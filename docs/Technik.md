@@ -620,13 +620,14 @@ Daten erst nach Server-Bestätigung.
 │   ├── mockups/           Vorher/Nachher-Bilder aus dem Prüfstand
 │   └── LIESMICH.md        Bauanleitung, Entscheidungen, Prüfstand
 ├── tools/                 Werkzeuge, werden nicht ausgeliefert
-│   ├── motor.mjs          Motorwahl für die drei Browserproben (AP3b,
-│   │                      Backlog Nr. 183): `--motor chromium|firefox|webkit`
-│   │                      und die Firefox-Voreinstellung, ohne die Gecko den
-│   │                      Media-Block der 36-px-Bedienhöhe nicht sieht.
-│   │                      Eine Stelle für Bilderlauf, Klickprobe und
-│   │                      Stilvergleich — dreimal geschrieben wäre sie
-│   │                      zweimal richtig und einmal falsch
+│   ├── motor.mjs          Motorwahl für jedes Browserwerkzeug (AP3b,
+│   │                      Backlog Nr. 183; seit R87 für alle, Nr. 390):
+│   │                      `MOTOR=` oder `--motor chromium|firefox|webkit`,
+│   │                      die Firefox-Voreinstellung, ohne die Gecko den
+│   │                      Media-Block der 36-px-Bedienhöhe nicht sieht, und
+│   │                      die Zeile `Motor: <name> <fassung>` im Protokoll.
+│   │                      Welches Werkzeug auf welchem Weg dahin kommt:
+│   │                      `tools/pruefstand/motoren.md`
 │   ├── sandbox/           stellt die Arbeitsumgebung her und fährt sie hoch:
 │   │                      aufbauen.sh (web|android|uhr|plattform|alles),
 │   │                      hochfahren.sh (--neu, --php 8.3), plattform.sh
@@ -906,26 +907,39 @@ Umgebungswerte er braucht und was er nicht kann, steht seit PK-01 in
 `Sandbox-Setup.md`** — dort und nur dort, samt der Frage, warum alle drei
 Engines dazugehören (1.1). **Welche Probe bei welcher Berührung und in
 welcher Stufe läuft, steht in `Pruefablauf.md` 3 und 4.** Hier bleibt, was
-die drei Prüfmittel mit Browser über ihre Motoren wissen müssen.
+die Prüfmittel mit Browser über ihre Motoren wissen müssen.
 
 *(Bis PK-07 stand dieser Abschnitt unter Abschnitt 4, zwischen 4.99 und
 4.99a — wer die Nummer las und in Abschnitt 2 suchte, fand nichts
 (F-PK-12). Die Tabelle darunter beschrieb bis dahin den Stand vor PK-04:
 eine Risikoliste im Bilderlauf und die Klickprobe.)*
 
-**Die drei Mittel wählen den Motor selbst** (`--motor
-chromium|firefox|webkit`, Vorgabe Chromium, seit AP3b der Mockup-Runde).
-Motorwahl und Firefox-Voreinstellung stehen **an einer Stelle**,
-`tools/motor.mjs`. **Der Prüfstand fährt alle drei in Chromium**; Firefox
-und WebKit fährt von Hand, wer eine Regel ändert, die ein Motor nicht können
-könnte. Die Hauptstufe soll den Bilderlauf in allen drei Engines fahren —
-gebaut ist das nicht (Backlog Nr. 300).
+**Jedes Browserwerkzeug wählt den Motor über `tools/motor.mjs`**
+(`MOTOR=` oder `--motor chromium|firefox|webkit`, Vorgabe Chromium).
+**Seit R87 (Konzept DM, 19.10.2026) fährt der Prüfstand jede Browserprobe
+in allen drei** — ab der Stufe `neben`, je Engine ein Lauf mit `MOTOR=…`,
+grün nur, wenn alle drei grün sind; **in `klein` in Chromium allein**
+(`docs/Pruefablauf.md` 1, Grundsatz 8, E-DM-08). Ein Seitenwechsel, der in
+WebKit mit „internal error" scheitert, wird einmal wiederholt und gezählt
+(E-DM-10, `motor.mjs`). Stufe 2
+fährt Kreislauf und Rückwegprobe ebenso dreifach. Welche Probe dreifach
+läuft, sagt `"motoren": true` in `pruefablauf.json`; welches Werkzeug auf
+welchem Weg dahin kommt (Probe, Helfer, von Hand, nur Chromium, kein Test),
+das Register `tools/pruefstand/motoren.md`, und der Bestandsriegel (Regel
+`motoren`) hält beides gegeneinander. *Bis dahin fuhr der Prüfstand alles in
+Chromium, Firefox und WebKit nur von Hand (Nr. 300, 390).*
 
-| Mittel | im Prüfstand | dreifach von Hand | warum |
-|---|---|---|---|
-| **Stilvergleich** | Chromium, wenn `style.css` berührt ist (`gegen.sh`) | bei jeder neuen Regel, deren Unterstützung zweifelhaft ist; 14–18 s je Motor | Berechnete Stile sind genau die Frage, bei der Motoren auseinandergehen. Die Aussage ist die **Übereinstimmung** der drei Zahlen, nicht die Zahl: Der Vergleich misst alt gegen neu *innerhalb* eines Motors, also meldet ein Motor, der eine neue Regel nicht kann, **weniger** Abweichungen. |
-| **Bilderlauf** | Chromium, nach Stufe (`--stufe klein`: drei Breiten, `neben`: zehn; E-PK-14 — die Risikoliste ist entfallen) | über die berührten Seiten (`--nur`) | Darstellung ist motorabhängig; dreimal voll wären rund 26 Minuten. |
-| **Bedienprobe** (bis PK-04 „Klickprobe") | Chromium | bei Dialogen, Blättern, Übergängen, Fokus, `<details>`, Zeigerereignissen — **und nur mit frisch eingespieltem Referenzbestand zwischen den Läufen**; ohne ihn meldeten Lauf 2 und 3 falsche Fehlschläge (gemessen 14.09.2026: 40 / 38 / 36 von 40) | Sie misst Wege, nicht Darstellung — JS-Semantik ist über Motoren hinweg weitgehend dieselbe. |
+**Was nur Chromium kann, bleibt dort** (E-DM-05, -06): die CPU-Drossel über
+CDP (Messstand, Hüllenprobe mit `--drossel`) und der virtuelle
+Passkey-Authenticator (Bedienprobe, Weg `einstellungen-profil-passkey`, der
+in Firefox und WebKit „nur in Chromium" meldet). Der Messstand läuft deshalb
+in Chromium allein: Seine Grundlinie ist gedrosseltes Chromium.
+
+| Mittel | im Prüfstand | warum dreifach |
+|---|---|---|
+| **Stilvergleich** | wenn `style.css` berührt ist (`gegen.sh`), je Engine; 14–18 s je Motor | Berechnete Stile sind genau die Frage, bei der Motoren auseinandergehen. Die Aussage ist die **Übereinstimmung** der drei Zahlen, nicht die Zahl: Der Vergleich misst alt gegen neu *innerhalb* eines Motors, also meldet ein Motor, der eine neue Regel nicht kann, **weniger** Abweichungen. |
+| **Bilderlauf** | nach Stufe (`--stufe klein`: drei Breiten, `neben`: zehn; E-PK-14), je Engine | Darstellung ist motorabhängig — der erste dreifache Lauf fand einen Überlauf, den nur WebKit hatte (Nr. 185). |
+| **Bedienprobe** (bis PK-04 „Klickprobe") | je Engine | Sie misst Wege, nicht Darstellung — aber Wege hängen an Zeitlagen, und die sind je Engine andere: Die Freigabeprobe fand so, dass das Schlüsselpaar in Firefox und WebKit nur entsteht, wer auf der ersten Seite bleibt (F-DM-02, Nr. 392). |
 
 **Zwei Dinge, die jeder Motorlauf wissen muss**, beide gemessen und beide in
 `tools/motor.mjs` begründet: Headless Firefox meldet ohne Voreinstellung
@@ -8598,7 +8612,7 @@ fremd/verändert/zweckfremd bis zur Sperre im Topf `totp`, die alte Fassung mit
 Verweis, die 400, den ganzen Weg mit echter Signatur und dieselbe Signatur an
 einem gesperrten Konto (Zweitfaktor bleibt an); `probe.mjs` fährt den Weg im
 Browser als NutzerIn und als BetreiberIn — örtlich und in Stufe 2 gegen
-Staging, von Hand mit `--motor` auch in Firefox und WebKit (RW-04). Beide
+Staging, seit R87 in beiden je Engine (Konzept DM). Beide
 Teile startet `tools/proben/rueckweg/probe.sh`, seit dem Aufnehmen von
 Konzept BR die Einstiegsdatei im Läufer.
 
@@ -11663,9 +11677,11 @@ in reinem PHP prüft und ob der Weg durchgeht, zeigt nur der Hoster. Die Probe
 legt zwei Wegwerfkonten `umlauf-rueckweg…` an (NutzerIn und BetreiberIn,
 über `pruefkonto.py`), schaltet deren Zweitfaktor ein, setzt ihn mit dem
 Wiederherstellungsschlüssel zurück und löscht die Konten wieder. Sie läuft
-**nach** dem Kreislauf und benutzt dessen Installationen (Playwright,
-Chromium, `cryptography`); fehlt `STAGING_TOTP` oder das Prüfkonto, ist der
-Schritt rot. Seit dem Merge läuft er grün mit (Lauf 99: 2:26).
+**nach** dem Kreislauf und benutzt dessen Installationen (Playwright, die
+drei Engines, `cryptography`); fehlt `STAGING_TOTP` oder das Prüfkonto, ist
+der Schritt rot. Seit dem Merge läuft er grün mit (Lauf 99: 2:26, damals
+Chromium allein). **Seit R87 laufen Kreislauf und Rückwegprobe je Engine**
+(DM-04); die Dauer des dreifachen Laufs ist noch nicht gemessen.
 
 **Ein Platz ist benannt und leer: Nr. 234** (E-PK-21) — der Weg „Deploy,
 Anmeldung, `update.php`" in einem Zug. Er steht als Kommentar im Job

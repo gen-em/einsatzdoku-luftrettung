@@ -144,10 +144,15 @@ tools/referenzdatensatz/einspielen/*rc.json
 # das Protokoll ihres Entstehens nicht.
 tools/referenzdatensatz/referenz/.export_lauf.json
 tools/screenshots/ausgabe/
+tools/screenshots/ausgabe-*/
 # Bericht und Bilder der Klickprobe (tools/klickprobe/probe.mjs). Sie
 # entstehen bei jedem Lauf neu und gehoeren als Zahl ins Pruefdokument, nicht
 # als Datei ins Repositorium -- dieselbe Regel wie beim Bilderlauf daneben.
 tools/klickprobe/ausgabe/
+# Die Bedienprobe hält ihren Chromium-Bericht unter ausgabe/ im Repositorium
+# (seit PK-04); die Läufe in Firefox und WebKit schreiben daneben je einen
+# eigenen Ordner (Konzept DM) und gehören als Zahl in den Prüfbericht.
+tools/bedienprobe/ausgabe-*/
 # Belegbild des Betriebslaufs (S10/AP3) — entsteht bei jedem Lauf neu
 tools/anteilprobe/ausgabe-*.png
 # Bildschirmabzuege des Emulators (android/werkzeuge/emulator.sh, Vorgabe

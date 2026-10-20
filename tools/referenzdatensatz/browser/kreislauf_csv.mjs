@@ -17,6 +17,7 @@
  */
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { downloadMitFortschritt } from './download_lib.mjs';
+import { motorWahl, starten, paarAbwarten } from '../../motor.mjs';
 /* Kontrollkästchen und Segmenttasten sind seit P3 unsichtbar; bedient
  * wird die Beschriftung. Warum und wie: bedienen.mjs. */
 const { ankreuzen, abwaehlen } = await import(
@@ -24,7 +25,9 @@ const { ankreuzen, abwaehlen } = await import(
 
 const MODUL = process.env.PLAYWRIGHT_MODUL
   || '/opt/node22/lib/node_modules/playwright/index.mjs';
-const { chromium } = await import(MODUL.startsWith('/') ? 'file://' + MODUL : MODUL);
+const PW = (m => m.default ?? m)(await import(MODUL.startsWith('/') ? 'file://' + MODUL : MODUL));
+/* Die Engine wählt der Läufer (MOTOR=… oder --motor), R87. */
+const MOTOR = motorWahl(process.argv);
 
 const basis   = process.argv[2] || 'https://127.0.0.1:8443';
 const quelle  = process.argv[3];
@@ -35,7 +38,7 @@ mkdirSync(ordner, { recursive: true });
 
 const KACHELFEHLER = /ERR_TUNNEL_CONNECTION_FAILED|ERR_NAME_NOT_RESOLVED|tile\.|opentopomap|arcgisonline/i;
 const lokal = /^https:\/\/(127\.0\.0\.1|localhost)(:|\/)/.test(basis);
-const browser = await chromium.launch();
+const browser = await starten(PW, MOTOR);
 const kontext = await browser.newContext({ ignoreHTTPSErrors: lokal, acceptDownloads: true });
 /* DER WARTUNGSLAUF BLEIBT AUS (S11-07, F-S11-77): Er packt und dünnt im
    Browser aus, sobald eine Seite ihn anstößt (Startseite, Reiter Backup),
@@ -73,6 +76,10 @@ await Promise.all([
   seite.click('#loginform button[type="submit"]'),
 ]);
 pruefe(!seite.url().includes('login.php'), `Anmeldung als ${konto} gescheitert`);
+/* Das Schlüsselpaar auf der ersten Seite abwarten (F-DM-02, Nr. 392): Ohne
+   es kam der Import in Firefox nie zu „Fertig", und der Export brach mit
+   „kein Schlüsselpaar" ab. */
+pruefe(await paarAbwarten(seite), 'Nach der Anmeldung entstand binnen 20 s kein Schlüsselpaar');
 schritt(`Als ${konto} anmelden`);
 
 // ---- Import -------------------------------------------------------------

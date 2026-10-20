@@ -33,6 +33,14 @@ async function einsaetze(k) {
   await k.gehZu(k.kennung.tagesuebersicht || (k.basis + '/index.php'));
   await k.seite.waitForFunction(
     () => typeof dayMissions !== 'undefined' && dayMissions.length, null, { timeout: 20000 });
+  /* DIE SPUREN ÖFFNET DER BROWSER NACH DER LISTE (Konzept DM, F-DM-07):
+   * `dayMissions` steht, bevor die Hüllen offen sind, und `m.track` füllt
+   * `EdOrtsdaten` erst danach. In Chromium war das zur Stelle, in Firefox und
+   * WebKit nicht — die Wege meldeten „kein Einsatz mit Aufzeichnung" an einem
+   * Bestand, der einen hat. Gewartet wird bis 20 s; kommt keiner, sagt die
+   * Meldung darunter es, wie bisher. */
+  await k.seite.waitForFunction(
+    () => dayMissions.some(m => (m.track || []).length > 1), null, { timeout: 20000 }).catch(() => {});
   const l = await k.seite.evaluate(() => ({
     tag: currentDayId,
     liste: dayMissions.map(m => ({ id: m.id, spur: (m.track || []).length })),

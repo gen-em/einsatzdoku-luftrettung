@@ -1,12 +1,12 @@
 # Rahmenplan — Programm „Gen-EM NAdoku" bis v1.0
 
-**Fassung 161 (19.10.2026)** · Steuerung: Reihenfolge, Status, programmweite
+**Fassung 163 (20.10.2026)** · Steuerung: Reihenfolge, Status, programmweite
 Entscheidungen. Verlauf: `Rahmenplan-Verlauf.md`. Fassungen 1–15:
 `Rahmenplan-Archiv.md`; Fassungen 16–124: `Rahmenplan-Archiv-2.md`.
 
 **Stand `origin/main`** (Commit `329566a`, gemessen 11.10.2026): Web 21.14.0 ·
 Uhr 3.1.0 · Android 0.17.0.
-**Läuft:** 12a — Konzept S11 auf `ccr-dd33b6e8-ismfm0`, freigegeben am 11.10.2026.
+**Läuft:** 12a — Konzept S11 auf `ccr-dd33b6e8-ismfm0`, freigegeben am 11.10.2026. Daneben 19 — Konzept DM (drei Engines, R87), freigegeben 19.10.2026.
 **Als Nächstes:** S11-01 (Messstand, Grundlinie) auf dem Zweig von 12a — Reihenfolge in Abschnitt 3. Die Kette läuft seit #104 auf `ubuntu-26.04` (Nr. 236 erledigt).
 **Offene PRs:** der Abschluss von Nr. 236 (nur `docs/`).
 **Fällig bei der Betreiberin:** 37 Posten (Abschnitt 6.1). **`update.php`:** auf Staging erledigt (11.10.2026); auf Produktiv seit dem Tag `web-v21.14.0` nachsehen, dort auch die aus 10c und Web 21.3.0 (6.1).
@@ -121,6 +121,7 @@ weil das Altbestand-Werkzeug ein einziges Konto voraussetzt.
 | 6 | **S4 — Rest, Teil C** | Play Console nach R65: interner Test-Track für Handy und Uhr unter einem Eintrag, Versionscode-Versatz, Signaturweg; Android 1.0.0 (E-R45-7). Die Vorbereitung ohne D-U-N-S und Schlüssel ist gebaut (Android 0.13.0), die Gerätetests sind erfolgt (24.09.2026) | D-U-N-S, Organisationskonto und Play App Signing — erledigt 26.09.2026 (SD-M1); offen in 6.2: Wear-OS-Uhr, Demo-Video, Datensicherheitsformular | `docs/konzepte/Konzept-S4-Handy-Uhr-Client.md` 13; `Vorbereitung-Play-Console.md` | offen — Teile A bis C gemergt 04.09.2026 (PR #33, Abschnitt 8); Android 1.0.0 und der interne Test-Track können beginnen |
 | 11 | **Planung v1.0** | Festlegungen vor dem Schnitt (R65 bis R73, entschieden 03.09.2026); Ergebnis sind die Konzepte der Phasen P6 bis P8 mit je eigenem Paketschnitt (P6 nach der Freigaberunde des Reviews) | keine | `docs/konzepte/Konzept-Planung-v1.0.md` | gemergt 03.09.2026 — Festlegungen entschieden (R65–R73); offen nur die Paketschnitte, je mit dem Konzept zu 12b, 13 und 14 |
 | 12a | **S11 — Ortsdaten verschlüsselt (Weg B)** (R78) | Konto-Schlüsselpaar (Nr. 53); Uhr und Handy verschlüsseln Spur, Phasenkoordinaten, Reanimationsereignisse und Zielklinik vor dem Upload; Spurfunktionen wandern in den Browser; Altbestand per Einmalwerkzeug (Nr. 43) | 12 (das Bedrohungsmodell liegt vor); **vor der Öffnung** | `docs/konzepte/Konzept-S11-Ortsdaten-Weg-B.md` (Kürzel S11, Opus, E-S11-01), Prüfdokument daneben | freigegeben — 11.10.2026 auf `ccr-dd33b6e8-ismfm0`; Umsetzung ab S11-01 |
+| 19 | **DM — Jede Browserprobe in drei Engines** (R87) | Firefox und WebKit im Standard-Setup der Arbeitsumgebung; jede Browserprobe im Prüfstand ab `neben` und in Stufe 2 dreifach, in `klein` Chromium, über `tools/motor.mjs`; Ausnahmen nur mit Begründung; ein Riegel in Stufe 1 zählt nach | keine; neben der Reihe | `docs/konzepte/Konzept-DM-Drei-Motoren.md` (Kürzel DM, Opus), Prüfdokument daneben | Umsetzung — freigegeben 19.10.2026 auf `claude/s11-ortsdaten-schritt-12a-2cvh7h` |
 | 12b | **P6 — Stücke 2 bis 12: Review und Bereinigung** | Bug- und Sicherheitsreview mit Fable über den Stand nach S11 (R17, R69, R86) — auch Uhr- und Android-Krypto, SPUR2, Browser-Spurfunktionen; Freigaberunde; Sofort-, Pflicht- und Aufräumpakete; Kommentardurchgang (R13, R31); R5-Ausnahmeliste | 12a gemergt | `docs/konzepte/Review-R17.md` (Fortsetzung aus 12); Paketschnitt nach der Freigaberunde | offen — nach 12a |
 | 13 | **P7 — Gesicht v1.0** | Umbenennung überall (Langform in den System-E-Mails entscheiden), neues Demo-Passwort (R25); Vertrag v1 (R12, Nr. 23); Doku-Neufassung, Handbuch als HTML im Release (R16, R72); Web-App-Manifest (R70); Changelog neu (R15); Backlog-Übernahme; Altformat der Sicherung weg (Nr. 46); Kommentarregel (R69) | 12b | eigenes Konzept nach K1 | offen — nach 12b |
 | 14 | **P8 — Schnitt** | Neuaufsetzen mit Übernahme per edbak (R40 (3), R60, Nr. 324); Migrationsregister neu (R66); Repo-Umzug und Inventur mit Begründung je Weglassung (R68); Kette im neuen Repositorium (R67, R40 (4)); Rechts- und Betreiberunterlagen (R41); Abnahme nach R11; Tags `web-v1.0.0`, `uhr-v…`, `android-v1.0.0` | 13 | eigenes Konzept nach K1 | offen — nach 13 |
@@ -387,6 +388,7 @@ werden hier kompakt angehängt; **der Statussatz wird ersetzt, nicht ergänzt**
 | R84 | Kein Schritt der Auslieferungskette geht ungeprobt auf Produktiv; wer einen Schritt hinzufügt, sagt, wodurch er geprobt wird | gilt | Konzept Kette II (gelöscht, `8854b86`), E-KH-17 |
 | R85 | Die Kette des Tags N spricht mit dem Server der Fassung N−1; ein unbekanntes Feld ist `unbekannt`, nie eine erfundene Null | gilt | Konzept Kette II (gelöscht, `8854b86`), E-KH-19 |
 | R86 | P6 in zwei Hälften um S11: Bedrohungsmodell als 12 vor 12a, Code-Review als 12b danach — S11 wird gegengelesen, der Code einmal, in Endfassung | gilt; entschieden 27.09.2026 (Betreiberin, Konzeptsitzung SR) | Abschnitt 3 („Warum so", Blöcke 12 und 12b) |
+| R87 | Browserproben in Chromium, Firefox und WebKit ab Stufe neben und in Stufe 2, in klein Chromium; fehlt eine Engine, rot. Ausnahmen begründet; Safari von Hand | gilt; entschieden 19.10.2026 (Betreiberin), Umsetzung Schritt 19 | `Konzept-DM-Drei-Motoren.md`, E-DM-01 bis -07 |
 
 ## 8. Erledigt
 

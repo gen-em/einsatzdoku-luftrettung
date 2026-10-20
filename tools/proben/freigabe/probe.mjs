@@ -44,6 +44,7 @@
 import { execFileSync } from 'node:child_process';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { motorWahl, starten } from '../../motor.mjs';
 
 const HIER   = dirname(fileURLToPath(import.meta.url));
 const BASIS  = process.argv[2] || 'https://127.0.0.1:8443';
@@ -54,7 +55,9 @@ const KONTO  = join(HIER, '..', '..', 'referenzdatensatz', 'vergleich', 'pruefko
 
 const MODUL = process.env.PLAYWRIGHT_MODUL
   || '/opt/node22/lib/node_modules/playwright/index.mjs';
-const { chromium } = await import('file://' + MODUL);
+const PW = (m => m.default ?? m)(await import('file://' + MODUL));
+/* Die Engine wählt der Läufer (MOTOR=… oder --motor), R87. */
+const MOTOR = motorWahl(process.argv);
 
 let gesamt = 0, offen = 0;
 const pruefe = (ok, was, wert = '') => {
@@ -73,7 +76,7 @@ if (EIGENES) {
 }
 
 const lokal = /^https?:\/\/(127\.0\.0\.1|localhost)(:|\/|$)/.test(BASIS);
-const browser = await chromium.launch();
+const browser = await starten(PW, MOTOR);
 const kontext = await browser.newContext({ ignoreHTTPSErrors: lokal });
 /* DER WARTUNGSLAUF BLEIBT AUS (S11-07, F-S11-77): Er packt und dünnt im
    Browser aus, sobald eine Seite ihn anstößt (Startseite, Reiter Backup),
@@ -149,18 +152,30 @@ try {
     throw new Error(`Anmeldung als ${ZIEL} gescheitert. Das Konto muss bestehen `
       + `und dieses Passwort haben (drittes Argument).`);
   }
-  await seite.goto(`${BASIS}/einstellungen.php?t=backup`, { waitUntil: 'domcontentloaded' });
-  await seite.waitForTimeout(1500);
   /* AUF DAS PAAR DES ZIELKONTOS WARTEN (S11-12). Es entsteht im Browser beim
    * ersten Entsperren nach der Anmeldung, nebenlaeufig. Ging die Probe ohne
    * es weiter, wies das Einspielen mit „kein Schlüsselpaar" ab — je nach
    * Zeitlage, im Pruefstand zweimal von vier Laeufen (22/9). Gewartet wird
-   * hoechstens 20 s; danach scheitert die Probe mit diesem Grund. */
+   * hoechstens 20 s; danach scheitert die Probe mit diesem Grund.
+   *
+   * UND ZWAR AUF DER ERSTEN SEITE (Konzept DM, F-DM-02). Das Paar entsteht
+   * nur dort, weil nur dort das Anmelde-Token liegt; bis zum 19.10.2026
+   * wartete die Probe erst auf einstellungen.php. In Chromium kam das Paar
+   * trotzdem an, in Firefox und WebKit nie. Der Schluss, nicht gemessen:
+   * Der Seitenwechsel bricht das Anlegen dort ab, und die zweite Seite hat
+   * kein Token mehr. Gemessen ist: Wartet die Probe hier, ist sie in allen
+   * drei Engines grün (23/23), und das Paar steht auf der ersten Seite
+   * nach 1152 ms (Firefox), 596 ms (WebKit), 599 ms
+   * (Chromium). Dass ein Mensch, der die erste Seite so schnell verlässt,
+   * bis zur nächsten Anmeldung kein Paar hat, ist ein Befund an der
+   * Anwendung, nicht an der Probe: Backlog Nr. 392. */
   let paarDa = false;
   for (let i = 0; i < 40 && !paarDa; i++) {
     paarDa = php('paar', { ziel: ZIEL }).paar === true;
     if (!paarDa) { await seite.waitForTimeout(500); }
   }
+  await seite.goto(`${BASIS}/einstellungen.php?t=backup`, { waitUntil: 'domcontentloaded' });
+  await seite.waitForTimeout(1500);
   pruefe(paarDa, 'Das Zielkonto hat nach dem Entsperren sein Schlüsselpaar',
          paarDa ? '' : 'nach 20 s noch keins');
   pruefe(await seite.locator('#freigabebtn').isVisible(),

@@ -110,10 +110,21 @@ async function zuordnen(k, tag, vehWert, baseWert) {
   await k.seite.selectOption('#basesel', baseWert).catch(() => {});
   await k.seite.evaluate(() => { document.getElementById('savestate').textContent = ''; });
   await k.seite.locator('#dayform button[type="submit"]').first().click();
-  await k.seite.waitForFunction(
-    () => /gespeichert|Gespeichert/.test(
-      document.getElementById('savestate').textContent || ''),
-    null, { timeout: 15000 });
+  /* 30 s STATT 15, UND DER TEXT IM FEHLER (Konzept DM, F-DM-10): In Firefox
+     lief die Grenze im vollen Lauf einmal ab, einzeln nie, und der Weg sagte
+     nur „Timeout". Jetzt wartet er auch auf einen Fehlertext und nennt, was
+     in `#savestate` stand. */
+  const stand = await k.seite.waitForFunction(
+    () => {
+      const t = document.getElementById('savestate').textContent || '';
+      return /gespeichert|Gespeichert|Fehler|fehlgeschlagen/.test(t) ? t : false;
+    },
+    null, { timeout: 30000 }).then(h => h.jsonValue()).catch(async () =>
+      'Zeitgrenze, #savestate: „' + await k.seite.evaluate(
+        () => document.getElementById('savestate').textContent || '') + '"');
+  if (!/gespeichert/i.test(stand)) {
+    throw new Error(`Diensttag ${tag} nicht gespeichert: ${stand}`);
+  }
   await k.seite.waitForTimeout(300);
 
   await tagAuf(k, tag);

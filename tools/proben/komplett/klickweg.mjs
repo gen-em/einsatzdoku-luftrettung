@@ -29,10 +29,12 @@
  */
 
 /* Der Code-Schritt des Zweitfaktors steht EINMAL, in motor.mjs (P5c/AP5). */
-import { codeSchritt } from '../../motor.mjs';
+import { codeSchritt, motorWahl, starten } from '../../motor.mjs';
 
 const MODUL = process.env.PW_MODUL || '/opt/node22/lib/node_modules/playwright/index.mjs';
-const { chromium } = await import(MODUL.startsWith('/') ? 'file://' + MODUL : MODUL);
+const PWM = (m => m.default ?? m)(await import(MODUL.startsWith('/') ? 'file://' + MODUL : MODUL));
+/* Die Engine wählt der Läufer (MOTOR=… oder --motor), R87. */
+const MOTOR = motorWahl(process.argv);
 
 const BASIS = process.env.ED_BASIS || 'https://127.0.0.1:8443';
 const MAIL  = process.env.ED_MAIL || 'admin@example.invalid';
@@ -44,7 +46,7 @@ const pruef = (was, ok, dazu = '') => {
   console.log(`  [${ok ? 'ok ' : 'OFFEN'}] ${was.padEnd(58)} ${dazu}`);
 };
 
-const browser = await chromium.launch();
+const browser = await starten(PWM, MOTOR);
 const kontext = await browser.newContext({ ignoreHTTPSErrors: true, acceptDownloads: true, viewport: { width: 1280, height: 900 } });
 /* DER WARTUNGSLAUF BLEIBT AUS (S11-07, F-S11-77): Er packt und dünnt im
    Browser aus, sobald eine Seite ihn anstößt (Startseite, Reiter Backup),

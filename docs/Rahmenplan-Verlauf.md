@@ -9,6 +9,8 @@ Verlauf bis zum Schnitt). Die Fassungszählung läuft fortlaufend weiter.
 
 | Fassung | Datum | Anlass | Was |
 |---|---|---|---|
+| 163 | 20.10.2026 | R87 | R87 geändert (E-DM-08): Die Stufe `klein` fährt die Browserproben in Chromium allein, ab `neben` in drei Engines — vorher alle Stufen dreifach (E-DM-07). Fahrplanzeile 19 nachgezogen. |
+| 162 | 19.10.2026 | R87, Schritt 19 | Neue Programmentscheidung R87: jede Browserprobe in drei Engines, örtlich und in Stufe 2. Schritt 19 (Konzept DM) beginnt; Fahrplanzeile und Kopf nachgezogen. |
 | 161 | 19.10.2026 | Zuarbeit 6.3 | Entwurf der Datenschutzerklärung für den Stand nach S11 in `docs/rechtstexte/`; die vier Zeilen zur Datenschutzerklärung in 6.3 sind eine, sie wartet auf Platzhalter, Rechtsprüfung und S11 auf Produktiv. Die Bausteine aus P5b sind darin aufgegangen und gelöscht. |
 | 160 | 11.10.2026 | Nr. 236 erledigt | Zuarbeit „Nr. 236 nachmessen" aus 6.1 fort: Auslieferung, Stufe 2, Wache und beide App-Probeläufe grün auf `ubuntu-26.04`; Kopf auf S11-01. |
 | 159 | 11.10.2026 | Nr. 236 | Zuarbeit 6.1: Nachmessung auf `ubuntu-26.04` nach dem Merge von #104. Berichtigt: Der Kopf nannte #103 offen und `update.php` auf Staging fällig — beides erledigt; 6.1 führte den Tag `web-v21.14.0` als offen, er ist seit dem 05.10.2026 ausgeliefert (Lauf 114). |

@@ -15,13 +15,13 @@ python3 tools/screenshots/vergleichen.py <vorher>     # --nur-text · --erwartet
 
 Überlauf, **Konsolenfehler**, Knopfhöhen gegen 44 und 36 px (`CLAUDE.md` 5), Karten außerhalb von `main.inhalt`,
 das **Umgebungsetikett** (P5c/AP1: `--etikett Staging` misst Titelvorsatz und rote Kopfleiste, ohne den Schalter die Gegenrichtung)
-und die **Bildgleichheit** über die Breiten; **rollende Behälter** nennt der Bericht, sie halten nicht auf. Fünf Rollen: aus, demo, betreiberin, admin, support (Prüfkonten: `pruefkonten.sh`). Drei Stufen (E-PK-14): klein = berührte Seiten, drei Breiten, Chromium · neben = alle
-Seiten, zehn Breiten · haupt = alle drei Engines. `kontrast.py` leitet die Farbpaare aus dem Stylesheet ab; ein Paar ohne Listeneintrag ist rot. `vergleichen.py` hält zwei Läufe gegeneinander — Bild, Zeile und **Form**;
+und die **Bildgleichheit** über die Breiten; **rollende Behälter** nennt der Bericht, sie halten nicht auf. Fünf Rollen: aus, demo, betreiberin, admin, support (Prüfkonten: `pruefkonten.sh`). Drei Stufen (E-PK-14): klein = berührte Seiten, drei Breiten · neben = alle
+Seiten, zehn Breiten · haupt = dazu die Matrix; ab neben in drei Engines, klein in Chromium (R87, `MOTOR=`). `kontrast.py` leitet die Farbpaare aus dem Stylesheet ab; ein Paar ohne Listeneintrag ist rot. `vergleichen.py` hält zwei Läufe gegeneinander — Bild, Zeile und **Form**;
 nur die Form ist ein Befund. Seiten und Bedienschritte: `seiten.json`.
 
 ## Was es braucht
 
-Eine Installation, Chromium (haupt: alle drei Engines) und für die
+Eine Installation, die drei Engines (`aufbauen.sh web`) und für die
 Wartungsseiten `--jobs-token`. **Ohne Token bricht der Lauf ab.**
 
 ## Erwartete Zahl

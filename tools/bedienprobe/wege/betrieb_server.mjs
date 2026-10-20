@@ -365,9 +365,20 @@ export const wege = [
         const sollKacheln = Number(phpK('require_once "server/serverkrypto_lib.php"; '
           + 'echo anteil_zustand(true)["kennung"] !== null ? 3 : 2;'));
         await k.bild('schluesselblatt-wechsel', s);
-        const pdf = await s.pdf({ format: 'A4', printBackground: true, preferCSSPageSize: true });
-        const seiten = (pdf.toString('latin1').match(/\/Type\s*\/Page(?![s\w])/g) || []).length;
-        schritte.push(`Blatt ${kacheln.length} Kacheln, ${seiten} Seite(n)`);
+        /* DIE SEITENZAHL NUR IN CHROMIUM (E-DM-05, Register
+         * `tools/pruefstand/motoren.md`): `page.pdf()` gibt es nur in
+         * Chromium. In Firefox und WebKit läuft der Weg ganz, nur die eine
+         * A4-Seite zählt er dort nicht und sagt es — gezählt wird sie im
+         * Chromium-Lauf derselben Probe. Ein echter Druck aus Firefox steht
+         * in den Prüflisten (P-P5c-20 ff.). */
+        const motor = s.context().browser().browserType().name();
+        let seiten = null;
+        if (motor === 'chromium') {
+          const pdf = await s.pdf({ format: 'A4', printBackground: true, preferCSSPageSize: true });
+          seiten = (pdf.toString('latin1').match(/\/Type\s*\/Page(?![s\w])/g) || []).length;
+        }
+        schritte.push(`Blatt ${kacheln.length} Kacheln, `
+          + (seiten === null ? `Seitenzahl nur in Chromium (${motor})` : `${seiten} Seite(n)`));
 
         /* 4. „Jetzt weiterarbeiten", bis alles nachgewiesen ist. Auf der
          *    örtlichen Anlage schafft der Wechsel selbst alles (ein Häppchen
@@ -438,7 +449,7 @@ export const wege = [
         const zurueckOk = zurueck.status === 0 && zustand().kennung === A;
         schritte.push('Rückweg ' + (zurueckOk ? `auf ${A}` : 'NICHT sauber: ' + (zurueck.stdout || zurueck.stderr).trim()));
 
-        const ok = ohneHaken && gewechselt && lageWechsel && kacheln.length === sollKacheln && seiten === 1
+        const ok = ohneHaken && gewechselt && lageWechsel && kacheln.length === sollKacheln && (seiten === 1 || seiten === null)
                 && fertig && satz && beantwortet && st.status === 0 && entfernenDa && entfernt && zurueckOk;
         return { ist: schritte.join(' · '), ok,
                  bemerkung: ok ? '' : `Soll: abgewiesen · gewechselt · Lage Wechsel · ${sollKacheln} Kacheln auf 1 Seite · `

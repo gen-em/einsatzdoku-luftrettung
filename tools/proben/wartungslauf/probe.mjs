@@ -25,6 +25,7 @@ import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { randomBytes } from 'node:crypto';
+import { motorWahl, starten } from '../../motor.mjs';
 
 const HIER   = dirname(fileURLToPath(import.meta.url));
 const WURZEL = join(HIER, '..', '..', '..');
@@ -33,7 +34,9 @@ const ADRESSE  = 'umlauf-wartungslauf@example.invalid';
 const PASSWORT = 'umlaufpruefung2026-wartungslauf';
 const KONTO = join(WURZEL, 'tools', 'referenzdatensatz', 'vergleich', 'pruefkonto.py');
 const MODUL = process.env.PLAYWRIGHT_MODUL || '/opt/node22/lib/node_modules/playwright/index.mjs';
-const { chromium } = await import('file://' + MODUL);
+const PW = (m => m.default ?? m)(await import('file://' + MODUL));
+/* Die Engine wählt der Läufer (MOTOR=… oder --motor), R87. */
+const MOTOR = motorWahl(process.argv);
 
 let gesamt = 0, offen = 0;
 const pruefe = (ok, was, wert = '') => {
@@ -79,8 +82,8 @@ const ruhe2 = { kind: 'rest_segment', client_ref: 'r-wartungslauf-2', day: tag, 
   track: { seq_from: 0, points: ruhe2Punkte } };
 
 const ordner = mkdtempSync(join(tmpdir(), 'wartungslauf-'));
-const browser = await chromium.launch();
-console.log(`Wartungslaufprobe (Browser, chromium) gegen ${BASIS}`);
+const browser = await starten(PW, MOTOR);
+console.log(`Wartungslaufprobe (Browser, ${MOTOR}) gegen ${BASIS}`);
 try {
   try { konto('loeschen'); } catch (e) { /* gab es nicht */ }
   konto('anlegen', join(ordner, 'rc.json'));

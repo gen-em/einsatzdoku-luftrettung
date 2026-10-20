@@ -52,14 +52,36 @@ teil_web() {
         || zeile "ACHTUNG: apt-get fehlgeschlagen — Prüfmittel unvollständig"
 
     melde "Engine-Bibliotheken"
-    # DIE ENGINES WERDEN NICHT NACHGELADEN. Sie liegen im Abbild
-    # (/opt/pw-browsers: chromium-1194, firefox-1495, webkit-2215); ein
-    # `playwright install` zöge eine zweite, abweichende Fassung daneben.
-    # Was fehlt, sind Systembibliotheken — und zwar genau die vier, die
-    # Playwright selbst nennt, wenn WebKit nicht startet. Gemessen am
-    # 21.09.2026: ohne sie startet WebKit nicht, mit ihnen 3 von 3.
+    # Genau die, die Playwright selbst nennt, wenn WebKit nicht startet —
+    # seine Meldung altert nicht, diese Liste schon. Die ersten vier gemessen
+    # am 21.09.2026, die übrigen fünf am 19.10.2026 (Konzept DM, F-DM-01):
+    # Das Abbild jenes Tages brachte sie nicht mehr mit, und WebKit
+    # verweigerte den Start mit „Host system is missing dependencies".
     apt_holen libenchant-2-2 libsecret-1-0 libwayland-server0 libmanette-0.2-0 \
+        libgtk-4-1 libevent-2.1-7t64 libgstreamer-plugins-bad1.0-0 libavif16 libgles2 \
         || zeile "ACHTUNG: Engine-Bibliotheken fehlgeschlagen"
+
+    melde "Engines"
+    # JEDE BROWSERPROBE LÄUFT IN DREI ENGINES (R87, E-DM-01) — also müssen
+    # alle drei da sein. Bis zum 19.10.2026 stand hier „die Engines werden
+    # nicht nachgeladen", weil sie im Abbild lagen und ein Nachladen eine
+    # zweite, abweichende Fassung danebengelegt hätte. Seit dem Abbild vom
+    # 11.10.2026 liegt dort nur noch Chromium (F-S11-20), und ganz S11 lief
+    # deshalb in einer Engine. Nachgeladen wird NUR, was fehlt, mit dem
+    # Playwright des Abbilds: Es zieht genau die Fassung, die zu ihm gehört
+    # (1.56: firefox-1495, webkit-2215), nichts daneben. Die Bibliotheken
+    # oben kommen zuerst — sonst lädt Playwright herunter und bricht danach
+    # an der eigenen Prüfung der Systembibliotheken ab.
+    local n fehlt=()
+    for n in chromium firefox webkit; do
+        compgen -G "$PW/$n-[0-9]*" >/dev/null || fehlt+=("$n")
+    done
+    if [ ${#fehlt[@]} -gt 0 ]; then
+        zeile "nachladen: ${fehlt[*]}"
+        PLAYWRIGHT_BROWSERS_PATH="$PW" PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD= \
+            node "$(dirname "$PW_MODUL")/cli.js" install "${fehlt[@]}" >/dev/null 2>&1 \
+            || zeile "ACHTUNG: Nachladen von ${fehlt[*]} meldet einen Fehler — der Nachweis unten zeigt, was startet"
+    fi
 
     melde "Python-Pakete"
     # `python3` ist 3.11 (deadsnakes), apt legt nach 3.12 — deshalb pip.

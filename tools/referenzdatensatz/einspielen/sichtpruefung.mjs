@@ -10,10 +10,13 @@
  *   node sichtpruefung.mjs [basis] [email] [passwort] [ausgabeordner]
  */
 import { writeFileSync, mkdirSync } from 'node:fs';
+import { motorWahl, starten } from '../../motor.mjs';
 
 const MODUL = process.env.PLAYWRIGHT_MODUL
   || '/opt/node22/lib/node_modules/playwright/index.mjs';
-const { chromium } = await import(MODUL.startsWith('/') ? 'file://' + MODUL : MODUL);
+const PW = (m => m.default ?? m)(await import(MODUL.startsWith('/') ? 'file://' + MODUL : MODUL));
+/* Die Engine wählt der Läufer (MOTOR=… oder --motor), R87. */
+const MOTOR = motorWahl(process.argv);
 
 const basis = process.argv[2] || 'https://127.0.0.1:8443';
 const email = process.argv[3] || 'demo@gen-em.org';
@@ -22,7 +25,7 @@ const ordner = process.argv[5] || '/tmp/sichtpruefung';
 mkdirSync(ordner, { recursive: true });
 
 const lokal = /^https:\/\/(127\.0\.0\.1|localhost)(:|\/)/.test(basis);
-const browser = await chromium.launch();
+const browser = await starten(PW, MOTOR);
 const kontext = await browser.newContext({ ignoreHTTPSErrors: lokal, viewport: { width: 1400, height: 1000 } });
 /* DER WARTUNGSLAUF BLEIBT AUS (S11-07, F-S11-77): Er packt und dünnt im
    Browser aus, sobald eine Seite ihn anstößt (Startseite, Reiter Backup),

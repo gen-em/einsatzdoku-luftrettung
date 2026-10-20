@@ -85,15 +85,21 @@ fi
 
 # ---- 4. Proben ------------------------------------------------------------
 melde "Proben (${#PROBEN[@]})"
-declare -A ZAHL; fehl=0; nicht=0
+declare -A ZAHL; fehl=0; nicht=0; DREIFACH=0; WIEDERHOLT=0
+# DIE ENGINES JE STUFE (R87, E-DM-08): `klein` fährt die Browserproben in
+# Chromium allein, `neben` und `haupt` in allen drei. Bis zum 20.10.2026
+# (E-DM-07) liefen alle Stufen dreifach; ein voller Lauf dauerte damit
+# länger, als der Container ihn hält (F-DM-11). bericht.py liest es gegen.
+if [ "$STUFE" = klein ]; then MOTOREN=(chromium); else MOTOREN=(chromium firefox webkit); fi
 for name in "${PROBEN[@]}"; do
     aufruf=$(python3 -c "
 import json,sys
 a=json.load(open('$HIER/pruefablauf.json'))
 p=a['proben'].get('$name')
-print(p['aufruf'] if p else '', p['braucht'] if p else '', 'demo' if p and p.get('demo') is True else '', sep='\t')")
+print(p['aufruf'] if p else '', p['braucht'] if p else '', 'demo' if p and p.get('demo') is True else '',
+      'drei' if p and p.get('motoren') is True else '', sep='\t')")
     befehl=$(printf '%s' "$aufruf" | cut -f1); braucht=$(printf '%s' "$aufruf" | cut -f2)
-    demo=$(printf '%s' "$aufruf" | cut -f3)
+    demo=$(printf '%s' "$aufruf" | cut -f3); drei=$(printf '%s' "$aufruf" | cut -f4)
     befehl=${befehl//\{stufe\}/$STUFE}   # der Bilderlauf misst je Stufe anders (PK-05)
     if [ -z "$befehl" ]; then
         zeile "?     $name — steht nicht unter \"proben\" in pruefablauf.json"; fehl=$((fehl+1)); continue
@@ -148,6 +154,33 @@ print(p['aufruf'] if p else '', p['braucht'] if p else '', 'demo' if p and p.get
     fi
     # Die Zeit je Probe steht in der Zeile (RP-01): Die Nebenstufe brauchte
     # 1 266 s, und niemand konnte sagen, wofür.
+    # DREI ENGINES (R87, Konzept DM), in `klein` eine. Eine Probe mit
+    # "motoren": true läuft einmal je Engine aus MOTOREN, mit MOTOR=… in der Umgebung — `tools/motor.mjs` liest
+    # es, und jeder Zwischenschritt (php, python, bash) reicht es weiter. Grün
+    # ist sie nur, wenn alle drei grün sind; rot nennt sie, welche nicht.
+    # Fehlt eine Engine, startet sie nicht, und die Probe ist rot — nicht
+    # übersprungen (Grundsatz 7). Bis zum 19.10.2026 lief jede Probe einmal,
+    # in Chromium, auch die, die --motor kannten.
+    if [ -n "$drei" ]; then
+        rot=()
+        for mo in "${MOTOREN[@]}"; do
+            t1=$SECONDS
+            if (cd "$WURZEL" && export MOTOR=$mo && eval "$befehl" >"/tmp/pruefstand-$name-$mo.log" 2>&1); then
+                zeile "ok    $name [$mo]  $((SECONDS - t1)) s"
+            else
+                zeile "ROT   $name [$mo]  $((SECONDS - t1)) s  (siehe /tmp/pruefstand-$name-$mo.log)"; rot+=("$mo")
+            fi
+            # Wiederholte Seitenwechsel in WebKit (E-DM-10, motor.mjs): genannt,
+            # nicht verschwiegen — grün bleibt grün, aber man sieht, wie oft.
+            w=$(grep -c '^WebKit-Wiederholung:' "/tmp/pruefstand-$name-$mo.log" 2>/dev/null || true)
+            [ "${w:-0}" -gt 0 ] && zeile "      $name [$mo]: $w Seitenwechsel wiederholt (WebKit-Stolpern, E-DM-10)"
+            WIEDERHOLT=$((WIEDERHOLT + ${w:-0}))
+        done
+        if [ ${#rot[@]} -eq 0 ]; then ZAHL[$name]=0
+        else ZAHL[$name]="rot:$(IFS=,; echo "${rot[*]}")"; fehl=$((fehl+1)); fi
+        DREIFACH=$((DREIFACH+1))
+        continue
+    fi
     t0=$SECONDS
     if (cd "$WURZEL" && eval "$befehl" >/tmp/pruefstand-$name.log 2>&1); then
         zeile "ok    $name  $((SECONDS - t0)) s"; ZAHL[$name]=0
@@ -169,6 +202,10 @@ melde "Bericht"
 args=(schreiben --stufe "$STUFE" --basis "$BASIS"
       --konfiguration "$([ "$STUFE" = haupt ] && echo alles || echo web)")
 for k in "${!ZAHL[@]}"; do args+=(--zahl "$k=${ZAHL[$k]}"); done
+# Welche Engines die dreifachen Proben gefahren haben — Stufe 1 liest es
+# gegen (bericht.py, Lage 6): Ein Bericht mit Browserproben ohne diese Zeile
+# ist rot.
+[ "$DREIFACH" -gt 0 ] && args+=(--zahl "motoren=$(IFS=+; echo "${MOTOREN[*]}")")
 # Ohne Bericht ist der Lauf rot, wie grün die Proben auch waren (BR-04,
 # Nr. 314): Bis dahin endete er hier mit rc 0 und „0 rot", auch wenn
 # bericht.py abgestürzt war — ein Lauf ohne Beleg, der sich als Beleg meldete.
@@ -179,6 +216,7 @@ if [ "$rcb" -ne 0 ]; then
 fi
 
 melde "$fehl rot, $nicht nicht gemessen, $(( ${#PROBEN[@]} - fehl - nicht )) grün · $SECONDS s"
+[ "$WIEDERHOLT" -gt 0 ] && zeile "$WIEDERHOLT Seitenwechsel in WebKit wiederholt — im Prüfdokument nennen (E-DM-10)"
 [ "$nicht" -gt 0 ] && zeile "Was nicht gemessen werden konnte, gehört in das Prüfdokument — an den Anfang."
 # Nicht gemessen ist nicht grün (E-KH-12, E-PK-46): Der Bericht trägt es, und
 # das Tor liest es als rot — dann soll es der Lauf auch sein.

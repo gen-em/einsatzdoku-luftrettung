@@ -113,8 +113,10 @@ jobs:
     needs: staging
     runs-on: ubuntu-26.04
     # Ohne Zeitgrenze liefe ein hängender Job sechs Stunden, und so lange wartet
-    # jeder weitere Lauf dieser Umgebung in seiner Gruppe.
-    timeout-minutes: 20
+    # jeder weitere Lauf dieser Umgebung in seiner Gruppe. 40 statt 20 seit
+    # R87: Kreislauf und Rückwegprobe laufen dreimal (am 19.10.2026 in
+    # Chromium allein 49 s und 144 s), dazu zwei Engines samt Bibliotheken.
+    timeout-minutes: 40
     environment: staging
     # GitHub setzt ein fehlendes Geheimnis still auf leer — deshalb prüfen die
     # Schritte ihre Werte mit `-z`, bevor sie sie benutzen.
@@ -230,18 +232,28 @@ jobs:
           export PLAYWRIGHT_MODUL="$PWD/node_modules/playwright/index.mjs"
           [ -f "$PLAYWRIGHT_MODUL" ] \
             || { echo "::error::Playwright-Modul fehlt unter $PLAYWRIGHT_MODUL"; exit 1; }
-          npx --yes playwright@1.56 install chromium
-          for art in edbak; do
-            echo "--- Kreislauf $art ---"
-            python3 tools/referenzdatensatz/vergleich/kreislauf.py \
-                    --art "$art" --frisch \
-                    --basis "$STAGING_URL" \
-                    --admin-email "$STAGING_KONTO" \
-                    --admin-passwort "$STAGING_PASS" \
-                    --admin-totp "$STAGING_TOTP" \
-                    --jobs-token "$JOBS_TOKEN" \
-              || { echo "::error::Kreislauf $art gegen Staging gescheitert."; exit 1; }
+          # DREI ENGINES (R87, Konzept DM/DM-04). Bis zum 19.10.2026 holte
+          # dieser Schritt nur Chromium, und Stufe 2 maß jede Engine außer
+          # einer nicht. `--with-deps` holt die Systembibliotheken, die
+          # Playwright für Firefox und WebKit selbst nennt; scheitert es,
+          # ist der Schritt rot, nicht übersprungen (Grundsatz 7).
+          npx --yes playwright@1.56 install --with-deps chromium firefox webkit
+          rot=""
+          for motor in chromium firefox webkit; do
+            for art in edbak; do
+              echo "--- Kreislauf $art · $motor ---"
+              MOTOR=$motor python3 tools/referenzdatensatz/vergleich/kreislauf.py \
+                      --art "$art" --frisch \
+                      --basis "$STAGING_URL" \
+                      --admin-email "$STAGING_KONTO" \
+                      --admin-passwort "$STAGING_PASS" \
+                      --admin-totp "$STAGING_TOTP" \
+                      --jobs-token "$JOBS_TOKEN" \
+                || { echo "::error::Kreislauf $art gegen Staging in $motor gescheitert."; rot="$rot $motor"; }
+            done
           done
+          echo "**Kreislauf edbak:** chromium, firefox, webkit —${rot:- alle grün}${rot:+ rot in$rot}" >> "$GITHUB_STEP_SUMMARY"
+          [ -z "$rot" ] || exit 1
 
       - name: Rückwegprobe gegen Staging
         # Lebt von den Installationen des Kreislaufs und steht deshalb dahinter;
@@ -255,9 +267,17 @@ jobs:
           export PLAYWRIGHT_MODUL="$PWD/node_modules/playwright/index.mjs"
           [ -f "$PLAYWRIGHT_MODUL" ] \
             || { echo "::error::Playwright-Modul fehlt unter $PLAYWRIGHT_MODUL"; exit 1; }
-          node tools/proben/rueckweg/probe.mjs --basis "$STAGING_URL" --admin "$STAGING_KONTO" \
-               --admin-pw "$STAGING_PASS" --admin-totp "$STAGING_TOTP" \
-            || { echo "::error::Rückwegprobe gegen Staging gescheitert."; exit 1; }
+          # Je Engine einmal (R87); `rueckweg/probe.mjs` liest MOTOR über
+          # `tools/motor.mjs`.
+          rot=""
+          for motor in chromium firefox webkit; do
+            echo "--- Rückwegprobe · $motor ---"
+            MOTOR=$motor node tools/proben/rueckweg/probe.mjs --basis "$STAGING_URL" --admin "$STAGING_KONTO" \
+                 --admin-pw "$STAGING_PASS" --admin-totp "$STAGING_TOTP" \
+              || { echo "::error::Rückwegprobe gegen Staging in $motor gescheitert."; rot="$rot $motor"; }
+          done
+          echo "**Rückwegprobe:** chromium, firefox, webkit —${rot:- alle grün}${rot:+ rot in$rot}" >> "$GITHUB_STEP_SUMMARY"
+          [ -z "$rot" ] || exit 1
 
       # Ein roter Schritt hier hält jeden Tag auf: Das Tor der grünen Läufe
       # verlangt den ganzen Auslieferungslauf grün, nicht nur `staging`.

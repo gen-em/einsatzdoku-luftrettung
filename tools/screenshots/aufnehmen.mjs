@@ -85,12 +85,11 @@ const MODUL = process.env.PLAYWRIGHT_MODUL
   || '/opt/node22/lib/node_modules/playwright/index.mjs';
 const PW = await import(MODUL.startsWith('/') ? 'file://' + MODUL : MODUL);
 const { motorWahl, starten, codeSchritt, istEinrichtungstor, EINRICHTUNGSTOR_MELDUNG,
-        einsaetzeVervielfachen } =
+        einsaetzeVervielfachen, abgebrochenerSchriftabruf, harmloserResizeHinweis } =
   await import(new URL('../motor.mjs', import.meta.url).href);
 
 const HIER   = dirname(fileURLToPath(import.meta.url));
 const WURZEL = join(HIER, '..', '..');
-const AUSGABE = join(HIER, 'ausgabe');
 
 const argv = process.argv.slice(2);
 const flag = (n) => argv.includes(n);
@@ -113,6 +112,12 @@ const SKALA  = flag('--klein') ? 1 : 2;
 const FINGER = flag('--finger');
 const FILTER = (wert('--nur', '') || '').split(',').filter(Boolean);
 const MOTOR  = motorWahl(argv);
+/* JE ENGINE EIN ORDNER (Konzept DM): Der Prüfstand fährt den Lauf dreimal
+ * hintereinander, und jeder Lauf leert seinen Ordner zuerst. Mit einem Ordner
+ * für alle stand nach dem Prüfstand nur der Bericht von WebKit da — der von
+ * Firefox mit seinem Konsolenfehler war weg. Chromium bleibt bei `ausgabe/`,
+ * weil Kontrast und Vergleich dort lesen. */
+const AUSGABE = join(HIER, MOTOR === 'chromium' ? 'ausgabe' : `ausgabe-${MOTOR}`);
 
 /* Fuer den Wartungsmodus einer FERNEN Installation — siehe den Block bei
  * `wartungAn()`. Ohne Token bleibt es beim lokalen Weg. */
@@ -364,6 +369,8 @@ function istRauschen(meldung, seitenAdresse) {
   // 3 Verbindungsfehler — aber nur auf einer NACHWEISBAR fremden Fundstelle
   //   (Nr. 176). 'keine' zaehlt, siehe herkunft().
   if (VERBINDUNGSCODES.test(text) && herkunft(ort) === 'fremd') return true;
+  // 4 Ein Schriftabruf, den das nächste Laden abbrach (Firefox, F-DM-08).
+  if (abgebrochenerSchriftabruf(text)) return true;
   return false;
 }
 
@@ -422,6 +429,12 @@ const SELBSTPROBE = [
   { nr: 15, soll: 'fehler',   grund: 'undurchsichtige Herkunft (data:) — URL.origin sagt "null"',
     text: 'Failed to load resource: net::ERR_CONNECTION_CLOSED',
     ort:  'data:text/html,<p>x' },
+  { nr: 16, soll: 'rauschen', grund: 'Firefox: Schriftabruf vom nächsten Laden abgebrochen (NS_BINDING_ABORTED, F-DM-08)',
+    text: 'downloadable font: download failed (font-family: "Open Sans" style:normal weight:400 stretch:100 src index:0): status=2152398850 source: EIGEN/assets/fonts/x.woff2',
+    ort:  'EIGEN/x.php' },
+  { nr: 17, soll: 'fehler',   grund: 'Firefox: Schrift fehlt wirklich (anderer Status) — bleibt ein Fehler',
+    text: 'downloadable font: download failed (font-family: "Open Sans" style:normal weight:400 stretch:100 src index:0): status=2147746065 source: EIGEN/assets/fonts/x.woff2',
+    ort:  'EIGEN/x.php' },
 ];
 
 if (flag('--selbstprobe')) {
@@ -622,7 +635,9 @@ async function anmelden(rolle) {
       fehler.push(m.text() + (ort ? '  [' + ort + ']' : ''));
     }
   });
-  seite.on('pageerror', e => fehler.push('pageerror: ' + e.message));
+  /* Seitenfehler zählen alle — außer dem einen Hinweis, den nur WebKit als
+   * Fehler wirft (F-DM-09, `harmloserResizeHinweis()` in motor.mjs). */
+  seite.on('pageerror', e => { if (!harmloserResizeHinweis(e.message)) { fehler.push('pageerror: ' + e.message); } });
 
   /* ---- Die Eingabeart haelt nicht von selbst (Fund aus S8/AP7) -----------
    *

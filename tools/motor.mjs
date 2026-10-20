@@ -43,6 +43,29 @@ import { naechsterCode } from './zweitfaktor/totp.mjs';
 
 export const MOTOREN = ['chromium', 'firefox', 'webkit'];
 
+/** Ein Schriftabruf, den das nächste Laden abgebrochen hat — in Firefox
+ *  (Konzept DM, F-DM-08). Firefox meldet ihn als Konsolenfehler
+ *  „downloadable font: download failed … status=2152398850"; das ist
+ *  NS_BINDING_ABORTED, also kein Fehler der Seite, sondern ein Werkzeug,
+ *  das schneller weiterlädt als die Schrift. Chromium und WebKit sagen dazu
+ *  nichts. Jeder andere Schriftfehler bleibt ein Fehler. Eine Stelle für
+ *  Bilderlauf und Bedienprobe. */
+/** Der Hinweis „ResizeObserver loop completed with undelivered
+ *  notifications" — WebKit wirft ihn als Seitenfehler (Konzept DM, F-DM-09),
+ *  Chromium und Firefox nicht. Die Spezifikation sieht ihn vor, wenn eine
+ *  Größenänderung erst im nächsten Bild gemeldet werden kann; er ist kein
+ *  Fehler der Seite. Der Beobachter in `map_layers.js` bündelt über
+ *  requestAnimationFrame und ändert keine Größe. Nur genau dieser Wortlaut
+ *  zählt nicht; „ResizeObserver loop limit exceeded" oder jede andere
+ *  Meldung bleibt ein Fehler. */
+export function harmloserResizeHinweis(text) {
+  return /^ResizeObserver loop completed with undelivered notifications\.?$/.test(String(text).trim());
+}
+
+export function abgebrochenerSchriftabruf(text) {
+  return /downloadable font: download failed/.test(text) && /status=2152398850\b/.test(text);
+}
+
 /* Fein + Hover als Gecko-Bitmaske. Siehe Kopfkommentar — 2 allein genügt
  * nicht, 6 ist die Zahl. */
 const ZEIGER_FIREFOX = {
@@ -64,6 +87,47 @@ export function motorWahl(argv) {
   return name;
 }
 
+/* ===========================================================================
+ * WebKit stolpert beim Seitenwechsel (Konzept DM, Q-DM-02, E-DM-10)
+ * ===========================================================================
+ *
+ * In diesem Container bricht WebKit sporadisch einen Seitenwechsel mit
+ * „WebKit encountered an internal error" ab — in jedem vollen Lauf der
+ * Bedienprobe an ein bis drei anderen Wegen, einzeln sind sie grün; bekannt
+ * seit F-RW-23 (Nr. 301). Ein `goto` oder `reload`, der GENAU daran scheitert,
+ * wird hier einmal wiederholt; scheitert er wieder, ist er rot. Jede
+ * Wiederholung steht als Zeile `WebKit-Wiederholung: …` im Protokoll, und
+ * `pruefen.sh` zählt sie.
+ *
+ * NICHT wiederholt wird ein Seitenwechsel nach einem Klick
+ * (`waitForNavigation`): Ihn zu wiederholen hieße, den Klick zu wiederholen,
+ * und das ist eine andere Bedienung. Er bleibt rot und benannt.
+ *
+ * Gepatcht wird die Klasse der Seite, einmal je Lauf — so trifft es jede
+ * Seite jedes Kontexts, ohne dass ein Werkzeug etwas tun muss. Nur WebKit;
+ * Chromium und Firefox bleiben unberührt. */
+export const WEBKIT_STOLPERN = 'WebKit encountered an internal error';
+async function webkitWiederholung(browser) {
+  const kontext = await browser.newContext();
+  const seite = await kontext.newPage();
+  const klasse = Object.getPrototypeOf(seite);
+  await kontext.close();
+  if (klasse.__webkitWiederholung) { return; }
+  klasse.__webkitWiederholung = true;
+  for (const methode of ['goto', 'reload']) {
+    const roh = klasse[methode];
+    klasse[methode] = async function (...args) {
+      try {
+        return await roh.apply(this, args);
+      } catch (e) {
+        if (!String((e && e.message) || e).includes(WEBKIT_STOLPERN)) { throw e; }
+        console.error(`WebKit-Wiederholung: ${methode} ${methode === 'goto' ? args[0] : this.url()}`);
+        return await roh.apply(this, args);
+      }
+    };
+  }
+}
+
 /** Startet den gewählten Motor. `pw` ist das geladene Playwright-Modul.
  *  `finger` sagt, ob der Lauf ein Fingergerät nachstellt; `optionen` reicht
  *  weitere Startangaben durch (der Stilvergleich setzt so seinen
@@ -72,7 +136,15 @@ export async function starten(pw, name, { finger = false, optionen = {} } = {}) 
   const auf = (name === 'firefox' && !finger)
     ? { ...optionen, firefoxUserPrefs: { ...ZEIGER_FIREFOX, ...(optionen.firefoxUserPrefs || {}) } }
     : { ...optionen };
-  return await pw[name].launch(auf);
+  const browser = await pw[name].launch(auf);
+  if (name === 'webkit') { await webkitWiederholung(browser); }
+  /* DER BELEG, WELCHE ENGINE LIEF (R87, Konzept DM). Eine Probe, die
+   * „grün in Firefox" meldet, aber still Chromium startete, wäre die
+   * schmeichelhafte Null aus dem Kopf dieser Datei. Die Zeile geht nach
+   * stderr, damit sie keine Ausgabe stört, die ein Aufrufer liest, und
+   * steht in jedem Protokoll des Prüfstands. */
+  console.error(`Motor: ${name} ${browser.version()}`);
+  return browser;
 }
 
 /* ===========================================================================
@@ -386,6 +458,37 @@ export async function codeSchritt(seite, { frist = 30000 } = {}) {
  *  eine halb gelesene Fehlerseite. Die Bedingung sieht deshalb erst hin,
  *  wenn das Dokument gelesen ist; auf Bilder und Kartenkacheln (`load`)
  *  wartet sie nicht. */
+/** Auf der ersten Seite nach der Anmeldung abwarten, bis das Schlüsselpaar
+ *  des Kontos steht (S11; seit Konzept DM an einer Stelle, F-DM-02).
+ *
+ *  Die Seite legt es still an — aber nur sie, weil nur sie das Anmelde-Token
+ *  hat. Wer vorher weitergeht, bricht das Anlegen ab, und das Konto hat bis
+ *  zur nächsten Anmeldung keins (Backlog Nr. 392). In Chromium ging das
+ *  meist gut, in Firefox und WebKit nie: Die Freigabeprobe und der
+ *  CSV-Kreislauf scheiterten daran, der edbak-Kreislauf wartete schon seit
+ *  F-S11-71 selbst. Diese Schleife ist seine, hierher geholt.
+ *
+ *  Nichts zu warten, wenn die Seite kein Paar pflegt (kein `KP_STAND`) oder
+ *  es schon eines gibt. Höchstens `frist` ms; Rückgabe true, wenn das Paar
+ *  steht oder nichts zu warten war, sonst false — der Aufrufer meldet es. */
+export async function paarAbwarten(seite, { frist = 20000 } = {}) {
+  const bis = Date.now() + frist;
+  for (;;) {
+    const stand = await seite.evaluate(async () => {
+      if (typeof KP_STAND === 'undefined' || KP_STAND !== 'fehlt' || typeof EdApi === 'undefined') {
+        return 'nichts';
+      }
+      try {
+        const a = await EdApi.postJson('api/kontopaar.php', { aktion: 'zustand' });
+        return a && a.ok && a.daten ? a.daten.stand : null;
+      } catch (e) { return null; }
+    }).catch(() => null);
+    if (stand === 'da' || stand === 'nichts') { return true; }
+    if (Date.now() > bis) { return false; }
+    await seite.waitForTimeout(500);
+  }
+}
+
 export async function nachDemPasswort(seite, { frist = 90000 } = {}) {
   try {
     await seite.waitForFunction(() => document.readyState !== 'loading'
@@ -400,6 +503,7 @@ export async function nachDemPasswort(seite, { frist = 90000 } = {}) {
   if (!zf.ok) { return { angemeldet: false, code: zf.code, meldung: zf.meldung }; }
   const angemeldet =
     (await seite.locator('input[name="password"], #codeform').count()) === 0;
+  if (angemeldet) { await paarAbwarten(seite); }
   return { angemeldet, code: zf.code,
            meldung: angemeldet ? '' : ((await seitenMeldung(seite)) || '(ohne Meldung der Seite)') };
 }

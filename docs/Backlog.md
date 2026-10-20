@@ -53,7 +53,8 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
 | Spanne | Zweig | seit |
 |---|---|---|
 | 380 bis 389 | `ccr-dd33b6e8-ismfm0`, für S11-12 `claude/s11-ortsdaten-schritt-12a-2cvh7h` — Schritt 12a, Konzept S11 (Ortsdaten, Weg B); vergeben: 380 bis 388 | 11.10.2026 |
-| ab 390 | frei — höchste vergebene Nummer 371; 372 bis 379 aus der Spanne von 12 blieben frei (PR #103), 362 bis 369 aus der von PK, 359 aus der von 18 (PR #101), 348 und 349 aus der von 17, 338 aus der von AR | 11.10.2026 |
+| 390 bis 399 | `claude/s11-ortsdaten-schritt-12a-2cvh7h` — Schritt 19, Konzept DM (drei Engines); vergeben: 390 bis 392 | 19.10.2026 |
+| ab 400 | frei — höchste vergebene Nummer 392; 372 bis 379 aus der Spanne von 12 blieben frei (PR #103), 362 bis 369 aus der von PK, 359 aus der von 18 (PR #101), 348 und 349 aus der von 17, 338 aus der von AR | 19.10.2026 |
 
 ---
 
@@ -1352,3 +1353,57 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      Quelldaten des Generators bauen, ohne Umweg über ein Konto.
      *Abnahme:* eine neu erzeugte Fixture setzt das Demo-Konto zurück, und
      die Riegelprobe ist in beiden Richtungen grün.
+
+
+<!-- -->
+
+390. **Jede Browserprobe lief in einer Engine, obwohl drei festgelegt waren.** · gehört zu: 19 · Stand: offen · seit 19.10.2026
+     *Aufgenommen 19.10.2026 mit Konzept DM (Abschnitt 1).* Nr. 183 hatte
+     drei Engines für Bilderlauf, Klickprobe und Stilvergleich beschlossen;
+     durchgesetzt wurde es nirgends. 22 von 32 Browserwerkzeugen starteten
+     Chromium fest, der Prüfstand übergab den übrigen zehn nie `--motor`,
+     Stufe 2 installierte nur Chromium, und seit dem Abbild vom 11.10.2026
+     lagen Firefox und WebKit nicht einmal mehr im Container (F-S11-20).
+     Ganz S11 lief deshalb in Chromium; gefunden hat es die Betreiberin an
+     P-S11-43, nicht ein Prüfmittel — keines verlangte eine zweite Engine.
+     *Weg (R87):* Standard-Setup lädt nach, jede Probe dreifach, der
+     Bericht nennt die Engines (`motoren=`), Stufe 1 liest es gegen, und
+     der Bestandsriegel (Regel `motoren`) hält jedes Werkzeug an das
+     Register `tools/pruefstand/motoren.md`.
+     *Abnahme:* Prüfstand und Stufe 2 grün in drei Engines.
+
+<!-- -->
+
+391. **Elf Browserwerkzeuge ruft kein Prüfstand.** · gehört zu: nächste Backlog-Runde · Stand: offen · seit 19.10.2026
+     *Aufgenommen 19.10.2026 in DM-03.* Beim Anlegen des Registers
+     `tools/pruefstand/motoren.md` fiel auf: Kopplungsrundlauf,
+     Betriebs- und Umstellungslauf der Anteilprobe, Klickweg der
+     Komplettprobe, sechs Werkzeuge unter `referenzdatensatz/browser/`
+     (Angriffswerte, CSV-Import, Demo-Bremse, Demo-Prüfung,
+     Papierkorb-Mischung, Referenzexport) und die Sichtprüfung des
+     Einspielens laufen nur, wenn jemand sie von Hand startet. Seit DM
+     können sie alle drei Engines, aber ob sie noch grün sind, weiß
+     niemand. Die Angriffswerte (R20) sind dabei die einzige Messung, dass
+     entschlüsselte Felder im Browser nicht als Markup gesetzt werden.
+     *Weg:* je Werkzeug entscheiden — in eine Probe hängen (Muster und
+     `"motoren": true`) oder löschen; „von Hand" bleibt nur mit Grund.
+     *Abnahme:* keine Zeile „von Hand" im Register ohne eigenen Grund.
+
+<!-- -->
+
+392. **Das Schlüsselpaar entsteht nur, wer auf der ersten Seite nach der Anmeldung bleibt.** · gehört zu: nächste Backlog-Runde · Stand: offen · seit 19.10.2026
+     *Aufgenommen 19.10.2026 in DM-02 (F-DM-02).* `unlock.js` legt das Paar
+     des Kontos (und den Rückweg) still an, sobald der Inhaltsschlüssel da
+     ist — und nur mit dem Anmelde-Token, das es allein auf der ersten
+     Seite nach der Anmeldung gibt. Die Freigabeprobe ging sofort auf
+     `einstellungen.php` weiter: In Chromium kam das Paar trotzdem an, in
+     Firefox und WebKit in keinem Lauf (2 von 2). Wartet sie auf der ersten
+     Seite, steht es nach 1152 ms (Firefox), 596 ms (WebKit), 599 ms
+     (Chromium). Wer die Seite schneller verlässt, hat bis zur nächsten
+     Anmeldung kein Paar: Geräte können nicht senden, eine Freigabe weist
+     mit „kein Schlüsselpaar" ab. Nicht gemessen: ob es ein Mensch je
+     schafft, und ob der Rückweg dasselbe Los hat.
+     *Weg:* das Token bis zum gelungenen Anlegen im Sitzungsspeicher
+     halten, oder das Anlegen auf der zweiten Seite nachholen.
+     *Abnahme:* die Freigabeprobe ohne Warten auf der ersten Seite grün,
+     in drei Engines.

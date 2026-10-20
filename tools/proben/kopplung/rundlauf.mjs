@@ -30,6 +30,7 @@
  * Rueckgabewert: 0 = alle Erwartungen erfuellt und keine Konsolenfehler.
  */
 import { mkdirSync } from 'node:fs';
+import { motorWahl, starten } from '../../motor.mjs';
 
 /* Denselben Neustart wie der Bilderlauf: Nodes fetch liest NODE_USE_ENV_PROXY
  * nur beim Prozessstart. Ohne Proxy geschieht hier nichts. */
@@ -43,7 +44,9 @@ if ((process.env.HTTPS_PROXY || process.env.https_proxy) && !process.env.NODE_US
 
 const MODUL = process.env.PLAYWRIGHT_MODUL
   || '/opt/node22/lib/node_modules/playwright/index.mjs';
-const { chromium } = await import(MODUL.startsWith('/') ? 'file://' + MODUL : MODUL);
+const PW = (m => m.default ?? m)(await import(MODUL.startsWith('/') ? 'file://' + MODUL : MODUL));
+/* Die Engine wählt der Läufer (MOTOR=… oder --motor), R87. */
+const MOTOR = motorWahl(process.argv);
 
 const argv = process.argv.slice(2);
 const wert = (n, s) => { const i = argv.indexOf(n); return i >= 0 ? argv[i + 1] : s; };
@@ -213,11 +216,16 @@ if (argv.includes('--selbstprobe')) {
 
 console.log(`Kopplungsrundlauf gegen ${BASIS} (Konto ${DEMO.email})`);
 
-const browser = await chromium.launch({ executablePath: BROWSER });
+/* Der feste Chromium-Pfad gilt nur für Chromium; Firefox und WebKit bringt
+ * Playwright selbst (R87). Wie im Bilderlauf, aufnehmen.mjs. */
+const browser = await starten(PW, MOTOR,
+  { finger: FINGER, optionen: MOTOR === 'chromium' ? { executablePath: BROWSER } : {} });
 const ctx = await browser.newContext({ ignoreHTTPSErrors: true,
   viewport: { width: BREITE, height: 900 }, hasTouch: FINGER });
 const seite = await ctx.newPage();
-const cdp = await ctx.newCDPSession(seite);
+/* CDP gibt es nur in Chromium; gebraucht wird es nur im Fingerlauf (unten).
+ * In Firefox und WebKit setzt `hasTouch` die Eingabeart allein. */
+const cdp = MOTOR === 'chromium' ? await ctx.newCDPSession(seite) : null;
 seite.on('console', m => {
   if (m.type() !== 'error') { return; }
   const ort = (m.location && m.location().url) || '';
@@ -365,7 +373,7 @@ await bild(seite, 'rundlauf-4-gekoppelt');
  * der Messung erneut gesendet. NUR im Fingerlauf: Am Zeigergeraet ist
  * `{enabled:false}` nicht das Gegenteil, sondern kippt beide Merkmale auf
  * `none`/`coarse` und misst denselben Fehler spiegelverkehrt. */
-if (FINGER) {
+if (FINGER && cdp) {
   await cdp.send('Emulation.setTouchEmulationEnabled',
     { enabled: true, maxTouchPoints: 5 }).catch(() => {});
 }

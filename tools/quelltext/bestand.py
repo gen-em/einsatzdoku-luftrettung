@@ -94,6 +94,21 @@ Pruefablauf.md 4:
              CLAUDE.md 5 nur, dass man es tun soll; gemessen hat es niemand,
              und alle vier Tabellen waren veraltet
 
+Seit Konzept DM (R87, Nr. 390) hält eine fünfzehnte Regel die
+Browserwerkzeuge an die drei Engines:
+
+  motoren    jede Datei unter tools/, die einen Browser startet, steht genau
+             einmal im Register tools/pruefstand/motoren.md, mit ihrem Weg:
+             `Probe: NAME` (eine Probe mit "motoren": true in
+             pruefablauf.json), `Helfer`, `von Hand`, `nur Chromium` oder
+             `kein Test` — die vier letzten mit Grund. Gestartet wird über
+             `starten()` aus tools/motor.mjs; ein `.launch(` daneben ist ein
+             Befund, außer bei `nur Chromium` und `kein Test`. Jede Probe mit
+             "motoren": true nennt das Register mindestens einmal. Erkannt
+             wird ein Browserstart an `.launch(`, `launchPersistentContext(`
+             oder `starten(` im Quelltext ohne Kommentare — ein Start über
+             eine Hilfsfunktion in einer anderen Datei sieht er nicht
+
 WIE ER LIEST — MIT DEN ECHTEN WERKZEUGEN, NICHT MIT NACHBAUTEN (BR-05).
 Drei Gegenprüfrunden haben gezeigt: Wer Markdown, PHP und Bash mit eigenen
 Mustern nachliest, liest jede Runde eine andere Randschreibweise anders als
@@ -164,7 +179,7 @@ LOSE_ERLAUBT = {'motor.mjs'}                 # E-BR-03 (4), beim Namen — kein 
 RUFER = ['tools/pruefstand/pruefablauf.json', 'tools/pruefstand/pruefen.sh',
          'docs/Sandbox-Setup.md']
 REGELN = ['form', 'anleitung', 'anlass', 'inventur', 'lose', 'probe', 'backlog',
-          'selbst', 'zeile', 'ablauf', 'tabelle', 'anlage', 'tor', 'design']
+          'selbst', 'zeile', 'ablauf', 'tabelle', 'anlage', 'tor', 'design', 'motoren']
 PROBEN_LAEUFER = 'tools/proben/proben.sh'
 QUELLTEXT = 'tools/quelltext/pruefen.sh'
 QUELLTEXT_ANLEITUNG = 'tools/quelltext/LIESMICH.md'
@@ -177,6 +192,9 @@ DESIGN_MARKE = '<!-- ERZEUGT von tools/erzeugen/design.py'
 AUSWAHL = 'tools/pruefstand/auswahl.py'
 PRUEFSTAND = 'tools/pruefstand/pruefen.sh'
 TOR = '.github/workflows/pruefung.yml'
+MOTOREN_REGISTER = 'tools/pruefstand/motoren.md'
+MOTOR_DATEI = 'tools/motor.mjs'
+MOTOREN_WEGE = ('Probe', 'Helfer', 'von Hand', 'nur Chromium', 'kein Test')
 # Was ohne config.php beim Laden abbricht (db.php prüft es in seinen ersten
 # Zeilen, Nr. 288) — erreicht eine Probe ohne Anlage eines davon, ist sie im
 # Tor rot.
@@ -191,7 +209,7 @@ SCHLUESSEL = {
     # `migration`); beim Aufnehmen von BR in den P5c-Zweig eingetragen.
     'oben': {'beschreibung', 'fassung', 'muster', 'proben', 'riegel', 'stufen', 'stufenregeln'},
     'riegel': {'beschreibung', 'proben'},
-    'probe': {'aufruf', 'bemerkung', 'braucht', 'demo', 'nach'},    # `demo`: R4-04, Nr. 322
+    'probe': {'aufruf', 'bemerkung', 'braucht', 'demo', 'motoren', 'nach'},    # `demo`: R4-04, Nr. 322; `motoren`: R87
     'muster': set(MUSTER_FELDER),
 }
 QUELLTEXT_SPRACHEN = ('.py', '.php')          # was der Riegel lesen kann — alles andere ist ein Befund
@@ -308,6 +326,16 @@ KENNUNGEN = {
     'design-marken': 'nicht genau vier Blöcke mit der Marke des Erzeugers',
     'design-abweichung': 'eine Tabelle weicht von der Ausgabe des Erzeugers ab',
     'design-mehrfach': 'eine Tabelle steht mehr als einmal',
+    'motoren-abbruch': 'die Gruppe motoren brach ab',
+    'motoren-register': 'das Register der Browserwerkzeuge fehlt',
+    'motoren-ohne-zeile': 'ein Browserwerkzeug ohne Zeile im Register',
+    'motoren-fremd': 'eine Zeile für eine Datei, die keinen Browser startet',
+    'motoren-doppelt': 'eine Datei steht zweimal im Register',
+    'motoren-weg': 'ein Weg, den es nicht gibt',
+    'motoren-grund': 'eine Ausnahme ohne Grund',
+    'motoren-direkt': 'ein Browserstart an starten() vorbei',
+    'motoren-probe': 'eine Zeile nennt eine Probe, die nicht dreifach läuft',
+    'motoren-verwaist': 'eine dreifache Probe, die das Register nicht nennt',
 }
 
 # Nur für die Selbstprobe: Werkzeuge, die als fehlend gelten sollen, und
@@ -929,7 +957,8 @@ def messen(wurzel):
     # zu viel in der Ablaufdatei still aus (Runde 4).
     for kennung, pruefung in (('selbst-abbruch', quelltext_pruefen), ('ablauf-abbruch', ablauf_pruefen),
                               ('tabelle-abbruch', tabelle_pruefen), ('anlage-abbruch', anlage_pruefen),
-                              ('tor-abbruch', tor_pruefen), ('design-abbruch', design_pruefen)):
+                              ('tor-abbruch', tor_pruefen), ('design-abbruch', design_pruefen),
+                              ('motoren-abbruch', motoren_pruefen)):
         try:
             if kennung in _ABBRUCH:
                 raise RuntimeError('eingebauter Abbruch der Selbstprobe')
@@ -1662,6 +1691,81 @@ def tor_pruefen(wurzel, alle, zahlen, ruf):
     return befunde
 
 
+JS_KOMMENTAR_RE = re.compile(r'/\*.*?\*/|(?<![:\'"\\])//[^\n]*', re.S)
+BROWSERSTART_RE = re.compile(r'\.launch(?:PersistentContext)?\(|\bstarten\(')
+DIREKT_RE = re.compile(r'\.launch(?:PersistentContext)?\(')
+
+
+def motoren_pruefen(wurzel, alle, zahlen, ruf):
+    """Regel `motoren` — startet jedes Browserwerkzeug über motor.mjs, und
+    steht es mit seinem Weg im Register (R87)?"""
+    werkzeuge = {}
+    for p in alle:
+        if not p.startswith('tools/') or not p.endswith(('.mjs', '.js')) or p == MOTOR_DATEI:
+            continue
+        code = JS_KOMMENTAR_RE.sub('', lies(wurzel, p))
+        if BROWSERSTART_RE.search(code):
+            werkzeuge[p] = bool(DIREKT_RE.search(code))
+    zahlen['motoren'] = len(werkzeuge)
+    if not werkzeuge:
+        return []
+    if MOTOREN_REGISTER not in alle:
+        return [bef('motoren-register', f'{MOTOREN_REGISTER} fehlt — {len(werkzeuge)} Browserwerkzeuge '
+                                        f'ohne Weg (R87)')]
+    try:
+        ablauf = json.loads(lies(wurzel, ABLAUF)).get('proben', {})
+    except (OSError, ValueError, AttributeError):
+        return []                               # die Regel `ablauf` meldet das
+    if not isinstance(ablauf, dict):
+        return []
+    drei = {n for n, d in ablauf.items() if isinstance(d, dict) and d.get('motoren') is True}
+    befunde, gesehen, genannt = [], {}, set()
+    for tab in gfm_tabellen(wurzel, MOTOREN_REGISTER):
+        if [k.lower() for k in tab['kopf'][:3]] != ['werkzeug', 'weg', 'grund']:
+            continue
+        for nr, zellen in tab['reihen']:
+            if len(zellen) < 3:
+                continue
+            (wtext, wcode), (weg, _), (grund, _) = zellen[0], zellen[1], zellen[2]
+            datei = (wcode[0] if wcode else wtext).strip()
+            weg, grund = weg.strip(), grund.strip()
+            if datei in gesehen:
+                befunde.append(bef('motoren-doppelt', f'{MOTOREN_REGISTER}:{nr}: {datei} steht schon in '
+                                                      f'Zeile {gesehen[datei]}'))
+                continue
+            gesehen[datei] = nr
+            if datei not in werkzeuge:
+                befunde.append(bef('motoren-fremd', f'{MOTOREN_REGISTER}:{nr}: {datei} '
+                                   + ('gibt es nicht' if datei not in alle else 'startet keinen Browser')))
+                continue
+            art = weg.split(':', 1)[0].strip()
+            if art not in MOTOREN_WEGE:
+                befunde.append(bef('motoren-weg', f'{MOTOREN_REGISTER}:{nr}: {datei}: Weg „{weg}" — '
+                                                  f'erlaubt sind {", ".join(MOTOREN_WEGE)}'))
+                continue
+            if art == 'Probe':
+                namen = [n.strip() for n in weg.split(':', 1)[1].split(',')] if ':' in weg else []
+                for n in namen or ['(keine)']:
+                    genannt.add(n)
+                    if n not in drei:
+                        befunde.append(bef('motoren-probe', f'{MOTOREN_REGISTER}:{nr}: {datei}: Probe „{n}" '
+                                           + ('gibt es nicht' if n not in ablauf else
+                                              'läuft nicht dreifach ("motoren": true fehlt)')))
+            elif gezeigt_leer(grund):
+                befunde.append(bef('motoren-grund', f'{MOTOREN_REGISTER}:{nr}: {datei}: „{art}" ohne Grund'))
+            if werkzeuge[datei] and art not in ('nur Chromium', 'kein Test'):
+                befunde.append(bef('motoren-direkt', f'{datei}: startet den Browser mit .launch( statt über '
+                                                     f'starten() aus {MOTOR_DATEI} — die Engine wählt sonst '
+                                                     f'niemand (R87)'))
+    for p in sorted(set(werkzeuge) - set(gesehen)):
+        befunde.append(bef('motoren-ohne-zeile', f'{p}: startet einen Browser, steht aber nicht in '
+                                                 f'{MOTOREN_REGISTER}'))
+    for n in sorted(drei - genannt):
+        befunde.append(bef('motoren-verwaist', f'Probe „{n}" läuft dreifach, aber keine Zeile in '
+                                               f'{MOTOREN_REGISTER} nennt sie — welches Werkzeug misst sie?'))
+    return befunde
+
+
 def bericht(befunde, zahlen):
     melde('Bestandsriegel — tools/ gegen docs/Pruefablauf.md 6 (Konzept BR)')
     melde()
@@ -1800,7 +1904,7 @@ ABLAUF_JSON = '''{
     "q-eins": {"aufruf": "bash tools/quelltext/pruefen.sh eins", "braucht": "nichts"},
     "q-zwei": {"aufruf": "bash tools/quelltext/pruefen.sh zwei", "braucht": "nichts"},
     "eins":   {"aufruf": "bash tools/proben/proben.sh eins", "braucht": "installation"},
-    "zwei":   {"aufruf": "bash tools/proben/proben.sh zwei", "braucht": "installation", "nach": ["eins"]},
+    "zwei":   {"aufruf": "bash tools/proben/proben.sh zwei", "braucht": "installation", "nach": ["eins"], "motoren": true},
     "android-bau": {"aufruf": "cd android && ./gradlew assembleDebug", "braucht": "android"},
     "uhr-stufe1":  {"aufruf": "bash tools/uhr-pruefstand/pruefstand.sh reihe liste.txt", "braucht": "uhr"}
   },
@@ -1812,6 +1916,14 @@ ABLAUF_JSON = '''{
     {"id": "uhr", "ab": "klein", "pfade": ["watch/**", "tools/uhr-pruefstand/**"], "proben": ["uhr-stufe1"], "anlass": "Nr. 2"}
   ]
 }
+'''
+
+MOTOREN_MD = '''# Register
+
+| Werkzeug | Weg | Grund |
+|---|---|---|
+| `tools/werkzeug/sicht.mjs` | Probe: zwei | |
+| `tools/erzeuger/logo.mjs` | kein Test | ein Erzeuger |
 '''
 
 TOR_YML = '''jobs:
@@ -1946,6 +2058,12 @@ def _grundbestand():
         'watch/source/App.mc': 'class App {}\n',
         'tools/uhr-pruefstand/LIESMICH.md': _anleitung('uhr-pruefstand', 'Anlass: Nr. 2 — die Uhr.', 'Uhr'),
         'tools/motor.mjs': 'export const x = 1;\n',
+        'tools/werkzeug/sicht.mjs': ("import { starten } from '../motor.mjs';\n"
+                                     "// ein Kommentar mit chromium.launch() zählt nicht\n"
+                                     "const b = await starten(PW, MOTOR);\n"),
+        'tools/erzeuger/logo.mjs': "const b = await chromium.launch();  /* ein Erzeuger */\n",
+        'tools/werkzeug/notiz.mjs': '/* Hier steht nur, dass man nie x.launch() ruft. */\nexport const y = 2;\n',
+        MOTOREN_REGISTER: MOTOREN_MD,
         'tools/werkzeug/LIESMICH.md': _anleitung('werkzeug', '**Anlass: Nr. 1** — ein erfundener Fehler.'),
         'tools/werkzeug/lauf.py': 'print(1)\n',
         'tools/werkzeug/unter/LIESMICH.md': _anleitung('werkzeug/unter', '', 'Unterteil'),
@@ -2212,7 +2330,8 @@ FAELLE = [
     ('GEGENPROBE: NAMEN mit Kommentar (Klammer), in Anführungszeichen, mit +=', None,
      _mehr(QUELLTEXT, 'NAMEN=(eins\n       zwei)\n', 'NAMEN=("eins"   # die erste (siehe unten)\n       )\nNAMEN+=(zwei)\n')),
     # zeile
-    ('zeile — cmark-gfm fehlt', 'zeile-werkzeug', _ohne('cmark-gfm')),
+    # Ohne cmark-gfm liest auch `motoren` sein Register nicht — ein Abbruch mit Namen, nicht grün.
+    ('zeile — cmark-gfm fehlt', ('zeile-werkzeug', 'motoren-abbruch'), _ohne('cmark-gfm')),
     ('zeile — die Anleitung fehlt', ('zeile-anleitung-fehlt', 'anleitung-fehlt'), _weg(QUELLTEXT_ANLEITUNG)),
     ('zeile — die Tabelle direkt unter einem zweizeiligen Listenpunkt (GitHub zeigt keine)', 'zeile-tabellen',
      _zelle('\n| Name | Prüft | Anlass |', '\n- ein Punkt\n  noch einer\n| Name | Prüft | Anlass |')),
@@ -2410,6 +2529,26 @@ FAELLE = [
     ('design — Design.md fehlt', 'design-doku-fehlt', _weg(DESIGN)),
     ('design — die Gruppe bricht ab', 'design-abbruch', _abbruch('design-abbruch')),
     ('GEGENPROBE: Text zwischen den Tabellen geändert', None, _mehr(DESIGN, 'Text.', 'Anderer Text.')),
+    # motoren — jede Browserprobe in drei Engines (R87, Konzept DM)
+    ('motoren — das Register fehlt', 'motoren-register', _weg(MOTOREN_REGISTER)),
+    ('motoren — ein Browserwerkzeug ohne Zeile (und seine Probe verwaist)', ('motoren-ohne-zeile', 'motoren-verwaist'),
+     _mehr(MOTOREN_REGISTER, '| `tools/werkzeug/sicht.mjs` | Probe: zwei | |\n', '')),
+    ('motoren — eine Zeile für eine Datei ohne Browserstart', 'motoren-fremd',
+     _mehr(MOTOREN_REGISTER, '| `tools/erzeuger/logo.mjs`', '| `tools/werkzeug/notiz.mjs` | von Hand | x |\n| `tools/erzeuger/logo.mjs`')),
+    ('motoren — eine Datei zweimal', 'motoren-doppelt',
+     _mehr(MOTOREN_REGISTER, '| `tools/erzeuger/logo.mjs` | kein Test | ein Erzeuger |\n',
+           '| `tools/erzeuger/logo.mjs` | kein Test | ein Erzeuger |\n| `tools/erzeuger/logo.mjs` | kein Test | noch einmal |\n')),
+    ('motoren — ein Weg, den es nicht gibt', 'motoren-weg', _mehr(MOTOREN_REGISTER, '| kein Test |', '| irgendwie |')),
+    ('motoren — eine Ausnahme ohne Grund', 'motoren-grund', _mehr(MOTOREN_REGISTER, '| ein Erzeuger |', '| |')),
+    ('motoren — ein Test startet Chromium selbst', 'motoren-direkt',
+     _mehr('tools/werkzeug/sicht.mjs', 'await starten(PW, MOTOR);', 'await chromium.launch();')),
+    ('motoren — die Probe der Zeile läuft nicht dreifach', 'motoren-probe',
+     _json(lambda a: a['proben']['zwei'].pop('motoren'))),
+    ('motoren — eine dreifache Probe, die keine Zeile nennt', 'motoren-verwaist',
+     _json(lambda a: a['proben']['eins'].__setitem__('motoren', True))),
+    ('GEGENPROBE: ein Erzeuger startet Chromium selbst und steht als „kein Test" da', None,
+     _mehr('tools/erzeuger/logo.mjs', '/* ein Erzeuger */', '/* weiter */')),
+    ('motoren — die Gruppe bricht ab', 'motoren-abbruch', _abbruch('motoren-abbruch')),
 ]
 
 

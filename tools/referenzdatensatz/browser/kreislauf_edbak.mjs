@@ -23,6 +23,7 @@
  */
 import { mkdirSync, writeFileSync, readdirSync } from 'node:fs';
 import { downloadMitFortschritt } from './download_lib.mjs';
+import { motorWahl, starten, paarAbwarten } from '../../motor.mjs';
 
 /* Die Referenzdatei NICHT mit Namen fest verdrahten.
  *
@@ -43,7 +44,9 @@ function referenzDatei(ordner) {
 
 const MODUL = process.env.PLAYWRIGHT_MODUL
   || '/opt/node22/lib/node_modules/playwright/index.mjs';
-const { chromium } = await import(MODUL.startsWith('/') ? 'file://' + MODUL : MODUL);
+const PW = (m => m.default ?? m)(await import(MODUL.startsWith('/') ? 'file://' + MODUL : MODUL));
+/* Die Engine wählt der Läufer (MOTOR=… oder --motor), R87. */
+const MOTOR = motorWahl(process.argv);
 
 const basis   = process.argv[2] || 'https://127.0.0.1:8443';
 const quelle  = process.argv[3]
@@ -56,7 +59,7 @@ mkdirSync(ordner, { recursive: true });
 
 const KACHELFEHLER = /ERR_TUNNEL_CONNECTION_FAILED|ERR_NAME_NOT_RESOLVED|tile\.|opentopomap|arcgisonline/i;
 const lokal = /^https:\/\/(127\.0\.0\.1|localhost)(:|\/)/.test(basis);
-const browser = await chromium.launch();
+const browser = await starten(PW, MOTOR);
 const kontext = await browser.newContext({ ignoreHTTPSErrors: lokal, acceptDownloads: true });
 /* DER WARTUNGSLAUF BLEIBT AUS (S11-07, F-S11-77): Er packt und dünnt im
    Browser aus, sobald eine Seite ihn anstößt (Startseite, Reiter Backup),
@@ -90,18 +93,11 @@ async function anmelden(mail, pw) {
   /* DAS SCHLÜSSELPAAR ABWARTEN (F-S11-71). Die erste Seite nach der
      Anmeldung legt es still an; wer vorher weitergeht, bricht das Anlegen ab,
      das Anmelde-Token ist verbraucht, und das Einspielen meldet „kein
-     Schlüsselpaar". Am 16.10.2026 einmal so geschehen. */
-  for (let i = 0; i < 40; i++) {
-    const stand = await seite.evaluate(async () => {
-      try {
-        const a = await EdApi.postJson('api/kontopaar.php', { aktion: 'zustand' });
-        return a && a.ok && a.daten ? a.daten.stand : null;
-      } catch (e) { return null; }
-    }).catch(() => null);
-    if (stand === 'da') { return true; }
-    await seite.waitForTimeout(500);
+     Schlüsselpaar". Am 16.10.2026 einmal so geschehen. Seit Konzept DM
+     steht die Schleife in `tools/motor.mjs` (`paarAbwarten()`). */
+  if (!(await paarAbwarten(seite))) {
+    befunde.push('Nach der Anmeldung entstand binnen 20 s kein Schlüsselpaar');
   }
-  befunde.push('Nach der Anmeldung entstand binnen 20 s kein Schlüsselpaar');
   return true;
 }
 
