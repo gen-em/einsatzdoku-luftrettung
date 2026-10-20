@@ -14,6 +14,57 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Werkzeug: Jede Browserprobe in drei Engines (R87, Konzept DM)] — 2026-10-19
+
+**Jede Browserprobe läuft jetzt in Chromium, Firefox und WebKit** — örtlich
+in jeder Stufe des Prüfstands und in Stufe 2 gegen Staging; fehlt eine
+Engine, ist die Probe rot. Nur `tools/`, `.github/` und `docs/` — keine
+Versionsstufe. Festgelegt waren drei Engines seit Nr. 183, durchgesetzt hat
+es nichts: 22 von 32 Browserwerkzeugen starteten Chromium fest, der
+Prüfstand gab den übrigen zehn nie eine andere Engine, Stufe 2 holte nur
+Chromium, und seit dem Abbild vom 11.10.2026 lagen Firefox und WebKit nicht
+einmal mehr im Container. Ganz S11 lief deshalb in einer Engine. Gefunden
+hat es die Betreiberin an einem Prüfpunkt, nicht ein Prüfmittel — keines
+verlangte eine zweite Engine, also fehlte nichts, was jemand hätte bemerken
+können (Nr. 390).
+
+**Was jetzt gilt.** Das Standard-Setup (`aufbauen.sh web`) lädt fehlende
+Engines mit dem Playwright des Abbilds nach, samt fünf WebKit-Bibliotheken,
+die es bisher nicht holte. Jedes Browserwerkzeug startet über `starten()`
+aus `tools/motor.mjs` und schreibt `Motor: <name> <fassung>` ins Protokoll —
+eine „grün in Firefox", die still Chromium startete, fiele sonst nicht auf.
+`pruefen.sh` fährt jede Probe mit `"motoren": true` einmal je Engine und
+schreibt `motoren=chromium+firefox+webkit` in den Bericht; Stufe 1 ist rot,
+wenn ein Bericht mit Browserproben die Zeile nicht trägt. Der
+Bestandsriegel hält mit der neuen Regel `motoren` jedes Werkzeug an das
+Register `tools/pruefstand/motoren.md`, wo sein Weg steht — Probe, Helfer,
+von Hand, nur Chromium oder kein Test, die letzten vier mit Grund. Die
+Regel ist Grundsatz 8 in `docs/Pruefablauf.md` und steht in `CLAUDE.md` 6.
+
+**Was der erste dreifache Lauf gefunden hat.** Zwei Proben waren in Firefox
+und WebKit rot. Die CSP-Probe erkannte eine Sperre nur am Wortlaut der
+Chromium-Konsole und hielt deshalb in den beiden anderen eine wirksame
+Richtlinie für wirkungslos; sie zählt jetzt das Ereignis
+`securitypolicyviolation`, das alle drei feuern. Die Freigabeprobe verließ
+die erste Seite nach der Anmeldung, bevor das Schlüsselpaar des Kontos
+stand — in Chromium kam es trotzdem an, in den beiden anderen nie. Die
+Probe wartet jetzt dort; **die Anwendung bleibt, wie sie ist**, weil ein
+Mensch, der die Seite so schnell verlässt, bis zur nächsten Anmeldung kein
+Paar hat, und das eine Änderung an `unlock.js` ist, also eine Web-Fassung
+(Nr. 392).
+
+**Bewusst so.** Was nur Chromium kann, läuft dort allein und steht mit Grund
+im Register: die CPU-Drossel (der Messstand misst gegen eine Grundlinie aus
+gedrosseltem Chromium und bleibt deshalb ganz bei Chromium) und der
+virtuelle Passkey-Authenticator (ein Weg der Bedienprobe, der in Firefox und
+WebKit „nur in Chromium" meldet). WebKit ist nicht Safari; ein echter
+Safari bleibt Handprüfung. Die Laufzeit der Browserproben ist ungefähr
+dreimal so lang, auch in der kleinsten Stufe — angenommen von der
+Betreiberin. Elf Browserwerkzeuge ruft kein Prüfstand; sie können jetzt drei
+Engines, ob sie grün sind, weiß aber niemand (Nr. 391). **Nicht gemessen:**
+Stufe 2 dreifach auf dem Läufer — das zeigt erst der erste Staging-Lauf nach
+dem Merge.
+
 ## [Web 23.0.0] — unveröffentlicht
 
 Schritt 12a, S11, Paket **S11-12 — die Aufräumauslieferung**. **Schema:**

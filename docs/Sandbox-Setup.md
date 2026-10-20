@@ -459,6 +459,7 @@ etwas anderes, als er glaubt.
 | **Plattformverhalten von Produktiv** | Es gibt keine Anlage, die Produktiv nachstellt. Die Plattformmatrix (2.2) misst dieselben Fassungen, nicht dieselbe Anlage. |
 | **Ein echtes Gerät** | Kein echter Data Layer, kein echter Schlüsselspeicher, kein gekoppeltes Gerät. Was der Emulator und der Uhr-Simulator dafür können und was nicht, steht in `android/LIESMICH.md` und `Geraete-Eingabe.md`. |
 | **Ein echtes Sicherungsziel** | Es wird keine Gegenstelle angefahren, die wirklich außer Haus schreibt. |
+| **Ein echter Safari** | Playwrights WebKit ist die Engine, nicht der Browser: ohne Apples Netzstapel, ohne iCloud-Schlüsselbund, ohne die Eigenheiten von iOS. Jede Browserprobe läuft in WebKit (R87); was nur Safari zeigt, bleibt Handprüfung in den Prüflisten (E-DM-04). |
 | **Docker ohne Maß** | Docker Hub drosselt anonyme Abrufe. Ein Lauf, der acht Abbilder holt, scheitert beim neunten mit 429 — und das sieht aus wie ein Netzfehler. |
 
 ### 6.1 Zwei Fallen, die Zeit kosten

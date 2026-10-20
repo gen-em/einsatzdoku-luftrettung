@@ -84,7 +84,6 @@ const { motorWahl, starten, codeSchritt } = await import(
   new URL('../motor.mjs', import.meta.url).href);
 
 const HIER = dirname(fileURLToPath(import.meta.url));
-const AUSGABE = join(HIER, 'ausgabe');
 
 const argv = process.argv.slice(2);
 const flag = (n) => argv.includes(n);
@@ -95,6 +94,10 @@ const DEMO   = { email: wert('--demo',  'demo@gen-em.org'),  pw: wert('--demo-pw
 const ADMIN  = { email: wert('--admin', 'admin@example.invalid'), pw: wert('--admin-pw', 'pruefstandzugang2026') };
 const FILTER = (wert('--nur', '') || '').split(',').filter(Boolean);
 const MOTOR  = motorWahl(argv);
+/* Je Engine ein Ordner (Konzept DM), wie im Bilderlauf: Der Prüfstand fährt
+ * die Probe dreimal hintereinander, und ein gemeinsamer Ordner hielte nur
+ * den Bericht des letzten Laufs. */
+const AUSGABE = join(HIER, MOTOR === 'chromium' ? 'ausgabe' : `ausgabe-${MOTOR}`);
 const BILDER = flag('--bilder');
 const MARKE  = wert('--marke', '');     // freie Beschriftung des Laufs im Bericht
 

@@ -30,7 +30,7 @@ nicht gibt.
 
 | Stück | Stand |
 |---|---|
-| Die sieben Grundsätze (1) | **gilt** |
+| Die acht Grundsätze (1) | **gilt**; der achte seit 19.10.2026 (R87, Konzept DM) |
 | Stationen A, D, E (2) | **gilt** — so läuft es heute |
 | Zweigschutz und Merge-Recht auf `main` (2, Station C) | **gilt seit 21.09.2026** (zwei Rulesets, PK-M1) |
 | Regeln für Prüfmittel (6) | **gilt** |
@@ -48,7 +48,7 @@ Abschnitt 2.4 nennt den Umfang von Station D mit Zahl.
 
 ---
 
-## 1. Die sieben Grundsätze
+## 1. Die acht Grundsätze
 
 1. **Jede Prüfung hat genau eine Stelle.** Sie steht hier, nicht in einem
    Kommentar und nicht im Gedächtnis.
@@ -76,6 +76,19 @@ Abschnitt 2.4 nennt den Umfang von Station D mit Zahl.
    noch einmal, wenn ein grüner PR-Lauf denselben Baum gemessen hat — und
    nennt dafür Lauf, Commit und Zeitpunkt. Ein Verweis mit Beleg, kein
    stilles Grün.
+8. **Jede Browserprobe läuft in Chromium, Firefox und WebKit.** Fehlt eine
+   Engine, ist die Probe rot, nicht übersprungen. Das gilt in jeder Stufe
+   des Prüfstands und in Stufe 2 (R87). Der Bericht nennt die Engines
+   (`motoren=chromium+firefox+webkit`), und das Tor liest es gegen (5.1);
+   welches Werkzeug auf welchem Weg dahin kommt, hält das Register
+   `tools/pruefstand/motoren.md`, und der Bestandsriegel zählt es nach.
+   **Was nur Chromium kann** — die CPU-Drossel, der virtuelle
+   Passkey-Authenticator, beides über CDP — läuft dort allein und steht mit
+   Grund im Register; die Probe läuft trotzdem in allen drei. **WebKit ist
+   nicht Safari:** Ein echter Safari bleibt Handprüfung in den Prüflisten.
+   *Bis zum 19.10.2026 lief jede Browserprobe in Chromium allein, obwohl
+   Nr. 183 drei Engines beschlossen hatte — durchgesetzt hat es kein
+   Prüfmittel, und ganz S11 lief in einer (Nr. 390).*
 
 ---
 
@@ -218,10 +231,15 @@ Hoster. Dazu ein benannter leerer Platz für Backlog Nr. 234 (8).
 die Anlage die Signatur des Rückwegs prüft — über `openssl` oder in reinem
 PHP —, zeigt nur der Hoster. Sie läuft nach dem Kreislauf, im selben Job.
 
-**Heutiger Umfang** (am Quelltext gezählt 29.09.2026, PK-06): Der Job heißt
+**Heutiger Umfang** (am Quelltext gezählt 19.10.2026, DM-04): Der Job heißt
 „Prüfung Stufe 2", hat **5** Schritte (Auschecken, Antwortprobe,
 Punktdateien, Kreislauf `edbak`, Rückwegprobe) und eine Zeitgrenze von
-20 Minuten; ohne Aktions-Cache (E-PK-54). **Gemessen an Lauf 99** (28.09.2026,
+40 Minuten; ohne Aktions-Cache (E-PK-54). **Kreislauf und Rückwegprobe
+laufen je Engine einmal** (Grundsatz 8, R87); der Schritt holt Firefox und
+WebKit samt Bibliotheken (`playwright install --with-deps`). *Bis zum
+19.10.2026: Chromium allein, 20 Minuten.* Wie lange der dreifache Lauf
+dauert und ob WebKit auf `ubuntu-26.04` startet, zeigt erst der erste Lauf
+nach dem Merge von Konzept DM — gemessen ist es noch nicht. **Gemessen an Lauf 99** (28.09.2026,
 `fc4253d`): Staging 35 s, Stufe 2 **3:16** — Kreislauf samt Installation
 44 s, Rückwegprobe 2:26. Bilderlauf und Kreislauf `csv` laufen seit dem
 21.09.2026 in Station B. Der Platz für Nr. 234 ist ein benannter Kommentar
@@ -284,9 +302,9 @@ nichts gelesen wird, misst gegen nichts.
 
 | Stufe | Auslöser | Umfang |
 |---|---|---|
-| **klein** | Korrekturstufe `a.a.Y`, oder kein Versionssprung | billige Riegel; je berührter Datei die zugeordneten Proben (4); Bilderlauf der berührten Seiten in drei Breiten, Chromium; Bedienprobe der berührten Seiten |
-| **neben** | Nebenstufe `a.X.a` | alles ohne Anlage: alle Proben gegen die örtliche Installation, beide Kreisläufe, Bilderlauf aller Seiten in zehn Breiten (seit R4-08; vorher acht), Chromium, Bedienprobe aller Seiten; Handy- und Uhr-Bau, wenn berührt |
-| **haupt** | Hauptstufe `X.a.a`, **eine neue Migration** (Stufenregel `migration`, 4; seit P5c/AP4) oder `--stufe haupt` | wie neben, dazu die **Plattformmatrix** (PHP 8.3.33 und 8.4; MariaDB 10.11 und 10.6, MySQL 8.0 und 8.4.0 — Schemaprobe und ein Kreislauf `edbak` je Paar), Bilderlauf mit allen drei Engines über alle Seiten, Messstand, Anteilprobe, Verbindungsprobe, Uhr-Prüfstand Stufe II |
+| **klein** | Korrekturstufe `a.a.Y`, oder kein Versionssprung | billige Riegel; je berührter Datei die zugeordneten Proben (4); Bilderlauf der berührten Seiten in drei Breiten; Bedienprobe der berührten Seiten — jede Browserprobe in drei Engines (Grundsatz 8) |
+| **neben** | Nebenstufe `a.X.a` | alles ohne Anlage: alle Proben gegen die örtliche Installation, beide Kreisläufe, Bilderlauf aller Seiten in zehn Breiten (seit R4-08; vorher acht), Bedienprobe aller Seiten, jede Browserprobe in drei Engines; Handy- und Uhr-Bau, wenn berührt |
+| **haupt** | Hauptstufe `X.a.a`, **eine neue Migration** (Stufenregel `migration`, 4; seit P5c/AP4) oder `--stufe haupt` | wie neben, dazu die **Plattformmatrix** (PHP 8.3.33 und 8.4; MariaDB 10.11 und 10.6, MySQL 8.0 und 8.4.0 — Schemaprobe und ein Kreislauf `edbak` je Paar), Messstand (Chromium allein, E-DM-06), Anteilprobe, Verbindungsprobe, Uhr-Prüfstand Stufe II |
 
 **Warum die Matrix in die Hauptstufe gehört und nicht in die Kette:** Der
 Export scheiterte am 21.09.2026 nicht an der Anwendung, sondern an einem
@@ -302,15 +320,15 @@ Anteil-, Verbindungs- und Schemaprobe (`plattform.sh schema`, vier
 Datenbanken, PHP des Containers) und den Bilderlauf. **Nicht gebaut
 sind:** PHP 8.3.33 als zweite Fassung, der Kreislauf `edbak` je Paar — auch
 der gegen MySQL 8.4.0 aus dem Absatz darüber; `kreislauf.py` kennt keine
-zweite Datenbank —, der Uhr-Prüfstand Stufe II und **Firefox und WebKit im
-Bilderlauf**: `aufnehmen.mjs` fährt einen Motor aus `--motor` (Vorgabe
-Chromium), und `--stufe haupt` ändert daran nichts. Die Zeile „haupt" oben ist damit **das Ziel, nicht der Stand**
+zweite Datenbank — und der Uhr-Prüfstand Stufe II. *Firefox und WebKit im
+Bilderlauf standen bis zum 19.10.2026 ebenfalls hier; seit Konzept DM läuft
+er in jeder Stufe dreifach.* Die Zeile „haupt" oben ist damit **das Ziel, nicht der Stand**
 (Backlog Nr. 300). Bis dahin fährt ein Paket in `haupt` die Teile, die es
 berühren, von Hand (`hochfahren.sh --php 8.3`) und nennt im Prüfdokument,
 was fehlt.
 
 **Eine Hauptstufe, die mit `--stufe klein` gefahren wurde, fällt im Tor
-auf** — das ist eine der fünf roten Lagen in 5.1.
+auf** — das ist eine der sechs roten Lagen in 5.1.
 
 ---
 
@@ -407,7 +425,8 @@ Zwei Dinge hängen mit daran, und beide sind gemessen:
 ## 5. Der Prüfbericht
 
 *Erzeugung gebaut mit PK-03, Gegenlesung im Tor mit PK-05 (`bericht.py`,
-Selbstprobe 13 Lagen / 0).*
+Selbstprobe 13 Lagen / 0; seit Konzept DM 16 Lagen / 0 mit der sechsten
+Lage).*
 
 Der Prüfstand schreibt am Ende einen Block, der in die Commit-Nachricht
 gehört und maschinell lesbar ist:
@@ -419,7 +438,7 @@ Prüfstand: neben · Baum a1b2c3d… · Konfiguration web
   handy=nicht berührt  uhr=nicht berührt
 ```
 
-### 5.1 Fünf Lagen, in denen das Tor rot wird
+### 5.1 Sechs Lagen, in denen das Tor rot wird
 
 - Der **Baum-Hash** ist nicht der Baum des Commits. Das fängt den Fehler,
   der in O9c passiert ist: gemessen wurde vor der letzten Änderung, gemeldet
@@ -441,7 +460,12 @@ Prüfstand: neben · Baum a1b2c3d… · Konfiguration web
 - Eine **Probe** meldet im Bericht etwas anderes als 0 — rot oder
   `nicht-gemessen` (E-PK-44, -46). Der Prüfstand druckt den Bericht auch
   nach einem roten Lauf; ein roter Lauf ist kein Nachweis, ein übersprungener
-  auch nicht.
+  auch nicht. Eine dreifache Probe meldet rot mit den Engines, die es waren
+  (`bedienprobe=rot:firefox,webkit`).
+- Der Bericht trägt eine **Browserprobe** (`"motoren": true` in
+  `pruefablauf.json`), aber nicht `motoren=chromium+firefox+webkit` — sie
+  ist dann in weniger als drei Engines gemessen (Grundsatz 8, seit Konzept
+  DM).
 
 Dazu rot, ohne eigene Lage: **kein Bericht** in der Nachricht des PR-Kopfs.
 Die Meldung sagt dann, wie er hineinkommt.

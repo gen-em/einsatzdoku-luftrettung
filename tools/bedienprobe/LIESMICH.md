@@ -23,7 +23,7 @@ Elf Wege `*-neuladen` (R4-11 zehn, SR-02 den für die Servereinstellungen; Nr. 2
 
 ## Was es braucht
 
-Eine laufende Installation und Chromium. Der Demo-Reset wird vor dem Lauf in die Zukunft gesetzt, damit er nicht mitten hinein fällt.
+Eine laufende Installation und die drei Engines (R87; der Prüfstand fährt sie mit `MOTOR=` nacheinander). Der Demo-Reset wird vor dem Lauf in die Zukunft gesetzt, damit er nicht mitten hinein fällt.
 Wege, die weder das Prüfkonto noch das Demo-Konto brauchen können — den Zweitfaktor einrichten —, legen mit `probekonto.mjs` ein eigenes Konto an und räumen es wieder ab (das Modul liegt neben `wege/`, weil der Läufer dort jede Datei als Wegdatei lädt).
 Braucht ein Weg einen Inhaltsschlüssel — das Paar des Rückwegs verpackt seinen privaten Teil damit (Konzept RW) —, legt `passwortSetzen()` das Konto über die Einladung an und setzt das Passwort im Browser auf `pw_handling.php`.
 Den QR-Code liest `vendor/jsQR.js` (1.4.0, Apache-2.0, nur Prüfwerkzeug; Nr. 298).
@@ -34,6 +34,6 @@ Den QR-Code liest `vendor/jsQR.js` (1.4.0, Apache-2.0, nur Prüfwerkzeug; Nr. 29
 
 ## Was es nicht kann
 
-Nichts sehen — ob eine Seite richtig aussieht, sagt der Bilderlauf. Und es
-fährt nur Chromium: Eine Bedienung, die in WebKit anders ausgeht, fällt
-ihm nicht auf.
+Nichts sehen — ob eine Seite richtig aussieht, sagt der Bilderlauf. Den Weg
+`einstellungen-profil-passkey` misst es nur in Chromium (CDP); Firefox und WebKit
+melden ihn als „nur in Chromium" (E-DM-05). Safari ist nicht WebKit.

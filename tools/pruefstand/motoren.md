@@ -22,7 +22,7 @@ ihre Fassung ins Protokoll schreibt (`Motor: firefox 142.0.1`). Ein eigenes
 
 | Werkzeug | Weg | Grund |
 |---|---|---|
-| `tools/bedienprobe/probe.mjs` | Probe: bedienprobe | Der Weg `einstellungen-profil-passkey` misst nur in Chromium (virtueller Authenticator über CDP, E-DM-05) und sagt es in Firefox und WebKit |
+| `tools/bedienprobe/probe.mjs` | Probe: bedienprobe | Zwei Stücke nur in Chromium (E-DM-05), in Firefox und WebKit benannt: der Weg `einstellungen-profil-passkey` (virtueller Authenticator über CDP) und im Weg `betrieb-server-schluesselwechsel` die Seitenzahl des Schlüsselblatts (`page.pdf()`) |
 | `tools/screenshots/aufnehmen.mjs` | Probe: bilderlauf | |
 | `tools/stilvergleich/stilvergleich.js` | Probe: stilvergleich | |
 | `tools/proben/abmelden/pruefe.mjs` | Probe: abmelde-probe | |

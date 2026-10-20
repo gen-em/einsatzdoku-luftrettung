@@ -67,7 +67,15 @@ export const wege = [
       const konsole = [];
       try {
         const s = await kontext.newPage();
-        s.on('console', m => { if (m.type() === 'error') { konsole.push(m.text()); } });
+        /* ABGEBROCHENE SCHRIFTABRUFE ZÄHLEN NICHT (Konzept DM, F-DM-08). Der
+         * Weg lädt die Seite neunmal schnell hintereinander; Firefox meldet
+         * dabei jede Schrift, deren Abruf das nächste Laden abbricht, als
+         * Fehler „downloadable font: download failed … status=2152398850" —
+         * das ist NS_BINDING_ABORTED, kein Fehler der Seite. Chromium und
+         * WebKit sagen dazu nichts. Jeder andere Schriftfehler zählt weiter. */
+        const abgebrochen = (text) => /downloadable font: download failed/.test(text)
+          && /status=2152398850\b/.test(text);
+        s.on('console', m => { if (m.type() === 'error' && !abgebrochen(m.text())) { konsole.push(m.text()); } });
         s.on('pageerror', e => konsole.push(String(e)));
 
         /* 1. Zeit bis zur Lösung — ab dem Beginn der Navigation, also mit

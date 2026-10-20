@@ -435,7 +435,7 @@ Stufe, steht in `docs/Pruefablauf.md`** — das ist die eine Stelle dafür. Die
 Arbeitsumgebung, ihre Ausbaustufen, die sieben Umgebungswerte und was sie
 **nicht** kann: `docs/Sandbox-Setup.md`.
 
-**Die sieben Grundsätze** (ausgeführt in `docs/Pruefablauf.md` 1):
+**Die acht Grundsätze** (ausgeführt in `docs/Pruefablauf.md` 1):
 
 1. **Jede Prüfung hat genau eine Stelle.** Sie steht dort — nicht in einem
    Kommentar, nicht im Gedächtnis.
@@ -448,6 +448,12 @@ Arbeitsumgebung, ihre Ausbaustufen, die sieben Umgebungswerte und was sie
    mit einer Backlog-Nummer. Ohne sie ist Stufe 1 rot (seit Konzept BR).
 6. **Geschichte steht im Commit, nicht im Werkzeug.**
 7. **Kein stilles Überspringen, keine grüne Zahl ohne Gegenstand.**
+8. **Jede Browserprobe läuft in Chromium, Firefox und WebKit** — in jeder
+   Stufe des Prüfstands und in Stufe 2. Fehlt eine Engine, ist die Probe
+   rot (R87, seit dem 19.10.2026). Ein neues Browserwerkzeug startet über
+   `starten()` aus `tools/motor.mjs` und bekommt eine Zeile im Register
+   `tools/pruefstand/motoren.md`; was nur Chromium kann, steht dort mit
+   Grund. WebKit ist nicht Safari — ein echter Safari bleibt Handprüfung.
 
 Fünf Sätze, die beim Arbeiten im Kopf sein müssen:
 

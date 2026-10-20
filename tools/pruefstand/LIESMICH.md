@@ -12,12 +12,12 @@ python3 tools/pruefstand/bericht.py lesen [--commit C] [--basis B] [--riegel n=w
 
 ## Was es misst
 
-`pruefen.sh` ermittelt die Stufe (Versionssprung; neue Migration heißt haupt),
-fährt die Anlage hoch, läuft Riegel und Proben der Berührung — vor jeder mit
-`demo: true` schiebt er die Demo-Marke (Nr. 322) — und **erzeugt** den
-Prüfbericht für die Commit-Nachricht. `auswahl.py` beantwortet
+`pruefen.sh` ermittelt die Stufe (Versionssprung; neue Migration heißt haupt), fährt
+die Anlage hoch, läuft Riegel und Proben der Berührung — vor `demo: true` schiebt er die
+Demo-Marke (Nr. 322), `motoren: true` fährt er in drei Engines (`MOTOR=…`, R87,
+`motoren.md`) — und **erzeugt** den Prüfbericht für die Commit-Nachricht. `auswahl.py` beantwortet
 „welche Probe zu welcher Datei" aus `pruefablauf.json`. `bericht.py lesen` ist
-die Gegenlesung in Stufe 1 (PK-05): fünf Lagen, Riegelzahlen als `--riegel`.
+die Gegenlesung in Stufe 1 (PK-05): sechs Lagen, Riegelzahlen als `--riegel`.
 
 ## Was es braucht
 
@@ -27,7 +27,7 @@ für `uhr-stufe1` `CIQ_GERAETE_URL`, für die Schemaprobe das Modul
 
 ## Erwartete Zahl
 
-`bericht.py lesen --selbstprobe` → **13 / 0**, `auswahl.py --selbstprobe` → **39 / 0**,
+`bericht.py lesen --selbstprobe` → **16 / 0**, `auswahl.py --selbstprobe` → **39 / 0**,
 `--abdeckung` → **0 ohne Muster**. `pruefen.sh` → 0 rot, 0 nicht gemessen, rc 0 (ohne
 Bericht rc 1); klein ohne `server/` die **20** Riegel, neben **44** (zuletzt 42 in 23 min, P5c/AP3).
 
@@ -37,4 +37,4 @@ Der Bericht ist ein **Nachweis, kein Riegel** (`docs/Pruefablauf.md` 5.2). Die S
 aus `server/version.php`; unlesbar ist rot, nicht „klein". `--gegen staging` misst
 **nur lesend** (E-PK-29) und schiebt keine Demo-Marke.
 
-*Anlass: O9c, Nr. 217, Nr. 267, Nr. 314, Nr. 322, Nr. 335, F-PK-30.*
+*Anlass: O9c, Nr. 217, Nr. 267, Nr. 314, Nr. 322, Nr. 335, Nr. 390, F-PK-30.*

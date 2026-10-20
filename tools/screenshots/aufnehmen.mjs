@@ -90,7 +90,6 @@ const { motorWahl, starten, codeSchritt, istEinrichtungstor, EINRICHTUNGSTOR_MEL
 
 const HIER   = dirname(fileURLToPath(import.meta.url));
 const WURZEL = join(HIER, '..', '..');
-const AUSGABE = join(HIER, 'ausgabe');
 
 const argv = process.argv.slice(2);
 const flag = (n) => argv.includes(n);
@@ -113,6 +112,12 @@ const SKALA  = flag('--klein') ? 1 : 2;
 const FINGER = flag('--finger');
 const FILTER = (wert('--nur', '') || '').split(',').filter(Boolean);
 const MOTOR  = motorWahl(argv);
+/* JE ENGINE EIN ORDNER (Konzept DM): Der Prüfstand fährt den Lauf dreimal
+ * hintereinander, und jeder Lauf leert seinen Ordner zuerst. Mit einem Ordner
+ * für alle stand nach dem Prüfstand nur der Bericht von WebKit da — der von
+ * Firefox mit seinem Konsolenfehler war weg. Chromium bleibt bei `ausgabe/`,
+ * weil Kontrast und Vergleich dort lesen. */
+const AUSGABE = join(HIER, MOTOR === 'chromium' ? 'ausgabe' : `ausgabe-${MOTOR}`);
 
 /* Fuer den Wartungsmodus einer FERNEN Installation — siehe den Block bei
  * `wartungAn()`. Ohne Token bleibt es beim lokalen Weg. */
