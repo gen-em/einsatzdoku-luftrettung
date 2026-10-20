@@ -9542,3 +9542,60 @@ zutreffen.
      WebKit einzeln gefahren (Prüfdokument DM 2), Stufe 2 in Lauf 133
      dreifach grün — Kreislauf `edbak` je 0 unerklärt, Rückwegprobe je
      21 von 21. Der volle Prüfstand einer Nebenstufe steht aus (P-DM-04).
+
+43. **Ortsdaten: die GPS-Spur ist nicht verschlüsselt — und das Transportziel auch nicht.** · gehört zu: 12a · Stand: erledigt · seit 30.08.2026
+     Befund: Einsatzort und Adresse sind Ende-zu-Ende verschlüsselt, die
+     Spur dorthin, die Koordinate jeder Phase (Phase 7 „Ankunft Klinik") und
+     `missions.transport_dest` mit `dest_lat`/`dest_lon` liegen im Klartext.
+     Der Ort ist nominell geschützt und faktisch rekonstruierbar. Der Server
+     rechnet mit den Koordinaten nicht; die Uhr hat keinen Schlüssel und kann
+     nur Klartext liefern (`Konzept-V1-Ortsdaten.md`).
+     Entschieden 06.09.2026 (R78): Weg C sofort (die Zusage eingegrenzt —
+     erledigt mit Web 15.6.0, Nr. 138); **Weg B als Schritt 12a (S11)** nach
+     P6 und vor der Öffnung: Konto-Schlüsselpaar (Nr. 53), Umfang Spur,
+     Phasenkoordinaten, Reanimationsereignisse und Zielklinik samt Koordinate
+     (ausdrücklich bestätigt 10.09.2026), Altbestand per Einmalwerkzeug im
+     Browser. Die Uhr kann es: ECDH P-256, AES-256-CBC, HMAC-SHA256 ab
+     Connect IQ 3.0.0. Skizze SP-9 in `Vorbereitung-Sicherheitspaket.md`.
+     Nicht vorgezogen, weil das Transportziel allein nichts verbirgt, solange
+     `mission_phases` die Koordinate der Ankunft trägt.
+     Werdegang bis 26.09.2026: `docs/Backlog.md@f5bddc2`, Nr. 43.
+     Erledigt 20.10.2026 mit Schritt 12a (S11, PR #106 und #111, Web 22.0.0
+     bis 23.0.0, Uhr 4.0.0, Android 0.18.0): Spur, Phasenorte, Reanimation
+     und Zielklinik verschlossen; Web 23.0.1 auf Produktiv, Migration durch.
+
+53. **Konto-Schlüsselpaar für versiegelte Serversicherungen.** · gehört zu: 12a · Stand: erledigt · seit 01.09.2026
+     Befund (E-S2-19): Nächtliche Backups je Konto ohne Browser sind
+     abgelehnt, weil der Server den Inhaltsschlüssel nicht hat und nicht
+     bekommen soll. Ein öffentlicher Schlüssel je Konto schlösse die Lücke:
+     Der Server versiegelt ohne Geheimnis, öffnen kann nur die NutzerIn.
+     Entschieden 06.09.2026 (R78): Dasselbe Paar ist der Schlüssel auf der
+     Uhr für Weg B (Nr. 43) — privater Teil unter dem Inhaltsschlüssel
+     gehüllt wie `pat_wrap_rc`, öffentlicher Teil ans Gerät; ein
+     Passwortwechsel berührt ihn nicht. Offen bleibt, ob ein Backup, das nur
+     die NutzerIn öffnen kann, für die Verwaltung eine Rückfallebene ist —
+     bei einem verlorenen Konto ist sie es nicht.
+     Werdegang bis 26.09.2026: `docs/Backlog.md@f5bddc2`, Nr. 53.
+     Erledigt 20.10.2026 mit Schritt 12a (S11-03, Web 22.0.0): Paar je Konto,
+     privater Teil unter dem Inhaltsschlüssel. Ein zweites Siegel über die
+     Konto-Backups entfällt (E-S11-06, Betreiberin 11.10.2026).
+
+161. **Aus einer Aufzeichnung ein Stück löschen können.** · gehört zu: 12a · Stand: erledigt · seit 08.09.2026
+     *Aufgenommen 08.09.2026 beim Bauen von Nr. 160.* Ein vergessener Dienst
+     zeichnet weiter auf — auch das Wochenende, auch den Weg nach Hause. Was
+     dabei hochgeladen wurde, lässt sich heute nur **ganz oder gar nicht**
+     loswerden: `trash_delete_day()` legt den Diensttag in den Papierkorb und
+     nimmt seine Ruhezeiten mit (`deleted_with_day = 1`), also auch den echten
+     Dienst, den man behalten will. Das Schneidewerkzeug (`api/schneiden.php`)
+     macht aus einem Stück Spur einen **Einsatz**; es löscht keines. Für
+     GPS-Daten, die im Klartext liegen und den Wohnort zeigen, ist das zu grob.
+     Behebung: In der Ansicht der Ruhezeiten einen Zeitraum wählen und dessen
+     Punkte löschen können — über `spur_lib.php`, nie unmittelbar per SQL
+     (CLAUDE.md 4), mit Rückfrage und einer Zeile im Protokoll.
+     Ziel 12a seit 26.09.2026 (R4-01, Q-R4-12): S11 verlegt die
+     Spurfunktionen in den Browser (Nr. 43); ein Schnitt über `spur_lib.php`
+     davor wäre dort neu zu bauen. **Gebaut in S11-05c** (Web 22.2.0, auf dem
+     Arbeitszweig): „Zeitraum löschen" im Schneide-Bereich; wandert mit dem
+     Abschluss von S11 nach `Backlog-Erledigt.md`.
+     Erledigt 20.10.2026 mit Schritt 12a (S11-05c, Web 22.2.0); auf Staging
+     von Hand offen (P-S11-22).

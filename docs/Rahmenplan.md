@@ -1,15 +1,15 @@
 # Rahmenplan — Programm „Gen-EM NAdoku" bis v1.0
 
-**Fassung 164 (20.10.2026)** · Steuerung: Reihenfolge, Status, programmweite
+**Fassung 165 (20.10.2026)** · Steuerung: Reihenfolge, Status, programmweite
 Entscheidungen. Verlauf: `Rahmenplan-Verlauf.md`. Fassungen 1–15:
 `Rahmenplan-Archiv.md`; Fassungen 16–124: `Rahmenplan-Archiv-2.md`.
 
-**Stand `origin/main`** (Commit `329566a`, gemessen 11.10.2026): Web 21.14.0 ·
-Uhr 3.1.0 · Android 0.17.0.
-**Läuft:** 12a — Konzept S11 auf `ccr-dd33b6e8-ismfm0`, freigegeben am 11.10.2026.
-**Als Nächstes:** S11-01 (Messstand, Grundlinie) auf dem Zweig von 12a — Reihenfolge in Abschnitt 3. Die Kette läuft seit #104 auf `ubuntu-26.04` (Nr. 236 erledigt).
-**Offene PRs:** der Abschluss von Nr. 236 (nur `docs/`).
-**Fällig bei der Betreiberin:** 37 Posten (Abschnitt 6.1). **`update.php`:** auf Staging erledigt (11.10.2026); auf Produktiv seit dem Tag `web-v21.14.0` nachsehen, dort auch die aus 10c und Web 21.3.0 (6.1).
+**Stand `origin/main`** (Commit `9135c50`, gemessen 20.10.2026): Web 23.0.1 ·
+Uhr 4.0.0 · Android 0.18.0; Web 23.0.1 auf Produktiv seit dem 20.10.2026.
+**Läuft:** nichts — 12a (S11) und 19 (DM) sind abgeschlossen.
+**Als Nächstes:** 12b — P6 Review mit Fable (Abschnitt 3); vor dem Beginn das Modell umstellen (CLAUDE.md 7).
+**Offene PRs:** der Abschluss von 12a (nur `docs/`).
+**Fällig bei der Betreiberin:** 39 Posten (Abschnitt 6.1). **`update.php`:** auf Staging und Produktiv am 20.10.2026 gelaufen (Web 23); ob dabei die älteren aus 6.1 mitliefen, unter Betrieb → Updates nachsehen.
 
 Kennungen sind Namen, keine Reihenfolge.
 
@@ -104,42 +104,26 @@ liest die 7.x-Sicherung genau einmal) · Rückwärtskompatibilität ab v1.0 (R60
 ## 3. Fahrplan — die nächsten Schritte
 
 Schrittnummern sind **Namen**, keine Reihenfolge; sie werden nie umvergeben.
-**Die Reihenfolge der offenen Schritte ist:** **12a** → 12b →
+**Die Reihenfolge der offenen Schritte ist:** **12b** →
 13 → 14; der Betriebsübergang folgt auf v1.0. Daneben, ohne Platz in
 der Reihe: die Paketschnitte von **11** und Teil C von **6** (seit SD-M1
 frei). **Warum so:** P6 liegt in zwei Hälften um S11 (R86): das
-**Bedrohungsmodell (12, abgeschlossen) vor S11 (12a)**, weil es dessen
+**Bedrohungsmodell (12, abgeschlossen) vor S11 (12a, abgeschlossen)**, weil es dessen
 Entwurfsfragen beantwortet hat — was Klartext bleibt, wie der Schlüssel aufs
 Gerät kommt (`docs/Bedrohungsmodell.md` 6, E-R17-09, -10) —, und der
 **Code-Review (12b) nach S11**, damit er die
 Krypto auf Uhr und Handy, SPUR2 und die Spurfunktionen im Browser mitliest
-und den Code genau einmal, in seiner Endfassung, liest. 12a vor der Öffnung,
-weil das Altbestand-Werkzeug ein einziges Konto voraussetzt.
+und den Code genau einmal, in seiner Endfassung, liest. 12a lag vor der Öffnung,
+weil das Altbestand-Werkzeug ein einziges Konto voraussetzte.
 
 | Schritt | Kennung | Inhalt | Voraussetzung | Konzept | Status |
 |---|---|---|---|---|---|
 | 6 | **S4 — Rest, Teil C** | Play Console nach R65: interner Test-Track für Handy und Uhr unter einem Eintrag, Versionscode-Versatz, Signaturweg; Android 1.0.0 (E-R45-7). Die Vorbereitung ohne D-U-N-S und Schlüssel ist gebaut (Android 0.13.0), die Gerätetests sind erfolgt (24.09.2026) | D-U-N-S, Organisationskonto und Play App Signing — erledigt 26.09.2026 (SD-M1); offen in 6.2: Wear-OS-Uhr, Demo-Video, Datensicherheitsformular | `docs/konzepte/Konzept-S4-Handy-Uhr-Client.md` 13; `Vorbereitung-Play-Console.md` | offen — Teile A bis C gemergt 04.09.2026 (PR #33, Abschnitt 8); Android 1.0.0 und der interne Test-Track können beginnen |
 | 11 | **Planung v1.0** | Festlegungen vor dem Schnitt (R65 bis R73, entschieden 03.09.2026); Ergebnis sind die Konzepte der Phasen P6 bis P8 mit je eigenem Paketschnitt (P6 nach der Freigaberunde des Reviews) | keine | `docs/konzepte/Konzept-Planung-v1.0.md` | gemergt 03.09.2026 — Festlegungen entschieden (R65–R73); offen nur die Paketschnitte, je mit dem Konzept zu 12b, 13 und 14 |
-| 12a | **S11 — Ortsdaten verschlüsselt (Weg B)** (R78) | Konto-Schlüsselpaar (Nr. 53); Uhr und Handy verschlüsseln Spur, Phasenkoordinaten, Reanimationsereignisse und Zielklinik vor dem Upload; Spurfunktionen wandern in den Browser; Altbestand per Einmalwerkzeug (Nr. 43) | 12 (das Bedrohungsmodell liegt vor); **vor der Öffnung** | `docs/konzepte/Konzept-S11-Ortsdaten-Weg-B.md` (Kürzel S11, Opus, E-S11-01), Prüfdokument daneben | freigegeben — 11.10.2026 auf `ccr-dd33b6e8-ismfm0`; Umsetzung ab S11-01 |
-| 12b | **P6 — Stücke 2 bis 12: Review und Bereinigung** | Bug- und Sicherheitsreview mit Fable über den Stand nach S11 (R17, R69, R86) — auch Uhr- und Android-Krypto, SPUR2, Browser-Spurfunktionen; Freigaberunde; Sofort-, Pflicht- und Aufräumpakete; Kommentardurchgang (R13, R31); R5-Ausnahmeliste | 12a gemergt | `docs/konzepte/Review-R17.md` (Fortsetzung aus 12); Paketschnitt nach der Freigaberunde | offen — nach 12a |
+| 12b | **P6 — Stücke 2 bis 12: Review und Bereinigung** | Bug- und Sicherheitsreview mit Fable über den Stand nach S11 (R17, R69, R86) — auch Uhr- und Android-Krypto, SPUR2, Browser-Spurfunktionen; Freigaberunde; Sofort-, Pflicht- und Aufräumpakete; Kommentardurchgang (R13, R31); R5-Ausnahmeliste | 12a gemergt (erfüllt 20.10.2026) | `docs/konzepte/Review-R17.md` (Fortsetzung aus 12); Paketschnitt nach der Freigaberunde | offen — als Nächstes; Modell Fable (CLAUDE.md 7) |
 | 13 | **P7 — Gesicht v1.0** | Umbenennung überall (Langform in den System-E-Mails entscheiden), neues Demo-Passwort (R25); Vertrag v1 (R12, Nr. 23); Doku-Neufassung, Handbuch als HTML im Release (R16, R72); Web-App-Manifest (R70); Changelog neu (R15); Backlog-Übernahme; Altformat der Sicherung weg (Nr. 46); Kommentarregel (R69) | 12b | eigenes Konzept nach K1 | offen — nach 12b |
 | 14 | **P8 — Schnitt** | Neuaufsetzen mit Übernahme per edbak (R40 (3), R60, Nr. 324); Migrationsregister neu (R66); Repo-Umzug und Inventur mit Begründung je Weglassung (R68); Kette im neuen Repositorium (R67, R40 (4)); Rechts- und Betreiberunterlagen (R41); Abnahme nach R11; Tags `web-v1.0.0`, `uhr-v…`, `android-v1.0.0` | 13 | eigenes Konzept nach K1 | offen — nach 13 |
 | — | **Betriebsübergang** | Öffnung in Wellen über die Betriebsarten (R41); Produktionsfreigabe in den Stores mit Welle 1 (R65; nach MDR-Abgrenzung und Rechtsunterlagen); mit Welle 1 entfällt die Seitenladung (`apk.php`, Handbuch 10.1); Garmin-Uhr über den Connect-IQ-Store; halbjährliche Probe-Wiederherstellung | v1.0 | — | offen — beginnt mit v1.0 (nach den Schritten 13 und 14); Wellen nach R41 |
-
-### Schritt 12a — S11 Ortsdaten verschlüsselt (Weg B)
-
-**Ziel:** Der Einsatzort ist nicht mehr aus der Datenbank rekonstruierbar.
-**Inhalt (R78, Nr. 43 und 53):** ein **Konto-Schlüsselpaar** (ECDH P-256),
-privater Teil unter dem Inhaltsschlüssel gehüllt, öffentlicher Teil ans
-Gerät; Uhr und Handy verschlüsseln Spur, Phasenkoordinaten,
-Reanimationsereignisse und Zielklinik vor dem Upload (Garmin: ECDH,
-AES-256-CBC, HMAC-SHA256; kein GCM); `seq` und Zeitstempel bleiben Klartext.
-**Preis:** Ausdünnung Stufe 3, GPX-Abruf, Schneiden, Verschieben, Ortshöhe
-und Zusammenführung wandern in den Browser oder entfallen; SPUR2 als Liste
-versiegelter Stücke, weiter nur über `spur_lib.php`; Vertrag, Uhr- und
-Android-Code, die nächste Nutzlastfassung der Sicherung. **Altbestand:** ein Einmalwerkzeug im Browser
-für das eine Konto vor der Öffnung, danach entfernt. **Rang:** Web, Uhr,
-Android Haupt. Die Webfelder gehen über `store => 'pat'` (E-S9-01) in den `pat_blob`; die Gerätedaten liegen in einer eigenen Hülle, weil das Gerät den Inhaltsschlüssel nicht hat (E-S11-12).
 
 ### Schritt 12b — P6, Stücke 2 bis 12: Review und Bereinigung
 
@@ -170,8 +154,7 @@ Backlog-Nummern verlangen die Gegenproben aus 2.2.
 
 | jetzt parallel möglich | nicht parallel |
 |---|---|
-| Konzeptarbeit zu allem; ein Abschluss nach K9 zu allem — er schreibt nur Buchführung | 12a → 12b → 13 → 14 nacheinander, nichts parallel (R71, R86) |
-| — | S11 (12a): Webfelder über `store => 'pat'` (E-S9-01), Gerätedaten in der Gerätehülle daneben (E-S11-12) |
+| Konzeptarbeit zu allem; ein Abschluss nach K9 zu allem — er schreibt nur Buchführung | 12b → 13 → 14 nacheinander, nichts parallel (R71, R86) |
 
 **Merge-Reihenfolge auf `main`:** ein Pull Request je Phase nach Freigabe
 (K7); nach jeder Migration `update.php`; nach einem fremden Merge nimmt jeder
@@ -221,6 +204,7 @@ gestrichen, 6a abgehakt; was steht, ist bestätigt offen.
 | **Zuarbeiten aus Kette II:** Aufbewahrung der Komplett-Stände auf Staging (Nr. 261, Vorschlag 5); `info.php` auf Staging löschen; Zweig `produktion` gegen Handpushes schützen; Hotfix-Weg beim ersten Hotfix | Kette II | 21.09.2026 | `Pruefdokument-Kette-Haertung.md`, 4a, 9, 27, 28 |
 | **Umgebung `staging` beschränken** (Deployment branches and tags): `main`, `hotfix/*` **und Tag `web-v*`** — ohne den Tag bleibt jede Produktivauslieferung am Job „Rückfallstand (Staging)" hängen | Kette II Z4 (E-PK-69) | 29.09.2026 | `Pruefdokument-Kette-Haertung.md`, Abgleich |
 | **Umgebung `produktion` beschränken** auf `main` und die Tags `web-v*`, `android-v*`, `uhr-v*` — ein Probelauf fordert sie heute von jedem Zweig an (F-R17-04); dabei Pflichtprüfer und Org-Zweitfaktor nachsehen | 12 (R17-01) | 11.10.2026 | `Pruefdokument-R17-Review.md`, P-R17-04 |
+| **Prüfliste S11:** Gerätetests Uhr 4.0.0 und Android 0.18.0 (P-S11-32 bis -35, -05, -39), Wege auf Staging (-14 bis -31), Safari (-43), Konto-Backup (-45), alte Sicherungen (-07, -08), Rechtstexte (-40) | 12a | 20.10.2026 | `Pruefdokument-S11-Ortsdaten.md` 4 |
 | **Prüfliste DM:** P-DM-02 (Registrierung in Firefox auf Staging: Knopf sofort frei), -03 (dasselbe in Safari), -06 (dasselbe auf Produktiv nach dem Tag `web-v23.0.1`, nur bei offener Registrierung); -04 im ersten Prüfstand einer Nebenstufe | 19 | 20.10.2026 | `Pruefdokument-DM-Drei-Motoren.md` 3 |
 | **Prüfliste R17:** P-R17-03 (Verweise auf das Modell nach dem Merge), -04 (Server-Anteil, CSP und HSTS auf Produktiv), -05 (Berechtigungen der Wear-Release-APK mit `aapt2`) | 12 | 11.10.2026 | `Pruefdokument-R17-Review.md` 4 |
 | **Plattformvergleich Staging vervollständigen:** vier leere Zellen (`max_user_connections`, Kontingent, Platz, Cron) und die Herkunft des Zertifikats aus Betrieb → Status | Kette II | 21.09.2026 | `Technik.md` 6.3a; Prüfpunkt 2c |
@@ -379,7 +363,7 @@ werden hier kompakt angehängt; **der Statussatz wird ersetzt, nicht ergänzt**
 | R75 | Rolle „BetreiberIn": dritte Rolle, kann alles, was ein Admin kann, sieht allein den Block Betrieb; das letzte Konto ist unlöschbar | erledigt (S8 AP1); vierte Rolle Support seit 10c AP4 | Archiv-2 7 |
 | R76 | Bedienhöhe in zwei Stufen: 44 px, am Zeigergerät ab 1024 px 36 px; Android bleibt bei 48 dp (R58) | erledigt (S8 AP7, Web 15.5.0) | Archiv-2 7 |
 | R77 | Drei Backup-Begriffe: Backup, Konto-Backup, Komplett-Backup; Verben sichern, einspielen, wiederherstellen | erledigt (S8 AP2, AP3) | Archiv-2 7 |
-| R78 | Krypto-Review vorgezogen; acht Beschlüsse: Sofortpaket 9a, S10, Zweitfaktor, CSP, Weg B als S11, Deploy-Tor, Photon-Schalter, Ersetzfenster 72 h | gilt; 9a, S10, Zweitfaktor (10c AP5, QR-Code E-P5c-41) und CSP (P5a AP4) erledigt; Weg B offen als Schritt 12a | Krypto-Review vom 05.09.2026 (gelöscht 11.10.2026 mit R17-04, Git-Historie; Stand je Befund in `Review-R17.md` 3.4), `Vorbereitung-Sicherheitspaket.md` |
+| R78 | Krypto-Review vorgezogen; acht Beschlüsse: Sofortpaket 9a, S10, Zweitfaktor, CSP, Weg B als S11, Deploy-Tor, Photon-Schalter, Ersetzfenster 72 h | gilt; 9a, S10, Zweitfaktor (10c AP5, QR-Code E-P5c-41) und CSP (P5a AP4) erledigt; Weg B erledigt mit Schritt 12a (S11, 20.10.2026) | Krypto-Review vom 05.09.2026 (gelöscht 11.10.2026 mit R17-04, Git-Historie; Stand je Befund in `Review-R17.md` 3.4), `Vorbereitung-Sicherheitspaket.md` |
 | R79 | Geocoding abschaltbar je Installation und je Konto; Dienstadresse als Einstellung | erledigt (S9 AP2) | Archiv-2 7 |
 | R80 | Ob ein Rettungsmittel Fähigkeiten führen darf, entscheidet sein Typ mit (`veh_caps_erlaubt()`) | erledigt (9d AP0, Web 20.3.0); Übersichten seit Schritt 15 nach Betriebsart und Fähigkeit (E-ZE-31); Nr. 198 nicht umgesetzt | Archiv-2 7 |
 | R81 | Plattformprofil hosterneutral in zwei Stufen (Muss, Empfohlen); `install.php` und Status prüfen es | gilt; gebaut in P5a AP2 | `Vorbereitung-P5-Plattformprofil.md`, E-PP-01 bis -04 |
@@ -441,6 +425,7 @@ die Aufräumfassung vom 24.09.2026 gelöscht hat (Archiv-2, Verlaufszeile 110).
 | 12 — Bedrohungsmodell (Review R17, Stück 1) | keine (`docs/`, zwei Zeilen `tools/quelltext/`) | 11.10.2026 · PR #103 | `Review-R17.md` bleibt für 12b (E-R17-02), Stand `30d7226` | `Pruefdokument-R17-Review.md` (P-R17-03 bis -05 offen, 6.1) | `docs/Bedrohungsmodell.md`: 5 Werte, 16 Lagen, 13 Zusagen mit Grenze, 20 Restrisiken; 31 Befunde (5 hoch) für 12b; Nr. 146 erledigt, 370 und 371 neu |
 | 18 — Sicherheitsrunde II (Konzept SR) | Web 21.7.0–21.14.0 | 05.10.2026 · PR #95, #101 | gelöscht 05.10.2026 (`0cbc19d`) | `Pruefdokument-SR-Sicherheitsrunde-II.md` (P-SR-04 bis -20 außer -15 offen, 6.1) | 9 Pakete, 2 Fable-Lesungen: Sitzungsbindung, Gerät merken, frischer Code, Passkeys, Schlüsselwechsel, Notzugang, `ingest.php` ohne Deadlock, Rechenaufgabe; Ziel 18: 10 erledigt, 1 umgehängt |
 | 19 — DM: drei Engines (R87) | Web 23.0.1, sonst Werkzeug | 20.10.2026 · PR #112–#114 | gelöscht (`3bedc25`) | `Pruefdokument-DM-Drei-Motoren.md` (P-DM-02, -03, -04, -06 offen, 6.1) | Firefox und WebKit im Setup, Start über `motor.mjs` mit Register und Riegel; ab `neben` und in Stufe 2 dreifach (Stufe 2 auf 24.04, Nr. 393); Nr. 390 erledigt |
+| 12a — S11: Ortsdaten verschlüsselt (Weg B, R78) | Web 22.0.0–23.0.0, Uhr 4.0.0, Android 0.18.0 | 20.10.2026 · PR #106, #111 | gelöscht (`0a6b926`) | `Pruefdokument-S11-Ortsdaten.md` (Gerätetests und Staging-Wege offen, 6.1) | Konto-Schlüsselpaar; Gerätehülle für Spur, Phasenorte, Reanimation; Zielklinik im `pat_blob`; Spurfunktionen im Browser; Klartext weg; Nr. 43, 53, 161 |
 
 ## 9. Pflege dieses Dokuments
 

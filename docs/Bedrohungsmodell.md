@@ -229,8 +229,9 @@ entscheiden muss. **Die BetreiberIn hat am 11.10.2026 entschieden**
 (`Review-R17.md` 2.1, E-R17-07 bis -12); die Entscheidung steht je Frage
 fett, die Lage davor bleibt als Begründung.
 
-**Umgesetzt in S11** (Web 22.0.0 bis 22.7.0, Uhr 4.0.0, Android 0.18.0;
-`docs/konzepte/Konzept-S11-Ortsdaten-Weg-B.md`). Die Abschnitte 6.1 bis 6.4
+**Umgesetzt in S11** (Web 22.0.0 bis 23.0.0, Uhr 4.0.0, Android 0.18.0;
+Konzept S11, gelöscht nach dem Abschluss am 20.10.2026, letzter Stand
+`0a6b926`). Die Abschnitte 6.1 bis 6.4
 bleiben als Begründung stehen; was daraus geworden ist, steht in G3 und im
 Baustein Gerätehülle (4.1). Kurz: 6.1 wie entschieden (die Zählung je Klinik
 rechnet der Browser); 6.2 Zweck Server, Frist für geparkte Pakete auf der
