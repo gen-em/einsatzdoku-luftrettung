@@ -8,7 +8,7 @@ Entscheidungen. Verlauf: `Rahmenplan-Verlauf.md`. Fassungen 1–15:
 Uhr 4.0.0 · Android 0.18.0; Web 23.0.1 auf Produktiv seit dem 20.10.2026.
 **Läuft:** Einschub Nr. 387 (Web 23.0.2) vor 12b; 12a (S11) und 19 (DM) sind abgeschlossen.
 **Als Nächstes:** 12b — P6 Review mit Fable (Abschnitt 3); vor dem Beginn das Modell umstellen (CLAUDE.md 7).
-**Offene PRs:** der Abschluss von 12a (nur `docs/`), danach Nr. 387 (Web 23.0.2).
+**Offene PRs:** Nr. 387 (Web 23.0.2).
 **Fällig bei der Betreiberin:** 36 Posten (Abschnitt 6.1). **`update.php`:** auf Staging und Produktiv nichts offen (Betreiberin, 20.10.2026, nach Web 23).
 
 Kennungen sind Namen, keine Reihenfolge.
