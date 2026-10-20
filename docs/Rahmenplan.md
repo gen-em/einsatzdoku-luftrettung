@@ -9,7 +9,7 @@ Uhr 4.0.0 · Android 0.18.0; Web 23.0.1 auf Produktiv seit dem 20.10.2026.
 **Läuft:** nichts — 12a (S11) und 19 (DM) sind abgeschlossen.
 **Als Nächstes:** 12b — P6 Review mit Fable (Abschnitt 3); vor dem Beginn das Modell umstellen (CLAUDE.md 7).
 **Offene PRs:** der Abschluss von 12a (nur `docs/`).
-**Fällig bei der Betreiberin:** 39 Posten (Abschnitt 6.1). **`update.php`:** auf Staging und Produktiv am 20.10.2026 gelaufen (Web 23); ob dabei die älteren aus 6.1 mitliefen, unter Betrieb → Updates nachsehen.
+**Fällig bei der Betreiberin:** 36 Posten (Abschnitt 6.1). **`update.php`:** auf Staging und Produktiv nichts offen (Betreiberin, 20.10.2026, nach Web 23).
 
 Kennungen sind Namen, keine Reihenfolge.
 
@@ -197,9 +197,7 @@ gestrichen, 6a abgehakt; was steht, ist bestätigt offen.
 | **Prüfliste BV:** P-BV-04 (Wertekasten Hintergrundjobs gegen `Technik.md` 4.97a), P-BV-07 (die zwei Rechtstexte: Höhe, Notizen, Abfahrtort), P-BV-09 (Textbaustein 11.5a neu übernehmen, nach P-P5c-40) | BV | 26.09.2026 | `Pruefdokument-BV-Backlog-Vorgriff.md` |
 | **Prüfliste BR:** P-BR-05 und -06 (Anlass-Zeilen und Nr. 304–313 lesen), P-BR-08 (beim nächsten Tag: das Produktionstor findet den Stufe-1-Lauf über `baumsuche.py`); freiwillig -03, -10, -11, -12 | BR | 24.09.2026 | `Pruefdokument-BR-Bestandsriegel.md` |
 | **Zwei tote Zweige löschen:** `claude/nice-lovelace-snlo8m` und `claude/pk05-tor-umbauen` — nichts Ungemergtes (F-R4-04); auf GitHub unter Branches | 17 (Q-R4-01, E-R4-15) | 26.09.2026 | `Pruefdokument-R4-Backlog-Runde-4.md`, P-R4-06 |
-| **`update.php` auf Produktiv nachsehen** — `web-v21.6.1` ist seit dem 28.09.2026 ausgeliefert (Lauf 36428081295); ausstehen können die Migrationen aus 10c und `…_days_created_at` (Web 21.3.0); auf Staging gelaufen (Stufe 2 grün, Lauf 101) | 10c, 17 (R4-15) | 28.09.2026 | `Technik.md` 6; P-R4-05 |
 | **Prüfliste R4:** P-R4-07 bis -23, je nach dem Deploy ihrer Fassung — Formular und Leseansicht, Konten, Demo-Reset, Handy, Verwerfen in der App, Statistik, Backlog auf GitHub | 17 | 28.09.2026 | `Pruefdokument-R4-Backlog-Runde-4.md` 4 |
-| **`update.php` auf Produktiv nachsehen** — Migrationen `…_vertraute_geraete` (Web 21.8.0) und `…_passkeys` (Web 21.10.0), seit dem Tag `web-v21.14.0` fällig; auf Staging erledigt (11.10.2026) | 18 (SR-02, SR-09) | 05.10.2026 | `Technik.md` 6; P-SR-06 |
 | **Prüfliste SR:** auf Staging P-SR-05, -07, -08 (mit -20 zuerst), -10, -11, -13, -14, -16 bis -19 — Gerät merken, Schlüsselwechsel, Notzugang, Passkeys und Rechenaufgabe an echten Geräten, Cookie-Absatz; freiwillig -09, -12 | 18 | 05.10.2026 | `Pruefdokument-SR-Sicherheitsrunde-II.md` 4 |
 | **Zuarbeiten aus Kette II:** Aufbewahrung der Komplett-Stände auf Staging (Nr. 261, Vorschlag 5); `info.php` auf Staging löschen; Zweig `produktion` gegen Handpushes schützen; Hotfix-Weg beim ersten Hotfix | Kette II | 21.09.2026 | `Pruefdokument-Kette-Haertung.md`, 4a, 9, 27, 28 |
 | **Umgebung `staging` beschränken** (Deployment branches and tags): `main`, `hotfix/*` **und Tag `web-v*`** — ohne den Tag bleibt jede Produktivauslieferung am Job „Rückfallstand (Staging)" hängen | Kette II Z4 (E-PK-69) | 29.09.2026 | `Pruefdokument-Kette-Haertung.md`, Abgleich |
@@ -214,7 +212,6 @@ gestrichen, 6a abgehakt; was steht, ist bestätigt offen.
 | **Ein `ftp`-Ziel, falls vorhanden, auf SFTP oder FTPS umstellen** — seit 10c AP8 fällt die Zielart ganz | S10 | 14.09.2026 | Archiv-2 6 |
 | **Wiederanlaufpaket um den Server-Anteil ergänzen** — vier Stücke: `config.php`, Serverschlüssel, Server-Anteil, Zugang zum Backup-Ziel (E-S10-17) | S10 | 14.09.2026 | Archiv-2 6 |
 | **Demo-Konto einmal „Auf Standard zurücksetzen"** (Adminbereich) — der Deploy legt nur die Fixture ab, das Konto zeigt bis zum nächsten Reset den alten Bestand | 9d | 15.09.2026 | Archiv-2 6 |
-| **`update.php` für S9/9a (drei Migrationen) und P5b (sechs)** auf Produktiv — laut Durchsicht vom 26.09.2026 weiter offen, obwohl Konzept PK zu M1 „Migrationen von Hand ausgeführt" sagt; unter Betrieb → Updates nachsehen | S9, 9a, 10b | 10.09.2026 | Archiv-2 6 |
 | **Abnahme S6:** je eine Kopplung mit Garmin-Uhr und Handy-App (Art und Modell in der Liste), eine Sitzung über 30 Minuten mit Bedienung, ein Leerlauf mit Abmeldung | S6 | 02.09.2026 | Archiv-2 6 |
 | **`tools/geraetemodelle/nachaufloesen.php` auf Produktiv fahren** — oder feststellen, dass der Nachlöse-Job aus P5a AP11 (Nr. 80 Teil 1) es schon getan hat | Nr. 80, R42 | 14.09.2026 | Archiv-2 6 |
 | **Das geplante Komplett-Backup einmal im Betrieb sehen** — Plan „täglich", ein Tag warten; erster Betriebsnachweis für Nr. 89 | S7 | 03.09.2026 | Archiv-2 6 |
