@@ -54,7 +54,8 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
 |---|---|---|
 | 380 bis 389 | `ccr-dd33b6e8-ismfm0`, für S11-12 `claude/s11-ortsdaten-schritt-12a-2cvh7h` — Schritt 12a, Konzept S11 (Ortsdaten, Weg B); vergeben: 380 bis 388 | 11.10.2026 |
 | 390 bis 399 | `claude/s11-ortsdaten-schritt-12a-2cvh7h` — Schritt 19, Konzept DM (drei Engines); vergeben: 390 bis 393 | 19.10.2026 |
-| ab 400 | frei — höchste vergebene Nummer 392; 372 bis 379 aus der Spanne von 12 blieben frei (PR #103), 362 bis 369 aus der von PK, 359 aus der von 18 (PR #101), 348 und 349 aus der von 17, 338 aus der von AR | 19.10.2026 |
+| 400 bis 409 | `claude/lucid-cannon-nvv86i` — Schritt 12b, Review R17 Stücke 2 bis 12 (Fortsetzung in `Review-R17.md`); vergeben: noch keine | 20.10.2026 |
+| ab 410 | frei — höchste vergebene Nummer 392; 372 bis 379 aus der Spanne von 12 blieben frei (PR #103), 362 bis 369 aus der von PK, 359 aus der von 18 (PR #101), 348 und 349 aus der von 17, 338 aus der von AR | 20.10.2026 |
 
 ---
 
