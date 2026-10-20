@@ -11523,8 +11523,9 @@ außerhalb der CI lag (E-S4-16) — berichtigt mit Nr. 236.)*
 ### 6.1a Der Läufer — ein festes Abbild statt `ubuntu-latest` (Nr. 236)
 
 **Alle zehn `runs-on`-Zeilen der Kette nennen ein festes Abbild**, nicht
-`ubuntu-latest`: neun seit dem 11.10.2026 `ubuntu-26.04`, der Job „Prüfung
-Stufe 2" seit dem 20.10.2026 `ubuntu-24.04` (die Ausnahme steht unten). Das Label `ubuntu-latest` wandert
+`ubuntu-latest`, und alle zehn `ubuntu-26.04` — neun seit dem 11.10.2026,
+der Job „Prüfung Stufe 2" wieder seit Nr. 393 (vom 20.10.2026 an stand er
+auf `ubuntu-24.04`; warum, steht unten). Das Label `ubuntu-latest` wandert
 vom 19.10. bis 19.11.2026 schrittweise von 24.04 auf 26.04; ein Lauf hätte
 in diesem Monat zufällig auf dem einen oder dem anderen Abbild gestanden,
 und ein Wechsel an einem Tag, an dem niemand etwas geändert hat, sucht man
@@ -11548,21 +11549,23 @@ Was das Abbild der Kette mitgibt und was sich dabei geändert hat (gemessen
   Vorgabe und bricht gegen den Dienstcontainer ab (`ERROR 2026: SSL is
   required`). `tools/schemaprobe/probe.php` ruft den Klienten `mariadb`
   deshalb mit `--skip-ssl` auf, den Klienten `mysql` nicht.
-- **Stufe 2 — die Ausnahme, seit dem 20.10.2026 auf `ubuntu-24.04`**
-  (Konzept DM, F-DM-13). Playwright 1.56 kennt Ubuntu 26.04 nicht und
-  lädt dort die Fassungen für 24.04. Für Chromium allein reichte das, mit
+- **Stufe 2 — Playwright aus dem Prüfstand, seit Nr. 393 wieder auf
+  `ubuntu-26.04`.** Playwright 1.56 kannte Ubuntu 26.04 nicht und lud dort
+  die Fassungen für 24.04. Für Chromium allein reichte das, mit
   `PLAYWRIGHT_HOST_PLATFORM_OVERRIDE=ubuntu24.04-x64` (11.10. bis
-  20.10.2026). Seit R87 läuft Stufe 2 aber auch in WebKit, und WebKit ist
-  gegen `libicuuc.so.74`, `libxml2.so.2`, `libvpx.so.9` und `libx264`
-  gebaut — die gibt es auf 26.04 nicht, auch nicht unter einem neueren
-  Paketnamen (Lauf 131 rot an `--with-deps`, Lauf 132 rot an einer
-  Namensersetzung, F-DM-12). Auf 24.04 unterstützt 1.56 alle drei Engines
-  offiziell; der Job installiert sie mit `install --with-deps`, ohne
-  Schalter. Playwright bleibt auf 1.56, weil der Prüfstand dieselbe Fassung
-  fährt (`docs/Sandbox-Setup.md`) und Stufe 2 sonst mit anderen Engines
-  mäße als der Bilderlauf. **Zurück auf 26.04 geht es mit dem Anheben von
-  Playwright auf 1.63 oder neuer** — erst diese Fassungen bringen eigene
-  Builds für 26.04 (Nr. 393).
+  20.10.2026). Seit R87 läuft Stufe 2 aber auch in WebKit, und WebKit aus
+  1.56 ist gegen `libicuuc.so.74`, `libxml2.so.2`, `libvpx.so.9` und
+  `libx264` gebaut — die gibt es auf 26.04 unter keinem Namen (Lauf 131 rot
+  an `--with-deps`, Lauf 132 rot an einer Namensersetzung, F-DM-12). Vom
+  20.10.2026 an lief der Job deshalb als einziger auf `ubuntu-24.04`
+  (F-DM-13). **Seit Nr. 393 fährt das ganze Projekt Playwright 1.64.1**,
+  das 26.04 als eigene Plattform führt: eigene Paketliste, eigener
+  WebKit-Build; Firefox lädt dort nach Playwrights eigener Zuordnung den
+  Build für 24.04. Die Fassung steht einmal, in der Zeile `PW_FASSUNG` von
+  `tools/sandbox/aufbauen.sh`; Stufe 2 liest sie dort und ist rot, wenn sie
+  keine findet. So misst Stufe 2 dieselben Engines wie der Prüfstand
+  (`docs/Sandbox-Setup.md` 1.3a). Der Job installiert sie mit `install
+  --with-deps` über das eben installierte Modul, nicht über `npx`.
 - **Uhr-Job:** `monkeyc` nahm das Java vom PATH, und das wechselte mit dem
   Abbild. Der Job setzt jetzt Java 17 per `actions/setup-java` fest — das
   Java, mit dem `uhr-v3.1.0` gebaut wurde. (Örtlich gemessen: das

@@ -155,10 +155,14 @@ function eigenschaften(css) {
    * allen dreien — 8 Auswahlfelder mal 13 Breiten, und die einzige geaenderte
    * Eigenschaft ist `contain`. Je Motor 14 bis 18 Sekunden.
    *
-   * `CHROMIUM=<pfad>` gilt weiter, aber nur fuer Chromium — Firefox und
-   * WebKit nimmt Playwright aus PLAYWRIGHT_BROWSERS_PATH. */
-  const auf = MOTOR === 'chromium'
-    ? { executablePath: process.env.CHROMIUM || '/opt/pw-browsers/chromium-1194/chrome-linux/chrome' }
+   * `CHROMIUM=<pfad>` gilt weiter, aber nur fuer Chromium. Ohne ihn nimmt
+   * Playwright jede Engine aus PLAYWRIGHT_BROWSERS_PATH, und zwar in der
+   * Fassung, die zu ihm gehoert. Bis Nr. 393 stand hier als Vorgabe der feste
+   * Pfad `chromium-1194` — das Chromium von Playwright 1.56. Nach dem
+   * Anheben haette der Vergleich damit ein Chromium gefahren, das kein
+   * anderes Pruefmittel mehr misst. */
+  const auf = MOTOR === 'chromium' && process.env.CHROMIUM
+    ? { executablePath: process.env.CHROMIUM }
     : {};
   const browser = await starten(PW, MOTOR, { optionen: auf });
   const seite = await browser.newPage();

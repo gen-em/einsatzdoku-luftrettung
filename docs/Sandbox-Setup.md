@@ -44,8 +44,10 @@ Gemessen am 21.09.2026.
 **Im Abbild vorhanden:** PHP **8.4.19** (mit `pdo_mysql`, `mysqli`,
 `openssl`, `gd`, `zip`, `mbstring`), Node **22.22** samt Playwright **1.56**
 und den Engine-Dateien unter `/opt/pw-browsers/` — am 21.09.2026 alle drei,
-seit dem Abbild vom 11.10.2026 **nur noch Chromium** (F-S11-20; Firefox und
-WebKit holt `aufbauen.sh` nach, 1.3), Python **3.11**
+seit dem Abbild vom 11.10.2026 **nur noch Chromium** (F-S11-20). **Das
+Playwright des Abbilds benutzt seit Nr. 393 kein Prüfmittel mehr:**
+`aufbauen.sh` hebt auf die Fassung in seiner Zeile `PW_FASSUNG` an (1.64.1)
+und lädt deren drei Engines (1.3), Python **3.11**
 (deadsnakes) mit `requests` und `cryptography`, Java, `socat`, `zip`,
 `unzip`, `git`, `curl`, `openssl`, Docker **29.3.1**. Vier Kerne, 15 GB
 Speicher.
@@ -64,7 +66,7 @@ prüft je Paket und holt nur, was fehlt.)*
 | **cmark-gfm** | die Quelltextprüfungen `handbuch` — rendern Handbuch und „Was ist NAdoku"? (seit BR-03) — und `bestand`, die die Tabelle der Quelltextprüfungen so liest, wie GitHub sie zeigt (seit BR-05) |
 | **Python `jsonschema`** | `tools/referenzdatensatz/quelldaten/pruefen.py` |
 | **Python `pyftpdlib`, `paramiko`, `pyopenssl`** | die Gegenstellen der Versandprobe (`tools/proben/versand/gegenstellen.py`); ohne `pyopenssl` fehlt FTPS, und alle drei Nachbauten brechen ab (RP-01) |
-| **Firefox und WebKit** (`firefox-1495`, `webkit-2215`) — seit dem Abbild vom 11.10.2026 (F-S11-20); nachgeladen seit Konzept DM (1.3) | jede Browserprobe — sie läuft in drei Engines und ist rot, wenn eine fehlt (R87, `Pruefablauf.md` 1, Grundsatz 8) |
+| **Playwright 1.64.1 und seine drei Engines** (`chromium-1248`, `firefox-1555`, `webkit-2370`) — das Abbild bringt 1.56.1 und nur dessen Chromium; angehoben seit Nr. 393, Engines nachgeladen seit Konzept DM (1.3) | jede Browserprobe — sie läuft in drei Engines und ist rot, wenn eine fehlt (R87, `Pruefablauf.md` 1, Grundsatz 8) |
 | **Neun Systembibliotheken für WebKit** (`libenchant-2-2`, `libsecret-1-0`, `libwayland-server0`, `libmanette-0.2-0`, seit 19.10.2026 dazu `libgtk-4-1`, `libevent-2.1-7t64`, `libgstreamer-plugins-bad1.0-0`, `libavif16`, `libgles2`) — Firefox startet ohne sie, WebKit nicht (die ersten vier gemessen 26.09.2026: entfernt, Start versucht, wieder geholt; Backlog Nr. 301; die fünf weiteren nannte Playwright am 19.10.2026, F-DM-01) | jede Probe in WebKit (R87) |
 | **Android-SDK** (Plattform 37.0, Build-Tools 36.0.0, `cmdline-tools` 23.0) | `./gradlew build` im Ordner `android/`; `cmdline-tools` unter 23.0 legt AVDs mit API 37 falsch an (F-AR-18) |
 | **Emulator, Abbilder API 37, `lz4`, `cpio`, `libpulse0`** | `android/werkzeuge/emulator.sh` — der Emulatorlauf nach `Pruefablauf.md` 6.9 |
@@ -138,19 +140,51 @@ einer Engine. Seit R87 läuft jede Browserprobe in drei, und eine fehlende
 Engine ist rot — also holt das Standard-Setup sie (E-DM-03).
 
 **Was `aufbauen.sh web` tut:** zuerst die neun Bibliotheken (sonst lädt
-Playwright herunter und bricht danach an der eigenen Prüfung ab), dann je
-Engine nachsehen, ob `$PLAYWRIGHT_BROWSERS_PATH/<name>-<rev>` liegt, und nur
-die fehlenden mit dem Playwright des Abbilds nachladen. Das zieht genau die
-Fassung, die zu ihm gehört — für 1.56 `firefox-1495` und `webkit-2215` —, und
-keine zweite daneben; die Sorge von 1.2 ist damit beantwortet, nicht
-übergangen. Der Nachweis startet danach alle drei einzeln.
+Playwright herunter und bricht danach an der eigenen Prüfung ab), dann
+Playwright selbst in der Fassung `PW_FASSUNG`, dann `playwright install
+chromium firefox webkit`. Playwright überspringt dabei, was in seiner Fassung
+schon liegt, und lädt nur den Rest. Der Nachweis prüft danach die Fassung und
+startet alle drei Engines einzeln.
 
-*Gemessen am 19.10.2026:* Firefox und WebKit beiseitegelegt,
+*Gemessen am 19.10.2026, noch mit 1.56:* Firefox und WebKit beiseitegelegt,
 `aufbauen.sh web` gefahren — „nachladen: firefox webkit", danach Chromium
 141.0.7390.37, Firefox 142.0.1, WebKit 26.0, Rückgabewert 0, 12 s. **Nicht
 gemessen:** das Nachholen der fünf neuen Bibliotheken aus einem Abbild, dem
 sie fehlen — sie lagen nach dem ersten Lauf vor, und sie zu entfernen hätte
 abhängige Pakete mitgerissen.
+
+### 1.3a Playwright wird angehoben — seit Nr. 393
+
+**Warum nicht das Playwright des Abbilds:** 1.56 hat keine WebKit-Fassung
+für Ubuntu 26.04, und Stufe 2 musste deshalb als einziger Job der Kette auf
+24.04 laufen (F-DM-13). Stufe 2 allein anzuheben hätte sie andere Engines
+messen lassen als den Prüfstand. Angehoben wird deshalb beides, und die
+Fassung steht **einmal**: in der Zeile `PW_FASSUNG` von
+`tools/sandbox/aufbauen.sh`. Stufe 2 liest sie dort und ist rot, wenn sie
+keine findet.
+
+**Wie:** Das Abbild legt `/opt/node22/lib/node_modules/playwright` als
+Verweis nach `/opt/node-tools/`, wo auch `eslint`, `prettier` und andere
+liegen. `aufbauen.sh` installiert die Fassung in ein eigenes Verzeichnis
+(`/opt/playwright-<Fassung>`) und biegt nur diesen Verweis und die beiden
+unter `/opt/node22/bin/` um. Damit gelten die rund 35 Rückfallpfade der
+Werkzeuge weiter, und `node-tools` bleibt, wie das Abbild es brachte. Liegt
+dort statt des Verweises ein echtes Verzeichnis, wird es beiseitegelegt
+(`playwright.abbild-<Fassung>`); sonst legte `ln -sfn` den Verweis hinein. Die
+Engines des Abbilds (`chromium-1194` und, falls vorhanden, `firefox-1495`,
+`webkit-2215`) bleiben liegen; kein Werkzeug startet sie mehr. Die
+Sorge aus 1.2, ein Nachladen lege eine zweite, abweichende Fassung daneben,
+ist damit nicht übergangen, sondern umgedreht: Die abweichende Fassung ist
+die des Abbilds, und sie ist abgehängt.
+
+**Wer `PLAYWRIGHT_MODUL` setzt,** bekommt keine Anhebung — `aufbauen.sh`
+fasst eine fremde Installation nicht an. Der Nachweis misst ihre Fassung
+trotzdem und ist rot, wenn sie nicht `PW_FASSUNG` ist.
+
+*Gemessen am 20.10.2026:* erster Lauf „anheben: 1.56.1 -> 1.64.1", danach
+`playwright 1.64.1`, Chromium 156.0.8078.4, Firefox 157.0, WebKit 27.2,
+41 s; zweiter Lauf „liegt: 1.64.1", nichts geladen, 3,9 s. Keine neue
+Systembibliothek nötig — die neun aus 1.3 genügten.
 
 ---
 
@@ -174,7 +208,8 @@ Der Hook ruft `web`. Wer mehr braucht, ruft nach.
 ### 2.1 Die Nachweistabelle
 
 Jeder Lauf endet mit einer Tabelle, die **je Stück die Fassung nennt** — die
-drei Engines **einzeln**, die acht Umgebungswerte mit ihrer Länge, nie mit
+drei Engines **einzeln**, davor die Fassung von Playwright gegen
+`PW_FASSUNG` (seit Nr. 393), die acht Umgebungswerte mit ihrer Länge, nie mit
 ihrem Wert. Der Grund steht in `Pruefablauf.md` 6.5: „3 Browser da" sagt
 nicht, welcher fehlt, und es fehlt immer nur einer. Der Prüfbericht führt
 diese Tabelle mit (`Pruefablauf.md` 5).
@@ -368,6 +403,7 @@ acht darüber: **Ein eingecheckter Zugang ist ein Zugang.**
 | Docker Hub (drosselt, 429 nach rund acht Abrufen) | `php.net` |
 | `deb.debian.org` **über HTTPS** | jeder Port außer 443 |
 | `cdn.playwright.dev`, `playwright.download.prss.microsoft.com` | |
+| `registry.npmjs.org` — für die Anhebung von Playwright (1.3a, 20.10.2026) | |
 | Maven Central — **aber gedrosselt**: `repo.maven.apache.org` 13 von 20 Abrufen `429` (24.09.2026) | |
 | Googles Spiegel `maven-central.storage-download.googleapis.com` (10 von 10) | |
 | Staging und dessen Webmail | |

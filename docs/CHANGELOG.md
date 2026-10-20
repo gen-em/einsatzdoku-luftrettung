@@ -14,6 +14,57 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Werkzeug: Playwright 1.64.1, Stufe 2 wieder auf Ubuntu 26.04 (Nr. 393)] — 2026-10-20
+
+**Das ganze Projekt fährt Playwright 1.64.1, und Stufe 2 läuft wieder auf
+`ubuntu-26.04` wie alle anderen Jobs.** Nur `tools/`, `.github/` und
+`docs/`, keine Versionsstufe. Seit dem Vormittag lief Stufe 2 als einziger
+Job auf 24.04 (F-DM-13): Playwright 1.56 hatte für 26.04 keine
+WebKit-Fassung, und die für 24.04 ist gegen Bibliotheken gebaut, die es
+auf 26.04 nicht gibt. Seit 1.63 führt Playwright 26.04 als eigene
+Plattform, mit eigener Paketliste und eigenem WebKit-Build; Firefox lädt
+dort nach Playwrights eigener Zuordnung den Build für 24.04. Gewählt ist
+1.64.1, die neueste stabile Fassung, nicht die kleinste, die reicht: Der
+Abstand bis zum nächsten Anheben ist so am größten. Die Engines springen
+mit: Chromium 141 auf 156, Firefox 142 auf 157, WebKit 26.0 auf 27.2.
+
+**Warum im ganzen Projekt und nicht nur in Stufe 2:** Stufe 2 soll
+dieselben Engines messen wie der Prüfstand. Deshalb steht die Fassung jetzt
+**einmal**, in der Zeile `PW_FASSUNG` von `tools/sandbox/aufbauen.sh`.
+Stufe 2 liest sie dort und ist rot, wenn sie keine findet. Bis dahin stand
+`playwright@1.56` zweimal im Workflow, und daneben stand im Abbild
+dieselbe Zahl ein drittes Mal. Gleich gehalten hat sie nur die Sorgfalt.
+Stufe 2 installiert die Engines über das eben installierte Modul, nicht
+über `npx playwright@…`. Sonst zöge `npx` eine zweite Kopie, die nur
+zufällig dieselbe ist.
+
+**Wie die Arbeitsumgebung anhebt:** Das Abbild legt
+`/opt/node22/lib/node_modules/playwright` als Verweis nach
+`/opt/node-tools/`, wo auch `eslint`, `prettier` und andere liegen.
+`aufbauen.sh` installiert deshalb in ein eigenes Verzeichnis
+(`/opt/playwright-1.64.1`) und biegt nur diesen Verweis um. So gelten die
+rund 35 Rückfallpfade der Werkzeuge weiter, ohne dass eines angefasst
+wird. Die Engines lädt jetzt immer `playwright install`, und Playwright
+überspringt, was in seiner Fassung schon liegt. Bis dahin sah der Schritt
+nur nach, ob irgendein `chromium-*` lag. Nach dem Anheben hätte das alte
+`chromium-1194` des Abbilds genügt, und der Fehler wäre erst beim Start
+aufgefallen. Der Nachweis nennt die Fassung von Playwright jetzt mit und
+ist rot, wenn sie nicht `PW_FASSUNG` ist. Gemessen: erster Lauf 41 s,
+zweiter 3,9 s ohne Download; keine neue Systembibliothek nötig.
+
+**Eine Stelle hätte das Anheben still überlebt:** `stilvergleich.js` nahm
+als Vorgabe den festen Pfad `chromium-1194`. Nach dem Anheben hätte der
+Stilvergleich ein Chromium gefahren, das kein anderes Prüfmittel mehr
+misst. Er nimmt jetzt wie alle das Chromium seines Playwright;
+`CHROMIUM=<pfad>` gilt weiter.
+
+**Was bewusst stehen bleibt:** die Engines des Abbilds unter
+`/opt/pw-browsers`. Sie stören nicht, und sie zu löschen hieße, ins Abbild
+einzugreifen. **Was erst nach dem Merge gemessen wird:** Stufe 2 auf
+26.04. Sie läuft nur nach einem Push auf `main`, auf dem Arbeitszweig
+lässt sie sich nicht belegen. Bleibt sie rot, ist der Rückweg eine Zeile
+(`runs-on`), und die Fassung bleibt angehoben.
+
 ## [Web 23.0.2] — unveröffentlicht
 
 Backlog Nr. 387, Einschub vor Schritt 12b. Kein Schema.

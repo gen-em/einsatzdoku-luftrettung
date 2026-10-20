@@ -239,13 +239,15 @@ PHP —, zeigt nur der Hoster. Sie läuft nach dem Kreislauf, im selben Job.
 Punktdateien, Kreislauf `edbak`, Rückwegprobe) und eine Zeitgrenze von
 40 Minuten; ohne Aktions-Cache (E-PK-54). **Kreislauf und Rückwegprobe
 laufen je Engine einmal** (Grundsatz 8, R87); der Schritt holt alle drei
-samt Bibliotheken mit `playwright install --with-deps`. **Der Job läuft
-deshalb auf `ubuntu-24.04`, als einziger der Kette** (F-DM-13,
-`docs/Technik.md` 6.1a): Playwright 1.56 hat für Ubuntu 26.04 keine
-WebKit-Fassung, und die für 24.04 braucht Bibliotheken, die es dort nicht
-gibt. *Bis zum 19.10.2026: Chromium allein, 20 Minuten, auf 26.04. Die
-ersten beiden dreifachen Läufe (131 und 132, 20.10.2026) brachen auf 26.04
-an den Bibliotheken ab, bevor sie maßen (F-DM-12).*
+samt Bibliotheken mit `playwright install --with-deps`, **in der Fassung
+des Prüfstands**: Sie steht einmal, in `PW_FASSUNG` von
+`tools/sandbox/aufbauen.sh`, und der Schritt liest sie dort (seit Nr. 393,
+`docs/Technik.md` 6.1a). Der Job läuft auf `ubuntu-26.04` wie alle.
+*Bis zum 19.10.2026: Chromium allein, 20 Minuten, auf 26.04. Die ersten
+beiden dreifachen Läufe (131 und 132, 20.10.2026) brachen auf 26.04 an den
+Bibliotheken ab, bevor sie maßen (F-DM-12); bis Nr. 393 lief der Job
+deshalb als einziger auf `ubuntu-24.04` (F-DM-13), weil Playwright 1.56 für
+26.04 keine WebKit-Fassung hatte.*
 Wie lange der dreifache Lauf dauert, ist noch nicht gemessen. **Gemessen an Lauf 99** (28.09.2026,
 `fc4253d`): Staging 35 s, Stufe 2 **3:16** — Kreislauf samt Installation
 44 s, Rückwegprobe 2:26. Bilderlauf und Kreislauf `csv` laufen seit dem

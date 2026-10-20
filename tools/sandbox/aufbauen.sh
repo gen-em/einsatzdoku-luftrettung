@@ -22,8 +22,17 @@ ANDROID_SDK="${ANDROID_HOME:-/opt/android-sdk}"
 CMDTOOLS_FASSUNG="23.0"
 CMDTOOLS_URL="https://dl.google.com/android/repository/commandlinetools-linux-16111833_latest.zip"
 CMDTOOLS_SHA1="e025545c62a8e64c7559119566a569fb1dec5f60"
+# PLAYWRIGHT 1.64.1 (Backlog Nr. 393). Das Abbild bringt 1.56.1 mit, und
+# 1.56 hat keine WebKit-Fassung für Ubuntu 26.04 — Stufe 2 musste deshalb auf
+# 24.04 bleiben (F-DM-13). Angehoben wird im ganzen Projekt, nicht nur in
+# Stufe 2, sonst misst sie andere Engines als der Prüfstand. DIESE ZEILE IST
+# DIE EINE STELLE: Der Job `stufe2` (`.github/workflows/auslieferung.yml`)
+# liest die Fassung von hier und bricht ab, wenn er sie nicht findet.
+PW_FASSUNG="1.64.1"
+PW_HEIM="/opt/playwright-$PW_FASSUNG"
+PW_GLOBAL="/opt/node22/lib/node_modules/playwright"
 PW=${PLAYWRIGHT_BROWSERS_PATH:-/opt/pw-browsers}
-PW_MODUL=${PLAYWRIGHT_MODUL:-/opt/node22/lib/node_modules/playwright/index.mjs}
+PW_MODUL=${PLAYWRIGHT_MODUL:-$PW_GLOBAL/index.mjs}
 export DEBIAN_FRONTEND=noninteractive
 
 melde() { printf '\033[1m==\033[0m %s\n' "$*" >&2; }
@@ -61,27 +70,24 @@ teil_web() {
         libgtk-4-1 libevent-2.1-7t64 libgstreamer-plugins-bad1.0-0 libavif16 libgles2 \
         || zeile "ACHTUNG: Engine-Bibliotheken fehlgeschlagen"
 
+    melde "Playwright"
+    playwright_heben
+
     melde "Engines"
     # JEDE BROWSERPROBE LÄUFT IN DREI ENGINES (R87, E-DM-01) — also müssen
-    # alle drei da sein. Bis zum 19.10.2026 stand hier „die Engines werden
-    # nicht nachgeladen", weil sie im Abbild lagen und ein Nachladen eine
-    # zweite, abweichende Fassung danebengelegt hätte. Seit dem Abbild vom
-    # 11.10.2026 liegt dort nur noch Chromium (F-S11-20), und ganz S11 lief
-    # deshalb in einer Engine. Nachgeladen wird NUR, was fehlt, mit dem
-    # Playwright des Abbilds: Es zieht genau die Fassung, die zu ihm gehört
-    # (1.56: firefox-1495, webkit-2215), nichts daneben. Die Bibliotheken
-    # oben kommen zuerst — sonst lädt Playwright herunter und bricht danach
-    # an der eigenen Prüfung der Systembibliotheken ab.
-    local n fehlt=()
-    for n in chromium firefox webkit; do
-        compgen -G "$PW/$n-[0-9]*" >/dev/null || fehlt+=("$n")
-    done
-    if [ ${#fehlt[@]} -gt 0 ]; then
-        zeile "nachladen: ${fehlt[*]}"
-        PLAYWRIGHT_BROWSERS_PATH="$PW" PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD= \
-            node "$(dirname "$PW_MODUL")/cli.js" install "${fehlt[@]}" >/dev/null 2>&1 \
-            || zeile "ACHTUNG: Nachladen von ${fehlt[*]} meldet einen Fehler — der Nachweis unten zeigt, was startet"
-    fi
+    # alle drei da sein, und zwar in der Fassung, die zum Playwright oben
+    # gehört (1.64.1: chromium-1248, firefox-1555, webkit-2370). Bis Nr. 393
+    # sah dieser Schritt nur nach, ob IRGENDEIN `chromium-*` lag; nach dem
+    # Anheben hätte das alte `chromium-1194` des Abbilds genügt, und der
+    # Nachweis wäre am Start gescheitert statt hier. Deshalb fragt der Schritt
+    # Playwright selbst: `install` überspringt, was in seiner Fassung schon
+    # liegt (gemessen: rund 1 s), und lädt den Rest. Die alten Fassungen des
+    # Abbilds bleiben liegen; kein Werkzeug startet sie mehr. Die
+    # Bibliotheken oben kommen zuerst — sonst lädt Playwright herunter und
+    # bricht danach an der eigenen Prüfung der Systembibliotheken ab.
+    PLAYWRIGHT_BROWSERS_PATH="$PW" PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD= \
+        node "$(dirname "$PW_MODUL")/cli.js" install chromium firefox webkit >/dev/null 2>&1 \
+        || zeile "ACHTUNG: Nachladen der Engines meldet einen Fehler — der Nachweis unten zeigt, was startet"
 
     melde "Python-Pakete"
     # `python3` ist 3.11 (deadsnakes), apt legt nach 3.12 — deshalb pip.
@@ -99,6 +105,36 @@ teil_web() {
     python3 -c 'import paramiko; from pyftpdlib.handlers import TLS_FTPHandler' >/dev/null 2>&1 \
         || python3 -m pip install -q --break-system-packages pyftpdlib paramiko pyopenssl >/dev/null 2>&1 \
         || zeile "ACHTUNG: Gegenstellen der Versandprobe (pyftpdlib, paramiko, pyopenssl) fehlen"
+}
+
+playwright_heben() {
+    # Das Abbild legt `playwright` als Verweis nach /opt/node-tools; dort
+    # liegen auch eslint, prettier, typescript und andere. Ein `npm install`
+    # dort hätte deren Baum mit angefasst. Deshalb ein eigenes Verzeichnis
+    # je Fassung, und umgebogen wird nur der Verweis — so bleiben die rund
+    # 35 Rückfallpfade der Werkzeuge (`/opt/node22/lib/node_modules/
+    # playwright/index.mjs`) gültig, ohne dass eines sie kennen muss.
+    if [ -n "${PLAYWRIGHT_MODUL:-}" ]; then
+        zeile "PLAYWRIGHT_MODUL ist gesetzt — die Fassung dort wird nicht angefasst, der Nachweis misst sie"
+        return 0
+    fi
+    local ist
+    ist=$(node -p "require('$PW_GLOBAL/package.json').version" 2>/dev/null)
+    if [ "$ist" = "$PW_FASSUNG" ]; then zeile "liegt: $ist"; return 0; fi
+    zeile "anheben: ${ist:-keins} -> $PW_FASSUNG"
+    npm install --prefix "$PW_HEIM" --no-audit --no-fund --silent "playwright@$PW_FASSUNG" >/dev/null 2>&1 \
+        || { zeile "ACHTUNG: npm install playwright@$PW_FASSUNG fehlgeschlagen"; return 1; }
+    # Ein echtes Verzeichnis statt des Verweises (ein anderes Abbild) wird
+    # beiseitegelegt: `ln -sfn` legte den Verweis sonst HINEIN, und am
+    # Pfad der Werkzeuge läge weiter die alte Fassung.
+    if [ -d "$PW_GLOBAL" ] && [ ! -L "$PW_GLOBAL" ]; then
+        mv "$PW_GLOBAL" "$PW_GLOBAL.abbild-$ist"
+    fi
+    ln -sfn "$PW_HEIM/node_modules/playwright" "$PW_GLOBAL"
+    if [ -d /opt/node22/bin ]; then
+        ln -sfn "$PW_HEIM/node_modules/.bin/playwright" /opt/node22/bin/playwright
+        ln -sfn "$PW_HEIM/node_modules/.bin/playwright-core" /opt/node22/bin/playwright-core
+    fi
 }
 
 teil_android() {
@@ -276,6 +312,9 @@ nachweis() {
       "python3 -c 'from cryptography.hazmat.primitives.ciphers.aead import AESGCM'"
     pruefe "python-jsonschema" "python3 -c 'import jsonschema'"
     pruefe "python-requests"   "python3 -c 'import requests'"
+    local pw_ist
+    pw_ist=$(node -p "require('$(dirname "$PW_MODUL")/package.json').version" 2>/dev/null)
+    pruefe "playwright     ${pw_ist:-fehlt} (soll $PW_FASSUNG)" "[ '$pw_ist' = '$PW_FASSUNG' ]"
     engines
     # STUFENABHÄNGIG, damit der Nachweis einen Gegenstand hat. Bis zum
     # 21.09.2026 prüfte er ausschließlich die Stücke der Stufe `web` — ein

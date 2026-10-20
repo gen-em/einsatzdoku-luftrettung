@@ -17,7 +17,7 @@ Die Wege:
 - **kein Test** — erzeugt etwas, prüft nichts.
 
 Gestartet wird über `starten()` aus `tools/motor.mjs`, das auch die Engine und
-ihre Fassung ins Protokoll schreibt (`Motor: firefox 142.0.1`). Ein eigenes
+ihre Fassung ins Protokoll schreibt (`Motor: firefox 157.0`). Ein eigenes
 `.launch(` ist nur bei „nur Chromium" und „kein Test" erlaubt.
 
 | Werkzeug | Weg | Grund |
