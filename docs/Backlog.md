@@ -53,7 +53,7 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
 | Spanne | Zweig | seit |
 |---|---|---|
 | 380 bis 389 | `ccr-dd33b6e8-ismfm0`, für S11-12 `claude/s11-ortsdaten-schritt-12a-2cvh7h` — Schritt 12a, Konzept S11 (Ortsdaten, Weg B); vergeben: 380 bis 388 | 11.10.2026 |
-| 390 bis 399 | `claude/s11-ortsdaten-schritt-12a-2cvh7h` — Schritt 19, Konzept DM (drei Engines); vergeben: 390 bis 392 | 19.10.2026 |
+| 390 bis 399 | `claude/s11-ortsdaten-schritt-12a-2cvh7h` — Schritt 19, Konzept DM (drei Engines); vergeben: 390 bis 393 | 19.10.2026 |
 | ab 400 | frei — höchste vergebene Nummer 392; 372 bis 379 aus der Spanne von 12 blieben frei (PR #103), 362 bis 369 aus der von PK, 359 aus der von 18 (PR #101), 348 und 349 aus der von 17, 338 aus der von AR | 19.10.2026 |
 
 ---
@@ -1354,23 +1354,6 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      *Abnahme:* eine neu erzeugte Fixture setzt das Demo-Konto zurück, und
      die Riegelprobe ist in beiden Richtungen grün.
 
-
-<!-- -->
-
-390. **Jede Browserprobe lief in einer Engine, obwohl drei festgelegt waren.** · gehört zu: 19 · Stand: offen · seit 19.10.2026
-     *Aufgenommen 19.10.2026 mit Konzept DM (Abschnitt 1).* Nr. 183 hatte
-     drei Engines für Bilderlauf, Klickprobe und Stilvergleich beschlossen;
-     durchgesetzt wurde es nirgends. 22 von 32 Browserwerkzeugen starteten
-     Chromium fest, der Prüfstand übergab den übrigen zehn nie `--motor`,
-     Stufe 2 installierte nur Chromium, und seit dem Abbild vom 11.10.2026
-     lagen Firefox und WebKit nicht einmal mehr im Container (F-S11-20).
-     Ganz S11 lief deshalb in Chromium; gefunden hat es die Betreiberin an
-     P-S11-43, nicht ein Prüfmittel — keines verlangte eine zweite Engine.
-     *Weg (R87):* Standard-Setup lädt nach, jede Probe dreifach, der
-     Bericht nennt die Engines (`motoren=`), Stufe 1 liest es gegen, und
-     der Bestandsriegel (Regel `motoren`) hält jedes Werkzeug an das
-     Register `tools/pruefstand/motoren.md`.
-     *Abnahme:* Prüfstand und Stufe 2 grün in drei Engines.
 
 <!-- -->
 
