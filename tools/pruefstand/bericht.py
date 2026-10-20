@@ -174,6 +174,8 @@ def beruehrt(basis, commit):
 
 
 MOTOREN = 'chromium+firefox+webkit'
+# Je Stufe (E-DM-08): `klein` in Chromium allein, ab `neben` alle drei.
+MOTOREN_JE_STUFE = {'klein': 'chromium', 'neben': MOTOREN, 'haupt': MOTOREN}
 
 
 def pruefen(bericht, basis=None, commit='HEAD', riegel=None, dateien=None, baum=None,
@@ -237,19 +239,21 @@ def pruefen(bericht, basis=None, commit='HEAD', riegel=None, dateien=None, baum=
         else:
             schlecht.append(f"Probe „{name}\" meldet {wert} — ein roter Lauf ist kein Nachweis.")
 
-    # (6) Eine Browserprobe, aber nicht in drei Engines (R87, Konzept DM).
-    # Welche Proben dreifach laufen, sagt `"motoren": true` in
+    # (6) Eine Browserprobe, aber nicht in den Engines ihrer Stufe (R87,
+    # Konzept DM). Welche Proben es sind, sagt `"motoren": true` in
     # pruefablauf.json; der Prüfstand schreibt dann `motoren=` mit den
-    # Engines, die er gefahren hat. Fehlt die Zeile oder nennt sie weniger,
-    # hat der Bericht eine Browserprobe in einer Engine gemessen — und das
-    # ist seit dem 19.10.2026 kein Nachweis mehr.
+    # Engines, die er gefahren hat. Verlangt sind in `klein` Chromium, ab
+    # `neben` alle drei (E-DM-08). Fehlt die Zeile oder nennt sie andere, ist
+    # der Bericht kein Nachweis.
     if motoren_namen is None:
         motoren_namen = {n for n, p in lade_ablauf()['proben'].items() if p.get('motoren') is True}
     browser = sorted(n for n in bericht['werte'] if n in motoren_namen)
-    if browser and bericht['werte'].get('motoren') != MOTOREN:
+    verlangt_m = MOTOREN_JE_STUFE.get(bericht['stufe'], MOTOREN)
+    if browser and bericht['werte'].get('motoren') != verlangt_m:
         schlecht.append(
-            f"Browserproben ({', '.join(browser)}) ohne alle drei Engines: "
-            f"„motoren={bericht['werte'].get('motoren', '(fehlt)')}\", verlangt „{MOTOREN}\" (R87).")
+            f"Browserproben ({', '.join(browser)}) nicht in den Engines der Stufe "
+            f"„{bericht['stufe']}\": „motoren={bericht['werte'].get('motoren', '(fehlt)')}\", "
+            f"verlangt „{verlangt_m}\" (R87, E-DM-08).")
     return schlecht
 
 
@@ -346,6 +350,12 @@ def selbstprobe():
                    dict(baum='abc1234', dateien=[], riegel={}, riegel_namen=namen), 1))
     faelle.append(('rot (6b) — Browserproben nur in zwei Engines',
                    zerlegen(guter.replace('chromium+firefox+webkit', 'chromium+firefox')),
+                   dict(baum='abc1234', dateien=[], riegel={}, riegel_namen=namen), 1))
+    faelle.append(('grün (6c) — Stufe klein mit motoren=chromium',
+                   zerlegen(guter.replace('neben', 'klein').replace('chromium+firefox+webkit', 'chromium')),
+                   dict(baum='abc1234', dateien=[], riegel={}, riegel_namen=namen), 0))
+    faelle.append(('rot (6d) — Stufe neben mit motoren=chromium',
+                   zerlegen(guter.replace('chromium+firefox+webkit', 'chromium')),
                    dict(baum='abc1234', dateien=[], riegel={}, riegel_namen=namen), 1))
     faelle.append(('grün (6) — keine Browserprobe, keine Zeile motoren=',
                    zerlegen(guter.replace('  spurprobe=0  kreislauf-edbak=0  bilderlauf=0\n', '  spurprobe=0\n')

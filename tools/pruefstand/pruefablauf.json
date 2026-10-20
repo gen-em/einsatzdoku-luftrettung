@@ -221,7 +221,7 @@
       "aufruf": "node tools/screenshots/aufnehmen.mjs --stufe {stufe}",
       "braucht": "installation",
       "demo": true,
-      "bemerkung": "E-PK-14: klein = drei Breiten (360, 1024, 1920); neben = zehn Breiten (seit R4-08 mit 1200 und 1600, E-R4-23); haupt = zehn Breiten. Seit Konzept DM (R87, E-DM-07) in JEDER Stufe alle drei Engines: pruefen.sh faehrt jede Probe mit \"motoren\": true dreimal (MOTOR=chromium|firefox|webkit). Bis dahin stand hier \"haupt = alle drei Engines -- GEBAUT IST DAVON NUR CHROMIUM\" (Nr. 300). pruefen.sh setzt {stufe} auf die ermittelte Stufe (PK-05).",
+      "bemerkung": "E-PK-14: klein = drei Breiten (360, 1024, 1920); neben = zehn Breiten (seit R4-08 mit 1200 und 1600, E-R4-23); haupt = zehn Breiten. Seit Konzept DM (R87, E-DM-08) ab neben alle drei Engines, in klein Chromium: pruefen.sh faehrt jede Probe mit \"motoren\": true je Engine der Stufe (MOTOR=chromium|firefox|webkit). Bis dahin stand hier \"haupt = alle drei Engines -- GEBAUT IST DAVON NUR CHROMIUM\" (Nr. 300). pruefen.sh setzt {stufe} auf die ermittelte Stufe (PK-05).",
       "motoren": true
     },
     "stilvergleich": {

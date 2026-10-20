@@ -87,6 +87,47 @@ export function motorWahl(argv) {
   return name;
 }
 
+/* ===========================================================================
+ * WebKit stolpert beim Seitenwechsel (Konzept DM, Q-DM-02, E-DM-10)
+ * ===========================================================================
+ *
+ * In diesem Container bricht WebKit sporadisch einen Seitenwechsel mit
+ * „WebKit encountered an internal error" ab — in jedem vollen Lauf der
+ * Bedienprobe an ein bis drei anderen Wegen, einzeln sind sie grün; bekannt
+ * seit F-RW-23 (Nr. 301). Ein `goto` oder `reload`, der GENAU daran scheitert,
+ * wird hier einmal wiederholt; scheitert er wieder, ist er rot. Jede
+ * Wiederholung steht als Zeile `WebKit-Wiederholung: …` im Protokoll, und
+ * `pruefen.sh` zählt sie.
+ *
+ * NICHT wiederholt wird ein Seitenwechsel nach einem Klick
+ * (`waitForNavigation`): Ihn zu wiederholen hieße, den Klick zu wiederholen,
+ * und das ist eine andere Bedienung. Er bleibt rot und benannt.
+ *
+ * Gepatcht wird die Klasse der Seite, einmal je Lauf — so trifft es jede
+ * Seite jedes Kontexts, ohne dass ein Werkzeug etwas tun muss. Nur WebKit;
+ * Chromium und Firefox bleiben unberührt. */
+export const WEBKIT_STOLPERN = 'WebKit encountered an internal error';
+async function webkitWiederholung(browser) {
+  const kontext = await browser.newContext();
+  const seite = await kontext.newPage();
+  const klasse = Object.getPrototypeOf(seite);
+  await kontext.close();
+  if (klasse.__webkitWiederholung) { return; }
+  klasse.__webkitWiederholung = true;
+  for (const methode of ['goto', 'reload']) {
+    const roh = klasse[methode];
+    klasse[methode] = async function (...args) {
+      try {
+        return await roh.apply(this, args);
+      } catch (e) {
+        if (!String((e && e.message) || e).includes(WEBKIT_STOLPERN)) { throw e; }
+        console.error(`WebKit-Wiederholung: ${methode} ${methode === 'goto' ? args[0] : this.url()}`);
+        return await roh.apply(this, args);
+      }
+    };
+  }
+}
+
 /** Startet den gewählten Motor. `pw` ist das geladene Playwright-Modul.
  *  `finger` sagt, ob der Lauf ein Fingergerät nachstellt; `optionen` reicht
  *  weitere Startangaben durch (der Stilvergleich setzt so seinen
@@ -96,6 +137,7 @@ export async function starten(pw, name, { finger = false, optionen = {} } = {}) 
     ? { ...optionen, firefoxUserPrefs: { ...ZEIGER_FIREFOX, ...(optionen.firefoxUserPrefs || {}) } }
     : { ...optionen };
   const browser = await pw[name].launch(auf);
+  if (name === 'webkit') { await webkitWiederholung(browser); }
   /* DER BELEG, WELCHE ENGINE LIEF (R87, Konzept DM). Eine Probe, die
    * „grün in Firefox" meldet, aber still Chromium startete, wäre die
    * schmeichelhafte Null aus dem Kopf dieser Datei. Die Zeile geht nach

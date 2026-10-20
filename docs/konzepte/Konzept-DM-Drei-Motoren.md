@@ -31,11 +31,11 @@ jeder Vergabe).
 >
 > | | |
 > |---|---|
-> | Stand | **20.10.2026 — DM-00 bis DM-04 gebaut, DM-05 bis auf Prüfstand und Prüfdokument.** Halt vor dem letzten Prüfstand: Q-DM-01 und Q-DM-02 |
-> | Entschieden | E-DM-01 bis E-DM-07 (Abschnitt 2), alle von der Betreiberin am 19.10.2026 |
-> | Offen | **Q-DM-01** (Rechenaufgabe in Firefox über dem Soll), **Q-DM-02** (WebKit stolpert sporadisch beim Seitenwechsel) — Abschnitt 4a |
+> | Stand | **20.10.2026 — DM-00 bis DM-04 gebaut, dazu Web 23.0.1 (E-DM-09), Option B (E-DM-08) und die WebKit-Wiederholung (E-DM-10); DM-05: letzter Prüfstand und Prüfdokument** |
+> | Entschieden | E-DM-01 bis E-DM-10 (Abschnitt 2); E-DM-07 ist durch E-DM-08 ersetzt |
+> | Offen | keine Frage (Q-DM-01, -02 beantwortet am 20.10.2026) |
 > | Umsetzung | **DM-00 erledigt** 19.10.2026 (Fahrplan, R87, Spanne). **DM-01 erledigt** 19.10.2026: `aufbauen.sh web` lädt fehlende Engines nach, neun Bibliotheken (F-DM-01); gemessen 3 von 3 nach Beiseitelegen von Firefox und WebKit. **DM-02 gebaut:** 22 Werkzeuge auf `starten()` aus `motor.mjs` (Engine aus `MOTOR` oder `--motor`, Zeile `Motor: <name> <fassung>` im Protokoll); `pruefen.sh` fährt 16 Proben mit `\"motoren\": true` je Engine, berichtet `rot:<engines>` und `motoren=chromium+firefox+webkit`; `bericht.py` Lage 6 (16 Lagen, 0 Fehlschläge); Muster `motoren` wählt alle 16, wenn `motor.mjs` oder das Register berührt ist. Einzeln in Firefox und WebKit gefahren: 10 Proben, zwei rot und behoben (F-DM-02, -03). **DM-03 gebaut:** Regel `motoren` im Bestandsriegel, Register `tools/pruefstand/motoren.md` (31 Werkzeuge), Selbstprobe 177 Fälle, 0 Fehlschläge, 110 von 110 Befundstellen. |
-> | Halt | **20.10.2026, vor dem letzten Prüfstand** — beide Fragen entscheiden, ob er grün werden kann |
+> | Halt | aufgehoben 20.10.2026 |
 > | Fable-Schritte | keine |
 > | Fächerung | keine (Kopf) |
 > | Nummern | 390 bis 399 reserviert; vergeben: 390 (Anlass des Riegels), 391 (F-DM-04), 392 (F-DM-02). Frei: 393 bis 399. |
@@ -73,7 +73,10 @@ hätte bemerken können.
 | E-DM-04 | **Safari:** Playwrights WebKit ist die Engine, nicht der Browser. Ein echter Safari bleibt Handprüfung in den Prüflisten. | Betreiberin, 19.10.2026 |
 | E-DM-05 | **Was nur Chromium kann:** Die Probe läuft trotzdem in allen drei Engines; nur der Teil, der nur in Chromium geht (Drossel, virtueller Passkey), läuft dort allein. Der Bericht sagt es, und es steht in der Ausnahmeliste. | Betreiberin, 19.10.2026 |
 | E-DM-06 | **Messstand:** bleibt als begründete Ausnahme bei Chromium — seine Grundlinie ist gedrosseltes Chromium, und Firefox und WebKit haben keine Drossel. | Betreiberin, 19.10.2026 |
-| E-DM-07 | **Laufzeit:** alle Stufen in drei Engines, auch `klein`. Die längere Laufzeit ist angenommen. | Betreiberin, 19.10.2026 |
+| E-DM-07 | **Laufzeit:** alle Stufen in drei Engines, auch `klein`. Die längere Laufzeit ist angenommen. **Ersetzt durch E-DM-08.** | Betreiberin, 19.10.2026 |
+| E-DM-08 | **Engines je Stufe (Option B):** `klein` fährt die Browserproben in Chromium allein, `neben` und `haupt` in allen drei; Stufe 2 dreifach. Grund: Der volle dreifache Lauf hielt im Container nicht durch (F-DM-11). Preis: Eine Korrektur, die nur in Firefox oder WebKit bricht, kommt in `klein` durch. Stufe 1 liest es je Stufe gegen (Lage 6). Das Weitermachen nach einem Abbruch wird nicht gebaut. | Betreiberin, 20.10.2026 |
+| E-DM-09 | **Q-DM-01 (a):** Das Soll der Rechenaufgabe (Median unter 1 s) gilt in jeder Engine. Behoben in diesem Schritt als Web 23.0.1: SHA-256 im Worker selbst gerechnet, gegen WebCrypto gegengeprüft. | Betreiberin, 20.10.2026 |
+| E-DM-10 | **Q-DM-02 (a):** Ein `goto`/`reload` in WebKit, der mit „WebKit encountered an internal error" scheitert, wird an einer Stelle (`motor.mjs`) einmal wiederholt und gezählt; ein zweiter Fehlschlag ist rot. Seitenwechsel nach einem Klick werden nicht wiederholt. | Betreiberin, 20.10.2026 |
 
 Nicht als Tests gezählt: der Erzeuger `tools/erzeugen/logos.mjs` und der
 Helfer `tools/referenzdatensatz/einspielen/passwort_setzen.mjs`; der Helfer
@@ -110,8 +113,8 @@ läuft in der Engine der Probe, die ihn ruft.
 
 | Nr. | Frage | Stand |
 |---|---|---|
-| Q-DM-01 | **Die Rechenaufgabe der Registrierung braucht in Firefox meist über 1 s.** Soll aus SR-08: Median unter 1 s, ungedrosselt. Gemessen (je 9 Läufe): Chromium 482 ms, WebKit 371 ms; Firefox 1365, 544 und 1333 ms in drei vollen Läufen. Der Weg `registrieren` der Bedienprobe ist damit in Firefox meist rot. Drei Wege: (a) das Soll gilt in jeder Engine — dann ist es ein Befund an der Anwendung (Schwierigkeit oder Worker, eine Web-Fassung, eigener Schritt), und der Prüfstand bleibt rot, bis er behoben ist; (b) das Soll gilt je Engine mit eigener Grenze (z. B. Firefox 2 s), begründet und im Weg benannt; (c) gemessen wird überall, verlangt nur in Chromium, Firefox als Zahl im Bericht. | offen |
-| Q-DM-02 | **WebKit bricht sporadisch Seitenwechsel ab** („WebKit encountered an internal error" bei `goto` oder `waitForNavigation`), in jedem vollen Lauf der Bedienprobe an anderen Wegen: einmal 1 Weg (Zweitfaktor, Zeitüberschreitung beim Abmelden), einmal 3 (Sicherungsziele, Dialogfehler, frischer Code); einzeln gefahren sind sie grün. Dasselbe im Bilderlauf (Nachtdienst, einmal). Bekannt seit F-RW-23 (Nr. 301). Zwei Wege: (a) ein Seitenwechsel, der genau mit dieser Meldung scheitert, wird an einer Stelle in `motor.mjs` einmal wiederholt und im Bericht gezählt — eine zweite Meldung ist rot; (b) nichts wiederholen: WebKit-Läufe sind dann oft rot, ohne dass die Anwendung etwas falsch macht. | offen |
+| Q-DM-01 | **Beantwortet 20.10.2026: (a), E-DM-09.** **Die Rechenaufgabe der Registrierung braucht in Firefox meist über 1 s.** Soll aus SR-08: Median unter 1 s, ungedrosselt. Gemessen (je 9 Läufe): Chromium 482 ms, WebKit 371 ms; Firefox 1365, 544 und 1333 ms in drei vollen Läufen. Der Weg `registrieren` der Bedienprobe ist damit in Firefox meist rot. Drei Wege: (a) das Soll gilt in jeder Engine — dann ist es ein Befund an der Anwendung (Schwierigkeit oder Worker, eine Web-Fassung, eigener Schritt), und der Prüfstand bleibt rot, bis er behoben ist; (b) das Soll gilt je Engine mit eigener Grenze (z. B. Firefox 2 s), begründet und im Weg benannt; (c) gemessen wird überall, verlangt nur in Chromium, Firefox als Zahl im Bericht. | beantwortet |
+| Q-DM-02 | **Beantwortet 20.10.2026: (a), E-DM-10.** **WebKit bricht sporadisch Seitenwechsel ab** („WebKit encountered an internal error" bei `goto` oder `waitForNavigation`), in jedem vollen Lauf der Bedienprobe an anderen Wegen: einmal 1 Weg (Zweitfaktor, Zeitüberschreitung beim Abmelden), einmal 3 (Sicherungsziele, Dialogfehler, frischer Code); einzeln gefahren sind sie grün. Dasselbe im Bilderlauf (Nachtdienst, einmal). Bekannt seit F-RW-23 (Nr. 301). Zwei Wege: (a) ein Seitenwechsel, der genau mit dieser Meldung scheitert, wird an einer Stelle in `motor.mjs` einmal wiederholt und im Bericht gezählt — eine zweite Meldung ist rot; (b) nichts wiederholen: WebKit-Läufe sind dann oft rot, ohne dass die Anwendung etwas falsch macht. | beantwortet |
 
 ## 5. Prüfprotokoll
 

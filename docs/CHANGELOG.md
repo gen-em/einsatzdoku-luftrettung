@@ -14,11 +14,42 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 23.0.1] — unveröffentlicht
+
+Konzept DM, Frage Q-DM-01. Kein Schema.
+
+### Behoben
+
+- **Die Rechenaufgabe der Registrierung brauchte in Firefox meist über eine
+  Sekunde.** Das Soll aus SR-08 ist ein Median unter einer Sekunde, und es
+  gilt in jeder Engine — gefunden hat es erst der dreifache Lauf von Konzept
+  DM: Chromium 482 ms, WebKit 371 ms, Firefox 1365, 544 und 1333 ms in drei
+  Läufen. Gerechnet hat nicht die Bitzahl zu viel, sondern WebCrypto zu
+  teuer: Jeder Versuch ging an `crypto.subtle.digest()`, und jeder Aufruf
+  erzeugt ein Promise, das mehr kostet als der Hash. Für 65 536 Hashes —
+  im Mittel eine Lösung bei 16 Bit — gemessen: WebCrypto Chromium 1008,
+  Firefox 1317, WebKit 522 ms; eine eigene Rechnung 428, 243 und 166 ms.
+  Der Worker rechnet SHA-256 jetzt selbst. Danach (je neun Läufe):
+  Chromium 516, Firefox 416, WebKit 319 ms im Median.
+
+### Bewusst so
+
+- **Eigene Rechnung, aber mit Gegenprobe.** Ein Arbeitsnachweis ist kein
+  Geheimnis — der Hash schützt nichts, er kostet nur Zeit, und der Server
+  prüft ihn weiter mit PHP. Trotzdem rechnet der Worker vor jeder Suche
+  einen Hash selbst und einmal mit WebCrypto; weichen sie ab, sucht er wie
+  bisher mit WebCrypto. Eine falsche Eigenrechnung fände sonst nur Lösungen,
+  die der Server ablehnt, und zwar still, auf genau dem Gerät, das sie
+  falsch rechnet. Gegen Node gehalten: 1505 Eingaben von 0 bis 300 Bytes,
+  0 Abweichungen.
+- **Bitzahl und Server bleiben.** 16 Bit, `pow_ok()` unverändert. Wer das
+  Formular tausendfach abschickt, rechnet ohnehin mit eigenem Code.
+
 ## [Werkzeug: Jede Browserprobe in drei Engines (R87, Konzept DM)] — 2026-10-19
 
 **Jede Browserprobe läuft jetzt in Chromium, Firefox und WebKit** — örtlich
-in jeder Stufe des Prüfstands und in Stufe 2 gegen Staging; fehlt eine
-Engine, ist die Probe rot. Nur `tools/`, `.github/` und `docs/` — keine
+ab der Stufe `neben` und in Stufe 2 gegen Staging; fehlt eine Engine, ist
+die Probe rot. In `klein` laufen sie in Chromium allein. Nur `tools/`, `.github/` und `docs/` — keine
 Versionsstufe. Festgelegt waren drei Engines seit Nr. 183, durchgesetzt hat
 es nichts: 22 von 32 Browserwerkzeugen starteten Chromium fest, der
 Prüfstand gab den übrigen zehn nie eine andere Engine, Stufe 2 holte nur
@@ -58,9 +89,15 @@ im Register: die CPU-Drossel (der Messstand misst gegen eine Grundlinie aus
 gedrosseltem Chromium und bleibt deshalb ganz bei Chromium) und der
 virtuelle Passkey-Authenticator (ein Weg der Bedienprobe, der in Firefox und
 WebKit „nur in Chromium" meldet). WebKit ist nicht Safari; ein echter
-Safari bleibt Handprüfung. Die Laufzeit der Browserproben ist ungefähr
-dreimal so lang, auch in der kleinsten Stufe — angenommen von der
-Betreiberin. Elf Browserwerkzeuge ruft kein Prüfstand; sie können jetzt drei
+Safari bleibt Handprüfung. **Die kleinste Stufe bleibt bei Chromium**
+(E-DM-08): Beschlossen waren zuerst drei Engines in jeder Stufe; der erste
+volle Lauf dauerte damit länger, als der Container ihn hielt — zweimal
+brach er nach 40 bis 50 Minuten ab. Eine Korrektur, die nur in WebKit
+bricht, kommt damit in `klein` durch; das ist der benannte Preis. **WebKit
+stolpert hier sporadisch beim Seitenwechsel** („internal error", ein bis
+drei Wege je vollem Lauf, einzeln grün; Nr. 301): Ein `goto` oder
+`reload`, der genau daran scheitert, wird einmal wiederholt und im
+Prüfstand gezählt (E-DM-10); nach einem Klick wird nichts wiederholt. Elf Browserwerkzeuge ruft kein Prüfstand; sie können jetzt drei
 Engines, ob sie grün sind, weiß aber niemand (Nr. 391). **Nicht gemessen:**
 Stufe 2 dreifach auf dem Läufer — das zeigt erst der erste Staging-Lauf nach
 dem Merge.

@@ -917,8 +917,11 @@ eine Risikoliste im Bilderlauf und die Klickprobe.)*
 **Jedes Browserwerkzeug wählt den Motor über `tools/motor.mjs`**
 (`MOTOR=` oder `--motor chromium|firefox|webkit`, Vorgabe Chromium).
 **Seit R87 (Konzept DM, 19.10.2026) fährt der Prüfstand jede Browserprobe
-in allen drei** — in jeder Stufe, je Engine ein Lauf mit `MOTOR=…`, grün nur,
-wenn alle drei grün sind (`docs/Pruefablauf.md` 1, Grundsatz 8). Stufe 2
+in allen drei** — ab der Stufe `neben`, je Engine ein Lauf mit `MOTOR=…`,
+grün nur, wenn alle drei grün sind; **in `klein` in Chromium allein**
+(`docs/Pruefablauf.md` 1, Grundsatz 8, E-DM-08). Ein Seitenwechsel, der in
+WebKit mit „internal error" scheitert, wird einmal wiederholt und gezählt
+(E-DM-10, `motor.mjs`). Stufe 2
 fährt Kreislauf und Rückwegprobe ebenso dreifach. Welche Probe dreifach
 läuft, sagt `"motoren": true` in `pruefablauf.json`; welches Werkzeug auf
 welchem Weg dahin kommt (Probe, Helfer, von Hand, nur Chromium, kein Test),
