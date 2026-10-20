@@ -239,10 +239,14 @@ PHP —, zeigt nur der Hoster. Sie läuft nach dem Kreislauf, im selben Job.
 Punktdateien, Kreislauf `edbak`, Rückwegprobe) und eine Zeitgrenze von
 40 Minuten; ohne Aktions-Cache (E-PK-54). **Kreislauf und Rückwegprobe
 laufen je Engine einmal** (Grundsatz 8, R87); der Schritt holt Firefox und
-WebKit samt Bibliotheken (`playwright install --with-deps`). *Bis zum
-19.10.2026: Chromium allein, 20 Minuten.* Wie lange der dreifache Lauf
-dauert und ob WebKit auf `ubuntu-26.04` startet, zeigt erst der erste Lauf
-nach dem Merge von Konzept DM — gemessen ist es noch nicht. **Gemessen an Lauf 99** (28.09.2026,
+WebKit samt Bibliotheken — die Liste nennt Playwright
+(`install-deps --dry-run`), und weil Playwright 1.56 Ubuntu 26.04 nicht
+kennt und die Namen von 24.04 nennt, ersetzt der Schritt jeden Namen, den
+es auf dem Läufer nicht gibt, durch das neueste Paket gleichen Stamms und
+schreibt es ins Protokoll (F-DM-12). *Bis zum 19.10.2026: Chromium allein,
+20 Minuten. Der erste dreifache Lauf (131, 20.10.2026) brach mit
+`--with-deps` an `libicu74`, `libxml2`, `libvpx9` und `libx264-164` ab.*
+Wie lange der dreifache Lauf dauert, ist noch nicht gemessen. **Gemessen an Lauf 99** (28.09.2026,
 `fc4253d`): Staging 35 s, Stufe 2 **3:16** — Kreislauf samt Installation
 44 s, Rückwegprobe 2:26. Bilderlauf und Kreislauf `csv` laufen seit dem
 21.09.2026 in Station B. Der Platz für Nr. 234 ist ein benannter Kommentar

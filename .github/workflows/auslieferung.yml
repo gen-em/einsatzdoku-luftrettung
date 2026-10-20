@@ -233,11 +233,34 @@ jobs:
           [ -f "$PLAYWRIGHT_MODUL" ] \
             || { echo "::error::Playwright-Modul fehlt unter $PLAYWRIGHT_MODUL"; exit 1; }
           # DREI ENGINES (R87, Konzept DM/DM-04). Bis zum 19.10.2026 holte
-          # dieser Schritt nur Chromium, und Stufe 2 maß jede Engine außer
-          # einer nicht. `--with-deps` holt die Systembibliotheken, die
-          # Playwright für Firefox und WebKit selbst nennt; scheitert es,
-          # ist der Schritt rot, nicht übersprungen (Grundsatz 7).
-          npx --yes playwright@1.56 install --with-deps chromium firefox webkit
+          # dieser Schritt nur Chromium.
+          #
+          # NICHT `--with-deps` (F-DM-12): Playwright 1.56 kennt Ubuntu 26.04
+          # nicht und nennt wegen PLAYWRIGHT_HOST_PLATFORM_OVERRIDE die
+          # Paketnamen von 24.04 — `libicu74`, `libxml2`, `libvpx9`,
+          # `libx264-164` gibt es auf dem Läufer nicht, und apt brach den
+          # ersten Lauf nach dem Merge ab (Lauf 131). Deshalb: die Liste von
+          # Playwright holen, jeden Namen gegen den Läufer halten und einen,
+          # den es nicht gibt, durch das neueste Paket gleichen Stamms
+          # ersetzen (`libicu74` → `libicu78`). Jede Ersetzung steht im
+          # Protokoll; ein Name ohne Ersatz auch, und startet eine Engine
+          # danach nicht, ist der Kreislauf rot — nicht übersprungen.
+          npx --yes playwright@1.56 install chromium firefox webkit
+          liste=$(npx --yes playwright@1.56 install-deps --dry-run chromium firefox webkit 2>/dev/null \
+                  | grep -oE 'no-install-recommends [^"]*' | sed 's/^no-install-recommends //')
+          [ -n "$liste" ] || { echo "::error::Playwright nannte keine Systembibliotheken (install-deps --dry-run)."; exit 1; }
+          sudo apt-get update -qq
+          kandidat() { apt-cache policy "$1" 2>/dev/null | grep -q 'Candidate: [^(]'; }
+          pakete=()
+          for p in $liste; do
+            if kandidat "$p"; then pakete+=("$p"); continue; fi
+            stamm=$(printf '%s' "$p" | sed -E 's/t64$//; s/-?[0-9][0-9.]*$//')
+            ersatz=$(apt-cache pkgnames "$stamm" | grep -E "^${stamm}-?[0-9][-0-9.]*(t64)?$" | sort -V \
+                     | while read -r k; do kandidat "$k" && echo "$k"; done | tail -1)
+            if [ -n "$ersatz" ]; then echo "  ersetzt: $p → $ersatz"; pakete+=("$ersatz")
+            else echo "::warning::$p gibt es auf dem Läufer nicht, und kein Paket gleichen Stamms ersetzt es."; fi
+          done
+          sudo apt-get install -y -qq --no-install-recommends "${pakete[@]}"
           rot=""
           for motor in chromium firefox webkit; do
             for art in edbak; do
