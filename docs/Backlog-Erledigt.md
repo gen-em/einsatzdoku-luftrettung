@@ -9522,3 +9522,23 @@ zutreffen.
      Staging und Stufe 2 (Lauf 38159702364), Integritätswache (38160018474),
      APP-PROBELAUF `android` (38161339219) und `uhr` (38161372112, Java 17,
      Store-Paket als Artefakt).
+
+390. **Jede Browserprobe lief in einer Engine, obwohl drei festgelegt waren.** · gehört zu: 19 · Stand: erledigt · seit 19.10.2026
+     *Aufgenommen 19.10.2026 mit Konzept DM (Abschnitt 1).* Nr. 183 hatte
+     drei Engines für Bilderlauf, Klickprobe und Stilvergleich beschlossen;
+     durchgesetzt wurde es nirgends. 22 von 32 Browserwerkzeugen starteten
+     Chromium fest, der Prüfstand übergab den übrigen zehn nie `--motor`,
+     Stufe 2 installierte nur Chromium, und seit dem Abbild vom 11.10.2026
+     lagen Firefox und WebKit nicht einmal mehr im Container (F-S11-20).
+     Ganz S11 lief deshalb in Chromium; gefunden hat es die Betreiberin an
+     P-S11-43, nicht ein Prüfmittel — keines verlangte eine zweite Engine.
+     *Weg (R87):* Standard-Setup lädt nach, jede Probe dreifach, der
+     Bericht nennt die Engines (`motoren=`), Stufe 1 liest es gegen, und
+     der Bestandsriegel (Regel `motoren`) hält jedes Werkzeug an das
+     Register `tools/pruefstand/motoren.md`.
+     *Abnahme:* Prüfstand und Stufe 2 grün in drei Engines.
+     Erledigt 20.10.2026 mit Schritt 19 (PR #112, #113, #114, nur
+     Werkzeug und Web 23.0.1): Prüfstand `klein` grün mit Firefox und
+     WebKit einzeln gefahren (Prüfdokument DM 2), Stufe 2 in Lauf 133
+     dreifach grün — Kreislauf `edbak` je 0 unerklärt, Rückwegprobe je
+     21 von 21. Der volle Prüfstand einer Nebenstufe steht aus (P-DM-04).

@@ -9,6 +9,7 @@ Verlauf bis zum Schnitt). Die Fassungszählung läuft fortlaufend weiter.
 
 | Fassung | Datum | Anlass | Was |
 |---|---|---|---|
+| 164 | 20.10.2026 | 19-Abschluss | Erledigt-Zeile 19 (PR #112 bis #114, `3bedc25`), Fahrplanzeile und Kopf ohne 19, Konzept DM gelöscht; R87 auf „umgesetzt"; 6.1: Prüfliste DM (P-DM-02, -03, -04, -06). Stufe 2 seit Lauf 133 dreifach grün, auf `ubuntu-24.04` (Nr. 393). |
 | 163 | 20.10.2026 | R87 | R87 geändert (E-DM-08): Die Stufe `klein` fährt die Browserproben in Chromium allein, ab `neben` in drei Engines — vorher alle Stufen dreifach (E-DM-07). Fahrplanzeile 19 nachgezogen. |
 | 162 | 19.10.2026 | R87, Schritt 19 | Neue Programmentscheidung R87: jede Browserprobe in drei Engines, örtlich und in Stufe 2. Schritt 19 (Konzept DM) beginnt; Fahrplanzeile und Kopf nachgezogen. |
 | 161 | 19.10.2026 | Zuarbeit 6.3 | Entwurf der Datenschutzerklärung für den Stand nach S11 in `docs/rechtstexte/`; die vier Zeilen zur Datenschutzerklärung in 6.3 sind eine, sie wartet auf Platzhalter, Rechtsprüfung und S11 auf Produktiv. Die Bausteine aus P5b sind darin aufgegangen und gelöscht. |
