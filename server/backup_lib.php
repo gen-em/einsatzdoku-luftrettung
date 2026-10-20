@@ -902,6 +902,32 @@ function edbak_klartext_fund(array $data): ?string
     return null;
 }
 
+/**
+ * Der Satz zu den verworfenen Werten eines Einspielberichts — leer, wenn es
+ * keine gab (Web 23.0.2, Backlog Nr. 387).
+ *
+ * `edbak_restore()` nennt in `rejected` jede Beanstandung der Prüfschicht
+ * („feld: grund" → Anzahl). Die Verwaltung zeigte das bis Web 23.0.1 nur als
+ * Rohtext im Bericht und blau — seit S11 nimmt eine abgewiesene Ortshülle
+ * aber Orte und Reanimation des Einsatzes mit, und das soll dastehen. Das
+ * Gegenstück im Browser ist `verworfenSatz()` in `einstellungen.php`.
+ */
+function edbak_verworfen_satz(array $bericht): string
+{
+    $teile = [];
+    $summe = 0;
+    foreach ((array)($bericht['rejected'] ?? []) as $ursache => $n) {
+        $n = (int)$n;
+        if ($n <= 0) { continue; }
+        $teile[] = $ursache . ' (' . $n . '×)';
+        $summe  += $n;
+    }
+    if ($teile === []) { return ''; }
+    return ' ACHTUNG: Verworfen hat die Prüfung ' . $summe
+         . ($summe === 1 ? ' Wert' : ' Werte') . ' — ' . implode(', ', $teile)
+         . '. Diese Angaben fehlen jetzt im Konto.';
+}
+
 /** @return array Zusammenfassung (Zaehler) */
 /**
  * DREI BETRIEBSARTEN, EINE FUNKTION (S2/AP5b) — dieselbe Linie wie bei

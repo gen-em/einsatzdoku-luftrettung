@@ -2649,6 +2649,16 @@ eines. Ein Backup, bei dem sich einzelne Angaben nicht entschlüsseln ließen,
 meldet sich **orange**: Die Datei ist vollständig, aber dieser Teil öffnet
 sich nur wieder in diesem Konto.
 
+**Orange heißt auch: Etwas wurde verworfen.** Jede Angabe aus der Datei läuft
+beim Einspielen durch dieselbe Prüfung wie alles, was die Anwendung annimmt.
+Was sie nicht passiert, wird nicht übernommen, und die Abschlussmeldung sagt
+es seit Web 23.0.2 mit Feld und Anzahl — etwa „ACHTUNG: Verworfen hat die
+Prüfung 1 Wert — ort_huelle: … (1×). Diese Angaben fehlen jetzt im Konto."
+Bei `ort_huelle` sind das die Orte und die Reanimation eines Einsatzes. Eine
+Datei, die die Anwendung selbst geschrieben hat, löst das nicht aus; es
+braucht eine beschädigte oder fremde Datei. Bis Web 23.0.1 blieb die Meldung
+in diesem Fall blau.
+
 Ver- und Entschlüsselung passieren **in deinem Browser**; der Server sieht die
 Inhalte nie. Deshalb lässt sich ein Backup auch **in ein anderes Konto**
 einspielen: Beim Import werden die geschützten Angaben automatisch mit dem
@@ -4320,6 +4330,9 @@ Titel und der Herkunft darunter. Daneben zwei leise Knöpfe — **Einspielen** u
 löschen* und *Ganzen Ordner löschen*. Welches Paket gemeint ist, wird im Dialog
 gewählt; jüngstes zuerst. An den Rückfragen ändert sich nichts: Vor dem
 Einspielen ist weiterhin die E-Mail-Adresse des Zielkontos abzutippen.
+Danach sagt die Meldung, was übernommen wurde. Hat die Prüfung dabei Werte
+verworfen, ist sie seit Web 23.0.2 **orange** und nennt Feld und Anzahl —
+hier und auf der Kontoseite, wie beim eigenen Backup (Abschnitt 6).
 
 **Die Freigabe** ist der Weg, wenn die Kontokennung nicht passt. Unmittelbar
 einspielen lässt sich ein Paket nur in ein bestehendes Konto mit derselben

@@ -9599,3 +9599,21 @@ zutreffen.
      Abschluss von S11 nach `Backlog-Erledigt.md`.
      Erledigt 20.10.2026 mit Schritt 12a (S11-05c, Web 22.2.0); auf Staging
      von Hand offen (P-S11-22).
+
+387. **Abgewiesene Werte beim Einspielen einer Sicherung zeigt der Browser nicht an.** · gehört zu: nächste Backlog-Runde · Stand: erledigt · seit 16.10.2026
+     *Aufgenommen 16.10.2026 bei der Nachprüfung von S11-06 (F-S11-72).*
+     `edbak_restore()` sammelt jede Beanstandung der Prüfschicht in
+     `$stats['rejected']` (Feld und Anzahl); `einstellungen.php` liest das
+     Feld nirgends — `git log -S` findet es dort nie. Seit S11 wiegt das
+     schwerer: Eine abgewiesene `ort_huelle` nimmt alle Orte und die
+     Reanimation des Einsatzes mit, und die Abschlussmeldung ist trotzdem
+     blau. Gefahren am 16.10.2026 mit einer Hülle falscher Länge: still
+     verworfen. Eine Datei, die die Anwendung selbst schrieb, trägt keine
+     solche Hülle — der Fall braucht eine beschädigte oder fremde Datei.
+     *Weg:* `rejected` in die Abschlussmeldung, Ton orange, wie
+     `import_ui.js` es für den CSV-Import tut. In S11-10 (Oberfläche) mit
+     der Einzahl „Bei 1 Einsätzen" derselben Meldungen. *Abnahme:* die
+     Hülle falscher Länge ergibt eine orange Meldung mit dem Feld.
+     Erledigt 20.10.2026 mit Web 23.0.2 (Einschub vor 12b): alle vier
+     Meldungen nennen Feld und Anzahl und sind orange; Ortsdatenprobe
+     Schritt 16 in drei Engines grün, mit der alten Seite rot.

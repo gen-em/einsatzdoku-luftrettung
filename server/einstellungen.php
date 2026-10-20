@@ -4226,6 +4226,31 @@ ui_seite_start(['titel' => 'Einstellungen',
        oft genug auf 1 stehen. */
     const zahlwort = (n, ein, viele) => (n === 1 ? '1 ' + ein : (n || 0) + ' ' + viele);
 
+    /* VERWORFENE WERTE (Web 23.0.2, Backlog Nr. 387). Die Prüfschicht des
+       Servers weist einzelne Werte ab und nennt sie in `stats.rejected`
+       („feld: grund" → Anzahl). Bis Web 23.0.1 las diese Seite das Feld
+       nirgends, und die Meldung blieb blau. Seit S11 wiegt das schwer: Eine
+       abgewiesene Ortshülle nimmt Orte und Reanimation des Einsatzes mit.
+       Der Satz nennt jedes Feld; der Ton wird orange (`verworfenZahl()`). */
+    const verworfenZahl = (s) => Object.values((s && s.rejected) || {})
+      .reduce((a, n) => a + (Number(n) || 0), 0);
+    function verworfenSatz(s) {
+      const r = (s && s.rejected) || {};
+      const teile = Object.entries(r).map(([k, n]) => `${k} (${n}×)`);
+      return teile.length
+        ? ` ACHTUNG: Verworfen hat die Prüfung ${zahlwort(verworfenZahl(s), 'Wert', 'Werte')}`
+          + ` — ${teile.join(', ')}. Diese Angaben fehlen jetzt im Konto.`
+        : '';
+    }
+    /* Zwei Berichte zusammenzählen: flache Zahlen addieren, `rejected`
+       je Ursache. */
+    function verworfenDazu(s, o) {
+      for (const [k, n] of Object.entries((o && o.rejected) || {})) {
+        s.rejected = s.rejected || {};
+        s.rejected[k] = (s.rejected[k] || 0) + (Number(n) || 0);
+      }
+    }
+
     function restoreBericht(s, zusatz) {
       const gruende = s.skipped_reasons && Object.keys(s.skipped_reasons).length
         ? ' — ' + Object.entries(s.skipped_reasons)
@@ -4270,7 +4295,7 @@ ui_seite_start(['titel' => 'Einstellungen',
                „Bereits systemweit vorhanden" war bis Web 20.47.0 die dritte
                und die einzige, die dieser Satz nannte (R39). */
             ? ` (${s.stammdaten_skipped} übersprungen: ohne passenden Standort oder unvollständig)` : '')
-        + '.' + uebersprungen + schnitte + papierkorb + (zusatz || '');
+        + '.' + uebersprungen + schnitte + papierkorb + verworfenSatz(s) + (zusatz || '');
         /* Hier stand bis Web 22.7.0 die Meldung zur Höhenberechnung nach dem
          * Einspielen (M5-05). Die Höhe trägt seit Web 22 der `pat_blob`; der
          * Server rechnet sie nicht mehr. */
@@ -4564,6 +4589,8 @@ ui_seite_start(['titel' => 'Einstellungen',
               s.skipped_reasons = s.skipped_reasons || {};
               s.skipped_reasons[g] = (s.skipped_reasons[g] || 0) + z;
             }
+            /* Bis Web 23.0.1 fiel `rejected` hier heraus (Nr. 387). */
+            verworfenDazu(s, o.stats);
             Object.assign(spurKarte, o.spur_karte || {});
           }
         }
@@ -4600,7 +4627,7 @@ ui_seite_start(['titel' => 'Einstellungen',
                 + `in diesem Konto nicht lesbar sind.`
               : '');
         melde(impState, 'Import fertig: ' + restoreBericht(s, zusatz) + spurText + rwText(rz, true),
-              rz.abgelehnt.length || rz.ohneZiel || rz.mitgebracht
+              rz.abgelehnt.length || rz.ohneZiel || rz.mitgebracht || verworfenZahl(s)
                 ? 'warn' : 'ok');
       } catch (e) {
         /* OHNE PRAEFIX (Schritt 15 AP8, R2). Den Satzanfang setzt jetzt
@@ -4873,6 +4900,9 @@ ui_seite_start(['titel' => 'Einstellungen',
             for (const [k, v] of Object.entries(o.stats || {})) {
               if (typeof v === 'number') { s[k] = (s[k] || 0) + v; }
             }
+            /* `rejected` ist ein Block, keine Zahl, und fiel hier bis
+               Web 23.0.1 heraus (Nr. 387). */
+            verworfenDazu(s, o.stats);
           }
 
           const nS = Number(fgPaket.spurteile || 0);
@@ -4924,7 +4954,7 @@ ui_seite_start(['titel' => 'Einstellungen',
                           + `Einspielen ist nicht nötig.`);
         melde(fgState, 'Fertig: ' + restoreBericht(s, zusatz),
               unlesbar || s.spuren_ohne_ziel || rz.abgelehnt.length || ortUnlesbar
-                || !frei.ok
+                || !frei.ok || verworfenZahl(s)
                 ? 'warn' : 'ok');
         document.getElementById('freigabebtn').disabled = true;
       } catch (e) {

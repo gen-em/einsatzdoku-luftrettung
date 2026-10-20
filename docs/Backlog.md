@@ -1264,24 +1264,6 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
 
 <!-- -->
 
-387. **Abgewiesene Werte beim Einspielen einer Sicherung zeigt der Browser nicht an.** · gehört zu: nächste Backlog-Runde · Stand: offen · seit 16.10.2026
-     *Aufgenommen 16.10.2026 bei der Nachprüfung von S11-06 (F-S11-72).*
-     `edbak_restore()` sammelt jede Beanstandung der Prüfschicht in
-     `$stats['rejected']` (Feld und Anzahl); `einstellungen.php` liest das
-     Feld nirgends — `git log -S` findet es dort nie. Seit S11 wiegt das
-     schwerer: Eine abgewiesene `ort_huelle` nimmt alle Orte und die
-     Reanimation des Einsatzes mit, und die Abschlussmeldung ist trotzdem
-     blau. Gefahren am 16.10.2026 mit einer Hülle falscher Länge: still
-     verworfen. Eine Datei, die die Anwendung selbst schrieb, trägt keine
-     solche Hülle — der Fall braucht eine beschädigte oder fremde Datei.
-     *Weg:* `rejected` in die Abschlussmeldung, Ton orange, wie
-     `import_ui.js` es für den CSV-Import tut. In S11-10 (Oberfläche) mit
-     der Einzahl „Bei 1 Einsätzen" derselben Meldungen. *Abnahme:* die
-     Hülle falscher Länge ergibt eine orange Meldung mit dem Feld.
-
-
-<!-- -->
-
 388. **Die Demo-Fixture lässt sich seit S11 nicht mehr aus dem Referenzkonto erzeugen.** · gehört zu: nächste Backlog-Runde · Stand: offen · seit 19.10.2026
      *Aufgenommen 19.10.2026 in S11-12 (F-S11-95).*
      `tools/referenzdatensatz/fixture/erzeugen.php` las das Referenzkonto

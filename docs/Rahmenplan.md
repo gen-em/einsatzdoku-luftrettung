@@ -1,14 +1,14 @@
 # Rahmenplan — Programm „Gen-EM NAdoku" bis v1.0
 
-**Fassung 165 (20.10.2026)** · Steuerung: Reihenfolge, Status, programmweite
+**Fassung 166 (20.10.2026)** · Steuerung: Reihenfolge, Status, programmweite
 Entscheidungen. Verlauf: `Rahmenplan-Verlauf.md`. Fassungen 1–15:
 `Rahmenplan-Archiv.md`; Fassungen 16–124: `Rahmenplan-Archiv-2.md`.
 
 **Stand `origin/main`** (Commit `9135c50`, gemessen 20.10.2026): Web 23.0.1 ·
 Uhr 4.0.0 · Android 0.18.0; Web 23.0.1 auf Produktiv seit dem 20.10.2026.
-**Läuft:** nichts — 12a (S11) und 19 (DM) sind abgeschlossen.
+**Läuft:** Einschub Nr. 387 (Web 23.0.2) vor 12b; 12a (S11) und 19 (DM) sind abgeschlossen.
 **Als Nächstes:** 12b — P6 Review mit Fable (Abschnitt 3); vor dem Beginn das Modell umstellen (CLAUDE.md 7).
-**Offene PRs:** der Abschluss von 12a (nur `docs/`).
+**Offene PRs:** der Abschluss von 12a (nur `docs/`), danach Nr. 387 (Web 23.0.2).
 **Fällig bei der Betreiberin:** 36 Posten (Abschnitt 6.1). **`update.php`:** auf Staging und Produktiv nichts offen (Betreiberin, 20.10.2026, nach Web 23).
 
 Kennungen sind Namen, keine Reihenfolge.
@@ -105,7 +105,7 @@ liest die 7.x-Sicherung genau einmal) · Rückwärtskompatibilität ab v1.0 (R60
 
 Schrittnummern sind **Namen**, keine Reihenfolge; sie werden nie umvergeben.
 **Die Reihenfolge der offenen Schritte ist:** **12b** →
-13 → 14; der Betriebsübergang folgt auf v1.0. Daneben, ohne Platz in
+13 → 14, davor als Einschub Nr. 387 (Web 23.0.2, Betreiberin 20.10.2026); der Betriebsübergang folgt auf v1.0. Daneben, ohne Platz in
 der Reihe: die Paketschnitte von **11** und Teil C von **6** (seit SD-M1
 frei). **Warum so:** P6 liegt in zwei Hälften um S11 (R86): das
 **Bedrohungsmodell (12, abgeschlossen) vor S11 (12a, abgeschlossen)**, weil es dessen

@@ -48,6 +48,7 @@ require_once __DIR__ . '/rueckweg_lib.php'; // rw_zustand(): Satz zum eigenen Zw
 
 $uid = (int)($_GET['id'] ?? $_POST['id'] ?? 0);
 $notice = null; $error = null; $bericht = null; $setzLink = null;
+$noticeTon = 'info';
 
 // Muss VOR der POST-Verarbeitung stehen: die Loeschbestaetigung vergleicht
 // die Eingabe mit $u['email']. Nach dem Block wird erneut gelesen, damit die
@@ -539,6 +540,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         edbak_paket_zurueckspielen($kennung, $datei, $uid);
                     if ($okE) {
                         $notice = 'Konto-Backup eingespielt.';
+                        /* Verworfene Werte nennen und orange melden
+                         * (Web 23.0.2, Nr. 387) — bis dahin blieb der
+                         * Bericht hier ganz ungelesen. */
+                        $verworfen = edbak_verworfen_satz((array)$bericht);
+                        if ($verworfen !== '') {
+                            $notice .= $verworfen;
+                            $noticeTon = 'warn';
+                        }
                         require_once __DIR__ . '/protokoll_lib.php';
                         protokoll('sicherung', 'kontobackup_eingespielt',
                             'Konto-Backup ' . $datei . ' in ' . $u['email'] . ' eingespielt',
@@ -885,7 +894,7 @@ ui_seite_start(['titel' => ($u['name'] ?: $u['email']) . ' — Konto']);
   ]);
   ?>
 
-  <?php ui_meldung($notice, $error, 'info', '  '); ?>
+  <?php ui_meldung($notice, $error, $noticeTon, '  '); ?>
 
   <?php if ($setzLink !== null): ?>
     <?php /* Muster aus admin_users.php: Ein gültiger Token, von dem niemand

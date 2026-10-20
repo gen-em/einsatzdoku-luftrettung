@@ -1,9 +1,11 @@
 /* Ortsdatenprobe — die Kette Gerät → Server → Browser mit Gerätehüllen
  * (S11-04b; Konzept S11 3.4, 3.5, E-S11-36 bis -40).
  *
- * Anlass: Nr. 43 — Spur, Phasenkoordinaten und Reanimation gehen seit Web 22
- * verschlossen an den Server; ob der Browser sie aus den Antworten der
- * Anwendung wieder öffnet, belegt keine Einzelprobe für sich.
+ * Anlass: Nr. 43, Nr. 387 — Spur, Phasenkoordinaten und Reanimation gehen
+ * seit Web 22 verschlossen an den Server; ob der Browser sie aus den
+ * Antworten der Anwendung wieder öffnet, belegt keine Einzelprobe für sich.
+ * Seit Web 23.0.2 auch: verworfene Werte beim Einspielen nennt die Meldung
+ * (Schritt 16; bis dahin zeigte die Seite sie nicht).
  *
  * WAS SIE FÄHRT, gegen die örtliche Anlage:
  *   1. ein Wegwerfkonto (`pruefkonto.py`), anmelden — das Kontopaar entsteht
@@ -51,6 +53,10 @@
  *      auf: die Ansicht sagt es, und der Reiter System hat eine Meldung mit
  *      Art, Kennung und Grund — ohne Inhalt (S11-04d, M-S11-01 d); das
  *      Formular verweigert dann das Speichern
+ *  16 (läuft nach 14) Sichern über die Oberfläche, den Einsatz endgültig
+ *      löschen, zurückspielen mit einer um ein Byte verlängerten Hülle: der
+ *      Einsatz kommt ohne Hülle zurück, die Meldung ist orange und nennt
+ *      `ort_huelle` (Web 23.0.2, Nr. 387)
  *
  * Nur örtlich, weil sie die Datenbank liest und verändert.
  *
@@ -747,6 +753,56 @@ try {
   const huelleNach = php(`echo md5((string)db()->query("SELECT ort_huelle FROM missions WHERE id = ${mid}")->fetchColumn());`);
   pruefe(/einsatz_form\.php/.test(s.url()) && huelleVor === huelleNach && await s.locator('#ortfehler').count() === 1,
          '14 Formular mit verdorbener Hülle: Speichern gesperrt, Hülle unverändert', s.url().replace(BASIS, ''));
+  /* 16 — verworfene Werte beim Einspielen (Web 23.0.2, Nr. 387). Bis
+   * Web 23.0.1 sammelte der Server jede Beanstandung in `stats.rejected`,
+   * die Seite las das Feld nirgends, und die Meldung blieb blau — auch wenn
+   * eine abgewiesene Hülle Orte und Reanimation des Einsatzes mitnahm. Die
+   * Probe sichert über die Oberfläche, löscht `mid` endgültig und spielt
+   * die Datei zurück; dabei verlängert sie die Hülle dieses Einsatzes in der
+   * Anfrage um ein Byte. Das ist die Abnahme aus Nr. 387: orange Meldung mit
+   * dem Feld. Läuft NACH 14 — dort ist die Hülle schon gekippt, aber in der
+   * Länge heil, und die Prüfschicht prüft nur Form und Größe. */
+  const BPW = 'ortsdatenprobe-backup-2026';
+  await s.goto(`${BASIS}/einstellungen.php?t=backup`, { waitUntil: 'networkidle' });
+  await s.fill('#bpw1', BPW);
+  await s.fill('#bpw2', BPW);
+  const laden = s.waitForEvent('download', { timeout: 120000 });
+  await s.click('#expbtn');
+  await ja();
+  const datei = join(ordner, 'probe16.edbak');
+  await (await laden).saveAs(datei);
+  php(`require_once "server/trash_lib.php"; trash_delete_mission(${id}, ${mid}); trash_purge_mission(${id}, ${mid});`);
+  const weg16 = Number(php(`echo (int)db()->query("SELECT COUNT(*) FROM missions WHERE id = ${mid}")->fetchColumn();`));
+  let verlaengert = 0;
+  await s.route('**/api/backup_eintraege_restore.php', async (route) => {
+    const rumpf = JSON.parse(route.request().postData() || '{}');
+    for (const m of ((rumpf.eintraege || {}).missions || [])) {
+      if (m.client_ref === einsatz.client_ref && typeof m.ort_huelle === 'string') {
+        m.ort_huelle = Buffer.concat([Buffer.from(m.ort_huelle, 'base64'), Buffer.from([0])]).toString('base64');
+        verlaengert++;
+      }
+    }
+    await route.continue({ postData: JSON.stringify(rumpf) });
+  });
+  await s.goto(`${BASIS}/einstellungen.php?t=backup`, { waitUntil: 'networkidle' });
+  await s.setInputFiles('#bfile', datei);
+  await s.fill('#ipw', BPW);
+  await s.click('#impbtn');
+  await ja();
+  const m16 = s.locator('#impstate .meldung');
+  await m16.first().waitFor({ state: 'attached', timeout: 120000 }).catch(() => null);
+  const ton16 = (await m16.first().getAttribute('class').catch(() => '')) || '';
+  const text16 = ((await s.locator('#impstate').textContent().catch(() => '')) || '').trim();
+  await s.unroute('**/api/backup_eintraege_restore.php');
+  const wieder16 = Number(php(`$st = db()->prepare("SELECT COUNT(*) FROM missions WHERE user_id = ? AND client_ref = ?");
+    $st->execute([${id}, '${einsatz.client_ref}']); echo (int)$st->fetchColumn();`));
+  const huelle16 = php(`$st = db()->prepare("SELECT COUNT(*) FROM missions WHERE user_id = ? AND client_ref = ? AND ort_huelle IS NOT NULL");
+    $st->execute([${id}, '${einsatz.client_ref}']); echo (int)$st->fetchColumn();`);
+  pruefe(weg16 === 0 && verlaengert === 1 && wieder16 === 1 && huelle16 === '0',
+         '16 Einspielen mit verlängerter Hülle: Einsatz da, Hülle abgewiesen',
+         `gelöscht ${weg16 === 0}, verlängert ${verlaengert}, Einsatz ${wieder16}, Hülle ${huelle16}`);
+  pruefe(/meldung-warn/.test(ton16) && /Verworfen hat die Prüfung 1 Wert/.test(text16) && /ort_huelle/.test(text16),
+         '16 Meldung orange, nennt das Feld (Nr. 387)', text16.slice(text16.indexOf('ACHTUNG'), text16.indexOf('ACHTUNG') + 70));
   pruefe(fehler.length === 0, '   keine Skriptfehler in der Seite', fehler.join(' | ').slice(0, 80));
   await kontext.close();
 } catch (e) {

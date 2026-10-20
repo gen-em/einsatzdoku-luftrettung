@@ -14,6 +14,36 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 23.0.2] — unveröffentlicht
+
+Backlog Nr. 387, Einschub vor Schritt 12b. Kein Schema.
+
+### Behoben
+
+- **Was die Prüfung beim Einspielen verwirft, stand in keiner Meldung.**
+  Jede Angabe aus einem Backup läuft durch die Prüfschicht, und was sie
+  nicht passiert, nennt der Server seit jeher in `stats.rejected`, mit Feld
+  und Anzahl. Die Einstellungsseite las das Feld nirgends; beim Einspielen
+  in Fenstern fiel es beim Aufsummieren sogar heraus. Die Verwaltung zeigte
+  es als Rohtext unter einer blauen Meldung, die Kontoseite gar nicht. Seit
+  S11 wiegt das schwer: Eine abgewiesene Ortshülle nimmt alle Orte und die
+  Reanimation des Einsatzes mit, und die Meldung sagte trotzdem „fertig" in
+  Blau. Jetzt nennen alle vier Meldungen (eigenes Backup, Freigabe,
+  Verwaltung → Sicherungen, Kontoseite) die verworfenen Werte und sind dann
+  orange — wie der CSV-Import es seit Web 7 tut. Der Satz steht je einmal
+  im Browser (`verworfenSatz()`) und auf dem Server
+  (`edbak_verworfen_satz()`).
+
+### Bewusst so
+
+- **Eine Datei der Anwendung löst das nicht aus.** Gefunden wurde der Fall
+  mit einer um ein Byte verlängerten Hülle (F-S11-72); eine Sicherung, die
+  die Anwendung selbst schreibt, trägt so etwas nicht. Die Meldung ist für
+  beschädigte und fremde Dateien da. Nachgewiesen ist es in der
+  Ortsdatenprobe (Schritt 16), die die Anfrage beim Einspielen abfängt und
+  die Hülle verlängert: orange, mit `ort_huelle`, in Chromium, Firefox und
+  WebKit. Mit der Seite von Web 23.0.1 ist derselbe Schritt rot.
+
 ## [Web 23.0.1] — unveröffentlicht
 
 Konzept DM, Frage Q-DM-01. Kein Schema.
