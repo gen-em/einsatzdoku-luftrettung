@@ -35,14 +35,6 @@ Gemessen 25.09.2026 gegen `origin/main` (P5c/AP9): **42 276 Elementmessungen, 17
 
 ## Was es nicht kann
 
-Es sieht keine Bilder — ein Layoutfehler, der aus dem Markup kommt, fällt
-ihm nicht auf. Dafür ist der Bilderlauf da.
+Es sieht keine Bilder — ein Layoutfehler, der aus dem Markup kommt, fällt ihm nicht auf. Dafür ist der Bilderlauf da.
 
-**Layoutmaße im Inhalt eines geschlossenen `<details>` vergleicht es nicht**
-(seit Nr. 393): Dort wird nichts gelayoutet, und Firefox liefert Pixel aus
-einem früheren Layout — einer von drei Läufen war deshalb rot, bei gleichem
-Stylesheet. Breite, Höhe, Lage, Ränder und Innenabstände solcher Elemente
-stehen als „(ohne Box)" da, in allen Engines; alles andere wird verglichen.
-Am 21.10.2026 betraf das **1 456 von 63 570 Elementmessungen**; die Zahl
-steht am Ende jedes Laufs. Ebenso entfernt es `autofocus` vor dem Laden —
-Firefox setzte den Fokus sonst nach dem `blur()` des Werkzeugs.
+**Layoutmaße im Inhalt eines geschlossenen `<details>` vergleicht es nicht** (seit Nr. 393): Dort wird nichts gelayoutet, und Firefox liefert Pixel aus einem früheren Layout — einer von drei Läufen war deshalb rot, bei gleichem Stylesheet. Breite, Höhe, Lage, Ränder und Innenabstände solcher Elemente stehen als „(ohne Box)" da, in allen Engines; alles andere wird verglichen. Am 21.10.2026 **1 456 von 63 570 Elementmessungen**, die Zahl steht am Ende jedes Laufs. `autofocus` entfernt es vor dem Laden — Firefox setzte den Fokus sonst nach dem `blur()` des Werkzeugs.

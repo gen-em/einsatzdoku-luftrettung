@@ -346,7 +346,18 @@ async function neuAnmelden(r) {
 async function kasten(rolle, weg, breite) {
   const r = await rolleHolen(rolle || 'demo');
   const BEDIENHOEHE = hoeheFuer(breite);
-  await r.seite.setViewportSize({ width: breite, height: 900 });
+  /* NUR WENN DIE GRÖSSE NICHT SCHON STIMMT (Nr. 393). In WebKit kehrt
+   * `setViewportSize` nicht zurück, wenn die Seite gerade neu lädt — gemessen
+   * am 21.10.2026: Die Demo-Seite stand im Hintergrund auf der Startseite,
+   * `betrieb-updates-neuladen` schaltete die Wartung ein und aus, die
+   * Startseite lud sich selbst neu, und der nächste Weg der Demo-Rolle hing
+   * 64 ms nach Beginn des Aufrufs für immer (`da-faehigkeiten-nach-typ`,
+   * zweimal im vollen Lauf). Im Prüfstand ist es eine Breite, und die stimmt
+   * seit dem Anlegen des Kontexts; der Aufruf war dort nie nötig. */
+  const jetzt = r.seite.viewportSize();
+  if (!jetzt || jetzt.width !== breite || jetzt.height !== 900) {
+    await r.seite.setViewportSize({ width: breite, height: 900 });
+  }
   await r.eingabeart();
   return {
     seite: r.seite,

@@ -198,6 +198,23 @@ WebKit 26 schnitt in der Bedienprobe sogar schlechter ab (74 von 77 gegen
     Breite; fünf Läufe der Seite danach grün (100 Aufnahmen). Nicht
     erklärt; die Meldung nennt seither Adresse, `readyState` und die
     geladenen Stylesheets, statt an der Zeitgrenze zu drehen.
+- **Der dritte volle Lauf (54 grün, 3 rot)** brachte drei weitere Funde im
+  Werkzeug, alle nachgestellt und behoben:
+  - *Bedienprobe hing in WebKit* an `da-faehigkeiten-nach-typ`, zweimal im
+    vollen Lauf, nie einzeln. Das Aufrufprotokoll zeigte den Grund:
+    `setViewportSize` auf der Seite der Demo-Rolle, während diese sich
+    selbst neu lud (der Weg davor schaltet die Wartung ein und aus). Ein
+    solcher Aufruf kehrt in WebKit nicht zurück. `kasten()` ruft ihn jetzt
+    nur, wenn die Größe nicht schon stimmt — im Prüfstand nie. Danach zwei
+    volle Läufe in WebKit mit 77 von 77, zum ersten Mal.
+  - *Rückwegprobe in Firefox* (zwei von drei vollen Läufen): Sie las nach
+    dem POST die alte Seite, weil `waitForLoadState('domcontentloaded')` am
+    alten Dokument sofort zurückkehrte. Sie wartet jetzt auf den
+    Seitenwechsel; danach Firefox 3×, Chromium und WebKit je 50/23.
+  - *Wartungslaufprobe D0* (neu in diesem Paket) fand gelegentlich keinen
+    Tausch: Der stille Lauf der Startseite aus Teil C hatte die Spur schon
+    verdichtet. D0 beginnt jetzt von der Spurenseite aus; danach fünf
+    Läufe in drei Engines 20 von 20.
 - **Die Wartungslaufprobe war in WebKit gelegentlich rot (D1)** — das war
   ein Fehler der Anwendung, nicht des Werkzeugs; er steht im Eintrag
   Web 23.0.3 darüber. Gefunden erst in einer Serie von zehn Läufen, nach

@@ -270,6 +270,12 @@ print(json.dumps({"pk": pk, "st": st, "p": P}))`], { cwd: WURZEL, encoding: 'utf
 
   /* ---- D  Ausdünnen über den stillen Lauf der Startseite ----------------- */
   console.log('\nD — Ausdünnen nach der Frist (Startseite, still)');
+  /* ERST WEG VON DER STARTSEITE (Nr. 393). Ihr stiller Lauf beginnt 1,5 s
+     nach `load`; kam das in Teil C spät, lief er erst NACH dem
+     Zurückdatieren unten und dünnte die Spur selbst aus — D0 fand dann
+     nichts mehr zu tauschen („kein Tausch angefragt", 21.10.2026). Die
+     Seite der Spuren startet keinen Lauf. */
+  await s.goto(`${BASIS}/tag_spuren.php?d=${dayId}`, { waitUntil: 'networkidle' });
   php(`db()->exec("UPDATE missions SET started_at = DATE_SUB(started_at, INTERVAL 40 DAY),
        ended_at = DATE_SUB(ended_at, INTERVAL 40 DAY) WHERE id = ${mid}");`);
   const vorD = (await oeffnen())['m' + mid];
@@ -283,7 +289,12 @@ print(json.dumps({"pk": pk, "st": st, "p": P}))`], { cwd: WURZEL, encoding: 'utf
      dem Zufall überlassen: den ersten Tausch abbrechen, dann nachsehen. */
   abbrechen = 1;
   await s.goto(`${BASIS}/index.php`, { waitUntil: 'load' });
-  for (let i = 0; i < 40 && abbrechen > 0; i++) { await s.waitForTimeout(500); }
+  /* Bis 60 s: Der erste Tausch kommt erst nach Liste, Öffnen, Ausdünnen,
+     Packen und Rundlauf. Im vollen Prüfstand brauchte WebKit dafür am
+     21.10.2026 länger als die 20 s, die hier zuerst standen (D1 wartet 30 s
+     auf das Ergebnis, nicht auf die Anfrage). Die Schleife endet, sobald der
+     Abbruch geschehen ist. */
+  for (let i = 0; i < 120 && abbrechen > 0; i++) { await s.waitForTimeout(500); }
   await s.waitForTimeout(1000);
   const ausgelassenD0 = await s.evaluate(() => sessionStorage.getItem('nadoku-wartungslauf-ausgelassen') || '[]');
   pruefe(abbrechen === 0 && !JSON.parse(ausgelassenD0).some(([a, i]) => a === 'mission' && Number(i) === mid),
