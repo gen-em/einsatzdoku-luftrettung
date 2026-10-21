@@ -18,7 +18,11 @@ Die Wege:
 
 Gestartet wird über `starten()` aus `tools/motor.mjs`, das auch die Engine und
 ihre Fassung ins Protokoll schreibt (`Motor: firefox 157.0`). Ein eigenes
-`.launch(` ist nur bei „nur Chromium" und „kein Test" erlaubt.
+`.launch(` ist nur bei „nur Chromium" und „kein Test" erlaubt — wer an
+`starten()` vorbeigeht, verliert in WebKit auch die drei Eigenheiten, die es
+dort zurückhält und am Ende zählt: die Wiederholung bei „internal error"
+(E-DM-10), den CSP-Bericht nach einem Screenshot und den abgebrochenen Abruf
+beim Seitenwechsel (beide Nr. 393). `pruefen.sh` nennt die Zahlen je Probe.
 
 | Werkzeug | Weg | Grund |
 |---|---|---|

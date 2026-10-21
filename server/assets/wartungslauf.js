@@ -23,7 +23,8 @@
  * Ein 409 ist der Normalfall eines Wettlaufs (ein Gerät hat inzwischen
  * gesendet): Die Spur bleibt liegen, der nächste Lauf nimmt sie mit. Eine
  * Hülle, die nicht aufgeht, geht an den Reiter System und wird für diese
- * Sitzung ausgelassen.
+ * Sitzung ausgelassen. KEINE Antwort (`status: 0`, meist ein Seitenwechsel)
+ * lässt nichts aus und beendet den Durchgang (seit Web 23.0.3, Nr. 393).
  *
  *   EdWartungslauf.lauf({ck, fortschritt})   ein Durchgang; liefert
  *                                            {spuren, getauscht, liegen,
@@ -246,6 +247,15 @@
       return 'getauscht';
     }
     if (a.status === 409) { return 'liegt'; }
+    /* KEINE ANTWORT IST KEIN URTEIL ÜBER DIE SPUR (Web 23.0.3, Nr. 393).
+       `status: 0` heißt: Die Anfrage kam nie zurück — meist, weil die Seite
+       gerade verlassen wird. Bis dahin landete die Spur dafür auf der
+       Auslassliste, und zwar für den ganzen Tab: Wer die Startseite öffnete
+       und gleich weiterklickte, schob die Spur, die gerade dran war, aus dem
+       Wartungslauf, bis der Tab zu war. */
+    if (a.status === 0) {
+      throw Object.assign(new Error(a.meldung || 'Keine Antwort'), { grund: 'verbindung' });
+    }
     throw Object.assign(new Error(a.meldung || 'Tausch abgelehnt'), { grund: 'server' });
   }
 
@@ -266,6 +276,10 @@
         if (r === 'getauscht') { z.getauscht++; } else { z.liegen++; }
       } catch (x) {
         z.fehler++;
+        /* Ohne Verbindung hat dieser Durchgang keinen Sinn mehr, und die
+           Spur ist nicht schuld: nicht auslassen, aufhören. Der nächste
+           Aufruf nimmt sie wieder. */
+        if (x && x.grund === 'verbindung') { break; }
         auslassen(e.art, e.id);
         if (x && x.art) { EdOrtsdaten.melden(x, x.art, e.id); }
       }

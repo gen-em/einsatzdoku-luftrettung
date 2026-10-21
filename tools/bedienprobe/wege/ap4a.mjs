@@ -108,7 +108,20 @@ async function zuordnen(k, tag, vehWert, baseWert) {
      Wechsel des Rettungsmittels selbst, und dann gibt es den alten Wert als
      Option nicht mehr. Geprüft wird deshalb unten nur das Rettungsmittel. */
   await k.seite.selectOption('#basesel', baseWert).catch(() => {});
-  await k.seite.evaluate(() => { document.getElementById('savestate').textContent = ''; });
+  /* ERST KLICKEN, WENN DIE ROLLEN DA SIND (Nr. 393, F-DM-10). Die Wahl löst
+     `rollenVorschau()` aus: Es holt die Rollen nach und baut `#crewfields`
+     neu — ÜBER dem Knopf. Kam die Antwort zwischen Playwrights Zielsuche und
+     dem Mausklick, rückte der Knopf weg, und der Klick traf daneben: In
+     Firefox einer von fünf Einzelläufen, `abgeschickt: 0` bei sichtbarem
+     Formular und richtigem `currentDayId`. Gewartet wird auf Ruhe im Netz,
+     höchstens 5 s; der Klick bleibt ein Klick. */
+  await k.seite.waitForLoadState('networkidle', { timeout: 5000 }).catch(() => {});
+  await k.seite.evaluate(() => {
+    document.getElementById('savestate').textContent = '';
+    /* Für die Fehlermeldung (Nr. 393): Kam das Absenden an? */
+    window.__abgeschickt = 0;
+    document.getElementById('dayform').addEventListener('submit', () => { window.__abgeschickt++; }, { capture: true });
+  });
   await k.seite.locator('#dayform button[type="submit"]').first().click();
   /* 30 s STATT 15, UND DER TEXT IM FEHLER (Konzept DM, F-DM-10): In Firefox
      lief die Grenze im vollen Lauf einmal ab, einzeln nie, und der Weg sagte
@@ -123,7 +136,17 @@ async function zuordnen(k, tag, vehWert, baseWert) {
       'Zeitgrenze, #savestate: „' + await k.seite.evaluate(
         () => document.getElementById('savestate').textContent || '') + '"');
   if (!/gespeichert/i.test(stand)) {
-    throw new Error(`Diensttag ${tag} nicht gespeichert: ${stand}`);
+    /* DER ZUSTAND DER SEITE GEHÖRT IN DIE MELDUNG (Nr. 393): F-DM-10 kam
+       einmal in fünf Einzelläufen in Firefox, und „#savestate leer" sagt
+       nicht, ob das Absenden ankam, ob `currentDayId` fehlte oder ob die
+       Seite gewechselt hatte. */
+    const z = await k.seite.evaluate(() => ({
+      url: location.pathname + location.search,
+      tag: typeof currentDayId === 'undefined' ? 'undef' : currentDayId,
+      formZu: document.getElementById('dayform') ? document.getElementById('dayform').hidden : 'fehlt',
+      abgeschickt: window.__abgeschickt,
+    })).catch(e => ({ fehler: String(e.message || e).slice(0, 80) }));
+    throw new Error(`Diensttag ${tag} nicht gespeichert: ${stand} — ${JSON.stringify(z)}`);
   }
   await k.seite.waitForTimeout(300);
 

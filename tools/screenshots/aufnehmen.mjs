@@ -1598,8 +1598,18 @@ for (const eintrag of liste) {
       () => getComputedStyle(document.documentElement)
               .getPropertyValue('--knopf').trim() !== '',
       null, { timeout: 5000 })
-      .catch(() => rolle.fehler.push(
-        'Stylesheet nach 5 s nicht angewendet — gemessen wurde die ungestaltete Seite'));
+      .catch(async () => {
+        /* WAS STATTDESSEN DA STAND (Nr. 393). Am 20.10.2026 kam diese Zeile
+           einmal in Firefox, an einer Breite einer Seite ohne Vorschritte;
+           fünf Läufe derselben Seite danach waren grün. Ohne Zustand ist
+           sie nicht zu erklären — jetzt nennt sie ihn. */
+        const z = await seite.evaluate(() => ({
+          url: location.pathname + location.search, bereit: document.readyState,
+          blaetter: [...document.styleSheets].map(b => (b.href || 'inline').split('/').pop()).join(','),
+        })).catch(e => ({ fehler: String(e.message || e).slice(0, 80) }));
+        rolle.fehler.push('Stylesheet nach 5 s nicht angewendet — gemessen wurde die ungestaltete Seite'
+          + ` (Zustand: ${JSON.stringify(z)})`);
+      });
 
     const mass = await seite.evaluate(() => ({
       scrollWidth: document.documentElement.scrollWidth,

@@ -41,7 +41,11 @@ steht seither ein Verweis hierher.
 
 Gemessen am 21.09.2026.
 
-**Im Abbild vorhanden:** PHP **8.4.19** (mit `pdo_mysql`, `mysqli`,
+**Im Abbild vorhanden:** PHP **8.4.19** — *am 21.10.2026 gemessen: **8.3.6**,
+und nur diese Fassung (`/usr/bin/php8.3`); das Abbild hat gewechselt, ohne dass
+`aufbauen.sh` es bemerkt. Die Anwendung verlangt mindestens 8.2
+(`PLATTFORM_PHP_MIN`), Produktiv läuft 8.4. Eine Probe, die gestern grün war,
+kann daran rot werden (Komplettprobe, Nr. 393)* — (mit `pdo_mysql`, `mysqli`,
 `openssl`, `gd`, `zip`, `mbstring`), Node **22.22** samt Playwright **1.56**
 und den Engine-Dateien unter `/opt/pw-browsers/` — am 21.09.2026 alle drei,
 seit dem Abbild vom 11.10.2026 **nur noch Chromium** (F-S11-20). **Das

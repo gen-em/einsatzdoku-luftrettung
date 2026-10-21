@@ -921,7 +921,15 @@ in allen drei** — ab der Stufe `neben`, je Engine ein Lauf mit `MOTOR=…`,
 grün nur, wenn alle drei grün sind; **in `klein` in Chromium allein**
 (`docs/Pruefablauf.md` 1, Grundsatz 8, E-DM-08). Ein Seitenwechsel, der in
 WebKit mit „internal error" scheitert, wird einmal wiederholt und gezählt
-(E-DM-10, `motor.mjs`). Stufe 2
+(E-DM-10, `motor.mjs`). **Zwei weitere Eigenheiten hält `starten()` in WebKit
+zurück, beide gezählt** (Nr. 393, seit dem 21.10.2026): den CSP-Bericht, den
+Playwrights eigener Screenshot auslöst (er legt ein `<style>` in die Seite;
+ab dem ersten Screenshot eines Kontexts beantwortet der Prüfstand
+`api/csp_bericht.php` selbst, die CSP bleibt in Kraft), und den Seitenfehler
+„… due to access control checks", mit dem WebKit einen Abruf meldet, den ein
+Seitenwechsel abbrach — nur dieser Wortlaut, nur eigene Herkunft, nur
+während einer Navigation. Beide traten in WebKit 26 genauso auf; sichtbar
+wurden sie im ersten vollen Lauf `neben` in drei Engines. Stufe 2
 fährt Kreislauf und Rückwegprobe ebenso dreifach. Welche Probe dreifach
 läuft, sagt `"motoren": true` in `pruefablauf.json`; welches Werkzeug auf
 welchem Weg dahin kommt (Probe, Helfer, von Hand, nur Chromium, kein Test),
@@ -8895,7 +8903,7 @@ dem Lesen nicht geändert hat**.
 
 | Teil | Wo | Was |
 |---|---|---|
-| Liste | `spur2_faellig()`, `api/wartungslauf.php` `liste` | höchstens 20 je Aufruf (E-S11-68): abgeschlossen (`final`), nicht im Papierkorb (bis Web 22.7.0 auch: ohne Altbestand, E-S11-70); fällig, wenn ein Stück der Stufe 1 liegt (Zusammenfügen ohne Karenz, E-S11-69), 31 Tage nach dem Ende (Ausdünnen, E-S11-25) oder ein Schnitt jünger ist als das jüngste Stück (die gesperrten Punkte fallen jetzt, E-S11-47). Mit Stücken, Sperrzeiten, Phasenzeiten und `pat_blob` samt Prüfsumme. `auslassen`: was der Browser in dieser Sitzung nicht öffnen konnte — sonst blockierte eine kaputte Hülle die ersten Plätze |
+| Liste | `spur2_faellig()`, `api/wartungslauf.php` `liste` | höchstens 20 je Aufruf (E-S11-68): abgeschlossen (`final`), nicht im Papierkorb (bis Web 22.7.0 auch: ohne Altbestand, E-S11-70); fällig, wenn ein Stück der Stufe 1 liegt (Zusammenfügen ohne Karenz, E-S11-69), 31 Tage nach dem Ende (Ausdünnen, E-S11-25) oder ein Schnitt jünger ist als das jüngste Stück (die gesperrten Punkte fallen jetzt, E-S11-47). Mit Stücken, Sperrzeiten, Phasenzeiten und `pat_blob` samt Prüfsumme. `auslassen`: was der Browser in dieser Sitzung nicht öffnen konnte — sonst blockierte eine kaputte Hülle die ersten Plätze. Eine Anfrage **ohne Antwort** (`status: 0`, meist ein Seitenwechsel) lässt seit Web 23.0.3 nichts aus und beendet den Durchgang; bis dahin schob sie die gerade bearbeitete Spur für den ganzen Tab aus dem Lauf (Nr. 393) |
 | Zahl | `spur2_faellig_zahl()`, `zahl` | wie viele Aufzeichnungen aus wie vielen Diensttagen, für die Karte |
 | Arbeit | `assets/wartungslauf.js` | öffnen (`EdOrtsdaten.spur()`), nach der Frist ausdünnen (`ausduennen()`, `ausduennungPruefen()` — wörtlich `spur_ausduennen()` und `spur_ausduennung_pruefen()`; gegen PHP an 221 Referenzspuren nachgemessen: 221 gleiche Behaltelisten), **ein** gepacktes Stück bauen (`EdOrtsdaten.gepacktBauen()`), es wieder öffnen und Punkt für Punkt vergleichen (Rundlauf) — erst dann schicken |
 | Ortshöhe | ebenda | fehlt sie im `pat_blob`, wird sie aus den offenen Punkten nachgetragen (E-S11-72); der Server schreibt den Blob nur bei unveränderter Prüfsumme |
@@ -10584,7 +10592,19 @@ versagt.
    `img-src`.
 2. **`connect-src` nennt den eingestellten Geocoder** (`geocoder_dienst()`),
    nicht den fest verdrahteten Namen aus dem Konzept — und lässt ihn weg,
-   wenn die Adresssuche aus ist.
+   wenn die Adresssuche aus ist. **Auf jeder Seite, seit Web 23.0.3.** Bis
+   dahin stand er nur dort, wo der Aufrufer `geocoder_lib.php` vor der
+   Kopfzeile geladen hatte (`function_exists()` in `kopf_csp()`) —
+   `einstellungen.php` ja, `einsatz_form.php` nicht, und gerade dort sucht
+   man Adressen. Gefunden am 21.10.2026 über die Meldungsliste
+   (`connect-src https://photon.komoot.io` von `einsatz_form.php`);
+   `kopfzeilen_lib.php` bindet die Datei seither selbst ein.
+   **Zweiter Fund derselben Messung:** Die Sicherung schrieb ihr Archiv mit
+   zip.js und `level: 0`, und zip.js lädt bei jeder Stufe außer 6 sein
+   WebAssembly (`script-src wasm-eval`, `connect-src data:`). Es fängt den
+   Fehlschlag still ab — die Sicherung gelang auch bei scharfer CSP (drei
+   Engines, Kreislauf grün) —, aber jede Sicherung schrieb zwei Meldungen.
+   Seit Web 23.0.3 `compressionMethod: 0` (`docs/Backup-Format.md` 1.2).
 3. **`img-src` mit `data:` — und das war zuerst anders.** SP-5 führt `data:`
    mit; eine Zählung im eigenen Quelltext ergab **0 Treffer**, also wurde es
    gestrichen, mit dem Satz „der Report-Only-Lauf sagt, wenn das ein Irrtum
@@ -12965,7 +12985,12 @@ zweiten wieder ab.
    Darunter stehen die letzten 20 Meldungen mit Richtlinie, Quelle, Seite und
    Zähler. **Leer ist das Ziel.** Steht dort etwas, ist es *vor* dem
    Umschalten zu klären: Jede Zeile ist etwas, das nach dem Scharfschalten
-   nicht mehr funktioniert — und zwar ohne Fehlermeldung.
+   nicht mehr funktioniert — und zwar ohne Fehlermeldung. *Bis Web 23.0.3
+   wurde sie nie leer:* Jede Sicherung schrieb `wasm-eval` und
+   `connect-src data:` (harmlos), jede Adresssuche im Einsatzformular
+   `connect-src` des Geocoders (nach dem Scharfschalten: Suche ohne
+   Ergebnis). Wer vor 23.0.3 scharf geschaltet hat, prüft die Adresssuche
+   im Einsatzformular nach dem Update noch einmal.
 3. Schalter **„CSP scharf schalten"** umlegen.
 4. **Danach durchklicken**, nicht nur die Startseite: Karte in allen vier
    Anbietern, Einsatzformular mit Adresssuche, Import (zip.js), Export,

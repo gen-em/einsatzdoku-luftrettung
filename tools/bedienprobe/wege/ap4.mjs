@@ -400,6 +400,9 @@ export const wege = [
         await seiteAuf();
         await k.seite.selectOption('#vehsel', vehWert);
         await k.seite.selectOption('#basesel', baseWert).catch(() => {});
+        /* Erst klicken, wenn `rollenVorschau()` die Rollen über dem Knopf
+           nachgebaut hat — sonst rückt der Knopf weg (Nr. 393, `ap4a.mjs`). */
+        await k.seite.waitForLoadState('networkidle', { timeout: 5000 }).catch(() => {});
         await k.seite.evaluate(() => document.getElementById('savestate').textContent = '');
         await k.seite.locator('#dayform button[type="submit"]').first().click();
         await k.seite.waitForFunction(

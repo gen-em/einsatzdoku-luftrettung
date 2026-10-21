@@ -14,6 +14,81 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 23.0.3] — unveröffentlicht
+
+Backlog Nr. 393, vier Funde aus den vollen Prüfständen in drei Engines
+(Werkzeug-Eintrag darunter). Kein Schema.
+
+### Behoben
+
+- **Die Adresssuche im Einsatzformular stand nicht in der CSP.**
+  `kopf_csp()` setzt den eingestellten Adressdienst in `connect-src`, aber
+  nur, wenn `geocoder_lib.php` vor der Kopfzeile geladen war — geprüft mit
+  `function_exists()`. `einstellungen.php` lädt sie früh,
+  `einsatz_form.php` erst später über `ui.php`. Gemessen am 21.10.2026:
+  `einsatz_form.php` lieferte `connect-src 'self'`, `einstellungen.php`
+  `'self' https://photon.komoot.io`. Solange die CSP auf Report-Only steht,
+  entsteht nur eine Meldung; **scharf geschaltet hätte die Adresssuche
+  genau dort nichts gefunden**, und zwar ohne Fehlermeldung außer in der
+  Konsole. `kopfzeilen_lib.php` bindet die Datei jetzt selbst ein; sie legt
+  beim Laden nur Konstanten und Funktionen an. Ohne Datenbank (Wartung,
+  `install.php`) bleibt es bei `'self'`, nachgeprüft mit einer Kopie der
+  drei Bibliotheken ohne `config.php`. Wer die CSP schon scharf geschaltet
+  hat, prüft nach dem Update die Adresssuche im Einsatzformular.
+- **Jede Sicherung schrieb zwei CSP-Meldungen.** Das Archiv der Sicherung
+  entstand mit zip.js und `level: 0`. zip.js schaltet bei jeder Stufe außer
+  6 die native `CompressionStream` ab, weil die keine Stufen kennt, und lädt
+  stattdessen seinen eigenen Packer als WebAssembly — auch bei Stufe 0, wo
+  gar nichts gepackt wird. Die CSP verbietet das (`script-src wasm-eval`,
+  `connect-src data:`), zip.js fängt den Fehlschlag still ab, und die
+  Sicherung gelang trotzdem: Mit scharfer CSP lief der Kreislauf `edbak` in
+  allen drei Engines grün, je 347 566 Einzelvergleiche ohne unerklärte
+  Abweichung. Geblieben waren die Meldungen im Reiter Betrieb, und mit
+  ihnen eine Liste, die vor dem Scharfschalten leer sein soll und es nie
+  wurde. `compressionMethod: 0` sagt dasselbe über das Verfahren statt über
+  die Stufe: dasselbe Archiv bis auf die Zeitstempel, Prüfsummen gültig,
+  Meldungen in Chromium 2 → 0 (Firefox und WebKit meldeten es in dieser
+  Nachstellung nicht).
+
+- **Wer die Startseite gleich wieder verließ, schob eine Spur aus dem
+  Wartungslauf.** Der stille Durchgang der Startseite beginnt 1,5 s nach dem
+  Laden und tauscht Spur um Spur. Wird die Seite währenddessen verlassen,
+  bricht der Browser die laufende Anfrage ab, und `EdApi` meldet
+  `status: 0`. `wartungslauf.js` nahm das als Fehler der Spur und setzte sie
+  auf die Auslassliste — und die gilt für den ganzen Tab. Bis er geschlossen
+  wurde, blieb diese Spur unverdichtet. Gefunden, weil die
+  Wartungslaufprobe in WebKit etwa jedes zehnte Mal in D1 rot war (eins von
+  zehn in einer Serie am 21.10.2026, dazu der Prüfstand am Vortag): Die
+  Seite aus Teil C arbeitete noch, als die Probe weiternavigierte. Eine
+  Anfrage ohne Antwort beendet jetzt den Durchgang, ohne auszulassen; der
+  nächste Aufruf nimmt die Spur wieder. Die Probe erzwingt den Fall seither
+  (D0: den ersten Tausch abbrechen) — mit dem alten Code in WebKit und
+  Chromium rot, mit dem neuen in allen drei Engines 20 von 20.
+
+- **Ein heiles Komplett-Backup konnte „verändert oder unvollständig"
+  heißen.** `komp_oeffnen()` erkennt den letzten Block daran, dass die
+  Leseposition das Dateiende erreicht, und nahm das Dateiende aus
+  `filesize()`. Das geht über den Stat-Cache von PHP: Hat derselbe Prozess
+  die Datei vorher gesehen, als sie kürzer war, gilt ein mittlerer Block als
+  letzter, und seine Zusatzdaten passen nicht. Gefunden, weil die
+  Komplettprobe und die Schlüsselwechselprobe im zweiten vollen Prüfstand
+  rot waren — beide versiegeln über mehrere Häppchen und öffnen danach im
+  selben Prozess. Dreimal rot, auch mit dem `server/`-Stand von `main`;
+  zuletzt grün waren sie am 19.10.2026, und warum sich das geändert hat,
+  ist nicht belegt: Die Arbeitsumgebung hat heute PHP 8.3.6, laut
+  `docs/Sandbox-Setup.md` lag im Abbild am 21.09.2026 PHP 8.4.19. Im
+  Betrieb liegen Versiegeln und Öffnen in verschiedenen Anfragen, und vor
+  dem Umhängen des fertigen Backups steht ein `clearstatcache()`; ein
+  Schaden im Betrieb ist nicht bekannt. Jetzt kommt die Größe von `fstat()`
+  am offenen Handle, an beiden Stellen, die sie lesen. Danach Komplettprobe
+  zweimal 69 von 69, Schlüsselwechselprobe 66 von 66.
+
+### Was bewusst stehen bleibt
+
+- Der Adressdienst steht jetzt auf **jeder** Seite in `connect-src`, nicht
+  nur auf denen mit Adresssuche. Die Richtlinie ist eine je Installation,
+  nicht je Seite, und die Ausnahme hängt weiter am Schalter „Adresssuche".
+
 ## [Werkzeug: Playwright 1.64.1, Stufe 2 wieder auf Ubuntu 26.04 (Nr. 393)] — 2026-10-20
 
 **Das ganze Projekt fährt Playwright 1.64.1, und Stufe 2 läuft wieder auf
@@ -57,6 +132,78 @@ als Vorgabe den festen Pfad `chromium-1194`. Nach dem Anheben hätte der
 Stilvergleich ein Chromium gefahren, das kein anderes Prüfmittel mehr
 misst. Er nimmt jetzt wie alle das Chromium seines Playwright;
 `CHROMIUM=<pfad>` gilt weiter.
+
+**Was der erste volle Lauf in drei Engines fand.** Der Prüfstand `neben`
+lief am 20.10.2026 zum ersten Mal über den ganzen Stand in Chromium,
+Firefox und WebKit — alle Berichte auf `main` seit Konzept DM waren
+`klein`, also Chromium allein. Er war 35 grün, 4 rot. Jede rote Probe ist
+gegen WebKit 26 nachgestellt worden, und keine war eine Folge der Anhebung;
+WebKit 26 schnitt in der Bedienprobe sogar schlechter ab (74 von 77 gegen
+76 von 77). Was dahinter lag:
+
+- **Playwrights Screenshot löst in WebKit einen CSP-Bericht aus.** Er legt
+  ein `<style>` in die Seite (Textcursor, Animationen), die CSP verbietet
+  Inline-Stile, WebKit meldet es — bei jedem Screenshot, Chromium und
+  Firefox nie. Auf den Wartungsseiten antwortet der Endpunkt mit 503, daher
+  20 Konsolenfehler; dazu eine örtliche `csp_berichte` voller falscher
+  Zeilen. Der Bericht ist von einem echten Verstoß nicht zu unterscheiden.
+  `starten()` beantwortet in WebKit ab dem ersten Screenshot eines Kontexts
+  `api/csp_bericht.php` selbst; die CSP bleibt in Kraft. Am Kontext, nicht
+  an der Seite: Eine `page.route()` sieht den Bericht nicht (gemessen).
+- **WebKit meldet einen abgebrochenen Abruf als Seitenfehler** („… due to
+  access control checks"), obwohl die Anwendung ihn fängt — wenn der stille
+  Wartungslauf noch läuft, während das Werkzeug weiternavigiert. Rauschen
+  ist er jetzt nur bei genau diesem Wortlaut, eigener Herkunft und einer
+  laufenden Navigation; dieselbe Zeile ohne Seitenwechsel bleibt ein
+  Fehler. Die Stelle ist `starten()`, für alle 25 Werkzeuge, die
+  Seitenfehler zählen. Gepatcht wird `addListener`, nicht `on`: Playwright
+  setzt `on` im Konstruktor jeder Seite als eigene Eigenschaft, und der
+  erste Versuch am Prototyp kam nie an. Selbstprobe 24 von 24, die
+  Gegenprobe (Bedingung gestrichen) macht drei Fälle rot.
+- **80 Bilder fehlten, weil der Demo-Reset in den WebKit-Lauf fiel.** Der
+  Prüfstand schob die Demo-Marke einmal je Probe, und seit R87 läuft eine
+  Probe dreimal hintereinander — der Bilderlauf 70 Minuten bei 30 Minuten
+  Schutz. Jetzt vor jedem Engine-Lauf.
+- **Die Bedienprobe hing 43 Minuten** und hatte keine Zeitgrenze je Weg.
+  Jetzt 300 s; wer sie reißt, ist verfehlt, und seine Rolle wird neu
+  angemeldet. Dazu der eine Weg, der in WebKit immer scheiterte
+  (`ap2-dialog-vier-einbauorte`): Er wählte den Einsatz „ohne Spur" an der
+  geöffneten Spur, und WebKit öffnet sie später — Einsatz 1119 mit 393
+  Punkten galt als spurlos, das Formular zeigte die Auswahl nicht, und
+  `selectOption` lief 30 s ins Leere. Jetzt entscheidet die Klartextzahl der
+  Stücke.
+- **Der zweite volle Lauf (51 grün, 5 rot) hatte keinen WebKit-Fehler mehr,
+  aber drei Einzelwackler in Firefox, je an einer Stelle, die im ersten
+  Lauf grün war.** Jeder ist einzeln nachgestellt oder benannt:
+  - *Stilvergleich:* Inhalt eines geschlossenen `<details>` wird nicht
+    gelayoutet; Firefox meldete für seine Breite trotzdem Pixel aus einem
+    früheren Layout (1680 gegen 1920 in jeder Fensterbreite, bei gleichem
+    Stylesheet). Solche Elemente vergleicht der Stilvergleich jetzt ohne
+    Layoutmaße — 1 456 von 63 570 Messungen. Der erste Entwurf nahm jedes
+    Element ohne Box und damit ein Fünftel der Abdeckung, auch die
+    berechneten Werte verborgener Dialoge; er war außerdem nur zufällig
+    grün, weil Firefox dem Inhalt geschlossener `details` Rechtecke gibt.
+    Dazu ein zweiter Zufall: `autofocus` in `login.php` setzt Firefox erst
+    nach `load`, also nach dem `blur()` des Werkzeugs — das Attribut wird
+    vor dem Laden entfernt. Danach acht Läufe in Firefox grün; eine
+    absichtlich geänderte Regel findet er weiter (273 Abweichungen).
+  - *Bedienprobe (F-DM-10, seit Konzept DM offen):* einer von fünf
+    Einzelläufen rot, `#savestate` leer. Die erweiterte Meldung zeigte
+    `abgeschickt: 0` bei sichtbarem Formular — der Klick traf daneben. Die
+    Wahl des Rettungsmittels baut die Rollenfelder über dem Knopf neu, und
+    kam die Antwort zwischen Zielsuche und Klick, rückte der Knopf weg.
+    `ap4a.mjs` und `ap4.mjs` warten jetzt auf Ruhe im Netz (höchstens 5 s);
+    danach 15 von 15 in Firefox.
+  - *Bilderlauf:* „Stylesheet nach 5 s nicht angewendet", einmal, an einer
+    Breite; fünf Läufe der Seite danach grün (100 Aufnahmen). Nicht
+    erklärt; die Meldung nennt seither Adresse, `readyState` und die
+    geladenen Stylesheets, statt an der Zeitgrenze zu drehen.
+- **Die Wartungslaufprobe war in WebKit gelegentlich rot (D1)** — das war
+  ein Fehler der Anwendung, nicht des Werkzeugs; er steht im Eintrag
+  Web 23.0.3 darüber. Gefunden erst in einer Serie von zehn Läufen, nach
+  einer falschen ersten Vermutung (eine Spur, die nicht aufgeht): Die Probe
+  schreibt seither mit, was der Browser als „geht nicht auf" meldet, und im
+  roten Lauf war es nichts.
 
 **Was bewusst stehen bleibt:** die Engines des Abbilds unter
 `/opt/pw-browsers`. Sie stören nicht, und sie zu löschen hieße, ins Abbild

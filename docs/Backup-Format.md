@@ -82,9 +82,11 @@ erreicht. In Fenstern wächst sie kaum: Was bleibt, ist die Kennungsliste.
 
 ### 1.2 Aufbau
 
-Ein ZIP, **gespeichert und nicht gepackt** (`level: 0`) — die Teile sind
-bereits gzip *und* verschlüsselt; ein zweiter Packlauf kostet Zeit und bringt
-nichts:
+Ein ZIP, **gespeichert und nicht gepackt** (`compressionMethod: 0`) — die
+Teile sind bereits gzip *und* verschlüsselt; ein zweiter Packlauf kostet Zeit
+und bringt nichts. *Bis Web 23.0.2 stand dort `level: 0`: dasselbe Archiv bis auf die Zeitstempel,
+aber zip.js versuchte dabei sein WebAssembly zu laden, und die CSP meldete
+das bei jeder Sicherung zweimal.* Gelesen wird beides gleich:
 
 | Eintrag | Inhalt |
 |---|---|

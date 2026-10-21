@@ -166,6 +166,16 @@ if (is_file(__DIR__ . '/config.php')) {
     require_once __DIR__ . '/db.php';
 }
 require_once __DIR__ . '/instanz_lib.php';
+/* `geocoder_lib.php` STEHT AUSGESCHRIEBEN (Web 23.0.3). `kopf_csp()` setzt den
+ * Adressdienst in `connect-src` — bis dahin nur, wenn ein Aufrufer die Datei
+ * VOR dem Kopf geladen hatte (`function_exists()`). `einstellungen.php` tat
+ * es, `einsatz_form.php` nicht: Es zieht sie erst über `ui.php`, nach der
+ * Kopfzeile. Gemessen am 21.10.2026: `einsatz_form.php` lieferte
+ * `connect-src 'self'`, und genau dort sucht man Adressen — bei scharfer CSP
+ * ohne Ergebnis, nur mit einer Zeile in der Konsole. Die Datei legt beim
+ * Laden nur Konstanten und Funktionen an und zieht selbst nichts; ohne
+ * Datenbank scheitert erst ihr Aufruf, und den fängt `kopf_csp()`. */
+require_once __DIR__ . '/geocoder_lib.php';
 
 /* ---- Einstellungen, je mit Vorgabe --------------------------------------- */
 
@@ -293,21 +303,21 @@ function kopf_csp(bool $mitNonce = true): string
         : "'self'";
 
     /* Der Adressdienst kommt zur LAUFZEIT herein und nur, wenn die Suche an
-     * ist (Abweichung 2 im Dateikopf). `geocoder_lib.php` wird nicht
-     * geladen — die Wartungsseite haette daran keine Freude; ist sie da,
-     * wird sie gefragt. */
+     * ist (Abweichung 2 im Dateikopf). `geocoder_lib.php` ist seit Web 23.0.3
+     * immer geladen (oben); bis dahin hing der Eintrag daran, ob der
+     * Aufrufer sie zufällig vor dem Kopf geladen hatte. Ohne Datenbank —
+     * Wartungsseite, `install.php` — scheitert die Frage, und es bleibt bei
+     * 'self'. */
     $verbinde = ["'self'"];
-    if (function_exists('geocoder_installation_an') && function_exists('geocoder_dienst')) {
-        try {
-            if (geocoder_installation_an()) {
-                $u = parse_url(geocoder_dienst());
-                if (!empty($u['host'])) {
-                    $verbinde[] = ($u['scheme'] ?? 'https') . '://' . $u['host']
-                                . (isset($u['port']) ? ':' . (int)$u['port'] : '');
-                }
+    try {
+        if (geocoder_installation_an()) {
+            $u = parse_url(geocoder_dienst());
+            if (!empty($u['host'])) {
+                $verbinde[] = ($u['scheme'] ?? 'https') . '://' . $u['host']
+                            . (isset($u['port']) ? ':' . (int)$u['port'] : '');
             }
-        } catch (Throwable $ex) { /* ohne Datenbank: nur 'self' */ }
-    }
+        }
+    } catch (Throwable $ex) { /* ohne Datenbank: nur 'self' */ }
 
     $teile = [
         "default-src 'none'",

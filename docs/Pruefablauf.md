@@ -367,7 +367,10 @@ Zwei Dinge hängen mit daran, und beide sind gemessen:
   und die Einsätze bekommen neue Kennungen; wen er traf, entschied bis dahin
   die Reihenfolge der Muster. Jetzt schiebt der Prüfstand vor jeder Probe
   mit `"demo": true` die Marke des letzten Resets auf „jetzt" und stellt sie
-  am Ende zurück; die Zeile steht im Lauf. Das Feld trägt, wer das
+  am Ende zurück; die Zeile steht im Lauf. **Je Engine-Lauf, nicht je
+  Probe** (seit Nr. 393): Ab `neben` läuft eine Probe dreimal hintereinander,
+  der Bilderlauf allein 70 Minuten, und am 20.10.2026 fiel der Reset mitten
+  in den WebKit-Lauf — 80 Aufnahmen ohne Bild. Das Feld trägt, wer das
   Demo-Konto anmeldet oder Demo-Daten über ihre Kennungen liest — heute
   sieben Proben (`auswahl.py --selbstprobe` hält die Form).
 - **Der Prüfstand meldet, wenn eine Datei unter `server/` kein Muster
