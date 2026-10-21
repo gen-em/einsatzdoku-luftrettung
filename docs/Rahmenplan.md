@@ -1,15 +1,15 @@
 # Rahmenplan — Programm „Gen-EM NAdoku" bis v1.0
 
-**Fassung 166 (20.10.2026)** · Steuerung: Reihenfolge, Status, programmweite
+**Fassung 168 (21.10.2026)** · Steuerung: Reihenfolge, Status, programmweite
 Entscheidungen. Verlauf: `Rahmenplan-Verlauf.md`. Fassungen 1–15:
 `Rahmenplan-Archiv.md`; Fassungen 16–124: `Rahmenplan-Archiv-2.md`.
 
-**Stand `origin/main`** (Commit `9135c50`, gemessen 20.10.2026): Web 23.0.1 ·
+**Stand `origin/main`** (Commit `f17380c`, gemessen 20.10.2026): Web 23.0.2 ·
 Uhr 4.0.0 · Android 0.18.0; Web 23.0.1 auf Produktiv seit dem 20.10.2026.
-**Läuft:** Einschub Nr. 387 (Web 23.0.2) vor 12b; 12a (S11) und 19 (DM) sind abgeschlossen.
-**Als Nächstes:** 12b — P6 Review mit Fable (Abschnitt 3); vor dem Beginn das Modell umstellen (CLAUDE.md 7).
-**Offene PRs:** Nr. 387 (Web 23.0.2).
-**Fällig bei der Betreiberin:** 36 Posten (Abschnitt 6.1). **`update.php`:** auf Staging und Produktiv nichts offen (Betreiberin, 20.10.2026, nach Web 23).
+**Läuft:** 12b — P6 (Abschnitt 3), Zweig `claude/lucid-cannon-nvv86i`: das Review mit Fable ist am 21.10.2026 zu Ende, die Freigaberunde beantwortet; die Pakete R17-18 bis -30 laufen mit Opus (R88), zuerst R17-18.
+**Als Nächstes:** 13 — P7 Gesicht v1.0, nach 12b.
+**Offene PRs:** keine.
+**Fällig bei der Betreiberin:** 37 Posten (Abschnitt 6.1). **`update.php`:** auf Staging und Produktiv nichts offen (Betreiberin, 20.10.2026, nach Web 23).
 
 Kennungen sind Namen, keine Reihenfolge.
 
@@ -105,7 +105,7 @@ liest die 7.x-Sicherung genau einmal) · Rückwärtskompatibilität ab v1.0 (R60
 
 Schrittnummern sind **Namen**, keine Reihenfolge; sie werden nie umvergeben.
 **Die Reihenfolge der offenen Schritte ist:** **12b** →
-13 → 14, davor als Einschub Nr. 387 (Web 23.0.2, Betreiberin 20.10.2026); der Betriebsübergang folgt auf v1.0. Daneben, ohne Platz in
+13 → 14 (der Einschub Nr. 387, Web 23.0.2, ist am 20.10.2026 gemergt); der Betriebsübergang folgt auf v1.0. Daneben, ohne Platz in
 der Reihe: die Paketschnitte von **11** und Teil C von **6** (seit SD-M1
 frei). **Warum so:** P6 liegt in zwei Hälften um S11 (R86): das
 **Bedrohungsmodell (12, abgeschlossen) vor S11 (12a, abgeschlossen)**, weil es dessen
@@ -120,7 +120,7 @@ weil das Altbestand-Werkzeug ein einziges Konto voraussetzte.
 |---|---|---|---|---|---|
 | 6 | **S4 — Rest, Teil C** | Play Console nach R65: interner Test-Track für Handy und Uhr unter einem Eintrag, Versionscode-Versatz, Signaturweg; Android 1.0.0 (E-R45-7). Die Vorbereitung ohne D-U-N-S und Schlüssel ist gebaut (Android 0.13.0), die Gerätetests sind erfolgt (24.09.2026) | D-U-N-S, Organisationskonto und Play App Signing — erledigt 26.09.2026 (SD-M1); offen in 6.2: Wear-OS-Uhr, Demo-Video, Datensicherheitsformular | `docs/konzepte/Konzept-S4-Handy-Uhr-Client.md` 13; `Vorbereitung-Play-Console.md` | offen — Teile A bis C gemergt 04.09.2026 (PR #33, Abschnitt 8); Android 1.0.0 und der interne Test-Track können beginnen |
 | 11 | **Planung v1.0** | Festlegungen vor dem Schnitt (R65 bis R73, entschieden 03.09.2026); Ergebnis sind die Konzepte der Phasen P6 bis P8 mit je eigenem Paketschnitt (P6 nach der Freigaberunde des Reviews) | keine | `docs/konzepte/Konzept-Planung-v1.0.md` | gemergt 03.09.2026 — Festlegungen entschieden (R65–R73); offen nur die Paketschnitte, je mit dem Konzept zu 12b, 13 und 14 |
-| 12b | **P6 — Stücke 2 bis 12: Review und Bereinigung** | Bug- und Sicherheitsreview mit Fable über den Stand nach S11 (R17, R69, R86) — auch Uhr- und Android-Krypto, SPUR2, Browser-Spurfunktionen; Freigaberunde; Sofort-, Pflicht- und Aufräumpakete; Kommentardurchgang (R13, R31); R5-Ausnahmeliste | 12a gemergt (erfüllt 20.10.2026) | `docs/konzepte/Review-R17.md` (Fortsetzung aus 12); Paketschnitt nach der Freigaberunde | offen — als Nächstes; Modell Fable (CLAUDE.md 7) |
+| 12b | **P6 — Stücke 2 bis 12: Review und Bereinigung** | Bug- und Sicherheitsreview mit Fable über den Stand nach S11 (R17, R69, R86) — auch Uhr- und Android-Krypto, SPUR2, Browser-Spurfunktionen; Freigaberunde; Sofort-, Pflicht- und Aufräumpakete; Kommentardurchgang (R13, R31); R5-Ausnahmeliste | 12a gemergt (erfüllt 20.10.2026) | `docs/konzepte/Review-R17.md` (Fortsetzung aus 12, Abschnitt 7); Paketschnitt in 7.3.12, verbindlich seit 21.10.2026 (E-R17-17) | **Umsetzung** seit 20.10.2026 — Zweig `claude/lucid-cannon-nvv86i`; Review mit Fable zu Ende 21.10.2026 (59 Befunde, kein Sofortpaket, Freigaberunde E-R17-17 bis -28); Pakete R17-18 bis -30 mit Opus in neuer Sitzung (R88), zuerst R17-18 |
 | 13 | **P7 — Gesicht v1.0** | Umbenennung überall (Langform in den System-E-Mails entscheiden), neues Demo-Passwort (R25); Vertrag v1 (R12, Nr. 23); Doku-Neufassung, Handbuch als HTML im Release (R16, R72); Web-App-Manifest (R70); Changelog neu (R15); Backlog-Übernahme; Altformat der Sicherung weg (Nr. 46); Kommentarregel (R69) | 12b | eigenes Konzept nach K1 | offen — nach 12b |
 | 14 | **P8 — Schnitt** | Neuaufsetzen mit Übernahme per edbak (R40 (3), R60, Nr. 324); Migrationsregister neu (R66); Repo-Umzug und Inventur mit Begründung je Weglassung (R68); Kette im neuen Repositorium (R67, R40 (4)); Rechts- und Betreiberunterlagen (R41); Abnahme nach R11; Tags `web-v1.0.0`, `uhr-v…`, `android-v1.0.0` | 13 | eigenes Konzept nach K1 | offen — nach 13 |
 | — | **Betriebsübergang** | Öffnung in Wellen über die Betriebsarten (R41); Produktionsfreigabe in den Stores mit Welle 1 (R65; nach MDR-Abgrenzung und Rechtsunterlagen); mit Welle 1 entfällt die Seitenladung (`apk.php`, Handbuch 10.1); Garmin-Uhr über den Connect-IQ-Store; halbjährliche Probe-Wiederherstellung | v1.0 | — | offen — beginnt mit v1.0 (nach den Schritten 13 und 14); Wellen nach R41 |
@@ -139,7 +139,13 @@ v1.0 wird nicht erklärt, solange ein Fund offen ist. **Preis:** Ein Fund im
 heutigen Bestand bleibt bis nach S11 liegen; den Kryptoteil hat der
 Krypto-Review (R78) schon gelesen, seine kritischen Funde sind mit 9a und
 S10 behoben. **Abnahme:** Review vollständig, Pakete abgenommen, Wortliste
-0/0/0.
+0/0/0. **Stand 21.10.2026:** Das Review ist zu Ende (59 Befunde: 5 hoch,
+22 mittel, 25 niedrig, 7 Hinweise; keiner kritisch, also kein Sofortpaket,
+E-R17-06). Der Paketschnitt steht in `Review-R17.md` 4: R17-18 bis -29 in
+der Reihenfolge Dokumentation Teil 1 (die öffentliche Zusage, F-R17-58),
+Kette, Konten, Uhr, Server, Sicherung, Android, `CryptoKey`,
+Browser-Herkunft, Dokumentation Teil 2, Aufräumen mit Kommentardurchgang,
+Seitenaufbau; dann der Abschluss R17-30. Alle mit Opus (R88).
 
 Die Schritte 13, 14 und der Betriebsübergang haben keinen Block: Ihre
 Zeilen nennen den Inhalt, den Volltext hält `Rahmenplan-Archiv-2.md` 3.
@@ -204,7 +210,8 @@ gestrichen, 6a abgehakt; was steht, ist bestätigt offen.
 | **Umgebung `produktion` beschränken** auf `main` und die Tags `web-v*`, `android-v*`, `uhr-v*` — ein Probelauf fordert sie heute von jedem Zweig an (F-R17-04); dabei Pflichtprüfer und Org-Zweitfaktor nachsehen | 12 (R17-01) | 11.10.2026 | `Pruefdokument-R17-Review.md`, P-R17-04 |
 | **Prüfliste S11:** Gerätetests Uhr 4.0.0 und Android 0.18.0 (P-S11-32 bis -35, -05, -39), Wege auf Staging (-14 bis -31), Safari (-43), Konto-Backup (-45), alte Sicherungen (-07, -08), Rechtstexte (-40) | 12a | 20.10.2026 | `Pruefdokument-S11-Ortsdaten.md` 4 |
 | **Prüfliste DM:** P-DM-02 (Registrierung in Firefox auf Staging: Knopf sofort frei), -03 (dasselbe in Safari), -06 (dasselbe auf Produktiv nach dem Tag `web-v23.0.1`, nur bei offener Registrierung); -04 im ersten Prüfstand einer Nebenstufe | 19 | 20.10.2026 | `Pruefdokument-DM-Drei-Motoren.md` 3 |
-| **Prüfliste R17:** P-R17-03 (Verweise auf das Modell nach dem Merge), -04 (Server-Anteil, CSP und HSTS auf Produktiv), -05 (Berechtigungen der Wear-Release-APK mit `aapt2`) | 12 | 11.10.2026 | `Pruefdokument-R17-Review.md` 4 |
+| **Prüfliste R17:** P-R17-03, -04 (CSP scharf ist Voraussetzung für R17-25), -05; aus 12b P-R17-06 bis -13, davor fällig -12 (keine `config.php`-Kopie) und -13 (die vier Texte) | 12, 12b | 11.10.2026 | `Pruefdokument-R17-Review.md` 4 |
+| **Logdauer des Hosters für Zugriffslogs erfragen** — Tokens in Anfrageadressen stehen dort, bis die Logs fallen (F-R17-22, -57); die Zahl in die Betriebsakte | 12b (R17-19) | 21.10.2026 | `Review-R17.md` 2.3 und 2.3a |
 | **Plattformvergleich Staging vervollständigen:** vier leere Zellen (`max_user_connections`, Kontingent, Platz, Cron) und die Herkunft des Zertifikats aus Betrieb → Status | Kette II | 21.09.2026 | `Technik.md` 6.3a; Prüfpunkt 2c |
 | **Server-Anteil anlegen** — Betrieb → Servereinstellungen, Karte „Schlüssel des Servers"; ohne den Griff tut S10 nichts, die Statuszeile steht rot | S10 | 14.09.2026 | Archiv-2 6; Runbook |
 | **Schlüsselblatt drucken** — zwei Ausdrucke, zwei Orte (Betriebsakte, Passwortmanager); Ablageort in der Betriebsakte vermerken | S10 | 14.09.2026 | Archiv-2 6 |
@@ -370,6 +377,7 @@ werden hier kompakt angehängt; **der Statussatz wird ersetzt, nicht ergänzt**
 | R85 | Die Kette des Tags N spricht mit dem Server der Fassung N−1; ein unbekanntes Feld ist `unbekannt`, nie eine erfundene Null | gilt | Konzept Kette II (gelöscht, `8854b86`), E-KH-19 |
 | R86 | P6 in zwei Hälften um S11: Bedrohungsmodell als 12 vor 12a, Code-Review als 12b danach — S11 wird gegengelesen, der Code einmal, in Endfassung | gilt; entschieden 27.09.2026 (Betreiberin, Konzeptsitzung SR) | Abschnitt 3 („Warum so", Blöcke 12 und 12b) |
 | R87 | Browserproben in Chromium, Firefox und WebKit ab Stufe neben und in Stufe 2, in klein Chromium; fehlt eine Engine, rot. Ausnahmen begründet; Safari von Hand | gilt; entschieden 19.10.2026 (Betreiberin), umgesetzt in Schritt 19 (abgeschlossen 20.10.2026) | Konzept DM (gelöscht, `3bedc25`), E-DM-01 bis -11 |
+| R88 | Die Pakete von 12b (R17-18 bis -30) laufen mit Opus, Kryptographie eingeschlossen — K8 (Krypto mit Fable, E-PV-5 (7)) gilt für 12b nicht; das Review war Fable | gilt; entschieden 21.10.2026 (Betreiberin, Freigaberunde) | `Review-R17.md` 2.1, E-R17-28 |
 
 ## 8. Erledigt
 
