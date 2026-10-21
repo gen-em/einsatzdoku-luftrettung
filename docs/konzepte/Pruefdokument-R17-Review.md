@@ -4,7 +4,7 @@
 Protokoll „ist es belegt?" steht im Statusblock und in Abschnitt 5 des
 Konzepts. Angelegt am 11.10.2026 mit R17-00 (Fable); jedes Paket füllt es
 mit Mittel **und** Zahl. Stand: **Schritt 12b läuft seit dem 20.10.2026**
-(R17-16 erledigt — Stücke 2 bis 12 gelesen und zusammengeführt; es folgt die Freigaberunde R17-17); Schritt 12 ist abgeschlossen — Freigabe des Modells
+(R17-16 erledigt — Stücke 2 bis 12 gelesen und zusammengeführt; R17-17 hat die Freigaberunde am 21.10.2026 eröffnet, Q-R17-09 bis -19, und wartet auf die Betreiberin); Schritt 12 ist abgeschlossen — Freigabe des Modells
 durch die Betreiberin am 11.10.2026 (P-R17-01), Erledigt-Zeile in
 Rahmenplan 8 (Fassung 156), PR #103 gemergt. **12b schreibt dieses
 Dokument fort** (E-R17-15), mit denselben Zählern: Die Punkte P-R17-03 bis
@@ -348,7 +348,7 @@ F-R17-24 bestätigt, Nr. 341 gemessen; **Stück 8 gelesen am 20.10.2026**, F-R17
 F-R17-11, -12, -13 bestätigt, F-R17-28 zur Hälfte erledigt, Uhr-Prüfstand 99 von 99; **Stück 9 gelesen am 20.10.2026**, F-R17-54,
 F-R17-27 und -31 bestätigt, AN-5 beantwortet, Gradle 280 und 72 Fälle grün, P-R17-11; **Stück 10 gelesen am 21.10.2026**, F-R17-55 bis -57,
 sieben Altbefunde bestätigt, Nr. 188 belegt, 13 Selbstproben grün, P-R17-12; **Stück 11 gelesen am 21.10.2026**, F-R17-58 und -59,
-F-R17-09, -25, -26, -30 bestätigt, F-R17-29 zum Teil offen, rund 120 Aussagen gemessen, P-R17-13; **Stück 12 zusammengeführt am 21.10.2026**, 59 Befunde mit Paket, Sofortpaket leer, Paketschnitt-Entwurf A bis K, Kommentardurchgang 11 855, R5-Liste leer, 3.4 erledigt), dann die Freigaberunde R17-17 mit dem Halt bei der Betreiberin; was die Stücke nicht
+F-R17-09, -25, -26, -30 bestätigt, F-R17-29 zum Teil offen, rund 120 Aussagen gemessen, P-R17-13; **Stück 12 zusammengeführt am 21.10.2026**, 59 Befunde mit Paket, Sofortpaket leer, Paketschnitt-Entwurf A bis K, Kommentardurchgang 11 855, R5-Liste leer, 3.4 erledigt), dann die Freigaberunde R17-17 — **eröffnet am 21.10.2026** mit Q-R17-09 bis -19 (Konzept 2.2), Halt bei der Betreiberin; was die Stücke nicht
 prüfen können, kommt in Abschnitt 1, die Vorsortierung mit ihren Grenzen
 in Abschnitt 5, Prüfpunkte für die Betreiberin ab P-R17-06 in Abschnitt 4.
 Für Stück 3 bleibt P-R17-04 (GitHub-Umgebungen, Org-Zweitfaktor, Produktiv-
