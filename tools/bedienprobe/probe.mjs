@@ -264,6 +264,24 @@ async function rolleHolen(name) {
 }
 const rollen = { demo: await rolleHolen('demo') };
 
+/* EINE ZEITGRENZE JE WEG (Nr. 393, F4). Am 20.10.2026 hing die Probe in
+ * WebKit nach `betrieb-updates-neuladen` 43 Minuten, ohne eine Zeile zu
+ * schreiben; erst ein Abbruch von Hand gab den Prüfstand frei, und 16 Wege
+ * galten danach als verfehlt, ohne gefahren zu sein. Ein Weg braucht sonst
+ * Sekunden, der längste wartet 90 s auf eine Adresse. Wer die Grenze reißt,
+ * ist verfehlt und benannt — und seine Rolle wird VERWORFEN: Der hängende
+ * Aufruf läuft auf ihrer Seite weiter, und der nächste Weg derselben Rolle
+ * bekäme sonst eine Seite, die ein anderer gerade bedient. */
+/* `WEG_FRIST_MS` nur für die Gegenprobe: mit 1000 muss jeder Weg an der
+ * Grenze scheitern und die Probe trotzdem sauber enden. */
+const WEG_FRIST = Number(process.env.WEG_FRIST_MS) || 300000;
+async function rolleVerwerfen(name) {
+  const r = rollenSpeicher[name];
+  delete rollenSpeicher[name];
+  if (r) { await r.kontext.close().catch(() => {}); }
+  if (name === 'demo') { rollen.demo = await rolleHolen('demo'); }
+}
+
 /* ---- Adressen, die zum Bestand gehoeren ----------------------------------
  *
  * Dieselbe Regel wie beim Bilderlauf: Kennungen gehoeren zu EINER
@@ -557,14 +575,25 @@ for (const breite of BREITEN) {
               + `Sollhöhe ${hoeheFuer(breite)} px ==`);
   }
   for (const weg of WEGE) {
-    let e;
+    let e, wecker;
+    const frist = new Promise((_, nein) => {
+      wecker = setTimeout(() => nein(Object.assign(
+        new Error(`Zeitgrenze ${WEG_FRIST / 1000} s überschritten — der Weg hing`), { gehangen: true })),
+        WEG_FRIST);
+    });
+    /* Der abgehängte Lauf darf später noch scheitern, ohne den Prozess zu
+     * beenden — Node wertet eine unbehandelte Ablehnung als Absturz. */
+    const lauf = (async () => weg.fahren(await kasten(weg.rolle, weg, breite)))();
+    lauf.catch(() => {});
     try {
-      const k = await kasten(weg.rolle, weg, breite);
-      e = await weg.fahren(k);
+      e = await Promise.race([lauf, frist]);
       if (!e || typeof e !== 'object') { throw new Error('Weg lieferte kein Ergebnis'); }
     } catch (f) {
+      if (f && f.gehangen) { await rolleVerwerfen(weg.rolle || 'demo'); }
       e = { ist: '—', ok: false,
             bemerkung: 'nicht gefahren: ' + (f && f.message ? f.message : f) };
+    } finally {
+      clearTimeout(wecker);
     }
     const zeile = {
       name: weg.name, paket: weg.paket, punkt: weg.punkt || '',

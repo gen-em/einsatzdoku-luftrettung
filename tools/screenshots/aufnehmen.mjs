@@ -85,7 +85,8 @@ const MODUL = process.env.PLAYWRIGHT_MODUL
   || '/opt/node22/lib/node_modules/playwright/index.mjs';
 const PW = await import(MODUL.startsWith('/') ? 'file://' + MODUL : MODUL);
 const { motorWahl, starten, codeSchritt, istEinrichtungstor, EINRICHTUNGSTOR_MELDUNG,
-        einsaetzeVervielfachen, abgebrochenerSchriftabruf, harmloserResizeHinweis } =
+        einsaetzeVervielfachen, abgebrochenerSchriftabruf, harmloserResizeHinweis,
+        abgangBeobachten } =
   await import(new URL('../motor.mjs', import.meta.url).href);
 
 const HIER   = dirname(fileURLToPath(import.meta.url));
@@ -450,9 +451,47 @@ if (flag('--selbstprobe')) {
     console.log(`${ok ? ' ok ' : 'FEHL'}  ${String(f.nr).padStart(2)}  `
       + `soll ${f.soll.padEnd(8)} ist ${ist.padEnd(8)}  ${f.grund}`);
   }
-  console.log(`\n${erfuellt} von ${SELBSTPROBE.length} Faellen erwartungsgemaess, `
-    + `${SELBSTPROBE.length - erfuellt} nicht.`);
-  process.exit(erfuellt === SELBSTPROBE.length ? 0 : 1);
+  /* 18 bis 23: der abgebrochene Abruf beim Verlassen der Seite (WebKit,
+   * Nr. 393). Er haengt an einem ZUSTAND — laeuft gerade eine Navigation? —,
+   * deshalb eine nachgebaute Seite mit eigener Uhr statt eines Browsers. */
+  const ABGANG = [
+    { nr: 18, soll: 'rauschen', grund: 'WebKit: Abruf waehrend laufender Navigation abgebrochen',
+      schritte: ['nav'], text: 'EIGEN_HOST/api/wartungslauf.php due to access control checks.' },
+    { nr: 19, soll: 'rauschen', grund: 'dasselbe, Meldung kurz (< 1 s) nach dem Dokumentwechsel',
+      schritte: ['nav', 'fertig', '+500'], text: 'EIGEN_HOST/api/kontopaar.php due to access control checks.' },
+    { nr: 20, soll: 'fehler',   grund: 'dieselbe Meldung OHNE Seitenwechsel — bleibt ein Fehler',
+      schritte: [], text: 'EIGEN_HOST/api/wartungslauf.php due to access control checks.' },
+    { nr: 21, soll: 'fehler',   grund: 'dieselbe Meldung 2 s nach dem Wechsel — bleibt ein Fehler',
+      schritte: ['nav', 'fertig', '+2000'], text: 'EIGEN_HOST/api/wartungslauf.php due to access control checks.' },
+    { nr: 22, soll: 'fehler',   grund: 'fremde Herkunft waehrend der Navigation — bleibt ein Fehler',
+      schritte: ['nav'], text: '/beispiel.example/api/x due to access control checks.' },
+    { nr: 23, soll: 'fehler',   grund: 'anderer Wortlaut waehrend der Navigation — bleibt ein Fehler',
+      schritte: ['nav'], text: 'TypeError: Load failed' },
+    { nr: 24, soll: 'fehler',   grund: 'Navigation vor 31 s begonnen und nie fertig — bleibt ein Fehler',
+      schritte: ['nav', '+31000'], text: 'EIGEN_HOST/api/wartungslauf.php due to access control checks.' },
+  ];
+  const host = new URL(BASIS).host;
+  for (const f of ABGANG) {
+    let uhr = 1000000;
+    const hoerer = {};
+    const rahmen = {};
+    const seite = { on: (n, fn) => { hoerer[n] = fn; }, mainFrame: () => rahmen, url: () => BASIS + '/index.php' };
+    const pruefe = abgangBeobachten(seite, { jetzt: () => uhr });
+    for (const x of f.schritte) {
+      if (x === 'nav') hoerer.request({ isNavigationRequest: () => true, frame: () => rahmen });
+      else if (x === 'fertig') hoerer.framenavigated(rahmen);
+      else uhr += Number(x);
+    }
+    const ist = pruefe(f.text.replace('EIGEN_HOST', '/' + host)) ? 'rauschen' : 'fehler';
+    const ok = ist === f.soll;
+    if (ok) erfuellt++;
+    console.log(`${ok ? ' ok ' : 'FEHL'}  ${String(f.nr).padStart(2)}  `
+      + `soll ${f.soll.padEnd(8)} ist ${ist.padEnd(8)}  ${f.grund}`);
+  }
+  const alle = SELBSTPROBE.length + ABGANG.length;
+  console.log(`\n${erfuellt} von ${alle} Faellen erwartungsgemaess, `
+    + `${alle - erfuellt} nicht.`);
+  process.exit(erfuellt === alle ? 0 : 1);
 }
 
 rmSync(AUSGABE, { recursive: true, force: true });
@@ -637,6 +676,8 @@ async function anmelden(rolle) {
   });
   /* Seitenfehler zählen alle — außer dem einen Hinweis, den nur WebKit als
    * Fehler wirft (F-DM-09, `harmloserResizeHinweis()` in motor.mjs). */
+  /* Ein Abruf, den das Verlassen der Seite abbrach, kommt hier gar nicht erst
+   * an — den hält `starten()` für alle Werkzeuge zurück (Nr. 393, motor.mjs). */
   seite.on('pageerror', e => { if (!harmloserResizeHinweis(e.message)) { fehler.push('pageerror: ' + e.message); } });
 
   /* ---- Die Eingabeart haelt nicht von selbst (Fund aus S8/AP7) -----------
