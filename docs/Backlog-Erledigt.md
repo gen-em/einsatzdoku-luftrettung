@@ -9617,3 +9617,17 @@ zutreffen.
      Erledigt 20.10.2026 mit Web 23.0.2 (Einschub vor 12b): alle vier
      Meldungen nennen Feld und Anzahl und sind orange; Ortsdatenprobe
      Schritt 16 in drei Engines grün, mit der alten Seite rot.
+
+77. **Die Wartungsseite `update.php` in Unterseiten aufteilen.** · gehört zu: 12b · Stand: erledigt · seit 02.09.2026
+     Befund: Die Seite trug Migrationsliste, Job-Einstieg, Speichergrenze und
+     weitere Betriebsangaben auf einer Fläche.
+     Entschieden 05.09.2026 (E-S8-05): nicht aufteilen, sondern **auflösen** —
+     der Block Betrieb trägt sieben Seiten mit je einem Anliegen;
+     Wartungsmodus und ausstehende Migrationen liegen zusammen auf Updates
+     (R66). Gebaut in S8 AP2 bis AP4; `update.php` ist seit Web 15.2.0 eine
+     302-Weiterleitung, der Notausgang `php update.php` bleibt.
+     Weg: Offen ist allein, dass die Adresse noch existiert — das räumt P6.
+     Werdegang bis 26.09.2026: `docs/Backlog.md@f5bddc2`, Nr. 77.
+     Erledigt 21.10.2026 (12b, Freigaberunde, E-R17-25): Die Weiche bleibt —
+     die Adresse steht in Runbooks, Lesezeichen und `WARTUNG_AUSNAHMEN`, der
+     Notausgang `php update.php` auch. Nichts mehr zu bauen.

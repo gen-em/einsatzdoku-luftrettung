@@ -216,19 +216,6 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
 
 <!-- -->
 
-77. **Die Wartungsseite `update.php` in Unterseiten aufteilen.** · gehört zu: 12b · Stand: teilweise · seit 02.09.2026
-     Befund: Die Seite trug Migrationsliste, Job-Einstieg, Speichergrenze und
-     weitere Betriebsangaben auf einer Fläche.
-     Entschieden 05.09.2026 (E-S8-05): nicht aufteilen, sondern **auflösen** —
-     der Block Betrieb trägt sieben Seiten mit je einem Anliegen;
-     Wartungsmodus und ausstehende Migrationen liegen zusammen auf Updates
-     (R66). Gebaut in S8 AP2 bis AP4; `update.php` ist seit Web 15.2.0 eine
-     302-Weiterleitung, der Notausgang `php update.php` bleibt.
-     Weg: Offen ist allein, dass die Adresse noch existiert — das räumt P6.
-     Werdegang bis 26.09.2026: `docs/Backlog.md@f5bddc2`, Nr. 77.
-
-<!-- -->
-
 80. **Auswertung der Gerätestatistik — und die zweite Hälfte der Frage.** · gehört zu: Zuarbeit · Stand: teilweise · seit 02.09.2026
      Befund: Rest von Nr. 59 (Speicherung, Web 12.9.0). Gebaut ist
      inzwischen fast alles: die Modelltabelle auf Betrieb → Statistik (S8/AP4,
@@ -669,7 +656,7 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
 
 <!-- -->
 
-263. **Die Integritätswache sieht nur, was öffentlich abrufbar ist.** · gehört zu: 12b · Stand: offen · seit 21.09.2026
+263. **Die Integritätswache sieht nur, was öffentlich abrufbar ist.** · gehört zu: nach v1.0 · Stand: nicht umsetzen · seit 21.09.2026
      *Aufgenommen 21.09.2026 (Kette II, Einschub Abschnitt 8).* Priorität:
      niedrig. **Abhilfe offen — hier wird die Grenze benannt, nicht
      geschlossen.**
@@ -687,8 +674,8 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      **Warum die Abhilfe offen bleibt:** Sie hieße, dem Server eine Schnittstelle
      zum Hashen der eigenen Quelldateien zu geben — ein neuer Angriffsweg für
      ein Problem, das der Vergleich nur teilweise löst.
-     Stand 11.10.2026 (Schritt 12, E-R17-12): Das Bedrohungsmodell benennt die
-     Grenze (G5, 6.6); Stück 10 des Reviews (12b) liest die Wache und entscheidet.
+     Entschieden 21.10.2026 (12b, E-R17-26): **nicht umsetzen** — die Grenze
+     steht im Modell (G5, 6.6); Anleitung, Alarmweg und lesende Probe gegen Produktiv baut R17-19.
 
 <!-- -->
 
