@@ -146,12 +146,19 @@ print(p['aufruf'] if p else '', p['braucht'] if p else '', 'demo' if p and p.get
     fi
     # Die Marke steht im Protokoll: Wer einen Reset mitten in einer Probe
     # vermutet, sieht hier, ob sie geschoben war (Nr. 322).
-    if [ -n "$demo" ] && [ "$GEGEN" = oertlich ]; then
-        jetzt=$(date +%s)
+    # JE LAUF, NICHT JE PROBE (Nr. 393, F3). Seit R87 läuft eine Probe in
+    # `neben` dreimal hintereinander, und bis Nr. 393 stand die Marke vor
+    # dieser Schleife: dreißig Minuten für drei Läufe. Der Bilderlauf
+    # braucht in Chromium allein 26 davon; am 20.10.2026 begann der
+    # WebKit-Lauf bei Minute 47, der Reset kam dazwischen, und 80 Aufnahmen
+    # fielen aus, weil die Kennungen fehlten.
+    marke_schieben() {
+        [ -n "$demo" ] && [ "$GEGEN" = oertlich ] || return 0
+        local jetzt; jetzt=$(date +%s)
         [ "$(demo_marke setzen "$jetzt")" = "$jetzt" ] \
-            && zeile "      $name: Demo-Marke auf $(date -u -d "@$jetzt" +%H:%M:%S) UTC — kein Reset in den nächsten 30 min" \
-            || zeile "      $name: Demo-Marke NICHT gesetzt — ein Demo-Reset kann diese Probe treffen"
-    fi
+            && zeile "      $name${1:+ [$1]}: Demo-Marke auf $(date -u -d "@$jetzt" +%H:%M:%S) UTC — kein Reset in den nächsten 30 min" \
+            || zeile "      $name${1:+ [$1]}: Demo-Marke NICHT gesetzt — ein Demo-Reset kann diese Probe treffen"
+    }
     # Die Zeit je Probe steht in der Zeile (RP-01): Die Nebenstufe brauchte
     # 1 266 s, und niemand konnte sagen, wofür.
     # DREI ENGINES (R87, Konzept DM), in `klein` eine. Eine Probe mit
@@ -164,23 +171,32 @@ print(p['aufruf'] if p else '', p['braucht'] if p else '', 'demo' if p and p.get
     if [ -n "$drei" ]; then
         rot=()
         for mo in "${MOTOREN[@]}"; do
+            marke_schieben "$mo"
             t1=$SECONDS
             if (cd "$WURZEL" && export MOTOR=$mo && eval "$befehl" >"/tmp/pruefstand-$name-$mo.log" 2>&1); then
                 zeile "ok    $name [$mo]  $((SECONDS - t1)) s"
             else
                 zeile "ROT   $name [$mo]  $((SECONDS - t1)) s  (siehe /tmp/pruefstand-$name-$mo.log)"; rot+=("$mo")
             fi
-            # Wiederholte Seitenwechsel in WebKit (E-DM-10, motor.mjs): genannt,
-            # nicht verschwiegen — grün bleibt grün, aber man sieht, wie oft.
-            w=$(grep -c '^WebKit-Wiederholung:' "/tmp/pruefstand-$name-$mo.log" 2>/dev/null || true)
-            [ "${w:-0}" -gt 0 ] && zeile "      $name [$mo]: $w Seitenwechsel wiederholt (WebKit-Stolpern, E-DM-10)"
+            # Wiederholte Seitenwechsel in WebKit (E-DM-10, motor.mjs) und neu
+            # angemeldete Rollen, deren Seite nicht mehr antwortete (Bedienprobe,
+            # Nr. 393): genannt, nicht verschwiegen — grün bleibt grün, aber man
+            # sieht, wie oft.
+            w=$(grep -cE '^WebKit-(Wiederholung|Neuanmeldung):' "/tmp/pruefstand-$name-$mo.log" 2>/dev/null || true)
+            [ "${w:-0}" -gt 0 ] && zeile "      $name [$mo]: $w Mal wiederholt (WebKit-Stolpern, E-DM-10: Seitenwechsel oder Neuanmeldung)"
             WIEDERHOLT=$((WIEDERHOLT + ${w:-0}))
+            # Was motor.mjs in WebKit zurückhält (Nr. 393): CSP-Berichte nach
+            # Screenshots, Abrufe, die ein Seitenwechsel abbrach. Genannt, nicht
+            # verschwiegen — die Zeile steht am Ende des Probenprotokolls.
+            grep -hE '^WebKit-(Screenshot|Seitenwechsel): ' "/tmp/pruefstand-$name-$mo.log" 2>/dev/null \
+                | sed -E 's/ \(motor\.mjs, Nr\. 393\)$//' | while IFS= read -r z; do zeile "      $name [$mo]: $z"; done
         done
         if [ ${#rot[@]} -eq 0 ]; then ZAHL[$name]=0
         else ZAHL[$name]="rot:$(IFS=,; echo "${rot[*]}")"; fehl=$((fehl+1)); fi
         DREIFACH=$((DREIFACH+1))
         continue
     fi
+    marke_schieben
     t0=$SECONDS
     if (cd "$WURZEL" && eval "$befehl" >/tmp/pruefstand-$name.log 2>&1); then
         zeile "ok    $name  $((SECONDS - t0)) s"; ZAHL[$name]=0
@@ -216,7 +232,7 @@ if [ "$rcb" -ne 0 ]; then
 fi
 
 melde "$fehl rot, $nicht nicht gemessen, $(( ${#PROBEN[@]} - fehl - nicht )) grün · $SECONDS s"
-[ "$WIEDERHOLT" -gt 0 ] && zeile "$WIEDERHOLT Seitenwechsel in WebKit wiederholt — im Prüfdokument nennen (E-DM-10)"
+[ "$WIEDERHOLT" -gt 0 ] && zeile "$WIEDERHOLT Wiederholungen in WebKit (Seitenwechsel oder Neuanmeldung) — im Prüfdokument nennen (E-DM-10)"
 [ "$nicht" -gt 0 ] && zeile "Was nicht gemessen werden konnte, gehört in das Prüfdokument — an den Anfang."
 # Nicht gemessen ist nicht grün (E-KH-12, E-PK-46): Der Bericht trägt es, und
 # das Tor liest es als rot — dann soll es der Lauf auch sein.

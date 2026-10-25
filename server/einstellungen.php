@@ -3963,7 +3963,7 @@ ui_seite_start(['titel' => 'Einstellungen',
         const vorgang = await EdCrypto.backupSchluessel(pw, KDF_ITER);
 
         const schreiber = new zip.BlobWriter('application/octet-stream');
-        const zw = new zip.ZipWriter(schreiber, { level: 0 });
+        const zw = new zip.ZipWriter(schreiber, { compressionMethod: 0 });
         const teileliste = [];
         let nr = 1;
 
@@ -3971,10 +3971,19 @@ ui_seite_start(['titel' => 'Einstellungen',
           const bytes = await EdCrypto.sealTeilJson(vorgang, inhalt,
             EdCrypto.aadTeil(kennung, name, nr, gesamt));
           teileliste.push({ name, art, sha256: await EdCrypto.sha256Hex(bytes) });
-          /* `level: 0` — gespeichert, nicht gepackt. Die Teile sind bereits
-             gzip UND verschlüsselt; ein zweiter Packlauf kostet Zeit und
-             bringt nichts. */
-          await zw.add(name, new zip.Uint8ArrayReader(bytes), { level: 0 });
+          /* Gespeichert, nicht gepackt. Die Teile sind bereits gzip UND
+             verschlüsselt; ein zweiter Packlauf kostet Zeit und bringt
+             nichts.
+             `compressionMethod: 0`, NICHT `level: 0` (Web 23.0.3). zip.js
+             schaltet bei jeder Stufe außer 6 die native CompressionStream
+             ab und lädt seinen eigenen Packer als WebAssembly — auch für
+             Stufe 0, wo gar nicht gepackt wird. Die CSP verbietet das
+             (`wasm-eval`, `connect-src data:`), zip.js fängt den Fehlschlag
+             still ab, und jede Sicherung schrieb zwei CSP-Berichte in den
+             Reiter Betrieb. Gemessen am 21.10.2026: dasselbe Archiv bis auf
+             die Zeitstempel (Flags, Fassungen, Prüfsummen gleich);
+             Berichte in Chromium 2 → 0, Firefox und WebKit 0 → 0. */
+          await zw.add(name, new zip.Uint8ArrayReader(bytes), { compressionMethod: 0 });
           nr++;
           return bytes.length;
         }
@@ -4096,7 +4105,7 @@ ui_seite_start(['titel' => 'Einstellungen',
         };
         const manifestBytes = await EdCrypto.sealTeilJson(vorgang, manifest,
           EdCrypto.aadManifest());
-        await zw.add('manifest.edbak', new zip.Uint8ArrayReader(manifestBytes), { level: 0 });
+        await zw.add('manifest.edbak', new zip.Uint8ArrayReader(manifestBytes), { compressionMethod: 0 });
         await zw.close();
 
         const blob = await schreiber.getData();

@@ -206,11 +206,17 @@ async function weg(browser, rolle) {
 
     /* 7: der richtige Zettel */
     await s.fill('#f-rs', rc);
+    /* AUF DEN SEITENWECHSEL WARTEN, nicht nur auf die Antwort (Nr. 393).
+       `waitForLoadState('domcontentloaded')` kehrte sofort zurück — das
+       ALTE Dokument war längst so weit —, und in Firefox kam die Antwort
+       vor dem neuen Dokument: zwei von drei vollen Läufen am 20./21.10.2026
+       lasen die Ausgangsseite („Gerät und Codes verloren") statt der
+       Erfolgskarte, einzeln grün. */
     const [antwort] = await Promise.all([
       s.waitForResponse(r => r.request().method() === 'POST' && /login\.php/.test(r.url())),
+      s.waitForNavigation({ waitUntil: 'domcontentloaded' }),
       s.click('#schluesselform button[type="submit"]'),
     ]);
-    await s.waitForLoadState('domcontentloaded');
     if (rolle === 'user') {
       const titel = (await s.locator('.anmeldung-schritt').first().textContent().catch(() => '')) || '';
       pruefe(antwort.status() === 200 && titel.includes('Zweitfaktor zurückgesetzt'),

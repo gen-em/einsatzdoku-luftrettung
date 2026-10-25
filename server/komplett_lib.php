@@ -1105,7 +1105,18 @@ function komp_oeffnen(string $pfad, string $schluessel, callable $hinaus): int
     $fh = fopen($pfad, 'rb');
     if ($fh === false) { throw new RuntimeException('Die Datei liess sich nicht öffnen.'); }
     fseek($fh, $k['ab']);
-    $gesamt = (int)filesize($pfad);
+    /* DIE GRÖSSE VOM GEÖFFNETEN HANDLE, NICHT `filesize()` (Web 23.0.3).
+     * `filesize()` geht über den Stat-Cache von PHP, und der kennt die Datei
+     * womöglich aus einem früheren Aufruf DIESES Prozesses — kürzer, als sie
+     * jetzt ist. Dann hält diese Schleife einen mittleren Block für den
+     * letzten, die Endemarkierung in den Zusatzdaten passt nicht, und ein
+     * heiles Backup heißt „verändert oder unvollständig". Gemessen am
+     * 21.10.2026 in der Komplettprobe (versiegeln über drei Häppchen, dann
+     * öffnen, ein Prozess): rot unter PHP 8.3.6, mit `fstat()` grün. Im
+     * Betrieb liegen Versiegeln und Öffnen in verschiedenen Anfragen, und
+     * vor dem Umhängen steht ohnehin ein `clearstatcache()`; die Stelle soll
+     * trotzdem nicht davon abhängen. */
+    $gesamt = (int)(fstat($fh)['size'] ?? 0);
     $i = 0;
     try {
         while (ftell($fh) < $gesamt) {
@@ -1171,7 +1182,7 @@ function komp_erster_block_oeffnet(string $pfad, string $schluessel): bool
         $nonce   = (string)fread($fh, KOMP_NONCE_LEN);
         $tag     = (string)fread($fh, KOMP_TAG_LEN);
         $chiffre = (string)fread($fh, $n);
-        $letzte  = ftell($fh) >= (int)filesize($pfad);
+        $letzte  = ftell($fh) >= (int)(fstat($fh)['size'] ?? 0);   // nicht filesize(), siehe komp_oeffnen()
     } finally {
         fclose($fh);
     }

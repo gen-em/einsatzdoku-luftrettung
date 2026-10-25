@@ -14,7 +14,7 @@ python3 tools/pruefstand/bericht.py lesen [--commit C] [--basis B] [--riegel n=w
 
 `pruefen.sh` ermittelt die Stufe (Versionssprung; neue Migration heißt haupt), fährt
 die Anlage hoch, läuft Riegel und Proben der Berührung — vor `demo: true` schiebt er die
-Demo-Marke (Nr. 322), `motoren: true` fährt er je Engine (ab neben drei, `MOTOR=…`, R87,
+Demo-Marke (Nr. 322; seit Nr. 393 vor jedem Engine-Lauf), `motoren: true` fährt er je Engine (ab neben drei, `MOTOR=…`, R87,
 `motoren.md`) — und **erzeugt** den Prüfbericht für die Commit-Nachricht. `auswahl.py` beantwortet
 „welche Probe zu welcher Datei" aus `pruefablauf.json`. `bericht.py lesen` ist
 die Gegenlesung in Stufe 1 (PK-05): sechs Lagen, Riegelzahlen als `--riegel`.

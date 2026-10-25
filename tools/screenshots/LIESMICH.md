@@ -28,7 +28,7 @@ Wartungsseiten `--jobs-token`. **Ohne Token bricht der Lauf ab.**
 
 Voller Lauf: **860 Einzelbilder, 86 Kontaktbögen, Überlauf 0, Knöpfe
 falscher Höhe 0, 208 Karten / 0 außerhalb, 80 Bilder mit rollendem Behälter**, 1 474 s (04.10.2026, Prüfstand zu SR-04; am 28.09.2026 205 Karten, 66 rollend — die neue Seite rollt nicht; seit R4-08 zehn Breiten, sechs Seiten für Admin und Support). `kontrast.py` **36 Paare, 0 verfehlt, 32 abgeleitet, 0 ohne Eintrag** (28.09.2026, R4-24: drei Paare der Diagramme dazu). Selbstproben offline:
-`aufnehmen.mjs` **15 von 15**, `vergleichen.py` **14 von 14**, `kontrast.py` **4 von 4**.
+`aufnehmen.mjs` **24 von 24** (21.10.2026, Nr. 393: Fälle 18 bis 24 für den abgebrochenen Abruf in WebKit; hier stand bis dahin 15, seit Konzept DM waren es 17), `vergleichen.py` **14 von 14**, `kontrast.py` **4 von 4**.
 
 ## Was es nicht kann
 

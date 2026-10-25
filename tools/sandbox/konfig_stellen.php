@@ -86,6 +86,9 @@ function konfig_stellen(array $werte, ?string $pfad = null): callable
      * einer echten Anlage waere das ein Verlust, den niemand bemerkt, bis
      * jemand die Datei aufmacht. */
     $vorherText = is_file($pfad) ? (string)file_get_contents($pfad) : null;
+    /* VOR dem Schreiben: Das Schreiben selbst legt die Marken womoeglich an
+     * (`konfig_stellen_marken_lesen()`). */
+    $vorherMarken = konfig_stellen_marken_lesen();
 
     $neu = konfig_stellen_lesen($pfad);
     foreach ($werte as $k => $v) {
@@ -94,10 +97,10 @@ function konfig_stellen(array $werte, ?string $pfad = null): callable
     konfig_stellen_schreiben($pfad, $neu);
 
     $zurueckgelegt = false;
-    $zurueck = static function () use ($pfad, $vorherText, &$zurueckgelegt): void {
+    $zurueck = static function () use ($pfad, $vorherText, $vorherMarken, &$zurueckgelegt): void {
         if ($zurueckgelegt) { return; }
         $zurueckgelegt = true;
-        konfig_stellen_bytes($pfad, $vorherText);
+        konfig_stellen_zuruecklegen($pfad, $vorherText, $vorherMarken);
     };
 
     /* UND EINE EINZIGE ABBRUCHSICHERUNG, DIE DEN ERSTEN STAND HAELT.
@@ -113,9 +116,66 @@ function konfig_stellen(array $werte, ?string $pfad = null): callable
      *
      * Jetzt merkt sich die erste gestellte Lage den Urstand, und nur sie
      * meldet die Sicherung an. Jede weitere verlaesst sich darauf. */
-    konfig_stellen_urstand($pfad, $vorherText);
+    konfig_stellen_urstand($pfad, $vorherText, $vorherMarken);
 
     return $zurueck;
+}
+
+/* DIE MARKEN GEHOEREN ZUM STAND (Nr. 393).
+ *
+ * Fehlt `server_key_kennung` oder `kdf_anteil_kennung` in `app_state`, legt
+ * die Anwendung sie beim naechsten Lesen des Zustands an, mit dem Schluessel,
+ * der GERADE in `config.php` steht (E-S10-U-02). Diese Datei ruft nach jedem
+ * Schreiben `config_gemerktes_verwerfen()`, und das liest den Zustand neu. Auf
+ * einer Anlage ohne Marke hielt die Datenbank danach also den Schluessel der
+ * GESTELLTEN Lage fest, auch nachdem die Datei laengst zurueckgelegt war, und
+ * die Anlage stand auf „abweichend". Gemessen am 25.10.2026 auf einer frisch
+ * eingerichteten Anlage: nach der `versandprobe` (sie stellt dreimal einen
+ * zufaelligen Serverschluessel) Marke `876aa734` gegen `01264396` in der
+ * Datei; ebenso nach der `komplettprobe`, die in ihrer Kopie stellt, aber in
+ * die echte Datenbank schreibt. Beide Proben meldeten sich gruen; rot wurden
+ * erst die Bedienprobe (Schluesselwechsel, alle drei Engines) und die
+ * `schluesselwechselprobe` („Vorbedingung nicht erfuellt"). Auf einer Anlage,
+ * die die Marke schon hatte, aendert die gestellte Lage sie nicht — deshalb
+ * fiel es in keinem Lauf davor auf.
+ *
+ * Gemerkt werden deshalb auch die beiden Marken, und der Rueckweg legt sie
+ * zurueck, wie sie waren: fehlte eine, wird sie wieder entfernt. */
+const KONFIG_STELLEN_MARKEN = ['server_key_kennung', 'kdf_anteil_kennung'];
+
+/** Die Marken lesen — `null`, wenn die Datenbankschicht nicht geladen ist. */
+function konfig_stellen_marken_lesen(): ?array
+{
+    if (!function_exists('app_state_lesen')) { return null; }
+    $m = [];
+    foreach (KONFIG_STELLEN_MARKEN as $k) { $m[$k] = app_state_lesen($k); }
+    return $m;
+}
+
+/**
+ * Datei UND Marken zuruecklegen — in dieser Reihenfolge: Marken, Datei,
+ * Marken. `konfig_stellen_bytes()` liest den Zustand am Ende neu und merkt
+ * ihn sich in einer `static`. Stuende dann noch die fremde Marke da, bliebe
+ * „abweichend" fuer den Rest der Probe gemerkt. Also zuerst die Marken, damit
+ * das Neulesen den echten Stand sieht; es legt eine fehlende Marke dabei mit
+ * dem ECHTEN Schluessel an. Das zweite Legen nimmt sie wieder weg, wenn es sie
+ * vorher nicht gab — der gemerkte Zustand („bereit") stimmt trotzdem.
+ */
+function konfig_stellen_zuruecklegen(string $pfad, ?string $text, ?array $marken): void
+{
+    konfig_stellen_marken_legen($marken);
+    konfig_stellen_bytes($pfad, $text);
+    konfig_stellen_marken_legen($marken);
+}
+
+/** Die Marken auf einen frueheren Stand legen; fehlte eine, kommt sie weg. */
+function konfig_stellen_marken_legen(?array $m): void
+{
+    if ($m === null || !function_exists('app_state_setzen')) { return; }
+    foreach ($m as $k => $v) {
+        if (app_state_lesen($k) === $v) { continue; }
+        if ($v === null) { app_state_loeschen($k); } else { app_state_setzen($k, $v); }
+    }
 }
 
 /**
@@ -125,7 +185,7 @@ function konfig_stellen(array $werte, ?string $pfad = null): callable
  * einem Fatal im Speicherlimit. Wer die Probe so beendet, legt die Datei von
  * Hand zurueck — sie steht als `config.php.vor-probe` daneben.
  */
-function konfig_stellen_urstand(string $pfad, ?string $text): void
+function konfig_stellen_urstand(string $pfad, ?string $text, ?array $marken = null): void
 {
     /* JE PFAD EINMAL, nicht einmal ueberhaupt: `komplettprobe` stellt in der
      * Kopie, und eine Probe koennte beide anfassen. Ein einziges Flag haette
@@ -138,8 +198,8 @@ function konfig_stellen_urstand(string $pfad, ?string $text): void
      * Abbruch ist der, bei dem PHP nichts mehr ausfuehrt. */
     if ($text !== null) { @file_put_contents($pfad . '.vor-probe', $text); }
 
-    register_shutdown_function(static function () use ($pfad, $text): void {
-        konfig_stellen_bytes($pfad, $text);
+    register_shutdown_function(static function () use ($pfad, $text, $marken): void {
+        konfig_stellen_zuruecklegen($pfad, $text, $marken);
         @unlink($pfad . '.vor-probe');
     });
 }

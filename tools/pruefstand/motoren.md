@@ -17,8 +17,15 @@ Die Wege:
 - **kein Test** — erzeugt etwas, prüft nichts.
 
 Gestartet wird über `starten()` aus `tools/motor.mjs`, das auch die Engine und
-ihre Fassung ins Protokoll schreibt (`Motor: firefox 142.0.1`). Ein eigenes
-`.launch(` ist nur bei „nur Chromium" und „kein Test" erlaubt.
+ihre Fassung ins Protokoll schreibt (`Motor: firefox 157.0`). Ein eigenes
+`.launch(` ist nur bei „nur Chromium" und „kein Test" erlaubt — wer an
+`starten()` vorbeigeht, verliert in WebKit auch die drei Eigenheiten, die es
+dort zurückhält und am Ende zählt: die Wiederholung bei „internal error"
+(E-DM-10), den CSP-Bericht nach einem Screenshot und den abgebrochenen Abruf
+beim Seitenwechsel (beide Nr. 393). Eine vierte fängt die Bedienprobe selbst: eine
+WebKit-Seite, die stumm wird — Neuanmeldung der Rolle vor dem Weg, einmalige
+Wiederholung des Wegs nach einer Zeitüberschreitung (Nr. 393).
+`pruefen.sh` nennt die Zahlen je Probe.
 
 | Werkzeug | Weg | Grund |
 |---|---|---|

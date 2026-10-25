@@ -32,23 +32,30 @@ async function einsaetze(k) {
   await k.seite.waitForFunction(
     () => typeof dayMissions !== 'undefined' && dayMissions.length,
     null, { timeout: 20000 });
-  /* DIE SPUREN ÖFFNET DER BROWSER NACH DER LISTE (Konzept DM, F-DM-07):
-   * `dayMissions` steht, bevor die Hüllen offen sind, und `m.track` füllt
-   * `EdOrtsdaten` erst danach. In Chromium war das zur Stelle, in Firefox und
-   * WebKit nicht — die Wege meldeten „kein Einsatz mit Aufzeichnung" an einem
-   * Bestand, der einen hat. Gewartet wird bis 20 s; kommt keiner, sagt die
-   * Meldung darunter es, wie bisher. */
-  await k.seite.waitForFunction(
-    () => dayMissions.some(m => (m.track || []).length > 1), null, { timeout: 20000 }).catch(() => {});
-  const l = await k.seite.evaluate(() => dayMissions.map(
-    m => ({ id: m.id, spur: (m.track || []).length })));
-  const mit  = l.find(m => m.spur > 1);
-  const ohne = l.find(m => m.spur <= 1);
+  /* OB EIN EINSATZ EINE SPUR HAT, SAGT DIE KLARTEXTZAHL, nicht `m.track`
+   * (Nr. 393, F4). `dayMissions` steht, bevor die Hüllen offen sind, und
+   * `m.track` füllt `EdOrtsdaten` erst danach, EINEN EINSATZ NACH DEM
+   * ANDEREN (Konzept DM, F-DM-07). Bis Nr. 393 wartete der Weg, bis IRGENDEIN
+   * Einsatz offen war, und nahm dann den ersten mit höchstens einem Punkt als
+   * „ohne Spur" — in WebKit war das am 21.10.2026 Einsatz 1119 mit 393
+   * Punkten, nur noch nicht geöffnet. Das Formular zeigt `#start_src` aber
+   * nur ohne Aufzeichnung, und `selectOption` lief 30 s ins Leere (in
+   * WebKit 26 und 27.2 gleich). Die Punktzahl der Stücke (`spur_stuecke[].
+   * punkte`) liegt im Klartext und steht mit der Liste da. */
+  const l = await k.seite.evaluate(() => dayMissions.map(m => ({
+    id: m.id, punkte: (m.spur_stuecke || []).reduce((n, st) => n + Number(st.punkte || 0), 0) })));
+  const mit  = l.find(m => m.punkte > 1);
+  const ohne = l.find(m => m.punkte <= 1);
   if (!mit || !ohne) {
     throw new Error('Der Bestand hat nicht beides — Einsatz mit Aufzeichnung '
       + `(${mit ? mit.id : 'keiner'}) und ohne (${ohne ? ohne.id : 'keiner'}). `
       + 'Referenzbestand neu einspielen.');
   }
+  /* Die geöffnete Spur des einen Einsatzes braucht der Weg trotzdem — ihre
+   * Punktzahl ist die, die der Dialog zeichnet. Gewartet wird bis 20 s. */
+  await k.seite.waitForFunction(
+    (id) => (dayMissions.find(m => m.id === id).track || []).length > 1, mit.id, { timeout: 20000 }).catch(() => {});
+  mit.spur = await k.seite.evaluate((id) => (dayMissions.find(m => m.id === id).track || []).length, mit.id);
   EINSAETZE = { mitSpur: mit.id, ohneSpur: ohne.id, punkte: mit.spur };
   return EINSAETZE;
 }

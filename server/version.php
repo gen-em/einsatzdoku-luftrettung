@@ -8264,5 +8264,22 @@ declare(strict_types=1);
  *   Freigabe, Verwaltung → Sicherungen, Kontoseite) Feld und Anzahl und
  *   sind dann orange (`verworfenSatz()`, `edbak_verworfen_satz()`). Kein
  *   Schema.
+ * 23.0.3 — ZWEI CSP-FUNDE AUS DEM ERSTEN VOLLEN LAUF IN DREI ENGINES
+ *   (Backlog Nr. 393). (1) `einsatz_form.php` lieferte `connect-src 'self'`
+ *   ohne den Adressdienst: `kopf_csp()` nahm ihn nur auf, wenn der Aufrufer
+ *   `geocoder_lib.php` vor dem Kopf geladen hatte, und das Formular lud sie
+ *   erst danach über `ui.php`. Bei scharfer CSP hätte die Adresssuche genau
+ *   dort nichts gefunden. `kopfzeilen_lib.php` bindet sie jetzt selbst ein.
+ *   (2) Die Sicherung schrieb ihr Archiv mit `level: 0`; zip.js schaltet bei
+ *   jeder Stufe außer 6 auf seinen eigenen Packer um und lädt dafür
+ *   WebAssembly, das die CSP verbietet — zwei Berichte je Sicherung.
+ *   `compressionMethod: 0` speichert dasselbe ohne den Umweg. (3) Der
+ *   stille Wartungslauf setzte eine Spur auf die Auslassliste des Tabs, wenn
+ *   ihr Tausch KEINE Antwort bekam (`status: 0`) — meist, weil die Seite
+ *   gerade verlassen wurde. Jetzt endet der Durchgang dann, ohne
+ *   auszulassen. (4) `komp_oeffnen()` las die Dateigröße über den Stat-Cache;
+ *   wer im selben Prozess versiegelte und öffnete, bekam die alte Größe, und
+ *   ein heiles Komplett-Backup hieß „verändert" (rot in der Komplettprobe
+ *   unter PHP 8.3.6). Jetzt `fstat()` am offenen Handle. Kein Schema.
  */
-const WEB_VERSION = '23.0.2';
+const WEB_VERSION = '23.0.3';
