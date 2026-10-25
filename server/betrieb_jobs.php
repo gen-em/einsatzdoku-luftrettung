@@ -56,6 +56,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'jobs_
     }
 }
 
+/* Das Kettentoken neu erzeugen (Web 23.1.0, R17-19, E-R17-34) — derselbe
+ * Weg wie beim Job-Token darueber: Umleitung nach dem POST, das Token reist
+ * nicht mit. Die Folge ist eine andere: Nicht ein Zeitplan-Eintrag laeuft ins
+ * Leere, sondern die naechste Auslieferung, bis das neue Token in GitHub als
+ * `JOBS_TOKEN` steht. */
+$ketteMeldung = null;
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'kette_token_neu') {
+    csrf_check();
+    try {
+        kette_token(true);
+        $ketteMeldung = ['ok', 'Ein neues Kettentoken steht bereit. Die Auslieferung '
+                             . 'scheitert, bis es in GitHub als JOBS_TOKEN dieser '
+                             . 'Umgebung eingetragen ist.'];
+    } catch (Throwable $ex) {
+        $ketteMeldung = ['fehler', 'Das Token ließ sich nicht erzeugen: '
+                                 . $ex->getMessage()];
+    }
+    if ($ketteMeldung[0] === 'ok') {
+        flash_setzen($ketteMeldung[0], $ketteMeldung[1], 'k-kette');
+        header('Location: betrieb_jobs.php#k-kette');
+        exit;
+    }
+}
+
 /* DIE JOBS ANHALTEN UND WIEDER FREIGEBEN (Backlog Nr. 118).
  *
  * Bis Web 19.3.0 ging das nur mit `php jobs.php --pause <Sekunden>`. Auf
@@ -124,6 +148,7 @@ $flash = flash_holen();
 if ($flash !== null) {
     if ($flash['ort'] === 'k-zustand')       { $pauseMeldung ??= [$flash['ton'], $flash['text']]; }
     elseif ($flash['ort'] === 'k-ausloeser') { $jobsMeldung  ??= [$flash['ton'], $flash['text']]; }
+    elseif ($flash['ort'] === 'k-kette')     { $ketteMeldung ??= [$flash['ton'], $flash['text']]; }
 }
 
 $jobs      = jobs_zustand();
@@ -139,6 +164,12 @@ if ($jobs !== []) {
     try {
         $tokenAdresse = app_url('jobs.php?token=' . jobs_token());
     } catch (Throwable $ex) { $tokenAdresse = null; }
+}
+$ketteToken = null;
+if ($jobs !== []) {
+    try {
+        $ketteToken = kette_token();
+    } catch (Throwable $ex) { $ketteToken = null; }
 }
 
 ui_seite_start(['titel' => 'Hintergrundjobs']);
@@ -296,6 +327,38 @@ ui_seite_start(['titel' => 'Hintergrundjobs']);
     <?php endif; ?>
 
     <h3 class="listen-form-titel">3. Huckepack auf einer Anfrage <span class="feld-klein-inline">immer an</span></h3>
+  <?php ui_karte_ende(); ?>
+
+  <?php /* ---- Auslieferungskette (Web 23.1.0, R17-19, E-R17-34) -------------
+     *
+     * Das zweite Token. Es steht neben den Auslösern und nicht darin, weil es
+     * keiner ist: Mit ihm schaltet die Auslieferung Wartung und Backup. Die
+     * Bausteine sind die der Karte darüber — Codeblock mit „Kopieren",
+     * Warnmeldung, leiser Knopf mit Rückfrage —, kein neuer (`CLAUDE.md` 5). */ ?>
+  <?php ui_karte_start(['titel' => 'Auslieferungskette', 'id' => 'k-kette']); ?>
+    <?php if ($ketteMeldung): ?>
+      <?= ui_meldung_markup($ketteMeldung[0], $ketteMeldung[1]) ?>
+    <?php endif; ?>
+    <p class="feld-hinweis">Mit diesem Token schaltet die Auslieferung Wartung und
+       Komplett-Backup dieser Anlage. Es gehört als Geheimnis <code>JOBS_TOKEN</code>
+       in die GitHub-Umgebung, die hierher ausliefert.
+       <a href="hilfe.php#die-drei-ausloeser-budget-und-reihenfolge">Wozu zwei Tokens</a></p>
+    <?= ui_meldung_markup('warn', 'Ein Geheimnis wie ein Passwort — nicht in eine '
+        . 'Adresse, nicht in eine Mail, nicht in ein Ticket.') ?>
+    <?php if ($ketteToken !== null): ?>
+      <?= ui_codeblock_lang($ketteToken, 'Kettentoken') ?>
+      <form method="post" action="betrieb_jobs.php">
+        <?= csrf_field() ?><input type="hidden" name="action" value="kette_token_neu">
+        <div class="listen-form-fuss">
+          <?= ui_knopf(['text' => 'Neues Kettentoken erzeugen', 'art' => 'leise',
+                        'typ' => 'submit',
+                        'attr' => ' data-confirm="Das bisherige Kettentoken wird damit '
+                                . 'ungültig. Die nächste Auslieferung scheitert, bis '
+                                . 'das neue in GitHub als JOBS_TOKEN steht."'
+                                . ' data-confirm-ok="Neu erzeugen"']) ?>
+        </div>
+      </form>
+    <?php endif; ?>
   <?php ui_karte_ende(); ?>
   <?php /* DIE KARTE „WAS HIER GILT" IST MIT P5c/AP9 ENTFALLEN (E-P5c-49).
            Budget, Reihenfolge, Anhalten auf der Kommandozeile und „Ein

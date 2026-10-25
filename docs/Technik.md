@@ -327,7 +327,8 @@ Daten erst nach Server-Bestätigung.
 │   │                       Abfrageteil der Adresse; Antwort immer 204
 │   ├── api/health.php    Zustand der Anlage fuer das eigene Monitoring (P5c/AP6,
 │   │                       4.99r). OHNE Anmeldung, mit Token aus config.php
-│   │                       (betrieb.health_token, leer = aus); 200/503 mit
+│   │                       (betrieb.health_token, leer = aus) als Kopfzeile
+│   │                       X-Health-Token oder `?token=`; 200/503 mit
 │   │                       acht Feldern, 403 einheitlich, Topf `health`
 │   ├── api/kopplung_stand.php  Wartet dieses Konto noch auf ein Gerät, und
 │   │                       hat es Ja gesagt? (S5, Web 13.1.0) GET, nimmt
@@ -693,7 +694,8 @@ Daten erst nach Server-Bestätigung.
 │   ├── kette/             die Tore der Auslieferungskette (P5a/AP1):
 │   │                      Backup-Tor, Wartung an/aus, Zustand und seit
 │   │                      Web 20.16.0 die Job-Pause — gegen
-│   │                      `jobs.php?aktion=…`. DER EINE CLIENT dieser
+│   │                      `jobs.php`, seit Web 23.1.0 per POST mit dem
+│   │                      Kettentoken im Rumpf. DER EINE CLIENT dieser
 │   │                      Schnittstelle: Er kennt Adresse, Token,
 │   │                      Zeitgrenze und den Umgang mit einer unlesbaren
 │   │                      Antwort; wer daran vorbei eine eigene
@@ -707,10 +709,15 @@ Daten erst nach Server-Bestätigung.
 │   │                      BR-03 baumsuche.py: die EINE Suche nach gruenen
 │   │                      Stufe-1-Laeufen mit demselben Baum, fuer
 │   │                      „Schon gemessen?" und das Produktionstor (E-BR-09).
-│   │                      Seit PK-08 appbau.sh (App bauen und signieren,
-│   │                      Android ueber apksigner nach dem Bau) und
-│   │                      apkablage.py (APK nach server/apk/, aeltere
-│   │                      Fassungen erst nach dem geprueften Ablegen weg)
+│   │                      Seit PK-08 appbau.sh (App bauen und signieren;
+│   │                      seit R17-19 Android in zwei Unterbefehlen fuer
+│   │                      zwei Jobs: `android-bauen` ohne Schluessel, Gradle
+│   │                      nur mit Positivliste, `android-signieren` mit
+│   │                      apksigner, ohne Gradle) und apkablage.py (APK nach
+│   │                      server/apk/, aeltere Fassungen erst nach dem
+│   │                      geprueften Ablegen weg). Seit R17-19 kennt
+│   │                      freigabe.py auch das Tor der App-Tags
+│   │                      (`app-urteil`: Stufe 1 auf dem Baum, Tag auf main)
 │   ├── kettenaufrufe/     haelt JEDEN Werkzeugaufruf der Arbeitslaeufe und
 │   │                      von pruefablauf.json gegen die tatsaechliche
 │   │                      Schnittstelle des aufgerufenen Werkzeugs —
@@ -720,8 +727,12 @@ Daten erst nach Server-Bestätigung.
 │   │                      KEIN WERKZEUG AUS, deshalb Stufe 1 (Nr. 217).
 │   │                      Werkzeuge, deren Schnittstelle nicht aus dem
 │   │                      Quelltext lesbar ist, zaehlt es als UNGEPRUEFT und
-│   │                      nennt die Zahl. Mit `--probe` (Zahl in seiner
-│   │                      LIESMICH)
+│   │                      nennt die Zahl. Seit R17-19 dazu zwei Riegel:
+│   │                      jede fremde `uses:`-Zeile an einer SHA mit
+│   │                      Fassung, die Ausnahmeliste der Kette gegen ihre
+│   │                      Sollliste und `.gitignore`, keine eingecheckte
+│   │                      `server/config.php*`. Mit `--probe` (Zahl in
+│   │                      seiner LIESMICH)
 │   ├── integritaetswache/ vergleicht die AUSGELIEFERTE Fassung mit dem
 │   │                      ZEIGER `produktion` (`--stand`, 6.6a): jede Datei
 │   │                      unter `server/assets/`
@@ -737,7 +748,10 @@ Daten erst nach Server-Bestätigung.
 │   │                      und nach jedem Deploy als GitHub-Action
 │   │                      (`integritaet.yml`); `--selbstprobe` beantwortet
 │   │                      zuerst, ob sie eine Abweichung überhaupt erkennt
-│   │                      (Backlog Nr. 140, SP-6)
+│   │                      (Backlog Nr. 140, SP-6). Seit R17-19 Teil 3: die
+│   │                      Punktpfade 403, `.well-known/` offen, keine Kopie
+│   │                      der `config.php` mit 200 — auch gegen Staging
+│   │                      (`--teil punktpfade`, Stufe 2)
 │   ├── messstand/         stellt ein Konto mit 5000 Einsätzen her — aus der
 │   │                      Referenz-Backup vervielfältigt und über den
 │   │                      REGULÄREN Wiederherstellungsweg eingespielt — und
@@ -879,7 +893,9 @@ Daten erst nach Server-Bestätigung.
 │                          Kommentare, dasselbe ohne Zeichenketteninhalt, und
 │                          das JavaScript (`.js` ganz, aus `.php` die
 │                          <script>-Blöcke). Liegt ein Ist-Wert über der
-│                          Decke, schlägt der Lauf an. Eine Decke wird nicht
+│                          Decke, schlägt der Lauf an — seit R17-19 auch
+│                          darunter (Ratsche): Wer eine Stelle entfernt,
+│                          schreibt die Decke herunter. Eine Decke wird nicht
 │                          angehoben, ohne dass es im Konzept steht
 │                          (s. LIESMICH.md)
 ├── .claude/hooks/session-start.sh  ruft beim Containerstart
@@ -1009,7 +1025,7 @@ Motoren 0. Ein Rauschfilter dafür ist deshalb **nicht** gebaut worden.
 | `deleted_refs` | Sperrliste gelöschter `client_ref`s (90 Tage) gegen Wieder-Upload durch die Uhr; `owner_type` unterscheidet Einsatz und Ruhe-Segment — die Liste gilt für **beide** |
 | `rate_limits` | Ratenschutz: Versuche je `topf` und `merkmal` (`ip:…`, `id:…` oder `alle`), mit Zeitfenster und Sperrfrist; liegt bewusst in der Datenbank und nicht in der Sitzung — eine Zählung, die der Aufrufer durch Wegwerfen seines Cookies zurücksetzen kann, ist keine. **Die Töpfe stehen in `RATE_GRENZEN` und nirgends sonst** — und hier steht ihre Zahl absichtlich **nicht** mehr: Bis Web 20.10.0 stand „alle vier“ (falsch seit sechs Töpfen), bis 20.11.0 „es sind zwölf“ (falsch mit den beiden Ingest-Töpfen). Eine Zahl in einem Fließtext altert genauso still wie eine Aufzählung. Bei `salt` und `reset` zählt **jede** Anfrage, nicht nur eine fehlgeschlagene: Beide Endpunkte kennen kein Scheitern, begrenzt wird die Menge (`rate_zaehlen()`). Der Job `aufraeumen` entsorgt Altbestand. Seit Web 20.10.0 dazu **`stufe`** (0 = nie gesperrt, 1–4 = Sprosse der Sperrleiter) und **`stufe_bis`** (letzter Fehlversuch + 24 h; danach gilt die Stufe als 0, auch wenn die Zeile noch dasteht) sowie ein Index auf `gesperrt_bis` |
 | `rechtstexte` | Die Rechtstexte dieser Installation (R32, seit Web 9.11.0). `schluessel` = `impressum` / `datenschutz`, seit Web 20.19.0 auch `nutzungsbedingungen` / `avv`, `inhalt` = Markdown-Quelle (`MEDIUMTEXT`; NULL oder leer = Leerzustand), `stand_am` = das im Editor **von Hand** gesetzte Standdatum (NULL = keine Standzeile). **Nicht in `app_state`:** Dessen Wert ist `VARCHAR(190)`, eine Datenschutzerklärung hat 8 000 bis 20 000 Zeichen — und ohne strict mode kürzt MySQL still |
-| `app_state` | Schlüssel/Wert (z. B. `salt_secret`, seit Web 10.1.0 `jobs_token` = Geheimnis für `jobs.php?token=…`, `adminbackup_intervall`, `adminbackup_last`, seit Web 9.8.0 `adminbackup_aufbewahrung` = Zahl der Pakete je Konto, 0/fehlend = Vorgabe **2**, vorher 3; seit Web 12.0.0 `adminbackup_grenze_gb` = Speichergrenze der Ablage (fehlend = 2), `adminbackup_schwellen` = Warnschwellen in Prozent (fehlend = 70,90), `adminbackup_schwellen_gemeldet` und `adminbackup_schwellen_offen` = je Schwelle einmal melden, `adminbackup_auftrag` = Zeiger des Auftrags „Alle sichern"; seit Web 12.1.0 `versand_auto` = Versand auf die Backup-Ziele ein/aus (S2/AP7); seit Web 9.10.0 `adminbackup_mail` = Erinnerung an die Verwaltung ein/aus, `adminbackup_mail_last` = Datum der letzten Erinnerung, `logo_standard` = Logo dieser Installation (`hubschrauber` / `fahrzeug`, fehlend = Hubschrauber); seit Web 15.1.0 `speicher_db_bytes`, `speicher_dateien_bytes` und `speicher_stand` = die tägliche Messung aus `speicher_lib.php` sowie `webspace_gb` = Webspace laut Hosting als **Angabe** der BetreiberIn (fehlend = kein zweiter Bezug, siehe 4.99d); seit Web 15.3.0 `smtp_last` und `smtp_last_ok` = Zeitpunkt und Erfolg des letzten Mailversands, geschrieben von `smtp_send()` (siehe 4.99e); seit Web 20.5.0 `speicher_db_grenze_gb` = Kontingent der Datenbank laut Hosting; seit Web 20.6.0 `migration_tor_hash` und `migration_tor_offen` = der Zwischenspeicher des Torwächters; seit Web 20.7.0 `csp_scharf` = Content-Security-Policy scharf statt Report-Only und `hsts_tage` = Bindungsdauer von HSTS in Tagen, 0/1/7/365, fehlend = **1** (siehe 5c); seit Web 20.8.0 `instanz_name` und `instanz_kurz` = der Name dieser Installation, fehlend = „Gen-EM Einsatzdokumentation Notarzt" bzw. „Gen-EM NAdoku" (siehe 5d)). Die Wartungsmarken `last_cleanup` und `last_cleanup_ok` sind mit Web 10.1.0 entfallen — ihre Auskunft steht vollständiger in `jobs` |
+| `app_state` | Schlüssel/Wert (z. B. `salt_secret`, seit Web 10.1.0 `jobs_token` = Geheimnis für `jobs.php?token=…` (seit Web 23.1.0 nur noch der Job-Lauf), seit Web 23.1.0 `kette_token` = Geheimnis der Aktionen der Auslieferungskette (nur per POST, 4.97a „Die zwei Tokens"), `adminbackup_intervall`, `adminbackup_last`, seit Web 9.8.0 `adminbackup_aufbewahrung` = Zahl der Pakete je Konto, 0/fehlend = Vorgabe **2**, vorher 3; seit Web 12.0.0 `adminbackup_grenze_gb` = Speichergrenze der Ablage (fehlend = 2), `adminbackup_schwellen` = Warnschwellen in Prozent (fehlend = 70,90), `adminbackup_schwellen_gemeldet` und `adminbackup_schwellen_offen` = je Schwelle einmal melden, `adminbackup_auftrag` = Zeiger des Auftrags „Alle sichern"; seit Web 12.1.0 `versand_auto` = Versand auf die Backup-Ziele ein/aus (S2/AP7); seit Web 9.10.0 `adminbackup_mail` = Erinnerung an die Verwaltung ein/aus, `adminbackup_mail_last` = Datum der letzten Erinnerung, `logo_standard` = Logo dieser Installation (`hubschrauber` / `fahrzeug`, fehlend = Hubschrauber); seit Web 15.1.0 `speicher_db_bytes`, `speicher_dateien_bytes` und `speicher_stand` = die tägliche Messung aus `speicher_lib.php` sowie `webspace_gb` = Webspace laut Hosting als **Angabe** der BetreiberIn (fehlend = kein zweiter Bezug, siehe 4.99d); seit Web 15.3.0 `smtp_last` und `smtp_last_ok` = Zeitpunkt und Erfolg des letzten Mailversands, geschrieben von `smtp_send()` (siehe 4.99e); seit Web 20.5.0 `speicher_db_grenze_gb` = Kontingent der Datenbank laut Hosting; seit Web 20.6.0 `migration_tor_hash` und `migration_tor_offen` = der Zwischenspeicher des Torwächters; seit Web 20.7.0 `csp_scharf` = Content-Security-Policy scharf statt Report-Only und `hsts_tage` = Bindungsdauer von HSTS in Tagen, 0/1/7/365, fehlend = **1** (siehe 5c); seit Web 20.8.0 `instanz_name` und `instanz_kurz` = der Name dieser Installation, fehlend = „Gen-EM Einsatzdokumentation Notarzt" bzw. „Gen-EM NAdoku" (siehe 5d)). Die Wartungsmarken `last_cleanup` und `last_cleanup_ok` sind mit Web 10.1.0 entfallen — ihre Auskunft steht vollständiger in `jobs` |
 | `csp_berichte` | Meldungen der Content-Security-Policy, **zusammengefasst**: UNIQUE über (`richtlinie`, `quelle`, `seite`), dazu `anzahl`, `erstellt`, `zuletzt`. Geschrieben von `api/csp_bericht.php` ohne Anmeldung; keine IP, kein Konto, kein Abfrageteil der Adresse. Der Job `aufraeumen` löscht nach 30 Tagen (seit Web 20.7.0, siehe 5c) |
 | `missions.letzter_punkt_am` / `rest_segments.letzter_punkt_am` | Wann zuletzt ein Punkt **eintraf** (seit Web 10.2.0, S2). Nicht der Zeitraum der Stücke (`ts_von`/`ts_bis`; bis Web 22.7.0 `track_points.ts`) — das ist die Aufzeichnungszeit. Die Karenz aus E-S2-06 braucht die Ankunftszeit: Die Uhr setzt `final` in *jedem* Teilstück, ein spät hochgeladener Puffer wäre über `MAX(ts)` gerechnet im Moment des Eintreffens schon 14 Tage still. NULL = noch nie gemessen; der Verdichtungsjob trägt es beim ersten Hinsehen nach |
 | `track_cuts` | Sperrvermerke des Schneidewerkzeugs (seit Web 12.5.0, S4/A2), eine Zeile je Schnitt: `owner_type`/`owner_id` = Quelle, `mission_id` = der herausgeschnittene Einsatz (seit Web 22.2.0 NULL-fähig: NULL = ein gelöschter Zeitraum, Backlog Nr. 161), `von_ts`/`bis_ts` = der gesperrte **Zeitraum**. `ingest.php` verwirft Punkte darin — sonst kehrte eine Nachlieferung aus dem Gerätepuffer in die Quelle zurück und der Schnitt löste sich still wieder auf. Wie `track_points` ohne FK (polymorph); die Löschwege räumen ausdrücklich mit. Siehe Abschnitt 4.97e |
@@ -3720,7 +3736,7 @@ Knopf „kopieren".
 | Auslöser | Aufruf | Zeitbudget je Lauf | gedacht für |
 |---|---|---|---|
 | `cli` | `* * * * * php /pfad/zur/installation/jobs.php` | `JOB_BUDGET_CLI` = 300 s | der **empfohlene** Regelfall |
-| `token` | `https://…/jobs.php?token=…` | `JOB_BUDGET_TOKEN` = 20 s | Hoster ohne CLI-Cron, aber mit „Cronjob per URL" |
+| `token` | `https://…/jobs.php?token=…` (Job-Token) | `JOB_BUDGET_TOKEN` = 20 s | Hoster ohne CLI-Cron, aber mit „Cronjob per URL" |
 | `anfrage` | `auth_guard.php` → `run_cleanup_if_due()` | `JOB_BUDGET_ANFRAGE` = 3 s | Rückfall, immer eingeschaltet |
 
 **Der Pfad im Aufruf ist ein Platzhalter.** Auf einer Installation gibt es
@@ -3739,12 +3755,17 @@ zwanzig Sekunden braucht, weil sie nebenbei aufräumt, kaputt ist — auch wenn
 kein Zeitlimit greift.
 
 **Der Token-Weg nimmt seit P5a zusätzlich einen Parameter `aktion`** — er ist
-damit auch der Einstieg der Auslieferungskette (E-P5a-12). Fünf Aktionen, alle
-über dasselbe Token, alle unter demselben Ratenschutz:
+damit auch der Einstieg der Auslieferungskette (E-P5a-12). **Seit Web 23.1.0
+mit eigenem Token und nur per POST** (R17-19, F-R17-57, E-R17-34): Die
+Aktionen öffnet das **Kettentoken**, Token und Aktion stehen im Rumpf; eine
+`aktion` in der Adresse ist `405 method`, bevor ein Token verglichen wird.
+Ohne `aktion` gilt das **Job-Token**, per GET oder POST wie bisher. Das eine
+Token öffnet den Weg des anderen nicht (`403 token`). Alle unter demselben
+Ratenschutz:
 
 | `aktion` | tut | Antwort |
 |---|---|---|
-| *(keine)* | alle fälligen Jobs, ein Häppchen | `{ok, jobs}` |
+| *(keine)* | alle fälligen Jobs, ein Häppchen — **Job-Token**, GET oder POST | `{ok, jobs}` |
 | `komplett` | **nur** das Komplett-Backup — und legt einen Auftrag an, wenn keiner steht | `{ok, fertig, bericht, komplett}` |
 | `wartung_an` / `wartung_aus` | Wartungsmodus, Urheber `kette` | `{ok, wartung}` |
 | `zustand` | Auskunft **ohne Nebenwirkung**: Version, Wartung, jüngster Komplett-Stand, Migration ausstehend | `{ok, version, wartung, komplett, migration_ausstehend}` |
@@ -3784,15 +3805,35 @@ Huckepack-Weg auslösen und damit den Job aus dem Job heraus starten. Der Abruf
 über die Adresse legitimiert sich mit dem Token, nicht mit einer Sitzung — ein
 Zeitplandienst hat keine.
 
-#### Das Token
+#### Die zwei Tokens
 
-32 Byte Zufall, hex, in `app_state` unter `jobs_token`; erzeugt beim ersten
-Lesen. **Nicht** in `config.php`: Die Anwendung schreibt diese Datei genau
-einmal, bei der Einrichtung; sie danach anzufassen hieße, auf jedem Webspace
-Schreibrecht auf die eigene Konfiguration zu brauchen — und
-Bestandsinstallationen hätten kein Token, ohne dass jemand sähe, warum.
+Je 32 Byte Zufall, hex, in `app_state`: das **Job-Token** unter
+`jobs_token` (`jobs_token()`), das **Kettentoken** seit Web 23.1.0 unter
+`kette_token` (`kette_token()`); beide unter **Betrieb → Hintergrundjobs**
+angezeigt und dort erneuerbar. **Nicht** in `config.php`: Die Anwendung
+schreibt diese Datei genau einmal, bei der Einrichtung; sie danach
+anzufassen hieße, auf jedem Webspace Schreibrecht auf die eigene
+Konfiguration zu brauchen — und Bestandsinstallationen hätten kein Token,
+ohne dass jemand sähe, warum.
 
-Wer das Token hat, kann die Wartung anstoßen; mehr nicht. Er kann damit weder
+**Warum zwei** (R17-19, F-R17-57, E-R17-34): Das Job-Token reist in der
+Adresse — ein „Cronjob per URL" kann nichts anderes —, und eine Adresse steht
+im Zugriffsprotokoll des Hosters. Bis Web 23.0.3 öffnete dasselbe Token die
+Aktionen der Kette, und die Kette schickte es ebenfalls in der Adresse; wer
+das Protokoll las, konnte den Produktivserver in die Wartung schalten. Jetzt
+startet das Job-Token höchstens einen Job-Lauf — das, was der Zeitplan
+ohnehin tut —, und das Kettentoken, das Backup, Wartung, Zustand und Pause
+öffnet, kommt nur im Rumpf einer POST-Anfrage und steht in keinem Protokoll.
+In GitHub liegt es als `JOBS_TOKEN` der Umgebungen (6.5).
+
+**Der Übergang:** Fehlt das Kettentoken, übernimmt es beim ersten Lesen den
+Wert des Job-Tokens. Ein frisch erzeugtes kennte die Kette nicht: Sie
+schaltet vor dem Abgleich mit dem alten Wert die Wartung ein und fragt danach
+die neue Fassung nach Zustand und `wartung_aus` — mit einem fremden Token
+bliebe die Anlage in der Wartung. Getrennt sind beide, sobald eines erneuert
+wird; das Runbook (7, „Die zwei Tokens nach dem Update erneuern") sagt, wann.
+
+Wer ein Token hat, kann die Wartung anstoßen; mehr nicht. Er kann damit weder
 Daten lesen noch schreiben. `jobs.php` prüft es mit `hash_equals`, hinter dem
 Ratenschutz-Topf `pair` (zehn Fehlversuche in zehn Minuten), und gleicht die
 Antwortzeit mit `rate_gleiche_dauer()` an — „Token gibt es gar nicht" darf
@@ -5433,16 +5474,32 @@ Der zweite ist der, den man vergisst. Dasselbe Muster wie `config.php` und
 `sicherungen/`, inklusive der doppelten Schreibweise: Die Action prüft
 Datei- und Verzeichnismuster getrennt.
 
-**Abgelegt wird seit PK-08 von der Kette** (E-PK-23, Job `android` in
-`.github/workflows/auslieferung.yml`); bis dahin lud die BetreiberIn per FTPS
-hoch. Der Weg:
+**Abgelegt wird seit PK-08 von der Kette** (E-PK-23, Jobs `app-tor`,
+`android-bau` und `android` in `.github/workflows/auslieferung.yml`); bis
+dahin lud die BetreiberIn per FTPS hoch. Der Weg:
 
 1. **Tag `android-vX.Y.Z`** — er muss zu `android/version.properties` passen,
-   sonst ist der Lauf rot, bevor gebaut wird (E-PK-60). Danach die
-   **Pflichtfreigabe** der Umgebung `produktion`.
-2. **Bauen, dann signieren** (`tools/kette/appbau.sh`): Gradle baut Handy und
-   Wear OS **unsigniert**; signiert wird danach mit `apksigner`, außerhalb von
-   Gradle, damit fremder Build-Code den Schlüssel nie sieht (E-PK-63). Der
+   sonst ist der Lauf rot, bevor gebaut wird (E-PK-60).
+2. **Das App-Tor** (Job `app-tor`, seit R17-19, F-R17-17, E-R17-33): ein
+   grüner Job `Stufe 1` auf demselben Baum und der Commit auf `main`
+   (`freigabe.py app-urteil`, `baumsuche.py`). Bis dahin baute die Kette
+   jeden Commit, der Tag = Fassung trug — auch einen nie geprüften. Dasselbe
+   Tor steht vor dem Job `uhr`.
+3. **Bauen ohne Geheimnisse** (Job `android-bau`, `appbau.sh
+   android-bauen`): Gradle baut Handy und Wear OS **unsigniert**, in einem
+   Job ohne Umgebung und ohne Geheimnis, mit einer Positivliste als
+   Umgebung (`env -i`) und gegen `android/gradle/verification-metadata.xml`.
+   **Warum ein eigener Job** (F-R17-03, E-R17-32): Bis R17-19 standen die vier
+   `APK_*`-Werte im selben Schritt wie `./gradlew`, und Gradle erbte sie —
+   „fremder Build-Code sieht den Schlüssel nie" (E-PK-63) stimmte nur für die
+   Datei. Ein eigener Schritt hätte nicht genügt: Ein Hintergrundprozess aus
+   dem Bau lebt auf demselben Läufer in den nächsten Schritt hinein und liest
+   dessen Umgebung über `/proc`. Die APKs gehen als Artefakt (`android-unsigniert`,
+   ein Tag aufbewahrt) weiter, ihre SHA-256 als Ausgabe des Jobs.
+4. **Signieren hinter der Pflichtfreigabe** (Job `android`, Umgebung
+   `produktion`, `appbau.sh android-signieren`): auf einem frischen Läufer,
+   ohne Gradle — `gh run download`, Prüfsummen gegen die Ausgabe des Bau-Jobs,
+   dann `zipalign` und `apksigner`. Der
    Schlüssel ist der **App-Signaturschlüssel** (Zertifikat `078c…ad64`,
    E-PK-53) — derselbe, den Play App Signing führt; nur so geht später ein
    Update von der Seitenladung auf die Play-Fassung ohne Neuinstallation.
@@ -5453,7 +5510,7 @@ hoch. Der Weg:
    `versionName`. Scheitert die Prüfung, steht die Ausgabe von
    `apksigner verify --print-certs` im Protokoll — sie ist öffentlich wie
    das Zertifikat selbst (F-PK-56).
-3. **Ablegen** (`tools/kette/apkablage.py`): `nadoku-X.Y.Z.apk` und
+5. **Ablegen** (`tools/kette/apkablage.py`): `nadoku-X.Y.Z.apk` und
    `nadoku-uhr-X.Y.Z.apk` (E-PK-58) je als `.teil` hochladen, zurückholen,
    SHA-256 vergleichen, umbenennen — **und erst dann** ältere Fassungen
    desselben Musters löschen: **Im Ordner bleibt je Gerät nur die neueste**
@@ -5470,12 +5527,21 @@ Fassung ist danach nur noch über ihren Tag wiederzubekommen.
 **Ein Probelauf** (Actions → „Auslieferung" → *Run workflow*,
 `app_probelauf: android`) baut und signiert mit derselben Freigabe, legt
 aber nichts ab: Die Ablage listet den Ordner und nennt, was sie ablegen und
-löschen würde.
+löschen würde. Das App-Tor fragt dabei nur Stufe 1, nicht die Abstammung —
+ein Arbeitszweig liegt nicht auf `main`. Starten kann ihn nur die
+BetreiberIn; eine Instanz darf keinen Lauf auslösen (Deny-Liste, F-R17-14).
 
 **Die Garmin-Uhr** (Tag `uhr-vX.Y.Z`, Job `uhr`) baut mit `monkeyc -e` das
 Store-Paket `nadoku-X.Y.Z.iq`, signiert mit dem Connect-IQ-Entwicklerschlüssel
 (`UHR_ENTWICKLERSCHLUESSEL_B64`), und hängt es als **Artefakt** an den Lauf
 (90 Tage); in den Connect-IQ-Store lädt es die BetreiberIn von Hand (E-PK-61).
+Der Job steht hinter demselben App-Tor. Das SDK kommt seit R17-19 nur mit
+passender SHA-256 (`SDK_SHA256` in `tools/uhr-pruefstand/pruefstand.sh`,
+F-R17-20): Der Hersteller veröffentlicht keine Summe, die eingetragene ist die
+eines Abrufs vom 25.10.2026, und eine andere Datei wird nicht entpackt. Hier —
+anders als bei Android — signiert das Werkzeug des Herstellers selbst; der
+Schlüssel liegt im selben Schritt wie `monkeyc`, und das ist gewollt: Es ist
+das SDK des Herstellers, kein fremder Build-Code aus einem Paketverzeichnis.
 
 #### Der Ordner selbst ist seit Web 15.6.0 gesperrt
 
@@ -5557,12 +5623,25 @@ Der Rückbau ist deshalb eine Eintragung und kein Notfall.
 
 **Warum das messbar ist und ein 404 nichts beweist.** `RewriteRule [F]`
 antwortet **403, ob die Datei da ist oder nicht** — mod_rewrite läuft vor der
-Dateisuche. Stufe 2 der Kette nutzt genau das: vier Punktpfade müssen **403**
-geben, `.well-known/acme-challenge/` muss **404 und ausdrücklich nicht 403**
-geben. Der Befund, der zu dieser Zeile geführt hat, wurde zuerst falsch
-entlastet: Die Abfrage lief gegen ein noch leeres Staging, gab 404, und das
-sah aus wie eine Sperre. Ein Prüfmittel, das „gesperrt" nicht von „nicht
-vorhanden" unterscheidet, misst nichts.
+Dateisuche. Die Prüfung nutzt genau das: sechs Punktpfade
+(`.ftp-deploy-sync-state.json`, beide `.deploy-state-*.json`, `.env`,
+`.git/config`, `.sitzungen/`) müssen **403** geben,
+`.well-known/acme-challenge/` muss **404 und ausdrücklich nicht 403** geben,
+und keine Kopie der `config.php` darf mit 200 kommen. Der Befund, der zu
+dieser Zeile geführt hat, wurde zuerst falsch entlastet: Die Abfrage lief
+gegen ein noch leeres Staging, gab 404, und das sah aus wie eine Sperre. Ein
+Prüfmittel, das „gesperrt" nicht von „nicht vorhanden" unterscheidet, misst
+nichts. **Seit R17-19 misst es auch Produktiv** (F-R17-18): Teil 3 der
+Integritätswache, täglich und nach jeder Auslieferung; Stufe 2 ruft dieselbe
+Stelle gegen Staging (`wache.py --teil punktpfade`). Bis dahin stand die
+Prüfung als Bash nur in Stufe 2 — und Staging liegt bei einem anderen Hoster
+(6.3a), belegte also nie, dass Produktiv `.htaccess` überhaupt liest.
+
+**Und seit Web 23.1.0 sperrt `FilesMatch` jede Datei, die mit `config.php`
+beginnt** (`config\.php.*`, F-R17-55): Eine Kopie wie `config.php.bak` endet
+nicht auf `.php`, läuft nicht durch PHP und käme als Text heraus. Bis dahin
+legten drei Prüfmittel ihre Sicherung genau so daneben; sie sichern
+inzwischen ins Temp-Verzeichnis, und die Zeile ist der zweite Riegel.
 
 **Was die Regel nicht tut:** eine bereits abgelegte Datei entfernen. Auf einer
 Anlage, auf die schon ausgeliefert wurde, liegt sie weiter im Webroot —
@@ -8125,6 +8204,7 @@ ist dabei gegangen: Die Installation nimmt keinen Rechtstext mehr an.
 | Profil: Passkey entfernen (SR-09) | `POST einstellungen.php?t=profil action=passkey_entfernen` | durch | durch | durch | durch | ja |
 | Betrieb · Jobs: die Seite | `GET betrieb_jobs.php` | 403 | 403 | 403 | 200 | — |
 | Betrieb · Jobs: Auslöser-Token neu | `POST betrieb_jobs.php action=jobs_token_neu` | 403 | 403 | 403 | durch | — |
+| Betrieb · Jobs: Kettentoken neu (Web 23.1.0) | `POST betrieb_jobs.php action=kette_token_neu` | 403 | 403 | 403 | durch | — |
 | Betrieb · Jobs: anhalten | `POST betrieb_jobs.php action=jobs_pause_an` | 403 | 403 | 403 | durch | — |
 | Betrieb · Jobs: Pause aufheben | `POST betrieb_jobs.php action=jobs_pause_aus` | 403 | 403 | 403 | durch | — |
 | Betrieb · Updates: die Seite | `GET betrieb_updates.php` | 403 | 403 | 403 | 200 | — |
@@ -11384,15 +11464,15 @@ E-P5a-10.
 | Push auf `main` | **Staging** | `staging` | Stufe 1 |
 | **Handlauf auf `hotfix/*`** (ab AP7) | **Staging** | `staging` | Stufe 1 |
 | Tag `web-vX.Y.Z` | **Produktiv** | `produktion` | Stufe 1, Stufe 2, Pflichtfreigabe, Backup-Tor, **Abstammung** |
-| Tag `android-vX.Y.Z` (seit PK-08) | `server/apk/` auf **Produktiv** | `produktion` | Pflichtfreigabe, Tag gegen Fassung, Zertifikat (4.97g) |
-| Tag `uhr-vX.Y.Z` (seit PK-08) | Artefakt des Laufs (Connect-IQ-Store von Hand) | `produktion` | Pflichtfreigabe, Tag gegen Fassung |
+| Tag `android-vX.Y.Z` (seit PK-08) | `server/apk/` auf **Produktiv** | `produktion` (nur der Signaturjob) | seit R17-19 **App-Tor** (Stufe 1 auf dem Baum, Tag auf `main`), Tag gegen Fassung, Bau ohne Geheimnisse, Pflichtfreigabe, Zertifikat (4.97g) |
+| Tag `uhr-vX.Y.Z` (seit PK-08) | Artefakt des Laufs (Connect-IQ-Store von Hand) | `produktion` | seit R17-19 **App-Tor**, Tag gegen Fassung, SDK-Prüfsumme, Pflichtfreigabe |
 
 Vier Arbeitsläufe unter `.github/workflows/`:
 
 | Datei | Was |
 |---|---|
 | `pruefung.yml` | **Stufe 1** — jeder Pull Request, dazu jeder Push auf `main` (seit 21.09.2026; vorher jeder Push auf jedem Zweig); seit PK-05 die Gegenlesung des Prüfberichts (6.2) |
-| `auslieferung.yml` | **wann**: Jobs `staging`, `stufe2`, `produktion`, `Rückfallstand (Staging)` und `zeiger`; seit PK-08 dazu `android` und `uhr`, je in eigener `concurrency`-Gruppe (ein Lauf, der auf die Freigabe wartet, belegt seine Gruppe) |
+| `auslieferung.yml` | **wann**: Jobs `staging`, `stufe2`, `produktion`, `Rückfallstand (Staging)` und `zeiger`; seit PK-08 dazu `android` und `uhr`, je in eigener `concurrency`-Gruppe (ein Lauf, der auf die Freigabe wartet, belegt seine Gruppe); seit R17-19 davor `app-tor` und, für Android, `android-bau` (ohne Umgebung und ohne Geheimnisse) |
 | `ausliefern-lauf.yml` | **was**: die Schrittfolge, einmal, für beide Umgebungen |
 | `integritaet.yml` | die Wache; läuft nach einem **Produktiv**-Deploy und täglich |
 
@@ -11439,10 +11519,13 @@ Zustandsdatei der Aktion dann einen Server beschreibt, den es so nicht gibt.
 ein Lauf; ein dritter verdrängt den zweiten wartenden. Für Staging ist das
 hinnehmbar — der jüngste Stand gewinnt, und genau den will man.
 
-**Alle zwölf fremden `uses:`-Zeilen hängen an einer 40-stelligen Commit-SHA**
-(E-KH-10), die Version steht als Kommentar daneben. **Die Zahl ist eine
-Orientierung, kein Prüfwert** — nachgezählt wird „keine fremde Zeile ohne
-SHA", und dafür stehen zwei Zählungen nebeneinander (`CLAUDE.md` 3). Die beiden **lokalen**
+**Alle fremden `uses:`-Zeilen hängen an einer 40-stelligen Commit-SHA**
+(E-KH-10), die Version steht als Kommentar daneben — neunzehn seit R17-19
+(hier stand bis dahin „zwölf", eine Zahl aus Kette II, die schon mit PK-08
+fünfzehn war). **Die Zahl ist eine Orientierung, kein Prüfwert** — geprüft
+wird „keine fremde Zeile ohne SHA", und das misst seit R17-19 ein Riegel in
+Stufe 1 (`tools/kettenaufrufe/`, F-R17-16); der Handbefehl aus `CLAUDE.md` 3
+bleibt die Gegenprobe. Die beiden **lokalen**
 (`./.github/workflows/ausliefern-lauf.yml`) tragen keine und können es
 nicht: Ein lokaler Pfad nimmt keinen Ref und läuft immer auf dem Commit des
 Aufrufers — das ist strenger als ein Pin, nicht schwächer.
@@ -11617,9 +11700,9 @@ Bilderzahl, die längst nicht mehr stimmte.
 | `tools/quelltext/pruefen.sh --selbstprobe`, dann `alle` | alle Selbstproben und alle vierzehn Prüfungen grün (`tools/quelltext/LIESMICH.md`) — darunter seit BR-03 Backlog-Nummern (`bestand`), Python übersetzen (`pysyntax`) und Handbuch rendern (`handbuch`), bis dahin drei eigene Schritte |
 | `tools/screenshots/kontrast.py` | 0 Befunde |
 | Umgebungswert eine Ebene höher | alle sechs Namen leer (6.5, E-KH-28) |
-| `tools/kettenaufrufe/pruefen.py --probe`, dann ohne Schalter | Selbstprobe vollständig, 0 Befunde; jeder ungeprüfte Aufruf benannt |
+| `tools/kettenaufrufe/pruefen.py --probe`, dann ohne Schalter | Selbstprobe vollständig, 0 Befunde; jeder ungeprüfte Aufruf benannt; seit R17-19 dazu die zwei Riegel der Kette: jede fremde `uses:`-Zeile an einer SHA mit Fassung, die Ausnahmeliste hält ihre acht Pfade, jeder steht in `.gitignore`, keine `server/config.php*` eingecheckt |
 | `tools/kette/tor.py`, `download_lib.mjs`, `tools/kette/freigabe.py`, `tools/kette/baumsuche.py`, je `--selbstprobe` | jede Lage erfüllt |
-| `tools/spaltenregister/pruefen.php`, `tools/zaehlung/zaehlen.php`, je mit Selbstprobe | 0 Befunde, 0 Zeilen über der Decke |
+| `tools/spaltenregister/pruefen.php`, `tools/zaehlung/zaehlen.php`, je mit Selbstprobe | 0 Befunde, 0 Zeilen über der Decke — und seit R17-19 auch 0 darunter (Ratsche, F-R17-56) |
 | `tools/proben/proben.sh rechtstexte` | 0 Fehlschläge |
 | **Prüfbericht gegenlesen** (überall außer auf `main`) | `bericht.py lesen` rc 0: Baum, Stufe, Flächen, alle Riegel, keine rote und keine nicht gemessene Probe |
 
@@ -11660,9 +11743,11 @@ Selbstprobe. **Er wird Pflichtprüfung** (E-PK-47): Die BetreiberIn trägt
 > aufgerufenen Werkzeuge und hält jeden Schalter gegen die Schnittstelle, die
 > im Quelltext des Werkzeugs steht — ohne eines auszuführen. Grund: Drei
 > Kettenschritte sind am 16./17.09.2026 beim jeweils **ersten** echten Lauf
-> gescheitert, alle drei mit gültigem YAML (Nr. 217). Seine Grenze steht in
-> seiner `LIESMICH.md` und gehört dazu: Es prüft Schnittstellen, nicht
-> Verhalten.
+> gescheitert, alle drei mit gültigem YAML (Nr. 217). Seit R17-19 trägt es
+> auch die zwei Prüfwerte, die `CLAUDE.md` 3 nennt und bis dahin nur ein
+> Handbefehl nachzählte: SHA-Pins und Ausnahmeliste (F-R17-16). Seine Grenze
+> steht in seiner `LIESMICH.md` und gehört dazu: Es prüft Schnittstellen und
+> Listen, nicht Verhalten.
 
 **Rot heißt kein Merge** — das entscheidet aber nicht die Datei, sondern der
 Zweigschutz auf `main`. **Seine Pflichtprüfung heißt `Stufe 1`**, nach dem
@@ -11751,7 +11836,12 @@ und genau das prüft das Tor „Grüner Staging- und Stufe-1-Lauf auf diesem
 Stand?" nach — **am ganzen Lauf**, nicht nur am Job `staging`.
 
 **Der Kreislauf braucht seit Web 20.16.0 zusätzlich `JOBS_TOKEN`** in der
-Umgebung `staging` (Backlog Nr. 219). Er hält die Hintergrundjobs an, bevor
+Umgebung `staging` (Backlog Nr. 219) — seit Web 23.1.0 das **Kettentoken**
+von Staging (4.97a). **Seine Pakete kommen seit R17-19 mit festen Fassungen
+und Prüfsummen** (F-R17-20): `pip install --require-hashes -r
+tools/kette/stufe2-anforderungen.txt` und Playwright über `npm ci` aus
+`tools/kette/stufe2-npm/`; bis dahin die Fassung des Tages, im selben Job
+wie Staging-Passwort, `STAGING_TOTP` und `JOBS_TOKEN`. Er hält die Hintergrundjobs an, bevor
 er ein Backup in ein frisches Konto spielt — sonst dünnt der
 Verdichtungsjob die wiederhergestellten Spuren aus, und der Vergleich misst
 „hat der Job dazwischen zugeschlagen" statt „kommt zurück, was hineinging"
@@ -11771,14 +11861,19 @@ suchte man den Fehler im falschen Ort.
 **Dazu seit Web 20.15.1 der Schritt „Punktdateien gesperrt,
 .well-known offen?"** (Nr. 213). Er braucht **kein** Prüfkonto — nur
 `STAGING_URL` — und misst die `.htaccess`-Sperre aus Abschnitt 4.97g in
-beide Richtungen:
+beide Richtungen. **Seit R17-19 ist er Teil 3 der Integritätswache**
+(`wache.py --teil punktpfade`, F-R17-18): dieselbe Stelle misst Staging hier
+und Produktiv in `integritaet.yml`; bis dahin stand die Prüfung als Bash nur
+in diesem Schritt.
 
 | Pfad | erwartet | wofür |
 |---|---|---|
 | `/.ftp-deploy-sync-state.json` | **403** | die Zustandsdatei der Kette (der Anlass) |
-| `/.deploy-state-staging.json` | **403** | auch der neue Name, falls `../` scheitert |
+| `/.deploy-state-staging.json`, `/.deploy-state-produktion.json` | **403** | auch die neuen Namen, falls `../` scheitert |
 | `/.env`, `/.git/config` | **403** | die Gattung, nicht nur der Name |
+| `/.sitzungen/` | **403** | die PHP-Sitzungsdateien (Schritt 16) |
 | `/.well-known/acme-challenge/kettenpruefung` | **404, NICHT 403** | die Zertifikatserneuerung |
+| `/config.php.vor-probe`, `/config.php.mailprobe`, `/config.php.bak` | **403 oder 404, NIE 200** | eine Kopie der Konfiguration (F-R17-55; 403 seit Web 23.1.0) |
 
 Die letzte Zeile ist die wichtigere. Antwortet `.well-known/` mit 403, ist die
 ACME-Herausforderung tot und das Zertifikat läuft in bis zu 90 Tagen ab —
@@ -11954,13 +12049,14 @@ Der Ablauf des Produktionslaufs:
 1. Tag gegen `WEB_VERSION` halten.
 2. Prüfen, dass es auf **diesem Commit** einen grünen Stufe-1- **und** einen
    grünen Staging-Lauf gibt.
-3. **Backup-Tor:** `jobs.php?aktion=komplett` in einer Schleife (höchstens 40
+3. **Backup-Tor:** `jobs.php`, `aktion=komplett` (seit Web 23.1.0 per POST mit
+   dem Kettentoken im Rumpf, 4.97a) in einer Schleife (höchstens 40
    Aufrufe, 20 s Pause), bis `fertig` kommt **und** der jüngste
    Komplett-Stand jünger ist als der Laufbeginn. Sonst: **Abbruch ohne
    Deploy.**
-4. `jobs.php?aktion=wartung_an` (Urheber `kette`).
+4. `aktion=wartung_an` (Urheber `kette`).
 5. FTPS-Sync.
-6. `jobs.php?aktion=zustand`: Steht eine Migration aus, **bleibt die Wartung
+6. `aktion=zustand`: Steht eine Migration aus, **bleibt die Wartung
    an** und der Lauf endet grün mit dem Hinweis „Migration ausstehend —
    `update.php` von Hand, dann Wartung aus"; sonst `wartung_aus`.
 
@@ -12096,9 +12192,14 @@ einbauen können. Welche Werte die
 beiden Anlagen tragen, steht in `docs/Rahmenplan.md` 6a.
 
 **`JOBS_TOKEN` steht in beiden Umgebungen unter demselben Namen und trägt
-verschiedene Werte.** Das Token gehört der **Installation**
-(`app_state.jobs_token`, sichtbar unter Betrieb → Hintergrundjobs), nicht dem
-Repositorium; Staging und Produktiv sind zwei Installationen. Jeder Lauf liest
+verschiedene Werte.** Das Token gehört der **Installation**, nicht dem
+Repositorium; Staging und Produktiv sind zwei Installationen. **Seit
+Web 23.1.0 ist es das Kettentoken** (`app_state.kette_token`, Betrieb →
+Hintergrundjobs → „Auslieferungskette", 4.97a) und nicht mehr das Job-Token
+der Adresse — der Name blieb, damit beim Umstieg kein Geheimnis umbenannt
+werden musste. Beim Update übernimmt das Kettentoken den bisherigen Wert;
+erneuert die BetreiberIn es danach (Runbook 7), trägt sie den neuen Wert hier
+ein, sonst ist die nächste Auslieferung rot. Jeder Lauf liest
 es aus seiner eigenen Umgebung, deshalb kollidiert der gleiche Name nicht.
 **Seit Kette II/AP5 gibt es dafür keine zwei Zeilen mehr, sondern einen
 Schritt:** Der erste Schritt des gemeinsamen Laufs bestimmt Basisadresse,
@@ -12117,6 +12218,11 @@ Produktiv. **Bis zum 20.09.2026** fragte sie deshalb zuerst über die API, ob
 der Job `produktion` in diesem Lauf mit Erfolg geendet hat, und hielt sonst
 still. Dieser Riegel ist mit AP2 entfallen — warum, steht im nächsten
 Abschnitt.
+
+**Seit R17-19 misst sie drei Teile** — die Dateien unter `assets/`, die
+Anmeldeseite und die Punktpfade samt Kopien der `config.php` (F-R17-18).
+Was bei Rot zu tun ist und wie die Meldung ankommt, steht im Runbook (7,
+„Die Integritätswache ist rot").
 
 ### 6.5a Zielprobe und Probelauf — die Kette misst, statt zu glauben
 
@@ -12679,14 +12785,51 @@ Nr. 140, seit S10 mit 6a, dass das **Schluesselblatt** erreichbar bleibt —
 die Lage, in der man es braucht, ist eine Wartungslage —, und seit Web 21.1.0
 mit 6b Komplett-Backup und Backup-Ziele samt Balken).
 
-**Die Integritaetswache ist rot:** `tools/integritaetswache/LIESMICH.md`,
-Abschnitt „Wenn sie rot wird" — in dieser Reihenfolge: Wurde gerade deployt?
-Steht `main` weiter als die Auslieferung? Erst wenn beides nicht passt, ist es
-eine Manipulation, und dann gilt: **nichts ueberschreiben**, bevor die
-abweichende Datei per FTPS heruntergeladen und beiseitegelegt ist — sie ist
-der Beleg. Danach FTPS-Zugangsdaten wechseln, Deploy neu ausloesen, und jedes
-Passwort, das seit der Abweichung eingegeben wurde, als moeglicherweise
-mitgelesen behandeln.
+**Die Integritätswache ist rot.** *(Bis R17-19 stand hier ein Verweis auf
+den Abschnitt „Wenn sie rot wird" in `tools/integritaetswache/LIESMICH.md`,
+den es nie gab, und die Frage „Steht `main` weiter als die Auslieferung?" —
+die Wache vergleicht seit AP2 gegen den Zeiger `produktion`, nicht gegen
+`main`, F-R17-15.)*
+
+**Wie die Meldung ankommt — der Alarmweg.** Ein roter Lauf meldet sich
+**nur** über GitHub: beim geplanten Lauf (täglich 04:17 UTC) an das Konto,
+das die `cron`-Zeile in `integritaet.yml` zuletzt geändert hat, beim Lauf
+nach einer Auslieferung an das Konto, das den Auslieferungslauf ausgelöst
+hat. In diesem Projekt ist das beide Male das Konto der BetreiberIn (Commits
+und Tags laufen unter ihrer Identität). Ankommen tut sie nur, wenn unter
+**GitHub → Settings → Notifications → Actions** die Benachrichtigung für
+fehlgeschlagene Läufe an ist (E-Mail oder App). Ist sie aus, bleibt Rot
+unbemerkt — das ist der eine Weg, auf dem die Wache still wird.
+
+**Was rot ist, steht oben im Protokoll; in dieser Reihenfolge lesen:**
+
+1. **„NICHT ERREICHBAR"** — die Anlage oder das Netz hat nicht geantwortet.
+   Nach einer Stunde von Hand neu starten (Actions → „Integritaetswache" →
+   *Run workflow*). Bleibt es, liegt es beim Hoster; eine Manipulation zeigt
+   sich so nicht.
+2. **Teil 3 (Punktpfade)** — seit R17-19. Ein Punktpfad mit 404 statt 403
+   heißt: Der Server liest `.htaccess` nicht mehr, oder sie ist verändert —
+   dann ist die Sperre der Zustandsdatei, der Sitzungen und der übrigen
+   Regeln fort. `.well-known/` mit 403 heißt: Die Zertifikatserneuerung
+   scheitert, sofort handeln. **Eine Kopie der `config.php` mit 200 ist ein
+   Ernstfall:** die Datei per FTPS löschen und alles darin als offen
+   behandeln — Datenbankpasswort beim Hoster wechseln, den Serverschlüssel
+   über **Betrieb → Servereinstellungen**, Karte „Schlüssel des Servers"
+   (4.97d, „Der Wechsel des Serverschlüssels"), das SMTP-Passwort beim
+   Mailanbieter.
+3. **Teil 1 oder 2 (Dateien, Anmeldeseite)** — zuerst die zwei harmlosen
+   Ursachen ausschließen: **Wurde gerade ausgeliefert, und ist der Lauf
+   grün?** Ein halber Abgleich lässt einen gemischten Stand oben; dann
+   denselben Tag noch einmal ausliefern (6.1, „Wenn etwas schiefging").
+   **Nennt die Zeile „Vergleichsstand" den ausgelieferten Tag?** Der Zeiger
+   `produktion` folgt nur einem erfolgreichen Job `produktion` (6.6a).
+4. **Passt beides nicht, ist es eine Manipulation**, und dann gilt:
+   **nichts überschreiben**, bevor die abweichende Datei per FTPS
+   heruntergeladen und beiseitegelegt ist — sie ist der Beleg. Danach
+   FTPS-Zugangsdaten und das Passwort des Hoster-Panels wechseln, denselben
+   Tag neu ausliefern, und jedes Passwort, das seit der Abweichung
+   eingegeben wurde, als möglicherweise mitgelesen behandeln
+   (`docs/Bedrohungsmodell.md`, Lage C1).
 
 **Demo-Konto einrichten (einmalig):** Fixture erzeugen —
 `php tools/referenzdatensatz/fixture/erzeugen.php` auf der Maschine, auf der
@@ -12766,7 +12909,27 @@ und Adresse je in einem Wertekasten mit Knopf „kopieren":
 2. **Abruf über die Adresse**, wo es keinen CLI-Cron gibt:
    `https://…/jobs.php?token=…`. **Die Adresse enthält ein Geheimnis** — nicht
    in eine Mail, nicht in ein Ticket. Ein neues Token macht das alte ungültig;
-   ein bestehender Zeitplan-Eintrag läuft danach ins Leere.
+   ein bestehender Zeitplan-Eintrag läuft danach ins Leere. Dieses
+   **Job-Token** startet seit Web 23.1.0 nur noch den Job-Lauf; es steht im
+   Zugriffsprotokoll des Hosters, und mehr soll man damit nicht können.
+
+**Die zwei Tokens nach dem Update erneuern (einmal, nach Web 23.1.0):** Bis
+Web 23.0.3 reiste ein einziges Token in jeder Adresse der Kette, also steht
+es in den Zugriffsprotokollen beider Hoster. Beim Update übernimmt das neue
+Kettentoken diesen Wert (sonst bliebe die Anlage nach dem Abgleich in der
+Wartung); getrennt werden sie erst durch Erneuern. Je Anlage, Staging zuerst:
+
+1. **Betrieb → Hintergrundjobs → „Auslieferungskette" → Neues Kettentoken
+   erzeugen**, den Wert kopieren und in GitHub als Geheimnis `JOBS_TOKEN` der
+   Umgebung dieser Anlage eintragen (`staging` bzw. `produktion`). Für
+   Staging zusätzlich den Umgebungswert `NADOKU_STAGING_JOBS_TOKEN` der
+   Cloud-Umgebung „NAdoku" (`docs/Sandbox-Setup.md`). **Bis der Eintrag
+   steht, ist jede Auslieferung dorthin rot** — das Backup-Tor sagt `403 token`.
+2. **Karte „Auslöser" → Neues Token erzeugen** (das Job-Token). Steht beim
+   Hoster ein „Cronjob per URL", die Adresse dort austauschen; ohne einen
+   solchen Eintrag ist nichts nachzuziehen.
+3. Nachweis: Ein Handlauf der Auslieferung auf Staging (Actions →
+   „Auslieferung" → *Run workflow*) ist grün; auf Produktiv der nächste Tag.
 
 **GPS-Daten werden nicht verdichtet:** Seit Web 22.6.0 packt und dünnt der
 Browser, nicht ein Job (4.99s, „Der Wartungslauf im Browser"). Was fällig ist, zeigt **Einstellungen →
@@ -13032,13 +13195,19 @@ OPcache des Hosters die Datei neu liest, können einige Sekunden vergehen.
 1. Einen Zufallswert erzeugen: `php -r 'echo bin2hex(random_bytes(24));'`.
 2. In `config.php` eintragen:
    `'betrieb' => ['health_token' => '<Wert>'],`
-3. Im Monitoring die Adresse
-   `https://<anlage>/api/health.php?token=<Wert>` eintragen, Abruf **einmal je
-   Minute** (mehr als 60 je Minute sperrt die Adresse eine Minute lang).
+3. Im Monitoring `https://<anlage>/api/health.php` mit der Kopfzeile
+   `X-Health-Token: <Wert>` eintragen — **die Kopfzeile ist der empfohlene
+   Weg** (seit Web 23.1.0, F-R17-22): Sie steht in keinem Zugriffsprotokoll.
+   Kann das Monitoring keine Kopfzeile setzen, geht
+   `https://<anlage>/api/health.php?token=<Wert>`; dann steht das Token im
+   Protokoll des Hosters, und es öffnet nur diese karge Auskunft. Abruf
+   **einmal je Minute** (mehr als 60 je Minute sperrt die Adresse eine Minute
+   lang).
    Auswerten: HTTP 200 = in Ordnung, 503 = nicht in Ordnung — der Rumpf sagt,
    was (`db`, `migration_ausstehend`, oder `error: maintenance`).
-4. Probe: `curl -s https://<anlage>/api/health.php?token=<Wert>` → `"ok":true`.
-   Ohne Token oder mit falschem → 403 `token`.
+4. Probe: `curl -s -H 'X-Health-Token: <Wert>' https://<anlage>/api/health.php`
+   → `"ok":true`. Ohne Token oder mit falschem → 403 `token`; stehen
+   Kopfzeile und Adresse beide da, gilt die Kopfzeile.
 
 Ausschalten: den Eintrag leeren. Der Endpunkt antwortet dann jedem mit 403,
 wie einem falschen Token.

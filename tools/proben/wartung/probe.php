@@ -540,6 +540,60 @@ $a9 = hole('jobs.php?token=falsch-und-zwar-eindeutig');
 pruefe($a9['code'] === 403 && ($a9['daten']['error'] ?? '') === 'token',
        '9   jobs.php mit falschem Token -> 403 token (wie heute)', 'HTTP ' . $a9['code']);
 
+/* 9a bis 9f  ZWEI TOKENS (Web 23.1.0, R17-19, F-R17-57, E-R17-34).
+ *
+ * Mit `aktion` nur POST und nur das Kettentoken, ohne `aktion` nur das
+ * Job-Token. Gemessen hier und nicht in einer eigenen Probe, weil `jobs.php`
+ * im Wartungsmodus offen bleiben MUSS (die Kette schaltet sie selbst aus) —
+ * die Lage, in der diese Probe ohnehin steht, ist die, in der die Kette die
+ * Aktionen braucht. Der Kettenwert wird vorher gemerkt und danach
+ * zurueckgelegt; die Fehlversuche im Topf `pair` raeumt der Block selbst weg,
+ * sonst sperrte der zehnte Lauf binnen zehn Minuten den eigenen Anschluss. */
+$ketteVorher = app_state_lesen(KETTE_TOKEN_SCHLUESSEL);
+$pdo->exec("DELETE FROM rate_limits WHERE topf = 'pair'");
+$pdo->prepare('DELETE FROM app_state WHERE k = ?')->execute([KETTE_TOKEN_SCHLUESSEL]);
+try {
+    $a9a = hole('jobs.php', null, ['token' => $token, 'aktion' => 'zustand']);
+    $uebernommen = app_state_lesen(KETTE_TOKEN_SCHLUESSEL);
+    pruefe($a9a['code'] === 200 && $uebernommen === $token
+           && ($a9a['daten']['wartung']['aktiv'] ?? null) === true,
+           '9a  ohne Kettentoken: POST aktion=zustand mit dem Job-Token -> 200, '
+           . 'und das Kettentoken uebernimmt dessen Wert (der Uebergang)',
+           'HTTP ' . $a9a['code'] . ', uebernommen: ' . ($uebernommen === $token ? 'ja' : 'nein'));
+
+    $a9b = hole('jobs.php?token=' . urlencode($token) . '&aktion=zustand');
+    pruefe($a9b['code'] === 405 && ($a9b['daten']['error'] ?? '') === 'method',
+           '9b  aktion in der Adresse -> 405 method, vor jedem Tokenvergleich',
+           'HTTP ' . $a9b['code']);
+
+    $kette = kette_token(true);
+    $a9c = hole('jobs.php', null, ['token' => $token, 'aktion' => 'zustand']);
+    pruefe($a9c['code'] === 403 && ($a9c['daten']['error'] ?? '') === 'token',
+           '9c  getrennt: das Job-Token oeffnet keine Aktion mehr -> 403 token',
+           'HTTP ' . $a9c['code']);
+
+    $a9d = hole('jobs.php', null, ['token' => $kette, 'aktion' => 'zustand']);
+    pruefe($a9d['code'] === 200 && ($a9d['daten']['aktion'] ?? '') === 'zustand',
+           '9d  das Kettentoken im Rumpf -> 200 zustand', 'HTTP ' . $a9d['code']);
+
+    $a9e = hole('jobs.php?token=' . urlencode($kette));
+    pruefe($a9e['code'] === 403 && ($a9e['daten']['error'] ?? '') === 'token',
+           '9e  das Kettentoken oeffnet den Job-Lauf nicht -> 403 token',
+           'HTTP ' . $a9e['code']);
+
+    $a9f = hole('jobs.php?token=' . urlencode($kette), null, ['aktion' => 'zustand']);
+    pruefe($a9f['code'] === 403 && ($a9f['daten']['error'] ?? '') === 'token',
+           '9f  Token in der Adresse, Aktion im Rumpf -> 403 token (genau das Protokollleck)',
+           'HTTP ' . $a9f['code']);
+} finally {
+    if ($ketteVorher === null) {
+        $pdo->prepare('DELETE FROM app_state WHERE k = ?')->execute([KETTE_TOKEN_SCHLUESSEL]);
+    } else {
+        app_state_setzen(KETTE_TOKEN_SCHLUESSEL, $ketteVorher);
+    }
+    $pdo->exec("DELETE FROM rate_limits WHERE topf = 'pair'");
+}
+
 $a10 = hole('login.php');
 pruefe($a10['code'] === 200, '10  login.php -> 200', 'HTTP ' . $a10['code']);
 pruefe(str_contains($a10['rumpf'], 'Wartungsmodus seit'),

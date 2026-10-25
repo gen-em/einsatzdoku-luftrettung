@@ -1,38 +1,40 @@
 # Integritätswache
 
-Liegt auf dem Produktivserver genau das, was ausgeliefert wurde?
+Liegt auf Produktiv noch das, was ausgeliefert wurde — und hält die Sperre?
 **Anlass: Nr. 140** — eine Datei, die niemand hochgeladen hat, fällt sonst nie auf.
 
 ## Aufruf
 
 ```bash
-python3 tools/integritaetswache/wache.py    # läuft als integritaet.yml
+python3 tools/integritaetswache/wache.py <basis> --stand zeiger    # so läuft integritaet.yml
+python3 tools/integritaetswache/wache.py <basis> --teil punktpfade # nur Teil 3 (Stufe 2, Staging)
+python3 tools/integritaetswache/wache.py --selbstprobe
 ```
 
 ## Was es misst
 
-Sie holt jede Datei unter `server/` vom Produktivserver und vergleicht sie
-mit dem Stand im Zweig **`produktion`** — dem Zeiger auf den zuletzt
-ausgelieferten Commit (E-KH-13). Gemeldet wird dreierlei: geändert, fehlt,
-**steht dort und gehört nicht dorthin**.
-
-**Ohne eingecheckte Prüfsummen:** Eine Liste im Repositorium wäre eine
-zweite Wahrheit, die altert. Verglichen wird gegen git.
+Über HTTPS, ohne Zugangsdaten, gegen den Zeiger `produktion`: (1) jede Datei
+unter `server/assets/` per SHA-256, (2) auf `login.php` alles, was den Weg
+des Passworts bestimmt, (3) seit R17-19 die Punktpfade — sechs mit **403**,
+`.well-known/` nicht 403, keine Kopie der `config.php` mit 200 (F-R17-18).
+Täglich und nach jeder Auslieferung (`integritaet.yml`), Selbstprobe zuerst.
 
 ## Was es braucht
 
-FTPS-Zugang zum Produktivserver und den Zweig `produktion`. **Fehlt der
-Zweig, ist die Wache rot** und sagt, wie man ihn anlegt — sie läuft nie
-still grün weiter.
+Den Zweig `produktion` (fehlt er, ist sie rot) und `WACHE_BASIS`. **Und eine
+Benachrichtigung, die ankommt:** Rot meldet nur GitHub, an das Konto, das die
+`cron`-Zeile zuletzt geändert hat — ist dort die Meldung fehlgeschlagener
+Läufe aus, bleibt Rot unbemerkt (F-R17-15).
 
 ## Erwartete Zahl
 
-**0 Abweichungen** außerhalb der Ausnahmeliste (`config.php`,
-`install.lock`, `wartung.lock`, `ueberlast.json`, `sicherungen/`, `apk/`,
-`.sitzungen/`, `doku/`). Die Liste steht in der Wache, nicht hier.
+**0 Abweichungen, 0 nicht erreichbar**; Teil 3 „6 gesperrt", „3 von 3 Kopien
+nicht ausgeliefert"; Selbstprobe **51 / 0** (25.10.2026). **Ist sie rot:**
+`docs/Technik.md` 7, „Die Integritätswache ist rot" — zuerst nichts
+überschreiben.
 
 ## Was es nicht kann
 
-Sie prüft **Dateien, nicht Verhalten** — ein Server, der die richtigen
-Dateien hat und trotzdem falsch antwortet, fällt ihr nicht auf. Und sie
-sieht nur `server/`; die Datenbank ist außerhalb.
+Keinen PHP-Quelltext, keine `config.php`, nicht den Inhalt der `.htaccess` —
+nur deren Wirkung (Nr. 263, nicht umsetzen); keinen Angreifer mit Push-Recht,
+keine Datenbank. *(Bis R17-19 beschrieb diese Anleitung eine Wache mit FTPS.)*

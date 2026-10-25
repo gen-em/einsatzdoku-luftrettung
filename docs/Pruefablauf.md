@@ -175,7 +175,10 @@ durch. Deshalb drei Lagen statt einer:
 1. **Das Ruleset** — Riegel gegen Git und gegen jede fremde Anwendung.
 2. **Die Deny-Liste in `.claude/settings.json`** — sie sperrt
    `mcp__github__merge_pull_request` und
-   `mcp__github__enable_pr_auto_merge`.
+   `mcp__github__enable_pr_auto_merge`, seit R17-19 auch
+   `mcp__github__push_files` und `mcp__github__actions_run_trigger`
+   (F-R17-14): Eine Instanz schreibt nicht an Git vorbei und startet keinen
+   Lauf — Staging- und App-Probeläufe startet die BetreiberIn.
 3. **Der Satz in `CLAUDE.md` 8** — eine Instanz mergt nie.
 
 **Wie Lage 2 wirkt, und wie man sie deshalb misst.** Eine Deny-Regel aus dem
@@ -275,10 +278,13 @@ dem die Uhr keine Zugangsdaten kennt (`CLAUDE.md` 4): Ein Schlüssel, dessen
 Verlust jede spätere Fassung zu einer anderen Anwendung macht, gehört nicht
 dorthin, wo bei jedem Bau fremder Code mitläuft. **Gebaut mit PK-08**
 (Jobs `android` und `uhr`, `tools/kette/appbau.sh` und `apkablage.py`,
-`Technik.md` 4.97g). **Was die Kette dort prüft:** Tag gegen Fassung, das
-Zertifikat gegen `APK_ZERTIFIKAT_SHA256` und die Enden `078c…ad64`, beide
-APKs gleich signiert, Paketname und `versionName`, die abgelegte Datei
-Byte für Byte gegen die gebaute. **Was sie nicht prüft:** ob die App
+`Technik.md` 4.97g). **Was die Kette dort prüft:** seit R17-19 zuerst das
+App-Tor (grüner Job `Stufe 1` auf demselben Baum, bei einem Tag der Commit
+auf `main`, F-R17-17), dann Tag gegen Fassung, den Bau in einem Job ohne
+Geheimnisse und mit Gradle-Verifikation (F-R17-03, -20), das Zertifikat
+gegen `APK_ZERTIFIKAT_SHA256` und die Enden `078c…ad64`, beide APKs gleich
+signiert, Paketname und `versionName`, die abgelegte Datei Byte für Byte
+gegen die gebaute; bei der Uhr die Prüfsumme des SDK. **Was sie nicht prüft:** ob die App
 funktioniert — das sind Station B (Prüfstand, Emulator) und der Gerätetest.
 
 ---
@@ -825,6 +831,22 @@ Shell-Syntax (Backlog Nr. 217). Wer einen Aufruf in der Kette ändert, fährt
 das Werkzeug davor; wer ein Werkzeug umbenennt oder seine Schalter ändert,
 ebenfalls.
 
+**Seit R17-19 trägt es zwei Riegel der Kette** (F-R17-16): Jede fremde
+`uses:`-Zeile hängt an einer 40-stelligen SHA mit Fassung als Kommentar, und
+die Ausnahmeliste des FTPS-Schritts hält ihre Sollliste von acht Pfaden,
+jeder Serverpfad (außer `install.php`) steht in `.gitignore`, und keine
+`server/config.php*` ist eingecheckt. Bis dahin waren das zwei Prüfwerte in
+`CLAUDE.md` 3, die ein Handbefehl nachzählte. Beide Riegel rechnen ihre
+Eingaben als Text — die Selbstprobe (`--probe`) legt ihnen jeden Fehler hin,
+ohne das Repositorium anzufassen.
+
+**Was die Kette sonst noch selbst misst** (R17-19): Teil 3 der
+Integritätswache — die Punktpfade 403, `.well-known/` offen, keine Kopie der
+`config.php` mit 200 — gegen Produktiv in `integritaet.yml` und gegen Staging
+in Stufe 2 (`wache.py --teil punktpfade`, F-R17-18); `appbau.sh --selbstprobe`
+misst mit einem Ersatz-`gradlew` die Umgebung des Gradle-Aufrufs (kein
+`APK_*`, nur die Positivliste, F-R17-03).
+
 **Wer das Läuferabbild wechselt** (die `runs-on`-Zeilen, `docs/Technik.md`
 6.1a), misst vorher dreifach, weil kein Teil allein reicht (Nr. 236):
 Stufe 1 und die Schemaprobe per Handlauf von `pruefung.yml` auf dem
@@ -926,7 +948,7 @@ hier steht, ist nur, **was grün heißt**:
 | `tools/quelltext/` `vollstaendigkeit` | 0 Befunde in sechs Prüfungen — ohne Schwelle seit PK-04/5e (E-PK-16); die sechste, Selektoren, seit R4-05 |
 | `tools/screenshots/` | 0 Überlauf, 0 Konsolenfehler, 0 Knöpfe falscher Höhe, 0 Karten außerhalb von `main.inhalt`; mit `--etikett NAME` zusätzlich 0 Abweichungen bei Titel und Kopfleiste (P5c/AP1). Rollende Behälter werden genannt und halten nicht auf (R4-08) |
 | `tools/screenshots/` `kontrast.py` | 0 Paare unter ihrem Sollwert, 0 Paare des Stylesheets ohne Eintrag in `PAARE` oder `AUSNAHMEN` (seit R4-08); Selbstprobe alle Fälle grün |
-| `tools/kettenaufrufe/` | 0 Befunde; jeder ungeprüfte Aufruf ist benannt |
+| `tools/kettenaufrufe/` | 0 Befunde; jeder ungeprüfte Aufruf ist benannt; seit R17-19 dazu jede fremde `uses:`-Zeile an einer SHA mit Fassung und die Ausnahmeliste bei ihren acht Pfaden, `.gitignore` vollständig, keine eingecheckte `server/config.php*` |
 | `tools/quelltext/` `bestand` | 0 Befunde in allen vierzehn Regeln — ohne Decke, ohne Ausnahmeliste (E-BR-01); seit R4-25 stehen die vier erzeugten Tabellen in `Design.md` wie ihr Erzeuger sie ausgibt (Regel `design`) |
 | `tools/quelltext/` `anker` | 0 Verweise `hilfe.php#…` ohne Ziel im gerenderten Handbuch; Selbstprobe 6 von 6 (falscher Anker rot, Kommentar zählt nicht, `-2` bei gleichem Titel) |
 | `tools/quelltext/` `kennzeichnung` | alle Kennzeichen der Sollliste stehen (heute 20 von 20: zehn Felder, Formular und Leseansicht), jedes Klartext-Freitextfeld trägt die Kleinzeile, 0 Blobfelder ohne Zeile; Selbstprobe 8 von 8 (die beiden Fehler aus 19.1.0 rot, Kommentar zählt nicht) |

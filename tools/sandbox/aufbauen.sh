@@ -84,21 +84,35 @@ teil_web() {
     fi
 
     melde "Python-Pakete"
-    # `python3` ist 3.11 (deadsnakes), apt legt nach 3.12 — deshalb pip.
-    python3 -c 'import jsonschema' >/dev/null 2>&1 \
-        || python3 -m pip install -q --break-system-packages jsonschema >/dev/null 2>&1 \
-        || zeile "ACHTUNG: jsonschema fehlt weiter"
-    # cryptography ist meist brauchbar; blind ersetzen macht mehr kaputt, als
-    # es heilt. Deshalb Import prüfen und nur im Fehlerfall nachhelfen.
-    python3 -c 'from cryptography.hazmat.primitives.ciphers.aead import AESGCM' >/dev/null 2>&1 \
-        || python3 -m pip install -q --break-system-packages cffi >/dev/null 2>&1 \
-        || zeile "ACHTUNG: cryptography trägt weiter nicht"
-    # Die Gegenstellen der Versandprobe (FTP, FTPS, SFTP als Nachbau, RP-01).
-    # pyOpenSSL ist KEIN Beiwerk: Ohne es fehlt pyftpdlib der TLS_FTPHandler,
-    # FTPS startet nicht, und die Gegenstellen brechen alle drei ab.
-    python3 -c 'import paramiko; from pyftpdlib.handlers import TLS_FTPHandler' >/dev/null 2>&1 \
-        || python3 -m pip install -q --break-system-packages pyftpdlib paramiko pyopenssl >/dev/null 2>&1 \
-        || zeile "ACHTUNG: Gegenstellen der Versandprobe (pyftpdlib, paramiko, pyopenssl) fehlen"
+    # FESTE FASSUNGEN MIT HASHES (R17-19, F-R17-20): `tools/sandbox/
+    # anforderungen.txt`. Bis dahin holte dieser Teil jsonschema, cffi,
+    # pyftpdlib, paramiko und pyopenssl in der Fassung des Tages. Installiert
+    # wird weiterhin NUR, wenn ein Import scheitert — blind ersetzen macht
+    # mehr kaputt, als es heilt —, dann aber der ganze Satz aus der Datei,
+    # gegen seine Hashes. `--ignore-installed`, weil pip ein per apt
+    # gelegtes Paket nicht deinstallieren kann und sonst abbräche.
+    # Die drei Prüfungen: jsonschema; cryptography (AESGCM); die Gegenstellen
+    # der Versandprobe — pyOpenSSL ist dort KEIN Beiwerk: Ohne es fehlt
+    # pyftpdlib der TLS_FTPHandler, FTPS startet nicht, und die Gegenstellen
+    # brechen alle drei ab.
+    local -a py_pruef=(
+        'jsonschema|import jsonschema'
+        'cryptography|from cryptography.hazmat.primitives.ciphers.aead import AESGCM'
+        'Versand-Gegenstellen|import paramiko; from pyftpdlib.handlers import TLS_FTPHandler'
+    )
+    local e fehlt_py=""
+    for e in "${py_pruef[@]}"; do
+        python3 -c "${e#*|}" >/dev/null 2>&1 || fehlt_py="$fehlt_py ${e%%|*}"
+    done
+    if [ -n "$fehlt_py" ]; then
+        zeile "nachinstallieren aus anforderungen.txt (mit Hashes):$fehlt_py"
+        python3 -m pip install -q --break-system-packages --require-hashes --ignore-installed \
+            -r "$WURZEL/tools/sandbox/anforderungen.txt" >/dev/null 2>&1 \
+            || zeile "ACHTUNG: pip --require-hashes ist gescheitert"
+        for e in "${py_pruef[@]}"; do
+            python3 -c "${e#*|}" >/dev/null 2>&1 || zeile "ACHTUNG: ${e%%|*} fehlt weiter"
+        done
+    fi
 }
 
 teil_android() {

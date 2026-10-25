@@ -5,7 +5,17 @@ declare(strict_types=1);
  * HEALTH — der Zustand der Anlage für ein fremdes Monitoring (P5c/AP6,
  * E-P5c-17, -52; R38).
  *
- *     GET /api/health.php?token=<betrieb.health_token aus config.php>
+ *     GET /api/health.php            Kopfzeile  X-Health-Token: <Token>
+ *     GET /api/health.php?token=<Token>          (fuer Monitore ohne Kopfzeilen)
+ *
+ *     <Token> = `betrieb.health_token` aus `config.php`
+ *
+ * DIE KOPFZEILE IST DER EMPFOHLENE WEG (Web 23.1.0, R17-19, F-R17-22,
+ * E-R17-35). Eine Adresse steht im Zugriffsprotokoll des Hosters, eine
+ * Kopfzeile nicht. Die Adresse bleibt, weil viele einfache Uptime-Dienste
+ * keine Kopfzeile setzen koennen; wer sie nutzt, nimmt den Protokolleintrag
+ * in Kauf — das Token oeffnet nur diese karge Auskunft. Stehen beide da,
+ * gilt die Kopfzeile.
  *
  * WOZU. Die BetreiberIn trägt diese Adresse in ihr eigenes Monitoring ein
  * (Uptime-Dienst, Nagios, ein `curl` im Cron). Kein Fremddienst wird von hier
@@ -66,7 +76,8 @@ if (!rate_erlaubt('health')) {
 }
 rate_zaehlen('health');
 
-$token    = (string)($_GET['token'] ?? '');
+$kopf     = (string)($_SERVER['HTTP_X_HEALTH_TOKEN'] ?? '');
+$token    = $kopf !== '' ? $kopf : (string)($_GET['token'] ?? '');
 $erwartet = (string)(konfig('betrieb.health_token') ?? '');
 if ($erwartet === '' || $token === '' || !hash_equals($erwartet, $token)) {
     rate_gleiche_dauer($t0);

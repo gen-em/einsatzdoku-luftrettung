@@ -26,15 +26,15 @@ Daneben, je mit Anleitung: `netzprobe/`, `eingabe-probe/`, `krypto-probe/`
 
 ## Was es braucht
 
-`CIQ_GERAETE_URL` mit den Archiven `devices.tar` und `fonts.tar` (Packen und
-Rückfall: `docs/Technik.md` 5.2b); das SDK holt es selbst; Stufe II `Xvfb`.
+`CIQ_GERAETE_URL` mit `devices.tar` und `fonts.tar` (`docs/Technik.md` 5.2b);
+SDK und Simulator-Bibliotheken holt es selbst, seit R17-19 nur mit passender
+SHA-256 (`SDK_SHA256`, F-R17-20); Stufe II `Xvfb`.
 
 ## Erwartete Zahl
 
-Aufbau: **SDK 9.2.0, 1332 Schriftdateien, 99 von 99 Manifest-Geräten, 0
-fehlende Bibliotheken**. Stufe I: **99 übersetzt, 0 fehlgeschlagen**.
+Aufbau: **SDK 9.2.0 (Summe stimmt), 1332 Schriften, 99/99 Geräte, 0 fehlende Bibliotheken**. Stufe I: **99 übersetzt, 0 rot**.
 
 ## Was es nicht kann
 
 Kein echtes Gerät ersetzen (`docs/Geraete-Eingabe.md`), kein Bluetooth;
-`speicher-leeren` wirkt nur bei beendetem Simulator.
+`speicher-leeren` wirkt nur bei beendetem Simulator; Gerätedateien ohne Summe.

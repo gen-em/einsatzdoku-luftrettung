@@ -123,7 +123,8 @@ function konfig_stellen(array $werte, ?string $pfad = null): callable
  *
  * `register_shutdown_function` greift nicht bei `kill -9` und nicht bei
  * einem Fatal im Speicherlimit. Wer die Probe so beendet, legt die Datei von
- * Hand zurueck — sie steht als `config.php.vor-probe` daneben.
+ * Hand zurueck — der Pfad der Sicherung steht zu Beginn auf stderr
+ * (`konfig_stellen_sicherung()`).
  */
 function konfig_stellen_urstand(string $pfad, ?string $text): void
 {
@@ -135,13 +136,41 @@ function konfig_stellen_urstand(string $pfad, ?string $text): void
     $gemerkt[$pfad] = true;
 
     /* EINE KOPIE AUF DER PLATTE, nicht nur im Speicher: Der haerteste
-     * Abbruch ist der, bei dem PHP nichts mehr ausfuehrt. */
-    if ($text !== null) { @file_put_contents($pfad . '.vor-probe', $text); }
+     * Abbruch ist der, bei dem PHP nichts mehr ausfuehrt.
+     *
+     * UND ZWAR AUSSERHALB VON `server/` (R17-19, F-R17-55, E-R17-36). Bis
+     * Web 23.0.3 lag sie als `config.php.vor-probe` NEBEN der Datei, also im
+     * Webverzeichnis — mit Datenbankzugang, Serverschluessel, Anteil und
+     * SMTP-Passwort, unter einem Namen, der nicht auf `.php` endet und deshalb
+     * als Text ausgeliefert wird. Die `FilesMatch`-Regel deckte nur genau
+     * `config.php`, und nach einem `kill -9` blieb die Kopie liegen. */
+    $sicherung = null;
+    if ($text !== null) {
+        $sicherung = konfig_stellen_sicherung($pfad);
+        $alt = umask(0077);
+        @file_put_contents($sicherung, $text);
+        umask($alt);
+        @chmod($sicherung, 0600);
+        fwrite(STDERR, "konfig_stellen: Sicherung von {$pfad} unter {$sicherung} "
+                     . "(liegt nach einem harten Abbruch noch dort)\n");
+    }
 
-    register_shutdown_function(static function () use ($pfad, $text): void {
+    register_shutdown_function(static function () use ($pfad, $text, $sicherung): void {
         konfig_stellen_bytes($pfad, $text);
-        @unlink($pfad . '.vor-probe');
+        if ($sicherung !== null) { @unlink($sicherung); }
     });
+}
+
+/**
+ * Wohin die Sicherung einer `config.php` kommt: ins Temp-Verzeichnis, je
+ * Pfad ein eigener Name — `komplettprobe` stellt in einer Kopie, und zwei
+ * Pfade duerfen einander die Sicherung nicht ueberschreiben. Nie unter
+ * `server/` und nie im Repositorium (F-R17-55).
+ */
+function konfig_stellen_sicherung(string $pfad): string
+{
+    return rtrim(sys_get_temp_dir(), '/') . '/nadoku-konfig-vor-probe-'
+         . substr(hash('sha256', $pfad), 0, 16) . '.php';
 }
 
 /** Die Datei auf einen frueheren Text zuruecksetzen (oder entfernen). */

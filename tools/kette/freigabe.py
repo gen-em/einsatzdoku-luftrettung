@@ -37,9 +37,15 @@ Commit denselben BAUM hat wie der Tag-Commit UND in dem der Job `Stufe 1`
 selbst grün war. Mit „Require branches to be up to date" im Ruleset ist der
 Baum des Zweig-Commits beweisbar der geprüfte (Konzept TB 2.2).
 
+SEIT R17-19 AUCH DAS TOR DER APP-TAGS (`app-urteil`, F-R17-17, E-R17-33):
+grüner Job `Stufe 1` auf demselben Baum und, bei einem Tag, der Commit auf
+`main`. Ohne den Staging-Teil — die Apps gehen nicht über Staging.
+
     python3 tools/kette/freigabe.py --selbstprobe
     python3 tools/kette/freigabe.py urteil --laeufe laeufe.json --vergleich ahead \
             --baum <baum-sha> --stufe1-laeufe stufe1.json
+    python3 tools/kette/freigabe.py app-urteil --baum <baum-sha> \
+            --stufe1-laeufe stufe1.json --vergleich-main behind --abstammung pflicht
 """
 
 from __future__ import annotations
@@ -261,6 +267,100 @@ def urteil(laeufe: list, vergleich: str | None, baum,
     return 0, zeilen
 
 
+# ------------------------------------------------- das Tor der App-Tags
+
+# Die Antworten von `compare/main...{sha}`, die belegen, dass der Commit AUF
+# `main` liegt: `behind` — er ist ein Vorfahr des Kopfs von `main`, also
+# gemergt; `identical` — er IST der Kopf. `ahead` und `diverged` heissen, er
+# traegt etwas, das `main` nie gesehen hat.
+AUF_MAIN_JA = ("behind", "identical")
+
+# Die zwei Lagen des App-Tors. `pflicht` fuer einen Tag, `aus` fuer den
+# App-Probelauf: Ein Arbeitszweig liegt nicht auf `main`, und der Probelauf
+# legt nichts ab (E-R17-33).
+ABSTAMMUNG_LAGEN = ("pflicht", "aus")
+
+
+def auf_main(vergleich: str | None) -> bool:
+    """Belegt diese Vergleichsantwort, dass der Commit auf `main` liegt?
+
+    IM ZWEIFEL NEIN — dieselbe Regel wie `abstammt()` darüber. Ein
+    gescheiterter Abruf öffnet das Tor nicht.
+    """
+    if not isinstance(vergleich, str):
+        return False
+    return vergleich.strip().lower() in AUF_MAIN_JA
+
+
+def app_urteil(stufe1_laeufe, baum, vergleich_main: str | None,
+               abstammung: str) -> tuple[int, list[str]]:
+    """Darf dieser App-Tag gebaut werden? 0 = ja, 1 = nein (R17-19, F-R17-17).
+
+    BIS WEB 23.0.3 GAB ES FÜR `android-v*` UND `uhr-v*` KEIN TOR. Ein Tag auf
+    einem nie geprüften Commit brauchte nur Tag = Fassung und die Freigabe der
+    Umgebung — und `CLAUDE.md` 3 las sich, als gälte das Tor der grünen Läufe
+    für alle drei Tags. Jetzt gilt für die Apps, was für das Web gilt, ohne
+    den Staging-Teil (die Apps gehen nicht über Staging):
+
+      1. ein grüner Job `Stufe 1` auf demselben BAUM (`stufe1_lauf_zaehlt()`
+         — dieselbe Funktion wie im Web-Tor, nicht eine zweite);
+      2. bei einem Tag: der Commit liegt auf `main` (E-R17-33). Das Web-Tor
+         belegt dasselbe über „Push auf `main`, Staging grün"; ohne Staging
+         bleibt die Abstammung.
+    """
+    zeilen: list[str] = []
+    zielbaum = baum_norm(baum)
+    zeilen.append(f"Baum des Tag-Commits:                 "
+                  f"{zielbaum or '— nicht ermittelt —'}")
+    if abstammung not in ABSTAMMUNG_LAGEN:
+        zeilen.append(f"::error::Abstammung `{abstammung}` ist keine der Lagen "
+                      f"{', '.join(ABSTAMMUNG_LAGEN)} — ein Fehler im Arbeitslauf. "
+                      f"Das Tor bleibt zu.")
+        return 1, zeilen
+    if not zielbaum:
+        zeilen.append("::error::Der Baum des Tag-Commits ist nicht ermittelt — "
+                      "ohne ihn lässt sich kein Lauf zuordnen. Das Tor bleibt zu.")
+        return 1, zeilen
+    if not isinstance(stufe1_laeufe, list):
+        zeilen.append("::error::Die Liste der Stufe-1-Läufe ist keine Liste. Das "
+                      "Tor bleibt zu.")
+        return 1, zeilen
+
+    stufe1 = 0
+    for lauf in stufe1_laeufe:
+        if not isinstance(lauf, dict):
+            zeilen.append(f"  [nein] unlesbarer Eintrag: {lauf!r}")
+            continue
+        zaehlt, grund = stufe1_lauf_zaehlt(lauf, zielbaum)
+        if zaehlt or "anderer Baum" not in grund:
+            zeilen.append(f"  [{'JA  ' if zaehlt else 'nein'}] {grund}")
+        if zaehlt:
+            stufe1 += 1
+    zeilen.append(f"Grüne Stufe-1-Läufe auf diesem Baum:  {stufe1}")
+
+    if abstammung == "pflicht":
+        zeilen.append(f"Liegt der Commit auf `{HAUPTZWEIG}`:          "
+                      f"{'ja' if auf_main(vergleich_main) else 'nein'} "
+                      f"(Vergleich: {vergleich_main or '— nicht ermittelt —'})")
+    else:
+        zeilen.append(f"Liegt der Commit auf `{HAUPTZWEIG}`:          "
+                      f"nicht gefragt (App-Probelauf, legt nichts ab)")
+
+    if stufe1 < 1:
+        zeilen.append("::error::Kein grüner Stufe-1-Lauf auf diesem Baum — "
+                      "dieser Stand wird nicht gebaut. Liegt der grüne Lauf "
+                      "außerhalb des Fensters, hilft ein Handlauf von "
+                      "`pruefung.yml` auf diesem Stand.")
+        return 1, zeilen
+    if abstammung == "pflicht" and not auf_main(vergleich_main):
+        zeilen.append(f"::error::Der getaggte Commit liegt nicht auf "
+                      f"`{HAUPTZWEIG}` — ein App-Tag kommt nur von gemergtem "
+                      f"Stand (E-R17-33). Erst den Pull Request mergen, dann "
+                      f"auf `{HAUPTZWEIG}` taggen.")
+        return 1, zeilen
+    return 0, zeilen
+
+
 # ---------------------------------------------------------------- Selbstprobe
 
 def selbstprobe() -> int:
@@ -467,6 +567,36 @@ def selbstprobe() -> int:
     pruefe(any("Abstammung vom Zeiger" in z and "diverged" in z for z in zeilen),
            "…und die Vergleichsantwort wird im Wortlaut genannt")
 
+    # ------------------------------------------------ app_urteil() (R17-19)
+    pruefe(auf_main("behind") and auf_main("identical") and auf_main(" BEHIND "),
+           "auf_main: `behind` und `identical` heissen gemergt")
+    pruefe(not auf_main("ahead") and not auf_main("diverged")
+           and not auf_main(None) and not auf_main(""),
+           "auf_main: `ahead`, `diverged`, leer und ein gescheiterter Abruf "
+           "heissen NEIN")
+    rc, _ = app_urteil(S1, BAUM, "behind", "pflicht")
+    pruefe(rc == 0, "app_urteil: grüner Stufe-1-Lauf auf dem Baum, Commit auf "
+                    "`main` → 0")
+    rc, z = app_urteil(S1, BAUM, "ahead", "pflicht")
+    pruefe(rc == 1 and any("nicht auf" in x for x in z),
+           "app_urteil: DIE GEGENPROBE — derselbe Stand, aber nicht auf `main` "
+           "(ein ungemergter Zweig) → 1, mit Grund")
+    rc, _ = app_urteil(S1, BAUM, None, "pflicht")
+    pruefe(rc == 1, "app_urteil: Abstammung nicht ermittelt → 1")
+    rc, _ = app_urteil([], BAUM, "behind", "pflicht")
+    pruefe(rc == 1, "app_urteil: auf `main`, aber kein grüner Stufe-1-Lauf → 1")
+    rc, _ = app_urteil([{**PR_LAUF, "stufe1_ok": False}], BAUM, "identical", "pflicht")
+    pruefe(rc == 1, "app_urteil: gleicher Baum, `Stufe 1` übersprungen → 1")
+    rc, _ = app_urteil(S1, BAUM, "diverged", "aus")
+    pruefe(rc == 0, "app_urteil: App-Probelauf (`aus`) fragt die Abstammung "
+                    "nicht — ein Arbeitszweig liegt nicht auf `main`")
+    rc, _ = app_urteil([], BAUM, "behind", "aus")
+    pruefe(rc == 1, "app_urteil: …aber Stufe 1 auch im Probelauf (E-R17-33)")
+    rc, _ = app_urteil(S1, BAUM, "behind", "")
+    pruefe(rc == 1, "app_urteil: eine leere Lage ist ein Fehler im Arbeitslauf → 1")
+    rc, _ = app_urteil(S1, "", "behind", "pflicht")
+    pruefe(rc == 1, "app_urteil: Zielbaum leer → 1")
+
     print(f"\n  erfüllt: {erfuellt} · offen: {offen}")
     return 0 if offen == 0 else 1
 
@@ -476,7 +606,7 @@ def selbstprobe() -> int:
 def main(argv: list[str]) -> int:
     p = argparse.ArgumentParser(description=__doc__,
                                 formatter_class=argparse.RawDescriptionHelpFormatter)
-    p.add_argument("befehl", nargs="?", choices=["urteil"])
+    p.add_argument("befehl", nargs="?", choices=["urteil", "app-urteil"])
     p.add_argument("--laeufe",
                    help="JSON-Liste der Staging-Läufe (Datei oder `-` für stdin); "
                         "je Eintrag: id, event, head_branch, staging_ok")
@@ -489,6 +619,12 @@ def main(argv: list[str]) -> int:
                    help="JSON-Liste der `pruefung.yml`-Läufe (Datei oder `-`); "
                         "je Eintrag: id, event, head_branch, head_sha, baum, "
                         "stufe1_ok")
+    p.add_argument("--vergleich-main",
+                   help="nur app-urteil: Antwort von `compare/main...<sha>` — "
+                        "behind, identical, ahead, diverged (leer = nicht ermittelt)")
+    p.add_argument("--abstammung", choices=list(ABSTAMMUNG_LAGEN),
+                   help="nur app-urteil: `pflicht` bei einem Tag, `aus` im "
+                        "App-Probelauf — ohne Vorgabe, der Arbeitslauf nennt sie")
     p.add_argument("--selbstprobe", action="store_true")
     a = p.parse_args(argv)
 
@@ -497,6 +633,22 @@ def main(argv: list[str]) -> int:
     if a.befehl is None:
         p.print_help()
         return 2
+    if a.befehl == "app-urteil":
+        if a.stufe1_laeufe is None or a.abstammung is None:
+            print("app-urteil braucht --stufe1-laeufe und --abstammung.", file=sys.stderr)
+            return 2
+        roh = (sys.stdin.read() if a.stufe1_laeufe == "-"
+               else open(a.stufe1_laeufe, encoding="utf-8").read())
+        try:
+            liste = json.loads(roh) if roh.strip() else []
+        except json.JSONDecodeError as f:
+            print(f"::error::Die Liste der Stufe-1-Läufe ist kein gültiges JSON "
+                  f"({f}). Das Tor bleibt zu.", file=sys.stderr)
+            return 1
+        rc, zeilen = app_urteil(liste, a.baum, a.vergleich_main, a.abstammung)
+        for z in zeilen:
+            print(z)
+        return rc
     if a.laeufe is None or a.stufe1_laeufe is None:
         print("urteil braucht --laeufe und --stufe1-laeufe (Datei oder `-`).",
               file=sys.stderr)

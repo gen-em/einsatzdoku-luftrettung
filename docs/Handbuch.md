@@ -5043,7 +5043,7 @@ jede Seite trägt ein Anliegen. Was wohin gegangen ist:
 | Was du suchst | Wo es jetzt steht |
 |---|---|
 | Wartungsmodus, ausstehende Updates, Fassung | Betrieb → **Updates** |
-| Zustand der Hintergrundjobs, die drei Auslöser, das Token | Betrieb → **Hintergrundjobs** |
+| Zustand der Hintergrundjobs, die drei Auslöser, das Job-Token und das Kettentoken | Betrieb → **Hintergrundjobs** |
 | Speichergrenze, Warnschwellen, Kontingente, Belegung, Ablage | Betrieb → **Servereinstellungen** |
 | CSP scharf schalten, HSTS-Dauer | Betrieb → **Servereinstellungen** |
 | Name und Logo der Installation | Verwaltung → **Installation** |
@@ -5755,6 +5755,22 @@ GPS-Daten") hinten.
 **Ein Rückstand ist kein Fehler.** Er zählt auch mit, was einfach noch nicht
 dran ist — etwa ein Papierkorb, dessen Frist noch läuft.
 
+**Zwei Tokens, seit Web 23.1.0.** Das Token in der Adresse unter 2. — das
+**Job-Token** — startet nur noch den Job-Lauf. Eine Adresse steht im
+Zugriffsprotokoll des Hosters, und mehr als „die Jobs laufen lassen" soll
+damit niemand können. Die Auslieferung über GitHub braucht mehr: Sie stößt
+das Komplett-Backup an und schaltet die Wartung ein und aus. Dafür steht in
+der Karte **„Auslieferungskette"** ein zweites Token, das **Kettentoken**.
+Es gehört als Geheimnis `JOBS_TOKEN` in die GitHub-Umgebung, die zu dieser
+Anlage ausliefert, und reist nie in einer Adresse.
+
+**„Neues Token erzeugen"** macht jeweils das bisherige ungültig: beim
+Job-Token läuft ein Zeitplan-Eintrag beim Hoster danach ins Leere, beim
+Kettentoken scheitert die nächste Auslieferung, bis der neue Wert in GitHub
+steht. **Einmal nach dem Update auf Web 23.1.0 sollten beide erneuert
+werden**, weil das alte, gemeinsame Token in den Zugriffsprotokollen steht;
+die Schrittfolge steht im Runbook (`Technik.md` 7).
+
 ### 12.5 Servereinstellungen
 
 **Nach dem Speichern steht die Meldung in der Karte, in der du geklickt
@@ -6426,9 +6442,12 @@ selbst meldet nichts nach draußen; sie antwortet nur, wenn sie gefragt wird.
 
 **Einrichten** geht über `config.php`, nicht über die Oberfläche: Dort steht
 ein langer Zufallswert als `betrieb.health_token`, und das Monitoring fragt
-`https://…/api/health.php?token=<Wert>`. Die Schritte stehen im Runbook
-(`Technik.md` 7, „Health-Endpunkt einrichten"). Ohne Eintrag ist der
-Endpunkt aus.
+`https://…/api/health.php` mit der Kopfzeile `X-Health-Token: <Wert>`. Kann
+dein Monitoring keine Kopfzeile setzen, geht auch
+`https://…/api/health.php?token=<Wert>` — dann steht der Wert im
+Zugriffsprotokoll des Hosters (seit Web 23.1.0 ist deshalb die Kopfzeile der
+empfohlene Weg). Die Schritte stehen im Runbook (`Technik.md` 7,
+„Health-Endpunkt einrichten"). Ohne Eintrag ist der Endpunkt aus.
 
 **Was die Antwort sagt:**
 

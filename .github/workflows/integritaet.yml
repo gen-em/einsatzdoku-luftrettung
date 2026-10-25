@@ -21,6 +21,16 @@ defaults:
   run:
     shell: bash -eo pipefail {0}
 
+# WAS SIE MISST (seit R17-19 drei Teile): Teil 1 jede Datei unter
+# `server/assets/`, Teil 2 die Anmeldeseite, Teil 3 die Punktpfade und Kopien
+# der `config.php` (F-R17-18 — bis dahin nur auf Staging gemessen).
+#
+# DER ALARMWEG (F-R17-15): Ein roter Lauf meldet sich NUR über die
+# Benachrichtigung von GitHub — beim geplanten Lauf an das Konto, das die
+# `cron`-Zeile zuletzt geändert hat, beim Lauf nach einer Auslieferung an
+# den, der sie ausgelöst hat. Kommt sie nicht an, bleibt Rot unbemerkt; die
+# Einstellung dafür und was bei Rot zu tun ist, steht in `docs/Technik.md` 7
+# („Die Integritätswache ist rot").
 jobs:
   wache:
     runs-on: ubuntu-26.04

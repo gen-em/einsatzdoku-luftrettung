@@ -7,8 +7,17 @@ declare(strict_types=1);
  *
  * Aufruf:  php tools/zaehlung/zaehlen.php [--selbstprobe] [--stellen]
  *          php tools/zaehlung/zaehlen.php --zeile=Z19 --stellen
- * Rueckgabe: 0 = jede Zeile auf oder unter ihrer Decke · 1 = eine darueber
- *            · 2 = die Zaehlung kam nicht los
+ * Rueckgabe: 0 = jede Zeile GENAU auf ihrer Decke · 1 = eine darueber oder
+ *            darunter · 2 = die Zaehlung kam nicht los
+ *
+ * DIE DECKE IST EINE RATSCHE (seit R17-19, F-R17-56, E-R17-37). Bis dahin
+ * meldete das Werkzeug nur „darueber". Eine Decke UEBER dem Ist blieb gruen —
+ * und Z17 stand nach AP5 bei Ist 0 auf Decke 30: Dreissig neue Schreibstellen
+ * an den Kindtabellen am Datenzugriff vorbei waeren gruen geblieben, genau der
+ * Zustand, den der Kopf des Registers ausschliesst. Jetzt ist auch „darunter"
+ * ein Befund: Wer eine Stelle entfernt, schreibt die Decke im selben Commit
+ * herunter. Sonst steht die naechste stehengebliebene Decke wieder da, bis
+ * jemand liest.
  *
  * WOGEGEN. R83 sagt, zentralisiert wird beim zweiten echten Verbraucher. Der
  * Beleg, aus dem die Entscheidung entstand, ist `edbak_groesse_text()`: Die
@@ -367,8 +376,10 @@ function zh_bestand(bool $auch_tools = false): array
          * `config.php`, wo `base_url` natuerlich steht. Die Zeile war rot,
          * ohne dass sich eine Zeile Code geaendert haette. */
         if ($p === $wurzel . '/config.php') { continue; }
-        /* Der Rueckweg, den `konfig_stellen()` fuer einen harten Abbruch
-         * hinterlegt — eine Kopie, kein Quelltext. */
+        /* Der Rueckweg, den `konfig_stellen()` bis Web 23.0.3 fuer einen
+         * harten Abbruch HIER hinterlegte — eine Kopie, kein Quelltext. Seit
+         * R17-19 liegt er im Temp-Verzeichnis (F-R17-55); die Zeile bleibt
+         * fuer eine liegengebliebene alte Kopie. */
         if (str_ends_with($p, '/config.php.vor-probe')) { continue; }
         $pfade[] = $p;
     }
@@ -797,6 +808,20 @@ function zh_regel_frischer_code(string $rel, array $sichten, string $quelle): ar
     return $nummern;
 }
 
+/**
+ * Die Lage einer Zeile: `DRUEBER`, `drunter` oder `genau` — und ob sie ein
+ * Befund ist. Eigene Funktion, damit die Selbstprobe die Ratsche pruefen kann
+ * (R17-19, F-R17-56): Seither ist auch `drunter` ein Befund.
+ *
+ * @return array{0:string,1:bool}  [Lage, Befund]
+ */
+function zh_lage(int $ist, int $decke): array
+{
+    if ($ist > $decke) { return ['DRUEBER', true]; }
+    if ($ist < $decke) { return ['drunter', true]; }
+    return ['genau', false];
+}
+
 function zh_selbstprobe(): int
 {
     $faelle = [
@@ -888,7 +913,22 @@ function zh_selbstprobe(): int
            $schief === 0 ? 'ok  ' : 'FEHL', 'Zeilentreue ueber ' . $geprueft . ' Sichten', 0, $schief);
     if ($schief === 0) { $ok++; }
 
-    $n = count($faelle) + 2;
+    /* DIE RATSCHE (R17-19, F-R17-56): Eine Decke ueber dem Ist ist ein
+     * Befund — der Fall Z17 (Ist 0, Decke 30) MUSS rot sein. */
+    $ratsche = [
+        [0, 30, 'drunter', true,  'Ist 0 unter Decke 30 (der Fall Z17) -> Befund'],
+        [31, 30, 'DRUEBER', true, 'Ist ueber der Decke -> Befund'],
+        [4, 4, 'genau', false,    'Ist gleich Decke -> kein Befund'],
+    ];
+    foreach ($ratsche as [$ist, $decke, $sollLage, $sollBefund, $was]) {
+        [$lageIst, $befundIst] = zh_lage($ist, $decke);
+        $passt = $lageIst === $sollLage && $befundIst === $sollBefund;
+        printf("  %s  %-52s erwartet %s, gemessen %s\n", $passt ? 'ok  ' : 'FEHL', $was,
+               $sollLage, $lageIst);
+        if ($passt) { $ok++; }
+    }
+
+    $n = count($faelle) + 2 + count($ratsche);
     printf("\nSelbstprobe: %d von %d\n", $ok, $n);
     return $ok === $n ? 0 : 1;
 }
@@ -919,7 +959,7 @@ printf("Bestand: %d PHP-Dateien, %d JS-Dateien (server/, ohne vendor/)\n\n", $ph
 printf("%-5s %-8s %5s %5s %5s  %-6s %s\n", 'Zeile', 'Paket', 'Start', 'Ist', 'Decke', 'Lage', 'Beschreibung');
 echo str_repeat('-', 78) . "\n";
 
-$ueber = []; $gesehen = 0;
+$ueber = []; $unter = []; $gesehen = 0;
 foreach ($register as $z) {
     if ($nurZeile !== null && $z['kennung'] !== $nurZeile) { continue; }
     $gesehen++;
@@ -930,8 +970,9 @@ foreach ($register as $z) {
         $m = zh_messen($z, $bestand);
     }
     $decke = $z['decke_jetzt'];
-    $lage  = $m['treffer'] > $decke ? 'DRUEBER' : ($m['treffer'] < $decke ? 'drunter' : 'genau');
-    if ($m['treffer'] > $decke) { $ueber[] = $z['kennung']; }
+    [$lage, $befund] = zh_lage($m['treffer'], $decke);
+    if ($lage === 'DRUEBER') { $ueber[] = $z['kennung']; }
+    if ($lage === 'drunter') { $unter[] = $z['kennung']; }
     printf("%-5s %-8s %5d %5d %5d  %-7s %s\n",
            $z['kennung'], $z['paket'], $z['start'], $m['treffer'], $decke, $lage, $z['beschreibung']);
     if ($mitStellen) {
@@ -940,9 +981,14 @@ foreach ($register as $z) {
 }
 
 echo str_repeat('-', 78) . "\n";
-printf("%d Zeilen gemessen, %d ueber der Decke.\n", $gesehen, count($ueber));
+printf("%d Zeilen gemessen, %d ueber der Decke, %d darunter.\n", $gesehen, count($ueber), count($unter));
 if ($ueber !== []) {
     echo "Ueber der Decke: " . implode(', ', $ueber) . "\n";
     echo "Eine Decke wird nicht angehoben, ohne dass es im Konzept steht (E-ZE-24).\n";
 }
-exit($ueber === [] ? 0 : 1);
+if ($unter !== []) {
+    echo "Unter der Decke: " . implode(', ', $unter) . "\n";
+    echo "Die Decke im Register auf den Ist-Wert herunterschreiben — im selben Commit,\n"
+       . "der die Stelle entfernt hat (Ratsche, R17-19).\n";
+}
+exit($ueber === [] && $unter === [] ? 0 : 1);

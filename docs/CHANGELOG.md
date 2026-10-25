@@ -14,6 +14,126 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 23.1.0] — unveröffentlicht
+
+Schritt 12b, Paket R17-19 — Kette und Werkzeuge (Befunde F-R17-03, -14
+bis -18, -20, -22, -55 bis -57). Kein Schema. **Nach dem Deploy beide
+Tokens erneuern** (siehe „Bewusst so").
+
+### Neu
+
+- **Zwei Tokens für `jobs.php`.** Bis Web 23.0.3 öffnete ein einziges
+  Token den Job-Lauf *und* die Aktionen der Auslieferungskette —
+  Komplett-Backup, Wartungsmodus, Zustand, Pause —, und die Kette schickte
+  es als `?token=…` in der Adresse. Eine Adresse steht im Zugriffsprotokoll
+  des Hosters, mit Zeitstempel, so lange er es aufhebt; wer das Protokoll
+  las, hatte damit den Schalter für die Wartung des Produktivservers
+  (F-R17-57, -22). Jetzt trägt ein eigenes **Kettentoken** die Aktionen,
+  nur im Rumpf einer POST-Anfrage; eine Aktion in der Adresse beantwortet
+  `jobs.php` mit 405, bevor es überhaupt ein Token vergleicht. Das bisherige
+  **Job-Token** bleibt für den „Cronjob per URL" beim Hoster — solche Dienste
+  können nur GET — und startet nur noch den Job-Lauf, also das, was der
+  Zeitplan ohnehin jede Minute tut. Das eine Token öffnet den Weg des
+  anderen nicht. Angezeigt und erneuert wird das Kettentoken unter
+  **Betrieb → Hintergrundjobs → Auslieferungskette**; in GitHub liegt es
+  weiter als `JOBS_TOKEN`, damit kein Geheimnis umbenannt werden musste.
+  **Warum zwei Tokens und nicht „GET abschaffen":** Der Review schlug vor,
+  das Token per GET nach einer Übergangsfassung gar nicht mehr anzunehmen.
+  Das hätte den „Cronjob per URL" gebrochen, eine dokumentierte Bedienung
+  für Hoster ohne Kommandozeile. Die Trennung nimmt dem Protokoll den
+  gefährlichen Teil und lässt den harmlosen, wo er gebraucht wird.
+
+### Geändert
+
+- **`api/health.php` nimmt das Token auch als Kopfzeile `X-Health-Token`**
+  (F-R17-22). Die Kopfzeile steht in keinem Zugriffsprotokoll und ist der
+  empfohlene Weg; `?token=` bleibt für Monitore, die keine Kopfzeile setzen
+  können. Stehen beide da, gilt die Kopfzeile.
+
+### Behoben
+
+- **Kopien der `config.php` im Webverzeichnis** (F-R17-55). Acht Proben
+  sicherten die Konfiguration vor dem Umstellen als `config.php.vor-probe`
+  daneben, die Mailprobe als `config.php.mailprobe`, der Passkey-Weg der
+  Bedienprobe ebenso — mit Datenbankzugang, Serverschlüssel, Anteil und
+  SMTP-Passwort, unter Namen, die nicht auf `.php` enden und deshalb als
+  Text ausgeliefert werden; nach einem harten Abbruch blieben sie liegen.
+  Den dritten Schreiber hatte der Review nicht gesehen (F-R17-62). Alle
+  drei sichern jetzt ins Temp-Verzeichnis, nur für den Besitzer lesbar, und
+  nennen den Pfad. Dazu zwei Riegel: `server/.htaccess` sperrt jede Datei,
+  die mit `config.php` beginnt, und `.gitignore` ignoriert jede solche
+  Kopie. Betroffen war die Arbeitsumgebung, nicht eine Anlage — der Weg nach
+  Produktiv hätte über einen Commit geführt, und den fängt seither ein
+  Riegel in Stufe 1 ab.
+
+### Kette und Werkzeuge
+
+- **Gradle sieht den App-Signaturschlüssel nicht mehr** (F-R17-03, hoch).
+  Die vier `APK_*`-Geheimnisse standen im selben Schritt wie
+  `./gradlew assembleRelease`, und Gradle erbte sie — `System.getenv()`
+  genügte jedem Plugin und jeder Abhängigkeit zur Bauzeit. „Gradle sieht den
+  Schlüssel nie" (E-PK-63) stimmte nur für die Datei. Ein eigener Schritt
+  hätte das nicht geheilt: Ein Hintergrundprozess aus dem Bau lebt auf
+  demselben Läufer in den nächsten Schritt hinein und liest dort die
+  Umgebung über `/proc`. Deshalb baut jetzt ein Job **ohne Geheimnisse und
+  ohne Umgebung** (`android-bau`), und ein zweiter signiert auf einem
+  frischen Läufer, ohne Gradle, hinter der Pflichtfreigabe; die APKs gehen
+  als Artefakt hinüber und werden gegen die Prüfsummen des Baus gehalten.
+  `appbau.sh android-bauen` baut nicht, sobald ein `APK_*` in seiner
+  Umgebung steht, und startet Gradle nur mit einer Positivliste
+  (`env -i`); seine Selbstprobe misst die Umgebung des Gradle-Aufrufs mit
+  einem Ersatz-`gradlew`. Dazu prüft Gradle jede Abhängigkeit gegen
+  `android/gradle/verification-metadata.xml`.
+- **App-Tags haben ein Tor** (F-R17-17). `android-v*` und `uhr-v*`
+  brauchten bisher nur Tag = Fassung und die Freigabe; ein Tag auf einem nie
+  geprüften Commit wurde gebaut. Jetzt verlangt der Job `app-tor` einen
+  grünen Job `Stufe 1` auf demselben Baum und, bei einem Tag, dass der
+  Commit auf `main` liegt (`freigabe.py app-urteil`). Der App-Probelauf
+  fragt nur Stufe 1, weil ein Arbeitszweig nicht auf `main` liegt und der
+  Probelauf nichts ablegt.
+- **Feste Fassungen mit Prüfsummen** (F-R17-20): `pip` in Stufe 2 und in
+  der Arbeitsumgebung mit `--require-hashes`, Playwright in Stufe 2 über
+  `npm ci` aus einer Sperrdatei, das Connect-IQ-SDK und die vier
+  Simulator-Bibliotheken mit SHA-256 — das SDK auch im Uhr-Job der
+  Auslieferung, mit dem das Store-Paket entsteht. Zwei Proben holten bei
+  jedem Lauf `npx --yes http-server`; sie nehmen jetzt den Server aus
+  Python, nur an `127.0.0.1`.
+- **Zwei neue Riegel in Stufe 1** (F-R17-16), im Schritt „Kettenaufrufe":
+  Jede fremde `uses:`-Zeile hängt an einer 40-stelligen SHA mit Fassung
+  daneben, und die Ausnahmeliste der Kette hält ihre Sollliste von acht
+  Pfaden, jeder Serverpfad steht auch in `.gitignore`, und keine
+  `server/config.php*` ist eingecheckt. Bis dahin waren das zwei Prüfwerte
+  in `CLAUDE.md` 3, die nur ein Handbefehl nachzählte.
+- **Die Integritätswache misst die Punktpfade jetzt auch auf Produktiv**
+  (F-R17-18) — Teil 3, täglich und nach jeder Auslieferung; Stufe 2 ruft
+  dieselbe Stelle gegen Staging. Ihre Anleitung beschrieb eine andere Wache
+  (FTPS, „jede Datei unter `server/`"); sie ist neu geschrieben, und der
+  Runbook-Abschnitt „Die Integritätswache ist rot", auf den Alarmtext und
+  Technik verwiesen, steht jetzt in `Technik.md` 7, samt Alarmweg
+  (F-R17-15).
+- **Die Zählung ist eine Ratsche** (F-R17-56). Eine Decke über dem Ist ist
+  jetzt ein Befund wie eine darunter; Z17 stand nach AP5 bei Ist 0 noch auf
+  30.
+- **`tor.py` schickt das Kettentoken im POST-Rumpf**, nie in der Adresse;
+  die Selbstprobe misst das am ganzen Weg über `main()`.
+- **Die Deny-Liste** in `.claude/settings.json` sperrt zusätzlich
+  `push_files` und `actions_run_trigger` (F-R17-14): Eine Instanz schiebt
+  nicht an Git vorbei und startet keine Läufe.
+
+### Bewusst so
+
+- **Beim Update übernimmt das Kettentoken den Wert des alten Tokens.** Ein
+  frisches Token kennte die Kette nicht: Sie schaltet vor dem Abgleich mit
+  dem alten Token die Wartung ein und fragt danach die neue Fassung nach
+  Zustand und `wartung_aus` — mit einem fremden Token bliebe die Anlage in
+  der Wartung stehen. Getrennt sind beide, sobald eines erneuert wird, und
+  **erneuert werden sollten beide**, weil die alten Zugriffsprotokolle den
+  gemeinsamen Wert tragen: das Kettentoken mit Eintrag als `JOBS_TOKEN` in
+  die GitHub-Umgebung, das Job-Token mit Nachtrag beim Hoster, falls ein
+  „Cronjob per URL" eingerichtet ist (Runbook, `Technik.md` 7).
+- **Android und Uhr stufen nicht hoch.** APK und Store-Paket ändern sich
+  nicht, nur ihr Bau.
+
 ## [Web 23.0.3] — unveröffentlicht
 
 Schritt 12b, Paket R17-18 (Befund F-R17-58). Kein Code der Anwendung, kein

@@ -428,10 +428,15 @@ require_once $wurzel . '/tools/sandbox/konfig_stellen.php';
 require_once $wurzel . '/server/migration_lib.php';
 require_once $wurzel . '/server/speicher_lib.php';
 $basis = rtrim($argv[1] ?? 'http://127.0.0.1:8080', '/');
-$health = static function (?string $token) use ($basis): array {
+/* `$kopf`: das Token als Kopfzeile `X-Health-Token` (Web 23.1.0, F-R17-22,
+ * E-R17-35) — der empfohlene Weg, weil eine Adresse im Zugriffsprotokoll des
+ * Hosters steht. `$token` geht dann NICHT in die Adresse, ausser beide sind
+ * gesetzt (Fall „Kopfzeile gewinnt"). */
+$health = static function (?string $token, ?string $kopf = null) use ($basis): array {
     $url = $basis . '/api/health.php' . ($token === null ? '' : '?token=' . rawurlencode($token));
     $ch = curl_init($url);
-    curl_setopt_array($ch, [CURLOPT_RETURNTRANSFER => true, CURLOPT_TIMEOUT => 30, CURLOPT_PROXY => '']);
+    curl_setopt_array($ch, [CURLOPT_RETURNTRANSFER => true, CURLOPT_TIMEOUT => 30, CURLOPT_PROXY => '',
+                            CURLOPT_HTTPHEADER => $kopf === null ? [] : ['X-Health-Token: ' . $kopf]]);
     $t = microtime(true);
     $rumpf = (string)curl_exec($ch);
     $dauer = microtime(true) - $t;
@@ -467,6 +472,14 @@ try {
           ($j['ok'] ?? null) === true && ($j['db'] ?? null) === true
           && ($j['migration_ausstehend'] ?? null) === false && ($j['web_version'] ?? '') === WEB_VERSION,
           json_encode(array_intersect_key($j, array_flip(['ok', 'db', 'migration_ausstehend', 'web_version']))));
+    $perKopf   = $health(null, $TOKEN);
+    $kopfFalsch = $health($TOKEN, bin2hex(random_bytes(16)));
+    pruef('Token als Kopfzeile X-Health-Token → 200 (der empfohlene Weg, nicht im Zugriffsprotokoll)',
+          $perKopf['code'] === 200 && ($perKopf['json']['ok'] ?? null) === true,
+          'HTTP ' . $perKopf['code']);
+    pruef('Kopfzeile falsch, Adresse richtig → 403 (die Kopfzeile gilt, die Adresse fuellt keine Luecke)',
+          $kopfFalsch['code'] === 403 && ($kopfFalsch['json']['error'] ?? '') === 'token',
+          'HTTP ' . $kopfFalsch['code']);
     pruef('… und keine Konten-, Mengen- oder Hosterangaben (nur Zahlen, Wahrheitswerte, die Fassung)',
           $j !== [] && !array_filter($j, static fn($v, $k): bool
               => !(is_bool($v) || is_int($v) || $v === null || $k === 'web_version'), ARRAY_FILTER_USE_BOTH),

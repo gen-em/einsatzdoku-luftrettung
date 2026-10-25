@@ -26,7 +26,11 @@ declare(strict_types=1);
  *   2. ADRESSE MIT TOKEN — wo es keinen CLI-Cron gibt, aber einen
  *      zeitgesteuerten Abruf (viele Hoster bieten „Cronjob per URL"):
  *
- *          https://…/jobs.php?token=<Token aus dem Wartungsbereich>
+ *          https://…/jobs.php?token=<Job-Token aus Betrieb → Hintergrundjobs>
+ *
+ *      Die Adresse steht im Zugriffsprotokoll des Hosters. Deshalb oeffnet
+ *      dieses Token seit Web 23.1.0 nur noch den Job-Lauf und nichts sonst
+ *      (siehe „Zwei Tokens" unten).
  *
  *   3. HUCKEPACK AUF EINER ANFRAGE — der Rückfall, und bis Web 10.0.0 der
  *      einzige Weg. `auth_guard.php` stößt ihn bei einer angemeldeten
@@ -38,7 +42,8 @@ declare(strict_types=1);
  * `jobs_lauf()`. Die Jobs stehen in `jobs_lib.php`.
  *
  * SEIT P5a IST DER TOKEN-WEG AUCH DER EINSTIEG DER AUSLIEFERUNGSKETTE
- * (E-P5a-12). Er nimmt dafür einen Parameter `aktion`:
+ * (E-P5a-12). Er nimmt dafür einen Parameter `aktion` — seit Web 23.1.0
+ * NUR im Rumpf einer POST-Anfrage und NUR mit dem Kettentoken:
  *
  *   (ohne)        wie bisher — alle fälligen Jobs, ein Häppchen
  *   komplett      NUR das Komplett-Backup, und zwar mit Auftrag: Steht keiner
@@ -56,6 +61,23 @@ declare(strict_types=1);
  *   zustand       Auskunft ohne Nebenwirkung: jüngster Komplett-Stand mit
  *                 Zeit, Wartung an/aus, Migration ausstehend ja/nein,
  *                 `WEB_VERSION`
+ *
+ * ZWEI TOKENS (Web 23.1.0, R17-19, F-R17-57, E-R17-34). Bis Web 23.0.3
+ * oeffnete EIN Token beides, den Job-Lauf und die Aktionen, und die Kette
+ * schickte es als `?token=…` — also in jede Zeile des Zugriffsprotokolls
+ * beim Hoster. Wer das Protokoll las, konnte die Anlage in die Wartung
+ * schalten. Seither:
+ *
+ *   ohne `aktion`   das JOB-Token (`jobs_token()`), per GET oder POST — der
+ *                   „Cronjob per URL" kann nur GET.
+ *   mit `aktion`    das KETTENTOKEN (`kette_token()`), NUR per POST, Token
+ *                   und Aktion im Rumpf. Eine `aktion` in der Adresse ist
+ *                   405 `method`, bevor ein Token verglichen wird — so faellt
+ *                   ein Werkzeug, das wieder per GET ruft, sofort auf, statt
+ *                   das Token still ins Protokoll zu schreiben.
+ *
+ * Das eine Token oeffnet den Weg des anderen nicht (403 `token`). Einziger
+ * Client der Aktionen ist `tools/kette/tor.py`.
  *
  * WARUM `pause` UEBER DIE ADRESSE ERREICHBAR SEIN MUSS (Web 20.16.0).
  * Der Kreislauftest haelt die Jobs an, bevor er ein Backup in ein frisches
@@ -78,7 +100,7 @@ declare(strict_types=1);
  *
  * WARUM EIN FEHLENDES `sekunden` EIN FEHLER IST UND NICHT NULL. `jobs_pause(0)`
  * HEBT die Pause auf. Wuerde ein vergessener Parameter als 0 gelesen, gaebe
- * ein `?aktion=pause` ohne Zahl die Jobs frei — der Aufrufer bekaeme ein
+ * ein `aktion=pause` ohne Zahl die Jobs frei — der Aufrufer bekaeme ein
  * `ok` und glaubte, sie stuenden still. Deshalb 400 statt Vorgabewert.
  *
  * WARUM DIE KETTE WIEDERHOLT RUFEN MUSS. Ein Aufruf hat 20 s Budget
@@ -175,13 +197,42 @@ if (!rate_erlaubt('pair')) {
     json_out(['error' => 'zu_viele_versuche'], 429);
 }
 
-$token = (string)($_GET['token'] ?? $_POST['token'] ?? '');
+/* EINE AKTION IN DER ADRESSE IST 405 — VOR JEDEM TOKENVERGLEICH (Web 23.1.0,
+ * E-R17-34). Die Antwort haengt nicht am Token und verraet deshalb nichts;
+ * sie zaehlt auch nicht als Fehlversuch. Sie ist der Riegel dafuer, dass das
+ * Kettentoken nie wieder in einer Adresse reist: Ein Werkzeug, das zurueck
+ * auf GET faellt, scheitert hier laut, statt grün zu loggen. */
+$aktionInAdresse = $_GET['aktion'] ?? null;
+if ($aktionInAdresse !== null && $aktionInAdresse !== '') {
+    kette_antwort(['ok' => false, 'error' => 'method',
+                   'meldung' => 'Aktionen nur per POST, Token und Aktion im Rumpf. '
+                              . 'In der Adresse stuenden sie im Zugriffsprotokoll.'], 405);
+}
+
+$aktion = (string)($_POST['aktion'] ?? '');
+
+/* WELCHES TOKEN, HAENGT AN DER AKTION. Mit Aktion zaehlt nur das Kettentoken
+ * aus dem Rumpf — ein Token in der Adresse neben einer Aktion im Rumpf
+ * waere genau das Protokollleck, gegen das die Trennung steht. Ohne Aktion
+ * das Job-Token, per GET oder POST wie bisher. */
+$token = $aktion !== ''
+    ? (string)($_POST['token'] ?? '')
+    : (string)($_GET['token'] ?? $_POST['token'] ?? '');
 
 $erwartet = '';
 try {
-    $st = db()->prepare('SELECT v FROM app_state WHERE k = ?');
-    $st->execute([JOB_TOKEN_SCHLUESSEL]);
-    $erwartet = (string)($st->fetchColumn() ?: '');
+    if ($aktion !== '') {
+        /* Legt das Kettentoken beim ersten Mal an — als Uebernahme des
+         * Job-Tokens, siehe `kette_token()`. */
+        $erwartet = kette_token();
+    } else {
+        /* Das Job-Token wird hier NICHT angelegt: Ohne Eintrag ist der Weg
+         * aus, bis die BetreiberIn ihn unter Betrieb → Hintergrundjobs
+         * einrichtet. */
+        $st = db()->prepare('SELECT v FROM app_state WHERE k = ?');
+        $st->execute([JOB_TOKEN_SCHLUESSEL]);
+        $erwartet = (string)($st->fetchColumn() ?: '');
+    }
 } catch (Throwable $ex) {
     rate_gleiche_dauer($t0);
     json_out(['error' => 'datenbank'], 500);
@@ -249,8 +300,6 @@ function kette_migration_offen(): bool
     return ((int)$m['offen'] + (int)$m['blockiert']) > 0;
 }
 
-$aktion = (string)($_GET['aktion'] ?? $_POST['aktion'] ?? '');
-
 if ($aktion === 'zustand') {
     $w = wartung_daten();
     kette_antwort([
@@ -296,7 +345,7 @@ if ($aktion === 'pause') {
     /* Siehe Kopf der Datei. `jobs_pause()` ist derselbe Weg wie auf der
      * Kommandozeile und in `betrieb_jobs.php` — hier kommt kein vierter
      * Mechanismus dazu, nur ein vierter Aufrufer. */
-    $roh = $_GET['sekunden'] ?? $_POST['sekunden'] ?? null;
+    $roh = $_POST['sekunden'] ?? null;
 
     /* KEIN VORGABEWERT. Ein fehlendes `sekunden` als 0 zu lesen hiesse, die
      * Pause bei einem vergessenen Parameter AUFZUHEBEN und dafuer `ok` zu

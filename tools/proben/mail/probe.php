@@ -33,14 +33,19 @@ declare(strict_types=1);
  * DIE PROBE TAUSCHT `server/config.php` AUS und stellt sie wieder her —
  * beim regulaeren Ende, bei einer Ausnahme UND bei einem Abbruch
  * (`register_shutdown_function`). Wer sie unterbricht, findet trotzdem die
- * eigene Datei wieder; die Sicherung liegt daneben als `config.php.mailprobe`.
+ * eigene Datei wieder; die Sicherung liegt im Temp-Verzeichnis der Probe
+ * (Pfad auf stderr). Bis Web 23.0.3 lag sie als `config.php.mailprobe` NEBEN
+ * der Datei, im Webverzeichnis, unter einem Namen, den der Webserver als Text
+ * ausliefert (R17-19, F-R17-55).
  */
 
 $wurzel = dirname(__DIR__, 3);
 $cfgPfad = $wurzel . '/server/config.php';
-$sicher  = $wurzel . '/server/config.php.mailprobe';
 $tmp     = sys_get_temp_dir() . '/mailprobe-' . getmypid();
+$altUmask = umask(0077);
 @mkdir($tmp, 0700, true);
+umask($altUmask);
+$sicher  = $tmp . '/config.php.mailprobe';
 
 $GLOBALS['__mp_kind'] = null;
 
@@ -63,6 +68,8 @@ if (!is_file($cfgPfad)) {
     exit(2);
 }
 copy($cfgPfad, $sicher);
+@chmod($sicher, 0600);
+fwrite(STDERR, "Mailprobe: Sicherung von config.php unter $sicher\n");
 
 /* ---- Zertifikat: eigene Wurzel, damit verify_peer greift ---------------- */
 

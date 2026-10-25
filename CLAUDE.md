@@ -93,12 +93,14 @@ ihn dort und damit für beide; das ist der Zweck (E-KH-14, -17).
   (`staging-nadoku.gen-em.org`). Kein Produktivserver.
 - **Tag `web-vX.Y.Z`** → nach **Pflichtfreigabe durch die Betreiberin**
   (GitHub-Umgebung `produktion`) und nach dem **Backup-Tor** auf Produktiv.
-- **Tag `android-vX.Y.Z`** → nach derselben Pflichtfreigabe: bauen, mit dem
-  App-Signaturschlüssel signieren, beide APKs nach `server/apk/` auf
-  Produktiv; dort bleibt je Gerät nur die neueste Fassung. **Tag
-  `uhr-vX.Y.Z`** → das Garmin-Paket als Artefakt des Laufs. Der Tag muss zur
-  Fassung in der Datei passen (seit PK-08, E-PK-53, -59, -60; `docs/Technik.md`
-  4.97g).
+- **Tag `android-vX.Y.Z`** → nach dem **App-Tor** (grüner Job `Stufe 1` auf
+  demselben Baum, der Commit liegt auf `main`; seit R17-19, E-R17-33) in einem
+  Job **ohne Geheimnisse** bauen, dann nach derselben Pflichtfreigabe in einem
+  zweiten Job, ohne Gradle, mit dem App-Signaturschlüssel signieren (E-R17-32),
+  beide APKs nach `server/apk/` auf Produktiv; dort bleibt je Gerät nur die
+  neueste Fassung. **Tag `uhr-vX.Y.Z`** → nach demselben Tor das Garmin-Paket
+  als Artefakt des Laufs. Der Tag muss zur Fassung in der Datei passen (seit
+  PK-08, E-PK-53, -59, -60; `docs/Technik.md` 4.97g).
 
 **Staging liegt seit dem 20.09.2026 bei einem anderen Hoster als Produktiv**
 (lima-city, `staging-nadoku.gen-em.org`; E-KH-04). Vorher lag es im selben
@@ -119,6 +121,9 @@ Stufe-1-Lauf auf demselben Baum** — ein grüner PR-Lauf zählt, ein Lauf mit
 übersprungener Stufe 1 nicht; fehlt er, bricht er ab, statt ungeprüft
 auszuliefern (Konzept TB, seit dem 23.09.2026; bis dahin „auf demselben
 Commit", und ein Tag wartete auf einen zweiten Lauf über denselben Inhalt).
+**Seit R17-19 gilt das auch für die App-Tags** (Job `app-tor`, F-R17-17);
+bis dahin las sich dieser Satz, als gälte er für alle drei, und er galt nur
+für `web-v*`.
 
 **Stufe 1 läuft seit dem 21.09.2026 auf Arbeitszweigen nur noch beim Pull
 Request, auf `main` bei jedem Push** (Vorgriff auf PK-05). Bis dahin stand
@@ -171,16 +176,20 @@ Protokoll oder einen alten Kommentar liest, liest das noch.
   ab. Ein Prüfschritt, der sich selbst überspringt, meldet grün, ohne
   gemessen zu haben.
 - **Jede fremde `uses:`-Zeile hängt an einer 40-stelligen Commit-SHA**
-  (E-KH-10), die Version als Kommentar daneben — **fünfzehn sind es** (seit
-  PK-08: `actions/setup-java` und `actions/upload-artifact` sind mit den
-  App-Jobs zurück, an denselben SHAs wie bis PK-05, dazu je ein
-  `actions/checkout`; von PK-05 bis PK-08 waren es zehn, bis Nr. 236
-  vierzehn — seither setzt auch der Uhr-Job sein Java fest). Die zwei **lokalen** (`./.github/workflows/…`)
+  (E-KH-10), die Version als Kommentar daneben — **neunzehn sind es** (seit
+  R17-19: App-Tor, Android-Bau und Signatur sind drei Jobs statt einem und
+  bringen je ihr `actions/checkout`, zweimal `actions/setup-java` und
+  einmal `actions/upload-artifact` mit, alle an denselben SHAs wie zuvor —
+  keine neue Aktion; seit PK-08 waren es fünfzehn, von PK-05 bis PK-08
+  zehn, bis Nr. 236 vierzehn). Die zwei **lokalen** (`./.github/workflows/…`)
   tragen keine und können es nicht: Ein lokaler Pfad nimmt keinen Ref und
   läuft immer auf dem Commit des Aufrufers. Wer eine Aktion aktualisiert,
   tauscht SHA **und** Kommentar. **Die Zahl ist kein Prüfwert, sondern eine
-  Orientierung** — der Prüfwert ist „keine fremde Zeile ohne SHA", und den
-  zählt man nach, statt ihn abzuschreiben:
+  Orientierung** — der Prüfwert ist „keine fremde Zeile ohne SHA", und
+  **seit R17-19 misst ihn ein Riegel in Stufe 1** (`tools/kettenaufrufe/`,
+  F-R17-16): Eine fremde Zeile ohne 40-stellige SHA oder ohne Fassung als
+  Kommentar ist rot. Bis dahin zählte nur dieser Handbefehl nach, und er
+  bleibt die unabhängige Gegenprobe:
   `grep -rhoE 'uses: [^ ]+@[0-9a-f]{40}' .github/workflows/ | wc -l` gegen
   `grep -rh 'uses:' .github/workflows/ | grep -vc 'uses: \./'`.
 - `server/config.php`, `install.lock`, `server/wartung.lock`,
@@ -189,7 +198,10 @@ Protokoll oder einen alten Kommentar liest, liest das noch.
   `server/.sitzungen/` (die PHP-Sitzungsdateien, Schritt 16, E-SA-05) liegen
   nur auf dem Server. Sie stehen in `.gitignore` **und** in der
   Ausnahmeliste des FTPS-Schritts — beides muss so bleiben.
-  **Acht Pfade sind es, und die Zahl ist der Prüfwert.** Die drei
+  **Acht Pfade sind es, und die Zahl ist der Prüfwert** — seit R17-19
+  gemessen vom zweiten Riegel in `tools/kettenaufrufe/` (Sollliste, dazu
+  `.gitignore` und keine eingecheckte `server/config.php*`, F-R17-16,
+  -55). Die drei
   Verzeichnisse stehen dort zweimal, als Datei- und als Verzeichnismuster
   (`sicherungen/**` und `sicherungen/`), weil die Aktion beides getrennt
   prüft; die fünf Dateien je einmal. *(Bis PK-06 stand hier „jeder steht
@@ -588,7 +600,10 @@ ausdrücklicher Bestätigung — und ein Push dorthin ist seit dem 21.09.2026
 ohnehin gesperrt (Zweigschutz, `docs/Pruefablauf.md` 2.3). Das gilt auch für
 den Weg über ein Werkzeug: `mcp__github__merge_pull_request` und
 `mcp__github__enable_pr_auto_merge` stehen in der Deny-Liste von
-`.claude/settings.json`. Der Grund ist gemessen (F-PK-01): Die
+`.claude/settings.json`, seit R17-19 auch `mcp__github__push_files` (ein
+Schreiben an Git und am Zweigschutz-Bericht vorbei) und
+`mcp__github__actions_run_trigger` (eine Instanz startet keinen Lauf — einen
+Staging- oder App-Probelauf startet die Betreiberin, F-R17-14). Der Grund ist gemessen (F-PK-01): Die
 GitHub-Werkzeuge handeln unter der Identität der Betreiberin, und ein Ruleset
 kann sie deshalb nicht von ihr unterscheiden — ein Merge über die
 Schnittstelle ging durch. **Wer die Deny-Liste ändert, hebt diesen Riegel

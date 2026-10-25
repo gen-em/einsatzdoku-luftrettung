@@ -178,39 +178,27 @@ jobs:
           echo "Staging liefert die Anmeldeseite der Anwendung aus."
 
       - name: Punktdateien gesperrt, .well-known offen?
-        # Erwartet wird 403, nicht 404 (die Sperre greift vor der Dateisuche,
-        # ein 404 käme auch von einer leeren Adresse), und `.well-known/` muss
-        # offen bleiben, sonst stirbt die Zertifikatserneuerung lautlos.
+        # Seit R17-19 EINE Stelle für Staging und Produktiv: Teil 3 der
+        # Integritätswache (F-R17-18). Bis dahin stand die Prüfung hier als
+        # Bash, und gegen Produktiv lief sie nie. Erwartet: Punktpfade 403
+        # (nicht 404 — die Sperre greift vor der Dateisuche), `.well-known/`
+        # nicht 403, keine Kopie der `config.php` mit 200.
         run: |
           if [ -z "${STAGING_URL:-}" ]; then
             echo "::error::STAGING_URL fehlt — die Punktdatei-Prüfung kann nicht messen, und ÜBERSPRINGEN IST SEIT AP6 ROT (B5, E-KH-12). Eintragen unter Settings -> Environments -> staging -> Variables."
             echo '**Punktdateien: NICHT GEMESSEN** (keine `STAGING_URL`) — der Lauf ist deshalb rot.' >> "$GITHUB_STEP_SUMMARY"
             exit 1
           fi
-          fehler=0
-
-          for pfad in ".ftp-deploy-sync-state.json" ".deploy-state-staging.json" ".env" ".git/config"; do
-            code=$(curl -sS -o /dev/null --max-time 20 -w '%{http_code}' "$STAGING_URL/$pfad" || echo '000')
-            echo "  /$pfad → HTTP $code"
-            if [ "$code" != "403" ]; then
-              echo "::error::/$pfad antwortet $code statt 403. Die Punktdatei-Sperre in server/.htaccess greift nicht — liest dieser Webserver .htaccess überhaupt? Ein 404 ist KEINE Entwarnung: er kommt auch von einer leeren Adresse."
-              fehler=1
-            fi
-          done
-
-          wk=$(curl -sS -o /dev/null --max-time 20 -w '%{http_code}' \
-                    "$STAGING_URL/.well-known/acme-challenge/kettenpruefung" || echo '000')
-          echo "  /.well-known/acme-challenge/kettenpruefung → HTTP $wk (erwartet 404, NICHT 403)"
-          if [ "$wk" = "403" ]; then
-            echo "::error::.well-known/ ist mitgesperrt. Die Zertifikatserneuerung (ACME) schlägt damit fehl, und zwar lautlos bis zum Ablauf. Die Ausnahme (?!well-known/) in server/.htaccess prüfen."
-            fehler=1
-          fi
-
-          if [ "$fehler" != "0" ]; then exit 1; fi
+          python3 tools/integritaetswache/wache.py --selbstprobe > /dev/null
+          rc=0
+          python3 tools/integritaetswache/wache.py "$STAGING_URL" --teil punktpfade \
+            > /tmp/punktpfade.txt 2>&1 || rc=$?
+          cat /tmp/punktpfade.txt
           {
-            echo '**Punktdateien:** 4 Pfade → 403 (gesperrt), `.well-known/acme-challenge/` → '"$wk"' (offen).'
+            echo '**Punktdateien (Staging):**'
+            grep -E '^  Teil 3' /tmp/punktpfade.txt | sed 's/^ *//' || true
           } >> "$GITHUB_STEP_SUMMARY"
-          echo "Punktdateien gesperrt, .well-known offen."
+          exit "$rc"
 
       - name: Kreislauf edbak gegen Staging
         run: |
@@ -229,11 +217,17 @@ jobs:
             echo '**Kreislauf: NICHT GEMESSEN** (kein `JOBS_TOKEN`) — der Lauf ist deshalb rot. Der Wert steht auf Staging unter Betrieb → Hintergrundjobs.' >> "$GITHUB_STEP_SUMMARY"
             exit 1
           fi
-          pip -q install cffi cryptography
-          # `npx playwright install` holt nur Browser; das Modul laden die
-          # Werkzeuge über `PLAYWRIGHT_MODUL`, darum hier installieren.
-          npm install --no-save --silent playwright@1.56
-          export PLAYWRIGHT_MODUL="$PWD/node_modules/playwright/index.mjs"
+          # FESTE FASSUNGEN MIT HASHES (R17-19, F-R17-20). Bis dahin
+          # `pip -q install cffi cryptography` und `npm install playwright@1.56`
+          # — die Fassung des Tages, in einem Job mit Staging-Passwort,
+          # `STAGING_TOTP` und `JOBS_TOKEN`. Jetzt prüft pip jede Datei gegen
+          # ihren SHA-256 und npm gegen die Integritätswerte der Sperrdatei.
+          # `--ignore-installed`: Bringt das Abbild eine Fassung per apt mit,
+          # kann pip sie nicht deinstallieren (kein RECORD) und bräche ab; so
+          # liegt die gepinnte daneben und gewinnt.
+          pip -q install --require-hashes --ignore-installed -r tools/kette/stufe2-anforderungen.txt
+          npm ci --prefix tools/kette/stufe2-npm --no-audit --no-fund --silent
+          export PLAYWRIGHT_MODUL="$PWD/tools/kette/stufe2-npm/node_modules/playwright/index.mjs"
           [ -f "$PLAYWRIGHT_MODUL" ] \
             || { echo "::error::Playwright-Modul fehlt unter $PLAYWRIGHT_MODUL"; exit 1; }
           # DREI ENGINES (R87, Konzept DM/DM-04). Bis zum 19.10.2026 holte
@@ -243,8 +237,9 @@ jobs:
           # Nr. 236. Vom 20.10.2026 an stand hier kurz eine Namensersetzung
           # für Ubuntu 26.04 (F-DM-12, Lauf 132 rot); sie konnte nicht tragen,
           # weil WebKit die Bibliotheken von 24.04 in genau ihrer Fassung
-          # braucht (F-DM-13, siehe `runs-on` oben).
-          npx --yes playwright@1.56 install --with-deps chromium firefox webkit
+          # braucht (F-DM-13, siehe `runs-on` oben). Seit R17-19 das
+          # Playwright aus der Sperrdatei, nicht `npx --yes` (F-R17-20).
+          tools/kette/stufe2-npm/node_modules/.bin/playwright install --with-deps chromium firefox webkit
           rot=""
           for motor in chromium firefox webkit; do
             for art in edbak; do
@@ -271,7 +266,7 @@ jobs:
             echo '**Rückwegprobe: NICHT GEMESSEN** — der Lauf ist deshalb rot.' >> "$GITHUB_STEP_SUMMARY"
             exit 1
           fi
-          export PLAYWRIGHT_MODUL="$PWD/node_modules/playwright/index.mjs"
+          export PLAYWRIGHT_MODUL="$PWD/tools/kette/stufe2-npm/node_modules/playwright/index.mjs"
           [ -f "$PLAYWRIGHT_MODUL" ] \
             || { echo "::error::Playwright-Modul fehlt unter $PLAYWRIGHT_MODUL"; exit 1; }
           # Je Engine einmal (R87); `rueckweg/probe.mjs` liest MOTOR über
@@ -416,15 +411,66 @@ jobs:
             echo 'Die Integritaetswache vergleicht ab jetzt gegen diesen Stand.'
           } >> "$GITHUB_STEP_SUMMARY"
   # ---------------------------------------------------------------------------
-  android:
-    name: Android-Auslieferung
-    # Einmal je Fassung, hinter der Pflichtfreigabe der Umgebung `produktion`
-    # (E-PK-23); nicht `staging…` heißen, sonst zählte das Tor der grünen Läufe
-    # diesen Job mit.
+  app-tor:
+    # DAS TOR DER APP-TAGS (R17-19, F-R17-17, E-R17-33). Bis Web 23.0.3 bauten
+    # `android-v*` und `uhr-v*` jeden Commit, der Tag = Fassung trug und die
+    # Freigabe bekam — auch einen nie geprüften. Jetzt wie beim Web: grüner
+    # Job `Stufe 1` auf demselben Baum, und bei einem Tag liegt der Commit auf
+    # `main`. Kein Geheimnis, keine Umgebung: Das Tor braucht nur `gh api`.
+    # Heißt nicht `staging…`, sonst zählte das Tor der grünen Läufe ihn mit.
+    name: App-Tor (Stufe 1, Abstammung)
+    if: >-
+      startsWith(github.ref, 'refs/tags/android-v')
+      || startsWith(github.ref, 'refs/tags/uhr-v')
+      || (inputs.app_probelauf || 'aus') != 'aus'
+    runs-on: ubuntu-26.04
+    timeout-minutes: 10
+    steps:
+      - name: Code auschecken
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - name: Grüner Stufe-1-Lauf auf diesem Baum — und liegt der Tag auf main?
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python3 tools/kette/freigabe.py --selbstprobe > /dev/null
+          baum=$(git rev-parse 'HEAD^{tree}' 2>/dev/null || true)
+          python3 tools/kette/baumsuche.py --baum "${baum:-}" --fenster 50 --ausgabe stufe1.json
+          # Ein Tag MUSS auf `main` liegen; der App-Probelauf läuft von einem
+          # Arbeitszweig und legt nichts ab — dort nur Stufe 1.
+          case "$GITHUB_REF" in
+            refs/tags/*)
+              abstammung=pflicht
+              vergleich=$(gh api "repos/${GITHUB_REPOSITORY}/compare/main...${GITHUB_SHA}" \
+                           --jq '.status' 2>/dev/null || true) ;;
+            *)
+              abstammung=aus
+              vergleich="" ;;
+          esac
+          python3 tools/kette/freigabe.py app-urteil \
+            --baum "${baum:-}" \
+            --stufe1-laeufe stufe1.json \
+            --vergleich-main "${vergleich:-}" \
+            --abstammung "$abstammung"
+  # ---------------------------------------------------------------------------
+  android-bau:
+    # BAUEN OHNE GEHEIMNISSE (R17-19, F-R17-03, E-R17-32). Dieser Job hat
+    # KEINE Umgebung und KEIN Geheimnis — mit Absicht. Bis Web 23.0.3 lief
+    # Gradle im selben Schritt wie die vier `APK_*`-Werte und erbte sie;
+    # `System.getenv()` genügte jedem Plugin. Ein eigener Schritt hätte das
+    # nicht geheilt: Ein Hintergrundprozess aus dem Bau lebt auf demselben
+    # Läufer in den nächsten Schritt hinein und liest dessen Umgebung über
+    # `/proc`. Signiert wird deshalb im Job `android`, auf einem frischen
+    # Läufer, ohne Gradle. `appbau.sh android-bauen` baut nicht, sobald ein
+    # `APK_*` in seiner Umgebung steht, und startet Gradle nur mit einer
+    # Positivliste (`env -i`).
+    name: Android-Bau (unsigniert)
+    needs: app-tor
     if: startsWith(github.ref, 'refs/tags/android-v') || inputs.app_probelauf == 'android'
     runs-on: ubuntu-26.04
-    environment: produktion
-    timeout-minutes: 45
+    timeout-minutes: 40
+    outputs:
+      pruefsummen: ${{ steps.bau.outputs.pruefsummen }}
     steps:
       - name: Code auschecken
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
@@ -435,14 +481,83 @@ jobs:
           distribution: temurin
           java-version: '21'
 
+      - name: Selbstprobe des Baus
+        run: bash tools/kette/appbau.sh --selbstprobe
+
+      - name: Unsigniert bauen — Gradle mit Positivliste, ohne Schlüssel
+        id: bau
+        run: |
+          case "$GITHUB_REF" in
+            refs/tags/android-v*) fassung="${GITHUB_REF_NAME#android-v}" ;;
+            *)                    fassung=datei ;;
+          esac
+          bash tools/kette/appbau.sh android-bauen "$fassung" unsigniert
+          {
+            echo 'pruefsummen<<ENDE_DER_SUMMEN'
+            cat unsigniert/pruefsummen.txt
+            echo 'ENDE_DER_SUMMEN'
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Unsignierte APKs an den Signaturjob übergeben
+        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+        with:
+          name: android-unsigniert
+          path: |
+            unsigniert/handy-release-unsigned.apk
+            unsigniert/uhr-release-unsigned.apk
+          if-no-files-found: error
+          retention-days: 1
+  # ---------------------------------------------------------------------------
+  android:
+    name: Android-Auslieferung
+    # Einmal je Fassung, hinter der Pflichtfreigabe der Umgebung `produktion`
+    # (E-PK-23); nicht `staging…` heißen, sonst zählte das Tor der grünen Läufe
+    # diesen Job mit. Seit R17-19 signiert er nur noch, was `android-bau`
+    # gebaut hat — Gradle läuft hier nicht (E-R17-32).
+    needs: [app-tor, android-bau]
+    if: startsWith(github.ref, 'refs/tags/android-v') || inputs.app_probelauf == 'android'
+    runs-on: ubuntu-26.04
+    environment: produktion
+    timeout-minutes: 20
+    steps:
+      - name: Code auschecken
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      # `apksigner` ist ein Java-Werkzeug; dieselbe Fassung wie beim Bau.
+      - name: Java 21 für apksigner
+        uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5
+        with:
+          distribution: temurin
+          java-version: '21'
+
       - name: Selbstproben von Bau und Ablage
         run: |
           bash tools/kette/appbau.sh --selbstprobe
           python3 tools/kette/apkablage.py --selbstprobe
 
-      - name: Bauen, signieren, Zertifikat prüfen
-        # Gradle baut unsigniert; signiert wird danach mit `apksigner`, damit
-        # fremder Build-Code den Schlüssel nie zu sehen bekommt (E-PK-63).
+      - name: Unsignierte APKs holen und gegen die Prüfsummen des Baus halten
+        # `gh run download` statt einer weiteren Fremd-Aktion; die Prüfsummen
+        # kommen über die Ausgabe des Bau-Jobs, nicht aus dem Artefakt selbst.
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PRUEFSUMMEN: ${{ needs.android-bau.outputs.pruefsummen }}
+        run: |
+          if [ -z "${PRUEFSUMMEN:-}" ]; then
+            echo "::error::Der Bau-Job hat keine Prüfsummen ausgegeben — ohne sie wird nichts signiert."
+            exit 1
+          fi
+          gh run download "$GITHUB_RUN_ID" --repo "$GITHUB_REPOSITORY" \
+            --name android-unsigniert --dir eingang
+          printf '%s\n' "$PRUEFSUMMEN" > eingang/pruefsummen.txt
+          (cd eingang && sha256sum -c pruefsummen.txt)
+          if [ "$(grep -c . eingang/pruefsummen.txt)" != 2 ]; then
+            echo "::error::Erwartet sind zwei Prüfsummen (Handy und Wear OS)."
+            exit 1
+          fi
+
+      - name: Signieren, Zertifikat prüfen
+        # Signiert wird mit `apksigner`, außerhalb von Gradle (E-PK-63), auf
+        # einem Läufer, auf dem Gradle nie lief (E-R17-32).
         env:
           APK_SPEICHER_B64:        ${{ secrets.APK_SPEICHER_B64 }}
           APK_SPEICHER_PASSWORT:   ${{ secrets.APK_SPEICHER_PASSWORT }}
@@ -454,7 +569,7 @@ jobs:
             refs/tags/android-v*) fassung="${GITHUB_REF_NAME#android-v}" ;;
             *)                    fassung=datei ;;
           esac
-          bash tools/kette/appbau.sh android "$fassung" ausgabe
+          bash tools/kette/appbau.sh android-signieren "$fassung" eingang ausgabe
 
       - name: Nach server/apk/ ablegen, ältere Fassungen löschen
         # Gelöscht wird erst, wenn die neue Datei zurückgeholt und gleich ist
@@ -499,6 +614,8 @@ jobs:
     name: Uhr-Auslieferung (Garmin)
     # Das Paket bleibt ein Artefakt dieses Laufs; in den Connect-IQ-Store lädt
     # es die Betreiberin von Hand (E-PK-61).
+    # Seit R17-19 hinter dem App-Tor (F-R17-17).
+    needs: app-tor
     if: startsWith(github.ref, 'refs/tags/uhr-v') || inputs.app_probelauf == 'uhr'
     runs-on: ubuntu-26.04
     environment: produktion

@@ -1318,7 +1318,8 @@ const ausgefallen = [];
  *
  * ZWEI WEGE, und welcher passt, haengt an `--jobs-token`:
  *
- *   MIT TOKEN ueber `jobs.php?aktion=wartung_an`, gefahren von
+ *   MIT TOKEN ueber `jobs.php` (`aktion=wartung_an`, seit Web 23.1.0 per POST
+ *   mit dem Kettentoken), gefahren von
  *   `tools/kette/tor.py` — dem einen Client dieser Schnittstelle. Derselbe
  *   Weg, den `kreislauf.py` seit Web 20.16.0 fuer die Job-Pause geht.
  *
