@@ -175,16 +175,24 @@ async function loeschen(k, name, bid) {
     await k.gehZu(adresse);
     await k.seite.evaluate(
       () => document.querySelectorAll('details').forEach(e => { e.open = true; }));
-    const traf = await k.seite.evaluate(([lesen, n]) => {
+    const formular = await k.seite.evaluate(([lesen, n]) => {
       // eslint-disable-next-line no-new-func
       const zeilen = new Function('return (' + lesen + ')()')();
       const z = zeilen.find(x => x.text.includes(n));
-      if (!z) { return false; }
-      document.getElementById(z.formular).submit();
-      return true;
+      return z ? z.formular : null;
     }, [ZEILEN_LESEN.toString(), name]);
-    if (traf) { await k.seite.waitForTimeout(400); }
-    return traf;
+    if (formular === null) { return false; }
+    if (!formular) { throw new Error(`Löschformular von „${name}" ohne id`); }
+    /* AUF DIE SEITE WARTEN, NICHT AUF DIE UHR (Nr. 393). Hier standen fest
+       400 ms nach dem Abschicken — dasselbe Muster, das im vierten vollen
+       Prüfstand in `ap5.mjs` sechs Wege gekostet hat (dort `abschicken()`):
+       Kommt die Antwort später, schlägt ihre Navigation in den nächsten
+       `gehZu()` ein, und der meldet „interrupted by another navigation". */
+    await Promise.all([
+      k.seite.waitForNavigation({ waitUntil: 'load' }).catch(() => {}),
+      k.seite.evaluate((id) => document.getElementById(id).submit(), formular),
+    ]);
+    return true;
   };
   /* BEIDE SEITEN, IN DIESER REIHENFOLGE. Ein Rettungsmittel ohne Standort
      steht auf der Liste, eines mit Standort auf dessen Seite — und welcher

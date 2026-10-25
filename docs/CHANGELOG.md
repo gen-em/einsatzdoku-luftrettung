@@ -34,7 +34,10 @@ Backlog Nr. 393, vier Funde aus den vollen Prüfständen in drei Engines
   beim Laden nur Konstanten und Funktionen an. Ohne Datenbank (Wartung,
   `install.php`) bleibt es bei `'self'`, nachgeprüft mit einer Kopie der
   drei Bibliotheken ohne `config.php`. Wer die CSP schon scharf geschaltet
-  hat, prüft nach dem Update die Adresssuche im Einsatzformular.
+  hat, prüft nach dem Update die Adresssuche im Einsatzformular. **Auf
+  Produktiv ist sie scharf** (Auskunft der Betreiberin, 25.10.2026). Dort
+  findet die Adresssuche im Einsatzformular also nichts, bis diese Fassung
+  ausgerollt ist.
 - **Jede Sicherung schrieb zwei CSP-Meldungen.** Das Archiv der Sicherung
   entstand mit zip.js und `level: 0`. zip.js schaltet bei jeder Stufe außer
   6 die native `CompressionStream` ab, weil die keine Stufen kennt, und lädt
@@ -221,6 +224,31 @@ WebKit 26 schnitt in der Bedienprobe sogar schlechter ab (74 von 77 gegen
   einer falschen ersten Vermutung (eine Spur, die nicht aufgeht): Die Probe
   schreibt seither mit, was der Browser als „geht nicht auf" meldet, und im
   roten Lauf war es nichts.
+- **Der vierte volle Lauf (56 grün, 1 rot)** war bis auf die Bedienprobe in
+  allen drei Engines grün, auch bei den Proben, die in den Läufen davor rot
+  waren. Die Bedienprobe hatte zwei Funde im Werkzeug:
+  - *Chromium: sechs Wege „nicht gefahren".* Das Aufräumen von
+    `ap5-standort-loeschen-variante-b` schickte sein Löschformular ab und
+    wartete danach fest 500 ms statt auf die Seite. Die erste Meldung nennt
+    die Adresse genau dieser Antwort (`…#sd-ohne-veh`): Sie kam erst, als
+    der nächste Weg schon navigierte. Dasselbe Muster stand in den
+    Lösch-Helfern von `ap5.mjs` und `ap4.mjs`, dort mit 400 ms, nur bisher
+    ohne Treffer. Alle drei warten jetzt auf die Seite danach, so wie das
+    Löschen des Standorts in derselben Datei seit P5c. Beim Umbau fiel ein
+    eigener Fehler sofort auf: `form.id` ist an diesen Formularen das
+    verborgene Feld `<input name="id">`, nicht ihre Kennung. Deshalb steht
+    dort jetzt `getAttribute('id')`, wie in `ap4.mjs` schon immer.
+    **Nicht erklärt sind die fünf Meldungen danach.** Sie lauten
+    „`index.php`, unterbrochen von `index.php`". Die Deutung: Jeder dieser
+    Wege scheitert in Millisekunden, und seine eigene Navigation schlägt
+    in den nächsten ein. Nachgestellt ist sie nicht. Ein nachgebautes
+    langsames Formular ließ sich in Chromium nicht dazwischenschieben
+    (vier Varianten, je sechs Wege, alle grün). Nach dem Umbau liefen
+    `ap5` und `ap6` dreimal mit 17 von 17, `ap4` zweimal mit 6 von 6, und
+    im Bestand blieb nichts zurück. **Das galt aber für das Chromium 153
+    des Abbilds, nicht für 156:** In dieser Sitzung sperrte die
+    Netzrichtlinie `cdn.playwright.dev`. Den Nachweis mit der Soll-Engine
+    erbringt erst der fünfte volle Lauf.
 
 **Was bewusst stehen bleibt:** die Engines des Abbilds unter
 `/opt/pw-browsers`. Sie stören nicht, und sie zu löschen hieße, ins Abbild

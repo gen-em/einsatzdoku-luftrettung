@@ -98,19 +98,43 @@ async function anlegen(k, bid, name) {
  */
 async function loeschenAllg(k, bid, name, aktion) {
   await k.gehZu(SEITE(k, bid));
-  const traf = await k.seite.evaluate(([n, a]) => {
+  const formular = await k.seite.evaluate(([n, a]) => {
     const zeilen = Array.from(document.querySelectorAll('section.sd-liste > .zeile'));
     const z = zeilen.find(x => (x.textContent || '').includes(n));
-    if (!z) { return false; }
+    if (!z) { return null; }
     for (let e = z.previousElementSibling; e; e = e.previousElementSibling) {
       if (e.tagName !== 'FORM') { break; }
       const f = e.querySelector('input[name="action"]');
-      if (f && f.value === a) { e.submit(); return true; }
+      if (f && f.value === a) { return e.getAttribute('id') || ''; }
     }
-    return false;
+    return null;
   }, [name, aktion]);
-  if (traf) { await k.seite.waitForTimeout(400); }
-  return traf;
+  if (formular === null) { return false; }
+  await abschicken(k, formular);
+  return true;
+}
+
+/**
+ * Ein verborgenes Formular abschicken und AUF DIE SEITE DANACH WARTEN, nicht
+ * auf die Uhr (Nr. 393). Hier und im Aufräumen von
+ * `ap5-standort-loeschen-variante-b` standen fest 400 und 500 ms. Im vierten
+ * vollen Prüfstand (21.10.2026) reichten sie in Chromium nicht: Die Antwort
+ * auf das Löschen (`…#sd-ohne-veh`) kam erst, als der nächste Weg schon
+ * navigierte, und sechs Wege brachen mit „Navigation … interrupted by
+ * another navigation" ab, ohne dass einer von ihnen etwas falsch machte.
+ * Dasselbe Muster wie beim Löschen des Standorts weiter unten.
+ *
+ * Die Kennung holt der Aufrufer mit `getAttribute('id')`, NICHT mit `e.id`:
+ * Diese Formulare tragen ein Feld `<input name="id">`, und benannte Felder
+ * überdecken die Eigenschaften des Formulars — `e.id` ist dann das Feld.
+ * So gemessen beim Umbau (25.10.2026 → „Cannot read properties of null").
+ */
+async function abschicken(k, formular) {
+  if (!formular) { throw new Error('Löschformular ohne id — sd_zeile() vergibt sonst immer eine'); }
+  await Promise.all([
+    k.seite.waitForNavigation({ waitUntil: 'load' }).catch(() => {}),
+    k.seite.evaluate((id) => document.getElementById(id).submit(), formular),
+  ]);
 }
 
 /** Der Regelfall: ein Rettungsmittel. */
@@ -754,18 +778,21 @@ export const wege = [
               + 'oder das Rettungsmittel ist mitgelöscht worden',
         };
       } finally {
+        /* Das Überlebende steht jetzt unter „Ohne Standort" auf der Liste,
+           nicht mehr auf einer Standortseite — deshalb nicht `loeschen()`. */
         await k.gehZu(LISTE(k));
-        await k.seite.evaluate((n) => {
+        const formular = await k.seite.evaluate((n) => {
           const z = Array.from(document.querySelectorAll('#sd-ohne-veh > .zeile'))
             .find(x => (x.textContent || '').includes(n));
-          if (!z) { return; }
+          if (!z) { return null; }
           for (let e = z.previousElementSibling; e; e = e.previousElementSibling) {
             if (e.tagName !== 'FORM') { break; }
             const a = e.querySelector('input[name="action"]');
-            if (a && a.value === 'veh_del') { e.submit(); return; }
+            if (a && a.value === 'veh_del') { return e.getAttribute('id') || ''; }
           }
+          return null;
         }, BLEIBT);
-        await k.seite.waitForTimeout(500);
+        if (formular !== null) { await abschicken(k, formular); }
       }
     },
   },
