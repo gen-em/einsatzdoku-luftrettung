@@ -1,15 +1,15 @@
 # Rahmenplan — Programm „Gen-EM NAdoku" bis v1.0
 
-**Fassung 169 (25.10.2026)** · Steuerung: Reihenfolge, Status, programmweite
+**Fassung 170 (25.10.2026)** · Steuerung: Reihenfolge, Status, programmweite
 Entscheidungen. Verlauf: `Rahmenplan-Verlauf.md`. Fassungen 1–15:
 `Rahmenplan-Archiv.md`; Fassungen 16–124: `Rahmenplan-Archiv-2.md`.
 
-**Stand `origin/main`** (Commit `f17380c`, gemessen 20.10.2026): Web 23.0.2 ·
-Uhr 4.0.0 · Android 0.18.0; Web 23.0.1 auf Produktiv seit dem 20.10.2026.
+**Stand `origin/main`** (Commit `50f67d2`, gemessen 25.10.2026): Web 23.0.3 ·
+Uhr 4.0.0 · Android 0.18.0; Web 23.0.3 auf Produktiv seit dem 25.10.2026.
 **Läuft:** 12b — P6 (Abschnitt 3), Zweig `claude/lucid-cannon-nvv86i`: das Review mit Fable ist am 21.10.2026 zu Ende, die Freigaberunde beantwortet; die Pakete R17-18 bis -30 laufen mit Opus (R88), zuerst R17-18.
 **Als Nächstes:** 13 — P7 Gesicht v1.0, nach 12b.
 **Offene PRs:** keine.
-**Fällig bei der Betreiberin:** 39 Posten (Abschnitt 6.1). **`update.php`:** auf Staging und Produktiv nichts offen (Betreiberin, 20.10.2026, nach Web 23).
+**Fällig bei der Betreiberin:** 38 Posten (Abschnitt 6.1). **`update.php`:** auf Staging und Produktiv nichts offen (Betreiberin, 20.10.2026, nach Web 23).
 
 Kennungen sind Namen, keine Reihenfolge.
 
@@ -210,8 +210,7 @@ gestrichen, 6a abgehakt; was steht, ist bestätigt offen.
 | **Umgebung `produktion` beschränken** auf `main` und die Tags `web-v*`, `android-v*`, `uhr-v*` — ein Probelauf fordert sie heute von jedem Zweig an (F-R17-04); dabei Pflichtprüfer und Org-Zweitfaktor nachsehen | 12 (R17-01) | 11.10.2026 | `Pruefdokument-R17-Review.md`, P-R17-04 |
 | **Prüfliste S11:** Gerätetests Uhr 4.0.0 und Android 0.18.0 (P-S11-32 bis -35, -05, -39), Wege auf Staging (-14 bis -31), Safari (-43), Konto-Backup (-45), alte Sicherungen (-07, -08), Rechtstexte (-40) | 12a | 20.10.2026 | `Pruefdokument-S11-Ortsdaten.md` 4 |
 | **Prüfliste DM:** P-DM-02 (Registrierung in Firefox auf Staging: Knopf sofort frei), -03 (dasselbe in Safari), -06 (dasselbe auf Produktiv nach dem Tag `web-v23.0.1`, nur bei offener Registrierung) | 19 | 20.10.2026 | `Pruefdokument-DM-Drei-Motoren.md` 3 |
-| **Tag `web-v23.0.3`** — die CSP ist auf Produktiv scharf, die Adresssuche im Einsatzformular findet bis dahin nichts (bis zum Tag: Report-Only); danach dort eine Adresse suchen | Nr. 393 | 25.10.2026 | `CHANGELOG.md` Web 23.0.3 |
-| **Stufe 2 nach dem Merge von Nr. 393 lesen** — erster Lauf auf `ubuntu-26.04` mit Playwright 1.64.1; bleibt sie rot, ist der Rückweg die Zeile `runs-on` | Nr. 393 | 25.10.2026 | Job „Prüfung Stufe 2"; `CHANGELOG.md` Werkzeug 1.64.1 |
+| **Adresssuche im Einsatzformular auf Produktiv** einmal benutzen — Web 23.0.3 liegt dort seit dem 25.10.2026 (Lauf 141), bei scharfer CSP fand sie vorher nichts; gescheitert, wenn keine Treffer kommen | Nr. 393 | 25.10.2026 | `CHANGELOG.md` Web 23.0.3 |
 | **Prüfliste R17:** P-R17-03, -04 (CSP scharf ist Voraussetzung für R17-25), -05; aus 12b P-R17-06 bis -13, davor fällig -12 (keine `config.php`-Kopie) und -13 (die vier Texte) | 12, 12b | 11.10.2026 | `Pruefdokument-R17-Review.md` 4 |
 | **Logdauer des Hosters für Zugriffslogs erfragen** — Tokens in Anfrageadressen stehen dort, bis die Logs fallen (F-R17-22, -57); die Zahl in die Betriebsakte | 12b (R17-19) | 21.10.2026 | `Review-R17.md` 2.3 und 2.3a |
 | **Plattformvergleich Staging vervollständigen:** vier leere Zellen (`max_user_connections`, Kontingent, Platz, Cron) und die Herkunft des Zertifikats aus Betrieb → Status | Kette II | 21.09.2026 | `Technik.md` 6.3a; Prüfpunkt 2c |
@@ -431,7 +430,7 @@ die Aufräumfassung vom 24.09.2026 gelöscht hat (Archiv-2, Verlaufszeile 110).
 | PK — Prüfkette | Web 20.37.1 (PK-04), sonst nur Werkzeug | 29.09.2026 · PR #67, #70–#72, #75, #81, #82, #96 | gelöscht 29.09.2026 (`80efce0`) | `Pruefdokument-PK-Pruefkette.md` (Abnahmen nach dem Merge, 6.1) | Station B mit Prüfstand und Bericht, Stufe 1 liest ihn gegen, Werkzeuge 49 → 15 Ordner, Stufe 2 schlank, Apps über Tag mit Signatur; PK-M2 29.09.2026 (Lauf 101) |
 | 12 — Bedrohungsmodell (Review R17, Stück 1) | keine (`docs/`, zwei Zeilen `tools/quelltext/`) | 11.10.2026 · PR #103 | `Review-R17.md` bleibt für 12b (E-R17-02), Stand `30d7226` | `Pruefdokument-R17-Review.md` (P-R17-03 bis -05 offen, 6.1) | `docs/Bedrohungsmodell.md`: 5 Werte, 16 Lagen, 13 Zusagen mit Grenze, 20 Restrisiken; 31 Befunde (5 hoch) für 12b; Nr. 146 erledigt, 370 und 371 neu |
 | 18 — Sicherheitsrunde II (Konzept SR) | Web 21.7.0–21.14.0 | 05.10.2026 · PR #95, #101 | gelöscht 05.10.2026 (`0cbc19d`) | `Pruefdokument-SR-Sicherheitsrunde-II.md` (P-SR-04 bis -20 außer -15 offen, 6.1) | 9 Pakete, 2 Fable-Lesungen: Sitzungsbindung, Gerät merken, frischer Code, Passkeys, Schlüsselwechsel, Notzugang, `ingest.php` ohne Deadlock, Rechenaufgabe; Ziel 18: 10 erledigt, 1 umgehängt |
-| 19 — DM: drei Engines (R87) | Web 23.0.1, sonst Werkzeug | 20.10.2026 · PR #112–#114 | gelöscht (`3bedc25`) | `Pruefdokument-DM-Drei-Motoren.md` (P-DM-02, -03, -04, -06 offen, 6.1) | Firefox und WebKit im Setup, Start über `motor.mjs` mit Register und Riegel; ab `neben` und in Stufe 2 dreifach (Stufe 2 auf 24.04, Nr. 393); Nr. 390 erledigt |
+| 19 — DM: drei Engines (R87) | Web 23.0.1, sonst Werkzeug | 20.10.2026 · PR #112–#114 | gelöscht (`3bedc25`) | `Pruefdokument-DM-Drei-Motoren.md` (P-DM-02, -03, -06 offen, 6.1) | Firefox und WebKit im Setup, Start über `motor.mjs` mit Register und Riegel; ab `neben` und in Stufe 2 dreifach (Stufe 2 auf 24.04, Nr. 393); Nr. 390 erledigt |
 | 12a — S11: Ortsdaten verschlüsselt (Weg B, R78) | Web 22.0.0–23.0.0, Uhr 4.0.0, Android 0.18.0 | 20.10.2026 · PR #106, #111 | gelöscht (`0a6b926`) | `Pruefdokument-S11-Ortsdaten.md` (Gerätetests und Staging-Wege offen, 6.1) | Konto-Schlüsselpaar; Gerätehülle für Spur, Phasenorte, Reanimation; Zielklinik im `pat_blob`; Spurfunktionen im Browser; Klartext weg; Nr. 43, 53, 161 |
 
 ## 9. Pflege dieses Dokuments

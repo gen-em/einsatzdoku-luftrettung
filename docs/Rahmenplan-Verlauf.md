@@ -9,6 +9,7 @@ Verlauf bis zum Schnitt). Die Fassungszählung läuft fortlaufend weiter.
 
 | Fassung | Datum | Anlass | Was |
 |---|---|---|---|
+| 170 | 25.10.2026 | Nr. 393, Zuarbeit | 6.1: Stufe 2 nach dem Merge grün auf `ubuntu-26.04` (Lauf 140), Tag `web-v23.0.3` ausgeliefert (Lauf 141); bleibt: Adresssuche auf Produktiv. `web-v23.0.2` kam nie an (Lauf 138, Zielprobe). Berichtigt: Die Erledigt-Zeile 19 nannte P-DM-04 offen. |
 | 169 | 25.10.2026 | Nr. 393, Zuarbeit | 6.1: P-DM-04 erledigt (Prüfstand `neben` in drei Engines grün, `a5e4d556`); neu: Tag `web-v23.0.3` (CSP auf Produktiv scharf, Adresssuche im Einsatzformular bis dahin tot) und Stufe 2 nach dem Merge lesen. Kopf 39 Posten. |
 | 167 | 20.10.2026 | 12b beginnt | Fahrplanzeile 12b auf „läuft" (Zweig `claude/lucid-cannon-nvv86i`, `Review-R17.md` 7, Pakete R17-05 bis -17: Buchführung, elf Stücke, Freigaberunde). Kopf: Nr. 387 gemergt (#117), `main` bei Web 23.0.2, keine offenen PRs, als Nächstes 13. |
 | 166 | 20.10.2026 | Reihenfolge | Einschub vor 12b: Nr. 387 (verworfene Werte beim Einspielen) als Web 23.0.2, Entscheidung der Betreiberin — 12b soll den Code in Endfassung lesen. Kopf nachgezogen. |
