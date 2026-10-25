@@ -275,11 +275,58 @@ const rollen = { demo: await rolleHolen('demo') };
 /* `WEG_FRIST_MS` nur für die Gegenprobe: mit 1000 muss jeder Weg an der
  * Grenze scheitern und die Probe trotzdem sauber enden. */
 const WEG_FRIST = Number(process.env.WEG_FRIST_MS) || 300000;
+/* Das Schließen bekommt eine eigene Frist: Es läuft außerhalb der
+ * Zeitgrenze des Wegs, und ein Kontext, dessen Seite nicht mehr antwortet,
+ * hielte sonst die ganze Probe an. Gemessen schloss er in 50 ms. */
 async function rolleVerwerfen(name) {
   const r = rollenSpeicher[name];
   delete rollenSpeicher[name];
-  if (r) { await r.kontext.close().catch(() => {}); }
+  if (r) {
+    await Promise.race([r.kontext.close().catch(() => {}),
+                        new Promise((ok) => setTimeout(ok, 10000))]);
+  }
   if (name === 'demo') { rollen.demo = await rolleHolen('demo'); }
+}
+
+/* EIN LEBENSZEICHEN VOR JEDEM WEG — NUR IN WEBKIT (Nr. 393).
+ *
+ * In den vollen Läufen hing WebKit dreimal am ERSTEN Aufruf auf der Seite
+ * einer Rolle, die untätig gestanden hatte, während ein anderer Kontext
+ * arbeitete: `setViewportSize` (Lauf 3, `da-faehigkeiten-nach-typ` nach dem
+ * Admin-Block), wohl ebenso in `mr-oeffner-markiert` (Lauf 4, nach dem
+ * eigenen Kontext von `einstellungen-profil-rueckweg`; nicht protokolliert)
+ * und am 25.10.2026 ein `goto` (wieder `da-faehigkeiten-nach-typ`).
+ * Das Aufrufprotokoll dieses Laufs zeigt, dass es nicht an der Anwendung
+ * lag: Die Navigation sagte 30 s lang nicht zu, und der PHP-Server nahm in
+ * der Zeit KEINE Verbindung an — die Anfrage verließ WebKit nie. Danach kam
+ * ein `evaluate` auf derselben Seite 120 s nicht zurück. Erst mit neuem
+ * Kontext lief es wieder, und der nächste Weg war verfehlt, ohne etwas
+ * falsch gemacht zu haben. Ein offener `beforeunload`-Dialog war es nicht
+ * (nachgestellt: ohne Dialog-Horcher navigieren alle drei Engines, und
+ * diese Probe hat keinen); der stille Wartungslauf steht hier ohnehin still.
+ *
+ * Reparieren lässt sich die Seite nicht, erkennen schon: Ein `evaluate`
+ * kehrt auf einer gesunden Seite in Millisekunden zurück. Kommt 10 s nichts,
+ * wird die Rolle neu angemeldet, BEVOR der Weg beginnt, und das steht als
+ * Zeile `WebKit-Neuanmeldung:` im Protokoll; `pruefen.sh` zählt sie mit den
+ * Wiederholungen aus E-DM-10. Wirft das `evaluate`, navigiert die Seite
+ * gerade; dann wird einmal auf `load` gewartet und neu gefragt.
+ *
+ * NICHT IN CHROMIUM UND FIREFOX: Dort ist es nie aufgetreten, und eine
+ * stille Neuanmeldung dort hätte keinen Befund, der sie begründet. */
+const LEBENSZEICHEN_MS = 10000;
+async function lebtDieSeite(seite) {
+  for (let versuch = 0; versuch < 2; versuch++) {
+    let wecker;
+    const frist = new Promise((ok) => { wecker = setTimeout(() => ok('stumm'), LEBENSZEICHEN_MS); });
+    const antwort = seite.evaluate(() => 1).then(() => 'da', () => 'navigiert');
+    const stand = await Promise.race([antwort, frist]);
+    clearTimeout(wecker);
+    if (stand === 'da') { return true; }
+    if (stand === 'stumm') { return false; }
+    await seite.waitForLoadState('load', { timeout: 5000 }).catch(() => {});
+  }
+  return false;
 }
 
 /* ---- Adressen, die zum Bestand gehoeren ----------------------------------
@@ -344,7 +391,13 @@ async function neuAnmelden(r) {
 }
 
 async function kasten(rolle, weg, breite) {
-  const r = await rolleHolen(rolle || 'demo');
+  let r = await rolleHolen(rolle || 'demo');
+  if (MOTOR === 'webkit' && !(await lebtDieSeite(r.seite))) {
+    console.error(`WebKit-Neuanmeldung: Seite der Rolle ${rolle || 'demo'} antwortete `
+      + `${LEBENSZEICHEN_MS / 1000} s nicht (vor ${weg.name}) — neu angemeldet (Nr. 393)`);
+    await rolleVerwerfen(rolle || 'demo');
+    r = await rolleHolen(rolle || 'demo');
+  }
   const BEDIENHOEHE = hoeheFuer(breite);
   /* NUR WENN DIE GRÖSSE NICHT SCHON STIMMT (Nr. 393). In WebKit kehrt
    * `setViewportSize` nicht zurück, wenn die Seite gerade neu lädt — gemessen
@@ -600,9 +653,24 @@ for (const breite of BREITEN) {
       e = await Promise.race([lauf, frist]);
       if (!e || typeof e !== 'object') { throw new Error('Weg lieferte kein Ergebnis'); }
     } catch (f) {
+      /* NACH EINEM FEHLSCHLAG IN WEBKIT DIE SEITE BEFRAGEN (Nr. 393). Stirbt
+       * sie MITTEN im Weg, ist der Weg verfehlt — das Lebenszeichen in
+       * `kasten()` kommt dafür zu spät. Dann sagt es die Bemerkung, und die
+       * Rolle wird gleich neu angemeldet, statt dem nächsten Weg dieselbe
+       * Seite zu geben. Eine Seite, die nach dem Fehlschlag antwortet,
+       * bleibt, wie sie ist: Dann war es der Weg, nicht WebKit. */
+      let stumm = false;
       if (f && f.gehangen) { await rolleVerwerfen(weg.rolle || 'demo'); }
+      else if (MOTOR === 'webkit' && rollenSpeicher[weg.rolle || 'demo']
+               && !(await lebtDieSeite(rollenSpeicher[weg.rolle || 'demo'].seite))) {
+        stumm = true;
+        console.error(`WebKit-Neuanmeldung: Seite der Rolle ${weg.rolle || 'demo'} antwortete `
+          + `nach dem Fehlschlag von ${weg.name} ${LEBENSZEICHEN_MS / 1000} s nicht — neu angemeldet (Nr. 393)`);
+        await rolleVerwerfen(weg.rolle || 'demo');
+      }
       e = { ist: '—', ok: false,
-            bemerkung: 'nicht gefahren: ' + (f && f.message ? f.message : f) };
+            bemerkung: 'nicht gefahren: ' + (f && f.message ? f.message : f)
+              + (stumm ? ' — danach antwortete die Seite nicht mehr (WebKit, Nr. 393)' : '') };
     } finally {
       clearTimeout(wecker);
     }

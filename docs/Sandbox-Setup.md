@@ -48,7 +48,9 @@ und nur diese Fassung (`/usr/bin/php8.3`); das Abbild hat gewechselt, ohne dass
 kann daran rot werden (Komplettprobe, Nr. 393)* — (mit `pdo_mysql`, `mysqli`,
 `openssl`, `gd`, `zip`, `mbstring`), Node **22.22** samt Playwright **1.56**
 und den Engine-Dateien unter `/opt/pw-browsers/` — am 21.09.2026 alle drei,
-seit dem Abbild vom 11.10.2026 **nur noch Chromium** (F-S11-20). **Das
+seit dem Abbild vom 11.10.2026 **nur noch Chromium** (F-S11-20). *Am
+25.10.2026 gemessen: Das Abbild vom 22.10.2026 bringt Playwright **1.63.0**
+und wieder nur dessen Chromium (`chromium-1243`).* **Das
 Playwright des Abbilds benutzt seit Nr. 393 kein Prüfmittel mehr:**
 `aufbauen.sh` hebt auf die Fassung in seiner Zeile `PW_FASSUNG` an (1.64.1)
 und lädt deren drei Engines (1.3), Python **3.11**
@@ -70,7 +72,7 @@ prüft je Paket und holt nur, was fehlt.)*
 | **cmark-gfm** | die Quelltextprüfungen `handbuch` — rendern Handbuch und „Was ist NAdoku"? (seit BR-03) — und `bestand`, die die Tabelle der Quelltextprüfungen so liest, wie GitHub sie zeigt (seit BR-05) |
 | **Python `jsonschema`** | `tools/referenzdatensatz/quelldaten/pruefen.py` |
 | **Python `pyftpdlib`, `paramiko`, `pyopenssl`** | die Gegenstellen der Versandprobe (`tools/proben/versand/gegenstellen.py`); ohne `pyopenssl` fehlt FTPS, und alle drei Nachbauten brechen ab (RP-01) |
-| **Playwright 1.64.1 und seine drei Engines** (`chromium-1248`, `firefox-1555`, `webkit-2370`) — das Abbild bringt 1.56.1 und nur dessen Chromium; angehoben seit Nr. 393, Engines nachgeladen seit Konzept DM (1.3) | jede Browserprobe — sie läuft in drei Engines und ist rot, wenn eine fehlt (R87, `Pruefablauf.md` 1, Grundsatz 8) |
+| **Playwright 1.64.1 und seine drei Engines** (`chromium-1248`, `firefox-1555`, `webkit-2370`) — das Abbild bringt 1.56.1 (seit dem Abbild vom 22.10.2026 1.63.0) und nur dessen Chromium; angehoben seit Nr. 393, Engines nachgeladen seit Konzept DM (1.3) | jede Browserprobe — sie läuft in drei Engines und ist rot, wenn eine fehlt (R87, `Pruefablauf.md` 1, Grundsatz 8) |
 | **Neun Systembibliotheken für WebKit** (`libenchant-2-2`, `libsecret-1-0`, `libwayland-server0`, `libmanette-0.2-0`, seit 19.10.2026 dazu `libgtk-4-1`, `libevent-2.1-7t64`, `libgstreamer-plugins-bad1.0-0`, `libavif16`, `libgles2`) — Firefox startet ohne sie, WebKit nicht (die ersten vier gemessen 26.09.2026: entfernt, Start versucht, wieder geholt; Backlog Nr. 301; die fünf weiteren nannte Playwright am 19.10.2026, F-DM-01) | jede Probe in WebKit (R87) |
 | **Android-SDK** (Plattform 37.0, Build-Tools 36.0.0, `cmdline-tools` 23.0) | `./gradlew build` im Ordner `android/`; `cmdline-tools` unter 23.0 legt AVDs mit API 37 falsch an (F-AR-18) |
 | **Emulator, Abbilder API 37, `lz4`, `cpio`, `libpulse0`** | `android/werkzeuge/emulator.sh` — der Emulatorlauf nach `Pruefablauf.md` 6.9 |
@@ -175,8 +177,9 @@ unter `/opt/node22/bin/` um. Damit gelten die rund 35 Rückfallpfade der
 Werkzeuge weiter, und `node-tools` bleibt, wie das Abbild es brachte. Liegt
 dort statt des Verweises ein echtes Verzeichnis, wird es beiseitegelegt
 (`playwright.abbild-<Fassung>`); sonst legte `ln -sfn` den Verweis hinein. Die
-Engines des Abbilds (`chromium-1194` und, falls vorhanden, `firefox-1495`,
-`webkit-2215`) bleiben liegen; kein Werkzeug startet sie mehr. Die
+Engines des Abbilds (`chromium-1194`, seit dem Abbild vom 22.10.2026
+`chromium-1243`, und, falls vorhanden, `firefox-1495`, `webkit-2215`) bleiben
+liegen; kein Werkzeug startet sie mehr. Die
 Sorge aus 1.2, ein Nachladen lege eine zweite, abweichende Fassung daneben,
 ist damit nicht übergangen, sondern umgedreht: Die abweichende Fassung ist
 die des Abbilds, und sie ist abgehängt.
@@ -189,6 +192,17 @@ trotzdem und ist rot, wenn sie nicht `PW_FASSUNG` ist.
 `playwright 1.64.1`, Chromium 156.0.8078.4, Firefox 157.0, WebKit 27.2,
 41 s; zweiter Lauf „liegt: 1.64.1", nichts geladen, 3,9 s. Keine neue
 Systembibliothek nötig — die neun aus 1.3 genügten.
+
+**Die Engines kommen von `cdn.playwright.dev`, und die Netzrichtlinie der
+Umgebung muss diesen Host zulassen.** Am 25.10.2026 antwortete der Proxy
+darauf mit 403 („no rule or allowlist entry allows host"). `aufbauen.sh`
+meldete „Nachladen der Engines meldet einen Fehler", der Nachweis alle drei
+Engines als FEHLT. Ohne sie richtet auch `hochfahren.sh` nicht ein, denn
+Schritt 6 setzt das Admin-Passwort im Browser. Die Betreiberin hat den Host
+in den Einstellungen der Umgebung unter „Allowed domains" eingetragen; danach
+ging es ohne Neustart des Containers, in 24 s. Einen anderen Spiegel hat
+niemand versucht: Eine gesperrte Adresse wird gemeldet, nicht umgangen. Wer
+eine Umgebung neu anlegt, trägt den Host gleich mit ein.
 
 ---
 
@@ -234,6 +248,14 @@ bash tools/sandbox/plattform.sh [php83|mariadb106|mysql80|mysql84|alles|schema|-
 | MySQL 8.4.0 | `mysql:8.4.0`, Port 3308 | bereit nach **10 s**, 8.4.0 |
 | MariaDB 10.11 | die örtliche, Port 3306 | 10.11.14 |
 | Schemaprobe je Fassung | `tools/schemaprobe/` | **4 × „50 Prüfungen, 0 Fehlschläge"** (seit S11-12, Fall 7; seit R4-15 bis dahin 40, P5c/AP8 30, davor 19) |
+
+*Am 25.10.2026 baute das PHP-Abbild nicht:* Im Bau-Behälter ließ sich
+`deb.debian.org` nicht auflösen („Could not resolve"), apt fand die
+Bibliotheken der fünf Erweiterungen nicht, und `plattform.sh alles` endete
+mit „1 Stück fehlen". Die drei Datenbankfassungen liefen, die Schemaprobe in
+allen vier Fassungen mit 50 Prüfungen und 0 Fehlschlägen. Gebraucht wird das
+Abbild nur für `hochfahren.sh --php 8.3`; die Stufe `neben` misst es nicht.
+Die Ursache ist nicht untersucht.
 
 **Drei Dinge, die erst die Messung ergeben hat** — und die alle drei gegen die
 erste Planung stehen:

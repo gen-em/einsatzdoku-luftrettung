@@ -178,10 +178,12 @@ print(p['aufruf'] if p else '', p['braucht'] if p else '', 'demo' if p and p.get
             else
                 zeile "ROT   $name [$mo]  $((SECONDS - t1)) s  (siehe /tmp/pruefstand-$name-$mo.log)"; rot+=("$mo")
             fi
-            # Wiederholte Seitenwechsel in WebKit (E-DM-10, motor.mjs): genannt,
-            # nicht verschwiegen — grün bleibt grün, aber man sieht, wie oft.
-            w=$(grep -c '^WebKit-Wiederholung:' "/tmp/pruefstand-$name-$mo.log" 2>/dev/null || true)
-            [ "${w:-0}" -gt 0 ] && zeile "      $name [$mo]: $w Seitenwechsel wiederholt (WebKit-Stolpern, E-DM-10)"
+            # Wiederholte Seitenwechsel in WebKit (E-DM-10, motor.mjs) und neu
+            # angemeldete Rollen, deren Seite nicht mehr antwortete (Bedienprobe,
+            # Nr. 393): genannt, nicht verschwiegen — grün bleibt grün, aber man
+            # sieht, wie oft.
+            w=$(grep -cE '^WebKit-(Wiederholung|Neuanmeldung):' "/tmp/pruefstand-$name-$mo.log" 2>/dev/null || true)
+            [ "${w:-0}" -gt 0 ] && zeile "      $name [$mo]: $w Mal wiederholt (WebKit-Stolpern, E-DM-10: Seitenwechsel oder Neuanmeldung)"
             WIEDERHOLT=$((WIEDERHOLT + ${w:-0}))
             # Was motor.mjs in WebKit zurückhält (Nr. 393): CSP-Berichte nach
             # Screenshots, Abrufe, die ein Seitenwechsel abbrach. Genannt, nicht
@@ -230,7 +232,7 @@ if [ "$rcb" -ne 0 ]; then
 fi
 
 melde "$fehl rot, $nicht nicht gemessen, $(( ${#PROBEN[@]} - fehl - nicht )) grün · $SECONDS s"
-[ "$WIEDERHOLT" -gt 0 ] && zeile "$WIEDERHOLT Seitenwechsel in WebKit wiederholt — im Prüfdokument nennen (E-DM-10)"
+[ "$WIEDERHOLT" -gt 0 ] && zeile "$WIEDERHOLT Wiederholungen in WebKit (Seitenwechsel oder Neuanmeldung) — im Prüfdokument nennen (E-DM-10)"
 [ "$nicht" -gt 0 ] && zeile "Was nicht gemessen werden konnte, gehört in das Prüfdokument — an den Anfang."
 # Nicht gemessen ist nicht grün (E-KH-12, E-PK-46): Der Bericht trägt es, und
 # das Tor liest es als rot — dann soll es der Lauf auch sein.
