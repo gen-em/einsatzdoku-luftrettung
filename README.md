@@ -8,18 +8,27 @@ Reanimations-Ereignisse und lädt sie auf einen eigenen Server; die Web-App
 Nachtragen/Bearbeiten. Name, Geburtsdatum, Alter, Diagnose, Einsatznummer,
 Adresse, Koordinate und Beschreibung des Einsatzorts, der manuelle Abfahrtort
 und die Notizen des Einsatzes sind **Ende-zu-Ende-verschlüsselt** (Schlüssel aus dem
-Login-Passwort, Wiederherstellungsschlüssel als Rettungsanker); ein
-verschlüsseltes **Backup** (.edbak) sichert alle Daten in eine Datei.
+Login-Passwort, Wiederherstellungsschlüssel als Rettungsanker). Seit Web 22
+ebenso die **GPS-Daten**, die **Koordinate jeder Einsatzphase**, der
+**Verlauf einer Reanimation**, das **Transportziel** samt Koordinate und die
+**Höhe des Einsatzorts**: Uhr, Handy und Browser verschließen sie, bevor sie
+etwas senden, öffnen kann sie nur der Browser des Kontos, und der Server
+nimmt sie unverschlüsselt gar nicht an. Ein verschlüsseltes **Backup**
+(.edbak) sichert alle Daten in eine Datei.
 
-> **Was die Verschlüsselung nicht abdeckt.** Die Notizen des Diensttags, die
-> GPS-Daten, die Koordinate jeder Einsatzphase, die Höhe des Einsatzorts, das
-> Transportziel samt Koordinate, Zeiten, Reanimationsverlauf und die Namen der
-> Besatzung liegen im Klartext in der Datenbank — sie werden für Auswertung und Sortierung
-> gebraucht, die der Server leisten muss. **Aus den GPS-Daten und den
-> Phasenkoordinaten lässt sich der Einsatzort rekonstruieren**, auch wenn die
-> Adresse verschlüsselt ist. Wer eine Installation betreibt, sollte das wissen und den
-> Datenbankzugang entsprechend behandeln; Einzelheiten in `docs/Technik.md`
-> 4.98.
+> **Was die Verschlüsselung nicht abdeckt.** Für den Server lesbar bleiben
+> unter anderem die Notizen des Diensttags, die Zeiten und Nummern der
+> Einsatzphasen, Strecke und Anstieg, Rettungsmittel und Standort,
+> Einsatzmerkmale wie Transportart oder Fehleinsatz und die Namen der
+> Besatzung — er sortiert, zählt und wertet damit aus. Wer weiß, wann ein
+> Einsatz war, findet ihn darüber; Ort, GPS-Daten, Klinik und Reanimation
+> findet er nicht. **Grenzen gehören dazu:** Uhr und Handy halten eine
+> Aufzeichnung unverschlüsselt im Gerätespeicher, bis der Server sie
+> angenommen hat; den Schlüssel, mit dem sie verschließen, bekommen sie ohne
+> zweiten Kanal vom Server; und Adresssuche und Karte fragen fremde Dienste.
+> Wer eine Installation betreibt, behandelt den Datenbankzugang entsprechend;
+> Einzelheiten in `docs/Technik.md` 4.98 und im Bedrohungsmodell
+> (`docs/Bedrohungsmodell.md`).
 
 Zum Ausprobieren gibt es ein **Demo-Konto** mit erfundenen Daten
 (`demo@gen-em.org` / `nadokudemo0815`), das sich 30 Minuten nach der ersten

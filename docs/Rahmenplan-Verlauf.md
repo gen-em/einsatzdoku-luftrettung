@@ -9,6 +9,8 @@ Verlauf bis zum Schnitt). Die Fassungszählung läuft fortlaufend weiter.
 
 | Fassung | Datum | Anlass | Was |
 |---|---|---|---|
+| 169 | 25.10.2026 | Berichtigung, Zuarbeit | Berichtigt: Kopf und Fahrplanzeile 12b nannten den Zweig `claude/lucid-cannon-nvv86i` — er ist mit PR #118 gemergt, die Pakete laufen auf `claude/modest-edison-byg7ay`. Zuarbeit 6.1: die Rechtstext-Runde vor v1.0 trägt Nr. 400 (E-R17-29). |
+| 168 | 21.10.2026 | R17-17 | Freigaberunde 12b beantwortet (E-R17-17 bis -28): Paketschnitt R17-18 bis -30 verbindlich, alle Pakete mit Opus (R88); Fahrplanzeile und Block 12b, Kopf; Zuarbeit Hoster-Logdauer (6.1); Nr. 77 erledigt, Nr. 263 nicht umsetzen. |
 | 167 | 20.10.2026 | 12b beginnt | Fahrplanzeile 12b auf „läuft" (Zweig `claude/lucid-cannon-nvv86i`, `Review-R17.md` 7, Pakete R17-05 bis -17: Buchführung, elf Stücke, Freigaberunde). Kopf: Nr. 387 gemergt (#117), `main` bei Web 23.0.2, keine offenen PRs, als Nächstes 13. |
 | 166 | 20.10.2026 | Reihenfolge | Einschub vor 12b: Nr. 387 (verworfene Werte beim Einspielen) als Web 23.0.2, Entscheidung der Betreiberin — 12b soll den Code in Endfassung lesen. Kopf nachgezogen. |
 | 165 | 20.10.2026 | 12a-Abschluss | Erledigt-Zeile 12a (PR #106, #111), Fahrplan ab 12b, R78; 6.1: Prüfliste S11, drei `update.php`-Posten fort (auf Produktiv nichts offen). Berichtigt: Der Kopf nannte Web 21.14.0 und „als Nächstes S11-01" (Stand 11.10.2026). |
@@ -49,7 +51,6 @@ Verlauf bis zum Schnitt). Die Fassungszählung läuft fortlaufend weiter.
 | 130 | 26.09.2026 | SD-04 | Abschluss: Stand von `main` gemessen (`f5bddc2`, Android 0.16.0), AR gemergt, Abschnitt 5 endgültig (Kopfzeilen und `uebersicht.py`), Kopf und 9 ohne „ab SD-03"; SD-Fahrplanzeile „gebaut", PR offen. |
 | 129 | 26.09.2026 | SD-03 | Berichtigt: Die Fahrplanzeile „Betriebsübergang" trug keinen Status („—"); `decken.py` verlangt das erste Wort aus dem Vokabular — jetzt „offen — beginnt mit v1.0 (nach den Schritten 13 und 14)". |
 | 128 | 26.09.2026 | SD-M1 | Durchsicht der Betreiberin (E-SD-34): 27 Zuarbeiten erledigt und gestrichen (6.1: 17, 6.2: 7, 6.3: 3), 6a Schritte 7–9 abgehakt. Schritt 6 Teil C ist nicht mehr blockiert (D-U-N-S, Play-Konto, Play App Signing erledigt); R65 und der Kopf nachgezogen. |
-| 168 | 21.10.2026 | R17-17 | Freigaberunde 12b beantwortet (E-R17-17 bis -28): Paketschnitt R17-18 bis -30 verbindlich, alle Pakete mit Opus (R88); Fahrplanzeile und Block 12b, Kopf; Zuarbeit Hoster-Logdauer (6.1); Nr. 77 erledigt, Nr. 263 nicht umsetzen. |
 | 127 | 26.09.2026 | SD-01 | Berichtigt: K7 und R40 (2) nannten den Push auf `main` als Produktiv-Deploy — seit Web 20.4.0 Staging, Produktiv über den Tag. Android ist 0.15.1, nicht 0.15.0; S7 ist PR #27; „Branch-Schutz" nennt nur noch den 2FA-Zwang. |
 | 126 | 26.09.2026 | SD-01 | Ergänzt (E-SD-09): Fahrplanzeilen für AR, BV, PK; Kette II, 11 und 6 (Teil C) bleiben; Erledigt-Zeilen für S4-Merge, S6, S5-Konzept aus ihren Fahrplanzeilen. Neue Zuarbeiten: Tag für 10c, Kette-II-Prüfpunkte 26–28 (6.1). |
 | 125 | 26.09.2026 | SD-01 | Der Schnitt (E-SD-01): Fassung 124 liegt wörtlich in `Rahmenplan-Archiv-2.md`, dieser Verlauf beginnt, der Rahmenplan ist nach Konzept SD 4 neu geschrieben — Kopf 15 Zeilen, Fahrplan nur offene Schritte, Zuarbeiten in drei Gruppen, Kurzregister, Erledigt als Tabelle. |

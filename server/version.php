@@ -8264,5 +8264,14 @@ declare(strict_types=1);
  *   Freigabe, Verwaltung → Sicherungen, Kontoseite) Feld und Anzahl und
  *   sind dann orange (`verworfenSatz()`, `edbak_verworfen_satz()`). Kein
  *   Schema.
+ * 23.0.3 — DIE TEXTE SAGEN, WAS S11 GEBAUT HAT (R17-18, Schritt 12b,
+ *   F-R17-58). README, „Was ist NAdoku" (`ueber.php`) und Handbuch 4.3 und 5
+ *   (`hilfe.php`) nannten GPS-Spur, Phasenorte, Transportziel, Ortshoehe und
+ *   Reanimation noch Klartext und den Einsatzort rekonstruierbar; seit
+ *   Web 22 ist das Gegenteil wahr. Ausgeliefert werden davon die zwei
+ *   Dokumente unter `server/doku/` — deshalb eine Fassung, obwohl kein Code
+ *   sich aendert. Die Textprobe liest die Zusage seither satzweise (Klasse
+ *   `zusage`). AVV und Nutzungsbedingungen bleiben bis zur Rechtstext-Runde
+ *   vor v1.0 (Backlog Nr. 400). Kein Schema.
  */
-const WEB_VERSION = '23.0.2';
+const WEB_VERSION = '23.0.3';

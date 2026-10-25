@@ -20,7 +20,7 @@ bash tools/quelltext/pruefen.sh <name> [zusatz…]   # alle · --selbstprobe · 
 | `behandler` | die drei Behandler des Fehlerprotokolls in `db.php` | Nr. 248 |
 | `linkprobe` | jeder Verweis nennt einen Parameter, den sein Ziel liest | Nr. 148, 151 |
 | `vollstaendigkeit` | Klasse ohne Regel, Wert außerhalb `:root`, `style=`; Ton ohne Regel (auch über eine Bedingung); Selektor, dessen Klasse niemand setzt | Nr. 36, 179, 227, 331 |
-| `textprobe` | **fünf Regelklassen** in sichtbarem Text: Luftbegriffe, Binnen-I, E-Mail-Adressen, Netzadressen, reale Namen — diese auch in Kommentaren und im Stylesheet | B-S4-06, E-PK-08, Nr. 283 |
+| `textprobe` | **sechs Regelklassen** in sichtbarem Text: Luftbegriffe, Binnen-I, E-Mail-Adressen, Netzadressen, reale Namen — diese auch in Kommentaren und im Stylesheet —, und die Zusage der Verschlüsselung, **satzweise** gelesen (Sicht `satz`, seit R17-18), auch in den Store-Texten (Bereich `g`) | B-S4-06, E-PK-08, Nr. 283, F-R17-58 |
 | `bestand` | jedes Werkzeug unter `tools/` gegen `Pruefablauf.md` 6, vierzehn Regeln: Form, Anlass, gerufen, keine lose Datei, keine Backlog-Nummer zweimal; eingehängt in `SELBST`, Tabelle, `pruefablauf.json` und die Tabelle in 4; keine Probe ohne Anlage lädt `db.php`, jeder Riegel steht im Tor; die vier erzeugten Tabellen in `Design.md` sind die Ausgabe von `design.py` (seit R4-25) | Nr. 209, 293, 315, 329 |
 | `pysyntax` | jedes Python-Werkzeug unter `tools/` übersetzt, auch mit Warnungen als Fehler | Kette II/AP4: `zustand.py`; Nr. 318 |
 | `handbuch` | Handbuch und „Was ist NAdoku" rendern, UTF-8 streng, kein fremdes Bild | P5b/AP8 |

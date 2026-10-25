@@ -25,7 +25,9 @@ seine Beschreibung, der manuelle Abfahrtort sowie die **Notizen des
 Einsatzes** werden
 **Ende-zu-Ende-verschlüsselt** gespeichert:
 Der Browser ver- und entschlüsselt sie mit einem Schlüssel aus deinem
-Login-Passwort, der Server sieht nur Chiffretext (Abschnitt 5). Die Notizen
+Login-Passwort, der Server sieht nur Chiffretext (Abschnitt 5). Seit Web 22
+gilt das ebenso für die Ortsdaten — GPS-Daten, die Koordinate jeder
+Einsatzphase, Reanimation, Transportziel und Ortshöhe. Die Notizen
 des **Diensttags** und die übrigen Freitextfelder sind davon **nicht**
 erfasst — dort gehören keine Patientendaten hinein; sie tragen die Kleinzeile
 „Klartext — keine Patientendaten". Was sonst im Klartext liegt und warum,
@@ -1380,8 +1382,8 @@ kommt er nicht zurück. Ein paar Grenzen:
 
 - **Die ganze Aufzeichnung** lässt sich so nicht löschen — dafür ist der
   Papierkorb da (den Diensttag löschen, Abschnitt 8).
-- **Aufzeichnungen aus der Zeit vor der Verschlüsselung** lassen sich erst
-  nach der Umstellung des Servers stückweise löschen; die Anwendung sagt es.
+- **Aufzeichnungen aus der Zeit vor der Verschlüsselung** gibt es seit
+  Web 23 nicht mehr; bis dahin ließen sie sich nicht stückweise löschen.
 - **Zusammengefasste und ausgedünnte Aufzeichnungen** (Abschnitt 6, „GPS-Daten
   verdichten") lassen sich seit Web 22.6.0 genauso stückweise löschen; sie
   bleiben danach zusammengefasst.
@@ -1951,8 +1953,10 @@ des Formulars; seither trägt das Formular einen Satz mit Verweis hierher
 **Zwei Zeichen sagen dir, wer mitliest.** Ein **Schloss** neben der
 Beschriftung heißt: Dieses Feld ver- und entschlüsselt dein Browser, der Server
 sieht nur Chiffretext. Es steht an Name, Geburtsdatum, Alter, Diagnose,
-Einsatznummer, Einsatzort samt Beschreibung, am **manuellen Abfahrtort** —
-und seit Web 19 an den **Notizen des Einsatzes**. Die Kleinzeile **„Klartext — keine
+Einsatznummer, Einsatzort samt Beschreibung, am **manuellen Abfahrtort**,
+seit Web 19 an den **Notizen des Einsatzes** — und seit Web 22 an der
+**Zielklinik** und an der Karte **Reanimation**, in der Einsatzansicht dazu an
+der **Höhe des Einsatzorts**. Die Kleinzeile **„Klartext — keine
 Patientendaten"** heißt das Gegenteil: Dieses Feld wird unverschlüsselt
 gespeichert. Sie steht an den Bergwacht-Angaben, an der weiteren NotärztIn, an
 den Besatzungsnamen — und am Notizfeld des **Diensttags**, das weiterhin Klartext
@@ -1968,10 +1972,13 @@ Beschriftung heißt wie die Karte — sie würde sonst zweimal dastehen.
 
 **Der Server sieht das eine nie und das andere immer.** Er kann die
 verschlüsselten Felder weder anzeigen noch durchsuchen — deshalb findet die
-Suche sie erst, wenn du entsperrt hast. Alles Übrige — Zeiten, Phasen samt
-Koordinaten, GPS-Daten, Transportziel — liegt lesbar in der Datenbank, weil
-Auswertung und Statistik darauf angewiesen sind. Welche Felder genau
-verschlüsselt sind und warum, steht in Abschnitt 5.
+Suche sie erst, wenn du entsperrt hast. Seit Web 22 gehört dazu auch, was den
+Ort eines Einsatzes verrät und kein eigenes Feld hat: die GPS-Daten und die
+Koordinaten der Phasen. Uhr und Handy verschlüsseln sie, bevor sie senden, und
+die Karten zeichnen sie erst nach dem Entsperren. Lesbar bleiben unter anderem
+die Zeiten und Nummern der Phasen, die Besatzung, Häkchen und Auswahlen wie
+Transportart oder Fehleinsatz und alles mit der Kleinzeile „Klartext".
+Welche Angaben genau verschlüsselt sind und warum, steht in Abschnitt 5.
 
 ### 4.4 Diensttage-Leiste, Jahres- und Monatsübersicht
 
@@ -2399,7 +2406,12 @@ Nachname, Vorname, Geburtsdatum, Alter, Diagnose, Adresse und Koordinate des
 Einsatzorts, die Beschreibung des Einsatzortes, der manuelle Abfahrtort, die
 Einsatznummer und die Notizen des Einsatzes sind **Ende-zu-Ende-verschlüsselt**: Der Browser ver- und
 entschlüsselt mit einem Schlüssel aus deinem Login-Passwort; der Server
-speichert nur Chiffretext. Es
+speichert nur Chiffretext. **Seit Web 22 ebenso** die GPS-Daten, die
+Koordinate jeder Einsatzphase, der Verlauf einer Reanimation, das
+Transportziel samt Koordinate und die Höhe des Einsatzorts: GPS-Daten,
+Phasenorte und Reanimation verschlüsseln Uhr und Handy, bevor sie senden
+(siehe „Der Schlüssel für Uhr und Handy" weiter unten), Transportziel und
+Ortshöhe dein Browser wie die übrigen Felder. Es
 gibt kein zweites Passwort und keinen Schalter — die Verschlüsselung ist
 Pflicht.
 
@@ -2481,16 +2493,25 @@ damit ungültig.
   dein Passwort neu, und alles ist wieder da.
 - **Verschlüsselt sind nicht alle Daten, sondern diese:** Name, Geburtsdatum,
   Alter, Diagnose, Einsatznummer, Adresse, Koordinate und Beschreibung des
-  Einsatzorts, der manuelle Abfahrtort und die Notizen des Einsatzes. **Im
-  Klartext liegen dagegen:**
-  die Notizen des Diensttags, die GPS-Daten, die Koordinate jeder
-  Einsatzphase, die Höhe des Einsatzorts, das Transportziel samt Koordinate,
-  alle Zeiten, der Verlauf einer Reanimation und die Namen der Besatzung —
-  sie werden für Auswertung und Statistik gebraucht, die der Server rechnet.
-  **Der Einsatzort lässt sich damit aus den GPS-Daten ableiten**, auch wenn die
-  Adresse verschlüsselt ist. Das ist keine Lücke, sondern die Grenze dieser
-  Bauform, und sie steht hier, damit niemand mehr erwartet, als sie hält. Wer
-  eine Installation betreibt, behandelt den Datenbankzugang entsprechend.
+  Einsatzorts, der manuelle Abfahrtort und die Notizen des Einsatzes — und
+  seit Web 22 die GPS-Daten, die Koordinate jeder Einsatzphase, der Verlauf
+  einer Reanimation, das Transportziel samt Koordinate und die Höhe des
+  Einsatzorts. **Für den Server lesbar bleiben unter anderem:** die Notizen
+  des Diensttags, die Zeiten und Nummern der Phasen, Strecke und Anstieg,
+  Rettungsmittel und Standort, Einsatzmerkmale wie Transportart oder
+  Fehleinsatz, weitere beteiligte Kräfte, Zeitraum und Punktzahl einer
+  GPS-Aufzeichnung und die Namen der Besatzung — damit sortiert, zählt und
+  rechnet er. Wer weiß, wann ein Einsatz war, findet ihn darüber; Ort,
+  GPS-Daten, Klinik und Reanimation findet er nicht. **Grenzen gehören
+  dazu:** Uhr und Handy halten eine Aufzeichnung unverschlüsselt im
+  Gerätespeicher, bis der Server sie angenommen hat (was bei einem verlorenen
+  Gerät zu tun ist, steht in Kapitel 10); den Schlüssel, mit dem sie
+  verschlüsseln, bekommen sie ohne zweiten Kanal vom Server; und
+  Adresssuche und Karte fragen fremde Dienste, die dabei sehen, wonach du
+  suchst und welchen Ausschnitt du ansiehst (zur Adresssuche 3.1a). Das sind
+  keine Lücken, sondern die Grenzen dieser Bauform, und sie stehen hier, damit
+  niemand mehr erwartet, als sie hält. Wer eine Installation betreibt,
+  behandelt den Datenbankzugang entsprechend.
 - Zeigt eine Seite „gesperrt“, lässt sich das direkt dort beheben — siehe
   **„Gesperrt: entsperren statt neu anmelden“** weiter unten.
 
@@ -2567,9 +2588,10 @@ Zwei Dinge sind dabei wichtig:
 **Der Schlüssel für Uhr und Handy (seit Web 22.0.0).** Beim ersten
 Entsperren nach einer Anmeldung legt die Anwendung still ein zweites
 Schlüsselpaar für dein Konto an. Uhr und Handy bekommen davon den
-öffentlichen Teil beim Koppeln; damit werden sie künftig GPS-Daten, Ortsangaben
-der Phasen und Reanimation verschlüsseln, bevor sie etwas senden — öffnen
-kann es nur dein Browser. Du musst dafür nichts tun. Steht oben auf einer
+öffentlichen Teil beim Koppeln; damit verschlüsseln sie GPS-Daten, Ortsangaben
+der Phasen und Reanimation, bevor sie etwas senden (die Uhr-App seit
+Fassung 4.0.0, die Android-App seit 0.18.0) — öffnen kann es nur dein Browser.
+Du musst dafür nichts tun. Steht oben auf einer
 Seite **„Der Schlüssel, mit dem Uhr und Handy für dieses Konto verschlüsseln,
 passt nicht zu deinem privaten Schlüssel"**, koppel bitte kein neues Gerät und
 gib der BetreiberIn Bescheid: Dann hat jemand den Schlüssel verändert, oder
@@ -2779,8 +2801,8 @@ das Ruhesegment abgeschlossen ist, und **dünnt sie 31 Tage nach dem Ende aus**
 Lässt sich eine Aufzeichnung nicht öffnen, bleibt sie, wie sie ist; die Karte
 sagt es rot, und die Betreuung sieht es im Reiter System. Kommt während des
 Laufs Neues von einem Gerät an, wartet er damit bis zum nächsten Mal — es geht
-nichts verloren. Aufzeichnungen aus der Zeit vor der Verschlüsselung fasst er
-nicht an; die übernimmt die Umstellung des Servers.
+nichts verloren. Aufzeichnungen aus der Zeit vor der Verschlüsselung gibt es
+seit Web 23 nicht mehr; bis dahin fasste er sie nicht an.
 
 ### 6.1 Konto-Backups durch die Verwaltung
 
@@ -2959,11 +2981,11 @@ Zwei Sonderfälle werden dabei erkannt:
 **Die Ortsdaten verschlüsselt dein Browser** (seit Web 22.4.0), bevor etwas
 an den Server geht: Phasenorte und Reanimation in denselben verschlossenen
 Block, den die Uhr schickt, Transportziel und Höhe des Einsatzorts zu den
-übrigen geschützten Angaben. Ältere Einsätze, die du überschreibst, ziehen
-dabei mit um — ihre bisher offen gespeicherten Orte stehen danach ebenfalls
-verschlüsselt da. Lässt sich bei einem solchen Einsatz das Vorhandene nicht
-öffnen, sagt der Import es vor dem Übernehmen und nennt den Einsatz; dann
-diese Zeile überspringen. Am Ende
+übrigen geschützten Angaben. Überschreibst du einen Einsatz, öffnet der
+Browser dazu dessen Orte und Reanimation; lässt sich das Vorhandene nicht
+öffnen, sagt der Import es vor dem Übernehmen und nennt den Einsatz — dann
+diese Zeile überspringen. *(Bis Web 22.7.0 zogen dabei ältere Einsätze mit
+offen gespeicherten Orten mit um; seit Web 23 gibt es keine mehr.)* Am Ende
 steht, wie viele Einsätze angelegt, überschrieben und übersprungen wurden,
 mit einem Link auf den ersten importierten Tag.
 
@@ -3600,11 +3622,14 @@ Plakette und Zahl verschwinden von selbst, sobald wieder ein Upload durchkommt.
 Mehr dazu in Abschnitt 11.4a.
 
 > **Uhr verloren? Sofort trennen.** Auf der Garmin-Uhr liegt der
-> Zugangsschlüssel im Klartext — die Plattform bietet nichts Besseres. Lesen
-> kann ein Finder damit nichts: Er kommt an keinen einzigen Datensatz. Er kann
-> aber **hochladen**, solange das Gerät gekoppelt ist. **Deaktivieren** oder
-> **Entkoppeln** beendet das augenblicklich; die hochgeladenen Daten bleiben
-> in beiden Fällen erhalten.
+> Zugangsschlüssel im Klartext — die Plattform bietet nichts Besseres. Vom
+> Server lesen kann ein Finder damit nichts: Er kommt an keinen einzigen
+> Datensatz. Er kann aber **hochladen**, solange das Gerät gekoppelt ist.
+> **Deaktivieren** oder **Entkoppeln** beendet das augenblicklich; die
+> hochgeladenen Daten bleiben in beiden Fällen erhalten. **Was die Uhr noch
+> nicht zugestellt hat, liegt auf ihr unverschlüsselt** (Abschnitt 5), und
+> Trennen löscht auf der Uhr nichts — wer sie findet und auslesen kann, sieht
+> diese Einsätze.
 >
 > Bis dahin gilt seit Web 15.6.0 eine Grenze: Ein Gerät darf einen
 > **bestehenden** Einsatz oder eine bestehende Ruhezeit nur noch **72 Stunden**
@@ -4349,14 +4374,14 @@ Paket so verschlüsselt, wie sie im Konto lagen, gebunden an dessen
 Schlüsselpaar. Ein Paket mit solchen Daten geht deshalb nie unmittelbar in
 ein Konto mit anderer Kennung, sondern über die Freigabe. Dort öffnet der
 Browser der NutzerIn sie und verschlüsselt sie neu. **Beim unmittelbaren
-Einspielen verlangt die Anwendung ein Schlüsselpaar im Zielkonto.** Es
-entsteht, wenn sich die NutzerIn einmal anmeldet und die Seite entsperrt.
-Fehlt es, wird abgewiesen, bevor etwas geschrieben ist. Ein älteres Paket
-trägt Orte und GPS-Daten noch offen. Der Server verschlüsselt sie beim
-Einspielen selbst, mit dem öffentlichen Schlüssel des Kontos — er hat sie ja
-ohnehin vor sich. Transportziel und Ortshöhe kann er nicht in die geschützten
-Angaben legen. Sie bleiben im alten Feld, bis der Einsatz das nächste Mal im
-Formular gespeichert wird.
+Einspielen gehen Hüllen und Stücke zurück, wie sie im Konto lagen;** der
+Server verschlüsselt dabei nichts und sieht nichts davon offen. Ein
+einteiliges Paket aus der Zeit vor Web 11 lässt sich seit Web 23 nicht mehr
+einspielen — die Anwendung sagt es, und es wird nichts geändert. *(Bis
+Web 22.7.0 trug ein solches Paket Orte und GPS-Daten offen; der Server
+verschlüsselte sie beim Einspielen selbst, dafür brauchte das Zielkonto ein
+Schlüsselpaar, und Transportziel und Ortshöhe blieben im alten Feld, bis der
+Einsatz das nächste Mal gespeichert wurde.)*
 
 #### Drei Backups, drei Namen
 
@@ -5666,7 +5691,7 @@ das nicht mehr ein Job hier, sondern der Browser jedes Kontos** (Abschnitt 6,
 nicht lesen. Bis dahin standen in dieser Liste die Jobs „GPS-Daten verdichten"
 und „GPS-Daten ausdünnen", mit einer Frist von zwei Wochen und sechs Monaten
 und einer Liste dessen, was liegenblieb. Aufzeichnungen aus der Zeit vor der
-Verschlüsselung bleiben bis zur Umstellung des Servers, wie sie sind.
+Verschlüsselung gibt es seit Web 23 nicht mehr.
 
 Zwei Dinge, die man dazu wissen sollte: Ändert man bei einem älteren, bereits
 ausgedünnten Einsatz eine **Phasenzeit**, wird die Höhe des Einsatzorts nicht

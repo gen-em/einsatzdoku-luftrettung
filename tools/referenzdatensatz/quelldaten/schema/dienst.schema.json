@@ -549,7 +549,7 @@
       }
     },
     "felder": {
-      "$kommentar": "Spalten aus server/mission_fields.php plus start_src. Alles KLARTEXT — der Server sieht diese Werte.",
+      "$kommentar": "Spalten aus server/mission_fields.php plus start_src. KLARTEXT — der Server sieht diese Werte —, außer transport_dest, dest_lat und dest_lon: Die legt das Einspielskript seit S11-05b in den pat_blob (Web 22.1.0).",
       "type": "object",
       "required": [
         "transport_mode",

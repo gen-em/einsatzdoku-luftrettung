@@ -679,7 +679,8 @@ den manuellen Abfahrtort (Web 21.1.5).
 
 Für jede Änderung an einem sichtbaren Text — der Weboberfläche, der
 Handy- und Uhr-Anwendungen oder der normativen Dokumentation — läuft
-`tools/quelltext/` (`textprobe`): Es zählt nach, ob Land und Luft neutral benannt sind.
+`tools/quelltext/` (`textprobe`): Es zählt nach, ob Land und Luft neutral benannt sind
+— und seit R17-18, ob ein Satz Ortsdaten noch als Klartext beschreibt.
 Erwartet werden null Treffer außerhalb der Ausnahmeliste und null ungenutzte
 Ausnahmen; ein Begriff, der bleiben soll, braucht einen Eintrag **mit
 Begründung** — kein Ausblenden.
@@ -699,7 +700,7 @@ Begründung** — kein Ausblenden.
 
 **Seit PK-04 ist die Wortliste die Textprobe** (E-PK-08): fünf Regelklassen
 statt einer, und sie läuft **einmal im Tor** statt bei jeder Textänderung von
-Hand.
+Hand. Seit R17-18 (Web 23.0.3) sind es sechs.
 
 | Klasse | Was sie misst | Ziel |
 |---|---|---|
@@ -708,6 +709,7 @@ Hand.
 | `adressen` | E-Mail-Adressen außerhalb der von RFC 2606 reservierten Formen; `demo@gen-em.org` ist die eine erlaubte (E-PK-27) | 0 |
 | `netz` | Adressen im Netz, die nicht in `docs/Lizenzen.md` stehen | 0 |
 | `namen` | reale Orts- und Rufnamen (E-P1-02) | 0 |
+| `zusage` | Sätze, die Ortsdaten — GPS-Daten, Phasenorte, Reanimation, Transportziel, Ortshöhe — als Klartext beschreiben, und den Satz von der Rekonstruierbarkeit des Ortes; **satzweise** (F-R17-58, E-R17-30) | 0 |
 
 **Rot ist nur ein NEUER Treffer.** Der Altbestand steht mit Zahl in
 `textprobe-altbestand.json`, je (Datei, Muster); wer eine Stelle bereinigt,
@@ -763,6 +765,37 @@ Uhr-Ressourcen und 14 normative Dokumente. **Nicht** gemessen werden
 > heißt damit „null in Text und Kommentaren der sechs Bereiche"**, nicht
 > „null im Repositorium": `tools/`, `docs/konzepte/**`, die
 > Steuerungsdokumente und der Kotlin-Quelltext bleiben ungelesen.
+
+> **Die Klasse `zusage` liest Sätze, nicht Zeilen** (R17-18, E-R17-30).
+> Sie sucht eine **Aussage** — ein Klartext-Wort und einen Ortsbegriff im
+> selben Satz —, und in Markdown ist ein Satz über Zeilen umbrochen.
+> Gemessen am 25.10.2026 an den siebzehn alten Sätzen, die Ortsdaten noch
+> als Klartext beschrieben: Das Zeilenmuster aus dem Review fand **einen**,
+> beide Muster der Klasse zeilenweise **elf**, satzweise **alle siebzehn**.
+> Die Sicht `satz` fügt einen Absatz, Listenpunkt, eine Überschrift oder eine
+> Tabellenzelle zusammen und teilt an Satzzeichen; gemeldet wird die Zeile,
+> in der der Satz beginnt, und eine Ausnahme liest mit `zeile` den **Satz**.
+> Außerhalb von Markdown bleibt die Zeile die Einheit, in PHP und
+> JavaScript die verkettete Zeichenkette.
+>
+> **Was `zusage = 0` heißt:** In den sechs Bereichen und in `g` (seit
+> R17-18 die Texte für die Stores, `docs/store/**/*.md`, nur diese Klasse)
+> steht kein Satz, der
+> beide Wörter trägt, außer den 35 erklärten (31 Regeln) — Geschichte mit
+> Versionsangabe (`C`), die Beschriftung der Aufräum-Migration (`E`), der
+> Gerätepuffer (`G`), Sätze, in denen „Klartext" oder „lesbar" etwas anderes
+> meint (`Homonym`), und bis Backlog Nr. 400 die Vorlagen von AVV und
+> Nutzungsbedingungen (`Bestand`).
+> **Nicht** heißt es, dass jeder Text die Zusage richtig sagt — die Probe
+> misst **Wortlaut, nicht den Sachverhalt**. Sie sieht keine alte Aussage,
+> die auf zwei Sätze verteilt ist, als Einleitung mit Liste darunter, als
+> Tabellenzeile („| GPS-Daten | Klartext |"), als Überschrift mit Absatz oder
+> in einem umbrochenen HTML-Absatz steht; keine, die ohne eines ihrer Wörter
+> auskommt („die Orte bleiben im alten Feld" — fünf solche Stellen im
+> Handbuch fand erst die Gegenprüfung von R17-18); und keine Zusage, die zu
+> viel verspricht. Gemessen von der Gegenprüfung: 29 von 55 erfundenen
+> falschen Sätzen rot, ein Fehlalarm unter acht richtigen. Das Übrige bleibt
+> Lesen.
 
 ### 6.7 Die Prüfmittel laufen zuletzt, nicht zwischendurch
 

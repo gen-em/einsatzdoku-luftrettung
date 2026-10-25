@@ -14,6 +14,68 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 23.0.3] — unveröffentlicht
+
+Schritt 12b, Paket R17-18 (Befund F-R17-58). Kein Code der Anwendung, kein
+Schema — die Fassung steigt, weil Handbuch und „Was ist NAdoku" als
+`server/doku/` ausgeliefert werden.
+
+### Behoben
+
+- **Die öffentlichen Texte beschrieben die Ortsdaten noch als Klartext.**
+  Seit Web 22 verschließen Uhr, Handy und Browser GPS-Spur, Phasenorte und
+  Reanimation, Transportziel und Ortshöhe liegen im verschlüsselten Block,
+  und seit Web 23 gibt es keine Spalte mehr, in der sie offen liegen
+  könnten. Das README, die Seite „Was ist NAdoku" vor der Anmeldung und das
+  Handbuch (4.3 und Kapitel 5, die Hilfe) sagten trotzdem weiter, das alles
+  liege lesbar in der Datenbank, und **aus GPS-Daten und Phasenkoordinaten
+  lasse sich der Einsatzort rekonstruieren**. Das war von Web 15.6.0 bis
+  Web 21 die ehrliche Grenze der Zusage (Backlog Nr. 138) und ist seit S11
+  falsch — in der Richtung „zu wenig versprochen", aber falsch. Die Texte
+  sagen jetzt dasselbe wie `CLAUDE.md` 4 und die Datenschutzerklärung:
+  verschlüsselt sind auch GPS-Spur, Phasenorte, Reanimation, Transportziel
+  und Ortshöhe; lesbar bleiben unter anderem Zeiten und Nummern der Phasen,
+  Strecke, Anstieg, Rettungsmittel, Standort, Einsatzmerkmale, Besatzung und
+  die Notizen des Diensttags; und Grenzen gehören dazu — der Puffer auf Uhr
+  und Handy, bis der Server angenommen hat, der Schlüssel, der ohne zweiten
+  Kanal vom Server kommt, und die fremden Dienste hinter Adresssuche und
+  Karte. Das Handbuch sagt in Kapitel 10 jetzt auch, dass Trennen auf der Uhr
+  nichts löscht; fünf Absätze zur Umstellung des Altbestands (Kontopaket,
+  Import, Wartungslauf, Löschen, Jobliste) stehen in der Vergangenheit, und
+  die Tabelle der Blobfelder in `Technik.md` 4.98 kennt Transportziel und
+  Ortshöhe. Das Handbuch nennt das Schloss jetzt auch an Zielklinik,
+  Reanimation und Ortshöhe, wo die Oberfläche es seit Web 22 zeigt; der
+  Absatz zum Schlüssel für Uhr und Handy sagte noch „künftig".
+
+### Prüfmittel
+
+- **Die Textprobe liest die Zusage satzweise** (neue Klasse `zusage`, neue
+  Sicht `satz`). Ein Satz, der ein Klartext-Wort und einen Ortsbegriff
+  trägt, oder der Satz von der Rekonstruierbarkeit, ist rot, außer er steht
+  mit Begründung in den Ausnahmen. **Warum satzweise:** Der Vorschlag aus
+  dem Review war ein Zeilenmuster („liegt im Klartext" neben einem
+  Ortsbegriff), und gemessen an den alten Texten fand es einen von siebzehn
+  Sätzen; auch beide Muster der neuen Klasse fanden zeilenweise nur elf —
+  durchgerutscht wären die sechs Klartextlisten, denn ein Markdown-Satz ist
+  umbrochen, und seine beiden Hälften stehen selten in einer Zeile.
+  Satzweise findet die Probe alle siebzehn, auf dem Stand vor diesem Paket
+  acht außerhalb der Ausnahmen; auf dem neuen null. Die Selbstprobe hält beides fest, mit dem
+  alten Wortlaut als Fall. Was sie nicht sieht: eine alte Aussage, die auf
+  zwei Sätze verteilt ist.
+
+### Bewusst so
+
+- **Die Vorlagen von AVV und Nutzungsbedingungen bleiben vorerst, wie sie
+  sind.** Beide sagen noch, Spur und Phasenkoordinaten lägen im Klartext —
+  die Nutzungsbedingungen in 4.4, die der Review übersehen hatte (F-R17-60).
+  Beide sind auf Produktiv eingespielt, und eine neue Fassung sperrt den
+  Login bis zur erneuten Annahme. Die Betreiberin berichtigt sie selbst in
+  der Rechtstext-Runde vor dem v1.0-Tag (Backlog Nr. 400). Bis dahin stehen
+  die neun Sätze als Ausnahmen der Textprobe — mit dem Satz, dass die Probe
+  rot wird, sobald einer berichtigt ist, damit die Ausnahme nicht stehen
+  bleibt. Die Richtung des Fehlers ist dieselbe wie oben: Der Vertrag
+  verspricht weniger, als die Anwendung hält.
+
 ## [Web 23.0.2] — unveröffentlicht
 
 Backlog Nr. 387, Einschub vor Schritt 12b. Kein Schema.

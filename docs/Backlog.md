@@ -52,8 +52,8 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
 
 | Spanne | Zweig | seit |
 |---|---|---|
-| 400 bis 409 | `claude/modest-edison-byg7ay` — Schritt 12b, Pakete R17-18 bis -30 (`Review-R17.md`); bis R17-17 `claude/lucid-cannon-nvv86i`, gemergt mit PR #118; vergeben: noch keine | 25.10.2026 |
-| ab 410 | frei — höchste vergebene Nummer 393; frei blieben 394 bis 399 aus der Spanne von 19 (PR #112 bis #114), 389 aus der von 12a (PR #116), 372 bis 379 aus der von 12 (PR #103), 362 bis 369 aus der von PK, 359 aus der von 18 (PR #101), 348 und 349 aus der von 17, 338 aus der von AR | 20.10.2026 |
+| 400 bis 409 | `claude/modest-edison-byg7ay` — Schritt 12b, Pakete R17-18 bis -30 (`Review-R17.md`); bis R17-17 `claude/lucid-cannon-nvv86i`, gemergt mit PR #118; vergeben: 400 | 25.10.2026 |
+| ab 410 | frei — höchste vergebene Nummer 400; frei blieben 394 bis 399 aus der Spanne von 19 (PR #112 bis #114), 389 aus der von 12a (PR #116), 372 bis 379 aus der von 12 (PR #103), 362 bis 369 aus der von PK, 359 aus der von 18 (PR #101), 348 und 349 aus der von 17, 338 aus der von AR | 20.10.2026 |
 
 ---
 
@@ -1320,3 +1320,24 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      *Abnahme:* Stufe 2 wieder auf `ubuntu-26.04`, dreifach grün; ein
      voller Prüfstand der Nebenstufe grün in drei Engines.
      *Frist:* bevor GitHub `ubuntu-24.04` abkündigt.
+
+<!-- -->
+
+400. **Die Rechtstexte auf den Stand nach S11 bringen.** · gehört zu: 14 · Stand: offen · seit 25.10.2026
+     *Aufgenommen 25.10.2026 mit R17-18 (F-R17-58, -60; E-R17-29).* AVV
+     und Nutzungsbedingungen sagen noch, GPS-Aufzeichnung,
+     Phasenkoordinaten, Transportziel und Reanimation lägen im Klartext,
+     und der Einsatzort sei daraus rekonstruierbar — seit Web 22 falsch.
+     Die Betreiberin berichtigt sie selbst, direkt vor dem v1.0-Tag.
+     *Stellen:* `AVV.md` Kopfkasten, A.2, Anlage II Nr. 2 (beide Listen,
+     „Grenze … durchlässig", besondere Kategorien), Prüfhinweis (a) — der
+     Schluss trägt weiter, die Begründung nicht; `Nutzungsbedingungen.md`
+     4.4 und Hinweis (d); `Datenschutzerklaerung.md` Kopfkasten
+     (einspielbar seit S11 auf Produktiv), Prüfhinweise 5 und 7 und der
+     Verweis „Grenze 2" in 0 (d) (die Grenze ist mit Web 23 gefallen).
+     *Preis:* AVV und Nutzungsbedingungen sind auf Produktiv eingespielt;
+     eine neue Fassung sperrt den Login bis zur Annahme (`Technik.md`
+     4.99j) — vorher die Ankündigung setzen.
+     *Abnahme:* die neun Ausnahmen der Klasse `Bestand` in
+     `textprobe-ausnahmen.json` (`avv-…`, `nb-…`) greifen nicht mehr und
+     sind gestrichen, die Textprobe ist grün; P-R17-13 auf Produktiv.

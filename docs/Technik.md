@@ -5637,6 +5637,8 @@ Browser), erzeugt in `einsatz_form.php`:
 | `site_desc` | Beschreibung des Einsatzorts (Zufahrt, Landestelle) |
 | `start.addr`, `start.lat`, `start.lon` | **Manueller Abfahrtort** (seit Web 6.2.0) — nur bei der Regel „Manueller Ort"; die Regel selbst (`missions.start_src`) ist Klartext. Bis zum 25.09.2026 fehlte die Zeile hier und in `CLAUDE.md` 4, obwohl 4.98a ihn als Blob-Schlüssel führt (Konzept BV, F-BV-13) |
 | `notes` | **Notizen des Einsatzes** (seit Web 19.0.0, S9/AP7). Bis dahin die Klartextspalte `missions.notes`; sie bleibt `NULL`-fähig stehen, bis P8 sie entfernt (R60), und trägt nur noch Altbestand, den die Anhebung nicht erreicht hat |
+| `transport_dest.addr`, `.lat`, `.lon` | **Transportziel** samt Koordinate (seit Web 22.1.0, S11-05b) — das erste Ortsfeld des Katalogs im Block, `'store' => 'pat'` in `mission_fields.php`, `{addr, lat, lon}` wie `loc`. Bis dahin die Spalten `missions.transport_dest`, `dest_lat`, `dest_lon`, mit Web 23 gefallen. Bis Web 23.0.3 fehlte die Zeile hier (F-R17-60) |
+| `ortshoehe` | **Höhe des Einsatzorts** in ganzen Metern (seit Web 22.1.0) — kein Katalogfeld, sondern im Browser gerechnet (`EdOrtsdaten.ortshoehe()`, beim Speichern und im Wartungslauf, 4.99s). Bis dahin `missions.site_ele_m`, mit Web 23 gefallen |
 
 Fehlende Schlüssel bedeuten „keine Angabe"; ein leerer Block wird als
 `__CLEAR__` übertragen und löscht den vorhandenen.
@@ -5689,23 +5691,29 @@ betreibt, sollte das wissen und den Datenbankzugang entsprechend behandeln.
 
 > **Dieser Abschnitt ist seit Web 15.6.0 die Zusage, nicht mehr nur eine
 > Einräumung** (Backlog Nr. 138, Weg C aus `docs/konzepte/Konzept-V1-Ortsdaten.md`,
-> K-1). Der Satz, um den es geht, ist der unbequeme: **Aus Spur und
-> Phasenkoordinaten lässt sich der Einsatzort rekonstruieren** — die
-> Verschlüsselung der Adresse verbirgt ihn nicht. Ein Datenbankabzug ergibt Ort,
-> Zeit, Klinik und Behandlung; ohne Name und Diagnose, aber mit Zusatzwissen
-> re-identifizierend.
+> K-1). Bis Web 21 galt hier der unbequeme Satz, aus Spur und
+> Phasenkoordinaten lasse sich der Einsatzort rekonstruieren, die
+> Verschlüsselung der Adresse verberge ihn nicht; ein Datenbankabzug ergab Ort,
+> Zeit, Klinik und Behandlung. Damals sagten `CLAUDE.md` 4, `README.md`,
+> `Handbuch.md` 5 und der Textbaustein für die Datenschutzerklärung (Handbuch
+> 11.5a) **dasselbe** und zählten beide Seiten auf, statt zu versprechen
+> „Diagnose, Alter und Einsatzort sind Ende-zu-Ende-verschlüsselt" — richtig
+> für das Feld, irreführend für die Sache. Das hat nichts sicherer gemacht,
+> aber die Frage nach **Weg B** (Schlüssel auf die Uhr) zu einem offenen Punkt
+> statt einem Widerspruch: Backlog Nr. 43, gebaut mit S11.
 >
-> Deshalb sagen `CLAUDE.md` 4, `README.md`, `Handbuch.md` 5 und der Textbaustein
-> für die Datenschutzerklärung (Handbuch 11.5) jetzt **dasselbe** und zählen
-> beide Seiten auf. *(Stand 25.09.2026: für die ersten drei nachgemessen und
-> berichtigt — Notizen des Einsatzes, Abfahrtort, Höhe des Einsatzorts;
-> 11.5 zieht P5c/AP9 nach, Backlog Nr. 194.)* Vorher versprachen sie „Diagnose, Alter und Einsatzort sind
-> Ende-zu-Ende-verschlüsselt" — richtig für das Feld, irreführend für die Sache.
->
-> **Das macht nichts sicherer.** Es macht das Projekt ehrlich, und es ist die
-> Voraussetzung dafür, dass die Frage nach **Weg B** (Schlüssel auf die Uhr,
-> Rahmenplan S11) nicht als Widerspruch im Raum steht, sondern als offener
-> Punkt: Backlog Nr. 43.
+> **Seit S11 gilt der Satz nicht mehr** (Bedrohungsmodell R3: „Mit S11
+> geschlossen") — für neue Daten seit Web 22.0.1, Uhr 4.0.0 und
+> Android 0.18.0, für den Altbestand seit Web 23.0.0. Die Texte sagen wieder
+> dasselbe, jetzt das Neue: `CLAUDE.md` 4 seit S11-11 (18.10.2026), der
+> Textbaustein (11.5a) und die Datenschutzerklärung mit S11, `README.md`,
+> `Was-ist-NAdoku.md`, `Handbuch.md` 4.3 und 5 und dieser Kasten erst mit
+> Web 23.0.3 (R17-18, F-R17-58) — seit S11-11 standen sie gegen die Zusage.
+> **Zwei Texte sagen es noch nicht:** die Vorlagen der AVV (A.2, Anlage II Nr. 2) und der
+> Nutzungsbedingungen (4.4) beschreiben den Stand vor S11, bis zur
+> Rechtstext-Runde vor v1.0 (Backlog Nr. 400). Damit es kein drittes Mal
+> auseinanderläuft, misst die Textprobe die Zusage seit Web 23.0.3 satzweise
+> (Klasse `zusage`, `docs/Pruefablauf.md` 6.6).
 
 Die Zuordnung Datensatz ↔ Person entsteht ausschließlich über den
 verschlüsselten Block.

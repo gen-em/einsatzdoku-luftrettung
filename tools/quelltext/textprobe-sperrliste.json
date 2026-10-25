@@ -222,6 +222,22 @@
       "grund": "Die realen Rufnamen und Orte aus `tools/referenzdatensatz/quelldaten/pruefen.py` (`VERBOTENE_NAMEN`, E-P1-02). `@@NAMEN@@` wird BEIM LAUF von dort gelesen; eine zweite Liste ginge beim naechsten Eintrag auseinander.",
       "quelle": "namen",
       "sicht": "mit_kommentaren"
+    },
+    {
+      "id": "zusage-klartext",
+      "regex": "^(?=.*?(?:(?<!nicht\\s)(?<!nicht\\smehr\\s)\\bim\\s+Klartext\\b|\\blesbar\\s+(?:bleib\\w*|sind\\b|ist\\b|lieg\\w*)|\\b(?:ist|sind|wird|werden|lieg\\w*|bleib\\w*)\\s+(?:\\w+\\s+){0,3}ungesch(?:ü|ue)tzt\\b|\\bKlartext\\s+(?:lieg|steh|gespeichert|verarbeitet|bleib|sind\\b|ist\\b)|\\b(?:liegt|liegen|bleib\\w*)\\s+(?:\\w+\\s+){0,3}lesbar\\b|\\bf(?:ü|ue)r\\s+(?:\\w+\\s+){1,4}lesbar\\b|\\blesbar\\s+in\\s+der\\s+Datenbank|\\bunverschl(?:ü|ue)sselt\\s+(?:in\\s+der\\s+Datenbank|auf\\s+dem\\s+Server|gespeichert)|\\b(?:ist|sind|war|waren|wird|werden|lieg\\w*|lag\\w*|bleib\\w*|steh\\w*)\\s+(?:\\w+\\s+){0,3}(?:unverschl(?:ü|ue)sselt|nicht\\s+verschl(?:ü|ue)sselt)\\b|\\b(?:unverschl(?:ü|ue)sselt|nicht\\s+verschl(?:ü|ue)sselt)\\s+(?:gespeichert|bleib|lieg|sind\\b|ist\\b)|\\beinsehbar\\b))(?=.*?(?:(?<!Punktzahl\\seiner\\s)\\bGPS|\\bSpur(?!st(?:ü|ue)ck)|\\bKoordinate\\w*\\s+(?:jeder|der)\\s+(?:Einsatz)?phase|Phasenkoordinat|Phasen\\s+samt\\s+Koordinat|Phasenort|Phasen-Koordinat|\\bKoordinate\\w*\\s+(?:aller|einer)\\s+(?:\\w+\\s+)?(?:Einsatz)?phase|\\bOrte?\\s+der\\s+(?:Einsatz)?phase|Wiederbelebung|\\bCPR\\b|\\bKlinik|Reanimation|Transportziel|Zielklinik|Ortsh(?:ö|oe)he|H(?:ö|oe)he\\s+des\\s+Einsatzort))",
+      "ersatz": "Wortlaut von CLAUDE.md 4, in zwei Sätzen: GPS-Spur, Koordinate jeder Phase, Reanimationsverlauf, Transportziel samt Koordinate und Ortshöhe liegen verschlossen. Lesbar bleiben unter anderem Zeiten und Nummern der Phasen, der Umriss der Spurstücke, Strecke, Anstieg, Besatzungsnamen und die Notizen des Diensttags.",
+      "grund": "F-R17-58 (R17-18): Vier öffentliche Texte und die AVV-Vorlage beschrieben Spur, Phasenorte, Transportziel und Reanimation noch als Klartext, als S11 sie längst verschlossen hatte — zum zweiten Mal nach Nr. 138, dass Zusage und Texte auseinanderliefen. Ein Satz, der ein Klartext-Wort („im Klartext“, „Klartext liegt/bleibt/ist“, „liegt/bleibt lesbar“, „für … lesbar“, „einsehbar“, „unverschlüsselt/nicht verschlüsselt gespeichert“, „ist ungeschützt“) und einen Ortsbegriff (GPS, Spur, Phasenkoordinate, Orte der Phasen, Reanimation/Wiederbelebung, Transportziel, Klinik, Ortshöhe) zugleich trägt, ist entweder Geschichte oder falsch. Geschichte steht mit Begründung in den Ausnahmen; alles andere ist rot. Nicht gemeint und deshalb ausgenommen: `Spurstück` und „Punktzahl einer GPS-Aufzeichnung“ (der Umriss ist Klartext, und das sagen die Texte zu Recht) und die Verneinung „nicht (mehr) im Klartext“. Liest SATZWEISE (Sicht `satz`): Zeilenweise fanden die beiden Muster am 25.10.2026 elf von siebzehn alten Sätzen, der Vorschlag aus dem Review einen. Geschärft nach der Gegenprüfung von R17-18 (E-R17-31): 29 von 55 erfundenen falschen Sätzen rot statt 11, ein Fehlalarm unter acht richtigen statt sechs.",
+      "klasse": "zusage",
+      "sicht": "satz"
+    },
+    {
+      "id": "zusage-rekonstruierbar",
+      "regex": "\\bEinsatzort\\w*\\b(?:(?!\\bnicht\\b|\\bkein\\w*\\b|\\bnie\\b)[^;]){0,80}?\\b(?:rekonstru\\w*|ableit\\w*|herleit\\w*|ergibt\\s+sich|ermitteln\\b|bestimmen\\b|ablesbar\\b|abzulesen\\b|erkennbar\\b|erschlie(?:ß|ss)en\\b|lokalisier\\w*)(?!\\w*\\s+(?:nicht|kein))|(?<!nicht\\s)(?<!nicht\\smehr\\s)\\brekonstru\\w*(?:(?!\\bnicht\\b|\\bkein\\w*\\b|\\bnie\\b)[^;]){0,60}?\\bEinsatzort",
+      "ersatz": "seit S11 (Web 22) ist der Einsatzort aus dem Server-Bestand nicht mehr rekonstruierbar (Bedrohungsmodell R3: „Mit S11 geschlossen“). Wer weiß, wann ein Einsatz war, findet ihn über die Zeiten — Ort, Spur, Klinik und Reanimation nicht.",
+      "grund": "F-R17-58 (R17-18): Der Satz „Aus den GPS-Daten und den Phasenkoordinaten lässt sich der Einsatzort rekonstruieren“ war von Web 15.6.0 bis Web 21 die ehrliche Grenze der Zusage (Nr. 138) und ist seit S11 falsch. Er stand an sechs Stellen in fünf Dateien und überlebte die Umstellung an allen; dieses Muster hält ihn fest, wo er noch einmal auftaucht. Liest SATZWEISE (Sicht `satz`); eine Verneinung im selben Satz („nicht mehr rekonstruierbar“, „kann den Einsatzort nicht …“) ist ausgenommen, weitere Verben (ermitteln, bestimmen, ablesbar, erkennbar, lokalisieren) seit der Gegenprüfung von R17-18.",
+      "klasse": "zusage",
+      "sicht": "satz"
     }
   ],
   "fallen": [
@@ -276,6 +292,7 @@
     "hausform": "Hausform Binnen-I (E-PK-26)",
     "adressen": "E-Mail-Adressen (E-PK-27)",
     "netz": "Adressen im Netz — Erlaubnisliste aus docs/Lizenzen.md",
-    "namen": "Reale Namen und Rufnamen (E-P1-02)"
+    "namen": "Reale Namen und Rufnamen (E-P1-02)",
+    "zusage": "Die Zusage der Verschlüsselung — Ortsdaten nicht als Klartext beschreiben (F-R17-58)"
   }
 }
