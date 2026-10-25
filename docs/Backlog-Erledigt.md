@@ -9642,8 +9642,9 @@ zutreffen.
      Funden im Werkzeug: Aufräumen in `ap4`/`ap5` wartet auf die Seite, eine
      stumme WebKit-Seite wird erkannt (Neuanmeldung, Weg einmal von vorn;
      E-DM-10 erweitert), und `konfig_stellen()` legt die Schlüsselmarken mit
-     zurück (frische Anlage stand sonst auf „abweichend"). Offen: Stufe 2
-     nach dem Merge.
+     zurück (frische Anlage stand sonst auf „abweichend"). Stufe 2 nach
+     dem Merge grün auf `ubuntu-26.04` (25.10.2026, Lauf 140): Kreislauf
+     `edbak` je 0 unerklärt, Rückwegprobe je 21 von 21, Playwright 1.64.1.
 
 77. **Die Wartungsseite `update.php` in Unterseiten aufteilen.** · gehört zu: 12b · Stand: erledigt · seit 02.09.2026
      Befund: Die Seite trug Migrationsliste, Job-Einstieg, Speichergrenze und
