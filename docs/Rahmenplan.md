@@ -1,6 +1,6 @@
 # Rahmenplan — Programm „Gen-EM NAdoku" bis v1.0
 
-**Fassung 168 (21.10.2026)** · Steuerung: Reihenfolge, Status, programmweite
+**Fassung 169 (25.10.2026)** · Steuerung: Reihenfolge, Status, programmweite
 Entscheidungen. Verlauf: `Rahmenplan-Verlauf.md`. Fassungen 1–15:
 `Rahmenplan-Archiv.md`; Fassungen 16–124: `Rahmenplan-Archiv-2.md`.
 
@@ -9,7 +9,7 @@ Uhr 4.0.0 · Android 0.18.0; Web 23.0.1 auf Produktiv seit dem 20.10.2026.
 **Läuft:** 12b — P6 (Abschnitt 3), Zweig `claude/lucid-cannon-nvv86i`: das Review mit Fable ist am 21.10.2026 zu Ende, die Freigaberunde beantwortet; die Pakete R17-18 bis -30 laufen mit Opus (R88), zuerst R17-18.
 **Als Nächstes:** 13 — P7 Gesicht v1.0, nach 12b.
 **Offene PRs:** keine.
-**Fällig bei der Betreiberin:** 37 Posten (Abschnitt 6.1). **`update.php`:** auf Staging und Produktiv nichts offen (Betreiberin, 20.10.2026, nach Web 23).
+**Fällig bei der Betreiberin:** 39 Posten (Abschnitt 6.1). **`update.php`:** auf Staging und Produktiv nichts offen (Betreiberin, 20.10.2026, nach Web 23).
 
 Kennungen sind Namen, keine Reihenfolge.
 
@@ -209,7 +209,9 @@ gestrichen, 6a abgehakt; was steht, ist bestätigt offen.
 | **Umgebung `staging` beschränken** (Deployment branches and tags): `main`, `hotfix/*` **und Tag `web-v*`** — ohne den Tag bleibt jede Produktivauslieferung am Job „Rückfallstand (Staging)" hängen | Kette II Z4 (E-PK-69) | 29.09.2026 | `Pruefdokument-Kette-Haertung.md`, Abgleich |
 | **Umgebung `produktion` beschränken** auf `main` und die Tags `web-v*`, `android-v*`, `uhr-v*` — ein Probelauf fordert sie heute von jedem Zweig an (F-R17-04); dabei Pflichtprüfer und Org-Zweitfaktor nachsehen | 12 (R17-01) | 11.10.2026 | `Pruefdokument-R17-Review.md`, P-R17-04 |
 | **Prüfliste S11:** Gerätetests Uhr 4.0.0 und Android 0.18.0 (P-S11-32 bis -35, -05, -39), Wege auf Staging (-14 bis -31), Safari (-43), Konto-Backup (-45), alte Sicherungen (-07, -08), Rechtstexte (-40) | 12a | 20.10.2026 | `Pruefdokument-S11-Ortsdaten.md` 4 |
-| **Prüfliste DM:** P-DM-02 (Registrierung in Firefox auf Staging: Knopf sofort frei), -03 (dasselbe in Safari), -06 (dasselbe auf Produktiv nach dem Tag `web-v23.0.1`, nur bei offener Registrierung); -04 im ersten Prüfstand einer Nebenstufe | 19 | 20.10.2026 | `Pruefdokument-DM-Drei-Motoren.md` 3 |
+| **Prüfliste DM:** P-DM-02 (Registrierung in Firefox auf Staging: Knopf sofort frei), -03 (dasselbe in Safari), -06 (dasselbe auf Produktiv nach dem Tag `web-v23.0.1`, nur bei offener Registrierung) | 19 | 20.10.2026 | `Pruefdokument-DM-Drei-Motoren.md` 3 |
+| **Tag `web-v23.0.3`** — die CSP ist auf Produktiv scharf, die Adresssuche im Einsatzformular findet bis dahin nichts (bis zum Tag: Report-Only); danach dort eine Adresse suchen | Nr. 393 | 25.10.2026 | `CHANGELOG.md` Web 23.0.3 |
+| **Stufe 2 nach dem Merge von Nr. 393 lesen** — erster Lauf auf `ubuntu-26.04` mit Playwright 1.64.1; bleibt sie rot, ist der Rückweg die Zeile `runs-on` | Nr. 393 | 25.10.2026 | Job „Prüfung Stufe 2"; `CHANGELOG.md` Werkzeug 1.64.1 |
 | **Prüfliste R17:** P-R17-03, -04 (CSP scharf ist Voraussetzung für R17-25), -05; aus 12b P-R17-06 bis -13, davor fällig -12 (keine `config.php`-Kopie) und -13 (die vier Texte) | 12, 12b | 11.10.2026 | `Pruefdokument-R17-Review.md` 4 |
 | **Logdauer des Hosters für Zugriffslogs erfragen** — Tokens in Anfrageadressen stehen dort, bis die Logs fallen (F-R17-22, -57); die Zahl in die Betriebsakte | 12b (R17-19) | 21.10.2026 | `Review-R17.md` 2.3 und 2.3a |
 | **Plattformvergleich Staging vervollständigen:** vier leere Zellen (`max_user_connections`, Kontingent, Platz, Cron) und die Herkunft des Zertifikats aus Betrieb → Status | Kette II | 21.09.2026 | `Technik.md` 6.3a; Prüfpunkt 2c |
