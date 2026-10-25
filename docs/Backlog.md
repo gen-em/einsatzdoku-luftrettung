@@ -52,9 +52,8 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
 
 | Spanne | Zweig | seit |
 |---|---|---|
-| 380 bis 389 | `ccr-dd33b6e8-ismfm0`, für S11-12 `claude/s11-ortsdaten-schritt-12a-2cvh7h` — Schritt 12a, Konzept S11 (Ortsdaten, Weg B); vergeben: 380 bis 388 | 11.10.2026 |
-| 390 bis 399 | `claude/s11-ortsdaten-schritt-12a-2cvh7h` — Schritt 19, Konzept DM (drei Engines); vergeben: 390 bis 393 | 19.10.2026 |
-| ab 400 | frei — höchste vergebene Nummer 392; 372 bis 379 aus der Spanne von 12 blieben frei (PR #103), 362 bis 369 aus der von PK, 359 aus der von 18 (PR #101), 348 und 349 aus der von 17, 338 aus der von AR | 19.10.2026 |
+| 400 bis 409 | `claude/lucid-cannon-nvv86i` — Schritt 12b, Review R17 Stücke 2 bis 12 (Fortsetzung in `Review-R17.md`); vergeben: noch keine | 20.10.2026 |
+| ab 410 | frei — höchste vergebene Nummer 393; frei blieben 394 bis 399 aus der Spanne von 19 (PR #112 bis #114), 389 aus der von 12a (PR #116), 372 bis 379 aus der von 12 (PR #103), 362 bis 369 aus der von PK, 359 aus der von 18 (PR #101), 348 und 349 aus der von 17, 338 aus der von AR | 20.10.2026 |
 
 ---
 
@@ -214,19 +213,6 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      Ziel 13 seit 26.09.2026 (R4-01, E-R4-08); Schritt 17 fasst keine
      Bilddatei an.
      Werdegang bis 26.09.2026: `docs/Backlog.md@f5bddc2`, Nr. 62.
-
-<!-- -->
-
-77. **Die Wartungsseite `update.php` in Unterseiten aufteilen.** · gehört zu: 12b · Stand: teilweise · seit 02.09.2026
-     Befund: Die Seite trug Migrationsliste, Job-Einstieg, Speichergrenze und
-     weitere Betriebsangaben auf einer Fläche.
-     Entschieden 05.09.2026 (E-S8-05): nicht aufteilen, sondern **auflösen** —
-     der Block Betrieb trägt sieben Seiten mit je einem Anliegen;
-     Wartungsmodus und ausstehende Migrationen liegen zusammen auf Updates
-     (R66). Gebaut in S8 AP2 bis AP4; `update.php` ist seit Web 15.2.0 eine
-     302-Weiterleitung, der Notausgang `php update.php` bleibt.
-     Weg: Offen ist allein, dass die Adresse noch existiert — das räumt P6.
-     Werdegang bis 26.09.2026: `docs/Backlog.md@f5bddc2`, Nr. 77.
 
 <!-- -->
 
@@ -670,7 +656,7 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
 
 <!-- -->
 
-263. **Die Integritätswache sieht nur, was öffentlich abrufbar ist.** · gehört zu: 12b · Stand: offen · seit 21.09.2026
+263. **Die Integritätswache sieht nur, was öffentlich abrufbar ist.** · gehört zu: nach v1.0 · Stand: nicht umsetzen · seit 21.09.2026
      *Aufgenommen 21.09.2026 (Kette II, Einschub Abschnitt 8).* Priorität:
      niedrig. **Abhilfe offen — hier wird die Grenze benannt, nicht
      geschlossen.**
@@ -688,8 +674,8 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      **Warum die Abhilfe offen bleibt:** Sie hieße, dem Server eine Schnittstelle
      zum Hashen der eigenen Quelldateien zu geben — ein neuer Angriffsweg für
      ein Problem, das der Vergleich nur teilweise löst.
-     Stand 11.10.2026 (Schritt 12, E-R17-12): Das Bedrohungsmodell benennt die
-     Grenze (G5, 6.6); Stück 10 des Reviews (12b) liest die Wache und entscheidet.
+     Entschieden 21.10.2026 (12b, E-R17-26): **nicht umsetzen** — die Grenze
+     steht im Modell (G5, 6.6); Anleitung, Alarmweg und lesende Probe gegen Produktiv baut R17-19.
 
 <!-- -->
 

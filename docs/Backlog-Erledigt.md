@@ -9638,3 +9638,17 @@ zutreffen.
      Screenshot-CSP, abgebrochene Abrufe, Demo-Marke, Bedienprobe; Firefox:
      Stilvergleich, F-DM-10) und vier der Anwendung (CSP im Formular,
      zip.js, Auslassliste, Stat-Cache). Offen: Stufe 2 nach dem Merge.
+
+77. **Die Wartungsseite `update.php` in Unterseiten aufteilen.** · gehört zu: 12b · Stand: erledigt · seit 02.09.2026
+     Befund: Die Seite trug Migrationsliste, Job-Einstieg, Speichergrenze und
+     weitere Betriebsangaben auf einer Fläche.
+     Entschieden 05.09.2026 (E-S8-05): nicht aufteilen, sondern **auflösen** —
+     der Block Betrieb trägt sieben Seiten mit je einem Anliegen;
+     Wartungsmodus und ausstehende Migrationen liegen zusammen auf Updates
+     (R66). Gebaut in S8 AP2 bis AP4; `update.php` ist seit Web 15.2.0 eine
+     302-Weiterleitung, der Notausgang `php update.php` bleibt.
+     Weg: Offen ist allein, dass die Adresse noch existiert — das räumt P6.
+     Werdegang bis 26.09.2026: `docs/Backlog.md@f5bddc2`, Nr. 77.
+     Erledigt 21.10.2026 (12b, Freigaberunde, E-R17-25): Die Weiche bleibt —
+     die Adresse steht in Runbooks, Lesezeichen und `WARTUNG_AUSNAHMEN`, der
+     Notausgang `php update.php` auch. Nichts mehr zu bauen.
