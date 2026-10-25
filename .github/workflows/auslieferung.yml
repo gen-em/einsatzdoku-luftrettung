@@ -212,8 +212,8 @@ jobs:
             exit 1
           fi
           if [ -z "${JOBS_TOKEN:-}" ]; then
-            echo "::error::JOBS_TOKEN der Umgebung staging fehlt — der Kreislauf kann nicht messen, und ÜBERSPRINGEN IST SEIT AP6 ROT (B5, E-KH-12). Der Wert steht auf Staging unter Betrieb -> Hintergrundjobs."
-            echo '**Kreislauf: NICHT GEMESSEN** (kein `JOBS_TOKEN`) — der Lauf ist deshalb rot. Der Wert steht auf Staging unter Betrieb → Hintergrundjobs.' >> "$GITHUB_STEP_SUMMARY"
+            echo "::error::JOBS_TOKEN der Umgebung staging fehlt — der Kreislauf kann nicht messen, und ÜBERSPRINGEN IST SEIT AP6 ROT (B5, E-KH-12). Gemeint ist das Kettentoken: auf Staging unter Betrieb -> Hintergrundjobs, Karte Auslieferungskette (nicht Ausloeser)."
+            echo '**Kreislauf: NICHT GEMESSEN** (kein `JOBS_TOKEN`) — der Lauf ist deshalb rot. Gemeint ist das Kettentoken: auf Staging unter Betrieb → Hintergrundjobs, Karte „Auslieferungskette“.' >> "$GITHUB_STEP_SUMMARY"
             exit 1
           fi
           # FESTE FASSUNGEN MIT HASHES (R17-19, F-R17-20). Bis dahin
@@ -223,8 +223,10 @@ jobs:
           # ihren SHA-256 und npm gegen die Integritätswerte der Sperrdatei.
           # `--ignore-installed`: Bringt das Abbild eine Fassung per apt mit,
           # kann pip sie nicht deinstallieren (kein RECORD) und bräche ab; so
-          # liegt die gepinnte daneben und gewinnt.
-          pip -q install --require-hashes --ignore-installed -r tools/kette/stufe2-anforderungen.txt
+          # liegt die gepinnte daneben und gewinnt. `--only-binary :all:`
+          # (Gegenprüfung R17-19): Ohne Rad baute pip aus dem Quellstand, und
+          # dessen Build-Abhängigkeiten prüft `--require-hashes` nicht.
+          pip -q install --require-hashes --only-binary :all: --ignore-installed -r tools/kette/stufe2-anforderungen.txt
           # DIE FASSUNG STEHT EINMAL, in `tools/sandbox/aufbauen.sh` (Nr. 393):
           # Stufe 2 muss dieselben Engines messen wie der Prüfstand. Die
           # Sperrdatei trägt dieselbe Zahl ein zweites Mal — mit den
@@ -241,7 +243,10 @@ jobs:
             exit 1
           fi
           echo "Playwright $PW_FASSUNG (Sperrdatei gleich)"
-          npm ci --prefix tools/kette/stufe2-npm --no-audit --no-fund --silent
+          # `--ignore-scripts`: Kein Paket der Sperrdatei braucht ein
+          # Installationsskript; eines, das künftig dazukäme, liefe sonst mit
+          # den Geheimnissen dieses Jobs.
+          npm ci --prefix tools/kette/stufe2-npm --ignore-scripts --no-audit --no-fund --silent
           export PLAYWRIGHT_MODUL="$PWD/tools/kette/stufe2-npm/node_modules/playwright/index.mjs"
           [ -f "$PLAYWRIGHT_MODUL" ] \
             || { echo "::error::Playwright-Modul fehlt unter $PLAYWRIGHT_MODUL"; exit 1; }
@@ -493,6 +498,11 @@ jobs:
     steps:
       - name: Code auschecken
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        # Ohne: Der Checkout legte das Lauf-Token in `.git/config`, und Gradle
+        # läuft im selben Baum — `env -i` schützt die Umgebung, nicht die Datei
+        # (Gegenprüfung R17-19). Gebraucht wird es hier nicht.
+        with:
+          persist-credentials: false
 
       - name: Java 21 für AGP 9
         uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5
@@ -541,6 +551,8 @@ jobs:
     steps:
       - name: Code auschecken
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false   # `gh run download` nimmt GH_TOKEN, nicht .git/config
 
       # `apksigner` ist ein Java-Werkzeug; dieselbe Fassung wie beim Bau.
       - name: Java 21 für apksigner

@@ -51,7 +51,10 @@ import shlex
 import sys
 
 WURZEL = pathlib.Path(__file__).resolve().parents[2]
-LAEUFE = sorted((WURZEL / '.github' / 'workflows').glob('*.yml'))
+# `.yml` UND `.yaml` (Gegenpruefung R17-19): GitHub faehrt beide, und eine neue
+# Datei `x.yaml` mit `uses: foo/bar@main` blieb sonst ungesehen.
+LAEUFE = sorted([*(WURZEL / '.github' / 'workflows').glob('*.yml'),
+                 *(WURZEL / '.github' / 'workflows').glob('*.yaml')])
 # SEIT PK-03 AUCH DIE ZUORDNUNG DES PRUEFSTANDS. Sie fuehrt dieselbe Art von
 # Aufruf wie ein Kettenschritt — und sie ist beim ersten Lauf an genau
 # denselben Fehlern gescheitert (`--format` statt `--art`, ein `./gradlew`
@@ -376,7 +379,10 @@ def pruefe_block(lauf: str, schritt: str, block: str) -> tuple[list[str], list[s
 # Text — die Selbstprobe legt ihnen damit jeden Fehler hin, ohne das
 # Repositorium anzufassen.
 
-USES_RE = re.compile(r'^\s*(?:-\s+)?uses:\s*(\S+)(.*)$')
+# AUCH IN DER FLOW-SCHREIBWEISE (Gegenpruefung R17-19): `- { uses: x@v7 }` ist
+# gueltiges YAML und laeuft; der Anker `^\s*(-\s+)?uses:` sah es nicht. Hinter
+# `{` oder `,` zaehlt `uses:` deshalb ebenso.
+USES_RE = re.compile(r'(?:^\s*(?:-\s+)?|[{,]\s*)uses:\s*([^\s,}]+)(.*)$')
 SHA_RE = re.compile(r'^[\w.-]+/[\w.-]+(?:/[\w./-]+)?@[0-9a-f]{40}$')
 
 
@@ -396,7 +402,7 @@ def fremde_aktionen(texte: dict[str, str]) -> tuple[list[str], int, int]:
     fremd = gepinnt = 0
     for name, text in sorted(texte.items()):
         for nr, zeile in enumerate(text.split('\n'), 1):
-            m = USES_RE.match(zeile)
+            m = USES_RE.search(zeile)
             if not m or zeile.lstrip().startswith('#'):
                 continue
             ziel, rest = m.group(1).strip('\'"'), m.group(2)
@@ -427,9 +433,14 @@ AUSNAHMEN_ALLGEMEIN = ('**/.git*', '**/.git*/**', '**/node_modules/**')
 NICHT_IN_GITIGNORE = ('install.php',)
 
 
-def ausnahmen_lesen(lauf_text: str) -> list[str] | None:
-    """Die Eintraege unter `exclude: |` — oder None, wenn es den Block nicht gibt."""
+def ausnahmen_bloecke(lauf_text: str) -> list[list[str]]:
+    """Die Eintraege JEDES Blocks `exclude: |`, in der Reihenfolge der Datei.
+
+    ALLE, nicht der erste (Gegenpruefung R17-19): Bekaeme ein zweiter
+    Abgleich-Schritt eine eigene, kuerzere Liste, bliebe sie ungeprueft — und
+    genau die zweite Liste schliesst `CLAUDE.md` 3 aus (E-KH-20 (1))."""
     zeilen = lauf_text.split('\n')
+    bloecke: list[list[str]] = []
     for i, z in enumerate(zeilen):
         m = re.match(r'^(\s*)exclude:\s*\|\s*$', z)
         if not m:
@@ -442,8 +453,14 @@ def ausnahmen_lesen(lauf_text: str) -> list[str] | None:
             if len(w) - len(w.lstrip()) <= tiefe:
                 break
             aus.append(w.strip())
-        return aus
-    return None
+        bloecke.append(aus)
+    return bloecke
+
+
+def ausnahmen_lesen(lauf_text: str) -> list[str] | None:
+    """Die Eintraege des ersten Blocks `exclude: |` — oder None, wenn es keinen gibt."""
+    bloecke = ausnahmen_bloecke(lauf_text)
+    return bloecke[0] if bloecke else None
 
 
 def ausnahmeliste_pruefen(lauf_text: str, ist_ignoriert, getrackt: list[str]
@@ -463,6 +480,10 @@ def ausnahmeliste_pruefen(lauf_text: str, ist_ignoriert, getrackt: list[str]
     if ist is None:
         return ['ausliefern-lauf.yml: kein Block `exclude: |` gefunden — die '
                 'Ausnahmeliste fehlt ganz'], 0
+    zahl = len(ausnahmen_bloecke(lauf_text))
+    if zahl > 1:
+        ab.append(f'ausliefern-lauf.yml: {zahl} Bloecke `exclude: |` — die Liste steht '
+                  f'EINMAL (E-KH-20 (1)); zwei Listen sind keine zwei Riegel')
     soll = set(AUSNAHMEN_DATEIEN) | set(AUSNAHMEN_ALLGEMEIN)
     for v in AUSNAHMEN_VERZEICHNISSE:
         soll |= {f'{v}/**', f'{v}/'}
@@ -502,7 +523,10 @@ def riegel_lauf() -> tuple[list[str], list[str]]:
         r = subprocess.run(['git', '-C', str(WURZEL), 'check-ignore', '-q', pfad])
         return r.returncode == 0
 
-    r = subprocess.run(['git', '-C', str(WURZEL), 'ls-files', '--', 'server/config.php*'],
+    # UEBERALL, nicht nur `server/config.php*` (Gegenpruefung R17-19): Eine
+    # Kopie in `server/api/` oder unter `tools/` ist dasselbe Leck.
+    r = subprocess.run(['git', '-C', str(WURZEL), 'ls-files', '--',
+                        ':(glob)**/config.php?*', ':(glob)config.php?*'],
                        capture_output=True, text=True)
     getrackt = [z for z in r.stdout.split('\n') if z.strip()]
     ab2, pfade = ausnahmeliste_pruefen(lauf_text, ist_ignoriert, getrackt)
@@ -661,6 +685,10 @@ def selbstprobe() -> int:
          '    uses: ./.github/workflows/ausliefern-lauf.yml'),
         ('GEGENPROBE: auskommentierte uses-Zeile', False,
          '      # - uses: actions/checkout@v7'),
+        ('Riegel 1: Flow-Schreibweise `- { uses: …@v7 }`', True,
+         '      - { uses: actions/checkout@v7 }'),
+        ('GEGENPROBE: Flow-Schreibweise an SHA mit Fassung', False,
+         f'      - {{ name: x, uses: actions/checkout@{sha} }} # v7'),
     ]
     for name, soll, zeile in riegel1:
         ab, _, _ = fremde_aktionen({'probe.yml': zeile})
@@ -692,6 +720,8 @@ def selbstprobe() -> int:
          liste_gut, alles_ignoriert, ['server/config.php.vor-probe']),
         ('Riegel 2: kein Block `exclude: |`', True,
          '      - name: nur ein Schritt\n', alles_ignoriert, []),
+        ('Riegel 2: eine ZWEITE Ausnahmeliste', True,
+         liste_gut + liste_gut, alles_ignoriert, []),
     ]
     for name, soll, text, ign, getr in riegel2:
         ab, _ = ausnahmeliste_pruefen(text, ign, getr)

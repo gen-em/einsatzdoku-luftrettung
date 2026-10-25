@@ -22,9 +22,10 @@ Täglich und nach jeder Auslieferung (`integritaet.yml`), Selbstprobe zuerst.
 ## Was es braucht
 
 Den Zweig `produktion` (fehlt er, ist sie rot) und `WACHE_BASIS`. **Und eine
-Benachrichtigung, die ankommt:** Rot meldet nur GitHub, an das Konto, das die
-`cron`-Zeile zuletzt geändert hat — ist dort die Meldung fehlgeschlagener
-Läufe aus, bleibt Rot unbemerkt (F-R17-15).
+Benachrichtigung, die ankommt:** Rot meldet nur GitHub — täglich an das Konto,
+das die `cron`-Zeile zuletzt geändert hat, nach einer Auslieferung an das, das
+sie auslöste; ist dort die Meldung fehlgeschlagener Läufe aus, bleibt Rot
+unbemerkt (F-R17-15).
 
 ## Erwartete Zahl
 
@@ -35,6 +36,5 @@ nicht ausgeliefert"; Selbstprobe **51 / 0** (25.10.2026). **Ist sie rot:**
 
 ## Was es nicht kann
 
-Keinen PHP-Quelltext, keine `config.php`, nicht den Inhalt der `.htaccess` —
-nur deren Wirkung (Nr. 263, nicht umsetzen); keinen Angreifer mit Push-Recht,
-keine Datenbank. *(Bis R17-19 beschrieb diese Anleitung eine Wache mit FTPS.)*
+Keinen PHP-Quelltext, keine `config.php`, nicht die `.htaccess` — nur ihre Wirkung
+(Nr. 263); keinen Angreifer mit Push-Recht, keine Datenbank. *(Bis R17-19: „mit FTPS".)*

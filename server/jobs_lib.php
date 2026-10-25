@@ -640,8 +640,20 @@ function jobs_token(bool $neu = false): string
         $wert = app_state_lesen(JOB_TOKEN_SCHLUESSEL);
         if ($wert !== null && $wert !== '') { return $wert; }
     }
+    /* ZUERST DAS KETTENTOKEN (R17-19, Gegenpruefung E-R17-43). Es uebernimmt
+     * beim ersten Lesen den Wert des Job-Tokens — gedacht fuer das Update
+     * einer Anlage, deren Kette den alten Wert kennt. Entstand das Job-Token
+     * vorher, auf einer NEUEN Anlage, uebernahm das Kettentoken danach dessen
+     * frischen Wert, und beide blieben dauerhaft gleich: die Trennung, die
+     * Web 23.1.0 bringen soll, gab es dort nie. Und wer nach dem Update
+     * zuerst das Job-Token erneuerte, gab dem Kettentoken den NEUEN Wert, den
+     * die Kette nicht kennt. Hier vorher gelesen, bekommt es auf einer neuen
+     * Anlage einen eigenen Zufallswert und beim Erneuern den bisherigen. */
+    kette_token();
     $token = bin2hex(random_bytes(32));
-    app_state_setzen(JOB_TOKEN_SCHLUESSEL, $token);
+    if (!app_state_setzen(JOB_TOKEN_SCHLUESSEL, $token)) {
+        throw new RuntimeException('Das Job-Token ließ sich nicht speichern — das bisherige gilt weiter.');
+    }
     return $token;
 }
 
@@ -675,7 +687,11 @@ function kette_token(bool $neu = false): string
 {
     if ($neu) {
         $token = bin2hex(random_bytes(32));
-        app_state_setzen(KETTE_TOKEN_SCHLUESSEL, $token);
+        /* Scheitert das Schreiben, gilt das alte weiter — und wer wegen eines
+         * Lecks erneuert, darf nicht „steht bereit" lesen. */
+        if (!app_state_setzen(KETTE_TOKEN_SCHLUESSEL, $token)) {
+            throw new RuntimeException('Das Kettentoken ließ sich nicht speichern — das bisherige gilt weiter.');
+        }
         return $token;
     }
     return app_state_einmalig(KETTE_TOKEN_SCHLUESSEL, static function (): string {

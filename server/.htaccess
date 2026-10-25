@@ -71,8 +71,11 @@ RewriteRule "(^|/)\.(?!well-known/)" - [F,L]
 # endet nicht auf `.php`, laeuft also nicht durch PHP und kaeme als Text
 # heraus, samt Datenbankzugang, Serverschluessel und Anteil. Die Proben legen
 # ihre Sicherung seither ausserhalb von `server/` ab; diese Zeile ist der
-# zweite Riegel fuer alles, was sonst noch so heisst.
-<FilesMatch "^(config\.php.*|config\.example\.php|schema\.sql|db\.php|smtp\.php|auth_guard\.php|install\.lock)$">
+# zweite Riegel fuer alles, was sonst noch so heisst. `(?i)` und `#?`
+# (Gegenpruefung R17-19): `Config.php.bak` kaeme sonst durch, ebenso die
+# Sicherung `#config.php#` von Emacs; `.#config.php` faengt schon die
+# Punktregel oben.
+<FilesMatch "^(?i:#?config\.php.*|config\.example\.php|schema\.sql|db\.php|smtp\.php|auth_guard\.php|install\.lock)$">
   Require all denied
 </FilesMatch>
 

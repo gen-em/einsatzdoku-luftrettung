@@ -42,6 +42,14 @@ Tokens erneuern** (siehe „Bewusst so").
   Das hätte den „Cronjob per URL" gebrochen, eine dokumentierte Bedienung
   für Hoster ohne Kommandozeile. Die Trennung nimmt dem Protokoll den
   gefährlichen Teil und lässt den harmlosen, wo er gebraucht wird.
+  **Wer zuerst entsteht, entscheidet die Gegenprüfung:** Das Kettentoken
+  übernimmt beim ersten Lesen den Wert des Job-Tokens — für das Update. Auf
+  einer *neuen* Anlage legte die Seite aber zuerst das Job-Token an, und
+  beide blieben für immer gleich. Jetzt legt `jobs_token()` vorher das
+  Kettentoken an: auf einer neuen Anlage mit eigenem Wert, beim ersten
+  Erneuern nach dem Update mit dem alten, den die Kette kennt. Und ein
+  Erneuern, das nicht gespeichert werden konnte, meldet sich als Fehler
+  statt als „steht bereit".
 
 ### Geändert
 
@@ -103,7 +111,8 @@ Tokens erneuern** (siehe „Bewusst so").
 - **Zwei neue Riegel in Stufe 1** (F-R17-16), im Schritt „Kettenaufrufe":
   Jede fremde `uses:`-Zeile hängt an einer 40-stelligen SHA mit Fassung
   daneben, und die Ausnahmeliste der Kette hält ihre Sollliste von acht
-  Pfaden, jeder Serverpfad steht auch in `.gitignore`, und keine
+  Pfaden, jeder Serverpfad außer `install.php` steht auch in `.gitignore`
+  (Nr. 214), und keine
   `server/config.php*` ist eingecheckt. Bis dahin waren das zwei Prüfwerte
   in `CLAUDE.md` 3, die nur ein Handbefehl nachzählte.
 - **Die Integritätswache misst die Punktpfade jetzt auch auf Produktiv**
@@ -121,6 +130,15 @@ Tokens erneuern** (siehe „Bewusst so").
 - **Die Deny-Liste** in `.claude/settings.json` sperrt zusätzlich
   `push_files` und `actions_run_trigger` (F-R17-14): Eine Instanz schiebt
   nicht an Git vorbei und startet keine Läufe.
+- **Aus der lesenden Gegenprüfung** (drei Agenten, E-R17-43): Der
+  Bau-Job checkt ohne gespeichertes Lauf-Token aus (`persist-credentials:
+  false` — `env -i` schützte die Umgebung, nicht `.git/config`); Stufe 2
+  installiert pip nur aus Rädern (`--only-binary :all:`) und npm ohne
+  Installationsskripte; die `.htaccess` sperrt `config.php*` ohne Rücksicht
+  auf Groß- und Kleinschreibung und samt `#config.php#`; der Riegel liest
+  auch `.yaml` und die Flow-Schreibweise `- { uses: … }`, meldet eine zweite
+  Ausnahmeliste und sucht eingecheckte Kopien der `config.php` im ganzen
+  Baum; `appbau.sh` bricht ab, wenn das Kopieren eines APK scheitert.
 - **Der Rundlauf der Uhr fragt die Tabelle, nicht entfernte Spalten**
   (F-R17-63). `rundlauf/pruefen.php` las `lat` und `lon` aus
   `mission_phases`; die Spalten fielen mit S11-12 weg, zwei Tage nachdem

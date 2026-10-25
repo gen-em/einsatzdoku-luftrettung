@@ -28,9 +28,9 @@ Datenbank, keine Installation.
 
 ## Erwartete Zahl
 
-**0 Befunde** („ungeprüft" ist kein Beiwerk, F-PK-20). 25.10.2026: **135
-Aufrufe, 0 Befunde, 3 ungeprüft; 19 Aktionszeilen gepinnt; 8 Serverpfade,
-0 eingecheckte Kopien**; `--probe` → **37 von 37**.
+**0 Befunde** („ungeprüft" ist kein Beiwerk, F-PK-20). 25.10.2026: **137
+Aufrufe, 0 Befunde, 4 ungeprüft; 19 Aktionszeilen gepinnt; 8 Serverpfade,
+0 eingecheckte Kopien**; `--probe` → **40 von 40**.
 
 ## Was es nicht kann
 

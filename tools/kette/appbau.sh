@@ -137,8 +137,9 @@ android_bauen() {
     for m in handy uhr; do
         roh="$WURZEL/android/$m/build/outputs/apk/release/$m-release-unsigned.apk"
         [ -f "$roh" ] || { fehler "$roh fehlt nach dem Bau."; return 1; }
-        cp "$roh" "$aus/"
-        (cd "$aus" && sha256sum "$m-release-unsigned.apk" >> pruefsummen.txt)
+        cp "$roh" "$aus/" || { fehler "$m-release-unsigned.apk ließ sich nicht kopieren."; return 1; }
+        (cd "$aus" && sha256sum "$m-release-unsigned.apk" >> pruefsummen.txt) \
+            || { fehler "Prüfsumme von $m-release-unsigned.apk gescheitert."; return 1; }
     done
     sag "Android $f unsigniert gebaut:"
     sed 's/^/  /' "$aus/pruefsummen.txt"

@@ -377,7 +377,7 @@ in der Dokumentation steht, ist keiner mehr.
 | `NADOKU_STAGING_URL` | Adresse der Prüfanlage | gesetzt, 33 Zeichen |
 | `NADOKU_STAGING_KONTO` | Prüfkonto dort | gesetzt, 18 Zeichen |
 | `NADOKU_STAGING_PASS` | dessen Passwort | gesetzt, 25 Zeichen |
-| `NADOKU_STAGING_JOBS_TOKEN` | Aufruf von `jobs.php` | gesetzt, 64 Zeichen |
+| `NADOKU_STAGING_JOBS_TOKEN` | Aktionen von `jobs.php` — seit Web 23.1.0 das **Kettentoken** (Karte „Auslieferungskette") | gesetzt, 64 Zeichen |
 | `_MAIL_URL` | Webmail der Prüfanlage | gesetzt, 17 Zeichen |
 | `_MAIL_USER` | Postfach dort | gesetzt, 18 Zeichen |
 | `_MAIL_PASS` | dessen Passwort | gesetzt, 20 Zeichen |

@@ -11,8 +11,11 @@
 #     pycparser==3.11
 #   pip-compile --generate-hashes --allow-unsafe --no-header --strip-extras
 # Die Hashes decken JEDE Datei der Fassung (alle Räder und den Quellstand),
-# also Läufer (Python 3.12) und Container (3.13) gleichermaßen. Wer eine
-# Fassung hebt, erzeugt die Datei neu, statt einen Hash von Hand zu ändern.
+# also jede Python-Fassung, für die PyPI ein Rad hat — für 3.12 bis 3.14 unter
+# Linux x86_64 alle drei Pakete (gesehen am 25.10.2026). Stufe 2 installiert mit
+# `--only-binary :all:`: Fehlt ein Rad, ist sie rot, statt aus dem Quellstand
+# mit ungeprüften Build-Abhängigkeiten zu bauen. Wer eine Fassung hebt,
+# erzeugt die Datei neu, statt einen Hash von Hand zu ändern.
 cffi==2.1.1 \
     --hash=sha256:046bfc24911b37851ee1b51aab8bffe713d89c68c6a057b09484ce9fd5f69b4e \
     --hash=sha256:06c72bb76605a4b0cd0aad6930b69d4baf7dd5d806cfc409b824191099700e66 \

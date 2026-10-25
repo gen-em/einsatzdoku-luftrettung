@@ -3846,6 +3846,12 @@ schaltet vor dem Abgleich mit dem alten Wert die Wartung ein und fragt danach
 die neue Fassung nach Zustand und `wartung_aus` — mit einem fremden Token
 bliebe die Anlage in der Wartung. Getrennt sind beide, sobald eines erneuert
 wird; das Runbook (7, „Die zwei Tokens nach dem Update erneuern") sagt, wann.
+**Die Übernahme greift nur beim Update:** `jobs_token()` legt das
+Kettentoken an, bevor es selbst entsteht oder erneuert wird. Auf einer neuen
+Anlage bekommt es so einen eigenen Wert, und wer nach dem Update zuerst das
+Job-Token erneuert, gibt dem Kettentoken den alten Wert, den die Kette kennt
+(Gegenprüfung R17-19; bis dahin blieben beide auf einer neuen Anlage
+dauerhaft gleich).
 
 Wer ein Token hat, kann die Wartung anstoßen; mehr nicht. Er kann damit weder
 Daten lesen noch schreiben. `jobs.php` prüft es mit `hash_equals`, hinter dem
@@ -5492,13 +5498,13 @@ Datei- und Verzeichnismuster getrennt.
 `android-bau` und `android` in `.github/workflows/auslieferung.yml`); bis
 dahin lud die BetreiberIn per FTPS hoch. Der Weg:
 
-1. **Tag `android-vX.Y.Z`** — er muss zu `android/version.properties` passen,
-   sonst ist der Lauf rot, bevor gebaut wird (E-PK-60).
-2. **Das App-Tor** (Job `app-tor`, seit R17-19, F-R17-17, E-R17-33): ein
-   grüner Job `Stufe 1` auf demselben Baum und der Commit auf `main`
-   (`freigabe.py app-urteil`, `baumsuche.py`). Bis dahin baute die Kette
-   jeden Commit, der Tag = Fassung trug — auch einen nie geprüften. Dasselbe
-   Tor steht vor dem Job `uhr`.
+1. **Das App-Tor** (Job `app-tor`, seit R17-19, F-R17-17, E-R17-33), vor
+   allem anderen: ein grüner Job `Stufe 1` auf demselben Baum und der Commit
+   auf `main` (`freigabe.py app-urteil`, `baumsuche.py`). Bis dahin baute die
+   Kette jeden Commit, der Tag = Fassung trug — auch einen nie geprüften.
+   Dasselbe Tor steht vor dem Job `uhr`.
+2. **Tag `android-vX.Y.Z`** — er muss zu `android/version.properties` passen,
+   sonst ist der Bau-Job rot, bevor gebaut wird (E-PK-60; `appbau.sh`).
 3. **Bauen ohne Geheimnisse** (Job `android-bau`, `appbau.sh
    android-bauen`): Gradle baut Handy und Wear OS **unsigniert**, in einem
    Job ohne Umgebung und ohne Geheimnis, mit einer Positivliste als
@@ -5652,7 +5658,9 @@ Prüfung als Bash nur in Stufe 2 — und Staging liegt bei einem anderen Hoster
 (6.3a), belegte also nie, dass Produktiv `.htaccess` überhaupt liest.
 
 **Und seit Web 23.1.0 sperrt `FilesMatch` jede Datei, die mit `config.php`
-beginnt** (`config\.php.*`, F-R17-55): Eine Kopie wie `config.php.bak` endet
+beginnt** (`(?i:#?config\.php.*|…)`, F-R17-55) — ohne Rücksicht auf
+Groß- und Kleinschreibung und samt der Emacs-Sicherung `#config.php#`
+(Gegenprüfung R17-19): Eine Kopie wie `config.php.bak` endet
 nicht auf `.php`, läuft nicht durch PHP und käme als Text heraus. Bis dahin
 legten drei Prüfmittel ihre Sicherung genau so daneben; sie sichern
 inzwischen ins Temp-Verzeichnis, und die Zeile ist der zweite Riegel.
@@ -8728,7 +8736,13 @@ und erfährt, ob die Anlage läuft — ohne sich anzumelden und ohne dass die
 Anwendung einen Fremddienst anbindet. Der Endpunkt antwortet nur, wenn er
 gefragt wird.
 
+    GET /api/health.php          X-Health-Token: <betrieb.health_token>
     GET /api/health.php?token=<betrieb.health_token>
+
+**Die Kopfzeile seit Web 23.1.0** (R17-19, F-R17-22): Ein Token in der
+Adresse steht in jedem Zugriffsprotokoll des Hosters, eine Kopfzeile nicht.
+Die Adresse geht weiter, für Dienste, die keine Kopfzeile setzen können;
+stehen beide da, gilt die Kopfzeile.
 
 **Der Token steht in `config.php`** (`'betrieb' => ['health_token' => …]`,
 Vorlage in `config.example.php`). **Leer heißt: Endpunkt aus.** Er steht
@@ -11837,7 +11851,8 @@ nicht. Weil das Tor der grünen Läufe einen **als Ganzes** grünen
 Staging-Lauf verlangt, kam damit kein Tag durch — der erste Versuch mit
 `web-v20.26.3` (Lauf 35646453443) scheiterte genau daran, ohne Produktiv zu
 berühren (Nr. 268). Was der Bilderlauf auf Staging noch brauchte
-(`JOBS_TOKEN` für die zwei Wartungsseiten, Nr. 220; der Bericht mit der
+(`JOBS_TOKEN` für die zwei Wartungsseiten, Nr. 220 — seit Web 23.1.0 das
+Kettentoken; der Bericht mit der
 Spalte `Verursacher` in der Zusammenfassung, Nr. 221), gilt für seinen Lauf
 in der Sandbox weiter.
 

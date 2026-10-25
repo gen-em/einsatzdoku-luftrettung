@@ -550,6 +550,7 @@ pruefe($a9['code'] === 403 && ($a9['daten']['error'] ?? '') === 'token',
  * zurueckgelegt; die Fehlversuche im Topf `pair` raeumt der Block selbst weg,
  * sonst sperrte der zehnte Lauf binnen zehn Minuten den eigenen Anschluss. */
 $ketteVorher = app_state_lesen(KETTE_TOKEN_SCHLUESSEL);
+$jobVorher   = app_state_lesen(JOB_TOKEN_SCHLUESSEL);
 $pdo->exec("DELETE FROM rate_limits WHERE topf = 'pair'");
 $pdo->prepare('DELETE FROM app_state WHERE k = ?')->execute([KETTE_TOKEN_SCHLUESSEL]);
 try {
@@ -585,11 +586,37 @@ try {
     pruefe($a9f['code'] === 403 && ($a9f['daten']['error'] ?? '') === 'token',
            '9f  Token in der Adresse, Aktion im Rumpf -> 403 token (genau das Protokollleck)',
            'HTTP ' . $a9f['code']);
+
+    /* 9g, 9h  WER ZUERST ENTSTEHT (Gegenpruefung R17-19, E-R17-43). Bis dahin
+     * legte die Seite das Job-Token vor dem Kettentoken an, und auf einer
+     * NEUEN Anlage uebernahm das Kettentoken danach dessen Wert — beide
+     * blieben dauerhaft gleich. */
+    $loesche = $pdo->prepare('DELETE FROM app_state WHERE k = ?');
+    $loesche->execute([KETTE_TOKEN_SCHLUESSEL]);
+    $loesche->execute([JOB_TOKEN_SCHLUESSEL]);
+    $neuJob = jobs_token();
+    $neuKette = app_state_lesen(KETTE_TOKEN_SCHLUESSEL);
+    pruefe($neuKette !== null && $neuKette !== '' && $neuKette !== $neuJob,
+           '9g  neue Anlage: das erste Job-Token legt ein EIGENES Kettentoken an, nicht denselben Wert',
+           'Kettentoken ' . ($neuKette === null ? 'fehlt' : ($neuKette === $neuJob ? 'GLEICH' : 'eigen')));
+
+    $loesche->execute([KETTE_TOKEN_SCHLUESSEL]);
+    $alt = jobs_token();
+    $erneuert = jobs_token(true);
+    $danach = app_state_lesen(KETTE_TOKEN_SCHLUESSEL);
+    pruefe($danach === $alt && $erneuert !== $alt,
+           '9h  Update, Job-Token zuerst erneuert: das Kettentoken behaelt den ALTEN Wert, den die Kette kennt',
+           'Kettentoken ' . ($danach === $alt ? 'alt' : ($danach === $erneuert ? 'NEU' : 'anders')));
 } finally {
     if ($ketteVorher === null) {
         $pdo->prepare('DELETE FROM app_state WHERE k = ?')->execute([KETTE_TOKEN_SCHLUESSEL]);
     } else {
         app_state_setzen(KETTE_TOKEN_SCHLUESSEL, $ketteVorher);
+    }
+    if ($jobVorher === null) {
+        $pdo->prepare('DELETE FROM app_state WHERE k = ?')->execute([JOB_TOKEN_SCHLUESSEL]);
+    } else {
+        app_state_setzen(JOB_TOKEN_SCHLUESSEL, $jobVorher);
     }
     $pdo->exec("DELETE FROM rate_limits WHERE topf = 'pair'");
 }
