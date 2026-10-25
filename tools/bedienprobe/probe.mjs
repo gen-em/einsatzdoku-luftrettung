@@ -406,7 +406,10 @@ async function kasten(rolle, weg, breite) {
    * Startseite lud sich selbst neu, und der nächste Weg der Demo-Rolle hing
    * 64 ms nach Beginn des Aufrufs für immer (`da-faehigkeiten-nach-typ`,
    * zweimal im vollen Lauf). Im Prüfstand ist es eine Breite, und die stimmt
-   * seit dem Anlegen des Kontexts; der Aufruf war dort nie nötig. */
+   * seit dem Anlegen des Kontexts; der Aufruf war dort nie nötig.
+   * Seit dem 25.10.2026 ist klar, dass das Neuladen wohl nur die Wirkung
+   * war: Am selben Weg war die Seite in fünf von neun vollen Läufen schon
+   * VOR dem Weg stumm, ohne einen einzigen Aufruf (`lebtDieSeite()` oben). */
   const jetzt = r.seite.viewportSize();
   if (!jetzt || jetzt.width !== breite || jetzt.height !== 900) {
     await r.seite.setViewportSize({ width: breite, height: 900 });
@@ -632,6 +635,56 @@ async function kasten(rolle, weg, breite) {
 if (!flag('--behalten')) { rmSync(AUSGABE, { recursive: true, force: true }); }
 mkdirSync(AUSGABE, { recursive: true });
 
+/** Einen Weg EINMAL fahren, mit Zeitgrenze. Zurück kommen das Ergebnis,
+ *  ob er an einer Zeitüberschreitung scheiterte (`zeit`) und ob seine Rolle
+ *  dabei schon verworfen wurde (`verworfen`). */
+async function einmalFahren(weg, breite) {
+  let e, wecker, zeit = false, verworfen = false;
+  const frist = new Promise((_, nein) => {
+    wecker = setTimeout(() => nein(Object.assign(
+      new Error(`Zeitgrenze ${WEG_FRIST / 1000} s überschritten — der Weg hing`), { gehangen: true })),
+      WEG_FRIST);
+  });
+  /* Der abgehängte Lauf darf später noch scheitern, ohne den Prozess zu
+   * beenden — Node wertet eine unbehandelte Ablehnung als Absturz. */
+  const lauf = (async () => weg.fahren(await kasten(weg.rolle, weg, breite)))();
+  lauf.catch(() => {});
+  try {
+    e = await Promise.race([lauf, frist]);
+    if (!e || typeof e !== 'object') { throw new Error('Weg lieferte kein Ergebnis'); }
+  } catch (f) {
+    zeit = !!(f && (f.gehangen || f.name === 'TimeoutError'));
+    /* NACH EINEM FEHLSCHLAG IN WEBKIT DIE SEITE BEFRAGEN (Nr. 393). Stirbt
+     * sie MITTEN im Weg, ist der Weg verfehlt — das Lebenszeichen in
+     * `kasten()` kommt dafür zu spät. Dann sagt es die Bemerkung, und die
+     * Rolle wird gleich neu angemeldet, statt dem nächsten Weg dieselbe
+     * Seite zu geben. Eine Seite, die nach dem Fehlschlag antwortet,
+     * bleibt, wie sie ist: Dann war es der Weg, nicht WebKit. */
+    let stumm = false;
+    if (f && f.gehangen) {
+      await rolleVerwerfen(weg.rolle || 'demo');
+      verworfen = true;
+      /* Der hängende Lauf geht auf der geschlossenen Seite zu Ende, und sein
+       * `finally` räumt auf. Das soll nicht in einen zweiten Versuch fallen
+       * — höchstens 15 s darauf warten. */
+      await Promise.race([lauf.catch(() => {}), new Promise((ok) => setTimeout(ok, 15000))]);
+    } else if (MOTOR === 'webkit' && rollenSpeicher[weg.rolle || 'demo']
+             && !(await lebtDieSeite(rollenSpeicher[weg.rolle || 'demo'].seite))) {
+      stumm = true;
+      console.error(`WebKit-Neuanmeldung: Seite der Rolle ${weg.rolle || 'demo'} antwortete `
+        + `nach dem Fehlschlag von ${weg.name} ${LEBENSZEICHEN_MS / 1000} s nicht — neu angemeldet (Nr. 393)`);
+      await rolleVerwerfen(weg.rolle || 'demo');
+      verworfen = true;
+    }
+    e = { ist: '—', ok: false,
+          bemerkung: 'nicht gefahren: ' + (f && f.message ? f.message : f)
+            + (stumm ? ' — danach antwortete die Seite nicht mehr (WebKit, Nr. 393)' : '') };
+  } finally {
+    clearTimeout(wecker);
+  }
+  return { e, zeit, verworfen };
+}
+
 const ergebnisse = [];
 for (const breite of BREITEN) {
   if (BREITEN.length > 1) {
@@ -639,40 +692,30 @@ for (const breite of BREITEN) {
               + `Sollhöhe ${hoeheFuer(breite)} px ==`);
   }
   for (const weg of WEGE) {
-    let e, wecker;
-    const frist = new Promise((_, nein) => {
-      wecker = setTimeout(() => nein(Object.assign(
-        new Error(`Zeitgrenze ${WEG_FRIST / 1000} s überschritten — der Weg hing`), { gehangen: true })),
-        WEG_FRIST);
-    });
-    /* Der abgehängte Lauf darf später noch scheitern, ohne den Prozess zu
-     * beenden — Node wertet eine unbehandelte Ablehnung als Absturz. */
-    const lauf = (async () => weg.fahren(await kasten(weg.rolle, weg, breite)))();
-    lauf.catch(() => {});
-    try {
-      e = await Promise.race([lauf, frist]);
-      if (!e || typeof e !== 'object') { throw new Error('Weg lieferte kein Ergebnis'); }
-    } catch (f) {
-      /* NACH EINEM FEHLSCHLAG IN WEBKIT DIE SEITE BEFRAGEN (Nr. 393). Stirbt
-       * sie MITTEN im Weg, ist der Weg verfehlt — das Lebenszeichen in
-       * `kasten()` kommt dafür zu spät. Dann sagt es die Bemerkung, und die
-       * Rolle wird gleich neu angemeldet, statt dem nächsten Weg dieselbe
-       * Seite zu geben. Eine Seite, die nach dem Fehlschlag antwortet,
-       * bleibt, wie sie ist: Dann war es der Weg, nicht WebKit. */
-      let stumm = false;
-      if (f && f.gehangen) { await rolleVerwerfen(weg.rolle || 'demo'); }
-      else if (MOTOR === 'webkit' && rollenSpeicher[weg.rolle || 'demo']
-               && !(await lebtDieSeite(rollenSpeicher[weg.rolle || 'demo'].seite))) {
-        stumm = true;
-        console.error(`WebKit-Neuanmeldung: Seite der Rolle ${weg.rolle || 'demo'} antwortete `
-          + `nach dem Fehlschlag von ${weg.name} ${LEBENSZEICHEN_MS / 1000} s nicht — neu angemeldet (Nr. 393)`);
-        await rolleVerwerfen(weg.rolle || 'demo');
-      }
-      e = { ist: '—', ok: false,
-            bemerkung: 'nicht gefahren: ' + (f && f.message ? f.message : f)
-              + (stumm ? ' — danach antwortete die Seite nicht mehr (WebKit, Nr. 393)' : '') };
-    } finally {
-      clearTimeout(wecker);
+    let { e, zeit, verworfen } = await einmalFahren(weg, breite);
+    /* EINMAL VON VORN — NUR IN WEBKIT, NUR NACH EINER ZEITÜBERSCHREITUNG
+     * (Nr. 393, Erweiterung von E-DM-10, entschieden von der Betreiberin
+     * am 25.10.2026). In neun vollen WebKit-Läufen blieb in vier eine Seite
+     * MITTEN in einem Weg stehen, jedes Mal in einem anderen: keine Anfrage
+     * beim Server, kein rechnender WebKit-Prozess, der Prozess schlief. Das
+     * Lebenszeichen in `kasten()` fängt nur, was VOR dem Weg schon stumm
+     * ist. Ein solcher Weg wird deshalb einmal ganz wiederholt, mit frisch
+     * angemeldeter Rolle — nicht der eine Klick (das schließt E-DM-10 weiter
+     * aus), sondern der Weg von seinem Anfang an, nachdem sein `finally`
+     * aufgeräumt hat. Ein Fehler der Anwendung scheitert auch beim zweiten
+     * Mal. Wiederholt wird NUR, was geworfen hat (Playwrights
+     * `TimeoutError` oder die Zeitgrenze des Wegs) — ein Weg, der ein
+     * falsches Ist misst, ist verfehlt, ohne zweite Gelegenheit. Die Zeile
+     * `WebKit-Wiederholung:` zählt `pruefen.sh`, und die Bemerkung des Wegs
+     * nennt den ersten Fehlschlag. */
+    if (MOTOR === 'webkit' && zeit) {
+      const erst = String(e.bemerkung).split('\n')[0];
+      console.error(`WebKit-Wiederholung: Weg ${weg.name} von vorn, mit neu angemeldeter Rolle `
+        + `— der erste Versuch: ${erst.slice(0, 160)} (Nr. 393)`);
+      if (!verworfen && rollenSpeicher[weg.rolle || 'demo']) { await rolleVerwerfen(weg.rolle || 'demo'); }
+      ({ e } = await einmalFahren(weg, breite));
+      e = { ...e, bemerkung: `zweiter Versuch (WebKit, Nr. 393; der erste: ${erst})`
+                             + (e.bemerkung ? ' · ' + e.bemerkung : '') };
     }
     const zeile = {
       name: weg.name, paket: weg.paket, punkt: weg.punkt || '',

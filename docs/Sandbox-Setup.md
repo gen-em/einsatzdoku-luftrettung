@@ -198,7 +198,7 @@ Umgebung muss diesen Host zulassen.** Am 25.10.2026 antwortete der Proxy
 darauf mit 403 („no rule or allowlist entry allows host"). `aufbauen.sh`
 meldete „Nachladen der Engines meldet einen Fehler", der Nachweis alle drei
 Engines als FEHLT. Ohne sie richtet auch `hochfahren.sh` nicht ein, denn
-Schritt 6 setzt das Admin-Passwort im Browser. Die Betreiberin hat den Host
+Schritt 6 setzt das Admin-Passwort im Browser. Die BetreiberIn hat den Host
 in den Einstellungen der Umgebung unter „Allowed domains" eingetragen; danach
 ging es ohne Neustart des Containers, in 24 s. Einen anderen Spiegel hat
 niemand versucht: Eine gesperrte Adresse wird gemeldet, nicht umgangen. Wer
@@ -344,9 +344,15 @@ Fassung 20.26.2, Rückgabewert 0.*
 
 **Eine Lage in `config.php` herstellen** — einen anderen Serverschlüssel,
 keinen Anteil — und wieder zurücknehmen: `tools/sandbox/konfig_stellen.php`.
-Vier Proben binden es ein; es schreibt die Datei und ruft
-`konfig_verwerfen()`, denselben Weg wie die Anwendung, und legt am Ende den
-vorigen Stand zurück, auch nach einem Abbruch.
+Sieben Proben binden es ein (bis Nr. 393 stand hier „vier") und ein Weg der
+Bedienprobe; es schreibt die Datei und ruft `konfig_verwerfen()`, denselben
+Weg wie die Anwendung, und legt am Ende den vorigen Stand zurück, auch nach
+einem Abbruch. **Seit Nr. 393 gehören dazu die beiden Marken in `app_state`**
+(`server_key_kennung`, `kdf_anteil_kennung`): Fehlt eine, legt die Anwendung
+sie beim nächsten Lesen mit dem Schlüssel an, der gerade in der Datei steht —
+und das war bis dahin der der gestellten Lage. Eine frisch eingerichtete
+Anlage stand danach auf „abweichend" (gemessen am 25.10.2026 nach der
+`versandprobe` und der `komplettprobe`).
 
 ---
 

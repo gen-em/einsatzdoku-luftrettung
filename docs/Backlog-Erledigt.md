@@ -9637,7 +9637,13 @@ zutreffen.
      Prüfstand `neben` in drei Engines fand Werkzeugfehler (WebKit:
      Screenshot-CSP, abgebrochene Abrufe, Demo-Marke, Bedienprobe; Firefox:
      Stilvergleich, F-DM-10) und vier der Anwendung (CSP im Formular,
-     zip.js, Auslassliste, Stat-Cache). Offen: Stufe 2 nach dem Merge.
+     zip.js, Auslassliste, Stat-Cache). Abgeschlossen 25.10.2026 mit dem
+     vollen Prüfstand `neben` in drei Engines (Bericht im Commit), nach drei
+     Funden im Werkzeug: Aufräumen in `ap4`/`ap5` wartet auf die Seite, eine
+     stumme WebKit-Seite wird erkannt (Neuanmeldung, Weg einmal von vorn;
+     E-DM-10 erweitert), und `konfig_stellen()` legt die Schlüsselmarken mit
+     zurück (frische Anlage stand sonst auf „abweichend"). Offen: Stufe 2
+     nach dem Merge.
 
 77. **Die Wartungsseite `update.php` in Unterseiten aufteilen.** · gehört zu: 12b · Stand: erledigt · seit 02.09.2026
      Befund: Die Seite trug Migrationsliste, Job-Einstieg, Speichergrenze und

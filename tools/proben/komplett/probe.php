@@ -82,6 +82,23 @@ register_shutdown_function(static function () use ($tmp): void {
 require_once $srv . '/komplett_lib.php';
 require_once __DIR__ . '/../../sandbox/konfig_stellen.php';
 
+/* DIE MARKE DES SERVERSCHLUESSELS BLEIBT, WIE SIE WAR (Nr. 393).
+ *
+ * `konfig_stellen()` ruft am Ende `config_gemerktes_verwerfen()`, und das
+ * fragt `serverschluessel_zustand(true)`. Fehlt die Marke
+ * `server_key_kennung`, LEGT DIESE FRAGE SIE AN (E-S10-U-02) — und zwar mit
+ * dem Schluessel, den der Prozess gerade liest: dem der ARBEITSKOPIE. Die
+ * Datenbank ist aber die echte. Gemessen am 25.10.2026: frisch eingerichtete
+ * Anlage, Marke noch nicht gesetzt; nach dieser Probe nannte sie den
+ * Zufallsschluessel der Kopie, die Installation stand auf „abweichend", und
+ * die Bedienprobe lehnte den Schluesselwechsel in Chromium und Firefox als
+ * „Vorbedingung nicht erfuellt" ab. Auf einer Anlage, die schon eine Marke
+ * hat, aendert die Kopie sie nicht; deshalb fiel es nie auf. Gemerkt wird
+ * jetzt vor dem ersten Griff, zurueckgelegt am Schluss — ein Pruefmittel
+ * soll den Zustand nicht herstellen, den es misst (dieselbe Regel wie in
+ * Teil 11 fuer die Marke des Anteils). */
+$skMarkeVorher = app_state_lesen('server_key_kennung');
+
 /* ---- Zählwerk ------------------------------------------------------------ */
 $n = 0; $offen = 0;
 function kopf(string $t): void { echo "\n$t\n"; }
@@ -883,5 +900,21 @@ if ($dump === '') {
 }
 
 /* ---- Schluss ------------------------------------------------------------- */
+kopf('Schluss — die echte Anlage');
+$skMarkeNach = app_state_lesen('server_key_kennung');
+$skMarkeWeg  = false;
+if ($skMarkeVorher === null && $skMarkeNach !== null) {
+    app_state_loeschen('server_key_kennung');
+    $skMarkeWeg = true;
+} elseif ($skMarkeVorher !== null && $skMarkeNach !== $skMarkeVorher) {
+    app_state_setzen('server_key_kennung', $skMarkeVorher);
+}
+pruef('Die Marke des Serverschluessels steht wie vor der Probe',
+      app_state_lesen('server_key_kennung') === $skMarkeVorher,
+      ($skMarkeVorher === null ? 'vorher keine' : 'vorher ' . $skMarkeVorher)
+      . ($skMarkeNach === $skMarkeVorher ? ', unveraendert'
+         : ($skMarkeWeg ? ', die Arbeitskopie hatte ' . $skMarkeNach . ' angelegt — entfernt'
+                        : ', die Arbeitskopie hatte ' . (string)$skMarkeNach . ' gesetzt — zurueckgelegt')));
+
 echo "\n-> $n Erwartungen, $offen nicht erfuellt\n";
 exit($offen === 0 ? 0 : 1);

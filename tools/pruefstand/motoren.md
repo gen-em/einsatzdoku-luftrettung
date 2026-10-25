@@ -22,7 +22,10 @@ ihre Fassung ins Protokoll schreibt (`Motor: firefox 157.0`). Ein eigenes
 `starten()` vorbeigeht, verliert in WebKit auch die drei Eigenheiten, die es
 dort zurückhält und am Ende zählt: die Wiederholung bei „internal error"
 (E-DM-10), den CSP-Bericht nach einem Screenshot und den abgebrochenen Abruf
-beim Seitenwechsel (beide Nr. 393). `pruefen.sh` nennt die Zahlen je Probe.
+beim Seitenwechsel (beide Nr. 393). Eine vierte fängt die Bedienprobe selbst: eine
+WebKit-Seite, die stumm wird — Neuanmeldung der Rolle vor dem Weg, einmalige
+Wiederholung des Wegs nach einer Zeitüberschreitung (Nr. 393).
+`pruefen.sh` nennt die Zahlen je Probe.
 
 | Werkzeug | Weg | Grund |
 |---|---|---|

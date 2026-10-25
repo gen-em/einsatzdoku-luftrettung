@@ -245,10 +245,88 @@ WebKit 26 schnitt in der Bedienprobe sogar schlechter ab (74 von 77 gegen
     langsames Formular ließ sich in Chromium nicht dazwischenschieben
     (vier Varianten, je sechs Wege, alle grün). Nach dem Umbau liefen
     `ap5` und `ap6` dreimal mit 17 von 17, `ap4` zweimal mit 6 von 6, und
-    im Bestand blieb nichts zurück. **Das galt aber für das Chromium 153
-    des Abbilds, nicht für 156:** In dieser Sitzung sperrte die
-    Netzrichtlinie `cdn.playwright.dev`. Den Nachweis mit der Soll-Engine
-    erbringt erst der fünfte volle Lauf.
+    im Bestand blieb nichts zurück. Das galt zunächst nur für das
+    Chromium 153 des Abbilds, denn die Netzrichtlinie sperrte
+    `cdn.playwright.dev`. Nach der Freigabe des Hosts kam derselbe
+    Nachweis mit der Soll-Engine: Chromium 156 dreimal 23 von 23 Wegen
+    (`ap4` bis `ap6`), Firefox 157 einmal 23 von 23.
+  - *WebKit: eine Seite, die nicht mehr antwortet.* `mr-oeffner-markiert`
+    hing bis zur Zeitgrenze. Einzeln war der Weg grün, und in den folgenden
+    vollen WebKit-Läufen blieb er es; die Stelle wanderte. In fünf von neun
+    Läufen war die Seite der Demo-Rolle vor `da-faehigkeiten-nach-typ`
+    stumm, also nach dem Admin-Block — an genau dem Weg, an dem Lauf 3
+    hing. Die Erklärung von dort (`setViewportSize` während eines
+    Neuladens) war damit wohl die Wirkung, nicht die Ursache.
+    Was „stumm" heißt, zeigen drei Messungen vom 25.10.2026. Die
+    Navigation sagt nicht zu, und der PHP-Server nimmt in dieser Zeit
+    **keine einzige Verbindung** an: Die Anfrage verlässt WebKit nie. Ein
+    `evaluate` kommt nicht zurück. Und kein WebKit-Prozess rechnet; der der
+    Seite schläft (980 MB, seit sechs Minuten in Gebrauch). Erst ein neuer
+    Kontext hilft. Ausgeschlossen sind damit ein Skript der Anwendung in
+    einer Endlosschleife, ein volles Verbindungsfach (keine offene
+    Verbindung zu socat) und eine Drosselung von Seiten im Hintergrund (in
+    allen drei Engines sichtbar, Zeitgeber und Bildaufbau laufen). Auch
+    eine offene `beforeunload`-Abfrage scheidet aus: Ohne Dialog-Horcher
+    navigieren alle drei Engines, und die Probe hat keinen. Den Auslöser
+    hat keine Messung gezeigt; in Ausschnitten bis 62 Wege kam es nie vor.
+    Ein Fehler der Anwendung ist es nach diesen Zahlen nicht. Ein echter
+    Safari ist das nicht, er bleibt Handprüfung.
+    Deshalb fängt die Bedienprobe es jetzt an zwei Stellen ab, beide nur
+    in WebKit und beide gezählt (`pruefen.sh`, zusammen mit E-DM-10):
+    1. Vor jedem Weg fragt `kasten()` die Seite der Rolle, höchstens 10 s
+       lang. Ist sie stumm, wird die Rolle neu angemeldet
+       (`WebKit-Neuanmeldung:`). In den fünf Läufen oben fing das jeden
+       dieser Fälle, und der Weg war danach grün.
+    2. In den anderen vier Läufen blieb eine Seite **mitten** in einem
+       Weg stehen, jedes Mal in einem anderen (`registrieren`,
+       `einstellungen-profil-rueckweg`, `betrieb-server-frischer-code`,
+       `p5c-ap8-adhoc-tag-in-der-luft`, `einstellungen-profil-zweitfaktor`).
+       Ein solcher Weg wird nach einer Zeitüberschreitung **einmal ganz**
+       wiederholt, mit frisch angemeldeter Rolle
+       (`WebKit-Wiederholung:`).
+    Punkt 2 erweitert E-DM-10, das einen Seitenwechsel nach einem Klick
+    nicht wiederholt. Wiederholt wird jetzt nicht der Klick, sondern der
+    Weg von vorn, nachdem sein `finally` aufgeräumt hat; entschieden hat
+    das die Betreiberin am 25.10.2026. Wiederholt wird nur, was geworfen
+    hat. Ein Weg, der ein falsches Ist misst, bekommt keine zweite
+    Gelegenheit, und ein Fehler der Anwendung scheitert auch beim zweiten
+    Mal. Danach drei volle WebKit-Läufe mit 77 von 77; im ersten griff die
+    Wiederholung einmal (`einstellungen-profil-rueckweg` hing 300 s und
+    war im zweiten Versuch grün), in den beiden anderen nichts.
+    `rolleVerwerfen()` schließt den Kontext jetzt mit eigener Frist, weil
+    ein toter Kontext sonst die ganze Probe anhielte.
+- **Der fünfte volle Lauf war rot und ist abgebrochen worden.** Die
+  Bedienprobe scheiterte in allen drei Engines am selben Weg,
+  `betrieb-server-schluesselwechsel`, und die `schluesselwechselprobe`
+  lief gar nicht erst: Der Serverschlüssel sei „abweichend", nicht
+  „bereit". In `config.php` stand der Schlüssel `41c90bbb`, die Marke in
+  `app_state` nannte `168251fa`. Neu war daran nur, dass die Anlage vor
+  dem Lauf frisch eingerichtet war. Eine frische Anlage hat die Marke
+  `server_key_kennung` noch nicht; die Anwendung legt sie beim ersten
+  Lesen des Zustands an, mit dem Schlüssel, der gerade in der Datei steht
+  (E-S10-U-02). `tools/sandbox/konfig_stellen.php` liest den Zustand nach
+  jedem Schreiben neu. Stellt eine Probe also einen anderen Schlüssel, hält
+  die Datenbank dessen Kennung fest, und das Zurücklegen der Datei ändert
+  daran nichts. Nachgestellt auf frischen Anlagen: Nach der
+  `komplettprobe` nannte die Marke `9103c0f2` gegen `5e1302b0` in der
+  Datei, nach der `versandprobe` `876aa734` gegen `01264396`. Beide
+  Proben meldeten sich dabei grün, mit 69 und 143 Erwartungen. Auf einer
+  Anlage, die die Marke schon hat, ändert die gestellte Lage sie nicht —
+  deshalb fiel es in keinem Lauf davor auf.
+  `konfig_stellen()` merkt sich jetzt beide Marken (`server_key_kennung`,
+  `kdf_anteil_kennung`) und legt sie mit der Datei zurück. Fehlte eine,
+  kommt sie wieder weg. Die `komplettprobe` misst das an ihrem Ende
+  selbst, denn ihre Kopie schreibt in die echte Datenbank: Die neue
+  Erwartung „Die Marke des Serverschluessels steht wie vor der Probe" ist
+  die siebzigste. Danach liefen die sieben Proben, die den Helfer
+  benutzen, und die `schluesselwechselprobe` zweimal hintereinander, einmal
+  auf frischer und einmal auf benutzter Anlage. Alle acht waren grün, und
+  keine hinterließ eine fremde Marke. Die erste Marke legte die
+  `zweitfaktorprobe` an, mit dem echten Schlüssel, so wie es ein
+  Seitenaufruf tut. Der Lauf wurde nach der halben Strecke abgebrochen:
+  Was danach kam, hing entweder vom verdorbenen Schlüsselstand ab oder war
+  von den Änderungen seit Lauf 4 unberührt. Ein abgebrochener Lauf ist
+  kein Bericht, gemessen wird mit einem neuen.
 
 **Was bewusst stehen bleibt:** die Engines des Abbilds unter
 `/opt/pw-browsers`. Sie stören nicht, und sie zu löschen hieße, ins Abbild

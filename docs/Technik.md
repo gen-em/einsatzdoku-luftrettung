@@ -639,8 +639,9 @@ Daten erst nach Server-Bestätigung.
 │   │                      SessionStart-Hooks (PK-02); Ausbaustufen und
 │   │                      Grenzen in docs/Sandbox-Setup.md.
 │   │                      konfig_stellen.php stellt eine Lage in
-│   │                      `config.php` her und nimmt sie wieder zurück —
-│   │                      vier Proben prüfen so, was die Anwendung mit
+│   │                      `config.php` her und nimmt sie wieder zurück,
+│   │                      samt den Schlüsselmarken in `app_state` (Nr. 393) —
+│   │                      sieben Proben prüfen so, was die Anwendung mit
 │   │                      einem anderen Schlüssel tut. Derselbe Weg wie in
 │   │                      der Anwendung: Datei schreiben, dann
 │   │                      `konfig_verwerfen()`. Bis Konzept BR lag sie lose
@@ -921,7 +922,12 @@ in allen drei** — ab der Stufe `neben`, je Engine ein Lauf mit `MOTOR=…`,
 grün nur, wenn alle drei grün sind; **in `klein` in Chromium allein**
 (`docs/Pruefablauf.md` 1, Grundsatz 8, E-DM-08). Ein Seitenwechsel, der in
 WebKit mit „internal error" scheitert, wird einmal wiederholt und gezählt
-(E-DM-10, `motor.mjs`). **Zwei weitere Eigenheiten hält `starten()` in WebKit
+(E-DM-10, `motor.mjs`). **Die Bedienprobe fängt in WebKit zusätzlich eine
+Seite, die stumm wird** (Nr. 393, seit dem 25.10.2026): Sie fragt vor jedem
+Weg die Seite der Rolle und meldet die Rolle neu an, wenn 10 s keine Antwort
+kommt, und sie fährt einen Weg, der an einer Zeitüberschreitung scheitert,
+einmal ganz von vorn — nicht den einen Klick, den E-DM-10 weiter ausschließt.
+Beides steht im Protokoll und wird gezählt. **Zwei weitere Eigenheiten hält `starten()` in WebKit
 zurück, beide gezählt** (Nr. 393, seit dem 21.10.2026): den CSP-Bericht, den
 Playwrights eigener Screenshot auslöst (er legt ein `<style>` in die Seite;
 ab dem ersten Screenshot eines Kontexts beantwortet der Prüfstand
