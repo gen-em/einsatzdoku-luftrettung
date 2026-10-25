@@ -6015,6 +6015,13 @@ nichts. Nach dem Umlegen einmal durchklicken, was du wirklich benutzt: Karte,
 Einsatzformular mit Adresssuche, Import, Export, Druckansicht. Zurückschalten
 geht jederzeit.
 
+*Bis Web 23.0.3 wurde die Liste nie ganz leer:* Jede Sicherung hinterließ
+zwei Zeilen (`wasm-eval`, `connect-src data:` — harmlos), und eine
+Adresssuche im Einsatzformular eine Zeile zum Adressdienst. Die zweite war
+ernst: Wer die Regel vor 23.0.3 scharf geschaltet hat, bei dem fand die
+Adresssuche im Einsatzformular nichts. Nach dem Update dort einmal eine
+Adresse suchen.
+
 Die Meldungen enthalten **keine IP, kein Konto und keine Einsatznummer** — von
 der Seitenadresse bleibt nur der Dateiname. Nach 30 Tagen räumt der
 Aufräumjob sie weg.

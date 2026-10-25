@@ -71,6 +71,16 @@ const BEISPIELE = parseInt(process.env.BEISPIELE || '8', 10);
  * Ohne 1024 und 1600 haette der Vergleich die halben Media-Bloecke nie
  * gesehen. */
 const BREITEN = [1920, 1680, 1440, 1280, 1100, 1024, 900, 768, 720, 560, 420, 390, 360];
+/* Die Maße, die erst das Layout ausrechnet — ohne Box bedeutungslos (siehe
+ * `vermessen()`). Ränder und Innenabstände stehen dabei, weil `auto` und
+ * Prozentwerte erst am Layout zu Pixeln werden. */
+const LAYOUTMASSE = ['width', 'height', 'inline-size', 'block-size',
+  'top', 'right', 'bottom', 'left', 'inset', 'inset-block', 'inset-block-start',
+  'inset-block-end', 'inset-inline', 'inset-inline-start', 'inset-inline-end',
+  'margin', 'margin-top', 'margin-right', 'margin-bottom', 'margin-left',
+  'margin-block', 'margin-block-start', 'margin-block-end', 'margin-inline',
+  'margin-inline-start', 'margin-inline-end', 'padding', 'padding-top',
+  'padding-right', 'padding-bottom', 'padding-left'];
 
 /* DIE LISTE DER GEPLANTEN ABWEICHUNGEN (P5c/AP1, F-P5c-72).
  *
@@ -155,16 +165,28 @@ function eigenschaften(css) {
    * allen dreien — 8 Auswahlfelder mal 13 Breiten, und die einzige geaenderte
    * Eigenschaft ist `contain`. Je Motor 14 bis 18 Sekunden.
    *
-   * `CHROMIUM=<pfad>` gilt weiter, aber nur fuer Chromium — Firefox und
-   * WebKit nimmt Playwright aus PLAYWRIGHT_BROWSERS_PATH. */
-  const auf = MOTOR === 'chromium'
-    ? { executablePath: process.env.CHROMIUM || '/opt/pw-browsers/chromium-1194/chrome-linux/chrome' }
+   * `CHROMIUM=<pfad>` gilt weiter, aber nur fuer Chromium. Ohne ihn nimmt
+   * Playwright jede Engine aus PLAYWRIGHT_BROWSERS_PATH, und zwar in der
+   * Fassung, die zu ihm gehoert. Bis Nr. 393 stand hier als Vorgabe der feste
+   * Pfad `chromium-1194` — das Chromium von Playwright 1.56. Nach dem
+   * Anheben haette der Vergleich damit ein Chromium gefahren, das kein
+   * anderes Pruefmittel mehr misst. */
+  const auf = MOTOR === 'chromium' && process.env.CHROMIUM
+    ? { executablePath: process.env.CHROMIUM }
     : {};
   const browser = await starten(PW, MOTOR, { optionen: auf });
   const seite = await browser.newPage();
-  let abweichungen = 0, gemessen = 0;
+  let abweichungen = 0, gemessen = 0, ohneBox = 0;
 
   async function laden(html, css) {
+    /* OHNE `autofocus` (Nr. 393). Gemessen wird ohne Fokus — deshalb das
+     * `blur()` unten. Firefox setzt den Autofokus aber erst NACH `load`, also
+     * nach dem `blur()`, und dann stand am 21.10.2026 der Fokusrahmen des
+     * Eingabefelds in `login.php` mal im alten, mal im neuen Stand: zwei von
+     * vier Läufen rot, bei identischem Stylesheet. Das Stylesheet wählt nicht
+     * nach `[autofocus]`; das Attribut zu entfernen ändert also nichts, was
+     * verglichen wird, außer dem Zufall. */
+    html = html.replace(/\sautofocus(?=[\s>\/=])/gi, '');
     await seite.setContent(
       '<!doctype html><html lang="de"><head><meta charset="utf-8">' +
       '<style>' + css + '</style></head><body>' + html + '</body></html>',
@@ -186,16 +208,42 @@ function eigenschaften(css) {
         try { a.finish(); } catch (e) { a.pause(); a.currentTime = 0; }
       }
     });
-    return await seite.evaluate(([props, sep]) => {
+    /* OHNE BOX KEIN PIXELMASS (Nr. 393). Inhalt eines geschlossenen
+     * `<details>` wird nicht gelayoutet; Firefox liefert für seine Breite
+     * trotzdem einen Pixelwert — aus irgendeinem früheren Layout, nicht aus
+     * dieser Breite. Am 21.10.2026 stand so `div.filterfelder` in
+     * `suche.php` mit 1680 gegen 1920 px da, in jeder Fensterbreite, bei
+     * identischem Stylesheet: einer von drei Läufen rot, ohne Ursache im
+     * Stylesheet. Für ein Element IM INHALT EINES GESCHLOSSENEN `<details>`
+     * (nicht in seinem `<summary>`) werden die Maße, die erst das Layout ausrechnet, deshalb als
+     * „ohne Box" gemessen — in allen Engines gleich; alle anderen
+     * Eigenschaften werden weiter verglichen.
+     * NICHT für jedes Element ohne Box: Ein `display:none`-Element (Dialog,
+     * Menü) liefert in allen drei Engines seinen BERECHNETEN Wert, etwa
+     * `width: 320px` aus dem Stylesheet, und eine Änderung daran soll der
+     * Vergleich weiter finden. Der erste Entwurf maskierte alle Elemente
+     * ohne Box — 12 994 von 63 570 Messungen, ein Fünftel der Abdeckung —
+     * und war trotzdem nur zufällig grün (siehe unten). */
+    return await seite.evaluate(([props, sep, layout]) => {
       const out = [];
+      const nurLayout = new Set(layout);
       const alle = document.querySelectorAll('*');
+      let ohneBox = 0;
       for (let i = 0; i < alle.length; i++) {
         const cs = getComputedStyle(alle[i]);
+        const el = alle[i];
+        /* Am ORT entschieden, nicht an `getClientRects()`: Firefox gibt dem
+         * Inhalt eines geschlossenen `<details>` Rechtecke — es überspringt
+         * nur sein Layout —, und die Abfrage „keine Box" ließ genau dieses
+         * Element durch (21.10.2026, der zweite Entwurf). */
+        const zu = el.parentElement && el.parentElement.closest('details:not([open])');
+        const keineBox = !!zu && !el.closest('summary');
+        if (keineBox) { ohneBox++; }
         const z = [];
-        for (const p of props) z.push(cs.getPropertyValue(p));
+        for (const p of props) z.push(keineBox && nurLayout.has(p) ? '(ohne Box)' : cs.getPropertyValue(p));
         out.push(z.join(sep));
       }
-      return { werte: out, gruppe: [...alle].map(el => {
+      return { ohneBox, werte: out, gruppe: [...alle].map(el => {
         const g = el.closest('[data-paar]'); return g ? g.getAttribute('data-paar') : ''; }), wer: [...alle].map(el =>
         /* WEISSRAUM IN DER KENNUNG WIRD EIN LEERZEICHEN (P5c/AP2, F-P5c-85):
          * Die Seitenprobe setzt Markup aus PHP-Zeichenketten zusammen, und
@@ -206,7 +254,7 @@ function eigenschaften(css) {
         + ' <' + (el.parentElement ? el.parentElement.tagName.toLowerCase()
                   + (el.parentElement.className && typeof el.parentElement.className === 'string'
                      ? '.' + el.parentElement.className.trim().split(/\s+/).join('.') : '') : '-') + '>') };
-    }, [props, SEP]);
+    }, [props, SEP, LAYOUTMASSE]);
   }
 
   for (const probe of PROBEN) {
@@ -228,6 +276,7 @@ function eigenschaften(css) {
       let schiefe = false;
       for (const [j, s] of teile.entries()) {
         const ra = je[j][b].alt, rn = je[j][b].neu;
+        ohneBox += ra.ohneBox;
         const a = ra.werte, n = rn.werte, wer = ra.wer, grp = ra.gruppe;
         const name = s.quelle ? probe + '[' + s.quelle + ']' : probe;
         if (a.length !== n.length) {
@@ -270,6 +319,7 @@ function eigenschaften(css) {
   console.log('');
   console.log(gemessen + ' Elementmessungen, ' + abweichungen + ' Abweichungen, '
               + props.length + ' Eigenschaften je Element  [' + MOTOR + ']');
+  console.log(ohneBox + ' davon im Inhalt eines geschlossenen <details> — Layoutmaße als „(ohne Box)" verglichen (Nr. 393)');
 
   const ist = signaturen_zeilen();
   if (SCHALTER['--geplant-schreiben']) {

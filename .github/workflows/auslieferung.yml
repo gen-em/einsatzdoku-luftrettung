@@ -111,16 +111,15 @@ jobs:
   stufe2:
     name: Prüfung Stufe 2
     needs: staging
-    # AUSNAHME von Nr. 236 (alle Jobs auf 26.04), seit dem 20.10.2026
-    # (F-DM-13): Playwright 1.56 kennt Ubuntu 26.04 nicht und lädt dort die
-    # Fassungen für 24.04. Chromium und Firefox bringen ihre Bibliotheken
-    # weitgehend mit, WebKit nicht: Es ist gegen `libicuuc.so.74`,
-    # `libxml2.so.2`, `libvpx.so.9` und `libx264` gebaut, und die gibt es auf
-    # 26.04 nicht — auch nicht unter einem neueren Paketnamen. Auf 24.04
-    # unterstützt 1.56 alle drei Engines offiziell, mit denselben Fassungen
-    # wie der Prüfstand. Zurück auf 26.04 geht es mit dem Anheben von
-    # Playwright auf 1.63 oder neuer (Nr. 393), nicht vorher.
-    runs-on: ubuntu-24.04
+    # Wieder auf 26.04 wie alle Jobs (Nr. 236), seit Nr. 393. Vom 20.10.2026
+    # an lief dieser Job als einziger auf 24.04 (F-DM-13): Playwright 1.56
+    # kannte 26.04 nicht und lud die WebKit-Fassung für 24.04, die gegen
+    # `libicuuc.so.74`, `libxml2.so.2`, `libvpx.so.9` und `libx264` gebaut
+    # ist — Bibliotheken, die es auf 26.04 unter keinem Namen gibt. Seit 1.63
+    # führt Playwright 26.04 als eigene Plattform mit eigener Paketliste und
+    # eigenem WebKit-Build; Firefox lädt dort nach Playwrights eigener
+    # Zuordnung den Build für 24.04.
+    runs-on: ubuntu-26.04
     # Ohne Zeitgrenze liefe ein hängender Job sechs Stunden, und so lange wartet
     # jeder weitere Lauf dieser Umgebung in seiner Gruppe. 40 statt 20 seit
     # R87: Kreislauf und Rückwegprobe laufen dreimal (am 19.10.2026 in
@@ -218,7 +217,7 @@ jobs:
             exit 1
           fi
           # FESTE FASSUNGEN MIT HASHES (R17-19, F-R17-20). Bis dahin
-          # `pip -q install cffi cryptography` und `npm install playwright@1.56`
+          # `pip -q install cffi cryptography` und `npm install playwright@…`
           # — die Fassung des Tages, in einem Job mit Staging-Passwort,
           # `STAGING_TOTP` und `JOBS_TOKEN`. Jetzt prüft pip jede Datei gegen
           # ihren SHA-256 und npm gegen die Integritätswerte der Sperrdatei.
@@ -226,6 +225,22 @@ jobs:
           # kann pip sie nicht deinstallieren (kein RECORD) und bräche ab; so
           # liegt die gepinnte daneben und gewinnt.
           pip -q install --require-hashes --ignore-installed -r tools/kette/stufe2-anforderungen.txt
+          # DIE FASSUNG STEHT EINMAL, in `tools/sandbox/aufbauen.sh` (Nr. 393):
+          # Stufe 2 muss dieselben Engines messen wie der Prüfstand. Die
+          # Sperrdatei trägt dieselbe Zahl ein zweites Mal — mit den
+          # Integritätswerten, die eine Fassungszeile nicht hat. Gehen beide
+          # auseinander, ist der Schritt rot, statt still eine andere Fassung
+          # zu messen (R17-19, nach dem Merge von Nr. 393).
+          PW_FASSUNG=$(sed -n 's/^PW_FASSUNG="\([0-9.]*\)"$/\1/p' tools/sandbox/aufbauen.sh)
+          [ -n "$PW_FASSUNG" ] \
+            || { echo "::error::PW_FASSUNG nicht in tools/sandbox/aufbauen.sh gefunden"; exit 1; }
+          PW_SPERRE=$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["packages"]["node_modules/playwright"]["version"])' \
+                        tools/kette/stufe2-npm/package-lock.json)
+          if [ "$PW_SPERRE" != "$PW_FASSUNG" ]; then
+            echo "::error::Die Sperrdatei tools/kette/stufe2-npm/package-lock.json nennt Playwright $PW_SPERRE, aufbauen.sh $PW_FASSUNG — Sperrdatei neu erzeugen (tools/kette/LIESMICH.md)."
+            exit 1
+          fi
+          echo "Playwright $PW_FASSUNG (Sperrdatei gleich)"
           npm ci --prefix tools/kette/stufe2-npm --no-audit --no-fund --silent
           export PLAYWRIGHT_MODUL="$PWD/tools/kette/stufe2-npm/node_modules/playwright/index.mjs"
           [ -f "$PLAYWRIGHT_MODUL" ] \
@@ -233,12 +248,16 @@ jobs:
           # DREI ENGINES (R87, Konzept DM/DM-04). Bis zum 19.10.2026 holte
           # dieser Schritt nur Chromium.
           #
-          # Engines samt Systembibliotheken über `--with-deps`, wie vor
-          # Nr. 236. Vom 20.10.2026 an stand hier kurz eine Namensersetzung
-          # für Ubuntu 26.04 (F-DM-12, Lauf 132 rot); sie konnte nicht tragen,
-          # weil WebKit die Bibliotheken von 24.04 in genau ihrer Fassung
-          # braucht (F-DM-13, siehe `runs-on` oben). Seit R17-19 das
-          # Playwright aus der Sperrdatei, nicht `npx --yes` (F-R17-20).
+          # Engines samt Systembibliotheken über `--with-deps`. Vom
+          # 20.10.2026 an stand hier kurz eine Namensersetzung für Ubuntu
+          # 26.04 (F-DM-12, Lauf 132 rot); sie konnte nicht tragen, weil
+          # WebKit aus 1.56 die Bibliotheken von 24.04 in genau ihrer Fassung
+          # braucht (F-DM-13). Seit Nr. 393 kennt Playwright 26.04 selbst.
+          # Das Programm des Moduls aus der Sperrdatei, nicht `npx playwright@…`
+          # — sonst zöge npx eine zweite Kopie ohne Integritätsprüfung
+          # (F-R17-20). Über `.bin/`, nicht `node …/cli.js`: Der Riegel in
+          # `tools/kettenaufrufe/` hielte einen Pfad unter `tools/` mit `.js`
+          # für ein Werkzeug des Projekts, und das liegt erst nach `npm ci` da.
           tools/kette/stufe2-npm/node_modules/.bin/playwright install --with-deps chromium firefox webkit
           rot=""
           for motor in chromium firefox webkit; do

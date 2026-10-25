@@ -41,11 +41,19 @@ steht seither ein Verweis hierher.
 
 Gemessen am 21.09.2026.
 
-**Im Abbild vorhanden:** PHP **8.4.19** (mit `pdo_mysql`, `mysqli`,
+**Im Abbild vorhanden:** PHP **8.4.19** — *am 21.10.2026 gemessen: **8.3.6**,
+und nur diese Fassung (`/usr/bin/php8.3`); das Abbild hat gewechselt, ohne dass
+`aufbauen.sh` es bemerkt. Die Anwendung verlangt mindestens 8.2
+(`PLATTFORM_PHP_MIN`), Produktiv läuft 8.4. Eine Probe, die gestern grün war,
+kann daran rot werden (Komplettprobe, Nr. 393)* — (mit `pdo_mysql`, `mysqli`,
 `openssl`, `gd`, `zip`, `mbstring`), Node **22.22** samt Playwright **1.56**
 und den Engine-Dateien unter `/opt/pw-browsers/` — am 21.09.2026 alle drei,
-seit dem Abbild vom 11.10.2026 **nur noch Chromium** (F-S11-20; Firefox und
-WebKit holt `aufbauen.sh` nach, 1.3), Python **3.11**
+seit dem Abbild vom 11.10.2026 **nur noch Chromium** (F-S11-20). *Am
+25.10.2026 gemessen: Das Abbild vom 22.10.2026 bringt Playwright **1.63.0**
+und wieder nur dessen Chromium (`chromium-1243`).* **Das
+Playwright des Abbilds benutzt seit Nr. 393 kein Prüfmittel mehr:**
+`aufbauen.sh` hebt auf die Fassung in seiner Zeile `PW_FASSUNG` an (1.64.1)
+und lädt deren drei Engines (1.3), Python **3.11**
 (deadsnakes) mit `requests` und `cryptography`, Java, `socat`, `zip`,
 `unzip`, `git`, `curl`, `openssl`, Docker **29.3.1**. Vier Kerne, 15 GB
 Speicher.
@@ -64,7 +72,7 @@ prüft je Paket und holt nur, was fehlt.)*
 | **cmark-gfm** | die Quelltextprüfungen `handbuch` — rendern Handbuch und „Was ist NAdoku"? (seit BR-03) — und `bestand`, die die Tabelle der Quelltextprüfungen so liest, wie GitHub sie zeigt (seit BR-05) |
 | **Python `jsonschema`** | `tools/referenzdatensatz/quelldaten/pruefen.py` |
 | **Python `pyftpdlib`, `paramiko`, `pyopenssl`** | die Gegenstellen der Versandprobe (`tools/proben/versand/gegenstellen.py`); ohne `pyopenssl` fehlt FTPS, und alle drei Nachbauten brechen ab (RP-01) |
-| **Firefox und WebKit** (`firefox-1495`, `webkit-2215`) — seit dem Abbild vom 11.10.2026 (F-S11-20); nachgeladen seit Konzept DM (1.3) | jede Browserprobe — sie läuft in drei Engines und ist rot, wenn eine fehlt (R87, `Pruefablauf.md` 1, Grundsatz 8) |
+| **Playwright 1.64.1 und seine drei Engines** (`chromium-1248`, `firefox-1555`, `webkit-2370`) — das Abbild bringt 1.56.1 (seit dem Abbild vom 22.10.2026 1.63.0) und nur dessen Chromium; angehoben seit Nr. 393, Engines nachgeladen seit Konzept DM (1.3) | jede Browserprobe — sie läuft in drei Engines und ist rot, wenn eine fehlt (R87, `Pruefablauf.md` 1, Grundsatz 8) |
 | **Neun Systembibliotheken für WebKit** (`libenchant-2-2`, `libsecret-1-0`, `libwayland-server0`, `libmanette-0.2-0`, seit 19.10.2026 dazu `libgtk-4-1`, `libevent-2.1-7t64`, `libgstreamer-plugins-bad1.0-0`, `libavif16`, `libgles2`) — Firefox startet ohne sie, WebKit nicht (die ersten vier gemessen 26.09.2026: entfernt, Start versucht, wieder geholt; Backlog Nr. 301; die fünf weiteren nannte Playwright am 19.10.2026, F-DM-01) | jede Probe in WebKit (R87) |
 | **Android-SDK** (Plattform 37.0, Build-Tools 36.0.0, `cmdline-tools` 23.0) | `./gradlew build` im Ordner `android/`; `cmdline-tools` unter 23.0 legt AVDs mit API 37 falsch an (F-AR-18) |
 | **Emulator, Abbilder API 37, `lz4`, `cpio`, `libpulse0`** | `android/werkzeuge/emulator.sh` — der Emulatorlauf nach `Pruefablauf.md` 6.9 |
@@ -138,19 +146,65 @@ einer Engine. Seit R87 läuft jede Browserprobe in drei, und eine fehlende
 Engine ist rot — also holt das Standard-Setup sie (E-DM-03).
 
 **Was `aufbauen.sh web` tut:** zuerst die neun Bibliotheken (sonst lädt
-Playwright herunter und bricht danach an der eigenen Prüfung ab), dann je
-Engine nachsehen, ob `$PLAYWRIGHT_BROWSERS_PATH/<name>-<rev>` liegt, und nur
-die fehlenden mit dem Playwright des Abbilds nachladen. Das zieht genau die
-Fassung, die zu ihm gehört — für 1.56 `firefox-1495` und `webkit-2215` —, und
-keine zweite daneben; die Sorge von 1.2 ist damit beantwortet, nicht
-übergangen. Der Nachweis startet danach alle drei einzeln.
+Playwright herunter und bricht danach an der eigenen Prüfung ab), dann
+Playwright selbst in der Fassung `PW_FASSUNG`, dann `playwright install
+chromium firefox webkit`. Playwright überspringt dabei, was in seiner Fassung
+schon liegt, und lädt nur den Rest. Der Nachweis prüft danach die Fassung und
+startet alle drei Engines einzeln.
 
-*Gemessen am 19.10.2026:* Firefox und WebKit beiseitegelegt,
+*Gemessen am 19.10.2026, noch mit 1.56:* Firefox und WebKit beiseitegelegt,
 `aufbauen.sh web` gefahren — „nachladen: firefox webkit", danach Chromium
 141.0.7390.37, Firefox 142.0.1, WebKit 26.0, Rückgabewert 0, 12 s. **Nicht
 gemessen:** das Nachholen der fünf neuen Bibliotheken aus einem Abbild, dem
 sie fehlen — sie lagen nach dem ersten Lauf vor, und sie zu entfernen hätte
 abhängige Pakete mitgerissen.
+
+### 1.3a Playwright wird angehoben — seit Nr. 393
+
+**Warum nicht das Playwright des Abbilds:** 1.56 hat keine WebKit-Fassung
+für Ubuntu 26.04, und Stufe 2 musste deshalb als einziger Job der Kette auf
+24.04 laufen (F-DM-13). Stufe 2 allein anzuheben hätte sie andere Engines
+messen lassen als den Prüfstand. Angehoben wird deshalb beides, und die
+Fassung steht **einmal**: in der Zeile `PW_FASSUNG` von
+`tools/sandbox/aufbauen.sh`. Stufe 2 liest sie dort und ist rot, wenn sie
+keine findet — oder wenn ihre Sperrdatei (`tools/kette/stufe2-npm/`, seit
+R17-19) eine andere nennt. Wer `PW_FASSUNG` anhebt, erzeugt die Sperrdatei
+im selben Zug neu (`tools/kette/LIESMICH.md`).
+
+**Wie:** Das Abbild legt `/opt/node22/lib/node_modules/playwright` als
+Verweis nach `/opt/node-tools/`, wo auch `eslint`, `prettier` und andere
+liegen. `aufbauen.sh` installiert die Fassung in ein eigenes Verzeichnis
+(`/opt/playwright-<Fassung>`) und biegt nur diesen Verweis und die beiden
+unter `/opt/node22/bin/` um. Damit gelten die rund 35 Rückfallpfade der
+Werkzeuge weiter, und `node-tools` bleibt, wie das Abbild es brachte. Liegt
+dort statt des Verweises ein echtes Verzeichnis, wird es beiseitegelegt
+(`playwright.abbild-<Fassung>`); sonst legte `ln -sfn` den Verweis hinein. Die
+Engines des Abbilds (`chromium-1194`, seit dem Abbild vom 22.10.2026
+`chromium-1243`, und, falls vorhanden, `firefox-1495`, `webkit-2215`) bleiben
+liegen; kein Werkzeug startet sie mehr. Die
+Sorge aus 1.2, ein Nachladen lege eine zweite, abweichende Fassung daneben,
+ist damit nicht übergangen, sondern umgedreht: Die abweichende Fassung ist
+die des Abbilds, und sie ist abgehängt.
+
+**Wer `PLAYWRIGHT_MODUL` setzt,** bekommt keine Anhebung — `aufbauen.sh`
+fasst eine fremde Installation nicht an. Der Nachweis misst ihre Fassung
+trotzdem und ist rot, wenn sie nicht `PW_FASSUNG` ist.
+
+*Gemessen am 20.10.2026:* erster Lauf „anheben: 1.56.1 -> 1.64.1", danach
+`playwright 1.64.1`, Chromium 156.0.8078.4, Firefox 157.0, WebKit 27.2,
+41 s; zweiter Lauf „liegt: 1.64.1", nichts geladen, 3,9 s. Keine neue
+Systembibliothek nötig — die neun aus 1.3 genügten.
+
+**Die Engines kommen von `cdn.playwright.dev`, und die Netzrichtlinie der
+Umgebung muss diesen Host zulassen.** Am 25.10.2026 antwortete der Proxy
+darauf mit 403 („no rule or allowlist entry allows host"). `aufbauen.sh`
+meldete „Nachladen der Engines meldet einen Fehler", der Nachweis alle drei
+Engines als FEHLT. Ohne sie richtet auch `hochfahren.sh` nicht ein, denn
+Schritt 6 setzt das Admin-Passwort im Browser. Die BetreiberIn hat den Host
+in den Einstellungen der Umgebung unter „Allowed domains" eingetragen; danach
+ging es ohne Neustart des Containers, in 24 s. Einen anderen Spiegel hat
+niemand versucht: Eine gesperrte Adresse wird gemeldet, nicht umgangen. Wer
+eine Umgebung neu anlegt, trägt den Host gleich mit ein.
 
 ---
 
@@ -174,7 +228,8 @@ Der Hook ruft `web`. Wer mehr braucht, ruft nach.
 ### 2.1 Die Nachweistabelle
 
 Jeder Lauf endet mit einer Tabelle, die **je Stück die Fassung nennt** — die
-drei Engines **einzeln**, die acht Umgebungswerte mit ihrer Länge, nie mit
+drei Engines **einzeln**, davor die Fassung von Playwright gegen
+`PW_FASSUNG` (seit Nr. 393), die acht Umgebungswerte mit ihrer Länge, nie mit
 ihrem Wert. Der Grund steht in `Pruefablauf.md` 6.5: „3 Browser da" sagt
 nicht, welcher fehlt, und es fehlt immer nur einer. Der Prüfbericht führt
 diese Tabelle mit (`Pruefablauf.md` 5).
@@ -195,6 +250,14 @@ bash tools/sandbox/plattform.sh [php83|mariadb106|mysql80|mysql84|alles|schema|-
 | MySQL 8.4.0 | `mysql:8.4.0`, Port 3308 | bereit nach **10 s**, 8.4.0 |
 | MariaDB 10.11 | die örtliche, Port 3306 | 10.11.14 |
 | Schemaprobe je Fassung | `tools/schemaprobe/` | **4 × „50 Prüfungen, 0 Fehlschläge"** (seit S11-12, Fall 7; seit R4-15 bis dahin 40, P5c/AP8 30, davor 19) |
+
+*Am 25.10.2026 baute das PHP-Abbild nicht:* Im Bau-Behälter ließ sich
+`deb.debian.org` nicht auflösen („Could not resolve"), apt fand die
+Bibliotheken der fünf Erweiterungen nicht, und `plattform.sh alles` endete
+mit „1 Stück fehlen". Die drei Datenbankfassungen liefen, die Schemaprobe in
+allen vier Fassungen mit 50 Prüfungen und 0 Fehlschlägen. Gebraucht wird das
+Abbild nur für `hochfahren.sh --php 8.3`; die Stufe `neben` misst es nicht.
+Die Ursache ist nicht untersucht.
 
 **Drei Dinge, die erst die Messung ergeben hat** — und die alle drei gegen die
 erste Planung stehen:
@@ -283,10 +346,18 @@ Fassung 20.26.2, Rückgabewert 0.*
 
 **Eine Lage in `config.php` herstellen** — einen anderen Serverschlüssel,
 keinen Anteil — und wieder zurücknehmen: `tools/sandbox/konfig_stellen.php`.
-Acht Proben binden es ein; es schreibt die Datei und ruft
+Acht Proben binden es ein — `anteil`, `komplett`, `passkey`, `raten`,
+`schluesselwechsel`, `versand`, `wiederherstellung`, `zweitfaktor` — und ein
+Weg der Bedienprobe (hier stand bis Nr. 393 „vier", danach „sieben"; gezählt
+am 25.10.2026 mit R17-19). Es schreibt die Datei und ruft
 `konfig_verwerfen()`, denselben Weg wie die Anwendung, und legt am Ende den
-vorigen Stand zurück, auch nach einem Abbruch. **Die Sicherung für einen
-harten Abbruch liegt seit R17-19 im Temp-Verzeichnis**
+vorigen Stand zurück, auch nach einem Abbruch. **Seit Nr. 393 gehören dazu die
+beiden Marken in `app_state`** (`server_key_kennung`, `kdf_anteil_kennung`):
+Fehlt eine, legt die Anwendung sie beim nächsten Lesen mit dem Schlüssel an,
+der gerade in der Datei steht — und das war bis dahin der der gestellten Lage.
+Eine frisch eingerichtete Anlage stand danach auf „abweichend" (gemessen am
+25.10.2026 nach der `versandprobe` und der `komplettprobe`). **Die Sicherung
+für einen harten Abbruch liegt seit R17-19 im Temp-Verzeichnis**
 (`nadoku-konfig-vor-probe-<kennung>.php`, nur für den Besitzer lesbar, der
 Pfad steht beim Start auf stderr), nicht mehr als `config.php.vor-probe`
 neben der Datei: Dort lag sie im Webverzeichnis, unter einem Namen, den der
@@ -374,6 +445,7 @@ acht darüber: **Ein eingecheckter Zugang ist ein Zugang.**
 | Docker Hub (drosselt, 429 nach rund acht Abrufen) | `php.net` |
 | `deb.debian.org` **über HTTPS** | jeder Port außer 443 |
 | `cdn.playwright.dev`, `playwright.download.prss.microsoft.com` | |
+| `registry.npmjs.org` — für die Anhebung von Playwright (1.3a, 20.10.2026) | |
 | Maven Central — **aber gedrosselt**: `repo.maven.apache.org` 13 von 20 Abrufen `429` (24.09.2026) | |
 | Googles Spiegel `maven-central.storage-download.googleapis.com` (10 von 10) | |
 | Staging und dessen Webmail | |

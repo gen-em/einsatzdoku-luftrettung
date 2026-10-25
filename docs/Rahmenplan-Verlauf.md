@@ -9,8 +9,10 @@ Verlauf bis zum Schnitt). Die Fassungszählung läuft fortlaufend weiter.
 
 | Fassung | Datum | Anlass | Was |
 |---|---|---|---|
-| 170 | 25.10.2026 | R17-19, Zuarbeit | Kopf und Fahrplanzeile 12b: die Pakete laufen ab R17-19 auf `claude/tender-feynman-3oyo13`. Zuarbeit 6.1: Probeläufe von R17-19 (P-R17-14 bis -16), Prüfliste R17 um -17 bis -19, Health-Token als Kopfzeile. |
-| 169 | 25.10.2026 | Berichtigung, Zuarbeit | Berichtigt: Kopf und Fahrplanzeile 12b nannten den Zweig `claude/lucid-cannon-nvv86i` — er ist mit PR #118 gemergt, die Pakete laufen auf `claude/modest-edison-byg7ay`. Zuarbeit 6.1: die Rechtstext-Runde vor v1.0 trägt Nr. 400 (E-R17-29). |
+| 172 | 25.10.2026 | Merge, Berichtigung | `main` mit Nr. 393 (PR #119) aufgenommen. Berichtigt: Fassung 169 und Web 23.0.3 waren doppelt vergeben (F-R17-64); sie bleiben bei Nr. 393, R17-18/-19 sind 170/171, R17-18 geht in Web 23.1.0 auf. Kopf: 40 Posten. |
+| 171 | 25.10.2026 | R17-19, Zuarbeit | Kopf und Fahrplanzeile 12b: die Pakete laufen ab R17-19 auf `claude/tender-feynman-3oyo13`. Zuarbeit 6.1: Probeläufe von R17-19 (P-R17-14 bis -16), Prüfliste R17 um -17 bis -19, Health-Token als Kopfzeile. |
+| 170 | 25.10.2026 | Berichtigung, Zuarbeit | Berichtigt: Kopf und Fahrplanzeile 12b nannten den Zweig `claude/lucid-cannon-nvv86i` — er ist mit PR #118 gemergt, die Pakete laufen auf `claude/modest-edison-byg7ay`. Zuarbeit 6.1: die Rechtstext-Runde vor v1.0 trägt Nr. 400 (E-R17-29). |
+| 169 | 25.10.2026 | Nr. 393, Zuarbeit | 6.1: P-DM-04 erledigt (Prüfstand `neben` in drei Engines grün, `a5e4d556`); neu: Tag `web-v23.0.3` (CSP auf Produktiv scharf, Adresssuche im Einsatzformular bis dahin tot) und Stufe 2 nach dem Merge lesen. Kopf 39 Posten. |
 | 168 | 21.10.2026 | R17-17 | Freigaberunde 12b beantwortet (E-R17-17 bis -28): Paketschnitt R17-18 bis -30 verbindlich, alle Pakete mit Opus (R88); Fahrplanzeile und Block 12b, Kopf; Zuarbeit Hoster-Logdauer (6.1); Nr. 77 erledigt, Nr. 263 nicht umsetzen. |
 | 167 | 20.10.2026 | 12b beginnt | Fahrplanzeile 12b auf „läuft" (Zweig `claude/lucid-cannon-nvv86i`, `Review-R17.md` 7, Pakete R17-05 bis -17: Buchführung, elf Stücke, Freigaberunde). Kopf: Nr. 387 gemergt (#117), `main` bei Web 23.0.2, keine offenen PRs, als Nächstes 13. |
 | 166 | 20.10.2026 | Reihenfolge | Einschub vor 12b: Nr. 387 (verworfene Werte beim Einspielen) als Web 23.0.2, Entscheidung der Betreiberin — 12b soll den Code in Endfassung lesen. Kopf nachgezogen. |

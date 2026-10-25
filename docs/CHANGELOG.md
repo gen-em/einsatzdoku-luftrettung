@@ -93,7 +93,9 @@ Tokens erneuern** (siehe „Bewusst so").
   Probelauf nichts ablegt.
 - **Feste Fassungen mit Prüfsummen** (F-R17-20): `pip` in Stufe 2 und in
   der Arbeitsumgebung mit `--require-hashes`, Playwright in Stufe 2 über
-  `npm ci` aus einer Sperrdatei, das Connect-IQ-SDK und die vier
+  `npm ci` aus einer Sperrdatei — in der Fassung, die Nr. 393 einmal in
+  `PW_FASSUNG` festgelegt hat; nennt die Sperrdatei eine andere, ist der
+  Schritt rot —, das Connect-IQ-SDK und die vier
   Simulator-Bibliotheken mit SHA-256 — das SDK auch im Uhr-Job der
   Auslieferung, mit dem das Store-Paket entsteht. Zwei Proben holten bei
   jedem Lauf `npx --yes http-server`; sie nehmen jetzt den Server aus
@@ -119,6 +121,13 @@ Tokens erneuern** (siehe „Bewusst so").
 - **Die Deny-Liste** in `.claude/settings.json` sperrt zusätzlich
   `push_files` und `actions_run_trigger` (F-R17-14): Eine Instanz schiebt
   nicht an Git vorbei und startet keine Läufe.
+- **Der Rundlauf der Uhr fragt die Tabelle, nicht entfernte Spalten**
+  (F-R17-63). `rundlauf/pruefen.php` las `lat` und `lon` aus
+  `mission_phases`; die Spalten fielen mit S11-12 weg, zwei Tage nachdem
+  das Werkzeug geschrieben war. Weil der Rundlauf nur bei einer Berührung
+  der Uhr läuft, brach er eine Woche lang ab, ohne dass ihn jemand fuhr —
+  erst der Prüfstand dieses Pakets fand es. Jetzt prüft er, dass die
+  Tabelle keine Koordinatenspalte hat: die schärfere Aussage.
 
 ### Bewusst so
 
@@ -134,13 +143,16 @@ Tokens erneuern** (siehe „Bewusst so").
 - **Android und Uhr stufen nicht hoch.** APK und Store-Paket ändern sich
   nicht, nur ihr Bau.
 
-## [Web 23.0.3] — unveröffentlicht
+### Mit dabei: Die Texte sagen, was S11 gebaut hat (R17-18)
 
-Schritt 12b, Paket R17-18 (Befund F-R17-58). Kein Code der Anwendung, kein
-Schema — die Fassung steigt, weil Handbuch und „Was ist NAdoku" als
-`server/doku/` ausgeliefert werden.
+Schritt 12b, Paket R17-18 (Befund F-R17-58). Kein Code der Anwendung —
+ausgeliefert werden Handbuch und „Was ist NAdoku" als `server/doku/`. Auf
+dem Arbeitszweig stand dieser Teil zuerst als eigene Fassung 23.0.3, einer
+Nummer, die Nr. 393 vier Tage vorher schon vergeben hatte (F-R17-64).
+Ausgeliefert war keine der beiden; mit dem Merge von Nr. 393 behält 23.0.3
+deren Inhalt, und R17-18 geht in dieser Fassung auf.
 
-### Behoben
+#### Behoben
 
 - **Die öffentlichen Texte beschrieben die Ortsdaten noch als Klartext.**
   Seit Web 22 verschließen Uhr, Handy und Browser GPS-Spur, Phasenorte und
@@ -167,7 +179,7 @@ Schema — die Fassung steigt, weil Handbuch und „Was ist NAdoku" als
   Reanimation und Ortshöhe, wo die Oberfläche es seit Web 22 zeigt; der
   Absatz zum Schlüssel für Uhr und Handy sagte noch „künftig".
 
-### Prüfmittel
+#### Prüfmittel
 
 - **Die Textprobe liest die Zusage satzweise** (neue Klasse `zusage`, neue
   Sicht `satz`). Ein Satz, der ein Klartext-Wort und einen Ortsbegriff
@@ -183,7 +195,7 @@ Schema — die Fassung steigt, weil Handbuch und „Was ist NAdoku" als
   alten Wortlaut als Fall. Was sie nicht sieht: eine alte Aussage, die auf
   zwei Sätze verteilt ist.
 
-### Bewusst so
+#### Bewusst so
 
 - **Die Vorlagen von AVV und Nutzungsbedingungen bleiben vorerst, wie sie
   sind.** Beide sagen noch, Spur und Phasenkoordinaten lägen im Klartext —
@@ -195,6 +207,326 @@ Schema — die Fassung steigt, weil Handbuch und „Was ist NAdoku" als
   rot wird, sobald einer berichtigt ist, damit die Ausnahme nicht stehen
   bleibt. Die Richtung des Fehlers ist dieselbe wie oben: Der Vertrag
   verspricht weniger, als die Anwendung hält.
+## [Web 23.0.3] — unveröffentlicht
+
+Backlog Nr. 393, vier Funde aus den vollen Prüfständen in drei Engines
+(Werkzeug-Eintrag darunter). Kein Schema.
+
+### Behoben
+
+- **Die Adresssuche im Einsatzformular stand nicht in der CSP.**
+  `kopf_csp()` setzt den eingestellten Adressdienst in `connect-src`, aber
+  nur, wenn `geocoder_lib.php` vor der Kopfzeile geladen war — geprüft mit
+  `function_exists()`. `einstellungen.php` lädt sie früh,
+  `einsatz_form.php` erst später über `ui.php`. Gemessen am 21.10.2026:
+  `einsatz_form.php` lieferte `connect-src 'self'`, `einstellungen.php`
+  `'self' https://photon.komoot.io`. Solange die CSP auf Report-Only steht,
+  entsteht nur eine Meldung; **scharf geschaltet hätte die Adresssuche
+  genau dort nichts gefunden**, und zwar ohne Fehlermeldung außer in der
+  Konsole. `kopfzeilen_lib.php` bindet die Datei jetzt selbst ein; sie legt
+  beim Laden nur Konstanten und Funktionen an. Ohne Datenbank (Wartung,
+  `install.php`) bleibt es bei `'self'`, nachgeprüft mit einer Kopie der
+  drei Bibliotheken ohne `config.php`. Wer die CSP schon scharf geschaltet
+  hat, prüft nach dem Update die Adresssuche im Einsatzformular. **Auf
+  Produktiv ist sie scharf** (Auskunft der Betreiberin, 25.10.2026). Dort
+  findet die Adresssuche im Einsatzformular also nichts, bis diese Fassung
+  ausgerollt ist.
+- **Jede Sicherung schrieb zwei CSP-Meldungen.** Das Archiv der Sicherung
+  entstand mit zip.js und `level: 0`. zip.js schaltet bei jeder Stufe außer
+  6 die native `CompressionStream` ab, weil die keine Stufen kennt, und lädt
+  stattdessen seinen eigenen Packer als WebAssembly — auch bei Stufe 0, wo
+  gar nichts gepackt wird. Die CSP verbietet das (`script-src wasm-eval`,
+  `connect-src data:`), zip.js fängt den Fehlschlag still ab, und die
+  Sicherung gelang trotzdem: Mit scharfer CSP lief der Kreislauf `edbak` in
+  allen drei Engines grün, je 347 566 Einzelvergleiche ohne unerklärte
+  Abweichung. Geblieben waren die Meldungen im Reiter Betrieb, und mit
+  ihnen eine Liste, die vor dem Scharfschalten leer sein soll und es nie
+  wurde. `compressionMethod: 0` sagt dasselbe über das Verfahren statt über
+  die Stufe: dasselbe Archiv bis auf die Zeitstempel, Prüfsummen gültig,
+  Meldungen in Chromium 2 → 0 (Firefox und WebKit meldeten es in dieser
+  Nachstellung nicht).
+
+- **Wer die Startseite gleich wieder verließ, schob eine Spur aus dem
+  Wartungslauf.** Der stille Durchgang der Startseite beginnt 1,5 s nach dem
+  Laden und tauscht Spur um Spur. Wird die Seite währenddessen verlassen,
+  bricht der Browser die laufende Anfrage ab, und `EdApi` meldet
+  `status: 0`. `wartungslauf.js` nahm das als Fehler der Spur und setzte sie
+  auf die Auslassliste — und die gilt für den ganzen Tab. Bis er geschlossen
+  wurde, blieb diese Spur unverdichtet. Gefunden, weil die
+  Wartungslaufprobe in WebKit etwa jedes zehnte Mal in D1 rot war (eins von
+  zehn in einer Serie am 21.10.2026, dazu der Prüfstand am Vortag): Die
+  Seite aus Teil C arbeitete noch, als die Probe weiternavigierte. Eine
+  Anfrage ohne Antwort beendet jetzt den Durchgang, ohne auszulassen; der
+  nächste Aufruf nimmt die Spur wieder. Die Probe erzwingt den Fall seither
+  (D0: den ersten Tausch abbrechen) — mit dem alten Code in WebKit und
+  Chromium rot, mit dem neuen in allen drei Engines 20 von 20.
+
+- **Ein heiles Komplett-Backup konnte „verändert oder unvollständig"
+  heißen.** `komp_oeffnen()` erkennt den letzten Block daran, dass die
+  Leseposition das Dateiende erreicht, und nahm das Dateiende aus
+  `filesize()`. Das geht über den Stat-Cache von PHP: Hat derselbe Prozess
+  die Datei vorher gesehen, als sie kürzer war, gilt ein mittlerer Block als
+  letzter, und seine Zusatzdaten passen nicht. Gefunden, weil die
+  Komplettprobe und die Schlüsselwechselprobe im zweiten vollen Prüfstand
+  rot waren — beide versiegeln über mehrere Häppchen und öffnen danach im
+  selben Prozess. Dreimal rot, auch mit dem `server/`-Stand von `main`;
+  zuletzt grün waren sie am 19.10.2026, und warum sich das geändert hat,
+  ist nicht belegt: Die Arbeitsumgebung hat heute PHP 8.3.6, laut
+  `docs/Sandbox-Setup.md` lag im Abbild am 21.09.2026 PHP 8.4.19. Im
+  Betrieb liegen Versiegeln und Öffnen in verschiedenen Anfragen, und vor
+  dem Umhängen des fertigen Backups steht ein `clearstatcache()`; ein
+  Schaden im Betrieb ist nicht bekannt. Jetzt kommt die Größe von `fstat()`
+  am offenen Handle, an beiden Stellen, die sie lesen. Danach Komplettprobe
+  zweimal 69 von 69, Schlüsselwechselprobe 66 von 66.
+
+### Was bewusst stehen bleibt
+
+- Der Adressdienst steht jetzt auf **jeder** Seite in `connect-src`, nicht
+  nur auf denen mit Adresssuche. Die Richtlinie ist eine je Installation,
+  nicht je Seite, und die Ausnahme hängt weiter am Schalter „Adresssuche".
+
+## [Werkzeug: Playwright 1.64.1, Stufe 2 wieder auf Ubuntu 26.04 (Nr. 393)] — 2026-10-20
+
+**Das ganze Projekt fährt Playwright 1.64.1, und Stufe 2 läuft wieder auf
+`ubuntu-26.04` wie alle anderen Jobs.** Nur `tools/`, `.github/` und
+`docs/`, keine Versionsstufe. Seit dem Vormittag lief Stufe 2 als einziger
+Job auf 24.04 (F-DM-13): Playwright 1.56 hatte für 26.04 keine
+WebKit-Fassung, und die für 24.04 ist gegen Bibliotheken gebaut, die es
+auf 26.04 nicht gibt. Seit 1.63 führt Playwright 26.04 als eigene
+Plattform, mit eigener Paketliste und eigenem WebKit-Build; Firefox lädt
+dort nach Playwrights eigener Zuordnung den Build für 24.04. Gewählt ist
+1.64.1, die neueste stabile Fassung, nicht die kleinste, die reicht: Der
+Abstand bis zum nächsten Anheben ist so am größten. Die Engines springen
+mit: Chromium 141 auf 156, Firefox 142 auf 157, WebKit 26.0 auf 27.2.
+
+**Warum im ganzen Projekt und nicht nur in Stufe 2:** Stufe 2 soll
+dieselben Engines messen wie der Prüfstand. Deshalb steht die Fassung jetzt
+**einmal**, in der Zeile `PW_FASSUNG` von `tools/sandbox/aufbauen.sh`.
+Stufe 2 liest sie dort und ist rot, wenn sie keine findet. Bis dahin stand
+`playwright@1.56` zweimal im Workflow, und daneben stand im Abbild
+dieselbe Zahl ein drittes Mal. Gleich gehalten hat sie nur die Sorgfalt.
+Stufe 2 installiert die Engines über das eben installierte Modul, nicht
+über `npx playwright@…`. Sonst zöge `npx` eine zweite Kopie, die nur
+zufällig dieselbe ist.
+
+**Wie die Arbeitsumgebung anhebt:** Das Abbild legt
+`/opt/node22/lib/node_modules/playwright` als Verweis nach
+`/opt/node-tools/`, wo auch `eslint`, `prettier` und andere liegen.
+`aufbauen.sh` installiert deshalb in ein eigenes Verzeichnis
+(`/opt/playwright-1.64.1`) und biegt nur diesen Verweis um. So gelten die
+rund 35 Rückfallpfade der Werkzeuge weiter, ohne dass eines angefasst
+wird. Die Engines lädt jetzt immer `playwright install`, und Playwright
+überspringt, was in seiner Fassung schon liegt. Bis dahin sah der Schritt
+nur nach, ob irgendein `chromium-*` lag. Nach dem Anheben hätte das alte
+`chromium-1194` des Abbilds genügt, und der Fehler wäre erst beim Start
+aufgefallen. Der Nachweis nennt die Fassung von Playwright jetzt mit und
+ist rot, wenn sie nicht `PW_FASSUNG` ist. Gemessen: erster Lauf 41 s,
+zweiter 3,9 s ohne Download; keine neue Systembibliothek nötig.
+
+**Eine Stelle hätte das Anheben still überlebt:** `stilvergleich.js` nahm
+als Vorgabe den festen Pfad `chromium-1194`. Nach dem Anheben hätte der
+Stilvergleich ein Chromium gefahren, das kein anderes Prüfmittel mehr
+misst. Er nimmt jetzt wie alle das Chromium seines Playwright;
+`CHROMIUM=<pfad>` gilt weiter.
+
+**Was der erste volle Lauf in drei Engines fand.** Der Prüfstand `neben`
+lief am 20.10.2026 zum ersten Mal über den ganzen Stand in Chromium,
+Firefox und WebKit — alle Berichte auf `main` seit Konzept DM waren
+`klein`, also Chromium allein. Er war 35 grün, 4 rot. Jede rote Probe ist
+gegen WebKit 26 nachgestellt worden, und keine war eine Folge der Anhebung;
+WebKit 26 schnitt in der Bedienprobe sogar schlechter ab (74 von 77 gegen
+76 von 77). Was dahinter lag:
+
+- **Playwrights Screenshot löst in WebKit einen CSP-Bericht aus.** Er legt
+  ein `<style>` in die Seite (Textcursor, Animationen), die CSP verbietet
+  Inline-Stile, WebKit meldet es — bei jedem Screenshot, Chromium und
+  Firefox nie. Auf den Wartungsseiten antwortet der Endpunkt mit 503, daher
+  20 Konsolenfehler; dazu eine örtliche `csp_berichte` voller falscher
+  Zeilen. Der Bericht ist von einem echten Verstoß nicht zu unterscheiden.
+  `starten()` beantwortet in WebKit ab dem ersten Screenshot eines Kontexts
+  `api/csp_bericht.php` selbst; die CSP bleibt in Kraft. Am Kontext, nicht
+  an der Seite: Eine `page.route()` sieht den Bericht nicht (gemessen).
+- **WebKit meldet einen abgebrochenen Abruf als Seitenfehler** („… due to
+  access control checks"), obwohl die Anwendung ihn fängt — wenn der stille
+  Wartungslauf noch läuft, während das Werkzeug weiternavigiert. Rauschen
+  ist er jetzt nur bei genau diesem Wortlaut, eigener Herkunft und einer
+  laufenden Navigation; dieselbe Zeile ohne Seitenwechsel bleibt ein
+  Fehler. Die Stelle ist `starten()`, für alle 25 Werkzeuge, die
+  Seitenfehler zählen. Gepatcht wird `addListener`, nicht `on`: Playwright
+  setzt `on` im Konstruktor jeder Seite als eigene Eigenschaft, und der
+  erste Versuch am Prototyp kam nie an. Selbstprobe 24 von 24, die
+  Gegenprobe (Bedingung gestrichen) macht drei Fälle rot.
+- **80 Bilder fehlten, weil der Demo-Reset in den WebKit-Lauf fiel.** Der
+  Prüfstand schob die Demo-Marke einmal je Probe, und seit R87 läuft eine
+  Probe dreimal hintereinander — der Bilderlauf 70 Minuten bei 30 Minuten
+  Schutz. Jetzt vor jedem Engine-Lauf.
+- **Die Bedienprobe hing 43 Minuten** und hatte keine Zeitgrenze je Weg.
+  Jetzt 300 s; wer sie reißt, ist verfehlt, und seine Rolle wird neu
+  angemeldet. Dazu der eine Weg, der in WebKit immer scheiterte
+  (`ap2-dialog-vier-einbauorte`): Er wählte den Einsatz „ohne Spur" an der
+  geöffneten Spur, und WebKit öffnet sie später — Einsatz 1119 mit 393
+  Punkten galt als spurlos, das Formular zeigte die Auswahl nicht, und
+  `selectOption` lief 30 s ins Leere. Jetzt entscheidet die Klartextzahl der
+  Stücke.
+- **Der zweite volle Lauf (51 grün, 5 rot) hatte keinen WebKit-Fehler mehr,
+  aber drei Einzelwackler in Firefox, je an einer Stelle, die im ersten
+  Lauf grün war.** Jeder ist einzeln nachgestellt oder benannt:
+  - *Stilvergleich:* Inhalt eines geschlossenen `<details>` wird nicht
+    gelayoutet; Firefox meldete für seine Breite trotzdem Pixel aus einem
+    früheren Layout (1680 gegen 1920 in jeder Fensterbreite, bei gleichem
+    Stylesheet). Solche Elemente vergleicht der Stilvergleich jetzt ohne
+    Layoutmaße — 1 456 von 63 570 Messungen. Der erste Entwurf nahm jedes
+    Element ohne Box und damit ein Fünftel der Abdeckung, auch die
+    berechneten Werte verborgener Dialoge; er war außerdem nur zufällig
+    grün, weil Firefox dem Inhalt geschlossener `details` Rechtecke gibt.
+    Dazu ein zweiter Zufall: `autofocus` in `login.php` setzt Firefox erst
+    nach `load`, also nach dem `blur()` des Werkzeugs — das Attribut wird
+    vor dem Laden entfernt. Danach acht Läufe in Firefox grün; eine
+    absichtlich geänderte Regel findet er weiter (273 Abweichungen).
+  - *Bedienprobe (F-DM-10, seit Konzept DM offen):* einer von fünf
+    Einzelläufen rot, `#savestate` leer. Die erweiterte Meldung zeigte
+    `abgeschickt: 0` bei sichtbarem Formular — der Klick traf daneben. Die
+    Wahl des Rettungsmittels baut die Rollenfelder über dem Knopf neu, und
+    kam die Antwort zwischen Zielsuche und Klick, rückte der Knopf weg.
+    `ap4a.mjs` und `ap4.mjs` warten jetzt auf Ruhe im Netz (höchstens 5 s);
+    danach 15 von 15 in Firefox.
+  - *Bilderlauf:* „Stylesheet nach 5 s nicht angewendet", einmal, an einer
+    Breite; fünf Läufe der Seite danach grün (100 Aufnahmen). Nicht
+    erklärt; die Meldung nennt seither Adresse, `readyState` und die
+    geladenen Stylesheets, statt an der Zeitgrenze zu drehen.
+- **Der dritte volle Lauf (54 grün, 3 rot)** brachte drei weitere Funde im
+  Werkzeug, alle nachgestellt und behoben:
+  - *Bedienprobe hing in WebKit* an `da-faehigkeiten-nach-typ`, zweimal im
+    vollen Lauf, nie einzeln. Das Aufrufprotokoll zeigte den Grund:
+    `setViewportSize` auf der Seite der Demo-Rolle, während diese sich
+    selbst neu lud (der Weg davor schaltet die Wartung ein und aus). Ein
+    solcher Aufruf kehrt in WebKit nicht zurück. `kasten()` ruft ihn jetzt
+    nur, wenn die Größe nicht schon stimmt — im Prüfstand nie. Danach zwei
+    volle Läufe in WebKit mit 77 von 77, zum ersten Mal.
+  - *Rückwegprobe in Firefox* (zwei von drei vollen Läufen): Sie las nach
+    dem POST die alte Seite, weil `waitForLoadState('domcontentloaded')` am
+    alten Dokument sofort zurückkehrte. Sie wartet jetzt auf den
+    Seitenwechsel; danach Firefox 3×, Chromium und WebKit je 50/23.
+  - *Wartungslaufprobe D0* (neu in diesem Paket) fand gelegentlich keinen
+    Tausch: Der stille Lauf der Startseite aus Teil C hatte die Spur schon
+    verdichtet. D0 beginnt jetzt von der Spurenseite aus; danach fünf
+    Läufe in drei Engines 20 von 20.
+- **Die Wartungslaufprobe war in WebKit gelegentlich rot (D1)** — das war
+  ein Fehler der Anwendung, nicht des Werkzeugs; er steht im Eintrag
+  Web 23.0.3 darüber. Gefunden erst in einer Serie von zehn Läufen, nach
+  einer falschen ersten Vermutung (eine Spur, die nicht aufgeht): Die Probe
+  schreibt seither mit, was der Browser als „geht nicht auf" meldet, und im
+  roten Lauf war es nichts.
+- **Der vierte volle Lauf (56 grün, 1 rot)** war bis auf die Bedienprobe in
+  allen drei Engines grün, auch bei den Proben, die in den Läufen davor rot
+  waren. Die Bedienprobe hatte zwei Funde im Werkzeug:
+  - *Chromium: sechs Wege „nicht gefahren".* Das Aufräumen von
+    `ap5-standort-loeschen-variante-b` schickte sein Löschformular ab und
+    wartete danach fest 500 ms statt auf die Seite. Die erste Meldung nennt
+    die Adresse genau dieser Antwort (`…#sd-ohne-veh`): Sie kam erst, als
+    der nächste Weg schon navigierte. Dasselbe Muster stand in den
+    Lösch-Helfern von `ap5.mjs` und `ap4.mjs`, dort mit 400 ms, nur bisher
+    ohne Treffer. Alle drei warten jetzt auf die Seite danach, so wie das
+    Löschen des Standorts in derselben Datei seit P5c. Beim Umbau fiel ein
+    eigener Fehler sofort auf: `form.id` ist an diesen Formularen das
+    verborgene Feld `<input name="id">`, nicht ihre Kennung. Deshalb steht
+    dort jetzt `getAttribute('id')`, wie in `ap4.mjs` schon immer.
+    **Nicht erklärt sind die fünf Meldungen danach.** Sie lauten
+    „`index.php`, unterbrochen von `index.php`". Die Deutung: Jeder dieser
+    Wege scheitert in Millisekunden, und seine eigene Navigation schlägt
+    in den nächsten ein. Nachgestellt ist sie nicht. Ein nachgebautes
+    langsames Formular ließ sich in Chromium nicht dazwischenschieben
+    (vier Varianten, je sechs Wege, alle grün). Nach dem Umbau liefen
+    `ap5` und `ap6` dreimal mit 17 von 17, `ap4` zweimal mit 6 von 6, und
+    im Bestand blieb nichts zurück. Das galt zunächst nur für das
+    Chromium 153 des Abbilds, denn die Netzrichtlinie sperrte
+    `cdn.playwright.dev`. Nach der Freigabe des Hosts kam derselbe
+    Nachweis mit der Soll-Engine: Chromium 156 dreimal 23 von 23 Wegen
+    (`ap4` bis `ap6`), Firefox 157 einmal 23 von 23.
+  - *WebKit: eine Seite, die nicht mehr antwortet.* `mr-oeffner-markiert`
+    hing bis zur Zeitgrenze. Einzeln war der Weg grün, und in den folgenden
+    vollen WebKit-Läufen blieb er es; die Stelle wanderte. In fünf von neun
+    Läufen war die Seite der Demo-Rolle vor `da-faehigkeiten-nach-typ`
+    stumm, also nach dem Admin-Block — an genau dem Weg, an dem Lauf 3
+    hing. Die Erklärung von dort (`setViewportSize` während eines
+    Neuladens) war damit wohl die Wirkung, nicht die Ursache.
+    Was „stumm" heißt, zeigen drei Messungen vom 25.10.2026. Die
+    Navigation sagt nicht zu, und der PHP-Server nimmt in dieser Zeit
+    **keine einzige Verbindung** an: Die Anfrage verlässt WebKit nie. Ein
+    `evaluate` kommt nicht zurück. Und kein WebKit-Prozess rechnet; der der
+    Seite schläft (980 MB, seit sechs Minuten in Gebrauch). Erst ein neuer
+    Kontext hilft. Ausgeschlossen sind damit ein Skript der Anwendung in
+    einer Endlosschleife, ein volles Verbindungsfach (keine offene
+    Verbindung zu socat) und eine Drosselung von Seiten im Hintergrund (in
+    allen drei Engines sichtbar, Zeitgeber und Bildaufbau laufen). Auch
+    eine offene `beforeunload`-Abfrage scheidet aus: Ohne Dialog-Horcher
+    navigieren alle drei Engines, und die Probe hat keinen. Den Auslöser
+    hat keine Messung gezeigt; in Ausschnitten bis 62 Wege kam es nie vor.
+    Ein Fehler der Anwendung ist es nach diesen Zahlen nicht. Ein echter
+    Safari ist das nicht, er bleibt Handprüfung.
+    Deshalb fängt die Bedienprobe es jetzt an zwei Stellen ab, beide nur
+    in WebKit und beide gezählt (`pruefen.sh`, zusammen mit E-DM-10):
+    1. Vor jedem Weg fragt `kasten()` die Seite der Rolle, höchstens 10 s
+       lang. Ist sie stumm, wird die Rolle neu angemeldet
+       (`WebKit-Neuanmeldung:`). In den fünf Läufen oben fing das jeden
+       dieser Fälle, und der Weg war danach grün.
+    2. In den anderen vier Läufen blieb eine Seite **mitten** in einem
+       Weg stehen, jedes Mal in einem anderen (`registrieren`,
+       `einstellungen-profil-rueckweg`, `betrieb-server-frischer-code`,
+       `p5c-ap8-adhoc-tag-in-der-luft`, `einstellungen-profil-zweitfaktor`).
+       Ein solcher Weg wird nach einer Zeitüberschreitung **einmal ganz**
+       wiederholt, mit frisch angemeldeter Rolle
+       (`WebKit-Wiederholung:`).
+    Punkt 2 erweitert E-DM-10, das einen Seitenwechsel nach einem Klick
+    nicht wiederholt. Wiederholt wird jetzt nicht der Klick, sondern der
+    Weg von vorn, nachdem sein `finally` aufgeräumt hat; entschieden hat
+    das die Betreiberin am 25.10.2026. Wiederholt wird nur, was geworfen
+    hat. Ein Weg, der ein falsches Ist misst, bekommt keine zweite
+    Gelegenheit, und ein Fehler der Anwendung scheitert auch beim zweiten
+    Mal. Danach drei volle WebKit-Läufe mit 77 von 77; im ersten griff die
+    Wiederholung einmal (`einstellungen-profil-rueckweg` hing 300 s und
+    war im zweiten Versuch grün), in den beiden anderen nichts.
+    `rolleVerwerfen()` schließt den Kontext jetzt mit eigener Frist, weil
+    ein toter Kontext sonst die ganze Probe anhielte.
+- **Der fünfte volle Lauf war rot und ist abgebrochen worden.** Die
+  Bedienprobe scheiterte in allen drei Engines am selben Weg,
+  `betrieb-server-schluesselwechsel`, und die `schluesselwechselprobe`
+  lief gar nicht erst: Der Serverschlüssel sei „abweichend", nicht
+  „bereit". In `config.php` stand der Schlüssel `41c90bbb`, die Marke in
+  `app_state` nannte `168251fa`. Neu war daran nur, dass die Anlage vor
+  dem Lauf frisch eingerichtet war. Eine frische Anlage hat die Marke
+  `server_key_kennung` noch nicht; die Anwendung legt sie beim ersten
+  Lesen des Zustands an, mit dem Schlüssel, der gerade in der Datei steht
+  (E-S10-U-02). `tools/sandbox/konfig_stellen.php` liest den Zustand nach
+  jedem Schreiben neu. Stellt eine Probe also einen anderen Schlüssel, hält
+  die Datenbank dessen Kennung fest, und das Zurücklegen der Datei ändert
+  daran nichts. Nachgestellt auf frischen Anlagen: Nach der
+  `komplettprobe` nannte die Marke `9103c0f2` gegen `5e1302b0` in der
+  Datei, nach der `versandprobe` `876aa734` gegen `01264396`. Beide
+  Proben meldeten sich dabei grün, mit 69 und 143 Erwartungen. Auf einer
+  Anlage, die die Marke schon hat, ändert die gestellte Lage sie nicht —
+  deshalb fiel es in keinem Lauf davor auf.
+  `konfig_stellen()` merkt sich jetzt beide Marken (`server_key_kennung`,
+  `kdf_anteil_kennung`) und legt sie mit der Datei zurück. Fehlte eine,
+  kommt sie wieder weg. Die `komplettprobe` misst das an ihrem Ende
+  selbst, denn ihre Kopie schreibt in die echte Datenbank: Die neue
+  Erwartung „Die Marke des Serverschluessels steht wie vor der Probe" ist
+  die siebzigste. Danach liefen die sieben Proben, die den Helfer
+  benutzen, und die `schluesselwechselprobe` zweimal hintereinander, einmal
+  auf frischer und einmal auf benutzter Anlage. Alle acht waren grün, und
+  keine hinterließ eine fremde Marke. Die erste Marke legte die
+  `zweitfaktorprobe` an, mit dem echten Schlüssel, so wie es ein
+  Seitenaufruf tut. Der Lauf wurde nach der halben Strecke abgebrochen:
+  Was danach kam, hing entweder vom verdorbenen Schlüsselstand ab oder war
+  von den Änderungen seit Lauf 4 unberührt. Ein abgebrochener Lauf ist
+  kein Bericht, gemessen wird mit einem neuen.
+
+**Was bewusst stehen bleibt:** die Engines des Abbilds unter
+`/opt/pw-browsers`. Sie stören nicht, und sie zu löschen hieße, ins Abbild
+einzugreifen. **Was erst nach dem Merge gemessen wird:** Stufe 2 auf
+26.04. Sie läuft nur nach einem Push auf `main`, auf dem Arbeitszweig
+lässt sie sich nicht belegen. Bleibt sie rot, ist der Rückweg eine Zeile
+(`runs-on`), und die Fassung bleibt angehoben.
 
 ## [Web 23.0.2] — unveröffentlicht
 

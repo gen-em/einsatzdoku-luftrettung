@@ -8264,15 +8264,23 @@ declare(strict_types=1);
  *   Freigabe, Verwaltung → Sicherungen, Kontoseite) Feld und Anzahl und
  *   sind dann orange (`verworfenSatz()`, `edbak_verworfen_satz()`). Kein
  *   Schema.
- * 23.0.3 — DIE TEXTE SAGEN, WAS S11 GEBAUT HAT (R17-18, Schritt 12b,
- *   F-R17-58). README, „Was ist NAdoku" (`ueber.php`) und Handbuch 4.3 und 5
- *   (`hilfe.php`) nannten GPS-Spur, Phasenorte, Transportziel, Ortshoehe und
- *   Reanimation noch Klartext und den Einsatzort rekonstruierbar; seit
- *   Web 22 ist das Gegenteil wahr. Ausgeliefert werden davon die zwei
- *   Dokumente unter `server/doku/` — deshalb eine Fassung, obwohl kein Code
- *   sich aendert. Die Textprobe liest die Zusage seither satzweise (Klasse
- *   `zusage`). AVV und Nutzungsbedingungen bleiben bis zur Rechtstext-Runde
- *   vor v1.0 (Backlog Nr. 400). Kein Schema.
+ * 23.0.3 — ZWEI CSP-FUNDE AUS DEM ERSTEN VOLLEN LAUF IN DREI ENGINES
+ *   (Backlog Nr. 393). (1) `einsatz_form.php` lieferte `connect-src 'self'`
+ *   ohne den Adressdienst: `kopf_csp()` nahm ihn nur auf, wenn der Aufrufer
+ *   `geocoder_lib.php` vor dem Kopf geladen hatte, und das Formular lud sie
+ *   erst danach über `ui.php`. Bei scharfer CSP hätte die Adresssuche genau
+ *   dort nichts gefunden. `kopfzeilen_lib.php` bindet sie jetzt selbst ein.
+ *   (2) Die Sicherung schrieb ihr Archiv mit `level: 0`; zip.js schaltet bei
+ *   jeder Stufe außer 6 auf seinen eigenen Packer um und lädt dafür
+ *   WebAssembly, das die CSP verbietet — zwei Berichte je Sicherung.
+ *   `compressionMethod: 0` speichert dasselbe ohne den Umweg. (3) Der
+ *   stille Wartungslauf setzte eine Spur auf die Auslassliste des Tabs, wenn
+ *   ihr Tausch KEINE Antwort bekam (`status: 0`) — meist, weil die Seite
+ *   gerade verlassen wurde. Jetzt endet der Durchgang dann, ohne
+ *   auszulassen. (4) `komp_oeffnen()` las die Dateigröße über den Stat-Cache;
+ *   wer im selben Prozess versiegelte und öffnete, bekam die alte Größe, und
+ *   ein heiles Komplett-Backup hieß „verändert" (rot in der Komplettprobe
+ *   unter PHP 8.3.6). Jetzt `fstat()` am offenen Handle. Kein Schema.
  *
  * 23.1.0 — ZWEI TOKENS FUER `jobs.php`, UND DIE KETTE HAT KEINEN SCHLUESSEL
  *   MEHR IN DER ADRESSE (R17-19, Schritt 12b, F-R17-57, -22). Bis 23.0.3
@@ -8290,5 +8298,18 @@ declare(strict_types=1);
  *   `config.php` beginnt (F-R17-55). Nebenfassung, weil ein Geheimnis und
  *   eine Karte dazukommen; die Kette selbst (App-Tor, Signatur ohne Gradle,
  *   gepinnte Pakete, zwei neue Riegel) stuft keine Zaehlung. Kein Schema.
+ *
+ *   MIT DABEI: DIE TEXTE SAGEN, WAS S11 GEBAUT HAT (R17-18, F-R17-58).
+ *   README, „Was ist NAdoku" (`ueber.php`) und Handbuch 4.3 und 5
+ *   (`hilfe.php`) nannten GPS-Spur, Phasenorte, Transportziel, Ortshoehe und
+ *   Reanimation noch Klartext und den Einsatzort rekonstruierbar; seit
+ *   Web 22 ist das Gegenteil wahr. Ausgeliefert werden davon die zwei
+ *   Dokumente unter `server/doku/`. Die Textprobe liest die Zusage seither
+ *   satzweise (Klasse `zusage`). AVV und Nutzungsbedingungen bleiben bis zur
+ *   Rechtstext-Runde vor v1.0 (Backlog Nr. 400).
+ *   Diese Zeilen standen auf dem Arbeitszweig als eigene Fassung 23.0.3 —
+ *   eine Nummer, die Nr. 393 vier Tage vorher schon vergeben hatte
+ *   (F-R17-64). Ausgeliefert war keine der beiden; mit dem Merge von
+ *   Nr. 393 behaelt die 23.0.3 deren Inhalt, und R17-18 geht in 23.1.0 auf.
  */
 const WEB_VERSION = '23.1.0';

@@ -20,7 +20,8 @@ Im Prüfstand als `uhr-rundlauf`: `--nachholen fenix6pro`, dann `fr945`.
 Koppeln (die Sitzung wird per SQL dem Demo-Konto zugeordnet — den Klick im
 Web misst die Kopplungsprobe), Senden, Öffnen mit dem Demo-Schlüssel: 600
 Punkte an den Rändern (negativ, 4500,5 m, ohne Höhe) in zwei Stücken, drei
-Phasen (eine ohne Ortung), Reanimation, Ruhestück. Mit `--nachholen` ist der
+Phasen (eine ohne Ortung; `mission_phases` ohne Koordinatenspalte — bis R17-19
+fragte es `lat`, die S11-12 entfernt hat, F-R17-63), Reanimation, Ruhestück. Mit `--nachholen` ist der
 öffentliche Schlüssel des Kontos beim Koppeln geleert: „Kein Schlüssel“, 0
 Einsätze; dann START halten (E-S11-79), erst danach gehen die Pakete.
 

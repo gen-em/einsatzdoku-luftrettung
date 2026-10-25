@@ -1306,23 +1306,6 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
 
 <!-- -->
 
-393. **Playwright 1.56 hat keine WebKit-Fassung für Ubuntu 26.04.** · gehört zu: nächste Backlog-Runde · Stand: offen · seit 20.10.2026
-     *Aufgenommen 20.10.2026 mit F-DM-13.* Stufe 2 läuft deshalb als
-     einziger Job der Kette auf `ubuntu-24.04` (E-DM-11, Ausnahme von
-     Nr. 236). Die WebKit-Fassung für 24.04 braucht auf 26.04 fehlende
-     Bibliotheken (`libicuuc.so.74`, `libxml2.so.2`, `libvpx.so.9`,
-     `libx264`). Erst Playwright 1.63 bringt eigene Builds für 26.04.
-     *Weg:* Playwright im ganzen Projekt anheben — Sandbox-Standard
-     (`aufbauen.sh`, `/opt/pw-browsers`), Stufe 2, die Werkzeuge. Nicht
-     nur in Stufe 2, sonst misst sie andere Engines als der Prüfstand.
-     Zu messen: Chromium springt von 141 auf 153, die Vergleichsbilder
-     des Bilderlaufs und des Stilvergleichs können sich verschieben.
-     *Abnahme:* Stufe 2 wieder auf `ubuntu-26.04`, dreifach grün; ein
-     voller Prüfstand der Nebenstufe grün in drei Engines.
-     *Frist:* bevor GitHub `ubuntu-24.04` abkündigt.
-
-<!-- -->
-
 400. **Die Rechtstexte auf den Stand nach S11 bringen.** · gehört zu: 14 · Stand: offen · seit 25.10.2026
      *Aufgenommen 25.10.2026 mit R17-18 (F-R17-58, -60; E-R17-29).* AVV
      und Nutzungsbedingungen sagen noch, GPS-Aufzeichnung,

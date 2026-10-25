@@ -94,11 +94,30 @@ try {
   await kontext.route(/tile\.|opentopomap|arcgisonline|basemap\.at/i, r => r.abort());
   /* Bis Teil B bleibt der Lauf aus: Die Anmeldung landet auf der Startseite,
      und der stille Durchgang soll nicht vorgreifen. */
-  let sperre = true;
-  await kontext.route('**/api/wartungslauf.php', (r) => sperre
-    ? r.fulfill({ status: 200, contentType: 'application/json',
-                  body: '{"ok":true,"spuren":[],"aufzeichnungen":0,"diensttage":0}' })
-    : r.continue());
+  /* `abbrechen` (Teil D0, Nr. 393): so viele `tauschen`-Anfragen werden
+     abgebrochen, wie die Zahl sagt — dasselbe, was ein Seitenwechsel mitten
+     im stillen Lauf tut. */
+  let sperre = true, abbrechen = 0;
+  await kontext.route('**/api/wartungslauf.php', (r) => {
+    if (sperre) {
+      return r.fulfill({ status: 200, contentType: 'application/json',
+                         body: '{"ok":true,"spuren":[],"aufzeichnungen":0,"diensttage":0}' });
+    }
+    if (abbrechen > 0 && /"aktion":"tauschen"/.test(r.request().postData() || '')) {
+      abbrechen--;
+      return r.abort();
+    }
+    return r.continue();
+  });
+  /* WAS DER BROWSER ALS „GEHT NICHT AUF" MELDET, mitschreiben (Nr. 393, F5).
+     Eine Spur, die im stillen Lauf nicht aufgeht, wird gemeldet und
+     übersprungen — D1 wäre dann rot, und hier steht, warum. Die Meldung
+     selbst käme beim Server nicht an, wenn die Probe vorher weiternavigiert. */
+  const nichtAuf = [];
+  kontext.on('request', (r) => {
+    if (!r.url().includes('/api/kontopaar.php')) { return; }
+    try { const b = JSON.parse(r.postData() || '{}'); if (b.aktion === 'oeffnen_fehler') { nichtAuf.push(`${b.art} ${b.id}: ${b.grund}`); } } catch { /* kein JSON */ }
+  });
   const s = await kontext.newPage();
   const fehler = [];
   s.on('pageerror', e => fehler.push(e.message));
@@ -251,16 +270,46 @@ print(json.dumps({"pk": pk, "st": st, "p": P}))`], { cwd: WURZEL, encoding: 'utf
 
   /* ---- D  Ausdünnen über den stillen Lauf der Startseite ----------------- */
   console.log('\nD — Ausdünnen nach der Frist (Startseite, still)');
+  /* ERST WEG VON DER STARTSEITE (Nr. 393). Ihr stiller Lauf beginnt 1,5 s
+     nach `load`; kam das in Teil C spät, lief er erst NACH dem
+     Zurückdatieren unten und dünnte die Spur selbst aus — D0 fand dann
+     nichts mehr zu tauschen („kein Tausch angefragt", 21.10.2026). Die
+     Seite der Spuren startet keinen Lauf. */
+  await s.goto(`${BASIS}/tag_spuren.php?d=${dayId}`, { waitUntil: 'networkidle' });
   php(`db()->exec("UPDATE missions SET started_at = DATE_SUB(started_at, INTERVAL 40 DAY),
        ended_at = DATE_SUB(ended_at, INTERVAL 40 DAY) WHERE id = ${mid}");`);
   const vorD = (await oeffnen())['m' + mid];
+
+  /* D0 — EIN ABGEBROCHENER TAUSCH SETZT DIE SPUR NICHT AUS (Nr. 393, F5).
+     Bis Web 23.0.3 wertete der stille Lauf eine abgebrochene Anfrage
+     (`status: 0`, etwa weil die Seite verlassen wurde) wie einen Fehler der
+     Spur und setzte sie für den ganzen Tab auf die Auslassliste. Gefunden,
+     weil D1 in WebKit jedes zehnte Mal rot war: Der Lauf der Seite aus Teil C
+     arbeitete noch, als die Probe hierher navigierte. Jetzt erzwungen statt
+     dem Zufall überlassen: den ersten Tausch abbrechen, dann nachsehen. */
+  abbrechen = 1;
+  await s.goto(`${BASIS}/index.php`, { waitUntil: 'load' });
+  /* Bis 60 s: Der erste Tausch kommt erst nach Liste, Öffnen, Ausdünnen,
+     Packen und Rundlauf. Im vollen Prüfstand brauchte WebKit dafür am
+     21.10.2026 länger als die 20 s, die hier zuerst standen (D1 wartet 30 s
+     auf das Ergebnis, nicht auf die Anfrage). Die Schleife endet, sobald der
+     Abbruch geschehen ist. */
+  for (let i = 0; i < 120 && abbrechen > 0; i++) { await s.waitForTimeout(500); }
+  await s.waitForTimeout(1000);
+  const ausgelassenD0 = await s.evaluate(() => sessionStorage.getItem('nadoku-wartungslauf-ausgelassen') || '[]');
+  pruefe(abbrechen === 0 && !JSON.parse(ausgelassenD0).some(([a, i]) => a === 'mission' && Number(i) === mid),
+         'D0 ein abgebrochener Tausch setzt die Spur nicht aus',
+         abbrechen === 0 ? `ausgelassen: ${ausgelassenD0}` : 'kein Tausch angefragt');
+  abbrechen = 0;
+
   await s.goto(`${BASIS}/index.php`, { waitUntil: 'load' });
   let stufeD = 0;
   for (let i = 0; i < 60 && stufeD !== 3; i++) {
     await s.waitForTimeout(500);
     stufeD = Number(php(`echo (int)db()->query("SELECT MAX(stufe) FROM track_stuecke WHERE owner_type = 'mission' AND owner_id = ${mid}")->fetchColumn();`));
   }
-  pruefe(stufeD === 3, 'D1 die Startseite hat still ausgedünnt (Stufe 3)', String(stufeD));
+  pruefe(stufeD === 3, 'D1 die Startseite hat still ausgedünnt (Stufe 3)',
+         String(stufeD) + (nichtAuf.length ? ` — nicht aufgegangen: ${nichtAuf.join('; ')}` : ''));
   const nachD = (await oeffnen())['m' + mid];
   const idx = nachD.map(p => vorD.findIndex(q => q.ts === p.ts));
   const phasen = JSON.parse(php(`echo json_encode(array_map('intval', db()->query("SELECT UNIX_TIMESTAMP(occurred_at) FROM mission_phases WHERE mission_id = ${mid}")->fetchAll(PDO::FETCH_COLUMN)));`));

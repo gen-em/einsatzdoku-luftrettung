@@ -640,8 +640,9 @@ Daten erst nach Server-Bestätigung.
 │   │                      SessionStart-Hooks (PK-02); Ausbaustufen und
 │   │                      Grenzen in docs/Sandbox-Setup.md.
 │   │                      konfig_stellen.php stellt eine Lage in
-│   │                      `config.php` her und nimmt sie wieder zurück —
-│   │                      vier Proben prüfen so, was die Anwendung mit
+│   │                      `config.php` her und nimmt sie wieder zurück,
+│   │                      samt den Schlüsselmarken in `app_state` (Nr. 393) —
+│   │                      sieben Proben prüfen so, was die Anwendung mit
 │   │                      einem anderen Schlüssel tut. Derselbe Weg wie in
 │   │                      der Anwendung: Datei schreiben, dann
 │   │                      `konfig_verwerfen()`. Bis Konzept BR lag sie lose
@@ -937,7 +938,20 @@ in allen drei** — ab der Stufe `neben`, je Engine ein Lauf mit `MOTOR=…`,
 grün nur, wenn alle drei grün sind; **in `klein` in Chromium allein**
 (`docs/Pruefablauf.md` 1, Grundsatz 8, E-DM-08). Ein Seitenwechsel, der in
 WebKit mit „internal error" scheitert, wird einmal wiederholt und gezählt
-(E-DM-10, `motor.mjs`). Stufe 2
+(E-DM-10, `motor.mjs`). **Die Bedienprobe fängt in WebKit zusätzlich eine
+Seite, die stumm wird** (Nr. 393, seit dem 25.10.2026): Sie fragt vor jedem
+Weg die Seite der Rolle und meldet die Rolle neu an, wenn 10 s keine Antwort
+kommt, und sie fährt einen Weg, der an einer Zeitüberschreitung scheitert,
+einmal ganz von vorn — nicht den einen Klick, den E-DM-10 weiter ausschließt.
+Beides steht im Protokoll und wird gezählt. **Zwei weitere Eigenheiten hält `starten()` in WebKit
+zurück, beide gezählt** (Nr. 393, seit dem 21.10.2026): den CSP-Bericht, den
+Playwrights eigener Screenshot auslöst (er legt ein `<style>` in die Seite;
+ab dem ersten Screenshot eines Kontexts beantwortet der Prüfstand
+`api/csp_bericht.php` selbst, die CSP bleibt in Kraft), und den Seitenfehler
+„… due to access control checks", mit dem WebKit einen Abruf meldet, den ein
+Seitenwechsel abbrach — nur dieser Wortlaut, nur eigene Herkunft, nur
+während einer Navigation. Beide traten in WebKit 26 genauso auf; sichtbar
+wurden sie im ersten vollen Lauf `neben` in drei Engines. Stufe 2
 fährt Kreislauf und Rückwegprobe ebenso dreifach. Welche Probe dreifach
 läuft, sagt `"motoren": true` in `pruefablauf.json`; welches Werkzeug auf
 welchem Weg dahin kommt (Probe, Helfer, von Hand, nur Chromium, kein Test),
@@ -5787,11 +5801,11 @@ betreibt, sollte das wissen und den Datenbankzugang entsprechend behandeln.
 > dasselbe, jetzt das Neue: `CLAUDE.md` 4 seit S11-11 (18.10.2026), der
 > Textbaustein (11.5a) und die Datenschutzerklärung mit S11, `README.md`,
 > `Was-ist-NAdoku.md`, `Handbuch.md` 4.3 und 5 und dieser Kasten erst mit
-> Web 23.0.3 (R17-18, F-R17-58) — seit S11-11 standen sie gegen die Zusage.
+> Web 23.1.0 (R17-18, F-R17-58) — seit S11-11 standen sie gegen die Zusage.
 > **Zwei Texte sagen es noch nicht:** die Vorlagen der AVV (A.2, Anlage II Nr. 2) und der
 > Nutzungsbedingungen (4.4) beschreiben den Stand vor S11, bis zur
 > Rechtstext-Runde vor v1.0 (Backlog Nr. 400). Damit es kein drittes Mal
-> auseinanderläuft, misst die Textprobe die Zusage seit Web 23.0.3 satzweise
+> auseinanderläuft, misst die Textprobe die Zusage seit Web 23.1.0 satzweise
 > (Klasse `zusage`, `docs/Pruefablauf.md` 6.6).
 
 Die Zuordnung Datensatz ↔ Person entsteht ausschließlich über den
@@ -8983,7 +8997,7 @@ dem Lesen nicht geändert hat**.
 
 | Teil | Wo | Was |
 |---|---|---|
-| Liste | `spur2_faellig()`, `api/wartungslauf.php` `liste` | höchstens 20 je Aufruf (E-S11-68): abgeschlossen (`final`), nicht im Papierkorb (bis Web 22.7.0 auch: ohne Altbestand, E-S11-70); fällig, wenn ein Stück der Stufe 1 liegt (Zusammenfügen ohne Karenz, E-S11-69), 31 Tage nach dem Ende (Ausdünnen, E-S11-25) oder ein Schnitt jünger ist als das jüngste Stück (die gesperrten Punkte fallen jetzt, E-S11-47). Mit Stücken, Sperrzeiten, Phasenzeiten und `pat_blob` samt Prüfsumme. `auslassen`: was der Browser in dieser Sitzung nicht öffnen konnte — sonst blockierte eine kaputte Hülle die ersten Plätze |
+| Liste | `spur2_faellig()`, `api/wartungslauf.php` `liste` | höchstens 20 je Aufruf (E-S11-68): abgeschlossen (`final`), nicht im Papierkorb (bis Web 22.7.0 auch: ohne Altbestand, E-S11-70); fällig, wenn ein Stück der Stufe 1 liegt (Zusammenfügen ohne Karenz, E-S11-69), 31 Tage nach dem Ende (Ausdünnen, E-S11-25) oder ein Schnitt jünger ist als das jüngste Stück (die gesperrten Punkte fallen jetzt, E-S11-47). Mit Stücken, Sperrzeiten, Phasenzeiten und `pat_blob` samt Prüfsumme. `auslassen`: was der Browser in dieser Sitzung nicht öffnen konnte — sonst blockierte eine kaputte Hülle die ersten Plätze. Eine Anfrage **ohne Antwort** (`status: 0`, meist ein Seitenwechsel) lässt seit Web 23.0.3 nichts aus und beendet den Durchgang; bis dahin schob sie die gerade bearbeitete Spur für den ganzen Tab aus dem Lauf (Nr. 393) |
 | Zahl | `spur2_faellig_zahl()`, `zahl` | wie viele Aufzeichnungen aus wie vielen Diensttagen, für die Karte |
 | Arbeit | `assets/wartungslauf.js` | öffnen (`EdOrtsdaten.spur()`), nach der Frist ausdünnen (`ausduennen()`, `ausduennungPruefen()` — wörtlich `spur_ausduennen()` und `spur_ausduennung_pruefen()`; gegen PHP an 221 Referenzspuren nachgemessen: 221 gleiche Behaltelisten), **ein** gepacktes Stück bauen (`EdOrtsdaten.gepacktBauen()`), es wieder öffnen und Punkt für Punkt vergleichen (Rundlauf) — erst dann schicken |
 | Ortshöhe | ebenda | fehlt sie im `pat_blob`, wird sie aus den offenen Punkten nachgetragen (E-S11-72); der Server schreibt den Blob nur bei unveränderter Prüfsumme |
@@ -10672,7 +10686,19 @@ versagt.
    `img-src`.
 2. **`connect-src` nennt den eingestellten Geocoder** (`geocoder_dienst()`),
    nicht den fest verdrahteten Namen aus dem Konzept — und lässt ihn weg,
-   wenn die Adresssuche aus ist.
+   wenn die Adresssuche aus ist. **Auf jeder Seite, seit Web 23.0.3.** Bis
+   dahin stand er nur dort, wo der Aufrufer `geocoder_lib.php` vor der
+   Kopfzeile geladen hatte (`function_exists()` in `kopf_csp()`) —
+   `einstellungen.php` ja, `einsatz_form.php` nicht, und gerade dort sucht
+   man Adressen. Gefunden am 21.10.2026 über die Meldungsliste
+   (`connect-src https://photon.komoot.io` von `einsatz_form.php`);
+   `kopfzeilen_lib.php` bindet die Datei seither selbst ein.
+   **Zweiter Fund derselben Messung:** Die Sicherung schrieb ihr Archiv mit
+   zip.js und `level: 0`, und zip.js lädt bei jeder Stufe außer 6 sein
+   WebAssembly (`script-src wasm-eval`, `connect-src data:`). Es fängt den
+   Fehlschlag still ab — die Sicherung gelang auch bei scharfer CSP (drei
+   Engines, Kreislauf grün) —, aber jede Sicherung schrieb zwei Meldungen.
+   Seit Web 23.0.3 `compressionMethod: 0` (`docs/Backup-Format.md` 1.2).
 3. **`img-src` mit `data:` — und das war zuerst anders.** SP-5 führt `data:`
    mit; eine Zählung im eigenen Quelltext ergab **0 Treffer**, also wurde es
    gestrichen, mit dem Satz „der Report-Only-Lauf sagt, wenn das ein Irrtum
@@ -11614,8 +11640,9 @@ außerhalb der CI lag (E-S4-16) — berichtigt mit Nr. 236.)*
 ### 6.1a Der Läufer — ein festes Abbild statt `ubuntu-latest` (Nr. 236)
 
 **Alle zehn `runs-on`-Zeilen der Kette nennen ein festes Abbild**, nicht
-`ubuntu-latest`: neun seit dem 11.10.2026 `ubuntu-26.04`, der Job „Prüfung
-Stufe 2" seit dem 20.10.2026 `ubuntu-24.04` (die Ausnahme steht unten). Das Label `ubuntu-latest` wandert
+`ubuntu-latest`, und alle zehn `ubuntu-26.04` — neun seit dem 11.10.2026,
+der Job „Prüfung Stufe 2" wieder seit Nr. 393 (vom 20.10.2026 an stand er
+auf `ubuntu-24.04`; warum, steht unten). Das Label `ubuntu-latest` wandert
 vom 19.10. bis 19.11.2026 schrittweise von 24.04 auf 26.04; ein Lauf hätte
 in diesem Monat zufällig auf dem einen oder dem anderen Abbild gestanden,
 und ein Wechsel an einem Tag, an dem niemand etwas geändert hat, sucht man
@@ -11639,21 +11666,27 @@ Was das Abbild der Kette mitgibt und was sich dabei geändert hat (gemessen
   Vorgabe und bricht gegen den Dienstcontainer ab (`ERROR 2026: SSL is
   required`). `tools/schemaprobe/probe.php` ruft den Klienten `mariadb`
   deshalb mit `--skip-ssl` auf, den Klienten `mysql` nicht.
-- **Stufe 2 — die Ausnahme, seit dem 20.10.2026 auf `ubuntu-24.04`**
-  (Konzept DM, F-DM-13). Playwright 1.56 kennt Ubuntu 26.04 nicht und
-  lädt dort die Fassungen für 24.04. Für Chromium allein reichte das, mit
+- **Stufe 2 — Playwright aus dem Prüfstand, seit Nr. 393 wieder auf
+  `ubuntu-26.04`.** Playwright 1.56 kannte Ubuntu 26.04 nicht und lud dort
+  die Fassungen für 24.04. Für Chromium allein reichte das, mit
   `PLAYWRIGHT_HOST_PLATFORM_OVERRIDE=ubuntu24.04-x64` (11.10. bis
-  20.10.2026). Seit R87 läuft Stufe 2 aber auch in WebKit, und WebKit ist
-  gegen `libicuuc.so.74`, `libxml2.so.2`, `libvpx.so.9` und `libx264`
-  gebaut — die gibt es auf 26.04 nicht, auch nicht unter einem neueren
-  Paketnamen (Lauf 131 rot an `--with-deps`, Lauf 132 rot an einer
-  Namensersetzung, F-DM-12). Auf 24.04 unterstützt 1.56 alle drei Engines
-  offiziell; der Job installiert sie mit `install --with-deps`, ohne
-  Schalter. Playwright bleibt auf 1.56, weil der Prüfstand dieselbe Fassung
-  fährt (`docs/Sandbox-Setup.md`) und Stufe 2 sonst mit anderen Engines
-  mäße als der Bilderlauf. **Zurück auf 26.04 geht es mit dem Anheben von
-  Playwright auf 1.63 oder neuer** — erst diese Fassungen bringen eigene
-  Builds für 26.04 (Nr. 393).
+  20.10.2026). Seit R87 läuft Stufe 2 aber auch in WebKit, und WebKit aus
+  1.56 ist gegen `libicuuc.so.74`, `libxml2.so.2`, `libvpx.so.9` und
+  `libx264` gebaut — die gibt es auf 26.04 unter keinem Namen (Lauf 131 rot
+  an `--with-deps`, Lauf 132 rot an einer Namensersetzung, F-DM-12). Vom
+  20.10.2026 an lief der Job deshalb als einziger auf `ubuntu-24.04`
+  (F-DM-13). **Seit Nr. 393 fährt das ganze Projekt Playwright 1.64.1**,
+  das 26.04 als eigene Plattform führt: eigene Paketliste, eigener
+  WebKit-Build; Firefox lädt dort nach Playwrights eigener Zuordnung den
+  Build für 24.04. Die Fassung steht einmal, in der Zeile `PW_FASSUNG` von
+  `tools/sandbox/aufbauen.sh`; Stufe 2 liest sie dort und ist rot, wenn sie
+  keine findet. So misst Stufe 2 dieselben Engines wie der Prüfstand
+  (`docs/Sandbox-Setup.md` 1.3a). **Installiert wird seit R17-19 nicht die
+  Zahl, sondern die Sperrdatei** `tools/kette/stufe2-npm/package-lock.json`
+  mit `npm ci` — sie trägt die Integritätswerte, die eine Fassungszeile
+  nicht hat (F-R17-20) —, und der Schritt ist rot, wenn sie eine andere
+  Fassung nennt als `PW_FASSUNG`. Der Job installiert die Engines mit
+  `install --with-deps` über dieses Modul, nicht über `npx`.
 - **Uhr-Job:** `monkeyc` nahm das Java vom PATH, und das wechselte mit dem
   Abbild. Der Job setzt jetzt Java 17 per `actions/setup-java` fest — das
   Java, mit dem `uhr-v3.1.0` gebaut wurde. (Örtlich gemessen: das
@@ -11840,7 +11873,8 @@ Umgebung `staging` (Backlog Nr. 219) — seit Web 23.1.0 das **Kettentoken**
 von Staging (4.97a). **Seine Pakete kommen seit R17-19 mit festen Fassungen
 und Prüfsummen** (F-R17-20): `pip install --require-hashes -r
 tools/kette/stufe2-anforderungen.txt` und Playwright über `npm ci` aus
-`tools/kette/stufe2-npm/`; bis dahin die Fassung des Tages, im selben Job
+`tools/kette/stufe2-npm/`, dessen Sperrdatei dieselbe Fassung nennen muss
+wie `PW_FASSUNG` (6.1a); bis dahin die Fassung des Tages, im selben Job
 wie Staging-Passwort, `STAGING_TOTP` und `JOBS_TOKEN`. Er hält die Hintergrundjobs an, bevor
 er ein Backup in ein frisches Konto spielt — sonst dünnt der
 Verdichtungsjob die wiederhergestellten Spuren aus, und der Vergleich misst
@@ -13133,7 +13167,12 @@ zweiten wieder ab.
    Darunter stehen die letzten 20 Meldungen mit Richtlinie, Quelle, Seite und
    Zähler. **Leer ist das Ziel.** Steht dort etwas, ist es *vor* dem
    Umschalten zu klären: Jede Zeile ist etwas, das nach dem Scharfschalten
-   nicht mehr funktioniert — und zwar ohne Fehlermeldung.
+   nicht mehr funktioniert — und zwar ohne Fehlermeldung. *Bis Web 23.0.3
+   wurde sie nie leer:* Jede Sicherung schrieb `wasm-eval` und
+   `connect-src data:` (harmlos), jede Adresssuche im Einsatzformular
+   `connect-src` des Geocoders (nach dem Scharfschalten: Suche ohne
+   Ergebnis). Wer vor 23.0.3 scharf geschaltet hat, prüft die Adresssuche
+   im Einsatzformular nach dem Update noch einmal.
 3. Schalter **„CSP scharf schalten"** umlegen.
 4. **Danach durchklicken**, nicht nur die Startseite: Karte in allen vier
    Anbietern, Einsatzformular mit Adresssuche, Import (zip.js), Export,

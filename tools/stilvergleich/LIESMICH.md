@@ -15,7 +15,7 @@ bash tools/stilvergleich/gegen.sh --schreiben [<ref>]  # Messung als geplant.txt
 ## Was es misst
 
 Die **berechneten** Stile zweier Stylesheets an denselben Elementen, in
-dreizehn Breiten: 189 Eigenschaften je Element. Die Seitenprobe misst **jede Seite als eigenes Dokument** (seit R4-08), die Signatur nennt sie: `seiten.html[einsatz.php]`. Vier Proben liefern die Elemente —
+dreizehn Breiten: 195 Eigenschaften je Element (21.10.2026; die Zahl folgt dem Stylesheet und steht am Ende jedes Laufs). Die Seitenprobe misst **jede Seite als eigenes Dokument** (seit R4-08), die Signatur nennt sie: `seiten.html[einsatz.php]`. Vier Proben liefern die Elemente —
 das Markup aller Seiten, das erst im Browser entstehende Markup, je ein
 Element pro Selektor und dasselbe für die Zustände (`:hover`, `:focus`).
 
@@ -35,5 +35,6 @@ Gemessen 25.09.2026 gegen `origin/main` (P5c/AP9): **42 276 Elementmessungen, 17
 
 ## Was es nicht kann
 
-Es sieht keine Bilder — ein Layoutfehler, der aus dem Markup kommt, fällt
-ihm nicht auf. Dafür ist der Bilderlauf da.
+Es sieht keine Bilder — ein Layoutfehler, der aus dem Markup kommt, fällt ihm nicht auf. Dafür ist der Bilderlauf da.
+
+**Layoutmaße im Inhalt eines geschlossenen `<details>` vergleicht es nicht** (seit Nr. 393): Dort wird nichts gelayoutet, und Firefox liefert Pixel aus einem früheren Layout — einer von drei Läufen war deshalb rot, bei gleichem Stylesheet. Breite, Höhe, Lage, Ränder und Innenabstände solcher Elemente stehen als „(ohne Box)" da, in allen Engines; alles andere wird verglichen. Am 21.10.2026 **1 456 von 63 570 Elementmessungen**, die Zahl steht am Ende jedes Laufs. `autofocus` entfernt es vor dem Laden — Firefox setzte den Fokus sonst nach dem `blur()` des Werkzeugs.

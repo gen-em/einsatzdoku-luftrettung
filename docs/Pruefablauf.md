@@ -242,13 +242,18 @@ PHP —, zeigt nur der Hoster. Sie läuft nach dem Kreislauf, im selben Job.
 Punktdateien, Kreislauf `edbak`, Rückwegprobe) und eine Zeitgrenze von
 40 Minuten; ohne Aktions-Cache (E-PK-54). **Kreislauf und Rückwegprobe
 laufen je Engine einmal** (Grundsatz 8, R87); der Schritt holt alle drei
-samt Bibliotheken mit `playwright install --with-deps`. **Der Job läuft
-deshalb auf `ubuntu-24.04`, als einziger der Kette** (F-DM-13,
-`docs/Technik.md` 6.1a): Playwright 1.56 hat für Ubuntu 26.04 keine
-WebKit-Fassung, und die für 24.04 braucht Bibliotheken, die es dort nicht
-gibt. *Bis zum 19.10.2026: Chromium allein, 20 Minuten, auf 26.04. Die
-ersten beiden dreifachen Läufe (131 und 132, 20.10.2026) brachen auf 26.04
-an den Bibliotheken ab, bevor sie maßen (F-DM-12).*
+samt Bibliotheken mit `playwright install --with-deps`, **in der Fassung
+des Prüfstands**: Sie steht einmal, in `PW_FASSUNG` von
+`tools/sandbox/aufbauen.sh`, und der Schritt liest sie dort (seit Nr. 393,
+`docs/Technik.md` 6.1a). Installiert wird sie aus der Sperrdatei
+`tools/kette/stufe2-npm/package-lock.json` mit `npm ci`; nennt die eine
+andere Fassung, ist der Schritt rot (R17-19, F-R17-20). Der Job läuft auf
+`ubuntu-26.04` wie alle.
+*Bis zum 19.10.2026: Chromium allein, 20 Minuten, auf 26.04. Die ersten
+beiden dreifachen Läufe (131 und 132, 20.10.2026) brachen auf 26.04 an den
+Bibliotheken ab, bevor sie maßen (F-DM-12); bis Nr. 393 lief der Job
+deshalb als einziger auf `ubuntu-24.04` (F-DM-13), weil Playwright 1.56 für
+26.04 keine WebKit-Fassung hatte.*
 Wie lange der dreifache Lauf dauert, ist noch nicht gemessen. **Gemessen an Lauf 99** (28.09.2026,
 `fc4253d`): Staging 35 s, Stufe 2 **3:16** — Kreislauf samt Installation
 44 s, Rückwegprobe 2:26. Bilderlauf und Kreislauf `csv` laufen seit dem
@@ -371,7 +376,10 @@ Zwei Dinge hängen mit daran, und beide sind gemessen:
   und die Einsätze bekommen neue Kennungen; wen er traf, entschied bis dahin
   die Reihenfolge der Muster. Jetzt schiebt der Prüfstand vor jeder Probe
   mit `"demo": true` die Marke des letzten Resets auf „jetzt" und stellt sie
-  am Ende zurück; die Zeile steht im Lauf. Das Feld trägt, wer das
+  am Ende zurück; die Zeile steht im Lauf. **Je Engine-Lauf, nicht je
+  Probe** (seit Nr. 393): Ab `neben` läuft eine Probe dreimal hintereinander,
+  der Bilderlauf allein 70 Minuten, und am 20.10.2026 fiel der Reset mitten
+  in den WebKit-Lauf — 80 Aufnahmen ohne Bild. Das Feld trägt, wer das
   Demo-Konto anmeldet oder Demo-Daten über ihre Kennungen liest — heute
   sieben Proben (`auswahl.py --selbstprobe` hält die Form).
 - **Der Prüfstand meldet, wenn eine Datei unter `server/` kein Muster
@@ -706,7 +714,7 @@ Begründung** — kein Ausblenden.
 
 **Seit PK-04 ist die Wortliste die Textprobe** (E-PK-08): fünf Regelklassen
 statt einer, und sie läuft **einmal im Tor** statt bei jeder Textänderung von
-Hand. Seit R17-18 (Web 23.0.3) sind es sechs.
+Hand. Seit R17-18 (Web 23.1.0) sind es sechs.
 
 | Klasse | Was sie misst | Ziel |
 |---|---|---|

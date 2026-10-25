@@ -25,9 +25,10 @@ Garmin `monkeyc -e`. `apkablage.py` lädt hoch, vergleicht, **erst dann** lösch
 
 ## Was es braucht
 
-Anlage und `JOBS_TOKEN` (das Kettentoken); `gh` und `GH_TOKEN`; Android-SDK
-bzw. `monkeyc`, die Schlüssel als Umgebungswerte — `android-bauen` baut nicht,
-wenn ein `APK_*` in seiner Umgebung steht; `curl` (Zielprobe, Ablage).
+Anlage, `JOBS_TOKEN` (das Kettentoken), `gh`, `GH_TOKEN`, `curl`; Android-SDK
+bzw. `monkeyc`, Schlüssel als Umgebungswerte (`android-bauen` baut nicht mit
+`APK_*`). Playwright für Stufe 2 aus `stufe2-npm/package-lock.json`, Fassung =
+`PW_FASSUNG` in `aufbauen.sh`; anheben: `package.json` dort, `npm install --package-lock-only`.
 
 ## Erwartete Zahl
 
@@ -36,5 +37,4 @@ Selbstproben (25.10.2026): `freigabe.py` **63/0**, `baumsuche.py` **11/0**, `app
 ## Was es nicht kann
 
 Nichts über den **Inhalt** (dafür die Wache); `appbau.sh` prüft, **womit**
-signiert ist — nicht, ob die App funktioniert oder eine gepinnte Abhängigkeit
-böswillig ist.
+signiert ist — nicht, ob die App läuft oder eine gepinnte Abhängigkeit böswillig ist.

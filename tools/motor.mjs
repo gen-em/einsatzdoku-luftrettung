@@ -62,6 +62,48 @@ export function harmloserResizeHinweis(text) {
   return /^ResizeObserver loop completed with undelivered notifications\.?$/.test(String(text).trim());
 }
 
+/** Ein Abruf, den das VERLASSEN DER SEITE abbrach — in WebKit (Nr. 393, F2).
+ *  WebKit meldet ihn als „Fetch API cannot load <Adresse> due to access
+ *  control checks." und Playwright reicht das als `pageerror` weiter,
+ *  obwohl die Anwendung den Fehler fängt (`EdApi.senden()`). Gemessen am
+ *  21.10.2026 im Bilderlauf: Der stille Wartungslauf der Startseite lief
+ *  noch, als das Werkzeug zur nächsten Breite navigierte; die Meldung kam
+ *  zwischen der Navigationsanfrage und dem Wechsel des Dokuments. WebKit 26
+ *  tut dasselbe. Chromium und Firefox sagen dazu nichts.
+ *
+ *  ENG GEFASST, weil ein abgebrochener Abruf am eigenen Server sonst ein
+ *  Fehler ist (Selbstprobe des Bilderlaufs, Fall 5, Nr. 176). Rauschen ist
+ *  die Meldung nur, wenn ALLES zutrifft: genau dieser Wortlaut, die eigene
+ *  Herkunft (Gastgeber der Seite) und eine Navigation des Hauptrahmens, die
+ *  gerade läuft oder vor weniger als einer Sekunde fertig wurde. Dieselbe
+ *  Meldung ohne Seitenwechsel — etwa eine echte Umleitung auf eine fremde
+ *  Herkunft — bleibt ein Fehler; Chromium und Firefox scheitern daran
+ *  ohnehin hörbar.
+ *
+ *  `seite` braucht nur `on()`, `mainFrame()` und `url()`; `jetzt` ist für
+ *  die Selbstprobe einstellbar. Zurück kommt die Prüffunktion. */
+const WEBKIT_ABBRUCH = /due to access control checks\.?$/;
+export function abgangBeobachten(seite, { jetzt = Date.now } = {}) {
+  /* `laeuft` endet mit dem Wechsel des Dokuments, mit dem Scheitern der
+   * Navigationsanfrage — und spätestens nach 30 s, damit eine Navigation,
+   * von der nie wieder etwas kommt, nicht für immer alles schluckt. */
+  let laeuft = 0, fertigUm = 0;
+  const hauptNavigation = (r) => r.isNavigationRequest() && r.frame() === seite.mainFrame();
+  seite.on('request', (r) => { if (hauptNavigation(r)) { laeuft = jetzt(); } });
+  seite.on('requestfailed', (r) => { if (hauptNavigation(r)) { laeuft = 0; fertigUm = jetzt(); } });
+  seite.on('framenavigated', (f) => {
+    if (f === seite.mainFrame()) { laeuft = 0; fertigUm = jetzt(); }
+  });
+  return (text) => {
+    const t = String(text).trim();
+    if (!WEBKIT_ABBRUCH.test(t)) { return false; }
+    let gastgeber = '';
+    try { gastgeber = new URL(seite.url()).host; } catch { return false; }
+    if (!gastgeber || !t.includes('/' + gastgeber + '/')) { return false; }
+    return (laeuft > 0 && jetzt() - laeuft < 30000) || (fertigUm > 0 && jetzt() - fertigUm < 1000);
+  };
+}
+
 export function abgebrochenerSchriftabruf(text) {
   return /downloadable font: download failed/.test(text) && /status=2152398850\b/.test(text);
 }
@@ -128,6 +170,101 @@ async function webkitWiederholung(browser) {
   }
 }
 
+/* ===========================================================================
+ * WebKit, der Screenshot und die CSP (Nr. 393, F1)
+ * ===========================================================================
+ *
+ * Playwrights `screenshot()` legt in WebKit ein eigenes `<style>` in die
+ * Seite (Textcursor und Animationen). Die CSP der Anwendung verbietet
+ * Inline-Stile, WebKit meldet den Verstoß an `api/csp_bericht.php` — bei
+ * JEDEM Screenshot. Gemessen am 21.10.2026 auf `login.php`, WebKit 26.0 und
+ * 27.2 gleich: Laden 0 Verstöße, jeder Screenshot 1 (`style-src-elem`,
+ * `blocked-uri: inline`); Chromium und Firefox 0. Folgen: die örtliche
+ * `csp_berichte` voll falscher Einträge (70× `index.php` nach einem
+ * Bilderlauf), und auf den Wartungsseiten 20 Konsolenfehler, weil der
+ * Endpunkt dort 503 antwortet.
+ *
+ * Der Bericht ist von einem echten Inline-Stil der Anwendung NICHT zu
+ * unterscheiden — gleicher Wortlaut, keine Quelldatei. Ein Filter auf den
+ * Inhalt geht also nicht. Deshalb beantwortet ab dem ERSTEN Screenshot in
+ * einem Kontext der Prüfstand selbst den Bericht mit 204, statt ihn zum
+ * Server zu lassen. Die CSP bleibt dabei in Kraft (kein `bypassCSP`): Was sie
+ * verbietet, wird weiter nicht angewandt, nur nicht mehr gemeldet.
+ * **Preis:** Ein echter Verstoß NACH dem ersten Screenshot in einem Kontext
+ * kommt in WebKit nicht mehr in `csp_berichte` an. Den Meldeweg misst die
+ * CSP-Browserprobe, und zwar vor ihrem einen Screenshot (Abschnitt 7).
+ * Nicht gefangen: `elementHandle.screenshot()` — kein Werkzeug nutzt es.
+ * Die Zahl der abgefangenen Berichte steht am Ende des Laufs im Protokoll. */
+let cspStumm = 0;
+async function webkitScreenshotOhneBericht(browser) {
+  const kontext = await browser.newContext();
+  const seite = await kontext.newPage();
+  const seitenKlasse = Object.getPrototypeOf(seite);
+  const fundKlasse = Object.getPrototypeOf(seite.locator('body'));
+  await kontext.close();
+  if (seitenKlasse.__cspStumm) { return; }
+  seitenKlasse.__cspStumm = true;
+  /* AM KONTEXT, NICHT AN DER SEITE: Eine Route mit `page.route()` sieht den
+   * Bericht in WebKit nicht — gemessen am 21.10.2026, zwei Screenshots, zwei
+   * Berichte beim Server. WebKit schickt ihn offenbar nicht als Anfrage der
+   * Seite. Die Kontext-Route fängt ihn. Sie gilt damit für alle Seiten des
+   * Kontexts, ab dem ersten Screenshot in einer davon. */
+  const stummSchalten = async (s) => {
+    const k = s.context();
+    if (k.__cspStumm) { return; }
+    k.__cspStumm = true;
+    await k.route('**/api/csp_bericht.php', (r) => { cspStumm++; return r.fulfill({ status: 204 }); });
+  };
+  const rohSeite = seitenKlasse.screenshot;
+  seitenKlasse.screenshot = async function (...args) {
+    await stummSchalten(this);
+    return rohSeite.apply(this, args);
+  };
+  const rohFund = fundKlasse.screenshot;
+  fundKlasse.screenshot = async function (...args) {
+    await stummSchalten(this.page());
+    return rohFund.apply(this, args);
+  };
+  process.on('exit', () => {
+    if (cspStumm) { console.error(`WebKit-Screenshot: ${cspStumm} CSP-Berichte örtlich beantwortet (motor.mjs, Nr. 393)`); }
+  });
+}
+
+/* Der abgebrochene Abruf beim Seitenwechsel — EINMAL für alle Werkzeuge
+ * (Nr. 393, F2). Wer in WebKit `seite.on('pageerror', …)` anmeldet, bekommt
+ * ihn nicht gemeldet; was Rauschen ist, entscheidet `abgangBeobachten()`
+ * oben. Bis dahin stand der Filter nur in Bilderlauf und Bedienprobe, und am
+ * 21.10.2026 meldete die Wartungslaufprobe genau diese Zeile als Fehler
+ * (einer von fünf Läufen). 25 Werkzeuge zählen Seitenfehler; der Filter
+ * gehört an die Stelle, über die sie alle starten. Nur WebKit — die anderen
+ * beiden sagen dazu nichts. Die Zahl steht am Ende im Protokoll. */
+let abgangStumm = 0;
+async function webkitAbgangLeise(browser) {
+  const kontext = await browser.newContext();
+  const seite = await kontext.newPage();
+  const klasse = Object.getPrototypeOf(seite);
+  await kontext.close();
+  if (klasse.__abgangLeise) { return; }
+  klasse.__abgangLeise = true;
+  /* `addListener`, NICHT `on`: Playwright setzt im Konstruktor jeder Seite
+   * `this.on = this.addListener` als EIGENE Eigenschaft (eventEmitter.ts) —
+   * ein Patch an `on` des Prototyps wird davon verdeckt. Gemessen am
+   * 21.10.2026: am Prototyp gepatcht, an der Seite nicht angekommen, und
+   * der Bilderlauf meldete die Zeile weiter. */
+  const roh = klasse.addListener;
+  klasse.addListener = function (ereignis, fn) {
+    if (ereignis !== 'pageerror') { return roh.call(this, ereignis, fn); }
+    if (!this.__abgang) { this.__abgang = abgangBeobachten(this); }
+    return roh.call(this, ereignis, (e) => {
+      if (this.__abgang(e && e.message)) { abgangStumm++; return; }
+      fn(e);
+    });
+  };
+  process.on('exit', () => {
+    if (abgangStumm) { console.error(`WebKit-Seitenwechsel: ${abgangStumm} abgebrochene Abrufe nicht als Seitenfehler gezählt (motor.mjs, Nr. 393)`); }
+  });
+}
+
 /** Startet den gewählten Motor. `pw` ist das geladene Playwright-Modul.
  *  `finger` sagt, ob der Lauf ein Fingergerät nachstellt; `optionen` reicht
  *  weitere Startangaben durch (der Stilvergleich setzt so seinen
@@ -137,7 +274,11 @@ export async function starten(pw, name, { finger = false, optionen = {} } = {}) 
     ? { ...optionen, firefoxUserPrefs: { ...ZEIGER_FIREFOX, ...(optionen.firefoxUserPrefs || {}) } }
     : { ...optionen };
   const browser = await pw[name].launch(auf);
-  if (name === 'webkit') { await webkitWiederholung(browser); }
+  if (name === 'webkit') {
+    await webkitWiederholung(browser);
+    await webkitScreenshotOhneBericht(browser);
+    await webkitAbgangLeise(browser);
+  }
   /* DER BELEG, WELCHE ENGINE LIEF (R87, Konzept DM). Eine Probe, die
    * „grün in Firefox" meldet, aber still Chromium startete, wäre die
    * schmeichelhafte Null aus dem Kopf dieser Datei. Die Zeile geht nach
