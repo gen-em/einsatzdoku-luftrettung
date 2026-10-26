@@ -5,11 +5,13 @@ EINE STELLE FUER ZWEI LESER. Das Pruefskript (pruefen.py) und der Generator
 anderes, als das andere erzeugt. Deshalb steht die Aufloesung hier und nicht
 zweimal.
 
-DIE TRENNUNG, DIE DAHINTER STECKT. Trackpunkte und Phasenkoordinaten liegen
-in der Anwendung im KLARTEXT (Tabellen `track_points` und `mission_phases`);
-verschluesselt ist die ADRESSE des Einsatzorts (`pat_blob.loc.addr`). Ein
-Einsatz ohne geschuetzte Angaben hat deshalb sehr wohl eine Spur — sie kommt
-dann aus `spur`, nicht aus `geschuetzt`.
+DIE TRENNUNG, DIE DAHINTER STECKT. Trackpunkte und Phasenkoordinaten gehoeren
+in der Anwendung NICHT zu den geschuetzten Angaben des Formulars (`pat_blob`,
+darin die ADRESSE des Einsatzorts, `loc.addr`), sondern liegen getrennt davon:
+seit Web 22 verschlossen in der Geraetehuelle (`track_stuecke`,
+`missions.ort_huelle`), bis dahin im Klartext (`track_points`, seit Web 10
+als SPUR1 in `track_blobs`; `mission_phases`). Ein Einsatz ohne geschuetzte Angaben hat deshalb sehr wohl
+eine Spur — sie kommt dann aus `spur`, nicht aus `geschuetzt`.
 
 Wegpunkte:
   basis        Standortkoordinate; hat der Standort keine -- oder hat der Tag

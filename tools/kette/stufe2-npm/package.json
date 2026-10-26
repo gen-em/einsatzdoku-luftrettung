@@ -1,0 +1,8 @@
+{
+  "name": "nadoku-stufe2",
+  "private": true,
+  "description": "Playwright für Stufe 2 der Kette, mit fester Fassung und Sperrdatei (R17-19, F-R17-20). Installiert mit `npm ci` — die Integritätswerte in package-lock.json prüft npm selbst.",
+  "dependencies": {
+    "playwright": "1.64.1"
+  }
+}

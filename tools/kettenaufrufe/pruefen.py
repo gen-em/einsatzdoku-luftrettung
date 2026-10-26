@@ -51,7 +51,10 @@ import shlex
 import sys
 
 WURZEL = pathlib.Path(__file__).resolve().parents[2]
-LAEUFE = sorted((WURZEL / '.github' / 'workflows').glob('*.yml'))
+# `.yml` UND `.yaml` (Gegenpruefung R17-19): GitHub faehrt beide, und eine neue
+# Datei `x.yaml` mit `uses: foo/bar@main` blieb sonst ungesehen.
+LAEUFE = sorted([*(WURZEL / '.github' / 'workflows').glob('*.yml'),
+                 *(WURZEL / '.github' / 'workflows').glob('*.yaml')])
 # SEIT PK-03 AUCH DIE ZUORDNUNG DES PRUEFSTANDS. Sie fuehrt dieselbe Art von
 # Aufruf wie ein Kettenschritt — und sie ist beim ersten Lauf an genau
 # denselben Fehlern gescheitert (`--format` statt `--art`, ein `./gradlew`
@@ -364,6 +367,176 @@ def pruefe_block(lauf: str, schritt: str, block: str) -> tuple[list[str], list[s
     return ab, hin, n
 
 
+
+# ------------------------------------------- die zwei Riegel der Kette (R17-19)
+#
+# Anlass: F-R17-16. `CLAUDE.md` 3 nannte zwei Pruefwerte der Kette — „keine
+# fremde `uses:`-Zeile ohne SHA" und „acht Pfade, die Zahl ist der Pruefwert"
+# — und kein Werkzeug mass sie; nur ein Handbefehl, und diese Anleitung
+# behauptete das Gegenteil („jede `uses:`-Zeile"). Beide stehen jetzt hier,
+# weil dieses Werkzeug die Arbeitslaeufe ohnehin Zeile fuer Zeile liest und in
+# Stufe 1 und im Pruefstand laeuft. Die Funktionen bekommen ihre Eingaben als
+# Text — die Selbstprobe legt ihnen damit jeden Fehler hin, ohne das
+# Repositorium anzufassen.
+
+# AUCH IN DER FLOW-SCHREIBWEISE (Gegenpruefung R17-19): `- { uses: x@v7 }` ist
+# gueltiges YAML und laeuft; der Anker `^\s*(-\s+)?uses:` sah es nicht. Hinter
+# `{` oder `,` zaehlt `uses:` deshalb ebenso.
+USES_RE = re.compile(r'(?:^\s*(?:-\s+)?|[{,]\s*)uses:\s*([^\s,}]+)(.*)$')
+SHA_RE = re.compile(r'^[\w.-]+/[\w.-]+(?:/[\w./-]+)?@[0-9a-f]{40}$')
+
+
+def fremde_aktionen(texte: dict[str, str]) -> tuple[list[str], int, int]:
+    """RIEGEL 1: Haengt jede fremde `uses:`-Zeile an einer 40-stelligen SHA,
+    mit der Fassung als Kommentar daneben?
+
+    Lokale Aufrufe (`./.github/workflows/…`) nehmen keinen Ref und sind
+    ausgenommen. Ein Tag (`@v7`) oder ein Zweig ist rot: Er kann sich unter
+    dem Lauf aendern (E-KH-10). Ohne Kommentar ist die Zeile ebenfalls rot —
+    wer eine Aktion aktualisiert, tauscht SHA UND Kommentar, und eine SHA
+    ohne Fassung liest niemand nach.
+
+    Rueckgabe: (Befunde, fremde Zeilen gesamt, davon gepinnt).
+    """
+    ab: list[str] = []
+    fremd = gepinnt = 0
+    for name, text in sorted(texte.items()):
+        for nr, zeile in enumerate(text.split('\n'), 1):
+            m = USES_RE.search(zeile)
+            if not m or zeile.lstrip().startswith('#'):
+                continue
+            ziel, rest = m.group(1).strip('\'"'), m.group(2)
+            if ziel.startswith('./'):
+                continue
+            fremd += 1
+            if not SHA_RE.match(ziel):
+                ab.append(f'{name}:{nr}: `uses: {ziel}` haengt nicht an einer '
+                          f'40-stelligen Commit-SHA (E-KH-10)')
+            elif not re.search(r'#\s*\S', rest):
+                ab.append(f'{name}:{nr}: `uses: {ziel}` ohne Fassung als Kommentar '
+                          f'daneben')
+            else:
+                gepinnt += 1
+    return ab, fremd, gepinnt
+
+
+# DIE SOLLLISTE der Ausnahmen (`CLAUDE.md` 3): fuenf Dateien, die nur auf dem
+# Server liegen oder nicht ausgeliefert werden, und drei Verzeichnisse — je
+# als `x/**` und `x/`, weil die Aktion beides getrennt prueft. ACHT PFADE.
+# Dazu drei allgemeine Muster, die keine Serverpfade sind.
+AUSNAHMEN_DATEIEN = ('config.php', 'install.php', 'install.lock', 'wartung.lock',
+                     'ueberlast.json')
+AUSNAHMEN_VERZEICHNISSE = ('sicherungen', 'apk', '.sitzungen')
+AUSNAHMEN_ALLGEMEIN = ('**/.git*', '**/.git*/**', '**/node_modules/**')
+# `install.php` liegt im Repositorium und wird nur nicht ausgeliefert (Nr. 214);
+# alle anderen stehen AUCH in `.gitignore`.
+NICHT_IN_GITIGNORE = ('install.php',)
+
+
+def ausnahmen_bloecke(lauf_text: str) -> list[list[str]]:
+    """Die Eintraege JEDES Blocks `exclude: |`, in der Reihenfolge der Datei.
+
+    ALLE, nicht der erste (Gegenpruefung R17-19): Bekaeme ein zweiter
+    Abgleich-Schritt eine eigene, kuerzere Liste, bliebe sie ungeprueft — und
+    genau die zweite Liste schliesst `CLAUDE.md` 3 aus (E-KH-20 (1))."""
+    zeilen = lauf_text.split('\n')
+    bloecke: list[list[str]] = []
+    for i, z in enumerate(zeilen):
+        m = re.match(r'^(\s*)exclude:\s*\|\s*$', z)
+        if not m:
+            continue
+        tiefe = len(m.group(1))
+        aus: list[str] = []
+        for w in zeilen[i + 1:]:
+            if not w.strip():
+                continue
+            if len(w) - len(w.lstrip()) <= tiefe:
+                break
+            aus.append(w.strip())
+        bloecke.append(aus)
+    return bloecke
+
+
+def ausnahmen_lesen(lauf_text: str) -> list[str] | None:
+    """Die Eintraege des ersten Blocks `exclude: |` — oder None, wenn es keinen gibt."""
+    bloecke = ausnahmen_bloecke(lauf_text)
+    return bloecke[0] if bloecke else None
+
+
+def ausnahmeliste_pruefen(lauf_text: str, ist_ignoriert, getrackt: list[str]
+                          ) -> tuple[list[str], int]:
+    """RIEGEL 2: Haelt die Ausnahmeliste der Kette ihre Sollliste, steht jeder
+    Serverpfad auch in `.gitignore`, und ist keine `server/config.php*`
+    eingecheckt?
+
+    `ist_ignoriert(pfad) -> bool` fragt `.gitignore` (im Lauf `git
+    check-ignore`, in der Selbstprobe eine Attrappe); `getrackt` sind die
+    eingecheckten Pfade unter `server/config.php*`.
+
+    Rueckgabe: (Befunde, Zahl der Serverpfade in der Liste).
+    """
+    ab: list[str] = []
+    ist = ausnahmen_lesen(lauf_text)
+    if ist is None:
+        return ['ausliefern-lauf.yml: kein Block `exclude: |` gefunden — die '
+                'Ausnahmeliste fehlt ganz'], 0
+    zahl = len(ausnahmen_bloecke(lauf_text))
+    if zahl > 1:
+        ab.append(f'ausliefern-lauf.yml: {zahl} Bloecke `exclude: |` — die Liste steht '
+                  f'EINMAL (E-KH-20 (1)); zwei Listen sind keine zwei Riegel')
+    soll = set(AUSNAHMEN_DATEIEN) | set(AUSNAHMEN_ALLGEMEIN)
+    for v in AUSNAHMEN_VERZEICHNISSE:
+        soll |= {f'{v}/**', f'{v}/'}
+    for fehlt in sorted(soll - set(ist)):
+        ab.append(f'Ausnahmeliste: `{fehlt}` fehlt — der naechste Abgleich '
+                  f'ueberschriebe oder loeschte, was nur auf dem Server liegt')
+    for fremd in sorted(set(ist) - soll):
+        ab.append(f'Ausnahmeliste: `{fremd}` steht nicht in der Sollliste — eine '
+                  f'Ausnahme liefert still etwas NICHT aus; erst Sollliste und '
+                  f'`CLAUDE.md` 3, dann hier')
+    pfade = sum(1 for d in AUSNAHMEN_DATEIEN if d in ist) + \
+        sum(1 for v in AUSNAHMEN_VERZEICHNISSE if f'{v}/**' in ist and f'{v}/' in ist)
+    for d in AUSNAHMEN_DATEIEN:
+        if d in NICHT_IN_GITIGNORE:
+            continue
+        if not ist_ignoriert(f'server/{d}'):
+            ab.append(f'.gitignore: `server/{d}` ist nicht ignoriert — ein `git add -A` '
+                      f'nahme es mit, und die Kette liefert es aus')
+    for v in AUSNAHMEN_VERZEICHNISSE:
+        if not ist_ignoriert(f'server/{v}/probe'):
+            ab.append(f'.gitignore: `server/{v}/` ist nicht ignoriert')
+    for g in getrackt:
+        ab.append(f'eingecheckt: `{g}` — eine Kopie der Konfiguration im Baum '
+                  f'(F-R17-55); entfernen, und den Zugang darin drehen')
+    return ab, pfade
+
+
+def riegel_lauf() -> tuple[list[str], list[str]]:
+    """Beide Riegel gegen dieses Repositorium. Rueckgabe: (Befunde, Zeilen)."""
+    import subprocess
+    texte = {p.name: p.read_text(encoding='utf-8') for p in LAEUFE}
+    ab1, fremd, gepinnt = fremde_aktionen(texte)
+    lauf_pfad = WURZEL / '.github' / 'workflows' / 'ausliefern-lauf.yml'
+    lauf_text = lauf_pfad.read_text(encoding='utf-8') if lauf_pfad.exists() else ''
+
+    def ist_ignoriert(pfad: str) -> bool:
+        r = subprocess.run(['git', '-C', str(WURZEL), 'check-ignore', '-q', pfad])
+        return r.returncode == 0
+
+    # UEBERALL, nicht nur `server/config.php*` (Gegenpruefung R17-19): Eine
+    # Kopie in `server/api/` oder unter `tools/` ist dasselbe Leck.
+    r = subprocess.run(['git', '-C', str(WURZEL), 'ls-files', '--',
+                        ':(glob)**/config.php?*', ':(glob)config.php?*'],
+                       capture_output=True, text=True)
+    getrackt = [z for z in r.stdout.split('\n') if z.strip()]
+    ab2, pfade = ausnahmeliste_pruefen(lauf_text, ist_ignoriert, getrackt)
+    zeilen = [f'  Fremd-Aktionen:     {fremd} Zeilen, davon an SHA mit Fassung: {gepinnt}',
+              f'  Ausnahmeliste:      {pfade} Serverpfade (Soll: '
+              f'{len(AUSNAHMEN_DATEIEN) + len(AUSNAHMEN_VERZEICHNISSE)}), '
+              f'eingecheckte config.php*: {len(getrackt)}']
+    return ab1 + ab2, zeilen
+
+
 def lauf() -> int:
     if not LAEUFE:
         melde('Keine Arbeitslaeufe unter .github/workflows/ gefunden.')
@@ -389,6 +562,11 @@ def lauf() -> int:
             ges += n
             proben += 1
 
+    # Die zwei Riegel der Kette (R17-19, F-R17-16) — ihre Befunde zaehlen wie
+    # die der Aufrufe.
+    rab, rzeilen = riegel_lauf()
+    alle_ab += rab
+
     melde('Werkzeugaufrufe der Arbeitslaeufe und des Pruefstands gegen ihre Schnittstellen')
     melde()
     melde(f'  Arbeitslaeufe:      {len(LAEUFE)}')
@@ -396,6 +574,8 @@ def lauf() -> int:
     melde(f'  Aufrufe geprueft:   {ges}')
     melde(f'  Befunde:            {len(alle_ab)}')
     melde(f'  ungeprueft:         {len(alle_hin)}')
+    for z in rzeilen:
+        melde(z)
     if alle_hin:
         melde()
         melde('UNGEPRUEFT (die Pruefung sagt, was sie NICHT wissen kann):')
@@ -408,7 +588,8 @@ def lauf() -> int:
             melde(f'  ! {a}')
         return 1
     melde()
-    melde('Kein Aufruf widerspricht der Schnittstelle seines Werkzeugs.')
+    melde('Kein Aufruf widerspricht der Schnittstelle seines Werkzeugs; jede fremde '
+          'Aktion haengt an einer SHA, die Ausnahmeliste haelt ihre Sollliste.')
     return 0
 
 
@@ -485,10 +666,81 @@ def selbstprobe() -> int:
     gut += ok
     melde(f'  [{"ok " if ok else "FEHL"}] {"NAMEN mit Kommentar (Klammer) und NAMEN+= (BR-05)":<52} '
           f'{" ".join(liste)}')
+
+    # DIE ZWEI RIEGEL DER KETTE (R17-19, F-R17-16). Je Riegel die Fehler,
+    # die er finden MUSS, und die Zeile, die er NICHT melden darf.
+    sha = 'a' * 40
+    riegel1 = [
+        ('Riegel 1: Aktion an einem Tag (@v7)', True,
+         '      - uses: actions/checkout@v7'),
+        ('Riegel 1: Aktion an einem Zweig (@main)', True,
+         '        uses: SamKirkland/FTP-Deploy-Action@main'),
+        ('Riegel 1: Aktion an einer KURZEN SHA', True,
+         f'      - uses: actions/checkout@{sha[:12]} # v7'),
+        ('Riegel 1: SHA ohne Fassung als Kommentar', True,
+         f'      - uses: actions/checkout@{sha}'),
+        ('GEGENPROBE: SHA mit Fassung', False,
+         f'      - uses: actions/checkout@{sha} # v7'),
+        ('GEGENPROBE: lokaler Aufruf ./.github/…', False,
+         '    uses: ./.github/workflows/ausliefern-lauf.yml'),
+        ('GEGENPROBE: auskommentierte uses-Zeile', False,
+         '      # - uses: actions/checkout@v7'),
+        ('Riegel 1: Flow-Schreibweise `- { uses: …@v7 }`', True,
+         '      - { uses: actions/checkout@v7 }'),
+        ('GEGENPROBE: Flow-Schreibweise an SHA mit Fassung', False,
+         f'      - {{ name: x, uses: actions/checkout@{sha} }} # v7'),
+    ]
+    for name, soll, zeile in riegel1:
+        ab, _, _ = fremde_aktionen({'probe.yml': zeile})
+        ok = bool(ab) == soll
+        gut += ok
+        melde(f'  [{"ok " if ok else "FEHL"}] {name:<52} '
+              f'{"gemeldet" if ab else "still"} ({len(ab)})')
+
+    liste_gut = ('        exclude: |\n'
+                 + ''.join(f'          {e}\n' for e in AUSNAHMEN_ALLGEMEIN + AUSNAHMEN_DATEIEN)
+                 + ''.join(f'          {v}/**\n          {v}/\n' for v in AUSNAHMEN_VERZEICHNISSE)
+                 + '      - name: weiter\n')
+    alles_ignoriert = lambda _p: True
+    riegel2 = [
+        ('GEGENPROBE: Sollliste vollstaendig, alles ignoriert', False,
+         liste_gut, alles_ignoriert, []),
+        ('Riegel 2: `apk/` fehlt (nur `apk/**` steht da)', True,
+         liste_gut.replace('          apk/\n', ''), alles_ignoriert, []),
+        ('Riegel 2: `.sitzungen/**` fehlt', True,
+         liste_gut.replace('          .sitzungen/**\n', ''), alles_ignoriert, []),
+        ('Riegel 2: eine Ausnahme ausserhalb der Sollliste', True,
+         liste_gut.replace('          apk/\n', '          apk/\n          assets/**\n'),
+         alles_ignoriert, []),
+        ('Riegel 2: `server/wartung.lock` nicht in .gitignore', True,
+         liste_gut, lambda pf: pf != 'server/wartung.lock', []),
+        ('Riegel 2: `install.php` darf in .gitignore FEHLEN (Nr. 214)', False,
+         liste_gut, lambda pf: pf != 'server/install.php', []),
+        ('Riegel 2: `config.php.vor-probe` eingecheckt (F-R17-55)', True,
+         liste_gut, alles_ignoriert, ['server/config.php.vor-probe']),
+        ('Riegel 2: kein Block `exclude: |`', True,
+         '      - name: nur ein Schritt\n', alles_ignoriert, []),
+        ('Riegel 2: eine ZWEITE Ausnahmeliste', True,
+         liste_gut + liste_gut, alles_ignoriert, []),
+    ]
+    for name, soll, text, ign, getr in riegel2:
+        ab, _ = ausnahmeliste_pruefen(text, ign, getr)
+        ok = bool(ab) == soll
+        gut += ok
+        melde(f'  [{"ok " if ok else "FEHL"}] {name:<52} '
+              f'{"gemeldet" if ab else "still"} ({len(ab)})')
+        if not ok and ab:
+            for a in ab:
+                melde(f'         {a}')
+    _, pfade = ausnahmeliste_pruefen(liste_gut, alles_ignoriert, [])
+    ok = pfade == 8
+    gut += ok
+    melde(f'  [{"ok " if ok else "FEHL"}] {"Die Sollliste zaehlt ACHT Serverpfade (CLAUDE.md 3)":<52} {pfade}')
+
+    gesamt = len(faelle) + 1 + len(riegel1) + len(riegel2) + 1
     melde()
-    melde(f'  -> {gut} von {len(faelle) + 1} Faellen erwartungsgemaess, '
-          f'{len(faelle) + 1 - gut} nicht.')
-    return 0 if gut == len(faelle) + 1 else 2
+    melde(f'  -> {gut} von {gesamt} Faellen erwartungsgemaess, {gesamt - gut} nicht.')
+    return 0 if gut == gesamt else 2
 
 
 def main() -> int:

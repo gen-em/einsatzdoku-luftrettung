@@ -13,22 +13,23 @@ php tools/zaehlung/zaehlen.php --zeile=Z19 --stellen   # eine Zeile, mit Datei u
 ## Was es misst
 
 Je Sache eine Zeile in `register.php` mit einer **Decke**; liegt der
-Ist-Wert darüber, schlägt die Zählung an. Gelesen wird mit dem Tokenizer in
+Ist-Wert darüber — **seit R17-19 auch darunter** (Ratsche, F-R17-56) —,
+schlägt die Zählung an. Gelesen wird mit dem Tokenizer in
 drei zeilentreuen Sichten — Aufrufe, SQL und Literale, JavaScript —, damit
 `--stellen` auf das Original zeigt. Felder und Regelarten stehen im Kopf von
 `register.php`, die Sichten im Kopf von `zaehlen.php`.
 
 ## Was es braucht
 
-Nichts außer `php`. Rückgabe 0 = jede Zeile auf oder unter ihrer Decke,
-1 = eine darüber, 2 = nicht gelaufen.
+Nichts außer `php`. Rückgabe 0 = jede Zeile genau auf ihrer Decke,
+1 = eine darüber oder darunter, 2 = nicht gelaufen.
 
 ## Erwartete Zahl
 
-**0 über der Decke** (44 Zeilen, 04.10.2026; Z44 seit SR-04); `--selbstprobe` → **34 von
-34**. Wird eine Zeile rot: Eine neue zweite Stelle gehört an die eine, die
-`grund` nennt; eine begründete Ausnahme kommt mit Grund in `ausser`; eine
-falsche Decke wird im Konzept begründet, bevor sie steigt (E-ZE-24).
+**0 über, 0 unter der Decke** (44 Zeilen, 25.10.2026); `--selbstprobe` →
+**37 von 37**. Darüber: Die zweite Stelle gehört an die eine aus `grund`, oder
+mit Grund in `ausser`; eine Decke steigt nur mit Begründung im Konzept
+(E-ZE-24). Darunter: die Decke im selben Commit herunterschreiben.
 
 ## Was es nicht kann
 

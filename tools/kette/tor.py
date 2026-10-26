@@ -12,7 +12,7 @@ nicht fertig meldet".
 
 DIE VIER UNTERBEFEHLE
 
-    backup        ruft `jobs.php?aktion=komplett` in einer Schleife, bis der
+    backup        ruft `jobs.php` mit `aktion=komplett` in einer Schleife, bis der
                   Job `fertig` meldet UND der jüngste Stand jünger ist als der
                   Laufbeginn. Sonst: Rückgabewert 1, kein Deploy.
     wartung-an    schaltet den Wartungsmodus ein (`wartung_einschalten('kette')`)
@@ -28,7 +28,7 @@ DIE VIER UNTERBEFEHLE
                   wieder frei (`--sekunden 0`)
 
 WARUM `pause` HIER STEHT UND NICHT IM KREISLAUFTEST (Web 20.16.0). Diese
-Datei ist der eine Client für `jobs.php?aktion=…` — sie kennt die Adresse,
+Datei ist der eine Client für die Aktionen von `jobs.php` — sie kennt die Adresse,
 das Token, die Zeitgrenze und den Umgang mit einer unlesbaren Antwort. Ein
 zweiter Aufrufer mit eigener `urllib`-Zeile wäre ein zweiter Weg, den niemand
 pflegt; `kreislauf.py` ruft deshalb dieses Werkzeug auf, so wie es auch
@@ -94,18 +94,39 @@ def jetzt_utc() -> str:
     return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
-def adresse_bauen(basis: str, token: str, aktion: str,
-                  felder: dict | None = None) -> str:
-    """Die Abrufadresse — eigene Funktion, damit die Selbstprobe sie prüfen kann.
+def adresse_bauen(basis: str) -> str:
+    """Die Abrufadresse — OHNE Token und ohne Aktion (Web 23.1.0, F-R17-57).
 
-    Sie stand bis Web 20.16.0 mitten in `rufen()`. Dort war sie ohne Netz
-    nicht zu messen, und genau das brauchte der Unterbefehl `pause`: Ob
-    `sekunden` überhaupt in der Adresse landet, entscheidet, ob die Jobs
+    Bis Web 23.0.3 trug sie beides als `?token=…&aktion=…`, und damit stand
+    das Token in jeder Zeile des Zugriffsprotokolls beim Hoster — mit dem
+    Schalter für die Wartung des Produktivservers. Seither reist alles im
+    Rumpf einer POST-Anfrage (`rumpf_bauen()`); `jobs.php` lehnt eine Aktion
+    in der Adresse mit 405 ab (E-R17-34).
+    """
+    return basis.rstrip("/") + "/jobs.php"
+
+
+def rumpf_bauen(token: str, aktion: str, felder: dict | None = None) -> bytes:
+    """Der Rumpf der POST-Anfrage — eigene Funktion, damit die Selbstprobe
+    ihn prüfen kann.
+
+    Bis Web 20.16.0 stand die Zusammensetzung mitten in `rufen()`. Dort war
+    sie ohne Netz nicht zu messen, und genau das brauchte der Unterbefehl
+    `pause`: Ob `sekunden` überhaupt ankommt, entscheidet, ob die Jobs
     stillstehen oder weiterlaufen — und ein `ok` bekäme man in beiden Fällen.
     """
     d = {"token": token, "aktion": aktion}
     d.update({k: str(v) for k, v in (felder or {}).items()})
-    return basis.rstrip("/") + "/jobs.php?" + urllib.parse.urlencode(d)
+    return urllib.parse.urlencode(d).encode("ascii")
+
+
+def anfrage_bauen(basis: str, token: str, aktion: str,
+                  felder: dict | None = None) -> urllib.request.Request:
+    """Die ganze Anfrage: POST an `adresse_bauen()` mit `rumpf_bauen()`."""
+    return urllib.request.Request(
+        adresse_bauen(basis), data=rumpf_bauen(token, aktion, felder), method="POST",
+        headers={"Content-Type": "application/x-www-form-urlencoded",
+                 "User-Agent": "nadoku-kette"})
 
 
 def kopfzeit(antwort) -> str | None:
@@ -147,10 +168,10 @@ def rufen(basis: str, token: str, aktion: str, zeitgrenze: int = ZEITGRENZE_S,
     `_roh`: Die Schleife oben entscheidet, ob sie es noch einmal versucht.
     Ein Abbruch hier machte aus einem Schluckauf des Servers ein Nein.
     """
-    adresse = adresse_bauen(basis, token, aktion, felder)
+    anfrage = anfrage_bauen(basis, token, aktion, felder)
     serverzeit = None
     try:
-        with urllib.request.urlopen(adresse, timeout=zeitgrenze) as antwort:
+        with urllib.request.urlopen(anfrage, timeout=zeitgrenze) as antwort:
             roh = antwort.read().decode("utf-8", "replace")
             serverzeit = kopfzeit(antwort)
     except urllib.error.HTTPError as ex:
@@ -551,9 +572,9 @@ def selbstprobe() -> int:
     # ------------------------------------------------------------------
     # 6. bis 10.: der Unterbefehl `pause` (Web 20.16.0).
     #
-    # WARUM DIE ADRESSE UND NICHT DIE ANTWORT GEMESSEN WIRD. Ob die Jobs
-    # stillstehen, entscheidet sich daran, ob `sekunden` in der Adresse
-    # landet — und ein `ok` bekäme der Aufrufer in beiden Fällen. Genau diese
+    # WARUM DIE ANFRAGE UND NICHT DIE ANTWORT GEMESSEN WIRD. Ob die Jobs
+    # stillstehen, entscheidet sich daran, ob `sekunden` in der Anfrage
+    # ankommt — und ein `ok` bekäme der Aufrufer in beiden Fällen. Genau diese
     # Sorte Fehler hat am 16./17.09.2026 drei Kettenschritte gekostet: ein
     # Schalter, der still verworfen wurde.
     print()
@@ -578,28 +599,42 @@ def selbstprobe() -> int:
         def read(self): return b'{"ok": true}'
 
     _echt = urllib.request.urlopen
-    urllib.request.urlopen = lambda adresse, timeout=None: (
-        gemerkt.__setitem__("adresse", adresse), _Antwort())[1]
+
+    def _merken(anfrage, timeout=None):
+        gemerkt["adresse"] = getattr(anfrage, "full_url", str(anfrage))
+        gemerkt["methode"] = anfrage.get_method() if hasattr(anfrage, "get_method") else "GET"
+        gemerkt["rumpf"] = (getattr(anfrage, "data", None) or b"").decode("ascii", "replace")
+        return _Antwort()
+
+    urllib.request.urlopen = _merken
     try:
         rc = main(["pause", "--basis", "https://x/", "--token", "geheim",
                    "--sekunden", "1800"])
     finally:
         urllib.request.urlopen = _echt
     a = gemerkt.get("adresse", "")
-    pruefe(rc == 0 and "aktion=pause" in a and "sekunden=1800" in a,
-           f"pause: `sekunden` steht in der ABGERUFENEN Adresse "
-           f"({a.split('?', 1)[1] if '?' in a else '— gar kein Abruf —'})")
+    r = gemerkt.get("rumpf", "")
+    pruefe(rc == 0 and "aktion=pause" in r and "sekunden=1800" in r,
+           f"pause: `sekunden` steht im Rumpf der ABGESCHICKTEN Anfrage "
+           f"({r or '— gar kein Abruf —'})")
 
-    a0 = adresse_bauen("https://x", "geheim", "pause", {"sekunden": 0})
-    pruefe("sekunden=0" in a0,
+    # 6a. DAS TOKEN REIST NIE IN DER ADRESSE (Web 23.1.0, F-R17-57). Gemessen
+    # am ganzen Weg über `main()`, nicht an `adresse_bauen()` allein — sonst
+    # bewiese der Fall nur, dass eine Funktion tut, was sie tut.
+    pruefe(gemerkt.get("methode") == "POST" and "geheim" not in a and "?" not in a
+           and "token=geheim" in r,
+           f"Das Token steht im Rumpf einer POST-Anfrage, nie in der Adresse "
+           f"({gemerkt.get('methode', '—')} {a})")
+
+    r0 = rumpf_bauen("geheim", "pause", {"sekunden": 0}).decode()
+    pruefe("sekunden=0" in r0,
            "pause: `sekunden=0` steht da und wird nicht als leer weggelassen")
 
-    az = adresse_bauen("https://x", "geheim", "zustand")
-    pruefe("sekunden" not in az,
-           "zustand: kein `sekunden` in der Adresse (die alten Aufrufe bleiben, wie sie waren)")
+    rz = rumpf_bauen("geheim", "zustand").decode()
+    pruefe("sekunden" not in rz,
+           "zustand: kein `sekunden` im Rumpf (die alten Aufrufe bleiben, wie sie waren)")
 
-    pruefe(adresse_bauen("https://x/", "g", "zustand")
-           == adresse_bauen("https://x", "g", "zustand"),
+    pruefe(adresse_bauen("https://x/") == adresse_bauen("https://x") == "https://x/jobs.php",
            "Ein Schrägstrich am Ende der Basis ändert die Adresse nicht")
 
     # Und der Riegel: ein vergessenes `--sekunden` darf die Pause NICHT
@@ -713,7 +748,7 @@ def main(argv: list[str]) -> int:
                    choices=["backup", "wartung-an", "wartung-aus", "zustand",
                             "pause"])
     p.add_argument("--basis", help="Adresse der Installation, z. B. https://nadoku.example")
-    p.add_argument("--token", help="Job-Token aus dem Wartungsbereich")
+    p.add_argument("--token", help="Kettentoken aus Betrieb → Hintergrundjobs → Auslieferungskette (seit Web 23.1.0; davor das Job-Token)")
     p.add_argument("--versuche", type=int, default=VERSUCHE_VORGABE)
     p.add_argument("--pause", type=int, default=PAUSE_VORGABE_S,
                    help="backup: Wartezeit ZWISCHEN zwei Aufrufen")

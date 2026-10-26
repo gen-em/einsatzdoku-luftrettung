@@ -194,6 +194,18 @@ BEREICHE: dict[str, dict] = {
             "docs/rechtstexte/Datenschutzerklaerung.md",
         ],
     },
+    # DIE TEXTE FUER DIE STORES, seit R17-18 — NUR die Klasse `zusage`. Die
+    # Beschreibung der Garmin-App geht von Hand in den Connect-IQ-Store und
+    # ist der oeffentlichste Satz ueber die Verschluesselung der Uhr; sie lag
+    # in keinem Bereich (gefunden von der Gegenpruefung, E-R17-31). Die
+    # anderen Klassen misst der Bereich nicht: Der Store-Text spricht von der
+    # Garmin-Uhr, und das ist dort Gegenstand (Klasse G, E-P2-15).
+    "g": {
+        "titel": "docs/store/**/*.md — Texte fuer die Stores (nur `zusage`)",
+        "art": "md",
+        "glob": ["docs/store/**/*.md"],
+        "nur_klassen": ["zusage"],
+    },
 }
 
 
@@ -258,7 +270,9 @@ KLASSE_VON: dict[str, str] = {}
 KLASSEN: dict[str, str] = {}
 
 
-SICHTEN = ("sichtbar", "mit_kommentaren")
+# `satz` (seit R17-18, F-R17-58) liest wie `sichtbar` ohne Kommentare, aber
+# nicht je Zeile, sondern je SATZ. Warum, steht an `saetze()`.
+SICHTEN = ("sichtbar", "mit_kommentaren", "satz")
 
 
 def lade_sperrliste(pfad: pathlib.Path) -> tuple[list[dict], list[dict]]:
@@ -459,6 +473,163 @@ def _fallen_in(zeile: str, fallen: list[dict]) -> list[tuple[int, int, str]]:
     return [(tr.start(), tr.end(), f["wort"]) for f in fallen for tr in f["_re"].finditer(zeile)]
 
 
+# ------------------------------------------------------- Die Sicht `satz`
+#
+# WARUM ES SIE GIBT (R17-18, F-R17-58). Die Klasse `zusage` sucht eine
+# AUSSAGE, kein Wort: „die GPS-Daten … liegen im Klartext". In Markdown ist
+# ein Satz ueber mehrere Zeilen umbrochen, und die beiden Haelften stehen
+# fast nie in derselben Zeile. Gemessen am 25.10.2026 an den Dateien von
+# Bereich c, Stand `c7e7581`: Von 17 Saetzen, die Ortsdaten als Klartext
+# beschrieben, fand das Zeilenmuster aus dem Review einen, die beiden Muster
+# der Klasse zeilenweise elf — die sechs Klartextlisten (README, „Was ist
+# NAdoku", Handbuch 5, Nutzungsbedingungen 4.4, AVV-Kopf und Anlage II)
+# waeren durchgerutscht. Eine Probe, die auf dem alten Wortlaut rot ist, weil
+# sie einen Teil der Stellen sieht, ist eine gruene Zahl ohne Gegenstand.
+#
+# WAS EIN SATZ IST. Ein Markdown-Absatz, ein Listenpunkt, eine Ueberschrift
+# oder eine Tabellenzelle wird zusammengefuegt (Zitatzeichen `>` und
+# Einrueckung fallen weg) und an Satzzeichen geteilt, nach denen ein
+# Grossbuchstabe oder ein Rueckstrich folgt; nach einer Abkuerzung („z. B.",
+# „Nr.", „bzw.") und nach einem einzelnen Buchstaben, der fuer sich steht,
+# wird nicht geteilt („4.99s)." teilt). In einem Zaun beginnt jede Zeile
+# eines Verzeichnisbaums (`├──`, `└──`) einen eigenen Block. Gemeldet wird
+# die Zeile, in der der Satz beginnt. Ausserhalb von Markdown ist die Zeile
+# die Einheit; in PHP und JavaScript haengt eine Fortsetzungszeile einer
+# verketteten Zeichenkette (`. '…'`, `+ "…"`) an die vorige — sichtbare
+# Meldungen sind dort oft ueber Zeilen verkettet.
+#
+# WAS SIE NICHT KANN. Sie versteht keinen Satz und misst Wortlaut, nicht den
+# Sachverhalt. Steht eine alte Aussage auf zwei Saetze verteilt („Die
+# GPS-Daten werden gespeichert. Sie liegen im Klartext."), als Einleitung mit
+# Liste darunter, als Tabellenzeile („| GPS-Spur | Klartext |") oder als
+# Ueberschrift mit Absatz, sieht sie sie nicht; ein umbrochener HTML-Absatz
+# in PHP ebenso wenig; und eine alte Aussage ohne eines ihrer Woerter („die
+# Orte bleiben im alten Feld") erst recht nicht. Steht eine richtige Aussage
+# mit beiden Woertern in einem Satz, meldet sie sie, und die Stelle braucht
+# eine Ausnahme mit Begruendung — gemessen am 25.10.2026 von der
+# Gegenpruefung (E-R17-31): 29 von 55 erfundenen falschen Saetzen rot, ein
+# Fehlalarm unter acht richtigen. Gegen das Erste hilft nur Lesen, gegen das
+# Zweite die Ausnahmeliste.
+
+_ABKUERZUNGEN = {
+    "abs", "art", "bzw", "ca", "d", "dh", "evtl", "ggf", "inkl", "lit", "nr",
+    "s", "sog", "u", "usw", "vgl", "z", "zb", "etc", "bspw", "ff",
+}
+_SATZENDE = re.compile(r"[.!?][*_)\]»“\"'`]*\s+(?=[*_„\"'(\[»]*[A-ZÄÖÜ]|`)")
+_LISTENPUNKT = re.compile(r"(?:[-*+]|\d+[.)])\s")
+_TRENNLINIE = re.compile(r"\|?\s*:?-{3,}:?\s*(\|\s*:?-{3,}:?\s*)*\|?")
+_BAUMZEILE = re.compile(r"[├└]──")
+# Fortsetzung einer verketteten Zeichenkette in PHP (`. '…'`) und
+# JavaScript (`+ "…"`): beginnt die Zeile damit, oder endet die vorige so.
+_FORTSETZUNG_ANFANG = re.compile(r"^\s*[.+]\s*['\"`]")
+_FORTSETZUNG_ENDE = re.compile(r"['\"`]\s*[.+]\s*$")
+
+
+def _teile_saetze(text: str) -> list[tuple[int, str]]:
+    """(Versatz, Satz) je Satz eines zusammengefuegten Blocks."""
+    aus, anfang = [], 0
+    for tr in _SATZENDE.finditer(text):
+        # Der Buchstabenlauf zaehlt nur, wenn er fuer sich steht: „z. B." ja,
+        # „4.99s)." und „epoch_s]." nein — dort endet ein Satz.
+        davor = re.search(r"(?:^|[^\w.])([A-Za-zÄÖÜäöüß]+)\W*$", text[:tr.start()])
+        wort = davor.group(1).lower() if davor else ""
+        if wort in _ABKUERZUNGEN or len(wort) == 1:
+            continue
+        satz = text[anfang:tr.end()].strip()
+        if satz:
+            aus.append((anfang, satz))
+        anfang = tr.end()
+    rest = text[anfang:].strip()
+    if rest:
+        aus.append((anfang, rest))
+    return aus
+
+
+def _md_bloecke(zeilen: list[str]) -> list[list[tuple[int, str]]]:
+    """Je Block die Liste (Zeilennummer, Text) — Absatz, Listenpunkt,
+    Ueberschrift, Tabellenzelle; Leerzeilen, Zaeune und Trennlinien trennen."""
+    bloecke: list[list[tuple[int, str]]] = []
+    lauf: list[tuple[int, str]] = []
+
+    def schliessen() -> None:
+        if lauf:
+            bloecke.append(list(lauf))
+            lauf.clear()
+
+    for nr, z in enumerate(zeilen, 1):
+        s = re.sub(r"^\s*(?:>\s?)+", "", z).strip()
+        if not s or s.startswith(("```", "~~~")) or _TRENNLINIE.fullmatch(s):
+            schliessen()
+            continue
+        if _BAUMZEILE.search(s):
+            # EIN VERZEICHNISBAUM IST KEIN ABSATZ. Ohne Leerzeilen im Zaun
+            # verschmoelze ein neuer Eintrag mit dem Satz des naechsten.
+            schliessen()
+        if s.startswith("#"):
+            schliessen()
+            bloecke.append([(nr, s.lstrip("#").strip())])
+            continue
+        if s.startswith("|"):
+            # JEDE ZELLE IST EINE EINHEIT. In einer Tabellenzeile stehen
+            # nebeneinander Aussagen, die nicht zusammengehoeren — „Klartext:
+            # Zeiten" in der einen Spalte, „verschlossen: GPS-Spur" in der
+            # naechsten. Als ein Satz gelesen, ergaebe das eine falsche Meldung.
+            schliessen()
+            for zelle in re.split(r"(?<!\\)\|", s.strip("|")):
+                if zelle.strip():
+                    bloecke.append([(nr, zelle.strip())])
+            continue
+        if _LISTENPUNKT.match(s):
+            schliessen()
+        lauf.append((nr, s))
+    schliessen()
+    return bloecke
+
+
+def saetze(zeilen: list[str], art: str) -> list[tuple[int, str]]:
+    """(Zeilennummer, an der der Satz beginnt; Satz) — die Einheit der Sicht `satz`."""
+    if art != "md":
+        if art not in ("php", "js"):
+            return [(nr, z) for nr, z in enumerate(zeilen, 1) if z.strip()]
+        einheiten: list[tuple[int, str]] = []
+        for nr, z in enumerate(zeilen, 1):
+            if not z.strip():
+                continue
+            if einheiten and (_FORTSETZUNG_ANFANG.match(z)
+                              or _FORTSETZUNG_ENDE.search(einheiten[-1][1])):
+                einheiten[-1] = (einheiten[-1][0], einheiten[-1][1] + " " + z.strip())
+            else:
+                einheiten.append((nr, z))
+        return einheiten
+    aus: list[tuple[int, str]] = []
+    for block in _md_bloecke(zeilen):
+        text, anfaenge = "", []
+        for nr, t in block:
+            if text:
+                text += " "
+            anfaenge.append((len(text), nr))
+            text += t
+        for versatz, satz in _teile_saetze(text):
+            nr = [n for o, n in anfaenge if o <= versatz][-1]
+            aus.append((nr, satz))
+    return aus
+
+
+def _satz_treffer(einheiten: list[tuple[int, str]], muster: list[dict],
+                  fallen: list[dict]):
+    """Wie `_zeilen_treffer`, je Satz statt je Zeile; ein Treffer je Satz und Muster.
+
+    OHNE FALLEN. Die Teilstring-Fallen gehoeren zu den Luftbegriffen; ein
+    Satzmuster trifft mit einer Vorausschau leer an Stelle 0, und jede Falle
+    am Satzanfang („Markdown …") zaehlte sonst als durchgerutscht.
+    """
+    for nr, satz in einheiten:
+        for m in muster:
+            tr = m["_re"].search(satz)
+            if tr:
+                yield nr, satz, m, tr, []
+
+
 def _zeilen_treffer(zeilen: list[str], zeilen_roh: list[str], muster: list[dict],
                     fallen: list[dict], fallen_zahl: dict | None = None):
     """Je Treffer (Zeilennummer, gelesene Zeile, Muster, Fund, Fallen der Zeile).
@@ -512,8 +683,14 @@ def suche(kennung: str, muster: list[dict], fallen: list[dict],
 
         # Ein Bereich mit `nur_klassen` zaehlt die Fallen nicht mit: Sie
         # gehoeren zu den Luftbegriffen, und die misst er nicht.
-        for nr, zeile, m, tr, fallen_spannen in _zeilen_treffer(
-                zeilen, zeilen_roh, aktiv, fallen, None if nur else fallen_zahl):
+        zeilenmuster = [m for m in aktiv if m.get("_sicht") != "satz"]
+        satzmuster = [m for m in aktiv if m.get("_sicht") == "satz"]
+        treffer = list(_zeilen_treffer(zeilen, zeilen_roh, zeilenmuster, fallen,
+                                       None if nur else fallen_zahl))
+        if satzmuster:
+            treffer += _satz_treffer(saetze(zeilen, _art_fuer(b, pfad)), satzmuster, fallen)
+            treffer.sort(key=lambda t: t[0])
+        for nr, zeile, m, tr, fallen_spannen in treffer:
             for a, e, wort in fallen_spannen:
                 if a <= tr.start() and tr.end() <= e:
                     fallen_durchgerutscht.append(
@@ -525,7 +702,12 @@ def suche(kennung: str, muster: list[dict], fallen: list[dict],
                     r["_treffer"] += 1
                     grund = r["id"]
                     break
-            zeigetext = zeilen_roh[nr - 1].strip() if nr <= len(zeilen_roh) else zeile.strip()
+            # Ein Satztreffer zeigt den SATZ: Die Zeile, in der er beginnt,
+            # traegt oft keines der beiden Woerter, die ihn zum Treffer machen.
+            if m.get("_sicht") == "satz":
+                zeigetext = zeile.strip()
+            else:
+                zeigetext = zeilen_roh[nr - 1].strip() if nr <= len(zeilen_roh) else zeile.strip()
             if len(zeigetext) > 150:
                 zeigetext = zeigetext[:147] + "…"
             if grund:
@@ -696,6 +878,91 @@ def selbstprobe_sicht() -> tuple[int, int]:
     return gut, len(faelle)
 
 
+def selbstprobe_satz() -> tuple[int, int]:
+    """Liest die Sicht `satz` je Satz — und haelt die Klasse `zusage` den alten Wortlaut? (R17-18)
+
+    Elf Faelle messen die Mechanik mit einem Probemuster: Ein umbrochener
+    Satz wird gefunden und an seiner ersten Zeile gemeldet, die zeilenweise
+    Sicht findet ihn nicht (Gegenprobe), eine Satzgrenze trennt, eine
+    Abkuerzung trennt nicht, Zitatzeichen fallen weg, Tabellenzellen sind
+    eigene Einheiten, ausserhalb von Markdown ist die Zeile die Einheit, eine
+    verkettete PHP-Zeichenkette ist eine, vor einem Rueckstrich und nach
+    „4.99s)." wird geteilt, ein Verzeichnisbaum ist kein Absatz.
+    Fuenf Faelle messen die ECHTEN Muster der Klasse `zusage`: am Wortlaut,
+    den F-R17-58 gefunden hat, und an dem, der ihn ersetzt — das ist die
+    Probe, dass der Riegel auf dem alten Text rot waere, und sie laeuft bei
+    jedem Lauf mit, nicht nur am Tag, an dem er gebaut wurde —, an einer
+    Verneinung, an „nicht verschluesselt gespeichert" und am Umriss einer
+    Aufzeichnung (die drei Schaerfungen aus der Gegenpruefung, E-R17-31).
+    """
+    probe = {"id": "probe-satz", "_sicht": "satz",
+             "_re": re.compile(r"^(?=.*?\bim\s+Klartext\b)(?=.*?\bGPS)", re.IGNORECASE)}
+
+    def satz(zeilen: list[str], art: str = "md") -> list[int]:
+        return [nr for nr, *_ in _satz_treffer(saetze(zeilen, art), [probe], [])]
+
+    umbrochen = ["Einleitung.", "", "Die GPS-Daten liegen", "im Klartext in der Datenbank."]
+    zeilenweise = sum(1 for _ in _zeilen_treffer(umbrochen, umbrochen,
+                                                 [dict(probe, _sicht="sichtbar")], []))
+    sperr = lade_sperrliste_aus(json.loads((HIER / "textprobe-sperrliste.json")
+                                           .read_text(encoding="utf-8")))[0]
+    zusage = [dict(m, _sicht="satz") for m in sperr if KLASSE_VON.get(m["id"]) == "zusage"]
+    alt = ["> **Was die Verschlüsselung nicht abdeckt.** Die Notizen des Diensttags, die",
+           "> GPS-Daten, die Koordinate jeder Einsatzphase, die Höhe des Einsatzorts, das",
+           "> Transportziel samt Koordinate, Zeiten, Reanimationsverlauf und die Namen der",
+           "> Besatzung liegen im Klartext in der Datenbank — sie werden gebraucht.",
+           "> **Aus den GPS-Daten und den",
+           "> Phasenkoordinaten lässt sich der Einsatzort rekonstruieren**, auch wenn die",
+           "> Adresse verschlüsselt ist."]
+    neu = ["> **Was die Verschlüsselung nicht abdeckt.** Die Notizen des Diensttags, die",
+           "> Zeiten und Nummern der Einsatzphasen und die Namen der Besatzung bleiben für",
+           "> den Server lesbar. Wer weiß, wann ein Einsatz war, findet",
+           "> ihn darüber; Ort, GPS-Daten, Klinik und Reanimation findet er nicht."]
+
+    def zusage_ids(zeilen: list[str]) -> list[str]:
+        return sorted(m["id"] for _, _, m, _, _ in _satz_treffer(saetze(zeilen, "md"), zusage, []))
+
+    faelle = [
+        ("ein umbrochener Satz wird gefunden, gemeldet an seiner ersten Zeile", satz(umbrochen), [3]),
+        ("GEGENPROBE: zeilenweise findet derselbe Ausdruck ihn nicht", zeilenweise, 0),
+        ("eine Satzgrenze trennt die beiden Woerter",
+         satz(["Die GPS-Daten sind verschlüsselt. Die Zeiten liegen im Klartext."]), []),
+        ("„z. B.“ trennt keinen Satz",
+         satz(["Im Klartext liegen z. B. die GPS-Daten."]), [1]),
+        ("Zitatzeichen fallen weg, der zweite Satz beginnt in Zeile 2",
+         satz(["> Vorweg.", "> Die GPS-Daten liegen", "> im Klartext."]), [2]),
+        ("jede Tabellenzelle ist eine Einheit",
+         satz(["| Zeiten im Klartext | verschlossen: GPS-Daten |",
+               "| GPS-Daten im Klartext | alt |"]), [2]),
+        ("ausserhalb von Markdown ist die Zeile die Einheit",
+         satz(["$a = 'GPS-Daten';", "$b = 'im Klartext';", "$c = 'GPS im Klartext';"], "php"), [3]),
+        ("eine verkettete PHP-Zeichenkette ist eine Einheit, gemeldet an ihrer ersten Zeile",
+         satz(["$h = 'Die GPS-Daten liegen '", "   . 'im Klartext.';"], "php"), [1]),
+        ("vor einem Rueckstrich wird geteilt",
+         satz(["Die GPS-Daten sind verschlossen. `days.notes` liegt im Klartext."]), []),
+        ("nach „4.99s).“ wird geteilt, nach „z. B.“ nicht",
+         satz(["Die GPS-Daten liegen verschlossen (Technik 4.99s). Im Klartext liegen die Zeiten."]), []),
+        ("ein Verzeichnisbaum im Zaun ist kein Absatz",
+         satz(["```", "├── spur.php      GPS-Daten als Datei", "└── demo.php      liegt im Klartext", "```"]), []),
+        ("Klasse `zusage`: der alte Wortlaut aus F-R17-58 ist rot (beide Muster)",
+         zusage_ids(alt), ["zusage-klartext", "zusage-rekonstruierbar"]),
+        ("Klasse `zusage`: der Wortlaut, der ihn ersetzt, ist sauber", zusage_ids(neu), []),
+        ("Klasse `zusage`: eine Verneinung ist sauber",
+         zusage_ids(["Die GPS-Spur liegt nicht mehr im Klartext. Den Einsatzort kann der Server nicht mehr rekonstruieren."]), []),
+        ("Klasse `zusage`: „nicht verschlüsselt gespeichert“ mit einem Ortsbegriff ist rot",
+         zusage_ids(["Nicht verschlüsselt gespeichert werden: alle Zeiten und die GPS-Spur."]), ["zusage-klartext"]),
+        ("Klasse `zusage`: der Umriss einer Aufzeichnung ist kein Ortsdatum",
+         zusage_ids(["Für uns lesbar bleiben Zeitraum und Punktzahl einer GPS-Aufzeichnung."]), []),
+    ]
+    gut = 0
+    for name, ist, soll in faelle:
+        ok = ist == soll
+        gut += ok
+        melde(f"  [{'ok  ' if ok else 'FEHL'}] {name}  (erwartet {soll}, gemessen {ist})")
+    melde(f"Selbstprobe der Satzsicht: {gut}/{len(faelle)} bestanden.")
+    return gut, len(faelle)
+
+
 def main() -> int:
     p = argparse.ArgumentParser(description="Wortliste der Phase P2")
     p.add_argument("--bereich", choices=sorted(BEREICHE), action="append",
@@ -723,7 +990,8 @@ def main() -> int:
             melde(f)
         melde(f"Selbstprobe des Zerlegers: {gut}/{gesamt} bestanden.")
         s_gut, s_gesamt = selbstprobe_sicht()
-        return 0 if gut == gesamt and s_gut == s_gesamt else 2
+        t_gut, t_gesamt = selbstprobe_satz()
+        return 0 if gut == gesamt and s_gut == s_gesamt and t_gut == t_gesamt else 2
 
     muster, fallen = lade_sperrliste(pathlib.Path(a.sperrliste))
     regeln = lade_ausnahmen(pathlib.Path(a.ausnahmen))

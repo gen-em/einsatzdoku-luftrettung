@@ -167,7 +167,9 @@ für Ubuntu 26.04, und Stufe 2 musste deshalb als einziger Job der Kette auf
 messen lassen als den Prüfstand. Angehoben wird deshalb beides, und die
 Fassung steht **einmal**: in der Zeile `PW_FASSUNG` von
 `tools/sandbox/aufbauen.sh`. Stufe 2 liest sie dort und ist rot, wenn sie
-keine findet.
+keine findet — oder wenn ihre Sperrdatei (`tools/kette/stufe2-npm/`, seit
+R17-19) eine andere nennt. Wer `PW_FASSUNG` anhebt, erzeugt die Sperrdatei
+im selben Zug neu (`tools/kette/LIESMICH.md`).
 
 **Wie:** Das Abbild legt `/opt/node22/lib/node_modules/playwright` als
 Verweis nach `/opt/node-tools/`, wo auch `eslint`, `prettier` und andere
@@ -344,15 +346,23 @@ Fassung 20.26.2, Rückgabewert 0.*
 
 **Eine Lage in `config.php` herstellen** — einen anderen Serverschlüssel,
 keinen Anteil — und wieder zurücknehmen: `tools/sandbox/konfig_stellen.php`.
-Sieben Proben binden es ein (bis Nr. 393 stand hier „vier") und ein Weg der
-Bedienprobe; es schreibt die Datei und ruft `konfig_verwerfen()`, denselben
-Weg wie die Anwendung, und legt am Ende den vorigen Stand zurück, auch nach
-einem Abbruch. **Seit Nr. 393 gehören dazu die beiden Marken in `app_state`**
-(`server_key_kennung`, `kdf_anteil_kennung`): Fehlt eine, legt die Anwendung
-sie beim nächsten Lesen mit dem Schlüssel an, der gerade in der Datei steht —
-und das war bis dahin der der gestellten Lage. Eine frisch eingerichtete
-Anlage stand danach auf „abweichend" (gemessen am 25.10.2026 nach der
-`versandprobe` und der `komplettprobe`).
+Acht Proben binden es ein — `anteil`, `komplett`, `passkey`, `raten`,
+`schluesselwechsel`, `versand`, `wiederherstellung`, `zweitfaktor` — und ein
+Weg der Bedienprobe (hier stand bis Nr. 393 „vier", danach „sieben"; gezählt
+am 25.10.2026 mit R17-19). Es schreibt die Datei und ruft
+`konfig_verwerfen()`, denselben Weg wie die Anwendung, und legt am Ende den
+vorigen Stand zurück, auch nach einem Abbruch. **Seit Nr. 393 gehören dazu die
+beiden Marken in `app_state`** (`server_key_kennung`, `kdf_anteil_kennung`):
+Fehlt eine, legt die Anwendung sie beim nächsten Lesen mit dem Schlüssel an,
+der gerade in der Datei steht — und das war bis dahin der der gestellten Lage.
+Eine frisch eingerichtete Anlage stand danach auf „abweichend" (gemessen am
+25.10.2026 nach der `versandprobe` und der `komplettprobe`). **Die Sicherung
+für einen harten Abbruch liegt seit R17-19 im Temp-Verzeichnis**
+(`nadoku-konfig-vor-probe-<kennung>.php`, nur für den Besitzer lesbar, der
+Pfad steht beim Start auf stderr), nicht mehr als `config.php.vor-probe`
+neben der Datei: Dort lag sie im Webverzeichnis, unter einem Namen, den der
+Webserver als Text ausliefert (F-R17-55). Wer nach einem `kill -9` eine
+verstellte `config.php` findet, legt diese Datei zurück.
 
 ---
 
@@ -367,7 +377,7 @@ in der Dokumentation steht, ist keiner mehr.
 | `NADOKU_STAGING_URL` | Adresse der Prüfanlage | gesetzt, 33 Zeichen |
 | `NADOKU_STAGING_KONTO` | Prüfkonto dort | gesetzt, 18 Zeichen |
 | `NADOKU_STAGING_PASS` | dessen Passwort | gesetzt, 25 Zeichen |
-| `NADOKU_STAGING_JOBS_TOKEN` | Aufruf von `jobs.php` | gesetzt, 64 Zeichen |
+| `NADOKU_STAGING_JOBS_TOKEN` | Aktionen von `jobs.php` — seit Web 23.1.0 das **Kettentoken** (Karte „Auslieferungskette") | gesetzt, 64 Zeichen |
 | `_MAIL_URL` | Webmail der Prüfanlage | gesetzt, 17 Zeichen |
 | `_MAIL_USER` | Postfach dort | gesetzt, 18 Zeichen |
 | `_MAIL_PASS` | dessen Passwort | gesetzt, 20 Zeichen |
@@ -532,12 +542,14 @@ etwas anderes, als er glaubt.
 
 ### 6.1 Zwei Fallen, die Zeit kosten
 
-**`python3` ist 3.11, apt legt nach 3.12.** Ein
+**`python3` ist nicht das Python, für das apt baut.** *(Bis R17-19 stand
+hier „3.11"; am 25.10.2026 meldet das Abbild 3.13.17.)* Ein
 `apt-get install python3-jsonschema` landet in einem Verzeichnis, das
 `python3` nicht liest. Deshalb `pip` mit `--break-system-packages`. Dasselbe
-erklärt, warum das apt-`cryptography` (für 3.12 gebaut, abi3) hier nur
-meistens trägt — der Import wird geprüft und das Paket nur im Fehlerfall
-ersetzt.
+erklärt, warum ein apt-`cryptography` hier nur meistens trägt — der Import
+wird geprüft und nur im Fehlerfall nachinstalliert, und zwar seit R17-19 der
+ganze Satz aus `tools/sandbox/anforderungen.txt`, mit festen Fassungen und
+`--require-hashes` (F-R17-20).
 
 **Der eingebaute PHP-Server liefert nach einer Dateiänderung für einige
 Sekunden den alten Stand.** Gemessen am 13.09.2026: dieselbe Anfrage 0 s

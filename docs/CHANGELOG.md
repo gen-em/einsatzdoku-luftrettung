@@ -14,6 +14,223 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 23.1.0] — unveröffentlicht
+
+Schritt 12b, Paket R17-19 — Kette und Werkzeuge (Befunde F-R17-03, -14
+bis -18, -20, -22, -55 bis -57). Kein Schema. **Nach dem Deploy beide
+Tokens erneuern** (siehe „Bewusst so").
+
+### Neu
+
+- **Zwei Tokens für `jobs.php`.** Bis Web 23.0.3 öffnete ein einziges
+  Token den Job-Lauf *und* die Aktionen der Auslieferungskette —
+  Komplett-Backup, Wartungsmodus, Zustand, Pause —, und die Kette schickte
+  es als `?token=…` in der Adresse. Eine Adresse steht im Zugriffsprotokoll
+  des Hosters, mit Zeitstempel, so lange er es aufhebt; wer das Protokoll
+  las, hatte damit den Schalter für die Wartung des Produktivservers
+  (F-R17-57, -22). Jetzt trägt ein eigenes **Kettentoken** die Aktionen,
+  nur im Rumpf einer POST-Anfrage; eine Aktion in der Adresse beantwortet
+  `jobs.php` mit 405, bevor es überhaupt ein Token vergleicht. Das bisherige
+  **Job-Token** bleibt für den „Cronjob per URL" beim Hoster — solche Dienste
+  können nur GET — und startet nur noch den Job-Lauf, also das, was der
+  Zeitplan ohnehin jede Minute tut. Das eine Token öffnet den Weg des
+  anderen nicht. Angezeigt und erneuert wird das Kettentoken unter
+  **Betrieb → Hintergrundjobs → Auslieferungskette**; in GitHub liegt es
+  weiter als `JOBS_TOKEN`, damit kein Geheimnis umbenannt werden musste.
+  **Warum zwei Tokens und nicht „GET abschaffen":** Der Review schlug vor,
+  das Token per GET nach einer Übergangsfassung gar nicht mehr anzunehmen.
+  Das hätte den „Cronjob per URL" gebrochen, eine dokumentierte Bedienung
+  für Hoster ohne Kommandozeile. Die Trennung nimmt dem Protokoll den
+  gefährlichen Teil und lässt den harmlosen, wo er gebraucht wird.
+  **Wer zuerst entsteht, entscheidet die Gegenprüfung:** Das Kettentoken
+  übernimmt beim ersten Lesen den Wert des Job-Tokens — für das Update. Auf
+  einer *neuen* Anlage legte die Seite aber zuerst das Job-Token an, und
+  beide blieben für immer gleich. Jetzt legt `jobs_token()` vorher das
+  Kettentoken an: auf einer neuen Anlage mit eigenem Wert, beim ersten
+  Erneuern nach dem Update mit dem alten, den die Kette kennt. Und ein
+  Erneuern, das nicht gespeichert werden konnte, meldet sich als Fehler
+  statt als „steht bereit".
+
+### Geändert
+
+- **`api/health.php` nimmt das Token auch als Kopfzeile `X-Health-Token`**
+  (F-R17-22). Die Kopfzeile steht in keinem Zugriffsprotokoll und ist der
+  empfohlene Weg; `?token=` bleibt für Monitore, die keine Kopfzeile setzen
+  können. Stehen beide da, gilt die Kopfzeile.
+
+### Behoben
+
+- **Kopien der `config.php` im Webverzeichnis** (F-R17-55). Acht Proben
+  sicherten die Konfiguration vor dem Umstellen als `config.php.vor-probe`
+  daneben, die Mailprobe als `config.php.mailprobe`, der Passkey-Weg der
+  Bedienprobe ebenso — mit Datenbankzugang, Serverschlüssel, Anteil und
+  SMTP-Passwort, unter Namen, die nicht auf `.php` enden und deshalb als
+  Text ausgeliefert werden; nach einem harten Abbruch blieben sie liegen.
+  Den dritten Schreiber hatte der Review nicht gesehen (F-R17-62). Alle
+  drei sichern jetzt ins Temp-Verzeichnis, nur für den Besitzer lesbar, und
+  nennen den Pfad. Dazu zwei Riegel: `server/.htaccess` sperrt jede Datei,
+  die mit `config.php` beginnt, und `.gitignore` ignoriert jede solche
+  Kopie. Betroffen war die Arbeitsumgebung, nicht eine Anlage — der Weg nach
+  Produktiv hätte über einen Commit geführt, und den fängt seither ein
+  Riegel in Stufe 1 ab.
+
+### Kette und Werkzeuge
+
+- **Gradle sieht den App-Signaturschlüssel nicht mehr** (F-R17-03, hoch).
+  Die vier `APK_*`-Geheimnisse standen im selben Schritt wie
+  `./gradlew assembleRelease`, und Gradle erbte sie — `System.getenv()`
+  genügte jedem Plugin und jeder Abhängigkeit zur Bauzeit. „Gradle sieht den
+  Schlüssel nie" (E-PK-63) stimmte nur für die Datei. Ein eigener Schritt
+  hätte das nicht geheilt: Ein Hintergrundprozess aus dem Bau lebt auf
+  demselben Läufer in den nächsten Schritt hinein und liest dort die
+  Umgebung über `/proc`. Deshalb baut jetzt ein Job **ohne Geheimnisse und
+  ohne Umgebung** (`android-bau`), und ein zweiter signiert auf einem
+  frischen Läufer, ohne Gradle, hinter der Pflichtfreigabe; die APKs gehen
+  als Artefakt hinüber und werden gegen die Prüfsummen des Baus gehalten.
+  `appbau.sh android-bauen` baut nicht, sobald ein `APK_*` in seiner
+  Umgebung steht, und startet Gradle nur mit einer Positivliste
+  (`env -i`); seine Selbstprobe misst die Umgebung des Gradle-Aufrufs mit
+  einem Ersatz-`gradlew`. Dazu prüft Gradle jede Abhängigkeit gegen
+  `android/gradle/verification-metadata.xml`.
+- **App-Tags haben ein Tor** (F-R17-17). `android-v*` und `uhr-v*`
+  brauchten bisher nur Tag = Fassung und die Freigabe; ein Tag auf einem nie
+  geprüften Commit wurde gebaut. Jetzt verlangt der Job `app-tor` einen
+  grünen Job `Stufe 1` auf demselben Baum und, bei einem Tag, dass der
+  Commit auf `main` liegt (`freigabe.py app-urteil`). Der App-Probelauf
+  fragt nur Stufe 1, weil ein Arbeitszweig nicht auf `main` liegt und der
+  Probelauf nichts ablegt.
+- **Feste Fassungen mit Prüfsummen** (F-R17-20): `pip` in Stufe 2 und in
+  der Arbeitsumgebung mit `--require-hashes`, Playwright in Stufe 2 über
+  `npm ci` aus einer Sperrdatei — in der Fassung, die Nr. 393 einmal in
+  `PW_FASSUNG` festgelegt hat; nennt die Sperrdatei eine andere, ist der
+  Schritt rot —, das Connect-IQ-SDK und die vier
+  Simulator-Bibliotheken mit SHA-256 — das SDK auch im Uhr-Job der
+  Auslieferung, mit dem das Store-Paket entsteht. Zwei Proben holten bei
+  jedem Lauf `npx --yes http-server`; sie nehmen jetzt den Server aus
+  Python, nur an `127.0.0.1`.
+- **Zwei neue Riegel in Stufe 1** (F-R17-16), im Schritt „Kettenaufrufe":
+  Jede fremde `uses:`-Zeile hängt an einer 40-stelligen SHA mit Fassung
+  daneben, und die Ausnahmeliste der Kette hält ihre Sollliste von acht
+  Pfaden, jeder Serverpfad außer `install.php` steht auch in `.gitignore`
+  (Nr. 214), und keine
+  `server/config.php*` ist eingecheckt. Bis dahin waren das zwei Prüfwerte
+  in `CLAUDE.md` 3, die nur ein Handbefehl nachzählte.
+- **Die Integritätswache misst die Punktpfade jetzt auch auf Produktiv**
+  (F-R17-18) — Teil 3, täglich und nach jeder Auslieferung; Stufe 2 ruft
+  dieselbe Stelle gegen Staging. Ihre Anleitung beschrieb eine andere Wache
+  (FTPS, „jede Datei unter `server/`"); sie ist neu geschrieben, und der
+  Runbook-Abschnitt „Die Integritätswache ist rot", auf den Alarmtext und
+  Technik verwiesen, steht jetzt in `Technik.md` 7, samt Alarmweg
+  (F-R17-15).
+- **Die Zählung ist eine Ratsche** (F-R17-56). Eine Decke über dem Ist ist
+  jetzt ein Befund wie eine darunter; Z17 stand nach AP5 bei Ist 0 noch auf
+  30.
+- **`tor.py` schickt das Kettentoken im POST-Rumpf**, nie in der Adresse;
+  die Selbstprobe misst das am ganzen Weg über `main()`.
+- **Die Deny-Liste** in `.claude/settings.json` sperrt zusätzlich
+  `push_files` und `actions_run_trigger` (F-R17-14): Eine Instanz schiebt
+  nicht an Git vorbei und startet keine Läufe.
+- **Aus der lesenden Gegenprüfung** (drei Agenten, E-R17-43): Der
+  Bau-Job checkt ohne gespeichertes Lauf-Token aus (`persist-credentials:
+  false` — `env -i` schützte die Umgebung, nicht `.git/config`); Stufe 2
+  installiert pip nur aus Rädern (`--only-binary :all:`) und npm ohne
+  Installationsskripte; die `.htaccess` sperrt `config.php*` ohne Rücksicht
+  auf Groß- und Kleinschreibung und samt `#config.php#`; der Riegel liest
+  auch `.yaml` und die Flow-Schreibweise `- { uses: … }`, meldet eine zweite
+  Ausnahmeliste und sucht eingecheckte Kopien der `config.php` im ganzen
+  Baum; `appbau.sh` bricht ab, wenn das Kopieren eines APK scheitert.
+- **Die Protokollprobe rechnet in Kalendertagen** (beim Zwischen-PR
+  gefunden). Sie setzte den Archivstand auf `time() - 3 × 86 400`; in der
+  letzten Stunde des Herbst-Umstellungstags, der 25 Stunden hat, war das
+  Tag −2, und sie zählte zwei offene Zeiträume statt drei — rot im
+  Prüfstand am 25.10.2026 um 23:27. Jetzt drei Kalendertage in der Zeitzone
+  der Anlage. Der Job selbst rechnet schon so; nur die Probe nicht.
+- **Der Rundlauf der Uhr fragt die Tabelle, nicht entfernte Spalten**
+  (F-R17-63). `rundlauf/pruefen.php` las `lat` und `lon` aus
+  `mission_phases`; die Spalten fielen mit S11-12 weg, zwei Tage nachdem
+  das Werkzeug geschrieben war. Weil der Rundlauf nur bei einer Berührung
+  der Uhr läuft, brach er eine Woche lang ab, ohne dass ihn jemand fuhr —
+  erst der Prüfstand dieses Pakets fand es. Jetzt prüft er, dass die
+  Tabelle keine Koordinatenspalte hat: die schärfere Aussage.
+
+### Bewusst so
+
+- **Beim Update übernimmt das Kettentoken den Wert des alten Tokens.** Ein
+  frisches Token kennte die Kette nicht: Sie schaltet vor dem Abgleich mit
+  dem alten Token die Wartung ein und fragt danach die neue Fassung nach
+  Zustand und `wartung_aus` — mit einem fremden Token bliebe die Anlage in
+  der Wartung stehen. Getrennt sind beide, sobald eines erneuert wird, und
+  **erneuert werden sollten beide**, weil die alten Zugriffsprotokolle den
+  gemeinsamen Wert tragen: das Kettentoken mit Eintrag als `JOBS_TOKEN` in
+  die GitHub-Umgebung, das Job-Token mit Nachtrag beim Hoster, falls ein
+  „Cronjob per URL" eingerichtet ist (Runbook, `Technik.md` 7).
+- **Android und Uhr stufen nicht hoch.** APK und Store-Paket ändern sich
+  nicht, nur ihr Bau.
+
+### Mit dabei: Die Texte sagen, was S11 gebaut hat (R17-18)
+
+Schritt 12b, Paket R17-18 (Befund F-R17-58). Kein Code der Anwendung —
+ausgeliefert werden Handbuch und „Was ist NAdoku" als `server/doku/`. Auf
+dem Arbeitszweig stand dieser Teil zuerst als eigene Fassung 23.0.3, einer
+Nummer, die Nr. 393 vier Tage vorher schon vergeben hatte (F-R17-64).
+Ausgeliefert war keine der beiden; mit dem Merge von Nr. 393 behält 23.0.3
+deren Inhalt, und R17-18 geht in dieser Fassung auf.
+
+#### Behoben
+
+- **Die öffentlichen Texte beschrieben die Ortsdaten noch als Klartext.**
+  Seit Web 22 verschließen Uhr, Handy und Browser GPS-Spur, Phasenorte und
+  Reanimation, Transportziel und Ortshöhe liegen im verschlüsselten Block,
+  und seit Web 23 gibt es keine Spalte mehr, in der sie offen liegen
+  könnten. Das README, die Seite „Was ist NAdoku" vor der Anmeldung und das
+  Handbuch (4.3 und Kapitel 5, die Hilfe) sagten trotzdem weiter, das alles
+  liege lesbar in der Datenbank, und **aus GPS-Daten und Phasenkoordinaten
+  lasse sich der Einsatzort rekonstruieren**. Das war von Web 15.6.0 bis
+  Web 21 die ehrliche Grenze der Zusage (Backlog Nr. 138) und ist seit S11
+  falsch — in der Richtung „zu wenig versprochen", aber falsch. Die Texte
+  sagen jetzt dasselbe wie `CLAUDE.md` 4 und die Datenschutzerklärung:
+  verschlüsselt sind auch GPS-Spur, Phasenorte, Reanimation, Transportziel
+  und Ortshöhe; lesbar bleiben unter anderem Zeiten und Nummern der Phasen,
+  Strecke, Anstieg, Rettungsmittel, Standort, Einsatzmerkmale, Besatzung und
+  die Notizen des Diensttags; und Grenzen gehören dazu — der Puffer auf Uhr
+  und Handy, bis der Server angenommen hat, der Schlüssel, der ohne zweiten
+  Kanal vom Server kommt, und die fremden Dienste hinter Adresssuche und
+  Karte. Das Handbuch sagt in Kapitel 10 jetzt auch, dass Trennen auf der Uhr
+  nichts löscht; fünf Absätze zur Umstellung des Altbestands (Kontopaket,
+  Import, Wartungslauf, Löschen, Jobliste) stehen in der Vergangenheit, und
+  die Tabelle der Blobfelder in `Technik.md` 4.98 kennt Transportziel und
+  Ortshöhe. Das Handbuch nennt das Schloss jetzt auch an Zielklinik,
+  Reanimation und Ortshöhe, wo die Oberfläche es seit Web 22 zeigt; der
+  Absatz zum Schlüssel für Uhr und Handy sagte noch „künftig".
+
+#### Prüfmittel
+
+- **Die Textprobe liest die Zusage satzweise** (neue Klasse `zusage`, neue
+  Sicht `satz`). Ein Satz, der ein Klartext-Wort und einen Ortsbegriff
+  trägt, oder der Satz von der Rekonstruierbarkeit, ist rot, außer er steht
+  mit Begründung in den Ausnahmen. **Warum satzweise:** Der Vorschlag aus
+  dem Review war ein Zeilenmuster („liegt im Klartext" neben einem
+  Ortsbegriff), und gemessen an den alten Texten fand es einen von siebzehn
+  Sätzen; auch beide Muster der neuen Klasse fanden zeilenweise nur elf —
+  durchgerutscht wären die sechs Klartextlisten, denn ein Markdown-Satz ist
+  umbrochen, und seine beiden Hälften stehen selten in einer Zeile.
+  Satzweise findet die Probe alle siebzehn, auf dem Stand vor diesem Paket
+  acht außerhalb der Ausnahmen; auf dem neuen null. Die Selbstprobe hält beides fest, mit dem
+  alten Wortlaut als Fall. Was sie nicht sieht: eine alte Aussage, die auf
+  zwei Sätze verteilt ist.
+
+#### Bewusst so
+
+- **Die Vorlagen von AVV und Nutzungsbedingungen bleiben vorerst, wie sie
+  sind.** Beide sagen noch, Spur und Phasenkoordinaten lägen im Klartext —
+  die Nutzungsbedingungen in 4.4, die der Review übersehen hatte (F-R17-60).
+  Beide sind auf Produktiv eingespielt, und eine neue Fassung sperrt den
+  Login bis zur erneuten Annahme. Die Betreiberin berichtigt sie selbst in
+  der Rechtstext-Runde vor dem v1.0-Tag (Backlog Nr. 400). Bis dahin stehen
+  die neun Sätze als Ausnahmen der Textprobe — mit dem Satz, dass die Probe
+  rot wird, sobald einer berichtigt ist, damit die Ausnahme nicht stehen
+  bleibt. Die Richtung des Fehlers ist dieselbe wie oben: Der Vertrag
+  verspricht weniger, als die Anwendung hält.
 ## [Web 23.0.3] — unveröffentlicht
 
 Backlog Nr. 393, vier Funde aus den vollen Prüfständen in drei Engines

@@ -151,8 +151,16 @@ kopf('1 — Der Job schreibt fällige Zeiträume in Häppchen');
 app_state_setzen(PROTOKOLL_K_ARCHIV_TAGE, '1');
 app_state_loeschen(PROTOKOLL_K_ARCHIV_BEHALTEN);
 /* Ortsmitternacht vor drei Tagen, als UTC — die Grenzen des Archivs sind
- * Kalendertage der Anlage, nicht UTC-Tage. */
-$beginn = protokoll_archiv_tag_beginn(gmdate('Y-m-d H:i:s', time() - 3 * 86400));
+ * Kalendertage der Anlage, nicht UTC-Tage.
+ *
+ * DREI KALENDERTAGE, NICHT 3 × 86 400 SEKUNDEN (R17-19). Am Tag der
+ * Zeitumstellung im Herbst hat der Tag 25 Stunden; in seiner letzten Stunde
+ * landete `time() - 3 * 86400` auf dem Tag −2, die Probe zählte zwei
+ * Zeiträume statt drei und war rot — gemessen am 25.10.2026 um 23:27 Ortszeit,
+ * im Prüfstand von R17-19. Gerechnet wird deshalb im Kalender der Anlage. */
+$vorDrei = (new DateTimeImmutable('now', protokoll_archiv_zone()))->modify('-3 days')
+    ->setTimezone(new DateTimeZone('UTC'))->format('Y-m-d H:i:s');
+$beginn = protokoll_archiv_tag_beginn($vorDrei);
 app_state_setzen(PROTOKOLL_K_ARCHIV_BIS, $beginn);
 $rueck = protokoll_archiv_rueckstand($pdo, []);
 pruef($rueck === 3, 'Drei Zeiträume stehen aus (Tag −3, −2, −1)', 'Rückstand ' . var_export($rueck, true));

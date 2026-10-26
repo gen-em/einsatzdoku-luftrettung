@@ -816,6 +816,348 @@
       ],
       "klasse": "G",
       "begruendung": "DAS MODELL UNTERSCHEIDET DIE ZWEI UHREN AN IHREN SICHERHEITSEIGENSCHAFTEN, und die sind die Plattform selbst: Die Garmin-Uhr haelt den Geraeteschluessel im Klartext, puffert Spur und Reanimation unverschluesselt, bekommt ihre Serveradresse aus Garmin Connect und schickt jede Anfrage durch die Begleit-App; die Wear-OS-Uhr kennt keine Zugangsdaten (G7). Ein geraetefreies „Uhr“ legte die beiden Gegenteile uebereinander — und genau die Angreiferlagen H, L und M entstehen aus dem Unterschied. Dieselbe Begruendung wie `handbuch-geraete-verlust-garmin`: keine Plattformnennung aus Bequemlichkeit, sondern die Sache selbst (Schritt 12, R17-02)."
+    },
+    {
+      "id": "avv-kopf-rekonstruierbarkeit",
+      "bereich": "c",
+      "datei": "docs/rechtstexte/AVV.md",
+      "muster": [
+        "zusage-rekonstruierbar"
+      ],
+      "zeile": "die Rekonstruierbarkeit des\\s+Einsatzortes",
+      "klasse": "Bestand",
+      "begruendung": "Der Kopfkasten der AVV-Vorlage nennt ihre Überarbeitung vom 17.09.2026, darunter „die Rekonstruierbarkeit des Einsatzortes“ in Anlage II Nr. 2 — den Stand vor S11. Bis zur Rechtstext-Runde vor dem v1.0-Tag (Backlog Nr. 400, E-R17-29): Die Betreiberin berichtigt AVV und Nutzungsbedingungen selbst, beide sind auf Produktiv eingespielt, und eine neue Fassung sperrt den Login bis zur Annahme. Sobald der Satz berichtigt ist, greift diese Regel nicht mehr und die Probe wird rot — dann wird sie gestrichen."
+    },
+    {
+      "id": "avv-a2-klartextliste",
+      "bereich": "c",
+      "datei": "docs/rechtstexte/AVV.md",
+      "muster": [
+        "zusage-klartext"
+      ],
+      "zeile": "Im Klartext liegen dagegen\\W+die Zeiten, die Koordinate jeder Einsatzphase",
+      "klasse": "Bestand",
+      "begruendung": "AVV-Vorlage A.2: die Klartextliste von vor S11 (Phasenkoordinaten, GPS-Aufzeichnung, Transportziel, Reanimation). Bis zur Rechtstext-Runde vor dem v1.0-Tag (Backlog Nr. 400, E-R17-29): Die Betreiberin berichtigt AVV und Nutzungsbedingungen selbst, beide sind auf Produktiv eingespielt, und eine neue Fassung sperrt den Login bis zur Annahme. Sobald der Satz berichtigt ist, greift diese Regel nicht mehr und die Probe wird rot — dann wird sie gestrichen."
+    },
+    {
+      "id": "avv-a2-rekonstruierbar",
+      "bereich": "c",
+      "datei": "docs/rechtstexte/AVV.md",
+      "muster": [
+        "zusage-rekonstruierbar"
+      ],
+      "zeile": "Aus den GPS-Daten und den Phasenkoordinaten lässt sich der Einsatzort rekonstruieren\\W+; die Verschlüsselung",
+      "klasse": "Bestand",
+      "begruendung": "AVV-Vorlage A.2: der Satz von der Rekonstruierbarkeit, seit S11 falsch. Bis zur Rechtstext-Runde vor dem v1.0-Tag (Backlog Nr. 400, E-R17-29): Die Betreiberin berichtigt AVV und Nutzungsbedingungen selbst, beide sind auf Produktiv eingespielt, und eine neue Fassung sperrt den Login bis zur Annahme. Sobald der Satz berichtigt ist, greift diese Regel nicht mehr und die Probe wird rot — dann wird sie gestrichen."
+    },
+    {
+      "id": "avv-anlage2-klartext",
+      "bereich": "c",
+      "datei": "docs/rechtstexte/AVV.md",
+      "muster": [
+        "zusage-klartext"
+      ],
+      "zeile": "Im Klartext \\(für die Funktionen des Dienstes erforderlich\\)",
+      "klasse": "Bestand",
+      "begruendung": "AVV-Vorlage Anlage II Nr. 2: die Klartextliste von vor S11. Bis zur Rechtstext-Runde vor dem v1.0-Tag (Backlog Nr. 400, E-R17-29): Die Betreiberin berichtigt AVV und Nutzungsbedingungen selbst, beide sind auf Produktiv eingespielt, und eine neue Fassung sperrt den Login bis zur Annahme. Sobald der Satz berichtigt ist, greift diese Regel nicht mehr und die Probe wird rot — dann wird sie gestrichen."
+    },
+    {
+      "id": "avv-anlage2-rekonstruierbar",
+      "bereich": "c",
+      "datei": "docs/rechtstexte/AVV.md",
+      "muster": [
+        "zusage-rekonstruierbar"
+      ],
+      "zeile": "Aus den GPS-Daten und diesen Koordinaten lässt sich der Einsatzort rekonstruieren, obwohl",
+      "klasse": "Bestand",
+      "begruendung": "AVV-Vorlage Anlage II Nr. 2: der Satz von der Rekonstruierbarkeit, seit S11 falsch. Bis zur Rechtstext-Runde vor dem v1.0-Tag (Backlog Nr. 400, E-R17-29): Die Betreiberin berichtigt AVV und Nutzungsbedingungen selbst, beide sind auf Produktiv eingespielt, und eine neue Fassung sperrt den Login bis zur Annahme. Sobald der Satz berichtigt ist, greift diese Regel nicht mehr und die Probe wird rot — dann wird sie gestrichen."
+    },
+    {
+      "id": "avv-anlage2-reanimation",
+      "bereich": "c",
+      "datei": "docs/rechtstexte/AVV.md",
+      "muster": [
+        "zusage-klartext"
+      ],
+      "zeile": "der Reanimationsverlauf liegt im Klartext",
+      "klasse": "Bestand",
+      "begruendung": "AVV-Vorlage Anlage II Nr. 2, besondere Kategorien: „der Reanimationsverlauf liegt im Klartext“ — seit S11 liegt er in der Einsatzhülle. Bis zur Rechtstext-Runde vor dem v1.0-Tag (Backlog Nr. 400, E-R17-29): Die Betreiberin berichtigt AVV und Nutzungsbedingungen selbst, beide sind auf Produktiv eingespielt, und eine neue Fassung sperrt den Login bis zur Annahme. Sobald der Satz berichtigt ist, greift diese Regel nicht mehr und die Probe wird rot — dann wird sie gestrichen."
+    },
+    {
+      "id": "avv-pruefhinweis-a",
+      "bereich": "c",
+      "datei": "docs/rechtstexte/AVV.md",
+      "muster": [
+        "zusage-klartext",
+        "zusage-rekonstruierbar"
+      ],
+      "zeile": "ging von einer Verschlüsselung aus, die so nicht besteht",
+      "klasse": "Bestand",
+      "begruendung": "AVV-Vorlage, Prüfhinweis (a): begründet die Auftragsverarbeitung mit GPS-Daten, Phasenkoordinaten und Transportziel im Klartext. Nach S11 trägt der Schluss weiter (Zeiten, Besatzung, Notizen des Diensttags bleiben lesbar), die Begründung nicht. Bis zur Rechtstext-Runde vor dem v1.0-Tag (Backlog Nr. 400, E-R17-29): Die Betreiberin berichtigt AVV und Nutzungsbedingungen selbst, beide sind auf Produktiv eingespielt, und eine neue Fassung sperrt den Login bis zur Annahme. Sobald der Satz berichtigt ist, greift diese Regel nicht mehr und die Probe wird rot — dann wird sie gestrichen."
+    },
+    {
+      "id": "nb-44-klartextliste",
+      "bereich": "c",
+      "datei": "docs/rechtstexte/Nutzungsbedingungen.md",
+      "muster": [
+        "zusage-klartext"
+      ],
+      "zeile": "Im Klartext liegen unter anderem die Zeiten, die \\*\\*Koordinate",
+      "klasse": "Bestand",
+      "begruendung": "Nutzungsbedingungen 4.4: die Klartextliste von vor S11 — F-R17-58 hatte die Stelle übersehen (F-R17-60). Bis zur Rechtstext-Runde vor dem v1.0-Tag (Backlog Nr. 400, E-R17-29): Die Betreiberin berichtigt AVV und Nutzungsbedingungen selbst, beide sind auf Produktiv eingespielt, und eine neue Fassung sperrt den Login bis zur Annahme. Sobald der Satz berichtigt ist, greift diese Regel nicht mehr und die Probe wird rot — dann wird sie gestrichen."
+    },
+    {
+      "id": "nb-44-rekonstruierbar",
+      "bereich": "c",
+      "datei": "docs/rechtstexte/Nutzungsbedingungen.md",
+      "muster": [
+        "zusage-rekonstruierbar"
+      ],
+      "zeile": "Aus den GPS-Daten und den Phasenkoordinaten lässt sich der\\s+Einsatzort rekonstruieren",
+      "klasse": "Bestand",
+      "begruendung": "Nutzungsbedingungen 4.4: der Satz von der Rekonstruierbarkeit, seit S11 falsch (F-R17-60). Bis zur Rechtstext-Runde vor dem v1.0-Tag (Backlog Nr. 400, E-R17-29): Die Betreiberin berichtigt AVV und Nutzungsbedingungen selbst, beide sind auf Produktiv eingespielt, und eine neue Fassung sperrt den Login bis zur Annahme. Sobald der Satz berichtigt ist, greift diese Regel nicht mehr und die Probe wird rot — dann wird sie gestrichen."
+    },
+    {
+      "id": "zusage-hb-textbaustein-alte-fassung",
+      "bereich": "c",
+      "datei": "docs/Handbuch.md",
+      "muster": [
+        "zusage-klartext"
+      ],
+      "zeile": "bis dahin lagen GPS-Spur, Phasenorte",
+      "klasse": "C",
+      "begruendung": "Handbuch 11.5a: Der Textbaustein sagt, dass seine Fassung seit Web 22 gilt und was BIS DAHIN im Klartext lag — damit, wer die alte übernommen hat, sie ersetzt. Geschichte mit Versionsangabe, kein heutiger Wortlaut."
+    },
+    {
+      "id": "zusage-export-altbestand-weg",
+      "bereich": "c",
+      "datei": "docs/Export-Format.md",
+      "muster": [
+        "zusage-klartext"
+      ],
+      "zeile": "weil es den Altbestand im Klartext",
+      "klasse": "C",
+      "begruendung": "Export-Format, Tabelle der Inhalte: „seit Web 23 sind das alle, weil es den Altbestand im Klartext nicht mehr gibt“ — eine Verneinung mit Versionsangabe."
+    },
+    {
+      "id": "zusage-technik-resus-gefallen",
+      "bereich": "c",
+      "datei": "docs/Technik.md",
+      "muster": [
+        "zusage-klartext"
+      ],
+      "zeile": "Bis dahin die Reanimationen im Klartext",
+      "klasse": "C",
+      "begruendung": "Technik 3, Tabellenverzeichnis: die mit Web 23 gefallenen Tabellen `resus_sessions`/`resus_events` und was BIS DAHIN darin lag."
+    },
+    {
+      "id": "zusage-technik-trackpoints-gefallen",
+      "bereich": "c",
+      "datei": "docs/Technik.md",
+      "muster": [
+        "zusage-klartext"
+      ],
+      "zeile": "Bis dahin GPS-Punkte im Klartext als Zeilen",
+      "klasse": "C",
+      "begruendung": "Technik 3, Tabellenverzeichnis: die mit Web 23 gefallene Tabelle `track_points` und was BIS DAHIN darin lag."
+    },
+    {
+      "id": "zusage-technik-spurstufe-damals",
+      "bereich": "c",
+      "datei": "docs/Technik.md",
+      "muster": [
+        "zusage-klartext"
+      ],
+      "zeile": "Die Begründung damals: Die Spur lag im Klartext",
+      "klasse": "C",
+      "begruendung": "Technik 4.97: warum die Stufe einer Spur früher auf dem Server lag — „Die Begründung damals“, ausdrücklich alt."
+    },
+    {
+      "id": "zusage-technik-spur1-bis-dahin",
+      "bereich": "c",
+      "datei": "docs/Technik.md",
+      "muster": [
+        "zusage-klartext"
+      ],
+      "zeile": "bis dahin als SPUR1-Blob im Klartext",
+      "klasse": "C",
+      "begruendung": "Technik, GPX-Import: Die Spur kommt seit Web 22.3.0 verschlossen, BIS DAHIN als SPUR1-Blob im Klartext."
+    },
+    {
+      "id": "zusage-technik-zusage-geschichte",
+      "bereich": "c",
+      "datei": "docs/Technik.md",
+      "muster": [
+        "zusage-rekonstruierbar"
+      ],
+      "zeile": "Bis Web 21 galt hier der unbequeme Satz",
+      "klasse": "C",
+      "begruendung": "Technik 4.98, der Kasten zur Zusage: erzählt, dass der Satz von der Rekonstruierbarkeit von Web 15.6.0 bis Web 21 die ehrliche Grenze war und seit Web 22 nicht mehr gilt (R17-18)."
+    },
+    {
+      "id": "zusage-technik-formular-rea-bis-2204",
+      "bereich": "c",
+      "datei": "docs/Technik.md",
+      "muster": [
+        "zusage-klartext"
+      ],
+      "zeile": "Bis Web 22\\.0\\.4 sah das Einsatzformular die Reanimation im Klartext",
+      "klasse": "C",
+      "begruendung": "Technik 4.99s: wie das Einsatzformular die Reanimation BIS Web 22.0.4 schrieb."
+    },
+    {
+      "id": "zusage-technik-altbestand-umzug",
+      "bereich": "c",
+      "datei": "docs/Technik.md",
+      "muster": [
+        "zusage-klartext"
+      ],
+      "zeile": "was vor Web 22 im Klartext angekommen war",
+      "klasse": "C",
+      "begruendung": "Technik 4.99s: das Einmalwerkzeug, das den Altbestand von vor Web 22 in die Hüllen umzog (S11-12 entfernt)."
+    },
+    {
+      "id": "zusage-vertrag-bis-2200",
+      "bereich": "c",
+      "datei": "docs/JSON-Vertrag.md",
+      "muster": [
+        "zusage-klartext"
+      ],
+      "zeile": "Bis Web 22\\.0\\.0\\W+trugen",
+      "klasse": "C",
+      "begruendung": "JSON-Vertrag: was das Gerät BIS Web 22.0.0 schickte — die Form, die der Server seither mit `400 klartext` abweist."
+    },
+    {
+      "id": "zusage-modell-lage-m-bis-uhr4",
+      "bereich": "c",
+      "datei": "docs/Bedrohungsmodell.md",
+      "muster": [
+        "zusage-klartext"
+      ],
+      "zeile": "Reanimation im Klartext\\W+von der Garmin seit Uhr 4\\.0\\.0",
+      "klasse": "C",
+      "begruendung": "Bedrohungsmodell, Lage M: was auf dem Transportweg mitzulesen war und seit Uhr 4.0.0 und Android 0.18.0 nur noch als Gerätehülle läuft."
+    },
+    {
+      "id": "zusage-modell-r3-geschlossen",
+      "bereich": "c",
+      "datei": "docs/Bedrohungsmodell.md",
+      "muster": [
+        "zusage-rekonstruierbar"
+      ],
+      "zeile": "Der Einsatzort ist aus W2 rekonstruierbar",
+      "klasse": "C",
+      "begruendung": "Bedrohungsmodell 5, Restrisiko R3: die Beschreibung des Risikos; die Spalte daneben sagt „Mit S11 geschlossen“. Die Tabellenzelle ist eine eigene Einheit der Sicht `satz` — der Stand steht in der nächsten."
+    },
+    {
+      "id": "zusage-dse-alte-sicherungen",
+      "bereich": "c",
+      "datei": "docs/rechtstexte/Datenschutzerklaerung.md",
+      "muster": [
+        "zusage-klartext"
+      ],
+      "zeile": "Sicherungen von vor S11 tragen Orte, GPS-Daten und Reanimation im Klartext",
+      "klasse": "C",
+      "begruendung": "Datenschutzerklärung, Prüfhinweis 0 (d): ein offener Einwand über Sicherungen von VOR S11 — in der Sache wahr und mit Versionsangabe. Der Verweis darin („CLAUDE.md 4, Grenze 2“) ist seit Web 23 veraltet (die Grenze „Sicherungen von vor S11“ ist mit S11-12 gefallen, Grenze 2 ist heute der Schlüssel ohne zweiten Kanal); ihn trägt Backlog Nr. 400 mit."
+    },
+    {
+      "id": "zusage-migration-inhaltsliste",
+      "bereich": "a",
+      "datei": "server/migration_lib.php",
+      "muster": [
+        "zusage-klartext"
+      ],
+      "zeile": "'(?:Transportziel|GPS-Punkte|GPS-Aufzeichnungen) im Klartext|'Reanimation im Klartext'",
+      "klasse": "E",
+      "begruendung": "Die Aufräum-Migration `2026_10_19_klartext_weg` (S11-12) nennt in ihrer Inhaltssperre je Tabelle und Spalte, was sie entfernt — die Klartext-Ortsdaten von vor Web 22. Beschriftung einer Migration (Klasse E), eine Stelle, eine Liste."
+    },
+    {
+      "id": "zusage-spurenrueckweg-altes-backup",
+      "bereich": "a",
+      "datei": "server/api/backup_spuren_restore.php",
+      "muster": [
+        "zusage-klartext"
+      ],
+      "zeile": "Das Backup enthielt GPS-Daten im Klartext\\. Seit Web 22\\.5\\.0",
+      "klasse": "C",
+      "begruendung": "Die Meldung, mit der der Rückweg eine Sicherung von vor Web 22.5.0 abweist — sie sagt, dass es ein alter Stand ist."
+    },
+    {
+      "id": "zusage-technik-export-entschluesselt",
+      "bereich": "c",
+      "datei": "docs/Technik.md",
+      "muster": [
+        "zusage-klartext"
+      ],
+      "zeile": "ersetzt sie durch Klartext, öffnet die Einsatzhüllen",
+      "klasse": "Homonym",
+      "begruendung": "Technik, Export: Der BROWSER entschlüsselt für die Exportdatei — „Klartext“ ist hier der Inhalt der Datei, die die NutzerIn sich holt, nicht die Ablage auf dem Server."
+    },
+    {
+      "id": "zusage-technik-ingest-weist-ab",
+      "bereich": "c",
+      "datei": "docs/Technik.md",
+      "muster": [
+        "zusage-klartext"
+      ],
+      "zeile": "weist Ortsdaten im Klartext ab",
+      "klasse": "Homonym",
+      "begruendung": "Technik 4.99s: Der Eingang WEIST Klartext ab (`400 klartext`) — die Zusage selbst, nicht ihr Gegenteil."
+    },
+    {
+      "id": "zusage-backup-spurteil-innen",
+      "bereich": "c",
+      "datei": "docs/Backup-Format.md",
+      "muster": [
+        "zusage-klartext"
+      ],
+      "zeile": "Ein Spurteil im Klartext, seit Nutzlast 13",
+      "klasse": "Homonym",
+      "begruendung": "Backup-Format: die Innenform eines Teils VOR dem Versiegeln — „im Klartext“ heißt hier „unversiegelt dargestellt“; die Datei trägt den Teil verschlüsselt."
+    },
+    {
+      "id": "zusage-vertrag-fehler-klartext",
+      "bereich": "c",
+      "datei": "docs/JSON-Vertrag.md",
+      "muster": [
+        "zusage-klartext"
+      ],
+      "zeile": "Ortsdaten im Klartext\\W+\\(seit Web 22\\.0\\.1\\)",
+      "klasse": "Homonym",
+      "begruendung": "JSON-Vertrag, Fehlertabelle: der Fehlerschlüssel `klartext` — was der Server abweist."
+    },
+    {
+      "id": "zusage-modell-lage-h-puffer",
+      "bereich": "c",
+      "datei": "docs/Bedrohungsmodell.md",
+      "muster": [
+        "zusage-klartext"
+      ],
+      "zeile": "Klartextpuffer \\(Spur, Phasen mit Koordinate",
+      "klasse": "G",
+      "begruendung": "Bedrohungsmodell, Lage H: der Puffer auf der Garmin-Uhr — Klartext bis zum Senden, eine benannte Grenze der Zusage (CLAUDE.md 4, Grenze 1)."
+    },
+    {
+      "id": "zusage-modell-g7-garmin",
+      "bereich": "c",
+      "datei": "docs/Bedrohungsmodell.md",
+      "muster": [
+        "zusage-klartext"
+      ],
+      "zeile": "Klartextpuffer samt Reanimation",
+      "klasse": "G",
+      "begruendung": "Bedrohungsmodell G7: die Garmin-Uhr als Gegenteil der Wear-OS-Uhr — Klartextpuffer bis zum Senden, Grenze 1 der Zusage."
+    },
+    {
+      "id": "zusage-wiederherstellung-schluesselpaar",
+      "bereich": "a",
+      "datei": "server/einstellungen.php",
+      "muster": [
+        "zusage-klartext"
+      ],
+      "zeile": "lesbar sind sie nur mit dem",
+      "klasse": "Homonym",
+      "begruendung": "Die Abschlussmeldung des Rückwegs (`rwText`): Einsätze, deren Orte und Reanimation verschlossen mitkamen, sind „lesbar nur mit dem Schlüsselpaar des Kontos, aus dem die Sicherung stammt“ — „lesbar“ heißt hier „mit dem Schlüssel zu öffnen“, das Gegenteil von Klartext. Die Meldung ist eine verkettete JavaScript-Zeichenkette über drei Zeilen; die Sicht `satz` fügt sie seit der Gegenprüfung von R17-18 zusammen."
     }
   ]
 }

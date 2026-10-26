@@ -19,7 +19,7 @@ Aufruf:
     ... [--basis …] [--konto …] [--frisch] [--behalten] [--jobs-token …]
 
 --jobs-token braucht, wer gegen eine FERNE Installation misst: Die Jobs
-werden dann ueber `jobs.php?aktion=pause` angehalten statt ueber die
+werden dann ueber `jobs.php`, `aktion=pause`, angehalten statt ueber die
 Kommandozeile. Ohne den Schalter bleibt es beim lokalen Weg.
 
 --frisch loescht ein bereits vorhandenes Umlaufkonto vorher ueber den
@@ -271,7 +271,8 @@ def jobs_pause(sekunden: int, basis: str = "", token: str = "") -> None:
     gilt für alle Auslöser. Es gibt ihn über ZWEI Zugänge, und welcher passt,
     hängt daran, wo die Installation steht:
 
-    MIT TOKEN: über `jobs.php?aktion=pause`, gefahren von `tools/kette/tor.py`
+    MIT TOKEN: über `jobs.php`, `aktion=pause` (seit Web 23.1.0 per POST mit dem
+    Kettentoken), gefahren von `tools/kette/tor.py`
     — dem einen Client dieser Schnittstelle. Das ist der Weg für eine FERNE
     Installation.
 
@@ -356,7 +357,8 @@ def main() -> int:
     # mit einem Token, das einer anderen gehört. Der Schalter wird jetzt
     # ausdrücklich gegeben oder gar nicht; die Kette gibt ihn (17.09.2026).
     p.add_argument("--jobs-token", default="",
-                   help="Job-Token der Installation; nötig, wenn --basis NICHT "
+                   help="Kettentoken der Installation (seit Web 23.1.0; davor das "
+                        "Job-Token); nötig, wenn --basis NICHT "
                         "auf diesem Rechner liegt (sonst läuft die Job-Pause "
                         "über die Kommandozeile).")
     a = p.parse_args()
@@ -388,7 +390,7 @@ def main() -> int:
     # Installation nicht bis zum Ablauf lahmlegt.
     #
     # ÜBER WELCHEN ZUGANG, entscheidet `--jobs-token` (Web 20.16.0, Nr. 219):
-    # mit Token über `jobs.php?aktion=pause`, ohne Token über die
+    # mit Token über `jobs.php` (`aktion=pause`), ohne Token über die
     # Kommandozeile. Der zweite Weg setzt eine Installation auf DIESER
     # Rechner voraus — gegen ein fernes Staging scheitert er.
     jobs_pause(1800, a.basis, a.jobs_token)

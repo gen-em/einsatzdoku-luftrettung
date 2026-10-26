@@ -30,8 +30,11 @@
  * DIE ADRESSE WIRD GESTELLT. Für eine IP-Adresse gibt es keine Passkeys
  * (E-SR-42), und die Sandbox steht auf 127.0.0.1. Der Weg setzt
  * `app.base_url` auf dieselbe Anlage unter `localhost` und fährt seinen
- * eigenen Kontext dort; im `finally` legt er `config.php` byte-gleich zurück
- * (daneben liegt so lange `config.php.vor-probe`, wie bei
+ * eigenen Kontext dort; im `finally` legt er `config.php` byte-gleich zurück.
+ * Die Sicherung für einen harten Abbruch liegt seit R17-19 im
+ * Temp-Verzeichnis (`SICHERUNG` unten), nicht mehr als `config.php.vor-probe`
+ * im Webverzeichnis — dort stand sie mit allen Zugangsdaten unter einem
+ * Namen, den jeder Webserver als Text ausliefert (F-R17-55, wie bei
  * `tools/sandbox/konfig_stellen.php`). Nach beiden Schritten wartet er
  * 3,2 Sekunden — OPcache sieht die Datei erst nach `revalidate_freq` und
  * rechnet in ganzen Sekunden; 2,2 s reichten nicht immer (F-SR-31).
@@ -40,8 +43,9 @@
  * (`tools/zweitfaktor/pruefkonto.php`) — wie `zweitfaktor-merken`.
  */
 
-import { readFileSync, writeFileSync, unlinkSync } from 'node:fs';
+import { readFileSync, writeFileSync, unlinkSync, chmodSync } from 'node:fs';
 import { join } from 'node:path';
+import { tmpdir } from 'node:os';
 import { execFileSync } from 'node:child_process';
 import { naechsterCode, SANDBOX } from '../../zweitfaktor/totp.mjs';
 import { probekontoAnlegen, probekontoRaeumen, eigenerKontext, passwortSchicken, php, WURZEL }
@@ -94,7 +98,10 @@ export const wege = [
       }
       const basisL = k.basis.replace('//127.0.0.1', '//localhost');
       const vorher = readFileSync(KONFIG);
-      writeFileSync(KONFIG + '.vor-probe', vorher);
+      const SICHERUNG = join(tmpdir(), `nadoku-konfig-vor-passkeyweg-${process.pid}.php`);
+      writeFileSync(SICHERUNG, vorher, { mode: 0o600 });
+      chmodSync(SICHERUNG, 0o600);
+      console.error(`Passkey-Weg: Sicherung von config.php unter ${SICHERUNG}`);
       probekontoAnlegen(ADRESSE, PASSWORT, 'user', 'Bedienprobe Passkey');
       execFileSync('php', ['tools/zweitfaktor/pruefkonto.php', ADRESSE], { cwd: WURZEL });
       /* Die Dauer der NutzerInnen fest auf 30 wie in `zweitfaktor-merken` —
@@ -288,7 +295,7 @@ export const wege = [
         await kontext.close();
         if (zweiter) { await zweiter.close(); }
         writeFileSync(KONFIG, vorher);
-        try { unlinkSync(KONFIG + '.vor-probe'); } catch { /* schon fort */ }
+        try { unlinkSync(SICHERUNG); } catch { /* schon fort */ }
         await warten(3200);
         probekontoRaeumen(ADRESSE);
         php(tageVorher === '' ? 'app_state_loeschen("zf_geraet_tage_user");'

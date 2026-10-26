@@ -27,7 +27,7 @@ Open Sans für den Rest). Alles liegt im Repositorium; die Vorlagen ziehen es
 Der Satz im Hero-Bild lautet „Einsatztracking am Handgelenk – verschlüsselt
 direkt auf der Uhr. In Ruhe im Web ansehen und nacharbeiten." **„Direkt auf
 der Uhr" und nicht „sofort":** Die Uhr verschließt beim Senden; bis dahin
-liegt der Puffer im Klartext (`CLAUDE.md` Abschnitt 4, Grenze 3).
+liegt der Puffer im Klartext (`CLAUDE.md` Abschnitt 4, Grenze 1).
 Verschlossen werden GPS-Spur, Phasenkoordinaten und Reanimation, nicht
 Zeiten und Phasennummern — die Beschreibung sagt es ausführlich.
 

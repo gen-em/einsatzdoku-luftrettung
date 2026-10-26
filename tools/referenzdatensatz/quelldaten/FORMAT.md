@@ -155,7 +155,7 @@ keine geschützten Angaben hat).
 | `route` | Wegpunkt-Folge für die Spur (siehe unten); `null` = kein Track |
 | `spur` | Koordinaten **nur** für die Spurerzeugung (siehe unten) |
 | `rea` | Sitzungen, je `beginn` und `ereignisse` `[typ, zeit]` |
-| `felder` | Spalten aus `mission_fields.php` (Klartext) |
+| `felder` | Spalten aus `mission_fields.php` (Klartext) — außer `transport_dest`, `dest_lat` und `dest_lon`: Die legt das Einspielskript seit S11-05b in den `pat_blob` (Web 22.1.0) |
 | `geschuetzt` | Inhalt des `pat_blob` (E2E-verschlüsselt) |
 | `papierkorb` | `null` oder `"einsatz"` — Dauerzustand nach E-P1-21 |
 
@@ -194,8 +194,12 @@ keine Koordinate doppelt und widersprüchlich führen. `pruefen.py` prüft für
 **jeden** Wegpunkt, dass er auf eine Koordinate auflöst.
 
 **`spur` ist kein Notbehelf, sondern die Trennung, die die Anwendung selbst
-macht.** Trackpunkte und Phasenkoordinaten liegen im Klartext (`track_points`,
-`mission_phases`); verschlüsselt ist die **Adresse** (`pat_blob.loc.addr`).
+macht.** Trackpunkte und Phasenkoordinaten gehören nicht zu den geschützten
+Angaben des Formulars (`pat_blob`, darin die **Adresse** `loc.addr`), sondern
+liegen getrennt davon: seit Web 22 verschlossen in der Gerätehülle
+(Spurstücke in `track_stuecke`, Phasenorte in `missions.ort_huelle`), bis
+dahin im Klartext (`track_points`, seit Web 10 als SPUR1 in `track_blobs`;
+`mission_phases`).
 Deshalb hat ein Einsatz ohne geschützte Angaben sehr wohl eine Spur — und
 deshalb kann eine Zielklinik ohne gespeicherte Koordinate trotzdem
 angeflogen worden sein. In beiden Fällen steht die Koordinate in `spur` und

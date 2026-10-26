@@ -6,10 +6,14 @@ watch/bin/
 
 # Lokale Server-Konfiguration (enthält Zugangsdaten — niemals ins Repo!)
 server/config.php
-# Die Sicherung, die tools/mailprobe/ waehrend ihres Laufs anlegt. Sie liegt
-# nur da, wenn die Probe nicht sauber zu Ende gekommen ist (kill -9, Behaelter
-# weg) -- und sie enthaelt dann dieselben Zugangsdaten wie config.php.
-server/config.php.mailprobe
+# JEDE KOPIE der config.php daneben (`config.php.bak`, `config.php~`, die
+# Sicherungen, die die Proben bis Web 23.0.3 hier anlegten:
+# `config.php.vor-probe` aus tools/sandbox/konfig_stellen.php,
+# `config.php.mailprobe` aus tools/proben/mail/). Seit R17-19 legen die
+# Proben ihre Sicherung im Temp-Verzeichnis ab (F-R17-55); diese Zeile ist
+# der Riegel fuer alles, was sonst noch so heisst. Ein Stufe-1-Riegel in
+# tools/kettenaufrufe/ faerbt eine eingecheckte Kopie zusaetzlich rot.
+server/config.php.*
 server/install.lock
 # Der Schalter des Wartungsmodus (S5 Paket W, E-S5W-02). Wie install.lock:
 # Er ist ein ZUSTAND DIESER EINEN INSTALLATION und gehoert nicht ins
@@ -168,3 +172,7 @@ emulator-bilder/
 # ausgelieferte Datei mit Pfad und Hash.
 .ftp-deploy-sync-state.json
 .deploy-state-*.json
+
+# Playwright fuer Stufe 2 der Kette (R17-19): `npm ci` legt es nur auf dem
+# Laeufer an; wer es oertlich nachstellt, checkt es nicht ein.
+tools/kette/stufe2-npm/node_modules/

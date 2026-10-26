@@ -108,8 +108,12 @@ function jobs_speicher_knapp(): bool
     return memory_get_usage(true) >= JOB_SPEICHER_DECKEL_MB * 1024 * 1024;
 }
 
-/** Schluessel des Token in `app_state`. */
+/** Schluessel des Job-Tokens in `app_state` — der Abruf ueber die Adresse. */
 const JOB_TOKEN_SCHLUESSEL = 'jobs_token';
+
+/** Schluessel des Kettentokens in `app_state` — die Aktionen der
+ * Auslieferungskette (Web 23.1.0, R17-19, E-R17-34). */
+const KETTE_TOKEN_SCHLUESSEL = 'kette_token';
 
 /**
  * Schluessel der Laufpause in `app_state` (UTC-Zeitstempel, bis wann).
@@ -615,15 +619,17 @@ function jobs_zustand(): array
  * saehe, warum der zeitgesteuerte Abruf nicht geht.
  *
  * Das Token ist ein Geheimnis wie ein Passwort — 32 Byte Zufall, hex. Wer es
- * hat, kann die Wartung anstossen: Jobs laufen lassen, ein Komplett-Backup
- * anstossen, den Wartungsmodus ein- und ausschalten, den Zustand abfragen und
- * — seit Web 20.16.0 — die Jobs anhalten (`aktion=pause`). Mehr nicht. Er kann
- * damit weder Daten lesen noch schreiben, und der Ratenschutz begrenzt die
- * Versuche.
+ * hat, kann seit Web 23.1.0 genau eines: die faelligen Jobs laufen lassen,
+ * also das, was der Zeitplan ohnehin jede Minute tut. Die Aktionen der
+ * Auslieferungskette — Komplett-Backup, Wartungsmodus, Zustand, Pause —
+ * oeffnet es nicht mehr; dafuer gibt es `kette_token()`.
  *
- * Wer diese Aufzaehlung fortschreibt, schreibt sie in `jobs.php` mit: Dort
- * steht dieselbe Liste noch einmal, einmal im Kopf und einmal in der Meldung
- * zu einer unbekannten Aktion.
+ * WARUM DIE TRENNUNG (R17-19, F-R17-57, E-R17-34). Dieses Token reist in der
+ * ADRESSE — ein „Cronjob per URL" beim Hoster kann nichts anderes —, und eine
+ * Adresse steht im Zugriffsprotokoll des Hosters, mit Zeitstempel, so lange,
+ * wie der Hoster es aufhebt. Bis Web 23.0.3 war es dasselbe Token, mit dem
+ * die Kette den Produktivserver in die Wartung schaltet. Wer das Protokoll
+ * las, hatte damit den Schalter. Jetzt hat er hoechstens einen Job-Lauf.
  */
 function jobs_token(bool $neu = false): string
 {
@@ -634,9 +640,64 @@ function jobs_token(bool $neu = false): string
         $wert = app_state_lesen(JOB_TOKEN_SCHLUESSEL);
         if ($wert !== null && $wert !== '') { return $wert; }
     }
+    /* ZUERST DAS KETTENTOKEN (R17-19, Gegenpruefung E-R17-43). Es uebernimmt
+     * beim ersten Lesen den Wert des Job-Tokens — gedacht fuer das Update
+     * einer Anlage, deren Kette den alten Wert kennt. Entstand das Job-Token
+     * vorher, auf einer NEUEN Anlage, uebernahm das Kettentoken danach dessen
+     * frischen Wert, und beide blieben dauerhaft gleich: die Trennung, die
+     * Web 23.1.0 bringen soll, gab es dort nie. Und wer nach dem Update
+     * zuerst das Job-Token erneuerte, gab dem Kettentoken den NEUEN Wert, den
+     * die Kette nicht kennt. Hier vorher gelesen, bekommt es auf einer neuen
+     * Anlage einen eigenen Zufallswert und beim Erneuern den bisherigen. */
+    kette_token();
     $token = bin2hex(random_bytes(32));
-    app_state_setzen(JOB_TOKEN_SCHLUESSEL, $token);
+    if (!app_state_setzen(JOB_TOKEN_SCHLUESSEL, $token)) {
+        throw new RuntimeException('Das Job-Token ließ sich nicht speichern — das bisherige gilt weiter.');
+    }
     return $token;
+}
+
+/**
+ * Das Kettentoken — der Schluessel der Auslieferungskette zu `jobs.php`
+ * (Web 23.1.0, R17-19, E-R17-34).
+ *
+ * Wer es hat, kann die Aktionen der Kette ausloesen: ein Komplett-Backup
+ * anstossen, den Wartungsmodus ein- und ausschalten, den Zustand abfragen,
+ * die Jobs anhalten. Daten lesen oder schreiben kann er damit nicht. Es kommt
+ * NUR im Rumpf einer POST-Anfrage an (`jobs.php` lehnt `aktion` per GET ab)
+ * und steht deshalb in keinem Zugriffsprotokoll. In GitHub liegt es als
+ * Geheimnis `JOBS_TOKEN` der Umgebungen `staging` und `produktion` — der Name
+ * ist geblieben, damit beim Umstieg kein Geheimnis umbenannt werden musste.
+ *
+ * DER UEBERGANG, UND WARUM ER SO AUSSIEHT. Fehlt das Kettentoken, uebernimmt
+ * es beim ersten Lesen den Wert des bisherigen Job-Tokens. Ein frisch
+ * erzeugtes Token kennte die Kette nicht: Sie schaltet VOR dem Abgleich mit
+ * dem alten Token die Wartung ein und fragt DANACH, gegen die neue Fassung,
+ * nach Zustand und `wartung_aus` — mit einem fremden Token bliebe die Anlage
+ * in der Wartung stehen, und der Lauf waere rot. Getrennt sind beide, sobald
+ * eines erneuert wird; das Runbook (`docs/Technik.md` 7) verlangt nach dem
+ * ersten Deploy, beide zu erneuern, weil die alten Zugriffsprotokolle den
+ * gemeinsamen Wert tragen.
+ *
+ * `app_state_einmalig()` beim Lesen: Zwei gleichzeitige erste Anfragen legen
+ * genau einen Wert an. Beim Erneuern `app_state_setzen()`, aus demselben
+ * Grund wie bei `jobs_token()`.
+ */
+function kette_token(bool $neu = false): string
+{
+    if ($neu) {
+        $token = bin2hex(random_bytes(32));
+        /* Scheitert das Schreiben, gilt das alte weiter — und wer wegen eines
+         * Lecks erneuert, darf nicht „steht bereit" lesen. */
+        if (!app_state_setzen(KETTE_TOKEN_SCHLUESSEL, $token)) {
+            throw new RuntimeException('Das Kettentoken ließ sich nicht speichern — das bisherige gilt weiter.');
+        }
+        return $token;
+    }
+    return app_state_einmalig(KETTE_TOKEN_SCHLUESSEL, static function (): string {
+        $bisher = app_state_lesen(JOB_TOKEN_SCHLUESSEL);
+        return ($bisher !== null && $bisher !== '') ? $bisher : bin2hex(random_bytes(32));
+    });
 }
 
 /* ---- Die Jobs selbst ----------------------------------------------------- */

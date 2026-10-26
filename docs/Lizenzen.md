@@ -450,9 +450,15 @@ freie Alternative zum Data Layer gibt es nicht: Er *ist* die Schnittstelle,
 
 Alles unter `tools/` ist Prüf- und Erzeugungswerkzeug und **wird nicht auf den
 Server geladen** (der Deploy nimmt den Ordner aus). Es benutzt Playwright mit
-Chromium sowie Python-Standardbibliothek und Pillow. Diese Abhängigkeiten
-sind Teil der Entwicklungsumgebung, nicht der Anwendung, und stehen deshalb
-nicht in dieser Aufstellung.
+Chromium, Firefox und WebKit sowie Python-Standardbibliothek und Pillow. Diese
+Abhängigkeiten sind Teil der Entwicklungsumgebung, nicht der Anwendung, und
+stehen deshalb nicht in dieser Aufstellung. **Ihre Fassungen stehen seit
+R17-19 fest, mit Prüfsummen** (F-R17-20): die Python-Pakete der Arbeitsumgebung
+in `tools/sandbox/anforderungen.txt`, die von Stufe 2 in
+`tools/kette/stufe2-anforderungen.txt`, Playwright für Stufe 2 in
+`tools/kette/stufe2-npm/package-lock.json`, das SDK der Uhr-App und die
+Simulator-Bibliotheken in `tools/uhr-pruefstand/pruefstand.sh`, die
+Gradle-Abhängigkeiten in `android/gradle/verification-metadata.xml`.
 
 Für die Uhr-App gilt dasselbe in die andere Richtung: `watch/` ist Monkey C
 und benutzt ausschließlich das Connect-IQ-SDK von Garmin.

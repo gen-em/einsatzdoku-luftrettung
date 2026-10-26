@@ -3,7 +3,12 @@
 
     python3 tools/integritaetswache/wache.py [basisadresse]
     python3 tools/integritaetswache/wache.py [basisadresse] --stand PFAD
+    python3 tools/integritaetswache/wache.py <basisadresse> --teil punktpfade
     python3 tools/integritaetswache/wache.py --selbstprobe
+
+`--teil punktpfade` misst nur Teil 3 (Punktpfade gesperrt, `.well-known/`
+offen, keine Kopie der `config.php` ausgeliefert) -- so ruft Stufe 2 sie
+gegen Staging. Ohne den Schalter laufen alle drei Teile.
 
 `--stand PFAD` sagt, WOGEGEN verglichen wird: ein Verzeichnis mit `server/`
 darin -- in der Kette die Arbeitskopie des Zeigerzweigs `produktion`, also der
@@ -358,6 +363,96 @@ PHP_RE    = re.compile(r'<\?(?:php\b|=)')
 HOLFEHLER = (OSError, ValueError, http.client.HTTPException)
 
 
+# ---- TEIL 3: DIE PUNKTPFADE (R17-19, F-R17-18, Abweichung E) ---------------
+#
+# Bis Web 23.0.3 mass die Sperre der Punktpfade nur Stufe 2 -- gegen STAGING,
+# und Staging liegt seit dem 20.09.2026 bei einem anderen Hoster
+# (`CLAUDE.md` 3: Staging belegt kein Plattformverhalten von Produktiv mehr).
+# Ob der Produktivserver `.htaccess` ueberhaupt liest, war nie gemessen. Jetzt
+# misst es die Wache, taeglich und nach jeder Auslieferung -- und Stufe 2 ruft
+# DIESELBE Stelle gegen Staging (`--teil punktpfade`), statt eine zweite zu
+# haben (Grundsatz 1).
+#
+# 403 UND NICHT 404: Die Regel `(^|/)\.(?!well-known/)` in `server/.htaccess`
+# antwortet, OB die Datei da ist oder nicht -- mod_rewrite laeuft vor der
+# Dateisuche. Ein 404 hiesse nur „nichts da" und bewiese nichts.
+PUNKTPFADE = ['.ftp-deploy-sync-state.json', '.deploy-state-staging.json',
+              '.deploy-state-produktion.json', '.env', '.git/config',
+              '.sitzungen/']
+# `.well-known/` MUSS offen bleiben, sonst stirbt die Zertifikatserneuerung
+# lautlos bis zum Ablauf. Erwartet ist „nicht 403" (404 auf eine leere
+# Adresse).
+WELL_KNOWN = '.well-known/acme-challenge/kettenpruefung'
+# KOPIEN DER `config.php` (F-R17-55). Sie liegen nicht da -- die Proben legen
+# ihre Sicherung seit Web 23.1.0 ausserhalb von `server/` ab. Erwartet ist
+# deshalb nur „nicht ausgeliefert": 403 (die `FilesMatch`-Regel seit 23.1.0)
+# oder 404 (eine Anlage vor 23.1.0). Ein 200 waere die Konfiguration als Text.
+KONFIG_KOPIEN = ['config.php.vor-probe', 'config.php.mailprobe', 'config.php.bak']
+
+
+class _OhneUmleitung(urllib.request.HTTPRedirectHandler):
+    """Eine Umleitung ist eine Antwort, kein Weg: Eine Sperre, die auf eine
+    Startseite umleitet, liefert sonst deren 200."""
+    def redirect_request(self, *_a, **_k):
+        return None
+
+
+def status_holen(url: str, unsicher: bool = False) -> int:
+    """Der HTTP-Status einer GET-Anfrage, ohne Umleitung. 0 = nicht erreichbar."""
+    ctx = None
+    if unsicher:
+        ctx = ssl.create_default_context()
+        ctx.check_hostname = False
+        ctx.verify_mode = ssl.CERT_NONE
+    oeffner = urllib.request.build_opener(_OhneUmleitung,
+                                          urllib.request.HTTPSHandler(context=ctx))
+    anfrage = urllib.request.Request(url, headers={'User-Agent': 'nadoku-integritaetswache'})
+    try:
+        with oeffner.open(anfrage, timeout=30) as antwort:
+            return int(antwort.status)
+    except urllib.error.HTTPError as ex:
+        return int(ex.code)
+    except HOLFEHLER:
+        return 0
+
+
+def punktpfade_urteil(codes: dict[str, int]) -> tuple[list[str], list[str]]:
+    """Das Urteil ueber Teil 3 -- ohne Netz, damit die Selbstprobe es pruefen
+    kann. `codes` bildet jeden Pfad auf seinen Status ab (0 = nicht
+    erreichbar). Rueckgabe: (Abweichungen, nicht erreichbar)."""
+    ab: list[str] = []
+    weg: list[str] = []
+    for pfad in PUNKTPFADE + [WELL_KNOWN] + KONFIG_KOPIEN:
+        code = codes.get(pfad)
+        if code is None:
+            ab.append(f'/{pfad}: nicht gefragt -- das Urteil braucht jeden Pfad')
+        elif code == 0:
+            weg.append(f'/{pfad}: keine Antwort')
+        elif pfad in PUNKTPFADE and code != 403:
+            ab.append(f'/{pfad}: HTTP {code} statt 403 -- die Punktpfad-Sperre in '
+                      f'.htaccess greift nicht (liest dieser Server .htaccess?)')
+        elif pfad == WELL_KNOWN and code == 403:
+            ab.append(f'/{pfad}: HTTP 403 -- .well-known/ ist mitgesperrt, die '
+                      f'Zertifikatserneuerung scheitert lautlos')
+        elif pfad in KONFIG_KOPIEN and code not in (403, 404):
+            ab.append(f'/{pfad}: HTTP {code} statt 403 oder 404 -- eine Kopie der '
+                      f'config.php wird ausgeliefert')
+    return ab, weg
+
+
+def punktpfade_messen(basis: str, unsicher: bool) -> tuple[dict[str, int], list[str], list[str]]:
+    """Teil 3 gegen eine Anlage: holen, urteilen, eine Zeile drucken."""
+    codes = {p: status_holen(url_fuer(basis, p), unsicher)
+             for p in PUNKTPFADE + [WELL_KNOWN] + KONFIG_KOPIEN}
+    ab, weg = punktpfade_urteil(codes)
+    gesperrt = sum(1 for p in PUNKTPFADE if codes.get(p) == 403)
+    kopien = sum(1 for p in KONFIG_KOPIEN if codes.get(p) in (403, 404))
+    print(f'  Teil 3  {len(PUNKTPFADE)} Punktpfade — {gesperrt} gesperrt (403); '
+          f'.well-known → {codes.get(WELL_KNOWN)} (erwartet: nicht 403); '
+          f'{kopien} von {len(KONFIG_KOPIEN)} Kopien der config.php nicht ausgeliefert')
+    return codes, ab, weg
+
+
 def ist_php(text: str) -> bool:
     return PHP_RE.search(text) is not None
 
@@ -629,9 +724,21 @@ def assets() -> list[Path]:
     return raus
 
 
-def lauf(basis: str, unsicher: bool) -> int:
+def lauf(basis: str, unsicher: bool, teil: str = 'alle') -> int:
     basis = basis.rstrip('/')
     print(f'Integritaetswache gegen {basis}')
+    if teil == 'punktpfade':
+        # NUR TEIL 3 -- so ruft Stufe 2 die Wache gegen Staging. Ein Vergleich
+        # der Dateien ergaebe dort nichts: Staging traegt den Arbeitsstand,
+        # nicht den Zeiger `produktion`.
+        _, ab, weg = punktpfade_messen(basis, unsicher)
+        for z in weg:
+            print(f'    NICHT ERREICHBAR: {z}')
+        for z in ab:
+            print(f'    ABWEICHUNG: {z}')
+        if not ab and not weg:
+            print('\n  Punktpfade gesperrt, .well-known offen, keine Kopie der config.php.')
+        return 1 if (ab or weg) else 0
     # WAS GEMESSEN WIRD, STEHT UEBER DEM ERGEBNIS (`CLAUDE.md` 6: eine gruene
     # Zahl ist erst dann ein Beleg, wenn sie das Gemessene benennt). Ohne
     # diese Zeile sagt ein "Kein Unterschied" nicht, WOGEGEN kein Unterschied
@@ -691,6 +798,11 @@ def lauf(basis: str, unsicher: bool) -> int:
           + ('nichts davon zu viel' if zuviel == 0
              else f'{zuviel} ZU VIEL oder veraendert'))
 
+    # ---- Teil 3: die Punktpfade (R17-19, F-R17-18) ------------------------
+    _, ab3, weg3 = punktpfade_messen(basis, unsicher)
+    abweichung.extend(ab3)
+    unerreichbar.extend(weg3)
+
     if unerreichbar:
         print('\n  NICHT ERREICHBAR:')
         for z in unerreichbar:
@@ -701,7 +813,8 @@ def lauf(basis: str, unsicher: bool) -> int:
             print(f'    {z}')
         print('\n  Die ausgelieferte Fassung ist nicht die des Repositoriums.')
         print('  Das kann ein vergessener Deploy sein — oder eine Manipulation.')
-        print('  Was zu tun ist, steht in tools/integritaetswache/LIESMICH.md.')
+        print('  Was zu tun ist, steht in docs/Technik.md, Abschnitt 7 (Runbook),')
+        print('  unter „Die Integritätswache ist rot". Vorher NICHTS ueberschreiben.')
     if not abweichung and not unerreichbar:
         print('\n  Kein Unterschied.')
     return 1 if (abweichung or unerreichbar) else 0
@@ -1018,6 +1131,31 @@ def selbstprobe() -> int:
     finally:
         globals()['SERVER'] = merker
 
+    # 9. TEIL 3, DIE PUNKTPFADE (R17-19, F-R17-18). Das Urteil ohne Netz:
+    #    die gute Lage gruen, jede der vier schlechten rot.
+    gut = {p: 403 for p in PUNKTPFADE}
+    gut[WELL_KNOWN] = 404
+    gut.update({p: 404 for p in KONFIG_KOPIEN})
+    ab, weg = punktpfade_urteil(gut)
+    pruefe(ab == [] and weg == [], 'Teil 3: alles gesperrt, .well-known offen -> kein Befund')
+    ab, _ = punktpfade_urteil({**gut, '.env': 404})
+    pruefe(len(ab) == 1 and '.env' in ab[0],
+           'ABWEICHUNG ERKANNT: ein Punktpfad mit 404 statt 403 (Sperre greift nicht)')
+    ab, _ = punktpfade_urteil({**gut, WELL_KNOWN: 403})
+    pruefe(len(ab) == 1 and 'well-known' in ab[0],
+           'ABWEICHUNG ERKANNT: .well-known mitgesperrt')
+    ab, _ = punktpfade_urteil({**gut, 'config.php.vor-probe': 200})
+    pruefe(len(ab) == 1 and 'config.php.vor-probe' in ab[0],
+           'ABWEICHUNG ERKANNT: eine Kopie der config.php kommt mit 200')
+    ab, _ = punktpfade_urteil({**gut, 'config.php.bak': 403})
+    pruefe(ab == [], 'Eine Kopie mit 403 (FilesMatch seit 23.1.0) ist in Ordnung')
+    ab, weg = punktpfade_urteil({**gut, '.sitzungen/': 0})
+    pruefe(ab == [] and len(weg) == 1, 'Keine Antwort ist "nicht erreichbar", nicht gruen')
+    ab, _ = punktpfade_urteil({k: v for k, v in gut.items() if k != '.git/config'})
+    pruefe(len(ab) == 1, 'Ein nicht gefragter Pfad ist ein Befund, kein Schweigen')
+    pruefe(status_holen('http://127.0.0.1:9/.env') == 0,
+           'status_holen: keine Verbindung -> 0, kein Abbruch')
+
     print(f'\n  -> {erwartungen} Erwartungen, {offen} nicht erfuellt')
     return 0 if offen == 0 else 1
 
@@ -1031,6 +1169,14 @@ def main() -> int:
     # Die Selbstprobe rechnet gegen das Repositorium neben sich und braucht
     # keinen Zeiger; ein `--stand` dabei waere ein Bedienfehler und wird
     # gesagt, nicht stillschweigend ignoriert.
+    teil = 'alle'
+    if '--teil' in args:
+        i = args.index('--teil')
+        if i + 1 >= len(args) or args[i + 1] not in ('alle', 'punktpfade'):
+            print('--teil braucht `alle` oder `punktpfade`.', file=sys.stderr)
+            return 2
+        teil = args[i + 1]
+        del args[i:i + 2]
     stand = None
     if '--stand' in args:
         i = args.index('--stand')
@@ -1063,7 +1209,7 @@ def main() -> int:
               '        weil eine vergessene Variable sonst eine Wache ergab, die '
               'die falsche Anlage bewacht -- und zwar gruen.', file=sys.stderr)
         return 2
-    return lauf(basis, unsicher)
+    return lauf(basis, unsicher, teil)
 
 
 if __name__ == '__main__':

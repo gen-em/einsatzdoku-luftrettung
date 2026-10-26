@@ -10,15 +10,15 @@ bash tools/sandbox/plattform.sh  [php83|mariadb106|mysql80|mysql84|alles|--aus]
 
 ## Was es misst
 
-`aufbauen.sh` beschafft, was der Container nicht mitbringt, und misst nach:
-elf Stücke, die drei Engines **einzeln**, acht Umgebungswerte mit ihrer
+`aufbauen.sh` beschafft, was der Container nicht mitbringt (Python-Pakete
+seit R17-19 aus `anforderungen.txt`, mit Hashes), und misst nach: elf Stücke, die drei Engines **einzeln**, acht Umgebungswerte mit ihrer
 Länge. `hochfahren.sh` richtet die örtliche Anlage ein oder startet sie.
 `plattform.sh` stellt PHP 8.3.33 und drei Datenbankfassungen bereit und
 fährt je eine Schemaprobe.
 
 ## Was es braucht
 
-Netz (Ubuntu, Docker Hub, Debian über HTTPS), `dockerd` für `plattform.sh` —
+Netz (Ubuntu, Docker Hub, Debian über HTTPS, PyPI), `dockerd` für `plattform.sh` —
 **er läuft nicht von selbst**: `dockerd >/tmp/dockerd.log 2>&1 &`. Die acht
 Umgebungswerte stehen in der Arbeitsumgebung, nicht im Repositorium; ihre
 Namen und die Grenzen der Umgebung in `docs/Sandbox-Setup.md`.

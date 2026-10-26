@@ -17,6 +17,12 @@ declare(strict_types=1);
  * das Paket schreibt `decke_jetzt` herunter. Ohne diese Trennung waere die
  * Zaehlung von AP1 bis AP9 durchgehend rot und damit wertlos.
  *
+ * SEIT R17-19 IST DIE DECKE EINE RATSCHE (F-R17-56, E-R17-37): `decke_jetzt`
+ * muss GENAU dem Ist entsprechen. Eine Decke ueber dem Ist ist ein Befund wie
+ * eine darunter — Z17 stand nach AP5 bei Ist 0 noch auf 30, und dreissig
+ * Rueckfaelle waeren gruen geblieben. Wer eine Stelle entfernt, schreibt die
+ * Decke im selben Commit herunter.
+ *
  * EINE DECKE WIRD NICHT ANGEHOBEN, OHNE DASS ES IM KONZEPT STEHT (E-ZE-24).
  * Wer eine zweite Stelle braucht, begruendet sie dort — nicht hier.
  *
@@ -301,7 +307,7 @@ return [
  'regel' => ['art' => 'muster', 'muster' =>
     '~\b(INSERT\s+(?:IGNORE\s+)?INTO|DELETE\b[^;]{0,40}?FROM|REPLACE\s+INTO)\s+`?('
   . ZH_KINDTABELLEN . ')`?~i'],
- 'start' => 30, 'decke_jetzt' => 30, 'decke_ziel' => 0],
+ 'start' => 30, 'decke_jetzt' => 0, 'decke_ziel' => 0],
 
 /* ---- AP6: Spaltenregister missions -------------------------------------- */
 
@@ -355,7 +361,7 @@ return [
           . 'entfallen; die Meldung schreibt jetzt assets/gpx.js.',
  'sicht' => 'php_ohne_zeichenketten', 'bereich' => 'php', 'ausser' => ['server/format_lib.php'],
  'regel' => ['art' => 'muster', 'muster' => '~/\s*\(?\s*1024|/\s*1048576|/\s*1073741824~'],
- 'start' => 18, 'decke_jetzt' => 4, 'decke_ziel' => 18],
+ 'start' => 18, 'decke_jetzt' => 4, 'decke_ziel' => 4],
 
 ['kennung' => 'Z23', 'paket' => 'AP7',
  'beschreibung' => 'Anteil von Hand (Teil * 100 / Ganzes)',

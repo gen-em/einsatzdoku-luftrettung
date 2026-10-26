@@ -553,7 +553,7 @@
           "lon": 10.322
         }
       },
-      "$warum_spur": "SPUR OHNE GESCHÜTZTE ANGABEN. Dieser Einsatz hat bewusst keinen pat_blob — geflogen ist die Uhr trotzdem. Das ist keine Notlösung, sondern das Modell der Anwendung: Trackpunkte und Phasenkoordinaten liegen im KLARTEXT (track_points, mission_phases), verschlüsselt ist die ADRESSE. Ein Einsatz ohne geschützte Angaben hat deshalb sehr wohl eine Spur."
+      "$warum_spur": "SPUR OHNE GESCHÜTZTE ANGABEN. Dieser Einsatz hat bewusst keinen pat_blob — geflogen ist die Uhr trotzdem. Das ist keine Notlösung, sondern das Modell der Anwendung: Trackpunkte und Phasenkoordinaten gehören NICHT zu den geschützten Angaben des Formulars (pat_blob, darin die ADRESSE), sondern liegen getrennt davon — seit Web 22 verschlossen in der Gerätehülle (track_stuecke, missions.ort_huelle), bis dahin im Klartext (track_points, seit Web 10 als SPUR1 in track_blobs; mission_phases). Ein Einsatz ohne geschützte Angaben hat deshalb sehr wohl eine Spur."
     }
   ],
   "$warum_besatzung": "EINZIGER Diensttag mit allen fünf Luftrollen belegt (p1, p2, hems, fr, other). Die Matrixzeile Besatzung verlangt das; p2 und other sind im Alltag selten besetzt und wären sonst im ganzen Datensatz leer geblieben.",

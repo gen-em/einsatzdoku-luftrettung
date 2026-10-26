@@ -64,7 +64,18 @@ RewriteRule ^(apk|demo)(/|$) - [F,L]
 RewriteRule "(^|/)\.(?!well-known/)" - [F,L]
 
 # Sensible Dateien niemals ausliefern
-<FilesMatch "^(config\.php|config\.example\.php|schema\.sql|db\.php|smtp\.php|auth_guard\.php|install\.lock)$">
+#
+# `config\.php.*` UND NICHT NUR `config\.php` (Web 23.1.0, R17-19, F-R17-55,
+# E-R17-36): Jede Kopie daneben -- `config.php.bak`, `config.php~` eines
+# Editors, bis Web 23.0.3 die Sicherung `config.php.vor-probe` der Proben --
+# endet nicht auf `.php`, laeuft also nicht durch PHP und kaeme als Text
+# heraus, samt Datenbankzugang, Serverschluessel und Anteil. Die Proben legen
+# ihre Sicherung seither ausserhalb von `server/` ab; diese Zeile ist der
+# zweite Riegel fuer alles, was sonst noch so heisst. `(?i)` und `#?`
+# (Gegenpruefung R17-19): `Config.php.bak` kaeme sonst durch, ebenso die
+# Sicherung `#config.php#` von Emacs; `.#config.php` faengt schon die
+# Punktregel oben.
+<FilesMatch "^(?i:#?config\.php.*|config\.example\.php|schema\.sql|db\.php|smtp\.php|auth_guard\.php|install\.lock)$">
   Require all denied
 </FilesMatch>
 

@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 # App-Bau — ein App-Paket bauen und signieren, einmal je Fassung (PK-08).
 #
-# Aufruf:  bash tools/kette/appbau.sh android <fassung|datei> <ausgabeordner>
-#          bash tools/kette/appbau.sh uhr     <fassung|datei> <ausgabeordner>
+# Aufruf:  bash tools/kette/appbau.sh android-bauen     <fassung|datei> <ausgabeordner>
+#          bash tools/kette/appbau.sh android-signieren <fassung|datei> <eingang> <ausgabeordner>
+#          bash tools/kette/appbau.sh uhr               <fassung|datei> <ausgabeordner>
 #          bash tools/kette/appbau.sh --selbstprobe
 #
 # Anlass: Nr. 100 (die App-Auslieferung lief von Hand), E-PK-23, -53, -60.
@@ -11,11 +12,30 @@
 # Datei passen, sonst rot vor dem Bau (E-PK-60); `datei` nimmt die Fassung
 # aus der Datei (Probelauf ohne Tag).
 #
-# android — Umgebung: ANDROID_HOME, APK_SPEICHER_B64, APK_SPEICHER_PASSWORT,
-#   APK_SCHLUESSEL_NAME, APK_SCHLUESSEL_PASSWORT, APK_ZERTIFIKAT_SHA256.
-#   Gradle baut UNSIGNIERT und sieht den Schlüssel nie; signiert wird danach
-#   mit `apksigner`, außerhalb von Gradle (E-PK-63). Ergebnis:
-#   nadoku-X.Y.Z.apk (Handy) und nadoku-uhr-X.Y.Z.apk (Wear OS, E-PK-58).
+# android-bauen — Umgebung: ANDROID_HOME, und KEIN `APK_*`-Wert. Gradle baut
+#   UNSIGNIERT, und zwar mit einer Umgebung aus einer Positivliste
+#   (`env -i`, GRADLE_UMGEBUNG unten). Ergebnis: handy- und
+#   uhr-release-unsigned.apk und `pruefsummen.txt` im Ausgabeordner.
+# android-signieren — Umgebung: ANDROID_HOME, APK_SPEICHER_B64,
+#   APK_SPEICHER_PASSWORT, APK_SCHLUESSEL_NAME, APK_SCHLUESSEL_PASSWORT,
+#   APK_ZERTIFIKAT_SHA256. Signiert die unsignierten APKs aus <eingang> mit
+#   `apksigner` und prüft das Zertifikat. Ergebnis: nadoku-X.Y.Z.apk (Handy)
+#   und nadoku-uhr-X.Y.Z.apk (Wear OS, E-PK-58). Gradle läuft hier NICHT.
+#
+# WARUM ZWEI UNTERBEFEHLE UND IN DER KETTE ZWEI JOBS (R17-19, F-R17-03,
+#   E-R17-32). Bis Web 23.0.3 stand „Gradle sieht den Schlüssel nie"
+#   (E-PK-63) hier, und für die DATEI stimmte es. Die Umgebung aber erbte
+#   Gradle vom Schritt, und im Schritt standen der Keystore als Base64 und
+#   beide Passwörter: `System.getenv()` genügte jedem Plugin und jeder
+#   Abhängigkeit zur Bauzeit. Ein eigener Schritt ohne die Werte hätte
+#   `getenv` geschlossen, nicht aber einen Hintergrundprozess, den ein
+#   bösartiger Bau zurücklässt — auf einem GitHub-Läufer lebt er in den
+#   nächsten Schritt hinein und liest dort `/proc/<pid>/environ` desselben
+#   Benutzers. Deshalb baut ein Job OHNE Geheimnisse und OHNE Umgebung, und
+#   ein zweiter Job auf einem frischen Läufer signiert, ohne Gradle. Die
+#   Positivliste beim Gradle-Aufruf ist der zweite Riegel für den Fall, dass
+#   jemand dem Bau-Job doch einmal ein Geheimnis gibt; der erste ist, dass
+#   `android-bauen` dann gar nicht erst baut.
 # uhr — Umgebung: UHR_ENTWICKLERSCHLUESSEL_B64; `monkeyc` auf dem PATH
 #   (`tools/uhr-pruefstand/pruefstand.sh aufbau-uebersetzen`, CIQ_ZIELE=alle).
 #   Ergebnis: nadoku-X.Y.Z.iq, das Paket für den Connect-IQ-Store.
@@ -69,34 +89,81 @@ fassung_pruefen() {     # fassung_pruefen <soll|datei> <gelesen> <datei>
     echo "$ist"
 }
 
+# Was Gradle aus der Umgebung des Schritts sehen darf — und nichts sonst.
+# PATH, HOME und die zwei Werkzeugwurzeln braucht der Bau; die Sprache, damit
+# javac Umlaute in Quelltexten richtig liest; TMPDIR, wo es gesetzt ist.
+# Ein Geheimnis gehört nie hierher, auch nicht „nur zum Prüfen".
+GRADLE_UMGEBUNG=(PATH HOME USER JAVA_HOME ANDROID_HOME ANDROID_SDK_ROOT
+                 GRADLE_USER_HOME LANG LC_ALL TMPDIR)
+
+# Die Umgebung für `env -i` aus der Positivliste — nur gesetzte Werte.
+gradle_umgebung() {
+    local v
+    for v in "${GRADLE_UMGEBUNG[@]}"; do
+        [ -n "${!v+x}" ] && printf '%s=%s\n' "$v" "${!v}"
+    done
+}
+
+# Liegt ein `APK_*`-Wert in der Umgebung? Dann baut `android-bauen` nicht.
+apk_in_umgebung() { compgen -e | grep -q '^APK_'; }
+
 android_bauen() {
-    local soll="$1" aus="$2" f bt tmp m name roh pruef ist erster=""
+    local soll="$1" aus="$2" f m roh
     f=$(fassung_pruefen "$soll" "$(fassung_android "$WURZEL/android/version.properties")" \
         android/version.properties) || return 1
-    for v in ANDROID_HOME APK_SPEICHER_B64 APK_SPEICHER_PASSWORT APK_SCHLUESSEL_NAME \
-             APK_SCHLUESSEL_PASSWORT APK_ZERTIFIKAT_SHA256; do
-        [ -n "${!v:-}" ] || { fehler "$v fehlt — nicht gebaut."; return 2; }
-    done
+    [ -n "${ANDROID_HOME:-}" ] || { fehler "ANDROID_HOME fehlt — nicht gebaut."; return 2; }
+    # DER ERSTE RIEGEL: Der Bau-Job hat keine Geheimnisse. Steht doch ein
+    # `APK_*` da, hat jemand ihm eines gegeben — gebaut wird dann nicht, und
+    # nicht erst die Positivliste darunter soll es retten (F-R17-03).
+    if apk_in_umgebung; then
+        fehler "In der Umgebung des Bauschritts steht ein APK_-Wert ($(compgen -e | grep '^APK_' | tr '\n' ' ')) — der Bau läuft ohne Schlüssel, im eigenen Job (E-R17-32). Nicht gebaut."
+        return 1
+    fi
     # Liegt eine signatur.properties da, signierte Gradle selbst — und der
     # Schlüssel stünde fremdem Build-Code offen, gegen den E-PK-63 gebaut ist.
     if [ -e "$WURZEL/android/signatur.properties" ]; then
         fehler "android/signatur.properties liegt da; die Kette signiert nur außerhalb von Gradle."
         return 1
     fi
-    sag "Android $f — Release unsigniert bauen"
-    (cd "$WURZEL/android" && ./gradlew --no-daemon :handy:assembleRelease :uhr:assembleRelease) \
+    sag "Android $f — Release unsigniert bauen (Umgebung: ${GRADLE_UMGEBUNG[*]})"
+    # DER ZWEITE RIEGEL: `env -i` mit der Positivliste. Mapfile statt
+    # Wortzerlegung, damit ein Wert mit Leerzeichen ein Wert bleibt.
+    local -a umg
+    mapfile -t umg < <(gradle_umgebung)
+    (cd "$WURZEL/android" && env -i "${umg[@]}" ./gradlew --no-daemon :handy:assembleRelease :uhr:assembleRelease) \
         || { fehler "Gradle-Bau gescheitert."; return 1; }
+    mkdir -p "$aus"
+    : > "$aus/pruefsummen.txt"
+    for m in handy uhr; do
+        roh="$WURZEL/android/$m/build/outputs/apk/release/$m-release-unsigned.apk"
+        [ -f "$roh" ] || { fehler "$roh fehlt nach dem Bau."; return 1; }
+        cp "$roh" "$aus/" || { fehler "$m-release-unsigned.apk ließ sich nicht kopieren."; return 1; }
+        (cd "$aus" && sha256sum "$m-release-unsigned.apk" >> pruefsummen.txt) \
+            || { fehler "Prüfsumme von $m-release-unsigned.apk gescheitert."; return 1; }
+    done
+    sag "Android $f unsigniert gebaut:"
+    sed 's/^/  /' "$aus/pruefsummen.txt"
+}
+
+android_signieren() {
+    local soll="$1" ein="$2" aus="$3" f bt tmp m name roh pruef ist erster=""
+    f=$(fassung_pruefen "$soll" "$(fassung_android "$WURZEL/android/version.properties")" \
+        android/version.properties) || return 1
+    for v in ANDROID_HOME APK_SPEICHER_B64 APK_SPEICHER_PASSWORT APK_SCHLUESSEL_NAME \
+             APK_SCHLUESSEL_PASSWORT APK_ZERTIFIKAT_SHA256; do
+        [ -n "${!v:-}" ] || { fehler "$v fehlt — nicht signiert."; return 2; }
+    done
     bt=$(ls -d "$ANDROID_HOME"/build-tools/* 2>/dev/null | sort -V | tail -1)
     [ -x "$bt/apksigner" ] || { fehler "apksigner fehlt unter $ANDROID_HOME/build-tools."; return 1; }
-    sag "  Build-Tools $(basename "$bt")"
+    sag "Android $f — signieren mit Build-Tools $(basename "$bt")"
     mkdir -p "$aus"
     tmp=$(mktemp -d); chmod 700 "$tmp"
     trap 'rm -rf "$tmp"' RETURN
     printf '%s' "$APK_SPEICHER_B64" | base64 -d > "$tmp/s.jks" \
         || { fehler "APK_SPEICHER_B64 ist kein Base64."; return 1; }
     for m in handy uhr; do
-        roh="$WURZEL/android/$m/build/outputs/apk/release/$m-release-unsigned.apk"
-        [ -f "$roh" ] || { fehler "$roh fehlt nach dem Bau."; return 1; }
+        roh="$ein/$m-release-unsigned.apk"
+        [ -f "$roh" ] || { fehler "$roh fehlt — der Bau-Job hat es nicht übergeben."; return 1; }
         name=$([ "$m" = handy ] && echo "nadoku-$f.apk" || echo "nadoku-uhr-$f.apk")
         "$bt/zipalign" -P 16 -f 4 "$roh" "$tmp/$m.apk" \
             || { fehler "zipalign ($m) gescheitert."; return 1; }
@@ -129,7 +196,7 @@ android_bauen() {
         fi
         sag "  $name  $(sha256sum "$aus/$name" | cut -d' ' -f1)  Zertifikat $ist"
     done
-    sag "Android $f gebaut, signiert, geprüft."
+    sag "Android $f signiert und geprüft."
 }
 
 uhr_bauen() {
@@ -199,12 +266,47 @@ Source Stamp Signer certificate SHA-256 digest: 1111$(printf "d%.0s" {1..56})222
     pruefe "7z-Kennung erkannt" 'ist_7z "$t/p.iq"'
     pruefe "ZIP ist kein Connect-IQ-Paket" '! ist_7z "$t/z.iq"'
     pruefe "Fehlende Datei ist keines" '! ist_7z "$t/fehlt.iq"'
+    # Die Fälle darunter laufen ohne fremde `APK_*`-Werte — auch dann, wenn
+    # die Selbstprobe in einem Schritt steht, der welche hat.
+    local ohne_apk='unset $(compgen -e | grep "^APK_") 2>/dev/null'
     mkdir -p "$t/android" && touch "$t/android/signatur.properties"
     printf 'version=0.17.0\n' > "$t/android/version.properties"
     pruefe "signatur.properties liegt da → rot, ohne zu bauen, mit diesem Grund" \
-        'grep -q "signatur.properties liegt da" <<<"$( ( WURZEL="$t"; ANDROID_HOME=x APK_SPEICHER_B64=x APK_SPEICHER_PASSWORT=x APK_SCHLUESSEL_NAME=x APK_SCHLUESSEL_PASSWORT=x APK_ZERTIFIKAT_SHA256=x android_bauen 0.17.0 "$t/aus" ) 2>&1 >/dev/null )"'
-    pruefe "Fehlender Schlüssel → Bedienfehler 2" \
-        '( WURZEL="$t"; unset APK_SPEICHER_B64; ANDROID_HOME=x android_bauen 0.17.0 "$t/aus" ) 2>/dev/null >/dev/null; [ $? = 2 ]'
+        'grep -q "signatur.properties liegt da" <<<"$( ( eval "$ohne_apk"; WURZEL="$t"; ANDROID_HOME=x android_bauen 0.17.0 "$t/aus" ) 2>&1 >/dev/null )"'
+    pruefe "Bau ohne ANDROID_HOME → Bedienfehler 2" \
+        '( eval "$ohne_apk"; WURZEL="$t"; unset ANDROID_HOME; android_bauen 0.17.0 "$t/aus" ) 2>/dev/null >/dev/null; [ $? = 2 ]'
+    pruefe "Signieren ohne Schlüssel → Bedienfehler 2" \
+        '( eval "$ohne_apk"; WURZEL="$t"; ANDROID_HOME=x android_signieren 0.17.0 "$t/ein" "$t/aus" ) 2>/dev/null >/dev/null; [ $? = 2 ]'
+
+    # DIE UMGEBUNG DES GRADLE-AUFRUFS (R17-19, F-R17-03). Ein Ersatz-`gradlew`
+    # schreibt auf, was er sieht, und legt die zwei unsignierten APKs hin —
+    # gemessen wird der GANZE Weg durch `android_bauen()`, nicht die Liste.
+    local g="$t/g"
+    mkdir -p "$g/android"
+    printf 'version=0.17.0\n' > "$g/android/version.properties"
+    cat > "$g/android/gradlew" <<'GRADLEW'
+#!/usr/bin/env bash
+env > ../umgebung.txt
+for m in handy uhr; do
+    mkdir -p "$m/build/outputs/apk/release"
+    printf 'apk-%s' "$m" > "$m/build/outputs/apk/release/$m-release-unsigned.apk"
+done
+GRADLEW
+    chmod +x "$g/android/gradlew"
+    pruefe "APK_-Wert in der Umgebung → rot, OHNE Gradle zu starten (erster Riegel)" \
+        '( eval "$ohne_apk"; WURZEL="$g"; ANDROID_HOME=x; export APK_SPEICHER_PASSWORT=geheim; android_bauen 0.17.0 "$g/aus" ) >/dev/null 2>&1; [ $? = 1 ] && [ ! -e "$g/umgebung.txt" ]'
+    ( eval "$ohne_apk"; WURZEL="$g"; export ANDROID_HOME=/x JOBS_TOKEN=geheim FTP_PASSWORD=geheim GH_TOKEN=geheim
+      android_bauen 0.17.0 "$g/aus" ) >/dev/null 2>&1
+    pruefe "Gradle lief und sah PATH, HOME und ANDROID_HOME" \
+        'grep -q "^PATH=" "$g/umgebung.txt" && grep -q "^HOME=" "$g/umgebung.txt" && grep -qx "ANDROID_HOME=/x" "$g/umgebung.txt"'
+    pruefe "DIE UMGEBUNG DES GRADLE-AUFRUFS ENTHÄLT KEIN APK_ (F-R17-03)" \
+        '[ -s "$g/umgebung.txt" ] && ! grep -q "^APK_" "$g/umgebung.txt"'
+    pruefe "…und keinen Wert außerhalb der Positivliste (JOBS_TOKEN, FTP_PASSWORD, GH_TOKEN)" \
+        '[ -s "$g/umgebung.txt" ] && ! grep -qE "^(JOBS_TOKEN|FTP_PASSWORD|GH_TOKEN)=" "$g/umgebung.txt"'
+    pruefe "Jede Zeile der Gradle-Umgebung steht in der Positivliste" \
+        '[ -s "$g/umgebung.txt" ] && ! cut -d= -f1 "$g/umgebung.txt" | grep -vxE "$(IFS="|"; echo "${GRADLE_UMGEBUNG[*]}|PWD|SHLVL|_|OLDPWD")" | grep -q .'
+    pruefe "Beide unsignierten APKs liegen im Ausgabeordner, mit Prüfsummen" \
+        '[ -f "$g/aus/handy-release-unsigned.apk" ] && [ -f "$g/aus/uhr-release-unsigned.apk" ] && [ "$(wc -l < "$g/aus/pruefsummen.txt")" = 2 ] && (cd "$g/aus" && sha256sum -c --quiet pruefsummen.txt)'
     rm -rf "$t"
     echo
     echo "$ok erfüllt, $fehl nicht erfüllt"
@@ -213,8 +315,12 @@ Source Stamp Signer certificate SHA-256 digest: 1111$(printf "d%.0s" {1..56})222
 
 case "${1:-}" in
     --selbstprobe) selbstprobe ;;
-    android) [ $# = 3 ] || { echo "Aufruf: $0 android <fassung|datei> <ausgabe>" >&2; exit 2; }
+    android-bauen)
+             [ $# = 3 ] || { echo "Aufruf: $0 android-bauen <fassung|datei> <ausgabe>" >&2; exit 2; }
              android_bauen "$2" "$3" ;;
+    android-signieren)
+             [ $# = 4 ] || { echo "Aufruf: $0 android-signieren <fassung|datei> <eingang> <ausgabe>" >&2; exit 2; }
+             android_signieren "$2" "$3" "$4" ;;
     uhr)     [ $# = 3 ] || { echo "Aufruf: $0 uhr <fassung|datei> <ausgabe>" >&2; exit 2; }
              uhr_bauen "$2" "$3" ;;
     *) sed -n '2,6p' "$0" >&2; exit 2 ;;

@@ -27,9 +27,14 @@ kannst sie jederzeit ausleiten und weitergeben, an wen du willst.
 **Verschlüsselt — nur du kannst sie lesen, wir nicht:** Nachname, Vorname,
 Geburtsdatum, Alter, Diagnose, Einsatznummer, die Adresse und Koordinate des
 Einsatzorts, seine Beschreibung, der manuelle Abfahrtort und die Notizen des
-Einsatzes. Dein Browser
-ver- und entschlüsselt sie; der Schlüssel entsteht aus deinem Passwort und
-verlässt den Browser nicht.
+Einsatzes — und die Ortsdaten eines Einsatzes: die GPS-Aufzeichnung der
+Fahrt, die Koordinate jeder Einsatzphase, das Transportziel samt Koordinate,
+die Höhe des Einsatzorts und der Verlauf einer Reanimation. Was du im Browser
+einträgst, verschlüsselt dein Browser; was Uhr und Handy aufzeichnen,
+verschlüsseln sie, bevor sie es senden. Öffnen kann beides nur dein Browser;
+der Schlüssel dazu entsteht aus deinem Passwort (und einem Anteil unseres
+Servers, der nichts öffnen kann) und verlässt deinen Browser nicht. Unser
+Server nimmt diese Angaben unverschlüsselt gar nicht an.
 
 **Alle diese Angaben sind freiwillig.** NAdoku verlangt keine davon — ein
 Einsatz lässt sich allein aus Zeiten dokumentieren. Je weniger du einträgst,
@@ -41,21 +46,24 @@ vergisst dein Passwort, kann niemand die Daten mehr öffnen — auch die
 BetreiberIn nicht. NAdoku sagt dir das bei der Einrichtung und fragt dich
 später, ob du ihn noch hast.
 
-**Im Klartext — für uns lesbar, weil die Anwendung damit rechnet:** Zeiten und
-Phasen, die Koordinate jeder Einsatzphase, die GPS-Aufzeichnung der Fahrt,
-Rettungsmittel und Standort, die Namen deiner Besatzung, das Transportziel
-samt Koordinate, die Höhe des Einsatzorts, der Verlauf einer Reanimation und
-die Notizen des Diensttags.
+**Für uns lesbar, weil die Anwendung damit rechnet,** unter anderem: die
+Zeiten und Nummern der Einsatzphasen, Strecke und Anstieg, Rettungsmittel und
+Standort, Einsatzmerkmale wie Transportart oder Fehleinsatz, die Namen deiner
+Besatzung und die Notizen des Diensttags.
 
-Der wichtigste Satz auf dieser Seite ist der nächste. Zwei der Einsatzphasen
-sind die Ankunft am Einsatzort und die Ankunft bei der PatientIn: **Aus den
-GPS-Daten und diesen Koordinaten lässt sich der Einsatzort rekonstruieren —
-auch wenn die Adresse verschlüsselt ist.** Die Verschlüsselung schützt die
-Identität, nicht das Geschehen. Wer das nicht will, koppelt kein Gerät und
-trägt seine Einsätze von Hand nach; dann entstehen keine GPS-Daten.
+Der wichtigste Satz auf dieser Seite ist der nächste. **Wer weiß, wann ein
+Einsatz war, findet ihn über die Zeiten — wo er war, wohin es ging und ob
+reanimiert wurde, findet er nicht.** Grenzen gehören dazu: Uhr und Handy
+halten eine Aufzeichnung unverschlüsselt im Gerätespeicher, bis unser Server
+sie angenommen hat — ein verlorenes Gerät gibt also preis, was es noch nicht
+zugestellt hat. Den Schlüssel, mit dem sie verschlüsseln, bekommen sie von
+unserem Server; wer ihn dort austauschte, könnte lesen, was Geräte danach
+senden — was schon gespeichert ist, nicht. Und Adresssuche und Karte fragen
+fremde Dienste.
 
-Was genau verschlüsselt ist und was nicht, steht vollständig in der
-Datenschutzerklärung dieser Installation.
+Was genau verschlüsselt ist und was nicht, und was die Adresssuche und die
+Karte an wen schicken, steht vollständig in der Datenschutzerklärung dieser
+Installation.
 
 ## Was es nicht ist
 

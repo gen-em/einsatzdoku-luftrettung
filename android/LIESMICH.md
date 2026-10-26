@@ -913,6 +913,32 @@ sucht Robolectric ein Abbild, das nicht dort liegt — und ohne Netz scheitert
 es sofort statt es nachzuladen. Das ist ein gewollter Tausch: ein sichtbarer
 Fehler statt eines stillen Downloads.
 
+### 2.4 Jede Abhängigkeit hat eine Prüfsumme (seit R17-19, F-R17-20)
+
+`gradle/verification-metadata.xml` hält für jede Datei, die Gradle
+auflöst — Plugins, Bibliotheken, Lint, die Prüffall-Abhängigkeiten —
+ihren SHA-256. Gradle prüft jede Datei dagegen und bricht ab, wenn eine
+fehlt oder nicht passt. Bis dahin war nur die Gradle-Verteilung selbst
+gepinnt (2.1), und eine untergeschobene Bibliothek wäre mit dem Bau der
+Release-APK gelaufen.
+
+**Erzeugt am 25.10.2026** über alle Aufgaben, die Prüfstand, Emulatorprobe
+und Kette fahren — 402 Komponenten, 679 Prüfsummen:
+
+```bash
+cd android
+./gradlew --no-daemon --write-verification-metadata sha256 build assembleAndroidTest
+```
+
+**Wer eine Abhängigkeit hebt** (`gradle/libs.versions.toml`), erzeugt die
+Datei mit genau diesem Befehl neu und liest im Unterschied nach, dass nur
+die erwarteten Koordinaten neu sind. Eine Abhängigkeit, die nur auf einem
+anderen Betriebssystem aufgelöst wird (`aapt2` gibt es je System als
+eigene Datei), steht nicht darin: **Gebaut wird unter Linux** — im
+Container und auf dem Läufer. Wer unter macOS oder Windows baut, erzeugt
+die Datei dort einmal mit und prüft den Unterschied. Quellen und Javadoc,
+die eine IDE nachlädt, stehen ebenfalls nicht darin.
+
 ## 3. Warum es zwei Module gibt und trotzdem gemeinsamen Quelltext
 
 `E-S4-02` legt **zwei** Module fest: `handy/` und `uhr/`. Beide brauchen
@@ -1004,13 +1030,25 @@ Fehlt sie, entsteht ein **unsigniertes** Release — so läuft es im Container
 und in der Kette.
 
 **Signiert wird seit PK-08 in der Kette, aber nicht von Gradle** (E-PK-23,
--53, -63). Beim Tag `android-vX.Y.Z` baut der Job `android` in
-`.github/workflows/auslieferung.yml` unsigniert und signiert danach mit
-`apksigner` — mit dem **App-Signaturschlüssel** (`078c…ad64`), den Play App
-Signing seit dem 26.09.2026 führt, damit Seitenladung und Play-Fassung
+-53, -63). Beim Tag `android-vX.Y.Z` prüft der Job `app-tor` in
+`.github/workflows/auslieferung.yml`, ob derselbe Baum einen grünen Job
+`Stufe 1` hat und der Commit auf `main` liegt (seit R17-19, E-R17-33); dann
+baut der Job `android-bau` unsigniert, und der Job `android` signiert danach
+mit `apksigner` — mit dem **App-Signaturschlüssel** (`078c…ad64`), den Play
+App Signing seit dem 26.09.2026 führt, damit Seitenladung und Play-Fassung
 dasselbe Zertifikat tragen. Der Schlüssel liegt als Geheimnis der Umgebung
-`produktion` hinter der Pflichtfreigabe und kommt nie an Gradle: Fremder
-Build-Code läuft, bevor er auf der Platte liegt. Bis PK-08 galt E-R45-9
+`produktion` hinter der Pflichtfreigabe.
+
+**Seit R17-19 kommt er auch nicht an Gradles Umgebung** (F-R17-03,
+E-R17-32). Bis dahin stimmte „kommt nie an Gradle" nur für die Datei: Die
+vier `APK_*`-Werte standen im selben Schritt wie `./gradlew`, und jedes
+Plugin hätte sie mit `System.getenv()` lesen können. Jetzt laufen Bau und
+Signatur in **zwei Jobs auf zwei Läufern** — ein Schritt hätte nicht
+genügt, weil ein Hintergrundprozess aus dem Bau in den nächsten Schritt
+hinein lebt. Der Bau-Job hat keine Geheimnisse; `appbau.sh android-bauen`
+baut nicht, wenn doch ein `APK_*` in seiner Umgebung steht, und startet
+Gradle nur mit einer Positivliste (`env -i`). Die APKs gehen als Artefakt
+in den Signaturjob und werden dort gegen die Prüfsummen des Baus gehalten. Bis PK-08 galt E-R45-9
 („signiert wird außerhalb der CI"); die Kommentare in beiden
 `build.gradle.kts` nennen es noch — sie ändern hieße eine Android-Stufe ohne
 eine Zeile am APK (F-PK-49). Das Werkzeug ist `tools/kette/appbau.sh`, der

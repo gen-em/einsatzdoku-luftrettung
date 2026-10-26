@@ -11,6 +11,16 @@
 set -euo pipefail
 
 SDK_VERSION="${CIQ_SDK_VERSION:-9.2.0}"
+# DIE PRUEFSUMME DES SDK (R17-19, F-R17-20). Bis dahin kam das SDK ohne jede
+# Pruefung — auch im Uhr-Job der Auslieferung, mit dem das Store-Paket fuer
+# 99 Uhren entsteht. Garmin veroeffentlicht keine Summe; diese ist die eines
+# Abrufs vom 25.10.2026 (`connectiq-sdk-lin-9.2.0-2026-06-09-92a1605b2.zip`,
+# 213 780 514 Byte). Wer `CIQ_SDK_VERSION` aendert, traegt die Summe der
+# neuen Fassung hier ein — ohne Eintrag bricht `sdk_holen` ab, statt
+# ungeprueft zu entpacken.
+declare -A SDK_SHA256=(
+    [9.2.0]=4907d8455b651c5a00a865e364cc4f1921c055b9279c7c8634c7a7a6773b5593
+)
 GERAETE_URL="${CIQ_GERAETE_URL:-}"      # Quelle fuer Devices/ und Fonts/ (bzw. die Archive)
 # SCHRAEGSTRICH AM ENDE WEG — sonst entsteht ein leeres Pfadsegment.
 #
@@ -62,10 +72,19 @@ for e in json.load(sys.stdin):
         print(e['linux']); break
 ")
     [ -n "$datei" ] || fehler "SDK-Fassung $SDK_VERSION nicht im Verzeichnis"
+    local soll="${SDK_SHA256[$SDK_VERSION]:-}"
+    [ -n "$soll" ] || fehler "Fuer SDK $SDK_VERSION steht keine Pruefsumme in SDK_SHA256 — ungeprueft wird nicht entpackt (F-R17-20)"
 
     mkdir -p "$BASIS"
     curl -sS -L --max-time 1800 -o "$BASIS/sdk.zip" \
         "https://developer.garmin.com/downloads/connect-iq/sdks/$datei"
+    local ist
+    ist=$(sha256sum "$BASIS/sdk.zip" | cut -d' ' -f1)
+    if [ "$ist" != "$soll" ]; then
+        rm -f "$BASIS/sdk.zip"
+        fehler "SDK $SDK_VERSION: Pruefsumme $ist, erwartet $soll — nicht entpackt"
+    fi
+    melde "SDK $SDK_VERSION: Pruefsumme stimmt"
     unzip -q -o "$BASIS/sdk.zip" -d "$SDK_DIR"
     rm -f "$BASIS/sdk.zip"
     chmod +x "$SDK_DIR/bin/"* 2>/dev/null || true
@@ -105,6 +124,17 @@ bibliotheken() {
     curl -sS -O --max-time 600 "$pool/w/webkit2gtk/libwebkit2gtk-4.0-37_${wk}_amd64.deb"
     curl -sS -O --max-time 600 "$pool/w/webkit2gtk/libjavascriptcoregtk-4.0-18_${wk}_amd64.deb"
     curl -sS -O --max-time 300 "$pool/i/icu/libicu70_70.1-2_amd64.deb"
+    # PRUEFSUMMEN DER VIER PAKETE (R17-19, F-R17-20). Sie werden per
+    # `LD_LIBRARY_PATH` in den Simulator geladen; ohne Pruefung lief, was
+    # der Spiegel an dem Tag lieferte. Die Summen stehen so im Paketindex von
+    # Ubuntu 22.04 (`jammy` fuer libsoup und libicu, `jammy-security` fuer
+    # die zwei webkit2gtk-Pakete), gegengelesen am 25.10.2026.
+    sha256sum -c --quiet - <<'SUMMEN' || fehler "Eine Simulator-Bibliothek hat eine fremde Pruefsumme — nicht entpackt"
+aef4d7f80586506bf6f24ef74e4e10242abe19431f2be24b0e40b440ab97fc39  libsoup2.4-1_2.74.2-3_amd64.deb
+121a795af0b4851eaa13b4e0cd55ba6261d7cf1578801bf39ce7c295af7d1174  libwebkit2gtk-4.0-37_2.50.4-0ubuntu0.22.04.1_amd64.deb
+68aafd3f6d0a560276875e6275713dc5f55e8cda570f9e33d38d94ba4906ce5e  libjavascriptcoregtk-4.0-18_2.50.4-0ubuntu0.22.04.1_amd64.deb
+58a154f6307289813da2276f900498ef536ae7c0522d2cf31a3c3c5cf62dfd9a  libicu70_70.1-2_amd64.deb
+SUMMEN
     mkdir -p root
     for f in *.deb; do dpkg-deb -x "$f" root; done
     rm -f ./*.deb

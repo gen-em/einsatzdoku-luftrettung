@@ -175,7 +175,10 @@ durch. Deshalb drei Lagen statt einer:
 1. **Das Ruleset** — Riegel gegen Git und gegen jede fremde Anwendung.
 2. **Die Deny-Liste in `.claude/settings.json`** — sie sperrt
    `mcp__github__merge_pull_request` und
-   `mcp__github__enable_pr_auto_merge`.
+   `mcp__github__enable_pr_auto_merge`, seit R17-19 auch
+   `mcp__github__push_files` und `mcp__github__actions_run_trigger`
+   (F-R17-14): Eine Instanz schreibt nicht an Git vorbei und startet keinen
+   Lauf — Staging- und App-Probeläufe startet die BetreiberIn.
 3. **Der Satz in `CLAUDE.md` 8** — eine Instanz mergt nie.
 
 **Wie Lage 2 wirkt, und wie man sie deshalb misst.** Eine Deny-Regel aus dem
@@ -242,7 +245,10 @@ laufen je Engine einmal** (Grundsatz 8, R87); der Schritt holt alle drei
 samt Bibliotheken mit `playwright install --with-deps`, **in der Fassung
 des Prüfstands**: Sie steht einmal, in `PW_FASSUNG` von
 `tools/sandbox/aufbauen.sh`, und der Schritt liest sie dort (seit Nr. 393,
-`docs/Technik.md` 6.1a). Der Job läuft auf `ubuntu-26.04` wie alle.
+`docs/Technik.md` 6.1a). Installiert wird sie aus der Sperrdatei
+`tools/kette/stufe2-npm/package-lock.json` mit `npm ci`; nennt die eine
+andere Fassung, ist der Schritt rot (R17-19, F-R17-20). Der Job läuft auf
+`ubuntu-26.04` wie alle.
 *Bis zum 19.10.2026: Chromium allein, 20 Minuten, auf 26.04. Die ersten
 beiden dreifachen Läufe (131 und 132, 20.10.2026) brachen auf 26.04 an den
 Bibliotheken ab, bevor sie maßen (F-DM-12); bis Nr. 393 lief der Job
@@ -277,10 +283,13 @@ dem die Uhr keine Zugangsdaten kennt (`CLAUDE.md` 4): Ein Schlüssel, dessen
 Verlust jede spätere Fassung zu einer anderen Anwendung macht, gehört nicht
 dorthin, wo bei jedem Bau fremder Code mitläuft. **Gebaut mit PK-08**
 (Jobs `android` und `uhr`, `tools/kette/appbau.sh` und `apkablage.py`,
-`Technik.md` 4.97g). **Was die Kette dort prüft:** Tag gegen Fassung, das
-Zertifikat gegen `APK_ZERTIFIKAT_SHA256` und die Enden `078c…ad64`, beide
-APKs gleich signiert, Paketname und `versionName`, die abgelegte Datei
-Byte für Byte gegen die gebaute. **Was sie nicht prüft:** ob die App
+`Technik.md` 4.97g). **Was die Kette dort prüft:** seit R17-19 zuerst das
+App-Tor (grüner Job `Stufe 1` auf demselben Baum, bei einem Tag der Commit
+auf `main`, F-R17-17), dann Tag gegen Fassung, den Bau in einem Job ohne
+Geheimnisse und mit Gradle-Verifikation (F-R17-03, -20), das Zertifikat
+gegen `APK_ZERTIFIKAT_SHA256` und die Enden `078c…ad64`, beide APKs gleich
+signiert, Paketname und `versionName`, die abgelegte Datei Byte für Byte
+gegen die gebaute; bei der Uhr die Prüfsumme des SDK. **Was sie nicht prüft:** ob die App
 funktioniert — das sind Station B (Prüfstand, Emulator) und der Gerätetest.
 
 ---
@@ -684,7 +693,8 @@ den manuellen Abfahrtort (Web 21.1.5).
 
 Für jede Änderung an einem sichtbaren Text — der Weboberfläche, der
 Handy- und Uhr-Anwendungen oder der normativen Dokumentation — läuft
-`tools/quelltext/` (`textprobe`): Es zählt nach, ob Land und Luft neutral benannt sind.
+`tools/quelltext/` (`textprobe`): Es zählt nach, ob Land und Luft neutral benannt sind
+— und seit R17-18, ob ein Satz Ortsdaten noch als Klartext beschreibt.
 Erwartet werden null Treffer außerhalb der Ausnahmeliste und null ungenutzte
 Ausnahmen; ein Begriff, der bleiben soll, braucht einen Eintrag **mit
 Begründung** — kein Ausblenden.
@@ -704,7 +714,7 @@ Begründung** — kein Ausblenden.
 
 **Seit PK-04 ist die Wortliste die Textprobe** (E-PK-08): fünf Regelklassen
 statt einer, und sie läuft **einmal im Tor** statt bei jeder Textänderung von
-Hand.
+Hand. Seit R17-18 (Web 23.1.0) sind es sechs.
 
 | Klasse | Was sie misst | Ziel |
 |---|---|---|
@@ -713,6 +723,7 @@ Hand.
 | `adressen` | E-Mail-Adressen außerhalb der von RFC 2606 reservierten Formen; `demo@gen-em.org` ist die eine erlaubte (E-PK-27) | 0 |
 | `netz` | Adressen im Netz, die nicht in `docs/Lizenzen.md` stehen | 0 |
 | `namen` | reale Orts- und Rufnamen (E-P1-02) | 0 |
+| `zusage` | Sätze, die Ortsdaten — GPS-Daten, Phasenorte, Reanimation, Transportziel, Ortshöhe — als Klartext beschreiben, und den Satz von der Rekonstruierbarkeit des Ortes; **satzweise** (F-R17-58, E-R17-30) | 0 |
 
 **Rot ist nur ein NEUER Treffer.** Der Altbestand steht mit Zahl in
 `textprobe-altbestand.json`, je (Datei, Muster); wer eine Stelle bereinigt,
@@ -769,6 +780,37 @@ Uhr-Ressourcen und 14 normative Dokumente. **Nicht** gemessen werden
 > „null im Repositorium": `tools/`, `docs/konzepte/**`, die
 > Steuerungsdokumente und der Kotlin-Quelltext bleiben ungelesen.
 
+> **Die Klasse `zusage` liest Sätze, nicht Zeilen** (R17-18, E-R17-30).
+> Sie sucht eine **Aussage** — ein Klartext-Wort und einen Ortsbegriff im
+> selben Satz —, und in Markdown ist ein Satz über Zeilen umbrochen.
+> Gemessen am 25.10.2026 an den siebzehn alten Sätzen, die Ortsdaten noch
+> als Klartext beschrieben: Das Zeilenmuster aus dem Review fand **einen**,
+> beide Muster der Klasse zeilenweise **elf**, satzweise **alle siebzehn**.
+> Die Sicht `satz` fügt einen Absatz, Listenpunkt, eine Überschrift oder eine
+> Tabellenzelle zusammen und teilt an Satzzeichen; gemeldet wird die Zeile,
+> in der der Satz beginnt, und eine Ausnahme liest mit `zeile` den **Satz**.
+> Außerhalb von Markdown bleibt die Zeile die Einheit, in PHP und
+> JavaScript die verkettete Zeichenkette.
+>
+> **Was `zusage = 0` heißt:** In den sechs Bereichen und in `g` (seit
+> R17-18 die Texte für die Stores, `docs/store/**/*.md`, nur diese Klasse)
+> steht kein Satz, der
+> beide Wörter trägt, außer den 35 erklärten (31 Regeln) — Geschichte mit
+> Versionsangabe (`C`), die Beschriftung der Aufräum-Migration (`E`), der
+> Gerätepuffer (`G`), Sätze, in denen „Klartext" oder „lesbar" etwas anderes
+> meint (`Homonym`), und bis Backlog Nr. 400 die Vorlagen von AVV und
+> Nutzungsbedingungen (`Bestand`).
+> **Nicht** heißt es, dass jeder Text die Zusage richtig sagt — die Probe
+> misst **Wortlaut, nicht den Sachverhalt**. Sie sieht keine alte Aussage,
+> die auf zwei Sätze verteilt ist, als Einleitung mit Liste darunter, als
+> Tabellenzeile („| GPS-Daten | Klartext |"), als Überschrift mit Absatz oder
+> in einem umbrochenen HTML-Absatz steht; keine, die ohne eines ihrer Wörter
+> auskommt („die Orte bleiben im alten Feld" — fünf solche Stellen im
+> Handbuch fand erst die Gegenprüfung von R17-18); und keine Zusage, die zu
+> viel verspricht. Gemessen von der Gegenprüfung: 29 von 55 erfundenen
+> falschen Sätzen rot, ein Fehlalarm unter acht richtigen. Das Übrige bleibt
+> Lesen.
+
 ### 6.7 Die Prüfmittel laufen zuletzt, nicht zwischendurch
 
 Erst der Code, dann die Dokumentation, **dann** die Prüfmittel. Ein
@@ -796,6 +838,22 @@ auszuführen. Grund: Am 16./17.09.2026 sind drei Kettenschritte beim jeweils
 Shell-Syntax (Backlog Nr. 217). Wer einen Aufruf in der Kette ändert, fährt
 das Werkzeug davor; wer ein Werkzeug umbenennt oder seine Schalter ändert,
 ebenfalls.
+
+**Seit R17-19 trägt es zwei Riegel der Kette** (F-R17-16): Jede fremde
+`uses:`-Zeile hängt an einer 40-stelligen SHA mit Fassung als Kommentar, und
+die Ausnahmeliste des FTPS-Schritts hält ihre Sollliste von acht Pfaden,
+jeder Serverpfad (außer `install.php`) steht in `.gitignore`, und keine
+`server/config.php*` ist eingecheckt. Bis dahin waren das zwei Prüfwerte in
+`CLAUDE.md` 3, die ein Handbefehl nachzählte. Beide Riegel rechnen ihre
+Eingaben als Text — die Selbstprobe (`--probe`) legt ihnen jeden Fehler hin,
+ohne das Repositorium anzufassen.
+
+**Was die Kette sonst noch selbst misst** (R17-19): Teil 3 der
+Integritätswache — die Punktpfade 403, `.well-known/` offen, keine Kopie der
+`config.php` mit 200 — gegen Produktiv in `integritaet.yml` und gegen Staging
+in Stufe 2 (`wache.py --teil punktpfade`, F-R17-18); `appbau.sh --selbstprobe`
+misst mit einem Ersatz-`gradlew` die Umgebung des Gradle-Aufrufs (kein
+`APK_*`, nur die Positivliste, F-R17-03).
 
 **Wer das Läuferabbild wechselt** (die `runs-on`-Zeilen, `docs/Technik.md`
 6.1a), misst vorher dreifach, weil kein Teil allein reicht (Nr. 236):
@@ -898,7 +956,7 @@ hier steht, ist nur, **was grün heißt**:
 | `tools/quelltext/` `vollstaendigkeit` | 0 Befunde in sechs Prüfungen — ohne Schwelle seit PK-04/5e (E-PK-16); die sechste, Selektoren, seit R4-05 |
 | `tools/screenshots/` | 0 Überlauf, 0 Konsolenfehler, 0 Knöpfe falscher Höhe, 0 Karten außerhalb von `main.inhalt`; mit `--etikett NAME` zusätzlich 0 Abweichungen bei Titel und Kopfleiste (P5c/AP1). Rollende Behälter werden genannt und halten nicht auf (R4-08) |
 | `tools/screenshots/` `kontrast.py` | 0 Paare unter ihrem Sollwert, 0 Paare des Stylesheets ohne Eintrag in `PAARE` oder `AUSNAHMEN` (seit R4-08); Selbstprobe alle Fälle grün |
-| `tools/kettenaufrufe/` | 0 Befunde; jeder ungeprüfte Aufruf ist benannt |
+| `tools/kettenaufrufe/` | 0 Befunde; jeder ungeprüfte Aufruf ist benannt; seit R17-19 dazu jede fremde `uses:`-Zeile an einer SHA mit Fassung und die Ausnahmeliste bei ihren acht Pfaden, `.gitignore` vollständig, keine eingecheckte `server/config.php*` |
 | `tools/quelltext/` `bestand` | 0 Befunde in allen vierzehn Regeln — ohne Decke, ohne Ausnahmeliste (E-BR-01); seit R4-25 stehen die vier erzeugten Tabellen in `Design.md` wie ihr Erzeuger sie ausgibt (Regel `design`) |
 | `tools/quelltext/` `anker` | 0 Verweise `hilfe.php#…` ohne Ziel im gerenderten Handbuch; Selbstprobe 6 von 6 (falscher Anker rot, Kommentar zählt nicht, `-2` bei gleichem Titel) |
 | `tools/quelltext/` `kennzeichnung` | alle Kennzeichen der Sollliste stehen (heute 20 von 20: zehn Felder, Formular und Leseansicht), jedes Klartext-Freitextfeld trägt die Kleinzeile, 0 Blobfelder ohne Zeile; Selbstprobe 8 von 8 (die beiden Fehler aus 19.1.0 rot, Kommentar zählt nicht) |

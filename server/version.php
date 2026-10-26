@@ -8281,5 +8281,35 @@ declare(strict_types=1);
  *   wer im selben Prozess versiegelte und öffnete, bekam die alte Größe, und
  *   ein heiles Komplett-Backup hieß „verändert" (rot in der Komplettprobe
  *   unter PHP 8.3.6). Jetzt `fstat()` am offenen Handle. Kein Schema.
+ *
+ * 23.1.0 — ZWEI TOKENS FUER `jobs.php`, UND DIE KETTE HAT KEINEN SCHLUESSEL
+ *   MEHR IN DER ADRESSE (R17-19, Schritt 12b, F-R17-57, -22). Bis 23.0.3
+ *   oeffnete ein Token den Job-Lauf UND die Aktionen der Kette, und die Kette
+ *   schickte es als `?token=…` — also in jede Zeile des Zugriffsprotokolls
+ *   beim Hoster, mit dem Schalter fuer die Wartung des Produktivservers.
+ *   Jetzt traegt ein KETTENTOKEN (`kette_token()`, Betrieb → Hintergrundjobs
+ *   → „Auslieferungskette") die Aktionen, nur per POST und nur im Rumpf; eine
+ *   Aktion in der Adresse ist 405. Das bisherige Job-Token bleibt fuer den
+ *   „Cronjob per URL" und oeffnet nur noch den Job-Lauf. Beim ersten Lesen
+ *   uebernimmt das Kettentoken den alten Wert, damit die Kette ueber das
+ *   Update hinweg weiterlaeuft; danach erneuert die Betreiberin beide.
+ *   Dazu: `api/health.php` nimmt das Token auch als Kopfzeile
+ *   `X-Health-Token`, und `.htaccess` sperrt jede Datei, die mit
+ *   `config.php` beginnt (F-R17-55). Nebenfassung, weil ein Geheimnis und
+ *   eine Karte dazukommen; die Kette selbst (App-Tor, Signatur ohne Gradle,
+ *   gepinnte Pakete, zwei neue Riegel) stuft keine Zaehlung. Kein Schema.
+ *
+ *   MIT DABEI: DIE TEXTE SAGEN, WAS S11 GEBAUT HAT (R17-18, F-R17-58).
+ *   README, „Was ist NAdoku" (`ueber.php`) und Handbuch 4.3 und 5
+ *   (`hilfe.php`) nannten GPS-Spur, Phasenorte, Transportziel, Ortshoehe und
+ *   Reanimation noch Klartext und den Einsatzort rekonstruierbar; seit
+ *   Web 22 ist das Gegenteil wahr. Ausgeliefert werden davon die zwei
+ *   Dokumente unter `server/doku/`. Die Textprobe liest die Zusage seither
+ *   satzweise (Klasse `zusage`). AVV und Nutzungsbedingungen bleiben bis zur
+ *   Rechtstext-Runde vor v1.0 (Backlog Nr. 400).
+ *   Diese Zeilen standen auf dem Arbeitszweig als eigene Fassung 23.0.3 —
+ *   eine Nummer, die Nr. 393 vier Tage vorher schon vergeben hatte
+ *   (F-R17-64). Ausgeliefert war keine der beiden; mit dem Merge von
+ *   Nr. 393 behaelt die 23.0.3 deren Inhalt, und R17-18 geht in 23.1.0 auf.
  */
-const WEB_VERSION = '23.0.3';
+const WEB_VERSION = '23.1.0';

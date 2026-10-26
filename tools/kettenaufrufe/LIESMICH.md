@@ -1,6 +1,7 @@
 # Kettenaufrufe
 
-Passt jeder Werkzeugaufruf zu der Schnittstelle des Werkzeugs, das er ruft?
+Passt jeder Werkzeugaufruf zu seinem Werkzeug — und seit R17-19: hängt jede
+fremde Aktion an einer SHA, hält die Ausnahmeliste der Kette ihre Sollliste?
 **Anlass: Nr. 217** — ein Aufruf mit einem Schalter, den es nicht gab.
 
 ## Aufruf
@@ -11,28 +12,29 @@ python3 tools/kettenaufrufe/pruefen.py    # --liste · --probe
 
 ## Was es misst
 
-Jede `uses:`- und `run:`-Zeile in `.github/workflows/` und jeden `aufruf`
-in `tools/pruefstand/pruefablauf.json`. Zu jedem Aufruf wird die
-Schnittstelle **aus dem Quelltext des Werkzeugs** ermittelt — `argparse`,
-`getopt`, ein `case`-Block, eine `BEKANNT`-Menge, die Namensliste eines
-Sammelläufers (`NAMEN=(…)`, `RUF`) — und der Aufruf dagegen gehalten.
+Jede `run:`-Zeile in `.github/workflows/` und jeden `aufruf` in
+`tools/pruefstand/pruefablauf.json`, gegen die Schnittstelle **aus dem
+Quelltext des Werkzeugs** — `argparse`, `case`-Zweige, `BEKANNT`-Mengen,
+Namenslisten der Sammelläufer. Dazu seit R17-19 zwei Riegel (F-R17-16):
+(1) jede fremde `uses:`-Zeile an einer 40-stelligen SHA, Fassung als
+Kommentar; (2) die Ausnahmeliste in `ausliefern-lauf.yml` gleich ihrer
+Sollliste (acht Pfade, Verzeichnisse als `x/**` und `x/`), jeder Serverpfad
+außer `install.php` in `.gitignore`, keine `server/config.php*` eingecheckt.
 
 ## Was es braucht
 
-Nichts. Kein Netz, keine Datenbank, keine Installation.
+Nur `git` (für `.gitignore` und die eingecheckten Pfade). Kein Netz, keine
+Datenbank, keine Installation.
 
 ## Erwartete Zahl
 
-**0 Befunde.** Die zweite Zahl ist „ungeprüft": Aufrufe, deren Werkzeug
-keine erkennbare Schnittstelle hat. **Sie ist kein Beiwerk** — der
-Stilvergleich stand darin und war kaputt (F-PK-20), `uhr-stufe1` stand
-nicht einmal darin und war es auch (F-PK-21). Stand 24.09.2026: **85
-Aufrufe, 0 Befunde, 2 ungeprüft**; `--probe` → **21 von 21** Fällen.
+**0 Befunde** („ungeprüft" ist kein Beiwerk, F-PK-20). 25.10.2026: **137
+Aufrufe, 0 Befunde, 4 ungeprüft; 19 Aktionszeilen gepinnt; 8 Serverpfade,
+0 eingecheckte Kopien**; `--probe` → **40 von 40**.
 
 ## Was es nicht kann
 
-**Pflichtargumente sieht es nur halb.** Bei Python-Werkzeugen mit argparse
-kennt es seit PK-05 die Unterbefehle und deren Pflichtschalter (F-PK-32);
-Positionsargumente und die Pflichtargumente eines Shell-Unterbefehls sieht es
-nicht (F-PK-21). Und es misst nur die Form — ob ein Aufruf das Richtige tut, sagt
-erst ein Lauf.
+Positionsargumente und Pflichtargumente eines Shell-Unterbefehls sieht es
+nicht (F-PK-21); es misst die Form, nicht das Tun. Die Riegel prüfen, **dass**
+eine SHA dasteht, nicht, ob sie zur Fassung gehört; eine neue Ausnahme heißt
+Sollliste in `pruefen.py`, `CLAUDE.md` 3 und Ausnahmeliste zugleich ändern.

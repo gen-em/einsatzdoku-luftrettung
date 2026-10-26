@@ -17,8 +17,11 @@ const wurzel = path.resolve(hier, '../../..');           // Projektwurzel
 const PORT  = 8731;
 
 // sessionStorage braucht eine echte Herkunft — file:// genuegt nicht.
-const srv = spawn('npx', ['--yes', 'http-server', wurzel, '-p', String(PORT), '-s'],
-                  { stdio: 'ignore' });
+// Seit R17-19 der Server aus Python statt `npx --yes http-server`: Der zog
+// bei jedem Lauf ein npm-Paket ohne Fassung und ohne Prüfsumme nach und
+// band auf allen Schnittstellen (F-R17-20). Dieser bindet nur 127.0.0.1.
+const srv = spawn('python3', ['-m', 'http.server', String(PORT), '--bind', '127.0.0.1',
+                              '--directory', wurzel], { stdio: 'ignore' });
 await new Promise(r => setTimeout(r, 1500));
 
 const browser = await starten(PW, MOTOR);
