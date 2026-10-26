@@ -1143,7 +1143,9 @@ gepfefferter Hash gepfeffert. Die Zählung „noch auf dem alten Anteil"
 noch ist. *Ausgenommen* ist das Demo-Konto (öffentliches Passwort, kein
 Anteil). *Der Preis* (E-R17-44): Fehlt der Anteil, zu dem ein Hash gehört,
 meldet sich das Konto nicht mehr an — **auch die BetreiberIn nicht**. Die
-Anmeldung sagt „Server-Anteil fehlt" und schreibt eine Systemmeldung; den
+Anmeldung sagt „Server-Anteil fehlt" und schreibt eine Systemmeldung; der
+Versuch zählt wie ein Fehlversuch (Topf `login`), sonst flutete wiederholtes
+Anmelden den Reiter System (Anteilprobe Teil F misst beides); den
 Weg zurück beschreibt das Runbook („Der Server-Anteil fehlt", Abschnitt 7).
 
 *Warum aus der Kontonummer und nicht aus dem Salz.* Passwortwechsel und Reset
@@ -12952,7 +12954,11 @@ mit 6b Komplett-Backup und Backup-Ziele samt Balken).
 **Der Server-Anteil fehlt** (seit Web 23.2.0, E-R17-44). *Woran man es
 sieht:* Die Anmeldung sagt „Dieser Installation fehlt der Server-Anteil …"
 statt „Passwort falsch", für jedes Konto, das sich seit Web 23.2.0
-angemeldet hat, und im Reiter System steht „Anmeldung ohne Server-Anteil".
+angemeldet hat, und im Reiter System steht „Anmeldung ohne Server-Anteil"
+(je Versuch eine Zeile, nach zehn Versuchen je Konto und Anschluss greift
+die Sperre). Im Sandbox-Ernstfall nachgefahren am 26.10.2026: Reset, Nachtragen,
+beide Konten wieder drin, die Hülle des zurückgesetzten Kontos bei der ersten
+Seite mit Schlüsselbedarf auf den Anteil gehoben.
 *Warum:* Der Anmelde-Hash trägt seither einen Pfeffer aus `kdf_anteil`
 (Abschnitt 3); fehlt in `config.php` der Anteil mit der Kennung, die der
 Hash nennt, lässt sich das Passwort nicht prüfen. Das trifft **auch die

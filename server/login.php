@@ -862,10 +862,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !csrf_ok()) {
             [$error, $sperreRest] = login_code_sperre($merkmale);
             $vergessen = true;
         } elseif ($anteilFehlt) {
-            /* DER ANTEIL FEHLT (E-R17-44). Kein Fehlversuch im Topf: Geraten
-             * werden kann hier nichts, weil ohne Anteil nichts geprueft wird.
-             * Die Systemmeldung erreicht die BetreiberIn, sobald jemand den
-             * Reiter System liest; sie nennt kein Konto. */
+            /* DER ANTEIL FEHLT (E-R17-44). Geraten werden kann hier nichts,
+             * weil ohne Anteil nichts geprueft wird — trotzdem ZAEHLT der
+             * Versuch wie ein Fehlversuch. Bis zur Handprobe in der Sandbox
+             * (26.10.2026) tat er es nicht: Jeder Versuch schrieb eine
+             * Systemmeldung, ohne Topf und ohne Bremse, und wer im Ernstfall
+             * eine bekannte Adresse beschoss, flutete den Reiter System. Die
+             * NutzerIn verliert dadurch nichts — sie kommt in diesem Zustand
+             * ohnehin nur ueber „Passwort vergessen" hinein, und das zaehlt in
+             * einem anderen Topf. Die Systemmeldung nennt kein Konto. */
+            rate_misserfolg('login', $email);
+            rate_misserfolg('login_ip', null);
+            rate_global_misserfolg();
             system_melden('login', 'Anmeldung ohne Server-Anteil — ein Anmeldehash '
                         . 'nennt einen Anteil, den config.php nicht trägt (Runbook: '
                         . '„Der Server-Anteil fehlt")');

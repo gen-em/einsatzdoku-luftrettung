@@ -15,6 +15,14 @@ declare(strict_types=1);
  * `app_state` von Hand verstellt. Hier werden sie hergestellt, gemessen und
  * wieder zurueckgestellt.
  *
+ * SEIT R17-20 (Web 23.2.0) AUCH DIE ANMELDUNG, UEBER HTTP (Teil F): Der
+ * Anmelde-Hash traegt einen Pfeffer aus `kdf_anteil`. Teil F meldet ein
+ * Probenkonto an der laufenden Anlage an — mit altem Hash (still umgestellt),
+ * mit Pfeffer, ohne Anteil (eigene Meldung, Systemmeldung, und nach der
+ * Grenze des Topfs `login` „Zu viele Anmeldeversuche"), mit zurueckgelegtem
+ * Anteil (ohne Reset wieder hinein). Konto, Sitzungen, Topfzeilen und
+ * Meldungen raeumt er selbst ab.
+ *
  * SIE FASST DIE INSTALLATION AN — DREIMAL, UND ALLES WIRD ZURUECKGELEGT:
  *
  *   1. `app_state.kdf_anteil_kennung`. Der Wert wird vor dem Lauf gelesen und
@@ -414,6 +422,130 @@ if ($schreib) {
 } else {
     teil('D. config_eintrag_schreiben() — NICHT gefahren');
     echo "  (ohne --schreiben wird der Schreibweg nicht eigens geprueft)\n";
+}
+
+/* ---- F. Die Anmeldung mit Pfeffer, ueber HTTP (R17-20, E-R17-20, -44) -----
+ *
+ * Der Anmelde-Hash traegt seit Web 23.2.0 einen Pfeffer aus `kdf_anteil`.
+ * Hier ueber den echten Weg (`login.php` der laufenden Anlage, Vorgabe
+ * http://127.0.0.1:8080, sonst `NADOKU_BASIS`):
+ *   F1  mit Anteil: das richtige Token meldet an, ein Hash ohne Praefix
+ *       (der alte) ebenso — und wird dabei still auf `pf1:` umgestellt;
+ *   F2  ohne Anteil (Lage „abweichend"): die eigene Meldung statt
+ *       „Passwort pruefen", eine Systemmeldung;
+ *   F3  und ZAEHLT: Nach der Grenze des Topfs `login` kommt „Zu viele
+ *       Anmeldeversuche" statt weiterer Systemmeldungen (Handprobe
+ *       26.10.2026 — vorher schrieb jeder Versuch eine);
+ *   F4  Anteil zurueck: dasselbe Konto meldet sich ohne Reset wieder an.
+ * Ohne Anteil prueft der Server das Token gar nicht; deshalb geht das ohne
+ * Browser, mit einem bekannten Token (Muster Sitzungsprobe). */
+teil('F. Anmeldung mit Pfeffer ueber HTTP (R17-20)');
+require_once $wurzel . '/ratelimit_lib.php';
+$basis = rtrim((string)(getenv('NADOKU_BASIS') ?: 'http://127.0.0.1:8080'), '/');
+$fMail = 'anteilprobe-anmeldung@probe.invalid';
+$fTok  = str_repeat('5a', 32);
+$fSitzungen = [];
+$fAnmelden = static function () use ($basis, $fMail, $fTok, &$fSitzungen): array {
+    $keks = [];
+    $hole = static function (string $methode, array $felder = []) use ($basis, &$keks): array {
+        $paare = [];
+        foreach ($keks as $n => $v) { $paare[] = $n . '=' . $v; }
+        $ch = curl_init($basis . '/login.php');
+        curl_setopt_array($ch, [CURLOPT_RETURNTRANSFER => true, CURLOPT_HEADER => true,
+            CURLOPT_FOLLOWLOCATION => false, CURLOPT_TIMEOUT => 60, CURLOPT_PROXY => '',
+            CURLOPT_HTTPHEADER => $paare !== [] ? ['Cookie: ' . implode('; ', $paare)] : []]);
+        if ($methode === 'POST') {
+            curl_setopt($ch, CURLOPT_POST, true);
+            curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($felder));
+        }
+        $roh = (string)curl_exec($ch);
+        $kl = (int)curl_getinfo($ch, CURLINFO_HEADER_SIZE);
+        $code = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+        $k = substr($roh, 0, $kl);
+        if (preg_match_all('/^Set-Cookie:\s*([^=;\s]+)=([^;\r\n]*)/mi', $k, $m, PREG_SET_ORDER)) {
+            foreach ($m as $c) { $keks[$c[1]] = $c[2]; }
+        }
+        $ort = preg_match('/^Location:\s*(\S+)/mi', $k, $l) ? $l[1] : '';
+        return ['code' => $code, 'ort' => $ort, 'rumpf' => html_entity_decode(substr($roh, $kl))];
+    };
+    $s = $hole('GET');
+    $csrf = preg_match('/name="csrf" value="([0-9a-f]+)"/', $s['rumpf'], $m) ? $m[1] : '';
+    $antwort = $hole('POST', ['csrf' => $csrf, 'email' => $fMail,
+                              'tokens' => json_encode(['600000' => $fTok])]);
+    foreach ($keks as $n => $v) { if ($n === 'PHPSESSID') { $fSitzungen[] = $v; } }
+    return $antwort;
+};
+/* DER WEBSERVER SIEHT EINE NEUE `config.php` ERST NACH SEINEM OPCACHE-INTERVALL.
+ * `konfig_stellen()` leert den Zwischenspeicher nur im eigenen Prozess (der
+ * Kommandozeile); der Webserver prueft die Datei hoechstens alle
+ * `opcache.revalidate_freq` Sekunden (Sandbox: 2). Ohne die Pause las er in
+ * F4 noch die Datei ohne Anteil — gemessen am 26.10.2026. Die Anwendung selbst
+ * hat das Problem nicht: `config_eintrag_schreiben()` leert im Webserver. */
+$fUmstellen = static function (?string $anteil): void {
+    stelle($anteil);
+    anteil_zustand(true);
+    sleep(3);
+};
+$fAngemeldet = static fn (array $r): bool => in_array($r['code'], [302, 303], true)
+                                            && !str_contains($r['ort'], 'login.php');
+$_SERVER['REMOTE_ADDR'] = '127.0.0.1';
+$fLeeren = static function () use ($fMail): void {
+    rate_erfolg('login', $fMail);
+    rate_erfolg('login_ip', null);
+};
+$fMeldungen = static fn (): int => (int)db()->query("SELECT COUNT(*) FROM protokoll_ereignisse
+                                     WHERE text LIKE '%Anmeldung ohne Server-Anteil%'")->fetchColumn();
+db()->prepare('DELETE FROM users WHERE email = ?')->execute([$fMail]);
+db()->prepare("INSERT INTO users (email, name, role, password_hash, kdf_salt, kdf_iter)
+               VALUES (?, 'Anteilprobe', 'user', '', '', 600000)")->execute([$fMail]);
+$fId = (int)db()->lastInsertId();
+$fHash = static fn (): string => (string)db()->query('SELECT password_hash FROM users WHERE id = ' . $fId)
+                                           ->fetchColumn();
+$fMeldVorher = $fMeldungen();
+try {
+    $fUmstellen(A_HEX);
+    marke(schluessel_kennung(A_HEX));
+    anteil_zustand(true);
+    $kA = (string)schluessel_kennung(A_HEX);
+    $fLeeren();
+    /* F1: alter Hash ohne Praefix → Anmeldung, still umgestellt */
+    db()->prepare('UPDATE users SET password_hash = ? WHERE id = ?')
+        ->execute([password_hash($fTok, PASSWORD_DEFAULT), $fId]);
+    pruefe('(F1) alter Hash: Anmeldung gelingt', $fAngemeldet($fAnmelden()), true);
+    pruefe('(F1) … und der Hash ist jetzt gepfeffert', str_starts_with($fHash(), 'pf1:' . $kA . ':'), true);
+    pruefe('(F1) gepfefferter Hash: Anmeldung gelingt', $fAngemeldet($fAnmelden()), true);
+    /* F2: Anteil weg, Marke bleibt → „abweichend" */
+    $fUmstellen(null);
+    $fLeeren();
+    $r = $fAnmelden();
+    pruefe('(F2) ohne Anteil: eigene Meldung, nicht angemeldet',
+           !$fAngemeldet($r) && str_contains($r['rumpf'], 'fehlt der Server-Anteil'), true);
+    pruefe('(F2) … und eine Systemmeldung', $fMeldungen() - $fMeldVorher, 1);
+    /* F3: bis zur Grenze, dann „Zu viele" */
+    $max = (int)(rate_grenze('login')['max'] ?? 10);
+    for ($i = 1; $i < $max; $i++) { $fAnmelden(); }
+    $r = $fAnmelden();
+    pruefe('(F3) nach ' . $max . ' Versuchen: „Zu viele Anmeldeversuche"',
+           str_contains($r['rumpf'], 'Zu viele Anmeldeversuche'), true);
+    pruefe('(F3) … und hoechstens so viele Systemmeldungen', $fMeldungen() - $fMeldVorher, $max);
+    /* F4: Anteil zurueck → ohne Reset wieder angemeldet */
+    $fUmstellen(A_HEX);
+    $fLeeren();
+    $r = $fAnmelden();
+    pruefe('(F4) Anteil zurueck: Anmeldung ohne Reset', $fAngemeldet($r), true);
+} finally {
+    $fLeeren();
+    $m = [rate_merkmal_kennung($fMail), rate_merkmal_ip()];
+    $in = implode(',', array_map([db(), 'quote'], $m));
+    db()->exec("DELETE FROM sicherheit_ereignisse WHERE merkmal IN ($in)");
+    db()->exec("DELETE FROM protokoll_ereignisse WHERE text LIKE '%Anmeldung ohne Server-Anteil%'
+                   OR betroffen_user_id = $fId OR urheber_user_id = $fId");
+    db()->prepare('DELETE FROM users WHERE id = ?')->execute([$fId]);
+    /* NUR DIE EIGENEN SITZUNGEN — jede Anmeldung oben hat eine angelegt. */
+    foreach (array_unique($fSitzungen) as $sid) {
+        if (preg_match('/^[A-Za-z0-9,-]{20,}$/', $sid)) { @unlink($wurzel . '/.sitzungen/sess_' . $sid); }
+    }
 }
 
 } finally {

@@ -8319,7 +8319,8 @@ declare(strict_types=1);
  *   weiter; der Satz „ein Abzug allein genuegt nicht mehr" war falsch und
  *   ist es fuer jedes Konto nicht mehr, das sich seither angemeldet hat —
  *   die Umstellung laeuft still bei der Anmeldung, in der vorhandenen
- *   Spalte. Preis: Fehlt der Anteil, meldet sich niemand an (E-R17-44).
+ *   Spalte. Preis: Fehlt der Anteil, meldet sich niemand an (E-R17-44);
+ *   jeder Versuch in diesem Zustand zaehlt wie ein Fehlversuch.
  *   Sieben Stellen, die das Anmelde-Token als Nachweis verlangen, laufen
  *   ueber `passwort_nachweis()` mit Ratentopf; vier rieten bis dahin ohne
  *   Sperre — und die Selbstloeschung verglich das Klartext-Passwort mit

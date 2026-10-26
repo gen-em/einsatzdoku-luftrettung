@@ -585,9 +585,9 @@ function mail_katalog(): array
                 . "geändert:\n\n"
                 . "  bisher: " . $d['alt'] . "\n"
                 . "  neu:    " . $d['neu'] . "\n\n"
-                . "Bis zum " . $d['bis'] . " gilt die neue Adresse als unbestätigt: Bis dahin\n"
-                . "verschickt " . $n . " keinen Link zum Setzen eines Passworts. Über den Link\n"
-                . "unten bestätigst du den Wechsel oder widersprichst ihm:\n\n"
+                . "Bis zum " . $d['bis'] . " gilt die neue Adresse als unbestätigt.\n"
+                . "Bis dahin geht kein Link zum Setzen eines Passworts hinaus. Über den\n"
+                . "Link unten bestätigst du den Wechsel oder widersprichst ihm:\n\n"
                 . $d['link'],
                 "Falls du um diesen Wechsel nicht gebeten hast, widersprich bitte über den\n"
                 . "Link — deine bisherige Adresse gilt dann wieder, und alle Sitzungen deines\n"

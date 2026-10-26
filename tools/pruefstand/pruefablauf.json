@@ -659,13 +659,14 @@
         "server/serverkrypto_lib.php",
         "server/auth_salt.php",
         "server/assets/unlock.js",
-        "server/assets/crypto.js"
+        "server/assets/crypto.js",
+        "server/login.php"
       ],
       "proben": [
         "anteilprobe",
         "containerprobe"
       ],
-      "anlass": "S10-Kern, F-S10-AP3-03"
+      "anlass": "S10-Kern, F-S10-AP3-03; seit R17-20 auch login.php (Teil F der Anteilprobe: Anmeldung mit Pfeffer und ohne Anteil)"
     },
     {
       "id": "freigabe",

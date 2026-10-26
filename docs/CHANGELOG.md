@@ -45,7 +45,9 @@ Backlog Nr. 371). Kein Schema, kein `update.php`.
   meldet sich dieses Konto nicht mehr an — auch die BetreiberIn nicht, die
   den Anteil sonst nach der Anmeldung vom Schlüsselblatt nachträgt. Die
   Anmeldung sagt das ausdrücklich („Server-Anteil fehlt"), statt „Passwort
-  falsch" zu behaupten, und schreibt eine Systemmeldung; der Rückweg ist
+  falsch" zu behaupten, und schreibt eine Systemmeldung — jeder Versuch zählt
+  dabei wie ein Fehlversuch, damit niemand den Reiter System fluten kann
+  (gefunden bei der Handprobe in der Sandbox, Anteilprobe Teil F); der Rückweg ist
   „Passwort vergessen" mit dem Wiederherstellungsschlüssel, danach das
   Nachtragen vom Blatt (Runbook in `Technik.md` 7). Das Demo-Konto bekommt
   keinen Pfeffer — sein Passwort ist öffentlich.

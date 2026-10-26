@@ -636,14 +636,16 @@ function adresse_verwaltung_antwort(int $userId, string $token, string $antwort)
     require_once __DIR__ . '/mail_lib.php';
     foreach (mail_betreiberinnen() as $an) {
         mail_einreihen('adresse_widerspruch', $an, [
-            'kern' => 'Die bisherige Adresse des Kontos Nr. ' . $userId . ' hat einem '
-                    . "Adresswechsel durch die Verwaltung widersprochen.\n"
-                    . ($zurueck ? 'Die bisherige Adresse ist zurückgesetzt, alle Sitzungen '
-                                . 'des Kontos sind beendet, offene Setz-Links entwertet.'
-                                : 'Die bisherige Adresse ist inzwischen vergeben und '
-                                . 'wurde NICHT zurückgesetzt — bitte von Hand klären.')
-                    . "\n\nWer die Adresse geändert hat, steht im Protokoll (Reiter "
-                    . 'Verwaltung, „Adresse geändert“).',
+            /* Klein nach „Hallo," und mit Umbruechen unter 76 Zeichen — so
+             * sieht es im Postfach aus (Handprobe 26.10.2026). */
+            'kern' => 'die bisherige Adresse des Kontos Nr. ' . $userId . " hat einem\n"
+                    . "Adresswechsel durch die Verwaltung widersprochen.\n\n"
+                    . ($zurueck ? "Die bisherige Adresse ist zurückgesetzt, alle Sitzungen des\n"
+                                . 'Kontos sind beendet, offene Setz-Links entwertet.'
+                                : "Die bisherige Adresse ist inzwischen vergeben und wurde\n"
+                                . 'NICHT zurückgesetzt — bitte von Hand klären.')
+                    . "\n\nWer die Adresse geändert hat, steht im Protokoll\n"
+                    . '(Reiter Verwaltung, „Adresse geändert“).',
             'link' => app_url('/admin_user.php?id=' . $userId)]);
     }
     return ['ok' => $zurueck, 'alt' => $alt,
