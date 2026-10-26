@@ -343,6 +343,9 @@ const PROTOKOLL_ARTEN = [
     /* Verwaltung — neu mit Konzept RW (RW-02, E-RW-14) */
     'rueckweg_angelegt'         => ['Rückweg eingerichtet', 'neutral'],
     'rueckweg_erneuert'         => ['Rückweg erneuert', 'neutral'],
+    /* Verwaltung — neu mit R17-20 (F-R17-06, E-R17-45) */
+    'adresse_bestaetigt'        => ['Adresswechsel bestätigt', 'blau'],
+    'adresse_widersprochen'     => ['Adresswechsel widersprochen', 'orange'],
     /* Verwaltung — neu mit S11-03 (Konzept S11 3.1, E-S11-14) */
     'kontopaar_angelegt'        => ['Kontoschlüssel angelegt', 'neutral'],
     'kontopaar_abweichung'      => ['Kontoschlüssel weicht ab', 'orange'],
@@ -379,6 +382,8 @@ const PROTOKOLL_ARTEN = [
     'serverschluessel_umgehuellt'   => ['Serverschlüssel umgehüllt', 'blau'],
     'serverschluessel_alt_entfernt' => ['Bisheriger Serverschlüssel entfernt', 'neutral'],
     'kontobackup_eingespielt'   => ['Konto-Backup eingespielt', 'orange'],
+    /* neu mit R17-20 (F-R17-02): bis dahin hinterliess eine Freigabe keine Spur */
+    'kontobackup_freigegeben'   => ['Konto-Backup freigegeben', 'orange'],
     /* Sicherheit — Sicht auf `sicherheit_ereignisse` und `csp_berichte` */
     'sperre'                    => ['Sperre', 'orange'],
     'verlangsamung'             => ['Verlangsamung', 'orange'],
@@ -578,6 +583,7 @@ function protokoll_arten_des_reiters(string $reiter): array
                          'totp_eingerichtet', 'totp_codes_erneuert', 'totp_ausgeschaltet',
                          'totp_zurueckgesetzt', 'totp_code_benutzt',
                          'rueckweg_angelegt', 'rueckweg_erneuert',
+                         'adresse_bestaetigt', 'adresse_widersprochen',
                          'kontopaar_angelegt', 'kontopaar_abweichung',
                          'zweitfaktor_geraet_gemerkt', 'zweitfaktor_geraete_vergessen',
                          'passkey_angelegt', 'passkey_entfernt', 'passkey_zaehler',
@@ -595,7 +601,7 @@ function protokoll_arten_des_reiters(string $reiter): array
         'jobs'       => ['job_lauf', 'job_fehler'],
         'sicherung'  => ['komplett_erzeugt', 'komplett_heruntergeladen',
                          'komplett_eingespielt', 'komplett_geloescht',
-                         'kontobackup_eingespielt',
+                         'kontobackup_eingespielt', 'kontobackup_freigegeben',
                          'serverschluessel_gewechselt', 'serverschluessel_umgehuellt',
                          'serverschluessel_alt_entfernt'],
         'ziele'      => ['ziel_gesendet', 'ziel_geloescht'],

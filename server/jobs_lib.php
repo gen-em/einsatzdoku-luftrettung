@@ -1201,10 +1201,14 @@ function job_konto_verfall(PDO $pdo, array $zustand, callable $zeitLinks): array
     $wartend = konto_verfall_wartend(konten_reg_frist_tage(), JOB_KONTO_VERFALL_BLOCK);
     foreach ($wartend as $k) {
         if ($zeitLinks() <= 0.0) { break; }
-        mail_einreihen('registrierung_verfallen', (string)$k['email'],
-                       ['link' => app_url('/registrieren.php')]);
         $r = konto_loeschen((int)$k['id'], true, 'verfall');
         if ($r['ok']) {
+            /* DIE MAIL NACH DER LOESCHUNG (R17-20): Seit `konto_loeschen()`
+             * die Warteschlange der Adresse leert (F-R17-21), naehme es eine
+             * vorher eingereihte, noch wartende Mail mit. Scheitert die
+             * Loeschung, geht keine Mail — das Konto besteht dann ja noch. */
+            mail_einreihen('registrierung_verfallen', (string)$k['email'],
+                           ['link' => app_url('/registrieren.php')]);
             $erledigt++;
         } else {
             system_melden('konto_verfall', 'wartendes Konto ' . $k['id']

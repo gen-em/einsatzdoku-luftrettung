@@ -132,6 +132,12 @@ try {
   pruefe(q.zip_eintraege > 0 && q.zip_versiegelt === q.zip_eintraege,
          'Jeder Eintrag im ZIP trägt das Siegel edsk1:',
          `${q.zip_versiegelt} von ${q.zip_eintraege} Einträgen`);
+  /* R17-20 (F-R17-02, E-R17-46): nur an Herkunft oder dieselbe Adresse, mit
+     Protokolleintrag. */
+  pruefe(q.fremd_erlaubt === false, 'Freigabe an ein fremdes Konto ist abgewiesen (R17-20)',
+         'erlaubt=' + q.fremd_erlaubt);
+  pruefe(q.protokolliert >= 1, 'Die Freigabe steht im Protokoll (R17-20)',
+         q.protokolliert + ' Einträge kontobackup_freigegeben');
   pruefe(q.begleit_versiegelt === true,
          'Auch die Begleitdatei konto.json ist versiegelt',
          q.begleit_versiegelt ? 'edsk1:' : 'im Klartext');

@@ -665,6 +665,131 @@ function konto_anteile(int $userId): array
 }
 
 /* ===========================================================================
+ * DER PFEFFER VOR BCRYPT (R17-20, F-R17-01, E-R17-20, -44, -51)
+ * ======================================================================== */
+
+/**
+ * WAS DAS PROBLEM WAR. Das Anmelde-Token sind die PBKDF2-Bytes 32 bis 63 aus
+ * dem Passwort, ohne Server-Anteil, und `users.password_hash` hielt
+ * bcrypt(Token). Wer nur die Datenbank hatte, riet damit offline weiter — je
+ * Kandidat PBKDF2 und bcrypt. Ein gefundenes Passwort führte über eine
+ * Anmeldung zum Anteil und damit zu allen `pat_blob` des Kontos. Der Satz
+ * „ein Abzug allein genügt nicht mehr für einen Offline-Angriff auf das
+ * Passwort" (`CLAUDE.md` 4, `Technik.md` 3) war falsch (F-R17-01).
+ *
+ * WAS JETZT GILT. Gespeichert wird
+ *
+ *     pf1:<Anteil-Kennung>:bcrypt( HMAC-SHA256(pfeffer, Token) )
+ *     pfeffer = HMAC-SHA256(kdf_anteil, "pfeffer:<Kontonummer>")
+ *
+ * Ohne `config.php` lässt sich damit kein Kandidat mehr gegen den Hash
+ * prüfen. Der Satz oben ist für jedes Konto wahr, das sich seit Web 23.2.0
+ * angemeldet hat.
+ *
+ * WARUM EIN EIGENER SCHLÜSSEL UND NICHT DER KONTO-ANTEIL (E-R17-51). Der
+ * Konto-Anteil (`konto_anteil()`) geht an jede angemeldete Sitzung, weil der
+ * Browser mit ihm die Hülle öffnet. Wer eine Sitzung UND einen Abzug hat,
+ * könnte mit ihm weiter offline raten. Der Pfeffer hat einen anderen
+ * Ableitungszweck und verlässt den Server nie.
+ *
+ * WARUM DIE KENNUNG IM PRÄFIX STEHT. Aus demselben Grund wie bei `edka1:`:
+ * Während einer Rotation stehen zwei Anteile in `config.php`, und der Server
+ * muss wissen, mit welchem er prüft. Die Umstellung auf den neuen läuft je
+ * Konto bei der nächsten Anmeldung, mit derselben Hülle zusammen.
+ *
+ * WAS DER PREIS IST (E-R17-44). Fehlt der Anteil, zu dem ein Hash gehört,
+ * meldet sich dieses Konto nicht mehr an — auch die BetreiberIn nicht. Die
+ * Anmeldung sagt es ausdrücklich (`anteil_fehlt`), statt „Passwort falsch"
+ * zu behaupten. Der Rückweg ist „Passwort vergessen" mit dem
+ * Wiederherstellungsschlüssel und danach das Nachtragen vom Schlüsselblatt
+ * (Runbook, `Technik.md` 7).
+ *
+ * DAS DEMO-KONTO BEKOMMT KEINEN PFEFFER. Sein Passwort ist öffentlich
+ * (E-P1-19), und es bekommt auch keinen Anteil.
+ *
+ * DIE LÄNGE GEHT AUF. bcrypt liest höchstens 72 Bytes; die HMAC als Hex sind
+ * 64 Zeichen, genau so lang wie das Token vorher.
+ */
+const PFEFFER_PRAEFIX = 'pf1:';
+
+/** Der Pfeffer dieses Kontos unter einem Anteil (32 Rohbytes). */
+function pfeffer_schluessel(int $userId, string $roh): string
+{
+    return hash_hmac('sha256', 'pfeffer:' . $userId, $roh, true);
+}
+
+/** Der Rohwert des Anteils mit dieser Kennung — der aktuelle, der vorige, oder null. */
+function pfeffer_anteil_roh(string $kennung): ?string
+{
+    if ($kennung === schluessel_kennung((string)konfig('kdf_anteil', ''))) {
+        return kdf_anteil();
+    }
+    if ($kennung === schluessel_kennung((string)konfig('kdf_anteil_alt', ''))) {
+        return kdf_anteil_alt();
+    }
+    return null;
+}
+
+/**
+ * Der Wert für `users.password_hash` zu diesem Token.
+ *
+ * Mit Pfeffer, wenn ein Anteil ausgeliefert wird; sonst bcrypt allein — wie
+ * vor Web 23.2.0. Das ist der Zustand jeder Installation ohne Anteil und
+ * der Zustand während einer Abweichung (`anteil_zustand()`), in der keine
+ * neue Hülle mit Anteil entsteht.
+ */
+function anmeldehash_bilden(int $userId, string $token, bool $istDemo = false): string
+{
+    $kennung = $istDemo ? null : anteil_ausgeliefert();
+    $roh     = $kennung === null ? null : pfeffer_anteil_roh($kennung);
+    if ($kennung === null || $roh === null) {
+        return password_hash($token, PASSWORD_DEFAULT);
+    }
+    $gepfeffert = hash_hmac('sha256', $token, pfeffer_schluessel($userId, $roh));
+    return PFEFFER_PRAEFIX . $kennung . ':' . password_hash($gepfeffert, PASSWORD_DEFAULT);
+}
+
+/**
+ * Passt das Token zum gespeicherten Wert?
+ *
+ * Drei Antworten, nicht zwei: `ok`, `falsch` und `anteil_fehlt` — der Hash
+ * nennt einen Anteil, den `config.php` nicht (mehr) trägt. Die dritte darf
+ * nicht als „falsch" beim Aufrufer ankommen, sonst sieht eine verlorene
+ * Konfiguration aus wie ein falsches Passwort, für jedes Konto zugleich.
+ *
+ * Ein Wert ohne Präfix ist der alte bcrypt-Hash und wird geprüft wie bisher.
+ */
+function anmeldehash_pruefen(int $userId, string $token, string $hash): string
+{
+    if ($token === '' || $hash === '') { return 'falsch'; }
+    if (!str_starts_with($hash, PFEFFER_PRAEFIX)) {
+        return password_verify($token, $hash) ? 'ok' : 'falsch';
+    }
+    if (!preg_match('/^pf1:([0-9a-f]{8}):(.+)$/s', $hash, $m)) { return 'falsch'; }
+    $roh = pfeffer_anteil_roh($m[1]);
+    if ($roh === null) { return 'anteil_fehlt'; }
+    $gepfeffert = hash_hmac('sha256', $token, pfeffer_schluessel($userId, $roh));
+    return password_verify($gepfeffert, $m[2]) ? 'ok' : 'falsch';
+}
+
+/**
+ * Soll dieser Hash bei der nächsten gelungenen Anmeldung neu gebildet werden?
+ *
+ * Ja, wenn ein Anteil ausgeliefert wird und der Hash einen anderen (oder
+ * keinen) trägt — die stille Umstellung — oder wenn bcrypt selbst eine neue
+ * Rundenzahl will. NIE rückwärts: Wird gerade kein Anteil ausgeliefert
+ * (Abweichung), bleibt ein gepfefferter Hash gepfeffert. Er öffnet sich
+ * wieder, sobald der Anteil zurück ist.
+ */
+function anmeldehash_veraltet(string $hash, bool $istDemo = false): bool
+{
+    $soll = $istDemo ? null : anteil_ausgeliefert();
+    $hat  = preg_match('/^pf1:([0-9a-f]{8}):(.+)$/s', $hash, $m) ? $m[1] : null;
+    if ($soll !== null && $hat !== $soll) { return true; }
+    return password_needs_rehash($hat !== null ? $m[2] : $hash, PASSWORD_DEFAULT);
+}
+
+/* ===========================================================================
  * SCHREIBEN IN config.php (S10, E-S10-10)
  * ======================================================================== */
 
@@ -1238,6 +1363,13 @@ function anteil_neuanfang(): array
  *
  * Konten ohne Hülle (`pat_wrap_pw IS NULL` — eingeladen, aber nie
  * eingerichtet) zählen ebenfalls nicht: Sie haben nichts umzustellen.
+ *
+ * SEIT R17-20 ZÄHLT AUCH DER ANMELDEHASH (E-R17-20). Er trägt die Kennung
+ * seines Anteils im Präfix (`pf1:`) und wird bei derselben Anmeldung
+ * umgestellt wie die Hülle — aber in einem anderen Schritt. Steht die Hülle
+ * schon auf dem neuen, der Hash noch auf dem alten (das Schreiben im Login
+ * scheiterte), zählt das Konto als „alt": Entfernte jemand jetzt den alten
+ * Anteil, käme es nicht mehr hinein.
  */
 function anteil_zaehlung(): array
 {
@@ -1247,14 +1379,21 @@ function anteil_zaehlung(): array
         require_once __DIR__ . '/demo_lib.php';
         $demoId = demo_id();
         $st = db()->prepare(
-            'SELECT SUBSTRING(pat_wrap_pw, 1, 15) AS p, COUNT(*) AS n
+            'SELECT SUBSTRING(pat_wrap_pw, 1, 15) AS p,
+                    SUBSTRING(password_hash, 1, 13) AS h, COUNT(*) AS n
                FROM users
               WHERE pat_wrap_pw IS NOT NULL AND (? IS NULL OR id <> ?)
-              GROUP BY p');
+              GROUP BY p, h');
         $st->execute([$demoId, $demoId ?? 0]);
         foreach ($st as $r) {
             $kennung = huelle_anteil_kennung((string)$r['p']);
+            $hashKennung = preg_match('/^pf1:([0-9a-f]{8}):/', (string)$r['h'], $hm) ? $hm[1] : null;
             $n = (int)$r['n'];
+            if ($kennung !== null && $kennung === $z['kennung']
+                && $hashKennung !== null && $hashKennung !== $z['kennung']) {
+                $aus['alt'] += $n;   // Hülle neu, Hash noch alt (oben)
+                continue;
+            }
             if ($kennung === null)                    { $aus['ohne'] += $n; }
             elseif ($kennung === $z['kennung'])       { $aus['neu']  += $n; }
             elseif ($kennung === $z['kennung_alt'])   { $aus['alt']  += $n; }

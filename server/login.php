@@ -8,6 +8,7 @@ require_once __DIR__ . '/ratelimit_lib.php';
 require_once __DIR__ . '/demo_lib.php';
 require_once __DIR__ . '/totp_lib.php';
 require_once __DIR__ . '/rueckweg_lib.php';
+require_once __DIR__ . '/serverkrypto_lib.php'; // anmeldehash_pruefen() — der Pfeffer (R17-20)
 
 /* HTTPS ZUERST (P5a/AP4, E-P5a-16). Diese Seite ist die, auf der es
  * auffaellt: Ihr Sitzungscookie traegt `secure`, und ueber HTTP sendet der
@@ -743,10 +744,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !csrf_ok()) {
             $tokenNach[310000] = $tokenNach[310000] ?? (string)$_POST['token'];
         }
 
+        /* DREI AUSGAENGE STATT ZWEI (R17-20, E-R17-44). `anteil_fehlt` heisst:
+         * Der Hash ist gepfeffert, und `config.php` traegt den Anteil nicht
+         * mehr, zu dem er gehoert. Das Passwort kann richtig sein — die Seite
+         * darf deshalb nicht „Passwort pruefen" sagen. */
+        $anteilFehlt = false;
         if ($u && $u['password_hash'] !== null) {
             $konto = (int)($u['kdf_iter'] ?? 0) ?: 310000;
             $token = $tokenNach[$konto] ?? '';
-            $ok = $token !== '' && password_verify($token, $u['password_hash']);
+            $pruef = anmeldehash_pruefen((int)$u['id'], $token, (string)$u['password_hash']);
+            $ok = ($pruef === 'ok');
+            $anteilFehlt = ($pruef === 'anteil_fehlt');
         } else {
             /* Unbekannte Adresse oder Konto ohne gesetztes Passwort: trotzdem
              * eine bcrypt-Rechnung, damit dieser Zweig nicht schneller ist.
@@ -797,6 +805,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !csrf_ok()) {
              * jeher auch fuer die IP. */
             rate_erfolg('login_ip', null);
 
+            /* ---- DIE STILLE UMSTELLUNG (R17-20, E-R17-20) ------------------
+             *
+             * Ein alter Hash ohne Pfeffer, einer unter dem vorigen Anteil oder
+             * einer mit alter bcrypt-Rundenzahl wird JETZT neu gebildet — das
+             * Token liegt nur in diesem Augenblick vor. Vor `login_zugang()`,
+             * weil auch eine Anmeldung, die danach an Wartung oder Status
+             * scheitert, das richtige Passwort bewiesen hat. Scheitert das
+             * Schreiben, bleibt der alte Hash gueltig; die Anmeldung geht
+             * weiter und der naechste Versuch holt es nach. */
+            if (anmeldehash_veraltet((string)$u['password_hash'], $istDemoAdresse)) {
+                try {
+                    db()->prepare('UPDATE users SET password_hash = ? WHERE id = ?')
+                        ->execute([anmeldehash_bilden((int)$u['id'], $token, $istDemoAdresse),
+                                   (int)$u['id']]);
+                } catch (Throwable $ex) {
+                    system_melden('login', 'Anmeldehash nicht umgestellt', $ex);
+                }
+            }
+
             /* ---- ZUGANG, DANN DER ZWEITE FAKTOR (P5c/AP5, E-P5c-53) --------
              *
              * `login_zugang()` bricht mit einer eigenen Seite ab, wenn das
@@ -834,6 +861,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !csrf_ok()) {
             }
             [$error, $sperreRest] = login_code_sperre($merkmale);
             $vergessen = true;
+        } elseif ($anteilFehlt) {
+            /* DER ANTEIL FEHLT (E-R17-44). Kein Fehlversuch im Topf: Geraten
+             * werden kann hier nichts, weil ohne Anteil nichts geprueft wird.
+             * Die Systemmeldung erreicht die BetreiberIn, sobald jemand den
+             * Reiter System liest; sie nennt kein Konto. */
+            system_melden('login', 'Anmeldung ohne Server-Anteil — ein Anmeldehash '
+                        . 'nennt einen Anteil, den config.php nicht trägt (Runbook: '
+                        . '„Der Server-Anteil fehlt")');
+            $error = 'Die Anmeldung ist gerade nicht möglich: Dieser Installation fehlt '
+                   . 'der Server-Anteil, mit dem die Anmeldedaten geschützt sind. Die '
+                   . 'BetreiberIn ist informiert. Mit „Passwort vergessen?" und dem '
+                   . 'Wiederherstellungsschlüssel kommst du trotzdem hinein.';
+            $vergessen = true;
+            rate_gleiche_dauer($t0);
         } else {
             /* DREI ZAEHLUNGEN AN EINEM FEHLVERSUCH (P5a/AP6):
              *   `login`     das eingetippte Konto — 10 je 15 min

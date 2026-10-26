@@ -968,7 +968,7 @@ AGPL-3.0; siehe `docs/Lizenzen.md`.
 | `schloss-offen.svg` | Tabler Icons „lock-open" (MIT) | 5 |
 | `schloss.svg` | Tabler Icons „lock" (MIT) | 21 |
 | `server.svg` | Tabler Icons „server" (MIT) | 19 |
-| `sicherung.svg` | Tabler Icons „archive" (MIT) | 24 |
+| `sicherung.svg` | Tabler Icons „archive" (MIT) | 25 |
 | `sonstiges.svg` | Tabler Icons „dots-circle-horizontal" (MIT) | 78 |
 | `sortieren.svg` | Tabler Icons „arrows-sort" (MIT) | 4 |
 | `standort.svg` | Tabler Icons „map-pin" (MIT) | 26 |
@@ -985,7 +985,7 @@ AGPL-3.0; siehe `docs/Lizenzen.md`.
 | `winkel.svg` | Tabler Icons „chevron-down" (MIT) | 19 |
 | `zahnrad.svg` | Tabler Icons „settings" (MIT) | 2 |
 | `ziel-fern.svg` | Tabler Icons „cloud-upload" (MIT) | 1 |
-| `zurueck.svg` | Tabler Icons „arrow-left" (MIT) | 33 |
+| `zurueck.svg` | Tabler Icons „arrow-left" (MIT) | 34 |
 
 58 Dateien in `server/assets/images/symbole/`, dazu `LICENSE-tabler-icons.txt` und `LIESMICH.md`.
 **Nirgends genannt:** `luftlinie`, `reanimation`, `werkzeug`.

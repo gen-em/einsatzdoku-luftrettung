@@ -1111,9 +1111,40 @@ Datenschlüssel  = HKDF-SHA256(ikm  = PBKDF2-Hälfte (32 Byte),
 
 *Wozu.* Wer die Datenbank hat, hat Salz, Rundenzahl und Hülle — und konnte bis
 dahin offline durchprobieren (Krypto-Review K-3, Weg 1). `kdf_anteil` steht in
-`config.php` und **nicht** in der Datenbank; ein Abzug allein genügt seither
-nicht mehr. Der Server gewinnt dabei nichts: Er kennt den Anteil, nicht die
-Hälfte aus dem Passwort.
+`config.php` und **nicht** in der Datenbank; die **Hülle** öffnet ein Abzug
+allein seither nicht mehr. Der Server gewinnt dabei nichts: Er kennt den
+Anteil, nicht die Hälfte aus dem Passwort.
+
+*Und der Anmelde-Hash — der Pfeffer (seit Web 23.2.0, R17-20, F-R17-01,
+E-R17-20, -44, -51).* Bis dahin stand hier „ein Abzug allein genügt seither
+nicht mehr", und das war für das **Passwort** falsch: Das Anmelde-Token (die
+PBKDF2-Bytes 32 bis 63, ohne Anteil) lag als bcrypt-Hash in
+`users.password_hash`, und an ihm ließ sich jeder Kandidat offline prüfen.
+Ein gefundenes Passwort führte über eine Anmeldung zum Anteil. Seither:
+
+```
+pfeffer   = HMAC-SHA256(schlüssel = kdf_anteil, nachricht = "pfeffer:" + users.id)
+gespeichert: "pf1:" + Anteil-Kennung + ":" + bcrypt( HMAC-SHA256(pfeffer, Token) als Hex )
+```
+
+Ohne `config.php` lässt sich damit kein Kandidat mehr prüfen. *Warum ein
+eigener Pfeffer und nicht der Konto-Anteil* (E-R17-51): Der Konto-Anteil geht
+an jede angemeldete Sitzung; wer Sitzung und Abzug hätte, riete mit ihm
+weiter. *Wo:* `anmeldehash_bilden()`, `anmeldehash_pruefen()` (drei Antworten:
+`ok`, `falsch`, `anteil_fehlt`) und `anmeldehash_veraltet()` in
+`serverkrypto_lib.php` — jeder Schreib- und Prüfweg des Hashes geht über sie
+(Anmeldung, Notzugang, Erstvergabe und Reset, Passwortwechsel, Rundenzahl,
+`passwort_nachweis()`). *Umgestellt* wird still bei der nächsten gelungenen
+Anmeldung, in der vorhandenen Spalte — auch beim Wechsel des Anteils, dessen
+Kennung im Präfix steht; ein Hash ohne Präfix ist der alte und wird wie bisher
+geprüft. Nie rückwärts: Wird gerade kein Anteil ausgeliefert, bleibt ein
+gepfefferter Hash gepfeffert. Die Zählung „noch auf dem alten Anteil"
+(`anteil_zaehlung()`) zählt ein Konto auch dann als alt, wenn nur sein Hash es
+noch ist. *Ausgenommen* ist das Demo-Konto (öffentliches Passwort, kein
+Anteil). *Der Preis* (E-R17-44): Fehlt der Anteil, zu dem ein Hash gehört,
+meldet sich das Konto nicht mehr an — **auch die BetreiberIn nicht**. Die
+Anmeldung sagt „Server-Anteil fehlt" und schreibt eine Systemmeldung; den
+Weg zurück beschreibt das Runbook („Der Server-Anteil fehlt", Abschnitt 7).
 
 *Warum aus der Kontonummer und nicht aus dem Salz.* Passwortwechsel und Reset
 würfeln das **neue** Salz im Browser; der Anteil dazu wäre in genau dem
@@ -1291,7 +1322,15 @@ Beide Hüllen entstehen **gemeinsam mit dem Passwort** in `pw_handling.php`
 die früher in `auth_guard.php` erzwungene Ersteinrichtung entfällt seit
 Web 2.7.0 ersatzlos. Passwort-Ändern re-wrappt clientseitig **und atomar**:
 Lässt sich der Inhaltsschlüssel nicht umpacken, wird auch das Passwort nicht
-geändert. Eine Admin-Passwortvergabe existiert bewusst nicht.
+geändert. Eine Admin-Passwortvergabe **im Browser** existiert bewusst nicht —
+die Verwaltung verschickt nur den Setz-Link. *Was das nicht heißt* (F-R17-06):
+Wer den Setz-Link bekommt, setzt auf `pw_handling.php` ein neues Passwort mit
+einer Hülle, deren `key_check` stimmt; der Server prüft dort nichts anderes
+(4.99q). Bis Web 23.1.0 ließ sich die Kette mit einer Adminsitzung schließen
+— Paket an sich selbst freigeben (`pat_key_check`), Adresse umschreiben,
+Setz-Link. Seither fehlen zwei Glieder: Eine Freigabe geht nur an dieselbe
+Adresse (Abschnitt „Konto-Backups", „Wer eine Freigabe bekommen kann"), und nach einem Adresswechsel durch die Verwaltung geht
+sieben Tage kein Setz-Link hinaus (unten).
 
 **Der Wechsel der Anmeldeadresse verlangt seit Web 15.6.0 einen
 Passwortnachweis** (Backlog Nr. 128, K-7). Bis dahin schrieb
@@ -1308,10 +1347,34 @@ Logo bleiben frei —, und `session_epoch` bleibt unverändert: Es hat sich kein
 Passwort geändert.
 
 Auf beiden Wegen — Profil und Verwaltung (`admin_user.php`) — geht danach eine
-**Hinweismail an die ALTE Adresse** (`profil_adresswechsel_melden()` in
-`email_lib.php`). Sie ist die einzige Stelle, an der die Besitzerin von einem
-unterschobenen Wechsel erfährt, und geht deshalb an die alte und nicht an die
-neue: Die neue gehört im Missbrauchsfall dem anderen. Scheitert der Versand,
+**Mail an die ALTE Adresse**: im Profil die Hinweismail
+(`profil_adresswechsel_melden()` in `email_lib.php`), in der Verwaltung seit
+Web 23.2.0 eine mit der Entscheidung darin (unten). Sie ist die einzige
+Stelle, an der die Besitzerin von einem unterschobenen Wechsel erfährt, und
+geht deshalb an die alte und nicht an die neue: Die neue gehört im
+Missbrauchsfall dem anderen.
+
+**Ein Adresswechsel durch die Verwaltung ist sieben Tage unbestätigt (seit
+Web 23.2.0, R17-20, F-R17-06, E-R17-45).** Die neue Adresse gilt sofort, aber
+bis die alte zustimmt oder `ADRESSE_FRIST_S` (sieben Tage) ohne Widerspruch
+vergeht, geht **kein Setz-Link** hinaus — die Kontoseite weist „Setz-Link
+senden" mit dem Datum ab, `reset_request.php` stellt still keinen Token aus.
+Die Mail `adresswechsel_verwaltung` an die alte Adresse führt auf
+`adresse_verwaltung.php` (ohne Anmeldung, der Token ist der Nachweis): Der
+Aufruf zeigt zwei Knöpfe und ändert nichts — ein Mailprogramm, das Links
+vorab abruft, löst so nichts aus —, erst der POST antwortet. *Zustimmen*
+hebt die Frist auf. *Widersprechen* setzt die alte Adresse zurück, entwertet
+offene Setz-Links, erhöht `session_epoch` und schreibt jeder BetreiberIn die
+Mail `adresse_widerspruch` (ohne Adressen). Gespeichert in `app_state`:
+`adresse_offen:<id>` = `<bis>|<sha256 des Tokens>`, `adresse_alt:<id>` = die
+alte Adresse (zwei Zeilen, weil eine Adresse allein 190 Zeichen füllen darf);
+eine abgelaufene Frist räumt `adresse_unbestaetigt()` beim Lesen ab,
+`konto_loeschen()` beim Löschen. Wechselt die Verwaltung erneut, bleibt die
+**erste** alte Adresse stehen. Keine Abkürzung, auch nicht für die
+BetreiberIn. Dazu ein frischer Code vor Adresswechsel und Setz-Link. Code:
+`konto_lib.php` (`adresse_verwaltung_vormerken()`, `adresse_unbestaetigt()`,
+`adresse_verwaltung_antwort()`); Nachweis: Rollenprobe, Teil
+„Adresswechsel durch die Verwaltung". Scheitert der Versand,
 steht das im Protokoll (Reiter System) und der Wechsel bleibt bestehen — ihn
 zurückzurollen, weil ein Mailserver klemmt, wäre die schlechtere Wahl. Die
 **Bestätigung der neuen** Adresse (Double-Opt-In) kommt mit R37.6 in P5.
@@ -4924,14 +4987,23 @@ neuen Kennung über Blöcken unter dem alten wäre ein Kopf, der lügt.
 
 - **Herunterladen** gibt den Dump **unverschlüsselt** als `.sql.gz` — die
   Fassung für `mysql` und phpMyAdmin (E-S2-20). Sie geht an die
-  AdministratorIn, die sich eben angemeldet hat und ohnehin jede Zeile dieser
-  Datenbank sehen kann.
+  **BetreiberIn** (seit Nr. 286 die einzige Rolle mit Zugang zu dieser
+  Seite). Bis Web 23.1.0 stand hier, sie gehe an die AdministratorIn, „die
+  ohnehin jede Zeile dieser Datenbank sehen kann" — die Rolle war falsch, und
+  die Begründung galt in der Anwendung nicht: Niemand sieht dort Hashes,
+  Hüllen und `app_state`-Geheimnisse aller Konten (F-R17-08).
 - **Versiegelt herunterladen** liefert dieselbe Datei unter einer Passphrase.
   Sie wird nicht doppelt verschlüsselt, sondern Block für Block *umgesiegelt*;
   der Speicherbedarf bleibt bei einem halben Megabyte, gleich wie gross die
   Datei ist. **Eine PBKDF2 je Vorgang** (Z3), nicht eine je Block.
 - Was **von selbst** hinausgeht — der Versand aufs Backup-Ziel (4.97c) —
   ist immer die versiegelte Fassung.
+- **Beide Downloads verlangen seit Web 23.2.0 einen frischen Code**
+  (`komplett_herunterladen` in `ZF_FRISCH_HANDLUNGEN`, F-R17-08, E-R17-48).
+  Auch der versiegelte: Die Passphrase wählt, wer herunterlädt, und eine
+  übernommene Sitzung bekäme mit ihr denselben Abzug. Das Schlüsselblatt
+  verlangte den Code schon; der Abzug, der mehr enthält, verlangte ihn
+  nicht.
 
 Der Download ist die eine begründete Ausnahme vom Z3-Budget „Serveranfrage
 ≤ 30 s": Das Budget gilt der *Arbeit*, ein Download rechnet nicht, sondern
@@ -6261,6 +6333,8 @@ Die Bausteine im Einzelnen:
 | Kalendertag | `validate_lib.php` | Ein unmöglicher Tag wird abgelehnt statt still verschoben (30. Februar → 2. März). Sichtbar nur über die Warnungsabfrage der Datumsklasse. |
 | Ratenschutz | `ratelimit_lib.php` | Zählung je Konto **und** IP, in der Datenbank. Greift **vor** teuren Prüfungen (bcrypt, PBKDF2), Antwortzeit bei Misserfolg konstant. Seit Web 4.4.0 an `login`, `salt`, `reset`, `pair`; seit 13.0.0 dazu `pair_start` (jede Sitzungsanfrage je Adresse) und `pair_code` (Code-Eingabe im Web je Konto und Adresse), E-S5-16. |
 | Fester Vergleichswert | `AUTH_VERGLEICHSWERT` in `db.php` | Ein bcrypt-Hash ohne zugehöriges Geheimnis, damit auch der Zweig „Kennung unbekannt" eine Passwortprüfung rechnet. Ohne ihn beantwortet die Antwortzeit die Frage, welche Konten und Geräte es gibt. **Seine Rundenzahl muss zu `PASSWORD_DEFAULT` passen, und die wächst mit den PHP-Fassungen** — seit Web 19.1.2 prüft `login.php` das mit `password_needs_rehash()` und rechnet im Bedarfsfall einen frischen Hash statt eines Vergleichs (Backlog Nr. 93; vorher 173,7 ms Abstand, nachher 0,1 ms). Seit Web 13.0.0 daneben `GERAET_VERGLEICHSWERT` (SHA-256) für die Gerätepfade — dieselbe Aufgabe, anderes Verfahren (E-S5-42). |
+| Pfeffer vor bcrypt | `serverkrypto_lib.php` | `anmeldehash_bilden()`, `anmeldehash_pruefen()`, `anmeldehash_veraltet()` — der eine Weg für `users.password_hash`: `pf1:<Anteil-Kennung>:bcrypt(HMAC(pfeffer, Token))`, der Pfeffer aus `kdf_anteil`, nie ausgeliefert. Ab Web 23.2.0 (R17-20, F-R17-01); Einzelheiten in Abschnitt 3. |
+| Passwortnachweis | `auth_guard.php` | `passwort_nachweis($userId, $token)` und `passwort_nachweis_json()` — Topf `login` und Vergleich in einem Aufruf, für jede Stelle, die das Anmelde-Token einer angemeldeten Sitzung verlangt (sieben). Ab Web 23.2.0 (F-R17-32); vorher prüfte jede selbst, vier ohne Topf. |
 | Antwort abschließen | `antwort_abschliessen()` in `smtp.php` | Beendet die Antwort, bevor der Mailversand beginnt. Nimmt dem Versand die messbare Wirkung auf die Antwortzeit. |
 | Schlüssel-Prüfsumme | `assets/crypto.js` | Erkennt, ob ein Inhaltsschlüssel zum Konto gehört. Der Server lernt dadurch nichts über den Schlüssel — er gewinnt nur die Fähigkeit, den einen Fehler zu erkennen, der alles kostet. |
 | Schlüsselbindung | `assets/keyguard.js` | Bindet den zwischengespeicherten Inhaltsschlüssel an die Hülle, aus der er stammt, und lässt ihn nach derselben Frist ablaufen wie die Sitzung — **gleitend wie sie**: Jeder Treffer erneuert den Zeitstempel (R44, seit Web 12.9.0). Vorher war es eine feste Frist ab dem Entsperren, und genau daraus entstand der Entsperrdialog mitten in der Arbeit. **Muss vor `unlock.js` geladen werden.** |
@@ -8079,7 +8153,9 @@ Durchlass für ein Konto ohne Zweitfaktor. Dafür sind drei Zeilen
 dazugekommen: der Rollenwechsel (`action=konto&role=…` — nur ein wirklicher
 Wechsel verlangt den Code), die Anzeige des Schlüsselblatts und das
 Ausschalten des eigenen Zweitfaktors; mit SR-09 zwei weitere, Passkey
-hinzufügen und entfernen.
+hinzufügen und entfernen; mit R17-20 (Web 23.2.0) der Komplett-Download,
+beide Freigaben, der Adresswechsel und die drei Setz-Links der Kontoseite
+sowie neue Wiederherstellungscodes.
 Dass jede Handlung der Liste genau **einen** Aufruf im Code hat, zählt das
 Register (`tools/zaehlung/`, Z43).
 
@@ -8091,10 +8167,18 @@ einem Weg ohne Datei, Wert und Passwort. Das misst nicht die Matrix (sie
 schickt nur ein falsches Token), sondern die Zweitfaktorprobe in Teil 8 —
 angemeldet als Admin, ohne Datei: dieselbe eine Antwort wie unangemeldet.
 
-**Drei Platzhalter** (seit Web 20.41.0, AP4; der dritte seit R4-18):
-`{ziel}` ist ein Konto der Rolle `user`, `{admin}` eines der Rolle `admin`,
-`{support}` eines der Rolle `support` — alle drei legt die Probe an und räumt
-sie ab. Mit `{support}` ist gemessen, was bis dahin nur im Code stand: Der
+**Vier Platzhalter** (seit Web 20.41.0, AP4; der dritte seit R4-18, der
+vierte seit Web 23.2.0): `{ziel}` ist ein Konto der Rolle `user`, `{admin}`
+eines der Rolle `admin`, `{support}` eines der Rolle `support`,
+`{betreiberin}` eine **zweite** BetreiberIn — alle vier legt die Probe an und
+räumt sie ab. **Nach oben kein Griff** (R17-20, F-R17-07, Nr. 371, E-R17-47):
+Ein Admin sieht das Konto einer BetreiberIn, ändert aber nichts daran — jede
+Handlung der Kontoseite ist dort 403, vor dem Token, nicht nur Sperren,
+Löschen und Umadressieren; die Seite zeigt ihm die Felder gesperrt und keine
+Knöpfe. Bis Web 23.1.0 gab es nur die Riegel für den Rollenwechsel und die
+letzte BetreiberIn. Die Rollenprobe misst dazu mit **gültigem** Token, dass
+Status und Adresse der zweiten BetreiberIn bleiben, und dass das Demo-Konto
+Status, Grenzen und Zweitfaktor abweist (`DEMO_GESPERRT`, F-R17-42). Mit `{support}` ist gemessen, was bis dahin nur im Code stand: Der
 Support betreut auch andere Support-Konten nicht (E-P5c-99,
 `rolle_darf_support()`), und zwar schon beim Seitenaufruf, vor jeder
 Handlung (Nr. 327). Die Kontoseite
@@ -8139,7 +8223,7 @@ ist dabei gegangen: Die Installation nimmt keinen Rechtstext mehr an.
 | Protokoll: unbekannter Reiter | `GET admin_protokoll.php?r=gibtesnicht` | 403 | 404 | 404 | 404 | — |
 | Protokoll: Fristen und Archiv einstellen | `POST betrieb_server.php action=protokoll` | 403 | 403 | 403 | durch | — |
 | Komplett-Backup: die Seite | `GET admin_komplettsicherung.php` | 403 | 403 | 403 | 200 | — |
-| Komplett-Backup: herunterladen | `POST admin_komplettsicherung.php action=herunterladen` | 403 | 403 | 403 | durch | — |
+| Komplett-Backup: herunterladen | `POST admin_komplettsicherung.php action=herunterladen` | 403 | 403 | 403 | durch | ja |
 | Komplett-Backup: jetzt sichern | `POST admin_komplettsicherung.php action=jetzt_sichern` | 403 | 403 | 403 | durch | — |
 | Komplett-Backup: fortsetzen | `POST admin_komplettsicherung.php action=fortsetzen` | 403 | 403 | 403 | durch | — |
 | Komplett-Backup: abbrechen | `POST admin_komplettsicherung.php action=abbrechen` | 403 | 403 | 403 | durch | — |
@@ -8159,33 +8243,42 @@ ist dabei gegangen: Die Installation nimmt keinen Rechtstext mehr an.
 | Kontoseite: Konto einer NutzerIn | `GET admin_user.php?id={ziel}` | 403 | 200 | 200 | 200 | — |
 | Kontoseite: Konto eines Admins | `GET admin_user.php?id={admin}` | 403 | 403 | 200 | 200 | — |
 | Kontoseite: Rolle, Name, Adresse | `POST admin_user.php?id={ziel} action=konto` | 403 | 403 | durch | durch | — |
+| Kontoseite: Adresse ändern (R17-20) | `POST admin_user.php?id={ziel} action=konto&email=rollenprobe-anders@probe.invalid` | 403 | 403 | durch | durch | ja |
 | Kontoseite: Rolle wechseln | `POST admin_user.php?id={ziel} action=konto&role=support` | 403 | 403 | durch | durch | ja |
 | Kontoseite: Mengengrenzen | `POST admin_user.php?id={ziel} action=konto_grenzen` | 403 | 403 | durch | durch | — |
 | Kontoseite: Status | `POST admin_user.php?id={ziel} action=konto_status` | 403 | 403 | durch | durch | — |
-| Kontoseite: Setz-Link senden | `POST admin_user.php?id={ziel} action=pw_reset` | 403 | durch | durch | durch | — |
+| Kontoseite: Setz-Link senden | `POST admin_user.php?id={ziel} action=pw_reset` | 403 | durch | durch | durch | ja |
 | Kontoseite: Bestätigung erneut senden | `POST admin_user.php?id={ziel} action=verifikation` | 403 | durch | durch | durch | — |
 | Kontoseite: Konto-Backup erzeugen | `POST admin_user.php?id={ziel} action=sichern` | 403 | 403 | durch | durch | — |
 | Kontoseite: Konto-Backup einspielen | `POST admin_user.php?id={ziel} action=einspielen` | 403 | 403 | durch | durch | — |
-| Kontoseite: Backup freigeben | `POST admin_user.php?id={ziel} action=freigeben` | 403 | 403 | durch | durch | — |
+| Kontoseite: Backup freigeben | `POST admin_user.php?id={ziel} action=freigeben` | 403 | 403 | durch | durch | ja |
 | Kontoseite: Freigabe widerrufen | `POST admin_user.php?id={ziel} action=widerrufen` | 403 | 403 | durch | durch | — |
 | Kontoseite: Backup löschen | `POST admin_user.php?id={ziel} action=paket_loeschen` | 403 | 403 | durch | durch | — |
 | Kontoseite: Konto löschen | `POST admin_user.php?id={ziel} action=user_delete` | 403 | 403 | durch | durch | ja |
 | Kontoseite: Gerät an oder aus | `POST admin_user.php?id={ziel} action=device_toggle` | 403 | 403 | durch | durch | — |
 | Kontoseite: Gerät deaktivieren | `POST admin_user.php?id={ziel} action=device_aus` | 403 | durch | durch | durch | — |
 | Kontoseite: Gerät entkoppeln | `POST admin_user.php?id={ziel} action=device_delete` | 403 | 403 | durch | durch | — |
-| Kontoseite: Setz-Link an einen Admin | `POST admin_user.php?id={admin} action=pw_reset` | 403 | 403 | durch | durch | — |
+| Kontoseite: Setz-Link an einen Admin | `POST admin_user.php?id={admin} action=pw_reset` | 403 | 403 | durch | durch | ja |
 | Kontoseite: Zweitfaktor zurücksetzen | `POST admin_user.php?id={ziel} action=totp_zuruecksetzen` | 403 | 403 | durch | durch | ja |
 | Kontoseite: Zweitfaktor eines Admins zurücksetzen | `POST admin_user.php?id={admin} action=totp_zuruecksetzen` | 403 | 403 | 403 | durch | ja |
 | Kontoseite: Konto eines Supports | `GET admin_user.php?id={support}` | 403 | 403 | 200 | 200 | — |
-| Kontoseite: Setz-Link an einen Support | `POST admin_user.php?id={support} action=pw_reset` | 403 | 403 | durch | durch | — |
+| Kontoseite: Setz-Link an einen Support | `POST admin_user.php?id={support} action=pw_reset` | 403 | 403 | durch | durch | ja |
 | Kontoseite: Bestätigung an einen Support | `POST admin_user.php?id={support} action=verifikation` | 403 | 403 | durch | durch | — |
 | Kontoseite: Gerät eines Supports deaktivieren | `POST admin_user.php?id={support} action=device_aus` | 403 | 403 | durch | durch | — |
 | Kontoseite: Zweitfaktor eines Supports zurücksetzen | `POST admin_user.php?id={support} action=totp_zuruecksetzen` | 403 | 403 | 403 | durch | ja |
+| Kontoseite: Konto einer zweiten BetreiberIn (R17-20) | `GET admin_user.php?id={betreiberin}` | 403 | 403 | 200 | 200 | — |
+| Kontoseite: BetreiberIn — Name, Adresse | `POST admin_user.php?id={betreiberin} action=konto` | 403 | 403 | 403 | durch | — |
+| Kontoseite: BetreiberIn — Status | `POST admin_user.php?id={betreiberin} action=konto_status` | 403 | 403 | 403 | durch | — |
+| Kontoseite: BetreiberIn — Mengengrenzen | `POST admin_user.php?id={betreiberin} action=konto_grenzen` | 403 | 403 | 403 | durch | — |
+| Kontoseite: BetreiberIn — Setz-Link | `POST admin_user.php?id={betreiberin} action=pw_reset` | 403 | 403 | 403 | durch | ja |
+| Kontoseite: BetreiberIn — Konto-Backup erzeugen | `POST admin_user.php?id={betreiberin} action=sichern` | 403 | 403 | 403 | durch | — |
+| Kontoseite: BetreiberIn — Gerät an oder aus | `POST admin_user.php?id={betreiberin} action=device_toggle` | 403 | 403 | 403 | durch | — |
+| Kontoseite: BetreiberIn — Konto löschen | `POST admin_user.php?id={betreiberin} action=user_delete` | 403 | 403 | 403 | durch | ja |
 | Konto-Backups: die Seite | `GET admin_sicherungen.php` | 403 | 403 | 200 | 200 | — |
 | Konto-Backups: Regeln | `POST admin_sicherungen.php action=regeln` | 403 | 403 | durch | durch | — |
 | Konto-Backups: alle sichern | `POST admin_sicherungen.php action=sichern_alle` | 403 | 403 | durch | durch | — |
 | Konto-Backups: einspielen | `POST admin_sicherungen.php action=einspielen` | 403 | 403 | durch | durch | — |
-| Konto-Backups: freigeben | `POST admin_sicherungen.php action=freigeben` | 403 | 403 | durch | durch | — |
+| Konto-Backups: freigeben | `POST admin_sicherungen.php action=freigeben` | 403 | 403 | durch | durch | ja |
 | Konto-Backups: Freigabe widerrufen | `POST admin_sicherungen.php action=widerrufen` | 403 | 403 | durch | durch | — |
 | Konto-Backups: Paket löschen | `POST admin_sicherungen.php action=paket_loeschen` | 403 | 403 | durch | durch | — |
 | Konto-Backups: Ordner löschen | `POST admin_sicherungen.php action=ordner_loeschen` | 403 | 403 | durch | durch | — |
@@ -8224,6 +8317,7 @@ ist dabei gegangen: Die Installation nimmt keinen Rechtstext mehr an.
 | Profil: Zweitfaktor ausschalten (nur ohne Pflicht) | `POST einstellungen.php?t=profil action=zf_ausschalten` | durch | durch | durch | durch | ja |
 | Profil: Passkey hinzufügen (SR-09) | `POST api/passkey_anlegen.php` | durch | durch | durch | durch | ja |
 | Profil: Passkey entfernen (SR-09) | `POST einstellungen.php?t=profil action=passkey_entfernen` | durch | durch | durch | durch | ja |
+| Profil: neue Wiederherstellungscodes (R17-20) | `POST einstellungen.php?t=profil action=zf_codes_neu` | durch | durch | durch | durch | ja |
 | Betrieb · Jobs: die Seite | `GET betrieb_jobs.php` | 403 | 403 | 403 | 200 | — |
 | Betrieb · Jobs: Auslöser-Token neu | `POST betrieb_jobs.php action=jobs_token_neu` | 403 | 403 | 403 | durch | — |
 | Betrieb · Jobs: Kettentoken neu (Web 23.1.0) | `POST betrieb_jobs.php action=kette_token_neu` | 403 | 403 | 403 | durch | — |
@@ -8386,7 +8480,7 @@ die Anwendung deshalb noch einmal nach dem Code, wenn der letzte älter als
 | | |
 |---|---|
 | frisch | `$_SESSION['zf_frisch_bis']`, gesetzt nach einem App- oder Wiederherstellungscode — seit Web 21.10.0 auch nach einem Passkey (E-SR-32) — im Code-Schritt von `login.php` und auf der Bestätigungsseite; `ZF_FRISCH_S` = 900. Eine Anmeldung über ein gemerktes Gerät und der Rückweg setzen nichts, `anmeldung_vollenden()` räumt eine alte Frist weg. Ein Konto **ohne** Zweitfaktor hat nichts zu bestätigen: `zweitfaktor_frisch()` ist dort ein Durchlass |
-| die Liste | `ZF_FRISCH_HANDLUNGEN` in `db.php`, neben den Rollen: `schluessel` (alle sieben `schluessel_*`-Griffe in `betrieb_server.php`), `schluesselblatt` (die Anzeige, vor der ersten Ausgabe), `rollenwechsel`, `totp_zuruecksetzen` und `user_delete` in `admin_user.php`, `totp_ausschalten` in `einstellungen.php` (nur, wo Ausschalten geht — nicht bei einer Pflichtrolle), seit Web 21.10.0 `passkey_anlegen` (`api/passkey_anlegen.php` — der erste Endpunkt der Liste) und `passkey_entfernen` (`einstellungen.php`, E-SR-31). Je Handlung die Seite und die Karte des Rücksprungs, beim Blatt dazu das Ziel von „Abbrechen" |
+| die Liste | `ZF_FRISCH_HANDLUNGEN` in `db.php`, neben den Rollen: `schluessel` (alle sieben `schluessel_*`-Griffe in `betrieb_server.php`), `schluesselblatt` (die Anzeige, vor der ersten Ausgabe), `rollenwechsel`, `totp_zuruecksetzen` und `user_delete` in `admin_user.php`, `totp_ausschalten` in `einstellungen.php` (nur, wo Ausschalten geht — nicht bei einer Pflichtrolle), seit Web 21.10.0 `passkey_anlegen` (`api/passkey_anlegen.php` — der erste Endpunkt der Liste) und `passkey_entfernen` (`einstellungen.php`, E-SR-31); seit Web 23.2.0 (R17-20) `totp_codes_neu` (`einstellungen.php`, F-R17-43), `komplett_herunterladen` (`admin_komplettsicherung.php`, beide Arten, F-R17-08), `freigeben` und `freigeben_ablage` (Kontoseite und Konto-Backups, F-R17-02), `adresswechsel_verwaltung` und `setzlink` (`admin_user.php`, F-R17-06). Je Handlung die Seite und die Karte des Rücksprungs, beim Blatt dazu das Ziel von „Abbrechen" |
 | das Tor | `zweitfaktor_frisch_verlangen($handlung)` in `auth_guard.php`, **vor** `csrf_check()` wie ein Rollentor (E-P5c-85). Nicht frisch: Seiten bekommen 303 auf `zweitfaktor.php?bestaetigen=1&zurueck=…` (nach einem POST mit `nochmal=1`), die API 403 JSON `zweitfaktor_frisch`. Ein Name, der nicht in der Liste steht, wirft — ein Tippfehler darf kein Durchlass sein |
 | die Bestätigung | `zweitfaktor.php?bestaetigen=1`: Codefeld wie im Code-Schritt (App-Code oder Wiederherstellungscode, seit Web 21.10.0 daneben „Mit Passkey bestätigen" mit eigener Herausforderung in `$_SESSION['passkey_best']`; Topf `totp` mit dem Merkmal des Kontos, fünf Fehlversuche sperren), bei Erfolg die Frist und 303 auf `zurueck`; nach einem POST steht in der Karte „Code bestätigt — bitte die Handlung noch einmal auslösen." Die Handlung wird **nicht nachgespielt** (ein gespeicherter POST samt Token wäre ein Zwischenspeicher, der beim nächsten Umbau falsch abgespielt wird). Steht in `WARTUNG_AUSNAHMEN` |
 | der Rücksprung | `zweitfaktor_zurueck()`: nur ein relativer Pfad auf eine Seite der Liste, die Abfrage nur mit harmlosen Zeichen (sonst fällt sie weg); alles andere wird `index.php` — sonst wäre die Seite ein offener Umleiter mit dem Vertrauen dieser Anwendung |
@@ -9357,7 +9451,13 @@ Sicherheitsfrist) und wartende nach der eingestellten Frist (Vorgabe 30 Tage,
 `konto_status_setzen()` beim Übergang nach `wartet` jetzt `bestaetigt_am` mit.
 Gelöscht wird über **`konto_loeschen()`** und nicht per `DELETE` — die Kaskade
 erreicht die GPS-Spuren nicht und die `app_state`-Zeilen `mengen:<id>` erst
-recht nicht (4.99l). Die letzte Mail geht **nur an die Wartenden**.
+recht nicht (4.99l). Die letzte Mail geht **nur an die Wartenden** — und seit
+Web 23.2.0 erst **nach** der Löschung: `konto_loeschen()` räumt seither auch
+die Mailwarteschlange der Adresse ab (`mail_konto_entfernen()`, F-R17-21; der
+Docblock verlangte das seit jeher, es gab keinen Aufrufer), und eine vorher
+eingereihte, noch wartende Abschiedsmail ginge mit. Dazu nimmt
+`konto_loeschen()` die zwei `app_state`-Zeilen eines offenen Adresswechsels
+mit (`adresse_offen:<id>`, `adresse_alt:<id>`).
 
 **Die Freischaltung** ist der vorhandene Knopf in der Statuskarte der
 Kontoseite; neu ist die Mail `freigeschaltet` beim Übergang **`wartet` →
@@ -9543,7 +9643,10 @@ Der Weg im Browser:
 2. damit `pat_wrap_pw` öffnen → der **Inhaltsschlüssel** (ck)
 3. **ck gegen `pat_key_check` halten** — die Wache
 4. neuen Code erzeugen (`newRecoveryCode`), ck damit neu verpacken
-5. `api/schluessel_erneuern.php` → schreibt **genau** `pat_wrap_rc`
+5. `api/schluessel_erneuern.php` → schreibt **genau** `pat_wrap_rc`, nach
+   `passwort_nachweis()` (Ratentopf `login`), und reiht seit Web 23.2.0 die
+   Mail `schluessel_erneuert` an die Kontoadresse ein (F-R17-10: Wer Passwort
+   und Sitzung erbeutet hatte, ersetzte den Rückweg sonst still)
 6. den Code anzeigen
 
 **Schritt 3 ist die Stelle, an der Daten verlorengehen könnten.** Öffnete
@@ -9668,7 +9771,19 @@ dann einen offenen Einladungslink entwerten.
 den Link hat, hat Zugang zum Postfach der neuen Adresse — genau das ist der
 Nachweis. Eine Anmeldung wäre gerade dann unmöglich, wenn sie am meisten hülfe.
 
+**Der Wechsel durch die Verwaltung geht den anderen Weg** (seit Web 23.2.0,
+R17-20): Er schreibt sofort, fragt die **alte** Adresse und sperrt bis dahin
+den Setz-Link — Abschnitt 3, „Ein Adresswechsel durch die Verwaltung ist
+sieben Tage unbestätigt". Die Seite dazu ist `adresse_verwaltung.php`, ohne
+Anmeldung aus demselben Grund wie diese.
+
 #### Die Selbstlöschung
+
+**Der Nachweis ist das abgeleitete Token** (seit Web 23.2.0, F-R17-67). Bis
+dahin schickte die Karte das Passwort selbst, und der Server verglich es mit
+bcrypt des **Tokens** — die Löschung ging nie. Jetzt leitet der Browser das
+Token ab (ein Zuhörer am Fenster in der Erfassungsphase, vor `confirm.js`),
+und `passwort_nachweis()` prüft mit Ratentopf.
 
 `gesperrt` mit dem Grund `selbstloeschung`, `loeschung_am` = jetzt + **30
 Tage**. **Die Rücknahme ist die Anmeldung** — `login.php` setzt den Status
@@ -12834,6 +12949,36 @@ Nr. 140, seit S10 mit 6a, dass das **Schluesselblatt** erreichbar bleibt —
 die Lage, in der man es braucht, ist eine Wartungslage —, und seit Web 21.1.0
 mit 6b Komplett-Backup und Backup-Ziele samt Balken).
 
+**Der Server-Anteil fehlt** (seit Web 23.2.0, E-R17-44). *Woran man es
+sieht:* Die Anmeldung sagt „Dieser Installation fehlt der Server-Anteil …"
+statt „Passwort falsch", für jedes Konto, das sich seit Web 23.2.0
+angemeldet hat, und im Reiter System steht „Anmeldung ohne Server-Anteil".
+*Warum:* Der Anmelde-Hash trägt seither einen Pfeffer aus `kdf_anteil`
+(Abschnitt 3); fehlt in `config.php` der Anteil mit der Kennung, die der
+Hash nennt, lässt sich das Passwort nicht prüfen. Das trifft **auch die
+BetreiberIn** — der Weg über „anmelden und vom Blatt nachtragen", den es bis
+Web 23.1.0 gab, ist damit zu. *Was zu tun ist:*
+
+1. Prüfen, ob `config.php` überhaupt die richtige ist (Wiederanlaufpaket,
+   Abschnitt 6.3a). Ist sie es, und nur `kdf_anteil` fehlt oder ist falsch:
+2. Die BetreiberIn setzt ihr Passwort über **„Passwort vergessen"** neu —
+   Mail an die eigene Adresse, im Browser der Wiederherstellungsschlüssel.
+   Der neue Hash entsteht ohne Pfeffer, weil kein Anteil ausgeliefert wird;
+   die neue Hülle ohne Anteil (`edk1:`).
+3. Anmelden, **Betrieb → Server → Schlüssel → „Nachtragen vom Blatt"**: den
+   Anteil vom Schlüsselblatt eintragen. Er wird gegen die Kennung in
+   `app_state` geprüft, bevor etwas geschrieben wird.
+4. Danach melden sich alle übrigen Konten **ohne Reset** wieder an — ihr Hash
+   und ihre Hülle nennen genau diesen Anteil. Das Konto der BetreiberIn
+   stellt bei der nächsten Anmeldung von selbst auf den Anteil um.
+5. Ohne Schlüsselblatt bleibt nur „Anteil neu anfangen": Dann braucht
+   **jedes** Konto „Passwort vergessen" und seinen Wiederherstellungsschlüssel
+   — kein Datenverlust, aber ein Passwort-Reset für alle (`CLAUDE.md` 4).
+
+Geht die Mail nicht hinaus (SMTP-Zugang stand in derselben verlorenen
+`config.php`), ist es kein Anteil-Fall, sondern ein Wiederanlauf mit dem
+Wiederanlaufpaket.
+
 **Die Integritätswache ist rot.** *(Bis R17-19 stand hier ein Verweis auf
 den Abschnitt „Wenn sie rot wird" in `tools/integritaetswache/LIESMICH.md`,
 den es nie gab, und die Frage „Steht `main` weiter als die Auslieferung?" —
@@ -13958,6 +14103,25 @@ Die dritte Zeile ist der Befund aus Prüfschritt **P6**: Konten mit
 und erster Passwortvergabe. Sie haben keinen Inhaltsschlüssel und damit auch
 keine geschützten Angaben; die Sperre aus E20 hätte dort keinen Zweck, weil ihre
 Begründung nicht zutrifft.
+
+**Wer eine Freigabe bekommen kann (seit Web 23.2.0, R17-20, F-R17-02,
+E-R17-46).** Nur das Herkunftskonto selbst (dieselbe Kennung) oder ein Konto
+mit **derselben Adresse**, wie sie in der Begleitdatei des Ordners steht —
+der Zweck ist „Konto neu aufgesetzt". Bis dahin ging jedes Paket an jedes
+Konto, das eigene des Admins eingeschlossen, und das Zielkonto bekam beim
+Einlösen den entsiegelten Bestand des Herkunftskontos (alles außer
+`pat_blob`), ohne Protokoll, ohne Mail. Geprüft wird an zwei Stellen,
+`edbak_freigabe_erlaubt()`: beim Freigeben und beim Einlösen
+(`edbak_freigabe_fuer()`), so dass auch eine ältere Freigabe an ein fremdes
+Konto wirkungslos ist. Freigegeben wird nur über `edbak_freigabe_erteilen()`
+— Regel, abgetippte Zieladresse, Protokolleintrag `kontobackup_freigegeben`
+(Reiter Sicherung), Mail `kontobackup_freigegeben` an Ziel- und, wenn sie
+abweicht, Herkunftsadresse —, aus beiden Seiten (Kontoseite und
+Konto-Backups), mit frischem Code. Die Auswahl im Dialog
+(`edbak_freigabe_zielkonten()`) zeigt nur Konten, an die es geht; ohne solche
+steht kein Knopf da. Eine Begleitdatei, die sich nicht lesen lässt, nennt
+keine Adresse; dann geht nur das Herkunftskonto. Nachweis: Freigabeprobe
+(Gegenfall an ein fremdes Konto, Protokolleintrag).
 
 **Der Nutzerweg** (`api/adminbackup_freigabe.php` + `einstellungen.php?t=backup`)
 läuft vollständig im Browser: Wiederherstellungsschlüssel →

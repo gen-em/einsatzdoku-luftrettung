@@ -1203,6 +1203,118 @@ function edbak_freigeben(string $kennung, string $datei, int $zielUserId): bool
     return edbak_begleit_schreiben($kennung, $begleit);
 }
 
+/**
+ * Darf das Paket dieses Ordners an dieses Konto freigegeben werden?
+ * (R17-20, F-R17-02, E-R17-46)
+ *
+ * WAS DAS PROBLEM WAR. Ein Admin gab das Paket JEDES Kontos an JEDES Konto
+ * frei, sein eigenes eingeschlossen — ohne Protokoll, ohne Mail, ohne
+ * frischen Code. Das Zielkonto bekam beim Einlösen den entsiegelten Bestand
+ * des Herkunftskontos: Ort, Zeit, Klinik, Reanimation, Besatzung,
+ * Diensttagsnotizen. `pat_blob` blieb zu, alles andere nicht. Genau den
+ * Abzug, den Nr. 286 der Rolle admin genommen hat.
+ *
+ * WAS JETZT GILT. Der Zweck der Freigabe ist „Konto neu aufgesetzt" — also
+ * nur an das Herkunftskonto selbst (dieselbe Kennung) oder an ein Konto mit
+ * DERSELBEN Adresse, wie sie in der Begleitdatei steht. Geprüft beim
+ * Freigeben UND beim Einlösen (`edbak_freigabe_fuer()`): So werden auch
+ * Freigaben wirkungslos, die vor Web 23.2.0 an ein fremdes Konto gingen.
+ *
+ * PREIS: Wer sich mit einer neuen Adresse neu registriert hat, bekommt das
+ * Paket erst, wenn die Verwaltung die Adresse angeglichen hat — und ein
+ * Adresswechsel durch die Verwaltung gilt erst nach der Frist (E-R17-45).
+ * Eine Begleitdatei, die sich nicht lesen lässt, nennt keine Adresse; dann
+ * geht nur das Herkunftskonto selbst.
+ */
+function edbak_freigabe_erlaubt(string $kennung, array $ziel): bool
+{
+    if (!edbak_kennung_gueltig($kennung)) { return false; }
+    if ((string)($ziel['account_key'] ?? '') === $kennung) { return true; }
+    $herkunft = trim((string)(edbak_begleit_lesen($kennung)['email'] ?? ''));
+    $adresse  = trim((string)($ziel['email'] ?? ''));
+    return $herkunft !== '' && $adresse !== '' && strcasecmp($herkunft, $adresse) === 0;
+}
+
+/**
+ * Die Freigabe erteilen — der EINE Weg für beide Seiten (`admin_user.php`,
+ * `admin_sicherungen.php`). `[ok, Meldung]`.
+ *
+ * Bis Web 23.1.0 stand dieser Ablauf zweimal wortgleich in den Seiten; die
+ * Regel, das Protokoll und die Mail dreimal zu ergänzen, hieße, beim
+ * nächsten Mal eine davon zu vergessen.
+ *
+ * DIE MAIL GEHT AN HERKUNFTS- UND ZIELADRESSE (F-R17-02) — in aller Regel
+ * dieselbe, dann eine. Sie ist die Spur, die eine Person ohne Zugang zum
+ * Protokoll bekommt. Der frische Code steht in den Seiten, vor dem Token
+ * (`zweitfaktor_frisch_verlangen('freigeben')`), wie bei jeder Handlung der
+ * Liste.
+ */
+function edbak_freigabe_erteilen(string $kennung, string $datei, int $zielId,
+                                 string $bestaetigung): array
+{
+    $ziel  = edbak_ziel_konto($zielId);
+    $paket = edbak_paket_kopf_lesen($kennung, $datei);
+    if (!$ziel) {
+        return [false, 'Zielkonto nicht gefunden.'];
+    }
+    if (!$paket) {
+        return [false, 'Das Paket liess sich nicht lesen.'];
+    }
+    if (!edbak_freigabe_erlaubt($kennung, $ziel)) {
+        return [false, 'Freigeben lässt sich ein Paket nur an das Konto, von dem es stammt, '
+                     . 'oder an ein Konto mit derselben E-Mail-Adresse — es wurde nichts '
+                     . 'freigegeben.'];
+    }
+    if (!edbak_bestaetigung_passt($bestaetigung, (string)$ziel['email'])) {
+        return [false, 'Die eingegebene E-Mail-Adresse stimmt nicht mit der des '
+                     . 'Zielkontos überein — es wurde nichts freigegeben.'];
+    }
+    if (!edbak_freigeben($kennung, $datei, (int)$ziel['id'])) {
+        return [false, 'Die Freigabe liess sich nicht speichern.'];
+    }
+
+    $herkunft = trim((string)(edbak_begleit_lesen($kennung)['email'] ?? ''));
+    require_once __DIR__ . '/protokoll_lib.php';
+    protokoll('sicherung', 'kontobackup_freigegeben',
+        'Konto-Backup ' . $datei . ' für ' . $ziel['email'] . ' freigegeben '
+        . '(aus dem Ordner ' . $kennung . ')',
+        ['kennung' => $kennung, 'datei' => $datei], (int)$ziel['id']);
+
+    require_once __DIR__ . '/mail_lib.php';
+    $link = app_url('/einstellungen.php?t=backup');
+    $an = [(string)$ziel['email']];
+    if ($herkunft !== '' && strcasecmp($herkunft, (string)$ziel['email']) !== 0) {
+        $an[] = $herkunft;
+    }
+    foreach ($an as $adresse) {
+        mail_einreihen('kontobackup_freigegeben', $adresse,
+                       ['link' => $link, 'ziel' => (string)$ziel['email']]);
+    }
+    return [true, 'Freigegeben für ' . $ziel['email'] . '. Die NutzerIn sieht das '
+                . 'Paket jetzt im eigenen Backup-Bereich und spielt es dort mit ihrem '
+                . 'Wiederherstellungsschlüssel ein; eine Mail geht an '
+                . implode(' und ', $an) . '.'];
+}
+
+/**
+ * Die Konten, an die das Paket dieses Ordners freigegeben werden darf —
+ * für die Auswahl im Dialog. Dieselbe Regel wie `edbak_freigabe_erlaubt()`;
+ * die Auswahl zeigt nichts an, was das Freigeben danach abweist.
+ *
+ * @return list<array{id:int, email:string}>
+ */
+function edbak_freigabe_zielkonten(string $kennung): array
+{
+    if (!edbak_kennung_gueltig($kennung)) { return []; }
+    $herkunft = trim((string)(edbak_begleit_lesen($kennung)['email'] ?? ''));
+    $st = db()->prepare('SELECT id, email FROM users
+                          WHERE account_key = ? OR (? <> \'\' AND LOWER(email) = LOWER(?))
+                          ORDER BY email');
+    $st->execute([$kennung, $herkunft, $herkunft]);
+    return array_map(static fn(array $r): array => ['id' => (int)$r['id'], 'email' => (string)$r['email']],
+                     $st->fetchAll(PDO::FETCH_ASSOC));
+}
+
 /** Freigabe widerrufen, solange sie nicht eingelöst wurde (Akzeptanzkriterium 53). */
 function edbak_freigabe_widerrufen(string $kennung): bool
 {
@@ -1225,12 +1337,18 @@ function edbak_freigabe_fuer(int $userId): ?array
 {
     $wurzel = edbak_wurzel();
     if (!is_dir($wurzel)) { return null; }
+    /* DIESELBE REGEL WIE BEIM FREIGEBEN (R17-20, E-R17-46): Eine Freigabe,
+     * die vor Web 23.2.0 an ein fremdes Konto ging, liegt noch in der
+     * Begleitdatei; sie wird hier wirkungslos statt eingelöst. */
+    $ich = edbak_ziel_konto($userId);
+    if (!$ich) { return null; }
     foreach (scandir($wurzel) ?: [] as $n) {
         if (!edbak_kennung_gueltig($n) || !is_dir($wurzel . '/' . $n)) { continue; }
         $begleit = edbak_begleit_lesen($n);
         $f = $begleit['freigabe'] ?? null;
         if (!is_array($f) || (int)($f['ziel_user'] ?? 0) !== $userId) { continue; }
         if (!empty($f['eingeloest'])) { continue; }
+        if (!edbak_freigabe_erlaubt($n, $ich)) { continue; }
         if (!isset($f['datei']) || !is_file(edbak_ordner($n) . '/' . $f['datei'])) { continue; }
         return ['account_key' => $n, 'datei' => (string)$f['datei'],
                 'erstellt' => $f['erstellt'] ?? null,

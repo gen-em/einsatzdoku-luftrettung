@@ -28,9 +28,11 @@ declare(strict_types=1);
  *     sie nicht. So läuft die Probe gefahrlos über „Stand löschen",
  *     „jetzt versenden" und „jetzt sichern".
  *
- * DREI PLATZHALTER (AP4, der dritte seit R4-18): `{ziel}` ist ein Konto der
- * Rolle `user`, `{admin}` eines der Rolle `admin`, `{support}` eines der
- * Rolle `support`. Die Kontoseite fragt die Rolle zweimal — ob die
+ * VIER PLATZHALTER (AP4, der dritte seit R4-18, der vierte seit R17-20):
+ * `{ziel}` ist ein Konto der Rolle `user`, `{admin}` eines der Rolle
+ * `admin`, `{support}` eines der Rolle `support`, `{betreiberin}` eine
+ * zweite BetreiberIn — an ihr hat ein Admin keinen schreibenden Griff
+ * (F-R17-07, Nr. 371). Die Kontoseite fragt die Rolle zweimal — ob die
  * Angemeldete das Zielkonto betreuen darf, dann je Handlung —, und beide
  * Tore stehen in der Matrix. `{support}` misst, dass der Support andere
  * Support-Konten nicht betreut (E-P5c-99); bis R4-18 stand das nur im Code
@@ -82,6 +84,14 @@ declare(strict_types=1);
  * `api/rueckweg_anlegen.php`, den alle vier Rollen erreichen; dazu die
  * Wirkung: Jede Rolle legt mit gültigem Formular- UND Anmelde-Token ein
  * Paar ab.
+ *
+ * SEIT R17-20 DREI WEITERE WIRKUNGEN, mit gültigem Token: Das Demo-Konto
+ * weist Status, Grenzen und Zweitfaktor ab (F-R17-42; die Probe zeigt
+ * `DEMO_K_USER` für ihre Laufzeit auf ein eigenes Konto); eine zweite
+ * BetreiberIn bleibt unverändert, wenn ein Admin sie sperren oder
+ * umadressieren will (F-R17-07); ein Adresswechsel durch die Verwaltung ist
+ * unbestätigt, sperrt den Setz-Link, und die Seite der alten Adresse
+ * widerspricht über einen Knopf, nicht über den Aufruf (F-R17-06, E-R17-45).
  *
  * WAS SIE NICHT PRÜFT: ob eine Handlung mit gültigem Token gelingt, außer
  * den Wirkungen oben (das tun Bedienwege und die Proben der Sache), und die
@@ -268,6 +278,20 @@ $zielMail = 'rollenprobe-ziel@probe.invalid';
 $zielId   = zielkonto('ziel', 'user');
 $adminZiel = zielkonto('zieladmin', 'admin');
 $supportZiel = zielkonto('zielsupport', 'support');
+/* EINE ZWEITE BETREIBERIN (R17-20, F-R17-07, Nr. 371): Der Platzhalter
+ * `{betreiberin}` misst, dass ein Admin an ihrem Konto keinen schreibenden
+ * Griff hat. Ein eigenes Zielkonto, nicht das der Rolle — sonst stuende die
+ * Probe auf ihrem eigenen Konto, und dort greifen andere Riegel. */
+$betreiberinZiel = zielkonto('zielbetreiberin', 'betreiberin');
+/* EIN DEMO-KONTO FUER DIE PROBE (R17-20, F-R17-42): `demo_id()` liest
+ * `DEMO_K_USER`; die Probe zeigt die Marke fuer ihre Laufzeit auf ein
+ * eigenes Konto und stellt sie im Schluss zurueck. Ein vorhandenes
+ * Demo-Konto zu benutzen hiesse, an dessen Bestand zu haengen — und ohne
+ * eines waere der Teil still uebersprungen. */
+require_once $srv . '/demo_lib.php';
+$demoZiel = zielkonto('demo', 'user');
+$demoMarkeVorher = app_state_lesen(DEMO_K_USER);
+app_state_setzen(DEMO_K_USER, (string)$demoZiel);
 $neuId    = zielkonto('neu', 'user', 'unbestaetigt');
 $pdo->prepare("INSERT INTO devices (user_id, device_id, api_key_hash, label, active)
                VALUES (?, ?, '', 'Rollenprobe', 1)")
@@ -279,10 +303,15 @@ try {
     $mailVorher = (int)$pdo->query('SELECT COALESCE(MAX(id), 0) FROM mail_warteschlange')->fetchColumn();
 } catch (Throwable) { $mailVorher = null; }
 $platzhalter = ['{ziel}' => (string)$zielId, '{admin}' => (string)$adminZiel,
-                '{support}' => (string)$supportZiel];
+                '{support}' => (string)$supportZiel, '{betreiberin}' => (string)$betreiberinZiel];
 
-register_shutdown_function(static function () use ($pdo, $konten, $zielId, $adminZiel, $supportZiel, $neuId, $mailVorher): void {
-    $ids = array_merge(array_column($konten, 'id'), [$zielId, $adminZiel, $supportZiel, $neuId]);
+register_shutdown_function(static function () use ($pdo, $konten, $zielId, $adminZiel, $supportZiel,
+                                                   $neuId, $mailVorher, $betreiberinZiel, $demoZiel,
+                                                   $demoMarkeVorher): void {
+    if ($demoMarkeVorher === null) { app_state_loeschen(DEMO_K_USER); }
+    else { app_state_setzen(DEMO_K_USER, $demoMarkeVorher); }
+    $ids = array_merge(array_column($konten, 'id'),
+                       [$zielId, $adminZiel, $supportZiel, $neuId, $betreiberinZiel, $demoZiel]);
     $in = implode(',', array_map('intval', $ids));
     foreach ($konten as $k) { @unlink(sitzung_ort() . '/sess_' . $k['sid']); }
     try {
@@ -292,7 +321,8 @@ register_shutdown_function(static function () use ($pdo, $konten, $zielId, $admi
     if ($mailVorher !== null) {
         try {
             $pdo->exec("DELETE FROM mail_warteschlange WHERE id > $mailVorher
-                           AND schluessel IN ('passwort_neu', 'registrierung_erneut')");
+                           AND schluessel IN ('passwort_neu', 'registrierung_erneut',
+                                              'adresswechsel_verwaltung', 'adresse_widerspruch')");
         } catch (Throwable) {}
     }
     /* Geräte und Setz-Token hängen per ON DELETE CASCADE an `users`. */
@@ -934,6 +964,103 @@ if (!db_hat_spalte($pdo, 'users', 'rw_seit')) {
         pruef($ok, "Rückweg ablegen · $rolle", 'HTTP ' . $r['code'] . ', Paar ' . $da);
     }
     pruef($gelungen === count($konten), "$gelungen von " . count($konten) . ' Rollen');
+}
+
+/* ---- Die Wirkung der Riegel aus R17-20 --------------------------------------
+ *
+ * Die Matrix misst mit FALSCHEM Token: `403` heisst Rollentor, `durch` heisst
+ * „erreicht". Was der Riegel des Demo-Kontos tut, sieht sie so nicht — er
+ * steht HINTER dem Token. Hier mit gueltigem Token, als Admin:
+ *   - Demo-Konto (F-R17-42): Status, Grenzen und Zweitfaktor werden
+ *     abgewiesen, und die Zeile bleibt, wie sie war. Bis Web 23.1.0 sperrte
+ *     ein POST von Hand das oeffentliche Konto.
+ *   - Zweite BetreiberIn (F-R17-07): Status und Adresse bleiben, auch mit
+ *     gueltigem Token und frischem Code — der Riegel steht vor beidem. */
+echo "\nRiegel mit gültigem Token (R17-20)\n";
+if (isset($konten['admin'])) {
+    $a = $konten['admin'];
+    $vorher = $pdo->query('SELECT status, grenze_einsaetze FROM users WHERE id = ' . $demoZiel)
+                  ->fetch(PDO::FETCH_ASSOC);
+    foreach ([['konto_status', ['status' => 'gesperrt', 'grund' => 'Rollenprobe']],
+              ['konto_grenzen', ['grenze_einsaetze' => '7', 'grenze_mb' => '', 'backup_pakete' => '']],
+              ['totp_zuruecksetzen', []]] as [$handlung, $felder]) {
+        $r = hole('admin_user.php?id=' . $demoZiel, $a['sid'],
+                  ['csrf' => $a['csrf'], 'action' => $handlung, 'id' => (string)$demoZiel] + $felder);
+        $nach = $pdo->query('SELECT status, grenze_einsaetze FROM users WHERE id = ' . $demoZiel)
+                    ->fetch(PDO::FETCH_ASSOC);
+        pruef($r['code'] === 200 && $nach == $vorher
+              && str_contains(html_entity_decode($r['rumpf']), 'Reiter „Demo-Konto“ verwaltet'),
+              "Demo-Konto: $handlung abgewiesen, Zeile unverändert",
+              'HTTP ' . $r['code'] . ', Status ' . ($nach['status'] ?? '?')
+              . ', Grenze ' . var_export($nach['grenze_einsaetze'] ?? null, true));
+    }
+    $vorherB = $pdo->query('SELECT status, email FROM users WHERE id = ' . $betreiberinZiel)
+                   ->fetch(PDO::FETCH_ASSOC);
+    foreach ([['konto_status', ['status' => 'gesperrt', 'grund' => 'Rollenprobe']],
+              ['konto', ['email' => 'rollenprobe-umgeleitet@probe.invalid', 'name' => 'x',
+                         'role' => 'betreiberin']]] as [$handlung, $felder]) {
+        $r = hole('admin_user.php?id=' . $betreiberinZiel, $a['sid'],
+                  ['csrf' => $a['csrf'], 'action' => $handlung, 'id' => (string)$betreiberinZiel] + $felder);
+        $nach = $pdo->query('SELECT status, email FROM users WHERE id = ' . $betreiberinZiel)
+                    ->fetch(PDO::FETCH_ASSOC);
+        pruef($r['code'] === 403 && $nach == $vorherB,
+              "Zweite BetreiberIn: $handlung durch einen Admin abgewiesen, Zeile unverändert",
+              'HTTP ' . $r['code'] . ', Status ' . ($nach['status'] ?? '?'));
+    }
+}
+
+/* ---- Adresswechsel durch die Verwaltung (R17-20, F-R17-06, E-R17-45) --------
+ *
+ * Mit gueltigem Token und frischem Code, als Admin am Konto `ziel`: Die
+ * Adresse wechselt, ist aber unbestaetigt — der Setz-Link danach wird
+ * abgewiesen, und „Passwort vergessen" stellt keinen Token aus. Die Mail an
+ * die alte Adresse steht in der Warteschlange. Danach setzt die Probe die
+ * Adresse und die Marke zurueck. */
+echo "\nAdresswechsel durch die Verwaltung (E-R17-45)\n";
+if (isset($konten['admin'])) {
+    require_once $srv . '/konto_lib.php';
+    $a = $konten['admin'];
+    $neuAdr = 'rollenprobe-umgezogen@probe.invalid';
+    $r = hole('admin_user.php?id=' . $zielId, $a['sid'],
+              ['csrf' => $a['csrf'], 'action' => 'konto', 'id' => (string)$zielId,
+               'name' => 'Rollenprobe ziel', 'role' => 'user', 'email' => $neuAdr]);
+    $offenAdr = adresse_unbestaetigt($zielId);
+    /* An der Nummer, nicht an der Adresse: Nach dem Versuch leert die
+     * Warteschlange den Empfaenger (oben, `$mailVorher`). */
+    $mailAlt = (int)$pdo->query("SELECT COUNT(*) FROM mail_warteschlange
+                                  WHERE schluessel = 'adresswechsel_verwaltung'
+                                    AND id > " . (int)$mailVorher)->fetchColumn();
+    pruef($r['code'] === 200 && $offenAdr !== null && $offenAdr['alt'] === $zielMail && $mailAlt >= 1,
+          'Wechsel: Adresse unbestätigt, alte Adresse gemerkt, Mail an die alte',
+          'HTTP ' . $r['code'] . ', Mails ' . $mailAlt);
+    $tokVorher = (int)$pdo->query('SELECT COUNT(*) FROM password_resets WHERE user_id = ' . $zielId)
+                          ->fetchColumn();
+    $r = hole('admin_user.php?id=' . $zielId, $a['sid'],
+              ['csrf' => $a['csrf'], 'action' => 'pw_reset', 'id' => (string)$zielId]);
+    $tokNach = (int)$pdo->query('SELECT COUNT(*) FROM password_resets WHERE user_id = ' . $zielId)
+                        ->fetchColumn();
+    pruef($tokNach === $tokVorher && str_contains(html_entity_decode($r['rumpf']), 'noch unbestätigt'),
+          'Setz-Link an die unbestätigte Adresse: abgewiesen, kein Token',
+          'HTTP ' . $r['code'] . ', Token ' . $tokVorher . ' → ' . $tokNach);
+    /* DIE SEITE DER ALTEN ADRESSE: Der Aufruf zeigt nur die Frage (ein
+     * Mailprogramm, das Links vorab abruft, loest nichts aus), der Knopf
+     * „widersprechen" setzt zurueck, ein zweiter Klick ist verbraucht. Den
+     * Token kennt nur die Mail — die Probe legt dafuer einen frischen an. */
+    $tokAdr = adresse_verwaltung_vormerken($zielId, $zielMail);
+    $r = hole('adresse_verwaltung.php?konto=' . $zielId . '&token=' . $tokAdr, null);
+    $knoepfe = substr_count($r['rumpf'], 'name="antwort"');
+    pruef($r['code'] === 200 && $knoepfe === 2 && adresse_unbestaetigt($zielId) !== null,
+          'Seite der alten Adresse: Aufruf zeigt zwei Knöpfe, ändert nichts', 'Knöpfe ' . $knoepfe);
+    $felder = ['konto' => (string)$zielId, 'token' => $tokAdr, 'antwort' => 'widersprechen'];
+    $r = hole('adresse_verwaltung.php', null, $felder);
+    $adrJetzt = (string)$pdo->query('SELECT email FROM users WHERE id = ' . $zielId)->fetchColumn();
+    pruef($r['code'] === 200 && $adrJetzt === $zielMail && adresse_unbestaetigt($zielId) === null,
+          'Widerspruch: alte Adresse zurück, Frist aufgehoben', 'Adresse ' . $adrJetzt);
+    $r = hole('adresse_verwaltung.php', null, $felder);
+    pruef(str_contains(html_entity_decode($r['rumpf']), 'abgelaufen oder schon benutzt'),
+          'Zweiter Klick: verbraucht', 'HTTP ' . $r['code']);
+    $pdo->prepare('UPDATE users SET email = ? WHERE id = ?')->execute([$zielMail, $zielId]);
+    app_state_loeschen('adresse_offen:' . $zielId, 'adresse_alt:' . $zielId);
 }
 
 echo "\n-> $n Erwartungen, $offen nicht erfüllt\n";

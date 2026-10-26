@@ -1118,21 +1118,6 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
 
 <!-- -->
 
-371. **Ein Admin darf BetreiberIn-Konten nicht sperren, löschen oder umadressieren.** · gehört zu: 12b · Stand: offen · seit 11.10.2026
-     *Aufgenommen 11.10.2026 aus Schritt 12 (Bedrohungsmodell, F-R17-07,
-     E-R17-11).* `admin_user.php` kennt gegenüber einem BetreiberIn-Konto
-     nur zwei Riegel: den Rollenwechsel und die letzte BetreiberIn. Ein Konto
-     der Rolle admin kann ein **zweites** BetreiberIn-Konto über
-     `konto_status` sperren, über `user_delete` löschen (mit frischem Code)
-     oder über `konto` die Anmeldeadresse ändern und es so aussperren. Die
-     Berechtigungsmatrix (`Technik.md` 4.99p) und die Rollenprobe messen nur
-     `{ziel}` = `user`. Entschieden: nicht erlaubt — Riegel in
-     `admin_user.php` (admin ⊂ betreiberin heißt auch: nach oben kein Griff),
-     eine Zeile in 4.99p, ein Fall in `tools/proben/rollen/`. Kleines Paket
-     in 12b.
-
-<!-- -->
-
 380. **Seitenaufbau: die Skripte jeder Seite kosten bei Drossel 6× 0,7 bis 1,5 s, bevor Daten geholt werden.** · gehört zu: 12b · Stand: offen · seit 13.10.2026
      *Aufgenommen 13.10.2026 mit S11-13 (Konzept S11, Vorschlag V2,
      E-S11-33).* Gemessen am Messstand (`tools/messstand/ausgangsmessung.md`,

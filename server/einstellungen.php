@@ -128,6 +128,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (($_POST['action'] ?? '') === 'passkey_entfernen') {
         zweitfaktor_frisch_verlangen('passkey_entfernen');
     }
+    /* Und vor neuen Wiederherstellungscodes (R17-20, F-R17-43): Sie sind ein
+     * dauerhafter zweiter Faktor, und E-SR-31 verlangt fuer den Passkey aus
+     * genau diesem Grund den frischen Code. */
+    if (($_POST['action'] ?? '') === 'zf_codes_neu') {
+        zweitfaktor_frisch_verlangen('totp_codes_neu');
+    }
     csrf_check();
     $action = $_POST['action'] ?? '';
 
@@ -221,18 +227,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
          * geaendert, und wer seine Adresse berichtigt, will nicht ueberall
          * abgemeldet werden. */
         $adressWechsel = ($email !== null && $email !== email_normalisieren($userEmail));
-        $nachweisOk = true;
-        if ($adressWechsel) {
-            $stp = db()->prepare('SELECT password_hash FROM users WHERE id = ?');
-            $stp->execute([$userId]);
-            $hash = (string)($stp->fetchColumn() ?: '');
-            $nachweisOk = $hash !== ''
-                && password_verify((string)($_POST['old_token'] ?? ''), $hash);
-        }
+        /* SEIT R17-20 MIT RATENTOPF (F-R17-32): `passwort_nachweis()` traegt
+         * Topf und Vergleich zusammen; bis dahin riet man hier ohne Sperre. */
+        $nachweis = $adressWechsel
+            ? passwort_nachweis($userId, (string)($_POST['old_token'] ?? ''))
+            : 'ok';
 
         if ($email === null) {
             $error = 'Bitte eine gültige E-Mail-Adresse angeben (höchstens 190 Zeichen).';
-        } elseif (!$nachweisOk) {
+        } elseif ($nachweis === 'gesperrt') {
+            $error = 'Zu viele falsche Passwörter. Bitte später erneut — es wurde nichts geändert.';
+        } elseif ($nachweis !== 'ok') {
             $error = 'Zum Ändern der E-Mail-Adresse ist das aktuelle Passwort nötig — '
                    . 'es war leer oder falsch. Es wurde nichts geändert.';
         } else {
@@ -315,12 +320,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
      * keine zweite Schranke. Der Fall, um den es geht, ist ein offener
      * Rechner in einer Wache.
      *
-     * ANDERS ALS BEIM ADRESSWECHSEL wird hier das PASSWORT selbst geprueft
-     * und nicht das abgeleitete Token: Diese Karte laedt kein `crypto.js`
-     * (sie entsperrt nichts), und ein Feld, das ein Token erwartet, braeuchte
-     * genau das. `password_verify()` gegen den Hash tut dasselbe — der
-     * Server sieht das Passwort in dieser einen Anfrage, und das ist
-     * derselbe Weg, den `login.php` ohnehin geht.
+     * WIE BEIM ADRESSWECHSEL DAS ABGELEITETE TOKEN (R17-20, F-R17-67). Bis
+     * Web 23.1.0 stand hier, die Karte pruefe das PASSWORT selbst gegen den
+     * Hash, weil sie kein `crypto.js` lade. Beides war falsch: Der Reiter
+     * Profil laedt `crypto.js` (`ui_krypto_bootstrap()`), und der Hash ist
+     * bcrypt des TOKENS, nicht des Passworts. Der Vergleich ging deshalb nie
+     * auf — eine Selbstloeschung war nicht moeglich, und die Seite sagte
+     * „Passwort falsch". Jetzt leitet das Formular das Token ab wie die
+     * Karten darueber, und `passwort_nachweis()` prueft mit Ratentopf.
      *
      * DEMO-KONTO NICHT. Es setzt sich nach jeder Aenderung selbst zurueck; eine
      * Loeschung mit 30 Tagen Karenz waere dort sinnlos und wuerde den
@@ -330,11 +337,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (demo_ist_demo($userId)) {
             $error = 'Das Demo-Konto lässt sich nicht löschen.';
         } else {
-            $stp = db()->prepare('SELECT password_hash, email FROM users WHERE id = ?');
+            $stp = db()->prepare('SELECT email FROM users WHERE id = ?');
             $stp->execute([$userId]);
             $z = $stp->fetch(PDO::FETCH_ASSOC) ?: [];
-            $hash = (string)($z['password_hash'] ?? '');
-            if ($hash === '' || !password_verify((string)($_POST['pw_loesch'] ?? ''), $hash)) {
+            $nachweis = passwort_nachweis($userId, (string)($_POST['loesch_token'] ?? ''));
+            if ($nachweis === 'gesperrt') {
+                $error = 'Zu viele falsche Passwörter. Bitte später erneut — es wurde nichts geändert.';
+            } elseif ($nachweis !== 'ok') {
                 $error = 'Das Passwort war leer oder falsch — es wurde nichts geändert.';
             } else {
                 $termin = konto_loeschung_beantragen($userId);
@@ -411,6 +420,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } elseif ($action === 'zf_codes_neu') {
             $zfCodes = totp_codes_erneuern($userId);
             if ($zfCodes !== null) {
+                /* Die Mail dazu (R17-20, F-R17-43) — an die Kontoadresse. */
+                mail_einreihen('zf_codes_erneuert', (string)$userEmail,
+                               ['link' => app_url('/einstellungen.php?t=profil#k-zweitfaktor')]);
                 $zfMeldung = ['Neue Codes erzeugt.', 'Die alten gelten ab jetzt nicht mehr.'];
             } else {
                 $zfZurueck = ['error', 'Der Zweitfaktor ist nicht eingeschaltet.'];
@@ -476,8 +488,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $st = db()->prepare('SELECT password_hash, pat_key_check FROM users WHERE id = ?');
         $st->execute([$userId]);
         $u = $st->fetch();
-        $oldOk = password_verify((string)($_POST['old_token'] ?? ''),
-                                 (string)$u['password_hash']);
+        /* Mit Ratentopf und Pfeffer (R17-20, F-R17-32). */
+        $nachweis = passwort_nachweis($userId, (string)($_POST['old_token'] ?? ''));
+        $oldOk = ($nachweis === 'ok');
         $newTok = (string)($_POST['new_token'] ?? '');
         $newSalt = (string)($_POST['new_salt'] ?? '');
         $wrapPw = (string)($_POST['wrap_pw'] ?? '');
@@ -485,7 +498,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $newIter = (int)($_POST['new_iter'] ?? 0);
         // Gespeicherte Pruefsumme des Inhaltsschluessels (NULL bei Altbestand)
         $chkSoll = $u['pat_key_check'] ?? null;
-        if (!$oldOk) {
+        if ($nachweis === 'gesperrt') {
+            $error = 'Zu viele falsche Passwörter. Bitte später erneut — das Passwort '
+                   . 'wurde NICHT geändert.';
+        } elseif (!$oldOk) {
             $error = 'Das aktuelle Passwort ist nicht korrekt.';
         } elseif (!preg_match('/^[0-9a-f]{64}$/', $newTok)
                   || !preg_match('/^[0-9a-f]{32}$/', $newSalt)) {
@@ -568,8 +584,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                                 kdf_iter = ?,
                                                 session_epoch = session_epoch + 1
                                WHERE id = ?')
-                    ->execute([password_hash($newTok, PASSWORD_DEFAULT), $newSalt,
-                               $newIter, $userId]);
+                    ->execute([anmeldehash_bilden($userId, $newTok, demo_ist_demo($userId)), $newSalt,
+                               $newIter, $userId]);   // mit Pfeffer (R17-20)
                 if ($patReady) {
                     // Pruefsumme mitschreiben: Bestandskonten bekommen sie
                     // hier erstmals, alle anderen bestaetigen den alten Wert.
@@ -2163,20 +2179,65 @@ ui_seite_start(['titel' => 'Einstellungen',
         <p class="feld-hinweis"><strong>Willst du sie behalten, leite sie vorher
            aus</strong> — unter <a href="import.php">Import / Export</a>. Danach ist
            es zu spät.</p>
-        <form method="post"
+        <form method="post" id="loeschform"
               data-confirm="Konto wirklich zur Löschung anmelden? Es wird sofort gesperrt und nach <?= KONTO_KARENZ_TAGE ?> Tagen endgültig gelöscht. Eine Anmeldung in dieser Zeit nimmt die Löschung zurück."
               data-confirm-ok="Zur Löschung anmelden">
           <?= csrf_field() ?><input type="hidden" name="action" value="konto_loeschen">
-          <?php /* DAS PASSWORT ALS NACHWEIS, wie beim Adresswechsel — und
-                   zwar SERVERSEITIG geprueft. Ein offener Rechner in einer
-                   Wache ist der Fall, um den es geht. */ ?>
-          <?php ui_feld(['label' => 'Aktuelles Passwort', 'name' => 'pw_loesch',
+          <input type="hidden" name="loesch_token" id="loesch_tok">
+          <?php /* DAS PASSWORT ALS NACHWEIS, wie beim Adresswechsel — im
+                   Browser zum Token abgeleitet und SERVERSEITIG geprueft. Das
+                   Feld hat keinen Namen: Das Passwort verlaesst den Browser
+                   nicht (R17-20, F-R17-67). */ ?>
+          <?php ui_feld(['label' => 'Aktuelles Passwort', 'id' => 'loesch_pw',
                          'art' => 'password', 'pflicht' => true,
                          'attr' => ' autocomplete="current-password"']); ?>
           <div class="listen-form-fuss">
             <?= ui_knopf(['text' => 'Konto zur Löschung anmelden', 'art' => 'gefahr']) ?>
           </div>
         </form>
+        <script<?= kopf_nonce_attr() ?>>
+        /* ---- Kontoloeschung: Nachweis ableiten (R17-20, F-R17-67) --------
+         *
+         * AM FENSTER, IN DER ERFASSUNGSPHASE — und das ist tragend:
+         * `confirm.js` faengt das Absenden am `document` in der
+         * Erfassungsphase ab, haelt es an und schickt nach der Rueckfrage mit
+         * `f.submit()`, das kein Ereignis mehr ausloest. Ein Zuhoerer am
+         * Formular liefe nie. Am Fenster laeuft er davor: Token ableiten,
+         * dann `requestSubmit()` — jetzt mit Token, und erst dann fragt
+         * `confirm.js`.
+         *
+         * DAS PASSWORTFELD HAT KEINEN NAMEN und geht deshalb nie mit; es muss
+         * nicht geleert werden (geleert scheiterte `requestSubmit()` an
+         * `required`). Wer nach einem Abbruch das Passwort aendert, verwirft
+         * das abgeleitete Token. */
+        (() => {
+          const f = document.getElementById('loeschform');
+          const feldPw = document.getElementById('loesch_pw');
+          const feldTok = document.getElementById('loesch_tok');
+          if (!f || !feldPw || !feldTok) { return; }
+          window.addEventListener('submit', async ev => {
+            if (ev.target !== f || f.dataset.tokenBereit === '1') { return; }
+            ev.preventDefault();
+            ev.stopImmediatePropagation();
+            if (!feldPw.value) { feldPw.reportValidity(); return; }
+            try {
+              const k = await EdCrypto.deriveKeys(feldPw.value, KDF_SALT, KDF_ITER);
+              feldTok.value = k.authToken;
+              f.dataset.tokenBereit = '1';
+              f.requestSubmit();
+            } catch (e) {
+              feldPw.setCustomValidity('Dieser Browser unterstützt die nötige '
+                                     + 'Verschlüsselung nicht.');
+              feldPw.reportValidity();
+            }
+          }, true);
+          feldPw.addEventListener('input', () => {
+            feldPw.setCustomValidity('');
+            feldTok.value = '';
+            delete f.dataset.tokenBereit;
+          });
+        })();
+        </script>
       <?php endif; ?>
     <?php ui_karte_ende(); ?>
 

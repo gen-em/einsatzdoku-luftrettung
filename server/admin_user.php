@@ -91,7 +91,12 @@ const SUPPORT_HANDLUNGEN = ['pw_reset', 'verifikation', 'device_aus'];
  * ausdruecklich zum Koppeln einer Uhr ein, und was dabei entsteht, raeumt
  * der Reset selbst wieder ab. */
 const DEMO_GESPERRT = ['konto', 'sichern', 'einspielen', 'freigeben',
-                       'widerrufen', 'paket_loeschen', 'user_delete'];
+                       'widerrufen', 'paket_loeschen', 'user_delete',
+                       /* seit R17-20 (F-R17-42): Bis dahin blendete nur das
+                        * Markup den Knopf aus, und ein POST von Hand sperrte
+                        * das oeffentliche Konto — der Reset setzt den Status
+                        * nicht zurueck, es blieb zu, bis jemand es oeffnete. */
+                       'konto_status', 'konto_grenzen', 'totp_zuruecksetzen'];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action  = (string)($_POST['action'] ?? '');
@@ -99,6 +104,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
      * Seite einem Support mit falschem Token jede Handlung gleich — und die
      * Rollenprobe koennte nicht sehen, welche er ueberhaupt erreicht. */
     handlung_erlaubt($action, SUPPORT_HANDLUNGEN);
+    /* NACH OBEN KEIN GRIFF (R17-20, F-R17-07, Nr. 371, E-R17-47). Ein Admin
+     * konnte ein ZWEITES BetreiberIn-Konto sperren, loeschen oder auf eine
+     * eigene Adresse umschreiben — Riegel gab es nur fuer den Rollenwechsel
+     * und die letzte BetreiberIn. admin ⊂ betreiberin heisst auch: nach oben
+     * kein Griff. Der Riegel steht vor ALLEN Handlungen und nicht je Handlung:
+     * Eine neue Handlung, die jemand spaeter anfuegt, erbt ihn so von selbst.
+     * Ansehen bleibt erlaubt. Wie ein Rollentor vor dem Token (E-P5c-85). */
+    if (rolle_ist_betreiberin($u['role'] ?? null) && !ist_betreiberin()) {
+        ui_abbruch(403, 'Kein Zugriff — ein Konto mit der Rolle „BetreiberIn" ändert nur '
+                      . 'eine BetreiberIn.');
+    }
     /* DER ZWEITFAKTOR EINES KONTOS MIT RECHTEN (P5c/AP5, E-P5c-42): Ein
      * Admin setzt nur Konten der Rolle user zurueck — ebenfalls vor dem
      * Token, aus demselben Grund wie die Zeile darueber. */
@@ -118,6 +134,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
     if ($action === 'totp_zuruecksetzen') { zweitfaktor_frisch_verlangen('totp_zuruecksetzen'); }
     if ($action === 'user_delete')        { zweitfaktor_frisch_verlangen('user_delete'); }
+    /* SEIT R17-20 AUCH VOR DER FREIGABE (F-R17-02) — sie gibt den Bestand
+     * eines Kontos an ein anderes. */
+    if ($action === 'freigeben')          { zweitfaktor_frisch_verlangen('freigeben'); }
+    /* UND VOR ADRESSWECHSEL UND SETZ-LINK (F-R17-06, E-R17-45) — die zwei
+     * Glieder der Kette, mit der eine uebernommene Adminsitzung ein fremdes
+     * Konto an sich zog. Der Adresswechsel zaehlt nur, wenn sich die Adresse
+     * aendert; dieselbe Rechnung wie der Zweig unten (`email_pruefen()`). */
+    if ($action === 'konto') {
+        $emailNeuTor = email_pruefen($_POST['email'] ?? '');
+        if ($emailNeuTor !== null && $emailNeuTor !== (string)$u['email']) {
+            zweitfaktor_frisch_verlangen('adresswechsel_verwaltung');
+        }
+    }
+    if ($action === 'pw_reset')           { zweitfaktor_frisch_verlangen('setzlink'); }
     csrf_check();
     if (demo_ist_demo($uid) && in_array($action, DEMO_GESPERRT, true)) {
         $error = 'Das Demo-Konto wird über den Reiter „Demo-Konto“ verwaltet — '
@@ -216,15 +246,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             try {
                 db()->prepare('UPDATE users SET email = ? WHERE id = ?')->execute([$email, $uid]);
                 $teile[] = 'E-Mail-Adresse';
-                /* Hinweismail an die ALTE Adresse (Backlog Nr. 128, K-7). Die
+                /* Mail an die ALTE Adresse (Backlog Nr. 128, K-7) — seit
+                   R17-20 mit der Entscheidung darin (F-R17-06, E-R17-45). Die
                    Verwaltung darf die Anmeldeadresse eines fremden Kontos
-                   aendern -- und danach den Setz-Link an die neue schicken.
-                   Das ist ein legitimer Weg (jemand hat die Firma gewechselt)
-                   und zugleich der kuerzeste Weg zur Kontouebernahme, wenn eine
-                   Adminsitzung uebernommen wurde. Die Mail an die alte Adresse
-                   ist die einzige Stelle, an der die Besitzerin davon erfaehrt;
-                   sie geht deshalb dorthin und nicht an die neue. */
-                profil_adresswechsel_melden((string)$u['email'], $email, 'verwaltung');
+                   aendern; das ist ein legitimer Weg (jemand hat die Firma
+                   gewechselt) und war zugleich der kuerzeste Weg zur
+                   Kontouebernahme, wenn eine Adminsitzung uebernommen wurde:
+                   gleich danach ein Setz-Link an die neue. Jetzt ist die neue
+                   Adresse unbestaetigt, bis die alte zustimmt oder die Frist
+                   ohne Widerspruch vergeht, und solange geht kein Setz-Link
+                   hinaus (`adresse_unbestaetigt()`). Die Mail geht an die
+                   alte Adresse, weil sie die einzige ist, die im
+                   Missbrauchsfall noch der Besitzerin gehoert. */
+                require_once __DIR__ . '/konto_lib.php';
+                $tokAdr = adresse_verwaltung_vormerken($uid, (string)$u['email']);
+                $offenAdr = adresse_unbestaetigt($uid);
+                require_once __DIR__ . '/mail_lib.php';
+                mail_einreihen('adresswechsel_verwaltung', (string)($offenAdr['alt'] ?? $u['email']), [
+                    'alt'  => (string)($offenAdr['alt'] ?? $u['email']), 'neu' => $email,
+                    'bis'  => datum_zeit_text(iso_utc((int)($offenAdr['bis'] ?? time())), ' um ') . ' Uhr',
+                    'link' => app_url('/adresse_verwaltung.php?konto=' . $uid . '&token=' . $tokAdr)]);
                 /* OHNE ADRESSEN IM TEXT (E-P5b-16) — derselbe Satz wie beim
                  * Wechsel durch die NutzerIn selbst, nur mit dem Weg. */
                 require_once __DIR__ . '/protokoll_lib.php';
@@ -385,9 +426,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     if ($action === 'pw_reset') {
+        require_once __DIR__ . '/konto_lib.php';
+        $offenAdr = adresse_unbestaetigt($uid);
         if (demo_ist_demo($uid)) {
             $error = 'Das Demo-Konto bekommt keinen Setz-Link: Sein Passwort ist '
                    . 'öffentlich und steht im Handbuch (E-P1-19).';
+        } elseif ($offenAdr !== null) {
+            /* KEIN SETZ-LINK AN EINE UNBESTAETIGTE ADRESSE (E-R17-45). */
+            $error = 'Die Anmeldeadresse dieses Kontos wurde von der Verwaltung geändert '
+                   . 'und ist noch unbestätigt — bis zum '
+                   . datum_zeit_text(iso_utc($offenAdr['bis']), ' um ') . ' Uhr' . ' oder bis die '
+                   . 'bisherige Adresse zustimmt, geht kein Setz-Link hinaus.';
         } else {
             /* Entwerten und Ausstellen in einer Funktion (P5b/AP2,
              * Backlog Nr. 202 Paket 1). Die Regel „hoechstens ein gueltiger
@@ -564,22 +613,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     /* ---- Freigeben und widerrufen (A8.6) --------------------------------- */
     if ($action === 'freigeben') {
-        $ziel  = edbak_ziel_konto((int)($_POST['ziel_user'] ?? 0));
-        $paket = edbak_paket_kopf_lesen($kennung, $datei);
-        if (!$ziel) {
-            $error = 'Zielkonto nicht gefunden.';
-        } elseif (!$paket) {
-            $error = 'Das Paket liess sich nicht lesen.';
-        } elseif (!edbak_bestaetigung_passt((string)($_POST['confirm_email'] ?? ''), (string)$ziel['email'])) {
-            $error = 'Die eingegebene E-Mail-Adresse stimmt nicht mit der des '
-                   . 'Zielkontos überein — es wurde nichts freigegeben.';
-        } elseif (edbak_freigeben($kennung, $datei, (int)$ziel['id'])) {
-            $notice = 'Freigegeben für ' . $ziel['email'] . '. Die NutzerIn sieht das '
-                    . 'Paket jetzt im eigenen Backup-Bereich und spielt es dort '
-                    . 'mit ihrem Wiederherstellungsschlüssel ein.';
-        } else {
-            $error = 'Die Freigabe liess sich nicht speichern.';
-        }
+        /* Regel, Protokoll und Mail an EINER Stelle (R17-20, F-R17-02). */
+        [$okF, $meldungF] = edbak_freigabe_erteilen($kennung, $datei,
+            (int)($_POST['ziel_user'] ?? 0), (string)($_POST['confirm_email'] ?? ''));
+        if ($okF) { $notice = $meldungF; } else { $error = $meldungF; }
     }
     if ($action === 'widerrufen') {
         if (edbak_freigabe_widerrufen($kennung)) { $notice = 'Freigabe widerrufen.'; }
@@ -722,15 +759,22 @@ $istIch  = $uid === $userId;
  * (P5c/AP4, E-P5c-14). Was er nicht darf, steht nicht da — keine
  * ausgegrauten Knoepfe fuer Handlungen, die ihm 403 antworten; nur die
  * Kontodaten stehen gesperrt, wie beim Demo-Konto, damit er sie lesen kann. */
-$nurSupport = ist_support();
+/* NUR ANSEHEN (R17-20, E-R17-47): Ein Admin auf dem Konto einer BetreiberIn
+ * sieht die Seite wie der Support — Kontodaten gesperrt, keine Knoepfe —,
+ * aber ohne dessen drei Handlungen; der POST-Riegel oben weist jede ab. */
+$nurAnsehen = rolle_ist_betreiberin($u['role'] ?? null) && !ist_betreiberin();
+$nurSupport = ist_support() || $nurAnsehen;
 $kStatusKopf = (string)($u['status'] ?? 'aktiv');
 
-/* Zielkonten der Freigabe: die uebrigen Konten. Eine Abfrage, kein
- * Dateizugriff — und ohne das eigene Konto, denn „an sich selbst freigeben"
- * ist der Fall, fuer den es das Einspielen gibt. */
-$zielkonten = db()->prepare('SELECT id, email FROM users WHERE id <> ? ORDER BY email');
-$zielkonten->execute([$uid]);
-$zielkonten = $zielkonten->fetchAll();
+/* Zielkonten der Freigabe (R17-20, E-R17-46): nur Konten mit DERSELBEN
+ * Adresse wie die Begleitdatei — bis Web 23.1.0 waren es alle uebrigen.
+ * Ohne das eigene Konto, denn „an sich selbst freigeben" ist der Fall, fuer
+ * den es das Einspielen gibt. Meist ist die Liste leer, und dann steht auch
+ * kein Knopf da: Der Weg fuer ein neu aufgesetztes Konto fuehrt ueber den
+ * verwaisten Ordner in „Backups ohne Konto". */
+$zielkonten = array_values(array_filter(
+    edbak_freigabe_zielkonten((string)($u['account_key'] ?? '')),
+    static fn(array $z): bool => $z['id'] !== $uid));
 
 /* WER BEKOMMT DIE FREIGABE? (S8/AP3, B-S8-09) In der Begleitdatei steht nur
  * die Kennung des Zielkontos. Fuer die Zustandszeile braucht es die Adresse —
@@ -853,7 +897,9 @@ ui_seite_start(['titel' => ($u['name'] ?: $u['email']) . ' — Konto']);
       : ($nurSupport ? '' : ui_knopf(['text' => 'Jetzt sichern', 'symbol' => 'sicherung',
                   'art' => 'neutral', 'attr' => ' form="f-sichern"']));
   $eintraege = [];
-  if (!$istDemoKopf && $nurSupport) {
+  if ($nurAnsehen) {
+      /* Kein Eintrag: Hier aendert nur eine BetreiberIn (E-R17-47). */
+  } elseif (!$istDemoKopf && $nurSupport) {
       /* „SETZ-LINK SENDEN" (E-P5c-62) — gesetzt wird kein Passwort, sondern
        * ein Link verschickt. Fuer den Support ohne Anzeige des Links. */
       $eintraege[] = ['text' => 'Setz-Link senden', 'symbol' => 'schloss-offen',
@@ -863,7 +909,7 @@ ui_seite_start(['titel' => ($u['name'] ?: $u['email']) . ' — Konto']);
                           'form' => 'f-verifikation'];
       }
   } elseif (!$istDemoKopf) {
-      if ($pakete) {
+      if ($pakete && $zielkonten) {
           $eintraege[] = ['text' => 'Für Zielkonto freigeben', 'symbol' => 'tausch',
                           'href' => '#', 'attr' => 'data-dialog="dlg-freigeben"'];
       }
@@ -1009,8 +1055,18 @@ ui_seite_start(['titel' => ($u['name'] ?: $u['email']) . ' — Konto']);
                    fieldset schickt auch versteckte Felder darin nicht mit. */ ?>
           <input type="hidden" name="role" value="<?= e($rolleWert) ?>">
         <?php endif; ?>
-        <?php ui_feld(['name' => 'email', 'label' => 'E-Mail (Anmeldung)', 'art' => 'email',
-                       'wert' => (string)$u['email'], 'pflicht' => true]); ?>
+        <?php
+          /* UNBESTAETIGT? (R17-20, E-R17-45) Die Zeile sagt es am Feld — sonst
+             wundert sich die Verwaltung, warum der Setz-Link abgewiesen wird. */
+          require_once __DIR__ . '/konto_lib.php';
+          $offenFeld = adresse_unbestaetigt($uid);
+          ui_feld(['name' => 'email', 'label' => 'E-Mail (Anmeldung)', 'art' => 'email',
+                   'wert' => (string)$u['email'], 'pflicht' => true,
+                   'klein' => $offenFeld !== null
+                       ? 'Von der Verwaltung geändert, unbestätigt bis '
+                         . datum_zeit_text(iso_utc($offenFeld['bis']), ' um ') . ' Uhr — '
+                         . 'bis dahin kein Setz-Link.'
+                       : '']); ?>
         <?php /* KNÖPFE WEG STATT AUSGEGRAUT beim Support (E-P5c-66): Ein
                  grauer „Speichern" fragte, warum er nicht geht. */ ?>
         <?php if (!$nurSupport): ?>
@@ -1027,6 +1083,8 @@ ui_seite_start(['titel' => ($u['name'] ?: $u['email']) . ' — Konto']);
       <p class="feld-hinweis">Das Passwort des Demo-Kontos ist öffentlich und wird
          nicht über einen Link gesetzt.
          <a href="hilfe.php#3-2-demo-konto-ausprobieren-ohne-etwas-kaputtzumachen">Handbuch: Demo-Konto</a></p>
+      <?php elseif ($nurAnsehen): ?>
+      <p class="feld-klein">Ein Konto mit der Rolle „BetreiberIn" ändert nur eine BetreiberIn.</p>
       <?php elseif ($nurSupport): ?>
       <p class="feld-klein">Ändern kann die Verwaltung, den Setz-Link schickt „Aktionen".</p>
       <?php else: ?>
@@ -1080,7 +1138,10 @@ ui_seite_start(['titel' => ($u['name'] ?: $u['email']) . ' — Konto']);
                 : '']); ?>
       <?php endif; ?>
 
-      <?php if ($nurSupport): ?>
+      <?php if ($nurAnsehen): ?>
+        <p class="feld-hinweis">Sperren, Entsperren und Freischalten eines Kontos
+           mit der Rolle „BetreiberIn" sind einer BetreiberIn vorbehalten.</p>
+      <?php elseif ($nurSupport): ?>
         <p class="feld-hinweis">Sperren, Entsperren und Freischalten sind der
            Verwaltung vorbehalten.</p>
       <?php elseif ($istDemo): ?>
@@ -1272,7 +1333,7 @@ ui_seite_start(['titel' => ($u['name'] ?: $u['email']) . ' — Konto']);
               ? ui_plakette('aktiv', ['ton' => 'blau'])
               : ui_plakette('deaktiviert', ['ton' => 'neutral']),
           'aktionen' => $nurSupport
-              ? ((int)$d['active']
+              ? ((int)$d['active'] && !$nurAnsehen
                   ? ui_zeilenaktionen(['titel' => 'Gerät', 'eintraege' => [
                         ['text' => 'Deaktivieren', 'form' => 'f-dev-a-' . (int)$d['id']]]])
                   : '')
@@ -1396,7 +1457,7 @@ ui_seite_start(['titel' => ($u['name'] ?: $u['email']) . ' — Konto']);
          <?= edbak_aufbewahrung_konto($kennung) ?> Pakete, das jüngste und ein
          freigegebenes immer.
          <a href="hilfe.php#11-1-die-kontoseite">Handbuch: Kontoseite</a></p>
-      <?php if ($pakete): ?>
+      <?php if ($pakete && $zielkonten): ?>
         <div class="listen-form-fuss">
           <?= ui_knopf(['text' => 'Für Zielkonto freigeben', 'symbol' => 'tausch',
                         'art' => 'neutral', 'typ' => 'button',
@@ -1524,7 +1585,8 @@ ui_seite_start(['titel' => ($u['name'] ?: $u['email']) . ' — Konto']);
         $zielwahl = ['' => '— Konto wählen —'];
         foreach ($zielkonten as $z) { $zielwahl[(string)$z['id']] = (string)$z['email']; }
         ui_feld(['name' => 'ziel_user', 'label' => 'Zielkonto', 'art' => 'select',
-                 'optionen' => $zielwahl, 'pflicht' => true]);
+                 'optionen' => $zielwahl, 'pflicht' => true,
+                 'klein' => 'Nur Konten mit derselben E-Mail-Adresse wie das Backup.']);
         ui_feld(['name' => 'confirm_email', 'label' => 'E-Mail-Adresse des Zielkontos',
                  'pflicht' => true, 'attr' => 'autocomplete="off"',
                  'klein' => 'Zur Bestätigung abtippen — geprüft wird das Ziel, '

@@ -87,18 +87,9 @@ $u = $st->fetch(PDO::FETCH_ASSOC);
 if (!$u) { json_out(['error' => 'konto'], 404); }
 $email = (string)$u['email'];
 
-if (!rate_erlaubt('login', $email)) {
-    json_out(['error' => 'gesperrt',
-              'meldung' => 'Zu viele Fehlversuche. Bitte später erneut.'], 429);
-}
-
 $b = api_rumpf();
-$token = (string)($b['token'] ?? '');
-if ($token === '' || !password_verify($token, (string)$u['password_hash'])) {
-    rate_misserfolg('login', $email);
-    json_out(['error' => 'passwort',
-              'meldung' => 'Das Passwort ist nicht korrekt.'], 403);
-}
+/* Topf und Vergleich in einer Funktion (R17-20, F-R17-32, E-R17-49). */
+passwort_nachweis_json($userId, (string)($b['token'] ?? ''));
 
 $oeffentlich = (string)($b['oeffentlich'] ?? '');
 $privat      = (string)($b['privat'] ?? '');

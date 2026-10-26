@@ -14,6 +14,137 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 23.2.0] — unveröffentlicht
+
+Schritt 12b, Paket R17-20 — Konten, Nachweise und Freigabe (Befunde
+F-R17-01, -02, -06 bis -08, -10, -21, -32, -42, -43 und der neue F-R17-67;
+Backlog Nr. 371). Kein Schema, kein `update.php`.
+
+### Neu
+
+- **Ein Pfeffer vor bcrypt.** Das Anmelde-Token entsteht im Browser aus dem
+  Passwort (PBKDF2) und lag als bcrypt-Hash in `users.password_hash`. Wer
+  nur die Datenbank hatte, konnte damit offline weiterraten — je Kandidat
+  PBKDF2 und bcrypt —, und ein gefundenes Passwort führte über eine
+  Anmeldung zum Server-Anteil und damit zu allen verschlossenen Angaben des
+  Kontos. Der Satz in `CLAUDE.md` 4 und `Technik.md` 3, ein Datenbankabzug
+  allein reiche seit S10 nicht mehr für einen Offline-Angriff auf das
+  Passwort, war deshalb falsch (F-R17-01). Jetzt steht dort
+  `pf1:<Anteil-Kennung>:bcrypt(HMAC(pfeffer, Token))`; der Pfeffer ist
+  `HMAC(kdf_anteil, "pfeffer:<Kontonummer>")` und verlässt den Server nie.
+  Ohne `config.php` lässt sich kein Kandidat mehr prüfen — der Satz ist
+  damit wahr, für jedes Konto, das sich seit dieser Fassung angemeldet hat.
+  **Umgestellt wird still bei der Anmeldung** (E-R17-20), in der
+  vorhandenen Spalte; ein Konto, das sich nie mehr anmeldet, behält den
+  alten Hash bis zum nächsten Reset. **Warum ein eigener Pfeffer und nicht
+  der Konto-Anteil**, wie der Review vorschlug (E-R17-51): Der Konto-Anteil
+  geht an jede angemeldete Sitzung, weil der Browser mit ihm die Hülle
+  öffnet. Wer eine Sitzung und einen Abzug hätte, könnte mit ihm weiter
+  offline raten. Ein eigener Ableitungszweck kostet nichts.
+  **Was das kostet** (E-R17-44): Fehlt der Anteil, zu dem ein Hash gehört,
+  meldet sich dieses Konto nicht mehr an — auch die BetreiberIn nicht, die
+  den Anteil sonst nach der Anmeldung vom Schlüsselblatt nachträgt. Die
+  Anmeldung sagt das ausdrücklich („Server-Anteil fehlt"), statt „Passwort
+  falsch" zu behaupten, und schreibt eine Systemmeldung; der Rückweg ist
+  „Passwort vergessen" mit dem Wiederherstellungsschlüssel, danach das
+  Nachtragen vom Blatt (Runbook in `Technik.md` 7). Das Demo-Konto bekommt
+  keinen Pfeffer — sein Passwort ist öffentlich.
+- **Eine Freigabe geht nur an das Herkunftskonto oder an dieselbe Adresse.**
+  Ein Admin gab das Konto-Backup *jedes* Kontos an *jedes* Konto frei, das
+  eigene eingeschlossen — ohne Protokoll, ohne Mail, ohne frischen Code —,
+  und das Zielkonto bekam beim Einlösen den entsiegelten Bestand: Orte,
+  Zeiten, Klinik, Reanimation, Besatzung, Diensttagsnotizen (F-R17-02).
+  Genau den Abzug, den Nr. 286 der Rolle admin genommen hatte. Der Zweck der
+  Freigabe ist „Konto neu aufgesetzt"; deshalb gilt jetzt dieselbe Adresse
+  wie in der Begleitdatei, geprüft beim Freigeben **und** beim Einlösen
+  (E-R17-46) — auch eine offene Freigabe aus der Zeit davor an ein fremdes
+  Konto wird damit wirkungslos. Dazu ein Protokolleintrag
+  „Konto-Backup freigegeben", eine Mail an Herkunfts- und Zieladresse und
+  ein frischer Code. Die zwei Abschriften des Ablaufs (Kontoseite,
+  Konto-Backups) sind eine Funktion, `edbak_freigabe_erteilen()`; die
+  Auswahl im Dialog zeigt nur noch Konten, an die es geht, und ohne solche
+  steht kein Knopf da.
+- **Ein Adresswechsel durch die Verwaltung ist sieben Tage unbestätigt.**
+  Die Verwaltung schrieb eine fremde Anmeldeadresse sofort um und konnte
+  gleich danach einen Setz-Link an die neue schicken — mit einer
+  übernommenen Adminsitzung der kürzeste Weg, ein Konto an sich zu ziehen
+  (F-R17-06). Die neue Adresse gilt weiter sofort, aber solange die alte
+  weder zugestimmt hat noch sieben Tage ohne Widerspruch vergangen sind,
+  geht **kein Setz-Link** hinaus — weder über die Verwaltung noch über
+  „Passwort vergessen" (dort still, damit die Seite für jede Adresse
+  dasselbe sagt). Die Mail an die alte Adresse trägt einen Link auf die neue
+  Seite `adresse_verwaltung.php`: zwei Knöpfe, Zustimmen oder Widersprechen.
+  Ein Widerspruch setzt die alte Adresse zurück, entwertet offene Setz-Links,
+  beendet alle Sitzungen des Kontos und schreibt jeder BetreiberIn eine
+  Mail. **Warum Knöpfe und kein Link, der gleich widerspricht:** Manche
+  Mailprogramme rufen Links vorab ab; ein solcher Link setzte Adressen
+  zurück, ohne dass jemand geklickt hat. **Keine Abkürzung** (E-R17-45),
+  auch nicht für die BetreiberIn — sie wäre genau der Weg einer
+  übernommenen Sitzung. Preis: Wer seine alte Adresse verloren hat, wartet
+  sieben Tage auf den Setz-Link. Gespeichert wird die Frist in `app_state`,
+  ohne Spalte (E-R17-50).
+- **Mails bei neuen Wiederherstellungscodes und bei einem erneuerten
+  Wiederherstellungsschlüssel.** Beides geschah bis dahin still, nur mit
+  einem Protokolleintrag, den die Rolle user nicht sieht. Wer Passwort und
+  Sitzung erbeutet hatte, entwertete so die Codes der Person oder ersetzte
+  ihren Rückweg, ohne dass sie es erfuhr (F-R17-43, -10).
+
+### Geändert
+
+- **Sieben Passwortnachweise, eine Funktion mit Ratentopf.** Adresswechsel,
+  Passwortwechsel, Kontolöschung und die stille Anhebung der Rundenzahl
+  (`api/kdf_upgrade.php`) prüften das Anmelde-Token ohne Ratentopf; mit
+  einer erbeuteten Sitzung ließ sich das Passwort dort online raten, ohne
+  Sperre (F-R17-32). Die drei Geschwister (`schluessel_erneuern`,
+  `kontopaar`, `rueckweg_anlegen`) hatten den Topf, jedes in einer eigenen
+  Abschrift. Jetzt tragen alle sieben `passwort_nachweis()` in
+  `auth_guard.php`: Topf `login` und Vergleich über den Pfeffer in einem
+  Aufruf, so dass keine achte Abschrift das eine ohne das andere haben kann
+  (E-R17-49). Zehn Fehlversuche dort sperren auch die Anmeldung — gewollt:
+  Es ist dasselbe Passwort.
+- **Frischer Code vor fünf weiteren Handlungen:** dem Download einer
+  Komplettsicherung (beide Arten, E-R17-48 — die Passphrase wählt, wer
+  herunterlädt), der Freigabe, dem Adresswechsel und dem Setz-Link durch die
+  Verwaltung, und neuen Wiederherstellungscodes. Das Schlüsselblatt verlangte
+  ihn schon; der Abzug, der mehr enthält, verlangte ihn nicht (F-R17-08).
+- **Ein Admin hat an BetreiberIn-Konten keinen schreibenden Griff** (Nr. 371,
+  F-R17-07). Riegel gab es nur für den Rollenwechsel und die letzte
+  BetreiberIn; eine zweite BetreiberIn ließ sich von einem Admin sperren,
+  löschen oder auf eine eigene Adresse umschreiben. Jetzt steht ein Riegel
+  vor **allen** Handlungen der Kontoseite (E-R17-47), damit eine spätere
+  neue Handlung ihn von selbst erbt; ansehen darf der Admin die Seite
+  weiter, mit gesperrten Feldern und ohne Knöpfe.
+- **Das Demo-Konto sperrt auch Status, Grenzen und Zweitfaktor** (F-R17-42).
+  Bis dahin hielt nur das Markup den Knopf fern, und ein POST von Hand
+  sperrte das öffentliche Konto — der Reset setzt den Status nicht zurück.
+
+### Behoben
+
+- **Die Selbstlöschung ging nie** (F-R17-67, gefunden beim Umbau). Das
+  Formular schickte das Passwort im Klartext, der Server verglich es mit dem
+  Hash — und der ist bcrypt des *Tokens*, nicht des Passworts. Jede
+  Löschung endete mit „Das Passwort war leer oder falsch". Der Kommentar
+  dazu sagte, die Karte lade kein `crypto.js`; der Reiter Profil lädt es.
+  Jetzt leitet das Formular das Token im Browser ab wie die Karten darüber;
+  das Passwort verlässt den Browser nicht mehr.
+- **Die Mailwarteschlange räumt die Adresse eines gelöschten Kontos ab**
+  (F-R17-21). `mail_konto_entfernen()` verlangte das in seinem Docblock bei
+  jeder Kontolöschung und hatte keinen Aufrufer; die Adresse blieb bis zu
+  30 Tage in der Warteschlange und in jeder Komplettsicherung dieser Zeit.
+  Der Verfalljob reiht seine Abschiedsmail deshalb erst *nach* der Löschung
+  ein, sonst nähme die Löschung sie mit.
+
+### Bewusst so
+
+- **Kein Umschlüsseln des Bestands.** Der Inhaltsschlüssel wechselt weiter
+  nie; wer ihn einmal hatte, liest auch spätere Abzüge (F-R17-10). Das ist
+  ein Restrisiko im Bedrohungsmodell (R17-27), keine Aufgabe dieses Pakets —
+  hier kommt nur die Mail dazu.
+- **`pat_key_check` bleibt die einzige Prüfung beim Reset.** Die Kette aus
+  F-R17-06 verliert zwei Glieder (keine Freigabe an sich selbst, kein
+  Setz-Link an eine frisch umgeschriebene Adresse), die Prüfung selbst
+  bleibt, wie sie ist; `Technik.md` 4.99q benennt ihre Schwäche.
+
 ## [Web 23.1.0] — unveröffentlicht
 
 Schritt 12b, Paket R17-19 — Kette und Werkzeuge (Befunde F-R17-03, -14

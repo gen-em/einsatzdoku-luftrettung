@@ -407,6 +407,14 @@ function mail_katalog(): array
             'text' => fn(array $d): string => mail_rahmen('Hallo,', $d['kern']),
         ],
 
+        /* WIDERSPRUCH GEGEN EINEN ADRESSWECHSEL DURCH DIE VERWALTUNG (R17-20,
+         * E-R17-45) — an jede BetreiberIn, ohne Adressen. */
+        'adresse_widerspruch' => [
+            'art' => 'betrieb', 'frist' => 86400, 'pflicht' => ['kern', 'link'],
+            'betreff' => fn(array $d): string => 'Widerspruch gegen einen Adresswechsel — ' . $n,
+            'text' => fn(array $d): string => mail_rahmen('Hallo,', $d['kern'] . "\n\n" . $d['link']),
+        ],
+
         'sicherheit_sammel' => [
             'art' => 'betrieb', 'frist' => 7200, 'pflicht' => ['kern'],
             /* FRIST ZWEI STUNDEN. Eine Sicherheitsmeldung, die drei Tage
@@ -561,6 +569,79 @@ function mail_katalog(): array
                 . $d['link'],
                 "Falls du das nicht warst, ändere bitte umgehend dein Passwort und melde dich\n"
                 . "bei der Verwaltung."),
+        ],
+
+        /* ADRESSWECHSEL DURCH DIE VERWALTUNG (R17-20, F-R17-06, E-R17-45) —
+         * an die ALTE Adresse, mit dem Link zur Entscheidung. Ersetzt fuer
+         * diesen Weg die blosse Hinweismail `adresswechsel`: Die konnte nur
+         * berichten, diese kann aufhalten. Der Link fuehrt auf eine Seite mit
+         * zwei Knoepfen und tut beim Aufruf selbst nichts — ein Mailprogramm,
+         * das Links vorab abruft, loest damit keinen Widerspruch aus. */
+        'adresswechsel_verwaltung' => [
+            'art' => 'konto', 'frist' => 86400, 'pflicht' => ['alt', 'neu', 'link', 'bis'],
+            'betreff' => fn(array $d): string => 'Deine Anmeldeadresse wurde geändert — ' . $n,
+            'text' => fn(array $d): string => mail_rahmen('Hallo,',
+                "die Verwaltung der " . $n . " hat die Anmeldeadresse deines Kontos\n"
+                . "geändert:\n\n"
+                . "  bisher: " . $d['alt'] . "\n"
+                . "  neu:    " . $d['neu'] . "\n\n"
+                . "Bis zum " . $d['bis'] . " gilt die neue Adresse als unbestätigt: Bis dahin\n"
+                . "verschickt " . $n . " keinen Link zum Setzen eines Passworts. Über den Link\n"
+                . "unten bestätigst du den Wechsel oder widersprichst ihm:\n\n"
+                . $d['link'],
+                "Falls du um diesen Wechsel nicht gebeten hast, widersprich bitte über den\n"
+                . "Link — deine bisherige Adresse gilt dann wieder, und alle Sitzungen deines\n"
+                . "Kontos werden beendet."),
+        ],
+
+        /* NEUE WIEDERHERSTELLUNGSCODES (R17-20, F-R17-43). Die Codes sind ein
+         * dauerhafter zweiter Faktor; wer sie mit einer erbeuteten Sitzung neu
+         * erzeugt, entwertet die alten — die rechtmaessige Person merkte es
+         * sonst erst, wenn ihre Codes nicht mehr gelten. Muster
+         * `passkey_entfernt`. */
+        'zf_codes_erneuert' => [
+            'art' => 'konto', 'frist' => 86400, 'pflicht' => ['link'],
+            'betreff' => fn(array $d): string => 'Neue Wiederherstellungscodes — ' . $n,
+            'text' => fn(array $d): string => mail_rahmen('Hallo,',
+                "an deinem Konto bei der " . $n . " sind neue Wiederherstellungscodes für den\n"
+                . "Zweitfaktor erzeugt worden. Die bisherigen Codes und ein gedrucktes Codeblatt\n"
+                . "gelten ab jetzt nicht mehr.\n\n"
+                . $d['link'],
+                "Falls du das nicht warst, ändere bitte umgehend dein Passwort, erzeuge dort\n"
+                . "neue Codes und melde dich bei der Verwaltung."),
+        ],
+
+        /* DER WIEDERHERSTELLUNGSSCHLUESSEL IST ERNEUERT (R17-20, F-R17-10).
+         * Wer Passwort und Sitzung hat, ersetzt damit `pat_wrap_rc` durch eine
+         * eigene Huelle; bis Web 23.1.0 stand das nur im Protokoll, und das
+         * sieht die Rolle user nicht. Dasselbe Muster wie `rueckweg_erneuert`. */
+        'schluessel_erneuert' => [
+            'art' => 'konto', 'frist' => 86400, 'pflicht' => ['link'],
+            'betreff' => fn(array $d): string => 'Wiederherstellungsschlüssel erneuert — ' . $n,
+            'text' => fn(array $d): string => mail_rahmen('Hallo,',
+                "an deinem Konto bei der " . $n . " ist der Wiederherstellungsschlüssel\n"
+                . "erneuert worden — dafür wurde dein Passwort eingegeben. Der bisherige\n"
+                . "Schlüssel auf deinem Notfallblatt gilt ab jetzt nicht mehr.\n\n"
+                . $d['link'],
+                "Falls du das nicht warst, ändere bitte umgehend dein Passwort, erneuere dort\n"
+                . "den Schlüssel und melde dich bei der Verwaltung."),
+        ],
+
+        /* EIN KONTO-BACKUP IST FREIGEGEBEN (R17-20, F-R17-02). An Herkunfts-
+         * und Zieladresse — in aller Regel dieselbe, dann eine Mail. Bis Web
+         * 23.1.0 geschah eine Freigabe still; das Zielkonto bekam beim
+         * Einloesen den entsiegelten Bestand des Herkunftskontos. */
+        'kontobackup_freigegeben' => [
+            'art' => 'konto', 'frist' => 86400, 'pflicht' => ['link', 'ziel'],
+            'betreff' => fn(array $d): string => 'Konto-Backup zum Einspielen freigegeben — ' . $n,
+            'text' => fn(array $d): string => mail_rahmen('Hallo,',
+                "die Verwaltung der " . $n . " hat ein Konto-Backup zum Einspielen\n"
+                . "freigegeben, und zwar für das Konto " . $d['ziel'] . ". Eingespielt wird es\n"
+                . "dort unter Einstellungen → Backup, mit dem Wiederherstellungsschlüssel.\n\n"
+                . $d['link'],
+                "Falls du darum nicht gebeten hast, melde dich bitte umgehend bei der\n"
+                . "Verwaltung — sie kann die Freigabe widerrufen, solange sie nicht\n"
+                . "eingespielt ist."),
         ],
 
         /* PASSKEYS (Schritt 18, SR-09, E-SR-33) — nach dem Muster

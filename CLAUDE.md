@@ -300,7 +300,14 @@ davon aufweicht, wird nicht nebenbei gemacht, sondern angesprochen:
   nichts öffnen** — er kennt den Anteil, nicht die PBKDF2-Hälfte aus dem
   Passwort. Was sich ändert, ist die Rechnung des Angreifers: Ein
   Datenbankabzug allein reicht nicht mehr für einen Offline-Angriff auf das
-  Passwort. **`config.php` ist damit Schlüsselträger aller Konten** — das
+  Passwort — **seit Web 23.2.0 wahr, weil auch der Anmelde-Hash einen Pfeffer
+  aus `kdf_anteil` trägt** (`pf1:`, `anmeldehash_bilden()`, R17-20, E-R17-20,
+  -51), für jedes Konto, das sich seither angemeldet hat; das Demo-Konto ist
+  ausgenommen. *(Bis dahin stand der Satz hier, und er war falsch: Der Hash
+  war bcrypt des Tokens ohne Anteil, und an ihm ließ sich offline raten,
+  F-R17-01.)* Der Preis: Fehlt der Anteil, meldet sich niemand an, auch die
+  BetreiberIn nicht (E-R17-44, Runbook `Technik.md` 7).
+  **`config.php` ist damit Schlüsselträger aller Konten** — das
   Wiederanlaufpaket (vier Stücke) und das Schlüsselblatt sind Pflicht, nicht
   Empfehlung. Wer diesen Absatz zitiert, zitiert den nächsten Satz mit:
   **`pat_wrap_rc` hängt NICHT am Anteil.** Der Wiederherstellungsschlüssel

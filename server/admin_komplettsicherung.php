@@ -41,6 +41,13 @@ $notice = null; $error = null;
 /* ---- Download: läuft VOR jeder Ausgabe und endet mit exit ---------------- */
 if ($_SERVER['REQUEST_METHOD'] === 'POST'
     && (string)($_POST['action'] ?? '') === 'herunterladen') {
+    /* EIN FRISCHER CODE VOR JEDEM DOWNLOAD (R17-20, F-R17-08, E-R17-48) —
+     * vor dem Token wie ein Rollentor. Beide Arten: Die Passphrase waehlt,
+     * wer herunterlaedt, und eine uebernommene Sitzung bekaeme mit ihr
+     * denselben Abzug aller Konten wie mit „klar". Das Schluesselblatt
+     * verlangte den frischen Code schon; der Abzug, der mehr enthaelt,
+     * verlangte ihn bis Web 23.1.0 nicht. */
+    zweitfaktor_frisch_verlangen('komplett_herunterladen');
     csrf_check();
     $datei = (string)($_POST['datei'] ?? '');
     $art   = (string)($_POST['art'] ?? 'klar');

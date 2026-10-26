@@ -508,6 +508,150 @@ function adresse_vormerkung_loeschen(int $userId): void
                           email_neu_bis = NULL WHERE id = ?')->execute([$userId]);
 }
 
+/* ---- Adresswechsel durch die Verwaltung: unbestaetigt bis zur Frist -------
+ *
+ * (R17-20, F-R17-06, E-R17-45)
+ *
+ * WAS DAS PROBLEM WAR. Die Verwaltung schrieb eine fremde Anmeldeadresse
+ * sofort um und konnte gleich danach einen Setz-Link an die neue schicken.
+ * Mit einer uebernommenen Adminsitzung war das die Kette zur Kontouebernahme:
+ * Adresse auf eine eigene, Setz-Link, auf `pw_handling.php` neues Token und
+ * eine Huelle mit bekanntem `key_check` (der kam bis R17-20 aus einer
+ * Freigabe an sich selbst). Danach Anmeldung, Klartext und Geraete des
+ * Kontos uebernommen. Die Hinweismail an die alte Adresse kam an — aber sie
+ * konnte nichts aufhalten.
+ *
+ * WAS JETZT GILT. Die neue Adresse gilt sofort (Anmeldung, Anzeige), ist
+ * aber UNBESTAETIGT: Solange geht kein Setz-Link hinaus, weder ueber die
+ * Verwaltung noch ueber „Passwort vergessen". Bestaetigt ist sie, wenn die
+ * ALTE Adresse ueber den Link in ihrer Mail zustimmt oder `ADRESSE_FRIST_S`
+ * ohne Widerspruch vergeht. Ein Widerspruch setzt die alte Adresse zurueck,
+ * entwertet alle offenen Setz-Links, beendet alle Sitzungen und meldet es.
+ * Keine Abkuerzung, auch nicht fuer die BetreiberIn: Eine Abkuerzung waere
+ * genau der Weg einer uebernommenen Sitzung.
+ *
+ * ZWEI ZEILEN IN `app_state`, weil eine nicht reicht: Die Spalte haelt 190
+ * Zeichen, und eine Adresse darf 190 lang sein (`email_pruefen()`).
+ *   adresse_offen:<id>  "<bis als Unixzeit>|<sha256 des Tokens>"
+ *   adresse_alt:<id>    die alte Adresse
+ * Keine Spalte in `users`, keine Migration (E-R17-50). `konto_loeschen()`
+ * raeumt beide Zeilen mit.
+ *
+ * PREIS: Wer seine alte Adresse verloren hat, wartet sieben Tage auf den
+ * Setz-Link.
+ */
+const ADRESSE_FRIST_S = 7 * 86400;
+
+/**
+ * Den Wechsel vormerken. Gibt den Token fuer den Link an die alte Adresse.
+ *
+ * WECHSELT DIE VERWALTUNG ERNEUT, BEVOR DIE FRIST UM IST, bleibt die ERSTE
+ * alte Adresse stehen — sie ist die, die der Besitzerin gehoert. Frist und
+ * Token beginnen neu; der vorige Link ist damit verbraucht.
+ */
+function adresse_verwaltung_vormerken(int $userId, string $alt): string
+{
+    $offen = adresse_unbestaetigt($userId);
+    $altBleibt = $offen !== null ? $offen['alt'] : $alt;
+    $token = bin2hex(random_bytes(32));
+    app_state_setzen_mehrere([
+        'adresse_offen:' . $userId => (time() + ADRESSE_FRIST_S) . '|' . hash('sha256', $token),
+        'adresse_alt:' . $userId   => $altBleibt,
+    ]);
+    return $token;
+}
+
+/**
+ * Ist die Adresse dieses Kontos unbestaetigt? Dann `['alt', 'bis']`, sonst null.
+ *
+ * Eine abgelaufene Frist raeumt hier ab: Ab dann gilt die Adresse als
+ * bestaetigt, und die zwei Zeilen werden nicht mehr gebraucht.
+ */
+function adresse_unbestaetigt(int $userId): ?array
+{
+    $w = app_state_mehrere(['adresse_offen:' . $userId, 'adresse_alt:' . $userId]);
+    $offen = (string)($w['adresse_offen:' . $userId] ?? '');
+    if (!preg_match('/^(\d+)\|([0-9a-f]{64})$/', $offen, $m)) { return null; }
+    if ((int)$m[1] <= time()) {
+        app_state_loeschen('adresse_offen:' . $userId, 'adresse_alt:' . $userId);
+        return null;
+    }
+    return ['alt' => (string)($w['adresse_alt:' . $userId] ?? ''), 'bis' => (int)$m[1],
+            'hash' => $m[2]];
+}
+
+/**
+ * Die Antwort der alten Adresse: `zustimmen` oder `widersprechen`.
+ *
+ * @return array{ok:bool, grund:string, alt:string}
+ *
+ * DER TOKEN IST DER NACHWEIS — er stand nur in der Mail an die alte Adresse.
+ * Kein Ratenschutz, aus demselben Grund wie bei `adresse_bestaetigen()`: 32
+ * Byte Zufall raet niemand.
+ */
+function adresse_verwaltung_antwort(int $userId, string $token, string $antwort): array
+{
+    $offen = adresse_unbestaetigt($userId);
+    if ($offen === null || !hash_equals($offen['hash'], hash('sha256', $token))) {
+        return ['ok' => false, 'alt' => '',
+                'grund' => 'Dieser Link ist abgelaufen oder schon benutzt worden.'];
+    }
+    require_once __DIR__ . '/protokoll_lib.php';
+    $alt = $offen['alt'];
+
+    if ($antwort === 'zustimmen') {
+        app_state_loeschen('adresse_offen:' . $userId, 'adresse_alt:' . $userId);
+        protokoll('verwaltung', 'adresse_bestaetigt',
+                  'Adresswechsel durch die Verwaltung von der bisherigen Adresse bestätigt',
+                  [], $userId);
+        return ['ok' => true, 'grund' => '', 'alt' => $alt];
+    }
+
+    /* WIDERSPRUCH: alte Adresse zurueck, offene Setz-Links weg, alle
+     * Sitzungen hinaus — in einem Zug. Ist die alte Adresse inzwischen
+     * vergeben, bleibt die neue stehen; die Meldung an die BetreiberIn geht
+     * trotzdem, denn genau dann muss jemand hinsehen. */
+    $pdo = db();
+    $zurueck = true;
+    try {
+        db_transaktion($pdo, static function (PDO $pdo) use ($userId, $alt): void {
+            $pdo->prepare('UPDATE users SET email = ?, session_epoch = session_epoch + 1
+                            WHERE id = ?')->execute([$alt, $userId]);
+            $pdo->prepare('UPDATE password_resets SET used_at = NOW()
+                            WHERE user_id = ? AND used_at IS NULL')->execute([$userId]);
+        });
+    } catch (PDOException $ex) {
+        if (!ist_dublettenfehler($ex)) { throw $ex; }
+        $zurueck = false;
+    }
+    app_state_loeschen('adresse_offen:' . $userId, 'adresse_alt:' . $userId);
+    protokoll('verwaltung', 'adresse_widersprochen',
+              'Adresswechsel durch die Verwaltung von der bisherigen Adresse widersprochen'
+            . ($zurueck ? ' — zurückgesetzt' : ' — NICHT zurückgesetzt, die Adresse ist vergeben'),
+              ['zurueck' => $zurueck], $userId);
+    /* AN JEDE BETREIBERIN EINE MAIL (E-R17-45): Ein Widerspruch heisst, dass
+     * jemand mit Verwaltungsrechten eine fremde Adresse umgeschrieben hat,
+     * die die Besitzerin nicht wollte — womoeglich eine uebernommene
+     * Sitzung. Ohne Adressen im Text, wie das Protokoll (E-P5b-16). */
+    require_once __DIR__ . '/mail_lib.php';
+    foreach (mail_betreiberinnen() as $an) {
+        mail_einreihen('adresse_widerspruch', $an, [
+            'kern' => 'Die bisherige Adresse des Kontos Nr. ' . $userId . ' hat einem '
+                    . "Adresswechsel durch die Verwaltung widersprochen.\n"
+                    . ($zurueck ? 'Die bisherige Adresse ist zurückgesetzt, alle Sitzungen '
+                                . 'des Kontos sind beendet, offene Setz-Links entwertet.'
+                                : 'Die bisherige Adresse ist inzwischen vergeben und '
+                                . 'wurde NICHT zurückgesetzt — bitte von Hand klären.')
+                    . "\n\nWer die Adresse geändert hat, steht im Protokoll (Reiter "
+                    . 'Verwaltung, „Adresse geändert“).',
+            'link' => app_url('/admin_user.php?id=' . $userId)]);
+    }
+    return ['ok' => $zurueck, 'alt' => $alt,
+            'grund' => $zurueck ? '' : 'Die bisherige Adresse wird inzwischen von einem '
+                                     . 'anderen Konto verwendet und ließ sich nicht '
+                                     . 'zurücksetzen. Die BetreiberIn ist informiert.'];
+}
+
 /* ---- Selbstloeschung mit Karenz (E-P5b-16) ------------------------------- */
 
 /** Karenz zwischen Antrag und endgueltiger Loeschung, in Tagen. */
@@ -801,7 +945,20 @@ function konto_loeschen(int $userId, bool $mitSicherungen, string $weg): array
      * Ballast. */
     /* `app_state_loeschen()` faengt und protokolliert selbst — das Loeschen
      * des Kontos darf daran nicht scheitern. */
-    app_state_loeschen('mengen:' . $userId, 'mengen_gemeldet:' . $userId);
+    app_state_loeschen('mengen:' . $userId, 'mengen_gemeldet:' . $userId,
+                       'adresse_offen:' . $userId, 'adresse_alt:' . $userId);
+
+    /* 6. DIE MAILWARTESCHLANGE DIESER ADRESSE (R17-20, F-R17-21). Der
+     *    Docblock von `mail_konto_entfernen()` verlangte diesen Aufruf bei
+     *    jeder Kontoloeschung — es gab keinen. Die Adresse eines geloeschten
+     *    Kontos blieb bis zu 30 Tage in der Warteschlange und in jeder
+     *    Komplettsicherung dieser Zeit. NACH dem `DELETE`: Das Protokoll
+     *    oben kann selbst noch eine Mail einreihen, und die soll mit weg.
+     *    Die Hinweismail an eine fruehere Adresse (`adresswechsel`) trifft
+     *    das nicht — sie geht an eine Adresse, die dem Konto nicht mehr
+     *    gehoert, und ist gerade fuer diesen Fall da. */
+    require_once __DIR__ . '/mail_lib.php';
+    mail_konto_entfernen($pdo, $email);
 
     return ['ok' => true, 'grund' => ''];
 }

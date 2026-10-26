@@ -194,6 +194,11 @@ $beispiel = [
     // der Wechsel ueber die Karte, mit 'hand' einer, der von Hand in
     // config.php stand (E-SR-74) — die Schluesselwechselprobe reiht ihn ein.
     'weg'         => 'oberflaeche',
+    // Seit R17-20: die Frist eines Adresswechsels durch die Verwaltung
+    // (adresswechsel_verwaltung) und das Zielkonto einer Freigabe
+    // (kontobackup_freigegeben).
+    'bis'         => '02.11.2026 um 07:00 Uhr',
+    'ziel'        => 'ziel@beispiel.invalid',
 ];
 $fehlend = [];
 foreach ($katalog as $k => $e) {

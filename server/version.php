@@ -8311,5 +8311,26 @@ declare(strict_types=1);
  *   eine Nummer, die Nr. 393 vier Tage vorher schon vergeben hatte
  *   (F-R17-64). Ausgeliefert war keine der beiden; mit dem Merge von
  *   Nr. 393 behaelt die 23.0.3 deren Inhalt, und R17-18 geht in 23.1.0 auf.
+ * 23.2.0 — KONTEN, NACHWEISE UND FREIGABE (Schritt 12b, R17-20; F-R17-01,
+ *   -02, -06 bis -08, -10, -21, -32, -42, -43, -67). Der Anmelde-Hash
+ *   traegt einen PFEFFER: `pf1:<Anteil-Kennung>:bcrypt(HMAC(pfeffer,
+ *   Token))`, der Pfeffer aus `kdf_anteil` abgeleitet und nie ausgeliefert
+ *   (E-R17-20, -51). Bis dahin riet, wer nur die Datenbank hatte, offline
+ *   weiter; der Satz „ein Abzug allein genuegt nicht mehr" war falsch und
+ *   ist es fuer jedes Konto nicht mehr, das sich seither angemeldet hat —
+ *   die Umstellung laeuft still bei der Anmeldung, in der vorhandenen
+ *   Spalte. Preis: Fehlt der Anteil, meldet sich niemand an (E-R17-44).
+ *   Sieben Stellen, die das Anmelde-Token als Nachweis verlangen, laufen
+ *   ueber `passwort_nachweis()` mit Ratentopf; vier rieten bis dahin ohne
+ *   Sperre — und die Selbstloeschung verglich das Klartext-Passwort mit
+ *   bcrypt(Token) und ging nie (F-R17-67). Eine Freigabe geht nur noch an
+ *   das Herkunftskonto oder an dieselbe Adresse, mit Protokoll und Mail;
+ *   ein Adresswechsel durch die Verwaltung ist sieben Tage unbestaetigt
+ *   und sperrt so lange den Setz-Link (neue Seite
+ *   `adresse_verwaltung.php`); ein Admin hat an BetreiberIn-Konten keinen
+ *   schreibenden Griff; frischer Code fuer Komplett-Download, Freigabe,
+ *   Adresswechsel, Setz-Link und neue Wiederherstellungscodes; Mails bei
+ *   neuen Codes und erneuertem Wiederherstellungsschluessel. Neben, weil
+ *   Mails, eine Seite und Riegel dazukommen; kein Schema (E-R17-50).
  */
-const WEB_VERSION = '23.1.0';
+const WEB_VERSION = '23.2.0';

@@ -9659,3 +9659,20 @@ zutreffen.
      Erledigt 21.10.2026 (12b, Freigaberunde, E-R17-25): Die Weiche bleibt —
      die Adresse steht in Runbooks, Lesezeichen und `WARTUNG_AUSNAHMEN`, der
      Notausgang `php update.php` auch. Nichts mehr zu bauen.
+
+371. **Ein Admin darf BetreiberIn-Konten nicht sperren, löschen oder umadressieren.** · gehört zu: 12b · Stand: erledigt · seit 11.10.2026
+     *Aufgenommen 11.10.2026 aus Schritt 12 (Bedrohungsmodell, F-R17-07,
+     E-R17-11).* `admin_user.php` kennt gegenüber einem BetreiberIn-Konto
+     nur zwei Riegel: den Rollenwechsel und die letzte BetreiberIn. Ein Konto
+     der Rolle admin kann ein **zweites** BetreiberIn-Konto über
+     `konto_status` sperren, über `user_delete` löschen (mit frischem Code)
+     oder über `konto` die Anmeldeadresse ändern und es so aussperren. Die
+     Berechtigungsmatrix (`Technik.md` 4.99p) und die Rollenprobe messen nur
+     `{ziel}` = `user`. Entschieden: nicht erlaubt — Riegel in
+     `admin_user.php` (admin ⊂ betreiberin heißt auch: nach oben kein Griff),
+     eine Zeile in 4.99p, ein Fall in `tools/proben/rollen/`. Kleines Paket
+     in 12b.
+     Erledigt 26.10.2026 (Web 23.2.0, R17-20, E-R17-47): Der Riegel steht
+     vor ALLEN Handlungen der Kontoseite, nicht nur vor den dreien; ansehen
+     bleibt. Matrix 4.99p mit `{betreiberin}` (acht Zeilen), Rollenprobe
+     dazu mit gültigem Token: Status und Adresse bleiben.

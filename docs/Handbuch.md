@@ -433,10 +433,12 @@ Glas" ist leichter zu merken und schwerer zu raten als „Kl!n1k2026". Länge
 zählt hier mehr als Sonderzeichen, und das ist keine Geschmacksfrage, sondern
 die Rechnung eines Rateangriffs.
 
-**Warum das mehr wiegt als sonst.** Wer die Datenbank stiehlt, kann dein
-Passwort ausprobieren, so oft er will — auf seinem eigenen Rechner, ohne
-Sperre nach Fehlversuchen und ohne dass es jemand merkt. Der einzige Schutz
-dagegen ist ein Passwort, das sich nicht raten lässt. Der Server kann dabei
+**Warum das mehr wiegt als sonst.** Wer die Datenbank **und** die
+Konfigurationsdatei des Servers stiehlt, kann dein Passwort ausprobieren, so
+oft er will — auf seinem eigenen Rechner, ohne Sperre nach Fehlversuchen und
+ohne dass es jemand merkt. Die Datenbank allein reicht dafür seit Web 23.2.0
+nicht mehr (bis dahin reichte sie). Gegen beides zusammen hilft nur ein
+Passwort, das sich nicht raten lässt. Der Server kann dabei
 nicht helfen: Er sieht das Passwort nie (Abschnitt 5), also kann er seine Güte
 auch nicht prüfen. Was die Seite prüft, prüft dein Browser.
 
@@ -458,6 +460,12 @@ Stärke der Verschlüsselung — es schützt nicht nur den Zugang, sondern leite
 den Schlüssel ab, mit dem die geschützten Angaben eines Einsatzes
 verschlüsselt werden — Patientendaten, Einsatzort, Abfahrtort und Notizen;
 die vollständige Liste steht in Abschnitt 5.
+
+**„Dieser Installation fehlt der Server-Anteil"** statt „Anmeldung
+fehlgeschlagen" heißt: Dein Passwort kann richtig sein, aber dem Server fehlt
+ein Teil seiner Konfiguration, ohne den er es nicht prüfen kann (seit Web
+23.2.0). Die BetreiberIn ist informiert. Über „Passwort vergessen" und deinen
+Wiederherstellungsschlüssel kommst du trotzdem hinein.
 
 **Die erste Anmeldung nach dem Update dauert länger.** Seit Web 15.6.0 rechnet
 der Browser mit 600 000 statt 320 000 Runden; solange ein Konto noch auf der
@@ -736,6 +744,12 @@ um eine höhere Grenze bitten. Sie kann sie **je Konto** setzen (11.1).
 
 Unter dem Zahnrad → **Profil**, ganz unten. **Du brauchst niemanden zu fragen.**
 
+**Dein aktuelles Passwort** ist der Nachweis; es verlässt den Browser nicht.
+*(Bis Web 23.1.0 ging die Löschung an dieser Stelle nie — die Seite sagte
+immer „Passwort leer oder falsch", auch beim richtigen.)* Nach zehn falschen
+Passwörtern hier, beim Passwort- oder Adresswechsel ist eine Weile Pause;
+dieselbe Sperre gilt dann auch für die Anmeldung.
+
 **Was passiert:** Dein Konto wird sofort gesperrt und nach **30 Tagen**
 endgültig gelöscht. In dieser Zeit genügt eine **Anmeldung**, und die Löschung
 ist zurückgenommen — einen Knopf dafür brauchst du nicht. Mit Zweitfaktor
@@ -803,7 +817,10 @@ sich **nicht nachdrucken**. Bewahre es getrennt vom Handy auf. Auf der Seite
 „Zweitfaktor einrichten" wird **„Weiter"** erst frei, wenn du **„Ich habe die
 Codes gesichert."** angehakt hast. **„Neue Codes
 erzeugen"** gibt dir zehn neue; die alten und ein gedrucktes Blatt gelten dann
-nicht mehr. Die Karte zeigt, wie viele noch offen sind („8 von 10").
+nicht mehr. Seit Web 23.2.0 fragt die Seite dafür nach einem **frischen
+Code** (unten), und eine Mail an deine Adresse sagt, dass neue Codes erzeugt
+wurden — hat das jemand anderes getan, erfährst du es so. Die Karte zeigt,
+wie viele noch offen sind („8 von 10").
 
 **Anmelden.** Nach dem Passwort fragt die Seite nach dem **Code aus der App**;
 Leerzeichen sind egal. Ein Passwortmanager mit gespeichertem Einmalcode
@@ -905,7 +922,11 @@ Handlungen verlangen einen Code, der höchstens **15 Minuten** alt ist: die
 Griffe an den Schlüsseln des Servers und das Schlüsselblatt, auf der
 Kontoseite einer anderen Person Rolle wechseln, Zweitfaktor zurücksetzen und
 Konto löschen, das Ausschalten deines eigenen Zweitfaktors und — seit Web
-21.10.0 — einen Passkey hinzufügen oder entfernen. Hast du dich eben mit dem
+21.10.0 — einen Passkey hinzufügen oder entfernen. Seit Web 23.2.0 kommen
+dazu: **neue Wiederherstellungscodes** erzeugen (sie sind ein dauerhafter
+zweiter Faktor wie ein Passkey), und in der Verwaltung ein Komplett-Backup
+herunterladen, ein Konto-Backup freigeben, die Anmeldeadresse einer anderen
+Person ändern und ihr einen Setz-Link senden. Hast du dich eben mit dem
 Code oder einem Passkey angemeldet, merkst du davon nichts. Kamst du über ein
 gemerktes Gerät herein oder ist die Anmeldung älter, erscheint die Seite
 **„Code bestätigen"** — Code aus der App (oder ein Wiederherstellungscode)
@@ -3972,7 +3993,28 @@ Darunter:
 | **Konto-Backups** | Die Pakete **dieses** Kontos mit Zeitpunkt, Umfang und Größe; im Kartenkopf der Zustand als Plakette und „Jetzt sichern". Läuft eine Freigabe, steht sie als blaue Zeile darüber. |
 | **Konto löschen** | Die Gefahrenzone, rot abgesetzt, ganz unten. |
 
-**Rolle wechseln, Zweitfaktor zurücksetzen und Konto löschen verlangen seit Web 21.9.0 einen frischen Code** (höchstens 15 Minuten alt, 3.1f). Ist er älter — etwa nach einer Anmeldung über ein gemerktes Gerät —, führt der Knopf zuerst auf „Code bestätigen"; danach steht die Kontoseite wieder da, mit dem Hinweis, die Handlung noch einmal auszulösen. Name und Adresse speichern ohne Rollenwechsel fragt nicht.
+**Rolle wechseln, Zweitfaktor zurücksetzen und Konto löschen verlangen seit Web 21.9.0 einen frischen Code** (höchstens 15 Minuten alt, 3.1f), **seit Web 23.2.0 auch Adresse ändern, Setz-Link senden und Freigeben**. Ist er älter — etwa nach einer Anmeldung über ein gemerktes Gerät —, führt der Knopf zuerst auf „Code bestätigen"; danach steht die Kontoseite wieder da, mit dem Hinweis, die Handlung noch einmal auszulösen. Nur den Namen speichern fragt nicht.
+
+**Das Konto einer BetreiberIn ändert nur eine BetreiberIn** (seit Web 23.2.0).
+Als Admin siehst du die Kontoseite einer BetreiberIn, mit gesperrten Feldern
+und ohne Knöpfe; jede Handlung daran — sperren, löschen, Adresse, Setz-Link,
+Backups, Geräte — antwortet mit „Kein Zugriff". Bis dahin ließ sich eine
+zweite BetreiberIn von einem Admin sperren, löschen oder auf eine andere
+Adresse umschreiben.
+
+**Ändert die Verwaltung die Anmeldeadresse, ist sie sieben Tage unbestätigt**
+(seit Web 23.2.0). Die neue Adresse gilt sofort für die Anmeldung, aber bis
+die **alte** Adresse zustimmt oder sieben Tage ohne Widerspruch vergehen,
+geht **kein Setz-Link** hinaus — „Setz-Link senden" sagt dann, bis wann, und
+„Passwort vergessen" verschickt nichts. Unter dem Adressfeld steht
+„unbestätigt bis …". An die alte Adresse geht eine Mail mit einem Link: Dort
+kann die Person den Wechsel bestätigen oder ihm **widersprechen** — dann gilt
+die alte Adresse wieder, alle Sitzungen des Kontos enden, und jede
+BetreiberIn bekommt eine Mail. **Warum:** Mit einer übernommenen
+Verwaltungssitzung war „Adresse ändern, dann Setz-Link" der kürzeste Weg, ein
+fremdes Konto zu übernehmen. **Der Preis:** Wer seine alte Adresse verloren
+hat, wartet sieben Tage auf den Setz-Link; eine Abkürzung gibt es nicht, auch
+nicht für die BetreiberIn.
 
 > Die Karte **„Abonnement · ab P5"** gibt es seit Web 15.2.0 nicht mehr. Sie
 > war ein reservierter Platz und hat auf jeder Kontoseite eine Zusage
@@ -4021,7 +4063,11 @@ Wort, das immer dasselbe sagt, sagt nichts.
   **anderes** Konto weiter — der Weg für ein neu aufgesetztes Konto. Die
   NutzerIn sieht es danach in ihrem eigenen Backup-Bereich und spielt es dort
   mit ihrem Wiederherstellungsschlüssel ein. Die Verwaltung bekommt zu keinem
-  Zeitpunkt Klartext zu sehen.
+  Zeitpunkt Klartext zu sehen. **Seit Web 23.2.0 nur an ein Konto mit
+  derselben E-Mail-Adresse** wie das Backup — der Knopf steht nur da, wenn es
+  eines gibt. Meist ist der Weg deshalb der verwaiste Ordner unter
+  „Backups ohne Konto" (11.4). Jede Freigabe steht im Protokoll, und an die
+  Adresse geht eine Mail.
 
 **Läuft eine Freigabe, sagt die Karte es** (seit Web 15.2.0). Eine blaue Zeile
 über den Paketen nennt, **für wen** freigegeben ist, **seit wann** und
@@ -4368,6 +4414,20 @@ ein Paket für ein Konto frei, und einspielen kann es nur die NutzerIn selbst,
 in ihrem Backup-Bereich, mit ihrem **Wiederherstellungsschlüssel**. Der liegt
 ausschließlich bei ihr — auch die Verwaltung hat ihn nicht, und ohne ihn
 öffnen sich die geschützten Angaben des Pakets nicht.
+
+**Freigeben lässt sich ein Paket seit Web 23.2.0 nur an ein Konto mit
+derselben E-Mail-Adresse**, wie sie zum Backup gehört — oder an das Konto,
+von dem es stammt. Der Knopf „Freigeben" steht nur an Ordnern, für die es ein
+solches Konto gibt, und die Auswahl im Dialog nennt nur diese. **Warum:**
+Beim Einspielen bekommt das Zielkonto alles, was nicht verschlüsselt ist —
+Zeiten, Besatzung, Notizen der Diensttage. Bis dahin ging das an **jedes**
+Konto, auch an das eigene der Verwaltung, still und ohne Spur. Jetzt steht
+jede Freigabe im Protokoll (Reiter Sicherung), an die Adresse geht eine Mail,
+und vorher fragt die Seite nach einem frischen Code. Eine ältere Freigabe an
+ein Konto mit anderer Adresse wird nicht mehr angeboten. **Hat sich die Person
+mit einer neuen Adresse neu registriert**, ändere zuerst die Adresse ihres
+neuen Kontos auf die alte — die Frist von sieben Tagen (11.1) gilt auch
+dann.
 
 **Seit Web 22.5.0 zählen Orte, Reanimation und GPS-Daten mit.** Sie liegen im
 Paket so verschlüsselt, wie sie im Konto lagen, gebunden an dessen

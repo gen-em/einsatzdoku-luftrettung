@@ -190,7 +190,10 @@ function notweg_passwort_passt(?array $u, string $tokensRoh): bool
     }
     if ($u !== null && $u['password_hash'] !== null) {
         $token = $tokenNach[(int)($u['kdf_iter'] ?? 0) ?: 310000] ?? '';
-        return $token !== '' && password_verify($token, (string)$u['password_hash']);
+        /* Ueber den Pfeffer (R17-20). `anteil_fehlt` ist hier ein Nein: Der
+         * Notweg ersetzt den Code, nicht die Anmeldung, und die sagt den
+         * Grund selbst. */
+        return anmeldehash_pruefen((int)$u['id'], $token, (string)$u['password_hash']) === 'ok';
     }
     /* Derselbe Blindvergleich wie in `login.php` (Backlog Nr. 93): passt die
      * Konstante zur Vorgabe, genuegt die Pruefung; sonst kostet ein Hash mit

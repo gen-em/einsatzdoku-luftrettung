@@ -49,6 +49,13 @@ declare(strict_types=1);
  * rechnet die Loesung in PHP; ob der WORKER im Browser sie findet, misst der
  * Bedienweg `registrieren` der Bedienprobe, nicht diese Probe.
  *
+ * SEIT R17-20 AUCH DER PASSWORTNACHWEIS, UEBER HTTP (Abschnitt 12a): die
+ * sieben Stellen, die das Anmelde-Token verlangen, zaehlen alle in den Topf
+ * `login` (F-R17-32) — nach so vielen Fehlversuchen, wie er erlaubt, wird
+ * auch das richtige abgewiesen. Der Hash des Probenkontos traegt den
+ * Pfeffer (F-R17-01); die Gegenprobe zeigt, dass das richtige Token davor
+ * durchkommt.
+ *
  * SIE RAEUMT HINTER SICH AUF. Angelegt werden Zeilen in `rate_limits`,
  * `sicherheit_ereignisse` und `mail_warteschlange` unter eigenen Merkmalen
  * (Praefix `probe-`); am Ende sind sie weg, und die Zahl davor und danach
@@ -898,6 +905,127 @@ $st->execute([$REG_MUSTER]);
 pruef('… und hinterher keine Probenkonten, Betriebsart wie vorher',
       (int)$st->fetchColumn() === 0 && _tor_lesen($pdo, 'konten_reg_art') === $regVorArt2,
       'Betriebsart ' . var_export(_tor_lesen($pdo, 'konten_reg_art'), true));
+
+/* ======================================================================== */
+abschnitt('12a  Passwortnachweis an sieben Stellen — ein Topf (R17-20, F-R17-32)');
+/* WAS DAS PROBLEM WAR. Sieben Stellen verlangen das Anmelde-Token, bevor sie
+ * etwas Folgenreiches tun; vier davon prueften es ohne Ratentopf. Mit einer
+ * erbeuteten Sitzung riet man dort ohne Sperre. Seit R17-20 laufen alle
+ * sieben ueber `passwort_nachweis()`.
+ *
+ * WIE GEMESSEN WIRD. Ein Probenkonto mit bekanntem Token — als Hash MIT
+ * Pfeffer (`anmeldehash_bilden()`), so dass derselbe Lauf den Pfeffer am
+ * Nachweis belegt —, eine Sitzung wie nach dem Code-Schritt. Je Stelle:
+ * so viele FALSCHE Token, wie der Topf `login` erlaubt, dann das RICHTIGE.
+ * Erwartet: Das richtige wird als „gesperrt" abgewiesen. Ohne Topf ginge es
+ * durch — und die Handlung geschaehe; die Gegenprobe ist deshalb das richtige
+ * Token vor den Fehlversuchen an einer harmlosen Stelle (`kontopaar` ohne
+ * gueltigen Schluessel: Der Nachweis gelingt, danach scheitert die Form).
+ * Zwischen den Stellen wird der Topf geleert. Das richtige Token loest an
+ * keiner Stelle etwas aus: Es kommt erst, wenn der Topf zu ist. */
+require_once $wurzel . '/server/sitzung_lib.php';
+require_once $wurzel . '/server/serverkrypto_lib.php';
+$NW_MAIL = 'probe-nachweis@ratenprobe.invalid';
+$pdo->prepare('DELETE FROM users WHERE email = ?')->execute([$NW_MAIL]);
+$pdo->prepare("INSERT INTO users (email, name, role, password_hash, kdf_salt, kdf_iter)
+               VALUES (?, 'Ratenprobe Nachweis', 'user', '', '', 310000)")->execute([$NW_MAIL]);
+$nwId  = (int)$pdo->lastInsertId();
+$nwTok = bin2hex(random_bytes(32));
+$nwHash = anmeldehash_bilden($nwId, $nwTok);
+$pdo->prepare('UPDATE users SET password_hash = ? WHERE id = ?')->execute([$nwHash, $nwId]);
+$nwEpoch = (int)$pdo->query('SELECT session_epoch FROM users WHERE id = ' . $nwId)->fetchColumn();
+$nwSid  = 'ratenprobe' . bin2hex(random_bytes(10));
+$nwCsrf = bin2hex(random_bytes(16));
+$nwBind = bin2hex(random_bytes(32));
+$nwOrt = is_dir(sitzung_ablage_pfad()) ? sitzung_ablage_pfad() : (string)(session_save_path() ?: sys_get_temp_dir());
+/* IN EINEM KINDPROZESS: Diese Probe hat laengst ausgegeben, und
+ * `session_start()` geht nur vor der ersten Ausgabe (die Rollenprobe legt
+ * ihre Sitzungen deshalb ganz oben an). Dieselbe Sitzung, wie `login.php`
+ * sie nach dem Code-Schritt hinterlaesst — mit Bindung (SR-01) und frischem
+ * Code. */
+$nwDaten = ['user_id' => $nwId, 'epoch' => $nwEpoch, 'last_seen' => time(), 'csrf' => $nwCsrf,
+            'bindung' => hash('sha256', $nwBind), 'zf_frisch_bis' => time() + 3600];
+$nwSkript = tempnam(sys_get_temp_dir(), 'ratenprobe-sitzung-');
+file_put_contents($nwSkript, '<?php session_save_path(' . var_export($nwOrt, true) . '); session_id('
+    . var_export($nwSid, true) . '); session_start(); $_SESSION = ' . var_export($nwDaten, true)
+    . '; session_write_close();');
+shell_exec(escapeshellarg(PHP_BINARY) . ' ' . escapeshellarg($nwSkript));
+@unlink($nwSkript);
+$nwKeks = 'PHPSESSID=' . $nwSid . '; ' . SITZUNG_COOKIES['bindung']['name'] . '=' . $nwBind;
+$nwHole = static function (string $pfad, array $felder, bool $json) use ($basis, $nwKeks, $nwCsrf): array {
+    $ch = curl_init($basis . '/' . $pfad);
+    $kopf = ['Cookie: ' . $nwKeks];
+    if ($json) { $kopf[] = 'Content-Type: application/json'; $kopf[] = 'X-CSRF: ' . $nwCsrf; }
+    else { $felder['csrf'] = $nwCsrf; }
+    curl_setopt_array($ch, [CURLOPT_RETURNTRANSFER => true, CURLOPT_POST => true,
+        CURLOPT_POSTFIELDS => $json ? (string)json_encode($felder) : http_build_query($felder),
+        CURLOPT_HTTPHEADER => $kopf, CURLOPT_TIMEOUT => 60, CURLOPT_PROXY => '']);
+    $rumpf = (string)curl_exec($ch);
+    $code = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    curl_close($ch);
+    return ['code' => $code, 'rumpf' => html_entity_decode($rumpf)];
+};
+$_SERVER['REMOTE_ADDR'] = '127.0.0.1';
+$nwMerkmale = [rate_merkmal_kennung($NW_MAIL), rate_merkmal_ip()];
+$nwLeeren = static function () use ($pdo, $nwMerkmale): void {
+    $in = implode(',', array_map([$pdo, 'quote'], $nwMerkmale));
+    $pdo->exec("DELETE FROM rate_limits WHERE topf = 'login' AND merkmal IN ($in)");
+    $pdo->exec("DELETE FROM sicherheit_ereignisse WHERE merkmal IN ($in)");
+};
+$nwMax = (int)(rate_grenze('login')['max'] ?? 10);
+/* Je Stelle: Pfad, Felder mit Token-Platzhalter, JSON?, „gesperrt"-Erkennung. */
+$nwFalsch = str_repeat('0', 64);
+$nwStellen = [
+    'kdf_upgrade (vorher ohne Topf)' => ['api/kdf_upgrade.php',
+        ['alt_token' => '@', 'neu_token' => str_repeat('1', 64), 'neu_iter' => KDF_ITER_ZIEL], true,
+        static fn (array $r): bool => $r['code'] === 429],
+    'Adresswechsel (vorher ohne Topf)' => ['einstellungen.php?t=profil',
+        ['action' => 'profile', 'name' => 'Ratenprobe Nachweis', 'email' => 'probe-nachweis-neu@ratenprobe.invalid',
+         'old_token' => '@'], false,
+        static fn (array $r): bool => str_contains($r['rumpf'], 'Zu viele falsche Passwörter')],
+    'Kontoloeschung (vorher ohne Topf, F-R17-67)' => ['einstellungen.php?t=profil',
+        ['action' => 'konto_loeschen', 'loesch_token' => '@'], false,
+        static fn (array $r): bool => str_contains($r['rumpf'], 'Zu viele falsche Passwörter')],
+    'Passwortwechsel (vorher ohne Topf)' => ['einstellungen.php?t=profil',
+        ['action' => 'password', 'old_token' => '@', 'new_token' => '', 'new_salt' => ''], false,
+        static fn (array $r): bool => str_contains($r['rumpf'], 'Zu viele falsche Passwörter')],
+    'schluessel_erneuern' => ['api/schluessel_erneuern.php', ['token' => '@'], false,
+        static fn (array $r): bool => $r['code'] === 429],
+    'kontopaar' => ['api/kontopaar.php', ['aktion' => 'anlegen', 'token' => '@'], true,
+        static fn (array $r): bool => $r['code'] === 429],
+    'rueckweg_anlegen' => ['api/rueckweg_anlegen.php', ['token' => '@'], true,
+        static fn (array $r): bool => $r['code'] === 429],
+];
+try {
+    /* Gegenprobe: das richtige Token geht durch den Nachweis (Topf leer). */
+    $nwLeeren();
+    $r = $nwHole('api/kontopaar.php', ['aktion' => 'anlegen', 'token' => $nwTok], true);
+    $fehler = (string)(json_decode($r['rumpf'], true)['error'] ?? '');
+    /* 400 MIT DEM FEHLER DER FORM: Der Nachweis ist bestanden, erst der
+     * fehlende Schluessel scheitert. Alles andere (401 Sitzung, 403 Passwort,
+     * 429) hiesse, die Probe misst nicht den Nachweis. */
+    pruef('Gegenprobe: richtiges Token mit Pfeffer besteht den Nachweis',
+          $r['code'] === 400 && !in_array($fehler, ['passwort', 'gesperrt', 'anteil', 'csrf'], true),
+          'HTTP ' . $r['code'] . ', error ' . ($fehler !== '' ? $fehler : '—'));
+    foreach ($nwStellen as $name => [$pfad, $felder, $json, $gesperrt]) {
+        $nwLeeren();
+        $mit = static fn (string $t): array => array_map(static fn ($v) => $v === '@' ? $t : $v, $felder);
+        for ($i = 0; $i < $nwMax; $i++) { $nwHole($pfad, $mit($nwFalsch), $json); }
+        $r = $nwHole($pfad, $mit($nwTok), $json);
+        pruef($name . ': nach ' . $nwMax . ' Fehlversuchen auch das richtige gesperrt',
+              $gesperrt($r), 'HTTP ' . $r['code']);
+    }
+    $nachH = (string)$pdo->query('SELECT password_hash FROM users WHERE id = ' . $nwId)->fetchColumn();
+    $nachM = (string)$pdo->query('SELECT email FROM users WHERE id = ' . $nwId)->fetchColumn();
+    pruef('… und das Konto ist unberuehrt (Hash, Adresse, keine Loeschung)',
+          $nachH === $nwHash && $nachM === $NW_MAIL, 'Adresse ' . $nachM);
+} finally {
+    $nwLeeren();
+    @unlink($nwOrt . '/sess_' . $nwSid);
+    $pdo->prepare('DELETE FROM protokoll_ereignisse WHERE betroffen_user_id = ? OR urheber_user_id = ?')
+        ->execute([$nwId, $nwId]);
+    $pdo->prepare('DELETE FROM users WHERE id = ?')->execute([$nwId]);
+}
 
 /* ======================================================================== */
 aufraeumen();
