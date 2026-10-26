@@ -139,6 +139,12 @@ Tokens erneuern** (siehe „Bewusst so").
   auch `.yaml` und die Flow-Schreibweise `- { uses: … }`, meldet eine zweite
   Ausnahmeliste und sucht eingecheckte Kopien der `config.php` im ganzen
   Baum; `appbau.sh` bricht ab, wenn das Kopieren eines APK scheitert.
+- **Die Protokollprobe rechnet in Kalendertagen** (beim Zwischen-PR
+  gefunden). Sie setzte den Archivstand auf `time() - 3 × 86 400`; in der
+  letzten Stunde des Herbst-Umstellungstags, der 25 Stunden hat, war das
+  Tag −2, und sie zählte zwei offene Zeiträume statt drei — rot im
+  Prüfstand am 25.10.2026 um 23:27. Jetzt drei Kalendertage in der Zeitzone
+  der Anlage. Der Job selbst rechnet schon so; nur die Probe nicht.
 - **Der Rundlauf der Uhr fragt die Tabelle, nicht entfernte Spalten**
   (F-R17-63). `rundlauf/pruefen.php` las `lat` und `lon` aus
   `mission_phases`; die Spalten fielen mit S11-12 weg, zwei Tage nachdem
@@ -544,7 +550,10 @@ WebKit 26 schnitt in der Bedienprobe sogar schlechter ab (74 von 77 gegen
 einzugreifen. **Was erst nach dem Merge gemessen wird:** Stufe 2 auf
 26.04. Sie läuft nur nach einem Push auf `main`, auf dem Arbeitszweig
 lässt sie sich nicht belegen. Bleibt sie rot, ist der Rückweg eine Zeile
-(`runs-on`), und die Fassung bleibt angehoben.
+(`runs-on`), und die Fassung bleibt angehoben. *Gemessen am 25.10.2026
+nach dem Merge (Lauf 140): grün, mit Playwright 1.64.1 — Kreislauf `edbak`
+in Chromium 156, Firefox 157 und WebKit 27.2 je 0 unerklärte Abweichungen,
+Rückwegprobe je 21 von 21.*
 
 ## [Web 23.0.2] — unveröffentlicht
 
