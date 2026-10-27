@@ -43,13 +43,6 @@ using Toybox.Application.Properties;
 
 module Input {
 
-    // Hat das Geraet UP/DOWN? Zur Laufzeit nicht ermittelbar — Connect IQ
-    // kennt keine solche Abfrage. Kommt darum zur Bauzeit aus
-    // source-tasten5/ bzw. source-tasten3/ (monkey.jungle).
-    function hasUpDown() as Lang.Boolean {
-        return DeviceProfile.HAS_UP_DOWN;
-    }
-
     // Touchbedienung aktiv? Auf Geraeten ohne UP/DOWN immer — ohne Touch
     // waeren sie unbedienbar, der Schalter waere dort ein Selbstmordknopf.
     // Auf Geraeten mit UP/DOWN und Touch (Fenix 7 und neuer) entscheidet die
@@ -61,6 +54,47 @@ module Input {
         var v = null;
         try { v = Properties.getValue("touchEnabled"); } catch (e) { v = null; }
         return (v == null) ? true : (v as Lang.Boolean);
+    }
+
+    /* DER SCHALTER WIRKT (F-R17-68).
+     *
+     * Bis Uhr 4.0.0 las nur `touchActive()` die Einstellung, und niemand rief
+     * es auf: Der Schalter stand in Garmin Connect und bewirkte nichts --
+     * auch auf Fenix 7, Epix 2 und FR965, die laengst im Manifest stehen.
+     *
+     * WOHER EIN BEHAVIOR KOMMT, SAGT CONNECT IQ NICHT. `onNextPage` entsteht
+     * aus DOWN und aus dem Wischen, `onSelect` aus START und aus dem Tippen,
+     * und das Roh-Ereignis einer belegten Geste wird gar nicht zugestellt
+     * (Geraete-Eingabe.md 4.2) -- abfangen laesst es sich also nicht. Was
+     * sich sehen laesst, ist die Taste: Jeder Delegate der App meldet jedes
+     * Druecken und Loslassen hierher (`tasteGesehen`). Ein Behavior, vor dem
+     * keine Taste unten war und keine in den letzten TASTE_FENSTER_MS
+     * losgelassen wurde, kam vom Bildschirm -- und wird bei ausgeschaltetem
+     * Schalter verworfen.
+     *
+     * NUR AUF GERAETEN MIT TOUCH UND UP/DOWN. Ohne Touch kommt alles von
+     * Tasten, und ein Fehler in dieser Rechnung verschluckte dort echte
+     * Druecke; ohne UP/DOWN waere das Geraet ohne Touch unbedienbar. In
+     * beiden Faellen antwortet `touchActive()` so, dass hier nichts
+     * verworfen wird.
+     *
+     * WAS ES NICHT ERREICHT: die Systembausteine -- die Rueckfragen
+     * (WatchUi.Confirmation) und die Liste "Zeiten" (Menu2). Ihre Eingaben
+     * gehen an keinen Delegate der App; dort bleibt Tippen wirksam. */
+    const TASTE_FENSTER_MS = 1000;
+    var _tasteUnten as Lang.Boolean = false;
+    var _tasteMs as Lang.Number = -100000;
+
+    function tasteGesehen(unten as Lang.Boolean) as Void {
+        _tasteUnten = unten;
+        _tasteMs = System.getTimer();
+    }
+
+    function beruehrungVerwerfen() as Lang.Boolean {
+        if (touchActive()) { return false; }
+        if (!System.getDeviceSettings().isTouchScreen) { return false; }
+        if (_tasteUnten) { return false; }
+        return System.getTimer() - _tasteMs > TASTE_FENSTER_MS;
     }
 
     // Bedienhinweise auf den Oberflaechen — je Profil andere Woerter
@@ -150,6 +184,7 @@ class ActionDelegate extends WatchUi.BehaviorDelegate {
     }
 
     function onKeyPressed(evt as WatchUi.KeyEvent) as Lang.Boolean {
+        Input.tasteGesehen(true);              // F-R17-68
         var k = evt.getKey();
         // Zweite Taste waehrend der ersten: Das ist die Tastensperre der Uhr
         // (START + beliebige Taste) und kein Bedienwunsch. Alles schlucken.
@@ -193,6 +228,7 @@ class ActionDelegate extends WatchUi.BehaviorDelegate {
     }
 
     function onKeyReleased(evt as WatchUi.KeyEvent) as Lang.Boolean {
+        Input.tasteGesehen(false);             // F-R17-68
         var k = evt.getKey();
         /* Fremde Taste losgelassen -> vergessen. Bleibt das Loslassen aus,
          * weil die Uhr es waehrend der Sperre nicht mehr zustellt, heilt es
@@ -217,11 +253,21 @@ class ActionDelegate extends WatchUi.BehaviorDelegate {
     // liefert das System ueber dieselben Behaviors; eigener Wisch-Code ist
     // weder noetig noch moeglich (das Roh-Ereignis wird bei belegten Gesten
     // gar nicht erst zugestellt).
-    function onPreviousPage() as Lang.Boolean { return actPagePrev(); }
-    function onNextPage() as Lang.Boolean     { return actPageNext(); }
+    // Vom Bildschirm bei ausgeschaltetem Schalter: verworfen (F-R17-68).
+    function onPreviousPage() as Lang.Boolean {
+        if (Input.beruehrungVerwerfen()) { return true; }
+        return actPagePrev();
+    }
+    function onNextPage() as Lang.Boolean {
+        if (Input.beruehrungVerwerfen()) { return true; }
+        return actPageNext();
+    }
 
     // BACK-Taste oder Wischen nach rechts
-    function onBack() as Lang.Boolean { return actBack(); }
+    function onBack() as Lang.Boolean {
+        if (Input.beruehrungVerwerfen()) { return true; }
+        return actBack();
+    }
 
     // onMenu ist geraeteabhaengig belegt:
     //   mit UP/DOWN  — langer UP-Druck (Fenix 6 Pro, FR945)
@@ -240,4 +286,26 @@ class ActionDelegate extends WatchUi.BehaviorDelegate {
     }
 
     // onSelect bleibt bewusst unbelegt — siehe Kopfkommentar.
+}
+
+// ---------------------------------------------------------------------------
+// Basis der selbst gezeichneten Menues und der Warteseiten (F-R17-68)
+// ---------------------------------------------------------------------------
+//
+// Sie werten Behaviors aus wie bisher, melden aber jede Taste an Input --
+// sonst hielte `Input.beruehrungVerwerfen()` auch einen Tastendruck auf
+// diesen Seiten fuer eine Beruehrung. `false` laesst die Taste beim System,
+// genau wie ohne diese Methoden.
+class TastenDelegate extends WatchUi.BehaviorDelegate {
+    function initialize() { BehaviorDelegate.initialize(); }
+
+    function onKeyPressed(evt as WatchUi.KeyEvent) as Lang.Boolean {
+        Input.tasteGesehen(true);
+        return false;
+    }
+
+    function onKeyReleased(evt as WatchUi.KeyEvent) as Lang.Boolean {
+        Input.tasteGesehen(false);
+        return false;
+    }
 }

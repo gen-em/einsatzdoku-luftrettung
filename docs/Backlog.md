@@ -52,8 +52,8 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
 
 | Spanne | Zweig | seit |
 |---|---|---|
-| 400 bis 409 | `claude/new-session-lvb0x0` — Schritt 12b, Pakete R17-20 bis -30 (`Review-R17.md`); R17-18 und -19 auf `claude/modest-edison-byg7ay` und `claude/tender-feynman-3oyo13`, gemergt mit PR #122, bis R17-17 `claude/lucid-cannon-nvv86i`, gemergt mit PR #118; vergeben: 400, 401 | 26.10.2026 |
-| ab 410 | frei — höchste vergebene Nummer 401; frei blieben 394 bis 399 aus der Spanne von 19 (PR #112 bis #114), 389 aus der von 12a (PR #116), 372 bis 379 aus der von 12 (PR #103), 362 bis 369 aus der von PK, 359 aus der von 18 (PR #101), 348 und 349 aus der von 17, 338 aus der von AR | 20.10.2026 |
+| 400 bis 409 | `claude/new-session-lvb0x0` — Schritt 12b, Pakete R17-20 bis -30 (`Review-R17.md`); R17-18 und -19 auf `claude/modest-edison-byg7ay` und `claude/tender-feynman-3oyo13`, gemergt mit PR #122, bis R17-17 `claude/lucid-cannon-nvv86i`, gemergt mit PR #118; vergeben: 400 bis 402 | 26.10.2026 |
+| ab 410 | frei — höchste vergebene Nummer 402; frei blieben 394 bis 399 aus der Spanne von 19 (PR #112 bis #114), 389 aus der von 12a (PR #116), 372 bis 379 aus der von 12 (PR #103), 362 bis 369 aus der von PK, 359 aus der von 18 (PR #101), 348 und 349 aus der von 17, 338 aus der von AR | 20.10.2026 |
 
 ---
 
@@ -1327,3 +1327,20 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      an) oder `quoted-printable` mit Zeilen unter 76 Zeichen; dazu ein Fall in
      der Mail- oder Versandprobe, der die Kopfzeile und einen Umlaut im
      dekodierten Text misst. Passt zu R17-22 (F-R17-46, `smtp_probe()`).
+
+<!-- -->
+
+402. **Die Sync-Seite der Uhr überlappt ab vier Zeilen im unteren Block.** · gehört zu: 12b · Stand: offen · seit 26.10.2026
+     Gefunden in R17-21 (F-R17-69) beim Bau der Fristanzeige: Auf der
+     Venu 3s schob eine dritte Meldungszeile („Daten verfallen am …") den
+     Mittelblock „N Pakete offen" in die rote Zeile darunter — im Simulator
+     gesehen, zwei Texte übereinander. Der Kommentar in `SyncView.mc` sagt
+     das Gegenteil: „Gegengerechnet bis zu fuenf Zeilen im unteren Block …
+     es ueberlappt nichts." Die Untergrenze `y >= 34` hält die GPS-Zeile im
+     Kreis, aber nicht den Mittelblock über `untenY`. R17-21 hat die Zeile
+     deshalb in die erste gezogen (zwei Zeilen wie vorher); vier Zeilen gibt
+     es aber auch ohne sie, etwa Fehler, Kopplungsmeldung, Weg heraus und
+     Version. *Weg:* den Mittelblock bei Platzmangel verkleinern (kleinere
+     Zahl, `fitFont`) oder Zeilen des unteren Blocks zusammenlegen; dazu
+     eine Bildprobe im Uhr-Prüfstand mit vier und fünf Zeilen auf Fenix,
+     FR945 und Venu 3s. Den Kommentar berichtigen.

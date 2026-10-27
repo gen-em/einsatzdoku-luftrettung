@@ -116,7 +116,16 @@ module Huelle {
 
     /* Kann diese Uhr verschliessen? Beim ersten Aufruf je App-Fassung und
      * Firmware wird gemessen (zwei Schluesselvereinbarungen, auf der
-     * Fenix 6 Pro rund 0,2 s), danach steht das Ergebnis im Storage. */
+     * Fenix 6 Pro rund 0,2 s), danach steht das Ergebnis im Storage.
+     *
+     * NUR EIN GUELTIGES ERGEBNIS BLEIBT (F-R17-53). Bis Uhr 4.0.0 landete
+     * auch "kaputt" im Storage, und zwar fuer jede Ausnahme beim Messen --
+     * knapper Speicher beim ersten Start mit vollem Puffer, ein Watchdog
+     * mitten in den Schluesselvereinbarungen. Eine einmalige Ursache wurde
+     * so zum Dauerzustand: Die Uhr sendete nichts mehr, und nichts im Geraet
+     * setzte den Vermerk zurueck, bis ein Update die Kennung aenderte. Jetzt
+     * gilt "kaputt" nur bis zum naechsten Start (`_ordnung` im Speicher)
+     * und wird dann einmal neu gemessen. */
     function bereit() as Lang.Boolean {
         if (_ordnung == null) { _ordnung = _messen(); }
         return !"kaputt".equals(_ordnung);
@@ -139,7 +148,8 @@ module Huelle {
             var s = alt as Lang.String;
             var i = s.find("#");
             if (i != null && s.substring(0, i).equals(kennung)) {
-                return s.substring(i + 1, s.length()) as Lang.String;
+                var gemerkt = s.substring(i + 1, s.length()) as Lang.String;
+                if ("be".equals(gemerkt) || "le".equals(gemerkt)) { return gemerkt; }
             }
         }
         var ergebnis = "kaputt";
@@ -159,8 +169,21 @@ module Huelle {
         } catch (e) {
             ergebnis = "kaputt";
         }
-        Storage.setValue(ABLAGE_PRUEFUNG, kennung + "#" + ergebnis);
+        if ("kaputt".equals(ergebnis)) {
+            Storage.deleteValue(ABLAGE_PRUEFUNG);
+        } else {
+            Storage.setValue(ABLAGE_PRUEFUNG, kennung + "#" + ergebnis);
+        }
         return ergebnis;
+    }
+
+    /* Den Vermerk des Selbsttests vergessen -- beim Trennen der Kopplung
+     * (F-R17-53): Neu koppeln soll ein frischer Anfang sein, auch fuer die
+     * Frage, ob diese Uhr verschliessen kann. Gemessen wird beim naechsten
+     * `bereit()`. */
+    function pruefungVergessen() as Void {
+        _ordnung = null;
+        Storage.deleteValue(ABLAGE_PRUEFUNG);
     }
 
     // ---- Bausteine (aus der Krypto-Probe, S11-02) ------------------------

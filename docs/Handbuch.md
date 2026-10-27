@@ -65,10 +65,16 @@ und verweisen für den Tastenweg hierher.
 Absicht — unter Einsatzbedingungen soll eine versehentliche Berührung nichts
 auslösen. In Menüs kann ein Tippen den gerade markierten Eintrag auswählen.
 
-Uhren mit Touchscreen **und** UP/DOWN-Tasten (Fenix 7 und neuer) werden noch
-nicht ausgeliefert. Für sie gibt es in den App-Einstellungen bereits den
-Schalter **„Touchbedienung verwenden"**; auf der Venu 3s hat er keine Wirkung,
-weil sie ohne Touch unbedienbar wäre.
+**Uhren mit Touchscreen und UP/DOWN-Tasten** (Fenix 7, Epix 2, FR965 und
+ähnliche) bedienst du mit denselben Tasten wie die Fenix 6 Pro. Für sie gibt
+es in den App-Einstellungen in Garmin Connect den Schalter **„Touchbedienung
+verwenden"** (Vorgabe: an). Steht er auf **aus**, verwirft die App Wischen und
+Tippen auf ihren eigenen Seiten und Menüs — es zählen nur noch die Tasten
+*(seit Uhr 4.1.0; bis dahin stand der Schalter da und bewirkte nichts)*. Die
+Rückfragen („Einsatztag beenden?" und ähnliche) und die Liste „Zeiten" sind
+Bausteine der Uhr selbst; dort wirkt ein Tippen weiter. Auf der Venu 3s hat
+der Schalter keine Wirkung, weil sie ohne Touch unbedienbar wäre, auf Uhren
+ohne Touchscreen ohnehin nicht.
 
 ### 2.1 Dienst beginnen und beenden
 
@@ -106,10 +112,14 @@ Abschnitt 2.2 gibt es erst im laufenden Dienst.
 > **Steht dort etwas in Rot?** Vier Meldungen sind möglich, und jede sagt dir,
 > was zu tun ist.
 >
-> „**Gerät nicht mehr angemeldet**" heißt: Der Server kennt diese Uhr nicht
-> mehr — sie wurde in den Einstellungen gelöscht oder abgeschaltet. Die Uhr
-> hört dann auf zu senden und **behält alles**; nichts geht verloren. Der Weg
-> zurück ist eine neue Kopplung (*lang START*).
+> „**Abgemeldet, Daten bis 27.10.**" *(seit Uhr 4.1.0; davor „Gerät nicht
+> mehr angemeldet")* heißt: Der Server kennt diese Uhr nicht mehr — sie wurde
+> in den Einstellungen gelöscht oder abgeschaltet. Die Uhr hört dann auf zu
+> senden und **behält alles — 30 Tage lang**, gezählt ab der ersten
+> Abmeldung. Danach verwirft sie alle ungesendeten Pakete: Eine Uhr, die
+> niemand mehr koppelt, soll Spur, Phasen und Reanimation nicht unbegrenzt
+> tragen. Das Datum in der Zeile ist der letzte Tag. Der Weg zurück ist eine
+> neue Kopplung (*lang START*); wer in der Frist koppelt, verliert nichts.
 >
 > „**1 abgewiesen**" heißt: Der Server hat dieses eine Paket dauerhaft
 > zurückgewiesen, es kommt nie an. Alles andere wird weiter gesendet. Mit
@@ -175,7 +185,11 @@ Seite kennt dafür drei Antworten:
 | Orange Zahl, darunter „Pakete offen" | So viele abgeschlossene Pakete warten noch |
 | Rot „Nicht eingerichtet" | Die Uhr kann gar nicht senden; darunter steht, was fehlt |
 
-Der dritte Fall ist der Zustand vor der Einrichtung. Darunter steht der
+Der dritte Fall ist der Zustand vor der Einrichtung. *Seit Uhr 4.1.0* zeigt
+ihn auch eine Uhr, die nie über den Code gekoppelt war, sondern vor Uhr 3.0.0
+von Hand mit Geräte-ID und API-Schlüssel in Garmin Connect eingerichtet: Diese
+Einstellungen liest die Uhr nicht mehr. Einmal koppeln, dann sendet sie
+weiter; was sie noch nicht gesendet hat, behält sie. Darunter steht der
 nächste Schritt — entweder „Erst Server-Adresse setzen" (das geschieht in
 Garmin Connect, nicht auf der Uhr) oder der Tastenweg zum Koppeln. Die
 Reihenfolge ist zwingend: Ohne Server-Adresse ist Koppeln nicht möglich.
@@ -3625,8 +3639,11 @@ Uhr, seit Web 12.8.0 auch das Handy mit der Android-App.
    Bis dahin läuft die Restzeit mit, und du kannst den Vorgang hier abbrechen.
 
 **Die Seite steht in der Reihenfolge, in der man sie braucht** *(seit Web
-15.4.1)*: koppeln, die Geräte ansehen, die App holen — und ganz unten,
-zugeklappt, die Ausnahme „Gerät ohne Code anlegen" (Abschnitt 10.1a).
+15.4.1)*: koppeln, die Geräte ansehen, die App holen. **Ein Gerät entsteht nur
+über die Kopplung** *(seit Web 23.3.0)*: Die zugeklappte Ausnahme „Gerät ohne
+Code anlegen", die Geräte-ID und API-Schlüssel zum Abtippen herausgab, ist
+entfallen — die Uhr-App nimmt solche Zugangsdaten seit Uhr 4.1.0 nicht
+mehr an, und die Android-App hat sie nie gebraucht.
 
 **Alle Handlungen an einem Gerät stehen in seinem Menü** — dem Knopf mit den
 drei Punkten am rechten Rand der Zeile, in jeder Bildschirmbreite. Darin:
@@ -3649,8 +3666,11 @@ Mehr dazu in Abschnitt 11.4a.
 > **Deaktivieren** oder **Entkoppeln** beendet das augenblicklich; die
 > hochgeladenen Daten bleiben in beiden Fällen erhalten. **Was die Uhr noch
 > nicht zugestellt hat, liegt auf ihr unverschlüsselt** (Abschnitt 5), und
-> Trennen löscht auf der Uhr nichts — wer sie findet und auslesen kann, sieht
-> diese Einsätze.
+> Trennen löscht auf der Uhr nicht sofort — wer sie findet und auslesen kann,
+> sieht diese Einsätze. *Seit Uhr 4.1.0* erfährt die Uhr beim nächsten
+> Sendeversuch, dass sie getrennt ist, und verwirft ihre ungesendeten Pakete
+> 30 Tage danach. Erreicht sie nie wieder ein Telefon, erfährt sie es nicht,
+> und die Daten bleiben liegen.
 >
 > Bis dahin gilt seit Web 15.6.0 eine Grenze: Ein Gerät darf einen
 > **bestehenden** Einsatz oder eine bestehende Ruhezeit nur noch **72 Stunden**
@@ -3767,14 +3787,6 @@ bessere Weg ist.
 
 Ist das Fach nicht da, liegt auf dieser Installation keine App-Datei. Frag
 die Verwaltung.
-
-### 10.1a Gerät ohne Code anlegen
-
-*Die Ausnahme, zugeklappt am Ende der Seite.* Für Geräte, die keinen Code
-anzeigen können. Du bekommst **Geräte-ID und API-Schlüssel** und trägst sie in
-der App ein — bei Garmin in Garmin Connect unter den App-Einstellungen. Beide
-Werte stehen anschließend in einem Kasten mit Knopf **„Kopieren"**; der
-Schlüssel wird **nur einmal** angezeigt, also sofort eintragen.
 
 ### 10.2 Was die App über die Aufzeichnung sagt
 

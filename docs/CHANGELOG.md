@@ -14,6 +14,148 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 23.3.0] — unveröffentlicht
+
+Schritt 12b, Paket R17-21 — gehört zu Uhr 4.1.0 (E-R17-56, F-R17-70). Kein
+Schema, kein `update.php`.
+
+### Entfernt
+
+- **Web — „Gerät ohne Code anlegen".** Die zugeklappte Karte am Ende der
+  Geräteseite legte ein Gerät von Hand an und zeigte Geräte-ID und
+  API-Schlüssel zum Abtippen — „bei Garmin in Garmin Connect unter den
+  App-Einstellungen". Genau diese Einstellungen gibt es seit Uhr 4.1.0 nicht
+  mehr (E-R17-21), und die Android-App hat sie nie gebraucht: Sie koppelt
+  über den Code, die Wear-OS-Uhr kennt keine Zugangsdaten. Ein Weg, der
+  Zugangsdaten auf einen Bildschirm legt, ohne dass ein Gerät sie noch
+  annimmt, ist nur noch Angriffsfläche. Er fällt deshalb ganz: die Karte,
+  die Aktion `add` in `einstellungen.php` und die Karte „Zugangsdaten des
+  neuen Geräts". **Geräte entstehen nur noch über die Kopplung.** Wer ein
+  eigenes Programm nach dem JSON-Vertrag gebaut hat und es von Hand
+  angelegt hätte, koppelt es wie eine Uhr (`pair.php`, Vertrag 1).
+
+### Behoben
+
+- **Web — der Erststart hakte „Uhr oder Handy koppeln" nie ab.** Den
+  dritten Schritt der Willkommenskarte auf der Startseite setzte nur die
+  Handanlage, die es jetzt nicht mehr gibt — nie das Koppeln, obwohl der
+  Schritt so heißt (F-R17-70, gefunden beim Entfernen). Wer seine Uhr
+  gekoppelt hatte, sah den Schritt weiter offen, bis er die Karte mit „nicht
+  mehr zeigen" wegklickte. Jetzt setzt `pair.php` ihn, sobald das Gerät
+  angelegt ist — nach dem Commit, damit eine Anzeige die Kopplung nicht
+  zurückrollen kann. Konten, die schon gekoppelt haben, bekommen den Haken
+  mit dem nächsten Koppeln; nachgetragen wird er nicht.
+
+## [Uhr 4.1.0] — unveröffentlicht
+
+Schritt 12b, Paket R17-21 — die Garmin-Uhr (Befunde F-R17-11, -12, -28,
+-52, -53 und der neue F-R17-68; die Aufräumposten der Uhr aus dem Review).
+Keine Server-Änderung; die Uhr spricht mit jedem Server ab Web 22.0.1.
+
+### Uhr — ein bestätigtes Paket geht über seine Referenz aus der Liste
+
+Nach der letzten Antwort eines Einsatzes nahm die Uhr den Eintrag aus der
+Warteschlange — über den **Listenplatz**, den sie beim Absenden gemessen
+hatte. Dazwischen liegt eine Netzanfrage, und in der Zeit darf die Liste
+schrumpfen: „Abgewiesene verwerfen" auf der Sync-Seite entfernt jedes
+geparkte Paket, und geparkte stehen gerade **vor** dem laufenden, weil die
+Uhr sie überspringt. Rückte die Liste um eins, traf das Entfernen ein
+anderes Paket — es verschwand, seine Spur blieb als Waise im Speicher, und
+der Einsatz kam nie an —, oder der Platz lag hinter dem Ende, und die App
+brach ab (F-R17-52). Der Review hatte das gelesen, nicht nachgespielt. Jetzt
+ist es nachgespielt: Ein neuer Fall im Rundlauf (`rundlauf.sh --schrumpfen`)
+legt zwei geparkte Pakete vor einen Einsatz und verwirft sie während seiner
+letzten Anfrage. Die alte Fassung bricht dort mit „Array Out Of Bounds" ab,
+das Ruhesegment dahinter kommt nie an; die neue entfernt über die Referenz,
+wie `verwerfen()` es schon tat, und hinterlässt eine leere Liste ohne ein
+einziges Spurstück.
+
+### Uhr — auch „abgemeldet" hat eine Frist
+
+Geparkte Pakete gehen seit Uhr 4.0.0 nach dreißig Tagen. Eine **abgemeldete**
+Uhr — im Web gelöscht oder auf inaktiv gestellt — hielt dagegen alle ihre
+Pakete ohne Frist, mit Spur, Phasen und Reanimation im Klartext des
+Gerätespeichers (F-R17-28, Lage H im Bedrohungsmodell). Jetzt merkt sie sich
+den Zeitpunkt der **ersten** Abmeldung im Speicher, über Neustarts hinweg,
+und verwirft dreißig Tage danach alle wartenden Pakete (E-R17-22). Die
+Sync-Seite sagt es in ihrer roten Zeile: „Abgemeldet, Daten bis 27.10."
+statt „Gerät nicht mehr angemeldet". Eine eigene dritte Zeile wäre
+deutlicher gewesen, schob auf der Venu 3s aber die Zahl der offenen Pakete
+in die Meldung — und zeigte dabei, dass der Satz im Code, bis zu fünf
+Zeilen überlappten nie, schon bei vier nicht stimmt (F-R17-69, Backlog
+Nr. 402). Eine angenommene Anfrage, ein neues Koppeln oder das Trennen
+löschen den Vermerk. **Der Preis:** Ein Diensttag, der dreißig Tage nach der Abmeldung
+noch nicht gesendet ist, geht auf der Uhr verloren; wer in der Frist neu
+koppelt, verliert nichts. **Was bleibt:** Eine Uhr, die nie wieder ein
+Telefon erreicht, erfährt nie, dass sie abgemeldet ist — für sie beginnt
+keine Frist.
+
+### Uhr — der Alt-Weg ist fort
+
+Geräte-ID und API-Schlüssel standen bis hierher zusätzlich als
+App-Einstellungen in Garmin Connect, sichtbar und von Hand eintragbar — der
+Weg aus der Zeit vor der Kopplung. Seit Uhr 3.0.0 füllte ihn niemand mehr,
+und er trug Zugangsdaten durch eine fremde App (F-R17-12, E-R17-21). Beide
+Einstellungen sind gestrichen, die Uhr liest nur noch die Zugangsdaten aus
+der Kopplung. **Eine Uhr, die noch über den Alt-Weg sendete** — vor 3.0.0
+von Hand eingerichtet und nie neu gekoppelt —, zeigt nach dem Update „Nicht
+eingerichtet" und koppelt einmal neu.
+
+**Bewusst nicht geändert:** Die **Serveradresse** bleibt eine Einstellung in
+Garmin Connect, und die Uhr bindet sie nicht an die Kopplung (E-R17-53). Wer
+sie dort umstellen kann, hält das Telefon mit der Begleit-App ohnehin in der
+Hand, und die sieht jede Anfrage (Lage M); umgeleitet würden der
+Geräteschlüssel — er erlaubt das Schreiben in das Konto, nicht das Lesen —
+und verschlossene Pakete. Das steht jetzt im Bedrohungsmodell.
+
+### Uhr — „http://" wird „https://"
+
+Eine eingetragene Adresse mit `http://` blieb bisher so stehen, und
+Geräteschlüssel und Pakete gingen ab dem Telefon unverschlüsselt (F-R17-11).
+Jetzt wird sie auf `https://` gehoben, ohne Ausnahmeschalter — wie auf
+Android seit E-S4-14 (E-R17-52). Abweisen wäre die Alternative gewesen; es
+hätte eine Uhr stumm gemacht, bis jemand die Einstellung findet.
+
+### Uhr — der Selbsttest merkt sich „kaputt" nicht mehr
+
+Der Selbsttest der Gerätehülle legte jedes Ergebnis im Speicher ab, auch
+„kaputt" — und zwar für jede Ausnahme beim Messen, etwa knappen Speicher
+beim ersten Start mit vollem Puffer. Eine einmalige Ursache wurde so zum
+Dauerzustand: Die Uhr sendete nichts mehr, zeigte „Verschlüsseln geht
+nicht", und nichts im Gerät setzte das zurück (F-R17-53). Jetzt bleiben nur
+die gültigen Ergebnisse; „kaputt" gilt bis zum nächsten Start und wird dann
+einmal neu gemessen (0,2 s auf der Fenix 6 Pro). Trennen vergisst den
+Vermerk mit, damit Neukoppeln ein frischer Anfang ist.
+
+### Uhr — der Schalter „Touchbedienung verwenden" wirkt
+
+Die Einstellung stand in Garmin Connect, und niemand las sie: Die einzige
+Funktion, die es tat, hatte keinen Aufrufer (F-R17-68, gefunden beim
+Aufräumen). Auf Fenix 7, Epix 2, FR965 und den anderen Uhren mit Tasten
+**und** Touch — sie stehen längst im Manifest, auch wenn Handbuch und
+Technik sie „noch nicht ausgeliefert" nannten — bewirkte der Schalter
+nichts. Jetzt verwirft die App bei „aus" Wischen und Tippen auf ihren
+eigenen Seiten und Menüs (E-R17-55). Weil Connect IQ nicht sagt, ob ein
+Blättern von der Taste oder vom Bildschirm kam, und das Roh-Ereignis einer
+belegten Geste gar nicht zustellt, merkt sich die App jede Taste: Ein
+Blättern ohne Taste davor kam vom Bildschirm. Geprüft im Simulator auf der
+Fenix 7 — Wischen bei „aus" verworfen, die Taste blättert, bei „an"
+blättert auch das Wischen. **Grenzen:** Auf Uhren ohne Touch und auf der
+Venu 3s (ohne Auf/Ab-Taste) ändert sich nichts. Die Rückfragen und die
+Liste „Zeiten" sind Bausteine des Systems; dort bleibt Tippen wirksam. Ein
+echtes Gerät hat das noch nicht gesehen.
+
+### Aufgeräumt
+
+`Input.hasUpDown()` (ohne Verwender) ist gestrichen; der Kopfsatz in
+`Util.mc`, die Datei sei noch nicht gegen das SDK übersetzt, auch — der
+Prüfstand übersetzt sie seit Nr. 13 für 99 Geräte. Die Markenfarben in
+`Ui.mc` nennen ihre Herkunft (`--orange`, `--blau`, `--rot`, `Design.md` 2),
+das Menü der Reanimation nimmt das Blau von dort statt einer eigenen Zahl.
+`Math.rand()` in `Util.newRef()` trägt den Vermerk, dass die Kennung kein
+Geheimnis ist; ein Kommentar im Uploader nennt den Netzaufruf nicht mehr
+beim Namen, damit wer die Netzstellen zählt sechs findet und nicht sieben.
+
 ## [Web 23.2.0] — unveröffentlicht
 
 Schritt 12b, Paket R17-20 — Konten, Nachweise und Freigabe (Befunde

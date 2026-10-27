@@ -407,8 +407,9 @@ module Pair {
             cb.method(:onResponse));
     }
 
-    /* Zugangsdaten auf der Uhr loeschen — beide Wege: die aus der Kopplung
-     * (Storage) und die von Hand eingetragenen (Properties, Alt-Weg). */
+    /* Zugangsdaten auf der Uhr loeschen: die aus der Kopplung
+     * (Storage). Bis Uhr 4.0.0 auch die von Hand eingetragenen (Properties,
+     * Alt-Weg, E-R17-21). */
     function lokalTrennen() as Void {
         /* GEPARKTE PAKETE GEHEN MIT (Backlog Nr. 159).
          *
@@ -419,16 +420,15 @@ module Pair {
          * Rueckfrage vor dem Trennen sagt, wie viele es sind. */
         Uploader.alleGeparktenVerwerfen();
         Uploader.abgemeldet = false;
+        Uploader.abmeldungVergessen();     // die Frist gehoert zur alten Kopplung
         Storage.deleteValue("cred");
         // Der Kontoschluessel gehoert zur Kopplung und geht mit (S11-08).
         Huelle.schluesselLoeschen();
-        try {
-            Properties.setValue("deviceId", "");
-            Properties.setValue("apiKey", "");
-        } catch (e) {
-            // Alt-Weg nicht beschreibbar: Der Storage-Weg hat Vorrang, die
-            // Kopplung ist damit trotzdem fort.
-        }
+        /* Und der Vermerk des Selbsttests (F-R17-53): Neu koppeln ist ein
+         * frischer Anfang. Die Einstellungen `deviceId` und `apiKey` leerte
+         * diese Stelle bis Uhr 4.0.0 mit; seit dem Ende des Alt-Wegs gibt es
+         * sie nicht mehr (E-R17-21). */
+        Huelle.pruefungVergessen();
         Uploader.lastError = null;
     }
 
@@ -982,6 +982,8 @@ module Pair {
         Storage.setValue("cred", { "d" => dev, "k" => key }
                          as Lang.Dictionary<Storage.KeyType, Storage.ValueType>);
         Uploader.lastError = null;
+        Uploader.abgemeldet = false;
+        Uploader.abmeldungVergessen();     // E-R17-22: neue Kopplung, keine Frist
         var ks = (dict != null) ? dict["kontoschluessel"] : null;
         if (!Huelle.schluesselSetzen(ks)) {
             /* Gekoppelt IST sie — das sagt die erste Zeile, gruen. Dass der

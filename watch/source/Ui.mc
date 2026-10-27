@@ -142,7 +142,10 @@ module Ui {
     }
 
     // Markenfarben (Brand Guidelines). Geraete mit kleiner Palette runden
-    // selbst auf den naechsten darstellbaren Ton.
+    // selbst auf den naechsten darstellbaren Ton. Herkunft: dieselben Werte
+    // wie `--orange`, `--blau`, `--rot` in server/assets/style.css
+    // (docs/Design.md 2, Markenfarben). Wer dort einen Wert aendert, aendert
+    // ihn hier mit -- die Uhr kennt keine Token, nur Zahlen.
     const ORANGE = 0xFF8F1F;         // Philipp Orange
     const BLAU   = 0x4280E5;         // Max Blau
     const ROT    = 0xD63338;         // Newroz Rot

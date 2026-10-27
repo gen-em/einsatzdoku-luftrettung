@@ -13,13 +13,27 @@
 // und Laenge, eine Hoehe ueber 3276 m (F-S11-64), eine negative, Punkte
 // ohne Hoehe. pruefen.php rechnet dieselben Werte und haelt die geoeffneten
 // Huellen dagegen.
+//
+// ART --schrumpfen (F-R17-52, Anlass: Nr. 43): Vor den Einsatz kommen zwei
+// GEPARKTE Pakete mit je einem Spurstueck. rundlauf.sh haengt zwei Haken in
+// die Kopie des Uploaders: `waehrendAnfrage()` direkt nach dem Absenden und
+// `bericht()` nach jeder angenommenen Antwort. Waehrend der LETZTEN Anfrage
+// des Einsatzes verwirft der erste Haken alle geparkten -- die Liste
+// schrumpft von drei auf einen Eintrag, genau der Weg ueber die Sync-Seite.
+// Bis Uhr 4.0.0 entfernte die Antwort dann `pendingMissions[2]` und brach ab;
+// seit 4.1.0 entfernt sie ueber die Referenz. `bericht()` schreibt in die
+// Konsole des Simulators, was in der Liste und im Speicher uebrig ist.
 using Toybox.Lang;
+using Toybox.System;
 using Toybox.Application.Storage;
 
 module Rundlauf {
     const T0 = 1792224000;            // 2026-10-17T08:00:00Z
     const EINSATZ = "m-rundlauf-0001";
     const RUHE = "r-rundlauf-0001";
+    const SCHRUMPFEN = false;         // rundlauf.sh --schrumpfen setzt true
+    const GEPARKT = ["m-rl-geparkt-1", "m-rl-geparkt-2"];
+    var _ausgeloest as Lang.Boolean = false;
 
     function punkt(i as Lang.Number) as Lang.Array {
         var ele = null;
@@ -35,6 +49,15 @@ module Rundlauf {
             var stueck = [];
             for (var i = c * 200; i < (c + 1) * 200; i++) { stueck.addAll(punkt(i)); }
             Storage.setValue(EINSATZ + "_" + c.toString(), stueck as Lang.Array<Storage.ValueType>);
+        }
+        if (SCHRUMPFEN) {
+            for (var g = 0; g < GEPARKT.size(); g++) {
+                var gref = GEPARKT[g] as Lang.String;
+                Storage.setValue(gref + "_0", [47.2d, 11.3d, 500.0f, T0 - 900] as Lang.Array<Storage.ValueType>);
+                Storage.setValue("bad_" + gref, Util.epochNow());   // geparkt, in der Frist
+                Model.pendingMissions.add({ "ref" => gref, "day" => "2026-10-17",
+                    "dref" => "d-rundlauf-0001", "final" => true });
+            }
         }
         Storage.setValue(RUHE + "_0", [47.1d, 11.2d, 600.0f, T0 - 600,
                                        47.1001d, 11.2001d, null, T0 - 300,
@@ -57,5 +80,30 @@ module Rundlauf {
         });
         Model.save();
         Storage.setValue("rl_gefuellt", true);
+    }
+
+    /* Haken 1, direkt nach dem Absenden (nur --schrumpfen): Ist das die
+     * zweite und letzte Anfrage des Einsatzes, alle geparkten verwerfen. */
+    function waehrendAnfrage(ref as Lang.String) as Void {
+        if (!SCHRUMPFEN || _ausgeloest) { return; }
+        if (!EINSATZ.equals(ref) || Uploader._ackedSeq(EINSATZ) == 0) { return; }
+        _ausgeloest = true;
+        var n = Uploader.alleGeparktenVerwerfen();
+        System.println("RL-SCHRUMPF verworfen=" + n.toString() + " offen=" + Model.pendingMissions.size().toString());
+    }
+
+    /* Haken 2, nach jeder angenommenen Antwort: was uebrig ist. Erwartet nach
+     * der letzten Antwort des Einsatzes: keine Einsaetze mehr in der Liste,
+     * kein Spurstueck mehr im Speicher -- weder vom Einsatz noch von den
+     * geparkten. */
+    function bericht() as Void {
+        if (!SCHRUMPFEN || !_ausgeloest) { return; }
+        var spuren = 0;
+        var refs = [EINSATZ, GEPARKT[0], GEPARKT[1]];
+        for (var i = 0; i < refs.size(); i++) {
+            if (Storage.getValue((refs[i] as Lang.String) + "_0") != null) { spuren += 1; }
+        }
+        System.println("RL-SCHRUMPF liste=" + Model.pendingMissions.size().toString()
+                       + " spuren=" + spuren.toString());
     }
 }

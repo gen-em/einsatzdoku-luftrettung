@@ -159,7 +159,15 @@ class SyncView extends WatchUi.View {
          * durchgelaufen waren, und danach wieder ein gruenes
          * "Sync vollstaendig". */
         if (Uploader.abgemeldet) {
-            lines.add(["Gerät nicht mehr angemeldet", Ui.ROT]);
+            /* Bis wann die Uhr die Pakete noch haelt (E-R17-22) -- in der
+             * ersten Zeile, nicht in einer dritten: Eine dritte rueckt den
+             * Mittelblock auf der Venu 3s in die Meldung ("Pakete offen" auf
+             * "Gerät nicht mehr angemeldet", im Simulator gesehen beim Bau,
+             * R17-21). Ohne Vermerk -- er entsteht mit der ersten Abmeldung,
+             * fehlt also praktisch nie -- bleibt der alte Wortlaut. */
+            var bis = Uploader.abmeldeFristBis();
+            lines.add([bis != null ? "Abgemeldet, Daten bis " + Util.datumAus(bis)
+                                   : "Gerät nicht mehr angemeldet", Ui.ROT]);
             lines.add(["Neu koppeln: " + Input.lSelectHold(), Graphics.COLOR_LT_GRAY]);
         } else if (Uploader.hasCredentials() && !Huelle.hatSchluessel()) {
             /* GEKOPPELT, ABER OHNE KONTOSCHLUESSEL (S11-08, E-S11-09). Der
@@ -231,8 +239,12 @@ class SyncView extends WatchUi.View {
          * Bei 34 traegt die Sehne 158/146/238 px — auf allen drei Geraeten
          * mehr als der Text braucht. Die Grenze greift ohnehin nur im engen
          * Fall; wo Platz ist, zentriert die Zeile darueber ganz normal.
-         * Gegengerechnet bis zu fuenf Zeilen im unteren Block: Der Mittelblock
-         * endet dann immer noch oberhalb von untenY, es ueberlappt nichts. */
+         *
+         * WAS DIE GRENZE NICHT HAELT: den Mittelblock oberhalb von untenY.
+         * Hier stand bis Uhr 4.1.0, bis zu fuenf Zeilen im unteren Block
+         * ueberlappten nichts. Gemessen in R17-21 (F-R17-69): Auf der Venu 3s
+         * liegt "N Pakete offen" schon bei VIER Zeilen auf der obersten
+         * Meldung. Offen als Backlog Nr. 402. */
         if (y < Ui.s(dc, 34)) { y = Ui.s(dc, 34); }
 
         /* AUCH DIESE ZEILE DURCH fitFont (Uhr-Layout_Regeln 4.2). Sie war die

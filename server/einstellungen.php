@@ -71,7 +71,7 @@ if ($tab === 'standort') {
         exit;
     }
 }
-$notice = null; $error = null; $pwGewechselt = false; $newKey = null;
+$notice = null; $error = null; $pwGewechselt = false;
 /* Zweitfaktor (P5c/AP5): die Codes, einmal in der Antwort auf den POST, der
  * sie erzeugt hat, und die Meldungen der Karte — [Auftakt, Text]. */
 $zfCodes = null; $zfMeldung = null; $zfFehler = null;
@@ -656,36 +656,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 
-    /* ---- Geräte (Selbstverwaltung) ------------------------------------- */
-    if ($action === 'add') {
-        // Dieselbe Obergrenze wie beim Koppeln (MAX_GERAETE, db.php). Sie an
-        // nur einem der beiden Wege zu pruefen hiesse, sie gar nicht zu haben.
-        if (geraete_grenze_erreicht(db(), $userId)) {
-            $error = 'Es sind bereits ' . MAX_GERAETE . ' Geräte mit diesem Konto verbunden. '
-                   . 'Bitte zuerst ein nicht mehr genutztes Gerät löschen — Deaktivieren '
-                   . 'genügt nicht, die Zugangsdaten bleiben dabei bestehen.';
-        } else {
-            $label = trim($_POST['label'] ?? '');
-            /* SECHZEHN ZUFALLSBYTES WIE BEI DER KOPPLUNG (B-S5-01, S5 Paket B).
-             *
-             * Hier standen vier. Zwei Wege fuehrten damit zu derselben Spalte,
-             * der eine mit 32, der andere mit 128 Bit — und der schwaechere war
-             * ausgerechnet der, den niemand pruefte: Bei der Kopplung faengt
-             * der eindeutige Schluessel eine Dublette ab und die Uhr versucht
-             * es erneut; hier bekaeme die NutzerIn einen Datenbankfehler. Die
-             * Begruendung fuer 16 steht in pair.php (M4-08, Geburtstags-
-             * problem). Bestandsgeraete behalten ihre kurze Kennung — die
-             * Spalte ist VARCHAR(64), es ist keine Migration noetig, und
-             * geraet_kennung_kurz() kommt mit beiden Laengen zurecht. */
-            $devId = 'dev-' . bin2hex(random_bytes(16));
-            $key   = bin2hex(random_bytes(24));
-            db()->prepare('INSERT INTO devices (user_id, device_id, api_key_hash, label) VALUES (?,?,?,?)')
-                ->execute([$userId, $devId, geraet_schluessel_hash($key), $label ?: null]);
-            erststart_erledigt($userId, ERSTSTART_GERAET);   // Schritt 3 (P5b/AP9)
-            $newKey = ['device_id' => $devId, 'api_key' => $key];
-            $notice = 'Gerät angelegt. Schlüssel unten JETZT notieren — er wird nur einmal angezeigt.';
-        }
-    }
+    /* ---- Geräte (Selbstverwaltung) -------------------------------------
+     *
+     * KEINE HANDANLAGE MEHR (R17-21). Hier stand bis Web 23.2.0 die Aktion
+     * `add`: ein Geraet ohne Code anlegen und Geraete-ID und API-Schluessel
+     * von Hand in die App tragen. Der einzige Abnehmer war der Alt-Weg der
+     * Garmin-Uhr, und den gibt es seit Uhr 4.1.0 nicht mehr (E-R17-21); die
+     * Android-App koppelt seit jeher ueber den Code. Ein Weg, der Zugangsdaten
+     * zum Abtippen auf einen Bildschirm legt, ohne dass ein Geraet sie noch
+     * annimmt, ist nur noch Angriffsflaeche (E-R17-56). Geraete entstehen
+     * jetzt ausschliesslich ueber die Kopplung (`pair.php`). */
     if ($action === 'toggle') {
         db()->prepare('UPDATE devices SET active = 1 - active WHERE id = ? AND user_id = ?')
             ->execute([(int)($_POST['id'] ?? 0), $userId]);
@@ -5407,50 +5387,6 @@ ui_seite_start(['titel' => 'Einstellungen',
       <?php endif; ?>
     <?php ui_karte_ende(); ?>
 
-    <?php /* ---- Gerät ohne Code anlegen (S8/AP6, Mockup 10) ----------------
-             DIE AUSNAHME STEHT ZUGEKLAPPT AM ENDE. Sie war bis Web 15.4.0 ein
-             Formular MITTEN in der Geräteliste, unter den Zeilen — an der
-             Stelle also, an der man nach dem Umbenennen sucht. Der Weg dahin
-             ist das Koppeln; von Hand angelegt wird nur, was keinen Code
-             zeigen kann.
-
-             NEUTRAL, NICHT PRIMÄR (B-S5-09): Die eine Haupthandlung dieses
-             Reiters ist „Weiter" an der Kopplungskarte. */ ?>
-    <?php if (!$editDev): ?>
-      <?php ui_karte_start(['titel' => 'Gerät ohne Code anlegen', 'id' => 'k-ohne-code',
-                            'zu' => true, 'vorschau' => 'Ausnahme · Zugangsdaten von Hand']); ?>
-        <p class="feld-hinweis">Für Geräte, die keinen Code anzeigen können. Du
-           bekommst Geräte-ID und API-Schlüssel und trägst sie in der App
-           ein — bei Garmin in Garmin Connect unter den App-Einstellungen.</p>
-        <form method="post" action="einstellungen.php?t=geraete">
-          <?= csrf_field() ?>
-          <input type="hidden" name="action" value="add">
-          <div class="listen-form-felder">
-            <?php ui_feld(['label' => 'Bezeichnung', 'name' => 'label', 'id' => 'devlabel',
-                           'platzhalter' => 'z. B. Ersatzuhr',
-                           'attr' => ' maxlength="120"']); ?>
-          </div>
-          <div class="listen-form-fuss">
-            <?= ui_knopf(['text' => 'Gerät anlegen', 'art' => 'neutral']) ?>
-          </div>
-        </form>
-      <?php ui_karte_ende(true); ?>
-    <?php endif; ?>
-
-    <?php if ($newKey): ?>
-      <?php ui_karte_start(['titel' => 'Zugangsdaten des neuen Geräts', 'id' => 'k-zugangsdaten']); ?>
-        <p class="feld-hinweis">Beide Werte in den Einstellungen der App
-           eintragen; als Server genügt die Domain.</p>
-        <p class="feld-klein">Bei Garmin stehen diese Einstellungen in Garmin Connect.</p>
-        <?php /* KLEINE STUFE MIT „KOPIEREN" (E-S8-10, Backlog Nr. 78). Die
-                 grosse Stufe ist fuer sechs Zeichen gemacht; Geraete-ID und
-                 API-Schluessel sind 36 beziehungsweise 64 Zeichen lang und
-                 standen darin in Plakatgroesse ueber drei Zeilen — und ohne
-                 Knopf, obwohl sie zum Abtippen gedacht sind. */ ?>
-        <?= ui_codeblock_lang((string)$newKey['device_id'], 'Geräte-ID') ?>
-        <?= ui_codeblock_lang((string)$newKey['api_key'], 'API-Schlüssel') ?>
-      <?php ui_karte_ende(); ?>
-    <?php endif; ?>
   <?php endif; ?>
 
   <script<?= kopf_nonce_attr() ?>>

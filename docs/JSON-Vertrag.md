@@ -74,7 +74,7 @@ Eine Ausnahme steht ausdrücklich darin: Die **Präfixe** der Client-Kennung
 
 | Header | Inhalt |
 |---|---|
-| `X-Device-Id` | Öffentliche Geräte-ID (vom Admin beim Anlegen des Geräts vergeben) |
+| `X-Device-Id` | Öffentliche Geräte-ID (vergibt die Kopplung, Abschnitt 1; seit Web 23.3.0 der einzige Weg — die Handanlage im Web ist entfallen, E-R17-56) |
 | `X-Api-Key` | Geheimer Geräteschlüssel (Klartext nur auf der Uhr; Server speichert Hash) |
 
 Antwort bei ungültigem Schlüssel: `401 {"error":"auth"}`.
@@ -251,7 +251,7 @@ Mit Kopfzeilen. `antwort` ist Pflicht und lautet `ja` oder `nein`:
 | `400 {"error":"payload"}` | `antwort` fehlt oder lautet etwas anderes als `ja` oder `nein`. Zählt **nicht** im Ratenschutz: Hier rät niemand, hier ist ein Client falsch gebaut |
 | `401 {"error":"auth"}` | Kennung unbekannt oder Schlüssel falsch — wie in 1a.2 |
 | `409 {"error":"nicht_beansprucht"}` | `ja`, aber noch hat kein Konto den Code eingegeben. **Die Sitzung bleibt bestehen**; ein Gerät, das sich an dieses Dokument hält, sendet `ja` nur nach `beansprucht` |
-| `409 {"error":"device_limit","meldung":"…"}` | das Konto hat bereits so viele Geräte, wie es haben darf (zwischen der Eingabe im Web und dem Ja kann eines von Hand dazugekommen sein). **Die Sitzung ist gelöscht**; erst ein Gerät im Web löschen, dann von vorn |
+| `409 {"error":"device_limit","meldung":"…"}` | das Konto hat bereits so viele Geräte, wie es haben darf (zwischen der Eingabe im Web und dem Ja kann eine zweite Kopplung fertig geworden sein; bis Web 23.2.0 auch ein von Hand angelegtes). **Die Sitzung ist gelöscht**; erst ein Gerät im Web löschen, dann von vorn |
 | `410 {"error":"abgelaufen"}` | Frist vorbei, und die Antwort war `ja`. Von vorn |
 | `429 {"error":"zu_viele_versuche","meldung":"…"}` | Ratenschutz |
 | `500 {"error":"server"}` | das Anlegen scheiterte. Die Sitzung besteht weiter; das Gerät darf wiederholen |

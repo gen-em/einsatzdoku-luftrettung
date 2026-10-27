@@ -3273,10 +3273,11 @@ der Vorgabe.
 
 ### Geräte je Konto
 
-Höchstens **fünf** (`MAX_GERAETE` in `db.php`), geprüft an **drei** Stellen:
-beim Eingeben des Codes im Web, noch einmal beim Ja am Gerät (`pair.php`) —
-dazwischen kann von Hand ein Gerät dazukommen — und beim manuellen Anlegen
-(`einstellungen.php`). Gezählt werden
+Höchstens **fünf** (`MAX_GERAETE` in `db.php`), geprüft an **zwei** Stellen:
+beim Eingeben des Codes im Web und noch einmal beim Ja am Gerät (`pair.php`) —
+dazwischen kann eine zweite Kopplung fertig werden. *(Bis Web 23.2.0 waren es
+drei: dazu das manuelle Anlegen in `einstellungen.php`, das mit R17-21
+entfallen ist, E-R17-56.)* Gezählt werden
 aktive **und** deaktivierte — ein deaktiviertes Gerät ist ein weiterhin
 vorhandener Zugangsdatensatz, der sich mit einem Klick wieder scharf schalten
 lässt. Löschen gibt einen Platz frei, Deaktivieren nicht.
@@ -6707,9 +6708,9 @@ und genau dann wäre er nötig.
 | `Model.mc` | Dienst-Klammer, Phasenlogik, Einsatz-/Segment-Lebenszyklus, Rea-Sitzungen, Persistenz (`state`) |
 | `Track.mc` | GPS (15 m/10 s/1 s-Ausdünnung), Distanz/Anstieg, Anzeige-Polylinie (Cap 1000, Dichte-Halbierung), **Flash-Chunks à 200 Punkte**; `restore()` lädt Teil-Chunks zurück in den Puffer (verlustfrei) |
 | `Cpr.mc` | Rea-Timer app-weit (1-s-Tick), 2:00-Zyklus, Ereignisse, **persistenter Zustand** (übersteht Neustart); drei Zustände: aus / laufend / pausiert |
-| `Uploader.mc` | Job-Queue (fertige Einsätze → Segmente → aktive), Chunking ≤ 500, `next_seq`-Bestätigung, Purge inkl. Marken; `hasServer()`/`hasCredentials()`. **Seit Uhr 3.1.0** trennt `onResponse()` drei Fälle: eine Störung (später erneut), ein dauerhaft abgewiesenes Paket (Marke `bad_<ref>`, wird übersprungen) und ein abgemeldetes Gerät (`401`/`403` → `abgemeldet`, das Senden hält an). Siehe 5.1c. **Seit Uhr 4.0.0** sendet er nur verschlossen (`track` mit `huelle`, `ort_huelle`, Phasen ohne Koordinate, keine `resus_sessions`) und ohne Kontoschlüssel oder bei gescheitertem Selbsttest gar nicht; die Marke `bad_<ref>` trägt den Zeitpunkt, `parkFristPruefen()` räumt nach `PARK_FRIST_S` = 30 Tagen (E-S11-11) |
-| `Huelle.mc` | **Seit Uhr 4.0.0** (S11-08): die Gerätehülle (Format: Kopf von `tools/proben/huelle/referenz.py`) — Bausteine aus der Krypto-Probe, `spurstueck()` (14 Byte je Punkt), `einsatz()` (JSON, Zeiten seit Beginn), Kontoschlüssel in `Storage 'kschl'`, Selbsttest `bereit()` gegen `HuelleVektor.mc` (erzeugt, Fall „kurz"): misst die Byteordnung des ECDH-Geheimnisses und das ganze Prüfwort, Ergebnis je Fassung und Firmware in `Storage 'kpruef'` (E-S11-30, -78) |
-| `Input.mc` | Eingabemodell: `ActionDelegate` übersetzt Tasten, Wischgesten und Langdrücke einmal zentral in Aktionen (s. Abschnitt 5.1) |
+| `Uploader.mc` | Job-Queue (fertige Einsätze → Segmente → aktive), Chunking ≤ 500, `next_seq`-Bestätigung, Purge inkl. Marken; `hasServer()`/`hasCredentials()`. **Seit Uhr 3.1.0** trennt `onResponse()` drei Fälle: eine Störung (später erneut), ein dauerhaft abgewiesenes Paket (Marke `bad_<ref>`, wird übersprungen) und ein abgemeldetes Gerät (`401`/`403` → `abgemeldet`, das Senden hält an). Siehe 5.1c. **Seit Uhr 4.0.0** sendet er nur verschlossen (`track` mit `huelle`, `ort_huelle`, Phasen ohne Koordinate, keine `resus_sessions`) und ohne Kontoschlüssel oder bei gescheitertem Selbsttest gar nicht; die Marke `bad_<ref>` trägt den Zeitpunkt, `parkFristPruefen()` räumt nach `PARK_FRIST_S` = 30 Tagen (E-S11-11). **Seit Uhr 4.1.0** (R17-21): die Frist auch für „abgemeldet" (`Storage 'abgem_seit'`, Zeitpunkt der ersten 401/403; `abmeldeFristPruefen()` vor jedem Sendelauf verwirft danach alle wartenden Pakete, E-R17-22); das bestätigte Paket geht über seine Referenz aus der Liste, nicht über einen Listenplatz (F-R17-52); `http://` wird zu `https://` (F-R17-11); Zugangsdaten nur aus `Storage 'cred'` — der Alt-Weg über die App-Einstellungen ist fort (E-R17-21) |
+| `Huelle.mc` | **Seit Uhr 4.0.0** (S11-08): die Gerätehülle (Format: Kopf von `tools/proben/huelle/referenz.py`) — Bausteine aus der Krypto-Probe, `spurstueck()` (14 Byte je Punkt), `einsatz()` (JSON, Zeiten seit Beginn), Kontoschlüssel in `Storage 'kschl'`, Selbsttest `bereit()` gegen `HuelleVektor.mc` (erzeugt, Fall „kurz"): misst die Byteordnung des ECDH-Geheimnisses und das ganze Prüfwort, Ergebnis je Fassung und Firmware in `Storage 'kpruef'` (E-S11-30, -78) — **seit Uhr 4.1.0 nur `be` oder `le`**: „kaputt" gilt bis zum nächsten Start und wird dann neu gemessen, `pruefungVergessen()` beim Trennen (F-R17-53) |
+| `Input.mc` | Eingabemodell: `ActionDelegate` übersetzt Tasten, Wischgesten und Langdrücke einmal zentral in Aktionen (s. Abschnitt 5.1); `TastenDelegate` ist die Basis der selbst gezeichneten Menüs und Warteseiten; `beruehrungVerwerfen()` setzt den Schalter `touchEnabled` um (seit Uhr 4.1.0, F-R17-68) |
 | `DeviceProfile.mc` | je Profil eine eigene Fassung in `source-tasten5/` bzw. `source-tasten3/`; liefert `HAS_UP_DOWN` und die Bedienhinweise |
 | `Ui.mc` | Geometrie relativ zur Displayhöhe (`s()` liefert bei 260 exakt den Ausgangswert), Markenfarben, Rea-Marker |
 | `Nav.mc` | Pager: Uhr → Tempo → Statistik → Sync → Rea |
@@ -7164,10 +7165,23 @@ Ersatz für fehlende Tasten:
 - **Die Tastensperre** (START + zweite Taste) entfällt auf der Venu, weil nur
   eine Taste sinnvoll erreichbar ist.
 
-**Profil C — fünf Tasten mit Touch** (Fenix 7 und neuer) ist vorbereitet, aber
-nicht ausgeliefert. Dafür existiert die App-Einstellung `touchEnabled`
-(Vorgabe: an), mit der sich die Touchbedienung abschalten lässt — auf
-Profil B hat sie keine Wirkung, weil das Gerät sonst unbedienbar wäre.
+**Profil C — fünf Tasten mit Touch** (Fenix 7, Epix 2, FR965 und weitere)
+steht im Manifest und läuft mit den Zuordnungen von Profil A; Wischen und
+Tippen kommen dazu wie auf der Venu. *(Bis Uhr 4.1.0 stand hier „vorbereitet,
+aber nicht ausgeliefert" — die Geräte standen da längst im Manifest.)* Die
+App-Einstellung `touchEnabled` (Vorgabe: an) schaltet die Berührung ab, und
+**seit Uhr 4.1.0 wirkt sie** (F-R17-68; bis dahin las sie nur
+`Input.touchActive()`, das niemand aufrief). Weil Connect IQ einem Behavior
+nicht ansieht, ob es von einer Taste oder vom Bildschirm kam, und das
+Roh-Ereignis einer belegten Geste gar nicht zustellt (`Geraete-Eingabe.md`
+4.2), meldet jeder Delegate der App jede Taste an `Input.tasteGesehen()`;
+`Input.beruehrungVerwerfen()` verwirft ein Blättern, Zurück oder Auswählen,
+vor dem keine Taste unten war und keine in den letzten 1000 ms losgelassen
+wurde. Das gilt nur auf Geräten mit Touch **und** UP/DOWN — auf Profil A
+ohne Touch und auf Profil B ändert sich nichts. **Nicht erreicht** werden die
+Systembausteine (`WatchUi.Confirmation`, `Menu2`); dort bleibt Tippen
+wirksam. Gemessen im Simulator auf der Fenix 7; auf einem echten Gerät
+ungeprüft.
 
 ### 5.1a Pausenzustand der Reanimation
 
@@ -7256,7 +7270,7 @@ Seither unterscheidet die Antwortbehandlung drei Fälle:
 
 | Antwort | Bedeutung | Was die Uhr tut |
 |---|---|---|
-| `401`, `403` | Das **Gerät** ist abgemeldet: gelöscht, Schlüssel ungültig, oder auf inaktiv gestellt | `Uploader.abgemeldet` wird gesetzt, `syncAll()` kehrt sofort zurück. **Kein Paket wird geparkt** — mit ihnen ist nichts verkehrt, sie werden nach einer neuen Kopplung gebraucht. Die Sync-Seite nennt den Grund und den Weg zurück |
+| `401`, `403` | Das **Gerät** ist abgemeldet: gelöscht, Schlüssel ungültig, oder auf inaktiv gestellt | `Uploader.abgemeldet` wird gesetzt, `syncAll()` kehrt sofort zurück. **Kein Paket wird geparkt** — mit ihnen ist nichts verkehrt, sie werden nach einer neuen Kopplung gebraucht. Die Sync-Seite nennt den Grund und den Weg zurück. **Seit Uhr 4.1.0** merkt sich die Uhr den Zeitpunkt der ersten Abmeldung (`abgem_seit`, übersteht Neustarts) und verwirft 30 Tage danach alle wartenden Pakete (E-R17-22); die rote Zeile lautet dann „Abgemeldet, Daten bis TT.MM." |
 | `400` **mit** `{"error":…}` | **Dieses** Paket ist unbrauchbar | Marke `bad_<ref>` im Storage, `_next()` arbeitet weiter. Ein blankes `400` ohne Kennzeichen zählt nicht: Es kann von jedem Zwischenstück kommen, und ein gesundes Paket dafür zu parken wäre teurer als ein Versuch zuviel |
 | alles Übrige | Störung | unverändert: `lastError`, später erneut |
 
@@ -7297,12 +7311,15 @@ Ergebnisse gehören nach `Geraete-Eingabe.md`.
 **Build:** VS Code + Monkey-C-Erweiterung + Connect-IQ-SDK + JDK;
 Entwickler-Schlüssel via „Generate a Developer Key". Ziele `fenix6pro`, `fr945`
 und `venu3s` (s. Abschnitt 5.1 und `Geraete-Eingabe.md`),
-Debug-Build; Sideload: `.prg` nach `GARMIN/Apps/`. Server-Adresse, Geräte-ID und
-API-Schlüssel sind **App-Einstellungen** (Garmin Connect). Seit Uhr 3.0.0 hat
+Debug-Build; Sideload: `.prg` nach `GARMIN/Apps/`. Die Server-Adresse ist eine
+**App-Einstellung** (Garmin Connect); `http://` hebt die Uhr seit 4.1.0 auf
+`https://` (F-R17-11). Seit Uhr 3.0.0 hat
 die **Server-Adresse einen Vorgabewert** — `nadoku.gen-em.org`, die öffentliche
 Installation (E-R49-8); Selbsthoster tragen dort ihre eigene Domain ein. Geräte-ID
-und API-Schlüssel bleiben leer und sind der **Alt-Weg** für die Handanlage; im
-Regelfall füllt sie die **Kopplung** (Uhr: Sync-Seite → START halten; das Gerät
+und API-Schlüssel waren bis Uhr 4.0.0 der **Alt-Weg** für die Handanlage;
+**seit Uhr 4.1.0 gibt es sie nicht mehr** (E-R17-21) und seit Web 23.3.0
+auch die Handanlage im Web nicht (E-R17-56). Die Zugangsdaten setzt allein die
+**Kopplung** (Uhr: Sync-Seite → START halten; das Gerät
 zeigt einen Code, den ein Mensch im Web unter Einstellungen → Geräte einträgt).
 Connect IQ bewahrt diese Einstellungen an der App-Kennung auf — sie überstehen
 jedes Neukompilieren, gehen aber bei einem Wechsel der Kennung verloren; der
@@ -7399,7 +7416,11 @@ Adresse `127.0.0.1:8443` und einer Füllung, die einen Einsatz und ein
 Ruhesegment anlegt — koppelt im Simulator an das Demo-Konto, sendet beides
 verschlossen, und `pruefen.php` öffnet es mit dem Demo-Schlüssel und hält es
 Wert für Wert gegen (12 Prüfungen). Mit `--nachholen` dazu der Weg ohne
-Kontoschlüssel und das Nachholen (E-S11-79). Den Klick im Web ersetzt eine
+Kontoschlüssel und das Nachholen (E-S11-79). Mit `--schrumpfen` (seit
+R17-21, F-R17-52) liegen zwei geparkte Pakete vor dem Einsatz, und die
+Prüffassung verwirft sie während seiner letzten Anfrage; danach muss die
+Konsole „liste=0 spuren=0" melden und keinen Absturz (3 Prüfungen). Die
+Fassung vor 4.1.0 bricht dort mit „Array Out Of Bounds" ab. Den Klick im Web ersetzt eine
 Zeile SQL; was die Weboberfläche beim Koppeln tut, misst die Kopplungsprobe.
 
 Die Grenzen bleiben die des Simulators: keine echte Hardware, keine
@@ -9597,7 +9618,7 @@ der ersten Minute, dass diese Anwendung im Weg steht.
 
 | Spalte | Was |
 |---|---|
-| `users.erststart_stand` | Bitfeld der drei Schritte (1 Standort, 2 Rettungsmittel, 4 Gerät); **`-1` = nicht mehr zeigen**, deshalb `TINYINT` mit Vorzeichen |
+| `users.erststart_stand` | Bitfeld der drei Schritte (1 Standort, 2 Rettungsmittel, 4 Gerät); **`-1` = nicht mehr zeigen**, deshalb `TINYINT` mit Vorzeichen. Das Bit 4 setzt seit Web 23.3.0 `pair.php` nach einer gelungenen Kopplung — bis dahin setzte es nur die Handanlage, nie das Koppeln (F-R17-70) |
 | `users.rueckfrage_naechste` | Datum der nächsten Konto-Rückfrage, `NULL` = Uhr läuft noch nicht |
 | `users.rueckfrage_runde` | 0 → 30 Tage, 1 → 6 Monate, 2+ → jährlich |
 | `users.rueckfrage_verschoben` | Zähler für „Später", höchstens 3 je Runde |
@@ -13162,7 +13183,9 @@ hinterher" — dann Punkt 1 oder 2 oben einrichten.
 
 **Gerät verloren / Schlüssel kompromittiert:** Web → „Geräte" (oder Verwaltung)
 → **Deaktivieren**. Wirkt sofort (Ingest antwortet `403`); Daten bleiben. Neue
-Uhr = neues Gerät anlegen.
+Uhr = neu koppeln (seit Web 23.3.0 der einzige Weg, ein Gerät anzulegen).
+Eine Uhr ab Uhr 4.1.0, die die Abmeldung erfährt, verwirft ihre
+ungesendeten Pakete 30 Tage danach (E-R17-22).
 
 **Die Kopplung klappt nicht (seit Web 13.0.0 anders zu suchen als davor):**
 Der Ablauf hat drei Schritte — das Gerät holt sich einen Code, ein Mensch

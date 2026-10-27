@@ -146,6 +146,17 @@ wirkungslos. In Menüs, die auf `onSelect` reagieren, kann ein Tippen den
 gerade markierten Eintrag auswählen — unabhängig davon, wo getippt wurde.
 Bewusst hingenommen.
 
+**Darauf baut der Schalter „Touchbedienung verwenden"** *(seit Uhr 4.1.0,
+F-R17-68)*. Weil eine Berührung kein Tastenereignis erzeugt, kam ein
+Behavior, vor dem keine Taste unten war und keine in der letzten Sekunde
+losgelassen wurde, vom Bildschirm; bei „aus" verwirft die App es
+(`Input.beruehrungVerwerfen()`). Das gilt nur auf Geräten mit Touch **und**
+UP/DOWN — auf der Venu 3s wäre es ein Selbstmordknopf. Gemessen im Simulator
+auf der Fenix 7 (26.10.2026): bei „aus" ändert ein Wisch hoch oder runter die
+Seite nicht, DOWN blättert; bei „an" blättert auch der Wisch. Rückfragen und
+`Menu2` sind Systembausteine und bleiben antippbar. Auf einem echten Gerät
+ungeprüft.
+
 ---
 
 ## 5. Ein Gerät ergänzen

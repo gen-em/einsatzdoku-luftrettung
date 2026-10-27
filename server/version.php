@@ -8333,5 +8333,16 @@ declare(strict_types=1);
  *   Adresswechsel, Setz-Link und neue Wiederherstellungscodes; Mails bei
  *   neuen Codes und erneuertem Wiederherstellungsschluessel. Neben, weil
  *   Mails, eine Seite und Riegel dazukommen; kein Schema (E-R17-50).
+ * 23.3.0 — KEINE HANDANLAGE VON GERAETEN MEHR (Schritt 12b, R17-21,
+ *   E-R17-56). Die Karte „Geraet ohne Code anlegen" auf der Geraeteseite
+ *   gab Geraete-ID und API-Schluessel zum Abtippen heraus; ihr einziger
+ *   Abnehmer war der Alt-Weg der Garmin-Uhr, und den streicht Uhr 4.1.0
+ *   (E-R17-21). Ein Weg, der Zugangsdaten auf einen Bildschirm legt, ohne
+ *   dass ein Geraet sie noch annimmt, ist nur noch Angriffsflaeche — er
+ *   faellt samt Aktion `add` und Zugangsdatenkarte. Geraete entstehen nur
+ *   noch ueber die Kopplung. Dabei gefunden (F-R17-70): Den dritten Schritt
+ *   des Erststarts („Uhr oder Handy koppeln") hakte nur die Handanlage ab,
+ *   nie das Koppeln; jetzt tut es `pair.php`. Neben, weil ein Weg durch die
+ *   Anwendung wegfaellt; kein Schema.
  */
-const WEB_VERSION = '23.2.0';
+const WEB_VERSION = '23.3.0';
