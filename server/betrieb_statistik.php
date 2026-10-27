@@ -447,7 +447,9 @@ if ($reiter === 'geraete') {
         fputcsv($out, ['Gerät', 'Hersteller', 'Art', 'Geräte', 'Anteil Geräte %',
                        'NutzerInnen', 'Anteil NutzerInnen %'], ';', '"', '');
         foreach ($modelle as $m) {
-            fputcsv($out, [$m['name'], $m['hersteller'], $m['art'],
+            /* Name, Hersteller und Art durch `csv_zelle()` (F-R17-45): Den
+             * Modellnamen meldet das Geraet beim Koppeln selbst. */
+            fputcsv($out, [csv_zelle($m['name']), csv_zelle($m['hersteller']), csv_zelle($m['art']),
                            $m['geraete'], prozent_wert($m['geraete'], $geraeteZahl, 'kauf'),
                            $m['nutzer'],  prozent_wert($m['nutzer'],  $kontenZahl,  'kauf')],
                      ';', '"', '');

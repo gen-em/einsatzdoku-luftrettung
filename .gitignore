@@ -15,6 +15,14 @@ server/config.php
 # tools/kettenaufrufe/ faerbt eine eingecheckte Kopie zusaetzlich rot.
 server/config.php.*
 server/install.lock
+# DER ZUSTAND DIESER INSTALLATION (seit Web 23.3.1, R17-22, F-R17-47): der
+# Schalter des Wartungsmodus und der Zaehler der Verbindungsgrenze liegen in
+# `server/.zustand/`. Bis Web 23.3.0 lagen sie als `server/wartung.lock` und
+# `server/ueberlast.json` im Webroot und waren ueber das Netz lesbar; die
+# beiden alten Zeilen bleiben stehen, solange eine Anlage sie noch tragen
+# kann (die neue Fassung raeumt sie weg). Die Begruendung unten gilt fuer
+# beide Orte.
+server/.zustand/
 # Der Schalter des Wartungsmodus (S5 Paket W, E-S5W-02). Wie install.lock:
 # Er ist ein ZUSTAND DIESER EINEN INSTALLATION und gehoert nicht ins
 # Repositorium -- ein eingecheckter Schalter schloesse jede Installation, die

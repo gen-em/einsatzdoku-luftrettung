@@ -248,12 +248,17 @@ ui_seite_start(['titel' => 'Sicherheit']);
           ? ui_plakette('Stufe ' . $bremse['stufe'], ['ton' => 'orange'])
           : ui_plakette('ruhig', ['ton' => 'blau'])]); ?>
     <?php if ($bremse['stufe'] > 0): ?>
-      <?= ui_meldung_markup('warn', 'Jede <strong>fehlgeschlagene</strong> Anmeldung '
-          . 'wartet zurzeit ' . e(rtrim(rtrim(number_format($bremse['sekunden'], 1, ',', ''), '0'), ','))
+      <?php /* OHNE TAGS IM TEXT (R17-22, F-R17-49): `ui_meldung_markup()`
+               maskiert den Text, und bis Web 23.3.0 stand hier zweimal
+               `<strong>` — die BetreiberIn las die Tags als Text. Die
+               Hervorhebung traegt der Auftakt; ein Riegel in Stufe 1 haelt
+               es so (`tools/zaehlung/`, Zeile `meldung-markup`). */ ?>
+      <?= ui_meldung_markup('warn', 'Jede fehlgeschlagene Anmeldung wartet zurzeit '
+          . rtrim(rtrim(number_format($bremse['sekunden'], 1, ',', ''), '0'), ',')
           . ' Sekunden. Gezählt sind ' . (int)$bremse['versuche'] . ' Fehlversuche in den '
-          . 'letzten 15 Minuten. <strong>Wer das richtige Passwort hat, kommt '
-          . 'ohne Verzögerung durch</strong>, und wer schon gesperrt ist, wird gar '
-          . 'nicht erst verlangsamt.', 'Die Bremse läuft.') ?>
+          . 'letzten 15 Minuten. Wer das richtige Passwort hat, kommt ohne Verzögerung '
+          . 'durch, und wer schon gesperrt ist, wird gar nicht erst verlangsamt.',
+          'Die Bremse läuft.') ?>
     <?php else: ?>
       <p class="feld-hinweis">Die Anmeldung antwortet normal; die Bremse greift
          erst ab <?= (int)(rate_bremse_schwellen()[0] ?? 200) ?> Fehlversuchen je

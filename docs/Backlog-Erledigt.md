@@ -9676,3 +9676,23 @@ zutreffen.
      vor ALLEN Handlungen der Kontoseite, nicht nur vor den dreien; ansehen
      bleibt. Matrix 4.99p mit `{betreiberin}` (acht Zeilen), Rollenprobe
      dazu mit gültigem Token: Status und Adresse bleiben.
+
+<!-- -->
+
+401. **Die Mails tragen keine Kopfzeile `Content-Transfer-Encoding`.** · gehört zu: 12b · Stand: erledigt · seit 26.10.2026
+     *Aufgenommen 26.10.2026 aus der Handprobe von R17-20 (Betreiberin: ja).*
+     `smtp_send()` in `smtp.php` schickt jede Mail mit `Content-Type:
+     text/plain; charset=UTF-8`, aber ohne `Content-Transfer-Encoding`, und
+     der Text enthält Umlaute, Gedankenstriche und Anführungszeichen, also
+     8-Bit-Zeichen. Ohne die Kopfzeile gilt nach RFC 2045 `7bit`; ein
+     strenger Empfänger oder Weiterleiter darf die Zeichen verwerfen oder
+     ersetzen. Gesehen in der örtlichen Mailsenke: Pythons Mailleser zeigte
+     jedes 8-Bit-Zeichen als Ersatzzeichen, die Rohbytes waren sauberes UTF-8.
+     Gängige Programme zeigen die Mails richtig — deshalb fiel es nie auf.
+     Gilt für alle Mails, seit es `smtp.php` gibt, nicht erst seit R17-20.
+     *Weg:* `Content-Transfer-Encoding: 8bit` (das Relais kündigt `8BITMIME`
+     an) oder `quoted-printable` mit Zeilen unter 76 Zeichen; dazu ein Fall in
+     der Mail- oder Versandprobe, der die Kopfzeile und einen Umlaut im
+     dekodierten Text misst. Passt zu R17-22 (F-R17-46, `smtp_probe()`).
+     Erledigt 27.10.2026 (Web 23.3.1, R17-22, E-R17-63): quoted-printable
+     mit Kopfzeile; die Mailprobe misst den Mitschnitt der Gegenstelle.

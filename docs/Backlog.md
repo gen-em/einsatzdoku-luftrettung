@@ -52,7 +52,7 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
 
 | Spanne | Zweig | seit |
 |---|---|---|
-| 400 bis 409 | `claude/new-session-lvb0x0` — Schritt 12b, Pakete R17-20 bis -30 (`Review-R17.md`); R17-18 und -19 auf `claude/modest-edison-byg7ay` und `claude/tender-feynman-3oyo13`, gemergt mit PR #122, bis R17-17 `claude/lucid-cannon-nvv86i`, gemergt mit PR #118; vergeben: 400 bis 402 | 26.10.2026 |
+| 400 bis 409 | `claude/new-session-lvb0x0` — Schritt 12b, Pakete R17-20 bis -30 (`Review-R17.md`); R17-18 und -19 auf `claude/modest-edison-byg7ay` und `claude/tender-feynman-3oyo13`, gemergt mit PR #122, bis R17-17 `claude/lucid-cannon-nvv86i`, gemergt mit PR #118; vergeben: 400 bis 402 (401 erledigt) | 26.10.2026 |
 | ab 410 | frei — höchste vergebene Nummer 402; frei blieben 394 bis 399 aus der Spanne von 19 (PR #112 bis #114), 389 aus der von 12a (PR #116), 372 bis 379 aus der von 12 (PR #103), 362 bis 369 aus der von PK, 359 aus der von 18 (PR #101), 348 und 349 aus der von 17, 338 aus der von AR | 20.10.2026 |
 
 ---
@@ -1309,24 +1309,6 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      *Abnahme:* die neun Ausnahmen der Klasse `Bestand` in
      `textprobe-ausnahmen.json` (`avv-…`, `nb-…`) greifen nicht mehr und
      sind gestrichen, die Textprobe ist grün; P-R17-13 auf Produktiv.
-
-<!-- -->
-
-401. **Die Mails tragen keine Kopfzeile `Content-Transfer-Encoding`.** · gehört zu: 12b · Stand: offen · seit 26.10.2026
-     *Aufgenommen 26.10.2026 aus der Handprobe von R17-20 (Betreiberin: ja).*
-     `smtp_send()` in `smtp.php` schickt jede Mail mit `Content-Type:
-     text/plain; charset=UTF-8`, aber ohne `Content-Transfer-Encoding`, und
-     der Text enthält Umlaute, Gedankenstriche und Anführungszeichen, also
-     8-Bit-Zeichen. Ohne die Kopfzeile gilt nach RFC 2045 `7bit`; ein
-     strenger Empfänger oder Weiterleiter darf die Zeichen verwerfen oder
-     ersetzen. Gesehen in der örtlichen Mailsenke: Pythons Mailleser zeigte
-     jedes 8-Bit-Zeichen als Ersatzzeichen, die Rohbytes waren sauberes UTF-8.
-     Gängige Programme zeigen die Mails richtig — deshalb fiel es nie auf.
-     Gilt für alle Mails, seit es `smtp.php` gibt, nicht erst seit R17-20.
-     *Weg:* `Content-Transfer-Encoding: 8bit` (das Relais kündigt `8BITMIME`
-     an) oder `quoted-printable` mit Zeilen unter 76 Zeichen; dazu ein Fall in
-     der Mail- oder Versandprobe, der die Kopfzeile und einen Umlaut im
-     dekodierten Text misst. Passt zu R17-22 (F-R17-46, `smtp_probe()`).
 
 <!-- -->
 

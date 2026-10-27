@@ -477,10 +477,14 @@ jobs:
           # jeder Datei), je Umgebung eine eigene, im Gesprächslauf eine im
           # Probeverzeichnis; `state-name` gilt relativ zu `server-dir`.
           state-name: ${{ inputs.probelauf_gespraech && '.deploy-state-gespraech.json' || env.ZUSTANDSPFAD }}
-          # Sieben Pfade, die nur auf dem Server liegen, und `install.php` (das
-          # Runbook lässt sie nach der Einrichtung löschen) — acht, und die Zahl
-          # ist der Prüfwert; die drei Verzeichnisse stehen als `x/**` und `x/`,
-          # weil die Aktion beides getrennt prüft.
+          # Sechs Pfade, die nur auf dem Server liegen, und `install.php` (das
+          # Runbook lässt sie nach der Einrichtung löschen) — sieben, und die
+          # Zahl ist der Prüfwert; die vier Verzeichnisse stehen als `x/**` und
+          # `x/`, weil die Aktion beides getrennt prüft. Bis Web 23.3.0 acht:
+          # `wartung.lock` und `ueberlast.json` lagen im Webroot und liegen
+          # seither in `.zustand/` (R17-22, F-R17-47). Eine Datei am alten Ort
+          # löscht die Aktion nicht — sie entfernt nur, was sie selbst
+          # hochgeladen hat —, und die neue Fassung räumt sie selbst weg.
           exclude: |
             **/.git*
             **/.git*/**
@@ -488,14 +492,14 @@ jobs:
             config.php
             install.php
             install.lock
-            wartung.lock
-            ueberlast.json
             sicherungen/**
             sicherungen/
             apk/**
             apk/
             .sitzungen/**
             .sitzungen/
+            .zustand/**
+            .zustand/
 
       - name: Liegt nach dem Abgleich wirklich die neue Fassung oben?
         if: ${{ inputs.umgebung == 'produktion' && !inputs.probelauf }}

@@ -546,9 +546,10 @@ function passwort_nachweis(int $userId, string $token): string
     $u = $st->fetch(PDO::FETCH_ASSOC);
     if (!$u) { return 'falsch'; }
     $email = (string)$u['email'];
-    if (!rate_erlaubt('login', $email)) { return 'gesperrt'; }
+    // Nur das Konto (F-R17-36): Der Nachweis zaehlt im Konto-Topf der Anmeldung.
+    if (!rate_erlaubt('login', null, rate_nur_konto($email))) { return 'gesperrt'; }
     $r = anmeldehash_pruefen($userId, $token, (string)($u['password_hash'] ?? ''));
-    if ($r === 'falsch') { rate_misserfolg('login', $email); }
+    if ($r === 'falsch') { rate_misserfolg('login', null, rate_nur_konto($email)); }
     return $r;
 }
 

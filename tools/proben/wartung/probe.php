@@ -300,6 +300,7 @@ function sitzung_weg(string $sid): void {
 /* ---- Schalter ---------------------------------------------------------- */
 
 function wartung_setzen(string $inhalt): void {
+    zustand_verzeichnis();       // seit Web 23.3.1 in `.zustand/` (F-R17-47)
     file_put_contents(WARTUNG_DATEI, $inhalt);
     clearstatcache(true, WARTUNG_DATEI);
 }
@@ -1216,6 +1217,45 @@ if ($torBereit) {
         pruefe(false, $nr . '  ' . $was, $nichtGemessen);
     }
 }
+
+/* ======================================================================
+ * Teil 8 — der Ort des Zustands (R17-22, F-R17-47, E-R17-59)
+ * ==================================================================== */
+echo "\n  Teil 8 — der Ort des Zustands und der Uebergang\n";
+/* Bis Web 23.3.0 lagen `wartung.lock` und `ueberlast.json` im Webroot, und
+ * keine `.htaccess`-Regel sperrte sie: Waehrend einer Wartung las jeder den
+ * Namen des Kontos, das geschaltet hatte. Seither `.zustand/`. Gemessen wird
+ * der Ort, die eigene Sperre des Verzeichnisses und der Uebergang — die Kette
+ * schaltet mit dem alten Code ein, also am alten Ort. Ob Apache die Sperre
+ * auch ausliefert, misst der PHP-Server dieser Probe nicht (er liest keine
+ * `.htaccess`); das ist P-R17-10 auf Staging. */
+wartung_weg();
+@unlink(WARTUNG_DATEI_ALT);
+pruefe(wartung_einschalten('Wartungsprobe') && is_file(WARTUNG_DATEI) && !is_file(WARTUNG_DATEI_ALT),
+       '34  Einschalten schreibt nach .zustand/, nicht in den Webroot',
+       str_replace($wurzel . '/', '', WARTUNG_DATEI));
+$sperre = (string)@file_get_contents(ZUSTAND_VERZEICHNIS . '/.htaccess');
+pruefe(str_contains($sperre, 'Require all denied') && str_contains($sperre, 'Deny from all'),
+       '34  ... und das Verzeichnis traegt seine eigene Sperre (.htaccess)', strlen($sperre) . ' Byte');
+wartung_ausschalten();
+file_put_contents(WARTUNG_DATEI_ALT, '{"seit":"2026-10-27T00:00:00Z","von":"alte Fassung"}' . "\n");
+clearstatcache();
+$r35 = hole('index.php');
+pruefe(wartung_aktiv() && $r35['code'] === 503,
+       '35  Uebergang: eine Wartungsdatei am ALTEN Ort gilt noch (Kette schaltet mit altem Code)',
+       'aktiv ' . (wartung_aktiv() ? 'ja' : 'nein') . ', HTTP ' . $r35['code']);
+pruefe(wartung_ausschalten() && !is_file(WARTUNG_DATEI_ALT) && !wartung_aktiv(),
+       '35  ... und Ausschalten raeumt sie weg', is_file(WARTUNG_DATEI_ALT) ? 'liegt noch' : 'weg');
+/* Der Zaehler: eine alte Datei geht beim ersten Vorfall; der Stand der
+ * neuen wird gesichert und zurueckgelegt, damit die Statusseite nichts
+ * Erfundenes zeigt. */
+$ulVorher = is_file(UEBERLAST_DATEI) ? (string)file_get_contents(UEBERLAST_DATEI) : null;
+file_put_contents(UEBERLAST_DATEI_ALT, '{"st":"2026-01-01 00","n":1}' . "\n");
+ueberlast_vermerken();
+pruefe(!is_file(UEBERLAST_DATEI_ALT) && is_file(UEBERLAST_DATEI),
+       '36  Ueberlastzaehler: der alte im Webroot geht, gezaehlt wird in .zustand/',
+       is_file(UEBERLAST_DATEI_ALT) ? 'alte liegt noch' : 'alte weg');
+if ($ulVorher === null) { @unlink(UEBERLAST_DATEI); } else { file_put_contents(UEBERLAST_DATEI, $ulVorher); }
 
 } finally {
     if ($torWeg !== null && ($migAlt ?? null) !== null) {

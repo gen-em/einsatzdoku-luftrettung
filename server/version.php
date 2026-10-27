@@ -8344,5 +8344,21 @@ declare(strict_types=1);
  *   des Erststarts („Uhr oder Handy koppeln") hakte nur die Handanlage ab,
  *   nie das Koppeln; jetzt tut es `pair.php`. Neben, weil ein Weg durch die
  *   Anwendung wegfaellt; kein Schema.
+ * 23.3.1 — SERVERVERHALTEN AUS DEM REVIEW (Schritt 12b, R17-22; F-R17-36 bis
+ *   -41, -44 bis -49; Backlog Nr. 401). Der Topf `login` zaehlte Konto UND
+ *   Anschluss mit einer Schwelle von 10 — zehn erfundene Adressen sperrten
+ *   einen Klinik-NAT; jetzt zaehlt er nur das Konto, `login_ip` den
+ *   Anschluss, wie Technik 5e.2 es immer versprach. Der Notzugang bremst
+ *   auch je Anschluss (`notweg_ip`). Die Einsatzseite verlor bei jeder
+ *   gepackten Spur „GPS-Daten als GPX"; ein Diensttag im Papierkorb sperrte
+ *   beim Import das ganze Datum; „overwrite" ohne Kennung legte an.
+ *   Mails gehen quoted-printable hinaus (Nr. 401), und ohne Benutzer und
+ *   Passwort gilt SMTP als nicht eingerichtet (E-R17-58). `wartung.lock`
+ *   und `ueberlast.json` liegen in `.zustand/` statt lesbar im Webroot
+ *   (E-R17-59); die Ausnahmeliste der Kette hat damit sieben statt acht
+ *   Pfade. Dazu Warnungen im Reiter System (Umdatieren, Monat 13), eine
+ *   CSV-Zelle als Formel, das Muster der Ueberlastnummern und zwei
+ *   Meldungen mit Tags als Text — samt Riegel Z45. Korrektur: kein neuer
+ *   Weg, kein Schema.
  */
-const WEB_VERSION = '23.3.0';
+const WEB_VERSION = '23.3.1';

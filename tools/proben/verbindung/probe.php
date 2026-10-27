@@ -214,7 +214,10 @@ if ($vorher === []) {
     exit(2);
 }
 
-$zaehlDatei = $wurzel . '/ueberlast.json';
+// Seit Web 23.3.1 in `.zustand/` (R17-22, F-R17-47) — aus der Konstante,
+// damit Probe und Anwendung denselben Ort meinen.
+require_once $wurzel . '/wartung_lib.php';
+$zaehlDatei = UEBERLAST_DATEI;
 $gehalten = [];
 
 /**
@@ -339,6 +342,21 @@ pruefe($b['fehler'] !== '' && $b['belegt'] > 0,
 pruefe(preg_match('/\[(1040|1203|1226)\]/', $b['fehler']) === 1,
        '... und meldet eine der drei Nummern aus UEBERLAST_CODES',
        preg_match('/\[(\d+)\]/', $b['fehler'], $mm) === 1 ? 'Fehler ' . $mm[1] : '-');
+/* UND JEDE NUMMER AUCH UEBER DIE MELDUNG ALLEIN (R17-22, F-R17-48). Der
+ * Weg, den `ueberlast_erkannt()` den verlaesslichen nennt — die Meldung —,
+ * kannte bis Web 23.3.0 die 1226 nicht; heute griff ein anderer Weg (der
+ * Code), und die Probe oben war gruen ueber diesen. Hier traegt die Ausnahme
+ * die Nummer NUR in der Meldung, wie bei einem Treiber, der den SQLSTATE in
+ * `getCode()` legt. */
+$nurMeldung = [];
+foreach (UEBERLAST_CODES as $nr) {
+    $nurMeldung[$nr] = ueberlast_erkannt(new PDOException('SQLSTATE[HY000] [' . $nr . '] Probe', 0));
+}
+pruefe(!in_array(false, $nurMeldung, true)
+       && !ueberlast_erkannt(new PDOException('SQLSTATE[HY000] [1045] Zugang verweigert', 0)),
+       '... und jede Nummer aus UEBERLAST_CODES wird auch nur an der Meldung erkannt',
+       implode(', ', array_map(static fn ($nr, $ok) => $nr . ($ok ? ' ja' : ' NEIN'),
+                               array_keys($nurMeldung), $nurMeldung)) . '; 1045 nicht');
 
 /* GEMESSEN WIRD `login.php` UND NICHT `index.php`.
  *

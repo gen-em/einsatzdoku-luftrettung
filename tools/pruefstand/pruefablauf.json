@@ -461,7 +461,8 @@
         "server/api/gpx_import.php",
         "server/tag_spuren.php",
         "server/*export*.php",
-        "server/assets/export.js"
+        "server/assets/export.js",
+        "server/einsatz.php"
       ],
       "proben": [
         "gpxprobe"
@@ -488,7 +489,8 @@
       "pfade": [
         "server/mail_lib.php",
         "server/email_lib.php",
-        "server/ankuendigung_lib.php"
+        "server/ankuendigung_lib.php",
+        "server/smtp.php"
       ],
       "proben": [
         "mailprobe"
@@ -504,7 +506,8 @@
         "server/admin_*.php",
         "server/betrieb_*.php",
         "server/api/rechtstext_vorschau.php",
-        "docs/Technik.md"
+        "docs/Technik.md",
+        "server/zeitraum.php"
       ],
       "proben": [
         "rollenprobe"
@@ -589,7 +592,11 @@
       "id": "ratelimit",
       "ab": "klein",
       "pfade": [
-        "server/ratelimit_lib.php"
+        "server/ratelimit_lib.php",
+        "server/login.php",
+        "server/auth_guard.php",
+        "server/zweitfaktor_notweg.php",
+        "server/api/schluesselblatt_pruefen.php"
       ],
       "proben": [
         "ratenprobe"
@@ -894,7 +901,8 @@
         "tools/proben/huelle/geraet_cli.php",
         "server/einstellungen.php",
         "server/admin_sicherungen.php",
-        "server/admin_user.php"
+        "server/admin_user.php",
+        "server/api/import_commit.php"
       ],
       "proben": [
         "ortsdatenprobe"

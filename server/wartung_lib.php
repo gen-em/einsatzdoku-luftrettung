@@ -53,9 +53,60 @@ require_once __DIR__ . '/instanz_lib.php';   // nur fuer INSTANZ_KURZ_VORGABE �
  * Betriebsablauf: `docs/Technik.md`, Abschnitt 7 (Runbook).
  */
 
-/** Der Schalter. Liegt neben `install.lock` und ist wie diese nur auf dem
- *  Server — `.gitignore` UND Ausnahmeliste des Deploys (E-S5W-02). */
-const WARTUNG_DATEI = __DIR__ . '/wartung.lock';
+/* DER ZUSTAND DIESER INSTALLATION LIEGT IN `.zustand/` (seit Web 23.3.1,
+ * R17-22, F-R17-47, E-R17-59).
+ *
+ * Bis dahin lagen `wartung.lock` und `ueberlast.json` im Webroot neben
+ * `install.lock`, und die `.htaccess` sperrte keine von beiden: Waehrend
+ * einer Wartung lieferte `https://<host>/wartung.lock` jedem Abrufer ohne
+ * Anmeldung den Namen oder die Anmeldeadresse des BetreiberIn-Kontos, das
+ * geschaltet hatte (`von`), und `ueberlast.json` jederzeit, wann die Anlage
+ * am Limit war. Ein Punktverzeichnis sperrt schon die Punktregel der
+ * `.htaccess` (wie `.sitzungen/`); `zustand_verzeichnis()` legt beim
+ * Anlegen eine eigene `.htaccess` mit `Require all denied` dazu — der zweite
+ * Riegel, falls die Punktregel fehlt. Das Verzeichnis liegt nur auf dem
+ * Server: `.gitignore` UND Ausnahmeliste des Deploys (E-S5W-02).
+ *
+ * DER UEBERGANG. Die Kette schaltet die Wartung mit dem ALTEN Code ein —
+ * vor dem Hochladen —, also am alten Ort. Die neue Fassung erkennt eine
+ * Datei dort deshalb noch (`WARTUNG_DATEI_ALT`), loescht sie beim
+ * Ausschalten mit und raeumt eine alte `ueberlast.json` beim ersten
+ * Zaehlen weg. Beides kann nach der ersten Auslieferung mit dieser Fassung
+ * auf jeder Anlage fallen — nicht vorher. */
+const ZUSTAND_VERZEICHNIS = __DIR__ . '/.zustand';
+
+/** Der Schalter (E-S5W-02). */
+const WARTUNG_DATEI = ZUSTAND_VERZEICHNIS . '/wartung.lock';
+
+/** Der Schalter am alten Ort, bis Web 23.3.0 — nur noch gelesen und geloescht. */
+const WARTUNG_DATEI_ALT = __DIR__ . '/wartung.lock';
+
+/**
+ * Das Zustandsverzeichnis anlegen, samt eigener Sperre. Rueckgabe false =
+ * es liess sich nicht anlegen (Rechte); der Aufrufer sagt das mit Pfad.
+ */
+function zustand_verzeichnis(): bool
+{
+    if (!is_dir(ZUSTAND_VERZEICHNIS) && !@mkdir(ZUSTAND_VERZEICHNIS, 0750)
+        && !is_dir(ZUSTAND_VERZEICHNIS)) {
+        return false;
+    }
+    $sperre = ZUSTAND_VERZEICHNIS . '/.htaccess';
+    if (!file_exists($sperre)) {
+        @file_put_contents($sperre, "# Zustand dieser Installation (wartung_lib.php) — nie ausliefern.
+"
+            . "<IfModule mod_authz_core.c>
+  Require all denied
+</IfModule>
+"
+            . "<IfModule !mod_authz_core.c>
+  Order allow,deny
+  Deny from all
+</IfModule>
+");
+    }
+    return true;
+}
 
 /** Hinweis an Browser und Werkzeuge, in Sekunden (E-S5W-12, F-S5W-04).
  *  Die Geraete halten ihren eigenen Backoff; dieser Wert steuert sie nicht. */
@@ -184,7 +235,8 @@ function wartung_aktiv(): bool
      * zeigt danach den Balken). Ohne den Aufruf zeigte die Seite den Zustand
      * von vor dem Klick. */
     clearstatcache(true, WARTUNG_DATEI);
-    return file_exists(WARTUNG_DATEI);
+    clearstatcache(true, WARTUNG_DATEI_ALT);
+    return file_exists(WARTUNG_DATEI) || file_exists(WARTUNG_DATEI_ALT);
 }
 
 /**
@@ -203,7 +255,7 @@ function wartung_daten(): array
      * trug und diese Liste nicht. */
     $leer = ['seit' => null, 'von' => null, 'wer' => null];
     if (!wartung_aktiv()) { return $leer; }
-    $roh = @file_get_contents(WARTUNG_DATEI);
+    $roh = @file_get_contents(file_exists(WARTUNG_DATEI) ? WARTUNG_DATEI : WARTUNG_DATEI_ALT);
     if ($roh === false || $roh === '') { return $leer; }
     $d = json_decode($roh, true);
     if (!is_array($d)) { return $leer; }
@@ -240,6 +292,7 @@ function wartung_einschalten(string $von): bool
         'von'  => $von,
         'wer'  => function_exists('instanz_kurz') ? instanz_kurz() : INSTANZ_KURZ_VORGABE,
     ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+    if (!zustand_verzeichnis()) { return false; }
     $ok = @file_put_contents(WARTUNG_DATEI, (string)$inhalt . "\n", LOCK_EX);
     clearstatcache(true, WARTUNG_DATEI);
     return $ok !== false;
@@ -249,9 +302,13 @@ function wartung_einschalten(string $von): bool
 function wartung_ausschalten(): bool
 {
     if (!wartung_aktiv()) { return true; }
-    $ok = @unlink(WARTUNG_DATEI);
-    clearstatcache(true, WARTUNG_DATEI);
-    return $ok;
+    /* BEIDE ORTE (Uebergang, s. o.): Eine Datei am alten Ort hielte die
+     * Wartung sonst fest, obwohl die am neuen fort ist. */
+    foreach ([WARTUNG_DATEI, WARTUNG_DATEI_ALT] as $datei) {
+        if (file_exists($datei)) { @unlink($datei); }
+        clearstatcache(true, $datei);
+    }
+    return !wartung_aktiv();
 }
 
 /** Laeuft dieses Skript ueberhaupt im Web? Auf der Kommandozeile nie tor. */
@@ -666,9 +723,13 @@ function wartung_balken(): string
  * und das waere die gruene Zahl, die nichts gemessen hat.
  */
 
-/** Der Zaehler. Liegt neben `wartung.lock` und ist wie diese nur auf dem
- *  Server — `.gitignore` UND Ausnahmeliste des Deploys. */
-const UEBERLAST_DATEI = __DIR__ . '/ueberlast.json';
+/** Der Zaehler. Liegt neben `wartung.lock` in `.zustand/` (seit Web 23.3.1,
+ *  F-R17-47) und ist wie diese nur auf dem Server — `.gitignore` UND
+ *  Ausnahmeliste des Deploys. */
+const UEBERLAST_DATEI = ZUSTAND_VERZEICHNIS . '/ueberlast.json';
+
+/** Der Zaehler am alten Ort, bis Web 23.3.0 — wird beim Zaehlen geloescht. */
+const UEBERLAST_DATEI_ALT = __DIR__ . '/ueberlast.json';
 
 /** Hinweis an Browser und Werkzeuge, in Sekunden (E-P5a-18). */
 const UEBERLAST_RETRY_S = 5;
@@ -758,7 +819,13 @@ function ueberlast_erkannt(Throwable $ex): bool
         return true;
     }
     if (in_array((int)$ex->getCode(), UEBERLAST_CODES, true)) { return true; }
-    return preg_match('/\[(1040|1203)\]/', $ex->getMessage()) === 1;
+    /* DAS MUSTER KOMMT AUS DER LISTE (R17-22, F-R17-48). Bis Web 23.3.0
+     * stand hier `\[(1040|1203)\]` von Hand — der Weg, den der Kommentar
+     * oben den verlaesslichen nennt, kannte ausgerechnet 1226 nicht, die
+     * Nummer, die ein Hoster herstellt. Heute griff Weg 2; fiele er aus,
+     * waere 1226 eine 500 statt der 503 mit Wartezeit. Eine Liste, drei Wege. */
+    $muster = '/\[(' . implode('|', UEBERLAST_CODES) . ')\]/';
+    return preg_match($muster, $ex->getMessage()) === 1;
 }
 
 /**
@@ -780,6 +847,10 @@ function ueberlast_erkannt(Throwable $ex): bool
 function ueberlast_vermerken(): void
 {
     $stunde = gmdate('Y-m-d H');
+    /* Der alte Zaehler im Webroot geht beim ersten Vorfall (Uebergang). Seine
+     * Zahl wird nicht uebernommen — sie ist ein Hinweis, kein Bestand. */
+    if (file_exists(UEBERLAST_DATEI_ALT)) { @unlink(UEBERLAST_DATEI_ALT); }
+    zustand_verzeichnis();
     $f = @fopen(UEBERLAST_DATEI, 'c+');
     if ($f === false) {
         /* Nicht still. Wenn die Datei nicht schreibbar ist, ist der Vorfall
@@ -837,7 +908,8 @@ function ueberlast_stand(): array
     $leer = ['stunde' => null, 'n' => 0, 'spitze' => 0, 'spitze_stunde' => null,
              'gesamt' => 0, 'letzt' => null,
              'schreibbar' => $da ? is_writable(UEBERLAST_DATEI)
-                                 : is_writable(__DIR__)];
+                                 : (is_dir(ZUSTAND_VERZEICHNIS) ? is_writable(ZUSTAND_VERZEICHNIS)
+                                                                : is_writable(__DIR__))];
     if (!$da) { return $leer; }
     $roh = @file_get_contents(UEBERLAST_DATEI);
     if ($roh === false || $roh === '') { return $leer; }

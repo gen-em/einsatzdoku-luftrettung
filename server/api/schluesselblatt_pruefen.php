@@ -122,7 +122,7 @@ if ($email === '') {
 /* ---- Stellen: die Positionen wuerfeln ----------------------------------- */
 
 if ($aktion === 'stellen') {
-    if (!rate_erlaubt('blatt', $email)) {
+    if (!rate_erlaubt('blatt', null, rate_nur_konto($email))) {
         json_out(['error' => 'gesperrt', 'text' => blatt_sperrtext()], 429);
     }
 
@@ -159,7 +159,7 @@ if ($aktion !== 'pruefen') {
     json_out(['error' => 'aktion'], 400);
 }
 
-if (!rate_erlaubt('blatt', $email)) {
+if (!rate_erlaubt('blatt', null, rate_nur_konto($email))) {
     json_out(['error' => 'gesperrt', 'text' => blatt_sperrtext()], 429);
 }
 
@@ -195,7 +195,7 @@ if (!$gut) {
      * jedem Fehlversuch waeren freundlicher und falsch: Wer raet, bekaeme
      * bei jedem Versuch neue Wuerfel. Dieselbe Frage noch einmal ist die
      * Frage, die gestellt wurde. */
-    rate_misserfolg('blatt', $email);
+    rate_misserfolg('blatt', null, rate_nur_konto($email));
     $rest = max(0, (int)rate_grenze('blatt')['max'] - (int)rate_versuche('blatt', $email));
 
     protokoll_sicherheit_blatt($email, $rest);
@@ -217,7 +217,7 @@ if (!$gut) {
 
 /* ---- Bestaetigt --------------------------------------------------------- */
 
-rate_erfolg('blatt', $email);
+rate_erfolg('blatt', null, rate_nur_konto($email));
 unset($_SESSION['blatt_fragen']);
 blatt_bestaetigt();
 

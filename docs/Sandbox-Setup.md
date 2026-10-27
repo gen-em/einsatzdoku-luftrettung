@@ -585,7 +585,8 @@ ganze Folge wieder hoch, nicht nur einen Teil:
    Ursache ist nicht gefunden);
 3. `bash tools/sandbox/plattform.sh alles` — ohne das sind die drei
    Datenbankfassungen der Schemaprobe nicht erreichbar;
-4. nachsehen, ob `server/wartung.lock` liegt.
+4. nachsehen, ob `server/.zustand/wartung.lock` (bis Web 23.3.0
+   `server/wartung.lock`) liegt.
 
 Ein abgebrochener Lauf hinterlässt Reste: verwaiste Spurzeilen (die
 Jobprobe meldete danach 10 statt 7) und Protokollarchive aus dem

@@ -561,7 +561,7 @@ function status_erhebung(): array
         /* DIE NULL, DIE NICHTS BEDEUTET (CLAUDE.md 6). Ohne diesen Zweig
          * saehe eine Installation, in der die Datei nicht angelegt werden
          * kann, aus wie eine ohne einen einzigen Vorfall. */
-        $ulText = 'Nicht gezählt — die Zähldatei neben wartung.lock lässt sich '
+        $ulText = 'Nicht gezählt — die Zähldatei in .zustand/ lässt sich '
                 . 'nicht schreiben. Eine Null bedeutet hier nichts';
         $ulTon  = 'orange';
         $ulPlak = 'ungezählt';

@@ -648,7 +648,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !csrf_ok()) {
                . ($bis !== null ? ' — wieder ab ' . fmt_local($bis, 'H:i') . ' Uhr.' : '.')
                . ' Ein eigenes Konto ist davon nicht betroffen.';
         rate_gleiche_dauer($t0);
-    } elseif (!rate_erlaubt('login', $email) || !rate_erlaubt('login_ip', null)) {
+    } elseif (!rate_erlaubt('login', null, rate_nur_konto($email)) || !rate_erlaubt('login_ip', null)) {
         /* ZWEI TOEPFE, EINE MELDUNG — aber die Meldung sagt, WELCHER greift
          * (P5a/AP6). „Für diesen Namen gesperrt" waere schlicht falsch, wenn
          * in Wahrheit die Adresssperre haelt, und wer den Unterschied nicht
@@ -658,7 +658,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !csrf_ok()) {
          * Merkmal ist der EINGETIPPTE Name (`rate_merkmale()`), nicht die
          * Kontozeile — deshalb gibt die Sperre keine Kontoauskunft, und
          * deshalb darf sie ihn nennen. */
-        $sperre = rate_sperre('login', $email) ?? rate_sperre('login_ip', null);
+        $sperre = rate_sperre('login', null, rate_nur_konto($email)) ?? rate_sperre('login_ip', null);
         $bis = $sperre['bis'] ?? null;
         $error = ($sperre !== null && $sperre['art'] === 'adresse'
                     ? 'Zu viele Anmeldeversuche von diesem Anschluss.'
@@ -791,7 +791,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !csrf_ok()) {
              * (E-S5W-09 b). Der Demo-Zaehler bleibt unten — er zaehlt die
              * NUTZUNG des Demo-Kontos, und wer sofort wieder abgemeldet wird,
              * hat es nicht benutzt. */
-            rate_erfolg('login', $email);
+            rate_erfolg('login', null, rate_nur_konto($email));
             // Auch den Zaehler des Salz-Endpunkts leeren — jede Anmeldung
             // verbraucht dort einen Versuch, und wer sich erfolgreich
             // anmeldet, soll sich nicht selbst aussperren.
@@ -871,7 +871,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !csrf_ok()) {
              * NutzerIn verliert dadurch nichts — sie kommt in diesem Zustand
              * ohnehin nur ueber „Passwort vergessen" hinein, und das zaehlt in
              * einem anderen Topf. Die Systemmeldung nennt kein Konto. */
-            rate_misserfolg('login', $email);
+            rate_misserfolg('login', null, rate_nur_konto($email));
             rate_misserfolg('login_ip', null);
             rate_global_misserfolg();
             system_melden('login', 'Anmeldung ohne Server-Anteil — ein Anmeldehash '
@@ -889,11 +889,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !csrf_ok()) {
              *   `login_ip`  der Anschluss        — 50 je 15 min
              *   `global`    die Installation     — Grundlage der Verlangsamung
              *
-             * `rate_misserfolg('login', $email)` zaehlt seit jeher BEIDE Merkmale
-             * dieses Topfes (Konto und IP). Das bleibt so — der zweite Topf ist
-             * nicht sein Ersatz, sondern die ZWEITE SCHWELLE: 10 je Konto ist
-             * richtig, 10 je Adresse waere es nicht. */
-            rate_misserfolg('login', $email);
+             * `login` zaehlt seit Web 23.3.1 NUR das Konto (R17-22, F-R17-36).
+             * Bis dahin stand hier, der Topf zaehle „seit jeher BEIDE Merkmale
+             * … das bleibt so" — und damit sperrten zehn Fehlversuche an zehn
+             * verschiedenen Konten den ganzen Anschluss, lange bevor
+             * `login_ip` mit seinen 50 je griff. 10 je Konto, 50 je Adresse
+             * steht in Technik.md 5e.2; jetzt haelt der Code es. */
+            rate_misserfolg('login', null, rate_nur_konto($email));
             rate_misserfolg('login_ip', null);
             rate_global_misserfolg();
 

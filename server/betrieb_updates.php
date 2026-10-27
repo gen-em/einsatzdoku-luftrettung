@@ -35,8 +35,9 @@ $pdo = db();
  *
  * NICHT AUF DER KOMMANDOZEILE: Der Notausgang laeuft ohne Sitzung und ohne
  * CSRF; ein Schalter dort waere ein Schalter ohne Nachweis, wer ihn betaetigt
- * hat. Wer per SSH schalten muss, legt `wartung.lock` von Hand an — die Datei
- * IST der Schalter (E-S5W-02), und das steht im Runbook.
+ * hat. Wer per SSH schalten muss, legt `.zustand/wartung.lock` von Hand an
+ * (bis Web 23.3.0 `wartung.lock` im Webroot, F-R17-47) — die Datei IST der
+ * Schalter (E-S5W-02), und das steht im Runbook.
  *
  * UMLEITEN NACH DEM POST (Web 21.1.9, Backlog Nr. 250): Ein Schalter, der
  * umgelegt hat, endet mit `flash_setzen()` und einer Umleitung in die Karte

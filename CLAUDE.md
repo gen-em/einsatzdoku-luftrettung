@@ -192,19 +192,23 @@ Protokoll oder einen alten Kommentar liest, liest das noch.
   bleibt die unabhängige Gegenprobe:
   `grep -rhoE 'uses: [^ ]+@[0-9a-f]{40}' .github/workflows/ | wc -l` gegen
   `grep -rh 'uses:' .github/workflows/ | grep -vc 'uses: \./'`.
-- `server/config.php`, `install.lock`, `server/wartung.lock`,
-  `server/ueberlast.json` (der Zähler der Verbindungsgrenze, P5a/AP9),
-  `server/sicherungen/`, `server/apk/` und — seit Web 20.26.0 —
-  `server/.sitzungen/` (die PHP-Sitzungsdateien, Schritt 16, E-SA-05) liegen
-  nur auf dem Server. Sie stehen in `.gitignore` **und** in der
-  Ausnahmeliste des FTPS-Schritts — beides muss so bleiben.
-  **Acht Pfade sind es, und die Zahl ist der Prüfwert** — seit R17-19
+- `server/config.php`, `install.lock`, `server/sicherungen/`,
+  `server/apk/`, — seit Web 20.26.0 — `server/.sitzungen/` (die
+  PHP-Sitzungsdateien, Schritt 16, E-SA-05) und — seit Web 23.3.1 —
+  `server/.zustand/` (Schalter des Wartungsmodus `wartung.lock` und Zähler
+  der Verbindungsgrenze `ueberlast.json`, R17-22, F-R17-47) liegen nur auf
+  dem Server. Sie stehen in `.gitignore` **und** in der Ausnahmeliste des
+  FTPS-Schritts — beides muss so bleiben.
+  **Sieben Pfade sind es, und die Zahl ist der Prüfwert** — seit R17-19
   gemessen vom zweiten Riegel in `tools/kettenaufrufe/` (Sollliste, dazu
   `.gitignore` und keine eingecheckte `server/config.php*`, F-R17-16,
-  -55). Die drei
+  -55). Die vier
   Verzeichnisse stehen dort zweimal, als Datei- und als Verzeichnismuster
   (`sicherungen/**` und `sicherungen/`), weil die Aktion beides getrennt
-  prüft; die fünf Dateien je einmal. *(Bis PK-06 stand hier „jeder steht
+  prüft; die drei Dateien je einmal. *(Bis Web 23.3.0 waren es acht Pfade:
+  `wartung.lock` und `ueberlast.json` lagen als Dateien im Webroot, und
+  während einer Wartung lieferte `https://<host>/wartung.lock` jedem den
+  Namen des schaltenden Kontos.)* *(Bis PK-06 stand hier „jeder steht
   zweimal" — das galt nur für die Verzeichnisse, F-PK-11.)*
   **Seit Kette II/AP5 steht die Liste EINMAL**, in
   `.github/workflows/ausliefern-lauf.yml` (E-KH-20 (1)). Bis dahin stand sie

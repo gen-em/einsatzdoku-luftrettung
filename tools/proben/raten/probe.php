@@ -402,7 +402,7 @@ abschnitt('10  Welche Toepfe eine Leiter haben — und welche ausdruecklich nich
  * `notweg` (Notzugang der einzigen BetreiberIn, Schritt 18, SR-04) hat eine:
  * Fuenf Versuche je Stunde und eingetippter Adresse — wer Datei,
  * Datenbankwert und Passwort hat, braucht keine fuenf. */
-const TOEPFE_MIT_LEITER = ['blatt', 'ingest', 'ingest_ip', 'login', 'login_ip', 'notweg', 'salt', 'totp'];
+const TOEPFE_MIT_LEITER = ['blatt', 'ingest', 'ingest_ip', 'login', 'login_ip', 'notweg', 'notweg_ip', 'salt', 'totp'];
 
 $mitLeiter = []; $ohne = [];
 foreach (RATE_GRENZEN as $topf => $g) {
@@ -1025,6 +1025,108 @@ try {
     $pdo->prepare('DELETE FROM protokoll_ereignisse WHERE betroffen_user_id = ? OR urheber_user_id = ?')
         ->execute([$nwId, $nwId]);
     $pdo->prepare('DELETE FROM users WHERE id = ?')->execute([$nwId]);
+}
+
+/* ======================================================================== */
+abschnitt('12b  Ein Anschluss, viele Konten — Anmeldung und Notzugang (R17-22, F-R17-36, -37)');
+/* WAS DAS PROBLEM WAR (F-R17-36). Der Topf `login` (10) zaehlte Konto UND
+ * Adresse. Zehn Fehlversuche von einem Anschluss — an zehn ERFUNDENEN
+ * Adressen — sperrten damit den ganzen Anschluss, lange bevor `login_ip` mit
+ * seinen 50 griff: eine Klinik hinter einem NAT, bis zu einer Stunde. Die
+ * Probe klopfte bis dahin nur `login_ip` allein und sah es nicht. Seit Web
+ * 23.3.1 zaehlt `login` nur das Konto.
+ *
+ * UND F-R17-37: Der Notzugang zaehlte nur die eingetippte Adresse. Wer sie
+ * je Anfrage wechselte, bekam unbegrenzt bcrypt-Rechnungen. Seit Web 23.3.1
+ * gibt es dazu `notweg_ip` (20 je Stunde).
+ *
+ * Beides UEBER HTTP, weil der Fehler im Aufruf der Seite lag, nicht in der
+ * Bibliothek. Die Adressen sind erfunden; sie zu probieren legt nichts an. */
+$_SERVER['REMOTE_ADDR'] = '127.0.0.1';
+$naIp = rate_merkmal_ip();
+$naLeeren = static function () use ($pdo, $naIp): void {
+    $q = $pdo->prepare("DELETE FROM rate_limits WHERE (merkmal = ? AND topf IN
+                          ('login', 'login_ip', 'salt', 'notweg', 'notweg_ip'))
+                          OR merkmal LIKE 'id:probe-nat-%'");
+    $q->execute([$naIp]);
+    $q = $pdo->prepare("DELETE FROM sicherheit_ereignisse WHERE merkmal = ? OR merkmal LIKE 'id:probe-nat-%'");
+    $q->execute([$naIp]);
+};
+/* Eine Seite mit eigener Sitzung: erst GET (Sitzung und Formular-Token),
+ * dann POST. Gibt den Rumpf der Antwort zurueck. */
+$naSeite = static function (string $pfad) use ($basis): Closure {
+    $keks = [];
+    $hole = static function (string $methode, array $felder = []) use ($basis, $pfad, &$keks): string {
+        $paare = [];
+        foreach ($keks as $n => $v) { $paare[] = $n . '=' . $v; }
+        $ch = curl_init($basis . '/' . $pfad);
+        curl_setopt_array($ch, [CURLOPT_RETURNTRANSFER => true, CURLOPT_HEADER => true,
+            CURLOPT_FOLLOWLOCATION => false, CURLOPT_TIMEOUT => 60, CURLOPT_PROXY => '',
+            CURLOPT_HTTPHEADER => $paare !== [] ? ['Cookie: ' . implode('; ', $paare)] : []]);
+        if ($methode === 'POST') {
+            curl_setopt($ch, CURLOPT_POST, true);
+            curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($felder));
+        }
+        $roh = (string)curl_exec($ch);
+        $kl = (int)curl_getinfo($ch, CURLINFO_HEADER_SIZE);
+        curl_close($ch);
+        if (preg_match_all('/^Set-Cookie:\s*([^=;\s]+)=([^;\r\n]*)/mi', substr($roh, 0, $kl), $m, PREG_SET_ORDER)) {
+            foreach ($m as $c) { $keks[$c[1]] = $c[2]; }
+        }
+        return html_entity_decode(substr($roh, $kl));
+    };
+    $csrf = preg_match('/name="csrf" value="([0-9a-f]+)"/', $hole('GET'), $m) ? $m[1] : '';
+    return static fn (array $felder): string => $hole('POST', ['csrf' => $csrf] + $felder);
+};
+$naFalsch = json_encode(['600000' => str_repeat('0', 64)]);
+try {
+    $naLeeren();
+    $max = (int)(rate_grenze('login')['max'] ?? 10);
+    $anmelden = $naSeite('login.php');
+    for ($i = 1; $i <= $max; $i++) {
+        $anmelden(['email' => 'probe-nat-' . $i . '@ratenprobe.invalid', 'tokens' => $naFalsch]);
+    }
+    $adr = stand('login', $naIp);
+    pruef($max . ' Fehlversuche an ' . $max . ' Konten: der Topf `login` zaehlt den Anschluss NICHT',
+          $adr === null, $adr === null ? 'keine Zeile' : 'Zeile mit ' . $adr['versuche'] . ' Versuchen');
+    $r = $anmelden(['email' => 'probe-nat-elf@ratenprobe.invalid', 'tokens' => $naFalsch]);
+    pruef('… und der elfte Versuch an einem weiteren Konto ist NICHT gesperrt',
+          !str_contains($r, 'Zu viele Anmeldeversuche'),
+          str_contains($r, 'Zu viele Anmeldeversuche von diesem Anschluss') ? 'Anschluss gesperrt'
+          : (str_contains($r, 'Zu viele Anmeldeversuche') ? 'Konto gesperrt' : 'normale Abweisung'));
+    $ip = stand('login_ip', $naIp);
+    pruef('… waehrend `login_ip` jeden mitzaehlt (' . ($max + 1) . ')',
+          $ip !== null && (int)$ip['versuche'] === $max + 1, 'Versuche ' . ($ip['versuche'] ?? '—'));
+    /* Gegenrichtung: Das KONTO wird weiter nach zehn gesperrt. */
+    for ($i = 1; $i <= $max; $i++) {
+        $anmelden(['email' => 'probe-nat-eins@ratenprobe.invalid', 'tokens' => $naFalsch]);
+    }
+    $r = $anmelden(['email' => 'probe-nat-eins@ratenprobe.invalid', 'tokens' => $naFalsch]);
+    pruef('… und ein Konto ist nach ' . $max . ' Fehlversuchen gesperrt, mit der Konto-Meldung',
+          str_contains($r, 'Zu viele Anmeldeversuche für diesen Namen'),
+          str_contains($r, 'Zu viele Anmeldeversuche von diesem Anschluss') ? 'Anschluss-Meldung'
+          : (str_contains($r, 'Zu viele Anmeldeversuche für diesen Namen') ? 'Konto-Meldung' : 'nicht gesperrt'));
+
+    /* F-R17-37: der Notzugang, Adresse je Anfrage gewechselt */
+    $naLeeren();
+    $nmax = (int)(rate_grenze('notweg_ip')['max'] ?? 0);
+    pruef('Der Topf `notweg_ip` steht auf 20 je Stunde', $nmax === 20, (string)$nmax);
+    $notweg = $naSeite('zweitfaktor_notweg.php');
+    for ($i = 1; $i <= $nmax; $i++) {
+        $notweg(['email' => 'probe-nat-n' . $i . '@ratenprobe.invalid', 'tokens' => $naFalsch,
+                 'wert' => str_repeat('0', 64)]);
+    }
+    $r = $notweg(['email' => 'probe-nat-n-letzt@ratenprobe.invalid', 'tokens' => $naFalsch,
+                  'wert' => str_repeat('0', 64)]);
+    pruef('Notzugang: nach ' . $nmax . ' Adressen von einem Anschluss ist der Anschluss gesperrt',
+          str_contains($r, 'Zu viele Versuche von diesem Anschluss'),
+          str_contains($r, 'Zu viele Versuche von diesem Anschluss') ? 'Anschluss-Meldung'
+          : (str_contains($r, 'Zu viele Versuche für diese Adresse') ? 'Adress-Meldung' : 'nicht gesperrt'));
+    $ein = stand('notweg', rate_merkmal_kennung('probe-nat-n1@ratenprobe.invalid'));
+    pruef('… und jede einzelne Adresse hat nur einen Versuch', $ein !== null && (int)$ein['versuche'] === 1,
+          'Versuche ' . ($ein['versuche'] ?? '—'));
+} finally {
+    $naLeeren();
 }
 
 /* ======================================================================== */

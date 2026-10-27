@@ -371,7 +371,7 @@ def pruefe_block(lauf: str, schritt: str, block: str) -> tuple[list[str], list[s
 # ------------------------------------------- die zwei Riegel der Kette (R17-19)
 #
 # Anlass: F-R17-16. `CLAUDE.md` 3 nannte zwei Pruefwerte der Kette — „keine
-# fremde `uses:`-Zeile ohne SHA" und „acht Pfade, die Zahl ist der Pruefwert"
+# fremde `uses:`-Zeile ohne SHA" und „sieben Pfade (bis Web 23.3.0 acht), die Zahl ist der Pruefwert"
 # — und kein Werkzeug mass sie; nur ein Handbefehl, und diese Anleitung
 # behauptete das Gegenteil („jede `uses:`-Zeile"). Beide stehen jetzt hier,
 # weil dieses Werkzeug die Arbeitslaeufe ohnehin Zeile fuer Zeile liest und in
@@ -420,13 +420,14 @@ def fremde_aktionen(texte: dict[str, str]) -> tuple[list[str], int, int]:
     return ab, fremd, gepinnt
 
 
-# DIE SOLLLISTE der Ausnahmen (`CLAUDE.md` 3): fuenf Dateien, die nur auf dem
-# Server liegen oder nicht ausgeliefert werden, und drei Verzeichnisse — je
-# als `x/**` und `x/`, weil die Aktion beides getrennt prueft. ACHT PFADE.
-# Dazu drei allgemeine Muster, die keine Serverpfade sind.
-AUSNAHMEN_DATEIEN = ('config.php', 'install.php', 'install.lock', 'wartung.lock',
-                     'ueberlast.json')
-AUSNAHMEN_VERZEICHNISSE = ('sicherungen', 'apk', '.sitzungen')
+# DIE SOLLLISTE der Ausnahmen (`CLAUDE.md` 3): drei Dateien, die nur auf dem
+# Server liegen oder nicht ausgeliefert werden, und vier Verzeichnisse — je
+# als `x/**` und `x/`, weil die Aktion beides getrennt prueft. SIEBEN PFADE.
+# Dazu drei allgemeine Muster, die keine Serverpfade sind. Bis Web 23.3.0
+# waren es acht: `wartung.lock` und `ueberlast.json` lagen als Dateien im
+# Webroot und sind seither das Verzeichnis `.zustand/` (R17-22, F-R17-47).
+AUSNAHMEN_DATEIEN = ('config.php', 'install.php', 'install.lock')
+AUSNAHMEN_VERZEICHNISSE = ('sicherungen', 'apk', '.sitzungen', '.zustand')
 AUSNAHMEN_ALLGEMEIN = ('**/.git*', '**/.git*/**', '**/node_modules/**')
 # `install.php` liegt im Repositorium und wird nur nicht ausgeliefert (Nr. 214);
 # alle anderen stehen AUCH in `.gitignore`.
@@ -712,8 +713,12 @@ def selbstprobe() -> int:
         ('Riegel 2: eine Ausnahme ausserhalb der Sollliste', True,
          liste_gut.replace('          apk/\n', '          apk/\n          assets/**\n'),
          alles_ignoriert, []),
-        ('Riegel 2: `server/wartung.lock` nicht in .gitignore', True,
-         liste_gut, lambda pf: pf != 'server/wartung.lock', []),
+        ('Riegel 2: `server/install.lock` nicht in .gitignore', True,
+         liste_gut, lambda pf: pf != 'server/install.lock', []),
+        ('Riegel 2: `server/.zustand/` nicht in .gitignore', True,
+         liste_gut, lambda pf: pf != 'server/.zustand/probe', []),
+        ('Riegel 2: `.zustand/` fehlt (nur `.zustand/**` steht da)', True,
+         liste_gut.replace('          .zustand/\n', ''), alles_ignoriert, []),
         ('Riegel 2: `install.php` darf in .gitignore FEHLEN (Nr. 214)', False,
          liste_gut, lambda pf: pf != 'server/install.php', []),
         ('Riegel 2: `config.php.vor-probe` eingecheckt (F-R17-55)', True,
@@ -733,9 +738,9 @@ def selbstprobe() -> int:
             for a in ab:
                 melde(f'         {a}')
     _, pfade = ausnahmeliste_pruefen(liste_gut, alles_ignoriert, [])
-    ok = pfade == 8
+    ok = pfade == 7
     gut += ok
-    melde(f'  [{"ok " if ok else "FEHL"}] {"Die Sollliste zaehlt ACHT Serverpfade (CLAUDE.md 3)":<52} {pfade}')
+    melde(f'  [{"ok " if ok else "FEHL"}] {"Die Sollliste zaehlt SIEBEN Serverpfade (CLAUDE.md 3)":<52} {pfade}')
 
     gesamt = len(faelle) + 1 + len(riegel1) + len(riegel2) + 1
     melde()

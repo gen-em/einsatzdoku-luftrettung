@@ -20,6 +20,12 @@ Betriebsarten (`--art`):
               je `--verzug` Sekunden                   -> die Rechnung aus
                                                           E-P5a-36 nachstellen
   stumm     begruesst und schweigt dann                -> Abbruch
+
+`--mitschnitt DATEI` (seit R17-22, Nr. 401): Die Gegenstelle schreibt die
+zuletzt angenommene Nachricht — Kopf und Rumpf, so wie sie auf der Leitung
+stand — in diese Datei. Daran misst die Probe die Kodierung. Jede Verbindung
+steht als Zeile „Verbindung" im Log; daran misst sie, dass ohne Anmeldedaten
+gar nicht erst verbunden wird (F-R17-46).
 """
 import argparse, socket, ssl, sys, threading, time
 
@@ -28,8 +34,9 @@ def zeile(verbindung, text, verzug=0.0):
         time.sleep(verzug)
     verbindung.sendall((text + "\r\n").encode("utf-8"))
 
-def gespraech(v, art, verzug):
+def gespraech(v, art, verzug, mitschnitt=None):
     datei = v.makefile("rb")
+    nachricht = []
     zeile(v, "220 mailprobe bereit")
     im_body = False
     # AUTH LOGIN ist ein Dreischritt: 334 (Name?), 334 (Passwort?), 235 (gut).
@@ -47,7 +54,13 @@ def gespraech(v, art, verzug):
         if im_body:
             if b == ".":
                 im_body = False
+                if mitschnitt:
+                    with open(mitschnitt, "wb") as f:
+                        f.write(b"".join(nachricht))
+                nachricht = []
                 zeile(v, "250 2.0.0 angenommen", verzug)
+            else:
+                nachricht.append(roh)
             continue
         oben = b.upper()
         if oben.startswith("EHLO") or oben.startswith("HELO"):
@@ -91,6 +104,7 @@ def main():
     p.add_argument("--verzug", type=float, default=0.0)
     p.add_argument("--zert", required=True)
     p.add_argument("--schluessel", required=True)
+    p.add_argument("--mitschnitt", default=None)
     a = p.parse_args()
     verzug = a.verzug if a.art in ("langsam", "vielzeilig") else 0.0
 
@@ -105,6 +119,7 @@ def main():
           % (a.art, a.port, verzug), flush=True)
     while True:
         roh, _ = s.accept()
+        print("  Verbindung", flush=True)
         try:
             v = ctx.wrap_socket(roh, server_side=True)
         except Exception as ex:
@@ -116,7 +131,8 @@ def main():
             t = threading.Thread(target=lambda: (zeile(v, "220 mailprobe bereit"),
                                                  time.sleep(600)), daemon=True)
         else:
-            t = threading.Thread(target=gespraech, args=(v, a.art, verzug), daemon=True)
+            t = threading.Thread(target=gespraech, args=(v, a.art, verzug, a.mitschnitt),
+                                 daemon=True)
         t.start()
 
 if __name__ == "__main__":

@@ -809,6 +809,55 @@ function zh_regel_frischer_code(string $rel, array $sichten, string $quelle): ar
 }
 
 /**
+ * Z45 — kein Markup im Text einer Meldung (R17-22, F-R17-49).
+ *
+ * `ui_meldung_markup()` maskiert seinen Text (Argument 2), `ui_meldung()`
+ * reicht Hinweis und Fehler (Argument 1 und 2) dorthin weiter. Ein `<` in
+ * einer FESTEN Zeichenkette dieser Argumente ist also ein Tag, das als Text
+ * erscheint — zweimal im Bestand bis Web 23.3.0 (`<strong>` auf der
+ * Sicherheitsseite, `<code>` auf der Dokuseite), und einmal davor auf der
+ * Jobseite (Web 19.3.0). Gelesen wird der Tokenstrom: Klammern zaehlen,
+ * Kommas auf Tiefe eins trennen die Argumente; Variablen und Aufrufe sieht
+ * die Regel nicht — sie misst, was im Quelltext steht.
+ *
+ * @return list<int>  Zeilen der Aufrufe mit Befund
+ */
+function zh_regel_meldung_markup(string $rel, array $sichten, string $quelle): array
+{
+    $textArgumente = ['ui_meldung_markup' => [1], 'ui_meldung' => [0, 1]];
+    $t = @token_get_all($quelle);
+    $n = count($t);
+    $nummern = [];
+    for ($i = 0; $i < $n; $i++) {
+        if (!is_array($t[$i]) || $t[$i][0] !== T_STRING) { continue; }
+        $name = strtolower($t[$i][1]);
+        if (!isset($textArgumente[$name])) { continue; }
+        /* Definition und Methodenaufruf sind keine Aufrufe dieses Bausteins. */
+        $v = $i - 1;
+        while ($v >= 0 && is_array($t[$v]) && $t[$v][0] === T_WHITESPACE) { $v--; }
+        if ($v >= 0 && is_array($t[$v])
+            && in_array($t[$v][0], [T_FUNCTION, T_OBJECT_OPERATOR, T_DOUBLE_COLON], true)) { continue; }
+        $j = $i + 1;
+        while ($j < $n && is_array($t[$j]) && $t[$j][0] === T_WHITESPACE) { $j++; }
+        if ($j >= $n || $t[$j] !== '(') { continue; }
+        $tiefe = 0; $arg = 0; $befund = false;
+        for ($k = $j; $k < $n; $k++) {
+            $tok = $t[$k];
+            if ($tok === '(' || $tok === '[') { $tiefe++; continue; }
+            if ($tok === ')' || $tok === ']') { $tiefe--; if ($tiefe === 0) { break; } continue; }
+            if ($tok === ',' && $tiefe === 1) { $arg++; continue; }
+            if ($tiefe === 1 && is_array($tok) && in_array($arg, $textArgumente[$name], true)
+                && in_array($tok[0], [T_CONSTANT_ENCAPSED_STRING, T_ENCAPSED_AND_WHITESPACE], true)
+                && str_contains($tok[1], '<')) {
+                $befund = true;
+            }
+        }
+        if ($befund) { $nummern[] = (int)$t[$i][2]; }
+    }
+    return $nummern;
+}
+
+/**
  * Die Lage einer Zeile: `DRUEBER`, `drunter` oder `genau` — und ob sie ein
  * Befund ist. Eigene Funktion, damit die Selbstprobe die Ratsche pruefen kann
  * (R17-19, F-R17-56): Seither ist auch `drunter` ein Befund.
@@ -869,6 +918,19 @@ function zh_selbstprobe(): int
          'handliste', null, 0, 'Tabelle steht HINTER der Liste — auch dann nicht'],
         ["<?php \$a = \$m['id']; \$b = \$m['notes'];",
          'handliste', null, 0, 'zwei Spaltennamen sind keine Liste'],
+        /* --- Meldungstext ohne Markup (Z45, F-R17-49) --------------------- */
+        ["<?php echo ui_meldung_markup('warn', 'Jede <strong>x</strong>', 'A');",
+         'meldung', null, 1, 'Tag im Text von ui_meldung_markup'],
+        ["<?php echo ui_meldung_markup('warn', 'Text', 'Auftakt', '<a href=\"x\">k</a>');",
+         'meldung', null, 0, 'Markup im Knopf ist erlaubt'],
+        ["<?php ui_meldung(null, 'Die Datei <code>x</code> fehlt');",
+         'meldung', null, 1, 'Tag im Fehlertext von ui_meldung'],
+        ["<?php ui_meldung(\$h, null, 'info', '', ['knopf' => '<b>k</b>']);",
+         'meldung', null, 0, 'Optionen (Argument 5) zaehlen nicht'],
+        ["<?php echo ui_meldung_markup('warn', sprintf('%d < %d', \$a, \$b));",
+         'meldung', null, 0, 'Zeichenkette in innerem Aufruf zaehlt nicht'],
+        ["<?php function ui_meldung_markup(\$t, \$x = '<') {}",
+         'meldung', null, 0, 'Definition ist kein Aufruf'],
     ];
 
     $ok = 0;
@@ -883,6 +945,7 @@ function zh_selbstprobe(): int
             case 'js':      $ist = preg_match_all($arg, $sichten['js_und_inline']); break;
             case 'date1':   $ist = count(zh_regel_date_ohne_zeitstempel('probe.php', $sichten, $code)); break;
             case 'handliste': $ist = count(zh_regel_missions_handliste('probe.php', $sichten, $code)); break;
+            case 'meldung': $ist = count(zh_regel_meldung_markup('probe.php', $sichten, $code)); break;
             case 'zeile':
                 preg_match($arg, $sichten['php_mit_zeichenketten'], $t, PREG_OFFSET_CAPTURE);
                 $ist = $t ? zh_zeile($sichten['php_mit_zeichenketten'], $t[0][1]) : 0;

@@ -18,7 +18,12 @@ require_once __DIR__ . '/diensttag_lib.php';   // dt_art_symbole() fuer die Tabe
 $jahr  = (string)($_GET['y'] ?? '');
 $monat = (string)($_GET['m'] ?? '');
 if (!preg_match('/^\d{4}$/', $jahr)) { header('Location: index.php'); exit; }
-if ($monat !== '' && !preg_match('/^\d{2}$/', $monat)) { $monat = ''; }
+/* NUR 01 BIS 12 — dieselbe Pruefung wie `api/range.php` (R17-22, F-R17-44).
+ * Bis Web 23.3.0 bestand `m=13` (ebenso 00 oder 99) die Formpruefung: eine
+ * Warnung im Reiter System, ein Titel ohne Monat, und `mktime()` rechnete
+ * ins naechste Jahr. Ein ungueltiger Monat gilt jetzt als keiner — die
+ * Seite zeigt das Jahr. */
+if ($monat !== '' && !preg_match('/^(0[1-9]|1[0-2])$/', $monat)) { $monat = ''; }
 
 $MONATSNAMEN = ['', 'Januar', 'Februar', 'März', 'April', 'Mai', 'Juni',
     'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember'];

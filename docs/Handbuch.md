@@ -2990,6 +2990,12 @@ Zwei Sonderfälle werden dabei erkannt:
   überschreiben oder trotzdem anlegen. Gelöschte Einsätze im Papierkorb
   zählen bewusst nicht als vorhanden.
 
+  **Ein gelöschter Diensttag sperrt sein Datum nicht mehr** *(seit Web
+  23.3.1)*. Liegt an einem Datum ein Diensttag im Papierkorb und daneben ein
+  aktiver, landen die Einsätze der Datei beim aktiven. Bis dahin übersprang
+  der Import das ganze Datum, solange der Papierkorb-Tag dort lag. Abgelehnt
+  wird ein Datum nur noch, wenn es **ausschließlich** im Papierkorb liegt.
+
   **„Überschreiben" löscht nichts, was die Datei nicht kennt** (seit Web
   5.8.0). Liefert die Datei zu einem Feld nichts, bleibt der gespeicherte Wert
   stehen. Das betrifft die Besatzung, Bergwacht-Infos, die weitere NotärztIn,
@@ -5731,8 +5737,10 @@ nach.
 an — die Anmeldung führt danach auf die Startseite, und die zeigt im
 Wartungsmodus die Wartungsseite. Dort steht der Knopf **„Zur Verwaltung"**,
 und der bringt dich zum Schalter zurück. Der zweite Weg: Wer Zugang zum
-Webspace hat, löscht die Datei `wartung.lock` neben den übrigen Serverdateien.
-Mehr als diese Datei ist der Schalter nicht.
+Webspace hat, löscht die Datei `wartung.lock` im Verzeichnis `.zustand/`
+neben den übrigen Serverdateien *(seit Web 23.3.1; vorher lag sie direkt
+dort — eine Datei am alten Ort gilt noch, also beide löschen)*. Mehr als
+diese Datei ist der Schalter nicht.
 
 > Beides hat bis September 2026 nicht funktioniert, und zwar nacheinander:
 > Bis Web 19.1.2 ließ sich das Anmeldeformular gar nicht abschicken, und bis

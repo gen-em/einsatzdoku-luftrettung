@@ -104,6 +104,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
     $feld = static fn(string $k): string => is_string($_POST[$k] ?? null) ? $_POST[$k] : '';
     $email = email_normalisieren($feld('email'));
     $merkmale = [rate_merkmal_kennung($email)];
+    $merkmaleIp = [rate_merkmal_ip()];    // F-R17-37: dazu der Anschluss
 
     if (!csrf_ok()) {
         /* Wie in `login.php`: Ein abgelaufenes Formular zaehlt nicht als
@@ -111,13 +112,17 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
          * ist. Dann gilt auch ein neuer Dateiname (E-SR-82). */
         $fehler = 'Das Formular ist abgelaufen. Bitte die Seite neu laden — '
                 . 'und den Namen der Datei mit dem vergleichen, der dann oben steht.';
-    } elseif (!rate_erlaubt('notweg', null, $merkmale)) {
+    } elseif (!rate_erlaubt('notweg', null, $merkmale)
+              || !rate_erlaubt('notweg_ip', null, $merkmaleIp)) {
         /* DIE SPERRE HAENGT AN DER EINGETIPPTEN ADRESSE, nicht an einem
          * Konto — sie erscheint fuer erfundene Adressen genauso und gibt
          * deshalb keine Auskunft. */
         $sperre = rate_sperre('notweg', null, $merkmale);
+        $vomAnschluss = $sperre === null;
+        $sperre ??= rate_sperre('notweg_ip', null, $merkmaleIp);
         $bis = $sperre['bis'] ?? null;
-        $fehler = 'Zu viele Versuche für diese Adresse.'
+        $fehler = ($vomAnschluss ? 'Zu viele Versuche von diesem Anschluss.'
+                                 : 'Zu viele Versuche für diese Adresse.')
                 . ($bis !== null ? ' Wieder ab ' . fmt_local($bis, 'H:i') . ' Uhr.'
                                  : ' Bitte später erneut versuchen.');
         rate_gleiche_dauer($t0);
@@ -135,6 +140,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
              * abgebrochenen Versuchen; sie galten ohnehin nicht mehr. */
             nachweis_entfernen(NOTWEG_MUSTER);
             rate_erfolg('notweg', null, $merkmale);
+            rate_erfolg('notweg_ip', null, $merkmaleIp);
             require_once __DIR__ . '/mail_lib.php';
             mail_einreihen('totp_zurueckgesetzt', (string)$u['email'],
                            ['link' => app_url('/login.php'), 'weg' => 'notweg']);
@@ -144,6 +150,10 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
         }
 
         rate_misserfolg('notweg', null, $merkmale);
+        rate_misserfolg('notweg_ip', null, $merkmaleIp);
+        /* UND DIE VERLANGSAMUNG (F-R17-37): Hier wurde gerechnet (bcrypt oder
+         * Blindvergleich) — derselbe Grund wie im Fehlzweig der Anmeldung. */
+        rate_global_misserfolg();
         $fehler = NOTWEG_NICHT_BEREIT;
         rate_gleiche_dauer($t0);
     }

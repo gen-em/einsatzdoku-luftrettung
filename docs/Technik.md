@@ -347,11 +347,11 @@ Daten erst nach Server-Bestätigung.
 │   ├── wartung_lib.php    Wartungsmodus (S5 Paket W, Web 13.2.0): Schalter,
 │   │                       Tor, Wartungsseite, 503-JSON, Balken,
 │   │                       Ausnahmeliste. Lädt NICHTS — der Zustand ist eine
-│   │                       Datei (`wartung.lock`), damit er auch bei
+│   │                       Datei (`.zustand/wartung.lock`), damit er auch bei
 │   │                       umgebauter Datenbank greift. Seit Web 20.13.0
 │   │                       steht die ZWEITE Störung daneben (P5a/AP9,
 │   │                       Abschnitt 5e): „ausgelastet" — Erkennung der
-│   │                       Fehlernummern, Zähler `ueberlast.json`, 503-Weg
+│   │                       Fehlernummern, Zähler `.zustand/ueberlast.json`, 503-Weg
 │   │                       und das gemeinsame Gerüst beider Störungsseiten.
 │   │                       Aus demselben Grund am selben Ort: Beide müssen
 │   │                       ohne Datenbank antworten
@@ -3100,6 +3100,20 @@ mail_einreihen($schluessel, $empfaenger, $daten, $sofort = true)
    → EINEN Versuch sofort — außer bei $sofort = false
    → 'zugestellt' | 'wartet' | 'abgelehnt'
 ```
+
+**Auf der Leitung** (`smtp_send()`, seit Web 23.3.1, R17-22): Der Rumpf geht
+**quoted-printable** hinaus, mit `Content-Transfer-Encoding: quoted-printable`
+— 7-Bit-sauber, Zeilen unter 77 Zeichen, unabhängig davon, ob das Relais
+`8BITMIME` kennt (Backlog Nr. 401, E-R17-63). Bis dahin gingen Umlaute und
+Gedankenstriche als rohe 8-Bit-Bytes ohne die Kopfzeile hinaus; nach RFC 2045
+gilt dann `7bit`, und ein strenger Weiterleiter darf sie verwerfen. **Und die
+Anmeldung ist Pflicht** (F-R17-46, E-R17-58): `smtp_eingerichtet()` verlangt
+`host`, `user` und `pass`, `smtp_probe()` sagt, was fehlt, und `smtp_send()`
+baut ohne Anmeldedaten keine Verbindung auf (Kennung `ANMELDUNG`). Bis dahin
+hieß es an beiden Stellen, ein Relais ohne Authentifizierung sei eine gültige
+Einrichtung — aber `smtp_send()` schickte immer `AUTH LOGIN` und scheiterte
+daran. Gemessen in der Mailprobe (Abschnitt 3 und 3a, Mitschnitt der
+Gegenstelle).
 
 **Nur einreihen** (`$sofort = false`, seit Web 20.38.0, F-P5c-29) gibt es für
 die Rundmail: Der sofortige Versuch kostet bis zu `MAIL_BUDGET_S` je
@@ -6356,7 +6370,7 @@ Die Bausteine im Einzelnen:
 | Transaktionsrahmen | `transaktion_lib.php` (bis Web 20.37.2 `db.php`, Nr. 288) | `db_transaktion($pdo, $fn)` — beginnen, den Rumpf laufen lassen, bestätigen; bei jedem `Throwable` zurückrollen und **weiterwerfen**. **Verschachtelungsfest und asymmetrisch:** Wer schon in einer fremden Transaktion steht, öffnet keine eigene und bestätigt und verwirft dann auch nichts. Vor dem `rollBack()` wird nachgefragt, ob sie noch steht — ein DDL bestätigt in MySQL still, und der Rumpf darf selbst zurückgerollt haben; sonst verdeckte eine zweite Ausnahme die erste. Ab Web 20.30.0; **neun Rahmen bleiben namentlich außen vor**, die Registerzeile Z16 führt sie mit Grund. |
 | Kindtabellen eines Einsatzes | `einsatz_lib.php` | `einsatz_phasen_ersetzen()`, `einsatz_rettungsmittel_ersetzen()`, `einsatz_besatzung_ersetzen()` (bis Web 22.7.0 dazu `einsatz_reas_ersetzen()`) — fünf Schreibwege (Formular, CSV-Import, Uhr-Eingang, Backup, Schneiden), dreißig Anweisungen, jetzt null außerhalb. Schalter `loeschen` (Vorgabe `true`; das Backup schreibt in einen gerade angelegten Einsatz) und `ignorieren` (dessen `INSERT IGNORE`). **Sie prüfen nichts** — was gültig ist, entscheidet der Aufrufer. Ab Web 20.30.0. |
 | Vorbereitete Anweisung | `einsatz_lib.php` (`einsatz_anweisung()`) | Eine `PDOStatement` je Verbindung und SQL-Text. Nötig, weil `db.php` `ATTR_EMULATE_PREPARES => false` setzt: Jedes `prepare()` ist ein Roundtrip, und der CSV-Import führt seine Anweisungen bis zu 3 000-mal aus. Die Verbindung wird **mitgehalten**, nicht nur ihre Objektkennung — eine freigegebene PDO gäbe ihre `spl_object_id` an die nächste weiter. |
-| Zahl, Größe, Anteil, Datum, Zeit | `format_lib.php` | `zahl_text()` · `groesse_text()` (drei Stufen: GB zwei, MB eine, KB null Nachkommastellen) · `groesse_kurz_text()` (mit Stufe „B", abgeschnittenen Nullen und `unbegrenzt` — eine **andere** Schreibweise, keine zweite Fassung) · `groesse_paar_text($ist, $grenze)` (gemeinsame Einheit: „3 von 250 MB") · `prozent_wert($teil, $ganz, 'ab'\|'kauf')` und `prozent_text()` · `datum_text()` · `datum_zeit_text($utc, $trenner)` · `datum_stunde_text()` · `zeit_relativ()` · `heute_lokal()` · `iso_utc()` / `iso_utc_lesen()`. Ab Web 20.32.0. **Sie lädt nur `konfig_lib.php`** — `install.php` erreicht sie über `plattform_lib.php`, bevor es eine `config.php` gibt. **Zwölf Stellen bleiben namentlich außen vor**, die Registerzeilen Z22–Z26 führen sie mit Grund. |
+| Zahl, Größe, Anteil, Datum, Zeit | `format_lib.php` | `zahl_text()` · `groesse_text()` (drei Stufen: GB zwei, MB eine, KB null Nachkommastellen) · `groesse_kurz_text()` (mit Stufe „B", abgeschnittenen Nullen und `unbegrenzt` — eine **andere** Schreibweise, keine zweite Fassung) · `groesse_paar_text($ist, $grenze)` (gemeinsame Einheit: „3 von 250 MB") · `prozent_wert($teil, $ganz, 'ab'\|'kauf')` und `prozent_text()` · `datum_text()` · `datum_zeit_text($utc, $trenner)` · `datum_stunde_text()` · `zeit_relativ()` · `heute_lokal()` · `iso_utc()` / `iso_utc_lesen()` · seit Web 23.3.1 `csv_zelle()` (entschärft eine CSV-Zelle, die mit `=`, `+`, `-`, `@`, Tabulator oder Wagenrücklauf beginnt, mit einem Apostroph; der Modellname in der Geräte-CSV der Statistik kommt vom Gerät, R17-22, F-R17-45). Ab Web 20.32.0. **Sie lädt nur `konfig_lib.php`** — `install.php` erreicht sie über `plattform_lib.php`, bevor es eine `config.php` gibt. **Zwölf Stellen bleiben namentlich außen vor**, die Registerzeilen Z22–Z26 führen sie mit Grund. |
 | Ortszeit | `format_lib.php` (`fmt_local()`) | **Stand bis Web 20.31.0 in `db.php`**, Name und Verhalten unverändert — alle 113 Aufrufer in 37 Dateien merken nichts, weil `db.php` die neue Datei lädt. Umgezogen, weil `datum_text()` und `datum_zeit_text()` darauf aufbauen. `local_to_utc()` **bleibt in `db.php`**: Sie liest einen Formularwert, um damit zu rechnen — die andere Richtung. |
 | Zwei Trenner für Datum und Zeit | `format_lib.php` | `datum_zeit_text($utc, $trenner)` hängt den Trenner **nach** dem Formatieren an, statt ihn ins Format-Literal zu schreiben. Sonst würde der erste Trenner mit einem Buchstaben still zu Formatzeichen (` um ` ergäbe `u` = Mikrosekunden, `m` = Monat) — und so einer steht schon im Bestand. Drei Trenner sind im Umlauf (Leerzeichen 25×, Mittelpunkt 11×, Komma 1×); die Vereinheitlichung entscheidet 10c AP9 und findet dafür **eine** Stelle statt 41. |
 | Formatierer im Browser | `assets/format.js` (`EdFormat`) | **Zahl und Größe** (`zahl()`, `groesse()`) — dieselben Regeln wie `format_lib.php`, über 2 014 Byte-Werte Zeichen für Zeichen geprüft. **Tag, Dauer und Strecke** seit Web 20.34.0 (`tag()`, `tagKurz()`, `spanne()`, `dauer()`, `dauerUhr()`, `minuten()`, `km()`, `kmSumme()`) — dafür gibt es **keine** PHP-Entsprechung: Dort geht es um UTC-Zeitstempel mit Zonenumrechnung, hier um einen nackten Tagesstring und um Dauern, die serverseitig nicht entstehen. **Der Leerwert ist überall ein Parameter**, kein fester Wert — die Lehre aus AP7, wo ein fester Frühausstieg aus „– um –“ ein „–“ machte. Sechs verschiedene Leer-Antworten waren im Bestand gemessen worden. **Die Datei steht im `<head>`** (`ui_seite_start()`), damit die Ladereihenfolge keine Frage mehr ist. **Fünf dünne Weiterleitungen bleiben** (Z34), jede bindet einen anderen Leerwert. |
@@ -6364,7 +6378,7 @@ Die Bausteine im Einzelnen:
 | Feste Werte in einer erzeugten Anweisung | (Aufrufseite) | Wo Werte fest im Satz stehen, hängt die Wertform an der **Spalte**, nicht an ihrer Stelle: `['uhr_gesperrt' => '1', 'origin' => "'import'"]`, `COALESCE(?, spalte)` für die vier Felder unter der Export-Schranke (A9/P10), `NULL AS spalte` im Export ohne personenbezogene Angaben. Wer ein Feld unter die Schranke nimmt, trägt es an **einer** Stelle ein. |
 | Schema fragen | `db.php` | `db_hat_tabelle()`, `db_hat_spalte()`, `db_hat_index()`, seit Web 20.41.0 `db_spalte_typ()` (der volle Spaltentyp, etwa die Werte eines ENUM — P5c/AP4), seit Web 21.0.0 `db_spalte_nullbar()` (ob die Spalte NULL zulässt — P5c/AP8) — sie nehmen ein `PDO`, **zwingend**: `tools/schemaprobe/` lässt Migrationen gegen ein frisch angelegtes Schema laufen, also gegen eine andere Verbindung als `db()`. Die privaten `_hat_*` in `migration_lib.php` reichen seit Web 20.29.0 nur noch durch (E-ZE-04: gelaufene Migrationen werden nicht umgebaut). |
 | Anfrage an den Server | `assets/api.js` (`EdApi`) | `EdApi.postJson(url, daten, o)` und `EdApi.postForm(url, felder, o)`, seit Web 20.34.0. Beide liefern `{ ok, status, daten, meldung }` und **werfen nie** — ein Netzfehler kommt als `status: 0`. Sie hängen das CSRF-Token selbst an (Kopfzeile bzw. Feld) und bauen den **einen** Satzbau `<Vorgang> ist fehlgeschlagen: <Grund>`. Vorrangkette des Grundes: `meldung` → `text` → `hinweis` → Ersatzsatz mit Kennung. **`error` steht nicht in der Kette** — es trägt Maschinenwörter, keine Sätze, und erscheint nur als Kennung in der Klammer. **`ok` ist ein Transport-Urteil**: Es prüft `daten.ok !== false`, nicht `=== true`, weil die lesenden Endpunkte gar kein `ok` schicken — wer ein fachliches `ok` braucht, prüft `a.daten.ok` mit. **Die Array-Regel von `postForm` ist sicherheitsrelevant**: Ein Feldwert, der ein Array ist, geht als `name[]` hinaus; ohne die Klammern liest PHP eine Zeichenkette, `is_array()` schlägt fehl, und die Schlüsselblatt-Rückfrage zählt einen Fehlversuch. **Die Datei steht im `<head>`** — nicht in der Immer-Liste, weil `ui_geruest_ende()` auf `einstellungen.php` und `import.php` **nach** den Seitenskripten steht und `unlock.js` dort zur Ladezeit sendet. |
-| Meldung im Browser | `assets/html.js` (`EdHtml.meldung`) | `EdHtml.meldung(ton, text, o)`, seit Web 20.34.0 — zeichengleich mit `ui_meldung_markup()` in `ui.php`; 200 von 200 Prüffällen ergaben denselben DOM-Baum. **Fünf Töne, geschlossene Liste, Wurf beim sechsten**, genau wie PHP. `o.auftakt` (fetter Vorspann, maskiert), `o.knopf` (fertiges Markup, unmaskiert), `o.roh` (Text **nicht** maskieren — ein benanntes Loch mit genau einem Verbraucher, der Erfolgsmeldung des Imports mit Link und Umbruch). Vorher: sieben eigenständige Nachbauten, keine zwei gleich, drei verschiedene Ton-zu-Symbol-Tabellen. **Seit Web 21.1.11** (R4-13) auch der Satz im Schneide-Bereich (`fehler` für einen Grund, `info` für den Erklärtext), die Rückmeldung über der Segmentliste und die Meldung im Entsperrdialog; `html.js` steht dafür im Kopf jeder Seite. Zwei Nachbauten bleiben bis Backlog Nr. 346 (`patient.js`, der Papierkorb-Hinweis in `index.php`); die Registerzeile Z37 zählt seither auch `className = '…meldung'`. **Die Tonklasse wird zusammengesetzt** — `tools/quelltext/` (`vollstaendigkeit`) sieht sie deshalb nicht und meldet `.meldung-ok` und `.meldung-schutz` als Regel ohne Markup. Das ist kein Befund, sondern die Eigenschaft des Bausteins. |
+| Meldung im Browser | `assets/html.js` (`EdHtml.meldung`) | `EdHtml.meldung(ton, text, o)`, seit Web 20.34.0 — zeichengleich mit `ui_meldung_markup()` in `ui.php`; 200 von 200 Prüffällen ergaben denselben DOM-Baum. **Fünf Töne, geschlossene Liste, Wurf beim sechsten**, genau wie PHP. `o.auftakt` (fetter Vorspann, maskiert), `o.knopf` (fertiges Markup, unmaskiert), `o.roh` (Text **nicht** maskieren — ein benanntes Loch mit genau einem Verbraucher, der Erfolgsmeldung des Imports mit Link und Umbruch). Vorher: sieben eigenständige Nachbauten, keine zwei gleich, drei verschiedene Ton-zu-Symbol-Tabellen. **Seit Web 21.1.11** (R4-13) auch der Satz im Schneide-Bereich (`fehler` für einen Grund, `info` für den Erklärtext), die Rückmeldung über der Segmentliste und die Meldung im Entsperrdialog; `html.js` steht dafür im Kopf jeder Seite. Zwei Nachbauten bleiben bis Backlog Nr. 346 (`patient.js`, der Papierkorb-Hinweis in `index.php`); die Registerzeile Z37 zählt seither auch `className = '…meldung'`. **Die Tonklasse wird zusammengesetzt** — `tools/quelltext/` (`vollstaendigkeit`) sieht sie deshalb nicht und meldet `.meldung-ok` und `.meldung-schutz` als Regel ohne Markup. Das ist kein Befund, sondern die Eigenschaft des Bausteins. **Kein Tag im Text** — weder hier noch in `ui_meldung()`/`ui_meldung_markup()` (PHP): Beide maskieren, ein `<strong>` erscheint als Text. Seit Web 23.3.1 hält der Riegel **Z45** in `tools/zaehlung/` die PHP-Seite: kein `<` in einer festen Zeichenkette eines Textarguments (R17-22, F-R17-49; zwei Stellen bis dahin). Hervorhebung trägt der Auftakt. |
 | Auftakt der Patientenanzeige | `assets/patient.js` (`EdPat.listeLaden`) | `EdPat.listeLaden(liste, o)`, seit Web 20.34.0: Schlüssel holen, Sperrbanner nach der Regel setzen (sichtbar genau dann, wenn kein Schlüssel da ist **und** die Liste überhaupt einen `pat_blob` enthält), entschlüsseln, zählen. Gibt `{ ck, zahl }` zurück und **entscheidet nicht**: Tagesansicht und Zeitraum kehren bei fehlendem Schlüssel zurück, die **Suche nicht** — sie muss ihre Trefferliste auch gesperrt zeigen und dabei den Altersfilter sperren. `zeigeUnlesbar()` ruft der Aufrufer **nach** seiner Schleife. **`einstellungen.php` bleibt draußen** (Z36 endet bei 1): Es teilt nur den Aufruf, arbeitet mit Fenstern zu 250 aus einem Bestand von tausenden, und `hinweisUnlesbar()` wertet die **ganze** Liste aus — über ein Fenster gesagt wäre der Satz falsch. |
 | Maskierung | `assets/html.js` (`EdHtml.escape`) | Eine Fassung, auch in Attributpositionen sicher (fünf Zeichen statt drei). Seit Web 4.6.0 in einer eigenen Datei statt in `missiontable.js` — die wird nur von zwei Seiten geladen, gebraucht wird die Maskierung auf fünf. `EdMissionTable.escape`/`.esc` bleiben als Weiterleitung. **Nicht dasselbe** wie `xmlEscape()` in `export.js`: GPX ist XML mit eigenen Regeln. |
 | Patientenanzeige | `assets/patient.js` | Eine Entschlüsselungsschleife statt fünf; unterscheidet sichtbar „keine Angaben" von „nicht lesbar". `entschluessleListe()` wird seit Web 4.6.0 von allen Aufrufern benutzt (Tages-, Zeitraum- und Suchansicht, Export, Import-Abgleich, Backup-Lauf) und schreibt je Einsatz `_pat` und `_patState`. |
@@ -7015,7 +7029,7 @@ geändert** (E-S5W-08).
 
 | | |
 |---|---|
-| Zustand | Datei `server/wartung.lock`, JSON mit `seit` (ISO-UTC) und `von` (Anzeigename). **Keine Datenbank** — der Schalter wird gerade dann gebraucht, wenn sie umgebaut wird oder eine Migration auf halber Strecke steht |
+| Zustand | Datei `server/.zustand/wartung.lock` (seit Web 23.3.1; bis dahin `server/wartung.lock` im Webroot, F-R17-47), JSON mit `seit` (ISO-UTC) und `von` (Anzeigename). **Keine Datenbank** — der Schalter wird gerade dann gebraucht, wenn sie umgebaut wird oder eine Migration auf halber Strecke steht. **Übergang:** Eine Datei am alten Ort gilt noch als Wartung und geht beim Ausschalten mit (die Kette schaltet vor dem Hochladen mit dem alten Code ein) |
 | Tor | `wartung_tor()` in `wartung_lib.php`, gerufen aus `db.php` **hinter `json_out()` und vor jeder Verbindung**. Nicht in `auth_guard.php`: Dort liefen nur die Seiten durch — `ingest.php` und `pair.php` laden `db.php` direkt, und das sind die beiden, die die Daten der Uhr bringen. Der **Torwächter** (unten) steht dagegen genau dort, und aus dem umgekehrten Grund: Er braucht eine Verbindung |
 | Antwort, Seiten | 503 mit einer schlichten HTML-Seite ohne `ui.php` (dessen Hülle zieht über `ui_favicon()`/`logo_stamm()` die Datenbank herein). Das Stylesheet ist verlinkt — statisch. Kein Skript |
 | Antwort, Maschinen | 503 `{"error":"maintenance","meldung":"…"}`. JSON, wenn der Pfad `/api/` enthält **oder** das Skript in `JSON_SKRIPTE_AUSSERHALB_API` steht — `ingest.php`, `pair.php`, `auth_salt.php`, `jobs.php`. Die vier liegen nicht unter `/api/` und brauchen trotzdem JSON. **Für den Wartungsmodus zählen nur die ersten beiden**, weil die anderen zwei in `WARTUNG_AUSNAHMEN` stehen und das Tor bei ihnen vorher umkehrt; die Liste ist in P5a/AP9 für die **Überlast** gewachsen, die keine Ausnahmen kennt (Abschnitt 5e) |
@@ -7032,13 +7046,30 @@ unlesbar oder kein gültiges JSON, gilt die Wartung trotzdem; der Balken sagt
 „seit unbekannt". Andersherum wäre es falsch — ein Tippfehler im Inhalt darf
 keine Installation öffnen, die jemand ausdrücklich geschlossen hat.
 
-**Zwei Einträge, die zusammengehören:** `server/wartung.lock` steht in
+**Zwei Einträge, die zusammengehören:** `server/.zustand/` steht in
 `.gitignore` **und** in der Ausnahmeliste des FTPS-Schritts in
 `.github/workflows/ausliefern-lauf.yml` (bis Kette II/AP5: zweimal in
 `auslieferung.yml`; bis Web 20.3.0: `deploy.yml`). Ohne den ersten schlösse ein Checkout jede
-Installation; ohne den zweiten löschte der Push die Datei — mitten im Update,
+Installation; ohne den zweiten löschte ein Spiegel mit Löschabgleich die Datei — mitten im Update,
 für das sie da ist. Dasselbe Muster wie `config.php`, `install.php`,
-`install.lock`, `sicherungen/`, `apk/` — und seit Web 20.13.0 `ueberlast.json` (Abschnitt 5e).
+`install.lock`, `sicherungen/`, `apk/` und `.sitzungen/`.
+
+**Warum ein eigenes Verzeichnis** (seit Web 23.3.1, R17-22, F-R17-47,
+E-R17-59). Bis dahin lagen `wartung.lock` und `ueberlast.json` als Dateien
+im Webroot, und keine Regel der `.htaccess` sperrte sie: Während einer
+Wartung lieferte `https://<host>/wartung.lock` jedem ohne Anmeldung den
+Namen oder die Anmeldeadresse des Kontos, das geschaltet hatte; der
+Überlastzähler sagte jederzeit, wann die Anlage am Limit war.
+`server/.zustand/` sperrt die Punktregel der `.htaccess` wie `.sitzungen/`,
+und `zustand_verzeichnis()` legt beim Anlegen eine eigene `.htaccess` mit
+`Require all denied` dazu — der zweite Riegel. **Übergang:** Die Kette
+schaltet die Wartung vor dem Hochladen mit dem alten Code ein, also am
+alten Ort; die neue Fassung erkennt eine Datei dort noch
+(`WARTUNG_DATEI_ALT`), löscht sie beim Ausschalten mit und räumt eine
+alte `ueberlast.json` beim ersten Zählen weg. Die Fremd-Aktion des
+Transports löscht am alten Ort nichts — sie entfernt nur, was sie selbst
+hochgeladen hat. Ob Apache die Sperre ausliefert, misst die örtliche
+Anlage nicht (der PHP-Server liest keine `.htaccess`, P-R17-10).
 
 #### Der Torwächter (ab Web 20.6.0, P5a/AP3, E-P5a-20; R40 (4), Nr. 54)
 
@@ -11035,7 +11066,7 @@ die Seitenhülle vor der Ersteinrichtung lädt.
 
 Sonst zeigte ausgerechnet die Seite, die Fremde zu sehen bekommen, „Gen-EM
 NAdoku", während die Installation anders heißt. `wartung_einschalten()`
-schreibt den Namen deshalb als Schlüssel `wer` in `wartung.lock` — beim
+schreibt den Namen deshalb als Schlüssel `wer` in `.zustand/wartung.lock` — beim
 Einschalten steht die Datenbank noch. Fehlt er oder ist die Datei unlesbar,
 gilt die Vorgabe; **„Die Datei ist der Schalter, nicht ihr Inhalt"** bleibt
 unverändert.
@@ -11215,8 +11246,9 @@ Vorgabe **15 / 20 / 30 / 60 min**. Verfall: **24 h ohne Fehlversuch**
 
 **Nicht jeder Topf bekommt eine Leiter** — nur `login`, `login_ip`, `salt`,
 seit Web 20.11.0 `ingest` und `ingest_ip`, seit Web 20.24.0 `blatt` (das Prüfen
-des Schlüsselblatts) und seit Web 20.42.0 `totp` (der Code des
-Zweitfaktors):
+des Schlüsselblatts), seit Web 20.42.0 `totp` (der Code des
+Zweitfaktors), seit Web 21.13.0 `notweg` und seit Web 23.3.1 `notweg_ip`
+(der Anschluss am Notzugang, 20 je Stunde, F-R17-37):
 
 | Topf | Leiter | warum |
 |---|---|---|
@@ -11236,6 +11268,19 @@ Zweitfaktors):
 10 Fehlversuche je **Konto**, 50 je **Anschluss** (`login_ip`). Bis Web 20.9.1
 galten für beide dieselben 10 — hinter einem Klinik-NAT sperrte damit die
 zehnte Vertipperin die übrigen neunzehn aus.
+
+> **Und bis Web 23.3.1 galt dieser Satz nur auf dem Papier** (R17-22,
+> F-R17-36). `rate_merkmale($konto)` hängt immer die Adresse an, und der
+> Topf `login` wurde mit der Adresse des Kontos gerufen — er zählte also
+> Konto **und** Anschluss, mit **einer** Schwelle von 10. Zehn falsche
+> Passwörter an zehn erfundenen Adressen sperrten damit den ganzen
+> Anschluss, lange bevor `login_ip` mit seinen 50 griff; dasselbe beim
+> Schlüsselblatt (`blatt`, 3) und am Passwortnachweis der sieben Stellen
+> aus R17-20. Seither geben die Aufrufer der Konto-Töpfe
+> `rate_nur_konto($konto)` mit. `reset` und `salt` zählen Konto **und**
+> Adresse weiter mit Absicht (Kommentar an `RATE_GRENZEN`). Die Ratenprobe
+> misst seit R17-22 den Weg über HTTP (Abschnitt 12b): zehn Konten von
+> einem Anschluss sperren ihn nicht, ein Konto nach zehn schon.
 
 **Warum zwei Töpfe und nicht zwei Zahlen in einem:** Diese Tabelle hängt am
 **Topf**, nicht am Merkmal, und `rate_misserfolg()` bindet für alle Merkmale
@@ -11536,7 +11581,7 @@ der Datenbank.
 | Antwort, Maschinen | 503 `{"error":"ausgelastet","meldung":"…"}` |
 | Kopfzeilen | `Retry-After: 5`, `Cache-Control: no-store`, `X-Content-Type-Options: nosniff`, `Referrer-Policy: no-referrer`. **Ohne `kopfzeilen_seite()`** — jenes liest zwei Einstellungen aus `app_state`, also aus der Datenbank, die gerade nicht antwortet |
 | Wer bekommt JSON | `JSON_SKRIPTE_AUSSERHALB_API` — `ingest.php`, `pair.php`, `auth_salt.php`, `jobs.php` — plus alles unter `/api/`. **Vier statt zwei:** Für den Wartungsmodus genügten zwei, weil die beiden anderen in `WARTUNG_AUSNAHMEN` stehen und das Tor bei ihnen vorher umkehrt. Die Überlast kennt keine Ausnahmen. `gpx.php` bleibt draußen: Es wird vom Browser angesteuert, nicht per `fetch()` geholt |
-| Zähler | Datei `server/ueberlast.json` — laufende Stunde, Zahl darin, größte je gemessene Stunde, Gesamtzahl, Zeitpunkt des letzten Vorfalls. `flock`, weil eine Überlast viele Prozesse gleichzeitig trifft |
+| Zähler | Datei `server/.zustand/ueberlast.json` (seit Web 23.3.1; bis dahin im Webroot und über das Netz lesbar, F-R17-47) — laufende Stunde, Zahl darin, größte je gemessene Stunde, Gesamtzahl, Zeitpunkt des letzten Vorfalls. `flock`, weil eine Überlast viele Prozesse gleichzeitig trifft |
 | Anzeige | Statusseite, Karte **Server**, Zeile **Verbindungen**. Orange ab zehn Vorfällen in der laufenden Stunde — **oder** wenn die Spitze diese Schwelle erreicht hat und der letzte Vorfall keine 24 Stunden her ist. Ist die Datei nicht schreibbar, sagt die Zeile das: „0 Vorfälle" und „nicht gezählt" sähen sonst gleich aus |
 | Persistente Verbindungen | bleiben aus. `PDO::ATTR_PERSISTENT` steht nirgends (gezählt 16.09.2026: 0 Treffer unter `server/` und `tools/`) — eine persistente Verbindung belegt über das Ende der Anfrage hinaus genau den Platz, um den es hier geht |
 | Prüfmittel | `tools/proben/verbindung/` — stellt 1226 her, misst über echtes HTTP. 24 Erwartungen |
@@ -11548,9 +11593,16 @@ werden müsste, gibt es keine Verbindung zur Datenbank. Es ist derselbe Satz,
 der über `wartung.lock` steht. Erwogen und verworfen wurde, den Vorfall in
 eine Datei zu schreiben und beim nächsten gelungenen Verbindungsaufbau nach
 `app_state` nachzutragen — das hätte den Buchstaben erfüllt und **zwei
-Speicher für eine Zahl** gebraucht. Die Datei steht in `.gitignore` **und** in
-der Ausnahmeliste des FTPS-Schritts, wie `config.php`, `install.php`
-(Nr. 214), `install.lock`, `wartung.lock`, `sicherungen/` und `apk/`.
+Speicher für eine Zahl** gebraucht. Ihr Verzeichnis `.zustand/` steht in
+`.gitignore` **und** in der Ausnahmeliste des FTPS-Schritts, wie `config.php`,
+`install.php` (Nr. 214), `install.lock`, `sicherungen/`, `apk/` und
+`.sitzungen/`.
+
+**Die Erkennung baut ihr Muster aus `UEBERLAST_CODES`** (seit Web 23.3.1,
+R17-22, F-R17-48). Bis dahin stand im dritten Weg — dem über die Meldung, den
+der Kommentar den verlässlichen nennt — `[1040|1203]` von Hand, ohne die
+1226 der Tabelle oben. Gegriffen hat bisher der zweite Weg (`getCode()`);
+die Verbindungsprobe misst seither jede Nummer auch über die Meldung allein.
 
 **Der Riegel gegen die Schleife.** Alles, was unterhalb der 503-Antwort noch
 eine Einstellung nachsehen will (`kopfzeilen_lib.php` liest zwei aus
@@ -12256,15 +12308,16 @@ der Aufruf bei Plan „Nur von Hand" nichts und meldete sofort `fertig`.
 
 **Auf dem Server liegt 1:1 der Repositoriumsstand von `server/`**; ausgenommen
 sind `config.php` und `install.lock` (bei der Einrichtung erzeugt),
-`wartung.lock` (der Schalter des Wartungsmodus), `ueberlast.json` (der Zähler
-der Verbindungsgrenze, P5a/AP9), `install.php` (liegt im Repositorium, wird
-aber nicht ausgeliefert — Nr. 214), `sicherungen/` und `apk/`.
+`.zustand/` (Schalter des Wartungsmodus und Zähler der Verbindungsgrenze;
+bis Web 23.3.0 die Dateien `wartung.lock` und `ueberlast.json` im Webroot),
+`install.php` (liegt im Repositorium, wird aber nicht ausgeliefert —
+Nr. 214), `sicherungen/`, `apk/` und `.sitzungen/`.
 Diese Ausnahmeliste ist tragend — ohne sie löscht der nächste Deploy, was nur
 dort entsteht. Sie steht **zusätzlich** in `.gitignore` (außer `install.php`);
 beides muss so bleiben.
 
 **Seit Kette II/AP5 steht sie EINMAL** (E-KH-20 (1)), im FTPS-Schritt von
-`ausliefern-lauf.yml`; **acht Pfade, und die Zahl ist der Prüfwert.** Bis
+`ausliefern-lauf.yml`; **sieben Pfade (bis Web 23.3.0 acht), und die Zahl ist der Prüfwert.** Bis
 dahin stand sie zweimal, wortgleich, je einmal für Staging und Produktiv.
 Zwei wortgleiche Listen sind keine zwei Riegel, sondern einer und ein
 Versprechen: Wer die eine ergänzt und die andere vergisst, schützt eine
@@ -12941,14 +12994,19 @@ ein 503 sagt nicht, dass es seit drei Tagen kommt.
 > eingeschaltetem Wartungsmodus: fünf Seiten mit 200 und Balken, neun weitere
 > Seiten mit 503.
 
-**Der Schalter ist eine Datei.** `server/wartung.lock`, JSON mit `seit` und
-`von`. Wer keinen Browserzugang mehr hat, legt sie per SSH an oder löscht
-sie — das ist der ganze Mechanismus:
+**Der Schalter ist eine Datei.** `server/.zustand/wartung.lock` (bis Web
+23.3.0 `server/wartung.lock`), JSON mit `seit` und `von`. Wer keinen
+Browserzugang mehr hat, legt sie per SSH an oder löscht sie — das ist der
+ganze Mechanismus:
 
 ```bash
-echo '{"seit":"2026-09-03T14:12:00Z","von":"SSH"}' > server/wartung.lock  # ein
-rm server/wartung.lock                                                     # aus
+mkdir -p server/.zustand                                                           # einmal
+echo '{"seit":"2026-09-03T14:12:00Z","von":"SSH"}' > server/.zustand/wartung.lock  # ein
+rm -f server/.zustand/wartung.lock server/wartung.lock                             # aus
 ```
+
+Das `rm` nennt beide Orte: Eine Datei am alten Ort gilt als Übergang noch
+als Wartung (E-R17-59).
 
 **Die Datei ist der Schalter, nicht ihr Inhalt.** Ist sie da, aber unlesbar
 oder kein gültiges JSON, gilt die Wartung trotzdem; der Balken sagt dann
@@ -12961,8 +13019,8 @@ Installation, ohne den zweiten löschte der Push die Datei — mitten im Update,
 für das sie da ist.
 
 **Der Wartungsmodus greift nicht:** Prüfen in dieser Reihenfolge —
-(1) Liegt `server/wartung.lock` wirklich dort, wo `WARTUNG_DATEI` hinzeigt
-(neben `db.php`)? (2) Ist die aufgerufene Seite eine der Ausnahmen (`WARTUNG_AUSNAHMEN`, seit Web 21.13.0 achtzehn, von 21.9.0 an siebzehn, von 21.1.0 an sechzehn; hier stand bis dahin „dreizehn", es waren vierzehn)?
+(1) Liegt die Datei wirklich dort, wo `WARTUNG_DATEI` hinzeigt
+(`server/.zustand/`, seit Web 23.3.1; bis dahin neben `db.php`)? (2) Ist die aufgerufene Seite eine der Ausnahmen (`WARTUNG_AUSNAHMEN`, seit Web 21.13.0 achtzehn, von 21.9.0 an siebzehn, von 21.1.0 an sechzehn; hier stand bis dahin „dreizehn", es waren vierzehn)?
 (3) Steht die Zeile `wartung_tor();` in `db.php` noch **vor** jedem
 `db()`-Aufruf? Nachweis für alle drei:
 `php tools/proben/wartung/probe.php` (**70 Erwartungen**, gezählt 04.10.2026; seit Web 15.5.2 misst

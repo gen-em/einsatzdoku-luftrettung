@@ -14,6 +14,94 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 23.3.1] — unveröffentlicht
+
+Schritt 12b, Paket R17-22 — das Verhalten des Servers (Befunde F-R17-36 bis
+-41, -44 bis -49; Backlog Nr. 401). Kein Schema, kein `update.php`. **Eine
+Änderung an der Auslieferung:** Wartungsschalter und Überlastzähler liegen
+jetzt in `server/.zustand/` — siehe unten; die neue Fassung räumt den alten
+Ort selbst auf.
+
+### Behoben
+
+- **Web — zehn falsche Passwörter sperrten einen ganzen Anschluss.** Das
+  Handbuch der Technik versprach 10 Fehlversuche je Konto und 50 je
+  Anschluss. Gezählt wurde anders: Der Topf `login` bekam neben dem Konto
+  immer auch die Adresse des Anschlusses mit, und ein Topf hat **eine**
+  Schwelle. Zehn falsche Passwörter an zehn erfundenen Adressen sperrten
+  damit den Anschluss für bis zu eine Stunde — hinter einem Klinik-NAT alle,
+  die dort arbeiten —, lange bevor der Anschlusstopf mit seinen 50 griff
+  (F-R17-36). Dasselbe am Schlüsselblatt (3) und an den sieben Stellen, die
+  seit R17-20 das Passwort als Nachweis verlangen. Jetzt zählen diese Töpfe
+  nur das Konto (`rate_nur_konto()`), der Anschluss zählt allein in
+  `login_ip`. Reset und Salz zählen Konto **und** Anschluss weiter, mit
+  Absicht — dort sind wenige Anfragen je Anschluss gewollt. Die
+  Ratenprobe misst den Weg jetzt über die echte Anmeldeseite.
+- **Web — der Notzugang rechnete ohne Anschlussgrenze.** Er zählte nur die
+  eingetippte Adresse; wer sie je Anfrage wechselte, bekam unbegrenzt
+  bcrypt-Rechnungen auf einem Webspace mit wenigen Arbeitern (F-R17-37).
+  Jetzt gilt dazu ein Topf je Anschluss (20 je Stunde), und Fehlversuche
+  zählen in die globale Verlangsamung wie bei der Anmeldung.
+- **Web — „GPS-Daten als GPX" fehlte bei jeder gepackten Spur.** Seit Web
+  23.0.0 las die Einsatzseite für gepackte und ausgedünnte Spuren ein Feld,
+  das es nicht mehr gibt: Die Punktzahl war 0, Menüeintrag und Plakette
+  fehlten, und jeder Aufruf schrieb eine Warnung in den Reiter System
+  (F-R17-39). Der Wartungslauf packt Spuren bei jeder Anmeldung — betroffen
+  war also jedes Konto mit älteren Spuren. Jetzt zählt die Seite die Punkte
+  aller Stücke, für jede Stufe.
+- **Web — ein gelöschter Diensttag sperrte beim Import das ganze Datum.**
+  Lag an einem Tag ein Diensttag im Papierkorb, übersprang der Import das
+  Datum, auch wenn daneben ein aktiver stand; alle Einsätze landeten unter
+  „ohne Diensttag" (F-R17-40). Jetzt sperrt nur ein Datum, das
+  ausschließlich im Papierkorb liegt. Und „überschreiben" ohne Kennung des
+  vorhandenen Einsatzes legte einen neuen mit ungeprüfter Kennung an — eine
+  Nutzlast, die der Browser nie schickt; jetzt antwortet der Server mit 400
+  (F-R17-41).
+- **Web — Mails ohne Kodierung.** Umlaute, Gedankenstriche und
+  Anführungszeichen gingen als rohe 8-Bit-Bytes hinaus, ohne die Kopfzeile
+  `Content-Transfer-Encoding`; ein strenger Empfänger oder Weiterleiter darf
+  sie dann verwerfen (Backlog Nr. 401, gefunden in der Handprobe von
+  R17-20). Jetzt quoted-printable: 7-Bit-sauber, kurze Zeilen, gleich
+  lesbar, und unabhängig davon, was das Relais ankündigt.
+- **Web — ein Mailserver ohne Anmeldedaten galt als eingerichtet.** Zwei
+  Funktionen erklärten ein Relais ohne Authentifizierung für gültig, der
+  Versand schickte aber immer `AUTH LOGIN` und scheiterte (F-R17-46). Die
+  Betreiberin hat entschieden: Die Anmeldung ist Pflicht. Ohne Benutzer und
+  Passwort zeigt die Statusseite „nicht eingerichtet", die Probe sagt, was
+  fehlt, und es wird keine Verbindung aufgebaut.
+- **Web — Kleinigkeiten mit Folgen im Reiter System.** Das Umdatieren eines
+  Diensttags schrieb zwei Warnungen (F-R17-38); `zeitraum.php?m=13` eine
+  weitere und einen Titel ohne Monat (F-R17-44, jetzt gilt nur 01 bis 12).
+  Die Statistik-CSV der Gerätemodelle übernahm den Modellnamen, den das
+  Gerät selbst meldet, ungeprüft — `=1+1` wurde in Excel zur Formel
+  (F-R17-45); `csv_zelle()` in `format_lib.php` entschärft jetzt mit einem
+  Apostroph. Die Überlasterkennung kannte die Nummer 1226 auf dem Weg über
+  die Meldung nicht (F-R17-48); ihr Muster entsteht jetzt aus der Liste.
+  Und zwei Meldungen zeigten `<strong>` und `<code>` als Text (F-R17-49) —
+  sie sind ohne Tags geschrieben, und ein neuer Riegel in Stufe 1 (Z45) lässt
+  kein `<` mehr im Text einer Meldung zu.
+
+### Geändert
+
+- **Web — Wartungsschalter und Überlastzähler nicht mehr im Webroot.**
+  `wartung.lock` und `ueberlast.json` lagen neben `install.lock`, und keine
+  Regel sperrte sie: Während einer Wartung lieferte
+  `https://<host>/wartung.lock` jedem ohne Anmeldung den Namen oder die
+  Anmeldeadresse des Kontos, das geschaltet hatte; der Zähler sagte, wann
+  die Anlage am Limit war (F-R17-47). Beide liegen jetzt in
+  `server/.zustand/` — einem Punktverzeichnis, das die `.htaccess` sperrt,
+  mit einer eigenen Sperrdatei dazu (E-R17-59). **Für die eine Auslieferung
+  dazwischen** erkennt die neue Fassung eine Wartungsdatei am alten Ort noch
+  und löscht sie beim Ausschalten mit — die Kette schaltet vor dem
+  Hochladen mit dem alten Code ein. `.gitignore`, die Ausnahmeliste der
+  Kette und ihr Riegel zählen damit **sieben** statt acht Pfade
+  (`CLAUDE.md` 3). Wer per SSH schaltet: `server/.zustand/wartung.lock`.
+
+### Bewusst stehen gelassen
+
+- **CSP-Vorgabe** (F-R17-23): bleibt „aus", bis die Betreiberin in P-R17-04
+  bestätigt hat, dass Produktiv scharf läuft (E-R17-60).
+
 ## [Web 23.3.0] — unveröffentlicht
 
 Schritt 12b, Paket R17-21 — gehört zu Uhr 4.1.0 (E-R17-56, F-R17-70). Kein

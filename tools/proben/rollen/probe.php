@@ -1063,5 +1063,45 @@ if (isset($konten['admin'])) {
     app_state_loeschen('adresse_offen:' . $zielId, 'adresse_alt:' . $zielId);
 }
 
+echo "\nStatistik-CSV: eine Formel als Modellname (R17-22, F-R17-45)\n";
+/* Den Modellnamen meldet das Geraet beim Koppeln selbst. Bis Web 23.3.0 stand
+ * er unbearbeitet in der CSV der BetreiberIn — `=1+1` wurde in Excel oder
+ * LibreOffice zur Formel. Seither entschaerft `csv_zelle()` (format_lib.php)
+ * mit einem Apostroph. Das Geraet legt die Probe von Hand an und raeumt es weg. */
+$csvKonto = $konten['betreiberin'] ?? null;
+if ($csvKonto !== null) {
+    $devCsv = 'dev-rollenprobe-csv';
+    $pdo->prepare('DELETE FROM devices WHERE device_id = ?')->execute([$devCsv]);
+    $pdo->prepare("INSERT INTO devices (user_id, device_id, api_key_hash, label, geraet_art, geraet_modell)
+                   VALUES (?, ?, '', 'Rollenprobe CSV', 'uhr', '=1+1')")->execute([$zielId, $devCsv]);
+    try {
+        $r = hole('betrieb_statistik.php?r=geraete&export=csv', $csvKonto['sid']);
+        $roh = $r['rumpf'];
+        $zeilen = preg_split('/\r?\n/', $roh);
+        $formel = array_filter($zeilen, static fn ($z) => preg_match('/^"?[=+\-@]/', (string)$z) === 1);
+        pruef($r['code'] === 200 && str_contains($roh, "'=1+1") && $formel === [],
+              'CSV: der Modellname „=1+1" steht als Text (Apostroph), keine Zeile beginnt mit einer Formel',
+              'HTTP ' . $r['code'] . ', Formelzeilen ' . count($formel));
+    } finally {
+        $pdo->prepare('DELETE FROM devices WHERE device_id = ?')->execute([$devCsv]);
+    }
+}
+
+echo "\nZeitraum mit Monat 13 (R17-22, F-R17-44)\n";
+/* `zeitraum.php?m=13` bestand bis Web 23.3.0 die Formpruefung: eine Warnung
+ * im Reiter System und ein Titel ohne Monat. Seither gilt nur 01 bis 12. */
+$zrKonto = $konten['user'] ?? null;
+if ($zrKonto !== null) {
+    $zrZahl = static fn (): int => (int)$pdo->query("SELECT COUNT(*) FROM protokoll_ereignisse
+        WHERE reiter = 'system' AND text LIKE '%Undefined array key%' AND daten LIKE '%zeitraum.php%'")->fetchColumn();
+    $vor = $zrZahl();
+    $r = hole('zeitraum.php?y=2026&m=13', $zrKonto['sid']);
+    $nach = $zrZahl();
+    $titel = preg_match('/<h1[^>]*>(.*?)<\/h1>/s', $r['rumpf'], $tm) ? trim(strip_tags(html_entity_decode($tm[1]))) : '—';
+    pruef($r['code'] === 200 && $nach === $vor && str_contains(html_entity_decode($r['rumpf']), 'Jahr 2026'),
+          'zeitraum.php?m=13: keine Warnung, die Seite zeigt das Jahr',
+          'HTTP ' . $r['code'] . ', Warnungen ' . $vor . ' → ' . $nach . ', Titel „' . $titel . '"');
+}
+
 echo "\n-> $n Erwartungen, $offen nicht erfüllt\n";
 exit($offen === 0 ? 0 : 1);
