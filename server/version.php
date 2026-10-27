@@ -8360,5 +8360,19 @@ declare(strict_types=1);
  *   CSV-Zelle als Formel, das Muster der Ueberlastnummern und zwei
  *   Meldungen mit Tags als Text — samt Riegel Z45. Korrektur: kein neuer
  *   Weg, kein Schema.
+ * 23.3.2 — SICHERUNG UND WIEDERHERSTELLUNG AUS DEM REVIEW (Schritt 12b,
+ *   R17-23; F-R17-19, -33, -34, -35; Backlog Nr. 386). Beim Einspielen in
+ *   Fenstern gingen die Sperrvermerke verloren, deren Ruhesegment in einem
+ *   spaeteren Fenster stand — die Sicherung schreibt alle Einsaetze vor
+ *   allen Segmenten, am Messstand also 147 von 147; jetzt werden sie nach
+ *   dem letzten Fenster nachgereicht und neu geprueft. Auf einem frischen
+ *   Webspace sperrt `wiederherstellen.php` den Backup-Ordner selbst, bevor
+ *   sie ihn liest, und das Aufraeumen nimmt die eingespielte Datei mit.
+ *   Ein abgebrochener Komplett-Dump von vor S7 galt als fremd und ging ohne
+ *   Endmarke durch (zwei wortgleiche Zeichenketten; die Liste steht jetzt in
+ *   `komplett_lib.php`). Stammdaten aus einer Sicherung gehen durch die
+ *   Pruefschicht, und in einem versiegelten Kontopaket muss jeder Teil
+ *   versiegelt sein. Korrektur: kein neuer Weg, kein Schema, keine neue
+ *   Nutzlast.
  */
-const WEB_VERSION = '23.3.1';
+const WEB_VERSION = '23.3.2';

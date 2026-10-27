@@ -397,7 +397,7 @@ Zwei Dinge hängen mit daran, und beide sind gemessen:
 | `server/ingest.php`, `server/validate_lib.php` | klein | `ingestprobe` | stiller Datenverlust bei "ok" |
 | `server/jobs_lib.php`, `server/jobs.php` | klein | `jobprobe`, `jobregister` | Huckepack 18 s; Nr. 208 |
 | `server/backup_lib.php`, `server/adminbackup_*.php`, `server/import*.php` | klein | `wiederherstellung`, `containerprobe`, `kreislauf-edbak` | Nr. 31, 33, 34, 35 |
-| `server/komplett_lib.php`, `server/admin_komplettsicherung.php` | klein | `komplettprobe` | count(null), F-S10-AP4-02; admin_komplettsicherung.php seit R4-11 (Nr. 250, F-R4-38): der Klickweg der Probe geht ueber diese Seite |
+| `server/komplett_lib.php`, `server/admin_komplettsicherung.php`, `server/wiederherstellen.php` | klein | `komplettprobe` | count(null), F-S10-AP4-02; admin_komplettsicherung.php seit R4-11 (Nr. 250, F-R4-38): der Klickweg der Probe geht ueber diese Seite; wiederherstellen.php seit R17-23 (F-R17-33): Teil 8a prueft, dass die Seite komp_dump_eigen() fragt |
 | `server/assets/gpx.js`, `server/api/gpx_import.php`, `server/tag_spuren.php`, `server/*export*.php`, `server/assets/export.js`, `server/einsatz.php` | klein | `gpxprobe` | Nr. 130; Nr. 43 (seit S11-05d baut und liest der Browser GPX) |
 | `server/geraete_lib.php`, `server/pair.php`, `server/geraete*.php` | klein | `geraeteprobe`, `kopplungsprobe` | Edge, das sich "uhr" nennt; Nr. 178, 180 |
 | `server/mail_lib.php`, `server/email_lib.php`, `server/ankuendigung_lib.php`, `server/smtp.php` | klein | `mailprobe` | smtp_letzter_fehler(); Rundmail Nr. 296 |

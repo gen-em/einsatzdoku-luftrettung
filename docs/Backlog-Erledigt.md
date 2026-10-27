@@ -9696,3 +9696,27 @@ zutreffen.
      dekodierten Text misst. Passt zu R17-22 (F-R17-46, `smtp_probe()`).
      Erledigt 27.10.2026 (Web 23.3.1, R17-22, E-R17-63): quoted-printable
      mit Kopfzeile; die Mailprobe misst den Mitschnitt der Gegenstelle.
+
+<!-- -->
+
+386. **Einspielen in Fenstern verwirft Sperrvermerke, deren Quelle in einem anderen Fenster liegt.** · gehört zu: nächste Backlog-Runde · Stand: erledigt · seit 16.10.2026
+     *Aufgenommen 16.10.2026 bei der Nachprüfung von S11-06 (F-S11-73).*
+     Der Browser schickt die Einträge einer Sicherung in Fenstern zu 250 an
+     `api/backup_eintraege_restore.php`; `edbak_restore()` baut die Karte
+     Kennung → Kennnummer (`$refKarte`) je Aufruf neu. Ein Sperrvermerk,
+     dessen Ruhesegment in einem anderen Fenster stand, findet seine Quelle
+     nicht und wird verworfen („Sperrvermerk ohne Quelle"). Gemessen mit der
+     Sicherung des Messstands (5096 Einsätze, 5782 Ruhesegmente, 44
+     Fenster): 147 von 147 verworfen, obwohl alle 147 `quelle_ref` in der
+     Datei auf ein Ruhesegment zeigen — mit Nutzlast 12 (11.10.) und 13
+     (16.10.) gleich, also älter als S11; der Code steht seit dem
+     17.09.2026. Folge: Der herausgeschnittene Zeitraum ist im Ruhesegment
+     wieder sichtbar, die Punkte erscheinen doppelt. Kleine Bestände (ein
+     Fenster) trifft es nicht; der Kreislauf sieht es deshalb nie.
+     *Weg:* die Quelle bei fehlendem Karteneintrag in der Datenbank des
+     Zielkontos nachschlagen (Kennung und Art), oder die Vermerke erst nach
+     dem letzten Fenster schicken. *Abnahme:* dieselbe Sicherung, 147
+     übernommen, 0 verworfen.
+
+     Erledigt 27.10.2026 (Web 23.3.2, R17-23, auf Wunsch der Betreiberin):
+     offene Vermerke werden nach dem letzten Fenster nachgereicht; 147/0.

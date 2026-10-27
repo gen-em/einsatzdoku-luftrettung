@@ -26,7 +26,7 @@ declare(strict_types=1);
  * Funktionsaufruf zu sehen.
  *
  * SIE IST DIE EINZIGE PROBE, DIE DEN SCHALTER UMLEGT. Sie legt
- * `server/wartung.lock` an und raeumt sie im `finally` wieder weg — auch
+ * `server/.zustand/wartung.lock` an (bis Web 23.3.1 `server/wartung.lock`) und raeumt sie im `finally` wieder weg — auch
  * wenn sie mittendrin abbricht. Wer sie auf einer Installation mit Betrieb
  * fahren wollte: nicht tun. Sie schliesst diese Installation fuer die Dauer
  * ihres Laufs.

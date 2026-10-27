@@ -139,11 +139,21 @@ function edbak_teil_siegeln(string $klartext, string $kennung,
  * diesem Namen. Welches davon, unterscheidet die Funktion bewusst nicht
  * (dieselbe Linie wie `sk_oeffnen()`); was die BetreiberIn braucht, ist der
  * Satz an der Oberfläche.
+ *
+ * `$siegelPflicht` (F-R17-35, R17-23): IST DAS MANIFEST VERSIEGELT, MUSS ES
+ * JEDER TEIL SEIN. Bis Web 23.3.1 entschied das Präfix je Teil, und in einem
+ * Fassung-3-Paket ging ein Teil, dem jemand das Siegel abgenommen und
+ * Klartext hingelegt hatte, ohne Prüfung durch — die Bindung an Server,
+ * Konto, Paket und Teilnamen fiel für diesen Teil weg. Die Aufrufer, die das
+ * Manifest schon geöffnet haben, geben dessen Siegel mit; ein unversiegelter
+ * Teil ist dann `null`, wie einer mit falschem Siegel. Das Manifest selbst
+ * wird ohne Pflicht gelesen — an ihm entscheidet sich die Fassung.
  */
 function edbak_teil_oeffnen(string $roh, string $kennung,
-                            string $paket, string $teil): ?string
+                            string $paket, string $teil,
+                            bool $siegelPflicht = false): ?string
 {
-    if (!sk_versiegelt($roh)) { return $roh; }          // Fassung 2
+    if (!sk_versiegelt($roh)) { return $siegelPflicht ? null : $roh; }   // Fassung 2
     $gz = sk_oeffnen($roh, edbak_teil_zweck($kennung, $paket, $teil));
     if ($gz === null) { return null; }
     $klar = @gzdecode($gz);
@@ -246,6 +256,43 @@ function edbak_wurzel(): string
 }
 
 /**
+ * Das Backup-Verzeichnis anlegen und mit `.htaccess` sperren — oder sagen,
+ * warum es nicht geht (null = steht).
+ *
+ * HERAUSGEZOGEN MIT F-R17-19 (R17-23). Bis Web 23.3.1 entstand die
+ * Schutzdatei nur in `edbak_ablage_bereit()`, also beim ersten Sichern. Auf
+ * einem frischen Webspace, auf dem `wiederherstellen.php` als Erstes laeuft,
+ * fehlte sie — und eine nach `sicherungen/eingang/` gelegte Klartext-
+ * `.sql.gz` war per HTTP abrufbar. Die Seite ruft jetzt diesen Teil, bevor
+ * sie den Eingang liest. Er haengt bewusst NICHT an ext/zip: Die Sperre
+ * braucht keine ZIP-Dateien, und ein fehlendes zip darf sie nicht kosten.
+ */
+function edbak_ablage_schuetzen(): ?string
+{
+    $wurzel = edbak_wurzel();
+    if (!is_dir($wurzel) && !@mkdir($wurzel, 0770, true) && !is_dir($wurzel)) {
+        return 'Das Verzeichnis für Backups lässt sich nicht anlegen ('
+             . $wurzel . '). Bitte Schreibrechte prüfen.';
+    }
+    $ht = $wurzel . '/.htaccess';
+    if (!is_file($ht)) {
+        $inhalt = "# Backups sind NIE über den Browser abrufbar.\n"
+                . "# Zweite Schranke ist der Ordnername: Er ist die zufällige\n"
+                . "# Kontokennung und nicht zu erraten (E17).\n"
+                . "Require all denied\n"
+                . "<IfModule !mod_authz_core.c>\n"
+                . "  Order allow,deny\n"
+                . "  Deny from all\n"
+                . "</IfModule>\n";
+        if (@file_put_contents($ht, $inhalt) === false) {
+            return 'Die Schutzdatei .htaccess lässt sich nicht schreiben. '
+                 . 'Ohne sie wird nicht gesichert.';
+        }
+    }
+    return null;
+}
+
+/**
  * Legt Wurzel und `.htaccess` an, falls sie fehlen.
  *
  * Die `.htaccess` wird bei JEDEM Schreibzugriff geprüft, nicht nur einmal:
@@ -268,25 +315,8 @@ function edbak_ablage_bereit(): array
                      . 'freischalten lassen.'];
     }
     $wurzel = edbak_wurzel();
-    if (!is_dir($wurzel) && !@mkdir($wurzel, 0770, true) && !is_dir($wurzel)) {
-        return [false, 'Das Verzeichnis für Backups lässt sich nicht anlegen ('
-                     . $wurzel . '). Bitte Schreibrechte prüfen.'];
-    }
-    $ht = $wurzel . '/.htaccess';
-    if (!is_file($ht)) {
-        $inhalt = "# Backups sind NIE über den Browser abrufbar.\n"
-                . "# Zweite Schranke ist der Ordnername: Er ist die zufällige\n"
-                . "# Kontokennung und nicht zu erraten (E17).\n"
-                . "Require all denied\n"
-                . "<IfModule !mod_authz_core.c>\n"
-                . "  Order allow,deny\n"
-                . "  Deny from all\n"
-                . "</IfModule>\n";
-        if (@file_put_contents($ht, $inhalt) === false) {
-            return [false, 'Die Schutzdatei .htaccess lässt sich nicht schreiben. '
-                         . 'Ohne sie wird nicht gesichert.'];
-        }
-    }
+    $schutz = edbak_ablage_schuetzen();
+    if ($schutz !== null) { return [false, $schutz]; }
     if (!is_writable($wurzel)) {
         return [false, 'Das Verzeichnis für Backups ist nicht beschreibbar ('
                      . $wurzel . ').'];
@@ -2338,10 +2368,11 @@ function edbak_paket_einspielen(string $kennung, string $datei, int $zielUserId)
     /* JEDER TEIL GEHT DURCH DAS SIEGEL (S10/AP4). `edbak_teil_oeffnen()`
      * lässt einen unversiegelten Eintrag unverändert durch — so bleibt ein
      * Fassung-2-Paket lesbar, ohne dass hier eine Fassungsweiche steht. */
-    $lies = static function (string $name) use ($zip, $kennung, $datei): ?array {
+    $siegelPflicht = false;          // gesetzt, sobald das Manifest gelesen ist
+    $lies = static function (string $name) use ($zip, $kennung, $datei, &$siegelPflicht): ?array {
         $roh = $zip->getFromName($name);
         if ($roh === false) { return null; }
-        $klar = edbak_teil_oeffnen($roh, $kennung, $datei, $name);
+        $klar = edbak_teil_oeffnen($roh, $kennung, $datei, $name, $siegelPflicht);
         if ($klar === null) { return null; }
         $d = json_decode($klar, true);
         return is_array($d) ? $d : null;
@@ -2367,6 +2398,7 @@ function edbak_paket_einspielen(string $kennung, string $datei, int $zielUserId)
         $zip->close();
         return [false, 'Dem Backup fehlt ein lesbares Manifest.', null];
     }
+    $siegelPflicht = sk_versiegelt($mRoh);          // Fassung 3: jeder Teil (F-R17-35)
     /* VOLLSTAENDIGKEIT VOR DEM ERSTEN SCHREIBEN. Ein fehlendes Teil soll
      * auffallen, solange das Zielkonto noch unberuehrt ist — nicht auf halber
      * Strecke, wenn schon die Haelfte drinsteht. */
@@ -2412,6 +2444,7 @@ function edbak_paket_einspielen(string $kennung, string $datei, int $zielUserId)
          * wie den Browser. Bis Web 22.7.0 stand hier 'server', und der
          * Server verschloss den Klartext alter Pakete selbst (E-S11-57). */
         $stats = edbak_restore($zielUserId, $kopf, null, 'browser');
+        $offen = [];
         $dayMap = $stats['day_map'] ?? [];
         $karte  = $stats['spur_karte'] ?? [];
         unset($stats['day_map'], $stats['spur_karte']);
@@ -2438,13 +2471,20 @@ function edbak_paket_einspielen(string $kennung, string $datei, int $zielUserId)
              * nehmen — den mit Spurverweisen — und die Felder der spaeteren
              * Fassungen samt und sonders optional sind. */
             $f['version'] = EDBAK_NUTZLAST;
-            $s2 = edbak_restore($zielUserId, $f, $dayMap, 'browser');
+            $s2 = edbak_restore($zielUserId, $f, $dayMap, 'browser', null, true);
             foreach ((array)($s2['spur_karte'] ?? []) as $ref => $ziel) {
                 $karte[(int)$ref] = $ziel;
             }
-            unset($s2['spur_karte'], $s2['day_map']);
+            foreach ((array)($s2['schnitte_offen'] ?? []) as $c) { $offen[] = $c; }
+            unset($s2['spur_karte'], $s2['day_map'], $s2['schnitte_offen']);
             $dazu($summe, $s2);
             unset($f);
+        }
+        /* DIE OFFENEN SPERRVERMERKE NACH DEM LETZTEN TEIL (Backlog Nr. 386,
+         * R17-23): Ihre Quelle — meist ein Ruhesegment — stand in einem
+         * spaeteren Teil als der Einsatz. Jetzt ist alles da. */
+        foreach (array_chunk($offen, EDBAK_SCHNITTE_NACHREICHEN_MAX) as $stueck) {
+            $dazu($summe, edbak_schnitte_nachreichen($zielUserId, $stueck));
         }
 
         $spuren = ['geschrieben' => 0, 'uebersprungen' => 0, 'abgelehnt' => [],
@@ -2550,8 +2590,9 @@ function edbak_paket_teil_lesen(string $kennung, string $datei, string $teil): ?
     if (!in_array($teil, $erlaubt, true)) { $zip->close(); return null; }
     $roh = $zip->getFromName($teil);
     $zip->close();
+    $siegelPflicht = sk_versiegelt((string)$mRoh);  // Fassung 3: jeder Teil (F-R17-35)
     if ($roh === false) { return null; }
-    return edbak_teil_oeffnen($roh, $kennung, $datei, $teil);
+    return edbak_teil_oeffnen($roh, $kennung, $datei, $teil, $siegelPflicht);
 }
 
 /* ---- Der Auftrag „Alle sichern" (S2/AP6, E-S2-14) ------------------------

@@ -36,6 +36,21 @@ api_methode();
 csrf_check();   // Feld ODER Kopfzeile X-CSRF (Nr. 67)
 
 $b = api_rumpf();
+/* DER ABSCHLUSS (Backlog Nr. 386, R17-23): Nach dem letzten Fenster schickt
+ * der Browser die Sperrvermerke zurueck, deren Quelle beim Einspielen ihres
+ * Fensters noch nicht da war — in Stuecken zu hoechstens
+ * EDBAK_SCHNITTE_NACHREICHEN_MAX. `edbak_schnitte_nachreichen()` prueft sie
+ * neu und sucht Ziel und Quelle im Konto.
+ * Rumpf: {"schnitte_offen": [...]} · Antwort: {"ok": true, "stats": {...}} */
+if (array_key_exists('schnitte_offen', $b)) {
+    if (!is_array($b['schnitte_offen'])) { json_out(['error' => 'payload'], 400); }
+    try {
+        json_out(['ok' => true,
+                  'stats' => edbak_schnitte_nachreichen($userId, $b['schnitte_offen'])]);
+    } catch (Throwable $ex) {
+        json_fehler($ex, 'restore');
+    }
+}
 if (!isset($b['eintraege']) || !is_array($b['eintraege'])) {
     json_out(['error' => 'payload'], 400);
 }
@@ -50,12 +65,18 @@ $eintraege = $b['eintraege'];
 $eintraege['version'] = EDBAK_NUTZLAST;
 
 try {
+    /* `offenZurueck`: Ein Vermerk, dessen Quelle in einem spaeteren Fenster
+     * steht, kommt als `schnitte_offen` zurueck statt verworfen zu werden
+     * (Nr. 386); der Browser reicht ihn nach dem letzten Fenster nach. */
     $stats = edbak_restore($userId, $eintraege,
-                           is_array($b['day_map'] ?? null) ? $b['day_map'] : [], 'browser');
+                           is_array($b['day_map'] ?? null) ? $b['day_map'] : [], 'browser',
+                           null, true);
     $karte = $stats['spur_karte'] ?? null;
-    unset($stats['spur_karte'], $stats['day_map']);
+    $offen = $stats['schnitte_offen'] ?? [];
+    unset($stats['spur_karte'], $stats['day_map'], $stats['schnitte_offen']);
     json_out(['ok' => true, 'stats' => $stats,
-              'spur_karte' => $karte ?: new stdClass()]);
+              'spur_karte' => $karte ?: new stdClass(),
+              'schnitte_offen' => $offen]);
 } catch (DomainException $ex) {
     /* Klartext-Ortsdaten (S11-06b): Der Browser verschliesst seit Web 22.5.0
      * Orte, Reanimation und Spur vor dem Senden; eine Nutzlast mit Klartext

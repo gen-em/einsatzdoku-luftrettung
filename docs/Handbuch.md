@@ -6350,8 +6350,16 @@ wurde, ist eine Vermutung.
 **Die Reihenfolge:** Datenbank anlegen (leer) · Anwendungsdateien hochladen ·
 `config.php` aus dem Wiederanlaufpaket daneben legen · Backup-Datei nach
 `sicherungen/eingang/` ·
-`wiederherstellen.php` · anmelden · **Betrieb → Updates**. Ausführlich steht
-es im Runbook, `docs/Technik.md`, Abschnitt 7.
+`wiederherstellen.php` · anmelden · **Betrieb → Updates** · **Aufräumen**.
+Ausführlich steht es im Runbook, `docs/Technik.md`, Abschnitt 7.
+
+**Aufräumen nimmt die Backup-Datei mit** (seit Web 23.3.2). Der Knopf am Ende
+löscht den ausgepackten Klartext, die Nachweisdatei und die Datei in
+`sicherungen/eingang/`, aus der eingespielt wurde — die Vorlage liegt ja am
+Backup-Ziel. Am besten legen Sie dort die versiegelte `.edk` ab; ein
+unverschlüsselter Dump vom Hoster (`.sql.gz`) geht auch, ist aber der Notweg.
+Den Ordner sperrt die Seite beim ersten Aufruf selbst gegen Abrufe über das
+Netz.
 
 **Der Serverschlüssel entscheidet.** Eine `.edk`-Datei mit dem Vermerk „mit
 dem Serverschlüssel" lässt sich nur mit *der* `config.php` öffnen, die beim

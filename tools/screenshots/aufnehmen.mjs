@@ -244,7 +244,7 @@ const OHNE_WARTUNGSWEG = (WARTUNGSEITEN.length && !OERTLICH && !JOBS_TOKEN)
 if (OHNE_WARTUNGSWEG) {
   console.error(`WARNUNG: ${WARTUNGSEITEN.join(', ')} brauchen den `
     + `Wartungsmodus, und ${BASIS} liegt nicht auf diesem Rechner — die Datei `
-    + `server/wartung.lock wirkt dort nicht. Diese Seiten FALLEN AUS; der `
+    + `server/.zustand/wartung.lock wirkt dort nicht. Diese Seiten FALLEN AUS; der `
     + `Lauf misst die uebrigen und endet rot. Mit --jobs-token <Token> `
     + `(Betrieb → Hintergrundjobs) werden sie gemessen.`);
 }

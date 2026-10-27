@@ -4301,6 +4301,38 @@ ui_seite_start(['titel' => 'Einstellungen',
       }
     }
 
+    /* OFFENE SPERRVERMERKE NACHREICHEN (Backlog Nr. 386, R17-23).
+       Die Sicherung schreibt alle Einsätze vor allen Ruhesegmenten. Ein
+       Vermerk, dessen Quelle ein Ruhesegment ist, kommt deshalb in einem
+       Fenster an, in dem es seine Quelle noch nicht gibt; der Server gibt
+       ihn als `schnitte_offen` zurück, statt ihn zu verwerfen. Nach dem
+       letzten Fenster gehen sie hier zurück — in Stücken zu 1000, der
+       Grenze des Servers (EDBAK_SCHNITTE_NACHREICHEN_MAX). Bis Web 23.3.1
+       gingen sie verloren, und der herausgeschnittene Zeitraum war im
+       Segment wieder sichtbar. Gezählt wird erst hier. */
+    async function schnitteNachreichen(offen, s, anzeige) {
+      for (let i = 0; i < offen.length; i += 1000) {
+        if (anzeige) { anzeige.textContent = 'Sperrvermerke werden zugeordnet…'; }
+        const a = await EdApi.postJson('api/backup_eintraege_restore.php',
+          { schnitte_offen: offen.slice(i, i + 1000) },
+          { vorgang: 'Das Zuordnen der Sperrvermerke' });
+        if (!a.ok) {
+          throw new Error(a.meldung + ' Die Einträge sind eingespielt; es fehlen '
+            + 'Sperrvermerke des Schneidens.');
+        }
+        const o = a.daten.stats || {};
+        for (const k of Object.keys(o.schnitte || {})) {
+          s.schnitte = s.schnitte || {};
+          s.schnitte[k] = (s.schnitte[k] || 0) + o.schnitte[k];
+        }
+        for (const [g, z] of Object.entries(o.skipped_reasons || {})) {
+          s.skipped_reasons = s.skipped_reasons || {};
+          s.skipped_reasons[g] = (s.skipped_reasons[g] || 0) + z;
+        }
+        verworfenDazu(s, o);
+      }
+    }
+
     function restoreBericht(s, zusatz) {
       const gruende = s.skipped_reasons && Object.keys(s.skipped_reasons).length
         ? ' — ' + Object.entries(s.skipped_reasons)
@@ -4600,6 +4632,7 @@ ui_seite_start(['titel' => 'Einstellungen',
          * eine Summe über alle Fenster — sonst meldete die Anwendung die
          * Zahlen des letzten Fensters als Ergebnis des Ganzen. */
         const spurKarte = Object.assign({}, out.spur_karte || {});
+        const schnitteOffen = [];
         if (fassung4.eintragsteile.length) {
           const dayMap = out.day_map || {};
           for (const [i, ti] of fassung4.eintragsteile.entries()) {
@@ -4642,7 +4675,9 @@ ui_seite_start(['titel' => 'Einstellungen',
             /* Bis Web 23.0.1 fiel `rejected` hier heraus (Nr. 387). */
             verworfenDazu(s, o.stats);
             Object.assign(spurKarte, o.spur_karte || {});
+            for (const c of (o.schnitte_offen || [])) { schnitteOffen.push(c); }
           }
+          await schnitteNachreichen(schnitteOffen, s, impState);
         }
 
         /* ---- Die Spuren hinterher (Konzept 3.2.4) ------------------------
@@ -4938,6 +4973,7 @@ ui_seite_start(['titel' => 'Einstellungen',
           let karte = Object.assign({}, out0.spur_karte || {});
 
           const nT = Number(fgPaket.eintragsteile || 0);
+          const schnitteOffen = [];
           for (let i = 1; i <= nT; i++) {
             fgState.textContent = `Einträge werden übertragen (Teil ${i} von ${nT})…`;
             const name = 'eintraege/' + String(i).padStart(4, '0') + '.json';
@@ -4953,7 +4989,9 @@ ui_seite_start(['titel' => 'Einstellungen',
             /* `rejected` ist ein Block, keine Zahl, und fiel hier bis
                Web 23.0.1 heraus (Nr. 387). */
             verworfenDazu(s, o.stats);
+            for (const c of (o.schnitte_offen || [])) { schnitteOffen.push(c); }
           }
+          await schnitteNachreichen(schnitteOffen, s, fgState);
 
           const nS = Number(fgPaket.spurteile || 0);
           for (let i = 1; i <= nS; i++) {

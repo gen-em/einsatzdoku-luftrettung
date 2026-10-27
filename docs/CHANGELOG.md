@@ -14,6 +14,78 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 23.3.2] — unveröffentlicht
+
+Schritt 12b, Paket R17-23 — Sicherung und Wiederherstellung (Befunde
+F-R17-19, -33, -34, -35; dazu Backlog Nr. 386 auf Wunsch der Betreiberin).
+Kein Schema, kein `update.php`, keine neue Nutzlast: Vorhandene Sicherungen
+spielen sich unverändert ein, nur vollständiger.
+
+### Behoben
+
+- **Web — beim Einspielen einer größeren Sicherung gingen Sperrvermerke
+  verloren.** Der Browser spielt eine Sicherung in Fenstern zu 250 Einträgen
+  ein, und die Sicherung schreibt alle Einsätze vor allen Ruhesegmenten. Ein
+  Sperrvermerk — der Zeitraum, den ein Schnitt aus einem Ruhesegment in einen
+  Einsatz gelegt hat — kam deshalb in einem Fenster an, in dem es sein
+  Segment noch gar nicht gab, und wurde verworfen. Am Messstand traf es
+  147 von 147; der herausgeschnittene Zeitraum war danach im Segment wieder
+  sichtbar, die Punkte erschienen doppelt (Backlog Nr. 386, seit 16.10.2026
+  bekannt, seit 17.09.2026 im Code). Nachschlagen in der Datenbank allein
+  hätte nur Quellen aus früheren Fenstern gefunden. Deshalb gibt der Server
+  einen Vermerk, dessen Quelle noch fehlt, jetzt als „offen" zurück; nach dem
+  letzten Fenster schickt der Browser diese Vermerke noch einmal, und der
+  Server prüft sie neu, sucht Ziel und Quelle im Konto und zählt erst dann.
+  Dasselbe gilt für das Einlösen einer Freigabe und für das direkte
+  Einspielen eines Kontopakets durch die Verwaltung. Abnahme am Messstand:
+  147 übernommen, 0 verworfen, und der Messstand ist wieder grün — er war es
+  seit dem 16.10. nicht mehr.
+- **Web — auf einem frischen Webspace lag ein Klartext-Dump offen im Netz.**
+  `wiederherstellen.php` liest aus `sicherungen/eingang/`, und das Runbook
+  erlaubt dort auch einen unverschlüsselten Dump des Hosters. Die Sperrdatei
+  `sicherungen/.htaccess` entstand aber erst beim ersten Sichern — auf genau
+  der leeren Anlage, für die die Seite da ist, fehlte sie, und der Name eines
+  Komplett-Dumps ist sekundengenau ratbar (F-R17-19). Jetzt legt die Seite
+  die Sperre an, bevor sie den Eingang liest, und spielt nichts ein, solange
+  das nicht gelingt. Die Sperre hängt dabei nicht mehr an ext/zip. **Der
+  Knopf „Aufräumen" nimmt jetzt auch die Datei mit, aus der eingespielt
+  wurde** (Entscheidung der Betreiberin); bis dahin blieb sie liegen, und das
+  Runbook sagte es nicht.
+- **Web — ein abgebrochener Komplett-Dump von vor S7 ging ohne Endmarke
+  durch.** Die Seite verlangt die Endmarke nur von einem Dump dieser
+  Anwendung und erkennt ihn an der Kopfzeile, in zwei Schreibweisen — der
+  Kommentar daneben nannte das Weglassen der alten „den gefährlichsten
+  Fehlschluss, den eine Umbenennung anrichten kann". Genau das war bei der
+  Begriffsumstellung geschehen: Beide Zeichenketten lauteten „Komplett-Backup",
+  ein Dump mit „Komplettsicherung" galt als fremd (F-R17-33, E-R17-23). Die
+  Liste steht jetzt einmal, neben dem Erzeuger der Kopfzeile
+  (`komp_dump_eigen()` in `komplett_lib.php`), und die Komplettprobe hält
+  alle drei Fälle fest. Dieselbe Doppelung stand auch in der Probe selbst.
+- **Web — Stammdaten aus einer Sicherung umgingen die Prüfschicht.**
+  Standortname und Koordinaten, die Namen der Besatzung, Bergwacht,
+  Ressourcen und Zielkliniken gingen roh in die Datenbank — als einziger
+  Teil des Einspielens (F-R17-34). Ein zu langer Name brach im strikten
+  SQL-Modus den ganzen Lauf ab, im laxen wurde er gekappt und passte dann
+  nicht mehr zu den Rettungsmitteln, die auf ihn zeigen. Jetzt: Leerraum weg,
+  Länge wie im Schema, Koordinaten im Bereich, Meldung unter „verworfen";
+  die Verweise werden genauso geschnitten.
+- **Web — in einem versiegelten Kontopaket ging ein unversiegelter Teil
+  durch.** Ob ein Teil versiegelt sein muss, entschied sein eigenes Präfix.
+  Wer einem Teil das Siegel abnahm und den Klartext hinlegte, hob damit die
+  Bindung an Server, Konto, Paket und Teilnamen auf (F-R17-35, ein Hinweis:
+  wer das kann, hat Dateizugriff und damit ohnehin `config.php`). Jetzt gilt
+  das Siegel des Manifests für alle Teile; Pakete der Fassung 2 werden weiter
+  gelesen.
+
+### Bewusst stehen gelassen
+
+- **Die Reihenfolge in der Sicherung bleibt** — erst Einsätze, dann
+  Segmente. Sie umzudrehen hätte Nr. 386 nur für neue Dateien gelöst und die
+  `spur_ref`-Zählung verschoben; das Nachreichen hilft auch jeder Datei, die
+  schon an einem Backup-Ziel liegt.
+- **Die alte Schreibweise „Komplettsicherung" bleibt bis zum v1.0-Schnitt**
+  (R60), wie E-R17-23 es festlegt.
+
 ## [Web 23.3.1] — unveröffentlicht
 
 Schritt 12b, Paket R17-22 — das Verhalten des Servers (Befunde F-R17-36 bis

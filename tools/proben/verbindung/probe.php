@@ -33,7 +33,7 @@ declare(strict_types=1);
  *   Teil 1  Die Antwort. Alles ist belegt; Seite und Geraete-Endpunkt
  *           muessen 503 bekommen, mit `Retry-After: 5`, mit dem richtigen
  *           Rumpf und OHNE ein Wort ueber die Datenbank. Dazu: Der Zaehler
- *           in `server/ueberlast.json` zaehlt genau so viele Vorfaelle, wie
+ *           in `server/.zustand/ueberlast.json` zaehlt genau so viele Vorfaelle, wie
  *           es Abweisungen gab.
  *   Teil 2  Null verlorene Uploads. Ein Teil der Verbindungen bleibt frei,
  *           mehrere Pakete laufen gleichzeitig; was 503 bekommt, wird

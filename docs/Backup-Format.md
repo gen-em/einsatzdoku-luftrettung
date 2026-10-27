@@ -1010,7 +1010,16 @@ in Abschnitt 3.
 - **Übersprungene Stammdaten** zählt die Ergebnismeldung
   (`stammdaten_skipped`). Seit Web 21.0.0 gibt es dafür zwei Gründe: Der
   Standort lässt sich nicht auflösen, oder die Prüfung eines Rettungsmittels
-  schlägt an. Bis dahin kam ein dritter hinzu: Ein gleichnamiger **zentraler**
+  schlägt an. **Seit Web 23.3.2 ein dritter:** ein Eintrag ohne Namen
+  (F-R17-34). Seither gehen **alle** Stammdaten durch die Prüfschicht — Namen
+  ohne Leerraum am Rand und gekürzt auf die Spaltenlänge (Standort,
+  Besatzung, Ressourcen, Bergwacht 120 Zeichen, Zielklinik 190), Koordinaten
+  als Zahl im Bereich, sonst leer. Was gekürzt oder verworfen wird, steht in
+  `rejected` (`bases.name`, `transport_dests.lat` …). Die Verweise der
+  Rettungsmittel und Listen (`base_ref`) werden genauso geschnitten, damit sie
+  ihren Standort wiederfinden. Bis dahin ging ein Standortname roh in die
+  Datenbank und brach, wenn er zu lang war, im strikten SQL-Modus den ganzen
+  Lauf ab. Bis dahin kam ein dritter hinzu: Ein gleichnamiger **zentraler**
   Eintrag war schon vorhanden. Zentrale Stammdaten gibt es seit Web 18.0.0
   nicht mehr in der Oberfläche und seit Web 21.0.0 nicht mehr im Schema
   (R39).
@@ -1318,6 +1327,15 @@ ohne Ziel ist keiner. Die Aufschlüsselung nennt vier Gründe:
 `schnitt_ohne_ziel`, `schnitt_ohne_quelle`, `schnitt_werte`,
 `schnitt_aufbau`; die betroffene `quelle_ref` steht unter `rejected`.
 
+**„Nicht auflösbar" heißt seit Web 23.3.2: auch nach dem letzten Fenster
+nicht** (Backlog Nr. 386). Die Datei führt alle Einsätze vor allen
+Ruhesegmenten, und eingespielt wird in Fenstern; ein Vermerk an einem Segment
+findet seine Quelle in seinem eigenen Fenster deshalb meist nicht. Er wird
+dann nicht verworfen, sondern nach dem letzten Fenster nachgereicht und erst
+dort gezählt (`docs/Technik.md`, Abschnitt zum Einspielen in Fenstern). Bis
+Web 23.3.1 gingen solche Vermerke verloren, sobald eine Sicherung mehr als ein
+Fenster hatte — eine Datei ändert sich dadurch nicht.
+
 **Jede Zeile kostet nur sich selbst.** Ein unbrauchbarer Vermerk nimmt weder
 die anderen Vermerke desselben Einsatzes mit noch die Wiederherstellung —
 dieselbe Linie wie seit Web 8.0.0 überall sonst. Höchstens
@@ -1549,6 +1567,14 @@ das Präfix `edsk1:` am `manifest.json`, und die Fassungsnummer steht in dessen
 `version`. Zwei Zahlen, die beide „Fassung" heissen: `edbak_paket_fassung()`
 liest die Endung und bleibt bei 2, `manifest.version` ist seit Web 20.2.0
 die 3.
+
+**Ist das Manifest versiegelt, muss es jeder Teil sein** (seit Web 23.3.2,
+F-R17-35). Bis dahin entschied das Präfix je Teil, und ein Teil, dem jemand
+das Siegel abgenommen und den Klartext hingelegt hatte, ging in einem
+Fassung-3-Paket ohne Prüfung durch — die Bindung an Server, Konto, Paket und
+Teilnamen fiel für ihn weg. Jetzt ist er unlesbar wie einer mit falschem
+Siegel, beim Einspielen wie beim Teilweg des Browsers. Ein Paket der Fassung 2
+(Manifest ohne Siegel) wird weiter gelesen.
 
 | Eintrag | Inhalt |
 |---|---|

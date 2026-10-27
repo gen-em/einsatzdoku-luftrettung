@@ -1797,6 +1797,22 @@ der Zuordnung `spur_ref` → angelegter Datensatz samt `client_ref`. Zuletzt
 gehen die Spuren an `api/backup_spuren_restore.php` — geprüft, und
 Vorhandenes übersprungen.
 
+**Sperrvermerke, deren Quelle noch nicht da ist, werden nachgereicht** (seit
+Web 23.3.2, Backlog Nr. 386). Die Sicherung schreibt alle Einsätze vor allen
+Ruhesegmenten; ein Vermerk, dessen Quelle ein Segment ist, kommt also in einem
+Fenster an, in dem es sie noch nicht gibt. Bis Web 23.3.1 wurde er verworfen —
+am Messstand 147 von 147, und der herausgeschnittene Zeitraum war im Segment
+wieder sichtbar. Jetzt sucht `edbak_restore()` eine Quelle, die nicht im
+Fenster steht, zuerst im Konto (`edbak_schnitt_quelle_suchen()`, für Quellen
+aus früheren Fenstern), und gibt den Vermerk sonst als `schnitte_offen`
+zurück. Nach dem letzten Fenster schickt der Browser diese Vermerke in Stücken
+zu höchstens 1000 an denselben Endpunkt (`{"schnitte_offen": […]}`);
+`edbak_schnitte_nachreichen()` prüft sie **neu**, sucht Ziel und Quelle im
+Konto und zählt erst dann übernommen oder verworfen. Die Verwaltung tut
+dasselbe beim direkten Einspielen eines Kontopakets auf dem Server
+(`edbak_paket_einspielen()`). Einzelaufrufe ohne Fenster (Demo-Reset,
+`api/backup_restore.php`) verwerfen wie bisher sofort.
+
 **Seit Web 22.5.0 (S11-06b) verschließt der Browser vor dem Senden**: Orte
 und Reanimation in die Einsatzhülle, Transportziel und Ortshöhe in den
 `pat_blob`, die Punktlisten der Spurteile in Stücke unter dem öffentlichen
@@ -13719,6 +13735,13 @@ Reihenfolge; jeder Schritt setzt den vorigen voraus:
 4. **Die Backup-Datei** nach `server/sicherungen/eingang/` legen — per
    FTP, SFTP oder Dateimanager des Hosters. Vom Backup-Ziel holt man sie
    sich dorthin. Erkannt werden `.edk` (versiegelt), `.sql.gz` und `.sql`.
+   **Die `.edk` ist der Regelfall**; ein unverschlüsselter Dump des Hosters
+   (`.sql.gz`, `.sql`) ist der Notweg, wenn es keine gibt. Den Ordner sperrt
+   die Seite beim ersten Aufruf selbst (`sicherungen/.htaccess`, seit Web
+   23.3.2, F-R17-19) — bis dahin entstand die Sperre erst beim ersten
+   Sichern, und auf einem frischen Webspace lag ein Klartext-Dump in
+   `eingang/` offen im Netz. Lässt sie sich nicht anlegen, spielt die Seite
+   nichts ein.
 5. **`wiederherstellen.php` aufrufen.** Die Seite nennt eine Nachweisdatei im
    Anwendungsverzeichnis; deren Kennung eintragen, *Auspacken und prüfen*,
    dann *Einspielen* — so oft, bis 100 % erreicht sind. Jeder Durchgang macht
@@ -13731,8 +13754,12 @@ Reihenfolge; jeder Schritt setzt den vorigen voraus:
    weil Migrationen Spalten löschen können und dazwischen eine angemeldete
    Person und ein Knopf gehören (M6-01).
 8. **Aufräumen** — auf `wiederherstellen.php` der gleichnamige Knopf. Er
-   entfernt den ausgepackten Klartext-Dump und die Nachweisdatei. Beides hat
-   danach auf dem Server nichts mehr verloren.
+   entfernt den ausgepackten Klartext-Dump, die Nachweisdatei **und die
+   Backup-Datei in `eingang/`, aus der eingespielt wurde** (seit Web 23.3.2,
+   F-R17-19; bis dahin blieb sie liegen). Alles drei hat danach auf dem
+   Server nichts mehr verloren; die Vorlage liegt am Backup-Ziel oder beim
+   Hoster. Liegt in `eingang/` noch eine Datei, die keinem Lauf zuzuordnen
+   ist, sagt die Meldung es — sie wird von Hand gelöscht.
 
 **Was dabei schiefgehen kann, und woran man es erkennt:**
 

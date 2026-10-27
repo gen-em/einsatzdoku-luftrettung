@@ -978,7 +978,8 @@ function edbak_verworfen_satz(array $bericht): string
  * Server kennt — es steht im Handbuch.
  */
 function edbak_restore(int $userId, array $data, ?array $dayMap = null,
-                       string $ortsdaten = 'browser', ?Closure $blobZiel = null): array {
+                       string $ortsdaten = 'browser', ?Closure $blobZiel = null,
+                       bool $offenZurueck = false): array {
     if (!in_array($ortsdaten, ['browser', 'server'], true)
         || ($ortsdaten === 'server' && $blobZiel === null)) {
         throw new InvalidArgumentException('ortsdaten: ' . $ortsdaten);
@@ -1175,11 +1176,27 @@ function edbak_restore(int $userId, array $data, ?array $dayMap = null,
         $hd->execute([$userId]);
         $hasDefBase = (bool)$hd->fetchColumn();
         $newDefBaseName = null;
+        /* DIE STAMMDATEN GEHEN DURCH DIE PRUEFSCHICHT (F-R17-34, R17-23).
+         * Bis Web 23.3.1 gingen Name und Koordinaten der Standorte, Namen der
+         * Besatzung, Bereitschaften, Ressourcen und Zielkliniken roh in die
+         * Datenbank — als einziger Teil dieses Laufs. Ein Name ueber der
+         * Spaltenlaenge brach im strikten SQL-Modus den ganzen Lauf mit 500
+         * ab, im laxen wurde er still gekappt und passte danach nicht mehr
+         * zum `base_ref` der Rettungsmittel. Jetzt: Leerraum weg, Laenge wie
+         * im Schema (`SD_NAME_MAX`, `SD_ZIEL_MAX`), Koordinaten als Zahl im
+         * Bereich; was nicht taugt, wird gemeldet. Ein Eintrag ohne Namen
+         * wird uebersprungen und gezaehlt. Dieselbe Schreibweise gilt fuer
+         * die Verweise (`$baseIdByName`), sonst faende ein gekuerzter
+         * Standort seine Rettungsmittel nicht wieder. */
         foreach (($sd['bases'] ?? []) as $b) {
-            $name = (string)$b['name'];
+            if (!is_array($b)) { $stats['stammdaten_skipped']++; continue; }
+            $name = pruef_text($b['name'] ?? null, SD_NAME_MAX, 'bases.name', $pruef);
+            if ($name === null) { $stats['stammdaten_skipped']++; continue; }
             // Koordinaten kommen mit (E37); sie duerfen leer bleiben.
             $st = $pdo->prepare('INSERT IGNORE INTO bases (user_id, name, lat, lon) VALUES (?,?,?,?)');
-            $st->execute([$userId, $name, $b['lat'] ?? null, $b['lon'] ?? null]);
+            $st->execute([$userId, $name,
+                          pruef_breite($b['lat'] ?? null, 'bases.lat', $pruef),
+                          pruef_laenge($b['lon'] ?? null, 'bases.lon', $pruef)]);
             $stats['stammdaten'] += $st->rowCount();
             if (!$hasDefBase && (int)($b['is_default'] ?? 0)) { $newDefBaseName = $name; }
         }
@@ -1188,7 +1205,8 @@ function edbak_restore(int $userId, array $data, ?array $dayMap = null,
          * sie stammt. Gesucht wird unter den eigenen Standorten (bis Web
          * 20.47.0 auch unter den zentralen, R39). */
         $baseIdByName = function (?string $name) use ($pdo, $userId): ?int {
-            if ($name === null || $name === '') { return null; }
+            $name = pruef_text($name, SD_NAME_MAX);       // wie beim Anlegen oben
+            if ($name === null) { return null; }
             $x = $pdo->prepare('SELECT id FROM bases WHERE name = ? AND user_id = ?');
             $x->execute([$name, $userId]);
             $id = $x->fetchColumn();
@@ -1295,32 +1313,41 @@ function edbak_restore(int $userId, array $data, ?array $dayMap = null,
             if (!array_key_exists($rc, CREW_ROLES)) { continue; }
             $bid = $baseIdByName(isset($c['base_ref']) ? (string)$c['base_ref'] : null);
             if ($bid === null) { $stats['stammdaten_skipped']++; continue; }
+            $cName = pruef_text($c['name'] ?? null, SD_NAME_MAX, 'crew_presets.name', $pruef);
+            if ($cName === null) { $stats['stammdaten_skipped']++; continue; }
             $st = $pdo->prepare('INSERT IGNORE INTO crew_presets
                                  (user_id, base_id, role_code, name) VALUES (?,?,?,?)');
-            $st->execute([$userId, $bid, $rc, (string)$c['name']]);
+            $st->execute([$userId, $bid, $rc, $cName]);
             $stats['stammdaten'] += $st->rowCount();
         }
         foreach (($sd['bw_units'] ?? []) as $w) {
             $bid = $baseIdByName(isset($w['base_ref']) ? (string)$w['base_ref'] : null);
             if ($bid === null) { $stats['stammdaten_skipped']++; continue; }
+            $wName = pruef_text($w['name'] ?? null, SD_NAME_MAX, 'bw_units.name', $pruef);
+            if ($wName === null) { $stats['stammdaten_skipped']++; continue; }
             $st = $pdo->prepare('INSERT IGNORE INTO bw_units (user_id, base_id, name) VALUES (?,?,?)');
-            $st->execute([$userId, $bid, (string)$w['name']]);
+            $st->execute([$userId, $bid, $wName]);
             $stats['stammdaten'] += $st->rowCount();
         }
         foreach (($sd['resources'] ?? []) as $r) {
             $bid = $baseIdByName(isset($r['base_ref']) ? (string)$r['base_ref'] : null);
             if ($bid === null) { $stats['stammdaten_skipped']++; continue; }
+            $rName = pruef_text($r['name'] ?? null, SD_NAME_MAX, 'resources.name', $pruef);
+            if ($rName === null) { $stats['stammdaten_skipped']++; continue; }
             $st = $pdo->prepare('INSERT IGNORE INTO resources (user_id, base_id, name) VALUES (?,?,?)');
-            $st->execute([$userId, $bid, (string)$r['name']]);
+            $st->execute([$userId, $bid, $rName]);
             $stats['stammdaten'] += $st->rowCount();
         }
         foreach (($sd['transport_dests'] ?? []) as $t) {
             $bid = $baseIdByName(isset($t['base_ref']) ? (string)$t['base_ref'] : null);
             if ($bid === null) { $stats['stammdaten_skipped']++; continue; }
+            $tName = pruef_text($t['name'] ?? null, SD_ZIEL_MAX, 'transport_dests.name', $pruef);
+            if ($tName === null) { $stats['stammdaten_skipped']++; continue; }
             $st = $pdo->prepare('INSERT IGNORE INTO transport_dests
                                  (user_id, base_id, name, lat, lon) VALUES (?,?,?,?,?)');
-            $st->execute([$userId, $bid, (string)$t['name'],
-                          $t['lat'] ?? null, $t['lon'] ?? null]);
+            $st->execute([$userId, $bid, $tName,
+                          pruef_breite($t['lat'] ?? null, 'transport_dests.lat', $pruef),
+                          pruef_laenge($t['lon'] ?? null, 'transport_dests.lon', $pruef)]);
             $stats['stammdaten'] += $st->rowCount();
         }
 
@@ -2360,6 +2387,25 @@ function edbak_restore(int $userId, array $data, ?array $dayMap = null,
 
                 $qRef = $refSchluessel($c['quelle_ref'] ?? null);
                 $quelleId = $qRef !== '' ? ($refKarte[$art][$qRef] ?? 0) : 0;
+                /* NICHT IN DIESER DATEI — DANN IM KONTO (Backlog Nr. 386,
+                 * R17-23). Ein Fenster kennt nur seine eigenen Eintraege; eine
+                 * Quelle aus einem FRUEHEREN Fenster steht schon in der
+                 * Datenbank, unter derselben Kennung. */
+                if ($quelleId === 0 && $qRef !== '') {
+                    $quelleId = edbak_schnitt_quelle_suchen($pdo, $userId, $art, $qRef);
+                }
+                if ($quelleId === 0 && $qRef !== '' && $offenZurueck) {
+                    /* NOCH NICHT DA — NACHREICHEN, NICHT VERWERFEN (Nr. 386).
+                     * Die Sicherung schreibt alle Einsaetze vor allen
+                     * Ruhesegmenten; ein Vermerk, dessen Quelle ein Segment
+                     * ist, kommt deshalb fast immer VOR ihr an. Der Aufrufer
+                     * sammelt diese Vermerke und reicht sie nach dem letzten
+                     * Fenster an `edbak_schnitte_nachreichen()` — erst dann
+                     * gilt eine fehlende Quelle als fehlend. Gezaehlt wird
+                     * dort, nicht hier, damit kein Vermerk zweimal zaehlt. */
+                    $stats['schnitte_offen'][] = ['ziel_ref' => $zielRef] + $c;
+                    continue;
+                }
                 if ($quelleId === 0) {
                     /* DIE QUELLE IST NICHT AUFLOESBAR: Sie stand nicht in der
                      * Datei, oder sie ist beim Einspielen liegengeblieben. Die
@@ -2372,35 +2418,13 @@ function edbak_restore(int $userId, array $data, ?array $dayMap = null,
                     continue;
                 }
 
-                /* Die Zeiten sind Sekunden seit 1970 und stehen als BIGINT in
-                 * der Tabelle. Die Obergrenze ist der 01.01.2100 — reichlich
-                 * und trotzdem eine Grenze; ein Wert daneben ist kein
-                 * Zeitpunkt, sondern Unfug. */
-                $von = pruef_zahl($c['von_ts'] ?? null, 0, 4102444800, 'schnitte.von_ts', $pruef);
-                $bis = pruef_zahl($c['bis_ts'] ?? null, 0, 4102444800, 'schnitte.bis_ts', $pruef);
-                $nPk = pruef_zahl($c['n_punkte'] ?? null, 1, LIMIT_TRACKPUNKTE_SPUR,
-                                  'schnitte.n_punkte', $pruef);
-                if ($von === null || $bis === null || $nPk === null || $bis < $von) {
-                    if ($bis !== null && $von !== null && $bis < $von) {
-                        $pruef->melde('schnitte.bis_ts', 'liegt vor von_ts');
-                    }
+                $w = edbak_schnitt_werte($c, $pruef);
+                if ($w === null) {
                     $stats['schnitte']['verworfen']++; $grund['schnitt_werte']++;
                     continue;
                 }
-
-                /* `erstellt_am` REIST MIT (E-R64-12), anders als `deleted_at`.
-                 * Der Unterschied ist die Art der Angabe: Ein Vermerk sagt,
-                 * WANN geschnitten wurde — ein Ereignis der Vergangenheit.
-                 * `deleted_at` traegt dagegen die Papierkorbfrist DIESER
-                 * Installation und muss deshalb neu beginnen. Ist der Wert
-                 * unbrauchbar, entsteht der Vermerk trotzdem, dann eben mit
-                 * dem Zeitpunkt des Einspielens: Ein Komfortwert darf keine
-                 * Sperre kosten. */
-                $wann = pruef_utc_oder_sql($c['erstellt_am'] ?? null,
-                                           'schnitte.erstellt_am', $pruef);
-
                 schnitt_vermerken($pdo, $userId, $art, $quelleId, $zielId,
-                                  $von, $bis, $nPk, $wann);
+                                  $w['von'], $w['bis'], $w['n'], $w['wann']);
                 $stats['schnitte']['uebernommen']++;
             }
         }
@@ -2435,6 +2459,141 @@ function edbak_restore(int $userId, array $data, ?array $dayMap = null,
      * mitbekommen hat, und die kennt der Aufrufer schon. */
     if (!$nurEintraege && isset($data['days'])) { $stats['day_map'] = $dayIdMap; }
     return $stats;
+}
+
+/**
+ * Die Werte eines Sperrvermerks aus einer Datei, geprueft — oder null.
+ *
+ * Herausgezogen mit Nr. 386 (R17-23), weil zwei Stellen sie brauchen: der
+ * Fensterlauf in `edbak_restore()` und das Nachreichen danach. Zwei Kopien
+ * derselben Pruefung wuerden auseinanderlaufen.
+ *
+ * Die Zeiten sind Sekunden seit 1970 und stehen als BIGINT in der Tabelle.
+ * Die Obergrenze ist der 01.01.2100 — reichlich und trotzdem eine Grenze;
+ * ein Wert daneben ist kein Zeitpunkt, sondern Unfug.
+ *
+ * `erstellt_am` REIST MIT (E-R64-12), anders als `deleted_at`. Ein Vermerk
+ * sagt, WANN geschnitten wurde — ein Ereignis der Vergangenheit. Ist der Wert
+ * unbrauchbar, entsteht der Vermerk trotzdem, dann eben mit dem Zeitpunkt des
+ * Einspielens: Ein Komfortwert darf keine Sperre kosten.
+ *
+ * @return array{von:int, bis:int, n:int, wann:?string}|null
+ */
+function edbak_schnitt_werte(array $c, Pruefliste $pruef): ?array
+{
+    $von = pruef_zahl($c['von_ts'] ?? null, 0, 4102444800, 'schnitte.von_ts', $pruef);
+    $bis = pruef_zahl($c['bis_ts'] ?? null, 0, 4102444800, 'schnitte.bis_ts', $pruef);
+    $nPk = pruef_zahl($c['n_punkte'] ?? null, 1, LIMIT_TRACKPUNKTE_SPUR,
+                      'schnitte.n_punkte', $pruef);
+    if ($von === null || $bis === null || $nPk === null || $bis < $von) {
+        if ($bis !== null && $von !== null && $bis < $von) {
+            $pruef->melde('schnitte.bis_ts', 'liegt vor von_ts');
+        }
+        return null;
+    }
+    $wann = pruef_utc_oder_sql($c['erstellt_am'] ?? null, 'schnitte.erstellt_am', $pruef);
+    return ['von' => (int)$von, 'bis' => (int)$bis, 'n' => (int)$nPk, 'wann' => $wann];
+}
+
+/**
+ * Die Kennnummer einer Quelle (Einsatz oder Ruhesegment) im Zielkonto, ueber
+ * ihre `client_ref` — 0, wenn es sie nicht gibt (Nr. 386, R17-23).
+ *
+ * Die Kennung ist je Konto eindeutig und reist mit jeder Sicherung; dieselbe
+ * Kennung im selben Konto ist derselbe Eintrag. Der Papierkorb zaehlt mit:
+ * Ein Vermerk an einer geloeschten Quelle ist einer, den das Wiederherstellen
+ * der Quelle braucht.
+ */
+function edbak_schnitt_quelle_suchen(PDO $pdo, int $userId, string $art, string $ref): int
+{
+    $tabelle = match ($art) {
+        'mission' => 'missions',
+        'rest'    => 'rest_segments',
+        default   => throw new InvalidArgumentException('art: ' . $art),
+    };
+    $q = $pdo->prepare("SELECT id FROM $tabelle WHERE user_id = ? AND client_ref = ?");
+    $q->execute([$userId, $ref]);
+    $id = $q->fetchColumn();
+    return $id === false ? 0 : (int)$id;
+}
+
+/** Wie viele offene Vermerke ein Nachreichen-Aufruf hoechstens nimmt. */
+const EDBAK_SCHNITTE_NACHREICHEN_MAX = 1000;
+
+/**
+ * Sperrvermerke nachreichen, deren Quelle beim Einspielen ihres Fensters noch
+ * nicht da war (Backlog Nr. 386, R17-23).
+ *
+ * WARUM ES DAS GIBT. Die Sicherung schreibt alle Einsaetze vor allen
+ * Ruhesegmenten (`edbak_build()`), und das Einspielen geht in Fenstern. Bis
+ * Web 23.3.1 baute jedes Fenster seine Karte Kennung → Kennnummer neu, und
+ * ein Vermerk, dessen Ruhesegment spaeter kam, wurde verworfen — gemessen am
+ * Messstand 147 von 147. Der herausgeschnittene Zeitraum war danach im
+ * Segment wieder sichtbar.
+ *
+ * WAS SIE NIMMT: die Eintraege, die `edbak_restore(…, offenZurueck: true)` in
+ * `schnitte_offen` zurueckgab — der Vermerk aus der Datei, dazu `ziel_ref`.
+ * Sie kommen ueber den Browser zurueck und werden deshalb NEU geprueft, nicht
+ * geglaubt: Ziel und Quelle werden im Konto gesucht, die Werte gehen durch
+ * dieselbe Pruefung wie im Fenster. Was der Browser schicken koennte, kann
+ * die NutzerIn ohnehin — einen Zeitraum ihrer eigenen Spur sperren.
+ *
+ * WAS JETZT NOCH FEHLT, FEHLT: Eine Quelle, die auch nach dem letzten Fenster
+ * nicht da ist, stand nicht in der Datei oder blieb liegen; der Vermerk wird
+ * verworfen und mit Kennung genannt, wie im Fenster.
+ *
+ * @return array{schnitte: array{uebernommen:int, verworfen:int},
+ *               skipped_reasons: array<string,int>, rejected: array<string,int>}
+ */
+function edbak_schnitte_nachreichen(int $userId, array $offen): array
+{
+    $pdo = db();
+    $pruef = new Pruefliste();
+    $stats = ['uebernommen' => 0, 'verworfen' => 0];
+    $grund = ['schnitt_aufbau' => 0, 'schnitt_ohne_ziel' => 0,
+              'schnitt_ohne_quelle' => 0, 'schnitt_werte' => 0];
+    $ref = static fn($r): string => is_string($r) ? trim($r) : '';
+
+    /* Was ueber der Grenze liegt, zaehlt als verworfen statt still zu fehlen;
+     * die Aufrufer schicken in Stuecken zu hoechstens dieser Zahl. */
+    if (count($offen) > EDBAK_SCHNITTE_NACHREICHEN_MAX) {
+        $stats['verworfen'] += count($offen) - EDBAK_SCHNITTE_NACHREICHEN_MAX;
+        $grund['schnitt_aufbau'] += count($offen) - EDBAK_SCHNITTE_NACHREICHEN_MAX;
+    }
+    db_transaktion($pdo, function (PDO $pdo) use ($userId, $offen, $pruef, $ref,
+                                                &$stats, &$grund): void {
+        foreach (pruef_menge($offen, EDBAK_SCHNITTE_NACHREICHEN_MAX,
+                             'schnitte_offen', $pruef) as $c) {
+            if (!is_array($c)) { $stats['verworfen']++; $grund['schnitt_aufbau']++; continue; }
+            $art = (string)($c['quelle_art'] ?? '');
+            if ($art !== 'mission' && $art !== 'rest') {
+                $stats['verworfen']++; $grund['schnitt_aufbau']++;
+                $pruef->melde('schnitte.quelle_art', 'weder mission noch rest');
+                continue;
+            }
+            $zRef = $ref($c['ziel_ref'] ?? null);
+            $zielId = $zRef !== '' ? edbak_schnitt_quelle_suchen($pdo, $userId, 'mission', $zRef) : 0;
+            if ($zielId === 0) {
+                $stats['verworfen']++; $grund['schnitt_ohne_ziel']++;
+                continue;
+            }
+            $qRef = $ref($c['quelle_ref'] ?? null);
+            $quelleId = $qRef !== '' ? edbak_schnitt_quelle_suchen($pdo, $userId, $art, $qRef) : 0;
+            if ($quelleId === 0) {
+                $stats['verworfen']++; $grund['schnitt_ohne_quelle']++;
+                $pruef->melde('schnitte.quelle_ref',
+                              'Quelle nicht gefunden: ' . ($qRef !== '' ? $qRef : '(leer)'));
+                continue;
+            }
+            $w = edbak_schnitt_werte($c, $pruef);
+            if ($w === null) { $stats['verworfen']++; $grund['schnitt_werte']++; continue; }
+            schnitt_vermerken($pdo, $userId, $art, $quelleId, $zielId,
+                              $w['von'], $w['bis'], $w['n'], $w['wann']);
+            $stats['uebernommen']++;
+        }
+    });
+    return ['schnitte' => $stats, 'skipped_reasons' => array_filter($grund),
+            'rejected' => $pruef->nachUrsache()];
 }
 
 /**

@@ -446,12 +446,13 @@
       "ab": "klein",
       "pfade": [
         "server/komplett_lib.php",
-        "server/admin_komplettsicherung.php"
+        "server/admin_komplettsicherung.php",
+        "server/wiederherstellen.php"
       ],
       "proben": [
         "komplettprobe"
       ],
-      "anlass": "count(null), F-S10-AP4-02; admin_komplettsicherung.php seit R4-11 (Nr. 250, F-R4-38): der Klickweg der Probe geht ueber diese Seite"
+      "anlass": "count(null), F-S10-AP4-02; admin_komplettsicherung.php seit R4-11 (Nr. 250, F-R4-38): der Klickweg der Probe geht ueber diese Seite; wiederherstellen.php seit R17-23 (F-R17-33): Teil 8a prueft, dass die Seite komp_dump_eigen() fragt"
     },
     {
       "id": "gpx",
