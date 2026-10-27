@@ -52,8 +52,8 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
 
 | Spanne | Zweig | seit |
 |---|---|---|
-| 400 bis 409 | `claude/new-session-lvb0x0` — Schritt 12b, Pakete R17-20 bis -30 (`Review-R17.md`); R17-18 und -19 auf `claude/modest-edison-byg7ay` und `claude/tender-feynman-3oyo13`, gemergt mit PR #122, bis R17-17 `claude/lucid-cannon-nvv86i`, gemergt mit PR #118; vergeben: 400 bis 402 (401 erledigt) | 26.10.2026 |
-| ab 410 | frei — höchste vergebene Nummer 402; frei blieben 394 bis 399 aus der Spanne von 19 (PR #112 bis #114), 389 aus der von 12a (PR #116), 372 bis 379 aus der von 12 (PR #103), 362 bis 369 aus der von PK, 359 aus der von 18 (PR #101), 348 und 349 aus der von 17, 338 aus der von AR | 20.10.2026 |
+| 400 bis 409 | `claude/new-session-lvb0x0` — Schritt 12b, Pakete R17-20 bis -30 (`Review-R17.md`); R17-18 und -19 auf `claude/modest-edison-byg7ay` und `claude/tender-feynman-3oyo13`, gemergt mit PR #122, bis R17-17 `claude/lucid-cannon-nvv86i`, gemergt mit PR #118; vergeben: 400 bis 403 (401 erledigt) | 26.10.2026 |
+| ab 410 | frei — höchste vergebene Nummer 403; frei blieben 394 bis 399 aus der Spanne von 19 (PR #112 bis #114), 389 aus der von 12a (PR #116), 372 bis 379 aus der von 12 (PR #103), 362 bis 369 aus der von PK, 359 aus der von 18 (PR #101), 348 und 349 aus der von 17, 338 aus der von AR | 20.10.2026 |
 
 ---
 
@@ -1305,3 +1305,22 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      Zahl, `fitFont`) oder Zeilen des unteren Blocks zusammenlegen; dazu
      eine Bildprobe im Uhr-Prüfstand mit vier und fünf Zeilen auf Fenix,
      FR945 und Venu 3s. Den Kommentar berichtigen.
+
+<!-- -->
+
+403. **Die Freigabeprobe in Chromium scheitert im Gesamtlauf des Prüfstands an der Anlage ihres Prüfkontos.** · gehört zu: 12b · Stand: offen · seit 27.10.2026
+     *Aufgenommen 27.10.2026 nach R17-23 (Betreiberin: ja, vor R17-30).*
+     Dreimal in Folge — im ersten `neben`-Lauf von R17-21 und R17-22 und im
+     Lauf von R17-23 — brach `freigabeprobe [chromium]` nach 3 s ab:
+     `pruefkonto.py anlegen` meldet „Kontoanlage ohne Einrichtungslink:
+     unbekannt". Die Anmeldung als Admin gelang (sonst meldete das Werkzeug
+     „Anmeldung gescheitert"); erst die Antwort auf `user_add` trug keinen
+     Link und keinen erkennbaren Meldungstext. Einzeln gefahren ist die Probe
+     jedes Mal grün (25/0), in Firefox und WebKit auch im Gesamtlauf. Sie
+     läuft im Prüfstand direkt nach der Bedienprobe in WebKit. Folge: Der
+     Bericht des Pull Requests von 12b wird rot, wenn es dort wieder trifft.
+     *Weg:* die Antwort auf `user_add` im Fehlerfall ganz ins Protokoll der
+     Probe schreiben (Seitenkennung, Adresse, Meldung), die Lage im
+     Gesamtlauf nachstellen (Bedienprobe WebKit, dann Freigabe Chromium) und
+     die Ursache beheben, nicht die Probe wiederholen lassen. *Abnahme:* zwei
+     Gesamtläufe `neben` ohne diesen Abbruch.
