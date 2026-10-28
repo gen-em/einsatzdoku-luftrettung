@@ -471,7 +471,7 @@ ist. Abhaken, wenn geprüft.
 |---|---|---|---|---|
 | P-R17-01 | `docs/Bedrohungsmodell.md` von vorn bis hinten lesen, mit dem eigenen Bild der Anlage daneben: Welche Lage fehlt? Welche Zusage steht dort anders, als Sie sie geben würden? | Keine Lage fehlt, keine Zusage ist zu weit; jede Grenze, die Sie kennen, steht benannt. | Eine Angreiferlage oder ein Klartextfeld, das Ihnen einfällt und im Modell nicht steht. | ☑ 11.10.2026 — freigegeben |
 | P-R17-02 | Die acht Fragen Q-R17-01 bis -08 (Konzept 2.2) beantworten — je Zeile die Empfehlung annehmen oder anders entscheiden. | Jede Frage hat eine Antwort, die als E-R17-NN eingetragen ist und im Modell 6 steht. | Eine Frage ohne E-Nummer nach dem Abschluss; eine Antwort, die im Modell fehlt. | ☑ 11.10.2026 (E-R17-06 bis -13) |
-| P-R17-04 | In GitHub: Settings → Environments → `produktion` und `staging`: Stehen Pflichtprüfer und eine Zweigbeschränkung (Deployment branches and tags)? Organisation `gen-em` → Authentication security: Ist der Zweitfaktor erzwungen? Auf Produktiv: Betrieb → Status, Zeile *Server-Anteil*; Betrieb → Servereinstellungen, CSP und HSTS. | Pflichtprüfer gesetzt, Zweige auf `main` und die drei Tag-Muster beschränkt; 2FA erzwungen; Anteil angelegt; CSP scharf, HSTS mindestens 180 Tage. | Eine fehlende Beschränkung bestätigt F-R17-04; ein fehlender Anteil F-R17-05. | ☐ |
+| P-R17-04 | In GitHub: Settings → Environments → `produktion` und `staging`: Stehen Pflichtprüfer und eine Zweigbeschränkung (Deployment branches and tags)? Organisation `gen-em` → Authentication security: Ist der Zweitfaktor erzwungen? Auf Produktiv: Betrieb → Status, Zeile *Server-Anteil*; Betrieb → Servereinstellungen, CSP und HSTS. | Pflichtprüfer gesetzt, Zweige auf `main` und die drei Tag-Muster beschränkt; 2FA erzwungen; Anteil angelegt; CSP scharf, HSTS mindestens 180 Tage. | Eine fehlende Beschränkung bestätigt F-R17-04; ein fehlender Anteil F-R17-05. | ☐ — **CSP scharf ☑ 28.10.2026** (Betreiberin; Karte, Adresssuche, Import, Export, Sicherung, Druck geprüft). Offen: HSTS (1 Tag), Pflichtprüfer und Zweigbeschränkung, Org-Zweitfaktor, Server-Anteil |
 | P-R17-05 | Die Wear-Release-APK aus der Kette (oder `appbau.sh`) mit `aapt2 dump permissions nadoku-uhr-<Fassung>.apk` ansehen. | Keine Zeile — die Wear-OS-Uhr hat keine Berechtigung (Modell G7). | Irgendeine `uses-permission`, vor allem `INTERNET`. | ☐ |
 | P-R17-03 | Nach dem Merge: `docs/Bedrohungsmodell.md` ist aus `README.md` und `docs/Technik.md` erreichbar; die Links führen hin. | Beide Verweise öffnen das Modell. | 404 oder ein Verweis auf eine andere Datei. | ☐ |
 
@@ -626,7 +626,9 @@ Auslieferung von 23.1.0 stehen als F-R17-73 bis -75 im Konzept, die Fragen
 als Q-R17-20 bis -22, beantwortet mit E-R17-70 bis -75. **CSP auf
 Produktiv:** „meldet nur", 0 Berichte in 30 Tagen (Bildschirmabzug der
 Betreiberin, 28.10.2026) — der Umstieg auf scharf (P-R17-04) steht aus und
-hält R17-25.
+hält R17-25. *Nachtrag am selben Tag:* scharf geschaltet und an Karte,
+Adresssuche, Import, Export, Sicherung und Druck geprüft — R17-25 kann
+beginnen. Gemeldet dabei: Backlog Nr. 404 bis 406 (für R17-25).
 
 **Aus Schritt 12:**
 

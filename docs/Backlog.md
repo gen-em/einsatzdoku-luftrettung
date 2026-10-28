@@ -53,7 +53,7 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
 | Spanne | Zweig | seit |
 |---|---|---|
 | 400 bis 409 | `claude/new-session-lvb0x0` — Schritt 12b, Pakete R17-20 bis -30 (`Review-R17.md`); R17-18 und -19 auf `claude/modest-edison-byg7ay` und `claude/tender-feynman-3oyo13`, gemergt mit PR #122, bis R17-17 `claude/lucid-cannon-nvv86i`, gemergt mit PR #118; vergeben: 400 bis 403 (401 erledigt) | 26.10.2026 |
-| ab 410 | frei — höchste vergebene Nummer 403; frei blieben 394 bis 399 aus der Spanne von 19 (PR #112 bis #114), 389 aus der von 12a (PR #116), 372 bis 379 aus der von 12 (PR #103), 362 bis 369 aus der von PK, 359 aus der von 18 (PR #101), 348 und 349 aus der von 17, 338 aus der von AR | 20.10.2026 |
+| ab 410 | frei — höchste vergebene Nummer 406; frei blieben 394 bis 399 aus der Spanne von 19 (PR #112 bis #114), 389 aus der von 12a (PR #116), 372 bis 379 aus der von 12 (PR #103), 362 bis 369 aus der von PK, 359 aus der von 18 (PR #101), 348 und 349 aus der von 17, 338 aus der von AR | 20.10.2026 |
 
 ---
 
@@ -1324,3 +1324,52 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      Gesamtlauf nachstellen (Bedienprobe WebKit, dann Freigabe Chromium) und
      die Ursache beheben, nicht die Probe wiederholen lassen. *Abnahme:* zwei
      Gesamtläufe `neben` ohne diesen Abbruch.
+
+<!-- -->
+
+404. **Der Export fragt mit Passwort dreimal nacheinander, in langen Fließtexten.** · gehört zu: 12b · Stand: offen · seit 28.10.2026
+     *Aufgenommen 28.10.2026, gemeldet von der Betreiberin nach dem
+     Umschalten der CSP.* `export.js` ruft `edConfirm()` bis zu dreimal in
+     Folge: Klartext in der Datei (mit Patientendaten), Passwort merken (mit
+     Passwort), „Dies ist kein Backup" (immer). Der Dialog setzt seinen Text
+     als `textContent` in ein einziges `<p>` — für einen Satz gebaut, nicht
+     für fünf. Dazu „ausserdem" statt „außerdem". *Weg (R17-25, Betreiberin
+     28.10.2026):* `edConfirm()` nimmt neben dem Text auch eine Liste von
+     Absätzen, jeder als eigenes `<p>` mit `textContent` — kein HTML von
+     außen; die rund 40 Aufrufe mit einem Satz bleiben unverändert. Eine
+     Rückfrage mit den zutreffenden Absätzen statt drei; „kein Backup" als
+     feste Hinweiszeile auf der Seite. Vor dem Bau ein Bild zur Freigabe
+     (`CLAUDE.md` 5). *Abnahme:* ein Dialog je Export, Bilderlauf, Textprobe.
+
+<!-- -->
+
+405. **Bitwarden bietet beim Backup mit Kontopasswort ein neues Passwort an statt des gespeicherten.** · gehört zu: 12b · Stand: offen · seit 28.10.2026
+     *Aufgenommen 28.10.2026, gemeldet von der Betreiberin (Bildschirmabzug).*
+     Die Karte „Backup erstellen" in `einstellungen.php` hat EIN Passwortfeld
+     `bpw1`, geladen mit `autocomplete="new-password"`; der Schalter „Mein
+     Kontopasswort verwenden" deutet es per Skript zu `current-password` um.
+     Bitwarden ordnet das Feld offenbar beim Laden ein und bleibt bei „neues
+     Passwort"; ein Feld mit dem Anmeldenamen fehlt ganz. *Weg (R17-25):* zwei
+     getrennte Felder, beide ab dem Laden im Markup — Kontopasswort mit
+     `current-password` und daneben ein verborgenes Feld `autocomplete=
+     "username"` mit dem Anmeldenamen, Backup-Passwort samt Wiederholung mit
+     `new-password`; der Schalter blendet nur um. Den Entsperrdialog
+     (`unlock.js`) auf dieselbe Frage hin ansehen. *Grenze:* Bitwarden gibt
+     es im Container nicht — gemessen wird nur das Markup; ob es ausfüllt,
+     zeigt ein Prüfpunkt bei der Betreiberin.
+
+<!-- -->
+
+406. **Der Entsperrdialog erscheint, während die Sitzung noch gilt.** · gehört zu: 12b · Stand: offen · seit 28.10.2026
+     *Aufgenommen 28.10.2026, gemeldet von der Betreiberin.* Erwartet war:
+     Sperre und Abmeldung laufen gleich (30 Minuten, R44) — wer gesperrt
+     wäre, ist abgemeldet. Gebaut ist es so, und der Dialog erscheint
+     trotzdem, wenn der Tab keinen Schlüssel hat, die Sitzung aber gilt:
+     neuer Tab, Browser-Neustart mit wiederhergestellten Tabs,
+     Passwort-Reset (Kopf von `keyguard.js`, „der Tab-Fall ist ausdrücklich
+     gewollt"). Welcher Fall es war, weiß die Betreiberin nicht mehr; ein
+     Fehler im selben Tab ist nicht ausgeschlossen. *Weg (R17-25):* Mit dem
+     `CryptoKey` in IndexedDB teilen sich alle Tabs eines Ursprungs den
+     Speicher — ob ein neuer Tab ohne Passwort weiterarbeiten darf, ist eine
+     Frage im Plan von R17-25. Dazu den Fall „derselbe Tab, Sitzung gilt,
+     Dialog erscheint" in der Fristprobe gezielt suchen.
