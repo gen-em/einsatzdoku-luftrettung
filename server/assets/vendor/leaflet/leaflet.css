@@ -2,7 +2,17 @@
  * Leaflet 1.9.4 — BSD-2-Clause
  * Bezogen ueber das npm-Paketarchiv (npm pack leaflet@1.9.4), Datei
  * dist/leaflet.css.
- * SHA-256: a7837102824184820dfa198d1ebcd109ff6d0ff9a2672a074b9a1b4d147d04c6
+ * SHA-256: 337bfca5cabd03b39815b2700febe2b3b7edf55921c59cd49f88ecb328212303
+ *
+ * ZWEI SUMMEN, EIN INHALT (R17-26, F-R17-50). Das npm-Original hat
+ * Windows-Zeilenenden (CRLF) und die SHA-256
+ * a7837102824184820dfa198d1ebcd109ff6d0ff9a2672a074b9a1b4d147d04c6.
+ * .gitattributes legt Text mit LF ab, und so liegt die Datei hier und auf
+ * dem Server — die Summe oben gilt fuer DIESE Ablage. Bis Web 23.5.0 stand
+ * oben die des Originals, und wer nachrechnete, fand eine Abweichung, die
+ * nur die Zeilenenden erzeugten. Inhalt bis auf \r zeichengleich.
+ * Die Pruefsumme gilt fuer die Datei OHNE diesen Kopf;
+ * tools/quelltext/fremdsummen.py rechnet sie nach.
  */
 /* required styles */
 

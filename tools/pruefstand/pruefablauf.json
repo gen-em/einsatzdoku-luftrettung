@@ -29,6 +29,11 @@
       "braucht": "nichts",
       "bemerkung": "R4-06, Anlass Nr. 170. Je verschluesseltem Feld das Schloss in Formular und Leseansicht gegen die Sollliste tools/quelltext/kennzeichnung-soll.md, dazu die Kleinzeile an jedem Klartext-Freitextfeld des Katalogs. Web 19.1.0 zaehlte 8 Schloesser und die Zahl stimmte -- zwei fehlten trotzdem."
     },
+    "fremdsummen": {
+      "aufruf": "bash tools/quelltext/pruefen.sh fremdsummen",
+      "braucht": "nichts",
+      "bemerkung": "R17-26, F-R17-50 und -51. Rechnet die SHA-256 im Herkunftskopf jeder Datei unter server/assets/vendor/ nach und haelt sie gegen die Pruefsummentabelle in docs/Lizenzen.md. Bis dahin rechnete niemand nach: leaflet.css trug die Summe des Originals mit CRLF, openlocationcode.js lag ohne Kopf ausserhalb von vendor/."
+    },
     "anker": {
       "aufruf": "bash tools/quelltext/pruefen.sh anker",
       "braucht": "nichts",
@@ -361,6 +366,7 @@
       "linkprobe",
       "anker",
       "kennzeichnung",
+      "fremdsummen",
       "bestand",
       "syntax-py",
       "handbuch",

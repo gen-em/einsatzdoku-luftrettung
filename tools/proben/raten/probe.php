@@ -457,10 +457,23 @@ $health = static function (?string $token, ?string $kopf = null) use ($basis): a
  * erste Fassung wartete 1,2 s und sah beim leeren Eintrag noch den Token
  * des Falls davor (F-P5c-123). */
 $stellen = static function (array $werte): callable { $z = konfig_stellen($werte); sleep(3); return $z; };
+/* SEIT WEB 23.5.0 LIEGT DAS TOKEN IN `app_state` (R17-26, E-R17-72), nicht
+ * mehr in `config.php`; die Datei wird nur noch einmal gelesen, wenn der
+ * Eintrag ganz fehlt. Die Faelle unten stellen es deshalb dort — ohne
+ * Wartezeit, eine Datenbankzeile kennt keinen OPcache. Der Rueckweg legt den
+ * Stand von vorher zurueck, auch „kein Eintrag". */
+$tokenStellen = static function (string $wert) use ($pdo): callable {
+    $vorher = app_state_lesen('health_token');
+    app_state_setzen('health_token', $wert);
+    return static function () use ($vorher): void {
+        if ($vorher === null) { app_state_loeschen('health_token'); }
+        else { app_state_setzen('health_token', $vorher); }
+    };
+};
 $pdo->exec("DELETE FROM rate_limits WHERE topf = 'health'");
 
 $TOKEN = bin2hex(random_bytes(16));
-$zurueckKonfig = $stellen(['betrieb' => ['health_token' => $TOKEN]]);
+$zurueckKonfig = $tokenStellen($TOKEN);
 try {
     $ohne   = $health(null);
     $falsch = $health(bin2hex(random_bytes(16)));
@@ -556,7 +569,7 @@ try {
 
 /* ENDPUNKT AUS: leerer Eintrag. Dieselbe 403 wie ohne und mit falschem
  * Token — die Antwort verraet nicht, ob einer eingerichtet ist. */
-$zurueckKonfig = $stellen(['betrieb' => ['health_token' => '']]);
+$zurueckKonfig = $tokenStellen('');
 try { $aus = $health($TOKEN); } finally { $zurueckKonfig(); }
 pruef('Endpunkt aus (leerer Eintrag) → 403 `token`', $aus['code'] === 403 && ($aus['json']['error'] ?? '') === 'token',
       'HTTP ' . $aus['code']);
@@ -568,12 +581,36 @@ pruef('… alle drei 403 mit angeglichener Dauer (je mindestens 0,35 s, Spanne u
 /* DIE MENGE: 60 je Minute. Der Zaehler steht nach den Faellen oben auf
  * einigen Anfragen — geleert, dann genau 60 richtige, dann die 61. */
 $pdo->exec("DELETE FROM rate_limits WHERE topf = 'health'");
-$zurueckKonfig = $stellen(['betrieb' => ['health_token' => $TOKEN]]);
+$zurueckKonfig = $tokenStellen($TOKEN);
 try {
     $codes = [];
     for ($i = 1; $i <= 61; $i++) { $codes[$i] = $health($TOKEN)['code']; }
 } finally { $zurueckKonfig(); }
 $bis60 = array_count_values(array_slice($codes, 0, 60));
+
+/* DER UEBERGANG AUS `config.php` (R17-26). Fehlt der Eintrag ganz, nimmt der
+ * erste Abruf den Wert aus der Datei und legt ihn ab; ein LEERER Eintrag
+ * (abgeschaltet) wird nicht wieder aus der Datei gefuellt. Gegen den Stand
+ * vor 23.5.0: Dort galt allein die Datei — der zweite Fall gaebe 200. */
+$pdo->exec("DELETE FROM rate_limits WHERE topf = 'health'");
+$vorherEintrag = app_state_lesen('health_token');
+app_state_loeschen('health_token');
+$zurueckDatei = $stellen(['betrieb' => ['health_token' => $TOKEN]]);
+try {
+    $ueber = $health(null, $TOKEN);
+    $abgelegt = app_state_lesen('health_token');
+    app_state_setzen('health_token', '');
+    $leer = $health(null, $TOKEN);
+} finally {
+    $zurueckDatei();
+    if ($vorherEintrag === null) { app_state_loeschen('health_token'); }
+    else { app_state_setzen('health_token', $vorherEintrag); }
+}
+pruef('Übergang: ohne Eintrag gilt der Wert aus config.php, und er wird abgelegt (R17-26)',
+      $ueber['code'] === 200 && $abgelegt === $TOKEN,
+      'HTTP ' . $ueber['code'] . ', abgelegt ' . ($abgelegt === $TOKEN ? 'ja' : var_export($abgelegt, true)));
+pruef('… ein leerer Eintrag (abgeschaltet) wird nicht wieder aus der Datei gefüllt',
+      $leer['code'] === 403, 'HTTP ' . $leer['code']);
 pruef('60 Anfragen in einer Minute gehen durch, die 61. bekommt 429',
       ($bis60[200] ?? 0) === 60 && $codes[61] === 429,
       '1–60: ' . json_encode($bis60) . ' · 61: ' . $codes[61]);

@@ -3102,7 +3102,7 @@ ui_seite_start(['titel' => 'Einstellungen',
 
   <?php endif; ?>
 
-    <script src="<?= asset('assets/openlocationcode.js') ?>"></script>
+    <script src="<?= asset('assets/vendor/openlocationcode.js') ?>"></script>
     <script src="<?= asset('assets/locparse.js') ?>"></script>
     <?php /* vorschlagsliste.js (EdVorschlaege) gehoert zur Ortsfeld-
              Komponente, seit die Trefferliste ein eigener Baustein ist

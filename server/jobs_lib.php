@@ -115,6 +115,10 @@ const JOB_TOKEN_SCHLUESSEL = 'jobs_token';
  * Auslieferungskette (Web 23.1.0, R17-19, E-R17-34). */
 const KETTE_TOKEN_SCHLUESSEL = 'kette_token';
 
+/** Schluessel des Health-Tokens in `app_state` (Web 23.5.0, R17-26, E-R17-72).
+ * Bis dahin stand es nur in `config.php` (`betrieb.health_token`). */
+const HEALTH_TOKEN_SCHLUESSEL = 'health_token';
+
 /**
  * Schluessel der Laufpause in `app_state` (UTC-Zeitstempel, bis wann).
  *
@@ -698,6 +702,54 @@ function kette_token(bool $neu = false): string
         $bisher = app_state_lesen(JOB_TOKEN_SCHLUESSEL);
         return ($bisher !== null && $bisher !== '') ? $bisher : bin2hex(random_bytes(32));
     });
+}
+
+
+/**
+ * Das Health-Token — der Schluessel des Monitorings zu `api/health.php`
+ * (seit Web 23.5.0 im Panel, R17-26, E-R17-72).
+ *
+ * BIS DAHIN NUR IN `config.php`. Wer es erneuern wollte, brauchte den
+ * Dateizugang; jetzt erzeugt es Betrieb → Hintergrundjobs wie die beiden
+ * anderen Tokens. Der Preis, ausgesprochen: Es liegt in der Datenbank, und
+ * ein Datenbankabzug enthaelt es (Bedrohungsmodell). Es oeffnet nur die karge
+ * Zustandsauskunft von `health.php` — Fassung, Datenbank, Migration, Alter
+ * der Jobs, Speicher —, keine Daten.
+ *
+ * DER UEBERGANG. Fehlt der Eintrag ganz, uebernimmt das erste Lesen den Wert
+ * aus `config.php` — ein laufendes Monitoring bricht beim Update nicht ab.
+ * Danach gilt nur noch der Eintrag; die Zeile in `config.php` liest niemand
+ * mehr. Ein LEERER Eintrag heisst „abgeschaltet" und wird nicht wieder aus
+ * der Datei gefuellt — sonst liesse sich die Abfrage nicht abschalten, solange
+ * die alte Zeile dort steht.
+ *
+ * Rueckgabe '' = keine Abfrage eingerichtet; `health.php` antwortet dann 403.
+ */
+function health_token(): string
+{
+    $wert = app_state_lesen(HEALTH_TOKEN_SCHLUESSEL);
+    if ($wert !== null) { return $wert; }
+    $alt = (string)(konfig('betrieb.health_token') ?? '');
+    if ($alt === '') { return ''; }
+    return app_state_einmalig(HEALTH_TOKEN_SCHLUESSEL, static fn(): string => $alt);
+}
+
+/** Ein neues Health-Token. Scheitert das Schreiben, gilt das alte weiter. */
+function health_token_neu(): string
+{
+    $token = bin2hex(random_bytes(32));
+    if (!app_state_setzen(HEALTH_TOKEN_SCHLUESSEL, $token)) {
+        throw new RuntimeException('Das Health-Token ließ sich nicht speichern — das bisherige gilt weiter.');
+    }
+    return $token;
+}
+
+/** Die Abfrage abschalten: ein leerer Eintrag, kein geloeschter (siehe oben). */
+function health_token_aus(): void
+{
+    if (!app_state_setzen(HEALTH_TOKEN_SCHLUESSEL, '')) {
+        throw new RuntimeException('Die Health-Abfrage ließ sich nicht abschalten — das bisherige Token gilt weiter.');
+    }
 }
 
 /* ---- Die Jobs selbst ----------------------------------------------------- */

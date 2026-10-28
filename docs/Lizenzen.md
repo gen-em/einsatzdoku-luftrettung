@@ -70,6 +70,7 @@ Alle unter `server/assets/vendor/`.
 | **SheetJS Community Edition** (`xlsx`) | 0.18.5 | Apache-2.0 | `vendor/xlsx.full.min.js` | Excel-Export und -Import; läuft **im Browser**, die Datei entsteht dort |
 | **zip.js** | 2.8.34 | BSD-3-Clause | `vendor/zipjs.min.js` | Das verschlüsselte Archiv des Exports |
 | **qrcode-generator** (Kazuhiko Arase) | 2.0.4 | MIT | `vendor/qrcode.js` | Der QR-Code beim Einrichten des Zweitfaktors (seit Web 20.42.0, E-P5c-41). Gebraucht wird **nur die Modulmatrix**; das SVG baut `assets/qr.js` selbst, mit Klassen und Token |
+| **Open Location Code** (Google) | Commit `2afe39f` (13.06.2025), Paketfassung 20250411.0.0 | Apache-2.0 | `vendor/openlocationcode.js` | Plus Codes in der Ortseingabe (`assets/locparse.js`, Einsatzformular und Standorte). Reine Rechnung, ohne DOM und ohne Netz. *Bis Web 23.5.0 lag sie als `assets/openlocationcode.js` ohne Herkunftskopf und fehlte in dieser Tabelle (F-R17-51)* |
 
 **Prüfsummen** (SHA-256, wie im Dateikopf vermerkt):
 
@@ -79,10 +80,17 @@ Alle unter `server/assets/vendor/`.
 | `xlsx.full.min.js` | `c9506197caf809a075b6dee1da0d36fb19da7158ffe8a88e7b0c96c5d8623c99` |
 | `zipjs.min.js` | `52351e49074131fca386e6b13913e1c0bad5e66af7a2b87a815c0d0ca8714982` |
 | `qrcode.js` | `79ec86f82856005b1c887905cfccfcfbec3821ca61c7fd5a952faa5f778f791c` (ohne den Herkunftskopf) |
+| `leaflet.css` | `337bfca5cabd03b39815b2700febe2b3b7edf55921c59cd49f88ecb328212303` (abgelegt mit LF; das npm-Original mit CRLF hat `a7837102…`, F-R17-50) |
+| `openlocationcode.js` | `271165812e3007d71b025b518cb2c0424a2646cb94cb5751521f3313d4b1e505` |
 
-Alle vier sind über das npm-Paketarchiv bezogen (`npm pack <paket>@<version>`)
-und unverändert übernommen; `qrcode.js` trägt oben einen Herkunftskopf, die
-Prüfsumme gilt für die Datei darunter.
+Leaflet, SheetJS, zip.js und qrcode-generator sind über das npm-Paketarchiv
+bezogen (`npm pack <paket>@<version>`), Open Location Code aus dem
+GitHub-Repositorium von Google (auf npm gibt es diesen Stand nicht). Alle sind
+unverändert übernommen und tragen oben einen Herkunftskopf; **jede Prüfsumme
+gilt für die Datei ohne diesen Kopf, so wie sie hier liegt.** Seit Web 23.5.0
+rechnet `tools/quelltext/fremdsummen.py` sie in Stufe 1 nach — Kopf gegen
+Datei und Kopf gegen diese Tabelle (R17-26). Bis dahin tat es niemand, und
+zwei Lücken fielen erst im Review auf (F-R17-50, -51).
 
 **Warum der QR-Code nicht von einem Dienst kommt:** Er trägt das Geheimnis des
 Zweitfaktors. Ein fremder Erzeuger — ein Diagrammdienst, eine Bild-API — sähe

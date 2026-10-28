@@ -326,8 +326,8 @@ Daten erst nach Server-Bestätigung.
 │   │                       zusammengefasst per UNIQUE, ohne IP und ohne
 │   │                       Abfrageteil der Adresse; Antwort immer 204
 │   ├── api/health.php    Zustand der Anlage fuer das eigene Monitoring (P5c/AP6,
-│   │                       4.99r). OHNE Anmeldung, mit Token aus config.php
-│   │                       (betrieb.health_token, leer = aus) als Kopfzeile
+│   │                       4.99r). OHNE Anmeldung, mit dem Health-Token aus
+│   │                       Betrieb → Hintergrundjobs (seit 23.5.0; leer = aus) als Kopfzeile
 │   │                       X-Health-Token oder `?token=`; 200/503 mit
 │   │                       acht Feldern, 403 einheitlich, Topf `health`
 │   ├── api/kopplung_stand.php  Wartet dieses Konto noch auf ein Gerät, und
@@ -767,7 +767,7 @@ Daten erst nach Server-Bestätigung.
 │   │                      steht (Grundsatz 1). `pruefen.sh` fährt sie je
 │   │                      Stufe, `auswahl.py` wählt nach Berührung aus,
 │   │                      `bericht.py` schreibt die Zahlen (s. LIESMICH.md)
-│   ├── quelltext/         vierzehn Prüfungen, die nur Quelltext lesen und im
+│   ├── quelltext/         fünfzehn Prüfungen, die nur Quelltext lesen und im
 │   │                      Tor laufen (PK-04, E-PK-24): installweiche,
 │   │                      sitzungshaertung, csp, jobregister,
 │   │                      migrationsregister, behandler (seit P5c/AP3),
@@ -778,7 +778,8 @@ Daten erst nach Server-Bestätigung.
 │   │                      seit P5c/AP9 anker (jeder Verweis hilfe.php#… trifft
 │   │                      eine Überschrift des Handbuchs), seit R4-06
 │   │                      kennzeichnung (jedes Schloss gegen eine
-│   │                      Sollliste). Ein
+│   │                      Sollliste), seit R17-26 fremdsummen (Kopfsumme
+│   │                      jeder Datei unter assets/vendor/). Ein
 │   │                      Läufer (`pruefen.sh <name>|alle|--selbstprobe`),
 │   │                      ein LIESMICH. Vorher acht Ordner.
 │   ├── referenzdatensatz/ erfundener Beispielbestand (22 Diensttage,
@@ -1639,7 +1640,7 @@ Feldtext — derselbe Ablauf wie bei Photon-Adressvorschlägen, kein
 Sonderfall im Formular. Formaterkennung/Parser liegt in
 `assets/locparse.js` (reine Funktionen, keine DOM-/Fetch-Abhängigkeiten);
 die Plus-Code-Dekodierung nutzt die gevendorte Bibliothek
-`assets/openlocationcode.js` (`google/open-location-code`, Apache-2.0).
+`assets/vendor/openlocationcode.js` (`google/open-location-code`, Apache-2.0; Herkunft und Prüfsumme im Kopf, seit Web 23.5.0).
 
 **Eine Karte entsteht über `EdKarte.anlegen(el, o)`** (`assets/map_layers.js`,
 seit Web 20.33.0, Schritt 15 AP8a). Die Funktion macht, was auf allen
@@ -7866,6 +7867,23 @@ Der Grund für die Trennung ist nicht Ordnung, sondern Wahrheit: Ein Zähler mit
 eigener Rechnung sagt früher oder später etwas anderes als die Seite, auf die
 er führt.
 
+**Zwei Auskünfte über die `config.php` (seit Web 23.5.0, R17-26, E-R17-72).**
+Die Zeile **„Adresse der Anlage"** in der Karte Server vergleicht den Host aus
+`app.base_url` (`parse_url`, klein geschrieben) mit `HTTP_HOST` ohne Port —
+derselben Quelle, die `kopfzeilen_lib.php` für den CSP-Bericht nimmt. Orange,
+wenn `base_url` fehlt oder der Host abweicht; ohne `HTTP_HOST` (Kommandozeile)
+gibt es die Zeile nicht. Sie zählt in Meldung und Menüzähler mit; beide
+rechnen nur im Webaufruf. Grenze: Ein Proxy, der den Host umschreibt, färbt
+sie zu Unrecht orange. Anlass war F-R17-75 — `base_url` stand auf Produktiv
+auf einer alten Adresse, und Mail-Links, `rp_id`, Blätter und Auslöser-Karte
+bauten sich daraus. Die **Lesekarte** (`k-konfig`, eingeklappt unter der
+Plattform) zeichnet `status_konfig_zeilen()`: eine **feste Liste**, kein
+Durchlauf über `konfig_alles()`, damit ein künftig eingetragener Schlüssel
+nicht von selbst auf der Seite steht. Geheimnisse (`db.pass`, `smtp.pass`,
+`server_key`, `kdf_anteil`, die `_alt`-Fassungen, ein altes
+`betrieb.health_token`) erscheinen nur als „gesetzt"/„leer". Sie zählt nicht
+in der Ampel. Die Datei bleibt zur Laufzeit unbeschreibbar.
+
 Zwei Zwischenspeicher in `app_state` (`menue_zaehler_betrieb`,
 `menue_zaehler_konto`), je 60 Sekunden, als JSON mit Zeitstempel. Zwei und
 nicht einer, weil „Konto-Backups" im Block Verwaltung steht und schon für eine
@@ -8442,8 +8460,10 @@ ist dabei gegangen: Die Installation nimmt keinen Rechtstext mehr an.
 | Profil: Passkey entfernen (SR-09) | `POST einstellungen.php?t=profil action=passkey_entfernen` | durch | durch | durch | durch | ja |
 | Profil: neue Wiederherstellungscodes (R17-20) | `POST einstellungen.php?t=profil action=zf_codes_neu` | durch | durch | durch | durch | ja |
 | Betrieb · Jobs: die Seite | `GET betrieb_jobs.php` | 403 | 403 | 403 | 200 | — |
-| Betrieb · Jobs: Auslöser-Token neu | `POST betrieb_jobs.php action=jobs_token_neu` | 403 | 403 | 403 | durch | — |
-| Betrieb · Jobs: Kettentoken neu (Web 23.1.0) | `POST betrieb_jobs.php action=kette_token_neu` | 403 | 403 | 403 | durch | — |
+| Betrieb · Jobs: Auslöser-Token neu | `POST betrieb_jobs.php action=jobs_token_neu` | 403 | 403 | 403 | durch | ja |
+| Betrieb · Jobs: Kettentoken neu (Web 23.1.0) | `POST betrieb_jobs.php action=kette_token_neu` | 403 | 403 | 403 | durch | ja |
+| Betrieb · Jobs: Health-Token neu (Web 23.5.0) | `POST betrieb_jobs.php action=health_token_neu` | 403 | 403 | 403 | durch | ja |
+| Betrieb · Jobs: Health-Abfrage abschalten (Web 23.5.0) | `POST betrieb_jobs.php action=health_token_aus` | 403 | 403 | 403 | durch | ja |
 | Betrieb · Jobs: anhalten | `POST betrieb_jobs.php action=jobs_pause_an` | 403 | 403 | 403 | durch | — |
 | Betrieb · Jobs: Pause aufheben | `POST betrieb_jobs.php action=jobs_pause_aus` | 403 | 403 | 403 | durch | — |
 | Betrieb · Updates: die Seite | `GET betrieb_updates.php` | 403 | 403 | 403 | 200 | — |
@@ -8603,7 +8623,7 @@ die Anwendung deshalb noch einmal nach dem Code, wenn der letzte älter als
 | | |
 |---|---|
 | frisch | `$_SESSION['zf_frisch_bis']`, gesetzt nach einem App- oder Wiederherstellungscode — seit Web 21.10.0 auch nach einem Passkey (E-SR-32) — im Code-Schritt von `login.php` und auf der Bestätigungsseite; `ZF_FRISCH_S` = 900. Eine Anmeldung über ein gemerktes Gerät und der Rückweg setzen nichts, `anmeldung_vollenden()` räumt eine alte Frist weg. Ein Konto **ohne** Zweitfaktor hat nichts zu bestätigen: `zweitfaktor_frisch()` ist dort ein Durchlass |
-| die Liste | `ZF_FRISCH_HANDLUNGEN` in `db.php`, neben den Rollen: `schluessel` (alle sieben `schluessel_*`-Griffe in `betrieb_server.php`), `schluesselblatt` (die Anzeige, vor der ersten Ausgabe), `rollenwechsel`, `totp_zuruecksetzen` und `user_delete` in `admin_user.php`, `totp_ausschalten` in `einstellungen.php` (nur, wo Ausschalten geht — nicht bei einer Pflichtrolle), seit Web 21.10.0 `passkey_anlegen` (`api/passkey_anlegen.php` — der erste Endpunkt der Liste) und `passkey_entfernen` (`einstellungen.php`, E-SR-31); seit Web 23.2.0 (R17-20) `totp_codes_neu` (`einstellungen.php`, F-R17-43), `komplett_herunterladen` (`admin_komplettsicherung.php`, beide Arten, F-R17-08), `freigeben` und `freigeben_ablage` (Kontoseite und Konto-Backups, F-R17-02), `adresswechsel_verwaltung` und `setzlink` (`admin_user.php`, F-R17-06). Je Handlung die Seite und die Karte des Rücksprungs, beim Blatt dazu das Ziel von „Abbrechen" |
+| die Liste | `ZF_FRISCH_HANDLUNGEN` in `db.php`, neben den Rollen: `schluessel` (alle sieben `schluessel_*`-Griffe in `betrieb_server.php`), `schluesselblatt` (die Anzeige, vor der ersten Ausgabe), `rollenwechsel`, `totp_zuruecksetzen` und `user_delete` in `admin_user.php`, `totp_ausschalten` in `einstellungen.php` (nur, wo Ausschalten geht — nicht bei einer Pflichtrolle), seit Web 21.10.0 `passkey_anlegen` (`api/passkey_anlegen.php` — der erste Endpunkt der Liste) und `passkey_entfernen` (`einstellungen.php`, E-SR-31); seit Web 23.2.0 (R17-20) `totp_codes_neu` (`einstellungen.php`, F-R17-43), `komplett_herunterladen` (`admin_komplettsicherung.php`, beide Arten, F-R17-08), `freigeben` und `freigeben_ablage` (Kontoseite und Konto-Backups, F-R17-02), `adresswechsel_verwaltung` und `setzlink` (`admin_user.php`, F-R17-06); seit Web 23.5.0 (R17-26) `jobs_token_neu`, `kette_token_neu` und `health_token` (`betrieb_jobs.php`, Erneuern und Abschalten der drei Tokens, E-R17-73). Je Handlung die Seite und die Karte des Rücksprungs, beim Blatt dazu das Ziel von „Abbrechen" |
 | das Tor | `zweitfaktor_frisch_verlangen($handlung)` in `auth_guard.php`, **vor** `csrf_check()` wie ein Rollentor (E-P5c-85). Nicht frisch: Seiten bekommen 303 auf `zweitfaktor.php?bestaetigen=1&zurueck=…` (nach einem POST mit `nochmal=1`), die API 403 JSON `zweitfaktor_frisch`. Ein Name, der nicht in der Liste steht, wirft — ein Tippfehler darf kein Durchlass sein |
 | die Bestätigung | `zweitfaktor.php?bestaetigen=1`: Codefeld wie im Code-Schritt (App-Code oder Wiederherstellungscode, seit Web 21.10.0 daneben „Mit Passkey bestätigen" mit eigener Herausforderung in `$_SESSION['passkey_best']`; Topf `totp` mit dem Merkmal des Kontos, fünf Fehlversuche sperren), bei Erfolg die Frist und 303 auf `zurueck`; nach einem POST steht in der Karte „Code bestätigt — bitte die Handlung noch einmal auslösen." Die Handlung wird **nicht nachgespielt** (ein gespeicherter POST samt Token wäre ein Zwischenspeicher, der beim nächsten Umbau falsch abgespielt wird). Steht in `WARTUNG_AUSNAHMEN` |
 | der Rücksprung | `zweitfaktor_zurueck()`: nur ein relativer Pfad auf eine Seite der Liste, die Abfrage nur mit harmlosen Zeichen (sonst fällt sie weg); alles andere wird `index.php` — sonst wäre die Seite ein offener Umleiter mit dem Vertrauen dieser Anwendung |
@@ -8953,18 +8973,23 @@ und erfährt, ob die Anlage läuft — ohne sich anzumelden und ohne dass die
 Anwendung einen Fremddienst anbindet. Der Endpunkt antwortet nur, wenn er
 gefragt wird.
 
-    GET /api/health.php          X-Health-Token: <betrieb.health_token>
-    GET /api/health.php?token=<betrieb.health_token>
+    GET /api/health.php          X-Health-Token: <Health-Token>
+    GET /api/health.php?token=<Health-Token>
 
 **Die Kopfzeile seit Web 23.1.0** (R17-19, F-R17-22): Ein Token in der
 Adresse steht in jedem Zugriffsprotokoll des Hosters, eine Kopfzeile nicht.
 Die Adresse geht weiter, für Dienste, die keine Kopfzeile setzen können;
 stehen beide da, gilt die Kopfzeile.
 
-**Der Token steht in `config.php`** (`'betrieb' => ['health_token' => …]`,
-Vorlage in `config.example.php`). **Leer heißt: Endpunkt aus.** Er steht
-dort und nicht in der Oberfläche, weil er in einem fremden Monitoring
-steht: Wer ihn wechselt, wechselt ihn dort mit.
+**Der Token liegt seit Web 23.5.0 in `app_state`** (`health_token`,
+`health_token()` in `jobs_lib.php`) und wird unter Betrieb → Hintergrundjobs,
+Karte „Monitoring", erzeugt, erneuert oder abgeschaltet — mit frischem Code
+des Zweitfaktors (R17-26, E-R17-72, -73). **Leer heißt: Endpunkt aus.** Bis
+23.4.x stand er in `config.php` (`'betrieb' => ['health_token' => …]`), mit
+der Begründung, er stehe ohnehin in einem fremden Monitoring und wer ihn
+wechsle, wechsle ihn dort mit. Das bleibt wahr; der Dateizugang dafür war
+trotzdem eine Hürde ohne Gewinn. Der Übergang steht im Runbook (7,
+„Health-Endpunkt einrichten").
 
 **Antworten.**
 
@@ -12026,7 +12051,7 @@ Bilderzahl, die längst nicht mehr stimmte.
 | Fassungen nennen (Web, Uhr, Android) | eine Auskunft — aber eine unlesbare Fassung ist rot |
 | `php -l` über `server/` und `tools/` | 0 Fehler, und mindestens eine Datei gelesen; die Zahl der versionierten `server/`-Dateien geht in die Gegenlesung (`syntax-php`) |
 | `cmark-gfm` bereitstellen | für die Quelltextprüfungen `handbuch` und `bestand` (seit BR-05: `bestand` liest die Tabelle der Quelltextprüfungen damit) |
-| `tools/quelltext/pruefen.sh --selbstprobe`, dann `alle` | alle Selbstproben und alle vierzehn Prüfungen grün (`tools/quelltext/LIESMICH.md`) — darunter seit BR-03 Backlog-Nummern (`bestand`), Python übersetzen (`pysyntax`) und Handbuch rendern (`handbuch`), bis dahin drei eigene Schritte |
+| `tools/quelltext/pruefen.sh --selbstprobe`, dann `alle` | alle Selbstproben und alle fünfzehn Prüfungen grün (`tools/quelltext/LIESMICH.md`) — darunter seit BR-03 Backlog-Nummern (`bestand`), Python übersetzen (`pysyntax`) und Handbuch rendern (`handbuch`), bis dahin drei eigene Schritte |
 | `tools/screenshots/kontrast.py` | 0 Befunde |
 | Umgebungswert eine Ebene höher | alle sechs Namen leer (6.5, E-KH-28) |
 | `tools/kettenaufrufe/pruefen.py --probe`, dann ohne Schalter | Selbstprobe vollständig, 0 Befunde; jeder ungeprüfte Aufruf benannt; seit R17-19 dazu die zwei Riegel der Kette: jede fremde `uses:`-Zeile an einer SHA mit Fassung, die Ausnahmeliste hält ihre acht Pfade, jeder steht in `.gitignore`, keine `server/config.php*` eingecheckt |
@@ -13568,12 +13593,14 @@ Schlüssel stehen auskommentiert in `config.example.php`. `config.php` wird
 zur Laufzeit nicht geschrieben; die Zeile kommt per FTP hinauf, und bis der
 OPcache des Hosters die Datei neu liest, können einige Sekunden vergehen.
 
-**Health-Endpunkt einrichten (seit Web 20.46.0, einmalig je Anlage, P5c/AP6):**
+**Health-Endpunkt einrichten (seit Web 20.46.0, einmalig je Anlage, P5c/AP6;
+seit Web 23.5.0 im Panel, R17-26):**
 
-1. Einen Zufallswert erzeugen: `php -r 'echo bin2hex(random_bytes(24));'`.
-2. In `config.php` eintragen:
-   `'betrieb' => ['health_token' => '<Wert>'],`
-3. Im Monitoring `https://<anlage>/api/health.php` mit der Kopfzeile
+1. **Betrieb → Hintergrundjobs**, Karte **Monitoring**, *Health-Token
+   erzeugen* (fragt nach dem frischen Code des Zweitfaktors, E-R17-73). Das
+   Token steht danach in der Karte, mit „Kopieren". Es liegt in `app_state`
+   (`health_token`, `health_token()` in `jobs_lib.php`).
+2. Im Monitoring `https://<anlage>/api/health.php` mit der Kopfzeile
    `X-Health-Token: <Wert>` eintragen — **die Kopfzeile ist der empfohlene
    Weg** (seit Web 23.1.0, F-R17-22): Sie steht in keinem Zugriffsprotokoll.
    Kann das Monitoring keine Kopfzeile setzen, geht
@@ -13583,12 +13610,21 @@ OPcache des Hosters die Datei neu liest, können einige Sekunden vergehen.
    lang).
    Auswerten: HTTP 200 = in Ordnung, 503 = nicht in Ordnung — der Rumpf sagt,
    was (`db`, `migration_ausstehend`, oder `error: maintenance`).
-4. Probe: `curl -s -H 'X-Health-Token: <Wert>' https://<anlage>/api/health.php`
+3. Probe: `curl -s -H 'X-Health-Token: <Wert>' https://<anlage>/api/health.php`
    → `"ok":true`. Ohne Token oder mit falschem → 403 `token`; stehen
    Kopfzeile und Adresse beide da, gilt die Kopfzeile.
 
-Ausschalten: den Eintrag leeren. Der Endpunkt antwortet dann jedem mit 403,
-wie einem falschen Token.
+Ausschalten: in derselben Karte *Abfrage abschalten* — der Eintrag wird
+leer, nicht gelöscht. Der Endpunkt antwortet dann jedem mit 403, wie einem
+falschen Token.
+
+**Übergang von `config.php` (Web 23.5.0).** Bis Web 23.4.x stand das Token
+als `betrieb.health_token` in `config.php`. Fehlt der Eintrag in `app_state`
+ganz, übernimmt der erste Abruf den Wert aus der Datei — ein laufendes
+Monitoring merkt das Update nicht. Danach liest niemand die Zeile mehr; sie
+kann aus `config.php` gelöscht werden. Ein **leerer** Eintrag (abgeschaltet)
+wird nicht wieder aus der Datei gefüllt. **Preis:** Ein Datenbankabzug
+enthält das Token (Bedrohungsmodell); es öffnet nur die Zustandsauskunft.
 
 **Code-Update mit DB-Änderung ausrollen:** pushen (Deploy läuft automatisch)
 → als BetreiberIn **Betrieb → Updates** aufrufen → nach dem Lauf muss die

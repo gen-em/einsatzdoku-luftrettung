@@ -940,7 +940,9 @@ Konto löschen, das Ausschalten deines eigenen Zweitfaktors und — seit Web
 dazu: **neue Wiederherstellungscodes** erzeugen (sie sind ein dauerhafter
 zweiter Faktor wie ein Passkey), und in der Verwaltung ein Komplett-Backup
 herunterladen, ein Konto-Backup freigeben, die Anmeldeadresse einer anderen
-Person ändern und ihr einen Setz-Link senden. Hast du dich eben mit dem
+Person ändern und ihr einen Setz-Link senden. Seit Web 23.5.0 außerdem unter
+Betrieb → Hintergrundjobs: eines der drei Tokens erneuern oder die
+Health-Abfrage abschalten. Hast du dich eben mit dem
 Code oder einem Passkey angemeldet, merkst du davon nichts. Kamst du über ein
 gemerktes Gerät herein oder ist die Anmeldung älter, erscheint die Seite
 **„Code bestätigen"** — Code aus der App (oder ein Wiederherstellungscode)
@@ -5140,7 +5142,7 @@ jede Seite trägt ein Anliegen. Was wohin gegangen ist:
 | Was du suchst | Wo es jetzt steht |
 |---|---|
 | Wartungsmodus, ausstehende Updates, Fassung | Betrieb → **Updates** |
-| Zustand der Hintergrundjobs, die drei Auslöser, das Job-Token und das Kettentoken | Betrieb → **Hintergrundjobs** |
+| Zustand der Hintergrundjobs, die drei Auslöser, das Job-Token, das Kettentoken und seit Web 23.5.0 das Health-Token | Betrieb → **Hintergrundjobs** |
 | Speichergrenze, Warnschwellen, Kontingente, Belegung, Ablage | Betrieb → **Servereinstellungen** |
 | CSP scharf schalten, HSTS-Dauer | Betrieb → **Servereinstellungen** |
 | Name und Logo der Installation | Verwaltung → **Installation** |
@@ -5161,7 +5163,9 @@ aufrufen.
 Oben steht eine Meldung mit einer Zahl — *„2 Punkte brauchen Aufmerksamkeit"*
 oder *„Alles läuft"*. Darunter vier Karten: **Server**, **E-Mail**,
 **Hintergrundjobs** und **Backups**, je Sache eine Zeile mit einer Plakette.
-Ganz unten, eingeklappt, eine fünfte: **Plattform** (seit Web 20.5.0).
+Ganz unten, eingeklappt, eine fünfte: **Plattform** (seit Web 20.5.0), und
+darunter, ebenso eingeklappt, seit Web 23.5.0 **„Einstellungen aus der
+config.php"**.
 
 **Neben dem Titel steht seit Web 20.12.0 ein zweiter Knopf: „Sicherheit".**
 Er führt auf die Unterseite, auf der steht, wer gerade ausgesperrt ist — und
@@ -5203,6 +5207,27 @@ wird **orange** in zwei Fällen: Die Mails tragen den Betreff-Präfix
 der `config.php`. Oder das Etikett nennt eine Farbe, die die Anwendung nicht
 kennt; die Kopfleiste steht dann trotzdem rot. Einstellen lässt sich beides
 nur in der `config.php` (`docs/Technik.md`, Runbook).
+
+**Die Zeile „Adresse der Anlage"** (seit Web 23.5.0) steht darunter. Sie
+vergleicht die Adresse aus `app.base_url` in der `config.php` mit der, unter
+der du die Seite gerade aufgerufen hast — verglichen wird nur der Name des
+Servers, nicht der Pfad. Aus `base_url` bauen sich die Links in Mails, die
+Passkeys, die gedruckten Blätter und die Adresse unter Betrieb →
+Hintergrundjobs. Steht dort eine alte Adresse, laufen sie alle ins Leere,
+ohne dass es sonst jemand meldet. **Orange** heißt: Die beiden weichen ab,
+oder `base_url` fehlt. Stimmt die Adresse in der Datei und rufst du die Seite
+nur ausnahmsweise unter einem anderen Namen auf, ist nichts zu tun; sonst die
+Zeile in der `config.php` berichtigen (per FTP — hier lässt sie sich nicht
+ändern). Wer `base_url` umstellt, muss Passkeys neu anlegen; sie gehören zur
+alten Adresse.
+
+**Die Karte „Einstellungen aus der config.php"** (seit Web 23.5.0) zeigt, was
+in der Datei steht — eine Zeile je Einstellung. Passwörter und Schlüssel
+(Datenbank, Mailserver, Serverschlüssel, Server-Anteil) stehen nur als
+**„gesetzt"** oder **„leer"** da, nie der Wert. Ändern lässt sich hier nichts:
+Die Datei ist während des Betriebs bewusst nicht beschreibbar, damit auch eine
+übernommene Sitzung sie nicht ändern kann. Die Karte zählt nicht in der
+Meldung oben mit.
 
 **Die Zeile „Verwaltungskonten"** (seit Web 20.42.0) steht darunter und sagt,
 ob die Anlage **vertreten** ist. Gezählt werden **handlungsfähige** Konten
@@ -5866,7 +5891,16 @@ Anlage ausliefert, und reist nie in einer Adresse.
 **„Neues Token erzeugen"** macht jeweils das bisherige ungültig: beim
 Job-Token läuft ein Zeitplan-Eintrag beim Hoster danach ins Leere, beim
 Kettentoken scheitert die nächste Auslieferung, bis der neue Wert in GitHub
-steht. **Einmal nach dem Update auf Web 23.1.0 sollten beide erneuert
+steht. **Seit Web 23.5.0 fragt der Knopf nach einem frischen Code** des
+Zweitfaktors, wenn der letzte älter als eine Viertelstunde ist (3.1f) — wer
+ein Token erneuert, legt Zeitplan, Kette oder Monitoring still, und das soll
+eine fremde Sitzung nicht können. Nach dem Code steht die Seite wieder da;
+den Knopf dann noch einmal drücken.
+
+**Das dritte Token, seit Web 23.5.0: Monitoring.** In der Karte
+**„Monitoring"** steht das Health-Token für ein eigenes Monitoring
+(Abschnitt 12.9) — erzeugen, kopieren, erneuern oder die Abfrage ganz
+abschalten. Bis dahin stand es nur in der `config.php`. **Einmal nach dem Update auf Web 23.1.0 sollten beide erneuert
 werden**, weil das alte, gemeinsame Token in den Zugriffsprotokollen steht;
 die Schrittfolge steht im Runbook (`Technik.md` 7).
 
@@ -6554,14 +6588,20 @@ Seit Web 20.46.0 kann ein Überwachungsdienst — ein Uptime-Dienst, ein
 Nagios, ein `curl` im Cron — die Anlage fragen, ob sie läuft. Die Anwendung
 selbst meldet nichts nach draußen; sie antwortet nur, wenn sie gefragt wird.
 
-**Einrichten** geht über `config.php`, nicht über die Oberfläche: Dort steht
-ein langer Zufallswert als `betrieb.health_token`, und das Monitoring fragt
-`https://…/api/health.php` mit der Kopfzeile `X-Health-Token: <Wert>`. Kann
-dein Monitoring keine Kopfzeile setzen, geht auch
-`https://…/api/health.php?token=<Wert>` — dann steht der Wert im
+**Einrichten** geht seit Web 23.5.0 über die Oberfläche: **Betrieb →
+Hintergrundjobs**, Karte **Monitoring**, Knopf *Health-Token erzeugen*. Das
+Monitoring fragt dann `https://…/api/health.php` mit der Kopfzeile
+`X-Health-Token: <Wert>`. Kann dein Monitoring keine Kopfzeile setzen, geht
+auch `https://…/api/health.php?token=<Wert>` — dann steht der Wert im
 Zugriffsprotokoll des Hosters (seit Web 23.1.0 ist deshalb die Kopfzeile der
-empfohlene Weg). Die Schritte stehen im Runbook (`Technik.md` 7,
-„Health-Endpunkt einrichten"). Ohne Eintrag ist der Endpunkt aus.
+empfohlene Weg). In derselben Karte erzeugst du ein neues Token oder
+schaltest die Abfrage ab; beides fragt, wie bei den anderen beiden Tokens der
+Seite, noch einmal nach dem Code des Zweitfaktors.
+
+*Bis Web 23.4.x stand das Token als `betrieb.health_token` in `config.php`.*
+Ein Wert, der dort steht, wird beim ersten Abruf nach dem Update übernommen —
+ein laufendes Monitoring merkt nichts. Danach liest niemand die Zeile mehr;
+du kannst sie aus `config.php` löschen. Ohne Token ist der Endpunkt aus.
 
 **Was die Antwort sagt:**
 

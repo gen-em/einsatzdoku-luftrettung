@@ -8395,5 +8395,24 @@ declare(strict_types=1);
  *   alte `wartung.lock` zieht bei der ersten Anfrage nach `.zustand/` um
  *   (F-R17-72). Neben, weil sich der Weg durch die Anwendung spuerbar
  *   aendert (neuer Tab ohne Passwort, eine Rueckfrage weniger); kein Schema.
+ * 23.5.0 — WAS IN DER config.php STEHT, SIEHT MAN JETZT (Schritt 12b,
+ *   R17-26; F-R17-50, -51, -75; Q-R17-20, -21). `app.base_url` stand auf
+ *   Produktiv wochenlang auf einer alten Adresse, und nichts meldete es —
+ *   gefunden hat es die Betreiberin ueber einen leeren 500er beim Cronjob
+ *   per URL. Die Statusseite vergleicht jetzt den Host aus `base_url` mit
+ *   dem, unter dem sie aufgerufen ist, und faerbt die Zeile „Adresse der
+ *   Anlage" orange, wenn sie auseinandergehen; darunter liegt eine
+ *   eingeklappte Lesekarte der Datei, Geheimnisse nur als „gesetzt" oder
+ *   „leer". Die Datei bleibt zur Laufzeit unbeschreibbar (E-R17-72). Das
+ *   Health-Token zieht dagegen in die Datenbank und wird unter Betrieb →
+ *   Jobs erzeugt, erneuert oder abgeschaltet; ein Wert in der Datei wird
+ *   beim ersten Abruf uebernommen. Preis: Ein Datenbankabzug traegt es
+ *   jetzt, wie die zwei Tokens daneben. Alle drei Tokens verlangen beim
+ *   Erneuern einen frischen Code (E-R17-73). Dazu die Herkunft im Browser:
+ *   `leaflet.css` trug die Summe des Originals mit Windows-Zeilenenden,
+ *   `openlocationcode.js` lag ohne Kopf ausserhalb von `vendor/` — beide
+ *   berichtigt, und `fremdsummen` rechnet die Koepfe seither in Stufe 1
+ *   nach. Neben, weil zwei Auskuenfte und ein Bedienweg dazukommen; kein
+ *   Schema.
  */
-const WEB_VERSION = '23.4.0';
+const WEB_VERSION = '23.5.0';

@@ -316,6 +316,49 @@ function status_erhebung(): array
             'blau', 'Produktiv');
     }
 
+    /* ---- Adresse der Anlage (R17-26, F-R17-75, E-R17-72 (2)) ------------
+     *
+     * WOFUER. `app.base_url` stand auf Produktiv wochenlang auf einer alten
+     * Adresse, und nichts meldete es: Mail-Links, die `rp_id` der Passkeys,
+     * die gedruckten Blaetter und die Karte „Ausloeser" bauten sich daraus,
+     * und der Cronjob per URL bekam einen leeren 500er. Gefunden hat es
+     * die Betreiberin, nicht die Anlage.
+     *
+     * VERGLICHEN WIRD DER HOST, nicht die ganze Adresse: Port und Pfad
+     * fallen weg, Gross- und Kleinschreibung auch. Der Host der Anfrage ist
+     * der, unter dem die BetreiberIn diese Seite gerade sieht — dieselbe
+     * Quelle, die `kopfzeilen_lib.php` fuer den CSP-Bericht nimmt. Hinter
+     * einem Proxy, der den Host umschreibt, waere die Zeile falsch orange;
+     * das ist die bekannte Grenze, und sie faellt auf, statt still zu sein.
+     *
+     * OHNE ANFRAGE (CLI, Jobs) KEINE ZEILE: Dort gibt es keinen Host, gegen
+     * den sich vergleichen liesse, und eine Zeile „unbekannt" saehe niemand.
+     * Die Datei bleibt zur Laufzeit unbeschreibbar — die Zeile sagt, WAS
+     * zu tun ist, und das Panel tut es nicht (Q-R17-20). */
+    $anfrageHost = strtolower((string)preg_replace('/:\d+$/', '',
+        (string)($_SERVER['HTTP_HOST'] ?? '')));
+    if ($anfrageHost !== '') {
+        $basis     = (string)(konfig('app.base_url') ?? '');
+        $basisHost = strtolower((string)(parse_url($basis, PHP_URL_HOST) ?? ''));
+        if ($basisHost === '') {
+            $server[] = status_z('Adresse der Anlage',
+                'app.base_url fehlt in der config.php oder ist keine Adresse. Links '
+                . 'in Mails, Passkeys und die gedruckten Blätter brauchen sie',
+                'orange', 'fehlt');
+        } elseif ($basisHost !== $anfrageHost) {
+            $server[] = status_z('Adresse der Anlage',
+                'app.base_url nennt „' . $basisHost . '", aufgerufen ist diese Seite '
+                . 'unter „' . $anfrageHost . '". Links in Mails, Passkeys und die '
+                . 'gedruckten Blätter zeigen auf die erste — in der config.php '
+                . 'berichtigen, falls sie nicht stimmt',
+                'orange', 'weicht ab');
+        } else {
+            $server[] = status_z('Adresse der Anlage',
+                'app.base_url passt zur aufgerufenen Adresse (' . $basisHost . ')',
+                'blau', 'passt');
+        }
+    }
+
     /* ---- Verwaltungskonten: der Bus-Faktor (P5c/AP5, E-P5c-16, -44, -56,
      *      -63; M-P5c-02d Bild 2) ------------------------------------------
      *
@@ -1128,6 +1171,90 @@ function status_zaehlen(array $karten): array
         }
     }
     return $z;
+}
+
+/**
+ * Die Lesekarte der `config.php` (R17-26, E-R17-72 (1), Q-R17-20).
+ *
+ * WARUM ES SIE GIBT. Was in der Datei steht, sah bis Web 23.5.0 nur, wer per
+ * FTP hineinschaute — `app.base_url` stand deshalb wochenlang auf einer
+ * alten Adresse (F-R17-75). Die Datei bleibt zur Laufzeit unbeschreibbar;
+ * diese Karte LIEST nur.
+ *
+ * EINE FESTE LISTE, KEIN DURCHLAUF ÜBER `konfig_alles()`. Ein Durchlauf
+ * zeigte jeden Schlüssel, den künftig jemand einträgt, und damit früher oder
+ * später ein Geheimnis. Hier steht jeder Schlüssel einzeln, und für die
+ * Geheimnisse — Datenbankpasswort, Mailpasswort, Serverschlüssel,
+ * Server-Anteil, ein altes Health-Token — gibt es nur „gesetzt" oder
+ * „leer", nie den Wert und nie seine Länge. Wer einen Schlüssel ergänzt,
+ * entscheidet hier, in welche Gruppe er gehört.
+ *
+ * KEINE AMPEL. Die Karte zählt nicht in der Meldung oben mit; was an
+ * diesen Werten falsch sein kann, melden die Zeilen der Karten darüber
+ * (Serverschlüssel, Server-Anteil, Adresse der Anlage, E-Mail).
+ *
+ * @return list<array> Zeilen wie `status_z()`, alle im Ton `neutral`
+ */
+function status_konfig_zeilen(): array
+{
+    $text = static function (string $pfad): string {
+        $w = konfig($pfad);
+        if ($w === null || $w === '') { return '—'; }
+        return is_scalar($w) ? (string)$w : '—';
+    };
+    $geheim = static function (string $pfad): string {
+        $w = konfig($pfad);
+        return (is_string($w) && $w !== '') ? 'gesetzt' : 'leer';
+    };
+    $zeile = static fn(string $schluessel, string $klein, string $plakette): array
+        => status_z($schluessel, $klein, 'neutral', $plakette);
+
+    /* Die DSN ohne Benutzer und Passwort: Treiber, Host, Datenbank. PDO-DSNs
+     * fuer MySQL tragen keine Zugangsdaten — wer doch `user=`/`password=`
+     * hineinschreibt, sieht hier die Teile davor und danach nicht. */
+    $dsn  = (string)(konfig('db.dsn') ?? '');
+    $dsnTeile = [];
+    if (preg_match('/^([a-z]+):(.*)$/i', $dsn, $m)) {
+        $dsnTeile[] = $m[1];
+        foreach (explode(';', $m[2]) as $teil) {
+            [$k, $v] = array_pad(explode('=', $teil, 2), 2, '');
+            if (in_array(strtolower(trim($k)), ['host', 'port', 'dbname', 'charset'], true)) {
+                $dsnTeile[] = trim($k) . '=' . trim($v);
+            }
+        }
+    }
+    $umgebung = konfig('app.umgebung');
+    $proxys   = konfig('netz.vertrauenswuerdige_proxys');
+    $altEins  = static fn(string $pfad): string
+        => (is_string(konfig($pfad)) && konfig($pfad) !== '') ? 'gesetzt' : 'nicht gesetzt';
+
+    return [
+        $zeile('db.dsn', $dsnTeile ? implode(' · ', $dsnTeile) : '—', 'Datenbank'),
+        $zeile('db.user', $text('db.user'), 'Datenbank'),
+        $zeile('db.pass', 'Wert wird nicht angezeigt', $geheim('db.pass')),
+        $zeile('app.base_url', $text('app.base_url'), 'Adresse'),
+        $zeile('app.timezone', $text('app.timezone'), 'Anzeige'),
+        $zeile('app.logo_path', $text('app.logo_path'), 'Anzeige'),
+        $zeile('app.max_body_bytes', $text('app.max_body_bytes') . ' Byte', 'Grenze'),
+        $zeile('app.umgebung', is_array($umgebung)
+            ? ((string)($umgebung['name'] ?? '—') . ', Farbe ' . (string)($umgebung['farbe'] ?? '—'))
+            : 'nicht gesetzt — Produktiv', 'Etikett'),
+        $zeile('mail.betreff_praefix', $text('mail.betreff_praefix'), 'E-Mail'),
+        $zeile('smtp.host', $text('smtp.host') . ', Port ' . $text('smtp.port'), 'E-Mail'),
+        $zeile('smtp.user', $text('smtp.user'), 'E-Mail'),
+        $zeile('smtp.pass', 'Wert wird nicht angezeigt', $geheim('smtp.pass')),
+        $zeile('smtp.from', $text('smtp.from_name') . ' <' . $text('smtp.from') . '>', 'E-Mail'),
+        $zeile('netz.vertrauenswuerdige_proxys', is_array($proxys) && $proxys
+            ? implode(', ', array_map('strval', $proxys))
+            : 'keine — die Adresse der Verbindung zählt', 'Netz'),
+        $zeile('server_key', 'Wert wird nicht angezeigt; alter Schlüssel '
+            . $altEins('server_key_alt'), $geheim('server_key')),
+        $zeile('kdf_anteil', 'Wert wird nicht angezeigt; alter Anteil '
+            . $altEins('kdf_anteil_alt'), $geheim('kdf_anteil')),
+        $zeile('betrieb.health_token', 'Seit Web 23.5.0 unter Betrieb → Jobs; ein Wert '
+            . 'hier wird beim ersten Abruf übernommen und kann danach heraus',
+            (string)(konfig('betrieb.health_token') ?? '') !== '' ? 'gesetzt' : 'leer'),
+    ];
 }
 
 

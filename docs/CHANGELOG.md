@@ -14,6 +14,84 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 23.5.0] — unveröffentlicht
+
+Schritt 12b, Paket R17-26 — was in der `config.php` steht, wird sichtbar, ohne
+dass die Datei beschreibbar wird (F-R17-75, Q-R17-20, E-R17-72); das
+Health-Token zieht ins Panel; die drei Tokens unter Betrieb → Jobs verlangen
+beim Erneuern einen frischen Code (Q-R17-21, E-R17-73); die Herkunft der
+Browser-Bibliotheken stimmt wieder und wird nachgerechnet (F-R17-50, -51).
+Kein Schema, kein `update.php`.
+
+### Hinzugefügt
+
+- **Web — die Statusseite meldet, wenn `app.base_url` nicht zur Adresse
+  passt.** Auf Produktiv stand dort wochenlang eine alte Adresse, und nichts
+  hat es gemeldet: Links in Mails, die Passkeys, die gedruckten Blätter und
+  die Karte „Auslöser" bauten sich daraus, und der Cronjob per URL bekam einen
+  leeren Fehler. Gefunden hat es die Betreiberin, nicht die Anlage. Jetzt
+  vergleicht die Zeile „Adresse der Anlage" in der Karte Server den Host aus
+  `base_url` mit dem, unter dem die Seite aufgerufen ist — orange, wenn sie
+  auseinandergehen oder `base_url` fehlt, und dann zählt sie in der Meldung
+  oben mit. Verglichen wird nur der Host; hinter einem Proxy, der ihn
+  umschreibt, wäre die Zeile zu Unrecht orange, und das fällt auf, statt still
+  zu bleiben.
+- **Web — eine Lesekarte der `config.php` auf der Statusseite.** Eingeklappt
+  unter der Plattform, jede Einstellung eine Zeile. Datenbank- und
+  Mailpasswort, Serverschlüssel und Server-Anteil stehen nur als „gesetzt"
+  oder „leer" da, nie der Wert und nie seine Länge. Die Liste ist fest und
+  läuft nicht über die ganze Datei: Ein Durchlauf zeigte jeden künftigen
+  Schlüssel und früher oder später ein Geheimnis. Ändern lässt sich hier
+  nichts — die Datei ist zur Laufzeit bewusst unbeschreibbar; was im Panel
+  änderbar ist, kann auch eine übernommene Admin-Sitzung ändern.
+- **Web — das Health-Token wird unter Betrieb → Jobs erzeugt.** Karte
+  „Monitoring": erzeugen, erneuern, abschalten, kopieren — dieselben Bausteine
+  wie die zwei Tokens darüber. Bis hierher stand es nur in der `config.php`,
+  und wer es einrichten oder wechseln wollte, brauchte FTP. Ein Wert, der dort
+  noch steht, wird beim ersten Abruf übernommen; danach gilt die Datenbank,
+  und die Zeile in der Datei kann heraus. Wer abschaltet, schaltet ab — ein
+  leerer Eintrag wird nicht wieder aus der Datei gefüllt.
+
+### Geändert
+
+- **Web — die drei Tokens unter Betrieb → Jobs verlangen beim Erneuern einen
+  frischen Code.** Wer ein Token erneuert, legt das Monitoring, den Cronjob
+  oder die Kette still, bis der neue Wert eingetragen ist; eine übernommene
+  Sitzung konnte das bisher ohne Code. Jetzt steht die Handlung in der Liste
+  der Frische-Handlungen wie das Abschalten des Zweitfaktors, und das
+  Zählregister wacht, dass jede genau einmal gefragt wird.
+- **Web — `openlocationcode.js` liegt unter `assets/vendor/`**, mit Herkunft
+  und Summe im Kopf und einer Zeile in `docs/Lizenzen.md`. Die Datei ist
+  Googles Open Location Code (Apache-2.0), byte-gleich mit dem Stand
+  `2afe39f1` des Repositoriums — sie lag bisher ohne Kopf neben dem eigenen
+  Code, und die Zusage „jede Fremddatei mit Herkunft und SHA-256" galt für sie
+  nicht.
+
+### Behoben
+
+- **Web — die Prüfsumme im Kopf von `leaflet.css` passte nicht zur Datei**
+  (F-R17-50). Sie war über das npm-Original mit Windows-Zeilenenden
+  gerechnet, abgelegt ist die Datei mit Unix-Zeilenenden. Wer nachrechnete,
+  fand eine Abweichung, die kein Eingriff war — und lernte, Abweichungen zu
+  übergehen. Der Kopf nennt jetzt beide Summen und sagt, welche wofür gilt.
+- **Web (Prüfmittel) — die Prüfsummen hat bisher niemand nachgerechnet.**
+  `tools/quelltext/fremdsummen.py` läuft jetzt in Stufe 1 und rechnet jede
+  `.js`- und `.css`-Datei unter `assets/vendor/` gegen ihren Kopf und gegen
+  die Tabelle in `docs/Lizenzen.md`. Eine Datei, die außerhalb von `vendor/`
+  liegt, sieht sie nicht — so war `openlocationcode.js` lange unbemerkt;
+  diese Grenze bleibt.
+
+### Bewusst stehen gelassen
+
+- **Ein Datenbankabzug trägt jetzt auch das Health-Token**, wie seit jeher
+  die Tokens für Cronjob und Kette. Das Token öffnet nur eine Zustandsauskunft
+  ohne Daten; der Gewinn — einrichten und wechseln ohne FTP, mit frischem
+  Code — wiegt das auf. Das Bedrohungsmodell nennt es bei der Lage des
+  Datenbankabzugs.
+- **Die übrigen harmlosen Einstellungen** (Zeitzone, Logo, Absendername,
+  Größengrenze) bleiben in der Datei und im Panel nur lesbar, bis sie im
+  Alltag stören (E-R17-72 (4)).
+
 ## [Web 23.4.0] — unveröffentlicht
 
 Schritt 12b, Paket R17-25 — der Inhaltsschlüssel als nicht extrahierbarer

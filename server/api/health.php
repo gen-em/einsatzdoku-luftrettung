@@ -8,7 +8,10 @@ declare(strict_types=1);
  *     GET /api/health.php            Kopfzeile  X-Health-Token: <Token>
  *     GET /api/health.php?token=<Token>          (fuer Monitore ohne Kopfzeilen)
  *
- *     <Token> = `betrieb.health_token` aus `config.php`
+ *     <Token> = das Health-Token aus Betrieb → Hintergrundjobs (seit Web
+ *               23.5.0, `health_token()` in `jobs_lib.php`; bis dahin
+ *               `betrieb.health_token` aus `config.php`, das beim ersten
+ *               Lesen uebernommen wird, R17-26)
  *
  * DIE KOPFZEILE IST DER EMPFOHLENE WEG (Web 23.1.0, R17-19, F-R17-22,
  * E-R17-35). Eine Adresse steht im Zugriffsprotokoll des Hosters, eine
@@ -66,6 +69,7 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/../db.php';
 require_once __DIR__ . '/../ratelimit_lib.php';
+require_once __DIR__ . '/../jobs_lib.php';   // health_token() (R17-26)
 
 api_methode('GET');
 $t0 = microtime(true);
@@ -78,7 +82,7 @@ rate_zaehlen('health');
 
 $kopf     = (string)($_SERVER['HTTP_X_HEALTH_TOKEN'] ?? '');
 $token    = $kopf !== '' ? $kopf : (string)($_GET['token'] ?? '');
-$erwartet = (string)(konfig('betrieb.health_token') ?? '');
+$erwartet = health_token();
 if ($erwartet === '' || $token === '' || !hash_equals($erwartet, $token)) {
     rate_gleiche_dauer($t0);
     json_out(['error' => 'token'], 403);

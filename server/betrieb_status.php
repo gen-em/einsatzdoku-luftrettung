@@ -302,6 +302,20 @@ ui_seite_start(['titel' => 'Status']);
     <?php foreach ($kp['zeilen'] as $zeile) { status_zeile($zeile); } ?>
   <?php ui_karte_ende(true); ?>
 
+  <?php /* DIE LESEKARTE DER config.php (R17-26, E-R17-72 (1)). Gebaut wie die
+           Plattform darueber — eingeklappt, Zeilen mit Plakette, kein neuer
+           Baustein. Sie LIEST nur; Geheimnisse stehen als „gesetzt" oder
+           „leer" da, die Liste und ihre Begruendung stehen in
+           `status_konfig_zeilen()`. Sie zaehlt nicht in der Meldung oben. */ ?>
+  <?php ui_karte_start(['titel' => 'Einstellungen aus der config.php', 'id' => 'k-konfig',
+                        'vorschau' => 'nur lesend · Geheimnisse als gesetzt/leer']); ?>
+    <p class="feld-hinweis">Die Datei liegt nur auf dem Server und lässt sich
+       hier nicht ändern — geändert wird sie per FTP. Passwörter und Schlüssel
+       stehen nie im Klartext da.
+       <a href="hilfe.php#12-1-status">Handbuch: Status</a></p>
+    <?php foreach (status_konfig_zeilen() as $zeile) { status_zeile($zeile); } ?>
+  <?php ui_karte_ende(true); ?>
+
   <?php /* ---- Betriebsprotokoll: eine Zaehlkarte (P5b/AP1, P5c/AP2) -------
      *
      * WARUM HIER NUR ZAHLEN STEHEN UND KEINE EINTRAEGE. Die Eintraege stehen

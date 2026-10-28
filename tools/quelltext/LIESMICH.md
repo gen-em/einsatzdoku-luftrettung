@@ -1,12 +1,10 @@
 # Quelltextprüfungen
 
-**Anlass: Nr. 148, 170, 188, 205, 208, 238, 248, 283, 293, 315, 318** — vierzehn Prüfungen, die Quelltext lesen und im Tor laufen (E-PK-24), je Prüfung mit Anlass in der Tabelle.
+**Anlass: Nr. 148, 170, 188, 205, 208, 238, 248, 283, 293, 315, 318** — fünfzehn Prüfungen, die Quelltext lesen und im Tor laufen (E-PK-24), je Prüfung mit Anlass in der Tabelle.
 
 ## Aufruf
 
-```bash
-bash tools/quelltext/pruefen.sh <name> [zusatz…]   # alle · --selbstprobe · --liste
-```
+`bash tools/quelltext/pruefen.sh <name> [zusatz…]` — dazu `alle` · `--selbstprobe` · `--liste`
 
 ## Was es misst
 
@@ -26,6 +24,7 @@ bash tools/quelltext/pruefen.sh <name> [zusatz…]   # alle · --selbstprobe · 
 | `handbuch` | Handbuch und „Was ist NAdoku" rendern, UTF-8 streng, kein fremdes Bild | P5b/AP8 |
 | `anker` | jeder Verweis `hilfe.php#…` trifft eine Überschrift des gerenderten Handbuchs | Nr. 188 |
 | `kennzeichnung` | Schloss an jedem verschlüsselten Feld in Formular und Leseansicht, gegen `kennzeichnung-soll.md`; Kleinzeile an jedem Klartext-Freitextfeld des Katalogs | Nr. 170 |
+| `fremdsummen` | die SHA-256 im Herkunftskopf jeder Datei unter `server/assets/vendor/`, nachgerechnet ohne den Kopf und gegen die Tabelle in `Lizenzen.md` 3 | F-R17-50, -51 |
 
 ## Was es braucht
 
@@ -33,7 +32,7 @@ bash tools/quelltext/pruefen.sh <name> [zusatz…]   # alle · --selbstprobe · 
 
 ## Erwartete Zahl
 
-`alle` → **14 von 14 grün**, `--selbstprobe` → **12 von 12**; ohne Schwelle. Die Textprobe meldet nur **neue** Treffer gegen `textprobe-altbestand.json` (neu schreiben mit `--altbestand-schreiben`, nie von Hand).
+`alle` → **15 von 15 grün**, `--selbstprobe` → **13 von 13**; ohne Schwelle. Die Textprobe meldet nur **neue** Treffer gegen `textprobe-altbestand.json` (neu schreiben mit `--altbestand-schreiben`, nie von Hand).
 
 ## Was es nicht kann
 

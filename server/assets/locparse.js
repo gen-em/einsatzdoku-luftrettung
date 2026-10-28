@@ -19,7 +19,7 @@
  *   {typ:'plus'|'gdm'|'dms'|'dezimal', lat, lon, anzeige} erfolgreich erkannt und umgerechnet
  *
  * Benoetigt fuer den Plus-Code-Zweig die gevendorte Bibliothek
- * assets/openlocationcode.js (globales Objekt OpenLocationCode). Fehlt sie
+ * assets/vendor/openlocationcode.js (globales Objekt OpenLocationCode). Fehlt sie
  * (z. B. in einer isolierten Testumgebung), greift dieser Zweig einfach
  * nicht — GDM und Dezimalgrad funktionieren unabhaengig davon.
  */

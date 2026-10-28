@@ -1,3 +1,18 @@
+/*!
+ * Open Location Code (Plus Codes), Google — Apache-2.0
+ * Bezogen aus github.com/google/open-location-code, Commit
+ * 2afe39f1809d1e51786e585d426c968c598aa5f9 (13.06.2025), Datei
+ * js/src/openlocationcode.js (Paketfassung 20250411.0.0). Keine npm-Fassung
+ * traegt diesen Stand: open-location-code 1.0.3 auf npm ist eine andere Datei.
+ * SHA-256: 271165812e3007d71b025b518cb2c0424a2646cb94cb5751521f3313d4b1e505
+ *
+ * Herkunft nachgetragen mit Web 23.5.0 (R17-26, F-R17-51): Bis dahin lag die
+ * Datei als assets/openlocationcode.js ohne diesen Kopf. Zeichen fuer Zeichen
+ * gleich mit dem genannten Commit, nachgerechnet am 28.10.2026. Nicht
+ * veraendern — bei einem Update die Datei komplett austauschen und Commit,
+ * Pruefsumme und docs/Lizenzen.md mitziehen. Die Pruefsumme gilt fuer die
+ * Datei OHNE diesen Kopf; tools/quelltext/fremdsummen.py rechnet sie nach.
+ */
 // Copyright 2014 Google Inc. All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the 'License');

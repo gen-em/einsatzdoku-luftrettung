@@ -1243,6 +1243,13 @@ const ZF_FRISCH_HANDLUNGEN = [
     'freigeben_ablage'   => ['seite' => 'admin_sicherungen.php',       'ort' => ''],
     // Adresswechsel und Setz-Link durch die Verwaltung (F-R17-06, E-R17-45)
     'adresswechsel_verwaltung' => ['seite' => 'admin_user.php',        'ort' => ''],
+    // die drei Tokens der Hintergrundjobs (R17-26, Q-R17-21, E-R17-73): Ein
+    // neues Token gibt den Weg zu Jobs, Wartung und Backup bzw. zur
+    // Zustandsauskunft frei — eine uebernommene Sitzung soll das nicht
+    // ohne zweiten Faktor koennen.
+    'jobs_token_neu'     => ['seite' => 'betrieb_jobs.php',            'ort' => 'k-ausloeser'],
+    'kette_token_neu'    => ['seite' => 'betrieb_jobs.php',            'ort' => 'k-kette'],
+    'health_token'       => ['seite' => 'betrieb_jobs.php',            'ort' => 'k-health'],
     'setzlink'           => ['seite' => 'admin_user.php',              'ort' => ''],
 ];
 
