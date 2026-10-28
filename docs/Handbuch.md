@@ -3861,6 +3861,13 @@ zwölf Stunden lang dieselbe Meldung, und die bei 10 % ginge darin unter.
 Hängst du das Gerät ans Kabel, verschwindet die Warnung; fällt der Stand
 später wieder, warnt dieselbe Schwelle erneut.
 
+**„Dienst beenden" in der Warnung beendet den Dienst ganz** — wie der Knopf
+in der App. *Bis Android 0.18.0 tat er das nicht:* Er hielt nur die
+Aufzeichnung an, der Dienst blieb offen, und im Web stand der Diensttag ohne
+Ende. Hast du den Knopf mit einer älteren Fassung gedrückt, schließe diesen
+Diensttag im Web von Hand. Dasselbe gilt für die Erinnerung „Dienst läuft
+seit N Stunden".
+
 **Die App beendet den Dienst nicht von selbst.** Das ist Absicht: Eine
 Abschaltung bei einem festen Ladestand beendete die Aufzeichnung **still**,
 mitten im Dienst, genau dann, wenn niemand aufs Handy sieht — und was in der

@@ -10231,7 +10231,23 @@ eine Attrappe. Zur Lizenzlage der proprietären Bibliothek:
    Einsatz, statt einen zweiten anzulegen.
 
 Ohne Quittung wird dieselbe Nachricht **mit derselben Nummer** erneut
-gesendet. Der Puffer der Uhr überlebt ihren Neustart.
+gesendet. Der Puffer der Uhr überlebt ihren Neustart. **Eine unlesbare
+Zeile** (ein halbes Schreiben) fällt seit Android 0.18.1 beim Laden heraus
+und wird im Kopf des Puffers gezählt (`Uhrpuffer.unlesbarVerworfen`); bis
+dahin blieb sie für immer, weil nur Zeilen mit lesbarer Nummer quittiert
+werden können.
+
+**Die Hauptansicht des Handys liest den Puffer nach Änderungen, nicht nach
+der Uhr** (seit Android 0.18.1). `Puffer.aenderungen` zählt jeden
+Schreibvorgang — erst nach dem Schreiben, damit die Ansicht keinen halben
+Stand liest und danach stehen bleibt; alle Schreibwege gehen über
+`schreibe { … }`. Rückstand, Abgewiesene und Verwerfbare liest die Ansicht
+nur, wenn sich der Zähler bewegt hat; bis 0.18.0 waren das drei
+SQLite-Abfragen je Sekunde auf dem Hauptfaden. **Ein GPS-Punkt zählt
+nicht** (`punktAnhaengen()`): Er landet in einem offenen Paket und ändert
+keine der drei Zahlen. Der übrige Dienststand bleibt am Sekundentakt, weil
+er mit der Zeit läuft („seit …"). Auf der Wear-Uhr zeichnet der Zeitschlag
+der Sperrfrist nur noch neu, wenn sich der Zustand geändert hat.
 
 **Und zwei Böden gegen einen fremden Absender** (seit Android 0.14.0,
 Backlog Nr. 144, Krypto-Review AN-4). Der erste ist die Bibliothek: Der Data
@@ -10307,7 +10323,14 @@ deutschen Satz.
 Dazu eine **Erinnerung auf dem Warnkanal** (ID 5), einmal je Lauf des
 Aufzeichnungsdienstes, sobald er `DIENSTDAUER_ERINNERUNG_H` = **26 Stunden**
 überschreitet: Titel „Dienst läuft seit N Stunden", Text mit dem Beginn und
-dem Knopf „Dienst beenden". Die Schwelle ist gewählt, nicht gemessen, und die
+dem Knopf „Dienst beenden". **Der Knopf geht denselben Weg wie die Rückfrage
+der Hauptansicht** (seit Android 0.18.1, F-R17-54): Die Aktion `BEENDEN`
+schließt in `onStartCommand()` zuerst die Dienstklammer und beendet dann den
+Vordergrunddienst. Bis 0.18.0 beendete sie nur den Vordergrunddienst — der
+Dienst im Puffer blieb offen; derselbe Knopf in der Akkuwarnung ab 15 % hatte
+denselben Fehler. `klammer.beenden()` ist idempotent, die Wege über die
+Rückfrage und über die Uhr, die die Klammer schon geschlossen haben, bleiben
+unberührt. Die Schwelle ist gewählt, nicht gemessen, und die
 Begründung steht an der Konstante — regulär bis 24 Stunden, zwei Stunden Luft
 für einen späten Schichtwechsel. Geprüft wird sie im **Wächtertakt** (10 s);
 der Vergleich kostet nichts, und ein Merker sorgt dafür, dass die Meldung

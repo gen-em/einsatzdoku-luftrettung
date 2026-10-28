@@ -44,10 +44,26 @@ class Uhrsteuerung(
     /** Die Nummer des gemeldeten Dienststarts, solange sie unquittiert ist. */
     private var dienstNr: Long? = null
 
+    /*
+     * `@Volatile` (R17-24): geschrieben auf der Werkbank der App
+     * (`UhrApp.werkbank`), gelesen vom Hauptfaden beim Start der Ansicht.
+     * Harmlos war es auch ohne — der nächste Aufruf von [beiAenderung] bringt
+     * den frischen Stand —, aber das Handy markiert dieselbe Bauform überall.
+     *
+     * NUR EINE ÄNDERUNG MELDET (R17-24). Die Ansicht schickt jede Sekunde
+     * einen Zeitschlag für die Sperrfrist; bis 0.18.0 setzte jeder davon den
+     * Zustand neu und rief [beiAenderung] — ein Post auf den Hauptfaden und
+     * eine Neuzeichnung je Sekunde, auch wenn nichts anders war. [Uhrzustand]
+     * ist eine `data class`; der Vergleich kostet weniger als das Zeichnen.
+     * Eine tickende Anzeige gibt es auf der Uhr nicht (`laufendeSeit` ist ein
+     * fester Text vom Handy), also fehlt dadurch keine Sekunde.
+     */
+    @Volatile
     var zustand: Uhrzustand = anfang.copy(
         gepuffert = funk.offen(), handyErreichbar = funk.handyErreichbar,
     )
         private set(wert) {
+            if (wert == field) return
             field = wert
             beiAenderung(wert)
         }

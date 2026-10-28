@@ -198,4 +198,30 @@ class UhrfunkTest {
         assertNotEquals(eine, zweite)
         assertTrue("Höchstens 64 Zeichen (Vertrag 3.2)", eine.length <= 64)
     }
+
+    /**
+     * **Eine unlesbare Zeile bleibt nicht für immer** (R17-24).
+     *
+     * Ein halbes Schreiben kann eine Zeile hinterlassen, die kein Ereignis
+     * ist. Bis 0.18.0 blieb sie: `quittieren()` nahm nur Zeilen mit lesbarer
+     * Nummer, `nachliefern()` schickte sie bei jedem Start, und sie zählte im
+     * Puffer mit. Jetzt fällt sie beim Laden heraus und wird gezählt; die
+     * lesbaren bleiben wortgleich.
+     */
+    @Test fun eineUnlesbareZeileFaelltBeimLadenHeraus() {
+        val vorher = funk()
+        weg.erreichbar = false
+        vorher.melde(Ereignisart.DIENST_BEGINNEN, 1_000)
+        val lesbar = Uhrpuffer(ablage, Random(7)).wartende().single()
+        ablage.schreib(ablage.lies() + "{\"uhr\":\"u-halb\",\"nr\":\n")   // abgerissen
+
+        val nachher = Uhrpuffer(ablage, Random(7))
+        assertEquals("Nur die lesbare Zeile wartet", 1, nachher.anzahl())
+        assertTrue("…wortgleich", lesbar.contentEquals(nachher.wartende().single()))
+        assertEquals("Verworfen und gezählt", 1L, nachher.unlesbarVerworfen)
+        assertFalse("Die Ablage trägt sie nicht mehr", ablage.lies().contains("u-halb"))
+
+        val nochmal = Uhrpuffer(ablage, Random(7))
+        assertEquals("Ein weiterer Start zählt nicht doppelt", 1L, nochmal.unlesbarVerworfen)
+    }
 }

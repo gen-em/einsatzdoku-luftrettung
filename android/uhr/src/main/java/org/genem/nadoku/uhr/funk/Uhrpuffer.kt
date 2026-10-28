@@ -73,6 +73,12 @@ class Uhrpuffer(private val ablage: Ablage, private val zufall: Random = Random.
     /** Wie viele Nachrichten auf ihre Quittung warten. */
     fun anzahl(): Int = warteschlange.size
 
+    /**
+     * Wie viele unlesbare Zeilen das Laden bisher verworfen hat — für die
+     * Fehlersuche, über alle Starts gezählt (R17-24).
+     */
+    val unlesbarVerworfen: Long get() = kopf.optLong(SCHLUESSEL_UNLESBAR, 0L)
+
     /** Die wartenden Nachrichten, in der Reihenfolge ihres Entstehens. */
     fun wartende(): List<ByteArray> = warteschlange.map { it.toByteArray(Charsets.UTF_8) }
 
@@ -147,7 +153,24 @@ class Uhrpuffer(private val ablage: Ablage, private val zufall: Random = Random.
             sichern()
         }
         warteschlange.clear()
-        warteschlange.addAll(zeilen.drop(1))
+        /* EINE UNLESBARE ZEILE GEHT BEIM LADEN (R17-24, Entscheidung der
+         * Betreiberin). Ein halbes Schreiben über den Ersatzweg ohne
+         * `renameTo` kann eine Zeile hinterlassen, die kein Ereignis mehr
+         * ist. Bis 0.18.0 blieb sie für immer: `quittieren()` entfernt nur
+         * Zeilen mit lesbarer Nummer, `nachliefern()` schickte sie bei jedem
+         * Start, `gepuffert` zählte sie mit. Das Handy liest mit demselben
+         * Format und hätte sie nie quittiert — zustellbar ist sie nicht. Sie
+         * fällt heraus und wird im Kopf gezählt; dasselbe wie beim Kopf
+         * oben, nur nicht still. */
+        val gelesen = zeilen.drop(1)
+        val lesbar = gelesen.filter {
+            Nachrichtenformat.liesMeldung(it.toByteArray(Charsets.UTF_8)) != null
+        }
+        warteschlange.addAll(lesbar)
+        if (lesbar.size < gelesen.size) {
+            kopf.put(SCHLUESSEL_UNLESBAR, unlesbarVerworfen + (gelesen.size - lesbar.size))
+            sichern()
+        }
     }
 
     private fun sichern() {
@@ -159,5 +182,6 @@ class Uhrpuffer(private val ablage: Ablage, private val zufall: Random = Random.
         const val SCHLUESSEL_NR = "nr"
         const val SCHLUESSEL_QUITTIERT = "qb"
         const val SCHLUESSEL_KENNUNG = "kz"
+        const val SCHLUESSEL_UNLESBAR = "uv"
     }
 }

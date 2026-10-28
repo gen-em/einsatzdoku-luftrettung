@@ -11,8 +11,8 @@ import java.util.concurrent.CopyOnWriteArrayList
  * WARUM SELBST GEBAUT UND KEINE BIBLIOTHEK. Der übliche Weg wäre
  * `MockWebServer` (OkHttp). Das hieße, für die Prüfung eine Abhängigkeit
  * aufzunehmen, die E-S4-04 für die App ausschließt — und sie stünde dann in
- * `libs.versions.toml`, wo die Liste der drei zugelassenen Fremdbestandteile
- * steht. Was hier gebraucht wird, sind sechzig Zeilen `ServerSocket`.
+ * `libs.versions.toml`, wo die Liste der zwei zugelassenen Fremdbestandteile
+ * steht (bis 0.18.0 hiess es hier „drei", ein Rest von vor R63). Was hier gebraucht wird, sind sechzig Zeilen `ServerSocket`.
  * (`com.sun.net.httpserver` scheidet aus: Beim Übersetzen gegen `android.jar`
  * ist es nicht sichtbar.)
  *

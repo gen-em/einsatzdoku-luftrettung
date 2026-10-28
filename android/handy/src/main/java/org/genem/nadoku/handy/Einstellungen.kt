@@ -15,9 +15,9 @@ import org.genem.nadoku.gemeinsam.Modus
  * Schutz der strengeren an der schwächeren auszurichten — oder umgekehrt
  * Einstellungen zu verschlüsseln, die auf jedem Werbebanner stehen könnten.
  *
- * Die Server-Adresse wird **normalisiert gespeichert** (Basis mit
- * abschließendem `/`), nicht so, wie sie getippt wurde: Sonst müsste jede
- * lesende Stelle die Toleranzregeln kennen.
+ * Die Server-Adresse steht hier nicht mehr — sie ist seit R63 (Nr. 84) eine
+ * Konstante des Baulaufs (`Serveradresse.BASIS`). Bis 0.18.0 sagte dieser
+ * Kopf noch, sie werde hier normalisiert gespeichert.
  */
 class Einstellungen(kontext: Context) {
 
@@ -29,12 +29,15 @@ class Einstellungen(kontext: Context) {
      * Einstellung mehr -- eine Angabe, die fuer alle dieselbe ist, gehoert
      * nicht in eine Ablage je Geraet.
      *
-     * EIN ALTBESTAND-EINTRAG `server_basis` BLEIBT LIEGEN und wird von
-     * niemandem mehr gelesen. Ihn zu loeschen waere Code fuer einen Fall, den
-     * es kaum gibt: Die App war nie im Store, und eine seitengeladene Fassung
-     * kann sich seit Web 13.0.0 ohnehin nicht mehr koppeln.
+     * DER ALTBESTAND-EINTRAG `server_basis` GEHT BEIM ERSTEN ZUGRIFF (seit
+     * 0.18.1, R17-24). Bis dahin blieb er liegen, und ein Absatz an dieser
+     * Stelle erklaerte, warum das Loeschen sich nicht lohne. Die Zeile
+     * darunter kostet weniger als der Absatz, und eine Adresse, die niemand
+     * mehr liest, soll auch niemand mehr finden. */
+    init {
+        if (ablage.contains(ALT_SERVER_BASIS)) ablage.edit { remove(ALT_SERVER_BASIS) }
+    }
 
-     */
     /**
      * Die Logo-Wahl (E-S4-22b). Vorgabe **„wechselnd"** — sie wird einmal je
      * App-Start gewürfelt und bleibt dann stehen; das Würfeln selbst macht
@@ -115,5 +118,7 @@ class Einstellungen(kontext: Context) {
         const val AKKU = "akku_hinweis"
         const val VERBRAUCH = "verbrauch_hinweis"
         const val ZAEHLER = "kennungszaehler"
+        /** Bis R63 die Serveradresse; nur noch zum Entfernen (0.18.1). */
+        const val ALT_SERVER_BASIS = "server_basis"
     }
 }

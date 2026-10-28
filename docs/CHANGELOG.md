@@ -14,6 +14,68 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Android 0.18.1] — unveröffentlicht
+
+Schritt 12b, Paket R17-24 — Android (Befund F-R17-54 und die Aufräumposten
+aus Stück 9). Handy und Wear-Uhr, eine Zählung. Kein neues Nachrichtenformat,
+kein neuer Vertrag mit dem Server.
+
+### Behoben
+
+- **Android — „Dienst beenden" aus einer Benachrichtigung ließ den Dienst
+  offen.** Die Akkuwarnung ab 15 % und die Erinnerung nach 26 Stunden tragen
+  einen Knopf „Dienst beenden". Er beendete nur den Vordergrunddienst:
+  Ortung aus, ein Sendelauf, die Dauermeldung weg. Den Dienst im Puffer
+  schloss er nicht — das taten nur die Rückfrage der Hauptansicht und das
+  Dienstende von der Uhr, die beide die Klammer selbst schließen, bevor sie
+  den Vordergrunddienst beenden (F-R17-54). Wer den Knopf drückte, sah beim
+  nächsten Öffnen „Dienst läuft" ohne Aufzeichnung, im Web stand der
+  Diensttag ohne Ende, und der nächste „Dienst beginnen" setzte den alten
+  fort — genau der Fall, den die Erinnerung verhindern soll. Jetzt schließt
+  die Aktion zuerst die Klammer; das ist unschädlich für die anderen beiden
+  Wege, weil ein zweites Schließen nichts tut. Ein Prüffall schickt die
+  Aktion an den Dienst wie die Benachrichtigung und ist gegen 0.18.0 rot.
+  Wer den Knopf schon gedrückt hat, schließt den offenen Diensttag im Web.
+- **Android — die Hauptansicht las jede Sekunde drei Zahlen aus der
+  Datenbank.** Rückstand, Abgewiesene und Verwerfbare kamen über SQLite auf
+  dem Hauptfaden, auch wenn sich nichts geändert hatte; auf einem alten
+  Gerät mit vollem Puffer ein Ruckeln je Sekunde. Der Puffer zählt jetzt
+  seine Schreibvorgänge, und die Ansicht liest die drei Zahlen nur nach,
+  wenn sich der Zähler bewegt hat (Entscheidung der Betreiberin). Er steigt
+  erst nach dem Schreiben, sonst könnte die Ansicht einen halben Stand
+  lesen und stehen bleiben. Ein GPS-Punkt zählt mit Absicht nicht: Er
+  landet in einem offenen Paket und ändert keine der drei Zahlen; zählte er,
+  liefen die Abfragen im Dienst wieder fast jede Sekunde.
+- **Wear-Uhr — jede Sekunde eine Neuzeichnung ohne Anlass.** Der Zeitschlag
+  für die Sperrfrist setzte den Zustand jede Sekunde neu und zeichnete die
+  Ansicht, auch wenn alles gleich war. Jetzt zeichnet nur eine Änderung;
+  eine laufende Uhrzeit gibt es auf der Uhr nicht, also fehlt keine Sekunde.
+- **Wear-Uhr — eine unlesbare Zeile blieb für immer im Puffer.** Ein halbes
+  Schreiben konnte eine Zeile hinterlassen, die kein Ereignis mehr ist; sie
+  wurde nie quittiert, bei jedem Start erneut gesendet und mitgezählt. Sie
+  fällt jetzt beim Laden heraus und wird im Kopf des Puffers gezählt
+  (Entscheidung der Betreiberin: verwerfen, nicht beiseitelegen — zustellbar
+  ist sie ohnehin nicht).
+
+### Geändert
+
+- **Android — der Altbestand `server_basis` geht beim ersten Start.** Die
+  Serveradresse ist seit R63 eine Konstante des Baulaufs; der alte Eintrag
+  blieb liegen, und ein Absatz erklärte, warum das Löschen sich nicht lohne.
+  Die eine Zeile kostet weniger als der Absatz.
+- **Kommentare:** „derselbe Knopf wie in der Dauermeldung" (die keinen hat),
+  „drei zugelassene Fremdbestandteile" (es sind zwei, AndroidX/Compose und
+  `play-services-wearable`), der Kopf von `Einstellungen.kt` (die Adresse
+  steht dort nicht mehr). `Uhrsteuerung.zustand` trägt `@Volatile` wie die
+  gleiche Bauform auf dem Handy.
+
+### Bewusst stehen gelassen
+
+- **Der Rest der Hauptansicht bleibt am Sekundentakt.** Der Dienststand
+  trägt Angaben, die mit der Zeit laufen („seit …", „Ortung seit n min"),
+  und liest dafür weiter einige Zeilen aus dem Puffer. Ihn zu teilen wäre
+  ein eigenes Stück Arbeit mit eigenem Prüfweg am Gerät.
+
 ## [Web 23.3.2] — unveröffentlicht
 
 Schritt 12b, Paket R17-23 — Sicherung und Wiederherstellung (Befunde

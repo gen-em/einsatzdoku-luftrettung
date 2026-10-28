@@ -5,6 +5,7 @@ import android.content.Context
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
 import androidx.core.database.sqlite.transaction
+import java.util.concurrent.atomic.AtomicLong
 import org.genem.nadoku.handy.aufzeichnung.Rohpunkt
 import org.genem.nadoku.handy.senden.Phaseneintrag
 
@@ -31,6 +32,46 @@ import org.genem.nadoku.handy.senden.Phaseneintrag
  */
 class Puffer(kontext: Context, name: String = DATEINAME) :
     SQLiteOpenHelper(kontext, name, null, FASSUNG) {
+
+    /*
+     * DER ÄNDERUNGSZÄHLER (R17-24, Entscheidung der Betreiberin). Die
+     * Hauptansicht las bis 0.18.0 jede Sekunde drei Zahlen über SQLite
+     * (`rueckstand()`, `abgewiesen()`, `verwerfbar()`) auf dem Hauptfaden —
+     * auf einem alten Gerät mit vollem Puffer ein Ruckeln je Sekunde, obwohl
+     * sich die Zahlen nur mit einem Schreibvorgang ändern. Jetzt zählt der
+     * Puffer jeden Schreibvorgang, und die Ansicht liest nur nach, wenn
+     * [aenderungen] sich bewegt hat.
+     *
+     * DER ZÄHLER STEIGT NACH DEM SCHREIBEN, nicht davor (`finally` in
+     * [schreibe]). Stiege er vorher, könnte die Ansicht zwischen Zählen und
+     * Festschreiben nachlesen, den alten Stand sehen und danach stehen
+     * bleiben, weil sich der Zähler nicht mehr bewegt. Eine Transaktion
+     * zählt deshalb an ihrem äußeren `schreibe` noch einmal — nach dem
+     * Festschreiben.
+     *
+     * JEDER SCHREIBWEG GEHT ÜBER [schreibe]; `writableDatabase` steht nur
+     * dort. Wer einen neuen Schreibweg daneben baut, bekommt eine Anzeige,
+     * die erst beim nächsten anderen Schreiben nachzieht.
+     *
+     * EINE AUSNAHME, MIT GRUND: `punktAnhaengen()` zählt nicht
+     * (`zaehlt = false`). Im Dienst kommt ein Punkt fast jede Sekunde; zählte
+     * er, liefen die drei Abfragen wieder im Sekundentakt. Ein Punkt landet
+     * aber immer in einem OFFENEN Paket, und keine der drei Zahlen sieht ein
+     * offenes Paket an (`rueckstand()` zählt nur `final = 1`, die anderen
+     * beiden nur abgewiesene). Wer [aenderungen] für etwas anderes liest als
+     * diese drei, prüft zuerst, ob ihm Punkte fehlen dürfen.
+     */
+    private val zaehler = AtomicLong(0)
+
+    /** Wie oft dieser Puffer seit dem Start geschrieben hat (R17-24). */
+    val aenderungen: Long get() = zaehler.get()
+
+    private inline fun <T> schreibe(zaehlt: Boolean = true, block: (SQLiteDatabase) -> T): T =
+        try {
+            block(writableDatabase)
+        } finally {
+            if (zaehlt) zaehler.incrementAndGet()
+        }
 
     override fun onCreate(db: SQLiteDatabase) {
         db.execSQL(
@@ -170,7 +211,7 @@ class Puffer(kontext: Context, name: String = DATEINAME) :
     // ---- Dienst ------------------------------------------------------------
 
     fun dienstBeginnen(dienstRef: String, tag: String, begonnenAt: String, modus: String): Long =
-        writableDatabase.insertOrThrow(
+        schreibe { it.insertOrThrow(
             "dienst", null,
             ContentValues().apply {
                 put("dienst_ref", dienstRef)
@@ -178,20 +219,20 @@ class Puffer(kontext: Context, name: String = DATEINAME) :
                 put("begonnen_at", begonnenAt)
                 put("modus", modus)
             },
-        )
+        ) }
 
     fun dienstBeenden(dienstRef: String, beendetAt: String) {
-        writableDatabase.update(
+        schreibe { it.update(
             "dienst", ContentValues().apply { put("beendet_at", beendetAt) },
             "dienst_ref = ?", arrayOf(dienstRef),
-        )
+        ) }
     }
 
     fun modusSetzen(dienstRef: String, modus: String) {
-        writableDatabase.update(
+        schreibe { it.update(
             "dienst", ContentValues().apply { put("modus", modus) },
             "dienst_ref = ?", arrayOf(dienstRef),
-        )
+        ) }
     }
 
     /**
@@ -214,7 +255,7 @@ class Puffer(kontext: Context, name: String = DATEINAME) :
 
     fun paketAnlegen(
         clientRef: String, art: String, tag: String, dienstRef: String?, begonnenAt: String,
-    ): Long = writableDatabase.insertOrThrow(
+    ): Long = schreibe { it.insertOrThrow(
         "paket", null,
         ContentValues().apply {
             put("client_ref", clientRef)
@@ -223,10 +264,10 @@ class Puffer(kontext: Context, name: String = DATEINAME) :
             put("dienst_ref", dienstRef)
             put("begonnen_at", begonnenAt)
         },
-    )
+    ) }
 
     fun paketSchliessen(paketId: Long, beendetAt: String, streckeM: Int?, anstiegM: Int?) {
-        writableDatabase.update(
+        schreibe { it.update(
             "paket",
             ContentValues().apply {
                 put("beendet_at", beendetAt)
@@ -235,7 +276,7 @@ class Puffer(kontext: Context, name: String = DATEINAME) :
                 if (anstiegM != null) put("anstieg_m", anstiegM)
             },
             "id = ?", arrayOf(paketId.toString()),
-        )
+        ) }
     }
 
     fun paket(paketId: Long): Paketzeile? =
@@ -260,8 +301,7 @@ class Puffer(kontext: Context, name: String = DATEINAME) :
      *
      * @return die vergebene Sequenznummer
      */
-    fun punktAnhaengen(paketId: Long, p: Rohpunkt): Long {
-        val db = writableDatabase
+    fun punktAnhaengen(paketId: Long, p: Rohpunkt): Long = schreibe(zaehlt = false) { db ->
         val seq = punktzahl(paketId)
         db.insertOrThrow(
             "punkt", null,
@@ -274,7 +314,7 @@ class Puffer(kontext: Context, name: String = DATEINAME) :
                 put("zeit", p.zeit)
             },
         )
-        return seq
+        seq
     }
 
     fun punktzahl(paketId: Long): Long =
@@ -399,7 +439,7 @@ class Puffer(kontext: Context, name: String = DATEINAME) :
      * werden (Fund B-S4-05). Gesendet, nicht nur gespeichert.
      */
     fun phaseAnhaengen(paketId: Long, nummer: Int, at: String, breite: Double?, laenge: Double?, quelle: String) {
-        writableDatabase.transaction {
+        schreibe { it.transaction {
             insertOrThrow(
                 "phase", null,
                 ContentValues().apply {
@@ -415,7 +455,7 @@ class Puffer(kontext: Context, name: String = DATEINAME) :
                 "paket", ContentValues().apply { put("metadaten_bestaetigt", 0) },
                 "id = ?", arrayOf(paketId.toString()),
             )
-        }
+        } }
     }
 
     /** Die Quelle einer Phase (`handy`/`uhr`) — nur für die Prüfung. */
@@ -436,14 +476,14 @@ class Puffer(kontext: Context, name: String = DATEINAME) :
      * (ein Einsatz, der nur Phasen trägt) hätte sonst nie „Arbeit erledigt".
      */
     fun bestaetigungMerken(paketId: Long, naechsteSeq: Long) {
-        writableDatabase.update(
+        schreibe { it.update(
             "paket",
             ContentValues().apply {
                 put("bestaetigt_seq", naechsteSeq)
                 put("metadaten_bestaetigt", 1)
             },
             "id = ?", arrayOf(paketId.toString()),
-        )
+        ) }
     }
 
     /**
@@ -452,10 +492,10 @@ class Puffer(kontext: Context, name: String = DATEINAME) :
      * weil dann niemand mehr sähe, dass etwas nicht angekommen ist.
      */
     fun alsFehlerhaftMerken(paketId: Long) {
-        writableDatabase.update(
+        schreibe { it.update(
             "paket", ContentValues().apply { put("fehlerhaft", 1) },
             "id = ?", arrayOf(paketId.toString()),
-        )
+        ) }
     }
 
     /**
@@ -469,11 +509,11 @@ class Puffer(kontext: Context, name: String = DATEINAME) :
         /* IN EINER TRANSAKTION. Bräche der Vorgang zwischen den drei
          * Löschungen ab, bliebe ein Paket ohne Punkte stehen — oder, schlimmer,
          * Punkte ohne Paket, die nie wieder jemand sähe. */
-        writableDatabase.transaction {
+        schreibe { it.transaction {
             delete("punkt", "paket_id = ?", arrayOf(paketId.toString()))
             delete("phase", "paket_id = ?", arrayOf(paketId.toString()))
             delete("paket", "id = ?", arrayOf(paketId.toString()))
-        }
+        } }
     }
 
     /**
@@ -582,7 +622,7 @@ class Puffer(kontext: Context, name: String = DATEINAME) :
      *   was vor ihm endete. `null` räumt ohne Frist.
      * @return was gelöscht wurde — für das Protokoll und den Prüfstand
      */
-    fun abgewieseneRaeumen(vor: String?): Raeumung = writableDatabase.transaction {
+    fun abgewieseneRaeumen(vor: String?): Raeumung = schreibe { it.transaction {
         val frist = if (vor != null) arrayOf(vor) else null
         val ids = rawQuery(
             "SELECT id FROM paket WHERE fehlerhaft = 1 AND final = 1" +
@@ -605,7 +645,7 @@ class Puffer(kontext: Context, name: String = DATEINAME) :
             frist,
         )
         Raeumung(pakete = ids.size, dienste = dienste)
-    }
+    } }
 
     /** Hat dieses Paket noch etwas zu senden? */
     fun hatArbeit(p: Paketzeile): Boolean =
@@ -623,7 +663,7 @@ class Puffer(kontext: Context, name: String = DATEINAME) :
      * oder gar nicht (Vermerk steht, gewirkt wurde nichts) — beides
      * unbemerkbar.
      */
-    fun <T> imVorgang(block: () -> T): T = writableDatabase.transaction { block() }
+    fun <T> imVorgang(block: () -> T): T = schreibe { it.transaction { block() } }
 
     /**
      * Kennt das Handy dieses Ereignis schon? Dann ist es eine
@@ -648,8 +688,7 @@ class Puffer(kontext: Context, name: String = DATEINAME) :
      *
      * @return der neue Stand — genau die Zahl, die in die Quittung gehört.
      */
-    fun uhrEreignisMerken(uhrId: String, nr: Long): Long {
-        val db = writableDatabase
+    fun uhrEreignisMerken(uhrId: String, nr: Long): Long = schreibe { db ->
         db.insertWithOnConflict(
             "uhr_ereignis", null,
             ContentValues().apply {
@@ -675,7 +714,7 @@ class Puffer(kontext: Context, name: String = DATEINAME) :
             SQLiteDatabase.CONFLICT_REPLACE,
         )
         db.delete("uhr_ereignis", "uhr_id = ? AND nr <= ?", arrayOf(uhrId, stand.toString()))
-        return stand
+        stand
     }
 
     /** Die höchste lückenlos übernommene Nummer dieser Uhr; 0, wenn keine. */

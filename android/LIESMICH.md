@@ -9,12 +9,16 @@ Phasenknöpfe.
 Grundlage ist `docs/konzepte/Konzept-S4-Handy-Uhr-Client.md`; der Vertrag, gegen den
 gebaut wird, steht in `docs/JSON-Vertrag.md` und ist die führende Quelle.
 
-> **Stand: Arbeitspaket C2 — die Blöcke B und C sind damit fertig.** Das
-> Handy koppelt sich, zeichnet auf, dokumentiert Phasen und Einsätze und
-> sendet alles nach dem JSON-Vertrag. Die Uhr hat ihr Bedienbild und den
-> Nachrichtenweg dorthin: Sie puffert jedes Ereignis, bis das Handy quittiert,
-> und liefert wortgleich nach. Was fehlt, ist der Browserteil (Block A) und
-> die Übergabe (Block D).
+> **Stand: Android 0.18.1 (Schritt 12b, R17-24, 27.10.2026).** Das Handy
+> koppelt sich, zeichnet auf, dokumentiert Phasen und Einsätze und sendet
+> alles nach dem JSON-Vertrag — Spur und Phasenorte seit 0.18.0 verschlossen
+> (S11-09). Die Wear-Uhr ist Fernbedienung und puffert jedes Ereignis, bis
+> das Handy quittiert. **Was aussteht:** der Gerätetest, an dessen Ende die
+> erste 1.0.0 steht (E-R45-7), und am Gerät P-R17-11 (der Knopf „Dienst
+> beenden" in der Akkuwarnung, Prüfdokument des Reviews R17). Was der
+> Baulauf meldet, steht in Abschnitt 2 unter „Was der Baulauf heute meldet".
+> *(Bis 0.18.0 stand hier noch „Arbeitspaket C2" aus S4 — der Kasten war
+> seither nicht mehr nachgezogen worden.)*
 
 ---
 

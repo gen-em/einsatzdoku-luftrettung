@@ -187,6 +187,17 @@ class AufzeichnungsDienst : LifecycleService() {
         super.onStartCommand(intent, flags, startId)
 
         if (intent?.action == BEENDEN) {
+            /* DIE KLAMMER ZUERST (F-R17-54, R17-24). Bis 0.18.0 rief dieser
+             * Zweig nur das eigene `beenden()`: Ortung ab, Sendelauf,
+             * `stopSelf()`. Den Dienst im PUFFER schloss nur, wer die Klammer
+             * vorher selbst beendete — die Rückfrage der Hauptansicht und
+             * das Dienstende von der Uhr. Der Knopf „Dienst beenden" in der
+             * Akkuwarnung und in der Erinnerung nach 26 Stunden kommt aber
+             * direkt hierher; danach war die Aufzeichnung weg, der Dienst
+             * im Puffer offen, und der nächste „Dienst beginnen" setzte ihn
+             * fort. `klammer.beenden()` ist idempotent (`false`, wenn kein
+             * Dienst läuft) — die beiden anderen Wege bleiben richtig. */
+            app.klammer.beenden()
             beenden()
             return START_NOT_STICKY
         }
@@ -500,8 +511,11 @@ class AufzeichnungsDienst : LifecycleService() {
      * Die Akkuwarnung — ab [Akkustufe.NIEDRIG] **mit** dem Angebot, den
      * Dienst zu beenden.
      *
-     * DER KNOPF LÖST DIESELBE AKTION AUS wie der in der Dauermeldung
-     * ([BEENDEN]); es entsteht kein zweiter Weg, den Dienst zu beenden. Bei
+     * DER KNOPF GEHT DENSELBEN WEG WIE DIE RÜCKFRAGE DER HAUPTANSICHT: Die
+     * Aktion [BEENDEN] schließt erst die Klammer und dann den Dienst
+     * (`onStartCommand()`). Bis 0.18.0 stand hier, er löse dieselbe Aktion
+     * aus „wie der in der Dauermeldung" — die Dauermeldung hat keinen Knopf,
+     * und die Aktion schloss die Klammer nicht (F-R17-54). Bei
      * [Akkustufe.KNAPP] fehlt er mit Absicht: Da ist Nachladen die richtige
      * Handlung, und ein Knopf, der das Aufgeben anbietet, bevor es naheliegt,
      * wird beim dritten Mal gedrückt, ohne gelesen zu werden.

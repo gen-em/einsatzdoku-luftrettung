@@ -270,6 +270,24 @@ class UhrsteuerungTest {
         assertEquals(Ansicht.DIENSTENDEFRAGE, steuerung.zustand.ansicht)
     }
 
+    /**
+     * **Ein Zeitschlag ohne Änderung zeichnet nicht** (R17-24). Bis 0.18.0
+     * rief jeder Zeitschlag [Uhrsteuerung]s Rückruf, auch wenn der Zustand
+     * gleich blieb — eine Neuzeichnung je Sekunde. Der erste Schlag darf
+     * etwas ändern (die Sperrfrist ist abgelaufen), die folgenden nicht.
+     */
+    @Test fun zeitschlagOhneAenderungMeldetNichts() {
+        var gerufen = 0
+        val s = Uhrsteuerung(funk = funk, jetzt = { uhrzeit }, beiAenderung = { gerufen++ })
+        s.ereignis(Uhrereignis.Zeitschlag(uhrzeit))
+        val nachDemErsten = gerufen
+        repeat(5) { s.ereignis(Uhrereignis.Zeitschlag(uhrzeit)) }
+        assertEquals("Fünf gleiche Zeitschläge zeichnen nicht neu", nachDemErsten, gerufen)
+
+        s.ereignis(Uhrereignis.Dienstknopf(tipp()))
+        assertTrue("Eine Bedienung meldet weiter", gerufen > nachDemErsten)
+    }
+
     private fun stand(dienstLaeuft: Boolean) = Standmeldung(
         dienstLaeuft = dienstLaeuft, modus = Modus.MIT_PHASENKNOEPFEN, einsatzLaeuft = false,
         laufendePhase = Phasen.FREI, laufendeSeit = null, phasen = emptyList(),

@@ -321,9 +321,18 @@ private fun GekoppelteOberflaeche(
                 PackageManager.PERMISSION_GRANTED
     }
 
-    val rueckstand = remember(takt) { app.puffer.rueckstand() }
-    val abgewiesen = remember(takt) { app.puffer.abgewiesen() }
-    val verwerfbar = remember(takt) { app.puffer.verwerfbar() }
+    /* DIE DREI ZAHLEN DES PUFFERS LESEN NUR NACH EINER ÄNDERUNG (R17-24).
+     * Bis 0.18.0 hingen sie am Sekundentakt: drei SQLite-Abfragen je Sekunde
+     * auf dem Hauptfaden, auf einem alten Gerät mit vollem Puffer ein
+     * Ruckeln — obwohl sie sich nur mit einem Schreibvorgang ändern (Senden,
+     * Verwerfen, ein geschlossenes Paket). Jetzt liest der Takt nur den
+     * Änderungszähler des Puffers, eine Zahl im Arbeitsspeicher; die drei
+     * Abfragen laufen, wenn er sich bewegt hat. `stand` darunter bleibt am
+     * Takt: Er trägt Angaben, die mit der Zeit laufen („seit …"). */
+    val pufferStand = remember(takt) { app.puffer.aenderungen }
+    val rueckstand = remember(pufferStand) { app.puffer.rueckstand() }
+    val abgewiesen = remember(pufferStand) { app.puffer.abgewiesen() }
+    val verwerfbar = remember(pufferStand) { app.puffer.verwerfbar() }
     val sendelaeuft = remember(takt) { app.sendelaufLaeuft }
     val sendeergebnis = remember(takt) { sendeergebnis(app.letzterSendebericht) }
 
