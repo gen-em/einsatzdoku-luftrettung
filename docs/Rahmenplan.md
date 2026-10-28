@@ -1,11 +1,11 @@
 # Rahmenplan — Programm „Gen-EM NAdoku" bis v1.0
 
-**Fassung 176 (26.10.2026)** · Steuerung: Reihenfolge, Status, programmweite
+**Fassung 177 (28.10.2026)** · Steuerung: Reihenfolge, Status, programmweite
 Entscheidungen. Verlauf: `Rahmenplan-Verlauf.md`. Fassungen 1–15:
 `Rahmenplan-Archiv.md`; Fassungen 16–124: `Rahmenplan-Archiv-2.md`.
 
 **Stand `origin/main`** (Commit `2e9bc9c`, PR #122, gemessen 26.10.2026): Web 23.1.0 ·
-Uhr 4.0.0 · Android 0.18.0; Web 23.0.3 auf Produktiv seit dem 25.10.2026.
+Uhr 4.0.0 · Android 0.18.0; Web 23.1.0 auf Produktiv seit dem 27.10.2026.
 **Läuft:** 12b — P6 (Abschnitt 3), Zweig `claude/new-session-lvb0x0` (R17-18/-19 gemergt mit PR #122): das Review mit Fable ist am 21.10.2026 zu Ende und mit PR #118 gemergt; die Pakete R17-18 bis -30 laufen mit Opus (R88).
 **Als Nächstes:** 13 — P7 Gesicht v1.0, nach 12b.
 **Offene PRs:** keine.
@@ -210,9 +210,9 @@ gestrichen, 6a abgehakt; was steht, ist bestätigt offen.
 | **Umgebung `produktion` beschränken** auf `main` und die Tags `web-v*`, `android-v*`, `uhr-v*` — ein Probelauf fordert sie heute von jedem Zweig an (F-R17-04); dabei Pflichtprüfer und Org-Zweitfaktor nachsehen | 12 (R17-01) | 11.10.2026 | `Pruefdokument-R17-Review.md`, P-R17-04 |
 | **Prüfliste S11:** Gerätetests Uhr 4.0.0 und Android 0.18.0 (P-S11-32 bis -35, -05, -39), Wege auf Staging (-14 bis -31), Safari (-43), Konto-Backup (-45), alte Sicherungen (-07, -08), Rechtstexte (-40) | 12a | 20.10.2026 | `Pruefdokument-S11-Ortsdaten.md` 4 |
 | **Prüfliste DM:** P-DM-02 (Registrierung in Firefox auf Staging: Knopf sofort frei), -03 (dasselbe in Safari), -06 (dasselbe auf Produktiv nach dem Tag `web-v23.0.1`, nur bei offener Registrierung) | 19 | 20.10.2026 | `Pruefdokument-DM-Drei-Motoren.md` 3 |
-| **Prüfliste R17:** P-R17-03, -04 (CSP scharf ist Voraussetzung für R17-25), -05; aus 12b P-R17-06 bis -13, davor fällig -12 und -13; aus R17-19 -17 bis -19 (Tokens erneuern nach dem Deploy, Benachrichtigung, Monitoring) | 12, 12b | 11.10.2026 | `Pruefdokument-R17-Review.md` 4 |
-| **R17-19 abnehmen** — nach dem Merge Stufe 2 des Push auf `main` lesen, dann „Prüfung“ und App-Probelauf `android`, `uhr` von `main`; eine Instanz startet keinen Lauf (E-R17-38) | 12b (R17-19) | 25.10.2026 | `Pruefdokument-R17-Review.md`, P-R17-14 bis -16 |
-| **Logdauer des Hosters für Zugriffslogs erfragen** — Tokens in Anfrageadressen stehen dort, bis die Logs fallen (F-R17-22, -57); die Zahl in die Betriebsakte | 12b (R17-19) | 21.10.2026 | `Review-R17.md` 2.3 und 2.3a |
+| **Prüfliste R17:** P-R17-03, -04 (CSP scharf, Voraussetzung für R17-25), -05; aus 12b -06 bis -11 und -15 bis -33, je nach Deploy ihrer Fassung (-12 bis -14 erledigt, -17 offen nur auf Staging) | 12, 12b | 11.10.2026 | `Pruefdokument-R17-Review.md` 4 |
+| **R17-19 abnehmen** — „Prüfung“ und App-Probelauf `android`, `uhr` von `main`; eine Instanz startet keinen Lauf (E-R17-38). Stufe 2 nach dem Merge ist gelesen (Lauf 40271258931, P-R17-14) | 12b (R17-19) | 25.10.2026 | `Pruefdokument-R17-Review.md`, P-R17-15 und -16 |
+| **Den Hoster fragen:** Haltedauer der Zugriffslogs (F-R17-22, -57; in die Betriebsakte) und ob er GitHub-Läufer zeitweise sperrt (F-R17-74; Text vom 28.10.2026) | 12b (R17-19, Übergabe) | 21.10.2026 | `Review-R17.md` 2.3 und 2.3a |
 | **Plattformvergleich Staging vervollständigen:** vier leere Zellen (`max_user_connections`, Kontingent, Platz, Cron) und die Herkunft des Zertifikats aus Betrieb → Status | Kette II | 21.09.2026 | `Technik.md` 6.3a; Prüfpunkt 2c |
 | **Server-Anteil anlegen** — Betrieb → Servereinstellungen, Karte „Schlüssel des Servers"; ohne den Griff tut S10 nichts, die Statuszeile steht rot | S10 | 14.09.2026 | Archiv-2 6; Runbook |
 | **Schlüsselblatt drucken** — zwei Ausdrucke, zwei Orte (Betriebsakte, Passwortmanager); Ablageort in der Betriebsakte vermerken | S10 | 14.09.2026 | Archiv-2 6 |

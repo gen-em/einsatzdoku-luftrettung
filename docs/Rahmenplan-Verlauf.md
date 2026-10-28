@@ -9,6 +9,7 @@ Verlauf bis zum Schnitt). Die Fassungszählung läuft fortlaufend weiter.
 
 | Fassung | Datum | Anlass | Was |
 |---|---|---|---|
+| 177 | 28.10.2026 | Zuarbeit, Berichtigung | 6.1: P-R17-12 bis -14 und -17 (Produktiv) erledigt, -33 neu; Hoster-Anfrage um F-R17-74 erweitert. Berichtigt: Der Kopf nannte Web 23.0.3 auf Produktiv — seit dem 27.10.2026 ist es 23.1.0 (Lauf 40282917885). |
 | 176 | 26.10.2026 | R17-20 | PR #122 (R17-18/-19, Web 23.1.0) gemergt. Kopf und Fahrplanzeile 12b: die Pakete laufen ab R17-20 auf `claude/new-session-lvb0x0`; Stand `main` `2e9bc9c`, keine offenen PRs. |
 | 175 | 25.10.2026 | Merge, Berichtigung | `main` mit PR #120/#121 aufgenommen. Berichtigt wie in 174: Fassungen 170 und 171 trug Nr. 393 schon; die von R17-18/-19 und dem ersten Merge sind jetzt 172 bis 174. Kopf: Stand `main`, Zwischen-PR R17-18/-19, 38 Posten. |
 | 174 | 25.10.2026 | Merge, Berichtigung | `main` mit Nr. 393 (PR #119) aufgenommen. Berichtigt: Fassung 169 und Web 23.0.3 waren doppelt vergeben (F-R17-64); sie bleiben bei Nr. 393, R17-18/-19 sind 172/173 (damals 170/171), R17-18 geht in Web 23.1.0 auf. Kopf: 40 Posten. |
