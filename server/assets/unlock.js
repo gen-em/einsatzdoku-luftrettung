@@ -2,11 +2,12 @@
  *
  * Warum es diesen Baustein gibt:
  *   Die Anmeldung haengt am PHP-Sitzungscookie (30 min Inaktivitaet), der
- *   Inhaltsschluessel dagegen am sessionStorage des Tabs. Beide Lebensdauern
- *   laufen auseinander — ein Link in einem neuen Tab, ein Browser-Neustart
- *   oder ein Passwort-Reset ohne Wiederherstellungsschluessel fuehren
- *   regelmaessig zu "angemeldet, aber geschuetzte Angaben gesperrt".
- *   Bisher half nur vollstaendiges Ab- und Neuanmelden.
+ *   Inhaltsschluessel an der Ablage im Browser (seit R17-25 IndexedDB, fuer
+ *   alle Tabs; bis Web 23.3.x der sessionStorage des Tabs). Beide koennen
+ *   auseinanderlaufen — ein Passwort-Reset ohne Wiederherstellungsschluessel,
+ *   ein Browser ohne IndexedDB, bis 23.3.x auch jeder neue Tab — und dann
+ *   heisst es "angemeldet, aber geschuetzte Angaben gesperrt". Bisher half
+ *   nur vollstaendiges Ab- und Neuanmelden.
  *
  * Verfahren (vollstaendig im Browser, das Passwort verlaesst ihn nie):
  *   1. EdCrypto.deriveKeys(passwort, kdfSalt, kdfIter) -> haelfteHex
@@ -16,7 +17,9 @@
  *   3. EdCrypto.huelleOeffnen(dk, wrap) versuchen.
  *      Gelingt es, war das Passwort richtig — die Echtheitspruefung steckt
  *      bereits in AES-GCM, ein zusaetzlicher Abgleich waere ueberfluessig.
- *   4. EdCrypto.setDataKey(dk), danach EdCrypto.getContentKey(wrap).
+ *   4. Den Inhaltsschluessel aus der Huelle als nicht extrahierbaren
+ *      CryptoKey ablegen (EdKeyGuard.ablegen, R17-25). Der Datenschluessel
+ *      wird NICHT aufbewahrt — er lebt nur in dieser Funktion.
  *
  * Erwartet aus der Seite: EdCrypto UND EdKeyGuard (assets/keyguard.js), das
  * vor dieser Datei geladen werden muss.
@@ -166,11 +169,10 @@ const EdUnlock = (() => {
           const dk = await EdCrypto.datenschluessel(abgeleitet.haelfteHex, wrap,
                                                     typeof KONTO_ANTEILE !== 'undefined' ? KONTO_ANTEILE : null);
           // Gelingt das Entpacken, war das Passwort richtig.
-          await EdCrypto.huelleOeffnen(dk, wrap);
-          EdCrypto.setDataKey(dk);
-          ck = await EdCrypto.getContentKey(wrap);
-          // Frisch entpackt: an die Huelle binden, aus der er stammt.
-          if (ck) { await EdKeyGuard.binden(wrap); }
+          const ckHex = await EdCrypto.huelleOeffnen(dk, wrap);
+          // Ablegen und an die Huelle binden, aus der er stammt. Zurueck
+          // kommt der CryptoKey; das Hex endet mit dieser Funktion.
+          ck = await EdKeyGuard.ablegen(ckHex, wrap);
         } catch (e) {
           ck = null;
           if (e && e.name === 'AnteilFehlt') { anteilFehlt = e.kennung; }
@@ -255,7 +257,15 @@ const EdUnlock = (() => {
       EdCrypto.vergissAbleitungen();
       return null;
     }
-    EdCrypto.setDataKey(dk);
+    /* Der Datenschlüssel lebt nur in dieser Funktion (R17-25): Er öffnet
+     * gleich die Hülle, und der Inhaltsschlüssel geht als CryptoKey in die
+     * Ablage. Bis 23.3.x lag er danach im sessionStorage. */
+    let ckHex = null;
+    if (wrap) {
+      try { ckHex = await EdCrypto.huelleOeffnen(dk, wrap); }
+      catch (e) { EdCrypto.vergissAbleitungen(); return null; }
+    }
+    let huellen = [wrap];
     /* Das Token für das Paar des Rückwegs, BEVOR das Fach geräumt wird
      * (Konzept RW, E-RW-02; siehe `rueckwegAnlegen()`). Hebt die Umstellung
      * unten die Rundenzahl an, gilt danach das neue — dort wird es ersetzt. */
@@ -306,17 +316,15 @@ const EdUnlock = (() => {
           neu_token: vor.tk[String(neuIter)],
           neu_iter:  neuIter
         };
-        let ck = null;
         let dkNeu = dk;
-        if (wrap) {
-          ck = await EdCrypto.huelleOeffnen(dk, wrap);
+        if (ckHex) {
           /* Der NEUE Datenschlüssel: neue Hälfte (falls die Rundenzahl
            * steigt) und aktueller Anteil. Beides kann sich unabhängig
            * geändert haben. */
           dkNeu = await EdCrypto.datenschluesselZu(vor.hf[String(neuIter)],
                                                    kennung, anteile);
-          nutzlast.wrap_pw   = await EdCrypto.huelleBauen(dkNeu, ck, kennung);
-          nutzlast.key_check = await EdCrypto.contentKeyCheck(ck);
+          nutzlast.wrap_pw   = await EdCrypto.huelleBauen(dkNeu, ckHex, kennung);
+          nutzlast.key_check = await EdCrypto.contentKeyCheck(ckHex);
         }
         /* OHNE `o.vorgang` (Schritt 15 AP8): Diese Stelle zeigt NICHTS an --
          * der Kommentar im catch unten sagt, warum. Ein Satzanfang waere der
@@ -324,30 +332,22 @@ const EdUnlock = (() => {
          * gelesen, nie zur Ladezeit. */
         const antwort = await EdApi.postJson('api/kdf_upgrade.php', nutzlast);
         if (antwort.ok) {
-          /* Erst JETZT den neuen Datenschlüssel übernehmen — der Server hat
-           * bestätigt. Andersherum stünde im Browser ein Schlüssel, zu dem
-           * die gespeicherte Hülle nicht passt (M2-07). */
-          EdCrypto.setDataKey(dkNeu);
+          /* Erst JETZT gilt die neue Hülle — der Server hat bestätigt.
+           * Andersherum stünde im Browser ein Schlüssel, der an eine Hülle
+           * gebunden ist, die es nicht gibt (M2-07). */
           rwToken = vor.tk[String(neuIter)] || rwToken;
-          EdCrypto.vergissAbleitungen();
-          if (ck) {
+          if (nutzlast.wrap_pw) {
             /* DIE HÜLLE DIESER SEITE IST JETZT VERALTET.
              *
              * PAT_WRAP wurde gerendert, bevor die Anhebung lief — in der
-             * Datenbank steht seit einer Zeile eine andere. Mit dem neuen
-             * Datenschlüssel lässt sich die alte Hülle nicht mehr öffnen, und
-             * der Entsperrdialog erschiene unmittelbar nach dem Anmelden.
-             * Genau das soll eine STILLE Anhebung nicht tun.
-             *
-             * Der Inhaltsschlüssel ist aber bekannt — er wurde oben entpackt.
-             * Er wird abgelegt und an die Hülle DIESER Seite gebunden. Beim
-             * nächsten Seitenaufbau trägt die Seite die neue Hülle; die
-             * Bindung passt dann nicht mehr, EdKeyGuard verwirft den
-             * zwischengespeicherten Schlüssel und entpackt ihn neu — diesmal
-             * aus der neuen Hülle mit dem neuen Datenschlüssel. */
-            EdCrypto.setContentKey(ck);
-            await EdKeyGuard.binden(wrap);
-            return ck;
+             * Datenbank steht seit einer Zeile eine andere. Der
+             * Inhaltsschlüssel ist derselbe; er wird an BEIDE gebunden: an
+             * die alte, nach der diese Seite fragt, und an die neue, die die
+             * nächste Seite trägt. Bis 23.3.x entpackte die nächste Seite
+             * ihn still mit dem neuen Datenschlüssel neu; den gibt es seit
+             * R17-25 nicht mehr, und ohne die zweite Bindung erschiene dort
+             * der Entsperrdialog unmittelbar nach dem Anmelden. */
+            huellen = [wrap, nutzlast.wrap_pw];
           }
         }
       } catch (e) {
@@ -373,7 +373,8 @@ const EdUnlock = (() => {
       }
     }
     EdCrypto.vergissAbleitungen();
-    return null;
+    if (!ckHex) { return null; }
+    return EdKeyGuard.ablegen(ckHex, huellen);
   }
 
   /* ---- Stille Anhebung der Einsatz-Notizen (S9/AP7, E-S9-01) -------------
@@ -505,7 +506,7 @@ const EdUnlock = (() => {
      * Umstellung liegt der Datenschlüssel dort und nirgends sonst. Ohne
      * diesen Schritt erschiene der Entsperrdialog unmittelbar nach dem
      * Anmelden — und zwar bei jedem Anmelden. */
-    if (!EdCrypto.getDataKey()) {
+    if (vormerkLauf || EdCrypto.holeAbleitungen()) {
       if (!vormerkLauf) { vormerkLauf = loeseVormerkung(wrap, kdfIter); }
       const ausVormerkung = await vormerkLauf;
       if (ausVormerkung) {
@@ -515,12 +516,11 @@ const EdUnlock = (() => {
       }
     }
 
-    // NICHT EdCrypto.getContentKey: Jene Fassung liefert einen
-    // zwischengespeicherten Schluessel zurueck, ohne zu pruefen, ob er zu
-    // DIESER Huelle gehoert. Die Richtigkeit haengt dann allein daran, dass
-    // jeder Weg, auf dem das Konto wechseln koennte, vorher aufraeumt — vier
-    // Stellen tun das, eine nicht. EdKeyGuard prueft es selbst und verwirft
-    // einen fremden oder zu alten Schluessel.
+    // Ueber EdKeyGuard und nicht unmittelbar aus der Ablage: EdKeyGuard
+    // prueft, ob der abgelegte Schluessel zu DIESER Huelle gehoert und noch
+    // in der Frist liegt, und verwirft ihn sonst. Ohne die Pruefung hinge die
+    // Richtigkeit allein daran, dass jeder Weg, auf dem das Konto wechseln
+    // koennte, vorher aufraeumt — vier Stellen taten das, eine nicht.
     const vorhanden = await EdKeyGuard.contentKey(wrap);
     if (vorhanden) { notizenAnheben(vorhanden); rueckwegAnlegen(vorhanden); return vorhanden; }
 
@@ -560,7 +560,7 @@ const EdUnlock = (() => {
     const kpFehlt = typeof KP_STAND !== 'undefined' && KP_STAND === 'fehlt';
     if ((typeof RW_STAND === 'undefined' || RW_STAND !== 'fehlt') && !kpFehlt) { return; }
     if (typeof PAT_WRAP === 'undefined' || !PAT_WRAP || typeof KDF_ITER === 'undefined') { return; }
-    if (EdCrypto.getDataKey() || !EdCrypto.holeAbleitungen()) { return; }
+    if (vormerkLauf || !EdCrypto.holeAbleitungen()) { return; }
     try {
       if (!vormerkLauf) { vormerkLauf = loeseVormerkung(PAT_WRAP, KDF_ITER); }
       const ck = (await vormerkLauf) || await EdKeyGuard.contentKey(PAT_WRAP);

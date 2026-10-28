@@ -201,9 +201,10 @@ const EdCrypto = (() => {
    * Schluessel im Fach begaennen alle 200 ihren eigenen Import, weil noch
    * keiner fertig ist. Mit der Promise warten 199 auf den ersten.
    *
-   * KEIN SICHERHEITSVERLUST: Der Schluessel liegt ohnehin als Hex vor (das
-   * Fach ist damit sogar die engere Form — der `CryptoKey` ist
-   * `extractable: false`). Das Fach wird beim Abmelden geraeumt
+   * KEIN SICHERHEITSVERLUST: Hierher kommt nur, was als Hex vorliegt — ein
+   * Wiederherstellungs-, Datei- oder fremder Schluessel beim Freigeben; das
+   * Fach ist die engere Form (`extractable: false`). Der Inhaltsschluessel
+   * selbst kommt seit R17-25 schon als `CryptoKey` und geht oben vorbei. Das Fach wird beim Abmelden geraeumt
    * (`clearSession`), damit nach dem Sperren auch dieses Stueck fort ist.
    *
    * EIN SCHEITERNDER IMPORT WIRD NICHT GEMERKT: Eine abgelehnte Promise im
@@ -218,6 +219,14 @@ const EdCrypto = (() => {
   const schluesselfach = new Map();
 
   async function aesKey(keyHex, usages) {
+    /* EIN FERTIGER SCHLÜSSEL GEHT DURCH (R17-25, Nr. 370). Der
+     * Inhaltsschlüssel kommt seit Web 23.4.0 als nicht extrahierbarer
+     * `CryptoKey` aus der Ablage, nicht mehr als Hex. Jeder Verbraucher
+     * reicht ihn an `encrypt()`/`decrypt()` weiter, und hier ist die eine
+     * Stelle, an der beide Formen zusammenlaufen: Hex (Wiederherstellungs-,
+     * Datei- und Datenschlüssel, ein fremder Schlüssel beim Freigeben) wird
+     * importiert, ein `CryptoKey` unverändert benutzt. */
+    if (typeof CryptoKey !== 'undefined' && keyHex instanceof CryptoKey) { return keyHex; }
     const fach = keyHex + '|' + usages.join(',');
     let versprechen = schluesselfach.get(fach);
     if (versprechen === undefined) {
@@ -473,44 +482,131 @@ const EdCrypto = (() => {
     return toHex(d).slice(0, 16);
   }
 
-  /* ---- Sitzung: dataKey / Inhaltsschlüssel ---------------------------- */
-  const S_DK = 'edk', S_CK = 'pck';
-  const setDataKey = hex => sessionStorage.setItem(S_DK, hex);
-  const getDataKey = () => sessionStorage.getItem(S_DK);
-  /* Einen bereits entpackten Inhaltsschlüssel ablegen.
+  /* ---- Die Ablage des Inhaltsschlüssels (R17-25, Backlog Nr. 370) -------
    *
-   * Sonst entsteht er ausschließlich in getContentKey() aus Hülle und
-   * Datenschlüssel. Genau das geht in einem Fall nicht: Direkt nach der
-   * stillen Anhebung (M2-01) hat der Browser den neuen Datenschlüssel, die
-   * Seite trägt aber noch die ALTE Hülle — sie wurde gerendert, bevor die
-   * Anhebung lief. Ein Entpacken müsste dort scheitern, und der
-   * Entsperrdialog erschiene unmittelbar nach dem Anmelden.
+   * WAS SICH GEÄNDERT HAT. Bis Web 23.3.x lagen Daten- und Inhaltsschlüssel
+   * als Hex im `sessionStorage` des Tabs (`edk`, `pck`). Ein Skript, das in
+   * die Seite gerät (Lage D), konnte beide lesen und mitnehmen — und weil der
+   * Inhaltsschlüssel nie wechselt (F-R17-10), öffnete ein einmal
+   * mitgenommener jeden späteren Block, auch nachdem die Lücke zu war.
    *
-   * Der Schlüssel ist in diesem Moment aber bekannt: Er wurde eine Zeile
-   * vorher mit dem alten Datenschlüssel entpackt, um ihn neu zu verpacken. */
-  const setContentKey = hex => sessionStorage.setItem(S_CK, hex);
-  /* SEIT S10 UEBER `huelleOeffnen()` UND NICHT MEHR UEBER `decrypt()`.
+   * Jetzt liegt EIN Ding in der Ablage: der Inhaltsschlüssel als `CryptoKey`
+   * mit `extractable: false` (AES-GCM, `encrypt` und `decrypt`). Ein Skript
+   * in der Seite kann damit weiter entschlüsseln lassen, solange es läuft,
+   * den Schlüssel aber nicht herausholen. Der Datenschlüssel wird nach dem
+   * Entsperren nicht mehr aufbewahrt; wer ihn braucht (Passwort ändern,
+   * Wiederherstellungsschlüssel und Rückweg erneuern), fragt ohnehin nach dem
+   * Passwort und leitet ihn neu ab.
    *
-   * Das ist die Zeile, an der S10 beinahe stillschweigend jede Anzeigeseite
-   * gesperrt haette. `decrypt()` weist jede Kennung ausser `edk1:` ab — eine
-   * `edka1:`-Huelle liefe hier also in den `catch` und damit auf `null`, und
-   * `null` heisst fuer die Aufrufer „gesperrt". Diese Funktion haengt an
-   * `EdKeyGuard.contentKey()`, und das benutzt JEDE Seite mit geschuetzten
-   * Angaben: Der Entsperrdialog waere nach der Umstellung bei jedem zweiten
-   * Seitenaufbau erschienen — beim ersten nicht, weil dort der Schluessel
-   * noch aus dem Vormerkfach kommt. Gefunden beim Gegenlesen des Konzepts
-   * (Fund F-1); der Katalog der „fuenf Stellen" zaehlt diese hier nicht mit. */
-  async function getContentKey(wrapPw) {
-    let ck = sessionStorage.getItem(S_CK);
-    if (ck) return ck;
-    const dk = getDataKey();
-    if (!dk || !wrapPw) return null;
-    try {
-      ck = await huelleOeffnen(dk, wrapPw);     // CK liegt als Hex im Wrap
-      sessionStorage.setItem(S_CK, ck);
-      return ck;
-    } catch (e) { return null; }               // Wrap passt nicht (z. B. nach Reset)
+   * WARUM INDEXEDDB. Ein `CryptoKey` lässt sich nicht als Text ablegen,
+   * `sessionStorage` nimmt nur Text. IndexedDB nimmt ihn als Objekt, und
+   * der Browser gibt ihn beim Lesen als dasselbe nicht extrahierbare Objekt
+   * zurück.
+   *
+   * WAS DAS KOSTET, AUSGESPROCHEN (E-R17-76):
+   *   (1) Die Ablage gilt für den URSPRUNG, nicht für den Tab: Alle Tabs
+   *       dieser Anlage teilen den Schlüssel. Das ist gewollt — ein neuer Tab
+   *       fragt nicht mehr nach dem Passwort (Nr. 406). Eine Trennung je Tab
+   *       brächte nichts: Ein Skript in einem Tab erreicht dieselbe Datenbank.
+   *   (2) Die Ablage überlebt das Schließen des Browsers. Geräumt wird sie
+   *       beim Abmelden, beim Anmelden, beim Ablauf der Sitzung und von jeder
+   *       Seite, die nach Ablauf der Frist lädt (`keyguard.js`). Wer den
+   *       Browser schließt, ohne sich abzumelden, lässt sie bis dahin auf der
+   *       Platte liegen — `sessionStorage` tat das nur mit
+   *       Sitzungswiederherstellung (Bedrohungsmodell, Lage F).
+   *   (3) Was unter dem Inhaltsschlüssel verpackt liegt, kann ein Skript in
+   *       der Seite weiter auspacken — das private Schlüsselpaar der
+   *       Ortsdaten etwa (E-R17-77). Nicht extrahierbar ist der
+   *       Inhaltsschlüssel, nicht alles, was er öffnet.
+   *
+   * OHNE INDEXEDDB (gesperrter Speicher, manche privaten Fenster) liegt der
+   * Schlüssel nur im Speicher der Seite: Jede Seite fragt dann neu nach dem
+   * Passwort. Das ist lästig, aber richtig — still geht nichts verloren.
+   */
+  const ABLAGE_DB = 'nadoku-schluessel', ABLAGE_FACH = 'fach', ABLAGE_ID = 'inhalt';
+  let ablageVersprechen = null;   // die geöffnete Datenbank, je Seite einmal
+  let ablageImSpeicher = null;    // Rückfall ohne IndexedDB, nur diese Seite
+
+  function ablageOeffnen() {
+    if (ablageVersprechen) { return ablageVersprechen; }
+    ablageVersprechen = new Promise((gut, schlecht) => {
+      let anfrage;
+      try { anfrage = indexedDB.open(ABLAGE_DB, 1); }
+      catch (e) { schlecht(e); return; }
+      anfrage.onupgradeneeded = () => { anfrage.result.createObjectStore(ABLAGE_FACH); };
+      anfrage.onsuccess = () => gut(anfrage.result);
+      anfrage.onerror = () => schlecht(anfrage.error);
+      anfrage.onblocked = () => schlecht(new Error('Ablage blockiert'));
+    }).catch(e => { ablageVersprechen = null; throw e; });
+    return ablageVersprechen;
   }
+
+  /** Ein Vorgang auf dem Fach; liefert das Ergebnis der Anfrage. */
+  async function ablageVorgang(art, arbeit) {
+    const db = await ablageOeffnen();
+    return new Promise((gut, schlecht) => {
+      const tx = db.transaction(ABLAGE_FACH, art);
+      const anfrage = arbeit(tx.objectStore(ABLAGE_FACH));
+      tx.oncomplete = () => gut(anfrage ? anfrage.result : undefined);
+      tx.onerror = () => schlecht(tx.error);
+      tx.onabort = () => schlecht(tx.error || new Error('Ablage abgebrochen'));
+    });
+  }
+
+  /**
+   * Einen eben entpackten Inhaltsschlüssel (Hex) ablegen — als nicht
+   * extrahierbaren `CryptoKey`. Liefert den `CryptoKey`; das Hex hat der
+   * Aufrufer danach nicht mehr zu halten.
+   *
+   * @param {string}   ckHex      der Inhaltsschlüssel, eben aus der Hülle
+   * @param {string[]} bindungen  Kennungen der Hüllen, zu denen er gehört
+   *                              (`wrapFingerprint()`); nach einer stillen
+   *                              Umstellung zwei — die alte der Seite und die
+   *                              neue in der Datenbank
+   */
+  async function inhaltAblegen(ckHex, bindungen) {
+    const schluessel = await crypto.subtle.importKey('raw', fromHex(ckHex),
+      { name: 'AES-GCM' }, false, ['encrypt', 'decrypt']);
+    const eintrag = { schluessel, bindungen: bindungen.slice(), zeit: Date.now() };
+    try {
+      await ablageVorgang('readwrite', fach => fach.put(eintrag, ABLAGE_ID));
+      ablageImSpeicher = null;
+    } catch (e) {
+      ablageImSpeicher = eintrag;
+    }
+    return schluessel;
+  }
+
+  /** Der abgelegte Eintrag {schluessel, bindungen, zeit} — oder null. */
+  async function inhaltLesen() {
+    if (ablageImSpeicher) { return ablageImSpeicher; }
+    try {
+      const e = await ablageVorgang('readonly', fach => fach.get(ABLAGE_ID));
+      return (e && e.schluessel && Array.isArray(e.bindungen)) ? e : null;
+    } catch (e) { return null; }
+  }
+
+  /** Die Frist von vorn zählen lassen (R44): nur der Zeitstempel. */
+  async function inhaltAnfassen(eintrag) {
+    eintrag.zeit = Date.now();
+    if (ablageImSpeicher) { return; }
+    try { await ablageVorgang('readwrite', fach => fach.put(eintrag, ABLAGE_ID)); }
+    catch (e) { /* dann läuft die alte Frist weiter */ }
+  }
+
+  /** Den Eintrag löschen. Wartet, bis die Datenbank es bestätigt hat. */
+  async function inhaltLoeschen() {
+    ablageImSpeicher = null;
+    try { await ablageVorgang('readwrite', fach => fach.delete(ABLAGE_ID)); }
+    catch (e) { /* keine Ablage — dann liegt dort auch nichts */ }
+  }
+
+  /* DIE FÄCHER DER FASSUNGEN BIS 23.3.x. Ein Tab, der über die Auslieferung
+   * hinweg offen war, trägt dort noch Daten- und Inhaltsschlüssel als Hex;
+   * niemand liest sie mehr, aber liegen bleiben sollen sie nicht. Jede Seite
+   * mit diesem Skript räumt sie beim Laden. */
+  const ALTE_FAECHER = ['edk', 'pck', 'pckb', 'pckt'];
+  try { ALTE_FAECHER.forEach(k => sessionStorage.removeItem(k)); } catch (e) { /* kein Speicher */ }
   /* ---- Vormerkfach für die Anmeldung (M2-01) ---------------------------
    *
    * WARUM ES DAS BRAUCHT
@@ -574,10 +670,16 @@ const EdCrypto = (() => {
    * ausgelesen und entfernt, BEVOR clearSession() laeuft. */
   const S_NEU = 'edk_neu';
 
+  /* SEIT R17-25 ASYNCHRON. Das Löschen in IndexedDB ist ein Vorgang, der
+   * erst fertig ist, wenn die Datenbank es bestätigt. Wer danach die Seite
+   * wechselt (Abmelden, Ablauf), wartet auf das Versprechen — sonst kann der
+   * Seitenwechsel den Vorgang abbrechen, und der Schlüssel bliebe liegen.
+   * Die Fächer im `sessionStorage` sind sofort leer, schon vor dem `await`. */
   const clearSession = () => {
-    sessionStorage.removeItem(S_DK);
-    sessionStorage.removeItem(S_CK);
-    sessionStorage.removeItem(S_NEU);
+    try {
+      ALTE_FAECHER.forEach(k => sessionStorage.removeItem(k));
+      sessionStorage.removeItem(S_NEU);
+    } catch (e) { /* kein Speicher */ }
     vergissAbleitungen();
     /* DAS SCHLUESSELFACH GEHOERT MIT GERAEUMT (S2/AP9). Im Regelfall laedt
        die Seite nach dem Abmelden ohnehin neu, und damit ist der Speicher des
@@ -586,6 +688,7 @@ const EdCrypto = (() => {
        dem Hex, den niemand mehr hat, aber vorhanden. Dasselbe Argument wie
        bei 'edk_neu' eine Ebene darueber. */
     schluesselfach.clear();
+    return inhaltLoeschen();
   };
 
   /* ---- Backup-Container ------------------------------------------------
@@ -1020,7 +1123,8 @@ const EdCrypto = (() => {
            newRecoveryCode, recoveryKeyHex,
            pruefeRecoveryCode, recoveryCodeMeldung, RC_CHARS, RC_LEN,
            contentKeyCheck, wrapFingerprint,
-           setDataKey, getDataKey, getContentKey, setContentKey, clearSession,
+           /* Ablage des Inhaltsschlüssels (R17-25) — gelesen von keyguard.js */
+           inhaltAblegen, inhaltLesen, inhaltAnfassen, inhaltLoeschen, clearSession,
            CHIFFRE_PRAEFIX,
            merkeAbleitungen, holeAbleitungen, vergissAbleitungen,
            isBackupFile,

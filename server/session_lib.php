@@ -131,10 +131,19 @@ function session_beenden(string $grund = 'abgemeldet'): never
 <?php ui_fuss_seite(['dunkel' => true]); ?>
 <script src="<?= asset('assets/crypto.js') ?>"></script>
 <script<?= kopf_nonce_attr() ?>>
-// Beide Schluessel raeumen: Daten- UND Inhaltsschluessel. Faengt das Skript
-// nicht, bleibt die Seite ueber den Verweis oben bedienbar.
-try { EdCrypto.clearSession(); } catch (e) { /* Skript blockiert */ }
-location.replace(<?= json_js($ziel) ?>);
+// Die Schluessel raeumen — seit R17-25 den Inhaltsschluessel in IndexedDB.
+// Das Loeschen ist ein Vorgang, den ein sofortiger Seitenwechsel abbrechen
+// koennte; deshalb erst nach der Bestaetigung weiter, hoechstens aber nach
+// drei Sekunden (eine haengende Datenbank soll niemanden festhalten). Faengt
+// das Skript nicht, bleibt die Seite ueber den Verweis oben bedienbar.
+(function () {
+  var weiter = function () { location.replace(<?= json_js($ziel) ?>); };
+  var raeumen;
+  try { raeumen = EdCrypto.clearSession(); } catch (e) { raeumen = null; }
+  Promise.race([Promise.resolve(raeumen),
+                new Promise(function (r) { setTimeout(r, 3000); })])
+    .then(weiter, weiter);
+})();
 </script>
 <?php
     ui_seite_ende();

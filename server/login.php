@@ -1230,8 +1230,10 @@ document.getElementById('loginform').addEventListener('submit', async ev => {
   try {
     state.textContent = 'Schlüssel wird abgeleitet…';
     // Schluessel einer frueheren Sitzung verwerfen — sonst wuerde ein alter
-    // Inhaltsschluessel weiterverwendet (etwa nach Kontowechsel im selben Tab).
-    EdCrypto.clearSession();
+    // Inhaltsschluessel weiterverwendet (etwa nach Kontowechsel im selben
+    // Browser). Seit R17-25 liegt er in IndexedDB, und das Loeschen ist erst
+    // fertig, wenn die Datenbank es bestaetigt: abwarten, bevor gesendet wird.
+    await EdCrypto.clearSession();
     const email = f.elements['email'].value.trim().toLowerCase();
     const pw = f.elements['password'].value;
     const r = await fetch('auth_salt.php', {

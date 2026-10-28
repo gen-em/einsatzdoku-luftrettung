@@ -266,7 +266,8 @@ try {
    * sie hier als Chiffretext an, den niemand öffnen kann. */
   const ort = await seite.evaluate(async (n) => {
     try {
-      const k = await EdOrtsdaten.schluessel(await EdCrypto.getContentKey());
+      /* Seit R17-25 aus der Ablage (IndexedDB), nicht mehr aus dem Tab. */
+      const k = await EdOrtsdaten.schluessel((await EdCrypto.inhaltLesen()).schluessel);
       const innen = await EdOrtsdaten.einsatz({ ort_huelle: n.ort_huelle, client_ref: n.client_ref }, k);
       const punkte = await EdOrtsdaten.spur(n.stuecke, 'spur', n.client_ref, [], k);
       return { lat: innen.phasen[0].lat, rea: innen.rea.length, punkte: punkte.length };
@@ -278,7 +279,8 @@ try {
 
   /* ---- 6. Und der Klartext ist derselbe --------------------------------- */
   const klarZurueck = await seite.evaluate(async (blob) => {
-    const ck = await EdCrypto.getContentKey();
+    const eintrag = await EdCrypto.inhaltLesen();
+    const ck = eintrag && eintrag.schluessel;
     if (!ck) { return { fehler: 'Inhaltsschlüssel in dieser Sitzung nicht verfügbar' }; }
     try { return { klar: JSON.parse(await EdCrypto.decrypt(ck, blob)) }; }
     catch (e) { return { fehler: String(e.message || e) }; }

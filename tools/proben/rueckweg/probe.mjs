@@ -226,12 +226,14 @@ async function weg(browser, rolle) {
         s.click('a.knopf[href="index.php"]'),
       ]);
       await s.goto(`${BASIS}/suche.php`, { waitUntil: 'networkidle' });
-      const fach = await s.evaluate(() => ({ vor: sessionStorage.getItem('edkvor'),
-                                             dk: !!EdCrypto.getDataKey() }));
-      pruefe(start.status() === 200 && fach.vor === null && fach.dk,
-             'Startseite 200; die Suche löst das Vormerkfach auf, Datenschlüssel da',
+      /* Seit R17-25 bleibt nach dem Auflösen kein Datenschlüssel liegen,
+         sondern der Inhaltsschlüssel in der Ablage (IndexedDB). */
+      const fach = await s.evaluate(async () => ({ vor: sessionStorage.getItem('edkvor'),
+                                                   ck: !!(await EdCrypto.inhaltLesen()) }));
+      pruefe(start.status() === 200 && fach.vor === null && fach.ck,
+             'Startseite 200; die Suche löst das Vormerkfach auf, Inhaltsschlüssel abgelegt',
              `HTTP ${start.status()}, Fach ${fach.vor === null ? 'leer' : 'belegt'}, `
-             + `Datenschlüssel ${fach.dk ? 'da' : 'fehlt'}`);
+             + `Inhaltsschlüssel ${fach.ck ? 'abgelegt' : 'fehlt'}`);
       await s.goto(`${BASIS}/einstellungen.php?t=profil`, { waitUntil: 'domcontentloaded' });
       const aus = await s.locator('#k-zweitfaktor button[value="zf_beginnen"]').count();
       pruefe(aus === 1, 'Profilkarte: Zweitfaktor aus („Einrichten")', `${aus} Knopf`);

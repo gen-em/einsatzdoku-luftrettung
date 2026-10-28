@@ -6,6 +6,7 @@ declare(strict_types=1);
  * laesst er offen, was offen bleiben muss? (S5 Paket W, Konzept 6.1)
  *
  * Anlass: Nr. 171 — Anmeldung im Wartungsmodus scheiterte: auth_salt.php bekam 503
+ * Anlass: F-R17-72 — im Übergang auf 23.3.x lag die alte wartung.lock bis zum Ausschalten abrufbar im Webroot
  *
  * WOFUER. Der Wartungsmodus ist eine Sperre, und eine Sperre hat zwei Arten
  * zu scheitern. Sie kann zu WENIG sperren — dann laeuft eine Uhr waehrend
@@ -1244,6 +1245,15 @@ $r35 = hole('index.php');
 pruefe(wartung_aktiv() && $r35['code'] === 503,
        '35  Uebergang: eine Wartungsdatei am ALTEN Ort gilt noch (Kette schaltet mit altem Code)',
        'aktiv ' . (wartung_aktiv() ? 'ja' : 'nein') . ', HTTP ' . $r35['code']);
+/* F-R17-72 (Web 23.4.0): Die erste Frage nach dem Schalter — die Anfrage
+ * eben hat sie gestellt — zieht die Datei um. Bis 23.3.2 lag sie bis zum
+ * Ausschalten im Webroot und war unter Apache abrufbar (200). */
+clearstatcache();
+pruefe(!is_file(WARTUNG_DATEI_ALT) && is_file(WARTUNG_DATEI)
+       && str_contains((string)@file_get_contents(WARTUNG_DATEI), 'alte Fassung'),
+       '35  ... und die erste Anfrage zieht sie nach .zustand/ um, mit ihrem Inhalt (F-R17-72)',
+       (is_file(WARTUNG_DATEI_ALT) ? 'alte liegt noch' : 'alte weg') . ', '
+       . (is_file(WARTUNG_DATEI) ? 'neue da' : 'neue fehlt'));
 pruefe(wartung_ausschalten() && !is_file(WARTUNG_DATEI_ALT) && !wartung_aktiv(),
        '35  ... und Ausschalten raeumt sie weg', is_file(WARTUNG_DATEI_ALT) ? 'liegt noch' : 'weg');
 /* Der Zaehler: eine alte Datei geht beim ersten Vorfall; der Stand der

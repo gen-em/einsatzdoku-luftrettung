@@ -1946,19 +1946,14 @@ ui_seite_start(['titel' => 'Einstellungen',
       });
     })();
 
-    /* Zweiter Teil des Passwortwechsels (M2-07): Das Vormerkfach aus dem
-     * vorigen Seitenaufruf aufloesen, bevor irgendetwas anderes geschieht. */
-    (() => {
-      const neu = sessionStorage.getItem('edk_neu');
-      if (neu === null) { return; }
-      sessionStorage.removeItem('edk_neu');
-      if (<?= $pwGewechselt ? 'true' : 'false' ?>) {
-        EdCrypto.clearSession();          // alten Inhaltsschluessel verwerfen
-        EdCrypto.setDataKey(neu);         // neuer Datenschluessel gilt ab jetzt
-      }
-      // Sonst: nichts tun. Der Wechsel ist nicht zustande gekommen, der alte
-      // Schluessel im Tab passt weiterhin zur gespeicherten Huelle.
-    })();
+    /* Zweiter Teil des Passwortwechsels (M2-07) — SEIT R17-25 OHNE
+     * VORMERKFACH. Bis 23.3.x lag hier der NEUE Datenschluessel einen
+     * Seitenwechsel lang im sessionStorage (`edk_neu`) und wurde nach dem
+     * Erfolg uebernommen. Jetzt bindet das Absenden den Inhaltsschluessel an
+     * BEIDE Huellen (unten), und es gibt nichts mehr zu uebernehmen. Ein
+     * Fach aus einem Tab, der ueber die Auslieferung offen war, wird
+     * geraeumt. */
+    try { sessionStorage.removeItem('edk_neu'); } catch (e) { /* kein Speicher */ }
 
     /* ---- Adresswechsel: Nachweis ableiten (Backlog Nr. 128, K-7) --------
      *
@@ -2043,10 +2038,12 @@ ui_seite_start(['titel' => 'Einstellungen',
         // Inhaltsschluessel des Moduls in die neue Passwort-Huelle umpacken.
         // Klappt das nicht, wird NICHT abgeschickt: ein geaendertes Passwort
         // ohne passende Huelle machte die geschuetzten Angaben unlesbar.
+        let ckFuerAblage = null;
         if (PAT_WRAP) {
           let ck;
           try {
             ck = await EdCrypto.huelleOeffnen(altDk, PAT_WRAP);
+            ckFuerAblage = ck;
           } catch (e) {
             st.textContent = 'Die geschützten Angaben lassen sich mit dem aktuellen '
                            + 'Passwort nicht entschlüsseln. Es wurde nichts geändert.';
@@ -2075,15 +2072,29 @@ ui_seite_start(['titel' => 'Einstellungen',
          * gaebe: "keine Angaben vorhanden". Ein FEHLGESCHLAGENER Vorgang
          * hinterliess also einen kaputten Zustand.
          *
-         * Jetzt wandert der neue Schluessel in ein VORMERKFACH. Nach dem
-         * Neuladen entscheidet die Antwort des Servers:
-         *   Erfolg    -> uebernehmen und Fach leeren
-         *   Fehlschlag-> Fach leeren, der alte Schluessel bleibt unberuehrt
+         * Von Web 7 bis 23.3.x wanderte der neue Schluessel deshalb in ein
+         * VORMERKFACH, und nach dem Neuladen entschied die Antwort des
+         * Servers. Seit R17-25 entscheidet sie nichts mehr — siehe unten. */
+        /* SEIT R17-25: KEIN VORMERKFACH MEHR, SONDERN ZWEI BINDUNGEN.
          *
-         * Das Vormerkfach liegt im sessionStorage, also im selben Tab und nur
-         * bis zu dessen Ende — dieselbe Lebensdauer wie der Schluessel, den
-         * es ersetzen soll. */
-        sessionStorage.setItem('edk_neu', neuDk);
+         * Der Inhaltsschluessel aendert sich beim Passwortwechsel nicht —
+         * nur die Huelle, die ihn verpackt. Er wird deshalb JETZT abgelegt,
+         * gebunden an die alte UND die neue Huelle: Nimmt der Server an,
+         * traegt die naechste Seite die neue und findet ihn; lehnt er ab,
+         * bleibt die alte und findet ihn ebenso. Den neuen Datenschluessel
+         * muss damit niemand mehr aufbewahren — bis 23.3.x lag er dafuer im
+         * sessionStorage (`edk_neu`).
+         *
+         * Gemessen beim Bau: Die Seite nach dem Erfolg traegt noch die ALTE
+         * Huelle in PAT_WRAP (auth_guard.php liest den Datensatz vor dem
+         * Speichern). Ein Weg, der dort mit dem neuen Datenschluessel
+         * oeffnen wollte, scheiterte — die zweite Bindung macht die Frage,
+         * welche Huelle die Seite traegt, gegenstandslos. */
+        if (PAT_WRAP && ckFuerAblage) {
+          await EdCrypto.inhaltAblegen(ckFuerAblage, [
+            await EdCrypto.wrapFingerprint(PAT_WRAP),
+            await EdCrypto.wrapFingerprint(document.getElementById('pw_wrap').value)]);
+        }
         f.dataset.ready = '1';
         f.submit();
       } catch (e) { st.textContent = 'Fehler bei der Schlüsselableitung.'; }
@@ -3291,21 +3302,31 @@ ui_seite_start(['titel' => 'Einstellungen',
          schwächer geschützt, und es ist ein Passwort weniger zu verwahren.
          <strong>Nicht</strong> geeignet, wenn die Datei an jemand anderen gehen soll.</p>
 
-      <?php /* `name="password"` UND `autocomplete` WIE BEI DER ANMELDUNG,
-               sobald der Schalter oben an ist (gemeldet 05.09.2026). Ein
-               Passwortverwalter entscheidet an genau diesen beiden Angaben,
-               ob er ein bekanntes Passwort anbietet oder ein neues vorschlägt:
-               `new-password` heisst „hier entsteht etwas Neues", und dann
-               bietet er nichts an — auch nicht, wenn das Feld in diesem
-               Augenblick nach dem Kontopasswort fragt. Das Umschalten
-               übernimmt der Schalter-Handler weiter unten. Der Ausgangswert
-               ist `new-password`, weil der Schalter aus ist. */ ?>
+      <?php /* ZWEI FELDER STATT EINES, DAS SEINE BEDEUTUNG WECHSELT (Nr. 405).
+               Bis 23.3.x war `bpw1` beides: das Backup-Passwort und, mit dem
+               Schalter, das Kontopasswort — `autocomplete` wechselte per
+               Skript von `new-password` auf `current-password` (gemeldet
+               05.09.2026). Ein Passwortverwalter ordnet ein Feld aber beim
+               Laden ein: Bitwarden bot am 28.10.2026 unter „Kontopasswort"
+               ein neu erzeugtes Passwort an. Jetzt stehen beide Felder ab dem
+               Laden im Markup, jedes mit seiner einen Bedeutung, und der
+               Schalter blendet nur um. Daneben der Anmeldename, verborgen und
+               als `username` gekennzeichnet: Ohne ihn weiß ein Verwalter
+               nicht, welcher seiner Einträge zu diesem Passwort gehört. */ ?>
+      <div id="bpwkfeld" hidden>
+        <input type="text" name="username" autocomplete="username" hidden readonly
+               value="<?= e($userEmail) ?>">
+        <?php ui_feld(['label' => 'Kontopasswort', 'id' => 'bpwk', 'name' => 'password',
+                       'art' => 'password', 'attr' => ' autocomplete="current-password"']); ?>
+      </div>
+      <div id="bpw1feld">
       <?php ui_feld(['label' => 'Passwort für das Backup', 'id' => 'bpw1',
-                     'name' => 'password',
+                     'name' => 'backup_passwort',
                      'art' => 'password', 'klasse' => 'bpw1-feld',
                      'klein' => 'Mindestens ' . PW_MIN_LAENGE . ' Zeichen.',
                      'attr' => ' minlength="' . PW_MIN_LAENGE . '" autocomplete="new-password"']); ?>
       <span class="pwstaerke" id="bpwguete"></span>
+      </div>
       <div id="bpw2label">
         <?php ui_feld(['label' => 'Passwort wiederholen', 'id' => 'bpw2',
                        'art' => 'password', 'attr' => ' autocomplete="new-password"']); ?>
@@ -3721,33 +3742,27 @@ ui_seite_start(['titel' => 'Einstellungen',
     const bpwGuete = document.getElementById('bpwguete');
     EdPwQuality.beobachte(bpw1, bpwGuete);
 
+    const bpwk = document.getElementById('bpwk');
     bpwKonto.addEventListener('change', () => {
       const an = bpwKonto.checked;
       document.getElementById('bpwkontohinweis').hidden = !an;
-      // Die Wiederholung entfällt: Ein falsch getipptes Kontopasswort fällt
-      // unten beim Öffnen der Hülle auf, nicht erst beim Öffnen der Datei.
+      /* Nur umblenden (Nr. 405): das Kontopasswort-Feld zeigen, das Feld
+         für ein eigenes Backup-Passwort samt Wiederholung und Güte
+         verbergen — oder umgekehrt. Die Wiederholung entfällt beim
+         Kontopasswort: Ein falsch getipptes fällt unten beim Öffnen der
+         Hülle auf, nicht erst beim Öffnen der Datei. */
+      document.getElementById('bpwkfeld').hidden = !an;
+      document.getElementById('bpw1feld').hidden = an;
       document.getElementById('bpw2label').hidden = an;
-      /* Die Beschriftung liegt seit O8c als eigenes <label class="feld-label">
-         neben dem Feld, nicht mehr als Textknoten davor — `parentElement
-         .firstChild` traf damit den Zeilenumbruch statt der Beschriftung. */
-      document.querySelector('label[for="bpw1"]').textContent = an
-        ? 'Kontopasswort'
-        : 'Passwort für das Backup';
-      document.querySelector('.bpw1-feld .feld-klein').hidden = an;
-      bpwGuete.hidden = an;
-      /* Das Feld wechselt seine BEDEUTUNG, also auch seine Ankuendigung an
-         den Passwortverwalter: an = das Kontopasswort, das er kennt
-         (`current-password`); aus = ein frisch zu waehlendes Backup-Passwort
-         (`new-password`). Mit dem festen `new-password` sah jeder Verwalter
-         hier ein neues Feld und bot nichts an. */
-      bpw1.autocomplete = an ? 'current-password' : 'new-password';
+      bpwk.value = '';
       bpw1.value = '';
+      bpw2.value = '';
       expState.textContent = '';
     });
 
     /** Prüft das eingegebene Passwort und liefert es zurück — oder null. */
     async function backupPasswort() {
-      const pw = bpw1.value;
+      const pw = bpwKonto.checked ? bpwk.value : bpw1.value;
       if (bpwKonto.checked) {
         if (pw === '') { melde(expState, 'Bitte das Kontopasswort eingeben.', 'fehler'); return null; }
         if (!PAT_WRAP) {

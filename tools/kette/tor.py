@@ -192,6 +192,11 @@ def rufen(basis: str, token: str, aktion: str, zeitgrenze: int = ZEITGRENZE_S,
             roh = ex.read().decode("utf-8", "replace")
         except Exception:                          # noqa: BLE001 — Koerper weg
             return {"_fehler": f"HTTP {ex.code}"}
+        # AUCH EINE ABLEHNUNG TRAEGT DIE UHR DES SERVERS (F-R17-73). Bis
+        # Web 23.4.0 las nur der Erfolgszweig den `Date`-Kopf; eine 403 kam
+        # ohne `_serverzeit` an, und `backup_tor()` meldete „kein
+        # `Date`-Kopf" statt des Grundes, der eine Zeile darunter stand.
+        serverzeit = kopfzeit(ex)
     except (urllib.error.URLError, OSError, TimeoutError) as ex:
         return {"_fehler": str(ex)}
     try:
@@ -258,6 +263,26 @@ def backup_tor(basis: str, token: str, versuche: int, pause: int,
             kurz = json.dumps(ohne_eigenes(antwort), ensure_ascii=False)[:200]
             print(f"  Aufruf {i:>2}: {kurz}")
 
+            # EIN NEIN DES SERVERS IST KEIN WARTEN. Ein falsches Token, eine
+            # unbekannte Aktion, ein Auftrag, der nicht zustande kommt (kein
+            # Serverschlüssel, Speichergrenze) — das wird beim vierzigsten Mal
+            # nicht anders. Vierzig Aufrufe mit 20 s Pause sind gut dreizehn
+            # Minuten, in denen niemand etwas erfährt, was nach dem ersten
+            # Aufruf schon feststand. Ein NETZFEHLER (`_fehler`) ist etwas
+            # anderes: Der wird wiederholt.
+            #
+            # UND ES STEHT VOR DER UHR (F-R17-73). Bis Web 23.4.0 kam die
+            # Uhrpruefung zuerst, und eine abgewiesene erste Antwort trug
+            # keinen `Date`-Kopf (siehe `rufen()`): Die Kette meldete „Die
+            # Antwort trägt keinen `Date`-Kopf" und den eigentlichen Grund —
+            # `{"error": "token"}` — erst in der Zeile darüber, im Protokoll
+            # des Aufrufs. Am 27.10.2026 kostete das drei Runden Rätselraten.
+            if "error" in antwort:
+                print(f"ABBRUCH: Die Installation antwortet mit '{antwort['error']}'"
+                      + (f" — {antwort['meldung']}" if antwort.get("meldung") else "")
+                      + ". Es wird nicht ausgeliefert.", file=sys.stderr)
+                return 1
+
             if beginn is None:
                 beginn = antwort.get("_serverzeit")
                 if beginn:
@@ -276,18 +301,6 @@ def backup_tor(basis: str, token: str, versuche: int, pause: int,
             if antwort.get("fertig") is True:
                 fertig = True
                 break
-            # EIN NEIN DES SERVERS IST KEIN WARTEN. Ein falsches Token, eine
-            # unbekannte Aktion, ein Auftrag, der nicht zustande kommt (kein
-            # Serverschlüssel, Speichergrenze) — das wird beim vierzigsten Mal
-            # nicht anders. Vierzig Aufrufe mit 20 s Pause sind gut dreizehn
-            # Minuten, in denen niemand etwas erfährt, was nach dem ersten
-            # Aufruf schon feststand. Ein NETZFEHLER (`_fehler`) ist etwas
-            # anderes: Der wird wiederholt.
-            if "error" in antwort:
-                print(f"ABBRUCH: Die Installation antwortet mit '{antwort['error']}'"
-                      + (f" — {antwort['meldung']}" if antwort.get("meldung") else "")
-                      + ". Es wird nicht ausgeliefert.", file=sys.stderr)
-                return 1
 
             # (3) KENNT DIESER SERVER DIE FRAGE ÜBERHAUPT? `fertig` fehlt,
             # `error` fehlt — dann ist das keine Antwort auf `aktion=komplett`,
@@ -551,6 +564,23 @@ def selbstprobe() -> int:
                                  serverzeit=None),
                     schlafen=lambda _s: None)
     pruefe(rc == 1, "Antwort ohne `Date`-Kopf → Abbruch, kein Rückfall auf die Läuferuhr")
+
+    # 9b. EINE ABGEWIESENE ERSTE ANTWORT NENNT IHREN GRUND, NICHT DIE UHR
+    #     (F-R17-73). Die Attrappe liefert `error` OHNE `_serverzeit` — so
+    #     kam die 403 bis Web 23.4.0 an. Die Meldung muss das Token nennen.
+    import contextlib
+    import io
+    fehlerausgabe = io.StringIO()
+    with contextlib.redirect_stderr(fehlerausgabe):
+        rc = backup_tor("http://attrappe", "t", 3, 0,
+                        ruf=attrappe([{"ok": False, "error": "token"}],
+                                     {"komplett": {"zeit": morgen}},
+                                     serverzeit=None),
+                        schlafen=lambda _s: None)
+    meldung = fehlerausgabe.getvalue()
+    pruefe(rc == 1 and "'token'" in meldung and "Date" not in meldung,
+           f"Abgewiesenes Token ohne `Date` → Abbruch mit dem Grund, nicht mit der Uhr "
+           f"(F-R17-73: {meldung.strip()[:70]!r})")
 
     # 10. ALTER SERVER (E-KH-19, der Fall vom 20.09.). Die Installation
     #     antwortet — aber weder mit `fertig` noch mit `error`. Vorher waren

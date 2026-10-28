@@ -69,9 +69,11 @@ require_once __DIR__ . '/instanz_lib.php';   // nur fuer INSTANZ_KURZ_VORGABE �
  *
  * DER UEBERGANG. Die Kette schaltet die Wartung mit dem ALTEN Code ein —
  * vor dem Hochladen —, also am alten Ort. Die neue Fassung erkennt eine
- * Datei dort deshalb noch (`WARTUNG_DATEI_ALT`), loescht sie beim
- * Ausschalten mit und raeumt eine alte `ueberlast.json` beim ersten
- * Zaehlen weg. Beides kann nach der ersten Auslieferung mit dieser Fassung
+ * Datei dort deshalb noch (`WARTUNG_DATEI_ALT`) — seit Web 23.4.0 zieht sie
+ * sie bei der ersten Frage nach dem Schalter nach `.zustand/` um
+ * (`wartung_altdatei_umziehen()`, F-R17-72), bis dahin las sie sie nur mit
+ * und loeschte sie erst beim Ausschalten — und raeumt eine alte
+ * `ueberlast.json` beim ersten Zaehlen weg. Beides kann nach der ersten Auslieferung mit dieser Fassung
  * auf jeder Anlage fallen — nicht vorher. */
 const ZUSTAND_VERZEICHNIS = __DIR__ . '/.zustand';
 
@@ -236,7 +238,37 @@ function wartung_aktiv(): bool
      * von vor dem Klick. */
     clearstatcache(true, WARTUNG_DATEI);
     clearstatcache(true, WARTUNG_DATEI_ALT);
+    if (file_exists(WARTUNG_DATEI_ALT)) { wartung_altdatei_umziehen(); }
     return file_exists(WARTUNG_DATEI) || file_exists(WARTUNG_DATEI_ALT);
+}
+
+/**
+ * Eine Datei am alten Ort nach `.zustand/` holen (F-R17-72, Web 23.4.0).
+ *
+ * WARUM. Die Kette schaltet die Wartung mit dem ALTEN Code ein, also im
+ * Webroot. Bis 23.4.0 las die neue Fassung die Datei dort nur mit und
+ * loeschte sie erst beim Ausschalten — bis dahin lieferte
+ * `https://<host>/wartung.lock` den Namen des schaltenden Kontos aus
+ * (gemessen unter Apache 2.4.58 am 27.10.2026, 200). Blieb die Wartung
+ * wegen einer Migration an, stand die Luecke aus F-R17-47 so lange offen.
+ * Jetzt zieht die erste Frage nach dem Schalter — jede Anfrage stellt sie
+ * — die Datei um. `rename()` ist auf demselben Dateisystem atomar: Es gibt
+ * keinen Augenblick, in dem die Wartung aus waere.
+ *
+ * SCHEITERT ES (Rechte), bleibt die Datei am alten Ort und gilt weiter;
+ * die Wartung haelt, nur die Luecke bleibt — wie bis 23.3.2.
+ */
+function wartung_altdatei_umziehen(): void
+{
+    if (!zustand_verzeichnis()) { return; }
+    if (file_exists(WARTUNG_DATEI)) {
+        // Steht der Schalter schon am neuen Ort, ist die alte Datei ein Rest.
+        @unlink(WARTUNG_DATEI_ALT);
+    } else {
+        @rename(WARTUNG_DATEI_ALT, WARTUNG_DATEI);
+    }
+    clearstatcache(true, WARTUNG_DATEI);
+    clearstatcache(true, WARTUNG_DATEI_ALT);
 }
 
 /**
