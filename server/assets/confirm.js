@@ -87,14 +87,36 @@
     return dlg;
   }
 
-  /** Zeigt die Rückfrage; liefert ein Promise mit true/false. */
+  /**
+   * Zeigt die Rückfrage; liefert ein Promise mit true/false.
+   *
+   * `text` ist ein Satz — oder, seit Web 23.4.0 (Backlog Nr. 404), eine
+   * LISTE VON ABSÄTZEN. Der Dialog war für „Wirklich löschen?" gebaut, und
+   * der Export stellte drei solche Fragen hintereinander, jede ein langer
+   * Fließtext in einem einzigen Absatz. Jetzt fragt er einmal, in Absätzen.
+   *
+   * JEDER ABSATZ ALS TEXT, NIE ALS HTML. Ein Absatz kann Werte von außen
+   * tragen (Namen, Dateinamen, Zahlen); als Markup gesetzt, brächte er
+   * eigenes HTML in eine Seite, in der entschlüsselt wird. Jeder bekommt ein
+   * eigenes `<p>` mit `textContent` — die Abstände dazwischen stehen schon
+   * im Stylesheet (`.dialog-inhalt p`), ein neuer Baustein ist das nicht.
+   */
   function ask(text, okLabel, tone, titel) {
+    const absaetze = Array.isArray(text) ? text.map(String) : [String(text)];
     // Sehr alte Browser ohne <dialog>: lieber nativ fragen als gar nicht.
     if (typeof HTMLDialogElement === 'undefined') {
-      return Promise.resolve(window.confirm(text));
+      return Promise.resolve(window.confirm(absaetze.join('\n\n')));
     }
     const d = build(titel);
-    d.querySelector('[data-text]').textContent = text;
+    const erster = d.querySelector('[data-text]');
+    erster.textContent = absaetze[0];
+    let davor = erster;
+    for (const a of absaetze.slice(1)) {
+      const p = document.createElement('p');
+      p.textContent = a;
+      davor.after(p);
+      davor = p;
+    }
     const ok = d.querySelector('[data-act="yes"]');
     ok.textContent = okLabel || 'Löschen';
     ok.className = (tone === 'normal') ? 'knopf knopf-primaer' : 'knopf knopf-gefahr';

@@ -8374,5 +8374,26 @@ declare(strict_types=1);
  *   Pruefschicht, und in einem versiegelten Kontopaket muss jeder Teil
  *   versiegelt sein. Korrektur: kein neuer Weg, kein Schema, keine neue
  *   Nutzlast.
+ * 23.4.0 — DER INHALTSSCHLUESSEL ALS NICHT EXTRAHIERBARER CRYPTOKEY
+ *   (Schritt 12b, R17-25; Backlog Nr. 370, 404, 405, 406; F-R17-24, -72,
+ *   -73). Bis hierher lagen Daten- und Inhaltsschluessel als Hex im
+ *   sessionStorage des Tabs, und ein Skript in der Seite konnte beide
+ *   mitnehmen — der Inhaltsschluessel wechselt nie, ein mitgenommener
+ *   oeffnete jeden spaeteren Block. Jetzt liegt er als `CryptoKey` mit
+ *   `extractable: false` in IndexedDB, fuer alle Tabs (E-R17-76: ein neuer
+ *   Tab fragt nicht mehr nach dem Passwort), und der Datenschluessel lebt
+ *   nur so lange, wie eine Huelle geoeffnet wird. Preis, ausgesprochen: Die
+ *   Ablage ueberlebt das Schliessen des Browsers bis zum Abmelden, Anmelden
+ *   oder der ersten Seite nach Ablauf der Frist; was unter dem Schluessel
+ *   verpackt liegt (das Schluesselpaar der Ortsdaten), kann ein Skript weiter
+ *   auspacken (E-R17-77). Beim Bau gefunden: Die Seite nach einem
+ *   Passwortwechsel traegt noch die alte Huelle — der Schluessel wird jetzt an
+ *   alte und neue gebunden, das Vormerkfach `edk_neu` faellt. Dazu: eine
+ *   Rueckfrage statt drei beim Export, Absaetze im Bestaetigungsdialog
+ *   (Nr. 404); ein eigenes Kontopasswort-Feld samt Anmeldename auf der
+ *   Backup-Karte, damit ein Passwortverwalter es erkennt (Nr. 405); eine
+ *   alte `wartung.lock` zieht bei der ersten Anfrage nach `.zustand/` um
+ *   (F-R17-72). Neben, weil sich der Weg durch die Anwendung spuerbar
+ *   aendert (neuer Tab ohne Passwort, eine Rueckfrage weniger); kein Schema.
  */
-const WEB_VERSION = '23.3.2';
+const WEB_VERSION = '23.4.0';

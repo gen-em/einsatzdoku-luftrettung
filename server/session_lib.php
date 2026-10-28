@@ -132,18 +132,16 @@ function session_beenden(string $grund = 'abgemeldet'): never
 <script src="<?= asset('assets/crypto.js') ?>"></script>
 <script<?= kopf_nonce_attr() ?>>
 // Die Schluessel raeumen — seit R17-25 den Inhaltsschluessel in IndexedDB.
-// Das Loeschen ist ein Vorgang, den ein sofortiger Seitenwechsel abbrechen
-// koennte; deshalb erst nach der Bestaetigung weiter, hoechstens aber nach
-// drei Sekunden (eine haengende Datenbank soll niemanden festhalten). Faengt
-// das Skript nicht, bleibt die Seite ueber den Verweis oben bedienbar.
-(function () {
-  var weiter = function () { location.replace(<?= json_js($ziel) ?>); };
-  var raeumen;
-  try { raeumen = EdCrypto.clearSession(); } catch (e) { raeumen = null; }
-  Promise.race([Promise.resolve(raeumen),
-                new Promise(function (r) { setTimeout(r, 3000); })])
-    .then(weiter, weiter);
-})();
+// Das Loeschen dort ist ein Vorgang, den der Seitenwechsel gleich danach
+// abbrechen KANN. Gewartet wird trotzdem nicht: Ein erster Entwurf wartete,
+// und die verspaetete Weiterleitung brach im Pruefstand jeden Aufruf ab, der
+// gleich nach dem Abmelden kam (Firefox: NS_BINDING_ABORTED, Rueckweg- und
+// Bedienprobe). Das Ziel ist die Anmeldeseite, und die loescht die Ablage
+// beim Laden noch einmal (login.php) — dort bleibt die Seite stehen, und der
+// Vorgang wird fertig. Faengt das Skript nicht, bleibt die Seite ueber den
+// Verweis oben bedienbar.
+try { EdCrypto.clearSession(); } catch (e) { /* Skript blockiert */ }
+location.replace(<?= json_js($ziel) ?>);
 </script>
 <?php
     ui_seite_ende();

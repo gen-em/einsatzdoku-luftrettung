@@ -14,6 +14,102 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 23.4.0] — unveröffentlicht
+
+Schritt 12b, Paket R17-25 — der Inhaltsschlüssel als nicht extrahierbarer
+`CryptoKey` (Backlog Nr. 370), dazu drei Meldungen der Betreiberin aus dem
+Umschalten der CSP (Nr. 404, 405, 406) und zwei Befunde aus der Auslieferung
+von 23.1.0 (F-R17-72, -73). Kein Schema, kein `update.php`. Voraussetzung
+war die scharfe CSP auf Produktiv (seit dem 28.10.2026): Sie ist die erste
+Linie gegen ein Skript in der Seite, der `CryptoKey` die zweite.
+
+### Geändert
+
+- **Web — der Schlüssel für die geschützten Angaben lässt sich nicht mehr
+  aus dem Browser herauslesen.** Bis hierher lagen Daten- und
+  Inhaltsschlüssel als Hex im Speicher des Tabs. Ein Skript, das in die Seite
+  gerät, konnte beide lesen und mitnehmen — und weil der Inhaltsschlüssel nie
+  wechselt, öffnete ein einmal mitgenommener jeden späteren Datensatz, auch
+  nachdem die Lücke geschlossen war. Jetzt liegt er als `CryptoKey` mit
+  `extractable: false` in IndexedDB: Ein Skript kann entschlüsseln lassen,
+  solange es läuft, den Schlüssel aber nicht mitnehmen; der Browser verweigert
+  das Auslesen (gemessen in Chromium, Firefox und WebKit). Der Datenschlüssel
+  aus dem Passwort wird nach dem Entsperren gar nicht mehr aufbewahrt — wer
+  ihn braucht (Passwort ändern, Wiederherstellungsschlüssel erneuern), fragt
+  ohnehin nach dem Passwort.
+- **Web — ein neuer Tab fragt nicht mehr nach dem Passwort** (Nr. 406). Die
+  Ablage gilt für alle Tabs dieses Browsers; ein Link im neuen Tab und ein
+  wiederhergestellter Browser sind innerhalb der halben Stunde sofort
+  entsperrt. „Ein Tab, ein Schlüssel" war der Preis des alten Speicherorts,
+  keine Sicherheit: Ein Skript in einem Tab erreicht dieselbe Datenbank wie
+  die anderen, eine Trennung brächte nichts (Entscheidung der Betreiberin).
+- **Web — der Export fragt nur noch einmal, und nur mit Patientendaten**
+  (Nr. 404). Bis hierher kamen bis zu drei Rückfragen hintereinander, jede
+  ein langer Fließtext in einem einzigen Absatz; zwei davon wiederholten, was
+  auf der Seite schon steht. Jetzt fragt der Export nur, wenn
+  personenbezogene Angaben die Verschlüsselung verlassen, und dann einmal, in
+  Absätzen. „Ein Export ist kein Backup" steht in der Einleitung der
+  Exportkarte, mit Verweis auf das Backup. Der Bestätigungsdialog nimmt dafür
+  eine Liste von Absätzen — jeder als Text, nie als HTML; die rund vierzig
+  Rückfragen mit einem Satz bleiben, wie sie sind.
+
+### Behoben
+
+- **Web — Bitwarden bot beim Backup mit Kontopasswort ein neues Passwort an**
+  (Nr. 405). Backup- und Kontopasswort teilten sich ein Feld, das per Skript
+  seine Bedeutung wechselte; ein Passwortverwalter ordnet ein Feld aber beim
+  Laden ein. Jetzt stehen zwei Felder ab dem Laden im Markup, jedes mit seiner
+  einen Bedeutung, dazu verborgen der Anmeldename, und der Schalter blendet
+  nur um. Ob Bitwarden ausfüllt, zeigt der Prüfpunkt bei der Betreiberin — im
+  Container gibt es kein Bitwarden.
+- **Web — nach einem Passwortwechsel hätte jede Seite nach dem Passwort
+  gefragt.** Beim Bau gefunden, nicht ausgeliefert: Die Seite nach dem Erfolg
+  trägt noch die alte Hülle, weil die Anmeldeprüfung den Datensatz vor dem
+  Speichern liest, und der neue Datenschlüssel öffnet sie nicht. Bis 23.3.x
+  fiel das nicht auf, weil der Datenschlüssel im Tab blieb und die nächste
+  Seite neu entpackte. Jetzt wird der Inhaltsschlüssel schon beim Absenden an
+  alte und neue Hülle gebunden — er ist derselbe —, und das Vormerkfach für den
+  neuen Datenschlüssel fällt weg.
+- **Web — eine alte `wartung.lock` blieb nach dem Deploy abrufbar**
+  (F-R17-72). Die Kette schaltet die Wartung mit dem alten Code ein, also im
+  Webroot; 23.3.x las die Datei dort nur mit und löschte sie beim Ausschalten.
+  Blieb die Wartung wegen einer Migration an, lieferte die Datei so lange den
+  Namen des schaltenden Kontos aus. Jetzt zieht die erste Anfrage sie nach
+  `.zustand/` um.
+- **Web (Kette) — `tor.py` meldete eine Token-Ablehnung als fehlenden
+  `Date`-Kopf** (F-R17-73). Am 27.10.2026 kostete das drei Runden: Die Kette
+  sagte „Die Antwort trägt keinen `Date`-Kopf", und der Grund —
+  `{"error": "token"}` — stand eine Zeile darüber. Eine Ablehnung trägt jetzt
+  ihre Uhr mit, und `error` wird vor der Uhr ausgewertet. Berührt nur
+  `tools/`; die Fassung zählt es nicht.
+
+### Berichtigt
+
+- Im Eintrag zu Web 23.0.3 steht: „Auf Produktiv ist sie scharf (Auskunft der
+  Betreiberin, 25.10.2026)." Das beruhte auf einem Missverständnis — die CSP
+  stand auf Produktiv bis zum 28.10.2026 auf „nur melden". Die Adresssuche im
+  Einsatzformular war damals also nicht unter scharfer Regel bestätigt; sie
+  ist es seit dem Umschalten (Betreiberin, 28.10.2026). Der Eintrag bleibt
+  stehen, wie er war.
+
+### Bewusst stehen gelassen
+
+- **Die Ablage überlebt das Schließen des Browsers.** Geräumt wird sie beim
+  Abmelden, beim Anmelden, beim Ablauf der Sitzung und von der ersten Seite
+  nach Ablauf der halben Stunde. Wer den Browser schließt, ohne sich
+  abzumelden, lässt den Schlüssel bis dahin auf dem Gerät — der Speicher des
+  Tabs tat das nur mit Sitzungswiederherstellung. Das Handbuch sagt es dort,
+  wo das Entsperren steht.
+- **Was unter dem Schlüssel verpackt liegt, bleibt auspackbar.** Der private
+  Teil des Schlüsselpaars für die Ortsdaten liegt unter dem
+  Inhaltsschlüssel; ein Skript in der Seite kann ihn auspacken lassen und
+  mitnehmen. Ihn anders abzulegen hieße, das Verfahren aus S11 umzubauen
+  (Entscheidung der Betreiberin: als Grenze festhalten; Bedrohungsmodell,
+  Lage D).
+- **Ohne IndexedDB** (manche privaten Fenster) liegt der Schlüssel nur im
+  Speicher der Seite, und jede Seite fragt nach dem Passwort. Lästig, aber
+  ehrlich: Still geht nichts verloren.
+
 ## [Android 0.18.1] — unveröffentlicht
 
 Schritt 12b, Paket R17-24 — Android (Befund F-R17-54 und die Aufräumposten

@@ -6,7 +6,7 @@ declare(strict_types=1);
  * laesst er offen, was offen bleiben muss? (S5 Paket W, Konzept 6.1)
  *
  * Anlass: Nr. 171 — Anmeldung im Wartungsmodus scheiterte: auth_salt.php bekam 503
- * Anlass: F-R17-72 — im Übergang auf 23.3.x lag die alte wartung.lock bis zum Ausschalten abrufbar im Webroot
+ * Fall 35 misst seit R17-25 auch F-R17-72: Im Übergang auf 23.3.x lag die alte wartung.lock bis zum Ausschalten abrufbar im Webroot.
  *
  * WOFUER. Der Wartungsmodus ist eine Sperre, und eine Sperre hat zwei Arten
  * zu scheitern. Sie kann zu WENIG sperren — dann laeuft eine Uhr waehrend

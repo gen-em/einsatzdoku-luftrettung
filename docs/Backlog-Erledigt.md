@@ -9720,3 +9720,75 @@ zutreffen.
 
      Erledigt 27.10.2026 (Web 23.3.2, R17-23, auf Wunsch der Betreiberin):
      offene Vermerke werden nach dem letzten Fenster nachgereicht; 147/0.
+
+370. **Inhaltsschlüssel als nicht-extrahierbarer `CryptoKey`.** · gehört zu: 12b · Stand: erledigt · seit 11.10.2026
+     *Aufgenommen 11.10.2026 aus Schritt 12 (Bedrohungsmodell, E-R17-08; aus
+     Nr. 146, Teil 2).* Heute liegen Daten- und Inhaltsschlüssel als Hex im
+     `sessionStorage` (`crypto.js`, `setDataKey()`/`getContentKey()`). Ein
+     XSS kann sie mitnehmen — und weil der Inhaltsschlüssel nie rotiert wird
+     (F-R17-10), öffnet ein einmal gestohlener alle späteren Blöcke. Als
+     `CryptoKey` mit `extractable: false` in IndexedDB könnte ein XSS zwar
+     weiter entschlüsseln lassen, den Schlüssel aber nicht mitnehmen.
+     Umfang: IndexedDB statt `sessionStorage`, anderes Lebensdauermodell
+     („ein Tab, ein Schlüssel", Handbuch 5; die Frist aus `keyguard.js`
+     räumt den Eintrag selbst), alle `getContentKey`-Aufrufer, das
+     `aesKey()`-Fach, `tools/proben/frist/`. **Nach** der scharfen CSP
+     (F-R17-23): Die CSP ist die erste Linie, der `CryptoKey` die zweite.
+     Fable-Schritt in 12b; Begründung im Bedrohungsmodell 6.5.
+     Erledigt 28.10.2026 mit R17-25 (Web 23.4.0): Inhaltsschlüssel als nicht
+     extrahierbarer CryptoKey in IndexedDB für alle Tabs (E-R17-76),
+     Datenschlüssel nicht aufbewahrt; Frist- und Abmeldeprobe gegen die
+     echte Ablage, je 7 und 6 Urteile in drei Engines grün; Grenze E-R17-77.
+
+404. **Der Export fragt mit Passwort dreimal nacheinander, in langen Fließtexten.** · gehört zu: 12b · Stand: erledigt · seit 28.10.2026
+     *Aufgenommen 28.10.2026, gemeldet von der Betreiberin nach dem
+     Umschalten der CSP.* `export.js` ruft `edConfirm()` bis zu dreimal in
+     Folge: Klartext in der Datei (mit Patientendaten), Passwort merken (mit
+     Passwort), „Dies ist kein Backup" (immer). Der Dialog setzt seinen Text
+     als `textContent` in ein einziges `<p>` — für einen Satz gebaut, nicht
+     für fünf. Dazu „ausserdem" statt „außerdem". *Weg (R17-25, Betreiberin
+     28.10.2026):* `edConfirm()` nimmt neben dem Text auch eine Liste von
+     Absätzen, jeder als eigenes `<p>` mit `textContent` — kein HTML von
+     außen; die rund 40 Aufrufe mit einem Satz bleiben unverändert. Eine
+     Rückfrage mit den zutreffenden Absätzen statt drei; „kein Backup" als
+     feste Hinweiszeile auf der Seite. Vor dem Bau ein Bild zur Freigabe
+     (`CLAUDE.md` 5). *Abnahme:* ein Dialog je Export, Bilderlauf, Textprobe.
+     Erledigt 28.10.2026 mit R17-25 (Web 23.4.0): eine Rückfrage nur mit
+     Patientendaten, edConfirm mit Absätzen; Handprobe in drei Engines:
+     3/2/0 Absätze je Lage, Datei entsteht jedes Mal.
+
+405. **Bitwarden bietet beim Backup mit Kontopasswort ein neues Passwort an statt des gespeicherten.** · gehört zu: 12b · Stand: erledigt · seit 28.10.2026
+     *Aufgenommen 28.10.2026, gemeldet von der Betreiberin (Bildschirmabzug).*
+     Die Karte „Backup erstellen" in `einstellungen.php` hat EIN Passwortfeld
+     `bpw1`, geladen mit `autocomplete="new-password"`; der Schalter „Mein
+     Kontopasswort verwenden" deutet es per Skript zu `current-password` um.
+     Bitwarden ordnet das Feld offenbar beim Laden ein und bleibt bei „neues
+     Passwort"; ein Feld mit dem Anmeldenamen fehlt ganz. *Weg (R17-25):* zwei
+     getrennte Felder, beide ab dem Laden im Markup — Kontopasswort mit
+     `current-password` und daneben ein verborgenes Feld `autocomplete=
+     "username"` mit dem Anmeldenamen, Backup-Passwort samt Wiederholung mit
+     `new-password`; der Schalter blendet nur um. Den Entsperrdialog
+     (`unlock.js`) auf dieselbe Frage hin ansehen. *Grenze:* Bitwarden gibt
+     es im Container nicht — gemessen wird nur das Markup; ob es ausfüllt,
+     zeigt ein Prüfpunkt bei der Betreiberin.
+     Erledigt 28.10.2026 mit R17-25 (Web 23.4.0): zwei Felder ab dem Laden
+     (current-password mit Anmeldename, new-password), Schalter blendet nur
+     um; Markup gemessen, Bitwarden selbst offen als P-R17-34.
+
+406. **Der Entsperrdialog erscheint, während die Sitzung noch gilt.** · gehört zu: 12b · Stand: erledigt · seit 28.10.2026
+     *Aufgenommen 28.10.2026, gemeldet von der Betreiberin.* Erwartet war:
+     Sperre und Abmeldung laufen gleich (30 Minuten, R44) — wer gesperrt
+     wäre, ist abgemeldet. Gebaut ist es so, und der Dialog erscheint
+     trotzdem, wenn der Tab keinen Schlüssel hat, die Sitzung aber gilt:
+     neuer Tab, Browser-Neustart mit wiederhergestellten Tabs,
+     Passwort-Reset (Kopf von `keyguard.js`, „der Tab-Fall ist ausdrücklich
+     gewollt"). Welcher Fall es war, weiß die Betreiberin nicht mehr; ein
+     Fehler im selben Tab ist nicht ausgeschlossen. *Weg (R17-25):* Mit dem
+     `CryptoKey` in IndexedDB teilen sich alle Tabs eines Ursprungs den
+     Speicher — ob ein neuer Tab ohne Passwort weiterarbeiten darf, ist eine
+     Frage im Plan von R17-25. Dazu den Fall „derselbe Tab, Sitzung gilt,
+     Dialog erscheint" in der Fristprobe gezielt suchen.
+     Erledigt 28.10.2026 mit R17-25 (Web 23.4.0): Ablage für alle Tabs
+     (E-R17-76) — neuer Tab ohne Dialog in drei Engines; der Fall im selben
+     Tab bei gültiger Sitzung ist damit derselbe Weg, die Fristprobe misst
+     ihn (kein Verlust über 97 Aufrufe).

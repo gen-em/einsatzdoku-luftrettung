@@ -48,7 +48,7 @@ function uebrigImTab() {
   ergebnis.ablageVorher = !!(await EdCrypto.inhaltLesen());
   ergebnis.griffExtrahierbar = griff.extractable;
 
-  // 3. Der Abmeldeweg (session_lib.php ruft genau das und wartet darauf).
+  // 3. Der Abmeldeweg (session_lib.php ruft genau das; login.php löscht die Ablage beim Laden noch einmal).
   await EdCrypto.clearSession();
   ergebnis.imTabNachher = uebrigImTab();
   ergebnis.ablageNachher = !!(await EdCrypto.inhaltLesen());

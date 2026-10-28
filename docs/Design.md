@@ -1018,6 +1018,7 @@ für eine Rückfrage — nicht für ein neues Element.
 | die eine Haupthandlung | `ui_knopf(['art' => 'primaer'])` | zwei primäre Knöpfe |
 | eine Handlung, die löscht | `ui_knopf(['art' => 'gefahr'])`, im Blatt `blatt-gefahr` | roten Text |
 | eine Rückfrage in **einem Satz** | `data-confirm="…"` (`assets/confirm.js`) | ein eigener Dialog |
+| eine Rückfrage, die **zwei oder drei kurze Absätze** braucht | `edConfirm([absatz, …], ok, ton, titel)` — jeder Absatz als Text (seit Web 23.4.0, Nr. 404) | mehrere Rückfragen hintereinander; ein Absatz Fließtext |
 | eine Rückfrage mit **Aufstellung** | eine eigene Seite mit Karte und Zeilen | einen Dialog mit viel Text |
 | der NutzerIn etwas sagen | `ui_meldung()` / `ui_meldung_markup($ton, …)` | ein `<p>` in Rot |
 | einen Zustand an einer Zeile zeigen | `ui_plakette($text, ['ton' => …])` | ein farbiges Wort |
@@ -1614,6 +1615,14 @@ Kopf und sprängen mit; das Mockup bleibt hier folgenlos.
 > Reanimationen, Ruhesegmente, Trackpunkte — bekommt eine eigene **Seite**.
 > Ein Dialog, der einen halben Bildschirm Text trägt, ist keiner mehr; und
 > der Weg zu einer Seite hat eine Adresse, die man zurückgehen kann.
+>
+> **Absätze sind keine Aufstellung** (seit Web 23.4.0, Backlog Nr. 404,
+> freigegeben mit Bild am 28.10.2026). Braucht eine Rückfrage zwei oder drei
+> kurze Sätze zu verschiedenen Dingen — was in der Datei steht, was mit dem
+> Passwort ist —, nimmt `edConfirm()` eine Liste; jeder Eintrag wird ein
+> eigenes `<p>` mit `textContent`, die Abstände kommen aus `.dialog-inhalt p`.
+> Vorher fragte der Export dreimal hintereinander. Eine Liste von
+> Datensätzen bleibt eine Seite.
 
 **Ein Formulardialog rollt in sich** (seit Web 17.0.0). Kopf und Fuß stehen
 fest, `.dialog-inhalt` bekommt `overflow-y:auto`; die Höhe ist auf

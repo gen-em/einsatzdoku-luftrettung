@@ -9,7 +9,7 @@
    schrieb — eine grüne Zahl ohne Gegenstand (Grundsatz 7).
 
    Anlass: Nr. 22 — der neue Datenschluessel (edk_neu) ueberlebte das Abmelden
-   Anlass: Nr. 370 — der Inhaltsschluessel liegt seit R17-25 in IndexedDB, und das Loeschen dort ist asynchron
+   Seit R17-25 (Nr. 370) misst sie auch die Ablage in IndexedDB, deren Loeschen asynchron ist.
 */
 import * as PWM from '/opt/node22/lib/node_modules/playwright/index.mjs';
 const PW = PWM.default ?? PWM;

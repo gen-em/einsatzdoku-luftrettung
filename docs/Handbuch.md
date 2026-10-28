@@ -2576,27 +2576,28 @@ Er käme an keine Daten — aber dein Notfallblatt öffnete plötzlich nichts me
 und du erführest es erst, wenn du es brauchst.
 
 **Gesperrt: entsperren statt neu anmelden.** Die Anmeldung und der Schlüssel
-für die geschützten Angaben haben unterschiedliche Lebensdauern. Der Schlüssel
-gilt nur im jeweiligen Browser-Tab; die Anmeldung dagegen hält bis zu 30 Minuten
-ohne Aktivität. Deshalb kommt es im Alltag regelmäßig vor, dass du angemeldet
-bist, die geschützten Angaben aber gesperrt sind — typischerweise, wenn du einen
-Link in einem **neuen Tab** öffnest oder den **Browser neu gestartet** hast.
+für die geschützten Angaben haben getrennte Lebensdauern. Seit Web 23.4.0 gilt
+der Schlüssel **für alle Tabs** dieses Browsers: Öffnest du einen Link in
+einem neuen Tab oder stellt der Browser nach einem Neustart deine Tabs wieder
+her, sind die geschützten Angaben sofort lesbar — solange du in der letzten
+halben Stunde gearbeitet hast. Gesperrt bist du trotz Anmeldung nur noch in
+wenigen Fällen: nach einem Zurücksetzen des Passworts ohne
+Wiederherstellungsschlüssel, nach einer Anmeldung mit Passkey, oder in einem
+Browser, der keinen Speicher für den Schlüssel erlaubt (manche privaten
+Fenster) — dort fragt jede Seite.
 
-> **Ein Tab, ein Schlüssel — das ist gewollt.** Der Schlüssel wandert
-> ausdrücklich nicht zwischen Tabs. Wer die Anwendung in einem zweiten Tab
-> öffnet, bekommt dort den Entsperrdialog, obwohl er angemeldet ist. Das ist
-> kein Fehler, sondern der Preis dafür, dass der Schlüssel nur dort liegt, wo
-> gearbeitet wird.
+> **Bis Web 23.3.x hieß es „Ein Tab, ein Schlüssel“**, und jeder neue Tab
+> fragte nach dem Passwort. Das ist vorbei: Der Schlüssel liegt jetzt so im
+> Browser, dass ihn auch ein eingeschleustes Skript nicht herauslesen kann,
+> und diese Ablage teilen sich alle Tabs. **Die Kehrseite:** Schließt du den
+> Browser, ohne dich abzumelden, bleibt der Schlüssel auf diesem Gerät liegen,
+> bis du dich das nächste Mal anmeldest oder abmeldest oder bis eine Seite der
+> Anwendung nach Ablauf der halben Stunde geladen wird. **Auf einem fremden
+> oder geteilten Rechner meldest du dich deshalb immer ab.**
 
-**Beide Fristen zählen seit Web 12.9.0 gleich.** Vorher lief die Frist des
-Schlüssels ab dem **Entsperren**, die der Anmeldung dagegen ab der **letzten
-Bedienung**. Gemerkt hast du davon nichts — der Schlüssel wurde im Hintergrund
-stillschweigend neu erzeugt, ohne Nachfrage. Trotzdem gehört es geradegerückt:
-Solange du arbeitest, bleibt beides gültig; lässt du die Anwendung eine halbe
-Stunde liegen, wirst du abgemeldet und meldest dich neu an.
-
-Der Entsperrdialog erscheint dadurch **nicht seltener** — er hängt nicht an
-dieser Frist, sondern an den drei oben genannten Fällen.
+**Beide Fristen zählen gleich (seit Web 12.9.0).** Solange du arbeitest,
+bleibt beides gültig; lässt du die Anwendung eine halbe Stunde liegen, wirst
+du abgemeldet, und der Schlüssel ist fort.
 
 In diesem Fall erscheint ein Fenster **„Geschützte Angaben entsperren“**, das
 nach deinem Kontopasswort fragt. Nach der Eingabe sind Einsatznummer, Name,
@@ -2781,8 +2782,10 @@ gibt es ein Passwort weniger zu verwahren, und die Datei ist genauso geschützt
 wie die Daten in der Datenbank. Ob das Passwort stimmt, prüft der Browser
 selbst; der Server bekommt es nicht zu sehen. Ist das Häkchen gesetzt, meldet
 sich auch der **Passwortverwalter** und bietet das gespeicherte
-Anmeldepasswort an — das Feld heißt dann für ihn dasselbe wie das auf der
-Anmeldeseite.
+Anmeldepasswort an: Seit Web 23.4.0 steht dafür ein eigenes Feld bereit, das
+er von Anfang an als Anmeldepasswort dieses Kontos erkennt. Vorher teilten sich
+Backup- und Kontopasswort ein Feld, und Bitwarden schlug dort ein neues
+Passwort vor statt des gespeicherten.
 
 Nicht geeignet ist das Kontopasswort, wenn die Datei an jemand anderen gehen
 soll — dann bekommt der Empfänger das Anmeldepasswort mit.
@@ -3041,8 +3044,9 @@ Rückimport der eigenen Exportformate ist da genauer — siehe „Zurücklesen" 
 Auf derselben Seite, unterhalb des Importbereichs, steht der **Export**. Er ist
 zum Weiterverarbeiten in anderen Programmen gedacht — **nicht als Backup**. Für
 ein vollständiges Backup gibt es Abschnitt 6. Dieser Satz stand lange nur hier
-im Handbuch; seit Web 19.3.0 steht er auch auf der Seite selbst, und die
-Backup-Seite verweist umgekehrt hierher.
+im Handbuch; seit Web 19.3.0 steht er auch auf der Seite selbst, seit Web
+23.4.0 in der Einleitung der Exportkarte mit einem Verweis auf das Backup, und
+die Backup-Seite verweist umgekehrt hierher.
 
 Wie beim Import passiert alles im Browser: Der Server liefert nur Rohdaten, die
 geschützten Angaben werden erst auf deinem Rechner entschlüsselt. Ohne den Haken
@@ -3167,6 +3171,14 @@ Das Passwort wird nirgends gespeichert und lässt sich nicht zurücksetzen. Geht
 es verloren, lässt sich die Datei **nicht mehr öffnen** — die Daten darin sind
 dann endgültig nicht mehr lesbar. Es gibt keinen Weg daran vorbei, auch nicht
 über die Anwendung.
+
+**Eine Rückfrage, nur mit Patientendaten (seit Web 23.4.0).** Gehen
+personenbezogene Angaben mit, fragt der Export einmal nach, bevor die Datei
+entsteht: was in ihr lesbar steht, und — je nachdem — dass das Passwort nicht
+wiederherstellbar ist und womit sich die Datei öffnen lässt, oder dass jeder
+sie öffnen kann, wenn du kein Passwort setzt. Ohne Patientendaten fragt er
+nicht. *Bis Web 23.3.x kamen bis zu drei Rückfragen hintereinander, die dritte
+mit „Dies ist kein Backup“; das steht jetzt in der Einleitung der Exportkarte.*
 
 **Der Dateiname sagt, was drin ist.** Er ist so aufgebaut:
 

@@ -172,9 +172,13 @@ ui_seite_start(['titel' => 'Import / Export']);
     </div>
 
     <?php ui_karte_start(['titel' => 'Export', 'id' => 'exportform']); ?>
+      <?php /* „KEIN BACKUP" STEHT HIER UND NICHT MEHR IM DIALOG (Nr. 404).
+               Bis Web 23.3.x war es die dritte Rückfrage jedes Exports. */ ?>
       <p class="feld-hinweis">Erzeugt eine Datei aus den vorhandenen Einsätzen dieses
          Kontos — zum Weiterverarbeiten in anderen Programmen. Der Aufbau der Datei
-         passiert vollständig <strong>in deinem Browser</strong>.</p>
+         passiert vollständig <strong>in deinem Browser</strong>. Ein Export ist
+         <strong>kein Backup</strong>: Das vollständige, verschlüsselte Backup steht
+         unter <a href="<?= ui_e($backupZ) ?>">Einstellungen → Backup</a>.</p>
       <div class="feld">
         <span class="feld-label">Zeitraum</span>
         <?php ui_segment(['name' => 'exp_zr', 'wert' => 'range',

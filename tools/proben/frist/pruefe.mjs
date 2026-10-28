@@ -14,7 +14,7 @@
  * Datenschlüssel, den es nach dem Entsperren nicht mehr gibt.
  *
  * Anlass: Nr. 310 — die Frist lief ab dem Entpacken: 17 stille Neu-Entpackungen je Schicht statt einer
- * Anlass: Nr. 370 — der Inhaltsschlüssel liegt seit R17-25 als CryptoKey in IndexedDB, für alle Tabs
+ * Seit R17-25 (Nr. 370) misst sie die Ablage des Inhaltsschlüssels in IndexedDB, für alle Tabs.
  */
 import * as PWM from '/opt/node22/lib/node_modules/playwright/index.mjs';
 const PW = PWM.default ?? PWM;

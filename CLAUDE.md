@@ -344,6 +344,15 @@ davon aufweicht, wird nicht nebenbei gemacht, sondern angesprochen:
   2.3, bis die Freigaberunde den Absatz nachzieht. Wer die Verschlüsselung,
   die Anmeldung, die Schlüsselablage eines Geräts oder die Kette ändert,
   schreibt das Modell fort.
+  **Der Inhaltsschlüssel im Browser** liegt seit Web 23.4.0 als nicht
+  extrahierbarer `CryptoKey` in IndexedDB, für alle Tabs, und der
+  Datenschlüssel wird nach dem Entsperren nicht aufbewahrt (R17-25, Nr. 370,
+  E-R17-76; `docs/Technik.md`, „Entsperren des Inhaltsschlüssels").
+  **Nicht extrahierbar ist er, nicht alles, was er öffnet:** Der private
+  Teil des Kontopaars (Ortsdaten) und `rw_privat` liegen unter ihm verpackt,
+  und ein Skript in der Seite kann sie auspacken und mitnehmen (E-R17-77).
+  Wer den Satz „der Schlüssel lässt sich nicht stehlen" schreibt, schreibt
+  diesen mit.
 - **Keine fremde Quelle zur Laufzeit.** Kein CDN, keine Google Fonts, kein
   externes Skript. Schriften und Bibliotheken liegen unter
   `server/assets/fonts/` bzw. `server/assets/vendor/`, mit Herkunft und

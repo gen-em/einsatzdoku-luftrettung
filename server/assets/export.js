@@ -26,28 +26,31 @@
 
     var $ = function (id) { return document.getElementById(id); };
 
+    /* EINE RÜCKFRAGE STATT DREI (Backlog Nr. 404, Web 23.4.0).
+     *
+     * Bis 23.3.x fragte der Export bis zu dreimal hintereinander: Klartext
+     * in der Datei, Passwort merken, „Dies ist kein Backup" — jede Frage ein
+     * langer Fließtext in einem Absatz. Zwei davon wiederholten, was ohnehin
+     * auf der Seite steht: Der Hinweis zum Passwort steht unter dem Feld,
+     * und dass ein Export kein Backup ist, sagt jetzt die Einleitung der
+     * Karte (import.php). Gefragt wird nur noch, wo etwas Unumkehrbares
+     * geschieht — Patientendaten verlassen die Verschlüsselung —, und dann
+     * einmal, in Absätzen (`edConfirm` mit einer Liste, confirm.js). */
+    var DIALOG_TITEL = 'Export mit Patientendaten';
     var DIALOG_PATIENT =
-        'Die Datei enthält personenbezogene Angaben im Klartext. Ab dem ' +
-        'Speichern schützt die Verschlüsselung dieser Anwendung die Daten nicht ' +
-        'mehr — Name, Geburtsdatum, Diagnose und Einsatzort der PatientIn, ' +
-        'dazu die Namen der Besatzung, Bergwacht-Angaben, die andere NotärztIn, ' +
-        'die Notizen und die Koordinaten des Einsatzortes stehen lesbar in der ' +
-        'Datei. Bewahre sie entsprechend auf und gib sie nicht unverschlüsselt weiter.';
-
-    var DIALOG_PASSWORT =
-        'Merke dir das Passwort. Es wird nirgends gespeichert und lässt sich ' +
-        'nicht zurücksetzen — geht es verloren, lässt sich die Datei nicht ' +
-        'mehr öffnen, und die Daten darin sind endgültig nicht mehr lesbar. ' +
-        'Zum Öffnen wird ausserdem ein Zusatzprogramm gebraucht: Der ' +
-        'Windows-Explorer und das Archivprogramm von macOS können ' +
-        'AES-verschlüsselte Archive nicht öffnen. Unter Windows geht 7-Zip ' +
-        '(7-zip.org), unter macOS Keka (keka.io) oder The Unarchiver — beide ' +
-        'kostenlos. Ohne Passwort entsteht ein normales Archiv, das überall aufgeht.';
-
-    var DIALOG_KEIN_BACKUP =
-        'Dies ist kein Backup. Ein Export ist zum Weiterverarbeiten in anderen ' +
-        'Programmen gedacht. Für ein vollständiges Backup inklusive ' +
-        'Verschlüsselung nutze Einstellungen → Backup.';
+        'Die Datei enthält Name, Geburtsdatum, Diagnose und Einsatzort der ' +
+        'PatientIn, die Namen der Besatzung, die Notizen und die Koordinaten ' +
+        'des Einsatzortes lesbar. Die Verschlüsselung dieser Anwendung schützt ' +
+        'sie danach nicht mehr.';
+    var DIALOG_MIT_PASSWORT = [
+        'Das Passwort der Datei wird nirgends gespeichert. Geht es verloren, ' +
+        'ist die Datei nicht mehr zu öffnen.',
+        'Zum Öffnen brauchst du 7-Zip (Windows) oder Keka bzw. The Unarchiver ' +
+        '(macOS).'
+    ];
+    var DIALOG_OHNE_PASSWORT =
+        'Ohne Passwort kann jeder die Datei öffnen, der sie in die Hand ' +
+        'bekommt. Bewahre sie entsprechend auf und gib sie nicht unverschlüsselt weiter.';
 
     /* ---------------------------------------------------------- Helfer --- */
 
@@ -1556,12 +1559,9 @@
             // davor — ein Fehler im Dialog brach den Export dann still ab,
             // ohne dass irgendetwas unter dem Knopf stand.
             if (patient) {
-                if (!await window.edConfirm(DIALOG_PATIENT, 'Verstanden, fortfahren', 'normal')) { return; }
+                var absaetze = [DIALOG_PATIENT].concat(pwOn ? DIALOG_MIT_PASSWORT : [DIALOG_OHNE_PASSWORT]);
+                if (!await window.edConfirm(absaetze, 'Export erstellen', 'normal', DIALOG_TITEL)) { return; }
             }
-            if (pwOn) {
-                if (!await window.edConfirm(DIALOG_PASSWORT, 'Verstanden, fortfahren', 'normal')) { return; }
-            }
-            if (!await window.edConfirm(DIALOG_KEIN_BACKUP, 'Export erstellen', 'normal')) { return; }
 
             setState('Daten werden geladen…');
             var data = await fetchMeta(von, bis, patient);

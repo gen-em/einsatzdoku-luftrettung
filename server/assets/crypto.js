@@ -671,10 +671,12 @@ const EdCrypto = (() => {
   const S_NEU = 'edk_neu';
 
   /* SEIT R17-25 ASYNCHRON. Das Löschen in IndexedDB ist ein Vorgang, der
-   * erst fertig ist, wenn die Datenbank es bestätigt. Wer danach die Seite
-   * wechselt (Abmelden, Ablauf), wartet auf das Versprechen — sonst kann der
-   * Seitenwechsel den Vorgang abbrechen, und der Schlüssel bliebe liegen.
-   * Die Fächer im `sessionStorage` sind sofort leer, schon vor dem `await`. */
+   * erst fertig ist, wenn die Datenbank es bestätigt; ein Seitenwechsel
+   * gleich danach kann ihn abbrechen. Die Anmeldung wartet deshalb darauf,
+   * bevor sie sendet. Die Abmeldeseite wartet NICHT (das brach Aufrufe ab,
+   * die gleich nach dem Abmelden kamen) — ihr Ziel, die Anmeldeseite, löscht
+   * die Ablage beim Laden noch einmal (`login.php`). Die Fächer im
+   * `sessionStorage` sind sofort leer, schon vor dem `await`. */
   const clearSession = () => {
     try {
       ALTE_FAECHER.forEach(k => sessionStorage.removeItem(k));

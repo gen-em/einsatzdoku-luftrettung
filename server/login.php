@@ -1204,6 +1204,20 @@ ui_seite_start(['titel' => 'Anmelden', 'klasse' => 'anmeldung-body']);
   });
 })();
 </script>
+<?php /* DIE ABLAGE DES INHALTSSCHLUESSELS RAEUMEN, BEIM LADEN (R17-25).
+         Seit Web 23.4.0 liegt der Inhaltsschluessel in IndexedDB und
+         ueberlebt das Schliessen des Browsers. Wer hier ankommt, ist
+         abgemeldet oder meldet sich gleich an — in beiden Faellen gehoert
+         die Ablage geleert. Die Abmeldeseite stoesst das Loeschen an und
+         leitet sofort hierher weiter; ob ihr Vorgang den Seitenwechsel
+         ueberlebt, ist nicht zugesagt, dieser hier laeuft auf einer Seite,
+         die stehen bleibt. NUR die Ablage, NICHT das Vormerkfach: Der
+         Code-Schritt des Zweitfaktors ist ebenfalls diese Seite, und dort
+         wird das Fach von der Passworteingabe noch gebraucht.
+         PHP-frei und immer da, wie die Bloecke ringsum (Integritaetswache). */ ?>
+<script<?= kopf_nonce_attr() ?>>
+EdCrypto.inhaltLoeschen();
+</script>
 <?php if ($halb === null && !$rwErfolg): ?>
 <?php /* DAS VORMERKFACH RAEUMEN, WENN DER HALBE STAND OHNE ANMELDUNG ENDETE
          (P5c/AP5, E-P5c-53: abgebrochen, abgelaufen, gesperrt).

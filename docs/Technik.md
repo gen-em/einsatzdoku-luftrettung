@@ -1089,7 +1089,9 @@ lokal erst löschen, wenn `final` bestätigt und `next_seq` = Punktzahl.
 PBKDF2-SHA256 (Rundenzahl je Konto, `users.kdf_iter`) aus Passwort + `kdf_salt` zwei Werte ab: ein
 Auth-Token (ersetzt das Passwort gegenüber dem Server, wird dort gehasht
 gespeichert) und eine **Hälfte**, aus der der Datenschlüssel entsteht (bleibt
-im Browser, `sessionStorage`).
+im Browser — seit Web 23.4.0 nur bis zum Entsperren; danach liegt allein der
+Inhaltsschlüssel als nicht extrahierbarer `CryptoKey` in IndexedDB, siehe
+„Entsperren des Inhaltsschlüssels" unten).
 Ein zufälliger **Inhaltsschlüssel** (256 Bit, nicht vom Passwort abgeleitet)
 verschlüsselt `pat_blob` (`{last, first, dob, dx, age, mission_no,
 loc:{addr,lat,lon}, site_desc, start:{addr,lat,lon}, notes}`, AES-256-GCM; Katalog in 4.98) und liegt doppelt verpackt in `users`: mit dem Datenschlüssel
@@ -1472,53 +1474,98 @@ Ein Fehlschlag ändert nichts: Das Konto behält seine Rundenzahl und versucht e
 beim nächsten Anmelden erneut. Gemeldet wird er nicht.
 
 **Entsperren des Inhaltsschlüssels in der Sitzung (`assets/unlock.js`, ab Web
-3.0.0):** Anmeldung und Inhaltsschlüssel haben unterschiedliche Lebensdauern —
-die Anmeldung hängt am PHP-Sitzungscookie (`SESSION_TIMEOUT_S`, 30 min
-Inaktivität), der Schlüssel dagegen am `sessionStorage` des jeweiligen Tabs
-(`edk` = Datenschlüssel, `pck` = Inhaltsschlüssel). Der Zustand „angemeldet,
-aber gesperrt" tritt daher regelmäßig auf: Link im neuen Tab, Browser-Neustart,
-Passwort-Reset ohne Wiederherstellungsschlüssel (der Wrap passt dann nicht mehr,
-`getContentKey()` liefert `null`).
+3.0.0):** Anmeldung und Inhaltsschlüssel haben getrennte Lebensdauern — die
+Anmeldung hängt am PHP-Sitzungscookie (`SESSION_TIMEOUT_S`, 30 min
+Inaktivität), der Schlüssel an der **Ablage im Browser**. Der Zustand
+„angemeldet, aber gesperrt" tritt auf, wenn die Ablage keinen passenden
+Schlüssel hat: nach einem Passwort-Reset ohne Wiederherstellungsschlüssel (die
+Hülle passt dann nicht mehr), nach Ablauf der Frist, in einem Browser ohne
+IndexedDB (dort fragt jede Seite), nach einer Anmeldung per Passkey (sie
+leitet aus keinem Passwort ab).
 
-**Beide Fristen messen dasselbe — seit Web 12.9.0 auch wirklich (R44).** Sie
-standen von Anfang an beide auf 30 Minuten, und der Kommentar in `keyguard.js`
-sagte ausdrücklich, sie sollten gleich sein. Sie waren es nicht: `auth_guard.php`
-schreibt `last_seen` bei **jeder Anfrage** — eine Inaktivitätsfrist —, während
-`keyguard.js` seinen Zeitstempel nur beim **Entpacken** setzte und ihn beim
-Treffer im Zwischenspeicher nicht anfasste. Das war eine absolute Frist ab dem
-Entsperren. `contentKey()` erneuert den Zeitstempel jetzt bei jedem Treffer.
+**Die Ablage (seit Web 23.4.0, R17-25, Backlog Nr. 370).** Bis 23.3.x lagen
+Daten- und Inhaltsschlüssel als Hex im `sessionStorage` des Tabs (`edk`,
+`pck`, Bindung `pckb`, Zeit `pckt`). Ein Skript in der Seite (Lage D) konnte
+beide lesen und mitnehmen, und weil der Inhaltsschlüssel nie wechselt
+(F-R17-10), öffnete ein mitgenommener jeden späteren Block. Jetzt:
 
-**Was der Fristablauf kostete, und was nicht.** Der R44-Eintrag schrieb ihm den
-Entsperrdialog zu; das ist im Rahmenplan-Archiv am 01.09.2026 berichtigt.
-`verwerfeInhalt()` lässt `edk` bewusst liegen, und `getContentKey()` entpackt
-den Inhaltsschlüssel daraus **ohne Passwort** neu — der Ablauf kostete ein
-**stilles Neu-Entpacken**. Zahl dazu: acht Stunden Dienst, alle fünf Minuten
-eine Seite, 97 Aufrufe ohne Pause — **vorher 17 Neu-Entpackungen, nachher 1**
-(`tools/proben/frist/`, dort auch die Gegenprobe, dass die Frist weiterhin
-greift). Der Dialog fällt an der Stelle darüber: wenn `getContentKey()` `null`
-liefert, also in genau den drei aufgezählten Fällen. **Das bleibt so.**
+| Was | Wo | Wie lange |
+|---|---|---|
+| Inhaltsschlüssel | IndexedDB `nadoku-schluessel`, Fach `fach`, Eintrag `inhalt`: `{schluessel: CryptoKey (AES-GCM, extractable: false), bindungen: [Kennungen der Hüllen], zeit}` | bis Abmelden, Anmelden, Ablauf der Sitzung (`session_lib.php`) oder die erste Seite mit `keyguard.js` nach Ablauf der Frist |
+| Datenschlüssel | nirgends — nur in der Funktion, die die Hülle öffnet | bis zum Ende dieser Funktion |
+| Hälften und Anmelde-Token (`edkvor`) | `sessionStorage` | einen Seitenwechsel nach der Anmeldung (unverändert) |
 
-Die Angleichung ist damit Aufräumen und kein Heilmittel — richtig bleibt sie:
-Zwei Uhren, die dieselbe Zahl tragen und Verschiedenes messen, sind eine Falle
-für den nächsten, der sich auf den Kommentar verlässt. Die Gegenrichtung — die
-Sitzung ebenfalls absolut befristen — hätte aktive NutzerInnen mitten in der
-Arbeit abgemeldet. Läuft die Frist wirklich ab, endet die **Sitzung**, und die
-nächste Anfrage landet auf der Anmeldeseite, die die Schlüssel ohnehin räumt.
+**Für alle Tabs** (E-R17-76): Die Ablage gilt für den Ursprung. Ein neuer Tab
+und ein wiederhergestellter Browser finden den Schlüssel, solange die Frist
+läuft (Nr. 406); bis 23.3.x fragte jeder neue Tab nach dem Passwort („Ein
+Tab, ein Schlüssel"). Eine Trennung je Tab brächte nichts — ein Skript in einem
+Tab erreicht dieselbe Datenbank. **Preis:** Die Ablage überlebt das Schließen
+des Browsers, bis sie geräumt wird (Bedrohungsmodell, Lage F).
+
+**Bindung:** `EdKeyGuard.contentKey(wrap)` liefert den Schlüssel nur, wenn die
+Kennung der Hülle (`wrapFingerprint()`) unter `bindungen` steht und die Frist
+läuft. Abgelaufen → löschen, `null`. Fremde Hülle → `null`, der Eintrag
+**bleibt**: Ein Tab von vor einem Passwortwechsel trägt die alte Hülle und
+sperrte sonst alle anderen mit. Zwei Bindungen entstehen an zwei Stellen —
+nach der stillen Umstellung beim Anmelden (alte Hülle der Seite und neue in der
+Datenbank) und beim Passwortwechsel (alte und neue; die Seite nach dem Erfolg
+trägt noch die alte, weil `auth_guard.php` den Datensatz vor dem Speichern
+liest). Das Vormerkfach `edk_neu` des Passwortwechsels gibt es seither nicht
+mehr.
+
+**Räumen ist asynchron.** `EdCrypto.clearSession()` liefert ein Versprechen,
+und ein Seitenwechsel gleich danach kann den Vorgang abbrechen. Deshalb an
+drei Stellen: `session_lib.php` stößt es an und leitet sofort weiter — ein
+erster Entwurf wartete, und die verspätete Weiterleitung brach im Prüfstand
+Aufrufe ab, die gleich nach dem Abmelden kamen (Firefox,
+`NS_BINDING_ABORTED`); `login.php` löscht die Ablage beim Laden noch einmal,
+auf einer Seite, die stehen bleibt (nicht das Vormerkfach — der Code-Schritt
+des Zweitfaktors ist dieselbe Seite); die Anmeldung wartet vor dem Senden.
+Die Hex-Fächer bis 23.3.x räumt jede Seite mit `crypto.js` beim Laden.
+
+**`aesKey()` nimmt beide Formen.** Alle Verbraucher reichen den Schlüssel nur
+an `EdCrypto.encrypt()`/`decrypt()` oder an das Schlüsselpaar weiter;
+`aesKey()` importiert ein Hex und reicht einen `CryptoKey` unverändert durch.
+Wo der Inhaltsschlüssel als Hex gebraucht wird — eine Hülle bauen, die
+Prüfsumme bilden —, kommt er aus der Hülle, die das Passwort gerade geöffnet
+hat (Passwortwechsel, Wiederherstellungsschlüssel und Rückweg erneuern, stille
+Umstellung), nie aus der Ablage.
+
+**Die Grenze** (E-R17-77): Nicht extrahierbar ist der Inhaltsschlüssel, nicht
+alles, was er öffnet. Der private Teil des Kontopaars (Ortsdaten) und
+`rw_privat` liegen unter ihm verpackt; ein Skript in der Seite kann sie
+auspacken lassen und mitnehmen. Erste Linie gegen Lage D bleibt die scharfe
+CSP.
+
+**Beide Fristen messen dasselbe (R44, seit Web 12.9.0).** Die Sitzung führt
+eine Inaktivitätsfrist (`auth_guard.php` schreibt `last_seen` bei jeder
+Anfrage); der Schlüssel ebenso: Jeder Gebrauch zählt sie neu (höchstens einmal
+je Minute geschrieben). Bis Web 12.9.0 lief sie absolut ab dem Entsperren und
+kostete alle 30 Minuten ein stilles Neu-Entpacken aus `edk` (17 statt 1 je
+Schicht) — seit 23.4.0 gäbe es dafür keinen Datenschlüssel mehr, der Ablauf
+hieße „Passwort". `tools/proben/frist/` misst gegen die echte Ablage: acht
+Stunden, alle fünf Minuten eine Seite, kein Verlust; Leerlauf über die Frist
+löscht; eine fremde Hülle lässt stehen; eine Seite nach Ablauf räumt. Die
+Gegenrichtung — die Sitzung ebenfalls absolut befristen — hätte aktive
+NutzerInnen mitten in der Arbeit abgemeldet.
 
 `unlock.js` exportiert genau eine Funktion:
 
 ```
-EdUnlock.ensureContentKey(wrap, kdfSalt) -> Promise<string|null>
+EdUnlock.ensureContentKey(wrap, kdfSalt, kdfIter) -> Promise<CryptoKey|null>
 ```
 
-Sie liefert den Inhaltsschlüssel, wenn er in der Sitzung liegt; sonst zeigt sie
-einen modalen Dialog und leitet den Schlüssel neu ab:
+Sie liefert den Inhaltsschlüssel, wenn er in der Ablage liegt (zuerst löst
+sie nach einer Anmeldung das Vormerkfach auf); sonst zeigt sie einen modalen
+Dialog und leitet den Schlüssel neu ab:
 
-1. `EdCrypto.deriveKeys(passwort, kdfSalt)` → `dataKeyHex`
-2. `EdCrypto.decrypt(dataKeyHex, wrap)` versuchen. Gelingt es, war das Passwort
+1. `EdCrypto.deriveKeys(passwort, kdfSalt, kdfIter)` → Hälfte, mit dem
+   Server-Anteil → Datenschlüssel (`datenschluessel()`, S10)
+2. `EdCrypto.huelleOeffnen(dk, wrap)` versuchen. Gelingt es, war das Passwort
    richtig — die Echtheitsprüfung steckt bereits in AES-GCM, ein separater
    Abgleich entfällt.
-3. `EdCrypto.setDataKey(dataKeyHex)`, danach `EdCrypto.getContentKey(wrap)`.
+3. `EdKeyGuard.ablegen(ckHex, wrap)` — als `CryptoKey` in die Ablage, an die
+   Hülle gebunden. Der Datenschlüssel endet mit der Funktion.
 
 Bei Abbruch kommt `null` zurück; die aufrufende Seite verhält sich dann wie
 bisher im gesperrten Zustand. Kein neuer Endpunkt, keine Passwortübertragung —
@@ -1541,10 +1588,11 @@ Drei Punkte, die bei Änderungen zu beachten sind:
 Aufrufstellen: `index.php`, `zeitraum.php`, `einsatz.php` (bezieht den Wrap aus
 der API-Antwort `m.pat_wrap`, das Salt zusätzlich aus PHP), `einsatz_form.php`,
 `import.php` über `assets/import_ui.js` und `assets/export.js`, sowie
-`einstellungen.php` im Backup-Block. **Nicht** umgestellt ist der
-Passwortwechsel im Profil-Block von `einstellungen.php`: Er leitet Schlüssel in
-einem anderen Zusammenhang ab (Re-Wrap mit dem alten Passwort) und hat mit dem
-Entsperren nichts zu tun.
+`einstellungen.php` im Backup-Block. **Nicht** über `ensureContentKey()` läuft
+der Passwortwechsel im Profil-Block von `einstellungen.php`: Er leitet mit dem
+alten Passwort ab, packt neu und legt den Schlüssel seit 23.4.0 unmittelbar
+über `EdCrypto.inhaltAblegen()` ab, an alte und neue Hülle gebunden — der
+Reiter lädt `keyguard.js` nicht.
 
 Jeder Sperrhinweis trägt einen Entsperr-Knopf, der denselben Ablauf erneut
 anstößt. Wichtig dabei: Die Funktionen hinter diesen Knöpfen müssen ein
@@ -3459,7 +3507,9 @@ Die nur **lesenden** Endpunkte (`range`, `suchindex`, `mission`) weisen seit
 der Frist, gelöschtes Konto und Passwortwechsel — alle laufen über
 `session_lib.php`. Der Grund für die gemeinsame Fassung: Eine reine
 Weiterleitung per Kopfzeile führt nie JavaScript aus, die Schlüssel im
-`sessionStorage` bleiben also liegen. Der Abmeldeweg löste das von Anfang an
+Browser (bis 23.3.x im `sessionStorage`, seit 23.4.0 in IndexedDB) bleiben
+also liegen. Seit 23.4.0 löscht zusätzlich die Anmeldeseite, auf der jede
+dieser Weiterleitungen endet, die Ablage beim Laden. Der Abmeldeweg löste das von Anfang an
 richtig, der Ablaufpfad nicht — und weil die Lösung nur an einer der beiden
 Stellen stand, war der Unterschied nicht zu sehen.
 
@@ -6370,7 +6420,7 @@ Die Bausteine im Einzelnen:
 | Passwortnachweis | `auth_guard.php` | `passwort_nachweis($userId, $token)` und `passwort_nachweis_json()` — Topf `login` und Vergleich in einem Aufruf, für jede Stelle, die das Anmelde-Token einer angemeldeten Sitzung verlangt (sieben). Ab Web 23.2.0 (F-R17-32); vorher prüfte jede selbst, vier ohne Topf. |
 | Antwort abschließen | `antwort_abschliessen()` in `smtp.php` | Beendet die Antwort, bevor der Mailversand beginnt. Nimmt dem Versand die messbare Wirkung auf die Antwortzeit. |
 | Schlüssel-Prüfsumme | `assets/crypto.js` | Erkennt, ob ein Inhaltsschlüssel zum Konto gehört. Der Server lernt dadurch nichts über den Schlüssel — er gewinnt nur die Fähigkeit, den einen Fehler zu erkennen, der alles kostet. |
-| Schlüsselbindung | `assets/keyguard.js` | Bindet den zwischengespeicherten Inhaltsschlüssel an die Hülle, aus der er stammt, und lässt ihn nach derselben Frist ablaufen wie die Sitzung — **gleitend wie sie**: Jeder Treffer erneuert den Zeitstempel (R44, seit Web 12.9.0). Vorher war es eine feste Frist ab dem Entsperren, und genau daraus entstand der Entsperrdialog mitten in der Arbeit. **Muss vor `unlock.js` geladen werden.** |
+| Schlüsselbindung | `assets/keyguard.js` | Bindet den Inhaltsschlüssel in der Ablage (seit Web 23.4.0 ein nicht extrahierbarer `CryptoKey` in IndexedDB, für alle Tabs) an die Hüllen, aus denen er stammt, und lässt ihn nach derselben Frist ablaufen wie die Sitzung — **gleitend wie sie**: Jeder Gebrauch erneuert den Zeitstempel (R44, seit Web 12.9.0). Eine fremde Hülle liefert `null` und lässt den Eintrag stehen; eine abgelaufene Frist löscht ihn, auch beim bloßen Laden einer Seite. *(Bis R17-25 stand hier, aus der festen Frist vor 12.9.0 sei der Entsperrdialog mitten in der Arbeit entstanden — er entstand nicht, sie kostete ein stilles Neu-Entpacken aus `edk`, F-R17-24.)* **Muss vor `unlock.js` geladen werden.** |
 | Fehlerantwort der Endpunkte | `db.php` | `json_fehler()` protokolliert den vollen Ausnahmetext und gibt nach außen nur eine achtstellige Kennung. `fehler_kennung()` für Stellen mit eigener Antwortform (`ingest.php`). |
 | Zeitrechnung | `db.php` | **`TIMESTAMP` und `DATETIME` verhalten sich verschieden, und das ist bei jeder Zeitspalte mitzudenken.** `TIMESTAMP` rechnet MySQL beim Schreiben in UTC um und beim Lesen zurück — der gespeicherte Wert ist unabhängig von der Sitzungszone immer richtig (`pair_sessions.erstellt_am`, `devices.last_seen`/`created_at`, `users.created_at`, `missions.created_at`, `deleted_refs`). `DATETIME` speichert unverändert, was dasteht; dort entscheidet die Sitzungszone (`rate_limits`, `password_resets.expires_at`, sowie die Einsatz- und Papierkorbzeiten — Letztere werden aber über `local_to_utc()` bzw. `UTC_TIMESTAMP()` befüllt und waren nie zonenabhängig). |
 | Zeitrechnung | `db.php` | Die Verbindung steht seit Web 4.5.2 ausdrücklich auf UTC (`SET time_zone = '+00:00'`). Ohne das käme die Zeitrechnung von `NOW()` aus einer Hoster-Einstellung, und `NOW()` und `UTC_TIMESTAMP()` liefen um den Zonenversatz auseinander. Der Unterschied im Code bleibt: `UTC_TIMESTAMP()` für den Papierkorb (90-Tage-Frist, `TRASH_DAYS`), `NOW()` für Kurzlebiges (Ratenschutz, Token, Kopplungssitzungen). Die **Anzeige** rechnet in PHP nach `konfig('app.timezone')` um (bis Web 20.26.2: `$CFG['app']['timezone']`). |
@@ -7081,8 +7131,11 @@ und `zustand_verzeichnis()` legt beim Anlegen eine eigene `.htaccess` mit
 `Require all denied` dazu — der zweite Riegel. **Übergang:** Die Kette
 schaltet die Wartung vor dem Hochladen mit dem alten Code ein, also am
 alten Ort; die neue Fassung erkennt eine Datei dort noch
-(`WARTUNG_DATEI_ALT`), löscht sie beim Ausschalten mit und räumt eine
-alte `ueberlast.json` beim ersten Zählen weg. Die Fremd-Aktion des
+(`WARTUNG_DATEI_ALT`) und zieht sie seit Web 23.4.0 bei der ersten Frage
+nach dem Schalter nach `.zustand/` um (`wartung_altdatei_umziehen()`,
+`rename()`, F-R17-72) — bis dahin lag sie bis zum Ausschalten im Webroot und
+war unter Apache abrufbar. Eine alte `ueberlast.json` räumt sie beim ersten
+Zählen weg. Die Fremd-Aktion des
 Transports löscht am alten Ort nichts — sie entfernt nur, was sie selbst
 hochgeladen hat. Ob Apache die Sperre ausliefert, misst die örtliche
 Anlage nicht (der PHP-Server liest keine `.htaccess`, P-R17-10).
