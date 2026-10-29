@@ -8414,5 +8414,15 @@ declare(strict_types=1);
  *   berichtigt, und `fremdsummen` rechnet die Koepfe seither in Stufe 1
  *   nach. Neben, weil zwei Auskuenfte und ein Bedienweg dazukommen; kein
  *   Schema.
+ * 23.5.1 — DAS FORMULAR SAGT, WANN ES ENTSCHLUESSELT HAT (Schritt 12b,
+ *   Zwischen-PR; Backlog Nr. 407, F-R17-79). Das Einsatzformular setzt die
+ *   Ortschips erst nach dem Entschluesseln, asynchron; wer vorher am
+ *   Ortsfeld arbeitete, dem setzte es den alten Ort hinterher wieder
+ *   hinein. Die Bedienprobe traf das in WebKit jeden dritten Lauf und war
+ *   damit rot, ohne dass sich am Formular etwas geaendert hatte. Jetzt
+ *   traegt das Formular `data-pat-geladen` (`offen` oder `gesperrt`), und
+ *   die Probe wartet darauf statt auf feste Pausen. Dass ein Mensch
+ *   schneller tippt, als der Browser entschluesselt, verhindert die Marke
+ *   nicht — sie macht den Zeitpunkt nur sichtbar. Korrektur; kein Schema.
  */
-const WEB_VERSION = '23.5.0';
+const WEB_VERSION = '23.5.1';

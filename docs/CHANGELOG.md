@@ -14,6 +14,41 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 23.5.1] — unveröffentlicht
+
+Schritt 12b, Zwischen-PR — eine Korrektur, damit der Prüfbericht grün sein
+kann (Backlog Nr. 407, F-R17-79). Kein Schema, kein `update.php`.
+
+### Behoben
+
+- **Web — das Einsatzformular sagt, wann es fertig entschlüsselt hat.** Die
+  Ortschips von Einsatz- und Abfahrtort setzt das Formular erst nach dem
+  Entschlüsseln, und das läuft asynchron neben dem Seitenaufbau her. Wer
+  vorher am Ortsfeld arbeitete — den Chip entfernte, das Feld leerte —, dem
+  setzte es den alten Ort hinterher wieder hinein. Die Bedienprobe traf das
+  in WebKit jeden dritten Lauf am Weg `ap2-treffer-setzt-nur-das-kreuz`, auch
+  auf dem Stand vor R17-26, und war damit rot, ohne dass sich am Ortsfeld
+  etwas geändert hatte. Gemessen: In 12 von 12 Aufrufen war das
+  Entschlüsseln beim Leeren nicht fertig, es endete 65 bis 144 ms später —
+  die feste Pause der Probe war 150 ms. Das Formular trägt jetzt
+  `data-pat-geladen` — `offen` nach dem Entschlüsseln, `gesperrt`, wenn der
+  Schlüssel fehlt —, und die Probe wartet darauf statt auf feste Pausen;
+  zehn Läufe in WebKit, 60 von 60 Wegen grün. **Was bewusst bleibt:** Ein
+  Mensch, der schneller tippt, als sein Browser entschlüsselt, kann den
+  Wettlauf weiter verlieren; die Marke macht den Zeitpunkt sichtbar, sie
+  sperrt das Feld nicht. Das Entschlüsseln dauert Millisekunden, und ein
+  gesperrtes Ortsfeld bei jedem Öffnen wäre der größere Schaden.
+
+### Mit dabei
+
+- **Werkzeuge — die Kontoanlage im Kreislauf sagt, was sie stattdessen
+  bekam.** Die Freigabeprobe in Chromium scheiterte im Gesamtlauf fünfmal an
+  „Kontoanlage ohne Einrichtungslink: unbekannt" (Backlog Nr. 403), und
+  niemand wusste, ob die Antwort eine Wartungsseite, die Anmeldung oder die
+  Liste ohne Meldung war. Zweimal nachgestellt, zweimal grün. Die Meldung
+  trägt jetzt die Seitenkennung der Antwort; trifft es wieder, steht die
+  Ursache im Bericht.
+
 ## [Web 23.5.0] — unveröffentlicht
 
 Schritt 12b, Paket R17-26 — was in der `config.php` steht, wird sichtbar, ohne

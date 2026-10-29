@@ -9792,3 +9792,24 @@ zutreffen.
      (E-R17-76) — neuer Tab ohne Dialog in drei Engines; der Fall im selben
      Tab bei gültiger Sitzung ist damit derselbe Weg, die Fristprobe misst
      ihn (kein Verlust über 97 Aufrufe).
+
+407. **Ein Weg der Bedienprobe wackelt in WebKit: „Treffer setzt nur das Kreuz".** · gehört zu: 12b · Stand: erledigt · seit 28.10.2026
+     *Aufgenommen 28.10.2026 mit R17-27 (F-R17-79), gefunden im Prüfstand von
+     R17-26.* `ap2-treffer-setzt-nur-das-kreuz` meldet in WebKit nach dem
+     Suchtreffer einen Ortschip im Formular, wo keiner sein darf — einzeln
+     1 von 2 Läufen rot, auf dem Stand vor R17-26 (`d0ee64e1`) 1 von 3.
+     Chromium und Firefox grün. Vermutung, nicht gemessen: Der Weg leert das
+     Ortsfeld, bevor das asynchrone Entschlüsseln des Einsatzes es wieder
+     füllt (seit R17-25 liegt der Schlüssel in IndexedDB). Auffällig: Nr. 403
+     läuft im Prüfstand direkt nach diesem Lauf.
+     *Weg:* den Wettlauf belegen (Zeitpunkt des Chips gegen das Ende des
+     Entschlüsselns), dann im Weg auf „Formular geöffnet" warten statt fester
+     Pausen — oder, falls die Anwendung den Chip zu spät setzt, dort beheben.
+     Nicht wiederholen lassen. *Abnahme:* zehn Einzelläufe in WebKit grün und
+     ein Gesamtlauf `neben` ohne diesen Weg.
+     Erledigt 29.10.2026 mit Web 23.5.1 (Zwischen-PR): Wettlauf gemessen —
+     in 12 von 12 Aufrufen war das Entschlüsseln beim Leeren nicht fertig,
+     es endete 65 bis 144 ms später, gegen 150 ms feste Pause. Das Formular
+     trägt `data-pat-geladen`, der Weg wartet darauf; zehn Einzelläufe
+     WebKit 60 von 60 Wegen grün. „Nr. 403 läuft direkt danach" war falsch
+     (siehe Nr. 403).

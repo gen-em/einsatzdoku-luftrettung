@@ -1614,6 +1614,17 @@ Submit-Handler die Blob-Erzeugung vorzeitig (`if (f.dataset.patDone === '1' ||
 erhalten geblieben und darf nicht wegfallen — sonst löscht ein Speichern ohne
 Schlüssel die Patientendaten.
 
+**Wann das Formular fertig entschlüsselt hat (seit Web 23.5.1).** `patLaden()`
+läuft asynchron neben dem Seitenaufbau her und setzt die Ortschips von
+Einsatz- und Abfahrtort erst nach dem Entschlüsseln. Wer vorher am Ortsfeld
+arbeitet, dem setzt es den alten Ort hinterher wieder hinein (Backlog
+Nr. 407). Das Ende steht deshalb am Formular: `#missionform` trägt
+`data-pat-geladen="offen"` nach dem Entschlüsseln, `"gesperrt"` ohne
+Schlüssel; jeder Lauf löscht die Marke zuerst, weil „Entsperren" ihn ein
+zweites Mal startet. Die Bedienprobe wartet darauf, bevor sie ein Ortsfeld
+leert. Die Marke sperrt nichts — ein Mensch kann den Wettlauf weiter
+verlieren, er dauert Millisekunden.
+
 **Koordinaten stehen getrennt vom Textfeld (seit Web 3.3.0).** `#locaddr` ist
 Bezeichnungsfeld *und* Eingabeweg für Koordinaten. Bestätigte Koordinaten
 landen deshalb **nicht** mehr im Textfeld, sondern als Chip darunter

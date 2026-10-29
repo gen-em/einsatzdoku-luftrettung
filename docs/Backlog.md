@@ -1297,31 +1297,16 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      unbekannt". Die Anmeldung als Admin gelang (sonst meldete das Werkzeug
      „Anmeldung gescheitert"); erst die Antwort auf `user_add` trug keinen
      Link und keinen erkennbaren Meldungstext. Einzeln gefahren ist die Probe
-     jedes Mal grün (25/0), in Firefox und WebKit auch im Gesamtlauf. Sie
-     läuft im Prüfstand direkt nach der Bedienprobe in WebKit. Folge: Der
-     Bericht des Pull Requests von 12b wird rot, wenn es dort wieder trifft.
-     *Weg:* die Antwort auf `user_add` im Fehlerfall ganz ins Protokoll der
-     Probe schreiben (Seitenkennung, Adresse, Meldung), die Lage im
-     Gesamtlauf nachstellen (Bedienprobe WebKit, dann Freigabe Chromium) und
-     die Ursache beheben, nicht die Probe wiederholen lassen. *Abnahme:* zwei
-     Gesamtläufe `neben` ohne diesen Abbruch.
-
-<!-- -->
-
-407. **Ein Weg der Bedienprobe wackelt in WebKit: „Treffer setzt nur das Kreuz".** · gehört zu: 12b · Stand: offen · seit 28.10.2026
-     *Aufgenommen 28.10.2026 mit R17-27 (F-R17-79), gefunden im Prüfstand von
-     R17-26.* `ap2-treffer-setzt-nur-das-kreuz` meldet in WebKit nach dem
-     Suchtreffer einen Ortschip im Formular, wo keiner sein darf — einzeln
-     1 von 2 Läufen rot, auf dem Stand vor R17-26 (`d0ee64e1`) 1 von 3.
-     Chromium und Firefox grün. Vermutung, nicht gemessen: Der Weg leert das
-     Ortsfeld, bevor das asynchrone Entschlüsseln des Einsatzes es wieder
-     füllt (seit R17-25 liegt der Schlüssel in IndexedDB). Auffällig: Nr. 403
-     läuft im Prüfstand direkt nach diesem Lauf.
-     *Weg:* den Wettlauf belegen (Zeitpunkt des Chips gegen das Ende des
-     Entschlüsselns), dann im Weg auf „Formular geöffnet" warten statt fester
-     Pausen — oder, falls die Anwendung den Chip zu spät setzt, dort beheben.
-     Nicht wiederholen lassen. *Abnahme:* zehn Einzelläufe in WebKit grün und
-     ein Gesamtlauf `neben` ohne diesen Weg.
+     jedes Mal grün (25/0), in Firefox und WebKit auch im Gesamtlauf.
+     *Stand 29.10.2026:* bis dahin 5 von 7 Läufen rot. Vor ihr laufen nicht
+     die Bedienprobe (so stand es hier bis zum 29.10.), sondern Raten-,
+     Wartungs-, Verbindungs- und Anteilprobe; diese Folge und die alte sind
+     je einmal nachgestellt, beide grün. Die Meldung trägt seit Web 23.5.1
+     die Seitenkennung der Antwort. Folge bleibt: Trifft es im Bericht des
+     Pull Requests, ist er rot. *Weg:* beim nächsten Treffer an der
+     Seitenkennung die Ursache ablesen und beheben, nicht die Probe
+     wiederholen lassen. *Abnahme:* zwei Gesamtläufe `neben` ohne diesen
+     Abbruch.
 
 <!-- -->
 

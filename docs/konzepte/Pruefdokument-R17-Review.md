@@ -4,7 +4,7 @@
 Protokoll „ist es belegt?" steht im Statusblock und in Abschnitt 5 des
 Konzepts. Angelegt am 11.10.2026 mit R17-00 (Fable); jedes Paket füllt es
 mit Mittel **und** Zahl. Stand: **Schritt 12b läuft seit dem 20.10.2026**
-(R17-17 erledigt — das Review ist zu Ende und mit PR #118 gemergt, die Pakete R17-18 bis -30 laufen mit Opus, E-R17-28, auf `claude/modest-edison-byg7ay`; **R17-18 erledigt am 25.10.2026**; **R17-19 umgesetzt am 25.10.2026** auf `claude/tender-feynman-3oyo13`, gemergt mit PR #122, die Abnahme wartet auf drei Probeläufe der Betreiberin, P-R17-14 bis -16; **R17-20 umgesetzt am 26.10.2026** auf `claude/new-session-lvb0x0`, Web 23.2.0, Prüfpunkte P-R17-20 bis -24; **R17-21 umgesetzt am 26.10.2026**, Uhr 4.1.0 und Web 23.3.0, Prüfpunkte P-R17-25 bis -28; **R17-22 umgesetzt am 27.10.2026**, Web 23.3.1, Prüfpunkte P-R17-29 und -30, P-R17-08 und -10 gelten weiter; **R17-23 umgesetzt am 27.10.2026**, Web 23.3.2, Prüfpunkte P-R17-31 und -32; **R17-24 umgesetzt am 27.10.2026**, Android 0.18.1, P-R17-11 im Emulator gefahren; **R17-25 umgesetzt am 28.10.2026**, Web 23.4.0, Prüfpunkte P-R17-34 und -35; **R17-26 umgesetzt am 28.10.2026**, Web 23.5.0, Prüfpunkte P-R17-36 und -37; **R17-27 umgesetzt am 28.10.2026**, keine Fassung, Prüfpunkt P-R17-38); Schritt 12 ist abgeschlossen — Freigabe des Modells
+(R17-17 erledigt — das Review ist zu Ende und mit PR #118 gemergt, die Pakete R17-18 bis -30 laufen mit Opus, E-R17-28, auf `claude/modest-edison-byg7ay`; **R17-18 erledigt am 25.10.2026**; **R17-19 umgesetzt am 25.10.2026** auf `claude/tender-feynman-3oyo13`, gemergt mit PR #122, die Abnahme wartet auf drei Probeläufe der Betreiberin, P-R17-14 bis -16; **R17-20 umgesetzt am 26.10.2026** auf `claude/new-session-lvb0x0`, Web 23.2.0, Prüfpunkte P-R17-20 bis -24; **R17-21 umgesetzt am 26.10.2026**, Uhr 4.1.0 und Web 23.3.0, Prüfpunkte P-R17-25 bis -28; **R17-22 umgesetzt am 27.10.2026**, Web 23.3.1, Prüfpunkte P-R17-29 und -30, P-R17-08 und -10 gelten weiter; **R17-23 umgesetzt am 27.10.2026**, Web 23.3.2, Prüfpunkte P-R17-31 und -32; **R17-24 umgesetzt am 27.10.2026**, Android 0.18.1, P-R17-11 im Emulator gefahren; **R17-25 umgesetzt am 28.10.2026**, Web 23.4.0, Prüfpunkte P-R17-34 und -35; **R17-26 umgesetzt am 28.10.2026**, Web 23.5.0, Prüfpunkte P-R17-36 und -37; **R17-27 umgesetzt am 28.10.2026**, keine Fassung, Prüfpunkt P-R17-38; **Zwischen-PR am 29.10.2026**, Web 23.5.1, Nr. 407 erledigt, kein neuer Prüfpunkt); Schritt 12 ist abgeschlossen — Freigabe des Modells
 durch die Betreiberin am 11.10.2026 (P-R17-01), Erledigt-Zeile in
 Rahmenplan 8 (Fassung 156), PR #103 gemergt. **12b schreibt dieses
 Dokument fort** (E-R17-15), mit denselben Zählern: Die Punkte P-R17-03 bis
@@ -52,6 +52,20 @@ nächsten Paket — eine Zeile hier ändert den Baum, den der Prüfstand gemesse
 hat (`Pruefablauf.md` 5.1); der Bericht eines Pakets steht in **seiner**
 Commit-Nachricht.
 
+### Zwischen-PR — Web 23.5.1 (29.10.2026)
+
+| Mittel | Was gemessen | Zahl |
+|---|---|---|
+| Messzeile in `ortLeeren()` (nur für die Messung, nicht eingecheckt), Bedienprobe `--nur ap2` WebKit, drei Läufe | Ist die Marke `data-pat-geladen` zu dem Zeitpunkt gesetzt, an dem der Weg bis 23.5.0 das Ortsfeld leerte? | **12 von 12** Aufrufen: nein; das Entschlüsseln endete **65 bis 144 ms** später, die feste Pause der Probe war 150 ms — der Wettlauf von Nr. 407 |
+| Bedienprobe `--nur ap2` WebKit, zehnmal mit Marke und Warten | Weg `ap2-treffer-setzt-nur-das-kreuz` und die übrigen fünf AP2-Wege | **10 von 10** Läufen, **60 von 60** Wegen, **0** Wiederholungen (vorher 1 von 2 bzw. 1 von 3 rot) |
+| Nachstellung Nr. 403 (Freigabeprobe Chromium) | (a) nach der Bedienprobe WebKit, (b) nach Raten-, Wartungs-, Verbindungs- und Anteilprobe — der tatsächlichen Folge im Prüfstand | **2 von 2 grün** (je 25 Erwartungen, 0 nicht erfüllt) — nicht nachgestellt; die Meldung trägt jetzt die Seitenkennung |
+| `pruefen.sh alle` · `decken.py` · `uebersicht.py` | Quelltextprüfungen, Steuerung (Nr. 407 nach Erledigt, 403 berichtigt) | **16 von 16** · 21/0 · 0 |
+| Prüfstand | alles, was die Berührung verlangt | Zahl in der Commit-Nachricht des Zwischen-PR |
+
+**Nicht geprüft:** ob ein Mensch den Wettlauf am Ortsfeld verlieren kann
+(die Marke sperrt nichts; das Fenster ist rund 0,1 s) — kein Prüfpunkt, weil
+es seit S11 so ist und die Betreiberin ihn nie gemeldet hat.
+
 ### R17-27 Dokumentation Teil 2 — der Bestand (28.10.2026)
 
 | Mittel | Was gemessen | Zahl |
@@ -63,7 +77,7 @@ Commit-Nachricht.
 | `textprobe` | sichtbarer Text nach der Neugliederung | erst **13 Treffer** (Ausnahmen hingen an alten Überschriften, F-R17-79-Klasse) → neue Regel `technik-garmin-als-gegenstand-r1727`, zwei geändert → **0**, 143 von 143 Regeln gegriffen |
 | `pruefen.sh alle`, `--selbstprobe` | alle Quelltextprüfungen | **16 von 16**, **14 von 14** |
 | `decken.py` · `uebersicht.py` · `nummern.py` | Steuerung (Backlog 407, 408, 188; Rahmenplan Fassung 180) | 21/0 · 0 · 0 (zwischendurch zwei gerissene Decken: Eintrag 230 mit 21 Zeilen, Verlaufszeile 303 Zeichen — gekürzt) |
-| Prüfstand | alles, was die Berührung verlangt | Zahl in der Commit-Nachricht von R17-27 |
+| Prüfstand | alles, was die Berührung verlangt | Zahl in der Commit-Nachricht von R17-27 (66 grün, 1 rot — Nr. 407). **Nachgetragen mit dem Zwischen-PR:** Die Bedienprobe in WebKit wurde in diesem Lauf **1 Mal wiederholt** (WebKit-Stolpern, E-DM-10: Seitenwechsel oder Neuanmeldung); welcher Weg, nennt das Protokoll des Laufs nicht |
 
 ### R17-26 Browser-Herkunft und Panel-Posten (28.10.2026)
 
@@ -549,7 +563,7 @@ ist. Abhaken, wenn geprüft.
 | P-R17-26 | **Abmeldefrist:** eine Test-Uhr im Web unter Geräte **deaktivieren**, auf der Uhr einen Einsatz aufzeichnen und den Dienst beenden, Sync-Seite ansehen. Danach wieder aktivieren. | Rote Zeile „Abgemeldet, Daten bis TT.MM." mit einem Datum 30 Tage nach heute, darunter „Neu koppeln: …"; nach dem Aktivieren geht das Paket hinaus, die Zeile verschwindet. | „Gerät nicht mehr angemeldet" ohne Datum (der Vermerk fehlt) oder ein Datum in der Vergangenheit; oder das Paket ist nach dem Aktivieren fort. | ☐ |
 | P-R17-27 | **Touch-Schalter** auf einer Uhr mit Touch **und** Tasten (Fenix 7, Epix 2, FR965 …), falls vorhanden: in Garmin Connect „Touchbedienung verwenden" **aus**, auf dem Startbildschirm hoch wischen, dann DOWN drücken; im Schnellmenü mit UP/DOWN blättern und mit START wählen. | Wischen tut nichts; jede Taste wirkt wie immer, auch langes Halten. Mit „an" blättert Wischen. | Eine Taste wirkt bei „aus" nicht oder erst beim zweiten Druck — dann kommt ihr Behavior zu spät für das Fenster von 1000 ms. Dann Schalter wieder an und melden. | ☐ |
 | P-R17-28 | **Nach dem Deploy von Web 23.3.0:** Einstellungen → Geräte ansehen; mit einem frischen Testkonto eine Uhr oder ein Handy koppeln und danach die Startseite öffnen. | Keine Karte „Gerät ohne Code anlegen" mehr; in der Willkommenskarte ist „Uhr oder Handy koppeln" abgehakt und zeigt den Gerätenamen. | Die Karte steht noch (alter Stand im Browser-Cache oder nicht ausgeliefert), oder der Schritt bleibt nach dem Koppeln offen. | ☐ |
-| P-R17-29 | **Vor dem Deploy von Web 23.3.1** (Tag `web-v23.3.1`, und schon vor dem Merge, weil `main` auf Staging geht): in der `config.php` von **Staging und Produktiv** unter `smtp` nachsehen, ob `user` und `pass` gesetzt sind. Danach Betrieb → Mail → „Verbindung prüfen". | Beide Schlüssel stehen auf beiden Anlagen; die Probe meldet nach dem Deploy Erfolg. | Ein Schlüssel fehlt: Dann versendet 23.3.1 **keine Mail** (E-R17-58) — keine Codes, keine Setz-Links. Die Probe sagt „In der config.php fehlen Benutzername oder Passwort"; den Schlüssel vor dem Deploy eintragen. | ☐ |
+| P-R17-29 | **Vor dem Deploy von Web 23.3.1** (Tag `web-v23.3.1`, und schon vor dem Merge, weil `main` auf Staging geht): in der `config.php` von **Staging und Produktiv** unter `smtp` nachsehen, ob `user` und `pass` gesetzt sind. Danach Betrieb → Mail → „Verbindung prüfen". | Beide Schlüssel stehen auf beiden Anlagen; die Probe meldet nach dem Deploy Erfolg. | Ein Schlüssel fehlt: Dann versendet 23.3.1 **keine Mail** (E-R17-58) — keine Codes, keine Setz-Links. Die Probe sagt „In der config.php fehlen Benutzername oder Passwort"; den Schlüssel vor dem Deploy eintragen. | ☑ 29.10.2026 — von der Betreiberin gesetzt (Staging und Produktiv), vor dem Zwischen-PR |
 | P-R17-30 | **Nach dem Deploy von Web 23.3.1:** Betrieb → Mail → Testmail an ein eigenes Postfach; in einem Mailprogramm öffnen und den Quelltext ansehen. | Umlaute richtig, der Link vollständig und anklickbar; im Quelltext `Content-Transfer-Encoding: quoted-printable`. | Zeichensalat (`=C3=A4` im Text) oder ein zerbrochener Link: Dann deutet das Mailprogramm die Kodierung nicht — Kopf im Quelltext prüfen und melden. | ☐ |
 | P-R17-31 | *(In der Sandbox am 27.10.2026 gefahren und grün — Firefox, WebKit über Freigabe, Verwaltung direkt; Abschnitt 2, „R17-23 Nachtrag". Auf Produktiv freiwillig, etwa in einem echten Safari.)* **Nach dem Deploy von Web 23.3.2:** eine eigene Sicherung mit mehr als 250 Einträgen und mindestens einem geschnittenen Einsatz (Schnitt aus einem Ruhesegment) in ein frisches Testkonto einspielen — wenn möglich in Firefox oder Safari, und einmal über eine Freigabe. Den geschnittenen Einsatz und das Ruhesegment öffnen. | Die Meldung nennt „Sperrvermerke … übernommen" und kein „verworfen"; im Ruhesegment fehlt der herausgeschnittene Zeitraum wie in der Quelle. | „verworfen" mit „Quelle nicht gefunden"; im Segment erscheinen die Punkte des Schnitts doppelt — dann greift das Nachreichen nicht; die Meldung mit Zahlen melden. | ☐ |
 | P-R17-32 | *(In der Sandbox am 27.10.2026 unter Apache 2.4.58 gefahren und grün, Gegenprobe mit dem alten Stand rot — Abschnitt 2. Was bleibt, ist der Hoster: ob er die `.htaccess` dort auswertet. Dafür reicht auf Staging der Abruf, kein ganzer Wiederanlauf.)* **Wiederanlauf-Übung auf Staging** (oder einer leeren Probe-Anlage): Ordner `sicherungen/` vorher löschen, `wiederherstellen.php` aufrufen, dann `curl -sI https://<host>/sicherungen/.htaccess` und — nach dem Ablegen einer Datei — `https://<host>/sicherungen/eingang/<datei>`; den Lauf zu Ende fahren und „Aufräumen" drücken. | Beide Abrufe antworten 403; nach dem Aufräumen ist `eingang/` leer und die Meldung nennt die Datei. | 200 mit Inhalt: Dann wertet der Apache dort die `.htaccess` nicht aus (`AllowOverride`) — der Eingang ist offen, nichts dort ablegen, melden. Die Datei bleibt nach dem Aufräumen: Meldung lesen und melden. | ☐ |
@@ -709,6 +723,13 @@ sind fort, rund sechzig veraltete Stellen berichtigt, drei Sätze der Zusage
 genauer, und `dokumente.py` liest die Dokumente in Stufe 1. **Offen daraus:**
 P-R17-38; die Kommentare im Code (Nr. 408) und F-R17-80 mit R17-28.
 Als Nächstes R17-28.
+
+**Zwischen-PR am 29.10.2026** (Web 23.5.1): Das Einsatzformular sagt mit
+`data-pat-geladen`, wann es fertig entschlüsselt hat, und die Bedienprobe
+wartet darauf (Nr. 407, F-R17-79). Nr. 403 ließ sich nicht nachstellen und
+bleibt offen; die Meldung nennt jetzt die Seitenkennung. **Offen daraus:**
+nichts Neues; vor dem Merge P-R17-29 (erledigt laut Betreiberin am
+29.10.2026). Als Nächstes R17-28.
 
 **Aus Schritt 12:**
 
