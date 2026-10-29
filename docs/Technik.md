@@ -1,7 +1,9 @@
 # Gen-EM NAdoku — Technische Dokumentation
 
-*Stand: 20.09.2026 · Bedienung: `Handbuch.md` · Schnittstelle: `JSON-Vertrag.md` ·
-Historie: `CHANGELOG.md`.*
+*Bedienung: `Handbuch.md` · Schnittstelle: `JSON-Vertrag.md` · Historie:
+`CHANGELOG.md`. Die Abschnitte sind seit R17-27 (28.10.2026) fortlaufend
+nummeriert; wer eine ältere Nummer liest — in einem Kommentar, einem Konzept
+oder dem Changelog —, übersetzt sie mit `Technik-Gliederung-alt-neu.md`.*
 
 ## 1. Architekturüberblick
 
@@ -76,23 +78,23 @@ Daten erst nach Server-Bestätigung.
 │   ├── auth_guard.php     Session/Rollen (Rolle+Existenz je Anfrage aus der DB,
 │   │                       Sitzungszähler, ist_admin(), csrf_check()); seit
 │   │                       Web 20.42.0 das Einrichtungstor des Zweitfaktors
-│   │                       und 401 JSON für die API ohne Anmeldung (4.99q)
+│   │                       und 401 JSON für die API ohne Anmeldung (4.38)
 │   ├── totp_lib.php       Der Zweitfaktor: RFC 6238, Geheimnis versiegelt,
-│   │                       Wiederherstellungscodes gehasht (P5c/AP5, 4.99q)
+│   │                       Wiederherstellungscodes gehasht (P5c/AP5, 4.38)
 │   ├── rueckweg_lib.php   Der Rückweg beim Zweitfaktor über den
 │   │                       Wiederherstellungsschlüssel: ECDSA-Prüfung
 │   │                       (phpseclib), Nachricht, Selbsttest mit Marke,
 │   │                       Stand des Paars je Konto (rw_zustand(); Konzept
-│   │                       RW, 4.99q)
+│   │                       RW, 4.38)
 │   ├── passkey_lib.php    Passkeys als Verfahren des Zweitfaktors (Schritt
 │   │                       18, SR-09): eigener CBOR-Leser, beide
 │   │                       WebAuthn-Zeremonien, Signaturen über phpseclib,
-│   │                       die Tabelle `passkeys` (4.99q)
+│   │                       die Tabelle `passkeys` (4.38)
 │   ├── zweitfaktor.php    Das Einrichtungstor für Pflichtrollen, in der
 │   │                       Anmeldehülle (E-P5c-61)
 │   ├── zweitfaktor_notweg.php  Der Notzugang der EINZIGEN BetreiberIn ohne
 │   │                       Gerät, Codes und Notfallblatt (Schritt 18, SR-04,
-│   │                       4.99q): Nachweisdatei per FTP, Wert aus der
+│   │                       4.38): Nachweisdatei per FTP, Wert aus der
 │   │                       Datenbank, Passwort. Unangemeldet, meldet niemanden an
 │   ├── zweitfaktor_teile.php  QR, Geheimnis, Codefeld und Codeliste — EIN
 │   │                       Markup für Tor und Profilkarte
@@ -101,7 +103,7 @@ Daten erst nach Server-Bestätigung.
 │   │                       nachdruckbar
 │   ├── auth_salt.php      KDF-Salt (mit Pseudo-Salt gegen User-Enumeration)
 │   ├── login/logout/reset_request.php   Auth-Flows; login.php seit Web 20.42.0
-│   │                       mit dem Code-Schritt VOR der Sitzung (4.99q)
+│   │                       mit dem Code-Schritt VOR der Sitzung (4.38)
 │   ├── pw_handling.php    Passwortvergabe über Einmal-Link: Erstvergabe (erzeugt
 │   │                      Inhalts- + Wiederherstellungsschlüssel) und Reset
 │   ├── index.php          Tagesübersicht (Karte + Tabelle)
@@ -176,19 +178,19 @@ Daten erst nach Server-Bestätigung.
 │   │                      der Tabelle, Stand in `app_state`, `gm_nachaufloesen()`
 │   │                      in Blöcken. Job UND Skript benutzen dieselbe Fassung
 │   ├── spur_lib.php       Spurstücke lesen und schreiben — die EINZIGE Stelle,
-│   │                       die `track_stuecke` anfasst (SPUR2, 4.97, 4.99s;
+│   │                       die `track_stuecke` anfasst (SPUR2, 4.6, 4.40;
 │   │                       bis Web 22.7.0 dazu `track_points`/`track_blobs`)
 │   ├── geraetehuelle_lib.php  Die Gerätehülle VERSCHLIESSEN (S11-04a) — für
 │   │                       Proben, Demo und den direkten Rückweg der
 │   │                       Verwaltung (S11-06c); byte-gleich mit Browser und
 │   │                       Referenz. Ein Öffnen gibt es hier mit Absicht nicht
 │   ├── kontopaar_lib.php  Das Schlüsselpaar des Kontos (S11-03): Siegel,
-│   │                       Zustand, Ablegen, SEC1 für die Kopplung (4.99s)
+│   │                       Zustand, Ablegen, SEC1 für die Kopplung (4.40)
 │   ├── tag_spuren.php     die Spuren eines Diensttages, einzeln oder mehrere
 │   │                       auf einmal abrufbar: Karte plus chronologische
-│   │                       Liste, Einsätze UND Ruhesegmente (4.97b)
+│   │                       Liste, Einsätze UND Ruhesegmente (4.8)
 │   ├── jobs.php           Einstieg der Hintergrundjobs: Kommandozeile, Adresse
-│   │                       mit Token, huckepack auf einer Anfrage (4.97a)
+│   │                       mit Token, huckepack auf einer Anfrage (4.7)
 │   ├── einwilligung_lib.php
 │   │                      Welche Rechtstexte dieses Konto noch annehmen oder
 │   │                      zur Kenntnis nehmen muss (P5b/AP4). Zwei sperren
@@ -210,16 +212,16 @@ Daten erst nach Server-Bestätigung.
 │   │                      20.39.0 auch der Leseweg: sieben Reiter der
 │   │                      Seite, je Reiter eine bis drei Quellen (nie ein
 │   │                      UNION), Katalog Art → Wort und Ton. KEIN
-│   │                      Zugriffsprotokoll: siehe 4.99g
+│   │                      Zugriffsprotokoll: siehe 4.28
 │   ├── systemmeldung_lib.php  Das Fehlerprotokoll (P5c/AP3): system_melden()
 │   │                      für jede Stelle, die bis Web 20.39.0 error_log()
 │   │                      rief; die drei Behandler, die db.php einrichtet;
 │   │                      die Fehlerseite mit Kennung und Meldeweg. Lädt
-│   │                      nichts; ohne Datenbank der Rückfall (4.99g)
+│   │                      nichts; ohne Datenbank der Rückfall (4.28)
 │   ├── protokoll_archiv_lib.php  Das Archiv des Protokolls (P5c/AP2):
 │   │                      alle 7 Tage ein versiegeltes ZIP nach
 │   │                      sicherungen/protokoll/, in Häppchen; Aufbewahrung,
-│   │                      Download entsiegelt. Ohne IP-Adressen (4.99g)
+│   │                      Download entsiegelt. Ohne IP-Adressen (4.28)
 │   ├── admin_protokoll.php  Verwaltung → Protokoll: Reiter nach Rolle,
 │   │                      Suche, Zeitraum, Art, Seitenwahl; Reiter Archiv
 │   │                      nur für die BetreiberIn
@@ -291,7 +293,7 @@ Daten erst nach Server-Bestätigung.
 │   │                       (SR-03, Nr. 247): Inventar aus vier Zwecken,
 │   │                       Häppchen mit Zeiger, Nachweis mit dem neuen (nach
 │   │                       einer Frist von zehn Minuten), die drei
-│   │                       Bedingungen, Mail (4.97c)
+│   │                       Bedingungen, Mail (4.9)
 │   ├── vendor/            fremde Bibliotheken, die auf dem SERVER laufen
 │   │                       (phpseclib3, ParagonIE/ConstantTime), gesperrt per
 │   │                       .htaccess, geladen über vendor/laden.php;
@@ -314,7 +316,7 @@ Daten erst nach Server-Bestätigung.
 │   │                       kopfzeilen_json() in json_out() — EINE Stelle,
 │   │                       deshalb auf jedem Webserver. Nonce je Anfrage,
 │   │                       csp_scharf und hsts_tage als Einstellung,
-│   │                       https_tor(). Siehe Abschnitt 5c
+│   │                       https_tor(). Siehe Abschnitt 8
 │   ├── netz_lib.php       Client-Adresse hinter einem Reverse Proxy (P5a/AP4):
 │   │                       X-Forwarded-For NUR von vertrauenswuerdigen
 │   │                       Proxys (config.php, netz.vertrauenswuerdige_proxys),
@@ -326,7 +328,7 @@ Daten erst nach Server-Bestätigung.
 │   │                       zusammengefasst per UNIQUE, ohne IP und ohne
 │   │                       Abfrageteil der Adresse; Antwort immer 204
 │   ├── api/health.php    Zustand der Anlage fuer das eigene Monitoring (P5c/AP6,
-│   │                       4.99r). OHNE Anmeldung, mit dem Health-Token aus
+│   │                       4.39). OHNE Anmeldung, mit dem Health-Token aus
 │   │                       Betrieb → Hintergrundjobs (seit 23.5.0; leer = aus) als Kopfzeile
 │   │                       X-Health-Token oder `?token=`; 200/503 mit
 │   │                       acht Feldern, 403 einheitlich, Topf `health`
@@ -350,7 +352,7 @@ Daten erst nach Server-Bestätigung.
 │   │                       Datei (`.zustand/wartung.lock`), damit er auch bei
 │   │                       umgebauter Datenbank greift. Seit Web 20.13.0
 │   │                       steht die ZWEITE Störung daneben (P5a/AP9,
-│   │                       Abschnitt 5e): „ausgelastet" — Erkennung der
+│   │                       Abschnitt 11): „ausgelastet" — Erkennung der
 │   │                       Fehlernummern, Zähler `.zustand/ueberlast.json`, 503-Weg
 │   │                       und das gemeinsame Gerüst beider Störungsseiten.
 │   │                       Aus demselben Grund am selben Ort: Beide müssen
@@ -478,7 +480,7 @@ Daten erst nach Server-Bestätigung.
 │   ├── einstieg_lib.php  WAS NACH DER ANMELDUNG FAELLIG IST (P5b/AP9):
 │   │                      Einwilligungstor, Schluesselblatt-Rueckfrage,
 │   │                      Konto-Rueckfrage, Erststart — genau EINES, in
-│   │                      dieser Reihenfolge (siehe 4.99o)
+│   │                      dieser Reihenfolge (siehe 4.36)
 │   ├── erststart_karte.php   die drei Schritte ueber der Tagesuebersicht.
 │   │                      Eine KARTE, kein Dialog: „Wer sie ignoriert,
 │   │                      arbeitet trotzdem" (Mockup M-P5b-02b)
@@ -497,7 +499,7 @@ Daten erst nach Server-Bestätigung.
 │   │                       links, Vorschau rechts (P5c/AP9, E-P5c-28); von
 │   │                       Web 15.2.0 bis 21.0.0 eine Weiterleitung
 │   ├── apk_lib.php        Was in server/apk/ liegt — Name, Größe, Fassung,
-│   │                       Datum, SHA-256 (S4/A1, siehe 4.97g)
+│   │                       Datum, SHA-256 (S4/A1, siehe 4.13)
 │   │                       · apk.php liefert die Datei aus
 │   │                       · apk/ die Dateien selbst (entstehen nur auf dem
 │   │                         Server, im Deploy ausgenommen)
@@ -523,17 +525,17 @@ Daten erst nach Server-Bestätigung.
 │   │                      (die Spurteile der Fassung 4, S2/AP5) ·
 │   │                      import_commit.php (Abgleich + Übernahme des Imports) ·
 │   │                      schneiden.php (Einsatz aus einem Ruhesegment schneiden
-│   │                      und zurücknehmen, S4/A2b — siehe 4.97e) ·
-│   │                      gpx_import.php (GPX herein als verschlossene Stücke, S4/A3, S11-05d — siehe 4.97f) ·
+│   │                      und zurücknehmen, S4/A2b — siehe 4.11) ·
+│   │                      gpx_import.php (GPX herein als verschlossene Stücke, S4/A3, S11-05d — siehe 4.12) ·
 │   │                      export_data.php (nur lesend, Rohdaten für den Export) ·
 │   │                      adminbackup_freigabe.php (freigegebenes Backup für die NutzerIn) ·
 │   │                      kdf_upgrade.php (stille Anhebung der Rundenzahl) ·
 │   │                      pat_anheben.php (stille Anhebung des Notiz-Altbestands
-│   │                      in den verschlüsselten Block, ab Web 19.0.0 — siehe 4.98d) ·
+│   │                      in den verschlüsselten Block, ab Web 19.0.0 — siehe 4.18) ·
 │   │                      rueckweg_anlegen.php (das Schlüsselpaar des Rückwegs
-│   │                      ablegen, nur mit Passwortnachweis; Konzept RW, 4.99q) ·
+│   │                      ablegen, nur mit Passwortnachweis; Konzept RW, 4.38) ·
 │   │                      passkey_anlegen.php (einen Passkey ablegen, nur mit
-│   │                      frischem Code; Schritt 18, SR-09, 4.99q) ·
+│   │                      frischem Code; Schritt 18, SR-09, 4.38) ·
 │   │                      rechtstext_vorschau.php (rendert das Getippte mit
 │   │                      rt_html(), speichert nichts; Admin und BetreiberIn,
 │   │                      Topf rt_vorschau — P5c/AP9)
@@ -553,9 +555,9 @@ Daten erst nach Server-Bestätigung.
 │   │                       Koordinaten, sechs Verwendungen, s. u.),
 │   │                      luftlinie.js (gestrichelte Verbindung ohne GPS-Track, s. u.),
 │   │                      schneiden.js (Karte „Ruhesegmente" und Schneide-Bereich
-│   │                       der Tagesansicht, S4/A2b — siehe 4.97e),
+│   │                       der Tagesansicht, S4/A2b — siehe 4.11),
 │   │                      gpx.js (EdGpx: GPX bauen und lesen im Browser — Abruf
-│   │                       je Spur und je Auswahl, Import; seit S11-05d, 4.97b/f),
+│   │                       je Spur und je Auswahl, Import; seit S11-05d, 4.8/4.12),
 │   │                      geo.js (EdGeo: Marker-Satz und Spurfarben der Karten, s. u.),
 │   │                      geocoder.js (EdGeocoder: der EINE Weg zum Adressdienst —
 │   │                       suche(), umkehr(), an(); keine Adresse im Code, s. u.),
@@ -566,11 +568,11 @@ Daten erst nach Server-Bestätigung.
 │   │                      symbol.js (edSymbol() — dieselbe Zeichenkette wie ui_symbol()
 │   │                       in PHP; kein Zeichen liegt als Inline-Pfad im Code),
 │   │                      rueckweg.js (EdRueckweg: das Schlüsselpaar des Rückwegs
-│   │                       erzeugen, verpacken, senden — Konzept RW, 4.99q),
+│   │                       erzeugen, verpacken, senden — Konzept RW, 4.38),
 │   │                      passkey.js (Passkey anlegen und bestätigen über
-│   │                       navigator.credentials, ohne Fremdbestandteil — SR-09, 4.99q),
+│   │                       navigator.credentials, ohne Fremdbestandteil — SR-09, 4.38),
 │   │                      pow.js + pow-worker.js (die Rechenaufgabe der Registrierung:
-│   │                       Worker mit WebCrypto, gesperrter Knopf — SR-08, 4.99m)
+│   │                       Worker mit WebCrypto, gesperrter Knopf — SR-08, 4.34)
 │   │   └── vendor/        xlsx.full.min.js — SheetJS Community Edition 0.18.5, Apache-2.0 ·
 │   │                      zipjs.min.js — zip.js 2.8.34, BSD-3-Clause (ZIP + AES-256) ·
 │   │                      qrcode.js — qrcode-generator 2.0.4, MIT (nur die Modulmatrix
@@ -583,7 +585,7 @@ Daten erst nach Server-Bestätigung.
 │   │       │                favicon.png + favicon-fahrzeug.png (erzeugt aus den
 │   │       │                Logodateien, s. tools/erzeugen/ (logos)); das Fahrzeug-Logo ist bis
 │   │       │                zur Zulieferung ein PLATZHALTER (gestrichelter Rahmen)
-│   │       └── symbole/    55 Zeichen als je eine SVG-Datei (Tabler Icons, MIT;
+│   │       └── symbole/    je Zeichen eine SVG-Datei (Tabler Icons, MIT;
 │   │                       ein eigener Entwurf), 24 x 24, currentColor, Anker
 │   │                       <g id="i">; dazu LICENSE-tabler-icons.txt und
 │   │                       LIESMICH.md mit der Zuordnung Datei -> Tabler-Name ->
@@ -595,7 +597,7 @@ Daten erst nach Server-Bestätigung.
 │   │                      EINZIGE Erzeugnis der Phase P1, das ausgeliefert
 │   │                      wird; erzeugt von tools/referenzdatensatz/fixture/
 │   ├── demo_lib.php       Demo-Konto: anlegen, zurücksetzen, entfernen,
-│   │                      Reset-Fälligkeit (Abschnitt 4.99a)
+│   │                      Reset-Fälligkeit (Abschnitt 4.21)
 │   ├── admin_demo.php     die zugehörige Adminseite
 │   ├── schema.sql         Voll-Schema für Neuinstallationen
 │   ├── migrations/        Migrationen als nachlesbare SQL-Dateien (ausgeführt
@@ -675,7 +677,7 @@ Daten erst nach Server-Bestätigung.
 │   │                      Zähler — kein Code gilt zweimal (E-P5c-43)
 │   ├── schemaprobe/       läuft `schema.sql` und der Migrationskatalog auf
 │   │                      der Datenbank, gegen die sie laufen sollen? Vier
-│   │                      Installationsfälle, 19 Erwartungen, gegen eine
+│   │                      Installationsfälle, gegen eine
 │   │                      LAUFENDE Datenbank. Fall 2 ist der Kern: Bestand
 │   │                      anlegen, migrieren, hinterher Wert für Wert
 │   │                      vergleichen — eine Migration, die Daten verliert,
@@ -684,7 +686,7 @@ Daten erst nach Server-Bestätigung.
 │   │                      und MariaDB 10.6: Der Stand vor Web 20.25.0 legt
 │   │                      auf MariaDB 42 Tabellen an und scheitert auf MySQL
 │   │                      mit 1064 (Nr. 238). Mit `--selbstprobe`
-│   ├── erzeugen/          sieben Befehle, die Dateien HERSTELLEN statt zu
+│   ├── erzeugen/          Befehle, die Dateien HERSTELLEN statt zu
 │   │                      prüfen (PK-04/3, E-PK-24): design (die Tabellen
 │   │                      in Design.md), logos, uhr-bilder,
 │   │                      geraetemodelle (+ nachaufloesen),
@@ -735,7 +737,7 @@ Daten erst nach Server-Bestätigung.
 │   │                      `server/config.php*`. Mit `--probe` (Zahl in
 │   │                      seiner LIESMICH)
 │   ├── integritaetswache/ vergleicht die AUSGELIEFERTE Fassung mit dem
-│   │                      ZEIGER `produktion` (`--stand`, 6.6a): jede Datei
+│   │                      ZEIGER `produktion` (`--stand`, 12.11): jede Datei
 │   │                      unter `server/assets/`
 │   │                      über SHA-256, und auf `login.php` die GANZE Menge
 │   │                      dessen, was den Weg des Passworts bestimmt —
@@ -767,7 +769,7 @@ Daten erst nach Server-Bestätigung.
 │   │                      steht (Grundsatz 1). `pruefen.sh` fährt sie je
 │   │                      Stufe, `auswahl.py` wählt nach Berührung aus,
 │   │                      `bericht.py` schreibt die Zahlen (s. LIESMICH.md)
-│   ├── quelltext/         fünfzehn Prüfungen, die nur Quelltext lesen und im
+│   ├── quelltext/         Prüfungen, die nur Quelltext lesen und im
 │   │                      Tor laufen (PK-04, E-PK-24): installweiche,
 │   │                      sitzungshaertung, csp, jobregister,
 │   │                      migrationsregister, behandler (seit P5c/AP3),
@@ -779,7 +781,9 @@ Daten erst nach Server-Bestätigung.
 │   │                      eine Überschrift des Handbuchs), seit R4-06
 │   │                      kennzeichnung (jedes Schloss gegen eine
 │   │                      Sollliste), seit R17-26 fremdsummen (Kopfsumme
-│   │                      jeder Datei unter assets/vendor/). Ein
+│   │                      jeder Datei unter assets/vendor/), seit R17-27
+│   │                      dokumente (Pfade, Zahlen, Kopfzeilen und die
+│   │                      Gliederung dieses Dokuments, Nr. 188). Ein
 │   │                      Läufer (`pruefen.sh <name>|alle|--selbstprobe`),
 │   │                      ein LIESMICH. Vorher acht Ordner.
 │   ├── referenzdatensatz/ erfundener Beispielbestand (22 Diensttage,
@@ -811,14 +815,14 @@ Daten erst nach Server-Bestätigung.
 │   │                      misst die zwei Riegel darin (Zielrundenzahl,
 │   │                      Hülle bleibt edk1: — sonst wäre das Demo-Konto auf
 │   │                      der Produktivinstallation ausgesperrt, S10)
-│   ├── proben/            siebenundzwanzig Prüfungen gegen die laufende Anlage
+│   ├── proben/            Prüfungen gegen die laufende Anlage
 │   │                      (PK-04/2, E-PK-24): ingest, spur, jobs,
 │   │                      kopplung, wartung, raten, mail, versand,
 │   │                      komplett, wiederherstellung, gpx, geraete,
 │   │                      verbindung, anteil, rechtstexte, freigabe,
 │   │                      container, frist, abmelden, csp-browser —
 │   │                      seit Web 20.39.0 dazu rollen (die
-│   │                      Berechtigungsmatrix aus 4.99p) und protokoll
+│   │                      Berechtigungsmatrix aus 4.37) und protokoll
 │   │                      (Quellen, Archiv, Siegel), seit Web 20.42.0
 │   │                      zweitfaktor (RFC-Vektoren, Code-Schritt, Tor),
 │   │                      seit Web 20.43.0 rueckweg (Signaturen des
@@ -876,7 +880,7 @@ Daten erst nach Server-Bestätigung.
 │   │                      Pflicht bei CSS-Umbauten (s. LIESMICH.md)
 │   ├── uhr-pruefstand/    baut SDK und Simulator auf einem nackten Linux-
 │   │                      Rechner auf, übersetzt die Uhr-App und startet
-│   │                      sie ohne Fensteroberfläche (s. Abschnitt 5.2b).
+│   │                      sie ohne Fensteroberfläche (s. Abschnitt 5.6).
 │   │                      Darunter die beiden Connect-IQ-Proben, die nur
 │   │                      dort laufen (PK-04/4): `netzprobe/` — EINE Anfrage,
 │   │                      kommt der Simulator an 127.0.0.1 heran, und trennt
@@ -887,7 +891,7 @@ Daten erst nach Server-Bestätigung.
 │   │                      der Uhr) und seit S11-08 `rundlauf/`: eine
 │   │                      Prüffassung koppelt im Simulator an die örtliche
 │   │                      Anlage, sendet verschlossen, und `pruefen.php`
-│   │                      öffnet Wert für Wert (Abschnitt 5.2b)
+│   │                      öffnet Wert für Wert (Abschnitt 5.6)
 │   └── zaehlung/          hält fest, dass jede Sache ihre EINE Stelle behält
 │                          (Schritt 15, R83, E-ZE-24): je Muster eine
 │                          Registerzeile mit einer Decke, gemessen mit dem
@@ -904,21 +908,21 @@ Daten erst nach Server-Bestätigung.
 │                          tools/sandbox/aufbauen.sh web — er beschafft nicht
 │                          mehr selbst (PK-02). STARTET nichts, und schlägt
 │                          nicht fehl: ein Mangel wird mit Zahl gemeldet
-└── .github/workflows/     die Auslieferungskette (P5a/AP1, Abschnitt 6)
+└── .github/workflows/     die Auslieferungskette (P5a/AP1, Abschnitt 12)
     ├── pruefung.yml       Stufe 1 ohne Installation: Arbeitszweige beim
     │                      Pull Request, main bei jedem Push; liest den
     │                      Prüfbericht gegen (PK-05)
     ├── auslieferung.yml   WANN ausgeliefert wird: Staging (Push auf main),
     │                      Stufe 2, Produktion (Tag, Pflichtfreigabe,
     │                      Backup-Tor), Zeiger; seit PK-08 Android und Uhr
-    │                      (Tag android-v… bzw. uhr-v…, 4.97g)
+    │                      (Tag android-v… bzw. uhr-v…, 4.13)
     ├── ausliefern-lauf.yml WAS dabei geschieht: die Schrittfolge, EINMAL,
     │                      für beide Umgebungen (Kette II/AP5, E-KH-14)
     └── integritaet.yml    die Wache — hängt am Anzeigenamen „Auslieferung"
                           (`deploy.yml` ist mit Web 20.4.0 gelöscht worden)
 ```
 
-### 2a Die Arbeitsumgebung — und was ihre Motoren messen
+### 2.1 Die Arbeitsumgebung — und was ihre Motoren messen
 
 **Was der Wegwerf-Container mitbringt, was nachgeholt wird, welche sieben
 Umgebungswerte er braucht und was er nicht kann, steht seit PK-01 in
@@ -928,8 +932,9 @@ welcher Stufe läuft, steht in `Pruefablauf.md` 3 und 4.** Hier bleibt, was
 die Prüfmittel mit Browser über ihre Motoren wissen müssen.
 
 *(Bis PK-07 stand dieser Abschnitt unter Abschnitt 4, zwischen 4.99 und
-4.99a — wer die Nummer las und in Abschnitt 2 suchte, fand nichts
-(F-PK-12). Die Tabelle darunter beschrieb bis dahin den Stand vor PK-04:
+4.99a der alten Zählung — wer die Nummer las und in Abschnitt 2 suchte, fand
+nichts (F-PK-12); bis R17-27 hieß er „2a". Die Zählung bis dahin steht in
+`docs/Technik-Gliederung-alt-neu.md`. Die Tabelle darunter beschrieb bis dahin den Stand vor PK-04:
 eine Risikoliste im Bilderlauf und die Klickprobe.)*
 
 **Jedes Browserwerkzeug wählt den Motor über `tools/motor.mjs`**
@@ -1011,19 +1016,19 @@ Motoren 0. Ein Rauschfilter dafür ist deshalb **nicht** gebaut worden.
 
 | Tabelle | Zweck / Besonderheiten |
 |---|---|
-| `users` | Login (E-Mail = Username), Rolle `user`/`admin`; Löschen kaskadiert alles; **Browser-Schlüsselableitung** (`kdf_salt` + `kdf_iter` = Rundenzahl je Konto) und **E2E-Schlüssel-Hüllen** `pat_wrap_pw`/`pat_wrap_rc` (Inhaltsschlüssel passwort- bzw. wiederherstellungsverpackt), dazu `pat_key_check` = im Browser gerechnete Prüfsumme des Inhaltsschlüssels (NULL bei Altbestand — ein gültiger Zustand); `session_epoch` = Zähler, mit dem ein Passwortwechsel offene Sitzungen beendet (**seit Web 4.5.0 in Gebrauch**). `password_hash` ist NULL, solange das Passwort noch nicht gesetzt wurde — ein solches Konto kann sich nicht anmelden. Die **Sortierregel der E-Mail-Spalte ist ausdrücklich festgelegt** (`utf8mb4_unicode_ci`); ohne das hinge die Anmeldung an der Standardregel der jeweiligen Installation. Seit Web 4.5.0 schreibt und sucht der Code zusätzlich kleingeschrieben (`email_lib.php`), hängt also nicht mehr von der Sortierregel ab; **Bestandszeilen bleiben unverändert**, die ci-Regel trifft sie ohnehin. Seit Web 9.7.0 dazu **`logo_wahl`** (`''` = Standard der Installation, sonst `hubschrauber` / `fahrzeug` / `wechselnd`, E-P3-20) — der Leerstring ist die Vorgabe, damit ein späterer Wechsel des Installationsstandards bestehende Konten erreicht. Seit Web 9.8.0 dazu **`last_login`** (DATETIME NULL) — der Zeitpunkt der letzten **Anmeldung**, geschrieben von `login.php` und sonst nirgends; Kontoseite und NutzerInnen-Liste zeigen ihn. Der Bestand bekommt bei der Migration NULL und nicht NOW(): Der Wert wäre sonst erfunden, und zwar genau in der Spalte, mit der man ungenutzte Konten sucht. NULL erscheint als „—“. **Seit Web 20.17.0 der Lebenszyklus** (P5b/AP2, E-P5b-12): `status` (`unbestaetigt` / `wartet` / `aktiv` / `gesperrt`), `bestaetigt_am`, `gesperrt_seit`, `gesperrt_grund`, `loeschung_am`. **Der Bestand wird `aktiv`** — jeder andere Wert wäre eine Aussage über Konten, die es vor der Prüfung schon gab, und `unbestaetigt` sperrte sie am Tag nach dem Update alle aus. `bestaetigt_am` bleibt dort **NULL**: „die Frage stellte sich nicht", dieselbe Entscheidung wie bei `last_login`. Der Index `idx_status_loeschung` ist für die Verfalljobs, nicht für die Anzeige. **Seit Web 20.42.0 der Zweitfaktor** (P5c/AP5, E-P5c-54): `totp_geheimnis` (20 Byte, versiegelt mit `sk_versiegeln()`, Zweck `totp|<user_id>` — der Zweck verhindert das Umhängen auf ein anderes Konto), `totp_seit` (eingeschaltet, **erst nach einem bestätigten Code**; ein Geheimnis ohne `totp_seit` ist eine angefangene Einrichtung) und `totp_schritt` (der zuletzt angenommene Zeitschritt — kein Code gilt zweimal). Siehe 4.99q. **Seit Web 20.43.0 das Paar des Rückwegs** (Konzept RW, E-RW-05): `rw_oeffentlich` (öffentlicher Teil eines ECDSA-P-256-Paars, SPKI in Base64, 124 Zeichen), `rw_privat` (der private Teil als Chiffretext unter dem **Inhaltsschlüssel**, `edk1:`, nie `edka1:` — er muss mit dem Wiederherstellungsschlüssel allein aufgehen, wie `pat_wrap_rc`), `rw_seit` (wann es entstand). Leer heißt: noch kein Paar. Ein Abzug enthält den öffentlichen Teil und einen Chiffretext unter einem Schlüssel, den der Server nie kennt — er kann prüfen, nicht signieren (4.99q). **Seit Web 22.0.0 das Schlüsselpaar des Kontos** (S11-03): `kp_oeffentlich` (öffentlicher Teil eines ECDH-P-256-Paars, SPKI, **versiegelt** mit `sk_versiegeln()`, Zweck `kontopaar|<user_id>`), `kp_privat` (privater Teil unter dem **Inhaltsschlüssel**, `edk1:`, nie `edka1:`), `kp_seit`. Leer heißt: noch kein Paar. Siehe 4.99s |
-| `vertraute_geraete` | „Gerät merken" beim Zweitfaktor (seit Web 21.8.0, Schritt 18, SR-02, E-SR-07): `user_id` (`ON DELETE CASCADE`), `token_hash` (SHA-256 des Cookies `EDGERAET`, eindeutig), `angelegt_am`, `zuletzt_am` (fortgeschrieben bei jeder Anmeldung ohne Code, ohne Protokoll). **Kein User-Agent, kein Gerätename** (R36). **Gültig ist eine Zeile, solange `angelegt_am` plus die heutige Dauer ihrer Rollengruppe in der Zukunft liegt** — gerechnet beim Prüfen, nicht beim Merken (E-SR-17); der Aufräumjob löscht abgelaufene. Reist im Komplett-Stand mit (nur Hashes), **nicht** im Konto-Backup: Ein Cookie gehört zu einem Browser, nicht zu einem Konto. Mehr in 4.99q |
-| `passkeys` | Passkeys als Verfahren des Zweitfaktors (seit Web 21.10.0, Schritt 18, SR-09, E-SR-29 bis -33): `user_id` (`ON DELETE CASCADE`), `credential_id` (Base64url der Kennung, höchstens 1023 Byte → `VARCHAR(1364)`, `ascii_bin`), `credential_hash` (SHA-256 der Kennung, `CHAR(64)`, **eindeutig** — seit Web 21.11.0, E-SR-47: Ein Index über die Kennung selbst reichte über 767 Byte und scheiterte unter einem älteren Zeilenformat), `rp_id` (die Adresse, für die der Passkey entstand, seit Web 21.11.0, E-SR-48; Index `idx_konto` über `user_id, rp_id`), `oeffentlich` (der öffentliche Schlüssel als SPKI-PEM — bei der Registrierung aus COSE überführt, damit die Anmeldung ohne CBOR auskommt), `alg` (-7 ES256 oder -257 RS256), `zaehler` (Signaturzähler, E-SR-33), `bezeichnung` (bis 40 Zeichen oder leer), `angelegt_am`, `zuletzt_am`, `gewarnt_am` (letzte Mail wegen eines zurückgelaufenen Zählers, höchstens eine je Tag, E-SR-46). **Kein User-Agent, keine AAGUID, kein Gerätename** (E-SR-31, R36); höchstens zehn je Konto **und Adresse** (`PK_HOECHSTENS`, geprüft unter `FOR UPDATE`). Reist im Komplett-Stand mit, **nicht** im Konto-Backup: Ein Passkey gilt nur für die Adresse, an der er entstand (Backup-Format 4, 6.11). Mehr in 4.99q |
+| `users` | Login (E-Mail = Username), Rolle (`role`, seit Web 20.41.0 vier Werte: `user`, `admin`, `betreiberin`, `support` — R75, E-P5c-14); Löschen kaskadiert alles; **Browser-Schlüsselableitung** (`kdf_salt` + `kdf_iter` = Rundenzahl je Konto) und **E2E-Schlüssel-Hüllen** `pat_wrap_pw`/`pat_wrap_rc` (Inhaltsschlüssel passwort- bzw. wiederherstellungsverpackt), dazu `pat_key_check` = im Browser gerechnete Prüfsumme des Inhaltsschlüssels (NULL bei Altbestand — ein gültiger Zustand); `session_epoch` = Zähler, mit dem ein Passwortwechsel offene Sitzungen beendet (**seit Web 4.5.0 in Gebrauch**). `password_hash` ist NULL, solange das Passwort noch nicht gesetzt wurde — ein solches Konto kann sich nicht anmelden. Die **Sortierregel der E-Mail-Spalte ist ausdrücklich festgelegt** (`utf8mb4_unicode_ci`); ohne das hinge die Anmeldung an der Standardregel der jeweiligen Installation. Seit Web 4.5.0 schreibt und sucht der Code zusätzlich kleingeschrieben (`email_lib.php`), hängt also nicht mehr von der Sortierregel ab; **Bestandszeilen bleiben unverändert**, die ci-Regel trifft sie ohnehin. Seit Web 9.7.0 dazu **`logo_wahl`** (`''` = Standard der Installation, sonst `hubschrauber` / `fahrzeug` / `wechselnd`, E-P3-20) — der Leerstring ist die Vorgabe, damit ein späterer Wechsel des Installationsstandards bestehende Konten erreicht. Seit Web 9.8.0 dazu **`last_login`** (DATETIME NULL) — der Zeitpunkt der letzten **Anmeldung**, geschrieben von `login.php` und sonst nirgends; Kontoseite und NutzerInnen-Liste zeigen ihn. Der Bestand bekommt bei der Migration NULL und nicht NOW(): Der Wert wäre sonst erfunden, und zwar genau in der Spalte, mit der man ungenutzte Konten sucht. NULL erscheint als „—“. **Seit Web 20.17.0 der Lebenszyklus** (P5b/AP2, E-P5b-12): `status` (`unbestaetigt` / `wartet` / `aktiv` / `gesperrt`), `bestaetigt_am`, `gesperrt_seit`, `gesperrt_grund`, `loeschung_am`. **Der Bestand wird `aktiv`** — jeder andere Wert wäre eine Aussage über Konten, die es vor der Prüfung schon gab, und `unbestaetigt` sperrte sie am Tag nach dem Update alle aus. `bestaetigt_am` bleibt dort **NULL**: „die Frage stellte sich nicht", dieselbe Entscheidung wie bei `last_login`. Der Index `idx_status_loeschung` ist für die Verfalljobs, nicht für die Anzeige. **Seit Web 20.42.0 der Zweitfaktor** (P5c/AP5, E-P5c-54): `totp_geheimnis` (20 Byte, versiegelt mit `sk_versiegeln()`, Zweck `totp|<user_id>` — der Zweck verhindert das Umhängen auf ein anderes Konto), `totp_seit` (eingeschaltet, **erst nach einem bestätigten Code**; ein Geheimnis ohne `totp_seit` ist eine angefangene Einrichtung) und `totp_schritt` (der zuletzt angenommene Zeitschritt — kein Code gilt zweimal). Siehe 4.38. **Seit Web 20.43.0 das Paar des Rückwegs** (Konzept RW, E-RW-05): `rw_oeffentlich` (öffentlicher Teil eines ECDSA-P-256-Paars, SPKI in Base64, 124 Zeichen), `rw_privat` (der private Teil als Chiffretext unter dem **Inhaltsschlüssel**, `edk1:`, nie `edka1:` — er muss mit dem Wiederherstellungsschlüssel allein aufgehen, wie `pat_wrap_rc`), `rw_seit` (wann es entstand). Leer heißt: noch kein Paar. Ein Abzug enthält den öffentlichen Teil und einen Chiffretext unter einem Schlüssel, den der Server nie kennt — er kann prüfen, nicht signieren (4.38). **Seit Web 22.0.0 das Schlüsselpaar des Kontos** (S11-03): `kp_oeffentlich` (öffentlicher Teil eines ECDH-P-256-Paars, SPKI, **versiegelt** mit `sk_versiegeln()`, Zweck `kontopaar|<user_id>`), `kp_privat` (privater Teil unter dem **Inhaltsschlüssel**, `edk1:`, nie `edka1:`), `kp_seit`. Leer heißt: noch kein Paar. Siehe 4.40 |
+| `vertraute_geraete` | „Gerät merken" beim Zweitfaktor (seit Web 21.8.0, Schritt 18, SR-02, E-SR-07): `user_id` (`ON DELETE CASCADE`), `token_hash` (SHA-256 des Cookies `EDGERAET`, eindeutig), `angelegt_am`, `zuletzt_am` (fortgeschrieben bei jeder Anmeldung ohne Code, ohne Protokoll). **Kein User-Agent, kein Gerätename** (R36). **Gültig ist eine Zeile, solange `angelegt_am` plus die heutige Dauer ihrer Rollengruppe in der Zukunft liegt** — gerechnet beim Prüfen, nicht beim Merken (E-SR-17); der Aufräumjob löscht abgelaufene. Reist im Komplett-Stand mit (nur Hashes), **nicht** im Konto-Backup: Ein Cookie gehört zu einem Browser, nicht zu einem Konto. Mehr in 4.38 |
+| `passkeys` | Passkeys als Verfahren des Zweitfaktors (seit Web 21.10.0, Schritt 18, SR-09, E-SR-29 bis -33): `user_id` (`ON DELETE CASCADE`), `credential_id` (Base64url der Kennung, höchstens 1023 Byte → `VARCHAR(1364)`, `ascii_bin`), `credential_hash` (SHA-256 der Kennung, `CHAR(64)`, **eindeutig** — seit Web 21.11.0, E-SR-47: Ein Index über die Kennung selbst reichte über 767 Byte und scheiterte unter einem älteren Zeilenformat), `rp_id` (die Adresse, für die der Passkey entstand, seit Web 21.11.0, E-SR-48; Index `idx_konto` über `user_id, rp_id`), `oeffentlich` (der öffentliche Schlüssel als SPKI-PEM — bei der Registrierung aus COSE überführt, damit die Anmeldung ohne CBOR auskommt), `alg` (-7 ES256 oder -257 RS256), `zaehler` (Signaturzähler, E-SR-33), `bezeichnung` (bis 40 Zeichen oder leer), `angelegt_am`, `zuletzt_am`, `gewarnt_am` (letzte Mail wegen eines zurückgelaufenen Zählers, höchstens eine je Tag, E-SR-46). **Kein User-Agent, keine AAGUID, kein Gerätename** (E-SR-31, R36); höchstens zehn je Konto **und Adresse** (`PK_HOECHSTENS`, geprüft unter `FOR UPDATE`). Reist im Komplett-Stand mit, **nicht** im Konto-Backup: Ein Passkey gilt nur für die Adresse, an der er entstand (Backup-Format 4, 6.11). Mehr in 4.38 |
 | `totp_codes` | Die Wiederherstellungscodes des Zweitfaktors (seit Web 20.42.0, P5c/AP5): `user_id`, `hash` (`password_hash()`), `benutzt_am` (NULL = offen). **Nicht am Serverschlüssel** (E-P5c-42) — sie sind der Rückweg für genau den Fall, dass das Geheimnis nicht mehr zu öffnen ist. `ON DELETE CASCADE` mit dem Konto. Angenommen wird atomar (`UPDATE … WHERE benutzt_am IS NULL`, gültig bei `rowCount() = 1`) |
 | Backup | `backup_lib.php` | Das Format ist seit Web 4.5.2 **aufgezählt** statt „alles, was in der Tabelle steht". Neue Spalten sind damit nicht mehr automatisch enthalten — sie einzutragen ist eine Entscheidung. Draußen: `id`/`user_id`/`device_id` (interne Verweise) und `other_resources` (tote Altspalte seit der Migration `2026_07`). **Bekannt:** `site_ele_m` ist im Backup, kommt beim Einspielen aber nicht zurück — der Einspielweg schreibt nur die Felder aus `mission_fields.php` plus `pat_blob`. |
 | `password_resets` | **Seit Web 20.17.0 schreibt nur noch `konto_lib.php` hierher** (P5b/AP2, Backlog Nr. 202 Paket 1) — nachweisbar mit `grep -rn "INSERT INTO password_resets" server/`. Die Laufzeiten stehen als `TOKEN_EINLADUNG_S` / `TOKEN_RESET_S` statt als SQL-Literale, und „höchstens ein gültiger Token je Konto" gilt damit an **allen vier** Stellen statt an zweien. Token-Hashes (sha256); 1 h bei „Passwort vergessen“, 24 h bei Neuanlage und Installation; der Job `aufraeumen` entsorgt Altbestand. Seit Web 4.4.0 gilt **höchstens ein offener Token je Konto**: Eine neue Anforderung entwertet alle vorherigen. Seit Web 4.5.0 entwertet auch **jeder Passwortwechsel** alle offenen Token des Kontos — der 24-Stunden-Einladungslink entsteht auf einem anderen Weg und hätte den soeben gewählten Zustand sonst überschreiben können |
-| `devices` | Upload-Zugang je Gerät: `device_id` (öffentlich, seit Web 4.5.1 aus **16** statt 4 Zufallsbytes — Bestandsgeräte behalten die kurze Kennung) + `api_key_hash`; **`active`-Flag** (deaktivieren statt löschen); virtuelle Geräte `manual-<userId>` für Handeinträge (dauerhaft inaktiv, aus Listen gefiltert). Seit Web 4.4.0 **höchstens `MAX_GERAETE` (5) echte Geräte je Konto**, aktive wie deaktivierte — die virtuellen zählen nicht mit. Seit Web 12.9.0 dazu die **Gerätekennung** (R42): `geraet_art` (`uhr`/`handy`/`sonstiges`), `geraet_modell` (aufgelöster Klarname, **VARCHAR(191)** — die Gerätedateien liefern Sammelnamen bis 153 Zeichen; die zunächst gewählten 64 waren geraten und sind mit Web 12.9.1 nachgezogen) und `geraet_teil` (die Rohangabe des Geräts — bei Garmin die Teilenummer, beim Handy Hersteller und Modell). **Alle drei sind dauerhaft NULL-bar**, und das ist keine Nachlässigkeit: Vier Wege legen ein Gerät an — Kopplung, Handanlage, virtuelles Gerät, Demo-Bestand —, und nur die Kopplung weiß etwas über das Gerät. Ein `NOT NULL DEFAULT 'unbekannt'` hätte daraus eine Aussage gemacht, wo keine ist; „unbekannt" ist eine Sache der Anzeige. **Bestandsgeräte bleiben leer**, bis sie neu koppeln — die Angabe entsteht ausschließlich beim Koppeln, und eine bereits gekoppelte Uhr wird nicht rückwirkend gefragt. **Drei Spalten statt der in R42 genannten zwei:** Die Rohangabe steht daneben, weil der Modellname aus einer erzeugten Tabelle stammt und ein künftiges Gerät sonst unwiederbringlich auf „unbekannt" fiele. Seit Web 20.11.0 dazu **`abgewiesen_seit`** (der **erste** Fehlversuch einer Serie, nicht der letzte) und **`abgewiesen_anzahl`** — der Vermerk der Mengenbremse aus P5a/AP7 (Abschnitt 5e.7). Beide werden beim nächsten gelungenen Upload geleert; ein Vermerk, der stehenbleibt, nachdem neu gekoppelt wurde, ist eine Falschmeldung. **Und seit Web 20.12.0 nach 30 Tagen auch ohne Upload** (Schritt `Geraetevermerke` im Aufräumjob): Den gelungenen Upload gibt es nicht mehr, wenn das Gerät ausgemustert ist — ohne den Schritt trüge ein verlorenes Gerät seine orange Plakette für immer. Siehe Abschnitt 5 |
-| `missions` | Einsatz; `UNIQUE(device_id, client_ref)` = Idempotenz-Anker; **`day_id`** = Fremdschlüssel auf `days` (bis Web 5.10.0: die Spalte `day` mit dem Kalenderdatum); **`uhr_gesperrt`** — ausschließlich Schutz vor Uhr-Überschreiben, NICHT „von Hand angelegt"; hieß bis Web 20.24.2 `manual` und brach damit die Einrichtung auf MySQL 8.4.0–8.4.10 (reserviertes Wort, Backlog Nr. 238) — **in Sicherungs- und Exportdatei heißt das Feld weiter `manual`**, abgebildet per Alias; **`origin`** (`watch`/`manual`/`import`) = Herkunft, wird beim Anlegen gesetzt und nie wieder geändert; **`edited`** = wurde nach dem Anlegen verändert; `deleted_at`/`deleted_with_day` (Papierkorb); Zusatzfelder lt. `mission_fields.php`; (`site_ele_m`, die berechnete Einsatzort-Höhe, ist mit Web 23 gefallen — sie liegt als `ortshoehe` im `pat_blob`, 4.99s); **`crew_override`** = abweichende Besatzung je Einsatz; die Namen liegen seit Web 6.0.0 in **`mission_crew`** (`mission_id, role_code, name`) statt in fünf festen Spalten — die Tagescrew in `day_crew` bleibt die einzige Wahrheit, solange der Haken nicht gesetzt ist (siehe Abschnitt 4); **`pat_blob`** = E2E-Chiffretext (Name, Geburtsdatum, Alter, Diagnose, Einsatzort, seit Web 2.9.0 auch die Einsatznummer, seit Web 3.3.0 auch die Beschreibung des Einsatzortes, seit Web 6.2.0 auch der manuelle Abfahrtort, seit Web 19.0.0 auch die Notizen des Einsatzes — Klartext-Ortsspalten existieren seit der Pflicht-Migration nicht mehr; der ganze Katalog steht in 4.98); **`ort_huelle`** (seit Web 22.0.1, S11-04a) = die **Einsatzhülle**: Koordinaten der Phasen und Reanimation als Gerätehülle unter dem Kontoschlüssel, Innenform JSON — geschrieben nur von `ingest.php`, gelesen nur vom Browser (4.99s) |
+| `devices` | Upload-Zugang je Gerät: `device_id` (öffentlich, seit Web 4.5.1 aus **16** statt 4 Zufallsbytes — Bestandsgeräte behalten die kurze Kennung) + `api_key_hash`; **`active`-Flag** (deaktivieren statt löschen); virtuelle Geräte `manual-<userId>` für Handeinträge (dauerhaft inaktiv, aus Listen gefiltert). Seit Web 4.4.0 **höchstens `MAX_GERAETE` (5) echte Geräte je Konto**, aktive wie deaktivierte — die virtuellen zählen nicht mit. Seit Web 12.9.0 dazu die **Gerätekennung** (R42): `geraet_art` (`uhr`/`handy`/`sonstiges`), `geraet_modell` (aufgelöster Klarname, **VARCHAR(191)** — die Gerätedateien liefern Sammelnamen bis 153 Zeichen; die zunächst gewählten 64 waren geraten und sind mit Web 12.9.1 nachgezogen) und `geraet_teil` (die Rohangabe des Geräts — bei Garmin die Teilenummer, beim Handy Hersteller und Modell). **Alle drei sind dauerhaft NULL-bar**, und das ist keine Nachlässigkeit: Vier Wege legen ein Gerät an — Kopplung, Handanlage, virtuelles Gerät, Demo-Bestand —, und nur die Kopplung weiß etwas über das Gerät. Ein `NOT NULL DEFAULT 'unbekannt'` hätte daraus eine Aussage gemacht, wo keine ist; „unbekannt" ist eine Sache der Anzeige. **Bestandsgeräte bleiben leer**, bis sie neu koppeln — die Angabe entsteht ausschließlich beim Koppeln, und eine bereits gekoppelte Uhr wird nicht rückwirkend gefragt. **Drei Spalten statt der in R42 genannten zwei:** Die Rohangabe steht daneben, weil der Modellname aus einer erzeugten Tabelle stammt und ein künftiges Gerät sonst unwiederbringlich auf „unbekannt" fiele. Seit Web 20.11.0 dazu **`abgewiesen_seit`** (der **erste** Fehlversuch einer Serie, nicht der letzte) und **`abgewiesen_anzahl`** — der Vermerk der Mengenbremse aus P5a/AP7 (Abschnitt 10.7). Beide werden beim nächsten gelungenen Upload geleert; ein Vermerk, der stehenbleibt, nachdem neu gekoppelt wurde, ist eine Falschmeldung. **Und seit Web 20.12.0 nach 30 Tagen auch ohne Upload** (Schritt `Geraetevermerke` im Aufräumjob): Den gelungenen Upload gibt es nicht mehr, wenn das Gerät ausgemustert ist — ohne den Schritt trüge ein verlorenes Gerät seine orange Plakette für immer. Siehe Abschnitt 5 |
+| `missions` | Einsatz; `UNIQUE(device_id, client_ref)` = Idempotenz-Anker; **`day_id`** = Fremdschlüssel auf `days` (bis Web 5.10.0: die Spalte `day` mit dem Kalenderdatum); **`uhr_gesperrt`** — ausschließlich Schutz vor Uhr-Überschreiben, NICHT „von Hand angelegt"; hieß bis Web 20.24.2 `manual` und brach damit die Einrichtung auf MySQL 8.4.0–8.4.10 (reserviertes Wort, Backlog Nr. 238) — **in Sicherungs- und Exportdatei heißt das Feld weiter `manual`**, abgebildet per Alias; **`origin`** (`watch`/`manual`/`import`) = Herkunft, wird beim Anlegen gesetzt und nie wieder geändert; **`edited`** = wurde nach dem Anlegen verändert; `deleted_at`/`deleted_with_day` (Papierkorb); Zusatzfelder lt. `mission_fields.php`; (`site_ele_m`, die berechnete Einsatzort-Höhe, ist mit Web 23 gefallen — sie liegt als `ortshoehe` im `pat_blob`, 4.40); **`crew_override`** = abweichende Besatzung je Einsatz; die Namen liegen seit Web 6.0.0 in **`mission_crew`** (`mission_id, role_code, name`) statt in fünf festen Spalten — die Tagescrew in `day_crew` bleibt die einzige Wahrheit, solange der Haken nicht gesetzt ist (siehe Abschnitt 4); **`pat_blob`** = E2E-Chiffretext (Name, Geburtsdatum, Alter, Diagnose, Einsatzort, seit Web 2.9.0 auch die Einsatznummer, seit Web 3.3.0 auch die Beschreibung des Einsatzortes, seit Web 6.2.0 auch der manuelle Abfahrtort, seit Web 19.0.0 auch die Notizen des Einsatzes — Klartext-Ortsspalten existieren seit der Pflicht-Migration nicht mehr; der ganze Katalog steht in 4.14); **`ort_huelle`** (seit Web 22.0.1, S11-04a) = die **Einsatzhülle**: Koordinaten der Phasen und Reanimation als Gerätehülle unter dem Kontoschlüssel, Innenform JSON — geschrieben nur von `ingest.php`, gelesen nur vom Browser (4.40) |
 | `mission_phases` | Phasen-Zeitstempel **2–9** (Mehrfach-Einträge erlaubt und erwünscht — eine erneut gesetzte Phase ist eine Korrektur, keine Dublette): Nummer und Zeit. Die Position liegt seit Web 22 in der Einsatzhülle; die Spalten `lat`/`lon` sind mit Web 23 gefallen (S11-12). Eine Phase 10 gibt es nicht; der Abschluss läuft über `final` und `ended_at` |
-| ~~`resus_sessions` / `resus_events`~~ | **Mit Web 23 gefallen** (S11-12). Bis dahin die Reanimationen im Klartext; seit Web 22 liegt der Verlauf in der Einsatzhülle (`missions.ort_huelle`, 4.99s) |
+| ~~`resus_sessions` / `resus_events`~~ | **Mit Web 23 gefallen** (S11-12). Bis dahin die Reanimationen im Klartext; seit Web 22 liegt der Verlauf in der Einsatzhülle (`missions.ort_huelle`, 4.40) |
 | `rest_segments` | Ruhe-Track-Segmente (gleiches Idempotenz-Schema wie Einsätze) |
 | ~~`track_points`~~ | **Mit Web 23 gefallen** (S11-12). Bis dahin GPS-Punkte im Klartext als Zeilen, PK `(owner_type, owner_id, seq)`, seit Web 10.0.0 nur noch der Eingangspuffer der Uhr; seit Web 22.0.1 kam nichts mehr an |
-| `track_stuecke` | **Seit Web 22.0.1 (S11-04a) die Spur, wie sie ankommt: verschlossene Stücke** (SPUR2), eine Zeile je Stück, PK `(owner_type, owner_id, seq_from)`. Klartext nur `punkte`, `n_original`, `ts_von`, `ts_bis`, `stufe` (1 Gerät, 2 zusammengefügt, 3 ausgedünnt); die Punkte stehen in `huelle` (Gerätehülle, Art `spur`/`ruhe`, Platz `<seq_from>:<punkte>`; ab Stufe 2 `<seq_from>:<punkte>:<stufe>:<n_original>`, Innenform gepackt, E-S11-71). Stufe 2 und 3 entstehen seit Web 22.6.0 im Wartungslauf des Browsers. Ohne FK (polymorph); gelesen und geschrieben nur über `spur_lib.php` — 4.99s |
+| `track_stuecke` | **Seit Web 22.0.1 (S11-04a) die Spur, wie sie ankommt: verschlossene Stücke** (SPUR2), eine Zeile je Stück, PK `(owner_type, owner_id, seq_from)`. Klartext nur `punkte`, `n_original`, `ts_von`, `ts_bis`, `stufe` (1 Gerät, 2 zusammengefügt, 3 ausgedünnt); die Punkte stehen in `huelle` (Gerätehülle, Art `spur`/`ruhe`, Platz `<seq_from>:<punkte>`; ab Stufe 2 `<seq_from>:<punkte>:<stufe>:<n_original>`, Innenform gepackt, E-S11-71). Stufe 2 und 3 entstehen seit Web 22.6.0 im Wartungslauf des Browsers. Ohne FK (polymorph); gelesen und geschrieben nur über `spur_lib.php` — 4.40 |
 | ~~`track_blobs`~~ | **Mit Web 23 gefallen** (S11-12). Bis dahin dieselben Punkte als Klartext-Blob (Format SPUR1), eine Zeile je Spur; gemessen 62,4 Byte je Punkt als Zeile gegen 3,58 als Blob. Stufe und `n_original` tragen seither die Stücke |
 | `bases` / `vehicles` / `crew_presets` | Stammdaten: Standorte (mit optionalen Koordinaten), Rettungsmittel und Besatzungsnamen je Rolle. `vehicles` ersetzt `aircraft` seit Web 6.0.0 und trägt **zwei Achsen** (E-S9-09, Web 16.0.0): `kind` = `air`/`ground` ist die **Betriebsart** und steuert Rollenkatalog, Fähigkeiten, Kachelsatz und Höhe; `typ` = `standard`/`bergwacht`/`veranstaltung`/`sonstiges` ist die **Art des Dienstes**. Dazu `kurz` (Kurzname, bis 16 Zeichen, freiwillig) sowie `vehicle_roles` und `vehicle_capabilities`. **Welches Rettungsmittel Fähigkeiten führen darf, entscheidet seit Web 20.3.0 `veh_caps_erlaubt()` (`db.php`) aus Typ UND Betriebsart** — `kind = 'air'` bei `standard`/`veranstaltung`/`sonstiges` (E29), beide Betriebsarten beim Typ `bergwacht`. Die Spalte `faehigkeiten` in `VEHICLE_TYPEN` ist die Quelle; das Schema führt die Regel nicht. **Der Standortbezug ist verbindlich (E15) — bei Rettungsmitteln aber nur noch für den Typ `standard`:** `vehicles.base_id` ist NULL-fähig, die drei anderen Typen dürfen ohne Standort bestehen und haben dann keine Vorschlagslisten. Die Regel steht in `pruef_rettungsmittel()` (`validate_lib.php`), nicht im Schema. `user_id` = das Konto, seit Web 21.0.0 `NOT NULL` — siehe den Hinweis unter der Tabelle |
 | `vehicle_roles` / `vehicle_capabilities` | Besetzte Rollen und Fähigkeiten (`winch`, `bergwacht`) je Rettungsmittel. Die Rollenkennungen stammen aus dem festen Katalog `CREW_ROLES` in `db.php`, nicht aus der Datenbank — deshalb VARCHAR und kein ENUM |
@@ -1032,7 +1037,7 @@ Motoren 0. Ein Rauschfilter dafür ist deshalb **nicht** gebaut worden.
 | `bw_units` | Bergwacht-Bereitschaften; `user_id` = das Konto |
 | `transport_dests` | Vorbelegung „Zielklinik" (Datalist-Vorschläge, `missions.transport_dest` bleibt Freitext ohne FK), seit Web 6.1.0 mit optionalen Koordinaten; `base_id` = Standort; `user_id` = das Konto |
 | `user_defaults` | Nutzerbezogene Standard-Vorbelegung für Diensttage (`kind` in `base`/`vehicle`, `item_id` verweist auf `bases.id` bzw. `vehicles.id` des Kontos — ohne FK, weil es zwei Zieltabellen sind); ersetzt die entfallenen Alt-Spalten `bases.is_default`/`aircraft.is_default` |
-| `days` | Diensttag. Seit Web 6.0.0 eine **eigene Zeile mit eigener Kennung** statt eines Kalendertags: Jeder Druck auf „Einsatztag starten" erzeugt einen; mehrere je Kalendertag sind zulässig (E9). Trägt echte `started_at`/`ended_at` und den beim Zuordnen **eingefrorenen** Snapshot aus Standort und Rettungsmittel (`kind`, `base_name`, `base_lat`, `base_lon`, `vehicle_name`, seit Web 16.0.0 auch `vehicle_typ` und `vehicle_kurz`) — Stammdatenänderungen wirken nur in die Zukunft (E8). **Seit Web 21.3.0 `created_at`** (TIMESTAMP, Serverzeit des Anlegens, Nr. 158): der Anker, ob Geräte den Zeitraum des Tages noch fortschreiben (4.99a2); der Bestand hat bei der Migration `started_at` bekommen, gekappt auf jetzt, und die Wiederherstellung setzt ihn ebenso — er steht nicht im Backup. `kind IS NULL` = neutral, noch nicht zugeordnet (E26) **Seit Web 18.1.0 kann die Momentaufnahme ohne Stammdatensatz bestehen** (E-S9-10): `vehicle_id IS NULL` bei gesetztem `vehicle_name` heißt „ein Rettungsmittel nur für diesen Tag“ — Bezeichnung, Typ, Betriebsart und der Standort (als Kennung oder als bloßer Name) stehen dann allein hier. Suche, Filter und Tagesliste lesen ohnehin die Momentaufnahme und finden es deshalb. `day_capabilities` bekommt dafür keinen Satz; `day_crew` seit Web 21.0.0 **die Rollen der gewählten Betriebsart** (Nr. 169, E-P5c-47 — bis dahin keinen, F19) |
+| `days` | Diensttag. Seit Web 6.0.0 eine **eigene Zeile mit eigener Kennung** statt eines Kalendertags: Jeder Druck auf „Einsatztag starten" erzeugt einen; mehrere je Kalendertag sind zulässig (E9). Trägt echte `started_at`/`ended_at` und den beim Zuordnen **eingefrorenen** Snapshot aus Standort und Rettungsmittel (`kind`, `base_name`, `base_lat`, `base_lon`, `vehicle_name`, seit Web 16.0.0 auch `vehicle_typ` und `vehicle_kurz`) — Stammdatenänderungen wirken nur in die Zukunft (E8). **Seit Web 21.3.0 `created_at`** (TIMESTAMP, Serverzeit des Anlegens, Nr. 158): der Anker, ob Geräte den Zeitraum des Tages noch fortschreiben (4.22); der Bestand hat bei der Migration `started_at` bekommen, gekappt auf jetzt, und die Wiederherstellung setzt ihn ebenso — er steht nicht im Backup. `kind IS NULL` = neutral, noch nicht zugeordnet (E26) **Seit Web 18.1.0 kann die Momentaufnahme ohne Stammdatensatz bestehen** (E-S9-10): `vehicle_id IS NULL` bei gesetztem `vehicle_name` heißt „ein Rettungsmittel nur für diesen Tag“ — Bezeichnung, Typ, Betriebsart und der Standort (als Kennung oder als bloßer Name) stehen dann allein hier. Suche, Filter und Tagesliste lesen ohnehin die Momentaufnahme und finden es deshalb. `day_capabilities` bekommt dafür keinen Satz; `day_crew` seit Web 21.0.0 **die Rollen der gewählten Betriebsart** (Nr. 169, E-P5c-47 — bis dahin keinen, F19) |
 | `day_refs` | Uhr-Kennungen eines Diensttags (`device_id`, `day_ref`). Bewusst eine eigene Tabelle: Nach dem Zusammenführen trägt ein Diensttag legitim **mehrere** Kennungen, und `ingest.php` findet damit ohne jede Umleitungslogik den richtigen Tag. Von Hand angelegte Diensttage haben hier keine Zeile |
 | `day_crew` / `mission_crew` | Besatzung je Rolle, normalisiert (E7). Die **Zeilenmenge** von `day_crew` ist der eingefrorene Rollensatz des Diensttags — auch leere Zeilen gehören dazu, denn sie sagen, welche Rollen der Dienst anbot |
 | `day_capabilities` | Eingefrorene Fähigkeiten des Diensttags. Wird der Windenhaken am Rettungsmittel später entfernt, verlieren alte Einsätze ihre Windenfelder nicht (A13e) |
@@ -1040,16 +1045,16 @@ Motoren 0. Ein Rauschfilter dafür ist deshalb **nicht** gebaut worden.
 | `deleted_refs` | Sperrliste gelöschter `client_ref`s (90 Tage) gegen Wieder-Upload durch die Uhr; `owner_type` unterscheidet Einsatz und Ruhe-Segment — die Liste gilt für **beide** |
 | `rate_limits` | Ratenschutz: Versuche je `topf` und `merkmal` (`ip:…`, `id:…` oder `alle`), mit Zeitfenster und Sperrfrist; liegt bewusst in der Datenbank und nicht in der Sitzung — eine Zählung, die der Aufrufer durch Wegwerfen seines Cookies zurücksetzen kann, ist keine. **Die Töpfe stehen in `RATE_GRENZEN` und nirgends sonst** — und hier steht ihre Zahl absichtlich **nicht** mehr: Bis Web 20.10.0 stand „alle vier“ (falsch seit sechs Töpfen), bis 20.11.0 „es sind zwölf“ (falsch mit den beiden Ingest-Töpfen). Eine Zahl in einem Fließtext altert genauso still wie eine Aufzählung. Bei `salt` und `reset` zählt **jede** Anfrage, nicht nur eine fehlgeschlagene: Beide Endpunkte kennen kein Scheitern, begrenzt wird die Menge (`rate_zaehlen()`). Der Job `aufraeumen` entsorgt Altbestand. Seit Web 20.10.0 dazu **`stufe`** (0 = nie gesperrt, 1–4 = Sprosse der Sperrleiter) und **`stufe_bis`** (letzter Fehlversuch + 24 h; danach gilt die Stufe als 0, auch wenn die Zeile noch dasteht) sowie ein Index auf `gesperrt_bis` |
 | `rechtstexte` | Die Rechtstexte dieser Installation (R32, seit Web 9.11.0). `schluessel` = `impressum` / `datenschutz`, seit Web 20.19.0 auch `nutzungsbedingungen` / `avv`, `inhalt` = Markdown-Quelle (`MEDIUMTEXT`; NULL oder leer = Leerzustand), `stand_am` = das im Editor **von Hand** gesetzte Standdatum (NULL = keine Standzeile). **Nicht in `app_state`:** Dessen Wert ist `VARCHAR(190)`, eine Datenschutzerklärung hat 8 000 bis 20 000 Zeichen — und ohne strict mode kürzt MySQL still |
-| `app_state` | Schlüssel/Wert (z. B. `salt_secret`, seit Web 10.1.0 `jobs_token` = Geheimnis für `jobs.php?token=…` (seit Web 23.1.0 nur noch der Job-Lauf), seit Web 23.1.0 `kette_token` = Geheimnis der Aktionen der Auslieferungskette (nur per POST, 4.97a „Die zwei Tokens"), `adminbackup_intervall`, `adminbackup_last`, seit Web 9.8.0 `adminbackup_aufbewahrung` = Zahl der Pakete je Konto, 0/fehlend = Vorgabe **2**, vorher 3; seit Web 12.0.0 `adminbackup_grenze_gb` = Speichergrenze der Ablage (fehlend = 2), `adminbackup_schwellen` = Warnschwellen in Prozent (fehlend = 70,90), `adminbackup_schwellen_gemeldet` und `adminbackup_schwellen_offen` = je Schwelle einmal melden, `adminbackup_auftrag` = Zeiger des Auftrags „Alle sichern"; seit Web 12.1.0 `versand_auto` = Versand auf die Backup-Ziele ein/aus (S2/AP7); seit Web 9.10.0 `adminbackup_mail` = Erinnerung an die Verwaltung ein/aus, `adminbackup_mail_last` = Datum der letzten Erinnerung, `logo_standard` = Logo dieser Installation (`hubschrauber` / `fahrzeug`, fehlend = Hubschrauber); seit Web 15.1.0 `speicher_db_bytes`, `speicher_dateien_bytes` und `speicher_stand` = die tägliche Messung aus `speicher_lib.php` sowie `webspace_gb` = Webspace laut Hosting als **Angabe** der BetreiberIn (fehlend = kein zweiter Bezug, siehe 4.99d); seit Web 15.3.0 `smtp_last` und `smtp_last_ok` = Zeitpunkt und Erfolg des letzten Mailversands, geschrieben von `smtp_send()` (siehe 4.99e); seit Web 20.5.0 `speicher_db_grenze_gb` = Kontingent der Datenbank laut Hosting; seit Web 20.6.0 `migration_tor_hash` und `migration_tor_offen` = der Zwischenspeicher des Torwächters; seit Web 20.7.0 `csp_scharf` = Content-Security-Policy scharf statt Report-Only und `hsts_tage` = Bindungsdauer von HSTS in Tagen, 0/1/7/365, fehlend = **1** (siehe 5c); seit Web 20.8.0 `instanz_name` und `instanz_kurz` = der Name dieser Installation, fehlend = „Gen-EM Einsatzdokumentation Notarzt" bzw. „Gen-EM NAdoku" (siehe 5d)). Die Wartungsmarken `last_cleanup` und `last_cleanup_ok` sind mit Web 10.1.0 entfallen — ihre Auskunft steht vollständiger in `jobs` |
-| `csp_berichte` | Meldungen der Content-Security-Policy, **zusammengefasst**: UNIQUE über (`richtlinie`, `quelle`, `seite`), dazu `anzahl`, `erstellt`, `zuletzt`. Geschrieben von `api/csp_bericht.php` ohne Anmeldung; keine IP, kein Konto, kein Abfrageteil der Adresse. Der Job `aufraeumen` löscht nach 30 Tagen (seit Web 20.7.0, siehe 5c) |
+| `app_state` | Schlüssel/Wert (z. B. `salt_secret`, seit Web 10.1.0 `jobs_token` = Geheimnis für `jobs.php?token=…` (seit Web 23.1.0 nur noch der Job-Lauf), seit Web 23.1.0 `kette_token` = Geheimnis der Aktionen der Auslieferungskette (nur per POST, 4.7 „Die zwei Tokens"), `adminbackup_intervall`, `adminbackup_last`, seit Web 9.8.0 `adminbackup_aufbewahrung` = Zahl der Pakete je Konto, 0/fehlend = Vorgabe **2**, vorher 3; seit Web 12.0.0 `adminbackup_grenze_gb` = Speichergrenze der Ablage (fehlend = 2), `adminbackup_schwellen` = Warnschwellen in Prozent (fehlend = 70,90), `adminbackup_schwellen_gemeldet` und `adminbackup_schwellen_offen` = je Schwelle einmal melden, `adminbackup_auftrag` = Zeiger des Auftrags „Alle sichern"; seit Web 12.1.0 `versand_auto` = Versand auf die Backup-Ziele ein/aus (S2/AP7); seit Web 9.10.0 `adminbackup_mail` = Erinnerung an die Verwaltung ein/aus, `adminbackup_mail_last` = Datum der letzten Erinnerung, `logo_standard` = Logo dieser Installation (`hubschrauber` / `fahrzeug`, fehlend = Hubschrauber); seit Web 15.1.0 `speicher_db_bytes`, `speicher_dateien_bytes` und `speicher_stand` = die tägliche Messung aus `speicher_lib.php` sowie `webspace_gb` = Webspace laut Hosting als **Angabe** der BetreiberIn (fehlend = kein zweiter Bezug, siehe 4.25); seit Web 15.3.0 `smtp_last` und `smtp_last_ok` = Zeitpunkt und Erfolg des letzten Mailversands, geschrieben von `smtp_send()` (siehe 4.26); seit Web 20.5.0 `speicher_db_grenze_gb` = Kontingent der Datenbank laut Hosting; seit Web 20.6.0 `migration_tor_hash` und `migration_tor_offen` = der Zwischenspeicher des Torwächters; seit Web 20.7.0 `csp_scharf` = Content-Security-Policy scharf statt Report-Only und `hsts_tage` = Bindungsdauer von HSTS in Tagen, 0/1/7/365, fehlend = **1** (siehe 8); seit Web 20.8.0 `instanz_name` und `instanz_kurz` = der Name dieser Installation, fehlend = „Gen-EM Einsatzdokumentation Notarzt" bzw. „Gen-EM NAdoku" (siehe 9)). Die Wartungsmarken `last_cleanup` und `last_cleanup_ok` sind mit Web 10.1.0 entfallen — ihre Auskunft steht vollständiger in `jobs` |
+| `csp_berichte` | Meldungen der Content-Security-Policy, **zusammengefasst**: UNIQUE über (`richtlinie`, `quelle`, `seite`), dazu `anzahl`, `erstellt`, `zuletzt`. Geschrieben von `api/csp_bericht.php` ohne Anmeldung; keine IP, kein Konto, kein Abfrageteil der Adresse. Der Job `aufraeumen` löscht nach 30 Tagen (seit Web 20.7.0, siehe 8) |
 | `missions.letzter_punkt_am` / `rest_segments.letzter_punkt_am` | Wann zuletzt ein Punkt **eintraf** (seit Web 10.2.0, S2). Nicht der Zeitraum der Stücke (`ts_von`/`ts_bis`; bis Web 22.7.0 `track_points.ts`) — das ist die Aufzeichnungszeit. Die Karenz aus E-S2-06 braucht die Ankunftszeit: Die Uhr setzt `final` in *jedem* Teilstück, ein spät hochgeladener Puffer wäre über `MAX(ts)` gerechnet im Moment des Eintreffens schon 14 Tage still. NULL = noch nie gemessen; der Verdichtungsjob trägt es beim ersten Hinsehen nach |
-| `track_cuts` | Sperrvermerke des Schneidewerkzeugs (seit Web 12.5.0, S4/A2), eine Zeile je Schnitt: `owner_type`/`owner_id` = Quelle, `mission_id` = der herausgeschnittene Einsatz (seit Web 22.2.0 NULL-fähig: NULL = ein gelöschter Zeitraum, Backlog Nr. 161), `von_ts`/`bis_ts` = der gesperrte **Zeitraum**. `ingest.php` verwirft Punkte darin — sonst kehrte eine Nachlieferung aus dem Gerätepuffer in die Quelle zurück und der Schnitt löste sich still wieder auf. Wie `track_points` ohne FK (polymorph); die Löschwege räumen ausdrücklich mit. Siehe Abschnitt 4.97e |
-| `protokoll_ereignisse` | Das **Betriebsprotokoll** (seit Web 20.16.5, P5b/AP1, V1). `reiter` = `verwaltung` / `email` / `jobs` / `sicherung` / `ziele` / `system`, dazu `art` (die maschinelle Kennung, nach der die Protokollseite filtert; Wort und Ton dazu im Katalog `PROTOKOLL_ARTEN`), `urheber_user_id` / `urheber_art`, `betroffen_user_id`, `text` und `daten` (JSON). **Betriebsereignisse, keine Datenzugriffe** — dass jemand einen Einsatz geöffnet, gelesen oder exportiert hat, steht hier nicht und soll hier nicht stehen. **Kein Fremdschlüssel auf `users`**, und das ist der wichtigste Satz dieser Zeile: Der häufigste Verwaltungseintrag ist „Konto gelöscht"; mit CASCADE löschte die Kontolöschung ihren eigenen Eintrag, mit RESTRICT verhinderte der Eintrag die Löschung. `urheber_user_id` ist **`0` und nicht NULL**, wenn kein Mensch gehandelt hat — `urheber_art` sagt, welche Art von Niemand (`cli` / `job`). **Zwei Fristen:** `verwaltung` 365 Tage (einstellbar 90–1095), alle übrigen 30 Tage fest; der Job `aufraeumen` räumt beide in einem Schritt. Die Seite Verwaltung → Protokoll (seit Web 20.39.0) liest sie zusammen mit fünf weiteren Tabellen, der Job `protokoll_archiv` archiviert sie. Siehe 4.99g |
-| `konto_einwilligungen` | Welche Fassung eines Rechtstextes dieses Konto angenommen hat (seit Web 20.19.0, P5b/AP4). `(user_id, schluessel)` als Primärschlüssel — **eine Zeile je Konto und Dokument, nicht je Annahme**; eine neue überschreibt die alte. `stand_am` ist die **angenommene** Fassung, der Vergleich gegen `rechtstexte.stand_am` ist die ganze Prüfung. Der Verlauf steht im Protokoll und überlebt dort die Kontolöschung; `ON DELETE CASCADE` ist hier richtig, weil eine Einwilligung ohne Konto keinen Gegenstand hat. Siehe 4.99j |
-| `sicherheit_ereignisse` | Was **war**, nicht was **ist** (seit Web 20.10.0, P5a/AP6). `art` = `sperre` / `verlangsamung` / `aufgehoben`, dazu `topf`, `merkmal`, `stufe`, `versuche`, `zeitpunkt`, `bis`, `wer`. **Ein Eintrag je Sperre, nicht je Fehlversuch** — ein Protokoll, das jeden Tippfehler verbucht, wird nicht gelesen. `merkmal` steht im **Klartext**, mit IP- und E-Mail-Adressen: Ohne sie wäre die Liste „irgendwo war irgendwer gesperrt" und damit wertlos (dieselbe Abwägung wie bei der Unzustellbar-Liste, E-P5a-39). **In die Komplettsicherung geht sie seit Web 20.39.0 ohne Zeilen** (`KOMP_OHNE_ZEILEN` in `komplett_lib.php`, P5c/AP2): nur das Schema, damit ein Einspielen die Tabelle anlegt. Die 30-Tage-Frist gilt damit auch für jeden Abzug. *Hier stand bis Web 21.1.0, sie liege in **jeder** Komplettsicherung, weil `komp_tabellen()` keine Ausnahmeliste habe — das stimmte bis Web 20.38.x.* Der Job `aufraeumen` löscht nach 30 Tagen, fest (E-P5a-09). **Gelesen wird sie seit Web 20.12.0 über `sicherheit_ereignisse()`** und gezeigt auf Betrieb → Status → Sicherheit (5e.8); geschrieben wird nur an den **Töpfen mit Leiter** (`'leiter' => true` in `RATE_GRENZEN`; seit Web 20.42.0 sieben, mit `totp`) — die übrigen sperren ohne Protokollzeile. *Hier stand „fünf" und „neun"; seit Web 20.11.0 waren es sechs mit Leiter, gezählt am 24.09.2026* |
+| `track_cuts` | Sperrvermerke des Schneidewerkzeugs (seit Web 12.5.0, S4/A2), eine Zeile je Schnitt: `owner_type`/`owner_id` = Quelle, `mission_id` = der herausgeschnittene Einsatz (seit Web 22.2.0 NULL-fähig: NULL = ein gelöschter Zeitraum, Backlog Nr. 161), `von_ts`/`bis_ts` = der gesperrte **Zeitraum**. `ingest.php` verwirft Punkte darin — sonst kehrte eine Nachlieferung aus dem Gerätepuffer in die Quelle zurück und der Schnitt löste sich still wieder auf. Wie `track_points` ohne FK (polymorph); die Löschwege räumen ausdrücklich mit. Siehe Abschnitt 4.11 |
+| `protokoll_ereignisse` | Das **Betriebsprotokoll** (seit Web 20.16.5, P5b/AP1, V1). `reiter` = `verwaltung` / `email` / `jobs` / `sicherung` / `ziele` / `system`, dazu `art` (die maschinelle Kennung, nach der die Protokollseite filtert; Wort und Ton dazu im Katalog `PROTOKOLL_ARTEN`), `urheber_user_id` / `urheber_art`, `betroffen_user_id`, `text` und `daten` (JSON). **Betriebsereignisse, keine Datenzugriffe** — dass jemand einen Einsatz geöffnet, gelesen oder exportiert hat, steht hier nicht und soll hier nicht stehen. **Kein Fremdschlüssel auf `users`**, und das ist der wichtigste Satz dieser Zeile: Der häufigste Verwaltungseintrag ist „Konto gelöscht"; mit CASCADE löschte die Kontolöschung ihren eigenen Eintrag, mit RESTRICT verhinderte der Eintrag die Löschung. `urheber_user_id` ist **`0` und nicht NULL**, wenn kein Mensch gehandelt hat — `urheber_art` sagt, welche Art von Niemand (`cli` / `job`). **Zwei Fristen:** `verwaltung` 365 Tage (einstellbar 90–1095), alle übrigen 30 Tage fest; der Job `aufraeumen` räumt beide in einem Schritt. Die Seite Verwaltung → Protokoll (seit Web 20.39.0) liest sie zusammen mit fünf weiteren Tabellen, der Job `protokoll_archiv` archiviert sie. Siehe 4.28 |
+| `konto_einwilligungen` | Welche Fassung eines Rechtstextes dieses Konto angenommen hat (seit Web 20.19.0, P5b/AP4). `(user_id, schluessel)` als Primärschlüssel — **eine Zeile je Konto und Dokument, nicht je Annahme**; eine neue überschreibt die alte. `stand_am` ist die **angenommene** Fassung, der Vergleich gegen `rechtstexte.stand_am` ist die ganze Prüfung. Der Verlauf steht im Protokoll und überlebt dort die Kontolöschung; `ON DELETE CASCADE` ist hier richtig, weil eine Einwilligung ohne Konto keinen Gegenstand hat. Siehe 4.31 |
+| `sicherheit_ereignisse` | Was **war**, nicht was **ist** (seit Web 20.10.0, P5a/AP6). `art` = `sperre` / `verlangsamung` / `aufgehoben`, dazu `topf`, `merkmal`, `stufe`, `versuche`, `zeitpunkt`, `bis`, `wer`. **Ein Eintrag je Sperre, nicht je Fehlversuch** — ein Protokoll, das jeden Tippfehler verbucht, wird nicht gelesen. `merkmal` steht im **Klartext**, mit IP- und E-Mail-Adressen: Ohne sie wäre die Liste „irgendwo war irgendwer gesperrt" und damit wertlos (dieselbe Abwägung wie bei der Unzustellbar-Liste, E-P5a-39). **In die Komplettsicherung geht sie seit Web 20.39.0 ohne Zeilen** (`KOMP_OHNE_ZEILEN` in `komplett_lib.php`, P5c/AP2): nur das Schema, damit ein Einspielen die Tabelle anlegt. Die 30-Tage-Frist gilt damit auch für jeden Abzug. *Hier stand bis Web 21.1.0, sie liege in **jeder** Komplettsicherung, weil `komp_tabellen()` keine Ausnahmeliste habe — das stimmte bis Web 20.38.x.* Der Job `aufraeumen` löscht nach 30 Tagen, fest (E-P5a-09). **Gelesen wird sie seit Web 20.12.0 über `sicherheit_ereignisse()`** und gezeigt auf Betrieb → Status → Sicherheit (10.8); geschrieben wird nur an den **Töpfen mit Leiter** (`'leiter' => true` in `RATE_GRENZEN`; welche, steht in 10.2 und — maßgeblich — in der Konstante) — die übrigen sperren ohne Protokollzeile. *Hier stand „fünf" und „neun"; seit Web 20.11.0 waren es sechs mit Leiter, gezählt am 24.09.2026* |
 | `mail_warteschlange` | Jede ausgehende Nachricht, eine Zeile (seit Web 20.8.0, P5a/AP5). `schluessel` = Eintrag aus `mail_katalog()`, `art` = `konto`/`geraet`/`betrieb` (das wird in P5c der Reiter im Protokoll), `zustand` = `offen` / `zugestellt` / `unzustellbar` / `zu_spaet` / `ueberholt`, `versuche`, `naechster_versuch`, `gueltig_bis` (ein Reset-Link gilt eine Stunde), `fehler` = Grund **samt Kennung**. **Was beim Endzustand geleert wird, hängt vom Zustand ab** (E-P5a-39): `zugestellt`, `zu_spaet` und `ueberholt` verlieren Adresse, Betreff und Rumpf — es bleibt „eine Nachricht dieser Art ging zu dieser Zeit hinaus". Bei `unzustellbar` **bleibt die Adresse stehen**, weil „die Einladung an X kam nie an" ohne X wertlos ist; der Rumpf fällt trotzdem, wegen des Tokens darin. Der Job `aufraeumen` löscht nach 30 Tagen |
 | `job_laeufe` | Verlauf der Hintergrundjobs (seit Web 20.8.0), eine Zeile je Lauf, der etwas getan hat oder scheiterte — ein Leerlauf schreibt nichts, sonst füllte sich die Tabelle mit Nichts. `job`, `zeitpunkt`, `ausloeser`, `erledigt`, `fehler`. Der Job `aufraeumen` löscht nach 30 Tagen |
-| `jobs` | Zustand der Hintergrundjobs (seit Web 10.1.0, S2), eine Zeile je Job. `zustand` = Fortsetzungsmarke als JSON, `rueckstand` = was noch aussteht (für die Wartungsseite), `letzter_ausloeser` = `cli` / `token` / `anfrage` / `seite` (seit Web 21.12.0, der Knopf „Jetzt weiterarbeiten", 4.97a), `letzter_fehler` = warum der letzte Lauf scheiterte, `laeuft_seit` = Sperre gegen zwei gleichzeitige Läufe — bewusst ein **Zeitstempel und kein Flag**, sonst bliebe ein abgestürzter Lauf für immer gesperrt. Siehe Abschnitt 4.97a |
+| `jobs` | Zustand der Hintergrundjobs (seit Web 10.1.0, S2), eine Zeile je Job. `zustand` = Fortsetzungsmarke als JSON, `rueckstand` = was noch aussteht (für die Wartungsseite), `letzter_ausloeser` = `cli` / `token` / `anfrage` / `seite` (seit Web 21.12.0, der Knopf „Jetzt weiterarbeiten", 4.7), `letzter_fehler` = warum der letzte Lauf scheiterte, `laeuft_seit` = Sperre gegen zwei gleichzeitige Läufe — bewusst ein **Zeitstempel und kein Flag**, sonst bliebe ein abgestürzter Lauf für immer gesperrt. Siehe Abschnitt 4.7 |
 | `backup_targets` | Backup-Ziele (seit Web 12.1.0, S2/AP7): FTPS- oder SFTP-Gegenstelle je Zeile. **`ftp` ist seit Web 20.2.0 abgeschafft** (S10/AP4, E-S10-14) und **seit Web 21.0.0 auch aus dem `ENUM`** (Migration `2026_09_25_ftp_entfernen`, P5c/AP8, E-P5c-124). Bis dahin behielt das Schema den Wert, und ein solches Ziel trug die rote Plakette *wird übergangen*; der Weg dafür ist mit dem Wert gefallen. `geheim` (Passwort oder Passphrase) und `schluessel` (privater SSH-Schlüssel) stehen **versiegelt** darin (`edsk1:`, `serverkrypto_lib.php`); der Schlüssel dazu liegt in `config.php` und damit **nicht im Dump**. Welches Feld gilt, sagt der Inhalt: Steht in `schluessel` etwas, wird damit angemeldet und `geheim` ist dessen Passphrase. `fingerabdruck` = SHA-256 des Hostschlüssels (nur SFTP, Riegel gegen einen untergeschobenen Server). `letzter_fehler` steht dort, damit ein seit Wochen scheiternder Versand in der Oberfläche auffällt. Nicht zu verwechseln mit `transport_dests` — das sind Zielkliniken |
 | `schema_migrations` | Buchführung des Migrations-Runners |
 
@@ -1060,7 +1065,7 @@ samt einer Tabelle, die zentrale Standorte den Konten zuordnete (E16). Die
 Oberfläche dafür ist mit Web 18.0.0 gefallen (Rahmenplan R39), das Modell mit
 P5c/AP8 (Backlog Nr. 168): Migration `2026_09_25_zentrale_stammdaten`, die
 Abfragen fragen nur noch `user_id = ?`, die Nutzlast der Kontosicherung steigt
-auf 12. **Die Migration hat eine Vorbedingung** (4.99, Zeile „Migrationsschutz"): Steht
+auf 12. **Die Migration hat eine Vorbedingung** (4.20, Zeile „Migrationsschutz"): Steht
 noch eine Zeile ohne Konto da, sperrt sie, nennt Tabelle und Zahl und lässt
 sich nicht freigeben. Die Fundliste des Rückbaus liegt in der Historie
 (`git log -- docs/konzepte/Bestandsaufnahme-R39-Zentrale-Stammdaten.md`).
@@ -1095,7 +1100,7 @@ Inhaltsschlüssel als nicht extrahierbarer `CryptoKey` in IndexedDB, siehe
 „Entsperren des Inhaltsschlüssels" unten).
 Ein zufälliger **Inhaltsschlüssel** (256 Bit, nicht vom Passwort abgeleitet)
 verschlüsselt `pat_blob` (`{last, first, dob, dx, age, mission_no,
-loc:{addr,lat,lon}, site_desc, start:{addr,lat,lon}, notes}`, AES-256-GCM; Katalog in 4.98) und liegt doppelt verpackt in `users`: mit dem Datenschlüssel
+loc:{addr,lat,lon}, site_desc, start:{addr,lat,lon}, notes}`, AES-256-GCM; Katalog in 4.14) und liegt doppelt verpackt in `users`: mit dem Datenschlüssel
 (`pat_wrap_pw`) und mit dem aus dem Wiederherstellungsschlüssel abgeleiteten
 Schlüssel (`pat_wrap_rc`). Weil der Inhaltsschlüssel vom Passwort getrennt ist,
 kostet ein Passwortwechsel kein Neuverschlüsseln — nur die Hülle wird erneuert.
@@ -1149,7 +1154,7 @@ meldet sich das Konto nicht mehr an — **auch die BetreiberIn nicht**. Die
 Anmeldung sagt „Server-Anteil fehlt" und schreibt eine Systemmeldung; der
 Versuch zählt wie ein Fehlversuch (Topf `login`), sonst flutete wiederholtes
 Anmelden den Reiter System (Anteilprobe Teil F misst beides); den
-Weg zurück beschreibt das Runbook („Der Server-Anteil fehlt", Abschnitt 7).
+Weg zurück beschreibt das Runbook („Der Server-Anteil fehlt", Abschnitt 13).
 
 *Warum aus der Kontonummer und nicht aus dem Salz.* Passwortwechsel und Reset
 würfeln das **neue** Salz im Browser; der Anteil dazu wäre in genau dem
@@ -1331,7 +1336,7 @@ geändert. Eine Admin-Passwortvergabe **im Browser** existiert bewusst nicht —
 die Verwaltung verschickt nur den Setz-Link. *Was das nicht heißt* (F-R17-06):
 Wer den Setz-Link bekommt, setzt auf `pw_handling.php` ein neues Passwort mit
 einer Hülle, deren `key_check` stimmt; der Server prüft dort nichts anderes
-(4.99q). Bis Web 23.1.0 ließ sich die Kette mit einer Adminsitzung schließen
+(4.38). Bis Web 23.1.0 ließ sich die Kette mit einer Adminsitzung schließen
 — Paket an sich selbst freigeben (`pat_key_check`), Adresse umschreiben,
 Setz-Link. Seither fehlen zwei Glieder: Eine Freigabe geht nur an dieselbe
 Adresse (Abschnitt „Konto-Backups", „Wer eine Freigabe bekommen kann"), und nach einem Adresswechsel durch die Verwaltung geht
@@ -1884,8 +1889,9 @@ Manifest trägt deshalb `unlesbar` — die Zahl der Einsätze, deren geschützte
 Angaben beim *Sichern* nicht zu entschlüsseln waren. Fehlt sie, wird gewarnt.
 
 Dadurch sind Backups zwischen Konten übertragbar; der Server sieht nie
-Klartext. Die einteiligen Fassungen 2 und 3 werden weiterhin **gelesen** und
-nicht mehr geschrieben (bis NaDoku 1.0, Backlog Nr. 46). Aufbau:
+Klartext. Die einteiligen Fassungen 2 und 3 wurden bis Web 22 noch
+**gelesen**; seit Web 23 lässt sich eine Sicherung unter Nutzlast 13 nicht
+mehr einspielen (4.40). Aufbau:
 `docs/Backup-Format.md`.
 
 **Versionierung & Zwischenspeicher:** `WEB_VERSION` steht ausschließlich in
@@ -2145,7 +2151,8 @@ Checkbox-Kindlogik in `einsatz_form.php` ohne Sonderfall (Kinder werden bei
 Haken = 0 auf NULL gesetzt).
 
 **Freitext statt Auswahl (ab Web 5.5.0, Block A4.2).** Die fünf Felder sind
-`'type' => 'text'` mit `suggest_src => 'crew:<rolle>'`: ein `<datalist>` mit
+`'type' => 'text'` mit `suggest_src => 'crew:<rolle>'`: eine Vorschlagsliste
+(seit Web 15.7.0 `EdVorschlaege`, 4.15; bis dahin ein `<datalist>`) mit
 den Vorbelegungen der Rolle aus `crew_presets` des Kontos, aber ohne
 Schranke. Fachlicher Grund: Wer
 aushilft, steht typischerweise **nicht** in den Stammdaten — genau der Anlass,
@@ -2212,7 +2219,7 @@ anders als bis Web 5.10.0, wo dann alle fünf Flugrollen erschienen: Mit zwei
 Arten gibt es keine sinnvolle Vorgabe mehr, und geraten wird nicht.
 
 Der **Unterschied zwischen Verstecken und Leeren** ist die wichtigste Regel
-dieses Bereichs und steht ausführlich in Abschnitt 4.98b: Ein durch `role_gate`,
+dieses Bereichs und steht ausführlich in Abschnitt 4.16: Ein durch `role_gate`,
 `kind_gate` oder `cap_gate` **gefiltertes** Feld behält seinen Inhalt und wird
 nur versteckt; ein durch `show_if` **ausgeschlossenes** Unterfeld wird geleert.
 
@@ -2235,7 +2242,7 @@ den Standort des Rettungsmittels zurück. `dt_vehicle_erlaubt()` und
 jede Kennung, welche **Namen** an einem fremden Standort hinterlegt sind.
 
 **Einsatzort-Höhe:** Seit Web 22 rechnet sie der Browser
-(`EdOrtsdaten.ortshoehe()`, 4.99s) — Referenzzeitpunkt Phase 5 „Ankunft
+(`EdOrtsdaten.ortshoehe()`, 4.40) — Referenzzeitpunkt Phase 5 „Ankunft
 PatientIn", Fallback Phase 6, Toleranz 300 s zum zeitlich nächstgelegenen
 Spurpunkt — und legt sie als `ortshoehe` in den `pat_blob`. Kein
 Formularfeld, daher nicht als Spalte im Feldkatalog. Bis Web 22.7.0 stand
@@ -2853,7 +2860,7 @@ und bekommt `edited=1` — er wird in der Einsatzansicht als „Uhr" +
 **Import fremder Einsatzlisten** (`import.php`, Web 2.8.0): Läuft bis auf den
 letzten Schritt vollständig im Browser — nicht aus Bequemlichkeit, sondern
 zwingend: Die Dateien enthalten Name, Geburtsdatum, Diagnose, Einsatzort,
-Notizen und die übrigen geschützten Angaben aus 4.98, und diese Angaben dürfen den Rechner nur verschlüsselt verlassen. Ein
+Notizen und die übrigen geschützten Angaben aus 4.14, und diese Angaben dürfen den Rechner nur verschlüsselt verlassen. Ein
 Datei-Upload ist damit ausgeschlossen. Kette:
 
 1. `assets/vendor/xlsx.full.min.js` (SheetJS 0.18.5, Apache-2.0, lokal
@@ -3054,7 +3061,7 @@ Pflichtangaben werden beim Rückimport **nach** der Parserkette geprüft: Das
 Füllzeichen `-` ist beim Einlesen nicht leer, wird aber zu `null` — die Prüfung
 vor der Kette sieht das nicht.
 
-**Hintergrundjobs:** siehe Abschnitt 4.97a.
+**Hintergrundjobs:** siehe Abschnitt 4.7.
 
 **JSON in einem `<script>`-Block läuft über `json_js()`** (`db.php`, seit
 Web 15.6.0, Backlog Nr. 135, K-15) — nicht über `json_encode()`. Der Baustein
@@ -3089,17 +3096,17 @@ die castet.
 
 **Sicherheit:** HTTPS erzwungen (.htaccess), Session-Cookies
 HttpOnly/Secure/SameSite=Strict, **seit Web 21.7.0 an ein zweites Cookie
-gebunden** (`EDBIND`, 4.99q „Die Sitzungsbindung"), CSRF für Formulare (`csrf_field`) — **seit
+gebunden** (`EDBIND`, 4.38 „Die Sitzungsbindung"), CSRF für Formulare (`csrf_field`) — **seit
 Web 15.6.0 auch am Anmeldeformular** (Backlog Nr. 127) — und für
 JSON-POSTs (Header `X-CSRF`), PDO Prepared Statements durchgängig,
 Passwörter/Schlüssel nur als Hash, Ratenschutz an **allen** ohne Anmeldung
 erreichbaren Endpunkten — Anmeldung, Salz-Abfrage, Zurücksetzen-Anforderung,
-Kopplung (s. 4.99 und 4.99b) —, Ingest mit Größen- (512 KB) und Wertevalidierung,
+Kopplung (s. 4.20 und 4.23) —, Ingest mit Größen- (512 KB) und Wertevalidierung,
 sensible Dateien und die Ordner `apk/` und `demo/` per .htaccess gesperrt
 (Nr. 129), Referrer-Policy
 `strict-origin-when-cross-origin` (OSM-Kacheln).
 
-### Die Antwortzeit als Auskunft
+### 4.1 Die Antwortzeit als Auskunft
 
 Vier Endpunkte antworten für „gibt es nicht" und „gibt es" absichtlich
 gleichlautend. Wortgleichheit allein genügt aber nicht: Wo der eine Zweig
@@ -3138,7 +3145,7 @@ nicht abzulesen.
 > Warteschlange mit einem Versand, der klappt. Klappt er nicht — und das ist
 > der einzige Fall, in dem es auf den Unterschied ankommt —, dann ist die
 > Nachricht ohne Warteschlange **weg**, und mit ihr liegt sie wenigstens da.
-> Seit Web 20.8.0 gibt es sie (Abschnitt 4.99); der Reset-Link wird weiterhin
+> Seit Web 20.8.0 gibt es sie (Abschnitt 4.2); der Reset-Link wird weiterhin
 > **sofort** versucht, die Warteschlange fängt nur den Fehlschlag auf.
 
 Der Preis des gewählten Weges bleibt: Auf Hosts ohne FPM oder LiteSpeed bleibt
@@ -3147,7 +3154,7 @@ des Versands belegt. Bei fünf Anforderungen je Stunde und Konto ist das klein,
 aber nicht null — das Zeitlimit steht seit Web 20.9.0 als `MAIL_BUDGET_S`
 (5 s) an **einer** Stelle statt an zehn.
 
-### 4.99 Der Mailweg — Katalog, Warteschlange, Job (P5a/AP5)
+### 4.2 Der Mailweg — Katalog, Warteschlange, Job (P5a/AP5)
 
 **Was bis Web 20.7.0 galt.** Zehn Stellen riefen `smtp_send()` unmittelbar.
 Scheiterte es, war die Nachricht weg — der Reset-Link, die Einladung, die
@@ -3251,7 +3258,7 @@ Personenbezug im Fehlerprotokoll, und sie widersprach der Zusage im Kopf von
 **Kennung** und den **Grund**; die Warteschlange schreibt dieselbe Kennung in
 ihre Fehlerspalte. Wer einem Fehlschlag nachgeht, findet über die Kennung
 beides zusammen — das Protokoll allein sagt nicht, wer gemeint war. Seit
-Web 20.40.0 steht die Meldung im Reiter System (4.99g), unter derselben
+Web 20.40.0 steht die Meldung im Reiter System (4.28), unter derselben
 Kennung.
 
 **Nachweis:** `tools/proben/mail/` gegen eine eigene SMTPS-Gegenstelle — 41
@@ -3260,7 +3267,7 @@ Prüfungen, 0 Befunde (Stand P5a; die Zahl von heute nennt der Prüfbericht);
 den Reiter System statt einer `error_log`-Datei und hält die Kennung des
 Eintrags gegen die Fehlerspalte der Warteschlange.
 
-### Was ein Gerät beim Koppeln über sich meldet — seit Web 12.9.0 gespeichert
+### 4.3 Was ein Gerät beim Koppeln über sich meldet — seit Web 12.9.0 gespeichert
 
 Das Gerät sendet den Block `geraet` mit `start` — der Anfrage, mit der es sich
 eine Kopplungssitzung holt; bis Web 12.9.4 lag er neben dem eingetippten Code.
@@ -3305,7 +3312,8 @@ keine Uhren**: 20 Edge, 8 Outdoor-Handgeräte.
 > „Uhr · Venu 3S". Verloren geht dabei nichts; genau dafür steht die Rohangabe
 > in einer eigenen Spalte, und der Job `nachaufloesen` trägt später nach —
 > von selbst, sobald eine gefüllte Tabelle da ist (seit Web 20.15.0;
-> `nachaufloesen.php` bleibt als Vorschau und Weg von Hand).
+> `tools/erzeugen/geraetemodelle-nachaufloesen.php` bleibt als Vorschau und
+> Weg von Hand).
 
 **Der Modellname ist ein Sammelname.** Die Gerätedateien führen je Teilenummer
 die **Hardware**, und Garmin verkauft dieselbe Hardware unter mehreren Namen —
@@ -3350,7 +3358,7 @@ anderes konnte nicht koppeln. Der Block ist auch heute freiwillig — eine
 Kopplung scheitert nie an einer Statistikangabe; wo er fehlt, bleibt es bei
 der Vorgabe.
 
-### Geräte je Konto
+### 4.4 Geräte je Konto
 
 Höchstens **fünf** (`MAX_GERAETE` in `db.php`), geprüft an **zwei** Stellen:
 beim Eingeben des Codes im Web und noch einmal beim Ja am Gerät (`pair.php`) —
@@ -3455,7 +3463,7 @@ nicht laden — `no-store` steht dort trotzdem.
 > die Registerzeile Z41 (`tools/zaehlung/`) hält `echo json_encode` unter
 > `api/` auf null. Es bleiben die drei Codezeilen darüber.
 
-### Der Eingang der Endpunkte (ab Web 20.28.0)
+### 4.5 Der Eingang der Endpunkte (ab Web 20.28.0)
 
 Einundzwanzig Dateien unter `server/api/` fingen mit derselben Handarbeit an.
 Seit Schritt 15 AP3 gibt es dafür zwei Funktionen in `db.php`, neben
@@ -3467,7 +3475,7 @@ Seit Schritt 15 AP3 gibt es dafür zwei Funktionen in `db.php`, neben
 | `api_rumpf($o = [])` | liest `php://input`, prüft „leer" und „ist ein JSON-Objekt", gibt das Feld zurück | **400** `leer` (mit dem einen `post_max_size`-Hinweis), **400** `format`, **413** `zu_gross` nur wenn `max_bytes` gesetzt ist |
 
 **Die Reihenfolge ist der Grund für zwei Funktionen und nicht eine.** In
-allen elf Dateien mit Rumpf steht dazwischen eine dritte Zeile:
+jeder Datei mit Rumpf steht dazwischen eine dritte Zeile:
 
 ```
 api_methode();   ->   csrf_check();   ->   $b = api_rumpf();
@@ -3567,7 +3575,7 @@ Aufruf zeigt nur an, was anstünde. Migrationen können Spalten löschen, und
 eine unwiderrufliche Handlung auf einen GET hin ist immer falsch — auch dann,
 wenn nur Verwaltende die Seite erreichen.
 
-### 4.97 Spurspeicherung: drei Stufen und ein Format (ab Web 10.0.0, S2)
+### 4.6 Spurspeicherung: drei Stufen und ein Format (ab Web 10.0.0, S2)
 
 **Spurpunkte sind 93 % des Bestands.** Gemessen am Referenzdatensatz kostet
 eine Zeile in `track_points` **62,4 Byte**; derselbe Punkt als Blob kostet
@@ -3582,7 +3590,7 @@ Deshalb liegen die Punkte seit S2 in drei Stufen:
 
 > **Seit Web 23 (S11-12) gibt es `track_points` und `track_blobs` nicht
 > mehr.** Seit Web 22.0.1 (S11-04a) schicken Uhr und Handy verschlossene
-> Stücke, und `ingest.php` legt sie in `track_stuecke` ab (SPUR2, 4.99s).
+> Stücke, und `ingest.php` legt sie in `track_stuecke` ab (SPUR2, 4.40).
 > Die drei Stufen bleiben als Begriff — `stufe` steht an jedem Stück —, aber
 > Zusammenfügen und Ausdünnen macht seit S11-07 der Browser, weil der Server
 > die Punkte nicht mehr sieht. Was dieser Abschnitt über Zeilen, Blob und
@@ -3872,7 +3880,7 @@ Spur sieht aus wie eine ganze; eine abgelehnte sieht man.
 
 ---
 
-### 4.97a Hintergrundjobs: drei Auslöser, ein Katalog (ab Web 10.1.0, S2)
+### 4.7 Hintergrundjobs: drei Auslöser, ein Katalog (ab Web 10.1.0, S2)
 
 Diese Anwendung hat bewusst **keinen Cron als Voraussetzung**: Sie soll auf
 einfachem Webspace laufen, und dort gibt es oft keinen. Der einzige Zeitgeber
@@ -3985,7 +3993,7 @@ das Protokoll las, konnte den Produktivserver in die Wartung schalten. Jetzt
 startet das Job-Token höchstens einen Job-Lauf — das, was der Zeitplan
 ohnehin tut —, und das Kettentoken, das Backup, Wartung, Zustand und Pause
 öffnet, kommt nur im Rumpf einer POST-Anfrage und steht in keinem Protokoll.
-In GitHub liegt es als `JOBS_TOKEN` der Umgebungen (6.5).
+In GitHub liegt es als `JOBS_TOKEN` der Umgebungen (12.7).
 
 **Der Übergang:** Fehlt das Kettentoken, übernimmt es beim ersten Lesen den
 Wert des Job-Tokens. Ein frisch erzeugtes kennte die Kette nicht: Sie
@@ -4013,7 +4021,7 @@ bis Web 22.2.0 auch `gpx.php`, das mit S11-05d entfallen ist. Wer die Zahlen
 in `RATE_GRENZEN` ändert, ändert beide — und eine Sperre, die hier greift,
 kann vom anderen stammen. Deshalb ruft seit Web 13.1.1 auch
 keiner von ihnen mehr `rate_erfolg('pair')`: Ein Erfolg im einen darf die
-Fehlversuche der anderen nicht löschen (4.99b, „Ein Topf, drei Verbraucher").
+Fehlversuche der anderen nicht löschen (4.23, „Ein Topf, drei Verbraucher").
 
 **Der Ratenschutz zählt je IP, und das hat eine Folge, die man kennen sollte:**
 Nach zehn Fehlversuchen von derselben Adresse antwortet der Endpunkt zehn
@@ -4043,22 +4051,22 @@ stehen, und der Job liefe nie wieder, stillschweigend. Nach
 
 | Job | täglich? | was er tut |
 |---|---|---|
-| `mail` | nein | Nachrichten, deren erster Versuch scheiterte — fünf Versuche über 24 Stunden, danach steht die Nachricht als unzustellbar auf der Statusseite (4.99). Steht **ganz vorn** im Katalog: `jobs_lauf()` arbeitet ihn der Reihe nach ab, und am Huckepack-Weg sind 3 s für alle Jobs zusammen — ein Job dahinter bekäme dort regelmäßig nichts |
+| `mail` | nein | Nachrichten, deren erster Versuch scheiterte — fünf Versuche über 24 Stunden, danach steht die Nachricht als unzustellbar auf der Statusseite (4.2). Steht **ganz vorn** im Katalog: `jobs_lauf()` arbeitet ihn der Reihe nach ab, und am Huckepack-Weg sind 3 s für alle Jobs zusammen — ein Job dahinter bekäme dort regelmäßig nichts |
 | `konto_loeschung` | nein | Konten, deren 30-Tage-Karenz abgelaufen ist, endgültig löschen (P5b/AP5, E-P5b-16) — **höchstens fünf je Lauf**, weil eine Löschung die Spuren von Hand räumt, einen Ordner im Dateisystem löscht und über jede Tabelle des Kontos kaskadiert. Steht weit vorn: im Regelfall eine Abfrage über einen Index, und wenn er etwas zu tun hat, ist es das, worauf jemand ein Recht hat |
-| `aufraeumen` | ja, höchstens 1×/Kalendertag | **achtzehn Schritte** — Kopplungssitzungen, **Sitzungsdateien** (Schritt 16, E-SA-06 — der einzige Schritt, der das Dateisystem anfasst; er räumt `server/.sitzungen/` und nur `sess_*`), **Gemerkte Geräte** (Schritt 18, SR-02 — abgelaufene Zeilen aus `vertraute_geraete`, je Rolle mit der Dauer ihrer Gruppe), Sperrliste gelöschter Kennungen, Ratenschutz-Zähler, Sperrereignisse, **Gerätevermerke** (P5a/AP8), CSP-Berichte, Mail-Warteschlange, **Betriebsprotokoll** (P5b/AP1 — als einziger Schritt mit ZWEI Fristen, siehe 4.99g), Mengen je Konto, Verwaiste Kontomarken (P5b/AP6), Job-Verlauf, Papierkorb, Passwort-Tokens, Erinnerung an die Verwaltung, Speicher messen, Warnschwellen melden. **Maßgeblich ist `job_aufraeumen_schritte()`, nicht diese Zeile** — und seit Web 20.26.0 wird das nachgezählt statt zugesagt (`tools/quelltext/` `jobregister`, Stufe 1). Die Namen hier sind deshalb die Schlüssel aus dem Code, Zeichen für Zeichen |
+| `aufraeumen` | ja, höchstens 1×/Kalendertag | **achtzehn Schritte** — Kopplungssitzungen, **Sitzungsdateien** (Schritt 16, E-SA-06 — der einzige Schritt, der das Dateisystem anfasst; er räumt `server/.sitzungen/` und nur `sess_*`), **Gemerkte Geräte** (Schritt 18, SR-02 — abgelaufene Zeilen aus `vertraute_geraete`, je Rolle mit der Dauer ihrer Gruppe), Sperrliste gelöschter Kennungen, Ratenschutz-Zähler, Sperrereignisse, **Gerätevermerke** (P5a/AP8), CSP-Berichte, Mail-Warteschlange, **Betriebsprotokoll** (P5b/AP1 — als einziger Schritt mit ZWEI Fristen, siehe 4.28), Mengen je Konto, Verwaiste Kontomarken (P5b/AP6), Job-Verlauf, Papierkorb, Passwort-Tokens, Erinnerung an die Verwaltung, Speicher messen, Warnschwellen melden. **Maßgeblich ist `job_aufraeumen_schritte()`, nicht diese Zeile** — und seit Web 20.26.0 wird das nachgezählt statt zugesagt (`tools/quelltext/` `jobregister`, Stufe 1). Die Namen hier sind deshalb die Schlüssel aus dem Code, Zeichen für Zeichen |
 | `konto_verfall` | nein | Registrierungen, die nicht bestätigt wurden, und Freischaltfristen, die abgelaufen sind (P5b) — **höchstens fünf je Lauf**, aus demselben Grund wie beim Löschjob darüber |
 | `adminbackup` | nein, nur mit Auftrag | Konto-Backups aus der Sammelaktion „Alle sichern" |
-| `protokoll_archiv` | nein, im Regelfall eine Abfrage auf die Marke | Die Einträge eines abgelaufenen Zeitraums (Vorgabe 7 Tage) versiegelt als ZIP nach `sicherungen/protokoll/`, in Häppchen zu 500 Zeilen; Archive nach Ablauf der Aufbewahrung (Vorgabe 365 Tage) löschen (P5c/AP2, 4.99g). Steht **vor** `versand`, damit ein fertiges Archiv im selben Lauf hinausgeht |
-| `schluesselwechsel` | nein, nur während eines Wechsels des Serverschlüssels | Was noch unter dem bisherigen Serverschlüssel liegt, mit dem neuen umhüllen und danach mit ihm nachweisen — Zugänge der Backup-Ziele, Zweitfaktor-Geheimnisse, Konto-Backups samt Begleitdatei, Archive des Protokolls (Schritt 18, SR-03, 4.97c). Ohne Wechsel eine Abfrage und `fertig`. Steht **vor** `versand`, damit ein umbenanntes Archiv im selben Lauf hinausgeht |
-| `versand` | nein | Pakete auf die aktiven Backup-Ziele — und seit Web 20.14.0 die **Aufbewahrung dort** (4.97c); seit Web 20.39.0 auch die Archive des Protokolls, **ohne** Aufbewahrungsregel dort |
-| `komplett` | nein, nach Plan | Komplett-Backup der Installation (4.97d) |
+| `protokoll_archiv` | nein, im Regelfall eine Abfrage auf die Marke | Die Einträge eines abgelaufenen Zeitraums (Vorgabe 7 Tage) versiegelt als ZIP nach `sicherungen/protokoll/`, in Häppchen zu 500 Zeilen; Archive nach Ablauf der Aufbewahrung (Vorgabe 365 Tage) löschen (P5c/AP2, 4.28). Steht **vor** `versand`, damit ein fertiges Archiv im selben Lauf hinausgeht |
+| `schluesselwechsel` | nein, nur während eines Wechsels des Serverschlüssels | Was noch unter dem bisherigen Serverschlüssel liegt, mit dem neuen umhüllen und danach mit ihm nachweisen — Zugänge der Backup-Ziele, Zweitfaktor-Geheimnisse, Konto-Backups samt Begleitdatei, Archive des Protokolls (Schritt 18, SR-03, 4.9). Ohne Wechsel eine Abfrage und `fertig`. Steht **vor** `versand`, damit ein umbenanntes Archiv im selben Lauf hinausgeht |
+| `versand` | nein | Pakete auf die aktiven Backup-Ziele — und seit Web 20.14.0 die **Aufbewahrung dort** (4.9); seit Web 20.39.0 auch die Archive des Protokolls, **ohne** Aufbewahrungsregel dort |
+| `komplett` | nein, nach Plan | Komplett-Backup der Installation (4.10) |
 | `nachaufloesen` | nein, nur nach einer neuen Modelltabelle | Teilenummern bestehender Geräte erneut auflösen, in Blöcken von 200 (P5a/AP11, unten) |
 | `waisen` | nein, läuft solange Rückstand da ist | Spurstücke ohne Eigentümer (bis Web 22.7.0 auch Zeilen und Blobs) — **bereichsweise** über den Primärschlüssel |
 
 **`verdichtung` und `ausduennen` gibt es seit Web 22.6.0 nicht mehr** (S11-07,
 E-S11-05). Sie standen hier von Web 10.2.0 bis 22.5.x und packten bzw.
 dünnten die Spuren auf dem Server. Seit S11 sieht der Server keine Koordinate
-mehr; das tut jetzt der **Wartungslauf im Browser** (4.99s, „Der Wartungslauf im Browser"). Den Altbestand im
+mehr; das tut jetzt der **Wartungslauf im Browser** (4.40, „Der Wartungslauf im Browser"). Den Altbestand im
 Klartext (`track_points`, `track_blobs`) fasste bis zum Einmalwerkzeug (S11-10)
 niemand mehr an (E-S11-70); seit Web 23 gibt es ihn nicht mehr (S11-12).
 
@@ -4087,7 +4095,7 @@ Jeder Aufräumschritt hat weiterhin seinen eigenen Fehlerblock: Einer, der
 scheitert, hält die anderen nicht auf (das war schon seit Web 4.5.1 so und
 bleibt). Der Unterschied ist, dass das Ergebnis jetzt in `jobs` landet und
 nicht nur in einem Protokoll — bis Web 20.39.0 dem des Webspace, seither dem
-Reiter System (4.99g).
+Reiter System (4.28).
 
 **Die Reihenfolge ist Absicht.** `jobs_lauf()` arbeitet den Katalog der Reihe
 nach ab und überspringt, was ins Restbudget nicht mehr passt. `waisen` ist ein
@@ -4131,7 +4139,7 @@ ausgelieferte Tabelle; am Regelfall ändert der Parameter nichts.
 
 Ausgetragen mit S11-07 (Web 22.6.0): Die beiden Jobs `verdichtung` und
 `ausduennen` lasen Klartextpunkte, und die gibt es für neue Aufzeichnungen
-nicht mehr. Ihre Nachfolge ist der Wartungslauf im Browser (4.99s, „Der Wartungslauf im Browser"). Was hier
+nicht mehr. Ihre Nachfolge ist der Wartungslauf im Browser (4.40, „Der Wartungslauf im Browser"). Was hier
 stand — Einstieg über die Punktseite, Häppchengrößen, Karenz, gemessene
 Laufzeiten am Messstand —, steht in der Git-Historie dieser Datei (bis
 `0db03e9`). Die Ausdünnung selbst (Stufe 3, oben) gilt unverändert; sie läuft
@@ -4230,7 +4238,7 @@ entfallen; ihre Auskunft steht vollständiger in `jobs`.
 
 ---
 
-### 4.97b GPX-Abruf je Spur und je Auswahl (ab Web 10.3.0, S2/AP4, E-S2-09; im Browser seit Web 22.3.0, S11-05d)
+### 4.8 GPX-Abruf je Spur und je Auswahl (ab Web 10.3.0, S2/AP4, E-S2-09; im Browser seit Web 22.3.0, S11-05d)
 
 Eine Spur lässt sich einzeln herunterladen — je Einsatz aus dessen
 Aktionsmenü, und je Einsatz **und Ruhesegment** über `tag_spuren.php`; auf
@@ -4248,7 +4256,7 @@ ist die einzige Stelle, die GPX für eine Spur schreibt — der große Export
 **Bis Web 22.2.0 baute der Server** (`gpx.php` mit `gpx_lib.php`), mit den
 Adressen `gpx.php?art=mission&id=42` und `gpx.php?tag=7&auswahl[]=…`. Die
 Begründung damals: Die Spur lag im Klartext, und nur der Server kannte die
-Stufe. Seit S11-04 liegt die Spur verschlossen (`track_stuecke`, 4.97), und
+Stufe. Seit S11-04 liegt die Spur verschlossen (`track_stuecke`, 4.6), und
 nur der Browser kann sie öffnen — `gpx.php` lieferte für eine verschlossene
 Spur nichts mehr (F-S11-54). Die Stufe steht seither an jedem Stück
 (`stufe`, `n_original`) und kommt mit den Stücken an den Browser. Beide Gründe
@@ -4267,7 +4275,7 @@ ist kein `xsd:decimal`; `EdGpx` schreibt `0.0000001` (F-S11-55).
   prüfen das Eigentum.
 - **Der Ratenschutz im Topf `pair`.** Er bremste das Abtasten fremder
   Kennungen über `gpx.php`; es gibt keinen Abruf mehr, den man abtasten
-  könnte. Der Topf hat seither zwei Verbraucher (4.99b).
+  könnte. Der Topf hat seither zwei Verbraucher (4.23).
 - **`GPX_AUSWAHL_MAX` = 100.** Die Grenze schützte den Arbeitsspeicher des
   Servers (Z3). Im Browser ist die Auswahl durch die Seite begrenzt — die
   Spuren **eines** Diensttags.
@@ -4329,7 +4337,7 @@ einem Archiv. Bis Web 22.2.0 ging er zusätzlich durch eine HTTP-Kopfzeile.
 waren sie eine schwarze Linie, ohne Zeile, ohne Popup; `api/day.php` lieferte
 nicht einmal ihre Kennung. *(Seit Web 12.6.0 gilt das nur noch für die Karte
 selbst: Die Tagesansicht führt sie als eigene Karte „Ruhesegmente" — dort wird
-geschnitten, siehe 4.97e.)* Ein Knopf je Ruhesegment hätte nirgendwo hingekonnt
+geschnitten, siehe 4.11.)* Ein Knopf je Ruhesegment hätte nirgendwo hingekonnt
 — die Abnahme verlangt den Abruf aber „je Einsatz **und** je Ruhesegment".
 
 `tag_spuren.php` gibt beiden dieselbe Identität: die Karte des Tages, darunter
@@ -4398,7 +4406,7 @@ dazwischen, nicht zwei verschiedene Fahrten.
 
 ---
 
-### 4.97c Backup-Ziele: das Backup verlässt das Haus (ab Web 12.1.0, S2/AP7, E-S2-22)
+### 4.9 Backup-Ziele: das Backup verlässt das Haus (ab Web 12.1.0, S2/AP7, E-S2-22)
 
 Bis Web 12.0.0 entstanden die Konto-Backups unter `server/sicherungen/`
 und blieben dort. Das ist die Rückfallebene für einen gelöschten Einsatz —
@@ -4635,7 +4643,7 @@ dem Nachtragen geht es weiter, ohne zweiten Beginn (F-SR-85). Jedes
 Häppchen liest `config.php` zuerst neu: Ein CLI-Lauf, der vor dem Wechsel
 begann, hielt sonst die Lage `bereit` und leerte den Zustand (F-SR-79).
 
-**Der Job `schluesselwechsel`** (4.97a) nimmt die Zwecke in der Reihenfolge
+**Der Job `schluesselwechsel`** (4.7) nimmt die Zwecke in der Reihenfolge
 `ziele`, `totp`, `konten`, `archive` — erst die Zeilen, dann die Dateien.
 **Der Zustand ist ein Zeiger** (E-SR-64): Phase, Zweck, das letzte Stück
 (lexikalisch; Zeilennummern auf zehn Stellen aufgefüllt, sonst stünde „10"
@@ -4748,7 +4756,7 @@ zwanzig, ohne Kontokennung.
 **Abschluss: `serverschluessel_alt_entfernen()`** verlangt drei Dinge
 (`sw_bedingungen()`, E-SR-09) — alles nachgewiesen, ein Komplett-Stand unter
 dem neuen, jünger als der Beginn (am Kopf **und** am ersten Block geprüft,
-4.97d), und die Rückfrage zum Blatt seit dem Beginn beantwortet. Fehlt eines,
+4.10), und die Rückfrage zum Blatt seit dem Beginn beantwortet. Fehlt eines,
 kommen die fehlenden als Sätze zurück, und nichts ändert sich. Danach
 Protokoll `serverschluessel_alt_entfernt` und die zweite Mail — seit Web
 21.12.1 unter eigenem Schlüssel (`serverschluessel_abgeschlossen`), damit sie
@@ -4786,7 +4794,7 @@ reinem PHP über eine Sekunde kostet; am Huckepack-Weg (3 s) fängt der Job
 deshalb gar nicht erst an.
 
 Der Schalter sagt **ob**, nicht **wann**. Wann etwas läuft, entscheidet der
-eingerichtete Auslöser (Abschnitt 4.97a). Eine zweite Uhr in der Datenbank
+eingerichtete Auslöser (Abschnitt 4.7). Eine zweite Uhr in der Datenbank
 wäre eine zweite Wahrheit.
 
 #### „Verbindung prüfen" prüft mehr als die Anmeldung
@@ -4886,7 +4894,7 @@ angefasst — die sichere Richtung.
 
 ---
 
-### 4.97d Komplett-Backup der Installation (ab Web 12.2.0, S2/AP8, E-S2-19 bis E-S2-21)
+### 4.10 Komplett-Backup der Installation (ab Web 12.2.0, S2/AP8, E-S2-19 bis E-S2-21)
 
 Das Konto-Backup (Abschnitt „Konto-Backups") sichert ein **Konto**.
 Diese hier sichert die **Installation**: alle Konten, Stammdaten, Geräte,
@@ -4902,12 +4910,12 @@ Alles darin steht in `server/komplett_lib.php`; die Oberfläche ist
 `config.php`. Sie trägt das Datenbankpasswort und den Serverschlüssel — also
 genau das, womit sich diese Datei öffnen lässt. Beides in dieselbe Datei zu
 legen hiesse, das Schloss an den Schlüssel zu binden. Sie gehört ins
-Wiederanlaufpaket (Abschnitt 7).
+Wiederanlaufpaket (Abschnitt 13).
 
 Ebenfalls nicht drin: die Dateiablage unter `sicherungen/`. Die Kontopakete
 sichern nichts, was nicht ohnehin in der Datenbank steht, und würden die Datei
 vervielfachen. Dasselbe gilt für die Archive des Protokolls
-(`sicherungen/protokoll/`, 4.99g).
+(`sicherungen/protokoll/`, 4.28).
 
 **Zwei Tabellen mit Schema, aber ohne Zeilen** (ab Web 20.39.0, P5c/AP2,
 E-P5c-57, F-P5c-20): `sicherheit_ereignisse` und `rate_limits`
@@ -4928,7 +4936,7 @@ laufende Sperre ist aufgehoben.
 **Ein Komplett-Stand schreibt einen Eintrag im Reiter Sicherung** des
 Protokolls (`komplett_erzeugt`, mit Größe, Zeilen, Tabellen und den
 verdrängten Ständen in `daten`), ebenso Herunterladen, Einspielen und
-Löschen (4.99g). Es gibt keine Tabelle, die festhält, wann ein Stand
+Löschen (4.28). Es gibt keine Tabelle, die festhält, wann ein Stand
 entstand — der Dateiname sagt es, bis die Aufbewahrung ihn verdrängt.
 
 #### Warum ein eigener Dump und nicht `mysqldump`
@@ -5035,7 +5043,7 @@ Bindung in den Zusatzdaten jedes Blocks — wer sie ändert, macht die Datei
 unlesbar, statt sie einem anderen Schlüssel zuzuschreiben. **Welcher
 Schlüssel welchen Stand öffnet** (`komp_serverschluessel_fuer()`): erst der
 heutige, dann der bisherige (`server_key_alt`, nur während eines Wechsels,
-4.97c), jeweils am ersten Block versucht; die Kennung allein wäre eine
+4.9), jeweils am ersten Block versucht; die Kennung allein wäre eine
 Behauptung. Die Liste zeigt „bisheriger Schlüssel" (blau) oder „anderer
 Schlüssel" (orange); Herunterladen, versiegelt Herunterladen und Einspielen
 (`komp_schluessel_fuer()` mit dem Pfad) nehmen denselben Weg. Ein Stand
@@ -5080,7 +5088,7 @@ neuen Kennung über Blöcken unter dem alten wäre ein Kopf, der lügt.
   Sie wird nicht doppelt verschlüsselt, sondern Block für Block *umgesiegelt*;
   der Speicherbedarf bleibt bei einem halben Megabyte, gleich wie gross die
   Datei ist. **Eine PBKDF2 je Vorgang** (Z3), nicht eine je Block.
-- Was **von selbst** hinausgeht — der Versand aufs Backup-Ziel (4.97c) —
+- Was **von selbst** hinausgeht — der Versand aufs Backup-Ziel (4.9) —
   ist immer die versiegelte Fassung.
 - **Beide Downloads verlangen seit Web 23.2.0 einen frischen Code**
   (`komplett_herunterladen` in `ZF_FRISCH_HANDLUNGEN`, F-R17-08, E-R17-48).
@@ -5149,7 +5157,7 @@ Der Fortsetzungszustand steht in `jobs.zustand` und wird vom Job-Rahmen erst
 
 #### Der Job steht nach dem Versand
 
-Im Katalog (4.97a) kommt `komplett` **nach** `versand`. Davor wäre er am
+Im Katalog (4.7) kommt `komplett` **nach** `versand`. Davor wäre er am
 rechten Platz — was entsteht, ginge im selben Lauf hinaus —, nur bekäme jeder
 Job hinter ihm nur noch, was die schwerste Arbeit der Anwendung übrig lässt.
 Ein Versand, der wochenlang nicht drankommt, wäre der teurere Fehler. Der
@@ -5186,7 +5194,7 @@ nutzten das aus, ohne es zu wollen:
   Jetzt steht dort eine **Fehlerkennung** (`fehler_kennung()`), unter der der
   volle Text im Fehlerprotokoll des Webspace liegt; die Seite sagt das auch.
   Dort und nicht im Reiter System, auch seit Web 20.40.0: Die Datenbank, in
-  der das Protokoll liegt, ist ja die, die nicht antwortet (Rückfall, 4.99g).
+  der das Protokoll liegt, ist ja die, die nicht antwortet (Rückfall, 4.28).
 - Die Karte „Diese Installation ist in Betrieb" nannte die **Kontenzahl**,
   fett. Gemessen: `2`. Für ihre Aussage — hier passiert nichts mehr — braucht
   sie die Zahl nicht; sie ist jetzt fort.
@@ -5236,7 +5244,7 @@ an erster Stelle ihrer `LIESMICH.md`.
 
 ---
 
-### 4.97e Schneiden: ein Zeitbereich wandert (ab Web 12.5.0, S4/A2, E-S4-53)
+### 4.11 Schneiden: ein Zeitbereich wandert (ab Web 12.5.0, S4/A2, E-S4-53)
 
 Wer einen vergessenen Einsatz nachträgt, hat sein Problem mit dem Formular
 nicht gelöst: Die **Spur** des Einsatzes liegt im Ruhesegment, in dem das
@@ -5245,7 +5253,7 @@ heraus.
 
 > **Seit Web 22.2.0 (S11-05c, E-S11-47, -48) schneidet der Browser, und das
 > Segment bleibt.** Der Server sieht die Punkte eines Segments nicht mehr
-> (`track_stuecke`, 4.99s); seit S11-04 fand `spur_teilen()` dort keine und
+> (`track_stuecke`, 4.40); seit S11-04 fand `spur_teilen()` dort keine und
 > antwortete „kein einziger Punkt" (F-S11-50). Jetzt öffnet `schneiden.js`
 > das Segment ohne seine Sperrzeiten, nimmt die Punkte in [von, bis] — den
 > Zeitraum rechnet es wie `pruef_ortszeit_zu_utc()` über
@@ -5318,7 +5326,7 @@ Das Gerät weiß vom Schnitt nichts. Hatte es die Punkte des geschnittenen
 Zeitraums noch im Puffer — ein Funkloch reicht —, liefert es sie nach.
 
 Die naheliegende Abwehr ist `n_original`: `spur_lesen_viele()` überging bis
-Web 22.7.0 jede Zeile mit `seq < n_original` (Abschnitt 4.97), der Schnitt müsste die Grenze
+Web 22.7.0 jede Zeile mit `seq < n_original` (Abschnitt 4.6), der Schnitt müsste die Grenze
 also nur hochsetzen. **Das trägt nicht.** `ingest.php` vergibt die
 Sequenznummern aus `seq_from` — der Marke, die das Gerät zuletzt bekommen
 hat. Gepufferte Punkte kommen deshalb **oberhalb** der Grenze an und laufen
@@ -5405,7 +5413,7 @@ später noch anfasst. Alles läuft in **einer** Transaktion; die Stücke legt
 ihr an).
 
 **Was der Endpunkt nicht tut:** Einsatzfelder füllen. Einsatzort, Alter,
-Diagnose und die übrigen Angaben aus 4.98 sind Ende-zu-Ende-verschlüsselt und entstehen im Browser; ein
+Diagnose und die übrigen Angaben aus 4.14 sind Ende-zu-Ende-verschlüsselt und entstehen im Browser; ein
 Endpunkt, der sie annähme, bräuchte Klartext.
 
 **Ein Schnitt ohne Punkte wird abgelehnt** (409). Er entstünde beim zweiten
@@ -5448,9 +5456,9 @@ Die Bedienung ist im Browser abgenommen (Chromium, lokale Installation):
 Rückgängig wieder 61 und 3. Bei 390 px: waagerechter Überlauf 0, alle
 Bedienelemente 44 px.
 
-### 4.97f GPX herein: der Weg zurück (ab Web 12.7.0, S4/A3, E-S4-18; im Browser seit Web 22.3.0, S11-05d)
+### 4.12 GPX herein: der Weg zurück (ab Web 12.7.0, S4/A3, E-S4-18; im Browser seit Web 22.3.0, S11-05d)
 
-Das Gegenstück zum Abruf (4.97b). Eine Aufzeichnung, die auf einem anderen
+Das Gegenstück zum Abruf (4.8). Eine Aufzeichnung, die auf einem anderen
 Gerät entstanden ist, kommt damit in die Anwendung: über **„···" → „GPX
 importieren"** in der Tagesansicht, als Dialog (`Design.md` 9.11).
 
@@ -5458,14 +5466,14 @@ importieren"** in der Tagesansicht, als Dialog (`Design.md` 9.11).
 
 | Ziel | wird | wofür |
 |---|---|---|
-| `ruhe` | ein **Ruhesegment** | Die Datei ist die Aufzeichnung eines ganzen Dienstes; die Einsätze schneidet man danach heraus (4.97e). Der Regelfall. |
+| `ruhe` | ein **Ruhesegment** | Die Datei ist die Aufzeichnung eines ganzen Dienstes; die Einsätze schneidet man danach heraus (4.11). Der Regelfall. |
 | `einsatz` | ein **Einsatz** | Die Datei *ist* genau ein Einsatz; die Phasenzeiten trägt man danach im Formular nach. |
 
 Beide entstehen auf dem Bestandsweg: virtuelles Gerät `manual-<userId>`,
 `client_ref` mit Präfix **`imp-`** wie beim CSV-Import (daran hängt die
 Sperrliste `deleted_refs`), beim Einsatz zusätzlich `origin = 'import'` und
 `uhr_gesperrt = 1`. Die Spur kommt seit Web 22.3.0 als **verschlossene
-Stücke** (SPUR2, 4.97; bis dahin als SPUR1-Blob im Klartext): Der Browser
+Stücke** (SPUR2, 4.6; bis dahin als SPUR1-Blob im Klartext): Der Browser
 liest die Datei, zieht die Kennung (`imp-` + 24 Hexzeichen) und verschließt
 die Punkte unter dem öffentlichen Kontoschlüssel, gebunden an diese Kennung
 (`EdOrtsdaten.stueckeBauen`). Der Server prüft Form der Kennung, Form der
@@ -5587,7 +5595,7 @@ um die es geht, heißen in beiden Fassungen gleich und bedeuten dasselbe. Auf
 Mehrere `<trkseg>` oder `<trk>` werden zu **einer** Spur zusammengeführt und
 **nach Zeit sortiert**, die Sequenz danach neu vergeben — ein Stück speichert
 Abstände zu seinem `ts_von` und verlässt sich auf eine aufsteigende Folge
-(4.97), und die Dateireihenfolge muss nicht die zeitliche sein.
+(4.6), und die Dateireihenfolge muss nicht die zeitliche sein.
 
 Einzelne unbrauchbare Punkte fallen heraus, ohne die Datei zu verwerfen; ihre
 Zahl nennt die Rückmeldung an die BedienerIn (seit Web 22.3.0 aus dem Lesen
@@ -5620,7 +5628,7 @@ S11-05d belegt `tools/proben/gpx/probe.mjs` Lesen, Bauen und Import im
 Browser — Teil 2 liest jede GPX-Datei des Referenzexports und baut sie neu,
 Teil 4 importiert über den Dialog und öffnet die Stücke wieder.*
 
-### 4.97g Die Android-App verteilen (ab Web 12.8.0, S4/A1, E-S4-16)
+### 4.13 Die Android-App verteilen (ab Web 12.8.0, S4/A1, E-S4-16)
 
 Die App wird über die Anwendung selbst verteilt, nicht über einen App-Store.
 Die Karte **„NAdoku für Android"** auf dem Geräte-Reiter zeigt, was in
@@ -5794,7 +5802,7 @@ die Aktion ihre Zustandsdatei nicht finden; sie hält den Server für leer und
 
 Erlaubt der Käfig des FTP-Zugangs kein `../`, zeigt man mit derselben
 Variablen wieder nach innen — die `.htaccess` fängt die Datei dort ab
-(Prüfzeile `/.deploy-state-staging.json` → 403 in der Tabelle unter 6.3).
+(Prüfzeile `/.deploy-state-staging.json` → 403 in der Tabelle unter 12.4).
 Der Rückbau ist deshalb eine Eintragung und kein Notfall.
 
 **Warum das messbar ist und ein 404 nichts beweist.** `RewriteRule [F]`
@@ -5811,7 +5819,7 @@ nichts. **Seit R17-19 misst es auch Produktiv** (F-R17-18): Teil 3 der
 Integritätswache, täglich und nach jeder Auslieferung; Stufe 2 ruft dieselbe
 Stelle gegen Staging (`wache.py --teil punktpfade`). Bis dahin stand die
 Prüfung als Bash nur in Stufe 2 — und Staging liegt bei einem anderen Hoster
-(6.3a), belegte also nie, dass Produktiv `.htaccess` überhaupt liest.
+(12.5), belegte also nie, dass Produktiv `.htaccess` überhaupt liest.
 
 **Und seit Web 23.1.0 sperrt `FilesMatch` jede Datei, die mit `config.php`
 beginnt** (`(?i:#?config\.php.*|…)`, F-R17-55) — ohne Rücksicht auf
@@ -5858,12 +5866,15 @@ eines leeren 404.
 durchgespielt — ein Trockenlauf bräuchte FTP-Zugangsdaten. Und es gab kein
 echtes APK.
 
-### 4.98 Was im verschlüsselten Block liegt — und was nicht
+### 4.14 Was im verschlüsselten Block liegt — und was nicht
 
 > **Gegen wen das hält und gegen wen nicht, sagt `docs/Bedrohungsmodell.md`**
 > (seit Schritt 12): Schutzziele in 1, die Angreiferlagen in 2, die Zusage mit
-> ihrer Grenze in 3 (G1 bis G3), die vollständige Klartextliste über
-> `Review-R17.md` 3.2, I-07. Dieser Abschnitt bleibt die Liste der Blobfelder.
+> ihrer Grenze in 3 (G1 bis G3). Dieser Abschnitt ist die Liste der
+> Blobfelder **und** der Klartextfelder; `CLAUDE.md` 4 verweist hierher, statt
+> sie zu wiederholen (F-R17-25). *(Bis R17-27 stand hier ein Verweis auf die
+> Klartextliste im Konzept `Review-R17.md`, I-07 — ein Arbeitsdokument, das
+> mit dem Abschluss von 12b gelöscht wird.)*
 
 Der Server kann `missions.pat_blob` nicht lesen. Genau deshalb muss an einer
 Stelle stehen, **welche Felder darin liegen**: Wer das nicht weiß, kann weder
@@ -5872,7 +5883,7 @@ Datenbank-Abzug preisgibt — und niemand kann prüfen, ob ein neues Feld
 versehentlich im Klartext gelandet ist.
 
 > **Seit Web 22.0.1 gibt es eine zweite verschlüsselte Ablage neben dem
-> Block:** die **Gerätehülle** (4.99s). Spurstücke (`track_stuecke.huelle`)
+> Block:** die **Gerätehülle** (4.40). Spurstücke (`track_stuecke.huelle`)
 > und die Einsatzhülle (`missions.ort_huelle` — Koordinaten der Phasen,
 > Reanimation) verschließen Uhr und Handy mit dem öffentlichen Kontoschlüssel,
 > weil sie den Inhaltsschlüssel nicht haben (E-S11-12). Sie gehören nicht in
@@ -5892,10 +5903,10 @@ Browser), erzeugt in `einsatz_form.php`:
 | `loc.addr` | Adresse des Einsatzorts |
 | `loc.lat`, `loc.lon` | Koordinaten des Einsatzorts |
 | `site_desc` | Beschreibung des Einsatzorts (Zufahrt, Landestelle) |
-| `start.addr`, `start.lat`, `start.lon` | **Manueller Abfahrtort** (seit Web 6.2.0) — nur bei der Regel „Manueller Ort"; die Regel selbst (`missions.start_src`) ist Klartext. Bis zum 25.09.2026 fehlte die Zeile hier und in `CLAUDE.md` 4, obwohl 4.98a ihn als Blob-Schlüssel führt (Konzept BV, F-BV-13) |
+| `start.addr`, `start.lat`, `start.lon` | **Manueller Abfahrtort** (seit Web 6.2.0) — nur bei der Regel „Manueller Ort"; die Regel selbst (`missions.start_src`) ist Klartext. Bis zum 25.09.2026 fehlte die Zeile hier und in `CLAUDE.md` 4, obwohl 4.15 ihn als Blob-Schlüssel führt (Konzept BV, F-BV-13) |
 | `notes` | **Notizen des Einsatzes** (seit Web 19.0.0, S9/AP7). Bis dahin die Klartextspalte `missions.notes`; sie bleibt `NULL`-fähig stehen, bis P8 sie entfernt (R60), und trägt nur noch Altbestand, den die Anhebung nicht erreicht hat |
 | `transport_dest.addr`, `.lat`, `.lon` | **Transportziel** samt Koordinate (seit Web 22.1.0, S11-05b) — das erste Ortsfeld des Katalogs im Block, `'store' => 'pat'` in `mission_fields.php`, `{addr, lat, lon}` wie `loc`. Bis dahin die Spalten `missions.transport_dest`, `dest_lat`, `dest_lon`, mit Web 23 gefallen. Bis Web 23.0.3 fehlte die Zeile hier (F-R17-60) |
-| `ortshoehe` | **Höhe des Einsatzorts** in ganzen Metern (seit Web 22.1.0) — kein Katalogfeld, sondern im Browser gerechnet (`EdOrtsdaten.ortshoehe()`, beim Speichern und im Wartungslauf, 4.99s). Bis dahin `missions.site_ele_m`, mit Web 23 gefallen |
+| `ortshoehe` | **Höhe des Einsatzorts** in ganzen Metern (seit Web 22.1.0) — kein Katalogfeld, sondern im Browser gerechnet (`EdOrtsdaten.ortshoehe()`, beim Speichern und im Wartungslauf, 4.40). Bis dahin `missions.site_ele_m`, mit Web 23 gefallen |
 
 Fehlende Schlüssel bedeuten „keine Angabe"; ein leerer Block wird als
 `__CLEAR__` übertragen und löscht den vorhandenen.
@@ -5918,10 +5929,10 @@ Einsatzansicht erst seit dieser Fassung eine beschriftete Zeile.
 > schöpfen. Ein weiteres solches Feld (S11: Zielklinik) braucht nur den
 > Katalogeintrag. *(Seit Web 22.1.0 ist es da: `transport_dest`, als erstes
 > Ortsfeld im Blob — `{addr, lat, lon}` wie `loc`; dazu `ortshoehe`, gerechnet
-> und ohne Katalogeintrag, 4.99s.)*
+> und ohne Katalogeintrag, 4.40.)*
 >
 > **Der Altbestand zieht beim Entsperren um** — `api/pat_anheben.php`, siehe
-> Abschnitt 4.98d. Ein Konto, das sich nie entsperrt, behält seinen Klartext
+> Abschnitt 4.18. Ein Konto, das sich nie entsperrt, behält seinen Klartext
 > in der Spalte; das ist derselbe Zustand wie vor Web 19, nicht schlechter.
 
 > **`site_desc` ist ein aktives Feld, kein Altbestand.** Es sieht wie ein Rest
@@ -5933,9 +5944,17 @@ Einsatzansicht erst seit dieser Fassung eine beschriftete Zeile.
 (`days.notes`, Betriebsnotizen des Diensttags — nicht die des Einsatzes),
 Zeiten und Nummern der Phasen, der Umriss der Spurstücke (Nummern,
 Punktzahl, Zeitraum, Stufe), Distanz und Steigung, Schockraum, Besatzung,
-Einsatzmittel, Diensttag- und Standortdaten. **Seit Web 22 (S11) nicht
+Einsatzmittel, Diensttag- und Standortdaten — ausdrücklich auch die
+Freitexte **„Namen / Infos"** der Bergwacht (`bw_info`), **„Weitere
+NotärztIn"** (`other_ema`) und **„Weitere Rettungsmittel"**
+(`other_resources`), die Angaben zum **Windeneinsatz**, die Koordinaten der
+Stammdaten (`bases.lat/lon`, `transport_dests.lat/lon`; die des Standorts eingefroren als
+`days.base_lat/base_lon`) und die Altbestandsspalte `missions.notes`, bis P8
+sie entfernt. Jedes Klartext-Freitextfeld trägt die Kleinzeile „Klartext —
+keine Patientendaten" (`CLAUDE.md` 4); ein Name in `bw_info` ist ein
+Bedienfehler, den die Anwendung nicht verhindern kann. **Seit Web 22 (S11) nicht
 mehr:** die Koordinate jeder Phase (Phase 4 und 5 sind der Einsatzort), die
-Spur und der Reanimationsverlauf — sie liegen in der Gerätehülle (4.99s) —,
+Spur und der Reanimationsverlauf — sie liegen in der Gerätehülle (4.40) —,
 Transportziel samt Koordinate und Ortshöhe — im `pat_blob`. Seit Web 23
 (S11-12) gibt es auch die alten Spalten und Tabellen dafür nicht mehr
 (`mission_phases.lat/lon`, `track_points`, `track_blobs`, `resus_sessions`,
@@ -5945,6 +5964,16 @@ Auswertung, Sortierung und Statistik nötig, die der Server leisten muss. Sie
 sind für sich genommen nicht personenbeziehbar; **in Verbindung mit Ort und
 Zeitpunkt eines Einsatzes können sie es aber werden.** Wer eine Installation
 betreibt, sollte das wissen und den Datenbankzugang entsprechend behandeln.
+
+**An Dritte geht Klartext doch — beim Suchen und auf der Karte** (F-R17-09,
+Bedrohungsmodell Lage G). Die Adresssuche (Photon, `photon.komoot.io`,
+Vorgabe **an**) bekommt beim Tippen die Adresse und mit der Umkehrsuche die
+gewählte Koordinate von Einsatzort und Abfahrtort — beides geschützte Felder
+—, die Kartendienste (OSM, openmaps.fr, OpenTopoMap, Esri) den Ausschnitt um
+den Einsatzort. Der Server sieht davon nichts; der Dienst sieht Ort,
+Zeitpunkt und die IP-Adresse. Abschalten lässt sich die Adresssuche für die
+ganze Installation (Betrieb → Servereinstellungen, Handbuch 12.5) und je
+Konto (Profil, Karte „Datenschutz", Handbuch 3.1a).
 
 > **Dieser Abschnitt ist seit Web 15.6.0 die Zusage, nicht mehr nur eine
 > Einräumung** (Backlog Nr. 138, Weg C aus `docs/konzepte/Konzept-V1-Ortsdaten.md`,
@@ -5976,7 +6005,7 @@ Die Zuordnung Datensatz ↔ Person entsteht ausschließlich über den
 verschlüsselten Block.
 
 **Unter demselben Inhaltsschlüssel liegt seit Web 20.44.0 der private Teil
-des Rückweg-Paars** (`users.rw_privat`, `edk1:`, Konzept RW, 4.99q) — keine
+des Rückweg-Paars** (`users.rw_privat`, `edk1:`, Konzept RW, 4.38) — keine
 Patientenangabe, sondern Schlüsselmaterial, aber mit derselben Zusage: Der
 Server kennt den Schlüssel nicht und kann ihn nicht öffnen. Der öffentliche
 Teil (`rw_oeffentlich`) steht im Klartext, weil er öffentlich ist; aus ihm
@@ -5985,7 +6014,7 @@ Server-Anteil (`RW_PRIVAT_RE` weist `edka1:` ab), weil er mit dem
 Wiederherstellungsschlüssel allein aufgehen muss.
 
 **Seit Web 22.0.0 auch der private Teil des Kontopaars** (`users.kp_privat`,
-`edk1:`, S11-03, 4.99s) — mit derselben Begründung: Er muss mit dem
+`edk1:`, S11-03, 4.40) — mit derselben Begründung: Er muss mit dem
 Wiederherstellungsschlüssel allein aufgehen, sonst gingen mit dem Anteil
 alle Ortsdaten des Kontos verloren (`KP_PRIVAT_RE` weist `edka1:` ab). Der
 öffentliche Teil (`kp_oeffentlich`) ist nicht geheim, liegt aber
@@ -6001,7 +6030,7 @@ Aufzählung ist die einzige Form von Schutz, die man ihnen geben kann.
 | Was | Wo | seit Web 15.6.0 |
 |---|---|---|
 | `dump.sql.gz` — eine **unverschlüsselte Abschrift jeder Tabelle** während des Komplettbackup-Baus | `sicherungen/komplett/.bau-<8 Hex>/` | **wird geräumt**: bei einem Fehlschlag sofort (`komp_schub()` fängt, räumt, setzt den Zustand auf `abgebrochen`), und bei einem Absturz ohne `catch` spätestens im nächsten Aufräumlauf — auch dem, bei dem nichts fällig ist |
-| **Reset-Token** bis zur Einlösung | PHP-Sitzungsdatei und Zugriffslog des ersten GET | bleibt (in M1-06 anerkannt): Der Token steht eine Stunde und wird beim ersten Gebrauch entwertet; ihn aus dem Zugriffslog zu halten hieße, den Link nicht mehr per Adresszeile anzunehmen. **Seit Web 20.26.0 liegt die Sitzungsdatei wenigstens nicht mehr irgendwo:** Sie steht in `server/.sitzungen/` mit `0700` statt in dem Verzeichnis, auf das der Hoster zeigt (Schritt 16, 5b.2 Punkt 11) — das verkleinert genau diesen Rest, hebt ihn aber nicht auf |
+| **Reset-Token** bis zur Einlösung | PHP-Sitzungsdatei und Zugriffslog des ersten GET | bleibt (in M1-06 anerkannt): Der Token steht eine Stunde und wird beim ersten Gebrauch entwertet; ihn aus dem Zugriffslog zu halten hieße, den Link nicht mehr per Adresszeile anzunehmen. **Seit Web 20.26.0 liegt die Sitzungsdatei wenigstens nicht mehr irgendwo:** Sie steht in `server/.sitzungen/` mit `0700` statt in dem Verzeichnis, auf das der Hoster zeigt (Schritt 16, 7.2 Punkt 11) — das verkleinert genau diesen Rest, hebt ihn aber nicht auf |
 | **Setz-Link**, wenn die Mail nicht wegging | auf der Kontoseite der Verwaltung | bleibt (`admin_user.php`): Ein gültiger Token in der Datenbank, von dem niemand weiß, ist die schlechtere Lage |
 
 **Was das Räumen kostet:** „Fortsetzen" nimmt einen **gescheiterten** Lauf
@@ -6015,7 +6044,7 @@ Zustand `abgebrochen`, dazu eine Zeile im Protokoll (Reiter System).
 Bis Web 15.5.2 wurde der Bauordner erst geräumt, wenn das **nächste Backup
 fällig** war — bei einem wöchentlichen Plan also bis zu sieben Tage später.
 
-### 4.98a Ortsfeld und Luftlinie (ab Web 6.1.0)
+### 4.15 Ortsfeld und Luftlinie (ab Web 6.1.0)
 
 **Das Ortsfeld war keine Komponente.** Bis Web 6.0.0 stand das Einsatzort-Widget
 ausgeschrieben in `einsatz_form.php`: rund 180 Zeilen, verdrahtet über die
@@ -6179,7 +6208,7 @@ Einsatzort liegt verschlüsselt im `pat_blob` — dieselbe Grenze, an der auch d
 serverseitige Suche endet. Und eine Luftlinie ist keine gefahrene Strecke;
 beides in einer Summe machte „Einsatzkilometer gesamt" unbrauchbar.
 
-### 4.98b Sichtbarkeit von Einsatzfeldern
+### 4.16 Sichtbarkeit von Einsatzfeldern
 
 Vier Schlüssel des Feldkatalogs entscheiden, ob ein Feld erscheint. Drei davon
 **verstecken nur** — der vierte **leert**:
@@ -6217,7 +6246,7 @@ Transportart geht das nicht mehr auf: Die Spalte ist ein
 „Ambulant". `mf_optionen()` ist die eine Stelle, die beide Schreibweisen
 auflöst — eine Liste bleibt Wert = Beschriftung, eine Zuordnung trennt sie.
 
-### 4.98c Gruppen des Einsatzformulars (ab Web 7.0.0)
+### 4.17 Gruppen des Einsatzformulars (ab Web 7.0.0)
 
 Das Formular rendert nicht mehr den ganzen Katalog am Stück, sondern **Gruppe
 für Gruppe**. Welche Gruppe ein Feld trägt, steht am Feld (`gruppe`), nicht in
@@ -6235,7 +6264,7 @@ Drei Helfer in `einsatz_form.php` werten das aus: `$gruppeFelder()` holt die
 Felder einer Gruppe, `$gruppeRendern()` gibt sie samt `.fld-reihe`-Klammerung
 aus, `$gruppeSichtbar()` beantwortet, ob eine Gruppe überhaupt etwas zu zeigen
 hat. Letzteres fragt nach **sichtbaren** Feldern (Gates plus „belegt", siehe
-4.98b): Die Gruppe „Bergrettung" besteht aus zwei Feldern, die beide an einer
+4.16): Die Gruppe „Bergrettung" besteht aus zwei Feldern, die beide an einer
 Fähigkeit hängen — an einem NEF-Dienst wäre sie ein Rahmen mit Überschrift und
 nichts darin und fällt deshalb ganz weg.
 
@@ -6257,7 +6286,7 @@ Einsatzansicht für ihre Luftlinie anlegt. Das Skript des Formulars fragt
 `start_src` deshalb überall auf Existenz ab, statt sie vorauszusetzen. Die
 gespeicherte Regel bleibt in der Datenbank unangetastet.
 
-### 4.98d Der Anhebelauf für Altbestand (`api/pat_anheben.php`, ab Web 19.0.0)
+### 4.18 Der Anhebelauf für Altbestand (`api/pat_anheben.php`, ab Web 19.0.0)
 
 Ein Feld, das aus einer Klartextspalte in den verschlüsselten Block wandert,
 lässt vorhandene Daten zurück — und **der Server kann sie nicht selbst
@@ -6298,7 +6327,7 @@ sobald wieder Klartext hereinkommt: eine eingespielte Sicherung mit Nutzlast 10,
 ein CSV-Import einer alten Datei, das Zurücksetzen des Demo-Kontos. Der
 abgeleitete Zustand kennt diesen Fall von selbst.
 
-### 4.98a Eine Stelle je Sache — und das Register, das es nachzählt
+### 4.19 Eine Stelle je Sache — und das Register, das es nachzählt
 
 **R83, gebaut in Schritt 15 (Zentralisierung), Stand Web 20.34.0.** Die
 Anwendung hatte für eine Reihe von Sachen mehrere Eingänge — nicht als
@@ -6353,7 +6382,7 @@ unter neuem Namen sieht sie nicht. Die sechste Kilometerfassung des Bestands
 `assets/schneiden.js` steht aus demselben Grund noch (Backlog Nr. 273). Wer
 etwas zentralisiert, zählt am Ende einmal unabhängig nach.
 
-### 4.99 Gemeinsame Bausteine
+### 4.20 Gemeinsame Bausteine
 
 Die Anwendung hat vier unabhängige Schreibwege in dieselben Tabellen. Die
 Prüftiefe verlief historisch **umgekehrt zur Vertrauenswürdigkeit der Quelle**:
@@ -6430,7 +6459,7 @@ Die Bausteine im Einzelnen:
 | Eingang der Endpunkte | `db.php` | `api_methode($erlaubt)` und `api_rumpf($o)` — Methodenprüfung (405 `method`) und Rumpf als JSON-Objekt (400 `leer`/`format`). Ab Web 20.28.0. **Zwei Funktionen, weil `csrf_check()` dazwischen steht**; Einzelheiten im Abschnitt „Der Eingang der Endpunkte". |
 | E-Mail-Adressen | `server/email_lib.php` | Eine Fassung für Normalisierung (`email_normalisieren()`), Prüfung (`email_pruefen()`) und Dublettenerkennung (`ist_dublettenfehler()`). **Ohne Abhängigkeiten**, damit `install.php` sie vor der Ersteinrichtung laden kann. |
 | Rollenprüfung | `auth_guard.php` | `ist_admin()` ist die einzige Stelle, an der die Frage gestellt wird; `require_admin()` und `ui.php` setzen darauf auf. |
-| Frischer Code | `db.php`, `auth_guard.php` | Die Liste `ZF_FRISCH_HANDLUNGEN` steht in `db.php` neben den Rollen, das Tor `zweitfaktor_frisch_verlangen($handlung)` in `auth_guard.php`, vor `csrf_check()`. Jede Handlung der Liste hat **genau einen** Aufruf mit ihrem Namen als fester Zeichenkette — das zählt das Register (Z43). Ab Web 21.9.0 (Schritt 18, SR-07); Einzelheiten in 4.99q. |
+| Frischer Code | `db.php`, `auth_guard.php` | Die Liste `ZF_FRISCH_HANDLUNGEN` steht in `db.php` neben den Rollen, das Tor `zweitfaktor_frisch_verlangen($handlung)` in `auth_guard.php`, vor `csrf_check()`. Jede Handlung der Liste hat **genau einen** Aufruf mit ihrem Namen als fester Zeichenkette — das zählt das Register (Z43). Ab Web 21.9.0 (Schritt 18, SR-07); Einzelheiten in 4.38. |
 | Schlüssel/Wert-Ablage | `db.php` | `app_state_lesen()`, `app_state_setzen()`, dazu ab Web 20.29.0 `app_state_mehrere()` (eine Abfrage statt n), `app_state_setzen_mehrere()`, `app_state_loeschen()` und `app_state_einmalig()` (`INSERT IGNORE`, dann zurücklesen — für die beiden Servergeheimnisse, bei denen von zwei gleichzeitigen Anfragen nur **eine** gewinnen darf). Die Längenprüfung gegen `APP_STATE_MAX` steht in `app_state_zu_lang()`. **Zwei Stellen fragen weiter selbst:** `jobs.php` (Gerätevertrag — es antwortet `500 datenbank`, wo der Helfer `null` liefert) und `job_aufraeumen_schritte()` (Verbund auf `users`). |
 | Virtuelles Gerät | `db.php` | `geraet_virtuell_sicherstellen($pdo, $userId)` — holen oder anlegen, an einer Stelle statt an vier. Dazu `geraet_virtuell_kennung()`, `geraet_virtuell()` (für Listen im Speicher), `GERAETE_ECHT_SQL` und `geraete_echt_sql($alias)` für Abfragen mit Tabellenalias sowie `GERAET_VIRTUELL_MUSTER` für die eine Abfrage, die das `LIKE`-Muster bindet. Ab Web 20.29.0. |
 | Einsatz laden | `einsatz_lib.php` | `einsatz_laden($id, $userId, ['spalten' => …, 'papierkorb' => 'nein'\|'ja'\|'egal'])`. Die Besitzprüfung steht **in** der Abfrage; die drei Fehlerfälle (gibt es nicht · gehört jemand anderem · falsche Seite des Papierkorbs) sind bewusst nicht unterscheidbar. Ab Web 20.29.0; zwei Stellen bleiben namentlich außen vor (siehe Dateikopf). |
@@ -6461,8 +6490,8 @@ Die Bausteine im Einzelnen:
 | Listenkopf und Listenfuß | `ui.php` (`ui_listenkopf()`, `ui_listenfuss()`), `assets/listenkopf.js` | Ab Web 20.39.0 (P5c/AP2, F-P5c-54). Suchfeld mit versteckten Feldern, Filterpillen (mit Zahl, eine mit Kreuz für einen Filter aus der Adresse), ein Auswahlfeld, das mit Skript sofort abschickt; darunter Zählung und Seitenwahl (erste, letzte, Nachbarn, Ellipse). Bis dahin nur als Markup in `admin_users.php`; Registerzeile Z40 hält es außerhalb von `ui.php` auf null. |
 | Aufklappbare Zeile | `ui.php` (`ui_zeile()` mit `daten`) | Ab Web 20.39.0 (P5c/AP2, E-P5c-26). Eine Zeile mit Angaben wird ein `<details class="zeile-mehr">`, dessen `<summary>` die Zeile ist; die Angaben stehen darunter als `<dl>`. `aktionsspalte => true` hält die leere Spalte in Zeilen ohne Angaben. Die Gegenregel zu `.zeile:first-child` ist Pflicht (F-P5c-13, `Design.md` 9.2). |
 | ZIP-Archive | `zip_lib.php` | Ab Web 20.39.0 (P5c/AP2, E-P5c-57, R83). `zip_verfuegbar()`, `zip_bauen($ziel, [Name => Pfad], $packen)` (ungepackt als Vorgabe, weil die Teile schon gzip und versiegelt sind), `zip_eintrag($pfad, $name)`, `zip_oeffnen($pfad)` (nur lesend), `zip_lesen($pfad, $fn)`, `zip_namen()`. Vorher öffneten vier Stellen selbst ein Archiv und fragten je selbst nach der Erweiterung; Registerzeile Z39. **Lädt selbst nichts.** |
-| Etwas melden, das schiefging | `systemmeldung_lib.php` (`system_melden()`, `system_rueckfall()`) | Ab Web 20.40.0 (P5c/AP3, E-P5c-58, Backlog Nr. 248). Der Reiter System statt `error_log()`: Kennung, bereinigte Meldung, Datei und Zeile; ohne Datenbank derselbe Satz mit derselben Kennung im Fehlerprotokoll des Webspace. `error_log()` bleibt an zwei Stellen (Register Z38, Decke 2). Einzelheiten 4.99g. |
-| Protokoll lesen | `protokoll_lib.php` (`protokoll_liste()`, `protokoll_zahl()`, `protokoll_quellen()`) | Ab Web 20.39.0 (P5c/AP2, E-P5c-38). Je Reiter ein bis drei Quellen mit derselben Zeilenform, **je Quelle eine Abfrage, nie ein UNION** (Kollationen, 4.99g). Die Seite, die Zählkarte der Statusseite und der Archivjob lesen alle darüber. |
+| Etwas melden, das schiefging | `systemmeldung_lib.php` (`system_melden()`, `system_rueckfall()`) | Ab Web 20.40.0 (P5c/AP3, E-P5c-58, Backlog Nr. 248). Der Reiter System statt `error_log()`: Kennung, bereinigte Meldung, Datei und Zeile; ohne Datenbank derselbe Satz mit derselben Kennung im Fehlerprotokoll des Webspace. `error_log()` bleibt an zwei Stellen (Register Z38, Decke 2). Einzelheiten 4.28. |
+| Protokoll lesen | `protokoll_lib.php` (`protokoll_liste()`, `protokoll_zahl()`, `protokoll_quellen()`) | Ab Web 20.39.0 (P5c/AP2, E-P5c-38). Je Reiter ein bis drei Quellen mit derselben Zeilenform, **je Quelle eine Abfrage, nie ein UNION** (Kollationen, 4.28). Die Seite, die Zählkarte der Statusseite und der Archivjob lesen alle darüber. |
 | Krypto-Rüstzeug der Seiten | `ui.php` (`ui_krypto_bootstrap()`) | Ab Web 7.2.0. Die Verweise auf `crypto.js`, `keyguard.js` und `unlock.js` samt `PAT_WRAP`, `KDF_SALT`, `KDF_ITER` und `KDF_ITER_ZIEL`; wahlweise `PAT_KEY_CHECK`, `CSRF` und `pwquality.js`. Vorher acht Blöcke in sieben Dateien — mit zwei Namen für dieselbe Hülle. Ein **zweiter Aufruf im selben Seitenaufbau gibt nichts aus und meldet es in den Reiter System** (`system_melden('ui', …)`): Zwei Einbindungen von `crypto.js` wären ein `SyntaxError`, der das ganze zweite Skript verwirft. |
 | Meldungszeile | `ui.php` (`ui_meldung()`) | Ab Web 7.2.0. Hinweis- und Fehlerzeile über dem Inhalt, vorher 21-mal in 13 Dateien. Der Ton (`info`/`ok`) ist Parameter, weil der Bestand beide kennt: `ok` meldet einen Vollzug (Stammdaten, Nachbearbeitung). |
 | Abbruchseite | `ui.php` (`ui_abbruch()`) | Ab Web 7.2.0. Statt `exit('… nicht gefunden.')` eine richtige Seite mit Kopfleiste und Rückweg — 16 Stellen, darunter `require_admin()` und `csrf_check()` in `auth_guard.php`. Wortlaut und HTTP-Code unverändert; der API-Zweig von `require_admin()` antwortet weiter mit JSON. |
@@ -6498,7 +6527,7 @@ Schutz gegen einen Angreifer mit Zugriff auf die Ablaufumgebung (Hoster,
 Datenbank, Protokolle) hängt damit allein an der Passwortwahl der Person. Das
 ist eine bewusste Entscheidung und gehört genau so dokumentiert.
 
-### 4.99a Demo-Konto (ab Web 7.3.0)
+### 4.21 Demo-Konto (ab Web 7.3.0)
 
 Ein Konto zum Ausprobieren: erfundene Daten, öffentliche Zugangsdaten,
 Änderungen erwünscht — und 30 Minuten nach der ersten Änderung zurück auf den
@@ -6781,64 +6810,7 @@ regelmäßig verworfen wird, und dass hier keine echten Daten hineingehören.
 Ein Hinweis, den man einmal schließt, ist beim zweiten Besuch nicht mehr da —
 und genau dann wäre er nötig.
 
-## 5. Uhr-App (Monkey C) — Modulstruktur
-
-| Datei | Verantwortung |
-|---|---|
-| `NAdokuApp.mc` | Einstieg; Restore-Kette bei Neustart (Model → Track → Cpr → Sync). Hieß bis Uhr 2.0.0 `HemsApp.mc` |
-| `Model.mc` | Dienst-Klammer, Phasenlogik, Einsatz-/Segment-Lebenszyklus, Rea-Sitzungen, Persistenz (`state`) |
-| `Track.mc` | GPS (15 m/10 s/1 s-Ausdünnung), Distanz/Anstieg, Anzeige-Polylinie (Cap 1000, Dichte-Halbierung), **Flash-Chunks à 200 Punkte**; `restore()` lädt Teil-Chunks zurück in den Puffer (verlustfrei) |
-| `Cpr.mc` | Rea-Timer app-weit (1-s-Tick), 2:00-Zyklus, Ereignisse, **persistenter Zustand** (übersteht Neustart); drei Zustände: aus / laufend / pausiert |
-| `Uploader.mc` | Job-Queue (fertige Einsätze → Segmente → aktive), Chunking ≤ 500, `next_seq`-Bestätigung, Purge inkl. Marken; `hasServer()`/`hasCredentials()`. **Seit Uhr 3.1.0** trennt `onResponse()` drei Fälle: eine Störung (später erneut), ein dauerhaft abgewiesenes Paket (Marke `bad_<ref>`, wird übersprungen) und ein abgemeldetes Gerät (`401`/`403` → `abgemeldet`, das Senden hält an). Siehe 5.1c. **Seit Uhr 4.0.0** sendet er nur verschlossen (`track` mit `huelle`, `ort_huelle`, Phasen ohne Koordinate, keine `resus_sessions`) und ohne Kontoschlüssel oder bei gescheitertem Selbsttest gar nicht; die Marke `bad_<ref>` trägt den Zeitpunkt, `parkFristPruefen()` räumt nach `PARK_FRIST_S` = 30 Tagen (E-S11-11). **Seit Uhr 4.1.0** (R17-21): die Frist auch für „abgemeldet" (`Storage 'abgem_seit'`, Zeitpunkt der ersten 401/403; `abmeldeFristPruefen()` vor jedem Sendelauf verwirft danach alle wartenden Pakete, E-R17-22); das bestätigte Paket geht über seine Referenz aus der Liste, nicht über einen Listenplatz (F-R17-52); `http://` wird zu `https://` (F-R17-11); Zugangsdaten nur aus `Storage 'cred'` — der Alt-Weg über die App-Einstellungen ist fort (E-R17-21) |
-| `Huelle.mc` | **Seit Uhr 4.0.0** (S11-08): die Gerätehülle (Format: Kopf von `tools/proben/huelle/referenz.py`) — Bausteine aus der Krypto-Probe, `spurstueck()` (14 Byte je Punkt), `einsatz()` (JSON, Zeiten seit Beginn), Kontoschlüssel in `Storage 'kschl'`, Selbsttest `bereit()` gegen `HuelleVektor.mc` (erzeugt, Fall „kurz"): misst die Byteordnung des ECDH-Geheimnisses und das ganze Prüfwort, Ergebnis je Fassung und Firmware in `Storage 'kpruef'` (E-S11-30, -78) — **seit Uhr 4.1.0 nur `be` oder `le`**: „kaputt" gilt bis zum nächsten Start und wird dann neu gemessen, `pruefungVergessen()` beim Trennen (F-R17-53) |
-| `Input.mc` | Eingabemodell: `ActionDelegate` übersetzt Tasten, Wischgesten und Langdrücke einmal zentral in Aktionen (s. Abschnitt 5.1); `TastenDelegate` ist die Basis der selbst gezeichneten Menüs und Warteseiten; `beruehrungVerwerfen()` setzt den Schalter `touchEnabled` um (seit Uhr 4.1.0, F-R17-68) |
-| `DeviceProfile.mc` | je Profil eine eigene Fassung in `source-tasten5/` bzw. `source-tasten3/`; liefert `HAS_UP_DOWN` und die Bedienhinweise |
-| `Ui.mc` | Geometrie relativ zur Displayhöhe (`s()` liefert bei 260 exakt den Ausgangswert), Markenfarben, Rea-Marker |
-| `Nav.mc` | Pager: Uhr → Tempo → Statistik → Sync → Rea |
-| `StartView.mc` | Startbildschirm „Dienst beginnen"; Hinweise zu Server-Adresse und Kopplung |
-| `ClockView/SpeedView/StatsView/SyncView/CprView.mc` | Oberflächen + Delegates; erben von `ActionDelegate` und beschreiben nur noch die Aktionen |
-| `SyncView.mc` | Sync-Status (Backlog = nur abgeschlossene Pakete, **ohne geparkte**), App-Version, Kopplung per START-Halten, **Verwerfen abgewiesener Pakete per kurzem START**; seit Uhr 4.0.0 „Kein Schlüssel · Holen: START halten" und „Verschlüsseln geht nicht" (E-S11-76) |
-| `Pair.mc` | Kopplung (seit Uhr 3.0.0 umgekehrt): holt mit `start` eine Sitzung, fragt im Takt `status`, bestätigt mit `bestaetigen` — erst danach `Storage 'cred'`. Bis dahin liegen Code, Kennung und Schlüssel **nur im Arbeitsspeicher**. **Seit Uhr 4.0.0** legt `_fertig()` den `kontoschluessel` aus der Antwort ab, und `schluesselHolen()` holt ihn bei bestehender Kopplung über `status` nach (E-S11-79) — kein Trennen, weil ein Rückstand das Trennen sperrt (F-S11-80) |
-| `PairView.mc` | Die Kopplungsansicht: zeigt den Code groß, dazu Restzeit und Verbindungshinweis; BACK bricht ab. Eigene Ansicht, weil der Code Buchstaben trägt (keine Ziffernschrift), eine Restzeit läuft und BACK hier anders wirkt als auf der Sync-Seite |
-| `Const.mc` / `Util.mc` | `APP_VERSION`, Labels, Tuning-Werte; ISO-UTC, lokale Anzeige, Vibration |
-
-Rückruf-Muster: `method()` existiert nur auf Objekten → kleine Träger-Klassen
-(`TrackCb`, `CprCb`, `UploaderCb`) reichen Callbacks an die Module weiter.
-
-> **Kartenseite entfernt (1.3.5):** `MapPage.mc` funktionierte am Gerät nicht
-> zuverlässig und wurde gelöscht. Eine künftige Kartenansicht wird neu
-> aufgebaut; die alte Fassung liegt in der Git-Historie.
-
-> **Vor jeder Änderung an einer Oberfläche:** `Uhr-Layout_Regeln.md` lesen. Dort
-> stehen die Regeln zu Schriften, runden Displays und vertikalen Blöcken —
-> jede davon, weil sie einmal verletzt wurde und der Fehler erst im Simulator
-> aufgefallen ist.
-
-**Was der Typprüfer verlangt (Stand 1.8.2).** Drei Eigenheiten kosten sonst
-jedes Mal aufs Neue Zeit:
-
-- **Die Null-Prüfung greift nur über lokale Variablen.** `if (mission == null)
-  { return; }` überzeugt den Prüfer nicht, wenn danach `mission[...]` steht —
-  bei einem Modul-Feld verfolgt er den Fluss nicht. Den Wert zuerst in eine
-  lokale Variable holen, dann prüfen, dann benutzen. Dasselbe gilt für
-  `info.position` und jedes andere Feld.
-- **`Storage.getValue()` liefert einen Sammeltyp** über alles Speicherbare, von
-  `BitmapResource` bis `ScanResult`. Jede Zuweisung daraus braucht eine
-  Zusicherung — sinnvollerweise dieselbe Struktur, die das zugehörige `save()`
-  geschrieben hat.
-- **Arrays brauchen einen Elementtyp.** `Lang.Array` allein lässt offen, ob
-  `x[i][2]` erlaubt ist. Für die Tupellisten `Lang.Array<Lang.Array>`, für die
-  Warteschlangen `Lang.Array<Lang.Dictionary>`.
-
-Beim Zusichern gilt: **lieber keine Angabe als eine falsche.** Der Punktpuffer
-in `Track` führt Breite und Länge als `Double`, die Höhe als `Float` (die
-fehlen darf) und den Zeitstempel als `Number` — `Lang.Array<Lang.Number>` wäre
-bequem und unwahr; richtig ist `Lang.Array<Lang.Numeric or Null>`.
-Lokale Variablen lassen sich übrigens **nicht** annotieren
-(„Local variable types are inferred"); die Zusicherung gehört dann an die
-Zuweisung.
-
-### 4.99a2 Das Ersetzfenster der Geräte (ab Web 15.6.0, Backlog Nr. 134)
+### 4.22 Das Ersetzfenster der Geräte (ab Web 15.6.0, Backlog Nr. 134)
 
 **Wogegen.** Der Geräteschlüssel liegt auf der Garmin-Uhr im Klartext
 (`watch/source/Pair.mc`; die Plattform hat nichts Besseres — die Wear-OS-Uhr
@@ -7004,12 +6976,16 @@ zurück: Mit dem neuen Anker galt sein in der Probe frisch entstandener Tag
 sonst als offen. Die Migration selbst fährt die Schemaprobe, Fall 6, auf den
 vier Datenbankfassungen.
 
-### 4.99b Bedrohungsmodell der Kopplung (ab Web 13.0.0, S5)
+### 4.23 Bedrohungsmodell der Kopplung (ab Web 13.0.0, S5)
 
 > Dieser Abschnitt ist das Modell **einer** Stelle, der Kopplung. Das Modell
 > der ganzen Anwendung — Werte, Lagen, Zusagen, Bausteine, Restrisiken — steht
 > seit Schritt 12 in `docs/Bedrohungsmodell.md`; die Kopplung ist dort Baustein
 > 4.3, mit Verweis hierher.
+>
+> **Fundstellen nennen Datei und Funktion, keine Zeilennummern** (seit R17-27,
+> F-R17-59). Bis dahin standen hier über zwanzig Zeilenangaben wie „`pair.php`
+> 318–343"; die meisten trafen nach den Umbauten seit S5 nicht mehr.
 
 Die Kopplung ist die eine Stelle, an der ein fremdes Gerät in ein fremdes
 Konto geraten kann. Sie war es vor S5 und ist es danach — nur ist der Weg
@@ -7038,16 +7014,16 @@ braucht ein Konto.
 
 | Nr. | Angriff | Tor / Gegenmittel | Was bleibt |
 |---|---|---|---|
-| 1 | **Fremdes Gerät im eigenen Konto** — jemand bewegt eine Kontoinhaberin dazu, einen Code einzugeben, den er ihr nennt | Die Eingabe koppelt nichts, sie **sucht** erst (`einstellungen.php`, Aktion `koppeln_pruefen`): Die Karte „Dieses Gerät koppeln?" zeigt Art, Modell und gekürzte Kennung, und erst ein zweiter Knopf bindet die Sitzung ans Konto. Danach die Kopplungsmail beim Ja (`pair.php` 318–343) und die Plakette „neu" sieben Tage lang (`GERAETE_NEU_TAGE`, `db.php` 686) | Wer ein Gerät zeigt, das dem Opfer plausibel erscheint, kommt durch — das ist Social Engineering, keine Protokolllücke. Das Gerät ist danach löschbar, und was es hochgeladen hat, trägt seine Kennung |
-| 2 | **Eigenes Gerät im fremden Konto** — Code vom Handgelenk abgelesen und schneller eingegeben als die Trägerin | Die Rückbestätigung am Gerät. `status` liefert im Zustand `beansprucht` die **maskierte** Adresse des beanspruchenden Kontos (`pair.php` 226–228, `email_maskieren()` in `db.php` 504–511); das Gerät fragt damit, und eine fremde Adresse fällt auf | Wer eine Adresse mit denselben zwei Anfangszeichen **und** derselben Domain hat, gewinnt. Dagegen hülfe nur die volle Adresse, und die will R36/E-R49-4 nicht auf eine Uhr schreiben. **Bis Paket C steht dieses Tor nur auf der Serverseite** — der Server sagt, wer beansprucht hat; die Frage stellt erst die neue Uhr-Fassung |
-| 3 | **Code-Raum füllen und auf einen Treffer hoffen** | Drei Bremsen greifen ineinander: die Obergrenze offener Sitzungen (`PAIR_SITZUNGEN_MAX` = 1000, `db.php` 488; gezählt per SQL über unverfallene Zeilen, `kopplung_lib.php` 39–43, geprüft in `pair.php` 140–142), der Topf `pair_start` je Adresse (20/600 s, `ratelimit_lib.php` 79) und der Topf `pair_code` an der Eingabe im Web, **je Konto und je Adresse** (10/600 s, `ratelimit_lib.php` 80; gezählt in `einstellungen.php` bei „Code nicht gefunden") | Sechs Zeichen aus 32 sind 1,07 Mrd. Möglichkeiten; höchstens 1000 davon sind gleichzeitig belegt, und findbar sind nur **unbeanspruchte, unverfallene** Sitzungen (`pair_sitzung_nach_code()`, `kopplung_lib.php` 135–145). Das sind ≤ 9,3 · 10⁻⁷ je Versuch — und ein Treffer läuft noch in Angriff 2, also in die Rückbestätigung |
+| 1 | **Fremdes Gerät im eigenen Konto** — jemand bewegt eine Kontoinhaberin dazu, einen Code einzugeben, den er ihr nennt | Die Eingabe koppelt nichts, sie **sucht** erst (`einstellungen.php`, Aktion `koppeln_pruefen`): Die Karte „Dieses Gerät koppeln?" zeigt Art, Modell und gekürzte Kennung, und erst ein zweiter Knopf bindet die Sitzung ans Konto. Danach die Kopplungsmail beim Ja (`pair.php`) und die Plakette „neu" sieben Tage lang (`GERAETE_NEU_TAGE`, `db.php`) | Wer ein Gerät zeigt, das dem Opfer plausibel erscheint, kommt durch — das ist Social Engineering, keine Protokolllücke. Das Gerät ist danach löschbar, und was es hochgeladen hat, trägt seine Kennung |
+| 2 | **Eigenes Gerät im fremden Konto** — Code vom Handgelenk abgelesen und schneller eingegeben als die Trägerin | Die Rückbestätigung am Gerät. `status` liefert im Zustand `beansprucht` die **maskierte** Adresse des beanspruchenden Kontos (`pair.php`, `email_maskieren()` in `db.php`); das Gerät fragt damit, und eine fremde Adresse fällt auf | Wer eine Adresse mit denselben zwei Anfangszeichen **und** derselben Domain hat, gewinnt. Dagegen hülfe nur die volle Adresse, und die will R36/E-R49-4 nicht auf eine Uhr schreiben. **Bis Paket C steht dieses Tor nur auf der Serverseite** — der Server sagt, wer beansprucht hat; die Frage stellt erst die neue Uhr-Fassung |
+| 3 | **Code-Raum füllen und auf einen Treffer hoffen** | Drei Bremsen greifen ineinander: die Obergrenze offener Sitzungen (`PAIR_SITZUNGEN_MAX` = 1000, `db.php`; gezählt per SQL über unverfallene Zeilen, `kopplung_lib.php`, geprüft in `pair.php`), der Topf `pair_start` je Adresse (20/600 s, `ratelimit_lib.php`) und der Topf `pair_code` an der Eingabe im Web, **je Konto und je Adresse** (10/600 s, `ratelimit_lib.php`; gezählt in `einstellungen.php` bei „Code nicht gefunden") | Sechs Zeichen aus 32 sind 1,07 Mrd. Möglichkeiten; höchstens 1000 davon sind gleichzeitig belegt, und findbar sind nur **unbeanspruchte, unverfallene** Sitzungen (`pair_sitzung_nach_code()`, `kopplung_lib.php`). Das sind ≤ 9,3 · 10⁻⁷ je Versuch — und ein Treffer läuft noch in Angriff 2, also in die Rückbestätigung |
 | 4 | **Verstopfen** — die Obergrenze mit eigenen Sitzungen füllen, damit niemand mehr koppeln kann | `pair_start` macht daraus 50 Adressen je zehn Minuten; die Obergrenze zählt **nur unverfallene** Zeilen, ein Vorrat toter Sitzungen bringt also nichts (E-S5-14). Umgekehrt räumt `start` bewusst **nichts** vorab auf — sonst ließe sich der Server mit jeder Anfrage zum Aufräumen bringen; das tut der Job `aufraeumen` | Ein großer Adressvorrat verhindert für die Dauer des Angriffs **Neukopplungen**. Er berührt den laufenden Betrieb gekoppelter Geräte nicht: `ingest.php` kennt `pair_sessions` gar nicht |
-| 5 | **Rechenlast** — den Server mit Anfragen beschäftigen, die teuer sind | Seit Web 13.0.0 ist an diesem Pfad **nichts mehr teuer**: Geräte- und Sitzungsschlüssel liegen als SHA-256 (`geraet_schluessel_hash()`, `db.php` 575), nicht mehr als bcrypt. Eine `status`-Abfrage kostet einen indizierten `SELECT` und einen Hashvergleich, ein `start` einen `INSERT`. Was übrigbleibt, ist die **Mindestdauer** von 0,35 s, die `rate_gleiche_dauer()` (`ratelimit_lib.php` 260–265) jedem abgewiesenen Aufruf auferlegt — sie bindet einen PHP-Arbeitsprozess. Begrenzt wird sie von denselben Töpfen wie Angriff 3 und 4 | Der Angriff hat mit E-S5-42 seinen Gegenstand verloren, und das ist der Grund, warum der Abfragetakt von fünf Sekunden eine **Bedienzahl** sein darf und keine Lastzahl: 120 Abfragen je Sitzung kosten Mikrosekunden, unter bcrypt wären es rund 27 s gewesen |
-| 6 | **Schwebende Zugangsdaten mitnehmen** — ein Gerät holt sich mit `start` einen Schlüssel und bestätigt nie | Ohne `devices`-Zeile weist `ingest.php` mit `401` ab (es sucht ausschließlich in `devices`, `ingest.php` 74–81). Die Sitzung verfällt nach zehn Minuten (eine Frist für alles, `pair_frist_sql()` in `kopplung_lib.php` 33–36), und gespeichert ist ohnehin nur der Hash (`schema.sql` 439) | Keiner. Der Klartext geht genau einmal über die Leitung — in der Antwort auf `start` (`pair.php` 181) — und steht in keinem Protokoll: Die `catch`-Zweige loggen die Ausnahme, nie den Rumpf |
-| 7 | **Die maskierte Adresse ablesen** — ein Gerätehalter erfährt etwas über die Person, die seinen Code eingegeben hat | Maskiert werden alle Zeichen des lokalen Teils bis auf die ersten zwei; die Domain bleibt voll, weil sie die Trägerin ihr Konto erkennen lässt (`db.php` 486–511). Der Wert wird nur im Dialog gezeigt und **nirgends gespeichert** | Zwei Zeichen und eine Domain. Wer sie sieht, hat die Person gerade zur Eingabe bewegt — er kennt sie also ohnehin (das ist Angriff 1); ein neuer Personenbezug entsteht nicht |
-| 8 | **Zeitseitenkanal** — aus der Antwortdauer ablesen, welche Gerätekennungen es gibt | Jeder Zweig, der etwas über Fremdes sagen könnte, endet über `abweisen()` (`pair.php` 97–105) und damit über `rate_gleiche_dauer()`. Der unbekannte Zweig rechnet gegen `GERAET_VERGLEICHSWERT` dieselben Schritte wie der bekannte (`pair.php` 355–364), und die Rümpfe für „Kennung unbekannt" und „Schlüssel falsch" sind byteweise gleich — beide `{"error":"auth"}`. `410` und `409` kommen **ohne** Verzögerung (`antworten()`, `pair.php` 107–113): Sie setzen die richtige Kennung **und** den richtigen Schlüssel voraus und sagen einem Fremden nichts | Wie an `ingest.php` und `auth_salt.php`. Die Kopplungsprobe misst beide 401-Zweige nebeneinander; siehe „Die Antwortzeit als Auskunft" weiter oben |
+| 5 | **Rechenlast** — den Server mit Anfragen beschäftigen, die teuer sind | Seit Web 13.0.0 ist an diesem Pfad **nichts mehr teuer**: Geräte- und Sitzungsschlüssel liegen als SHA-256 (`geraet_schluessel_hash()`, `db.php`), nicht mehr als bcrypt. Eine `status`-Abfrage kostet einen indizierten `SELECT` und einen Hashvergleich, ein `start` einen `INSERT`. Was übrigbleibt, ist die **Mindestdauer** von 0,35 s, die `rate_gleiche_dauer()` (`ratelimit_lib.php`) jedem abgewiesenen Aufruf auferlegt — sie bindet einen PHP-Arbeitsprozess. Begrenzt wird sie von denselben Töpfen wie Angriff 3 und 4 | Der Angriff hat mit E-S5-42 seinen Gegenstand verloren, und das ist der Grund, warum der Abfragetakt von fünf Sekunden eine **Bedienzahl** sein darf und keine Lastzahl: 120 Abfragen je Sitzung kosten Mikrosekunden, unter bcrypt wären es rund 27 s gewesen |
+| 6 | **Schwebende Zugangsdaten mitnehmen** — ein Gerät holt sich mit `start` einen Schlüssel und bestätigt nie | Ohne `devices`-Zeile weist `ingest.php` mit `401` ab (es sucht ausschließlich in `devices`, `ingest.php`). Die Sitzung verfällt nach zehn Minuten (eine Frist für alles, `pair_frist_sql()` in `kopplung_lib.php`), und gespeichert ist ohnehin nur der Hash (`schema.sql` 439) | Keiner. Der Klartext geht genau einmal über die Leitung — in der Antwort auf `start` (`pair.php`) — und steht in keinem Protokoll: Die `catch`-Zweige loggen die Ausnahme, nie den Rumpf |
+| 7 | **Die maskierte Adresse ablesen** — ein Gerätehalter erfährt etwas über die Person, die seinen Code eingegeben hat | Maskiert werden alle Zeichen des lokalen Teils bis auf die ersten zwei; die Domain bleibt voll, weil sie die Trägerin ihr Konto erkennen lässt (`db.php`). Der Wert wird nur im Dialog gezeigt und **nirgends gespeichert** | Zwei Zeichen und eine Domain. Wer sie sieht, hat die Person gerade zur Eingabe bewegt — er kennt sie also ohnehin (das ist Angriff 1); ein neuer Personenbezug entsteht nicht |
+| 8 | **Zeitseitenkanal** — aus der Antwortdauer ablesen, welche Gerätekennungen es gibt | Jeder Zweig, der etwas über Fremdes sagen könnte, endet über `abweisen()` (`pair.php`) und damit über `rate_gleiche_dauer()`. Der unbekannte Zweig rechnet gegen `GERAET_VERGLEICHSWERT` dieselben Schritte wie der bekannte (`pair.php`), und die Rümpfe für „Kennung unbekannt" und „Schlüssel falsch" sind byteweise gleich — beide `{"error":"auth"}`. `410` und `409` kommen **ohne** Verzögerung (`antworten()`, `pair.php`): Sie setzen die richtige Kennung **und** den richtigen Schlüssel voraus und sagen einem Fremden nichts | Wie an `ingest.php` und `auth_salt.php`. Die Kopplungsprobe misst beide 401-Zweige nebeneinander; siehe „Die Antwortzeit als Auskunft" weiter oben |
 | 9 | **CSRF auf den Web-Aktionen** — eine fremde Seite lässt den angemeldeten Browser einen Code beanspruchen oder eine Sitzung abbrechen | `csrf_field()` an allen drei Formularen der Karte „Gerät koppeln" (`einstellungen.php`, Aktionen `koppeln_pruefen`, `koppeln_bestaetigen`, `koppeln_abbrechen`), wie an jeder Formularaktion der Anwendung | Der Nachlade-Endpunkt hat bewusst keine Prüfung — siehe Nr. 11 |
-| 10 | **Verlorene Antwort auf `bestaetigen`** — das Ja kommt an, die Antwort nicht, das Gerät wiederholt | Idempotenz über `devices` (E-S5-15): Ein wiederholtes Ja und ein `status` mit den Zugangsdaten eines bereits angelegten Geräts bekommen `200 {"ok":true}` bzw. `{"zustand":"gekoppelt"}` (`pair.php` 366–376). Auch das gleichzeitige zweite Ja endet dort: Es wartet an `SELECT … FOR UPDATE`, findet die Sitzung nicht mehr und fällt in den Geräte-Zweig (`pair.php` 262–271, 303, 346) | Ohne diese Antwort hinge die Kopplung an einem einzigen Funkpaket. Ein `bestaetigen nein` auf ein fertiges Gerät ist deshalb ein **Nichtstun** (E-S5-48): Ein Nein, das ein Gerät löschte, wäre ein Trennen ohne Trennen-Mail |
+| 10 | **Verlorene Antwort auf `bestaetigen`** — das Ja kommt an, die Antwort nicht, das Gerät wiederholt | Idempotenz über `devices` (E-S5-15): Ein wiederholtes Ja und ein `status` mit den Zugangsdaten eines bereits angelegten Geräts bekommen `200 {"ok":true}` bzw. `{"zustand":"gekoppelt"}` (`pair.php`). Auch das gleichzeitige zweite Ja endet dort: Es wartet an `SELECT … FOR UPDATE`, findet die Sitzung nicht mehr und fällt in den Geräte-Zweig (`pair.php`) | Ohne diese Antwort hinge die Kopplung an einem einzigen Funkpaket. Ein `bestaetigen nein` auf ein fertiges Gerät ist deshalb ein **Nichtstun** (E-S5-48): Ein Nein, das ein Gerät löschte, wäre ein Trennen ohne Trennen-Mail |
 | 11 | **Der Nachlade-Endpunkt als neue Tür** — `api/kopplung_stand.php` sagt, ob eine Kopplung fertig ist (E-S5-53) | Er **nimmt keine Eingabe**. Welche Sitzung gemeint ist, steht in der Browsersitzung (`$_SESSION['pair_warten']`, gesetzt beim Beanspruchen), nicht in einem Parameter, den jemand mit einer fremden Kennung füllen könnte; die Kontokennung steht zusätzlich in der Bedingung, damit eine Erinnerung aus einer fremden Sitzung — möglich nach einem Kontowechsel im selben Browser — nichts beantwortet. Er verlangt Anmeldung, ist GET-only und ändert nichts | Kein CSRF-Token und kein eigener Ratenschutz, beides begründet: Er liest, und er hat nichts zu erraten. Was er verrät, hat der Aufrufer eine Minute zuvor selbst angestoßen |
 | 12 | **Ein Reiter, der ewig fragt** — das Nachladeskript als selbstgemachte Last | `assets/kopplung.js` hört von selbst auf: bei Erfolg, bei Ablehnung am Gerät, mit dem Ende der Frist und nach drei Fehlversuchen in Folge; es ruht, solange der Reiter im Hintergrund liegt (`document.hidden`), und es lebt nie länger als die zehn Minuten der Sitzung | Ohne JavaScript bleibt der Weg vollständig — die Karte sagt auch dann, was am Gerät zu tun ist; das Skript nimmt nur den Handgriff „neu laden" ab |
 
@@ -7079,11 +7055,11 @@ Kennungen durchprobiert.
 
 **Wo dieselbe Frage sonst noch beantwortet wird:** „Die Antwortzeit als
 Auskunft" (Antwortgleichheit der vier anmeldungsfreien Endpunkte),
-„Geräte je Konto" (`MAX_GERAETE`, Kopplungsmail, Plakette „neu"), 4.99
+„Geräte je Konto" (`MAX_GERAETE`, Kopplungsmail, Plakette „neu"), 4.20
 (Ratenschutz, fester Vergleichswert, Sitzungsende) und der JSON-Vertrag,
 Abschnitt 1a (die Antworten im Wortlaut).
 
-### 4.99c Wartungsmodus (ab Web 13.2.0, S5 Paket W)
+### 4.24 Wartungsmodus (ab Web 13.2.0, S5 Paket W)
 
 **Ein Schalter, der die Installation vorübergehend für alle außer der
 Verwaltung schließt.** Er beantwortet den Unterschied zwischen „kaputt" und
@@ -7099,7 +7075,7 @@ geändert** (E-S5W-08).
 | Zustand | Datei `server/.zustand/wartung.lock` (seit Web 23.3.1; bis dahin `server/wartung.lock` im Webroot, F-R17-47), JSON mit `seit` (ISO-UTC) und `von` (Anzeigename). **Keine Datenbank** — der Schalter wird gerade dann gebraucht, wenn sie umgebaut wird oder eine Migration auf halber Strecke steht. **Übergang:** Eine Datei am alten Ort gilt noch als Wartung und geht beim Ausschalten mit (die Kette schaltet vor dem Hochladen mit dem alten Code ein) |
 | Tor | `wartung_tor()` in `wartung_lib.php`, gerufen aus `db.php` **hinter `json_out()` und vor jeder Verbindung**. Nicht in `auth_guard.php`: Dort liefen nur die Seiten durch — `ingest.php` und `pair.php` laden `db.php` direkt, und das sind die beiden, die die Daten der Uhr bringen. Der **Torwächter** (unten) steht dagegen genau dort, und aus dem umgekehrten Grund: Er braucht eine Verbindung |
 | Antwort, Seiten | 503 mit einer schlichten HTML-Seite ohne `ui.php` (dessen Hülle zieht über `ui_favicon()`/`logo_stamm()` die Datenbank herein). Das Stylesheet ist verlinkt — statisch. Kein Skript |
-| Antwort, Maschinen | 503 `{"error":"maintenance","meldung":"…"}`. JSON, wenn der Pfad `/api/` enthält **oder** das Skript in `JSON_SKRIPTE_AUSSERHALB_API` steht — `ingest.php`, `pair.php`, `auth_salt.php`, `jobs.php`. Die vier liegen nicht unter `/api/` und brauchen trotzdem JSON. **Für den Wartungsmodus zählen nur die ersten beiden**, weil die anderen zwei in `WARTUNG_AUSNAHMEN` stehen und das Tor bei ihnen vorher umkehrt; die Liste ist in P5a/AP9 für die **Überlast** gewachsen, die keine Ausnahmen kennt (Abschnitt 5e) |
+| Antwort, Maschinen | 503 `{"error":"maintenance","meldung":"…"}`. JSON, wenn der Pfad `/api/` enthält **oder** das Skript in `JSON_SKRIPTE_AUSSERHALB_API` steht — `ingest.php`, `pair.php`, `auth_salt.php`, `jobs.php`. Die vier liegen nicht unter `/api/` und brauchen trotzdem JSON. **Für den Wartungsmodus zählen nur die ersten beiden**, weil die anderen zwei in `WARTUNG_AUSNAHMEN` stehen und das Tor bei ihnen vorher umkehrt; die Liste ist in P5a/AP9 für die **Überlast** gewachsen, die keine Ausnahmen kennt (Abschnitt 11) |
 | Kopfzeilen | `Retry-After: 300` (E-S5W-12), `Cache-Control: no-store`. Kein `Set-Cookie`: Das Tor greift vor `session_start()` |
 | Ausnahmen | **achtzehn** Skripte (`WARTUNG_AUSNAHMEN` in `wartung_lib.php` — dort steht zu jedem der Grund), verglichen am **Dateinamen** (`basename($_SERVER['SCRIPT_NAME'])`, nicht am Pfad — `login.php` lädt `db.php` als Erstes): `betrieb_status.php`, `betrieb_sicherheit.php`, `betrieb_statistik.php`, `betrieb_updates.php`, `betrieb_jobs.php`, `betrieb_server.php`, `betrieb_schluesselblatt.php`, `admin_komplettsicherung.php`, `admin_sicherungsziele.php`, `zweitfaktor.php`, `zweitfaktor_notweg.php`, `update.php`, `wiederherstellen.php`, `jobs.php`, `login.php`, `auth_salt.php`, `logout.php`, `install.php`. **Die Betriebsseiten stehen seit S8/AP2 bzw. AP4 mit dabei** — ohne sie sperrte sich der Wartungsmodus selbst aus: Die Seite mit dem Ausschalter antwortete 503 (F-S8-P-04). `betrieb_schluesselblatt.php` kam mit S10/AP3 dazu: Die Lage, in der man das Blatt braucht, ist genau eine Wartungslage. `betrieb_sicherheit.php` mit P5a/AP8, aus demselben Grund und schärfer: Dort steht der Knopf, mit dem sich eine Sperre aufheben lässt — wer im Wartungsmodus jemanden wieder hereinlassen muss, braucht genau diese Seite. **Komplett-Backup und Backup-Ziele seit Web 21.1.0** (P5c/AP9, E-P5c-134): Schloss der Torwächter, führte der Knopf „Komplett-Backup" der Seite Updates in die Sperre, und die Vorbedingung der FTP-Migration nannte die gesperrten Backup-Ziele als Weg. **`zweitfaktor.php` seit Web 21.9.0** (Schritt 18, SR-07): die Bestätigung des frischen Codes — Schlüsselgriffe und Blatt liegen in der Wartung offen und verlangen ihn; ohne die Zeile führte ihr Umweg auf eine 503. **`zweitfaktor_notweg.php` seit Web 21.13.0** (Schritt 18, SR-04): der Notzugang der einzigen BetreiberIn — nach einem Deploy ist die Wartung an, bis `update.php` gelaufen ist, und genau dann steht sie, die den Zweitfaktor verloren hat, davor. **Das Tor fragt nie nach der Rolle** — bis Web 21.1.0 sagten Karte und Handbuch „für alle außer Verwaltung und Betrieb" (F-P5c-158); jede Seite unter Verwaltung antwortet 503. **Die Zahl stand hier bis Web 20.1.0 auf „elf“ und die Aufzählung ließ `auth_salt.php` aus** — beide hinkten seit Web 19.1.2 (Nr. 171) hinterher; maßgeblich ist immer die Konstante, nicht dieser Satz. Alles unter `assets/` läuft ohnehin nicht durch PHP; die Kommandozeile ist nie getort |
 | Schalten | `betrieb_updates.php`, Karte „Wartungsmodus", POST mit CSRF, nur BetreiberIn (S8/AP1). Idempotent: Ein zweites Einschalten überschreibt `seit` und `von` nicht. Scheitert das Schreiben oder Löschen, sagt die Seite es **mit Pfad** |
@@ -7159,7 +7135,7 @@ um derentwillen es dort steht. `migrationen_ausstehend()` braucht eine
 Verbindung und steht deshalb eine Ebene höher.
 
 **Der Zwischenspeicher hängt am Katalog-Hash.** Ein voller
-`migrationen_lauf($pdo, false)` geht 46 Katalogeinträge durch und stellt je
+`migrationen_lauf($pdo, false)` geht jeden Eintrag von `migrationen_katalog()` durch und stellt je
 Eintrag mindestens eine `information_schema`-Abfrage — das ist der Preis
 einer Statusseite, nicht der Preis *jeder* Seite. In `app_state` stehen
 deshalb zwei Zeilen: `migration_tor_hash` (SHA-256 über die **Kennungen** des
@@ -7208,329 +7184,10 @@ schließt, nennt den Grund, gibt `ingest.php` sein JSON-503, lässt Betrieb →
 Updates offen, bietet „Wartung beenden" und öffnet wieder — dazu Nr. 54 in
 der Richtung, die weh tut (Erwartung 32 zeigt, dass der Zwischenspeicher nach
 einer Wiederherstellung *lügt*, Erwartung 33, dass das Zurücksetzen ihn
-wieder sehend macht). Betriebsablauf: Abschnitt 7.
+wieder sehend macht). Betriebsablauf: Abschnitt 13.
 
 
-### 5.1 Tastenbelegung je Geräteprofil
-
-Die Zielgeräte unterscheiden sich in zwei Achsen: **fünf oder drei Tasten**
-und **mit oder ohne Touch**. Daraus ergeben sich die Belegungen unten. Was das
-einzelne Gerät technisch hergibt, steht gemessen in `Geraete-Eingabe.md` —
-dieser Abschnitt beschreibt, was die App daraus macht.
-
-**Profil A — fünf Tasten, kein Touch** (`fenix6pro`, `fr945`)
-
-| Eingabe | Hauptseiten | Reanimationsseite | Listen und Menüs |
-|---|---|---|---|
-| kurz UP | Seite zurück | Seite zurück | Eintrag hoch |
-| kurz DOWN | Seite vor | Seite vor | Eintrag runter |
-| kurz START | — | Rea beginnen bzw. Untermenü | Eintrag wählen |
-| lang START | Schnellmenü; Sync-Seite: Kopplung | Countdown neu starten | — |
-| lang UP | — | Adrenalin | — |
-| lang DOWN | — | Rhythmuskontrolle | — |
-| BACK | App verlassen (Abfrage) | zurück zur Uhrseite | Liste schließen |
-| START + beliebige Taste | Tastensperre, wirkungslos | Tastensperre, wirkungslos | — |
-
-LIGHT wird auf beiden Geräten nicht zugestellt und ist unbelegt.
-
-**Profil B — drei Tasten, Touch** (`venu3s`)
-
-Nur zwei der drei Tasten sind für Connect-IQ-Apps erreichbar; die mittlere ist
-systemseitig belegt. Ohne Touch ist das Gerät deshalb nicht bedienbar.
-
-| Eingabe | Wirkung |
-|---|---|
-| kurz Action | wie kurz START in Profil A |
-| lang Action | wie lang START in Profil A |
-| lang Zurück | wie lang START in Profil A (zweiter Weg, s. u.) |
-| kurz Zurück | wie BACK in Profil A |
-| Wischen hoch / runter | Seite vor / zurück, in Listen Eintrag runter / hoch |
-| Wischen rechts | wie BACK |
-| Wischen links | unbelegt |
-| Tippen | auf Hauptseiten wirkungslos; in Menüs kann es den markierten Eintrag wählen |
-
-Ersatz für fehlende Tasten:
-
-- **UP/DOWN** werden durch Wischen ersetzt. Das System leitet Wischgesten
-  selbst in `onNextPage`/`onPreviousPage` um; eigener Wisch-Code ist weder
-  nötig noch möglich (das Roh-Ereignis wird gar nicht erst zugestellt).
-- **Lang UP und lang DOWN** haben auf der Venu keine Entsprechung. Adrenalin
-  und Rhythmuskontrolle sind dort nur über das Rea-Untermenü erreichbar —
-  ein Bedienschritt mehr.
-- **Der lange Druck liegt bewusst doppelt**, auf Action *und* Zurück. Grund:
-  Das Handbuch der Venu 3 nennt ein Steuerungsmenü nach zwei Sekunden Halten
-  der Action-Taste. Im Simulator trat es nicht auf, auf echter Hardware ist es
-  ungeprüft. Fängt die Uhr den langen Action-Druck ab, bleibt die App über den
-  langen Zurück-Druck vollständig bedienbar. Beide Wege sind gegeneinander
-  entprellt.
-- **Die Tastensperre** (START + zweite Taste) entfällt auf der Venu, weil nur
-  eine Taste sinnvoll erreichbar ist.
-
-**Profil C — fünf Tasten mit Touch** (Fenix 7, Epix 2, FR965 und weitere)
-steht im Manifest und läuft mit den Zuordnungen von Profil A; Wischen und
-Tippen kommen dazu wie auf der Venu. *(Bis Uhr 4.1.0 stand hier „vorbereitet,
-aber nicht ausgeliefert" — die Geräte standen da längst im Manifest.)* Die
-App-Einstellung `touchEnabled` (Vorgabe: an) schaltet die Berührung ab, und
-**seit Uhr 4.1.0 wirkt sie** (F-R17-68; bis dahin las sie nur
-`Input.touchActive()`, das niemand aufrief). Weil Connect IQ einem Behavior
-nicht ansieht, ob es von einer Taste oder vom Bildschirm kam, und das
-Roh-Ereignis einer belegten Geste gar nicht zustellt (`Geraete-Eingabe.md`
-4.2), meldet jeder Delegate der App jede Taste an `Input.tasteGesehen()`;
-`Input.beruehrungVerwerfen()` verwirft ein Blättern, Zurück oder Auswählen,
-vor dem keine Taste unten war und keine in den letzten 1000 ms losgelassen
-wurde. Das gilt nur auf Geräten mit Touch **und** UP/DOWN — auf Profil A
-ohne Touch und auf Profil B ändert sich nichts. **Nicht erreicht** werden die
-Systembausteine (`WatchUi.Confirmation`, `Menu2`); dort bleibt Tippen
-wirksam. Gemessen im Simulator auf der Fenix 7; auf einem echten Gerät
-ungeprüft.
-
-### 5.1a Pausenzustand der Reanimation
-
-`Cpr.mc` kennt drei Zustände: `active=false` (keine Rea), `active=true,
-paused=false` (läuft) und `active=true, paused=true` (angehalten). Die Pause
-entsteht ausschließlich über „Rea BEENDEN" im Untermenü: Der 2:00-Countdown
-steht, die Übersicht öffnet sich, und dort wird fortgesetzt oder endgültig
-geschlossen.
-
-Zwei Punkte sind bewusst so gebaut:
-
-- **Die Gesamtdauer läuft während der Pause weiter.** Sie ist die tatsächlich
-  verstrichene Reanimationszeit; ein Anhalten würde sie zu kurz dokumentieren.
-  Nur der Countdown steht.
-- **Die Pause wird nicht übertragen.** Sie ist ein reiner Bedienzustand, im
-  JSON-Vertrag gibt es sie nicht. Persistiert wird sie trotzdem (`Storage`
-  `"cpr"`, Schlüssel `"p"`), damit ein Neustart der App keine Entscheidung
-  erzwingt oder unterschlägt.
-
-`stopRecording()` schließt die Sitzung unabhängig davon, ob sie lief oder
-pausiert war — Einsatzabschluss und Dienstende brauchen deshalb keine
-Sonderbehandlung.
-
-### 5.1b Geräteprofile im Jungle
-
-`monkey.jungle` weist jedem Gerät seinen Quell- und Ressourcenpfad **vollständig**
-zu:
-
-```
-fenix6pro.sourcePath   = source;source-tasten5
-venu3s.sourcePath      = source;source-tasten3
-venu3s.resourcePath    = resources;resources-icon70;resources-marke105
-```
-
-**Nicht** `$(<gerät>.sourcePath);source-tasten5` schreiben. Der Selbstbezug
-fällt auf eine Vorgabe zurück, die alle `source*`-Ordner einsammelt; dann
-landen beide `DeviceProfile.mc` im Build und der Compiler meldet
-`Redefinition of 'HAS_UP_DOWN'`. Dasselbe gilt für `resourcePath` — sonst
-bekäme die Fenix das Symbol der Venu 3s.
-
-`base.sourcePath` steht auf dem Fünf-Tasten-Profil: Ein Gerät, das jemand ins
-Manifest einträgt ohne hier eine Zeile zu ergänzen, baut damit gegen das
-konservativere Profil.
-
-**Die Ressourcenordner sind nach Größe geschnitten, nicht nach Gerät:**
-
-| Ordner | Inhalt |
-|---|---|
-| `resources` | Grundordner — Launcher-Symbol 40 px, Bildmarke 73 px |
-| `resources-icon<N>` | **nur** das Launcher-Symbol in N Pixeln (35, 36, 54, 56, 60, 61, 65, 70) |
-| `resources-marke<K>` | **nur** die Bildmarke in einer Kachel von K Pixeln |
-
-Getrennt, weil die beiden Größen nicht miteinander laufen: Ein Gerät mit
-60-px-Symbol gibt es bei 360, 390, 416 und 454 Pixeln Displayhöhe. Die
-Ordnerzahl gewinnt dabei nichts — getrennt 8 + 3, zusammengelegt ebenfalls 11 —,
-wohl aber die Pflege: Zusammengelegt läge dieselbe 101er Kachel in fünf
-Ordnern, und eine verschobene Stufengrenze schnitte den ganzen Satz neu.
-
-Die Symbolgröße ist eine **Vorgabe des Geräts** (`launcherIcon.width` in
-seiner `compiler.json`), keine Wahl; fehlt sie, skaliert `monkeyc` und meldet
-es als Warnung.
-
-Die Kachelgröße der Bildmarke kommt dagegen aus einer Entscheidung: vier
-Stufen (60, 73, 101, 118) über die zehn vorkommenden Displayhöhen, Zielwert
-27 % — das Verhältnis 70/260 des Bezugsgeräts, dem `Ui.s()` ohnehin jede Länge
-folgt. Ein Bitmap kann `Ui.s()` nicht folgen (`dc.drawBitmap` zeichnet 1:1),
-vorgerasterte Stufen holen das nach. Alle 99 Geräte liegen damit zwischen 25,0
-und 28,8 %; vor Uhr 1.10.3 reichte die Spanne von 15 % bis 34 %, weil die
-Zuordnung an der Symbolgröße hing. Begründung der Stufenzahl:
-Kopf von `tools/erzeugen/uhr-bilder.sh`.
-
-Bilder erzeugen: `tools/erzeugen/uhr-bilder.sh`. Die passenden Jungle-Zeilen:
-`tools/uhr-pruefstand/geraeteklassen.py --bloecke`.
-
-### 5.1c Was die Uhr mit einer Absage anfängt (ab Uhr 3.1.0, Backlog Nr. 159)
-
-Bis Uhr 3.0.2 kannte `Uploader.onResponse()` zwei Fälle: Erfolg, und alles
-andere. „Alles andere" hieß `lastError` setzen und beim nächsten Anlass erneut
-versuchen — für einen Netzfehler richtig, für eine Absage falsch. Ein Paket,
-das der Server nie annimmt, stand vorn in `_findJob()` und blieb dort; alles
-dahinter kam nicht mehr an. Und weil `Pair.start()` das Trennen verweigert,
-solange `Model.backlogCount() > 0`, ließ sich die Uhr danach auch nicht mehr
-neu koppeln. Es blieb das Löschen der App, mit allem, was sie trug.
-
-Seither unterscheidet die Antwortbehandlung drei Fälle:
-
-| Antwort | Bedeutung | Was die Uhr tut |
-|---|---|---|
-| `401`, `403` | Das **Gerät** ist abgemeldet: gelöscht, Schlüssel ungültig, oder auf inaktiv gestellt | `Uploader.abgemeldet` wird gesetzt, `syncAll()` kehrt sofort zurück. **Kein Paket wird geparkt** — mit ihnen ist nichts verkehrt, sie werden nach einer neuen Kopplung gebraucht. Die Sync-Seite nennt den Grund und den Weg zurück. **Seit Uhr 4.1.0** merkt sich die Uhr den Zeitpunkt der ersten Abmeldung (`abgem_seit`, übersteht Neustarts) und verwirft 30 Tage danach alle wartenden Pakete (E-R17-22); die rote Zeile lautet dann „Abgemeldet, Daten bis TT.MM." |
-| `400` **mit** `{"error":…}` | **Dieses** Paket ist unbrauchbar | Marke `bad_<ref>` im Storage, `_next()` arbeitet weiter. Ein blankes `400` ohne Kennzeichen zählt nicht: Es kann von jedem Zwischenstück kommen, und ein gesundes Paket dafür zu parken wäre teurer als ein Versuch zuviel |
-| alles Übrige | Störung | unverändert: `lastError`, später erneut |
-
-**Ein geparktes Paket wird übersprungen, nicht entfernt.** Das ist der Punkt,
-an dem die naheliegende Lösung Daten verliert: `Model.backlogCount()` entsorgt
-Einträge, für die `Uploader.hasWork()` falsch liefert — wer ein geparktes
-Paket darüber aus der Schlange nähme, ließe seine Spur als Waise im Speicher
-zurück, rund 100 kB, die nichts mehr freigibt. `hasWork()` bleibt deshalb
-wahr; `_findJob()`, `backlogCount()` und `allSynced()` fragen zusätzlich
-`istGeparkt()`. Entfernt wird nur über `Uploader.verwerfen()`, und das räumt
-`Track.purge()` und alle drei Marken mit.
-
-Dass geparkte Pakete **nicht** im Rückstand zählen, ist kein Schönheitsfehler,
-sondern der Ausweg: Sonst bliebe die Zahl für immer über null, `Pair.start()`
-verweigerte das Trennen weiter, und die Sackgasse wäre dieselbe wie vorher.
-Beim Trennen werden sie verworfen — sie gehören dem bisherigen Konto —, und
-die Rückfrage sagt es vorher.
-
-### 5.2 Neue Zielgeräte prüfen — `tools/uhr-pruefstand/eingabe-probe`
-
-Bevor ein Gerät in `watch/manifest.xml` aufgenommen wird, muss gemessen sein,
-welche Tasten überhaupt bei der App ankommen, welche Behaviors das System
-daraus ableitet und ob die Langdruck-Erkennung dort funktioniert. Datenblätter
-reichen dafür nicht: Auf der Venu 3s ist eine der drei Tasten systemseitig
-belegt und für Connect-IQ-Apps unsichtbar — das steht in keiner Übersicht.
-
-Dafür liegt unter `tools/uhr-pruefstand/eingabe-probe/` ein eigenständiges Connect-IQ-Projekt.
-Es wird nie ausgeliefert, hat eine eigene UUID und keine Berechtigungen. Es
-protokolliert jedes Eingabeereignis mit Millisekunden-Stempel auf Konsole und
-Display und startet bei jedem Tastendruck einen 1000-ms-Timer — denselben
-Mechanismus, den die App über `Const.LONG_PRESS_MS` für Langdrücke benutzt.
-Steht `HALTE-TIMER` im Protokoll vor dem `KeyReleased`, sind Langdrücke
-möglich; steht es danach oder gar nicht, sind sie es nicht.
-
-Messfolge und Auswertung: `tools/uhr-pruefstand/eingabe-probe/LIESMICH.md`.
-Ergebnisse gehören nach `Geraete-Eingabe.md`.
-
-**Build:** VS Code + Monkey-C-Erweiterung + Connect-IQ-SDK + JDK;
-Entwickler-Schlüssel via „Generate a Developer Key". Ziele `fenix6pro`, `fr945`
-und `venu3s` (s. Abschnitt 5.1 und `Geraete-Eingabe.md`),
-Debug-Build; Sideload: `.prg` nach `GARMIN/Apps/`. Die Server-Adresse ist eine
-**App-Einstellung** (Garmin Connect); `http://` hebt die Uhr seit 4.1.0 auf
-`https://` (F-R17-11). Seit Uhr 3.0.0 hat
-die **Server-Adresse einen Vorgabewert** — `nadoku.gen-em.org`, die öffentliche
-Installation (E-R49-8); Selbsthoster tragen dort ihre eigene Domain ein. Geräte-ID
-und API-Schlüssel waren bis Uhr 4.0.0 der **Alt-Weg** für die Handanlage;
-**seit Uhr 4.1.0 gibt es sie nicht mehr** (E-R17-21) und seit Web 23.3.0
-auch die Handanlage im Web nicht (E-R17-56). Die Zugangsdaten setzt allein die
-**Kopplung** (Uhr: Sync-Seite → START halten; das Gerät
-zeigt einen Code, den ein Mensch im Web unter Einstellungen → Geräte einträgt).
-Connect IQ bewahrt diese Einstellungen an der App-Kennung auf — sie überstehen
-jedes Neukompilieren, gehen aber bei einem Wechsel der Kennung verloren; der
-Simulator behält sie sogar über ein neues Kompilat hinweg (`pruefstand.sh
-einstellungen-leeren`). `Const.APP_VERSION` bei Releases mitziehen (Anzeige
-Sync-Seite). Die **App-Kennung im `manifest.xml`** ist seit Uhr 2.0.0 keine
-Platzhalterzahl mehr, sondern die endgültige — sie wird nicht wieder gewechselt,
-weil ein Wechsel für die Uhr eine andere App bedeutet und die Kopplung mitnimmt.
-
-**Dienstende (Uhr):** „Einsatztag beenden" schließt Rea und Dienst, setzt den
-Arbeitszustand zurück (Zähler, Phase, Tag) und beendet die App per
-`System.exit()`; die Upload-Warteschlange bleibt erhalten. Der Wechsel zur
-Sende-Ansicht läuft verzögert (Modul `EndDay`), weil ein direkter
-`switchToView()` aus `ConfirmationDelegate.onResponse()` von der sich
-schließenden Bestätigung wieder entfernt würde.
-
-### 5.2b Uhr-App ohne Arbeitsplatz prüfen — `tools/uhr-pruefstand`
-
-Der Build oben setzt einen eingerichteten Arbeitsplatz voraus. Damit war jede
-Änderung am Monkey-C-Code aus einer Wegwerf-Umgebung heraus blind: kein
-Kompilat, kein Simulatorlauf, nur Lesen. `tools/uhr-pruefstand/pruefstand.sh`
-schließt diese Lücke — es baut SDK und Simulator auf einer nackten
-Linux-Rechner auf und startet die App unter einem virtuellen X-Server.
-
-Drei der vier nötigen Teile beschafft das Skript allein: das SDK von
-`developer.garmin.com` (keine Anmeldung nötig), die Systembibliotheken aus den
-Ubuntu-Quellen und den Entwickler-Schlüssel per `openssl` — für den Simulator
-genügt jeder gültige Schlüssel, der des Arbeitsplatzes gehört nicht dorthin.
-
-Der vierte Teil ist der Haken. **Gerätedateien (`Devices/`) und Zeichensätze
-(`Fonts/`) liefert nur der SDK-Manager aus**, und der ist eine
-Fensteranwendung mit Garmin-Anmeldung — auf einem Rechner ohne Bildschirm
-nicht zu bedienen. Sie werden deshalb von einer selbst bereitgestellten Quelle
-geholt, deren Adresse in `CIQ_GERAETE_URL` steht und bewusst **nicht** im
-Repositorium: Es ist öffentlich, und die Dateien gehören Garmin. Wer den
-Prüfstand neu aufsetzt, muss die Adresse also erfragen. Seit dem 23.09.2026
-holt das Skript zuerst je ein Archiv (`devices.tar`, `fonts.tar`) von dort —
-eine Anfrage statt tausender, und die Anfragen waren die Zeit: rund 31 min für
-Gerätedateien und Schriften in Lauf #253, 1 min über die Archive. Fehlt ein
-Archiv, fällt es mit einer Warnung auf `wget -r` über die Einzeldateien
-zurück; dafür braucht die Quelle eine eingeschaltete Verzeichnisauflistung.
-Gepackt werden die Archive im Ordner `~/.Garmin/ConnectIQ` mit
-`tar cf devices.tar Devices` und `tar cf fonts.tar Fonts`, **immer über den
-ganzen Bestand** — sonst sieht `geraeteklassen.py` kein neues Gerät. Lässt
-sich ein Archiv nicht entpacken oder liegt es eine Ebene zu tief, ist der
-Lauf rot. **Wer Geräte nachlädt, packt beide Archive neu**; sonst holt die
-Kette ohne Warnung den alten Stand.
-`aufbau` holt nur die drei Zielgeräte — für Stufe I und
-`geraeteklassen.py` braucht es `CIQ_ZIELE=alle`. Fehlen die
-Zeichensätze, übersetzt die App zwar, bricht aber beim ersten Zeichnen mit
-`Invalid Font Specified` ab — der Fehler zeigt auf die eigene Zeile, liegt
-aber an der Umgebung.
-
-Zwei Eigenheiten sind der Erwähnung wert. Der Simulator ist gegen
-`webkit2gtk 4.0` gebunden, das es in Ubuntu 24.04 nicht mehr gibt; das Skript
-holt die 22.04-Stände und legt sie **neben** den Simulator, statt am System zu
-drehen. Und Bedienung wird als X-Ereignis zugestellt — Tastendruck, Tipp,
-Langdruck und Wischgeste kommen so bis in die App durch, gemessen mit der
-Eingabe-Probe (s. `Geraete-Eingabe.md`).
-
-Eine dritte Eigenheit ist beim Messen teuer geworden. Der Simulator führt zwei
-Ablagen, die jedes neue Kompilat überleben — die App-Einstellungen und
-`Application.Storage` — und **ihre Dateinamen sagen nichts darüber aus, zu
-welcher App sie gehören**: Am 02.09.2026 legte ein und derselbe Lauf
-`V2.SET` und `UUID_ALT.DAT` an, beide nach früher geladenen Kompilaten benannt.
-Dagegen helfen `einstellungen-leeren` und `speicher-leeren`, die je eine Ablage
-**ganz** räumen. Wer stattdessen die Datei löscht, deren Namen er erwartet,
-trifft womöglich nichts und misst dann den Zustand des vorigen Laufs.
-
-**Der Simulator und TLS** (Netzprobe, F-S5-11). Ob der Simulator einen
-Server auf `127.0.0.1` erreicht, beantwortet `tools/uhr-pruefstand/netzprobe/`
-mit einer Anfrage an `pair.php` (`GET` → 405). Gemessen am 03.09.2026, SDK
-9.2.0, fenix6pro:
-
-| Weg | Konsole der App | Zugriffsprotokoll |
-|---|---|---|
-| `http://127.0.0.1:8080` | **−1001** (`SECURE_CONNECTION_REQUIRED`) | **`[405]: GET /pair.php`** |
-| `https://127.0.0.1:8443`, selbstsigniert | 404 | nichts (`tlsv1 alert unknown ca`) |
-| `https://127.0.0.1:8443`, eigene CA im Systemspeicher | **405** | **`[405]: GET /pair.php`** |
-
-**Die erste Zeile ist die unangenehme:** Über blankes HTTP lässt der
-Simulator die Anfrage hinaus, der Server **führt sie aus**, und die App
-bekommt `−1001`. Wer nur auf den Rücklaufcode sieht, hält den Weg für tot
-und übersieht, dass die Gegenseite gehandelt hat — bei einem schreibenden
-`POST` kein Schönheitsfehler. Die dritte Zeile ist das Rezept in
-`tools/referenzdatensatz/einspielen/lokal_starten.sh`: eine eigene CA, ein
-Serverzertifikat mit `subjectAltName=IP:127.0.0.1`, die CA per
-`update-ca-certificates` im Systemspeicher. Sie entsteht auf der Maschine
-und verlässt sie nicht.
-
-**Der Rundlauf** (seit S11-08, `tools/uhr-pruefstand/rundlauf/`) baut auf
-dieser dritten Zeile auf: Eine Prüffassung der App — eine Kopie mit der
-Adresse `127.0.0.1:8443` und einer Füllung, die einen Einsatz und ein
-Ruhesegment anlegt — koppelt im Simulator an das Demo-Konto, sendet beides
-verschlossen, und `pruefen.php` öffnet es mit dem Demo-Schlüssel und hält es
-Wert für Wert gegen (12 Prüfungen). Mit `--nachholen` dazu der Weg ohne
-Kontoschlüssel und das Nachholen (E-S11-79). Mit `--schrumpfen` (seit
-R17-21, F-R17-52) liegen zwei geparkte Pakete vor dem Einsatz, und die
-Prüffassung verwirft sie während seiner letzten Anfrage; danach muss die
-Konsole „liste=0 spuren=0" melden und keinen Absturz (3 Prüfungen). Die
-Fassung vor 4.1.0 bricht dort mit „Array Out Of Bounds" ab. Den Klick im Web ersetzt eine
-Zeile SQL; was die Weboberfläche beim Koppeln tut, misst die Kopplungsprobe.
-
-Die Grenzen bleiben die des Simulators: keine echte Hardware, keine
-Systemgesten, keine GPS-Aufzeichnung (die Punkte legt die Füllung an), keine
-Zeiten einer echten Uhr. Ein Lauf zeigt, dass es startet, wie es aussieht und
-dass das Gesendete aufgeht — nicht, dass es auf dem Gerät genauso ist.
-Anleitung: `tools/uhr-pruefstand/LIESMICH.md`.
-
-### 4.99d Betrieb: drei Seiten statt einer Wartungsseite (ab Web 15.1.0, S8/AP2)
+### 4.25 Betrieb: drei Seiten statt einer Wartungsseite (ab Web 15.1.0, S8/AP2)
 
 **Die Wartungsseite war neun Blöcke auf einer Fläche** — Wartungsmodus,
 Schlüsselableitung, Logo, Umgebung, Hintergrundjobs, Job-Auslöser, Einsätze
@@ -7650,7 +7307,7 @@ sicherer Kontext), markiert das Skript den Text und meldet „markiert — Strg+
 Die Rückmeldung steht **im Knopf**, nicht daneben — eine Zeile, die auftaucht
 und wieder verschwindet, verschiebt sonst das Layout.
 
-### 4.99e Status und Statistik: bewerten und zählen (ab Web 15.3.0, S8/AP4; drei Reiter ab Web 20.47.0, P5c/AP7)
+### 4.26 Status und Statistik: bewerten und zählen (ab Web 15.3.0, S8/AP4; drei Reiter ab Web 20.47.0, P5c/AP7)
 
 **Zwei Seiten, zwei Fragen — und die Trennung ist die Sache.**
 `betrieb_status.php` beantwortet „ist hier etwas zu tun?", `betrieb_statistik.php`
@@ -7693,7 +7350,7 @@ nicht, und `edbak_ablage_bereit()` legt das Verzeichnis notfalls neu an.
 
 **Das Demo-Konto — in keiner Zahl.** Sein Bestand ist erfunden, liegt als
 Fixture im Repositorium und wird bei jedem Reset daraus neu hergestellt
-(4.99a). Jede Abfrage der Seite trägt deshalb `WHERE … <> :demo`; fehlt die
+(4.21). Jede Abfrage der Seite trägt deshalb `WHERE … <> :demo`; fehlt die
 Marke `demo_user_id`, ist der Wert 0 und die Bedingung wahr für alle —
 dieselbe Abfrage, ein Sonderfall weniger.
 
@@ -7809,7 +7466,7 @@ haben.
 
 Gemessen: erste Bytes `ef bb bf`, danach `Gerät` als `47 65 72 c3 a4 74`.
 
-### 4.99f Menü und Leiste des Einstellungsbereichs (ab Web 15.4.0, S8/AP5)
+### 4.27 Menü und Leiste des Einstellungsbereichs (ab Web 15.4.0, S8/AP5)
 
 **Eine Quelle.** `ui_einstellungen_punkte()` in `server/ui.php` liefert die
 Blöcke — Schlüssel, Titel, Punkte, je Punkt `[key, href, text, symbol,
@@ -7941,7 +7598,7 @@ seit Langem `scroll-padding-top: calc(var(--kopf) + var(--abstand-4))`, und
 beides addiert sich — gemessen landete die angesprungene Karte 68 px zu tief.
 Mit `scroll-padding-top` allein sitzt der Sprung bei 72 px.
 
-### 4.99g Das Betriebsprotokoll: Schreibweg, Seite, Archiv (ab Web 20.16.5, P5b/AP1; Seite und Archiv ab Web 20.39.0, P5c/AP2; Reiter System ab Web 20.40.0, P5c/AP3)
+### 4.28 Das Betriebsprotokoll: Schreibweg, Seite, Archiv (ab Web 20.16.5, P5b/AP1; Seite und Archiv ab Web 20.39.0, P5c/AP2; Reiter System ab Web 20.40.0, P5c/AP3)
 
 *Entscheidungen: V1 (16.09.2026), V2, E-P5b-06, E-P5b-12; für Seite und
 Archiv E-P5c-02, -03, -10, -11, -26, -38, -39, -57, -75, -76; für den Reiter
@@ -8044,7 +7701,7 @@ die Verwaltung auf der Kontoseite, **vor** dem `DELETE` (F-P5c-99); bis
 dahin schrieben ihn nur die Selbstlöschung und der Verfall.
 
 **Neu mit Web 21.12.0** (Schritt 18, SR-03): drei Arten im Reiter Sicherung
-für den Wechsel des Serverschlüssels (4.97c) — `serverschluessel_gewechselt`
+für den Wechsel des Serverschlüssels (4.9) — `serverschluessel_gewechselt`
 (orange; neue und bisherige Kennung, Zahl der Stücke),
 `serverschluessel_umgehuellt` (blau; die Zahlen des Nachweises und bis zu
 zwanzig Stücke, die mit keinem der beiden aufgingen, ohne Kontokennung) und
@@ -8062,7 +7719,7 @@ darf, zeigt die Seite nicht — kein ausgegrauter Reiter. Ein Reiter außerhalb
 der Liste in der Adresse ist 403, ein unbekannter 404; die Meldung nennt,
 wem er vorbehalten ist — Jobs und Sicherung der Verwaltung, die übrigen der
 BetreiberIn (F-P5c-100). Die Zellen stehen in der Berechtigungsmatrix
-(4.99p).
+(4.37).
 
 **Löschen kann niemand** — nur die Fristen (E-P5c-02). Fristen und Archiv
 stellt die BetreiberIn in **Betrieb → Servereinstellungen → Protokoll** ein;
@@ -8224,7 +7881,7 @@ Archiv hält sie länger und außer Haus (E-P5c-03).
 | **Höchstgröße** | **32 MB** Klartext je Archiv; was darüber liegt, wird nicht archiviert, und das Manifest sagt es (`gekuerzt` je Reiter) |
 | **Arbeitsweise** | in Häppchen zu **500 Zeilen** je Abfrage mit Fortsetzungsmarke (Produktiv hat keinen Cron, huckepack gibt es 3 s); der Klartext liegt nur im Bauordner `.bau/` unter `sicherungen/` und wird nach dem Packen gelöscht |
 | **Aufbewahrung** | **365 Tage** (90–1095), gezählt ab dem Beginn des Zeitraums; dann löscht der Job |
-| **Versand** | mit dem Versandjob auf die aktiven Sicherungsziele (Einstellung, Vorgabe an), **ohne Aufbewahrungsregel dort** (4.97c) |
+| **Versand** | mit dem Versandjob auf die aktiven Sicherungsziele (Einstellung, Vorgabe an), **ohne Aufbewahrungsregel dort** (4.9) |
 | **Ohne Serverschlüssel** | kein Archiv — ein Archiv im Klartext wäre genau das, was das Siegel verhindern soll; die Statusseite sagt schon rot, dass der Schlüssel fehlt |
 
 **Was hineindarf (E-P5c-39, -75).** Sicherheit: nur Art, Topf, Stufe, Zeit —
@@ -8243,7 +7900,7 @@ Namen, ohne es zu öffnen: Der Reiter Archiv zeigt es mit der Plakette
 „anderer Schlüssel" und sperrt den Download. Während eines Wechsels des
 Serverschlüssels trägt ein noch nicht umgehülltes Archiv seit Web 21.12.1
 die Plakette „bisheriger Schlüssel" (blau) — der Download bleibt gesperrt,
-bis der Job es unter dem neuen Namen abgelegt hat (4.97c), und die Meldung
+bis der Job es unter dem neuen Namen abgelegt hat (4.9), und die Meldung
 darüber sagt das, statt auf den Schlüssel von damals zu verweisen
 (F-SR-82).
 
@@ -8258,7 +7915,882 @@ Anfrage danach endet.
 Segment der Konto-Backups mit (E-P5c-77) — ein eigenes Segment bräuchte
 eine Farbe und eine Freigabe.
 
-### 4.99p Die Berechtigungsmatrix (ab Web 20.39.0, P5c/AP2, E-P5c-22)
+### 4.29 Die Einstellungen rund um Konten (ab Web 20.16.5, P5b/AP1)
+
+*E-P5b-14. Code: `server/konten_einstellungen_lib.php`, Oberfläche
+Betrieb → Servereinstellungen, Karte „Konten".*
+
+**Bibliothek und nicht Seite** (R83): Die zweiten Verbraucher stehen
+namentlich im Konzept — `registrieren.php` liest die Betriebsart,
+`login.php` die Demo-Anmeldung, `ingest.php` die Mengengrenzen, der Job
+`konto_verfall` die Freischaltfrist. Sie in die Seite zu schreiben und später
+herauszuziehen wäre derselbe Umbau, nur mit vier Aufrufern mehr.
+
+| Schlüssel in `app_state` | Vorgabe | wirkt ab |
+|---|---|---|
+| `konten_reg_art` | **`einladung`** | AP3 |
+| `konten_reg_frist` | 30 Tage | AP3 |
+| `konten_wegwerf` / `…_eigene` | an / leer | AP3 |
+| `konten_grenze_einsaetze` | 5000 | AP6 |
+| `konten_grenze_mb` | 250 | AP6 |
+| `konten_aufbewahrung` | leer = unbegrenzt | AP6 |
+| `konten_demo_anmeldung` | an | **AP1** |
+| `protokoll_frist_verwaltung` | 365 | **AP1** |
+
+**Die Vorgabe der Betriebsart ist `einladung`**, und das ist nicht die, die
+nadoku selbst fährt. Sie ist die sicherste Grundstellung für eine
+Selbsthosterin, die die Seite nie aufschlägt — heutiges Verhalten, keine
+offene Tür durch Untätigkeit (E-P5b-01).
+
+**Zwei Fallen, beide im Code vermerkt:**
+
+- **Leer ist ein Wert.** Die Aufbewahrung „unbegrenzt" ist der leere String;
+  sie darf nicht auf die Vorgabe zurückfallen, sonst ließe sie sich nie
+  einschalten. Eine `0` gibt es nicht — sie hieße „nichts aufbewahren".
+- **Eine unbekannte Betriebsart fällt auf die Vorgabe zurück**, statt zu
+  gelten. `offen` durch einen Tippfehler wäre die teuerste aller stillen
+  Änderungen.
+
+`konten_einstellungen()` holt **alle acht Schlüssel in einer Abfrage** und
+hält sie je Anfrage. `app_state_lesen()` hat keinen Zwischenspeicher und
+fragt bei jedem Aufruf neu; acht Einzelaufrufe wären acht Abfragen je
+Seitenaufbau.
+
+### 4.30 Der Lebenszyklus eines Kontos (ab Web 20.17.0, P5b/AP2)
+
+*E-P5b-11, -12; R37 (1); Backlog Nr. 202 Paket 1. Code: `server/konto_lib.php`.*
+
+#### Vier Fassungen derselben Sache — und warum das aufgelöst wurde
+
+Ein Konto entstand an zwei Stellen, ein Token an vier, und keine glich der
+anderen:
+
+| Stelle | legte an | Transaktion | entwertete Vorgänger | Laufzeit |
+|---|---|---|---|---|
+| `admin_users.php` | Konto + Token | **ja** (E17) | nein | `INTERVAL 24 HOUR` |
+| `install.php` | Konto + Token | **nein** | nein | `INTERVAL 24 HOUR` |
+| `admin_user.php` | nur Token | — | ja | `INTERVAL 1 HOUR` |
+| `reset_request.php` | nur Token | — | ja | `INTERVAL 1 HOUR` |
+
+**`install.php` war die gefährliche**: Ein Abbruch zwischen den beiden
+`INSERT` hinterließ ein Konto ohne Weg hinein — anmelden ging nicht (kein
+Passwort), und der Einrichter lief nicht mehr, weil `install.lock` stand. Eine
+Installation, aus der man sich beim Einrichten selbst ausgesperrt hat.
+
+Aufgelöst wurde es hier und nicht in Schritt 15, weil die Selbstregistrierung
+aus AP3 sonst die **fünfte** Fassung geworden wäre — und sie ist die einzige,
+die von außen erreichbar ist.
+
+**Nachweis:** `grep -rn "INSERT INTO password_resets" server/` zeigt nur noch
+`konto_lib.php`.
+
+#### Die Bibliothek läuft ohne `config.php`
+
+`install.php` ist der vierte Aufrufer und der einzige, der läuft, **bevor** es
+eine `config.php` gibt: Er schreibt sie erst, nachdem er das erste Konto
+angelegt hat, und bringt deshalb seine eigene PDO-Verbindung mit. `konto_lib.php`
+lädt `db.php` und `protokoll_lib.php` deshalb nur mit `is_file()`, und jede
+Funktion nimmt ein `?PDO` entgegen. Dieselbe Falle wie Backlog Nr. 223 — und
+hier von vornherein vermieden statt hinterher behoben.
+
+**Und dann doch hineingelaufen (Backlog Nr. 288).** Seit Schritt 15 legt
+`konto_anlegen()` das Konto in `db_transaktion()` an, und der Rahmen stand in
+`db.php` — also hinter derselben Weiche. Von **Web 20.30.0 bis 20.37.2**
+scheiterte jede Neueinrichtung an „Call to undefined function
+db_transaktion()"; bemerkt hat es erst `hochfahren.sh --neu`, weil Stufe 1
+keine Anlage einrichtet. Seit **Web 20.37.3** steht der Rahmen in
+`transaktion_lib.php`, die nichts lädt; `konto_lib.php` bindet sie
+**unbedingt** ein, `db.php` ebenfalls. **Nie ein zweites Mal definieren**,
+auch nicht hinter `function_exists()`: Die Erfolgsseite des Einrichters lädt
+`db.php` nach, sobald `config.php` steht, und eine zweite Definition bräche dort
+mit „Cannot redeclare" ab — nachdem `config.php` und `install.lock` geschrieben
+sind. **Wer hier eine Funktion aus einer bedingt geladenen Datei ruft, prüft
+den Einrichter mit `bash tools/sandbox/hochfahren.sh --neu`.**
+
+Der Protokolleintrag „erstes Konto angelegt" fällt im Einrichter aus
+(`function_exists('protokoll')`). Das ist richtig: Er trüge ohnehin keinen
+Urheber, weil es zu diesem Zeitpunkt noch niemanden gibt, der handeln könnte.
+
+#### Die vier Zustände und ihre Übergänge
+
+| von → nach | `unbestaetigt` | `wartet` | `aktiv` | `gesperrt` |
+|---|---|---|---|---|
+| **`unbestaetigt`** | — | ja | ja | ja |
+| **`wartet`** | nein | — | ja | ja |
+| **`aktiv`** | **nein** | **nein** | — | ja |
+| **`gesperrt`** | nein | nein | ja | — |
+
+**Die Übergänge stehen als Tabelle und nicht als `if`-Zweige** (`KONTO_UEBERGAENGE`).
+Die Rückwege sind die interessanten: Aus `gesperrt` geht es nach `aktiv`
+zurück (Entsperren, Rücknahme der Selbstlöschung), aus `aktiv` aber **nicht**
+nach `unbestaetigt` — ein Konto, dessen Besitzerin sich plötzlich nicht mehr
+anmelden kann, ohne dass jemand es angeordnet hat, wäre ein Fehler mit Ansage.
+
+**Entsperren räumt auf**: `gesperrt_seit`, `gesperrt_grund` und
+**`loeschung_am`** werden geleert. Ohne das Letzte fände der Löschjob ein
+`loeschung_am` in der Vergangenheit und löschte ein Konto, dessen Besitzerin
+die Löschung gerade zurückgenommen hat — kein Schönheits-, sondern ein
+Datenverlustfehler.
+
+#### Wo der Status geprüft wird
+
+| Ort | Verhalten |
+|---|---|
+| `login.php` | **vor** der Sitzung, im Erfolgszweig der Passwortprüfung. Eigene Seite über `stoerung_seite_html()` (dritter Aufrufer, kein neuer Baustein), Antwortdauer angeglichen |
+| `auth_guard.php` | jede angemeldete Anfrage. Endegrund **`gesperrt`** — neu in `SESSION_ENDE_GRUENDE`, **mit beiden Texten** |
+| `ingest.php` | **`403`** mit `{"error":"konto","grund":"<status>"}`, **nach** der Schlüsselprüfung |
+
+**Die Selbstlöschung ist der Sonderfall, und zwar der wichtige** (E-P5b-16):
+Während der Karenz steht das Konto auf `gesperrt`, aber **die Anmeldung IST
+der Rückzug**. `login.php` nimmt die Löschung zurück, statt abzuweisen; hier
+abzuweisen hieße, den einen Weg zu versperren, der aus der Löschung
+herausführt — und danach löscht der Job. `auth_guard.php` lässt eine laufende
+Sitzung mit diesem Grund deshalb ebenfalls durch.
+
+**`ingest.php`: `403` und nicht `401`.** Die Uhr behandelt `403` heute als
+„abgemeldet" und puffert — genau das soll sie tun. Der Unterschied steht im
+JSON-Rumpf, nicht im Code; **eine Uhr-Stufe ist dafür nicht nötig**. Dass die
+Uhr „abgemeldet" statt „gesperrt" anzeigt, ist ein Backlog-Eintrag für die
+nächste Auslieferung.
+
+**Der Ratenschutz zählt das nicht mit.** Ein gesperrtes Konto ist kein
+Angriff; sein Gerät sendet weiter, weil niemand es abgeschaltet hat. Zählte es
+als Fehlversuch, sperrte der Ratenschutz nach kurzer Zeit eine Kennung, die
+nichts falsch macht — und nach dem Entsperren käme der Rückstand dann **nicht**
+durch. Gemessen: fünf Uploads mit gesperrtem Konto, **null** Zeilen in
+`rate_limits`.
+
+### 4.31 Einwilligungen (ab Web 20.19.0, P5b/AP4)
+
+*E-P5b-05, -15. Code: `server/einwilligung_lib.php`, `server/einwilligung.php`,
+Tabelle `konto_einwilligungen`.*
+
+#### Vier Rechtstexte, drei mit Einwilligung
+
+| Schlüssel | Seite | Einwilligung | Wirkung bei neuer Fassung |
+|---|---|---|---|
+| `impressum` | `impressum.php` | **keine** | — |
+| `datenschutz` | `datenschutz.php` | „zur Kenntnis genommen" | Hinweis auf jeder Seite |
+| `nutzungsbedingungen` | `nutzungsbedingungen.php` | „angenommen" | **sperrt den Login** |
+| `avv` | `avv.php` | „angenommen" | **sperrt den Login** |
+
+**Der Unterschied ist die Rechtsnatur, nicht der Rang.** Ein Vertrag kommt
+durch Annahme zustande und darf ohne sie nicht weiterlaufen. Eine
+Datenschutzerklärung informiert; Widerspruch dagegen ist kein
+Vertragsschluss, sondern ein Recht. Sie darf den Zugang nicht sperren — muss
+aber auffallen, sonst ist die Kenntnisnahme eine Behauptung.
+
+**Das Impressum steht bewusst nicht in der Reihe.** Es wird weder angenommen
+noch zur Kenntnis genommen; es ist eine Pflichtangabe. `RT_EINWILLIGUNG` sagt,
+welche der vier eine Einwilligung verlangen.
+
+#### Was „aktuelle Fassung" heißt
+
+`rechtstexte.stand_am`, und seit AP4 ist das ein **`DATETIME`** und kein
+`DATE` mehr — der Fehlerfund F3 des Konzepts: Zwei Änderungen am selben Tag
+wären sonst *eine* Fassung, und wer die erste angenommen hat, gälte als
+Annehmer der zweiten. Der Editor bleibt ein Datumsfeld; die Uhrzeit setzt der
+Speicherweg.
+
+`konto_einwilligungen.stand_am` hält, **welche** Fassung angenommen wurde. Der
+Vergleich der beiden ist die ganze Prüfung.
+
+**Ein Text ohne Standdatum verlangt nichts.** Sonst sperrte ein leer
+angelegter Platzhalter alle Konten aus — genau der Zustand zwischen dem
+Einspielen der Mechanik (AP4) und dem Einspielen der geprüften Texte (R41).
+
+**Der Satz gilt für die Registrierung genauso — seit Web 20.22.2, vorher
+nicht.** `registrieren.php` verlangte alle Schlüssel aus `RT_EINWILLIGUNG`,
+ohne `stand_am` anzusehen; der Begriff kam in der Datei kein einziges Mal vor.
+Wer sich in dem Zustand registrierte, auf den dieser Abschnitt gerade
+hingewiesen hat, musste den Haken „Ich nehme die Vereinbarung zur
+Auftragsverarbeitung (AVV) an" setzen, während `avv.php` daneben den Leertext
+zeigte. `einwilligung_in_kraft()` beantwortet die Frage jetzt für beide
+Seiten; **Prüfung und Markup ziehen aus derselben Liste**, sonst könnte die
+BetreiberIn zwischen Anzeige und Absenden einen Text in Kraft setzen und das
+Formular verlangte einen Haken, den es nie gezeigt hat. Backlog Nr. 231.
+
+#### Wo die Annahme entsteht
+
+**Bei der Registrierung, nicht erst am Tor** (E-P5b-25, seit Web 20.22.2).
+Dort wird der Vertrag geschlossen; das Tor ist dafür da, eine **neue** Fassung
+nachzuholen, nicht die erste zu erheben. Bis Web 20.22.1 war es andersherum,
+und zwar ungewollt: `registrieren.php` verlangte die Häkchen und schrieb sie
+nie — `einwilligung_setzen()` wurde im ganzen Server nur von
+`einwilligung.php` aufgerufen. Verloren ging dadurch nichts (das Tor fasst
+jedes Konto beim ersten Login), wohl aber die Stelle: Die Registrierende
+beantwortete dieselben Fragen zweimal.
+
+**Dass das Konto dabei noch `unbestaetigt` ist, ist kein Einwand.**
+Festgehalten wird, was an diesem Formular erklärt wurde — nicht, wem die
+Adresse gehört. Wird die Registrierung nie bestätigt, räumt
+`job_konto_verfall()` das Konto weg und die Zeilen mit ihm (`ON DELETE
+CASCADE` an `fk_kew_user`).
+
+**Das Tor bleibt das Auffangnetz**, und es wird gebraucht: Wer sich
+registriert, solange kein Text in Kraft ist, gibt keine Erklärung ab — die
+holt das Tor beim ersten Login nach dem Einspielen.
+
+#### Das Tor
+
+`auth_guard.php` leitet auf `einwilligung.php`, solange eine Annahme fehlt.
+**Drei Wege bleiben offen — Abmelden, Export, Konto löschen.** Wer nicht
+zustimmen will, muss an seine Daten kommen und gehen können; ein Tor, das auch
+den Ausgang versperrt, wäre Nötigung. Die Ausnahmeliste steht in
+`auth_guard.php` neben dem Tor, nicht in einer Konstante: Sie gehört dazu und
+wird mit ihm gelesen.
+
+**API und `ingest.php` bleiben unberührt.** Die Uhr fragt niemanden um
+Zustimmung — sie hat keinen Bildschirm dafür, und ihre Besitzerin hat der
+Nutzung zugestimmt, als sie das Gerät gekoppelt hat. Ein Tor vor `api/day.php`
+ließe eine laufende Aufzeichnung ins Leere laufen.
+
+#### Eine Zeile je Konto und Schlüssel, nicht je Annahme
+
+Der Primärschlüssel ist `(user_id, schluessel)`; eine neue Annahme
+überschreibt die alte. Der Verlauf — wer wann welche Fassung angenommen hat —
+steht im **Protokoll** (Reiter Verwaltung) und überlebt dort auch die
+Kontolöschung. Die Tabelle beantwortet nur die eine Frage, die bei jedem
+Seitenaufbau gestellt wird: *Liegt die aktuelle Fassung vor?*
+
+`ON DELETE CASCADE` ist hier — anders als beim Protokoll — richtig: Eine
+Einwilligung ist eine Aussage **über** das Konto; ohne Konto hat sie keinen
+Gegenstand.
+
+#### Der Leerzustand kommt aus einem Katalog
+
+In `rechtstext_seite.php` stand er als *zweiwertiger* ternärer Ausdruck. Das
+war die eine Stelle, an der ein dritter Schlüssel **stillschweigend falsch**
+geantwortet hätte: Die Nutzungsbedingungen hätten gemeldet, es sei „noch keine
+Datenschutzerklärung hinterlegt". Kein Fehler, keine Meldung — nur ein
+falscher Satz. `RT_LEERTEXT` kann das nicht: Ein fehlender Eintrag fällt beim
+Nachsehen auf, ein falscher Zweig nicht.
+
+### 4.32 Selbstlöschung und Adresswechsel (ab Web 20.20.0, P5b/AP5)
+
+*E-P5b-16. Code: `server/konto_lib.php`, `server/adresse_bestaetigen.php`,
+Job `konto_loeschung`.*
+
+#### Der Adresswechsel geht über die neue Adresse
+
+| | bis Web 20.19.0 | seit 20.20.0 |
+|---|---|---|
+| Schreiben | **sofort** | erst beim Klick |
+| Prüfung der neuen Adresse | **keine** | Link, 24 h |
+| Nachricht an die alte | Hinweis | Hinweis (unverändert) |
+| Nachweis | Passwort-Token | Passwort-Token (unverändert) |
+
+**Ein Tippfehler sperrte aus.** Die Anmeldung läuft über die Adresse, und
+„Passwort vergessen" schickt an eine Adresse, die es nicht gibt — der Weg
+zurück führte über die Verwaltung oder, auf einer Einzelinstallation, über die
+Datenbank.
+
+**Kein `UNIQUE` auf `email_neu`.** Zwei Konten dürfen dieselbe Adresse
+vormerken; erst der Klick entscheidet, und dort fängt das `UNIQUE` auf `email`.
+Eine Sperre schon beim Vormerken verriete, dass jemand anders dieselbe Adresse
+vorgemerkt hat.
+
+**Der Token steht nicht in `password_resets`.** Er gehört zu einer Adresse,
+nicht zu einem Passwort; dort wäre er ein zweiter Tokentyp in einer Tabelle,
+deren Regel „höchstens ein gültiger je Konto" lautet — ein Adresswechsel würde
+dann einen offenen Einladungslink entwerten.
+
+**`adresse_bestaetigen.php` läuft ohne Anmeldung**, und das ist der Zweck: Wer
+den Link hat, hat Zugang zum Postfach der neuen Adresse — genau das ist der
+Nachweis. Eine Anmeldung wäre gerade dann unmöglich, wenn sie am meisten hülfe.
+
+**Der Wechsel durch die Verwaltung geht den anderen Weg** (seit Web 23.2.0,
+R17-20): Er schreibt sofort, fragt die **alte** Adresse und sperrt bis dahin
+den Setz-Link — Abschnitt 3, „Ein Adresswechsel durch die Verwaltung ist
+sieben Tage unbestätigt". Die Seite dazu ist `adresse_verwaltung.php`, ohne
+Anmeldung aus demselben Grund wie diese.
+
+#### Die Selbstlöschung
+
+**Der Nachweis ist das abgeleitete Token** (seit Web 23.2.0, F-R17-67). Bis
+dahin schickte die Karte das Passwort selbst, und der Server verglich es mit
+bcrypt des **Tokens** — die Löschung ging nie. Jetzt leitet der Browser das
+Token ab (ein Zuhörer am Fenster in der Erfassungsphase, vor `confirm.js`),
+und `passwort_nachweis()` prüft mit Ratentopf.
+
+`gesperrt` mit dem Grund `selbstloeschung`, `loeschung_am` = jetzt + **30
+Tage**. **Die Rücknahme ist die Anmeldung** — `login.php` setzt den Status
+zurück, ohne dass es einen Knopf braucht.
+
+**Warum kein eigener Rücknahmeweg:** Ein Link in der Mail, der etwas anderes
+tut als anmelden, wäre ein zweiter Weg mit eigenem Token und eigener Frist —
+und er müsste ohne Passwort wirken, sonst braucht man ohnehin die Anmeldung.
+Ein Rückzug ohne Passwort ist aber genau das, was ein Angreifer wollte, der
+die Löschung verhindern will, um weiter mitzulesen.
+
+**Der Job löscht höchstens fünf je Lauf.** Eine Kontolöschung räumt die Spuren
+von Hand (die Kaskade erreicht sie nicht), löscht den Backup-Ordner im
+Dateisystem und kaskadiert über jede Tabelle des Kontos (fünfzehn am
+26.09.2026). Das Huckepack-Budget sind
+drei Sekunden für **alle** Jobs zusammen; einen Tag später zu löschen ist kein
+Zusagenbruch, eine hängende Anfrage schon.
+
+**Er steht weit vorn im Katalog**, gleich hinter dem Aufräumen: Im Regelfall
+hat er nichts zu tun (eine Abfrage über einen Index), und wenn doch, ist es
+das, worauf jemand ein Recht hat.
+
+#### Das Protokoll nennt beim Wechsel keine Adressen
+
+Nur die Kontonummer und dass gewechselt wurde. Ein Audit, in dem jede je
+benutzte Adresse eines Kontos steht, ist ein Verzeichnis von Adressen und
+nicht eines von Handlungen. Nachgemessen: Der Eintrag enthält kein `@`.
+
+Beim **Löschen** stehen Adresse und Termin dagegen im Eintrag — dort ist die
+Adresse der einzige Anhalt, der die Löschung überhaupt noch nachvollziehbar
+macht, und die Zeile überlebt das Konto.
+
+### 4.33 Mengengrenze je Konto (ab Web 20.21.0, P5b/AP6)
+
+*E-P5b-04, -18; Backlog Nr. 37 und 48. Code: `konten_einstellungen_lib.php`
+(`konto_mengen()`, `konto_grenzen()`, `konto_fuellstand()`), `spur_bytes()` in
+`spur_lib.php`.*
+
+#### Zwei Grenzen, der größere Anteil zählt
+
+| | Vorgabe | je Konto |
+|---|---|---|
+| Einsätze | `konten_grenze_einsaetze` (5000) | `users.grenze_einsaetze` |
+| Speicher | `konten_grenze_mb` (250) | `users.grenze_mb` |
+| Konto-Backups | `adminbackup_aufbewahrung` (2) | `users.backup_pakete` |
+
+**`NULL` heißt „die Vorgabe gilt"** — nicht 0 und nicht die Vorgabe als Zahl.
+Trüge die Spalte den Wert, änderte eine spätere Anhebung der Vorgabe an
+bestehenden Konten nichts, und niemand sähe, warum.
+
+**Der größere der beiden Anteile zählt**, nicht der Durchschnitt: Wer 5000
+Einsätze mit wenigen GPS-Daten hat, ist genauso am Ende wie jemand mit 250 MB
+in dreihundert Aufzeichnungen. Eine gemittelte Zahl ließe beide weiterladen,
+bis eine Grenze weit überschritten ist.
+
+#### `507`, und warum nicht `403` oder `429`
+
+`507 Insufficient Storage` sagt „der Server hat keinen Platz mehr". `403`
+hieße „du darfst nicht", `429` hieße „nicht so schnell" — beides wäre falsch
+und ließe die Uhr das Falsche tun. Bei `507` wie bei `429` behält sie ihre
+Warteschlange und sendet später.
+
+**Bearbeiten und Löschen bleiben frei.** Die Grenze steht in `ingest.php` und
+im Import, nirgends sonst. Wer sie erreicht, muss aufräumen können. Aus
+demselben Grund zählt, was im **Papierkorb** liegt, nicht mit — sonst ließe
+sich die Grenze durch Löschen nicht unterschreiten, und genau das schlägt die
+Meldung vor.
+
+**Der Ratenschutz zählt die Absage nicht.** Ein volles Konto ist kein Angriff.
+
+#### Gemessen wird gecacht, fortgeschrieben wird geschätzt
+
+Die Byte-Messung liest die Blob-Längen **aller** GPS-Daten eines Kontos. Bei
+jedem Upload wäre das genau an dem Weg teuer, der schnell sein muss.
+
+| Wann | Wie |
+|---|---|
+| nach jedem Upload-Schub | **geschätzt** fortgeschrieben (`SPUR_ZEILE_BYTE` je Punkt) |
+| Aufräumjob, einmal am Tag | **gemessen**, Cache ersetzt |
+
+Format in `app_state` unter `mengen:<id>`: `<einsaetze>\|<bytes>\|<zeitstempel>`
+— drei Zahlen mit Trennstrich, weil `app_state.v` 190 Zeichen fasst und JSON
+dort keinen Platz hätte.
+
+**Ohne die Fortschreibung griffe die Grenze erst einen Tag später**, und ein
+Konto könnte an einem Tag beliebig weit darüber hinauswachsen.
+
+#### `spur_bytes()` steht in `spur_lib.php`
+
+Nicht beim Aufrufer, und das ist die Regel aus `CLAUDE.md` 4: Wer die
+Spurablage unmittelbar zählt, misst früher oder später die Hälfte, ohne
+Fehlermeldung — bis Web 22.7.0 lagen die Punkte je nach Alter als Zeilen in
+`track_points`, als Blob in `track_blobs` oder als Stücke.
+
+**Gewogen, nicht geschätzt — seit Web 23:** `spur_bytes()` zählt `LENGTH()`
+der Hüllen in `track_stuecke`; dort steckt die ganze Masse. Bis Web 22.7.0
+kam für `track_points` ein fester Wert je Zeile dazu (`SPUR_ZEILE_BYTE`, 48),
+weil `information_schema` nur Tabellensummen kennt; die Grenze war damit eine
+Schätzung mit bekanntem Fehler. Den Fehler gibt es mit der Tabelle nicht
+mehr.
+
+#### Backlog Nr. 48 ist die Zahl der Backup-Pakete, nicht eine Frist
+
+**Und das ist beim Bauen zuerst falsch verstanden worden**, deshalb steht es
+hier: Nr. 48 („Aufbewahrung je Konto einstellbar, nicht nur je Installation")
+meint `adminbackup_aufbewahrung` — **wie viele Konto-Backups aufgehoben
+werden**, bevor der älteste verdrängt wird. Es meint **keine
+Aufbewahrungsfrist für Einsätze**; die gibt es nicht, und sie soll es auch
+nicht geben: Einsatzdaten von selbst verschwinden zu lassen wäre eine Zusage,
+die dieses Projekt nicht macht.
+
+Umgesetzt als `users.backup_pakete` und `edbak_aufbewahrung_konto($kennung)`,
+gelesen in `edbak_verdraengen()`. **Keine zweite Installationsvorgabe** — die
+gibt es schon unter Verwaltung → Konto-Backups; eine zweite Zahl daneben wäre
+genau die Doppelung, die R83 verhindern soll.
+
+`edbak_aufbewahrung_konto()` geht **über die Kontokennung**, nicht über die
+Id: `edbak_verdraengen()` arbeitet auf dem Ordner, und der heißt nach der
+Kennung. Ein Ordner ohne Konto („Backup ohne Konto") fällt auf die
+Installationszahl zurück — es gibt niemanden mehr, der etwas anderes bestimmen
+könnte.
+
+#### Die Marken sterben mit dem Konto
+
+`mengen:<id>` und `mengen_gemeldet:<id>` hängen an keinem Fremdschlüssel;
+`konto_loeschen()` räumt sie deshalb ausdrücklich mit, und der Aufräumjob holt
+verwaiste aus der Zeit davor. **`users.id` ist AUTO_INCREMENT, aber ein
+Wiederanlauf aus einer Sicherung kann eine Id erneut vergeben** — das neue
+Konto fände dann den Mengenstand des alten vor und stünde womöglich sofort an
+seiner Grenze, ohne einen einzigen Einsatz. Genau das ist beim Prüfen
+passiert.
+
+#### Ein Weg, ein Konto zu löschen (seit Web 21.1.8)
+
+**Jede Löschung geht über `konto_loeschen($id, $mitSicherungen, $weg)`** —
+die Kontoseite der Verwaltung (`verwaltung`), der Job nach der Karenz
+(`loeschantrag`), der Verfall unbestätigter und wartender Konten
+(`verfall`), das Entfernen des Demo-Kontos (`demo`) und die Prüfmittel
+(`probe`). Der Weg steht als Angabe `weg` im Protokolleintrag
+`konto_geloescht`. `grep -rn "DELETE FROM users" server/` findet eine
+Codezeile, und die steht in `konto_lib.php`.
+
+**Bis Web 21.1.7 waren es drei Abschriften** (Backlog Nr. 299, F-R4-09):
+Die Kontoseite und `demo_entfernen()` schrieben die Reihenfolge selbst hin,
+und beide waren auseinandergelaufen — die Kontoseite vergaß die Marken oben,
+das Demo-Konto seine Konto-Backups und das Protokoll. Umgekehrt hatte nur
+die Demo-Abschrift die Sperrliste der Geräte (`deleted_refs`, ohne
+Fremdschlüssel) geräumt; die Zeile steht jetzt in der Funktion.
+
+**Was die Aufrufer davor prüfen, bleibt bei ihnen:** Die Kontoseite lehnt
+das eigene Konto, die letzte BetreiberIn und das Demo-Konto ab und verlangt
+die abgetippte Adresse; `demo_entfernen()` löscht danach nur noch seine
+Kennzeichnung in `app_state`, und nur, wenn die Löschung gelungen ist.
+Scheitert sie (Backups nicht zu entfernen), bleibt alles stehen.
+
+#### Was hier NICHT gebaut wurde
+
+**Die Umstellung der Geräteschlüssel auf SHA-256** (E-P5b-17). Sie ist seit
+**Web 13.0.0** erledigt — `geraet_schluessel_gueltig()` rechnet
+`hash_equals(hash('sha256', …))`, und der Kommentar daneben trägt die Messung,
+die sie ausgelöst hat: bcrypt kostete 228 ms je Upload „für eine Bremse, die
+nichts bremst". Das Konzept beschreibt in 1.3 einen Stand von vor Web 13.0.0.
+
+### 4.34 Die Selbstregistrierung (ab Web 20.22.0, P5b/AP3)
+
+*E-P5b-01, -02, -03, -13, -23; seit Web 21.14.0 E-SR-26, E-SR-88 bis -93
+(Schritt 18, SR-08). Code: `server/registrieren.php`,
+`server/bestaetigen.php`, `server/konten_einstellungen_lib.php`
+(`wegwerf_trifft()`), `server/ratelimit_lib.php` (drei Töpfe),
+`server/konto_lib.php` (Verfall, Sammelmeldung), `server/jobs_lib.php`
+(`konto_verfall`), `server/wegwerfdomains.txt`, `server/assets/pow.js` und
+`server/assets/pow-worker.js` (Rechenaufgabe).*
+
+**Der Weg in fünf Schritten.**
+
+1. `registrieren.php` nimmt **Adresse, Name und drei Häkchen** — kein
+   Passwort (Begründung unten). Antwort ist für jeden Ausgang dieselbe Karte.
+2. Bei freier Adresse entsteht ein Konto im Zustand **`unbestaetigt`**
+   (`konto_anlegen(…, 'registrierung', 'unbestaetigt', …, TOKEN_REGISTRIERUNG_S)`),
+   dazu ein **48 Stunden** gültiger Token. Die Mail `registrierung` trägt den
+   Link.
+3. Der Link führt auf **`pw_handling.php`** — dieselbe Seite wie beim
+   Einladungsweg. Dort entstehen im Browser Passwort, Datenschlüssel und
+   Wiederherstellungsschlüssel.
+4. Nach dem Speichern wechselt der Status: bei *offen* auf **`aktiv`**, bei
+   *mit Freischaltung* auf **`wartet`**; im zweiten Fall geht eine Sammelmail
+   an die Verwaltung.
+5. Weiterleitung auf **`bestaetigen.php?s=…`**, das sagt, wie es weitergeht.
+
+**Warum das Passwort nicht auf der Registrierungsseite steht.** Der
+Datenschlüssel hängt seit S10 am Server-Anteil, und der wird per
+`HMAC(kdf_anteil, 'konto:<id>')` aus der **Kontonummer** abgeleitet (4.14,
+E-S10-17). Eine Registrierungsseite hat sie nicht — das Konto entsteht ja erst
+mit ihr. Der Browser kann `pat_wrap_pw` also nicht bilden, und eine Hülle ohne
+Anteil weist `huelle_pw_pruefen()` ab, sobald die Installation einen
+ausliefert. **Konto zuerst, Schlüssel danach** ist damit keine Vorliebe,
+sondern die einzige Reihenfolge, die geht. Das freigegebene Mockup M-P5b-02a
+zeichnet die Felder dort; die Abweichung ist am 17.09.2026 mit dem
+Auftraggeber geklärt.
+
+**Keine Kontoauskunft.** Fünf Ausgänge, eine Antwort: frei, belegt,
+Wegwerfadresse, Demo-Adresse, gesperrter Ratenschutz. Unterschieden wird in
+der **Mail** — `registrierung` an die freie, `registrierung_bekannt` an die
+belegte, keine an die übrigen. Die Dauer ist angeglichen
+(`rate_gleiche_dauer($t0, REG_MINDESTDAUER)`, 0,5 s Boden) und der Versand
+läuft **nach** `antwort_abschliessen()`; ohne beides wäre die Dauer die
+Auskunft, die der gleiche Text verhindert (M1-07). Gemessen über 120 Aufrufe:
+Spanne der Mediane **0,2 ms**; seit Web 21.14.0 mit der Rechenaufgabe die
+Ratenprobe, Abschnitt 12: sechs Lagen je fünfmal (ohne Lösung, falsche
+Lösung, abgelaufen, belegt, Wegwerf, frei), Spanne der Mediane **1,0 ms** (1,0 bis 1,5 ms über drei Läufe).
+
+**Die vier Bremsen** (die vierte seit Web 21.14.0; geprüft wird sie zuerst).
+
+| | was | warum still |
+|---|---|---|
+| Rechenaufgabe | Proof-of-Work: SHA-256 über Aufgabe und Zahl mit `POW_BITS` = 16 Nullbits, gelöst im Worker, geprüft mit einer Rechnung (`pow_ok()`); eine Aufgabe je Absendung, zwei Stunden gültig | eine Meldung „Aufgabe falsch" sagte einem Skript, woran es scheitert |
+| Honeypot | Feld `website` in `.nur-vorlesen`, mit `aria-hidden` und `tabindex="-1"` | `display:none` füllt kein Bot; ohne `aria-hidden` wäre es eine Falle für Bildschirmleser |
+| Mindestdauer | signierter Zeitstempel, 4 s bis 2 h gültig (`reg_stempel()`) | ohne Signatur bestimmt der Absender die Zahl selbst |
+| Töpfe | `reg` 10/h je IP · `regg` 100/h global · `regz` **3/24 h je Zieladresse** | eine Meldung „Honeypot gefüllt" wäre eine Bauanleitung |
+
+**Die Rechenaufgabe im Einzelnen** (SR-08, Nr. 228, E-SR-26).
+
+- **Aufgabe.** `pow_aufgabe_neu()` würfelt beim Zeichnen des Formulars 32
+  Byte (Hex) und legt sie mit ihrem Verfall als ganze Zahl in die Sitzung:
+  `$_SESSION['pow'][<aufgabe>] = <bis>`. Abgelaufene fallen beim nächsten
+  Aufruf weg, und es bleiben höchstens fünf, die jüngsten (E-SR-89) — ein
+  zweiter Reiter oder ein nach einem sichtbaren Fehler neu gezeichnetes
+  Formular entwertet die erste nicht. Die Frist ist `REG_FORMULAR_GILT_S`,
+  dieselbe Zahl wie die des Zeitstempels (zwei Stunden, E-SR-93).
+- **Sitzung nur bei offener Registrierung** (E-SR-92). Die Seite ruft
+  `https_tor()` und `sitzung_starten('app')` nur, wenn `konten_reg_offen()`;
+  eine Anlage „nur auf Einladung" setzt hier weiter kein Cookie. Einmal
+  gültig geht nur mit einer Ablage auf dem Server — ein signierter Wert
+  wie der Zeitstempel ließe sich innerhalb seiner Frist beliebig oft
+  vorzeigen. Die Sitzungsdatei arbeitet zwei Absendungen derselben Sitzung
+  nacheinander ab.
+- **Worker.** `assets/pow.js` startet beim Laden `assets/pow-worker.js`; die
+  Adresse (mit Erkennungswert aus `asset()`) und die Bitzahl kommen als
+  `data-pow-worker` und `data-pow-bits` aus derselben Konstante (E-SR-90).
+  Der Worker hängt die Zahl als Dezimalziffern an die Aufgabe und rechnet
+  `crypto.subtle.digest()` in Bündeln von 64; die Lösung kommt ins Feld
+  `pow_loesung`. Erlaubt ist er durch `worker-src 'self' blob:`, nicht durch
+  `script-src`. Wer schneller abschickt, als er rechnet, sieht den Knopf
+  gesperrt und „Sicherheitsprüfung läuft …"; das Formular geht von selbst
+  ab. Kann der Browser nicht rechnen, sagt die Zustandszeile es und das
+  Formular geht nicht ab. **Ohne JavaScript** steht dort der Satz „Ohne
+  JavaScript lässt sich hier kein Konto anlegen." (F-SR-92).
+- **Prüfung.** `pow_ok()` steht im stillen Teil an erster Stelle, hinter den
+  zwei sichtbaren Fehlern (Häkchen, Adressformat — E-SR-88). Sie verbraucht
+  die Aufgabe immer, ob sie gelingt oder nicht, verlangt eine Dezimalzahl
+  mit höchstens zwölf Stellen (E-SR-91) und rechnet eine SHA-256. Ein
+  Fehlschlag nimmt den Weg der anderen Bremsen: dieselbe Karte, dieselbe
+  Dauer, Zählung in `reg` und `regg`.
+- **Die Zahl.** 16 Bit, gemessen am 05.10.2026 in Chromium 141 (je 30
+  Läufe): ungedrosselt 158 343 Versuche/s, Median 0,47 s, höchstens 1,34 s;
+  auf ein Viertel der CPU begrenzt 34 875 Versuche/s, Median 1,71 s,
+  höchstens 6,0 s. Die Drosselung der Entwicklerwerkzeuge
+  (`Emulation.setCPUThrottlingRate`) erreicht keinen Worker (F-SR-95);
+  gemessen hat eine CPU-Quote des Betriebssystems. Eine Stufe weniger
+  halbiert die Zeit (P-SR-14).
+- **Was sie nicht kann.** Ein Skript, das SHA-256 in Maschinencode rechnet,
+  braucht für 16 Bit Millisekunden. Die Aufgabe verteuert das massenhafte
+  Absenden; die Grenze bleiben die Töpfe.
+- **Felder nur als Text** (seit Web 21.14.0, F-SR-96): `$feld()` nimmt
+  `email`, `name`, `website`, `zeit` und die beiden Felder der Aufgabe nur
+  als Zeichenkette; eine Liste gilt als leer.
+
+`regz` ist der wichtigste: Ohne ihn verschickt die Seite an **jede**
+eingetippte Adresse eine Mail, ohne dass der Absender sie besitzen muss. Sein
+Merkmal ist ein **Hash** der Adresse (`rate_reg_ziel()`) — `rate_limits` wäre
+sonst ein Verzeichnis fremder Postfächer in derselben Datenbank, die auch ein
+Angreifer abzieht.
+
+**Die Wegwerfliste.** `server/wegwerfdomains.txt`, 8 883 Domains, CC0 1.0,
+eine je Zeile, durchgehend klein. **Nie zur Laufzeit geholt** (R36);
+`wegwerf_trifft()` liest sie je Anfrage einmal in eine `static`. Die Prüfung
+geht von der vollen Domain nach oben (`a.b.example.com` → `b.example.com` →
+`example.com`), damit Unterdomains mitzählen — sie hört **vor** der Endung auf,
+denn eine Liste, die `com` sperrte, sperrte das halbe Netz. Fehlt die Datei,
+trifft nichts: Eine Installation, die alle Registrierungen abweist, *weil* eine
+Datei fehlt, wäre das Gegenteil des Schalters. Pflege:
+`tools/erzeugen/wegwerfdomains.py` (Runbook, Abschnitt 13; Backlog
+Nr. 230), Herkunft in `docs/Lizenzen.md` 7b.
+
+**Zwei Fristen, zwei Zustände, ein Job.** `konto_verfall` löscht
+unbestätigte Konten nach **48 h** (`KONTEN_UNBESTAETIGT_H`, fest — eine
+Sicherheitsfrist) und wartende nach der eingestellten Frist (Vorgabe 30 Tage,
+1–365). Gemessen ab `created_at` bzw. `bestaetigt_am`; **deshalb** schreibt
+`konto_status_setzen()` beim Übergang nach `wartet` jetzt `bestaetigt_am` mit.
+Gelöscht wird über **`konto_loeschen()`** und nicht per `DELETE` — die Kaskade
+erreicht die GPS-Spuren nicht und die `app_state`-Zeilen `mengen:<id>` erst
+recht nicht (4.33). Die letzte Mail geht **nur an die Wartenden** — und seit
+Web 23.2.0 erst **nach** der Löschung: `konto_loeschen()` räumt seither auch
+die Mailwarteschlange der Adresse ab (`mail_konto_entfernen()`, F-R17-21; der
+Docblock verlangte das seit jeher, es gab keinen Aufrufer), und eine vorher
+eingereihte, noch wartende Abschiedsmail ginge mit. Dazu nimmt
+`konto_loeschen()` die zwei `app_state`-Zeilen eines offenen Adresswechsels
+mit (`adresse_offen:<id>`, `adresse_alt:<id>`).
+
+**Die Freischaltung** ist der vorhandene Knopf in der Statuskarte der
+Kontoseite; neu ist die Mail `freigeschaltet` beim Übergang **`wartet` →
+`aktiv`** — beim Entsperren (`gesperrt` → `aktiv`) geht keine. Gefunden werden
+die Wartenden über den Filter **„Wartet auf Freischaltung"** in
+`admin_users.php`; die Liste liest `status` seit Web 20.22.0 mit und zeigt ihn
+als Plakette neben der Adresse (keine neunte Spalte — in 95 von 100 Zeilen wäre
+sie leer).
+
+### 4.35 Handbuch und „Was ist NAdoku" als Seiten (ab Web 20.23.0, P5b/AP8)
+
+*E-P5b-08, -22; Mockup M-P5b-01. Code: `server/doku_lib.php`,
+`server/doku_seite.php`, `server/hilfe.php`, `server/ueber.php`,
+`server/assets/doku.js`, `server/vendor/Parsedown.php`.*
+
+Die Quelle bleibt Markdown im Repositorium: `docs/Handbuch.md` und
+`docs/Was-ist-NAdoku.md`. Auf GitHub editierbar, die Wortliste läuft darüber,
+das Prüftor prüft die Rendertauglichkeit — und es gibt **keine zweite Fassung
+in einer Datenbank**, die auseinanderlaufen könnte.
+
+#### Zwei Orte, und eine Asymmetrie, die man kennen muss
+
+`doku_pfad()` sucht erst `../docs/` (Selbsthosterinnen laden das Repositorium
+hoch), dann `server/doku/` (dorthin kopiert die Kette). **Für den TEXT genügt
+das, für BILDER nicht** — und das ist der Punkt, an dem sich zwei Welten
+treffen:
+
+- Den **Text** liest PHP aus dem Dateisystem. `../docs/` ist dort ein ganz
+  normaler Ort.
+- Ein **Bild** holt der **Browser**. Der sieht nur, was unterhalb des
+  Dokumentenstamms liegt, also `server/`. `../docs/` ist für ihn unerreichbar,
+  und das soll so bleiben.
+
+Deshalb schreibt `DokuMarkdown::inlineImage()` jede relative Bildquelle auf
+`doku/…` um, und die Kette kopiert `docs/bilder/` mit. Wer selbst hostet und
+nur `docs/` neben `server/` legt, bekommt den Text und keine Bilder; dann
+fehlt derselbe Kopierschritt.
+
+**Der Fehler ist teuer, weil er leise ist:** Ohne die Umschreibung löste
+`![](bilder/x.png)` zu `/bilder/x.png` auf — `server/bilder/`, wo nichts
+liegt. Der Bilderlauf meldete dafür **24 Konsolenfehler**; auf dem Server
+wären es drei kaputte Bilder in einem Handbuch gewesen, das ohne sie noch
+lesbar ist.
+
+#### Was der Renderer darf
+
+`Parsedown` mit **beidem**: `setMarkupEscaped(true)` (rohes HTML wird Text)
+und `setSafeMode(true)` (Zielprüfung an Links). Dazu drei eigene Regeln in
+`DokuMarkdown`:
+
+| Regel | wofür |
+|---|---|
+| Sprungmarken an jeder Überschrift, h2/h3 zusätzlich ins Verzeichnis | `hilfe.php#abschnitt` als Ziel für Hilfe-Verweise |
+| `rel="noopener"` an fremden Zielen | E-P5b-22; ohne `target` streng genommen überflüssig, aber dann schon da |
+| **Bilder nur relativ** | die Zusage „keine fremde Quelle zur Laufzeit" |
+
+**Die dritte ist die einzige, die wirklich etwas trägt** — und sie ist
+nachgemessen, nicht vermutet. Parsedown liefert **mit** SafeMode für
+`![B](https://fremd.example/b.png)` ein `<img src="https://fremd.example/…">`.
+SafeMode prüft das **Schema**, nicht die **Herkunft**. Auf einer Seite, die
+jede Besucherin vor der Anmeldung sieht, steht zwischen dem Handbuch und einem
+fremden Server allein dieser Überschreiber.
+
+#### Kein Cache — entgegen dem Konzept
+
+E-P5b-22 verlangt einen Cache in `app_state`. Er ist **unmöglich**
+(`app_state.v` ist `VARCHAR(190)`, das gerenderte Handbuch 303 KB) und
+**unnötig**: 266 KB Markdown rendern in **11 bis 12 ms**. Die Begründung steht
+im Kopf von `doku_lib.php`. Wäre er je nötig, gehörte er in eine **Datei**
+neben der Quelle.
+
+#### Wo die Seiten auftauchen
+
+- **Fußzeile der Anmeldeseite** (`.fuss-anmeldung`): Was ist NAdoku? ·
+  Handbuch · Impressum · Datenschutz — **unter** der Karte (bis Web 20.37.2
+  stand sie daneben, Nr. 289). Der erste Link ist der einzige Weg, auf
+  dem jemand **ohne Konto** erfährt, was diese Anwendung ist.
+- **Kopfleiste, angemeldet:** ein Fragezeichen links vom Zahnrad
+  (`.kopf-hilfe`), das auch auf dem Handy stehen bleibt.
+- `ueber.php` zeigt am Ende „Konto anlegen" **nur, wenn die Registrierung
+  offen ist** — sonst führte der Knopf auf eine Seite, die absagt.
+
+#### Grenzen der Prüfmittel an dieser Seite
+
+`hilfe.php` zeigt das ganze Handbuch auf einer Seite. Der Bilderlauf kann sie
+**nicht ganzseitig** fotografieren: 19 MB je Abzug, und ab 1024 px scheitert
+Chromium an seiner Höchsthöhe. Der Eintrag trägt deshalb
+`"ganzseitig": false` in `seiten.json` — das Bild ist ein Ausschnitt, die
+**Messungen** (Überlauf, Konsolenfehler, Knopfhöhen) laufen weiter über das
+ganze Dokument.
+
+### 4.36 Einstiege nach der Anmeldung (ab Web 20.24.0, P5b/AP9)
+
+*E-P5b-09, -10, -19, -20, -21; Mockups M-P5b-02b/c/d. Code:
+`server/einstieg_lib.php`, `server/erststart_karte.php`,
+`server/rueckfrage_dialog.php`, `server/schluessel_teile.php`,
+`server/blatt_dialog.php`, `server/notfallblatt.php`,
+`server/assets/rueckfrage.js`, `server/assets/schluessel.js`,
+`server/assets/schluesselblatt.js`, `server/api/rueckfrage.php`,
+`server/api/schluessel_erneuern.php`,
+`server/api/schluesselblatt_pruefen.php`.*
+
+Nach dem Anmelden kann viererlei anstehen. Es erscheint **genau eines**, in
+dieser Reihenfolge:
+
+| # | Was | Form | Fällig |
+|--:|---|---|---|
+| 1 | Einwilligungstor | eigene **Seite** (`einwilligung.php`) | solange eine Annahme fehlt (4.31) |
+| 2 | Schlüsselblatt-Rückfrage | Dialog, nur BetreiberIn | alle 3 Monate, installationsweit |
+| 3 | Konto-Rückfrage | Dialog | nach 30 Tagen, 6 Monaten, dann jährlich |
+| 4 | Erststart | **Karte** über der Tagesübersicht | solange ein Schritt offen ist |
+
+`einstieg_faellig($userId, $istBetreiberin, $uebergehen)` gibt den Schlüssel
+des ersten fälligen Einstiegs zurück oder `null`. Der dritte Parameter nennt,
+was die Sitzung schon gezeigt hat — ohne ihn verdeckt eine weggeklickte Frage
+alle folgenden, weil die Funktion nur die erste herausgibt.
+
+Das Einwilligungstor steht in der Liste, aber nicht im Code dieser
+Bibliothek: Es ist eine Umleitung in `auth_guard.php` und läuft, bevor eine
+Seite etwas ausgibt.
+
+#### Der vierte ist kein Dialog
+
+E-P5b-19 zählt alle vier in einer Reihe auf und schreibt „die Seite zeigt
+genau einen Dialog". Das freigegebene Mockup M-P5b-02b sagt es genauer:
+**„Die Karte steht über der Tagesübersicht, nicht als Dialog: Wer sie
+ignoriert, arbeitet trotzdem."**
+
+Der Unterschied ist keine Geschmacksfrage. Die Rückfragen sind
+Sicherheitsfragen mit einer Frist — sie dürfen stören. Der Erststart ist eine
+Einladung; wer ihn wegklicken muss, um an seine Diensttage zu kommen, lernt in
+der ersten Minute, dass diese Anwendung im Weg steht.
+
+#### Zustand am Konto, nicht in den Stammdaten
+
+| Spalte | Was |
+|---|---|
+| `users.erststart_stand` | Bitfeld der drei Schritte (1 Standort, 2 Rettungsmittel, 4 Gerät); **`-1` = nicht mehr zeigen**, deshalb `TINYINT` mit Vorzeichen. Das Bit 4 setzt seit Web 23.3.0 `pair.php` nach einer gelungenen Kopplung — bis dahin setzte es nur die Handanlage, nie das Koppeln (F-R17-70) |
+| `users.rueckfrage_naechste` | Datum der nächsten Konto-Rückfrage, `NULL` = Uhr läuft noch nicht |
+| `users.rueckfrage_runde` | 0 → 30 Tage, 1 → 6 Monate, 2+ → jährlich |
+| `users.rueckfrage_verschoben` | Zähler für „Später", höchstens 3 je Runde |
+| `app_state.schluesselblatt_bestaetigt_am` | installationsweit, für die Betreiber-Rückfrage |
+
+Ein `SELECT COUNT(*) FROM bases` wäre für den Erststart einfacher und wäre
+falsch: „Ich brauche keinen Standort" ist eine Antwort, und wer den Schritt
+bewusst übergeht, soll ihn nicht bei jedem Anmelden wiedersehen.
+
+Die Uhr der Konto-Rückfrage startet bei der **Anmeldung**
+(`rueckfrage_anstossen()` in `login.php`), nicht beim Anlegen des Kontos, und
+nur wenn `pat_wrap_rc` gesetzt ist: Ein eingeladenes Konto ohne gesetztes
+Passwort hat kein Notfallblatt, und es 30 Tage später danach zu fragen wäre
+eine Frage ohne Gegenstand.
+
+#### Das Notfallblatt speichert nichts — und kann nichts speichern
+
+`notfallblatt.php` bekommt den Wiederherstellungsschlüssel **per POST aus dem
+Browser** und gibt ihn in derselben Antwort zurück. Er wird nicht gelesen,
+nicht geschrieben, nicht protokolliert. Das ist keine Vorsicht, sondern die
+einzig mögliche Bauform: Der Server kennt diesen Schlüssel nicht.
+
+Daraus folgt die Eigenschaft, die das Blatt ausmacht: **Es lässt sich später
+nicht erneut drucken.** Wer es verliert, erzeugt einen neuen Schlüssel — das
+alte Blatt wird damit ungültig, und genau das steht darauf.
+
+**Kein `auth_guard.php`, und das ist kein Versehen.** Der Schlüssel wird an
+zwei Stellen gezeigt, und an einer davon gibt es noch keine Sitzung: beim
+ersten Setzen des Passworts (`pw_handling.php`). Was stattdessen schützt: Die
+Seite gibt nur wieder, was ihr gesendet wurde, und zwar **geprüfte Werte in
+festem Text** — der Code muss dem Format entsprechen (20 Zeichen aus dem
+Alphabet ohne 0/1/I/L/O/U, fünf Vierergruppen), die Adresse muss eine Adresse
+sein; alles andere wird ausgelassen. Kein freier Text, kein Verweis nach
+draußen, kein Markup aus der Eingabe.
+
+#### Die Schlüsselerneuerung: eine Komponente, zwei Verbraucher
+
+`assets/schluessel.js` rechnet, `api/schluessel_erneuern.php` schreibt,
+`schluessel_teile.php` zeigt. Aufrufer sind der Rückfrage-Dialog und die Karte
+unter **Einstellungen → Profil** (R83).
+
+Der Weg im Browser:
+
+1. Passwort → Datenschlüssel (`deriveKeys`, `datenschluessel`)
+2. damit `pat_wrap_pw` öffnen → der **Inhaltsschlüssel** (ck)
+3. **ck gegen `pat_key_check` halten** — die Wache
+4. neuen Code erzeugen (`newRecoveryCode`), ck damit neu verpacken
+5. `api/schluessel_erneuern.php` → schreibt **genau** `pat_wrap_rc`, nach
+   `passwort_nachweis()` (Ratentopf `login`), und reiht seit Web 23.2.0 die
+   Mail `schluessel_erneuert` an die Kontoadresse ein (F-R17-10: Wer Passwort
+   und Sitzung erbeutet hatte, ersetzte den Rückweg sonst still)
+6. den Code anzeigen
+
+**Schritt 3 ist die Stelle, an der Daten verlorengehen könnten.** Öffnete
+Schritt 2 aus irgendeinem Grund einen *anderen* Schlüssel, verpackte Schritt 4
+diesen, der Server nähme ihn an, und der neue Zettel öffnete **nichts** — der
+alte wäre schon überschrieben. Konten ohne `pat_key_check` (vor Web 10)
+bekommen die Funktion nicht, statt sie ungeprüft zu benutzen.
+
+Drei Feinheiten, die je einen Betriebsfall entscheiden:
+
+- `datenschluessel()` und **nicht** `datenschluesselZu()`: Die erste liest die
+  Anteilskennung aus dem **Präfix der zu öffnenden Hülle**, die zweite erzwingt
+  eine genannte. Während einer Anteilsrotation trägt die alte Hülle noch den
+  alten Anteil — mit der zweiten wäre die Erneuerung für jedes Konto
+  gescheitert, das sich seither nicht angemeldet hat.
+- `encrypt()` und **nicht** `huelleBauen()`: `pat_wrap_rc` hängt **nicht** am
+  Server-Anteil (E-S10-04). Der Server weist eine `edka1:`-Hülle zusätzlich ab
+  (`huelle_rc_pruefen()`).
+- **Das Passwort wird verlangt, obwohl die Sitzung steht.** Nicht wegen der
+  Verschlüsselung — eine entsperrte Sitzung hätte den ck bereits —, sondern
+  weil sonst jemand mit einer übernommenen Sitzung den Zettel des Opfers
+  ungültig machen könnte: kein Datenklau, aber der lautlose Verlust des
+  Rückwegs. Geprüft wird serverseitig, und der Endpunkt zählt in den Topf
+  `login`.
+
+`session_epoch` bleibt unberührt: Am Schlüssel der offenen Sitzungen hat sich
+nichts geändert.
+
+#### Die Betreiber-Rückfrage wird eingegeben, nicht bestätigt
+
+`api/schluesselblatt_pruefen.php`, zwei Aufrufe:
+
+- `aktion=stellen` — der Server würfelt je Wert (Serverschlüssel,
+  Server-Anteil) **zwei verschiedene Gruppenpositionen** aus 1–16, legt sie in
+  **seine Sitzung** und nennt nur die Nummern. Ein verstecktes Feld wäre vom
+  Browser wählbar; wer die Positionen selbst bestimmt, sucht sich die zwei
+  aus, die er kennt.
+- `aktion=pruefen` — vier Antworten, Vergleich mit `hash_equals()` gegen die
+  Gruppen aus `config.php`, **alle vier ohne Abkürzung bei der ersten
+  Abweichung**. Ein Abbruch wäre an der Antwortzeit messbar und machte aus
+  einem Rätsel zu sechzehn Zeichen vier Rätsel zu vier.
+
+Gezeigt wird nie ein Wert, nur die achtstellige **Kennung** — die Regel des
+Hauses; `betrieb_schluesselblatt.php` ist ihre einzige Ausnahme. Drei
+Fehlversuche → Topf **`blatt`** (erste Sprosse 15 Minuten, dann steigend — die
+Leiter überholt den Wert in `sperre`), Eintrag in
+`sicherheit_ereignisse` ohne Werte. Erfolg setzt
+`app_state.schluesselblatt_bestaetigt_am` und schreibt ins Protokoll (Reiter
+Verwaltung).
+
+**Keine Schlüsselerneuerung an dieser Stelle.** Den Serverschlüssel zu wechseln
+hieße, jede versiegelte Sicherung neu zu umhüllen — seit Web 21.12.0 gibt es
+diesen Vorgang (4.9, SR-03), und er steht unter Betrieb →
+Servereinstellungen, nicht in einem Dialog. Wer sein Blatt verloren hat,
+druckt es neu; der Schlüssel bleibt derselbe.
+
+**Nach einer Rotation kommt die Frage sofort** (seit Web 21.12.0, Nr. 233,
+E-SR-11). Beide Rotationen — Anteil und Serverschlüssel — rufen
+`blatt_neu_faellig()`: Die Bestätigung wird gelöscht, und
+`app_state.schluesselblatt_neu_weil` sagt, welche es war. Der Dialog setzt
+dann den Satz voran „Ein Wert hat gewechselt — drucke das Blatt neu", und
+während eines Wechsels nennt er die Kennung des bisherigen, der mit aufs
+Blatt gehört. Gefragt werden weiter nur die **heutigen** Werte; der
+bisherige wird genannt, nicht abgefragt. Die Antwort (`blatt_bestaetigt()`)
+räumt den Grund wieder weg. Bis dahin fasste die Rotation die Marke nicht
+an, und die Frage kam im nächsten Quartal — mit einem Blatt in der Akte,
+das den heutigen Wert nicht trug.
+
+#### „Später" heißt zweierlei
+
+Bei der **Konto**-Rückfrage sieben Tage, höchstens dreimal je Runde
+(`rueckfrage_verschoben`). Bei der **Betreiber**-Rückfrage nur bis zur
+nächsten Anmeldung, über ein Merkmal in der Sitzung — und das weicht von
+E-P5b-10 ab. Der Grund: Der Schlüsselblatt-Stand ist **ein** Datum in
+`app_state`, und es heißt `schluesselblatt_bestaetigt_am`. Um sieben Tage zu
+schieben, müsste dort ein Datum stehen, an dem nichts bestätigt wurde — eine
+Unwahrheit in genau dem Feld, das die Frage beantwortet. Und es gälte für
+alle: Eine BetreiberIn, die schiebt, nähme die Frage auch der anderen weg.
+
+#### Grenzen
+
+- **Ohne JavaScript erscheinen die beiden Dialoge nicht.** Die Erneuerung
+  rechnet im Browser (PBKDF2, HKDF, AES-GCM) und kann keinen serverseitigen
+  Ersatzweg haben — der Server kennt den Inhaltsschlüssel nicht. Die
+  Erststart-**Karte** dagegen kommt ohne aus; ihre beiden Auswege sind ein
+  gewöhnliches Formular.
+- **Die Fristen sind im Betrieb nicht abgewartet, sondern gestellt worden.**
+  Geprüft wurde mit vorgestelltem `rueckfrage_naechste`; die Runden 0 → 1 → 2
+  → 2 sind in vier Durchgängen gemessen, ein tatsächlicher Halbjahresabstand
+  nicht.
+
+### 4.37 Die Berechtigungsmatrix (ab Web 20.39.0, P5c/AP2, E-P5c-22)
 
 *Wer darf was — eine Zeile je Handlung, eine Spalte je Rolle. Die Tabelle
 zwischen den beiden Markierungen ist **keine Beschreibung, sondern die
@@ -8500,7 +9032,7 @@ dass die Rolle die Handlung erreicht, nicht, was sie dort tut:
   bleibt). Die Bestätigung einer Registrierung geht erneut hinaus und
   schreibt `verifikation_gesendet`, ohne den Link zu zeigen.
 
-### 4.99q Der Zweitfaktor (ab Web 20.42.0, P5c/AP5)
+### 4.38 Der Zweitfaktor (ab Web 20.42.0, P5c/AP5)
 
 *E-P5c-15, -41 bis -43, -53, -54, -56, -61; Mockups M-P5c-02b und -02c.*
 TOTP nach RFC 6238 — HMAC-SHA1 über den Zeitschritt, 30 s, sechs Ziffern,
@@ -8587,7 +9119,7 @@ Hand am entsperrten Rechner, mit Schadcode im Browser —, hat beides. Gegen
 Skript in der Seite hilft `HttpOnly`, gegen fremde Seiten `SameSite=Strict`;
 gegen jemanden, der auf dem Webspace **schreiben** kann, hilft kein Cookie.
 Der Reset-Token in der Sitzungsdatei des Passwort-Wegs ist davon unberührt
-(Art `passwort`; 4.98, „Klartext-Reste außerhalb der Datenbank", Zeile
+(Art `passwort`; 4.14, „Klartext-Reste außerhalb der Datenbank", Zeile
 „Reset-Token", in M1-06 anerkannt).
 Nachweis: `tools/proben/sitzung/` (Anlass Nr. 242).
 
@@ -8629,7 +9161,7 @@ die Anwendung deshalb noch einmal nach dem Code, wenn der letzte älter als
 | der Rücksprung | `zweitfaktor_zurueck()`: nur ein relativer Pfad auf eine Seite der Liste, die Abfrage nur mit harmlosen Zeichen (sonst fällt sie weg); alles andere wird `index.php` — sonst wäre die Seite ein offener Umleiter mit dem Vertrauen dieser Anwendung |
 
 Nachweis: `tools/proben/zweitfaktor/` Teil 5c, die Rollenprobe (Spalte
-„frischer Code" der Matrix, 4.99p), das Register (Z43: jede Handlung genau
+„frischer Code" der Matrix, 4.37), das Register (Z43: jede Handlung genau
 ein Aufruf), im Browser der Bedienweg `betrieb-server-frischer-code`.
 
 **Passkeys (ab Web 21.10.0, Schritt 18, SR-09; Nr. 350; E-SR-28 bis -36,
@@ -8963,7 +9495,7 @@ Staging, seit R87 in beiden je Engine (Konzept DM). Beide
 Teile startet `tools/proben/rueckweg/probe.sh`, seit dem Aufnehmen von
 Konzept BR die Einstiegsdatei im Läufer.
 
-### 4.99r Der Health-Endpunkt (ab Web 20.46.0, P5c/AP6)
+### 4.39 Der Health-Endpunkt (ab Web 20.46.0, P5c/AP6)
 
 *E-P5c-17, -52; R38. Code: `server/api/health.php`; Topf `health` in
 `ratelimit_lib.php`; die gemerkten Anteile in `speicher_lib.php`.*
@@ -9043,7 +9575,7 @@ Dauer, 200 mit genau diesen Feldern, 503 bei ausstehender Migration,
 Balken der Karte „Speicher", 60 durch und die 61. mit 429) und Wartungsprobe Fall 5a (503 `maintenance` aus dem
 Tor, mit falschem und ohne Token, der Topf zählt nichts).
 
-### 4.99s Das Schlüsselpaar des Kontos und die Gerätehülle (ab Web 22.0.0, S11-03)
+### 4.40 Das Schlüsselpaar des Kontos und die Gerätehülle (ab Web 22.0.0, S11-03)
 
 *Konzept S11 3.1, 3.2, 3.2a; E-S11-12, -14, -17, -31.* Die Grundlage von S11:
 Uhr und Handy verschließen Spur, Phasenkoordinaten und Reanimation vor dem
@@ -9062,7 +9594,7 @@ jedes Konto ein **ECDH-Paar auf P-256**.
 **Es entsteht still, beim ersten Entsperren nach einer Anmeldung**
 (`unlock.js`, `kontopaarPflegen()`), mit dem Token aus dem Vormerkfach als
 Nachweis des Passworts — dieselbe Stelle und derselbe Grund wie beim Rückweg
-(4.99q): Wer das Paar ablegt, bestimmt, für wen die Geräte verschließen.
+(4.38): Wer das Paar ablegt, bestimmt, für wen die Geräte verschließen.
 `api/kontopaar.php` legt nur ab, wenn noch keins da ist (409 sonst); ersetzt
 wird nicht, weil ein neues Paar jede Hülle unter dem alten unlesbar machte.
 
@@ -9340,889 +9872,390 @@ Adminpaket-Fassungen (JSON, unversiegeltes ZIP) liest die Verwaltung weiter
 
 **Nach dem Deploy:** `update.php`. Die Wartung bleibt sonst an.
 
-### 4.99l Mengengrenze je Konto (ab Web 20.21.0, P5b/AP6)
+## 5. Uhr-App (Monkey C) — Modulstruktur
 
-*E-P5b-04, -18; Backlog Nr. 37 und 48. Code: `konten_einstellungen_lib.php`
-(`konto_mengen()`, `konto_grenzen()`, `konto_fuellstand()`), `spur_bytes()` in
-`spur_lib.php`.*
-
-#### Zwei Grenzen, der größere Anteil zählt
-
-| | Vorgabe | je Konto |
-|---|---|---|
-| Einsätze | `konten_grenze_einsaetze` (5000) | `users.grenze_einsaetze` |
-| Speicher | `konten_grenze_mb` (250) | `users.grenze_mb` |
-| Konto-Backups | `adminbackup_aufbewahrung` (2) | `users.backup_pakete` |
-
-**`NULL` heißt „die Vorgabe gilt"** — nicht 0 und nicht die Vorgabe als Zahl.
-Trüge die Spalte den Wert, änderte eine spätere Anhebung der Vorgabe an
-bestehenden Konten nichts, und niemand sähe, warum.
-
-**Der größere der beiden Anteile zählt**, nicht der Durchschnitt: Wer 5000
-Einsätze mit wenigen GPS-Daten hat, ist genauso am Ende wie jemand mit 250 MB
-in dreihundert Aufzeichnungen. Eine gemittelte Zahl ließe beide weiterladen,
-bis eine Grenze weit überschritten ist.
-
-#### `507`, und warum nicht `403` oder `429`
-
-`507 Insufficient Storage` sagt „der Server hat keinen Platz mehr". `403`
-hieße „du darfst nicht", `429` hieße „nicht so schnell" — beides wäre falsch
-und ließe die Uhr das Falsche tun. Bei `507` wie bei `429` behält sie ihre
-Warteschlange und sendet später.
-
-**Bearbeiten und Löschen bleiben frei.** Die Grenze steht in `ingest.php` und
-im Import, nirgends sonst. Wer sie erreicht, muss aufräumen können. Aus
-demselben Grund zählt, was im **Papierkorb** liegt, nicht mit — sonst ließe
-sich die Grenze durch Löschen nicht unterschreiten, und genau das schlägt die
-Meldung vor.
-
-**Der Ratenschutz zählt die Absage nicht.** Ein volles Konto ist kein Angriff.
-
-#### Gemessen wird gecacht, fortgeschrieben wird geschätzt
-
-Die Byte-Messung liest die Blob-Längen **aller** GPS-Daten eines Kontos. Bei
-jedem Upload wäre das genau an dem Weg teuer, der schnell sein muss.
-
-| Wann | Wie |
+| Datei | Verantwortung |
 |---|---|
-| nach jedem Upload-Schub | **geschätzt** fortgeschrieben (`SPUR_ZEILE_BYTE` je Punkt) |
-| Aufräumjob, einmal am Tag | **gemessen**, Cache ersetzt |
-
-Format in `app_state` unter `mengen:<id>`: `<einsaetze>\|<bytes>\|<zeitstempel>`
-— drei Zahlen mit Trennstrich, weil `app_state.v` 190 Zeichen fasst und JSON
-dort keinen Platz hätte.
-
-**Ohne die Fortschreibung griffe die Grenze erst einen Tag später**, und ein
-Konto könnte an einem Tag beliebig weit darüber hinauswachsen.
-
-#### `spur_bytes()` steht in `spur_lib.php`
-
-Nicht beim Aufrufer, und das ist die Regel aus `CLAUDE.md` 4: Wer die
-Spurablage unmittelbar zählt, misst früher oder später die Hälfte, ohne
-Fehlermeldung — bis Web 22.7.0 lagen die Punkte je nach Alter als Zeilen in
-`track_points`, als Blob in `track_blobs` oder als Stücke.
-
-**Gewogen, nicht geschätzt — seit Web 23:** `spur_bytes()` zählt `LENGTH()`
-der Hüllen in `track_stuecke`; dort steckt die ganze Masse. Bis Web 22.7.0
-kam für `track_points` ein fester Wert je Zeile dazu (`SPUR_ZEILE_BYTE`, 48),
-weil `information_schema` nur Tabellensummen kennt; die Grenze war damit eine
-Schätzung mit bekanntem Fehler. Den Fehler gibt es mit der Tabelle nicht
-mehr.
-
-#### Backlog Nr. 48 ist die Zahl der Backup-Pakete, nicht eine Frist
-
-**Und das ist beim Bauen zuerst falsch verstanden worden**, deshalb steht es
-hier: Nr. 48 („Aufbewahrung je Konto einstellbar, nicht nur je Installation")
-meint `adminbackup_aufbewahrung` — **wie viele Konto-Backups aufgehoben
-werden**, bevor der älteste verdrängt wird. Es meint **keine
-Aufbewahrungsfrist für Einsätze**; die gibt es nicht, und sie soll es auch
-nicht geben: Einsatzdaten von selbst verschwinden zu lassen wäre eine Zusage,
-die dieses Projekt nicht macht.
-
-Umgesetzt als `users.backup_pakete` und `edbak_aufbewahrung_konto($kennung)`,
-gelesen in `edbak_verdraengen()`. **Keine zweite Installationsvorgabe** — die
-gibt es schon unter Verwaltung → Konto-Backups; eine zweite Zahl daneben wäre
-genau die Doppelung, die R83 verhindern soll.
-
-`edbak_aufbewahrung_konto()` geht **über die Kontokennung**, nicht über die
-Id: `edbak_verdraengen()` arbeitet auf dem Ordner, und der heißt nach der
-Kennung. Ein Ordner ohne Konto („Backup ohne Konto") fällt auf die
-Installationszahl zurück — es gibt niemanden mehr, der etwas anderes bestimmen
-könnte.
-
-#### Die Marken sterben mit dem Konto
-
-`mengen:<id>` und `mengen_gemeldet:<id>` hängen an keinem Fremdschlüssel;
-`konto_loeschen()` räumt sie deshalb ausdrücklich mit, und der Aufräumjob holt
-verwaiste aus der Zeit davor. **`users.id` ist AUTO_INCREMENT, aber ein
-Wiederanlauf aus einer Sicherung kann eine Id erneut vergeben** — das neue
-Konto fände dann den Mengenstand des alten vor und stünde womöglich sofort an
-seiner Grenze, ohne einen einzigen Einsatz. Genau das ist beim Prüfen
-passiert.
-
-#### Ein Weg, ein Konto zu löschen (seit Web 21.1.8)
-
-**Jede Löschung geht über `konto_loeschen($id, $mitSicherungen, $weg)`** —
-die Kontoseite der Verwaltung (`verwaltung`), der Job nach der Karenz
-(`loeschantrag`), der Verfall unbestätigter und wartender Konten
-(`verfall`), das Entfernen des Demo-Kontos (`demo`) und die Prüfmittel
-(`probe`). Der Weg steht als Angabe `weg` im Protokolleintrag
-`konto_geloescht`. `grep -rn "DELETE FROM users" server/` findet eine
-Codezeile, und die steht in `konto_lib.php`.
-
-**Bis Web 21.1.7 waren es drei Abschriften** (Backlog Nr. 299, F-R4-09):
-Die Kontoseite und `demo_entfernen()` schrieben die Reihenfolge selbst hin,
-und beide waren auseinandergelaufen — die Kontoseite vergaß die Marken oben,
-das Demo-Konto seine Konto-Backups und das Protokoll. Umgekehrt hatte nur
-die Demo-Abschrift die Sperrliste der Geräte (`deleted_refs`, ohne
-Fremdschlüssel) geräumt; die Zeile steht jetzt in der Funktion.
-
-**Was die Aufrufer davor prüfen, bleibt bei ihnen:** Die Kontoseite lehnt
-das eigene Konto, die letzte BetreiberIn und das Demo-Konto ab und verlangt
-die abgetippte Adresse; `demo_entfernen()` löscht danach nur noch seine
-Kennzeichnung in `app_state`, und nur, wenn die Löschung gelungen ist.
-Scheitert sie (Backups nicht zu entfernen), bleibt alles stehen.
-
-#### Was hier NICHT gebaut wurde
-
-**Die Umstellung der Geräteschlüssel auf SHA-256** (E-P5b-17). Sie ist seit
-**Web 13.0.0** erledigt — `geraet_schluessel_gueltig()` rechnet
-`hash_equals(hash('sha256', …))`, und der Kommentar daneben trägt die Messung,
-die sie ausgelöst hat: bcrypt kostete 228 ms je Upload „für eine Bremse, die
-nichts bremst". Das Konzept beschreibt in 1.3 einen Stand von vor Web 13.0.0.
-
-### 4.99m Die Selbstregistrierung (ab Web 20.22.0, P5b/AP3)
-
-*E-P5b-01, -02, -03, -13, -23; seit Web 21.14.0 E-SR-26, E-SR-88 bis -93
-(Schritt 18, SR-08). Code: `server/registrieren.php`,
-`server/bestaetigen.php`, `server/konten_einstellungen_lib.php`
-(`wegwerf_trifft()`), `server/ratelimit_lib.php` (drei Töpfe),
-`server/konto_lib.php` (Verfall, Sammelmeldung), `server/jobs_lib.php`
-(`konto_verfall`), `server/wegwerfdomains.txt`, `server/assets/pow.js` und
-`server/assets/pow-worker.js` (Rechenaufgabe).*
-
-**Der Weg in fünf Schritten.**
-
-1. `registrieren.php` nimmt **Adresse, Name und drei Häkchen** — kein
-   Passwort (Begründung unten). Antwort ist für jeden Ausgang dieselbe Karte.
-2. Bei freier Adresse entsteht ein Konto im Zustand **`unbestaetigt`**
-   (`konto_anlegen(…, 'registrierung', 'unbestaetigt', …, TOKEN_REGISTRIERUNG_S)`),
-   dazu ein **48 Stunden** gültiger Token. Die Mail `registrierung` trägt den
-   Link.
-3. Der Link führt auf **`pw_handling.php`** — dieselbe Seite wie beim
-   Einladungsweg. Dort entstehen im Browser Passwort, Datenschlüssel und
-   Wiederherstellungsschlüssel.
-4. Nach dem Speichern wechselt der Status: bei *offen* auf **`aktiv`**, bei
-   *mit Freischaltung* auf **`wartet`**; im zweiten Fall geht eine Sammelmail
-   an die Verwaltung.
-5. Weiterleitung auf **`bestaetigen.php?s=…`**, das sagt, wie es weitergeht.
-
-**Warum das Passwort nicht auf der Registrierungsseite steht.** Der
-Datenschlüssel hängt seit S10 am Server-Anteil, und der wird per
-`HMAC(kdf_anteil, 'konto:<id>')` aus der **Kontonummer** abgeleitet (4.98,
-E-S10-17). Eine Registrierungsseite hat sie nicht — das Konto entsteht ja erst
-mit ihr. Der Browser kann `pat_wrap_pw` also nicht bilden, und eine Hülle ohne
-Anteil weist `huelle_pw_pruefen()` ab, sobald die Installation einen
-ausliefert. **Konto zuerst, Schlüssel danach** ist damit keine Vorliebe,
-sondern die einzige Reihenfolge, die geht. Das freigegebene Mockup M-P5b-02a
-zeichnet die Felder dort; die Abweichung ist am 17.09.2026 mit dem
-Auftraggeber geklärt.
-
-**Keine Kontoauskunft.** Fünf Ausgänge, eine Antwort: frei, belegt,
-Wegwerfadresse, Demo-Adresse, gesperrter Ratenschutz. Unterschieden wird in
-der **Mail** — `registrierung` an die freie, `registrierung_bekannt` an die
-belegte, keine an die übrigen. Die Dauer ist angeglichen
-(`rate_gleiche_dauer($t0, REG_MINDESTDAUER)`, 0,5 s Boden) und der Versand
-läuft **nach** `antwort_abschliessen()`; ohne beides wäre die Dauer die
-Auskunft, die der gleiche Text verhindert (M1-07). Gemessen über 120 Aufrufe:
-Spanne der Mediane **0,2 ms**; seit Web 21.14.0 mit der Rechenaufgabe die
-Ratenprobe, Abschnitt 12: sechs Lagen je fünfmal (ohne Lösung, falsche
-Lösung, abgelaufen, belegt, Wegwerf, frei), Spanne der Mediane **1,0 ms** (1,0 bis 1,5 ms über drei Läufe).
-
-**Die vier Bremsen** (die vierte seit Web 21.14.0; geprüft wird sie zuerst).
-
-| | was | warum still |
-|---|---|---|
-| Rechenaufgabe | Proof-of-Work: SHA-256 über Aufgabe und Zahl mit `POW_BITS` = 16 Nullbits, gelöst im Worker, geprüft mit einer Rechnung (`pow_ok()`); eine Aufgabe je Absendung, zwei Stunden gültig | eine Meldung „Aufgabe falsch" sagte einem Skript, woran es scheitert |
-| Honeypot | Feld `website` in `.nur-vorlesen`, mit `aria-hidden` und `tabindex="-1"` | `display:none` füllt kein Bot; ohne `aria-hidden` wäre es eine Falle für Bildschirmleser |
-| Mindestdauer | signierter Zeitstempel, 4 s bis 2 h gültig (`reg_stempel()`) | ohne Signatur bestimmt der Absender die Zahl selbst |
-| Töpfe | `reg` 10/h je IP · `regg` 100/h global · `regz` **3/24 h je Zieladresse** | eine Meldung „Honeypot gefüllt" wäre eine Bauanleitung |
-
-**Die Rechenaufgabe im Einzelnen** (SR-08, Nr. 228, E-SR-26).
-
-- **Aufgabe.** `pow_aufgabe_neu()` würfelt beim Zeichnen des Formulars 32
-  Byte (Hex) und legt sie mit ihrem Verfall als ganze Zahl in die Sitzung:
-  `$_SESSION['pow'][<aufgabe>] = <bis>`. Abgelaufene fallen beim nächsten
-  Aufruf weg, und es bleiben höchstens fünf, die jüngsten (E-SR-89) — ein
-  zweiter Reiter oder ein nach einem sichtbaren Fehler neu gezeichnetes
-  Formular entwertet die erste nicht. Die Frist ist `REG_FORMULAR_GILT_S`,
-  dieselbe Zahl wie die des Zeitstempels (zwei Stunden, E-SR-93).
-- **Sitzung nur bei offener Registrierung** (E-SR-92). Die Seite ruft
-  `https_tor()` und `sitzung_starten('app')` nur, wenn `konten_reg_offen()`;
-  eine Anlage „nur auf Einladung" setzt hier weiter kein Cookie. Einmal
-  gültig geht nur mit einer Ablage auf dem Server — ein signierter Wert
-  wie der Zeitstempel ließe sich innerhalb seiner Frist beliebig oft
-  vorzeigen. Die Sitzungsdatei arbeitet zwei Absendungen derselben Sitzung
-  nacheinander ab.
-- **Worker.** `assets/pow.js` startet beim Laden `assets/pow-worker.js`; die
-  Adresse (mit Erkennungswert aus `asset()`) und die Bitzahl kommen als
-  `data-pow-worker` und `data-pow-bits` aus derselben Konstante (E-SR-90).
-  Der Worker hängt die Zahl als Dezimalziffern an die Aufgabe und rechnet
-  `crypto.subtle.digest()` in Bündeln von 64; die Lösung kommt ins Feld
-  `pow_loesung`. Erlaubt ist er durch `worker-src 'self' blob:`, nicht durch
-  `script-src`. Wer schneller abschickt, als er rechnet, sieht den Knopf
-  gesperrt und „Sicherheitsprüfung läuft …"; das Formular geht von selbst
-  ab. Kann der Browser nicht rechnen, sagt die Zustandszeile es und das
-  Formular geht nicht ab. **Ohne JavaScript** steht dort der Satz „Ohne
-  JavaScript lässt sich hier kein Konto anlegen." (F-SR-92).
-- **Prüfung.** `pow_ok()` steht im stillen Teil an erster Stelle, hinter den
-  zwei sichtbaren Fehlern (Häkchen, Adressformat — E-SR-88). Sie verbraucht
-  die Aufgabe immer, ob sie gelingt oder nicht, verlangt eine Dezimalzahl
-  mit höchstens zwölf Stellen (E-SR-91) und rechnet eine SHA-256. Ein
-  Fehlschlag nimmt den Weg der anderen Bremsen: dieselbe Karte, dieselbe
-  Dauer, Zählung in `reg` und `regg`.
-- **Die Zahl.** 16 Bit, gemessen am 05.10.2026 in Chromium 141 (je 30
-  Läufe): ungedrosselt 158 343 Versuche/s, Median 0,47 s, höchstens 1,34 s;
-  auf ein Viertel der CPU begrenzt 34 875 Versuche/s, Median 1,71 s,
-  höchstens 6,0 s. Die Drosselung der Entwicklerwerkzeuge
-  (`Emulation.setCPUThrottlingRate`) erreicht keinen Worker (F-SR-95);
-  gemessen hat eine CPU-Quote des Betriebssystems. Eine Stufe weniger
-  halbiert die Zeit (P-SR-14).
-- **Was sie nicht kann.** Ein Skript, das SHA-256 in Maschinencode rechnet,
-  braucht für 16 Bit Millisekunden. Die Aufgabe verteuert das massenhafte
-  Absenden; die Grenze bleiben die Töpfe.
-- **Felder nur als Text** (seit Web 21.14.0, F-SR-96): `$feld()` nimmt
-  `email`, `name`, `website`, `zeit` und die beiden Felder der Aufgabe nur
-  als Zeichenkette; eine Liste gilt als leer.
-
-`regz` ist der wichtigste: Ohne ihn verschickt die Seite an **jede**
-eingetippte Adresse eine Mail, ohne dass der Absender sie besitzen muss. Sein
-Merkmal ist ein **Hash** der Adresse (`rate_reg_ziel()`) — `rate_limits` wäre
-sonst ein Verzeichnis fremder Postfächer in derselben Datenbank, die auch ein
-Angreifer abzieht.
-
-**Die Wegwerfliste.** `server/wegwerfdomains.txt`, 8 883 Domains, CC0 1.0,
-eine je Zeile, durchgehend klein. **Nie zur Laufzeit geholt** (R36);
-`wegwerf_trifft()` liest sie je Anfrage einmal in eine `static`. Die Prüfung
-geht von der vollen Domain nach oben (`a.b.example.com` → `b.example.com` →
-`example.com`), damit Unterdomains mitzählen — sie hört **vor** der Endung auf,
-denn eine Liste, die `com` sperrte, sperrte das halbe Netz. Fehlt die Datei,
-trifft nichts: Eine Installation, die alle Registrierungen abweist, *weil* eine
-Datei fehlt, wäre das Gegenteil des Schalters. Pflege:
-`tools/erzeugen/wegwerfdomains.py` (Runbook, Abschnitt 7; Backlog
-Nr. 230), Herkunft in `docs/Lizenzen.md` 7b.
-
-**Zwei Fristen, zwei Zustände, ein Job.** `konto_verfall` löscht
-unbestätigte Konten nach **48 h** (`KONTEN_UNBESTAETIGT_H`, fest — eine
-Sicherheitsfrist) und wartende nach der eingestellten Frist (Vorgabe 30 Tage,
-1–365). Gemessen ab `created_at` bzw. `bestaetigt_am`; **deshalb** schreibt
-`konto_status_setzen()` beim Übergang nach `wartet` jetzt `bestaetigt_am` mit.
-Gelöscht wird über **`konto_loeschen()`** und nicht per `DELETE` — die Kaskade
-erreicht die GPS-Spuren nicht und die `app_state`-Zeilen `mengen:<id>` erst
-recht nicht (4.99l). Die letzte Mail geht **nur an die Wartenden** — und seit
-Web 23.2.0 erst **nach** der Löschung: `konto_loeschen()` räumt seither auch
-die Mailwarteschlange der Adresse ab (`mail_konto_entfernen()`, F-R17-21; der
-Docblock verlangte das seit jeher, es gab keinen Aufrufer), und eine vorher
-eingereihte, noch wartende Abschiedsmail ginge mit. Dazu nimmt
-`konto_loeschen()` die zwei `app_state`-Zeilen eines offenen Adresswechsels
-mit (`adresse_offen:<id>`, `adresse_alt:<id>`).
-
-**Die Freischaltung** ist der vorhandene Knopf in der Statuskarte der
-Kontoseite; neu ist die Mail `freigeschaltet` beim Übergang **`wartet` →
-`aktiv`** — beim Entsperren (`gesperrt` → `aktiv`) geht keine. Gefunden werden
-die Wartenden über den Filter **„Wartet auf Freischaltung"** in
-`admin_users.php`; die Liste liest `status` seit Web 20.22.0 mit und zeigt ihn
-als Plakette neben der Adresse (keine neunte Spalte — in 95 von 100 Zeilen wäre
-sie leer).
-
-### 4.99n Handbuch und „Was ist NAdoku" als Seiten (ab Web 20.23.0, P5b/AP8)
-
-*E-P5b-08, -22; Mockup M-P5b-01. Code: `server/doku_lib.php`,
-`server/doku_seite.php`, `server/hilfe.php`, `server/ueber.php`,
-`server/assets/doku.js`, `server/vendor/Parsedown.php`.*
-
-Die Quelle bleibt Markdown im Repositorium: `docs/Handbuch.md` und
-`docs/Was-ist-NAdoku.md`. Auf GitHub editierbar, die Wortliste läuft darüber,
-das Prüftor prüft die Rendertauglichkeit — und es gibt **keine zweite Fassung
-in einer Datenbank**, die auseinanderlaufen könnte.
-
-#### Zwei Orte, und eine Asymmetrie, die man kennen muss
-
-`doku_pfad()` sucht erst `../docs/` (Selbsthosterinnen laden das Repositorium
-hoch), dann `server/doku/` (dorthin kopiert die Kette). **Für den TEXT genügt
-das, für BILDER nicht** — und das ist der Punkt, an dem sich zwei Welten
-treffen:
-
-- Den **Text** liest PHP aus dem Dateisystem. `../docs/` ist dort ein ganz
-  normaler Ort.
-- Ein **Bild** holt der **Browser**. Der sieht nur, was unterhalb des
-  Dokumentenstamms liegt, also `server/`. `../docs/` ist für ihn unerreichbar,
-  und das soll so bleiben.
-
-Deshalb schreibt `DokuMarkdown::inlineImage()` jede relative Bildquelle auf
-`doku/…` um, und die Kette kopiert `docs/bilder/` mit. Wer selbst hostet und
-nur `docs/` neben `server/` legt, bekommt den Text und keine Bilder; dann
-fehlt derselbe Kopierschritt.
-
-**Der Fehler ist teuer, weil er leise ist:** Ohne die Umschreibung löste
-`![](bilder/x.png)` zu `/bilder/x.png` auf — `server/bilder/`, wo nichts
-liegt. Der Bilderlauf meldete dafür **24 Konsolenfehler**; auf dem Server
-wären es drei kaputte Bilder in einem Handbuch gewesen, das ohne sie noch
-lesbar ist.
-
-#### Was der Renderer darf
-
-`Parsedown` mit **beidem**: `setMarkupEscaped(true)` (rohes HTML wird Text)
-und `setSafeMode(true)` (Zielprüfung an Links). Dazu drei eigene Regeln in
-`DokuMarkdown`:
-
-| Regel | wofür |
-|---|---|
-| Sprungmarken an jeder Überschrift, h2/h3 zusätzlich ins Verzeichnis | `hilfe.php#abschnitt` als Ziel für Hilfe-Verweise |
-| `rel="noopener"` an fremden Zielen | E-P5b-22; ohne `target` streng genommen überflüssig, aber dann schon da |
-| **Bilder nur relativ** | die Zusage „keine fremde Quelle zur Laufzeit" |
-
-**Die dritte ist die einzige, die wirklich etwas trägt** — und sie ist
-nachgemessen, nicht vermutet. Parsedown liefert **mit** SafeMode für
-`![B](https://fremd.example/b.png)` ein `<img src="https://fremd.example/…">`.
-SafeMode prüft das **Schema**, nicht die **Herkunft**. Auf einer Seite, die
-jede Besucherin vor der Anmeldung sieht, steht zwischen dem Handbuch und einem
-fremden Server allein dieser Überschreiber.
-
-#### Kein Cache — entgegen dem Konzept
-
-E-P5b-22 verlangt einen Cache in `app_state`. Er ist **unmöglich**
-(`app_state.v` ist `VARCHAR(190)`, das gerenderte Handbuch 303 KB) und
-**unnötig**: 266 KB Markdown rendern in **11 bis 12 ms**. Die Begründung steht
-im Kopf von `doku_lib.php`. Wäre er je nötig, gehörte er in eine **Datei**
-neben der Quelle.
-
-#### Wo die Seiten auftauchen
-
-- **Fußzeile der Anmeldeseite** (`.fuss-anmeldung`): Was ist NAdoku? ·
-  Handbuch · Impressum · Datenschutz — **unter** der Karte (bis Web 20.37.2
-  stand sie daneben, Nr. 289). Der erste Link ist der einzige Weg, auf
-  dem jemand **ohne Konto** erfährt, was diese Anwendung ist.
-- **Kopfleiste, angemeldet:** ein Fragezeichen links vom Zahnrad
-  (`.kopf-hilfe`), das auch auf dem Handy stehen bleibt.
-- `ueber.php` zeigt am Ende „Konto anlegen" **nur, wenn die Registrierung
-  offen ist** — sonst führte der Knopf auf eine Seite, die absagt.
-
-#### Grenzen der Prüfmittel an dieser Seite
-
-`hilfe.php` zeigt das ganze Handbuch auf einer Seite. Der Bilderlauf kann sie
-**nicht ganzseitig** fotografieren: 19 MB je Abzug, und ab 1024 px scheitert
-Chromium an seiner Höchsthöhe. Der Eintrag trägt deshalb
-`"ganzseitig": false` in `seiten.json` — das Bild ist ein Ausschnitt, die
-**Messungen** (Überlauf, Konsolenfehler, Knopfhöhen) laufen weiter über das
-ganze Dokument.
-
-### 4.99o Einstiege nach der Anmeldung (ab Web 20.24.0, P5b/AP9)
-
-*E-P5b-09, -10, -19, -20, -21; Mockups M-P5b-02b/c/d. Code:
-`server/einstieg_lib.php`, `server/erststart_karte.php`,
-`server/rueckfrage_dialog.php`, `server/schluessel_teile.php`,
-`server/blatt_dialog.php`, `server/notfallblatt.php`,
-`server/assets/rueckfrage.js`, `server/assets/schluessel.js`,
-`server/assets/schluesselblatt.js`, `server/api/rueckfrage.php`,
-`server/api/schluessel_erneuern.php`,
-`server/api/schluesselblatt_pruefen.php`.*
-
-Nach dem Anmelden kann viererlei anstehen. Es erscheint **genau eines**, in
-dieser Reihenfolge:
-
-| # | Was | Form | Fällig |
-|--:|---|---|---|
-| 1 | Einwilligungstor | eigene **Seite** (`einwilligung.php`) | solange eine Annahme fehlt (4.99j) |
-| 2 | Schlüsselblatt-Rückfrage | Dialog, nur BetreiberIn | alle 3 Monate, installationsweit |
-| 3 | Konto-Rückfrage | Dialog | nach 30 Tagen, 6 Monaten, dann jährlich |
-| 4 | Erststart | **Karte** über der Tagesübersicht | solange ein Schritt offen ist |
-
-`einstieg_faellig($userId, $istBetreiberin, $uebergehen)` gibt den Schlüssel
-des ersten fälligen Einstiegs zurück oder `null`. Der dritte Parameter nennt,
-was die Sitzung schon gezeigt hat — ohne ihn verdeckt eine weggeklickte Frage
-alle folgenden, weil die Funktion nur die erste herausgibt.
-
-Das Einwilligungstor steht in der Liste, aber nicht im Code dieser
-Bibliothek: Es ist eine Umleitung in `auth_guard.php` und läuft, bevor eine
-Seite etwas ausgibt.
-
-#### Der vierte ist kein Dialog
-
-E-P5b-19 zählt alle vier in einer Reihe auf und schreibt „die Seite zeigt
-genau einen Dialog". Das freigegebene Mockup M-P5b-02b sagt es genauer:
-**„Die Karte steht über der Tagesübersicht, nicht als Dialog: Wer sie
-ignoriert, arbeitet trotzdem."**
-
-Der Unterschied ist keine Geschmacksfrage. Die Rückfragen sind
-Sicherheitsfragen mit einer Frist — sie dürfen stören. Der Erststart ist eine
-Einladung; wer ihn wegklicken muss, um an seine Diensttage zu kommen, lernt in
-der ersten Minute, dass diese Anwendung im Weg steht.
-
-#### Zustand am Konto, nicht in den Stammdaten
-
-| Spalte | Was |
-|---|---|
-| `users.erststart_stand` | Bitfeld der drei Schritte (1 Standort, 2 Rettungsmittel, 4 Gerät); **`-1` = nicht mehr zeigen**, deshalb `TINYINT` mit Vorzeichen. Das Bit 4 setzt seit Web 23.3.0 `pair.php` nach einer gelungenen Kopplung — bis dahin setzte es nur die Handanlage, nie das Koppeln (F-R17-70) |
-| `users.rueckfrage_naechste` | Datum der nächsten Konto-Rückfrage, `NULL` = Uhr läuft noch nicht |
-| `users.rueckfrage_runde` | 0 → 30 Tage, 1 → 6 Monate, 2+ → jährlich |
-| `users.rueckfrage_verschoben` | Zähler für „Später", höchstens 3 je Runde |
-| `app_state.schluesselblatt_bestaetigt_am` | installationsweit, für die Betreiber-Rückfrage |
-
-Ein `SELECT COUNT(*) FROM bases` wäre für den Erststart einfacher und wäre
-falsch: „Ich brauche keinen Standort" ist eine Antwort, und wer den Schritt
-bewusst übergeht, soll ihn nicht bei jedem Anmelden wiedersehen.
-
-Die Uhr der Konto-Rückfrage startet bei der **Anmeldung**
-(`rueckfrage_anstossen()` in `login.php`), nicht beim Anlegen des Kontos, und
-nur wenn `pat_wrap_rc` gesetzt ist: Ein eingeladenes Konto ohne gesetztes
-Passwort hat kein Notfallblatt, und es 30 Tage später danach zu fragen wäre
-eine Frage ohne Gegenstand.
-
-#### Das Notfallblatt speichert nichts — und kann nichts speichern
-
-`notfallblatt.php` bekommt den Wiederherstellungsschlüssel **per POST aus dem
-Browser** und gibt ihn in derselben Antwort zurück. Er wird nicht gelesen,
-nicht geschrieben, nicht protokolliert. Das ist keine Vorsicht, sondern die
-einzig mögliche Bauform: Der Server kennt diesen Schlüssel nicht.
-
-Daraus folgt die Eigenschaft, die das Blatt ausmacht: **Es lässt sich später
-nicht erneut drucken.** Wer es verliert, erzeugt einen neuen Schlüssel — das
-alte Blatt wird damit ungültig, und genau das steht darauf.
-
-**Kein `auth_guard.php`, und das ist kein Versehen.** Der Schlüssel wird an
-zwei Stellen gezeigt, und an einer davon gibt es noch keine Sitzung: beim
-ersten Setzen des Passworts (`pw_handling.php`). Was stattdessen schützt: Die
-Seite gibt nur wieder, was ihr gesendet wurde, und zwar **geprüfte Werte in
-festem Text** — der Code muss dem Format entsprechen (20 Zeichen aus dem
-Alphabet ohne 0/1/I/L/O/U, fünf Vierergruppen), die Adresse muss eine Adresse
-sein; alles andere wird ausgelassen. Kein freier Text, kein Verweis nach
-draußen, kein Markup aus der Eingabe.
-
-#### Die Schlüsselerneuerung: eine Komponente, zwei Verbraucher
-
-`assets/schluessel.js` rechnet, `api/schluessel_erneuern.php` schreibt,
-`schluessel_teile.php` zeigt. Aufrufer sind der Rückfrage-Dialog und die Karte
-unter **Einstellungen → Profil** (R83).
-
-Der Weg im Browser:
-
-1. Passwort → Datenschlüssel (`deriveKeys`, `datenschluessel`)
-2. damit `pat_wrap_pw` öffnen → der **Inhaltsschlüssel** (ck)
-3. **ck gegen `pat_key_check` halten** — die Wache
-4. neuen Code erzeugen (`newRecoveryCode`), ck damit neu verpacken
-5. `api/schluessel_erneuern.php` → schreibt **genau** `pat_wrap_rc`, nach
-   `passwort_nachweis()` (Ratentopf `login`), und reiht seit Web 23.2.0 die
-   Mail `schluessel_erneuert` an die Kontoadresse ein (F-R17-10: Wer Passwort
-   und Sitzung erbeutet hatte, ersetzte den Rückweg sonst still)
-6. den Code anzeigen
-
-**Schritt 3 ist die Stelle, an der Daten verlorengehen könnten.** Öffnete
-Schritt 2 aus irgendeinem Grund einen *anderen* Schlüssel, verpackte Schritt 4
-diesen, der Server nähme ihn an, und der neue Zettel öffnete **nichts** — der
-alte wäre schon überschrieben. Konten ohne `pat_key_check` (vor Web 10)
-bekommen die Funktion nicht, statt sie ungeprüft zu benutzen.
-
-Drei Feinheiten, die je einen Betriebsfall entscheiden:
-
-- `datenschluessel()` und **nicht** `datenschluesselZu()`: Die erste liest die
-  Anteilskennung aus dem **Präfix der zu öffnenden Hülle**, die zweite erzwingt
-  eine genannte. Während einer Anteilsrotation trägt die alte Hülle noch den
-  alten Anteil — mit der zweiten wäre die Erneuerung für jedes Konto
-  gescheitert, das sich seither nicht angemeldet hat.
-- `encrypt()` und **nicht** `huelleBauen()`: `pat_wrap_rc` hängt **nicht** am
-  Server-Anteil (E-S10-04). Der Server weist eine `edka1:`-Hülle zusätzlich ab
-  (`huelle_rc_pruefen()`).
-- **Das Passwort wird verlangt, obwohl die Sitzung steht.** Nicht wegen der
-  Verschlüsselung — eine entsperrte Sitzung hätte den ck bereits —, sondern
-  weil sonst jemand mit einer übernommenen Sitzung den Zettel des Opfers
-  ungültig machen könnte: kein Datenklau, aber der lautlose Verlust des
-  Rückwegs. Geprüft wird serverseitig, und der Endpunkt zählt in den Topf
-  `login`.
-
-`session_epoch` bleibt unberührt: Am Schlüssel der offenen Sitzungen hat sich
-nichts geändert.
-
-#### Die Betreiber-Rückfrage wird eingegeben, nicht bestätigt
-
-`api/schluesselblatt_pruefen.php`, zwei Aufrufe:
-
-- `aktion=stellen` — der Server würfelt je Wert (Serverschlüssel,
-  Server-Anteil) **zwei verschiedene Gruppenpositionen** aus 1–16, legt sie in
-  **seine Sitzung** und nennt nur die Nummern. Ein verstecktes Feld wäre vom
-  Browser wählbar; wer die Positionen selbst bestimmt, sucht sich die zwei
-  aus, die er kennt.
-- `aktion=pruefen` — vier Antworten, Vergleich mit `hash_equals()` gegen die
-  Gruppen aus `config.php`, **alle vier ohne Abkürzung bei der ersten
-  Abweichung**. Ein Abbruch wäre an der Antwortzeit messbar und machte aus
-  einem Rätsel zu sechzehn Zeichen vier Rätsel zu vier.
-
-Gezeigt wird nie ein Wert, nur die achtstellige **Kennung** — die Regel des
-Hauses; `betrieb_schluesselblatt.php` ist ihre einzige Ausnahme. Drei
-Fehlversuche → Topf **`blatt`** (erste Sprosse 15 Minuten, dann steigend — die
-Leiter überholt den Wert in `sperre`), Eintrag in
-`sicherheit_ereignisse` ohne Werte. Erfolg setzt
-`app_state.schluesselblatt_bestaetigt_am` und schreibt ins Protokoll (Reiter
-Verwaltung).
-
-**Keine Schlüsselerneuerung an dieser Stelle.** Den Serverschlüssel zu wechseln
-hieße, jede versiegelte Sicherung neu zu umhüllen — seit Web 21.12.0 gibt es
-diesen Vorgang (4.97c, SR-03), und er steht unter Betrieb →
-Servereinstellungen, nicht in einem Dialog. Wer sein Blatt verloren hat,
-druckt es neu; der Schlüssel bleibt derselbe.
-
-**Nach einer Rotation kommt die Frage sofort** (seit Web 21.12.0, Nr. 233,
-E-SR-11). Beide Rotationen — Anteil und Serverschlüssel — rufen
-`blatt_neu_faellig()`: Die Bestätigung wird gelöscht, und
-`app_state.schluesselblatt_neu_weil` sagt, welche es war. Der Dialog setzt
-dann den Satz voran „Ein Wert hat gewechselt — drucke das Blatt neu", und
-während eines Wechsels nennt er die Kennung des bisherigen, der mit aufs
-Blatt gehört. Gefragt werden weiter nur die **heutigen** Werte; der
-bisherige wird genannt, nicht abgefragt. Die Antwort (`blatt_bestaetigt()`)
-räumt den Grund wieder weg. Bis dahin fasste die Rotation die Marke nicht
-an, und die Frage kam im nächsten Quartal — mit einem Blatt in der Akte,
-das den heutigen Wert nicht trug.
-
-#### „Später" heißt zweierlei
-
-Bei der **Konto**-Rückfrage sieben Tage, höchstens dreimal je Runde
-(`rueckfrage_verschoben`). Bei der **Betreiber**-Rückfrage nur bis zur
-nächsten Anmeldung, über ein Merkmal in der Sitzung — und das weicht von
-E-P5b-10 ab. Der Grund: Der Schlüsselblatt-Stand ist **ein** Datum in
-`app_state`, und es heißt `schluesselblatt_bestaetigt_am`. Um sieben Tage zu
-schieben, müsste dort ein Datum stehen, an dem nichts bestätigt wurde — eine
-Unwahrheit in genau dem Feld, das die Frage beantwortet. Und es gälte für
-alle: Eine BetreiberIn, die schiebt, nähme die Frage auch der anderen weg.
-
-#### Grenzen
-
-- **Ohne JavaScript erscheinen die beiden Dialoge nicht.** Die Erneuerung
-  rechnet im Browser (PBKDF2, HKDF, AES-GCM) und kann keinen serverseitigen
-  Ersatzweg haben — der Server kennt den Inhaltsschlüssel nicht. Die
-  Erststart-**Karte** dagegen kommt ohne aus; ihre beiden Auswege sind ein
-  gewöhnliches Formular.
-- **Die Fristen sind im Betrieb nicht abgewartet, sondern gestellt worden.**
-  Geprüft wurde mit vorgestelltem `rueckfrage_naechste`; die Runden 0 → 1 → 2
-  → 2 sind in vier Durchgängen gemessen, ein tatsächlicher Halbjahresabstand
-  nicht.
-
-### 4.99k Selbstlöschung und Adresswechsel (ab Web 20.20.0, P5b/AP5)
-
-*E-P5b-16. Code: `server/konto_lib.php`, `server/adresse_bestaetigen.php`,
-Job `konto_loeschung`.*
-
-#### Der Adresswechsel geht über die neue Adresse
-
-| | bis Web 20.19.0 | seit 20.20.0 |
-|---|---|---|
-| Schreiben | **sofort** | erst beim Klick |
-| Prüfung der neuen Adresse | **keine** | Link, 24 h |
-| Nachricht an die alte | Hinweis | Hinweis (unverändert) |
-| Nachweis | Passwort-Token | Passwort-Token (unverändert) |
-
-**Ein Tippfehler sperrte aus.** Die Anmeldung läuft über die Adresse, und
-„Passwort vergessen" schickt an eine Adresse, die es nicht gibt — der Weg
-zurück führte über die Verwaltung oder, auf einer Einzelinstallation, über die
-Datenbank.
-
-**Kein `UNIQUE` auf `email_neu`.** Zwei Konten dürfen dieselbe Adresse
-vormerken; erst der Klick entscheidet, und dort fängt das `UNIQUE` auf `email`.
-Eine Sperre schon beim Vormerken verriete, dass jemand anders dieselbe Adresse
-vorgemerkt hat.
-
-**Der Token steht nicht in `password_resets`.** Er gehört zu einer Adresse,
-nicht zu einem Passwort; dort wäre er ein zweiter Tokentyp in einer Tabelle,
-deren Regel „höchstens ein gültiger je Konto" lautet — ein Adresswechsel würde
-dann einen offenen Einladungslink entwerten.
-
-**`adresse_bestaetigen.php` läuft ohne Anmeldung**, und das ist der Zweck: Wer
-den Link hat, hat Zugang zum Postfach der neuen Adresse — genau das ist der
-Nachweis. Eine Anmeldung wäre gerade dann unmöglich, wenn sie am meisten hülfe.
-
-**Der Wechsel durch die Verwaltung geht den anderen Weg** (seit Web 23.2.0,
-R17-20): Er schreibt sofort, fragt die **alte** Adresse und sperrt bis dahin
-den Setz-Link — Abschnitt 3, „Ein Adresswechsel durch die Verwaltung ist
-sieben Tage unbestätigt". Die Seite dazu ist `adresse_verwaltung.php`, ohne
-Anmeldung aus demselben Grund wie diese.
-
-#### Die Selbstlöschung
-
-**Der Nachweis ist das abgeleitete Token** (seit Web 23.2.0, F-R17-67). Bis
-dahin schickte die Karte das Passwort selbst, und der Server verglich es mit
-bcrypt des **Tokens** — die Löschung ging nie. Jetzt leitet der Browser das
-Token ab (ein Zuhörer am Fenster in der Erfassungsphase, vor `confirm.js`),
-und `passwort_nachweis()` prüft mit Ratentopf.
-
-`gesperrt` mit dem Grund `selbstloeschung`, `loeschung_am` = jetzt + **30
-Tage**. **Die Rücknahme ist die Anmeldung** — `login.php` setzt den Status
-zurück, ohne dass es einen Knopf braucht.
-
-**Warum kein eigener Rücknahmeweg:** Ein Link in der Mail, der etwas anderes
-tut als anmelden, wäre ein zweiter Weg mit eigenem Token und eigener Frist —
-und er müsste ohne Passwort wirken, sonst braucht man ohnehin die Anmeldung.
-Ein Rückzug ohne Passwort ist aber genau das, was ein Angreifer wollte, der
-die Löschung verhindern will, um weiter mitzulesen.
-
-**Der Job löscht höchstens fünf je Lauf.** Eine Kontolöschung räumt die Spuren
-von Hand (die Kaskade erreicht sie nicht), löscht den Backup-Ordner im
-Dateisystem und kaskadiert über jede Tabelle des Kontos (fünfzehn am
-26.09.2026). Das Huckepack-Budget sind
-drei Sekunden für **alle** Jobs zusammen; einen Tag später zu löschen ist kein
-Zusagenbruch, eine hängende Anfrage schon.
-
-**Er steht weit vorn im Katalog**, gleich hinter dem Aufräumen: Im Regelfall
-hat er nichts zu tun (eine Abfrage über einen Index), und wenn doch, ist es
-das, worauf jemand ein Recht hat.
-
-#### Das Protokoll nennt beim Wechsel keine Adressen
-
-Nur die Kontonummer und dass gewechselt wurde. Ein Audit, in dem jede je
-benutzte Adresse eines Kontos steht, ist ein Verzeichnis von Adressen und
-nicht eines von Handlungen. Nachgemessen: Der Eintrag enthält kein `@`.
-
-Beim **Löschen** stehen Adresse und Termin dagegen im Eintrag — dort ist die
-Adresse der einzige Anhalt, der die Löschung überhaupt noch nachvollziehbar
-macht, und die Zeile überlebt das Konto.
-
-### 4.99j Einwilligungen (ab Web 20.19.0, P5b/AP4)
-
-*E-P5b-05, -15. Code: `server/einwilligung_lib.php`, `server/einwilligung.php`,
-Tabelle `konto_einwilligungen`.*
-
-#### Vier Rechtstexte, drei mit Einwilligung
-
-| Schlüssel | Seite | Einwilligung | Wirkung bei neuer Fassung |
+| `NAdokuApp.mc` | Einstieg; Restore-Kette bei Neustart (Model → Track → Cpr → Sync). Hieß bis Uhr 2.0.0 `HemsApp.mc` |
+| `Model.mc` | Dienst-Klammer, Phasenlogik, Einsatz-/Segment-Lebenszyklus, Rea-Sitzungen, Persistenz (`state`) |
+| `Track.mc` | GPS (15 m/10 s/1 s-Ausdünnung), Distanz/Anstieg, Anzeige-Polylinie (Cap 1000, Dichte-Halbierung), **Flash-Chunks à 200 Punkte**; `restore()` lädt Teil-Chunks zurück in den Puffer (verlustfrei) |
+| `Cpr.mc` | Rea-Timer app-weit (1-s-Tick), 2:00-Zyklus, Ereignisse, **persistenter Zustand** (übersteht Neustart); drei Zustände: aus / laufend / pausiert |
+| `Uploader.mc` | Job-Queue (fertige Einsätze → Segmente → aktive), Chunking ≤ 500, `next_seq`-Bestätigung, Purge inkl. Marken; `hasServer()`/`hasCredentials()`. **Seit Uhr 3.1.0** trennt `onResponse()` drei Fälle: eine Störung (später erneut), ein dauerhaft abgewiesenes Paket (Marke `bad_<ref>`, wird übersprungen) und ein abgemeldetes Gerät (`401`/`403` → `abgemeldet`, das Senden hält an). Siehe 5.4. **Seit Uhr 4.0.0** sendet er nur verschlossen (`track` mit `huelle`, `ort_huelle`, Phasen ohne Koordinate, keine `resus_sessions`) und ohne Kontoschlüssel oder bei gescheitertem Selbsttest gar nicht; die Marke `bad_<ref>` trägt den Zeitpunkt, `parkFristPruefen()` räumt nach `PARK_FRIST_S` = 30 Tagen (E-S11-11). **Seit Uhr 4.1.0** (R17-21): die Frist auch für „abgemeldet" (`Storage 'abgem_seit'`, Zeitpunkt der ersten 401/403; `abmeldeFristPruefen()` vor jedem Sendelauf verwirft danach alle wartenden Pakete, E-R17-22); das bestätigte Paket geht über seine Referenz aus der Liste, nicht über einen Listenplatz (F-R17-52); `http://` wird zu `https://` (F-R17-11); Zugangsdaten nur aus `Storage 'cred'` — der Alt-Weg über die App-Einstellungen ist fort (E-R17-21) |
+| `Huelle.mc` | **Seit Uhr 4.0.0** (S11-08): die Gerätehülle (Format: Kopf von `tools/proben/huelle/referenz.py`) — Bausteine aus der Krypto-Probe, `spurstueck()` (14 Byte je Punkt), `einsatz()` (JSON, Zeiten seit Beginn), Kontoschlüssel in `Storage 'kschl'`, Selbsttest `bereit()` gegen `HuelleVektor.mc` (erzeugt, Fall „kurz"): misst die Byteordnung des ECDH-Geheimnisses und das ganze Prüfwort, Ergebnis je Fassung und Firmware in `Storage 'kpruef'` (E-S11-30, -78) — **seit Uhr 4.1.0 nur `be` oder `le`**: „kaputt" gilt bis zum nächsten Start und wird dann neu gemessen, `pruefungVergessen()` beim Trennen (F-R17-53) |
+| `Input.mc` | Eingabemodell: `ActionDelegate` übersetzt Tasten, Wischgesten und Langdrücke einmal zentral in Aktionen (s. Abschnitt 5.1); `TastenDelegate` ist die Basis der selbst gezeichneten Menüs und Warteseiten; `beruehrungVerwerfen()` setzt den Schalter `touchEnabled` um (seit Uhr 4.1.0, F-R17-68) |
+| `DeviceProfile.mc` | je Profil eine eigene Fassung in `source-tasten5/` bzw. `source-tasten3/`; liefert `HAS_UP_DOWN` und die Bedienhinweise |
+| `Ui.mc` | Geometrie relativ zur Displayhöhe (`s()` liefert bei 260 exakt den Ausgangswert), Markenfarben, Rea-Marker |
+| `Nav.mc` | Pager: Uhr → Tempo → Statistik → Sync → Rea |
+| `StartView.mc` | Startbildschirm „Dienst beginnen"; Hinweise zu Server-Adresse und Kopplung |
+| `ClockView/SpeedView/StatsView/SyncView/CprView.mc` | Oberflächen + Delegates; erben von `ActionDelegate` und beschreiben nur noch die Aktionen |
+| `SyncView.mc` | Sync-Status (Backlog = nur abgeschlossene Pakete, **ohne geparkte**), App-Version, Kopplung per START-Halten, **Verwerfen abgewiesener Pakete per kurzem START**; seit Uhr 4.0.0 „Kein Schlüssel · Holen: START halten" und „Verschlüsseln geht nicht" (E-S11-76) |
+| `Pair.mc` | Kopplung (seit Uhr 3.0.0 umgekehrt): holt mit `start` eine Sitzung, fragt im Takt `status`, bestätigt mit `bestaetigen` — erst danach `Storage 'cred'`. Bis dahin liegen Code, Kennung und Schlüssel **nur im Arbeitsspeicher**. **Seit Uhr 4.0.0** legt `_fertig()` den `kontoschluessel` aus der Antwort ab, und `schluesselHolen()` holt ihn bei bestehender Kopplung über `status` nach (E-S11-79) — kein Trennen, weil ein Rückstand das Trennen sperrt (F-S11-80) |
+| `PairView.mc` | Die Kopplungsansicht: zeigt den Code groß, dazu Restzeit und Verbindungshinweis; BACK bricht ab. Eigene Ansicht, weil der Code Buchstaben trägt (keine Ziffernschrift), eine Restzeit läuft und BACK hier anders wirkt als auf der Sync-Seite |
+| `Const.mc` / `Util.mc` | `APP_VERSION`, Labels, Tuning-Werte; ISO-UTC, lokale Anzeige, Vibration |
+
+Rückruf-Muster: `method()` existiert nur auf Objekten → kleine Träger-Klassen
+(`TrackCb`, `CprCb`, `UploaderCb`) reichen Callbacks an die Module weiter.
+
+> **Kartenseite entfernt (1.3.5):** `MapPage.mc` funktionierte am Gerät nicht
+> zuverlässig und wurde gelöscht. Eine künftige Kartenansicht wird neu
+> aufgebaut; die alte Fassung liegt in der Git-Historie.
+
+> **Vor jeder Änderung an einer Oberfläche:** `Uhr-Layout_Regeln.md` lesen. Dort
+> stehen die Regeln zu Schriften, runden Displays und vertikalen Blöcken —
+> jede davon, weil sie einmal verletzt wurde und der Fehler erst im Simulator
+> aufgefallen ist.
+
+**Was der Typprüfer verlangt (Stand 1.8.2).** Drei Eigenheiten kosten sonst
+jedes Mal aufs Neue Zeit:
+
+- **Die Null-Prüfung greift nur über lokale Variablen.** `if (mission == null)
+  { return; }` überzeugt den Prüfer nicht, wenn danach `mission[...]` steht —
+  bei einem Modul-Feld verfolgt er den Fluss nicht. Den Wert zuerst in eine
+  lokale Variable holen, dann prüfen, dann benutzen. Dasselbe gilt für
+  `info.position` und jedes andere Feld.
+- **`Storage.getValue()` liefert einen Sammeltyp** über alles Speicherbare, von
+  `BitmapResource` bis `ScanResult`. Jede Zuweisung daraus braucht eine
+  Zusicherung — sinnvollerweise dieselbe Struktur, die das zugehörige `save()`
+  geschrieben hat.
+- **Arrays brauchen einen Elementtyp.** `Lang.Array` allein lässt offen, ob
+  `x[i][2]` erlaubt ist. Für die Tupellisten `Lang.Array<Lang.Array>`, für die
+  Warteschlangen `Lang.Array<Lang.Dictionary>`.
+
+Beim Zusichern gilt: **lieber keine Angabe als eine falsche.** Der Punktpuffer
+in `Track` führt Breite und Länge als `Double`, die Höhe als `Float` (die
+fehlen darf) und den Zeitstempel als `Number` — `Lang.Array<Lang.Number>` wäre
+bequem und unwahr; richtig ist `Lang.Array<Lang.Numeric or Null>`.
+Lokale Variablen lassen sich übrigens **nicht** annotieren
+(„Local variable types are inferred"); die Zusicherung gehört dann an die
+Zuweisung.
+
+### 5.1 Tastenbelegung je Geräteprofil
+
+Die Zielgeräte unterscheiden sich in zwei Achsen: **fünf oder drei Tasten**
+und **mit oder ohne Touch**. Daraus ergeben sich die Belegungen unten. Was das
+einzelne Gerät technisch hergibt, steht gemessen in `Geraete-Eingabe.md` —
+dieser Abschnitt beschreibt, was die App daraus macht.
+
+**Profil A — fünf Tasten, kein Touch** (`fenix6pro`, `fr945`)
+
+| Eingabe | Hauptseiten | Reanimationsseite | Listen und Menüs |
 |---|---|---|---|
-| `impressum` | `impressum.php` | **keine** | — |
-| `datenschutz` | `datenschutz.php` | „zur Kenntnis genommen" | Hinweis auf jeder Seite |
-| `nutzungsbedingungen` | `nutzungsbedingungen.php` | „angenommen" | **sperrt den Login** |
-| `avv` | `avv.php` | „angenommen" | **sperrt den Login** |
+| kurz UP | Seite zurück | Seite zurück | Eintrag hoch |
+| kurz DOWN | Seite vor | Seite vor | Eintrag runter |
+| kurz START | — | Rea beginnen bzw. Untermenü | Eintrag wählen |
+| lang START | Schnellmenü; Sync-Seite: Kopplung | Countdown neu starten | — |
+| lang UP | — | Adrenalin | — |
+| lang DOWN | — | Rhythmuskontrolle | — |
+| BACK | App verlassen (Abfrage) | zurück zur Uhrseite | Liste schließen |
+| START + beliebige Taste | Tastensperre, wirkungslos | Tastensperre, wirkungslos | — |
 
-**Der Unterschied ist die Rechtsnatur, nicht der Rang.** Ein Vertrag kommt
-durch Annahme zustande und darf ohne sie nicht weiterlaufen. Eine
-Datenschutzerklärung informiert; Widerspruch dagegen ist kein
-Vertragsschluss, sondern ein Recht. Sie darf den Zugang nicht sperren — muss
-aber auffallen, sonst ist die Kenntnisnahme eine Behauptung.
+LIGHT wird auf beiden Geräten nicht zugestellt und ist unbelegt.
 
-**Das Impressum steht bewusst nicht in der Reihe.** Es wird weder angenommen
-noch zur Kenntnis genommen; es ist eine Pflichtangabe. `RT_EINWILLIGUNG` sagt,
-welche der vier eine Einwilligung verlangen.
+**Profil B — drei Tasten, Touch** (`venu3s`)
 
-#### Was „aktuelle Fassung" heißt
+Nur zwei der drei Tasten sind für Connect-IQ-Apps erreichbar; die mittlere ist
+systemseitig belegt. Ohne Touch ist das Gerät deshalb nicht bedienbar.
 
-`rechtstexte.stand_am`, und seit AP4 ist das ein **`DATETIME`** und kein
-`DATE` mehr — der Fehlerfund F3 des Konzepts: Zwei Änderungen am selben Tag
-wären sonst *eine* Fassung, und wer die erste angenommen hat, gälte als
-Annehmer der zweiten. Der Editor bleibt ein Datumsfeld; die Uhrzeit setzt der
-Speicherweg.
-
-`konto_einwilligungen.stand_am` hält, **welche** Fassung angenommen wurde. Der
-Vergleich der beiden ist die ganze Prüfung.
-
-**Ein Text ohne Standdatum verlangt nichts.** Sonst sperrte ein leer
-angelegter Platzhalter alle Konten aus — genau der Zustand zwischen dem
-Einspielen der Mechanik (AP4) und dem Einspielen der geprüften Texte (R41).
-
-**Der Satz gilt für die Registrierung genauso — seit Web 20.22.2, vorher
-nicht.** `registrieren.php` verlangte alle Schlüssel aus `RT_EINWILLIGUNG`,
-ohne `stand_am` anzusehen; der Begriff kam in der Datei kein einziges Mal vor.
-Wer sich in dem Zustand registrierte, auf den dieser Abschnitt gerade
-hingewiesen hat, musste den Haken „Ich nehme die Vereinbarung zur
-Auftragsverarbeitung (AVV) an" setzen, während `avv.php` daneben den Leertext
-zeigte. `einwilligung_in_kraft()` beantwortet die Frage jetzt für beide
-Seiten; **Prüfung und Markup ziehen aus derselben Liste**, sonst könnte die
-BetreiberIn zwischen Anzeige und Absenden einen Text in Kraft setzen und das
-Formular verlangte einen Haken, den es nie gezeigt hat. Backlog Nr. 231.
-
-#### Wo die Annahme entsteht
-
-**Bei der Registrierung, nicht erst am Tor** (E-P5b-25, seit Web 20.22.2).
-Dort wird der Vertrag geschlossen; das Tor ist dafür da, eine **neue** Fassung
-nachzuholen, nicht die erste zu erheben. Bis Web 20.22.1 war es andersherum,
-und zwar ungewollt: `registrieren.php` verlangte die Häkchen und schrieb sie
-nie — `einwilligung_setzen()` wurde im ganzen Server nur von
-`einwilligung.php` aufgerufen. Verloren ging dadurch nichts (das Tor fasst
-jedes Konto beim ersten Login), wohl aber die Stelle: Die Registrierende
-beantwortete dieselben Fragen zweimal.
-
-**Dass das Konto dabei noch `unbestaetigt` ist, ist kein Einwand.**
-Festgehalten wird, was an diesem Formular erklärt wurde — nicht, wem die
-Adresse gehört. Wird die Registrierung nie bestätigt, räumt
-`job_konto_verfall()` das Konto weg und die Zeilen mit ihm (`ON DELETE
-CASCADE` an `fk_kew_user`).
-
-**Das Tor bleibt das Auffangnetz**, und es wird gebraucht: Wer sich
-registriert, solange kein Text in Kraft ist, gibt keine Erklärung ab — die
-holt das Tor beim ersten Login nach dem Einspielen.
-
-#### Das Tor
-
-`auth_guard.php` leitet auf `einwilligung.php`, solange eine Annahme fehlt.
-**Drei Wege bleiben offen — Abmelden, Export, Konto löschen.** Wer nicht
-zustimmen will, muss an seine Daten kommen und gehen können; ein Tor, das auch
-den Ausgang versperrt, wäre Nötigung. Die Ausnahmeliste steht in
-`auth_guard.php` neben dem Tor, nicht in einer Konstante: Sie gehört dazu und
-wird mit ihm gelesen.
-
-**API und `ingest.php` bleiben unberührt.** Die Uhr fragt niemanden um
-Zustimmung — sie hat keinen Bildschirm dafür, und ihre Besitzerin hat der
-Nutzung zugestimmt, als sie das Gerät gekoppelt hat. Ein Tor vor `api/day.php`
-ließe eine laufende Aufzeichnung ins Leere laufen.
-
-#### Eine Zeile je Konto und Schlüssel, nicht je Annahme
-
-Der Primärschlüssel ist `(user_id, schluessel)`; eine neue Annahme
-überschreibt die alte. Der Verlauf — wer wann welche Fassung angenommen hat —
-steht im **Protokoll** (Reiter Verwaltung) und überlebt dort auch die
-Kontolöschung. Die Tabelle beantwortet nur die eine Frage, die bei jedem
-Seitenaufbau gestellt wird: *Liegt die aktuelle Fassung vor?*
-
-`ON DELETE CASCADE` ist hier — anders als beim Protokoll — richtig: Eine
-Einwilligung ist eine Aussage **über** das Konto; ohne Konto hat sie keinen
-Gegenstand.
-
-#### Der Leerzustand kommt aus einem Katalog
-
-In `rechtstext_seite.php` stand er als *zweiwertiger* ternärer Ausdruck. Das
-war die eine Stelle, an der ein dritter Schlüssel **stillschweigend falsch**
-geantwortet hätte: Die Nutzungsbedingungen hätten gemeldet, es sei „noch keine
-Datenschutzerklärung hinterlegt". Kein Fehler, keine Meldung — nur ein
-falscher Satz. `RT_LEERTEXT` kann das nicht: Ein fehlender Eintrag fällt beim
-Nachsehen auf, ein falscher Zweig nicht.
-
-### 4.99i Der Lebenszyklus eines Kontos (ab Web 20.17.0, P5b/AP2)
-
-*E-P5b-11, -12; R37 (1); Backlog Nr. 202 Paket 1. Code: `server/konto_lib.php`.*
-
-#### Vier Fassungen derselben Sache — und warum das aufgelöst wurde
-
-Ein Konto entstand an zwei Stellen, ein Token an vier, und keine glich der
-anderen:
-
-| Stelle | legte an | Transaktion | entwertete Vorgänger | Laufzeit |
-|---|---|---|---|---|
-| `admin_users.php` | Konto + Token | **ja** (E17) | nein | `INTERVAL 24 HOUR` |
-| `install.php` | Konto + Token | **nein** | nein | `INTERVAL 24 HOUR` |
-| `admin_user.php` | nur Token | — | ja | `INTERVAL 1 HOUR` |
-| `reset_request.php` | nur Token | — | ja | `INTERVAL 1 HOUR` |
-
-**`install.php` war die gefährliche**: Ein Abbruch zwischen den beiden
-`INSERT` hinterließ ein Konto ohne Weg hinein — anmelden ging nicht (kein
-Passwort), und der Einrichter lief nicht mehr, weil `install.lock` stand. Eine
-Installation, aus der man sich beim Einrichten selbst ausgesperrt hat.
-
-Aufgelöst wurde es hier und nicht in Schritt 15, weil die Selbstregistrierung
-aus AP3 sonst die **fünfte** Fassung geworden wäre — und sie ist die einzige,
-die von außen erreichbar ist.
-
-**Nachweis:** `grep -rn "INSERT INTO password_resets" server/` zeigt nur noch
-`konto_lib.php`.
-
-#### Die Bibliothek läuft ohne `config.php`
-
-`install.php` ist der vierte Aufrufer und der einzige, der läuft, **bevor** es
-eine `config.php` gibt: Er schreibt sie erst, nachdem er das erste Konto
-angelegt hat, und bringt deshalb seine eigene PDO-Verbindung mit. `konto_lib.php`
-lädt `db.php` und `protokoll_lib.php` deshalb nur mit `is_file()`, und jede
-Funktion nimmt ein `?PDO` entgegen. Dieselbe Falle wie Backlog Nr. 223 — und
-hier von vornherein vermieden statt hinterher behoben.
-
-**Und dann doch hineingelaufen (Backlog Nr. 288).** Seit Schritt 15 legt
-`konto_anlegen()` das Konto in `db_transaktion()` an, und der Rahmen stand in
-`db.php` — also hinter derselben Weiche. Von **Web 20.30.0 bis 20.37.2**
-scheiterte jede Neueinrichtung an „Call to undefined function
-db_transaktion()"; bemerkt hat es erst `hochfahren.sh --neu`, weil Stufe 1
-keine Anlage einrichtet. Seit **Web 20.37.3** steht der Rahmen in
-`transaktion_lib.php`, die nichts lädt; `konto_lib.php` bindet sie
-**unbedingt** ein, `db.php` ebenfalls. **Nie ein zweites Mal definieren**,
-auch nicht hinter `function_exists()`: Die Erfolgsseite des Einrichters lädt
-`db.php` nach, sobald `config.php` steht, und eine zweite Definition bräche dort
-mit „Cannot redeclare" ab — nachdem `config.php` und `install.lock` geschrieben
-sind. **Wer hier eine Funktion aus einer bedingt geladenen Datei ruft, prüft
-den Einrichter mit `bash tools/sandbox/hochfahren.sh --neu`.**
-
-Der Protokolleintrag „erstes Konto angelegt" fällt im Einrichter aus
-(`function_exists('protokoll')`). Das ist richtig: Er trüge ohnehin keinen
-Urheber, weil es zu diesem Zeitpunkt noch niemanden gibt, der handeln könnte.
-
-#### Die vier Zustände und ihre Übergänge
-
-| von → nach | `unbestaetigt` | `wartet` | `aktiv` | `gesperrt` |
-|---|---|---|---|---|
-| **`unbestaetigt`** | — | ja | ja | ja |
-| **`wartet`** | nein | — | ja | ja |
-| **`aktiv`** | **nein** | **nein** | — | ja |
-| **`gesperrt`** | nein | nein | ja | — |
-
-**Die Übergänge stehen als Tabelle und nicht als `if`-Zweige** (`KONTO_UEBERGAENGE`).
-Die Rückwege sind die interessanten: Aus `gesperrt` geht es nach `aktiv`
-zurück (Entsperren, Rücknahme der Selbstlöschung), aus `aktiv` aber **nicht**
-nach `unbestaetigt` — ein Konto, dessen Besitzerin sich plötzlich nicht mehr
-anmelden kann, ohne dass jemand es angeordnet hat, wäre ein Fehler mit Ansage.
-
-**Entsperren räumt auf**: `gesperrt_seit`, `gesperrt_grund` und
-**`loeschung_am`** werden geleert. Ohne das Letzte fände der Löschjob ein
-`loeschung_am` in der Vergangenheit und löschte ein Konto, dessen Besitzerin
-die Löschung gerade zurückgenommen hat — kein Schönheits-, sondern ein
-Datenverlustfehler.
-
-#### Wo der Status geprüft wird
-
-| Ort | Verhalten |
+| Eingabe | Wirkung |
 |---|---|
-| `login.php` | **vor** der Sitzung, im Erfolgszweig der Passwortprüfung. Eigene Seite über `stoerung_seite_html()` (dritter Aufrufer, kein neuer Baustein), Antwortdauer angeglichen |
-| `auth_guard.php` | jede angemeldete Anfrage. Endegrund **`gesperrt`** — neu in `SESSION_ENDE_GRUENDE`, **mit beiden Texten** |
-| `ingest.php` | **`403`** mit `{"error":"konto","grund":"<status>"}`, **nach** der Schlüsselprüfung |
+| kurz Action | wie kurz START in Profil A |
+| lang Action | wie lang START in Profil A |
+| lang Zurück | wie lang START in Profil A (zweiter Weg, s. u.) |
+| kurz Zurück | wie BACK in Profil A |
+| Wischen hoch / runter | Seite vor / zurück, in Listen Eintrag runter / hoch |
+| Wischen rechts | wie BACK |
+| Wischen links | unbelegt |
+| Tippen | auf Hauptseiten wirkungslos; in Menüs kann es den markierten Eintrag wählen |
 
-**Die Selbstlöschung ist der Sonderfall, und zwar der wichtige** (E-P5b-16):
-Während der Karenz steht das Konto auf `gesperrt`, aber **die Anmeldung IST
-der Rückzug**. `login.php` nimmt die Löschung zurück, statt abzuweisen; hier
-abzuweisen hieße, den einen Weg zu versperren, der aus der Löschung
-herausführt — und danach löscht der Job. `auth_guard.php` lässt eine laufende
-Sitzung mit diesem Grund deshalb ebenfalls durch.
+Ersatz für fehlende Tasten:
 
-**`ingest.php`: `403` und nicht `401`.** Die Uhr behandelt `403` heute als
-„abgemeldet" und puffert — genau das soll sie tun. Der Unterschied steht im
-JSON-Rumpf, nicht im Code; **eine Uhr-Stufe ist dafür nicht nötig**. Dass die
-Uhr „abgemeldet" statt „gesperrt" anzeigt, ist ein Backlog-Eintrag für die
-nächste Auslieferung.
+- **UP/DOWN** werden durch Wischen ersetzt. Das System leitet Wischgesten
+  selbst in `onNextPage`/`onPreviousPage` um; eigener Wisch-Code ist weder
+  nötig noch möglich (das Roh-Ereignis wird gar nicht erst zugestellt).
+- **Lang UP und lang DOWN** haben auf der Venu keine Entsprechung. Adrenalin
+  und Rhythmuskontrolle sind dort nur über das Rea-Untermenü erreichbar —
+  ein Bedienschritt mehr.
+- **Der lange Druck liegt bewusst doppelt**, auf Action *und* Zurück. Grund:
+  Das Handbuch der Venu 3 nennt ein Steuerungsmenü nach zwei Sekunden Halten
+  der Action-Taste. Im Simulator trat es nicht auf, auf echter Hardware ist es
+  ungeprüft. Fängt die Uhr den langen Action-Druck ab, bleibt die App über den
+  langen Zurück-Druck vollständig bedienbar. Beide Wege sind gegeneinander
+  entprellt.
+- **Die Tastensperre** (START + zweite Taste) entfällt auf der Venu, weil nur
+  eine Taste sinnvoll erreichbar ist.
 
-**Der Ratenschutz zählt das nicht mit.** Ein gesperrtes Konto ist kein
-Angriff; sein Gerät sendet weiter, weil niemand es abgeschaltet hat. Zählte es
-als Fehlversuch, sperrte der Ratenschutz nach kurzer Zeit eine Kennung, die
-nichts falsch macht — und nach dem Entsperren käme der Rückstand dann **nicht**
-durch. Gemessen: fünf Uploads mit gesperrtem Konto, **null** Zeilen in
-`rate_limits`.
+**Profil C — fünf Tasten mit Touch** (Fenix 7, Epix 2, FR965 und weitere)
+steht im Manifest und läuft mit den Zuordnungen von Profil A; Wischen und
+Tippen kommen dazu wie auf der Venu. *(Bis Uhr 4.1.0 stand hier „vorbereitet,
+aber nicht ausgeliefert" — die Geräte standen da längst im Manifest.)* Die
+App-Einstellung `touchEnabled` (Vorgabe: an) schaltet die Berührung ab, und
+**seit Uhr 4.1.0 wirkt sie** (F-R17-68; bis dahin las sie nur
+`Input.touchActive()`, das niemand aufrief). Weil Connect IQ einem Behavior
+nicht ansieht, ob es von einer Taste oder vom Bildschirm kam, und das
+Roh-Ereignis einer belegten Geste gar nicht zustellt (`Geraete-Eingabe.md`
+4.2), meldet jeder Delegate der App jede Taste an `Input.tasteGesehen()`;
+`Input.beruehrungVerwerfen()` verwirft ein Blättern, Zurück oder Auswählen,
+vor dem keine Taste unten war und keine in den letzten 1000 ms losgelassen
+wurde. Das gilt nur auf Geräten mit Touch **und** UP/DOWN — auf Profil A
+ohne Touch und auf Profil B ändert sich nichts. **Nicht erreicht** werden die
+Systembausteine (`WatchUi.Confirmation`, `Menu2`); dort bleibt Tippen
+wirksam. Gemessen im Simulator auf der Fenix 7; auf einem echten Gerät
+ungeprüft.
 
-### 4.99h Die Einstellungen rund um Konten (ab Web 20.16.5, P5b/AP1)
+### 5.2 Pausenzustand der Reanimation
 
-*E-P5b-14. Code: `server/konten_einstellungen_lib.php`, Oberfläche
-Betrieb → Servereinstellungen, Karte „Konten".*
+`Cpr.mc` kennt drei Zustände: `active=false` (keine Rea), `active=true,
+paused=false` (läuft) und `active=true, paused=true` (angehalten). Die Pause
+entsteht ausschließlich über „Rea BEENDEN" im Untermenü: Der 2:00-Countdown
+steht, die Übersicht öffnet sich, und dort wird fortgesetzt oder endgültig
+geschlossen.
 
-**Bibliothek und nicht Seite** (R83): Die zweiten Verbraucher stehen
-namentlich im Konzept — `registrieren.php` liest die Betriebsart,
-`login.php` die Demo-Anmeldung, `ingest.php` die Mengengrenzen, der Job
-`konto_verfall` die Freischaltfrist. Sie in die Seite zu schreiben und später
-herauszuziehen wäre derselbe Umbau, nur mit vier Aufrufern mehr.
+Zwei Punkte sind bewusst so gebaut:
 
-| Schlüssel in `app_state` | Vorgabe | wirkt ab |
+- **Die Gesamtdauer läuft während der Pause weiter.** Sie ist die tatsächlich
+  verstrichene Reanimationszeit; ein Anhalten würde sie zu kurz dokumentieren.
+  Nur der Countdown steht.
+- **Die Pause wird nicht übertragen.** Sie ist ein reiner Bedienzustand, im
+  JSON-Vertrag gibt es sie nicht. Persistiert wird sie trotzdem (`Storage`
+  `"cpr"`, Schlüssel `"p"`), damit ein Neustart der App keine Entscheidung
+  erzwingt oder unterschlägt.
+
+`stopRecording()` schließt die Sitzung unabhängig davon, ob sie lief oder
+pausiert war — Einsatzabschluss und Dienstende brauchen deshalb keine
+Sonderbehandlung.
+
+### 5.3 Geräteprofile im Jungle
+
+`monkey.jungle` weist jedem Gerät seinen Quell- und Ressourcenpfad **vollständig**
+zu:
+
+```
+fenix6pro.sourcePath   = source;source-tasten5
+venu3s.sourcePath      = source;source-tasten3
+venu3s.resourcePath    = resources;resources-icon70;resources-marke105
+```
+
+**Nicht** `$(<gerät>.sourcePath);source-tasten5` schreiben. Der Selbstbezug
+fällt auf eine Vorgabe zurück, die alle `source*`-Ordner einsammelt; dann
+landen beide `DeviceProfile.mc` im Build und der Compiler meldet
+`Redefinition of 'HAS_UP_DOWN'`. Dasselbe gilt für `resourcePath` — sonst
+bekäme die Fenix das Symbol der Venu 3s.
+
+`base.sourcePath` steht auf dem Fünf-Tasten-Profil: Ein Gerät, das jemand ins
+Manifest einträgt ohne hier eine Zeile zu ergänzen, baut damit gegen das
+konservativere Profil.
+
+**Die Ressourcenordner sind nach Größe geschnitten, nicht nach Gerät:**
+
+| Ordner | Inhalt |
+|---|---|
+| `resources` | Grundordner — Launcher-Symbol 40 px, Bildmarke 73 px |
+| `resources-icon<N>` | **nur** das Launcher-Symbol in N Pixeln (35, 36, 54, 56, 60, 61, 65, 70) |
+| `resources-marke<K>` | **nur** die Bildmarke in einer Kachel von K Pixeln |
+
+Getrennt, weil die beiden Größen nicht miteinander laufen: Ein Gerät mit
+60-px-Symbol gibt es bei 360, 390, 416 und 454 Pixeln Displayhöhe. Die
+Ordnerzahl gewinnt dabei nichts — getrennt 8 + 3, zusammengelegt ebenfalls 11 —,
+wohl aber die Pflege: Zusammengelegt läge dieselbe 101er Kachel in fünf
+Ordnern, und eine verschobene Stufengrenze schnitte den ganzen Satz neu.
+
+Die Symbolgröße ist eine **Vorgabe des Geräts** (`launcherIcon.width` in
+seiner `compiler.json`), keine Wahl; fehlt sie, skaliert `monkeyc` und meldet
+es als Warnung.
+
+Die Kachelgröße der Bildmarke kommt dagegen aus einer Entscheidung: vier
+Stufen (60, 73, 101, 118) über die zehn vorkommenden Displayhöhen, Zielwert
+27 % — das Verhältnis 70/260 des Bezugsgeräts, dem `Ui.s()` ohnehin jede Länge
+folgt. Ein Bitmap kann `Ui.s()` nicht folgen (`dc.drawBitmap` zeichnet 1:1),
+vorgerasterte Stufen holen das nach. Alle 99 Geräte liegen damit zwischen 25,0
+und 28,8 %; vor Uhr 1.10.3 reichte die Spanne von 15 % bis 34 %, weil die
+Zuordnung an der Symbolgröße hing. Begründung der Stufenzahl:
+Kopf von `tools/erzeugen/uhr-bilder.sh`.
+
+Bilder erzeugen: `tools/erzeugen/uhr-bilder.sh`. Die passenden Jungle-Zeilen:
+`tools/uhr-pruefstand/geraeteklassen.py --bloecke`.
+
+### 5.4 Was die Uhr mit einer Absage anfängt (ab Uhr 3.1.0, Backlog Nr. 159)
+
+Bis Uhr 3.0.2 kannte `Uploader.onResponse()` zwei Fälle: Erfolg, und alles
+andere. „Alles andere" hieß `lastError` setzen und beim nächsten Anlass erneut
+versuchen — für einen Netzfehler richtig, für eine Absage falsch. Ein Paket,
+das der Server nie annimmt, stand vorn in `_findJob()` und blieb dort; alles
+dahinter kam nicht mehr an. Und weil `Pair.start()` das Trennen verweigert,
+solange `Model.backlogCount() > 0`, ließ sich die Uhr danach auch nicht mehr
+neu koppeln. Es blieb das Löschen der App, mit allem, was sie trug.
+
+Seither unterscheidet die Antwortbehandlung drei Fälle:
+
+| Antwort | Bedeutung | Was die Uhr tut |
 |---|---|---|
-| `konten_reg_art` | **`einladung`** | AP3 |
-| `konten_reg_frist` | 30 Tage | AP3 |
-| `konten_wegwerf` / `…_eigene` | an / leer | AP3 |
-| `konten_grenze_einsaetze` | 5000 | AP6 |
-| `konten_grenze_mb` | 250 | AP6 |
-| `konten_aufbewahrung` | leer = unbegrenzt | AP6 |
-| `konten_demo_anmeldung` | an | **AP1** |
-| `protokoll_frist_verwaltung` | 365 | **AP1** |
+| `401`, `403` | Das **Gerät** ist abgemeldet: gelöscht, Schlüssel ungültig, oder auf inaktiv gestellt | `Uploader.abgemeldet` wird gesetzt, `syncAll()` kehrt sofort zurück. **Kein Paket wird geparkt** — mit ihnen ist nichts verkehrt, sie werden nach einer neuen Kopplung gebraucht. Die Sync-Seite nennt den Grund und den Weg zurück. **Seit Uhr 4.1.0** merkt sich die Uhr den Zeitpunkt der ersten Abmeldung (`abgem_seit`, übersteht Neustarts) und verwirft 30 Tage danach alle wartenden Pakete (E-R17-22); die rote Zeile lautet dann „Abgemeldet, Daten bis TT.MM." |
+| `400` **mit** `{"error":…}` | **Dieses** Paket ist unbrauchbar | Marke `bad_<ref>` im Storage, `_next()` arbeitet weiter. Ein blankes `400` ohne Kennzeichen zählt nicht: Es kann von jedem Zwischenstück kommen, und ein gesundes Paket dafür zu parken wäre teurer als ein Versuch zuviel |
+| alles Übrige | Störung | unverändert: `lastError`, später erneut |
 
-**Die Vorgabe der Betriebsart ist `einladung`**, und das ist nicht die, die
-nadoku selbst fährt. Sie ist die sicherste Grundstellung für eine
-Selbsthosterin, die die Seite nie aufschlägt — heutiges Verhalten, keine
-offene Tür durch Untätigkeit (E-P5b-01).
+**Ein geparktes Paket wird übersprungen, nicht entfernt.** Das ist der Punkt,
+an dem die naheliegende Lösung Daten verliert: `Model.backlogCount()` entsorgt
+Einträge, für die `Uploader.hasWork()` falsch liefert — wer ein geparktes
+Paket darüber aus der Schlange nähme, ließe seine Spur als Waise im Speicher
+zurück, rund 100 kB, die nichts mehr freigibt. `hasWork()` bleibt deshalb
+wahr; `_findJob()`, `backlogCount()` und `allSynced()` fragen zusätzlich
+`istGeparkt()`. Entfernt wird nur über `Uploader.verwerfen()`, und das räumt
+`Track.purge()` und alle drei Marken mit.
 
-**Zwei Fallen, beide im Code vermerkt:**
+Dass geparkte Pakete **nicht** im Rückstand zählen, ist kein Schönheitsfehler,
+sondern der Ausweg: Sonst bliebe die Zahl für immer über null, `Pair.start()`
+verweigerte das Trennen weiter, und die Sackgasse wäre dieselbe wie vorher.
+Beim Trennen werden sie verworfen — sie gehören dem bisherigen Konto —, und
+die Rückfrage sagt es vorher.
 
-- **Leer ist ein Wert.** Die Aufbewahrung „unbegrenzt" ist der leere String;
-  sie darf nicht auf die Vorgabe zurückfallen, sonst ließe sie sich nie
-  einschalten. Eine `0` gibt es nicht — sie hieße „nichts aufbewahren".
-- **Eine unbekannte Betriebsart fällt auf die Vorgabe zurück**, statt zu
-  gelten. `offen` durch einen Tippfehler wäre die teuerste aller stillen
-  Änderungen.
+### 5.5 Neue Zielgeräte prüfen — `tools/uhr-pruefstand/eingabe-probe`
 
-`konten_einstellungen()` holt **alle acht Schlüssel in einer Abfrage** und
-hält sie je Anfrage. `app_state_lesen()` hat keinen Zwischenspeicher und
-fragt bei jedem Aufruf neu; acht Einzelaufrufe wären acht Abfragen je
-Seitenaufbau.
+Bevor ein Gerät in `watch/manifest.xml` aufgenommen wird, muss gemessen sein,
+welche Tasten überhaupt bei der App ankommen, welche Behaviors das System
+daraus ableitet und ob die Langdruck-Erkennung dort funktioniert. Datenblätter
+reichen dafür nicht: Auf der Venu 3s ist eine der drei Tasten systemseitig
+belegt und für Connect-IQ-Apps unsichtbar — das steht in keiner Übersicht.
 
-## 5a. Android-Apps (Kotlin/Compose) — Handy und Wear OS
+Dafür liegt unter `tools/uhr-pruefstand/eingabe-probe/` ein eigenständiges Connect-IQ-Projekt.
+Es wird nie ausgeliefert, hat eine eigene UUID und keine Berechtigungen. Es
+protokolliert jedes Eingabeereignis mit Millisekunden-Stempel auf Konsole und
+Display und startet bei jedem Tastendruck einen 1000-ms-Timer — denselben
+Mechanismus, den die App über `Const.LONG_PRESS_MS` für Langdrücke benutzt.
+Steht `HALTE-TIMER` im Protokoll vor dem `KeyReleased`, sind Langdrücke
+möglich; steht es danach oder gar nicht, sind sie es nicht.
+
+Messfolge und Auswertung: `tools/uhr-pruefstand/eingabe-probe/LIESMICH.md`.
+Ergebnisse gehören nach `Geraete-Eingabe.md`.
+
+**Build:** VS Code + Monkey-C-Erweiterung + Connect-IQ-SDK + JDK;
+Entwickler-Schlüssel via „Generate a Developer Key". Ziele `fenix6pro`, `fr945`
+und `venu3s` (s. Abschnitt 5.1 und `Geraete-Eingabe.md`),
+Debug-Build; Sideload: `.prg` nach `GARMIN/Apps/`. Die Server-Adresse ist eine
+**App-Einstellung** (Garmin Connect); `http://` hebt die Uhr seit 4.1.0 auf
+`https://` (F-R17-11). Seit Uhr 3.0.0 hat
+die **Server-Adresse einen Vorgabewert** — `nadoku.gen-em.org`, die öffentliche
+Installation (E-R49-8); Selbsthoster tragen dort ihre eigene Domain ein. Geräte-ID
+und API-Schlüssel waren bis Uhr 4.0.0 der **Alt-Weg** für die Handanlage;
+**seit Uhr 4.1.0 gibt es sie nicht mehr** (E-R17-21) und seit Web 23.3.0
+auch die Handanlage im Web nicht (E-R17-56). Die Zugangsdaten setzt allein die
+**Kopplung** (Uhr: Sync-Seite → START halten; das Gerät
+zeigt einen Code, den ein Mensch im Web unter Einstellungen → Geräte einträgt).
+Connect IQ bewahrt diese Einstellungen an der App-Kennung auf — sie überstehen
+jedes Neukompilieren, gehen aber bei einem Wechsel der Kennung verloren; der
+Simulator behält sie sogar über ein neues Kompilat hinweg (`pruefstand.sh
+einstellungen-leeren`). `Const.APP_VERSION` bei Releases mitziehen (Anzeige
+Sync-Seite). Die **App-Kennung im `manifest.xml`** ist seit Uhr 2.0.0 keine
+Platzhalterzahl mehr, sondern die endgültige — sie wird nicht wieder gewechselt,
+weil ein Wechsel für die Uhr eine andere App bedeutet und die Kopplung mitnimmt.
+
+**Dienstende (Uhr):** „Einsatztag beenden" schließt Rea und Dienst, setzt den
+Arbeitszustand zurück (Zähler, Phase, Tag) und beendet die App per
+`System.exit()`; die Upload-Warteschlange bleibt erhalten. Der Wechsel zur
+Sende-Ansicht läuft verzögert (Modul `EndDay`), weil ein direkter
+`switchToView()` aus `ConfirmationDelegate.onResponse()` von der sich
+schließenden Bestätigung wieder entfernt würde.
+
+### 5.6 Uhr-App ohne Arbeitsplatz prüfen — `tools/uhr-pruefstand`
+
+Der Build oben setzt einen eingerichteten Arbeitsplatz voraus. Damit war jede
+Änderung am Monkey-C-Code aus einer Wegwerf-Umgebung heraus blind: kein
+Kompilat, kein Simulatorlauf, nur Lesen. `tools/uhr-pruefstand/pruefstand.sh`
+schließt diese Lücke — es baut SDK und Simulator auf einer nackten
+Linux-Rechner auf und startet die App unter einem virtuellen X-Server.
+
+Drei der vier nötigen Teile beschafft das Skript allein: das SDK von
+`developer.garmin.com` (keine Anmeldung nötig), die Systembibliotheken aus den
+Ubuntu-Quellen und den Entwickler-Schlüssel per `openssl` — für den Simulator
+genügt jeder gültige Schlüssel, der des Arbeitsplatzes gehört nicht dorthin.
+
+Der vierte Teil ist der Haken. **Gerätedateien (`Devices/`) und Zeichensätze
+(`Fonts/`) liefert nur der SDK-Manager aus**, und der ist eine
+Fensteranwendung mit Garmin-Anmeldung — auf einem Rechner ohne Bildschirm
+nicht zu bedienen. Sie werden deshalb von einer selbst bereitgestellten Quelle
+geholt, deren Adresse in `CIQ_GERAETE_URL` steht und bewusst **nicht** im
+Repositorium: Es ist öffentlich, und die Dateien gehören Garmin. Wer den
+Prüfstand neu aufsetzt, muss die Adresse also erfragen. Seit dem 23.09.2026
+holt das Skript zuerst je ein Archiv (`devices.tar`, `fonts.tar`) von dort —
+eine Anfrage statt tausender, und die Anfragen waren die Zeit: rund 31 min für
+Gerätedateien und Schriften in Lauf #253, 1 min über die Archive. Fehlt ein
+Archiv, fällt es mit einer Warnung auf `wget -r` über die Einzeldateien
+zurück; dafür braucht die Quelle eine eingeschaltete Verzeichnisauflistung.
+Gepackt werden die Archive im Ordner `~/.Garmin/ConnectIQ` mit
+`tar cf devices.tar Devices` und `tar cf fonts.tar Fonts`, **immer über den
+ganzen Bestand** — sonst sieht `geraeteklassen.py` kein neues Gerät. Lässt
+sich ein Archiv nicht entpacken oder liegt es eine Ebene zu tief, ist der
+Lauf rot. **Wer Geräte nachlädt, packt beide Archive neu**; sonst holt die
+Kette ohne Warnung den alten Stand.
+`aufbau` holt nur die drei Zielgeräte — für Stufe I und
+`geraeteklassen.py` braucht es `CIQ_ZIELE=alle`. Fehlen die
+Zeichensätze, übersetzt die App zwar, bricht aber beim ersten Zeichnen mit
+`Invalid Font Specified` ab — der Fehler zeigt auf die eigene Zeile, liegt
+aber an der Umgebung.
+
+Zwei Eigenheiten sind der Erwähnung wert. Der Simulator ist gegen
+`webkit2gtk 4.0` gebunden, das es in Ubuntu 24.04 nicht mehr gibt; das Skript
+holt die 22.04-Stände und legt sie **neben** den Simulator, statt am System zu
+drehen. Und Bedienung wird als X-Ereignis zugestellt — Tastendruck, Tipp,
+Langdruck und Wischgeste kommen so bis in die App durch, gemessen mit der
+Eingabe-Probe (s. `Geraete-Eingabe.md`).
+
+Eine dritte Eigenheit ist beim Messen teuer geworden. Der Simulator führt zwei
+Ablagen, die jedes neue Kompilat überleben — die App-Einstellungen und
+`Application.Storage` — und **ihre Dateinamen sagen nichts darüber aus, zu
+welcher App sie gehören**: Am 02.09.2026 legte ein und derselbe Lauf
+`V2.SET` und `UUID_ALT.DAT` an, beide nach früher geladenen Kompilaten benannt.
+Dagegen helfen `einstellungen-leeren` und `speicher-leeren`, die je eine Ablage
+**ganz** räumen. Wer stattdessen die Datei löscht, deren Namen er erwartet,
+trifft womöglich nichts und misst dann den Zustand des vorigen Laufs.
+
+**Der Simulator und TLS** (Netzprobe, F-S5-11). Ob der Simulator einen
+Server auf `127.0.0.1` erreicht, beantwortet `tools/uhr-pruefstand/netzprobe/`
+mit einer Anfrage an `pair.php` (`GET` → 405). Gemessen am 03.09.2026, SDK
+9.2.0, fenix6pro:
+
+| Weg | Konsole der App | Zugriffsprotokoll |
+|---|---|---|
+| `http://127.0.0.1:8080` | **−1001** (`SECURE_CONNECTION_REQUIRED`) | **`[405]: GET /pair.php`** |
+| `https://127.0.0.1:8443`, selbstsigniert | 404 | nichts (`tlsv1 alert unknown ca`) |
+| `https://127.0.0.1:8443`, eigene CA im Systemspeicher | **405** | **`[405]: GET /pair.php`** |
+
+**Die erste Zeile ist die unangenehme:** Über blankes HTTP lässt der
+Simulator die Anfrage hinaus, der Server **führt sie aus**, und die App
+bekommt `−1001`. Wer nur auf den Rücklaufcode sieht, hält den Weg für tot
+und übersieht, dass die Gegenseite gehandelt hat — bei einem schreibenden
+`POST` kein Schönheitsfehler. Die dritte Zeile ist das Rezept in
+`tools/referenzdatensatz/einspielen/lokal_starten.sh`: eine eigene CA, ein
+Serverzertifikat mit `subjectAltName=IP:127.0.0.1`, die CA per
+`update-ca-certificates` im Systemspeicher. Sie entsteht auf der Maschine
+und verlässt sie nicht.
+
+**Der Rundlauf** (seit S11-08, `tools/uhr-pruefstand/rundlauf/`) baut auf
+dieser dritten Zeile auf: Eine Prüffassung der App — eine Kopie mit der
+Adresse `127.0.0.1:8443` und einer Füllung, die einen Einsatz und ein
+Ruhesegment anlegt — koppelt im Simulator an das Demo-Konto, sendet beides
+verschlossen, und `pruefen.php` öffnet es mit dem Demo-Schlüssel und hält es
+Wert für Wert gegen (12 Prüfungen). Mit `--nachholen` dazu der Weg ohne
+Kontoschlüssel und das Nachholen (E-S11-79). Mit `--schrumpfen` (seit
+R17-21, F-R17-52) liegen zwei geparkte Pakete vor dem Einsatz, und die
+Prüffassung verwirft sie während seiner letzten Anfrage; danach muss die
+Konsole „liste=0 spuren=0" melden und keinen Absturz (3 Prüfungen). Die
+Fassung vor 4.1.0 bricht dort mit „Array Out Of Bounds" ab. Den Klick im Web ersetzt eine
+Zeile SQL; was die Weboberfläche beim Koppeln tut, misst die Kopplungsprobe.
+
+Die Grenzen bleiben die des Simulators: keine echte Hardware, keine
+Systemgesten, keine GPS-Aufzeichnung (die Punkte legt die Füllung an), keine
+Zeiten einer echten Uhr. Ein Lauf zeigt, dass es startet, wie es aussieht und
+dass das Gesendete aufgeht — nicht, dass es auf dem Gerät genauso ist.
+Anleitung: `tools/uhr-pruefstand/LIESMICH.md`.
+
+## 6. Android-Apps (Kotlin/Compose) — Handy und Wear OS
 
 *Seit S4, Blöcke B und C. Die App zählt eigene Fassungen
 (`android/version.properties`), unabhängig von `WEB_VERSION` und von der
 Uhr-App aus Abschnitt 5.* Bauanleitung, Entscheidungen und der vollständige Prüfstand
 stehen in `android/LIESMICH.md`; hier steht, wie es zusammenhängt.
 
-### Zwei Module, ein Quelltext
+### 6.1 Zwei Module, ein Quelltext
 
 | Modul | läuft auf | hat |
 |---|---|---|
@@ -10282,10 +10315,13 @@ liefe.
 Beide Module tragen dieselbe `applicationId` (`org.genem.nadoku`) und
 **müssen mit demselben Schlüssel signiert sein** — der Wear Data Layer
 stellt sonst nicht zu (E-S4-01). Der Signaturschlüssel entsteht außerhalb des
-Repositoriums und wird verwahrt (E-R45-6); jede spätere Fassung braucht
+Repositoriums und wird verwahrt (E-R45-6); seit PK-08 liegt er als Geheimnis
+der Umgebung `produktion` (12.7), und seit R17-19 signiert der Job `android`
+ohne Gradle, nachdem `android-bau` ohne Geheimnisse gebaut hat (E-R17-32,
+12.1). Jede spätere Fassung braucht
 denselben, sonst verlangt Android eine Neuinstallation.
 
-### Der Weg zwischen Uhr und Handy
+### 6.2 Der Weg zwischen Uhr und Handy
 
 `MessageClient` des Wear Data Layer, drei Pfade: `/nadoku/ereignis`
 (Uhr → Handy), `/nadoku/quittung` und `/nadoku/stand` (Handy → Uhr). Die
@@ -10340,7 +10376,7 @@ in der Zukunft und höchstens fünf Minuten vor dem laufenden Dienst; außerhalb
 wird quittiert, aber nicht gewirkt — dieselbe Regel wie für eine Phase ohne
 Dienst. Die fünf Minuten sind gewählt, nicht gemessen.
 
-### Ortungswächter und Nachsenden
+### 6.3 Ortungswächter und Nachsenden
 
 *Seit Android 0.8.0 (S5, Paket E).*
 
@@ -10444,7 +10480,7 @@ außerdem nur noch gestartet, wenn er nicht schon läuft — sonst schob jede
 Uhrnachricht seine Frist vor sich her, und ein von der Uhr geführter Dienst
 sendete bis zum Dienstende gar nicht.
 
-### Dienstende und Nachsenden
+### 6.4 Dienstende und Nachsenden
 
 *Seit Android 0.9.0 (S5, Paket E2).*
 
@@ -10528,7 +10564,7 @@ lebt in der Oberfläche, nicht in `NAdokuApp`. Ansehen und Ausleiten gibt es
 nicht: Der Server hat mit 400 endgültig abgelehnt, und ein Nachreichen von
 Hand wäre ein zweiter Weg an `validate_lib.php` vorbei.
 
-### Der Uhr-Spiegel
+### 6.5 Der Uhr-Spiegel
 
 *Seit Android 0.10.0 (S5, Paket E3).*
 
@@ -10560,7 +10596,7 @@ nicht.
 Ereignis der Uhr (gepuffert bis zur Quittung) ist der Stand ein
 Augenblickswert; der nächste Wechsel trägt den dann gültigen.
 
-### Was die App an den Server schickt
+### 6.6 Was die App an den Server schickt
 
 Nichts Neues: denselben JSON-Vertrag wie die Uhr-App aus Abschnitt 5 — seit
 Android 0.18.0 (S11-09) also **verschlossen**: `senden/Geraetehuelle.kt`
@@ -10586,7 +10622,7 @@ weiterhin für den Upload — dort entscheidet nichts am Verhalten des Servers,
 welcher Client sendet. Beim Koppeln ist die
 Geräteart die Auskunft selbst.
 
-### Prüfen ohne Gerät
+### 6.7 Prüfen ohne Gerät
 
 Es gibt keine Uhr und kein Telefon. Was trotzdem geht, steht in
 `android/LIESMICH.md`; die Kurzform:
@@ -10631,7 +10667,7 @@ Ob eine Nachricht ankommt, ob die beiden `WearableListenerService` mit einer
 echten Nachricht das Richtige tun, ob Paket- und Signaturgleichheit im Feld
 greift — das ist Gerätetest und steht aus.
 
-## 5b. Plattformprofil (ab Web 20.5.0, P5a/AP2, R81)
+## 7. Plattformprofil (ab Web 20.5.0, P5a/AP2, R81)
 
 **Was eine Installation von ihrer Plattform braucht — hosterneutral, in genau
 zwei Stufen.** Beschlossen am 15.09.2026 als R81; Volltext der Herleitung in
@@ -10640,7 +10676,7 @@ zwei Stufen.** Beschlossen am 15.09.2026 als R81; Volltext der Herleitung in
 **Zwei Installationen lesen diese Liste, und sie stehen auf zwei
 Plattformen.** Seit dem 20.09.2026 liegt Staging bei einem anderen Hoster als
 Produktiv; was das für die Übertragbarkeit einer Messung bedeutet — und der
-Vergleich beider Auskünfte nebeneinander — steht in **Abschnitt 6.3a**.
+Vergleich beider Auskünfte nebeneinander — steht in **Abschnitt 12.5**.
 
 | Stufe | Bedeutung | Was die Anwendung daraus macht |
 |---|---|---|
@@ -10652,7 +10688,7 @@ vorausgesetzt** — namentlich der DDoS-Grundschutz des Hosters und die
 Verschlüsselung at rest. Beides ist eine Empfehlung an die BetreiberIn, keine
 Anforderung an die Plattform.
 
-### 5b.1 Eine Funktion, zwei Leser
+### 7.1 Eine Funktion, zwei Leser
 
 Die Liste steht an **einer** Stelle: `plattform_pruefen()` in
 `server/plattform_lib.php`. `install.php` ruft sie vor der Einrichtung, die
@@ -10665,7 +10701,7 @@ Jahr noch erfüllen.
 feststellbar**. Nur `false` auf der Muss-Stufe hält die Einrichtung auf. Wer
 nichts gemessen hat, darf nichts behaupten.
 
-### 5b.2 Die Prüfpunkte (Stand 20.09.2026)
+### 7.2 Die Prüfpunkte (Stand 20.09.2026)
 
 **Muss**
 
@@ -10705,7 +10741,7 @@ E-SA-04) · vertrauenswürdige Proxys eingetragen (reine Auskunft).
 > aber ihr **Dateiname ist die Sitzungskennung**. Bis Web 21.6.1 hieß das:
 > Wer sie liest, ist angemeldet und sieht die Klartextliste. **Seit Web
 > 21.7.0 genügt die Datei allein nicht mehr** — zur Sitzung gehört das
-> Cookie `EDBIND`, in der Datei steht nur sein SHA-256 (4.99q, „Die
+> Cookie `EDBIND`, in der Datei steht nur sein SHA-256 (4.38, „Die
 > Sitzungsbindung"). Der Punkt bleibt Muss: Die Datei trägt weiter
 > `totp_halb`, Marken und Rückfragen, und ein fremdes Verzeichnis ist ein
 > fremdes Verzeichnis. Dass Muss die Einrichtung sperren
@@ -10727,7 +10763,7 @@ E-SA-04) · vertrauenswürdige Proxys eingetragen (reine Auskunft).
 > als erfüllte Empfehlung unsichtbar. Eine Muss-Zeile, die immer dasteht,
 > trägt diese Auskunft jetzt mit.
 
-### 5b.2a Der Rückfall nennt seine Lage, er rät sie nicht (ab Web 20.26.1)
+### 7.3 Der Rückfall nennt seine Lage, er rät sie nicht (ab Web 20.26.1)
 
 **Bis Web 20.26.0 stand auf der Statusseite eine Ursache, die niemand
 gemessen hatte.** Sobald der wirksame Pfad nicht der eigene war, druckte sie
@@ -10784,7 +10820,7 @@ Wert also nur **gesetzt**, nicht per `php_admin_value` **gesperrt**.
 **Sie gehört nicht ins Repositorium.** Der Pfad ist anlagenabhängig, und
 E-PP-04 sagt: Ein Hosterwechsel ändert `config.php`, keine Codezeile. Sie ist
 ein **Handgriff der BetreiberIn**, und er steht als solcher im Runbook
-(Abschnitt 7). Zwei Bedingungen: `.user.ini` wirkt nur bei CGI/FastCGI, und
+(Abschnitt 13). Zwei Bedingungen: `.user.ini` wirkt nur bei CGI/FastCGI, und
 sie greift erst nach `user_ini.cache_ttl` (Vorgabe 300 s). Gegen Abruf über
 die Adresszeile deckt sie dieselbe Punktregel wie `.sitzungen/` selbst.
 
@@ -10803,7 +10839,7 @@ gilt „vom Hersteller noch mit Sicherheitskorrekturen versorgt". Die Zahlen
 oben sind der Stand vom 15.09.2026 und stehen im Code an **einer** Stelle, als
 Konstanten in `plattform_lib.php` — nicht in drei Meldungstexten.
 
-### 5b.3 Warum die Untergrenze bei PHP 8.2 liegt
+### 7.4 Warum die Untergrenze bei PHP 8.2 liegt
 
 **Nicht, weil der Code mehr bräuchte.** Er kommt mit 8.1 aus (`array_is_list()`,
 Rückgabetyp `never`) und soll die Untergrenze auch nicht von selbst
@@ -10811,7 +10847,7 @@ weiterschieben. Sie liegt bei 8.2, weil PHP 8.1 seit Ende 2025 keine
 Sicherheitskorrekturen mehr bekommt. Eine Anwendung, die Patientendaten führt,
 soll nicht auf einer ungepflegten Fassung laufen und es niemandem sagen.
 
-### 5b.4 Die Weiche in `install.php` — und ihre Grenze
+### 7.5 Die Weiche in `install.php` — und ihre Grenze
 
 `install.php` beginnt mit einer Versionsprüfung, die eine Seite mit dem Grund
 zeigt. **Sie nützt nur, solange die Datei auf der alten Fassung noch übersetzt
@@ -10843,7 +10879,7 @@ PHP-8-Code, und PHP übersetzt sie ganz, bevor die Weiterleitung auf
 Startseite aufruft, sieht einen Parse Error; der Weg für eine Ersteinrichtung
 ist `install.php` unmittelbar.
 
-### 5b.5 Schreibrechte werden mit einer Probedatei geprüft
+### 7.6 Schreibrechte werden mit einer Probedatei geprüft
 
 `is_writable()` beantwortet die Frage anhand der Rechtebits — und liegt falsch,
 sobald ACLs, `open_basedir`, ein schreibgeschütztes Dateisystem oder SELinux im
@@ -10878,7 +10914,7 @@ die auseinanderläuft.
 > haben. Nachgemessen über `get_included_files()`: `plattform_lib.php` zieht
 > `email_lib.php` und `php_mindest.php` nach, `db.php` nicht.
 
-### 5b.6 Die zwei Kontingente und ihre Warnung
+### 7.7 Die zwei Kontingente und ihre Warnung
 
 Seit Web 20.5.0 gibt es **zwei** Kontingent-Angaben unter Betrieb →
 Servereinstellungen:
@@ -10908,7 +10944,7 @@ Warnung beim nächsten Überschreiten wiederkommt.
 > („Dieser Job lief von Web 12.2.0 bis 12.9.2 nie"). Der Aufruf steht jetzt im
 > täglichen Aufräumjob, direkt hinter der Messung.
 
-## 5c. Sicherheitskopfzeilen, CSP und die Client-Adresse (ab Web 20.7.0, P5a/AP4)
+## 8. Sicherheitskopfzeilen, CSP und die Client-Adresse (ab Web 20.7.0, P5a/AP4)
 
 **Bis Web 20.6.0** standen vier Kopfzeilen in `server/.htaccess`. Eine
 Content-Security-Policy gab es nicht. Drei Folgen, und jede war ein Loch:
@@ -10917,7 +10953,7 @@ Patientendaten *im Browser*, ein Skript dort läuft neben dem Datenschlüssel;
 `.htaccess` gilt nur auf Apache, wer hinter nginx oder Caddy läuft hatte gar
 keine Kopfzeilen; und HSTS war ein Jahr, fest verdrahtet.
 
-### 5c.1 Eine Stelle schreibt sie: `kopfzeilen_lib.php`
+### 8.1 Eine Stelle schreibt sie: `kopfzeilen_lib.php`
 
 | Funktion | Ruft wer | Setzt |
 |---|---|---|
@@ -10955,7 +10991,7 @@ Installation (Befehl in der dortigen `LIESMICH.md`).
 Weil beide Wege durch *eine* Stelle gehen, bekommt jede Seite und jede
 API-Antwort die Kopfzeilen — gleich auf welchem Webserver.
 
-### 5c.2 Die Richtlinie
+### 8.2 Die Richtlinie
 
     default-src 'none';
     script-src 'self' 'nonce-<16 Zufallsbytes je Anfrage>';
@@ -11017,7 +11053,7 @@ versagt.
    Skript ausführt: Der Weg zum Datenschlüssel bleibt über `script-src`
    verschlossen.
 
-### 5c.3 Zwei Stufen: Report-Only, dann scharf
+### 8.3 Zwei Stufen: Report-Only, dann scharf
 
 Zuerst `Content-Security-Policy-Report-Only`: Der Browser meldet, was er
 blockiert *hätte*, und führt es trotzdem aus. Erst wenn zwei Wochen lang
@@ -11072,10 +11108,10 @@ eine Fehlermeldung wäre eine Auskunft an jemanden, der nichts zu fragen hatte.
 > Kopfzeile, die auf eine Gruppe zeigt, die es nicht gibt, ist schlimmer als
 > keine.
 >
-> Nachgehalten wird das von `tools/proben/csp-browser/browserprobe.mjs`, Abschnitt 7:
+> Nachgehalten wird das von `tools/proben/csp-browser/browserprobe.mjs`, Abschnitt 13:
 > Sie löst einen Verstoß **absichtlich** aus und sieht nach, ob er ankommt.
 
-### 5c.4 HSTS ist eine Einstellung — und `.htaccess` hat die Zeile verloren
+### 8.4 HSTS ist eine Einstellung — und `.htaccess` hat die Zeile verloren
 
 Wählbar sind **aus / 1 Tag / 7 Tage / 1 Jahr**, Vorgabe **1 Tag**
 (`hsts_tage` in `app_state`). Wer eine Installation aufsetzt, will nicht mit
@@ -11095,7 +11131,7 @@ nicht behält; wer seit Jahren produktiv läuft, will die 365 Tage.
 > Das ist der richtige Weg herum — eine zu kurze Bindung kostet einen Klick,
 > eine zu lange kostet ein Jahr.
 
-### 5c.5 Die Client-Adresse: `netz_lib.php`
+### 8.5 Die Client-Adresse: `netz_lib.php`
 
 `rate_ip()` rechnete mit `REMOTE_ADDR`. Hinter einem Reverse Proxy, einem
 Loadbalancer oder einem DDoS-Schutz ist das die Adresse **des Proxys** — der
@@ -11117,7 +11153,7 @@ Dieselbe Liste entscheidet über `X-Forwarded-Proto` (`kopf_https()`, und
 damit HSTS und `https_tor()`): Wer die Client-Adresse fälschen könnte, könnte
 sonst auch behaupten, eine Anfrage sei über HTTPS gekommen.
 
-### 5c.6 CSRF als Kopfzeile
+### 8.6 CSRF als Kopfzeile
 
 `csrf_ok()` nimmt seit 20.7.0 das POST-Feld **oder** die Kopfzeile `X-CSRF`.
 Zwölf API-Dateien trugen denselben handgeschriebenen Prüfblock; sie rufen nun
@@ -11125,7 +11161,7 @@ Zwölf API-Dateien trugen denselben handgeschriebenen Prüfblock; sie rufen nun
 Pseudo-Feld mitschleppen müsste — nebenbei verschwinden zwölf Kopien einer
 Prüfung, die hätten auseinanderlaufen können.
 
-### 5c.7 Nachweis: `tools/proben/csp-browser/`
+### 8.7 Nachweis: `tools/proben/csp-browser/`
 
 Ein vergessener Nonce legt eine Seite **still** lahm — kein PHP-Fehler, kein
 Protokolleintrag, keine rote Seite. Die Probe zählt nach: fünf Regeln
@@ -11135,7 +11171,7 @@ Protokolleintrag, keine rote Seite. Die Probe zählt nach: fünf Regeln
 `tools/quelltext/LIESMICH.md`; sie läuft auch in Stufe 1 der
 Auslieferungskette.
 
-## 5d. Der Name dieser Installation (ab Web 20.8.0, P5a/AP5)
+## 9. Der Name dieser Installation (ab Web 20.8.0, P5a/AP5)
 
 **Bis Web 20.7.0** stand der Name **38-mal von Hand** im Quelltext, in **drei**
 Schreibweisen: „Gen-EM NAdoku" (Browsertab, Kopfleiste, Anmeldeseite,
@@ -11149,7 +11185,7 @@ Der zweite Grund wiegt schwerer: **„Gen-EM" ist eine Marke, keine Funktion.**
 Logo, Impressum und Datenschutztext sind längst je Installation einstellbar
 (E-P3-19/20, R32) — der Name war es nicht.
 
-### 5d.1 Zwei Werte, zwei Gebrauchslagen
+### 9.1 Zwei Werte, zwei Gebrauchslagen
 
 | Funktion | Vorgabe | Wo sie steht |
 |---|---|---|
@@ -11161,7 +11197,7 @@ Beide liegen in `app_state` (`instanz_name`, `instanz_kurz`) und werden unter
 Logo steht. Leer heißt „zurück auf die Vorgabe"; höchstens 80
 Zeichen.
 
-### 5d.2 Die Datei lädt nichts — und das ist der Kniff
+### 9.2 Die Datei lädt nichts — und das ist der Kniff
 
 `instanz_lib.php` hat **keine** Abhängigkeit auf oberster Ebene, dasselbe
 Muster wie `smtp.php`. Drei Stellen dürfen hier nicht anklopfen:
@@ -11179,7 +11215,7 @@ die Zeitgrenze statt in eine Ausnahme.
 `ui.php` benutzt `ui_instanz_kurz()` mit demselben Rückfall, weil `install.php`
 die Seitenhülle vor der Ersteinrichtung lädt.
 
-### 5d.3 Die Wartungsseite bekommt den Namen aus dem Schalter
+### 9.3 Die Wartungsseite bekommt den Namen aus dem Schalter
 
 Sonst zeigte ausgerechnet die Seite, die Fremde zu sehen bekommen, „Gen-EM
 NAdoku", während die Installation anders heißt. `wartung_einschalten()`
@@ -11193,7 +11229,7 @@ unverändert.
 > nicht kannte — die Seite zeigte die Vorgabe, und nichts deutete auf einen
 > Fehler hin. Wer dort einen Schlüssel ergänzt, ergänzt beides.
 
-### 5d.4 Der Name wird geprüft, weil er in einen Mailbetreff geht
+### 9.4 Der Name wird geprüft, weil er in einen Mailbetreff geht
 
 `instanz_namen_setzen()` weist Steuerzeichen und Zeilenumbrüche ab. Ein
 Zeilenumbruch im Betreff wäre eine **eingeschleuste Kopfzeile**, und der
@@ -11206,7 +11242,7 @@ nicht. 6 von 6 Versuchen wie erwartet (Zeilenumbruch, Wagenrücklauf, Nullbyte,
 Tabulator, 81 Zeichen, gültig); bei allen fünf abgewiesenen bleibt die Vorgabe
 in der Datenbank stehen.
 
-### 5d.5 Zwei Stellen bleiben ausdrücklich fest
+### 9.5 Zwei Stellen bleiben ausdrücklich fest
 
 - **Die Fußzeile „© Gen-EM · Open Source"** (`ui.php`) ist die *Urheberschaft
   der Software*, nicht der Name des Betriebs. Wer diese Anwendung aufsetzt,
@@ -11226,7 +11262,7 @@ in der Datenbank stehen.
   danach gleich, **0** Unterschiede, die Referenz musste nicht neu erzeugt
   werden. Gegenprobe: ein fremder `creator` fällt weiterhin auf.
 
-### 5d.6 Zwei Adressen der Installation (Web 20.9.0, E-P5a-40)
+### 9.6 Zwei Adressen der Installation (Web 20.9.0, E-P5a-40)
 
 Dieselbe Fehlerklasse wie beim Namen, eine Fassung später gefunden: In
 **sieben** Mailtexten stand dieselbe persönliche Adresse der EntwicklerIn, fest
@@ -11265,7 +11301,7 @@ Die Längenprüfung steht **vor** der Syntaxprüfung — `filter_var()` weist ei
 E-Mail-Adresse", und wer eine syntaktisch einwandfreie Adresse eintippt und
 das liest, sucht an der falschen Stelle.
 
-### 5d.7 `app_url()` — eine Basisadresse statt sieben Verkettungen
+### 9.7 `app_url()` — eine Basisadresse statt sieben Verkettungen
 
 `base_url` wurde an sieben Stellen von Hand verkettet, **fünf davon ohne
 `rtrim()`**. Steht in der `config.php` ein Schrägstrich am Ende, entstand
@@ -11287,7 +11323,7 @@ Dateizugriff je Aufruf.
 > strenge Relais antworten mit 501, und der Versand scheitert an einer Stelle,
 > an der niemand ihn vermutet. Jetzt steht dort ein Rückfall auf `localhost`.
 
-### 5d.8 Was von „Gen-EM" im Quelltext bleibt
+### 9.8 Was von „Gen-EM" im Quelltext bleibt
 
 `grep -rn "gen-em\.org" server/` ergibt seit Web 20.9.0 **0**. Von den festen
 `'Gen-EM NAdoku'` benutzen Installer und HTTPS-Tor jetzt
@@ -11342,7 +11378,7 @@ Repositoriums-Variable, die `.github/workflows/integritaet.yml` liest — ist di
 Adresse **dieser** Installation: Betriebskonfiguration der
 Auslieferungskette, keine Eigenschaft der Software.
 
-### 5e Der Ratenschutz — Leiter, Schwellen, Verlangsamung, Mengenbremse, Sicherheitsseite (P5a/AP6–AP8)
+## 10. Der Ratenschutz — Leiter, Schwellen, Verlangsamung, Mengenbremse, Sicherheitsseite (P5a/AP6–AP8)
 
 **Was bis Web 20.9.1 galt.** Eine Sperre dauerte fest 15 Minuten — die erste
 wie die hundertste. Wer geduldig ist, bekommt damit 10 Versuche je
@@ -11350,7 +11386,7 @@ Viertelstunde, dauerhaft. Und alle Fehlversuche der Installation zusammen
 wurden nirgends gezählt: Ein Angriff über tausend Namen sah aus wie tausend
 einzelne Vertipperinnen.
 
-#### 5e.1 Die Leiter
+### 10.1 Die Leiter
 
 Je Merkmal eine **Stufe 1–4** (0 = nie gesperrt), Dauer aus `rate_leiter()`,
 Vorgabe **15 / 20 / 30 / 60 min**. Verfall: **24 h ohne Fehlversuch**
@@ -11380,7 +11416,7 @@ Zweitfaktors), seit Web 21.13.0 `notweg` und seit Web 23.3.1 `notweg_ip`
 > also gegen die Leiter entschieden, die AP7 dort baut. Sie war nicht falsch
 > gemeint, sondern falsch formuliert (E-P5a-48).
 
-#### 5e.2 Zwei Schwellen, zwei Töpfe
+### 10.2 Zwei Schwellen, zwei Töpfe
 
 10 Fehlversuche je **Konto**, 50 je **Anschluss** (`login_ip`). Bis Web 20.9.1
 galten für beide dieselben 10 — hinter einem Klinik-NAT sperrte damit die
@@ -11411,7 +11447,7 @@ ist ein zweiter Topf mit ausdrücklicher Merkmalsliste (Muster:
 > läuft eine Praxis über den Tag in ihre 50 hinein, ohne dass irgendjemand
 > etwas falsch gemacht hätte.
 
-#### 5e.3 Die Verlangsamung — und wo sie ansetzt
+### 10.3 Die Verlangsamung — und wo sie ansetzt
 
 Topf `global`, Merkmal `alle`, `max = PHP_INT_MAX` (er sperrt **nie**).
 Gelesen wird nur `versuche`; ab 200 / 400 / 800 / 1600 je 15 min wartet jede
@@ -11436,7 +11472,7 @@ Installation nach einem Angriff verlangsamt, bis zufällig wieder jemand ein
 Passwort falsch eintippt — im schlechtesten Fall wochenlang, und niemand fände
 den Grund.
 
-#### 5e.4 Zwei Fehler, die ohne Meldung durchgegangen wären
+### 10.4 Zwei Fehler, die ohne Meldung durchgegangen wären
 
 **Der Gesperrte hätte sich durch Klopfen befreit.** `rate_misserfolg()` setzte
 `gesperrt_bis = NULL`, sobald das **Zählfenster** ablief. Folgenlos, solange
@@ -11450,7 +11486,7 @@ Fehlversuchen. Jeder schob die Frist um 24 h vor, sodass sie beim zehnten nie
 abgelaufen war. Gefunden von `tools/proben/raten/`; im Betrieb wäre es niemandem
 aufgefallen.
 
-#### 5e.5 Der Weg zurück
+### 10.5 Der Weg zurück
 
 `pw_handling.php` rief bis Web 20.9.1 **keine einzige** `rate_*`-Funktion. Wer
 sein Passwort über den Link zurücksetzte, blieb an der Anmeldung gesperrt.
@@ -11462,7 +11498,7 @@ Für die Betriebsseite gibt es `rate_sperre_aufheben($topf, $merkmal, $wer)`.
 der Betriebsseite wäre das die IP der AdministratorIn; der Knopf löschte ihre
 eigene Zeile, meldete Erfolg, und die Sperre bliebe stehen.
 
-#### 5e.6 Das Fenster zwischen Deploy und `update.php`
+### 10.6 Das Fenster zwischen Deploy und `update.php`
 
 Die Grundzählung in `rate_misserfolg()` nennt `stufe` und `stufe_bis` **mit
 keinem Wort** und läuft in diesem Fenster unverändert weiter. Die Leiter steht
@@ -11476,7 +11512,7 @@ nicht nur für die Leiter, und ohne dass irgendetwas rot würde.
 
 **Nachweis:** `php tools/proben/raten/probe.php` — 50 Prüfungen, 0 Befunde.
 
-#### 5e.7 Die Mengenbremse von `ingest.php` (Web 20.11.0, P5a/AP7)
+### 10.7 Die Mengenbremse von `ingest.php` (Web 20.11.0, P5a/AP7)
 
 **Was bis Web 20.10.0 galt.** `ingest.php` war der **einzige Endpunkt der
 Anwendung ohne Ratenschutz**. Das war kein Versehen, sondern eine offene
@@ -11510,7 +11546,7 @@ läuft. Ein gelungener Upload leert den Kennungstopf.
 **Die Antwort ist `429` mit `{"error":"zu_viele_versuche"}` und
 `Retry-After`** — und sie nennt nicht, welcher Topf gegriffen hat.
 
-##### Warum 30 und nicht 10
+#### Warum 30 und nicht 10
 
 Gemessen am Sendeplan des Referenzdatensatzes
 (`tools/referenzdatensatz/einspielen/messprotokoll.json`): 612 Anfragen, Spitze
@@ -11521,7 +11557,7 @@ Warteschlange des Geräts und laufen der Reihe nach in die Abweisung;
 **14 Teilstücke in einem Paket** sind gemessen (`teilstuecke_je_paket.max`).
 30 lässt zwei solche Stöße durch.
 
-##### Das Existenzorakel — benannt, verkleinert, nicht geschlossen
+#### Das Existenzorakel — benannt, verkleinert, nicht geschlossen
 
 Das Konzept nannte **50** für den Adresstopf. Verschiedene Schwellen sind eine
 Auskunft: Wer dieselbe geratene Kennung von einer Adresse aus hämmert, bekäme
@@ -11545,7 +11581,7 @@ sollen aufhören.
 > ausdrücklich **kein Geheimnis**; das Orakel beantwortet nur die Frage „ist
 > diese Kennung, die ich ohnehin schon habe, noch eingetragen?"
 
-##### Der Vermerk am Gerät
+#### Der Vermerk am Gerät
 
 `devices.abgewiesen_seit` (der **erste** Fehlversuch einer Serie, nicht der
 letzte) und `devices.abgewiesen_anzahl`. Sichtbar unter **Einstellungen →
@@ -11553,14 +11589,14 @@ Geräte** (Kleinzeile und orange Plakette) und unter **Betrieb → Status**
 (Zeile „Abgewiesene Geräte"). Beide werden beim nächsten gelungenen Upload
 geleert.
 
-##### Das Fenster zwischen Deploy und `update.php`
+#### Das Fenster zwischen Deploy und `update.php`
 
 Die beiden Spalten kommen mit einer Migration. Die Geräteabfrage in
 `ingest.php` und die auf der Kontoseite haben deshalb einen **Rückfall** ohne
 sie; die Statusseite fängt. Der Schutz selbst hängt nicht daran — er zählt in
 `rate_limits`, und die Tabelle steht seit Web 20.10.0.
 
-##### Was die Clients tun müssen: nichts
+#### Was die Clients tun müssen: nichts
 
 Ein Client, der `401` richtig behandelt, behandelt `429` ebenfalls richtig.
 Beide tun es bereits: Die Uhr fällt in ihren Zweig „später erneut"
@@ -11577,7 +11613,7 @@ Anfragen, 64 478 Punkte, je zwei Läufe): Median **14,43 ms ohne**,
 Fehlversuche in allen vier Läufen — bei einer Streuung von 3 bis 4 % zwischen
 zwei *gleichen* Läufen.
 
-#### 5e.8 Die Sicherheitsseite (Web 20.12.0, P5a/AP8)
+### 10.8 Die Sicherheitsseite (Web 20.12.0, P5a/AP8)
 
 **Betrieb → Status → Sicherheit** (`betrieb_sicherheit.php`). Fünf Karten:
 aktive Sperren mit dem Knopf „Aufheben", Verlangsamung, Mengenbremse der
@@ -11591,7 +11627,7 @@ Elternseite aktiv — dasselbe Muster wie `admin_user.php` unter
 `admin_users.php`. In `ui_einstellungen_punkte()` ist **nichts** einzutragen;
 die Sprungmarken der Karten entstehen von selbst aus `.karte[id]`.
 
-##### Drei Lesefunktionen und keine vierte
+#### Drei Lesefunktionen und keine vierte
 
 Sie stehen in `ratelimit_lib.php` neben `rate_ereignis()`, nicht als
 Einzelabfragen in der Seite — dieselbe Trennung wie zwischen `status_lib.php`
@@ -11607,7 +11643,7 @@ und `betrieb_status.php`:
 `LIMIT 200` ist unter Beschuss schnell erreicht, und eine Karte, die dann
 zweihundert Zeilen zeigt und schweigt, sagt „das war alles".
 
-##### Drei Ableitungen wurden eine
+#### Drei Ableitungen wurden eine
 
 „Ist dieses Merkmal ein Konto oder eine Adresse?" stand dreimal nachgebaut —
 in `rate_sperre()`, in `sicherheit_melden_pruefen()` und auf der Statusseite.
@@ -11615,7 +11651,7 @@ in `rate_sperre()`, in `sicherheit_melden_pruefen()` und auf der Statusseite.
 Gerätevermerken: Die Statusseite stellte eine eigene Abfrage auf dieselben zwei
 Spalten und ruft jetzt `sicherheit_bremse_geraete()`.
 
-##### Was die Seite ändert — genau eines
+#### Was die Seite ändert — genau eines
 
 `rate_sperre_aufheben($topf, $merkmal, $wer)`, über POST mit CSRF-Token.
 **Nicht `rate_erfolg()`**: Jene bildet die Merkmale aus dem *Aufrufer* — das
@@ -11624,15 +11660,17 @@ meldete Erfolg, und die Sperre bliebe stehen. `$wer` ist die Kontokennung der
 Handelnden; ohne sie bliebe die Spalte `wer` leer, und das Ereignis
 „aufgehoben" sagte nicht, wer aufgehoben hat.
 
-##### Was **nicht** protokolliert wird, und warum das auf der Karte steht
+#### Was **nicht** protokolliert wird, und warum das auf der Karte steht
 
-Ein Sperrereignis entsteht nur an den **acht Töpfen mit Leiter** — `login`,
-`login_ip`, `salt`, `ingest`, `ingest_ip`, `blatt`, `totp` und seit Web
-21.13.0 `notweg`, der Notzugang der einzigen BetreiberIn (bis Web 21.1.0
-stand hier „fünf"; `blatt` und `totp` waren beim Nachtragen der Leiter nicht
-mitgezählt worden). Die übrigen dreizehn (`reset`, die drei Kopplungstöpfe,
-`demo`, `demog`, `testmail`, `csp`, `health`, `rt_vorschau` und die drei der
-Registrierung) sperren über den Rückfallweg **ohne** Protokollzeile;
+Ein Sperrereignis entsteht nur an den **Töpfen mit Leiter** — `login`,
+`login_ip`, `salt`, `ingest`, `ingest_ip`, `blatt`, `totp`, seit Web
+21.13.0 `notweg`, der Notzugang der einzigen BetreiberIn, und seit Web
+23.3.1 `notweg_ip` (R17-22). Die übrigen (`reset`, die drei Kopplungstöpfe,
+`demo`, `demog`, `testmail`, `csp`, `kontopaar`, `health`, `rt_vorschau` und
+die drei der Registrierung) sperren über den Rückfallweg **ohne**
+Protokollzeile; maßgeblich ist `'leiter'` in `RATE_GRENZEN`, nicht diese
+Aufzählung *(hier stand „acht" und „dreizehn"; `notweg_ip` und `kontopaar`
+fehlten — F-R17-59)*;
 `global` sperrt nie. Ohne diesen Satz auf der Karte liest sich eine kurze
 Liste als „es war fast nichts", obwohl die meisten Töpfe gar nicht
 berichten. *Bis Web 21.13.0 stand hier „die übrigen neun" mit fünf Namen —
@@ -11642,7 +11680,7 @@ der Satz mitwuchs.*
 Und die Karte „Verlangsamung" zeigt **Anstiege, keine Phasen**: Vermerkt wird,
 wenn die Stufe steigt; ein Ende hat kein eigenes Ereignis.
 
-##### Zwei Fehler, die AP8 nebenbei behoben hat
+#### Zwei Fehler, die AP8 nebenbei behoben hat
 
 **Das Protokoll hing am Mailschalter.** `sicherheit_melden_pruefen()` kehrte
 als *erste* Zeile zurück, wenn `rate_mail_an()` false ist — und darin stand
@@ -11656,7 +11694,7 @@ gelungenen Upload geleert — den gibt es nicht mehr, wenn das Gerät ausgemuste
 ist. Der Aufräumjob hat dafür jetzt den Schritt **`Geraetevermerke`**
 (30 Tage ab `abgewiesen_seit`).
 
-##### Der Datenschutztext
+#### Der Datenschutztext
 
 Die Seite zeigt IP- und E-Mail-Adressen im Klartext. Die Anwendung liefert
 **keinen Rechtstext mit** (R32); sie kann nur **vorschlagen**. Unter
@@ -11670,7 +11708,7 @@ erfüllt, gemessen am DOM *und* an der Datenbank (Zeile 1 → 0, `rate_limits`
 1 → 0, Ereignis „aufgehoben" mit Kontokennung).
 
 
-## 5e. Die Verbindungsgrenze (ab Web 20.13.0, P5a/AP9, E-P5a-18)
+## 11. Die Verbindungsgrenze (ab Web 20.13.0, P5a/AP9, E-P5a-18)
 
 **„Ausgelastet" ist nicht „kaputt".** MySQL/MariaDB weist eine Verbindung ab,
 wenn eine von drei Grenzen erreicht ist. Die Nummern sind verschieden, und das
@@ -11737,7 +11775,7 @@ eine HTML-Seite nach stdout schreibt und sich beendet, verschluckt seinen
 eigenen Fehler; der Aufrufer soll die Ausnahme sehen. Dieselbe Unterscheidung
 trifft `wartung_tor()` eine Ebene höher.
 
-### 5e.1 Gedrängel: 1213 und 1205 (E-P5a-52)
+### 11.1 Gedrängel: 1213 und 1205 (E-P5a-52)
 
 Gefunden von der Verbindungsprobe, nebenbei, und teurer als das, wonach sie
 suchte: Zwanzig Uploads desselben Geräts auf denselben Diensttag, gleichzeitig
@@ -11755,7 +11793,7 @@ und der eigene Fangblock von `ingest.php`, das seine 500 selbst ausgibt.
 
 Der Vorfall steht mit **Datei und Zeile** im Fehlerprotokoll des Webspace
 und **nicht** im Reiter System (`gedraengel_vermerken()`, ein Rückfall nach
-4.99g): Die Anfrage hängt gerade an einer Sperre, und ein weiterer
+4.28): Die Anfrage hängt gerade an einer Sperre, und ein weiterer
 Schreibzugriff ist das Letzte, was sie braucht. Ein Gedrängel ist auch nichts,
 wonach jemand am Telefon fragt — was zählt, ist die Stelle, und die findet man
 durch Zählen gleicher Zeilen. Die Kennung, die jede Rückfallzeile seit
@@ -11796,7 +11834,7 @@ Verbindungsprobe. Wo ein Rumpf einen Fehler schluckt, ist es nicht
 gleichwertig: Dann läuft nach einem echten Deadlock der Rest ohne
 Transaktion weiter (Nr. 354).
 
-## 6. Deployment — die Auslieferungskette (ab Web 20.4.0, P5a/AP1)
+## 12. Deployment — die Auslieferungskette (ab Web 20.4.0, P5a/AP1)
 
 **Bis Web 20.3.0** gab es genau einen Weg: Push auf `main` mit Änderungen unter
 `server/` → GitHub Action → FTPS auf **Produktiv**. Keine Zwischenstufe, kein
@@ -11804,21 +11842,21 @@ Prüftor, kein Freigabeschritt, kein Rollback-Weg — und kein Backup, von dem
 jemand wüsste, dass es zu diesem Stand gehört. Das beschreibt R67 und beendet
 E-P5a-10.
 
-### 6.1 Zwei Wege, drei Tore
+### 12.1 Zwei Wege, drei Tore
 
 | Auslöser | Ziel | Umgebung | Davor |
 |---|---|---|---|
 | Push auf `main` | **Staging** | `staging` | Stufe 1 |
 | **Handlauf auf `hotfix/*`** (ab AP7) | **Staging** | `staging` | Stufe 1 |
 | Tag `web-vX.Y.Z` | **Produktiv** | `produktion` | Stufe 1, Stufe 2, Pflichtfreigabe, Backup-Tor, **Abstammung** |
-| Tag `android-vX.Y.Z` (seit PK-08) | `server/apk/` auf **Produktiv** | `produktion` (nur der Signaturjob) | seit R17-19 **App-Tor** (Stufe 1 auf dem Baum, Tag auf `main`), Tag gegen Fassung, Bau ohne Geheimnisse, Pflichtfreigabe, Zertifikat (4.97g) |
+| Tag `android-vX.Y.Z` (seit PK-08) | `server/apk/` auf **Produktiv** | `produktion` (nur der Signaturjob) | seit R17-19 **App-Tor** (Stufe 1 auf dem Baum, Tag auf `main`), Tag gegen Fassung, Bau ohne Geheimnisse, Pflichtfreigabe, Zertifikat (4.13) |
 | Tag `uhr-vX.Y.Z` (seit PK-08) | Artefakt des Laufs (Connect-IQ-Store von Hand) | `produktion` | seit R17-19 **App-Tor**, Tag gegen Fassung, SDK-Prüfsumme, Pflichtfreigabe |
 
 Vier Arbeitsläufe unter `.github/workflows/`:
 
 | Datei | Was |
 |---|---|
-| `pruefung.yml` | **Stufe 1** — jeder Pull Request, dazu jeder Push auf `main` (seit 21.09.2026; vorher jeder Push auf jedem Zweig); seit PK-05 die Gegenlesung des Prüfberichts (6.2) |
+| `pruefung.yml` | **Stufe 1** — jeder Pull Request, dazu jeder Push auf `main` (seit 21.09.2026; vorher jeder Push auf jedem Zweig); seit PK-05 die Gegenlesung des Prüfberichts (12.3) |
 | `auslieferung.yml` | **wann**: Jobs `staging`, `stufe2`, `produktion`, `Rückfallstand (Staging)` und `zeiger`; seit PK-08 dazu `android` und `uhr`, je in eigener `concurrency`-Gruppe (ein Lauf, der auf die Freigabe wartet, belegt seine Gruppe); seit R17-19 davor `app-tor` und, für Android, `android-bau` (ohne Umgebung und ohne Geheimnisse) |
 | `ausliefern-lauf.yml` | **was**: die Schrittfolge, einmal, für beide Umgebungen |
 | `integritaet.yml` | die Wache; läuft nach einem **Produktiv**-Deploy und täglich |
@@ -11953,12 +11991,12 @@ Vergleich.
 gleich `WEB_VERSION` in `server/version.php`. Der Produktionslauf verweigert,
 wenn beides nicht übereinstimmt. **Seit PK-08 gilt dasselbe für die Apps:**
 `android-vX.Y.Z` gegen `android/version.properties`, `uhr-vX.Y.Z` gegen
-`watch/source/Const.mc` (E-PK-60, Tabelle oben, 4.97g). *(Bis PK-08 stand
+`watch/source/Const.mc` (E-PK-60, Tabelle oben, 4.13). *(Bis PK-08 stand
 hier, Uhr und Android bekämen keine Auslieferungs-Tags, weil ihre Signatur
 außerhalb der CI lag (E-S4-16) — berichtigt mit Nr. 236.)*
 **Rollback ist ein Lauf mit dem vorigen Tag.**
 
-### 6.1a Der Läufer — ein festes Abbild statt `ubuntu-latest` (Nr. 236)
+### 12.2 Der Läufer — ein festes Abbild statt `ubuntu-latest` (Nr. 236)
 
 **Alle zehn `runs-on`-Zeilen der Kette nennen ein festes Abbild**, nicht
 `ubuntu-latest`, und alle zehn `ubuntu-26.04` — neun seit dem 11.10.2026,
@@ -12023,7 +12061,7 @@ das Abbild `break-system-packages = true` in `/etc/pip.conf` schreibt
 **Wer das Abbild wechselt**, misst vorher — wie, steht in
 `docs/Pruefablauf.md` 6.8.
 
-### 6.2 Stufe 1 — was ohne Installation messbar ist
+### 12.3 Stufe 1 — was ohne Installation messbar ist
 
 `pruefung.yml`, **bei jedem Pull Request und bei jedem Push auf `main`**.
 Ein Push auf einen Arbeitszweig löst seit dem 21.09.2026 keinen Lauf mehr
@@ -12039,7 +12077,7 @@ Prüfbericht in der Nachricht des PR-Kopfs entgegen. Android und Uhr baut sie
 ist, und der Bericht sagt es — sagt er „nicht berührt", obwohl der PR dort
 etwas ändert, ist das Tor rot. Bis PK-05 baute Stufe 1 beides selbst, mit
 eigener Bereichserkennung, eigenem JDK und bis zu 42 Minuten Laufzeit; die
-Datei hatte 988 Zeilen, heute 337.
+Datei hatte 988 Zeilen.
 
 Die Schritte des Jobs `Stufe 1`, in dieser Reihenfolge. **Die Zahlen stehen
 nicht hier**, sondern in der `LIESMICH.md` des Werkzeugs
@@ -12053,7 +12091,7 @@ Bilderzahl, die längst nicht mehr stimmte.
 | `cmark-gfm` bereitstellen | für die Quelltextprüfungen `handbuch` und `bestand` (seit BR-05: `bestand` liest die Tabelle der Quelltextprüfungen damit) |
 | `tools/quelltext/pruefen.sh --selbstprobe`, dann `alle` | alle Selbstproben und alle fünfzehn Prüfungen grün (`tools/quelltext/LIESMICH.md`) — darunter seit BR-03 Backlog-Nummern (`bestand`), Python übersetzen (`pysyntax`) und Handbuch rendern (`handbuch`), bis dahin drei eigene Schritte |
 | `tools/screenshots/kontrast.py` | 0 Befunde |
-| Umgebungswert eine Ebene höher | alle sechs Namen leer (6.5, E-KH-28) |
+| Umgebungswert eine Ebene höher | alle sechs Namen leer (12.7, E-KH-28) |
 | `tools/kettenaufrufe/pruefen.py --probe`, dann ohne Schalter | Selbstprobe vollständig, 0 Befunde; jeder ungeprüfte Aufruf benannt; seit R17-19 dazu die zwei Riegel der Kette: jede fremde `uses:`-Zeile an einer SHA mit Fassung, die Ausnahmeliste hält ihre acht Pfade, jeder steht in `.gitignore`, keine `server/config.php*` eingecheckt |
 | `tools/kette/tor.py`, `download_lib.mjs`, `tools/kette/freigabe.py`, `tools/kette/baumsuche.py`, je `--selbstprobe` | jede Lage erfüllt |
 | `tools/spaltenregister/pruefen.php`, `tools/zaehlung/zaehlen.php`, je mit Selbstprobe | 0 Befunde, 0 Zeilen über der Decke — und seit R17-19 auch 0 darunter (Ratsche, F-R17-56) |
@@ -12073,7 +12111,7 @@ Selbstprobe. **Er wird Pflichtprüfung** (E-PK-47): Die BetreiberIn trägt
 > Lauf entweder selbst oder verweist über `Schon gemessen?` auf den grünen
 > PR-Lauf mit demselben Baum. **Ein Handlauf auf einem Zweig liest gegen**
 > (E-PK-43): Sonst setzte ein Handlauf auf dem PR-Kopf ein grünes
-> `Stufe 1` ohne Gegenlesung — der Hotfix-Weg (6.6b) braucht deshalb einen
+> `Stufe 1` ohne Gegenlesung — der Hotfix-Weg (12.12) braucht deshalb einen
 > Bericht im Hotfix-Commit.
 
 > **`tools/quelltext/` `jobregister` hängt seit Kette II in Stufe 1** — seit
@@ -12114,7 +12152,7 @@ Lauf eine Auskunft und keine Schranke. Denselben Namen sucht
 für den Job `Schon gemessen?`; seit BR-03 eine Suche statt zweier (E-BR-09).
 Ein umbenannter Job hängt alle drei still ab.
 
-### 6.3 Stufe 2 — was eine Installation braucht
+### 12.4 Stufe 2 — was eine Installation braucht
 
 Job `stufe2` in `auslieferung.yml`, nach dem Staging-Sync, **drei Schritte**
 aus Konzept PK (seit dem 21.09.2026, E-PK-01/E-PK-17) und einer aus Konzept RW
@@ -12192,11 +12230,11 @@ Stand?" nach — **am ganzen Lauf**, nicht nur am Job `staging`.
 
 **Der Kreislauf braucht seit Web 20.16.0 zusätzlich `JOBS_TOKEN`** in der
 Umgebung `staging` (Backlog Nr. 219) — seit Web 23.1.0 das **Kettentoken**
-von Staging (4.97a). **Seine Pakete kommen seit R17-19 mit festen Fassungen
+von Staging (4.7). **Seine Pakete kommen seit R17-19 mit festen Fassungen
 und Prüfsummen** (F-R17-20): `pip install --require-hashes -r
 tools/kette/stufe2-anforderungen.txt` und Playwright über `npm ci` aus
 `tools/kette/stufe2-npm/`, dessen Sperrdatei dieselbe Fassung nennen muss
-wie `PW_FASSUNG` (6.1a); bis dahin die Fassung des Tages, im selben Job
+wie `PW_FASSUNG` (12.2); bis dahin die Fassung des Tages, im selben Job
 wie Staging-Passwort, `STAGING_TOTP` und `JOBS_TOKEN`. Er hält die Hintergrundjobs an, bevor
 er ein Backup in ein frisches Konto spielt — sonst dünnt der
 Verdichtungsjob die wiederhergestellten Spuren aus, und der Vergleich misst
@@ -12216,7 +12254,7 @@ suchte man den Fehler im falschen Ort.
 
 **Dazu seit Web 20.15.1 der Schritt „Punktdateien gesperrt,
 .well-known offen?"** (Nr. 213). Er braucht **kein** Prüfkonto — nur
-`STAGING_URL` — und misst die `.htaccess`-Sperre aus Abschnitt 4.97g in
+`STAGING_URL` — und misst die `.htaccess`-Sperre aus Abschnitt 4.13 in
 beide Richtungen. **Seit R17-19 ist er Teil 3 der Integritätswache**
 (`wache.py --teil punktpfade`, F-R17-18): dieselbe Stelle misst Staging hier
 und Produktiv in `integritaet.yml`; bis dahin stand die Prüfung als Bash nur
@@ -12241,7 +12279,7 @@ Datei da ist oder nicht**: mod_rewrite läuft vor der Dateisuche. Ein 404
 käme auch von einer leeren Adresse — genau so wurde der auslösende Befund
 zuerst falsch entlastet.
 
-### 6.3a Staging und Produktiv sind zwei Plattformen (ab 20.09.2026, E-KH-04)
+### 12.5 Staging und Produktiv sind zwei Plattformen (ab 20.09.2026, E-KH-04)
 
 **Bis zum 19.09.2026 lagen sie im selben Webspace.** `staging.nadoku.gen-em.org`
 war eine Subdomain desselben Plesk-Abonnements wie Produktiv, mit eigener
@@ -12285,11 +12323,11 @@ eingeschlichen hat, fällt dort auf, bevor ein Selbsthoster ihn findet.
 #### Der Plattformvergleich
 
 Beide Anlagen melden ihre Plattform selbst: **Betrieb → Status**, gespeist aus
-`plattform_pruefen()` (Abschnitt 5b). Die Auskunft gehört hierher
+`plattform_pruefen()` (Abschnitt 7). Die Auskunft gehört hierher
 nebeneinander, damit ein Unterschied sichtbar ist, bevor er eine Messung
 erklärt.
 
-| Prüfpunkt (5b.2) | Produktiv (Plesk) | Staging (lima-city) |
+| Prüfpunkt (7.2) | Produktiv (Plesk) | Staging (lima-city) |
 |---|---|---|
 | PHP-Fassung | **8.3.33** | **8.3.33** — dieselbe |
 | Server-API | ⬚ Z3 | **FPM/FastCGI**, Apache 2.4 davor |
@@ -12332,7 +12370,7 @@ sobald die Statusseite dort antwortet. Alles, was nur die Anwendung weiß
 > nur *Empfohlen* ist und keine Ampel färbt, und weil
 > `opcache_invalidate()` — das die Anwendung nach jedem Schreiben in
 > `config.php` ruft (`serverkrypto_lib.php`) — **nicht** abgeschaltet ist und
-> weiter wirkt. Grundsätzlich, weil Abschnitt 5b.1 genau das verbietet:
+> weiter wirkt. Grundsätzlich, weil Abschnitt 7.1 genau das verbietet:
 > *„`ok` ist dreiwertig … **`null` nicht feststellbar**. Wer nichts gemessen
 > hat, darf nichts behaupten."* Hier hat die Anwendung nichts gemessen und
 > behauptet „aus".
@@ -12360,7 +12398,7 @@ sobald die Statusseite dort antwortet. Alles, was nur die Anwendung weiß
 
 > **Der auffälligste Wert ist eine Nicht-Zahl: Produktiv hat keinen Cron.**
 > Alle elf Hintergrundjobs tragen als Weg **„anfrage"** — sie laufen huckepack
-> auf einer Seitenanfrage (Abschnitt 4.97a). Das ist ein zulässiger der drei
+> auf einer Seitenanfrage (Abschnitt 4.7). Das ist ein zulässiger der drei
 > Wege und kein Mangel, aber es heißt: **Ohne Besucher läuft nichts.** Der
 > Job „GPS-Daten verdichten" stand am 20.09.2026 auf **Rückstand 69**. Für
 > die Kette ist das die Zeile, die zählt, sobald AP5 das Backup-Tor auch auf
@@ -12382,13 +12420,13 @@ sobald die Statusseite dort antwortet. Alles, was nur die Anwendung weiß
 > derselbe Wert nicht erhoben, und für Selbsthoster ist er offen. Eine
 > Sitzungsdatei führt zwar kein Schlüsselmaterial — ihr **Dateiname ist die
 > Sitzungs-ID**, und wer sie auflisten konnte, war bis Web 21.6.1
-> angemeldet; seit Web 21.7.0 braucht es dazu das Cookie `EDBIND` (4.99q).
+> angemeldet; seit Web 21.7.0 braucht es dazu das Cookie `EDBIND` (4.38).
 > Vorschlag im Prüfdokument, Abschnitt 4.
 > **(3) `open_basedir` ist leer** und `allow_url_fopen` an. Beides ist die
 > Voreinstellung vieler Hoster und kein Mangel der Anwendung; es steht hier,
 > damit der Vergleich später nicht bei null anfängt.
 
-### 6.4 Das Backup-Tor
+### 12.6 Das Backup-Tor
 
 Vor dem Schreiben auf Produktiv läuft das Komplett-Backup **nachweislich zu
 Ende**. Die Logik steht in `tools/kette/tor.py` und nicht im Arbeitslauf: Eine
@@ -12403,10 +12441,11 @@ ihn beschädigte, bekam von Stufe 1 ein Grün.
 Der Ablauf des Produktionslaufs:
 
 1. Tag gegen `WEB_VERSION` halten.
-2. Prüfen, dass es auf **diesem Commit** einen grünen Stufe-1- **und** einen
-   grünen Staging-Lauf gibt.
+2. Prüfen, dass es auf **demselben Baum** einen grünen Stufe-1- **und** einen
+   grünen Staging-Lauf gibt — gemessen am Baum, nicht am Commit (12.1, Konzept
+   TB; bis zum 23.09.2026 „auf diesem Commit").
 3. **Backup-Tor:** `jobs.php`, `aktion=komplett` (seit Web 23.1.0 per POST mit
-   dem Kettentoken im Rumpf, 4.97a) in einer Schleife (höchstens 40
+   dem Kettentoken im Rumpf, 4.7) in einer Schleife (höchstens 40
    Aufrufe, 20 s Pause), bis `fertig` kommt **und** der jüngste
    Komplett-Stand jünger ist als der Laufbeginn. Sonst: **Abbruch ohne
    Deploy.**
@@ -12421,7 +12460,7 @@ gestern meldet ebenfalls `fertig` und schützt diesen Deploy nicht. Und
 `aktion=komplett` **legt einen Auftrag an**, wenn keiner steht — ohne das täte
 der Aufruf bei Plan „Nur von Hand" nichts und meldete sofort `fertig`.
 
-### 6.5 Was auf dem Server liegt
+### 12.7 Was auf dem Server liegt
 
 **Auf dem Server liegt 1:1 der Repositoriumsstand von `server/`**; ausgenommen
 sind `config.php` und `install.lock` (bei der Einrichtung erzeugt),
@@ -12447,9 +12486,9 @@ die es nur auf dem Server gab.
 > weil es jemandem aufgefallen wäre. Dieselbe Klasse wie Backlog Nr. 208, nur
 > an einer Liste, für die es noch kein Prüfmittel gibt.
 
-> **`.sitzungen/` wird der achte Pfad — und steht noch nicht darin**
-> (Schritt 16, E-SA-05). Der Eintrag gehört zu Kette II (E-KH-20, AP5 dort)
-> und ist dort angemeldet; Schritt 16 fasst `.github/` nicht an.
+> **`.sitzungen/` steht seit Kette II/AP5 in der Liste** (Schritt 16,
+> E-SA-05, E-KH-20). Hier stand bis R17-27, er werde „der achte Pfad" und
+> stehe „noch nicht darin" — das war der Stand von Schritt 16.
 >
 > **Wogegen er schützt — nachgemessen, weil die naheliegende Begründung
 > nicht stimmt.** Der heutige Transport löscht `.sitzungen/` **nicht**:
@@ -12469,19 +12508,19 @@ die es nur auf dem Server gab.
 > ausdrücklich auch Ausgenommenes.
 >
 > Der Abnahmepunkt „zwei Deploys hintereinander, die Sitzung überlebt beide"
-> bleibt bis zum Merge von Kette II **offen** — er belegt dann die Zusage
+> blieb bis zum Merge von Kette II **offen** — er belegt dann die Zusage
 > des Eintrags, nicht mehr die Abwehr einer akuten Gefahr.
 >
 > Die Aktion prüft Datei- und Verzeichnismuster getrennt; jeder Ordner steht
 > deshalb **zweimal** (`sicherungen/**` und `sicherungen/`). Für `.sitzungen/`
-> gilt dasselbe — zwei Zeilen, in **beiden** Schritten.
+> gilt dasselbe — zwei Zeilen, seit Kette II/AP5 in **einem** Schritt.
 
 Geheimnisse liegen seit Web 20.4.0 nicht mehr als Repositoriums-Secrets herum,
 sondern an den **Umgebungen**:
 
 | Ort | Geheimnisse | Variablen |
 |---|---|---|
-| Umgebung `staging` | `FTP_SERVER`, `FTP_USERNAME`, `FTP_PASSWORD`, `STAGING_KONTO`, `STAGING_PASS`, `JOBS_TOKEN` | `FTP_ZIELPFAD`, `FTP_STATE_PFAD`, `STAGING_URL` |
+| Umgebung `staging` | `FTP_SERVER`, `FTP_USERNAME`, `FTP_PASSWORD`, `STAGING_KONTO`, `STAGING_PASS`, `STAGING_TOTP` (das TOTP-Geheimnis des Prüfkontos, seit Stufe 2 den Zweitfaktor fährt), `JOBS_TOKEN` | `FTP_ZIELPFAD`, `FTP_STATE_PFAD`, `STAGING_URL` |
 | Umgebung `produktion` | dieselben drei FTP-Angaben plus `JOBS_TOKEN`; seit PK-08 die fünf Schlüsselwerte `APK_SPEICHER_B64`, `APK_SPEICHER_PASSWORT`, `APK_SCHLUESSEL_NAME`, `APK_SCHLUESSEL_PASSWORT`, `UHR_ENTWICKLERSCHLUESSEL_B64` (Zuarbeit Z6 des Konzepts PK) | `FTP_ZIELPFAD`, `FTP_STATE_PFAD`, `PRODUKTION_URL`; seit PK-08 `APK_ZERTIFIKAT_SHA256` (der volle SHA-256 des App-Signaturzertifikats `078c…ad64` — öffentlich, deshalb Variable) |
 | Repositorium | `CIQ_GERAETE_URL` — von PK-05 bis PK-08 von keinem Arbeitslauf gelesen, seither vom Job `uhr` (E-PK-48) | `WACHE_BASIS` |
 
@@ -12552,7 +12591,7 @@ beiden Anlagen tragen, steht in `docs/Rahmenplan.md` 6a.
 verschiedene Werte.** Das Token gehört der **Installation**, nicht dem
 Repositorium; Staging und Produktiv sind zwei Installationen. **Seit
 Web 23.1.0 ist es das Kettentoken** (`app_state.kette_token`, Betrieb →
-Hintergrundjobs → „Auslieferungskette", 4.97a) und nicht mehr das Job-Token
+Hintergrundjobs → „Auslieferungskette", 4.7) und nicht mehr das Job-Token
 der Adresse — der Name blieb, damit beim Umstieg kein Geheimnis umbenannt
 werden musste. Beim Update übernimmt das Kettentoken den bisherigen Wert;
 erneuert die BetreiberIn es danach (Runbook 7), trägt sie den neuen Wert hier
@@ -12563,25 +12602,7 @@ Schritt:** Der erste Schritt des gemeinsamen Laufs bestimmt Basisadresse,
 Zielpfad und Pfad der Zustandsdatei je Umgebung — mit einem `case` und einem
 Abbruch, wenn einer fehlt.
 
-### 6.6 Die Integritätswache hängt am Namen
-
-`integritaet.yml` wird per `workflow_run` vom Lauf **„Auslieferung"**
-angestoßen. **Wer diesen Lauf umbenennt, hängt die Wache ab — still, ohne
-Fehlermeldung.** Genau das stand bis Web 20.3.0 im Raum: Dort hieß die
-Kupplung „Server per FTP hochladen" (Fund F4 des P5a-Konzepts).
-
-Seit der Kette hat der Auslieferungslauf **zwei Ziele**, die Wache misst aber
-Produktiv. **Bis zum 20.09.2026** fragte sie deshalb zuerst über die API, ob
-der Job `produktion` in diesem Lauf mit Erfolg geendet hat, und hielt sonst
-still. Dieser Riegel ist mit AP2 entfallen — warum, steht im nächsten
-Abschnitt.
-
-**Seit R17-19 misst sie drei Teile** — die Dateien unter `assets/`, die
-Anmeldeseite und die Punktpfade samt Kopien der `config.php` (F-R17-18).
-Was bei Rot zu tun ist und wie die Meldung ankommt, steht im Runbook (7,
-„Die Integritätswache ist rot").
-
-### 6.5a Zielprobe und Probelauf — die Kette misst, statt zu glauben
+### 12.8 Zielprobe und Probelauf — die Kette misst, statt zu glauben
 
 **Die Zielprobe** (`tools/kette/zielprobe.py`, seit AP3 der Kettenhärtung,
 E-KH-07) steht **vor dem Backup-Tor**. Sie schreibt per FTPS eine Datei mit
@@ -12655,7 +12676,7 @@ eine Datei.
 
 **Warum sie dazugekommen ist (E-KH-26, 20.09.2026).** Fehlt die
 Zustandsdatei, läuft auch der **Trockenlauf** in den toten Client — er merkt
-es nur nicht, weil danach kein Steuerbefehl mehr kommt (6.5b). Die Zeile
+es nur nicht, weil danach kein Steuerbefehl mehr kommt (12.9). Die Zeile
 „0 geplante Löschungen", auf der die Abnahme beruht, käme dann aus dem
 **Fehlerpfad** und nicht aus einem Vergleich mit dem Serverbestand. Eine
 Abnahme, die ihre Zahl aus dem Fehlerpfad liest, prüft nichts.
@@ -12695,7 +12716,7 @@ Produktiv davor, ungeprobten Code zu bekommen — der Probelauf liefert keinen
 Code aus. Und es wäre der falsche Riegel am falschen Tag: Ausgerechnet wenn
 die Kette klemmt, braucht man den Probelauf, um zu messen **warum**.
 
-### 6.5b Warum die Zustandsdatei der Auslieferungsaktion da sein muss
+### 12.9 Warum die Zustandsdatei der Auslieferungsaktion da sein muss
 
 **Ohne sie liefert die Kette gar nicht aus.** Das ist nicht Vorsicht, sondern
 gemessen: Bis zum 20.09.2026 ist **kein einziger** Abgleich gegen den
@@ -12775,7 +12796,25 @@ heraus, der erste ist der schonende:
    eingeschalteter Wartung, denn die geht in `ausliefern-lauf.yml`
    unmittelbar vor dem Abgleich an. Auf Produktiv der teuerste Weg.
 
-### 6.6a Der Zeiger `produktion` — wogegen die Wache vergleicht
+### 12.10 Die Integritätswache hängt am Namen
+
+`integritaet.yml` wird per `workflow_run` vom Lauf **„Auslieferung"**
+angestoßen. **Wer diesen Lauf umbenennt, hängt die Wache ab — still, ohne
+Fehlermeldung.** Genau das stand bis Web 20.3.0 im Raum: Dort hieß die
+Kupplung „Server per FTP hochladen" (Fund F4 des P5a-Konzepts).
+
+Seit der Kette hat der Auslieferungslauf **zwei Ziele**, die Wache misst aber
+Produktiv. **Bis zum 20.09.2026** fragte sie deshalb zuerst über die API, ob
+der Job `produktion` in diesem Lauf mit Erfolg geendet hat, und hielt sonst
+still. Dieser Riegel ist mit AP2 entfallen — warum, steht im nächsten
+Abschnitt.
+
+**Seit R17-19 misst sie drei Teile** — die Dateien unter `assets/`, die
+Anmeldeseite und die Punktpfade samt Kopien der `config.php` (F-R17-18).
+Was bei Rot zu tun ist und wie die Meldung ankommt, steht im Runbook (7,
+„Die Integritätswache ist rot").
+
+### 12.11 Der Zeiger `produktion` — wogegen die Wache vergleicht
 
 **Der Fehler war nicht der Auslöser, sondern der Vergleichsstand** (Befund B6
 der Kettenhärtung, E-KH-13). Die Wache verglich den Produktivserver gegen
@@ -12828,7 +12867,7 @@ wäre.
 nicht entwickelt, es gibt keinen PR dorthin, und von Hand bewegt wird er
 nicht.
 
-### 6.6b Der Hotfix-Weg — Runbook (ab AP7, E-KH-15/-16)
+### 12.12 Der Hotfix-Weg — Runbook (ab AP7, E-KH-15/-16)
 
 **Wann man ihn braucht.** Auf Produktiv liegt Tag `web-v20.26.2`, etwas ist
 kaputt, und `main` ist inzwischen bei `20.28.0` mit Dingen, die noch nicht
@@ -12919,7 +12958,7 @@ läuft auf eine fehlende Tabelle. Erst den Komplett-Stand einspielen
 |---|---|
 | Der Tag-Lauf bricht am Tor ab: „stammt NICHT vom Zeiger `produktion` ab" | Der Hotfix-Zweig wurde von `main` abgezweigt statt vom Zeiger — Schritt 3 noch einmal |
 | Dasselbe, obwohl richtig abgezweigt | Der Zeiger ist inzwischen weitergerückt (eine andere Auslieferung dazwischen). Neu abzweigen und Schritt 4 wiederholen |
-| „Abstammung: nein (Vergleich: — nicht ermittelt —)" | Der Zweig `produktion` fehlt. Er ist kein Arbeitszweig und wird nur vom Job `zeiger` bewegt (6.6a) |
+| „Abstammung: nein (Vergleich: — nicht ermittelt —)" | Der Zweig `produktion` fehlt. Er ist kein Arbeitszweig und wird nur vom Job `zeiger` bewegt (12.11) |
 | Der Handlauf auf `hotfix/*` zählt nicht | Der Job `staging` war übersprungen oder rot. Übersprungen ist nicht geprüft (B5) |
 | Der Handlauf von `pruefung.yml` auf `hotfix/*` ist rot: „Kein Prüfbericht in der Nachricht" | Der Hotfix-Commit trägt keinen Bericht — Schritt 3, Prüfstand fahren, Commit mit Bericht darüber (E-PK-43) |
 | Der Rückfallstand heißt `unbekannt` | Die Anlage hat keinen Komplett-Stand gemeldet. Der Job ist dann **rot** — ein Stand, dessen Namen niemand kennt, ist keiner |
@@ -12931,7 +12970,7 @@ etwas kaputt ist. Hinge die Produktiv-Auslieferung daran, dass Staging
 erreichbar ist, dann sperrte eine kranke Testumgebung die Reparatur der
 echten — genau verkehrt herum.
 
-### 6.7 Selbst hosten — der Weg ohne GitHub bleibt vollständig
+### 12.13 Selbst hosten — der Weg ohne GitHub bleibt vollständig
 
 Dateien hochladen, `update.php` aufrufen. Das ist der eine Weg, den jeder
 gehen kann, und er bleibt es (PP-9, Muss). Die Anwendung weiß nicht, wie sie
@@ -12939,7 +12978,7 @@ auf den Server gekommen ist — FTPS, SFTP, rsync über SSH und ein Upload von
 Hand sind gleichwertig. Was sie weiß, ist ihre eigene Fassung
 (`version.php`) und ob eine Migration aussteht.
 
-## 7. Betrieb (Runbook)
+## 13. Betrieb (Runbook)
 
 **Vor jeder Auslieferung: die Wegwerfliste nachziehen** (seit Web 20.22.0,
 Backlog Nr. 230).
@@ -12977,7 +13016,7 @@ und liefert nach. Die acht Schritte:
 > bleibt Schritt 6, von Hand (R66).
 
 > **Seit Web 20.4.0 nimmt die Kette die Schritte 1, 2 und 3 ab** (P5a/AP1,
-> Abschnitt 6.4): Der Produktionslauf fährt das Komplett-Backup zu Ende,
+> Abschnitt 12.6): Der Produktionslauf fährt das Komplett-Backup zu Ende,
 > schaltet die Wartung ein, lädt hoch und schaltet sie hinterher wieder aus —
 > **außer** es steht eine Migration aus, dann bleibt sie an und der Lauf sagt
 > es. Von Hand bleiben damit Schritt 4 und die Gegenproben 5 bis 8. Die
@@ -13046,7 +13085,7 @@ Satz daneben, was zu tun ist — er rät nicht mehr:
 | **„die Anlage übernimmt den gesetzten Pfad aber nicht"** | **`.user.ini` anlegen, siehe unten** |
 | „lief bereits eine Sitzung" | `session.auto_start` oder `auto_prepend_file` der Anlage; dann tragen die Sitzungscookies auch **kein** `secure`/`SameSite` — beim Hoster abstellen lassen |
 
-**Der Handgriff `.user.ini`** (gemessen auf Staging am 20.09.2026, 5b.2a).
+**Der Handgriff `.user.ini`** (gemessen auf Staging am 20.09.2026, 7.3).
 Eine Datei neben `index.php`, eine Zeile, der absolute Pfad der Anlage:
 
     session.save_path = "/home/webpages/…/nadoku-staging/.sitzungen"
@@ -13059,17 +13098,17 @@ Sie liegt **nur auf dem Server** und gehört nicht ins Repositorium: Der Pfad
 ist anlagenabhängig (E-PP-04). Sie beginnt mit einem Punkt und fällt damit
 unter dieselbe `.htaccess`-Sperre wie `.sitzungen/`. **Sie steht allerdings
 NICHT in der Ausnahmeliste des Transports** — sie muss dort nicht stehen,
-solange der Transport nur löscht, was er selbst hochgeladen hat (6.5), aber
+solange der Transport nur löscht, was er selbst hochgeladen hat (12.7), aber
 wer den Transport wechselt, denkt an sie.
 
 **Produktiv ist ungeprüft.** Dort ist `session.save_path` nie erhoben worden;
 ob der Handgriff auch dort fällig ist, sagt die Zeile beim ersten Ausrollen.
 
 **Sie wiederholt sich nicht bei jedem Deploy** — das ist nachgemessen und
-nicht angenommen (6.5): Der heutige Transport löscht `.sitzungen/` nicht, weil
+nicht angenommen (12.7): Der heutige Transport löscht `.sitzungen/` nicht, weil
 seine Löschliste nur aus der eigenen Zustandsdatei entsteht und der Ordner dort
 nie stand. Dass `.sitzungen/` trotzdem in die Ausnahmeliste gehört (Kette II,
-E-KH-20), hat einen anderen Grund; er steht in 6.5.
+E-KH-20), hat einen anderen Grund; er steht in 12.7.
 
 **Was währenddessen erreichbar bleibt** (E-S5W-04; maßgeblich ist
 `WARTUNG_AUSNAHMEN`, achtzehn seit Web 21.13.0): die **sieben**
@@ -13162,7 +13201,7 @@ BetreiberIn** — der Weg über „anmelden und vom Blatt nachtragen", den es bi
 Web 23.1.0 gab, ist damit zu. *Was zu tun ist:*
 
 1. Prüfen, ob `config.php` überhaupt die richtige ist (Wiederanlaufpaket,
-   Abschnitt 6.3a). Ist sie es, und nur `kdf_anteil` fehlt oder ist falsch:
+   Abschnitt 12.5). Ist sie es, und nur `kdf_anteil` fehlt oder ist falsch:
 2. Die BetreiberIn setzt ihr Passwort über **„Passwort vergessen"** neu —
    Mail an die eigene Adresse, im Browser der Wiederherstellungsschlüssel.
    Der neue Hash entsteht ohne Pfeffer, weil kein Anteil ausgeliefert wird;
@@ -13211,14 +13250,14 @@ unbemerkt — das ist der eine Weg, auf dem die Wache still wird.
    Ernstfall:** die Datei per FTPS löschen und alles darin als offen
    behandeln — Datenbankpasswort beim Hoster wechseln, den Serverschlüssel
    über **Betrieb → Servereinstellungen**, Karte „Schlüssel des Servers"
-   (4.97d, „Der Wechsel des Serverschlüssels"), das SMTP-Passwort beim
+   (4.10, „Der Wechsel des Serverschlüssels"), das SMTP-Passwort beim
    Mailanbieter.
 3. **Teil 1 oder 2 (Dateien, Anmeldeseite)** — zuerst die zwei harmlosen
    Ursachen ausschließen: **Wurde gerade ausgeliefert, und ist der Lauf
    grün?** Ein halber Abgleich lässt einen gemischten Stand oben; dann
-   denselben Tag noch einmal ausliefern (6.1, „Wenn etwas schiefging").
+   denselben Tag noch einmal ausliefern (12.1, „Wenn etwas schiefging").
    **Nennt die Zeile „Vergleichsstand" den ausgelieferten Tag?** Der Zeiger
-   `produktion` folgt nur einem erfolgreichen Job `produktion` (6.6a).
+   `produktion` folgt nur einem erfolgreichen Job `produktion` (12.11).
 4. **Passt beides nicht, ist es eine Manipulation**, und dann gilt:
    **nichts überschreiben**, bevor die abweichende Datei per FTPS
    heruntergeladen und beiseitegelegt ist — sie ist der Beleg. Danach
@@ -13233,7 +13272,7 @@ der Referenzbestand liegt — dann `server/demo/fixture.json.gz` mit ausrollen
 und im Adminbereich unter **Demo-Konto → anlegen**. Die Seite zeigt danach
 die Bestandszahlen; sie müssen 21 Diensttage, 104 Einsätze, 118 Ruhesegmente
 und 2 Geräte nennen, darunter im Papierkorb 5 Einsätze, 1 Diensttag und
-5 Ruhesegmente (gemessen nach einem Reset, R4-16). Mechanik: Abschnitt 4.99a.
+5 Ruhesegmente (gemessen nach einem Reset, R4-16). Mechanik: Abschnitt 4.21.
 
 **Demo-Konto sieht falsch aus / hängt:** Adminbereich → **Demo-Konto → Auf
 Standard zurücksetzen**. Der Vorgang ist transaktional und dauert wenige
@@ -13328,7 +13367,7 @@ Wartung); getrennt werden sie erst durch Erneuern. Je Anlage, Staging zuerst:
    „Auslieferung" → *Run workflow*) ist grün; auf Produktiv der nächste Tag.
 
 **GPS-Daten werden nicht verdichtet:** Seit Web 22.6.0 packt und dünnt der
-Browser, nicht ein Job (4.99s, „Der Wartungslauf im Browser"). Was fällig ist, zeigt **Einstellungen →
+Browser, nicht ein Job (4.40, „Der Wartungslauf im Browser"). Was fällig ist, zeigt **Einstellungen →
 Backup** → Karte **„GPS-Daten verdichten"** dem Konto selbst; die Verwaltung
 sieht es nicht, weil sie die Aufzeichnungen nicht öffnen kann. Eine Aufzeichnung,
 deren Hülle nicht aufgeht, steht im **Reiter System** (Meldung des Browsers)
@@ -13550,7 +13589,7 @@ stehen; der Job `aufraeumen` löscht sie nach 30 Tagen.
 steht sie auf 1 Tag**, auch auf einer Installation, die vorher über
 `.htaccess` ein Jahr band: Die HSTS-Zeile ist dort entfallen, weil
 `Header always set` überschrieben hätte, was PHP schickt (E-P5a-31, siehe
-5c.4). **Wer produktiv läuft und bei seiner Domain bleibt, stellt hier wieder
+8.4). **Wer produktiv läuft und bei seiner Domain bleibt, stellt hier wieder
 auf 1 Jahr.** Wer gerade erst aufsetzt, lässt es auf 1 Tag, bis die Adresse
 endgültig ist.
 
@@ -13708,7 +13747,7 @@ Wege, **in dieser Reihenfolge** — der erste, der geht, ist der richtige:
    blau zeigt und das Konto ein Paar hat (die Karte „Zweitfaktor" im Profil
    sagt „eingerichtet").
 2. **Eine zweite BetreiberIn** setzt auf der Kontoseite zurück (E-P5c-42).
-3. **Der Notzugang** `zweitfaktor_notweg.php` (seit Web 21.13.0, 4.99q) —
+3. **Der Notzugang** `zweitfaktor_notweg.php` (seit Web 21.13.0, 4.38) —
    nur, wenn es **genau eine** BetreiberIn gibt. Er verlangt drei Dinge:
    (a) die Seite aufrufen und den Dateinamen ablesen, der dort steht
    (`zweitfaktor-notweg-<32 Hexzeichen>.txt`; er gehört zu diesem
@@ -13818,7 +13857,7 @@ Backup-Ziel nimmt ihn wie jedes andere Paket mit. Ein Hoster-Backup oder
 ein `mysqldump` von aussen bleibt daneben zulässig und ist nicht überflüssig
 — es läuft auf einem anderen Weg und fällt deshalb nicht mit demselben Fehler
 aus. `config.php` ist in **keinem** dieser Backups enthalten; sie gehört
-ins Wiederanlaufpaket (gleich darunter). Mechanik: Abschnitt 4.97d.
+ins Wiederanlaufpaket (gleich darunter). Mechanik: Abschnitt 4.10.
 
 Die Uhr sendet nach einer Wiederherstellung fehlende jüngste Daten idempotent
 nach, sofern lokal noch vorhanden.
@@ -13832,7 +13871,7 @@ Reihenfolge; jeder Schritt setzt den vorigen voraus:
    darin auf die neue Datenbank anpassen, den **`server_key` unverändert
    lassen** — er ist es, der das Backup öffnet. **Genauer, seit Web
    21.12.0:** der Schlüssel, unter dem der **Stand** versiegelt ist. Sein
-   Kopf nennt die Kennung (4.97d); stammt er aus der Zeit vor einem Wechsel
+   Kopf nennt die Kennung (4.10); stammt er aus der Zeit vor einem Wechsel
    des Serverschlüssels, ist es der Wert vom **bisherigen** Blatt — als
    `server_key`, denn auch die Zeilen im Dump und die Marke in `app_state`
    gehören zu ihm. Das gilt für die **leere** Anlage dieses Runbooks: Auf
@@ -13843,7 +13882,7 @@ Reihenfolge; jeder Schritt setzt den vorigen voraus:
    eines Wechsels, gehören beide Werte vom Blatt dieser Zeit hinein —
    `server_key` der neue, `server_key_alt` der bisherige. Seit Web 21.12.1
    beginnt der Nachweis dann auf dieser Anlage von vorn
-   (`sw_nach_einspielen()`, 4.97c); der Beginn bleibt der des Dumps.
+   (`sw_nach_einspielen()`, 4.9); der Beginn bleibt der des Dumps.
 4. **Die Backup-Datei** nach `server/sicherungen/eingang/` legen — per
    FTP, SFTP oder Dateimanager des Hosters. Vom Backup-Ziel holt man sie
    sich dorthin. Erkannt werden `.edk` (versiegelt), `.sql.gz` und `.sql`.
@@ -14017,12 +14056,12 @@ Konto-Backup neu erzeugen.
 **Backup-Ziel einrichten:** Adminbereich → **Backup-Ziele** → *Ziel
 anlegen*. **SFTP wählen, wenn das Ziel es anbietet** — es ist von den
 beiden das einzige, das den Server am Hostschlüssel wiedererkennt (`ftp` ist
-seit Web 20.2.0 abgeschafft, 4.97c). Danach
+seit Web 20.2.0 abgeschafft, 4.9). Danach
 **Verbindung prüfen**: Der Lauf schreibt eine Probedatei, liest sie zurück,
 vergleicht sie und löscht sie wieder; er beantwortet damit auch die Frage nach
 den Schreibrechten. Beim ersten Mal wird der Hostschlüssel übernommen.
 Zuletzt den Schalter *Backups automatisch versenden* setzen — **wie oft**
-das geschieht, entscheidet der eingerichtete Job-Auslöser (Abschnitt 4.97a).
+das geschieht, entscheidet der eingerichtete Job-Auslöser (Abschnitt 4.7).
 
 **„Der Server meldet sich mit einem ANDEREN Hostschlüssel":** Erst klären, ob
 die Gegenstelle ihren Schlüssel tatsächlich gewechselt hat (beim Hoster
@@ -14124,7 +14163,7 @@ sich damit **nicht allein über die Kette** einrichten: Die Datei
 `server/install.php` muss **einmal von Hand** hinauf, danach wird eingerichtet
 und danach wird sie wieder gelöscht — so, wie es der letzte Satz dieses
 Absatzes seit jeher verlangt. Stufe 2 der Kette erkennt genau diesen Fall und
-sagt es (Abschnitt 6.3). Der Installer fragt **kein** Passwort mehr ab; er legt den
+sagt es (Abschnitt 12.4). Der Installer fragt **kein** Passwort mehr ab; er legt den
 Zugang ohne Passwort an und zeigt auf der Erfolgsseite einen 24 h gültigen
 Einmal-Link auf `pw_handling.php`, über den Passwort und
 Wiederherstellungsschlüssel im Browser entstehen. Nach Erfolg sperrt
@@ -14162,7 +14201,7 @@ Liste nichts. Die Kontoseite eines Kontos mit eigenen Rechten ist für ihn
 403 **vor** jeder Handlung, und die Liste zeigt ihm nur
 `rollen_ohne_rechte_sql()`. Den Setz-Link sieht er nie, auch nicht, wenn die
 Mail nicht hinausging. `device_aus` schaltet nur 1 → 0; `device_toggle`
-bleibt der Verwaltung. Die Zellen stehen in der Berechtigungsmatrix (4.99p). Zwei Zusagen sitzen serverseitig und sind nicht umgehbar: Nur eine
+bleibt der Verwaltung. Die Zellen stehen in der Berechtigungsmatrix (4.37). Zwei Zusagen sitzen serverseitig und sind nicht umgehbar: Nur eine
 BetreiberIn vergibt oder entzieht die Rolle, und das **letzte**
 BetreiberIn-Konto lässt sich weder zurückstufen noch löschen
 (`ist_letzte_betreiberin()`).
@@ -14193,7 +14232,7 @@ legt eine neue an).
 Die Bibliothek kennt beide Richtungen: den **Lesenachweis** dieser Seite und
 von `wiederherstellen.php` (die Seite legt an, der Mensch tippt ab) und den
 **Schreibnachweis** des Notzugangs (die Seite nennt den Namen, der Mensch
-legt an; 4.99q). Die Register-Zeile Z44 zählt jede Kopie der Mechanik
+legt an; 4.38). Die Register-Zeile Z44 zählt jede Kopie der Mechanik
 außerhalb der Bibliothek; ihre Decke ist 0. Die drei Muster
 (`install-nachweis-`, `wiederher-nachweis-`, `zweitfaktor-notweg-`) sperrt
 die `.htaccess` und schließt `.gitignore` aus.
@@ -14230,23 +14269,7 @@ aktiv? Einstellungen der Uhr-App (Server-Domain, ID, Schlüssel) gesetzt?
 Uhr online (Handy-Kopplung/WLAN)? Anzeige „Sync ausstehend" verschwindet nach
 erfolgreichem Upload. *Bei Garmin liegen diese Einstellungen in Garmin Connect.*
 
-## 8. Backlog
-
-Die offenen Punkte stehen in **`Backlog.md`**, die erledigten wörtlich in
-**`Backlog-Erledigt.md`** (seit Konzept SD, 26.09.2026). Jeder offene Eintrag
-beginnt mit einer Kopfzeile — Nummer, Titel, `gehört zu` (eine Kennung der
-Fahrplan-Tabelle des Rahmenplans oder eines von vier festen Wörtern),
-`Stand`, `seit` — und hat höchstens 20 Zeilen; die Regeln stehen im Kopf der
-Datei. Verweise aus Code und Dokumentation nennen die Nummer (z. B. „Backlog
-Nr. 10"); sie löst in genau einer der beiden Dateien auf, und
-`tools/quelltext/bestand.py` (Regel `backlog`) hält beide zusammen frei von
-Doppelungen. Die Übersicht nach Ziel und Stand liefert
-`tools/steuerung/uebersicht.py`; die Decken der Steuerungsdokumente hält
-`tools/steuerung/decken.py` (Konzept SD, `tools/steuerung/LIESMICH.md`).
-
----
-
-## Konto-Backups (A8, seit Web 5.9.0; Name seit Web 15.2.0, E-S8-06)
+## 14. Konto-Backups (A8, seit Web 5.9.0; Name seit Web 15.2.0, E-S8-06)
 
 **Zweck.** Die Verwaltung soll Konten sichern und wiederherstellen können, ohne
 Einblick in die Daten zu bekommen. Der Serverteil war im Kern vorhanden:
@@ -14358,7 +14381,7 @@ Der letzte Schritt ist Absicht: Das Feld `daten` **ist** ein Backup — dieselbe
 Nutzlast wie in einer `.edbak` (seit Web 8.0.0 Version 7) —, und ein zweiter
 Rückspielpfad wäre eine zweite Stelle, an der dieselben Fehler zu machen sind.
 
-### Aufbewahrung und Verdrängung (seit Web 9.8.0)
+### 14.1 Aufbewahrung und Verdrängung (seit Web 9.8.0)
 
 `edbak_verdraengen()` läuft nach **jedem** Sichern eines Kontos und entfernt,
 was über der Aufbewahrung liegt. Keine Altersgrenze: Bei rein manueller
@@ -14378,7 +14401,7 @@ gelesen** wurde (`edbak_paket_kopf_lesen()` als Gegenprobe in
 `edbak_sicherung_erzeugen()`). Ein ZIP, das sich nicht öffnen lässt, ist genau
 der Fall, in dem man den alten Stand noch braucht.
 
-### Der Auftrag „Alle sichern" (seit Web 12.0.0)
+### 14.2 Der Auftrag „Alle sichern" (seit Web 12.0.0)
 
 Er läuft **in Schüben**: von der Schaltfläche, solange die Anfrage Zeit hat
 (`SICHERN_BUDGET`, 20 s), und vom Wartungsjob `adminbackup` weiter. Der
@@ -14401,7 +14424,7 @@ Die zweite Ausnahme folgt derselben Regel wie
 `edbak_verzeichnis_abgleichen()`, das eine Freigabe auf eine nicht mehr
 vorhandene Datei löscht: Eine Freigabe und die Datei dazu gehören zusammen.
 
-### Die NutzerInnen-Liste (E-P3-41, seit Web 9.9.0)
+### 14.3 Die NutzerInnen-Liste (E-P3-41, seit Web 9.9.0)
 
 `admin_users.php` zeigt vier Statuskacheln, eine Suche, fünf Filter, sechs
 sortierbare Spalten und **50 Konten je Seite**. Zwei Kacheln, zwei Filter und
@@ -14457,7 +14480,7 @@ Referenz, damit `edbak_marke_setzen()` den neuen Wert nachziehen kann). Ohne das
 holte die Liste das Erinnerungsintervall je Zeile aus der Datenbank: bei 304
 Konten 304 Abfragen und 27,7 ms.
 
-### Die Kontoseite (E-P3-41, seit Web 9.8.0)
+### 14.4 Die Kontoseite (E-P3-41, seit Web 9.8.0)
 
 Alles zu **einem** Konto liegt auf `admin_user.php?id=…`: Kontodaten (ein
 Formular, ein Speichern), Geräte, die Konto-Backups **dieses** Kontos und die
@@ -14514,7 +14537,7 @@ Wiederherstellungsschlüssel ist ein neu aufgesetztes Konto nicht
 wiederherstellbar. Das ist kein Mangel der Umsetzung, sondern die Folge der
 Ende-zu-Ende-Verschlüsselung — der Schlüssel existiert nirgends sonst.
 
-### Die Regelseite (seit Web 9.10.0)
+### 14.5 Die Regelseite (seit Web 9.10.0)
 
 `admin_sicherungen.php` trägt seit O9c nur noch, was für **alle** Konten gilt.
 Die Aufteilung über die drei Seiten:
@@ -14542,7 +14565,7 @@ Klick der älteste — die Reihenfolge sorgt selbst dafür, dass wiederholtes
 Klicken konvergiert. Gemessen: 222 ms je Konto mit 82 Einsätzen, 7 ms für ein
 leeres.
 
-### Die wöchentliche Erinnerung an die Verwaltung (seit Web 9.10.0)
+### 14.6 Die wöchentliche Erinnerung an die Verwaltung (seit Web 9.10.0)
 
 **Es gibt keinen Cron.** Einziger Zeitgeber ist `run_cleanup_if_due()`
 (`db.php`), der huckepack auf der ersten Anfrage des Tages läuft — aus
@@ -14567,7 +14590,7 @@ Abschalten: Einstellungen → Backups → „Erinnerung an Admins per E-Mail".
 Beim Einschalten wird `adminbackup_mail_last` geleert, damit die erste
 Erinnerung nicht im Rhythmus einer abgeschalteten Zeit hängt.
 
-### Das Logo der Installation (E-P3-19/20, einstellbar seit Web 9.10.0)
+### 14.7 Das Logo der Installation (E-P3-19/20, einstellbar seit Web 9.10.0)
 
 Drei Ebenen, von unten nach oben:
 
@@ -14594,12 +14617,12 @@ steht (F-P3-AN). `pw_handling.php` lädt dafür `session_lib.php`.
 
 **Der Platzhalterhinweis** an der Logo-Karte fragt die Datei, nicht eine
 Zahl im Code: `logo_platzhalter_liegt()` liest die ersten 400 Byte von
-`gen-em_logo_fahrzeug.svg` und `…_weiss.svg` und sucht das Wort „PLATZHALTER"
+`gen-em_logo_nef.svg` und `…_weiss.svg` und sucht das Wort „PLATZHALTER"
 im Kopfkommentar. Er verschwindet damit von selbst, sobald die echten Dateien
 liegen — sie ersetzen den Platzhalter 1:1 (gleicher Name, gleicher `viewBox`).
 
 
-### Installation und Rechtstexte (R32, seit Web 9.11.0; Installation seit Web
+### 14.8 Installation und Rechtstexte (R32, seit Web 9.11.0; Installation seit Web
 15.2.0, Rechtstexte wieder eigene Seite seit Web 21.1.0)
 
 **Die Anwendung liefert keinen Rechtstext mit.** Was darin steht, ist Sache der
@@ -14728,7 +14751,7 @@ Adminrolle würde sonst bis zur nächsten Anmeldung weitergelten.
 > `sitzung_starten('lesend')` verwirft eine Sitzung mit `user_id`, aber ohne
 > passende Bindung, **ohne zu schreiben**; die Seite sieht dann niemanden.
 > Beendet wird sie hier nicht — das tut die nächste angemeldete Seite mit
-> Grund (4.99q, „Die Sitzungsbindung").
+> Grund (4.38, „Die Sitzungsbindung").
 
 Ohne `config.php` leitet sie auf `install.php` um, wie `login.php` es tut. Ein
 Impressum ist das erste, was jemand auf einer frischen Installation aufruft — es
@@ -14737,10 +14760,24 @@ darf keinen weißen Fehler zeigen.
 #### Grenzen
 
 - **Die Content-Security-Policy ist die zweite Verteidigungslinie** hinter dem
-  Renderer (seit Web 20.7.0, 5c). Hier stand bis Web 21.1.0 „keine
+  Renderer (seit Web 20.7.0, 8). Hier stand bis Web 21.1.0 „keine
   Content-Security-Policy".
 - **Kein Versionsstand der Texte.** Wer den Text überschreibt, überschreibt ihn;
   eine Historie gibt es nicht. Für ein Dokument, dessen alte Fassung
   rechtlich zählen kann, ist das eine bewusst offene Stelle.
 - **Die Vorschau zeigt seit Web 21.1.0 das Getippte** (Endpunkt oben); ohne
   JavaScript den gespeicherten Stand.
+
+## 15. Backlog
+
+Die offenen Punkte stehen in **`Backlog.md`**, die erledigten wörtlich in
+**`Backlog-Erledigt.md`** (seit Konzept SD, 26.09.2026). Jeder offene Eintrag
+beginnt mit einer Kopfzeile — Nummer, Titel, `gehört zu` (eine Kennung der
+Fahrplan-Tabelle des Rahmenplans oder eines von vier festen Wörtern),
+`Stand`, `seit` — und hat höchstens 20 Zeilen; die Regeln stehen im Kopf der
+Datei. Verweise aus Code und Dokumentation nennen die Nummer (z. B. „Backlog
+Nr. 10"); sie löst in genau einer der beiden Dateien auf, und
+`tools/quelltext/bestand.py` (Regel `backlog`) hält beide zusammen frei von
+Doppelungen. Die Übersicht nach Ziel und Stand liefert
+`tools/steuerung/uebersicht.py`; die Decken der Steuerungsdokumente hält
+`tools/steuerung/decken.py` (Konzept SD, `tools/steuerung/LIESMICH.md`).

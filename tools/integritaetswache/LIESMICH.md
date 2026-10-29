@@ -31,7 +31,7 @@ unbemerkt (F-R17-15).
 
 **0 Abweichungen, 0 nicht erreichbar**; Teil 3 „6 gesperrt", „3 von 3 Kopien
 nicht ausgeliefert"; Selbstprobe **51 / 0** (25.10.2026). **Ist sie rot:**
-`docs/Technik.md` 7, „Die Integritätswache ist rot" — zuerst nichts
+`docs/Technik.md` 13, „Die Integritätswache ist rot" — zuerst nichts
 überschreiben.
 
 ## Was es nicht kann

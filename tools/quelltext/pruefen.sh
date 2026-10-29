@@ -10,7 +10,7 @@
 #
 # Namen:   installweiche sitzungshaertung csp jobregister migrationsregister
 #          behandler linkprobe vollstaendigkeit textprobe bestand pysyntax
-#          handbuch anker kennzeichnung fremdsummen
+#          handbuch anker kennzeichnung fremdsummen dokumente
 #
 # Vor PK-04 waren das acht Ordner mit acht Anleitungen und acht
 # Aufrufkonventionen; die Messungen darunter sind unverändert (Abnahme von
@@ -22,20 +22,21 @@ cd "$WURZEL" || exit 1
 
 NAMEN=(installweiche sitzungshaertung csp jobregister migrationsregister
        behandler linkprobe vollstaendigkeit textprobe bestand pysyntax handbuch anker
-       kennzeichnung fremdsummen)
-# Die dreizehn mit eingebauter Selbstprobe (`behandler` seit P5c/AP3, `anker` seit
-# P5c/AP9, `kennzeichnung` seit R4-06, `fremdsummen` seit R17-26). `linkprobe`
+       kennzeichnung fremdsummen dokumente)
+# Die vierzehn mit eingebauter Selbstprobe (`behandler` seit P5c/AP3, `anker` seit
+# P5c/AP9, `kennzeichnung` seit R4-06, `fremdsummen` seit R17-26, `dokumente`
+# seit R17-27). `linkprobe`
 # und `vollstaendigkeit` haben keine und hatten vor dem Umzug auch keine — das
 # ist kein Rückschritt, sondern ein Rest, den E-PK-24 mit dem gemeinsamen
 # Rahmen erst noch einlöst. `textprobe` hatte eine, hinter `--probe`, und sie
 # lief bis BR-05 nirgends — `bestand` (Regel `selbst`) hält die Liste seither
 # gegen den Code.
 SELBST=(installweiche sitzungshaertung csp jobregister migrationsregister behandler
-        textprobe bestand pysyntax handbuch anker kennzeichnung fremdsummen)
+        textprobe bestand pysyntax handbuch anker kennzeichnung fremdsummen dokumente)
 
 starter() {   # starter <name> — womit die Datei gefahren wird
     case "$1" in
-        linkprobe|vollstaendigkeit|textprobe|bestand|pysyntax|handbuch|fremdsummen)
+        linkprobe|vollstaendigkeit|textprobe|bestand|pysyntax|handbuch|fremdsummen|dokumente)
                                               echo "python3 tools/quelltext/$1.py" ;;
         *)                                    echo "php tools/quelltext/$1.php" ;;
     esac

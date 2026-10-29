@@ -1,6 +1,6 @@
 # Gen-EM NAdoku — Handbuch
 
-*Stand: 06.09.2026 · Für die technische Struktur siehe `Technik.md`, für
+*Für die technische Struktur siehe `Technik.md`, für
 Änderungen `CHANGELOG.md`.*
 
 > **Aufbau.** Kapitel 1 bis 10 gelten für **alle**: die Uhr, die
@@ -13,7 +13,8 @@
 
 Gen-EM NAdoku dokumentiert Notarzteinsätze direkt vom Handgelenk — luft-
 gebunden wie bodengebunden (RTH, NEF, NAW): Eine Uhr-App (derzeit für
-Garmin-Uhren: Fenix 6 Pro, Forerunner 945, Venu 3s) erfasst Einsatzphasen
+Garmin-Uhren — rund hundert Modelle, gebaut und geprüft an Fenix 6 Pro,
+Forerunner 945, Venu 3s; dazu eine Wear-OS-Uhr mit der Android-App) erfasst Einsatzphasen
 mit Zeitstempeln, GPS-Tracks und
 Reanimations-Ereignisse und lädt alles automatisch auf einen eigenen Server.
 Die Web-Oberfläche zeigt Diensttage mit Karte, Einsatz-Details
@@ -2695,9 +2696,10 @@ Meldung nicht: Das entscheidet die Einstellung deines Browsers — meist der
 Download-Ordner, bei entsprechender Einstellung fragt er nach. Dasselbe gilt
 für den Datenexport unter **Einstellungen → „Export"**.
 
-**Ältere Backups kannst du weiterhin einspielen.** Umgekehrt gilt das
-nicht: Eine Datei aus Web 11.1.0 lässt sich in einer älteren Installation
-nicht öffnen — sie sagt das aber deutlich, statt „Passwort falsch" zu melden.
+**Welche Backups sich einspielen lassen:** seit Web 23 nur noch eines ab
+Web 22.5.0 (siehe unten, „Orte, Reanimation und GPS-Daten"). Umgekehrt lässt
+sich eine neuere Datei in einer älteren Installation nicht öffnen — sie sagt
+das aber deutlich, statt „Passwort falsch" zu melden.
 Wählst du versehentlich ein *einzelnes Teil* aus (etwa weil du die Datei
 entpackt hast), sagt die Anwendung auch das.
 
@@ -2792,9 +2794,11 @@ Passwort vor statt des gespeicherten.
 Nicht geeignet ist das Kontopasswort, wenn die Datei an jemand anderen gehen
 soll — dann bekommt der Empfänger das Anmeldepasswort mit.
 
-**Backup-Dateien bleiben lesbar, auch nach einem Update.** In der Datei steht
-seit 5.0.0 vermerkt, mit welchen Einstellungen sie verschlüsselt wurde. Ältere
-Dateien lassen sich unverändert öffnen. Kommt eine Datei aus einer *neueren*
+**Ein geändertes Passwort macht ein Backup nicht unlesbar.** In der Datei steht
+seit 5.0.0 vermerkt, mit welchen Einstellungen sie verschlüsselt wurde; das
+Passwort, mit dem du sie gesichert hast, öffnet sie weiter. Einspielen lässt
+sich seit Web 23 aber nur ein Backup ab Web 22.5.0 (siehe oben). Kommt eine
+Datei aus einer *neueren*
 Fassung des Programms, sagt die Meldung genau das — und nicht „Passwort
 falsch".
 
@@ -3113,11 +3117,10 @@ Option versprach.
   wird, gehört es zu den geschützten Angaben und steht nur noch mit Haken in
   der Datei.
 - **Weitere Rettungsmittel** („RTW Talwang") — Organisationskennungen.
-- Der **Verlauf einer Reanimation** älterer Einsätze, ohne Angabe, wen sie
-  betraf. Bei Einsätzen, deren Reanimation schon verschlüsselt liegt, steht er
-  seit Web 22.4.0 nur noch mit Haken in der Datei: Er geht nur mit deinem
-  Passwort auf, und ein Export ohne Haken fragt nicht danach. Bis alle alten
-  Einsätze umgestellt sind, ist eine Datei ohne Haken deshalb gemischt.
+- *Der **Verlauf einer Reanimation** stand hier bis Web 22.3.x. Seit Web
+  22.4.0 liegt er verschlüsselt und steht nur noch mit Haken in der Datei; er
+  geht nur mit deinem Passwort auf, und ein Export ohne Haken fragt nicht
+  danach. Seit Web 23 liegt jede Reanimation verschlüsselt.*
 - Die **Zeitpunkte** der Phasen. Sie tragen Alarmzeit, Endzeit und Dauer.
 - Der Haken **abweichende Besatzung**. Er sagt nur, *dass* sie abwich — sonst
   wäre nicht mehr zu erkennen, dass die leeren Namensspalten leer *gemacht*
@@ -3161,8 +3164,9 @@ Exportdatei ist zum Weitergeben gedacht.
 Exportierst du **ohne** personenbezogene Angaben, erscheint unter dem Kästchen
 ein Hinweis. Bis Web 5.7.0 sagte er, die Datei sei trotzdem personenbezogen —
 das stimmte damals und stimmt seit Web 5.8.0 nicht mehr. Was bleibt, sind
-**Betriebsangaben**: Einsatzzeiten, Transportziele, weitere Rettungsmittel und
-der Verlauf einer Reanimation. Kein Personenbezug, aber auch nichts, was ohne
+**Betriebsangaben**: Einsatzzeiten, Phasen und weitere Rettungsmittel —
+Transportziele und Reanimation gehören seit Web 22 zu den geschützten Angaben
+und fehlen ohne Haken. Kein Personenbezug, aber auch nichts, was ohne
 Weiteres in fremde Hände gehört. Der Schutz schaltet sich deshalb **nicht** von
 selbst ab; die Entscheidung bleibt bei dir. Zum Öffnen wird
 ein Zusatzprogramm gebraucht: **7-Zip** unter Windows, **Keka** oder **The
@@ -3771,7 +3775,7 @@ womit aufgezeichnet wurde. Jetzt bleibt sie am Einsatz stehen.
 **Sie wird nicht nachgezogen.** Koppelt dasselbe Gerät später neu oder wird sein
 Modellname nachträglich aufgelöst, ändert das an bestehenden Einsätzen nichts —
 dort steht weiter, was beim Anlegen galt. Sichtbar ist die Angabe im
-CSV-Export (Abschnitt 8), nicht in der Einsatzansicht.
+CSV-Export (Abschnitt 7.1), nicht in der Einsatzansicht.
 
 Ausgewertet wird die Gerätekennung unter Betrieb → Statistik (Abschnitt
 12.2): welche Modelle koppeln und aus welcher Quelle ein Einsatz stammt. Die
@@ -5255,7 +5259,7 @@ zurücksetzt, wenn Handy und Codes fehlen. Blau „prüft" mit Weg und Dauer:
 „openssl" ist der schnelle, „reines PHP" der langsamere, beide tragen. Orange
 „abgeschaltet": Der Selbsttest ist gescheitert, der Rückweg wird bei der
 Anmeldung nicht angeboten; Codes und das Zurücksetzen durch die Verwaltung
-gehen weiter. Was dann zu tun ist, steht im Runbook (`docs/Technik.md` 7).
+gehen weiter. Was dann zu tun ist, steht im Runbook (`docs/Technik.md` 13).
 
 **Eine Testmail an dich selbst.** Im Kopf der Karte **E-Mail** steht seit
 Web 19.3.0 der Knopf **„Testmail an mich"**. Er schickt eine kurze Nachricht
@@ -5376,7 +5380,7 @@ Programm ablegen und hat damit alles — dagegen hilft keine Seite der
 Anwendung. Halte deshalb die Zugänge beim Hoster so sicher wie dein
 Passwort. **Und:** Hast du auch den Zugang zur Datenbank verloren, hilft der
 Notzugang nicht — dann führt der Weg über den Hoster und das
-Wiederanlaufpaket. Das Runbook in `docs/Technik.md` 7 nennt alle vier Wege in
+Wiederanlaufpaket. Das Runbook in `docs/Technik.md` 13 nennt alle vier Wege in
 ihrer Reihenfolge, als letzten das SQL von Hand.
 
 #### Die Zeile „Verbindungen" (seit Web 20.13.0)
@@ -5772,7 +5776,7 @@ Updates verlangt die Rolle **BetreiberIn**, und wenn ausgerechnet die
 ausstehende Migration diese Rolle einführt, kommt niemand auf die Seite, die
 sie ausführen müsste. Der Weg heraus führt über das Datenbankwerkzeug des
 Hosters (phpMyAdmin oder gleichwertig) — er steht mit den genauen Schritten im
-Runbook (`Technik.md`, Abschnitt 7). Danach steht die Migration hier als
+Runbook (`Technik.md`, Abschnitt 13). Danach steht die Migration hier als
 **„nicht nötig"**, und ein Druck auf „Ausstehende ausführen" trägt den Vermerk
 nach.
 
@@ -5902,7 +5906,7 @@ den Knopf dann noch einmal drücken.
 (Abschnitt 12.9) — erzeugen, kopieren, erneuern oder die Abfrage ganz
 abschalten. Bis dahin stand es nur in der `config.php`. **Einmal nach dem Update auf Web 23.1.0 sollten beide erneuert
 werden**, weil das alte, gemeinsame Token in den Zugriffsprotokollen steht;
-die Schrittfolge steht im Runbook (`Technik.md` 7).
+die Schrittfolge steht im Runbook (`Technik.md` 13).
 
 ### 12.5 Servereinstellungen
 
@@ -6388,7 +6392,7 @@ Seite; P5c/AP9.)*
 **Der Weg zurück** heisst `wiederherstellen.php` und wird genau einmal
 gebraucht: wenn alles weg ist. Er arbeitet nur auf einer **leeren** Datenbank
 und verlangt einen Nachweis, dass man Zugriff auf das Verzeichnis der
-Anwendung hat. Die Schritte stehen im Runbook (`docs/Technik.md`, Abschnitt 7);
+Anwendung hat. Die Schritte stehen im Runbook (`docs/Technik.md`, Abschnitt 13);
 die Seite selbst führt durch sie hindurch.
 
 **Einmal im Halbjahr ausprobieren.** Ein Backup, das nie zurückgespielt
@@ -6404,7 +6408,7 @@ wurde, ist eine Vermutung.
 `config.php` aus dem Wiederanlaufpaket daneben legen · Backup-Datei nach
 `sicherungen/eingang/` ·
 `wiederherstellen.php` · anmelden · **Betrieb → Updates** · **Aufräumen**.
-Ausführlich steht es im Runbook, `docs/Technik.md`, Abschnitt 7.
+Ausführlich steht es im Runbook, `docs/Technik.md`, Abschnitt 13.
 
 **Aufräumen nimmt die Backup-Datei mit** (seit Web 23.3.2). Der Knopf am Ende
 löscht den ausgepackten Klartext, die Nachweisdatei und die Datei in
@@ -6424,7 +6428,7 @@ umgehüllt. Die Liste zeigt einen Stand von vorher mit **„bisheriger
 Schlüssel"**, solange der Wechsel läuft — er lässt sich dann weiter
 herunterladen und einspielen —, und danach mit **„anderer Schlüssel"**:
 Öffnen lässt er sich dann nur noch mit dem Wert vom bisherigen Blatt
-(Runbook, `docs/Technik.md` 7); hier herunterladen lässt er sich dann nicht
+(Runbook, `docs/Technik.md` 13); hier herunterladen lässt er sich dann nicht
 mehr, nur löschen. Neue Stände tragen seit Web 21.12.0 die Kennung ihres
 Schlüssels im Kopf. Wechselt der Schlüssel, während ein Stand gerade
 versiegelt wird, fängt die Anlage das Versiegeln mit dem neuen von vorn an

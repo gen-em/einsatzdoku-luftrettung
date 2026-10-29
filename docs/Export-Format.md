@@ -210,7 +210,7 @@ blieben sie stehen (A9). Seit Web 22.4.0 auch „Transportziel" (E-S11-53).
 | 30 | Kilometer |
 | 31 | Notizen * |
 
-31 Spalten, davon 16 geschützte. Die Beschriftungen folgen dem Wortlaut aus
+31 Spalten; die geschützten tragen in der Tabelle ein Sternchen (bis R17-27 stand hier „16 geschützte", seit `transport_dest` verschlüsselt ist, sind es 17). Die Beschriftungen folgen dem Wortlaut aus
 `server/mission_fields.php` — die Tabelle soll dieselben Begriffe verwenden wie
 das Eingabeformular.
 
@@ -376,7 +376,7 @@ verworfen — maßgeblich ist `typ`.
 
   > **Warum das ausdrücklich dasteht.** Seit Web 20.8.0 hängt der Name dieser
   > Anlage an einer Einstellung (`instanz_kurz()`, siehe `docs/Technik.md`
-  > 5d) und lässt sich umbenennen. **Dieses Feld ist davon ausgenommen**, und
+  > 9) und lässt sich umbenennen. **Dieses Feld ist davon ausgenommen**, und
   > zwar nach dem Format selbst: GPX 1.1 beschreibt `creator` als *„the name
   > and URL of the software that created your GPX document"* — es benennt das
   > **erzeugende Programm**. Wer die Anwendung aufsetzt, hat sie nicht

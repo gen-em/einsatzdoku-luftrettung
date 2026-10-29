@@ -92,6 +92,75 @@ Kein Schema, kein `update.php`.
   Größengrenze) bleiben in der Datei und im Panel nur lesbar, bis sie im
   Alltag stören (E-R17-72 (4)).
 
+### Mit dabei: Die Dokumentation beschreibt den Bestand (R17-27)
+
+Schritt 12b, Paket R17-27 (Befunde F-R17-09, -10, -25, -27, -29, -59; Backlog
+Nr. 188). Kein Code der Anwendung; ausgeliefert wird davon nur das Handbuch
+(`server/doku/`), und die Fassung zählt es nicht.
+
+#### Geändert
+
+- **`docs/Technik.md` ist fortlaufend nummeriert.** Mit 14 700 Zeilen stand
+  sie nicht mehr in Reihenfolge: Die Abschnitte 4.99a2 bis 4.99c lagen
+  hinter „5. Uhr-App", 4.99d bis 4.99g hinter 5.2b, 4.99p bis 4.99s vor 4.99l,
+  „4.98a", „4.99", „5e" und „5e.1" gab es je zweimal, der Ratenschutz war ein
+  Unterabschnitt „5e" mitten in „5d", und die Konto-Backups standen ohne
+  Nummer hinter dem Backlog. Jetzt: Kapitel 1 bis 15, Abschnitte fortlaufend,
+  der Text nur verschoben — gemessen standen vor und nach dem Umsortieren
+  dieselben Zeilen da. Die Verweise in den Dokumenten sind umgestellt; die
+  Kommentare im Code nennen noch die alten Nummern, bis Backlog Nr. 408 sie
+  nachzieht. Was wohin kam, steht eingefroren in
+  `docs/Technik-Gliederung-alt-neu.md` (Entscheidung der Betreiberin).
+- **Die Kopfzeilen „Stand: …" sind fort** — in Handbuch, Technik,
+  Prüfablauf und Sandbox-Setup. Sie nannten Daten zwischen dem 06.09. und dem
+  19.10.2026 über Dokumenten, die seither oft geändert worden waren. Den Stand
+  eines Dokuments kennt Git. Das Bedrohungsmodell behält seine Liste, welcher
+  Teil gegen welche Fassung nachgelesen ist, unter diesem Namen statt
+  „Stand".
+
+#### Behoben
+
+- **Rund sechzig Stellen beschrieben einen Stand, den es nicht mehr gab**
+  (F-R17-29, -59). Das Handbuch sagte in Kapitel 6 zweimal, ältere Backups
+  ließen sich weiter einspielen, und einmal das Gegenteil — seit Web 23 geht
+  nur eines ab Web 22.5.0. Ein Export ohne Haken enthielt laut Handbuch noch
+  Transportziele und Reanimation; beide sind seit Web 22 geschützt.
+  `android/LIESMICH.md` nannte drei Klassen einer Kamera, die es seit Android
+  0.11.0 nicht mehr gibt, `server/vendor/HERKUNFT.md` einen Verwender von
+  phpseclib statt vier, `Technik.md` acht Töpfe mit Leiter statt neun, eine
+  Spalte `role` mit zwei Werten statt vier und über zwanzig Zeilennummern als
+  Fundstellen, die nach den Umbauten seit S5 nicht mehr trafen. Dazu
+  Rundenzahlen, Fassungen des Containers, Schrittzahlen und Pfade, die mit
+  PK-04 umgezogen waren. Wo eine Zahl stand, die ein Werkzeug zählt, steht sie
+  jetzt nicht mehr — oder mit dem Befehl daneben.
+- **Zwei Zusagen waren enger formuliert, als die Anwendung sie hält.**
+  `CLAUDE.md` 4 sagt jetzt, dass Adresssuche und Kartendienste getippte
+  Adresse, gewählte Koordinate und den Kartenausschnitt um den Einsatzort im
+  Klartext bekommen, und wo man sie abschaltet (F-R17-09); und dass die
+  Play-Dienste-Bibliothek in drei Dateien steckt, nicht in einer — der Empfang
+  kann nicht hinter die Schnittstelle (F-R17-27). Die Klartextliste verweist
+  auf `Technik.md` 4.14, die jetzt auch „Namen / Infos" der Bergwacht und die
+  übrigen Klartext-Freitexte nennt (F-R17-25). Im Bedrohungsmodell steht die
+  fehlende Rotation des Inhaltsschlüssels als bewusst offenes Restrisiko
+  (F-R17-10).
+- **Web (Prüfmittel) — kein Werkzeug las die Dokumente** (Nr. 188).
+  `tools/quelltext/dokumente.py` läuft jetzt in Stufe 1: jeder Pfad in
+  `docs/`, `README.md`, `CLAUDE.md` und jeder `LIESMICH.md` gegen den Baum,
+  jede Zahl an einem Verzeichnis gegen `ls`, keine Kopfzeile „Stand:", und
+  die Gliederung von `Technik.md` fortlaufend. Ein Pfad, den es nur auf dem
+  Server, in einem Archiv oder in einer früheren Fassung gibt, steht mit
+  Klasse und Grund in einer Ausnahmeliste. Der erste Lauf fand zehn veraltete
+  Pfade und zwei veraltete Zahlen; über den Stand davor gefahren meldet sie
+  114 Befunde.
+
+#### Bewusst stehen gelassen
+
+- **Die Kommentare im Code und die Arbeitsdokumente** unter `docs/konzepte/`
+  nennen weiter die alte Gliederung. Die Kommentare kommen mit R17-28 (Nr.
+  408); die Konzepte beschreiben den Stand, an dem sie geschrieben wurden.
+- **Der AVV-Satz „Schlüssel in zwei Teilen"** ist ein Rechtstext und folgt
+  mit Nr. 400.
+
 ## [Web 23.4.0] — unveröffentlicht
 
 Schritt 12b, Paket R17-25 — der Inhaltsschlüssel als nicht extrahierbarer

@@ -255,7 +255,7 @@ beide **einzeln** nach.
 
 Salt und Rundenzahl stehen in **allen** Teilköpfen gleich; der Schlüssel wird
 einmal abgeleitet und weitergereicht. Bei zwölf Teilen wären es sonst zwölf
-Ableitungen zu je 320 000 Runden — auf einem gedrosselten Telefon eine knappe
+Ableitungen zu je 600 000 Runden (`KDF_ITER_ZIEL`) — auf einem gedrosselten Telefon eine knappe
 Minute reines Warten, und zwar zweimal: beim Sichern und beim Einspielen.
 
 Wer eine Fassung-4-Datei liest, nimmt Salt und Runden aus dem **Manifest** —
@@ -610,7 +610,7 @@ seit Web 4.1.2 auch:
 ```jsonc
 {
   "format": "einsatzdoku-backup",       // Kennung, immer dieser Wert
-  "version": 12,                        // 8 bis 12 = Verweise, 6/7 = Punktlisten
+  "version": 13,                        // seit Web 22.5.0; einspielbar seit Web 23 nur 13
   "app": "einsatzdoku-notarzt",         // Kennung der Anwendung
   "created_at": "2026-07-20T18:00:00+00:00",   // Export-Zeitpunkt (UTC)
   "user": { "email": "...", "name": "..." },   // Herkunftskonto, wird beim
@@ -855,7 +855,7 @@ seit Web 4.1.2 auch:
 
 Serverseitig liegen die Punkte seit Web 10.0.0 nicht mehr nur als Zeilen in
 `track_points`, sondern je nach Alter als **Blob** in `track_blobs` (Format
-SPUR1, `docs/Technik.md` 4.97). **Von Web 11.0.0 bis 22.4.0 gab das Backup
+SPUR1, `docs/Technik.md` 4.6). **Von Web 11.0.0 bis 22.4.0 gab das Backup
 sie genauso weiter**, statt sie auszupacken: Der Spurteil trug den Blob, wie
 er liegt. **Seit Nutzlast 13 (Web 22.5.0) steht im Spurteil die Punktliste**
 — der Browser öffnet die Stücke (Abschnitt 1.2; bis Web 22.7.0 setzte er
@@ -921,7 +921,7 @@ Server nicht mehr vorhanden. Wer den vollen Stand behalten will, sichert
 Die eingespielten Einsätze tragen ihre alten Daten; seit Web 22.6.0 fasst sie
 der Wartungslauf im Browser zusammen, sobald das Konto die Startseite oder den
 Reiter Backup öffnet, und was älter als 31 Tage ist, dünnt er aus (E-S11-25,
-`docs/Technik.md` 4.99s). Das ist gewollt, sollte aber wissen, wer ein altes
+`docs/Technik.md` 4.40). Das ist gewollt, sollte aber wissen, wer ein altes
 Backup zur Ansicht einspielt. Die Pause der Hintergrundjobs hält ihn **nicht**
 an — er ist kein Job. Bis Web 22.5 taten es die Jobs `verdichtung` und
 `ausduennen` nach zwei Wochen bzw. sechs Monaten.
@@ -1428,7 +1428,7 @@ darf eine Wiederherstellung nicht kosten.
 **`days.created_at` steht nicht in der Datei** (seit Web 21.3.0, Schritt 17,
 R4-15, Nr. 158) — die Nutzlast bleibt, wie sie ist. Die Spalte ist der Anker,
 ob Geräte den Zeitraum eines Diensttags noch fortschreiben (`docs/Technik.md`
-4.99a2). Beim Einspielen wird sie gesetzt wie der Rückfall der Migration:
+4.22). Beim Einspielen wird sie gesetzt wie der Rückfall der Migration:
 `started_at`, ohne eines der Tag um 00:00, höchstens jetzt. Mit der Vorgabe
 der Datenbank stünde an jedem eingespielten Tag die Zeit des Einspielens,
 und ein Gerät schriebe seinen Zeitraum danach drei Tage lang wieder fort.
@@ -1549,7 +1549,7 @@ bricht mit Grund ab, bevor irgendetwas gelesen wird — derselbe Riegel wie beim
 Komplett-Backup.
 
 **Beim Wechsel des Serverschlüssels** (seit Web 21.12.0, `docs/Technik.md`
-4.97c) werden Paket und Begleitdatei **unter demselben Namen** umgehüllt:
+4.9) werden Paket und Begleitdatei **unter demselben Namen** umgehüllt:
 jeder versiegelte Eintrag mit dem bisherigen geöffnet, mit dem neuen
 versiegelt, das ZIP neu gebaut und jeder Eintrag daran mit dem neuen
 geöffnet und gegen die Prüfsumme davor gehalten, erst dann ersetzt. Zweck
@@ -1581,7 +1581,7 @@ Siegel, beim Einspielen wie beim Teilweg des Browsers. Ein Paket der Fassung 2
 | `manifest.json` | Umfang, Schlüsselhüllen, Teileliste, `geschuetzte` |
 | `kopf.json` | Stammdaten, Diensttage, `eintraege_gesamt` |
 | `eintraege/0001.json` … | je 250 Einträge (Einsätze **und** Ruhesegmente) ohne Punktlisten |
-| `spuren/0001.json` … | je Teil eine Liste `{spur_ref, stuecke, stufe, n, fortsetzung?}` — die verschlossenen Stücke, wie sie liegen (seit Web 22.5.0; bis Web 22.7.0 dazu `{spur_ref, blob, stufe, n_original, n}` mit SPUR1 für den Altbestand); seit Web 22.6.0 trägt **jedes Stück seine `stufe`** (1 Gerät, 2 gepackt, 3 ausgedünnt — die Innenform der Stufen 2 und 3 in `docs/Technik.md` 4.99s). Ein Paket aus Web 22.5 ohne Stufe am Stück spielt sich als Stufe 1 ein |
+| `spuren/0001.json` … | je Teil eine Liste `{spur_ref, stuecke, stufe, n, fortsetzung?}` — die verschlossenen Stücke, wie sie liegen (seit Web 22.5.0; bis Web 22.7.0 dazu `{spur_ref, blob, stufe, n_original, n}` mit SPUR1 für den Altbestand); seit Web 22.6.0 trägt **jedes Stück seine `stufe`** (1 Gerät, 2 gepackt, 3 ausgedünnt — die Innenform der Stufen 2 und 3 in `docs/Technik.md` 4.40). Ein Paket aus Web 22.5 ohne Stufe am Stück spielt sich als Stufe 1 ein |
 
 **Ungepackt im ZIP, aber gzip davor.** Bis Fassung 2 packte das ZIP die Teile
 (sie waren blankes JSON). Ein Siegel ist Zufallsrauschen — darüber bringt ein
@@ -1825,7 +1825,7 @@ eigenes Format. Beschlossen in E-S2-19 bis E-S2-21, gebaut in S2/AP8.
 **Nicht enthalten: `config.php`.** Sie trägt das Datenbankpasswort und den
 Serverschlüssel — also genau das, womit sich diese Datei öffnen lässt. Sie
 gehört ins getrennt aufbewahrte Wiederanlaufpaket (`docs/Technik.md`,
-Abschnitt 7).
+Abschnitt 13).
 
 **Das Schlüsselpaar des Rückwegs reist hier mit, und nur hier** (seit Web
 20.43.0, Konzept RW, E-RW-09): `users.rw_oeffentlich`, `rw_privat` und
@@ -2023,7 +2023,7 @@ Drei Wege spielen dieselbe Datei ein:
 3. **Von Hand** über Abschnitt 6.6 und dann Weg 1.
 
 Nach jedem davon gehört der **Migrationslauf** (`update.php`), wenn der Dump
-aus einer älteren Fassung stammt. Das Runbook (`docs/Technik.md`, Abschnitt 7)
+aus einer älteren Fassung stammt. Das Runbook (`docs/Technik.md`, Abschnitt 13)
 führt die ganze Reihenfolge auf.
 
 ### 6.8 Die Rolle im Dump (seit Web 15.0.0)
@@ -2118,7 +2118,7 @@ der Zweitfaktor ausgeschaltet wird.
 ## 7. Archiv des Protokolls (seit Web 20.39.0)
 
 *Code: `server/protokoll_archiv_lib.php`; Betrieb und Entscheidungen:
-`docs/Technik.md` 4.99g.*
+`docs/Technik.md` 4.28.*
 
 Alle 7 Tage (einstellbar 1–31) schreibt der Job `protokoll_archiv` die
 Einträge eines abgelaufenen Zeitraums aus allen sieben Reitern der
@@ -2141,7 +2141,7 @@ den Schlüssel — dieselbe, die das Schlüsselblatt zeigt). Ein Archiv eines an
 die Seite am Namen, ohne es zu öffnen.
 
 **Beim Wechsel des Serverschlüssels** (seit Web 21.12.0, `docs/Technik.md`
-4.97c) bekommt ein Archiv deshalb einen **neuen Namen**: gleicher Beginn,
+4.9) bekommt ein Archiv deshalb einen **neuen Namen**: gleicher Beginn,
 neue Kennung. Weil der Name im Zweck jedes Teils steht, wird jeder Teil
 unter dem neuen Namen versiegelt; im Manifest ändert sich nur `kennung` —
 leere `zeilen` und `gekuerzt` bleiben `{}` (bis Web 21.12.0 wurden sie beim

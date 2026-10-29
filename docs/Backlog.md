@@ -52,8 +52,8 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
 
 | Spanne | Zweig | seit |
 |---|---|---|
-| 400 bis 409 | `claude/new-session-lvb0x0` — Schritt 12b, Pakete R17-20 bis -30 (`Review-R17.md`); R17-18 und -19 auf `claude/modest-edison-byg7ay` und `claude/tender-feynman-3oyo13`, gemergt mit PR #122, bis R17-17 `claude/lucid-cannon-nvv86i`, gemergt mit PR #118; vergeben: 400 bis 403 (401 erledigt) | 26.10.2026 |
-| ab 410 | frei — höchste vergebene Nummer 406; frei blieben 394 bis 399 aus der Spanne von 19 (PR #112 bis #114), 389 aus der von 12a (PR #116), 372 bis 379 aus der von 12 (PR #103), 362 bis 369 aus der von PK, 359 aus der von 18 (PR #101), 348 und 349 aus der von 17, 338 aus der von AR | 20.10.2026 |
+| 400 bis 409 | `claude/new-session-lvb0x0` — Schritt 12b, Pakete R17-20 bis -30 (`Review-R17.md`); R17-18 und -19 auf `claude/modest-edison-byg7ay` und `claude/tender-feynman-3oyo13`, gemergt mit PR #122, bis R17-17 `claude/lucid-cannon-nvv86i`, gemergt mit PR #118; vergeben: 400 bis 408 (401, 404 bis 406 erledigt) | 26.10.2026 |
+| ab 410 | frei — höchste vergebene Nummer 408; frei blieben 394 bis 399 aus der Spanne von 19 (PR #112 bis #114), 389 aus der von 12a (PR #116), 372 bis 379 aus der von 12 (PR #103), 362 bis 369 aus der von PK, 359 aus der von 18 (PR #101), 348 und 349 aus der von 17, 338 aus der von AR | 20.10.2026 |
 
 ---
 
@@ -144,7 +144,7 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      Der Ausweg ist **nicht** eine Merkliste in der Datenbank — die behauptet
      „schon versandt" auch dann noch, wenn die Datei am Ziel gelöscht oder das
      Ziel neu aufgesetzt wurde, und diese Art Lüge fällt erst auf, wenn man das
-     Backup braucht (Begründung in Technik 4.97c). Denkbar ist stattdessen,
+     Backup braucht (Begründung in Technik 4.9). Denkbar ist stattdessen,
      die Liste je Ziel **einmal rekursiv** zu holen, wo das Protokoll es
      hergibt, und nur bei Zweifel nachzufragen. Erst messen, dann bauen.
 
@@ -220,7 +220,8 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      Befund: Rest von Nr. 59 (Speicherung, Web 12.9.0). Gebaut ist
      inzwischen fast alles: die Modelltabelle auf Betrieb → Statistik (S8/AP4,
      Web 15.3.0; 325 Teilenummern auf 173 Modelle), der Nachlöse-Job
-     (P5a/AP11, Web 20.15.0 — `nachaufloesen.php` ist nur noch Weg von Hand)
+     (P5a/AP11, Web 20.15.0 — `geraetemodelle-nachaufloesen.php` ist nur noch
+     Weg von Hand)
      und die Herkunft je Einsatz mit den drei Reitern der Statistik (P5c/AP7,
      Web 20.47.0, E-P5c-18, ohne Vorbedingung — E-P5c-45). Die User-Agent-
      Hälfte („Rechner zählen") ist gestrichen (R36: keine Neuerhebung).
@@ -238,7 +239,7 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      Der Rundlauf der Uhr-Kopplung sollte sechs Fälle belegen; der sechste —
      „Telefon aus der Reichweite" — ist im Simulator **nicht** herstellbar. Wird
      der Server getötet, sieht die App **HTTP 404**, keinen negativen Code
-     (dieselbe Eigenschaft, die `tools/netzprobe/` für den CA-Fehler gemessen
+     (dieselbe Eigenschaft, die `tools/uhr-pruefstand/netzprobe/` für den CA-Fehler gemessen
      hat: eine fehlgeschlagene TLS-Verbindung erscheint als 404). Der Zweig
      „`Keine Verbindung (n)`, Code bleibt stehen, Abfrage läuft weiter"
      (E-S5-25) bleibt damit ungeprüft, und er ist kein Randfall — er ist der
@@ -331,7 +332,7 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      Zu entfernen: beide Endpunkte samt Aufrufern, `KDF_ITER_LISTE` in
      `db.php` (damit auch das Vormerkfach der Anmeldung), die Statuszeile
      „Schlüsselableitung", die Lesetoleranz für `edk1:` (`WRAP_PRAEFIX_RE`)
-     und die Prüfmittel dazu (`anteilprobe/endpunkt.py` Teil E,
+     und die Prüfmittel dazu (`tools/proben/anteil/endpunkt.py` Teil E,
      `umstellungslauf.mjs`, `huelle_stellen.py`). Nicht mitgehen: die
      Formatkennung selbst und die Rotation des Server-Anteils (E-S10-11).
      Reihenfolge: in einem Paket mit Nr. 46, sobald keine Anlage mit
@@ -349,19 +350,16 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      Die Fahrplanzeile zu Schritt 7 nannte acht Tage lang einen Konzeptpfad,
      den es nicht mehr gab; die 34 Löschungen von Fassung 110 (24.09.2026)
      wurden mit `grep` von Hand nachgezogen — zweiter Fall dieses Punkts.
-     Weg: eine Probe nach dem Muster von `tools/linkprobe/`, die jeden Pfad-
-     und Dateinamensverweis in `docs/`, `server/`, `tools/`, `android/`,
-     `watch/` gegen `git ls-files` hält. Sie muss relative Pfade auflösen
-     (`api/day.php` = `server/api/day.php`, sonst über 200 Fehltreffer),
-     eingefrorene Dokumente auslassen (Archive, Changelog, `erledigt/`) und
-     eine begründete Ausnahmeliste führen (`config.php`, `wartung.lock`,
-     Ausgabeordner, geplante Dokumente).
-     Erledigt ist ein Teil: die Ankerprüfung `hilfe.php#…` gegen die
-     Handbuch-Überschriften (`tools/quelltext/anker.php`, Web 21.1.0, P5c
-     E-P5c-86) führt diese Nummer als Anlass.
-     Abnahme: 0 Treffer außerhalb der Ausnahmeliste, 0 ungenutzte Ausnahmen,
-     und die Zahl der geprüften Verweise steht dabei. Zuordnung P6 (R69),
-     früher, wenn vorher ein weiteres Konzept gelöscht wird.
+     Erledigt: die Ankerprüfung `hilfe.php#…` (`tools/quelltext/anker.php`,
+     Web 21.1.0) und **seit R17-27 die Dokumentenprobe**
+     `tools/quelltext/dokumente.py` in Stufe 1: Pfade in `docs/`, `README.md`,
+     `CLAUDE.md` und jeder `LIESMICH.md` gegen den Baum, mit begründeter
+     Ausnahmeliste; dazu Zahlen an Verzeichnissen, „Stand:"-Kopfzeilen und
+     die Gliederung von `Technik.md` (F-R17-59). Sie fand beim ersten Lauf
+     zehn veraltete Pfade und zwei veraltete Zahlen.
+     **Offen:** die Code-Bäume (`server/`, `tools/`, `android/`, `watch/`) —
+     mit Nr. 408, nach dem Kommentardurchgang. Abnahme dann: 0 Treffer
+     außerhalb der Ausnahmeliste, 0 ungenutzte Ausnahmen.
      Werdegang bis 26.09.2026: `docs/Backlog.md@f5bddc2`, Nr. 188.
 
 <!-- -->
@@ -499,10 +497,10 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      Registrierung sieht aus wie eine richtige (E-P5b-13). Gefährlicher ist
      die andere Zahl: Eine Klinikdomain auf der Liste erfährt nie, woran es
      lag. Jede Aktualisierung muss deshalb beide Messungen wiederholen.
-     Erledigt (Web 20.22.0, AP3): Liste (8 883 Domains) und
-     `tools/wegwerfdomains/aktualisieren.py`, das beide Richtungen misst
-     und nicht schreibt, wenn eine echte Domain getroffen wird; die Zeile im
-     Auslieferungs-Runbook (`Technik.md` 7).
+     Erledigt (Web 20.22.0, AP3): Liste (8 883 Domains) und das Werkzeug
+     (seit PK-04 `tools/erzeugen/wegwerfdomains.py`), das beide Richtungen
+     misst und nicht schreibt, wenn eine echte Domain getroffen wird; die
+     Zeile im Auslieferungs-Runbook (`Technik.md` 13).
      Offen: der Stand der Liste — Datum und Zahl — in Betrieb → Status nach
      dem Vorbild der Zeile Gerätemodelle (`status_lib.php`), damit eine
      veraltete Liste sichtbar ist statt still; und die Zahl steht doppelt
@@ -550,7 +548,7 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      was die Betreiberin tut — Migrationen zurücksetzen oder zweite Anlage,
      anmelden, `update.php`, wieder anmelden — vor dem Kreislauftest, dessen
      Meldung („Anmeldung gescheitert: unbekannt") das Schema nicht nennt.
-     Kette II fuhr den Weg von Hand (`Technik.md` 6); das Prüfmittel
+     Kette II fuhr den Weg von Hand (`Technik.md` 12); das Prüfmittel
      fehlt, sein Platz steht seit PK-06 als Kommentar am Ende von `stufe2`.
      Werdegang bis 26.09.2026: `docs/Backlog.md@f5bddc2`, Nr. 234.
 
@@ -624,7 +622,7 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      Speicherplatz auf einer konkreten Anlage; eine höhere Vorgabe änderte
      sie für jede Installation mit. Die Laufzusammenfassung nennt den
      Dateinamen und sagt, dass er verdrängt wird; das Runbook
-     (`Technik.md` 6.6b, Schritt 2) ebenso.
+     (`Technik.md` 12.12, Schritt 2) ebenso.
      Vorschlag an die Betreiberin (Prüfpunkt 28, vor M2): Aufbewahrung auf
      Staging auf 5 setzen; wie viele Tags man rückwirkend reparieren können
      will, weiß nur sie.
@@ -1267,7 +1265,7 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      Verweis „Grenze 2" in 0 (d) (die Grenze ist mit Web 23 gefallen).
      *Preis:* AVV und Nutzungsbedingungen sind auf Produktiv eingespielt;
      eine neue Fassung sperrt den Login bis zur Annahme (`Technik.md`
-     4.99j) — vorher die Ankündigung setzen.
+     4.31) — vorher die Ankündigung setzen.
      *Abnahme:* die neun Ausnahmen der Klasse `Bestand` in
      `textprobe-ausnahmen.json` (`avv-…`, `nb-…`) greifen nicht mehr und
      sind gestrichen, die Textprobe ist grün; P-R17-13 auf Produktiv.
@@ -1307,3 +1305,35 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      Gesamtlauf nachstellen (Bedienprobe WebKit, dann Freigabe Chromium) und
      die Ursache beheben, nicht die Probe wiederholen lassen. *Abnahme:* zwei
      Gesamtläufe `neben` ohne diesen Abbruch.
+
+<!-- -->
+
+407. **Ein Weg der Bedienprobe wackelt in WebKit: „Treffer setzt nur das Kreuz".** · gehört zu: 12b · Stand: offen · seit 28.10.2026
+     *Aufgenommen 28.10.2026 mit R17-27 (F-R17-79), gefunden im Prüfstand von
+     R17-26.* `ap2-treffer-setzt-nur-das-kreuz` meldet in WebKit nach dem
+     Suchtreffer einen Ortschip im Formular, wo keiner sein darf — einzeln
+     1 von 2 Läufen rot, auf dem Stand vor R17-26 (`d0ee64e1`) 1 von 3.
+     Chromium und Firefox grün. Vermutung, nicht gemessen: Der Weg leert das
+     Ortsfeld, bevor das asynchrone Entschlüsseln des Einsatzes es wieder
+     füllt (seit R17-25 liegt der Schlüssel in IndexedDB). Auffällig: Nr. 403
+     läuft im Prüfstand direkt nach diesem Lauf.
+     *Weg:* den Wettlauf belegen (Zeitpunkt des Chips gegen das Ende des
+     Entschlüsselns), dann im Weg auf „Formular geöffnet" warten statt fester
+     Pausen — oder, falls die Anwendung den Chip zu spät setzt, dort beheben.
+     Nicht wiederholen lassen. *Abnahme:* zehn Einzelläufe in WebKit grün und
+     ein Gesamtlauf `neben` ohne diesen Weg.
+
+<!-- -->
+
+408. **Code-Kommentare zeigen auf die alten Abschnittsnummern von `Technik.md`.** · gehört zu: 12b · Stand: offen · seit 28.10.2026
+     *Aufgenommen 28.10.2026 mit R17-27 (Betreiberin: komplett neu
+     nummerieren, Kommentare später).* R17-27 hat `Technik.md` fortlaufend
+     neu nummeriert und die Verweise in den Dokumenten umgestellt; die
+     Kommentare in `server/`, `tools/`, `android/` und `watch/` nennen weiter
+     „Technik.md 4.99q", „5e.2", „6.5" und so fort. Die Zuordnung alt → neu
+     steht in `docs/Technik-Gliederung-alt-neu.md`.
+     *Weg:* im Kommentardurchgang von R17-28 je Verweis die neue Nummer
+     setzen (über die Konkordanz, nicht per Suchen und Ersetzen über bloße
+     Zahlen — „6.5" ist auch ein Teil von „Web 6.5.0"); danach die
+     Dokumentenprobe auf die Code-Bäume erweitern (Nr. 188). *Abnahme:* kein
+     Verweis „Technik.md <alte Nummer>" mehr außerhalb der Konkordanz.

@@ -53,10 +53,14 @@ Dateien wäre er von Hand nicht zu pflegen und beim ersten Austausch falsch.
 
 `ParagonIE\ConstantTime` wird von phpseclib vorausgesetzt (genau eine Stelle:
 `phpseclib3/Common/Functions/Strings.php`) und sonst nirgends benutzt.
-phpseclib selbst wird nur für **einen** Zweck geladen: den SFTP-Adapter in
-`sicherungsziel_lib.php`. Kein anderer Teil der Anwendung berührt es, und der
-Lader `laden.php` wird auch nur dort eingebunden — eine Seite, die keine
-SFTP-Verbindung aufbaut, lädt keine einzige dieser Dateien.
+phpseclib wird für vier Zwecke geladen: den SFTP-Adapter
+(`sicherungsziel_lib.php`), die Signaturen des Rückwegs (`rueckweg_lib.php`,
+seit Web 20.43.0), die Passkeys (`passkey_lib.php`, seit Web 21.10.0) und das
+Schlüsselpaar des Kontos (`kontopaar_lib.php`, über den Lader des Rückwegs).
+`totp_lib.php` bindet den Lader für `ParagonIE\ConstantTime\Base32` ein. Eine
+Seite, die keinen davon braucht, lädt keine einzige dieser Dateien. *(Bis
+R17-27 stand hier „nur für **einen** Zweck" — das war der Stand von S2,
+F-R17-59.)*
 
 **`Parsedown.php` geht am Lader vorbei** und wird von `doku_lib.php` direkt
 eingebunden (`require_once`). Grund: Die Klasse `Parsedown` trägt keinen

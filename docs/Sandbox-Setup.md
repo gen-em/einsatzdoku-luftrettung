@@ -1,6 +1,6 @@
 # Arbeitsumgebung — was sie mitbringt, was nachgeholt wird, was sie nicht kann
 
-*Stand: 19.10.2026 · Prüfablauf: `Pruefablauf.md` · Architektur und Betrieb:
+*Prüfablauf: `Pruefablauf.md` · Architektur und Betrieb:
 `Technik.md` · Arbeitsanweisung: `CLAUDE.md`.*
 
 Die Arbeit an diesem Repositorium findet in einem **Wegwerf-Container**
@@ -9,7 +9,7 @@ was nicht im Repositorium liegt, muss er sich jedes Mal neu holen. Dieses
 Dokument sagt, **was er mitbringt**, **wie das Fehlende beschafft wird** und
 **was auch danach nicht geht**. Es ist die eine Stelle dafür.
 
-Aufgestellt mit **Konzept PK** (PK-01). Es löst `Technik.md` 2a ab; dort
+Aufgestellt mit **Konzept PK** (PK-01). Es löst `Technik.md` 2.1 ab; dort
 steht seither ein Verweis hierher.
 
 > **Der letzte Abschnitt ist der wichtigste.** Eine Umgebung, von der man
@@ -39,24 +39,24 @@ steht seither ein Verweis hierher.
 
 ## 1. Was der Container heute mitbringt
 
-Gemessen am 21.09.2026.
+Gemessen am 28.10.2026 mit `php -v`, `python3 -V`, `docker -v`, `nproc` und
+`free -g`. **Das Abbild wechselt ohne Ankündigung** — es gilt die Messung,
+nicht dieser Absatz; eine Probe, die gestern grün war, kann am Wechsel rot
+werden (Komplettprobe, Nr. 393).
 
-**Im Abbild vorhanden:** PHP **8.4.19** — *am 21.10.2026 gemessen: **8.3.6**,
-und nur diese Fassung (`/usr/bin/php8.3`); das Abbild hat gewechselt, ohne dass
-`aufbauen.sh` es bemerkt. Die Anwendung verlangt mindestens 8.2
-(`PLATTFORM_PHP_MIN`), Produktiv läuft 8.4. Eine Probe, die gestern grün war,
-kann daran rot werden (Komplettprobe, Nr. 393)* — (mit `pdo_mysql`, `mysqli`,
-`openssl`, `gd`, `zip`, `mbstring`), Node **22.22** samt Playwright **1.56**
-und den Engine-Dateien unter `/opt/pw-browsers/` — am 21.09.2026 alle drei,
-seit dem Abbild vom 11.10.2026 **nur noch Chromium** (F-S11-20). *Am
-25.10.2026 gemessen: Das Abbild vom 22.10.2026 bringt Playwright **1.63.0**
-und wieder nur dessen Chromium (`chromium-1243`).* **Das
-Playwright des Abbilds benutzt seit Nr. 393 kein Prüfmittel mehr:**
-`aufbauen.sh` hebt auf die Fassung in seiner Zeile `PW_FASSUNG` an (1.64.1)
-und lädt deren drei Engines (1.3), Python **3.11**
-(deadsnakes) mit `requests` und `cryptography`, Java, `socat`, `zip`,
-`unzip`, `git`, `curl`, `openssl`, Docker **29.3.1**. Vier Kerne, 15 GB
-Speicher.
+**Im Abbild vorhanden:** PHP **8.3.6**, und nur diese Fassung
+(`/usr/bin/php8.3`; die Anwendung verlangt mindestens 8.2,
+`PLATTFORM_PHP_MIN`, Produktiv läuft 8.4) — mit `pdo_mysql`, `mysqli`,
+`openssl`, `gd`, `zip`, `mbstring`; Node **22.22** samt einem Playwright des
+Abbilds und dessen Chromium unter `/opt/pw-browsers/`. **Das Playwright des
+Abbilds benutzt seit Nr. 393 kein Prüfmittel mehr:** `aufbauen.sh` hebt auf
+die Fassung in seiner Zeile `PW_FASSUNG` an und lädt deren drei Engines
+(1.3). Python **3.13** mit `requests` und `cryptography`, Java, `socat`,
+`zip`, `unzip`, `git`, `curl`, `openssl`, Docker **29.9**. Vier Kerne, 15 GB
+Speicher. *(Bis R17-27 standen hier die Messungen vom 21.09., 21.10. und
+25.10.2026 übereinander — PHP 8.4.19, Python 3.11, Docker 29.3.1,
+Playwright 1.56 und 1.63 —, und die Zeile darüber sagte „gemessen am
+21.09.2026"; F-R17-59.)*
 
 **Nicht im Abbild, und ohne diese steht die Hälfte der Prüfmittel:**
 *(Am 26.09.2026 brachte das Abbild MariaDB, ImageMagick und `rsvg-convert`
@@ -520,8 +520,8 @@ Tagesübersicht **unter `/login.php`** — es gibt keine Umleitung. Eine Prüfun
 auf „Adresse enthält login.php nicht mehr" wartet auf etwas, das nie
 eintritt. Das verlässliche Merkmal ist das Verschwinden des Passwortfeldes;
 gemessene Dauer danach 1,1 s. Dass die Anmeldung überhaupt Zeit braucht,
-liegt an der Ableitung im Browser (310 000 Runden, während einer Anhebung
-zweimal).
+liegt an der Ableitung im Browser (`KDF_ITER_ZIEL`, heute 600 000 Runden,
+während einer Anhebung zweimal; hier stand bis R17-27 „310 000").
 
 ---
 

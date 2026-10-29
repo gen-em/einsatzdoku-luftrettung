@@ -1,6 +1,6 @@
 # Quelltextprüfungen
 
-**Anlass: Nr. 148, 170, 188, 205, 208, 238, 248, 283, 293, 315, 318** — fünfzehn Prüfungen, die Quelltext lesen und im Tor laufen (E-PK-24), je Prüfung mit Anlass in der Tabelle.
+**Anlass: Nr. 148, 170, 188, 205, 208, 238, 248, 283, 293, 315, 318** — sechzehn Prüfungen, die Quelltext lesen und im Tor laufen (E-PK-24), je Prüfung mit Anlass in der Tabelle.
 
 ## Aufruf
 
@@ -19,12 +19,13 @@
 | `linkprobe` | jeder Verweis nennt einen Parameter, den sein Ziel liest | Nr. 148, 151 |
 | `vollstaendigkeit` | Klasse ohne Regel, Wert außerhalb `:root`, `style=`; Ton ohne Regel (auch über eine Bedingung); Selektor, dessen Klasse niemand setzt | Nr. 36, 179, 227, 331 |
 | `textprobe` | **sechs Regelklassen** in sichtbarem Text: Luftbegriffe, Binnen-I, E-Mail-Adressen, Netzadressen, reale Namen — diese auch in Kommentaren und im Stylesheet —, und die Zusage der Verschlüsselung, **satzweise** gelesen (Sicht `satz`, seit R17-18), auch in den Store-Texten (Bereich `g`) | B-S4-06, E-PK-08, Nr. 283, F-R17-58 |
-| `bestand` | jedes Werkzeug unter `tools/` gegen `Pruefablauf.md` 6, vierzehn Regeln: Form, Anlass, gerufen, keine lose Datei, keine Backlog-Nummer zweimal; eingehängt in `SELBST`, Tabelle, `pruefablauf.json` und die Tabelle in 4; keine Probe ohne Anlage lädt `db.php`, jeder Riegel steht im Tor; die vier erzeugten Tabellen in `Design.md` sind die Ausgabe von `design.py` (seit R4-25) | Nr. 209, 293, 315, 329 |
+| `bestand` | jedes Werkzeug unter `tools/` gegen `Pruefablauf.md` 6, Regeln (`REGELN`): Form, Anlass, gerufen, keine lose Datei, keine Backlog-Nummer zweimal; eingehängt in `SELBST`, Tabelle, `pruefablauf.json` und die Tabelle in 4; keine Probe ohne Anlage lädt `db.php`, jeder Riegel steht im Tor; die vier erzeugten Tabellen in `Design.md` sind die Ausgabe von `design.py` (seit R4-25) | Nr. 209, 293, 315, 329 |
 | `pysyntax` | jedes Python-Werkzeug unter `tools/` übersetzt, auch mit Warnungen als Fehler | Kette II/AP4: `zustand.py`; Nr. 318 |
 | `handbuch` | Handbuch und „Was ist NAdoku" rendern, UTF-8 streng, kein fremdes Bild | P5b/AP8 |
 | `anker` | jeder Verweis `hilfe.php#…` trifft eine Überschrift des gerenderten Handbuchs | Nr. 188 |
 | `kennzeichnung` | Schloss an jedem verschlüsselten Feld in Formular und Leseansicht, gegen `kennzeichnung-soll.md`; Kleinzeile an jedem Klartext-Freitextfeld des Katalogs | Nr. 170 |
 | `fremdsummen` | die SHA-256 im Herkunftskopf jeder Datei unter `server/assets/vendor/`, nachgerechnet ohne den Kopf und gegen die Tabelle in `Lizenzen.md` 3 | F-R17-50, -51 |
+| `dokumente` | jeder Pfad in den Dokumenten gegen den Baum (Ausnahmen mit Grund in `dokumente-ausnahmen.md`), Zahlen an Verzeichnissen gegen `ls`, keine „Stand:"-Kopfzeile, Gliederung von `Technik.md` | Nr. 188 |
 
 ## Was es braucht
 
@@ -32,7 +33,7 @@
 
 ## Erwartete Zahl
 
-`alle` → **15 von 15 grün**, `--selbstprobe` → **13 von 13**; ohne Schwelle. Die Textprobe meldet nur **neue** Treffer gegen `textprobe-altbestand.json` (neu schreiben mit `--altbestand-schreiben`, nie von Hand).
+`alle` → **16 von 16 grün**, `--selbstprobe` → **14 von 14**; ohne Schwelle. Die Textprobe meldet nur **neue** Treffer gegen `textprobe-altbestand.json` (neu schreiben mit `--altbestand-schreiben`, nie von Hand).
 
 ## Was es nicht kann
 

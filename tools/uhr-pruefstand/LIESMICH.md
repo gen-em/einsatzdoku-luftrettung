@@ -26,7 +26,7 @@ Daneben, je mit Anleitung: `netzprobe/`, `eingabe-probe/`, `krypto-probe/`
 
 ## Was es braucht
 
-`CIQ_GERAETE_URL` mit `devices.tar` und `fonts.tar` (`docs/Technik.md` 5.2b);
+`CIQ_GERAETE_URL` mit `devices.tar` und `fonts.tar` (`docs/Technik.md` 5.6);
 SDK und Simulator-Bibliotheken holt es selbst, seit R17-19 nur mit passender
 SHA-256 (`SDK_SHA256`, F-R17-20); Stufe II `Xvfb`.
 

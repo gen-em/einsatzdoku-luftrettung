@@ -1,6 +1,6 @@
 # Prüfablauf — jede Prüfung einmal, an ihrer Stelle
 
-*Stand: 23.09.2026 · Arbeitsumgebung: `Sandbox-Setup.md` · Architektur und
+*Arbeitsumgebung: `Sandbox-Setup.md` · Architektur und
 Betrieb: `Technik.md` · Steuerung: `Rahmenplan.md` · Arbeitsanweisung:
 `CLAUDE.md`.*
 
@@ -204,9 +204,11 @@ Wer die versionierte Deny-Liste ändert, hebt Lage 2 ebenfalls auf; das fällt
 im Pull Request auf, weil `.claude/settings.json` dann in der Berührung
 steht.
 
-**Heutiger Umfang** (gezählt am 23.09.2026 am Quelltext, nach PK-05): Der
-Arbeitslauf `pruefung.yml` heißt „Prüfung" und führt drei Jobs —
-**`Schon gemessen?`** mit **2** Schritten, `Stufe 1` mit **15** und
+**Heutiger Umfang** (gezählt am 28.10.2026 am Quelltext, R17-27 —
+nachzählen: `awk 'NR>=75 && NR<231 && /^      - /' .github/workflows/pruefung.yml | wc -l`
+für `Stufe 1`): Der Arbeitslauf `pruefung.yml` heißt „Prüfung" und führt drei
+Jobs — **`Schon gemessen?`** mit **2** Schritten, `Stufe 1` mit **16** (bis
+R17-27 stand hier 15, F-R17-29) und
 `Schema gegen …` mit **4**; bis PK-05 waren es in `Stufe 1` **24**, bis BR-03
 **17** — drei Schritte sind in die Quelltextprüfungen gewandert (`bestand`,
 `pysyntax`, `handbuch`), einer kam dazu (`cmark-gfm` bereitstellen). Den
@@ -245,7 +247,7 @@ laufen je Engine einmal** (Grundsatz 8, R87); der Schritt holt alle drei
 samt Bibliotheken mit `playwright install --with-deps`, **in der Fassung
 des Prüfstands**: Sie steht einmal, in `PW_FASSUNG` von
 `tools/sandbox/aufbauen.sh`, und der Schritt liest sie dort (seit Nr. 393,
-`docs/Technik.md` 6.1a). Installiert wird sie aus der Sperrdatei
+`docs/Technik.md` 12.2). Installiert wird sie aus der Sperrdatei
 `tools/kette/stufe2-npm/package-lock.json` mit `npm ci`; nennt die eine
 andere Fassung, ist der Schritt rot (R17-19, F-R17-20). Der Job läuft auf
 `ubuntu-26.04` wie alle.
@@ -271,7 +273,7 @@ im Job `stufe2`, kein Schritt (8).
 ### 2.5 Station E — Produktiv
 
 Beim Tag `web-vX.Y.Z`, nach der Pflichtfreigabe durch die BetreiberIn und
-nach dem Backup-Tor. Der Ablauf steht in `Technik.md` 6; PK ändert ihn
+nach dem Backup-Tor. Der Ablauf steht in `Technik.md` 12; PK ändert ihn
 nicht. Dazu gehören der Zeiger-Zweig `produktion` und die Integritätswache,
 die gegen ihn vergleicht.
 
@@ -283,7 +285,7 @@ dem die Uhr keine Zugangsdaten kennt (`CLAUDE.md` 4): Ein Schlüssel, dessen
 Verlust jede spätere Fassung zu einer anderen Anwendung macht, gehört nicht
 dorthin, wo bei jedem Bau fremder Code mitläuft. **Gebaut mit PK-08**
 (Jobs `android` und `uhr`, `tools/kette/appbau.sh` und `apkablage.py`,
-`Technik.md` 4.97g). **Was die Kette dort prüft:** seit R17-19 zuerst das
+`Technik.md` 4.13). **Was die Kette dort prüft:** seit R17-19 zuerst das
 App-Tor (grüner Job `Stufe 1` auf demselben Baum, bei einem Tag der Commit
 auf `main`, F-R17-17), dann Tag gegen Fassung, den Bau in einem Job ohne
 Geheimnisse und mit Gradle-Verifikation (F-R17-03, -20), das Zertifikat
@@ -437,7 +439,7 @@ Zwei Dinge hängen mit daran, und beide sind gemessen:
 | `server/assets/style.css`, `server/assets/images/gen-em_logo_*.png` | klein | `android-farbabgleich`, `android-bildmarken` | Nr. 334 (R4-04): Die App uebernimmt Farbwerte und Bildmarken aus dem Web (E-S4-22a). Wer sie dort aendert, erfaehrt hier, dass die App nachzieht -- ohne den Android-Bau, der dafuer nichts misst. |
 | `tools/motor.mjs`, `tools/pruefstand/motoren.md`, `tools/zweitfaktor/totp.mjs` | klein | `gpxprobe`, `freigabeprobe`, `fristprobe`, `abmelde-probe`, `containerprobe`, `huellenprobe`, `kontopaarprobe`, `ortsdatenprobe`, `wartungslaufprobe`, `browserprobe-csp`, `bedienprobe`, `bilderlauf`, `stilvergleich`, `kreislauf-csv`, `kreislauf-edbak`, `rueckwegprobe` | Nr. 390 — die Engine-Wahl und das Register gelten fuer jede Browserprobe; wer sie aendert, faehrt alle in drei Engines (R87) |
 
-**Die billigen Riegel laufen in jeder Stufe, ohne Muster:** `syntax-php`, `wortliste`, `vollstaendigkeit`, `kontraste`, `linkprobe`, `anker`, `kennzeichnung`, `fremdsummen`, `bestand`, `syntax-py`, `handbuch`, `installweiche`, `behandler`, `sitzungshaertung`, `cspprobe`, `jobregister`, `migrationsregister`, `rechtstexte`, `kettenaufrufe`, `zaehlung`, `spaltenregister`, `steuerung`.
+**Die billigen Riegel laufen in jeder Stufe, ohne Muster:** `syntax-php`, `wortliste`, `vollstaendigkeit`, `kontraste`, `linkprobe`, `anker`, `kennzeichnung`, `fremdsummen`, `dokumente`, `bestand`, `syntax-py`, `handbuch`, `installweiche`, `behandler`, `sitzungshaertung`, `cspprobe`, `jobregister`, `migrationsregister`, `rechtstexte`, `kettenaufrufe`, `zaehlung`, `spaltenregister`, `steuerung`.
 
 **Stufenregel `migration`:** eine neue Kennung in `server/migration_lib.php` heißt mindestens **haupt** — E-P5c-36, E-P5c-88: Ein Paket mit Migration faehrt die Plattformmatrix, und die laeuft nur in haupt -- dort sind Nr. 238 und Nr. 267 gefunden worden. Ausgeloest von einer NEUEN Kennung im Katalog, nicht von einer Aenderung an der Datei: Die aendert sich auch ohne Migration (P5c/AP2, AP3).
 
@@ -856,7 +858,7 @@ misst mit einem Ersatz-`gradlew` die Umgebung des Gradle-Aufrufs (kein
 `APK_*`, nur die Positivliste, F-R17-03).
 
 **Wer das Läuferabbild wechselt** (die `runs-on`-Zeilen, `docs/Technik.md`
-6.1a), misst vorher dreifach, weil kein Teil allein reicht (Nr. 236):
+12.2), misst vorher dreifach, weil kein Teil allein reicht (Nr. 236):
 Stufe 1 und die Schemaprobe per Handlauf von `pruefung.yml` auf dem
 Arbeitszweig mit dem neuen Label; die Selbstproben der Kette und den
 Uhr-Bau örtlich in einem Container der neuen Ubuntu-Fassung; Stufe 2, die
@@ -957,10 +959,11 @@ hier steht, ist nur, **was grün heißt**:
 | `tools/screenshots/` | 0 Überlauf, 0 Konsolenfehler, 0 Knöpfe falscher Höhe, 0 Karten außerhalb von `main.inhalt`; mit `--etikett NAME` zusätzlich 0 Abweichungen bei Titel und Kopfleiste (P5c/AP1). Rollende Behälter werden genannt und halten nicht auf (R4-08) |
 | `tools/screenshots/` `kontrast.py` | 0 Paare unter ihrem Sollwert, 0 Paare des Stylesheets ohne Eintrag in `PAARE` oder `AUSNAHMEN` (seit R4-08); Selbstprobe alle Fälle grün |
 | `tools/kettenaufrufe/` | 0 Befunde; jeder ungeprüfte Aufruf ist benannt; seit R17-19 dazu jede fremde `uses:`-Zeile an einer SHA mit Fassung und die Ausnahmeliste bei ihren sieben Pfaden (bis Web 23.3.0 acht), `.gitignore` vollständig, keine eingecheckte `server/config.php*` |
-| `tools/quelltext/` `bestand` | 0 Befunde in allen vierzehn Regeln — ohne Decke, ohne Ausnahmeliste (E-BR-01); seit R4-25 stehen die vier erzeugten Tabellen in `Design.md` wie ihr Erzeuger sie ausgibt (Regel `design`) |
+| `tools/quelltext/` `bestand` | 0 Befunde in allen Regeln (`REGELN` in `bestand.py`, heute 15) — ohne Decke, ohne Ausnahmeliste (E-BR-01); seit R4-25 stehen die vier erzeugten Tabellen in `Design.md` wie ihr Erzeuger sie ausgibt (Regel `design`) |
 | `tools/quelltext/` `anker` | 0 Verweise `hilfe.php#…` ohne Ziel im gerenderten Handbuch; Selbstprobe 6 von 6 (falscher Anker rot, Kommentar zählt nicht, `-2` bei gleichem Titel) |
-| `tools/quelltext/` `kennzeichnung` | alle Kennzeichen der Sollliste stehen (heute 20 von 20: zehn Felder, Formular und Leseansicht), jedes Klartext-Freitextfeld trägt die Kleinzeile, 0 Blobfelder ohne Zeile; Selbstprobe 8 von 8 (die beiden Fehler aus 19.1.0 rot, Kommentar zählt nicht) |
+| `tools/quelltext/` `kennzeichnung` | alle Kennzeichen der Sollliste stehen (heute 26 von 26: 13 Felder, Formular und Leseansicht), jedes Klartext-Freitextfeld trägt die Kleinzeile, 0 Blobfelder ohne Zeile; Selbstprobe 8 von 8 (die beiden Fehler aus 19.1.0 rot, Kommentar zählt nicht) |
 | `tools/quelltext/` `fremdsummen` | jede Datei unter `server/assets/vendor/` (heute 6) mit Herkunftskopf, SHA-256 ohne den Kopf gleich der Kopfzeile und gleich der Tabelle in `Lizenzen.md` 3; 0 Befunde; Selbstprobe 7 von 7 (die Falle aus F-R17-50 und die Datei ohne Kopf aus F-R17-51 rot) |
+| `tools/quelltext/` `dokumente` | jeder Pfad in `docs/`, `README.md`, `CLAUDE.md` und jeder `LIESMICH.md` trifft den Baum oder steht mit Klasse und Grund in `dokumente-ausnahmen.md`; jede Zahl an einem Verzeichnis ist eine, die `ls` dort liefert; keine Kopfzeile „Stand:"; die Gliederung von `Technik.md` fortlaufend; 0 Befunde, 0 ungenutzte Ausnahmen; Selbstprobe 10 von 10 (falscher Pfad, ungenutzte Ausnahme, falsche Zahl in Text und Baum, Stand-Zeile, Doppel- und Fehlnummer rot) |
 | `tools/quelltext/` `pysyntax`, `handbuch` | 0 Syntaxfehler und 0 Warnungen (ungültige Escape-Folge, seit R4-07) bei mindestens einer Datei; beide Dokumente rendern, gültiges UTF-8, 0 Bilder aus fremder Quelle |
 | `./gradlew build` | 0 Lint-Fehler, 0 Fehlschläge |
 | `tools/stilvergleich/` | die gemessenen Abweichungen sind genau `geplant.txt` — ohne Datei: 0 (6.10) |
@@ -970,7 +973,7 @@ PK-04 hat zwei davon geändert: E-PK-16 hat der Vollständigkeit die
 Symbolzählung und ihre Schwelle genommen, E-PK-08 hat die Wortliste zur
 Textprobe erweitert.
 
-*Warum hier keine Zahl steht:* `docs/Technik.md` 6.2 trug die Zahl des
+*Warum hier keine Zahl steht:* `docs/Technik.md` 12.3 trug die Zahl des
 Bilderlaufs ein zweites Mal und stand bis Web 20.21.1 auf 366, während die
 Kette längst mit 377 lief. Eine Schwelle hat genau einen Ort, und das ist
 der Aufruf, der sie anwendet — seit PK-03 `tools/pruefstand/pruefablauf.json`.

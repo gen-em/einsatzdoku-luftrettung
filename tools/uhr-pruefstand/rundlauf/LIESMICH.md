@@ -27,7 +27,7 @@ verworfen während seiner letzten Anfrage (Haken in der Kopie von
 
 ## Was es braucht
 
-Uhr-Prüfstand mit Simulator, örtliche Anlage mit eigener CA (`Technik.md` 5.2b),
+Uhr-Prüfstand mit Simulator, örtliche Anlage mit eigener CA (`Technik.md` 5.6),
 Demo-Konto mit Schlüsselpaar; Marke, Schlüssel und Gerät stellt es zurück, auch nach Abbruch.
 
 ## Erwartete Zahl

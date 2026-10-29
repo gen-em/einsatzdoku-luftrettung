@@ -2736,7 +2736,7 @@ hieße, sie zweimal zu benennen; das Inhaltsverzeichnis steht als erstes
 Element im `<main>`, der Sprung landet also dort, wo das Mockup hinwill.
 
 **Eigene Funktion und keine Option an `ui_karte_ende()`:** Die hat als
-einziger Baustein kein `array $o`, dafür 115 Aufrufstellen.
+einziger Baustein kein `array $o`, dafür über hundert Aufrufstellen (`grep -c "ui_karte_ende("`, am 28.10.2026: 154).
 
 ### 9.34 Kopfzeile einer Tagesgruppe (`.imp-daygroup`)
 
@@ -3358,9 +3358,9 @@ Ergebnis.
 
 | Liste | wofür | Vermerke |
 |---|---|---|
-| `streichliste.md` | Klassen des alten Stylesheets, die es nicht mehr gibt, je mit ihrem Ersatz | `[bleibt]` für die, die als Skriptanker im Markup bleiben |
-| `ausnahmen.md` | Werte außerhalb der Token — Geometrie statt Gestaltung | — |
-| `ohne-regel.md` | Klassen im Markup, die keine Regel brauchen | `[bleibt]` = kein Befund, nur eine Zahl · `[offen]` = bleibt Befund, unter eigener Überschrift |
+| `tools/quelltext/vollstaendigkeit-streichliste.md` | Klassen des alten Stylesheets, die es nicht mehr gibt, je mit ihrem Ersatz | `[bleibt]` für die, die als Skriptanker im Markup bleiben |
+| `…-ausnahmen.md` | Werte außerhalb der Token — Geometrie statt Gestaltung | — |
+| `…-ohne-regel.md` | Klassen im Markup, die keine Regel brauchen | `[bleibt]` = kein Befund, nur eine Zahl · `[offen]` = bleibt Befund, unter eigener Überschrift |
 
 **Warum es die dritte gibt.** Die Gegenprobe „im Markup, aber ohne Regel" hat
 den Export-Knopf gefunden — und stellte diesen einen echten Fund neben

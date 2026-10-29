@@ -45,7 +45,7 @@ ausgeliefert.
 
 Das ist keine Vorliebe, sondern folgt aus dem Zweck der Anwendung: Sie
 verschlüsselt Diagnose, Alter, Einsatzort und die übrigen Angaben aus
-`Technik.md` 4.98 im Browser, damit sie den Server
+`Technik.md` 4.14 im Browser, damit sie den Server
 nie im Klartext erreichen. Eine Schrift, die bei jedem Seitenaufruf von einem
 fremden Server geholt wird, meldet demselben Server die IP-Adresse und den
 Zeitpunkt — und damit, *dass und wann* jemand Einsatzdaten bearbeitet. Das ist
@@ -375,7 +375,7 @@ die Kleinzeile unter dem Ortsfeld und die Karte „Datenschutz" im Profil.
 
 Handy- und Wear-OS-App liegen unter `android/` und werden **nicht über den
 Deploy verteilt**, sondern als APK auf den Server gelegt (`server/apk/`,
-Technik 4.97g). Ihre Fremdbestandteile sind deshalb eine eigene Aufstellung —
+Technik 4.13). Ihre Fremdbestandteile sind deshalb eine eigene Aufstellung —
 sie laufen auf dem Telefon, nicht auf dem Server und nicht im Browser.
 
 **So wenige wie möglich, und das ist gemessen.** HTTP läuft über
@@ -431,9 +431,14 @@ anderen Android-Systemschnittstelle. Die AGPL verlangt die Quellen des
 Werks; ein Systemdienst des Betriebssystems gehört nicht dazu (die
 Ausnahme für „System Libraries" in GPL-3 §1, auf die die AGPL sich stützt).
 
-**Sie ist eingegrenzt und die Grenze ist nachprüfbar.** Sie wird an genau
-einer Stelle benutzt: `android/gemeinsam/quelle/…/WearNachrichtenweg.kt`, der
-Umsetzung der Schnittstelle `Nachrichtenweg`. Alles darüber — Puffer,
+**Sie ist eingegrenzt und die Grenze ist nachprüfbar.** Das **Senden** läuft
+an genau einer Stelle: `android/gemeinsam/quelle/…/WearNachrichtenweg.kt`, der
+Umsetzung der Schnittstelle `Nachrichtenweg`. Der **Empfang** kann nicht
+dahinter — das System stellt eine Nachricht einem `WearableListenerService`
+zu —, und so steckt die Bibliothek dazu in den zwei Horchern `HandyHorcher.kt`
+und `UhrHorcher.kt`, die nur weiterreichen; dazu kommt ein Gerätetest
+(`DataLayerErreichbarTest.kt`). *(Bis R17-27 stand hier „an genau einer
+Stelle"; F-R17-27.)* Alles darüber — Puffer,
 Quittung, Nummernvergabe, Bedienbild — kennt nur diese Schnittstelle. Wer
 den Data Layer ersetzen will (Bluetooth unmittelbar, ein anderer Hersteller),
 schreibt eine zweite Umsetzung und rührt nichts anderes an. Genau diese
@@ -587,7 +592,7 @@ sechsmal so viel Risiko, eine echte Domain zu treffen).
 
 **Zur Laufzeit wird nichts geholt** (R36). Der Preis dafür ist, dass die Datei
 altert, und zwar unbemerkt: Eine durchgelassene Registrierung sieht aus wie
-eine richtige. Der Handgriff steht im Runbook (`docs/Technik.md` 7) und als
+eine richtige. Der Handgriff steht im Runbook (`docs/Technik.md` 13) und als
 Backlog Nr. 230.
 
 ---

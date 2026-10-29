@@ -1,7 +1,8 @@
 # Gen-EM NAdoku
 
 Dokumentation von Notarzteinsätzen — **luftgebunden wie bodengebunden**
-(RTH, NEF, NAW). Eine Uhr-App (derzeit für Garmin-Uhren: Fenix 6 Pro,
+(RTH, NEF, NAW). Eine Uhr-App (derzeit für Garmin-Uhren — rund hundert
+Modelle laut `watch/manifest.xml`, gebaut und geprüft an Fenix 6 Pro,
 Forerunner 945, Venu 3s) erfasst Einsatzphasen, GPS-Tracks und
 Reanimations-Ereignisse und lädt sie auf einen eigenen Server; die Web-App
 (PHP/MySQL) zeigt **Diensttage**, Einsätze und Rea-Protokolle und erlaubt
@@ -27,7 +28,7 @@ nimmt sie unverschlüsselt gar nicht an. Ein verschlüsseltes **Backup**
 > angenommen hat; den Schlüssel, mit dem sie verschließen, bekommen sie ohne
 > zweiten Kanal vom Server; und Adresssuche und Karte fragen fremde Dienste.
 > Wer eine Installation betreibt, behandelt den Datenbankzugang entsprechend;
-> Einzelheiten in `docs/Technik.md` 4.98 und im Bedrohungsmodell
+> Einzelheiten in `docs/Technik.md` 4.14 und im Bedrohungsmodell
 > (`docs/Bedrohungsmodell.md`).
 
 Zum Ausprobieren gibt es ein **Demo-Konto** mit erfundenen Daten
@@ -35,7 +36,7 @@ Zum Ausprobieren gibt es ein **Demo-Konto** mit erfundenen Daten
 Änderung selbst zurücksetzt. Es ist die **einzige** Stelle, an der die
 Ende-zu-Ende-Verschlüsselung bewusst ausgesetzt ist — sein Schlüsselmaterial
 liegt auf dem Server, damit die Rücksetzung funktioniert. Näheres im Handbuch
-(Abschnitt 3.2) und in `docs/Technik.md` 4.99a.
+(Abschnitt 3.2) und in `docs/Technik.md` 4.21.
 
 **Einen Demo-Knopf auf der Anmeldeseite gibt es bewusst nicht** — die
 Zugangsdaten stehen hier und im Handbuch, und das genügt. Eine BetreiberIn
@@ -58,6 +59,7 @@ wird nur der Weg hinein.
 |---|---|
 | [`docs/Handbuch.md`](docs/Handbuch.md) | Vorstellung und Bedienung aller Funktionen (Uhr + Web) |
 | [`docs/Technik.md`](docs/Technik.md) | Architektur, Datenmodell, Abläufe, Build, Deployment, **Betrieb/Runbook** |
+| [`docs/Technik-Gliederung-alt-neu.md`](docs/Technik-Gliederung-alt-neu.md) | eingefroren: die Abschnittsnummern von `Technik.md` bis R17-27 und ihre neuen — für Kommentare, Konzepte und Changelog |
 | [`docs/Bedrohungsmodell.md`](docs/Bedrohungsmodell.md) | Was die Anwendung schützt, gegen wen, womit — und wo die Grenzen liegen; die Referenz für Review, S11 und die Rechtstexte |
 | [`docs/CHANGELOG.md`](docs/CHANGELOG.md) | Änderungshistorie |
 | [`docs/JSON-Vertrag.md`](docs/JSON-Vertrag.md) | Schnittstelle Uhr/Fremdquellen → Server |
@@ -75,7 +77,7 @@ wird nur der Weg hinein.
 | [`docs/konzepte/erledigt/Pruefdokument-P2-Terminologie.md`](docs/konzepte/erledigt/Pruefdokument-P2-Terminologie.md) | Prüfdokument dazu |
 | [`docs/konzepte/erledigt/Pruefung-Sofortpaket-22.md`](docs/konzepte/erledigt/Pruefung-Sofortpaket-22.md) | Prüfdokument des Sofortpakets zu Backlog Nr. 22 (Web 7.2.1) |
 | [`tools/referenzdatensatz/LIESMICH.md`](tools/referenzdatensatz/LIESMICH.md) | erfundener Beispielbestand: Demo-Konto **und** Regressionsreferenz |
-| [`tools/quelltext/LIESMICH.md`](tools/quelltext/LIESMICH.md) | elf Quelltextprüfungen im Tor — darunter die Textprobe (neutral von Land und Luft) und der Bestandsriegel |
+| [`tools/quelltext/LIESMICH.md`](tools/quelltext/LIESMICH.md) | die Quelltextprüfungen im Tor — darunter die Textprobe (neutral von Land und Luft) und der Bestandsriegel |
 
 ## Schnellstart
 
@@ -100,4 +102,4 @@ Wartungsmodus an und sagt es.
 
 **Selbst hosten geht ohne das alles:** Dateien hochladen, `update.php`
 aufrufen — fertig. Die Kette ist der bequeme Weg des Projekts, nicht die
-Voraussetzung (Details: Technik-Doku, Abschnitt 6).
+Voraussetzung (Details: Technik-Doku, Abschnitt 12).

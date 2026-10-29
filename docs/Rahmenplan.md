@@ -1,6 +1,6 @@
 # Rahmenplan — Programm „Gen-EM NAdoku" bis v1.0
 
-**Fassung 179 (28.10.2026)** · Steuerung: Reihenfolge, Status, programmweite
+**Fassung 180 (28.10.2026)** · Steuerung: Reihenfolge, Status, programmweite
 Entscheidungen. Verlauf: `Rahmenplan-Verlauf.md`. Fassungen 1–15:
 `Rahmenplan-Archiv.md`; Fassungen 16–124: `Rahmenplan-Archiv-2.md`.
 
@@ -177,7 +177,7 @@ genannten Lücken).
 ## 6. Offene Abnahmen und Zuarbeiten
 
 Eine Zeile je Posten, in drei Gruppen; Bedienweg und Erwartung stehen im
-genannten Prüfdokument oder Runbook (`docs/Technik.md` 7), der Werdegang in
+genannten Prüfdokument oder Runbook (`docs/Technik.md` 13), der Werdegang in
 `Rahmenplan-Archiv-2.md` 6. Erledigt heißt gelöscht, mit Verlaufszeile. **Durchgesehen von der
 Betreiberin am 26.09.2026** (SD-M1, E-SD-34): 27 Zeilen als erledigt
 gestrichen, 6a abgehakt; was steht, ist bestätigt offen.
@@ -200,7 +200,7 @@ gestrichen, 6a abgehakt; was steht, ist bestätigt offen.
 | **Prüfliste P5c/AP8:** `update.php` auf Staging mit der zerstörenden Migration, ein Diensttag mit „Anderem Rettungsmittel" in Luft und Boden, Sicherungsziele ohne FTP-Plakette; auf Produktiv nach dem Tag dasselbe | 10c AP8 | 25.09.2026 | P-P5c-35 bis -38 |
 | **Prüfliste P5c/AP9:** die eigene Datenschutzerklärung nachziehen (P-P5c-40, sofort), Rechtstexte mit Vorschau in Firefox und am Handy, beide Blätter auf Papier, Wartungsmodus nach einem echten Deploy, die Leiste bei 850 und über 950 px Höhe | 10c AP9 | 25.09.2026 | P-P5c-39 bis -44 |
 | **Prüfliste AR:** Gerätetests P-AR-03/-04 (Android 17), -06, -07, -10 (Handy), -11 bis -14 (Wear-OS-Uhr), -15 (Rundlauf gegen die örtliche Anlage), -01 (Bau ohne Spiegel) | AR | 26.09.2026 | `Pruefdokument-AR-Android-Runde.md` |
-| **Prüfliste BV:** P-BV-04 (Wertekasten Hintergrundjobs gegen `Technik.md` 4.97a), P-BV-07 (die zwei Rechtstexte: Höhe, Notizen, Abfahrtort), P-BV-09 (Textbaustein 11.5a neu übernehmen, nach P-P5c-40) | BV | 26.09.2026 | `Pruefdokument-BV-Backlog-Vorgriff.md` |
+| **Prüfliste BV:** P-BV-04 (Wertekasten Hintergrundjobs gegen `Technik.md` 4.7), P-BV-07 (die zwei Rechtstexte: Höhe, Notizen, Abfahrtort), P-BV-09 (Textbaustein 11.5a neu übernehmen, nach P-P5c-40) | BV | 26.09.2026 | `Pruefdokument-BV-Backlog-Vorgriff.md` |
 | **Prüfliste BR:** P-BR-05 und -06 (Anlass-Zeilen und Nr. 304–313 lesen), P-BR-08 (beim nächsten Tag: das Produktionstor findet den Stufe-1-Lauf über `baumsuche.py`); freiwillig -03, -10, -11, -12 | BR | 24.09.2026 | `Pruefdokument-BR-Bestandsriegel.md` |
 | **Zwei tote Zweige löschen:** `claude/nice-lovelace-snlo8m` und `claude/pk05-tor-umbauen` — nichts Ungemergtes (F-R4-04); auf GitHub unter Branches | 17 (Q-R4-01, E-R4-15) | 26.09.2026 | `Pruefdokument-R4-Backlog-Runde-4.md`, P-R4-06 |
 | **Prüfliste R4:** P-R4-07 bis -23, je nach dem Deploy ihrer Fassung — Formular und Leseansicht, Konten, Demo-Reset, Handy, Verwerfen in der App, Statistik, Backlog auf GitHub | 17 | 28.09.2026 | `Pruefdokument-R4-Backlog-Runde-4.md` 4 |
@@ -210,10 +210,10 @@ gestrichen, 6a abgehakt; was steht, ist bestätigt offen.
 | **Umgebung `produktion` beschränken** auf `main` und die Tags `web-v*`, `android-v*`, `uhr-v*` — ein Probelauf fordert sie heute von jedem Zweig an (F-R17-04); dabei Pflichtprüfer und Org-Zweitfaktor nachsehen | 12 (R17-01) | 11.10.2026 | `Pruefdokument-R17-Review.md`, P-R17-04 |
 | **Prüfliste S11:** Gerätetests Uhr 4.0.0 und Android 0.18.0 (P-S11-32 bis -35, -05, -39), Wege auf Staging (-14 bis -31), Safari (-43), Konto-Backup (-45), alte Sicherungen (-07, -08), Rechtstexte (-40) | 12a | 20.10.2026 | `Pruefdokument-S11-Ortsdaten.md` 4 |
 | **Prüfliste DM:** P-DM-02 (Registrierung in Firefox auf Staging: Knopf sofort frei), -03 (dasselbe in Safari), -06 (dasselbe auf Produktiv nach dem Tag `web-v23.0.1`, nur bei offener Registrierung) | 19 | 20.10.2026 | `Pruefdokument-DM-Drei-Motoren.md` 3 |
-| **Prüfliste R17:** P-R17-03, -04 (CSP scharf seit 28.10.2026; offen HSTS, GitHub), -05; aus 12b -06 bis -11 und -15 bis -35, je nach Deploy ihrer Fassung (-12 bis -14 erledigt, -17 offen nur auf Staging) | 12, 12b | 11.10.2026 | `Pruefdokument-R17-Review.md` 4 |
+| **Prüfliste R17:** P-R17-03, -04 (CSP scharf seit 28.10.2026; offen HSTS, GitHub), -05; aus 12b -06 bis -11 und -15 bis -38, je nach Deploy ihrer Fassung (-12 bis -14 erledigt, -17 offen nur auf Staging) | 12, 12b | 11.10.2026 | `Pruefdokument-R17-Review.md` 4 |
 | **R17-19 abnehmen** — „Prüfung“ und App-Probelauf `android`, `uhr` von `main`; eine Instanz startet keinen Lauf (E-R17-38). Stufe 2 nach dem Merge ist gelesen (Lauf 40271258931, P-R17-14) | 12b (R17-19) | 25.10.2026 | `Pruefdokument-R17-Review.md`, P-R17-15 und -16 |
 | **Antwort des Hosters auswerten** (gestellt 28.10.2026): Haltedauer der Zugriffslogs (F-R17-22, -57; in die Betriebsakte) und ob er GitHub-Läufer zeitweise sperrt (F-R17-74) | 12b (R17-19, Übergabe) | 21.10.2026 | `Review-R17.md` 2.3 und 2.3a |
-| **Plattformvergleich Staging vervollständigen:** vier leere Zellen (`max_user_connections`, Kontingent, Platz, Cron) und die Herkunft des Zertifikats aus Betrieb → Status | Kette II | 21.09.2026 | `Technik.md` 6.3a; Prüfpunkt 2c |
+| **Plattformvergleich Staging vervollständigen:** vier leere Zellen (`max_user_connections`, Kontingent, Platz, Cron) und die Herkunft des Zertifikats aus Betrieb → Status | Kette II | 21.09.2026 | `Technik.md` 12.5; Prüfpunkt 2c |
 | **Server-Anteil anlegen** — Betrieb → Servereinstellungen, Karte „Schlüssel des Servers"; ohne den Griff tut S10 nichts, die Statuszeile steht rot | S10 | 14.09.2026 | Archiv-2 6; Runbook |
 | **Schlüsselblatt drucken** — zwei Ausdrucke, zwei Orte (Betriebsakte, Passwortmanager); Ablageort in der Betriebsakte vermerken | S10 | 14.09.2026 | Archiv-2 6 |
 | **Einmal anmelden und auf Status nachsehen** — die Zeile „Server-Anteil" zählt die stille Umstellung je Konto mit | S10 | 14.09.2026 | Archiv-2 6 |
@@ -221,7 +221,7 @@ gestrichen, 6a abgehakt; was steht, ist bestätigt offen.
 | **Wiederanlaufpaket um den Server-Anteil ergänzen** — vier Stücke: `config.php`, Serverschlüssel, Server-Anteil, Zugang zum Backup-Ziel (E-S10-17) | S10 | 14.09.2026 | Archiv-2 6 |
 | **Demo-Konto einmal „Auf Standard zurücksetzen"** (Adminbereich) — der Deploy legt nur die Fixture ab, das Konto zeigt bis zum nächsten Reset den alten Bestand | 9d | 15.09.2026 | Archiv-2 6 |
 | **Abnahme S6:** je eine Kopplung mit Garmin-Uhr und Handy-App (Art und Modell in der Liste), eine Sitzung über 30 Minuten mit Bedienung, ein Leerlauf mit Abmeldung | S6 | 02.09.2026 | Archiv-2 6 |
-| **`tools/geraetemodelle/nachaufloesen.php` auf Produktiv fahren** — oder feststellen, dass der Nachlöse-Job aus P5a AP11 (Nr. 80 Teil 1) es schon getan hat | Nr. 80, R42 | 14.09.2026 | Archiv-2 6 |
+| **`tools/erzeugen/geraetemodelle-nachaufloesen.php` auf Produktiv fahren** — oder feststellen, dass der Nachlöse-Job aus P5a AP11 (Nr. 80 Teil 1) es schon getan hat | Nr. 80, R42 | 14.09.2026 | Archiv-2 6 |
 | **Das geplante Komplett-Backup einmal im Betrieb sehen** — Plan „täglich", ein Tag warten; erster Betriebsnachweis für Nr. 89 | S7 | 03.09.2026 | Archiv-2 6 |
 | **SPF/DKIM/DMARC der Versanddomain; `smtp.from` als echtes Postfach**, das die Betreiberin liest — Rückläufer liest die Anwendung nicht (E-P5c-51) | P5 | 15.09.2026 | Archiv-2 6 |
 

@@ -34,6 +34,11 @@
       "braucht": "nichts",
       "bemerkung": "R17-26, F-R17-50 und -51. Rechnet die SHA-256 im Herkunftskopf jeder Datei unter server/assets/vendor/ nach und haelt sie gegen die Pruefsummentabelle in docs/Lizenzen.md. Bis dahin rechnete niemand nach: leaflet.css trug die Summe des Originals mit CRLF, openlocationcode.js lag ohne Kopf ausserhalb von vendor/."
     },
+    "dokumente": {
+      "aufruf": "bash tools/quelltext/pruefen.sh dokumente",
+      "braucht": "nichts",
+      "bemerkung": "R17-27, Anlass Nr. 188 (F-R17-59). Jeder Pfad in docs/, README.md, CLAUDE.md und jeder LIESMICH.md gegen den Baum, mit begruendeter Ausnahmeliste (tools/quelltext/dokumente-ausnahmen.md); dazu Zahlen an Verzeichnissen gegen ls, keine Kopfzeile Stand:, die Gliederung von Technik.md fortlaufend. Rund fuenfzig Stellen in zwoelf Dokumenten waren veraltet, und keine zaehlte jemand nach."
+    },
     "anker": {
       "aufruf": "bash tools/quelltext/pruefen.sh anker",
       "braucht": "nichts",
@@ -367,6 +372,7 @@
       "anker",
       "kennzeichnung",
       "fremdsummen",
+      "dokumente",
       "bestand",
       "syntax-py",
       "handbuch",
