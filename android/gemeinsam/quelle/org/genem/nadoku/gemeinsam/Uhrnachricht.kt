@@ -4,7 +4,7 @@ import org.json.JSONArray
 import org.json.JSONObject
 
 /**
- * Das Nachrichtenformat zwischen Uhr und Handy (E-S4-10) — **die eine
+ * Das Nachrichtenformat zwischen Uhr und Handy — **die eine
  * Beschreibung, von beiden Seiten benutzt**.
  *
  * WARUM ES IN `gemeinsam/` LIEGT UND NICHT ZWEIMAL: Ein Format, das zwei
@@ -13,13 +13,13 @@ import org.json.JSONObject
  * meldet keine unverstandene Nachricht, er stellt sie zu und niemand tut
  * etwas damit. Beide Module übersetzen deshalb denselben Quelltext.
  *
- * WAS NICHT DARIN VORKOMMT, IST DER PUNKT (E-S4-11): kein `api_key`, keine
+ * WAS NICHT DARIN VORKOMMT, IST DER PUNKT: kein `api_key`, keine
  * `device_id`, keine Serveradresse. Die Uhr spricht nur mit dem Handy, nie
  * mit dem Server; ein gestohlener Uhr-Speicher gibt nichts preis. Der
  * Prüffall `NachrichtenformatTest.keine_zugangsdaten_im_format` zählt die
  * Schlüssel nach, statt es zu behaupten.
  *
- * DAS ZEITMASS IST DIE UHR (E-R45-1): Jedes Ereignis trägt den Zeitstempel
+ * DAS ZEITMASS IST DIE UHR: Jedes Ereignis trägt den Zeitstempel
  * **der Uhr**, in Millisekunden seit der Epoche. Nicht den des Handys — die
  * Uhr war dabei, das Handy liegt im Rucksack.
  */
@@ -83,7 +83,7 @@ object Nachrichtenformat {
         put("einsatz", s.einsatzLaeuft)
         put("phase", s.laufendePhase)
         if (s.laufendeSeit != null) put("seit", s.laufendeSeit)
-        /* NUR WENN ES ETWAS ZU SAGEN GIBT (E-S5Z-15). Ein fehlender Schlüssel
+        /* NUR WENN ES ETWAS ZU SAGEN GIBT. Ein fehlender Schlüssel
          * heisst „diese Handy-Fassung kennt den Ortungszustand nicht" — und
          * eine Uhr, die dann nichts anzeigt, sagt genau das Richtige. Ein
          * leerer Wert wäre eine Aussage, ein fehlender ist keine. */
@@ -140,11 +140,11 @@ enum class Ereignisart(val gespeichert: String) {
  *   jedes Ereignis für eine Doppelzustellung und verwürfe es stillschweigend.
  *   Mit der Kennung führt es die Buchhaltung je Uhr, und eine neue Uhr fängt
  *   sauber an.
- * @param nr fortlaufend und lückenlos, überlebt Neustarts (E-S4-10).
- * @param zeitMs der Zeitstempel **der Uhr** (E-R45-1).
+ * @param nr fortlaufend und lückenlos, überlebt Neustarts.
+ * @param zeitMs der Zeitstempel **der Uhr**.
  * @param einsatzRef nur beim Ereignis, das einen Einsatz **eröffnet**: die auf
  *   der Uhr gebildete `wm-`-Kennung. Sie ist der Idempotenz-Anker über den
- *   Funkabriss (E-S4-09) — meldet die Uhr dasselbe Ereignis nach verlorener
+ *   Funkabriss — meldet die Uhr dasselbe Ereignis nach verlorener
  *   Quittung erneut, erkennt das Handy den Einsatz daran wieder, statt einen
  *   zweiten anzulegen.
  */
@@ -158,7 +158,7 @@ data class Uhrmeldung(
 )
 
 /**
- * Die Quittung: **bis hierher ist alles übernommen** (E-S4-10).
+ * Die Quittung: **bis hierher ist alles übernommen**.
  *
  * Sie nennt die höchste **lückenlos** übernommene Nummer, nicht die höchste
  * überhaupt gesehene. Der Unterschied entscheidet über Datenverlust: Ginge
@@ -171,11 +171,11 @@ data class Quittung(val bisNr: Long)
 data class Phasenmarke(val nummer: Int, val hhmm: String)
 
 /**
- * Der Anzeigestand vom Handy (E-S4-10).
+ * Der Anzeigestand vom Handy.
  *
  * DIE UHR BESITZT DEN ZUSTAND NICHT, sie spiegelt ihn — der Dienst läuft am
  * Handy. Auch der Modus kommt von dort: Im Nur-Aufzeichnen-Modus zeigt die
- * Uhr keine Phasenknöpfe (E-S4-20).
+ * Uhr keine Phasenknöpfe.
  */
 data class Standmeldung(
     val dienstLaeuft: Boolean,
@@ -186,16 +186,16 @@ data class Standmeldung(
     val phasen: List<Phasenmarke>,
     /**
      * Wie es um die Ortung steht — einer der [Ortungscode]; `null`, wenn das
-     * Handy es nicht mitteilt (E-S5Z-15).
+     * Handy es nicht mitteilt.
      *
      * WARUM DIE UHR DAS ERFÄHRT. Sie kann einen Dienst beginnen, während der
      * Standort des Handys aus ist — fragen kann sie niemanden, das Handy
-     * liegt in der Tasche. Der Dienst wird trotzdem durchgelassen (F-S5Z-01
-     * (c)), aber eine Uhr, die dann „Dienst läuft" zeigt, verschweigt genau
-     * die Lücke, die hinterher niemand erklären kann. Dieselbe Begründung wie
-     * bei `dienst_schwebt` (E-S4-10).
+     * liegt in der Tasche. Der Dienst wird trotzdem durchgelassen, aber eine
+     * Uhr, die dann „Dienst läuft" zeigt, verschweigt genau die Lücke, die
+     * hinterher niemand erklären kann. Dieselbe Begründung wie bei
+     * `dienst_schwebt`.
      *
-     * ES REIST KEIN ZUGANGSDATUM MIT (E-S4-11): ein Kurzcode, sonst nichts.
+     * ES REIST KEIN ZUGANGSDATUM MIT: ein Kurzcode, sonst nichts.
      * Die Schlüsselmenge der **Uhrmeldung** — der Richtung, in der die
      * Sicherheitsaussage steht — bleibt davon unberührt.
      */
@@ -203,7 +203,7 @@ data class Standmeldung(
 )
 
 /**
- * Die Kurzcodes des Ortungszustands im Nachrichtenformat (E-S5Z-15).
+ * Die Kurzcodes des Ortungszustands im Nachrichtenformat.
  *
  * WARUM SIE IN `gemeinsam/` STEHEN und nicht auf jeder Seite als Zeichenkette:
  * Zwei Programme, die dieselben sechs Wörter unabhängig voneinander tippen,
@@ -239,7 +239,7 @@ object Ortungscode {
      * tut das Handy. Für sie zerfallen die sechs Stufen deshalb in drei
      * Fälle, und diese Zusammenfassung steht **einmal** hier statt zweimal
      * ausgeschrieben — in der Anzeige der Uhr und in der Entscheidung des
-     * Handys, wann es überhaupt meldet (E3).
+     * Handys, wann es überhaupt meldet.
      */
     enum class Anzeige {
         /** Rot: „keine Ortung · keine Aufzeichnung". */
@@ -262,10 +262,9 @@ object Ortungscode {
 /**
  * Der Weg, auf dem eine Nachricht geht — **die Naht zur Hardware**.
  *
- * Dahinter steckt in der App der `MessageClient` des Wear Data Layer
- * (E-S4-10); im Prüfstand eine Attrappe. Diese Trennung ist der einzige Grund,
- * warum von C2 überhaupt etwas belegt ist: Ohne Uhr und ohne Emulator
- * (E-R45-7, E-R45-8) lässt sich der Data Layer nicht ausführen. Alles, was
+ * Dahinter steckt in der App der `MessageClient` des Wear Data Layer; im
+ * Prüfstand eine Attrappe. Diese Trennung ist der einzige Grund, warum vom
+ * Funkweg überhaupt etwas belegt ist: Ohne Uhr und ohne Emulator lässt sich der Data Layer nicht ausführen. Alles, was
  * hier drüber liegt — Puffer, Quittung, Nachlieferung, Doppelzustellung —
  * läuft dagegen auf der JVM.
  */

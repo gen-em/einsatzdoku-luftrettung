@@ -5,8 +5,7 @@ require_once __DIR__ . '/ui.php';
 require_once __DIR__ . '/konto_lib.php';
 
 /**
- * EINEN ADRESSWECHSEL DURCH DIE VERWALTUNG BESTAETIGEN ODER IHM WIDERSPRECHEN
- * (R17-20, F-R17-06, E-R17-45).
+ * EINEN ADRESSWECHSEL DURCH DIE VERWALTUNG BESTAETIGEN ODER IHM WIDERSPRECHEN.
  *
  * WER HIER LANDET, hat den Link aus der Mail an die ALTE Adresse eines Kontos,
  * dessen Anmeldeadresse die Verwaltung geaendert hat. Bis zur Antwort — oder

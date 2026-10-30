@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# App-Bau — ein App-Paket bauen und signieren, einmal je Fassung (PK-08).
+# App-Bau — ein App-Paket bauen und signieren, einmal je Fassung.
 #
 # Aufruf:  bash tools/kette/appbau.sh android-bauen     <fassung|datei> <ausgabeordner>
 #          bash tools/kette/appbau.sh android-signieren <fassung|datei> <eingang> <ausgabeordner>
@@ -9,7 +9,7 @@
 # Anlass: Nr. 100 (die App-Auslieferung lief von Hand), E-PK-23, -53, -60.
 #
 # `<fassung>` kommt aus dem Tag (`android-v0.17.0` → `0.17.0`) und muss zur
-# Datei passen, sonst rot vor dem Bau (E-PK-60); `datei` nimmt die Fassung
+# Datei passen, sonst rot vor dem Bau; `datei` nimmt die Fassung
 # aus der Datei (Probelauf ohne Tag).
 #
 # android-bauen — Umgebung: ANDROID_HOME, und KEIN `APK_*`-Wert. Gradle baut
@@ -20,15 +20,14 @@
 #   APK_SPEICHER_PASSWORT, APK_SCHLUESSEL_NAME, APK_SCHLUESSEL_PASSWORT,
 #   APK_ZERTIFIKAT_SHA256. Signiert die unsignierten APKs aus <eingang> mit
 #   `apksigner` und prüft das Zertifikat. Ergebnis: nadoku-X.Y.Z.apk (Handy)
-#   und nadoku-uhr-X.Y.Z.apk (Wear OS, E-PK-58). Gradle läuft hier NICHT.
+#   und nadoku-uhr-X.Y.Z.apk (Wear OS). Gradle läuft hier NICHT.
 #
-# WARUM ZWEI UNTERBEFEHLE UND IN DER KETTE ZWEI JOBS (R17-19, F-R17-03,
-#   E-R17-32). Bis Web 23.0.3 stand „Gradle sieht den Schlüssel nie"
-#   (E-PK-63) hier, und für die DATEI stimmte es. Die Umgebung aber erbte
-#   Gradle vom Schritt, und im Schritt standen der Keystore als Base64 und
-#   beide Passwörter: `System.getenv()` genügte jedem Plugin und jeder
-#   Abhängigkeit zur Bauzeit. Ein eigener Schritt ohne die Werte hätte
-#   `getenv` geschlossen, nicht aber einen Hintergrundprozess, den ein
+# WARUM ZWEI UNTERBEFEHLE UND IN DER KETTE ZWEI JOBS. „Gradle sieht den
+#   Schlüssel nie" reicht nicht, wenn es nur für die DATEI gilt: Die Umgebung
+#   erbt Gradle vom Schritt, und stünden dort der Keystore als Base64 und
+#   beide Passwörter, genügte `System.getenv()` jedem Plugin und jeder
+#   Abhängigkeit zur Bauzeit. Ein eigener Schritt ohne die Werte schlösse
+#   `getenv`, nicht aber einen Hintergrundprozess, den ein
 #   bösartiger Bau zurücklässt — auf einem GitHub-Läufer lebt er in den
 #   nächsten Schritt hinein und liest dort `/proc/<pid>/environ` desselben
 #   Benutzers. Deshalb baut ein Job OHNE Geheimnisse und OHNE Umgebung, und
@@ -44,8 +43,8 @@
 set -uo pipefail
 WURZEL=${WURZEL:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}
 
-# Das App-Signaturzertifikat, wie es die Dokumentation seit B1 nennt
-# (E-S4-27, R65). Die Variable trägt den vollen Wert; diese beiden Enden
+# Das App-Signaturzertifikat, wie es die Dokumentation nennt.
+# Die Variable trägt den vollen Wert; diese beiden Enden
 # fangen einen Vertipper in ihr ab.
 DOKU_ANFANG=078c
 DOKU_ENDE=ad64
@@ -62,7 +61,7 @@ fassung_uhr() { sed -n 's/.*const APP_VERSION = "\([0-9.]*\)";.*/\1/p' "$1" | he
 
 # Jede Zeile „… Signer … certificate SHA-256 digest: …" in den drei Formen,
 # die apksigner kennt — „Signer #1", „Signer (minSdkVersion=…)" und seit den
-# Build-Tools 37 „V3.0 Signer:" (F-PK-56, Lauf 105): genau EIN Wert, sonst
+# Build-Tools 37 „V3.0 Signer:": genau EIN Wert, sonst
 # leer. Derselbe Wert zweimal ist ein Unterzeichner.
 zertifikat_aus() {
     local z
@@ -114,13 +113,13 @@ android_bauen() {
     [ -n "${ANDROID_HOME:-}" ] || { fehler "ANDROID_HOME fehlt — nicht gebaut."; return 2; }
     # DER ERSTE RIEGEL: Der Bau-Job hat keine Geheimnisse. Steht doch ein
     # `APK_*` da, hat jemand ihm eines gegeben — gebaut wird dann nicht, und
-    # nicht erst die Positivliste darunter soll es retten (F-R17-03).
+    # nicht erst die Positivliste darunter soll es retten.
     if apk_in_umgebung; then
         fehler "In der Umgebung des Bauschritts steht ein APK_-Wert ($(compgen -e | grep '^APK_' | tr '\n' ' ')) — der Bau läuft ohne Schlüssel, im eigenen Job (E-R17-32). Nicht gebaut."
         return 1
     fi
     # Liegt eine signatur.properties da, signierte Gradle selbst — und der
-    # Schlüssel stünde fremdem Build-Code offen, gegen den E-PK-63 gebaut ist.
+    # Schlüssel stünde fremdem Build-Code offen, gegen den das Signieren außerhalb von Gradle gebaut ist.
     if [ -e "$WURZEL/android/signatur.properties" ]; then
         fehler "android/signatur.properties liegt da; die Kette signiert nur außerhalb von Gradle."
         return 1
@@ -173,7 +172,7 @@ android_signieren() {
             || { fehler "apksigner sign ($m) gescheitert."; return 1; }
         # Die Ausgabe ist öffentlich (Zertifikat und Prüfsummen stehen in jeder
         # APK) und kommt bei jedem Scheitern ins Protokoll — ohne sie war
-        # Lauf 103 nicht zu deuten (F-PK-56).
+        # ein gescheiterter Lauf nicht zu deuten.
         pruef=$("$bt/apksigner" verify --print-certs "$aus/$name" 2>&1) || {
             fehler "apksigner verify ($m) gescheitert:"; sed 's/^/    /' <<<"$pruef" >&2
             rm -f "$aus/$name"; return 1; }
@@ -278,7 +277,7 @@ Source Stamp Signer certificate SHA-256 digest: 1111$(printf "d%.0s" {1..56})222
     pruefe "Signieren ohne Schlüssel → Bedienfehler 2" \
         '( eval "$ohne_apk"; WURZEL="$t"; ANDROID_HOME=x android_signieren 0.17.0 "$t/ein" "$t/aus" ) 2>/dev/null >/dev/null; [ $? = 2 ]'
 
-    # DIE UMGEBUNG DES GRADLE-AUFRUFS (R17-19, F-R17-03). Ein Ersatz-`gradlew`
+    # DIE UMGEBUNG DES GRADLE-AUFRUFS. Ein Ersatz-`gradlew`
     # schreibt auf, was er sieht, und legt die zwei unsignierten APKs hin —
     # gemessen wird der GANZE Weg durch `android_bauen()`, nicht die Liste.
     local g="$t/g"

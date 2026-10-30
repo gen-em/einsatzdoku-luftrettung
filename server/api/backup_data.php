@@ -10,7 +10,7 @@ require_once __DIR__ . '/../backup_lib.php';
  * durch Klartext, bevor er die Datei mit dem Backup-Passwort versiegelt. Der
  * Server sieht dabei nie Klartext.
  *
- * FUER CONTAINERFASSUNG 4 (S2/AP5) LIEFERT ER IN STUECKEN:
+ * FUER CONTAINERFASSUNG 4 LIEFERT ER IN STUECKEN:
  *
  *   ?teil=kopf                       Stammdaten, Diensttage, `eintraege_gesamt`
  *   ?teil=eintraege&ab=0&anzahl=500  ein Fenster von Einsaetzen und
@@ -24,7 +24,7 @@ require_once __DIR__ . '/../backup_lib.php';
  * 1. DER RUECKWEG. Der Kern eines 5000er-Bestands ist 10,5 MB; er ginge als
  *    EIN POST zurueck, gegen ein Limit, das niemand kennt — nginx nimmt in
  *    der Vorgabe 1 MB. Ein Fenster von 250 Eintraegen ist 0,44 MB.
- * 2. DER SPEICHER. Am Stueck kostet der Bau 39,5 MB von 64 (Z3) und waechst
+ * 2. DER SPEICHER. Am Stueck kostet der Bau 39,5 MB von 64 und waechst
  *    mit dem Bestand; in Fenstern sind es 10,0 MB, fast unabhaengig davon.
  *
  * GEMESSEN am 31.08.2026 (`memory_get_peak_usage(true)`, PHP-CLI):
@@ -39,13 +39,12 @@ require_once __DIR__ . '/../backup_lib.php';
  * erreicht. In Fenstern waechst sie kaum: Was bleibt, ist die Kennungsliste.
  *
  * WARUM EIN GET-PARAMETER UND KEIN POST. Der Endpunkt aendert nichts, und was
- * nichts aendert, beantwortet auch kein POST (M3-11) — der Schutz ist die
+ * nichts aendert, beantwortet auch kein POST — der Schutz ist die
  * Sitzung. Ein Wechsel auf POST haette nur den CSRF-Kopf gebracht, den ein
  * lesender Weg nicht braucht, und den heutigen Vertrag gebrochen.
  *
- * OHNE PARAMETER lieferte er bis Web 22.7.0 die vollstaendige Nutzlast 7
- * mit Punktlisten. Seit S11 sieht der Server keine Punkte mehr; seit Web 23
- * antwortet er darauf mit 400 `teil` (S11-12).
+ * OHNE PARAMETER antwortet er mit 400 `teil`: Der Server sieht keine
+ * Punkte.
  */
 
 /** Hoechstens so viele Eintraege je Anfrage. */
@@ -71,9 +70,9 @@ try {
                   'meldung' => 'Unbekannter Teil — erwartet „kopf" oder „eintraege".'], 400);
     }
     /* Dieser Weg gibt das Paket direkt aus — `$out` ist fertiger Text und
-     * kann gross werden. Seit Web 20.9.1 ueber `json_roh_out()`: DERSELBE
-     * Kopfzeilensatz wie `json_out()`, nur ein anderer Rumpf. Vorher standen
-     * die zwei `header()`-Zeilen hier von Hand, und `nosniff` fehlte. */
+     * kann gross werden. Ueber `json_roh_out()`: DERSELBE Kopfzeilensatz
+     * wie `json_out()`, nur ein anderer Rumpf — `header()`-Zeilen von Hand
+     * vergaessen leicht `nosniff`. */
     json_roh_out((string)$out);
 } catch (Throwable $ex) {
     json_fehler($ex, 'backup');

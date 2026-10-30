@@ -69,7 +69,7 @@ sealed interface Kopplungsschritt {
     data object Abgebrochen : Kopplungsschritt
 
     /**
-     * Nach dem Trennen. GESAGT WIRD ES IMMER (E-S4-12): Ohne Antwort des
+     * Nach dem Trennen. GESAGT WIRD ES IMMER: Ohne Antwort des
      * Servers steht der Eintrag dort noch und belegt einen Geräteplatz — das
      * ist im Browser ein Klick, aber nur, wenn jemand davon weiß.
      */
@@ -77,17 +77,14 @@ sealed interface Kopplungsschritt {
 }
 
 /**
- * Der Kopplungsbildschirm (JSON-Vertrag 1a, R49/S5, R63).
+ * Der Kopplungsbildschirm (JSON-Vertrag 1a).
  *
- * EIN WEG STATT ZWEI. Bis Android 0.10.1 standen hier zwei gleichwertige Wege
- * nebeneinander — Kameraschwenk und Abtippen — und darüber ein Adressfeld.
- * Alle drei sind fort: Der QR-Code trug die Serveradresse, und die ist jetzt
- * fest (R63); der eingetippte Code kommt nicht mehr von hier, sondern **geht**
+ * EIN WEG: kein Kameraschwenk, kein Abtippen, kein Adressfeld. Die
+ * Serveradresse ist fest, und der Code kommt nicht hierher, sondern **geht**
  * von hier in den Browser.
  *
- * Was bleibt, ist ein Knopf und danach eine Zahl zum Ablesen. Das ist der
- * eigentliche Gewinn der Umkehr: Der Bildschirm, der vorher eine Eingabemaske
- * war, ist jetzt eine Anzeige.
+ * Es bleibt ein Knopf und danach eine Zahl zum Ablesen: Der Bildschirm ist
+ * keine Eingabemaske, sondern eine Anzeige.
  */
 @Composable
 fun KopplungAnsicht(
@@ -102,7 +99,7 @@ fun KopplungAnsicht(
             .fillMaxSize()
             .background(Farbe.rauch)
             /* Die Navigationsleiste unten -- und im Querformat die seitliche
-             * Geste (Backlog Nr. 86). Wie oben gilt: `background` zuerst, damit
+             * Geste. Wie oben gilt: `background` zuerst, damit
              * die Flaeche bis zum Rand faerbt, das Padding danach, damit der
              * Inhalt nicht darunter geraet. */
             .windowInsetsPadding(WindowInsets.navigationBars)

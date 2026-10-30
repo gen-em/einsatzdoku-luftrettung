@@ -74,8 +74,7 @@ class AusduennerTest {
     @Test fun stadtfahrt() = pruefe("stadtfahrt")
 
     /**
-     * Der 12-h-Dienst — die Abnahmefrage „Größenordnung der
-     * Referenz-Diensttage" (Konzept, B3).
+     * Der 12-h-Dienst — die Frage „Größenordnung der Referenz-Diensttage".
      *
      * Der Referenzdatensatz trägt **56 587 Punkte auf 16 Diensten**, also rund
      * **3 537 je Diensttag**. Dieser Strom ergibt spürbar mehr, und das ist
@@ -177,8 +176,8 @@ class AusduennerTest {
 
     // ---- brauchbar(): dieselbe Schwelle fuer Aufzeichnung und Anzeige ----
     //
-    // Sie steht seit E1 als eigene Funktion da, weil der Ortungswaechter sie
-    // ebenfalls braucht (E-S5Z-02). Diese Faelle belegen die GRENZE selbst --
+    // Sie steht als eigene Funktion da, weil der Ortungswaechter sie
+    // ebenfalls braucht. Diese Faelle belegen die GRENZE selbst --
     // 100 m ist die Zahl im Code, und ein "> " statt "≥" verschoebe sie um
     // einen Meter, ohne dass ein Stromfall das merkte.
 

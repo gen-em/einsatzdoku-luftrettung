@@ -1,6 +1,5 @@
 /* Vorschau eines Rechtstexts beim Tippen — Seite „Rechtstexte".
  * ===========================================================================
- * (P5c/AP9, E-P5c-28, Backlog Nr. 121, Mockup M-P5c-01d Variante 2)
  *
  * WAS ES TUT. 0,4 s nach dem letzten Tastendruck (oder einer Änderung des
  * Standdatums) schickt es Text und Stand an `api/rechtstext_vorschau.php`
@@ -8,7 +7,7 @@
  * wird AUF DEM SERVER, mit `rt_html()` — derselbe Renderer wie die
  * öffentliche Seite; einen zweiten im Browser gibt es nicht.
  *
- * DIE PLAKETTE SAGT, WAS DASTEHT (Zustände aus dem Mockup, Teil 3):
+ * DIE PLAKETTE SAGT, WAS DASTEHT:
  *   „gespeicherter Stand"   blau    — nichts getippt, wie ohne Skript
  *   „wird aktualisiert …"   neutral — getippt, Antwort steht aus
  *   „ungespeichert"         orange  — zeigt, was getippt ist

@@ -2,7 +2,7 @@
 declare(strict_types=1);
 
 /**
- * BERICHTE DER CONTENT-SECURITY-POLICY (P5a/AP4, E-P5a-15; SP-5).
+ * BERICHTE DER CONTENT-SECURITY-POLICY.
  *
  * WOZU. Die Richtlinie kommt zweistufig: zuerst `…-Report-Only`, zwei Wochen
  * im Betrieb, dann scharf (Einstellung `csp_scharf`). Dieser Endpunkt ist die
@@ -12,7 +12,7 @@ declare(strict_types=1);
  *
  * ER BRAUCHT KEINE ANMELDUNG, UND ZWAR ZWINGEND. Ein Verstoss auf der
  * ANMELDESEITE ist der interessanteste von allen — dort steht der Weg des
- * Passworts (SP-6). Ein Endpunkt, der eine Sitzung verlangt, saehe genau den
+ * Passworts. Ein Endpunkt, der eine Sitzung verlangt, saehe genau den
  * nicht. Deshalb laedt diese Datei `auth_guard.php` NICHT.
  *
  * WAS DARAUS FOLGT: Er ist von aussen erreichbar, und jeder kann ihn fuellen.

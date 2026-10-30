@@ -25,7 +25,7 @@
 | `anker` | jeder Verweis `hilfe.php#…` trifft eine Überschrift des gerenderten Handbuchs | Nr. 188 |
 | `kennzeichnung` | Schloss an jedem verschlüsselten Feld in Formular und Leseansicht, gegen `kennzeichnung-soll.md`; Kleinzeile an jedem Klartext-Freitextfeld des Katalogs | Nr. 170 |
 | `fremdsummen` | die SHA-256 im Herkunftskopf jeder Datei unter `server/assets/vendor/`, nachgerechnet ohne den Kopf und gegen die Tabelle in `Lizenzen.md` 3 | F-R17-50, -51 |
-| `dokumente` | jeder Pfad in den Dokumenten gegen den Baum (Ausnahmen mit Grund in `dokumente-ausnahmen.md`), Zahlen an Verzeichnissen gegen `ls`, keine „Stand:"-Kopfzeile, Gliederung von `Technik.md` | Nr. 188 |
+| `dokumente` | jeder Pfad in den Dokumenten gegen den Baum (Ausnahmen mit Grund in `dokumente-ausnahmen.md`), Zahlen an Verzeichnissen gegen `ls`, keine „Stand:"-Kopfzeile, Gliederung von `Technik.md`; im Code jeder Abschnittsverweis („`Technik.md` 4.14") gegen die Überschriften | Nr. 188 |
 
 ## Was es braucht
 

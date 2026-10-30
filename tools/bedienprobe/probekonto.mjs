@@ -1,5 +1,5 @@
 /* Ein Konto mit bekanntem Passwort — für Wege, die weder das Prüfkonto noch
- * das Demo-Konto brauchen können (P5c/AP5).
+ * das Demo-Konto brauchen können.
  * ===========================================================================
  *
  * WOZU: Das Prüfkonto hat seinen Zweitfaktor schon, und das Demo-Konto darf
@@ -21,6 +21,7 @@
 import { execFileSync } from 'node:child_process';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { istOertlich } from '../motor.mjs';
 
 const HIER = dirname(fileURLToPath(import.meta.url));
 export const WURZEL = process.env.ED_WURZEL || join(HIER, '..', '..');
@@ -53,10 +54,11 @@ export function probekontoAnlegen(adresse, passwort, rolle, name = 'Bedienprobe'
 }
 
 /** Ein eigener Browserkontext neben dem des Läufers — dieselbe Fenstergröße,
- *  dieselbe Nachsicht mit dem Zertifikat der Sandbox, keine Kartenkacheln. */
+ *  dieselbe Nachsicht mit dem Zertifikat (nur an der örtlichen Anlage),
+ *  keine Kartenkacheln. */
 export async function eigenerKontext(k) {
   const kontext = await k.seite.context().browser().newContext({
-    viewport: k.seite.viewportSize(), ignoreHTTPSErrors: true });
+    viewport: k.seite.viewportSize(), ignoreHTTPSErrors: istOertlich(k.basis) });
   await kontext.route('**/tile.openstreetmap.org/**', r => r.abort());
   return kontext;
 }
@@ -69,7 +71,7 @@ export async function passwortSchicken(s, basis, adresse, passwort) {
   await s.click('#loginform button[type="submit"]');
 }
 
-/** Ein Konto MIT Schlüsselhülle (Konzept RW, RW-02) — über die Einladung
+/** Ein Konto MIT Schlüsselhülle — über die Einladung
  *  und `pw_handling.php`, im Browser, wie jedes echte. Wege, die einen
  *  Inhaltsschlüssel brauchen (das Paar des Rückwegs verpackt seinen privaten
  *  Teil damit), können `probekontoAnlegen()` nicht nehmen: Dessen Konten

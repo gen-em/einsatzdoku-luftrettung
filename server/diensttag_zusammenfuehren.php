@@ -5,11 +5,11 @@ require_once __DIR__ . '/diensttag_lib.php';
 require_once __DIR__ . '/ui.php';   // auth_guard.php laedt sie bereits
 
 /**
- * Einen anderen Diensttag in den geoeffneten aufnehmen (E10-E13, E25, A6-A8).
+ * Einen anderen Diensttag in den geoeffneten aufnehmen.
  *
  * DER GEOEFFNETE TAG IST IMMER DER ZIELTAG. Das ist keine Bequemlichkeit,
  * sondern der Grund, warum der Einstieg ueberhaupt hier liegt und nicht in der
- * Tagesliste (E25): Der Vorgang ist NICHT UMKEHRBAR, und bei einer Auswahl von
+ * Tagesliste: Der Vorgang ist NICHT UMKEHRBAR, und bei einer Auswahl von
  * zwei Zeilen in einer Liste ist die Richtung eine Frage der Lesart. Hier ist
  * sie eine Tatsache — der Tag, der stehenbleibt, steht im Titel.
  *
@@ -19,7 +19,7 @@ require_once __DIR__ . '/ui.php';   // auth_guard.php laedt sie bereits
  * Vorschau erst nach dem Absenden — und eine Vorschau, die man nur mit dem
  * Absenden bekommt, ist keine.
  *
- * Der Papierkorb kommt hier nicht vor (E13). Was das bedeutet, steht in der
+ * Der Papierkorb kommt hier nicht vor. Was das bedeutet, steht in der
  * Rueckfrage; die Begruendung in dt_zusammenfuehren().
  */
 
@@ -82,7 +82,7 @@ $anz = static fn(int $n, string $eins, string $viele): string
     => $n . ' ' . ($n === 1 ? $eins : $viele);
 
 /** Rettungsmittel und Standort eines Tags in einer Zeile — aus den
- *  eingefrorenen Spalten (E8), nie aus den heutigen Stammdaten. */
+ *  eingefrorenen Spalten, nie aus den heutigen Stammdaten. */
 $wer = static function (array $t): string {
     $s = [];
     if (($t['vehicle_name'] ?? null) !== null && $t['vehicle_name'] !== '') { $s[] = (string)$t['vehicle_name']; }
@@ -90,13 +90,12 @@ $wer = static function (array $t): string {
     return $s ? implode(' · ', $s) : 'ohne Zuordnung';
 };
 
-/* Waehlbare und nicht waehlbare Kandidaten TRENNEN (P3/O11). Vorher standen
- * sie in EINER Tabelle, die nicht waehlbaren mit einem abgeschalteten Radio
- * und der Klasse `zeile-aus` — die es im neuen Stylesheet gar nicht mehr gibt,
- * die Zeilen sahen also aus wie die anderen. Ein abgeschaltetes Radio ist auf
- * einem Telefon ohnehin kaum von einem leeren zu unterscheiden. Jetzt stehen
- * die waehlbaren in der Wahlliste und die uebrigen darunter in einer eigenen,
- * zugeklappten Karte — mit dem Grund an jeder Zeile. */
+/* Waehlbare und nicht waehlbare Kandidaten TRENNEN. In EINER Tabelle, die
+ * nicht waehlbaren mit einem abgeschalteten Radio, saehen die Zeilen aus wie
+ * die anderen, und ein abgeschaltetes Radio ist auf einem Telefon ohnehin
+ * kaum von einem leeren zu unterscheiden. Deshalb stehen die waehlbaren in
+ * der Wahlliste und die uebrigen darunter in einer eigenen, zugeklappten
+ * Karte — mit dem Grund an jeder Zeile. */
 $waehlbar = $nichtWaehlbar = [];
 foreach ($kandidaten as $k) {
     if ($k['vereinbar']) { $waehlbar[] = $k; } else { $nichtWaehlbar[] = $k; }
@@ -266,10 +265,10 @@ ui_seite_start(['titel' => 'Diensttag aufnehmen']);
           'text' => 'Art',
           'plaketten' => ui_plakette($ergSym['text'], ['ton' => 'blau']),
       ]);
-      /* DIE ART BLEIBT DIE BETRIEBSART, DER TYP STEHT DARUNTER (S9/AP4a,
-         Freigabe M-S9-09 Variante c). Beides in eine Zeile zu ziehen waere
-         moeglich — `dt_art_symbol()` kennt den Typ seit Web 16.0.0 und
-         antwortete dann „Bergwacht, luftgebunden" —, aber der Typ ist eine
+      /* DIE ART BLEIBT DIE BETRIEBSART, DER TYP STEHT DARUNTER. Beides in
+         eine Zeile zu ziehen waere moeglich — `dt_art_symbol()` kennt den
+         Typ und antwortete dann „Bergwacht, luftgebunden" —, aber der Typ
+         ist eine
          Eigenschaft des Rettungsmittels und die Betriebsart eine des
          Dienstes; sie folgen beim Zusammenfuehren derselben Wahl und heissen
          trotzdem nicht dasselbe. Ton blau wie die uebrigen Ergebniswerte
@@ -284,7 +283,7 @@ ui_seite_start(['titel' => 'Diensttag aufnehmen']);
          jemand das andere waehlt: Sie zeigte weiter den Typ des Zieltags,
          waehrend `dt_zusammenfuehren()` den des Quelltags schreibt.
          Also nennt sie beide, und die Kleinzeile sagt, wer entscheidet.
-         Das weicht von M-S9-09 ab, das eine Plakette zeigt — ein Mockup ist
+         Das weicht vom Mockup ab, das eine Plakette zeigt — ein Mockup ist
          ein Standbild und kennt den Klick nicht. */
       $typZiel   = dt_typ_label($ziel['vehicle_typ'] === null
                                 ? null : (string)$ziel['vehicle_typ']);
@@ -323,18 +322,18 @@ ui_seite_start(['titel' => 'Diensttag aufnehmen']);
                             'zahl' => count($vorschau['wahlen'])]); ?>
         <p class="feld-hinweis">Die beiden Diensttage widersprechen sich an diesen
            Stellen. Was soll gelten? Vorbelegt ist jeweils der Tag, der bleibt.</p>
-        <?php /* Aus `fieldset`/`legend` mit blanken Radios wird die Wahlliste
-                 (E-P3-20): 44 px hohe Zeilen, die gewählte hell orange, der
+        <?php /* Aus `fieldset`/`legend` mit blanken Radios wird die Wahlliste:
+                 44 px hohe Zeilen, die gewählte hell orange, der
                  Fokusring an der Zeile statt am unsichtbaren Radio. */ ?>
         <?php /* BEIM RETTUNGSMITTEL STEHT DER TYP MIT IM ZUSATZ, davor der
-                 Kurzname, wenn es einen gibt (S9/AP4a). Er entscheidet mit,
+                 Kurzname, wenn es einen gibt. Er entscheidet mit,
                  was der Zieltag danach traegt, und ohne ihn waere die Wahl
                  zwischen zwei Namen eine zwischen zwei Woertern.
                  Der Tag bleibt im Zusatz stehen — anders als im Mockup, das
                  ihn durch den Typ ersetzt: Er sagt, WOHER die Angabe kommt,
                  und die beiden anderen Widersprueche nennen ihn auch.
                  Der Kurzname steht NEBEN der Bezeichnung, nie statt ihrer
-                 (E-S9-09) — die Bezeichnung ist der Text der Zeile. */
+                 — die Bezeichnung ist der Text der Zeile. */
               $rmZusatz = static function (array $tag): string {
                   $teile = [];
                   $typ = dt_typ_label($tag['vehicle_typ'] === null

@@ -52,9 +52,8 @@
     // Reihenfolge und Beschriftung der Phasen — muss zu PHASE_LABELS in
     // db.php und zu den Spaltennamen in assets/export.js passen.
     /* Rollenkatalog aus CREW_ROLES (server/db.php), von import.php als
-     * CREW_ROLLEN und CREW_LABELS gesetzt. Der Rueckfall ist der Stand vor
-     * Web 6.0.0 — die fuenf Flugrollen —, damit diese Datei auch ohne die
-     * Vorgabe laeuft. */
+     * CREW_ROLLEN und CREW_LABELS gesetzt. Der Rueckfall sind die fuenf
+     * Flugrollen, damit diese Datei auch ohne die Vorgabe laeuft. */
     var ROLLEN = (typeof CREW_ROLLEN !== 'undefined' && CREW_ROLLEN.length)
         ? CREW_ROLLEN : ['p1', 'p2', 'hems', 'fr', 'other'];
     var LABELS = (typeof CREW_LABELS !== 'undefined' && CREW_LABELS)
@@ -65,10 +64,9 @@
     /**
      * Besatzungsspalten in ein Profil eintragen.
      *
-     * Bis Web 5.10.0 standen sie ausgeschrieben da — zehn Zeilen im CSV-Profil,
-     * fuenf im Excel-Profil. Mit sieben Rollen waeren es vierzehn und sieben
-     * geworden, und eine achte Rolle haette man an einer der drei Stellen
-     * vergessen. $ziel ist 'dayCrew' oder 'crew', $namen bildet die Rolle auf
+     * Ausgeschrieben waeren es bei sieben Rollen vierzehn Zeilen im
+     * CSV-Profil und sieben im Excel-Profil, und eine achte Rolle vergaesse
+     * man an einer der drei Stellen. $ziel ist 'dayCrew' oder 'crew', $namen bildet die Rolle auf
      * die Spaltenueberschrift ab.
      */
     function crewSpalten(columns, prefixOderLabel, ziel, alsLabel) {
@@ -87,13 +85,13 @@
     }
 
     /* Muss mit assets/export.js uebereinstimmen — dort steht die Begruendung
-       fuer die neutralen Namen der Phasen 3 und 7 (E20). */
+       fuer die neutralen Namen der Phasen 3 und 7. */
     var PHASE_SLUGS = {
         2: 'alarmierung', 3: 'ausruecken', 4: 'ankunft_einsatzort',
         5: 'ankunft_patientin', 6: 'transportbeginn', 7: 'ankunft_klinik',
         8: 'uebergabezeit', 9: 'endzeit'
     };
-    /* Die Namen bis Web 6.1.0. Nur diese beiden Phasen sind betroffen; die
+    /* Die Namen aelterer Exporte. Nur diese beiden Phasen sind betroffen; die
        uebrigen sechs hiessen immer schon neutral. */
     var ALT_PHASE_SLUGS = { 3: 'abflug', 7: 'landung_krankenhaus' };
 
@@ -153,9 +151,9 @@
             'Einsatz-Nr': { target: 'pat.mission_no', parse: ['trim', 'max:64'], sensitive: true }
         },
 
-        // Seit Web 2.9.0 ist die Einsatznummer Teil des pat_blob und wird dem
-        // Server beim Abgleich nicht mehr im Klartext uebergeben — er kennt
-        // dafuer nur noch Tag + Alarmzeit. Der Abgleich ueber die Nummer
+        // Die Einsatznummer ist Teil des pat_blob und wird dem Server beim
+        // Abgleich nicht im Klartext uebergeben — er kennt dafuer nur
+        // Tag + Alarmzeit. Der Abgleich ueber die Nummer
         // passiert clientseitig gegen die entschluesselten Bestandsdaten
         // (siehe import_ui.js, bestandPruefen/dublette).
         dedupeKey: ['day+alarm'],
@@ -195,21 +193,16 @@
          * Mitternacht weichen sie planmaessig voneinander ab — ein Einsatz um
          * 01:38 des Dienstes vom 28. liegt am 29.
          *
-         * Bis Web 7.3.1 stand 'datum' auf target:null, mit der Begruendung,
-         * die Uhrzeit rechne die Mitternachtslogik ohnehin dem Folgetag zu.
-         * DAS WAR FALSCH: api/import_commit.php rief
-         * pruef_ortszeit_zu_utc($tag, $hhmm, 0, …) und rechnete die Uhrzeit
-         * auf den DIENSTTAG. Ein Einsatz um 01:38 landete damit 24 Stunden
-         * frueher — vor dem Beginn des Dienstes, zu dem er gehoert. Der
-         * Kommentar stand an genau der Stelle, an der die Entscheidung fiel.
-         *
-         * Gemessen im Kreislauf der Phase P1: zwei Einsaetze, beide exakt
-         * 24 Stunden zurueck (Fund F-P1-K). Die Angabe, die den Fehler
-         * behebt, lag die ganze Zeit in der Datei. */
+         * 'datum' darf NICHT auf target:null stehen, auch wenn es so
+         * aussieht, als rechne die Uhrzeit die Mitternachtslogik ohnehin dem
+         * Folgetag zu: Ohne 'datum' rechnet api/import_commit.php die Uhrzeit
+         * auf den DIENSTTAG (pruef_ortszeit_zu_utc($tag, $hhmm, 0, …)). Ein
+         * Einsatz um 01:38 landete damit 24 Stunden frueher — vor dem Beginn
+         * des Dienstes, zu dem er gehoert. */
         'diensttag': { target: 'day', parse: ['trim', 'dateIso'], required: true },
         'diensttag_id': { target: null },                // kontospezifisch, s. einsatz_id
         'datum': { target: 'einsatzdatum', parse: ['trim', 'dateIso'] },
-        /* Kopfzeile bis Web 5.10.0. Zeigt auf dasselbe Ziel, damit frühere
+        /* Aeltere Kopfzeile. Zeigt auf dasselbe Ziel, damit frühere
            Exportdateien lesbar bleiben — dieselbe Regel wie bei 'site_desc'
            weiter unten. */
         'flugtag': { target: 'day', parse: ['trim', 'dateIso'] },
@@ -220,13 +213,11 @@
         // Aktualisieren selbst. Ein Wert aus der Datei waere dort eine Aussage
         // ueber ein fremdes Konto.
         'herkunft': { target: null },                    // wird beim Import neu gesetzt
-        /* `final` IST ZUSTAND, nicht Entstehung (Backlog Nr. 28).
+        /* `final` IST ZUSTAND, nicht Entstehung.
          *
-         * Bis Web 7.3.1 stand hier target:null, und api/import_commit.php
-         * schrieb im INSERT das Literal 1. Der einzige nicht abgeschlossene
-         * Einsatz des Referenzdatensatzes kam damit als abgeschlossen zurueck
-         * — im Ueberschreiben-Modus sogar an einem Einsatz, der es vorher
-         * richtig hatte. Anders als `herkunft` und `edited` sagt `final`
+         * Mit target:null kaeme ein nicht abgeschlossener Einsatz als
+         * abgeschlossen zurueck — im Ueberschreiben-Modus sogar an einem
+         * Einsatz, der es vorher richtig hatte. Anders als `herkunft` und `edited` sagt `final`
          * nichts ueber das Quellkonto aus, sondern ueber den Einsatz. */
         'final': { target: 'final', parse: ['boolJN'] },
         'manual': { target: null },
@@ -236,18 +227,17 @@
            eingefrorenen Spalten des Diensttags. Sie werden NICHT uebernommen:
            Eine Aufloesung ueber Namensgleichheit waere bruechig (umbenannt,
            gleichnamig an zwei Standorten), und der Standortbezug ist
-           verbindlich (E15). Beides wird oben auf der Seite ausgewaehlt.
-           'hubschrauber' ist die Kopfzeile bis Web 5.10.0. */
+           verbindlich. Beides wird oben auf der Seite ausgewaehlt.
+           'hubschrauber' ist die aeltere Kopfzeile. */
         'hubschrauber': { target: null },
         'rettungsmittel': { target: null },
-        /* KURZNAME UND TYP STEHEN HIER NICHT (E-S9-09, Web 16.0.0), obwohl
-           der Export sie seit dieser Fassung führt. Sie stehen in
+        /* KURZNAME UND TYP STEHEN HIER NICHT, obwohl der Export sie führt.
+           Sie stehen in
            `diensttage.csv`, und dieses Profil liest `einsaetze.csv` — nur
            diese eine Datei. `expectedHeaders` leitet sich aus den Schlüsseln
            dieser Liste ab; zwei Überschriften einzutragen, die in der
            gelesenen Datei nie vorkommen, hieße Spalten zu erwarten, die es
-           dort nicht gibt. (Ein erster Anlauf in AP4 hatte sie eingetragen —
-           die Gegenprobe hat es gefunden.) */
+           dort nicht gibt. */
         'art': { target: null },
         'standort': { target: null },
 
@@ -264,7 +254,7 @@
         'hoehenmeter_m': { target: 'ascent_m', parse: ['ganzzahl'] },
         'hoehe_einsatzort_m': { target: 'site_ele_m', parse: ['ganzzahl'] },
 
-        /* Felder der Etappe 2 (Web 6.1.0). `export_csv_v1` ist der verlustfreie
+        /* `export_csv_v1` ist der verlustfreie
            Rückweg des eigenen Exports und muss mit assets/export.js synchron
            bleiben — jede dort ergänzte Spalte gehört hier ebenfalls hin, sonst
            verliert ein Export-Import-Umlauf sie stillschweigend. */
@@ -279,8 +269,8 @@
         'pat_start_lon': { target: 'pat.start.lon', parse: ['dezimal'], sensitive: true },
 
         'transport_dest': { target: 'transport_dest', parse: ['trim', 'max:190'] },
-        // Alte Kopfzeile aus Exporten bis Web 3.2.0. Zeigt auf dasselbe Ziel wie
-        // 'pat_ort_beschreibung' (E10), damit frühere Dateien lesbar bleiben.
+        // Alte Kopfzeile aus frueheren Exporten. Zeigt auf dasselbe Ziel wie
+        // 'pat_ort_beschreibung', damit frühere Dateien lesbar bleiben.
         'site_desc': { target: 'pat.site_desc', parse: ['trim', 'max:190'], sensitive: true },
         'schockraum': { target: 'schockraum', parse: ['boolJN'] },
         'secondary': { target: 'secondary', parse: ['boolJN'] },
@@ -294,8 +284,8 @@
         'other_ema': { target: 'other_ema', parse: ['trim', 'max:190'] },
         'weitere_rettungsmittel': { target: 'resources', parse: ['pipeList', 'maxEach:120'] },
         // `trimMehrzeilig` statt `trim`: Die Notiz ist das einzige Feld, das
-        // Zeilenumbrueche traegt, und `trim` zog sie weg (Backlog Nr. 27).
-        // ZIEL IST DER PAT-BLOCK (S9/AP7) — und damit `sensitive: true`: Der
+        // Zeilenumbrueche traegt, und `trim` zoege sie weg.
+        // ZIEL IST DER PAT-BLOCK — und damit `sensitive: true`: Der
         // Wert darf den Browser nur verschluesselt verlassen. Ohne die Marke
         // ginge er als Klartextspalte an `import_commit.php`, und der Import
         // waere das Loch, das das Formular gerade geschlossen hat.
@@ -316,7 +306,7 @@
         'track_datei': { target: null },                 // GPX wird nicht eingelesen
         'track_punkte': { target: null },
 
-        /* Die Momentaufnahme des Geräts (R64, Web 14.1.0) wird NICHT
+        /* Die Momentaufnahme des Geräts wird NICHT
            übernommen — dieselbe Begründung wie bei `herkunft` ein Stück weiter
            oben: Sie beschreibt, mit welchem Gerät der Einsatz IM QUELLKONTO
            entstanden ist. Beim Einlesen entsteht er neu, und zwar ohne Gerät
@@ -340,7 +330,7 @@
         csvColumns['phase_0' + n + '_lat'] = { target: 'phaseLat:' + n, parse: ['dezimal'] };
         csvColumns['phase_0' + n + '_lon'] = { target: 'phaseLon:' + n, parse: ['dezimal'] };
     });
-    /* Die Spaltennamen der Phasen 3 und 7 aus Exporten BIS Web 6.1.0. Sie
+    /* Die Spaltennamen der Phasen 3 und 7 aus aelteren Exporten. Sie
        zeigen auf dasselbe Ziel wie ihre neutralen Nachfolger — dieselbe
        Loesung wie bei 'site_desc' weiter oben. Ohne sie verlöre der Rückweg
        einer alten Exportdatei stillschweigend zwei Zeitstempel, und zwar die
@@ -381,8 +371,8 @@
         sheet: 0,
         headerRow: 'auto',
         minHeaderMatch: 10,
-        /* Die Kopfzeilen BEIDER Fassungen stehen hier: die bis Web 5.10.0
-           ('Hubschrauber', 'Flugkilometer') und die neutrale ab Web 6.0.0
+        /* Die Kopfzeilen BEIDER Fassungen stehen hier: die aeltere
+           ('Hubschrauber', 'Flugkilometer') und die neutrale
            ('Rettungsmittel', 'Kilometer'). minHeaderMatch entscheidet ueber
            Treffer, nicht Vollstaendigkeit — damit erkennt das Profil beide
            Fassungen, ohne dass es zwei Profile braeuchte. */
@@ -401,9 +391,8 @@
         // Wortlaut aus docs/Export-Format.md 5.2. Bewusst in der
         // Aussagerichtung "bleibt leer", nicht "geht verloren": Die Angaben
         // stehen in dieser Datei nie drin, es werden lediglich Felder nicht
-        // befuellt. Die Phasennamen sind die seit Web 6.0.0 gueltigen; bis
-        // dahin hiessen Phase 3 "Abflug" und Phase 7 "Landung Krankenhaus",
-        // und der Warntext hat das bis Web 8.0.0 weiter behauptet.
+        // befuellt. Die Phasennamen sind die neutralen; in aelteren Dateien
+        // heissen Phase 3 "Abflug" und Phase 7 "Landung Krankenhaus".
         warning: 'Diese Datei enthält nicht alle Felder, die das System kennt. '
             + 'Nach dem Import bleiben leer: die Phasen Ausrücken, Ankunft '
             + 'Einsatzort, Ankunft PatientIn, Transportbeginn, Ankunft Klinik '
@@ -417,8 +406,8 @@
             // Rettungsmittel und Standort sind Stammdaten und werden oben auf
             // der Seite ausgewaehlt — eine Bezeichnung aus der Datei wuerde sonst
             // stillschweigend neue Stammdaten anlegen.
-            /* 'Hubschrauber' ist die Kopfzeile bis Web 5.10.0, 'Rettungsmittel'
-               die neutrale ab Web 6.0.0. Beide bleiben eingetragen, damit
+            /* 'Hubschrauber' ist die aeltere Kopfzeile, 'Rettungsmittel'
+               die neutrale. Beide bleiben eingetragen, damit
                frühere Exportdateien lesbar bleiben. */
             'Hubschrauber': { target: null },
             'Rettungsmittel': { target: null },
@@ -427,7 +416,7 @@
             'Alarmzeit': { target: 'alarm', parse: ['dashLeer', 'timeHHMM'], required: true },
             'Endzeit': { target: 'phaseLocal:9', parse: ['dashLeer', 'timeHHMM'] },
             // Gerechnet, nicht gespeichert — wuerde zu Widerspruechen fuehren,
-            // sobald jemand eine Zeit korrigiert (SPEC_Export.md 7.2).
+            // sobald jemand eine Zeit korrigiert.
             'Dauer': { target: null },
             // 'Alter' ist in dieser Datei das ANGEZEIGTE Alter: bei gesetztem
             // Geburtsdatum daraus gerechnet, sonst der gespeicherte Wert. Ein
@@ -459,11 +448,11 @@
             'Höhe Einsatzort (m)': { target: 'site_ele_m', parse: ['dashLeer', 'ganzzahl'] },
             /* Kilometer sind aus dem Track gerechnet. Ohne Track waere ein
                uebernommener Wert nicht nachvollziehbar — deshalb verworfen.
-               'Flugkilometer' ist die Kopfzeile bis Web 5.10.0 und bleibt
+               'Flugkilometer' ist die aeltere Kopfzeile und bleibt
                eingetragen, damit frühere Dateien erkannt werden. */
             'Flugkilometer': { target: null },
             'Kilometer': { target: null },
-            // Ebenfalls in den pat-Block (S9/AP7), siehe oben.
+            // Ebenfalls in den pat-Block, siehe oben.
             'Notizen': { target: 'pat.notes', parse: ['dashLeer', 'trimMehrzeilig', 'max:2000'], sensitive: true }
         },
 
@@ -474,7 +463,7 @@
             'Windeneinsatz', 'HEMS', 'Pilot 1', 'Einsatznummer'],
 
         // Profil A schreibt einen Diensttag ohne Einsatz als eine Zeile mit
-        // Datum und lauter "-" (SPEC_Export.md 3.2). Die Pipeline muss das
+        // Datum und lauter "-" (docs/Export-Format.md 2). Die Pipeline muss das
         // als Diensttag ohne Einsatz lesen, nicht als fehlerhaften Einsatz.
         emptyDayRows: true
     };

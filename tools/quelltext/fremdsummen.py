@@ -8,7 +8,7 @@ Rückgabewert 0 = jede Textdatei unter server/assets/vendor/ trägt einen
 Herkunftskopf, dessen SHA-256 zur Datei passt, und Lizenzen.md nennt dieselbe
 Summe · 1 = eine Abweichung · 2 = gemessen wurde nichts (keine Datei).
 
-WOFÜR (R17-26, F-R17-50, -51). CLAUDE.md 4 und Lizenzen.md 3 versprechen:
+WOFÜR. CLAUDE.md 4 und Lizenzen.md 3 versprechen:
 jede vendorierte Datei „mit Herkunft und SHA-256 im Dateikopf". Nachgerechnet
 hat das niemand. Das Review fand zwei Lücken: `leaflet.css` trug die Summe
 des npm-Originals mit Windows-Zeilenenden, abgelegt ist sie mit LF — wer
@@ -112,8 +112,8 @@ def lauf(wurzel):
 
 
 def selbstprobe():
-    """Eine stimmige Datei; die Falle aus F-R17-50; ein falscher Rumpf; kein
-    Kopf (F-R17-51); Lizenzen.md abweichend oder ohne Zeile; ein leerer Baum."""
+    """Eine stimmige Datei; die Summe des Originals mit CRLF; ein falscher Rumpf; kein
+    Kopf; Lizenzen.md abweichend oder ohne Zeile; ein leerer Baum."""
     rumpf = b'a{b:c}\nd{e:f}\n'
     lf = hashlib.sha256(rumpf).hexdigest()
     crlf = hashlib.sha256(rumpf.replace(b'\n', b'\r\n')).hexdigest()

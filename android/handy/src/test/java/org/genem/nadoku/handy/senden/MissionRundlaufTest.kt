@@ -31,12 +31,12 @@ import java.time.Instant
 import kotlin.random.Random
 
 /**
- * **`mission`-Ketten gegen das echte `ingest.php`** (Abnahme B5).
+ * **`mission`-Ketten gegen das echte `ingest.php`.**
  *
- * Wie in B4: 0 × `rejected`, 0 × `kept_*`, 0 × 400. Zusätzlich zu prüfen ist
+ * Wie bei den Ruhesegmenten: 0 × `rejected`, 0 × `kept_*`, 0 × 400. Zusätzlich zu prüfen ist
  * hier, was nur ein Einsatz hat — Phasen, Kennzahlen, `final` mit `ended_at`
- * — und vor allem, dass **mehrfache Phaseneinträge erhalten bleiben**
- * (E-R45-12): Der Server ersetzt die Phasenliste bei jedem Upload, und wenn
+ * — und vor allem, dass **mehrfache Phaseneinträge erhalten bleiben**:
+ * Der Server ersetzt die Phasenliste bei jedem Upload, und wenn
  * er entdoppelte, fiele es genau hier auf.
  */
 @RunWith(RobolectricTestRunner::class)
@@ -74,7 +74,7 @@ class MissionRundlaufTest {
     }
 
     @After fun abbauen() {
-        /* ZUERST DIE DATEN (Backlog Nr. 95, R4-21): Das Trennen loescht das
+        /* ZUERST DIE DATEN: Das Trennen loescht das
          * Geraet, und danach gehoerte nichts mehr erkennbar zu diesem Lauf. */
         if (basis.isNotEmpty()) {
             val fehler = Kopplungshilfe.datenAbraeumen()
@@ -85,7 +85,7 @@ class MissionRundlaufTest {
         }
         /* Auch hier den Ratenschutz leeren: Diese Klassen koppeln ebenfalls
          * über `start`, und alle drei Rundlaufklassen teilen sich den Topf
-         * von 127.0.0.1 (E-S5-33). Wer nur in einer aufräumt, sperrt die
+         * von 127.0.0.1. Wer nur in einer aufräumt, sperrt die
          * anderen aus. */
         if (basis.isNotEmpty()) Kopplungshilfe.aufraeumen()
         if (this::puffer.isInitialized) puffer.close()
@@ -162,7 +162,7 @@ class MissionRundlaufTest {
     }
 
     /**
-     * **Mehrfache Phaseneinträge überstehen den Rundlauf** (E-R45-12).
+     * **Mehrfache Phaseneinträge überstehen den Rundlauf.**
      *
      * Der Server ersetzt die Phasenliste bei jedem Upload. Entdoppelte er
      * dabei — oder übergänge er die Liste —, käme hier ein `kept_phases`
@@ -205,7 +205,7 @@ class MissionRundlaufTest {
     }
 
     /**
-     * **Der Weg der Uhr endet beim Server** (Abnahme C2, E-S4-10).
+     * **Der Weg der Uhr endet beim Server.**
      *
      * Dieser Fall schließt die Kette, die auf der Uhr beginnt: Ein an der Uhr
      * ausgelöster Einsatz (`wm-`-Kennung), eine Doppelzustellung nach
@@ -213,11 +213,10 @@ class MissionRundlaufTest {
      * gegen das echte `ingest.php`.
      *
      * WARUM DAS NICHT SCHON DIE ANNAHME BELEGT: `UhrannahmeTest` zeigt, dass
-     * beide Einträge im **Puffer** stehen. Die Abnahme verlangt, dass beide
-     * **gesendet** werden — und genau das war bis C2 nicht der Fall: Ein
-     * Einsatz, dessen Metadaten der Server schon bestätigt hatte, galt als
-     * erledigt, und eine nachträgliche Phase wäre liegengeblieben
-     * (Fund B-S4-05).
+     * beide Einträge im **Puffer** stehen. Verlangt ist, dass beide
+     * **gesendet** werden: Ein Einsatz, dessen Metadaten der Server schon
+     * bestätigt hat, darf nicht als erledigt gelten, sonst bliebe eine
+     * nachträgliche Phase liegen.
      */
     @Test fun derWegDerUhrEndetBeimServer() {
         assertNull(

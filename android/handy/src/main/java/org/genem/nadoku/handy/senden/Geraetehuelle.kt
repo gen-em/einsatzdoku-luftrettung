@@ -26,17 +26,17 @@ import javax.crypto.spec.SecretKeySpec
 import kotlin.math.floor
 
 /**
- * Die Gerätehülle (S11-09, Konzept S11 3.4 und 3.7, E-S11-17).
+ * Die Gerätehülle.
  *
- * WAS SIE IST. Seit Web 22.0.1 nimmt `ingest.php` Spur und Phasenkoordinaten
- * nur noch verschlossen an und weist Klartext mit `400 klartext` ab. Das
+ * WAS SIE IST. `ingest.php` nimmt Spur und Phasenkoordinaten nur
+ * verschlossen an und weist Klartext mit `400 klartext` ab. Das
  * Handy verschließt mit dem ÖFFENTLICHEN Schlüssel des Kontos aus der
  * Kopplung; öffnen kann nur der Browser der Kontoinhaberin. Das Format steht
  * im Kopf von `tools/proben/huelle/referenz.py` und nur dort (Fassung 1);
  * die Prüffälle (`GeraetehuelleTest`) halten diese Umsetzung gegen dessen
  * Vektoren, Byte für Byte.
  *
- * NUR BORDMITTEL (E-S11-21): ECDH über `KeyAgreement`, AES-256-CBC über
+ * NUR BORDMITTEL: ECDH über `KeyAgreement`, AES-256-CBC über
  * `Cipher`, HMAC-SHA256 über `Mac`, HKDF daraus von Hand (RFC 5869, zwei
  * Runden für 64 Byte). Keine Fremdbibliothek; `docs/Lizenzen.md` bleibt
  * unberührt.
@@ -46,7 +46,7 @@ import kotlin.math.floor
  * Prüffälle laufen auf derselben Plattformschicht wie die App.
  *
  * WAS DAS HANDY NICHT VERSCHLIESST, weil es das nicht hat: die Reanimation
- * (sie bleibt bei der Garmin, E-R45-1). Die Einsatzhülle trägt deshalb eine
+ * (sie bleibt bei der Garmin). Die Einsatzhülle trägt deshalb eine
  * leere `rea`-Liste — „es gibt keine", und das stimmt für ein Handy immer.
  */
 object Geraetehuelle {
@@ -54,9 +54,9 @@ object Geraetehuelle {
     const val FASSUNG = 1
     private val INFO = "nadoku-huelle-1".toByteArray(Charsets.UTF_8)
 
-    /** Höhe ohne Wert in der Innenform (E-S11-39). */
+    /** Höhe ohne Wert in der Innenform. */
     const val HOEHE_UNBEKANNT = -32768
-    /** Ganze Meter, geklemmt (E-S11-66). */
+    /** Ganze Meter, geklemmt. */
     const val HOEHE_GRENZE = 32767
 
     private val kurve: ECParameterSpec by lazy {
@@ -140,7 +140,7 @@ object Geraetehuelle {
 
     /**
      * Eine Hülle bauen. `fluechtig` und `iv` nur für Prüffälle fest; sonst
-     * je Hülle ein neues Schlüsselpaar und ein zufälliger IV (E-S11-31).
+     * je Hülle ein neues Schlüsselpaar und ein zufälliger IV.
      */
     fun verschliessen(
         klar: ByteArray, empfaengerSec1: ByteArray, art: String, clientRef: String, platz: String,
@@ -172,7 +172,7 @@ object Geraetehuelle {
     fun runden(x: Double): Long = if (x >= 0) floor(x + 0.5).toLong() else -floor(-x + 0.5).toLong()
 
     /**
-     * Ein Spurstück innen: je Punkt 14 Byte, big-endian (E-S11-31, -39, -66) —
+     * Ein Spurstück innen: je Punkt 14 Byte, big-endian —
      * Breite und Länge in 1e-7 Grad (`int32`), Höhe in ganzen Metern
      * (`int16`, `-32768` = keine), Zeit relativ zu `tsVon` (`uint32`).
      */
@@ -208,8 +208,8 @@ object Geraetehuelle {
     }
 
     /**
-     * Die Einsatzhülle innen (E-S11-40): `{"fassung":1,"phasen":[…],"rea":[]}`,
-     * Zeiten in Sekunden seit `started_at` (E-S11-18). Die Phasen stehen in
+     * Die Einsatzhülle innen: `{"fassung":1,"phasen":[…],"rea":[]}`,
+     * Zeiten in Sekunden seit `started_at`. Die Phasen stehen in
      * derselben Reihenfolge wie `phases[]` der Nachricht.
      */
     fun einsatzInnen(begonnenAt: String, phasen: List<Phaseneintrag>): String {

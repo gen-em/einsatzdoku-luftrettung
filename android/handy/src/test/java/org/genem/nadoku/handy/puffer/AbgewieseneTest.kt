@@ -16,26 +16,25 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 
 /**
- * Abgewiesene Pakete tauchen jetzt irgendwo auf (B-S5Z-06, E-S5Z-12).
+ * Abgewiesene Pakete tauchen irgendwo auf.
  *
  * DER FEHLER, GEGEN DEN DIESE ZEILEN STEHEN: `alsFehlerhaftMerken` nimmt ein
  * Paket aus der Warteschlange **und** aus dem Rückstand. Beides ist richtig —
  * es wird nicht wiederholt (Vertrag 5), und ein Rückstand, der sich nie
- * abbaut, wäre eine Anzeige ohne Aussage. Die Folge war aber, dass es
- * **nirgends** mehr auftauchte: Die App sagte „Alles gesendet", während beim
- * Server ein Segment offen blieb.
+ * abbaut, wäre eine Anzeige ohne Aussage. Ohne eigene Zahl tauchte es aber
+ * **nirgends** mehr auf: Die App sagte „Alles gesendet", während beim
+ * Server ein Segment offen bleibt.
  *
  * Geprüft wird gegen ein **echtes SQLite** (Robolectric), nicht gegen eine
  * Attrappe: Die Zusicherung ist eine über eine Abfrage, und eine Attrappe
  * bestätigte nur, dass sie so geschrieben wurde, wie sie geschrieben wurde.
  *
- * SEIT ANDROID 0.14.0 AUCH DER RÄUMTEIL (Backlog Nr. 114, Krypto-Review
- * AN-2): Ein abgewiesenes Paket blieb bis dahin **für immer** liegen — samt
- * Spur, über Trennen und Neukopplung hinweg. Die Fälle unten schreiben die
- * Regel fest: nach der Frist und beim Trennen weg, laufende bleiben,
+ * DAZU DER RÄUMTEIL: Ohne ihn bliebe ein abgewiesenes Paket **für immer**
+ * liegen — samt Spur, über Trennen und Neukopplung hinweg. Die Fälle unten
+ * schreiben die Regel fest: nach der Frist und beim Trennen weg, laufende bleiben,
  * beendete `dienst`-Zeilen ohne Pakete gehen mit, die laufende nie.
  *
- * SEIT ANDROID 0.17.0 DER BEDIENWEG (Nr. 114, R4-22): „Verwerfen" in der
+ * UND DER BEDIENWEG: „Verwerfen" in der
  * Dienstansicht ruft den Räumteil ohne Frist. Die zwei Fälle am Ende halten
  * fest, was der Knopf zählt und was danach bleibt.
  */
@@ -108,8 +107,8 @@ class AbgewieseneTest {
 
     /**
      * Ein **laufendes** Paket zählt in keiner der beiden Zahlen — es ist
-     * weder abgeschlossen noch abgewiesen (Backlog Nr. 11: sonst stünde
-     * während des ganzen Dienstes „Rückstand 1").
+     * weder abgeschlossen noch abgewiesen (sonst stünde während des ganzen
+     * Dienstes „Rückstand 1").
      */
     @Test fun dasLaufendePaketZaehltNirgends() {
         puffer.paketAnlegen(
@@ -120,7 +119,7 @@ class AbgewieseneTest {
         assertEquals(0, puffer.abgewiesen())
     }
 
-    // ---- Der Räumteil (Backlog Nr. 114, Krypto-Review AN-2) ----------------
+    // ---- Der Räumteil -----------------------------------------------------
 
     /** Ein abgewiesener Einsatz mit Ende [beendet], samt einem Punkt und einer Phase. */
     private fun abgewiesenesPaket(ref: String, beendet: String, dienstRef: String? = null): Long {
@@ -230,7 +229,7 @@ class AbgewieseneTest {
         assertEquals(listOf("ad-jung"), dienstRefs())
     }
 
-    // ---- Der Bedienweg „Verwerfen" (Nr. 114, R4-22) ------------------------
+    // ---- Der Bedienweg „Verwerfen" -----------------------------------------
 
     /**
      * **Der Knopf steht nur, wenn er etwas tut.** [Puffer.verwerfbar] zählt
@@ -253,7 +252,7 @@ class AbgewieseneTest {
     }
 
     /**
-     * **Nach „Verwerfen" ist die Zahl 0** (Abnahme R4-22) — derselbe Aufruf
+     * **Nach „Verwerfen" ist die Zahl 0** — derselbe Aufruf
      * wie hinter dem Knopf. Die Quittung ist die Zahl, die zurückkommt; der
      * Rückstand gehört nicht dazu.
      */

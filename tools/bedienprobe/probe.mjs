@@ -1,18 +1,18 @@
-/* Klickprobe — das Pruefmittel, das bedient statt fotografiert (S9, E-S9-16).
+/* Klickprobe — das Pruefmittel, das bedient statt fotografiert.
  * ===========================================================================
  *
- * WARUM ES SIE GIBT. Das Projekt hatte vor S9 vier Pruefmittel im Browser, und
+ * WARUM ES SIE GIBT. Das Projekt hatte einmal vier Pruefmittel im Browser, und
  * keines davon hat je ein Element BEDIENT: Der Bilderlauf fotografiert, die
  * Vollstaendigkeit liest das Stylesheet, die Linkprobe folgt Adressen, die
  * Wartungsprobe zaehlt Erwartungen auf einer Seite. Zwei Fehler sind genau
  * dort hindurchgelaufen:
  *
- *   PS-2 (Backlog 102) — die Trefferliste der weiteren Rettungsmittel
+ *   Die Trefferliste der weiteren Rettungsmittel
  *   uebernahm auf `click`, das Feld versteckte die Liste 150 ms nach `blur`.
  *   Wer die Maus laenger haelt, bekommt kein `click`. Auf jedem Bild sah die
  *   Liste richtig aus.
  *
- *   Nr. 148 — der Knopf „Diensttage zusammenfuehren" fuehrte auf 404, weil er
+ *   Der Knopf „Diensttage zusammenfuehren" fuehrte auf 404, weil er
  *   `?ziel=` schrieb, wo die Seite `?d=` liest. Auch das sieht man einem Bild
  *   nicht an; gefunden hat es erst die Linkprobe, die dafuer gebaut wurde.
  *
@@ -42,9 +42,12 @@
  *   node tools/bedienprobe/probe.mjs --breiten 390,1280 --bilder
  *   node tools/bedienprobe/probe.mjs --breiten 390,1280 --finger --bilder --behalten
  *
- * AUSGABE unter tools/bedienprobe/ausgabe/ (steht in .gitignore):
- *   bericht.md, bericht.json  — je Weg Soll, Ist, Urteil
- *   bild/<weg>.png            — nur mit --bilder
+ * AUSGABE unter tools/bedienprobe/ausgabe/ (Chromium; die anderen Engines
+ * je in `ausgabe-<motor>/`, das in .gitignore steht):
+ *   bericht.md, bericht.json  — je Weg Soll, Ist, Urteil. EINGECHECKT: Der
+ *                               Bericht des Chromium-Laufs gehoert zum Baum,
+ *                               den der Pruefbericht nennt.
+ *   bild/<weg>.png            — nur mit --bilder; in .gitignore
  *
  * RUECKGABEWERT != 0, sobald ein Weg sein Soll verfehlt oder gar nicht
  * gefahren werden konnte. Ein Weg, der nicht gefahren werden konnte, gilt als
@@ -54,9 +57,9 @@
  * GRENZEN. Die Adressabfrage laeuft gegen die Attrappe in `attrappe.mjs`, nicht
  * gegen den echten Dienst; ein Finger ist kein Zeiger — was nur mit
  * Handschuhen auffaellt, faellt hier nicht auf. Der Satz „nur Chromium“
- * stand hier bis AP3b und stimmt seit dem 14.09.2026 nicht mehr:
- * `--motor firefox|webkit` faehrt dieselben Wege in Gecko und WebKit
- * (Nr. 183). Was dabei NICHT gleich ist, steht in `tools/motor.mjs` —
+ * gilt nicht:
+ * `--motor firefox|webkit` faehrt dieselben Wege in Gecko und WebKit.
+ * Was dabei NICHT gleich ist, steht in `tools/motor.mjs` —
  * headless Firefox meldet ohne Voreinstellung „kein Zeiger, kein Hover“
  * und misst damit 44 statt 36 px. Und WebKit hier ist nicht Safari:
  * derselbe Kern, anderer Unterbau (Schriften, Textrasterung).
@@ -80,7 +83,7 @@ if ((process.env.HTTPS_PROXY || process.env.https_proxy) && !process.env.NODE_US
 const MODUL = process.env.PLAYWRIGHT_MODUL
   || '/opt/node22/lib/node_modules/playwright/index.mjs';
 const PW = await import(MODUL.startsWith('/') ? 'file://' + MODUL : MODUL);
-const { motorWahl, starten, codeSchritt } = await import(
+const { motorWahl, starten, codeSchritt, istOertlich } = await import(
   new URL('../motor.mjs', import.meta.url).href);
 
 const HIER = dirname(fileURLToPath(import.meta.url));
@@ -94,14 +97,14 @@ const DEMO   = { email: wert('--demo',  'demo@gen-em.org'),  pw: wert('--demo-pw
 const ADMIN  = { email: wert('--admin', 'admin@example.invalid'), pw: wert('--admin-pw', 'pruefstandzugang2026') };
 const FILTER = (wert('--nur', '') || '').split(',').filter(Boolean);
 const MOTOR  = motorWahl(argv);
-/* Je Engine ein Ordner (Konzept DM), wie im Bilderlauf: Der Prüfstand fährt
+/* Je Engine ein Ordner, wie im Bilderlauf: Der Prüfstand fährt
  * die Probe dreimal hintereinander, und ein gemeinsamer Ordner hielte nur
  * den Bericht des letzten Laufs. */
 const AUSGABE = join(HIER, MOTOR === 'chromium' ? 'ausgabe' : `ausgabe-${MOTOR}`);
 const BILDER = flag('--bilder');
 const MARKE  = wert('--marke', '');     // freie Beschriftung des Laufs im Bericht
 
-/* ---- Die Uhr des Demo-Kontos ablesen (S10/AP3) ---------------------------
+/* ---- Die Uhr des Demo-Kontos ablesen -------------------------------------
  *
  * WARUM DAS HIERHER GEHOERT. Die Sitzungswache unten faengt den Fall ab, dass
  * der Demo-Reset eine SITZUNG beendet: Sie meldet sich neu an und faehrt die
@@ -132,12 +135,12 @@ const DEMO_RESET_VOR = await demoUhr();
 
 /* BREITE UND EINGABEART, weil ein Bild ohne beides nichts belegt. Die Abnahme
  * einer Vorschlagsliste lautet „zwei Breiten, beide Bedienhoehen" — 44 px am
- * Finger, 36 px am Zeigergeraet ab 1024 px (R76). Dieselbe Weiche wie beim
+ * Finger, 36 px am Zeigergeraet ab 1024 px. Dieselbe Weiche wie beim
  * Bilderlauf, und derselbe Fund dahinter: `hasTouch` allein reicht nicht,
  * `Emulation.setTouchEmulationEnabled` muss ueber CDP nachgesetzt werden, und
  * im Zeigerlauf wird gar nichts gesendet — `{enabled:false}` ist NICHT das
  * Gegenteil von `{enabled:true}` und kippt die Merkmale auf `none`/`coarse`
- * (S8/AP7, siehe tools/screenshots/LIESMICH.md). */
+ * (siehe tools/screenshots/LIESMICH.md). */
 const BREITEN = (wert('--breiten', '1280') || '1280')
   .split(',').map(b => parseInt(b, 10)).filter(b => b > 0);
 const FINGER = flag('--finger');
@@ -145,7 +148,7 @@ const hoeheFuer = (b) => (FINGER || b < 1024) ? 44 : 36;
 
 /* EINE ANMELDUNG, MEHRERE BREITEN — und das ist keine Bequemlichkeit.
  *
- * Das Demo-Konto traegt eine Mengenbremse (E-P1-20): 20 Anmeldungen je
+ * Das Demo-Konto traegt eine Mengenbremse: 20 Anmeldungen je
  * Fenster und Adresse, danach ist es fuer eine Stunde gesperrt. Vier Laeufe
  * mit je zwei Anmeldungen (demo und admin) haben sie gefuellt, und der
  * fuenfte Lauf endete mit „Anmeldung gescheitert" — was wie ein kaputter
@@ -181,10 +184,10 @@ const browser = await starten(PW, MOTOR, { finger: FINGER });
 async function anmelden(rolle) {
   const konto = rolle === 'admin' ? ADMIN : DEMO;
   const kontext = await browser.newContext({
-    ignoreHTTPSErrors: true, viewport: { width: BREITEN[0], height: 900 },
+    ignoreHTTPSErrors: istOertlich(BASIS), viewport: { width: BREITEN[0], height: 900 },
     hasTouch: FINGER,
   });
-  /* DER WARTUNGSLAUF BLEIBT AUS (S11-07, F-S11-77): Er packt und dünnt im
+  /* DER WARTUNGSLAUF BLEIBT AUS: Er packt und dünnt im
      Browser aus, sobald eine Seite ihn anstößt (Startseite, Reiter Backup),
      und das Ausdünnen ändert die Punkte — mitten in einem Vergleich wäre das
      eine Abweichung, die keine ist. Die Antwort sagt „nichts fällig" — ein
@@ -217,12 +220,12 @@ async function anmelden(rolle) {
     seite.waitForNavigation({ waitUntil: 'domcontentloaded', timeout: 30000 }),
     seite.click('#loginform button[type="submit"]'),
   ]);
-  /* DER CODE-SCHRITT DES ZWEITFAKTORS (P5c/AP5, E-P5c-43). Das Pruefkonto
+  /* DER CODE-SCHRITT DES ZWEITFAKTORS. Das Pruefkonto
    * `admin@example.invalid` ist eine BetreiberIn mit Zweitfaktor; nach dem
    * Passwort fragt `login.php` nach dem Code. `codeSchritt()` (motor.mjs)
    * geht ihn — und meldet das Einrichtungstor als Scheitern: Dessen Adresse
    * enthaelt `login.php` nicht, und ohne diese Pruefung liefe jeder Admin-Weg
-   * auf `zweitfaktor.php` statt auf seiner Seite (F-P5c-33). */
+   * auf `zweitfaktor.php` statt auf seiner Seite. */
   const zf = await codeSchritt(seite);
   if (!zf.ok) {
     throw new Error(`Anmeldung als ${konto.email} gescheitert — ${zf.meldung}`);
@@ -234,13 +237,13 @@ async function anmelden(rolle) {
       + 'Anmeldungen je Fenster und Adresse zu (E-P1-20) und sperrt danach '
       + 'für eine Stunde — mehrere Läufe hintereinander füllen sie.');
   }
-  /* Die Eingabeart haelt nicht von selbst (Fund aus S8/AP7): `hasTouch` am
+  /* Die Eingabeart haelt nicht von selbst: `hasTouch` am
    * Kontext setzt sie, ein Vollseiten-Screenshot verliert sie wieder. Sie
    * wird deshalb vor jeder Breite erneut gesendet — und NUR im Fingerlauf:
    * `{enabled:false}` ist nicht das Gegenteil von `{enabled:true}` und kippt
    * an einem Zeigerkontext die Merkmale auf `none`/`coarse`. */
-  /* NUR CHROMIUM HAT CDP. Seit AP3b faehrt die Probe auch Firefox und WebKit
-   * (Nr. 183); dort wirft `newCDPSession`. Gebraucht wird die Sitzung ohnehin
+  /* NUR CHROMIUM HAT CDP. Die Probe faehrt auch Firefox und WebKit;
+   * dort wirft `newCDPSession`. Gebraucht wird die Sitzung ohnehin
    * nur im Fingerlauf — und nur in Chromium, weil nur Chromium die
    * Eingabeart am Vollseiten-Screenshot verliert (gemessen: Firefox und
    * WebKit behalten pointer:coarse darueber hinweg). */
@@ -254,8 +257,8 @@ async function anmelden(rolle) {
   return { kontext, seite, fehler, rolle, eingabeart };
 }
 
-/* Faul: Eine Rolle wird angemeldet, wenn der erste Weg sie verlangt. AP1
- * braucht nur `demo` — eine Anmeldung als `admin` waere ein Zug aus der
+/* Faul: Eine Rolle wird angemeldet, wenn der erste Weg sie verlangt. Die Gruppe
+ * `AP1` braucht nur `demo` — eine Anmeldung als `admin` waere ein Zug aus der
  * Mengenbremse fuer nichts. */
 const rollenSpeicher = {};
 async function rolleHolen(name) {
@@ -264,7 +267,7 @@ async function rolleHolen(name) {
 }
 const rollen = { demo: await rolleHolen('demo') };
 
-/* EINE ZEITGRENZE JE WEG (Nr. 393, F4). Am 20.10.2026 hing die Probe in
+/* EINE ZEITGRENZE JE WEG. Am 20.10.2026 hing die Probe in
  * WebKit nach `betrieb-updates-neuladen` 43 Minuten, ohne eine Zeile zu
  * schreiben; erst ein Abbruch von Hand gab den Prüfstand frei, und 16 Wege
  * galten danach als verfehlt, ohne gefahren zu sein. Ein Weg braucht sonst
@@ -288,12 +291,12 @@ async function rolleVerwerfen(name) {
   if (name === 'demo') { rollen.demo = await rolleHolen('demo'); }
 }
 
-/* EIN LEBENSZEICHEN VOR JEDEM WEG — NUR IN WEBKIT (Nr. 393).
+/* EIN LEBENSZEICHEN VOR JEDEM WEG — NUR IN WEBKIT.
  *
  * In den vollen Läufen hing WebKit dreimal am ERSTEN Aufruf auf der Seite
  * einer Rolle, die untätig gestanden hatte, während ein anderer Kontext
- * arbeitete: `setViewportSize` (Lauf 3, `da-faehigkeiten-nach-typ` nach dem
- * Admin-Block), wohl ebenso in `mr-oeffner-markiert` (Lauf 4, nach dem
+ * arbeitete: `setViewportSize` (`da-faehigkeiten-nach-typ` nach dem
+ * Admin-Block), wohl ebenso in `mr-oeffner-markiert` (nach dem
  * eigenen Kontext von `einstellungen-profil-rueckweg`; nicht protokolliert)
  * und am 25.10.2026 ein `goto` (wieder `da-faehigkeiten-nach-typ`).
  * Das Aufrufprotokoll dieses Laufs zeigt, dass es nicht an der Anwendung
@@ -309,7 +312,7 @@ async function rolleVerwerfen(name) {
  * kehrt auf einer gesunden Seite in Millisekunden zurück. Kommt 10 s nichts,
  * wird die Rolle neu angemeldet, BEVOR der Weg beginnt, und das steht als
  * Zeile `WebKit-Neuanmeldung:` im Protokoll; `pruefen.sh` zählt sie mit den
- * Wiederholungen aus E-DM-10. Wirft das `evaluate`, navigiert die Seite
+ * Wiederholungen eines Seitenwechsels (`tools/motor.mjs`). Wirft das `evaluate`, navigiert die Seite
  * gerade; dann wird einmal auf `load` gewartet und neu gefragt.
  *
  * NICHT IN CHROMIUM UND FIREFOX: Dort ist es nie aufgetreten, und eine
@@ -335,7 +338,7 @@ async function lebtDieSeite(seite) {
  * Installation und stehen nicht in einer eingecheckten Datei. Sie werden ueber
  * dieselben Wege geholt, die eine NutzerIn ginge — und ein nicht aufgeloester
  * Wert ist `null` und laesst den Weg scheitern, statt ihn auf der falschen
- * Seite fahren zu lassen (F-P3-AH, F-P3-AQ). */
+ * Seite fahren zu lassen. */
 async function kennungen() {
   const s = rollen.demo.seite;
   await s.goto(`${BASIS}/index.php`, { waitUntil: 'domcontentloaded' });
@@ -345,7 +348,7 @@ async function kennungen() {
    * da ist (index.php 739); die 300 ms davor waren geraten. Unter Last kam
    * die Antwort spaeter, `k.kennung.tag` blieb `null`, und JEDER Weg meldete
    * „Kein Diensttag im Bestand" — zweimal an einem Nachmittag gesehen und
-   * beide Male fuer eine Stoerung gehalten (F-S9-U-15, 08.09.2026). */
+   * beide Male fuer eine Stoerung gehalten. */
   await s.waitForFunction(
     () => typeof currentDayId !== 'undefined' && currentDayId !== null,
     null, { timeout: 30000 }).catch(() => {});
@@ -366,7 +369,7 @@ const KENNUNG = await kennungen();
 /* Ein Weg bekommt genau diese Handreichungen und sonst nichts. Was hier nicht
  * steht, gehoert in den Weg — und was drei Wege brauchen, gehoert hierher. */
 /**
- * EINE VERLORENE SITZUNG WIEDER AUFBAUEN (S9/AP6).
+ * EINE VERLORENE SITZUNG WIEDER AUFBAUEN.
  *
  * Nur die Anmeldung, nicht der ganze Kontext: Kontext und Seite bleiben
  * stehen, damit Eingabeart, Attrappe und Kachelsperre erhalten bleiben — sie
@@ -399,7 +402,7 @@ async function kasten(rolle, weg, breite) {
     r = await rolleHolen(rolle || 'demo');
   }
   const BEDIENHOEHE = hoeheFuer(breite);
-  /* NUR WENN DIE GRÖSSE NICHT SCHON STIMMT (Nr. 393). In WebKit kehrt
+  /* NUR WENN DIE GRÖSSE NICHT SCHON STIMMT. In WebKit kehrt
    * `setViewportSize` nicht zurück, wenn die Seite gerade neu lädt — gemessen
    * am 21.10.2026: Die Demo-Seite stand im Hintergrund auf der Startseite,
    * `betrieb-updates-neuladen` schaltete die Wartung ein und aus, die
@@ -425,8 +428,8 @@ async function kasten(rolle, weg, breite) {
     /**
      * Seite oeffnen und auf das Stylesheet warten (sonst misst man ungestaltet).
      *
-     * MIT SITZUNGSWACHE SEIT S9/AP6 — dieselbe, die der Bilderlauf seit
-     * Web 9.10.1 hat. Das Demo-Konto setzt sich 30 Minuten nach der ersten Aenderung zurueck
+     * MIT SITZUNGSWACHE — dieselbe, die der Bilderlauf hat. Das
+     * Demo-Konto setzt sich 30 Minuten nach der ersten Aenderung zurueck
      * (`DEMO_RESET_SEKUNDEN`, demo_lib.php) und erhoeht dabei die
      * Sitzungs-Epoche; `auth_guard.php` beendet daraufhin jede offene Sitzung
      * dieses Kontos — auch die der Probe. Ein voller Lauf ueber zwei Breiten
@@ -462,10 +465,10 @@ async function kasten(rolle, weg, breite) {
     },
 
     /**
-     * DER KLICK MIT GEHALTENER MAUS — der Kern dieser Probe (E-S9-08).
+     * DER KLICK MIT GEHALTENER MAUS — der Kern dieser Probe.
      *
      * `locator.click()` von Playwright haelt die Taste rund 10 ms; genau
-     * deshalb faellt PS-2 damit NICHT auf. Hier wird die Folge von Hand
+     * deshalb faellt der Fehler der Trefferliste damit NICHT auf. Hier wird die Folge von Hand
      * gefahren: zeigen, druecken, `ms` warten, loslassen. 300 ms sind der
      * Wert aus der Abnahme — laenger als die 150 ms des Blur-Aufschubs und
      * kuerzer als ein Klick, den jemand fuer absichtlich haelt.
@@ -505,9 +508,9 @@ async function kasten(rolle, weg, breite) {
     /**
      * Werkzeugkasten fuer eine ANDERE Rolle, bei derselben Breite.
      *
-     * Geschrieben fuer AP2: DERSELBE Kartendialog sass an fuenf Stellen, und
+     * Geschrieben fuer die Wege in `ap2.mjs`: DERSELBE Kartendialog sass an fuenf Stellen, und
      * die fuenfte — die systemweiten Standorte — stand nur der Verwaltung
-     * offen. Die ist mit S9/AP5b gefallen (R39); die Einbauorte stehen seither
+     * offen. Die ist gefallen; die Einbauorte stehen seither
      * alle in einer Rolle (`wege/ap2.mjs`), der Werkzeugkasten bleibt fuer
      * den naechsten Weg in einer anderen. Die Rolle wird faul geholt wie
      * sonst auch: Wer sie nie verlangt, meldet sie nie an und zieht nichts
@@ -516,9 +519,9 @@ async function kasten(rolle, weg, breite) {
     async rolle(name) { return kasten(name, weg, breite); },
 
     /**
-     * ABMELDEN UND NEU ANMELDEN, in derselben Rolle und demselben Kontext
-     * (P5c/AP1). Die Ankuendigung laesst sich je SITZUNG wegklicken und
-     * kommt beim naechsten Anmelden wieder (E-P5c-13) — belegen laesst sich
+     * ABMELDEN UND NEU ANMELDEN, in derselben Rolle und demselben Kontext.
+     * Die Ankuendigung laesst sich je SITZUNG wegklicken und
+     * kommt beim naechsten Anmelden wieder — belegen laesst sich
      * das nur mit einer neuen Sitzung im selben Browser. Ein zweiter
      * Kontext waere eine zweite Sitzung, aber keine NEU-Anmeldung: Er haette
      * die alte nie gesehen.
@@ -601,9 +604,9 @@ async function kasten(rolle, weg, breite) {
 
     /** `seite`: die Seite, die ins Bild soll, wenn es nicht die der Rolle
      *  ist — ein Weg mit eigenem Kontext (`eigenerKontext()`) gibt seine mit.
-     *  Bis SR-02 kannte `bild()` nur die Seite der Rolle, und die drei Bilder
+     *  Kannte `bild()` nur die Seite der Rolle, und die drei Bilder
      *  des Zweitfaktor-Wegs zeigten die Startseite des Demo-Kontos statt Tor,
-     *  Codes und Haken — unter dem richtigen Namen (F-SR-21). */
+     *  Codes und Haken — unter dem richtigen Namen. */
     async bild(name, seite = null) {
       if (!BILDER) { return; }
       mkdirSync(join(AUSGABE, 'bild'), { recursive: true });
@@ -654,7 +657,7 @@ async function einmalFahren(weg, breite) {
     if (!e || typeof e !== 'object') { throw new Error('Weg lieferte kein Ergebnis'); }
   } catch (f) {
     zeit = !!(f && (f.gehangen || f.name === 'TimeoutError'));
-    /* NACH EINEM FEHLSCHLAG IN WEBKIT DIE SEITE BEFRAGEN (Nr. 393). Stirbt
+    /* NACH EINEM FEHLSCHLAG IN WEBKIT DIE SEITE BEFRAGEN. Stirbt
      * sie MITTEN im Weg, ist der Weg verfehlt — das Lebenszeichen in
      * `kasten()` kommt dafür zu spät. Dann sagt es die Bemerkung, und die
      * Rolle wird gleich neu angemeldet, statt dem nächsten Weg dieselbe
@@ -694,13 +697,13 @@ for (const breite of BREITEN) {
   for (const weg of WEGE) {
     let { e, zeit, verworfen } = await einmalFahren(weg, breite);
     /* EINMAL VON VORN — NUR IN WEBKIT, NUR NACH EINER ZEITÜBERSCHREITUNG
-     * (Nr. 393, Erweiterung von E-DM-10, entschieden von der Betreiberin
-     * am 25.10.2026). In neun vollen WebKit-Läufen blieb in vier eine Seite
+     * (entschieden von der Betreiberin am 25.10.2026). In neun vollen
+     * WebKit-Läufen blieb in vier eine Seite
      * MITTEN in einem Weg stehen, jedes Mal in einem anderen: keine Anfrage
      * beim Server, kein rechnender WebKit-Prozess, der Prozess schlief. Das
      * Lebenszeichen in `kasten()` fängt nur, was VOR dem Weg schon stumm
      * ist. Ein solcher Weg wird deshalb einmal ganz wiederholt, mit frisch
-     * angemeldeter Rolle — nicht der eine Klick (das schließt E-DM-10 weiter
+     * angemeldeter Rolle — nicht der eine Klick (den schließt `tools/motor.mjs` weiter
      * aus), sondern der Weg von seinem Anfang an, nachdem sein `finally`
      * aufgeräumt hat. Ein Fehler der Anwendung scheitert auch beim zweiten
      * Mal. Wiederholt wird NUR, was geworfen hat (Playwrights
@@ -781,7 +784,8 @@ if (DEMO_RESET_VOR !== null && DEMO_RESET_NACH !== null
 }
 md.push('## Grenzen dieses Laufs');
 md.push('');
-md.push('- Nur Chromium; WebKit und Gecko stehen im Prüfstand nicht zur Verfügung.');
+md.push(`- Gefahren in ${MOTOR}; die anderen beiden Engines haben je einen eigenen Lauf`);
+md.push('  und Bericht (`ausgabe-firefox/`, `ausgabe-webkit/`). Ein echter Safari ist es nicht.');
 md.push('- Die Adressabfrage lief gegen die Attrappe (`attrappe.mjs`), nicht gegen');
 md.push('  den echten Dienst — der Prüfstand hat dorthin keinen Netzzugang.');
 md.push(`- Gemessen wurde bei **${BREITEN.join(', ')} px** als `

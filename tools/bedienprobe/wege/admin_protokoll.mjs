@@ -1,14 +1,13 @@
 /* Wege der Seite Verwaltung → Protokoll (`admin_protokoll.php`).
  * ===========================================================================
  *
- * Entstanden mit P5c/AP2 (E-P5c-10, -25, -26; Bild M-P5c-01a). Nach der
- * SEITE benannt (E-PK-15).
+ * Nach der SEITE benannt.
  *
  *   admin-protokoll-reiter      Reiter wechseln; die Leiste trägt keine
  *                               Unterpunkte; eine Fehlerkennung im Suchfeld
  *                               landet auf „System"
  *   admin-protokoll-zeilen      eine Zeile aufklappen; aufklappbare und feste
- *                               Zeilen sind gleich hoch (F-P5c-13); das
+ *                               Zeilen sind gleich hoch; das
  *                               Auswahlfeld „Art" schickt ohne Knopf ab
  *
  * WER DIE SEITE SIEHT, UND WER NICHT, misst die Rollenprobe
@@ -22,6 +21,10 @@
  */
 
 import { execFileSync } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
+/* Die Wurzel des Repositoriums aus dem Ort dieser Datei — kein fester
+   Containerpfad; `ED_WURZEL` geht weiter vor. */
+const WURZEL_HIER = fileURLToPath(new URL('../../../', import.meta.url));
 
 const SEITE = k => `${k.basis}/admin_protokoll.php`;
 const MARKE = 'Bedienprobe-Messzeile';
@@ -29,7 +32,7 @@ const MARKE = 'Bedienprobe-Messzeile';
 function php(code) {
   return execFileSync('php', ['-r',
     'require "server/db.php"; require "server/protokoll_lib.php"; ' + code],
-    { cwd: process.env.ED_WURZEL || '/home/user/einsatzdoku-luftrettung',
+    { cwd: process.env.ED_WURZEL || WURZEL_HIER,
       encoding: 'utf-8' }).trim();
 }
 const aufraeumen = () => php('db()->prepare("DELETE FROM protokoll_ereignisse WHERE text LIKE ?")'

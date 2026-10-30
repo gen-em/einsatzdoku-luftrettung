@@ -15,15 +15,15 @@ declare(strict_types=1);
  * SOLANGE EIN PAKET NOCH NICHT GEBAUT IST, steht die Decke auf dem Startwert
  * (`decke_jetzt`), und `decke_ziel` sagt, worauf das Paket sie setzt. Erst
  * das Paket schreibt `decke_jetzt` herunter. Ohne diese Trennung waere die
- * Zaehlung von AP1 bis AP9 durchgehend rot und damit wertlos.
+ * Zaehlung waehrend des ganzen Umbaus durchgehend rot und damit wertlos.
  *
- * SEIT R17-19 IST DIE DECKE EINE RATSCHE (F-R17-56, E-R17-37): `decke_jetzt`
+ * DIE DECKE IST EINE RATSCHE: `decke_jetzt`
  * muss GENAU dem Ist entsprechen. Eine Decke ueber dem Ist ist ein Befund wie
- * eine darunter — Z17 stand nach AP5 bei Ist 0 noch auf 30, und dreissig
+ * eine darunter — Z17 stand einmal bei Ist 0 noch auf 30, und dreissig
  * Rueckfaelle waeren gruen geblieben. Wer eine Stelle entfernt, schreibt die
  * Decke im selben Commit herunter.
  *
- * EINE DECKE WIRD NICHT ANGEHOBEN, OHNE DASS ES IM KONZEPT STEHT (E-ZE-24).
+ * EINE DECKE WIRD NICHT ANGEHOBEN, OHNE DASS ES IM KONZEPT STEHT.
  * Wer eine zweite Stelle braucht, begruendet sie dort — nicht hier.
  *
  * SICHTEN: `php_ohne_zeichenketten` (Aufrufe) · `php_mit_zeichenketten`
@@ -41,12 +41,12 @@ declare(strict_types=1);
  * nicht trifft).
  */
 
-/* Die Kindtabellen eines Einsatzes (E-ZE-21). Bis Web 22.7.0 fuenf; mit
- * S11-12 sind `resus_sessions` und `resus_events` gefallen (die Reanimation
+/* Die Kindtabellen eines Einsatzes. `resus_sessions` und `resus_events`
+ * gibt es nicht mehr (die Reanimation
  * liegt in der Einsatzhuelle). */
 const ZH_KINDTABELLEN = 'mission_phases|mission_resources|mission_crew';
 
-/* Die vierzehn Formatierer-Definitionen aus Konzept 1.4, Zeile „Formatierer".
+/* Die vierzehn Formatierer-Definitionen der Zeile „Formatierer".
  * WARUM EINE NAMENSLISTE UND KEIN MUSTER: Die vierzehn heissen `fmtTag`,
  * `wertKmSumme`, `durationHHMM` — es gibt kein gemeinsames Muster, das sie
  * trifft und `wertLesen()` in `suche.php` (liest ein Formularfeld) oder
@@ -54,21 +54,21 @@ const ZH_KINDTABELLEN = 'mission_phases|mission_resources|mission_crew';
  * Muster, das beide mitnimmt, misst etwas anderes als gefragt war.
  * PREIS, ausdruecklich: Diese Zeile haelt die vierzehn auf null; einen NEU
  * erfundenen Formatierer unter neuem Namen sieht sie nicht. Dafuer ist die
- * Lesearbeit in AP8 da, nicht dieses Werkzeug. */
+ * Lesearbeit da, nicht dieses Werkzeug. */
 const ZH_FORMATIERER = [
     'server/assets/missiontable.js' => ['fmtTag', 'fmtDur', 'fmtKm', 'fmtKmZahl'],
     'server/assets/export.js'       => ['durationHHMM', 'durationMinutes'],
     'server/index.php'              => ['fmtDay'],
     'server/einsatz.php'            => ['fmtDay', 'fmtKm', 'fmtDauer'],
     'server/zeitraum.php'           => ['fmtKmDe', 'wertKm', 'wertKmSumme', 'fmtTagKurz'],
-    // R4-13 (Nr. 273): die dritte Dauer-Schreibweise stand hier; gefunden
+    // Die dritte Dauer-Schreibweise stand hier; gefunden
     // hatte sie erst eine Gegenprobe ueber das Muster der Rechnung.
     'server/assets/schneiden.js'    => ['dauer'],
 ];
 
 return [
 
-/* ---- AP1: Gegenproben zu Paket 1 und 3 aus Nr. 202 ---------------------- */
+/* ---- Gegenproben -------------------------------------------------------- */
 
 ['kennung' => 'Z30', 'paket' => 'AP1',
  'beschreibung' => "Gegenprobe P1: INSERT INTO password_resets ausserhalb konto_lib.php",
@@ -106,7 +106,7 @@ return [
  'regel' => ['art' => 'aufruf', 'namen' => ['usleep']],
  'start' => 0, 'decke_jetzt' => 1, 'decke_ziel' => 1],
 
-/* ---- AP2: Konfiguration und Sitzung ------------------------------------- */
+/* ---- Konfiguration und Sitzung ------------------------------------------ */
 
 ['kennung' => 'Z01', 'paket' => 'AP2',
  'beschreibung' => 'session_start( Aufrufe',
@@ -144,7 +144,7 @@ return [
  'regel' => ['art' => 'muster', 'muster' => '~\$CFG\b|\$GLOBALS\[\s*[\'"]CFG[\'"]\s*\]~'],
  'start' => 46, 'decke_jetzt' => 0, 'decke_ziel' => 0],
 
-/* ---- AP3: API-Eingang und Flash ----------------------------------------- */
+/* ---- API-Eingang und Flash ---------------------------------------------- */
 
 ['kennung' => 'Z05', 'paket' => 'AP3',
  'beschreibung' => 'php://input unter api/',
@@ -190,7 +190,7 @@ return [
  'regel' => ['art' => 'muster', 'muster' => '~\$_SESSION\[\s*[\'"]flash~'],
  'start' => 22, 'decke_jetzt' => 0, 'decke_ziel' => 0],
 
-/* ---- AP4: Datenzugriff klein -------------------------------------------- */
+/* ---- Datenzugriff klein ------------------------------------------------- */
 
 ['kennung' => 'Z10', 'paket' => 'AP4',
  'beschreibung' => 'app_state-SQL ausserhalb db.php und migration_lib.php',
@@ -269,9 +269,9 @@ return [
  'sicht' => 'php_mit_zeichenketten', 'bereich' => 'php', 'ausser' => [],
  'nur' => 'server/migration_lib.php',
  'regel' => ['art' => 'muster', 'muster' => '~information_schema~i'],
- 'start' => 57, 'decke_jetzt' => 54, 'decke_ziel' => 54],
+ 'start' => 57, 'decke_jetzt' => 53, 'decke_ziel' => 53],
 
-/* ---- AP5: Transaktion und Kindtabellen ---------------------------------- */
+/* ---- Transaktion und Kindtabellen --------------------------------------- */
 
 ['kennung' => 'Z16', 'paket' => 'AP5',
  'beschreibung' => 'beginTransaction( ausserhalb transaktion_lib.php',
@@ -309,7 +309,7 @@ return [
   . ZH_KINDTABELLEN . ')`?~i'],
  'start' => 30, 'decke_jetzt' => 0, 'decke_ziel' => 0],
 
-/* ---- AP6: Spaltenregister missions -------------------------------------- */
+/* ---- Spaltenregister missions ------------------------------------------- */
 
 ['kennung' => 'Z18', 'paket' => 'AP6',
  'beschreibung' => 'Handlisten der missions-Spalten (>= 10 Spaltennamen dicht beieinander)',
@@ -323,7 +323,7 @@ return [
  'regel' => ['art' => 'eigen', 'name' => 'missions_handliste'],
  'start' => 12, 'decke_jetzt' => 3, 'decke_ziel' => 3],
 
-/* ---- AP7: Zeit und Zahl in PHP ------------------------------------------ */
+/* ---- Zeit und Zahl in PHP ----------------------------------------------- */
 
 ['kennung' => 'Z19', 'paket' => 'AP7',
  'beschreibung' => 'edbak_groesse_text( Aufrufe',
@@ -416,7 +416,7 @@ return [
  'regel' => ['art' => 'eigen', 'name' => 'date_ohne_zeitstempel'],
  'start' => 4, 'decke_jetzt' => 0, 'decke_ziel' => 0],
 
-/* ---- AP8: JavaScript ---------------------------------------------------- */
+/* ---- JavaScript --------------------------------------------------------- */
 
 ['kennung' => 'Z28', 'paket' => 'AP8',
  'beschreibung' => "JS: Literal 'X-CSRF'",
@@ -431,15 +431,14 @@ return [
 ['kennung' => 'Z29', 'paket' => 'AP8',
  'beschreibung' => 'JS: Formularfeld csrf von Hand',
  'grund' => 'FF-4: 10b hat einen zweiten CSRF-Transport gebaut. EdApi.postForm() '
-          . 'haengt ihn an. ZWEI BLEIBEN, nicht null — Entscheidung des '
-          . 'Auftraggebers vom 22.09.2026 (ehrliche Zahl statt runder Null). '
-          . 'Die eine ist die Zentrale selbst. Die andere ist rueckfrage.js: '
-          . 'KEIN Formularfeld, sondern eine Parameterweitergabe an '
-          . 'EdSchluessel.erneuern() — ein Fehlalarm des Musters. Sie faellt '
-          . 'nur ueber eine Schnittstellenaenderung, und die bleibt.',
+          . 'haengt ihn an. EINE BLEIBT, nicht null — Entscheidung des '
+          . 'Auftraggebers vom 22.09.2026 (ehrliche Zahl statt runder Null): '
+          . 'die Zentrale selbst. Die zweite war eine Parameterweitergabe in '
+          . 'rueckfrage.js an EdSchluessel.erneuern(), die der Empfaenger nicht '
+          . 'mehr las; sie ist mit R17-28 gefallen (30.10.2026).',
  'sicht' => 'js_und_inline', 'bereich' => 'js_und_inline', 'ausser' => [],
  'regel' => ['art' => 'muster', 'muster' => '~[\'"]csrf[\'"]\s*[,:]|(?<![\w.$])csrf\s*:~'],
- 'start' => 5, 'decke_jetzt' => 2, 'decke_ziel' => 0],
+ 'start' => 5, 'decke_jetzt' => 1, 'decke_ziel' => 0],
 
 ['kennung' => 'Z34', 'paket' => 'AP8',
  'beschreibung' => 'JS: Formatierer-Definitionen ausserhalb assets/format.js',
@@ -523,7 +522,7 @@ return [
  'regel' => ['art' => 'aufruf', 'namen' => ['error_log']],
  'start' => 77, 'decke_jetzt' => 2, 'decke_ziel' => 2],
 
-/* ---- 10c AP2: zwei neue eine Stellen (R83) ------------------------------- */
+/* ---- zwei neue eine Stellen ---------------------------------------------- */
 
 ['kennung' => 'Z39', 'paket' => '10c AP2',
  'beschreibung' => 'new ZipArchive ausserhalb zip_lib.php',
@@ -570,7 +569,7 @@ return [
              'muster' => '~INSERT\s+INTO\s+missions\s*\(\s*\'\s*\.\s*implode\s*\(~i'],
  'start' => 4, 'decke_jetzt' => 0, 'decke_ziel' => 0],
 
-/* ---- Schritt 18, SR-07: der frische Code --------------------------------- */
+/* ---- der frische Code ---------------------------------------------------- */
 
 ['kennung' => 'Z43', 'paket' => 'SR-07',
  'beschreibung' => 'frischer Code: jede Handlung der Liste genau ein Aufruf',
@@ -585,7 +584,7 @@ return [
  'regel' => ['art' => 'eigen', 'name' => 'frischer_code'],
  'start' => 0, 'decke_jetzt' => 0, 'decke_ziel' => 0],
 
-/* ---- Schritt 18, SR-04: die Nachweisdatei (R83) ------------------------- */
+/* ---- die Nachweisdatei -------------------------------------------------- */
 
 ['kennung' => 'Z44', 'paket' => 'SR-04',
  'beschreibung' => 'Nachweisdatei-Mechanik ausserhalb nachweis_lib.php',
@@ -600,7 +599,7 @@ return [
  'regel' => ['art' => 'muster', 'muster' => '~[\'"]\*\.txt[\'"]|\{32\}\)\\\\\.txt~'],
  'start' => 4, 'decke_jetzt' => 0, 'decke_ziel' => 0],
 
-/* ---- R17-22: kein Markup im Meldungstext (F-R17-49) --------------------- */
+/* ---- kein Markup im Meldungstext ---------------------------------------- */
 
 ['kennung' => 'Z45', 'paket' => 'R17-22',
  'beschreibung' => 'Tag in einem Textargument von ui_meldung() oder ui_meldung_markup()',

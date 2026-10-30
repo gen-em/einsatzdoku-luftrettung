@@ -1,5 +1,4 @@
-/* passkey.js — Passkeys anlegen und bestätigen (Schritt 18, SR-09;
- * E-SR-29 bis -32).
+/* passkey.js — Passkeys anlegen und bestätigen.
  *
  * ZWEI GRIFFE, BEIDE AN `data-`-ATTRIBUTEN, kein Inline-Skript (CSP):
  *
@@ -19,9 +18,9 @@
  *
  * OHNE `PublicKeyCredential` BLEIBT ALLES VERBORGEN: Beide Bereiche tragen
  * `hidden` im Markup, und nur dieses Skript nimmt es weg. Ohne JavaScript
- * bleibt der Codeweg (E-SR-32).
+ * bleibt der Codeweg.
  *
- * KEIN FREMDBESTANDTEIL (E-SR-30): Base64url und die zwei Aufrufe der
+ * KEIN FREMDBESTANDTEIL: Base64url und die zwei Aufrufe der
  * Plattform sind alles, was es braucht.
  */
 (function () {
@@ -61,7 +60,7 @@
 
   /** Was der Browser meldet, in einem Satz, den man versteht. NotAllowedError
    *  heißt auch „auf diesem Gerät liegt kein passender Passkey" — der Browser
-   *  unterscheidet das mit Absicht nicht (H-SR-08, F-SR-41). */
+   *  unterscheidet das mit Absicht nicht. */
   function grund(e) {
     if (e && e.name === 'NotAllowedError') {
       return 'Abgebrochen, abgelaufen oder kein passender Passkey auf diesem Gerät — nichts geändert.';
@@ -79,7 +78,7 @@
     const knopf = bereich.querySelector('[data-passkey-knopf]');
     if (!knopf) { return; }
     knopf.addEventListener('click', async () => {
-      /* DIE BEZEICHNUNG VOR DEM DIALOG PRÜFEN (H-SR-08, F-SR-39): Lehnte erst
+      /* DIE BEZEICHNUNG VOR DEM DIALOG PRÜFEN: Lehnte erst
          der Server sie ab, läge im Gerät schon ein Passkey ohne Zeile hier.
          Gezählt in Zeichen wie mb_strlen(), nicht in UTF-16-Einheiten. */
       const feldVorab = bereich.querySelector('input[name="pk_bezeichnung"]');
@@ -116,15 +115,14 @@
         if (!antw.ok) { throw Object.assign(new Error(antw.meldung), { eigen: true }); }
         window.location.reload();
       } catch (e) {
-        /* SOBALD DIE ANTWORT ABGESCHICKT IST, BLEIBT DER KNOPF AUS
-         * (Nachprüfung von H-SR-08, E-1): Der Passkey liegt dann schon im
+        /* SOBALD DIE ANTWORT ABGESCHICKT IST, BLEIBT DER KNOPF AUS: Der
+         * Passkey liegt dann schon im
          * Authenticator, und ob der Server ihn bekam, weiß hier niemand —
          * nach einem Netzfehler so wenig wie nach einer Ablehnung. Ein
          * zweiter Klick erzeugte einen zweiten Passkey, womöglich ohne Zeile
          * auf dem Server. Deshalb sagt die Meldung dann IMMER „Seite neu
-         * laden" — bis Web 21.11.1 stand hier „nach einer Antwort des
-         * Servers", und nur zwei der Antworten sagten es (dritte Lesung,
-         * 3B-2). Scheitert schon der Dialog des Browsers, ist nichts
+         * laden", gleich ob eine Antwort des Servers kam oder nicht.
+         * Scheitert schon der Dialog des Browsers, ist nichts
          * gesendet, und der Knopf geht wieder an. */
         const text = e && e.eigen ? e.message : grund(e);
         melden(bereich, 'fehler', gesendet && !/neu laden/.test(text)
@@ -158,8 +156,8 @@
           authenticatorData: b64u.zu(r.authenticatorData),
           signature: b64u.zu(r.signature),
         });
-        /* Der Haken „Gerät merken" steht im Codeformular daneben (E-SR-32:
-           ein Passkey zählt wie ein App-Code). */
+        /* Der Haken „Gerät merken" steht im Codeformular daneben (ein
+           Passkey zählt wie ein App-Code). */
         const merken = document.getElementById('sw-merken');
         const ziel = form.querySelector('input[name="merken"]');
         if (ziel) { ziel.value = merken && merken.checked ? '1' : ''; }

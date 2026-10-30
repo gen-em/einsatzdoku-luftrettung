@@ -40,15 +40,14 @@ class NAdokuApp : Application() {
     val ausduenner: Ausduenner by lazy { Ausduenner() }
 
     /**
-     * Wie es um die Ortung steht — `null`, solange kein Dienst läuft
-     * (E-S5Z-01, E-S5Z-06).
+     * Wie es um die Ortung steht — `null`, solange kein Dienst läuft.
      *
      * WARUM HIER UND NICHT IM PUFFER. Das ist ein **Augenblickswert**, kein
      * Zustand des Dienstes: Er überlebt einen Neustart bewusst nicht. Eine
      * wiederhergestellte Aussage über den GPS-Empfang von vorhin wäre
      * schlimmer als keine — sie sähe aus wie eine Messung. Nach einem
-     * Neustart misst der Wächter neu. Das widerspricht E-S4-31 nicht: Dort
-     * geht es um den Zustand des **Dienstes**, der Neustarts überleben muss.
+     * Neustart misst der Wächter neu. Anders der Zustand des **Dienstes**:
+     * Der muss Neustarts überleben.
      *
      * `null` HEISST „ES LÄUFT KEIN DIENST", nicht „unbekannt". Vor dem Dienst
      * leitet die Oberfläche selbst ab, was sie braucht — Freigabe und
@@ -87,27 +86,25 @@ class NAdokuApp : Application() {
             tresor = tresor,
             phasenLeser = { paketId -> puffer.phasen(paketId) },
             // Fehlt der Kontoschlüssel, holt der Sendelauf ihn über `status`
-            // nach (S11-09, E-S11-80) — auf demselben Faden, ohne Bildschirm.
+            // nach — auf demselben Faden, ohne Bildschirm.
             schluesselHolen = {
                 org.genem.nadoku.handy.kopplung.Kopplungsdienst(HttpNetzweg(), tresor).schluesselHolen()
             },
         )
     }
 
-    // ---- Senden: EIN Ausführer, nie zwei Läufe zugleich (E-S5Z-11) --------
+    // ---- Senden: EIN Ausführer, nie zwei Läufe zugleich -------------------
 
     /**
      * Der eine Faden, auf dem gesendet wird.
      *
-     * WARUM ER SEIN MUSS. Bis 0.8.1 startete **jeder** Anlass seinen eigenen
-     * `Thread`: der 15-Minuten-Takt und das Dienstende aus dem
-     * Vordergrunddienst, der Phasenwechsel und der Einsatzabschluss aus der
-     * Oberfläche. Der Kommentar dazu lautete „die Läufe überlappen nicht (der
-     * nächste kommt frühestens in 15 Minuten)" — und das galt nur für den
-     * Takt. Zwei Läufe auf demselben Puffer waren möglich, `Sender.chunkPunkte`
-     * ist ein ungeschütztes `var`, und harmlos war es nur, weil der Server
-     * idempotent ist (B-S5Z-11). Mit E2 kommt ein dritter Anlass dazu (der
-     * Nachsende-Job) — die Zusicherung wird jetzt gemacht statt kommentiert.
+     * WARUM ER SEIN MUSS. Senden wollen viele Anlässe: der 15-Minuten-Takt
+     * und das Dienstende aus dem Vordergrunddienst, der Phasenwechsel und
+     * der Einsatzabschluss aus der Oberfläche, der Nachsende-Job. Startete
+     * jeder seinen eigenen `Thread`, wären zwei Läufe auf demselben Puffer
+     * möglich — `Sender.chunkPunkte` ist ein ungeschütztes `var`, und harmlos
+     * wäre es nur, weil der Server idempotent ist. Die Zusicherung wird hier
+     * gemacht statt kommentiert.
      *
      * Ein einzelner Faden und kein Vorrat: Es gibt nichts zu parallelisieren.
      * Was hier eingereiht wird, will nacheinander geschehen.
@@ -117,24 +114,24 @@ class NAdokuApp : Application() {
     }
 
     /**
-     * Der Faden für Nachrichten **an die Uhr** — ein zweiter, und das ist eine
-     * Berichtigung von E-S5Z-24 (E3).
+     * Der Faden für Nachrichten **an die Uhr** — ein zweiter, nicht der
+     * Sendeausführer.
      *
-     * DAS KONZEPT SAH DEN SENDEAUSFÜHRER VOR. Der Gedanke war richtig — die
-     * Meldung darf nicht auf den Hauptfaden, weil `WearNachrichtenweg.sende()`
-     * bis zu fünf Sekunden je `Tasks.await` blockiert (B4.6). Die Folgerung
-     * war es nicht: Beide Warteschlangen haben **verschiedene Fristen und
-     * verschiedene Fehlerbilder**.
+     * Die Meldung darf nicht auf den Hauptfaden, weil
+     * `WearNachrichtenweg.sende()` bis zu fünf Sekunden je `Tasks.await`
+     * blockiert. Auf den Sendeausführer darf sie aber auch nicht: Beide
+     * Warteschlangen haben **verschiedene Fristen und verschiedene
+     * Fehlerbilder**.
      *
      * Ein Upload eines Zwölfstundendienstes braucht zwanzig Anfragen und kann
      * eine Minute dauern. Läge die Uhrnachricht dahinter, erschiene die
      * Warnung „keine Ortung" am Handgelenk eine Minute zu spät — und genau
-     * ihre Rechtzeitigkeit ist der Grund, warum es E3 gibt. Umgekehrt darf
+     * ihre Rechtzeitigkeit ist der Grund, warum die Uhr es erfährt. Umgekehrt darf
      * eine Uhr im Funkloch (fünf Sekunden Wartezeit, oft mehrfach) keinen
      * Diensttag aufhalten.
      *
-     * WAS E-S5Z-11 ZUSICHERT, BLEIBT UNBERÜHRT: Dort geht es um **zwei Läufe
-     * auf demselben Puffer**. Eine Uhrnachricht fasst den Puffer nur lesend
+     * WAS DER SENDEAUSFÜHRER ZUSICHERT, BLEIBT UNBERÜHRT: Dort geht es um
+     * **zwei Läufe auf demselben Puffer**. Eine Uhrnachricht fasst den Puffer nur lesend
      * an (den Stand), schreibt nichts und kann deshalb nichts verschränken.
      */
     val uhrausfuehrer: ExecutorService by lazy {
@@ -155,8 +152,8 @@ class NAdokuApp : Application() {
     val sendelaufLaeuft: Boolean get() = eingereicht.get() > 0
 
     /**
-     * Was der letzte Lauf ergeben hat — für die Ergebniszeile der Ansicht
-     * (E-S5Z-12). `null` = seit dem App-Start hat keiner stattgefunden.
+     * Was der letzte Lauf ergeben hat — für die Ergebniszeile der Ansicht.
+     * `null` = seit dem App-Start hat keiner stattgefunden.
      */
     @Volatile
     var letzterSendebericht: Sendelauf? = null
@@ -182,12 +179,12 @@ class NAdokuApp : Application() {
     }
 
     /**
-     * Beim Start nachsehen, ob etwas liegen geblieben ist (E-S5Z-09).
+     * Beim Start nachsehen, ob etwas liegen geblieben ist.
      *
      * DER FALL, DEN DAS ABFÄNGT: Der Prozess ist gestorben, **bevor** der
      * Nachsende-Job geplant werden konnte — abgeräumt vom System, oder mit
      * der App weggewischt. Dann wartet die Nachlieferung sonst auf den
-     * nächsten Dienst, und genau das war der Fehler, gegen den E2 gebaut ist.
+     * nächsten Dienst, und genau dagegen ist der Nachsende-Job gebaut.
      *
      * Es wird nur **geplant**, nicht gesendet: Ein Sendelauf beim App-Start
      * kostete Anlaufzeit für etwas, das ein paar Sekunden später ohnehin

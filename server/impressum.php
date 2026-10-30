@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 /**
- * Impressum dieser Installation (R32).
+ * Impressum dieser Installation.
  *
  * Der Inhalt steht in der Datenbank und wird unter Einstellungen →
  * Rechtstexte gepflegt; die Anwendung liefert keinen Text mit. Die Seite

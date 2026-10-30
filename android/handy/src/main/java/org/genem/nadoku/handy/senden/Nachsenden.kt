@@ -7,15 +7,15 @@ import android.content.Context
 import android.util.Log
 
 /**
- * Das Nachsenden nach dem Dienstende (E-S5Z-09) — **Planung und Entscheidung**.
+ * Das Nachsenden nach dem Dienstende — **Planung und Entscheidung**.
  *
- * DER FEHLER, GEGEN DEN ES GEBAUT IST, ist belegt (Diagnose 1.3, H2/Kette B1):
- * Ein Dienstende, dessen Sendelauf nicht durchkam, wurde **nie wiederholt**.
- * `spaeterErneut` hiess bis 0.8.1 „später" ohne ein Später: Ausserhalb eines
- * laufenden Dienstes gab es keinen Zeitgeber, der noch einmal angeklopft
- * hätte. Erst der **nächste** Dienst sendete wieder — sein erster Takt kommt
- * eine Viertelstunde nach dem Start. Bis dahin stand der Diensttag im Web
- * ohne Ende und das letzte Ruhesegment „–offen".
+ * DER FEHLER, GEGEN DEN ES GEBAUT IST, ist belegt: Ohne Nachsenden würde ein
+ * Dienstende, dessen Sendelauf nicht durchkam, **nie wiederholt**.
+ * `spaeterErneut` hiesse „später" ohne ein Später: Ausserhalb eines
+ * laufenden Dienstes gibt es keinen Zeitgeber, der noch einmal anklopft.
+ * Erst der **nächste** Dienst sendete wieder — sein erster Takt kommt eine
+ * Viertelstunde nach dem Start. Bis dahin stünde der Diensttag im Web ohne
+ * Ende und das letzte Ruhesegment „–offen".
  *
  * WARUM `JobScheduler` UND NICHT `WorkManager`. Der Planer ist ein Bordmittel
  * und kostet keine Abhängigkeit; `WorkManager` wäre eine, gehörte nach
@@ -41,7 +41,7 @@ object Nachsenden {
      */
     const val JOB_ID = 1
 
-    /** Z-S5Z-06: `JobInfo.DEFAULT_INITIAL_BACKOFF_MILLIS`. Die Plattform deckelt bei 5 h. */
+    /** `JobInfo.DEFAULT_INITIAL_BACKOFF_MILLIS`. Die Plattform deckelt bei 5 h. */
     const val BACKOFF_MS = 30_000L
 
     private const val MARKE = "NAdoku"
@@ -79,8 +79,8 @@ object Nachsenden {
     /**
      * Den Job einplanen (oder den vorhandenen ersetzen).
      *
-     * @param ueberNeustart `setPersisted` — braucht `RECEIVE_BOOT_COMPLETED`
-     *   (E-S5Z-19). Nur der Weg über das Dienstende und den App-Start setzt
+     * @param ueberNeustart `setPersisted` — braucht `RECEIVE_BOOT_COMPLETED`.
+     *   Nur der Weg über das Dienstende und den App-Start setzt
      *   es; der Job selbst plant sich über den Rückgabewert von `jobFinished`
      *   nach und braucht es dort nicht.
      */

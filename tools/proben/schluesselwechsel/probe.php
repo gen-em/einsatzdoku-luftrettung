@@ -3,74 +3,70 @@ declare(strict_types=1);
 
 /**
  * Schlüsselwechselprobe — wechselt der Serverschlüssel als Vorgang, und geht
- * dabei nichts verloren? (Schritt 18, SR-03)
+ * dabei nichts verloren?
  *
  * Anlass: Nr. 247 — es gab keinen Wechsel; wer `server_key` von Hand änderte, machte alles Versiegelte stumm
  *
  * WAS SIE MISST, gegen die örtliche Anlage, mit eigenen Stücken:
  *   1. Das Inventar kommt aus den Aufrufern: jeder `sk_versiegeln(`-Aufruf in
- *      `server/` gehört zu einem Zweck, den der Job kennt (F-SR-01). Ein neuer
+ *      `server/` gehört zu einem Zweck, den der Job kennt. Ein neuer
  *      Zweck ohne Eintrag ist rot.
  *   2. Je Zweck ein Stück unter dem Schlüssel A — ein Ziel mit Passwort, ein
  *      Konto mit Zweitfaktor, eine Begleitdatei und ein Konto-Backup
  *      (Fassung 3), dazu eines der Fassung 2 ohne Siegel, ein Archiv des
  *      Protokolls, ein Komplett-Stand — und ein Stück, das sich mit KEINEM
- *      Schlüssel öffnen lässt (E-SR-61).
- *   3. Die Riegel vor dem Wechsel: ohne Haken nichts (E-SR-63), nicht neben
- *      einer Anteil-Rotation (E-SR-60); ein `server_key_alt` gleich dem
- *      heutigen ist kein Wechsel (F-SR-78) und steht nicht auf dem Blatt; eine
+ *      Schlüssel öffnen lässt.
+ *   3. Die Riegel vor dem Wechsel: ohne Haken nichts, nicht neben
+ *      einer Anteil-Rotation; ein `server_key_alt` gleich dem
+ *      heutigen ist kein Wechsel und steht nicht auf dem Blatt; eine
  *      Sperre, die steht, sagt seit wann und bis wann höchstens; die
- *      Rücknahme eines halben Griffs räumt keinen fremden Eintrag weg
- *      (Nachprüfung H-SR-06, F-SR-86).
+ *      Rücknahme eines halben Griffs räumt keinen fremden Eintrag weg.
  *   4. Der Wechsel A → B — ZWEIMAL GLEICHZEITIG, aus zwei Prozessen: genau
- *      einer kommt durch, A bleibt als bisheriger (H-SR-06, F-SR-78). Lage
- *      `rotation`, Marke auf B, Blatt-Marke gelöscht (Nr. 233, E-SR-11),
- *      Protokoll, Mail an jede BetreiberIn (E-SR-62); ein dritter Wechsel und
+ *      einer kommt durch, A bleibt als bisheriger. Lage
+ *      `rotation`, Marke auf B, Blatt-Marke gelöscht,
+ *      Protokoll, Mail an jede BetreiberIn; ein dritter Wechsel und
  *      die Anteil-Rotation sind jetzt gesperrt; das Entfernen verweigert mit
  *      drei Gründen; alles Alte öffnet noch (über den bisherigen); Blatt und
  *      Karte über HTTP.
  *   5. Die Häppchen: ein Wiederanlauf räumt eine halbe Nebendatei weg; mit
  *      wenig Zeit nur die Zeilen, nicht die Dateien. Ein Stück, das beim
- *      Umhüllen wirft, wird genannt und hält Bedingung 1 zu (F-SR-81); der
- *      Nachweis wartet die Frist ab (E-SR-73) und kreist nicht um ein Paket
- *      mit kaputtem Teil (F-SR-81). Dann bis `fertig`: JEDES Stück öffnet
+ *      Umhüllen wirft, wird genannt und hält Bedingung 1 zu; der
+ *      Nachweis wartet die Frist ab und kreist nicht um ein Paket
+ *      mit kaputtem Teil. Dann bis `fertig`: JEDES Stück öffnet
  *      mit B und liefert denselben Klartext; die Archive haben den Namen
  *      gewechselt, auch eines mit fremder Kennung im Namen; das Stück ohne
  *      Siegel ist byte-gleich; das unlesbare ist gezählt und genannt; ein
  *      Komplett-Stand, dessen Versiegelung über den Wechsel lief, ist ganz
- *      unter B (E-SR-72); nach einem Einspielen beginnt der Nachweis neu.
+ *      unter B; nach einem Einspielen beginnt der Nachweis neu.
  *      Ein Archiv, das sich nicht in den Arbeitsordner schreiben lässt,
  *      steht in der Fehlerliste, nicht unter „mit keinem der beiden"; ein
  *      Nachweis ohne Stück wird einmal fertig, nicht in jedem Häppchen; eine
- *      Lage „abweichend" lässt den Zustand stehen (Nachprüfung H-SR-06,
- *      F-SR-85). Ein Zustand eines anderen Schlüsselpaars in der Phase
- *      „fertig" heißt „nicht begonnen", und der Knopf steht da (F-SR-87).
+ *      Lage „abweichend" lässt den Zustand stehen. Ein Zustand eines anderen Schlüsselpaars in der Phase
+ *      „fertig" heißt „nicht begonnen", und der Knopf steht da.
  *      Die Karte zählt über der Decke auch mitten im Durchgang mit („und 3
- *      weitere") und sagt ungezählt „wird gezählt", nicht „noch 0 von 0"
- *      (F-SR-88, seit der Nachmessung).
+ *      weitere") und sagt ungezählt „wird gezählt", nicht „noch 0 von 0".
  *   6. Der Abschluss: ohne frischen Stand und ohne Rückfrage verweigert; mit
  *      beiden entfernt; danach öffnet alles mit B, der alte Stand nur noch
  *      mit dem Wert A („vom Blatt"). Dieser Stand liegt jetzt unter einem
  *      DRITTEN Schlüssel: Die Liste sagt es in einem Glied der Kleinzeile und
  *      bietet weder Herunterladen noch Passphrase an, der Download weist vor
- *      Protokoll und Kopfzeilen ab (F-SR-82, F-SR-87; bis zur Nachmessung
- *      gelesen).
- *   7. Nr. 344, über HTTP: „Freigabe widerrufen" mit einem Handgriff aus
+ *      Protokoll und Kopfzeilen ab.
+ *   7. Über HTTP: „Freigabe widerrufen" mit einem Handgriff aus
  *      Nullen meldet einen Fehler und legt KEINE `konto.json` in die Wurzel
  *      der Ablage. (Das Konzept nannte die Freigabeprobe; die arbeitet als
  *      NutzerIn im Browser und hat kein Adminkonto — die Sitzung einer
- *      BetreiberIn hat diese Probe ohnehin, E-SR-66.)
+ *      BetreiberIn hat diese Probe ohnehin.)
  *   8. DER RÜCKWEG B → A — mit demselben Job. Er ist kein Aufräumen, sondern
  *      der zweite Wechsel: Der erste hat auch die Geheimnisse der Anlage selbst
  *      umgehüllt (die Zweitfaktoren der Prüfkonten), und ohne ihn wären sie
  *      nach dem Zurücklegen von `config.php` unlesbar. Er steht von Hand in
  *      `config.php` (A neu, B bisher) und misst damit den Beginn, den der Job
- *      einem solchen Wechsel gibt (E-SR-74). Gezählt wird, dass danach jedes
+ *      einem solchen Wechsel gibt. Gezählt wird, dass danach jedes
  *      Stück der Anlage mit A öffnet. WIRD ER NICHT FERTIG, LEGT ER NICHTS
- *      ZURÜCK (H-SR-06, F-SR-83): A und B bleiben in `config.php`, die
+ *      ZURÜCK: A und B bleiben in `config.php`, die
  *      Stand-Datei bleibt, und ein zweites `--zurueck` macht weiter. Bis Web
  *      21.12.0 warf er B in diesem Fall weg. Als B gilt nur ein Wert, der
- *      nicht A ist (Nachprüfung H-SR-06, F-SR-84).
+ *      nicht A ist.
  *
  * DIE JOBS STEHEN WÄHREND DER PROBE STILL (`jobs_pause()`). Sonst trüge
  * jeder der zwei Seitenabrufe über den Huckepack-Weg ein Häppchen mit, und
@@ -90,17 +86,17 @@ declare(strict_types=1);
  * ab, bevor der Rückweg lief, liegt der Rückweg in einer Datei im
  * Temp-Verzeichnis (`schluesselwechselprobe.json`, 0600 vom ersten Byte an,
  * mit BEIDEN Werten) und läuft mit `--zurueck`. **Nicht gegen eine Anlage
- * mit Betrieb.** Die Frist vor dem Nachweis (zehn Minuten, E-SR-73) kürzt
+ * mit Betrieb.** Die Frist vor dem Nachweis (zehn Minuten) kürzt
  * sie im Zustand — die Jobs stehen still, und außer ihr versiegelt niemand.
  *
  * Aufruf:  php tools/proben/schluesselwechsel/probe.php [basis]
  *          php tools/proben/schluesselwechsel/probe.php --zurueck
  *
  * DREI HANDGRIFFE FÜR DEN BEDIENWEG `betrieb-server-schluesselwechsel`, der
- * den Wechsel im Browser fährt (P-SR-05) und dieselbe Buchführung braucht:
+ * den Wechsel im Browser fährt und dieselbe Buchführung braucht:
  *          --merken   den Stand sichern und die Jobs anhalten, sonst nichts
  *          --stand    einen kleinen Komplett-Stand unter dem heutigen
- *                     Schlüssel bauen (die zweite Bedingung, E-SR-09)
+ *                     Schlüssel bauen (die zweite Bedingung)
  *          --zurueck  der Rückweg wie oben — mit dem Schlüssel, der gerade
  *                     in config.php steht, als B
  * Rückgabewert: 0 = alles erfüllt, 1 = mindestens eine Erwartung nicht,
@@ -117,7 +113,7 @@ require_once $srv . '/jobs_lib.php';
 require_once $srv . '/komplett_lib.php';
 require_once $srv . '/sicherungsziel_lib.php';
 require_once $srv . '/totp_lib.php';
-require_once $srv . '/kontopaar_lib.php';   // S11-03: Zweck kontopaar
+require_once $srv . '/kontopaar_lib.php';   // Zweck kontopaar
 require_once $srv . '/rueckweg_lib.php';    // ein P-256-SPKI als Kontoschlüssel der Probe
 require_once $srv . '/einstieg_lib.php';
 require_once $srv . '/mail_lib.php';
@@ -133,7 +129,7 @@ $pdo = db();
 $gut = 0; $schlecht = 0;
 const SWP_DATEI = 'schluesselwechselprobe.json';
 /** Der Knopf „Jetzt weiterarbeiten", an seiner Aktion erkannt: Das Wort allein
- *  steht auch in der Kleinzeile der Zeile „Umhüllung" (Nachmessung H-SR-06). */
+ *  steht auch in der Kleinzeile der Zeile „Umhüllung". */
 const SWP_KNOPF_WEITER = 'value="schluessel_sk_weiter"';
 const SWP_MARKEN = ['server_key_kennung', 'kdf_anteil_kennung', 'schluesselblatt_bestaetigt_am',
                     'schluesselblatt_neu_weil', JOB_PAUSE_SCHLUESSEL];
@@ -148,7 +144,7 @@ function pruefe(bool $ok, string $was, string $dazu = ''): void
 function teil(string $t): void { echo "\n== $t\n"; }
 
 /** Den Stand in die Datei — nur für die eigene Kennung lesbar, und zwar vom
- *  ersten Byte an (H-SR-06, F-SR-83). Bis Web 21.12.0 lag sie zwischen dem
+ *  ersten Byte an. Laege sie zwischen dem
  *  Schreiben und dem `chmod` einen Augenblick mit 0644 da — mit dem Wert A
  *  und der ganzen `config.php`. */
 function swp_stand_schreiben(array $s): void
@@ -163,7 +159,7 @@ function swp_stand_schreiben(array $s): void
     @chmod($p, 0600);
 }
 
-/** Die Frist vor dem Nachweis (E-SR-73) im Zustand kürzen — die Probe hält
+/** Die Frist vor dem Nachweis im Zustand kürzen — die Probe hält
  *  die Jobs an, und außer ihr läuft kein Prozess, der mit dem bisherigen
  *  Schlüssel versiegeln könnte. */
 function swp_frist_kuerzen(): void
@@ -268,7 +264,7 @@ function rueckweg(array $s): array
                 'unter_b' => null, 'hand' => null];
     $a = strtolower((string)$s['a_hex']);
     $b = isset($s['b_hex']) ? strtolower((string)$s['b_hex']) : null;
-    /* A IST NIE B (Nachprüfung H-SR-06, F-SR-84). Kam beim Wettlauf keines der
+    /* A IST NIE B. Kam beim Wettlauf keines der
      * Kinder durch, stand bis dahin A als `b_hex` in der Datei — der Rückweg
      * schrieb A und A, die Lage hieß `bereit`, der Job tat nichts, und jedes
      * `--zurueck` endete „nicht fertig". Wechselte der Hauptlauf danach selbst,
@@ -321,9 +317,9 @@ function rueckweg(array $s): array
         /* DER RÜCKWEG IST EIN ZWEITER WECHSEL: A neu, B bisher — immer. Auch
          * wenn config.php schon so aussieht (ein abgebrochener Rückweg) oder
          * nur A trägt (eine Abbruchsicherung hat zurückgelegt): Solange B in
-         * der Datei steht, ist nichts, was noch unter B liegt, verloren. Bis
-         * Web 21.12.0 hing das an `server_key !== A`, und ein zweites
-         * `--zurueck` übersprang den Job (H-SR-06, F-SR-83). */
+         * der Datei steht, ist nichts, was noch unter B liegt, verloren. Hinge
+         * das an `server_key !== A`, uebersprang ein zweites
+         * `--zurueck` den Job. */
         konfig_stellen_schreiben(konfig_stellen_pfad(),
             array_merge(konfig_stellen_lesen(konfig_stellen_pfad()),
                         ['server_key' => $a, 'server_key_alt' => $b]));
@@ -340,8 +336,7 @@ function rueckweg(array $s): array
         /* EINE STEHENGEBLIEBENE SPERRE LÖSEN — aber nur eine alte: Brach die
          * Probe mitten in einem Häppchen ab, steht `laeuft_seit` bis zu einer
          * Stunde, und jeder Lauf hieße „läuft bereits". Eine junge kann einem
-         * Häppchen gehören, das gerade arbeitet (Nachprüfung H-SR-06,
-         * F-SR-84); dann wartet die Schleife unten. */
+         * Häppchen gehören, das gerade arbeitet; dann wartet die Schleife unten. */
         $sperreLoesen = static function (): void {
             db()->prepare('UPDATE jobs SET laeuft_seit = NULL WHERE job = ?
                              AND laeuft_seit < DATE_SUB(UTC_TIMESTAMP(), INTERVAL 120 SECOND)')
@@ -349,7 +344,7 @@ function rueckweg(array $s): array
         };
         $sperreLoesen();
         /* DER ZUSTAND BLEIBT LEER, und der Job beginnt den Wechsel selbst —
-         * derselbe Weg wie ein Wechsel von Hand in config.php (E-SR-74), und
+         * derselbe Weg wie ein Wechsel von Hand in config.php, und
          * damit gemessen. Gehört der Zustand schon zu A/B (ein abgebrochener
          * Rückweg), arbeitet der Job dort weiter. */
         $z0 = sw_zustand();
@@ -372,7 +367,7 @@ function rueckweg(array $s): array
                         WHERE id > $maxMail AND schluessel = 'serverschluessel_gewechselt'")->fetchColumn(),
                     'betreiberinnen' => count(mail_betreiberinnen()),
                     'weg' => (string)(sw_zustand()['weg'] ?? ''),
-                    /* Nach dem Beginn endet das Häppchen (F-SR-85), und die
+                    /* Nach dem Beginn endet das Häppchen, und die
                      * Mails trägt der Mailjob hinaus, nicht die Anfrage. */
                     'erledigt' => (int)($l['erledigt'] ?? -1),
                     'versucht' => (int)db()->query("SELECT COUNT(*) FROM mail_warteschlange
@@ -388,7 +383,7 @@ function rueckweg(array $s): array
         $bericht['umgehuellt'] = (int)($z['umgehuellt'] ?? 0);
         if (($z['phase'] ?? '') !== 'fertig' || (array)($z['fehler'] ?? []) !== []
             || $bericht['fehler'] !== null) {
-            /* NICHT FERTIG: NICHTS ZURÜCKLEGEN (H-SR-06, F-SR-83). Bis Web
+            /* NICHT FERTIG: NICHTS ZURÜCKLEGEN. Bis Web
              * 21.12.0 legte der Rückweg config.php hier trotzdem zurück und
              * löschte die Stand-Datei — B stand danach nirgends mehr, und was
              * noch unter B lag, war ohne Rückweg. Jetzt bleiben A und B in
@@ -446,7 +441,7 @@ function rueckweg(array $s): array
      * ist `sofort`), und die örtliche Anlage hat einen SMTP-Eintrag ohne
      * Gegenstelle: Jede schreibt eine Zeile „smtp: …" in den Reiter System.
      * Dazu die Zeilen „schluesselwechsel: …" des Stücks, das die Probe
-     * absichtlich scheitern lässt (F-SR-81). Sie gehören der Probe — die Jobs
+     * absichtlich scheitern lässt. Sie gehören der Probe — die Jobs
      * stehen still, und Proben laufen nicht nebeneinander. */
     db()->prepare("DELETE FROM protokoll_ereignisse WHERE id > ? AND reiter = 'system'
                      AND art = 'stoerung' AND (text LIKE 'smtp:%' OR text LIKE 'schluesselwechsel:%')")
@@ -475,7 +470,7 @@ if ($modus === '--stand') {
 if ($modus === '--zurueck') {
     $pfad = sys_get_temp_dir() . '/' . SWP_DATEI;
     if (!is_file($pfad)) { fwrite(STDERR, "Kein gesicherter Stand in $pfad — nichts zurückzulegen.\n"); exit(2); }
-    /* Auch hier die Jobs anhalten (Nachprüfung H-SR-06, F-SR-84): Läuft
+    /* Auch hier die Jobs anhalten: Läuft
      * `--zurueck` erst nach der Pause des Hauptlaufs, arbeitete sonst ein
      * Häppchen des Auslösers neben dem Rückweg im selben Arbeitsordner. Der
      * fertige Rückweg legt die Marke der Pause mit den übrigen zurück. */
@@ -496,7 +491,7 @@ if ($modus === '--zurueck') {
 
 /* ---- Vorbedingungen und Sicherung ----------------------------------------- */
 
-/* DIE STAND-DATEI ZUERST (Nachprüfung H-SR-06, F-SR-84): Nach einem nicht
+/* DIE STAND-DATEI ZUERST: Nach einem nicht
  * fertigen Rückweg trägt config.php A und B, und die Lage hieße „rotation" —
  * die Meldung dazu schickte auf die Suche nach einem Wechsel der Anlage
  * statt zum liegengebliebenen Rückweg. */
@@ -513,7 +508,7 @@ if (anteil_zustand(true)['stand'] === 'rotation') {
     fwrite(STDERR, "Nicht gelaufen: Es läuft eine Rotation des Server-Anteils.\n");
     exit(2);
 }
-/* EINE STEHENDE SPERRE DES JOBS (Nachprüfung H-SR-06, F-SR-84): Mit ihr
+/* EINE STEHENDE SPERRE DES JOBS: Mit ihr
  * hörten beide Kinder des Wettlaufs „gleich noch einmal", und kein Wechsel
  * käme durch. Sie gehört einem Griff, einem Häppchen — oder einem, der
  * abbrach; das entscheidet nicht die Probe. */
@@ -533,7 +528,7 @@ $stand = [
     'konfig_bytes' => base64_encode((string)file_get_contents($pfadKonfig)),
     'marken' => array_combine(SWP_MARKEN, array_map('app_state_lesen', SWP_MARKEN)),
     /* Zwei Jobzeilen: die des Wechsels und die des Komplett-Backups — der
-     * Wechsel merkt nach dem Nachweis einen Auftrag vor (Q-SR-03), und der
+     * Wechsel merkt nach dem Nachweis einen Auftrag vor, und der
      * liefe nach der Probe sonst über die ganze örtliche Datenbank. */
     'jobzeilen' => (function () use ($pdo): array {
         $aus = [];
@@ -573,7 +568,7 @@ try {
         if (!str_ends_with((string)$f, '.php') || str_contains((string)$f, '/vendor/')) { continue; }
         $t = token_get_all((string)file_get_contents((string)$f));
         for ($i = 0, $n = count($t); $i < $n; $i++) {
-            /* AUCH VOLL QUALIFIZIERT (`\sk_versiegeln(`, H-SR-06, F-SR-83): Das
+            /* AUCH VOLL QUALIFIZIERT (`\sk_versiegeln(`): Das
              * ist in PHP 8 ein eigenes Zeichen, kein T_STRING. Durch
              * Zeichenketten (`call_user_func('sk_versiegeln')`) sieht die
              * Zählung nicht — heute gibt es keine (Prüfdokument). */
@@ -625,7 +620,7 @@ try {
     $uidFremd = $konto('schluesselwechselprobe-fremd@probe.invalid', 'user');
     $pdo->prepare('UPDATE users SET totp_geheimnis = ? WHERE id = ?')
         ->execute([fremd_versiegeln('x', 'totp|' . $uidFremd), $uidFremd]);
-    /* DER KONTOSCHLÜSSEL (S11-03): ein gültiger P-256-SPKI — der des
+    /* DER KONTOSCHLÜSSEL: ein gültiger P-256-SPKI — der des
      * Rückweg-Selbsttests, der private Teil dazu ist nicht aufgehoben und
      * wird hier nicht gebraucht. */
     $kpKlar = RW_VEKTOR_OEFFENTLICH;
@@ -666,10 +661,10 @@ try {
     zip_bauen(edbak_ordner($kennung) . '/' . $paket2, ['manifest.json' => "$bau/m2"]);
     array_map('unlink', glob("$bau/*") ?: []); @rmdir($bau);
     $paket2Summe = hash_file('sha256', edbak_ordner($kennung) . '/' . $paket2);
-    /* EIN PAKET MIT EINEM KAPUTTEN TEIL (F-SR-81): Das Manifest öffnet mit
+    /* EIN PAKET MIT EINEM KAPUTTEN TEIL: Das Manifest öffnet mit
      * A, `kern.json` mit keinem. Das Umhüllen nennt es `verloren` und lässt
-     * es liegen; bis Web 21.12.0 sagte der Nachweis dazu `alt`, und der
-     * Wechsel wurde nie fertig. */
+     * es liegen; sagte der Nachweis dazu `alt`, wuerde der
+     * Wechsel nie fertig. */
     $paket3 = substr($paket, 0, 20) . '_' . bin2hex(random_bytes(4)) . '.zip';
     $bau = sys_get_temp_dir() . '/swp-' . bin2hex(random_bytes(4));
     @mkdir($bau);
@@ -686,7 +681,7 @@ try {
     $archivTeil = str_repeat("{\"art\":\"probe\"}\n", 300);
     /* `zeilen` und `gekuerzt` LEER UND ALS OBJEKT, wie der Archivjob sie
      * schreibt (Backup-Format 7.1) — das Umhüllen machte daraus bis Web
-     * 21.12.0 `[]` (F-SR-81). */
+     * 21.12.0 `[]`. */
     $manifestA = ['format' => 'einsatzdoku-protokollarchiv', 'fassung' => 1, 'von' => $archivVon,
                   'bis' => $archivVon, 'kennung' => $Akenn, 'teile' => ['probe.jsonl'],
                   'zeilen' => new stdClass(), 'gekuerzt' => new stdClass()];
@@ -697,9 +692,9 @@ try {
     zip_bauen(protokoll_archiv_wurzel() . '/' . $archivAlt, ['manifest.json.sk' => "$bau/m", 'probe.jsonl.sk' => "$bau/t"]);
     array_map('unlink', glob("$bau/*") ?: []); @rmdir($bau);
 
-    /* EIN ARCHIV MIT EINER DRITTEN KENNUNG IM NAMEN, versiegelt mit A
-     * (F-SR-81). Bis Web 21.12.0 hieß es `verloren`, obwohl der bisherige es
-     * öffnete. */
+    /* EIN ARCHIV MIT EINER DRITTEN KENNUNG IM NAMEN, versiegelt mit A.
+     * Es heißt nicht `verloren`, denn der bisherige
+     * öffnet es. */
     $archivVon3 = '2001-02-0' . random_int(1, 9) . ' 00:00:00';
     $stand['eigenes']['archive_von'][] = $archivVon3; $merken();
     $archivDritt = protokoll_archiv_name($archivVon3, 'deadbeef');
@@ -713,8 +708,8 @@ try {
 
     $standA = stand_bauen();
     $stand['eigenes']['staende'][] = $standA; $merken();
-    /* EIN KOMPLETT-STAND, DESSEN VERSIEGELUNG ÜBER DEN WECHSEL LÄUFT
-     * (F-SR-79, E-SR-72): drei Blöcke Klartext, der Kopf mit Kennung A, ein
+    /* EIN KOMPLETT-STAND, DESSEN VERSIEGELUNG ÜBER DEN WECHSEL LÄUFT:
+     * drei Blöcke Klartext, der Kopf mit Kennung A, ein
      * Block unter A versiegelt — dann hält die Probe an wie ein Häppchen, dem
      * die Zeit ausgeht. Nach dem Wechsel geht es mit dem weiter, was
      * `komp_schub_lauf()` tut: `komp_kopf_angleichen()`, dann siegeln. In
@@ -755,7 +750,7 @@ try {
         && strtolower((string)konfig('server_key', '')) === $A,
         'ohne Haken: abgewiesen, config.php unverändert (E-SR-63)', $was);
     if (anteil_zustand(true)['stand'] === 'bereit') {
-        /* OHNE `konfig_stellen()` (H-SR-06, F-SR-83): Dessen Abbruchsicherung
+        /* OHNE `konfig_stellen()`: Dessen Abbruchsicherung
          * legt beim Ende des Prozesses den Text von HIER zurück — nach einem
          * Abbruch hinter dem Wechsel also eine config.php ohne B, während
          * Stücke schon unter B lägen. */
@@ -775,8 +770,8 @@ try {
             'nicht gemessen — die Anlage hat keinen Server-Anteil (Lage „' . anteil_zustand()['stand'] . '")');
     }
 
-    /* EINE STEHENDE SPERRE SAGT, SEIT WANN UND BIS WANN HÖCHSTENS
-     * (Nachprüfung H-SR-06, F-SR-86). Stirbt ein Häppchen an der Zeitgrenze,
+    /* EINE STEHENDE SPERRE SAGT, SEIT WANN UND BIS WANN HÖCHSTENS.
+     * Stirbt ein Häppchen an der Zeitgrenze,
      * läuft kein `finally`; „gleich noch einmal" allein ließe eine Stunde
      * raten. Gemessen an einem Griff, der sonst nichts tut (Lage bereit). */
     $pdo->prepare('INSERT IGNORE INTO jobs (job) VALUES (?)')->execute([SW_JOB]);
@@ -793,7 +788,7 @@ try {
         'eine stehende Sperre: abgewiesen mit „seit" und „spätestens … frei", config.php unverändert (F-SR-86)',
         $wasS);
 
-    /* DIE RÜCKNAHME EINES HALBEN GRIFFS (F-SR-86): Steht in `server_key`
+    /* DIE RÜCKNAHME EINES HALBEN GRIFFS: Steht in `server_key`
      * nicht mehr der gesicherte Wert, hat jemand an der Sperre vorbei
      * geschrieben — dann bleibt `server_key_alt`. Steht er noch da, geht der
      * halbe Eintrag. Der fremde Wert ist ein Wegwerfwert; unter ihm wird in
@@ -821,15 +816,15 @@ try {
         mb_substr($wasR1, 0, 60));
 
     /* EIN `server_key_alt` GLEICH DEM HEUTIGEN — so bleibt ein Wechsel
-     * stehen, der zwischen seinen beiden Schreibschritten abbrach (F-SR-78).
+     * stehen, der zwischen seinen beiden Schreibschritten abbrach.
      * Kein Wechsel, sondern `bereit`; der nächste überschreibt ihn. */
     konfig_stellen_schreiben($pfadKonfig, array_merge(konfig_stellen_lesen($pfadKonfig), ['server_key_alt' => $A]));
     $zw = serverschluessel_zustand(true);
     pruefe($zw['stand'] === 'bereit' && $zw['kennung_alt'] === null && $zw['kennung'] === $Akenn,
         'server_key_alt = server_key: Lage bereit, kein Wechsel mit sich selbst (F-SR-78)', $zw['stand']);
-    /* … und keine zweite Kachel mit derselben Kennung auf dem Blatt
-     * (Nachprüfung H-SR-06, F-SR-86). Die Sitzung dient auch Teil 4. OPcache
-     * sieht die neue config.php erst nach revalidate_freq (F-SR-31). */
+    /* … und keine zweite Kachel mit derselben Kennung auf dem Blatt.
+     * Die Sitzung dient auch Teil 4. OPcache
+     * sieht die neue config.php erst nach revalidate_freq. */
     $sitz = sitzung_anlegen($bid);
     $stand['eigenes']['sitzungen'][] = $sitz['sid']; $merken();
     sleep(3);
@@ -843,14 +838,14 @@ try {
     /* ---- 4. Der Wechsel A → B ------------------------------------------------ */
     teil('4. Der Wechsel A → B — zweimal gleichzeitig');
     $betreiberinnen = count(mail_betreiberinnen());
-    /* ZWEI PROZESSE, EIN STARTSCHUSS (H-SR-06, F-SR-78). Bis Web 21.12.0 lief
-     * der Wechsel ohne Sperre; je nach Verschränkung überschrieb der zweite
+    /* ZWEI PROZESSE, EIN STARTSCHUSS. Lief
+     * der Wechsel ohne Sperre, überschriebe je nach Verschränkung der zweite
      * den frisch gewürfelten Schlüssel des ersten. Jetzt hält jeder die
      * Sperre der Jobzeile: genau einer kommt durch, der andere wartet und
      * hört „gleich noch einmal" oder „läuft bereits". JEDER HAT config.php
      * VOR DEM STARTSCHUSS GELESEN — wie eine Seite, die beim Aufruf schon
      * angemeldet prüft. Ohne das läse der zweite meist frisch, und der Fall
-     * aus K-1 (ein Prozess mit gemerktem Stand) käme nicht vor; die
+     * eines Prozesses mit gemerktem Stand käme nicht vor; die
      * Gegenprobe ohne Sperre blieb so grün. Sicher für die Anlage:
      * Kein Häppchen läuft (die Jobs stehen still), unter B liegt also noch
      * nichts, und A steht in der Stand-Datei. */
@@ -867,8 +862,7 @@ echo json_encode(["ok" => $ok, "was" => $was]);
     $start = microtime(true) + 2.0;
     $kinder = []; $rohre = [];
     for ($i = 0; $i < 2; $i++) {
-        /* PHP_BINARY, nicht `php` aus dem Suchpfad (Nachprüfung H-SR-06,
-         * F-SR-84): Ist das eine andere Hauptfassung, scheitern beide Kinder,
+        /* PHP_BINARY, nicht `php` aus dem Suchpfad: Ist das eine andere Hauptfassung, scheitern beide Kinder,
          * und der Hauptlauf wechselte nachher selbst. */
         $kinder[$i] = proc_open([PHP_BINARY, $kindSkript, $wurzel, sprintf('%.6F', $start)],
                                 [1 => ['pipe', 'w'], 2 => ['pipe', 'w']], $rohre[$i]);
@@ -885,7 +879,7 @@ echo json_encode(["ok" => $ok, "was" => $was]);
     @unlink($kindSkript);
     config_gemerktes_verwerfen();
     $B = strtolower((string)konfig('server_key', ''));
-    /* NUR EIN WERT, DER NICHT A IST, IST B (Nachprüfung H-SR-06, F-SR-84). */
+    /* NUR EIN WERT, DER NICHT A IST, IST B. */
     if ($B !== $A && preg_match('/^[0-9a-f]{64}$/', $B) === 1) { $stand['b_hex'] = $B; $merken(); }
     $durch = array_values(array_filter($erg, static fn(array $e): bool => $e['ok'] === true));
     $Bkenn = (string)($durch[0]['was'] ?? '');
@@ -916,7 +910,7 @@ echo json_encode(["ok" => $ok, "was" => $was]);
     $post = static fn(): int => (int)$pdo->query("SELECT COUNT(*) FROM mail_warteschlange
         WHERE id > {$stand['max_mail']} AND schluessel = 'serverschluessel_gewechselt'")->fetchColumn();
     pruefe($prot('serverschluessel_gewechselt') === 1, 'Protokoll: serverschluessel_gewechselt, einmal');
-    /* OHNE SMTP NICHT GEMESSEN — und damit rot (H-SR-06, F-SR-83). Bis Web
+    /* OHNE SMTP NICHT GEMESSEN — und damit rot. Bis Web
      * 21.12.0 hieß es dann „ok": eine grüne Zahl ohne Gegenstand. */
     pruefe(smtp_eingerichtet() && $post() === $betreiberinnen,
         'Mail an jede BetreiberIn mit Passwort (E-SR-62)',
@@ -936,7 +930,7 @@ echo json_encode(["ok" => $ok, "was" => $was]);
         'alles unter A öffnet noch — über den bisherigen; der Stand A heißt „alt"');
 
     /* Blatt und Karte über HTTP — OPcache sieht die neue config.php erst nach
-     * revalidate_freq (F-SR-31): drei Sekunden warten. Die Sitzung stammt
+     * revalidate_freq: drei Sekunden warten. Die Sitzung stammt
      * aus Teil 3. */
     sleep(3);
     $blatt = hole('betrieb_schluesselblatt.php', $sitz);
@@ -968,7 +962,7 @@ echo json_encode(["ok" => $ok, "was" => $was]);
     $zz = sw_zustand();
     $offenDateien = count(glob(sw_arbeit() . '/*') ?: []);
     $nurZeilen = ($zz['zweck'] ?? '') === 'konten' && ($zz['phase'] ?? '') === 'umhuellen'
-              && (komp_zustand()['stand'] ?? null) !== 'dump';   // noch kein Auftrag (Q-SR-03)
+              && (komp_zustand()['stand'] ?? null) !== 'dump';   // noch kein Auftrag
     pruefe(($e['fehler'] ?? null) === null && $offenDateien === 0 && $nurZeilen
         && sk_oeffnen_mit_wem((string)$pdo->query("SELECT totp_geheimnis FROM users WHERE id = $uid")->fetchColumn(),
                               'totp|' . $uid)['mit'] === 'neu',
@@ -983,15 +977,15 @@ echo json_encode(["ok" => $ok, "was" => $was]);
     file_put_contents(protokoll_archiv_wurzel() . '/' . $archivAlt, $archivKopie);
     $archivNeuSumme = hash_file('sha256', protokoll_archiv_wurzel() . '/' . protokoll_archiv_name($archivVon, $Bkenn));
 
-    /* EIN STÜCK, DAS BEIM UMHÜLLEN WIRFT (F-SR-81): An der Stelle der
+    /* EIN STÜCK, DAS BEIM UMHÜLLEN WIRFT: An der Stelle der
      * Nebendatei der Begleitdatei liegt ein Ordner mit einem Unterordner —
      * `sw_arbeit_leeren()` räumt ihn nicht, und das Schreiben scheitert. Ein
      * Rechte-Trick ginge nicht: Die Probe läuft im Container als root. */
     $sperre = sw_arbeit() . '/' . $kennung . '-konto.json';
     @mkdir($sperre . '/x', 0770, true);
     $stand['eigenes']['ordner_weg'][] = $sperre; $merken();
-    /* EIN ARCHIV, DESSEN TEIL SICH NICHT IN DEN ARBEITSORDNER SCHREIBEN LÄSST
-     * (Nachprüfung H-SR-06, F-SR-85): An der Stelle des ersten Teils liegt ein
+    /* EIN ARCHIV, DESSEN TEIL SICH NICHT IN DEN ARBEITSORDNER SCHREIBEN LÄSST:
+     * An der Stelle des ersten Teils liegt ein
      * Ordner mit einer Datei. Bis zur Nachprüfung hieß das Archiv dann
      * „mit keinem der beiden zu öffnen", und der Nachweis kreiste. Das mit
      * der fremden Kennung im Namen, weil das andere schon umgehüllt liegt
@@ -1135,13 +1129,12 @@ echo json_encode(["ok" => $ok, "was" => $was]);
     pruefe($bed['inventar'] && !$bed['komplett'] && !$bed['blatt'] && !$bed['alle'],
         'Bedingungen: Inventar ja, frischer Stand nein, Rückfrage nein', json_encode($bed['fehlt']));
     /* NACH DEM EINSPIELEN EINES DUMPS gilt der mitgebrachte Zustand nicht als
-     * Nachweis (F-SR-80): `wiederherstellen.php` ruft dieselbe Funktion. */
+     * Nachweis: `wiederherstellen.php` ruft dieselbe Funktion. */
     $beginnVorher = (string)($zz['begonnen'] ?? '');
     sw_nach_einspielen($pdo);
     $ze = sw_zustand();
     /* Die Liste „mit keinem der beiden" des Dumps gilt hier nicht — der
-     * Nachweis baut sie aus den hiesigen Stücken neu (Nachprüfung H-SR-06,
-     * F-SR-85). */
+     * Nachweis baut sie aus den hiesigen Stücken neu. */
     $nachEinspielen = ($ze['phase'] ?? '') === 'nachweis'
         && array_key_exists('cursor', $ze) && $ze['cursor'] === null
         && !isset($ze['nachweis_am']) && ($ze['begonnen'] ?? '') === $beginnVorher && !sw_bedingungen()['inventar']
@@ -1155,7 +1148,7 @@ echo json_encode(["ok" => $ok, "was" => $was]);
         'zurückgesetzt ' . ($nachEinspielen ? 'ja' : 'NEIN') . ', danach ' . (string)(sw_zustand()['phase'] ?? '?')
         . ', verloren ' . count($verlNeu));
 
-    /* EIN NACHWEIS-DURCHGANG OHNE STÜCK (Nachprüfung H-SR-06, F-SR-85): Der
+    /* EIN NACHWEIS-DURCHGANG OHNE STÜCK: Der
      * Zeiger steht hinter dem letzten Archiv — so sieht ein Durchgang auf
      * einer Anlage ohne Ziel, Zweitfaktor, Konto-Backup und Archiv aus. Bis
      * zur Nachprüfung blieb `nachweis_begonnen` dann leer: Jedes Häppchen hielt
@@ -1177,7 +1170,7 @@ echo json_encode(["ok" => $ok, "was" => $was]);
         'Protokoll +' . ($prot('serverschluessel_umgehuellt') - $protVor) . ', Beginn '
         . (($zl1['nachweis_begonnen'] ?? null) ?? 'leer'));
 
-    /* LAGE „ABWEICHEND" MITTEN IM WECHSEL (F-SR-85): eine Marke aus einem
+    /* LAGE „ABWEICHEND" MITTEN IM WECHSEL: eine Marke aus einem
      * älteren Dump. Das Häppchen lässt den Zustand stehen; nach der
      * Reparatur geht es weiter, ohne einen zweiten Beginn. */
     $gewVor = $prot('serverschluessel_gewechselt');
@@ -1196,8 +1189,7 @@ echo json_encode(["ok" => $ok, "was" => $was]);
         'Lage „abweichend" im Wechsel: Zustand bleibt, nach der Reparatur kein zweiter Beginn (F-SR-85)',
         "Lage $lageAb, Beginn " . (($zAb2['begonnen'] ?? null) === ($zAb['begonnen'] ?? 'x') ? 'gleich' : 'NEU'));
 
-    /* EIN ZUSTAND EINES ANDEREN SCHLÜSSELPAARS IN DER PHASE „fertig"
-     * (Nachprüfung H-SR-06, F-SR-87; gemessen seit der Nachmessung): Die Zeile
+    /* EIN ZUSTAND EINES ANDEREN SCHLÜSSELPAARS IN DER PHASE „fertig": Die Zeile
      * „Umhüllung" sagt „nicht begonnen … oder mit Jetzt weiterarbeiten" — dann
      * muss der Knopf auch dastehen. Bis zur Nachprüfung hing er am rohen
      * Zustand und fehlte. Die Jobs stehen still; kein Häppchen fasst den
@@ -1221,7 +1213,7 @@ echo json_encode(["ok" => $ok, "was" => $was]);
         'Karte: Zustand eines anderen Schlüsselpaars („fertig") — „nicht begonnen" und der Knopf dazu (F-SR-87)',
         "HTTP {$karteK['code']}, Plakette „{$plaketteUmh}\"");
 
-    /* F-SR-88 FEST (Nachmessung zu H-SR-06): zwei Auskünfte, die bis dahin nur
+    /* FEST: zwei Auskünfte, die sonst nur
      * eine einmalige Messung mit Verfälschung belegte — ein Rückbau bliebe
      * sonst in jedem Prüfmittel grün (Gegenprüfung der Nachmessung). Gesetzt
      * wird nur der Zustand, die Jobs stehen still. (1) Zwanzig Stücke in der
@@ -1293,11 +1285,11 @@ echo json_encode(["ok" => $ok, "was" => $was]);
     pruefe(komp_serverschluessel_fuer(komp_wurzel() . '/' . $standA)[1] === 'keiner'
         && komp_erster_block_oeffnet(komp_wurzel() . '/' . $standA, (string)hex2bin($A)),
         'der alte Stand: mit keinem Schlüssel der Anlage — mit dem Wert A vom Blatt schon');
-    /* … UND SO STEHT ER IN DER LISTE (F-SR-82, F-SR-87; bis zur Nachmessung
-     * gelesen). Gelesen wird die Zeile des Stands bis zur nächsten Zeile oder
+    /* … UND SO STEHT ER IN DER LISTE.
+     * Gelesen wird die Zeile des Stands bis zur nächsten Zeile oder
      * zum Ende der Karte — dort stünde ein Passphrase-Formular. OPcache sieht
-     * die config.php ohne `server_key_alt` erst nach revalidate_freq
-     * (F-SR-31): Ohne die drei Sekunden hieß der Stand dort noch „bisheriger
+     * die config.php ohne `server_key_alt` erst nach revalidate_freq:
+     * Ohne die drei Sekunden hieß der Stand dort noch „bisheriger
      * Schlüssel", und der Download ging durch (Nachmessung, erster Lauf). */
     sleep(3);
     $liste = hole('admin_komplettsicherung.php', $sitz);
@@ -1324,7 +1316,7 @@ echo json_encode(["ok" => $ok, "was" => $was]);
         'Download dieses Stands: abgewiesen, ohne Eintrag „heruntergeladen" (F-SR-82)',
         "HTTP {$dl['code']}, Einträge " . ($prot('komplett_heruntergeladen') - $dlVor));
 
-    /* ---- 7. Nr. 344 ----------------------------------------------------------- */
+    /* ---- 7. Freigabe widerrufen ----------------------------------------------- */
     teil('7. Freigabe widerrufen ohne gültige Kennung (Nr. 344)');
     $wurzelDatei = edbak_wurzel() . '/konto.json';
     $vorher = is_file($wurzelDatei);
@@ -1365,7 +1357,7 @@ echo json_encode(["ok" => $ok, "was" => $was]);
     pruefe(hash('sha256', (string)file_get_contents($pfadKonfig)) === hash('sha256', (string)base64_decode($stand['konfig_bytes']))
         && serverschluessel_zustand(true)['stand'] === 'bereit' && serverschluessel_kennung() === $Akenn,
         'config.php byte-gleich, Lage bereit mit A');
-    sleep(3);   // OPcache der Anlage sieht die alte config.php wieder (F-SR-31)
+    sleep(3);   // OPcache der Anlage sieht die alte config.php wieder
 }
 
 echo "\n$gut ok, $schlecht fehlen\n";

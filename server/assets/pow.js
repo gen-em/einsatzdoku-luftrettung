@@ -1,5 +1,4 @@
-/* pow.js — die Rechenaufgabe der Registrierung steuern (Schritt 18, SR-08;
- * E-SR-26, E-SR-88 bis -93).
+/* pow.js — die Rechenaufgabe der Registrierung steuern.
  *
  * EIN GRIFF, `[data-pow]` am Formular von `registrieren.php`. Es trägt die
  * Bitzahl (`data-pow-bits`) und die Adresse des Workers (`data-pow-worker`,
@@ -14,8 +13,8 @@
  *
  * NIE STILL WARTEN: Kann der Browser nicht rechnen (kein Worker, kein
  * WebCrypto, Worker gesperrt), sagt die Zustandszeile es, und das Formular
- * geht nicht ab. Ohne Lösung bekäme es die Danke-Karte und keine Mail
- * (F-SR-92) — das wäre für einen Menschen die schlechteste Antwort.
+ * geht nicht ab. Ohne Lösung bekäme es die Danke-Karte und keine Mail —
+ * das wäre für einen Menschen die schlechteste Antwort.
  *
  * DER KNOPF STEHT FREI IM MARKUP und wird nur hier gesperrt (Muster
  * `zweitfaktor.js`). Ohne Skript bleibt der Satz unter dem Knopf stehen, den

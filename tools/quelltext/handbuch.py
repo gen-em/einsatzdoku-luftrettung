@@ -7,20 +7,20 @@
 Rückgabewert 0 = beide rendern, kein Bild aus fremder Quelle · 1 = Befund ·
 2 = nicht gelaufen (`cmark-gfm` fehlt).
 
-WOFÜR (P5b/AP8, E-P5b-08). Die Anwendung zeigt beide Dokumente als Seiten
+WOFÜR. Die Anwendung zeigt beide Dokumente als Seiten
 (`hilfe.php`, `ueber.php`) und rendert sie zur Laufzeit aus dem Markdown im
 Repositorium. Fehlt eines, zeigt die Seite „Dieses Dokument fehlt"; bricht
 die Kodierung, rendert es nicht; und ein Bild aus fremder Quelle zeigt die
 Anwendung nicht an, weil sie keine fremde Quelle zur Laufzeit lädt
 (`CLAUDE.md` 4).
 
-BIS BR-03 EIN SCHRITT IN STUFE 1, den Station B nie fuhr (F-BR-03). Die
+FRÜHER EIN SCHRITT IN STUFE 1, den der Prüfstand nie fuhr. Die
 Prüfung ist dieselbe geblieben — `cmark-gfm --validate-utf8`, dazu das
 Muster für ein Bild mit Adresse — und um EINE Zeile gewachsen: Die Kodierung
 wird streng gelesen. `--validate-utf8` scheitert an kaputten Bytes nicht, es
 ERSETZT sie still durch U+FFFD und endet mit 0; der Tor-Schritt hätte ein
 kaputtes Handbuch grün gemeldet. Gefunden von der Selbstprobe dieser Datei
-beim Umzug (F-BR-16). `cmark-gfm` kommt mit der Ausbaustufe `web`
+beim Umzug. `cmark-gfm` kommt mit der Ausbaustufe `web`
 (`tools/sandbox/aufbauen.sh`) und im Tor über `apt-get`. Fehlt es, ist das
 rc 2 — rot, nicht still grün.
 """

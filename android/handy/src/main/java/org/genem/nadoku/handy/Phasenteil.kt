@@ -32,17 +32,17 @@ import org.genem.nadoku.gemeinsam.Phasen
 data class Phasenzeile(val nummer: Int, val hhmm: String)
 
 /**
- * Der Phasenteil der Dienstansicht (E-S4-08, E-S4-21b).
+ * Der Phasenteil der Dienstansicht.
  *
  * **Ein großer Knopf für die nächste Phase**, darunter die Liste. Jede Zeile
  * der Liste setzt ihre Phase direkt — eine Korrektur erzeugt dabei einen
- * **zweiten Eintrag** und überschreibt den ersten nicht (E-R45-12); die Liste
+ * **zweiten Eintrag** und überschreibt den ersten nicht; die Liste
  * zeigt deshalb alle Zeiten, die eine Phase hat, und nicht die letzte.
  *
  * Nach der letzten Phase wird der große Knopf zu „Einsatz abschließen" —
  * **mit Rückfrage**: Ein versehentlicher letzter Tipp beendet nichts.
  *
- * IM NUR-AUFZEICHNEN-MODUS wird dieser ganze Teil nicht gezeichnet (E-S4-20):
+ * IM NUR-AUFZEICHNEN-MODUS wird dieser ganze Teil nicht gezeichnet:
  * kein Knopf, den man mit Handschuhen versehentlich trifft.
  */
 @Composable
@@ -69,7 +69,7 @@ fun ColumnScope.Phasenteil(
     )
 
     /* DER EINE GROSSE KNOPF. Ohne laufenden Einsatz trägt er Phase 2 — sie
-     * startet den Einsatz (E-S4-08); es gibt kein separates
+     * startet den Einsatz; es gibt kein separates
      * „Einsatz beginnen", weil es im Einsatz auch keine Zeit dafür gibt. */
     val naechste = naechstePhase ?: if (!einsatzLaeuft) Phasen.ERSTE else null
     if (naechste != null) {
@@ -79,28 +79,27 @@ fun ColumnScope.Phasenteil(
     }
 
     if (einsatzLaeuft) {
-        /* DIE LISTE ZEIGT NICHT MEHR ALLE ACHT PHASEN (B-S5Z-16, E-S5Z-33).
+        /* DIE LISTE ZEIGT NICHT ALLE ACHT PHASEN.
          *
          * DER GRUND IST GEMESSEN: Acht Reihen zu 48 dp sind rund 412 dp und
          * damit der größte Block der laufenden Ansicht (1015 dp gesamt). Auf
-         * einem 800-dp-Telefon lag „Einsatz abschließen" dadurch bei
+         * einem 800-dp-Telefon läge „Einsatz abschließen" dadurch bei
          * 771–819 dp — halb unter der Faltkante, also die Handlung, die den
-         * Einsatz beendet, nur mit Schieben erreichbar. Der Bilderlauf hat
-         * es gefunden; gelesen hätte es niemand.
+         * Einsatz beendet, nur mit Schieben erreichbar. Gemessen hat es der
+         * Bilderlauf; gelesen hätte es niemand.
          *
          * SICHTBAR SIND: alle **gesetzten** Phasen und die **nächste**. Die
          * gesetzten bleiben, weil sie die Dokumentation sind und weil ein
-         * erneutes Tippen die Korrektur ist (E-R45-12); die nächste, weil sie
+         * erneutes Tippen die Korrektur ist; die nächste, weil sie
          * der nächste Schritt ist. Alles andere liegt einen Druck entfernt.
          *
-         * DIE DIREKTWAHL GEHT NICHT VERLOREN, sie wird einen Schritt tiefer
-         * (E-S4-21c hatte die Liste als „Übersicht und Direktwahl in einem"
-         * gebaut). Das ist der Preis, und er ist bewusst bezahlt: Ein Knopf
+         * DIE DIREKTWAHL GEHT NICHT VERLOREN, sie liegt einen Schritt tiefer
+         * (die Liste ist „Übersicht und Direktwahl in einem"). Das ist der
+         * Preis, und er ist bewusst bezahlt: Ein Knopf
          * unter dem Rand ist teurer als ein Knopf hinter einem Knopf.
          *
          * WAS DAS NICHT LÖST: Gegen Ende eines Einsatzes sind fast alle
-         * Phasen gesetzt, und dann ist die Liste wieder lang. Die Zahlen
-         * dazu stehen im Prüfdokument. */
+         * Phasen gesetzt, und dann ist die Liste wieder lang. */
         var alleZeigen by remember(einsatzLaeuft) { mutableStateOf(false) }
         val sichtbar = if (alleZeigen) {
             Phasen.UEBERTRAGEN.toList()
@@ -128,7 +127,7 @@ fun ColumnScope.Phasenteil(
             KnopfNeutral(stringResource(R.string.phasen_weniger_zeigen)) { alleZeigen = false }
         }
 
-        // Beendende Handlung: vollflächig rot, mit Rückfrage (E-S4-22a).
+        // Beendende Handlung: vollflächig rot, mit Rückfrage.
         KnopfBeenden(stringResource(R.string.einsatz_abschliessen)) { aufAbschluss() }
     }
 }
@@ -158,7 +157,7 @@ private fun Phasenreihe(nummer: Int, zeiten: List<Phasenzeile>, aufTippen: () ->
             modifier = Modifier.weight(1f),
         )
         /* ALLE Zeiten einer Phase, nicht die letzte: Eine erneut gesetzte
-         * Phase ist eine Korrektur und damit eine Information (E-R45-12).
+         * Phase ist eine Korrektur und damit eine Information.
          * Wer nur die letzte zeigte, verschwiege genau das. */
         Text(
             text = zeiten.joinToString(" · ") { it.hhmm },

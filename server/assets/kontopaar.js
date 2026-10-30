@@ -1,6 +1,6 @@
 /**
- * Das Schlüsselpaar des Kontos — im Browser (S11-03; Konzept S11 3.1,
- * E-S11-14). Server: `kontopaar_lib.php`, `api/kontopaar.php`.
+ * Das Schlüsselpaar des Kontos — im Browser. Server: `kontopaar_lib.php`,
+ * `api/kontopaar.php`.
  *
  * ===========================================================================
  * WAS HIER ENTSTEHT
@@ -30,12 +30,12 @@
  *                       einer Anmeldung. Wirft nie.
  *   abgleichen(ck)      bei jedem Entsperren, wenn eins da ist: Leitet aus
  *                       dem privaten Teil den öffentlichen ab und vergleicht
- *                       ihn mit dem, den der Server ausliefert (E-S11-14,
- *                       zweiter Riegel). Weicht er ab, sagt es die Seite, und
+ *                       ihn mit dem, den der Server ausliefert (zweiter
+ *                       Riegel). Weicht er ab, sagt es die Seite, und
  *                       der Server meldet es (Reiter System) — EINMAL je
  *                       Seite.
  *   privat(ck)          der private Teil als CryptoKey (nicht extrahierbar),
- *                       zum Öffnen der Gerätehüllen — ab S11-04. Lebt so
+ *                       zum Öffnen der Gerätehüllen. Lebt so
  *                       lange wie die Seite und damit nie länger als der
  *                       Inhaltsschlüssel, aus dem er kommt.
  *
@@ -48,8 +48,8 @@
 
   let privatSchluessel = null;
   let abgeglichen = false;
-  /* DAS PAAR DIESER SEITE, WENN ES NACH IHREM AUFBAU ENTSTAND (S11-05e,
-     F-S11-61). KP_OEFFENTLICH und KP_PRIVAT sind Konstanten vom Aufbau der
+  /* DAS PAAR DIESER SEITE, WENN ES NACH IHREM AUFBAU ENTSTAND.
+     KP_OEFFENTLICH und KP_PRIVAT sind Konstanten vom Aufbau der
      Seite; ein Paar, das danach angelegt wird — hier oder auf einer Seite, die
      kurz vorher geladen war —, kennen sie nicht. `neu` hält es fest, `laufend`
      das Anlegen, auf das `bereit()` wartet. */
@@ -97,8 +97,8 @@
   }
 
   /**
-   * Wartet, bis die Seite den Schlüssel kennt, wenn es ihn gibt (S11-05e,
-   * F-S11-61): auf ein laufendes Anlegen, und — kennt die Seite danach noch
+   * Wartet, bis die Seite den Schlüssel kennt, wenn es ihn gibt: auf ein
+   * laufendes Anlegen, und — kennt die Seite danach noch
    * keinen, obwohl sie beim Aufbau „fehlt" hieß — fragt den Server, ob
    * inzwischen eines da ist (die Anmeldung legt es auf der ersten Seite an,
    * und eine zweite kann vorher geladen worden sein). Wirft nie.

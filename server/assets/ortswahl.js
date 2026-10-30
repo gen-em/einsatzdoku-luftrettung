@@ -1,7 +1,7 @@
 /* Ortswahl — „Meine Position übernehmen" und „Auf der Karte wählen".
  * ===========================================================================
  *
- * WOFUER (P3/O5, E-P3-34). Wer am Einsatzort steht oder ihn auf der Karte
+ * WOFUER. Wer am Einsatzort steht oder ihn auf der Karte
  * kennt, soll ihn nicht abtippen muessen. Der Pin-Knopf am Ortsfeld
  * (ui_ortsfeld mit 'ortswahl') oeffnet ein Blatt mit zwei Wegen:
  *
@@ -13,26 +13,25 @@
  *                                auf dem Handy verdeckt der eigene Finger
  *                                sonst genau die Stelle, um die es geht.
  *
- * WAS S9/AP2 DAZUGEBAUT HAT (E-S9-06, Mockup M-S9-04):
+ * DAZU:
  *
- *   SUCHFELD IM DIALOGKOPF (PS-1). Bisher zeigte der Dialog Karte, Kreuz und
- *   „Uebernehmen" — wer den Ort nicht auf dem sichtbaren Ausschnitt fand,
- *   musste die Karte von Hand dorthin schieben. Jetzt steht oben ein Feld mit
- *   Lupe. Ein Treffer SETZT NUR DAS KREUZ (`setView`, Zoom 15) und traegt
- *   seinen Namen ins Suchfeld — uebernommen wird erst mit „Uebernehmen"
- *   (F1). Das Kreuz laesst sich danach noch verschieben; ein Treffer ist ein
+ *   SUCHFELD IM DIALOGKOPF. Wer den Ort nicht auf dem sichtbaren Ausschnitt
+ *   findet, muesste die Karte sonst von Hand dorthin schieben. Oben steht
+ *   ein Feld mit Lupe. Ein Treffer SETZT NUR DAS KREUZ (`setView`, Zoom 15)
+ *   und traegt seinen Namen ins Suchfeld — uebernommen wird erst mit
+ *   „Uebernehmen". Das Kreuz laesst sich danach noch verschieben; ein Treffer ist ein
  *   Vorschlag, wohin man sehen soll, keine Entscheidung.
  *
- *   DIE AUFGEZEICHNETE SPUR (PS-11, Backlog 147). Wer den Einsatzort
+ *   DIE AUFGEZEICHNETE SPUR. Wer den Einsatzort
  *   nachtraegt, hat die Spur — und der Ort liegt fast immer auf ihr. Sie wird
  *   als Linie in der ersten Spurfarbe gezeichnet, mit einem blauen Ringpunkt
  *   am Anfang und einem roten am Ende. KEINE PFEILE, KEINE LUFTLINIE, KEINE
  *   SCHILDER: Standort und Zielklinik gehoeren nicht in einen Auswahldialog,
  *   sie wuerden das Kreuz verdecken. Ist das Bezeichnungsfeld leer, oeffnet
  *   die Karte AUF DER SPUR (`fitBounds`); steht schon eine Koordinate, gilt
- *   sie wie bisher.
+ *   sie.
  *
- *   OHNE ADRESSSUCHE (E-S9-05) fehlt das Suchfeld, und nach „Uebernehmen"
+ *   OHNE ADRESSSUCHE fehlt das Suchfeld, und nach „Uebernehmen"
  *   bleibt das Bezeichnungsfeld leer statt mit einer Adresse gefuellt — die
  *   Umkehrsuche folgt demselben Schalter. Alles Uebrige ist gleich. Der
  *   Dialog sagt NICHT, warum das Feld fehlt: Das sagt die Karte „Datenschutz"
@@ -56,9 +55,9 @@
     'use strict';
 
     var RUECKFALL = [47.7, 10.3];      // derselbe Ausgangspunkt wie auf den Karten
-    var ZOOM_KOORD = 14;               // gesetzte Koordinate — wie seit O5
-    var ZOOM_TREFFER = 15;             // Adresstreffer: eine Stufe naeher (M-S9-04)
-    var RAND_PX = 24;                  // Rand beim Einpassen der Spur (M-S9-04)
+    var ZOOM_KOORD = 14;               // gesetzte Koordinate
+    var ZOOM_TREFFER = 15;             // Adresstreffer: eine Stufe naeher
+    var RAND_PX = 24;                  // Rand beim Einpassen der Spur
     var felder = {};                   // praefix -> {steuer, opt}
 
     /**
@@ -131,13 +130,12 @@
 
         var dlg = document.createElement('dialog');
         dlg.className = 'dialog dialog-karte';
-        /* DAS SUCHFELD STEHT IM KOPF, nicht im Inhalt (M-S9-04, E-S9-06 a).
+        /* DAS SUCHFELD STEHT IM KOPF, nicht im Inhalt.
          * Der Unterschied ist keine Formsache: Im Inhalt schoebe es die Karte
          * nach unten, sobald die Trefferliste aufklappt; im Kopf legt sich die
          * Liste UEBER die Karte, und das Kreuz bleibt, wo es war. Und die
-         * Ueberschrift ist jetzt ein `h2` wie in jedem anderen Dialog dieser
-         * Anwendung — dieser eine trug seinen Titel seit Web 9.4.0 als nackten
-         * Text. */
+         * Ueberschrift ist ein `h2` wie in jedem anderen Dialog dieser
+         * Anwendung, kein nackter Text. */
         dlg.innerHTML =
             '<div class="dialog-kopf"><h2>Auf der Karte wählen</h2>' +
             (mitSuche
@@ -157,7 +155,7 @@
             '  <div class="ortswahl-karte"><div class="geo" data-karte></div>' +
             '    <span class="ortswahl-kreuz" aria-hidden="true"></span></div>' +
             '  <p class="feld-hinweis">Karte verschieben, bis das Kreuz auf dem Ort steht.</p>' +
-            /* Reihenfolge nach M-S9-04: erst der Hinweis, dann die Legende.
+            /* Reihenfolge: erst der Hinweis, dann die Legende.
              * Die Legende erklaert die Zeichnung darueber und gehoert an den
              * Fuss des Inhalts; der Hinweis sagt, was zu tun ist. */
             '  <div class="legende" data-legende hidden>' +
@@ -209,7 +207,7 @@
             EdGeo.markerRing(spur[spur.length - 1], 'ende').addTo(karte);
             var legende = dlg.querySelector('[data-legende]');
             if (legende) { legende.hidden = false; }
-            /* NUR BEI LEEREM FELD auf die Spur einpassen (E-S9-06 b): Steht
+            /* NUR BEI LEEREM FELD auf die Spur einpassen: Steht
              * schon eine Koordinate, ist sie die Aussage — die Spur ist dann
              * Zusatz und darf den Ausschnitt nicht bestimmen. */
             if (leer && !geschoben) {

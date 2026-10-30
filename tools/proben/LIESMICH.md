@@ -1,6 +1,6 @@
 # Proben gegen die örtliche Installation
 
-Neunundzwanzig Prüfungen gegen die laufende Anlage (E-PK-24).
+Prüfungen gegen die laufende Anlage (E-PK-24); wie viele, steht unter „Erwartete Zahl“.
 
 ## Aufruf
 

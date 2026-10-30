@@ -1,4 +1,4 @@
-/* Kreislauftest des CSV-Archivs (Arbeitspaket B5, P-08).
+/* Kreislauftest des CSV-Archivs.
  *
  *   Referenz-Archiv  →  frisches Konto  →  erneut exportieren  →  vergleichen
  *
@@ -6,7 +6,7 @@
  * enthaltene `einsaetze.csv` muss nicht ausgepackt werden.
  *
  * ZWEI ANGABEN KOMMEN NICHT AUS DER DATEI: Rettungsmittel und Standort werden
- * oben auf der Seite gewaehlt. Das ist Absicht (E15): Ein Kennzeichen aus der
+ * oben auf der Seite gewaehlt. Das ist Absicht: Ein Kennzeichen aus der
  * Datei legte sonst stillschweigend neue Stammdaten an. Fuer den Umlauf heisst
  * es, dass eine Datei mit mehreren Rettungsmitteln auf EINES zusammenfaellt —
  * eine der erwarteten Abweichungen, und der Grund, warum das Zielkonto vorher
@@ -18,7 +18,7 @@
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { downloadMitFortschritt } from './download_lib.mjs';
 import { motorWahl, starten, paarAbwarten } from '../../motor.mjs';
-/* Kontrollkästchen und Segmenttasten sind seit P3 unsichtbar; bedient
+/* Kontrollkästchen und Segmenttasten sind seit dem Redesign unsichtbar; bedient
  * wird die Beschriftung. Warum und wie: bedienen.mjs. */
 const { ankreuzen, abwaehlen } = await import(
   new URL('./bedienen.mjs', import.meta.url).href);
@@ -26,7 +26,7 @@ const { ankreuzen, abwaehlen } = await import(
 const MODUL = process.env.PLAYWRIGHT_MODUL
   || '/opt/node22/lib/node_modules/playwright/index.mjs';
 const PW = (m => m.default ?? m)(await import(MODUL.startsWith('/') ? 'file://' + MODUL : MODUL));
-/* Die Engine wählt der Läufer (MOTOR=… oder --motor), R87. */
+/* Die Engine wählt der Läufer (MOTOR=… oder --motor). */
 const MOTOR = motorWahl(process.argv);
 
 const basis   = process.argv[2] || 'https://127.0.0.1:8443';
@@ -40,7 +40,7 @@ const KACHELFEHLER = /ERR_TUNNEL_CONNECTION_FAILED|ERR_NAME_NOT_RESOLVED|tile\.|
 const lokal = /^https:\/\/(127\.0\.0\.1|localhost)(:|\/)/.test(basis);
 const browser = await starten(PW, MOTOR);
 const kontext = await browser.newContext({ ignoreHTTPSErrors: lokal, acceptDownloads: true });
-/* DER WARTUNGSLAUF BLEIBT AUS (S11-07, F-S11-77): Er packt und dünnt im
+/* DER WARTUNGSLAUF BLEIBT AUS: Er packt und dünnt im
    Browser aus, sobald eine Seite ihn anstößt (Startseite, Reiter Backup),
    und das Ausdünnen ändert die Punkte — mitten in einem Vergleich wäre das
    eine Abweichung, die keine ist. Die Antwort sagt „nichts fällig" — ein
@@ -76,7 +76,7 @@ await Promise.all([
   seite.click('#loginform button[type="submit"]'),
 ]);
 pruefe(!seite.url().includes('login.php'), `Anmeldung als ${konto} gescheitert`);
-/* Das Schlüsselpaar auf der ersten Seite abwarten (F-DM-02, Nr. 392): Ohne
+/* Das Schlüsselpaar auf der ersten Seite abwarten: Ohne
    es kam der Import in Firefox nie zu „Fertig", und der Export brach mit
    „kein Schlüsselpaar" ab. */
 pruefe(await paarAbwarten(seite), 'Nach der Anmeldung entstand binnen 20 s kein Schlüsselpaar');

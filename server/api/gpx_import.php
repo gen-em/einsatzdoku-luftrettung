@@ -6,7 +6,7 @@ require_once __DIR__ . '/../diensttag_lib.php';
 require_once __DIR__ . '/../spur_lib.php';
 
 /**
- * GPX-Import (S4/A3, E-S4-18).
+ * GPX-Import.
  *
  * POST api/gpx_import.php   JSON-Body, Header X-CSRF wie bei api/day.php
  *
@@ -15,11 +15,11 @@ require_once __DIR__ . '/../spur_lib.php';
  *     client_ref: 'imp-' + 24 Hexzeichen,   vom Browser gezogen
  *     stuecke:    [{seq_from, punkte, ts_von, ts_bis, huelle}, …] }
  *
- * WOFUER. Das Gegenstueck zum GPX-Abruf (S2/AP4). Eine Spur, die auf einem
+ * WOFUER. Das Gegenstueck zum GPX-Abruf. Eine Spur, die auf einem
  * anderen Geraet entstanden ist — ein Wanderuhr-Track, ein Export aus einer
  * Leitstellensoftware, das eigene Backup —, kommt damit in die Anwendung.
  *
- * ZWEI ZIELE, UND DIE WAHL IST NICHT KOSMETIK (E-R45-4):
+ * ZWEI ZIELE, UND DIE WAHL IST NICHT KOSMETIK:
  *
  *   ruhe      Die Datei ist die Aufzeichnung eines ganzen Dienstes. Sie wird
  *             EIN Ruhesegment, und die Einsaetze schneidet man danach heraus
@@ -27,26 +27,23 @@ require_once __DIR__ . '/../spur_lib.php';
  *   einsatz   Die Datei IST genau ein Einsatz. Sie wird unmittelbar einer,
  *             die Phasenzeiten traegt man danach im Formular nach.
  *
- * SEIT S11-05d LIEST DER BROWSER DIE DATEI (`assets/gpx.js`) und schickt
- * die Punkte als verschlossene Stuecke (SPUR2) — wie jede andere Spur seit
- * S11-04. Bis Web 22.2.0 las der Server die Zeichenkette (`gpx_lesen()`)
- * und legte die Punkte im Klartext ab; die Begruendung damals war, eine
- * GPX-Datei enthalte nichts Verschluesseltes. Seit Schritt 12a ist die Spur
- * selbst das, was verschluesselt wird (R78), und der Server darf sie nicht
- * mehr sehen. DER PREIS: Die Ablehnungsregeln (`time` ist Pflicht, kein
- * DOCTYPE, Koordinaten im Bereich) stehen jetzt im Browser und sind damit
+ * DER BROWSER LIEST DIE DATEI (`assets/gpx.js`) und schickt
+ * die Punkte als verschlossene Stuecke (SPUR2) — wie jede andere Spur. Die
+ * Spur ist das, was verschluesselt wird, und der Server darf sie nicht
+ * sehen. DER PREIS: Die Ablehnungsregeln (`time` ist Pflicht, kein
+ * DOCTYPE, Koordinaten im Bereich) stehen im Browser und sind damit
  * eine Bequemlichkeit, keine Schranke. Was der Server noch haelt, ist die
  * Form der Stuecke (`pruef_spurstueck()`), die Menge und die Kennung — eine
  * Hülle, die sich nicht oeffnen laesst, schadet nur dem eigenen Konto.
  *
  * DER CLIENT_REF KOMMT VOM BROWSER, weil die Huellen an ihn gebunden sind
- * (Bindung art|client_ref|platz, E-S11-08) und der Browser verschliesst,
+ * (Bindung art|client_ref|platz) und der Browser verschliesst,
  * bevor er fragt. Der Server prueft Form und Eindeutigkeit.
  */
 
 try {
     api_methode();
-    csrf_check();   // Feld ODER Kopfzeile X-CSRF (Nr. 67)
+    csrf_check();   // Feld ODER Kopfzeile X-CSRF
     $b = api_rumpf();
 
     $ziel = (string)($b['ziel'] ?? 'ruhe');
@@ -110,7 +107,7 @@ try {
                                                                     $von, $bis, $ref,
                                                                     $stuecke): array {
         $devId = geraet_virtuell_sicherstellen($pdo, $userId);
-        /* `imp-` WIE BEIM UEBRIGEN IMPORT (E-S4-18). Daran haengt die
+        /* `imp-` WIE BEIM UEBRIGEN IMPORT. Daran haengt die
          * Sperrliste: Ein geloeschter Eintrag mit dieser Kennung wird von
          * `ingest.php` nicht wieder angelegt (`deleted_refs`). Doppelt
          * vergeben ist sie nur, wenn derselbe Ruf zweimal kommt — dann
@@ -140,9 +137,8 @@ try {
             $typ = 'rest';
         }
 
-        /* ALS STUECKE (SPUR2, S11-05d). Bis Web 22.2.0 ein SPUR1-Blob im
-         * Klartext; die Begruendung „fertig, also gleich verdichtet" gilt
-         * weiter — Stufe 1, nichts kommt nach. */
+        /* ALS STUECKE (SPUR2), fertig, also gleich verdichtet — Stufe 1,
+         * nichts kommt nach. */
         foreach ($stuecke as $st) {
             spur2_stueck_schreiben($pdo, $typ, $id, $st['seq_from'], $st['punkte'],
                                    $st['ts_von'], $st['ts_bis'], $st['huelle']);
@@ -161,9 +157,8 @@ try {
         json_fehler($ex, 'gpx_import');
     }
 
-    /* Hier stand bis Web 22.2.0 `compute_site_elevation()`; die Hoehe des
-     * Einsatzorts entsteht seit S11-05b im Browser. Was nicht mitkam
-     * (Punkte ohne Zeit, unbrauchbare Koordinaten), nennt jetzt der Browser
+    /* Die Hoehe des Einsatzorts entsteht im Browser. Was nicht mitkam
+     * (Punkte ohne Zeit, unbrauchbare Koordinaten), nennt der Browser
      * — er hat die Datei gelesen. */
     $antwort = ['ok' => true, 'art' => $typ, 'id' => $id, 'punkte' => $summe,
                 'von' => fmt_local($von), 'bis' => fmt_local($bis)];

@@ -2,14 +2,13 @@
 declare(strict_types=1);
 
 /**
- * DAS PRÜFKONTO BEKOMMT EINEN ZWEITFAKTOR MIT BEKANNTEM GEHEIMNIS
- * (P5c/AP5, E-P5c-43).
+ * DAS PRÜFKONTO BEKOMMT EINEN ZWEITFAKTOR MIT BEKANNTEM GEHEIMNIS.
  *
  * Anlass: Nr. 320 (F-P5c-33) — das Prüfkonto `admin@example.invalid` ist eine BetreiberIn;
  * ohne Zweitfaktor landete jedes Werkzeug nach der Anmeldung im
  * Einrichtungstor, mit einem unbekannten nicht über den Code-Schritt.
  *
- * KEIN SCHALTER, DER DIE PFLICHT ABSCHALTET (E-P5c-43): Das Konto hat einen
+ * KEIN SCHALTER, DER DIE PFLICHT ABSCHALTET: Das Konto hat einen
  * echten Zweitfaktor, eingerichtet über dieselben Funktionen wie im Tor —
  * nur mit einem Geheimnis, das die Rechner daneben kennen. Die Anmeldung
  * geht durch denselben Code-Schritt wie jede andere.

@@ -4,7 +4,7 @@ import android.os.Build
 import org.json.JSONObject
 
 /**
- * Der `geraet`-Block der Kopplung (JSON-Vertrag 1a, F-S4-B → E-S4-28).
+ * Der `geraet`-Block der Kopplung (JSON-Vertrag 1a).
  *
  * WOZU ES IHN GIBT. Der Server soll wissen, welche Geräte tatsächlich koppeln
  * — es gibt dafür keine brauchbare äußere Quelle, und ohne die Angabe weiß er
@@ -12,11 +12,9 @@ import org.json.JSONObject
  * Teilenummer (325 Teilenummern → 173 Modelle, serverseitig auflösbar). Ein
  * Handy hat keine; es kennt seinen Modellnamen dafür selbst.
  *
- * DIE FELDFORM (E-S4-28, entschieden am 31.08.2026). Das R42-Kleinstpaket lag
- * beim Bau von B2 nicht auf `main` — `pair.php` liest den Block dort an keiner
- * Stelle aus. Genommen wird deshalb der in F-S4-B vorgeschlagene Rückfall: die
- * Felder der Uhr, soweit sie an einem Handy dieselbe Bedeutung haben, dazu
- * `hersteller`/`modell` an der Stelle der Teilenummer.
+ * DIE FELDFORM: die Felder der Uhr, soweit sie an einem Handy dieselbe
+ * Bedeutung haben, dazu `hersteller`/`modell` an der Stelle der
+ * Teilenummer.
  *
  * | Feld | Uhr | Handy |
  * |---|---|---|

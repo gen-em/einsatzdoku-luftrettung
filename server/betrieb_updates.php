@@ -5,11 +5,11 @@ require_betreiberin();
 require_once __DIR__ . '/migration_lib.php';
 require_once __DIR__ . '/wartung_lib.php';
 require_once __DIR__ . '/format_lib.php';   // groesse_text(), datum_text(),
-                                            // datum_zeit_text(), zeit_relativ() (Schritt 15/AP7)
+                                            // datum_zeit_text(), zeit_relativ()
 require_once __DIR__ . '/komplett_lib.php';      // juengster Komplett-Stand
 
 /**
- * BETRIEB → UPDATES (S8/AP2, E-S8-05, R66).
+ * BETRIEB → UPDATES.
  *
  * WARUM WARTUNGSMODUS UND MIGRATIONEN AUF EINER SEITE STEHEN. Weil sie
  * derselbe Vorgang sind. Der Ablauf eines Updates ist fuenfstufig — Backup
@@ -17,11 +17,10 @@ require_once __DIR__ . '/komplett_lib.php';      // juengster Komplett-Stand
  * Stufen finden hier statt. Sie auf zwei Seiten zu verteilen hiesse, mitten
  * im Vorgang das Menue zu benutzen.
  *
- * WAS R66 AENDERT. Die alte Liste zeigte ALLE 43 Migrationen, davon 41 mit
- * „Bereits angewendet" — eine Seite, auf der man scrollen muss, um die zwei
- * Zeilen zu finden, um die es geht. Hier steht nur, was aussteht; die
- * Ausgefuehrten liegen zugeklappt darunter und entfallen mit dem
- * Audit-Protokoll in P5.
+ * NUR, WAS AUSSTEHT. Eine Liste ALLER Migrationen, fast alle mit „Bereits
+ * angewendet", waere eine Seite, auf der man scrollen muss, um die zwei
+ * Zeilen zu finden, um die es geht. Die Ausgefuehrten liegen zugeklappt
+ * darunter.
  *
  * DER ZWEISTUFIGE ABLAUF BLEIBT: Der Aufruf zeigt an, der Knopf fuehrt aus.
  * Migrationen koennen Spalten loeschen; eine unwiderrufliche Handlung auf
@@ -31,15 +30,15 @@ require_once __DIR__ . '/komplett_lib.php';      // juengster Komplett-Stand
 
 $pdo = db();
 
-/* ---- Wartungsmodus ein- und ausschalten (S5 Paket W, E-S5W-01) -----------
+/* ---- Wartungsmodus ein- und ausschalten ------------------------
  *
  * NICHT AUF DER KOMMANDOZEILE: Der Notausgang laeuft ohne Sitzung und ohne
  * CSRF; ein Schalter dort waere ein Schalter ohne Nachweis, wer ihn betaetigt
  * hat. Wer per SSH schalten muss, legt `.zustand/wartung.lock` von Hand an
- * (bis Web 23.3.0 `wartung.lock` im Webroot, F-R17-47) — die Datei IST der
- * Schalter (E-S5W-02), und das steht im Runbook.
+ * — die Datei IST der
+ * Schalter, und das steht im Runbook.
  *
- * UMLEITEN NACH DEM POST (Web 21.1.9, Backlog Nr. 250): Ein Schalter, der
+ * UMLEITEN NACH DEM POST: Ein Schalter, der
  * umgelegt hat, endet mit `flash_setzen()` und einer Umleitung in die Karte
  * „Wartungsmodus" — sonst schaltet Neuladen ein zweites Mal und schreibt
  * einen zweiten Protokolleintrag. Legte er nicht um, ist nichts geschehen,
@@ -68,7 +67,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST'
                        . 'Der Wartungsmodus steht damit WEITERHIN — bitte die '
                        . 'Rechte prüfen oder die Datei von Hand entfernen.'];
     }
-    /* NUR WAS GESCHAH, STEHT IM PROTOKOLL (P5c/AP2, E-P5c-38): Ein Schalter,
+    /* NUR WAS GESCHAH, STEHT IM PROTOKOLL: Ein Schalter,
      * der nicht umlegte, ist keine Wartung. Der Eintrag steht hier und nicht
      * in `wartung_lib.php` — die läuft im Torwächter vor jeder Datenbank. */
     if ($wartungMeldung[0] === 'ok') {
@@ -87,10 +86,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST'
  *
  * Die Freigabe einer blockierten Migration ist bewusst KEIN globales
  * „trotzdem": Angehakt wird genau die eine Migration, deren Meldung man
- * gerade gelesen hat (D10, zweite Stufe).
+ * gerade gelesen hat.
  *
- * DER LAUF LEITET UM, SEIN ERGEBNIS REIST MIT (Web 21.1.9, Backlog Nr. 250,
- * E-R4-33). Sonst schickt Neuladen den Lauf ein zweites Mal. Nach der
+ * DER LAUF LEITET UM, SEIN ERGEBNIS REIST MIT. Sonst schickt Neuladen den Lauf
+ * ein zweites Mal. Nach der
  * Umleitung zeigt die Seite keine frische Vorschau, sondern den Lauf, wie er
  * war — eine gescheiterte Migration mit ihrer Meldung, die Zeile je Eintrag,
  * „Wartung beenden". Deshalb geht `$lauf` ganz in die Sitzung, und
@@ -131,17 +130,16 @@ $results   = $lauf['results'];
 $blockiert = $lauf['blockiert'];
 
 /* Zwei Listen aus einem Ergebnis: was ansteht und was erledigt ist. Die
- * Trennung ist die ganze Aenderung an R66 — sie geschieht hier und nicht im
+ * Trennung geschieht hier und nicht im
  * Katalog, damit die Kommandozeile weiterhin alles sieht.
  *
- * `skip` GEHOERT UNTER AUSSTEHEND (Backlog Nr. 149). Eine Migration, deren
+ * `skip` GEHOERT UNTER AUSSTEHEND. Eine Migration, deren
  * Schema schon aktuell ist, die aber im Register fehlt, hat nichts
  * auszufuehren und trotzdem etwas offen: den Vermerk. `migrationen_lauf()`
  * zaehlt sie deshalb als `offen`, und Status und Menue melden „1 Migration
- * steht aus". Solange sie hier als `ok` unter „Ausgefuehrt" lag, sagte diese
- * Seite daneben „Alles aktuell" und zeigte keinen Knopf — der Vermerk war im
- * Web nicht nachzuholen. Zwei Zaehlweisen fuer einen Sachverhalt; genau das,
- * was E-S8-16 abschaffen wollte.
+ * steht aus". Laege sie hier als `ok` unter „Ausgefuehrt", sagte diese
+ * Seite daneben „Alles aktuell" und zeigte keinen Knopf — der Vermerk waere im
+ * Web nicht nachzuholen. Zwei Zaehlweisen fuer einen Sachverhalt.
  *
  * DIE ZWEITE STELLE STEHT WEITER UNTEN. Der `match` fuer die Plakette hat
  * einen `default`-Zweig auf „Fehler"/rot. Wer nur diesen Filter erweitert,
@@ -151,12 +149,11 @@ $ausstehend = array_values(array_filter($results,
 $erledigt   = array_values(array_filter($results,
     static fn(array $r): bool => $r[2] === 'ok'));
 
-/* ---- Jüngstes Komplett-Backup: die Meldung statt des Knopfs (Mockup 05) --
+/* ---- Jüngstes Komplett-Backup: die Meldung statt des Knopfs -------------
  *
- * Bis Web 15.0.0 stand hier „Vorher ein Backup erstellen" mit einem Knopf auf
- * die Backup-Seite der NutzerIn — also auf das FALSCHE Backup: Vor einer
- * Migration schuetzt das Komplett-Backup der Installation, nicht die
- * `.edbak`-Datei eines Kontos. Jetzt nennt die Meldung den juengsten Stand
+ * Vor einer Migration schuetzt das Komplett-Backup der Installation, nicht
+ * die `.edbak`-Datei eines Kontos — ein Knopf auf die Backup-Seite der
+ * NutzerIn fuehrte zum FALSCHEN Backup. Die Meldung nennt den juengsten Stand
  * mit Alter und verweist dorthin. */
 $kompStaende = komp_staende();
 $kompJuengst = $kompStaende[0] ?? null;
@@ -177,14 +174,14 @@ ui_seite_start(['titel' => 'Updates']);
 
   <?= wartung_balken() ?>
 
-  <?php /* VIER KARTEN, ZWEI SPALTEN (Konzept AP5 (8)). `.karten-raster` teilt
+  <?php /* VIER KARTEN, ZWEI SPALTEN. `.karten-raster` teilt
            sie selbst auf — anders als `.form-raster` braucht es dafuer keine
            Zuordnung im Markup. Die Karten dieser Seite haben keine
            thematische Ordnung, die eine Zuordnung von Hand rechtfertigen
            wuerde. */ ?>
   <div class="karten-raster">
 
-  <?php /* ---- Wartungsmodus (S5 Paket W, zieht mit E-S8-05 hierher) ------
+  <?php /* ---- Wartungsmodus ---------------------------------------------
      *
      * Zwei Zustaende, ein Knopf. Im Normalzustand ist „einschalten" die
      * Haupthandlung dieser Karte — aber NICHT die der Seite: Die ist das
@@ -198,13 +195,13 @@ ui_seite_start(['titel' => 'Updates']);
     <?php if ($wartungMeldung !== null): ?>
       <?= ui_meldung_markup($wartungMeldung[0], $wartungMeldung[1]) ?>
     <?php endif; ?>
-    <?php /* DER TORWAECHTER HAT EINEN NAMEN UND EINEN GRUND (P5a/AP3,
-             E-P5a-20). `wartung.lock` traegt seit AP1/AP3 nicht nur
+    <?php /* DER TORWAECHTER HAT EINEN NAMEN UND EINEN GRUND.
+             `wartung.lock` traegt nicht nur
              Personennamen im Feld `von`, sondern auch `torwaechter` und
              `kette`. Wer die Seite oeffnet, weil die Installation ploetzlich
              geschlossen ist, soll hier erfahren, WARUM — sonst sieht eine
              automatisch geschlossene Installation aus wie eine vergessene,
-             und genau das ist der Fehler, vor dem E-S5W-05 warnt. */ ?>
+             und genau das ist der Fehler, vor dem hier gewarnt wird. */ ?>
     <?php if (($wartungVon = (string)(wartung_daten()['von'] ?? '')) !== ''
               && in_array($wartungVon, ['torwaechter', 'kette'], true)): ?>
       <?= ui_meldung_markup('warn', $wartungVon === 'torwaechter'
@@ -218,15 +215,14 @@ ui_seite_start(['titel' => 'Updates']);
           . 'bleibt sie an und du bist dran.',
           $wartungVon === 'torwaechter' ? 'Vom Torwächter geschlossen' : 'Von der Kette geschaltet') ?>
     <?php endif; ?>
-    <?php /* EIN SATZ, UND ER STIMMT (P5c/AP9, E-P5c-132, F-P5c-158). Hier stand
-             „für alle außer Verwaltung und Betrieb" — das Tor arbeitet aber
-             nach SEITEN (`WARTUNG_AUSNAHMEN`), nicht nach Rollen: Jede Seite
+    <?php /* EIN SATZ, UND ER STIMMT. Nicht „für alle außer Verwaltung
+             und Betrieb" — das Tor arbeitet nach SEITEN (`WARTUNG_AUSNAHMEN`),
+             nicht nach Rollen: Jede Seite
              unter Verwaltung antwortet im Wartungsmodus mit 503, offen bleiben
              die Anmeldung und die Seiten unter Betrieb, und die erreicht nur
-             die BetreiberIn. Darunter stand bis Web 21.0.0 der Ablauf eines
-             Updates als nummerierte Liste (Mockup 05) — derselbe Ablauf stand
-             mit sieben Schritten im Handbuch. Zwei Fassungen einer Sache laufen
-             auseinander; er steht jetzt nur noch dort. */ ?>
+             die BetreiberIn. Der Ablauf eines Updates steht im Handbuch
+             und nicht noch einmal hier — zwei Fassungen einer Sache laufen
+             auseinander. */ ?>
     <p class="feld-hinweis">Schließt die Anwendung für alle; offen bleiben nur die
        Seiten unter Betrieb, und Uhr und Handy liefern danach nach.
        <a href="hilfe.php#der-wartungsmodus">Handbuch: Wartungsmodus und Ablauf eines Updates</a></p>
@@ -242,7 +238,7 @@ ui_seite_start(['titel' => 'Updates']);
     </form>
   <?php ui_karte_ende(); ?>
 
-  <?php /* ---- Ausstehende Updates (R66) ---------------------------------- */ ?>
+  <?php /* ---- Ausstehende Updates ---------------------------------- */ ?>
   <?php ui_karte_start(['titel' => 'Ausstehende Updates', 'id' => 'k-ausstehend',
       'zahl' => $ausstehend
           ? count($ausstehend) . (count($ausstehend) === 1 ? ' Update' : ' Updates')
@@ -257,8 +253,8 @@ ui_seite_start(['titel' => 'Updates']);
     <?php endif; ?>
 
     <?php if (!$ausstehend && !$ausfuehren): ?>
-      <?php /* OHNE e(): `ui_meldung_markup()` maskiert den Text selbst — bis Web
-               21.1.0 wurde hier zweimal maskiert (Endzählung AP9, D-5). */ ?>
+      <?php /* OHNE e(): `ui_meldung_markup()` maskiert den Text selbst —
+               sonst wuerde zweimal maskiert. */ ?>
       <?= ui_meldung_markup('info',
           'Alles aktuell · ' . ($stand['letzte'] !== null
               ? (string)$stand['letzte'] . ($stand['wann'] !== null
@@ -302,7 +298,7 @@ ui_seite_start(['titel' => 'Updates']);
 
     <?php foreach ($ausstehend as [$id, $label, $status, $detail, $zerstoert, $blockId, $web]): ?>
       <?php
-        /* `nicht nötig` IST NEUTRAL, NICHT ORANGE (Backlog Nr. 149). Orange
+        /* `nicht nötig` IST NEUTRAL, NICHT ORANGE. Orange
            heisst auf dieser Seite „hier ist etwas zu tun, das die Datenbank
            aendert"; hier ist nur ein Vermerk nachzutragen. Ein `default`-Zweig
            steht darunter — ein Status, den dieser `match` nicht kennt, wird
@@ -339,19 +335,18 @@ ui_seite_start(['titel' => 'Updates']);
       <p class="feld-klein">Führt der Reihe nach aus, was oben steht, blockierte
          Einträge nur mit gesetztem Häkchen.</p>
     <?php endif; ?>
-    <?php /* DER VERWEIS STEHT IMMER (E-P5c-133): Die Seite hat keinen Seitenkopf,
+    <?php /* DER VERWEIS STEHT IMMER: Die Seite hat keinen Seitenkopf,
              der ihn für alle Karten trüge. */ ?>
     <p class="feld-hinweis"><a href="hilfe.php#12-3-updates">Handbuch: Updates</a></p>
 
-    <?php /* „WARTUNG BEENDEN" STEHT HIER UND NICHT NUR OBEN (P5a/AP3,
-             E-P5a-20).
-             R66 bleibt unberührt: Die Wartung geht NIE von selbst aus. Wer
+    <?php /* „WARTUNG BEENDEN" STEHT HIER UND NICHT NUR OBEN.
+             Die Wartung geht NIE von selbst aus. Wer
              sie geschlossen hat, ist aber ein Unterschied — hat der
              Torwächter sie geschaltet, hat niemand sie bewusst eingeschaltet,
              und niemand rechnet damit, sie hinterher ausschalten zu müssen.
              Der Knopf steht deshalb genau dort, wo man gerade geklickt hat:
              unter den Migrationen, die eben durchgelaufen sind. Oben in der
-             Karte „Wartungsmodus" steht er weiterhin — das ist derselbe
+             Karte „Wartungsmodus" steht er ebenso — das ist derselbe
              Schalter, nicht ein zweiter.
 
              DREI BEDINGUNGEN, und alle drei sind nötig: Der Torwächter muss
@@ -391,20 +386,16 @@ ui_seite_start(['titel' => 'Updates']);
                   'plaketten' => $plaketten]);
       ?>
     <?php endforeach; ?>
-    <?php /* BIS WEB 21.0.0 STAND HIER „Diese Liste steht hier bis P5. Danach
-             führt das Audit-Protokoll die ausgeführten Kennungen (R66), und die
-             Karte entfällt." (F-P5c-146). Gestrichen, weil ein Versprechen ohne
-             Termin nicht auf die Seite gehört. Die Begründung dazu war falsch
-             (Gegenlesung AP11): Das Protokoll führt jede ausgeführte Migration
-             seit P5c/AP2 im Reiter Verwaltung (`migration_ausgefuehrt` in
-             `migrationen_lauf()`). Die Karte bleibt trotzdem — sie nennt
-             als Einzige die Fassung je Kennung (Q-P5c-53, Nr. 326). */ ?>
+    <?php /* Das Protokoll führt jede ausgeführte Migration im Reiter
+             Verwaltung (`migration_ausgefuehrt` in `migrationen_lauf()`).
+             Die Karte bleibt trotzdem — sie nennt als Einzige die Fassung
+             je Kennung. */ ?>
   <?php ui_karte_ende(true); ?>
 
   <?php /* ---- Fassung ------------------------------------------------------
      *
      * Ersetzt den Kopf der alten Wartungsseite. Es ist die Stelle, an der der
-     * Torwaechter (P5, R40.4) spaeter anzeigt, dass er gesperrt hat. */ ?>
+     * Torwaechter spaeter anzeigt, dass er gesperrt hat. */ ?>
   <?php ui_karte_start(['titel' => 'Fassung', 'id' => 'k-fassung']); ?>
     <?php
       ui_zeile(['text' => 'Web', 'klein' => 'server/version.php',
@@ -414,13 +405,12 @@ ui_seite_start(['titel' => 'Updates']);
                          . ' verbucht',
                 'plaketten' => ui_plakette($stand['letzte'] ?? '—',
                                            ['ton' => 'neutral'])]);
-      /* DIE UHR-FASSUNG STEHT NICHT AUF DEM SERVER (gemessen in AP2).
-         Das Konzept nannte als Quelle „eine Konstante in `ingest.php`/`api`,
-         prüfen" — es gibt keine: `ingest.php` kennt weder eine Fassungsangabe
+      /* DIE UHR-FASSUNG STEHT NICHT AUF DEM SERVER. Eine Konstante
+         in `ingest.php` oder `api/` gibt es nicht: `ingest.php` kennt weder eine Fassungsangabe
          der Uhr noch eine Untergrenze, und der einzige Treffer auf „Fassung"
          in der Datei ist ein Kommentar über Uhr-Fassungen OHNE `day_ref`, also
          gerade der Rückfall für ALTE Uhren. Der JSON-Vertrag ist bewusst
-         abwärtskompatibel (R12). Eine Zahl hier zu erfinden wäre schlimmer als
+         abwärtskompatibel. Eine Zahl hier zu erfinden wäre schlimmer als
          keine — sie sähe aus wie eine Zusage, die niemand einlöst. */
       ui_zeile(['text' => 'Uhr-App',
                 'klein' => 'Der JSON-Vertrag ist abwärtskompatibel; welche '

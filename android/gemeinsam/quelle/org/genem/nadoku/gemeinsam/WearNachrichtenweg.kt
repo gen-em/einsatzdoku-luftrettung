@@ -7,18 +7,16 @@ import com.google.android.gms.wearable.Wearable
 import java.util.concurrent.TimeUnit
 
 /**
- * Der Data Layer — **die dünne Hülle** (E-S4-10).
+ * Der Data Layer — **die dünne Hülle**.
  *
  * HIER IST DIE GRENZE DES BELEGTEN. Alles oberhalb dieser Klasse — Puffer,
  * Quittung, Nachlieferung, Doppelzustellung, die Buchführung am Handy — läuft
  * auf der JVM und ist geprüft. Was diese Klasse tut, ist im Container **nicht**
  * ausführbar: Der Data Layer braucht zwei gekoppelte Geräte, die
- * Play-Dienste und eine Bluetooth-Strecke. Es gibt weder Uhr (E-R45-7) noch
- * Emulator (E-R45-8).
+ * Play-Dienste und eine Bluetooth-Strecke. Es gibt weder Uhr noch Emulator.
  *
  * DESHALB IST SIE SO KLEIN WIE MÖGLICH: Knoten holen, senden, Erfolg melden —
- * und seit 0.14.0 die Knotenliste nennen ([verbundeneKnoten], Backlog
- * Nr. 144). Keine Entscheidung, keine Zustandsführung, kein Zwischenspeicher — sonst
+ * und die Knotenliste nennen ([verbundeneKnoten]). Keine Entscheidung, keine Zustandsführung, kein Zwischenspeicher — sonst
  * läge ungeprüfte Logik in einer Klasse, die niemand ausführen kann. Was hier
  * schiefgeht, geht **sichtbar** schief: `false` heißt „nicht zugestellt", und
  * die Schicht darüber liefert nach.
@@ -65,8 +63,7 @@ class WearNachrichtenweg(
     }
 
     /**
-     * Die zurzeit verbundenen Knoten — für die Absenderprüfung am Handy
-     * (Backlog Nr. 144, Krypto-Review AN-4).
+     * Die zurzeit verbundenen Knoten — für die Absenderprüfung am Handy.
      *
      * `null`, wenn die Liste nicht zu lesen war (keine Play-Dienste, Zeit
      * abgelaufen): Das ist etwas anderes als „keine Knoten", und die Schicht

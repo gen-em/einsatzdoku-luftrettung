@@ -27,7 +27,7 @@
       "id": "update-migrationen",
       "datei": "server/migration_lib.php",
       "klasse": "E",
-      "begruendung": "Migrationsbeschriftungen und SQL frueherer Schemafassungen. Sie beschreiben, was eine Migration DAMALS getan hat — eine Umbenennung machte die Beschreibung falsch. Entfallen mit R11 (Uebergabeliste an P6, Konzept 10.3). DIE DATEI HAT SICH GEAENDERT: Bis Web 15.0.0 lag der Katalog in `server/update.php`; seit S8/AP2 steht er in `server/migration_lib.php`, weil zwei Aufrufer ihn brauchen — die neue Seite Betrieb → Updates und der Notausgang auf der Kommandozeile. Der Regelname bleibt, die Fundstelle nicht."
+      "begruendung": "Migrationsbeschriftungen und SQL frueherer Schemafassungen. Sie beschreiben, was eine Migration DAMALS getan hat — eine Umbenennung machte die Beschreibung falsch. Sie bleiben, solange die Migrationen im Katalog stehen. DIE DATEI HAT SICH GEAENDERT: Bis Web 15.0.0 lag der Katalog in `server/update.php`; seit S8/AP2 steht er in `server/migration_lib.php`, weil zwei Aufrufer ihn brauchen — die neue Seite Betrieb → Updates und der Notausgang auf der Kommandozeile. Der Regelname bleibt, die Fundstelle nicht."
     },
     {
       "id": "config-beispiel",
@@ -121,7 +121,7 @@
       "id": "connect-iq-rueckruf",
       "zeile": "von Connect IQ bekommt",
       "klasse": "G",
-      "begruendung": "Die Signatur des Rueckrufs — `(code, data)` ohne Kopfzeilen — ist eine Eigenschaft der Garmin-Plattform und nicht der Uhr im Allgemeinen. Sie ist der GRUND, warum `ingest.php` seit Web 20.11.0 ein `Retry-After` schickt, das kein Geraet dieses Projekts liest (P5a/AP7, E-P5a-01). Ein geraetefreies „die Uhr bekommt keine Kopfzeilen\" waere hier keine Neutralitaet, sondern eine falsche Verallgemeinerung: Ein Wear-OS-Client koennte sie lesen. Dieselbe Ueberlegung wie `garmin-zusatz-kopplung` (E-P2-02): genannt wird die Plattform dort, wo sie die Sache IST. Zwei Stellen, docs/Technik.md 5e.7 und docs/JSON-Vertrag.md 5."
+      "begruendung": "Die Signatur des Rueckrufs — `(code, data)` ohne Kopfzeilen — ist eine Eigenschaft der Garmin-Plattform und nicht der Uhr im Allgemeinen. Sie ist der GRUND, warum `ingest.php` seit Web 20.11.0 ein `Retry-After` schickt, das kein Geraet dieses Projekts liest (P5a/AP7, E-P5a-01). Ein geraetefreies „die Uhr bekommt keine Kopfzeilen\" waere hier keine Neutralitaet, sondern eine falsche Verallgemeinerung: Ein Wear-OS-Client koennte sie lesen. Dieselbe Ueberlegung wie `garmin-zusatz-kopplung` (E-P2-02): genannt wird die Plattform dort, wo sie die Sache IST. Zwei Stellen, docs/Technik.md 10.7 und docs/JSON-Vertrag.md 5."
     },
     {
       "id": "connect-iq-projekt",
@@ -685,7 +685,7 @@
       "datei": "docs/Technik.md",
       "zeile": "sichtbar in Garmin Connect|die Uhr zeigt das Feld in Garmin Connect",
       "klasse": "G",
-      "begruendung": "Technik.md 5d.8 begruendet, warum die Vorgabe-Serveradresse der Uhr-App auf der Adresse der Betreiberin stehen BLEIBT (E-P5a-42, Auftraggeber 16.09.2026). Die Begruendung IST die Plattform: Das Feld steht in Garmin Connect und ist dort von jeder Betreiberin aenderbar — deshalb ist die Vorgabe eine Vorgabe und keine Festverdrahtung. Ohne den Namen waere der Satz „die Uhr zeigt das Feld irgendwo\" und begruendete gar nichts; die Wear-OS-Uhr hat dieses Feld ausdruecklich NICHT (E-S4-11, sie kennt weder Adresse noch Schluessel). Dieselbe Ueberlegung wie `statistik-hersteller-garmin` und `handbuch-geraete-verlust-garmin` (E-P2-02): genannt wird die Plattform dort, wo sie die Sache IST."
+      "begruendung": "Technik.md 9.8 begruendet, warum die Vorgabe-Serveradresse der Uhr-App auf der Adresse der Betreiberin stehen BLEIBT (E-P5a-42, Auftraggeber 16.09.2026). Die Begruendung IST die Plattform: Das Feld steht in Garmin Connect und ist dort von jeder Betreiberin aenderbar — deshalb ist die Vorgabe eine Vorgabe und keine Festverdrahtung. Ohne den Namen waere der Satz „die Uhr zeigt das Feld irgendwo\" und begruendete gar nichts; die Wear-OS-Uhr hat dieses Feld ausdruecklich NICHT (E-S4-11, sie kennt weder Adresse noch Schluessel). Dieselbe Ueberlegung wie `statistik-hersteller-garmin` und `handbuch-geraete-verlust-garmin` (E-P2-02): genannt wird die Plattform dort, wo sie die Sache IST."
     },
     {
       "id": "mail-demo-konto",
@@ -734,7 +734,7 @@
         "hausform-rollen-weiblich"
       ],
       "zeile": "'label' *=> *'(Pilot|Flugretter|Fahrer|Praktikant)|p1: 'Pilot 1'|Pilot 1, Pilot 2|Fahrer, Praktikant|Pilot 1 und HEMS-TC|Besatzung Fahrer, Praktikant|bodengebunden Fahrer|Fahrer und Praktikant dazugekommen",
-      "begruendung": "E-PK-39: DIE FUENF ROLLENBESCHRIFTUNGEN SIND SPALTENUEBERSCHRIFTEN. `CREW_ROLES` in db.php 912 liefert sie ueber `crew_rolle_text()`, und sie stehen als Spalten 14 bis 19 in jeder CSV- und Excel-Ausgabe (docs/Export-Format.md 181-186). Sie gehen mit der Datei aus dem Haus -- derselbe Fall wie der `exportTitle`, den der Auftraggeber am 23.09.2026 stehen lassen wollte. WICHTIG: Die Tabelle steht DREIMAL -- in `db.php` und als Rueckfallwert in `import_profiles.js` 62 und `import_ui.js` 334, falls der Server keine liefert. Wer eine aendert, aendert alle drei, sonst zeigt der Import andere Rollennamen als die Anwendung. ERWEITERT am 23.09.2026, weil mein eigener Faecherungsauftrag die Ausnahme nur fuer `Export-Format.md` benannt hatte: Der Handbuch-Agent hat die Aufzaehlung „Pilot 1, Pilot 2, HEMS-TC, Flugretter\" gegendert und damit beschrieben, was die Oberflaeche NICHT zeigt. 15 Stellen zurueckgenommen. Ein Auftrag, der eine dateiuebergreifende Regel nur an EINER Datei nennt, laesst sie an allen anderen durch -- und der Agent kann es nicht wissen. Dazu die Stelle in `Export-Format.md` 537, die ERKLAERT, dass Fahrer und Praktikant als Spalten dazugekommen sind -- sie nennt die Ueberschriften."
+      "begruendung": "E-PK-39: DIE FUENF ROLLENBESCHRIFTUNGEN SIND SPALTENUEBERSCHRIFTEN. `CREW_ROLES` in db.php 912 liefert sie ueber `crew_rolle_text()`, und sie stehen als Spalten 14 bis 19 in jeder CSV- und Excel-Ausgabe (docs/Export-Format.md 2). Sie gehen mit der Datei aus dem Haus -- derselbe Fall wie der `exportTitle`, den der Auftraggeber am 23.09.2026 stehen lassen wollte. WICHTIG: Die Tabelle steht DREIMAL -- in `db.php` und als Rueckfallwert in `import_profiles.js` 62 und `import_ui.js` 334, falls der Server keine liefert. Wer eine aendert, aendert alle drei, sonst zeigt der Import andere Rollennamen als die Anwendung. ERWEITERT am 23.09.2026, weil mein eigener Faecherungsauftrag die Ausnahme nur fuer `Export-Format.md` benannt hatte: Der Handbuch-Agent hat die Aufzaehlung „Pilot 1, Pilot 2, HEMS-TC, Flugretter\" gegendert und damit beschrieben, was die Oberflaeche NICHT zeigt. 15 Stellen zurueckgenommen. Ein Auftrag, der eine dateiuebergreifende Regel nur an EINER Datei nennt, laesst sie an allen anderen durch -- und der Agent kann es nicht wissen. Dazu die Stelle in `Export-Format.md` 3.8, die ERKLAERT, dass Fahrer und Praktikant als Spalten dazugekommen sind -- sie nennt die Ueberschriften."
     },
     {
       "id": "zusammensetzung-bindestrich",
@@ -802,7 +802,7 @@
       "datei": "docs/Technik.md",
       "zeile": "\\*\\*Die Garmin-Uhr\\*\\* \\(Tag `uhr-vX|Store-Paket `nadoku-X\\.Y\\.Z\\.iq`, signiert mit dem Connect-IQ|in den Connect-IQ-Store lädt es die BetreiberIn|Artefakt des Laufs \\(Connect-IQ-Store von Hand\\)",
       "klasse": "G",
-      "begruendung": "Die App-Auslieferung (PK-08, Technik.md 4.97g und 6.1) hat ZWEI Uhren mit zwei Tags: Die Wear-OS-Uhr kommt mit dem Tag android-v* als APK, die Garmin-Uhr mit uhr-v* als Connect-IQ-Paket (monkeyc -e, .iq, Store von Hand). Ein bloßes „Uhr\" wäre genau an dieser Stelle zweideutig; genannt wird die Plattform dort, wo sie die Sache IST — dieselbe Überlegung wie technik-abgrenzung-beide-uhren und E-P2-15. Aufgenommen 29.09.2026 mit PK-08."
+      "begruendung": "Die App-Auslieferung (PK-08, Technik.md 4.13 und 12.1) hat ZWEI Uhren mit zwei Tags: Die Wear-OS-Uhr kommt mit dem Tag android-v* als APK, die Garmin-Uhr mit uhr-v* als Connect-IQ-Paket (monkeyc -e, .iq, Store von Hand). Ein bloßes „Uhr\" wäre genau an dieser Stelle zweideutig; genannt wird die Plattform dort, wo sie die Sache IST — dieselbe Überlegung wie technik-abgrenzung-beide-uhren und E-P2-15. Aufgenommen 29.09.2026 mit PK-08."
     },
     {
       "id": "spur-fachdokument-bedrohungsmodell",
@@ -977,7 +977,7 @@
       ],
       "zeile": "Die Begründung damals: Die Spur lag im Klartext",
       "klasse": "C",
-      "begruendung": "Technik 4.97: warum die Stufe einer Spur früher auf dem Server lag — „Die Begründung damals“, ausdrücklich alt."
+      "begruendung": "Technik 4.6: warum die Stufe einer Spur früher auf dem Server lag — „Die Begründung damals“, ausdrücklich alt."
     },
     {
       "id": "zusage-technik-spur1-bis-dahin",
@@ -999,7 +999,7 @@
       ],
       "zeile": "Bis Web 21 galt hier der unbequeme Satz",
       "klasse": "C",
-      "begruendung": "Technik 4.98, der Kasten zur Zusage: erzählt, dass der Satz von der Rekonstruierbarkeit von Web 15.6.0 bis Web 21 die ehrliche Grenze war und seit Web 22 nicht mehr gilt (R17-18)."
+      "begruendung": "Technik 4.14, der Kasten zur Zusage: erzählt, dass der Satz von der Rekonstruierbarkeit von Web 15.6.0 bis Web 21 die ehrliche Grenze war und seit Web 22 nicht mehr gilt (R17-18)."
     },
     {
       "id": "zusage-technik-formular-rea-bis-2204",
@@ -1010,7 +1010,7 @@
       ],
       "zeile": "Bis Web 22\\.0\\.4 sah das Einsatzformular die Reanimation im Klartext",
       "klasse": "C",
-      "begruendung": "Technik 4.99s: wie das Einsatzformular die Reanimation BIS Web 22.0.4 schrieb."
+      "begruendung": "Technik 4.40: wie das Einsatzformular die Reanimation BIS Web 22.0.4 schrieb."
     },
     {
       "id": "zusage-technik-altbestand-umzug",
@@ -1021,7 +1021,7 @@
       ],
       "zeile": "was vor Web 22 im Klartext angekommen war",
       "klasse": "C",
-      "begruendung": "Technik 4.99s: das Einmalwerkzeug, das den Altbestand von vor Web 22 in die Hüllen umzog (S11-12 entfernt)."
+      "begruendung": "Technik 4.40: das Einmalwerkzeug, das den Altbestand von vor Web 22 in die Hüllen umzog (S11-12 entfernt)."
     },
     {
       "id": "zusage-vertrag-bis-2200",
@@ -1109,7 +1109,7 @@
       ],
       "zeile": "weist Ortsdaten im Klartext ab",
       "klasse": "Homonym",
-      "begruendung": "Technik 4.99s: Der Eingang WEIST Klartext ab (`400 klartext`) — die Zusage selbst, nicht ihr Gegenteil."
+      "begruendung": "Technik 4.40: Der Eingang WEIST Klartext ab (`400 klartext`) — die Zusage selbst, nicht ihr Gegenteil."
     },
     {
       "id": "zusage-backup-spurteil-innen",

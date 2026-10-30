@@ -1,7 +1,7 @@
 /* Wege der Seite Verwaltung → Konto-Backups (`admin_sicherungen.php`).
  * ===========================================================================
  *
- * Entstanden mit R4-11 (Backlog Nr. 250): Nach einer Handlung leitet die
+ * Nach einer Handlung leitet die
  * Seite um; Neuladen schickt nichts noch einmal. Gespeichert werden die
  * Regeln, wie sie stehen — „Es gab nichts zu ändern", der Weg ändert nichts.
  */

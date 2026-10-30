@@ -11,8 +11,8 @@
  * fehlen sie schlicht — die Tabelle zeigt dann Gedankenstriche.
  *
  * Erwartet aus der Seite: EdHtml (assets/html.js) und EdFormat
- * (assets/format.js) -- Letzteres steht seit Schritt 15 AP8d im Kopf JEDER
- * Seite und muss deshalb nirgends mehr eingebunden werden. Sonst reine
+ * (assets/format.js) -- Letzteres steht im Kopf JEDER Seite und muss
+ * deshalb nirgends eigens eingebunden werden. Sonst reine
  * DOM-Arbeit.
  */
 'use strict';
@@ -20,61 +20,54 @@ const EdMissionTable = (() => {
 
   /* ---- Formatierung (auch nach aussen gegeben, s. u.) ------------------ */
 
-  /* Maskierung fuer HTML: Baustein B7, seit Web 4.6.0 in assets/html.js
-   * (M6-03, M6-05). Hier steht nur noch die Weiterleitung — sie haelt die
-   * vorhandenen Aufrufe EdMissionTable.escape/.esc gueltig und macht zugleich
-   * sichtbar, dass es NUR NOCH EINE Fassung gibt.
+  /* Maskierung fuer HTML steht in assets/html.js. Hier steht nur die
+   * Weiterleitung — sie haelt die vorhandenen Aufrufe
+   * EdMissionTable.escape/.esc gueltig und macht zugleich sichtbar, dass es
+   * NUR EINE Fassung gibt.
    *
-   * esc() war bis dahin eine zweite, eigene Umsetzung ueber ein Hilfselement
-   * (textContent -> innerHTML). Sie maskierte drei Zeichen, escape() fuenf —
-   * zwei Namen fuer dieselbe Aufgabe mit unterschiedlichem Umfang, und an der
-   * Aufrufstelle war nicht zu sehen, welche der beiden man erwischt hatte.
-   * Beide zeigen jetzt auf denselben Baustein.
+   * Zwei Namen fuer dieselbe Aufgabe mit unterschiedlichem Umfang waeren
+   * eine Falle: An der Aufrufstelle waere nicht zu sehen, welche der beiden
+   * man erwischt. Beide zeigen deshalb auf denselben Baustein.
    */
   const escape = EdHtml.escape;
   const esc    = EdHtml.escape;
 
   /* Zelle fuer eine Angabe aus dem verschluesselten Block.
    *
-   * DER GRUND FUER DIESE FUNKTION: Bisher zeigten diese Spalten einen
-   * Gedankenstrich, und zwar in ZWEI voellig verschiedenen Faellen — der
-   * Einsatz hat keine Angaben, oder er hat welche, die sich nicht
-   * entschluesseln lassen. Der zweite Fall ist ein Alarmzeichen und sah aus
-   * wie der erste. Wer den Unterschied nicht sieht, merkt nicht, dass sein
+   * DER GRUND FUER DIESE FUNKTION: Ein Gedankenstrich allein stuende fuer
+   * ZWEI voellig verschiedene Faelle — der Einsatz hat keine Angaben, oder
+   * er hat welche, die sich nicht entschluesseln lassen. Der zweite Fall ist
+   * ein Alarmzeichen und saehe aus wie der erste. Wer den Unterschied nicht sieht, merkt nicht, dass sein
    * Inhaltsschluessel nicht mehr passt — und erstellt als Naechstes ein
    * Backup.
    *
-   * Jetzt:  –  keine Angaben      ⚠  vorhanden, aber nicht lesbar
+   * Deshalb:  –  keine Angaben      ⚠  vorhanden, aber nicht lesbar
    *
-   * MASKIERT WIRD HIER, NICHT IN DER FORMATIERUNG (Backlog Nr. 22, F-20).
-   * Bis Web 7.2.0 war das Maskieren Sache der aufrufenden Seite: Einsatzort
-   * und Diagnose kamen mit `v => esc(v)`, das Alter mit `v => v` — weil es
+   * MASKIERT WIRD HIER, NICHT IN DER FORMATIERUNG. Laege das Maskieren bei
+   * der aufrufenden Seite, kaeme das Alter leicht mit `v => v` — weil es
    * eine Zahl ist. Aus dem Formular ist es das auch (parseInt) — aber das
    * FELD ist keine Zahl: `age` liegt im pat_blob, und der ist freies JSON,
    * das der Server nie im Klartext sieht und deshalb nicht prüfen kann. Die
-   * Zelle wird per innerHTML gesetzt; Markup darin lief in dem Fenster los,
+   * Zelle wird per innerHTML gesetzt; Markup darin liefe in dem Fenster los,
    * in dem der Inhaltsschlüssel liegt.
    *
    * DER WEG HINEIN IST DIE WIEDERHERSTELLUNG EINER BACKUP, nicht der
-   * Import. Bis Web 7.3.1 stand hier das Gegenteil („import.js übernimmt
-   * pat.age als rohen Zellenwert"); das ist nachgemessen falsch —
-   * import_profiles.js bildet `pat_alter` mit parse:['alterJahre'] ab, und
+   * Import: import_profiles.js bildet `pat_alter` mit parse:['alterJahre'] ab, und
    * PARSERS.ganzzahl verlangt /^-?\d+$/. `47<img …>` wird verworfen, nicht
    * übernommen. api/backup_restore.php dagegen übernimmt den inneren
    * Chiffretext unverändert, wie es sein muss — und im Adminbereich
    * schreibt „Einspielen" ein FREMDES Backup in ein Konto.
    *
    * Die Entscheidung, eine Angabe zu maskieren, darf deshalb nicht an der
-   * Aufrufstelle liegen: Sie war an zwei von sechs Stellen falsch getroffen,
-   * und die nächste neue Spalte hätte dieselbe Wahl noch einmal gehabt.
-   * `formatiere` bekommt den Wert jetzt BEREITS MASKIERT und darf ihn nur
-   * noch umschichten — wer rohes Markup braucht, kann diese Funktion nicht
+   * Aufrufstelle liegen: Jede neue Spalte haette dieselbe Wahl noch einmal.
+   * `formatiere` bekommt den Wert BEREITS MASKIERT und darf ihn nur
+   * umschichten — wer rohes Markup braucht, kann diese Funktion nicht
    * benutzen (heute braucht das niemand).
    */
   function zelleGeschuetzt(m, wert, formatiere, klassen) {
     const kl = klassen ? klassen + ' ' : '';
     if (m._patFehler) {
-      /* Das Warnzeichen kommt aus dem Symbolvorrat (E-P3-18), nicht als
+      /* Das Warnzeichen kommt aus dem Symbolvorrat, nicht als
          Unicode-Zeichen — es faerbt sich mit und sieht ueberall gleich aus. */
       return `<td class="${kl}patfehler" title="Diese Angaben liegen verschlüsselt vor, `
            + `lassen sich mit dem aktuellen Schlüssel aber nicht lesen.">`
@@ -84,11 +77,11 @@ const EdMissionTable = (() => {
     const text = leer ? '–' : (formatiere ? formatiere(esc(wert)) : esc(wert));
     return `<td class="${kl}${leer ? 'dash' : ''}">${text}</td>`;
   }
-  /* Tag, Dauer und Strecke rechnet seit Schritt 15 AP8d die Zentrale
-   * `EdFormat` (assets/format.js). Hier stehen nur noch die drei
+  /* Tag, Dauer und Strecke rechnet die Zentrale
+   * `EdFormat` (assets/format.js). Hier stehen nur die drei
    * Weiterleitungen -- sie halten `EdMissionTable.fmtTag`/`.fmtDur`/
    * `.fmtKmZahl` gueltig (zeitraum.php und index.php nehmen sie als Alias)
-   * und machen zugleich sichtbar, dass es NUR NOCH EINE Rechnung gibt.
+   * und machen zugleich sichtbar, dass es NUR EINE Rechnung gibt.
    * Dieselbe Bauform wie bei esc/escape zwei Absaetze weiter oben.
    *
    * DER LEERWERT STEHT HIER, NICHT IN DER ZENTRALE: Jede Aufrufstelle hat
@@ -124,7 +117,7 @@ const EdMissionTable = (() => {
    * wird der Text unveraendert durchgereicht: Eine von Hand eingetragene
    * Bezeichnung bleibt vollstaendig stehen, und ein Altdatensatz mit
    * Koordinatentext in addr ("47.72800, 10.31600") zeigt die ganze Koordinate
-   * statt des Fragments "10.31600" (E11). */
+   * statt des Fragments "10.31600". */
   function extractOrt(addr) {
     const parts = addr.split(',');
     const last = parts[parts.length - 1].trim();
@@ -132,13 +125,13 @@ const EdMissionTable = (() => {
     return last.replace(/^\d{4,5}\s+/, '');
   }
 
-  /* Artsymbol eines Einsatzes (E27, A7c). Die Liste kommt aus
+  /* Artsymbol eines Einsatzes. Die Liste kommt aus
    * dt_art_symbole() (diensttag_lib.php) und wird von der einbindenden Seite
-   * als ART_SYMBOLE gesetzt — dieselbe Loesung wie bei CREW_ROLLEN (Befund
-   * P9). Der Rueckfall haelt die Datei fuer sich lauffaehig; er ist die
+   * als ART_SYMBOLE gesetzt — dieselbe Loesung wie bei CREW_ROLLEN. Der
+   * Rueckfall haelt die Datei fuer sich lauffaehig; er ist die
    * Notloesung, nicht die Quelle.
    *
-   * DER TYP GEHT VOR DER BETRIEBSART (E-S9-13, Web 16.0.0) — dieselbe Regel
+   * DER TYP GEHT VOR DER BETRIEBSART — dieselbe Regel
    * wie in dt_art_symbol() auf der Serverseite, und aus demselben Grund: Das
    * Typzeichen sagt, WORUM es geht, die Betriebsart sagt, WOMIT. Ohne diese
    * zweite Liste zeichnete die Einsatztabelle die Betriebsart, waehrend die
@@ -159,12 +152,12 @@ const EdMissionTable = (() => {
     return { symbol: typen[typ].symbol, text: typen[typ].text + ', ' + art.text };
   }
 
-  /* ---- Bausteine der Zellen (P3/O3) ------------------------------------- */
+  /* ---- Bausteine der Zellen --------------------------------------------- */
 
-  /** Haken aus dem Symbolvorrat, dunkelblau (E-P3-32). */
+  /** Haken aus dem Symbolvorrat, dunkelblau. */
   function HAKEN() { return edSymbol('haken', 'tabelle-haken', 'ja'); }
 
-  /** Dauer-Zelle: „kein Ende" ist eine rote Plakette, keine Zahl (E-P3-32). */
+  /** Dauer-Zelle: „kein Ende" ist eine rote Plakette, keine Zahl. */
   function zelleDauer(s) {
     return s == null
       ? '<span class="plakette plakette-rot">kein Ende</span>'
@@ -181,21 +174,21 @@ const EdMissionTable = (() => {
     return EdFormat.km(m, { einheit: false, leer: '<span class="dash">–</span>' });
   }
 
-  /* ---- Die Kachel (E-P3-32, Mockup 10) ----------------------------------
+  /* ---- Die Kachel -------------------------------------------------------
    *
-   * Unter 720 px gibt es keine Einsatztabelle: Bei 360 px bekamen Einsatzort
-   * und Diagnose — die beiden wichtigsten Spalten — null Pixel Breite und
-   * verschwanden ohne Hinweis, waehrend sieben Zahlenspalten stehen blieben
-   * (Befund B-P3-03). Die Kachel dreht das um: Zeile 1 Ort und km, Zeile 2
+   * Unter 720 px gibt es keine Einsatztabelle: Bei 360 px bekaemen
+   * Einsatzort und Diagnose — die beiden wichtigsten Spalten — null Pixel
+   * Breite und verschwaenden ohne Hinweis, waehrend sieben Zahlenspalten
+   * stehen blieben. Die Kachel dreht das um: Zeile 1 Ort und km, Zeile 2
    * Diagnose, Zeile 3 Dauer, Alter und Plaketten.
    *
    * EIN ERZEUGER FUER ALLE DREI SEITEN. opts:
    *   farbe     Farbstreifen (Spurfarbe des Einsatzes; Tagesuebersicht)
    *   artDatum  true = Artzeichen, Datum und Beginn als erstes Element
-   *             (Suche und Zeitraum, E-P3-32)
+   *             (Suche und Zeitraum)
    *   knapp     true = Diagnose einzeilig (Suche und Zeitraum)
    *   hervor    Funktion(maskiert) -> HTML; hebt die Suchwoerter hervor
-   *             (Suche, E-P3-36)
+   *             (Suche)
    */
   function kachel(m, opts) {
     opts = opts || {};
@@ -203,7 +196,7 @@ const EdMissionTable = (() => {
     var h = '<a class="' + k + '" href="einsatz.php?id=' + encodeURIComponent(m.id) + '">';
     h += '<span class="kachel-streifen"'
        + (opts.farbe ? ' style="background:' + esc(opts.farbe) + '"' : '') + '></span>';
-    /* Artzeichen, Datum und Beginn stehen in EINER Zeile (Mockup 27):
+    /* Artzeichen, Datum und Beginn stehen in EINER Zeile:
        „<Zeichen> 22.08.2026 · 07:42". Getrennte Bloecke haetten das Zeichen
        unter das Datum geschoben, sobald die Kachel schmal wird. */
     h += '<span class="kachel-zeit">';
@@ -263,10 +256,10 @@ const EdMissionTable = (() => {
    * beiden Funktionen fuer Sortierwert und Zellinhalt. Neue Spalte = ein
    * Eintrag hier, und sie erscheint auf beiden Seiten.
    *
-   * SPALTEN NACH BESTAND (ab Web 6.2.0, A13d). `nurWenn` bekommt den Bestand
+   * SPALTEN NACH BESTAND. `nurWenn` bekommt den Bestand
    * und entscheidet, ob die Spalte ueberhaupt erscheint. Der Gedanke ist
    * derselbe wie bei den Filterbloecken der Suche (GRUPPE_NUR_WENN) und bei
-   * den Kacheln der Zeitraum-Uebersicht (E30): Eine Spalte, die im ganzen
+   * den Kacheln der Zeitraum-Uebersicht: Eine Spalte, die im ganzen
    * Bestand leer bleibt, kostet auf schmalen Geraeten Platz und sagt nichts.
    *
    * MASSGEBLICH IST DER BESTAND, NICHT DIE TREFFERLISTE. Sonst verschwaende
@@ -275,15 +268,15 @@ const EdMissionTable = (() => {
    * Bestand ist, sagt die Seite mit setSpaltenBestand(); ohne diesen Aufruf
    * sind Bestand und Trefferliste dasselbe.
    *
-   * WINDE UND BERGWACHT FOLGEN SEIT SCHRITT 15 AP9 DER FAEHIGKEIT, NICHT DEM
-   * BESTAND (E-ZE-31). `nurWenn` bekommt dafuer ein ZWEITES Argument: die
+   * WINDE UND BERGWACHT FOLGEN DER FAEHIGKEIT, NICHT DEM BESTAND.
+   * `nurWenn` bekommt dafuer ein ZWEITES Argument: die
    * Faehigkeiten der Ansicht, `{winch: bool, bergwacht: bool}`. Die Seite
    * setzt sie mit setFaehigkeiten() -- WELCHE Tage sie zusammenfasst, ist
    * ihre Sache und nicht die dieses Moduls: Die Zeitraumuebersicht zaehlt
    * nur LUFT-Diensttage (api/range.php filtert auf `d.kind = 'air'`), die
    * Suche zaehlt Luft UND Boden. Beides ist so entschieden.
    *
-   * OHNE setFaehigkeiten() GILT WEITER DER BESTAND. Das ist kein Vergessen,
+   * OHNE setFaehigkeiten() GILT DER BESTAND. Das ist kein Vergessen,
    * sondern der Rueckfall: Eine Seite, die das Modul einbindet und die
    * Faehigkeiten nicht kennt, soll ihre Spalten nicht stillschweigend
    * verlieren. Der Unterschied zwischen beiden Regeln ist gerade der Fall
@@ -292,12 +285,12 @@ const EdMissionTable = (() => {
    */
   const SPALTEN = [
     /* Die Art als Symbolspalte. In der Tagesleiste steht sie am Namen des
-       Rettungsmittels (E27) — den fuehrt diese Tabelle nicht, und ein
+       Rettungsmittels — den fuehrt diese Tabelle nicht, und ein
        Textkuerzel „luftgebunden" waere die breiteste Spalte fuer die
        schmalste Auskunft. Sie erscheint nur, wenn im Bestand ueberhaupt mehr
        als eine Art vorkommt; bei reiner Luftrettung bliebe in jeder Zeile
        dasselbe Zeichen stehen. */
-    /* Farbstreifen wie in der Tagesuebersicht (E-P3-36, Mockup 28). Die
+    /* Farbstreifen wie in der Tagesuebersicht. Die
        Farbe steht als `_col` an der Zeile; wer sie nicht setzt, bekommt die
        Spalte gar nicht erst. Sie traegt dieselbe Bedeutung wie dort: die
        Spurfarbe des Einsatzes an SEINEM Diensttag — derselbe Einsatz hat in
@@ -314,16 +307,16 @@ const EdMissionTable = (() => {
       wert: m => m.kind || '',
       zelle: m => {
         const s = artSymbol(m.kind, m.day_typ);
-        /* Seit P3/O2 kommt das Zeichen aus dem Symbolvorrat statt als Emoji
-           (E-P3-18). edSymbol() erzeugt dieselbe Zeichenkette wie ui_symbol()
+        /* Das Zeichen kommt aus dem Symbolvorrat, nicht als Emoji.
+           edSymbol() erzeugt dieselbe Zeichenkette wie ui_symbol()
            in PHP; faellt assets/symbol.js aus, bleibt das Wort. */
         const zeichen = (typeof edSymbol === 'function')
           ? edSymbol(s.symbol, '', s.text)
           : esc(s.text);
         return `<td>${zeichen}</td>`;
       } },
-    /* DIE EINSATZNUMMER DES TAGES (E-ZE-33, Schritt 15 AP9b). Sie kam mit
-       der Tagesuebersicht hinzu und ist dort keine Zierspalte, sondern die
+    /* DIE EINSATZNUMMER DES TAGES. Sie gehoert zur Tagesuebersicht und ist
+       dort keine Zierspalte, sondern die
        VERBINDUNG ZUR KARTE: Pins und Popups heissen „Einsatz <Nr.>". Faellt
        sie weg, steht die Nummer im Kartenpopup und sonst nirgends mehr.
 
@@ -336,35 +329,30 @@ const EdMissionTable = (() => {
       nurWenn: liste => liste.some(m => m._no != null),
       wert: m => m._no == null ? -1 : m._no,
       zelle: m => `<td class="mitte-spalte">${m._no == null ? '' : m._no}</td>` },
-    /* DAS DATUM HAT KEIN `nurWenn`, UND DAS IST EINE KORREKTUR.
-       In AP9b stand hier zuerst „nur zeigen, wenn es mehrere Tage gibt" --
-       die Tagesuebersicht hat einen, und die Spalte waere von selbst
-       weggefallen. Der Bildvergleich hat gezeigt, was das anrichtet: Im
-       Monat Januar des Referenzbestands liegen beide Einsaetze auf DEMSELBEN
-       Tag, und die Zeitraumuebersicht verlor dort ihre Datumsspalte --
-       waehrend sie weiter nach ihr sortierte. Die Beschriftung las sich dann
-       „älteste zuerst" ohne Spaltennamen: sortiert nach etwas, das nicht
-       dasteht.
+    /* DAS DATUM HAT KEIN `nurWenn`. Mit „nur zeigen, wenn es mehrere Tage
+       gibt" verloere die Zeitraumuebersicht ihre Datumsspalte, sobald alle
+       Einsaetze eines Monats auf DEMSELBEN Tag liegen -- waehrend sie
+       weiter nach ihr sortierte. Die Beschriftung laese sich dann „älteste
+       zuerst" ohne Spaltennamen: sortiert nach etwas, das nicht dasteht.
        Die Artspalte darf das (ein Zeichen, das sich nie aendert, sagt
        nichts), das Datum nicht (es sagt, WELCHER Tag). Wer die Spalte nicht
        will, nennt sie in `opts.ohne` -- so macht es index.php. */
     { key: 'day',   kopf: 'Datum',                 thClass: '',
       wert: m => m.day,
       zelle: m => `<td>${fmtTag(m.day)}</td>` },
-    /* SORTIERT WIRD CHRONOLOGISCH, NICHT ALPHABETISCH (E-ZE-32).
+    /* SORTIERT WIRD CHRONOLOGISCH, NICHT ALPHABETISCH.
        `start_hhmm` ist eine Zeichenkette, und bei einem Dienst ueber
        Mitternacht -- laut Handbuch „der klassische Fall" -- stuende damit
        01:10 vor 23:50. Still: keine Meldung, keine Luecke, nur eine falsche
-       Reihenfolge, die richtig aussieht. `start_sort` kommt seit Schritt 15
-       AP9b aus allen drei Endpunkten und traegt 'Y-m-d H:i' in Ortszeit.
-       Der Rueckfall haelt die Datei fuer sich lauffaehig; er ist NICHT die
-       Loesung, sondern das Verhalten von vorher. */
+       Reihenfolge, die richtig aussieht. `start_sort` kommt aus allen drei
+       Endpunkten und traegt 'Y-m-d H:i' in Ortszeit. Der Rueckfall haelt
+       die Datei fuer sich lauffaehig; er ist NICHT die Loesung. */
     { key: 'start', kopf: 'Beginn',                thClass: '',
       wert: m => m.start_sort || ((m.day || '') + ' ' + (m.start_hhmm || '')),
       zelle: m => `<td>${m.start_hhmm}</td>` },
-    /* NOWRAP STATT UMBRUCH (F-N1-G). „1h 06min" passte nicht in die Spalte
-       und brach nach der Stunde um — eine Dauer auf zwei Zeilen liest sich
-       wie zwei Angaben. Die Spalte richtet sich jetzt nach ihrem laengsten
+    /* NOWRAP STATT UMBRUCH. „1h 06min" passt nicht immer in die Spalte und
+       braeche nach der Stunde um — eine Dauer auf zwei Zeilen liest sich
+       wie zwei Angaben. Die Spalte richtet sich nach ihrem laengsten
        Wert; das kostet in der Breite weniger als der Umbruch an Klarheit. */
     { key: 'dur',   kopf: 'Dauer',                 thClass: 'zahl-spalte',
       wert: m => m.duration_s == null ? -1 : m.duration_s,
@@ -378,9 +366,8 @@ const EdMissionTable = (() => {
     { key: 'dx',    kopf: 'Diagnose',              thClass: '',
       wert: m => (m._dx || '').toLowerCase(),
       zelle: (m, ctx) => zelleGeschuetzt(m, m._dx, ctx && ctx.hervor) },
-    /* Winde und Bergwacht sind FAEHIGKEITEN einzelner Rettungsmittel (E29)
-       — und seit Schritt 15 AP9 entscheidet genau das ueber die Spalte, nicht
-       mehr der Bestand. Siehe den Kopfkommentar oben; `f` ist null, solange
+    /* Winde und Bergwacht sind FAEHIGKEITEN einzelner Rettungsmittel
+       — und genau das entscheidet ueber die Spalte, nicht der Bestand. Siehe den Kopfkommentar oben; `f` ist null, solange
        die Seite keine Faehigkeiten gesetzt hat. */
     { key: 'winch', kopf: 'Winde',                 thClass: 'haken-spalte',
       katalog: 'winch',
@@ -392,9 +379,9 @@ const EdMissionTable = (() => {
       nurWenn: (liste, f) => f ? !!f.bergwacht : liste.some(m => m.bergwacht),
       wert: m => m.bergwacht ? 1 : 0,
       zelle: m => `<td class="haken-spalte">${m.bergwacht ? HAKEN() : ''}</td>` },
-    /* WEICHES TRENNZEICHEN STATT <br> (F-N1-G). „Sekundaertransport" ist EIN
-       Wort; das harte <br> trennte es ohne Bindestrich in zwei
-       („Sekundaer Transport"), und genau so las es sich auch. `&shy;` laesst
+    /* WEICHES TRENNZEICHEN STATT <br>. „Sekundaertransport" ist EIN
+       Wort; ein hartes <br> trennte es ohne Bindestrich in zwei
+       („Sekundaer Transport"), und genau so laese es sich auch. `&shy;` laesst
        den Browser entscheiden: Passt es in eine Zeile, steht es in einer;
        muss er trennen, setzt er den Bindestrich dazu. Dasselbe bei
        „Fehleinsatz". */
@@ -402,23 +389,22 @@ const EdMissionTable = (() => {
       katalog: 'secondary',
       wert: m => m.secondary ? 1 : 0,
       zelle: m => `<td class="haken-spalte">${m.secondary ? HAKEN() : ''}</td>` },
-    /* Fehleinsatz (E17, seit Web 6.1.0 erfassbar). Wie Winde und Bergwacht
+    /* Fehleinsatz. Wie Winde und Bergwacht
        datengetrieben: Der Haken steht beiden Arten offen, gesetzt ist er
        selten, und eine Spalte voller leerer Zellen liest sich als Mangel. */
     { key: 'fehl',  kopf: 'Fehl&shy;einsatz',       thClass: 'haken-spalte',
       nurWenn: liste => liste.some(m => m.false_alarm),
       wert: m => m.false_alarm ? 1 : 0,
       zelle: m => `<td class="haken-spalte">${m.false_alarm ? HAKEN() : ''}</td>` },
-    /* Neutral beschriftet, nicht „Flug km" (Abschnitt 3.9/3.7.3). Diese
+    /* Neutral beschriftet, nicht „Flug km". Diese
        Tabelle wird von zeitraum.php UND suche.php gemeinsam erzeugt; in der
        Suche stehen luft- und bodengebundene Einsaetze NEBENEINANDER, ein
        artabhaengiger Spaltenkopf ist dort gar nicht darstellbar. Die
-       Flugterminologie bleibt allein den Kacheln vorbehalten (E32). */
+       Flugterminologie bleibt allein den Kacheln vorbehalten. */
     /* Die Zelle nennt nur die ZAHL — die Einheit steht im Spaltenkopf, und
-       „38,4 km" in jeder Zeile unter einem Kopf „km" sagt sie doppelt
-       (Mockup 04). Wer die Einheit im Fliesstext braucht, ruft
-       EdFormat.km() ohne `einheit: false`. Die eigene Fassung mit Einheit
-       (`fmtKm`) hatte keinen einzigen Aufrufer und ist in AP8d entfallen. */
+       „38,4 km" in jeder Zeile unter einem Kopf „km" sagt sie doppelt.
+       Wer die Einheit im Fliesstext braucht, ruft EdFormat.km() ohne
+       `einheit: false`. */
     { key: 'km',    kopf: 'km',                    thClass: 'zahl-spalte',
       wert: m => m.distance_m == null ? -1 : m.distance_m,
       zelle: m => `<td class="zahl-spalte">${fmtKmZahl(m.distance_m)}</td>` }
@@ -427,32 +413,29 @@ const EdMissionTable = (() => {
   /* ---- Der Feldkatalog behaelt seinen Griff auf die Tabelle -------------
    *
    * Drei Spalten oben tragen `katalog`: Sie gehoeren zu einem Feld mit
-   * 'day_col' in mission_fields.php. Bis Schritt 15 AP9b galt dieser
-   * Schluessel NUR fuer die Tagesuebersicht, und die baute ihre Zeilen
-   * selbst; Suche und Zeitraum fuehrten dieselben drei Spalten ein zweites
-   * Mal, von Hand. Jetzt gibt es einen Erzeuger -- und damit die Frage, wer
-   * ueber die Spalten bestimmt.
+   * 'day_col' in mission_fields.php. Es gibt einen Erzeuger fuer alle drei
+   * Einsatztabellen -- und damit die Frage, wer ueber die Spalten bestimmt.
    *
    * DIE ANTWORT IST GETEILT, und beide Haelften stehen hier:
    *
    *   Der KATALOG bestimmt, WELCHE Spalten es gibt. Faellt ein 'day_col'
    *   weg, faellt die Spalte -- auf allen drei Seiten. Kommt eines hinzu,
    *   erscheint die Spalte, ohne dass hier jemand etwas eintraegt
-   *   (Backlog Nr. 10, „Feldkatalog statt Sonderfall").
+   *   („Feldkatalog statt Sonderfall").
    *
    *   DIESE DATEI bestimmt, WIE sie aussehen und in welcher REIHENFOLGE sie
-   *   stehen. Das ist E-ZE-34: Beschriftung, Ausrichtung und
+   *   stehen: Beschriftung, Ausrichtung und
    *   Hakenreihenfolge folgen dem Modul. Deshalb heisst die Spalte hier
    *   „Sekundär&shy;transport" mit weichem Trennzeichen und nicht
    *   „Sekundär<br>Transport" wie im Katalog, und deshalb stehen Winde und
    *   Bergwacht VOR dem Sekundaertransport, obwohl der Katalog sie
    *   dahinter fuehrt.
    *
-   * WAS DAS KOSTET, und es gehoert gesagt: 'day_col' heisst ab jetzt „Spalte
-   * in JEDER Einsatztabelle", nicht mehr „Spalte in der Tagesuebersicht".
-   * Wer den Schluessel an einem Feld entfernt, nimmt die Spalte auch aus
-   * Suche und Zeitraumuebersicht. Das ist die Folge davon, dass es nur noch
-   * einen Erzeuger gibt.
+   * WAS DAS KOSTET, und es gehoert gesagt: 'day_col' heisst „Spalte in
+   * JEDER Einsatztabelle", nicht „Spalte in der Tagesuebersicht". Wer den
+   * Schluessel an einem Feld entfernt, nimmt die Spalte auch aus Suche und
+   * Zeitraumuebersicht. Das ist die Folge davon, dass es nur einen
+   * Erzeuger gibt.
    *
    * OHNE `KATALOG_SPALTEN` bleibt alles, wie es ist. Eine Seite, die die
    * Liste nicht setzt, bekommt die drei Spalten unveraendert -- derselbe
@@ -465,12 +448,10 @@ const EdMissionTable = (() => {
   }
 
   /* Ein Spaltenkopf ALS REINER TEXT -- fuer das Sortierblatt und fuer
-   * `data-label`. Beides zeigte bis Schritt 15 AP9b die ENTITAET roh:
-   * „Sekundär&shy;transport" und „Fehl&shy;einsatz" standen so im mobilen
-   * Blatt von suche.php und zeitraum.php, seit es das Blatt gibt. Die alte
-   * Zeile streifte nur die TAGS ab (`/<[^>]*>/g`), und ein `&shy;` ist kein
-   * Tag; die Seite maskierte den Text danach mit esc(), und aus dem `&`
-   * wurde `&amp;`.
+   * `data-label`. Nur die TAGS abzustreifen (`/<[^>]*>/g`) reicht nicht:
+   * Ein `&shy;` ist kein Tag, die Seite maskiert den Text danach mit esc(),
+   * und aus dem `&` wird `&amp;` — „Sekundär&shy;transport" stuende so im
+   * mobilen Blatt.
    *
    * Der Umweg ueber ein Wegwerf-Element loest jede Entitaet, nicht die drei,
    * die einem gerade einfallen. Die Tags werden VORHER durch ein Leerzeichen
@@ -497,7 +478,7 @@ const EdMissionTable = (() => {
       thClass: (haken ? 'haken-spalte ' : '') + (d.klasse || ''),
       katalog: d.col,
       /* Haengt das Feld an einer Faehigkeit ('cap_gate'), folgt die Spalte
-         ihr -- genau wie Winde und Bergwacht oben (E-ZE-31). */
+         ihr -- genau wie Winde und Bergwacht oben. */
       nurWenn: d.cap
         ? (liste, f) => f ? !!f[d.cap] : liste.some(m => m[d.col])
         : null,
@@ -557,10 +538,10 @@ const EdMissionTable = (() => {
    *                   bisherigen Aufrufer lesen nur die erste und bleiben
    *                   damit richtig.
    *
-   * SEITENGROESSE (Web 5.10.0).
+   * SEITENGROESSE.
    *
-   * Bis dahin zeichnete diese Tabelle IMMER jeden Treffer. Auf der Suchseite
-   * heisst das beim Oeffnen den gesamten Bestand: Jede Zeile ist ein <tr> mit
+   * Ohne sie zeichnete diese Tabelle IMMER jeden Treffer. Auf der Suchseite
+   * hiesse das beim Oeffnen den gesamten Bestand: Jede Zeile ist ein <tr> mit
    * zehn Zellen, und der Aufbau geschieht bei jedem Tastendruck im Suchfeld
    * erneut. Bei einigen tausend Einsaetzen wird daraus eine spuerbare Pause
    * zwischen Anschlag und Anzeige — bezahlt fuer Zeilen, die niemand ansieht;
@@ -585,12 +566,8 @@ const EdMissionTable = (() => {
     let sortAsc = opts.sortAsc !== false;
     const seite = Math.max(0, opts.seite || 0);   // 0 = ohne Begrenzung
     let sichtbar = seite;
-    /* Der Sortierpfeil wird IMMER gezeigt (M6-10).
-     *
-     * Vorher gab es dafuer einen Schalter: Die Suche zeigte ihn sofort, die
-     * Zeitraum-Uebersicht erst nach dem ersten Klick. Beide Tabellen sind
-     * beim Oeffnen sortiert — die eine sagte es, die andere liess es raten.
-     * Der Unterschied war historisch gewachsen, nicht gewollt. */
+    /* Der Sortierpfeil wird IMMER gezeigt, ohne Schalter: Jede Tabelle ist
+     * beim Oeffnen sortiert, und sie sagt es, statt es raten zu lassen. */
     let daten = [];
     let datenGesetzt = false;
     /* Bestand fuer die Spaltensichtbarkeit (siehe SPALTEN oben). null heisst
@@ -637,13 +614,12 @@ const EdMissionTable = (() => {
       mehrAlleKnopf.addEventListener('click', () => mehrZeigen(Infinity));
       mehrZeile.appendChild(mehrKnopf);
       mehrZeile.appendChild(mehrAlleKnopf);
-      /* HINTER DIE KACHELN, NICHT HINTER DIE TABELLE (Web 21.4.0, R4-17).
-       * Bis hierher hing die Zeile unmittelbar hinter dem <table> — und
-       * damit IN dessen Scrollbehaelter `.tabelle-scroll.nur-ab-720`. Unter
-       * 720 px ist der ausgeblendet, und mit ihm die Knoepfe: Die Suche
-       * zeigte auf dem Handy seit den Kacheln (E-P3-32) 200 Treffer und
+      /* HINTER DIE KACHELN, NICHT HINTER DIE TABELLE. Unmittelbar hinter
+       * dem <table> hinge die Zeile IN dessen Scrollbehaelter
+       * `.tabelle-scroll.nur-ab-720`. Unter 720 px ist der ausgeblendet, und
+       * mit ihm die Knoepfe: Die Suche zeigte auf dem Handy 200 Treffer und
        * keinen Weg zu den uebrigen, gemessen an 5096 Treffern bei 390 px.
-       * Jetzt steht sie hinter der Kachelliste, wo es eine gibt: Am
+       * Deshalb steht sie hinter der Kachelliste, wo es eine gibt: Am
        * Schreibtisch ist die ausgeblendet, und die Zeile steht unter der
        * Tabelle; auf dem Handy steht sie unter den Kacheln. Ohne Kacheln
        * hinter dem Scrollbehaelter, damit sie nicht mit der Tabelle quer
@@ -660,7 +636,7 @@ const EdMissionTable = (() => {
      * gesetzt ist, das Datum nur bei mehreren, die Art nur bei mehreren. */
     const ohne = new Set(opts.ohne || []);
 
-    /** Die Spalten, die dieser Bestand rechtfertigt (A13d). */
+    /** Die Spalten, die dieser Bestand rechtfertigt. */
     function sichtbareSpalten() {
       const basis = bestand !== null ? bestand : daten;
       return spaltenSatz().filter(sp => !ohne.has(sp.key)
@@ -674,7 +650,7 @@ const EdMissionTable = (() => {
         th.className = 'sortable' + (sp.thClass ? ' ' + sp.thClass : '');
         th.dataset.key = sp.key;
         /* Beschriftung ohne Auszeichnung — fuer das Sortierblatt, das
-         * dieselben Spalten fuehrt wie der Kopf (E-P3-32). */
+         * dieselben Spalten fuehrt wie der Kopf. */
         th.dataset.label = nurText(sp.kopf);
         th.innerHTML = sp.kopf;
         if (sp.key === sortKey) {
@@ -708,16 +684,15 @@ const EdMissionTable = (() => {
        * Pfeil hat keinen Kopf, an dem er stehen koennte. */
       const alle = spaltenSatz();
       const sp = alle.find(s => s.key === sortKey) || alle[0];
-      /* GLEICHSTAENDE: die Einsatznummer entscheidet, wo es eine gibt
-       * (Schritt 15 AP9b). Die Tagesuebersicht hatte das schon -- sechs
-       * gleich lange Einsaetze standen dort nach einem zweiten Klick wieder
+      /* GLEICHSTAENDE: die Einsatznummer entscheidet, wo es eine gibt.
+       * Sechs gleich lange Einsaetze stehen nach einem zweiten Klick wieder
        * 1-6 und nicht in der Reihenfolge, die der Sortierer gerade uebrig
        * liess. Ohne sie waere das eine stille Verschlechterung: Array.sort
        * ist zwar stabil, aber die vorige Reihenfolge ist nach dem ersten
        * Sortieren nicht mehr die urspruengliche.
        * Die Nummer geht NICHT in die Richtung ein: Sie ordnet den
        * Gleichstand, sie kehrt ihn nicht um. Wo es keine gibt (Suche,
-       * Zeitraum), bleibt es bei der stabilen Sortierung von vorher. */
+       * Zeitraum), bleibt es bei der stabilen Sortierung. */
       const sortiert = daten.slice().sort((a, b) => {
         const x = sp.wert(a), y = sp.wert(b);
         const r = (x > y) - (x < y);
@@ -754,10 +729,10 @@ const EdMissionTable = (() => {
         });
         tbody.appendChild(tr);
       });
-      /* DIE KACHELN AUS DEMSELBEN ZEILENBESTAND (E-P3-32/36). Sortierung,
+      /* DIE KACHELN AUS DEMSELBEN ZEILENBESTAND. Sortierung,
        * Spaltensichtbarkeit und Seitengrenze gelten fuer beide Formen —
        * welche zu sehen ist, entscheidet allein das Stylesheet. Ohne
-       * `kacheln` bleibt alles beim Alten. */
+       * `kacheln` gibt es nur die Tabelle. */
       if (opts.kacheln) {
         const ko = Object.assign({ hervor: opts.hervor }, opts.kachelOpts || {});
         opts.kacheln.innerHTML = gezeigt
@@ -767,7 +742,7 @@ const EdMissionTable = (() => {
       zeichneMehr(sortiert.length, gezeigt.length);
       /* Dritter Wert: die vollstaendige Trefferliste. Die Suche rechnet
        * daraus ihre km-Summe — ueber ALLE Treffer, nicht nur die
-       * gezeichneten (E-P3-36). */
+       * gezeichneten. */
       if (opts.onAfterDraw) { opts.onAfterDraw(sortiert.length, gezeigt.length, sortiert); }
     }
 
@@ -789,16 +764,12 @@ const EdMissionTable = (() => {
      *
      * Unter 720 px zeigen alle drei Seiten Kacheln statt einer Tabelle, und
      * eine Kachel hat keine Spaltenkoepfe zum Anklicken. Das Blatt ist dort
-     * der EINZIGE Weg zu sortieren (E-P3-32).
+     * der EINZIGE Weg zu sortieren.
      *
-     * SEIT SCHRITT 15 AP9b STEHT ES HIER. Bis dahin baute es jede Seite
-     * selbst: 22 Zeilen in `suche.php`, dieselben 22 in `zeitraum.php`
-     * (zeichengleich bis auf einen Aufruf) und 20 in `index.php`. Alle drei
-     * lasen ihre Spalten schon aus `tabelle.spalten()` — die LISTE war also
-     * gemeinsam, die SCHLEIFE dreifach. Und der Unterschied kostete: In
-     * suche.php und zeitraum.php stellte ein Klick im Blatt um, ohne dass
-     * sich etwas bewegte, weil setSort() nicht zeichnete und die Seite es
-     * auch nicht tat.
+     * ES STEHT HIER, NICHT IN JEDER SEITE: Die Spaltenliste kommt ohnehin
+     * aus `tabelle.spalten()`, und eine dreifache Schleife liefe
+     * auseinander — etwa ein Klick im Blatt, der umstellt, ohne dass sich
+     * etwas bewegt.
      *
      * DIE BESCHRIFTUNG IST WAHLFREI. `sortlabel` bekommt „Datum, neueste
      * zuerst"; index.php hat kein solches Feld und uebergibt keins. Die
@@ -851,11 +822,11 @@ const EdMissionTable = (() => {
       mehrAlleKnopf.textContent = 'Alle ' + gesamt + ' anzeigen';
     }
 
-    /* EINEN EINSATZ IN DIE ANZEIGE HOLEN (Web 21.4.0, R4-17, Nr. 37).
+    /* EINEN EINSATZ IN DIE ANZEIGE HOLEN.
      *
      * Eine Seite, die zu einer Zeile springen will — die Zeitraumuebersicht
-     * aus ihren Extremwert-Kacheln —, fand sie bis hierher immer, weil sie
-     * ohne Seitengroesse jede Zeile zeichnete. Mit einer steht der laengste
+     * aus ihren Extremwert-Kacheln —, faende sie ohne Seitengroesse immer,
+     * weil dann jede Zeile gezeichnet ist. Mit einer steht der laengste
      * Einsatz des Jahres vielleicht an Stelle 900, und der Sprung liefe ins
      * Leere, ohne dass es jemand merkt: Die Kachel leuchtet, die Karte auch,
      * nur die Zeile gibt es nicht. Deshalb wird so weit nachgeladen, dass er
@@ -883,11 +854,10 @@ const EdMissionTable = (() => {
       zeichne();
     }
 
-    /* ZEICHNET SEIT SCHRITT 15 AP9b SELBST. Bis dahin setzte diese Funktion
-     * nur Schluessel und Richtung -- das mobile Sortierblatt der Suche und
-     * der Zeitraumuebersicht stellte also um, ohne dass sich etwas bewegte,
-     * und funktionierte nur dort, wo die Seite hinterher von Hand
-     * nachzeichnete. Wer eine Sortierfunktion ruft, will sortiert sehen. */
+    /* ZEICHNET SELBST. Setzte diese Funktion nur Schluessel und Richtung,
+     * stellte das mobile Sortierblatt um, ohne dass sich etwas bewegte, und
+     * funktionierte nur dort, wo die Seite hinterher von Hand nachzeichnet.
+     * Wer eine Sortierfunktion ruft, will sortiert sehen. */
     function setSort(key, asc) {
       if (!spaltenSatz().some(s => s.key === key)) { return; }
       sortKey = key; sortAsc = !!asc;
@@ -920,13 +890,10 @@ const EdMissionTable = (() => {
     };
   }
 
-  /* zelleGeschuetzt ist seit Web 7.2.0 mit dabei: index.php baut seine Zeile
-     selbst (sie fuehrt die Katalogspalten aus DAY_COLS, die diese Tabelle
-     nicht kennt), soll die drei geschuetzten Spalten aber genauso zeigen wie
-     Suche und Zeitraum-Uebersicht — Warnzeichen statt Gedankenstrich, wenn
-     die Angaben da, aber nicht lesbar sind. Seit Web 7.2.1 bringt sie auch
-     die Maskierung mit — beide Zeilen sind damit an derselben einen Stelle
-     gegen Markup aus einer Importdatei abgesichert (Backlog Nr. 22). */
+  /* zelleGeschuetzt steht im Ergebnis, weil die geschuetzten Spalten auf
+     jeder Seite gleich aussehen sollen — Warnzeichen statt Gedankenstrich,
+     wenn die Angaben da, aber nicht lesbar sind — und die Maskierung gegen
+     Markup aus einer Importdatei an EINER Stelle steht. */
   return { erzeuge, SPALTEN, esc, escape, fmtTag, fmtDur, fmtKmZahl,
            extractOrt, artSymbol, zelleGeschuetzt, zelleDauer, kachel };
 })();

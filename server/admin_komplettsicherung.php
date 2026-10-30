@@ -1,21 +1,18 @@
 <?php
 declare(strict_types=1);
 require_once __DIR__ . '/auth_guard.php';
-/* NUR DIE BETREIBERIN (P5c/AP2, E-P5c-31, Backlog Nr. 286). Bis Web 20.38.0
- * stand hier `require_admin()` — R75 und der Kopf der Rollen in `db.php`
- * sagten BetreiberIn, das Tor sagte Admin. Mangels Admin-Konten war die
- * Lücke nicht ausnutzbar; die Rollenprobe prüft sie seither je Handlung. */
+/* NUR DIE BETREIBERIN. Der Kopf der Rollen in `db.php` sagt BetreiberIn,
+ * und das Tor sagt es auch; die Rollenprobe prüft es je Handlung. */
 require_betreiberin();
 require_once __DIR__ . '/komplett_lib.php';
 require_once __DIR__ . '/jobs_lib.php';
 require_once __DIR__ . '/format_lib.php';  /* groesse_text(), zahl_text() — ausdruecklich, nicht ueber die Ladekette. */
 
 /**
- * KOMPLETT-BACKUP — die ganze Installation als versiegelter SQL-Dump
- * (E-S2-19 bis E-S2-21, S2/AP8).
+ * KOMPLETT-BACKUP — die ganze Installation als versiegelter SQL-Dump.
  *
  * WARUM EINE EIGENE SEITE UND KEINE KARTE AUF „BACKUPS". Dieselbe
- * Begründung wie bei den Backup-Zielen: „Backups" ist seit P3/O9c die
+ * Begründung wie bei den Backup-Zielen: „Backups" ist die
  * Seite der REGELN — Aufbewahrung, Grenze, Schwellen. Hier steht eine Liste
  * von Ständen mit Handgriffen daran, dazu ein Lauf, der Minuten dauert und
  * einen Fortschritt hat. Das ist der Zuschnitt einer Seite.
@@ -41,12 +38,11 @@ $notice = null; $error = null;
 /* ---- Download: läuft VOR jeder Ausgabe und endet mit exit ---------------- */
 if ($_SERVER['REQUEST_METHOD'] === 'POST'
     && (string)($_POST['action'] ?? '') === 'herunterladen') {
-    /* EIN FRISCHER CODE VOR JEDEM DOWNLOAD (R17-20, F-R17-08, E-R17-48) —
-     * vor dem Token wie ein Rollentor. Beide Arten: Die Passphrase waehlt,
-     * wer herunterlaedt, und eine uebernommene Sitzung bekaeme mit ihr
-     * denselben Abzug aller Konten wie mit „klar". Das Schluesselblatt
-     * verlangte den frischen Code schon; der Abzug, der mehr enthaelt,
-     * verlangte ihn bis Web 23.1.0 nicht. */
+    /* EIN FRISCHER CODE VOR JEDEM DOWNLOAD — vor dem Token wie ein
+     * Rollentor. Beide Arten: Die Passphrase waehlt, wer herunterlaedt, und
+     * eine uebernommene Sitzung bekaeme mit ihr denselben Abzug aller Konten
+     * wie mit „klar". Das Schluesselblatt verlangt den frischen Code auch,
+     * und der Abzug enthaelt mehr. */
     zweitfaktor_frisch_verlangen('komplett_herunterladen');
     csrf_check();
     $datei = (string)($_POST['datei'] ?? '');
@@ -58,11 +54,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST'
         $error = 'Diesen Stand gibt es nicht (mehr).';
     } elseif ($kopfDl !== null && ($kopfDl['kopf']['kdf'] ?? null) === null
               && komp_serverschluessel_fuer($pfad)[1] === 'keiner') {
-        /* VOR PROTOKOLL UND KOPFZEILEN (H-SR-06, F-SR-82). Bis Web 21.12.0
-         * stellte erst das Entsiegeln fest, dass der Stand unter einem
-         * dritten Schlüssel liegt — nach dem Eintrag „heruntergeladen" und
-         * nach den Kopfzeilen: Der Browser bekam eine leere Datei, der Satz
-         * dazu landete nur im Reiter System. Ein Block, 256 KiB. */
+        /* VOR PROTOKOLL UND KOPFZEILEN. Stellte erst das Entsiegeln fest,
+         * dass der Stand unter einem dritten Schlüssel liegt, waere das nach
+         * dem Eintrag „heruntergeladen" und nach den Kopfzeilen: Der Browser
+         * bekaeme eine leere Datei, der Satz dazu landete nur im Reiter
+         * System. Ein Block, 256 KiB. */
         $error = 'Dieser Stand ist mit einem anderen Serverschlüssel versiegelt — weder dem '
                . 'heutigen noch dem bisherigen. Er öffnet nur mit dem Wert vom Blatt, das damals '
                . 'galt. Es wurde nichts heruntergeladen.';
@@ -82,7 +78,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST'
          *
          * Der Speicher bleibt trotzdem bei einem halben Megabyte: Es wird
          * Block für Block entsiegelt und Block für Block ausgegeben. */
-        /* DER EINTRAG STEHT VOR DEM DOWNLOAD (P5c/AP2): Danach endet die
+        /* DER EINTRAG STEHT VOR DEM DOWNLOAD: Danach endet die
          * Anfrage mit `exit`. Ein Komplett-Stand ist die ganze Datenbank —
          * wer ihn wann geholt hat, gehört ins Protokoll. */
         require_once __DIR__ . '/protokoll_lib.php';
@@ -115,7 +111,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST'
 }
 
 /* ---- Die übrigen Handgriffe ---------------------------------------------- */
-/* UMLEITEN NACH DEM POST (Web 21.1.9, Backlog Nr. 250). Was einen Lauf
+/* UMLEITEN NACH DEM POST. Was einen Lauf
  * anstösst oder abbricht, Regeln speichert oder einen Stand löscht, endet mit
  * `flash_setzen()` und einer Umleitung auf diese Seite — sonst stösst
  * Neuladen den nächsten Durchgang an oder löscht ein zweites Mal. Eine
@@ -139,46 +135,44 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $error === null) {
                 exit;
             }
         }
-        if ($error === null) {
-            /* DERSELBE WEG WIE DER JOB, nur mit dem Budget dieser Seite.
-             * `jobs_lauf('token', ['komplett'])` wäre der Umweg über den
-             * Katalog samt Sperre und Mindestabstand — beides steht hier im
-             * Weg: Wer klickt, will jetzt und nicht in fünf Minuten. */
-            $anfang = microtime(true);
-            $z = komp_zustand();
-            try {
-                $e = komp_schub(db(), $z,
-                                static fn(): float => KOMP_BUDGET_SEITE - (microtime(true) - $anfang),
-                                5.0);
-                komp_zustand_setzen($z);
-                if (($z['stand'] ?? '') === 'fertig') {
-                    $notice = 'Das Komplett-Backup ist fertig: '
-                            . zahl_text((int)$z['zeilen']) . ' Zeilen aus '
-                            . (int)$z['tabellen'] . ' Tabellen, '
-                            . groesse_text((int)$z['bytes']) . '.';
-                    if (($z['verdraengt'] ?? []) !== []) {
-                        $notice .= ' Verdrängt wurde: ' . implode(', ', (array)$z['verdraengt']) . '.';
-                    }
-                } else {
-                    $notice = 'Der Durchgang ist zu Ende, der Lauf noch nicht. '
-                            . 'Er macht mit dem nächsten Aufräumlauf weiter — oder '
-                            . 'gleich hier mit „Fortsetzen".';
+        /* DERSELBE WEG WIE DER JOB, nur mit dem Budget dieser Seite.
+         * `jobs_lauf('token', ['komplett'])` wäre der Umweg über den
+         * Katalog samt Sperre und Mindestabstand — beides steht hier im
+         * Weg: Wer klickt, will jetzt und nicht in fünf Minuten. */
+        $anfang = microtime(true);
+        $z = komp_zustand();
+        try {
+            $e = komp_schub(db(), $z,
+                            static fn(): float => KOMP_BUDGET_SEITE - (microtime(true) - $anfang),
+                            5.0);
+            komp_zustand_setzen($z);
+            if (($z['stand'] ?? '') === 'fertig') {
+                $notice = 'Das Komplett-Backup ist fertig: '
+                        . zahl_text((int)$z['zeilen']) . ' Zeilen aus '
+                        . (int)$z['tabellen'] . ' Tabellen, '
+                        . groesse_text((int)$z['bytes']) . '.';
+                if (($z['verdraengt'] ?? []) !== []) {
+                    $notice .= ' Verdrängt wurde: ' . implode(', ', (array)$z['verdraengt']) . '.';
                 }
-            } catch (Throwable $ex) {
-                /* KEIN komp_zustand_setzen() MEHR, und kein "Fortsetzen"
-                 * (Backlog Nr. 133): `komp_schub()` hat den Bauordner samt
-                 * Klartext-Dump geraeumt und den Zustand selbst auf
-                 * "abgebrochen" geschrieben. Ein "Fortsetzen" haette danach
-                 * nichts mehr, woran es ansetzen koennte. */
-                $error = 'Der Lauf ist gescheitert: ' . $ex->getMessage()
-                       . ' Der halbe Stand ist entfernt — im Bauordner lag der '
-                       . 'unverschlüsselte Dump, und der bleibt nicht liegen. '
-                       . 'Ein neuer Lauf fängt von vorn an.';
+            } else {
+                $notice = 'Der Durchgang ist zu Ende, der Lauf noch nicht. '
+                        . 'Er macht mit dem nächsten Aufräumlauf weiter — oder '
+                        . 'gleich hier mit „Fortsetzen".';
             }
-            flash_setzen($error !== null ? 'error' : 'notice', (string)($error ?? $notice));
-            header('Location: admin_komplettsicherung.php');
-            exit;
+        } catch (Throwable $ex) {
+            /* KEIN komp_zustand_setzen() und kein "Fortsetzen":
+             * `komp_schub()` hat den Bauordner samt
+             * Klartext-Dump geraeumt und den Zustand selbst auf
+             * "abgebrochen" geschrieben. Ein "Fortsetzen" haette danach
+             * nichts mehr, woran es ansetzen koennte. */
+            $error = 'Der Lauf ist gescheitert: ' . $ex->getMessage()
+                   . ' Der halbe Stand ist entfernt — im Bauordner lag der '
+                   . 'unverschlüsselte Dump, und der bleibt nicht liegen. '
+                   . 'Ein neuer Lauf fängt von vorn an.';
         }
+        flash_setzen($error !== null ? 'error' : 'notice', (string)($error ?? $notice));
+        header('Location: admin_komplettsicherung.php');
+        exit;
     } elseif ($aktion === 'abbrechen') {
         $r = komp_auftrag_abbrechen();
         /* Beide Ausgaenge leiten um — aus demselben Grund wie die Abweisung
@@ -208,13 +202,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $error === null) {
                       'Komplett-Backup ' . $datei . ' von Hand gelöscht', ['datei' => $datei]);
         }
         $notice = $geloescht
-            /* DER SATZ IST SEIT WEB 20.14.0 GENAUER (P5a/AP10). Vorher hiess
-             * er „gelöscht wird auf dem Ziel nichts" — als Zusage über die
-             * Anwendung. Seit es die Aufbewahrungsregel je Ziel gibt, stimmt
-             * das nur noch für DIESE Handlung: Ein hier gelöschter Stand
-             * verschwindet drüben nicht deswegen. Ob er dort irgendwann
-             * fällt, entscheidet die Regel des Ziels, und die ist eine
-             * andere Sache. */
+            /* DER SATZ GILT FUER DIESE HANDLUNG, nicht fuer die Anwendung:
+             * Ein hier gelöschter Stand verschwindet drüben nicht deswegen.
+             * Ob er dort irgendwann fällt, entscheidet die Aufbewahrungsregel
+             * des Ziels, und die ist eine andere Sache. */
             ? 'Der Stand wurde gelöscht. Was auf einem Backup-Ziel liegt, bleibt '
             . 'dort — dieses Löschen greift nicht hinüber. (Ob dort aufgeräumt '
             . 'wird, entscheidet die Aufbewahrungsregel des jeweiligen Ziels.)'
@@ -278,19 +269,17 @@ ui_seite_start(['titel' => 'Komplett-Backup']);
                           'art' => 'primaer', 'attr' => ' form="f-sichern"']))
           : '',
   ]); ?>
-  <?php /* DER BALKEN, WIE AUF JEDER AUSNAHMESEITE DES WARTUNGSMODUS — seit
-           P5c/AP9 steht diese Seite in WARTUNG_AUSNAHMEN (E-P5c-134). */ ?>
+  <?php /* DER BALKEN, WIE AUF JEDER AUSNAHMESEITE DES WARTUNGSMODUS — diese
+           Seite steht in WARTUNG_AUSNAHMEN. */ ?>
   <?= wartung_balken() ?>
 
   <?php ui_meldung($notice, $error, 'info', '  '); ?>
 
   <?php if (!$schluesselDa): ?>
     <?php ui_karte_start(['titel' => 'Serverschlüssel fehlt', 'id' => 'k-schluessel-fehlt']); ?>
-      <?php /* BIS WEB 21.0.0 STAND HIER „Backup-Ziele" als der Ort, an dem der
-               Schlüssel entsteht (F-P5c-138). Das stimmte bis Web 20.1.0; seither
-               legt ihn die Karte „Schlüssel des Servers" unter
-               Betrieb → Servereinstellungen an, und Backup-Ziele verweist selbst
-               nur noch dorthin. */ ?>
+      <?php /* DER SCHLÜSSEL ENTSTEHT unter Betrieb → Servereinstellungen
+               (Karte „Schlüssel des Servers"), nicht unter „Backup-Ziele";
+               Backup-Ziele verweist selbst nur dorthin. */ ?>
       <p class="feld-hinweis">Ein Komplett-Backup wird immer versiegelt, und dafür
       fehlt der Serverschlüssel aus <code>config.php</code>.
       <a href="hilfe.php#karte-schluessel-des-servers-seit-web-20-1-0">Handbuch: Schlüssel des Servers</a></p>
@@ -408,8 +397,8 @@ ui_seite_start(['titel' => 'Komplett-Backup']);
           $kopf = komp_kopf_lesen(komp_wurzel() . '/' . $s['datei']);
           $k = $kopf['kopf'] ?? [];
           $id = 'st' . $nr;
-          /* WELCHER SCHLÜSSEL (SR-03, F-SR-11): Stände werden beim Wechsel
-             nicht umgehüllt (E-SR-21). Der erste Block entscheidet — ein
+          /* WELCHER SCHLÜSSEL: Stände werden beim Wechsel
+             nicht umgehüllt. Der erste Block entscheidet — ein
              Block je Stand, bei einer Aufbewahrung von zwei bis zwanzig. */
           $welcher = ($kopf !== null && ($k['kdf'] ?? null) === null)
               ? komp_serverschluessel_fuer(komp_wurzel() . '/' . $s['datei'])[1] : 'neu';
@@ -438,8 +427,7 @@ ui_seite_start(['titel' => 'Komplett-Backup']);
                         : 'Der Dateikopf ist nicht lesbar.')
                      /* Der Satz zum dritten Schlüssel als Glied der
                       * Kleinzeile, nicht als Absatz je Stand — eine Warnung
-                      * ist kein Absatz (Design.md; Nachprüfung H-SR-06,
-                      * F-SR-87). */
+                     * ist kein Absatz (Design.md). */
                      . ($welcher === 'keiner'
                         ? ' · öffnet nur mit dem Serverschlüssel vom Blatt, das damals galt, '
                           . 'und lässt sich hier nicht herunterladen'
@@ -449,8 +437,8 @@ ui_seite_start(['titel' => 'Komplett-Backup']);
                          . ($welcher === 'alt' ? ui_plakette('bisheriger Schlüssel', ['ton' => 'blau'])
                            : ($welcher === 'keiner' ? ui_plakette('anderer Schlüssel', ['ton' => 'orange']) : '')),
             /* Ein Stand unter einem DRITTEN Schlüssel lässt sich hier nicht
-             * entsiegeln — weder heruntergeladen noch unter einer Passphrase
-             * (H-SR-06, F-SR-82). Löschen bleibt. */
+             * entsiegeln — weder heruntergeladen noch unter einer Passphrase.
+             * Löschen bleibt. */
             'aktionen' => ui_zeilenaktionen(['eintraege' => array_values(array_filter([
                 $welcher === 'keiner' ? null
                     : ['text' => 'Herunterladen', 'symbol' => 'tausch', 'form' => 'f-klar-' . $id],

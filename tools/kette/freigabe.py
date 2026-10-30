@@ -1,23 +1,23 @@
 #!/usr/bin/env python3
-"""Darf dieser Stand auf Produktiv? — das Tor der grünen Läufe (AP7, E-KH-15).
+"""Darf dieser Stand auf Produktiv? — das Tor der grünen Läufe.
 
 WAS DIESES WERKZEUG ENTSCHEIDET. Vor einer Produktiv-Auslieferung fragt die
-Kette: Stand dieser Commit schon auf Staging, und war er dort grün? Bis AP7
+Kette: Stand dieser Commit schon auf Staging, und war er dort grün? Früher
 war die Antwort einfach — ein `push` auf `main`, ein erfolgreicher Job
 `staging`, fertig. Der Hotfix-Weg bricht diese Einfachheit auf: Ein
 `hotfix/*`-Zweig kommt per HANDLAUF auf Staging, nicht per Push, und ein
 Handlauf umginge den Zweigschutz von `main`, den die alte Regel voraussetzt.
 
-E-KH-15 setzt an die Stelle des Zweigschutzes die ABSTAMMUNG: Ein
+Die Kette setzt an die Stelle des Zweigschutzes die ABSTAMMUNG: Ein
 `hotfix/*`-Commit zählt, wenn er vom Zeiger `produktion` abstammt — also von
 genau dem Stand, der heute ausgeliefert ist. Wer einen Hotfix baut, zweigt
 vom Ausgelieferten ab; wer etwas anderes unterschieben will, kann das nicht,
 ohne die Abstammung zu verlieren.
 
 WARUM DAS HIER STEHT UND NICHT ALS `if` IM ARBEITSLAUF. Dieselbe Begründung
-wie beim Backup-Tor (E-P5a-12): Eine Bedingung, die eine Auslieferung
+wie beim Backup-Tor: Eine Bedingung, die eine Auslieferung
 verhindern soll, gehört dorthin, wo eine `--selbstprobe` sie nachweisen kann.
-Die Abnahme von AP7 verlangt wörtlich eine Gegenprobe — „lehnt einen
+Verlangt ist wörtlich eine Gegenprobe — „lehnt einen
 `hotfix/*`-Commit ab, der NICHT vom Zeiger abstammt; nimmt einen an, der
 abstammt". Als Bash im Arbeitslauf wäre das nur durch einen echten
 Produktivlauf zu belegen, also praktisch nie.
@@ -27,7 +27,7 @@ sie ausgingen, ob der Commit abstammt — holt der Arbeitslauf mit `gh api`.
 Dieses Werkzeug bekommt sie als JSON und fällt das Urteil. Die Trennung ist
 Absicht: Abrufen kann man nicht ohne Netz proben, Entscheiden schon.
 
-STUFE 1 NACH BAUM, NICHT NACH COMMIT (Konzept TB, E-TB-02/-03/-05). Bis
+STUFE 1 NACH BAUM, NICHT NACH COMMIT. Bis
 dahin zählte das Tor grüne Stufe-1-Läufe mit `head_sha` gleich dem
 Tag-Commit. Ein PR-Lauf trägt aber die SHA des Zweigs, nie die des
 Merge-Commits — der Tag `web-v20.37.1` wartete deshalb auf einen zweiten
@@ -35,9 +35,9 @@ Lauf, der Byte für Byte maß, was der erste schon gemessen hatte (Lauf
 35834341392, beide Commits Baum `447793e…`). Jetzt zählt ein Lauf, dessen
 Commit denselben BAUM hat wie der Tag-Commit UND in dem der Job `Stufe 1`
 selbst grün war. Mit „Require branches to be up to date" im Ruleset ist der
-Baum des Zweig-Commits beweisbar der geprüfte (Konzept TB 2.2).
+Baum des Zweig-Commits beweisbar der geprüfte.
 
-SEIT R17-19 AUCH DAS TOR DER APP-TAGS (`app-urteil`, F-R17-17, E-R17-33):
+AUCH DAS TOR DER APP-TAGS (`app-urteil`):
 grüner Job `Stufe 1` auf demselben Baum und, bei einem Tag, der Commit auf
 `main`. Ohne den Staging-Teil — die Apps gehen nicht über Staging.
 
@@ -57,7 +57,7 @@ import sys
 # Der Zweig, auf dem die Entwicklung liegt und für den ein Push die Regel ist.
 HAUPTZWEIG = "main"
 
-# Das Präfix der Hotfix-Zweige (E-KH-15). Ein Zweig `hotfixes/…` ist keiner —
+# Das Präfix der Hotfix-Zweige. Ein Zweig `hotfixes/…` ist keiner —
 # der Schrägstrich gehört dazu, sonst zählte auch `hotfix-versuch-2`.
 HOTFIX_PRAEFIX = "hotfix/"
 
@@ -108,7 +108,7 @@ def lauf_zaehlt(lauf: dict, abstammung: bool) -> tuple[bool, str]:
 
     # ZUERST DAS ERGEBNIS, DANN DIE HERKUNFT. Ein Lauf, in dem der Job
     # `staging` uebersprungen wurde oder rot war, ist kein Nachweis — gleich,
-    # von welchem Zweig er kam. Das ist der Fund F-KH-U-35 in Funktionsform.
+    # von welchem Zweig er kam.
     if not lauf.get("staging_ok"):
         return False, (f"Lauf {kennung} ({ereignis}, `{zweig}`): der Job "
                        f"`staging` war nicht erfolgreich — übersprungen oder rot "
@@ -129,9 +129,9 @@ def lauf_zaehlt(lauf: dict, abstammung: bool) -> tuple[bool, str]:
         return False, (f"Lauf {kennung} ({ereignis}, `{zweig}`): Hotfix-Zweig, "
                        f"aber der Commit stammt NICHT vom Zeiger `produktion` ab")
 
-    # ALLES ANDERE IST NEIN, und das ist eine Verschaerfung gegenueber AP6:
-    # Bis dahin zaehlte JEDER Push-Lauf, ohne nach dem Zweig zu fragen. Das
-    # ging gut, solange `on.push.branches` nur `main` nennt — aber eine Regel,
+    # ALLES ANDERE IST NEIN, und das ist Absicht: Zaehlte JEDER Push-Lauf,
+    # ohne nach dem Zweig zu fragen, ginge das nur gut, solange
+    # `on.push.branches` nur `main` nennt — aber eine Regel,
     # die nur wegen einer Zeile in einer anderen Datei stimmt, stimmt nicht.
     return False, (f"Lauf {kennung} ({ereignis}, `{zweig}`): weder Push auf "
                    f"`{HAUPTZWEIG}` noch ein Hotfix-Zweig mit Abstammung")
@@ -140,7 +140,7 @@ def lauf_zaehlt(lauf: dict, abstammung: bool) -> tuple[bool, str]:
 def baum_norm(baum) -> str:
     """Der Baum als 40 kleine Hexziffern — oder leer, wenn es keiner ist.
 
-    IM ZWEIFEL LEER, und leer zählt nie (E-TB-04). Groß geschrieben ist
+    IM ZWEIFEL LEER, und leer zählt nie. Groß geschrieben ist
     derselbe Baum; ein abgeschnittener, ein `null` aus einem gescheiterten
     Abruf oder eine Fehlermeldung von `gh` sind keiner.
     """
@@ -157,14 +157,13 @@ def stufe1_lauf_zaehlt(lauf: dict, zielbaum: str) -> tuple[bool, str]:
 
     Zwei Bedingungen, beide nötig:
       1. derselbe Baum — der geprüfte Inhalt ist der auszuliefernde;
-      2. der Job `Stufe 1` war selbst `success` (E-TB-05). Ein Lauf ist auch
+      2. der Job `Stufe 1` war selbst `success`. Ein Lauf ist auch
          dann „success", wenn `Stufe 1` übersprungen wurde — etwa der
-         Push-Lauf auf `main`, der auf einen PR-Lauf verweist statt zu messen
-         (TB-03). Ein Verweis ist keine Messung (F-TB-06, Lehre aus
-         F-KH-U-35).
+         Push-Lauf auf `main`, der auf einen PR-Lauf verweist statt zu messen.
+         Ein Verweis ist keine Messung.
 
     Erwartet in `lauf`: `id`, `event`, `head_branch`, `head_sha`, `baum`,
-    `stufe1_ok`. Ereignis und Zweig werden NICHT geprüft (E-TB-02): Ein
+    `stufe1_ok`. Ereignis und Zweig werden NICHT geprüft: Ein
     PR-Lauf misst `server/` so vollständig wie ein Push-Lauf auf `main`.
     """
     kennung = lauf.get("id", "?")
@@ -196,7 +195,7 @@ def urteil(laeufe: list, vergleich: str | None, baum,
     abst = abstammt(vergleich)
     zielbaum = baum_norm(baum)
 
-    # ---- Stufe 1: nach Baum (Konzept TB) ----------------------------------
+    # ---- Stufe 1: nach Baum -----------------------------------------------
     zeilen.append(f"Baum des Tag-Commits:                 "
                   f"{zielbaum or '— nicht ermittelt —'}")
     stufe1 = 0
@@ -227,7 +226,7 @@ def urteil(laeufe: list, vergleich: str | None, baum,
                   f"davon mit anderem Baum: {andere}")
     zeilen.append(f"Grüne Stufe-1-Läufe auf diesem Baum:  {stufe1}")
 
-    # ---- Staging: nach Commit und Herkunft (AP7, unverändert) --------------
+    # ---- Staging: nach Commit und Herkunft ---------------------------------
     zeilen.append(f"Abstammung vom Zeiger `produktion`:    "
                   f"{'ja' if abst else 'nein'} (Vergleich: {vergleich or '— nicht ermittelt —'})")
 
@@ -277,7 +276,7 @@ AUF_MAIN_JA = ("behind", "identical")
 
 # Die zwei Lagen des App-Tors. `pflicht` fuer einen Tag, `aus` fuer den
 # App-Probelauf: Ein Arbeitszweig liegt nicht auf `main`, und der Probelauf
-# legt nichts ab (E-R17-33).
+# legt nichts ab.
 ABSTAMMUNG_LAGEN = ("pflicht", "aus")
 
 
@@ -294,7 +293,7 @@ def auf_main(vergleich: str | None) -> bool:
 
 def app_urteil(stufe1_laeufe, baum, vergleich_main: str | None,
                abstammung: str) -> tuple[int, list[str]]:
-    """Darf dieser App-Tag gebaut werden? 0 = ja, 1 = nein (R17-19, F-R17-17).
+    """Darf dieser App-Tag gebaut werden? 0 = ja, 1 = nein.
 
     BIS WEB 23.0.3 GAB ES FÜR `android-v*` UND `uhr-v*` KEIN TOR. Ein Tag auf
     einem nie geprüften Commit brauchte nur Tag = Fassung und die Freigabe der
@@ -304,7 +303,7 @@ def app_urteil(stufe1_laeufe, baum, vergleich_main: str | None,
 
       1. ein grüner Job `Stufe 1` auf demselben BAUM (`stufe1_lauf_zaehlt()`
          — dieselbe Funktion wie im Web-Tor, nicht eine zweite);
-      2. bei einem Tag: der Commit liegt auf `main` (E-R17-33). Das Web-Tor
+      2. bei einem Tag: der Commit liegt auf `main`. Das Web-Tor
          belegt dasselbe über „Push auf `main`, Staging grün"; ohne Staging
          bleibt die Abstammung.
     """
@@ -368,7 +367,7 @@ def selbstprobe() -> int:
 
     Die interessanten Lagen sind nicht die guten. Ein Hotfix, der durchgeht,
     belegt wenig — ein Hotfix OHNE Abstammung, der durchginge, wäre genau der
-    Weg, den E-KH-15 versperren soll: Handlauf auf einem beliebigen Zweig,
+    Weg, den die Abstammung versperren soll: Handlauf auf einem beliebigen Zweig,
     vorbei am Zweigschutz, direkt auf Produktiv.
     """
     erfuellt = 0
@@ -567,7 +566,7 @@ def selbstprobe() -> int:
     pruefe(any("Abstammung vom Zeiger" in z and "diverged" in z for z in zeilen),
            "…und die Vergleichsantwort wird im Wortlaut genannt")
 
-    # ------------------------------------------------ app_urteil() (R17-19)
+    # ------------------------------------------------ app_urteil()
     pruefe(auf_main("behind") and auf_main("identical") and auf_main(" BEHIND "),
            "auf_main: `behind` und `identical` heissen gemergt")
     pruefe(not auf_main("ahead") and not auf_main("diverged")

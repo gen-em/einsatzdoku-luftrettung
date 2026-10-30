@@ -4,9 +4,9 @@ require_once __DIR__ . '/../auth_guard.php';
 require_once __DIR__ . '/../mission_fields_lib.php';
 require_once __DIR__ . '/../einsatz_lib.php';
 require_once __DIR__ . '/../diensttag_lib.php';
-require_once __DIR__ . '/../spur_lib.php';   // Spuren: Zeilen UND Blob (S2)
+require_once __DIR__ . '/../spur_lib.php';   // Spuren: Zeilen UND Blob
 
-// Nur lesen (M3-11) — derselbe Grund wie bei den uebrigen lesenden
+// Nur lesen — derselbe Grund wie bei den uebrigen lesenden
 // Endpunkten: Was nichts aendert, beantwortet auch kein POST.
 api_methode('GET');
 
@@ -18,8 +18,8 @@ try {
 
     /* Zusatzfelder generisch aus der zentralen Definition (mission_fields.php).
      *
-     * JEDER EINTRAG NENNT SEINE SPALTE ('col', Web 7.0.0). Die Einsatzansicht
-     * ordnet die Liste seither selbst — Name, Geburtsdatum, Einsatzort,
+     * JEDER EINTRAG NENNT SEINE SPALTE ('col'). Die Einsatzansicht
+     * ordnet die Liste selbst — Name, Geburtsdatum, Einsatzort,
      * Diagnose, Notizen und der Transportblock stehen dort in einer fachlich
      * gewaehlten Reihenfolge, die nicht die des Katalogs ist. Ohne die Spalte
      * muesste sie die Felder ueber ihre BESCHRIFTUNG zurueckerkennen; eine
@@ -33,7 +33,7 @@ try {
          * ihren eigenen Block —, aber die Bedingung steht da, damit ein
          * kuenftiges Feld mit eigener Ablage nicht als leerer Wert erscheint. */
         if (!mf_ist_spalte($f) && $type !== 'resources') {
-            /* DIE KINDER GEHEN TROTZDEM DURCH (S11-05b). Seit das
+            /* DIE KINDER GEHEN TROTZDEM DURCH. Seit das
              * Transportziel im Blob liegt, ist es das erste verschluesselte
              * Feld MIT Kindern — und der Haken „Schockraum" darunter ist
              * Klartext. Ein blosses `return` haette ihn aus der Ansicht
@@ -63,7 +63,7 @@ try {
         if ($v !== null && $v !== '') {
             /* Bei einem Auswahlfeld die BESCHRIFTUNG zeigen, nicht den
              * gespeicherten Wert: In der Einsatzansicht stuende sonst „ground"
-             * statt „Boden" (mf_optionen, Web 6.1.0). Ein Wert ohne Eintrag in
+             * statt „Boden" (mf_optionen). Ein Wert ohne Eintrag in
              * der Liste bleibt sichtbar, wie er ist — er kann aus aelteren
              * Daten oder aus geaenderten Stammdaten stammen. */
             $anzeige = (string)$v;
@@ -89,15 +89,12 @@ try {
     /* ---- Effektive Besatzung (COALESCE-Regel) -----------------------------
      *
      * Einsatzwert nur bei gesetztem Haken, sonst die Besatzung des Diensttags.
-     * Die Regel ist unveraendert; sie laeuft seit Web 6.0.0 ueber zwei TABELLEN
-     * statt ueber zwei Spaltensaetze (E7). Der frueher noetige Umweg — die
-     * days-Zeile separat laden, weil 'SELECT *' und `days` dieselben
-     * Spaltennamen crew_* trugen — ist damit entfallen: Die Namen stehen jetzt
-     * in `day_crew` und `mission_crew` und koennen sich nicht ueberschreiben.
+     * Die Regel laeuft ueber zwei TABELLEN: Die Namen stehen in `day_crew`
+     * und `mission_crew` und koennen sich nicht ueberschreiben.
      *
-     * WELCHE ROLLEN VORKOMMEN, sagt der DIENSTTAG (`day_crew`, E8) — nicht der
+     * WELCHE ROLLEN VORKOMMEN, sagt der DIENSTTAG (`day_crew`) — nicht der
      * Katalog. Ein bodengebundener Dienst liefert Fahrer und Praktikant, ein
-     * luftgebundener die Flugrollen, ein neutraler keine (E26). Rollen, die nur
+     * luftgebundener die Flugrollen, ein neutraler keine. Rollen, die nur
      * am Einsatz belegt sind, kommen dazu: Sie stehen in der Datenbank, also
      * gehoeren sie angezeigt.
      */
@@ -138,12 +135,10 @@ try {
     $no->execute([$userId, $dayId, $m['started_at']]);
     $dayNo = (int)$no->fetchColumn();
 
-    /* DIE SPUR LIEST DER BROWSER (S11-04c). Bis Web 22.0.2 stand hier
-     * `spur_lesen()` mit den Punkten im Klartext, dazu je Phase der Index des
-     * zeitlich naechsten Punkts (`track_idx`). Seit S11 kommen die Punkte nur
-     * noch verschlossen an; `assets/ortsdaten.js` oeffnet die Stuecke und
-     * rechnet `track_idx` dort, wo die Punkte sind. Kein Uebergang (E-S11-36):
-     * Altbestand im Klartext zeigt diese Antwort nicht mehr. */
+    /* DIE SPUR LIEST DER BROWSER. Die Punkte kommen nur verschlossen an;
+     * `assets/ortsdaten.js` oeffnet die Stuecke und rechnet den Index des
+     * zeitlich naechsten Punkts je Phase (`track_idx`) dort, wo die Punkte
+     * sind. */
     $ph = db()->prepare('SELECT phase, occurred_at FROM mission_phases
                          WHERE mission_id = ? ORDER BY occurred_at');
     $ph->execute([$id]);
@@ -151,37 +146,36 @@ try {
         'phase' => (int)$p['phase'],
         'label' => PHASE_LABELS[(int)$p['phase']] ?? ('Phase ' . $p['phase']),
         'time'  => fmt_local($p['occurred_at']),
-        /* Seit S11-04b die Zeit auch als Epoche: Der Browser ordnet damit die
+        /* Die Zeit auch als Epoche: Der Browser ordnet damit die
          * Phasen der Einsatzhuelle zu (Zeiten dort relativ zum Beginn). */
         'ts'    => $p['occurred_at'] !== null
                    ? (new DateTime((string)$p['occurred_at'], new DateTimeZone('UTC')))->getTimestamp() : null,
     ], $ph->fetchAll());
 
-    /* DIE REANIMATION STEHT IN DER EINSATZHUELLE (E-S11-02). Bis Web 22.0.2
-     * las der Server sie hier aus `resus_sessions`/`resus_events`; seit
-     * S11-04c baut der Browser die Ereignislisten aus der Huelle. Die
+    /* DIE REANIMATION STEHT IN DER EINSATZHUELLE. Der Browser baut die
+     * Ereignislisten aus der Huelle. Die
      * Beschriftungen und die Zeitzone liefert die Antwort mit. */
 
     /* Der Diensttag des Einsatzes — fuer die Anzeige mit seinen EINGEFRORENEN
-     * Angaben (E8). `day` bleibt als Datum in der Antwort, weil die
+     * Angaben. `day` bleibt als Datum in der Antwort, weil die
      * Einsatzansicht es im Kopf zeigt; dazu kommen Kennung, Art und
      * Bezeichnungen, damit die Seite den Dienst benennen kann, ohne die
      * Stammdaten zu befragen. */
     $tag = $dayId > 0 ? dt_laden($userId, $dayId) : null;
-    /* Zeichen aus dem Typ, wo einer steht (E-S9-13, eine Funktion, alle
+    /* Zeichen aus dem Typ, wo einer steht (eine Funktion, alle
      * Stellen). Ohne den zweiten Wert truege die Einsatzansicht den
      * Hubschrauber, waehrend die Leiste daneben den Berg zeigt. */
     $sym = dt_art_symbol($tag !== null && $tag['kind'] !== null ? (string)$tag['kind'] : null,
                          $tag !== null && $tag['vehicle_typ'] !== null
                              ? (string)$tag['vehicle_typ'] : null);
 
-    /* ---- Abfahrtort aufloesen (E34, Konzept 4.6.1) ------------------------
+    /* ---- Abfahrtort aufloesen ----------------------------------------------
      *
      * Gespeichert ist nur die REGEL. Woher die Koordinate kommt, haengt an ihr —
      * und damit auch, ob sie ueberhaupt hierher gehoert:
      *
      *   base       days.base_lat/base_lon, eingefroren beim Anlegen  Klartext
-     *   prev_dest  Transportziel des vorherigen Einsatzes            verschlüsselt (seit S11-05b)
+     *   prev_dest  Transportziel des vorherigen Einsatzes            verschlüsselt
      *   prev_site  Einsatzort des vorherigen Einsatzes               verschlüsselt
      *   manual     pat_blob.start DIESES Einsatzes                   verschlüsselt
      *
@@ -195,9 +189,9 @@ try {
      * Datenweitergabe ohne Zweck — auch innerhalb desselben Kontos.
      *
      * VORHERIGER EINSATZ ist der zeitlich unmittelbar vorangehende DESSELBEN
-     * Diensttags; Papierkorbeintraege zaehlen nicht mit (A13q). Gibt es keinen,
+     * Diensttags; Papierkorbeintraege zaehlen nicht mit. Gibt es keinen,
      * bleibt die Quelle leer und es entsteht keine Linie — es wird NICHT auf
-     * eine andere ausgewichen (A13i). */
+     * eine andere ausgewichen. */
     $startSrc = $m['start_src'] !== null ? (string)$m['start_src'] : null;
     $startBase = null; $startPrevBlob = null;
 
@@ -205,12 +199,10 @@ try {
         && $tag['base_lat'] !== null && $tag['base_lon'] !== null) {
         $startBase = ['lat' => (float)$tag['base_lat'], 'lon' => (float)$tag['base_lon']];
     }
-    /* SEIT S11-05b AUCH BEI 'prev_dest' NUR DER BLOB (F-S11-11). Bis dahin
-     * rechnete der Server die letzte Zielklinik aus `dest_lat`/`dest_lon` des
-     * Vorgaengers und gab sie als `start_prev_dest` aus. Das Transportziel
-     * liegt jetzt im `pat_blob`; der Server kann es nicht mehr lesen und
-     * reicht den Blob des Vorgaengers durch wie bei 'prev_site'. Die
-     * Einsatzansicht liest daraus `transport_dest`. */
+    /* AUCH BEI 'prev_dest' NUR DER BLOB. Das Transportziel liegt im
+     * `pat_blob`; der Server kann es nicht lesen und reicht den Blob des
+     * Vorgaengers durch wie bei 'prev_site'. Die Einsatzansicht liest daraus
+     * `transport_dest`. */
     if (($startSrc === 'prev_dest' || $startSrc === 'prev_site') && $dayId > 0) {
         $vq = db()->prepare('SELECT pat_blob FROM missions
                               WHERE user_id = ? AND day_id = ? AND deleted_at IS NULL
@@ -229,7 +221,7 @@ try {
         'day' => $tag !== null ? (string)$tag['day'] : null,
         /* Das ECHTE Einsatzdatum in Ortszeit. Bezugstag der Altersberechnung
          * und der Anzeige — nicht das Datum des Diensttags: Ein Einsatz um
-         * 01:30 eines Dienstes vom Vortag hat sein eigenes Datum (E14). */
+         * 01:30 eines Dienstes vom Vortag hat sein eigenes Datum. */
         'mission_day' => fmt_local($m['started_at'], 'Y-m-d'),
         'day_kind'         => $tag !== null && $tag['kind'] !== null ? (string)$tag['kind'] : null,
         'day_art_symbol'   => $sym['symbol'],
@@ -238,38 +230,33 @@ try {
                               ? (string)$tag['vehicle_name'] : null,
         'day_base_name'    => $tag !== null && $tag['base_name'] !== null
                               ? (string)$tag['base_name'] : null,
-        /* Standort-Koordinate des Tages (eingefroren, E8) — Klartext wie ihr
-         * Name; seit O4 zeichnet die Einsatzansicht daraus das Haus-Schild
-         * (E-P3-33/40). Vorher ging sie nur bei start_src = base mit. */
+        /* Standort-Koordinate des Tages (eingefroren) — Klartext wie ihr
+         * Name; die Einsatzansicht zeichnet daraus das Haus-Schild. */
         'base_lat' => $tag !== null && $tag['base_lat'] !== null ? (float)$tag['base_lat'] : null,
         'base_lon' => $tag !== null && $tag['base_lon'] !== null ? (float)$tag['base_lon'] : null,
         'start_hhmm' => fmt_local($m['started_at']),
         'end_hhmm'   => fmt_local($m['ended_at']),
         'distance_m' => $m['distance_m'] !== null ? (int)$m['distance_m'] : null,
-        /* `ascent_m` steht hier NICHT mehr (Web 7.0.0). Die Einsatzansicht war
-         * der einzige Abnehmer, und sie zeigt die Steigung nicht mehr an: Sie
-         * ist das Profil der geflogenen Strecke, keine Aussage ueber den
-         * Einsatz. Erhalten bleibt sie ueberall sonst — in der Spalte, im
-         * Export (`hoehenmeter_m`), im Import und im Backup. */
-        /* `site_ele_m` steht hier NICHT mehr (S11-05b). Die Hoehe des
+        /* `ascent_m` steht hier NICHT. Die Einsatzansicht zeigt die Steigung
+         * nicht an: Sie ist das Profil der geflogenen Strecke, keine Aussage
+         * ueber den Einsatz. Erhalten bleibt sie ueberall sonst — in der
+         * Spalte, im Export (`hoehenmeter_m`), im Import und im Backup. */
+        /* `site_ele_m` steht hier NICHT. Die Hoehe des
          * Einsatzorts liegt im `pat_blob` (`ortshoehe`); die Einsatzansicht
          * liest sie nach dem Entsperren von dort. */
         'origin'     => (string)($m['origin'] ?? 'watch'),
         'edited'     => (int)($m['edited'] ?? 0) === 1,
         'day_no'     => $dayNo,
-        /* `hat_ende` statt `has_p9` (Web 14.2.2, F-R64-05). Die
-         * Einsatzansicht fragte damit, ob sie eine Endzeit anzeigen darf --
-         * und Phase 9 war dafuer nur ein Stellvertreter. Ein geschnittener
-         * oder importierter Einsatz hat keine Phase 9, aber sehr wohl ein
-         * Ende; die Seite schrieb daneben "kein Ende". Gefragt wird jetzt
-         * das, was gemeint ist -- und die eigene Abfrage nach Phase 9 ist
-         * damit ersatzlos entfallen: Sie hatte keinen zweiten Verwender. */
+        /* `hat_ende` und nicht „gibt es Phase 9". Die Einsatzansicht fragt
+         * damit, ob sie eine Endzeit anzeigen darf -- und Phase 9 waere dafuer
+         * nur ein Stellvertreter: Ein geschnittener oder importierter Einsatz
+         * hat keine Phase 9, aber sehr wohl ein Ende. Gefragt wird das, was
+         * gemeint ist. */
         'hat_ende'   => $m['ended_at'] !== null,
         /* `dest_lat`, `dest_lon`, `dest_name` und `start_prev_dest` stehen hier
-         * NICHT mehr (S11-05b). Das Transportziel liegt im `pat_blob`
+         * NICHT. Das Transportziel liegt im `pat_blob`
          * (`transport_dest` = {addr, lat, lon}); sein Pin erscheint erst nach
-         * dem Entsperren. Bis dahin war er Klartext und ohne Freischalten
-         * sichtbar (E40) — das kehrt R78 um. */
+         * dem Entsperren. */
         'start_src'        => $startSrc,
         'start_base'       => $startBase,
         'start_prev_blob'  => $startPrevBlob,
@@ -280,17 +267,17 @@ try {
         'phases' => $phases,
         'reanimationsarten' => RESUS_LABELS,
         'zeitzone'     => (string)konfig('app.timezone', 'Europe/Berlin'),
-        /* ---- DIE ORTSDATEN ALS GERAETEHUELLEN (S11-04b, Konzept S11 3.5) ----
+        /* ---- DIE ORTSDATEN ALS GERAETEHUELLEN -------------------------------
          *
-         * Seit Web 22.0.1 kommen Spur, Phasenkoordinaten und Reanimation nur
-         * noch verschlossen an; der Server liefert sie hier aus, wie sie
-         * liegen, und oeffnet nichts. Dazu, was der Browser zum Oeffnen und
-         * Einordnen braucht: `client_ref` (Bindung), `started_ts` (die Zeiten
-         * der Einsatzhuelle zaehlen von dort, E-S11-40) und die Sperrzeiten
-         * aus Schnitten (E-S11-37: gesperrte Punkte blendet der Browser aus).
+         * Spur, Phasenkoordinaten und Reanimation kommen nur verschlossen an;
+         * der Server liefert sie hier aus, wie sie liegen, und oeffnet nichts.
+         * Dazu, was der Browser zum Oeffnen und Einordnen braucht:
+         * `client_ref` (Bindung), `started_ts` (die Zeiten der Einsatzhuelle
+         * zaehlen von dort) und die Sperrzeiten aus Schnitten (gesperrte
+         * Punkte blendet der Browser aus).
          *
-         * `track`, `phases[].lat/lon/track_idx` und `resus` setzt seit S11-04c
-         * der Browser (`assets/ortsdaten.js`). */
+         * `track`, `phases[].lat/lon/track_idx` und `resus` setzt der Browser
+         * (`assets/ortsdaten.js`). */
         'client_ref'   => (string)$m['client_ref'],
         'started_ts'   => (new DateTime((string)$m['started_at'], new DateTimeZone('UTC')))->getTimestamp(),
         'spur_stuecke' => spur2_lesen(db(), 'mission', $id),

@@ -8,17 +8,17 @@
  * ist nicht extrahierbar · 1 = eins davon nicht (oder die Probe selbst ist
  * gescheitert).
  *
- * Was genau gemessen wird, steht in probe.html. Seit R17-25 gegen die
- * echten Dateien und die echte IndexedDB; bis dahin mit einem nachgebauten
+ * Was genau gemessen wird, steht in probe.html. Gegen die
+ * echten Dateien und die echte IndexedDB; nicht mit einem nachgebauten
  * EdCrypto, und gezählt wurden stille Neu-Entpackungen aus dem
  * Datenschlüssel, den es nach dem Entsperren nicht mehr gibt.
  *
  * Anlass: Nr. 310 — die Frist lief ab dem Entpacken: 17 stille Neu-Entpackungen je Schicht statt einer
- * Seit R17-25 (Nr. 370) misst sie die Ablage des Inhaltsschlüssels in IndexedDB, für alle Tabs.
+ * Sie misst die Ablage des Inhaltsschlüssels in IndexedDB, für alle Tabs.
  */
 import * as PWM from '/opt/node22/lib/node_modules/playwright/index.mjs';
 const PW = PWM.default ?? PWM;
-/* Die Engine wählt der Läufer (MOTOR=… oder --motor), R87. */
+/* Die Engine wählt der Läufer (MOTOR=… oder --motor). */
 const MOTOR = motorWahl(process.argv);
 import { spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
@@ -30,9 +30,9 @@ const wurzel = path.resolve(hier, '../../..');
 const PORT   = 8733;
 
 // IndexedDB braucht eine echte Herkunft — file:// genügt nicht.
-// Seit R17-19 der Server aus Python statt `npx --yes http-server`: Der zog
+// Der Server aus Python statt `npx --yes http-server`: Der zoege
 // bei jedem Lauf ein npm-Paket ohne Fassung und ohne Prüfsumme nach und
-// band auf allen Schnittstellen (F-R17-20). Dieser bindet nur 127.0.0.1.
+// band auf allen Schnittstellen. Dieser bindet nur 127.0.0.1.
 const srv = spawn('python3', ['-m', 'http.server', String(PORT), '--bind', '127.0.0.1',
                               '--directory', wurzel], { stdio: 'ignore' });
 await new Promise(r => setTimeout(r, 1500));

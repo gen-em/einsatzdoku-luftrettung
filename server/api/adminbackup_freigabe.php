@@ -9,7 +9,7 @@ require_once __DIR__ . '/../adminbackup_lib.php';
  *   GET  api/adminbackup_freigabe.php            -> Paket oder { freigabe: null }
  *   POST api/adminbackup_freigabe.php  { eingeloest: true }
  *
- * WARUM ES DIESEN WEG ÜBERHAUPT GIBT (E5, E20)
+ * WARUM ES DIESEN WEG ÜBERHAUPT GIBT
  * Wurde ein Konto gelöscht und neu aufgesetzt, trägt es einen NEUEN
  * Inhaltsschlüssel. Die geschützten Angaben des alten Backups sind mit dem
  * ALTEN verschlüsselt, und der steckt in `pat_wrap_rc` — geöffnet allein vom
@@ -29,19 +29,18 @@ require_once __DIR__ . '/../adminbackup_lib.php';
  * Fehler zu machen sind.
  */
 
-/* Beide Zweige unten enden in `json_out()`; die Pruefung stand deshalb bis
- * Web 20.28.0 als Auffangzeile am DATEIENDE. Sie steht jetzt vorn, wo man
- * sie sucht — erreichbar ist derselbe Satz Methoden. */
+/* Beide Zweige unten enden in `json_out()`; die Pruefung der Methode steht
+ * trotzdem vorn, wo man sie sucht — erreichbar ist derselbe Satz Methoden. */
 api_methode(['GET', 'POST']);
 
 if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     $f = edbak_freigabe_fuer($userId);
     if ($f === null) { json_out(['freigabe' => null]); }
 
-    /* ---- Ein Teil, roh (S2/AP6) ----------------------------------------
+    /* ---- Ein Teil, roh -------------------------------------------------
      *
-     * Ein Fassung-2-Paket geht nicht mehr in EINER Antwort heraus. Beim
-     * 5000er-Konto waeren das 94 MB gewesen — und auf dem Rueckweg ein POST
+     * Ein Fassung-2-Paket geht nicht in EINER Antwort heraus. Beim
+     * 5000er-Konto waeren das 94 MB — und auf dem Rueckweg ein POST
      * derselben Groesse gegen ein Limit, das niemand kennt. Der Browser holt
      * Kopf, Eintragsfenster und Spurteile einzeln, genau wie beim Einspielen
      * eines eigenen Backups.
@@ -49,7 +48,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
      * Der Name wird in `edbak_paket_teil_lesen()` gegen die Teileliste des
      * Manifests geprueft; was dort nicht steht, gibt es hier nicht.
      *
-     * SEIT S10/AP4 OEFFNET DER SERVER VORHER. Die Teile eines Fassung-3-Pakets
+     * DER SERVER OEFFNET VORHER. Die Teile eines Fassung-3-Pakets
      * sind gzip-gepackt und mit dem Serverschluessel versiegelt; der Browser
      * kennt ihn nicht und koennte damit nichts anfangen.
      * `edbak_paket_teil_lesen()` gibt deshalb Klartext-JSON zurueck — fuer
@@ -64,9 +63,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
                       'meldung' => 'Dieser Teil gehört nicht zur freigegebenen '
                                  . 'Backup.'], 404);
         }
-        /* Fertiger Text, direkt hinaus — seit Web 20.9.1 ueber
-         * `json_roh_out()` und damit mit demselben Kopfzeilensatz wie jede
-         * andere Antwort (`nosniff` inbegriffen, der hier fehlte). */
+        /* Fertiger Text, direkt hinaus — ueber `json_roh_out()` und damit
+         * mit demselben Kopfzeilensatz wie jede andere Antwort (`nosniff`
+         * inbegriffen). */
         json_roh_out($klar);
     }
 
@@ -78,9 +77,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     }
     $fassung = (int)($paket['version'] ?? 1);
 
-    /* Hier stand `header('Cache-Control: no-store')`. Seit Web 20.9.1 setzt
-     * `json_roh_out()` den Satz, und `json_out()` unten geht durch sie — die
-     * Zeile war ab da eine Wiederholung derselben Kopfzeile. */
+    /* Kein eigenes `header('Cache-Control: no-store')`: `json_roh_out()`
+     * setzt den Satz, und `json_out()` unten geht durch sie. */
     $antwort = [
         'freigabe' => [
             'erstellt'       => $f['erstellt'],
@@ -97,7 +95,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         'fassung'       => $fassung,
         'pat_wrap_rc'   => $paket['schluessel']['pat_wrap_rc'] ?? null,
         'pat_key_check' => $paket['schluessel']['pat_key_check'] ?? null,
-        /* Der private Teil des Ursprungskontos (S11-06c), unter dessen
+        /* Der private Teil des Ursprungskontos, unter dessen
          * Inhaltsschluessel — der Browser oeffnet ihn mit dem, was
          * `pat_wrap_rc` hergibt, und damit Huellen und Stuecke. */
         'kp_privat'     => $paket['schluessel']['kp_privat'] ?? null,
@@ -107,9 +105,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         $antwort['spurteile']     = (int)($paket['spurteile'] ?? 0);
         $antwort['eintraege']     = (int)($paket['eintraege'] ?? 0);
     } else {
-        /* Fassung 1 (einteilig, bis Web 11) ging bis Web 22.7.0 am Stueck
-         * heraus. Sie trug Orte und Spur im Klartext; seit Web 23 wird sie
-         * nicht mehr ausgeliefert (S11-12, E-S11-84). */
+        /* Fassung 1 (einteilig) trug Orte und Spur im Klartext und wird
+         * nicht ausgeliefert. */
         json_out(['error' => 'fassung_alt',
                   'meldung' => 'Dieses Backup hat das einteilige Format einer Fassung vor '
                              . 'Web 11 und lässt sich seit Web 23 nicht mehr einspielen.'], 409);
@@ -118,7 +115,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    csrf_check();   // Feld ODER Kopfzeile X-CSRF (Nr. 67)
+    csrf_check();   // Feld ODER Kopfzeile X-CSRF
     $f = edbak_freigabe_fuer($userId);
     if ($f === null) { json_out(['error' => 'keine_freigabe'], 404); }
     /* Als eingelöst vermerken, nicht löschen: Das Backup selbst bleibt

@@ -1,7 +1,7 @@
 /* Wege der Seite Verwaltung → Installation (`admin_installation.php`).
  * ===========================================================================
  *
- * Entstanden mit R4-11 (Backlog Nr. 250): Nach dem Speichern leitet die Seite
+ * Nach dem Speichern leitet die Seite
  * in die Karte um, die gehandelt hat; Neuladen schickt nichts noch einmal.
  * Gespeichert wird der Logo-Standard, der schon gilt — der Weg ändert nichts.
  */

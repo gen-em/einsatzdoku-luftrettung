@@ -14,15 +14,14 @@ import org.genem.nadoku.uhr.Uhrzustand
  *
  * SIE IST DIE NAHT ZWISCHEN ZWEI PRÜFBAREN TEILEN. [Uhrbedienung] entscheidet,
  * was eine Berührung bedeutet; [Uhrfunk] sorgt dafür, dass die Meldung ankommt.
- * Dazwischen liegt genau das, was C2 belegen muss: dass jede Wirkung der
+ * Dazwischen liegt genau das, was zu belegen ist: dass jede Wirkung der
  * Bedienung zu genau einer Meldung wird, dass die `wm-`-Kennung dort entsteht,
  * wo ein Einsatz eröffnet wird, und dass die Anzeige den Unterschied zwischen
  * „gemeldet" und „angekommen" nicht verschluckt.
  *
  * DIE OBERFLÄCHE HÄNGT DARAN UND NICHT UMGEKEHRT: `UhrActivity` liest
  * [zustand] und schickt Ereignisse herein. Deshalb ist von der Uhr alles
- * geprüft außer dem Zeichnen — auf einem Gerät, das es hier nicht gibt
- * (E-R45-7, E-R45-8).
+ * geprüft außer dem Zeichnen — auf einem Gerät, das es hier nicht gibt.
  */
 class Uhrsteuerung(
     private val funk: Uhrfunk,
@@ -45,15 +44,15 @@ class Uhrsteuerung(
     private var dienstNr: Long? = null
 
     /*
-     * `@Volatile` (R17-24): geschrieben auf der Werkbank der App
+     * `@Volatile`: geschrieben auf der Werkbank der App
      * (`UhrApp.werkbank`), gelesen vom Hauptfaden beim Start der Ansicht.
      * Harmlos war es auch ohne — der nächste Aufruf von [beiAenderung] bringt
      * den frischen Stand —, aber das Handy markiert dieselbe Bauform überall.
      *
-     * NUR EINE ÄNDERUNG MELDET (R17-24). Die Ansicht schickt jede Sekunde
-     * einen Zeitschlag für die Sperrfrist; bis 0.18.0 setzte jeder davon den
-     * Zustand neu und rief [beiAenderung] — ein Post auf den Hauptfaden und
-     * eine Neuzeichnung je Sekunde, auch wenn nichts anders war. [Uhrzustand]
+     * NUR EINE ÄNDERUNG MELDET. Die Ansicht schickt jede Sekunde einen
+     * Zeitschlag für die Sperrfrist; setzte jeder davon den Zustand neu und
+     * riefe [beiAenderung], wäre das ein Post auf den Hauptfaden und eine
+     * Neuzeichnung je Sekunde, auch wenn nichts anders ist. [Uhrzustand]
      * ist eine `data class`; der Vergleich kostet weniger als das Zeichnen.
      * Eine tickende Anzeige gibt es auf der Uhr nicht (`laufendeSeit` ist ein
      * fester Text vom Handy), also fehlt dadurch keine Sekunde.
@@ -82,7 +81,7 @@ class Uhrsteuerung(
         return ergebnis.wirkungen
     }
 
-    /** Das Handy hat quittiert (E-S4-10). */
+    /** Das Handy hat quittiert. */
     fun quittungEingegangen(q: Quittung) {
         funk.quittung(q)
         dienstNr?.let { if (funk.bestaetigt(it)) dienstNr = null }
@@ -90,7 +89,7 @@ class Uhrsteuerung(
     }
 
     /**
-     * Das Handy meldet seinen Stand — **er führt** (E-S4-10).
+     * Das Handy meldet seinen Stand — **er führt**.
      *
      * DIE UHR BESITZT DEN ZUSTAND NICHT. Weicht ihre Anzeige vom Handy ab, hat
      * das Handy recht: Dort liegt der Dienst, dort die Phasen, dort der Modus.
@@ -136,7 +135,7 @@ class Uhrsteuerung(
         when (w) {
             is Uhrwirkung.PhaseSetzen -> funk.melde(
                 Ereignisart.PHASE, zeit, phase = w.phase,
-                /* DIE KENNUNG ENTSTEHT NUR BEIM ERÖFFNENDEN EREIGNIS (E-S4-09).
+                /* DIE KENNUNG ENTSTEHT NUR BEIM ERÖFFNENDEN EREIGNIS.
                  * Sie an jede Phase zu hängen wäre nicht bloß überflüssig: Bei
                  * der zweiten Phase wäre es eine ANDERE Kennung, und das Handy
                  * öffnete einen zweiten Einsatz, sobald der erste geschlossen
@@ -148,7 +147,7 @@ class Uhrsteuerung(
 
             Uhrwirkung.DienstBeginnen -> {
                 /* SCHWEBEND, BIS DAS HANDY QUITTIERT. Vorher läuft dort kein
-                 * GPS (E-S4-10) — und eine Uhr, die „Dienst läuft" zeigt,
+                 * GPS — und eine Uhr, die „Dienst läuft" zeigt,
                  * während nichts aufgezeichnet wird, verschwiege genau die
                  * Lücke, die später niemand mehr erklären kann. */
                 dienstNr = funk.melde(Ereignisart.DIENST_BEGINNEN, zeit).nr

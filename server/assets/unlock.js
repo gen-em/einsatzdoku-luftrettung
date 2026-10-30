@@ -2,23 +2,22 @@
  *
  * Warum es diesen Baustein gibt:
  *   Die Anmeldung haengt am PHP-Sitzungscookie (30 min Inaktivitaet), der
- *   Inhaltsschluessel an der Ablage im Browser (seit R17-25 IndexedDB, fuer
- *   alle Tabs; bis Web 23.3.x der sessionStorage des Tabs). Beide koennen
- *   auseinanderlaufen — ein Passwort-Reset ohne Wiederherstellungsschluessel,
- *   ein Browser ohne IndexedDB, bis 23.3.x auch jeder neue Tab — und dann
- *   heisst es "angemeldet, aber geschuetzte Angaben gesperrt". Bisher half
- *   nur vollstaendiges Ab- und Neuanmelden.
+ *   Inhaltsschluessel an der Ablage im Browser (IndexedDB, fuer alle Tabs).
+ *   Beide koennen auseinanderlaufen — ein Passwort-Reset ohne
+ *   Wiederherstellungsschluessel, ein Browser ohne IndexedDB — und dann
+ *   heisst es "angemeldet, aber geschuetzte Angaben gesperrt". Ohne diesen
+ *   Baustein hilfe nur vollstaendiges Ab- und Neuanmelden.
  *
  * Verfahren (vollstaendig im Browser, das Passwort verlaesst ihn nie):
  *   1. EdCrypto.deriveKeys(passwort, kdfSalt, kdfIter) -> haelfteHex
  *   2. EdCrypto.datenschluessel(haelfteHex, wrap, KONTO_ANTEILE) -> dk.
- *      Seit S10 haengt der Datenschluessel am SERVER-ANTEIL, und welcher
- *      gilt, steht im Praefix der Huelle (E-S10-04).
+ *      Der Datenschluessel haengt am SERVER-ANTEIL, und welcher gilt,
+ *      steht im Praefix der Huelle.
  *   3. EdCrypto.huelleOeffnen(dk, wrap) versuchen.
  *      Gelingt es, war das Passwort richtig — die Echtheitspruefung steckt
  *      bereits in AES-GCM, ein zusaetzlicher Abgleich waere ueberfluessig.
  *   4. Den Inhaltsschluessel aus der Huelle als nicht extrahierbaren
- *      CryptoKey ablegen (EdKeyGuard.ablegen, R17-25). Der Datenschluessel
+ *      CryptoKey ablegen (EdKeyGuard.ablegen). Der Datenschluessel
  *      wird NICHT aufbewahrt — er lebt nur in dieser Funktion.
  *
  * Erwartet aus der Seite: EdCrypto UND EdKeyGuard (assets/keyguard.js), das
@@ -52,7 +51,7 @@ const EdUnlock = (() => {
    * Stellen gleichzeitig danach fragen (siehe `nachDerAnmeldung()` unten). */
   let vormerkLauf = null;
 
-  /* ---- Die Meldung, wenn der Server-Anteil nicht passt (S10, E-S10-09) ---
+  /* ---- Die Meldung, wenn der Server-Anteil nicht passt ------------------
    *
    * DREI LAGEN, ZWEI SAETZE — UND KEINER DAVON HEISST „Passwort falsch".
    *
@@ -90,12 +89,11 @@ const EdUnlock = (() => {
 
   function baueDialog() {
     const d = document.createElement('dialog');
-    /* Markup und Klassen des Dialog-Bausteins aus P3/O2 (.dialog, .feld,
-     * .knopf) — dieselben wie serverseitig in ui.php. Die Meldungszeile
-     * wechselt zwischen Hinweis („Schlüssel wird abgeleitet …") und Fehler
-     * und kommt seit Web 21.1.11 aus EdHtml.meldung(), mit Symbol wie jede
-     * andere Meldung (unten, `melde()`). Hier stand, sie benutze den
-     * Baustein „ohne Symbol" — sie benutzte ihn gar nicht (Nr. 272). */
+    /* Markup und Klassen des Dialog-Bausteins (.dialog, .feld, .knopf) —
+     * dieselben wie serverseitig in ui.php. Die Meldungszeile wechselt
+     * zwischen Hinweis („Schlüssel wird abgeleitet …") und Fehler und kommt
+     * aus EdHtml.meldung(), mit Symbol wie jede andere Meldung (unten,
+     * `melde()`). */
     d.className = 'dialog';
     d.innerHTML =
       '<div class="dialog-kopf"><h2>Geschützte Angaben entsperren</h2></div>' +
@@ -137,10 +135,8 @@ const EdUnlock = (() => {
         resolve(v);
       }
 
-      /* AUS DEM BAUSTEIN (Web 21.1.11, Backlog Nr. 272). Hier stand ein
-       * `<p class="meldung">` ohne Tonklasse, ohne Symbol, ohne `role`, dem
-       * `melde()` die Klassen nachtraeglich zuwies — der Name des Bausteins,
-       * aber keiner. Jetzt ist der Platz ein leerer Behaelter, und die
+      /* AUS DEM BAUSTEIN. Der Platz ist ein leerer Behaelter, kein
+       * `<p class="meldung">` ohne Tonklasse, Symbol und `role`; die
        * Meldung kommt aus EdHtml.meldung() (html.js steht im Kopf jeder
        * Seite). */
       function melde(text, art) {
@@ -163,8 +159,8 @@ const EdUnlock = (() => {
         let anteilFehlt = null;
         try {
           const abgeleitet = await EdCrypto.deriveKeys(pw, kdfSalt, kdfIter);
-          /* Erst der Datenschluessel — er haengt seit S10 an der Huelle
-           * (E-S10-08). Fehlt der Anteil dazu, wirft das hier, und die
+          /* Erst der Datenschluessel — er haengt an der Huelle. Fehlt der
+           * Anteil dazu, wirft das hier, und die
            * Meldung unten sagt etwas anderes als „Passwort falsch". */
           const dk = await EdCrypto.datenschluessel(abgeleitet.haelfteHex, wrap,
                                                     typeof KONTO_ANTEILE !== 'undefined' ? KONTO_ANTEILE : null);
@@ -182,7 +178,7 @@ const EdUnlock = (() => {
         if (ck) { done(ck); return; }
 
         ok.disabled = nein.disabled = feld.disabled = false;
-        /* DIE MELDUNG MUSS DIE LAGE TREFFEN (E-S10-09). „Passwort falsch" bei
+        /* DIE MELDUNG MUSS DIE LAGE TREFFEN. „Passwort falsch" bei
          * einem richtigen Passwort ist die teuerste Auskunft, die diese
          * Anwendung geben kann: Sie schickt die NutzerIn in den Reset und die
          * Administration auf die falsche Faehrte — und zwar alle gleichzeitig,
@@ -214,7 +210,7 @@ const EdUnlock = (() => {
    * wenn ueberhaupt nichts zu entsperren ist — kommt null zurueck, die
    * aufrufende Seite verhaelt sich dann wie bisher im gesperrten Zustand.
    */
-  /* ---- Vormerkfach der Anmeldung auflösen (M2-01, Schritt 3+4) ---------
+  /* ---- Vormerkfach der Anmeldung auflösen -------------------------------
    *
    * Die Anmeldung konnte den Datenschlüssel nicht setzen: Sie hat für mehrere
    * Rundenzahlen abgeleitet und wusste nicht, welche gilt. DIESE Seite weiß
@@ -238,17 +234,16 @@ const EdUnlock = (() => {
       return null;
     }
 
-    /* ---- Der Datenschlüssel hängt seit S10 an der Hülle (E-S10-04) ------
+    /* ---- Der Datenschlüssel hängt an der Hülle ---------------------------
      *
-     * Bis Web 19.7.0 stand hier `setDataKey(vor.dk[…])` — die Hälfte WAR der
-     * Datenschlüssel. Jetzt entscheidet das Präfix der Hülle: `edka1:<k>:`
+     * Das Präfix der Hülle entscheidet: `edka1:<k>:`
      * verlangt HKDF mit dem Anteil zu <k>, alles andere die Hälfte
      * unverändert.
      *
      * Lässt sich der Schlüssel nicht bilden, ist das Fach wertlos: Der Anteil
      * zu dieser Hülle wird nicht ausgeliefert. Dann räumt diese Funktion ab
      * und überlässt es dem Dialog, die Lage zu erklären — er nennt die
-     * erwartete Kennung, statt „Passwort falsch" zu behaupten (E-S10-09). */
+     * erwartete Kennung, statt „Passwort falsch" zu behaupten. */
     const anteile = (typeof KONTO_ANTEILE !== 'undefined') ? KONTO_ANTEILE : null;
     let dk;
     try {
@@ -257,9 +252,8 @@ const EdUnlock = (() => {
       EdCrypto.vergissAbleitungen();
       return null;
     }
-    /* Der Datenschlüssel lebt nur in dieser Funktion (R17-25): Er öffnet
-     * gleich die Hülle, und der Inhaltsschlüssel geht als CryptoKey in die
-     * Ablage. Bis 23.3.x lag er danach im sessionStorage. */
+    /* Der Datenschlüssel lebt nur in dieser Funktion: Er öffnet gleich die
+     * Hülle, und der Inhaltsschlüssel geht als CryptoKey in die Ablage. */
     let ckHex = null;
     if (wrap) {
       try { ckHex = await EdCrypto.huelleOeffnen(dk, wrap); }
@@ -267,11 +261,11 @@ const EdUnlock = (() => {
     }
     let huellen = [wrap];
     /* Das Token für das Paar des Rückwegs, BEVOR das Fach geräumt wird
-     * (Konzept RW, E-RW-02; siehe `rueckwegAnlegen()`). Hebt die Umstellung
+     * (siehe `rueckwegAnlegen()`). Hebt die Umstellung
      * unten die Rundenzahl an, gilt danach das neue — dort wird es ersetzt. */
     rwToken = vor.tk[String(kdfIter)] || null;
 
-    /* ---- Stille Umstellung (Schritt 4; seit S10 mit zwei Anlässen) -----
+    /* ---- Stille Umstellung ----------------------------------------------
      *
      * Jetzt liegt alles beisammen, was sie braucht, und zwar nur jetzt: das
      * Passwort ist zwar längst weg, aber seine beiden Ableitungen sind da,
@@ -282,7 +276,7 @@ const EdUnlock = (() => {
      * die Prüfsumme gleich, und deshalb bleiben alle verschlüsselten Angaben
      * unangetastet.
      *
-     * ZWEI ANLÄSSE, EIN AUFRUF (E-S10-07):
+     * ZWEI ANLÄSSE, EIN AUFRUF:
      *
      *   RUNDENZAHL  Das Konto rechnet unter dem Zielwert. Dann ändert sich
      *               die Hälfte — und mit ihr Token und Datenschlüssel.
@@ -303,7 +297,7 @@ const EdUnlock = (() => {
     /* Ohne ausgelieferten Anteil wird NICHT umgestellt — weder zurück noch
      * hin. Das deckt drei Lagen mit derselben Zeile ab: `fehlt` (es gibt
      * keinen), `abweichend` (es wird keiner herausgegeben) und `demo` (das
-     * Demo-Konto bleibt auf `edk1:`, E-P1-19). */
+     * Demo-Konto bleibt auf `edk1:`). */
     const huelleUmstellen = !!(wrap && kennung
                                && EdCrypto.huelleKennung(wrap) !== kennung);
     const neuIter = rundenAnheben ? ziel : kdfIter;
@@ -326,7 +320,7 @@ const EdUnlock = (() => {
           nutzlast.wrap_pw   = await EdCrypto.huelleBauen(dkNeu, ckHex, kennung);
           nutzlast.key_check = await EdCrypto.contentKeyCheck(ckHex);
         }
-        /* OHNE `o.vorgang` (Schritt 15 AP8): Diese Stelle zeigt NICHTS an --
+        /* OHNE `o.vorgang`: Diese Stelle zeigt NICHTS an --
          * der Kommentar im catch unten sagt, warum. Ein Satzanfang waere der
          * Anfang eines Satzes, den niemand liest. `EdApi` wird zur AUFRUFZEIT
          * gelesen, nie zur Ladezeit. */
@@ -334,7 +328,7 @@ const EdUnlock = (() => {
         if (antwort.ok) {
           /* Erst JETZT gilt die neue Hülle — der Server hat bestätigt.
            * Andersherum stünde im Browser ein Schlüssel, der an eine Hülle
-           * gebunden ist, die es nicht gibt (M2-07). */
+           * gebunden ist, die es nicht gibt. */
           rwToken = vor.tk[String(neuIter)] || rwToken;
           if (nutzlast.wrap_pw) {
             /* DIE HÜLLE DIESER SEITE IST JETZT VERALTET.
@@ -343,10 +337,9 @@ const EdUnlock = (() => {
              * Datenbank steht seit einer Zeile eine andere. Der
              * Inhaltsschlüssel ist derselbe; er wird an BEIDE gebunden: an
              * die alte, nach der diese Seite fragt, und an die neue, die die
-             * nächste Seite trägt. Bis 23.3.x entpackte die nächste Seite
-             * ihn still mit dem neuen Datenschlüssel neu; den gibt es seit
-             * R17-25 nicht mehr, und ohne die zweite Bindung erschiene dort
-             * der Entsperrdialog unmittelbar nach dem Anmelden. */
+             * nächste Seite trägt. Der Datenschlüssel ist nach dem
+             * Entsperren fort; ohne die zweite Bindung erschiene dort der
+             * Entsperrdialog unmittelbar nach dem Anmelden. */
             huellen = [wrap, nutzlast.wrap_pw];
           }
         }
@@ -359,14 +352,13 @@ const EdUnlock = (() => {
          * Der Datenschlüssel bleibt in diesem Fall der ALTE, und die Hülle
          * der Seite passt weiterhin zu ihm.
          *
-         * Seit AP8 wirft die Sendestelle selbst NICHT mehr: Ein Fehlschlag
+         * Die Sendestelle selbst wirft NICHT: Ein Fehlschlag
          * kommt als `antwort.ok === false` zurueck, und die fertige Meldung
          * von `EdApi` wird hier bewusst nicht gelesen.
          *
          * WAS IN DIESEM catch LANDET, ist damit vor allem eines: die
          * Krypto-Schritte darueber. Eine abschliessende Aufzaehlung ist es
-         * nicht, und die erste Fassung dieses Kommentars behauptete genau
-         * das -- ein Gegenleser hat es gefunden. Alles, was in diesem
+         * nicht: Alles, was in diesem
          * Rumpf wirft, landet hier und verschwindet. Wer hier einen
          * stillen Ausfall sucht, sucht deshalb nicht nur bei der
          * Verschluesselung. */
@@ -377,11 +369,11 @@ const EdUnlock = (() => {
     return EdKeyGuard.ablegen(ckHex, huellen);
   }
 
-  /* ---- Stille Anhebung der Einsatz-Notizen (S9/AP7, E-S9-01) -------------
+  /* ---- Stille Anhebung der Einsatz-Notizen -------------------------------
    *
-   * Bis Web 19.0.0 lagen die Notizen des Einsatzes im KLARTEXT in der Spalte
-   * `missions.notes`. Sie gehören in den `pat_blob` — und dorthin bringen kann
-   * sie nur der Browser, denn nur er hat den Schlüssel. Sobald einer da ist,
+   * Altbestand kann die Notizen des Einsatzes im KLARTEXT in der Spalte
+   * `missions.notes` tragen. Sie gehören in den `pat_blob` — und dorthin
+   * bringen kann sie nur der Browser, denn nur er hat den Schlüssel. Sobald einer da ist,
    * läuft das hier im Hintergrund.
    *
    * WARUM HIER UND NICHT BEI `loeseVormerkung`: Die KDF-Anhebung hängt dort,
@@ -452,18 +444,18 @@ const EdUnlock = (() => {
     }
   }
 
-  /* ---- Das Paar des Rückwegs (Konzept RW, RW-02, E-RW-02) ---------------
+  /* ---- Das Paar des Rückwegs ---------------------------------------------
    *
    * DIE EINE STELLE, AN DER ES STILL ENTSTEHT. Es braucht zweierlei: das
-   * Anmelde-Token als Nachweis des Passworts (E-RW-06) — das gibt es nur im
+   * Anmelde-Token als Nachweis des Passworts — das gibt es nur im
    * Vormerkfach, also nur unmittelbar nach einer Anmeldung — und den
    * Inhaltsschlüssel, der den privaten Teil verpackt. `loeseVormerkung()`
    * merkt sich das Token, bevor es das Fach räumt; sobald der
    * Inhaltsschlüssel da ist, auf welchem der drei Wege auch immer, geht
    * beides an `EdRueckweg.anlegen()`.
    *
-   * NUR BEI `RW_STAND === 'fehlt'`: 'da' hat eins, 'demo' bekommt keins
-   * (E-RW-15), 'spalten' heißt, die Migration steht aus. `rueckweg.js` wird
+   * NUR BEI `RW_STAND === 'fehlt'`: 'da' hat eins, 'demo' bekommt keins,
+   * 'spalten' heißt, die Migration steht aus. `rueckweg.js` wird
    * auch nur dann ausgeliefert (`ui_krypto_bootstrap()`).
    *
    * NIEMAND WARTET DARAUF, wie bei den Notizen: kein `await`, kein Fehler
@@ -479,7 +471,7 @@ const EdUnlock = (() => {
     window.EdRueckweg.anlegen(ck, token);
   }
 
-  /* ---- Das Schlüsselpaar des Kontos (S11-03, Konzept S11 3.1) -----------
+  /* ---- Das Schlüsselpaar des Kontos --------------------------------------
    *
    * DIESELBE STELLE WIE DER RÜCKWEG, weil es dasselbe braucht: den
    * Inhaltsschlüssel und — zum Anlegen — das Anmelde-Token als Nachweis des
@@ -489,7 +481,7 @@ const EdUnlock = (() => {
    *   KP_STAND 'fehlt'  mit Token: still anlegen (`EdKontopaar.anlegen`)
    *   KP_STAND 'da'     abgleichen (`EdKontopaar.abgleichen`) — einmal je
    *                     Seite; eine Abweichung sagt die Seite und meldet der
-   *                     Server (E-S11-14, zweiter Riegel)
+   *                     Server (zweiter Riegel)
    *
    * Niemand wartet darauf, wie beim Rückweg: kein `await`, kein Fehler nach
    * außen. */
@@ -538,13 +530,12 @@ const EdUnlock = (() => {
   }
 
   /* ---- Nach der Anmeldung, auch auf einer Seite ohne Schlüsselbedarf ------
-   * (Konzept RW, RW-02, F-RW-14).
    *
    * Das Vormerkfach löst sonst erst die Seite auf, die den Inhaltsschlüssel
    * BRAUCHT. Die Startseite eines Kontos ohne Diensttag braucht ihn nie —
    * gemessen: Anmeldung, `index.php`, Fach belegt, kein Paar; erst
    * `suche.php` legte es an. Genau die Konten der BetreiberInnen haben oft
-   * keine Einsätze, und für sie ist der Rückweg gedacht (E-RW-08).
+   * keine Einsätze, und für sie ist der Rückweg gedacht.
    *
    * Deshalb löst diese Stelle das Fach selbst auf, wenn ein Paar fehlt:
    * nach dem Laden der Seite (die Konstanten stehen HINTER diesem Skript),
@@ -555,7 +546,7 @@ const EdUnlock = (() => {
    * `kdf_upgrade.php`, und der zweite setzte danach den alten
    * Datenschlüssel wieder ein. */
   async function nachDerAnmeldung() {
-    /* SEIT S11-03 AUCH FÜR DAS SCHLÜSSELPAAR DES KONTOS: Fehlt es, braucht
+    /* AUCH FÜR DAS SCHLÜSSELPAAR DES KONTOS: Fehlt es, braucht
      * es dasselbe Token aus dem Vormerkfach wie der Rückweg. */
     const kpFehlt = typeof KP_STAND !== 'undefined' && KP_STAND === 'fehlt';
     if ((typeof RW_STAND === 'undefined' || RW_STAND !== 'fehlt') && !kpFehlt) { return; }

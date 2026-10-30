@@ -12,10 +12,10 @@ enum class Ansicht {
     /** Im Dienst: der eine große Knopf (oder, ohne Phasen, nur „beenden"). */
     LAUFEND,
 
-    /** Die Phasenliste — Übersicht und Direktwahl in einem (E-S4-21c). */
+    /** Die Phasenliste — Übersicht und Direktwahl in einem. */
     PHASENLISTE,
 
-    /** Die Rückfrage vor dem Einsatzabschluss (E-S4-21b). */
+    /** Die Rückfrage vor dem Einsatzabschluss. */
     ABSCHLUSSFRAGE,
 
     /** Die Rückfrage vor dem Dienstende. */
@@ -41,40 +41,39 @@ data class Uhrzustand(
 
     /**
      * Wie es um die Ortung des Handys steht — ein
-     * [org.genem.nadoku.gemeinsam.Ortungscode], oder `null` (E-S5Z-15).
+     * [org.genem.nadoku.gemeinsam.Ortungscode], oder `null`.
      *
      * **`null` heisst „das Handy sagt nichts dazu"** und nicht „alles gut" —
      * derselbe dritte Zustand wie bei [handyErreichbar] und aus demselben
-     * Grund (B-S4-09). Eine ältere Handy-Fassung schickt das Feld nicht mit;
+     * Grund. Eine ältere Handy-Fassung schickt das Feld nicht mit;
      * die Uhr zeigt dann nichts an, statt etwas zu behaupten.
      */
     val ortung: String? = null,
 
-    /** Die Anzeige ist gesperrt (E-S4-21d). */
+    /** Die Anzeige ist gesperrt. */
     val gesperrt: Boolean = false,
 
     /** Wann zuletzt bedient wurde — Grundlage der Sperrfrist. */
     val letzteBedienungMs: Long = 0,
 
     /**
-     * Ist das Handy erreichbar? (E-S4-10)
+     * Ist das Handy erreichbar?
      *
      * **`null` heißt „noch nichts versucht"** — und dieser dritte Zustand ist
-     * der Punkt (Fund B-S4-09). Vorher stand hier `true` als Vorgabe, und die
-     * Startseite meldete „Handy verbunden", bevor je eine Nachricht
-     * hinausgegangen war. Das ist dieselbe Art Aussage, gegen die E-S4-47
-     * gebaut ist: eine Behauptung über etwas, das die Uhr nicht wissen kann.
+     * der Punkt. Mit `true` als Vorgabe meldete die Startseite „Handy
+     * verbunden", bevor je eine Nachricht hinausgegangen ist: eine
+     * Behauptung über etwas, das die Uhr nicht wissen kann.
      *
      * `true`/`false` sind Beobachtungen am letzten Sendeversuch, keine
      * Verbindungsanzeige — mehr gibt der Data Layer nicht her.
      */
     val handyErreichbar: Boolean? = null,
 
-    /** Wie viele Ereignisse warten auf ihre Quittung? (C2) */
+    /** Wie viele Ereignisse warten auf ihre Quittung? */
     val gepuffert: Int = 0,
 
     /**
-     * Hat das Handy den Dienststart übernommen? (E-S4-10)
+     * Hat das Handy den Dienststart übernommen?
      *
      * DER UNTERSCHIED WIRD ANGEZEIGT UND NICHT VERSCHWIEGEN: „Ein an der Uhr
      * ausgelöster Dienststart wirkt erst mit Zustellung ans Handy — vorher
@@ -91,8 +90,8 @@ data class Uhrzustand(
     /**
      * Trägt der große Knopf eine nächste Phase — oder den Abschluss?
      *
-     * Nach der letzten Phase wird derselbe Knopf zu „Einsatz abschließen"
-     * (E-S4-21b). Ohne laufenden Einsatz trägt er Phase 2: Sie startet ihn.
+     * Nach der letzten Phase wird derselbe Knopf zu „Einsatz abschließen".
+     * Ohne laufenden Einsatz trägt er Phase 2: Sie startet ihn.
      */
     val naechstePhase: Int?
         get() = when {
@@ -100,7 +99,7 @@ data class Uhrzustand(
             else -> Phasen.naechste(laufendePhase)
         }
 
-    /** Zeigt die Uhr in diesem Modus überhaupt Phasenknöpfe? (E-S4-20) */
+    /** Zeigt die Uhr in diesem Modus überhaupt Phasenknöpfe? */
     val mitPhasen: Boolean get() = modus == Modus.MIT_PHASENKNOEPFEN
 }
 
@@ -127,7 +126,7 @@ sealed interface Uhrereignis {
     /** Eine Rückfrage wurde verworfen, oder zurück aus der Liste. */
     data class Verworfen(val jetztMs: Long) : Uhrereignis
 
-    /** Die freie Zusatztaste, falls das Gerät eine meldet (E-S4-21a). */
+    /** Die freie Zusatztaste, falls das Gerät eine meldet. */
     data class FreieTaste(val jetztMs: Long) : Uhrereignis
 
     /** Ein Halten wurde beendet — der Weg aus der Sperre. */
@@ -137,11 +136,11 @@ sealed interface Uhrereignis {
     data class Zeitschlag(val jetztMs: Long) : Uhrereignis
 }
 
-/** Was das Handy tun soll. Die Uhr tut selbst nichts (E-S4-11). */
+/** Was das Handy tun soll. Die Uhr tut selbst nichts. */
 sealed interface Uhrwirkung {
     /**
      * @param eroeffnet Diese Phase **beginnt** einen Einsatz — dann bildet die
-     *   Uhr eine `wm-`-Kennung und schickt sie mit (E-S4-09). Sie ist der
+     *   Uhr eine `wm-`-Kennung und schickt sie mit. Sie ist der
      *   Idempotenz-Anker über den Funkabriss; ohne sie legte das Handy bei
      *   der Nachlieferung einen zweiten Einsatz an.
      */

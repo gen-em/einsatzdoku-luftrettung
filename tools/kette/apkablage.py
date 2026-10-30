@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""APK-Ablage — ein signiertes APK nach `server/apk/` legen, per FTPS (PK-08).
+"""APK-Ablage — ein signiertes APK nach `server/apk/` legen, per FTPS.
 
     python3 tools/kette/apkablage.py --art handy|uhr --datei nadoku-X.Y.Z.apk \\
             --ftp-server HOST --ftp-konto NAME --ftp-pass … [--ftp-pfad /]
@@ -14,14 +14,14 @@ Anlass: Nr. 100 (die App-Auslieferung lief von Hand), E-PK-23, E-PK-58/-59.
 DIE REIHENFOLGE IST DER RIEGEL. Hochladen unter `<name>.teil`, zurückholen,
 SHA-256 vergleichen, erst dann auf den endgültigen Namen umbenennen — und
 erst NACH dem Umbenennen die älteren Fassungen desselben Musters löschen
-(E-PK-59: nur die neueste bleibt liegen). Scheitert irgendein Schritt davor,
+(nur die neueste bleibt liegen). Scheitert irgendein Schritt davor,
 wird nichts gelöscht: Lieber zwei Fassungen im Ordner als keine.
 
 `apk_liste()` (`server/apk_lib.php`) zeigt nur Namen auf `*.apk`; ein
 `…apk.teil` erscheint deshalb nie auf dem Geräte-Reiter, auch nicht halb.
 
 ZWEI MUSTER, UND KEINES FASST DAS ANDERE AN. `handy` ist
-`nadoku-X.Y.Z.apk`, `uhr` ist `nadoku-uhr-X.Y.Z.apk` (Wear OS, E-PK-58).
+`nadoku-X.Y.Z.apk`, `uhr` ist `nadoku-uhr-X.Y.Z.apk` (Wear OS).
 Was im Ordner sonst liegt, bleibt liegen.
 
 DER FTPS-WEG IST DER DER ZIELPROBE: `curl` mit `--ssl-reqd`, Passwort über
@@ -158,7 +158,7 @@ def ablegen(art: str, datei: str, server: str, pfad: str, konto: str, pw: str,
         return 1
     sag(f"Liegt: {ordner}/{name}", geh)
 
-    # 4. ERST JETZT: ÄLTERE FASSUNGEN DESSELBEN MUSTERS (E-PK-59)
+    # 4. ERST JETZT: ÄLTERE FASSUNGEN DESSELBEN MUSTERS
     alt = sorted(n for n in namen if n != name and (
         MUSTER[art].match(n) or (n.endswith(TEIL) and MUSTER[art].match(n[:-len(TEIL)]))))
     if alt:

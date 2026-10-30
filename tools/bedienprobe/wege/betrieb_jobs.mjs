@@ -1,7 +1,7 @@
 /* Wege der Seite Betrieb → Hintergrundjobs (`betrieb_jobs.php`).
  * ===========================================================================
  *
- * Entstanden mit R4-11 (Backlog Nr. 250): Anhalten und Aufheben leiten in die
+ * Anhalten und Aufheben leiten in die
  * Karte „Zustand" um; Neuladen setzt die Pause nicht ein zweites Mal. Der
  * Pausenhinweis der Karte sagt dasselbe wie die Meldung („… angehalten bis"),
  * solange die Pause gilt — `neuladenPruefen()` zählt deshalb Treffer.

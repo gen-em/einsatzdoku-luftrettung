@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 require_once __DIR__ . '/auth_guard.php';
-/* SEIT P5c/AP4 AUCH DER SUPPORT — mit zwei Reitern, lesend
+/* AUCH DER SUPPORT — mit zwei Reitern, lesend
  * (`protokoll_reiter_sichtbar()`). Die eine Handlung der Seite, das Laden
  * eines Archivs, fragt weiterhin die BetreiberIn. */
 require_support();
@@ -9,7 +9,7 @@ require_once __DIR__ . '/protokoll_archiv_lib.php';
 require_once __DIR__ . '/format_lib.php';   // datum_zeit_text(), datum_text(), zahl_text(), groesse_text()
 
 /**
- * VERWALTUNG → PROTOKOLL (P5c/AP2, E-P5c-02, -10, -11, -26, -38; Bild M-P5c-01a)
+ * VERWALTUNG → PROTOKOLL
  * ===========================================================================
  *
  * EINE SEITE, EIN ORT. Was die Rolle nicht darf, zeigt die Seite nicht:
@@ -21,10 +21,10 @@ require_once __DIR__ . '/format_lib.php';   // datum_zeit_text(), datum_text(), 
  * EIN REITER, DEN DIE ROLLE NICHT SIEHT, IST 403 — auch über die Adresse.
  * Die Rollenprobe (`tools/proben/rollen/`) fragt jeden Reiter mit jeder Rolle.
  *
- * KEIN ZUGRIFFSPROTOKOLL. Der Satz im Kopf ist die Zusage aus E-P5c-01 und
- * V1: Wer wann welchen Einsatz geöffnet hat, steht hier nicht.
+ * KEIN ZUGRIFFSPROTOKOLL. Der Satz im Kopf ist eine Zusage: Wer wann
+ * welchen Einsatz geöffnet hat, steht hier nicht.
  *
- * DIE FEHLERKENNUNG (E-P5c-26): Acht Hexzeichen im Suchfeld wechseln — nur
+ * DIE FEHLERKENNUNG: Acht Hexzeichen im Suchfeld wechseln — nur
  * für die BetreiberIn — von jedem Reiter auf „System". Die Kennung nennt die
  * Fehlerseite; wer sie gemeldet bekommt, soll nicht raten müssen, wo sie
  * steht.
@@ -64,7 +64,7 @@ $reiter = (string)($_GET['r'] ?? ($sichtbar[0] ?? 'verwaltung'));
 $istArchiv = $reiter === 'archiv';
 if ($istArchiv ? !$betreiberin : !in_array($reiter, $sichtbar, true)) {
     /* Jobs und Sicherung sieht auch der Admin — dem Support stuende dort
-     * sonst „der BetreiberIn vorbehalten", und das stimmte nicht (F-P5c-100). */
+     * sonst „der BetreiberIn vorbehalten", und das stimmte nicht. */
     ui_abbruch(isset(PROTOKOLL_SEITE_REITER[$reiter]) || $istArchiv ? 403 : 404,
         isset(PROTOKOLL_SEITE_REITER[$reiter]) || $istArchiv
             ? 'Dieser Reiter des Protokolls ist der '
@@ -139,10 +139,9 @@ ui_seite_start(['titel' => 'Protokoll']);
        aufbewahrt <?= protokoll_archiv_behalten() ?> Tage.
        <a href="hilfe.php#das-archiv-nur-betreiberin">Handbuch: Archiv des Protokolls</a></p>
     <?php
-    /* WÄHREND EINES WECHSELS (H-SR-06, F-SR-82): Ein Archiv unter dem
+    /* WÄHREND EINES WECHSELS: Ein Archiv unter dem
      * BISHERIGEN ist nicht verloren — der Job hüllt es um und benennt es
-     * neu, dann lässt es sich wieder herunterladen. Bis Web 21.12.0 stand
-     * auch dafür der Satz „nur mit dem Schlüssel von damals". */
+     * neu, dann lässt es sich wieder herunterladen. */
     $kBisher = serverschluessel_alt_kennung();
     $umzuhuellen = array_values(array_filter($fremd,
         static fn(array $a): bool => $kBisher !== null && $a['kennung'] === $kBisher));
@@ -186,7 +185,7 @@ ui_seite_start(['titel' => 'Protokoll']);
           $bis = gmdate('Y-m-d H:i:s', (int)strtotime($bisRoh . ' UTC') - 1);
           $zeilen = is_array($m) ? array_sum(array_map('intval', (array)($m['zeilen'] ?? []))) : null;
           /* DIE KENNUNG WIE AUF DEM SCHLÜSSELBLATT — acht Zeichen am Stück,
-           * nicht in Vierergruppen wie im Bild M-P5c-01a: Wer vergleicht, legt
+          * nicht in Vierergruppen: Wer vergleicht, legt
            * das Blatt daneben. */
           $klein = 'Schlüssel ' . (string)$a['kennung']
                  . ($zeilen !== null ? ' · ' . zahl_text($zeilen) . ' Einträge' : '')
@@ -209,7 +208,7 @@ ui_seite_start(['titel' => 'Protokoll']);
               'text' => zeitraum_text($von, $bis),
               'klein' => $klein,
               'plaketten' => $plakette,
-              /* OHNE SYMBOL (E-P5c-26). Bei anderem Schlüssel gibt es nichts
+              /* OHNE SYMBOL. Bei anderem Schlüssel gibt es nichts
                * herunterzuladen, was sich öffnen ließe — dann kein Knopf. */
               'aktionen' => $a['passt'] ? ui_zeilenaktionen([
                   'titel' => 'Archiv ' . zeitraum_text($von, $bis),

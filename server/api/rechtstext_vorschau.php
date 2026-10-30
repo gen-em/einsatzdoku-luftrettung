@@ -2,7 +2,7 @@
 declare(strict_types=1);
 
 /**
- * VORSCHAU EINES RECHTSTEXTS BEIM TIPPEN (P5c/AP9, E-P5c-28, Nr. 121).
+ * VORSCHAU EINES RECHTSTEXTS BEIM TIPPEN.
  *
  * WAS ER TUT: Er nimmt Text und Standdatum aus dem Feld der Seite
  * „Rechtstexte" und gibt zurück, was `rt_html()` und `rt_stand_markup()`
@@ -15,8 +15,8 @@ declare(strict_types=1);
  * dann eine Seite, die es nicht gibt. Hier gibt es genau einen.
  *
  * DIE REIHENFOLGE IST DIE DES HAUSES (db.php, „Der Eingang der Endpunkte"):
- * Methode, ROLLE, Token, Ratenschutz, Rumpf. Die Rolle steht VOR dem Token
- * (Muster E-P5c-85), damit die Rollenprobe das Rollentor von der
+ * Methode, ROLLE, Token, Ratenschutz, Rumpf. Die Rolle steht VOR dem Token,
+ * damit die Rollenprobe das Rollentor von der
  * Token-Ablehnung unterscheiden kann.
  *
  * NUR ADMIN UND BETREIBERIN — dieselben, die die Seite öffnen dürfen
@@ -44,8 +44,7 @@ csrf_check();
  *
  * NUR DAS KONTO, NICHT DIE ADRESSE (Muster Topf `totp` in `login.php`). Mit
  * dem zweiten Argument allein zählte `rate_merkmale()` die Adresse mit, und
- * zwei Verwaltungskonten im selben Haus teilten sich den Topf — so stand es
- * im ersten Wurf (F-P5c-155). */
+ * zwei Verwaltungskonten im selben Haus teilten sich den Topf. */
 $merkmale = [rate_merkmal_kennung($userEmail)];
 if (!rate_erlaubt('rt_vorschau', null, $merkmale)) {
     json_out(['error' => 'gesperrt',

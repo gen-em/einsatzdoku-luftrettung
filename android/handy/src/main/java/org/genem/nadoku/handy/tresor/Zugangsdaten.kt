@@ -10,7 +10,7 @@ package org.genem.nadoku.handy.tresor
  *
  * KEIN `toString()` MIT INHALT. Die Vorgabe von `data class` würde den
  * Schlüssel in jede Protokollzeile schreiben, in der ein Objekt dieser Art
- * beiläufig auftaucht — E-S4-13: kein Klartext in Logs. Deshalb ist
+ * beiläufig auftaucht — und in Logs steht kein Klartext. Deshalb ist
  * `toString()` überschrieben; das ist keine Kosmetik, sondern die einzige
  * Stelle, an der ein Geheimnis sonst *unbeabsichtigt* austritt.
  */
@@ -18,11 +18,11 @@ data class Zugangsdaten(
     val geraeteKennung: String,
     val schluessel: String,
     /**
-     * Der öffentliche Schlüssel des Kontos, Base64 eines SEC1-Punkts (seit
-     * 0.18.0, S11-09, JSON-Vertrag 1a.3a). Damit verschließt das Handy Spur
-     * und Phasenorte. `null`: Die Kopplung stammt aus der Zeit davor, oder das
-     * Konto hatte beim Koppeln noch kein Schlüsselpaar — der Sender holt ihn
-     * dann über `status` nach (E-S11-80). Kein Geheimnis, aber er steht im
+     * Der öffentliche Schlüssel des Kontos, Base64 eines SEC1-Punkts
+     * (JSON-Vertrag 1a.3a). Damit verschließt das Handy Spur und Phasenorte.
+     * `null`: Die Kopplung ist eine alte ohne Schlüssel, oder das Konto hatte
+     * beim Koppeln noch kein Schlüsselpaar — der Sender holt ihn dann über
+     * `status` nach. Kein Geheimnis, aber er steht im
      * selben Tresor: eine Kopplung, eine Ablage.
      */
     val kontoschluessel: String? = null,

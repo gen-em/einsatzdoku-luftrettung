@@ -1,8 +1,8 @@
 /* Wege der Seite Betrieb → Status → Sicherheit (`betrieb_sicherheit.php`).
  * ===========================================================================
  *
- * Entstanden mit R4-11 (Backlog Nr. 250). Der ältere Weg dieser Seite steht
- * noch unter dem Namen seines Pakets (`p5a-ap8.mjs`, E-PK-15 steht aus).
+ * Der ältere Weg dieser Seite steht
+ * noch unter dem Namen seines Pakets (`p5a-ap8.mjs`).
  *
  * „Aufheben" leitet nach dem Bestätigen auf die Seite um; Neuladen hebt nichts
  * ein zweites Mal auf und schreibt kein zweites Ereignis. Die Sperre legt der

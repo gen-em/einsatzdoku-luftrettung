@@ -2,9 +2,9 @@
 declare(strict_types=1);
 
 /**
- * Die Weiche in `install.php` — traegt sie noch? (P5a/AP2, PP-1)
+ * Die Weiche in `install.php` — traegt sie noch?
  *
- * WOGEGEN. `install.php` beginnt seit Web 20.5.0 mit einer Versionspruefung:
+ * WOGEGEN. `install.php` beginnt mit einer Versionspruefung:
  * Auf PHP unter 8.2 zeigt sie eine Seite, die sagt, warum. Das nuetzt nur,
  * solange die Datei auf jener alten Fassung ueberhaupt noch UEBERSETZT werden
  * kann — PHP uebersetzt eine Datei vollstaendig, bevor es die erste Zeile

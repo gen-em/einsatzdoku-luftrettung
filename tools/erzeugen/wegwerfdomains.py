@@ -1,17 +1,17 @@
 #!/usr/bin/env python3
-"""Zieht `server/wegwerfdomains.txt` von der Quelle nach (P5b/AP3, E-P5b-23).
+"""Zieht `server/wegwerfdomains.txt` von der Quelle nach.
 
 WOFUER. Die Registrierung weist Wegwerfadressen ab. Die Liste dafuer liegt ALS
 DATEI im Repositorium und wird mit ausgeliefert — sie wird **nie zur Laufzeit
-geholt**, weil die Zusage „keine fremde Quelle zur Laufzeit" (R36, CLAUDE.md 4)
+geholt**, weil die Zusage „keine fremde Quelle zur Laufzeit" (CLAUDE.md 4)
 keine Ausnahme kennt, auch nicht fuer eine Textdatei. Der Preis dafuer ist
 dieser Handgriff: Die Datei altert genau so lange, wie niemand ihn macht.
 
 UND SIE ALTERT IN EINE RICHTUNG. Neue Wegwerfanbieter kommen dazu, die Datei
 bleibt stehen. Auffallen kann das niemandem — eine durchgelassene
 Registrierung sieht aus wie eine richtige, und die Seite antwortet ohnehin auf
-jede gleich (E-P5b-13). Deshalb steht der Lauf im Auslieferungs-Runbook
-(`docs/Technik.md`, Abschnitt 7) und nicht im guten Willen. Backlog Nr. 230.
+jede gleich. Deshalb steht der Lauf im Auslieferungs-Runbook
+(`docs/Technik.md`, Abschnitt 13) und nicht im guten Willen.
 
     python3 tools/erzeugen/wegwerfdomains.py            # holen und pruefen
     python3 tools/erzeugen/wegwerfdomains.py --schreiben  # auch schreiben

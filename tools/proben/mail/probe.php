@@ -3,14 +3,14 @@ declare(strict_types=1);
 
 /**
  * MAILPROBE — die Warteschlange, der Katalog und die Frist, gegen einen
- * echten SMTPS-Gegenpart (P5a/AP5).
+ * echten SMTPS-Gegenpart.
  *
  * Anlass: Nr. 204 — smtp_letzter_fehler() nannte den Grund des vorigen Versuchs
  *
  * Aufruf:  php tools/proben/mail/probe.php
  *
- * WAS SIE MISST UND WARUM SIE NOETIG IST. Bis Web 20.7.0 rief jede der zehn
- * Versandstellen `smtp_send()` unmittelbar; scheiterte es, war die Nachricht
+ * WAS SIE MISST UND WARUM SIE NOETIG IST. Riefe jede der zehn
+ * Versandstellen `smtp_send()` unmittelbar, waere die Nachricht beim Scheitern
  * weg. Die Warteschlange behauptet, dass das nicht mehr passiert. Eine
  * Behauptung ueber Fehlerfaelle laesst sich nur gegen eine Gegenstelle
  * pruefen, die auf Kommando scheitert — deshalb `gegenstelle.py` und nicht
@@ -34,9 +34,9 @@ declare(strict_types=1);
  * beim regulaeren Ende, bei einer Ausnahme UND bei einem Abbruch
  * (`register_shutdown_function`). Wer sie unterbricht, findet trotzdem die
  * eigene Datei wieder; die Sicherung liegt im Temp-Verzeichnis der Probe
- * (Pfad auf stderr). Bis Web 23.0.3 lag sie als `config.php.mailprobe` NEBEN
- * der Datei, im Webverzeichnis, unter einem Namen, den der Webserver als Text
- * ausliefert (R17-19, F-R17-55).
+ * (Pfad auf stderr). Laege sie als `config.php.mailprobe` NEBEN
+ * der Datei, im Webverzeichnis, stuende sie unter einem Namen, den der
+ * Webserver als Text
  */
 
 $wurzel = dirname(__DIR__, 3);
@@ -132,6 +132,14 @@ $cfg['smtp'] = ['host' => '127.0.0.1', 'port' => $PORT,
 file_put_contents($cfgPfad, "<?php return " . var_export($cfg, true) . ";\n");
 
 require_once $wurzel . '/server/mail_lib.php';
+/* DIE VORWERTE MERKEN. Die Probe setzt Instanzname, Kontakt und
+ * Betriebsadresse fuer ihre Faelle; am Ende kommt zurueck, was vorher dort
+ * stand — nicht ein leerer Wert, der eine eingerichtete Anlage stumm
+ * umstellte. */
+$mpVorwerte = [];
+foreach (['instanz_name', 'instanz_kontakt', 'betrieb_mail'] as $mpK) {
+    $mpVorwerte[$mpK] = (string)(app_state_lesen($mpK) ?? '');
+}
 
 /* ---- Zaehlwerk ---------------------------------------------------------- */
 
@@ -179,23 +187,23 @@ $beispiel = [
     'pakete'     => 42,
     'ordner'     => 7,
     'rat'        => 'Alte Pakete loeschen.',
-    // Seit P5b: Loeschantrag (termin) und Kontomenge (einsaetze, speicher).
-    // Fehlten sie hier, meldete die Probe rot, ohne dass ein Text falsch war (F-RP-04).
+    // Loeschantrag (termin) und Kontomenge (einsaetze, speicher).
+    // Fehlten sie hier, meldete die Probe rot, ohne dass ein Text falsch war.
     'termin'     => '23.10.2026',
     'einsaetze'  => '1 234 von 1 500',
     'speicher'   => '412 MB von 500 MB',
-    // Seit P5c/AP1: der Text der Ankuendigung fuer die Rundmail.
+    // Der Text der Ankuendigung fuer die Rundmail.
     'text'       => 'Wartung am Dienstag, 20:00 bis 21:00.',
-    // Seit SR-09: der Name eines Passkeys (passkey_angelegt, passkey_entfernt).
+    // Der Name eines Passkeys (passkey_angelegt, passkey_entfernt).
     'bezeichnung' => 'Handy',
-    // Seit SR-03: Beginn und Abschluss eines Wechsels des Serverschluessels
-    // (serverschluessel_gewechselt, seit Web 21.12.1 dazu
+    // Beginn und Abschluss eines Wechsels des Serverschluessels
+    // (serverschluessel_gewechselt, dazu
     // serverschluessel_abgeschlossen; `neu` und `alt` sind dort Kennungen —
     // die Adressen oben rendern genauso). `weg` ist kein Pflichtwert: ohne ihn
     // der Wechsel ueber die Karte, mit 'hand' einer, der von Hand in
-    // config.php stand (E-SR-74) — die Schluesselwechselprobe reiht ihn ein.
+    // config.php stand — die Schluesselwechselprobe reiht ihn ein.
     'weg'         => 'oberflaeche',
-    // Seit R17-20: die Frist eines Adresswechsels durch die Verwaltung
+    // Die Frist eines Adresswechsels durch die Verwaltung
     // (adresswechsel_verwaltung) und das Zielkonto einer Freigabe
     // (kontobackup_freigegeben).
     'bis'         => '02.11.2026 um 07:00 Uhr',
@@ -219,7 +227,7 @@ foreach ($katalog as $k => $e) {
 pruef('Kein Eintrag erzeugt leeren Betreff oder Text', $leer === [],
       count($katalog) . ' Eintraege gerendert');
 
-/* SEIT SR-04 (Schritt 18): Die Mail `totp_zurueckgesetzt` hat drei Fassungen
+/* Die Mail `totp_zurueckgesetzt` hat drei Fassungen
  * — Verwaltung, Wiederherstellungsschluessel, Notzugang. Der Notzugang steht
  * nur offen, wenn es genau eine BetreiberIn gibt; ein Verweis „melde dich
  * bei der Verwaltung" ginge an die Empfaengerin selbst. */
@@ -288,7 +296,7 @@ pruef('Empfaenger, Betreff und Rumpf sind geleert',
       'empfaenger=' . var_export($z['empfaenger'] ?? null, true));
 pruef('Zustellung unter 2 s', $d < 2.0, sprintf('%.2f s', $d));
 
-/* DIE KODIERUNG AUF DER LEITUNG (R17-22, Backlog Nr. 401). Bis Web 23.3.0
+/* DIE KODIERUNG AUF DER LEITUNG. Frueher
  * gingen Umlaute und Gedankenstriche als rohe 8-Bit-Bytes hinaus, ohne
  * `Content-Transfer-Encoding` — ein strenger Empfaenger darf sie verwerfen.
  * Gemessen an dem, was die Gegenstelle mitgeschnitten hat: die Kopfzeile,
@@ -313,7 +321,7 @@ pruef('… und dekodiert wieder UTF-8 mit Umlauten und dem Link',
 
 /* ======================================================================== */
 abschnitt('3a  Ohne Benutzer oder Passwort — kein Versuch (R17-22, F-R17-46)');
-/* Bis Web 23.3.0 galt ein Mailserver ohne Anmeldedaten als eingerichtet,
+/* Frueher galt ein Mailserver ohne Anmeldedaten als eingerichtet,
  * `smtp_send()` schickte trotzdem `AUTH LOGIN` mit zwei Warnungen und
  * scheiterte. Die Betreiberin hat entschieden: Die Anmeldung ist Pflicht.
  * Also: nicht eingerichtet, die Probe sagt warum, und `smtp_send()` baut
@@ -534,13 +542,13 @@ pruef('Mit Einstellung: genau diese eine',
 /* ======================================================================== */
 abschnitt('13  Das Fehlerprotokoll nennt keinen Empfaenger');
 
-/* SEIT P5c/AP3 STEHT DIE MELDUNG IM REITER SYSTEM (`system_melden()`), nicht
- * mehr in der Datei von `error_log`. Bis dahin las dieser Abschnitt die
+/* DIE MELDUNG STEHT IM REITER SYSTEM (`system_melden()`), nicht
+ * in der Datei von `error_log`. Frueher las dieser Abschnitt die
  * Datei — und waere danach blind gewesen: 0 Byte, also auch 0 Adressen,
- * und die erste Pruefung gruen (F-P5c-96). Jetzt verlangt er einen Eintrag,
+ * und die erste Pruefung gruen. Jetzt verlangt er einen Eintrag,
  * bevor er ihn nach der Adresse absucht, und haelt dessen Kennung gegen die
  * Fehlerspalte der Warteschlange — die Kennung ist der Faden zwischen
- * Ursache und Adressat (E-P5a-37). */
+ * Ursache und Adressat. */
 $sysVorher = (int)$pdo->query('SELECT COALESCE(MAX(id), 0) FROM protokoll_ereignisse')->fetchColumn();
 mp_gegenstelle('ablehnen');
 $pdo->exec('DELETE FROM mail_warteschlange');
@@ -566,7 +574,7 @@ foreach ($smtpZeilen as $z) {
 /* ======================================================================== */
 abschnitt('14  Rundmail — nur einreihen, an alle erreichbaren, einmal je Tag');
 
-/* ANLASS: Nr. 296 (P5c/AP1). `mail_einreihen()` versuchte jede Nachricht
+/* `mail_einreihen()` versuchte jede Nachricht
  * sofort, bis zu MAIL_BUDGET_S je Stueck; eine Rundmail an vierzig Konten
  * haette den Seitenaufruf bis zu 200 s aufgehalten. Gemessen wird deshalb
  * GEGEN EINEN SCHWEIGENDEN SERVER: Versuchte die Rundmail doch sofort, hinge
@@ -673,9 +681,7 @@ try {
 
 /* ======================================================================== */
 $pdo->exec('DELETE FROM mail_warteschlange');
-app_state_setzen('instanz_name', '');
-app_state_setzen('instanz_kontakt', '');
-app_state_setzen('betrieb_mail', '');
+foreach ($mpVorwerte as $mpK => $mpW) { app_state_setzen($mpK, $mpW); }
 mp_aufraeumen();
 
 echo "\n" . str_repeat('=', 74) . "\n";

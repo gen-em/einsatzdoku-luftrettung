@@ -6,7 +6,7 @@ require_once __DIR__ . '/../backup_lib.php';      // edbak_spuren_schreiben()
 /**
  * POST api/backup_spuren_restore.php — die Spuren eines Backups zurueckspielen.
  *
- * WOFUER (Konzept S2, 3.2.4). Der Kern ist eingespielt; der Server hat dabei
+ * WOFUER. Der Kern ist eingespielt; der Server hat dabei
  * gesagt, unter welcher Kennung jede `spur_ref` angelegt wurde. Jetzt kommen
  * die Spuren, teilweise — hoechstens 2 MB je Anfrage.
  *
@@ -14,11 +14,10 @@ require_once __DIR__ . '/../backup_lib.php';      // edbak_spuren_schreiben()
  *                     "stuecke": [{seq_from, punkte, ts_von, ts_bis, huelle,
  *                                  n_original?}, …]}, …]}
  *
- * SEIT WEB 22.5.0 NUR VERSCHLOSSEN (S11-06b). Bis dahin kamen hier SPUR1-
- * Blobs an, also Punkte im Klartext. Der Browser nimmt die Punktlisten der
+ * NUR VERSCHLOSSEN. Der Browser nimmt die Punktlisten der
  * Nutzlast 13, verschliesst sie mit dem oeffentlichen Schluessel des Kontos
- * und schickt Stuecke (bis Web 22.7.0 las er dazu SPUR1 aus 8 bis 12);
- * eine lange Spur verteilt er auf mehrere Anfragen. Ein Blob wird mit 400
+ * und schickt Stuecke; eine lange Spur verteilt er auf mehrere Anfragen.
+ * Ein SPUR1-Blob (Punkte im Klartext) wird mit 400
  * abgewiesen, und zwar die ganze Anfrage, bevor etwas liegt.
  * Antwort: {"geschrieben": 12, "uebersprungen": 3, "abgelehnt": [{…}]}
  *
@@ -38,9 +37,8 @@ require_once __DIR__ . '/../backup_lib.php';      // edbak_spuren_schreiben()
  *    fortsetzen lassen: Eine Spur, die schon im Klartext liegt, wird nicht
  *    ergaenzt, und ein Stueck, das schon liegt, nicht doppelt geschrieben.
  *
- * DIE HOEHE DES EINSATZORTS RECHNET HIER NIEMAND MEHR (F-S11-45). Bis
- * Web 22.4.0 stand sie hier, aus der eben geschriebenen Klartextspur; seit
- * S11-06b traegt sie der `pat_blob`, den der Browser aus der Datei fuellt.
+ * DIE HOEHE DES EINSATZORTS RECHNET HIER NIEMAND: Sie traegt der
+ * `pat_blob`, den der Browser aus der Datei fuellt.
  */
 
 /** Hoechstens so viele Spuren je Anfrage — die Groesse deckelt der Browser. */
@@ -48,7 +46,7 @@ const BACKUP_SPUREN_RESTORE_MAX = 500;
 
 try {
     api_methode();
-    csrf_check();   // Feld ODER Kopfzeile X-CSRF (Nr. 67)
+    csrf_check();   // Feld ODER Kopfzeile X-CSRF
 
     $b = api_rumpf();
     if (!isset($b['spuren']) || !is_array($b['spuren'])) {
@@ -61,13 +59,12 @@ try {
                              . ' Aufzeichnungen je Anfrage.'], 400);
     }
 
-    /* DIE ARBEIT STEHT IN backup_lib.php (S2/AP6).
+    /* DIE ARBEIT STEHT IN backup_lib.php.
      *
-     * Sie stand bis Web 11.2.0 hier — und das Admin-Backup braucht seit
-     * dem Umbau auf das mehrteilige Rohpaket genau dasselbe. Ein zweiter Weg
-     * waere ein zweiter Ort, an dem die Eigentumspruefung, die Blobpruefung
-     * und das Ueberspringen vorhandener Spuren zu vergessen sind. Dieser
-     * Endpunkt ist seitdem die Schale: Rumpf pruefen, Grenze halten,
+     * Das Admin-Backup braucht mit dem mehrteiligen Rohpaket genau dasselbe.
+     * Ein zweiter Weg waere ein zweiter Ort, an dem die Eigentumspruefung,
+     * die Blobpruefung und das Ueberspringen vorhandener Spuren zu vergessen
+     * sind. Dieser Endpunkt ist die Schale: Rumpf pruefen, Grenze halten,
      * antworten. */
     foreach ($liste as $s) {
         if (is_array($s) && isset($s['blob'])) {

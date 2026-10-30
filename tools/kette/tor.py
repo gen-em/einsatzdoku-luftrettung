@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
-"""Die Tore der Auslieferungskette — Backup, Wartung, Zustand (P5a/AP1).
+"""Die Tore der Auslieferungskette — Backup, Wartung, Zustand.
 
 WOZU ES DIESE DATEI GIBT UND NICHT DREI SHELL-ZEILEN IM ARBEITSLAUF.
-Das Backup-Tor (E-P5a-12) ist die eine Stelle der Kette, an der etwas
+Das Backup-Tor ist die eine Stelle der Kette, an der etwas
 Unwiderrufliches verhindert wird: ein Deploy auf Produktiv ohne frisches
 Komplett-Backup. Eine Bedingung, die das leisten soll, gehört nicht in ein
 YAML-Feld, in dem sie niemand liest und niemand probieren kann — sie gehört
 dorthin, wo eine `--selbstprobe` sie nachweisen kann. Genau das verlangt die
-Abnahme von AP1: „das Backup-Tor bricht **nachweislich** ab, wenn `komplett`
+Abnahme: „das Backup-Tor bricht **nachweislich** ab, wenn `komplett`
 nicht fertig meldet".
 
 DIE VIER UNTERBEFEHLE
@@ -22,12 +22,12 @@ DIE VIER UNTERBEFEHLE
                   `migration` -> `ja`/`nein`, `version` -> die Fassung,
                   `wartung` -> `an`/`aus`. Kennt der Server das Feld nicht,
                   lautet die Antwort `unbekannt` und der Rueckgabewert 1 --
-                  nie eine erfundene Null (E-KH-19: die Kette des Tags N
+                  nie eine erfundene Null (die Kette des Tags N
                   spricht mit dem Server der Fassung N-1).
     pause         hält die Hintergrundjobs an (`--sekunden N`) oder gibt sie
                   wieder frei (`--sekunden 0`)
 
-WARUM `pause` HIER STEHT UND NICHT IM KREISLAUFTEST (Web 20.16.0). Diese
+WARUM `pause` HIER STEHT UND NICHT IM KREISLAUFTEST. Diese
 Datei ist der eine Client für die Aktionen von `jobs.php` — sie kennt die Adresse,
 das Token, die Zeitgrenze und den Umgang mit einer unlesbaren Antwort. Ein
 zweiter Aufrufer mit eigener `urllib`-Zeile wäre ein zweiter Weg, den niemand
@@ -78,12 +78,12 @@ VERSUCHE_VORGABE = 40
 PAUSE_VORGABE_S = 20
 ZEITGRENZE_S = 60
 
-# ZWEI RUNDEN, NICHT MEHR (E-KH-05 (2)). Eine zweite faengt den fremden
+# ZWEI RUNDEN, NICHT MEHR. Eine zweite faengt den fremden
 # Auftrag ab, der beim Aufruf schon lief. Eine dritte faenge nichts mehr ab,
 # was die zweite nicht schon hat -- sie verdoppelte nur die Wartezeit.
 RUNDEN = 2
 
-# DREI FREMDE ANTWORTEN, DANN SCHLUSS (E-KH-19). Eine waere zu wenig: Eine
+# DREI FREMDE ANTWORTEN, DANN SCHLUSS. Eine waere zu wenig: Eine
 # einzelne Fehlerseite des Hosters ist ein Schluckauf, kein alter Server.
 # Vierzig waren zu viel -- genau das war der Fall vom 20.09.2026.
 FREMDE_ANTWORTEN = 3
@@ -95,13 +95,13 @@ def jetzt_utc() -> str:
 
 
 def adresse_bauen(basis: str) -> str:
-    """Die Abrufadresse — OHNE Token und ohne Aktion (Web 23.1.0, F-R17-57).
+    """Die Abrufadresse — OHNE Token und ohne Aktion.
 
-    Bis Web 23.0.3 trug sie beides als `?token=…&aktion=…`, und damit stand
-    das Token in jeder Zeile des Zugriffsprotokolls beim Hoster — mit dem
-    Schalter für die Wartung des Produktivservers. Seither reist alles im
+    Truege sie beides als `?token=…&aktion=…`, stuende das Token in jeder
+    Zeile des Zugriffsprotokolls beim Hoster — mit dem Schalter für die
+    Wartung des Produktivservers. Deshalb reist alles im
     Rumpf einer POST-Anfrage (`rumpf_bauen()`); `jobs.php` lehnt eine Aktion
-    in der Adresse mit 405 ab (E-R17-34).
+    in der Adresse mit 405 ab.
     """
     return basis.rstrip("/") + "/jobs.php"
 
@@ -110,8 +110,8 @@ def rumpf_bauen(token: str, aktion: str, felder: dict | None = None) -> bytes:
     """Der Rumpf der POST-Anfrage — eigene Funktion, damit die Selbstprobe
     ihn prüfen kann.
 
-    Bis Web 20.16.0 stand die Zusammensetzung mitten in `rufen()`. Dort war
-    sie ohne Netz nicht zu messen, und genau das brauchte der Unterbefehl
+    Mitten in `rufen()` waere die Zusammensetzung
+    ohne Netz nicht zu messen, und genau das braucht der Unterbefehl
     `pause`: Ob `sekunden` überhaupt ankommt, entscheidet, ob die Jobs
     stillstehen oder weiterlaufen — und ein `ok` bekäme man in beiden Fällen.
     """
@@ -132,7 +132,7 @@ def anfrage_bauen(basis: str, token: str, aktion: str,
 def kopfzeit(antwort) -> str | None:
     """Die Uhr des SERVERS aus dem `Date`-Kopf, als `YYYY-MM-DDTHH:MM:SSZ`.
 
-    WARUM NICHT DIE UHR DES LAEUFERS (F1, E-KH-05 (1)). Das Tor vergleicht
+    WARUM NICHT DIE UHR DES LAEUFERS. Das Tor vergleicht
     zwei Zeiten: den Laufbeginn und den Zeitstempel des Komplett-Stands. Der
     Stand kommt vom Server; der Laufbeginn kam bis zum 20.09.2026 von
     `datetime.now(UTC)` auf dem GitHub-Laeufer. **Das sind zwei Uhren.**
@@ -192,10 +192,10 @@ def rufen(basis: str, token: str, aktion: str, zeitgrenze: int = ZEITGRENZE_S,
             roh = ex.read().decode("utf-8", "replace")
         except Exception:                          # noqa: BLE001 — Koerper weg
             return {"_fehler": f"HTTP {ex.code}"}
-        # AUCH EINE ABLEHNUNG TRAEGT DIE UHR DES SERVERS (F-R17-73). Bis
-        # Web 23.4.0 las nur der Erfolgszweig den `Date`-Kopf; eine 403 kam
-        # ohne `_serverzeit` an, und `backup_tor()` meldete „kein
-        # `Date`-Kopf" statt des Grundes, der eine Zeile darunter stand.
+        # AUCH EINE ABLEHNUNG TRAEGT DIE UHR DES SERVERS. Laese nur der
+        # Erfolgszweig den `Date`-Kopf, kaeme eine 403 ohne `_serverzeit`
+        # an, und `backup_tor()` meldete „kein `Date`-Kopf" statt des
+        # Grundes, der eine Zeile darunter steht.
         serverzeit = kopfzeit(ex)
     except (urllib.error.URLError, OSError, TimeoutError) as ex:
         return {"_fehler": str(ex)}
@@ -214,7 +214,7 @@ def ohne_eigenes(d: dict) -> dict:
     """Die Antwort des Servers — ohne die Felder, die wir selbst angehaengt haben.
 
     `rufen()` haengt seit dem 20.09.2026 `_serverzeit` an jede Antwort (die
-    Uhr aus dem `Date`-Kopf, E-KH-05). Das ist fuer das Tor noetig und fuer
+    Uhr aus dem `Date`-Kopf). Das ist fuer das Tor noetig und fuer
     den Leser des Protokolls irrefuehrend: Die Ausgabe von `zustand` und
     `pause` ist als "die Antwort der Installation" dokumentiert, und wer dort
     ein Feld sieht, das der Server nie geschickt hat, sucht es in `jobs.php`.
@@ -228,7 +228,7 @@ def backup_tor(basis: str, token: str, versuche: int, pause: int,
                ruf=rufen, schlafen=time.sleep, runden: int = RUNDEN) -> int:
     """Das Tor. Rückgabewert 0 = Deploy erlaubt, 1 = nicht.
 
-    DREI DINGE HABEN SICH AM 20.09.2026 GEÄNDERT (F1, E-KH-05 und -19):
+    DREI DINGE HABEN SICH AM 20.09.2026 GEÄNDERT:
 
     (1) **Der Laufbeginn ist die Uhr des Servers**, gelesen aus dem
         `Date`-Kopf der ersten Antwort. Vorher kam er von der Uhr des
@@ -236,7 +236,7 @@ def backup_tor(basis: str, token: str, versuche: int, pause: int,
 
     (2) **Ein Stand, der älter ist als der Laufbeginn, bricht nicht mehr
         ab, sondern dreht eine weitere Runde.** Der Grund ist der Fall,
-        der F1 ausgelöst hat: Läuft beim Aufruf bereits ein FREMDER
+        der die Änderung ausgelöst hat: Läuft beim Aufruf bereits ein FREMDER
         Komplett-Auftrag, meldet `fertig` dessen Abschluss — und sein
         Zeitstempel liegt vor unserem Laufbeginn. Die erste Runde fährt
         ihn damit zu Ende; der nächste Aufruf legt einen frischen an. Die
@@ -247,7 +247,7 @@ def backup_tor(basis: str, token: str, versuche: int, pause: int,
     (3) **Ein Server, der die Aktion nicht kennt, führt zu einem
         definierten Abbruch** statt zu vierzig Runden Warten. Eine Antwort
         ohne `fertig` und ohne `error` ist keine Antwort auf diese Frage
-        (E-KH-19, der Fall vom 20.09.). Drei solche hintereinander und der
+        (der Fall vom 20.09.2026). Drei solche hintereinander und der
         Lauf endet mit einer Meldung, die sagt, was stattdessen kam. Drei
         und nicht eine: Ein einzelner Schluckauf soll kein Nein werden —
         dieselbe Linie, die `rufen()` im Kopfkommentar zieht.
@@ -271,12 +271,12 @@ def backup_tor(basis: str, token: str, versuche: int, pause: int,
             # Aufruf schon feststand. Ein NETZFEHLER (`_fehler`) ist etwas
             # anderes: Der wird wiederholt.
             #
-            # UND ES STEHT VOR DER UHR (F-R17-73). Bis Web 23.4.0 kam die
-            # Uhrpruefung zuerst, und eine abgewiesene erste Antwort trug
-            # keinen `Date`-Kopf (siehe `rufen()`): Die Kette meldete „Die
-            # Antwort trägt keinen `Date`-Kopf" und den eigentlichen Grund —
-            # `{"error": "token"}` — erst in der Zeile darüber, im Protokoll
-            # des Aufrufs. Am 27.10.2026 kostete das drei Runden Rätselraten.
+            # UND ES STEHT VOR DER UHR. Kaeme die Uhrpruefung zuerst, truege
+            # eine abgewiesene erste Antwort keinen `Date`-Kopf (siehe
+            # `rufen()`): Die Kette meldete „Die Antwort trägt keinen
+            # `Date`-Kopf" und den eigentlichen Grund — `{"error": "token"}`
+            # — erst in der Zeile darüber, im Protokoll des Aufrufs. Am
+            # 27.10.2026 kostete das drei Runden Rätselraten.
             if "error" in antwort:
                 print(f"ABBRUCH: Die Installation antwortet mit '{antwort['error']}'"
                       + (f" — {antwort['meldung']}" if antwort.get("meldung") else "")
@@ -387,7 +387,7 @@ def zustand_auskunft(antwort: dict, frage: str):
         return fassung.strip(), 0
 
     if frage == "komplett":
-        # DER DATEINAME DES LETZTEN KOMPLETT-STANDES (AP7, E-KH-16). Die Kette
+        # DER DATEINAME DES LETZTEN KOMPLETT-STANDES. Die Kette
         # stoesst bei jeder Produktiv-Auslieferung ein Komplett-Backup auf
         # STAGING an und nennt dessen Dateinamen neben dem Tag -- damit man
         # spaeter weiss, WELCHEN Stand man einspielen muss, um Staging auf den
@@ -429,7 +429,7 @@ def selbstprobe() -> int:
     für die Fehlerantwort von `rufen()`.
 
     DIESE ZAHL IST ZUM ZWEITEN MAL FALSCH GEWESEN, und daraus folgt die Form
-    der Kopfzeile unten. Bis Web 20.16.1 meldete sie „fünf Lagen" und fuhr
+    der Kopfzeile unten. Einmal meldete sie „fünf Lagen" und fuhr
     zehn; danach stand „fünf und fünf" da, und mit dem elften Fall stimmte
     auch das nicht mehr. Wer eine handgepflegte Zahl abschreibt, trägt sie
     ins Prüfprotokoll. **Die Kopfzeile nennt deshalb nur noch die Gruppen;
@@ -456,14 +456,14 @@ def selbstprobe() -> int:
     morgen = "2999-01-01T00:00:00Z"
     # NUN ist die Uhr des Servers in diesen Faellen; `gleich_danach` ein Stand,
     # der eine Sekunde spaeter fertig wurde. Beide kommen aus DERSELBEN Uhr —
-    # genau das ist der Punkt von E-KH-05 (1).
+    # genau das ist der Punkt.
     NUN = "2026-09-20T12:00:00Z"
 
     def attrappe(folge, zustand, serverzeit=NUN):
         """Liefert der Reihe nach `folge`, danach immer den letzten Eintrag.
 
         `zustand` darf eine LISTE sein — dann liefert der n-te Abruf den
-        n-ten Eintrag. Das braucht die zweite Runde (E-KH-05 (2)): Runde 1
+        n-ten Eintrag. Das braucht die zweite Runde: Runde 1
         sieht den fremden, alten Stand, Runde 2 den frischen.
 
         `serverzeit` hängt an jeder Antwort, wie es `rufen()` aus dem
@@ -486,7 +486,7 @@ def selbstprobe() -> int:
             return d
         return ruf
 
-    # KEINE GESAMTZAHL IN DIESER ZEILE (Web 20.16.4). Sie ist zweimal
+    # KEINE GESAMTZAHL IN DIESER ZEILE. Sie ist zweimal
     # veraltet, ohne dass ein Lauf es gemerkt hätte — gezählt wird unten.
     print("Selbstprobe von tor.py — Backup-Tor, Unterbefehl `pause` und die "
           "Fehlerantwort, ohne Netz\n")
@@ -498,7 +498,7 @@ def selbstprobe() -> int:
                     schlafen=lambda _s: None)
     pruefe(rc == 0, "Regelfall: fertig nach zwei Häppchen, frischer Stand → Tor offen")
 
-    # 2. Meldet nie fertig — die Lage, die die Abnahme von AP1 verlangt.
+    # 2. Meldet nie fertig — die Lage, die die Abnahme verlangt.
     rc = backup_tor("http://attrappe", "t", 3, 0,
                     ruf=attrappe([{"fertig": False}],
                                  {"komplett": {"zeit": morgen}}),
@@ -519,11 +519,11 @@ def selbstprobe() -> int:
     pruefe(rc == 1, "Fertig, aber kein Komplett-Stand vorhanden → Tor zu")
 
     # ------------------------------------------------------------------
-    # 5. bis 11.: F1 — die Uhr des Servers und die zweite Runde
-    #    (E-KH-05, E-KH-19; alle neu am 20.09.2026).
+    # 5. bis 11.: die Uhr des Servers und die zweite Runde
+    #    (alle neu am 20.09.2026).
     print()
 
-    # 5. DER FALL, DER F1 AUSGELÖST HAT. Beim Aufruf lief bereits ein FREMDER
+    # 5. DER FALL, DER DIE ÄNDERUNG AUSGELÖST HAT. Beim Aufruf lief bereits ein FREMDER
     #    Komplett-Auftrag; `fertig` meldet dessen Abschluss, und sein
     #    Zeitstempel liegt VOR unserem Laufbeginn. Runde 1 fährt ihn zu Ende,
     #    Runde 2 legt einen frischen an.
@@ -557,7 +557,7 @@ def selbstprobe() -> int:
                         f"aus derselben Uhr)")
 
     # 9. KEIN `Date`-KOPF → ABBRUCH MIT ANSAGE. Ein Rückfall auf die Läuferuhr
-    #    wäre genau der Fehler, den F1 beschreibt — nur wieder still.
+    #    wäre genau der Fehler, um den es hier geht — nur wieder still.
     rc = backup_tor("http://attrappe", "t", 3, 0,
                     ruf=attrappe([{"fertig": True}],
                                  {"komplett": {"zeit": morgen}},
@@ -565,9 +565,9 @@ def selbstprobe() -> int:
                     schlafen=lambda _s: None)
     pruefe(rc == 1, "Antwort ohne `Date`-Kopf → Abbruch, kein Rückfall auf die Läuferuhr")
 
-    # 9b. EINE ABGEWIESENE ERSTE ANTWORT NENNT IHREN GRUND, NICHT DIE UHR
-    #     (F-R17-73). Die Attrappe liefert `error` OHNE `_serverzeit` — so
-    #     kam die 403 bis Web 23.4.0 an. Die Meldung muss das Token nennen.
+    # 9b. EINE ABGEWIESENE ERSTE ANTWORT NENNT IHREN GRUND, NICHT DIE UHR.
+    #     Die Attrappe liefert `error` OHNE `_serverzeit` — so
+    #     kam die 403 frueher an. Die Meldung muss das Token nennen.
     import contextlib
     import io
     fehlerausgabe = io.StringIO()
@@ -582,7 +582,7 @@ def selbstprobe() -> int:
            f"Abgewiesenes Token ohne `Date` → Abbruch mit dem Grund, nicht mit der Uhr "
            f"(F-R17-73: {meldung.strip()[:70]!r})")
 
-    # 10. ALTER SERVER (E-KH-19, der Fall vom 20.09.). Die Installation
+    # 10. ALTER SERVER (der Fall vom 20.09.2026). Die Installation
     #     antwortet — aber weder mit `fertig` noch mit `error`. Vorher waren
     #     das vierzig Runden Warten auf etwas, das nie kommt.
     rc = backup_tor("http://attrappe", "t", 40, 0,
@@ -600,7 +600,7 @@ def selbstprobe() -> int:
                     "einem Schluckauf)")
 
     # ------------------------------------------------------------------
-    # 6. bis 10.: der Unterbefehl `pause` (Web 20.16.0).
+    # 6. bis 10.: der Unterbefehl `pause`.
     #
     # WARUM DIE ANFRAGE UND NICHT DIE ANTWORT GEMESSEN WIRD. Ob die Jobs
     # stillstehen, entscheidet sich daran, ob `sekunden` in der Anfrage
@@ -648,7 +648,7 @@ def selbstprobe() -> int:
            f"pause: `sekunden` steht im Rumpf der ABGESCHICKTEN Anfrage "
            f"({r or '— gar kein Abruf —'})")
 
-    # 6a. DAS TOKEN REIST NIE IN DER ADRESSE (Web 23.1.0, F-R17-57). Gemessen
+    # 6a. DAS TOKEN REIST NIE IN DER ADRESSE. Gemessen
     # am ganzen Weg über `main()`, nicht an `adresse_bauen()` allein — sonst
     # bewiese der Fall nur, dass eine Funktion tut, was sie tut.
     pruefe(gemerkt.get("methode") == "POST" and "geheim" not in a and "?" not in a
@@ -672,7 +672,7 @@ def selbstprobe() -> int:
     rc = main(["pause", "--basis", "https://x", "--token", "g"])
     pruefe(rc == 2, "pause ohne --sekunden → Rückgabewert 2, KEIN stilles Freigeben")
 
-    # 11. EINE 4xx-ANTWORT MUSS MIT IHRER BEGRÜNDUNG ANKOMMEN. Bis Web 20.16.1
+    # 11. EINE 4xx-ANTWORT MUSS MIT IHRER BEGRÜNDUNG ANKOMMEN. Frueher
     # fing `rufen()` die HTTPError im URLError-Zweig und machte daraus
     # `{"_fehler": "HTTP Error 400: ..."}` — der Körper mit `error` und
     # `meldung` ging verloren, und `backup_tor()` hielt ein falsches Token für
@@ -697,7 +697,7 @@ def selbstprobe() -> int:
            f"({list(antwort)})")
 
     # ------------------------------------------------------------------
-    # `--frage` (AP6): version und wartung, und was bei halben Antworten
+    # `--frage`: version und wartung, und was bei halben Antworten
     # herauskommen MUSS.
     # ------------------------------------------------------------------
     #
@@ -720,7 +720,7 @@ def selbstprobe() -> int:
     pruefe(zustand_auskunft(VOLL, "migration") == ("nein", 0),
            "--frage migration antwortet unveraendert")
 
-    # E-KH-19: Die Kette des Tags N spricht mit dem Server der Fassung N-1.
+    # Die Kette des Tags N spricht mit dem Server der Fassung N-1.
     # Ein Server, der ein Feld noch nicht kennt, darf keine Null erfinden.
     pruefe(zustand_auskunft({"ok": True}, "version") == ("unbekannt", 1),
            "ALTER SERVER: kein `version`-Feld -> 'unbekannt' und 1, nicht ''")
@@ -734,7 +734,7 @@ def selbstprobe() -> int:
            "Eine Antwort ohne `ok` wird gar nicht erst ausgeschlachtet")
 
     # ------------------------------------------------------------------
-    # `--frage komplett` (AP7, E-KH-16): der Dateiname des letzten
+    # `--frage komplett`: der Dateiname des letzten
     # Komplett-Standes. Er wandert in die Laufzusammenfassung, damit beim
     # Zuruecksetzen von Staging klar ist, WELCHER Stand gemeint ist.
     # ------------------------------------------------------------------

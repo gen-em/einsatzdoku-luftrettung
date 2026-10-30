@@ -1,5 +1,5 @@
 /**
- * DER CODE-RECHNER FÜR NODE (P5c/AP5, E-P5c-43). Einer je Sprache — die
+ * DER CODE-RECHNER FÜR NODE. Einer je Sprache — die
  * anderen sind `totp.php` und `totp.py` daneben; alle drei rechnen dasselbe
  * und teilen denselben Zähler. Warum es den Zähler gibt und wie er sperrt,
  * steht im Kopf von `totp.php`.

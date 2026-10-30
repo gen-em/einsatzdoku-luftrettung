@@ -3,29 +3,27 @@ declare(strict_types=1);
 require_once __DIR__ . '/serverkrypto_lib.php';
 
 /**
- * BACKUP-ZIELE — wohin die Backups gehen (E-S2-22, S2/AP7).
+ * BACKUP-ZIELE — wohin die Backups gehen.
  *
- * WARUM „BACKUP-ZIEL" UND NICHT „TRANSPORTZIEL". Das Konzept nennt es
- * Transportziel. Diesen Namen trägt in dieser Anwendung seit Web 4 aber schon
+ * WARUM „BACKUP-ZIEL" UND NICHT „TRANSPORTZIEL". Diesen Namen trägt in dieser Anwendung aber schon
  * etwas anderes: `transport_dests`, die Zielklinik einer Patientin, gepflegt
  * unter Stammdaten. Zwei Dinge, zwei Klicks voneinander entfernt, unter einem
  * Wort — das wäre kein Detail, sondern die Art Verwechslung, die man in einer
- * Fehlermeldung nicht mehr auflösen kann. Also: Backup-Ziel. Festgehalten
- * in `docs/konzepte/erledigt/Konzept-S2-Mengen-Spuren-Sicherung.md` unter F-S2-G.
+ * Fehlermeldung nicht mehr auflösen kann. Also: Backup-Ziel.
  *
  * DREI PROTOKOLLE, EINE SCHNITTSTELLE
  * `Zielweg` beschreibt, was ein Ziel können muss — verbinden, Ordner anlegen,
  * senden, holen, auflisten, löschen. Wer eine Datei wegschiebt, sieht nicht,
  * ob dahinter FTP oder SFTP steckt. Das ist nicht Ästhetik: Der Versandjob
- * (AP7/5) und das Komplettbackup (AP8) sollen beide nichts über Protokolle
- * wissen müssen, und ein vierter Adapter (WebDAV steht im Backlog) soll sie
+ * und das Komplettbackup sollen beide nichts über Protokolle
+ * wissen müssen, und ein weiterer Adapter (etwa WebDAV) soll sie
  * nicht anfassen.
  *
  * WAS DIE DREI TATSÄCHLICH TAUGEN — der Reihe nach, und ohne Beschönigung:
  *
  *   FTP    Zugangsdaten und Inhalt gehen im Klartext über die Leitung. Es ist
  *          hier, weil es auf einfachem Webspace oft das Einzige ist, was es
- *          gibt. Für ein versiegeltes Komplettbackup (AP8) ist das vertretbar,
+ *          gibt. Für ein versiegeltes Komplettbackup ist das vertretbar,
  *          für die Zugangsdaten selbst nie — sie sind im Klartext mitzulesen.
  *          Die Oberfläche sagt das an der Stelle, an der man FTP auswählt.
  *   FTPS   verschlüsselt die Leitung, aber `ext/ftp` PRÜFT DAS ZERTIFIKAT
@@ -62,9 +60,9 @@ const SZ_ZEITLIMIT = 20;
 /**
  * Vorgabeports je Protokoll.
  *
- * `ftp` STEHT HIER NICHT MEHR (S10/AP4, E-S10-14). Diese Liste ist nicht bloss
+ * `ftp` STEHT HIER NICHT MEHR. Diese Liste ist nicht bloss
  * eine Bequemlichkeit: `sz_pruefen_eingabe()` prüfte gegen SIE, nicht gegen
- * `SZ_PROTOKOLLE` (Fund F-6). Wer das Protokoll nur aus dem Anzeigekatalog
+ * `SZ_PROTOKOLLE`. Wer das Protokoll nur aus dem Anzeigekatalog
  * gestrichen hätte, hätte gar nichts abgeschafft — es wäre weiter
  * speicherbar gewesen, nur nicht mehr wählbar. Geprüft wird ab jetzt gegen
  * `SZ_PROTOKOLLE`, und beide Listen tragen dieselben Schlüssel; eine
@@ -211,7 +209,7 @@ function sz_name_gueltig(string $name): bool
 /**
  * Grundpfad und Rest zu einem fernen Pfad zusammensetzen.
  *
- * Er heisst `grundpfad` und nicht `basis`: Die Textprobe (`tools/quelltext/textprobe.py`, bis PK-04 „Wortliste")
+ * Er heisst `grundpfad` und nicht `basis`: Die Textprobe (`tools/quelltext/textprobe.py`)
  * führt „Basis" als Luftbegriff — gemeint ist dort die Luftrettungsstation.
  * Hier wäre es dasselbe Wort in einer völlig anderen Bedeutung, und eine
  * Ausnahme dafuer einzutragen hiesse, die Liste um einen Fall zu erweitern,
@@ -690,10 +688,8 @@ function sz_pruefen_eingabe(array $e): array
     }
     $prot = (string)($e['protokoll'] ?? '');
     if (!sz_protokoll_erlaubt($prot)) {
-        /* DER SATZ NENNT DEN GRUND, nicht bloss „unbekannt". Geschrieben fuer
-         * das bestehende `ftp`-Ziel, das jemand bearbeitete (S10/AP4); seit
-         * P5c/AP8 kann es keines mehr geben, und der Fall kommt nur noch aus
-         * einer gebauten Anfrage. Der Grund bleibt derselbe. */
+        /* DER SATZ NENNT DEN GRUND, nicht bloss „unbekannt". Ein `ftp`-Ziel
+         * kann es nicht geben; der Fall kommt nur aus einer gebauten Anfrage. */
         $f[] = $prot === 'ftp'
             ? 'FTP überträgt alles im Klartext, auch Nutzername und Passwort. '
               . 'Es wird seit Web 20.2.0 nicht mehr angeboten — bitte SFTP oder '
@@ -716,14 +712,14 @@ function sz_pruefen_eingabe(array $e): array
     if (mb_strlen($pfad) > 255 || str_contains($pfad, '..')) {
         $f[] = 'Der Pfad ist zu lang oder enthält „..".';
     }
-    /* ---- Die Loeschregel (P5a/AP10, E-P5a-03) ----------------------------
+    /* ---- Die Loeschregel ----------------------------
      *
      * SIE IST AUS, WENN DER HAKEN AUS IST — und dann stehen die beiden
      * Zahlen auf `NULL`, nicht auf `0`. Der Unterschied ist der zwischen
      * „hier wird nicht aufgeraeumt" und „hier wird alles weggeraeumt". Eine
      * `0`, die als „Option aus" gemeint war und als „nichts behalten"
      * gelesen wird, loescht das Ziel leer; das ist genau der Fehler, gegen
-     * den Backlog Nr. 49 die Option ueberhaupt erst zur Option macht.
+     * den die Option ueberhaupt erst eine Option ist.
      *
      * MINDESTENS 1. Wer aufraeumen laesst, behaelt mindestens einen Stand.
      * Ein Ziel, auf dem nichts mehr liegt, ist kein Sicherungsziel. */
@@ -887,13 +883,12 @@ function sz_weg(array $ziel): Zielweg
             . 'erfassen.');
     }
     $prot = (string)$ziel['protokoll'];
-    /* DER ENGPASS, UND ER PRÜFT POSITIV (S10/AP4, E-S10-U-10).
+    /* DER ENGPASS, UND ER PRÜFT POSITIV.
      *
-     * Hier stand ein einziger benannter Zweig (`sftp`), und alles andere fiel
-     * in `ZielFtp`, wo `$prot === 'ftps'` über TLS entscheidet. FTPS war
-     * damit geschützt — ein UNBEKANNTES oder LEERES Protokoll aber fiel
-     * still auf Klartext-FTP zurück, und dann gehen Nutzername und Passwort
-     * offen über Port 21.
+     * Mit einem einzigen benannten Zweig (`sftp`) fiele alles andere in
+     * `ZielFtp`, wo `$prot === 'ftps'` über TLS entscheidet — ein
+     * UNBEKANNTES oder LEERES Protokoll fiele still auf Klartext-FTP zurück,
+     * und dann gingen Nutzername und Passwort offen über Port 21.
      *
      * Geprüft wird deshalb gegen den Katalog und nicht auf `!== 'ftp'`: Ein
      * `ENUM`, das je nach `sql_mode` zum Leerstring wird, ist im Projekt
@@ -997,8 +992,7 @@ function sz_verbindung_pruefen(array $ziel): array
 /**
  * Schlüssel in `app_state`: Versendet die Anwendung von selbst?
  *
- * EIN SCHALTER UND KEIN ZEITPLAN. E-S2-22 spricht von einem „Zeitplan für den
- * Push im Admin-Bereich"; einen eigenen Zeitplan gibt es hier trotzdem nicht,
+ * EIN SCHALTER UND KEIN ZEITPLAN. Einen eigenen Zeitplan gibt es hier nicht,
  * und zwar aus demselben Grund wie bei allen anderen Jobs: Wann etwas läuft,
  * entscheidet der eingerichtete Auslöser (Cron, Token-Aufruf oder huckepack an
  * einer Anfrage — Wartungsseite), nicht eine zweite Uhr in der Datenbank. Zwei
@@ -1038,18 +1032,16 @@ function sz_auto_setzen(bool $an): bool
  * gilt für die Ablage auf diesem Server; auf dem Ziel räumt niemand auf. Das
  * ist bewusst so: Der Zweck eines auswärtigen Ziels ist, den Ausfall DIESES
  * Servers zu überleben — samt eines Fehlers, der hier zu viel löscht. Wer dort
- * aufräumen will, tut es dort. (Backlog Nr. 49.)
+ * aufräumen will, tut es dort.
  *
  * @param callable $zeitLinks gibt die verbleibenden Sekunden
  * @return array ['gesendet' => int, 'bytes' => int, 'ziele' => int,
  *                'fehler' => [text, ...], 'fertig' => bool, …]
  *
- * BIS WEB 20.47.0 KANNTE SIE EIN DRITTES ERGEBNIS NEBEN GESENDET UND
- * GESCHEITERT: übergangen, für ein Ziel mit dem abgeschafften Protokoll
- * `ftp` (S10/AP4, E-S10-14), mit eigener Zahl und Namensliste. Seit P5c/AP8
- * nimmt die Datenbank den Wert nicht mehr an (E-P5c-124), und der Weg ist
- * gefallen. Ein Protokoll, das diese Fassung nicht kennt, kann nur noch aus
- * einem Fehler kommen — `sz_weg()` wirft dann, und das gehört in `fehler`.
+ * KEIN DRITTES ERGEBNIS NEBEN GESENDET UND GESCHEITERT: Das Protokoll
+ * `ftp` nimmt die Datenbank nicht an. Ein Protokoll, das diese Fassung
+ * nicht kennt, kann nur aus einem Fehler kommen — `sz_weg()` wirft dann, und
+ * das gehört in `fehler`.
  */
 function sz_versand_schub(callable $zeitLinks, float $reserve = SZ_VERSAND_RESERVE_S): array
 {
@@ -1057,7 +1049,7 @@ function sz_versand_schub(callable $zeitLinks, float $reserve = SZ_VERSAND_RESER
     $ziele = sz_alle(true);
     $raus = ['gesendet' => 0, 'bytes' => 0, 'ziele' => count($ziele),
              'fehler' => [], 'fertig' => true,
-             /* P5a/AP10: was die Aufbewahrungsregel dort entfernt hat — und
+             /* Was die Aufbewahrungsregel dort entfernt hat — und
               * was deshalb nicht noch einmal hinuebergeschickt wurde. */
              'geloescht' => 0, 'geloescht_bytes' => 0, 'nicht_wieder' => 0];
     if ($ziele === []) { return $raus; }
@@ -1073,7 +1065,7 @@ function sz_versand_schub(callable $zeitLinks, float $reserve = SZ_VERSAND_RESER
     }
     sort($ordner);
 
-    /* DIE KOMPLETT-BACKUP GEHT DENSELBEN WEG (S2/AP8, E-S2-21).
+    /* DIE KOMPLETT-BACKUP GEHT DENSELBEN WEG.
      *
      * Sie liegt in `sicherungen/komplett/` und nicht in einem Kontoordner —
      * `edbak_kennung_gueltig()` weist den Namen ab, die Schleife oben
@@ -1089,8 +1081,8 @@ function sz_versand_schub(callable $zeitLinks, float $reserve = SZ_VERSAND_RESER
     require_once __DIR__ . '/komplett_lib.php';
     if (is_dir(komp_wurzel())) { array_unshift($ordner, KOMP_ORDNER); }
 
-    /* DIE ARCHIVE DES PROTOKOLLS SIND DIE DRITTE DATEIART (P5c/AP2,
-     * E-P5c-39) — hinten angehängt, weil sie klein sind und weil ein
+    /* DIE ARCHIVE DES PROTOKOLLS SIND DIE DRITTE DATEIART — hinten angehängt,
+     * weil sie klein sind und weil ein
      * Kontopaket, das nicht hinausgeht, schwerer wiegt. Nur mit der
      * Einstellung (Vorgabe an). */
     require_once __DIR__ . '/protokoll_archiv_lib.php';
@@ -1114,8 +1106,8 @@ function sz_versand_schub(callable $zeitLinks, float $reserve = SZ_VERSAND_RESER
 
         $fehlerHier = null;
         $gesendetHier = 0;
-        /* WAS DIE REGEL DORT ENTFERNT HAT, GEHT NICHT WIEDER HINUEBER
-         * (E-P5a-57). Ohne diese Zeile senden und loeschen sich Versand und
+        /* WAS DIE REGEL DORT ENTFERNT HAT, GEHT NICHT WIEDER HINUEBER.
+         * Ohne diese Zeile senden und loeschen sich Versand und
          * Aufbewahrung gegenseitig im Kreis — die Begruendung steht bei
          * `sz_dort_entfernt()`. Einmal je Ziel gelesen, nicht je Datei. */
         $nichtWieder = sz_dort_entfernt((int)$z['id']);
@@ -1151,7 +1143,7 @@ function sz_versand_schub(callable $zeitLinks, float $reserve = SZ_VERSAND_RESER
                      * falschen Länge, und die gälte für immer als erledigt. */
                     $bytes = (int)$p['groesse'];
                     if (isset($dort[$name]) && $dort[$name] === $bytes) {
-                        /* SCHON DA — UND TROTZDEM EIN VERMERK (P5a/AP10).
+                        /* SCHON DA — UND TROTZDEM EIN VERMERK.
                          *
                          * Ohne diese Zeile faenge das Versandprotokoll erst
                          * mit dem naechsten NEUEN Paket an, und alles, was
@@ -1179,8 +1171,8 @@ function sz_versand_schub(callable $zeitLinks, float $reserve = SZ_VERSAND_RESER
                         default                 => edbak_ordner($kennung) . '/' . $name,
                     };
                     $weg->senden($hier, $kennung . '/' . $name);
-                    /* DAS PROTOKOLL STEHT DIREKT HINTER DEM VERSAND
-                     * (P5a/AP10). Es ist die zweite der drei Sicherungen der
+                    /* DAS PROTOKOLL STEHT DIREKT HINTER DEM VERSAND.
+                     * Es ist die zweite der drei Sicherungen der
                      * Loeschregel: Ohne diese Zeile gilt die Datei drueben
                      * spaeter als fremd und wird nie angefasst — die sichere
                      * Richtung, aber die falsche Auskunft. */
@@ -1195,7 +1187,7 @@ function sz_versand_schub(callable $zeitLinks, float $reserve = SZ_VERSAND_RESER
             $raus['fehler'][] = (string)$z['name'] . ': ' . $fehlerHier;
             $raus['fertig'] = false;
         }
-        /* ---- DIE DRITTE SICHERUNG DER LOESCHREGEL (P5a/AP10, E-P5a-03) ---
+        /* ---- DIE DRITTE SICHERUNG DER LOESCHREGEL ---
          *
          * Aufgeraeumt wird NUR in einem Lauf, dessen eigener Versand
          * durchgelaufen ist. Wer nicht sicher weiss, dass der neue Stand
@@ -1233,8 +1225,6 @@ function sz_versand_schub(callable $zeitLinks, float $reserve = SZ_VERSAND_RESER
 function sz_versand_rueckstand(): ?int
 {
     require_once __DIR__ . '/adminbackup_lib.php';
-    /* Bis Web 20.47.0 fielen hier die uebergangenen FTP-Ziele heraus
-     * (E-S10-U-15); sie gibt es seit P5c/AP8 nicht mehr (E-P5c-124). */
     $ziele = sz_alle(true);
     if ($ziele === []) { return null; }
     $aeltester = null;
@@ -1259,7 +1249,7 @@ function sz_versand_rueckstand(): ?int
     foreach (komp_staende() as $st) {
         if ((int)@filemtime(komp_wurzel() . '/' . $st['datei']) > $grenze) { $n++; }
     }
-    /* Und die Archive des Protokolls (P5c/AP2), wenn sie mitgehen. */
+    /* Und die Archive des Protokolls, wenn sie mitgehen. */
     require_once __DIR__ . '/protokoll_archiv_lib.php';
     if (protokoll_archiv_versand()) {
         foreach (protokoll_archive() as $a) {
@@ -1270,7 +1260,7 @@ function sz_versand_rueckstand(): ?int
 }
 
 /* ==========================================================================
- * AUFBEWAHRUNG AUF DEM ZIEL           P5a/AP10, E-P5a-03/-56, Backlog Nr. 49
+ * AUFBEWAHRUNG AUF DEM ZIEL
  * ==========================================================================
  *
  * WOGEGEN. Der Versand ERGAENZT nur; auf der Gegenstelle loescht diese
@@ -1300,7 +1290,7 @@ function sz_versand_rueckstand(): ?int
  *        Wer nicht sicher weiss, dass der neue Stand drueben angekommen ist,
  *        raeumt den alten nicht weg.
  *
- * WARUM DAS PROTOKOLL EINE TABELLE IST UND NICHT `app_state` (E-P5a-56):
+ * WARUM DAS PROTOKOLL EINE TABELLE IST UND NICHT `app_state`:
  * siehe die Migration `2026_09_16_sicherungsziel_aufbewahrung`. Kurz:
  * `app_state.v` ist `VARCHAR(190)`, und die Frage lautet „hat DIESE
  * Installation die Datei X auf Ziel Y geschickt?" — eine Zeile je Datei und
@@ -1370,8 +1360,7 @@ function sz_geschickt(int $zielId): array
 }
 
 /**
- * Was diese Installation auf diesem Ziel SELBST entfernt hat (P5a/AP10,
- * E-P5a-57).
+ * Was diese Installation auf diesem Ziel SELBST entfernt hat.
  *
  * WOGEGEN — und das ist beim Bauen der Probe herausgekommen, nicht beim
  * Nachdenken: Ohne diese Liste raeumt die Regel im zweiten Lauf drei alte
@@ -1596,7 +1585,7 @@ function sz_aufraeumen(array $ziel, Zielweg $weg, callable $zeitLinks,
 
     foreach ($ordner as $o) {
         if ($zeitLinks() < $reserve) { $raus['fertig'] = false; break; }
-        /* DIE ARCHIVE DES PROTOKOLLS HABEN DORT KEINE REGEL (E-P5c-39):
+        /* DIE ARCHIVE DES PROTOKOLLS HABEN DORT KEINE REGEL:
          * rund 52 kleine Dateien im Jahr. Ohne diese Zeile fiele der Ordner
          * unter die Zahl je KONTO — und die Regel löschte drüben alle bis
          * auf die letzten zwei Wochen. */
@@ -1654,7 +1643,7 @@ function sz_aufraeumen(array $ziel, Zielweg $weg, callable $zeitLinks,
 }
 
 /**
- * Die Loeschungen der letzten Tage — fuer die Sicherheitsseite (E-P5a-08).
+ * Die Loeschungen der letzten Tage — fuer die Sicherheitsseite.
  *
  * @return array{zeilen:list<array>,gesamt:int}
  */
@@ -1685,7 +1674,7 @@ function sz_loeschungen(int $tage = SZ_PROTOKOLL_TAGE, int $hoechstens = 50): ar
 
 /**
  * Ziele, die seit ueber einem Monat wachsen, ohne dass dort etwas entfernt
- * wurde (E-P5a-03, Statusseite).
+ * wurde (Statusseite).
  *
  * SIE FRAGT DIE ZIELE NICHT — sie liest das Protokoll. Eine Statusseite, die
  * drei FTP-Verbindungen aufbaut, laedt zehn Sekunden; dieselbe Ueberlegung

@@ -9,7 +9,7 @@ Vier Stueck, jede beantwortet eine andere Frage:
                  if/else —, was hier erwuenscht ist: Es erhoeht die Abdeckung,
                  und verglichen wird ohnehin dieselbe DOM gegen sich selbst.
                  Je Datei ein Stueck, getrennt durch STUECK; stilvergleich.js
-                 misst jedes als eigenes Dokument (R4-08, Nr. 321).
+                 misst jedes als eigenes Dokument.
   js_markup.html Das Markup, das ERST IM BROWSER entsteht: HTML-Zeichenketten
                  aus den JS-Modulen und den Inline-Skripten der Seiten.
   katalog.html   Fuer JEDEN Selektor aus style.css ein Element, das ihn trifft.
@@ -46,14 +46,14 @@ TAGS = (r'<(tr|td|th|li|div|span|button|a|p|dt|dd|details|summary|section|aside|
 
 
 def php_zeichenketten(text):
-    """HTML-Schnipsel aus PHP-ZEICHENKETTEN — der blinde Fleck bis O12.
+    """HTML-Schnipsel aus PHP-ZEICHENKETTEN — einst der blinde Fleck.
 
     `entphp()` schneidet alles zwischen <?php und ?> heraus. Das war richtig,
-    solange das Markup einer Seite ZWISCHEN den PHP-Bloecken stand. Seit P3
+    solange das Markup einer Seite ZWISCHEN den PHP-Bloecken stand. Seit dem Redesign
     kommt es zum groessten Teil aus den Bausteinen in ui.php, und die bauen es
     mit `echo '<div class="zeile">'` — also INNERHALB eines PHP-Blocks. Genau
     davor warnte die LIESMICH: „mit jedem weiteren Baustein waechst der blinde
-    Fleck." Nach O11 war er die halbe Oberflaeche.
+    Fleck." Zuletzt war er die halbe Oberflaeche.
 
     Geholt wird jede Zeichenkette, die wie Markup aussieht; PHP-Ausdruecke
     darin werden zu X, wie in jsprobe(). Doppelt gezaehlte Schnipsel schaden
@@ -67,7 +67,7 @@ def php_zeichenketten(text):
     return h
 
 
-# DIE TRENNMARKE ZWISCHEN DEN SEITEN (R4-08, Nr. 321). In EINEM Dokument
+# DIE TRENNMARKE ZWISCHEN DEN SEITEN. In EINEM Dokument
 # teilten sich alle Seiten Hoehe und Verschachtelung: Eine Regel fuer Seite A
 # aenderte die Hoehe des Dokuments, damit `top`/`bottom` jedes absolut
 # gesetzten Elements auf ALLEN Seiten (`span.nur-vorlesen`), und eine Seite B,
@@ -106,9 +106,9 @@ def jsprobe():
             continue
         t = io.open(pfad, encoding='utf-8', errors='replace').read()
         if pfad.endswith('.php'):
-            # TAG_REST statt `[^>]*` (CLAUDE.md 6, Backlog Nr. 218): Hier laeuft
-            # das Muster ueber die ROHE PHP-Quelle, und seit Web 20.7.0 traegt
-            # jedes Inline-Skript `<script<?= kopf_nonce_attr() ?>>`. Die kurze
+            # TAG_REST statt `[^>]*` (CLAUDE.md 6): Hier laeuft
+            # das Muster ueber die ROHE PHP-Quelle, und
+            # jedes Inline-Skript traegt `<script<?= kopf_nonce_attr() ?>>`. Die kurze
             # Form endete am `>` des PHP-Schlusses: Von 110 Bloecken begannen 12
             # Dateien mit einem ueberzaehligen `>`, und aus
             # `<script src="<?= asset(…) ?>"></script>` wurde ein Scheinblock mit
@@ -131,7 +131,7 @@ def jsprobe():
 # `:disabled` STEHT MIT IN DIESER LISTE, obwohl es kein Bedienzustand im Sinne
 # von :hover ist: Es laesst sich an einem `<div>` des Katalogs nicht herstellen,
 # und der Katalog baut aus jedem Selektor ein `<div>`, wenn der Selektor keinen
-# Tag nennt. Die Regel `.feld-eingabe:disabled` (S8/AP7) waere damit in KEINER
+# Tag nennt. Die Regel `.feld-eingabe:disabled` waere damit in KEINER
 # Probe gemessen worden — der Stilvergleich haette zu ihr geschwiegen und das
 # wie ein „unveraendert" ausgesehen. Mit der Ersetzung traegt der Katalog ein
 # `div.feld-eingabe.pcdisabled`, und beide Staende werden daran gemessen.

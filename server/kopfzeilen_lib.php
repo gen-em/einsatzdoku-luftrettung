@@ -2,16 +2,14 @@
 declare(strict_types=1);
 
 /**
- * SICHERHEITSKOPFZEILEN AN EINER STELLE (P5a/AP4, E-P5a-15; Backlog Nr. 8, SP-5).
+ * SICHERHEITSKOPFZEILEN AN EINER STELLE.
  *
- * WAS BIS WEB 20.6.0 GALT. Die Anwendung setzte **keine einzige**
- * Sicherheitskopfzeile aus PHP — `grep -rn 'Content-Security-Policy' server/`
- * fand genau einen Treffer, und der war ein Kommentar. Vier Kopfzeilen kamen
- * aus der `.htaccess`, und die liest nur Apache: Auf nginx, Caddy oder
- * LiteSpeed stand die Installation ohne `nosniff`, ohne `Referrer-Policy`,
- * ohne `X-Frame-Options` und ohne HSTS da, und niemand sah es.
+ * WOGEGEN. Kaemen die Kopfzeilen nur aus der `.htaccess`, laese sie nur
+ * Apache: Auf nginx, Caddy oder LiteSpeed stuende die Installation ohne
+ * `nosniff`, ohne `Referrer-Policy`, ohne `X-Frame-Options` und ohne HSTS
+ * da, und niemand saehe es. Deshalb setzt PHP sie.
  *
- * ES GIBT JETZT GENAU ZWEI SAETZE, und der Unterschied ist keine Feinheit:
+ * ES GIBT GENAU ZWEI SAETZE, und der Unterschied ist keine Feinheit:
  *
  *   kopfzeilen_seite()   fuer alles, was HTML ausliefert — mit CSP und Nonce
  *   kopfzeilen_json()    fuer die Endpunkte — ohne CSP, weil eine JSON-Antwort
@@ -20,7 +18,7 @@ declare(strict_types=1);
  *                        verhindert, dass ein Browser eine JSON-Antwort als
  *                        HTML deutet.
  *
- * DIE CSP KOMMT ZWEISTUFIG (E-P5a-15). Zuerst `…-Report-Only` mit einem
+ * DIE CSP KOMMT ZWEISTUFIG. Zuerst `…-Report-Only` mit einem
  * Berichtsendpunkt, **zwei Wochen im Betrieb**, dann scharf ueber die
  * Einstellung `csp_scharf`. Eine CSP, die man scharf einschaltet und dann
  * eine vergessene Quelle findet, bricht eine Seite bei jemandem, der gerade
@@ -31,19 +29,18 @@ declare(strict_types=1);
  * fuer die 25 Inline-Bloecke. Kein `'unsafe-inline'`.
  *
  * ---------------------------------------------------------------------------
- * DREI ABWEICHUNGEN VOM BAUPLAN SP-5 — jede gemessen, jede begruendet
+ * DREI EINZELHEITEN — jede gemessen, jede begruendet
  * ---------------------------------------------------------------------------
  *
- * 1. `style-src`. SP-5 nennt **ein** `style=`-Attribut („das eine in
- *    index.php wird umgebaut, dann faellt 'unsafe-inline'"). Nachgemessen am
- *    15.09.2026 waren es **dreizehn**: drei im PHP-Markup
+ * 1. `style-src`. Nachgemessen am 15.09.2026 standen **dreizehn**
+ *    `style=`-Attribute im Bestand: drei im PHP-Markup
  *    (`betrieb_server.php` zweimal, `index.php` einmal) und **zehn, die die
  *    Skripte zur Laufzeit per `innerHTML` schreiben** (`geo.js`,
  *    `missiontable.js`, `schneiden.js`). Alle dreizehn tragen BERECHNETE
  *    Werte: Prozentbreiten eines Balkens, Kartenfarben, Drehwinkel — in
  *    Klassen sind sie nicht aufloesbar.
  *
- *    DREI SIND AUFGELOEST (AP4): Der Speicherbalken traegt seine Breite jetzt
+ *    DREI SIND AUFGELOEST: Der Speicherbalken traegt seine Breite jetzt
  *    in `data-breite` und bekommt sie nach dem Aufbau gesetzt, der
  *    Farbstreifen der Tagesuebersicht ebenso. Die Vollstaendigkeitspruefung
  *    findet im PHP-Markup ausserhalb von `vendor/` jetzt **0** Stilattribute;
@@ -70,27 +67,25 @@ declare(strict_types=1);
  *    kennt — der faellt auf `style-src 'self'` zurueck und blockiert die zehn
  *    Stellen. Beides faellt in der Report-Only-Phase auf und nicht danach.
  *
- * 2. `connect-src`. SP-5 schreibt `https://photon.komoot.io` fest. Der
- *    Adressdienst ist seit S9 aber **je Installation einstellbar**
- *    (`geocoder_dienst()`), und genau das ist der Weg, den F-SP-4 anpreist:
- *    den eigenen Photon betreiben. Ein fester Wert braeche ihn — ohne
+ * 2. `connect-src`. Der Adressdienst ist **je Installation einstellbar**
+ *    (`geocoder_dienst()`), und das ist ein Weg, den man nutzen soll: den
+ *    eigenen Photon betreiben. Ein fester Wert wie `https://photon.komoot.io`
+ *    braeche ihn — ohne
  *    Fehlermeldung ausser in der Konsole. Die Zeile setzt deshalb den
  *    LAUFENDEN Dienst ein, und ist die Suche aus, steht er gar nicht erst da.
  *
- * 3. `img-src data:` — HIER STAND EIN IRRTUM, UND DER REPORT-ONLY-LAUF HAT
- *    IHN GEFUNDEN. SP-5 fuehrt `data:` mit. Nachgemessen wurde zuerst im
- *    Quelltext von `server/` und `assets/style.css`: 0 Treffer, also
- *    gestrichen — mit dem Satz „der Report-Only-Lauf sagt, wenn das ein
- *    Irrtum war". Er hat es gesagt: **140 Verstoesse** auf den vier
- *    Kartenseiten (`index.php` 65, `zeitraum.php` 31, `einsatz.php` 28,
- *    `tag_spuren.php` 16), alle mit der Quelle `data`.
+ * 3. `img-src data:` — EINE ZAEHLUNG IM QUELLTEXT HAETTE ES GESTRICHEN. Im
+ *    Quelltext von `server/` und `assets/style.css` steht `data:` nirgends
+ *    (0 Treffer). Der Report-Only-Lauf hat ohne es **140 Verstoesse**
+ *    gemeldet, auf den vier Kartenseiten (`index.php` 65, `zeitraum.php` 31,
+ *    `einsatz.php` 28, `tag_spuren.php` 16), alle mit der Quelle `data`.
  *
  *    URSACHE: `leaflet.js` traegt eine eingebaute Konstante — ein 1x1
  *    Pixel grosses, durchsichtiges GIF als `data:image/gif;base64,…`
  *    (`L.Util.emptyImageUrl`). Leaflet setzt sie als `src`, wenn es eine
  *    Kachel wegraeumt. Sie steht in einer minifizierten Bibliothek und
  *    nicht in unserem Quelltext, und genau deshalb hat die Zaehlung sie
- *    nicht gesehen. `data:` steht seither drin.
+ *    nicht gesehen. Deshalb steht `data:` drin.
  *
  *    WAS DAS KOSTET, ausgesprochen: `data:` in `img-src` erlaubt jedem
  *    eingeschleusten Markup ein beliebiges Bild aus der Zeichenkette
@@ -108,21 +103,17 @@ declare(strict_types=1);
  * HSTS: EINE ZAHL, EINE STELLE
  * ---------------------------------------------------------------------------
  *
- * `Strict-Transport-Security` steht bis Web 20.6.0 in der `.htaccess` mit
- * `max-age=31536000` und `Header always set` — und `set` ERSETZT, was PHP
- * gesetzt hat. Eine Einstellung neben dieser Zeile waere auf Apache eine
- * Luege gewesen. Die Zeile ist deshalb aus der `.htaccess` verschwunden; hier
- * ist die einzige Stelle.
+ * `Strict-Transport-Security` steht NICHT in der `.htaccess`: Dort ersetzte
+ * `Header always set`, was PHP gesetzt hat, und eine Einstellung daneben
+ * waere auf Apache eine Luege. Hier ist die einzige Stelle.
  *
- * DER PREIS STEHT MIT DA: Die Vorgabe ist **ein Tag** (E-P5a-15) — auf einer
- * Installation, die bisher ein Jahr gesendet hat, sinkt die Bindung damit,
- * bis jemand den Wert hochstellt. Das ist Absicht und keine Nachlaessigkeit:
- * Ein falsch gesetzter langer HSTS sperrt eine Domain aus, und zwar fuer die
- * ganze Dauer. Die Einstellung sagt es, die Statusseite sagt es, und im
- * Pruefdokument steht es als Punkt fuer die Betreiberin.
+ * DER PREIS STEHT MIT DA: Die Vorgabe ist **ein Tag**. Das ist Absicht und
+ * keine Nachlaessigkeit: Ein falsch gesetzter langer HSTS sperrt eine Domain
+ * aus, und zwar fuer die ganze Dauer. Die Einstellung sagt es, und die
+ * Statusseite sagt es.
  *
  * `includeSubDomains` bleibt aussen vor, bis geklaert ist, dass keine
- * Subdomain ohne TLS laeuft (SP-5) — und die Staging-Adresse dieser
+ * Subdomain ohne TLS laeuft — und die Staging-Adresse dieser
  * Auslieferungskette ist genau so eine Subdomain. Die Anschrift steht
  * absichtlich nicht hier: Sie ist eine Eigenschaft der Installation und
  * gehoert in die Geheimnisse der Kette, nicht in den Quelltext.
@@ -144,16 +135,16 @@ declare(strict_types=1);
  * still wegfaellt. Die Datei laedt selbst nichts (dort ausgeschrieben).
  */
 
-/* `db.php` NUR, WENN ES SCHON EINE KONFIGURATION GIBT (Nr. 214).
+/* `db.php` NUR, WENN ES SCHON EINE KONFIGURATION GIBT.
  *
  * `db.php` verlangt `config.php` hart (`$CFG = require ...`), und das ist dort
  * richtig: Jede regulaere Seite laeuft nach der Einrichtung. Genau eine laeuft
  * davor — `install.php`, und sie zieht `ui.php`, damit ihr Formular aussieht
  * wie die Anwendung. Ueber `ui_seite_start()` landete sie hier, hier in
- * `db.php` und dort im Fatal Error: Nach P5a/AP4 war die Anwendung nicht mehr
+ * `db.php` und dort im Fatal Error: Die Anwendung waere nicht
  * installierbar, und zwar genau so lange, wie noch niemand sie installiert
- * hatte. Der Kopf oben sagt, diese Datei komme „ohne Datenbank aus"; sie kam
- * nur nicht ohne `config.php` aus, und das ist derselbe Fall eine Ebene
+ * hat. Der Kopf oben sagt, diese Datei komme „ohne Datenbank aus"; ohne
+ * `config.php` kaeme sie es nicht, und das ist derselbe Fall eine Ebene
  * tiefer.
  *
  * `is_file()` statt eines abgefangenen `require`: Ein fehlgeschlagenes
@@ -166,11 +157,11 @@ if (is_file(__DIR__ . '/config.php')) {
     require_once __DIR__ . '/db.php';
 }
 require_once __DIR__ . '/instanz_lib.php';
-/* `geocoder_lib.php` STEHT AUSGESCHRIEBEN (Web 23.0.3). `kopf_csp()` setzt den
- * Adressdienst in `connect-src` — bis dahin nur, wenn ein Aufrufer die Datei
- * VOR dem Kopf geladen hatte (`function_exists()`). `einstellungen.php` tat
- * es, `einsatz_form.php` nicht: Es zieht sie erst über `ui.php`, nach der
- * Kopfzeile. Gemessen am 21.10.2026: `einsatz_form.php` lieferte
+/* `geocoder_lib.php` STEHT AUSGESCHRIEBEN. `kopf_csp()` setzt den
+ * Adressdienst in `connect-src`. Hinge der Eintrag daran, ob ein Aufrufer
+ * die Datei VOR dem Kopf geladen hat (`function_exists()`), fehlte er in
+ * `einsatz_form.php`: Es zieht sie erst über `ui.php`, nach der Kopfzeile.
+ * Gemessen am 21.10.2026: `einsatz_form.php` lieferte
  * `connect-src 'self'`, und genau dort sucht man Adressen — bei scharfer CSP
  * ohne Ergebnis, nur mit einer Zeile in der Konsole. Die Datei legt beim
  * Laden nur Konstanten und Funktionen an und zieht selbst nichts; ohne
@@ -183,7 +174,7 @@ require_once __DIR__ . '/geocoder_lib.php';
 const KOPF_K_CSP_SCHARF = 'csp_scharf';
 const KOPF_K_HSTS_TAGE  = 'hsts_tage';
 
-/** Vorgabe der HSTS-Dauer in Tagen (E-P5a-15). Stufen: 1 · 7 · 365. */
+/** Vorgabe der HSTS-Dauer in Tagen. Stufen: 1 · 7 · 365. */
 const KOPF_HSTS_VORGABE = 1;
 const KOPF_HSTS_STUFEN  = [1, 7, 365];
 
@@ -195,7 +186,7 @@ const KOPF_KACHELN = [
     'https://server.arcgisonline.com',
 ];
 
-/* DIE VIER GATTER (Nr. 214). Ohne `config.php` gibt es `app_state_lesen()`
+/* DIE VIER GATTER. Ohne `config.php` gibt es `app_state_lesen()`
  * nicht — dann gilt die Vorgabe, dieselbe, die auch bei fehlender Tabelle
  * gilt. Fuer den Einrichter ist das die richtige Antwort: Report-Only und
  * ein Tag HSTS sind die vorsichtigen Werte, und geschrieben wird vor der
@@ -276,7 +267,7 @@ function kopf_https(): bool
     }
     if ((string)($_SERVER['REQUEST_SCHEME'] ?? '') === 'https') { return true; }
     /* `X-Forwarded-Proto` NUR von einem Proxy, dem diese Installation
-     * ausdruecklich vertraut (E-P5a-17). Die Kopfzeile kommt sonst vom
+     * ausdruecklich vertraut. Die Kopfzeile kommt sonst vom
      * Aufrufer, und wer sie erfinden darf, schaltet HSTS und den HTTPS-Zwang
      * mit einer Zeile ab. */
     if (function_exists('netz_proxy_vertrauenswuerdig') && netz_proxy_vertrauenswuerdig()) {
@@ -303,11 +294,9 @@ function kopf_csp(bool $mitNonce = true): string
         : "'self'";
 
     /* Der Adressdienst kommt zur LAUFZEIT herein und nur, wenn die Suche an
-     * ist (Abweichung 2 im Dateikopf). `geocoder_lib.php` ist seit Web 23.0.3
-     * immer geladen (oben); bis dahin hing der Eintrag daran, ob der
-     * Aufrufer sie zufällig vor dem Kopf geladen hatte. Ohne Datenbank —
-     * Wartungsseite, `install.php` — scheitert die Frage, und es bleibt bei
-     * 'self'. */
+     * ist (Punkt 2 im Dateikopf). `geocoder_lib.php` ist immer geladen
+     * (oben). Ohne Datenbank — Wartungsseite, `install.php` — scheitert die
+     * Frage, und es bleibt bei 'self'. */
     $verbinde = ["'self'"];
     try {
         if (geocoder_installation_an()) {
@@ -332,7 +321,7 @@ function kopf_csp(bool $mitNonce = true): string
         "form-action 'self'",
         "object-src 'none'",
     ];
-    /* `frame-ancestors` NUR IN DER SCHARFEN FASSUNG (Backlog Nr. 224).
+    /* `frame-ancestors` NUR IN DER SCHARFEN FASSUNG.
      *
      * In einer Report-Only-Richtlinie wird die Direktive vom Browser
      * IGNORIERT — so steht es in CSP Level 3, und WebKit sagt es laut:
@@ -372,7 +361,7 @@ function kopf_csp(bool $mitNonce = true): string
      * werden kann. Gemessen am 15.09.2026: mit `report-to csp` und einer
      * `Reporting-Endpoints`-Zeile, die eine relative Adresse trug, kamen
      * **null** Berichte an; ohne `report-to` kam derselbe Verstoss sofort
-     * als Zeile in `csp_berichte` (F-P5a-AP4-1). Die Report-Only-Phase
+     * als Zeile in `csp_berichte`. Die Report-Only-Phase
      * waere eine Wartezeit ohne Erkenntnis gewesen, und der leere Kasten
      * auf der Servereinstellungsseite haette wie ein gutes Zeichen
      * ausgesehen.
@@ -477,7 +466,7 @@ function kopf_hsts(): void
 }
 
 /* ---------------------------------------------------------------------------
- * HTTPS-ZWANG (P5a/AP4, E-P5a-16; PP-6 Muss)
+ * HTTPS-ZWANG
  * ---------------------------------------------------------------------------
  *
  * WAS OHNE IHN PASSIERT, UND WARUM ES SO AERGERLICH IST. Die Sitzungscookies
@@ -502,7 +491,7 @@ function kopf_hsts(): void
  * NICHT GETORT: `install.php` (wer einrichtet, hat unter Umstaenden noch kein
  * Zertifikat), die Kommandozeile und die Geraete-Endpunkte `ingest.php` und
  * `pair.php` — deren Zusage steht im JSON-Vertrag, und eine neue Antwortart
- * dort waere eine Client-Aenderung (E-P5a-16 nennt sie ausdruecklich nicht).
+ * dort waere eine Client-Aenderung.
  */
 
 /** Laeuft die Anfrage gegen localhost? Dann gilt sie als sicherer Kontext. */

@@ -1,14 +1,14 @@
 /* Einsatzdoku — Stylesheet
    ===========================================================================
 
-   Neu geschrieben in P3 (Oberflächen-Redesign, mobil-first). Die Vorgängerin
-   war über zwanzig Fassungen gewachsen: 1 468 Zeilen, 78 Hexwerte außerhalb
+   Mobil-first und mit einer Stelle je Wert. Die Vorgängerin war über
+   zwanzig Fassungen gewachsen: 1 468 Zeilen, 78 Hexwerte außerhalb
    von :root, 21 verschiedene Schriftgrößen, die Kopfhöhe fünfmal als 50px
    fest verdrahtet, sechs Schaltflächenvarianten und zwei Graufamilien
    nebeneinander. Sie war nicht schlecht gepflegt — sie hatte nur nie eine
    Stelle, an der ein Wert **einmal** steht.
 
-   DIE DREI EBENEN (Konzept P3, E-P3-06):
+   DIE DREI EBENEN:
 
      Token      Jeder Wert — Farbe, Größe, Abstand, Maß — steht in :root und
                 nirgends sonst. Wer eine Farbe ändern will, ändert sie hier.
@@ -33,28 +33,22 @@
      2  Token                    (:root — alle Werte, sonst keiner)
      3  Grundlagen               (Reset, Körper, Typografie, Fokus, Symbole)
 
-   Die Bausteine folgen in Abschnitt 4 ff. — sie entstehen in Arbeitspaket O2.
-   Bis dahin ist diese Datei bewusst unvollständig: O1 legt das Fundament,
-   O2 setzt die Bausteine darauf. Ein Zwischenstand, in dem die Anwendung roh
-   aussieht, ist eingeplant (Konzept, O2 Punkt 6).
+   Die Bausteine folgen ab Abschnitt 4.
 
    PRÜFMITTEL. tools/quelltext/vollstaendigkeit.py liest diese Datei und meldet jeden
    Hexwert, jede Schriftgröße und jedes Pixelmaß außerhalb von :root, dazu
    jede Klasse des alten Stylesheets, die weder eine neue Regel noch einen
-   Eintrag auf der Streichliste hat. Der Stilvergleich (tools/stilvergleich/)
-   ruht während P3 und wird in O12 neu geeicht.
+   Eintrag auf der Streichliste hat.
 */
 
 
 /* == 1. SCHRIFTEN ==========================================================
  *
- * Wortgleich aus dem Bestand übernommen — an den Schriften ändert P3 nichts.
- *
- * Beide Schriften werden SELBST AUSGELIEFERT (assets/fonts/, Backlog Nr. 12).
- * Vorher kamen sie per @import von Google; das meldete bei jedem Seitenaufruf
- * die IP-Adresse der NutzerIn an Google — in einer Anwendung, deren ganzer
- * Zweck darin besteht, dass Patientendaten den Browser nicht unverschlüsselt
- * verlassen, war das ein Bruch in der Linie.
+ * Beide Schriften werden SELBST AUSGELIEFERT (assets/fonts/). Ein @import
+ * von Google meldete bei jedem Seitenaufruf die IP-Adresse der NutzerIn an
+ * Google — in einer Anwendung, deren ganzer Zweck darin besteht, dass
+ * Patientendaten den Browser nicht unverschlüsselt verlassen, wäre das ein
+ * Bruch in der Linie.
  *
  * Herkunft: npm-Pakete @fontsource/bricolage-grotesque 5.3.0 und
  * @fontsource/open-sans 5.3.0 (beide OFL-1.1), Unterverzeichnis files/.
@@ -125,7 +119,7 @@
  * Vollständigkeitsprüfung meldet jeden Hexwert, jede Schriftgröße und jedes
  * Pixelmaß, das außerhalb dieses Blocks steht.
  *
- * FARBROLLEN (E-P3-15). Die Farbe sagt, worum es geht:
+ * FARBROLLEN. Die Farbe sagt, worum es geht:
  *
  *   Orange       Handeln und „hier bin ich" — Primärknopf, aktiver
  *                Menüpunkt, Anlegen-Wege, Vorbelegungsstern, aktive Kachel,
@@ -138,10 +132,8 @@
  *                Tabellenkopf.
  *   Sand/Grau    Mechanik — Winkel, Trennlinien, inaktive Symbole.
  *
- * Grün und Gelb gibt es nicht mehr. Beide waren markenfremd: Grün trug die
- * Vollzugsmeldung und die Passwortstärke, Gelb den Knopf „Bearbeiten" in den
- * Stammdaten — dieselbe Handlung, die anderswo orange war. Vollzug ist jetzt
- * Blau mit Haken (E-P3-16), „Bearbeiten" der neutrale Rahmenknopf.
+ * Grün und Gelb gibt es nicht. Beide wären markenfremd. Vollzug ist Blau
+ * mit Haken, „Bearbeiten" der neutrale Rahmenknopf.
  *
  * JE FARBE EIN TIEF UND EIN HELL. Das „Tief" ist die Schriftfassung und
  * erreicht auf Schnee die Kontrastschwelle; das „Hell" ist die Fläche. Die
@@ -157,9 +149,7 @@
  *   Rot tief          7,58:1     Rot D63338                4,68:1
  *   Orange tief       4,32:1  — nur ab 14 px fett oder 18 px (Schwelle 3:1)
  *
- * Drei Werte weichen von Anlage G des Konzepts ab, alle nach oben (Asphalt
- * 19,3 statt 17,5; Blau tief 7,8 statt 7,2; Rot tief 7,6 statt 7,1; Primärknopf
- * 6,0 statt 5,4). Die Rechnung steht in tools/screenshots/kontrast.py und
+ * Die Rechnung steht in tools/screenshots/kontrast.py und
  * läuft bei jedem Screenshot-Lauf mit; die Tabelle in docs/Design.md wird
  * daraus erzeugt, nicht abgeschrieben.
  */
@@ -168,17 +158,15 @@
   /* ---- Flächen ---------------------------------------------------------
    * Schnee ist die Karte, Rauch die Seite darunter, Sand die Mechanik.
    * Weiß (#FFF) ist KEIN Token: In der Marke ist Weiß nur Logo- und
-   * Schriftfarbe auf Dunkel. Im alten Stylesheet stand es vierzehnmal als
-   * Fläche — das ist der Grund, warum die Oberfläche stellenweise kalt
-   * wirkte, während der Rest warm war. */
+   * Schriftfarbe auf Dunkel. Als Fläche wirkte es kalt, wo der Rest warm
+   * ist. */
   --schnee:#FFFCFA;
   --rauch:#F7F5ED;
   --sand:#D4C7AD;
 
   /* ---- Schrift ---------------------------------------------------------
-   * Gedämpft ist die EINZIGE Graustufe. Der Bestand hatte daneben eine
-   * zweite, kühle Familie (5B5F66, 9AA0A6, 8A96A8, C6CEDB …) — zwei
-   * Grauwelten in einer Oberfläche. Sie ist ersatzlos fort. */
+   * Gedämpft ist die EINZIGE Graustufe. Eine zweite, kühle Familie daneben
+   * ergäbe zwei Grauwelten in einer Oberfläche. */
   --asphalt:#1A0500;
   --dunkelblau:#1A2E4D;
   --gedaempft:#6E6459;
@@ -197,9 +185,8 @@
    *                  und ist ohnehin schon Token — ein neuer Farbwert war
    *                  dafür nicht nötig.
    *
-   * Das ist der Fund F-P3-K: Anlage G führt für Ränder 3:1, nennt aber nur
-   * Farben, die darunter liegen. Ohne die Trennung hätte jedes Eingabefeld
-   * einen Rand von 1,4:1 — sichtbar für gute Augen, unsichtbar für andere. */
+   * Ohne die Trennung hätte jedes Eingabefeld einen Rand von 1,4:1 —
+   * sichtbar für gute Augen, unsichtbar für andere. */
   --linie:#E3DAC6;
   --linie-stark:var(--gedaempft);
 
@@ -221,30 +208,28 @@
   /* ---- Primärknopf -----------------------------------------------------
    * Die eine Stelle, an der die Kontrastfrage entschieden wurde: Weiß auf
    * Orange sind 2,3:1 und damit unlesbar; Dunkelblau auf Orange sind 5,97:1.
-   * Der Knopf trägt deshalb dunkelblaue Schrift (E-P3-15). Die Mockups
-   * zeigen an dieser Stelle Weiß — der Entscheidungstext gilt, nicht die
-   * Skizze (Konzept 3, Vorbemerkung). */
+   * Der Knopf trägt deshalb dunkelblaue Schrift. */
   --knopf-primaer-flaeche:var(--orange);
   --knopf-primaer-schrift:var(--dunkelblau);
 
   /* ---- Schriftfamilien -------------------------------------------------
-   * Die Ersatzlisten sind NORMAL BREIT. Hier stand einmal 'Arial Narrow' an
-   * zweiter Stelle; kam die Webschrift nicht durch, wurde die ganze
-   * Oberfläche gedrungen, und es sah nach einem Gestaltungsfehler aus statt
-   * nach einem fehlgeschlagenen Download. */
+   * Die Ersatzlisten sind NORMAL BREIT. Stünde eine schmale Schrift wie
+   * 'Arial Narrow' an zweiter Stelle, würde die ganze Oberfläche gedrungen,
+   * sobald die Webschrift nicht durchkommt, und es sähe nach einem
+   * Gestaltungsfehler aus statt nach einem fehlgeschlagenen Download. */
   --schrift-kopf:'Bricolage Grotesque',system-ui,-apple-system,'Segoe UI',
                  Roboto,'Helvetica Neue',Arial,sans-serif;
   --schrift-text:'Open Sans',system-ui,'Segoe UI',Roboto,
                  'Helvetica Neue',Arial,sans-serif;
   /* Schreibmaschinenschrift nur, wo sie die Aussage IST: Kopplungscode
-   * (seit Web 13.1.0 im Eingabefeld, .feld-fest — er wird abgetippt, nicht
+   * (im Eingabefeld, .feld-fest — er wird abgetippt, nicht
    * angezeigt), Wiederherstellungsschlüssel, Rechtstext-Editor. */
   --schrift-fest:ui-monospace,'SF Mono','Cascadia Mono','JetBrains Mono',
                  Consolas,monospace;
 
   /* ---- Schriftskala ----------------------------------------------------
-   * Major Third (1,25) um die Grundgröße 15/16 px. Der Bestand hatte 21
-   * verschiedene Größen und damit keine Skala, sondern eine Sammlung.
+   * Major Third (1,25) um die Grundgröße 15/16 px — eine Skala, keine
+   * Sammlung.
    *
    *   1  12  Kleinzeile, Plakette, Tabellenfuß
    *   2  13  Kleinzeile groß, Beschriftung, Meta
@@ -255,8 +240,7 @@
    *   titel  Seitentitel: 28 mobil, 30 ab 720   — 24 × 1,25
    *
    * Der Seitentitel hat einen eigenen Namen statt --groesse-7, weil er als
-   * einziger von der Fensterbreite abhängt. Das Konzept nennt in 5.2 sechs
-   * Namen und sieben Werte; das ist die Auflösung (Fund F-P3-I). */
+   * einziger von der Fensterbreite abhängt. */
   --groesse-1:12px;
   --groesse-2:13px;
   --groesse-3:15px;
@@ -270,8 +254,7 @@
   --zeile-lesen:1.6;                   /* Fließtext in der Lesespalte */
 
   /* ---- Abstände --------------------------------------------------------
-   * Fünf Stufen, Vierer-Raster. Mehr braucht es nicht; weniger hätte den
-   * Bestand nicht abgebildet. */
+   * Fünf Stufen, Vierer-Raster. Mehr braucht es nicht. */
   --abstand-1:4px;
   --abstand-2:8px;
   --abstand-3:12px;
@@ -284,16 +267,14 @@
   --radius-gross:12px;                 /* Karte, Blatt, Dialog */
 
   /* ---- Maße -------------------------------------------------------------
-   * --kopf ist die Kopfhöhe und steht GENAU HIER. Im Bestand stand sie
-   * fünfmal als 50px im Stylesheet (.layout min-height, .daylist top und
-   * height, .filterspalte top und height) — und weil die tatsächliche Höhe
-   * vom Umbruch des Markentexts abhing und das Demo-Banner sie zusätzlich
-   * verschob, rutschte im Demo-Konto die Leiste unter der Kopfleiste hervor.
-   * Das ist Fund F-P3-G; er ist mit diesem einen Token erledigt.
+   * --kopf ist die Kopfhöhe und steht GENAU HIER, nicht als 50px an fünf
+   * Stellen — sonst rutscht, weil die tatsächliche Höhe vom Umbruch des
+   * Markentexts abhängt und das Demo-Banner sie zusätzlich verschiebt, im
+   * Demo-Konto die Leiste unter der Kopfleiste hervor.
    *
    * --knopf ist 44 px, für JEDEN Knopf, mobil wie Desktop, auch für
    * Zeilenaktionen. Es gibt keine Kompaktvariante: Was kleiner ist, ist kein
-   * Knopf, sondern ein Link mit Symbol (E-P3-22). */
+   * Knopf, sondern ein Link mit Symbol. */
   --kopf:56px;
   --knopf:44px;
   --leiste:260px;                      /* Seitenleiste ab 1200 */
@@ -309,19 +290,17 @@
   --uebersicht-spalte:240px;           /* schmalste Spalte der Einstellungs-Übersicht */
   --suchfeld:48px;                     /* das große Suchfeld */
   --symbol-klein:16px;                 /* Zusatzzeichen an einer Beschriftung */
-  /* Drei abgeleitete Symbolmasse aus der Mockup-Runde 9c (AP2, Nr. 42). Die
-   * Skala ist geschlossen (`CLAUDE.md` 5), deshalb stehen sie als RECHNUNG da,
+  /* Drei abgeleitete Symbolmasse. Die Skala ist geschlossen (`CLAUDE.md` 5), deshalb stehen sie als RECHNUNG da,
    * und die Rechnung ist ihre Herkunft:
    *   --symbol-winzig 12 px = --symbol-klein (16) minus --abstand-1 (4). So
-   *     gross wie das Malzeichen, das es ersetzt (E-MR-14): Der 16-px-Vorschlag
-   *     war „zu gross, zu dicht" und ist verworfen.
+   *     gross wie ein Malzeichen; 16 px waeren „zu gross, zu dicht".
    *   --ziel-chip    28 px = --symbol-gross (24) plus --abstand-1 (4). Das
-   *     TREFFZIEL um dieses Symbol, freigegeben als F-MR-6b. Es ist groesser
+   *     TREFFZIEL um dieses Symbol. Es ist groesser
    *     als das der Filter-Plakette (20 px, .plakette-weg) — mit Absicht: Der
    *     Chip steht in einem Formular, die Plakette in einer Leiste, und ein
    *     Fehlgriff kostet hier einen Wert.
    *   --symbol-text  1em = so gross wie die Schrift, in der es steht. Das
-   *     Warnzeichen im Satz einer Meldung waechst mit ihr (E-MR-10). */
+   *     Warnzeichen im Satz einer Meldung waechst mit ihr. */
   --symbol-winzig:calc(var(--symbol-klein) - var(--abstand-1)); /* 12 px, im Chip */
   --ziel-chip:calc(var(--symbol-gross) + var(--abstand-1));     /* 28 px, Treffziel */
   --symbol-text:1em;                   /* Symbol im Fliesstext */
@@ -330,25 +309,25 @@
   --strich:1px;                        /* Haarlinie */
   --strich-stark:2px;                  /* Aktivstrich, Randstrich, Fokus */
   --radius-rund:999px;                 /* Zähler, Griff, Punkt — voll rund */
-  --schalter-breit:46px;               /* der Schalter aus E-P3-28 … */
+  --schalter-breit:46px;               /* der Schalter, 46 breit … */
   --schalter-hoch:26px;                /* … 26 hoch, damit er in eine */
   --schalter-punkt:20px;               /* 44-px-Zeile passt und greifbar bleibt */
   --geo-kreis:28px;                    /* Einsatzort-Kreis auf der Karte */
   --geo-schild:30px;                   /* Kästchen für Standort und Zielklinik */
   --geo-ring:3px;                      /* Randstärke des Farbrands Start/Ende */
-  /* Zwei abgeleitete Maße aus M-S9-01 V1 (S9/AP3). Die Skala ist geschlossen
+  /* Zwei abgeleitete Maße. Die Skala ist geschlossen
    * (`CLAUDE.md` 5), deshalb stehen sie nicht als neue Stufen da, sondern als
    * Rechnung — und die Rechnung IST ihre Herkunft:
    *   Ringpunkt 14 px = --abstand-4 (16) minus --strich-stark (2). Er ist der
    *     Ring ohne Schild und soll um genau eine Randstärke kleiner sein als
-   *     das Rasterfeld, in dem er bisher saß.
+   *     das Rasterfeld von 16 px.
    *   Symbol im Schild 18 px = --symbol (20) minus --strich-stark (2). Der
    *     Kasten schrumpft um 6 px; das Symbol gibt eine Randstärke ab, damit
    *     der Weißraum um es herum nicht auf null fällt.
    * Das Symbol IM KREIS bekommt kein eigenes Maß — es ist --symbol-klein. */
   --geo-ringpunkt:calc(var(--abstand-4) - var(--strich-stark)); /* Ring ohne Schild (14 px) */
   --geo-symbol:calc(var(--symbol) - var(--strich-stark)); /* Symbol im Kartenschild (18 px) */
-  /* Speicherbalken (E-S8-18, Web 15.1.0). Zwei Maße, beide abgeleitet:
+  /* Speicherbalken. Zwei Maße, beide abgeleitet:
    * 8 px ist --abstand-2, also eine Stufe des Vierer-Rasters — ein Balken,
    * der eine Zeile Grafik ist und keine Fläche; 10 px ist --radius, die
    * kleinste Rundung, und ergibt einen Punkt, der neben 13-px-Text
@@ -356,36 +335,34 @@
   --balken:8px;                        /* Höhe des Speicherbalkens */
   --logo-kachel:var(--kopf);           /* Vorschau-Kachel der Installation … */
   --balken-punkt:10px;                 /* Farbpunkt in seiner Legende */
-  --anmeldekarte:400px;                /* Karte der Anmeldung (E-P3-38) */
+  --anmeldekarte:400px;                /* Karte der Anmeldung */
   --zeile-frei:1.4em;                  /* Mindesthöhe der Zustandszeile */
   --balken-glied:28px;                 /* ein Segment des Passwortstärke- … */
-  --strich-balken:6px;                 /* … balkens, vier davon (E-P3-16) */
-  --karte-neben-breit:400px;           /* Kartenspalte ab 1600 px (E-P3-31) */
+  --strich-balken:6px;                 /* … balkens, vier davon */
+  --karte-neben-breit:400px;           /* Kartenspalte ab 1600 px */
 
   /* ---- Karte (Leaflet) --------------------------------------------------- */
   --karte-mobil:160px;
   --karte-tablet:220px;
   --karte-desktop:300px;
-  /* DIE DRITTE GROESSE (Backlog Nr. 45, M-MR-03, F-MR-7). Zwischen 300 px und
-   * Vollbild lag nichts: Wer mehr von der Spur sehen wollte, musste die Seite
-   * verlassen. `min()` statt einer festen Zahl, und beide Haelften haben einen
+  /* DIE DRITTE GROESSE. Zwischen 300 px und Vollbild laege sonst nichts:
+   * Wer mehr von der Spur sehen will, muesste die Seite verlassen. `min()` statt einer festen Zahl, und beide Haelften haben einen
    * Grund — 60vh laesst auf jedem Geraet ein Drittel des Glases fuer die
    * Liste darunter uebrig, 520 px deckelt das auf einem hohen Schreibtisch-
    * bildschirm, wo 60vh sonst 800 px waeren und die Liste aus dem Bild
-   * schoebe. Freigegeben am 14.09.2026. */
+   * schoebe. */
   --karte-gross:min(60vh, 520px);
 
-  /* ---- Spurfarben (P3/O3, E-P3-40) --------------------------------------
-   * Acht Farben für die Einsätze eines Tages, in Vergabereihenfolge. Bis
-   * Web 9.1.1 stand die Liste als COLORS-Array in index.php und enthielt
-   * fünf markenfremde Werte (F-P3-H). Jetzt: die drei Markenfarben,
-   * Dunkelblau und vier ABGELEITETE Töne — jede Ableitung mit Herkunft:
+  /* ---- Spurfarben --------------------------------------------------------
+   * Acht Farben für die Einsätze eines Tages, in Vergabereihenfolge: die
+   * drei Markenfarben, Dunkelblau und vier ABGELEITETE Töne — jede
+   * Ableitung mit Herkunft:
    *   spur-5..7  die Tief-Töne der drei Markenfarben (stehen oben bereits
    *              als Schrifttöne; hier tragen sie Fläche auf der Karte)
    *   spur-8     Sand, von L 75 % auf 40 % abgedunkelt (4,6:1 auf Schnee)
    * Die Ruhespur ist Mechanik, keine Botschaft — sie fährt gedämpft.
    * JavaScript liest die Werte über getComputedStyle; eine zweite Liste im
-   * Code gibt es nicht mehr. */
+   * Code gibt es nicht. */
   --spur-1:var(--orange);
   --spur-2:var(--blau);
   --spur-3:var(--rot);
@@ -417,9 +394,9 @@
    * Kurz und einheitlich. Wer Bewegung abbestellt hat, bekommt keine
    * (Abschnitt 3).
    *
-   * SEIT WEB 19.6.0 SIND ES 240 ms, VORHER 180 (E-MR-22). Anlass war das
-   * Aktionsblatt: Bei 180 ms war die Auffahrt aus der unteren Bildkante
-   * eher ein Aufblitzen als eine Bewegung, und eine Bewegung, die man
+   * 240 ms, NICHT 180. Anlass ist das Aktionsblatt: Bei 180 ms waere die
+   * Auffahrt aus der unteren Bildkante eher ein Aufblitzen als eine
+   * Bewegung, und eine Bewegung, die man
    * nicht sieht, erklaert auch nichts. Der Wert gilt fuer ALLE Nutzer des
    * Tokens — Schublade und Schleier, Akkordeon-Winkel, Winkel am
    * „Aktionen"-Knopf, Schalter-Griff, Kennzahlen-Winkel und das Blatt.
@@ -441,7 +418,7 @@
   :root{ --groesse-titel:30px; }
 }
 
-/* ---- Die zweite Bedienhöhe: 36 px am Zeigergerät (E-S8-09, R76) ----------
+/* ---- Die zweite Bedienhöhe: 36 px am Zeigergerät -------------------------
  *
  * 44 px BLEIBT DIE VORGABE, und sie gilt überall dort, wo ein Finger tippt.
  * Die Zahl kommt aus WCAG 2.5.8 (Zielgröße mindestens 24 × 24 px) und aus
@@ -480,15 +457,14 @@
  *
  * Was hier steht, gilt für die ganze Anwendung und hängt an keinem Baustein:
  * Reset, Körper, Typografie, Fokus, Symbole, Bewegung. Alles Weitere sind
- * Bausteine und steht ab Abschnitt 4 (Arbeitspaket O2).
+ * Bausteine und steht ab Abschnitt 4.
  */
 
 *,*::before,*::after{box-sizing:border-box}
 
 /* hidden gewinnt IMMER — auch gegen Bausteine mit eigenem display (flex,
  * grid). Ohne diese Regel überstimmt jede display-Angabe das Attribut, und
- * JS-Umschalter zeigen Lese- und Formularzustand gleichzeitig (Fund aus O3
- * am Diensttag-Umschalter). */
+ * JS-Umschalter zeigen Lese- und Formularzustand gleichzeitig. */
 [hidden]{display:none !important}
 
 /* Innenabstände und Ränder der Standardelemente auf null. Was Abstand
@@ -509,7 +485,7 @@ body{
   font-family:var(--schrift-text);
   font-size:var(--groesse-3);
   line-height:var(--zeile);
-  /* Der Rahmen ist zentriert (E-P3-12); die Kopfleiste bleibt voll breit und
+  /* Der Rahmen ist zentriert; die Kopfleiste bleibt voll breit und
    * setzt ihr Inneres selbst auf dasselbe Raster. */
   min-height:100vh;
   min-height:100dvh;
@@ -518,16 +494,13 @@ body{
 /* ---- Überschriften -------------------------------------------------------
  *
  * Bricolage 600 für alles, was Titel ist. GESPERRTE VERSALIEN gibt es nur
- * noch für Abschnittsköpfe in den Leisten („Diensttage", „Filter",
- * „Administration") — im Bestand trugen sie acht Regeln, darunter jeder
- * Tabellenkopf, jede Legende und jeder Feldname. Auf 360 px war das die
- * teuerste Zeile der Anwendung.
+ * für Abschnittsköpfe in den Leisten („Diensttage", „Filter",
+ * „Administration") — nicht für jeden Tabellenkopf, jede Legende und jeden
+ * Feldnamen. Auf 360 px wäre das die teuerste Zeile der Anwendung.
  *
- * Nebenbei erledigt sich damit Fund F-P3-A: `.metanotes` erbte Versalien und
- * Sperrung vom umgebenden `summary` und setzte sie nicht zurück, sodass die
- * Notiz „Wetter: Nebel bis 9 Uhr" als gesperrte Versalzeile erschien. Wenn
- * das `summary` selbst keine Versalien mehr trägt, gibt es nichts mehr zu
- * erben. */
+ * Nebenbei vererbt ein `summary` damit keine Versalien und Sperrung an
+ * Kinder wie `.metanotes`, die sie nicht zurücksetzen — die Notiz „Wetter:
+ * Nebel bis 9 Uhr" erschiene sonst als gesperrte Versalzeile. */
 h1,h2,h3,h4{
   font-family:var(--schrift-kopf);
   font-weight:600;
@@ -547,8 +520,8 @@ p{margin:0}
  * Tabellarische Ziffern überall, wo Zahlen untereinanderstehen. Open Sans
  * kann das über 'tnum' und hat dabei — anders als jede Schreibmaschinenschrift
  * auf dem Markt — eine GLATTE NULL. Die durchgestrichene Null der
- * Monospace-Familien sah in einer Uhrzeit aus wie ein Sonderzeichen; das war
- * der Grund, diese Familie in Web 7.0.0 aus den Tabellen zu nehmen. */
+ * Monospace-Familien sieht in einer Uhrzeit aus wie ein Sonderzeichen; das
+ * ist der Grund, diese Familie aus den Tabellen herauszuhalten. */
 .zahl,td,th,time,output{font-variant-numeric:tabular-nums;font-feature-settings:'tnum' 1}
 
 /* ---- Links ---------------------------------------------------------------
@@ -614,7 +587,7 @@ img,svg,video{max-width:100%;height:auto}
   vertical-align:middle;
 }
 .symbol-gross{width:var(--symbol-gross);height:var(--symbol-gross)}
-/* EIN SYMBOL IM FLIESSTEXT (E-MR-10, Mockup-Runde 9c / AP2). Es waechst mit
+/* EIN SYMBOL IM FLIESSTEXT. Es waechst mit
  * der Schrift, in der es steht — `1em`, nicht 16 oder 20 px —, und sitzt auf
  * der Grundlinie statt in der Zeilenmitte: `vertical-align:middle` laesst ein
  * Zeichen in einem Satz zu hoch schweben. Der Wert `-.15em` ist die
@@ -622,9 +595,9 @@ img,svg,video{max-width:100%;height:auto}
  * Schriftgroesse und geht deshalb mit ihr mit.
  *
  * WOFUER. Die Meldung „N Eintraege lassen sich nicht entschluesseln und sind
- * mit … gekennzeichnet" trug das Zeichen bis Web 19.4.1 als Unicode `⚠` —
- * damit sah es in jedem System anders aus und nahm die Schriftfarbe nicht an.
- * Jetzt ist es dasselbe Symbol wie die Marke in der Tabelle daneben. */
+ * mit … gekennzeichnet" traegt kein Unicode `⚠` — das saehe in jedem System
+ * anders aus und naehme die Schriftfarbe nicht an —, sondern dasselbe
+ * Symbol wie die Marke in der Tabelle daneben. */
 .symbol-text{
   width:var(--symbol-text);height:var(--symbol-text);
   vertical-align:-.15em;
@@ -636,16 +609,12 @@ img,svg,video{max-width:100%;height:auto}
 .symbol-rechts{transform:rotate(-90deg)}
 .symbol-oben{transform:rotate(180deg)}
 
-/* Der Stern wird gefüllt, wenn die Vorbelegung gesetzt ist. Dasselbe Zeichen,
- * zwei Zustände — kein zweites Symbol. */
-.symbol-gefuellt{fill:currentColor}
-
 /* Das Schloss an der Beschriftung eines verschlüsselten Feldes (F-N1-B). Es
  * steht NEBEN dem Wort, nicht davor: Die Beschriftung ist die Auskunft, das
  * Zeichen der Zusatz. Kleiner als ein gewöhnliches Symbol und in der Farbe
  * der Beschriftung — es soll gefunden werden, wenn man danach sucht, und
  * nicht auffallen, wenn man es nicht tut. */
-/* SENKRECHT MITTIG ZUM TEXT (S3/AP6) — und der Wert ist gemessen, nicht
+/* SENKRECHT MITTIG ZUM TEXT — und der Wert ist gemessen, nicht
  * geraten. Das Schloss ist mit 16 px hoeher als die Versalhoehe des
  * 15-px-Wortes daneben; `baseline` stellt seinen Kasten auf die Schriftlinie
  * und schiebt es damit nach oben, `middle` (und ebenso `text-bottom` und
@@ -690,11 +659,11 @@ img,svg,video{max-width:100%;height:auto}
  *
  * Kopfleiste, Rahmen, Leiste/Schublade, Inhalt, Fußzeile.
  *
- * DIE KOPFHÖHE IST --kopf UND SONST NICHTS. Im Bestand stand sie fünfmal als
- * 50px im Stylesheet, und die tatsächliche Höhe hing zusätzlich vom Umbruch
- * des Markentexts ab; das Demo-Banner verschob sie ein weiteres Mal. Ergebnis:
- * Im Demo-Konto rutschte die Leiste unter der Kopfleiste hervor. Jetzt gibt es
- * eine Zahl an einer Stelle, und der Demo-Hinweis steht innerhalb des Inhalts.
+ * DIE KOPFHÖHE IST --kopf UND SONST NICHTS. Die tatsächliche Höhe hängt
+ * sonst vom Umbruch des Markentexts ab, und ein Demo-Banner verschiebt sie
+ * ein weiteres Mal — im Demo-Konto rutschte die Leiste unter der Kopfleiste
+ * hervor. Deshalb eine Zahl an einer Stelle, und der Demo-Hinweis steht
+ * innerhalb des Inhalts.
  *
  * MOBIL ZUERST. Was hier ohne Media-Abfrage steht, gilt für das Handy. Die
  * vier Schwellen (720, 1024, 1200, 1600) bauen nach oben aus.
@@ -707,7 +676,7 @@ img,svg,video{max-width:100%;height:auto}
   height:var(--kopf);
 }
 /* Der Inhalt der Kopfleiste sitzt auf demselben Raster wie Leiste und Inhalt
- * darunter — die Leiste selbst bleibt voll breit (E-P3-12). */
+ * darunter — die Leiste selbst bleibt voll breit. */
 .kopf-innen{
   display:flex;align-items:center;gap:var(--abstand-2);
   height:var(--kopf);
@@ -757,17 +726,17 @@ img,svg,video{max-width:100%;height:auto}
 .kopf-zurueck{display:inline-flex}
 .kopf-zahnrad{margin-right:calc(var(--abstand-2) * -1)}
 .kopf-zahnrad.aktiv{background:var(--auf-dunkel-flaeche);border-radius:var(--radius)}
-/* HILFE steht links vom Zahnrad und bleibt auf dem Handy stehen (P5b/AP8).
+/* HILFE steht links vom Zahnrad und bleibt auf dem Handy stehen.
  * Der negative Rand des Zahnrads zieht nur den letzten Knopf an die Kante;
  * dieser hier braucht ihn nicht. */
 .kopf-hilfe.aktiv{background:var(--auf-dunkel-flaeche);border-radius:var(--radius)}
 /* KOPFLEISTE EINER ANLAGE MIT ETIKETT (.kopf-umgebung) — Variante der
- * Kopfleiste (P5c/AP1, E-P5c-05, -55, -59; M-P5c-02 a). Gesetzt von ui_kopf(),
+ * Kopfleiste. Gesetzt von ui_kopf(),
  * wenn `app.umgebung` einen Namen traegt; die Farbe ist eine geschlossene
  * Liste, heute nur `rot`. Weiss auf --rot 4,78 : 1.
  * Der aktive Punkt: --orange haette auf Rot 2,10 : 1 und fiele unter die
  * 3 : 1 aus WCAG 1.4.11. --orange-hell bleibt in der Familie „hier stehst du"
- * und traegt 4,12 : 1 (Variante A, Q-P5c-26).
+ * und traegt 4,12 : 1.
  * Der Name traegt auf Dunkelblau --sand (8,15 : 1); auf Rot waeren es
  * 2,86 : 1. --schnee traegt 4,68 : 1 und bleibt durch Gewicht 400 gegen 600
  * der Marke untergeordnet. */
@@ -791,7 +760,7 @@ img,svg,video{max-width:100%;height:auto}
  * Unter 1024 px liegt die Leiste als Schublade von links über dem Inhalt,
  * darüber steht sie fest daneben. Der Unterschied ist ausschließlich hier.
  *
- * Das ist die Lehre aus der Vormerkliste von P0: Der Mechanismus hängt an der
+ * Der Mechanismus hängt an der
  * KLASSE, nicht an der Funktion, die die Diensttage ausgibt — sonst bliebe
  * die Suchseite als einzige ohne mobiles Menü.
  */
@@ -829,23 +798,22 @@ img,svg,video{max-width:100%;height:auto}
   flex:0 0 auto;padding:var(--abstand-2);
   border-top:var(--strich) solid var(--linie);
 }
-/* EINE STUFE GRÖSSER (F-N1-K). Mit 12 px war die Überschrift der Leiste das
- * kleinste Element darin — kleiner als die Gruppen, die sie überschreibt, und
+/* GROSS GENUG. Mit 12 px waere die Überschrift der Leiste das kleinste
+ * Element darin — kleiner als die Gruppen, die sie überschreibt, und
  * kleiner als jede Beschriftung darunter. Eine Überschrift, die von allem
  * überragt wird, das sie ordnet, ordnet nichts.
  *
- * SEIT S3/AP4 (E-R43-2) EINE STUFE HOEHER: 15 px statt 13, --asphalt statt
- * --gedaempft. Die Rueckmeldung „wirkt verloren" war ein Problem von Groesse
- * und Kontrast, nicht von Ausrichtung — linksbuendig bleibt sie.
+ * 15 px, --asphalt statt --gedaempft. „Wirkt verloren" ist ein Problem von
+ * Groesse und Kontrast, nicht von Ausrichtung — linksbuendig bleibt sie.
  *
- * VERSALIEN UND SPERRUNG SIND DABEI ENTFALLEN, und das ist am Bild
- * entschieden (E-S3-12 a): Bei 15 px in Bricolage 600 liest sich
+ * KEINE VERSALIEN UND KEINE SPERRUNG, und das ist am Bild entschieden: Bei
+ * 15 px in Bricolage 600 liest sich
  * „DIENSTTAGE" gesperrt als ETIKETT und steht dem Jahreseintrag „2026"
  * darunter an Lautstaerke kaum nach — zwei Ueberschriften statt einer
  * Ordnung. Gemischt gesetzt bleibt es eine Ueberschrift: praesent, aber
- * ersichtlich eine Ebene ueber dem, was es ordnet. Bei 13 px trug die
- * Sperrung noch, weil die Groesse allein nicht reichte; sie war der Ersatz
- * fuer die Groesse, die jetzt da ist. */
+ * ersichtlich eine Ebene ueber dem, was es ordnet. Bei 13 px truege die
+ * Sperrung noch, weil die Groesse allein nicht reichte; sie waere der
+ * Ersatz fuer die Groesse, die da ist. */
 .leiste-kopfzeile{
   font-family:var(--schrift-kopf);font-size:var(--groesse-3);
   font-weight:600;
@@ -854,21 +822,19 @@ img,svg,video{max-width:100%;height:auto}
 }
 .leiste-leer{color:var(--gedaempft);padding:0 var(--abstand-3)}
 
-/* ---- Die drei Blöcke des Einstellungsmenüs (E-S8-07, Option 1 „Linie") ----
+/* ---- Die drei Blöcke des Einstellungsmenüs --------------------------------
  * Ein `<details>` je Block, gebaut aus dem Akkordeon-Baustein. Markup,
  * Aufklappen und das Merken des Zustands (`menue.js`) kommen vom Baustein;
  * diese Regeln setzen nur, was die Blocküberschrift von einem Eintrag
  * unterscheidet.
  *
- * SEIT P5c/AP9 NACH OPTION 1 „LINIE" (E-P5c-29, Nr. 244, Mockup M-P5c-01c).
- * Bis Web 21.0.0 unterschied die Überschrift von einem Eintrag nur eine
- * Gewichtsstufe — Bricolage ist nur in 500 und 600 eingebunden, 400 fällt auf
- * 500 — und ein Winkel an der Stelle, an der die Einträge ihr Symbol tragen.
- * Jetzt: Winkel rechts (die linke Spalte gehört allein den Symbolen), eine
- * Schriftstufe größer in Dunkelblau, Trennlinie und Luft vor jedem weiteren
- * Bereich. Das hebt für DIESES Menü die Begründung aus E-S8-07 auf („zwei
- * Leisten mit demselben Mechanismus sollen denselben Griff haben"): Die
- * Diensttage-Leiste behält Winkel links und Jahreszeilen wie bisher — die
+ * „LINIE". Eine Gewichtsstufe allein unterscheidet die Überschrift nicht
+ * von einem Eintrag — Bricolage ist nur in 500 und 600 eingebunden, 400
+ * fällt auf 500. Deshalb: Winkel rechts (die linke Spalte gehört allein den
+ * Symbolen), eine Schriftstufe größer in Dunkelblau, Trennlinie und Luft vor
+ * jedem weiteren Bereich. Für DIESES Menü gilt damit nicht, dass zwei
+ * Leisten mit demselben Mechanismus denselben Griff haben: Die
+ * Diensttage-Leiste behält Winkel links und Jahreszeilen — die
  * Regeln hängen alle an `.leiste-gruppe`, und die trägt nur dieses Menü.
  *
  * DIE ZAHL STEHT NUR AM ZUGEKLAPPTEN BLOCK. Sie sagt, was verborgen ist
@@ -886,7 +852,7 @@ img,svg,video{max-width:100%;height:auto}
 }
 .leiste-gruppe > .akkordeon-inhalt{padding-left:0}
 
-/* ---- Das APK-Fach auf dem Geräte-Reiter (S8/AP6, Mockup 10) --------------
+/* ---- Das APK-Fach auf dem Geräte-Reiter ----------------------------------
  * Der Rückfall neben zwei Store-Wegen: zugeklappt sagt die Zeile, dass es ihn
  * gibt, ohne ihn anzubieten. Derselbe Akkordeon-Baustein wie in den Leisten,
  * nur mit dem Abstand einer Kartenzeile darüber. */
@@ -895,7 +861,7 @@ img,svg,video{max-width:100%;height:auto}
 .gruppen-zahl{color:var(--gedaempft);font-weight:400;font-size:var(--groesse-2)}
 .leiste-gruppe[open] > .akkordeon-zeile .gruppen-zahl{display:none}
 
-/* ---- Unterpunkte: die Karten der offenen Seite (E-S8-15) -----------------
+/* ---- Unterpunkte: die Karten der offenen Seite ---------------------------
  * Unter dem aktiven Menüpunkt stehen die Kartentitel der Seite als
  * Sprungmarken. Sie sind KEINE Menüpunkte zweiter Ordnung: 28 px statt 44,
  * eine Schriftstufe kleiner, ohne Symbol und ohne Randstrich. Wer sie für
@@ -922,16 +888,15 @@ img,svg,video{max-width:100%;height:auto}
 .eintrag-unter:hover{background:var(--rauch);color:var(--asphalt);text-decoration:none}
 .eintrag-unter.hier{color:var(--dunkelblau);font-weight:600}
 
-/* SPRUNGMARKEN ERST AB 950 PX FENSTERHÖHE — in der festen Leiste (P5c/AP9,
- * E-P5c-131; angehoben mit Web 21.1.3, F-P5c-164). Bei 1280 × 720
- * schoben sie auf acht von vierzehn Seiten Einträge unter den Rand, auf der
- * Seite Servereinstellungen acht Stück; die Leiste war dort nur mit Rollen
- * vollständig, und das Akkordeon wurde gegen genau diesen Zustand gebaut
- * (E-S8-07). Die Einträge sind die Wege durch die Anwendung, die Sprungmarken
+/* SPRUNGMARKEN ERST AB 950 PX FENSTERHÖHE — in der festen Leiste. Bei
+ * 1280 × 720 schoben sie auf acht von vierzehn Seiten Einträge unter den
+ * Rand, auf der Seite Servereinstellungen acht Stück; die Leiste war dort
+ * nur mit Rollen vollständig, und das Akkordeon ist gegen genau diesen
+ * Zustand gebaut. Die Einträge sind die Wege durch die Anwendung, die Sprungmarken
  * nur Wege durch eine Seite — wenn einer weichen muss, dann sie.
  * NUR AB 1024 PX: Darunter ist die Leiste eine Schublade, und dort sind die
  * Sprungmarken der einzige Weg zu den Karten, den man sieht, ohne zu rollen.
- * BIS WEB 21.1.2 STAND HIER 800, und darüber passten drei Listen
+ * WARUM 950 UND NICHT 800: Darüber passten drei Listen
  * nicht: Servereinstellungen (acht Marken) braucht rund 947 px, Status 891,
  * Updates 835. Gemessen bei 1280 px Breite und acht Höhen von 800 bis
  * 1000 px: mit 800 bei 800 px 11 von 14 Seiten vollständig, bei 900 px
@@ -942,13 +907,12 @@ img,svg,video{max-width:100%;height:auto}
   .leiste-gruppe .eintrag-unterliste{display:none}
 }
 
-/* KEINE `scroll-margin-top` AN DER KARTE. Das Konzept sah eine vor — „gibt es
- * im Stylesheet noch nicht" — und das stimmte für den Namen, nicht für die
- * Sache: `html` trägt seit Langem `scroll-padding-top: --kopf + --abstand-4`
- * (Abschnitt 1), und das löst dasselbe Problem eine Ebene höher. Beides
- * zusammen addiert sich: gemessen landete die angesprungene Karte bei 140 px
- * statt bei 72, also 68 px zu tief. Die Regel ist deshalb wieder heraus; der
- * Sprung sitzt mit `scroll-padding-top` allein richtig (gemessen 72 px). */
+/* KEINE `scroll-margin-top` AN DER KARTE. `html` trägt
+ * `scroll-padding-top: --kopf + --abstand-4` (Abschnitt 1), und das löst
+ * dasselbe Problem eine Ebene höher. Beides zusammen addiert sich: gemessen
+ * landete die angesprungene Karte bei 140 px statt bei 72, also 68 px zu
+ * tief. Der Sprung sitzt mit `scroll-padding-top` allein richtig (gemessen
+ * 72 px). */
 
 /* ---- Fußzeile ------------------------------------------------------------
  * Zweizeilig, zentriert, unter dem Inhalt — und außerhalb von <main>. */
@@ -961,12 +925,12 @@ img,svg,video{max-width:100%;height:auto}
 .fuss-zeile{margin:0;display:flex;flex-wrap:wrap;gap:var(--abstand-2);justify-content:center}
 .fuss-rechts{margin-top:var(--abstand-1)}
 .fuss-seite a{color:var(--blau-tief);font-weight:600}
-/* --gedaempft, nicht --sand (O10). Auf --rauch ergab Sand 1,53:1 — die
+/* --gedaempft, nicht --sand. Auf --rauch ergaebe Sand 1,53:1 — die
  * Versionsnummer ist die Auskunft, mit der ein Fehlerbericht anfaengt, und
- * damit ein zu LESENDER Text. `kontrast.py` fuehrte „Sand auf Schnee" als
+ * damit ein zu LESENDER Text. `kontrast.py` fuehrt „Sand auf Schnee" als
  * Ausnahme, begruendet aber nur den Akkordeon-Winkel („Mechanik, keine
  * Botschaft"); das trifft auf eine Zahl nicht zu, die man abtippen soll.
- * Jetzt 5,30:1. Die dunkle Fassung darunter bleibt, wie sie ist. */
+ * So 5,30:1. Die dunkle Fassung darunter bleibt, wie sie ist. */
 .fuss-version{color:var(--gedaempft)}
 .fuss-dunkel{
   background:var(--dunkelblau);color:var(--rauch);
@@ -984,24 +948,22 @@ img,svg,video{max-width:100%;height:auto}
 /* == 5. LEISTENINHALT ======================================================
  *
  * Akkordeon und Einträge. Beide Leisten — Diensttage und Einstellungen —
- * benutzen dieselben Klassen; bis Web 8.0.1 trug das Einstellungsmenü
- * buchstäblich die Klasse `.daylist` und erbte damit jede Regel der
- * Tagesleiste, einschließlich der 100-vh-Höhe.
+ * benutzen dieselben Klassen, aber keine die Klasse der anderen — sonst
+ * erbte das Einstellungsmenü jede Regel der Tagesleiste, einschließlich
+ * der 100-vh-Höhe.
  */
 
 /* ---- Akkordeon -----------------------------------------------------------
- * DIE GANZE ZEILE KLAPPT, nicht nur das Dreieck (E-P3-09). Bisher war der
- * Text der Link auf die Jahresübersicht und nur das Dreieck der Schalter — auf
- * einem Touchgerät nicht zu unterscheiden. Der Weg in die Übersicht ist jetzt
- * ein eigenes Symbol rechts.
+ * DIE GANZE ZEILE KLAPPT, nicht nur das Dreieck. Text als Link und Dreieck
+ * als Schalter wären auf einem Touchgerät nicht zu unterscheiden. Der Weg
+ * in die Übersicht ist ein eigenes Symbol rechts.
  *
  * Der Winkel steht in Sand: Er ist Mechanik, keine Botschaft.
  */
-/* GRÖSSER ALS DIE FELDTITEL DARIN (F-N1-K). Beide standen auf 15 px und
- * unterschieden sich nur durch die Schrift — die Gruppe „Einsatz" war
- * genauso groß wie „Wochentage" darin, obwohl sie eine Ebene darüber steht.
- * 16 px, und mit Bricolage dazu ist der Unterschied auch ohne Nachmessen zu
- * sehen. */
+/* GRÖSSER ALS DIE FELDTITEL DARIN. Bei gleichen 15 px unterschieden sie
+ * sich nur durch die Schrift — die Gruppe „Einsatz" wäre genauso groß wie
+ * „Wochentage" darin, obwohl sie eine Ebene darüber steht. 16 px, und mit
+ * Bricolage dazu ist der Unterschied auch ohne Nachmessen zu sehen. */
 .akkordeon-zeile{
   display:flex;align-items:center;gap:var(--abstand-2);
   min-height:var(--knopf);
@@ -1014,21 +976,19 @@ img,svg,video{max-width:100%;height:auto}
 .akkordeon-zeile::-webkit-details-marker{display:none}
 .akkordeon-zeile:hover{background:var(--rauch)}
 /* winkel.svg zeigt nach UNTEN. Zugeklappt wird er nach rechts gedreht,
- * aufgeklappt steht er in Ruhelage — so zeigen es die Mockups 01/03/06:
- * „›" heißt zu, „⌄" heißt offen. Die erste Fassung hatte es umgekehrt
- * (offen = oben) — das ist die Konvention mancher Aufklappmenüs, aber nicht
- * die dieses Entwurfs (Fable-Kontrolle, F-P3-Q). */
+ * aufgeklappt steht er in Ruhelage: „›" heißt zu, „⌄" heißt offen. Umgekehrt
+ * (offen = oben) ist die Konvention mancher Aufklappmenüs, aber nicht die
+ * dieses Entwurfs. */
 .akkordeon-winkel{color:var(--sand);transition:transform var(--dauer) ease-out;
   transform:rotate(-90deg)}
 details[open] > .akkordeon-zeile > .akkordeon-winkel{transform:none}
 .akkordeon-text{flex:1 1 auto;min-width:0}
 /* Der Weg in die Jahres- bzw. Monatsübersicht: eigenes Ziel, eigene
- * Trefferfläche, 44 px. ER STEHT IM <summary> — die erste Fassung hatte ihn
- * daneben, als Kind des <details>, und der Inhalt eines geschlossenen
- * <details> wird nicht gerendert: Der Link war an jeder zugeklappten Zeile
- * unsichtbar und unerreichbar, die Mockups zeigen ihn an jeder
- * (Fable-Kontrolle, F-P3-R). Weil ein Link im <summary> beim Klick auch das
- * Auf- und Zuklappen auslöste, fängt daylist.js ihn ab und navigiert selbst. */
+ * Trefferfläche, 44 px. ER STEHT IM <summary>: Als Kind des <details>
+ * daneben wäre er an jeder zugeklappten Zeile unsichtbar und unerreichbar,
+ * denn der Inhalt eines geschlossenen <details> wird nicht gerendert. Weil
+ * ein Link im <summary> beim Klick auch das Auf- und Zuklappen auslöst,
+ * fängt daylist.js ihn ab und navigiert selbst. */
 .akkordeon-uebersicht{
   margin-left:auto;flex:0 0 auto;
   width:var(--knopf);height:var(--knopf);
@@ -1041,7 +1001,7 @@ details[open] > .akkordeon-zeile > .akkordeon-winkel{transform:none}
 
 /* ---- Eintrag -------------------------------------------------------------
  * Menüpunkt und Diensttag. Aktiv: hell orange mit orangem Strich links —
- * in BEIDEN Leisten gleich (E-P3-10).
+ * in BEIDEN Leisten gleich.
  */
 .eintrag{
   display:flex;align-items:center;gap:var(--abstand-2);
@@ -1053,17 +1013,17 @@ details[open] > .akkordeon-zeile > .akkordeon-winkel{transform:none}
 }
 .eintrag:hover{background:var(--rauch);text-decoration:none}
 .eintrag .symbol{color:var(--dunkelblau)}
-/* Das Datum schrumpft NICHT. Beim ersten Anlauf hatten Datum und
- * Rettungsmittelname beide `flex:1 1 auto`, und bei 260 px Leistenbreite wurde
- * aus „27.12.2026" ein „27.12.20…" — abgeschnitten wurde also die Auskunft,
- * die den Eintrag überhaupt identifiziert. Der Name absorbiert die Restbreite
- * (E-P3-09: Ellipse am NAMEN, voller Name im Tooltip). */
-/* NORMAL, NICHT FETT (S3/AP4). Alle Eintraege standen auf 600. In einer
- * Liste, in der JEDE Zeile fett ist, hebt das nichts hervor -- es macht nur
+/* Das Datum schrumpft NICHT. Haetten Datum und Rettungsmittelname beide
+ * `flex:1 1 auto`, wuerde bei 260 px Leistenbreite aus „27.12.2026" ein
+ * „27.12.20…" — abgeschnitten wuerde also die Auskunft, die den Eintrag
+ * überhaupt identifiziert. Der Name absorbiert die Restbreite (Ellipse am
+ * NAMEN, voller Name im Tooltip). */
+/* NORMAL, NICHT FETT. In einer Liste, in der JEDE Zeile fett ist, hebt das
+ * nichts hervor -- es macht nur
  * den Block schwer, und der aktive Punkt muss seine Erkennbarkeit allein aus
  * Flaeche und Randstrich holen. Die Auszeichnung wandert von „alle" zu
  * „einer": Grundschnitt 400, der aktive Punkt 600. Dieselbe Ueberlegung wie
- * bei den Blattzeilen (F-N1-F). */
+ * bei den Blattzeilen. */
 .eintrag-text{
   flex:1 0 auto;min-width:0;
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
@@ -1071,10 +1031,10 @@ details[open] > .akkordeon-zeile > .akkordeon-winkel{transform:none}
 }
 /* Lange Rettungsmittelnamen werden abgeschnitten („NEF Neubran…"); der volle
  * Name steht im Tooltip und im Seitentitel. Drei Zustände über die Breiten,
- * nicht zwei: In der Schublade (unter 1024 px, 320 px breit) steht der Name
- * seit jeher; im Band 1024–1199 px ist die Leiste 220 px schmal und zeigt
- * nur einen gesetzten Kurznamen (`.kurz`, S9/AP4a); ab 1200 px steht wieder
- * jeder Name. Das Artzeichen bleibt überall (E-P3-09). */
+ * nicht zwei: In der Schublade (unter 1024 px, 320 px breit) steht der
+ * Name; im Band 1024–1199 px ist die Leiste 220 px schmal und zeigt nur
+ * einen gesetzten Kurznamen (`.kurz`); ab 1200 px steht wieder jeder Name.
+ * Das Artzeichen bleibt überall. */
 .eintrag-neben{
   flex:0 1 auto;min-width:0;
   color:var(--gedaempft);font-size:var(--groesse-2);
@@ -1090,8 +1050,8 @@ details[open] > .akkordeon-zeile > .akkordeon-winkel{transform:none}
 .eintrag-offen .eintrag-text{color:var(--rot-tief)}
 .eintrag-anlegen .symbol,
 .eintrag-anlegen .eintrag-text{color:var(--orange-tief)}
-/* `font-weight:400` stand hier, solange die Grundform 600 war; seit S3/AP4
- * ist 400 die Grundform und die Angabe waere eine Dublette (9.16). */
+/* Kein `font-weight:400` hier: 400 ist die Grundform, die Angabe waere eine
+ * Dublette (9.16). */
 .eintrag-leise .symbol,
 .eintrag-leise .eintrag-text{color:var(--gedaempft)}
 .zaehler{
@@ -1102,9 +1062,8 @@ details[open] > .akkordeon-zeile > .akkordeon-winkel{transform:none}
   background:var(--rot);color:var(--auf-dunkel);
   font-size:var(--groesse-1);font-weight:700;
 }
-/* DREI TÖNE, DIESELBEN WIE DIE AMPEL (S8/AP5, Design.md 9.23). Rot bleibt die
- * Grundform — den Zähler gab es bis Web 15.3.3 nur für die offene Zuordnung,
- * und die ist rot. Orange heißt „braucht Aufmerksamkeit, arbeitet aber",
+/* DREI TÖNE, DIESELBEN WIE DIE AMPEL (Design.md 9.23). Rot ist die
+ * Grundform — die offene Zuordnung ist rot. Orange heißt „braucht Aufmerksamkeit, arbeitet aber",
  * neutral „eine Zahl ohne Wertung": ausstehende Updates sind kein Fehler,
  * sondern Arbeit, die jemand auslösen muss.
  *
@@ -1118,7 +1077,7 @@ details[open] > .akkordeon-zeile > .akkordeon-winkel{transform:none}
  *
  * Jeder Inhaltsblock ist eine Karte mit Titel, optionaler Zahl und GENAU
  * EINER Kopfaktion rechts. Eine zweite gibt es nicht — was mehr braucht,
- * bekommt ein Aktionsmenü (E-P3-25).
+ * bekommt ein Aktionsmenü.
  */
 
 .karte{
@@ -1143,7 +1102,7 @@ details[open] > .akkordeon-zeile > .akkordeon-winkel{transform:none}
 }
 .karte-zahl{color:var(--gedaempft);font-size:var(--groesse-2);flex:0 0 auto}
 /* Die Kopfaktion ist ein LINK mit Symbol, kein Knopf: Was kleiner als 44 px
- * ist, ist kein Knopf (E-P3-22). Die Trefferfläche erreicht sie über den
+ * ist, ist kein Knopf. Die Trefferfläche erreicht sie über den
  * Innenabstand trotzdem. */
 .karte-aktion{
   margin-left:auto;flex:0 0 auto;
@@ -1165,18 +1124,18 @@ details[open] > .akkordeon-zeile > .akkordeon-winkel{transform:none}
 
 /* ---- Zeile ---------------------------------------------------------------
  * Text links (fett plus Kleinzeile), Plaketten, Aktionen rechts. Am Desktop
- * sind die Aktionen Knöpfe; mobil ein „⋯" je Zeile (E-P3-26).
+ * sind die Aktionen Knöpfe; mobil ein „⋯" je Zeile.
  */
 .zeile{
   display:flex;align-items:center;gap:var(--abstand-3);
   padding:var(--abstand-3) 0;
   border-bottom:var(--strich) solid var(--linie);
 }
-/* DIE ZEILE ALS VERWEIS (S9/AP5, M-S9-06). Sie sieht aus wie jede andere
+/* DIE ZEILE ALS VERWEIS. Sie sieht aus wie jede andere
  * Zeile — der Unterschied ist der Winkel rechts und die Flaeche, die sich
  * anfassen laesst. Keine Unterstreichung: Die ganze Zeile ist der Link, und
  * ein unterstrichener Name daerinnen sagte, nur er sei es. */
-/* „ZUM ANFANG" (S9/AP5): rechtsbuendig am Ende eines Abschnitts, mit Luft
+/* „ZUM ANFANG": rechtsbuendig am Ende eines Abschnitts, mit Luft
  * darueber. Der Knopf selbst ist `.knopf knopf-leise` — die Klasse traegt
  * die Bedienhoehe und wird vom Bilderlauf gemessen. */
 .nach-oben{margin:var(--abstand-4) 0 0;text-align:right}
@@ -1195,13 +1154,13 @@ a.zeile:hover .zeile-weiter{color:var(--blau-tief)}
 .zeile-plaketten{display:flex;flex-wrap:wrap;gap:var(--abstand-1);flex:0 1 auto}
 .zeile-aktionen{display:flex;gap:var(--abstand-2);flex:0 0 auto}
 
-/* ZEILE MIT AUFKLAPPBAREN ANGABEN (.zeile-mehr) — P5c/AP2, E-P5c-26,
- * M-P5c-01a. Ein <details>, dessen <summary> die Zeile ist; die Angaben
+/* ZEILE MIT AUFKLAPPBAREN ANGABEN (.zeile-mehr). Ein <details>, dessen
+ * <summary> die Zeile ist; die Angaben
  * stehen darunter als Liste, der Winkel in der Aktionsspalte.
  *
  * DAS <summary> IST IMMER ERSTES KIND seines <details>. `.zeile:first-child`
  * (oben) naehme ihm den oberen Innenabstand, und aufklappbare Zeilen waeren
- * 13 px niedriger als die uebrigen (F-P5c-13, gemessen). Die Gegenregel
+ * 13 px niedriger als die uebrigen (gemessen). Die Gegenregel
  * steht an `.zeile-mehr > summary.zeile` — Spezifitaet 0,2,1 gegen 0,2,0. */
 .zeile-mehr{border-bottom:var(--strich) solid var(--linie)}
 .zeile-mehr > summary{list-style:none;cursor:pointer;border-bottom:0}
@@ -1219,7 +1178,7 @@ a.zeile:hover .zeile-weiter{color:var(--blau-tief)}
 }
 .zeile-daten dt{color:var(--gedaempft)}
 .zeile-daten dd{margin:0;overflow-wrap:anywhere}
-/* Zeile hervorgehoben — die Spurliste des Diensttages (S2/AP4).
+/* Zeile hervorgehoben — die Spurliste des Diensttages.
  *
  * Kein neuer Farbwert und kein neues Mass: dieselbe Rauchflaeche, die schon
  * die neutrale Plakette traegt, plus ein orangener Balken links in
@@ -1235,7 +1194,7 @@ a.zeile:hover .zeile-weiter{color:var(--blau-tief)}
  * (`:focus-visible` weiter oben), und der greift auch hier. */
 .spur-zeile{cursor:pointer}
 
-/* DIE ANGESPRUNGENE ZEILE (S9/AP5, M-S9-05 und M-S9-07).
+/* DIE ANGESPRUNGENE ZEILE.
  *
  * Wer aus der Sprungliste kommt oder gerade etwas angelegt hat, landet auf
  * einer Zeile unter zwoelf gleich aussehenden. `:target` faerbt genau die,
@@ -1247,8 +1206,8 @@ a.zeile:hover .zeile-weiter{color:var(--blau-tief)}
  *
  * DER RAND DER FLAECHE: Die Zeile liegt in `.karte-inhalt`, und das hat
  * `--abstand-4` Innenabstand. Damit die Flaeche bis an den Kartenrand
- * reicht, ist der negative Aussenabstand GENAU dieser Wert — die Mockups
- * schreiben `--abstand-3` und lassen so je Seite 4 px Weiss stehen. */
+ * reicht, ist der negative Aussenabstand GENAU dieser Wert — mit
+ * `--abstand-3` blieben je Seite 4 px Weiss stehen. */
 .zeile:target{
   background:var(--orange-hell);
   margin:0 calc(var(--abstand-4) * -1);
@@ -1265,7 +1224,7 @@ a.zeile:hover .zeile-weiter{color:var(--blau-tief)}
 }
 .titelzeile-haupt{display:flex;align-items:flex-start;gap:var(--abstand-3);flex-wrap:wrap}
 /* flex-basis auto statt fester 14rem: Ein kurzer Titel („Einsatz 1") liess
- * sonst die Knoepfe umbrechen, obwohl alles in eine Zeile passt (O4). Lange
+ * sonst die Knoepfe umbrechen, obwohl alles in eine Zeile passt. Lange
  * Titel sind mobil ohnehin kurz gefasst (wtag-kurz). */
 .titelzeile-text{flex:1 1 auto;min-width:0}
 .titelzeile-unter{color:var(--gedaempft);font-size:var(--groesse-2);margin-top:var(--abstand-1)}
@@ -1275,9 +1234,9 @@ a.zeile:hover .zeile-weiter{color:var(--blau-tief)}
 /* == 7. KNOPF ==============================================================
  *
  * EINE HÖHE: 44 px, mobil wie Desktop, auch für Zeilenaktionen. Es gibt keine
- * Kompaktvariante — was kleiner ist, ist kein Knopf (E-P3-22). Der Bestand
- * hatte sechs Varianten und sechs ortsgebundene Größen; `.btn-primary` trug
- * global `width:100%` und wurde an zehn Stellen zurückgenommen.
+ * Kompaktvariante — was kleiner ist, ist kein Knopf. Keine Varianten und
+ * keine ortsgebundenen Größen, und keine Regel, die global gesetzt und an
+ * zehn Stellen zurückgenommen wird.
  *
  * Die Vollständigkeitsprüfung liest die Höhenangabe nach: Sie muss aus
  * --knopf kommen.
@@ -1298,8 +1257,7 @@ a.zeile:hover .zeile-weiter{color:var(--blau-tief)}
 .knopf[disabled],.knopf[aria-disabled="true"]{opacity:.5;cursor:default}
 
 /* Dunkelblaue Schrift auf Orange: 5,97:1. Weiß auf Orange wären 2,3:1 und
- * damit unlesbar — die Mockups zeigen an dieser Stelle Weiß, der
- * Entscheidungstext gilt (E-P3-15, Fund F-P3-L). */
+ * damit unlesbar. */
 .knopf-primaer{
   background:var(--knopf-primaer-flaeche);
   color:var(--knopf-primaer-schrift);
@@ -1326,7 +1284,7 @@ a.zeile:hover .zeile-weiter{color:var(--blau-tief)}
 /* == 8. PLAKETTE ===========================================================
  *
  * Plaketten tragen KEIN Häkchen: Ihr Vorhandensein ist das Häkchen. Und sie
- * sind keine Bedienelemente (E-P3-17).
+ * sind keine Bedienelemente.
  */
 .plakette{
   display:inline-flex;align-items:center;gap:var(--abstand-1);
@@ -1335,7 +1293,7 @@ a.zeile:hover .zeile-weiter{color:var(--blau-tief)}
   font-size:var(--groesse-1);font-weight:600;
   white-space:nowrap;
 }
-.plakette .symbol{width:14px;height:14px}
+.plakette .symbol{width:calc(var(--symbol-klein) - 2px);height:calc(var(--symbol-klein) - 2px)}
 .plakette-neutral{background:var(--rauch);color:var(--gedaempft);border:var(--strich) solid var(--linie)}
 .plakette-orange{background:var(--orange-hell);color:var(--asphalt)}
 .plakette-blau{background:var(--blau-hell);color:var(--dunkelblau)}
@@ -1349,8 +1307,8 @@ a.zeile:hover .zeile-weiter{color:var(--blau-tief)}
 
 /* == 9. MELDUNG ============================================================
  *
- * Vier Töne mit Symbol und optionalem fettem Auftakt (E-P3-16). Grün ist
- * fort: Die Vollzugsmeldung ist jetzt blau wie der Hinweis und unterscheidet
+ * Vier Töne mit Symbol und optionalem fettem Auftakt. Kein Grün: Die
+ * Vollzugsmeldung ist blau wie der Hinweis und unterscheidet
  * sich durch das Symbol — Haken gegen Kreis-i. Farbe ist nie der einzige
  * Träger (Grundregel 3).
  *
@@ -1366,7 +1324,7 @@ a.zeile:hover .zeile-weiter{color:var(--blau-tief)}
 }
 /* Der Text braucht eine Mindestbreite, unter der die Aktion in die naechste
  * Zeile umbricht — sonst quetscht ein breiter Knopf den Text auf ein Wort je
- * Zeile (Fund aus O3 am Geraetehinweis bei 390 px). */
+ * Zeile (etwa der Geraetehinweis bei 390 px). */
 .meldung p{flex:1 1 16rem;min-width:0}
 .meldung .symbol{flex:0 0 auto}
 .meldung-aktion{flex:0 0 auto}
@@ -1376,7 +1334,7 @@ a.zeile:hover .zeile-weiter{color:var(--blau-tief)}
 .meldung-info .symbol{color:var(--blau-tief)}
 .meldung-ok{background:var(--blau-hell);color:var(--blau-tief)}
 .meldung-ok .symbol{color:var(--blau-tief)}
-/* SCHUTZ — rot, aber kein Fehler (S3, Rueckmeldung vom 01.09.2026). Fuer den
+/* SCHUTZ — rot, aber kein Fehler. Fuer den
  * einen Fall, in dem eine Meldung dauerhaft steht und trotzdem die Farbe des
  * Ernstfalls braucht: ein Datenschutzhinweis an der Stelle, an der jemand
  * gleich Daten herunterlaedt. Er benutzt die Flaeche und die Schrift von
@@ -1396,30 +1354,29 @@ a.zeile:hover .zeile-weiter{color:var(--blau-tief)}
  *
  * Mobil ein „⋯", das ein Blatt von unten öffnet; am Desktop derselbe Vorrat
  * als Aufklappmenü. EIN Markup für beide Formen — assets/blatt.js öffnet und
- * schließt nur, welche Form erscheint, sagt dieses Stylesheet (E-P3-27).
+ * schließt nur, welche Form erscheint, sagt dieses Stylesheet.
  */
 .aktionen{position:relative}
 .aktionen-knopf .symbol:last-child{transition:transform var(--dauer) ease-out}
 .aktionen-knopf[aria-expanded="true"] .symbol:last-child{transform:rotate(180deg)}
 
-/* DER OFFENE OEFFNER IST MARKIERT (Backlog Nr. 124, Weg b; E-MR-21, D4).
+/* DER OFFENE OEFFNER IST MARKIERT.
  *
  * Das Blatt deckt am Handy die untere Bildhaelfte ab, und der Knopf, aus dem
- * es kam, verschwand darin optisch — wer es wieder zumachen wollte, suchte.
+ * es kam, verschwaende darin optisch — wer es wieder zumachen will, suchte.
  * Er traegt deshalb, solange sein Blatt offen ist, die Flaeche `--orange-hell`
  * mit `--orange-tief` darauf: 11,7:1 gegen den dunkelblauen Kartenkopf,
  * 3,8:1 fuer die Punkte gegen die Flaeche — ueber den 3:1, die WCAG 1.4.11
  * fuer ein Bedienelement verlangt (`kontrast.py`, Paar „Orange tief auf
- * Orange hell"). Zur Wahl standen vier Ringfassungen; keine ueberzeugte, der
- * Ring auf Blau-hell lag bei 1,9:1 (E-MR-17, E-MR-20).
+ * Orange hell"). Ein Ring ueberzeugt nicht; auf Blau-hell laege er bei
+ * 1,9:1.
  *
  * AM ATTRIBUT, NICHT AN DER KLASSE — und das ist der Kern. Oeffner gibt es in
  * vier Bauarten: `ui_aktionen()` (6 Aufrufe), `ui_zeilenaktionen()` (9), der
  * Pin-Knopf des Ortsfelds und drei handgeschriebene Sortierblatt-Knoepfe in
  * index.php, suche.php und zeitraum.php. Sie teilen genau ein Merkmal:
  * `data-blatt` und `aria-expanded`. Eine Regel daran erreicht alle vier, auch
- * die naechste — „Blatt offen" ist dieselbe Aussage, gleich an welchem Knopf
- * (E-MR-25).
+ * die naechste — „Blatt offen" ist dieselbe Aussage, gleich an welchem Knopf.
  *
  * `border-radius` steht hier mit, weil nicht jeder Oeffner ein `.knopf` ist:
  * `.karte-sortieren` ist ein blanker Button, und ohne die Rundung bekaeme er
@@ -1432,7 +1389,7 @@ a.zeile:hover .zeile-weiter{color:var(--blau-tief)}
   border-radius:var(--radius);
 }
 
-/* DAS BLATT FAEHRT AUF, STATT DAZUSTEHEN (Backlog Nr. 124, Weg b).
+/* DAS BLATT FAEHRT AUF, STATT DAZUSTEHEN.
  *
  * Es liegt unten am Bildrand, und ein Menue, das dort ohne Bewegung
  * erscheint, liest sich wie ein Seitenwechsel: Die halbe Flaeche ist ploetzlich
@@ -1506,14 +1463,13 @@ a.zeile:hover .zeile-weiter{color:var(--blau-tief)}
  *
  * Feld, Schalter, Segmentwahl, Speichern-Leiste.
  *
- * Die Beschriftung steht in NORMALSCHRIFT. Im Bestand waren Feldnamen,
- * Tabellenköpfe und Legenden gesperrte Versalien — das prägende Stilmittel
- * und zugleich das, was auf 360 px am meisten Breite kostete (E-P3-21).
+ * Die Beschriftung steht in NORMALSCHRIFT. Feldnamen, Tabellenköpfe und
+ * Legenden in gesperrten Versalien kosten auf 360 px am meisten Breite.
  */
-/* EIN <fieldset>, DAS NUR GRUPPIERT (S3/AP10). Gebraucht fuer das
+/* EIN <fieldset>, DAS NUR GRUPPIERT. Gebraucht fuer das
  * `disabled`-Attribut: Es sperrt ein ganzes Formular in einem Zug, statt an
- * jedem Feld ein Attribut zu setzen. Die Elementregeln fuer fieldset sind mit
- * O11 gefallen — ohne diese Ruecknahme brachte der Browser seinen eigenen
+ * jedem Feld ein Attribut zu setzen. Es gibt keine Elementregeln fuer
+ * fieldset — ohne diese Ruecknahme braechte der Browser seinen eigenen
  * Rahmen und seine eigene Polsterung mit. `min-width:0` gehoert dazu: Ein
  * fieldset hat eine eingebaute Mindestbreite nach seinem Inhalt und sprengt
  * damit sonst jedes schmale Raster. */
@@ -1530,10 +1486,10 @@ a.zeile:hover .zeile-weiter{color:var(--blau-tief)}
   border:var(--strich) solid var(--linie-stark);
   border-radius:var(--radius-klein);
 }
-/* GESPERRT MUSS GESPERRT AUSSEHEN (F-S8-P-03, aufgenommen in S8/AP1).
+/* GESPERRT MUSS GESPERRT AUSSEHEN.
  * `.feld-eingabe` setzt Flaeche und Schrift selbst und ueberschreibt damit
  * die Graufaerbung, die der Browser einem `disabled` gibt — ein einzeln
- * gesperrtes Feld war von einem bedienbaren nicht zu unterscheiden. Es
+ * gesperrtes Feld waere von einem bedienbaren nicht zu unterscheiden. Es
  * bekommt deshalb die Seitenflaeche statt der Kartenflaeche: dieselbe
  * Aussage wie beim gesperrten Feldsatz, aber ohne dessen `opacity`, die
  * auch den Rand aufhellt. Der Rand bleibt `--linie-stark` und damit ueber
@@ -1571,7 +1527,7 @@ a.zeile:hover .zeile-weiter{color:var(--blau-tief)}
  * Änderung und keine zweite. */
 input[type=file].feld-eingabe{line-height:calc(var(--knopf) - 2*var(--strich))}
 /* DAS AUSWAHLFELD: sein laengster Eintrag schiebt die SEITE, nicht sich selbst
- * (WebKit; gefunden in AP3b mit dem dreifachen Bilderlauf, Nr. 185).
+ * (WebKit; gefunden mit dem dreifachen Bilderlauf).
  *
  * Gemessen auf `import.php` bei 360 px, angemeldet als Demo-Konto:
  *
@@ -1608,24 +1564,20 @@ select.feld-eingabe{contain:paint}
    Eingabefeld. `suche.php` schaltet sie an die Beschriftung des Altersfilters,
    solange die Patientendaten nicht entsperrt sind (`classList.toggle`).
 
-   SIE STAND SEIT P3 OHNE REGEL DA, und der Schalter tat deshalb nichts:
-   Das Eingabefeld wurde `disabled` und vom Browser grau gefaerbt, die
-   Beschriftung daneben blieb schwarz. Kaputt war nichts -- den Zustand
-   zeigen schon `disabled` und der Hinweis `alterlock` --, aber eine
-   Beschriftung, die anders aussieht als das Feld, zu dem sie gehoert,
-   ist eine Ungereimtheit. Gefunden von der Vollstaendigkeitspruefung
-   (PK-04/5e, Backlog Nr. 278), nachgetragen mit dem VORHANDENEN Token
-   und ohne neue Darstellung (CLAUDE.md 5). */
+   Ohne diese Regel wuerde das Eingabefeld `disabled` und vom Browser grau
+   gefaerbt, die Beschriftung daneben bliebe schwarz. Kaputt waere nichts
+   -- den Zustand zeigen schon `disabled` und der Hinweis `alterlock` --,
+   aber eine Beschriftung, die anders aussieht als das Feld, zu dem sie
+   gehoert, ist eine Ungereimtheit. Mit dem VORHANDENEN Token und ohne
+   neue Darstellung (CLAUDE.md 5). */
 .feld-gesperrt{color:var(--gedaempft)}
-.feld-reihe{display:flex;flex-wrap:wrap;gap:var(--abstand-3)}
-.feld-reihe > .feld{flex:1 1 12rem;min-width:0}
 
 /* ---- Schalter ------------------------------------------------------------
  * Aus einer echten Checkbox gebaut — Tastaturbedienung, Vorlesezustand und
  * Absenden kommen damit vom Browser und nicht aus einem Skript. */
 .schalter{margin-bottom:var(--abstand-3)}
-/* DER SELEKTOR IST ABSICHTLICH SO LANG — dieselbe Falle wie F-P3-AP, hier
- * in O11 nachgezogen. `.schalter-box` (0,1,0) verliert gegen
+/* DER SELEKTOR IST ABSICHTLICH SO LANG — dieselbe Falle wie bei der
+ * Segmentwahl. `.schalter-box` (0,1,0) verliert gegen
  * `input[type=checkbox]` in den Grundformen (0,1,1), die jedem Kästchen
  * 20 x 20 px gibt; gemessen war es genau das. Weder `.schalter` noch
  * `.wahlliste` setzen `position:relative`, das unsichtbare Kästchen lag also
@@ -1635,10 +1587,10 @@ input[type=checkbox].schalter-box{position:absolute;opacity:0;width:0;height:0;m
   display:flex;align-items:center;gap:var(--abstand-3);
   min-height:var(--knopf);cursor:pointer;
 }
-/* DER GRIFF STEHT NEBEN DER BESCHRIFTUNG, NICHT AM RAND (Backlog Nr. 123,
- * gemeldet 05.09.2026 mit Bild). Bis Web 15.4.1 trug `.schalter-text`
- * `flex:1 1 auto` und drückte den Griff an den rechten Rand der Karte.
- * Gemessen: bei 1440 px lagen zwischen dem Ende von „Mein Kontopasswort
+/* DER GRIFF STEHT NEBEN DER BESCHRIFTUNG, NICHT AM RAND. Mit
+ * `flex:1 1 auto` an `.schalter-text` drückte der Text den Griff an den
+ * rechten Rand der Karte. Gemessen am 05.09.2026: bei 1440 px lagen
+ * zwischen dem Ende von „Mein Kontopasswort
  * verwenden" und dem Griff **832 px**, bei 1920 px **1072 px** — mehr als
  * eine halbe Bildschirmbreite. Man sieht den Schalter dort nicht mehr als zu
  * dieser Zeile gehörig; man sieht ihn oft gar nicht.
@@ -1672,7 +1624,7 @@ input[type=checkbox].schalter-box{position:absolute;opacity:0;width:0;height:0;m
   outline:var(--strich-stark) solid var(--blau);outline-offset:var(--strich-stark);
 }
 /* AUSGEGRAUT — ein Schalter, den eine Einstellung darueber gesperrt hat
- * (S9/AP2, E-S9-05: die Installation ist die Obergrenze des Kontoschalters).
+ * (die Installation ist die Obergrenze des Kontoschalters).
  * Dieselbe Sprache wie beim gesperrten Eingabefeld (`.feld-eingabe:disabled`):
  * gedaempfte Schrift, Rauch als Flaeche, `not-allowed` am Zeiger. Ein
  * ZWEITES Aussehen fuer denselben Zustand waere zwei Aussagen fuer eine
@@ -1698,21 +1650,21 @@ input[type=checkbox].schalter-box{position:absolute;opacity:0;width:0;height:0;m
   border-radius:var(--radius);
   overflow:hidden;
 }
-/* DER SELEKTOR IST ABSICHTLICH SO LANG (F-P3-AP, O9c). `.segment-box`
- * allein (0,1,0) verliert gegen `input[type=radio]` (0,1,1) in Abschnitt 15,
- * die jedem Radio 20 x 20 px gibt — und weil diese Regel spaeter steht, blieb
- * das Kaestchen 20 x 20 gross, nur durchsichtig. Absolut positioniert und
- * unsichtbar lag es damit UEBER der Umgebung und fing Klicks ab; gefunden
- * beim Bedienen der Wartungsseite („intercepts pointer events"). Es betraf
- * jede Segmentwahl der Anwendung — Zeitraum, Suchfilter, Reiter. */
+/* DER SELEKTOR IST ABSICHTLICH SO LANG. `.segment-box` allein (0,1,0)
+ * verliert gegen `input[type=radio]` (0,1,1) in Abschnitt 15, die jedem
+ * Radio 20 x 20 px gibt — und weil diese Regel spaeter steht, bliebe das
+ * Kaestchen 20 x 20 gross, nur durchsichtig. Absolut positioniert und
+ * unsichtbar laege es damit UEBER der Umgebung und finge Klicks ab
+ * („intercepts pointer events") — in jeder Segmentwahl der Anwendung,
+ * Zeitraum, Suchfilter, Reiter. */
 input[type=radio].segment-box,
 input[type=checkbox].segment-box{position:absolute;opacity:0;width:0;height:0;min-height:0}
-/* DER RAND MUSS WEG (F-N1-L). Die Taste ist ein `<label>`, und die
- * Grundformen geben jedem `label` `margin-bottom: --abstand-3` — den Abstand
- * zum nächsten Feld. Innerhalb des Segmentrahmens ist das kein Abstand,
- * sondern ein toter Streifen: Der Rahmen war 58 px hoch, die Tasten 44, und
- * unter ihnen lagen 12 px Leere im Kasten. Betroffen war JEDE Segmentwahl der
- * Anwendung — Wochentage, Dreiwertfilter, Zeitraum-Reiter, Logo-Wahl.
+/* DER RAND MUSS WEG. Die Taste ist ein `<label>`, und die Grundformen geben
+ * jedem `label` `margin-bottom: --abstand-3` — den Abstand zum nächsten
+ * Feld. Innerhalb des Segmentrahmens ist das kein Abstand, sondern ein toter
+ * Streifen: Der Rahmen waere 58 px hoch, die Tasten 44, und unter ihnen
+ * laegen 12 px Leere im Kasten — in JEDER Segmentwahl der Anwendung,
+ * Wochentage, Dreiwertfilter, Zeitraum-Reiter, Logo-Wahl.
  *
  * Das ist die Falle aus `Design.md` 9.16, in Reinform: Ein Baustein auf einem
  * Elementnamen, dessen Grundform er nicht zurücknimmt. */
@@ -1734,14 +1686,13 @@ input[type=checkbox].segment-box{position:absolute;opacity:0;width:0;height:0;mi
 /* ---- Speichern-Leiste ----------------------------------------------------
  * Klebt am unteren Rand und erscheint, sobald das Formular schmutzig ist.
  * KEIN „Verwerfen" — der Rückweg oben genügt, und ein Verwerfen-Knopf neben
- * einem Speichern-Knopf ist die Stelle, an der man sich vergreift (E-P3-29). */
+ * einem Speichern-Knopf ist die Stelle, an der man sich vergreift. */
 .speichern{
   position:sticky;bottom:0;z-index:30;
-  /* KARTENFORM (E-R43-1). Bis Web 12.2.2 brach die Leiste mit
-   * `margin: … calc(var(--abstand-3) * -1)` seitlich aus dem Inhalt aus und
-   * lief ohne Radius von Rand zu Rand — sie wirkte dadurch „eckig und
-   * breiter" als die Karte darüber, obwohl sie zu ihr gehört. Jetzt Radius
-   * und Breite wie die Karte; der Ausbruch ist ersatzlos entfallen.
+  /* KARTENFORM. Bräche die Leiste mit negativem Rand seitlich aus dem
+   * Inhalt aus und liefe ohne Radius von Rand zu Rand, wirkte sie „eckig
+   * und breiter" als die Karte darüber, obwohl sie zu ihr gehört. Deshalb
+   * Radius und Breite wie die Karte.
    *
    * WAS BLEIBT, ist alles, was die FUNKTION traegt: der klebende Sitz, die
    * Trennlinie nach oben und der Schatten. Die Leiste soll auffallen, weil
@@ -1767,15 +1718,15 @@ input[type=checkbox].segment-box{position:absolute;opacity:0;width:0;height:0;mi
 /* == 12. KENNZAHL ==========================================================
  *
  * Wert in Bricolage mit Einheit, darunter die Beschriftung. Die Hervorhebung
- * eines Extremwerts war rot und ist jetzt orange: Rot heißt in dieser
- * Oberfläche „Aufmerksamkeit", und ein Höchstwert ist kein Fehler (E-P3-37).
+ * eines Extremwerts ist orange, nicht rot: Rot heißt in dieser Oberfläche
+ * „Aufmerksamkeit", und ein Höchstwert ist kein Fehler.
  */
 .kennzahl-raster{
   display:grid;gap:var(--abstand-3);
   grid-template-columns:repeat(2,minmax(0,1fr));
   margin-bottom:var(--abstand-4);
 }
-/* SENKRECHT MITTIG (S3/AP5). Die Kacheln stehen in einem Raster und werden
+/* SENKRECHT MITTIG. Die Kacheln stehen in einem Raster und werden
  * alle so hoch wie die hoechste — und die ist hoeher, sobald EINE
  * Beschriftung umbricht („Laengste Flugstrecke · 14.08."). Der Inhalt der
  * uebrigen klebte dann oben, und eine Reihe gleich hoher Kacheln zeigte
@@ -1798,7 +1749,7 @@ input[type=checkbox].segment-box{position:absolute;opacity:0;width:0;height:0;mi
 .kennzahl-einheit{font-size:var(--groesse-2);color:var(--gedaempft);margin-left:var(--abstand-1)}
 .kennzahl-label{font-size:var(--groesse-2);color:var(--gedaempft)}
 /* Der Tag des Extremwerts steht IN der Beschriftungszeile („Längste
- * Flugstrecke · 14.08.", Mockup 30), nicht darunter: Er gehört zur Aussage
+ * Flugstrecke · 14.08."), nicht darunter: Er gehört zur Aussage
  * der Kachel und nicht als zweite Zeile darunter. Bei schmalen Kacheln
  * bricht die Zeile um — das ist richtiger, als eine feste zweite Zeile zu
  * erzwingen, die bei den übrigen Kacheln leer bliebe. */
@@ -1813,11 +1764,12 @@ input[type=checkbox].segment-box{position:absolute;opacity:0;width:0;height:0;mi
 /* == 13. TEXT UND ÖFFENTLICHE HÜLLE ========================================
  *
  * Fließtext in der Lesespalte — Erklärtexte, Abbruchseite, Impressum und
- * Datenschutz (E-P3-12, E-P3-38).
+ * Datenschutz.
  */
-/* `overflow-wrap` FUER DEN RECHTSTEXT-BAUSTEIN (Backlog Nr. 221, 18.09.2026).
+/* `overflow-wrap` FUER DEN RECHTSTEXT-BAUSTEIN.
  *
- * WAS UEBERLIEF, gemessen auf der Datenschutzseite bei 360 px: ein `<p>` mit
+ * WAS UEBERLIEF, gemessen am 18.09.2026 auf der Datenschutzseite bei
+ * 360 px: ein `<p>` mit
  * `scrollWidth` 350 gegen `clientWidth` 302 — die Seite schob sich um
  * **127 px** nach rechts. Verursacher waren eine Mailadresse und zwei
  * Adressen im Fliesstext; keines davon hat eine Stelle, an der ein Browser
@@ -1835,7 +1787,7 @@ input[type=checkbox].segment-box{position:absolute;opacity:0;width:0;height:0;mi
  * er es nicht muesste. `break-word` greift nur, wenn das Wort sonst
  * ueberliefe. Fuer Fliesstext ist das die richtige Haerte; die
  * Festbreitenschrift der Dokumentseiten hat aus demselben Grund die andere
- * (`.doku-text code`, P5b/AP8).
+ * (`.doku-text code`).
  *
  * VERERBT SICH auf p, li, a und td — deshalb genuegt die eine Zeile am
  * Baustein statt vier an seinen Kindern. */
@@ -1852,12 +1804,12 @@ input[type=checkbox].segment-box{position:absolute;opacity:0;width:0;height:0;mi
 
 /* ---- Erststart: die Willkommenskarte -------------------------------------
  *
- * P5b/AP9, Mockup M-P5b-02b (freigegeben 17.09.2026). Drei Zeilen aus dem
- * Baustein `.zeile`; neu ist nur die Nummernplakette davor.
+ * Drei Zeilen aus dem Baustein `.zeile`; neu ist nur die Nummernplakette
+ * davor.
  *
  * SIE IST RUND UND TRAEGT EINE ZIFFER, und damit ist sie etwas anderes als
  * `.plakette` (die traegt Text und hat einen weichen Radius). Ein eigener
- * Baustein also — gedeckt durch das Mockup, das ihn ausdruecklich nennt.
+ * Baustein also — freigegeben mit Mockup.
  */
 .erststart-nr{
   display:inline-flex;align-items:center;justify-content:center;
@@ -1888,7 +1840,7 @@ input[type=checkbox].segment-box{position:absolute;opacity:0;width:0;height:0;mi
 
 /* ---- Konto-Rueckfrage: drei Abschnitte in einem Dialog --------------------
  *
- * P5b/AP9, Mockup M-P5b-02c (freigegeben 17.09.2026). Kein neuer Baustein:
+ * Kein neuer Baustein:
  * Kopf, Inhalt und Fuss sind die vorhandenen des Dialogs. Neu ist nur, dass
  * es DREI davon gibt und je einer sichtbar ist.
  *
@@ -1902,9 +1854,8 @@ input[type=checkbox].segment-box{position:absolute;opacity:0;width:0;height:0;mi
 
 /* DREI KNOEPFE UNTEREINANDER, NICHT NEBENEINANDER.
  *
- * Die Anmerkung des Mockups sagt „in einer Reihe … auf dem Handy
- * untereinander"; die ZEICHNUNG daneben zeigt sie bei 512 px untereinander.
- * Die Zeichnung hat recht, und zwar rechnerisch: `.dialog` ist hoechstens
+ * „In einer Reihe, auf dem Handy untereinander" ginge nicht, und zwar
+ * rechnerisch: `.dialog` ist hoechstens
  * 32 rem breit, „Nein — neuen Schluessel erzeugen" ist allein ueber 260 px —
  * drei nebeneinander gaebe es an keiner Fensterbreite, weil der Dialog nicht
  * mitwaechst. Eine Reihe, die nie eine Reihe ist, waere eine Regel, die nur
@@ -1932,7 +1883,7 @@ input[type=checkbox].segment-box{position:absolute;opacity:0;width:0;height:0;mi
 
 /* ---- Betreiber-Rueckfrage: vier Gruppen in zwei Spalten ------------------
  *
- * P5b/AP9, Mockup M-P5b-02c Teil 2. Vier Felder zu vier Zeichen, paarweise
+ * Vier Felder zu vier Zeichen, paarweise
  * nebeneinander: Serverschluessel links und rechts, darunter der Anteil.
  *
  * ZWEI SPALTEN AUCH AM HANDY, und das ist hier die Ausnahme von der Regel.
@@ -1961,8 +1912,7 @@ input[type=checkbox].segment-box{position:absolute;opacity:0;width:0;height:0;mi
 
 /* ---- Dokumentseite: Handbuch und „Was ist NAdoku" ------------------------
  *
- * P5b/AP8, Mockup M-P5b-01 (freigegeben 17.09.2026). Zwei Seiten, ein
- * Baukasten: `hilfe.php` mit Inhaltsverzeichnis, `ueber.php` ohne.
+ * Zwei Seiten, ein Baukasten: `hilfe.php` mit Inhaltsverzeichnis, `ueber.php` ohne.
  *
  * WARUM NICHT `.text` WIEDERVERWENDET. `.text` ist fuer Rechtstexte gemacht,
  * und `rt_html()` erzeugt dort nur h2/h3/p/ul/ol/li/a — mehr kennt es nicht.
@@ -1995,7 +1945,7 @@ input[type=checkbox].segment-box{position:absolute;opacity:0;width:0;height:0;mi
           text-decoration:none}
 .doku-e a:hover{background:var(--rauch)}
 .doku-e3 a{padding-left:var(--abstand-4);color:var(--gedaempft)}
-/* AKTIV: Dunkelblau auf Blau-hell. Nachgemessen 4,9:1 (Mockup-Anmerkung). */
+/* AKTIV: Dunkelblau auf Blau-hell. Nachgemessen 4,9:1. */
 .doku-e.aktiv a{background:var(--blau-hell);color:var(--dunkelblau);font-weight:600}
 .doku-leer{color:var(--gedaempft);font-size:var(--groesse-2);
            padding:var(--abstand-2);margin:0}
@@ -2019,7 +1969,7 @@ input[type=checkbox].segment-box{position:absolute;opacity:0;width:0;height:0;mi
  * `#abschnitt` so, dass die Kopfleiste (`position:sticky`) die Ueberschrift
  * verdeckt — man springt richtig und sieht das Falsche. */
 
-/* Tabelle: Kopfzeile in Rauch, wie im Mockup */
+/* Tabelle: Kopfzeile in Rauch */
 /* TABELLEN MUESSEN WAAGERECHT SCROLLEN DUERFEN, wie die Codebloecke.
  * Das Handbuch hat 43 Tabellen, manche mit drei Spalten Fliesstext; bei
  * 360 px ist die schmalste davon 368 px breit, und dann schiebt sie die
@@ -2050,12 +2000,10 @@ input[type=checkbox].segment-box{position:absolute;opacity:0;width:0;height:0;mi
  * Taeter ein `code` von 626 px. `anywhere` und nicht `break-word`, weil
  * `break-word` an einer Zeichenkette ohne Leerzeichen nicht greift — und
  * genau die stehen hier drin. */
-/* SCHRIFT UND GROESSE KOMMEN AUS DER BASISREGEL `code,kbd,pre` — hier stand
- * `font-size:.92em` und `padding:1px 4px`, beides an der Skala vorbei und
- * beides von der Vollstaendigkeitspruefung gefunden. Das Override war auch
- * sachlich ueberfluessig: Die Basisregel setzt bereits `--schrift-fest` und
- * `--groesse-2`. Bleibt, was wirklich neu ist — Flaeche, Radius und der
- * Umbruch. */
+/* SCHRIFT UND GROESSE KOMMEN AUS DER BASISREGEL `code,kbd,pre` — kein
+ * eigenes Override an der Skala vorbei: Die Basisregel setzt bereits
+ * `--schrift-fest` und `--groesse-2`. Hier steht, was wirklich neu ist —
+ * Flaeche, Radius und der Umbruch. */
 .doku-text code{background:var(--rauch);border-radius:var(--radius-klein);
                 padding:0 var(--abstand-1);overflow-wrap:anywhere}
 .doku-text pre code{background:none;padding:0}
@@ -2095,7 +2043,7 @@ input[type=checkbox].segment-box{position:absolute;opacity:0;width:0;height:0;mi
 
 /* ---- Fusszeile der Anmeldeseite ------------------------------------------
  *
- * Vier Wege unter der Karte, auf Dunkelblau (M-P5b-01, Bild 3). Sie steht
+ * Vier Wege unter der Karte, auf Dunkelblau. Sie steht
  * NICHT in `.fuss-seite`: Die traegt Lizenz und Version und sitzt am
  * Seitenende; diese hier gehoert zur Anmeldekarte und ist der einzige Weg,
  * auf dem jemand ohne Konto zu „Was ist NAdoku" findet.
@@ -2113,13 +2061,11 @@ input[type=checkbox].segment-box{position:absolute;opacity:0;width:0;height:0;mi
   min-height:100vh;min-height:100dvh;
   display:flex;flex-direction:column;
 }
-/* SPALTENRICHTUNG (Web 20.37.3, Backlog Nr. 289). Bis dahin stand hier die
- * Vorgabe `row`, und das war gleichgueltig, solange `.anmeldung` nur die Karte
- * enthielt. Seit Web 20.23.0 steht in `login.php` die Fusszeile
- * `.fuss-anmeldung` als zweites Kind daneben — und landete NEBEN der Karte
- * statt darunter; bei 390 px drueckte sie die Karte auf rund 200 px. Fuer die
- * Seiten mit nur der Karte aendert sich nichts: Sie bleibt waagerecht und
- * senkrecht mittig, jetzt ueber `justify-content` statt `align-items`. */
+/* SPALTENRICHTUNG. In `login.php` steht die Fusszeile `.fuss-anmeldung` als
+ * zweites Kind neben der Karte — mit der Vorgabe `row` landete sie NEBEN
+ * der Karte statt darunter; bei 390 px drueckte sie die Karte auf rund
+ * 200 px. Seiten mit nur der Karte bleiben waagerecht und senkrecht
+ * mittig, ueber `justify-content` statt `align-items`. */
 .anmeldung{
   flex:1 1 auto;
   display:flex;flex-direction:column;align-items:center;justify-content:center;
@@ -2132,10 +2078,10 @@ input[type=checkbox].segment-box{position:absolute;opacity:0;width:0;height:0;mi
   padding:var(--abstand-5);
   box-shadow:var(--schatten-hoch);
 }
-.anmeldung-logo{display:block;height:56px;width:auto;margin:0 auto var(--abstand-4)}
+.anmeldung-logo{display:block;height:var(--kopf);width:auto;margin:0 auto var(--abstand-4)}
 .anmeldung-titel{text-align:center;font-size:var(--groesse-6)}
 .anmeldung-unter{text-align:center;color:var(--gedaempft);margin-bottom:var(--abstand-5)}
-/* LINKSBUENDIG, nicht zentriert (O10, Mockup 32). Der Link steht unter einem
+/* LINKSBUENDIG, nicht zentriert. Der Link steht unter einem
  * 100 % breiten Knopf und ueber dem linken Rand der Feldbeschriftungen;
  * zentriert schwebt er zwischen beidem. Betrifft Anmeldung, „Passwort
  * vergessen" und die Abmeldeseite — alle drei tragen dieselbe Klasse. */
@@ -2154,7 +2100,7 @@ input[type=checkbox].segment-box{position:absolute;opacity:0;width:0;height:0;mi
 }
 .demo-hinweis .symbol{color:var(--orange-tief)}
 
-/* ---- Die Reihe der Hinweise (.hinweise) — P5c/AP1, E-P5c-55 --------------
+/* ---- Die Reihe der Hinweise (.hinweise) ----------------------------------
  * Umgebung → Ankündigung → Demo → Datenschutz, an der Stelle des
  * Demo-Hinweises (ui_hinweise()). EIN BEHÄLTER STATT VIER AUSSENABSTÄNDEN:
  * .demo-hinweis und .meldung bringen je --abstand-5 nach unten mit; gestapelt
@@ -2180,20 +2126,20 @@ input[type=checkbox].segment-box{position:absolute;opacity:0;width:0;height:0;mi
 
 /* == 14. TABELLE UND KACHEL ================================================
  *
- * Das Gerüst; gefüllt wird es in O3 (Startseite und Kachelform) und O6/O7.
+ * Das Gerüst; die Startseite, die Kachelform und die Seiten Suche und
+ * Zeitraum füllen es (Abschnitte 20, 24, 25).
  *
  * Unter 720 px gibt es KEINE Tabelle: Die Einsätze erscheinen als dreizeilige
- * Kachel (E-P3-32). Der Grund steht im Befund — bei 360 px bekamen Einsatzort
- * und Diagnose null Pixel Breite und verschwanden ohne Hinweis, während sieben
- * Zahlenspalten stehen blieben.
+ * Kachel. Bei 360 px bekämen Einsatzort und Diagnose sonst null Pixel
+ * Breite und verschwänden ohne Hinweis, während sieben Zahlenspalten stehen
+ * blieben.
  */
 /* tabular-nums: Ziffern gleicher Breite, damit Zahlenspalten (Beginn, Dauer,
- * km) untereinander fluchten — die frühere mono-Klasse entfällt (Mockup 03
- * setzt die Textschrift, keine Schreibmaschine). */
+ * km) untereinander fluchten — in der Textschrift, keine Schreibmaschine. */
 .tabelle{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
-/* SPALTENTITEL ZENTRIERT (F-N1-G). Vorher folgte der Titel der Ausrichtung
- * seiner Zellen: links über Text, rechts über Zahlen, mittig über Haken —
- * drei Ausrichtungen in einer Zeile. Der Kopf ist aber keine Zeile der
+/* SPALTENTITEL ZENTRIERT. Folgte der Titel der Ausrichtung seiner Zellen —
+ * links über Text, rechts über Zahlen, mittig über Haken —, stünden drei
+ * Ausrichtungen in einer Zeile. Der Kopf ist aber keine Zeile der
  * Daten, sondern ihre Beschriftung; einheitlich zentriert liest er sich als
  * das, was er ist. Die ZELLEN behalten ihre Ausrichtung: Zahlen fluchten
  * weiter rechts, Text steht weiter links. */
@@ -2222,13 +2168,10 @@ input[type=checkbox].segment-box{position:absolute;opacity:0;width:0;height:0;mi
  * Bestätigen, Entsperren, Rückspielen, Karte wählen, Stammdaten anlegen: eine
  * Karte im Schleier — **in jeder Breite**.
  *
- * HIER STAND „am Desktop eine Karte im Schleier, mobil ein Blatt von unten"
- * (E-P3-27, 5.3), und `Design.md` 9.11 sagte es nach. Es stimmt nicht und hat
- * nie gestimmt: Zu `.dialog` gibt es in diesem Stylesheet **keine einzige
- * Medienabfrage**. Das Blatt (`.blatt`, Abschnitt 10) ist ein eigener
- * Baustein mit eigenem Skript und eigenem Markup — es ersetzt keinen Dialog,
- * es steht neben ihm. Berichtigt in S9/AP5-4, als der Satz beim Bau der
- * Stammdaten-Dialoge zum ersten Mal jemanden in die Irre geführt hat.
+ * NICHT „am Desktop eine Karte im Schleier, mobil ein Blatt von unten": Zu
+ * `.dialog` gibt es in diesem Stylesheet **keine einzige Medienabfrage**.
+ * Das Blatt (`.blatt`, Abschnitt 10) ist ein eigener Baustein mit eigenem
+ * Skript und eigenem Markup — es ersetzt keinen Dialog, es steht neben ihm.
  */
 .dialog{
   border:0;padding:0;
@@ -2237,28 +2180,25 @@ input[type=checkbox].segment-box{position:absolute;opacity:0;width:0;height:0;mi
   box-shadow:var(--schatten-hoch);
   max-width:min(92vw,32rem);width:100%;
   color:var(--asphalt);
-  /* EIN DIALOG, DER LÄNGER IST ALS DER BILDSCHIRM, ROLLT IN SICH (S9/AP5-4).
-   * Bis Web 16.3.0 hatte `.dialog` keine Höhenangabe. Das ging so lange gut,
-   * wie jeder Dialog aus zwei Sätzen und zwei Knöpfen bestand; der
+  /* EIN DIALOG, DER LÄNGER IST ALS DER BILDSCHIRM, ROLLT IN SICH. Der
    * Rettungsmittel-Dialog hat vier Felder, fünf Rollenhaken und zwei
-   * Fähigkeitshaken und ist am Handy höher als das Glas. Ohne Angabe kappt
-   * die Browservorgabe (`max-height: calc(100% - 6px - 2em)`) unten ab — und
-   * unten steht der Fuß mit „Anlegen". Der Dialog war dann nicht zu
-   * bedienen, ohne dass etwas fehlerhaft ausgesehen hätte.
+   * Fähigkeitshaken und ist am Handy höher als das Glas. Ohne Höhenangabe
+   * kappt die Browservorgabe (`max-height: calc(100% - 6px - 2em)`) unten ab
+   * — und unten steht der Fuß mit „Anlegen". Der Dialog wäre dann nicht zu
+   * bedienen, ohne dass etwas fehlerhaft aussähe.
    *
    * Kopf und Fuß stehen fest, der Inhalt rollt. `dvh` statt `vh`, weil die
    * Adressleiste mobiler Browser mitrechnet; die Seitenhülle macht es an
    * zwei Stellen schon so. */
   max-height:calc(100dvh - var(--abstand-5));
 }
-/* `display` GEHOERT AN `[open]` UND NICHT AN `.dialog` (Fund F-S9-U-27, beim
- * Bau der Stammdaten-Dialoge). Die Browservorgabe versteckt einen
- * geschlossenen Dialog mit `dialog:not([open]){display:none}` — eine
- * UA-Regel, und die verliert gegen JEDE Autorenregel, ganz gleich wie
- * spezifisch. `.dialog{display:flex}` machte damit alle fuenf Dialoge der
- * Standortseite sichtbar: als Kaesten am Seitenende, mit Feldern, die man
- * ausfuellen kann, und Knoepfen, die absenden. Aufgefallen ist es an einem
- * Vollseitenbild — im Fensterausschnitt standen sie unter der Falz.
+/* `display` GEHOERT AN `[open]` UND NICHT AN `.dialog`. Die Browservorgabe
+ * versteckt einen geschlossenen Dialog mit `dialog:not([open]){display:none}`
+ * — eine UA-Regel, und die verliert gegen JEDE Autorenregel, ganz gleich
+ * wie spezifisch. `.dialog{display:flex}` machte damit alle fuenf Dialoge
+ * der Standortseite sichtbar: als Kaesten am Seitenende, mit Feldern, die
+ * man ausfuellen kann, und Knoepfen, die absenden — im Fensterausschnitt
+ * unter der Falz, sichtbar erst auf einem Vollseitenbild.
  * Dieselbe Falle wie bei `.zeile-knoepfe` (Abschnitt 11, dort gegen
  * `.nur-ab-720`): Ein `display` in der Grundregel schlaegt das, was den
  * Baustein ein- und ausblendet. */
@@ -2268,7 +2208,7 @@ input[type=checkbox].segment-box{position:absolute;opacity:0;width:0;height:0;mi
 .dialog > form{display:flex;flex-direction:column;min-height:0}
 .dialog::backdrop{background:var(--schleier)}
 .dialog-kopf{padding:var(--abstand-4) var(--abstand-4) 0;flex:0 0 auto}
-/* UNTERZEILE IM KOPF (S9/AP5-4, M-S9-07). Sie sagt, worauf sich der Dialog
+/* UNTERZEILE IM KOPF. Sie sagt, worauf sich der Dialog
  * bezieht — der Standort, zu dem das neue Rettungsmittel gehört. Das gehört
  * nicht in den Titel („Rettungsmittel an Standort Talwang anlegen" wäre eine
  * Zeile, die umbricht) und nicht ins Formular (es ist kein Feld, es ist der
@@ -2281,7 +2221,7 @@ input[type=checkbox].segment-box{position:absolute;opacity:0;width:0;height:0;mi
  * sonst nicht unter seine Inhaltshoehe schrumpft und dann gar nichts rollt. */
 .dialog-inhalt{padding:var(--abstand-4);overflow-y:auto;min-height:0}
 /* Ein erklärender Absatz vor den Feldern braucht Luft nach unten — sonst
- * klebt die erste Beschriftung an ihm (O9, Rückspieldialog). Der letzte
+ * klebt die erste Beschriftung an ihm (etwa im Rückspieldialog). Der letzte
  * Absatz bekommt keine: Er steht ohnehin vor dem Fuß mit eigenem Abstand. */
 .dialog-inhalt p{margin:0 0 var(--abstand-3)}
 .dialog-inhalt p:last-child{margin-bottom:0}
@@ -2295,7 +2235,8 @@ input[type=checkbox].segment-box{position:absolute;opacity:0;width:0;height:0;mi
 
 /* == 16. KARTENANSICHT (Leaflet) ===========================================
  *
- * Höhe nach Token, Position nach Schwellen. Der Marker-Satz entsteht in O3.
+ * Höhe nach Token, Position nach Schwellen. Der Marker-Satz steht in
+ * Abschnitt 21.
  */
 .geo{
   height:var(--karte-mobil);
@@ -2305,7 +2246,7 @@ input[type=checkbox].segment-box{position:absolute;opacity:0;width:0;height:0;mi
   margin-bottom:var(--abstand-5);
   /* EIGENER STAPELKONTEXT. Leaflet vergibt intern z-index bis 1000 — seine
    * Bedienelemente zeichneten über Schublade (60) und Schleier (50), der
-   * Kartenpin stand mitten im Menü (Fable-Kontrolle, F-P3-Y). position und
+   * Kartenpin stand mitten im Menü. position und
    * z-index:0 sperren die inneren Werte in die Karte ein; kein Wettrüsten
    * der z-Indizes nötig. */
   position:relative;z-index:0;
@@ -2314,33 +2255,7 @@ input[type=checkbox].segment-box{position:absolute;opacity:0;width:0;height:0;mi
 
 /* == 17. GRUNDFORMEN ======================================================
  *
- * Bis Web 9.11.1 hieß dieser Abschnitt ROHSCHICHT und war ausdrücklich ein
- * ÜBERGANG: P3 baute die Seiteninhalte Paket für Paket um (O3 bis O11), und
- * bis dahin stand auf jeder noch nicht umgebauten Seite Markup mit
- * Klassennamen, für die es keine Regel mehr gab. Dieser Übergang ist mit
- * O11 zu Ende, und was ihn ausmachte, ist weg:
- *
- *   .alert-Familie  Die eine begründete Klassen-Ausnahme (F-P3-T). Ersetzt
- *                   durch den Meldungs-Baustein `.meldung` — in PHP über
- *                   ui_meldung_markup(), in JS über dasselbe Markup
- *                   (import_ui.js, einstellungen.php, patient.js).
- *   .muted          Die zweite Ausnahme, zuletzt 16 Stellen. Ersetzt durch
- *                   `.feld-hinweis` (Absatz), `.feld-klein` (Absatz unter
- *                   einem Feld), `.feld-klein-inline` (Zusatz in einer
- *                   Beschriftung) und `.dash` (Tabellenzelle) — vier Rollen,
- *                   die eine Klasse vorher gemeinsam trug.
- *   table/th/td     Die Notbremse gegen waagerechten Überlauf. Es gibt keine
- *                   Tabelle mehr, die ihre Gestaltung von hier bezieht: Die
- *                   letzte (`.imp-table` im Import — eine Klasse, die selbst
- *                   nie eine Regel hatte) trägt jetzt `.tabelle` und liegt wie
- *                   die übrigen in `.tabelle-scroll`.
- *   fieldset/legend Null Verwendungen — die letzten fünf standen im
- *                   Einrichter und sind in O10 zu Karten geworden.
- *   hr              Null Verwendungen — der letzte Trenner stand auf der
- *                   Wartungsseite und ist in O11 mit den Karten entfallen.
- *
- * WAS BLEIBT, IST KEIN ÜBERGANG MEHR, sondern die Grundform der Elemente,
- * auf denen die Bausteine aufsetzen. Ein `.feld` ist eine Beschriftung mit
+ * Die Grundform der Elemente, auf denen die Bausteine aufsetzen. Ein `.feld` ist eine Beschriftung mit
  * Eingabefeld — aber ein `<input>` gibt es auch außerhalb davon (im
  * Suchfeld, im Auswahlkästchen einer Zeile, in einem Filter), und es muss
  * dort dieselbe Höhe, denselben Rahmen und dieselbe Farbe haben. Diese
@@ -2356,7 +2271,7 @@ input[type=checkbox].segment-box{position:absolute;opacity:0;width:0;height:0;mi
  * Gebot, dass jede Beschriftung einer sein müsse.
  *
  * DIE EINTRITTSKARTE BLEIBT ENG: Hier stehen ausschließlich Elementnamen.
- * Eine KLASSE hier einzutragen hieße, das Redesign zurückzunehmen — dafür
+ * Eine KLASSE hier einzutragen hieße, die Bausteine zu umgehen — dafür
  * gibt es die Bausteine in den Abschnitten davor.
  */
 input,select,textarea{
@@ -2368,7 +2283,7 @@ input,select,textarea{
   border-radius:var(--radius-klein);
 }
 /* Kästchen und Radios sind keine Textfelder: feste Größe statt Mindesthöhe.
- * ACHTUNG, DRITTE FALLE DIESER ART (F-P3-AP, F-P3-AZ): Diese Regel hat
+ * ACHTUNG, DIESELBE FALLE WIE BEI SCHALTER UND SEGMENTWAHL: Diese Regel hat
  * Spezifität (0,1,1) und schlägt damit jede bloße Klasse. Wer ein solches
  * Kästchen ausblenden will, braucht `input[type=checkbox].meine-klasse` —
  * `.meine-klasse` allein verliert. */
@@ -2394,7 +2309,7 @@ pre{overflow-x:auto;background:var(--rauch);padding:var(--abstand-3);border-radi
 
 /* == 18. SCHWELLEN =========================================================
  *
- * Die vier Schwellen aus Anlage G des Konzepts, und NUR hier stehen sie als
+ * Die vier Schwellen, und NUR hier stehen sie als
  * Zahlen: Custom Properties funktionieren in Media-Abfragen nicht. Zur
  * Auskunft liegen dieselben Werte als --s-handy, --s-leiste, --s-zwei und
  * --s-karte-neben in :root.
@@ -2457,15 +2372,12 @@ pre{overflow-x:auto;background:var(--rauch);padding:var(--abstand-3);border-radi
   .nur-schmal{display:none}
 
   /* Die Filterleiste der Suche ist breiter als die Tagesliste: Sie traegt
-     Auswahlfelder und Zahlenpaare („von … bis"), nicht Zeilen. Die Werte
-     kommen aus Anlage G des Konzepts; die beiden Token lagen bis O12
-     ungenutzt in :root (F-P3-BC). */
+     Auswahlfelder und Zahlenpaare („von … bis"), nicht Zeilen. */
   .leiste-filter{width:var(--leiste-filter-schmal)}
 
   /* IN DIESEM BAND IST DIE LEISTE 220 PX SCHMAL. Der volle
      Rettungsmittelname bliebe hier ohnehin nur eine Ellipse — er entfällt,
-     das Artzeichen bleibt (E-P3-09). Ein gesetzter KURZNAME steht dagegen
-     (S9/AP4a, Freigabe M-S9-08 Variante 2; Platz nach M-S9-11 Weg 2).
+     das Artzeichen bleibt. Ein gesetzter KURZNAME steht dagegen.
      WIE VIEL VON IHM, HÄNGT AM DATUM DANEBEN. `.eintrag-text` schrumpft
      nicht (`flex:1 0 auto`), und seine Breite schwankt: Bricolage Grotesque
      setzt Ziffern PROPORTIONAL — die Regel `tabular-nums` (Abschnitt 3)
@@ -2474,14 +2386,15 @@ pre{overflow-x:auto;background:var(--rauch);padding:var(--abstand-3);border-radi
      dem Nebentext zur Verfügung: ohne die beiden Regeln darunter 48–63 px,
      mit der Einrückung allein 56–71, mit beiden 64–79. „BW Hoch" braucht 55,
      „NEF 76/1" 53 — die stehen damit an JEDEM Datum ganz, „RTH" mit einem
-     Ort aus sechs Buchstaben (76) an den meisten. Ein Auslassungszeichen bleibt möglich und ist kein
-     Fehler: Der Tooltip nennt die volle Bezeichnung.
+     Ort aus sechs Buchstaben (76) an den meisten. Ein Auslassungszeichen
+     bleibt möglich und ist kein Fehler: Der Tooltip nennt die volle
+     Bezeichnung.
      Der Zustand darunter — Schublade, 320 px — bleibt unberührt: Dort greift
-     dieser Block nicht, und der volle Name steht dort weiterhin. */
+     dieser Block nicht, und der volle Name steht dort. */
   .eintrag-neben{display:none}
   .eintrag-neben.kurz{display:block}
 
-  /* ZWEIMAL VIER PIXEL, ZWEIMAL WIRKSAM (Freigabe M-S9-11, Weg 2).
+  /* ZWEIMAL VIER PIXEL, ZWEIMAL WIRKSAM.
      Die Einrückung wirkt je Akkordeonebene (Jahr, Monat), der Abstand je
      Zwischenraum der Zeile (Zeichen–Datum, Datum–Name): 12 → 4 px und
      8 → 4 px bringen dem Nebentext zusammen 16 px.
@@ -2503,9 +2416,9 @@ pre{overflow-x:auto;background:var(--rauch);padding:var(--abstand-3);border-radi
   /* Das Aktionsmenü wird ein Aufklappmenü statt eines Blattes.
      KEINE FAHRT HIER. `translateY(100%)` hiesse am Aufklappmenü „um die
      eigene Höhe nach unten" — es stünde neben der Sache statt unter dem
-     Bildrand. Das Mockup M-MR-04 sagt zum Schreibtisch ausdrücklich
-     „unverändert"; die Markierung des Öffners gilt dagegen in beiden Formen,
-     und der Winkel dreht weiter. */
+     Bildrand. Am Schreibtisch bleibt das Menü deshalb ohne Bewegung; die
+     Markierung des Öffners gilt dagegen in beiden Formen, und der Winkel
+     dreht weiter. */
   .blatt{
     position:absolute;inset:auto 0 auto auto;top:calc(var(--knopf) + var(--abstand-1));
     width:16rem;
@@ -2530,7 +2443,7 @@ pre{overflow-x:auto;background:var(--rauch);padding:var(--abstand-3);border-radi
   .akkordeon:not(.leiste-gruppe) .eintrag{gap:var(--abstand-2)}
   .geo{height:var(--karte-desktop)}
 
-  /* ---- Karten, die sich selbst auf zwei Spalten verteilen (E-S8-15) -------
+  /* ---- Karten, die sich selbst auf zwei Spalten verteilen ----------------
    *
    * DER UNTERSCHIED ZU `.form-raster`: Dort entscheidet die Seite, welche
    * Karte in welche Spalte gehört, und schreibt dafür zwei Behälter ins
@@ -2541,31 +2454,23 @@ pre{overflow-x:auto;background:var(--rauch);padding:var(--abstand-3);border-radi
    * wieder. `break-inside:avoid` hält jede Karte zusammen; ohne das reißt der
    * Satz sie mitten im Text auseinander, und zwar ohne Fehlermeldung.
    *
-   * WANN. Ab 1200 px. Das Konzept nannte „mehr als vier Karten"; gemessen
-   * ist die Zahl nicht die Frage, sondern die Höhe. Von den sieben dort
-   * genannten Seiten stehen Status, Statistik und Konto-Backups längst
-   * zweispaltig (`.form-raster`, mit einer thematischen Zuordnung von Hand,
-   * die eine automatische Verteilung verschlechtern würde) — seit
-   * Web 19.3.0 auch die Installation, die dafür bis dahin eine zweite,
-   * gleichlautende Regel `.zweispalter` hatte (Backlog Nr. 125) —, und
-   * Hintergrundjobs (3 Karten) wie Geräte (2) haben zu wenige. Übrig bleibt Updates mit vier: 1206 px hoch einspaltig,
-   * 977 px zweispaltig — 229 px, und damit passt die Seite auf einen
+   * WANN. Ab 1200 px. Nicht die Zahl der Karten ist die Frage, sondern die
+   * Höhe. Status, Statistik, Konto-Backups und Installation stehen
+   * zweispaltig über `.form-raster`, mit einer thematischen Zuordnung von
+   * Hand, die eine automatische Verteilung verschlechtern würde;
+   * Hintergrundjobs (3 Karten) wie Geräte (2) haben zu wenige. Übrig
+   * bleibt Updates mit vier: 1206 px hoch einspaltig, 977 px zweispaltig —
+   * 229 px, und damit passt die Seite auf einen
    * üblichen Bildschirm. Die Regel gilt also für vier Karten aufwärts, wenn
    * sie keine thematische Ordnung haben. */
   .karten-raster{columns:2;column-gap:var(--abstand-4)}
   .karten-raster > .karte{break-inside:avoid}
 }
 
-/* ---- ab 1600: die Karte steht neben Daten und Tabelle -------------------- */
-@media (min-width:1600px){
-  .karte-neben{display:grid;grid-template-columns:1fr var(--karte-neben-breit);
-    gap:var(--abstand-4);align-items:start}
-}
-
 
 /* == 19. ÜBERSICHTSZEILE ===================================================
  *
- * Die Einstellungs-Übersicht (E-P3-11): Symbol, Text, Winkel. Auf dem Handy
+ * Die Einstellungs-Übersicht: Symbol, Text, Winkel. Auf dem Handy
  * ist sie der einzige Weg, der zeigt, WAS es im Bereich gibt.
  */
 .uebersicht-zeile{
@@ -2583,17 +2488,13 @@ pre{overflow-x:auto;background:var(--rauch);padding:var(--abstand-3);border-radi
   font-family:var(--schrift-kopf);font-weight:600;font-size:var(--groesse-4);
 }
 .uebersicht-winkel{color:var(--sand)}
-/* DIE BEREICHSKARTE (P5c/AP9, E-P5c-29, Mockup M-P5c-01c, Design.md 9.1).
+/* DIE BEREICHSKARTE (Design.md 9.1).
  * Je Bereich eine eigene Karte; der Kopf trägt ein rundes Bereichszeichen,
  * den Bereichsnamen und die Zahl der Einträge — als Gruppe MITTIG — und liegt
  * auf Rauch, dem Ton der Seite. Abgesetzt wird über das Zeichen und die
  * Mitte, nicht über eine Farbe mit Bedeutung: Orange heißt „hier stehst du",
- * Hellblau „erledigt", Rot „Gefahr", und ein getönter Kopf las sich im
- * Mockup als Meldung.
- *
- * Bis Web 21.0.0 stand der Bereichsname als gesperrte Versalzeile ÜBER einer
- * titellosen Karte (`.uebersicht-block`, `.uebersicht-block-erst`); beide
- * Klassen sind entfallen. */
+ * Hellblau „erledigt", Rot „Gefahr", und ein getönter Kopf läse sich als
+ * Meldung. */
 .karte-bereich > .karte-kopf{
   justify-content:center;
   background:var(--rauch);
@@ -2623,21 +2524,21 @@ pre{overflow-x:auto;background:var(--rauch);padding:var(--abstand-3);border-radi
 
 
 
-/* == 20. TAGESÜBERSICHT UND EINSATZLISTE (O3) ==============================
+/* == 20. TAGESÜBERSICHT UND EINSATZLISTE ===================================
  *
  * Kachel, Tabelle mit Farbstreifen, Diensttag-Daten als Lesezustand und das
  * Raster, das die Karte ab 1600 px neben Daten und Tabelle stellt.
  */
 
 /* ---- Sichtbarkeitsschwelle 720 -------------------------------------------
- * Unter 720 px gibt es KEINE Einsatztabelle, sondern die Kachel (E-P3-32).
+ * Unter 720 px gibt es KEINE Einsatztabelle, sondern die Kachel.
  * Zwei Hilfsklassen tragen den Wechsel; sie blenden nur AUS und lassen die
  * Grundform des Elements unangetastet. */
 .nur-ab-720{display:none}
 @media (min-width:720px){
   /* revert statt block: Die Utility soll die GRUNDFORM wiederherstellen —
-   * ein <span> (Titelzusatz „· 07:34 Uhr") wurde mit block zur eigenen
-   * Zeile (Fund aus O4). */
+   * ein <span> (Titelzusatz „· 07:34 Uhr") würde mit block zur eigenen
+   * Zeile. */
   .nur-ab-720{display:revert}
   /* Doppelt geschrieben, um jede Baustein-Regel gleicher Spezifität zu
    * schlagen (der Sortier-Knopf traegt .karte-sortieren mit display:flex —
@@ -2645,7 +2546,7 @@ pre{overflow-x:auto;background:var(--rauch);padding:var(--abstand-3);border-radi
   .nur-unter-720.nur-unter-720{display:none}
 }
 
-/* ---- Kachel (E-P3-32, Mockup 10) ---------------------------------------- */
+/* ---- Kachel ------------------------------------------------------------- */
 .kachelliste{display:flex;flex-direction:column}
 .kachel{
   display:flex;gap:var(--abstand-3);
@@ -2681,7 +2582,7 @@ pre{overflow-x:auto;background:var(--rauch);padding:var(--abstand-3);border-radi
   display:-webkit-box;-webkit-box-orient:vertical;
   -webkit-line-clamp:2;line-clamp:2;overflow:hidden;
 }
-/* In Suche und Zeitraum eine Zeile mit Abschneiden (E-P3-32). */
+/* In Suche und Zeitraum eine Zeile mit Abschneiden. */
 .kachel-knapp .kachel-dx{-webkit-line-clamp:1;line-clamp:1}
 .kachel-fuss{
   display:flex;align-items:center;flex-wrap:wrap;
@@ -2698,10 +2599,10 @@ pre{overflow-x:auto;background:var(--rauch);padding:var(--abstand-3);border-radi
 /* Warnzeichen „vorhanden, aber nicht lesbar" in der Kachel. */
 .kachel .patfehler{color:var(--rot-tief)}
 
-/* ---- Tabelle: Verfeinerungen (E-P3-32, Mockup 04) ------------------------
+/* ---- Tabelle: Verfeinerungen ---------------------------------------------
  * Der Baustein .tabelle steht in Abschnitt 14; hier kommt dazu, was die
- * EINSATZtabelle braucht: display:table gegen die Übergangsregel (der
- * Überlauf gehört dem Behälter .tabelle-scroll), Farbstreifen, blauer
+ * EINSATZtabelle braucht: display:table (der Überlauf gehört dem Behälter
+ * .tabelle-scroll), Farbstreifen, blauer
  * Sortierpfeil, dunkelblaue Haken, die klickbare Zeile. */
 .tabelle{display:table}
 .tabelle-scroll{overflow-x:auto}
@@ -2720,11 +2621,11 @@ pre{overflow-x:auto;background:var(--rauch);padding:var(--abstand-3);border-radi
 .tabelle tr.clickable:focus-visible{outline-offset:calc(var(--strich-stark) * -1)}
 .tabelle td.dash,.tabelle .patfehler{color:var(--gedaempft)}
 .tabelle .patfehler .symbol{color:var(--rot-tief)}
-/* EIN ZEILENKOPF IST EINE BESCHRIFTUNG, KEINE SPALTENÜBERSCHRIFT (S8/AP4).
+/* EIN ZEILENKOPF IST EINE BESCHRIFTUNG, KEINE SPALTENÜBERSCHRIFT.
  * `.tabelle th` steht auf `text-align:center` — richtig für die Kopfzeile,
  * falsch für die erste Spalte einer Kennzahlentabelle, in der links die
  * Beschriftung und rechts die Zahlen stehen. Die Regel greift NUR bei
- * `scope="row"`; bis Web 15.3.0 gab es keine solche Tabelle. */
+ * `scope="row"`. */
 .tabelle th[scope="row"]{text-align:left;font-weight:600}
 .tabelle td.zahl-spalte{text-align:right}
 .tabelle td.haken-spalte{text-align:center}
@@ -2747,7 +2648,7 @@ pre{overflow-x:auto;background:var(--rauch);padding:var(--abstand-3);border-radi
 }
 .blatt-zeile.aktiv{background:var(--orange-hell);color:var(--dunkelblau)}
 
-/* ---- Wochentag im Titel: lang ab 720, kurz darunter (E-P3-31) ------------ */
+/* ---- Wochentag im Titel: lang ab 720, kurz darunter ---------------------- */
 .wtag-lang{display:none}
 .wtag-kurz{display:inline}
 @media (min-width:720px){
@@ -2755,7 +2656,7 @@ pre{overflow-x:auto;background:var(--rauch);padding:var(--abstand-3);border-radi
   .wtag-kurz{display:none}
 }
 
-/* ---- Diensttag-Daten: Lesezustand (E-P3-31, Mockups 02/03) --------------- */
+/* ---- Diensttag-Daten: Lesezustand ---------------------------------------- */
 .tag-lese{display:block}
 .tagfeld{
   display:grid;grid-template-columns:minmax(7em,auto) 1fr;
@@ -2766,7 +2667,7 @@ pre{overflow-x:auto;background:var(--rauch);padding:var(--abstand-3);border-radi
 .tagfeld dd{margin:0;min-width:0;overflow-wrap:anywhere}
 .tag-lese-leer{color:var(--gedaempft)}
 /* Standort und Rettungsmittel entfallen mobil — sie stehen dort schon in der
- * Unterzeile des Titels (Mockup 02). */
+ * Unterzeile des Titels. */
 .tagfeld-doppelt{display:none}
 @media (min-width:720px){
   .tagfeld-doppelt{display:grid}
@@ -2783,7 +2684,7 @@ pre{overflow-x:auto;background:var(--rauch);padding:var(--abstand-3);border-radi
   .tagfeld-breit{grid-column:1 / -1}
 }
 
-/* ---- Das Raster der Tagesübersicht (E-P3-31) -----------------------------
+/* ---- Das Raster der Tagesübersicht ---------------------------------------
  * Unter 1600 px gewöhnlicher Fluss: Daten, Karte, Einsätze. Ab 1600 rückt
  * die Karte in eine rechte Spalte und läuft von der Höhe der Diensttag-Daten
  * bis unter die Tabelle. */
@@ -2803,7 +2704,7 @@ pre{overflow-x:auto;background:var(--rauch);padding:var(--abstand-3);border-radi
 }
 
 
-/* == 21. KARTENMARKER (O3, E-P3-40, Mockup 26) =============================
+/* == 21. KARTENMARKER ======================================================
  *
  * Der Marker-Satz gilt für alle drei Kartenseiten und entsteht in
  * assets/geo.js. Die Zeichnung: Schilder (Haus, Klinik) als weiße Kästchen;
@@ -2812,34 +2713,32 @@ pre{overflow-x:auto;background:var(--rauch);padding:var(--abstand-3);border-radi
  * beides am selben Ort als Doppelrand. Richtungspfeile erscheinen erst ab
  * einer Zoomstufe, bei der sie nicht gedrängt stehen.
  *
- * DER FARBRING IST SEIT S9/AP3 DER RAND (M-S9-01 V1, E-S9-12). Bis Web
- * 15.8.0 lag er als zweiter und dritter `box-shadow` AUSSERHALB des
- * dunkelblauen Randes; ein Standort mit Doppelring maß dadurch 60 px und
- * deckte auf der Handykarte mehr als ein Drittel der Höhe. Jetzt ersetzt der
- * Farbrand den dunkelblauen: 38 px beim Doppelrand, 32 px sonst. Ohne
+ * DER FARBRING IST DER RAND. Als zweiter und dritter `box-shadow` AUSSERHALB
+ * des dunkelblauen Randes mäße ein Standort mit Doppelring 60 px und
+ * deckte auf der Handykarte mehr als ein Drittel der Höhe. Deshalb ersetzt
+ * der Farbrand den dunkelblauen: 38 px beim Doppelrand, 32 px sonst. Ohne
  * Aufzeichnung bleibt der Rand dunkelblau — er sagt dann nichts über die
  * Spur, sondern trennt nur.
  *
- * AUSSEN LIEGT IMMER 1 px SCHNEE (F6), am Schild und nur dort. Er trennt die
+ * AUSSEN LIEGT IMMER 1 px SCHNEE, am Schild und nur dort. Er trennt die
  * Farbe von der Karte, damit Blau nicht auf Grün und Rot nicht auf Braun
  * stößt. Der Einsatzort-Kreis bekommt ihn NICHT: Er ist orange auf einer
- * Karte, die kein Orange trägt, und die freigegebene Maßleiste des Mockups
- * nennt für ihn 28 px — mit Trennlinie wären es 30.
+ * Karte, die kein Orange trägt, und freigegeben sind für ihn 28 px — mit
+ * Trennlinie wären es 30.
  *
- * DIE SCHATTENANGABEN TRAGEN DEN SCHLAGSCHATTEN MIT. Bis Web 15.8.0
- * überschrieben die drei Ringregeln `box-shadow` vollständig; ein beringtes
- * Schild hatte deshalb keinen Schatten, ein unberingtes schon. Das war
- * niemandem aufgefallen, weil beide Zustände selten nebeneinander stehen.
+ * DIE SCHATTENANGABEN TRAGEN DEN SCHLAGSCHATTEN MIT. Überschrieben die drei
+ * Ringregeln `box-shadow` vollständig, hätte ein beringtes Schild keinen
+ * Schatten, ein unberingtes schon — und das fiele niemandem auf, weil beide
+ * Zustände selten nebeneinander stehen.
  */
-/* KEIN NAMENSSCHILD MEHR (S3/AP7). Die Spalte traegt seit S3 genau ein Kind;
+/* KEIN NAMENSSCHILD. Die Spalte traegt genau ein Kind;
  * `gap` und `flex-direction` bleiben trotzdem stehen, weil die Ringklassen
  * darauf aufsetzen und ein Marker mit zwei Kindern jederzeit wiederkommen
  * kann — dann aber mit ausdruecklichem `iconSize` (siehe geo.js). */
 .geo-schild{display:flex;flex-direction:column;align-items:center;gap:var(--abstand-1)}
-/* ENGER, ZWEITE STUFE (S9/AP3): 30 statt 36 px, davor 44. Die 44 kamen von
- * `--knopf` — der Kasten ist aber kein Bedienelement, sondern eine Zeichnung,
- * und die 44-px-Regel gilt fuer das, was man DRUECKT (R76 gilt hier nicht,
- * S3/AP7). Untergrenze am Finger ist WCAG 2.5.8 mit 24 px; 30 px liegen
+/* 30 px, NICHT `--knopf`: Der Kasten ist kein Bedienelement, sondern eine
+ * Zeichnung, und die 44-px-Regel gilt fuer das, was man DRUECKT.
+ * Untergrenze am Finger ist WCAG 2.5.8 mit 24 px; 30 px liegen
  * darueber. Das Symbol gibt eine Randstaerke ab (--geo-symbol, 18 px), damit
  * der Weissraum ringsum nicht auf null faellt. */
 .geo-schild-kasten{
@@ -2853,7 +2752,7 @@ pre{overflow-x:auto;background:var(--rauch);padding:var(--abstand-3);border-radi
 .geo-schild-kasten .symbol{width:var(--geo-symbol);height:var(--geo-symbol)}
 /* DER FARBRAND ERSETZT DEN DUNKELBLAUEN, er liegt nicht darum herum. Der
  * Doppelrand ist innen blau (Start) und aussen rot (Ende): blauer Rand, 1 px
- * Schnee, 2 px Rot, 1 px Schnee — 38 px statt frueher 60. Die Schnee-Angabe
+ * Schnee, 2 px Rot, 1 px Schnee — 38 px statt 60. Die Schnee-Angabe
  * VOR der roten liegt oben und laesst von deren 3 px Spread 2 px stehen. */
 .geo-ring-start .geo-schild-kasten{border-color:var(--blau);border-width:var(--geo-ring)}
 .geo-ring-ende  .geo-schild-kasten{border-color:var(--rot);border-width:var(--geo-ring)}
@@ -2864,10 +2763,9 @@ pre{overflow-x:auto;background:var(--rauch);padding:var(--abstand-3);border-radi
              0 0 0 calc(var(--geo-ring) + var(--strich)) var(--schnee),
              var(--schatten);
 }
-/* OHNE WEISSE UMRANDUNG UND KLEINER (S3/AP7, S9/AP3). Der weisse Rand war ein
- * Rest aus der Zeit vor dem Schatten: Er sollte den Kreis von der Karte
- * abheben. Das tut der Schatten, und der Rand machte den Kreis zusaetzlich
- * um 4 px breiter, als er aussah. 28 px, davor 32, davor 36. */
+/* OHNE WEISSE UMRANDUNG. Den Kreis von der Karte abzuheben tut der
+ * Schatten, und ein weisser Rand machte den Kreis zusaetzlich um 4 px
+ * breiter, als er aussieht. 28 px. */
 .geo-kreis{
   display:flex;align-items:center;justify-content:center;
   width:var(--geo-kreis);height:var(--geo-kreis);
@@ -2876,8 +2774,7 @@ pre{overflow-x:auto;background:var(--rauch);padding:var(--abstand-3);border-radi
   box-shadow:var(--schatten);
 }
 .geo-kreis .symbol{width:var(--symbol-klein);height:var(--symbol-klein)}
-/* DER PUNKT BRAUCHT EINEN KASTEN, sonst hat er keinen (Backlog Nr. 153,
- * S9/AP3). Er ist ein <span> (geo.js, markerPunkt), und an einem nicht
+/* DER PUNKT BRAUCHT EINEN KASTEN, sonst hat er keinen. Er ist ein <span> (geo.js, markerPunkt), und an einem nicht
  * ersetzten Inline-Element wirken `width` und `height` NICHT: Gemessen in
  * der Tagesuebersicht am 07.09.2026 stand er auf 4 x 18 px statt 16 x 16 —
  * uebrig blieben die beiden 2-px-Raender als weisser Strich, und die
@@ -2889,12 +2786,11 @@ pre{overflow-x:auto;background:var(--rauch);padding:var(--abstand-3);border-radi
   border-radius:var(--radius-rund);
   border:var(--strich-stark) solid var(--schnee);
 }
-/* DER PFEIL BRAUCHT EINEN KASTEN, DAMIT ER SICH DREHEN KANN (Backlog Nr. 72,
- * S9/AP3). `geo.js` setzt die Laufrichtung als `transform:rotate(Ndeg)` auf
- * diesen <span>; `transform` wirkt aber nicht auf ein nicht ersetztes
- * Inline-Element, und die Regel hier setzte bis Web 15.8.0 nur die Farbe.
- * Jeder Pfeil zeigte deshalb nach Norden, und auf Nord-Sued-Abschnitten sah
- * das richtig aus.
+/* DER PFEIL BRAUCHT EINEN KASTEN, DAMIT ER SICH DREHEN KANN. `geo.js` setzt
+ * die Laufrichtung als `transform:rotate(Ndeg)` auf diesen <span>;
+ * `transform` wirkt aber nicht auf ein nicht ersetztes Inline-Element. Mit
+ * nur der Farbe hier zeigte jeder Pfeil nach Norden, und auf
+ * Nord-Sued-Abschnitten saehe das richtig aus.
  *
  * DER BERECHNETE WERT LUEGT DABEI: `getComputedStyle` meldet die
  * Drehmatrix auch am Inline-Element. Nachweisbar ist der Fehler nur an der
@@ -2923,12 +2819,12 @@ pre{overflow-x:auto;background:var(--rauch);padding:var(--abstand-3);border-radi
 .leaflet-div-icon{background:none;border:0}
 
 
-/* == 22. EINSATZANSICHT (O4, E-P3-33, Mockups 19/20/21) ====================
+/* == 22. EINSATZANSICHT ====================================================
  *
  * Vier Karten (Einsatz, PatientIn, Transport, Reanimation) plus Besatzung;
  * die DOM-Reihenfolge ist die MOBILE (Angaben, Karte, Phasen, Reanimation).
  * Ab 1200 px ordnet das Raster um: Karte und Einsatzphasen wandern in eine
- * klebende rechte Spalte, die Reanimation in die linke — Mockup 20.
+ * klebende rechte Spalte, die Reanimation in die linke.
  */
 @media (min-width:1200px){
   .einsatz-raster{
@@ -2958,13 +2854,13 @@ pre{overflow-x:auto;background:var(--rauch);padding:var(--abstand-3);border-radi
 .einsatz-raster .tag-lese{display:block}
 
 /* Kleinzeile unter einem Lesewert: Höhe, Luftlinie und Strecke unter dem
- * Einsatzort, das Alter unter dem Geburtsdatum (Mockup 19). */
+ * Einsatzort, das Alter unter dem Geburtsdatum. */
 .lese-klein{display:block;color:var(--gedaempft);font-size:var(--groesse-2)}
 
 /* Die Plaketten am Fuß der Einsatz-Karte — dieselben wie auf der Kachel. */
 .karte-inhalt .zeile-plaketten{margin-top:var(--abstand-3)}
 
-/* ---- Einsatzphasen als Zeilenliste (Mockup 19) ---------------------------
+/* ---- Einsatzphasen als Zeilenliste ---------------------------------------
  * Nummer gedämpft, Name, rechts die Uhrzeit mit dem Minutenabstand zur
  * vorigen Phase klein darunter. Die angetippte Zeile leuchtet orange und
  * hebt ihr Teilstück auf der Karte hervor (einsatz.php). */
@@ -2989,7 +2885,7 @@ pre{overflow-x:auto;background:var(--rauch);padding:var(--abstand-3);border-radi
   padding:var(--abstand-3) var(--abstand-4) 0;
 }
 
-/* ---- Phasenmarker auf der Karte (Bestand, neu eingekleidet) --------------
+/* ---- Phasenmarker auf der Karte ------------------------------------------
  * Kleine Nummernschilder an den GPS-Positionen der Phasen; der Umschalter
  * ist ein Leaflet-Control mit Text — Leaflets eigene 26-px-Knopfbreite
  * würde ihn abschneiden. */
@@ -3010,35 +2906,30 @@ pre{overflow-x:auto;background:var(--rauch);padding:var(--abstand-3);border-radi
   color:var(--dunkelblau);
 }
 /* Der Vollbildknopf teilt den aktiven Zustand mit dem Phasenumschalter — ein
- * Selektor mehr, keine zweite Regel (O11). Vorher hatte `a.active` am
- * Vollbildknopf gar keine: Der Knopf hiess im Vollbild „Vollbild verlassen"
- * und sah aus wie vorher. */
+ * Selektor mehr, keine zweite Regel. Ohne ihn hiesse der Knopf im Vollbild
+ * „Vollbild verlassen" und saehe aus wie vorher. */
 .geo .map-ctrl-phase a.active,
 .geo .map-ctrl-fs a.active{background:var(--orange-hell)}
 
-/* ---- VOLLBILD (O11) ------------------------------------------------------
+/* ---- VOLLBILD ------------------------------------------------------------
  *
  * ZWEI WEGE, EIN AUSSEHEN. `map_fullscreen.js` nimmt die Fullscreen-API,
  * wenn es sie gibt, und sonst einen CSS-Rueckfall — „relevant v. a. iOS
  * Safari, das requestFullscreen() fuer beliebige Elemente nicht
  * unterstuetzt" (Dateikopf des Skripts).
  *
- * DER RUECKFALL WAR TOT. Die Klassen `map-fs` und `map-fs-lock` hatten seit
- * dem Neubau des Stylesheets (Web 9.0.0, O1) keine Regel mehr — auf einem
- * iPhone passierte beim Druck auf „Vollbild" NICHTS: Die Karte blieb, wie
- * sie war, nur der Knopf hiess jetzt „Vollbild verlassen". Vier Monate
- * unbemerkt, weil der Weg nur dort genommen wird und die Bildaufnahme den
- * Vollbildzustand nie herstellt.
+ * DER RUECKFALL BRAUCHT DIESE REGELN. Ohne sie passiert auf einem iPhone
+ * beim Druck auf „Vollbild" NICHTS: Die Karte bleibt, wie sie war, nur der
+ * Knopf heisst „Vollbild verlassen". Das faellt lange nicht auf, weil der
+ * Weg nur dort genommen wird und die Bildaufnahme den Vollbildzustand nie
+ * herstellt.
  *
- * Der Selektor heisst jetzt `.geo`, nicht mehr `.map`: Der Kartenbehaelter
- * wurde in O2 umbenannt, zusammen mit dem Markup der drei Karten (bis
- * Web 21.1.6 stand hier „O1" — das Stylesheet aus O1 kennt weder `.map`
- * noch `.geo`, Backlog Nr. 333). Die alten Zeilen zurueckzukopieren haette
- * den Fehler stehen lassen.
+ * Der Selektor heisst `.geo`, nicht `.map`: So heisst der Kartenbehaelter
+ * im Markup der drei Karten.
  *
- * z-index 70 statt der alten 2000: Das ist die Ebene des Blatts. Hoehere
- * Werte braucht die Anwendung nicht mehr, seit `.geo` einen eigenen
- * Stapelkontext hat (Abschnitt 16, oben).
+ * z-index 70: Das ist die Ebene des Blatts. Hoehere Werte braucht die
+ * Anwendung nicht, weil `.geo` einen eigenen Stapelkontext hat
+ * (Abschnitt 16, oben).
  *
  * Die `:fullscreen`-Zeile ist auch am Schreibtisch noetig: Das UA-Blatt
  * setzt Groesse und Rand mit `!important`, den `border-radius` von `.geo`
@@ -3056,15 +2947,13 @@ body.map-fs-lock{overflow:hidden}
  *
  * ER STEHT HIER UND NICHT IN ABSCHNITT 21, wo der uebrige Marker-Satz liegt —
  * eine alte Einordnung, die stehenbleibt: Ihn zu verschieben waere eine
- * Reihenfolgeaenderung im Stylesheet und damit ein Fall fuer den
- * Stilvergleich, der waehrend P3 ausgesetzt ist. Wer Abschnitt 21 aendert,
- * aendert hier mit (S9/AP3: 16 -> 14 px, Rand 3 -> 2 px nach M-S9-01 V1).
+ * Reihenfolgeaenderung im Stylesheet. Wer Abschnitt 21 aendert, aendert
+ * hier mit (14 px, Rand 2 px).
  * Seine Groesse steht auch in geo.js (`iconSize`), und die Legende des
  * Kartendialogs benutzt dieselben Klassen — siehe dort. */
-/* DIE ANTIPPFLAECHE UM DEN RING (S9/AP3, geo.js `RINGFELD_PX`). Sie ist
- * durchsichtig und 24 px gross — die Untergrenze aus WCAG 2.5.8, die E-S9-12
- * im selben Absatz nennt, in dem es den Ring auf 14 px setzt. Die Zeichnung
- * bleibt 14 px; nur der Finger bekommt mehr. */
+/* DIE ANTIPPFLAECHE UM DEN RING (geo.js `RINGFELD_PX`). Sie ist
+ * durchsichtig und 24 px gross — die Untergrenze aus WCAG 2.5.8. Die
+ * Zeichnung bleibt 14 px; nur der Finger bekommt mehr. */
 .geo-ringpunkt-feld{
   display:flex;align-items:center;justify-content:center;
   width:100%;height:100%;
@@ -3085,7 +2974,7 @@ body.map-fs-lock{overflow:hidden}
 }
 
 
-/* == 23. EINSATZFORMULAR (O5, E-P3-34, Mockups 22/23/25) ===================
+/* == 23. EINSATZFORMULAR ===================================================
  *
  * Karten statt Rahmengruppen; Ja/Nein als Schalter mit eingerückten
  * Detailfeldern; Phasen- und Reanimationszeilen mit 44-px-Zeitfeld und
@@ -3101,7 +2990,7 @@ body.map-fs-lock{overflow:hidden}
     align-items:start;
   }
 }
-/* EINE SPALTE, WENN DIE ZWEITE LEER BLIEBE (P5c/AP4, M-P5c-02c, E-P5c-66):
+/* EINE SPALTE, WENN DIE ZWEITE LEER BLIEBE:
  * Der Support sieht auf der Kontoseite keine Konto-Backups und keine
  * Gefahrenzone — die rechte Spalte entfiele, und die linke stuende halb so
  * breit neben einer Leere. Hinter der Regel oben, damit sie ab 1200 px
@@ -3110,10 +2999,10 @@ body.map-fs-lock{overflow:hidden}
   grid-template-columns:minmax(0,1fr);
   max-width:calc(var(--lesespalte) + var(--abstand-5));
 }
-/* LINKS BREIT, 3 : 2 (P5c/AP7, M-P5c-01b, E-P5c-18): links eine Tabelle
+/* LINKS BREIT, 3 : 2: links eine Tabelle
  * „… je Zeitraum" mit bis zu fuenf Zahlenspalten, rechts eine Karte mit
  * Zeilen und Zaehlplakette. Gleich geteilt laeuft die Fuenf-Fenster-Tabelle
- * ueber und rollt — gemessen in AP7: 40 px bei 1200, 20 px bei 1240, ab
+ * ueber und rollt — gemessen: 40 px bei 1200, 20 px bei 1240, ab
  * 1280 px nicht mehr. Mit 3 : 2 passt sie bei 1200, 1280, 1366 und 1440 px
  * ohne Rollen, in Chromium, Firefox und WebKit. Hinter der Regel von
  * `.form-raster`, gleiche Spezifitaet. */
@@ -3122,14 +3011,14 @@ body.map-fs-lock{overflow:hidden}
 }
 
 /* Zwei kurze Felder in einer Zeile (Nachname/Vorname, Geburtsdatum/Alter) —
- * auch mobil, wie im Mockup. */
+ * auch mobil. */
 .fld-reihe,.patname{
   display:grid;grid-template-columns:repeat(2,minmax(0,1fr));
   gap:0 var(--abstand-3);
 }
 
 /* Detailfelder eines Schalters: eingerückt hinter einer orangen Linie
- * (Mockup 22 Mitte — Cycles unter dem Windeneinsatz). */
+ * (etwa Cycles unter dem Windeneinsatz). */
 .childfields{
   margin:0 0 var(--abstand-3) var(--abstand-2);
   padding-left:var(--abstand-4);
@@ -3137,37 +3026,36 @@ body.map-fs-lock{overflow:hidden}
 }
 .fld-sub{margin-left:0}
 
-/* Hinweistexte im Formular. Sie hiessen bis Web 9.11.1 „muted small" und
- * bezogen Farbe und Groesse aus der Uebergangsschicht; seit deren Auflösung
- * (O11) steht beides hier. */
+/* Hinweistexte im Formular: Farbe und Groesse stehen hier. */
 .feld-hinweis{color:var(--gedaempft);font-size:var(--groesse-2)}
 /* Steht der Hinweis VOR einem Feld (Gefahrenzone der Kontoseite: erst die
  * Folgen, dann die Eingabe), braucht er Abstand nach unten — p hat global
  * keinen. Steht er danach, ist der Abstand des Feldes schon da. */
 .feld-hinweis + .feld,.feld-hinweis + form{margin-top:var(--abstand-3)}
 
-/* KLEINTEXT GEHOERT ZU DEM FELD UEBER IHM (F-N1-I). `label` traegt
+/* KLEINTEXT GEHOERT ZU DEM FELD UEBER IHM. `label` traegt
  * `margin-bottom: --abstand-3` als Abstand zum NAECHSTEN Feld. Folgt ein
- * `.feld-klein` („Zufahrt, Besonderheiten, Lage vor Ort"), stand der Hinweis
- * damit 16 px unter seinem eigenen Feld und 4 px ueber dem naechsten — er
- * las sich als Ueberschrift des folgenden statt als Erlaeuterung des
- * vorigen. Der Abstand wandert vom Feld hinter den Hinweis. */
+ * `.feld-klein` („Zufahrt, Besonderheiten, Lage vor Ort"), stuende der
+ * Hinweis damit 16 px unter seinem eigenen Feld und 4 px ueber dem
+ * naechsten — er laese sich als Ueberschrift des folgenden statt als
+ * Erlaeuterung des vorigen. Der Abstand wandert vom Feld hinter den Hinweis. */
 label:has(+ .feld-klein){margin-bottom:0}
 label + .feld-klein{margin-bottom:var(--abstand-3)}
 
-/* ---- Ortsfeld: Feld + Lupe + Pin (E-P3-34) ------------------------------- */
-/* DIESELBE NAEHE WIE UEBERALL SONST (F-N1-I). Beim Muster
+/* ---- Ortsfeld: Feld + Lupe + Pin ----------------------------------------- */
+/* DIESELBE NAEHE WIE UEBERALL SONST. Beim Muster
  * `<label>Text <input></label>` liegen 4 px zwischen Beschriftung und Feld
  * (`label > input{margin-top: --abstand-1}`). Das Ortsfeld kann dieses Muster
  * nicht benutzen — sein Feld steht in einer Zeile mit Lupe und Pin —, und so
- * griff nur `label{margin-bottom: --abstand-3}`: 12 px statt 4. „Einsatzort"
- * hing dadurch zwischen den Feldern, statt zu seinem zu gehoeren. */
+ * griffe nur `label{margin-bottom: --abstand-3}`: 12 px statt 4.
+ * „Einsatzort" hinge dadurch zwischen den Feldern, statt zu seinem zu
+ * gehoeren. */
 .loc-widget > label{margin-bottom:var(--abstand-1)}
 /* Und der Block als Ganzes braucht den Abstand nach unten, den ein `label`
  * mitbraechte — sonst klebte „Beschreibung Einsatzort" am Koordinaten-Chip. */
-/* `position:relative`, seit die Trefferliste ueber dem folgenden Inhalt
- * schwebt statt ihn zu verschieben (S9/AP1): Ohne einen positionierten
- * Vorfahren haengte sie am Seitenanfang. */
+/* `position:relative`, weil die Trefferliste ueber dem folgenden Inhalt
+ * schwebt statt ihn zu verschieben: Ohne einen positionierten Vorfahren
+ * haengte sie am Seitenanfang. */
 .loc-widget{margin-bottom:var(--abstand-3);position:relative}
 .ortsfeld-zeile{display:flex;gap:var(--abstand-2);align-items:stretch}
 .ortsfeld-zeile input{flex:1 1 auto;min-width:0}
@@ -3185,8 +3073,7 @@ label + .feld-klein{margin-bottom:var(--abstand-3)}
   background:var(--blau-hell);color:var(--dunkelblau);
   border-radius:var(--radius-rund);
   font-size:var(--groesse-2);font-weight:600;
-  /* GLEICH VIEL ABSTAND ZUM TEXT WIE ZUM RAND (E-MR-18, Skizze des
-   * Auftraggebers): 6 px beidseits des Symbols. 6 px ist keine Stufe des
+  /* GLEICH VIEL ABSTAND ZUM TEXT WIE ZUM RAND: 6 px beidseits des Symbols. 6 px ist keine Stufe des
    * Vierer-Rasters — es ist anderthalb `--abstand-1`, und genau so steht es
    * da, damit die Zahl ihre Herkunft behaelt. Links bleibt `--abstand-2`:
    * Dort steht Text an einer runden Kante und braucht mehr Luft. */
@@ -3194,13 +3081,12 @@ label + .feld-klein{margin-bottom:var(--abstand-3)}
   padding:var(--abstand-1) calc(var(--abstand-1) * 1.5)
           var(--abstand-1) var(--abstand-2);
 }
-/* DAS ENTFERNEN-ZIEL IST GROESSER ALS DAS, WAS MAN SIEHT — und das ist der
- * ganze Punkt von Backlog Nr. 42 (M-MR-02, Variante C).
+/* DAS ENTFERNEN-ZIEL IST GROESSER ALS DAS, WAS MAN SIEHT.
  *
- * Bis Web 19.4.1 stand hier das Malzeichen `×` als TEXT, und das Ziel war so
- * gross wie das Zeichen: gemessen 11 x 15 px. Auf einem Handy mit Handschuhen
- * ist das kein Bedienelement, sondern ein Glueckspiel — und ein Fehlgriff
- * loescht eine Koordinate oder ein Rettungsmittel.
+ * Ein Malzeichen `×` als TEXT hat ein Ziel so gross wie das Zeichen:
+ * gemessen 11 x 15 px. Auf einem Handy mit Handschuhen ist das kein
+ * Bedienelement, sondern ein Glueckspiel — und ein Fehlgriff loescht eine
+ * Koordinate oder ein Rettungsmittel.
  *
  * WARUM EIN PSEUDOELEMENT UND KEIN GROESSERER KNOPF: Ein 28 px hoher Knopf
  * machte den Chip 28 px hoch, und der soll bei 26 bleiben. Das `::before`
@@ -3208,11 +3094,10 @@ label + .feld-klein{margin-bottom:var(--abstand-3)}
  * (sie gehoert zu ihm, nicht zum Chip) und nimmt keinen Platz im Fluss. Der
  * Chip behaelt seine Hoehe, das Ziel ragt unsichtbar darueber hinaus.
  *
- * EINE REGEL FUER BEIDE CHIPS (E-MR-11): Koordinaten (`ortsfeld.js`) und
- * beteiligte Rettungsmittel (`einsatz_form.php`) teilen sich `.rmchip`/`.rmx`.
- * Bis hierher setzten sie dasselbe Zeichen auf zwei Arten — einmal als
- * Zeichen, einmal als JavaScript-Escape; die zweite hat die
- * Vollstaendigkeitspruefung nie gesehen. */
+ * EINE REGEL FUER BEIDE CHIPS: Koordinaten (`ortsfeld.js`) und
+ * beteiligte Rettungsmittel (`einsatz_form.php`) teilen sich `.rmchip`/`.rmx`
+ * — nicht dasselbe Zeichen auf zwei Arten, von denen die
+ * Vollstaendigkeitspruefung eine nicht saehe. */
 .rmx{
   position:relative;
   display:inline-flex;align-items:center;justify-content:center;
@@ -3229,7 +3114,7 @@ label + .feld-klein{margin-bottom:var(--abstand-3)}
 /* Rueckmeldung ohne neue Flaeche: der Ton wird kraeftiger. Eine Fuellung
  * haette eine zweite Blauflaeche auf der ersten bedeutet. */
 .rmx:hover{color:var(--blau-tief)}
-/* Eingabefeld mit Chips darin (Weitere Rettungsmittel, Mockup 22). */
+/* Eingabefeld mit Chips darin (Weitere Rettungsmittel). */
 .rmbox{position:relative}
 .rmfeld{
   display:flex;flex-wrap:wrap;gap:var(--abstand-1);align-items:center;
@@ -3244,29 +3129,25 @@ label + .feld-klein{margin-bottom:var(--abstand-3)}
   padding:var(--abstand-1);background:none;
 }
 
-/* ---- Vorschlagsliste: EIN Baustein unter jedem Feld (S9/AP1, E-S9-07) ----
+/* ---- Vorschlagsliste: EIN Baustein unter jedem Feld ----------------------
  *
- * Sie ersetzt drei Fassungen auf einmal: `.loc-suggest` (Photon-Liste des
- * Ortsfelds), `.rmlist`/`.rmopt` (weitere Rettungsmittel) und jede native
- * `<datalist>`. Rahmen, Schatten und Radius sind die der alten
- * `.loc-suggest`; neu sind die Gruppenzeile, das Symbol je Eintrag, die
- * gedaempfte Nebenzeile und die Markierung, die Zeiger und Pfeiltaste teilen.
- * Mockup M-S9-03, freigegeben 07.09.2026.
+ * Eine Liste fuer das Ortsfeld (Photon), die weiteren Rettungsmittel und
+ * jedes Feld, das sonst eine native `<datalist>` truege: mit Gruppenzeile,
+ * Symbol je Eintrag, gedaempfter Nebenzeile und einer Markierung, die Zeiger
+ * und Pfeiltaste teilen.
  *
- * SIE SCHWEBT (`position:absolute`), sie schiebt nicht. Die alte
- * `.loc-suggest` stand im Fluss und drueckte beim Tippen alles darunter nach
- * unten — auf einem 390-px-Schirm sprang das halbe Formular. Der Behaelter
+ * SIE SCHWEBT (`position:absolute`), sie schiebt nicht. Eine Liste im Fluss
+ * drueckte beim Tippen alles darunter nach unten — auf einem 390-px-Schirm
+ * spraenge das halbe Formular. Der Behaelter
  * traegt dafuer `position:relative`: `.loc-widget`, `.rmbox`,
  * `.feld-vorschlag`.
  *
- * IHRE EBENE IST 35, UND DAS IST EINE ENTSCHEIDUNG. Sie stand zuerst auf 20 —
- * dem Wert der alten `.rmlist`, die als einzige schwebte. Damit lag sie UNTER
+ * IHRE EBENE IST 35, UND DAS IST EINE ENTSCHEIDUNG. Auf 20 laege sie UNTER
  * der klebenden Speichern-Leiste (30), und die deckte beim Tippen genau die
  * untersten Trefferzeilen zu: gemessen 61 px Ueberlappung, und
- * `elementFromPoint` traf in der Schnittflaeche die Leiste. Gefunden hat es
- * der Auftraggeber am Bild, kein Pruefmittel — ein Bild zeigt die Ueberdeckung
- * nur, wenn die Scrollposition zufaellig passt. Die Klickprobe misst sie
- * jetzt (`ap1-liste-ueber-speichern-leiste`).
+ * `elementFromPoint` traf in der Schnittflaeche die Leiste. Ein Bild zeigt
+ * die Ueberdeckung nur, wenn die Scrollposition zufaellig passt; die
+ * Klickprobe misst sie (`ap1-liste-ueber-speichern-leiste`).
  *
  * NACH OBEN IST SIE EBENSO BEGRENZT: Die Kopfleiste liegt auf 40 und bleibt
  * darueber — eine Vorschlagsliste, die ueber die Kopfleiste malt, verdeckt
@@ -3275,7 +3156,7 @@ label + .feld-klein{margin-bottom:var(--abstand-3)}
  *
  * KEIN EIGENES HOEHENTOKEN. Die Zeile ist `--knopf` hoch und folgt damit
  * beiden Bedienhoehen von selbst (44 px am Finger, 36 px am Zeigergeraet ab
- * 1024 px, R76). */
+ * 1024 px). */
 .vorschlaege{
   position:absolute;left:0;right:0;z-index:35;
   margin:var(--abstand-1) 0 0;padding:0;list-style:none;
@@ -3310,11 +3191,10 @@ label + .feld-klein{margin-bottom:var(--abstand-3)}
 }
 /* Zeiger und Pfeiltaste teilen sich EINE Markierung — sonst haette die
  * Tastaturbedienung ein zweites Aussehen fuer dieselbe Aussage.
- * DER STRICH IST `--orange-tief` (Web 21.1.6, R4-08): Er steht hier allein —
- * Rauch hebt sich von Schnee kaum ab —, und Orange erreichte darauf 2,09:1.
- * Die Regel aus Design.md 3.1 und derselbe Tausch wie beim Reiter
- * (E-P5c-79): 4,04:1. Gefunden hat es kontrast.py, seit es die Paare aus
- * den Regeln ableitet. */
+ * DER STRICH IST `--orange-tief`: Er steht hier allein — Rauch hebt sich
+ * von Schnee kaum ab —, und Orange erreichte darauf 2,09:1. Die Regel aus
+ * Design.md 3.1 und derselbe Tausch wie beim Reiter: 4,04:1. kontrast.py
+ * leitet die Paare aus den Regeln ab und misst es. */
 .vorschlag:hover,.vorschlag.aktiv{background:var(--rauch);border-left-color:var(--orange-tief)}
 /* Die freie Eingabe ist eine HANDLUNG, kein Datensatz. */
 .vorschlag-neu .vorschlag-haupt{
@@ -3325,7 +3205,7 @@ label + .feld-klein{margin-bottom:var(--abstand-3)}
  * Ortsfeld und die Rettungsmittelbox bringen ihren eigenen mit. */
 .feld-vorschlag{position:relative}
 
-/* ---- Phasen- und Reanimationszeilen (Mockup 22/25) ----------------------- */
+/* ---- Phasen- und Reanimationszeilen -------------------------------------- */
 .phasen-eingabe{
   display:grid;
   grid-template-columns:minmax(0,1fr) calc(var(--knopf) * 2) var(--knopf);
@@ -3344,12 +3224,12 @@ label + .feld-klein{margin-bottom:var(--abstand-3)}
   border-left:var(--strich-stark) solid var(--orange)}
 .zeile-weg{color:var(--rot)}
 
-/* ---- Schneide-Bereich (S4/A2b, E-S4-17) -----------------------------------
+/* ---- Schneide-Bereich -----------------------------------------------------
  *
  * Der aufklappbare Bereich unter einer Ruhesegment-Zeile: Aus dem Segment
  * wird ein Einsatz herausgeschnitten. Er GEHÖRT ZUR ZEILE DARÜBER, und das
  * sagt der orange Randstrich — dieselbe Form wie `.rea-ereignisse`, kein
- * neuer Gedanke (E-P3-28).
+ * neuer Gedanke.
  *
  * Kein eigener Farbwert und keine eigene Größe: Alles hier kommt aus den
  * vorhandenen Token. Die Zeitleiste benutzt `--sand` für die volle Dauer und
@@ -3374,11 +3254,11 @@ label + .feld-klein{margin-bottom:var(--abstand-3)}
 /* Die Zeitleiste. Sie ist eine ANZEIGE und keine Bedienung: Geführt wird über
  * die Zeitfelder, die Leiste zeigt das Ergebnis. Deshalb kein Ziehen an den
  * Griffen — es gäbe eine zweite Eingabe für dieselbe Zahl, und die beiden
- * liefen auseinander (Mockup A0, Vorschlag 2).
+ * liefen auseinander.
  *
- * SIE IST HTML UND KEIN SVG, und das war eine Korrektur: Ein SVG mit
- * `viewBox` skaliert seine Beschriftung mit der Breite. Auf 1280 px stand sie
- * richtig, auf 390 px war sie sechs Pixel hoch und unlesbar — dieselbe Zahl
+ * SIE IST HTML UND KEIN SVG: Ein SVG mit `viewBox` skaliert seine
+ * Beschriftung mit der Breite. Auf 1280 px stuende sie richtig, auf 390 px
+ * waere sie sechs Pixel hoch und unlesbar — dieselbe Zahl
  * in zwei Größen, je nach Fenster. Mit Prozentbreiten auf gewöhnlichen
  * Elementen bleibt der Text der Text und nur der Balken skaliert. */
 .schnitt-vorschau{
@@ -3435,7 +3315,7 @@ label + .feld-klein{margin-bottom:var(--abstand-3)}
 }
 .karte-fussweg{margin:0}
 
-/* ---- Kartendialog der Ortswahl (Fadenkreuz, E-P3-34) --------------------- */
+/* ---- Kartendialog der Ortswahl (Fadenkreuz) ------------------------------ */
 .dialog-karte{width:min(92vw, calc(var(--karte-neben-breit) * 1.4))}
 .ortswahl-karte{position:relative}
 .ortswahl-karte .geo{height:var(--karte-desktop);margin-bottom:0}
@@ -3454,7 +3334,7 @@ label + .feld-klein{margin-bottom:var(--abstand-3)}
 .ortswahl-kreuz::after{top:50%;left:0;right:0;height:var(--strich-stark);
   transform:translateY(-50%)}
 
-/* ---- Suchfeld im Dialogkopf (S9/AP2, E-S9-06; Mockup M-S9-04) ------------
+/* ---- Suchfeld im Dialogkopf ----------------------------------------------
  *
  * Der Behaelter traegt `position:relative`, weil die Trefferliste
  * (`.vorschlaege`, 9.28) darin schwebt — dieselbe Anforderung wie bei
@@ -3462,13 +3342,13 @@ label + .feld-klein{margin-bottom:var(--abstand-3)}
  * (`.ortsfeld-zeile`, Feld plus Lupe): Dasselbe Bedienelement soll nicht
  * zweimal aussehen. */
 .dialog-suche{position:relative;margin-bottom:var(--abstand-3)}
-/* Das Suchfeld steht im KOPF (M-S9-04). Damit die Karte unmittelbar darunter
+/* Das Suchfeld steht im KOPF. Damit die Karte unmittelbar darunter
  * beginnt, faellt der obere Innenabstand des Inhalts weg — sonst stuende
  * zwischen Feld und Karte zweimal Luft: der Abstand des Feldes und der des
  * Inhalts. Auf den Kartendialog begrenzt; jeder andere Dialog behaelt seinen. */
 .dialog-karte .dialog-inhalt{padding-top:0}
 
-/* ---- Legende unter der Karte (S9/AP2) ------------------------------------
+/* ---- Legende unter der Karte ---------------------------------------------
  *
  * Eine Zeile, gedaempft: „Aufzeichnung · Start · Ende". Sie erscheint nur,
  * wenn eine Spur gezeichnet wurde — eine Legende ohne Gegenstueck erklaert
@@ -3485,7 +3365,7 @@ label + .feld-klein{margin-bottom:var(--abstand-3)}
   background:var(--spur-1);border-radius:var(--radius-klein);
 }
 
-/* Blatt-Zeilen gibt es seit O5 auch als <button> (Ortswahl) — dieselbe
+/* Blatt-Zeilen gibt es auch als <button> (Ortswahl) — dieselbe
  * Gestalt wie die Verweise, ohne Knopf-Grundform. */
 button.blatt-zeile{
   width:100%;background:none;border:0;text-align:left;cursor:pointer;
@@ -3493,9 +3373,9 @@ button.blatt-zeile{
 }
 
 
-/* == 24. SUCHE (O6, E-P3-36, Mockups 27/28) ================================
+/* == 24. SUCHE =============================================================
  *
- * Die Filterspalte IST die Leiste (O2) — hier steht nur, was ihren Inhalt
+ * Die Filterspalte IST die Leiste — hier steht nur, was ihren Inhalt
  * ausmacht: Akkordeongruppen mit einer Zahl im Kopf, von/bis nebeneinander,
  * Wochentage und Dreiwert als Segmentwahl, der Fuß mit „Zurücksetzen" und —
  * nur in der Schublade — „n Treffer zeigen".
@@ -3504,20 +3384,19 @@ button.blatt-zeile{
 .filterzahl{flex:0 0 auto;margin-left:auto}
 .filtergruppe .akkordeon-text{flex:1 1 auto}
 .filterfelder{padding:var(--abstand-2) var(--abstand-3) var(--abstand-4)}
-/* HIER STAND `.filterfelder label{margin-bottom:var(--abstand-3)}` — und
- * setzte damit GENAU DEN WERT, den die Grundform `label` schon setzt. Eine
- * Regel ohne eigene Wirkung, aber mit höherer Spezifität (0,1,1): Sie schlug
- * jedes `.segment-taste{margin:0}` (0,1,0) und hielt den toten Streifen unter
- * den Segmenttasten der Filterleiste fest, nachdem er überall sonst fort war
- * (F-N1-L). Eine Dublette ist nie harmlos — sie tut nichts, bis sie etwas
- * verhindert. */
+/* KEIN `.filterfelder label{margin-bottom:var(--abstand-3)}`: Das setzte
+ * GENAU DEN WERT, den die Grundform `label` schon setzt — eine Regel ohne
+ * eigene Wirkung, aber mit höherer Spezifität (0,1,1). Sie schlüge jedes
+ * `.segment-taste{margin:0}` (0,1,0) und hielte den toten Streifen unter
+ * den Segmenttasten der Filterleiste fest. Eine Dublette ist nie harmlos —
+ * sie tut nichts, bis sie etwas verhindert. */
 
-/* Ab 1024 px ist die Segmentwahl inline (E-P3-30) — in der Filterleiste
+/* Ab 1024 px ist die Segmentwahl inline — in der Filterleiste
  * soll sie die Spaltenbreite füllen wie jedes Feld darüber. */
 .filterfelder .segment{display:flex;width:100%}
-/* Am UNTEREN Rand ausrichten — als Netz, nicht als Reparatur: Seit die
- * Paare „von"/„bis" heißen und ihren Namen über sich tragen (F-N1-J), sind
- * beide Beschriftungen gleich kurz und stehen ohnehin auf einer Höhe. Bliebe
+/* Am UNTEREN Rand ausrichten — als Netz, nicht als Reparatur: Die Paare
+ * heißen „von"/„bis" und tragen ihren Namen über sich; damit sind beide
+ * Beschriftungen gleich kurz und stehen ohnehin auf einer Höhe. Bliebe
  * eine künftig doch einmal länger, stünden die Felder trotzdem nebeneinander
  * und nicht versetzt. */
 .filterfelder .fld-reihe{gap:0 var(--abstand-2);align-items:end}
@@ -3525,14 +3404,13 @@ button.blatt-zeile{
 
 /* Beschriftung über einer Gruppe von Bedienelementen (Segmentwahl), dort wo
  * ein <label> nicht taugt: Es kann nur EIN Element beschriften. Die
- * Beschriftung selbst ist `.feld-label` aus Abschnitt 11 — hier stand sie
- * bis S3/AP2 ein zweites Mal, mit demselben Wert und ohne font-weight, und
- * setzte damit nichts, was die erste Regel nicht schon gesetzt hätte. Eine
- * Änderung am Abstand wäre an einer der beiden Stellen hängengeblieben. */
+ * Beschriftung selbst ist `.feld-label` aus Abschnitt 11 und steht hier
+ * nicht ein zweites Mal — eine Änderung am Abstand bliebe sonst an einer
+ * der beiden Stellen hängen. */
 .feldblock{margin-bottom:var(--abstand-3)}
 
 /* Segmentwahl in der Filterspalte: leiser als die Segmentwahl im Inhalt —
- * hell orange mit orangem Rahmen statt voller Fläche (Mockup 27/28). Bis zu
+ * hell orange mit orangem Rahmen statt voller Fläche. Bis zu
  * sieben davon stehen untereinander; sieben orange Balken wären ein Alarm,
  * und gemeint ist eine Einstellung. */
 .segment-filter .segment-taste{padding:0 var(--abstand-2)}
@@ -3551,7 +3429,7 @@ button.blatt-zeile{
 
 .filterfuss{display:flex;flex-direction:column;gap:var(--abstand-2)}
 
-/* ---- Suchzeile: Feld und Filterknopf (Mockup 27) ------------------------- */
+/* ---- Suchzeile: Feld und Filterknopf ------------------------------------- */
 .suchzeile{display:flex;gap:var(--abstand-2);align-items:stretch;margin-bottom:var(--abstand-3)}
 .suchfeld{position:relative;flex:1 1 auto;display:flex;align-items:center}
 .suchfeld input{
@@ -3597,7 +3475,7 @@ button.blatt-zeile{
 /* ---- Trefferkarte -------------------------------------------------------- */
 .sortieren-aktion{margin-left:auto;position:relative}
 .karte-treffer .karte-aktion{margin-left:0}
-/* Das Trefferwort hell orange hinterlegt (E-P3-36) — die Fläche trägt hier
+/* Das Trefferwort hell orange hinterlegt — die Fläche trägt hier
  * keine Bedeutung allein, sie zeigt nur, wo der Begriff steht; der Text
  * bleibt Asphalt und damit voll lesbar. */
 mark.treffer{background:var(--orange-hell);color:inherit;border-radius:var(--radius-klein)}
@@ -3608,7 +3486,7 @@ mark.treffer{background:var(--orange-hell);color:inherit;border-radius:var(--rad
   padding:var(--abstand-3) var(--abstand-4) 0;
 }
 
-/* Artzeichen, Datum und Beginn der Kachel stehen in einer Zeile (Mockup 27);
+/* Artzeichen, Datum und Beginn der Kachel stehen in einer Zeile;
  * das Zeichen sitzt vor dem Datum und nimmt die Farbe der Zeile an. */
 .kachel-art{margin-right:var(--abstand-1);color:var(--dunkelblau)}
 .kachel-art .symbol{vertical-align:-.15em}
@@ -3618,36 +3496,35 @@ mark.treffer{background:var(--orange-hell);color:inherit;border-radius:var(--rad
 
 
 /* ===========================================================================
- * 25  ZEITRAUM                                              (P3/O7, E-P3-37)
+ * 25  ZEITRAUM
  *
  * Die Übersicht eines Monats oder Jahres. Neu daran ist weniger die
  * Gestaltung als der ZUSCHNITT: „Gemischt" zeigt vier Kennzahlen statt acht,
  * und unter 720 px sind von jedem Satz vier sichtbar, der Rest steht hinter
  * „Weitere Statistik".
  *
- * Die Kachel selbst ist der Baustein aus O1 (`.kennzahl`, ui_kennzahl) — hier
+ * Die Kachel selbst ist der Baustein `.kennzahl` (ui_kennzahl) — hier
  * stehen nur Raster, mobile Kappung und die Segmentwahl in der Titelzeile.
  * ======================================================================== */
 
-/* DREI SPALTEN, IN JEDER BREITE (S9/AP5, M-S9-07): das Inhaltsverzeichnis
+/* DREI SPALTEN, IN JEDER BREITE: das Inhaltsverzeichnis
  * der Standortseite. Die Regel steht mit Absicht OHNE Medienabfrage und
  * NACH der Vierspalten-Regel des 1024er Bandes — nur so gewinnt sie in jeder
  * Breite. Im 720er Block darunter waere sie am Handy wirkungslos, und dort
- * stuenden zwei Kacheln nebeneinander und eine allein; das freigegebene
- * Mockup zeigt die drei auch bei 376 px in einer Reihe. Drei Kacheln zu je
+ * stuenden zwei Kacheln nebeneinander und eine allein; die drei gehoeren
+ * auch bei 376 px in eine Reihe. Drei Kacheln zu je
  * rund 110 px sind schmal — sie tragen eine Zahl und ein Wort, und mehr
  * sollen sie nicht. */
 .kennzahl-raster-3{grid-template-columns:repeat(3,minmax(0,1fr))}
 
 /* Spaltenzahl folgt dem Satz: vier Kacheln in vier Spalten, acht in zwei
- * Reihen zu vier, zehn in zwei Reihen zu fünf — so bleibt keine Reihe halb
- * leer. Unter 720 px sind es immer zwei (Grundregel von .kennzahl-raster). */
+ * Reihen zu vier — so bleibt keine Reihe halb leer. Unter 720 px sind es
+ * immer zwei (Grundregel von .kennzahl-raster). */
 @media (min-width:720px){
   .kennzahl-raster-4{grid-template-columns:repeat(4,minmax(0,1fr))}
-  .kennzahl-raster-5{grid-template-columns:repeat(5,minmax(0,1fr))}
 }
 
-/* MOBIL VIER (E-P3-37). Die übrigen Kacheln stehen im Markup und sind nur
+/* MOBIL VIER. Die übrigen Kacheln stehen im Markup und sind nur
  * verborgen — nicht ausgelassen: Der Knopf „Weitere Statistik" klappt sie
  * auf, ohne dass etwas nachgeladen oder neu gerechnet würde. Deshalb
  * `display:none` und nicht das `hidden`-Attribut: Letzteres gehört dem
@@ -3671,8 +3548,7 @@ mark.treffer{background:var(--orange-hell);color:inherit;border-radius:var(--rad
 }
 
 /* Die Segmentwahl steht in den AKTIONEN der Titelzeile: ab 720 px rechts
- * neben dem Titel (Mockup 29), darunter vollbreit unter dem Titel
- * (Mockup 31). `width:100%` an der Wahl allein genügt dafür nicht —
+ * neben dem Titel, darunter vollbreit unter dem Titel. `width:100%` an der Wahl allein genügt dafür nicht —
  * `.titelzeile-aktionen` ist ein Flex-Kind mit `flex:0 0 auto` und schrumpft
  * auf die Breite seines Inhalts. Der Aktionsblock muss deshalb mobil selbst
  * umbrechen und die volle Breite nehmen; die drei Segmente teilen sie sich
@@ -3686,7 +3562,7 @@ mark.treffer{background:var(--orange-hell);color:inherit;border-radius:var(--rad
   .segment-art .segment-taste{flex:0 0 auto}
 }
 
-/* DIE MARKIERUNG DES ANGEZEIGTEN ZEITRAUMS in der Leiste (E-P3-37). Sie
+/* DIE MARKIERUNG DES ANGEZEIGTEN ZEITRAUMS in der Leiste. Sie
  * sitzt auf der Zeile des Akkordeons, nicht auf dem `<details>` selbst —
  * sonst färbte sich auch der aufgeklappte Inhalt. Dieselben Farben wie beim
  * aktiven Diensttag (`.eintrag.aktiv`), damit „hier stehe ich" überall
@@ -3697,7 +3573,7 @@ mark.treffer{background:var(--orange-hell);color:inherit;border-radius:var(--rad
 }
 .akkordeon.aktiv > .akkordeon-zeile .akkordeon-text{color:var(--dunkelblau)}
 
-/* Die Zeile des Extremwert-Trägers, hell orange statt rot (E-P3-37): Rot
+/* Die Zeile des Extremwert-Trägers, hell orange statt rot: Rot
  * heißt in dieser Oberfläche „Aufmerksamkeit" — ein Höchstwert ist kein
  * Fehler. Gilt für die Tabellenzeile ab 720 px und die Kachel darunter. */
 .hl-extrem{background:var(--orange-hell)}
@@ -3705,18 +3581,18 @@ tr.hl-extrem td{background:var(--orange-hell)}
 
 
 /* ===========================================================================
- * 26  EINSTELLUNGEN UND VERWALTUNGSLISTEN                   (P3/O8, E-P3-35)
+ * 26  EINSTELLUNGEN UND VERWALTUNGSLISTEN
  * ======================================================================== */
 
 /* WAHLLISTE (.wahlliste) — eine aus vieren, untereinander, 44 px hoch.
- * Freigegeben mit Mockup 13. Die Radios selbst sind unsichtbar; die Zeile
+ * Die Radios selbst sind unsichtbar; die Zeile
  * ist das Bedienelement, und der Punkt links wird gezeichnet — so lässt er
  * sich färben und auf Größe bringen, was ein Systemradio nicht zulässt.
  *
- * SCHLICHTE LISTE STATT UMRANDETER EINZELZEILEN (S3/AP8). Jede Zeile trug
- * einen eigenen Rahmen auf eigener Fläche und stand mit 8 px Abstand zur
- * nächsten — vier Kästchen untereinander, die aussahen wie vier Karten und
- * nur eine Wahl sind. Die Auswahl braucht diese Umrandung nicht: Sie zeigt
+ * SCHLICHTE LISTE STATT UMRANDETER EINZELZEILEN. Ein eigener Rahmen je
+ * Zeile auf eigener Fläche, mit 8 px Abstand zur nächsten, ergäbe vier
+ * Kästchen untereinander, die aussähen wie vier Karten und nur eine Wahl
+ * sind. Die Auswahl braucht diese Umrandung nicht: Sie zeigt
  * sich am Punkt links und, bei der gewählten Zeile, an der Fläche.
  * Was bleibt, sind die 44 px Zeilenhöhe und der gezeichnete Punkt. */
 .wahlliste{display:flex;flex-direction:column}
@@ -3763,10 +3639,10 @@ input[type=radio].wahl-box{position:absolute;opacity:0;width:0;height:0;min-heig
   .kopf-name{font-size:var(--groesse-4)}
 }
 
-/* PASSWORTSTÄRKE als Balken (E-P3-16, Mockup 11). Vier Segmente, gefüllt
- * nach Stufe; die Farbe verstärkt nur, was die Zahl der Segmente schon
- * sagt. Vorher war es eine Textzeile in fünf Farben, darunter Grün und
- * Gelb — zwei Töne, die es in der Marke nicht gibt. */
+/* PASSWORTSTÄRKE als Balken. Vier Segmente, gefüllt nach Stufe; die Farbe
+ * verstärkt nur, was die Zahl der Segmente schon sagt. Eine Textzeile in
+ * fünf Farben bräuchte Grün und Gelb — zwei Töne, die es in der Marke
+ * nicht gibt. */
 .pwstaerke{
   display:flex;align-items:center;flex-wrap:wrap;
   gap:var(--abstand-2);
@@ -3795,7 +3671,7 @@ input[type=radio].wahl-box{position:absolute;opacity:0;width:0;height:0;min-heig
 .pwq-3 .pwstaerke-balken > span.an,
 .pwq-4 .pwstaerke-balken > span.an{background:var(--dunkelblau)}
 
-/* VERWALTUNGSLISTEN (E-P3-35). Erklärtext auf drei Zeilen unter dem Titel,
+/* VERWALTUNGSLISTEN. Erklärtext auf drei Zeilen unter dem Titel,
  * dann die Karte mit Zeilen und darunter — IN derselben Karte — das
  * Formular zum Anlegen. */
 .seiten-erklaerung{
@@ -3806,7 +3682,7 @@ input[type=radio].wahl-box{position:absolute;opacity:0;width:0;height:0;min-heig
 /* Der negative Rand oben ist auf die TITELZEILE abgestimmt, die ihren eigenen
  * Abstand nach unten mitbringt. Steht die Erklärung dagegen direkt unter einem
  * blanken <h1> — öffentliche Seiten und Einrichter, die kein Gerüst und damit
- * keine Titelzeile haben —, zieht er sie an die Überschrift heran (O10). */
+ * keine Titelzeile haben —, zieht er sie an die Überschrift heran. */
 h1 + .seiten-erklaerung{margin-top:0}
 
 /* Das Formular unter der Liste, durch eine Linie abgesetzt: Es gehört zur
@@ -3824,7 +3700,7 @@ h1 + .seiten-erklaerung{margin-top:0}
 .listen-form-felder{display:grid;gap:var(--abstand-3)}
 .listen-form-fuss{display:flex;flex-wrap:wrap;gap:var(--abstand-2);margin-top:var(--abstand-4)}
 
-/* Ab 720 px stehen Name und Lage nebeneinander (Mockup 08) — sie gehören
+/* Ab 720 px stehen Name und Lage nebeneinander — sie gehören
  * zusammen und passen in eine Zeile. */
 @media (min-width:720px){
   .listen-form-felder{grid-template-columns:1fr 1fr;align-items:start}
@@ -3847,7 +3723,7 @@ h1 + .seiten-erklaerung{margin-top:0}
   .zeile-knoepfe{display:flex;flex-wrap:wrap;gap:var(--abstand-2);justify-content:flex-end}
 }
 
-/* „Als Vorbelegung" ist leise UND orange (Mockup 11): Sie ist eine
+/* „Als Vorbelegung" ist leise UND orange: Sie ist eine
  * Auszeichnung, kein Hauptweg — ein voller Orangeknopf neben „Bearbeiten"
  * und „Löschen" behauptete, sie sei die zu erwartende Handlung. */
 .knopf-leise-orange{color:var(--orange-tief)}
@@ -3857,10 +3733,8 @@ h1 + .seiten-erklaerung{margin-top:0}
  * Zielkliniken, weitere Rettungsmittel, Bergwacht). Sie sind Abschnitte,
  * keine eigenen Karten: Zwei Rahmen um dieselbe Sache trennen, was
  * zusammengehört — die zweite Ebene ordnet nur. */
-/* ABSTAND AUCH VOR DER ERSTEN LISTE (F-N1-M). Die Regel setzte den Abstand
- * nur ZWISCHEN zwei Listen. Steht davor etwas anderes — gemessen am Hinweis
- * „[systemweit] Dieser Standort wird von der Administration gepflegt", den
- * es bis Web 20.47.0 gab (R39) —, klebte die Überschrift „Rettungsmittel"
+/* ABSTAND AUCH VOR DER ERSTEN LISTE, nicht nur ZWISCHEN zwei Listen. Steht
+ * davor etwas anderes, klebte die Überschrift „Rettungsmittel" sonst
  * unmittelbar daran. */
 .sd-liste{margin-top:var(--abstand-4)}
 .sd-liste:first-child{margin-top:0}
@@ -3877,16 +3751,6 @@ h1 + .seiten-erklaerung{margin-top:0}
  * des Einsatzformulars („nebeneinander" im Feldkatalog). */
 .vehkind{display:flex;flex-wrap:wrap;gap:0 var(--abstand-4)}
 .vehkind label{margin-bottom:0}
-.sd-titel{
-  display:flex;align-items:center;gap:var(--abstand-2);
-  font-family:var(--schrift-kopf);font-weight:600;
-  font-size:var(--groesse-4);color:var(--dunkelblau);
-  margin:0 0 var(--abstand-2);
-}
-.sd-zahl{
-  font-family:var(--schrift-text);font-weight:400;
-  font-size:var(--groesse-2);color:var(--gedaempft);
-}
 /* Die Rolle innerhalb der Besatzungsliste — eine Ebene tiefer als der
  * Listentitel, deshalb kleiner und ohne eigene Linie. */
 .sd-rolle{
@@ -3902,10 +3766,10 @@ h1 + .seiten-erklaerung{margin-top:0}
  * oder herauskopiert werden, oft unter Zeitdruck: groß, in Festbreite, mit
  * Abstand zwischen den Zeichen.
  *
- * DER KOPPLUNGSCODE STEHT SEIT WEB 13.1.0 NICHT MEHR HIER. Er wandert seit S5
- * in die andere Richtung — das Gerät zeigt ihn, ein Mensch tippt ihn im Web
- * ein —, und dafür ist ein Eingabefeld zuständig (.feld-fest). Der Baustein
- * bleibt: sechs andere Stellen benutzen ihn. */
+ * DER KOPPLUNGSCODE STEHT NICHT HIER. Er wandert in die andere Richtung —
+ * das Gerät zeigt ihn, ein Mensch tippt ihn im Web ein —, und dafür ist ein
+ * Eingabefeld zuständig (.feld-fest). Den Baustein benutzen sechs andere
+ * Stellen. */
 .codeblock{
   background:var(--rauch);
   border:var(--strich) solid var(--linie);
@@ -3927,13 +3791,13 @@ h1 + .seiten-erklaerung{margin-top:0}
   margin:0;
 }
 
-/* ZWEITE STUFE FÜR LANGE WERTE (E-S8-10, Backlog Nr. 78, Web 15.1.0).
+/* ZWEITE STUFE FÜR LANGE WERTE.
  *
  * Die große Stufe darüber ist für sechs Zeichen gemacht — Geräte-ID,
- * Wiederherstellungsschlüssel. Benutzt wurde sie auch für die Cron-Zeile, die
- * Token-Adresse, den Setz-Link und die Serverschlüssel-Zeile: Werte mit
- * sechzig bis hundert Zeichen, die in dieser Größe über drei Zeilen brechen
- * und dabei aussehen, als seien sie zum Vorlesen gedacht.
+ * Wiederherstellungsschlüssel. Die Cron-Zeile, die Token-Adresse, der
+ * Setz-Link und die Serverschlüssel-Zeile sind Werte mit sechzig bis
+ * hundert Zeichen, die in dieser Größe über drei Zeilen brächen und dabei
+ * aussähen, als seien sie zum Vorlesen gedacht.
  *
  * Zwei Stufen also, ein Kasten. Die kleine trägt kein Sperrmaß (letter-spacing
  * hilft beim Abschreiben von sechs Zeichen und schadet beim Lesen von
@@ -3955,7 +3819,7 @@ h1 + .seiten-erklaerung{margin-top:0}
   margin:0;
 }
 
-/* SPEICHERBALKEN — Belegung nach Art (E-S8-18, Mockup 07, Web 15.1.0).
+/* SPEICHERBALKEN — Belegung nach Art.
  *
  * WOFÜR. Zwei Fragen, die eine Zahlenreihe nicht beantwortet: Wie voll ist es,
  * und woraus besteht das? „1,3 GB von 2 GB" sagt das Erste; erst die Segmente
@@ -4023,8 +3887,8 @@ h1 + .seiten-erklaerung{margin-top:0}
 }
 .zustandszeile .meldung{margin:0}
 
-/* LADEPLATZ — solange der Browser Ortsdaten holt oder oeffnet (S11-04c,
- * M-S11-01, E-S11-35). Ein Ring und ein Satz an der Stelle des Inhalts: in
+/* LADEPLATZ — solange der Browser Ortsdaten holt oder oeffnet. Ein Ring und
+ * ein Satz an der Stelle des Inhalts: in
  * der Kartenflaeche auf einem Schnee-Kaestchen mittig, in einer Karte als
  * Zeile. Er erscheint erst nach 300 ms (`assets/ortsdaten.js`), damit eine
  * schnelle Ansicht nicht flackert. `.ladeplatz-still` haelt den Ring an: Es
@@ -4049,8 +3913,7 @@ h1 + .seiten-erklaerung{margin-top:0}
 }
 .ladeplatz[hidden]{display:none}
 /* BALKEN — Fortschritt eines langen Laufs, IN der Zustandszeile unter dem
- * Ladeplatz (M-S11-01 Abschnitt 3, freigegeben mit E-S11-35; erster
- * Verwender: der Wartungslauf, S11-07, M-S11-02). Hoehe wie die Glieder des
+ * Ladeplatz (Verwender: der Wartungslauf). Hoehe wie die Glieder des
  * Passwortbalkens (`--strich-balken`), Flaeche `--linie`, Fuellung
  * `--orange-tief` (3,2 : 1 auf `--linie`, fuer eine Grafik genug). Die Breite
  * der Fuellung setzt das Skript; `role="progressbar"` traegt den Wert. */
@@ -4060,7 +3923,7 @@ h1 + .seiten-erklaerung{margin-top:0}
 }
 .balken > i{display:block;height:100%;width:0;background:var(--orange-tief)}
 /* Geht eine Huelle nicht auf, steht die Meldung an der Stelle des
- * Ladeplatzes (M-S11-01, Zustand d) — mittig in der Kartenflaeche. */
+ * Ladeplatzes — mittig in der Kartenflaeche. */
 .geo > [data-ortsdaten]{
   position:absolute;left:var(--abstand-3);right:var(--abstand-3);top:50%;
   transform:translateY(-50%);z-index:500;
@@ -4068,7 +3931,7 @@ h1 + .seiten-erklaerung{margin-top:0}
 
 
 /* ===========================================================================
- * 27  ADMINISTRATION                                        (P3/O9, E-P3-41)
+ * 27  ADMINISTRATION
  *
  * Kontoseite, NutzerInnen-Liste, Backup-Regeln. Fast alles daran sind
  * vorhandene Bausteine — Karte, Zeile, Zeilenaktionen, Kennzahl, Dialog.
@@ -4076,7 +3939,7 @@ h1 + .seiten-erklaerung{margin-top:0}
  * erkennen ist.
  * ======================================================================== */
 
-/* GEFAHRENZONE (.karte-gefahr) — Mockup 40, Karte „Konto löschen". Roter
+/* GEFAHRENZONE (.karte-gefahr) — Karte „Konto löschen". Roter
  * Rand, roter Titel, sonst eine gewöhnliche Karte. Kein roter GRUND: Eine
  * rot geflutete Fläche zwingt jeden Text darin auf einen zweiten Kontrastwert
  * und macht das Formular darin schwerer lesbar — die Warnung soll den Rahmen
@@ -4085,7 +3948,7 @@ h1 + .seiten-erklaerung{margin-top:0}
 .karte-gefahr .karte-titel{color:var(--rot-tief)}
 
 
-/* ---- Statuskacheln mit Ton (O9b, Mockup 41) ------------------------------
+/* ---- Statuskacheln mit Ton -----------------------------------------------
  * Eine Kachel, die einen Befund meldet, ist eingefärbt: Orange für „das will
  * angesehen werden", Rot für „das fehlt". Dieselben zwei Töne wie bei der
  * Plakette, dieselbe Bedeutung. Als Verweis behält sie ihre Farben und
@@ -4100,13 +3963,11 @@ a.kennzahl:hover{border-color:var(--blau);text-decoration:none}
 /* ---- Kopf einer langen Liste: Suche und Filter --------------------------- */
 .listenkopf{display:flex;flex-direction:column;gap:var(--abstand-3);
   margin-bottom:var(--abstand-4)}
-/* DAS SUCHFELD STEHT IN EIGENER ZEILE, IN JEDER BREITE (E-S8-08, Backlog
- * Nr. 73). Bis Web 15.4.0 rückten Suche und Filter ab 1024 px NEBENEINANDER
- * (Mockup 41 aus P3), das Suchfeld auf `flex:0 1 26rem`. Gemessen an
- * `admin_users.php` mit fünf Filtern: Bei 1440, 1280 und 1024 px fiel der
- * letzte Filter allein in eine zweite Zeile — ein Umbruch, der wie ein Unfall
- * aussah, weil die erste Zeile halb leer blieb. Genau das war die gemeldete
- * Beobachtung.
+/* DAS SUCHFELD STEHT IN EIGENER ZEILE, IN JEDER BREITE. Rückten Suche und
+ * Filter ab 1024 px NEBENEINANDER, das Suchfeld auf `flex:0 1 26rem`, fiele
+ * — gemessen an `admin_users.php` mit fünf Filtern, bei 1440, 1280 und
+ * 1024 px — der letzte Filter allein in eine zweite Zeile: ein Umbruch,
+ * der wie ein Unfall aussieht, weil die erste Zeile halb leer bleibt.
  *
  * Untereinander ist der Umbruch der Filterreihe Absicht: Sie beginnt links,
  * füllt die Breite und bricht am Ende. Das Suchfeld bekommt eine
@@ -4123,15 +3984,15 @@ a.kennzahl:hover{border-color:var(--blau);text-decoration:none}
  * erreichbar), und er funktioniert ohne Skript. Der aktive ist orange
  * hinterlegt — dieselbe Auszeichnung wie die aktive Kennzahl. */
 .filterreihe{display:flex;flex-wrap:wrap;gap:var(--abstand-2)}
-/* Ein Auswahlfeld in der Filterreihe („Art", P5c/AP2) ist so hoch wie ein
+/* Ein Auswahlfeld in der Filterreihe („Art") ist so hoch wie ein
  * Filter und nur so breit, wie es muss. */
 .filterreihe .feld-eingabe{width:auto;min-width:12rem;flex:0 1 auto}
-/* AUCH DIESER NAME IST NICHT FREI: `.filterknopf` gehoert seit O6 dem Knopf,
+/* AUCH DIESER NAME IST NICHT FREI: `.filterknopf` gehoert dem Knopf,
  * der auf der Suchseite die Filterschublade oeffnet — und der ist 48 px hoch,
  * weil er neben dem 48-px-Suchfeld steht (die einzige benannte Ausnahme von
- * der 44-px-Regel). Eine zweite Regel gleichen Namens weiter unten haette ihn
- * auf 44 px gesetzt. Gemeldet hat es der Bilderlauf, nicht der Verstand:
- * „15-suche · Filter 0 · 44 px (soll 48)", achtmal, in jeder Breite. */
+ * der 44-px-Regel). Eine zweite Regel gleichen Namens weiter unten setzte
+ * ihn auf 44 px — der Bilderlauf meldet das als „15-suche · Filter 0 ·
+ * 44 px (soll 48)". */
 .listenfilter{
   display:inline-flex;align-items:center;gap:var(--abstand-2);
   min-height:var(--knopf);padding:0 var(--abstand-3);
@@ -4146,13 +4007,12 @@ a.kennzahl:hover{border-color:var(--blau);text-decoration:none}
 /* Die Zahl ist eine eigene Fläche, damit sie sich vom Wort abhebt, ohne eine
  * zweite Schriftgröße zu brauchen.
  *
- * SIE HEISST NICHT `.filterzahl`. Diese Klasse ist seit O6 vergeben — die
+ * SIE HEISST NICHT `.filterzahl`. Diese Klasse ist vergeben — die
  * Suche hängt sie als `filterzahl plakette plakette-blau` in den Kopf jeder
  * Filtergruppe (suche.php). Eine zweite Regel gleichen Namens weiter unten im
  * Stylesheet hätte deren Hintergrund und Schriftfarbe überschrieben, weil die
  * spätere Regel gleicher Spezifität gewinnt: Aus den blauen Zählern der
- * Suchseite wären graue geworden, und zwar auf einer Seite, die dieses Paket
- * gar nicht anfasst. */
+ * Suchseite wären graue geworden. */
 .listenfilter-zahl{
   display:inline-flex;align-items:center;justify-content:center;
   min-width:calc(var(--symbol) + var(--abstand-1));
@@ -4163,7 +4023,7 @@ a.kennzahl:hover{border-color:var(--blau);text-decoration:none}
 }
 .listenfilter.aktiv .listenfilter-zahl{background:var(--orange);color:var(--knopf-primaer-schrift)}
 
-/* ZEITRAUMWAHL (.zeitraumwahl, R4-23, Nr. 122 a, Bild M-R4-23) — die
+/* ZEITRAUMWAHL (.zeitraumwahl) — die
  * Filterreihe der Statistik: feste Fenster als Pillen (9.18a) und zwei
  * Datumsfelder mit „Anwenden" in EINER Reihe, die am Ende bricht. Neu ist nur
  * die Anordnung; Pillen, Felder und Knopf sind vorhandene Bausteine, kein
@@ -4181,14 +4041,14 @@ a.kennzahl:hover{border-color:var(--blau);text-decoration:none}
   .zeitraumwahl-felder .feld-eingabe{width:8.6rem}
 }
 
-/* DIAGRAMM (R4-24, Nr. 122 b, Bild M-R4-24, Design.md 9.40) — zwei Formen,
+/* DIAGRAMM (Design.md 9.40) — zwei Formen,
  * beide aus PHP, ohne Bibliothek und ohne Skript: Säulen über die Zeit
  * (`ui_diagramm_saeulen()`) und Anteile als Balken (`ui_diagramm_balken()`).
  *
  * EINE FARBE JE DIAGRAMM. Blau erklärt; der Höchstwert steht in Orange tief
- * und trägt seine Zahl (E-R4-60): Orange auf Schnee erreicht 2,23 : 1 und
- * verfehlte als Grafik die 3 : 1 aus WCAG 1.4.11 — derselbe Fund wie der
- * Rückstandspunkt der App (B-S5Z-13). Die Schrift steht in Asphalt und
+ * und trägt seine Zahl: Orange auf Schnee erreicht 2,23 : 1 und verfehlte
+ * als Grafik die 3 : 1 aus WCAG 1.4.11 — dasselbe wie beim Rückstandspunkt
+ * der App. Die Schrift steht in Asphalt und
  * Gedämpft, nie in der Reihenfarbe; Gitter in Linie, die Nulllinie stärker
  * in Gedämpft. */
 .diagramm{margin:0 0 var(--abstand-3)}
@@ -4214,8 +4074,8 @@ a.kennzahl:hover{border-color:var(--blau);text-decoration:none}
 }
 
 /* Kleine Vielfache: je Reihe ein Diagramm mit eigener Skala — untereinander,
- * ab der Schwelle 720 nebeneinander. Das Mockup setzte 768 px; das ist keine
- * Stufe der Skala (Design.md 7, F-R4-68). */
+ * ab der Schwelle 720 nebeneinander. 768 px wären keine Stufe der Skala
+ * (Design.md 7). */
 .kleinvielfach{display:grid;grid-template-columns:1fr;gap:var(--abstand-4)}
 @media (min-width:720px){
   .kleinvielfach{grid-template-columns:repeat(2,minmax(0,1fr))}
@@ -4241,7 +4101,7 @@ a.kennzahl:hover{border-color:var(--blau);text-decoration:none}
 
 
 /* ---- Kontentabelle ------------------------------------------------------- */
-/* Name und Adresse stehen untereinander in EINER Zelle (Mockup 41): Zwei
+/* Name und Adresse stehen untereinander in EINER Zelle: Zwei
  * Spalten dafür kosteten Breite und träfen doch nie beide zugleich zu — ein
  * Konto ohne Namen hat nur die Adresse. */
 .konto-name{display:block;font-weight:600;color:var(--dunkelblau)}
@@ -4273,7 +4133,7 @@ a.kennzahl:hover{border-color:var(--blau);text-decoration:none}
 .listenzahl{color:var(--gedaempft);font-size:var(--groesse-2)}
 .seitenwahl{display:flex;flex-wrap:wrap;gap:var(--abstand-1)}
 /* Die Seitenknöpfe sind quadratisch und 44 px hoch wie jeder Knopf — sie
- * werden auf dem Handy mit dem Daumen getroffen (E-P3-22). */
+ * werden auf dem Handy mit dem Daumen getroffen. */
 .seitenknopf{
   display:inline-flex;align-items:center;justify-content:center;
   min-width:var(--knopf);min-height:var(--knopf);padding:0 var(--abstand-2);
@@ -4301,32 +4161,28 @@ a.kennzahl:hover{border-color:var(--blau);text-decoration:none}
 
 
 /* ===========================================================================
- * 28  RECHTSTEXTE                                       (P3/O10, E-P3-38, R32)
+ * 28  RECHTSTEXTE
  *
  * Impressum und Datenschutzerklärung — die beiden öffentlichen Seiten und
  * ihr Editor. Erstaunlich wenig eigenes: Die Seiten sind Lesespalte
  * (`.rahmen-lesespalte`) plus eine Karte plus `.text`, der Editor ist das
- * Kartenraster (`.form-raster`, seit Web 19.3.0 — davor eine zweite,
- * gleichlautende Regel `.zweispalter`) mit zwei Karten und je einem
- * Textfeld. Was hier steht, sind
- * die drei Dinge, für die es im Bestand nichts gab.
+ * Kartenraster (`.form-raster`) mit zwei Karten und je einem Textfeld. Was
+ * hier steht, sind die drei Dinge, für die es sonst nichts gibt.
  * ======================================================================== */
 
-/* Monospace im Textfeld (Mockup 35). Das Token gibt es seit O1
- * (--schrift-fest), benutzt haben es bisher nur `code, kbd, pre` und
- * `.codeblock-wert` — ein <textarea> erbt von keinem der beiden.
+/* Monospace im Textfeld. Das Token (--schrift-fest) benutzen sonst
+ * `code, kbd, pre` und `.codeblock-wert` — ein <textarea> erbt von keinem
+ * der beiden.
  *
  * Die Klasse hängt an der HÜLLE, nicht am Feld: ui_feld() setzt $o['klasse']
  * an `.feld`. Ein Nachfahrenselektor kommt damit ohne jede Änderung am
  * Baustein aus. */
 .feld-fest .feld-eingabe{font-family:var(--schrift-fest)}
 
-/* DIE VORSCHAU, DIE MITLÄUFT (P5c/AP9, E-P5c-28, Mockup M-P5c-01d Variante 2).
- * Seit Web 21.1.0 ist die Vorschau eine eigene Karte neben dem Feld (Seite
- * „Rechtstexte"); der Zustand steht als Plakette im Kartenkopf. Bis dahin war
- * sie ein gestrichelter Kasten `.vorschau` unter jedem Feld auf
- * „Installation" (Mockup 35) — zwei Rahmen ineinander sagten nichts, und die
- * Klasse ist mit ihrem einzigen Verwender entfallen.
+/* DIE VORSCHAU, DIE MITLÄUFT. Die Vorschau ist eine eigene Karte neben dem
+ * Feld (Seite „Rechtstexte"); der Zustand steht als Plakette im
+ * Kartenkopf. Ein Kasten unter dem Feld innerhalb derselben Karte wären
+ * zwei Rahmen ineinander, und die sagen nichts.
  *
  * DER KASTEN ROLLT IN SICH, damit er in Sichtweite des Feldes bleibt. Die
  * Höhe ist die des Textfelds (18 Zeilen) — kein neues Maß, sondern dasselbe
@@ -4342,7 +4198,7 @@ a.kennzahl:hover{border-color:var(--blau);text-decoration:none}
   margin-top:var(--abstand-3);flex-wrap:wrap;
 }
 
-/* ---- Logo-Vorschau der Installation (S8/AP3, Mockup 09) -------------------
+/* ---- Logo-Vorschau der Installation --------------------------------------
  * Kachel links, Erklärung rechts. Die Kachel ist so hoch wie die Kopfleiste
  * (--logo-kachel = --kopf) und dunkelblau wie sie — das Logo soll dort zu
  * sehen sein, wo man es täglich sieht, und nicht auf einem Weiß, auf dem es
@@ -4362,7 +4218,7 @@ a.kennzahl:hover{border-color:var(--blau);text-decoration:none}
  * Text schmal neben der Kachel stehen und bräche mitten im Satz. */
 .logo-vorschau > .feld-hinweis{flex:1 1 12rem;margin:0}
 
-/* ---- Sprungliste und Kartenfilter (S9/AP5, M-S9-05 und M-S9-06) ----------
+/* ---- Sprungliste und Kartenfilter ----------------------------------------
  *
  * Zwei Hilfsmittel für eine LANGE Liste in einer Karte, beide ab sechs
  * Einträgen (`SD_HILFE_AB`, stammdaten_ui.php): die Sprungliste führt zu
@@ -4382,9 +4238,8 @@ a.kennzahl:hover{border-color:var(--blau);text-decoration:none}
  * unterscheidet.
  *
  * DIE HÖHE IST --knopf, und der Bilderlauf misst sie: `.sprungziel` steht
- * seit S9/AP5 in seiner Auswahl (aufnehmen.mjs). Ohne das wäre die 44/36
- * hier eine Zusage ohne Prüfmittel — genau der Fall, der `.listenfilter`
- * vier Monate lang ungemessen gelassen hat. */
+ * in seiner Auswahl (aufnehmen.mjs). Ohne das wäre die 44/36 hier eine
+ * Zusage ohne Prüfmittel. */
 .sprungliste{display:flex;flex-wrap:wrap;gap:var(--abstand-1);
   margin:0 0 var(--abstand-3)}
 .sprungziel{
@@ -4409,7 +4264,7 @@ a.kennzahl:hover{border-color:var(--blau);text-decoration:none}
 .sprungziel.aktiv .symbol{color:var(--orange-tief)}
 
 /* DER FILTER HEISST `.kartenfilter` UND NICHT `.filterfeld`: `.filterfelder`
- * (Mehrzahl) ist seit P3 der Innenabstand einer aufgeklappten Filtergruppe
+ * (Mehrzahl) ist der Innenabstand einer aufgeklappten Filtergruppe
  * der Suchseite. Zwei Klassen, die sich um ein „r" unterscheiden und
  * Verschiedenes meinen, sind derselbe Fehler, den `.listenfilter-zahl` weiter
  * oben ausdrücklich umgangen hat.
@@ -4420,8 +4275,7 @@ a.kennzahl:hover{border-color:var(--blau);text-decoration:none}
  *
  * DIE LUPE HAT KEIN `top`. Der Behälter zentriert senkrecht
  * (`align-items:center`), und damit sitzt sie in BEIDEN Bedienhöhen mittig.
- * Das Mockup schreibt `top:12px`; das stimmt bei 44 px und sitzt bei 36 px
- * 4 px zu tief. Dieselbe Lösung wie bei `.suchfeld-lupe`. */
+ * `top:12px` stimmte bei 44 px und säße bei 36 px 4 px zu tief. Dieselbe Lösung wie bei `.suchfeld-lupe`. */
 .kartenfilter{position:relative;display:flex;align-items:center;
   margin:0 0 var(--abstand-3)}
 .kartenfilter input{
@@ -4449,35 +4303,30 @@ a.kennzahl:hover{border-color:var(--blau);text-decoration:none}
 
 
 /* ===========================================================================
- * 29  IMPORTVORSCHAU                      (Mockup-Runde 9c, M-MR-01, E-MR-09)
+ * 29  IMPORTVORSCHAU
  *
  * Die Vorschau des CSV-Imports gruppiert ihre Zeilen nach Diensttagen. Der
- * Gruppenkopf ist eine Tabellenzeile ueber die volle Breite — und sah bis
- * Web 19.3.1 aus wie eine Datenzeile: Text in `<strong>`, sonst nichts.
- * `imp-daygroup` und `imp-warn` standen deshalb seit O11 als `[offen]` in
- * `ohne-regel.md`; Backlog Nr. 41 ist der Eintrag dazu.
+ * Gruppenkopf ist eine Tabellenzeile ueber die volle Breite — ohne eigene
+ * Regel saehe er aus wie eine Datenzeile: Text in `<strong>`, sonst nichts.
  *
  * WAS DIE REGEL TUT. Sie macht aus der Datenzeile eine Ueberschrift: Flaeche
  * in Rauch, kraeftige Oberlinie, das Datum in Kopfschrift und Dunkelblau,
  * der Rest gedaempft und eine Stufe kleiner. Damit traegt der Kopf dieselbe
  * Sprache wie jede andere Zwischenueberschrift der Anwendung.
  *
- * WARUM `imp-warn` NICHT AUCH EINE REGEL BEKOMMT (F-MR-1, Variante A). Die
+ * WARUM ES KEIN `imp-warn` GIBT. Die
  * Warnung „abweichende Crew" ist ein Zustand, der Aufmerksamkeit will — und
  * dafuer gibt es den Baustein schon: `.plakette-orange` mit dem Symbol
  * `warnung`. Eine zweite Darstellung fuer dieselbe Aussage waere eine
- * Darstellung zu viel; die Klasse ist deshalb ersatzlos gestrichen und steht
- * mit Begruendung auf `streichliste.md`. Dieselbe Kopfzeile traegt die
- * Gruppe „Nicht zuordenbar", dort mit `.plakette-rot` (F-MR-3, E-MR-13).
+ * Darstellung zu viel; die Klasse steht mit Begruendung auf
+ * `streichliste.md`. Dieselbe Kopfzeile traegt die Gruppe „Nicht
+ * zuordenbar", dort mit `.plakette-rot`.
  *
- * DIE ZEILE BRICHT UM — ABER ERST SEIT WEB 19.4.1, und der Umweg dorthin ist
- * der Kern dieses Abschnitts (Backlog Nr. 182, M-MR-05, F-MR-14 = Weg B).
- *
- * Web 19.4.0 hat `flex-wrap` gesetzt und geglaubt, damit sei es getan. Es war
- * es nicht: Die Zelle ist so breit wie die TABELLE, nicht wie das
- * Sichtfenster — gemessen 2653 px gegen 342 px am Handy. In einer 2653 px
- * breiten Zeile bricht nichts um, und alles hinter dem Datum stand ausserhalb
- * des Sichtfensters. Die Plakette „abweichende Crew" war damit in KEINER
+ * DIE ZEILE BRICHT UM — und `flex-wrap` allein genuegt dafuer NICHT: Die
+ * Zelle ist so breit wie die TABELLE, nicht wie das Sichtfenster —
+ * gemessen 2653 px gegen 342 px am Handy. In einer 2653 px breiten Zeile
+ * bricht nichts um, und alles hinter dem Datum stuende ausserhalb des
+ * Sichtfensters. Die Plakette „abweichende Crew" waere damit in KEINER
  * Breite zu sehen, ohne waagerecht zu scrollen — eine Plakette, die
  * Aufmerksamkeit will und keine bekommt.
  *
@@ -4535,14 +4384,14 @@ a.kennzahl:hover{border-color:var(--blau);text-decoration:none}
 
 
 /* ===========================================================================
- * 30  DRITTE KARTENGROESSE                 (Mockup-Runde 9c, M-MR-03, AP3)
+ * 30  DRITTE KARTENGROESSE
  *
- * Die Karte der Tagesuebersicht hatte zwei Zustaende: ihre Hoehe nach Breite
- * (160 / 220 / 300 px) und Vollbild. Dazwischen lag nichts — wer mehr von der
- * Spur sehen wollte, musste die Seite verlassen und wiederkommen. Backlog
- * Nr. 45 fuellt die Luecke mit EINEM Zustand und EINEM Knopf.
+ * Die Karte der Tagesuebersicht hat ausser ihrer Hoehe nach Breite
+ * (160 / 220 / 300 px) und dem Vollbild einen dritten Zustand — sonst
+ * muesste, wer mehr von der Spur sehen will, die Seite verlassen und
+ * wiederkommen. EIN Zustand und EIN Knopf.
  *
- * ZWEI WIRKUNGEN JE BREITE (E-MR-16, F-MR-9 geaendert). Bis 1599 px wird die
+ * ZWEI WIRKUNGEN JE BREITE. Bis 1599 px wird die
  * Karte HOEHER — `--karte-gross`, also min(60vh, 520px). Ab 1600 px steht sie
  * ohnehin in einer eigenen Spalte und ist dort schon hoch; dort wird sie
  * stattdessen BREIT: Das Raster faellt auf eine Spalte, und die Karte rueckt
@@ -4553,13 +4402,13 @@ a.kennzahl:hover{border-color:var(--blau);text-decoration:none}
  * WARUM `:has()` UND KEINE ZWEITE KLASSE AM RASTER. Der Zustand gehoert der
  * Karte, nicht dem Raster — `blatt.js` und `map_fullscreen.js` setzen ihn
  * dort, und eine zweite Klasse an einem Vorfahren waere eine zweite Stelle,
- * die auseinanderlaufen kann. `:has()` steht seit P3 an sechs Stellen im
+ * die auseinanderlaufen kann. `:has()` steht an sechs Stellen im
  * Stylesheet; die Browsergeneration ist damit ohnehin vorausgesetzt.
  * ======================================================================== */
 .geo-gross{height:var(--karte-gross)}
 
-/* DER KNOPF TRAEGT BEIDE ZEICHEN, das Stylesheet zeigt je Breite eins
- * (E-MR-19). Ein Knopf, der sein Symbol per JavaScript tauscht, haette die
+/* DER KNOPF TRAEGT BEIDE ZEICHEN, das Stylesheet zeigt je Breite eins.
+ * Ein Knopf, der sein Symbol per JavaScript tauscht, haette die
  * Schwelle 1600 ein zweites Mal im Code — sie steht in dieser Anwendung
  * ausschliesslich hier. */
 .karte-groesse .symbol-breit{display:none}
@@ -4574,17 +4423,15 @@ a.kennzahl:hover{border-color:var(--blau);text-decoration:none}
 }
 
 /* ===========================================================================
- * 26. DRUCK — und die eine Seite, die dafür gemacht ist (S10/AP3, E-S10-10)
+ * 31  DRUCK — und die eine Seite, die dafür gemacht ist
  *
- * DAS IST DER ERSTE `@media print`-BLOCK DIESER ANWENDUNG. Bis Web 20.0.0 gab
- * es keinen: Nachgezählt am 14.09.2026 ergab `grep -c '@media print'` genau 0.
- * Es gab bis dahin auch nichts zu drucken — eine Einsatzliste sieht man am
- * Bildschirm an, und ein Ausdruck davon wäre eine zweite, ungepflegte Fassung
- * der Daten.
+ * DAS IST DER EINZIGE `@media print`-BLOCK DIESER ANWENDUNG. Sonst gibt es
+ * nichts zu drucken — eine Einsatzliste sieht man am Bildschirm an, und ein
+ * Ausdruck davon wäre eine zweite, ungepflegte Fassung der Daten.
  *
  * DAS SCHLÜSSELBLATT IST DIE AUSNAHME, und es ist die einzige, die es geben
- * soll: Es ist eine Seite, deren ZWECK der Ausdruck ist. `config.php` ist seit
- * S10 Schlüsselträger der ganzen Installation, und ein zweiter Ort für ihre
+ * soll: Es ist eine Seite, deren ZWECK der Ausdruck ist. `config.php` ist
+ * Schlüsselträger der ganzen Installation, und ein zweiter Ort für ihre
  * beiden Geheimnisse muss das überleben, was die Datei nicht überlebt. Papier
  * tut das; eine heruntergeladene Datei liegt im selben Unglück.
  *
@@ -4611,19 +4458,18 @@ a.kennzahl:hover{border-color:var(--blau);text-decoration:none}
   .blatt-seite .rahmen,
   .blatt-seite .inhalt { background: none; }
 
-  /* KEIN UMBRUCH NACH EINER ÜBERSCHRIFT. Den Umbruch MITTEN im Wert hielt
-   * bis Web 21.0.0 hier `.blatt-wert`; das tut seither `.blatt-kachel`
-   * (Druckblatt, P5c/AP9). */
+  /* KEIN UMBRUCH NACH EINER ÜBERSCHRIFT. Den Umbruch MITTEN im Wert hält
+   * `.blatt-kachel` (Druckblatt). */
   h2 { break-after: avoid; page-break-after: avoid; }
 }
 
 
 
 /* ===========================================================================
- * 31  REITER UND PROTOKOLL                     (P5c/AP2, E-P5c-25, -26)
+ * 32  REITER UND PROTOKOLL
  *
  * REITER (.reiter-rahmen, .reiter, .reiter-punkt, .reiter-abgesetzt) — NEUER
- * BAUSTEIN, freigegeben mit M-P5c-01a (20.09.2026). Wechsel zwischen
+ * BAUSTEIN, freigegeben mit Mockup. Wechsel zwischen
  * gleichrangigen Sichten EINER Seite; serverseitig, jeder Reiter ist ein
  * Verweis (`ui_reiter()`). Orange heisst wie in der Kopfleiste „hier stehst
  * du" — hier in der tiefen Stufe, weil der Strich auf Rauch steht. Unter
@@ -4644,7 +4490,7 @@ a.kennzahl:hover{border-color:var(--blau);text-decoration:none}
   border-bottom:var(--strich-stark) solid transparent;
 }
 .reiter-punkt:hover{color:var(--dunkelblau);text-decoration:none}
-/* ORANGE TIEF, NICHT ORANGE (E-P5c-79, 24.09.2026): Der Strich steht auf
+/* ORANGE TIEF, NICHT ORANGE: Der Strich steht auf
  * Rauch, und --orange haette dort 2,09 : 1 — unter den 3 : 1 fuer einen
  * Bedienzustand. Die Schrift wechselt zwar mit, aber Gedaempft gegen
  * Dunkelblau sind auch nur 2,35 : 1. --orange-tief: 4,04 : 1. */
@@ -4661,7 +4507,7 @@ a.kennzahl:hover{border-color:var(--blau);text-decoration:none}
 .reiter-rahmen.rollt-links::before{left:0;background:linear-gradient(to left,transparent,var(--rauch))}
 
 /* DIE PROTOKOLLLISTE (.protokoll-liste). UNTER 720 px STEHT DIE PLAKETTE
- * UNTER DEM TEXT. Gemessen bei 376 px (M-P5c-01a): Neben einer Plakette von
+ * UNTER DEM TEXT. Gemessen bei 376 px: Neben einer Plakette von
  * 110 px bleiben dem Haupttext 170 px — „Konto …: aktiv → gesperrt (…)"
  * bricht auf fuenf Zeilen. Der Winkel bleibt rechts, lotrecht mittig zur
  * ganzen Zeile. */
@@ -4672,7 +4518,7 @@ a.kennzahl:hover{border-color:var(--blau);text-decoration:none}
 .protokoll-liste .zeile-text{grid-area:text}
 .protokoll-liste .zeile-plaketten{grid-area:plak}
 .protokoll-liste .zeile-aktionen{grid-area:akt;align-self:center;justify-content:flex-end}
-/* AB 720 px EINE KANTE FUER ALLE PLAKETTEN (Vorgabe 17.09.2026, Punkt 1):
+/* AB 720 px EINE KANTE FUER ALLE PLAKETTEN:
  * Plakette und Winkel stehen in je einer Spalte am rechten Rand; die
  * Aktionsspalte ist in JEDER Zeile gleich breit — auch dort, wo es nichts
  * aufzuklappen gibt. */
@@ -4685,14 +4531,13 @@ a.kennzahl:hover{border-color:var(--blau);text-decoration:none}
 
 
 /* ===========================================================================
- * 32  ZWEITFAKTOR UND DRUCKBLATT              (P5c/AP5, E-P5c-08, -41, -66)
+ * 33  ZWEITFAKTOR UND DRUCKBLATT
  *
- * NEUE BAUSTEINE, freigegeben mit M-P5c-02b (23.09.2026, E-P5c-66) und — für
- * das Druckblatt — mit M-P5c-01f (20.09.2026). Die Regeln sind die aus dem
- * Abschnitt „Vorschlag für style.css" der Mockups, unverändert.
+ * NEUE BAUSTEINE, freigegeben mit Mockup — für den Zweitfaktor und für das
+ * Druckblatt.
  * ======================================================================== */
 
-/* QR-CODE (.qr) — E-P5c-41. Die Modulmatrix kommt aus qrcode-generator (MIT,
+/* QR-CODE (.qr). Die Modulmatrix kommt aus qrcode-generator (MIT,
  * vendoriert, kein Netz); das SVG baut `assets/qr.js`: ein Pfad, Klassen statt
  * style="…", Token statt Hexwerten. Halbe Anmeldekarte breit (200 px): 53
  * Module bei Fehlerstufe M für eine übliche Adresse, rund 3,3 px je Modul. */
@@ -4725,27 +4570,26 @@ a.kennzahl:hover{border-color:var(--blau);text-decoration:none}
 .anmeldung-schritt{font-size:var(--groesse-5);margin:0 0 var(--abstand-2)}
 
 /* DRUCKBLATT (.blatt-druck) — EIN Baustein für Codeblatt, Schlüsselblatt und
- * Notfallblatt (E-P5c-08, Nr. 246). Das Codeblatt war sein erster Verwender
- * (AP5); Schlüssel- und Notfallblatt sind mit AP9 nachgezogen, und mit ihnen
- * ist `.blatt-wert` entfallen — der Wert am Stück in der Lesespalte.
+ * Notfallblatt.
  *
  * `@page` GILT FÜR JEDE GEDRUCKTE SEITE, nicht nur für das Blatt — eine
  * Seitenregel lässt sich nicht an eine Klasse binden, und ein benannter
- * Seitentyp (`page:`) trägt nicht in jedem Browser, der hier druckt. Bis
- * hierher gab es keine Vorgabe; gedruckt wird in dieser Anwendung ohnehin nur
- * auf den Blättern. */
+ * Seitentyp (`page:`) trägt nicht in jedem Browser, der hier druckt. Gedruckt
+ * wird in dieser Anwendung ohnehin nur auf den Blättern. */
 @page{size:A4;margin:14mm 18mm}
 .blatt-druck{font-size:var(--groesse-3);line-height:1.45;color:var(--asphalt)}
 .blatt-kopf{display:flex;align-items:center;gap:var(--abstand-3);
   padding-bottom:var(--abstand-2);margin-bottom:var(--abstand-3);
   border-bottom:var(--strich-stark) solid var(--dunkelblau)}
+/* Millimeter, weil es ein Druckblatt ist: Die Skala der Bildschirmgrößen
+ * gilt dort nicht, und 11 mm sind die Höhe der Kopfzeile auf Papier. */
 .blatt-kopf img{height:11mm;width:auto;flex:0 0 auto}
 .blatt-marke{font-family:var(--schrift-kopf);font-weight:600;font-size:var(--groesse-6);color:var(--dunkelblau);line-height:var(--zeile-eng);min-width:0;overflow-wrap:anywhere}
 .blatt-kopf-rechts{margin-left:auto;flex:0 1 45%;min-width:0;overflow-wrap:anywhere;text-align:right;font-size:var(--groesse-2);color:var(--gedaempft);line-height:1.4}
 /* `break-word` AN DER ÜBERSCHRIFT: „Wiederherstellungscodes" ist bei 360 px
- * breiter als die Spalte (345 gegen 328 px, Bilderlauf P5c/AP5) und hat
- * keine Stelle, an der ein Browser von sich aus umbricht. Dieselbe Härte wie
- * `.text` (Backlog Nr. 221) — sie greift nur, wenn das Wort sonst überliefe;
+ * breiter als die Spalte (345 gegen 328 px, Bilderlauf) und hat keine
+ * Stelle, an der ein Browser von sich aus umbricht. Dieselbe Härte wie
+ * `.text` — sie greift nur, wenn das Wort sonst überliefe;
  * auf A4 nie. */
 .blatt-druck h1{font-size:var(--groesse-titel);margin:0 0 var(--abstand-2);overflow-wrap:break-word}
 .blatt-druck h2{font-size:var(--groesse-4);margin:var(--abstand-3) 0 var(--abstand-1)}
@@ -4765,12 +4609,12 @@ a.kennzahl:hover{border-color:var(--blau);text-decoration:none}
 .blatt-kachel-neben{font-size:var(--groesse-2);color:var(--gedaempft)}
 .blatt-kachel > p{font-size:var(--groesse-2);margin:0}
 .blatt-kachel-neben code{font-size:inherit}
-/* DIE NUMMERIERTEN GRUPPEN (.blatt-druck-gruppen, P5c/AP9, M-P5c-01f) —
+/* DIE NUMMERIERTEN GRUPPEN (.blatt-druck-gruppen) —
  * sechzehn Vierergruppen je Wert beim Schlüsselblatt, fünf beim Notfallblatt.
- * Jede Gruppe trägt ihre NUMMER darüber: Die Quartalsrückfrage (E-P5b-10)
+ * Jede Gruppe trägt ihre NUMMER darüber: Die Quartalsrückfrage
  * fragt „Serverschlüssel · Gruppe 11", und bis elf zählt auf Papier niemand
  * gern. DER NAME TRÄGT `-druck-`, weil `.blatt-gruppen` und `.blatt-gruppe`
- * schon vergeben sind (Betreiber-Rückfrage, P5b/AP9; F-P5c-44). Die Kachel
+ * schon vergeben sind (Betreiber-Rückfrage). Die Kachel
  * bricht nicht über zwei Seiten (`.blatt-kachel`); eine halb abgetippte
  * Gruppe sieht aus wie eine falsche. */
 .blatt-druck-gruppen{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:var(--abstand-1) 0;margin:var(--abstand-1) 0 var(--abstand-2)}
@@ -4784,15 +4628,15 @@ a.kennzahl:hover{border-color:var(--blau);text-decoration:none}
   font-size:var(--groesse-1);color:var(--gedaempft);display:flex;justify-content:space-between;gap:var(--abstand-3)}
 /* AM BILDSCHIRM sieht das Blatt aus wie das Blatt: A4 mit den Rändern aus @page.
  * `max-width:100%`, weil A4 794 px breit ist und die Regel ab 720 px greift:
- * Bei 768 px stand das Blatt 26 px über (Bilderlauf in Firefox und WebKit,
- * P5c/AP5). Ab 794 px ändert die Grenze nichts. */
+ * Bei 768 px stünde das Blatt 26 px über (Bilderlauf in Firefox und
+ * WebKit). Ab 794 px ändert die Grenze nichts. */
 @media screen{ .blatt-druck{padding:var(--abstand-4);background:var(--schnee)} }
 @media screen and (min-width:720px){
   .blatt-druck{box-sizing:border-box;width:210mm;max-width:100%;min-height:297mm;padding:14mm 18mm;margin:var(--abstand-5) auto;
     border:var(--strich) solid var(--linie);box-shadow:var(--schatten)}
 }
 @media print{ .blatt-kachel{background:none} }
-/* DIE UMGEBUNGSZEILE DES DRUCKBLATTS (E-P5c-50, M-P5c-02e) — steht nur, wenn
+/* DIE UMGEBUNGSZEILE DES DRUCKBLATTS — steht nur, wenn
  * app.umgebung gesetzt ist, direkt unter dem Kopf. Text und Rahmen, keine
  * Fläche: Das Blatt muss auch schwarzweiß sagen, dass es nicht zur
  * Produktivanlage gehört. */
@@ -4802,8 +4646,8 @@ a.kennzahl:hover{border-color:var(--blau);text-decoration:none}
 /* DIE CODELISTE DES CODEBLATTS (.blatt-codes) — zehn Einmalcodes, nummeriert,
  * mit einem Kästchen zum Abhaken. Zwei Spalten; die Nummer steht davor, nicht
  * darüber, weil ein Code acht Zeichen hat und nicht vier. DAS KÄSTCHEN STEHT
- * VORN (order:-1, E-P5c-65): Am Zeilenende stand das der linken Spalte direkt
- * vor der Nummer der rechten und schien zu ihr zu gehören. */
+ * VORN (order:-1): Am Zeilenende stünde das der linken Spalte direkt vor der
+ * Nummer der rechten und schiene zu ihr zu gehören. */
 .blatt-codes{list-style:none;margin:var(--abstand-2) 0;padding:0;counter-reset:code;
   display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--abstand-2) var(--abstand-5)}
 .blatt-codes li{counter-increment:code;display:flex;align-items:center;gap:var(--abstand-3);margin:0;

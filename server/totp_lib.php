@@ -2,7 +2,7 @@
 declare(strict_types=1);
 
 /**
- * DER ZWEITFAKTOR (P5c/AP5, R38, Nr. 141; E-P5c-15, -41, -42, -53, -54).
+ * DER ZWEITFAKTOR.
  *
  * WAS ES IST. Zusätzlich zum Passwort ein sechsstelliger Code aus einer App
  * auf dem Handy — TOTP nach RFC 6238: HMAC-SHA1 über den Zeitschritt, 30 s,
@@ -13,7 +13,7 @@ declare(strict_types=1);
  * DAS GEHEIMNIS liegt in `users.totp_geheimnis`, versiegelt mit dem
  * Serverschlüssel (`sk_versiegeln()`), Zweck `totp|<user_id>` — der Zweck
  * steht in der Prüfsumme und verhindert das Umhängen eines Geheimnisses auf
- * ein anderes Konto (E-P5c-54). Eingeschaltet ist der Zweitfaktor erst, wenn
+ * ein anderes Konto. Eingeschaltet ist der Zweitfaktor erst, wenn
  * `totp_seit` gesetzt ist, und das geschieht erst nach einem bestätigten Code:
  * Ein Geheimnis ohne `totp_seit` ist eine angefangene Einrichtung und zählt
  * bei der Anmeldung nicht.
@@ -22,7 +22,7 @@ declare(strict_types=1);
  * Zeitschritt; angenommen wird nur ein späterer. Ohne das wäre derselbe Code
  * wegen der Toleranz rund 90 Sekunden lang wiederholbar.
  *
- * DIE WIEDERHERSTELLUNGSCODES HÄNGEN NICHT AM SERVERSCHLÜSSEL (E-P5c-42).
+ * DIE WIEDERHERSTELLUNGSCODES HÄNGEN NICHT AM SERVERSCHLÜSSEL.
  * Zehn Stück, je acht Zeichen, gespeichert mit `password_hash()` in
  * `totp_codes`. Sie sind der Rückweg für genau den Fall, dass das Geheimnis
  * nicht mehr zu öffnen ist — ein anderer Serverschlüssel, ein eingespieltes
@@ -30,19 +30,18 @@ declare(strict_types=1);
  * fielen sie mit ihm.
  *
  * WAS HIER NICHT STEHT: der Rückweg über den Wiederherstellungsschlüssel.
- * E-P5c-42 sah ihn vor, geprüft gegen `pat_key_check` — einen Wert, den jeder
- * Datenbankabzug enthält (F-P5c-106). Er steht fälschungssicher in
- * `rueckweg_lib.php` (Konzept RW, seit Web 20.45.0); hier bleibt davon nur
+ * Gegen `pat_key_check` geprüft taugte er nicht — das ist ein Wert, den jeder
+ * Datenbankabzug enthält. Er steht fälschungssicher in
+ * `rueckweg_lib.php`; hier bleibt davon nur
  * `totp_abschalten(…, 'schluessel')`.
  *
- * „GERAET MERKEN" (seit Web 21.8.0, Schritt 18, SR-02, E-SR-07, -17, -18,
- * -34). Nach einem Code aus der App kann der Browser fuer eine Dauer gemerkt
+ * „GERAET MERKEN". Nach einem Code aus der App kann der Browser fuer eine Dauer gemerkt
  * werden, die die BetreiberIn je Rollengruppe einstellt; dann fragt die
  * Anmeldung dort keinen Code. Die Helfer heissen `zweitfaktor_geraet_*`,
- * weil sie den FAKTOR meinen und nicht das Verfahren (E-SR-34) — ab SR-09
- * merkt auch ein Passkey. Das Datenmodell steht unten am Abschnitt.
+ * weil sie den FAKTOR meinen und nicht das Verfahren — auch
+ * ein Passkey merkt. Das Datenmodell steht unten am Abschnitt.
  *
- * OHNE DIE SPALTEN IST ALLES STUMM (E-P5c-36, -53). Zwischen Deploy und
+ * OHNE DIE SPALTEN IST ALLES STUMM. Zwischen Deploy und
  * `update.php` gibt es `totp_*` nicht; dann fragt die Anmeldung keinen Code,
  * und das Tor der Pflichtrollen schweigt. `totp_spalten_da()` ist die eine
  * Frage danach.
@@ -56,7 +55,7 @@ const TOTP_SCHRITT_S       = 30;
 const TOTP_STELLEN         = 6;
 const TOTP_FENSTER         = 1;     // Schritte Toleranz nach beiden Seiten
 const TOTP_GEHEIMNIS_BYTES = 20;    // 160 Bit, wie RFC 4226 empfiehlt
-const TOTP_CODES           = 10;    // Wiederherstellungscodes (E-P5c-41)
+const TOTP_CODES           = 10;    // Wiederherstellungscodes
 const TOTP_CODE_LAENGE     = 8;
 /** Dasselbe Alphabet wie der Wiederherstellungsschlüssel (`RC_CHARS` in
  *  crypto.js): ohne 0, 1, I, L, O und U — die Verwechslungszeichen. */
@@ -170,11 +169,11 @@ function totp_code_normieren(string $eingabe): ?string
 /* ---- Datenbank --------------------------------------------------------------- */
 
 /** Gibt es die Spalten und die Codetabelle? Ohne sie ist der Zweitfaktor
- *  stumm (E-P5c-36, -53). Einmal je Anfrage gefragt.
+ *  stumm. Einmal je Anfrage gefragt.
  *
- *  EIN FEHLER DER DATENBANK IST KEIN „NEIN" (F-P5c-166). Bis Web 21.1.0 fing
- *  hier ein `catch (Throwable)` jeden Fehler und gab `false` — und
- *  `login.php` meldete darauf ohne Code-Schritt an. Ein Tor, das bei einem
+ *  EIN FEHLER DER DATENBANK IST KEIN „NEIN". Finge hier ein
+ *  `catch (Throwable)` jeden Fehler und gaebe `false`, meldete `login.php`
+ *  darauf ohne Code-Schritt an. Ein Tor, das bei einem
  *  Fehler aufgeht, ist keines. `db_hat_spalte()` und `db_hat_tabelle()` sagen
  *  „nein", wenn es die Spalte nicht gibt; werfen tun sie nur, wenn die
  *  Datenbank selbst nicht antwortet, und dann bricht die Anfrage ab. */
@@ -192,7 +191,7 @@ function totp_spalten_da(?PDO $pdo = null): bool
  * Der Zustand eines Kontos.
  *
  * @return array{an:bool, seit:?string, angefangen:bool, codes_offen:int,
- *               codes_alle:int, fehlt:bool}
+ *               codes_alle:int, geraete:int, fehlt:bool}
  *         `fehlt` heisst: Die Spalten gibt es noch nicht (`update.php` steht aus).
  */
 function totp_zustand(int $userId): array
@@ -240,7 +239,7 @@ function totp_einrichtung_beginnen(int $userId): array
     if (demo_ist_demo($userId)) { return ['ok' => false, 'grund' => 'demo']; }
     if (totp_an($userId)) { return ['ok' => false, 'grund' => 'an']; }
     if (serverschluessel() === null) { return ['ok' => false, 'grund' => 'serverschluessel']; }
-    /* VERWAISTE PASSKEYS RAEUMEN (H-SR-08, F-SR-38): Ein Faktor, der aus ist,
+    /* VERWAISTE PASSKEYS RAEUMEN: Ein Faktor, der aus ist,
      * hat keine — steht trotzdem einer da (ein Weg an `totp_abschalten()`
      * vorbei, etwa das SQL des Notwegs), wuerde er mit dem neuen Faktor
      * wieder gelten. */
@@ -334,7 +333,7 @@ function totp_codes_erneuern(int $userId): ?array
  *         `art`: 'app' oder 'code'. `geheimnis_fehlt`: Das Geheimnis lässt
  *         sich nicht öffnen (anderer Serverschlüssel) — dann helfen
  *         Wiederherstellungscodes, Passkeys (sie hängen nicht am Schlüssel,
- *         E-SR-49) und die Verwaltung. Es entsteht nur im Zweig des App-Codes.
+ *         ) und die Verwaltung. Es entsteht nur im Zweig des App-Codes.
  */
 function totp_anmeldung_pruefen(int $userId, string $eingabe, ?string $nur = null): array
 {
@@ -375,31 +374,31 @@ function totp_anmeldung_pruefen(int $userId, string $eingabe, ?string $nur = nul
  * Den Zweitfaktor eines Kontos abschalten: Geheimnis, Zeitschritt, Codes weg.
  *
  * `$weg` sagt, wer es tat: 'selbst' (Profil, nur ohne Pflicht),
- * 'verwaltung' (Kontoseite, E-P5c-42), — seit Konzept RW, RW-03 —
+ * 'verwaltung' (Kontoseite),
  * 'schluessel' (der Rückweg am Code-Schritt, `login.php` hinter dem Tor)
- * oder — seit Schritt 18, SR-04 — 'notweg' (der Notzugang der einzigen
+ * oder 'notweg' (der Notzugang der einzigen
  * BetreiberIn, `zweitfaktor_notweg.php`: Nachweisdatei, Datenbankwert,
  * Passwort). Alle außer 'selbst' sind ein ZURÜCKSETZEN und schreiben
- * `totp_zurueckgesetzt`; `daten.weg` unterscheidet sie (E-RW-14). Die Mail
+ * `totp_zurueckgesetzt`; `daten.weg` unterscheidet sie. Die Mail
  * an die Kontoadresse verschickt der Aufrufer. EINE Funktion, vier
  * Aufrufer — weder RW noch der Notzugang bauen das Zurücksetzen ein zweites
  * Mal (3.3).
  *
- * BEIM NOTZUGANG IST NIEMAND ANGEMELDET (E-SR-86): Der Eintrag trägt dann
+ * BEIM NOTZUGANG IST NIEMAND ANGEMELDET: Der Eintrag trägt dann
  * den Urheber `job`, wie beim Passwort-Reset über den Mail-Link; der Text
  * sagt, welcher Weg es war.
  *
- * DIE GEMERKTEN GERAETE UND DIE PASSKEYS GEHEN MIT, auf jedem Weg (SR-02,
- * E-SR-07; SR-09, E-SR-29). Zu den Geraeten: Ein
+ * DIE GEMERKTEN GERAETE UND DIE PASSKEYS GEHEN MIT, auf jedem Weg. Zu den
+ * Geraeten: Ein
  * Faktor, der aus ist, hat keine Geraete, die ihn ersetzen; und wer ihn
  * zuruecksetzen laesst, weil das Handy weg ist, will auch den Laptop nicht
  * mehr als bekannt gelten lassen, auf dem jemand anders sitzen koennte.
  *
- * IN DERSELBEN TRANSAKTION (seit Web 21.11.0, H-SR-08, F-SR-38): Bis dahin
+ * IN DERSELBEN TRANSAKTION: Bis dahin
  * liefen Geraete und Passkeys nach dem Commit. Brach das Loeschen ab, war der
  * Faktor aus und die Passkeys standen noch — und beim naechsten Einschalten
- * galten sie wieder. Jetzt gilt alles oder nichts, wie beim Passwortwechsel
- * (E-SR-40); die Protokolleintraege stehen mit in der Transaktion.
+ * galten sie wieder. Jetzt gilt alles oder nichts, wie beim Passwortwechsel;
+ * die Protokolleintraege stehen mit in der Transaktion.
  */
 function totp_abschalten(int $userId, string $weg): bool
 {
@@ -411,7 +410,7 @@ function totp_abschalten(int $userId, string $weg): bool
                         WHERE id = ?')->execute([$userId]);
         $pdo->prepare('DELETE FROM totp_codes WHERE user_id = ?')->execute([$userId]);
         zweitfaktor_geraete_vergessen($userId, 'zweitfaktor_' . $weg);
-        /* DIE PASSKEYS GEHEN MIT, auf jedem Weg (SR-09, E-SR-29): Ein
+        /* DIE PASSKEYS GEHEN MIT, auf jedem Weg: Ein
          * Passkey ist ein Verfahren DIESES Faktors; ein Faktor, der aus ist,
          * hat keine. */
         pk_alle_entfernen($userId, 'zweitfaktor_' . $weg);
@@ -433,17 +432,17 @@ function totp_abschalten(int $userId, string $weg): bool
 
 
 /* ===========================================================================
- * „GERAET MERKEN" (Schritt 18, SR-02; E-SR-07, -17, -18, -34)
+ * „GERAET MERKEN"
  * ===========================================================================
  *
  * DAS COOKIE IST DER BESITZ, DIE TABELLE NUR DER HASH. Im Browser liegt
  * `EDGERAET` mit 32 Zufallsbyte (Parameter in `SITZUNG_COOKIES`,
  * `sitzung_lib.php`), in `vertraute_geraete` sein SHA-256 — dieselbe
  * Ueberlegung wie bei der Sitzungsbindung: Ein Datenbankabzug soll kein
- * Geraet zum bekannten machen. KEIN User-Agent, KEIN Geraetename (R36): Das
+ * Geraet zum bekannten machen. KEIN User-Agent, KEIN Geraetename: Das
  * erste waere Telemetrie, das zweite eine Eingabe, die niemand pflegt.
  *
- * DIE DAUER WIRD BEIM PRUEFEN GERECHNET, NICHT BEIM MERKEN (E-SR-17). Die
+ * DIE DAUER WIRD BEIM PRUEFEN GERECHNET, NICHT BEIM MERKEN. Die
  * Zeile traegt `angelegt_am`; gueltig ist sie, solange `angelegt_am` plus
  * die HEUTIGE Dauer ihrer Rollengruppe in der Zukunft liegt. So gilt eine
  * verkuerzte Einstellung sofort fuer alle, und „aus" (0) meldet alle Geraete
@@ -451,7 +450,7 @@ function totp_abschalten(int $userId, string $weg): bool
  * traegt die Dauer von damals als Ablauf; es darf laenger leben als die
  * Zeile, nicht umgekehrt.
  *
- * GEMERKT WIRD NUR NACH EINEM CODE AUS DER APP (E-SR-18) — nicht nach einem
+ * GEMERKT WIRD NUR NACH EINEM CODE AUS DER APP — nicht nach einem
  * Wiederherstellungscode und nicht nach dem Rueckweg: In beiden Lagen fehlte
  * gerade das Handy, und der Browser ist vor der Betroffenen nicht als ihrer
  * ausgewiesen. Die Entscheidung trifft `login.php`, das die Art kennt.
@@ -459,18 +458,18 @@ function totp_abschalten(int $userId, string $weg): bool
  * VERGESSEN wird beim Passwortwechsel und -reset (wo `session_epoch`
  * steigt), bei `totp_abschalten()` auf jedem Weg, mit dem Konto (Kaskade),
  * im Demo-Reset und mit „Alle vergessen" im Profil. Protokolliert wird Merken
- * und Vergessen, nicht die Nutzung (E-SR-07).
+ * und Vergessen, nicht die Nutzung.
  *
  * VOR `update.php` IST ALLES STUMM: ohne Tabelle kein Haken, kein Erkennen,
  * keine Zahl — dieselbe Regel wie fuer die Spalten des Zweitfaktors.
  */
 
-/** Die waehlbaren Dauern in Tagen (E-SR-17); 0 heisst: kein Haken. */
+/** Die waehlbaren Dauern in Tagen; 0 heisst: kein Haken. */
 const ZF_GERAET_TAGE_WAHL = [0, 1, 7, 14, 30, 90];
-/** Die zwei Einstellungen in `app_state`, je Rollengruppe (Q-SR-10). */
+/** Die zwei Einstellungen in `app_state`, je Rollengruppe. */
 const ZF_GERAET_K_USER       = 'zf_geraet_tage_user';
 const ZF_GERAET_K_VERWALTUNG = 'zf_geraet_tage_verwaltung';
-/** Die Vorgaben: NutzerInnen 30 Tage, die Verwaltung kuerzer (E-SR-17). */
+/** Die Vorgaben: NutzerInnen 30 Tage, die Verwaltung kuerzer. */
 const ZF_GERAET_VORGABE_USER       = 30;
 const ZF_GERAET_VORGABE_VERWALTUNG = 7;
 
@@ -510,7 +509,7 @@ function zweitfaktor_geraet_dauer(?string $rolle): int
 }
 
 /** Dieselbe Frage fuer ein Konto — die Rolle aus der Zeile, nicht aus der
- *  Sitzung (M1-05). Ein Konto, das es nicht gibt, hat 0. */
+ *  Sitzung. Ein Konto, das es nicht gibt, hat 0. */
 function zweitfaktor_geraet_dauer_konto(int $userId): int
 {
     $st = db()->prepare('SELECT role FROM users WHERE id = ?');
@@ -556,7 +555,7 @@ function zweitfaktor_geraet_merken(int $userId): bool
  * Cookie → Hash → Zeile DIESES Kontos, deren `angelegt_am` plus die heutige
  * Dauer in der Zukunft liegt. Ein fremdes Cookie an einem anderen Konto
  * zaehlt nicht: Die Zeile muss zum Konto gehoeren. `zuletzt_am` wird
- * fortgeschrieben, ohne Protokoll (E-SR-07: je Nutzung waere Rauschen).
+ * fortgeschrieben, ohne Protokoll (je Nutzung waere Rauschen).
  *
  * ERST LESEN, DANN SCHREIBEN, und zwar ueber die Kennung: `rowCount()` eines
  * `UPDATE` zaehlt unter MySQL nur GEAENDERTE Zeilen — zwei Anmeldungen in

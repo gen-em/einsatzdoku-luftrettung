@@ -15,22 +15,21 @@ $SD_BASES    = dt_bases($userId);
 $SD_VEHICLES = dt_vehicles($userId);
 $SD_DEFAULTS = dt_standardwerte($userId);
 
-/* Gewaehlter Diensttag: ?d=<Kennung>, sonst der juengste. NICHT mehr ein
- * Datum: Seit E9 koennen mehrere Diensttage auf einem Kalendertag liegen, ein
- * Datum bestimmt also keinen Tag mehr. */
+/* Gewaehlter Diensttag: ?d=<Kennung>, sonst der juengste. NICHT ein
+ * Datum: Es koennen mehrere Diensttage auf einem Kalendertag liegen, ein
+ * Datum bestimmt also keinen Tag. */
 $selDayId = (int)($_GET['d'] ?? 0);
 if ($selDayId > 0 && dt_laden($userId, $selDayId) === null) { $selDayId = 0; }
 if ($selDayId === 0) { $selDayId = dt_neuester($userId) ?? 0; }
 $selDay = $selDayId > 0 ? $selDayId : null;
 
 
-/* Neu hinzugekommene Geraete (M4-10). Die Startseite ist die Seite, auf der
+/* Neu hinzugekommene Geraete. Die Startseite ist die Seite, auf der
  * nach der Anmeldung jede/r landet — ein Hinweis, der nur im Geraete-Reiter
  * stuende, erreichte genau die Person nicht, die dort nie hinsieht. Die
  * eigentliche Benachrichtigung ist die E-Mail beim Koppeln (pair.php).
  *
- * Der Hinweis laesst sich bestaetigen. Vorher stand er sieben Tage lang da
- * und war nicht wegzuklicken — eine Warnung, die man nicht loswird, wird
+ * Der Hinweis laesst sich bestaetigen — eine Warnung, die man nicht loswird, wird
  * ueberlesen, und dann steht sie unbemerkt da, wenn sie einmal wirklich
  * gemeint ist. Post/Redirect/Get, damit ein Neuladen sie nicht wiederholt. */
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'geraete_ok') {
@@ -41,7 +40,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'gerae
 }
 $neueGeraete = geraete_neu(db(), $userId);
 
-/* ---- Erststart (P5b/AP9, E-P5b-09, Mockup M-P5b-02b) ---------------------
+/* ---- Erststart ---------------------
  *
  * ZWEI AUSWEGE IN EINEM FORMULAR. „Spaeter" ist der Knopf, „nicht mehr
  * zeigen" das Haekchen daneben — wer beides setzt, meint das Haekchen. Post/
@@ -51,7 +50,7 @@ $neueGeraete = geraete_neu(db(), $userId);
  * „SPAETER" SCHREIBT NICHTS IN DIE DATENBANK. Es haelt die Karte bis zur
  * naechsten ANMELDUNG zurueck, und das ist eine Eigenschaft der Sitzung, kein
  * Zustand des Kontos. Wer sich morgen anmeldet, sieht sie wieder — genau so
- * steht es im Mockup. */
+ * ist es gewollt. */
 require_once __DIR__ . '/einstieg_lib.php';
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'erststart') {
     csrf_check();
@@ -64,7 +63,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'ersts
     exit;
 }
 
-/* Die Karte steht nur, wenn kein Dialog faellig ist (E-P5b-19): Zwei
+/* Die Karte steht nur, wenn kein Dialog faellig ist: Zwei
  * Aufforderungen auf einmal sind eine zu viel. */
 $erststartStand = (einstieg_zustand($userId)['erststart_stand'] ?? 0);
 $erststartOffen = erststart_offen((int)$erststartStand);
@@ -78,7 +77,7 @@ $einstiegGezeigt = array_values(array_filter([
 $einstiegFaellig = einstieg_faellig($userId, ist_betreiberin(), $einstiegGezeigt);
 $erststartZeigen = $einstiegFaellig === 'erststart' && $erststartOffen !== [];
 
-/* ---- Konto-Rueckfrage (P5b/AP9, E-P5b-09, Mockup M-P5b-02c) --------------
+/* ---- Konto-Rueckfrage --------------
  *
  * EINMAL JE SITZUNG, NICHT EINMAL JE SEITENAUFRUF. `einstieg_faellig()`
  * haengt an einem DATUM, und das Datum aendert sich erst, wenn jemand
@@ -97,9 +96,8 @@ $erststartZeigen = $einstiegFaellig === 'erststart' && $erststartOffen !== [];
  *   Messbar: Der Bilderlauf oeffnet dieselbe Seite in acht Fensterbreiten.
  *   Mit dem Merkmal am Ausgeben haette genau EIN Bild den Dialog gezeigt und
  *   sieben nicht — und der Lauf haette „8 Bilder, 0 Ueberlauf" gemeldet.
- *   Dieselbe Falle wie F-P3-AQ, nur andersherum.
  *
- * Gesetzt wird es jetzt von `api/rueckfrage.php`, und zwar bei JEDER Antwort
+ * Gesetzt wird es von `api/rueckfrage.php`, und zwar bei JEDER Antwort
  * — auch bei `weggeklickt`, das `rueckfrage.js` beim Schliessen ohne Antwort
  * sendet.
  *
@@ -109,7 +107,7 @@ $erststartZeigen = $einstiegFaellig === 'erststart' && $erststartOffen !== [];
 $rueckfrageZeigen = $einstiegFaellig === 'konto';
 $rueckfrageStand  = $rueckfrageZeigen ? einstieg_zustand($userId) : null;
 
-/* ---- Betreiber-Rueckfrage zum Schluesselblatt (P5b/AP9, E-P5b-10) -------
+/* ---- Betreiber-Rueckfrage zum Schluesselblatt -------
  *
  * Dieselbe Bauart, andere Frage: Sie haengt nicht am Konto, sondern an der
  * INSTALLATION (`app_state schluesselblatt_bestaetigt_am`), und sie steht
@@ -117,10 +115,11 @@ $rueckfrageStand  = $rueckfrageZeigen ? einstieg_zustand($userId) : null;
  * heraus. */
 $blattZeigen = $einstiegFaellig === 'schluesselblatt';
 
-/* Zeitlich ueberschneidende Diensttage (R57, E-S4-76). Der Fall ist F-S4-D:
+/* Zeitlich ueberschneidende Diensttage. Der Fall:
  * Garmin und Handy gleichzeitig im Dienst legen ZWEI Diensttage an, weil
  * `day_refs` je Geraet geschluesselt ist. Es geht nichts verloren — es ist
- * alles doppelt, und bis hierher fiel das erst in der Jahresstatistik auf.
+ * alles doppelt, und ohne diesen Hinweis fiele das erst in der
+ * Jahresstatistik auf.
  *
  * SERVERSEITIG UND NICHT UEBER api/day.php: Die Seite kennt den gewaehlten
  * Tag bereits, die Abfrage kostet einen Index-Zugriff, und der Hinweis steht
@@ -129,7 +128,7 @@ $blattZeigen = $einstiegFaellig === 'schluesselblatt';
  * nicht holt (`mitPapierkorb`); diese hier haengt an nichts dergleichen. */
 $ueberlappungen = $selDay !== null ? dt_ueberlappungen($userId, $selDay) : [];
 
-/* DIE ANFRAGE BEGINNT SCHON IM KOPF (S11-04c, V1) — wie in `einsatz.php`. */
+/* DIE ANFRAGE BEGINNT SCHON IM KOPF — wie in `einsatz.php`. */
 ui_seite_start(['titel' => 'Tagesübersicht', 'karte' => true,
                 'kopf' => $selDay !== null
                     ? '<script src="' . ui_e(ui_asset('assets/vorladen.js')) . '"'
@@ -144,15 +143,15 @@ ui_seite_start(['titel' => 'Tagesübersicht', 'karte' => true,
              allein da, und das ist die Absicht. */ ?>
     <?php if ($erststartZeigen): require __DIR__ . '/erststart_karte.php'; endif; ?>
     <?php if ($neueGeraete): ?>
-      <?php /* Warnmeldung nach E-P3-16: Symbol, Text, Ausweg als Knopf IM
-               Rahmen. Der Hinweis bleibt bestaetigbar (M4-10) — eine Warnung,
+      <?php /* Warnmeldung: Symbol, Text, Ausweg als Knopf IM
+               Rahmen. Der Hinweis bleibt bestaetigbar — eine Warnung,
                die man nicht loswird, wird ueberlesen. */ ?>
       <div class="meldung meldung-warn" role="status">
         <?= ui_symbol('warnung', 'symbol-gross') ?>
         <p>
           <?= count($neueGeraete) === 1 ? 'Ein neues Gerät wurde' : count($neueGeraete) . ' neue Geräte wurden' ?>
           mit deinem Konto verbunden:
-          <?php /* Seit Web 12.9.0 steht die Geraeteart dabei (S6/R42): Der
+          <?php /* Die Geraeteart steht dabei: Der
                    Hinweis stellt die Frage „war ich das?", und „Uhr · Venu 3S"
                    beantwortet sie besser als die frei waehlbare Bezeichnung
                    allein — die lautet bei einer frischen Kopplung schlicht
@@ -182,7 +181,7 @@ ui_seite_start(['titel' => 'Tagesübersicht', 'karte' => true,
       </div>
     <?php endif; ?>
     <?php if ($ueberlappungen): ?>
-      <?php /* R57 (E-S4-76): Ein HINWEIS, keine Automatik. Die beiden Tage
+      <?php /* Ein HINWEIS, keine Automatik. Die beiden Tage
                bleiben stehen — sie sind zwei vollstaendige Aufzeichnungen,
                und ein stiller Automatismus muesste raten, welche gilt.
 
@@ -247,12 +246,12 @@ ui_seite_start(['titel' => 'Tagesübersicht', 'karte' => true,
           <?php endforeach; ?>
         </p>
         <div class="meldung-aktion">
-          <?php /* DER AUSWEG STEHT IM RAHMEN (E-P3-16). Er fuehrt auf die
+          <?php /* DER AUSWEG STEHT IM RAHMEN. Er fuehrt auf die
                    Seite, auf der ein MENSCH entscheidet — sie zeigt eine
                    Vorschau und fuehrt den Vorgang erst nach Bestaetigung aus
-                   (E13: nicht umkehrbar). Von hier geht also kein Klick
+                   (nicht umkehrbar). Von hier geht also kein Klick
                    unmittelbar in eine Zusammenfuehrung. */ ?>
-          <?php /* `?d=` UND NICHT `?ziel=` (Backlog Nr. 148). Die Zielseite
+          <?php /* `?d=` UND NICHT `?ziel=`. Die Zielseite
                    liest `$_GET['d']` — wie die beiden anderen Wege dorthin
                    (Aktionsmenue oben und `daymergelink` in `loadDay()`). Mit
                    `?ziel=` blieb `$zielId` auf 0, `dt_laden()` lieferte null,
@@ -265,10 +264,10 @@ ui_seite_start(['titel' => 'Tagesübersicht', 'karte' => true,
         </div>
       </div>
     <?php endif; ?>
-    <?php /* TITELZEILE NACH E-P3-31: kein Rueckweg (das hier IST die
+    <?php /* TITELZEILE: kein Rueckweg (das hier IST die
              Startseite), Titel „Samstag, 22.08.2026" — mobil kurz „Sa" —,
-             Unterzeile Rettungsmittel · Standort, rechts das Aktionsmenue
-             (E-P3-27): mobil „⋯" und ein Blatt von unten, am Desktop
+             Unterzeile Rettungsmittel · Standort, rechts das Aktionsmenue:
+             mobil „⋯" und ein Blatt von unten, am Desktop
              „Aktionen" als Aufklappmenue. Der Anlegen-Weg steht als erste
              Zeile auch dort; „Tag loeschen" ist rot und abgesetzt.
 
@@ -290,7 +289,7 @@ ui_seite_start(['titel' => 'Tagesübersicht', 'karte' => true,
              'href' => 'diensttag_datum.php?d=' . (int)$selDay, 'attr' => 'id="daydatelink"'],
             ['text' => 'Anderen Diensttag aufnehmen', 'symbol' => 'ordner-plus',
              'href' => 'diensttag_zusammenfuehren.php?d=' . (int)$selDay, 'attr' => 'id="daymergelink"'],
-            /* SPUREN DES TAGES (S2/AP4). Der Weg zu den GPX-Dateien fuehrt
+            /* SPUREN DES TAGES. Der Weg zu den GPX-Dateien fuehrt
              * ueber eine eigene Seite und nicht ueber je einen Knopf an der
              * Linie: Ruhesegmente haben in der Tagesansicht keine Zeile und
              * kein Popup, ein Knopf haette dort nirgendwo hingekonnt. Das
@@ -299,7 +298,7 @@ ui_seite_start(['titel' => 'Tagesübersicht', 'karte' => true,
              * dieselbe Freigabe wie ein neuer Baustein. */
             ['text' => 'GPS-Daten als GPX', 'symbol' => 'karte',
              'href' => 'tag_spuren.php?d=' . (int)$selDay, 'attr' => 'id="dayspurenlink"'],
-            /* GPX HEREIN (S4/A3, E-S4-18). Es steht neben „GPS-Daten als GPX" —
+            /* GPX HEREIN. Es steht neben „GPS-Daten als GPX" —
              * hinaus und herein sind dieselbe Sache in zwei Richtungen, und
              * wer den einen Weg sucht, sucht dort auch den anderen. Kein
              * Verweis, sondern ein Knopf: Der Import ist ein Dialog auf
@@ -320,15 +319,13 @@ ui_seite_start(['titel' => 'Tagesübersicht', 'karte' => true,
       <?= ui_symbol('warnung', 'symbol-gross') ?><p id="loaderror"></p>
     </div>
     <div class="tag-raster">
-    <?php /* DIENSTTAG-DATEN ALS KARTE MIT LESEZUSTAND (E-P3-31, Mockup 02/03).
-             Bis Web 9.1.1 war das ein <details>-Aufklapper, dessen summary die
-             eingefrorenen Namen UND die Notizen trug — als gesperrte
-             Versalzeile (Fund F-P3-A, damit erledigt). Jetzt: eine Karte, die
-             LIEST — Standort, Rettungsmittel, Besatzung, Notizen; am Desktop
+    <?php /* DIENSTTAG-DATEN ALS KARTE MIT LESEZUSTAND.
+             Kein <details>-Aufklapper, dessen summary die eingefrorenen
+             Namen UND die Notizen als gesperrte Versalzeile truege, sondern
+             eine Karte, die LIEST — Standort, Rettungsmittel, Besatzung, Notizen; am Desktop
              zweispaltig, mobil ohne Standort und Rettungsmittel (die stehen
              dort schon in der Unterzeile des Titels). „Bearbeiten" klappt
-             dasselbe Formular in der Karte auf — es ist dasselbe wie vorher,
-             mitsamt Dirty-Tracking. */ ?>
+             das Formular in der Karte auf, mitsamt Dirty-Tracking. */ ?>
     <section class="karte karte-daten" id="tagdaten">
       <div class="karte-kopf">
         <h2 class="karte-titel">Diensttag-Daten</h2>
@@ -363,8 +360,8 @@ ui_seite_start(['titel' => 'Tagesübersicht', 'karte' => true,
                 <?= e($v['name']) ?><?php
                   echo $v['base_name'] !== null ? ' · ' . e((string)$v['base_name']) : ''; ?></option>
             <?php endforeach; ?>
-            <?php /* DER LETZTE EINTRAG IST KEIN STAMMDATENSATZ (S9/AP6,
-                     E-S9-10). Er klappt die drei Felder darunter auf und
+            <?php /* DER LETZTE EINTRAG IST KEIN STAMMDATENSATZ. Er klappt
+                     die drei Felder darunter auf und
                      speichert NUR am Tag: Wer einmal auf einem fremden
                      Fahrzeug Dienst tut, soll dafür keinen Stammdatensatz
                      anlegen müssen, den er danach nie wieder braucht. Steht
@@ -372,9 +369,9 @@ ui_seite_start(['titel' => 'Tagesübersicht', 'karte' => true,
             <option value="adhoc">Anderes Rettungsmittel …</option>
           </select>
         </label>
-        <?php /* EINE EBENE TIEFER ALS DIE AUSWAHL (R74 (3)): derselbe
+        <?php /* EINE EBENE TIEFER ALS DIE AUSWAHL: derselbe
                  Baustein, mit dem abhängige Felder unter einem Schalter
-                 aufklappen (`.schalter-abhaengig`, E-P3-28) — eingerückt
+                 aufklappen (`.schalter-abhaengig`) — eingerückt
                  hinter einem orangen Randstrich. Die Felder gehören zur
                  Auswahl darüber und stehen deshalb nicht auf gleicher Höhe
                  mit ihr. */ ?>
@@ -397,7 +394,7 @@ ui_seite_start(['titel' => 'Tagesübersicht', 'karte' => true,
             <label><input type="radio" name="adhoc_kind" value="ground" class="vehkind-radio">
               bodengebunden</label>
           </div>
-          <?php /* STANDORT: AUSWAHL ODER FREITEXT (E-S9-10). Ein Treffer aus
+          <?php /* STANDORT: AUSWAHL ODER FREITEXT. Ein Treffer aus
                    der Vorschlagsliste übernimmt den Standort samt Koordinate
                    (die verborgene Kennung daneben); wer etwas anderes tippt,
                    behält den Text — dann friert der Tag den Namen ein und
@@ -411,16 +408,16 @@ ui_seite_start(['titel' => 'Tagesübersicht', 'karte' => true,
             Rollen der gewählten Betriebsart.</p>
         </div>
         <?php /* Die Besatzungsfelder entstehen im Browser aus dem EINGEFRORENEN
-                 Rollensatz des Diensttags (`day_crew`, E8), den api/day.php
+                 Rollensatz des Diensttags (`day_crew`), den api/day.php
                  mitliefert — nicht aus einer festen Liste von fünf Flugrollen.
                  Ein bodengebundener Dienst zeigt damit Fahrer, Praktikant und
-                 Sonstige (A3), ein neutraler keine (A7a). */ ?>
+                 Sonstige, ein neutraler keine. */ ?>
         <div id="crewfields"></div>
         <p class="feld-hinweis" id="crewhint" hidden></p>
         <p class="feld-hinweis" id="sd-hint" <?= ($SD_VEHICLES || $SD_BASES) ? 'hidden' : '' ?>>
           Noch keine Standorte hinterlegt — unter
           <a href="einstellungen.php?t=standorte">Einstellungen → Standorte</a> anlegen.</p>
-        <?php /* DIE KLEINZEILE AUCH HIER (S9/AP7, E-S9-02, Nr. 132). Die
+        <?php /* DIE KLEINZEILE AUCH HIER. Die
                  Notizen des DIENSTTAGS bleiben Klartext — sie sind
                  Betriebsnotizen, nicht Patientendaten (Antwort 1 vom
                  06.09.2026). Damit stehen im Formular des Diensttags und im
@@ -443,7 +440,7 @@ ui_seite_start(['titel' => 'Tagesübersicht', 'karte' => true,
     <?php /* Rueckmeldung nach dem Zusammenfuehren. Sie gehoert hierher und
              nicht auf die Zwischenseite: Die ist nach dem Vorgang
              verschwunden, und die Bestaetigung soll an dem Tag stehen, der
-             jetzt alles traegt. Vollzug = blau mit Haken (E-P3-16). */ ?>
+             jetzt alles traegt. Vollzug = blau mit Haken. */ ?>
     <?php if (($_GET['aufgenommen'] ?? '') === '1' && $selDay): ?>
       <?= ui_meldung_markup('ok', 'Einsätze, Ruhesegmente und Uhr-Kennungen hängen '
             . 'jetzt an diesem Tag; der aufgenommene ist verschwunden.',
@@ -457,8 +454,8 @@ ui_seite_start(['titel' => 'Tagesübersicht', 'karte' => true,
     <?php /* Die Karte. Mobil 160 px ueber der Liste, ab 720 px 220, ab 1200
              300; ab 1600 rueckt sie in die rechte Spalte des Rasters und
              laeuft von der Hoehe der Diensttag-Daten bis unter die Tabelle
-             (E-P3-31, Anlage G).
-             SEIT WEB 19.5.0 GIBT ES EINEN DRITTEN ZUSTAND (Backlog Nr. 45):
+             (Anlage G).
+             ES GIBT EINEN DRITTEN ZUSTAND:
              Der Knopf unter „Vollbild" macht sie hoeher — und ab 1600 px, wo
              sie ohnehin hoch ist, stattdessen breit; dann faellt das Raster
              auf eine Spalte und die Karte steht wieder zwischen Daten und
@@ -471,9 +468,9 @@ ui_seite_start(['titel' => 'Tagesübersicht', 'karte' => true,
         <h2 class="karte-titel">Einsätze</h2>
         <span class="karte-zahl" id="mzahl"></span>
         <?php /* Sortieren mobil: Die Kachel hat keine Spaltenkoepfe — der
-                 leise Link oeffnet das Blatt mit den Spalten (E-P3-32). Er
+                 leise Link oeffnet das Blatt mit den Spalten. Er
                  ist bewusst KEINE zweite Kopfaktion: Die eine Handlung der
-                 Karte bleibt „+ Nachtragen" (E-P3-25). */ ?>
+                 Karte bleibt „+ Nachtragen". */ ?>
         <button type="button" class="karte-sortieren nur-unter-720"
                 data-blatt="sortblatt" aria-expanded="false" aria-controls="sortblatt">
           <?= ui_symbol('sortieren', '', 'Sortieren') ?>
@@ -483,8 +480,8 @@ ui_seite_start(['titel' => 'Tagesübersicht', 'karte' => true,
         </a>
       </div>
       <div class="karte-inhalt">
-        <?php /* Sperrhinweis als Meldung mit Schloss und „Entsperren"
-                 (E-P3-31). Der Knopf steht IN der Meldung, mittig rechts. */ ?>
+        <?php /* Sperrhinweis als Meldung mit Schloss und „Entsperren".
+                 Der Knopf steht IN der Meldung, mittig rechts. */ ?>
         <div class="meldung meldung-info" id="lockbanner" role="status" hidden>
           <?= ui_symbol('schloss', 'symbol-gross') ?>
           <p>Geschützte Angaben sind gesperrt — Einsatzort, Alter und Diagnose
@@ -496,11 +493,11 @@ ui_seite_start(['titel' => 'Tagesübersicht', 'karte' => true,
         </div>
 
         <?php /* Ab 720 px die Tabelle im eigenen Scrollbehaelter; darunter
-                 die dreizeilige Kachel (E-P3-32). Beide entstehen aus
+                 die dreizeilige Kachel. Beide entstehen aus
                  demselben Zeilenbestand in renderMissionTable(). */ ?>
         <div class="tabelle-scroll nur-ab-720">
           <?php /* Kopf UND Zeilen entstehen im Browser, aus
-                   assets/missiontable.js (Schritt 15 AP9b). Hier stand ein
+                   assets/missiontable.js. Hier stand ein
                    handgeschriebener <thead> mit sieben festen Spalten und
                    einer Schleife ueber den Feldkatalog — eine zweite
                    Spaltenliste neben der des Moduls, das Suche und
@@ -518,9 +515,9 @@ ui_seite_start(['titel' => 'Tagesübersicht', 'karte' => true,
     </section>
     </div><?php /* .tag-raster */ ?>
 
-    <?php /* ---- Ruhesegmente (S4/A2b, E-S4-17) ---------------------------
-             Bis Web 12.5.0 lagen die Segmente nur als graue Linie auf der
-             Karte und waren nicht anfassbar. Sie sind aber der Ort, an dem
+    <?php /* ---- Ruhesegmente ---------------------------
+             Die Segmente sind nicht nur eine graue Linie auf der
+             Karte. Sie sind der Ort, an dem
              die Spur eines vergessenen Einsatzes liegt — wer waehrend des
              Einsatzes keinen Knopf gedrueckt hat, findet sie hier und
              nirgends sonst.
@@ -541,11 +538,11 @@ ui_seite_start(['titel' => 'Tagesübersicht', 'karte' => true,
       </div>
     </section>
 
-    <?php /* Das Sortierblatt (E-P3-32): dieselben Spalten wie der
+    <?php /* Das Sortierblatt: dieselben Spalten wie der
              Tabellenkopf, mobil als Blatt von unten. Die Eintraege baut
              renderMissionTable() aus den Koepfen — eine zweite Spaltenliste
              gaebe es sonst hier. */ ?>
-    <?php /* ---- GPX-Import (S4/A3) ---------------------------------------
+    <?php /* ---- GPX-Import ---------------------------------------
              Ein Dialog und keine Seite: zwei Angaben (Datei, Ziel), eine
              Handlung — die Aufstellungs-Regel aus Design.md 9.11 greift
              nicht. Nach dem Import steht man wieder in der Tagesansicht, wo
@@ -625,19 +622,19 @@ ui_seite_start(['titel' => 'Tagesübersicht', 'karte' => true,
 <script src="<?= asset('assets/schluessel.js') ?>"></script>
 <script src="<?= asset('assets/rueckfrage.js') ?>"></script>
 <?php endif; ?>
-<?php /* Die eine Vorschlagsliste (E-S9-07). Sie loest an den
-         Besatzungsfeldern des Diensttags die native <datalist> ab, die auf dem
-         Handy oft gar nichts zeigte (Backlog 68). Sie braucht EdHtml.escape;
-         html.js steht seit Web 21.1.11 im Kopf jeder Seite. */ ?>
+<?php /* Die eine Vorschlagsliste. Sie steht an den
+         Besatzungsfeldern des Diensttags statt der nativen <datalist>, die auf
+         dem Handy oft gar nichts zeigt. Sie braucht EdHtml.escape;
+         html.js steht im Kopf jeder Seite. */ ?>
 <script src="<?= asset('assets/vorschlagsliste.js') ?>"></script>
 <script src="<?= asset('assets/patient.js') ?>"></script>
 <?php /* Vorspann der Einsatztabelle (Artsymbole, Typsymbole,
          Katalogspalten) — dieselbe Stelle wie in suche.php und
-         zeitraum.php, seit Schritt 15 AP9b. */
+         zeitraum.php. */
       ui_tabellen_bootstrap(); ?>
 <?php /* missiontable.js liefert die gemeinsamen Bausteine der drei
          Einsatztabellen. Sie liest EdHtml schon beim Laden — html.js steht
-         dafuer im Kopf (seit Web 21.1.11). */ ?>
+         dafuer im Kopf. */ ?>
 <script src="<?= asset('assets/missiontable.js') ?>"></script>
 <script src="<?= asset('assets/forms.js') ?>"></script>
 <script src="<?= asset('assets/vendor/leaflet/leaflet.js') ?>"></script>
@@ -645,7 +642,7 @@ ui_seite_start(['titel' => 'Tagesübersicht', 'karte' => true,
 <script src="<?= asset('assets/map_layers.js') ?>"></script>
 <script src="<?= asset('assets/geo.js') ?>"></script>
 <script src="<?= asset('assets/luftlinie.js') ?>"></script>
-<?php /* Der Schnitt (S4/A2b). Er liest EdHtml (html.js, im Kopf) und steht
+<?php /* Der Schnitt. Er liest EdHtml (html.js, im Kopf) und steht
          VOR dem Block unten, der `EdSchnitt.starten()` ruft. `zeitfeld.js`
          ruestet die Felder des Schneide-Bereichs nach — es beobachtet das
          Dokument und erfasst auch spaeter erzeugte Felder, die erzeugende

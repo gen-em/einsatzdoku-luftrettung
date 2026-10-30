@@ -1,11 +1,11 @@
 """Eine Backup-Datei SCHREIBEN — das Gegenstück zu `vergleich/lesen.py`.
 
-SEIT WEB 23 FASSUNG 4 (S11-12, E-S11-85). Der Einspielweg nimmt nur noch die
+SEIT WEB 23 FASSUNG 4. Der Einspielweg nimmt nur noch die
 mehrteilige Datei mit Nutzlast 13; die einteilige Fassung 3 mit Nutzlast 7,
-die dieses Werkzeug bis Web 22.7.0 schrieb, weist er ab. `schreiben_edbak_v4()`
+die dieses Werkzeug frueher schrieb, weist er ab. `schreiben_edbak_v4()`
 baut deshalb das ZIP, das auch der Browser baut (`einstellungen.php`,
 `assets/crypto.js` `sealTeil`): Manifest, Kopf, Eintragsteile, Spurteile mit
-Punktlisten. Backlog Nr. 46 hatte genau das vorhergesagt.
+Punktlisten.
 
 WOFUER. Der Vervielfältiger (`vervielfaeltigen.py`) baut aus einem echten
 Referenz-Backup einen Großbestand. Er muss die entstandenen Nutzlasten
@@ -14,7 +14,7 @@ Browser öffnet eine `.edbak`, entschlüsselt sie, verschlüsselt die geschützt
 Angaben für das Zielkonto um und schickt sie an `api/backup_restore.php`. Eine
 Nutzlast, die nur als JSON auf der Platte liegt, kommt dort nicht hinein — und
 ein eigener Einspielweg am Container vorbei wäre genau der zweite Weg, den
-niemand pflegt (R4).
+niemand pflegt.
 
 GELESEN WIRD NICHT HIER. `tools/referenzdatensatz/vergleich/lesen.py` liest
 den Container bereits, und zwar geprüft; diese Datei importiert von dort. Zwei

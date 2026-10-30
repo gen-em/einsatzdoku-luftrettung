@@ -1,4 +1,4 @@
-/* Wege des Arbeitspakets AP3 — Karte und Zeichen (E-S9-03, -04, -12, -13).
+/* Wege der Gruppe `AP3` — Karte und Zeichen.
  * ===========================================================================
  *
  *   P-08  Schildmasse nachgemessen              Soll 32/32/32/38/28/14/20 px
@@ -9,18 +9,18 @@
  *
  * WARUM DIE SCHILDER HIER GEMESSEN WERDEN UND NICHT IM BILDERLAUF: Der
  * fotografiert Seiten und misst Ueberlauf, Konsolenfehler und Knopfhoehen.
- * Ein Kartenzeichen ist kein Knopf (R76 gilt fuer es nicht, S3/AP7), und
+ * Ein Kartenzeichen ist kein Knopf (die Bedienhoehe gilt fuer es nicht), und
  * seine Groesse steht auf keinem Bild als Zahl. Das Konzept verlangt
  * „nachgemessen im Browser" — das ist dieser Weg.
  *
  * UND WARUM DIE PFEILE NICHT AUS DEM BERECHNETEN STIL GELESEN WERDEN:
  * `getComputedStyle` meldet die Drehmatrix auch dann, wenn sie gar nicht
- * wirkt (Inline-Element, Backlog Nr. 72). Gemessen wird deshalb die
+ * wirkt (Inline-Element). Gemessen wird deshalb die
  * BILDSCHIRMMATRIX des SVG (`getScreenCTM`) — sie beschreibt, was gezeichnet
  * wurde, nicht was dastand.
  */
 
-/* Die Sollmasse aus M-S9-01 V1, freigegeben am 06.09.2026. Aussenmass
+/* Die Sollmasse, freigegeben am 06.09.2026. Aussenmass
  * einschliesslich der Schattenringe. */
 const SOLL = {
   ohne: 32, start: 32, ende: 32, beide: 38,
@@ -33,7 +33,7 @@ async function einsaetze(k) {
   await k.gehZu(k.kennung.tagesuebersicht || (k.basis + '/index.php'));
   await k.seite.waitForFunction(
     () => typeof dayMissions !== 'undefined' && dayMissions.length, null, { timeout: 20000 });
-  /* DIE SPUREN ÖFFNET DER BROWSER NACH DER LISTE (Konzept DM, F-DM-07):
+  /* DIE SPUREN ÖFFNET DER BROWSER NACH DER LISTE:
    * `dayMissions` steht, bevor die Hüllen offen sind, und `m.track` füllt
    * `EdOrtsdaten` erst danach. In Chromium war das zur Stelle, in Firefox und
    * WebKit nicht — die Wege meldeten „kein Einsatz mit Aufzeichnung" an einem
@@ -62,9 +62,9 @@ async function einsaetze(k) {
  * messen.
  *
  * GENAU DAS IST MIT DEM DEMO-AUSBAU EINGETRETEN. Der Standort
- * „Notarztstandort Talwang" fuehrte bis dahin bewusst KEINE Koordinaten
- * (E-P1-02); seine Bodeneinsaetze hatten deshalb kein Standort-Schild und
- * immer einen freistehenden Ring am Spuranfang. Seit E-DA-09 hat er welche,
+ * „Notarztstandort Talwang" fuehrte bis dahin bewusst KEINE Koordinaten;
+ * seine Bodeneinsaetze hatten deshalb kein Standort-Schild und
+ * immer einen freistehenden Ring am Spuranfang. Heute hat er welche,
  * das Schild steht da, und der Ring faellt weg — richtig so, und fuer diesen
  * Weg der Grund, warum er nicht mehr den erstbesten Einsatz nehmen darf.
  *
@@ -194,7 +194,7 @@ export const wege = [
       await karteSeite(k);
       const GRADE = [0, 30, 60, 90, 120, 150, 180, 210, 240, 270, 300, 330];
       /* WIE DER WINKEL GEMESSEN WIRD — und warum nicht mehr mit
-         `getScreenCTM()` (AP3b, Nr. 186).
+         `getScreenCTM()`.
 
          Bis zum 14.09.2026 las dieser Weg die Drehung aus der
          Bildschirmmatrix des inneren `<svg>`. Das ist in Chromium und Gecko
@@ -260,11 +260,11 @@ export const wege = [
       const schraeg = schraegeWinkel.length;
       /* WIE LANG IST DIE SPUR AM BILDSCHIRM? `geo.js` zeichnet einen Pfeil
          alle 140 px und gar keinen, wenn die ganze Spur kürzer als zwei
-         Abstände ist (E-P3-33/40, „herausgezoomt verschwinden sie von
+         Abstände ist („herausgezoomt verschwinden sie von
          selbst"). Bei 390 px Fensterbreite ist die Karte so klein, dass genau
          das eintritt — und dann sind NULL Pfeile das richtige Ergebnis, nicht
          ein Fehlschlag.
-         Gemerkt beim ersten Lauf über zwei Breiten (S9/AP5-6): Der Weg war
+         Gemerkt beim ersten Lauf über zwei Breiten: Der Weg war
          für 1280 px geschrieben und meldete bei 390 px „0 von 0" als
          verfehlt. Statt einer Breitenschwelle im Weg wird die Länge GEMESSEN
          — `getTotalLength()` am Spur-Pfad ist genau die Zahl, aus der
@@ -334,7 +334,7 @@ export const wege = [
     was: 'Sechs Artzeichen aus einer Hand — drei Betriebsarten, drei Typen',
     soll: '6 von 6 mit Anker und Herkunft',
     async fahren(k) {
-      /* Die Typen kommen erst mit AP4 ins Datenmodell; die Zeichen sind schon
+      /* Die Typen stehen im Datenmodell erst spaeter; die Zeichen sind schon
        * da und muessen sich zeichnen lassen. Geprueft wird der Vorrat selbst:
        * laedt die Datei, traegt sie den Anker `#i`, nennt ihr Kopf die
        * Herkunft? Ein fehlender Anker ist der einzige stille Fehler des

@@ -4,7 +4,7 @@ import org.json.JSONObject
 import java.io.File
 
 /**
- * Die Ablage von `device_id` und `api_key` (E-S4-13).
+ * Die Ablage von `device_id` und `api_key`.
  *
  * DREI SCHICHTEN, UND JEDE TRÄGT ETWAS:
  *
@@ -25,8 +25,8 @@ import java.io.File
  * nichts — und `SharedPreferences` schreibt zusätzlich eine
  * `.bak`-Zwischendatei, also eine zweite Stelle, an der es steht.
  *
- * SEIT DER UMGEKEHRTEN KOPPLUNG (R49, S5) HAT DER TRESOR ZWEI ZUSTÄNDE.
- * Zugangsdaten entstehen jetzt schon beim ersten Schritt (`start`), sind aber
+ * DER TRESOR HAT ZWEI ZUSTÄNDE. Zugangsdaten entstehen schon beim ersten
+ * Schritt (`start`), sind aber
  * bis zum Ja des Menschen **schwebend**: `ingest.php` weist sie mit `401` ab,
  * weil es das Gerät noch nicht gibt (Vertrag 1a.1). Sie liegen trotzdem in der
  * Datei und nicht im Arbeitsspeicher — die beiden folgenden Anliegen brauchen
@@ -98,9 +98,8 @@ class Schluesseltresor(
     }
 
     /**
-     * Den Kontoschlüssel einer bestehenden Kopplung ablegen (S11-09, E-S11-80)
-     * — der Weg, auf dem eine Kopplung aus der Zeit vor 0.18.0 zu einem
-     * kommt. Ändert nichts an Kennung, Schlüssel und Zustand.
+     * Den Kontoschlüssel einer bestehenden Kopplung ablegen — der Weg, auf
+     * dem eine alte Kopplung ohne Schlüssel zu einem kommt. Ändert nichts an Kennung, Schlüssel und Zustand.
      */
     fun kontoschluesselSetzen(kontoschluessel: String) {
         val zugang = lesen() ?: return
@@ -133,7 +132,7 @@ class Schluesseltresor(
     /**
      * Löscht die Kopplung auf dem Gerät.
      *
-     * LOKAL WIRD IMMER GETRENNT (E-S4-12, Backlog Nr. 14) — auch wenn der
+     * LOKAL WIRD IMMER GETRENNT — auch wenn der
      * Server nicht geantwortet hat. Andernfalls bliebe ein Handy ohne Netz
      * dauerhaft an ein Konto gebunden, das es nicht mehr benutzen soll.
      */
@@ -172,7 +171,7 @@ class Schluesseltresor(
 
         /** Einbuchstabig wie die beiden anderen: Die Datei soll nichts erzählen. */
         private const val FELD_SCHWEBEND = "s"
-        /** Der öffentliche Kontoschlüssel (seit 0.18.0, S11-09). */
+        /** Der öffentliche Kontoschlüssel. */
         private const val FELD_KONTOSCHLUESSEL = "p"
     }
 }

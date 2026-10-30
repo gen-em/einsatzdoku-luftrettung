@@ -11,12 +11,11 @@ declare(strict_types=1);
  *     zip_lesen($pfad, fn(callable $eintrag) …)  // mehrere Einträge, einmal geöffnet
  *     zip_oeffnen($pfad)                         // ZipArchive zum Lesen | null
  *
- * WARUM EINE EIGENE DATEI (P5c/AP2, E-P5c-57, R83). `new ZipArchive` stand
- * viermal in `adminbackup_lib.php`, jedes Mal mit eigener Prüfung auf die
- * Erweiterung und eigenem Umgang mit `open() !== true`. Das Archiv des
- * Protokolls wäre die fünfte Stelle gewesen. Das Register zählt `new
- * ZipArchive` außerhalb dieser Datei (Art `muster` — die Art `aufruf` sieht
- * `new X(` nicht, F-P5c-55) und hält die Zahl auf null.
+ * WARUM EINE EIGENE DATEI. Ohne sie stuende `new ZipArchive` an jeder
+ * Stelle, die ein Archiv braucht, jedes Mal mit eigener Prüfung auf die
+ * Erweiterung und eigenem Umgang mit `open() !== true`. Das Register zählt
+ * `new ZipArchive` außerhalb dieser Datei (Art `muster` — die Art `aufruf`
+ * sieht `new X(` nicht) und hält die Zahl auf null.
  *
  * UNGEPACKT IST DIE VORGABE. Was hier hineingeht, ist versiegelt
  * (`sk_versiegeln()`, Kontopakete der Fassung 3, Archive des Protokolls) —
@@ -26,7 +25,7 @@ declare(strict_types=1);
  * ÜBER DATEIEN, NICHT ÜBER `addFromString()`. `ZipArchive` hält, was mit
  * `addFromString()` kommt, bis `close()` im Speicher; bei einem Kontopaket
  * sind das mehrere Teile zu je einigen MB gegen ein Budget von 64
- * (S2/AP6, gemessen). `zip_bauen()` nimmt deshalb Pfade, keine Inhalte.
+ * (gemessen). `zip_bauen()` nimmt deshalb Pfade, keine Inhalte.
  */
 
 /** Ist die Erweiterung da? Ohne sie gibt es weder Backups noch Archive. */
@@ -63,7 +62,7 @@ function zip_bauen(string $ziel, array $teile, bool $packen = false): bool|strin
         }
         /* ERST HINZUFÜGEN, DANN DAS VERFAHREN SETZEN: `setCompressionName()`
          * greift auf einen Eintrag, den es schon gibt. Umgekehrt tut der
-         * Aufruf nichts und meldet auch nichts (gemessen in S10/AP4). */
+         * Aufruf nichts und meldet auch nichts (gemessen). */
         if (!$packen) {
             $zip->setCompressionName((string)$name, ZipArchive::CM_STORE);
         }

@@ -2,17 +2,17 @@
 declare(strict_types=1);
 /**
  * Rückwegprobe, Server-Teil — hält der Rückweg beim Zweitfaktor, was
- * Konzept RW zusagt? (E-RW-03, -04, -05, -11, -12)
+ * er zusagt?
  *
  * Anlass: Nr. 319 (F-P5c-106) — der Rückweg nach E-P5c-42 prüfte gegen
  * `pat_key_check`, einen Wert, den jeder Datenbankabzug enthält; wer einen
  * Abzug hatte, legte ihn vor. Dazu Nr. 141 (Zweitfaktor).
  *
  * WAS SIE MISST, OHNE HTTP (Muster Anteilprobe).
- *   Teil A — die Bibliothek (`rueckweg_lib.php`, RW-01):
+ *   Teil A — die Bibliothek (`rueckweg_lib.php`):
  *     1. Der Selbsttest mit erzwungener Engine, OpenSSL und reines PHP —
  *        beide müssen den festen Browser-Vektor annehmen; die Dauer steht da.
- *     2. Sechs Signaturfälle (Konzept RW 5.3, in der Git-Historie): echt → angenommen; fremd,
+ *     2. Sechs Signaturfälle: echt → angenommen; fremd,
  *        verändert, zweckfremd, fremdes Konto, verstümmelt → abgewiesen.
  *     3. Fremde Schlüssel: P-384 und Ed25519 weist `rw_oeffentlich_pruefen()`
  *        ab, und eine gültige Signatur mit ihnen nimmt `rw_pruefen()` nicht an.
@@ -21,25 +21,25 @@ declare(strict_types=1);
  *     5. Die Statuszeile „Rückweg-Prüfung" in drei Lagen, mit gesetzten Werten.
  *     6. Die Marke: Der Selbsttest läuft einmal je Marke, ein gestellter
  *        Fehlschlag schaltet den Weg ab.
- *     7. Der Stand des Paars (RW-02): `rw_zustand()` in allen vier Lagen —
+ *     7. Der Stand des Paars: `rw_zustand()` in allen vier Lagen —
  *        'da' mit Datum, 'fehlt', 'demo', und 'spalten' gegen eine
  *        Datenbank ohne die Spalten (SQLite im Speicher; die der Anlage
  *        wird dafür nicht zurückgebaut).
- *     8. Das Kontopaket trägt das Paar nicht (E-RW-09): kein `rw_` in den
+ *     8. Das Kontopaket trägt das Paar nicht: kein `rw_` in den
  *        Spaltenlisten von Konto-Backup und Freigabe.
  *
- *   Teil B — der Weg im Server (RW-03), über `rw_rueckweg_pruefen()`, den
+ *   Teil B — der Weg im Server, über `rw_rueckweg_pruefen()`, den
  *   Prüfzweig von `login.php`, mit einer gestellten halben Sitzung:
  *     B1. echte Signatur → angenommen, die Herausforderung verbraucht — und
  *         der Zweitfaktor NOCH AN: Abgeschaltet wird erst in `login.php`,
- *         hinter dem Tor (F-RW-21; gemessen in B8)
+ *         hinter dem Tor (gemessen in B8)
  *     B2. dieselbe Signatur noch einmal → abgewiesen (verbraucht)
  *     B3. abgelaufen → abgewiesen, die nächste Herausforderung ist eine neue
  *     B4. fremd, verändert, zweckfremd → abgewiesen, jeder zählt im Topf
  *         `totp`; weiter bis zur Sperre, danach auch die echte abgewiesen
  *     B5. die alte Fassung: `pat_key_check` statt einer Signatur → abgewiesen
  *     B6. nicht angeboten (kein Paar; Selbsttest gescheitert) → abgewiesen
- *     B7. die Abzug-Gegenprobe (die Konstruktion dazu: Technik.md 4.99q, „Was ein Abzug enthält“): jeder Wert der Kontozeile,
+ *     B7. die Abzug-Gegenprobe (die Konstruktion dazu: Technik.md 4.38, „Was ein Abzug enthält“): jeder Wert der Kontozeile,
  *         jeder aus `app_state`, `server_key`, `kdf_anteil` und der Anteil
  *         des Kontos — als Hex und als Rohbytes — als Schlüssel für
  *         `rw_privat`: 0 Erfolge. Der richtige Inhaltsschlüssel öffnet ihn
@@ -50,7 +50,7 @@ declare(strict_types=1);
  *         Signatur → Erfolgskarte, Zweitfaktor aus, Codes 0, Protokoll
  *         `totp_zurueckgesetzt` mit `weg=schluessel` +1, Mail +1; dieselbe
  *         an einem GESPERRTEN Konto → die Seite des Tors, und der
- *         Zweitfaktor bleibt an, ohne Protokoll und ohne Mail (F-RW-21).
+ *         Zweitfaktor bleibt an, ohne Protokoll und ohne Mail.
  *
  * DAS KONTO VON TEIL B BAUT DIE PROBE SELBST, mit derselben Verpackung wie
  * `crypto.js` (`edk1:` = AES-256-GCM, IV vorn, Tag hinten): Sie muss den
@@ -108,7 +108,7 @@ $o = rw_selbsttest('OpenSSL');
 pruefe($o['ok'] && $o['weg'] === 'openssl', 'OpenSSL: Vektor angenommen, veränderte Nachricht abgewiesen',
        sprintf('%.1f ms', $o['ms']));
 $p = rw_selbsttest('PHP');
-/* SOLLBEREICH 150 BIS 400 MS (Konzept RW, RW-01) — als Auskunft. Gefordert
+/* SOLLBEREICH 150 BIS 400 MS — als Auskunft. Gefordert
  * ist, dass reines PHP unter einer Sekunde bleibt: Mehr trüge ein Weg nicht,
  * der am Code-Schritt auf eine Antwort wartet. */
 pruefe($p['ok'] && $p['weg'] === 'php' && $p['ms'] < 1000,
@@ -223,10 +223,10 @@ $lagen['fehlt'] = rw_zustand($probeId);
 $pdo->prepare('UPDATE users SET rw_oeffentlich = ?, rw_privat = ?, rw_seit = UTC_TIMESTAMP()
                WHERE id = ?')->execute([$pub, 'edk1:' . $chiffre, $probeId]);
 $lagen['da'] = rw_zustand($probeId);
-/* DIE LAGE „spalten" SO, WIE MYSQL SIE MELDET (F-P5c-166): SQLSTATE 42S22.
- * Bis Web 21.1.0 stand hier eine SQLite-Datenbank ohne die Spalten — sie
- * meldet HY000, und die Lage war nur grün, weil `rw_zustand()` jeden Fehler
- * für „spalten" hielt. Genau das war der Fehler. */
+/* DIE LAGE „spalten" SO, WIE MYSQL SIE MELDET: SQLSTATE 42S22.
+ * Eine SQLite-Datenbank ohne die Spalten genuegt nicht — sie
+ * meldet HY000, und die Lage waere nur grün, weil `rw_zustand()` jeden Fehler
+ * für „spalten" haelt. */
 final class ProbeFehltSpalte extends PDOException { protected $code = '42S22'; }
 final class ProbeGestoertePdo extends PDO
 {
@@ -274,7 +274,7 @@ pruefe($treffer === [], 'rw_ in den Zeichenketten von adminbackup_lib.php und ba
        count($treffer) . ' Treffer' . ($treffer === [] ? '' : ' — ' . implode(', ', $treffer)));
 
 /* ============================================================================
- * TEIL B — der Weg im Server (RW-03)
+ * TEIL B — der Weg im Server
  * ========================================================================== */
 echo "\n== Teil B: der Rückweg am Code-Schritt (RW-03)\n";
 require_once $wurzel . '/server/totp_lib.php';
@@ -469,7 +469,7 @@ $basis = rtrim($argv[1] ?? 'http://127.0.0.1:8080', '/');
 $ort = is_dir(sitzung_ablage_pfad()) ? sitzung_ablage_pfad() : (string)(session_save_path() ?: sys_get_temp_dir());
 $sid = 'rueckwegprobe' . bin2hex(random_bytes(10));
 $csrf = bin2hex(random_bytes(16));
-/* DIE BINDUNG (seit Web 21.7.0, Schritt 18, SR-01): `login.php` verwirft
+/* DIE BINDUNG: `login.php` verwirft
  * einen halben Stand, dessen Hash nicht zum Cookie `EDBIND` passt — ohne sie
  * mäße B8 den Verwurf statt des Rückwegs. */
 $bind = bin2hex(random_bytes(32));
@@ -548,7 +548,7 @@ pruefe($echt['code'] === 200 && str_contains($echt['rumpf'], 'Zweitfaktor zurüc
        "HTTP {$echt['code']}, an={$z['an']}, {$z['codes']} Codes, Protokoll "
        . ($protokollB() - $protokollVor) . ', Mail ' . ($mails() - $mailVor));
 
-/* F-RW-21: Dieselbe echte Signatur an einem gesperrten Konto. Das Tor
+/* Dieselbe echte Signatur an einem gesperrten Konto. Das Tor
  * `login_zugang()` weist es ab — und weil das Abschalten dahinter steht,
  * bleibt der Zweitfaktor an. In der ersten Fassung stand es davor: Er war
  * weg, ohne Anmeldung und ohne Mail. */

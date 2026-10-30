@@ -9,14 +9,10 @@ import org.junit.Assume.assumeTrue
 import org.junit.Test
 
 /**
- * Die tolerante Ergänzung der Server-Adresse (E-S4-12, E-S4-14).
+ * Die tolerante Ergänzung der Server-Adresse.
  *
- * SEIT R63 PRÜFT DIESE KLASSE ETWAS ANDERES ALS FRÜHER, obwohl die Fälle
- * fast dieselben geblieben sind: Die Regeln fingen bis Android 0.10.1 ab,
- * was ein Mensch in ein Eingabefeld tippt. Das Feld gibt es nicht mehr — sie
- * fangen jetzt ab, was jemand als `SERVER_BASIS` ins Bauskript schreibt.
- * Dieselbe Frage, ein anderer Zeitpunkt: Ein Fehler fällt beim Bauen auf und
- * nicht bei der Kopplung.
+ * Die Regeln fangen ab, was jemand als `SERVER_BASIS` ins Bauskript
+ * schreibt: Ein Fehler fällt beim Bauen auf und nicht bei der Kopplung.
  */
 class ServeradresseTest {
 
@@ -34,7 +30,7 @@ class ServeradresseTest {
         )
     }
 
-    /** E-S4-14: nur HTTPS für jeden echten Rechnernamen. */
+    /** Nur HTTPS für jeden echten Rechnernamen. */
     @Test fun httpWirdZuHttps() {
         assertEquals(
             "https://einsatz.beispieldomain.de/",
@@ -80,7 +76,7 @@ class ServeradresseTest {
 
     /**
      * DIE ÖRTLICHE INSTALLATION BEHÄLT IHR `http` — die eine benannte
-     * Ausnahme von E-S4-14 — **nur im Prüf-APK** (Backlog Nr. 142, AN-1).
+     * Ausnahme von „nur HTTPS" — **nur im Prüf-APK**.
      *
      * Sie ist keine Aufweichung: `127.0.0.1` und `localhost` taugen ohnehin
      * nicht als Adresse einer ausgelieferten App (ein Gerät im Feld erreichte
@@ -101,10 +97,9 @@ class ServeradresseTest {
     }
 
     /**
-     * Und im **Release** gibt es die Ausnahme nicht (Backlog Nr. 142, AN-1):
-     * Dort wird auch eine IP-Adresse zu `https`. Bis 0.13.0 galt die
-     * Ausnahme in beiden Bauarten — ein mit IP-Adresse gebautes APK hätte den
-     * Geräteschlüssel auf Android 8 im Klartext verschickt.
+     * Und im **Release** gibt es die Ausnahme nicht: Dort wird auch eine
+     * IP-Adresse zu `https`. Sonst verschickte ein mit IP-Adresse gebautes
+     * APK den Geräteschlüssel auf Android 8 im Klartext.
      */
     @Test fun imReleaseGiltHttpsAuchFuerOertlicheAdressen() {
         assumeFalse("nur im Release", BuildConfig.DEBUG)
@@ -114,7 +109,7 @@ class ServeradresseTest {
     }
 
     /**
-     * DIE FESTE ADRESSE DIESES BAULAUFS (R63, Backlog Nr. 84).
+     * DIE FESTE ADRESSE DIESES BAULAUFS.
      *
      * Der Prüflauf setzt `SERVER_BASIS` nicht um, prüft also den Wert, mit dem
      * gebaut wurde. Zugesichert wird hier nicht die Domain — die kann ein

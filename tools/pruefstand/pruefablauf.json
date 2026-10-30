@@ -117,7 +117,7 @@
     "rollenprobe": {
       "aufruf": "bash tools/proben/proben.sh rollen",
       "braucht": "installation",
-      "bemerkung": "Die Matrix steht in docs/Technik.md 4.99p zwischen den Markierungen rollenprobe:anfang und rollenprobe:ende; die Probe liest sie von dort (E-P5c-22)."
+      "bemerkung": "Die Matrix steht in docs/Technik.md 4.37 zwischen den Markierungen rollenprobe:anfang und rollenprobe:ende; die Probe liest sie von dort (E-P5c-22)."
     },
     "protokollprobe": {
       "aufruf": "bash tools/proben/proben.sh protokoll",
@@ -927,6 +927,7 @@
       "ab": "klein",
       "pfade": [
         "server/api/wartungslauf.php",
+        "server/assets/wartungslauf.js",
         "server/spur_lib.php",
         "server/validate_lib.php",
         "tools/proben/wartungslauf/**"

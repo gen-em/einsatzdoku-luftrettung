@@ -5,7 +5,7 @@ Die Garmin-Uhr kennt ihren Modellnamen nicht. `System.getDeviceSettings()`
 führt ihn nicht, und eine Modelltabelle auf einem Gerät mit 128 kB wäre der
 falsche Platz. Sie sendet deshalb beim Koppeln ihre **Teilenummer**
 (`006-B4261-00`), und der Server löst sie auf — so steht es im JSON-Vertrag,
-Abschnitt 1a, und so hat R42 es entschieden.
+Abschnitt 1a.
 
 Diese Zuordnung steht nirgends als Liste. Sie steckt in den **Gerätedateien
 der Uhr-Plattform**, je Gerät eine `compiler.json` mit drei Angaben, die hier
@@ -51,11 +51,11 @@ import re
 import sys
 import textwrap
 
-# --- Geräteart (R42: Uhr / Handy / Sonstiges) --------------------------------
+# --- Geräteart (Uhr / Handy / Sonstiges) -------------------------------------
 #
 # `webDocDeviceGroup` ist die Einteilung, die Garmin selbst für seine
 # Dokumentation benutzt. "Watches/Wearables" ist die Uhr; alles andere, was
-# Connect IQ trägt -- Radcomputer, Handgeräte -- ist für R42 "Sonstiges".
+# Connect IQ trägt -- Radcomputer, Handgeräte -- ist "Sonstiges".
 # "Handy" kann hier nie herauskommen: Eine Connect-IQ-App läuft nicht auf
 # einem Handy. Die Handy-Angabe kommt aus der Android-App und geht an dieser
 # Tabelle vorbei.

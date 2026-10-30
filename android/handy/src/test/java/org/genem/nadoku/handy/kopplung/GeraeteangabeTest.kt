@@ -7,7 +7,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 
-/** Der `geraet`-Block der Handy-Kopplung (E-S4-28). */
+/** Der `geraet`-Block der Handy-Kopplung. */
 @RunWith(RobolectricTestRunner::class)
 class GeraeteangabeTest {
 

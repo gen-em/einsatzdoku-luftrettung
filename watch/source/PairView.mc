@@ -1,12 +1,12 @@
 // NAdoku — die Kopplungsansicht: die Uhr ZEIGT den Code
 //
-// Seit 3.0.0 laeuft die Kopplung andersherum (S5, E-R49-1): Nicht die
+// Die Kopplung laeuft andersherum: Nicht die
 // Traegerin tippt einen Code ein, den das Web erzeugt hat — die Uhr holt sich
 // eine Sitzung, zeigt den Code, und ein Mensch traegt ihn im Web ein. Diese
 // Seite ist die Anzeige dazu; der Ablauf dahinter steht in Pair.mc.
 //
 // WARUM EINE EIGENE ANSICHT und kein vierter Zustand des Mittelblocks der
-// Sync-Seite (E-S5-24) — drei Gruende, jeder fuer sich ausreichend:
+// Sync-Seite — drei Gruende, jeder fuer sich ausreichend:
 //   1. Der Code muss GROSS stehen, und er traegt Buchstaben. Eine
 //      Ziffernschrift scheidet damit aus (Uhr-Layout_Regeln 3.1: sie kennt
 //      keine Buchstaben und zeichnet leere Kaestchen), es bleibt fitFont
@@ -30,7 +30,7 @@ class PairView extends WatchUi.View {
     /* Derselbe 2-s-Takt wie auf der Sync-Seite — er treibt die Restzeit, die
      * ohne ihn stehenbliebe. Die ABFRAGE beim Server laeuft langsamer und nie
      * ueberlappend; darueber entscheidet Pair.abfrageAnstossen() allein
-     * (Const.PAIR_TAKT_MS, E-S5-25). Der Zeitgeber weiss davon nichts: Er
+     * (Const.PAIR_TAKT_MS). Der Zeitgeber weiss davon nichts: Er
      * klopft nur an. */
     function onShow() as Void {
         /* Diese Ansicht wird auch wieder sichtbar, wenn die Rueckfrage
@@ -87,17 +87,14 @@ class PairView extends WatchUi.View {
          * vollstaendig (chordW haelt zusaetzlich Ui.s(dc,16) = 24 px Rand),
          * aber ohne jede Reserve. "10 min gültig" nimmt sie zurueck.
          *
-         * Die frueher hier genannten 71/64/146 px galten dem EINSTELLIGEN
-         * Fall ohne "gültig"; sie sind berichtigt.
-         *
          * Eine Zeile hoeher traegt die Sehne 173/163/271 px — dort passt der
          * Hinweis. Das ist auch der Grund, warum die Sync-Seite an derselben
-         * Verankerung ueberlebt: Ihre unterste Zeile ist immer "Version 3.0.0". */
+         * Verankerung ueberlebt: Ihre unterste Zeile ist immer "Version …". */
         var lines = [];
         /* "Kopple…" waehrend das Ja unterwegs ist. Hellgrau nach
-         * Uhr-Layout_Regeln 7 ("laeuft gerade, noch keine Aussage"), Wortlaut
-         * aus 2.0.0 uebernommen. Der Block ist fuer eine schwankende
-         * Zeilenzahl gebaut, der Codeblock darueber weicht von selbst aus. */
+         * Uhr-Layout_Regeln 7 ("laeuft gerade, noch keine Aussage"). Der
+         * Block ist fuer eine schwankende Zeilenzahl gebaut, der Codeblock
+         * darueber weicht von selbst aus. */
         if (Pair.jaLaeuft) { lines.add(["Kopple…", Graphics.COLOR_LT_GRAY]); }
         var netz = Pair.netzHinweis;
         if (netz != null) {
@@ -171,7 +168,7 @@ class PairView extends WatchUi.View {
     }
 }
 
-/* BACK bricht die Kopplung ab (E-S5-23).
+/* BACK bricht die Kopplung ab.
  *
  * Kein Bedienhinweis dafuer auf der Seite: Die Zurueck-Taste tut auf allen
  * drei Zielgeraeten dasselbe (Input.mc), und das Handbuch sagt es. Eine
@@ -184,13 +181,13 @@ class PairDelegate extends TastenDelegate {
     function initialize() { TastenDelegate.initialize(); }
 
     function onBack() as Lang.Boolean {
-        if (Input.beruehrungVerwerfen()) { return true; }   // F-R17-68
+        if (Input.beruehrungVerwerfen()) { return true; }
         Pair.abbrechen();
         return true;
     }
 }
 
-/* Die Rueckbestaetigung — der zweite der beiden Tore aus E-R49-5.
+/* Die Rueckbestaetigung — der zweite der beiden Tore (Kopf von Pair.mc).
  *
  * Bewusst der vorhandene Baustein WatchUi.Confirmation, wie beim Trennen, beim
  * Einsatzabschluss und beim Verlassen der App. Er traegt genau das, was hier

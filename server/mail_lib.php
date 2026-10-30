@@ -1,11 +1,11 @@
 <?php
 declare(strict_types=1);
 
-/* Der eine Leser fuer config.php (Schritt 15 AP2). */
+/* Der eine Leser fuer config.php. */
 require_once __DIR__ . '/konfig_lib.php';
 
 /**
- * MAIL: EIN KATALOG UND EINE WARTESCHLANGE (P5a/AP5, E-P5a-14, E-P5a-39).
+ * MAIL: EIN KATALOG UND EINE WARTESCHLANGE.
  *
  * ---------------------------------------------------------------------------
  * WARUM ES DIESE DATEI GIBT — zwei Gruende, und der zweite ist der groessere
@@ -36,7 +36,7 @@ require_once __DIR__ . '/konfig_lib.php';
  * DER ERSTE VERSUCH LAEUFT SOFORT — und das ist keine Bequemlichkeit
  * ---------------------------------------------------------------------------
  *
- * E-PP-05: Double-Opt-In, Kopplungsmail und Passwort-Reset warten nicht auf
+ * Double-Opt-In, Kopplungsmail und Passwort-Reset warten nicht auf
  * den naechsten Job-Lauf. Und sie duerfen es auch gar nicht: Der Job laeuft
  * huckepack auf einer Web-Anfrage, hoechstens alle fuenf Minuten, und nur
  * wenn ueberhaupt jemand angemeldet eine Seite aufruft. Nachts, am
@@ -86,7 +86,7 @@ require_once __DIR__ . '/konfig_lib.php';
  *
  * BEI `unzustellbar` BLEIBT DIE ADRESSE, und das ist eine ausdrueckliche
  * Ausnahme von der Zusage in `smtp.php`: „Die Einladung an X kam nie an" ist
- * ohne X wertlos, und E-P5a-14 verlangt die Liste „mit Empfaenger und Grund".
+ * ohne X wertlos; die Liste steht „mit Empfaenger und Grund".
  * Eine Liste GESCHEITERTER Zustellungen ist kein Protokoll darueber, wer Post
  * BEKOMMEN hat, sondern eine Maengelliste. Die Ausnahme steht im Kopf von
  * `smtp.php` neben der Zusage — nicht davon getrennt.
@@ -154,7 +154,7 @@ const MAIL_JE_LAUF = 10;
  * DER NACHRICHTENKATALOG.
  *
  * Je Eintrag:
- *   art       Fuer die Liste und spaeter den Reiter im Protokoll (P5c).
+ *   art       Fuer die Liste und spaeter den Reiter im Protokoll.
  *   frist     Sekunden, die die Nachricht sinnvoll bleibt. `null` = unbegrenzt.
  *             Ein Versuch nach Ablauf wird nicht mehr unternommen.
  *   pflicht   Werte, die `$daten` tragen MUSS. Fehlt einer, wirft die
@@ -186,7 +186,7 @@ function mail_katalog(): array
 
         /* ZWEI EINTRAEGE FUER DENSELBEN LINK, und das ist kein Versehen:
          * `admin_user.php` (Verwaltung loest aus) und `reset_request.php`
-         * (die Nutzerin selbst) schickten bis Web 20.7.0 fast denselben Text
+         * (die Nutzerin selbst) schicken fast denselben Text
          * — die Selbstbedienung aber MIT dem Satz „Falls du das nicht
          * angefordert hast, kannst du diese E-Mail einfach ignorieren".
          * Der gehoert dorthin und nur dorthin: Wer die Verwaltung gebeten
@@ -236,7 +236,7 @@ function mail_katalog(): array
                 . "einzige, die im Missbrauchsfall noch dir gehört."),
         ],
 
-        /* DIE DREI NACHRICHTEN DES KONTO-LEBENSZYKLUS (P5b/AP5, E-P5b-16). */
+        /* DIE DREI NACHRICHTEN DES KONTO-LEBENSZYKLUS. */
 
         'adresse_bestaetigen' => [
             'art' => 'konto', 'frist' => 86400, 'pflicht' => ['link', 'alt'],
@@ -347,21 +347,20 @@ function mail_katalog(): array
                 . 'verdrängt. Bitte alte Backups entfernen, die Aufbewahrung senken oder die '
                 . 'Grenze erhöhen.'),
         ],
-        /* DER WECHSEL DES SERVERSCHLUESSELS (Schritt 18, SR-03, E-SR-22,
-         * E-SR-62): bei Beginn und bei Abschluss an JEDES Konto der Rolle
+        /* DER WECHSEL DES SERVERSCHLUESSELS: bei Beginn und bei Abschluss an JEDES Konto der Rolle
          * BetreiberIn (`mail_betreiberinnen()`), nur Kennungen, nie Werte. Wer
          * den Wechsel nicht ausgeloest hat, erfaehrt so, dass an den
          * Sicherungen der Anlage etwas geschehen ist — und die Regel zum
-         * bisherigen Blatt (E-SR-10) steht dort, wo sie gelesen wird, bevor
+         * bisherigen Blatt steht dort, wo sie gelesen wird, bevor
          * jemand Papier vernichtet.
          *
-         * ZWEI SCHLUESSEL SEIT WEB 21.12.1 (H-SR-06, F-SR-82): Eine offene
+         * ZWEI SCHLUESSEL: Eine offene
          * Mail desselben Schluessels an dieselbe Adresse gilt beim
-         * Einreihen als ueberholt. Mit einem gemeinsamen verschwand eine
-         * Beginn-Mail, die noch auf ihren naechsten Versuch wartete, mit dem
+         * Einreihen als ueberholt. Mit einem gemeinsamen verschwaende eine
+         * Beginn-Mail, die noch auf ihren naechsten Versuch wartet, mit dem
          * Abschluss — gerade die mit „Warst du das nicht". `weg` sagt, ob
-         * der Wechsel ueber die Karte kam oder von Hand in config.php stand
-         * (E-SR-74). */
+         * der Wechsel ueber die Karte kam oder von Hand in config.php stand.
+         * */
         'serverschluessel_gewechselt' => [
             'art' => 'betrieb', 'frist' => 86400, 'pflicht' => ['neu', 'alt', 'link'],
             'betreff' => fn(array $d): string => (($d['weg'] ?? 'oberflaeche') === 'hand'
@@ -407,8 +406,8 @@ function mail_katalog(): array
             'text' => fn(array $d): string => mail_rahmen('Hallo,', $d['kern']),
         ],
 
-        /* WIDERSPRUCH GEGEN EINEN ADRESSWECHSEL DURCH DIE VERWALTUNG (R17-20,
-         * E-R17-45) — an jede BetreiberIn, ohne Adressen. */
+        /* WIDERSPRUCH GEGEN EINEN ADRESSWECHSEL DURCH DIE VERWALTUNG — an jede
+         * BetreiberIn, ohne Adressen. */
         'adresse_widerspruch' => [
             'art' => 'betrieb', 'frist' => 86400, 'pflicht' => ['kern', 'link'],
             'betreff' => fn(array $d): string => 'Widerspruch gegen einen Adresswechsel — ' . $n,
@@ -426,7 +425,7 @@ function mail_katalog(): array
             'text' => fn(array $d): string => mail_rahmen('Hallo,', $d['kern']),
         ],
 
-        /* ---- Selbstregistrierung (P5b/AP3, E-P5b-02, -13) ------------
+        /* ---- Selbstregistrierung ------------
          *
          * VIER EINTRAEGE, UND ZWEI DAVON GEHEN AN JEMANDEN, DER VIELLEICHT
          * GAR KEIN KONTO WILL. Die Registrierungsseite antwortet jedem
@@ -451,7 +450,7 @@ function mail_katalog(): array
                 . "nichts, und nach 48 Stunden wird die Anfrage von selbst gelöscht."),
         ],
 
-        /* DIESE MAIL IST DER PREIS DER NEUTRALEN ANTWORT (E-P5b-13). Die
+        /* DIESE MAIL IST DER PREIS DER NEUTRALEN ANTWORT. Die
          * Seite darf nicht sagen „diese Adresse hat schon ein Konto" — das
          * waere eine Kontoauskunft an jeden, der Adressen durchprobiert.
          * Also sagt sie nichts, und die Auskunft geht an den, den sie
@@ -470,7 +469,7 @@ function mail_katalog(): array
         ],
 
         'freigeschaltet' => [
-            'art' => 'konto', 'frist' => 86400, 'pflicht' => [],
+            'art' => 'konto', 'frist' => 86400, 'pflicht' => ['link'],
             'betreff' => fn(array $d): string => 'Dein Zugang ist frei — ' . $n,
             'text' => fn(array $d): string => mail_rahmen('Hallo,',
                 "dein Zugang zur " . $n . " ist jetzt freigeschaltet.\n"
@@ -479,11 +478,11 @@ function mail_katalog(): array
         ],
 
         /* EINE LETZTE MAIL BEIM VERFALL, und sie ist ausdruecklich
-         * gewuenscht (E-P5b-02). Ohne sie waere der Verfall das, was jede
+         * gewuenscht. Ohne sie waere der Verfall das, was jede
          * Warteschlange schlecht macht: Man wartet, und irgendwann merkt
          * man, dass nichts mehr kommt. Der Satz „du kannst sie neu stellen"
          * ist der Zweck der Mail — nicht die Absage. */
-        /* DIESELBE BESTAETIGUNG, NOCH EINMAL (P5c/AP4, E-P5c-14). Verwaltung
+        /* DIESELBE BESTAETIGUNG, NOCH EINMAL. Verwaltung
          * oder Support haben sie angestossen, weil die erste nicht ankam oder
          * untergegangen ist. Eigener Eintrag, weil die Frist eine andere ist:
          * Der Link gilt nicht 48 Stunden ab jetzt, sondern bis zu dem
@@ -504,7 +503,7 @@ function mail_katalog(): array
                 . "Link passiert nichts, und zum genannten Zeitpunkt wird die Anfrage gelöscht."),
         ],
 
-        /* DER ZWEITFAKTOR IST ZURUECKGESETZT (P5c/AP5, E-P5c-42). Die Mail
+        /* DER ZWEITFAKTOR IST ZURUECKGESETZT. Die Mail
          * geht an die Kontoadresse, und zwar IMMER — auch dann, wenn die
          * Person selbst darum gebeten hat. Wer sie NICHT erbeten hat, erfaehrt
          * so, dass an seinem Konto die zweite Schranke gefallen ist; das ist
@@ -512,12 +511,12 @@ function mail_katalog(): array
         'totp_zurueckgesetzt' => [
             'art' => 'konto', 'frist' => 86400, 'pflicht' => ['link'],
             'betreff' => fn(array $d): string => 'Zweitfaktor zurückgesetzt — ' . $n,
-            /* DER ERSTE SATZ HÄNGT AM WEG (Konzept RW, RW-03, E-RW-14): Die
-             * Verwaltung (E-P5c-42), der Wiederherstellungsschlüssel am
-             * Code-Schritt oder — seit Schritt 18, SR-04 — der Notzugang der
+            /* DER ERSTE SATZ HÄNGT AM WEG: Die
+             * Verwaltung, der Wiederherstellungsschlüssel am
+             * Code-Schritt oder der Notzugang der
              * einzigen BetreiberIn. `weg` ist kein Pflichtwert — fehlt er,
-             * bleibt der Satz der Verwaltung stehen, wörtlich wie seit
-             * Web 20.42.0. Der Notzugang nennt, was er verlangt hat: Wer die
+             * bleibt der Satz der Verwaltung stehen. Der Notzugang nennt, was
+             * er verlangt hat: Wer die
              * Mail bekommt, ohne es gewesen zu sein, weiß dann, dass jemand
              * Webspace, Datenbank UND Passwort hatte. */
             'text' => fn(array $d): string => mail_rahmen('Hallo,',
@@ -553,7 +552,7 @@ function mail_katalog(): array
                 }),
         ],
 
-        /* DER RÜCKWEG IST ERNEUERT (Konzept RW, RW-02, E-RW-06). Nur beim
+        /* DER RÜCKWEG IST ERNEUERT. Nur beim
          * ERSETZEN, nicht beim ersten Anlegen nach der Anmeldung: Wer den
          * Rückweg eines Kontos an sich nähme, hinterlässt damit eine Spur im
          * Postfach. Das erste Anlegen geschieht still bei einer gewöhnlichen
@@ -571,7 +570,7 @@ function mail_katalog(): array
                 . "bei der Verwaltung."),
         ],
 
-        /* ADRESSWECHSEL DURCH DIE VERWALTUNG (R17-20, F-R17-06, E-R17-45) —
+        /* ADRESSWECHSEL DURCH DIE VERWALTUNG —
          * an die ALTE Adresse, mit dem Link zur Entscheidung. Ersetzt fuer
          * diesen Weg die blosse Hinweismail `adresswechsel`: Die konnte nur
          * berichten, diese kann aufhalten. Der Link fuehrt auf eine Seite mit
@@ -594,7 +593,7 @@ function mail_katalog(): array
                 . "Kontos werden beendet."),
         ],
 
-        /* NEUE WIEDERHERSTELLUNGSCODES (R17-20, F-R17-43). Die Codes sind ein
+        /* NEUE WIEDERHERSTELLUNGSCODES. Die Codes sind ein
          * dauerhafter zweiter Faktor; wer sie mit einer erbeuteten Sitzung neu
          * erzeugt, entwertet die alten — die rechtmaessige Person merkte es
          * sonst erst, wenn ihre Codes nicht mehr gelten. Muster
@@ -611,9 +610,9 @@ function mail_katalog(): array
                 . "neue Codes und melde dich bei der Verwaltung."),
         ],
 
-        /* DER WIEDERHERSTELLUNGSSCHLUESSEL IST ERNEUERT (R17-20, F-R17-10).
+        /* DER WIEDERHERSTELLUNGSSCHLUESSEL IST ERNEUERT.
          * Wer Passwort und Sitzung hat, ersetzt damit `pat_wrap_rc` durch eine
-         * eigene Huelle; bis Web 23.1.0 stand das nur im Protokoll, und das
+         * eigene Huelle; das Protokoll allein
          * sieht die Rolle user nicht. Dasselbe Muster wie `rueckweg_erneuert`. */
         'schluessel_erneuert' => [
             'art' => 'konto', 'frist' => 86400, 'pflicht' => ['link'],
@@ -627,7 +626,7 @@ function mail_katalog(): array
                 . "den Schlüssel und melde dich bei der Verwaltung."),
         ],
 
-        /* EIN KONTO-BACKUP IST FREIGEGEBEN (R17-20, F-R17-02). An Herkunfts-
+        /* EIN KONTO-BACKUP IST FREIGEGEBEN. An Herkunfts-
          * und Zieladresse — in aller Regel dieselbe, dann eine Mail. Bis Web
          * 23.1.0 geschah eine Freigabe still; das Zielkonto bekam beim
          * Einloesen den entsiegelten Bestand des Herkunftskontos. */
@@ -644,7 +643,7 @@ function mail_katalog(): array
                 . "eingespielt ist."),
         ],
 
-        /* PASSKEYS (Schritt 18, SR-09, E-SR-33) — nach dem Muster
+        /* PASSKEYS — nach dem Muster
          * `rueckweg_erneuert`: Ein neuer zweiter Faktor an einem erbeuteten
          * Konto bliebe sonst still. Die Anmeldung mit Passkey schreibt keine
          * Mail (je Anmeldung waere Rauschen). */
@@ -670,11 +669,11 @@ function mail_katalog(): array
                 . "bei der Verwaltung."),
         ],
 
-        /* EIN PASSKEY MIT ZURUECKGELAUFENEM ZAEHLER (H-SR-08, E-SR-46,
-         * F-SR-36). Ausloesen kann das nur, wer einen gueltigen Schluessel hat
+        /* EIN PASSKEY MIT ZURUECKGELAUFENEM ZAEHLER. Ausloesen kann das nur,
+         * wer einen gueltigen Schluessel hat
          * und im Code-Schritt vorher das Passwort — das staerkste Zeichen fuer
          * ein erbeutetes Konto, das die Anlage kennt. Den Reiter Verwaltung
-         * sieht die Rolle `user` nicht; ohne diese Mail erfuhr sie davon
+         * sieht die Rolle `user` nicht; ohne diese Mail erfuehre sie davon
          * nichts. Hoechstens eine je Passkey und Tag (`gewarnt_am`). */
         'passkey_zaehler' => [
             'art' => 'konto', 'frist' => 86400, 'pflicht' => ['link', 'bezeichnung'],
@@ -704,7 +703,7 @@ function mail_katalog(): array
         ],
 
         /* DIE SAMMELMAIL AN DIE VERWALTUNG. Muster ist
-         * `sicherheit_sammel` (E-P5a-07): EIN Eintrag mit fertigem Kern,
+         * `sicherheit_sammel`: EIN Eintrag mit fertigem Kern,
          * nicht eine Mail je Registrierung. Ohne diese Bauform bekaeme die
          * Verwaltung bei einer Anmeldewelle hundert Einzelmails und laese
          * keine davon. Die Drossel auf eine Mail je Stunde sitzt beim
@@ -718,7 +717,7 @@ function mail_katalog(): array
                 . "mehrere Registrierungen eingehen."),
         ],
 
-        /* DIE RUNDMAIL (P5c/AP1, E-P5c-13). Der Kern ist der Text der
+        /* DIE RUNDMAIL. Der Kern ist der Text der
          * Ankuendigung, woertlich — die BetreiberIn hat ihn geschrieben, und
          * der Streifen zeigt denselben. Die FRIST IST EIN TAG: Die Rundmail
          * wird nur eingereiht (`$sofort = false`), und auf einer Anlage ohne
@@ -739,9 +738,8 @@ function mail_katalog(): array
         'testmail' => [
             'art' => 'betrieb', 'frist' => 3600, 'pflicht' => [],
             /* DIE TESTMAIL BEKOMMT DENSELBEN RAHMEN wie jede andere, und das
-             * ist der Punkt: Bis Web 20.7.0 war sie die einzige ohne Anrede,
-             * ohne Kontaktzeile und ohne Grussformel — und die einzige, deren
-             * Betreff „Gen-EM" fehlte. Wer den Versand prueft, soll sehen,
+             * ist der Punkt: Anrede, Kontaktzeile, Grussformel und
+             * Betreff-Praefix wie jede. Wer den Versand prueft, soll sehen,
              * wie eine ECHTE Mail dieser Anlage aussieht. */
             'betreff' => fn(array $d): string => 'Testmail — ' . $n,
             'text' => fn(array $d): string => mail_rahmen('Hallo,',
@@ -752,13 +750,14 @@ function mail_katalog(): array
 }
 
 /**
- * WER BETRIEBSPOST BEKOMMT — an einer Stelle (E-P5a-40, R83).
+ * WER BETRIEBSPOST BEKOMMT — an einer Stelle.
  *
- * DREI STELLEN BAUTEN DIESELBE LISTE: `speicher_lib.php` (Kontingente),
+ * DREI STELLEN BRAUCHEN DIESELBE LISTE: `speicher_lib.php` (Kontingente),
  * `adminbackup_lib.php` zweimal (Speichergrenze, faellige Sicherungen). Drei
- * Verbraucher sind zwei mehr als der eine, ab dem R83 das Zentralisieren
- * verlangt — und die dritte hatte bereits eine abweichende Sortierung
- * (`ORDER BY email` statt `ORDER BY id`) und eine zusaetzliche Bedingung.
+ * Verbraucher sind zwei mehr als der eine, ab dem „eine Stelle je Sache"
+ * (CLAUDE.md 4) das Zentralisieren verlangt — und drei Abschriften laufen
+ * auseinander, etwa in Sortierung (`ORDER BY email` statt `ORDER BY id`)
+ * oder einer zusaetzlichen Bedingung.
  *
  * STEHT EINE BETREIBERADRESSE IN DEN EINSTELLUNGEN, GEHT DIE POST NUR DORTHIN.
  * Sonst an alle Konten mit Verwaltungsrecht, wie bisher. Die Richtung ist
@@ -787,16 +786,16 @@ function mail_betriebsziele(bool $nurAngemeldete = false): array
 }
 
 /**
- * JEDES KONTO DER ROLLE BETREIBERIN — fuer die Post, die genau sie betrifft
- * (Schritt 18, SR-03, E-SR-62).
+ * JEDES KONTO DER ROLLE BETREIBERIN — fuer die Post, die genau sie betrifft.
+ * 
  *
  * NICHT `mail_betriebsziele()`. Jene geht an die Betriebsadresse, wenn eine
  * eingetragen ist, sonst an alle Verwaltungskonten (auch Admin). Der Wechsel
  * des Serverschluessels ist eine Sache der BetreiberInnen: Sie halten das
  * Blatt, und eine, die den Wechsel nicht ausgeloest hat, soll davon
  * erfahren — auch wenn Betriebspost sonst an ein Sammelpostfach geht. Eine
- * zweite Liste mit anderer Frage ist keine Doppelung (R83 zaehlt Wege zur
- * selben Sache).
+ * zweite Liste mit anderer Frage ist keine Doppelung (das Register zaehlt Wege
+ * zur selben Sache).
  *
  * Nur Konten mit gesetztem Passwort — eines, das noch nie angemeldet war,
  * hat die Einladung noch offen.
@@ -817,8 +816,8 @@ function mail_betreiberinnen(): array
 /**
  * Betreff-Praefix aus `config.php` — Staging traegt „[Staging]".
  *
- * AN EINER STELLE, und das ist der Punkt: Bis Web 20.7.0 haette man ihn in
- * zehn Betreffzeilen einsetzen muessen, und die zehnte haette ihn vergessen.
+ * AN EINER STELLE, und das ist der Punkt: Sonst muesste man ihn in
+ * zehn Betreffzeilen einsetzen, und die zehnte vergaesse ihn.
  */
 function mail_praefix(): string
 {
@@ -839,7 +838,7 @@ function mail_praefix(): string
  * @param bool   $sofort     `false` = nur einreihen; der Job traegt sie hinaus
  * @return string MAIL_ZUGESTELLT | MAIL_WARTET | MAIL_ABGELEHNT
  *
- * NUR EINREIHEN (P5c/AP1, F-P5c-29) gibt es fuer die Rundmail: Der sofortige
+ * NUR EINREIHEN gibt es fuer die Rundmail: Der sofortige
  * Versuch kostet bis zu MAIL_BUDGET_S je Nachricht, und vierzig Empfaenger
  * in einem Seitenaufruf waeren bis zu 200 s. Es ist EIN Parameter an DIESER
  * Funktion und keine zweite: Pruefung, Praefix, Frist und das Schliessen
@@ -961,7 +960,7 @@ function mail_zeile_versuchen(int $id, ?float $budget = null): bool
     }
 
     /* DER GRUND SAMT KENNUNG — siehe `smtp_letzter_fehler()`. Das
-     * Fehlerprotokoll nennt seit E-P5a-37 keinen Empfaenger mehr; die
+     * Fehlerprotokoll nennt keinen Empfaenger; die
      * Kennung ist der Faden, an dem sich beides wieder zusammenfuehren
      * laesst. Ohne sie waere die Unzustellbar-Liste eine Aussage ohne
      * Ursache und das Protokoll eine Ursache ohne Adressat. */
@@ -971,7 +970,7 @@ function mail_zeile_versuchen(int $id, ?float $budget = null): bool
         : $f['grund'] . ' (Kennung ' . $f['kennung'] . ')';
 
     /* KEINE STUFE MEHR? Dann endgueltig unzustellbar — und DIE ADRESSE
-     * BLEIBT STEHEN (E-P5a-39): „Die Einladung an X kam nie an" ist ohne X
+     * BLEIBT STEHEN: „Die Einladung an X kam nie an" ist ohne X
      * wertlos. Der Rumpf faellt trotzdem, wegen des Tokens. */
     if ($versuche >= count(MAIL_LEITER)) {
         $pdo->prepare('UPDATE mail_warteschlange
@@ -1048,17 +1047,17 @@ function mail_job(PDO $pdo, array $zustand, callable $zeitLinks): array
 /**
  * DIE LAGE DER WARTESCHLANGE — fuer die eine Zeile auf der Statusseite.
  *
- * KEINE EIGENE SEITE UND KEIN KNOPF, und das ist eine Entscheidung
- * (E-P5a-41): Eine Liste ist eine neue Darstellung und braucht nach
+ * KEINE EIGENE SEITE UND KEIN KNOPF, und das ist eine Entscheidung:
+ * Eine Liste ist eine neue Darstellung und braucht nach
  * `CLAUDE.md` 5 eine Freigabe mit Mockup. Was eine BetreiberIn hier braucht,
  * ist zudem keine Liste, sondern eine Antwort auf eine Frage — „ist etwas
- * liegengeblieben?" —, und die passt in eine Zeile. Der volle Bereich mit
- * Reitern kommt in P5c (Protokoll); bis dahin ist diese Zeile die Auskunft.
+ * liegengeblieben?" —, und die passt in eine Zeile. Den vollen Bereich mit
+ * Reitern hat das Protokoll (Reiter E-Mail).
  *
  * DIE ADRESSEN STEHEN IN DER ZEILE, hoechstens drei. „2 unzustellbar" ohne
  * Adresse ist eine Aussage, mit der niemand etwas anfangen kann — und der
- * Grund, aus dem E-P5a-39 die Adresse beim Endzustand `unzustellbar`
- * ueberhaupt stehenlaesst.
+ * Grund, aus dem die Adresse beim Endzustand `unzustellbar`
+ * ueberhaupt stehen bleibt.
  *
  * @return array{offen:int, unzustellbar:int, zuspaet:int, adressen:string[],
  *               grund:?string}|null  `null` = die Tabelle gibt es nicht

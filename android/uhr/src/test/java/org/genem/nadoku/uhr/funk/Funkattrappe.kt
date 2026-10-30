@@ -5,9 +5,9 @@ import org.genem.nadoku.gemeinsam.Nachrichtenweg
 /**
  * Die Transport-Attrappe — **an ihrer Stelle steht in der App der Data Layer**.
  *
- * SIE IST DER GRUND, WARUM VON C2 ÜBERHAUPT ETWAS BELEGT IST. Der echte Data
- * Layer braucht zwei gekoppelte Geräte; es gibt weder Uhr (E-R45-7) noch
- * Emulator (E-R45-8). Was hier geprüft wird, ist alles **oberhalb** der
+ * SIE IST DER GRUND, WARUM VOM FUNKWEG ÜBERHAUPT ETWAS BELEGT IST. Der echte
+ * Data Layer braucht zwei gekoppelte Geräte; es gibt weder Uhr noch
+ * Emulator. Was hier geprüft wird, ist alles **oberhalb** der
  * Naht — und das ist der Teil, in dem Ereignisse verlorengehen können.
  *
  * SIE KANN, WAS DER FUNK KANN: zustellen, nicht zustellen, und — der

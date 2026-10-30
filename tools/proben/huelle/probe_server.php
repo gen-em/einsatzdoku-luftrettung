@@ -9,7 +9,7 @@
  *   Rundlauf   eine Hülle mit zufälligem Schlüssel öffnet die Referenz
  *              (Python), mit dem privaten Schlüssel aus den Vektoren
  *   Innenform  `gh_spur_innen()` gleich `referenz.innen_binaer()`, auch
- *              für einen Punkt ohne Höhe (E-S11-39)
+ *              für einen Punkt ohne Höhe
  *
  * Aufruf:  php tools/proben/huelle/probe_server.php
  * Rückgabe: 0 alles gleich · 1 Abweichung · 2 nicht gelaufen

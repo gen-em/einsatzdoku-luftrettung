@@ -13,14 +13,14 @@ declare(strict_types=1);
  *   'checkbox'                      Haken (0/1); optional 'children':
  *                                   Unterfelder, nur sichtbar/gespeichert,
  *                                   wenn der Haken gesetzt ist
- *   'loc'                           ORTSFELD (Web 6.1.0): Bezeichnung wie
+ *   'loc'                           ORTSFELD: Bezeichnung wie
  *                                   'text' — samt 'max', 'placeholder' und
  *                                   'suggest_src' —, dazu ZWEI optionale
  *                                   Koordinatenspalten, benannt in 'lat_col'
  *                                   und 'lon_col'. Die Bedienung uebernimmt
  *                                   assets/ortsfeld.js (Chip, Adresssuche,
  *                                   Plus Code); die Koordinaten sind ueberall
- *                                   FREIWILLIG (E39) — ohne sie bleibt es ein
+ *                                   FREIWILLIG — ohne sie bleibt es ein
  *                                   reines Textfeld ohne Pin und ohne Linie.
  *                                   Umgekehrt gilt wie beim Einsatzort:
  *                                   Koordinaten ohne Bezeichnung werden
@@ -34,7 +34,7 @@ declare(strict_types=1);
  *                                                  in db.php
  *                                   Beide liefern die eigenen
  *                                   Stammdaten DES STANDORTS, der am Diensttag
- *                                   hinterlegt ist (E15) — es gibt keine
+ *                                   hinterlegt ist — es gibt keine
  *                                   standortuebergreifenden Stammdaten mehr.
  *                                   Freitext bleibt speicherbar (Stammdaten
  *                                   sind aenderbar), ein nicht mehr gelisteter
@@ -43,7 +43,7 @@ declare(strict_types=1);
  *
  * Weitere Schluessel:
  *   'day_col'   => true|'check'     Spalte in der Tagestabelle (Text bzw. ✓).
- *                                   Seit Web 5.4.0 generisch ausgewertet:
+ *                                   Generisch ausgewertet:
  *                                   mf_tagesspalten() in mission_fields_lib.php
  *                                   ist die EINZIGE Stelle, die diesen
  *                                   Schluessel liest. api/day.php liefert die
@@ -57,19 +57,19 @@ declare(strict_types=1);
  *   'role_gate' => Rollenkennung aus CREW_ROLES (db.php)
  *                                   Feld nur zeigen, wenn der DIENSTTAG diese
  *                                   Rolle anbietet — also eine Zeile in
- *                                   `day_crew` dafuer traegt (E8). Bis Web
+ *                                   `day_crew` dafuer traegt. Bis Web
  *                                   5.10.0 wurde stattdessen der Hubschrauber
  *                                   befragt; seit dem Einfrieren des
  *                                   Rollensatzes ist der Diensttag die Quelle,
  *                                   und eine spaetere Aenderung am
- *                                   Rettungsmittel aendert an ihm nichts (A4).
+ *                                   Rettungsmittel aendert an ihm nichts.
  *                                   Das Feld wird trotzdem gerendert und nur
  *                                   versteckt — sonst sendet der Browser es
  *                                   nicht mit und die Speicherlogik wuerde
  *                                   einen vorhandenen Wert loeschen. Ein
  *                                   bereits belegtes Feld bleibt darum immer
  *                                   sichtbar. Ein neutraler Diensttag hat keine
- *                                   Rollen (E26): Dann sind alle
+ *                                   Rollen: Dann sind alle
  *                                   rollengebundenen Felder verborgen, ausser
  *                                   den belegten.
  *
@@ -78,7 +78,7 @@ declare(strict_types=1);
  *                                   Zuordnen). Verhalten exakt wie 'role_gate':
  *                                   rendern und verstecken, nie weglassen; ein
  *                                   bereits belegtes Feld bleibt sichtbar. Ist
- *                                   die Art NULL (neutraler Diensttag, E26),
+ *                                   die Art NULL (neutraler Diensttag),
  *                                   greift KEIN artgebundenes Feld — beide
  *                                   Artenbloecke bleiben verborgen.
  *
@@ -96,10 +96,10 @@ declare(strict_types=1);
  *
  *   'cap_gate' => Faehigkeit        Feld nur zeigen, wenn der DIENSTTAG diese
  *                                   Faehigkeit traegt (`day_capabilities`,
- *                                   eingefroren beim Zuordnen, E29). Kennungen:
+ *                                   eingefroren beim Zuordnen). Kennungen:
  *                                   VEHICLE_CAPABILITIES in db.php.
  *
- *                                   ERSETZT DIE ARTPRUEFUNG VOLLSTAENDIG (E29):
+ *                                   ERSETZT DIE ARTPRUEFUNG VOLLSTAENDIG:
  *                                   Ein zusaetzliches 'kind_gate' waere eine
  *                                   zweite Formulierung derselben Aussage —
  *                                   und die erste, die beim naechsten Umbau
@@ -126,18 +126,17 @@ declare(strict_types=1);
  *      'not_in' => ['<wert>', …],     wenn das uebergeordnete Auswahlfeld
  *   ]                                KEINEN der genannten Werte hat.
  *
- *                                   Bis Web 6.0.0 gab es bedingte Unterfelder
- *                                   ausschliesslich unter Checkboxen; unter
- *                                   einem 'select' wurden Kinder immer
- *                                   gerendert und immer gespeichert. Anders als
+ *                                   Bedingte Unterfelder gibt es auch unter
+ *                                   einem 'select', nicht nur unter
+ *                                   Checkboxen. Anders als
  *                                   bei den Gates wird hier GELEERT statt nur
  *                                   versteckt: Ein Transportziel hinter
  *                                   „Ambulant" waere kein schuetzenswerter
  *                                   Bestand, sondern ein Widerspruch in den
- *                                   Daten (A5). Die Aenderung ist sichtbar —
+ *                                   Daten. Die Aenderung ist sichtbar —
  *                                   das Feld verschwindet vor dem Speichern.
  *
- *   'gruppe' => Kennung             FORMULARGRUPPE (Web 7.0.0). Nur an Feldern
+ *   'gruppe' => Kennung             FORMULARGRUPPE. Nur an Feldern
  *                                   der obersten Ebene; Unterfelder folgen
  *                                   ihrem Elternfeld. Die Gruppen, ihre
  *                                   Ueberschriften und ihre Reihenfolge stehen
@@ -148,14 +147,14 @@ declare(strict_types=1);
  *
  *   'nebeneinander' => true         Das Feld teilt sich eine Zeile mit seinen
  *                                   unmittelbaren Nachbarn derselben Gruppe,
- *                                   die dasselbe verlangen (Web 7.0.0). Gedacht
+ *                                   die dasselbe verlangen. Gedacht
  *                                   fuer kurze Haken wie Sekundaertransport und
  *                                   Fehleinsatz — zwei Woerter, die
  *                                   untereinander zwei Zeilen kosten und
  *                                   nebeneinander eine.
  *
  *   'vorbelegt_bei' => [            VORBELEGUNG EINER CHECKBOX, abhaengig vom
- *      '<spalte>' => '<wert>',      Wert eines ANDEREN Feldes (Web 7.0.0). Der
+ *      '<spalte>' => '<wert>',      Wert eines ANDEREN Feldes. Der
  *   ]                               Haken wird gesetzt, sobald das genannte
  *                                   Feld den genannten Wert annimmt — aber NUR,
  *                                   solange niemand ihn von Hand angefasst hat.
@@ -179,7 +178,7 @@ declare(strict_types=1);
  *                                   `missions`, sondern als Zeile in
  *                                   `mission_crew (mission_id, role_code,
  *                                   name)`. Grund: Die Besatzung ist seit Web
- *                                   6.0.0 normalisiert (E7) — feste
+ *                                   6.0.0 normalisiert — feste
  *                                   Rollenspalten tragen mit zwei
  *                                   Rettungsmittelarten nicht mehr. Wer den
  *                                   Katalog auswertet, MUSS diesen Schluessel
@@ -190,8 +189,8 @@ declare(strict_types=1);
  *   'ohne_spalte' => true           nur bei 'store' => 'pat': Das Feld hat
  *                                   auch keine ALTE Klartextspalte mehr, die
  *                                   das Formular beim Speichern leeren
- *                                   muesste (seit Web 23 das Transportziel,
- *                                   S11-12). Ohne den Schluessel gilt der
+ *                                   muesste (etwa das Transportziel).
+ *                                   Ohne den Schluessel gilt der
  *                                   Feldname als solche Spalte (`notes`).
  *   'day_label' => 'Winde'          Spaltentitel (sonst 'label'). Wird
  *                                   unmaskiert ausgegeben und darf deshalb
@@ -199,9 +198,9 @@ declare(strict_types=1);
  *   'placeholder'
  *   'suggest_src'                   nur bei 'text' und 'loc': Quelle der
  *                                   Vorschlaege; Freitext bleibt moeglich.
- *                                   Seit S9/AP1 (E-S9-07) zeichnet sie
+ *                                   Sie zeichnet
  *                                   assets/vorschlagsliste.js unter dem Feld,
- *                                   nicht mehr eine native <datalist>.
+ *                                   nicht eine native <datalist>.
  *                                     'transport_dests'  Stammdaten-Tabelle
  *                                     'crew:<rolle>'     Besatzungs-Vorbelegungen
  *                                                        der Rolle (CREW_ROLES)
@@ -215,7 +214,7 @@ declare(strict_types=1);
  * Der Einsatzort (Adresse + Koordinaten, Photon-Autocomplete) ist bewusst
  * KEIN Eintrag hier — er liegt Ende-zu-Ende-verschlüsselt im pat_blob.
  *
- * Der ABFAHRTORT (Web 6.1.0, E34) ebenso wenig, aus zwei Gruenden: Seine
+ * Der ABFAHRTORT ebenso wenig, aus zwei Gruenden: Seine
  * Auswahl speichert eine REGEL (`missions.start_src` — 'base', 'prev_site',
  * 'prev_dest', 'manual'), deren Beschriftungen nicht ihre Datenbankwerte sind,
  * und der manuelle Ort liegt wie der Einsatzort verschluesselt im pat_blob
@@ -224,18 +223,16 @@ declare(strict_types=1);
  * ihn deshalb ausdruecklich, unmittelbar unter dem Einsatzort
  * (einsatz_form.php).
  *
- * Die Einsatznummer ist bewusst KEIN Eintrag hier — sie liegt seit Web 2.9.0
+ * Die Einsatznummer ist bewusst KEIN Eintrag hier — sie liegt
  * Ende-zu-Ende-verschlüsselt im pat_blob, weil sich über sie bei der
  * Leitstelle die betroffene Person ermitteln lässt.
  */
 
-/* ---- Besatzungsfelder aus dem Rollenkatalog erzeugen (E4) -----------------
+/* ---- Besatzungsfelder aus dem Rollenkatalog erzeugen -----------------
  *
- * Bis Web 5.10.0 standen hier fuenf Eintraege ausgeschrieben — je einer fuer
- * Pilot 1, Pilot 2, HEMS-TC, Flugretter und Sonstige. Mit den bodengebundenen
- * Rollen waeren es sieben geworden, und jede neue Rolle haette diese Liste,
- * das Formular, den Export und die Importprofile gleichzeitig anfassen muessen.
- * Die Quelle ist jetzt CREW_ROLES in db.php; wer eine Rolle ergaenzt, ergaenzt
+ * Keine ausgeschriebenen Eintraege je Rolle: Jede neue Rolle muesste sonst
+ * diese Liste, das Formular, den Export und die Importprofile gleichzeitig
+ * anfassen. Die Quelle ist CREW_ROLES in db.php; wer eine Rolle ergaenzt, ergaenzt
  * sie DORT und nirgends sonst.
  *
  * Der Feldname bleibt `crew_<rolle>` — er ist der Name des Formularfeldes und
@@ -244,12 +241,12 @@ declare(strict_types=1);
  *
  * Die Reihenfolge ist die des Katalogs, ueber alle Arten hinweg. Welche Felder
  * SICHTBAR sind, entscheidet 'role_gate' anhand des Diensttags — ein
- * bodengebundener Dienst zeigt Fahrer, Praktikant und Sonstige und sonst nichts
- * (A3). Eine Aufteilung des Katalogs nach Art waere hier also nicht nur
+ * bodengebundener Dienst zeigt Fahrer, Praktikant und Sonstige und sonst nichts.
+ * Eine Aufteilung des Katalogs nach Art waere hier also nicht nur
  * unnoetig, sondern falsch: Ein Einsatz kann eine belegte Rolle tragen, die die
  * Art des Tages nicht vorsieht, und die muss sichtbar bleiben.
  */
-/* DER EINE SATZ AN DEN KLARTEXT-FREITEXTFELDERN (S9/AP7, E-S9-02, Nr. 132).
+/* DER EINE SATZ AN DEN KLARTEXT-FREITEXTFELDERN.
  *
  * Er steht an EINER Stelle und nicht viermal ausgeschrieben: Ein Satz, der an
  * vier Feldern verschieden lautet, ist kein Versprechen mehr, sondern vier.
@@ -259,17 +256,17 @@ declare(strict_types=1);
  * Getragen wird er von `bw_info`, `other_ema`, den Besatzungs-Freitexten und —
  * ausserhalb dieses Katalogs — vom Notizfeld des DIENSTTAGS (index.php).
  *
- * NICHT getragen wird er von `notes`: Die Notizen des Einsatzes sind seit
- * Web 19.0.0 verschluesselt und tragen stattdessen das Schloss. Wer den
+ * NICHT getragen wird er von `notes`: Die Notizen des Einsatzes sind
+ * verschluesselt und tragen stattdessen das Schloss. Wer den
  * Hinweis dort ergaenzt, sagt das Gegenteil der Wahrheit. */
 $mf_hinweis_klartext = 'Klartext — keine Patientendaten';
 
 $mf_crew_kinder = [];
 foreach (CREW_ROLES as $mf_code => $mf_rolle) {
     $mf_crew_kinder['crew_' . $mf_code] = [
-        // Textfelder mit Vorschlagsliste, nicht Auswahlfelder (Web 5.5.0,
-        // Entscheidung E8): Wer aushilft, steht oft nicht in den Stammdaten —
-        // eine reine Auswahl liess genau diesen Fall nicht dokumentieren. Die
+        // Textfelder mit Vorschlagsliste, nicht Auswahlfelder: Wer aushilft,
+        // steht oft nicht in den Stammdaten — eine reine Auswahl liesse genau
+        // diesen Fall nicht dokumentieren. Die
         // Vorbelegungen der Rolle bleiben als Vorschlaege erhalten, Freitext
         // ist zusaetzlich moeglich.
         'label'       => $mf_rolle['label'],
@@ -283,15 +280,10 @@ foreach (CREW_ROLES as $mf_code => $mf_rolle) {
     ];
 }
 
-/* ---- Reihenfolge = FORMULARREIHENFOLGE (Web 7.0.0) ------------------------
+/* ---- Reihenfolge = FORMULARREIHENFOLGE ------------------------
  *
- * Die Liste stand bis Web 6.3.0 in der Reihenfolge, in der die Felder
- * entstanden sind: Transport zuerst, weil er als letztes Grossfeld dazukam,
- * Notizen zuletzt, weil sie schon immer unten standen. Im Formular las sich
- * das quer zur Arbeit — die Transportart stand ueber dem Einsatzort, und
- * „Weitere Rettungsmittel" hing zwischen Bergwacht und Besatzung.
- *
- * Jetzt folgt die Liste dem Ablauf des Einsatzes, und JEDES FELD NENNT SEINE
+ * Nicht die Reihenfolge, in der die Felder entstanden sind — die liest sich
+ * im Formular quer zur Arbeit. Die Liste folgt dem Ablauf des Einsatzes, und JEDES FELD NENNT SEINE
  * GRUPPE ('gruppe'). Das Formular rendert Gruppe fuer Gruppe mit eigener
  * Ueberschrift; welche Felder in welche gehoert, entscheidet allein dieser
  * Schluessel — nicht eine zweite Liste im Formular, die beim naechsten Feld
@@ -318,10 +310,10 @@ return [
         // Harter Umbruch statt weichem Trennstrich: Die Zeitraum- und die
         // Suchtabelle (assets/missiontable.js) beschriften diese Spalte
         // ebenso. Solange 'day_col' wirkungslos war, fiel der Unterschied
-        // nicht auf (Web 5.4.0).
+        // nicht auf.
         'day_col' => 'check', 'day_label' => 'Sekundär<br>Transport',
     ],
-    /* FEHLEINSATZ (E17). EIN Haken ohne Unterauswahl — ausdruecklich so
+    /* FEHLEINSATZ. EIN Haken ohne Unterauswahl — ausdruecklich so
      * entschieden (Abschnitt 7): Ob storniert, abgebrochen oder von vornherein
      * gegenstandslos, ist eine Unterscheidung, die im Nachhinein selten
      * verlaesslich zu treffen ist. */
@@ -339,14 +331,14 @@ return [
 
     /* ---- Gruppe „Transport" -----------------------------------------------
      *
-     * TRANSPORTART (E17). Sie ist das ordnende Feld der Einsatzdokumentation
+     * TRANSPORTART. Sie ist das ordnende Feld der Einsatzdokumentation
      * geworden: Zielklinik, Schockraum und NA-Begleitung haengen daran und
      * entfallen bei „Ambulant" — also dann, wenn die Patientin nicht
      * transportiert wurde.
      *
-     * SIE HEISST SEIT WEB 7.0.0 „TRANSPORTART" und nicht mehr „Transport".
-     * „Transport" war zugleich der Name der Gruppe, in der sie steht, und der
-     * Name eines Feldes darin — und im Altbestand ausserdem der Spaltentitel
+     * SIE HEISST „TRANSPORTART" und nicht „Transport".
+     * „Transport" ist zugleich der Name der Gruppe, in der sie steht, und der
+     * Name eines Feldes darin — und in alten Dateien ausserdem der Spaltentitel
      * fuer die ZIELKLINIK (siehe assets/import_profiles.js). Drei Bedeutungen
      * fuer ein Wort sind zwei zu viel.
      *
@@ -357,10 +349,10 @@ return [
     'transport_mode' => [
         'label' => 'Transportart', 'type' => 'select', 'gruppe' => 'transport',
         /* WERT LINKS, BESCHRIFTUNG RECHTS. Die Spalte ist ein
-         * `ENUM('air','ground','ambulant')` — sie stammt aus der Migration der
-         * Web 6.0.0 und ist englisch benannt wie alle uebrigen Spalten. Eine
-         * Liste ['Luft','Boden','Ambulant'] haette die Beschriftung in die
-         * Spalte geschrieben und dort still abgeschnitten. Beide Schreibweisen
+         * `ENUM('air','ground','ambulant')` — sie ist englisch benannt wie alle
+         * uebrigen Spalten. Eine
+         * Liste ['Luft','Boden','Ambulant'] schriebe die Beschriftung in die
+         * Spalte, und dort wuerde sie still abgeschnitten. Beide Schreibweisen
          * loest mf_optionen() auf (mission_fields_lib.php). */
         'options' => ['air' => 'Luft', 'ground' => 'Boden', 'ambulant' => 'Ambulant'],
         'children' => [
@@ -368,7 +360,7 @@ return [
                 'label' => 'NA-Begleitung', 'type' => 'checkbox',
                 // 'not_in' nennt den GESPEICHERTEN Wert, nicht die Beschriftung.
                 'show_if' => ['field' => 'transport_mode', 'not_in' => ['ambulant']],
-                /* VORBELEGT BEI LUFT (Web 7.0.0). Ein luftgebundener Transport
+                /* VORBELEGT BEI LUFT. Ein luftgebundener Transport
                  * ohne Notarzt an Bord ist die Ausnahme, nicht die Regel — der
                  * Haken war damit der am haeufigsten vergessene des Formulars.
                  * Gesetzt wird er NUR, solange niemand ihn von Hand angefasst
@@ -380,18 +372,15 @@ return [
                  * ohne dort je einen gespeicherten Wert zu ueberschreiben. */
                 'vorbelegt_bei' => ['transport_mode' => 'air'],
             ],
-            /* ZIELKLINIK ALS ORTSFELD (E37/E38/E40). Freitext und
+            /* ZIELKLINIK ALS ORTSFELD. Freitext und
              * Vorschlagsliste, dazu die optionale Koordinate.
              *
-             * SEIT S11-05b VERSCHLUESSELT ('store' => 'pat', R78, E-S11-12).
-             * Bis dahin lagen Name und Koordinate im KLARTEXT
-             * (`dest_lat`/`dest_lon`), und ihr Pin war ohne Freischalten
-             * sichtbar. Jetzt stehen sie im `pat_blob` unter
+             * VERSCHLUESSELT ('store' => 'pat'). Name und Koordinate
+             * stehen im `pat_blob` unter
              * `transport_dest` als {addr, lat, lon} — derselbe Aufbau wie der
-             * Einsatzort `loc`. Die Spalten `transport_dest`, `dest_lat` und
-             * `dest_lon` trugen danach nur noch den Altbestand und sind mit
-             * Web 23 gefallen (S11-12) — deshalb `ohne_spalte` und keine
-             * `lat_col`/`lon_col` mehr. Die Vorschlagsliste der Zielkliniken
+             * Einsatzort `loc`. Klartextspalten dafuer gibt es nicht —
+             * deshalb `ohne_spalte` und keine `lat_col`/`lon_col`. Die
+             * Vorschlagsliste der Zielkliniken
              * (`transport_dests`) bleibt Stammdatum im Klartext: Sie sagt, wohin
              * man fliegen KANN, nicht wohin jemand geflogen ist. Der Haken
              * „Schockraum" darunter bleibt Klartext — er ist kein Ort.
@@ -399,14 +388,14 @@ return [
              * EINGEFROREN AM EINSATZ, nicht ueber den Namen aufgeloest: Das
              * Feld ist Freitext, und eine Aufloesung ueber Namensgleichheit
              * verloere die Koordinate, sobald jemand den Stammdatensatz
-             * umbenennt (A13p). */
+             * umbenennt. */
             'transport_dest' => [
                 'label' => 'Transportziel', 'type' => 'loc', 'max' => 190,
                 'placeholder' => 'z. B. Klinikum Westried',
                 'suggest_src' => 'transport_dests',
                 'store' => 'pat',
                 'ohne_spalte' => true,
-                /* PIN-KNOPF UND KARTE (S9/AP2, E-S9-06 d; PS-7). Ein per
+                /* PIN-KNOPF UND KARTE. Ein per
                  * Karte gewaehltes Ziel ist ein AD-HOC-WERT DIESES EINSATZES
                  * und kein Stammdatensatz — die Koordinate wird am Einsatz
                  * eingefroren (im Blob), die Zielklinik-Liste
@@ -417,7 +406,7 @@ return [
                  * (optional)" — was es einsammelt, sind aber laengst keine
                  * Zahlen mehr, sondern eine Adresse, ein Plus Code oder ein
                  * Stammdatentreffer. Die Koordinate ist das ERGEBNIS und steht
-                 * danach als Merkfeld darunter (Web 7.0.0). */
+                 * danach als Merkfeld darunter. */
                 'such_label' => 'Lokalisation Transportziel (optional)',
                 'show_if' => ['field' => 'transport_mode', 'not_in' => ['ambulant']],
                 'children' => [
@@ -476,7 +465,7 @@ return [
         'gruppe' => 'mittel',
     ],
     'other_ema' => [
-        /* „Weiterer Notarzt" statt „Anderer Notarzt" (Web 7.0.0). „Anderer"
+        /* „Weiterer Notarzt" statt „Anderer Notarzt". „Anderer"
          * las sich, als sei der eigene ersetzt worden; gemeint ist ein
          * zusaetzlicher, der ebenfalls am Einsatz war — dieselbe Logik wie bei
          * „Weitere Rettungsmittel" direkt darueber. */
@@ -494,10 +483,8 @@ return [
         // Besatzung (COALESCE-Regel, jetzt ueber zwei TABELLEN statt zwei
         // Spaltensaetze) liefert api/mission.php weiterhin als 'crew_effektiv'.
         //
-        // KEINE Spalte in der Tagestabelle (Web 5.10.0). Sie war seit Web 5.4.0
-        // zu sehen — der Eintrag 'day_col' hier hatte davor keine Wirkung, weil
-        // die Spalten hartkodiert waren (Backlog Nr. 10). Im taeglichen Gebrauch
-        // trug sie nichts bei: Der Haken steht bei den allermeisten Taegen in
+        // KEINE Spalte in der Tagestabelle. Im taeglichen Gebrauch
+        // traegt sie nichts bei: Der Haken steht bei den allermeisten Taegen in
         // keiner einzigen Zeile und kostete trotzdem Breite in einer Tabelle,
         // die auf schmalen Geraeten ohnehin knapp ist. Wo die abweichende
         // Besatzung wirklich interessiert, steht sie vollstaendig — in der
@@ -510,18 +497,16 @@ return [
 
     /* ---- Gruppe „Notizen" -------------------------------------------------
      *
-     * 'store' => 'pat' (S9/AP7): Das Feld ist KEINE Spalte in `missions` mehr,
+     * 'store' => 'pat': Das Feld ist KEINE Spalte in `missions` mehr,
      * sondern ein Schluessel im Ende-zu-Ende-verschluesselten `pat_blob`.
      * mf_ist_spalte() nimmt es damit von selbst aus jedem SELECT, INSERT und
-     * UPDATE — dieselbe Mechanik, die seit Web 6.0.0 die Besatzung aus
+     * UPDATE — dieselbe Mechanik, die die Besatzung aus
      * `missions` heraushaelt ('store' => 'crew').
      *
-     * DER PLATZHALTER IST WEG. Er lautete „Freitext (keine Patientendaten!)"
-     * und war die Notbremse dafuer, dass hier Klartext auf dem Server landete.
-     * Mit der Verschluesselung ist die Warnung gegenstandslos — und sie
+     * KEIN PLATZHALTER „Freitext (keine Patientendaten!)". Mit der
+     * Verschluesselung ist die Warnung gegenstandslos — und sie
      * stuende der Sache im Weg: In die Notizen GEHOERT, was zum Einsatz zu
-     * sagen ist. Die Spalte `missions.notes` bleibt NULL-faehig stehen, bis
-     * P8 sie entfernt (R60).
+     * sagen ist. Die Spalte `missions.notes` bleibt NULL-faehig stehen.
      */
     'notes' => [
         'label' => 'Notizen', 'type' => 'textarea', 'max' => 2000,

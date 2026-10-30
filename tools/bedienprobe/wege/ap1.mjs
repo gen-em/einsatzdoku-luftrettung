@@ -1,4 +1,4 @@
-/* Wege des Arbeitspakets AP1 — die eine Vorschlagsliste (E-S9-07, E-S9-08).
+/* Wege der Gruppe `AP1` — die eine Vorschlagsliste.
  * ===========================================================================
  *
  * Drei Wege, drei Prüfpunkte des Konzepts:
@@ -158,7 +158,7 @@ export const wege = [
       }));
       /* DIE ZEILENHOEHE ALS ZAHL, nicht als Behauptung: Die Liste traegt
        * `min-height: var(--knopf)` und soll damit beiden Bedienhoehen von
-       * selbst folgen (R76). Gemessen wird, was dasteht. */
+       * selbst folgen. Gemessen wird, was dasteht. */
       const hoehe = await k.gemesseneHoehe('.vorschlaege .vorschlag');
       await k.bild('ap1-transportziel-eine-liste');
 
@@ -298,7 +298,7 @@ export const wege = [
        * mit der Herkunft — die Zeile ist dort rund 51 px hoch und damit in
        * beiden Stufen dieselbe: `--knopf` ist eine UNTERGRENZE, kein Sollmass.
        * Das Besatzungsfeld hat nur die Hauptzeile; hier muss die Umschaltung
-       * 44/36 (R76) tatsaechlich messbar sein. */
+       * 44/36 tatsaechlich messbar sein. */
       const einzeilig = gefunden ? await k.gemesseneHoehe(EINTRAG) : null;
       let wert = '';
       if (gefunden) {

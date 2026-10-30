@@ -10,9 +10,9 @@ import org.genem.nadoku.handy.aufzeichnung.Rohpunkt
 import org.genem.nadoku.handy.senden.Phaseneintrag
 
 /**
- * Der Puffer: alles, was noch nicht bestätigt beim Server liegt (E-S4-06).
+ * Der Puffer: alles, was noch nicht bestätigt beim Server liegt.
  *
- * SQLITE ALS BORDMITTEL, ohne ORM (E-S4-04). Was hier gebraucht wird, sind
+ * SQLITE ALS BORDMITTEL, ohne ORM. Was hier gebraucht wird, sind
  * vier Tabellen, zwei Indizes und ein Dutzend Abfragen — dafür eine
  * Bibliothek mitzunehmen hieße, sie in `docs/Lizenzen.md` zu führen und bei
  * jeder Sicherheitsmeldung zu verfolgen.
@@ -34,12 +34,11 @@ class Puffer(kontext: Context, name: String = DATEINAME) :
     SQLiteOpenHelper(kontext, name, null, FASSUNG) {
 
     /*
-     * DER ÄNDERUNGSZÄHLER (R17-24, Entscheidung der Betreiberin). Die
-     * Hauptansicht las bis 0.18.0 jede Sekunde drei Zahlen über SQLite
-     * (`rueckstand()`, `abgewiesen()`, `verwerfbar()`) auf dem Hauptfaden —
-     * auf einem alten Gerät mit vollem Puffer ein Ruckeln je Sekunde, obwohl
-     * sich die Zahlen nur mit einem Schreibvorgang ändern. Jetzt zählt der
-     * Puffer jeden Schreibvorgang, und die Ansicht liest nur nach, wenn
+     * DER ÄNDERUNGSZÄHLER. Läse die Hauptansicht jede Sekunde drei Zahlen
+     * über SQLite (`rueckstand()`, `abgewiesen()`, `verwerfbar()`) auf dem
+     * Hauptfaden, wäre das auf einem alten Gerät mit vollem Puffer ein
+     * Ruckeln je Sekunde, obwohl sich die Zahlen nur mit einem
+     * Schreibvorgang ändern. Deshalb zählt der Puffer jeden Schreibvorgang, und die Ansicht liest nur nach, wenn
      * [aenderungen] sich bewegt hat.
      *
      * DER ZÄHLER STEIGT NACH DEM SCHREIBEN, nicht davor (`finally` in
@@ -63,7 +62,7 @@ class Puffer(kontext: Context, name: String = DATEINAME) :
      */
     private val zaehler = AtomicLong(0)
 
-    /** Wie oft dieser Puffer seit dem Start geschrieben hat (R17-24). */
+    /** Wie oft dieser Puffer seit dem Start geschrieben hat. */
     val aenderungen: Long get() = zaehler.get()
 
     private inline fun <T> schreibe(zaehlt: Boolean = true, block: (SQLiteDatabase) -> T): T =
@@ -121,9 +120,7 @@ class Puffer(kontext: Context, name: String = DATEINAME) :
             )
             """.trimIndent()
         )
-        /* Phasen (B5). Sie stehen schon hier, weil eine Schemaänderung an
-         * einem Puffer, in dem ein laufender Dienst liegt, teurer ist als
-         * eine Tabelle, die eine Fassung lang leer bleibt.
+        /* Phasen.
          *
          * KEIN UNIQUE AUF (paket, nummer): Mehrfache Einträge derselben
          * Phase sind ausdrücklich erlaubt und bleiben erhalten (Vertrag 3) —
@@ -148,7 +145,7 @@ class Puffer(kontext: Context, name: String = DATEINAME) :
     }
 
     /**
-     * Die Buchführung über die Ereignisse der Uhr (C2, E-S4-10).
+     * Die Buchführung über die Ereignisse der Uhr.
      *
      * ZWEI TABELLEN UND NICHT EINE: `uhr_stand` führt je Uhr die höchste
      * **lückenlos** übernommene Nummer, `uhr_ereignis` die vereinzelten
@@ -189,7 +186,7 @@ class Puffer(kontext: Context, name: String = DATEINAME) :
      * eine noch nicht gesendete Aufzeichnung existiert; ein `DROP TABLE` beim
      * App-Update wäre der stillste denkbare Datenverlust.
      *
-     * 1 → 2 (C2): die beiden Tabellen der Uhr-Buchführung kommen hinzu. Sie
+     * 1 → 2: die beiden Tabellen der Uhr-Buchführung kommen hinzu. Sie
      * sind leer und hängen an nichts — die Migration kann deshalb nichts
      * verlieren.
      */
@@ -322,7 +319,7 @@ class Puffer(kontext: Context, name: String = DATEINAME) :
             "SELECT COUNT(*) FROM punkt WHERE paket_id = ?", arrayOf(paketId.toString()),
         ).use { c -> if (c.moveToFirst()) c.getLong(0) else 0L }
 
-    /** Punkte ab `vonSeq`, höchstens `hoechstens` Stück — für das Senden (B4). */
+    /** Punkte ab `vonSeq`, höchstens `hoechstens` Stück — für das Senden. */
     fun punkte(paketId: Long, vonSeq: Long, hoechstens: Int): List<Rohpunkt> =
         readableDatabase.rawQuery(
             "SELECT breite, laenge, hoehe, zeit FROM punkt WHERE paket_id = ? AND seq >= ? " +
@@ -343,7 +340,7 @@ class Puffer(kontext: Context, name: String = DATEINAME) :
             }
         }
 
-    // ---- Phasen (B5; die Tabelle steht seit B3) ----------------------------
+    // ---- Phasen ------------------------------------------------------------
 
     /**
      * Alle Phasen eines Einsatzes, **in der Reihenfolge ihres Entstehens**.
@@ -375,7 +372,7 @@ class Puffer(kontext: Context, name: String = DATEINAME) :
 
     /**
      * Der Spurpunkt, der einem Zeitpunkt am nächsten liegt — für die
-     * Phasen-Koordinate (E-S4-10).
+     * Phasen-Koordinate.
      *
      * Gesucht wird über **alle Pakete dieses Dienstes**, nicht nur über das
      * eine: Eine Phase, die den Einsatz startet, trägt einen Zeitstempel aus
@@ -432,11 +429,9 @@ class Puffer(kontext: Context, name: String = DATEINAME) :
      * Server einen **veralteten** Stand — und [hatArbeit] sähe das nicht, weil
      * es nur Punkte zählt. Steht das Fahrzeug (kein neuer Punkt), bliebe die
      * Phase liegen, bis der Einsatz abgeschlossen wird; im
-     * Nur-Aufzeichnen-Betrieb sogar bis zum Dienstende.
-     *
-     * Der Fehler stammt aus B5 und ist in C2 aufgefallen, als die Abnahme
-     * verlangte, dass beim Phasenkonflikt Uhr/Handy **beide Einträge gesendet**
-     * werden (Fund B-S4-05). Gesendet, nicht nur gespeichert.
+     * Nur-Aufzeichnen-Betrieb sogar bis zum Dienstende. Beim Phasenkonflikt
+     * Uhr/Handy werden **beide Einträge gesendet** — gesendet, nicht nur
+     * gespeichert.
      */
     fun phaseAnhaengen(paketId: Long, nummer: Int, at: String, breite: Double?, laenge: Double?, quelle: String) {
         schreibe { it.transaction {
@@ -464,7 +459,7 @@ class Puffer(kontext: Context, name: String = DATEINAME) :
             "SELECT quelle FROM phase WHERE paket_id = ? ORDER BY id", arrayOf(paketId.toString()),
         ).use { c -> buildList { while (c.moveToNext()) add(c.getString(0)) } }
 
-    // ---- Buchführung des Sendens (B4) --------------------------------------
+    // ---- Buchführung des Sendens --------------------------------------------
 
     /**
      * Was der Server bestätigt hat.
@@ -517,7 +512,7 @@ class Puffer(kontext: Context, name: String = DATEINAME) :
     }
 
     /**
-     * Die Warteschlange in ihrer Reihenfolge (E-S4-06, wie `Uploader._findJob`):
+     * Die Warteschlange in ihrer Reihenfolge (wie `Uploader._findJob`):
      *
      *   1. abgeschlossene **Einsätze**
      *   2. abgeschlossene **Ruhesegmente**
@@ -543,7 +538,7 @@ class Puffer(kontext: Context, name: String = DATEINAME) :
      *
      * Das laufende Segment zählt bewusst nicht mit — sonst stünde während des
      * ganzen Dienstes „Rückstand 1", und die Anzeige verlöre den einen Zweck,
-     * den sie hat (Backlog Nr. 11).
+     * den sie hat.
      */
     fun rueckstand(): Int =
         readableDatabase.rawQuery(
@@ -554,15 +549,14 @@ class Puffer(kontext: Context, name: String = DATEINAME) :
         ).use { if (it.moveToFirst()) it.getInt(0) else 0 }
 
     /**
-     * Pakete, die der Server mit **400** abgewiesen hat (B-S5Z-06).
+     * Pakete, die der Server mit **400** abgewiesen hat.
      *
      * WARUM SIE EINE EIGENE ZAHL BRAUCHEN. `alsFehlerhaftMerken` nimmt ein
      * Paket aus der Warteschlange **und** aus [rueckstand] — beides zu Recht:
      * Es wird nicht wiederholt (Vertrag 5), und ein Rückstand, der sich nie
-     * abbaut, wäre eine Anzeige ohne Aussage. Die Folge war aber, dass es
-     * **nirgends** mehr auftauchte: Die App sagte „Alles gesendet", während
-     * beim Server ein Segment offen blieb. E-S4-36 hatte die Anzeige dem
-     * Paket D1 zugewiesen; dort ist sie nicht entstanden.
+     * abbaut, wäre eine Anzeige ohne Aussage. Ohne eigene Zahl tauchte es
+     * aber **nirgends** mehr auf: Die App sagte „Alles gesendet", während
+     * beim Server ein Segment offen bleibt.
      */
     fun abgewiesen(): Int =
         readableDatabase.rawQuery(
@@ -571,7 +565,7 @@ class Puffer(kontext: Context, name: String = DATEINAME) :
 
     /**
      * Wie viele der [abgewiesen]en Pakete sich **jetzt** verwerfen lassen —
-     * die abgeschlossenen (Backlog Nr. 114, R4-22).
+     * die abgeschlossenen.
      *
      * WARUM EINE ZWEITE ZAHL. [abgewieseneRaeumen] nimmt nur `final = 1`: Ein
      * laufendes Paket, dessen Teil-Upload eine 400 bekam, wird noch
@@ -586,12 +580,11 @@ class Puffer(kontext: Context, name: String = DATEINAME) :
         ).use { if (it.moveToFirst()) it.getInt(0) else 0 }
 
     /**
-     * Abgewiesene Pakete **räumen** (Backlog Nr. 114, Räumteil; Krypto-Review
-     * AN-2).
+     * Abgewiesene Pakete **räumen**.
      *
-     * WAS BIS 0.13.0 GALT: Ein mit 400 abgewiesenes Paket blieb samt Spur
-     * **für immer** liegen — es überlebte Trennen und Neukopplung, und die
-     * `dienst`-Zeilen wurden nie gelöscht. [alsFehlerhaftMerken] sagt dazu:
+     * WARUM: Sonst bliebe ein mit 400 abgewiesenes Paket samt Spur **für
+     * immer** liegen — es überlebte Trennen und Neukopplung, und die
+     * `dienst`-Zeilen würden nie gelöscht. [alsFehlerhaftMerken] sagt dazu:
      * „gelöscht wird sie nicht, weil dann niemand mehr sähe, dass etwas nicht
      * angekommen ist." Das bleibt richtig — für Tage, nicht für Jahre. Eine
      * Spur, die niemand mehr nachreichen wird, ist kein Beleg mehr, sondern
@@ -612,7 +605,7 @@ class Puffer(kontext: Context, name: String = DATEINAME) :
      * gelöscht — nach dem Upload liest sie niemand mehr ([laufenderDienst]
      * fragt nur nach der offenen). Die laufende bleibt in jedem Fall.
      *
-     * DER BEDIENWEG IST „VERWERFEN" (seit 0.17.0, R4-22, E-R4-09): ein Knopf
+     * DER BEDIENWEG IST „VERWERFEN": ein Knopf
      * unter der roten Zeile der Dienstansicht, mit Rückfrage, ruft diese
      * Funktion ohne Frist. Ansehen und Ausleiten gibt es nicht: Der Server
      * hat das Paket mit 400 endgültig abgelehnt, und ein Nachreichen von
@@ -651,7 +644,7 @@ class Puffer(kontext: Context, name: String = DATEINAME) :
     fun hatArbeit(p: Paketzeile): Boolean =
         !p.metadatenBestaetigt || p.bestaetigtSeq < punktzahl(p.id)
 
-    // ---- Buchführung über die Uhr (C2, E-S4-10) ----------------------------
+    // ---- Buchführung über die Uhr --------------------------------------------
 
     /**
      * Führt [block] als **einen** Schreibvorgang aus.
@@ -763,19 +756,17 @@ data class Dienstzeile(
     val modus: String,
 )
 
-/** Was ein Räumlauf gelöscht hat (Backlog Nr. 114, Räumteil). */
+/** Was ein Räumlauf gelöscht hat. */
 data class Raeumung(val pakete: Int, val dienste: Int) {
     companion object {
         /**
          * Nach so vielen Tagen ist ein abgewiesenes Paket kein Beleg mehr,
-         * sondern ein liegengebliebener Ortsdatensatz (SP-14, AN-2). Die Zahl
+         * sondern ein liegengebliebener Ortsdatensatz. Die Zahl
          * ist **gewählt**, nicht gemessen: lang genug, dass die rote Zeile
          * gesehen und der Fehler am Server gemeldet werden kann, und kurz
          * genug, dass ein verlorenes Handy nicht die Spuren eines ganzen
-         * Jahres trägt. Bis 0.16.1 hieß es hier „und das Paket von Hand
-         * nachgereicht werden kann — der Bedienweg dafür fehlt noch
-         * (Nr. 114)". Nachreichen gibt es nicht (E-R4-09); verwerfen lässt
-         * es sich seit 0.17.0 jederzeit von Hand.
+         * Jahres trägt. Nachreichen gibt es nicht; verwerfen lässt es sich
+         * jederzeit von Hand.
          */
         const val FRIST_TAGE = 30L
     }

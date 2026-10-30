@@ -4,7 +4,7 @@ require_once __DIR__ . '/auth_guard.php';
 require_once __DIR__ . '/apk_lib.php';
 
 /**
- * Die APK-Datei ausliefern (S4/A1, E-S4-16).
+ * Die APK-Datei ausliefern.
  *
  * GET apk.php?d=nadoku-1.0.0.apk
  *
@@ -15,12 +15,12 @@ require_once __DIR__ . '/apk_lib.php';
  * Bandbreite eines geteilten Webspaces ist endlich. `auth_guard.php` bringt
  * die Schranke mit.
  *
- * NEBEN DEN SEITEN UND NICHT UNTER `api/`, aus demselben Grund wie bis Web 22.2.0 `gpx.php`:
+ * NEBEN DEN SEITEN UND NICHT UNTER `api/`:
  * `ist_api_aufruf()` entscheidet am Pfad. Ein `<a href>`, den jemand
  * anklickt, bekaeme dort nach einer Mittagspause `{"error":"session_ende"}`
  * im Browserfenster statt der Anmeldeseite.
  *
- * GET UND OHNE CSRF (M3-11): Was nichts aendert, beantwortet auch kein POST.
+ * GET UND OHNE CSRF: Was nichts aendert, beantwortet auch kein POST.
  *
  * DER NAME WIRD NICHT GEPRUEFT, SONDERN GESUCHT. `apk_liste()` liest, was im
  * Ordner liegt; der Parameter waehlt daraus aus. Ein Pfad, den der Aufrufer
@@ -41,13 +41,13 @@ if ($treffer === null) {
     require_once __DIR__ . '/ui.php';
     /* ui_seite_start() OEFFNET DIE HUELLE, ui_geruest_start() NICHT.
      *
-     * Bis Web 19.3.1 fehlte die erste Zeile hier, und die 404-Seite ging ohne
+     * Ohne die erste Zeile hier ginge die 404-Seite ohne
      * `<!doctype>`, `<head>`, `<title>` und ohne Stylesheet hinaus — sie
-     * begann mit `<header class="kopf">` und endete trotzdem mit
-     * `</body></html>`. Der Browser las sie im Quirks-Modus (`compatMode`
-     * BackCompat) und zeichnete sie in Times New Roman. Gefunden hat es die
-     * neue Pruefung "Seite ohne Geruest" (Backlog Nr. 58) ueber ihre
-     * GEGENRICHTUNG: eine Datei mit Geruest, aber ohne Seitenhuelle.
+     * begaenne mit `<header class="kopf">` und endete trotzdem mit
+     * `</body></html>`. Der Browser laese sie im Quirks-Modus (`compatMode`
+     * BackCompat) und zeichnete sie in Times New Roman. Die Pruefung "Seite
+     * ohne Geruest" findet das ueber ihre GEGENRICHTUNG: eine Datei mit
+     * Geruest, aber ohne Seitenhuelle.
      *
      * Die Seite ist erreichbar, sobald ein Verweis auf ein APK zeigt, das
      * nicht mehr im Ordner liegt — also nach jedem Aufraeumen und aus jedem
@@ -80,6 +80,6 @@ header('X-Content-Type-Options: nosniff');
 header('Cache-Control: private, max-age=86400');
 
 /* Bei mehreren MB nicht ueber `file_get_contents()`: Das haelt die ganze
- * Datei im Speicher, und das Budget ist 64 MB (Z3). */
+ * Datei im Speicher, und das Budget ist 64 MB. */
 if (ob_get_level() > 0) { ob_end_clean(); }
 readfile($pfad);

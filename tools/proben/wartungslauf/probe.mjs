@@ -1,21 +1,24 @@
-/* Wartungslaufprobe, Browserteil (S11-07; Konzept S11 E-S11-68 bis -74).
+/* Wartungslaufprobe, Browserteil.
  *
  * Anlass: Nr. 43 — Packen und Ausdünnen wandern aus den Jobs in den Browser;
  * was der Server nicht mehr prüfen kann (den Inhalt), prüft diese Probe.
  *
  * WAS ES MISST, mit einem Wegwerfkonto und einem Gerät, das verschlossen sendet:
- *   A  das gepackte Format (E-S11-71): ein Stück aus `referenz.py` öffnet im
+ *   A  das gepackte Format: ein Stück aus `referenz.py` öffnet im
  *      Browser Punkt für Punkt gleich; ein Stück aus `gepacktBauen()` öffnet
  *      wieder (Rundlauf, mit Randwerten: keine Höhe, negative, 5000 m, Pol)
- *   B  die Karte im Reiter Backup (M-S11-02): zählt, packt alles zu Stufe 2,
+ *   B  die Karte im Reiter Backup: zählt, packt alles zu Stufe 2,
  *      verlustfrei — außer den Punkten im Schnitt, die jetzt fallen —, die
  *      Marke bleibt, die fehlende Ortshöhe steht danach im Blob
- *   C  „Zeitraum löschen" auf einer gepackten Spur (E-S11-74): bleibt Stufe 2,
+ *   C  „Zeitraum löschen" auf einer gepackten Spur: bleibt Stufe 2,
  *      Marke bleibt, die Punkte im Zeitraum sind fort
  *   D  der stille Lauf der Startseite dünnt nach der Frist aus (Stufe 3) —
  *      die Behalteliste gegen `spur_ausduennung_pruefen()` in PHP, also
  *      unabhängig von der Rechnung im Browser
  *   E  eine Nachlieferung nach dem Ausdünnen wird verworfen und gezählt
+ *   F  die drei Exporte unmittelbar: `ausduennen()` gegen `spur_ausduennen()`,
+ *      `ausduennungPruefen()` mit zwei Fehlern, `lauf()` an einem fälligen
+ *      Ruhesegment
  *
  * Nur gegen die örtliche Anlage. Rückgabewert 0 = alles erfüllt.
  */
@@ -25,7 +28,7 @@ import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { randomBytes } from 'node:crypto';
-import { motorWahl, starten } from '../../motor.mjs';
+import { motorWahl, starten, istOertlich } from '../../motor.mjs';
 
 const HIER   = dirname(fileURLToPath(import.meta.url));
 const WURZEL = join(HIER, '..', '..', '..');
@@ -35,7 +38,7 @@ const PASSWORT = 'umlaufpruefung2026-wartungslauf';
 const KONTO = join(WURZEL, 'tools', 'referenzdatensatz', 'vergleich', 'pruefkonto.py');
 const MODUL = process.env.PLAYWRIGHT_MODUL || '/opt/node22/lib/node_modules/playwright/index.mjs';
 const PW = (m => m.default ?? m)(await import('file://' + MODUL));
-/* Die Engine wählt der Läufer (MOTOR=… oder --motor), R87. */
+/* Die Engine wählt der Läufer (MOTOR=… oder --motor). */
 const MOTOR = motorWahl(process.argv);
 
 let gesamt = 0, offen = 0;
@@ -90,11 +93,11 @@ try {
   const id = Number(php(`$st = db()->prepare("SELECT id FROM users WHERE email = ?");
     $st->execute(['${ADRESSE}']); echo (int)$st->fetchColumn();`));
 
-  const kontext = await browser.newContext({ ignoreHTTPSErrors: true });
+  const kontext = await browser.newContext({ ignoreHTTPSErrors: istOertlich(BASIS) });
   await kontext.route(/tile\.|opentopomap|arcgisonline|basemap\.at/i, r => r.abort());
   /* Bis Teil B bleibt der Lauf aus: Die Anmeldung landet auf der Startseite,
      und der stille Durchgang soll nicht vorgreifen. */
-  /* `abbrechen` (Teil D0, Nr. 393): so viele `tauschen`-Anfragen werden
+  /* `abbrechen` (Teil D0): so viele `tauschen`-Anfragen werden
      abgebrochen, wie die Zahl sagt — dasselbe, was ein Seitenwechsel mitten
      im stillen Lauf tut. */
   let sperre = true, abbrechen = 0;
@@ -109,7 +112,7 @@ try {
     }
     return r.continue();
   });
-  /* WAS DER BROWSER ALS „GEHT NICHT AUF" MELDET, mitschreiben (Nr. 393, F5).
+  /* WAS DER BROWSER ALS „GEHT NICHT AUF" MELDET, mitschreiben.
      Eine Spur, die im stillen Lauf nicht aufgeht, wird gemeldet und
      übersprungen — D1 wäre dann rot, und hier steht, warum. Die Meldung
      selbst käme beim Server nicht an, wenn die Probe vorher weiternavigiert. */
@@ -154,7 +157,7 @@ try {
          ant.map(a => `${a.code}/${a.daten && a.daten.stored_points}`).join(' '));
   const mid = Number(ant[0].daten.id), rid = Number(ant[1].daten.id), rid2 = Number(ant[2].daten.id);
   const dayId = Number(php(`echo (int)db()->query("SELECT day_id FROM missions WHERE id = ${mid}")->fetchColumn();`));
-  /* Ein Schnitt im ersten Ruhesegment: die Punkte 10 bis 14 (E-S11-37). */
+  /* Ein Schnitt im ersten Ruhesegment: die Punkte 10 bis 14. */
   const cutVon = ruhePunkte[10][3], cutBis = ruhePunkte[14][3];
   php(`db()->prepare("INSERT INTO track_cuts (user_id, owner_type, owner_id, mission_id, von_ts, bis_ts, n_punkte, erstellt_am)
        VALUES (?, 'rest', ?, ?, ?, ?, 5, UTC_TIMESTAMP())")->execute([${id}, ${rid}, ${mid}, ${cutVon}, ${cutBis}]);`);
@@ -270,7 +273,7 @@ print(json.dumps({"pk": pk, "st": st, "p": P}))`], { cwd: WURZEL, encoding: 'utf
 
   /* ---- D  Ausdünnen über den stillen Lauf der Startseite ----------------- */
   console.log('\nD — Ausdünnen nach der Frist (Startseite, still)');
-  /* ERST WEG VON DER STARTSEITE (Nr. 393). Ihr stiller Lauf beginnt 1,5 s
+  /* ERST WEG VON DER STARTSEITE. Ihr stiller Lauf beginnt 1,5 s
      nach `load`; kam das in Teil C spät, lief er erst NACH dem
      Zurückdatieren unten und dünnte die Spur selbst aus — D0 fand dann
      nichts mehr zu tauschen („kein Tausch angefragt", 21.10.2026). Die
@@ -280,8 +283,8 @@ print(json.dumps({"pk": pk, "st": st, "p": P}))`], { cwd: WURZEL, encoding: 'utf
        ended_at = DATE_SUB(ended_at, INTERVAL 40 DAY) WHERE id = ${mid}");`);
   const vorD = (await oeffnen())['m' + mid];
 
-  /* D0 — EIN ABGEBROCHENER TAUSCH SETZT DIE SPUR NICHT AUS (Nr. 393, F5).
-     Bis Web 23.0.3 wertete der stille Lauf eine abgebrochene Anfrage
+  /* D0 — EIN ABGEBROCHENER TAUSCH SETZT DIE SPUR NICHT AUS.
+     Wertete der stille Lauf eine abgebrochene Anfrage
      (`status: 0`, etwa weil die Seite verlassen wurde) wie einen Fehler der
      Spur und setzte sie für den ganzen Tab auf die Auslassliste. Gefunden,
      weil D1 in WebKit jedes zehnte Mal rot war: Der Lauf der Seite aus Teil C
@@ -321,6 +324,60 @@ print(json.dumps({"pk": pk, "st": st, "p": P}))`], { cwd: WURZEL, encoding: 'utf
          'D2 Behalteliste: Teilmenge, PHP-Prüfung (2 m / 3 m, Schutzpunkte)', `${nachD.length} von ${vorD.length}, ${urteil}`);
   pruefe(stand('mission', mid).naechste_seq === markeVor.m.naechste_seq, 'D3 Marke bleibt nach dem Ausdünnen',
          String(stand('mission', mid).naechste_seq));
+
+  /* ---- F  Die drei Exporte unmittelbar -----------------------------------
+     `ausduennen`, `ausduennungPruefen` und `lauf` hatten außerhalb der Datei
+     keinen Verwender. Teil D misst sie nur durch den stillen Lauf hindurch;
+     hier stehen sie einzeln, und die Rechnung des Browsers gegen die von
+     `spur_lib.php` — die beiden sollen wörtlich gleich rechnen. */
+  console.log('\nF — die Exporte des Wartungslaufs');
+  const Pf = vorD.map((p, i) => [i, p.lat, p.lon, p.ele, p.ts]);
+  const f = await s.evaluate(([P, z]) => {
+    const b = EdWartungslauf.ausduennen(P, z);
+    const ok = EdWartungslauf.ausduennungPruefen(P, b, z);
+    const ohneLetzten = EdWartungslauf.ausduennungPruefen(P, b.slice(0, -1), z);
+    /* Ein weggelassener Punkt, 0,001° (rund 110 m) verschoben: Die Prüfung
+       muss ihn finden, sonst prüft sie nichts. */
+    const weg = P.findIndex((_, i) => i > 0 && i < P.length - 1 && !b.includes(i));
+    const Q = P.map(q => q.slice());
+    if (weg > 0) { Q[weg][1] += 0.001; }
+    const verschoben = weg > 0 ? EdWartungslauf.ausduennungPruefen(Q, b, z) : 'kein Punkt weggelassen';
+    return { b, ok, ohneLetzten, verschoben, weg };
+  }, [Pf, phasen]);
+  const fDatei = join(ordner, 'f.json');
+  execFileSync('bash', ['-c', `cat > ${fDatei}`], { input: JSON.stringify({ p: Pf, z: phasen, b: f.b }) });
+  const fPhp = JSON.parse(php(`$d = json_decode(file_get_contents('${fDatei}'), true);
+    $b = spur_ausduennen($d['p'], $d['z']); $u = spur_ausduennung_pruefen($d['p'], $d['b'], $d['z']);
+    echo json_encode(['b' => $b, 'urteil' => $u]);`));
+  pruefe(f.b.length > 2 && f.b.length < Pf.length && f.ok === null,
+         'F1 ausduennen() liefert eine Behalteliste, die ausduennungPruefen() besteht',
+         `${f.b.length} von ${Pf.length}, ${f.ok === null ? 'in Ordnung' : f.ok}`);
+  pruefe(JSON.stringify(f.b) === JSON.stringify(fPhp.b) && fPhp.urteil === null,
+         'F2 Browser und spur_lib.php rechnen dieselbe Liste, PHP prüft sie gut',
+         JSON.stringify(f.b) === JSON.stringify(fPhp.b) ? 'gleich' : `Browser ${f.b.length}, PHP ${fPhp.b.length}`);
+  pruefe(typeof f.ohneLetzten === 'string' && /letzte/.test(f.ohneLetzten)
+         && typeof f.verschoben === 'string' && /daneben/.test(f.verschoben),
+         'F3 ausduennungPruefen() findet den fehlenden letzten und einen verschobenen Punkt',
+         `${f.ohneLetzten} · ${f.verschoben}`);
+  /* `lauf` unmittelbar: ein frisches Ruhesegment ist fällig, die Startseite
+     lässt es liegen (Sperre), der Aufruf packt es. */
+  sperre = true;
+  const ruhe3Punkte = Array.from({ length: 12 }, (_, i) => [47.40 + i * 0.0003, 10.05, 620 + i, jetzt + 7000 + i * 30]);
+  const f4 = await senden([{ kind: 'rest_segment', client_ref: 'r-wartungslauf-3', day: tag, day_ref: 'd-wartungslauf-1',
+    started_at: iso(jetzt + 7000), ended_at: iso(jetzt + 7000 + 11 * 30), final: true,
+    track: { seq_from: 0, points: ruhe3Punkte } }]);
+  const rid3 = Number(f4[0].daten && f4[0].daten.id);
+  await s.goto(`${BASIS}/index.php`, { waitUntil: 'load' });
+  await s.waitForTimeout(2500);                  // der stille Lauf ist vorbei, ohne Liste
+  sperre = false;
+  const lz = await s.evaluate(async () => {
+    const ck = await EdKeyGuard.contentKey(PAT_WRAP);
+    return EdWartungslauf.lauf({ ck });
+  });
+  const stufe3 = Number(php(`echo (int)db()->query("SELECT MAX(stufe) FROM track_stuecke WHERE owner_type = 'rest' AND owner_id = ${rid3}")->fetchColumn();`));
+  pruefe(f4[0].code === 200 && lz && lz.getauscht >= 1 && lz.fehler === 0 && stufe3 === 2,
+         'F4 lauf() packt ein fälliges Segment (Stufe 2), ohne Fehler',
+         `${JSON.stringify(lz)}, Stufe ${stufe3}`);
 
   /* ---- E  Nachlieferung nach dem Ausdünnen ------------------------------- */
   console.log('\nE — Nachlieferung nach dem Ausdünnen');

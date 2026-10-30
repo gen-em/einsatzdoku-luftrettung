@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Quelldaten des Referenzdatensatzes pruefen (Arbeitspaket B1).
+"""Quelldaten des Referenzdatensatzes pruefen.
 
 Drei Pruefungen in einem Lauf:
 
@@ -9,7 +9,7 @@ Drei Pruefungen in einem Lauf:
                     Rettungsmittel nicht anbietet, ein Windenhaken an
                     einem Rettungsmittel ohne Winde, Ortszeiten in einer
                     Stunde, die es an dem Tag nicht gibt, reale Namen
-  3. ABDECKUNG   -- jede Zeile der Abdeckungsmatrix (Konzept Abschnitt 5)
+  3. ABDECKUNG   -- jede Zeile der Abdeckungsmatrix
                     gegen die Marken in den Dokumenten
 
 WARUM MIT ZAHLEN. Eine Pruefung ohne Zahl ist keine Pruefung. Der Lauf
@@ -43,12 +43,12 @@ ROLLEN_ART = {"p1": "air", "p2": "air", "hems": "air", "fr": "air",
 # RESUS_LABELS (db.php) und in docs/JSON-Vertrag.md 3.3, wird aber von KEINEM
 # Schreibweg als Ereignis angenommen -- ingest.php verwirft es still,
 # einsatz_form.php weist es ab. Der Reanimationsbeginn steckt in `started_at`
-# der Sitzung. Siehe Fehlerfund F-P1-F.
+# der Sitzung.
 REA_TYPEN = {"zugang", "adrenalin", "rhythmuskontrolle", "defibrillation",
              "intubation", "amiodaron", "sonographie", "rosc", "tod"}
 PHASEN = set(range(2, 10))
 
-# --- Reale Namen, die hier nicht vorkommen duerfen (E-P1-02) ---------------
+# --- Reale Namen, die hier nicht vorkommen duerfen -------------------------
 # Die Geographie ist echt, die NAMEN sind erfunden. Diese Liste faengt das
 # Naheliegende ab: reale Rufnamen der Luftrettung und die Orte, deren
 # Koordinaten der Datensatz benutzt.
@@ -79,7 +79,7 @@ def teilenummern() -> set[str]:
     return set(re.findall(r"'(\d{3}-[A-Z0-9]+-\d{2})'\s*=>", quelle.read_text("utf-8")))
 
 
-# --- Abdeckungsmatrix (Konzept Abschnitt 5) --------------------------------
+# --- Abdeckungsmatrix ------------------------------------------------------
 # Je Zeile: (Dimension, Anforderung, Marken -- eine davon genuegt).
 # Zeilen mit leerer Markenmenge werden STRUKTURELL geprueft (siehe unten).
 MATRIX = [
@@ -92,11 +92,11 @@ MATRIX = [
     # ueberhaupt gibt, und bis dahin belegte sie kein Dokument.
     ("Erfassungsart (R4)", "ohne Track, mit Ort- und Zielkoordinate (Luftlinie)",
      ["luftlinie-ort-ziel"]),
-    # ALLE SECHS HERKUNFTSWERTE (server/geraete_lib.php HERKUNFT_WERTE), seit
-    # R64/AP4. Bis dahin standen hier drei -- und die Zeile "watch" blieb
+    # ALLE SECHS HERKUNFTSWERTE (server/geraete_lib.php HERKUNFT_WERTE).
+    # Standen hier nur drei, blieb die Zeile "watch"
     # gruen, obwohl sechs der Einsaetze, die sie trugen, an einem HANDY
     # haengen. Eine Matrix, die drei von sechs Werten prueft und dabei gruen
-    # meldet, ist genau das Muster F-P3-AQ.
+    # meldet, ist genau die alte Falle.
     ("Herkunft", "watch", ["herkunft-watch"]),
     ("Herkunft", "android", ["herkunft-android"]),
     ("Herkunft", "wear", ["herkunft-wear"]),
@@ -110,11 +110,11 @@ MATRIX = [
     ("Diensttage", "Bodendienst", ["dienst-boden"]),
     ("Diensttage", "Kalendertag mit zwei Diensten", ["zwei-dienste-ein-tag"]),
     ("Diensttage", "Dienst über Mitternacht", ["dienst-ueber-mitternacht"]),
-    # SCHAERFER ALS DIE ZEILE DARUEBER (Schritt 17, R4-16, Nr. 275): Die zwei
+    # SCHAERFER ALS DIE ZEILE DARUEBER: Die zwei
     # Dienste ueber Mitternacht waren beide bodengebunden und beide auf einer
     # Zeitumstellung. Der klassische Fall -- ein Luftdienst in der Nacht, an
     # dem Einsaetze vor UND nach Mitternacht beginnen, ohne Umstellung --
-    # fehlte, und mit ihm jede Probe fuer die Sortierung „Beginn" (AP9b: 01:10
+    # fehlte, und mit ihm jede Probe fuer die Sortierung „Beginn" (01:10
     # vor 23:50). Die Marke wird GERECHNET, nicht getippt: unten, am Ende der
     # Einsatzschleife.
     ("Diensttage", "Luftdienst mit Einsätzen vor und nach Mitternacht, ohne Zeitumstellung",
@@ -122,8 +122,8 @@ MATRIX = [
     ("Diensttage", "Einsatzdatum ≠ Diensttag", ["einsatzdatum-abweichend"]),
     ("Diensttage", "Diensttag ohne Einsatz", ["dienst-ohne-einsatz"]),
     ("Diensttage", "Tagesnotizen", ["notizen-diensttag"]),
-    # DIE DREI TYPEN AUS S9 IM BETRIEB (Demo-Ausbau). Sie standen seit Web
-    # 16.0.0 als Stammdaten im Bestand und trugen keinen einzigen Diensttag —
+    # DIE DREI TYPEN IM BETRIEB (Demo-Ausbau). Sie standen lange
+    # als Stammdaten im Bestand und trugen keinen einzigen Diensttag —
     # der Bestand kannte sie, die Anwendung zeigte sie nie.
     ("Diensttage", "Typ Bergwacht", ["dienst-bergwacht"]),
     ("Diensttage", "Typ Veranstaltung", ["dienst-veranstaltung"]),
@@ -155,9 +155,9 @@ MATRIX = [
     ("Abfahrtort", "Regel prev_site", ["start-prevsite"]),
     ("Abfahrtort", "Regel prev_dest", ["start-prevdest"]),
     ("Abfahrtort", "Regel manual (verschlüsselter pat.start)", ["start-manual"]),
-    # DIE DIMENSION HIESS „LUFTSPEZIFIK" UND IST ES NICHT MEHR (E-DA-06):
+    # DIE DIMENSION HIESS „LUFTSPEZIFIK" UND IST ES NICHT MEHR:
     # Winde und Bergwacht haengen an der Faehigkeit des Diensttags, nicht an
-    # seiner Art, und seit Web 20.3.0 fuehrt ein Bergwachtnotarzt sie auch am
+    # seiner Art, und ein Bergwachtnotarzt fuehrt sie auch am
     # Boden. Der Name der Dimension steht in `matrix_abgleich.md` und im
     # Prueffdokument; ein falscher Name dort faerbt jede spaetere Lesung.
     ("Bergrettung", "Winde mit Cycles", ["winde-cycles"]),
@@ -244,21 +244,13 @@ def zeitpunkt_existiert(s: str) -> tuple[bool, bool]:
     return existiert, eindeutig
 
 
-def ph_zeiten(einsatz: dict) -> dict[int, datetime]:
-    """Erste Zeit je Phasennummer (Mehrfacheintraege sind Korrekturen)."""
-    p: dict[int, datetime] = {}
-    for nr, zeit in einsatz["phasen"]:
-        p.setdefault(nr, lokal(zeit))
-    return p
-
-
 def bewegungsfenster(dienst: dict, einsatz: dict, namen: list[str],
                      koords: list) -> list[tuple[float, float]]:
     """Zeitfenster der Bewegungsabschnitte — als Dauer in Minuten je Abschnitt.
 
     SIE STAND BIS ZUM DEMO-AUSBAU ZWEIMAL, hier und in `erzeugen._fenster()`.
     Der Kommentar begruendete das mit „die Regel selbst ist kurz". Sie war es;
-    mit dem Wegpunkt `zustieg` (E-DA-13) ist sie es nicht mehr — vier
+    mit dem Wegpunkt `zustieg` ist sie es nicht mehr — vier
     Teilstuecke und drei Phasenfenster verlangen eine Zuteilung. Zwei
     Fassungen davon hiessen, dass dieses Skript die Erreichbarkeit eines
     ANDEREN Ablaufs misst als den, den der Generator zeichnet, und dass beide
@@ -294,10 +286,10 @@ def main() -> int:
     dienstdateien = sorted((HIER / "dienste").glob("D*.json"))
     dienste = [json.loads(p.read_text("utf-8")) for p in dienstdateien]
     sperrliste = json.loads((HIER / "pruefschritte" / "sperrliste.json").read_text("utf-8"))
-    # DIE ZWEI GERAETEBLOECKE (R64/AP4). Sie bestimmen, was beim Koppeln an
+    # DIE ZWEI GERAETEBLOECKE. Sie bestimmen, was beim Koppeln an
     # `pair.php` geht -- und damit die Momentaufnahme, die an jedem Einsatz
     # und jedem Segment haengt. Ohne sie stuende sie im ganzen Bestand auf
-    # NULL, und der edbak-Kreislauf belegte fuer R64 nichts.
+    # NULL, und der edbak-Kreislauf belegte fuer die Momentaufnahme nichts.
     geraete = json.loads((HIER / "geraete.json").read_text("utf-8"))["geraete"]
     MODELLE = teilenummern()
     # DER NEUESTE DIENSTTAG. `index.php` oeffnet ihn ohne Zutun, und daran
@@ -353,7 +345,7 @@ def main() -> int:
         rm = fahrzeug.get(dn["rettungsmittel"], {})
         lauf.pruefe(rm.get("art") == dn["art"], f"{n}: Art {dn['art']!r} passt nicht zum Rettungsmittel ({rm.get('art')!r})")
 
-        # DER DIENSTTAG OHNE STANDORT (E-DA-08, seit Web 16.0.0 moeglich).
+        # DER DIENSTTAG OHNE STANDORT.
         #
         # Er ist kein Sonderfall der Quelldaten, sondern einer der Anwendung:
         # `index.php` (`vehicleBaseSync()`) laesst das Standortfeld weg, sobald
@@ -409,7 +401,7 @@ def main() -> int:
                 rollen_belegt.add(rolle)
                 lauf.pruefe((dn["standort"], rolle, name) in vorbeleg,
                             f"{n}: Besatzung {name!r} ({rolle}) fehlt als Vorbelegung am Standort")
-        # SPUR-AUSGANGSPUNKT: PFLICHT UND VERBOT IN EINEM (E-DA-09).
+        # SPUR-AUSGANGSPUNKT: PFLICHT UND VERBOT IN EINEM.
         #
         # Er ist noetig, wo der Wegpunkt `basis` sonst auf nichts aufloest —
         # an einem Standort ohne Koordinaten und an einem Tag ohne Standort.
@@ -447,7 +439,7 @@ def main() -> int:
         if not d["einsaetze"]:
             merke(["dienst-ohne-einsatz"], n)
 
-        # NACHTDIENST IN DER LUFT (R4-16, Nr. 275): Einsatzbeginne an ZWEI
+        # NACHTDIENST IN DER LUFT: Einsatzbeginne an ZWEI
         # Ortsdaten, und Dienstbeginn und -ende tragen denselben UTC-Versatz
         # -- dann liegt keine Zeitumstellung dazwischen. Gerechnet aus den
         # Beginnzeiten, weil es um die Sortierung nach Beginn geht.
@@ -532,7 +524,7 @@ def main() -> int:
             namen = [nm for nm, k in aufgeloest if k]
             fenster = bewegungsfenster(dn, e, namen, koords)
             for i in range(min(len(koords) - 1, len(fenster))):
-                # DER FUSSWEG HAT SEINE EIGENE GRENZE (E-DA-13). 80 km/h waeren
+                # DER FUSSWEG HAT SEINE EIGENE GRENZE. 80 km/h waeren
                 # fuer ihn keine Pruefung, sondern eine Erlaubnis: Ein Steig,
                 # fuer den zwei Minuten vorgesehen sind, laege mit 12 km/h weit
                 # darunter und trotzdem weit ueber allem, was ein Mensch mit
@@ -557,7 +549,7 @@ def main() -> int:
             vorheriger = e
 
             f = e["felder"]
-            # Die Notiz des Einsatzes liegt seit S9/AP7 unter `geschuetzt`;
+            # Die Notiz des Einsatzes liegt unter `geschuetzt`;
             # die Abdeckung braucht deshalb beide Bloecke.
             gs = e["geschuetzt"]
             if f:
@@ -582,7 +574,7 @@ def main() -> int:
                     merke(["besatzung-abweichend"], wo)
                 if f["other_ema"]:
                     merke(["weiterer-notarzt"], wo)
-                # SEIT S9/AP7 unter `geschuetzt`: Die Notiz des Einsatzes liegt
+                # Unter `geschuetzt`: Die Notiz des Einsatzes liegt
                 # im verschluesselten pat_blob. `f["notes"]` liefe hier in
                 # einen KeyError — und zwar sofort, was besser ist als ein
                 # `.get()`, das die Abdeckung still verloere.
@@ -595,7 +587,7 @@ def main() -> int:
                 if f["transport_dest"]:
                     merke(["zielklinik-koordinate" if f["dest_lat"] is not None
                            else "zielklinik-ohne-koordinate"], wo)
-                    # OHNE STANDORT GIBT ES KEINE VORSCHLAGSLISTE (E-DA-08).
+                    # OHNE STANDORT GIBT ES KEINE VORSCHLAGSLISTE.
                     # Das Ziel ist dann Freitext — `nachtragen` schickt es mit
                     # `f_transport_dest` samt Koordinatenpaar, und die Marke
                     # kommt aus dem INHALT und nicht aus einer Behauptung.
@@ -653,7 +645,7 @@ def main() -> int:
                                 f"{wo}: start_src='base' ohne Standort mit Koordinaten")
 
             # OHNE TRACK, ABER MIT BEIDEN KOORDINATEN — die gestrichelte
-            # Luftlinie der Karte (E-DA-08). Aus dem INHALT abgeleitet: kein
+            # Luftlinie der Karte. Aus dem INHALT abgeleitet: kein
             # `route`, ein Einsatzort mit Koordinate und ein Ziel mit
             # Koordinate. Fehlt eines davon, zeichnet die Karte nichts, und
             # die Zeile waere unbelegt — auch wenn eine Marke es behauptete.
@@ -763,9 +755,9 @@ def main() -> int:
         lauf.pruefe(existiert, f"Ortszeit {z} gibt es an diesem Tag nicht (Frühjahrsumstellung)")
         lauf.pruefe(eindeutig, f"Ortszeit {z} ist mehrdeutig (Herbstumstellung)")
 
-    # ---- Zwei Dienste an einem Kalendertag: der zweite am Abend (E-DA-04) --
+    # ---- Zwei Dienste an einem Kalendertag: der zweite am Abend --
     #
-    # OHNE UEBERSCHNEIDUNG. R57 meldet ueberlappende Dienste, und sie hat
+    # OHNE UEBERSCHNEIDUNG. Die Anwendung meldet ueberlappende Dienste, und sie hat
     # recht: Niemand faehrt zwei Dienste gleichzeitig. Der Fall, den der
     # Bestand belegen soll, ist der ANDERE — Notarztdienst tagsueber, danach
     # der Sanitaetsdienst auf der Veranstaltung. Beides derselbe Kalendertag,
@@ -786,7 +778,7 @@ def main() -> int:
             if lokal(danach["dienst"]["beginn"]).hour >= 17:
                 merke(["abenddienst"], danach["kennung"])
 
-    # ---- Import nur an Kalendertagen mit genau EINEM Dienst (B-04) --------
+    # ---- Import nur an Kalendertagen mit genau EINEM Dienst ---------------
     for pfad, d in zip(dienstdateien, dienste):
         mehrere = len(dienste_je_datum[d["dienst"]["day"]]) > 1
         for e in d["einsaetze"]:
@@ -794,7 +786,7 @@ def main() -> int:
                         f"{d['kennung']}: Import-Einsatz an einem Datum mit mehreren Diensten "
                         f"— der Import löst nur über das Datum auf (B-04)")
 
-    # ---- Sperrwoerter in den Geraetebeschriftungen (R64/AP4) ---------------
+    # ---- Sperrwoerter in den Geraetebeschriftungen -------------------------
     #
     # WARUM HIER UND NICHT IN tools/quelltext/. Die Beschriftungen der zwei
     # Referenzgeraete werden ueber `server/demo/fixture.json.gz` zu SICHTBAREM
@@ -803,7 +795,7 @@ def main() -> int:
     # normative Dokumentation, Android, watch/); `tools/` ist in keinem davon,
     # und das war kein Versehen: Dort steht Werkzeug, kein Client. Diese zwei
     # Zeichenketten sind aber weder Werkzeug noch Client, sondern Daten, die
-    # als Text herauskommen -- und bis R64/AP4 hiess das eine davon
+    # als Text herauskommen -- und einmal hiess eine davon
     # „Uhr Luftrettung (Referenz)", mit einem Sperrwort darin, das nie jemand
     # gemessen hat.
     #
@@ -811,7 +803,7 @@ def main() -> int:
     # naechsten Eintrag auseinander, und dann prueft diese Stelle gegen einen
     # Stand, den es nicht mehr gibt.
     #
-    # FEHLT SIE, IST DAS ROT UND NICHT STILL (PK-04). Bis zum 21.09.2026 stand
+    # FEHLT SIE, IST DAS ROT UND NICHT STILL. Bis zum 21.09.2026 stand
     # hier `if sperr.exists():` — die Pruefung uebersprang sich dann selbst und
     # meldete gruen, ohne eine Beschriftung angesehen zu haben. Der Umzug der
     # Liste nach tools/quelltext/ haette genau das ausgeloest.
@@ -833,7 +825,7 @@ def main() -> int:
                         f"Ersatz: {m['ersatz']}")
                 lauf.pruefungen += 1
 
-    # ---- Geraete (R64/AP4) ------------------------------------------------
+    # ---- Geraete ----------------------------------------------------------
     nummern = sorted(g["nummer"] for g in geraete)
     lauf.pruefe(nummern == ["11", "12"],
                 f"geraete.json: erwartet werden die Nummern 11 und 12, da stehen {nummern}")
@@ -845,7 +837,7 @@ def main() -> int:
             # DIE TEILENUMMER MUSS ES GEBEN UND SIE MUSS ECHT SEIN. Eine
             # erfundene liefe in den Rueckfall `geraet_teil`; das Demo-Konto
             # zeigte dann eine Nummer statt eines Modells -- also gerade
-            # nicht das, was R64 belegen soll.
+            # nicht das, was die Momentaufnahme belegen soll.
             lauf.pruefe(bool(b.get("teil")), f"{wo}: eine Uhr braucht eine Teilenummer")
             lauf.pruefe(not MODELLE or b.get("teil") in MODELLE,
                         f"{wo}: Teilenummer {b.get('teil')!r} steht nicht in "
@@ -877,7 +869,7 @@ def main() -> int:
                         f"{wo2}: Kennung {kennung} passt nicht zu Geraet {g['nummer']} "
                         f"({b['art']}, erlaubt: {', '.join(erlaubt)})")
 
-    # ---- Schnitte (R64/AP4, E-R64-16) -------------------------------------
+    # ---- Schnitte ---------------------------------------------------------
     schnittzahl = 0
     for d in dienste:
         n = d["kennung"]
@@ -923,13 +915,13 @@ def main() -> int:
             # aber keine entschluesselbare Diagnose.
             lauf.pruefe(d["dienst"]["day"] != neuester_tag,
                         f"{wo}: der Schnitt liegt am neuesten Diensttag ({neuester_tag})")
-    # WIE VIELE SCHNITTE — die Zahl steht nicht mehr fest (E-DA-11).
+    # WIE VIELE SCHNITTE — die Zahl steht nicht mehr fest.
     #
-    # E-R64-16 verlangte GENAU EINEN, und die Zeile hiess `schnittzahl == 1`.
+    # Verlangt war GENAU EINER, und die Zeile hiess `schnittzahl == 1`.
     # Sie prueft seither die Summe gegen die Liste: So viele, wie in den
     # Quelldaten stehen, und mindestens einer. Der Sinn der alten Zeile bleibt
     # damit erhalten — sie sollte verhindern, dass der Bestand den Schnitt
-    # STILL verliert (Backlog Nr. 63: Der Sperrvermerk muss die Sicherung
+    # STILL verliert (Der Sperrvermerk muss die Sicherung
     # ueberstehen, und ohne einen Schnitt belegt ihn niemand). Was sie
     # zusaetzlich verhinderte, war ein zweiter Schnitt, und dafuer gab es nie
     # einen Grund.
@@ -976,12 +968,12 @@ def main() -> int:
         "alle speicherbaren Ereignisarten (neun)": (alle_rea_typen == REA_TYPEN,
                                     f"fehlen: {sorted(REA_TYPEN - alle_rea_typen)}"),
         # FRUEHER: „≥ 2 Standorte, einer ohne Koordinaten". Diese Zeile ist mit
-        # dem Demo-Ausbau umformuliert (F-DA-1, Weg a). Der Auftrag gibt allen
-        # Standorten Koordinaten (E-DA-09) — die alte Zeile pruefte danach
+        # dem Demo-Ausbau umformuliert. Der Auftrag gibt allen
+        # Standorten Koordinaten — die alte Zeile pruefte danach
         # einen Zustand, den es nicht mehr gibt, und mit ihr den einzigen
         # lebenden Fall fuer `spur_ausgangspunkt`. Den gibt es weiterhin, nur
         # an anderer Stelle: am DIENSTTAG OHNE STANDORT, den die Anwendung
-        # seit Web 16.0.0 kennt. Die Zeile prueft jetzt ihn.
+        # kennt. Die Zeile prueft jetzt ihn.
         "≥ 3 Standorte, alle mit Koordinaten": (
             len(stammdaten["standorte"]) >= 3
             and all(s["lat"] is not None and s["lon"] is not None
@@ -995,7 +987,7 @@ def main() -> int:
             and any(not r["faehigkeiten"] and r["art"] == "air" for r in stammdaten["rettungsmittel"]), ""),
         "≥ 1 Boden-Rettungsmittel": (
             any(r["art"] == "ground" for r in stammdaten["rettungsmittel"]), ""),
-        # SEIT WEB 20.3.0 ZULAESSIG (E-DA-06) und damit pruefbar: Faehigkeiten
+        # SEIT WEB 20.3.0 ZULAESSIG und damit pruefbar: Faehigkeiten
         # an einem BODENgebundenen Rettungsmittel — aber nur beim Typ
         # Bergwacht. Die Zeile prueft beide Haelften: dass es den Fall gibt,
         # und dass er auf diesen einen Typ beschraenkt bleibt.
@@ -1032,7 +1024,7 @@ def main() -> int:
 
     # ---- Umfang -----------------------------------------------------------
     # Umfang: 22 Diensttage, im Schnitt rund fünf Einsätze je Dienst (Nachtrag
-    # B1 zur Abdeckungsmatrix — die ursprünglichen 30–40 stammten aus einem
+    # zur Abdeckungsmatrix — die ursprünglichen 30–40 stammten aus einem
     # Entwurf mit deutlich weniger Bodendiensten; das Fenster 80–100 aus dem
     # Stand vor dem Demo-Ausbau).
     #

@@ -10,19 +10,17 @@ module Model {
     var day as Lang.String or Null = null;        // Betriebstag "YYYY-MM-DD"
     var phase as Lang.Number = 1;
 
-    // Dienstkennung (JSON-Vertrag 1.3, Web-Konzept 4.4). Sie entsteht bei
+    // Dienstkennung (JSON-Vertrag 1.3). Sie entsteht bei
     // "Einsatztag starten" und bleibt fuer ALLE Uploads dieses Dienstes
     // unveraendert — gleiches Muster wie client_ref, gleiche Idempotenz.
     //
-    // WOZU. Bis Web 5.10.0 war ein Diensttag (damals noch „Flugtag") ein
-    // KALENDERTAG, und der Server ordnete ueber (Konto, Datum) zu. Seit
-    // Web 6.0.0 ist ein Diensttag eine eigene Zeile: Zwei Dienste an einem
-    // Kalendertag sind der vorgesehene Fall — ein luftgebundener am Tag, ein
-    // bodengebundener am Abend. Aus dem Datum allein laesst sich dann nicht
-    // mehr ableiten, welcher gemeint ist.
-    // Die Kennung sagt es.
+    // WOZU. Ein Diensttag ist kein KALENDERTAG, sondern eine eigene Zeile
+    // auf dem Server: Zwei Dienste an einem Kalendertag sind der vorgesehene
+    // Fall — ein luftgebundener am Tag, ein bodengebundener am Abend. Aus dem
+    // Datum allein laesst sich dann nicht ableiten, welcher gemeint ist. Die
+    // Kennung sagt es.
     //
-    // Die Uhr erfaehrt dabei NICHTS ueber die Einsatzart (E21). Sie sagt nur,
+    // Die Uhr erfaehrt dabei NICHTS ueber die Einsatzart. Sie sagt nur,
     // WELCHER Dienst — nicht, was fuer einer.
     var dayRef as Lang.String or Null = null;
 
@@ -46,7 +44,7 @@ module Model {
         // Fertig uebertragene Eintraege, die nur noch in der Liste stehen,
         // werden dabei gleich entsorgt (Selbstheilung) — sonst zeigte die
         // Sync-Seite dauerhaft "1 Paket offen", obwohl alles angekommen ist.
-        /* GEPARKTE ZAEHLEN NICHT ALS RUECKSTAND (Backlog Nr. 159): An ihnen ist
+        /* GEPARKTE ZAEHLEN NICHT ALS RUECKSTAND: An ihnen ist
          * nichts mehr zu senden, und sie mitzuzaehlen hiesse, dass die Zahl
          * nie wieder auf null geht -- und dass Pair.start() das Trennen
          * dauerhaft verweigert. Entsorgt werden sie hier aber AUCH NICHT: Sie
@@ -101,7 +99,7 @@ module Model {
         }
     }
 
-    /* Der Cast am Ende ist kein Schmuck (Backlog Nr. 13, letzter Rest).
+    /* Der Cast am Ende ist kein Schmuck.
      *
      * Storage.setValue() nimmt als zweiten Parameter einen PolyType aus 16
      * Alternativen — darunter Lang.Dictionary<Storage.KeyType,
@@ -132,7 +130,7 @@ module Model {
     // Die Kennung des LAUFENDEN Dienstes; fehlt sie, wird sie nachgezogen.
     //
     // DER FALL, DEN DAS ABFAENGT: Ein Dienst laeuft bereits, waehrend die Uhr
-    // von 1.7.0 auf 1.8.0 aktualisiert wird. Der gespeicherte Zustand hat dann
+    // von einer Fassung ohne Dienstkennung aktualisiert wird. Der gespeicherte Zustand hat dann
     // kein "dref", der Dienst laeuft aber weiter — ohne diese Zeile truege
     // jeder Einsatz bis Dienstende keine Kennung.
     //
@@ -157,7 +155,7 @@ module Model {
         day = Util.localDay();
         phase = 1;
         dayMissions = 0;
-        dayRef = Util.newRef("d");     // eine Kennung je Dienst (E9)
+        dayRef = Util.newRef("d");     // eine Kennung je Dienst
         _startRestSegment();
         save();
         Track.startPositioning();
@@ -230,7 +228,7 @@ module Model {
     function _startMission() as Void {
         _closeRestSegment();
         mission = {
-            "ref" => Util.newRef("m"),      // Zaehler + Zufall, kein Zeitstempel (M7-03)
+            "ref" => Util.newRef("m"),      // Zaehler + Zufall, kein Zeitstempel
             "day" => Util.localDay(),      // Tag des EINSATZbeginns (0:00-Wechsel)
             "dref" => ensureDayRef(),      // Dienst, zu dem dieser Einsatz gehoert
             "startedAt" => Util.isoNow(), "endedAt" => null,
@@ -273,7 +271,7 @@ module Model {
 
     function _startRestSegment() as Void {
         restSegment = {
-            "ref" => Util.newRef("r"),      // wie beim Einsatz (M7-03)
+            "ref" => Util.newRef("r"),      // wie beim Einsatz
             "day" => Util.localDay(),      // Tag des Segmentbeginns
             "dref" => ensureDayRef(),      // Dienst, zu dem dieses Segment gehoert
             "startedAt" => Util.isoNow(), "endedAt" => null, "final" => false

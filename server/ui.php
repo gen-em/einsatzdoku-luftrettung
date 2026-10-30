@@ -5,8 +5,8 @@ declare(strict_types=1);
  * Fusszeile.
  *
  * Voraussetzung fuer alles ausser der Huelle: auth_guard.php ist geladen
- * ($userId, $userEmail, $userName) samt ist_admin() — die eine Rollenpruefung
- * (M1-15).
+ * ($userId, $userEmail, $userName) samt ist_admin() — die eine Rollenpruefung.
+ * 
  *
  * DIESE DATEI HAT AUF OBERSTER EBENE KEINE ABHAENGIGKEIT, und das muss so
  * bleiben: install.php laedt sie VOR der Ersteinrichtung, zu einem Zeitpunkt,
@@ -18,14 +18,13 @@ declare(strict_types=1);
 /* ---------------------------------------------------------------------------
  * SEITENHUELLE
  *
- * WARUM ES SIE GIBT (P0/A2). Bis Web 7.0.2 baute JEDE Seite ihren Kopf selbst:
- * 28 Bloecke aus Doctype, <html>, <head> und der Eroeffnung des <body>, nahezu
- * gleich und doch uneinheitlich — zwei Schreibweisen des Viewports, zwei
- * Titeltrenner, drei Einrueckungen. Eine Aenderung am Viewport, an den
- * Stylesheets oder ein kuenftiges Mobile-Menue war damit eine 28-fache
- * Aenderung. Jetzt ist sie eine einzige.
+ * WARUM ES SIE GIBT. Baute JEDE Seite ihren Kopf selbst, gaebe es
+ * Dutzende Bloecke aus Doctype, <html>, <head> und der Eroeffnung des <body>,
+ * nahezu gleich und doch uneinheitlich. Eine Aenderung am Viewport, an den
+ * Stylesheets oder am Mobile-Menue waere damit eine vielfache Aenderung.
+ * Hier ist sie eine einzige.
  *
- * ENTSCHIEDENE SCHREIBWEISEN (A2 Punkt 3, am Bestand ausgezaehlt):
+ * ENTSCHIEDENE SCHREIBWEISEN (am Bestand ausgezaehlt):
  *   Viewport      "width=device-width,initial-scale=1" ohne Leerzeichen
  *                 (15 Seiten so, 10 mit Leerzeichen)
  *   Titeltrenner  Gedankenstrich "—" (15 Seiten so, 10 mit "·"). Das Konzept
@@ -36,7 +35,7 @@ declare(strict_types=1);
  * REIHENFOLGE IM KOPF (unveraendert gegenueber dem Bestand):
  *   charset · viewport · Titel · 'kopf' · Leaflet-CSS · style.css · Favicon
  * Leaflet-CSS steht VOR style.css, damit eigene Regeln die des Kartenwerks
- * ueberschreiben, und nur auf Kartenseiten (AK-A2-3).
+ * ueberschreiben, und nur auf Kartenseiten.
  *
  * Schluessel von $o:
  *   titel    Pflicht. Der Wortlaut VOR dem Trenner; " — Gen-EM NAdoku" haengt
@@ -53,10 +52,10 @@ declare(strict_types=1);
  * ------------------------------------------------------------------------- */
 function ui_seite_start(array $o): void
 {
-    /* DIE KOPFZEILEN STEHEN VOR DER ERSTEN AUSGABEZEILE (P5a/AP4, E-P5a-15).
+    /* DIE KOPFZEILEN STEHEN VOR DER ERSTEN AUSGABEZEILE.
      *
      * Hier und nicht in jeder Seite: Diese Huelle ist die eine Stelle, durch
-     * die jede Seite laeuft — dafuer hat P3 gesorgt. Drei Stellen erzeugen
+     * die jede Seite laeuft. Drei Stellen erzeugen
      * eine eigene Huelle (`wartung_lib.php`, `betrieb_schluesselblatt.php`,
      * `apk.php`); die rufen `kopfzeilen_seite()` selbst.
      *
@@ -84,7 +83,7 @@ function ui_seite_start(array $o): void
             . (defined('WEB_VERSION') ? ui_e(WEB_VERSION) : '') . '">',
         '<head>',
         '<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">',
-        /* DER VORSATZ „[Staging] " (P5c/AP1, E-P5c-05): Der Reiter im Browser
+        /* DER VORSATZ „[Staging] ": Der Reiter im Browser
          * ist oft das Einzige, was man von einer Seite sieht, und zwei Reiter
          * mit derselben Beschriftung sind zwei Anlagen, die man verwechselt. */
         '<title>' . ui_e(ui_umgebung_praefix() . (string)$o['titel']) . ' — '
@@ -101,8 +100,7 @@ function ui_seite_start(array $o): void
     }
     $zeilen[] = ui_favicon();
 
-    /* `assets/api.js` (EdApi) STEHT IM KOPF, und zwar auf JEDER Seite —
-     * Schritt 15 AP8b.
+    /* `assets/api.js` (EdApi) STEHT IM KOPF, und zwar auf JEDER Seite.
      *
      * ES STAND ZUERST IN DER IMMER-LISTE von ui_geruest_ende(), mit dem
      * Kommentar, das trage schon, weil jeder EdApi-Aufruf in einem Zuhoerer
@@ -126,8 +124,8 @@ function ui_seite_start(array $o): void
      * ist kein Ablageplatz, sondern die Antwort auf eine Reihenfolgefrage. */
     $zeilen[] = '<script src="' . ui_asset('assets/api.js') . '"></script>';
 
-    /* `assets/format.js` (EdFormat) STEHT AUS DEMSELBEN GRUND HIER
-     * (Schritt 15 AP8d). Es setzt `window.EdFormat` und haengt an nichts.
+    /* `assets/format.js` (EdFormat) STEHT AUS DEMSELBEN GRUND HIER.
+     * Es setzt `window.EdFormat` und haengt an nichts.
      * Seine Verbraucher sind ueber die Seiten verstreut -- die
      * Einsatztabelle (`missiontable.js`, auf Suche und Zeitraum), die
      * Einsatzansicht, die Startseite, der Export --, und
@@ -141,13 +139,12 @@ function ui_seite_start(array $o): void
     $zeilen[] = '<script src="' . ui_asset('assets/format.js') . '"></script>';
 
     /* `assets/html.js` (EdHtml: Maskierung und das Meldungs-Markup) NACH
-     * DERSELBEN REGEL (Web 21.1.11, R4-13): Es setzt `window.EdHtml`, haengt
+     * DERSELBEN REGEL: Es setzt `window.EdHtml`, haengt
      * an nichts — `edSymbol()` liest es erst beim Aufruf — und wird von mehr
-     * als einer Seite gebraucht. Bis dahin luden es acht Seiten je einzeln,
-     * und `unlock.js`, das seit R4-13 ueber `EdHtml.meldung()` meldet, hinge
-     * an einer Zeile, die jede Seite mit `ui_krypto_bootstrap()` von Hand
-     * setzen muesste — die sieben heutigen tun es, eine neue vergaesse es
-     * still. */
+     * als einer Seite gebraucht. Sonst hinge `unlock.js`, das ueber
+     * `EdHtml.meldung()` meldet, an einer Zeile, die jede Seite mit
+     * `ui_krypto_bootstrap()` von Hand setzen muesste — eine neue Seite
+     * vergaesse es still. */
     $zeilen[] = '<script src="' . ui_asset('assets/html.js') . '"></script>';
     $zeilen[] = '</head>';
 
@@ -187,8 +184,8 @@ function ui_seite_ende(array $o = []): void
  *
  * asset() und favicon_tags() stehen in db.php, und db.php laedt die
  * config.php. Der Einrichter laeuft aber VOR der Ersteinrichtung: Dort gibt es
- * beides noch nicht. Die Huelle darf an dieser Stelle also nichts voraussetzen
- * (benanntes Risiko zu A2). Ohne asset() fehlt nur der Erkennungswert an der
+ * beides noch nicht. Die Huelle darf an dieser Stelle also nichts voraussetzen.
+ * Ohne asset() fehlt nur der Erkennungswert an der
  * Adresse — der Verweis stimmt trotzdem, und der Einrichter laeuft genau
  * einmal, hat also nichts zwischenzuspeichern.
  */
@@ -217,7 +214,7 @@ function ui_instanz_kurz(): string
 }
 
 /**
- * Das Etikett dieser Anlage (P5c/AP1, E-P5c-05) — `umgebung()`, oder `null`.
+ * Das Etikett dieser Anlage — `umgebung()`, oder `null`.
  *
  * `umgebung_lib.php` laedt nur `konfig_lib.php`, und die laedt nichts; beide
  * vertragen den Einrichter vor `config.php` (dann gibt es kein Etikett). Das
@@ -251,7 +248,7 @@ function ui_favicon(): string
 /**
  * SYMBOLE — ein Zeichen, eine Datei, ein Aufruf.
  *
- * WARUM ES SIE GIBT (P3/O1, E-P3-18). Der Bestand trug seine Zeichen an vier
+ * WARUM ES SIE GIBT. Der Bestand trug seine Zeichen an vier
  * verschiedenen Orten: fuenf Inline-SVG mit Pfaddaten mitten im PHP und JS
  * (das Zahnrad zweimal, der Karten-Pin sogar wortgleich in zwei Dateien), rund
  * zwoelf Unicode-Zeichen als Symbol (▸ ▾ ✓ ⚠ ★ ◌ ← + –) und die Emoji 🚁 und
@@ -285,7 +282,7 @@ function ui_favicon(): string
  *
  * @param string      $name     Dateiname ohne Endung, z. B. 'haus'
  * @param string      $klassen  zusaetzliche Klassen: 'symbol-gross',
- *                              'symbol-links', 'symbol-gefuellt' …
+ *                              'symbol-links' …
  * @param string|null $titel    Wenn gesetzt, ist das Symbol fuer Screenreader
  *                              sichtbar und traegt diesen Namen. Ohne Titel
  *                              gilt es als Schmuck (aria-hidden) — richtig
@@ -305,23 +302,24 @@ function ui_symbol(string $name, string $klassen = '', ?string $titel = null): s
 }
 
 /* ===========================================================================
- * BAUSTEINE (P3/O2)
+ * BAUSTEINE
  *
  * Ab hier steht das Gerüst der Oberfläche und der Vorrat, aus dem jede Seite
  * gebaut wird. Die Regel dazu ist knapp und gilt ohne Ausnahme:
  *
  *   Eine Seite setzt vorhandene Bausteine zusammen und definiert nichts
  *   Eigenes. Ein neuer Baustein wird vorher beschrieben, mit Mockup
- *   vorgelegt, freigegeben und in docs/Design.md aufgenommen (E-P3-06,
- *   CLAUDE.md Abschnitt 9).
+ *   vorgelegt, freigegeben und in docs/Design.md aufgenommen
+ *   (CLAUDE.md Abschnitt 9).
  *
- * WARUM DAS HIER STEHT UND NICHT IN DEN SEITEN. Bis Web 8.0.1 baute jede
- * Seite ihre Karten, Zeilen, Knöpfe und Meldungen selbst. Das Ergebnis waren
+ * WARUM DAS HIER STEHT UND NICHT IN DEN SEITEN. Baute jede Seite ihre
+ * Karten, Zeilen, Knöpfe und Meldungen selbst, waere das Ergebnis — so war
+ * es gemessen —
  * sechs Schaltflächenvarianten für vier Bedeutungen, zwei Farben für dieselbe
  * Handlung („Bearbeiten" orange in der Einsatzansicht, gelb in den
  * Stammdaten) und eine Mindesttrefferfläche, die keine Zeilenaktion erreichte.
  * Nicht aus Nachlässigkeit — sondern weil es keine Stelle gab, an der ein Knopf
- * EINMAL beschrieben ist.
+ * EINMAL beschrieben waere.
  *
  * DIE JS-ERZEUGER BENUTZEN DIESELBEN KLASSEN. Große Teile der Oberfläche
  * entstehen erst im Browser (missiontable.js, die Reiter der Einstellungen,
@@ -363,17 +361,16 @@ function ui_user_label(): string {
 /**
  * Pfad zum Logo für die Kopfleiste (weiße Fassung) bzw. für helle Flächen.
  *
- * Die Wahl je Profil (E-P3-20: Standard / Hubschrauber / Fahrzeug /
- * wechselnd) steht seit Web 9.7.0 in `users.logo_wahl` und wird bei der
+ * Die Wahl je Profil (Standard / Hubschrauber / Fahrzeug /
+ * wechselnd) steht in `users.logo_wahl` und wird bei der
  * Anmeldung EINMAL aufgelöst (session_lib.php). Diese Funktion liest nur
- * das Ergebnis — die Vorarbeit aus O1 hat sich bewährt: Der Umbau in O8
- * war eine Zuweisung und keine Suche über 25 Seiten.
+ * das Ergebnis — eine Zuweisung und keine Suche über 25 Seiten.
  */
 function ui_logo(bool $weiss = false): string
 {
-    /* Seit Web 9.7.0 entscheidet logo_stamm() (session_lib.php) — dieselbe
+    /* Es entscheidet logo_stamm() (session_lib.php) — dieselbe
      * Stelle, die auch favicon_tags() fragt. So können Kopfleiste und
-     * Browser-Symbol nicht auseinanderlaufen (E-P3-20). Ohne Sitzung
+     * Browser-Symbol nicht auseinanderlaufen. Ohne Sitzung
      * (Anmeldung, Einrichter) liefert sie den Standard. */
     $stamm = function_exists('logo_stamm') ? logo_stamm() : 'gen-em_logo_helicopter';
     return ui_asset('assets/images/' . $stamm . ($weiss ? '_weiss' : '') . '.svg');
@@ -383,11 +380,11 @@ function ui_logo(bool $weiss = false): string
 /**
  * Bildmasse des gewaehlten Logos bei gegebener Hoehe: ['breite' => …, 'hoehe' => …].
  *
- * WARUM DIE BREITE NICHT FEST STEHEN DARF (S3/AP11). Bis Web 12.4.1 stand in
- * der Kopfleiste `width="54" height="34"` — fuer BEIDE Logos. 54:34 ist das
- * Verhaeltnis des Luftlogos; das Bodenlogo ist 420:335 und damit nur 42,6 px
- * breit. Der Browser reservierte also einen Kasten, in den das Bild nicht
- * passt, und rueckte beim Laden nach: ein Layoutsprung, den man nur sieht,
+ * WARUM DIE BREITE NICHT FEST STEHEN DARF. Ein festes `width="54"
+ * height="34"` fuer BEIDE Logos passt nur zum Luftlogo (54:34); das
+ * Bodenlogo ist 420:335 und damit nur 42,6 px breit. Der Browser
+ * reservierte einen Kasten, in den das Bild nicht passt, und rueckte beim
+ * Laden nach: ein Layoutsprung, den man nur sieht,
  * wenn man darauf wartet.
  *
  * Die Verhaeltnisse stehen HIER als Zahlen und nicht im Stylesheet: Sie sind
@@ -397,7 +394,7 @@ function ui_logo(bool $weiss = false): string
 function ui_logo_masse(int $hoehe): array
 {
     $stamm = function_exists('logo_stamm') ? logo_stamm() : 'gen-em_logo_helicopter';
-    /* Rahmen der SVG, nach dem Beschnitt in S3/AP11 deckungsgleich mit der
+    /* Rahmen der SVG, nach dem Beschnitt deckungsgleich mit der
      * Zeichnung: Luft 400,16 x 249,81 · Boden 420 x 335. */
     $verhaeltnis = str_contains($stamm, 'nef') ? 420 / 335 : 400.16 / 249.81;
     return ['breite' => (int)round($hoehe * $verhaeltnis), 'hoehe' => $hoehe];
@@ -407,10 +404,9 @@ function ui_logo_masse(int $hoehe): array
 /**
  * Artzeichen eines Diensttags — Symbol mit Textalternative.
  *
- * Die EINE Stelle, an der aus `days.kind` ein sichtbares Zeichen wird. Bis
- * Web 8.0.1 stand an vierzehn Stellen dieselbe Zeile mit einem Emoji darin;
- * jetzt steht hier ein Aufruf, und die Zeichnung kommt aus dem Symbolvorrat
- * (E-P3-18).
+ * Die EINE Stelle, an der aus `days.kind` ein sichtbares Zeichen wird. Die
+ * Zeichnung kommt aus dem Symbolvorrat.
+ * 
  *
  * WO KEIN SVG HINEINPASST — in einem <option> etwa —, nimmt man nicht dieses
  * Markup, sondern das WORT aus dt_art_symbol()['text'].
@@ -421,15 +417,15 @@ function ui_artzeichen(?string $kind, string $klassen = '', ?string $typ = null)
     /* DER TYP STEHT AN DRITTER STELLE, nicht an zweiter. `$klassen` ist die
      * dokumentierte zweite Stelle (`docs/Design.md` 9.15) — wer den Typ dorthin
      * schoebe, braeche jeden kuenftigen Aufruf mit Klassen, ohne dass etwas
-     * meldet. Seit AP4 (Web 16.0.0) uebergeben ihn alle sechs Aufrufer:
+     * meldet. Alle sechs Aufrufer uebergeben ihn:
      * Leiste, Papierkorb, Diensttag loeschen, Zusammenfuehren, Nachbearbeitung
      * und die Stammdatenliste. NULL bleibt zulaessig und bedeutet „kein Typ
      * bekannt" — dann zeichnet die Betriebsart. */
     $sym = dt_art_symbol($kind, $typ);
-    /* OHNE DIE KLASSE `artzeichen` (P3/O11). Sie stammt aus der Zeit, als das
+    /* OHNE DIE KLASSE `artzeichen`. Sie stammt aus der Zeit, als das
      * Artzeichen ein EMOJI war, und war dessen Korsett:
-     * `width:1.4em;text-align:center;font-size:1.05em;cursor:help`. Seit O2
-     * kommt das Zeichen aus dem Symbolvorrat (E-P3-18) und bringt seine Groesse
+     * `width:1.4em;text-align:center;font-size:1.05em;cursor:help`. Heute
+     * kommt das Zeichen aus dem Symbolvorrat und bringt seine Groesse
      * selbst mit; im neuen Stylesheet hatte die Klasse folgerichtig keine Regel
      * mehr. Eine Klasse ohne Regel im Markup ist kein Schaden, aber auch keine
      * Auskunft — und die naechste, die sie wieder mit Leben fuellt, baut das
@@ -445,12 +441,12 @@ function ui_artzeichen(?string $kind, string $klassen = '', ?string $typ = null)
  * Ab 1024: Logo, Name und Nutzername links; rechts „Startseite" und „Suche"
  * mit Symbol (aktiv mit orangem Strich) und das Zahnrad.
  *
- * Der Menüpunkt heißt STARTSEITE, nicht „Übersicht" (E-P3-07) — im Suchmenü
+ * Der Menüpunkt heißt STARTSEITE, nicht „Übersicht" — im Suchmenü
  * daneben war „Übersicht" missverständlich. Der Seitentitel bleibt
  * „Tagesübersicht", wie das Handbuch ihn nennt.
  *
  * Die Kopfleiste bleibt voll breit; ihr Inhalt sitzt auf demselben Raster wie
- * Leiste und Inhalt darunter (E-P3-12).
+ * Leiste und Inhalt darunter.
  *
  * $o: aktiv   'start' | 'suche' | 'einstellungen' | ''
  *     menue   false = kein Menüknopf und kein Zahnrad (öffentliche Hülle)
@@ -461,7 +457,7 @@ function ui_kopf(array $o = []): void
     $aktiv  = (string)($o['aktiv'] ?? '');
     $menue  = ($o['menue'] ?? true) !== false;
     $zurueck = $o['zurueck'] ?? null;
-    /* DIE FARBE DER UMGEBUNG (P5c/AP1, E-P5c-05, -55, -59). Eine Stelle fuer
+    /* DIE FARBE DER UMGEBUNG. Eine Stelle fuer
      * jede Seite mit Kopfleiste. `farbe` ist eine geschlossene Liste, und
      * heute steht darin nur `rot` — ein unbekannter Wert kommt aus
      * `umgebung()` schon als `rot` zurueck und steht auf der Statusseite. */
@@ -499,7 +495,7 @@ function ui_kopf(array $o = []): void
            <?= $aktiv === 'suche' ? 'aria-current="page"' : '' ?>>
           <?= ui_symbol('lupe') ?><span>Suche</span>
         </a>
-        <?php /* HILFE LINKS VOM ZAHNRAD (P5b/AP8, M-P5b-01). Auf dem Handy
+        <?php /* HILFE LINKS VOM ZAHNRAD. Auf dem Handy
                  bleibt er stehen — anders als „Startseite" und „Suche", die
                  dort in die Schublade wandern: Ein Fragezeichen ist 24 px
                  breit und der eine Knopf, den jemand sucht, der gerade nicht
@@ -529,7 +525,7 @@ function ui_kopf(array $o = []): void
  * `<aside class="leiste">` als Schublade über dem Inhalt, darüber steht sie
  * fest daneben — der Unterschied ist ausschließlich CSS.
  *
- * Das ist die Lehre aus der Vormerkliste von P0 (10.5): „Wird die
+ * Die Regel dahinter: „Wird die
  * Seitenleiste zur Schublade, muss der Mechanismus an der KLASSE hängen und
  * nicht an ui_days_sidebar() — sonst bleibt die Suchseite als einzige ohne
  * Mobile-Menü." Genau deshalb kennt dieses Gerüst drei Leisteninhalte und
@@ -539,7 +535,7 @@ function ui_kopf(array $o = []): void
  *     leiste   'diensttage' | 'einstellungen' | 'filter' | null
  *     tag      Kennung des gewählten Diensttags (nur bei 'diensttage')
  *     zeitraum ['jahr'=>'2026','monat'=>'08'] — markiert Jahres- bzw.
- *              Monatszeile der Leiste (nur bei 'diensttage', E-P3-37)
+ *              Monatszeile der Leiste (nur bei 'diensttage')
  *     menue    aktiver Eintrag des Einstellungsmenüs (nur bei 'einstellungen')
  *     lesespalte  true = Inhaltsspalte auf Lesebreite (760 px) begrenzen
  *     titel    Überschrift der Leiste bei 'filter'
@@ -554,7 +550,7 @@ function ui_geruest_start(array $o = []): void
     ui_hat_tagesleiste($leiste === 'diensttage');
     ui_hat_menueleiste($leiste === 'einstellungen');
     ui_kopf(['aktiv' => (string)($o['aktiv'] ?? '')]);
-    /* LESESPALTE (Web 15.1.0, E-S8-18): Eine Seite mit wenigen Karten und viel
+    /* LESESPALTE: Eine Seite mit wenigen Karten und viel
      * Erklärtext liest sich auf 760 px besser als über die volle Breite eines
      * 1920er Bildschirms. Die Regel `.rahmen-lesespalte` gab es längst — sie
      * war nur für Seiten OHNE Leiste gebaut (Anmeldung, Rechtstexte,
@@ -565,18 +561,13 @@ function ui_geruest_start(array $o = []): void
 <div class="<?= ui_e($rahmen) ?>">
   <?php /* tabindex="-1": Beim Öffnen der Schublade fokussiert schublade.js
            die Leiste SELBST, nicht ihr erstes Bedienelement — sonst trüge
-           das X beim Öffnen einen Fokusring, den niemand bestellt hat
-           (F-P3-V). Per Tab ist die Leiste dadurch nicht erreichbar; ihre
+           das X beim Öffnen einen Fokusring, den niemand bestellt hat.
+           Per Tab ist die Leiste dadurch nicht erreichbar; ihre
            Einträge sind es. */ ?>
-  <?php /* DIE FILTERLEISTE DER SUCHE IST BREITER (E-P3-Anlage G, nachgezogen
-           in O12). Sie traegt Auswahlfelder und Zahlenpaare, die
-           Diensttage-Leiste nur Zeilen; Anlage G fuehrt sie deshalb mit
-           240 px (1024–1199) und 280 px (ab 1200) statt 220/260.
-
-           Die beiden Token dafuer standen seit O1 in :root und wurden von
-           NIEMANDEM benutzt — aufgefallen ist das der erzeugten Tokentabelle
-           in O12 (F-P3-BC). Gemessen war die Filterleiste 220 bzw. 260 px
-           breit, also so breit wie die Tagesliste. */ ?>
+  <?php /* DIE FILTERLEISTE DER SUCHE IST BREITER. Sie traegt
+           Auswahlfelder und Zahlenpaare, die Diensttage-Leiste nur Zeilen;
+           deshalb 240 px (1024–1199) und 280 px (ab 1200) statt 220/260,
+           ueber die beiden Token in :root. */ ?>
   <aside class="leiste<?= $leiste === 'filter' ? ' leiste-filter' : '' ?>"
          id="leiste" aria-label="Bereichsmenü" tabindex="-1">
     <div class="leiste-kopf nur-schublade">
@@ -601,8 +592,8 @@ function ui_geruest_start(array $o = []): void
     } elseif ($leiste === 'einstellungen') {
         ui_leiste_einstellungen((string)($o['menue'] ?? ''));
         ui_leiste_ende();
-        /* „‹ Einstellungen" über dem Titel jeder Unterseite (E-P3-11,
-         * Mockup 07). Nur unter 1024 px sichtbar — am Desktop steht das Menü
+        /* „‹ Einstellungen" über dem Titel jeder Unterseite. Nur unter 1024 px
+         * sichtbar — am Desktop steht das Menü
          * daneben, und ein Rückweg auf eine Seite, die man sieht, wäre
          * Rauschen. Auf der Übersicht selbst (menue = '') entfällt er. */
         if ((string)($o['menue'] ?? '') !== '') {
@@ -635,8 +626,8 @@ function ui_leiste_ende(): void
  * DIE VIER SKRIPTE DES GERÜSTS stehen hier und nicht auf den Seiten: Sie
  * gehören zur Hülle, und eine Seite, die eines davon zu laden vergisst, fällt
  * nicht auf — sie verhält sich nur an einer Stelle anders als alle anderen.
- * Genau so war es bis Web 8.0.1 mit confirm.js, das auf drei Seiten zweimal
- * und auf drei anderen gar nicht eingebunden war.
+ * So ging es einmal mit confirm.js, das auf drei Seiten zweimal und auf
+ * drei anderen gar nicht eingebunden war.
  *
  * daylist.js kommt nur mit, wo es eine Diensttage-Leiste gibt: Auf
  * Einstellungen, Import, Administration und Wartung sucht es sein Akkordeon,
@@ -666,13 +657,13 @@ function ui_geruest_ende(array $o = []): void
 /* ---------------------------------------------------------------------------
  * LEISTENINHALT: DIENSTTAGE
  *
- * SIE LISTET DIENSTTAGE, NICHT KALENDERTAGE (E9, Web 6.0.0): Jeder Einsatz
+ * SIE LISTET DIENSTTAGE, NICHT KALENDERTAGE: Jeder Einsatz
  * hängt an einer Zeile in `days`, und diese Zeile IST der Eintrag. Zwei
  * Dienste an einem Kalendertag stehen als zwei Zeilen untereinander;
  * auseinandergehalten werden sie durch die Uhrzeit des Dienstbeginns — aber
  * nur dann, denn im Regelfall kostet sie nur Breite.
  *
- * DREI ÄNDERUNGEN GEGENÜBER DEM BESTAND (E-P3-09):
+ * DREI ÄNDERUNGEN GEGENÜBER DEM BESTAND:
  *
  *  1  Die ganze Zeile klappt das Akkordeon, nicht nur das Dreieck. Bisher war
  *     der TEXT der Link auf die Jahres-/Monatsübersicht und nur das Dreieck
@@ -685,11 +676,11 @@ function ui_geruest_ende(array $o = []): void
  *     die Leiste 220 px schmal: Dort steht nur noch, was auch hineinpasst —
  *     ein gesetzter KURZNAME (Klasse `kurz`), sonst nichts. Unterhalb von
  *     1024 px liegt die Leiste als Schublade und ist mit 320 px wieder breit
- *     genug für den vollen Namen; sie zeigt ihn seit jeher und behält ihn
- *     (S9/AP4a, Freigabe M-S9-08 Variante 2). Das Artzeichen bleibt in jeder
+ *     genug für den vollen Namen; sie zeigt ihn seit jeher und behält ihn.
+ *     Das Artzeichen bleibt in jeder
  *     Breite.
  *
- * Das Artzeichen kommt aus dem Symbolvorrat statt als Emoji (E-P3-18) — es
+ * Das Artzeichen kommt aus dem Symbolvorrat statt als Emoji — es
  * lässt sich damit färben und auf Kontrast prüfen, und es sieht auf jedem
  * Betriebssystem gleich aus.
  * ------------------------------------------------------------------------ */
@@ -697,9 +688,9 @@ function ui_leiste_diensttage(?int $currentDayId, array $zeitraum = []): void
 {
     global $userId;
     require_once __DIR__ . '/diensttag_lib.php';
-    /* HOECHSTENS 500 DIENSTTAGE — UND DIE LEISTE SAGT ES (Web 21.4.0, R4-17,
-     * Nr. 37). Bis hierher kappte sie still: Ein Konto mit 1029 Diensttagen
-     * (Messstand) sah 500, und nichts deutete an, dass es aeltere gibt. Eine
+    /* HOECHSTENS 500 DIENSTTAGE — UND DIE LEISTE SAGT ES. Kappte sie still,
+     * saehe ein Konto mit 1029 Diensttagen (Messstand) 500, und nichts
+     * deutete an, dass es aeltere gibt. Eine
      * Dokumentation, die Zeilen verschweigt, ist falsch, nicht nur knapp.
      * Gefragt wird nach EINEM MEHR, als gezeigt wird: So weiss die Leiste,
      * ob es aeltere gibt, statt es aus „genau 500" zu schliessen — bei
@@ -736,7 +727,7 @@ function ui_leiste_diensttage(?int $currentDayId, array $zeitraum = []): void
         $offenerMonat = substr((string)$tage[0]['day'], 5, 2);
     }
 
-    /* DER ANGEZEIGTE ZEITRAUM WIRD MARKIERT (E-P3-37). Wer auf der
+    /* DER ANGEZEIGTE ZEITRAUM WIRD MARKIERT. Wer auf der
        Jahres- oder Monatsübersicht steht, sah in der Leiste bisher nichts
        davon — der aktive Eintrag war stets ein Diensttag, und den gibt es
        dort nicht. Jetzt trägt die Jahres- bzw. Monatszeile die Markierung,
@@ -764,8 +755,8 @@ function ui_leiste_diensttage(?int $currentDayId, array $zeitraum = []): void
                  <?= $jahrS === $offenesJahr ? 'open' : '' ?>>
           <?php /* Der Balken-Link steht IM summary: Als Kind des <details>
                    wäre er an jeder zugeklappten Zeile unsichtbar — der Inhalt
-                   eines geschlossenen <details> wird nicht gerendert
-                   (F-P3-R). daylist.js fängt den Klick ab, damit er nicht
+                   eines geschlossenen <details> wird nicht gerendert.
+                   daylist.js fängt den Klick ab, damit er nicht
                    zusätzlich auf- und zuklappt. */ ?>
           <summary class="akkordeon-zeile">
             <?= ui_symbol('winkel', 'akkordeon-winkel') ?>
@@ -796,7 +787,7 @@ function ui_leiste_diensttage(?int $currentDayId, array $zeitraum = []): void
                   $kind = $t['kind'] === null ? null : (string)$t['kind'];
                   $typ  = $t['vehicle_typ'] === null ? null : (string)$t['vehicle_typ'];
                   $sym  = dt_art_symbol($kind, $typ);
-                  /* DIE LEISTE ZEIGT DEN KURZNAMEN (Nr. 69, E-S9-09): Sie ist
+                  /* DIE LEISTE ZEIGT DEN KURZNAMEN: Sie ist
                      die schmalste Stelle der Anwendung, und „AF1" statt
                      „Alpenfalke 1" ist genau dafuer gedacht. Der TITEL nennt
                      weiterhin die volle Bezeichnung — wer den Kurznamen nicht
@@ -816,7 +807,7 @@ function ui_leiste_diensttage(?int $currentDayId, array $zeitraum = []): void
                      vom Nebentext ab. Gemessen bei 1024, 1100 und 1199 px:
                      3 px fuer einen Kurznamen, der 55 braucht — eine Ellipse
                      ohne Buchstaben. Die ist schlechter als kein Nebentext,
-                     also bleibt er dort aus, wie vor S9/AP4a. */
+                     also bleibt er dort aus, wie ohne Typ. */
                   $mehrfach = (bool)$t['mehrfach'];
                   $hatKurz = !$mehrfach
                           && trim((string)($t['vehicle_kurz'] ?? '')) !== '';
@@ -855,8 +846,7 @@ function ui_leiste_diensttage(?int $currentDayId, array $zeitraum = []): void
       $nbOffen = nb_offen_gesamt($userId);
     ?>
     <div class="leiste-fuss">
-      <?php /* Die Nachbearbeitung erscheint NUR, solange etwas offen ist (E24,
-               A12, bestätigt in E-P3-09). Ein dauerhafter Eintrag für eine
+      <?php /* Die Nachbearbeitung erscheint NUR, solange etwas offen ist. Ein dauerhafter Eintrag für eine
                einmalige Aufgabe wäre genau der Hinweis, den man nicht
                loswird. */ ?>
       <?php if ($nbOffen > 0): ?>
@@ -878,20 +868,18 @@ function ui_leiste_diensttage(?int $currentDayId, array $zeitraum = []): void
 
 
 /* ---------------------------------------------------------------------------
- * DAS MENÜ DER EINSTELLUNGEN — EINE QUELLE (S8/AP5, E-S8-04, löst B-S8-01)
+ * DAS MENÜ DER EINSTELLUNGEN — EINE QUELLE
  *
- * ES GAB DIESE LISTE ZWEIMAL. `ui_leiste_einstellungen()` führte sie für die
- * Seitenleiste, `ui_einstellungen_uebersicht()` noch einmal für die
- * Übersichtsseite — dieselben Einträge, dieselben Symbole, zwei Stellen. Sie
- * sind auseinandergelaufen, und zwar messbar: Bis Web 15.3.0 stand
- * „Stammdaten systemweit" in beiden, „Komplett-Backup" nur in einer, und die
- * Reihenfolge unterschied sich. Wer einen Punkt hinzufügte, fügte ihn an
- * einer Stelle hinzu und merkte es nie.
+ * DIESE LISTE STEHT EINMAL. Die Seitenleiste (`ui_leiste_einstellungen()`)
+ * und die Übersichtsseite (`ui_einstellungen_uebersicht()`) zeigen dieselben
+ * Einträge mit denselben Symbolen; zwei Listen liefen auseinander — ein
+ * Punkt in der einen, in der anderen nicht, eine andere Reihenfolge —, und
+ * wer einen Punkt hinzufügt, merkte es nie.
  *
- * `ui_einstellungen_punkte()` ist jetzt die eine Quelle. Beide Darstellungen
+ * `ui_einstellungen_punkte()` ist die eine Quelle. Beide Darstellungen
  * lesen daraus; ein neuer Punkt kostet eine Zeile.
  *
- * DREI BLÖCKE NACH ROLLE (E-S8-04, Zielbild 5.1):
+ * DREI BLÖCKE NACH ROLLE (Zielbild 5.1):
  *
  *   Einstellungen   alle             das eigene Konto und seine Daten
  *   Verwaltung      Admin +          andere Konten und was die Anlage zeigt
@@ -901,14 +889,10 @@ function ui_leiste_diensttage(?int $currentDayId, array $zeitraum = []): void
  * den dritten Block sieht, sieht auch die ersten beiden, und wer nur den
  * ersten sieht, soll nicht raten müssen, ob es weitere gibt.
  *
- * „STAMMDATEN SYSTEMWEIT" GIBT ES NICHT MEHR (S9/AP5b, Rahmenplan R39).
- * Erst nahm E-S8-14 der Seite den Menüpunkt — sie wurde einmal bei der
- * Einrichtung gepflegt und danach jahrelang nicht, und ein Menüpunkt, den man
- * einmal benutzt, kostet siebzehn Mal Platz. Seit S9/AP5b ist die Seite
- * ersatzlos gestrichen: Es gibt eine Installation, dort steht kein zentraler
- * Standort mehr, und es soll keinen neuen geben können. Standorte pflegt jedes
- * Konto selbst unter „Standorte". Wer hier einen Eintrag vermisst, sucht eine
- * Seite, die es nicht mehr gibt — nicht einen vergessenen Menüpunkt.
+ * „STAMMDATEN SYSTEMWEIT" GIBT ES NICHT. Es gibt keinen zentralen Standort,
+ * und es soll keinen geben können. Standorte pflegt jedes Konto selbst unter
+ * „Standorte". Wer hier einen Eintrag vermisst, sucht eine Seite, die es
+ * nicht gibt — nicht einen vergessenen Menüpunkt.
  * ------------------------------------------------------------------------ */
 
 /**
@@ -920,7 +904,7 @@ function ui_leiste_diensttage(?int $currentDayId, array $zeitraum = []): void
  *    'punkte' => [ ['key','href','text','symbol','zaehler'] … ] ]
  *
  * `zaehler` ist null oder ['n' => int, 'ton' => 'rot'|'orange'|'neutral'] —
- * die Zahl am Menüpunkt (S8/AP5, Konzept (3)). Sie kommt aus
+ * die Zahl am Menüpunkt. Sie kommt aus
  * `status_lib.php` und steht nur da, wo sie über null steht; welche vier
  * Punkte eine tragen und warum, steht dort.
  *
@@ -930,7 +914,7 @@ function ui_leiste_diensttage(?int $currentDayId, array $zeitraum = []): void
  * führt ins 403; eines, das weniger zeigt, verschweigt eine Funktion.
  */
 /**
- * Die Zahl an einem Menüpunkt — oder nichts (S8/AP5).
+ * Die Zahl an einem Menüpunkt — oder nichts.
  *
  * `$z` ist ['n' => int, 'ton' => 'rot'|'orange'|'neutral'] oder null.
  * Sie steht NUR, wenn es etwas zu tun gibt: Eine „0" am Menüpunkt ist keine
@@ -961,8 +945,8 @@ function ui_einstellungen_punkte(): array
              * erste Schritt jeder neuen NutzerIn; Standorte und
              * Rettungsmittel werden einmal gepflegt. */
             ['geraete',        'einstellungen.php?t=geraete',        'Geräte',          'uhr'],
-            /* NUR NOCH EIN PUNKT FUER DIE STAMMDATEN (S9/AP5, PS-12).
-             * „Rettungsmittel" stand hier seit Web 7.0.0 daneben; der Schnitt
+            /* NUR NOCH EIN PUNKT FUER DIE STAMMDATEN.
+             * „Rettungsmittel" stand hier daneben; der Schnitt
              * nach Taetigkeit hat sich nicht bewaehrt, weil beide Reiter
              * DENSELBEN Bestand luden und man zwischen ihnen hin und her
              * ging, um einen Standort einzurichten. Jetzt fuehrt „Standorte"
@@ -997,23 +981,22 @@ function ui_einstellungen_punkte(): array
                 ['admin',              'admin_users.php',        'NutzerInnen',   'gruppe'],
                 ['admin_sicherungen',  'admin_sicherungen.php',  'Konto-Backups', 'sicherung',
                                                                   $z('admin_sicherungen')],
-                /* `haus` fuer „Installation" (Mockup 13, freigegeben
-                 * 05.09.2026), und seit P5c/AP9 wieder eine eigene Seite
-                 * „Rechtstexte" mit dem Zeichen, das seit P3 im Vorrat lag
-                 * (E-P5c-28): zwischen Installation und Demo-Konto. */
+                /* `haus` fuer „Installation" (freigegeben), und eine eigene
+                 * Seite „Rechtstexte" mit ihrem Zeichen aus dem Vorrat:
+                 * zwischen Installation und Demo-Konto. */
                 ['admin_installation', 'admin_installation.php', 'Installation',  'haus'],
                 ['admin_rechtstexte',  'admin_rechtstexte.php',  'Rechtstexte',   'rechtstexte'],
                 ['admin_demo',         'admin_demo.php',         'Demo-Konto',    'kolben'],
-                /* PROTOKOLL UNTER VERWALTUNG, nicht unter Betrieb (E-P5c-10,
-                 * R74 (1)): Der Admin sieht vier seiner Reiter, und ein
+                /* PROTOKOLL UNTER VERWALTUNG, nicht unter Betrieb: Der Admin
+                 * sieht vier seiner Reiter, und ein
                  * Admin sieht Betrieb nicht. Menueeintrag und Zeichen kommen
-                 * mit der Seite (F-P5c-47) — ohne Eintrag waere „keine
+                 * mit der Seite — ohne Eintrag waere „keine
                  * Unterpunkte in der Leiste" gruen, ohne gemessen zu haben. */
                 ['admin_protokoll',    'admin_protokoll.php',    'Protokoll',     'protokoll'],
             ],
         ];
     } elseif (function_exists('ist_support') && ist_support()) {
-        /* DER SUPPORT (P5c/AP4, E-P5c-14): unter Verwaltung genau die zwei
+        /* DER SUPPORT: unter Verwaltung genau die zwei
          * Seiten, die er betritt — NutzerInnen (nur Konten der Rolle `user`)
          * und Protokoll (Verwaltung und E-Mail). Keine Zaehler: Sie zaehlen
          * Konto-Backups, und die sind nicht seine Sache. */
@@ -1032,11 +1015,10 @@ function ui_einstellungen_punkte(): array
             'schluessel' => 'betrieb',
             'titel'      => 'Betrieb',
             'punkte'     => [
-                /* FÜNF NEUE ZEICHEN (Mockup 13, freigegeben 05.09.2026).
-                 * AP3 hatte für die neuen Betriebsseiten aus dem Vorrat
-                 * geliehen — dabei entstanden vier Doppelbelegungen, und in
-                 * einer Leiste mit siebzehn Einträgen untereinander ist das
-                 * keine Sparsamkeit mehr, sondern eine Verwechslungsgefahr.
+                /* EIGENE ZEICHEN FÜR DIE BETRIEBSSEITEN (freigegeben). Aus dem
+                 * Vorrat geliehen, gaebe es Doppelbelegungen, und in einer
+                 * Leiste mit siebzehn Einträgen untereinander ist das keine
+                 * Sparsamkeit, sondern eine Verwechslungsgefahr.
                  * Alle fünf sind unveränderte Tabler Icons (MIT), wie die
                  * übrigen 44. Der Zylinder (`datenbank`) bleibt dem
                  * Komplett-Backup: dort wird wirklich die Datenbank
@@ -1067,11 +1049,11 @@ function ui_einstellungen_punkte(): array
  * Reihenfolge, mit denselben Symbolen — beide lesen aus
  * `ui_einstellungen_punkte()`.
  *
- * FETTDRUCK NUR FÜR DEN AKTIVEN EINTRAG (Backlog Nr. 75, E-S8-07). Bis Web
+ * FETTDRUCK NUR FÜR DEN AKTIVEN EINTRAG. Bis Web
  * 15.3.0 waren in der Administration ALLE Einträge fett, weil `.leiste-liste`
  * dort eine eigene Regel trug; der aktive war damit nicht mehr zu erkennen.
  *
- * DIE BLÖCKE KLAPPEN (E-S8-07, Konzept AP5 (2)). Für eine BetreiberIn stehen
+ * DIE BLÖCKE KLAPPEN. Für eine BetreiberIn stehen
  * siebzehn Einträge untereinander, und das passt in kein übliches
  * Browserfenster: Gemessen am 05.09.2026 bei 1280 × 900 waren **14 von 17**
  * ohne Rollen erreichbar, bei 720 px Fensterhöhe noch **10 von 17** — die
@@ -1080,24 +1062,23 @@ function ui_einstellungen_punkte(): array
  *
  * Gebaut aus dem vorhandenen Akkordeon-Baustein (`.akkordeon-zeile`,
  * `-winkel`, `-inhalt`) — demselben, den die Diensttage-Leiste benutzt.
- * SEIT P5c/AP9 STEHT DER WINKEL RECHTS (Option 1 „Linie", E-P5c-29, Nr. 244):
- * Bis Web 21.0.0 stand er links, damit beide Leisten denselben Griff haben
- * (E-S8-07) — und genau dort, wo die Einträge ihr Symbol tragen, so dass sich
- * die Überschrift wie ein Eintrag las. Das Markup ist unverändert; die
+ * DER WINKEL STEHT RECHTS (Variante „Linie"): Links stuende er genau dort,
+ * wo die Einträge ihr Symbol tragen, und die Überschrift laese sich wie ein
+ * Eintrag. Die
  * Regeln an `.leiste-gruppe` setzen Winkel, Schriftstufe, Farbe und
  * Trennlinie. Die Diensttage-Leiste trägt die Klasse nicht und bleibt, wie
  * sie war.
  *
  * OFFEN IST: „Einstellungen" und der Block der aktiven Seite — in JEDER
- * Breite. Das Konzept sah ab 1024 px alle Blöcke offen vor; damit blieb es
- * bei 1280 × 900 bei 14 von 17 erreichbaren Einträgen, also bei genau dem
- * Zustand, gegen den das Akkordeon gebaut wurde. So waren es 17 von 17.
+ * Breite. Ab 1024 px alle Blöcke offen hiesse bei 1280 × 900 14 von 17
+ * erreichbaren Einträgen, also genau der Zustand, gegen den das Akkordeon
+ * gebaut wurde. So waren es 17 von 17.
  *
- * NACHGEMESSEN IN P5c/AP9 (F-P5c-157), mit 18 Einträgen: bei 1280 × 900 auf
+ * NACHGEMESSEN mit 18 Einträgen: bei 1280 × 900 auf
  * 13 von 14 Seiten alle erreichbar (die Servereinstellungen mit acht
- * Sprungmarken 16), bei 1280 × 720 auf 6 von 14. Seither fallen die
- * Sprungmarken unter einer Fensterhöhe weg (E-P5c-131, style.css) — seit
- * Web 21.1.3 unter 950 px statt 800 (F-P5c-164), und bei jeder gemessenen
+ * Sprungmarken 16), bei 1280 × 720 auf 6 von 14. Deshalb fallen die
+ * Sprungmarken unter einer Fensterhöhe weg (style.css) — unter 950 px, und
+ * bei jeder gemessenen
  * Höhe sind es 14 von 14. Gezählt wird ein Eintrag, wenn er im Bild steht oder der Kopf
  * seiner zugeklappten Gruppe; nach der Box allein zu fragen zählt die Einträge
  * zugeklappter Gruppen mit, denn Chromium gibt ihnen eine.
@@ -1118,8 +1099,7 @@ function ui_leiste_einstellungen(string $aktiv): void
          * nicht: Bei 1280 x 900 blieben mit allen offenen Bloecken 14 von 17
          * Eintraegen erreichbar — genau der Zustand, gegen den das Akkordeon
          * gebaut wurde. Mit dieser Vorgabe waren es 17 von 17 (bei 17 Einträgen;
-         * nachgemessen P5c/AP9, siehe Kopf). Entschieden am
-         * 05.09.2026 auf Nachfrage; die Abweichung steht im Konzept.
+         * nachgemessen, siehe Kopf). Entschieden auf Nachfrage.
          *
          * WARUM PHP UND NICHT DAS SKRIPT. Der Serverzustand ist damit schon
          * der Zielzustand — in jeder Breite, ohne Skript. `menue.js` legt nur
@@ -1164,14 +1144,14 @@ function ui_leiste_einstellungen(string $aktiv): void
 
 
 /**
- * Einstellungs-Übersicht — die Eingangsseite des Bereichs (E-P3-11).
+ * Einstellungs-Übersicht — die Eingangsseite des Bereichs.
  *
  * Sie führt dieselben Punkte wie die Leiste, aber als Liste im Inhalt: Symbol,
  * Text, Winkel. Auf dem Handy ist sie der einzige Weg, der zeigt, WAS es
  * gibt — dort ist die Leiste eine Schublade, und ein Zahnrad, das ungefragt
  * auf „Profil" landet, verschweigt die übrigen sechzehn Punkte.
  *
- * Jeder Bereich ist eine Bereichskarte (seit P5c/AP9). „Abmelden" steht
+ * Jeder Bereich ist eine Bereichskarte. „Abmelden" steht
  * getrennt am Ende, darunter nur der Name der angemeldeten Person.
  */
 function ui_einstellungen_uebersicht(): void
@@ -1182,7 +1162,7 @@ function ui_einstellungen_uebersicht(): void
     ui_geruest_start(['aktiv' => 'einstellungen', 'leiste' => 'einstellungen', 'menue' => '']);
     ui_titelzeile(['titel' => 'Einstellungen', 'unter' => ui_e(ui_user_label())]);
 
-    /* AM SCHREIBTISCH DREI SPALTEN (Konzept AP5 (6)). Gestapelt sind es für
+    /* AM SCHREIBTISCH DREI SPALTEN. Gestapelt sind es für
      * eine BetreiberIn drei Karten mit achtzehn Zeilen — anderthalb
      * Bildschirme, auf denen nur die erste Karte ohne Rollen zu sehen ist.
      * Nebeneinander passt der ganze Bereich auf einen Blick. Das Raster
@@ -1190,23 +1170,17 @@ function ui_einstellungen_uebersicht(): void
      * für eine Admin, drei für eine BetreiberIn. */
     echo '  <div class="uebersicht-raster">' . "\n";
     foreach ($bloecke as $b) {
-        /* JE BEREICH EINE BEREICHSKARTE (P5c/AP9, E-P5c-29, Mockup M-P5c-01c).
-         * Bis Web 21.0.0 stand der Bereichsname als gesperrte Versalzeile
-         * ÜBER einer titellosen Karte (`.uebersicht-block`, Mockup 07), und
-         * der erste Block trug sie nur nebeneinander — gestapelt hätte sie
-         * die Seitenüberschrift wiederholt. Jetzt ist der Name der
-         * Kartentitel, mit Zeichen und Zahl der Einträge, mittig auf Rauch;
-         * die Sonderregel für den ersten Block entfällt, weil ein Kartentitel
-         * etwas anderes ist als eine zweite Überschrift darüber: Er benennt
-         * die Karte, nicht die Seite.
+        /* JE BEREICH EINE BEREICHSKARTE. Der Name ist der Kartentitel, mit
+         * Zeichen und Zahl der Einträge, mittig auf Rauch. Ein Kartentitel
+         * ist etwas anderes als eine zweite Überschrift darüber: Er benennt
+         * die Karte, nicht die Seite — deshalb braucht der erste Block keine
+         * Sonderregel.
          *
          * DIE ZEICHEN gehören zur Freigabe: `profil` (Einstellungen — ich),
          * `gruppe` (Verwaltung — die Konten), `server` (Betrieb — die Anlage).
          * Sie doppeln je einen Eintrag darunter; das ist in Kauf genommen.
          *
-         * DIE KARTE IST SELBST DAS KIND DES RASTERS. Bis Web 21.0.0 stand um
-         * Überschrift und Karte ein Behälter `.uebersicht-gruppe`; ohne die
-         * Überschrift hielt er nur noch die Karte und trug keine Regel mehr. */
+         * DIE KARTE IST SELBST DAS KIND DES RASTERS — ohne Behälter darum. */
         $zeichen = ['einstellungen' => 'profil', 'verwaltung' => 'gruppe',
                     'betrieb' => 'server'][$b['schluessel']] ?? 'zahnrad';
         ui_karte_start(['titel' => $b['titel'] !== '' ? $b['titel'] : 'Einstellungen',
@@ -1238,15 +1212,13 @@ function ui_einstellungen_uebersicht(): void
  * FUSSZEILE  (.fuss-seite)
  *
  * Zweizeilig und zentriert, auf JEDER Seite — auch auf Anmeldung, Passwort
- * zurücksetzen, Abbruchseite und Einrichter (R32, E-P3-14).
+ * zurücksetzen, Abbruchseite und Einrichter.
  *
- * Sie steht AUSSERHALB von <main>. Bis Web 8.0.1 stand sie mitten im Inhalt;
- * für ein Gerüst mit klebender Leiste unten ist das der falsche Ort — und es
- * war der Grund, warum sie auf Seiten ohne Inhalt fehlte.
+ * Sie steht AUSSERHALB von <main>. Mitten im Inhalt waere für ein Gerüst mit
+ * klebender Leiste unten der falsche Ort — und sie fehlte auf Seiten ohne
+ * Inhalt.
  *
- * DIE VERWEISE STEHEN SEIT WEB 9.11.0 IMMER. Bis dahin prüfte diese Funktion
- * mit is_file(), ob es die Seiten überhaupt gibt — richtig, solange sie noch
- * nicht existierten (sie entstanden in O10), und danach tote Logik: zwei
+ * DIE VERWEISE STEHEN IMMER. Ein is_file() je Seite waere tote Logik: zwei
  * Dateisystemzugriffe je Seitenaufruf für eine Frage, deren Antwort feststeht.
  *
  * Sie sagte auch die falsche Sache. „Die Datei ist da" heißt nicht „ein Text
@@ -1286,7 +1258,7 @@ function ui_fuss_seite(array $o = []): void
 
 
 /* ---------------------------------------------------------------------------
- * DIE HINWEISE ÜBER DEM INHALT  (.hinweise)  — P5c/AP1, E-P5c-55, M-P5c-02
+ * DIE HINWEISE ÜBER DEM INHALT  (.hinweise)
  *
  * VIER STREIFEN, IN DIESER REIHENFOLGE: Umgebung → Ankündigung → Demo →
  * Datenschutz. Vom Allgemeinen zum Eigenen: welche Anlage, was auf ihr
@@ -1298,12 +1270,12 @@ function ui_fuss_seite(array $o = []): void
  * Abstand und nimmt den der Kinder zurück (style.css).
  *
  * AN DER STELLE DES DEMO-HINWEISES, nicht unter der Kopfleiste: Dort
- * verschob ein Streifen die klebende Leiste (F-P3-G), und der Platz ist seit
- * P3 geräumt. Die rote Kopfleiste kennzeichnet jede Seite mit Kopfleiste
+ * verschoebe ein Streifen die klebende Leiste. Die rote Kopfleiste kennzeichnet
+ * jede Seite mit Kopfleiste
  * ohnehin; die Zeile sagt, was Rot heißt.
  *
  * DIE SEITEN OHNE GERÜST rufen diese Funktion selbst, als erstes Kind ihres
- * `<main>` — die Anmeldeseiten über der Karte (E-P5c-60), die übrigen über
+ * `<main>` — die Anmeldeseiten über der Karte, die übrigen über
  * dem Text. Ohne Streifen gibt sie nichts aus, auch keinen leeren Behälter.
  *
  * `$datenschutz = false` nur auf `einwilligung.php`: Die Seite ist das Ziel,
@@ -1333,7 +1305,7 @@ function ui_hinweise(bool $datenschutz = true): void
  * DER UMGEBUNGSSTREIFEN  (.demo-hinweis.hinweis-umgebung)
  *
  * Eine Variante des Hinweisstreifens im Ton der Fehlermeldung (Rot-tief auf
- * Rosa, 6,27 : 1) — kein neuer Baustein (M-P5c-02, E-P5c-66). Nicht
+ * Rosa, 6,27 : 1) — kein neuer Baustein. Nicht
  * wegklickbar, aus demselben Grund wie der Demo-Hinweis: Wer eine Pause
  * macht und zurückkommt, soll wieder sehen, wo er ist.
  */
@@ -1349,7 +1321,7 @@ function ui_umgebung_hinweis(): void
 <?php }
 
 /**
- * DIE ANKÜNDIGUNG  (.meldung.meldung-ankuendigung)  — E-P5c-13, -60
+ * DIE ANKÜNDIGUNG  (.meldung.meldung-ankuendigung)
  *
  * Gibt zurück, ob ein Kreuz dasteht — dann braucht die Seite das Skript
  * (ui_hinweise() bindet es hinter der Reihe ein).
@@ -1362,11 +1334,11 @@ function ui_umgebung_hinweis(): void
  *
  * KEIN KREUZ OHNE SITZUNG. Die lesenden Seiten (Handbuch, Rechtstexte)
  * starten ohne Cookie keine, und die Setzseite hat eine eigene
- * (`sitzung_starten('passwort')`, E-ZE-12) — ein Kreuz dort schlösse in
+ * (`sitzung_starten('passwort')`) — ein Kreuz dort schlösse in
  * einer Sitzung, die die nächste Seite nicht liest. Der Streifen steht dann
  * ohne Kreuz da; schließen lässt er sich auf jeder anderen Seite.
  *
- * DER ERSTE SATZ WIRD FETT, wie im Bild (M-P5c-02 a): „Wartung am Dienstag,
+ * DER ERSTE SATZ WIRD FETT, wie im freigegebenen Bild: „Wartung am Dienstag,
  * 30.09.2026, 20:00 bis 21:00." ist der Satz, den man beim Vorbeiscrollen
  * lesen soll. Erkannt wird er an einem Satzzeichen mit Leerzeichen und
  * Großbuchstaben dahinter, frühestens nach zwölf Zeichen — sonst bräche
@@ -1421,13 +1393,13 @@ function ui_ankuendigung(): bool
  * ist der Punkt, an dem es ernst wird: Das Schlüsselmaterial dieses Kontos
  * liegt auf dem Server.
  *
- * NEU IN P3: Er steht INNERHALB des Inhalts, nicht zwischen Kopfleiste und
- * Gerüst. Vorher verschob er die klebende Leiste um seine eigene Höhe, und im
- * Demo-Konto rutschte sie unter der Kopfleiste hervor (F-P3-G).
+ * Er steht INNERHALB des Inhalts, nicht zwischen Kopfleiste und Gerüst.
+ * Dort verschoebe er die klebende Leiste um seine eigene Höhe, und im
+ * Demo-Konto rutschte sie unter der Kopfleiste hervor.
  * ------------------------------------------------------------------------ */
 function ui_demo_hinweis(): void
 {
-    /* ERST DIE SITZUNG, DANN DIE BIBLIOTHEK (P5c/AP1, F-P5c-71). Seit die
+    /* ERST DIE SITZUNG, DANN DIE BIBLIOTHEK. Seit die
      * Streifen auch auf den Seiten ohne Gerüst stehen, läuft diese Funktion
      * im Einrichter — dort gibt es noch keine `config.php`, und
      * `demo_lib.php` zieht `db.php`, das ohne sie wirft. Ohne Anmeldung gibt
@@ -1441,7 +1413,7 @@ function ui_demo_hinweis(): void
         require_once __DIR__ . '/demo_lib.php';
     }
     if (!demo_ist_demo((int)$uid)) { return; }
-    /* DIE FRIST NUR MIT MARKE (Web 21.2.0, R4-14, Nr. 76): Ohne Aenderung
+    /* DIE FRIST NUR MIT MARKE: Ohne Aenderung
      * ist kein Reset in Sicht ausser dem taeglichen — „in etwa 1380 Minuten"
      * hiesse nichts. Die Zahl erscheint, sobald etwas geaendert wurde. */
     $rest = demo_geaendert_seit() > 0 ? demo_reset_in() : 0;
@@ -1460,7 +1432,7 @@ function ui_demo_hinweis(): void
 
 
 /**
- * DER HINWEIS AUF EINE NEUE DATENSCHUTZERKLAERUNG (P5b/AP4, E-P5b-05).
+ * DER HINWEIS AUF EINE NEUE DATENSCHUTZERKLAERUNG.
  *
  * WARUM HIER UND NICHT ALS TOR. Eine Datenschutzerklaerung wird nicht
  * angenommen, sondern zur Kenntnis genommen — Widerspruch dagegen ist kein
@@ -1497,21 +1469,19 @@ function ui_datenschutz_hinweis(): void
 /* ---------------------------------------------------------------------------
  * MELDUNG  (.meldung)
  *
- * VIER TÖNE, jeder mit Symbol und optionalem fettem Auftakt (E-P3-16):
+ * VIER TÖNE, jeder mit Symbol und optionalem fettem Auftakt:
  *
  *   fehler   rosa/rot   Dreieck    „Nicht gespeichert."
  *   info     hellblau   Kreis-i    Erklärung, Zustand
  *   ok       hellblau   Haken      Vollzug: „Backup erstellt."
  *   warn     hellorange Dreieck    Warnung, die kein Fehler ist
  *
- * GRÜN IST FORT. Die Vollzugsmeldung war grün — eine Farbe, die es in der
- * Marke nicht gibt. Sie ist jetzt blau wie der Hinweis und unterscheidet sich
- * durch das SYMBOL: Haken gegen Kreis-i. Das ist zugleich die Einlösung des
- * Vorbehalts E-A6-02 aus Konzept P0, der die Tonart ausdrücklich P3
- * überlassen hat.
+ * KEIN GRÜN — eine Farbe, die es in der Marke nicht gibt. Die
+ * Vollzugsmeldung ist blau wie der Hinweis und unterscheidet sich durch das
+ * SYMBOL: Haken gegen Kreis-i.
  *
  * Farbe ist nie der einzige Träger (Grundregel 3) — deshalb trägt jede
- * Meldung ein Symbol, und das war vorher bei keiner der Fall.
+ * Meldung ein Symbol.
  *
  * Signatur wie im Bestand, damit die 21 Aufrufstellen unverändert bleiben:
  *   $hinweis, $fehler, $ton, $einzug
@@ -1540,7 +1510,7 @@ function ui_meldung(?string $hinweis, ?string $fehler = null,
 /**
  * Markup einer einzelnen Meldung. Auch von den JS-Erzeugern nachgebaut.
  *
- * `$klasse` BENENNT EINEN VERWENDER, keine Variante (P5c/AP1): Die
+ * `$klasse` BENENNT EINEN VERWENDER, keine Variante: Die
  * Ankündigung trägt `meldung-ankuendigung`, damit ihr Kreuz oben rechts
  * stehen bleibt, statt beim Umbruch allein in eine Zeile zu fallen
  * (style.css). Ton und Symbol bleiben die geschlossene Liste unten.
@@ -1549,10 +1519,9 @@ function ui_meldung_markup(string $ton, string $text, string $auftakt = '',
                            string $knopf = '', string $klasse = ''): string
 {
     /* FUENF TOENE, UND DIE LISTE IST GESCHLOSSEN (Design.md 9.5). Ein Ton,
-     * den es nicht gibt, ergab bis S3 eine Klasse ohne Regel im Stylesheet —
-     * also einen ungestalteten Kasten, und zwar ohne jede Fehlermeldung. Die
-     * Spurenseite trug so zwei Jahre lang zwei weisse Meldungen mit dem Ton
-     * „hinweis", den diese Funktion nie gekannt hat. Weil die Klasse hier
+     * den es nicht gibt, ergaebe eine Klasse ohne Regel im Stylesheet —
+     * also einen ungestalteten Kasten, und zwar ohne jede Fehlermeldung. Weil
+     * die Klasse hier
      * ZUSAMMENGESETZT wird, sieht die Vollstaendigkeitspruefung sie nicht;
      * das kann nur diese Stelle selbst pruefen. */
     $symbole = ['fehler' => 'warnung', 'warn' => 'warnung',
@@ -1579,7 +1548,7 @@ function ui_meldung_markup(string $ton, string $text, string $auftakt = '',
  *
  * EINE HÖHE: 44 px, mobil wie Desktop, auch für Zeilenaktionen. Es gibt keine
  * Kompaktvariante — was kleiner ist, ist kein Knopf, sondern ein Link mit
- * Symbol (E-P3-22). Der Bestand hatte sechs Varianten und sechs
+ * Symbol. Der Bestand hatte sechs Varianten und sechs
  * ortsgebundene Größen; `.btn-primary` trug global `width:100%` und wurde an
  * zehn Stellen zurückgenommen.
  *
@@ -1629,8 +1598,7 @@ function ui_knopf(array $o): string
  * Fuer LANGE Werte: Cron-Zeile, Token-Adresse, Setz-Link,
  * Serverschluessel-Zeile, Geraete-ID und API-Schluessel. Die grosse Stufe
  * (`.codeblock-wert`) ist fuer sechs Zeichen gemacht und sperrt sie zusaetzlich
- * — bei hundert Zeichen ergibt das drei Zeilen in Plakatgroesse (Backlog
- * Nr. 78, E-S8-10).
+ * — bei hundert Zeichen ergibt das drei Zeilen in Plakatgroesse.
  *
  * DER KNOPF IST TEIL DES BAUSTEINS und nicht Sache der Seite: Ein Wert, den man
  * kopieren soll, und ein Knopf, der ihn kopiert, gehoeren zusammen — sonst
@@ -1664,8 +1632,8 @@ function ui_codeblock_lang(string $wert, string $titel = ''): string
  * PLAKETTE  (.plakette)
  *
  * Plaketten tragen KEIN Häkchen: Ihr Vorhandensein ist das Häkchen. Und sie
- * sind KEINE Bedienelemente — wer eine anklickbar braucht, nimmt einen Knopf
- * (E-P3-17).
+ * sind KEINE Bedienelemente — wer eine anklickbar braucht, nimmt einen Knopf.
+ * 
  *
  * Töne: neutral · orange (Winde, Bergwacht) · blau (Sekundär,
  * Rettungsmittel, aktuell, freigegeben) · rot (Fehleinsatz, kein Ende, nie
@@ -1687,7 +1655,7 @@ function ui_plakette(string $text, array $o = []): string
 
 
 /* ---------------------------------------------------------------------------
- * LADEPLATZ  (.ladeplatz) — seit Web 22.0.3 (S11-04c, M-S11-01, E-S11-35)
+ * LADEPLATZ  (.ladeplatz)
  *
  * Ring und Satz an der Stelle eines Inhalts, den der Browser noch holt oder
  * oeffnet. Ausgegeben wird er VERBORGEN; `EdOrtsdaten.ladeplatz()` zeigt ihn
@@ -1715,7 +1683,7 @@ function ui_ladeplatz(string $text, array $o = []): string
  * (gedämpft) und GENAU EINER Kopfaktion rechts als Link mit Symbol:
  * „Bearbeiten" (blau) oder ein Anlegen-Weg („+ Nachtragen", orange tief).
  * Eine zweite Kopfaktion gibt es nicht — was mehr braucht, bekommt ein
- * Aktionsmenü (E-P3-25).
+ * Aktionsmenü.
  *
  * Zugeklappte Karten tragen den Winkel links im Kopf und eine Vorschau rechts
  * („keine", „vom Diensttag", „3 · 1 ausgewählt").
@@ -1724,7 +1692,7 @@ function ui_ladeplatz(string $text, array $o = []): string
  *     zu (bool), vorschau, klasse, id, plakette, geschuetzt (bool),
  *     symbol (Bereichszeichen vor dem Titel — nur mit 'klasse' => 'karte-bereich')
  *
- * DIE BEREICHSKARTE (P5c/AP9, E-P5c-29, Mockup M-P5c-01c). `symbol` setzt ein
+ * DIE BEREICHSKARTE. `symbol` setzt ein
  * rundes Zeichen in Dunkelblau vor den Titel; zusammen mit der Klasse
  * `.karte-bereich` steht der Kopf auf Rauch und die Gruppe aus Zeichen, Titel
  * und Zahl MITTIG. Gedacht für die Einstellungen-Übersicht; ein zweiter
@@ -1732,7 +1700,7 @@ function ui_ladeplatz(string $text, array $o = []): string
  * KEINE Kopfaktion — mittig gesetzt hätte sie keinen Platz. Das Zeichen ist
  * `aria-hidden` wie jedes Symbol; der Titel daneben sagt, was es meint.
  *
- * DIE KOPFAKTION KANN AUCH EIN ABSENDEKNOPF SEIN (S8/AP3). „Jetzt sichern"
+ * DIE KOPFAKTION KANN AUCH EIN ABSENDEKNOPF SEIN. „Jetzt sichern"
  * auf der Kontoseite ist ein POST, kein Link — mit `form` wird aus dem <a>
  * ein <button type="submit" form="…">, gleiche Klasse, gleiches Aussehen.
  * Ein <form> um den Knopf ginge nicht: Der Kartenkopf steht bereits in einem
@@ -1742,7 +1710,7 @@ function ui_karte_start(array $o = []): void
 {
     $zu = !empty($o['zu']) || isset($o['vorschau']);
 
-    /* 'geschuetzt' => true haengt das SCHLOSS an den Kartentitel (Web 19.1.1).
+    /* 'geschuetzt' => true haengt das SCHLOSS an den Kartentitel.
      *
      * Gedacht ist es fuer eine Karte, deren Inhalt vollstaendig im `pat_blob`
      * liegt, ohne dass ein einzelnes Feld das Zeichen tragen KANN: Die Karte
@@ -1794,7 +1762,7 @@ function ui_karte_start(array $o = []): void
         if (isset($o['zahl'])) {
             echo '    <span class="karte-zahl">' . ui_e((string)$o['zahl']) . "</span>\n";
         }
-        /* Eine Plakette neben Titel und Zahl (O9, Mockup 40: „Backups 3
+        /* Eine Plakette neben Titel und Zahl („Backups 3
          * [überfällig · 23 Tage]"). Sie sagt den ZUSTAND des Karteninhalts —
          * und gehört deshalb dorthin, wo man den Titel liest, nicht in die
          * erste Zeile darunter. Fertiges Markup aus ui_plakette(). */
@@ -1829,7 +1797,7 @@ function ui_karte_ende(bool $klappbar = false): void
 
 
 /* ---------------------------------------------------------------------------
- * ZUM ANFANG  (.nach-oben)                                    S9/AP5, M-S9-06
+ * ZUM ANFANG  (.nach-oben)
  *
  * Der Rueckweg am Ende eines langen Abschnitts. Eine Standortseite mit zehn
  * Rettungsmitteln und drei Dutzend Zielkliniken ist mehrere Bildschirme lang;
@@ -1843,8 +1811,8 @@ function ui_karte_ende(bool $klappbar = false): void
  *
  * `.knopf knopf-leise` GIBT ES SCHON, und die Klasse ist hier kein Zierrat:
  * Der Bilderlauf misst Bedienhoehen an `.knopf`. Ein eigener Klassenname
- * waere aus seiner Messung gefallen — genau so ist der Export-Knopf vier
- * Monate ungestaltet geblieben (F-P3-BA).
+ * waere aus seiner Messung gefallen, und ein ungestalteter Knopf fiele
+ * niemandem auf.
  *
  * KEIN `scroll-margin-top`: `html` traegt bereits `scroll-padding-top`; die
  * zweite Angabe war schon einmal gebaut und wieder ausgebaut, weil sie sich
@@ -1867,7 +1835,7 @@ function ui_nach_oben(string $ziel = '#inhalt'): void
 
 
 /* ---------------------------------------------------------------------------
- * SPRUNGLISTE  (.sprungliste / .sprungziel)                  S9/AP5, M-S9-05
+ * SPRUNGLISTE  (.sprungliste / .sprungziel)
  *
  * Eine umbrechende Zeile runder Marken ueber einer langen Liste: Artzeichen
  * plus Name, ein Klick springt zur Zeile. Sie ersetzt kein Inhaltsverzeichnis
@@ -1916,18 +1884,18 @@ function ui_sprungliste(array $o): void
 
 
 /* ---------------------------------------------------------------------------
- * KARTENFILTER  (.kartenfilter)                              S9/AP5, M-S9-06
+ * KARTENFILTER  (.kartenfilter)
  *
  * Ein Feld mit Lupe ueber einer langen Liste in einer Karte: Tippen blendet
  * aus, was nicht passt — im Browser, ohne Anfrage. Erst ab `SD_HILFE_AB`
  * Eintraegen; darunter ist die Liste kuerzer als das Feld darueber.
  *
- * ER HEISST NICHT `.filterfeld`. Das Stylesheet fuehrt seit P3
+ * ER HEISST NICHT `.filterfeld`. Das Stylesheet fuehrt
  * `.filterfelder` (Mehrzahl) als Innenabstand einer aufgeklappten
  * Filtergruppe der Suchseite. Zwei Klassen, die sich um ein `r`
  * unterscheiden und Verschiedenes meinen, sind derselbe Fehler, den
  * `.listenfilter-zahl` einmal ausdruecklich umgangen hat („SIE HEISST NICHT
- * `.filterzahl`. Diese Klasse ist seit O6 vergeben", style.css). `.kartenfilter`
+ * `.filterzahl`. Diese Klasse ist vergeben", style.css). `.kartenfilter`
  * sagt zugleich, wo er steht — in einer Karte, nicht am Seitenkopf.
  *
  * ER IST NICHT DAS GROSSE SUCHFELD. `.suchfeld` ist 48 px hoch
@@ -1965,13 +1933,11 @@ function ui_kartenfilter(array $o): void
     echo '    <button type="button" class="kartenfilter-x" hidden title="Filter leeren">'
        . ui_symbol('schliessen', '', 'Filter leeren') . "</button>\n";
     echo "  </div>\n";
-    /* DER ZWEITE SATZ IST MIT WEB 17.0.0 EIN ANDERER. Er lautete „Leere den
-       Filter, um etwas anzulegen" — richtig, solange die Anlegen-Formulare in
-       der Liste standen und beim Filtern mit verschwanden. Angelegt wird
-       seither im Dialog, und dessen Oeffner steht im KARTENKOPF, also
+    /* DER ZWEITE SATZ SAGT, WAS DER FILTER VERDECKT — alles Uebrige.
+       Angelegt wird im Dialog, und dessen Oeffner steht im KARTENKOPF, also
        ausserhalb der gefilterten Liste: „Anlegen" ist auch bei null Treffern
-       da. Der Satz sagt jetzt, was der Filter tatsaechlich verdeckt — alles
-       Uebrige — und nicht mehr eine Sackgasse, die es nicht mehr gibt. */
+       da. „Leere den Filter, um etwas anzulegen" waere eine Sackgasse, die
+       es nicht gibt. */
     echo '  <p class="kartenfilter-leer feld-hinweis" data-leer-fuer="' . ui_e($ziel)
        . '" hidden>Kein Eintrag passt dazu. Leere den Filter, um wieder alle'
        . ' zu sehen.</p>' . "\n";
@@ -1983,9 +1949,9 @@ function ui_kartenfilter(array $o): void
  *
  * Text links (fett plus Kleinzeile), Plaketten, Aktionen rechts. Am Desktop
  * sind die Aktionen Knöpfe zu 44 px, mobil ein einziges „⋯" je Zeile, das
- * dasselbe Aktionsblatt öffnet (E-P3-26).
+ * dasselbe Aktionsblatt öffnet.
  *
- * DIE GANZE ZEILE ALS VERWEIS (`href_ganz`, S9/AP5, Mockup M-S9-06). Die
+ * DIE GANZE ZEILE ALS VERWEIS (`href_ganz`). Die
  * Standortliste fuehrt auf je eine Seite; dort ist nicht der Name der Link,
  * sondern die Zeile, und rechts steht ein Winkel statt eines Knopfes. Zwei
  * Dinge folgen daraus:
@@ -1998,7 +1964,7 @@ function ui_kartenfilter(array $o): void
  *     die Knoepfe. Er ist Zierde und traegt keinen eigenen Namen: Was die
  *     Zeile tut, sagt ihr Text.
  *
- * DIE AUFKLAPPBARE ZEILE (`daten`, P5c/AP2, E-P5c-26, M-P5c-01a). Hat eine
+ * DIE AUFKLAPPBARE ZEILE (`daten`). Hat eine
  * Zeile Angaben, die nicht in den Satz passen (die `daten` eines
  * Protokolleintrags), wird sie ein `<details class="zeile-mehr">`, dessen
  * `<summary>` die Zeile IST; die Angaben stehen darunter als Liste. Der
@@ -2022,13 +1988,13 @@ function ui_zeile(array $o): void
     $k = 'zeile' . (!empty($o['klasse']) ? ' ' . (string)$o['klasse'] : '');
     /* `attr` wie bei ui_knopf() und ui_aktionen(): fertige Attribute, die der
      * Aufrufer anhaengt — etwa `data-…` und `tabindex` fuer eine Zeile, die
-     * mit etwas anderem auf der Seite verknuepft ist (S2/AP4, tag_spuren.php).
+     * mit etwas anderem auf der Seite verknuepft ist (tag_spuren.php).
      * Keine neue Darstellung, nur dieselbe Zusatzoption an einem dritten
      * Baustein. */
     echo ($ganz !== ''
         ? '<a class="' . $k . '" href="' . ui_e($ganz) . '"'
         : '<div class="' . $k . '"') . (string)($o['attr'] ?? '') . '>' . "\n";
-    /* VORN steht, was VOR dem Text gehört (O9b): in der NutzerInnen-Liste das
+    /* VORN steht, was VOR dem Text gehört: in der NutzerInnen-Liste das
      * Auswahlkästchen. Es gehört nicht zu den Aktionen rechts — es wählt die
      * Zeile aus, statt an ihr zu handeln, und in der Tabellenfassung derselben
      * Liste steht es ebenfalls in der ersten Spalte. Fertiges Markup. */
@@ -2063,7 +2029,7 @@ function ui_zeile(array $o): void
  *
  * DAS `<summary>` IST IMMER ERSTES KIND seines `<details>`. `.zeile:first-child`
  * naehme ihm deshalb den oberen Innenabstand, und aufklappbare Zeilen waeren
- * 13 px niedriger als die uebrigen (F-P5c-13, gemessen in M-P5c-01).
+ * 13 px niedriger als die uebrigen (gemessen).
  * `style.css` setzt die Gegenregel an `.zeile-mehr > summary.zeile`.
  */
 function ui_zeile_mehr(array $o, array $daten): void
@@ -2091,14 +2057,13 @@ function ui_zeile_mehr(array $o, array $daten): void
 
 /* ---------------------------------------------------------------------------
  * REITER  (.reiter-rahmen, .reiter, .reiter-punkt, .reiter-abgesetzt)
- *                                          P5c/AP2, E-P5c-25, Bild M-P5c-01a
  *
  * Wechsel zwischen gleichrangigen Sichten EINER Seite — serverseitig, jeder
  * Reiter ist ein Verweis. Orange unterstrichen wie der aktive Punkt der
  * Kopfleiste: „hier stehst du". Drei Verwender sind geplant: Protokoll (hier
- * entstanden), Statistik (AP7), Rechtstexte (AP9).
+ * entstanden), Statistik, Rechtstexte.
  *
- * WARUM NICHT DAS SEGMENT UND NICHT DIE FILTERPILLEN (M-P5c-01a, geprüft und
+ * WARUM NICHT DAS SEGMENT UND NICHT DIE FILTERPILLEN (geprüft und
  * verworfen): Das Segment ist fuer wenige kurze Moeglichkeiten, sieben Woerter
  * passen bei 400 px nicht. Die Pillen stehen eine Zeile tiefer als
  * Zeitraumfilter — zwei Reihen gleich aussehender Pillen mit verschiedener
@@ -2109,7 +2074,7 @@ function ui_zeile_mehr(array $o, array $daten): void
  * Bild und setzt den Verlauf am Rand — ohne Skript rollt die Reihe trotzdem.
  *
  * SEITEN MIT REITERN TRAGEN KEINE UNTERPUNKTE IN DER LEISTE: `menue.js` baut
- * keine, wenn `#inhalt` eine `.reiter`-Reihe enthaelt (E-P5c-25).
+ * keine, wenn `#inhalt` eine `.reiter`-Reihe enthaelt.
  *
  * $o: label (fuer die Vorlesesoftware), punkte [ ['text', 'href',
  *     'aktiv' => bool, 'abgesetzt' => bool (am rechten Rand, fuer eine
@@ -2136,9 +2101,8 @@ function ui_reiter(array $o): void
 /* ---------------------------------------------------------------------------
  * LISTENKOPF UND LISTENFUSS  (.listenkopf, .listensuche, .filterreihe,
  * .listenfilter · .listenfuss, .listenzahl, .seitenwahl, .seitenknopf)
- *                                                P5c/AP2, R83, F-P5c-54
  *
- * BIS WEB 20.38.0 STANDEN SUCHFELD, FILTERPILLEN UND SEITENWAHL NUR ALS
+ * OHNE DIESE BAUSTEINE STUENDEN SUCHFELD, FILTERPILLEN UND SEITENWAHL ALS
  * HANDGESCHRIEBENES MARKUP IN `admin_users.php`. Die Protokollseite waere die
  * zweite Kopie gewesen — und zwei Kopien derselben Seitenwahl laufen
  * auseinander, sobald eine von beiden eine Ellipse mehr bekommt. Jetzt ist
@@ -2267,8 +2231,8 @@ function ui_listenfuss(array $o): void
 }
 
 /**
- * Die Zeitraumwahl (`.zeitraumwahl`, R4-23, Nr. 122 a, Bild M-R4-23,
- * Design.md 9.18b): feste Fenster als Pillen, daneben Von/Bis und
+ * Die Zeitraumwahl (`.zeitraumwahl`, Design.md 9.18b): feste Fenster als
+ * Pillen, daneben Von/Bis und
  * „Anwenden"; ein eigener Zeitraum steht als aktive Pille mit Kreuz, deren
  * Verweis ihn wegnimmt.
  *
@@ -2345,12 +2309,12 @@ function ui_diagramm_skala(int $hoechst): array
 }
 
 /**
- * Das Diagramm „Säulen" (`.diagramm-saeulen`, R4-24, Nr. 122 b, Bild
- * M-R4-24, Design.md 9.40): eine Reihe über die Zeit als Inline-SVG, aus
+ * Das Diagramm „Säulen" (`.diagramm-saeulen`, Design.md 9.40): eine Reihe über
+ * die Zeit als Inline-SVG, aus
  * PHP, ohne Bibliothek und ohne Skript.
  *
  * EINE FARBE, DER HÖCHSTWERT HERVORGEHOBEN UND BESCHRIFTET: Blau erklärt,
- * Orange tief hebt hervor (E-R4-60) — und die Zahl darüber sagt es noch
+ * Orange tief hebt hervor — und die Zahl darüber sagt es noch
  * einmal, weil Farbe nie der einzige Träger ist. Jede andere Säule zeigt ihre
  * Zahl beim Überfahren (`:hover`) und trägt sie als `<title>`.
  *
@@ -2424,14 +2388,14 @@ function ui_diagramm_saeulen(array $o): string
 }
 
 /**
- * Das Diagramm „Balken" (`.diagramm-balken`, R4-24, Bild M-R4-24): Anteile
+ * Das Diagramm „Balken" (`.diagramm-balken`): Anteile
  * — je Zeile Beschriftung mit Anteil, ein Balken, die Zahl. Kein Kreis:
  * Anteile nebeneinander liest das Auge an einer gemeinsamen Linie genauer
  * als an Winkeln.
  *
  * DER BALKEN IST EIN KLEINES SVG, KEIN DIV MIT STILATTRIBUT FÜR DIE BREITE:
  * Ein Stilattribut im PHP-Markup fiele unter `style-src` der CSP, und die
- * Seite hat keins mehr (`kopfzeilen_lib.php`, P5a/AP4; die
+ * Seite hat keins mehr (`kopfzeilen_lib.php`; die
  * Vollständigkeitsprüfung zählt jedes, auch in einem Kommentar). `width="53%"` an einem
  * `<rect>` ist ein Attribut der Grafik, kein Stil — und der Balken steht
  * damit auch ohne Skript.
@@ -2475,7 +2439,7 @@ function ui_titelzeile(array $o): void
   <?php /* Die Unterzeile steht NACH der Hauptzeile, nicht im Flex-Block:
            Sonst bestimmt ihre Breite die des Titelblocks, und die Aktionen
            brechen unter einen kurzen Titel („Einsatz 1"), obwohl neben ihm
-           Platz ist (Fund aus O4, Mockups 02/19). */ ?>
+           Platz ist. */ ?>
   <div class="titelzeile-haupt">
     <div class="titelzeile-text">
       <h1<?= !empty($o['titel_mobil']) ? ' data-mobil="' . ui_e((string)$o['titel_mobil']) . '"' : '' ?>><?= ui_e((string)($o['titel'] ?? '')) ?></h1>
@@ -2497,8 +2461,8 @@ function ui_titelzeile(array $o): void
  * Mobil ein „⋯" neben dem Titel, das ein Blatt von unten öffnet: Griff,
  * Titel, große Zeilen zu 50 px, „Löschen" rot und durch eine Linie
  * abgesetzt, „Abbrechen". Am Desktop derselbe Vorrat als „Aktionen ▾" in
- * einem Aufklappmenü. Der Anlegen-Weg steht auch dort als erste Zeile
- * (E-P3-27).
+ * einem Aufklappmenü. Der Anlegen-Weg steht auch dort als erste Zeile.
+ * 
  *
  * EIN Markup für beide Formen; assets/blatt.js entscheidet nichts, es öffnet
  * und schließt nur. Welche Form erscheint, sagt das Stylesheet.
@@ -2528,7 +2492,7 @@ function ui_aktionen(array $o): string
         $inhalt = (!empty($e['symbol']) ? ui_symbol((string)$e['symbol']) : '')
                 . '<span>' . ui_e((string)($e['text'] ?? '')) . '</span>';
         $attr = !empty($e['attr']) ? ' ' . (string)$e['attr'] : '';
-        /* EIN EINTRAG KANN AUCH EINE HANDLUNG SEIN, nicht nur ein Weg (O9).
+        /* EIN EINTRAG KANN AUCH EINE HANDLUNG SEIN, nicht nur ein Weg.
          * „Setz-Link senden" auf der Kontoseite ist ein POST — als
          * <a href> wäre es entweder wirkungslos oder ein Zustandswechsel auf
          * einen GET hin, und genau das ist an anderer Stelle schon einmal
@@ -2537,7 +2501,7 @@ function ui_aktionen(array $o): string
          * Der Knopf verweist über `form` auf ein Formular an anderer Stelle
          * der Seite — dasselbe Verfahren wie in ui_zeilenaktionen(): Ein
          * <form> um den Eintrag herum ginge nicht, weil das Blatt selbst in
-         * einem Formular stehen kann. `button.blatt-zeile` trägt seit O5
+         * einem Formular stehen kann. `button.blatt-zeile` trägt
          * dieselbe Gestalt wie der Verweis (Stylesheet, Abschnitt 23). */
         if (!empty($e['form'])) {
             $m .= '<button type="submit" class="' . $k . '" form="'
@@ -2559,12 +2523,11 @@ function ui_aktionen(array $o): string
  * FELD  (.feld)
  *
  * Beschriftung oben, Eingabe 44 px hoch, blauer Fokusring, optionale
- * Kleinzeile darunter. Reihen zu zweit oder dritt entstehen über
- * `.feld-reihe` um mehrere Felder.
+ * Kleinzeile darunter.
  *
  * Die Beschriftung steht in NORMALSCHRIFT. Im Bestand waren Feldnamen,
  * Tabellenköpfe und Legenden gesperrte Versalien — das prägende Stilmittel
- * und zugleich das, was auf 360 px am meisten Breite kostete (E-P3-21).
+ * und zugleich das, was auf 360 px am meisten Breite kostete.
  *
  * $o: name, label, wert, art (text|date|number|email|password|file|select|
  *     textarea), optionen, klein, pflicht, attr, klasse, platzhalter
@@ -2598,7 +2561,7 @@ function ui_feld(array $o): void
   <?php if (isset($o['label'])): ?>
     <label class="feld-label" for="<?= ui_e($id) ?>"><?= ui_e((string)$o['label']) ?><?php
       if (!empty($o['pflicht'])): ?> <span class="feld-pflicht" aria-hidden="true">*</span><?php endif;
-      /* EIN GEDAEMPFTER ZUSATZ IN DER BESCHRIFTUNG (O10, Mockup 35):
+      /* EIN GEDAEMPFTER ZUSATZ IN DER BESCHRIFTUNG:
          „Text (Markdown: Überschriften, Absätze, Listen, Links)". Er gehört
          zur Beschriftung, nicht unter das Feld — dort steht schon `klein`.
          Als eigener Schlüssel und nicht als Markup in `label`: Der Wert
@@ -2631,7 +2594,7 @@ function ui_feld(array $o): void
  *
  * Ja/Nein-Felder werden Schalter in 44-px-Zeilen: Beschriftung links, an in
  * Orange. Abhängige Felder klappen darunter auf, eingerückt mit orangem
- * Randstrich (E-P3-28).
+ * Randstrich.
  *
  * Gebaut aus einer echten Checkbox — die Tastaturbedienung, der
  * Vorlesezustand und das Absenden im Formular kommen damit vom Browser und
@@ -2662,7 +2625,7 @@ function ui_schalter(array $o): void
  * SEGMENTWAHL  (.segment)
  *
  * Tastenreihe mit orangem Aktivzustand — für Gemischt/Luft/Boden,
- * egal/ja/nein und die Wochentage. Mobil vollbreit (E-P3-30).
+ * egal/ja/nein und die Wochentage. Mobil vollbreit.
  *
  * Als Radiogruppe gebaut, nicht als Knopfreihe mit Skript: Pfeiltasten,
  * Vorlesezustand und Absenden kommen damit vom Browser.
@@ -2675,7 +2638,7 @@ function ui_segment(array $o): void
 }
 
 /**
- * Dieselbe Segmentwahl als Zeichenkette (O9c).
+ * Dieselbe Segmentwahl als Zeichenkette.
  *
  * WARUM BEIDES: `ui_segment()` gibt aus und passt damit ueberall dorthin, wo
  * ein Formular Zeile fuer Zeile geschrieben wird. Die Titelzeile
@@ -2707,13 +2670,13 @@ function ui_segment_markup(array $o): string
  * SPEICHERN-LEISTE  (.speichern)
  *
  * Klebt am unteren Rand und erscheint, sobald das Formular schmutzig ist —
- * das Dirty-Tracking dafür liegt seit Web 7.0.0 in assets/forms.js
+ * das Dirty-Tracking dafür liegt in assets/forms.js
  * (`data-dirty-track`). Mobil ein breiter Primärknopf; am Desktop der Knopf
  * links plus der Hinweis „Es gibt ungespeicherte Änderungen · Strg + Enter
  * speichert".
  *
  * KEIN „VERWERFEN". Der Rückweg oben genügt, und ein Verwerfen-Knopf neben
- * einem Speichern-Knopf ist die Stelle, an der man sich vergreift (E-P3-29).
+ * einem Speichern-Knopf ist die Stelle, an der man sich vergreift.
  *
  * $o: text, hinweis, name, wert, attr
  * ------------------------------------------------------------------------ */
@@ -2722,7 +2685,7 @@ function ui_segment_markup(array $o): string
  *
  * Eine Reihe großer Auswahlzeilen mit Radio links, Beschriftung und einem
  * gedämpften Zusatz rechts; die gewählte Zeile wird hell orange mit orangem
- * Rahmen. Freigegeben mit Mockup 13 (Logo-Wahl, E-P3-20).
+ * Rahmen. Freigegeben mit Mockup.
  *
  * WARUM NICHT DIE SEGMENTWAHL: Ein Segment trägt kurze Wörter nebeneinander
  * („Gemischt / Luft / Boden"). Hier stehen vier Zeilen mit Erklärung
@@ -2762,11 +2725,11 @@ function ui_wahlliste(array $o): void
 
 
 /* ---------------------------------------------------------------------------
- * ZEILENAKTIONEN  (.zeile-aktionen)  — E-P3-26
+ * ZEILENAKTIONEN  (.zeile-aktionen)
  *
- * Am Schreibtisch stehen die Handlungen einer Zeile als Knöpfe nebeneinander
- * (Mockup 08); unter 720 px steht dort EIN „⋯", das ein Aktionsblatt öffnet
- * (Mockup 07). Ein Dutzend Knöpfe untereinander wäre auf dem Handy eine
+ * Am Schreibtisch stehen die Handlungen einer Zeile als Knöpfe nebeneinander;
+ * unter 720 px steht dort EIN „⋯", das ein Aktionsblatt öffnet. Ein Dutzend
+ * Knöpfe untereinander wäre auf dem Handy eine
  * Bildschirmlänge je Zeile.
  *
  * FORMULARE STEHEN NUR EINMAL IM MARKUP. Die meisten Zeilenaktionen sind
@@ -2789,15 +2752,15 @@ function ui_zeilenaktionen(array $o): string
      * damit Blatt und Knopfreihe nicht auseinanderlaufen können. */
     $knopf = static function (array $e, string $klasse) : string {
         $art  = (string)($e['art'] ?? 'neutral');
-        /* ZWEI VOKABELN FÜR DIESELBE SACHE, und sie sind nicht austauschbar
-         * (O11). Die Knopfreihe am Desktop kennt `knopf-gefahr`, das Blatt
+        /* ZWEI VOKABELN FÜR DIESELBE SACHE, und sie sind nicht austauschbar.
+         * Die Knopfreihe am Desktop kennt `knopf-gefahr`, das Blatt
          * kennt `blatt-gefahr` — und die Blattzeile setzt ihre Schriftfarbe
          * SELBST (`.blatt-zeile{color:var(--asphalt)}`, Stylesheet
          * Abschnitt 11). Beide Regeln haben Spezifität (0,1,0); die spätere
          * gewinnt, und das ist `.blatt-zeile`.
          *
-         * Bis Web 9.11.0 bekam die Blattzeile deshalb `knopf-gefahr` und sah
-         * aus wie jede andere: kein Rot, dunkelblaues Symbol statt rotem,
+         * Mit `knopf-gefahr` allein saehe die Blattzeile deshalb aus wie jede
+         * andere: kein Rot, dunkelblaues Symbol statt rotem,
          * keine abgesetzte Trennlinie. Gemessen an „Löschen" in der
          * Stammdatenliste: rgb(26,5,0) — dieselbe Farbe wie „Bearbeiten".
          *
@@ -2841,7 +2804,7 @@ function ui_zeilenaktionen(array $o): string
 
     /* Desktop: die Knöpfe. Mobil: das „⋯" und dasselbe wieder im Blatt.
      *
-     * `blatt_immer` LÄSST DIE KNOPFREIHE WEG (S8/AP6, Mockup 10, freigegeben):
+     * `blatt_immer` LÄSST DIE KNOPFREIHE WEG (freigegeben):
      * Dann steht der Punkte-Knopf in jeder Breite, und ab 1024 px klappt
      * daran das Aufklappmenü auf — dasselbe Markup, das Stylesheet entscheidet.
      *
@@ -2881,7 +2844,7 @@ function ui_zeilenaktionen(array $o): string
 
 function ui_speichern_leiste(array $o = []): void
 {
-    /* ZWEI VERWENDUNGEN, EIN BAUSTEIN (O9b). Die Leiste ist ursprünglich die
+    /* ZWEI VERWENDUNGEN, EIN BAUSTEIN. Die Leiste ist ursprünglich die
      * Speichern-Leiste eines schmutzigen Formulars (forms.js hängt an
      * `data-speichern`). Die Sammelleiste der NutzerInnen-Liste ist derselbe
      * Baustein mit anderem Inhalt: unten klebend, ein Hauptknopf, ein Text
@@ -2891,16 +2854,16 @@ function ui_speichern_leiste(array $o = []): void
      *
      * $o: text, symbol, name, wert, attr, hinweis, id, form, zahl (Hinweis
      *     immer sichtbar), kein_haken (nicht an forms.js hängen),
-     *     hinweis_vorlage (S8/AP3: forms.js ersetzt den Hinweis dann durch
+     *     hinweis_vorlage (forms.js ersetzt den Hinweis dann durch
      *     „<Vorlage>: Karte A und Karte B" — die Titel der Karten, in denen
      *     etwas geändert wurde) */
     $id = !empty($o['id']) ? ' id="' . ui_e((string)$o['id']) . '"' : '';
     ?>
 <div class="speichern"<?= $id ?><?= empty($o['kein_haken']) ? ' data-speichern' : '' ?> hidden>
-  <?php /* HINWEIS ZUERST, KNOPF DANACH (E-R43-1). Bis Web 12.2.2 stand der
-           Knopf im Markup vorn und damit links, die Zaehlung rechts davon —
-           umgekehrt zu allem anderen in dieser Oberflaeche, wo die
-           Haupthandlung rechts sitzt. Die Reihenfolge im Markup ist zugleich
+  <?php /* HINWEIS ZUERST, KNOPF DANACH. Stuende der Knopf im Markup vorn und
+           damit links, die Zaehlung rechts davon, waere es umgekehrt zu allem
+           anderen in dieser Oberflaeche, wo die Haupthandlung rechts sitzt. Die
+           Reihenfolge im Markup ist zugleich
            die Vorlesereihenfolge: erst „12 ausgewaehlt", dann „Auswahl
            sichern". Ausgerichtet wird ueber `justify-content:flex-end` an
            `.speichern-innen`, nicht ueber `order` — sonst liefen Seh- und
@@ -2933,7 +2896,7 @@ function ui_speichern_leiste(array $o = []): void
  *
  * Wert in Bricolage mit Einheit, darunter die Beschriftung. Extremwerte
  * tragen einen Punkt oben rechts und den Tag in der Beschriftung; die aktive
- * Kachel wird hell orange mit orangem Rahmen (E-P3-37).
+ * Kachel wird hell orange mit orangem Rahmen.
  *
  * Die Hervorhebung war rot und ist jetzt orange: Rot heißt in dieser
  * Oberfläche „Aufmerksamkeit" (Fehler, Löschen), und ein Höchstwert ist kein
@@ -2943,7 +2906,7 @@ function ui_speichern_leiste(array $o = []): void
  * ------------------------------------------------------------------------ */
 function ui_kennzahl(array $o): string
 {
-    /* TON UND VERWEIS (O9b, Mockup 41). Eine Statuskachel sagt nicht nur eine
+    /* TON UND VERWEIS. Eine Statuskachel sagt nicht nur eine
      * Zahl, sondern auch, ob sie in Ordnung ist („27 Backup überfällig" in
      * Orange, „9 nie gesichert" in Rot) — und sie ist ein WEG: Ein Klick
      * öffnet die Liste, auf die sie sich bezieht. Ein <a> statt eines <div>,
@@ -3009,12 +2972,12 @@ function ui_abbruch(int $code, string $text, array $o = []): never
     exit;
 }
 /**
- * Markup eines ORTSFELDES — Bezeichnung plus optionale Koordinaten (E37/E39).
+ * Markup eines ORTSFELDES — Bezeichnung plus optionale Koordinaten.
  *
  * Gegenstueck zu assets/ortsfeld.js: Diese Funktion erzeugt die Elemente, das
  * Skript belebt sie. Beide bilden die Kennungen aus demselben PRAEFIX; wer eine
  * siebte Verwendung braucht, schreibt einen Aufruf hier und ein
- * EdOrtsfeld.init() dort — und nicht wieder 250 Zeilen (Vorpruefung V8).
+ * EdOrtsfeld.init() dort — und nicht wieder 250 Zeilen.
  *
  * ZWEI FORMEN, gesteuert ueber 'feld':
  *
@@ -3038,19 +3001,17 @@ function ui_abbruch(int $code, string $text, array $o = []): never
  *               wandert dann verschluesselt in den pat_blob)
  *   lat_name / lon_name, lat / lon                   Koordinatenfelder
  *   ortswahl    Pin-Knopf mit dem Blatt „Meine Position / Auf der Karte" —
- *               seit Web 15.8.0 in BEIDEN Fassungen (E-S9-06 c)
+ *               in BEIDEN Fassungen
  *   klasse      zusaetzliche Klasse am Rahmen (z. B. 'loc-inline')
  *
- * KEINE `<datalist>` MEHR (S9/AP1, E-S9-07). Bis Web 15.5.2 nahm der
- * Schluessel 'datalist' eine Namensliste entgegen und haengte sie als native
- * Vorschlagsliste an das Feld. Am Transportziel standen damit ZWEI Listen
- * uebereinander — die native, vom Browser ueber dem Feld gezeichnet, und die
- * eigene darunter (PS-6); mobil zeigte die native nichts (Backlog 68). Die
- * Stammdaten kommen jetzt als GRUPPE in die eine Liste; uebergeben werden sie
+ * KEINE `<datalist>`. Eine native Vorschlagsliste am Feld ergaebe ZWEI
+ * Listen uebereinander — die native, vom Browser ueber dem Feld gezeichnet,
+ * und die eigene darunter; mobil zeigte die native nichts. Die
+ * Stammdaten kommen als GRUPPE in die eine Liste; uebergeben werden sie
  * dem Skript (`EdOrtsfeld.init({vorschlaege: […]})`), nicht dem Markup.
  */
 /**
- * DAS TOKEN FUER `EdApi` AUF SEITEN OHNE VERSCHLUESSELUNG (P5c/AP9, E-P5c-130).
+ * DAS TOKEN FUER `EdApi` AUF SEITEN OHNE VERSCHLUESSELUNG.
  *
  * `EdApi.postJson()` und `.postForm()` lesen die Konstante `CSRF`. Bis Web
  * 21.1.0 schrieb sie nur `ui_krypto_bootstrap()` — und der bringt Salz,
@@ -3085,17 +3046,14 @@ function ui_csrf_bootstrap(): void
 }
 
 /**
- * Die Einstellungen der Adresssuche fuer den Browser (S9/AP2, E-S9-05).
+ * Die Einstellungen der Adresssuche fuer den Browser.
  *
- * WARUM NICHT IM KRYPTO-BOOTSTRAP, wie das Konzept es vorsah. Dort stehen
+ * WARUM NICHT IM KRYPTO-BOOTSTRAP. Dort stehen
  * schon Konstanten fuer den Browser, und der Gedanke war richtig — nur haengt
  * die Adresssuche nicht an der Verschluesselung: Eine Seite kann Ortsfelder
- * tragen, ohne `ui_krypto_bootstrap()` zu rufen. Bis S9/AP5b war die
- * systemweite Stammdatenpflege genau so ein Fall; sie brauchte keine
- * Verschluesselung, trug aber zwei Ortsfelder, und die Adresssuche haette dort
- * ohne Einstellung dagestanden und waere auf den Rueckfall gefallen. Die Seite
- * ist gestrichen, die Moeglichkeit nicht: Der naechste Ortsfeld-Einbau kann
- * wieder einer sein. Also ein eigener, kleiner Bootstrap — und er wird nicht
+ * tragen, ohne `ui_krypto_bootstrap()` zu rufen, und die Adresssuche stuende
+ * dort ohne Einstellung da und fiele auf den Rueckfall. Also ein eigener,
+ * kleiner Bootstrap — und er wird nicht
  * von den Seiten gerufen, sondern von `ui_ortsfeld()` selbst: Wo ein Ortsfeld
  * steht, stehen seine Einstellungen, und keine Seite kann sie vergessen.
  *
@@ -3103,17 +3061,17 @@ function ui_csrf_bootstrap(): void
  * Ortsfelder auf einer Seite sind der Regelfall, nicht die Ausnahme, und
  * siebenmal dasselbe Skript ist siebenmal Ballast.
  *
- * `window.` UND NICHT `const` — daran ist AP2 einmal vorbeigelaufen. Der
+ * `window.` UND NICHT `const`. Der
  * Krypto-Bootstrap schreibt `const PAT_WRAP = …`, und das geht dort gut, weil
  * seine Leser INLINE-Skripte derselben Seite sind: Ein `const` auf oberster
  * Ebene liegt im globalen LEXIKALISCHEN Bereich, den ein Skript sieht — aber
  * es wird KEINE Eigenschaft von `window`. `assets/geocoder.js` ist eine
- * eigene Datei und liest `global.GEO_DIENST`; die stand damit auf
- * `undefined`, `EdGeocoder.an()` lieferte `false`, und der Kartendialog kam
- * ohne Suchfeld — auf einer Seite, deren Hinweiszeile daneben sagte, die
- * Suche sei an. In der Konsole war nichts zu sehen: Wer dort `GEO_DIENST`
+ * eigene Datei und liest `global.GEO_DIENST`; mit `const` stuende die auf
+ * `undefined`, `EdGeocoder.an()` lieferte `false`, und der Kartendialog kaeme
+ * ohne Suchfeld — auf einer Seite, deren Hinweiszeile daneben sagt, die
+ * Suche sei an. In der Konsole waere nichts zu sehen: Wer dort `GEO_DIENST`
  * eintippt, bekommt den lexikalischen Wert und damit die Antwort, die er
- * erwartet. Gefunden hat es die Klickprobe (F-S9-P-08). Eine Zuweisung an
+ * erwartet. Eine Zuweisung an
  * `window` ist ausserdem beim zweiten Mal harmlos — der Merkzettel bleibt
  * trotzdem, denn zweimal dasselbe auszugeben ist auch dann falsch.
  */
@@ -3131,7 +3089,7 @@ function ui_geocoder_bootstrap(): void
 }
 
 /**
- * Der Hinweis unter dem Ortsfeld — EINMAL je Seite (S9/AP2, E-S9-05, Nr. 137).
+ * Der Hinweis unter dem Ortsfeld — EINMAL je Seite.
  *
  * WARUM NUR EINMAL. „Ein Hinweis am Ortsfeld" heisst es im Auftrag, und beim
  * Einsatzformular waeren das drei gleiche Saetze auf einer Seite. Auf
@@ -3166,8 +3124,8 @@ function ui_ortsfeld(array $o): void
 
     $versteckt = !empty($o['versteckt']) ? ' hidden' : '';
 
-    /* SEIT O5 (E-P3-34) GIBT ES KEIN ZWEITES SUCHFELD MEHR: An seine Stelle
-     * tritt der Lupen-Knopf neben dem Feld — er sucht mit dem, was im Feld
+    /* ES GIBT KEIN ZWEITES SUCHFELD: Statt seiner gibt es den Lupen-Knopf neben
+     * dem Feld — er sucht mit dem, was im Feld
      * steht (bei getrennter Suche uebernimmt der Treffer weiterhin NUR die
      * Koordinaten, assets/ortsfeld.js). 'ortswahl' ergaenzt den Pin-Knopf mit
      * dem Blatt „Meine Position uebernehmen / Auf der Karte waehlen"
@@ -3176,14 +3134,12 @@ function ui_ortsfeld(array $o): void
 
     /* DIE EINSTELLUNGEN DER ADRESSSUCHE gehen mit dem ersten Ortsfeld der
      * Seite in den Browser — nicht die Seite bestellt sie, sondern das Feld
-     * bringt sie mit (S9/AP2). */
+     * bringt sie mit. */
     ui_geocoder_bootstrap();
 
-    /* DER PIN-KNOPF STEHT IN BEIDEN FASSUNGEN (E-S9-06 c). Bis Web 15.7.1
-     * rendete ihn nur der `feld = true`-Zweig; die Nur-Lage-Fassung der
-     * Stammdaten hatte deshalb keine Karte — und Backlog Nr. 70 („Karte fuer
-     * Standorte") war genau das. Der Block steht jetzt einmal hier und wird
-     * zweimal ausgegeben. */
+    /* DER PIN-KNOPF STEHT IN BEIDEN FASSUNGEN — sonst haette die
+     * Nur-Lage-Fassung der Stammdaten keine Karte. Der Block steht einmal
+     * hier und wird zweimal ausgegeben. */
     $pinKnopf = static function () use ($o, $p): void {
         ?>
             <span class="aktionen ortsfeld-aktionen">
@@ -3211,8 +3167,8 @@ function ui_ortsfeld(array $o): void
 
     if ($mitFeld): ?>
       <div class="loc-widget <?= e((string)($o['klasse'] ?? '')) ?>"<?= $versteckt ?>>
-        <?php /* 'geschuetzt' => true haengt das Schloss an die Beschriftung
-                 (S9/AP7, E-S9-02). Der Einsatzort und der manuelle Abfahrtort
+        <?php /* 'geschuetzt' => true haengt das Schloss an die Beschriftung.
+                 Der Einsatzort und der manuelle Abfahrtort
                  liegen im `pat_blob`, das Transportziel und der Standort eines
                  Rettungsmittels nicht — und man sieht es einem Ortsfeld sonst
                  nicht an. Ein eigener Schluessel und kein HTML im 'label':
@@ -3243,15 +3199,10 @@ function ui_ortsfeld(array $o): void
                Treffer setzt ausschließlich die Koordinaten (ortsfeld.js,
                `getrennteSuche`).
 
-               BIS WEB 9.6.0 STAND HIER GAR KEIN FELD. Diese Fassung gab nur
-               das Zubehör aus — Vorschlagsliste, Zustandszeile, Chips, die
-               versteckten Koordinatenfelder —, weil das sichtbare Suchfeld
-               getrennt daneben stand ('such' => true). Mit O5 ist das zweite
-               Suchfeld ausgebaut worden (der Lupen-Knopf am Namensfeld trat
-               an seine Stelle), und dabei ist diese Fassung leer
-               zurückgeblieben: Die Lage eines Standorts oder einer Zielklinik
-               ließ sich seither nicht mehr eingeben, nur noch behalten
-               (F-P3-AI). */ ?>
+               DIESE FASSUNG TRAEGT IHR FELD SELBST. Gaebe sie nur das Zubehör
+               aus — Vorschlagsliste, Zustandszeile, Chips, die versteckten
+               Koordinatenfelder —, liesse sich die Lage eines Standorts oder
+               einer Zielklinik nicht eingeben, nur behalten. */ ?>
       <div class="loc-widget <?= e((string)($o['klasse'] ?? '')) ?>"<?= $versteckt ?>>
         <?php if (!empty($o['such_hinweis'])): ?>
           <label class="feld-label" for="<?= e($p) ?>addr"><?= e((string)$o['such_hinweis']) ?></label>
@@ -3267,7 +3218,7 @@ function ui_ortsfeld(array $o): void
     <?php endif; ?>
 
       <?php /* Die Trefferliste — EIN Baustein fuer Stammdaten, Adressen und
-               erkannte Koordinaten (assets/vorschlagsliste.js, E-S9-07). Das
+               erkannte Koordinaten (assets/vorschlagsliste.js). Das
                Markup ist leer; gefuellt wird es beim Tippen. */ ?>
       <ul id="<?= e($p) ?>suggest" class="vorschlaege" hidden></ul>
       <?php /* Meldungszeile unmittelbar unter dem Feld: Sie sagt etwas über
@@ -3290,17 +3241,17 @@ function ui_ortsfeld(array $o): void
 
 /**
  * Die Vorgaben, die `assets/missiontable.js` braucht — EINMAL, fuer alle
- * drei Seiten mit einer Einsatztabelle (Schritt 15 AP9b).
+ * drei Seiten mit einer Einsatztabelle.
  *
  * Bis dahin standen `ART_SYMBOLE` und `TYP_SYMBOLE` wortgleich in
  * `suche.php` und `zeitraum.php`, und `index.php` hatte statt dessen seine
  * eigene Liste `DAY_COLS`. Drei Seiten, drei Vorspaenne, eine Tabelle —
- * genau die Bauform, die Schritt 15 abschafft.
+ * genau die Bauform, die die eine Stelle je Sache abschafft.
  *
  * `KATALOG_SPALTEN` ist `mf_tagesspalten()`, also die Felder mit 'day_col'
  * aus `mission_fields.php`. Das Modul gleicht seine Hakenspalten dagegen ab:
  * Der Katalog bestimmt, WELCHE es gibt, das Modul, wie sie aussehen und in
- * welcher Reihenfolge sie stehen (E-ZE-34). `label` darf Auszeichnung
+ * welcher Reihenfolge sie stehen. `label` darf Auszeichnung
  * tragen und geht deshalb unmaskiert hinaus — der Wert stammt aus einer
  * Datei des Projekts, nie aus einer Eingabe.
  *
@@ -3337,7 +3288,7 @@ function ui_tabellen_bootstrap(): void
  * Ruestzeug der Ende-zu-Ende-Verschluesselung: die Skripte und die Werte,
  * die sie aus der Nutzerzeile brauchen.
  *
- * WARUM ES SIE GIBT (P0/A6, Befund C1 und F-12). Acht Stellen in sieben
+ * WARUM ES SIE GIBT. Acht Stellen in sieben
  * Dateien schrieben denselben Block: drei <script>-Verweise und vier
  * Konstanten, dazu jedes Mal derselbe achtzeilige Kommentar. Zwei Folgen
  * hatte das schon:
@@ -3345,7 +3296,7 @@ function ui_tabellen_bootstrap(): void
  *   1. NAMENSDRIFT. einstellungen.php nannte die Huelle im Profilreiter
  *      WRAP_PW, ueberall sonst heisst sie PAT_WRAP. Ein Baustein, der aus
  *      diesem Reiter etwas uebernimmt, greift ins Leere.
- *   2. DOPPELTE EINBINDUNG (F-12). Dieselbe Datei band crypto.js zweimal ein
+ *   2. DOPPELTE EINBINDUNG. Dieselbe Datei band crypto.js zweimal ein
  *      und pwquality.js ebenfalls — einmal je Reiter. Beide Dateien
  *      deklarieren auf oberster Ebene ein `const`; eine zweite Deklaration im
  *      selben Dokument ist ein SyntaxError, der das GANZE zweite Skript
@@ -3365,12 +3316,12 @@ function ui_tabellen_bootstrap(): void
  * unlock.js, patient.js, export.js, import_ui.js).
  *
  * VORAUSSETZUNG: auth_guard.php ist geladen. Von dort kommen $patWrapPw,
- * $patKeyCheck, $kdfSalt, $kdfIter und — seit S10 — $kontoAnteile,
- * $anteilKennung und $anteilStand; KDF_ITER_ZIEL kommt aus db.php. Seit
- * RW-02 auch $userId, für RW_STAND (Konzept RW).
+ * $patKeyCheck, $kdfSalt, $kdfIter, $kontoAnteile,
+ * $anteilKennung und $anteilStand; KDF_ITER_ZIEL kommt aus db.php. Dazu
+ * $userId, für RW_STAND.
  *
- * DIE DREI S10-KONSTANTEN STEHEN IMMER, wie CSRF und aus demselben Grund
- * (Backlog Nr. 136, Fund F-9a-01): Ein Schalter, den drei von sieben Seiten
+ * DIE DREI KONSTANTEN DES SERVER-ANTEILS STEHEN IMMER, wie CSRF und aus demselben Grund:
+ * Ein Schalter, den drei von sieben Seiten
  * nicht stellen, nimmt der stillen Umstellung die Grundlage — und zwar
  * dauerhaft, weil `loeseVormerkung()` das Vormerkfach danach verwirft. Die
  * Lehre von damals kostet hier drei Zeilen Markup.
@@ -3378,12 +3329,12 @@ function ui_tabellen_bootstrap(): void
  * $o: skripte  Liste der Verweise. Vorgabe: crypto.js, keyguard.js, unlock.js.
  *              Ein leeres Feld gibt keinen Verweis aus (fuer Seiten, die ihre
  *              Verweise aus anderem Grund selbst setzen muessen).
- *     guete    true  -> zusaetzlich pwquality.js (Passwortguete, Baustein B9)
+ *     guete    true  -> zusaetzlich pwquality.js (Passwortguete)
  *     wrap     false -> KEIN PAT_WRAP. Genau ein Aufrufer: einsatz.php, das
  *              die Huelle aus der API-Antwort bezieht (m.pat_wrap).
  *     keycheck true  -> zusaetzlich PAT_KEY_CHECK (Herkunftsabgleich beim
  *              Einspielen eines Backups)
- *     csrf     ohne Wirkung seit Backlog Nr. 136 — CSRF steht immer (siehe
+ *     csrf     ohne Wirkung — CSRF steht immer (siehe
  *              unten). Das Feld wird noch angenommen, damit die Aufrufer
  *              nicht angefasst werden muessen.
  *     einzug   Einrueckung der ausgegebenen Zeilen
@@ -3409,12 +3360,12 @@ function ui_krypto_bootstrap(array $o = []): void
     $skripte = $o['skripte'] ?? ['assets/crypto.js', 'assets/keyguard.js', 'assets/unlock.js'];
     if (!empty($o['guete'])) { $skripte[] = 'assets/pwquality.js'; }
 
-    /* DER STAND DES PAARS FÜR DEN RÜCKWEG (Konzept RW, RW-02; E-RW-02, -05,
-     * -15): 'da', 'fehlt', 'spalten' oder 'demo'. Nur bei 'fehlt' legt
+    /* DER STAND DES PAARS FÜR DEN RÜCKWEG: 'da', 'fehlt', 'spalten' oder
+     * 'demo'. Nur bei 'fehlt' legt
      * `unlock.js` nach der Anmeldung still eins an — und nur dann kommt
      * `rueckweg.js` mit, vor `unlock.js`.
      *
-     * HIER GEFRAGT UND NICHT IN `auth_guard.php` (E-RW-17): Die Wache läuft
+     * HIER GEFRAGT UND NICHT IN `auth_guard.php`: Die Wache läuft
      * bei jeder Anfrage, auch bei jedem API-Aufruf; gebraucht wird der Wert
      * nur auf den Seiten, die dieses Rüstzeug anfordern. */
     global $userId;
@@ -3425,7 +3376,7 @@ function ui_krypto_bootstrap(array $o = []): void
         array_splice($skripte, (int)$unlockAn, 0, ['assets/rueckweg.js']);
     }
 
-    /* DAS SCHLÜSSELPAAR DES KONTOS (S11-03, Konzept S11 3.1): 'da', 'fehlt',
+    /* DAS SCHLÜSSELPAAR DES KONTOS: 'da', 'fehlt',
      * 'spalten' oder 'siegel' (das Siegel geht nicht auf — dann wird der
      * öffentliche Teil nicht ausgegeben, `kp_oeffentlich_lesen()` meldet es).
      * `kontopaar.js` kommt mit, sobald es etwas zu tun gibt: anlegen bei
@@ -3451,12 +3402,12 @@ function ui_krypto_bootstrap(array $o = []): void
         $zeilen[] = 'const PAT_KEY_CHECK = ' . json_js($patKeyCheck) . ';';
     }
     $zeilen[] = 'const KDF_SALT = ' . json_js($kdfSalt) . ';';
-    /* Rundenzahl dieses Kontos und Zielwert (M2-01). Salz und Rundenzahl
+    /* Rundenzahl dieses Kontos und Zielwert. Salz und Rundenzahl
        gehoeren zusammen — wer mit dem einen rechnet und das andere raet,
        bekommt einen anderen Schluessel. */
     $zeilen[] = 'const KDF_ITER      = ' . json_js($kdfIter) . ';';
     $zeilen[] = 'const KDF_ITER_ZIEL = ' . json_js(KDF_ITER_ZIEL) . ';';
-    /* Der Server-Anteil dieses Kontos (S10, E-S10-06). KONTO_ANTEILE ist ein
+    /* Der Server-Anteil dieses Kontos. KONTO_ANTEILE ist ein
        Objekt `{ kennung: 64 hex }` — waehrend einer Rotation zwei Eintraege —,
        oder `null` fuer das Demo-Konto. ANTEIL_KENNUNG nennt den aktuellen;
        mit ihm werden NEUE Huellen gebaut. ANTEIL_STAND ist 'bereit', 'fehlt',
@@ -3469,7 +3420,7 @@ function ui_krypto_bootstrap(array $o = []): void
     $zeilen[] = 'const KP_STAND       = ' . json_js($kp['stand']) . ';';
     $zeilen[] = 'const KP_OEFFENTLICH = ' . json_js($kp['oeffentlich']) . ';';
     $zeilen[] = 'const KP_PRIVAT      = ' . json_js($kp['privat']) . ';';
-    /* CSRF IMMER, NICHT AUF ANFRAGE (Backlog Nr. 136, Fund F-9a-01).
+    /* CSRF IMMER, NICHT AUF ANFRAGE.
      *
      * Bis zum Sofortpaket Sicherheit war das ein Schalter, und drei von sieben
      * Seiten stellten ihn. Das war folgenlos, solange KDF_ITER_LISTE nur einen

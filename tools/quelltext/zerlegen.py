@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """Kommentare aus PHP und JavaScript entfernen — zeilentreu.
 
-WOFUER. Die Wortliste (`wortliste.py`) prueft *sichtbare* Texte. Ein
-Kommentar ist Klasse E der Fundort-Klassen (Konzept P2, Abschnitt 5.1) und
-bleibt bis P6 stehen; er darf den Befund nicht fuellen. Also muss er weg,
+WOFUER. Die Textprobe (`textprobe.py`) prueft *sichtbare* Texte. Ein
+Kommentar ist ein eigener Fundort und
+bleibt stehen; er darf den Befund nicht fuellen. Also muss er weg,
 bevor gesucht wird.
 
 ZEILENTREU heisst: Der Kommentarinhalt wird durch Leerzeichen ersetzt, die
@@ -32,8 +32,9 @@ nicht kann"):
   Kommentar ist, bleibt stehen. Ein Treffer zu viel kostet eine Ausnahme,
   ein Treffer zu wenig kostet die Aussage.
 
-`--probe` faehrt die Selbstprobe (siehe unten): neunzehn Faelle mit
-Sollergebnis, darunter die Fallen, an denen der Einzeiler scheitert.
+Unmittelbar aufgerufen, faehrt die Datei ihre Selbstprobe (siehe unten):
+Faelle mit Sollergebnis, darunter die Fallen, an denen der Einzeiler
+scheitert.
 """
 from __future__ import annotations
 
@@ -393,7 +394,7 @@ PROBEN: list[tuple[str, str, list[str], list[str]]] = [
     # JS-Kommentar stehen.
     ("php", "<script>\nvar id = <?= json_encode($x) ?>;\n/* Flugtag */\n"
             "var n = 'Pilot';\n</script>\n", ["Pilot"], ["Flugtag"]),
-    # XML (Android-`strings.xml`, S4/D1). Hier ist MEHR wegzuraeumen als der
+    # XML (Android-`strings.xml`). Hier ist MEHR wegzuraeumen als der
     # Kommentar: Der Schluesselname im Tag ist ein Bezeichner, den niemand
     # liest — bliebe er stehen, meldete die Wortliste jeden davon als Treffer.
     ("xml", '<resources>\n  <!-- Flugtag -->\n'

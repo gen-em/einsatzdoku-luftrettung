@@ -2,7 +2,7 @@
 <!--
     NAdoku Handy.
 
-    ALLOWBACKUP IST AUS (E-S4-13). Mit `true` wandern die App-Daten — und
+    ALLOWBACKUP IST AUS. Mit `true` wandern die App-Daten — und
     damit die verschluesselte Ablage von `device_id` und `api_key` — in die
     Geraetesicherung und von dort auf ein anderes Geraet. Der Schluessel, mit
     dem sie verschluesselt sind, liegt im Android Keystore und ist nicht
@@ -10,10 +10,8 @@
     und ein Geheimnis, das an einer Stelle mehr liegt als noetig, ist ein
     Geheimnis weniger. Die Kopplung ist ohnehin in einer Minute neu gemacht.
 
-    Die Berechtigungen wachsen mit den Arbeitspaketen: Ortung und
-    Vordergrunddienst kommen mit B3, die Kamera fuer den QR-Scan mit B2. Hier
-    steht bewusst nur, was der Stand B1 wirklich braucht — eine Berechtigung
-    auf Vorrat waere eine Frage an die NutzerIn, die die App noch nicht
+    Hier steht bewusst nur, was die App wirklich braucht — eine Berechtigung
+    auf Vorrat waere eine Frage an die NutzerIn, die die App nicht
     beantworten kann.
 -->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
@@ -22,20 +20,14 @@
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
     <!--
-        HIER STAND DIE KAMERA-FREIGABE. Sie diente ausschliesslich dem
-        Kopplungs-QR (E-S4-15), und der ist mit R63 (Backlog Nr. 84) entfallen:
-        Der Code trug die Serveradresse, und die App kennt jetzt genau eine.
-
-        Der Vermerk bleibt stehen, weil eine gestrichene Berechtigung mehr ist
-        als eine geloeschte Zeile. Sie war das einzige Recht, das die App je
-        zur Laufzeit erfragt hat, ohne dass die Aufzeichnung es brauchte:
-        Wer die App im Store ansieht, sieht ihren Wegfall, und diese Zeile
-        sagt, warum. Eine spaetere Fassung, die wieder eine Kamera will,
-        braucht dafuer einen eigenen Grund.
+        KEINE KAMERA-FREIGABE. Ein Kopplungs-QR truege die Serveradresse,
+        und die App kennt genau eine; die Aufzeichnung braucht keine Kamera.
+        Eine Fassung, die eine Kamera will, braucht dafuer einen eigenen
+        Grund.
     -->
 
     <!--
-        Ortung und Vordergrunddienst (E-S4-05).
+        Ortung und Vordergrunddienst.
 
         ACCESS_FINE_LOCATION, nicht COARSE: Die Ausdünnung entscheidet auf
         15 Metern; eine grobe Ortung liegt um Größenordnungen daneben und
@@ -71,8 +63,7 @@
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
     <!--
-        RECEIVE_BOOT_COMPLETED fuer den PERSISTIERTEN Nachsende-Job
-        (E-S5Z-09/-19). Sie ist eine normale Berechtigung: kein Dialog, keine
+        RECEIVE_BOOT_COMPLETED fuer den PERSISTIERTEN Nachsende-Job. Sie ist eine normale Berechtigung: kein Dialog, keine
         Frage an die NutzerIn.
 
         WOZU SIE DA IST und wozu nicht: Die App startet bei einem Neustart
@@ -82,8 +73,7 @@
         wieder eingeplant werden muss.
 
         Ohne sie verloere ein Neustart nach einem Dienst ohne Netz die
-        Nachlieferung, bis jemand die App oeffnet. Genau das war der belegte
-        Fehler dieses Pakets (Diagnose 1.3, H2).
+        Nachlieferung, bis jemand die App oeffnet.
 
         Der Job laeuft erst nach dem ERSTEN ENTSPERREN: Die Zugangsdaten
         liegen in der anmeldungsgeschuetzten Speicherung. Das ist richtig so
@@ -92,8 +82,7 @@
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 
     <!--
-        REQUEST_IGNORE_BATTERY_OPTIMIZATIONS STEHT HIER BEWUSST NICHT MEHR
-        (Fund B-S4-04, entschieden mit E-S4-52).
+        REQUEST_IGNORE_BATTERY_OPTIMIZATIONS STEHT HIER BEWUSST NICHT.
 
         Sie erlaubt den gezielten Dialog "NAdoku von der Optimierung
         ausnehmen?" — und verstoesst gegen die Inhaltsrichtlinie des Play
@@ -114,32 +103,26 @@
     <uses-feature android:name="android.hardware.location.gps" android:required="false" />
 
     <!--
-        ANDROID:ROUNDICON IST AUSGETRAGEN (Backlog Nr. 81, 04.09.2026).
+        KEIN ANDROID:ROUNDICON.
 
-        Es stand auf `@mipmap/symbol` — also auf DEMSELBEN adaptiven Symbol wie
-        `android:icon`. Das ist ein Kategorienfehler: `roundIcon` stammt aus
+        Auf `@mipmap/symbol` — also auf DEMSELBEN adaptiven Symbol wie
+        `android:icon` — waere es ein Kategorienfehler: `roundIcon` stammt aus
         Android 7.1 und war die Uebergangsloesung, BEVOR es adaptive Symbole
         gab. Wer es auswertet, erwartet dort ein FERTIG GERUNDETES Bild, das
         die Flaeche fuellt — kein 108-dp-Raster mit einem 52-dp-Motiv in der
         Mitte. Ab minSdk 26 gibt es kein Zielgeraet, das es braucht: Die Maske
         macht der Launcher.
 
-        WARUM DAS HIER STEHT: Der Auftraggeber hat am 02.09.2026 gemeldet, dass
-        das App-Symbol im KOPF DER BENACHRICHTIGUNG zu gross und angeschnitten
-        erscheint — weisser Korpus bis an den Rand, farbige Flaechen links. Die
-        adaptive Kachel selbst ist nachgerechnet und richtig; „Themed Icons"
-        waren aus, die `<monochrome>`-Ebene also gar nicht im Spiel (beides am
-        04.09.2026 geklaert). Was bleibt, ist dieser doppelte Verweis: Eine
-        Oberflaeche, die `roundIcon` bevorzugt und es als fertiges Bild
-        behandelt, zeichnet den Vordergrund auf die volle Flaeche — und das
-        ergibt genau das gemeldete Bild.
+        WARUM DAS HIER STEHT: Eine Oberflaeche, die `roundIcon` bevorzugt
+        und es als fertiges Bild behandelt, zeichnet den Vordergrund auf die
+        volle Flaeche — das App-Symbol erschiene im KOPF DER BENACHRICHTIGUNG
+        zu gross und angeschnitten, weisser Korpus bis an den Rand. Die
+        adaptive Kachel selbst ist nachgerechnet und richtig.
 
         DAS IST EINE ERKLAERUNG, KEIN BELEG. Sie liesse sich nur am Geraet
         pruefen; der Emulator fuehrt AOSP und zeichnet den
-        Benachrichtigungskopf anders als One UI. Ausgetragen wird das Attribut
-        trotzdem, denn es ist unabhaengig davon ueberfluessig und falsch
-        belegt. Ob der Befund damit erledigt ist, sagt der naechste Blick auf
-        das S24.
+        Benachrichtigungskopf anders als One UI. Das Attribut fehlt trotzdem,
+        denn es waere unabhaengig davon ueberfluessig und falsch belegt.
     -->
     <application
         android:name=".handy.NAdokuApp"
@@ -178,7 +161,7 @@
             android:stopWithTask="false" />
 
         <!--
-            Der Nachsende-Job (E-S5Z-09).
+            Der Nachsende-Job.
 
             `permission="BIND_JOB_SERVICE"` ist PFLICHT und keine Vorsicht:
             Ohne sie lehnt der Job-Planer den Dienst beim Einplanen ab
@@ -194,13 +177,13 @@
             android:permission="android.permission.BIND_JOB_SERVICE" />
 
         <!--
-            Der Empfang der Uhr-Ereignisse (C2, E-S4-10).
+            Der Empfang der Uhr-Ereignisse.
 
             `exported="true"` ist Pflicht und keine Oeffnung: Der Data Layer
             der Play-Dienste stellt die Nachricht zu, also muss ein fremder
             Prozess den Dienst starten duerfen. Wer zustellen darf, ist damit
             nicht beliebig — der Data Layer liefert NUR zwischen Apps mit
-            gleichem Paketnamen UND gleicher Signatur (E-S4-01). Der
+            gleichem Paketnamen UND gleicher Signatur. Der
             `pathPrefix` grenzt zusaetzlich ein: Nachrichten ausserhalb von
             /nadoku erreichen den Dienst gar nicht erst.
         -->

@@ -9,7 +9,7 @@
 -- schreibt sie zu diesem Zeitpunkt noch kein Code: Das Verhalten der
 -- Anwendung aendert sich durch diese Migration nicht.
 
--- S1 --------------------------------------------------------------------
+-- ------------------------------------------------------------------------
 -- Rundenzahl der Schluesselableitung je Konto.
 -- BESONDERE SORGFALT: Ein Fehler an der Schluesselableitung sperrt ALLE
 -- KONTEN GLEICHZEITIG aus. Dieser Schritt legt die Spalte nur an und fuellt
@@ -18,19 +18,19 @@ ALTER TABLE users
   ADD COLUMN kdf_iter INT UNSIGNED NOT NULL DEFAULT 310000 AFTER kdf_salt;
 UPDATE users SET kdf_iter = 310000 WHERE kdf_iter = 0;
 
--- S2 --------------------------------------------------------------------
+-- ------------------------------------------------------------------------
 -- Pruefsumme des Inhaltsschluessels. Bleibt fuer Bestandskonten LEER —
 -- der Server kann sie nicht berechnen, er kennt den Schluessel nicht.
 ALTER TABLE users
   ADD COLUMN pat_key_check CHAR(32) NULL AFTER pat_wrap_rc;
 
--- S3 --------------------------------------------------------------------
+-- ------------------------------------------------------------------------
 -- Sitzungszaehler: wird beim Passwortwechsel erhoeht, bei jeder Anfrage
 -- gegen die Sitzung geprueft.
 ALTER TABLE users
   ADD COLUMN session_epoch INT UNSIGNED NOT NULL DEFAULT 0 AFTER role;
 
--- S4 --------------------------------------------------------------------
+-- ------------------------------------------------------------------------
 -- Ratenschutz je Kontokennung und je IP-Adresse, mit Zeitfenster.
 CREATE TABLE rate_limits (
   id            INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
@@ -43,7 +43,7 @@ CREATE TABLE rate_limits (
   INDEX idx_fenster (fenster_start)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- S5 --------------------------------------------------------------------
+-- ------------------------------------------------------------------------
 -- Sperrliste auch fuer Ruhe-Segmente. Bestand besteht ausschliesslich aus
 -- Einsaetzen, deshalb ist der Vorgabewert richtig. Erst den neuen Schluessel
 -- anlegen, dann den alten entfernen.
@@ -53,7 +53,7 @@ ALTER TABLE deleted_refs
   ADD UNIQUE KEY uq_dev_type_ref (device_id, owner_type, client_ref);
 ALTER TABLE deleted_refs DROP INDEX uq_dev_ref;
 
--- S6 --------------------------------------------------------------------
+-- ------------------------------------------------------------------------
 -- Sortierregel der E-Mail-Spalte ausdruecklich festlegen. Bisher haengt die
 -- Anmeldung an der Standardregel der jeweiligen Installation.
 ALTER TABLE users

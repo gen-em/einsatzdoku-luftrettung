@@ -2,13 +2,13 @@
 declare(strict_types=1);
 
 /**
- * Die öffentliche Rechtstextseite — eine Fassung für beide (R32, P3/O10).
+ * Die öffentliche Rechtstextseite — eine Fassung für alle.
  *
  * `impressum.php` und `datenschutz.php` sind zwei Zeilen lang und setzen nur
  * `$rtSchluessel`; alles Weitere steht hier. Der Unterschied zwischen den
  * beiden ist ein Wort in der Überschrift — dafür zwei Dateien mit demselben
- * Inhalt zu führen, wäre die Sorte Verdopplung, die beim dritten Dokument
- * (R33, Nutzungsbedingungen) zur dritten Kopie würde.
+ * Inhalt zu führen, wäre die Sorte Verdopplung, die mit jedem weiteren
+ * Dokument eine weitere Kopie bräuchte.
  *
  * OHNE ANMELDUNG ERREICHBAR. Diese Seite lädt ausdrücklich NICHT
  * `auth_guard.php`: Der Guard leitet Nichtangemeldete auf die Anmeldung um,
@@ -17,7 +17,7 @@ declare(strict_types=1);
  *
  * SIE KENNT DIE SITZUNG TROTZDEM, weil der Leerzustand für Admins einen Weg
  * zum Editor zeigt. Gelesen wird die Rolle aus der DATENBANK, nicht aus der
- * Sitzung — dieselbe Regel wie im Guard (M1-05): Wer zum Zeitpunkt der
+ * Sitzung — dieselbe Regel wie im Guard: Wer zum Zeitpunkt der
  * Anmeldung Admin war, ist es jetzt vielleicht nicht mehr.
  */
 
@@ -30,7 +30,7 @@ if (!is_file(__DIR__ . '/config.php')) { header('Location: install.php'); exit; 
 require_once __DIR__ . '/db.php';
 /* Für logo_src(): Ohne session_lib.php fände es logo_stamm() nicht und fiele
  * still auf den Hubschrauber zurück, gleich was die Installation eingestellt
- * hat — genau der Fund F-P3-AN, nur eine Seite weiter. */
+ * hat. */
 require_once __DIR__ . '/session_lib.php';
 require_once __DIR__ . '/rechtstexte_lib.php';
 require_once __DIR__ . '/ui.php';
@@ -49,8 +49,8 @@ $titel = RT_TEXTE[$rtSchluessel];
  * schneller und an dieser Stelle falsch: Eine zurückgenommene Adminrolle
  * würde bis zur nächsten Anmeldung weiter gelten. */
 $istAdmin = false;
-/* Siehe `doku_seite.php`: nur fragen, und seit Web 20.27.0 nur, wenn ein
- * Cookie da ist (F-ZE-2, Art `lesend`). Die Haertung steht weiterhin davor —
+/* Siehe `doku_seite.php`: nur fragen, und nur, wenn ein
+ * Cookie da ist (Art `lesend`). Die Haertung steht weiterhin davor —
  * sie steht jetzt in `sitzung_starten()`, damit die Regel keine Ausnahme
  * hat, an der sie später jemand aufhängt. */
 sitzung_starten('lesend');
@@ -70,8 +70,8 @@ $leer = rt_leer($text['inhalt']);
 /* ---- Zurück: wohin? -------------------------------------------------------
  *
  * Wer angemeldet ist, will auf die Startseite; wer nicht, zur Anmeldung —
- * dorthin, wo er herkam. Mockup 32 zeigt „Anmeldung", Mockup 34 „Zurück zur
- * Anmeldung"; beide meinen denselben Weg. */
+ * dorthin, wo er herkam. „Anmeldung" und „Zurück zur Anmeldung" meinen
+ * denselben Weg. */
 $zurueck = !empty($_SESSION['user_id'])
     ? ['text' => 'Zur Startseite', 'href' => 'index.php']
     : ['text' => 'Zur Anmeldung',  'href' => 'login.php'];
@@ -90,12 +90,12 @@ ui_kopf(['menue' => false, 'zurueck' => $zurueck]);
                  Anwendung liefert keinen Rechtstext mit. Deshalb der Ton
                  „info" und nicht „warn": Für eine Besucherin ist das eine
                  Auskunft über die BetreiberIn, keine Störung. */ ?>
-        <?php /* AUS DEM KATALOG (P5b/AP4). Hier stand ein ZWEIWERTIGER
-                 ternaerer Ausdruck, und das war die eine Stelle, an der ein
-                 dritter Schluessel stillschweigend falsch geantwortet
-                 haette: Die Nutzungsbedingungen haetten gemeldet, es sei
-                 „noch keine Datenschutzerklaerung hinterlegt". Kein Fehler,
-                 keine Meldung — nur ein falscher Satz. */ ?>
+        <?php /* AUS DEM KATALOG. Ein ZWEIWERTIGER ternaerer Ausdruck waere
+                 die eine Stelle, an der ein dritter Schluessel
+                 stillschweigend falsch antwortete: Die Nutzungsbedingungen
+                 meldeten, es sei „noch keine Datenschutzerklaerung
+                 hinterlegt". Kein Fehler, keine Meldung — nur ein falscher
+                 Satz. */ ?>
         <?= ui_meldung_markup('info',
             'Die BetreiberIn dieser Installation hat '
             . (RT_LEERTEXT[$rtSchluessel] ?? 'diesen Text noch nicht hinterlegt.')) ?>

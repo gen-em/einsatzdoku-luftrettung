@@ -1,5 +1,5 @@
 <?php
-/* Die Gerätehilfe der Proben — senden wie ein Gerät ab Web 22 (S11-04a).
+/* Die Gerätehilfe der Proben — senden wie ein Gerät.
  *
  * Anlass: Nr. 43 — seit S11 nimmt `ingest.php` Spur, Phasenkoordinaten und
  * Reanimation nur noch verschlossen an. Die Proben, die den Eingang wie ein
@@ -17,10 +17,10 @@
  *   gh_probe_einsatz()       die Einsatzhülle eines Einsatzes öffnen und als
  *                            Feld zurückgeben
  *
- * DIE INNENFORM DER EINSATZHÜLLE (E-S11-40) steht im JSON-Vertrag 1b und hier
+ * DIE INNENFORM DER EINSATZHÜLLE steht im JSON-Vertrag 1b und hier
  * als Code: {"fassung":1, "phasen":[{"phase","t","lat","lon"}],
  * "rea":[{"t","ereignisse":[{"art","t"}]}]} — alle Zeiten in Sekunden seit
- * dem Einsatzbeginn (E-S11-18), damit ein Datumswechsel des Diensttags die
+ * dem Einsatzbeginn, damit ein Datumswechsel des Diensttags die
  * Hülle nicht ungültig macht.
  */
 declare(strict_types=1);
@@ -40,7 +40,7 @@ function gh_probe_iso_zu_s(string $iso): int
 }
 
 /**
- * Ein Paket im alten Format so umbauen, wie ein Gerät ab Web 22 sendet.
+ * Ein Paket im alten Format so umbauen, wie ein Gerät sendet.
  * Ohne Punkte fällt `track` weg; ohne Koordinaten und Reanimation entsteht
  * trotzdem eine Einsatzhülle, sobald Phasen dabei sind — das tut auch das
  * Gerät, damit die Hülle zu den Phasen passt.

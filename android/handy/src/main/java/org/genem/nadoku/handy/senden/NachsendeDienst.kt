@@ -7,7 +7,7 @@ import org.genem.nadoku.R
 import org.genem.nadoku.handy.NAdokuApp
 
 /**
- * Der Nachsende-Job (E-S5Z-09) — **die dünne Hülle um einen Sendelauf**.
+ * Der Nachsende-Job — **die dünne Hülle um einen Sendelauf**.
  *
  * Er entscheidet nichts: Ob überhaupt geplant wird, steht in
  * [Nachsenden.planen], und was gesendet wird, weiss der [Sender]. Hier steht
@@ -18,11 +18,11 @@ import org.genem.nadoku.handy.NAdokuApp
  * Hauptfaden, und ein `false` hiesse „schon fertig", bevor irgendetwas
  * gesendet wurde.
  *
- * Eingereicht wird beim **Sendeausführer** (E-S5Z-11) und nicht auf einem
- * eigenen Faden: Damit überlappt der Job nie mit einem Lauf aus der
- * Oberfläche oder aus dem Dienst. Zwei Läufe auf demselben Puffer waren
- * bisher möglich und nur deshalb harmlos, weil der Server idempotent ist
- * (B-S5Z-11) — das ist kein Zustand, auf den man bauen sollte.
+ * Eingereicht wird beim **Sendeausführer** und nicht auf einem eigenen
+ * Faden: Damit überlappt der Job nie mit einem Lauf aus der Oberfläche oder
+ * aus dem Dienst. Zwei Läufe auf demselben Puffer wären nur deshalb harmlos,
+ * weil der Server idempotent ist — das ist kein Zustand, auf den man bauen
+ * sollte.
  */
 class NachsendeDienst : JobService() {
 

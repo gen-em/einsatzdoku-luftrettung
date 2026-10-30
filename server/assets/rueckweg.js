@@ -1,19 +1,18 @@
 /**
- * Der Rückweg beim Zweitfaktor — das Schlüsselpaar (Konzept RW, RW-02;
- * E-RW-02, -03, -06).
+ * Der Rückweg beim Zweitfaktor — das Schlüsselpaar.
  *
  * ===========================================================================
  * WAS HIER ENTSTEHT
  * ===========================================================================
  *
- * Ein ECDSA-Paar auf P-256, im Browser, über WebCrypto (E-RW-03):
+ * Ein ECDSA-Paar auf P-256, im Browser, über WebCrypto:
  *
  *   öffentlicher Teil  SPKI, Base64            → users.rw_oeffentlich
  *   privater Teil      PKCS8, Base64, verpackt → users.rw_privat
  *                      mit dem INHALTSSCHLÜSSEL (`EdCrypto.encrypt(ck, …)`,
  *                      Kennung `edk1:`)
  *
- * Beim Rückweg (RW-03) läuft es rückwärts: Der Wiederherstellungsschlüssel
+ * Beim Rückweg läuft es rückwärts: Der Wiederherstellungsschlüssel
  * öffnet die Wiederherstellungs-Hülle und liefert den Inhaltsschlüssel, der
  * öffnet den privaten Teil, und der signiert die Herausforderung des
  * Servers. Der Server sieht davon nur den öffentlichen Teil und eine
@@ -22,28 +21,28 @@
  * `encrypt()` UND NICHT `huelleBauen()`: Der private Teil hängt am
  * Inhaltsschlüssel, nicht am Server-Anteil. Er muss mit dem
  * Wiederherstellungsschlüssel ALLEIN aufgehen, wie `pat_wrap_rc`; der Server
- * weist `edka1:` hier ab (`RW_PRIVAT_RE`, E-RW-05).
+ * weist `edka1:` hier ab (`RW_PRIVAT_RE`).
  *
  * ===========================================================================
  * DREI AUFRUFER
  * ===========================================================================
  *
  *   anlegen()   still, nach der Anmeldung — `unlock.js` ruft es, wenn das
- *               Konto kein Paar hat (`RW_STAND === 'fehlt'`, E-RW-02). Das
+ *               Konto kein Paar hat (`RW_STAND === 'fehlt'`). Das
  *               Token stammt aus dem Vormerkfach der Anmeldung. Wirft nie:
  *               Ein Fehlschlag kostet nichts, der nächste Entsperrvorgang
  *               nach einer Anmeldung versucht es erneut.
- *   erneuern()  der Knopf „Rückweg erneuern" unter Einstellungen → Profil
- *               (E-RW-06). Fragt das Passwort ab, öffnet den
- *               Inhaltsschlüssel über `EdSchluessel.oeffnen()` — dieselbe
- *               Wache gegen `pat_key_check` wie „Neuen
- *               Wiederherstellungsschlüssel erzeugen" — und ersetzt.
- *   signieren() der Rückweg selbst, am Code-Schritt der Anmeldung (RW-03,
- *               `login.php?weg=schluessel`): Zettel → Wiederherstellungs-
+ *   erneuern()  der Knopf „Rückweg erneuern" unter Einstellungen → Profil.
+ *               Fragt das Passwort ab, öffnet den Inhaltsschlüssel über
+ *               `EdSchluessel.oeffnen()` — dieselbe Wache gegen
+ *               `pat_key_check` wie „Neuen Wiederherstellungsschlüssel
+ *               erzeugen" — und ersetzt.
+ *   signieren() der Rückweg selbst, am Code-Schritt der Anmeldung
+ *               (`login.php?weg=schluessel`): Zettel → Wiederherstellungs-
  *               Hülle → Inhaltsschlüssel → privater Teil → Signatur über die
- *               Nachricht, die der SERVER gebaut hat (`RW_NACHRICHT`,
- *               E-RW-04, -18). Der Zettel verlässt den Browser nie; passt er
- *               nicht, wird NICHTS gesendet.
+ *               Nachricht, die der SERVER gebaut hat (`RW_NACHRICHT`). Der
+ *               Zettel verlässt den Browser nie; passt er nicht, wird
+ *               NICHTS gesendet.
  *
  * Erwartet: EdCrypto (crypto.js), EdApi (api.js, im Kopf jeder Seite); für
  * erneuern() zusätzlich EdSchluessel (schluessel.js). Alle werden zur
@@ -111,7 +110,7 @@
   }
 
   /**
-   * Den Rückweg gehen: die Nachricht des Servers signieren (RW-03).
+   * Den Rückweg gehen: die Nachricht des Servers signieren.
    *
    * @param {object} o
    *   schluessel  der Wiederherstellungsschlüssel, wie getippt
@@ -156,6 +155,5 @@
     return base64(sig);
   }
 
-  window.EdRueckweg = { paarErzeugen: paarErzeugen, paarSenden: paarSenden,
-                        anlegen: anlegen, erneuern: erneuern, signieren: signieren };
+  window.EdRueckweg = { anlegen: anlegen, erneuern: erneuern, signieren: signieren };
 })();

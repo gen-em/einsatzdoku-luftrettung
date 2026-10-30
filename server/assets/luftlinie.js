@@ -1,24 +1,24 @@
-/* Luftlinie — Abfahrtort → Einsatzort → Zielklinik (Web 6.1.0, E34–E36).
+/* Luftlinie — Abfahrtort → Einsatzort → Zielklinik.
  *
  * WOFUER. Faellt die Uhr aus oder wird ohne Uhr gearbeitet, fehlt der Track und
  * die Karte bleibt leer, obwohl der Einsatzort bekannt ist. Dieses Modul
  * zeichnet dann eine gerade Verbindung zwischen den bekannten Punkten — und
  * benennt sie ausdruecklich als Luftlinie.
  *
- * DER TRACK HAT IMMER VORRANG (E35). Liegt er vor, unterbleibt die Linie; die
+ * DER TRACK HAT IMMER VORRANG. Liegt er vor, unterbleibt die Linie; die
  * Abfahrtortangabe bleibt gespeichert und wird lediglich nicht dargestellt.
  * Faellt der Track spaeter weg, erscheint sie wieder.
  *
- * OHNE EINSATZORT KEINE LINIE (A13n). Auch dann nicht, wenn Abfahrtort und
+ * OHNE EINSATZORT KEINE LINIE. Auch dann nicht, wenn Abfahrtort und
  * Zielklinik beide Koordinaten haben: Eine direkte Verbindung zwischen beiden
  * hat nie stattgefunden und waere eine Falschaussage.
  *
- * KEIN AUSWEICHEN (A13i). Fehlt die Koordinate der GEWAEHLTEN Quelle — kein
+ * KEIN AUSWEICHEN. Fehlt die Koordinate der GEWAEHLTEN Quelle — kein
  * vorheriger Einsatz, Standort ohne Koordinaten, Zielklinik ohne Koordinaten —,
  * entsteht keine Linie. Es wird nicht stillschweigend eine andere Quelle
  * genommen, weil eine falsche Linie schlechter ist als keine.
  *
- * KEINE STATISTIKWIRKUNG (E36). Die Laenge steht an der Linie und sonst
+ * KEINE STATISTIKWIRKUNG. Die Laenge steht an der Linie und sonst
  * nirgends: nicht in einer Kachel, nicht in einem Filter. Eine Luftlinie und
  * eine gefahrene Strecke sind nicht dieselbe Groesse, und der Einsatzort liegt
  * ohnehin verschluesselt im pat_blob — serverseitig ist er nicht lesbar.
@@ -29,10 +29,14 @@
 (function (global) {
     'use strict';
 
-    /* Max Blau. Bewusst weit weg vom Track-Orange #FF8F1F: Eine gerechnete
-     * Verbindung darf nicht wie eine gemessene Spur aussehen. Zusaetzlich
-     * gestrichelt — Farbe allein traegt die Unterscheidung nicht. */
-    var FARBE = '#4280E5';
+    /* Max Blau, das Token `--blau` — bewusst weit weg vom Orange der Spur:
+     * Eine gerechnete Verbindung darf nicht wie eine gemessene Spur
+     * aussehen. Zusaetzlich gestrichelt — Farbe allein traegt die
+     * Unterscheidung nicht. Gelesen wird das Token, nicht ein Hexwert:
+     * Farben stehen in `:root` (CLAUDE.md 5), wie bei den Spuren in geo.js. */
+    function farbe() {
+        return getComputedStyle(document.documentElement).getPropertyValue('--blau').trim();
+    }
     var STRICHEL = '8 7';
 
     function zahl(v) {
@@ -50,7 +54,7 @@
     }
 
     /**
-     * Abfahrtort aus der REGEL aufloesen (Konzept 4.6.1).
+     * Abfahrtort aus der REGEL aufloesen.
      *
      * Gespeichert ist in `missions.start_src` nur die Regel; wo die Koordinate
      * herkommt, haengt daran — und mit ihr, ob sie im Klartext steht oder
@@ -87,9 +91,9 @@
      */
     function punkte(ctx) {
         ctx = ctx || {};
-        if (ctx.hatTrack) { return []; }                 // E35: Track hat Vorrang
+        if (ctx.hatTrack) { return []; }                 // Track hat Vorrang
         var ort = punkt(ctx.ort, ctx.ort && ctx.ort.addr ? ctx.ort.addr : 'Einsatzort');
-        if (!ort) { return []; }                         // A13n: ohne Einsatzort keine Linie
+        if (!ort) { return []; }                         // ohne Einsatzort keine Linie
         var start = ctx.abfahrt || null;
         var ziel = punkt(ctx.ziel, ctx.ziel && ctx.ziel.name ? ctx.ziel.name : 'Zielklinik');
         if (!start && !ziel) { return []; }              // ein einzelner Punkt ist keine Linie
@@ -105,7 +109,7 @@
      * Summe der Grosskreisdistanzen in Metern.
      *
      * Kein Umwegfaktor: Eine gerechnete Fahrstrecke taeuschte eine Genauigkeit
-     * vor, die es nicht gibt (Konzept 4.6.1). Bei drei Punkten ist es die Summe
+     * vor, die es nicht gibt. Bei drei Punkten ist es die Summe
      * beider Abschnitte.
      */
     function meter(liste) {
@@ -122,13 +126,11 @@
         return s;
     }
 
-    /** „12,3 km Luftlinie" — die Benennung ist Teil der Aussage (E36).
+    /** „12,3 km Luftlinie" — die Benennung ist Teil der Aussage.
      *
-     * DIE STRECKE RECHNET EdFormat (Schritt 15 AP8d). Hier stand die
-     * sechste Fassung derselben Rechnung im Bestand, und die Zaehlzeile Z34
-     * hat sie NIE gesehen: Sie zaehlt ueber eine Namensliste, und `text`
-     * stand nicht darauf. Gefunden hat sie erst eine Gegenprobe ueber das
-     * Muster der Rechnung selbst. Zeichengleich, nachgemessen ueber
+     * DIE STRECKE RECHNET EdFormat, keine eigene Rechnung hier. Die
+     * Zaehlzeile Z34 zaehlt ueber eine Namensliste und saehe eine Rechnung
+     * unter anderem Namen nicht. Zeichengleich, nachgemessen ueber
      * 57 143 Meterwerte von 0 bis 400 000: 0 Abweichungen. */
     function text(liste) {
         return EdFormat.km(meter(liste)) + ' Luftlinie';
@@ -147,9 +149,8 @@
         opt = opt || {};
         if (!liste || liste.length < 2) { return []; }
         var ziel = opt.ziel || map;
-        var farbe = opt.farbe || FARBE;
         var linie = L.polyline(liste.map(function (p) { return [p.lat, p.lon]; }), {
-            color: farbe, weight: 3, opacity: 0.9,
+            color: opt.farbe || farbe(), weight: 3, opacity: 0.9,
             dashArray: STRICHEL, smoothFactor: 0
         });
         linie.bindPopup((opt.titel ? opt.titel + '<br>' : '') + text(liste)
@@ -162,8 +163,6 @@
         abfahrt: abfahrt,
         punkte: punkte,
         meter: meter,
-        text: text,
-        zeichne: zeichne,
-        FARBE: FARBE
+        zeichne: zeichne
     };
 })(window);

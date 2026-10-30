@@ -1,12 +1,10 @@
 /**
- * Die Betreiber-Rückfrage zum Schlüsselblatt (P5b/AP9, E-P5b-10, -21;
- * Mockup M-P5b-02c, Teil 2).
+ * Die Betreiber-Rückfrage zum Schlüsselblatt.
  *
  * DER NAME IST `schluesselblatt.js` UND NICHT `blatt.js`. Den zweiten gibt es
  * längst: das Aktionsmenü, das mobil von unten auffährt (`window.edBlatt`).
- * Ich hatte diese Datei zuerst so genannt und die andere damit überschrieben
- * — aufgefallen an `git status`, nicht an einem Fehler, denn beide sind
- * gültiges JavaScript und keine Seite lädt beide. „Blatt" heisst in diesem
+ * Eine Verwechslung fiele an keinem Fehler auf, denn beide sind gültiges
+ * JavaScript und keine Seite lädt beide. „Blatt" heisst in diesem
  * Haus zweierlei; der längere Name sagt, welches gemeint ist.
  *
  * ===========================================================================
@@ -26,7 +24,7 @@
  * ===========================================================================
  *
  * `maxlength=4` und ein Sprung ins nächste Feld, sobald vier Zeichen stehen
- * (Mockup: „automatischer Sprung zum nächsten Feld"). Das ist Bequemlichkeit
+ * („automatischer Sprung zum nächsten Feld"). Das ist Bequemlichkeit
  * und kein Zwang — wer tabbt, tabbt; wer zurückgeht, kann korrigieren.
  *
  * ES WIRD NICHTS VALIDIERT, WÄHREND GETIPPT WIRD. Eine rote Umrandung nach
@@ -59,7 +57,7 @@
     fehler.hidden = text === '';
   }
 
-  /* DER SENDER IST `EdApi.postForm` (Schritt 15, AP8). Das Feld `csrf` haengt
+  /* DER SENDER IST `EdApi.postForm`. Das Feld `csrf` haengt
    * EdApi selbst an, die Erfolgsregel (HTTP UND Fachschluessel) liegt dort,
    * und ein Netzfehler kommt als `status: 0` zurueck statt als Wurf.
    *
@@ -84,22 +82,20 @@
 
   /* DIESER ENDPUNKT NENNT SEIN SATZFELD `text`, nicht `meldung`.
    *
-   * Das war beim Umbau zuerst ein Problem und ist keins mehr: Die
-   * Vorrangkette von `EdApi` liest `text` seit AP8 mit (`grund()` in
+   * Die Vorrangkette von `EdApi` liest `text` mit (`grund()` in
    * assets/api.js). Fuenf Saetze haengen daran -- kein_schluessel,
    * gesperrt (zweimal), keine_frage und falsch --, darunter der wichtigste
    * der ganzen Rueckfrage: „Stimmt nicht. Noch 2 Versuche, dann sperrt die
    * Anmeldung diesen Weg fuer 15 Minuten."
    *
-   * Gefunden wurde die Luecke beim Gegenlesen: Diese Datei hatte dafuer
-   * einen eigenen Helfer `fehlersatz()`, der `daten.text` VOR der fertigen
-   * Meldung las -- und damit den Vorgangsnamen verlor, den der einheitliche
-   * Satzbau vorschreibt. Der Helfer ist fort, die Kette kann es jetzt.
+   * Einen eigenen Helfer, der `daten.text` VOR der fertigen Meldung liest,
+   * braucht diese Datei deshalb nicht -- er verloere den Vorgangsnamen, den
+   * der einheitliche Satzbau vorschreibt.
    *
    * DASS DER SERVER ZWEI NAMEN FUER DIESELBE SACHE FUEHRT, bleibt: neun
    * Stellen `text` (hier und in schluessel_erneuern.php), zweiunddreissig
    * `meldung` (alle uebrigen), keine schickt beides. Das zusammenzufuehren
-   * ruehrt an Antwortvertraege und gehoert nicht in dieses Paket. */
+   * ruehrt an Antwortvertraege und steht noch aus. */
 
   /* ---- Die Frage stellen ------------------------------------------------ */
 
@@ -183,12 +179,12 @@
         return;
       }
       melde(a.meldung);
-      /* KEIN NETZ, KEINE PRÜFUNG (Backlog Nr. 269, P5c/AP9). Kommt die
-       * Anfrage gar nicht an (`status: 0`), hat der Server nichts gezählt und
-       * nichts entschieden — die vier Gruppen bleiben stehen, und der Knopf
-       * geht wieder. Bis Web 21.0.0 lief auch dieser Fall in den Zweig
-       * „falsch" darunter und leerte die Felder: Wer im Funkloch prüfte,
-       * tippte vier Gruppen noch einmal ab, obwohl nichts falsch war. */
+      /* KEIN NETZ, KEINE PRÜFUNG. Kommt die Anfrage gar nicht an
+       * (`status: 0`), hat der Server nichts gezählt und nichts
+       * entschieden — die vier Gruppen bleiben stehen, und der Knopf geht
+       * wieder. Liefe dieser Fall in den Zweig „falsch" darunter, leerte er
+       * die Felder: Wer im Funkloch prüft, tippte vier Gruppen noch einmal
+       * ab, obwohl nichts falsch war. */
       if (a.status === 0) { pruefen.disabled = false; return; }
       /* GESPERRT HEISST ZU. Weitere Felder anzubieten, während der Topf
        * gesperrt ist, wäre eine Einladung zum Weiterraten — und jeder
@@ -223,18 +219,16 @@
     /* KEIN ENDPUNKT, NUR EIN MERKMAL IN DER SITZUNG — über
      * `api/rueckfrage.php`, das dafür `blatt_spaeter` kennt. Warum nicht
      * sieben Tage: siehe Kopf von `blatt_dialog.php`. */
-    /* NUR DER NETZFEHLER WIRD GEMELDET, so wie bisher: Das alte `.catch` fing
-     * genau den Wurf des `fetch`, und `status: 0` ist derselbe Fall. Eine
-     * abgelehnte Antwort (HTTP 400) blieb hier schon immer still -- das ist
-     * eine Luecke, aber keine, die dieses Paket aufmacht. Statt des
-     * Browsertexts „Failed to fetch" steht jetzt ein deutscher Satz in der
-     * Konsole; den Fehlergegenstand selbst gibt EdApi nicht heraus. */
+    /* JEDER FEHLSCHLAG WIRD GEMELDET: der Netzfehler (`status: 0`) und eine
+     * abgelehnte Antwort (400, 403). Die Frage kommt dann wieder; die
+     * Konsole sagt, warum. Den Fehlergegenstand selbst gibt EdApi nicht
+     * heraus. */
     /* OHNE `vorgang`: Die Konsolenzeile nennt den Vorgang bereits
      * („Spaeter nicht gemeldet:"). Mit einem zweiten Vorgangsnamen stuenden
-     * dort zwei Fehlersaetze hintereinander -- gefunden beim Gegenlesen. */
+     * dort zwei Fehlersaetze hintereinander. */
     EdApi.postForm('api/rueckfrage.php', { antwort: 'blatt_spaeter' })
       .then(function (a) {
-        if (a.status === 0) { console.error('Später nicht gemeldet:', a.meldung); }
+        if (!a.ok) { console.error('Später nicht gemeldet:', a.status, a.meldung); }
       });
     if (typeof dlg.close === 'function') { dlg.close(); }
     else { dlg.removeAttribute('open'); }

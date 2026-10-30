@@ -7,7 +7,7 @@ import java.io.File
 import kotlin.random.Random
 
 /**
- * Der Ereignispuffer der Uhr (E-S4-10) — **was noch nicht quittiert ist**.
+ * Der Ereignispuffer der Uhr — **was noch nicht quittiert ist**.
  *
  * WARUM DIE UHR ÜBERHAUPT PUFFERT: Weil Bluetooth abreißt. Die Uhr am
  * Handgelenk, das Handy im Rucksack im Fahrzeug — zehn Meter und eine
@@ -18,7 +18,7 @@ import kotlin.random.Random
  *
  * WAS GESPEICHERT WIRD, SIND DIE FERTIGEN NACHRICHTEN — die Bytes, die auf
  * die Leitung gehen, nicht die Absicht dahinter. Damit ist „identisch
- * nachliefern" (E-S4-10) keine Zusage, die man einhalten muss, sondern eine,
+ * nachliefern" keine Zusage, die man einhalten muss, sondern eine,
  * die man nicht brechen kann: Es gibt gar keinen zweiten Weg, die Nachricht
  * noch einmal zu bilden.
  *
@@ -75,7 +75,7 @@ class Uhrpuffer(private val ablage: Ablage, private val zufall: Random = Random.
 
     /**
      * Wie viele unlesbare Zeilen das Laden bisher verworfen hat — für die
-     * Fehlersuche, über alle Starts gezählt (R17-24).
+     * Fehlersuche, über alle Starts gezählt.
      */
     val unlesbarVerworfen: Long get() = kopf.optLong(SCHLUESSEL_UNLESBAR, 0L)
 
@@ -84,7 +84,7 @@ class Uhrpuffer(private val ablage: Ablage, private val zufall: Random = Random.
 
     /**
      * Die nächste Ereignisnummer — fortlaufend, lückenlos, über Neustarts
-     * hinweg (E-S4-10).
+     * hinweg.
      *
      * Sie wird **vor** dem Gebrauch gesichert. Ein Absturz dazwischen darf
      * eine Nummer überspringen (das Handy merkt es an der Lücke und wartet),
@@ -122,7 +122,7 @@ class Uhrpuffer(private val ablage: Ablage, private val zufall: Random = Random.
     }
 
     /**
-     * Der Zählerspeicher für die `wm-`-Kennungen (E-S4-09).
+     * Der Zählerspeicher für die `wm-`-Kennungen.
      *
      * Er liegt in derselben Datei wie der Ereigniszähler — beide müssen
      * dasselbe überleben, und zwei Dateien wären zwei Gelegenheiten,
@@ -153,13 +153,13 @@ class Uhrpuffer(private val ablage: Ablage, private val zufall: Random = Random.
             sichern()
         }
         warteschlange.clear()
-        /* EINE UNLESBARE ZEILE GEHT BEIM LADEN (R17-24, Entscheidung der
-         * Betreiberin). Ein halbes Schreiben über den Ersatzweg ohne
-         * `renameTo` kann eine Zeile hinterlassen, die kein Ereignis mehr
-         * ist. Bis 0.18.0 blieb sie für immer: `quittieren()` entfernt nur
-         * Zeilen mit lesbarer Nummer, `nachliefern()` schickte sie bei jedem
-         * Start, `gepuffert` zählte sie mit. Das Handy liest mit demselben
-         * Format und hätte sie nie quittiert — zustellbar ist sie nicht. Sie
+        /* EINE UNLESBARE ZEILE GEHT BEIM LADEN. Ein halbes Schreiben über
+         * den Ersatzweg ohne `renameTo` kann eine Zeile hinterlassen, die
+         * kein Ereignis mehr ist. Bliebe sie, dann für immer: `quittieren()`
+         * entfernt nur Zeilen mit lesbarer Nummer, `nachliefern()` schickte
+         * sie bei jedem Start, `gepuffert` zählte sie mit. Das Handy liest
+         * mit demselben Format und quittierte sie nie — zustellbar ist sie
+         * nicht. Sie
          * fällt heraus und wird im Kopf gezählt; dasselbe wie beim Kopf
          * oben, nur nicht still. */
         val gelesen = zeilen.drop(1)

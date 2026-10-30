@@ -14,29 +14,24 @@ require_once __DIR__ . '/../backup_lib.php';
  */
 
 api_methode();
-csrf_check();   // Feld ODER Kopfzeile X-CSRF (Nr. 67)
+csrf_check();   // Feld ODER Kopfzeile X-CSRF
 
 $data = api_rumpf();
 if (($data['format'] ?? '') !== 'einsatzdoku-backup') {
     json_out(['error' => 'format'], 400);
 }
 
-/* NUR NOCH NUTZLAST 13 (S11-12, E-S11-85).
+/* NUR NUTZLAST 13.
  *
- * Bis Web 22.7.0 nahm dieser Weg jede Nutzlast ab 6 an: Der Browser
- * verschloss Orte, Reanimation und Spur aus jeder Fassung, und SPUR1 las er
- * selbst (`EdOrtsdaten.spur1Lesen()`). Aeltere Sicherungen gibt es nach
- * Auskunft der Betreiberin nicht mehr; mit ihnen ist der Rueckweg gegangen —
- * er waere der einzige Weg gewesen, auf dem noch SPUR1 und Klartextspalten
- * in die Anlage kamen.
+ * Aeltere Sicherungen nimmt dieser Weg nicht an; sie waeren der einzige Weg,
+ * auf dem noch SPUR1 und Klartextspalten in die Anlage kaemen.
  *
  * Die Ablehnung ist ausdruecklich und benannt, nicht ein Fehler beim
  * Einlesen; der Container liess sich entsiegeln, und genau darum kommt die
  * Meldung hier an. Der Browser fragt dieselbe Zahl schon vor dem Senden
  * (`einstellungen.php`), dieser Satz ist der Riegel dahinter.
  *
- * (Bis Web 5 stand die Schranke bei 6 — ab Web 6.0.0 mit Diensttagen, E23.
- * Die einteilige Datei bis Nutzlast 7 nimmt nur noch der Demo-Reset, aus
+ * (Die einteilige Datei bis Nutzlast 7 nimmt nur der Demo-Reset, aus
  * seiner eigenen Fixture und nicht ueber diesen Endpunkt.) */
 $nutzlast = isset($data['version']) ? (int)$data['version'] : 0;
 if ($nutzlast < 13) {
@@ -47,25 +42,23 @@ if ($nutzlast < 13) {
                          . 'die Ortsdaten unverschlüsselt. Es wurde nichts geändert.'], 409);
 }
 
-/* UND EINE SCHRANKE NACH OBEN (S2/AP5).
+/* UND EINE SCHRANKE NACH OBEN.
  *
- * Die gab es bisher nicht, und das war so lange harmlos, wie es nur eine
- * Nutzlast gab. Mit Fassung 8 (Kern ohne Punktlisten) ist es das nicht mehr:
- * Eine kuenftige Fassung 9, die etwas anders ablegt, liefe hier in den
- * Fassung-8-Zweig und legte still einen halben Bestand an.
+ * Ohne sie liefe eine kuenftige Fassung, die etwas anders ablegt, hier in
+ * einen aelteren Zweig und legte still einen halben Bestand an.
  *
  * Die Meldung sagt deshalb, was los ist — dieselbe Linie wie bei einem
  * Container aus einer neueren Fassung (`assets/crypto.js`).
  *
- * DER SATZ DARUEBER HAT SICH BEWAEHRT: Fassung 9 ist mit Web 14.2.0
- * gekommen (Geraete-Momentaufnahme und Sperrvermerke, R64 / Backlog Nr. 63),
- * und die Schranke hat genau dafuer gearbeitet — eine 9er-Datei wird von
- * jedem aelteren Stand ABGEWIESEN statt halb eingelesen. Wer die Zahl hier
- * hochsetzt, ohne den Rueckweg auf die neuen Felder vorzubereiten, hebelt
- * genau das aus. Die Schranke nach UNTEN bleibt bei 6; alle Felder ab
- * Fassung 7 sind optional, und was fehlt, wird NULL.
+ * WER DIE ZAHL HIER HOCHSETZT, ohne den Rueckweg auf die neuen Felder
+ * vorzubereiten, hebelt genau das aus: Eine neuere Datei wird von jedem
+ * aelteren Stand ABGEWIESEN statt halb eingelesen. Die Schranke nach UNTEN
+ * bleibt bei 6; alle Felder ab Fassung 7 sind optional, und was fehlt, wird
+ * NULL.
  *
- * FASSUNG 10 (Web 16.0.0, E-S9-09): Typ und Kurzname am Rettungsmittel. Der
+ * FASSUNG 9: Geraete-Momentaufnahme und Sperrvermerke.
+ *
+ * FASSUNG 10: Typ und Kurzname am Rettungsmittel. Der
  * Rueckweg ist darauf vorbereitet — `edbak_restore()` schickt beide durch
  * `pruef_rettungsmittel()`, ein fehlender Typ wird 'standard'. Und hier
  * arbeitet die Schranke besonders deutlich: Ohne sie legte ein aelterer Stand
@@ -73,17 +66,17 @@ if ($nutzlast < 13) {
  * Standortpflicht und Rollenvorlagen, und ohne dass man dem Datensatz den
  * Verlust ansaehe.
  *
- * FASSUNG 12 (Web 21.0.0, P5c/AP8): ohne die Auswahl zentraler Standorte
- * (R39). Der Rueckweg ist darauf vorbereitet — er ueberliest das Feld in
- * aelteren Dateien und fragt es in neueren nicht. Eine 11er-Datei bleibt
- * hier lesbar; ein Stand vor Web 21.0.0 weist eine 12er-Datei ab, und das
- * ist richtig: Sein Code laeuft auf diesem Schema ohnehin nicht.
+ * FASSUNG 12: ohne die Auswahl zentraler Standorte. Der Rueckweg ist darauf
+ * vorbereitet — er ueberliest das Feld in aelteren Dateien und fragt es in
+ * neueren nicht. Eine 11er-Datei bleibt hier lesbar; ein aelterer Stand
+ * weist eine 12er-Datei ab, und das ist richtig: Sein Code laeuft auf diesem
+ * Schema ohnehin nicht.
  *
- * FASSUNG 13 (Web 22.5.0, S11-06a): Orte der Phasen und Reanimation stehen
+ * FASSUNG 13: Orte der Phasen und Reanimation stehen
  * offen im verschlossenen Kern, die Spuren als Punktlisten statt SPUR1. Der
  * Rueckweg ist darauf vorbereitet — der Browser verschliesst beides vor dem
  * Senden, aus jeder Fassung von 6 bis 13 gleich, und dieser Endpunkt nimmt
- * nur noch Verschlossenes an. Ein Stand vor Web 22.5.0 weist eine 13er-Datei
+ * nur Verschlossenes an. Ein aelterer Stand weist eine 13er-Datei
  * ab; er kennt die Punktlisten im Spurteil nicht und liefe still ohne Spuren. */
 const NUTZLAST_HOECHSTENS = 13;
 if ($nutzlast > NUTZLAST_HOECHSTENS) {
@@ -99,25 +92,25 @@ try {
     $stats = edbak_restore($userId, $data, null, 'browser');
     /* DIE SPURKARTE GEHT GETRENNT ZURUECK, nicht in `stats`: `stats` ist die
      * Rueckmeldung an die Nutzerin und wird angezeigt; die Karte ist eine
-     * Arbeitsangabe fuer den naechsten Schritt des Browsers (Konzept 3.2.4). */
+     * Arbeitsangabe fuer den naechsten Schritt des Browsers. */
     $karte = $stats['spur_karte'] ?? null;
     $tage  = $stats['day_map'] ?? null;
     unset($stats['spur_karte'], $stats['day_map']);
     $antwort = ['ok' => true, 'stats' => $stats];
     if ($karte !== null) { $antwort['spur_karte'] = $karte ?: new stdClass(); }
-    /* DIE ZUORDNUNG DER DIENSTTAGE (S2/AP5b). Der Kopf einer Fassung-4-Datei
+    /* DIE ZUORDNUNG DER DIENSTTAGE. Der Kopf einer Fassung-4-Datei
      * bringt Stammdaten und Diensttage; die Eintraege kommen danach in
      * eigenen Anfragen und muessen wissen, an welchen Tag sie gehoeren. */
     if ($tage !== null) { $antwort['day_map'] = $tage ?: new stdClass(); }
     json_out($antwort);
 } catch (DomainException $ex) {
-    /* Die zweite Schranke in `edbak_restore()` (S11-12); oben steht die erste. */
+    /* Die zweite Schranke in `edbak_restore()`; oben steht die erste. */
     if (str_starts_with($ex->getMessage(), 'version_alt')) {
         json_out(['error' => 'version_alt',
                   'meldung' => 'Seit Web 23 lassen sich nur noch Sicherungen ab Format 13 '
                              . 'einspielen. Es wurde nichts geändert.'], 409);
     }
-    /* Klartext-Ortsdaten (S11-06b): Der Browser verschliesst seit Web 22.5.0
+    /* Klartext-Ortsdaten: Der Browser verschliesst
      * Orte, Reanimation und Spur vor dem Senden; eine Nutzlast mit Klartext
      * kommt aus einer veralteten Seite oder von Hand. Nichts ist geschrieben
      * — `edbak_restore()` prueft vor der Transaktion. */

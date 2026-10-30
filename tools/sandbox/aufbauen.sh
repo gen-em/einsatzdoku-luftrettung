@@ -6,14 +6,14 @@
 #
 # Anlass: Nr. 183 (WebKit fehlte still), 13.09.2026 (Container ohne MariaDB).
 # Ersetzt `.claude/hooks/session-start.sh` und `tools/containeraufbau/`, die
-# dasselbe mit zwei verschiedenen Listen taten (PK-02, F-PK-10).
+# dasselbe mit zwei verschiedenen Listen taten.
 #
 # Die Ausbaustufen und die benannten Grenzen stehen in docs/Sandbox-Setup.md.
 set -uo pipefail
 
 WURZEL=${WURZEL:-$(cd "$(dirname "$0")/../.." && pwd)}
 ANDROID_SDK="${ANDROID_HOME:-/opt/android-sdk}"
-# CMDLINE-TOOLS 23.0 (Konzept AR, F-AR-18). Bis zum 25.09.2026 stand hier
+# CMDLINE-TOOLS 23.0. Bis zum 25.09.2026 stand hier
 # 12.0 — und dessen `avdmanager` kann Abbilder mit API „37.0" nicht lesen: Er
 # schreibt `target=android-0` in die AVD, gfxstream wird falsch eingerichtet,
 # und der Gast bricht mit `!hasReadColorBufferDma` ab (auf der Uhr
@@ -22,9 +22,9 @@ ANDROID_SDK="${ANDROID_HOME:-/opt/android-sdk}"
 CMDTOOLS_FASSUNG="23.0"
 CMDTOOLS_URL="https://dl.google.com/android/repository/commandlinetools-linux-16111833_latest.zip"
 CMDTOOLS_SHA1="e025545c62a8e64c7559119566a569fb1dec5f60"
-# PLAYWRIGHT 1.64.1 (Backlog Nr. 393). Das Abbild bringt 1.56.1 mit, und
+# PLAYWRIGHT 1.64.1. Das Abbild bringt 1.56.1 mit, und
 # 1.56 hat keine WebKit-Fassung für Ubuntu 26.04 — Stufe 2 musste deshalb auf
-# 24.04 bleiben (F-DM-13). Angehoben wird im ganzen Projekt, nicht nur in
+# 24.04 bleiben. Angehoben wird im ganzen Projekt, nicht nur in
 # Stufe 2, sonst misst sie andere Engines als der Prüfstand. DIESE ZEILE IST
 # DIE EINE STELLE: Der Job `stufe2` (`.github/workflows/auslieferung.yml`)
 # liest die Fassung von hier und bricht ab, wenn er sie nicht findet.
@@ -55,15 +55,15 @@ apt_holen() {   # apt_holen <paket…> — nur was fehlt, erst ohne, dann mit up
 
 teil_web() {
     melde "Systempakete"
-    # cmark-gfm seit BR-03: die Quelltextprüfung `handbuch` (F-BR-03), seit
-    # BR-05 auch `bestand` — er liest Tabellen so, wie GitHub sie zeigt.
+    # cmark-gfm: die Quelltextprüfungen `handbuch` und
+    # `bestand` — er liest Tabellen so, wie GitHub sie zeigt.
     apt_holen mariadb-server librsvg2-bin imagemagick socat unzip wget curl cmark-gfm \
         || zeile "ACHTUNG: apt-get fehlgeschlagen — Prüfmittel unvollständig"
 
     melde "Engine-Bibliotheken"
     # Genau die, die Playwright selbst nennt, wenn WebKit nicht startet —
     # seine Meldung altert nicht, diese Liste schon. Die ersten vier gemessen
-    # am 21.09.2026, die übrigen fünf am 19.10.2026 (Konzept DM, F-DM-01):
+    # am 21.09.2026, die übrigen fünf am 19.10.2026:
     # Das Abbild jenes Tages brachte sie nicht mehr mit, und WebKit
     # verweigerte den Start mit „Host system is missing dependencies".
     apt_holen libenchant-2-2 libsecret-1-0 libwayland-server0 libmanette-0.2-0 \
@@ -74,9 +74,9 @@ teil_web() {
     playwright_heben
 
     melde "Engines"
-    # JEDE BROWSERPROBE LÄUFT IN DREI ENGINES (R87, E-DM-01) — also müssen
+    # JEDE BROWSERPROBE LÄUFT IN DREI ENGINES — also müssen
     # alle drei da sein, und zwar in der Fassung, die zum Playwright oben
-    # gehört (1.64.1: chromium-1248, firefox-1555, webkit-2370). Bis Nr. 393
+    # gehört (1.64.1: chromium-1248, firefox-1555, webkit-2370). Früher
     # sah dieser Schritt nur nach, ob IRGENDEIN `chromium-*` lag; nach dem
     # Anheben hätte das alte `chromium-1194` des Abbilds genügt, und der
     # Nachweis wäre am Start gescheitert statt hier. Deshalb fragt der Schritt
@@ -90,7 +90,7 @@ teil_web() {
         || zeile "ACHTUNG: Nachladen der Engines meldet einen Fehler — der Nachweis unten zeigt, was startet"
 
     melde "Python-Pakete"
-    # FESTE FASSUNGEN MIT HASHES (R17-19, F-R17-20): `tools/sandbox/
+    # FESTE FASSUNGEN MIT HASHES: `tools/sandbox/
     # anforderungen.txt`. Bis dahin holte dieser Teil jsonschema, cffi,
     # pyftpdlib, paramiko und pyopenssl in der Fassung des Tages. Installiert
     # wird weiterhin NUR, wenn ein Import scheitert — blind ersetzen macht
@@ -160,11 +160,11 @@ teil_android() {
     fi
     melde "Android-SDK beschaffen (Plattform 37.0, Build-Tools 36.0.0)"
     yes | "$sdkm" --licenses >/dev/null 2>&1 || true
-    # EINE PLATTFORM: die, gegen die gebaut wird (`compileSdk` 37, seit
-    # Android 0.16.0). Bis R4-02 kam 36 dazu, nur weil der Prüfstand die
-    # Ausbaustufe an `platforms/android-36` erkannte (Backlog Nr. 335) — seit
-    # R4-02 liest er `compileSdk`. Den Emulator und seine Abbilder holt die
-    # Stufe `emulator` — mehrere GB, die nur der Emulatorlauf braucht (F-AR-02).
+    # EINE PLATTFORM: die, gegen die gebaut wird (`compileSdk` 37). Früher
+    # kam 36 dazu, nur weil der Prüfstand die
+    # Ausbaustufe an `platforms/android-36` erkannte — heute
+    # liest er `compileSdk`. Den Emulator und seine Abbilder holt die
+    # Stufe `emulator` — mehrere GB, die nur der Emulatorlauf braucht.
     "$sdkm" "platform-tools" "platforms;android-37.0" \
         "build-tools;36.0.0" >/dev/null 2>&1
 }
@@ -172,7 +172,7 @@ teil_android() {
 cmdtools_holen() {
     # AUCH IN EINEM SCHON EINGERICHTETEN CONTAINER. Bis zum 25.09.2026 prüfte
     # die Stufe nur, ob die Plattformen da sind, und ließ ein veraltetes
-    # `cmdline-tools` stehen — genau das hat F-AR-18 verursacht. Maßgeblich
+    # `cmdline-tools` stehen — genau das hat einmal einen Fehler verursacht. Maßgeblich
     # ist die Fassung in `source.properties`, nicht das Dasein des Ordners.
     local ziel="$ANDROID_SDK/cmdline-tools/latest" ist
     ist=$(sed -n 's/^Pkg.Revision=//p' "$ziel/source.properties" 2>/dev/null)
@@ -193,7 +193,7 @@ cmdtools_holen() {
 }
 
 teil_emulator() {
-    # DIE STUFE FÜR DEN EMULATORLAUF (Konzept AR, F-AR-18). `lz4` und `cpio`
+    # DIE STUFE FÜR DEN EMULATORLAUF. `lz4` und `cpio`
     # braucht die Debug-Ramdisk der Wear-Abbilder ab API 36, die nur als
     # `user`-Build erscheinen; `libpulse0` bindet die QEMU-Binärdatei hart.
     # Abbilder, AVDs und Ramdisk legt `emulator.sh aufbauen` an — dort steht,
@@ -204,7 +204,7 @@ teil_emulator() {
 }
 
 gradle_bezug() {
-    # MAVEN CENTRAL DROSSELT DIESEN CONTAINER (Konzept AR, F-AR-01, E-AR-13):
+    # MAVEN CENTRAL DROSSELT DIESEN CONTAINER:
     # 13 von 20 Abrufen `429`, der unveränderte Android-Stand baute am
     # 24.09.2026 erst im fünften Anlauf. Googles Spiegel von Maven Central
     # kommt deshalb VOR die Quellen des Projekts, Maven Central bleibt
@@ -248,7 +248,7 @@ teil_uhr() {
     # BASH, NICHT SH (21.09.2026). `pruefstand.sh` ist `#!/usr/bin/env bash`
     # und setzt `-o pipefail`; `sh` ist in diesem Abbild dash und bricht in
     # Zeile 11 mit „Illegal option -o pipefail" ab. Derselbe Fehler stand in
-    # `tools/pruefstand/pruefen.sh` und ist dort in PK-03 behoben worden —
+    # `tools/pruefstand/pruefen.sh` und ist dort behoben worden —
     # hier blieb er stehen und fiel nicht auf, weil der Rückgabewert dieser
     # Funktion verworfen wurde (siehe unten, „Lauf").
     CIQ_ZIELE=${CIQ_ZIELE:-alle} bash "$WURZEL/tools/uhr-pruefstand/pruefstand.sh" aufbau

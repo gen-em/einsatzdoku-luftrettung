@@ -1,0 +1,8 @@
+# Pruefsummen der Garmin-Geraetearchive unter CIQ_GERAETE_URL (F-R17-66).
+# pruefstand.sh vergleicht jedes Archiv VOR dem Entpacken mit seiner Zeile;
+# im Auslieferungslauf ist die Zeile Pflicht (CIQ_SUMMEN_PFLICHT=1).
+# Wer die Archive neu packt, traegt die neuen Summen im selben Commit ein:
+#   sha256sum devices.tar fonts.tar
+# Stand der Archive: Last-Modified 23.09.2026, gerechnet am 30.10.2026.
+60bdd4c3211f598f7ca8e9be0bffe6a2cd32eaf2b502ac01727f4ce521fe05ff  devices.tar
+ee60eb4b40e0a68e28e3ac7269ba38d2f21d38e7f719e2c44562b9dad59fd159  fonts.tar

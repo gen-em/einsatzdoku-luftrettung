@@ -2,10 +2,10 @@
 declare(strict_types=1);
 
 /**
- * Prüfkonten — ein Testbestand für die NutzerInnen-Liste (P3/O9b).
+ * Prüfkonten — ein Testbestand für die NutzerInnen-Liste.
  *
  * WOFUER. Das Konzept verlangt die Abnahme der NutzerInnen-Liste „mit einem
- * Testbestand von 300 Konten" (E-P3-41, Abnahme O9). Ein Referenzdatensatz mit
+ * Testbestand von 300 Konten". Ein Referenzdatensatz mit
  * vier Konten beantwortet die Fragen nicht, um derentwillen die Liste gebaut
  * wurde: Trägt der Seitenwechsel? Bleibt die Auswahl über Seiten hinweg? Wie
  * lange braucht ein Aufruf, wenn der Backup-Stand aus dem Dateisystem kommt?
@@ -113,14 +113,14 @@ if ($befehl === 'anlegen') {
     [$bereit, $grund] = edbak_ablage_bereit();
     if (!$bereit) { fwrite(STDERR, "Ablage nicht bereit: $grund\n"); exit(2); }
 
-    /* OHNE SERVERSCHLUESSEL GEHT ES SEIT S10/AP4 NICHT MEHR (S10/AP5).
+    /* OHNE SERVERSCHLUESSEL GEHT ES NICHT.
      *
      * Die Begleitdatei `konto.json` wird seit der Fassung 3 versiegelt
      * (`edbak_begleit_schreiben()` ruft `sk_versiegeln()`), und ohne
      * eingetragenen Schluessel wirft sie mitten in der Schleife — nach dem
      * ersten `commit()`, also mit halbem Bestand in der Datenbank und einem
      * Ablageordner, den `entfernen` dann zwar findet, aber dessen Begleitdatei
-     * fehlt. `edbak_sicherung_erzeugen()` hat diesen Riegel in AP4 bekommen;
+     * fehlt. `edbak_sicherung_erzeugen()` hat diesen Riegel;
      * hier fehlte er, weil dieses Werkzeug `edbak_begleit_schreiben()`
      * unmittelbar ruft. Lieber vorher anhalten mit einem Satz, der sagt, wo
      * der Schluessel herkommt. */

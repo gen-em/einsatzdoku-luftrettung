@@ -5,7 +5,7 @@
     Der Grund ist `marke_asphalt` (#1A0500), nicht reines Schwarz. Warum, steht
     in farben.xml: Auf einem OLED-Display ist der Unterschied weder zu sehen
     noch am Stromverbrauch zu messen, aber es ist ein Wert der Marke und kein
-    neuer (E-S4-22a).
+    neuer.
 
     Elternthema ist `Theme.DeviceDefault`, das Wear-OS-Grundthema der
     Plattform — damit gelten die Systemvorgaben fuer runde Displays und den

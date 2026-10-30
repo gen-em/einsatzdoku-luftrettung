@@ -2,20 +2,19 @@
 declare(strict_types=1);
 
 /**
- * DAS EINRICHTUNGSTOR DES ZWEITFAKTORS (P5c/AP5, E-P5c-53, -61; M-P5c-02b
- * Bild 4).
+ * DAS EINRICHTUNGSTOR DES ZWEITFAKTORS.
  *
  * Support, Admin und BetreiberIn ohne Zweitfaktor landen hier, bevor eine
  * andere Seite aufgeht — das Tor dazu steht in `auth_guard.php`, und diese
  * Seite ist seine einzige Ausnahme neben dem Abmelden.
  *
- * IN DER ANMELDEHÜLLE, NICHT IM GERÜST (E-P5c-61). Das Gerüst zeigte eine
+ * IN DER ANMELDEHÜLLE, NICHT IM GERÜST. Das Gerüst zeigte eine
  * Leiste, deren Einträge alle wieder hierher führten.
  *
  * ZWEI SCHRITTE, EINE ADRESSE:
  *   1. GET: Geheimnis zeigen (QR, Verweis, Base32) und nach einem Code
- *      fragen. Eingeschaltet wird erst mit einem bestätigten Code
- *      (E-P5c-54) — wer das Scannen abbricht, sperrt sich nicht aus.
+ *      fragen. Eingeschaltet wird erst mit einem bestätigten Code — wer
+ *      das Scannen abbricht, sperrt sich nicht aus.
  *   2. POST mit gültigem Code: eingeschaltet, die zehn Codes einmal
  *      sichtbar, „Weiter" nach dem Haken.
  *
@@ -27,8 +26,8 @@ declare(strict_types=1);
  * WER HIER NICHTS ZU TUN HAT — keine Pflichtrolle, schon eingeschaltet,
  * Spalten noch nicht da —, geht zur Startseite.
  *
- * SEIT WEB 21.9.0 EIN ZWEITER MODUS: DIE BESTAETIGUNG (Schritt 18, SR-07,
- * E-SR-20). `?bestaetigen=1&zurueck=…` fragt nach einem Code — aus der App
+ * EIN ZWEITER MODUS: DIE BESTAETIGUNG.
+ * `?bestaetigen=1&zurueck=…` fragt nach einem Code — aus der App
  * oder einem Wiederherstellungscode, im Topf `totp` wie der Code-Schritt der
  * Anmeldung — und macht ihn damit frisch (`ZF_FRISCH_S`). Dahin schickt
  * `zweitfaktor_frisch_verlangen()` jede Handlung der Liste in `db.php`, wenn
@@ -42,7 +41,7 @@ require_once __DIR__ . '/auth_guard.php';
 require_once __DIR__ . '/totp_lib.php';
 require_once __DIR__ . '/zweitfaktor_teile.php';
 
-/* ---- DIE BESTAETIGUNG (SR-07) ---------------------------------------------
+/* ---- DIE BESTAETIGUNG -----------------------------------------------------
  *
  * SCHON FRISCH ODER KEIN ZWEITFAKTOR: nichts zu fragen, gleich zurueck.
  * GESPERRT (fuenf falsche Codes im Topf `totp`): Die Seite sagt bis wann und
@@ -64,17 +63,17 @@ if (isset($_GET['bestaetigen'])) {
     require_once __DIR__ . '/passkey_lib.php';
     if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$gesperrt) {
         csrf_check();
-        /* DER PASSKEY ZAEHLT WIE EIN CODE (SR-09, E-SR-32): Antwort im Feld
+        /* DER PASSKEY ZAEHLT WIE EIN CODE: Antwort im Feld
          * `passkey_antwort`, Herausforderung in `passkey_best` (einmal). */
-        /* Ein Feld, das kein Text ist, ist eine leere Antwort (Nachpruefung
-         * von H-SR-08, B-1: sonst eine PHP-Warnung im Reiter System). */
+        /* Ein Feld, das kein Text ist, ist eine leere Antwort (sonst eine
+         * PHP-Warnung im Reiter System). */
         $pkFeld = $_POST['passkey_antwort'] ?? '';
         $mitPk = !$mitRc && $pkFeld !== '';
         if ($mitPk) {
             $pkAblage = is_array($_SESSION['passkey_best'] ?? null) ? $_SESSION['passkey_best'] : [];
             unset($_SESSION['passkey_best']);
-            /* Das Fach traegt das Konto wie die beiden anderen (H-SR-08,
-             * F-SR-39), und die Antwort hat einen Deckel (F-SR-35). */
+            /* Das Fach traegt das Konto wie die beiden anderen, und die
+             * Antwort hat einen Deckel. */
             if (!pk_ablage_passt($pkAblage, $userId)) { $pkAblage = []; }
             $pkRoh = is_string($pkFeld) ? $pkFeld : '';
             $pkAntwort = strlen($pkRoh) <= PK_ANTWORT_MAX ? json_decode($pkRoh, true) : null;
@@ -94,7 +93,7 @@ if (isset($_GET['bestaetigen'])) {
                           ['codes_offen' => (int)($pr['codes_offen'] ?? 0)], $userId);
             }
             /* NACH EINEM POST: Die Handlung wurde nicht ausgefuehrt und wird
-             * nicht nachgespielt (E-SR-20) — die Seite sagt es in der Karte,
+             * nicht nachgespielt — die Seite sagt es in der Karte,
              * aus der sie kam. Nach einer Seite (dem Schluesselblatt) gibt es
              * nichts zu wiederholen; der Ruecksprung zeigt sie. */
             if ($nochmal) {
@@ -106,7 +105,7 @@ if (isset($_GET['bestaetigen'])) {
         }
         /* Kein Fehlversuch: eine abgelaufene oder verdraengte Herausforderung
          * und ein zurueckgelaufener Zaehler bei gueltiger Signatur
-         * (H-SR-08, F-SR-37 — dieselbe Regel wie im Code-Schritt). */
+         * (dieselbe Regel wie im Code-Schritt). */
         if (!in_array($pr['passkey'] ?? '', ['herausforderung', 'zaehler'], true)) {
             rate_misserfolg('totp', null, $merkmale);
         }
@@ -122,7 +121,7 @@ if (isset($_GET['bestaetigen'])) {
             $bAuftakt = 'Der Passkey wurde nicht angenommen.';
             $bFehler  = 'Nimm den Code aus der App — oder versuche es noch einmal.';
         } elseif (!$gesperrt && !empty($pr['geheimnis_fehlt'])) {
-            /* Passkeys haengen nicht am Serverschluessel (E-SR-49). */
+            /* Passkeys haengen nicht am Serverschluessel. */
             $bAuftakt = 'Der Code lässt sich hier nicht prüfen.';
             $bFehler  = 'Der Zweitfaktor wurde mit einem anderen Serverschlüssel eingerichtet. '
                       . (pk_verfuegbar() && pk_zahl($userId) > 0
@@ -143,7 +142,7 @@ if (isset($_GET['bestaetigen'])) {
     }
     $hier = 'zweitfaktor.php?bestaetigen=1&zurueck=' . rawurlencode($zurueck) . ($nochmal ? '&nochmal=1' : '')
           . (isset($_GET['abbruch']) ? '&abbruch=' . rawurlencode($abbruch) : '');
-    /* Der Passkey als Weg daneben — wie im Code-Schritt (E-SR-32). */
+    /* Der Passkey als Weg daneben — wie im Code-Schritt. */
     $pkBest = null;
     if (!$gesperrt && !$mitRc && pk_verfuegbar() && pk_zahl($userId) > 0) {
         $pkAblage = [];
@@ -187,7 +186,7 @@ if (isset($_GET['bestaetigen'])) {
                  'attr' => ' autocomplete="off" autocapitalize="characters" spellcheck="false" autofocus required',
                  'klein' => 'Jeder Code gilt einmal.']);
     } else {
-        /* DIE ID TRAEGT „totp" (Web 22.7.1): Bitwarden erkennt das Feld in
+        /* DIE ID TRAEGT „totp": Bitwarden erkennt das Feld in
            Firefox nur an einem Stichwort in id, Name oder Beschriftung —
            Firefox reicht autocomplete="one-time-code" nicht weiter, und
            „code" allein gilt als mehrdeutig. Der Name bleibt `code`, weil er
@@ -225,7 +224,7 @@ if (isset($_GET['bestaetigen'])) {
 
 $zustand = totp_zustand($userId);
 $codes   = null;
-/* NACH DEM RÜCKWEG (Konzept RW, RW-03; M-RW-01 Bild 3): `login.php` schickt
+/* NACH DEM RÜCKWEG: `login.php` schickt
  * eine Pflichtrolle unmittelbar hierher und legt diese Marke ab. Sie gilt
  * EINMAL — gelesen und weggenommen —, damit die Meldung nicht bei jedem
  * Neuladen des Tors wiederkommt. */

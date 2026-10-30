@@ -5,14 +5,14 @@
     DEUTSCH, EINSPRACHIG. Die Weboberflaeche ist es auch; eine zweite Sprache
     waere eine Zusage, die niemand pflegt.
 
-    GERAETEFREI FORMULIERT (E-S4-19, P2-Muster E-P2-02): Es heisst "Dienst",
+    GERAETEFREI FORMULIERT: Es heisst "Dienst",
     nicht "Flugdienst"; "Einsatzort", nicht "Landeplatz". Die App laeuft an
     bodengebundenen Notarzteinsaetzen genauso wie an luftgebundenen und
     erfaehrt die Art gar nicht — die Einordnung geschieht im Browser.
 -->
 <resources>
     <!--
-        DER NAME AM HANDY IST DER VOLLE (R63, Backlog Nr. 85): "Gen-EM NAdoku".
+        DER NAME AM HANDY IST DER VOLLE: "Gen-EM NAdoku".
         Er steht im Startprogramm, in der Anwendungsliste und ueber jeder
         Benachrichtigung — an Stellen also, an denen er neben Dutzenden
         fremder Namen steht und alleine sagen muss, wozu er gehoert.
@@ -35,7 +35,7 @@
 
     <string name="fassung">Fassung %1$s</string>
 
-    <!-- ==== Sync-Anzeige: die drei Zustände (Backlog Nr. 11) ============ -->
+    <!-- ==== Sync-Anzeige: die drei Zustände ============================ -->
     <string name="sync_nicht_eingerichtet">Nicht eingerichtet</string>
     <!-- Mehrzahl über <plurals>, nicht über zwei Zeichenketten und ein if:
          Android kennt die Regeln der Sprache, der Code nicht. -->
@@ -46,12 +46,10 @@
     <string name="sync_vollstaendig">Alles gesendet</string>
     <string name="sync_gekoppelt_mit">Gekoppelt · %1$s</string>
 
-    <!-- ==== Kopplung (JSON-Vertrag 1a, umgekehrt seit R49/S5) ========= -->
+    <!-- ==== Kopplung (JSON-Vertrag 1a) ================================== -->
     <!--
-        DIE RICHTUNG HAT SICH GEDREHT, und die Texte tragen das. Vorher hiess
-        es "Im Browser einen Kopplungscode erzeugen" — die App war der
-        Empfaenger. Jetzt zeigt das GERAET den Code, und der Browser nimmt ihn
-        entgegen; jeder Satz hier muss deshalb sagen, wer gerade dran ist.
+        DAS GERAET ZEIGT DEN CODE, und der Browser nimmt ihn entgegen; jeder
+        Satz hier muss deshalb sagen, wer gerade dran ist.
 
         DREI SCHRITTE, DREI TEXTE: Code zeigen, warten, bestaetigen.
     -->
@@ -72,10 +70,10 @@
         laedt zum Zusehen ein, und zehn Minuten sind reichlich Zeit. Unter
         einer Minute wird es genau, weil es dann darauf ankommt.
     -->
-    <!-- Mehrzahl ueber <plurals> seit Android 0.16.0 (Konzept AR, E-AR-10):
-         Bei genau 60 s rundet die Anzeige auf "1", und unter einer Minute
-         zaehlt sie bis 1 herunter; als <string> stand dort "Noch 1 Minuten"
-         und "Noch 1 Sekunden". Lint meldete es als PluralsCandidate. -->
+    <!-- Mehrzahl ueber <plurals>: Bei genau 60 s rundet die Anzeige auf
+         "1", und unter einer Minute zaehlt sie bis 1 herunter; als <string>
+         stuende dort "Noch 1 Minuten" und "Noch 1 Sekunden". Lint meldet es
+         als PluralsCandidate. -->
     <plurals name="kopplung_rest_min">
         <item quantity="one">Noch %1$d Minute</item>
         <item quantity="other">Noch %1$d Minuten</item>
@@ -121,7 +119,7 @@
     <string name="fehler_unbekannt">Kopplung fehlgeschlagen</string>
     <string name="fehler_unbekannt_hinweis">Unerwartete Antwort des Servers.</string>
 
-    <!-- ==== Trennen (E-S4-12, Backlog Nr. 14) =========================== -->
+    <!-- ==== Trennen ===================================================== -->
     <string name="trennen">Gerät trennen</string>
     <string name="trennen_frage">Kopplung trennen?</string>
     <string name="trennen_frage_text">Danach dokumentiert dieses Gerät auf kein Konto mehr. Hochgeladene Daten bleiben erhalten.</string>
@@ -137,7 +135,7 @@
     <string name="trennen_rueckstand_hinweis">Sie gehören dem bisherigen Konto. Nach einer Neukopplung gingen sie an das neue.</string>
 
     <!--
-        ==== Akkuwarnung waehrend des Dienstes (Nr. 82, 04.09.2026) =========
+        ==== Akkuwarnung waehrend des Dienstes ===============================
 
         DREI SCHWELLEN, weil sie Verschiedenes bedeuten: Bei 25 % ist noch
         alles offen, bei 15 % wird es knapp, bei 10 % geht es zu Ende. Ein
@@ -161,7 +159,7 @@
     <string name="warnung_akku_kritisch">Gleich ist Schluss. Lade jetzt nach, oder beende den Dienst, solange du es noch selbst entscheidest: Ein Abschalten mitten im Dienst lässt den Diensttag ohne Ende stehen.</string>
 
     <!--
-        ==== Der Stromverbrauch, einmalig beim ersten Dienst (Nr. 82) =======
+        ==== Der Stromverbrauch, einmalig beim ersten Dienst =================
 
         WARUM ES DIESEN ZWEITEN ORT BRAUCHT, obwohl der Akku-Dialog es schon
         sagt: Der erscheint NUR, wenn die Freistellung noch nicht steht
@@ -172,8 +170,8 @@
         EINMAL JE INSTALLATION, und NACH dem Dienstbeginn, nicht davor: Ein
         Dialog, der den Start aufhaelt, steht im Weg, wenn es losgeht. Und
         einer, den man bei JEDEM Dienstbeginn wegklickt, wird nicht gelesen
-        (Backlog Nr. 82: "Nicht als Dauerwarnung", dieselbe Ueberlegung wie
-        beim Geraete-Hinweis M4-10).
+        ("Nicht als Dauerwarnung", dieselbe Ueberlegung wie beim
+        Geraete-Hinweis).
     -->
     <string name="verbrauch_titel">Der Dienst läuft — ein Wort zum Akku</string>
     <string name="verbrauch_hinweis">Die Aufzeichnung braucht durchgehend GPS. Über einen langen Dienst ist sie damit der größte Stromverbraucher des Geräts.\n\nEin leerer Akku am Dienstende ist kein Fehler, sondern der Preis dafür. <b>Lade zwischendurch</b>, wenn du kannst — im Fahrzeug oder an der Wache.</string>
@@ -182,19 +180,17 @@
     <!-- ==== Einstellungen =============================================== -->
     <string name="einstellungen">Einstellungen</string>
 
-    <!-- ==== Dienst und Aufzeichnung (E-S4-05, E-S4-20) ================== -->
+    <!-- ==== Dienst und Aufzeichnung ===================================== -->
     <string name="dienst_kanal">Aufzeichnung</string>
     <string name="dienst_kanal_zweck">Zeigt an, dass die GPS-Daten des laufenden Dienstes aufgezeichnet werden.</string>
     <string name="dienst_meldung_ohne">Kein Dienst</string>
     <string name="dienst_meldung_beendet_sendet">Dienst beendet · sende …</string>
 
-    <!-- Der Ortungszustand in Worten (E-S5Z-01, Wortlaute 4.3 des Zusatzes).
+    <!-- Der Ortungszustand in Worten.
          EIN Satz Texte fuer Dauermeldung UND Zustandszeile: Zwei Wortlaute
          fuer denselben Zustand laufen frueher oder spaeter auseinander.
          "Aufzeichnung laeuft" steht nur bei OK; in allen anderen Zustaenden
-         "Dienst laeuft", weil das wahr ist und das andere nicht. Ersetzt
-         dienst_meldung_laeuft, dienst_laeuft_seit und
-         dienst_laeuft_seit_ohne_gps aus 0.7.7 (B-S5Z-07). -->
+         "Dienst laeuft", weil das wahr ist und das andere nicht. -->
     <string name="dienst_laeuft_ok">Aufzeichnung läuft seit %1$s · GPS empfängt</string>
     <string name="dienst_laeuft_sucht">Dienst läuft seit %1$s · GPS sucht …</string>
     <string name="dienst_laeuft_kein_signal">Dienst läuft seit %1$s · kein GPS-Signal seit %2$d min · keine Aufzeichnung</string>
@@ -203,9 +199,9 @@
     <string name="dienst_laeuft_freigabe_fehlt">Dienst läuft seit %1$s · Ortung nicht freigegeben · keine Aufzeichnung</string>
 
     <string name="dienst_keiner">Kein Dienst</string>
-    <!-- Erinnerung an einen sehr langen Dienst (Backlog Nr. 160). Die Schwelle
+    <!-- Erinnerung an einen sehr langen Dienst. Die Schwelle
          und ihre Begruendung stehen an AufzeichnungsDienst.DIENSTDAUER_ERINNERUNG_H. -->
-    <!-- <plurals> seit Android 0.16.0 (E-AR-10). Die Erinnerung kommt
+    <!-- <plurals>: Die Erinnerung kommt
          fruehestens nach 26 Stunden, "1 Stunde" erscheint also nie; die
          Form steht trotzdem richtig da, damit eine spaetere Schwelle nicht
          einen falschen Satz erbt. -->
@@ -236,13 +232,13 @@
     <string name="ortung_fehlt_hinweis">Ohne Ortungsfreigabe zeichnet die App keine GPS-Daten auf. Tippe hier, um sie zu erteilen.</string>
     <string name="ortung_freigeben">Ortung freigeben</string>
 
-    <!-- Ohne eingeschalteten Standort beginnt kein Dienst (E-S5Z-03). Muster
+    <!-- Ohne eingeschalteten Standort beginnt kein Dienst. Muster
          wie oben: erst was los ist, dann was hilft. -->
     <string name="standort_aus">Standort ausgeschaltet</string>
     <string name="standort_aus_hinweis">Ohne eingeschalteten Standort beginnt kein Dienst. Tippe hier, um ihn einzuschalten.</string>
     <string name="standort_einschalten">Standort einschalten</string>
 
-    <!-- Die Warnung (ID 3, eigener Kanal, Vibration ohne Ton; E-S5Z-04).
+    <!-- Die Warnung (ID 3, eigener Kanal, Vibration ohne Ton).
          Ein Titel fuer alle vier Ursachen: Was zaehlt, ist "es wird nichts
          aufgezeichnet"; die Ursache steht im Text, samt dem, was hilft. -->
     <string name="warnung_kanal">Warnungen</string>
@@ -253,8 +249,7 @@
     <string name="warnung_ungenau">Das GPS-Signal ist zu ungenau (über 100 m). Handy aus der Tasche oder ans Fenster.</string>
     <string name="warnung_freigabe_fehlt">Die Ortungsfreigabe fehlt. In der App erteilen.</string>
 
-    <!-- Hinweis nach dem Dienstende (ID 2, stiller Kanal, wegwischbar;
-         E-S5Z-07). Er sagt, dass etwas aussteht, und verschwindet, sobald der
+    <!-- Hinweis nach dem Dienstende (ID 2, stiller Kanal, wegwischbar). Er sagt, dass etwas aussteht, und verschwindet, sobald der
          Nachsende-Job es erledigt hat. Kein Ton, keine Vibration: Es gibt
          nichts zu tun. -->
     <plurals name="hinweis_warten">
@@ -263,10 +258,10 @@
     </plurals>
     <string name="hinweis_schluessel_abgewiesen">Dienst beendet · Schlüssel abgewiesen – Gerät neu koppeln</string>
 
-    <!-- Was die Ansicht ueber das Senden sagt (E-S5Z-12). "Abgewiesen" ist
-         der Fall, den die App bis 0.8.1 verschwieg: Ein Paket mit 400 fiel
-         aus Warteschlange UND Anzeige, und es stand "Alles gesendet", waehrend
-         beim Server ein Segment offen blieb (B-S5Z-06). -->
+    <!-- Was die Ansicht ueber das Senden sagt. "Abgewiesen" darf nicht
+         verschwiegen werden: Fiele ein Paket mit 400 aus Warteschlange UND
+         Anzeige, stuende "Alles gesendet", waehrend beim Server ein Segment
+         offen bleibt. -->
     <plurals name="sync_abgewiesen">
         <item quantity="one">%1$d Paket vom Server abgewiesen</item>
         <item quantity="other">%1$d Pakete vom Server abgewiesen</item>
@@ -282,13 +277,13 @@
         <item quantity="other">Server hat %1$d Pakete abgewiesen</item>
     </plurals>
 
-    <!-- Abgewiesene verwerfen (Backlog Nr. 114, R4-22, Bild M-R4-22). Die
+    <!-- Abgewiesene verwerfen. Die
          Beschriftung des Knopfs nennt keine Zahl: Die steht in der roten Zeile
          darueber, und eine zweite Zahl in der Beschriftung koennte altern. Die
          Frist im Hinweis (%1$d) kommt aus `Raeumung.FRIST_TAGE`, nicht aus
          diesem Text - sonst stuende sie zweimal; die Zahl der Pakete waehlt
          dort nur die Form. Wortlaut der Rueckfrage nach dem Muster der
-         Garmin-Uhr (Nr. 159): Titel mit Zahl, Text mit Grund und Folge. -->
+         Garmin-Uhr: Titel mit Zahl, Text mit Grund und Folge. -->
     <string name="abgewiesene_verwerfen">Abgewiesene verwerfen …</string>
     <plurals name="abgewiesene_hinweis">
         <item quantity="one">Der Server hat dieses Paket endgültig abgelehnt (Antwort 400). Es wird nicht erneut gesendet und nach %1$d Tagen oder beim Trennen des Geräts geräumt.</item>
@@ -310,16 +305,14 @@
     </plurals>
     <string name="akku_titel">Von der Akkuoptimierung ausnehmen</string>
     <!--
-        Der Text nennt jetzt den WEG, weil die App nicht mehr direkt fragen
-        darf (E-S4-52): Sie oeffnet die Liste aller Apps, und darin muss man
+        Der Text nennt den WEG, weil die App nicht direkt fragen darf: Sie oeffnet die Liste aller Apps, und darin muss man
         NAdoku finden. Ohne diesen Satz steht die NutzerIn vor einer langen
         Liste und weiss nicht, was sie dort soll.
     -->
     <!--
-        DER ZWEITE ABSATZ IST NEU (Backlog Nr. 82). Bis dahin erklaerte dieser
-        Text nur, warum die App Strom ziehen DARF — nicht, dass sie es in
-        erheblichem Mass TUT. Wer nur das las, hielt den leeren Akku am
-        Dienstende fuer einen Fehler.
+        DER ZWEITE ABSATZ: Der erste erklaert nur, warum die App Strom ziehen
+        DARF — nicht, dass sie es in erheblichem Mass TUT. Wer nur das liest,
+        haelt den leeren Akku am Dienstende fuer einen Fehler.
 
         KEINE ZAHL. "Etwa X Prozent" waere hilfreicher, ist aber ohne Messung
         am Geraet nicht zu verantworten, und der Geraetetest steht aus. Ein
@@ -347,7 +340,7 @@
     <string name="recht_kein_browser">Auf diesem Gerät ist kein Browser eingerichtet.</string>
     <string name="zurueck">Zurück</string>
 
-    <!-- ==== Phasen und Einsätze (E-S4-08, E-S4-21b) ===================== -->
+    <!-- ==== Phasen und Einsätze ========================================= -->
     <string name="einsatz_laeuft">Einsatz · %1$s seit %2$s</string>
     <string name="einsatz_kein">Kein Einsatz</string>
     <string name="phase_knopf">%1$d · %2$s</string>
@@ -357,7 +350,7 @@
     <string name="einsatz_abschliessen_ja">Abschließen</string>
     <string name="phasenliste">Phasen</string>
     <!-- Die Liste zeigt gesetzte und naechste Phase; der Rest liegt einen
-         Druck entfernt (B-S5Z-16). Acht Reihen zu 48 dp schoben "Einsatz
+         Druck entfernt. Acht Reihen zu 48 dp schoeben "Einsatz
          abschliessen" unter die Faltkante. -->
     <string name="phasen_alle_zeigen">Alle Phasen zeigen</string>
     <string name="phasen_weniger_zeigen">Weniger zeigen</string>

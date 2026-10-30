@@ -8,9 +8,9 @@ require_once __DIR__ . '/ratelimit_lib.php';
 require_once __DIR__ . '/demo_lib.php';
 require_once __DIR__ . '/totp_lib.php';
 require_once __DIR__ . '/rueckweg_lib.php';
-require_once __DIR__ . '/serverkrypto_lib.php'; // anmeldehash_pruefen() — der Pfeffer (R17-20)
+require_once __DIR__ . '/serverkrypto_lib.php'; // anmeldehash_pruefen() — der Pfeffer
 
-/* HTTPS ZUERST (P5a/AP4, E-P5a-16). Diese Seite ist die, auf der es
+/* HTTPS ZUERST. Diese Seite ist die, auf der es
  * auffaellt: Ihr Sitzungscookie traegt `secure`, und ueber HTTP sendet der
  * Browser es nicht — das Formular kaeme zurueck, als waere das Passwort
  * falsch. `https_tor()` sagt stattdessen, was los ist. Vor `session_start()`,
@@ -20,8 +20,8 @@ https_tor();
 // Zeitpunkt fuer die konstante Antwortdauer im Fehlerzweig — muss VOR jeder
 // Arbeit stehen, sonst misst er nicht die ganze Anfrage.
 $t0 = microtime(true);
-/* Siehe `auth_guard.php`: eine Stelle fuer alle vier Sitzungsarten
- * (Schritt 15 AP2, E-ZE-12). */
+/* Siehe `auth_guard.php`: eine Stelle fuer alle vier Sitzungsarten.
+ * */
 sitzung_starten('app');
 
 if (!empty($_SESSION['user_id'])) { header('Location: index.php'); exit; }
@@ -36,14 +36,13 @@ if (!empty($_SESSION['user_id'])) { header('Location: index.php'); exit; }
 $hinweis = session_ende_text($_GET['ende'] ?? null);
 if ($hinweis === '' && isset($_GET['timeout'])) { $hinweis = session_ende_text('abgelaufen'); }
 
-/* DIE VERLANGSAMUNG SAGT SICH AN (E-P5a-06, P5a/AP6).
+/* DIE VERLANGSAMUNG SAGT SICH AN.
  *
  * Wer die Seite oeffnet, waehrend die Bremse laeuft, soll wissen, warum das
  * Anmelden gleich lange dauert — sonst haelt er die Anwendung fuer kaputt und
  * klickt noch einmal, was die Lage genau nicht verbessert.
  *
- * RUHIG UND OHNE DAS WORT ANGRIFF. Das Konzept sagt es ausdruecklich, und es
- * hat recht: Auf dieser Seite steht jemand, der zum Dienst will. „Wird ganz
+ * RUHIG UND OHNE DAS WORT ANGRIFF: Auf dieser Seite steht jemand, der zum Dienst will. „Wird ganz
  * normal geprueft" ist der Satz, auf den es ankommt.
  *
  * Steht schon ein Fehler an, tritt der Hinweis zurueck (ui_meldung unten) —
@@ -60,7 +59,7 @@ if ($hinweis === '' && $bremse['stufe'] > 0) {
              . 'ganz normal geprüft.';
 }
 
-/* ---- ZWISCHEN PASSWORT UND CODE (P5c/AP5, E-P5c-53) -----------------------
+/* ---- ZWISCHEN PASSWORT UND CODE -----------------------
  *
  * Wer einen Zweitfaktor hat, bekommt nach dem Passwort KEINE Sitzung, sondern
  * einen eigenen Schluessel `totp_halb`: Konto, Adresse, Frist. `user_id` gibt
@@ -82,12 +81,12 @@ $abgelaufen = 'Die Anmeldung ist abgelaufen: Der Code muss innerhalb von fünf '
 $halb = is_array($_SESSION['totp_halb'] ?? null) ? $_SESSION['totp_halb'] : null;
 $vergessen = false;
 $fehlerAuftakt = '';
-/* DER DRITTE WEG (Konzept RW, RW-03): `?weg=schluessel` wählt den
+/* DER DRITTE WEG: `?weg=schluessel` wählt den
  * Schlüsselschritt, `$rwErfolg` die Erfolgskarte nach dem Rückweg. */
 $rwWeg = ($_GET['weg'] ?? '') === 'schluessel';
 $rwErfolg = false;
 $rwZustellung = null;
-/* DER HALBE STAND IST GEBUNDEN (Schritt 18, SR-01, E-SR-04, Nr. 242). Er
+/* DER HALBE STAND IST GEBUNDEN. Er
  * traegt Konto, Adresse, fuenf Minuten Passwortnachweis und die
  * Herausforderung des Rueckwegs — eine gelesene Sitzungsdatei darf auch ihn
  * nicht tragen. Ohne passende Bindung endet er wie ein abgelaufener: Stand
@@ -106,10 +105,9 @@ if ($halb !== null && (isset($_GET['abbrechen']) || (int)($halb['bis'] ?? 0) < t
     $vergessen = true;
 }
 
-/* ---- DREI STUECKE DES ANMELDEWEGS (P5c/AP5) -------------------------------
+/* ---- DREI STUECKE DES ANMELDEWEGS -------------------------------
  *
- * Bis Web 20.41 standen sie einmal, im Passwortzweig. Seit dem Code-Schritt
- * braucht es sie zweimal: nach dem Passwort und nach dem Code — in den fuenf
+ * Mit dem Code-Schritt braucht es sie zweimal: nach dem Passwort und nach dem Code — in den fuenf
  * Minuten dazwischen kann das Konto gesperrt oder die Wartung eingeschaltet
  * worden sein. Zwei Abschriften derselben Pruefung laufen auseinander; eine
  * Funktion nicht. */
@@ -120,23 +118,21 @@ if ($halb !== null && (isset($_GET['abbrechen']) || (int)($halb['bis'] ?? 0) < t
  */
 function login_zeile(string $spalte, string|int $wert): array|false
 {
-    /* `role` seit S5 Paket W: Im Wartungsmodus entscheidet die Rolle,
-     * ob die Anmeldung Bestand hat (E-S5W-09). Sie wandert NICHT in die
-     * Sitzung — das war M1-05, und daran aendert sich nichts; sie wird
-     * hier einmal gelesen und danach vergessen. auth_guard.php liest sie
+    /* `role`: Im Wartungsmodus entscheidet die Rolle,
+     * ob die Anmeldung Bestand hat. Sie wandert NICHT in die
+     * Sitzung; sie wird hier einmal gelesen und danach vergessen. auth_guard.php liest sie
      * weiterhin bei jeder Anfrage neu. */
-    /* WARUM DAS SELECT ZWEIMAL DASTEHT (Hotfix nach dem P5b-Merge, 18.09.2026).
+    /* WARUM DAS SELECT ZWEIMAL DASTEHT.
      *
      * `status` und `gesperrt_grund` kommen aus der Migration
      * `2026_09_16_konto_lebenszyklus`. Zwischen dem Deploy und dem Aufruf von
-     * `update.php` gibt es die beiden Spalten NICHT — und dieses SELECT warf
-     * dann, ungefangen, mitten im Anmeldeweg.
+     * `update.php` gibt es die beiden Spalten NICHT — und ein einzelnes SELECT
+     * wuerfe dann, ungefangen, mitten im Anmeldeweg.
      *
-     * DAS WAR EIN RIEGEL, KEIN SCHOENHEITSFEHLER: Ohne Anmeldung kein
+     * DAS WAERE EIN RIEGEL, KEIN SCHOENHEITSFEHLER: Ohne Anmeldung kein
      * `betrieb_updates.php`, ohne das keine Migration, ohne die keine Anmeldung.
-     * Die Anlage stand mit HTTP 500 auf der Anmeldeseite und liess sich aus dem
-     * Browser nicht mehr aufschliessen. Gemessen auf Staging am 18.09.2026,
-     * unmittelbar nach dem Merge von PR #57.
+     * Die Anlage stuende mit HTTP 500 auf der Anmeldeseite und liesse sich aus
+     * dem Browser nicht mehr aufschliessen (auf Staging gemessen).
      *
      * DER RUECKFALL UND NICHT EINE VORABFRAGE: `information_schema` bei JEDEM
      * Seitenaufbau zu fragen kostet einen Roundtrip fuer einen Zustand, der nach
@@ -145,7 +141,7 @@ function login_zeile(string $spalte, string|int $wert): array|false
      *
      * WAS DANACH GILT: Ohne die Spalten ist jedes Konto `aktiv` und ohne
      * Sperrgrund — die Vorgabewerte, die die Migration selbst setzt. Die
-     * Anwendung laeuft also genau so weiter wie vor P5b, bis die Migration
+     * Anwendung laeuft also wie ohne Kontostatus weiter, bis die Migration
      * durch ist. */
     $wo = $spalte === 'id' ? 'id = ?' : 'email = ?';
     $LOGIN_SPALTEN = 'id, password_hash, session_epoch, kdf_iter, logo_wahl, role';
@@ -154,7 +150,7 @@ function login_zeile(string $spalte, string|int $wert): array|false
                              FROM users WHERE ' . $wo);
         $st->execute([$wert]);
     } catch (Throwable $ex) {
-        /* RUECKFALL (E-P5c-58) — wie in `auth_guard.php`. */
+        /* RUECKFALL — wie in `auth_guard.php`. */
         system_rueckfall('login', 'Lebenszyklus-Spalten fehlen — Migration '
                        . '2026_09_16_konto_lebenszyklus steht aus. Anmeldung läuft '
                        . 'ohne sie weiter.', $ex);
@@ -171,7 +167,7 @@ function login_zeile(string $spalte, string|int $wert): array|false
  */
 function login_zugang(array $u, float $t0, bool $vollstaendig): void
 {
-    /* ---- KONTOSTATUS (P5b/AP2, E-P5b-12, E-P5b-16) ----------------
+    /* ---- KONTOSTATUS ----------------
      *
      * DIE STELLE IST DIESELBE ABWAEGUNG WIE BEIM WARTUNGSMODUS
      * darunter: Der Zweig haengt am ERFOLG des Passwortvergleichs
@@ -182,7 +178,7 @@ function login_zugang(array $u, float $t0, bool $vollstaendig): void
      *
      * DIE SELBSTLOESCHUNG IST DER SONDERFALL, UND ZWAR DER WICHTIGE:
      * Waehrend der Karenz steht das Konto auf `gesperrt`, aber
-     * **die Anmeldung IST der Rueckzug** (E-P5b-16). Wer sich
+     * **die Anmeldung IST der Rueckzug**. Wer sich
      * anmeldet, will sein Konto behalten. Es hier abzuweisen hiesse,
      * den einen Weg zu versperren, der aus der Loeschung
      * herausfuehrt — und danach loescht der Job.
@@ -193,7 +189,7 @@ function login_zugang(array $u, float $t0, bool $vollstaendig): void
     $kStatus = (string)($u['status'] ?? 'aktiv');
     if ($kStatus === 'gesperrt'
         && ($u['gesperrt_grund'] ?? null) === 'selbstloeschung') {
-        /* ERST MIT DER GANZEN ANMELDUNG (P5c/AP5). Mit Zweitfaktor ist das
+        /* ERST MIT DER GANZEN ANMELDUNG. Mit Zweitfaktor ist das
          * Passwort allein noch keine Anmeldung — wer nur das Passwort hat,
          * darf die Loeschung nicht zuruecknehmen. Bis zum Code gilt das
          * Konto hier als aktiv; zurueckgenommen wird im Code-Schritt. */
@@ -208,13 +204,13 @@ function login_zugang(array $u, float $t0, bool $vollstaendig): void
         session_verwerfen();
         /* KEINE SITZUNG, und eine eigene Seite statt des Formulars —
          * derselbe Weg, den der Wartungsmodus eine Zeile darunter
-         * geht, und aus demselben Grund (Backlog Nr. 126): Wer hier
+         * geht, und aus demselben Grund: Wer hier
          * landete und wieder die Anmeldemaske saehe, laese das als
          * „Passwort falsch" und tippte weiter, bis der Ratenschutz
          * zuschlaegt. Das Passwort war richtig.
          *
          * `stoerung_seite_html()` ist dasselbe Geruest, das Wartung
-         * und Ausgelastet benutzen (P5a/AP9) — kein neuer Baustein
+         * und Ausgelastet benutzen — kein neuer Baustein
          * (Design.md 9), nur ein dritter Aufrufer.
          *
          * DIE ANTWORTDAUER WIRD TROTZDEM ANGEGLICHEN. Sonst waere
@@ -234,10 +230,9 @@ function login_zugang(array $u, float $t0, bool $vollstaendig): void
         exit;
     }
 
-    /* ---- WARTUNGSMODUS: nur die Verwaltung kommt hinein (E-S5W-09) --
+    /* ---- WARTUNGSMODUS: nur die Verwaltung kommt hinein --
      *
-     * Die Entscheidung des Auftraggebers vom 03.09.2026, abweichend
-     * von der Empfehlung des Konzepts: Ein Nicht-Admin-Konto bekommt
+     * Entschieden vom Auftraggeber: Ein Nicht-Admin-Konto bekommt
      * KEINE Sitzung, die die Wartung ueberdauert. Damit liegt waehrend
      * des Umbaus kein entsperrter Inhaltsschluessel herum, und keine
      * Anmeldung schreibt in `users` (`last_login`, gleich darunter),
@@ -256,7 +251,7 @@ function login_zugang(array $u, float $t0, bool $vollstaendig): void
      * ist. */
     if (wartung_aktiv() && !rolle_darf_verwalten($u['role'] ?? null)) {
         session_verwerfen();
-        /* OHNE RUECKWEG (Backlog Nr. 126). Das ist die einzige Stelle,
+        /* OHNE RUECKWEG. Das ist die einzige Stelle,
          * an der wir die Rolle KENNEN — und sie reicht nicht: Hinter
          * `betrieb_updates.php` steht `require_betreiberin()`. Ein
          * Knopf, der hier steht, fuehrt garantiert auf ein 403. */
@@ -268,22 +263,22 @@ function login_zugang(array $u, float $t0, bool $vollstaendig): void
 function anmeldung_vollenden(array $u, bool $istDemoAdresse): void
 {
     session_regenerate_id(true);
-    /* DIE BINDUNG WECHSELT MIT DER KENNUNG (Schritt 18, SR-01, E-SR-04):
+    /* DIE BINDUNG WECHSELT MIT DER KENNUNG:
      * neu gewuerfelt, nicht die des halben Stands weitergereicht. Erst Cookie
      * und Hash machen die Sitzung zur Anmeldung — die Datei allein nicht. */
     sitzung_binden();
-    /* Auch das Formular-Token wird neu gezogen (Backlog Nr. 127). Die
+    /* Auch das Formular-Token wird neu gezogen. Die
        Sitzungskennung wechselt eine Zeile darueber gegen die
        Sitzungsuebernahme; ein Token, das der Angreifer vor der
        Anmeldung gesetzt hat, ueberlebte diesen Wechsel sonst. */
     unset($_SESSION['csrf']);
     $_SESSION['user_id'] = (int)$u['id'];
-    /* Stand des Sitzungszaehlers mitfuehren (M1-09). Jede Anfrage
+    /* Stand des Sitzungszaehlers mitfuehren. Jede Anfrage
      * vergleicht ihn in auth_guard.php gegen die Zeile; ein
      * Passwortwechsel erhoeht ihn und beendet damit alle Sitzungen,
      * die noch den alten Stand tragen. */
     $_SESSION['epoch']   = (int)($u['session_epoch'] ?? 0);
-    /* Die Rolle wird NICHT mehr hier abgelegt (M1-05). Sie kam
+    /* Die Rolle wird NICHT mehr hier abgelegt. Sie kam
      * frueher aus dieser einen Zeile und wurde nie wieder geprueft —
      * ein Rollenentzug wirkte erst nach dem naechsten Anmelden.
      * auth_guard.php liest sie jetzt bei jeder Anfrage aus der
@@ -291,23 +286,23 @@ function anmeldung_vollenden(array $u, bool $istDemoAdresse): void
     // Alte Sitzungsbremse aufraeumen: Auf Rechnern, die vor dieser
     // Fassung angemeldet waren, liegen die beiden Werte noch herum.
     unset($_SESSION['login_fails'], $_SESSION['login_last'], $_SESSION['role']);
-    /* DER FRISCHE CODE BEGINNT BEI NULL (Schritt 18, SR-07, E-SR-20). Nur der
+    /* DER FRISCHE CODE BEGINNT BEI NULL. Nur der
      * Code-Schritt setzt ihn, NACH dieser Funktion; eine Anmeldung ueber ein
      * gemerktes Geraet oder den Rueckweg erbt keine Frist aus einer frueheren
      * Anmeldung in derselben Sitzungsdatei. */
     unset($_SESSION['zf_frisch_bis']);
-    /* DIE ANKUENDIGUNG KOMMT MIT JEDER ANMELDUNG WIEDER (P5c/AP1,
-     * E-P5c-13). Wer sie auf DIESER Seite geschlossen hat, schloss sie
+    /* DIE ANKUENDIGUNG KOMMT MIT JEDER ANMELDUNG WIEDER. Wer sie auf DIESER
+     * Seite geschlossen hat, schloss sie
      * fuer die Sitzung vor dem Anmelden — und `session_regenerate_id()`
      * oben behaelt die Daten. Ohne diese Zeile truege das Schliessen in
      * die Anmeldung hinueber. */
     require_once __DIR__ . '/ankuendigung_lib.php';
     unset($_SESSION[ANKUENDIGUNG_SITZUNG]);
-    /* LOGO-WAHL EINMAL AUFLOESEN (E-P3-20). Bei „wechselnd" faellt
+    /* LOGO-WAHL EINMAL AUFLOESEN. Bei „wechselnd" faellt
        hier der Wuerfel — je Anmeldung, nicht je Seitenaufruf; sonst
        spraenge das Logo beim Blaettern. */
     logo_sitzung_setzen($u['logo_wahl'] ?? '');
-    /* ZULETZT ANGEMELDET (E-P3-41). Die einzige Stelle, an der der
+    /* ZULETZT ANGEMELDET. Die einzige Stelle, an der der
        Wert geschrieben wird — nicht bei jedem Seitenaufruf. Ein
        Fehlschlag darf die Anmeldung nicht aufhalten: Der Wert ist
        eine Auskunft fuer die Administration, kein Teil des Zugangs.
@@ -324,8 +319,7 @@ function anmeldung_vollenden(array $u, bool $istDemoAdresse): void
      * Fehlversuchsschutz des Kontos, dieser die Nutzungsmenge des
      * Demo-Kontos. */
     if ($istDemoAdresse) { rate_demo_zaehlen(); }
-    /* DIE UHR DER KONTO-RUECKFRAGE IN GANG SETZEN (P5b/AP9,
-     * E-P5b-09). Erste Frage in 30 Tagen.
+    /* DIE UHR DER KONTO-RUECKFRAGE IN GANG SETZEN. Erste Frage in 30 Tagen.
      *
      * BEIM ANMELDEN UND NICHT BEIM ANLEGEN DES KONTOS: Ein Konto, das
      * nie benutzt wird, soll keine Frist mit sich herumtragen. Und
@@ -374,7 +368,7 @@ function login_code_sperre(array $merkmale): array
  */
 $error = null;
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && !csrf_ok()) {
-    /* ---- Login-CSRF (Backlog Nr. 127, K-8) ------------------------------
+    /* ---- Login-CSRF ------------------------------
      *
      * DAS ANMELDEFORMULAR WAR DAS EINZIGE OHNE TOKEN. Eine fremde Seite konnte
      * einen abgemeldeten Browser per Top-Level-POST in ein ANGREIFERKONTO
@@ -395,7 +389,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !csrf_ok()) {
      * Antwort. Ein neues Token liefert dieselbe Seite gleich mit. */
     $error = 'Das Formular ist abgelaufen. Bitte versuche es erneut.';
 } elseif ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['schritt'] ?? '') === 'code') {
-    /* ---- DER CODE-SCHRITT (P5c/AP5, E-P5c-53, M-P5c-02b Bild 3) ----------
+    /* ---- DER CODE-SCHRITT ----------
      *
      * EIN TOPF JE KONTO. `totp` zaehlt am Namen des halben Standes, nicht an
      * der Adresse — wer hier steht, hat das Passwort schon (Begruendung in
@@ -417,14 +411,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !csrf_ok()) {
         $kontoId  = (int)$halb['konto'];
         $merkmale = [rate_merkmal_kennung((string)$halb['email'])];
         $mitRc    = ($_POST['art'] ?? '') === 'rc';
-        /* DER PASSKEY IST DER DRITTE WEG (Schritt 18, SR-09, E-SR-32): Die
+        /* DER PASSKEY IST DER DRITTE WEG: Die
          * Antwort kommt als Feld `passkey_antwort` in denselben Schritt, im
          * selben Topf `totp`, und der Erfolg laeuft durch denselben Zweig —
          * Art `passkey` zaehlt unten wie `app` (Geraet merken, frischer
          * Code). Die Herausforderung liegt im halben Stand und gilt einmal. */
         /* Ein Feld, das kein Text ist (`passkey_antwort[]=x`), ist eine leere
-         * Antwort — kein `(string)` mit PHP-Warnung im Reiter System
-         * (Nachpruefung von H-SR-08, B-1). */
+         * Antwort — kein `(string)` mit PHP-Warnung im Reiter System.
+         * */
         $pkFeld   = $_POST['passkey_antwort'] ?? '';
         $mitPk    = !$mitRc && $pkFeld !== '';
         $pr = ['ok' => false];
@@ -434,7 +428,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !csrf_ok()) {
                 $pkAblage = is_array($halb['passkey'] ?? null) ? $halb['passkey'] : [];
                 unset($_SESSION['totp_halb']['passkey']);
                 if (!pk_ablage_passt($pkAblage, $kontoId)) { $pkAblage = []; }
-                /* HOECHSTENS PK_ANTWORT_MAX (H-SR-08, F-SR-35): Eine riesige
+                /* HOECHSTENS PK_ANTWORT_MAX: Eine riesige
                  * Antwort endete sonst im Speicherfehler statt in einer
                  * Ablehnung — vor der Signaturpruefung, fuer jeden mit dem
                  * Passwort. */
@@ -454,18 +448,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !csrf_ok()) {
                     login_zugang($u, $t0, true);
                     unset($_SESSION['totp_halb']);
                     anmeldung_vollenden($u, !empty($halb['demo']));
-                    /* GERAET MERKEN NUR NACH EINEM CODE AUS DER APP (SR-02,
-                     * E-SR-18): Ein Wiederherstellungscode heisst, das Handy
+                    /* GERAET MERKEN NUR NACH EINEM CODE AUS DER APP: Ein
+                     * Wiederherstellungscode heisst, das Handy
                      * fehlte — dann ist der Browser vor der Betroffenen nicht
                      * als ihrer ausgewiesen. Der Haken steht deshalb nur im
                      * App-Formular, und diese Zeile fragt die Art noch einmal:
                      * ein handgebautes `merken=1` am anderen Feld zaehlt nicht.
-                     * Ein Passkey zaehlt wie ein App-Code (SR-09, E-SR-32). */
+                     * Ein Passkey zaehlt wie ein App-Code. */
                     if (in_array($pr['art'], ['app', 'passkey'], true) && ($_POST['merken'] ?? '') === '1') {
                         zweitfaktor_geraet_merken($kontoId);
                     }
-                    /* DER CODE IST FRISCH (SR-07, E-SR-20) — nach App-Code,
-                     * Wiederherstellungscode und Passkey gleich (E-SR-32):
+                    /* DER CODE IST FRISCH — nach App-Code,
+                     * Wiederherstellungscode und Passkey gleich:
                      * Alle drei zeigen, dass gerade jemand den Faktor in der
                      * Hand hat. Die Liste der
                      * Handlungen, die ihn verlangen, steht in `db.php`. */
@@ -483,7 +477,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !csrf_ok()) {
                     header('Location: index.php'); exit;
                 }
             } elseif (!in_array($pr['passkey'] ?? '', ['herausforderung', 'zaehler'], true)) {
-                /* KEIN FEHLVERSUCH (H-SR-08, F-SR-37): eine abgelaufene oder
+                /* KEIN FEHLVERSUCH: eine abgelaufene oder
                  * von einem zweiten Reiter verdraengte Herausforderung — hier
                  * wurde nichts geprueft, wie beim Rueckweg — und ein
                  * zurueckgelaufener Zaehler bei GUELTIGER Signatur. Zaehlte
@@ -493,15 +487,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !csrf_ok()) {
             }
         }
         if (!$pr['ok'] && !rate_erlaubt('totp', null, $merkmale)) {
-            /* GESPERRT: Der halbe Stand endet, das Vormerkfach wird geraeumt
-             * (E-P5c-53). Zurueck geht es auf das Passwortformular mit dem
+            /* GESPERRT: Der halbe Stand endet, das Vormerkfach wird geraeumt.
+             * Zurueck geht es auf das Passwortformular mit dem
              * Countdown der Sperre. */
             [$error, $sperreRest] = login_code_sperre($merkmale);
             unset($_SESSION['totp_halb']);
             $halb = null;
             $vergessen = true;
         } elseif (!$pr['ok'] && !empty($pr['geheimnis_fehlt'])) {
-            /* PASSKEYS HAENGEN NICHT AM SERVERSCHLUESSEL (E-SR-49, F-SR-44):
+            /* PASSKEYS HAENGEN NICHT AM SERVERSCHLUESSEL:
              * Hat das Konto einen fuer diese Adresse, ist er hier der
              * bequemste Weg hinein — der Satz sagt es. */
             require_once __DIR__ . '/passkey_lib.php';
@@ -536,8 +530,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !csrf_ok()) {
         }
     }
 } elseif ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['schritt'] ?? '') === 'schluessel') {
-    /* ---- DER RÜCKWEG MIT DEM WIEDERHERSTELLUNGSSCHLÜSSEL (Konzept RW, RW-03;
-     * E-RW-01, -04, -08, -14; M-RW-01 Bild 2 und 3) ----------------------
+    /* ---- DER RÜCKWEG MIT DEM WIEDERHERSTELLUNGSSCHLÜSSEL ----------------
      *
      * AUS DEM RUMPF KOMMT NUR DIE SIGNATUR. Den Zettel hat der Browser
      * behalten; die Nachricht baut `rw_rueckweg_pruefen()` selbst aus der
@@ -547,16 +540,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !csrf_ok()) {
      * messen kann.
      *
      * DAS JA STEHT HIER, in der Reihenfolge des Code-Schritts: Erfolg zählen,
-     * das Tor, die Sitzung — und ERST DAHINTER den Zweitfaktor abschalten
-     * (F-RW-21). Das Tor weist ein gesperrtes Konto ab und während der
+     * das Tor, die Sitzung — und ERST DAHINTER den Zweitfaktor abschalten.
+     * Das Tor weist ein gesperrtes Konto ab und während der
      * Wartung jedes ohne Verwaltungsrecht; stünde das Abschalten davor, verlöre
      * ein solches Konto seinen Zweitfaktor ohne Anmeldung und ohne Mail. Nach
      * `anmeldung_vollenden()` trägt der Protokolleintrag das Konto als
      * Urheber, wie der Eintrag zum Wiederherstellungscode oben.
      *
-     * NACH DEM ERFOLG ZWEI WEGE (M-RW-01 Bild 3): Die Rolle user bekommt die
+     * NACH DEM ERFOLG ZWEI WEGE: Die Rolle user bekommt die
      * Erfolgskarte in dieser Antwort; eine Pflichtrolle geht unmittelbar ins
-     * Einrichtungstor (E-P5c-61), mit der Meldung oben — keine Seite ohne
+     * Einrichtungstor, mit der Meldung oben — keine Seite ohne
      * Zweitfaktor. */
     $rwWeg = true;
     if ($halb === null) {
@@ -601,7 +594,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !csrf_ok()) {
             $rwWeg = false;
         } elseif ($r['grund'] === 'nicht_angeboten') {
             /* Ein handgebauter POST an einem Konto ohne Paar, oder die Anlage
-             * kann gerade nicht prüfen (E-RW-11). Kein Zählen: Hier wurde
+             * kann gerade nicht prüfen. Kein Zählen: Hier wurde
              * nichts geprüft. */
             http_response_code(400);
             $rwWeg = false;
@@ -619,7 +612,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !csrf_ok()) {
         $halb = is_array($_SESSION['totp_halb'] ?? null) ? $_SESSION['totp_halb'] : null;
     }
 } elseif ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    /* Eine Schreibweise fuer alle Stellen (M1-13, email_lib.php). Hier stand
+    /* Eine Schreibweise fuer alle Stellen (email_lib.php). Hier stand
      * bisher nur trim(): Dass die Anmeldung trotzdem funktionierte, lag allein
      * an der Sortierregel der Datenbank. Nebenbei behoben: rate_erfolg('salt',
      * ...) unten meldete den Erfolg mit der Adresse WIE GETIPPT, waehrend
@@ -627,7 +620,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !csrf_ok()) {
      * leerte seinen Salz-Zaehler nie. */
     $email = email_normalisieren($_POST['email'] ?? '');
 
-    /* Mengenbremse des Demo-Kontos (E-P1-20).
+    /* Mengenbremse des Demo-Kontos.
      *
      * VOR der teuren Pruefung, wie jede Bremse hier — sonst bliebe der
      * Rechenaufwand als Angriffsflaeche offen.
@@ -649,8 +642,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !csrf_ok()) {
                . ' Ein eigenes Konto ist davon nicht betroffen.';
         rate_gleiche_dauer($t0);
     } elseif (!rate_erlaubt('login', null, rate_nur_konto($email)) || !rate_erlaubt('login_ip', null)) {
-        /* ZWEI TOEPFE, EINE MELDUNG — aber die Meldung sagt, WELCHER greift
-         * (P5a/AP6). „Für diesen Namen gesperrt" waere schlicht falsch, wenn
+        /* ZWEI TOEPFE, EINE MELDUNG — aber die Meldung sagt, WELCHER greift.
+         * „Für diesen Namen gesperrt" waere schlicht falsch, wenn
          * in Wahrheit die Adresssperre haelt, und wer den Unterschied nicht
          * liest, wartet auf das Falsche.
          *
@@ -682,7 +675,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !csrf_ok()) {
         // abgeleitete Token (siehe assets/crypto.js).
         $u = login_zeile('email', $email);
 
-        /* ---- DEMO-ANMELDUNG ABGESCHALTET (P5b/AP7, E-P5b-07) --------------
+        /* ---- DEMO-ANMELDUNG ABGESCHALTET --------------
          *
          * DIE ZEILE IST DIE GANZE UMSETZUNG, und sie steht hier und nicht
          * weiter unten, weil das der einzige Ort ist, an dem sie NICHTS
@@ -703,13 +696,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !csrf_ok()) {
          * DER BESTAND BLEIBT. Abgeschaltet ist die ANMELDUNG, nicht das
          * Konto: Seine Einsaetze, sein Reset und sein Platz in der
          * Kontoverwaltung sind unberuehrt, und ein Umlegen des Schalters
-         * macht es sofort wieder zugaenglich (R25). */
+         * macht es sofort wieder zugaenglich. */
         if ($u && $istDemoAdresse) {
             require_once __DIR__ . '/konten_einstellungen_lib.php';
             if (!konten_demo_anmeldung_an()) { $u = false; }
         }
 
-        /* ---- Ein Token je Rundenzahl (M2-01, Schritt 3) -------------------
+        /* ---- Ein Token je Rundenzahl -------------------
          *
          * Der Salz-Endpunkt nennt jeder Adresse dieselbe Liste von
          * Rundenzahlen, damit er nicht verraet, welche Konten es gibt. Der
@@ -744,7 +737,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !csrf_ok()) {
             $tokenNach[310000] = $tokenNach[310000] ?? (string)$_POST['token'];
         }
 
-        /* DREI AUSGAENGE STATT ZWEI (R17-20, E-R17-44). `anteil_fehlt` heisst:
+        /* DREI AUSGAENGE STATT ZWEI. `anteil_fehlt` heisst:
          * Der Hash ist gepfeffert, und `config.php` traegt den Anteil nicht
          * mehr, zu dem er gehoert. Das Passwort kann richtig sein — die Seite
          * darf deshalb nicht „Passwort pruefen" sagen. */
@@ -759,12 +752,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !csrf_ok()) {
             /* Unbekannte Adresse oder Konto ohne gesetztes Passwort: trotzdem
              * eine bcrypt-Rechnung, damit dieser Zweig nicht schneller ist.
              *
-             * DER VERGLEICHSWERT WIRD GEPRUEFT, NICHT GEGLAUBT (Backlog
-             * Nr. 93). Er traegt eine feste Rundenzahl (db.php), und die
-             * Vorgabe von PASSWORD_DEFAULT waechst mit den PHP-Fassungen —
-             * von Web 5 bis 19.1.1 stand er auf 10, waehrend PHP 8.4 laengst
-             * 12 anlegte, und der blinde Zweig war damit viermal schneller
-             * als der bekannte. password_needs_rehash() kostet nichts
+             * DER VERGLEICHSWERT WIRD GEPRUEFT, NICHT GEGLAUBT. Er traegt eine
+             * feste Rundenzahl (db.php), und die Vorgabe von PASSWORD_DEFAULT
+             * waechst mit den PHP-Fassungen — stuende er auf 10, waehrend PHP
+             * 12 anlegt, waere der blinde Zweig viermal schneller als der
+             * bekannte. password_needs_rehash() kostet nichts
              * (0,0000 ms ueber 2000 Laeufe) und faengt genau das ab: Passt
              * die Konstante, bleibt es beim billigen Vergleich; passt sie
              * nicht, kostet ein password_hash() mit der Vorgabe genau so
@@ -787,8 +779,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !csrf_ok()) {
              * Beide Aufrufe standen bisher weiter unten. Sie stehen jetzt hier
              * oben, weil der Wartungsmodus gleich darunter abbrechen kann und
              * das Passwort trotzdem RICHTIG war: Wer waehrend einer Wartung
-             * dreimal richtig tippt, darf sich danach nicht ausgesperrt finden
-             * (E-S5W-09 b). Der Demo-Zaehler bleibt unten — er zaehlt die
+             * dreimal richtig tippt, darf sich danach nicht ausgesperrt finden.
+             * Der Demo-Zaehler bleibt unten — er zaehlt die
              * NUTZUNG des Demo-Kontos, und wer sofort wieder abgemeldet wird,
              * hat es nicht benutzt. */
             rate_erfolg('login', null, rate_nur_konto($email));
@@ -796,7 +788,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !csrf_ok()) {
             // verbraucht dort einen Versuch, und wer sich erfolgreich
             // anmeldet, soll sich nicht selbst aussperren.
             rate_erfolg('salt', $email);
-            /* UND DEN ADRESSTOPF (P5a/AP6). `login_ip` zaehlt 50 Fehlversuche
+            /* UND DEN ADRESSTOPF. `login_ip` zaehlt 50 Fehlversuche
              * je Adresse — hinter einem Klinik-NAT teilen sich viele eine.
              * Ohne diese Zeile liefe eine Praxis ueber den Tag in ihre 50
              * hinein, ohne dass irgendjemand etwas falsch gemacht haette:
@@ -805,7 +797,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !csrf_ok()) {
              * jeher auch fuer die IP. */
             rate_erfolg('login_ip', null);
 
-            /* ---- DIE STILLE UMSTELLUNG (R17-20, E-R17-20) ------------------
+            /* ---- DIE STILLE UMSTELLUNG ------------------
              *
              * Ein alter Hash ohne Pfeffer, einer unter dem vorigen Anteil oder
              * einer mit alter bcrypt-Rundenzahl wird JETZT neu gebildet — das
@@ -824,7 +816,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !csrf_ok()) {
                 }
             }
 
-            /* ---- ZUGANG, DANN DER ZWEITE FAKTOR (P5c/AP5, E-P5c-53) --------
+            /* ---- ZUGANG, DANN DER ZWEITE FAKTOR --------
              *
              * `login_zugang()` bricht mit einer eigenen Seite ab, wenn das
              * Konto nicht hinein darf (Status, Wartung) — vor dem Code, damit
@@ -839,8 +831,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !csrf_ok()) {
              * Stand gar nicht erst: Er liefe nach fünf Minuten ab, die Sperre
              * erst nach fünfzehn. Die Meldung sagt es gleich hier. */
             $mitCode = totp_an((int)$u['id']);
-            /* EIN GEMERKTES GERAET ERSETZT DEN CODE (Schritt 18, SR-02,
-             * E-SR-07, -17). Nach dem Passwort und VOR dem halben Stand:
+            /* EIN GEMERKTES GERAET ERSETZT DEN CODE. Nach dem Passwort und VOR dem halben Stand:
              * `zweitfaktor_geraet_erkannt()` verlangt das Cookie `EDGERAET`,
              * eine Zeile DIESES Kontos und eine Dauer, die heute noch gilt —
              * gerechnet beim Pruefen, so dass „aus" sofort aus ist. Die
@@ -862,7 +853,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !csrf_ok()) {
             [$error, $sperreRest] = login_code_sperre($merkmale);
             $vergessen = true;
         } elseif ($anteilFehlt) {
-            /* DER ANTEIL FEHLT (E-R17-44). Geraten werden kann hier nichts,
+            /* DER ANTEIL FEHLT. Geraten werden kann hier nichts,
              * weil ohne Anteil nichts geprueft wird — trotzdem ZAEHLT der
              * Versuch wie ein Fehlversuch. Bis zur Handprobe in der Sandbox
              * (26.10.2026) tat er es nicht: Jeder Versuch schrieb eine
@@ -884,17 +875,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !csrf_ok()) {
             $vergessen = true;
             rate_gleiche_dauer($t0);
         } else {
-            /* DREI ZAEHLUNGEN AN EINEM FEHLVERSUCH (P5a/AP6):
+            /* DREI ZAEHLUNGEN AN EINEM FEHLVERSUCH:
              *   `login`     das eingetippte Konto — 10 je 15 min
              *   `login_ip`  der Anschluss        — 50 je 15 min
              *   `global`    die Installation     — Grundlage der Verlangsamung
              *
-             * `login` zaehlt seit Web 23.3.1 NUR das Konto (R17-22, F-R17-36).
-             * Bis dahin stand hier, der Topf zaehle „seit jeher BEIDE Merkmale
-             * … das bleibt so" — und damit sperrten zehn Fehlversuche an zehn
-             * verschiedenen Konten den ganzen Anschluss, lange bevor
-             * `login_ip` mit seinen 50 je griff. 10 je Konto, 50 je Adresse
-             * steht in Technik.md 5e.2; jetzt haelt der Code es. */
+             * `login` zaehlt NUR das Konto. Zaehlte der Topf BEIDE Merkmale,
+             * sperrten zehn Fehlversuche an zehn verschiedenen Konten den
+             * ganzen Anschluss, lange bevor `login_ip` mit seinen 50 je griffe.
+             * 10 je Konto, 50 je Adresse steht in Technik.md 10.2. */
             rate_misserfolg('login', null, rate_nur_konto($email));
             rate_misserfolg('login_ip', null);
             rate_global_misserfolg();
@@ -911,14 +900,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !csrf_ok()) {
         }
     }
 }
-/* WIRD DER RÜCKWEG ANGEBOTEN? (E-RW-01, -11) Nur, wenn die Anlage prüfen
+/* WIRD DER RÜCKWEG ANGEBOTEN? Nur, wenn die Anlage prüfen
  * kann und das Konto Paar und Wiederherstellungs-Hülle hat — sonst steht am
  * Code-Schritt kein Verweis. Der Schlüsselschritt bekommt, was der Browser
  * zum Signieren braucht, und nur er: die Wiederherstellungs-Hülle, den
  * privaten Teil und die Nachricht mit einer FRISCHEN Herausforderung. Jede
- * Anzeige stellt eine neue; die vorige ist damit verbraucht (E-RW-04).
+ * Anzeige stellt eine neue; die vorige ist damit verbraucht.
  *
- * DIE NACHRICHT KOMMT FERTIG VOM SERVER (E-RW-18), aus `rw_nachricht()` —
+ * DIE NACHRICHT KOMMT FERTIG VOM SERVER, aus `rw_nachricht()` —
  * das Format steht damit an einer Stelle. Zurück kommt nur die Signatur,
  * und geprüft wird gegen die Nachricht, die der Server selbst baut. */
 $rwAngeboten = $halb !== null && rw_angeboten((int)$halb['konto']);
@@ -935,7 +924,7 @@ if ($halb !== null && $rwWeg && $rwAngeboten) {
 } else {
     $rwWeg = false;
 }
-/* DER PASSKEY IM CODE-SCHRITT (Schritt 18, SR-09, E-SR-32): nur im Formular
+/* DER PASSKEY IM CODE-SCHRITT: nur im Formular
  * des App-Codes (dort steht der Haken „Geraet merken"), nur wenn das Konto
  * Passkeys hat und die Anlage eine taugliche Adresse. Die Herausforderung
  * liegt im halben Stand wie die des Rueckwegs, neu bei jedem Aufbau, fuenf
@@ -962,14 +951,14 @@ ui_seite_start(['titel' => 'Anmelden', 'klasse' => 'anmeldung-body']);
   <img src="<?= e(logo_src()) ?>" alt="" class="anmeldung-logo">
   <h1 class="anmeldung-titel"><?= e(instanz_kurz()) ?></h1>
   <p class="anmeldung-unter">Einsatzdokumentation Notarzt</p>
-  <?php /* Der Wartungsbalken (S5 Paket W, Konzept 4.5). Er steht UEBER der
+  <?php /* Der Wartungsbalken. Er steht UEBER der
            Meldung und nicht darunter: Wer hier ankommt, waehrend die Wartung
            laeuft, soll wissen, warum die Anwendung sonst nicht antwortet,
            BEVOR er sein Passwort eintippt. Anmelden kann er sich trotzdem —
-           was danach geschieht, entscheidet die Rolle (E-S5W-09). */ ?>
+           was danach geschieht, entscheidet die Rolle. */ ?>
   <?= wartung_balken() ?>
   <?php if ($rwErfolg):
-    /* NACH DEM RÜCKWEG, ROLLE user (M-RW-01 Bild 3). Die Sitzung steht; der
+    /* NACH DEM RÜCKWEG, ROLLE user. Die Sitzung steht; der
        Zweitfaktor ist aus. Eine Pflichtrolle kommt hier nie an — sie geht
        unmittelbar ins Einrichtungstor. */ ?>
   <h2 class="anmeldung-schritt">Zweitfaktor zurückgesetzt</h2>
@@ -985,9 +974,9 @@ ui_seite_start(['titel' => 'Anmelden', 'klasse' => 'anmeldung-body']);
   </div>
   <p class="anmeldung-neben"><a href="einstellungen.php?t=profil">Gleich zum Profil</a></p>
   <?php elseif ($rwWeg):
-    /* DER SCHLÜSSELSCHRITT (M-RW-01 Bild 2): die Schwester der
+    /* DER SCHLÜSSELSCHRITT: die Schwester der
        Passwort-Reset-Seite in der Anmeldekarte — dasselbe Feld, dieselbe
-       Sofortprüfung (M2-06).
+       Sofortprüfung.
 
        DAS FELD HAT KEINEN NAMEN. Der Zettel verlässt den Browser nie; ein
        Feld ohne Namen schickt kein Formular mit, auch nicht ohne Skript.
@@ -1019,13 +1008,13 @@ ui_seite_start(['titel' => 'Anmelden', 'klasse' => 'anmeldung-body']);
   <p class="anmeldung-neben"><a href="login.php">Code aus der App verwenden</a><br><a
       href="login.php?abbrechen=1">Zurück zur Anmeldung</a></p>
   <?php elseif ($halb !== null):
-    /* DER CODE-SCHRITT (P5c/AP5, M-P5c-02b Bild 3). Ein Knopf, zwei
+    /* DER CODE-SCHRITT. Ein Knopf, zwei
        Rueckwege: der andere Code und der Anfang. Beide als Verweis und nicht
        als Skript — `art=rc` waehlt das Feld, `abbrechen=1` beendet den halben
        Stand und raeumt das Vormerkfach (Kopf der Datei).
 
-       DIE MELDUNG STEHT IM FORMULAR, unter der Zeile „Angemeldet als" — wie
-       im Mockup: Sie gehoert zum Feld darunter, nicht zur Seite. */
+       DIE MELDUNG STEHT IM FORMULAR, unter der Zeile „Angemeldet als": Sie
+       gehoert zum Feld darunter, nicht zur Seite. */
     $rc = ($_GET['art'] ?? $_POST['art'] ?? '') === 'rc'; ?>
   <form method="post" id="codeform">
     <?= csrf_field() ?>
@@ -1052,7 +1041,7 @@ ui_seite_start(['titel' => 'Anmelden', 'klasse' => 'anmeldung-body']);
                  'klein' => 'Jeder Code gilt einmal. Danach unter Einstellungen → Profil '
                           . 'den Zweitfaktor neu einrichten.']);
     } else {
-        /* DIE ID TRAEGT „totp" (Web 22.7.1): Bitwarden erkennt das Feld in
+        /* DIE ID TRAEGT „totp": Bitwarden erkennt das Feld in
            Firefox nur an einem Stichwort in id, Name oder Beschriftung —
            Firefox reicht autocomplete="one-time-code" nicht weiter, und
            „code" allein gilt als mehrdeutig. Der Name bleibt `code`, weil er
@@ -1060,7 +1049,7 @@ ui_seite_start(['titel' => 'Anmelden', 'klasse' => 'anmeldung-body']);
         ui_feld(['name' => 'code', 'id' => 'f-totp', 'label' => 'Code aus der App', 'klasse' => 'feld-code',
                  'platzhalter' => '000 000',
                  'attr' => ' inputmode="numeric" autocomplete="one-time-code" autofocus required']);
-        /* DER HAKEN „GERAET MERKEN" (SR-02, E-SR-15, -17, -18): nur hier,
+        /* DER HAKEN „GERAET MERKEN": nur hier,
            im Formular des App-Codes, und nur, wenn die Rollengruppe eine
            Dauer hat. Die Zahl steht im Text — sie ist die Einstellung der
            Anlage fuer diese Rolle, nicht eine Wahl der Person. */
@@ -1082,7 +1071,7 @@ ui_seite_start(['titel' => 'Anmelden', 'klasse' => 'anmeldung-body']);
     <input type="hidden" name="passkey_antwort" value=""><input type="hidden" name="merken" value="">
   </form>
   <?php endif; ?>
-  <?php /* DER DRITTE VERWEIS (Konzept RW, E-RW-01; M-RW-01 Bild 1) — auch
+  <?php /* DER DRITTE VERWEIS — auch
            aus dem Schritt „Wiederherstellungscode", weil dort steht, wer
            die Codes nicht mehr hat. Nur, wenn der Weg angeboten wird; sonst
            sagt der Schritt „Wiederherstellungscode", wer dann hilft. */ ?>
@@ -1101,7 +1090,7 @@ ui_seite_start(['titel' => 'Anmelden', 'klasse' => 'anmeldung-body']);
   <?php ui_meldung($error ? null : $hinweis, $error); ?>
   <form method="post" autocomplete="on" id="loginform"
         data-sperre-rest="<?= (int)$sperreRest ?>" data-vergessen="<?= $vergessen ? '1' : '0' ?>">
-    <?php /* Ein Token je Rundenzahl (M2-01). Das alte Feld 'token' entfaellt —
+    <?php /* Ein Token je Rundenzahl. Das alte Feld 'token' entfaellt —
              der Server nimmt es weiterhin an, aber diese Seite fuellt es nicht
              mehr, weil sie nicht weiss, welche Rundenzahl fuer das Konto gilt. */ ?>
     <?= csrf_field() ?>
@@ -1117,8 +1106,8 @@ ui_seite_start(['titel' => 'Anmelden', 'klasse' => 'anmeldung-body']);
     </div>
   </form>
   <p class="anmeldung-neben"><a href="reset_request.php">Passwort vergessen?</a>
-     <?php /* DER WEG ZUR REGISTRIERUNG STEHT NUR DA, WENN ES IHN GIBT
-              (P5b/AP3, E-P5b-01). Bei `nur auf Einladung` fuehrte er auf eine
+     <?php /* DER WEG ZUR REGISTRIERUNG STEHT NUR DA, WENN ES IHN GIBT.
+              Bei `nur auf Einladung` fuehrte er auf eine
               Seite, die absagt — eine Einladung ins Leere. Die Betriebsart
               kommt aus `app_state` und ist damit auch der Grund, warum diese
               Zeile eine Abfrage kostet; sie steht im selben Aufruf wie die
@@ -1130,14 +1119,13 @@ ui_seite_start(['titel' => 'Anmelden', 'klasse' => 'anmeldung-body']);
   <?php endif; ?>
   <?php /* Zustandszeile der Anmeldung (Schluesselableitung laeuft …).
            `.zustandszeile` haelt ihre Hoehe frei, damit die Karte beim
-           Erscheinen der Meldung nicht springt — `.muted` tat das nicht
-           und ist mit der Uebergangsschicht in O11 gefallen. */ ?>
+           Erscheinen der Meldung nicht springt — `.muted` tut das nicht. */ ?>
   <p class="zustandszeile" id="loginstate"></p>
  </div>
 
- <?php /* DIE VIER WEGE UNTER DER KARTE (P5b/AP8, M-P5b-01, Bild 3).
-          Sie stehen AUSSERHALB von `.anmeldung-karte`, nicht darin: Auf dem
-          Mockup liegen sie auf dem Dunkelblau, nicht auf der weissen Karte —
+ <?php /* DIE VIER WEGE UNTER DER KARTE.
+          Sie stehen AUSSERHALB von `.anmeldung-karte`, nicht darin: Sie
+          liegen auf dem Dunkelblau, nicht auf der weissen Karte —
           und die Karte ist das Formular, nicht die Seite.
 
           WARUM HIER UND NICHT IN `ui_fuss_seite()`: Die Fusszeile traegt
@@ -1153,15 +1141,15 @@ ui_seite_start(['titel' => 'Anmelden', 'klasse' => 'anmeldung-body']);
  </nav>
 </main>
 <script src="<?= asset('assets/crypto.js') ?>"></script>
-<?php /* DER SCHLÜSSELSCHRITT (Konzept RW, RW-03). `crypto.js` und `rueckweg.js`
+<?php /* DER SCHLÜSSELSCHRITT. `crypto.js` und `rueckweg.js`
          STEHEN IMMER DA, und der Block darunter auch — aus demselben Grund
          wie der Block zum Vormerkfach weiter unten: Die Integritätswache
          fragt ohne Sitzung und vergleicht Zeichen für Zeichen; was nur im
          halben Stand in der Seite stünde, fehlte ihr. Ob der Block etwas
          tut, sagt das Formular `#schluesselform`; ohne es kehrt er sofort
-         zurück. Bis Web 20.44 lud `crypto.js` nur das Passwortformular.
+         zurück.
 
-         WAS ER TUT: beim Tippen die Sofortprüfung (M2-06, dieselben Sätze
+         WAS ER TUT: beim Tippen die Sofortprüfung (dieselben Sätze
          wie `pw_handling.php`); beim Absenden die Signatur über die
          Nachricht des Servers — passt der Zettel nicht, geht NICHTS hinaus.
          Gesendet wird nur `signatur`; das Schlüsselfeld hat keinen Namen. */ ?>
@@ -1204,8 +1192,8 @@ ui_seite_start(['titel' => 'Anmelden', 'klasse' => 'anmeldung-body']);
   });
 })();
 </script>
-<?php /* DIE ABLAGE DES INHALTSSCHLUESSELS RAEUMEN, BEIM LADEN (R17-25).
-         Seit Web 23.4.0 liegt der Inhaltsschluessel in IndexedDB und
+<?php /* DIE ABLAGE DES INHALTSSCHLUESSELS RAEUMEN, BEIM LADEN.
+         Der Inhaltsschluessel liegt in IndexedDB und
          ueberlebt das Schliessen des Browsers. Wer hier ankommt, ist
          abgemeldet oder meldet sich gleich an — in beiden Faellen gehoert
          die Ablage geleert. Die Abmeldeseite stoesst das Loeschen an und
@@ -1220,7 +1208,7 @@ EdCrypto.inhaltLoeschen();
 </script>
 <?php if ($halb === null && !$rwErfolg): ?>
 <?php /* DAS VORMERKFACH RAEUMEN, WENN DER HALBE STAND OHNE ANMELDUNG ENDETE
-         (P5c/AP5, E-P5c-53: abgebrochen, abgelaufen, gesperrt).
+         (abgebrochen, abgelaufen, gesperrt).
 
          DER BLOCK STEHT IMMER DA, und ob er etwas tut, sagt `data-vergessen`
          am Formular. Stuende er nur im Bedarfsfall in der Seite, saehe die
@@ -1327,11 +1315,10 @@ document.getElementById('loginform').addEventListener('submit', async ev => {
 });
 </script>
 <?php endif; ?>
-<?php /* DER COUNTDOWN DER SPERRE (E-P5a-06, P5a/AP6).
+<?php /* DER COUNTDOWN DER SPERRE.
  *
- * EIGENER BLOCK UND NICHT `forms.js` — das ist eine benannte Abweichung vom
- * Konzept (E-P5a-45). Das Konzept nennt „login.php, forms.js"; login.php
- * LAEDT forms.js aber gar nicht, und forms.js ist Aenderungsverfolgung,
+ * EIGENER BLOCK UND NICHT `forms.js`: login.php
+ * LAEDT forms.js gar nicht, und forms.js ist Aenderungsverfolgung,
  * Strg-Enter und Abbrechen-Rueckfrage. Es hier nachzutragen schaltete
  * nebenbei eine beforeunload-Warnung auf einer Seite frei, auf der jemand
  * ein Passwort tippt — und ein Zeitgeber steht darin ohnehin nicht.
@@ -1385,7 +1372,7 @@ document.getElementById('loginform').addEventListener('submit', async ev => {
   }, 1000);
 })();
 </script>
-<?php /* Fusszeile auf JEDER Seite, auch vor der Anmeldung (R32, E-P3-14) —
+<?php /* Fusszeile auf JEDER Seite, auch vor der Anmeldung —
          dunkel, weil sie hier auf der dunkelblauen Flaeche liegt. */ ?>
 <?php ui_fuss_seite(['dunkel' => true]); ?>
 <?php ui_seite_ende(['skripte' => $pkLogin !== null ? ['assets/passkey.js'] : []]); ?>

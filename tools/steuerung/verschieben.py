@@ -7,8 +7,8 @@
 Rückgabewert 0 = verschoben (oder gezeigt) · 1 = nicht verschoben (Nummer
 fehlt, Kopfzeile ohne Grammatik, Nummer steht schon in der Erledigt-Datei).
 
-WOFÜR. Konzept SD sagt „wörtlich", aber nicht, was mit dem Stand geschieht;
-E-R4-06 hat die Form festgelegt: Die Kopfzeile bleibt, `Stand:` wird
+WOFÜR. „Wörtlich" sagt noch nicht, was mit dem Stand geschieht; die Form
+ist: Die Kopfzeile bleibt, `Stand:` wird
 `erledigt`, und ein Schlusssatz mit Datum, Anlass und Beleg ist die letzte
 Folgezeile, eingerückt mit fünf Leerzeichen. Von Hand sind das drei Stellen
 in zwei Dateien je Punkt — und eine Runde verschiebt Dutzende.
@@ -16,11 +16,10 @@ in zwei Dateien je Punkt — und eine Runde verschiebt Dutzende.
 Der Schlusssatz wird umbrochen; keine Zeile beginnt dabei mit Zahl und Punkt
 (der Bestandsriegel läse dort eine Nummer, Kopf von `docs/Backlog.md`).
 
-DIE TRENNZEILE BLEIBT ZURÜCK (seit R4-25, Nr. 340): Vor jedem Eintrag in
+DIE TRENNZEILE BLEIBT ZURÜCK: Vor jedem Eintrag in
 `docs/Backlog.md` steht `<!-- -->`, damit GitHub jeden als eigene Liste mit
 seiner Nummer zeigt. Der Eintrag verlässt die Datei samt seiner Trennzeile;
-in `Backlog-Erledigt.md` kommt er ohne sie an, wie der Bestand dort
-(E-R4-62).
+in `Backlog-Erledigt.md` kommt er ohne sie an, wie der Bestand dort.
 """
 import argparse
 import os
@@ -33,8 +32,11 @@ WURZEL = os.path.dirname(os.path.dirname(HIER))
 BACKLOG = os.path.join(WURZEL, 'docs', 'Backlog.md')
 ERLEDIGT = os.path.join(WURZEL, 'docs', 'Backlog-Erledigt.md')
 
+sys.path.insert(0, HIER)
+from uebersicht import STAENDE  # noqa: E402 -- das Vokabular steht dort, einmal
+
 KOPF = re.compile(r'^(\d+)\. \*\*.+?\*\* · gehört zu: .+? · Stand: '
-                  r'(offen|teilweise|zurückgestellt|nur auf Anlass|nicht umsetzen) · seit \d{2}\.\d{2}\.\d{4}$')
+                  r'(' + '|'.join(STAENDE) + r') · seit \d{2}\.\d{2}\.\d{4}$')
 GRENZE = re.compile(r'^(\d+\. \*\*|## |---|<!-- -->$)')
 TRENNER = '<!-- -->'
 EINZUG = '     '

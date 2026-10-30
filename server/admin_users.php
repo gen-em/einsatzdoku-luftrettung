@@ -3,36 +3,34 @@ declare(strict_types=1);
 require_once __DIR__ . '/auth_guard.php';
 require_once __DIR__ . '/mail_lib.php';
 require_once __DIR__ . '/smtp.php';
-/* SEIT P5c/AP4 BETRITT AUCH DER SUPPORT DIESE SEITE (E-P5c-14): Er sieht die
+/* AUCH DER SUPPORT BETRITT DIESE SEITE: Er sieht die
  * Konten der Rolle `user` und nichts sonst, und er legt nichts an und sichert
  * nichts — beide Handlungen fragen `ist_admin()` vor dem Token. */
 require_support();
 $nurSupport = ist_support();
 require_once __DIR__ . '/adminbackup_lib.php';
-require_once __DIR__ . '/format_lib.php';   // zahl_text(), datum_text() (AP7)
+require_once __DIR__ . '/format_lib.php';   // zahl_text(), datum_text()
 
 /**
- * NUTZERINNEN — die Liste, ausgelegt auf mehrere hundert Konten (E-P3-41, O9b).
+ * NUTZERINNEN — die Liste, ausgelegt auf mehrere hundert Konten.
  *
- * WAS SICH GEAENDERT HAT. Bis Web 9.8.0 war das eine ungefilterte Tabelle
- * ueber ALLE Konten mit vier Spalten, dazu ein Anlegen-Formular darunter und
- * je Zeile ein Loeschknopf. Bei dreissig Konten geht das; bei dreihundert ist
- * es eine Seite, die man durchscrollt, um eine Zeile zu suchen.
+ * Eine ungefilterte Tabelle ueber ALLE Konten geht bei dreissig Konten; bei
+ * dreihundert ist es eine Seite, die man durchscrollt, um eine Zeile zu
+ * suchen.
  *
- * Jetzt: vier Statuskacheln, eine Suche nach Name oder Adresse, fuenf
+ * Deshalb: vier Statuskacheln, eine Suche nach Name oder Adresse, fuenf
  * Filterplaketten mit Zahl, sieben Spalten, FUENFZIG Konten je Seite mit
  * Seitenwechsel — und eine Sammelleiste, deren Auswahl ueber die Seiten
  * hinweg gilt. Das Anlegen steht als „+ Anlegen" im Kartenkopf und oeffnet
- * einen Dialog; das LOESCHEN eines Kontos steht nur noch auf der Kontoseite,
- * wo die Entscheidung ueber die Backups mit dazugehoert (E25).
+ * einen Dialog; das LOESCHEN eines Kontos steht nur auf der Kontoseite,
+ * wo die Entscheidung ueber die Backups mit dazugehoert.
  *
  * WO DIE ARBEIT LIEGT, UND WARUM SIE DORT VERTRETBAR IST.
  *
  * Der Backup-Stand eines Kontos steht NICHT in der Datenbank, sondern im
  * Dateisystem. Drei Fragen der Seite haengen daran: die beiden roten Kacheln,
  * zwei der fuenf Filter und die Spalte „Backup". Ihn je Zeile zu holen
- * hiesse bei 300 Konten 300 Verzeichnisdurchlaeufe — genau der Fehler, den
- * die alte Backup-Seite gemacht hat (F-P3-F).
+ * hiesse bei 300 Konten 300 Verzeichnisdurchlaeufe.
  *
  * Stattdessen: EIN Durchlauf der Ablagewurzel (edbak_staende(), je Ordner eine
  * kleine JSON-Datei) und EINE Abfrage ueber die Konten. Gemessen an 304 Konten:
@@ -45,7 +43,7 @@ require_once __DIR__ . '/format_lib.php';   // zahl_text(), datum_text() (AP7)
  * Frage — und der zweite haette die falschen Zahlen. Was der Browser bekommt,
  * sind in jedem Fall hoechstens fuenfzig Zeilen.
  *
- * Die Grenze davon steht in docs/Backlog.md Nr. 37: Bei einigen tausend
+ * Die Grenze davon: Bei einigen tausend
  * Konten kippt das Verhaeltnis, und dann braucht der Backup-Stand eine
  * Spalte in der Datenbank statt eines Verzeichnisdurchlaufs.
  */
@@ -71,7 +69,7 @@ const KONTEN_JE_SEITE = 50;
  */
 const KONTEN_SAMMELBUDGET = 20.0;
 
-/* DIE NAMEN TRAGEN IHREN ORT (O9b). `const FILTER` gibt es in suche.php
+/* DIE NAMEN TRAGEN IHREN ORT. `const FILTER` gibt es in suche.php
  * bereits — dort ist es der Katalog der Suchfilter. Zwei Seiten, zwei
  * Anfragen: heute stossen sie nicht zusammen. Aber eine Konstante auf
  * Dateiebene ist eine GLOBALE Konstante, und der Tag, an dem beide Seiten
@@ -83,20 +81,16 @@ const KONTEN_SAMMELBUDGET = 20.0;
 const KONTEN_FILTER = [
     'alle'        => 'Alle',
     'admins'      => 'Admins',
-    /* WORTGLEICH MIT DEN KENNZAHLEN, die auf sie zeigen (S8/AP3, B-S8-07,
-     * B-S8-19). Bis Web 15.1.0 hiess die Kennzahl „Backup überfällig" und der
-     * Filter ebenso, die Kennzahl auf der Backup-Seite aber „überfällig ·
-     * Liste öffnen" und der zweite Filter „Nie gesichert" gegen „nie
-     * gesichert" — vier Namen fuer zwei Filter. Und „Backup" allein war
-     * ohnehin zweideutig: Gemeint ist das Paket der VERWALTUNG, nicht das,
-     * was eine NutzerIn sich selbst herunterlaedt (E-S8-06). */
+    /* WORTGLEICH MIT DEN KENNZAHLEN, die auf sie zeigen — nicht vier Namen
+     * fuer zwei Filter. Und „Backup" allein waere zweideutig: Gemeint ist das
+     * Paket der VERWALTUNG, nicht das,
+     * was eine NutzerIn sich selbst herunterlaedt. */
     'ueberfaellig'=> 'Konto-Backup überfällig',
     'nie'         => 'nie Konto-Backup',
     'ohne-geraet' => 'Ohne Gerät',
-    /* SEIT P5b/AP3. Ohne diesen Filter fuehrt die Sammelmail
+    /* Ohne diesen Filter fuehrte die Sammelmail
      * „Registrierungen warten“ auf eine Liste, in der die Wartenden zwischen
-     * allen anderen stehen und an nichts zu erkennen sind — die Spalte
-     * `status` wurde bis dahin nicht einmal mitgelesen. */
+     * allen anderen stehen und an nichts zu erkennen sind. */
     'wartet'      => 'Wartet auf Freischaltung',
 ];
 
@@ -128,34 +122,34 @@ function konten_param(string $name, string $vorgabe = ''): string
     return is_string($v) ? $v : $vorgabe;
 }
 
-/* UMLEITEN NACH DEM POST (Web 21.1.9, Backlog Nr. 250). Was ein Konto anlegt
+/* UMLEITEN NACH DEM POST. Was ein Konto anlegt
  * oder sichert, endet mit `flash_setzen()` und einer Umleitung auf dieselbe
  * Ansicht — `konten_weg()` behaelt Suche, Filter, Sortierung und Seite. Sonst
  * wiederholt Neuladen die Handlung. Ein Eingabefehler bleibt auf der Seite;
  * ebenso die Anlage mit Setz-Link: Der Link ist ein Geheimnis und gehoert
- * nicht in die Sitzungsdatei (E-R4-33). */
+ * nicht in die Sitzungsdatei. */
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = (string)($_POST['action'] ?? '');
-    handlung_erlaubt($action);   // der Support hat hier keine (E-P5c-85: Rolle vor Token)
+    handlung_erlaubt($action);   // der Support hat hier keine (Rolle vor Token)
     csrf_check();
 
-    /* ---- NutzerIn anlegen (M1-10) --------------------------------------
+    /* ---- NutzerIn anlegen --------------------------------------
      *
-     * DREI DINGE WAREN HIER FALSCH, UND ZWAR ALLE DREI AN DERSELBEN STELLE:
+     * DREI FALLEN, ALLE AN DERSELBEN STELLE:
      *
-     *  1. DUBLETTE. Bei vorhandener Adresse warf die Datenbank eine
-     *     ungefangene Ausnahme — der Admin sah eine weisse Seite oder einen
-     *     Servertfehler statt einer Auskunft.
+     *  1. DUBLETTE. Bei vorhandener Adresse wirft die Datenbank eine
+     *     Ausnahme — ungefangen saehe der Admin eine weisse Seite oder einen
+     *     Serverfehler statt einer Auskunft.
      *
-     *  2. HALBER ZUSTAND. Konto und Setz-Token entstanden in zwei getrennten
-     *     Anweisungen. Scheiterte die zweite, blieb ein Konto ohne jeden Weg
-     *     zu einem Passwort zurueck — anmelden unmoeglich, und "Passwort
-     *     vergessen" haette es zwar geheilt, aber niemand wusste davon.
+     *  2. HALBER ZUSTAND. Entstuenden Konto und Setz-Token in zwei getrennten
+     *     Anweisungen und scheiterte die zweite, bliebe ein Konto ohne jeden
+     *     Weg zu einem Passwort zurueck — anmelden unmoeglich, und "Passwort
+     *     vergessen" heilte es zwar, aber niemand wuesste davon.
      *
-     *  3. VERWORFENER RUECKGABEWERT. smtp_send() liefert true/false; hier
-     *     wurde es ignoriert und in jedem Fall "Setz-Link per E-Mail
-     *     verschickt" gemeldet. Bei einem Fehlschlag existierte das Konto,
-     *     ein gueltiger Token lag in der Datenbank — nur hatte niemand den
+     *  3. VERWORFENER RUECKGABEWERT. Die Zustellung liefert ein Ergebnis;
+     *     ignoriert, hiesse es in jedem Fall "Setz-Link per E-Mail
+     *     verschickt". Bei einem Fehlschlag existierte das Konto,
+     *     ein gueltiger Token laege in der Datenbank — nur haette niemand den
      *     Link, und es sagte auch niemand etwas.
      *
      * Der Versand liegt bewusst NACH dem Commit und wird NICHT ueber
@@ -166,7 +160,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
      */
     if ($action === 'user_add') {
         $email = email_pruefen($_POST['email'] ?? '');
-        /* ROLLE AUS DEM FORMULAR — UND ZWEIMAL GEPRUEFT (R75).
+        /* ROLLE AUS DEM FORMULAR — UND ZWEIMAL GEPRUEFT.
          *
          * rolle_normieren() faengt alles ab, was nicht im Katalog steht; die
          * zweite Pruefung faengt den Fall, der davon nicht erfasst wird: Ein
@@ -190,16 +184,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if ($vorh->fetch()) {
                 $error = 'Es gibt bereits ein Konto mit dieser E-Mail-Adresse.';
             } else {
-                /* EINE STELLE FUER VIER (P5b/AP2, Backlog Nr. 202 Paket 1).
+                /* EINE STELLE FUER VIER.
                  *
-                 * Konto, Kontokennung und Setz-Token entstehen jetzt in
-                 * `konto_anlegen()`. Die Transaktionsklammer, die hier seit
-                 * E17 richtig stand, steht damit auch in `install.php`, wo
-                 * sie fehlte — und die Laufzeit kommt aus
+                 * Konto, Kontokennung und Setz-Token entstehen in
+                 * `konto_anlegen()`, in einer Transaktionsklammer — wie
+                 * in `install.php` —, und die Laufzeit kommt aus
                  * `TOKEN_EINLADUNG_S` statt aus einem SQL-Literal.
                  *
-                 * Die Kontokennung entsteht weiterhin BEI DER ANLAGE und
-                 * nicht spaeter (E17): Sie ist ab dann unveraenderlich und
+                 * Die Kontokennung entsteht BEI DER ANLAGE und
+                 * nicht spaeter: Sie ist ab dann unveraenderlich und
                  * der Ordnername des Admin-Backups; ein Konto ohne sie waere
                  * eines, das sich nicht sichern laesst. */
                 require_once __DIR__ . '/konto_lib.php';
@@ -221,29 +214,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 if ($angelegt) {
                     $link = app_url('/pw_handling.php?token=' . $token);
-                    /* DREI ZUSTAENDE, UND `wartet` GEHOERT AUF DIE ANDERE SEITE
-                     * (E-P5a-14, berichtigt in AP9 als E-P5a-54).
+                    /* DREI ZUSTAENDE, UND `wartet` GEHOERT AUF DIE SEITE DES SCHEITERNS.
                      *
-                     * AP5 hat `wartet` als „liegt in der Warteschlange und
-                     * geht gleich hinaus" gelesen und den Link deshalb
-                     * verborgen. Das ist die falsche Haelfte: `wartet`
-                     * heisst, dass der ERSTE VERSUCH GESCHEITERT IST
-                     * (`mail_zeile_versuchen()` gibt nur dann false zurueck)
-                     * — genau das sagt die Statusseite auch, wortgleich,
-                     * seit AP5.
+                     * `wartet` heisst nicht „liegt in der Warteschlange und
+                     * geht gleich hinaus", sondern dass der ERSTE VERSUCH
+                     * GESCHEITERT IST (`mail_zeile_versuchen()` gibt nur dann
+                     * false zurueck) — genau das sagt die Statusseite auch,
+                     * wortgleich.
                      *
-                     * Die Folge war eine Sackgasse: Auf einer Installation
-                     * mit eingetragenem, aber unerreichbarem SMTP-Server
-                     * (falsches Passwort, gesperrter Port, abgelaufenes
-                     * Zertifikat) kam die Einladung nie an, und der Link war
-                     * nirgends mehr zu bekommen — auch „Setz-Link erneut
-                     * schicken" verbarg ihn. Das Konto blieb unbenutzbar.
-                     *
-                     * GEFUNDEN AM 16.09.2026 in P5a/AP9, weil der Messstand
-                     * daran haengenblieb: `kreislauf.py` liest den Link aus
-                     * dieser Antwort, und die lokale Installation hat keinen
-                     * erreichbaren Mailserver. Ein Werkzeug, das ueber den
-                     * regulaeren Weg geht, misst eben auch den Weg.
+                     * Den Link dann zu verbergen, waere eine Sackgasse: Auf
+                     * einer Installation mit eingetragenem, aber unerreichbarem
+                     * SMTP-Server (falsches Passwort, gesperrter Port,
+                     * abgelaufenes Zertifikat) kaeme die Einladung nie an, und
+                     * der Link waere nirgends mehr zu bekommen. Das Konto
+                     * bliebe unbenutzbar. Auch `kreislauf.py` liest den Link
+                     * aus dieser Antwort, denn die lokale Installation hat
+                     * keinen erreichbaren Mailserver.
                      *
                      * Nur `zugestellt` heisst „die Mail ist raus". */
                     $zustellung = mail_einreihen('einladung', $email, ['link' => $link]);
@@ -318,7 +304,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $error = 'Nicht erzeugt: ' . implode(' · ', array_unique($schlecht));
             }
             /* Zahl, Gruende und Restauswahl reisen ueber die Sitzung mit
-             * (E-R4-33) — die Restauswahl setzt das Skript unten wie bisher. */
+             * — die Restauswahl setzt das Skript unten wie bisher. */
             flash_setzen('notice', $notice, '',
                          ['fehler' => $error, 'auswahl_rest' => $auswahlRest]);
             header('Location: ' . konten_weg());
@@ -376,19 +362,16 @@ unset($k);
  * den Filterplaketten dagegen beziehen sich auf die laufende Suche: Sie
  * beantworten „was bringt mir dieser Filter jetzt?".
  *
- * SIE TRETEN AN DIE STELLE DER BACKUP-ERINNERUNG (A8.4). Bis Web 9.8.0
- * stand oben auf dieser Seite eine Warnung aus edbak_erinnerung() — mit der
- * ausdruecklichen Begruendung, sie stehe HIER und nicht nur auf der
- * Backup-Seite, weil ein Hinweis auf einer Seite, die man erst oeffnet,
- * wenn man ohnehin sichern will, niemandem etwas meldet. Diese Begruendung
- * gilt weiter; erfuellt wird sie jetzt besser.
+ * SIE STEHEN STATT EINER BACKUP-ERINNERUNG. Ein Hinweis gehoert HIER hin
+ * und nicht nur auf die Backup-Seite, weil ein Hinweis auf einer Seite, die
+ * man erst oeffnet, wenn man ohnehin sichern will, niemandem etwas meldet.
  *
- * Denn edbak_erinnerung() liest EINE Marke: wann zuletzt IRGENDEIN Konto
- * gesichert wurde. Wer ein Konto taeglich sichert und dreihundert nie, bekam
- * damit „alles in Ordnung" gemeldet. Die beiden rechten Kacheln zaehlen
- * dagegen Konten — und sie fuehren mit einem Klick in genau die Liste, um die
- * es geht. Die alte Marke bleibt in der Bibliothek und traegt weiterhin die
- * Regelseite (admin_sicherungen.php, O9c).
+ * edbak_erinnerung() taugt dafuer nicht: Es liest EINE Marke, wann zuletzt
+ * IRGENDEIN Konto gesichert wurde. Wer ein Konto taeglich sichert und
+ * dreihundert nie, bekaeme damit „alles in Ordnung" gemeldet. Die beiden
+ * rechten Kacheln zaehlen dagegen Konten — und sie fuehren mit einem Klick
+ * in genau die Liste, um die es geht. Die Marke traegt die Regelseite
+ * (admin_sicherungen.php).
  */
 $gesamt = [
     'konten'       => count($alle),
@@ -398,7 +381,7 @@ $gesamt = [
 ];
 foreach ($alle as $k) {
     /* „Admins" zaehlt JEDES Konto mit Verwaltungsrechten, also auch die
-     * BetreiberInnen (R75). Die Kennzahl beantwortet die Frage „wie viele
+     * BetreiberInnen. Die Kennzahl beantwortet die Frage „wie viele
      * koennen hier verwalten?" — und darauf ist eine BetreiberIn ein Ja.
      * Wer wissen will, wer betreibt, sieht die Rollenspalte: Sie nennt drei
      * Werte, die Kennzahl fasst zwei davon zusammen. */
@@ -519,8 +502,8 @@ function konten_sortwert(array $k, string $sort): string
         /* Vier Stufen, absteigend nach Rechten: BetreiberIn, Admin,
          * Support, NutzerIn. Aufsteigend steht damit oben, wer am meisten
          * darf. Die Reihenfolge ist die von `ROLLEN`, rueckwaerts — aus dem
-         * Katalog gelesen, damit eine fuenfte Rolle hier nicht vergessen wird
-         * (F-P5c-36). */
+         * Katalog gelesen, damit eine fuenfte Rolle hier nicht vergessen wird.
+         * */
         'rolle'      => (string)(count(ROLLEN) - 1
                         - (int)array_search(rolle_normieren($k['role']), array_keys(ROLLEN), true)),
         'seit'       => (string)($k['created_at'] ?? ''),
@@ -577,9 +560,9 @@ ui_seite_start(['titel' => 'NutzerInnen']);
 <?php ui_geruest_start(['aktiv' => 'einstellungen', 'leiste' => 'einstellungen', 'menue' => 'admin']); ?>
 
   <?php ui_titelzeile(['titel' => 'NutzerInnen']); ?>
-  <?php /* „MIT KONTODATEN, GERÄTEN UND KONTO-BACKUPS" STAND HIER BIS WEB 21.1.0 —
-           der Support und das Demo-Konto haben keine Karte Konto-Backups
-           (Endzählung AP9, A-4). Welche Karten eine Kontoseite trägt, sagt
+  <?php /* NICHT „MIT KONTODATEN, GERÄTEN UND KONTO-BACKUPS" —
+           der Support und das Demo-Konto haben keine Karte Konto-Backups.
+           Welche Karten eine Kontoseite trägt, sagt
            das Handbuch. */ ?>
   <p class="seiten-erklaerung">Jedes Konto hat eine eigene Seite — ein Klick auf
      eine Zeile öffnet sie.
@@ -593,14 +576,14 @@ ui_seite_start(['titel' => 'NutzerInnen']);
         . 'ist angelegt, der Link 24 Stunden gültig — bitte auf einem anderen Weg '
         . 'an die Person selbst weitergeben. Wer ihn hat, kann das Passwort des '
         . 'neuen Kontos setzen. Die Ursache findet die BetreiberIn im Protokoll unter System.') ?>
-    <?php /* KLEINE STUFE MIT „KOPIEREN" (E-S8-10, Backlog Nr. 78). Der Link
+    <?php /* KLEINE STUFE MIT „KOPIEREN". Der Link
              ist über hundert Zeichen lang; in der grossen Stufe stand er
              gesperrt in Plakatgrösse über drei Zeilen — und ohne Knopf,
              obwohl er zum Weitergeben da ist. */ ?>
     <?= ui_codeblock_lang((string)$setzLink, 'Einladungslink') ?>
   <?php endif; ?>
 
-  <?php /* ---- Die vier Statuskacheln (Mockup 41) --------------------------
+  <?php /* ---- Die vier Statuskacheln ---------------------------------------
        Jede ist ein Weg in die Liste, die sie meint. Die beiden linken tragen
        keinen Ton — sie sind Bestandszahlen, keine Befunde. */ ?>
   <?php /* NULL IST KEIN BEFUND. Der Ton haengt an der Zahl, nicht an der
@@ -611,14 +594,14 @@ ui_seite_start(['titel' => 'NutzerInnen']);
 
            Die linke Kachel ist NICHT „aktiv": Sie zaehlt den Bestand, sie
            ist kein Filterzustand. Welcher Filter gilt, sagt die Plakettenreihe
-           in der Karte darunter (Mockup 41).
+           in der Karte darunter.
 
            JEDE KACHEL LOESCHT DIE SUCHE MIT. Sie nennt eine Zahl aus dem
            GANZEN Bestand — bliebe beim Klick ein Suchbegriff stehen, führte
            „7 Admins" auf eine Liste mit dreien, und die Kachel hätte gelogen.
            Die Filterplaketten darunter machen es umgekehrt richtig: Sie
            zählen innerhalb der Suche und behalten sie deshalb. */ ?>
-  <?php /* DER SUPPORT SIEHT DREI KACHELN, NICHT VIER (M-P5c-02c): Admins
+  <?php /* DER SUPPORT SIEHT DREI KACHELN, NICHT VIER: Admins
            stehen nicht in seiner Liste, eine Kachel „Admins" zaehlte Konten,
            die er nicht oeffnen darf. Die Zahlen kommen aus derselben
            gefilterten Liste — „Konten" heisst bei ihm: Konten von
@@ -649,12 +632,12 @@ ui_seite_start(['titel' => 'NutzerInnen']);
   ]); ?>
 
     <?php /* ---- Suche und Filter ----------------------------------------
-         Seit P5c/AP2 ein Baustein (`ui_listenkopf()`, R83): Die
+         Ein Baustein (`ui_listenkopf()`): Die
          Protokollseite ist der zweite Verbraucher. */
     $pillen = [];
     foreach (KONTEN_FILTER as $key => $text) {
         /* Der Support sieht nur Konten der Rolle `user` — ein Filter
-         * „Admins" fuehrte ihn auf eine leere Liste (M-P5c-02c). Die Filter
+         * „Admins" fuehrte ihn auf eine leere Liste. Die Filter
          * nach Konto-Backups bleiben: Sehen darf er den Stand. */
         if ($nurSupport && $key === 'admins') { continue; }
         $pillen[] = ['text' => $text, 'aktiv' => $filter === $key, 'zahl' => (int)$zahlen[$key],
@@ -708,9 +691,9 @@ ui_seite_start(['titel' => 'NutzerInnen']);
               <span class="konto-mail"><?= e((string)$k['email']) ?>
                 <?= konto_status_plakette($k['status'] ?? null) ?></span>
             </td>
-            <?php /* FUENF SPALTEN MITTIG (S3/AP5, Block B). Rolle, Seit,
-                     Zuletzt angemeldet, Geraete und Backup standen links,
-                     ihre Titel aber mittig (F-N1-G) — die Ueberschrift stand
+            <?php /* FUENF SPALTEN MITTIG. Rolle, Seit,
+                     Zuletzt angemeldet, Geraete und Backup stehen unter
+                     mittigen Titeln — links stuende die Ueberschrift
                      ueber nichts. Keiner dieser Werte ist Flietext oder eine
                      Groesse zum Vergleichen; mittig stehen sie unter ihrem
                      Titel. KONTO bleibt linksbuendig: Name und Adresse sind
@@ -731,7 +714,7 @@ ui_seite_start(['titel' => 'NutzerInnen']);
     <?php /* ---- Unter 720 px die Zeilen ----------------------------------
          Dieselben Angaben, andere Form: Name und Adresse untereinander, der
          Stand als Plakette, das Kaestchen davor. Eine Tabelle mit acht
-         Spalten auf 360 px waere dasselbe wie in der Einsatzliste (E-P3-32):
+         Spalten auf 360 px waere dasselbe wie in der Einsatzliste:
          Sie gibt den wichtigen Spalten null Pixel und behaelt die Zahlen. */ ?>
     <div class="nur-unter-720">
       <?php foreach ($zeilen as $k):
@@ -788,8 +771,8 @@ ui_seite_start(['titel' => 'NutzerInnen']);
           <?php ui_feld(['name' => 'name', 'label' => 'Name',
                          'attr' => 'maxlength="120" placeholder="z. B. Vorname Nachname"',
                          'klein' => 'Kann später ergänzt werden.']); ?>
-          <?php /* Die Option „BetreiberIn" sieht nur, wer selbst eine ist
-                   (R75). Geprueft wird sie oben im Schreibweg noch einmal —
+          <?php /* Die Option „BetreiberIn" sieht nur, wer selbst eine ist.
+                   Geprueft wird sie oben im Schreibweg noch einmal —
                    das Ausblenden ist die Anzeige der Regel, nicht die
                    Regel. */ ?>
           <?php ui_feld(['name' => 'role', 'label' => 'Rolle', 'art' => 'select',

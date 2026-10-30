@@ -2,18 +2,16 @@
  * ===========================================================================
  *
  * Das Auf- und Zuklappen selbst kann der Browser: Die Leiste ist aus
- * <details>/<summary> gebaut, und die ganze Zeile ist der Schalter (E-P3-09).
+ * <details>/<summary> gebaut, und die ganze Zeile ist der Schalter.
  * Was er nicht kann, ist die Verkopplung — dass beim Aufklappen eines Jahres
  * die uebrigen Jahre zugehen. Genau dafuer ist dieses Skript da, und fuer
  * sonst nichts.
  *
- * WAS HIER FRUEHER STAND UND JETZT NICHT MEHR NOETIG IST: eine Sonderbehandlung
- * fuer den Klick auf die Beschriftung. Bis Web 8.0.1 war der TEXT der Link auf
- * die Zeitraum-Uebersicht und nur das Dreieck der Schalter; beides lag im
- * <summary>, und ohne preventDefault haette ein Klick auf den Link zusaetzlich
- * auf- und zugeklappt. Auf einem Touchgeraet war das nicht auseinanderzuhalten.
- * Der Weg in die Uebersicht ist jetzt ein eigenes Symbol RECHTS in der Zeile
- * und liegt ausserhalb des <summary> — damit erledigt sich die Sonderregel.
+ * KEINE SONDERBEHANDLUNG FUER DEN KLICK AUF DIE BESCHRIFTUNG. Der Weg in die
+ * Zeitraum-Uebersicht ist ein eigenes Symbol RECHTS in der Zeile und liegt
+ * ausserhalb des <summary>; ein Link IM <summary> wuerde beim Klick
+ * zusaetzlich auf- und zuklappen, und auf einem Touchgeraet waere das nicht
+ * auseinanderzuhalten.
  */
 (function () {
   'use strict';

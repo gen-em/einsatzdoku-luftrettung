@@ -1,4 +1,4 @@
-/* Motorwahl — ein Prüfmittel, drei Engines (AP3b, Backlog Nr. 183).
+/* Motorwahl — ein Prüfmittel, drei Engines.
  * ===========================================================================
  *
  * WARUM ES DIESE DATEI GIBT. Seit dem 14.09.2026 liegen drei Playwright-
@@ -19,7 +19,7 @@
  *
  * Headless Firefox meldet also "kein Zeiger, kein Hover". Damit ist der
  * gesamte Media-Block der 36-px-Bedienhöhe
- * `(hover:hover) and (pointer:fine) and (min-width:1024px)` (E-S8-09/R76)
+ * `(hover:hover) and (pointer:fine) and (min-width:1024px)`
  * für Firefox unsichtbar — die Klickprobe meldete prompt "Zeile 44 px statt
  * 36", und der Bilderlauf hätte auf jeder Seite ab 1024 px falsche
  * Knopfhöhen gemeldet. Schlimmer als die falsche Meldung ist der stumme Fall:
@@ -37,21 +37,21 @@
  * Schalter `finger`.
  */
 
-/* Der Code-Rechner des Zweitfaktors — einer je Sprache, nicht je Werkzeug
- * (E-P5c-43). Gebraucht wird er unten in `codeSchritt()`. */
+/* Der Code-Rechner des Zweitfaktors — einer je Sprache, nicht je Werkzeug.
+ * Gebraucht wird er unten in `codeSchritt()`. */
 import { naechsterCode } from './zweitfaktor/totp.mjs';
 
 export const MOTOREN = ['chromium', 'firefox', 'webkit'];
 
-/** Ein Schriftabruf, den das nächste Laden abgebrochen hat — in Firefox
- *  (Konzept DM, F-DM-08). Firefox meldet ihn als Konsolenfehler
+/** Ein Schriftabruf, den das nächste Laden abgebrochen hat — in Firefox.
+ *  Firefox meldet ihn als Konsolenfehler
  *  „downloadable font: download failed … status=2152398850"; das ist
  *  NS_BINDING_ABORTED, also kein Fehler der Seite, sondern ein Werkzeug,
  *  das schneller weiterlädt als die Schrift. Chromium und WebKit sagen dazu
  *  nichts. Jeder andere Schriftfehler bleibt ein Fehler. Eine Stelle für
  *  Bilderlauf und Bedienprobe. */
 /** Der Hinweis „ResizeObserver loop completed with undelivered
- *  notifications" — WebKit wirft ihn als Seitenfehler (Konzept DM, F-DM-09),
+ *  notifications" — WebKit wirft ihn als Seitenfehler,
  *  Chromium und Firefox nicht. Die Spezifikation sieht ihn vor, wenn eine
  *  Größenänderung erst im nächsten Bild gemeldet werden kann; er ist kein
  *  Fehler der Seite. Der Beobachter in `map_layers.js` bündelt über
@@ -62,7 +62,7 @@ export function harmloserResizeHinweis(text) {
   return /^ResizeObserver loop completed with undelivered notifications\.?$/.test(String(text).trim());
 }
 
-/** Ein Abruf, den das VERLASSEN DER SEITE abbrach — in WebKit (Nr. 393, F2).
+/** Ein Abruf, den das VERLASSEN DER SEITE abbrach — in WebKit.
  *  WebKit meldet ihn als „Fetch API cannot load <Adresse> due to access
  *  control checks." und Playwright reicht das als `pageerror` weiter,
  *  obwohl die Anwendung den Fehler fängt (`EdApi.senden()`). Gemessen am
@@ -72,7 +72,7 @@ export function harmloserResizeHinweis(text) {
  *  tut dasselbe. Chromium und Firefox sagen dazu nichts.
  *
  *  ENG GEFASST, weil ein abgebrochener Abruf am eigenen Server sonst ein
- *  Fehler ist (Selbstprobe des Bilderlaufs, Fall 5, Nr. 176). Rauschen ist
+ *  Fehler ist (Selbstprobe des Bilderlaufs, Fall 5). Rauschen ist
  *  die Meldung nur, wenn ALLES zutrifft: genau dieser Wortlaut, die eigene
  *  Herkunft (Gastgeber der Seite) und eine Navigation des Hauptrahmens, die
  *  gerade läuft oder vor weniger als einer Sekunde fertig wurde. Dieselbe
@@ -130,13 +130,13 @@ export function motorWahl(argv) {
 }
 
 /* ===========================================================================
- * WebKit stolpert beim Seitenwechsel (Konzept DM, Q-DM-02, E-DM-10)
+ * WebKit stolpert beim Seitenwechsel
  * ===========================================================================
  *
  * In diesem Container bricht WebKit sporadisch einen Seitenwechsel mit
  * „WebKit encountered an internal error" ab — in jedem vollen Lauf der
  * Bedienprobe an ein bis drei anderen Wegen, einzeln sind sie grün; bekannt
- * seit F-RW-23 (Nr. 301). Ein `goto` oder `reload`, der GENAU daran scheitert,
+ * seit Langem. Ein `goto` oder `reload`, der GENAU daran scheitert,
  * wird hier einmal wiederholt; scheitert er wieder, ist er rot. Jede
  * Wiederholung steht als Zeile `WebKit-Wiederholung: …` im Protokoll, und
  * `pruefen.sh` zählt sie.
@@ -171,7 +171,7 @@ async function webkitWiederholung(browser) {
 }
 
 /* ===========================================================================
- * WebKit, der Screenshot und die CSP (Nr. 393, F1)
+ * WebKit, der Screenshot und die CSP
  * ===========================================================================
  *
  * Playwrights `screenshot()` legt in WebKit ein eigenes `<style>` in die
@@ -231,7 +231,7 @@ async function webkitScreenshotOhneBericht(browser) {
 }
 
 /* Der abgebrochene Abruf beim Seitenwechsel — EINMAL für alle Werkzeuge
- * (Nr. 393, F2). Wer in WebKit `seite.on('pageerror', …)` anmeldet, bekommt
+ * Wer in WebKit `seite.on('pageerror', …)` anmeldet, bekommt
  * ihn nicht gemeldet; was Rauschen ist, entscheidet `abgangBeobachten()`
  * oben. Bis dahin stand der Filter nur in Bilderlauf und Bedienprobe, und am
  * 21.10.2026 meldete die Wartungslaufprobe genau diese Zeile als Fehler
@@ -279,7 +279,7 @@ export async function starten(pw, name, { finger = false, optionen = {} } = {}) 
     await webkitScreenshotOhneBericht(browser);
     await webkitAbgangLeise(browser);
   }
-  /* DER BELEG, WELCHE ENGINE LIEF (R87, Konzept DM). Eine Probe, die
+  /* DER BELEG, WELCHE ENGINE LIEF. Eine Probe, die
    * „grün in Firefox" meldet, aber still Chromium startete, wäre die
    * schmeichelhafte Null aus dem Kopf dieser Datei. Die Zeile geht nach
    * stderr, damit sie keine Ausgabe stört, die ein Aufrufer liest, und
@@ -289,7 +289,7 @@ export async function starten(pw, name, { finger = false, optionen = {} } = {}) 
 }
 
 /* ===========================================================================
- * Der Weg nach draußen — ohne die Zertifikatsprüfung abzuschalten (PK-02)
+ * Der Weg nach draußen — ohne die Zertifikatsprüfung abzuschalten
  * ===========================================================================
  *
  * Der ausgehende Verkehr der Arbeitsumgebung läuft über einen Proxy mit
@@ -335,16 +335,16 @@ export async function proxyRoute(kontext) {
 /** Sagt, ob eine Basisadresse auf diesen Rechner zeigt. */
 export function istOertlich(basis) { return OERTLICH.test(String(basis)); }
 
-/* EINSATZLISTE AUF DEM WEG IN DEN BROWSER VERVIELFACHEN (R4-17, Nr. 37).
+/* EINSATZLISTE AUF DEM WEG IN DEN BROWSER VERVIELFACHEN.
  *
- * Die Zeitraumuebersicht zeigt seit Web 21.4.0 hoechstens 200 Zeilen, und
+ * Die Zeitraumuebersicht zeigt hoechstens 200 Zeilen, und
  * was dann geschieht — Nachladezeile, „200 angezeigt", der Sprung aus einer
  * Extremwert-Kachel zu einer Zeile jenseits der 200 —, ist am Demo-Konto
  * nicht zu sehen: Es hat 109 Einsaetze. Einen groesseren Bestand dafuer
  * einzuspielen hiesse, das Demo-Konto zu veraendern, das Bilderlauf und
  * Bedienprobe unveraendert brauchen.
  *
- * Deshalb wie in der Sondierung zu Nr. 37 (P3): Die Antwort wird auf dem
+ * Deshalb wie in einer frueheren Sondierung: Die Antwort wird auf dem
  * Weg in den Browser vervielfacht, und der Browser geht damit den echten
  * Weg — entschluesseln, sortieren, zeichnen. Jede Kopie bekommt eine eigene
  * Kennung (Versatz 10^6 je Kopie), alles andere bleibt, auch der
@@ -451,16 +451,16 @@ export async function blattDialogSchliessen(seite, { frist = 8000 } = {}) {
  *     etwas, das nie eintritt, und meldet dann „nicht angemeldet", während
  *     der Seitentitel „Tagesübersicht" lautet.
  *
- *  Bis P5c/AP5 hieß es hier: Das verlässliche Merkmal ist das Verschwinden
+ *  Früher hieß es hier: Das verlässliche Merkmal ist das Verschwinden
  *  des Passwortfeldes (gemessene Dauer danach: 1,1 s). ALLEIN IST ES DAS
  *  NICHT MEHR, und daraus folgt ein dritter falscher Griff — nicht
  *  gemessen, sondern aus `login.php` und `auth_guard.php` gelesen:
  *
- *  3. NICHT NUR AUF DAS PASSWORTFELD SEHEN (F-P5c-33). Auch der Code-Schritt
+ *  3. NICHT NUR AUF DAS PASSWORTFELD SEHEN. Auch der Code-Schritt
  *     des Zweitfaktors hat keines, und das Einrichtungstor ebenso wenig. Wer
  *     nur darauf sieht, meldet für ein Konto mit Zweitfaktor „angemeldet",
  *     steht in Wahrheit vor der Frage nach dem Code — und misst von da an die
- *     Anmeldeseite. Genau das ist F-P3-AQ: eine grüne Zahl über Bildern der
+ *     Anmeldeseite. Genau das ist die alte Falle: eine grüne Zahl über Bildern der
  *     Anmeldeseite.
  *
  *  Gewartet wird deshalb auf einen von DREI Ausgängen (`nachDemPasswort()`
@@ -486,7 +486,7 @@ export async function anmelden(seite, { basis, konto, pass, frist = 90000 }) {
 }
 
 /* ===========================================================================
- * Der Code-Schritt des Zweitfaktors (P5c/AP5, E-P5c-43, F-P5c-33)
+ * Der Code-Schritt des Zweitfaktors
  * ===========================================================================
  *
  * WAS SICH GEÄNDERT HAT. Ein Konto mit eingeschaltetem Zweitfaktor bekommt
@@ -542,7 +542,7 @@ async function seitenMeldung(seite) {
  *  Fehlerfall, woran es lag. Die Funktion wirft nicht.
  *
  *  EIN ZWEITER VERSUCH, KEIN DRITTER. Der Server nimmt keinen Zeitschritt
- *  zweimal (E-P5c-54). Der Rechner führt dafür einen Zähler über alle
+ *  zweimal. Der Rechner führt dafür einen Zähler über alle
  *  Prozesse (Kopf von `tools/zweitfaktor/totp.php`) — aber er sieht nur, was
  *  über ihn lief: einen Code von Hand oder einen Rechner mit anderem
  *  `TMPDIR` nicht. Erscheint `#codeform` nach dem Absenden wieder, ist das
@@ -600,14 +600,14 @@ export async function codeSchritt(seite, { frist = 30000 } = {}) {
  *  wenn das Dokument gelesen ist; auf Bilder und Kartenkacheln (`load`)
  *  wartet sie nicht. */
 /** Auf der ersten Seite nach der Anmeldung abwarten, bis das Schlüsselpaar
- *  des Kontos steht (S11; seit Konzept DM an einer Stelle, F-DM-02).
+ *  des Kontos steht — an einer Stelle für alle Werkzeuge.
  *
  *  Die Seite legt es still an — aber nur sie, weil nur sie das Anmelde-Token
  *  hat. Wer vorher weitergeht, bricht das Anlegen ab, und das Konto hat bis
- *  zur nächsten Anmeldung keins (Backlog Nr. 392). In Chromium ging das
+ *  zur nächsten Anmeldung keins. In Chromium ging das
  *  meist gut, in Firefox und WebKit nie: Die Freigabeprobe und der
- *  CSV-Kreislauf scheiterten daran, der edbak-Kreislauf wartete schon seit
- *  F-S11-71 selbst. Diese Schleife ist seine, hierher geholt.
+ *  CSV-Kreislauf scheiterten daran, der edbak-Kreislauf wartete schon
+ *  selbst. Diese Schleife ist seine, hierher geholt.
  *
  *  Nichts zu warten, wenn die Seite kein Paar pflegt (kein `KP_STAND`) oder
  *  es schon eines gibt. Höchstens `frist` ms; Rückgabe true, wenn das Paar

@@ -25,17 +25,14 @@
    *
    * Diese Datei ist eine IIFE ohne eigenen Namensraum: Eine zweite Einbindung
    * ist kein Fehler, sie meldet nur ein zweites Mal dieselben Zuhoerer an —
-   * und dann oeffnen zwei Dialoge uebereinander. Bis Web 7.1.0 war das auf
-   * drei Seiten der Fall (admin_sicherungen, admin_stammdaten,
-   * nachbearbeitung), weil sie confirm.js zusaetzlich zu ui_footer() selbst
-   * einbanden. Die Zeilen sind entfernt; diese Schranke sorgt dafuer, dass es
-   * beim naechsten Mal nicht wieder auffaellt, sondern gar nicht erst
-   * passiert. */
+   * und dann oeffnen zwei Dialoge uebereinander. Das geschieht, sobald eine
+   * Seite confirm.js zusaetzlich zu ui_footer() selbst einbindet; diese
+   * Schranke sorgt dafuer, dass es nicht erst auffallen muss, sondern gar
+   * nicht passiert. */
   if (window.edConfirm) { return; }
 
-  /* Je Aufruf ein EIGENES <dialog>. Vorher gab es ein einziges,
-   * wiederverwendetes Element — das ist bei zwei aufeinanderfolgenden
-   * Rückfragen stillschweigend schiefgegangen:
+  /* Je Aufruf ein EIGENES <dialog>. Ein einziges, wiederverwendetes Element
+   * geht bei zwei aufeinanderfolgenden Rückfragen stillschweigend schief:
    *
    *   1. Dialog 1, Klick auf OK -> done() entfernt den eigenen
    *      close-Zuhörer und ruft d.close(). Das close-Ereignis wird dabei nur
@@ -46,21 +43,20 @@
    *      landet beim Zuhörer von Dialog 2: done(false). Dialog 2 schließt
    *      sich sofort selbst und meldet „abgebrochen".
    *
-   * Der Aufrufer sah daraufhin einen stillen Abbruch ohne jede Meldung. Ein
+   * Der Aufrufer sieht daraufhin einen stillen Abbruch ohne jede Meldung. Ein
    * eigenes Element je Aufruf schließt diesen ganzen Fall aus: Ein
    * nachlaufendes Ereignis kann keinen späteren Aufruf mehr erreichen.
    */
-  /* Markup und Klassen sind die des Dialog-Bausteins (.dialog, .knopf) aus
-   * P3/O2 — dieselben, die ui.php serverseitig benutzt. Die frueheren eigenen
+  /* Markup und Klassen sind die des Dialog-Bausteins (.dialog, .knopf) —
+   * dieselben, die ui.php serverseitig benutzt. Die frueheren eigenen
    * Klassen (.confirmbox, .confirmbtns, .btn-red, .btn-plain) stehen auf der
    * Streichliste; wer hier eine aendert, aendert sie im Stylesheet-Abschnitt
    * 15 mit. */
-  /* DER DIALOG HAT EINEN NAMEN (O11).
+  /* DER DIALOG HAT EINEN NAMEN.
    *
-   * Bis Web 9.11.0 hatte er keinen: kein Titel, kein `aria-label`, kein
-   * `role`. Ausgerechnet die Rueckfrage vor dem Loeschen war damit die
-   * anonymste Stelle der Oberflaeche — ein Screenreader las den Text und
-   * zwei Knoepfe, ohne zu sagen, WAS da fragt.
+   * Ohne Titel, `aria-label` und `role` waere ausgerechnet die Rueckfrage
+   * vor dem Loeschen die anonymste Stelle der Oberflaeche — ein Screenreader
+   * laese den Text und zwei Knoepfe, ohne zu sagen, WAS da fragt.
    *
    * `alertdialog` statt `dialog`: Die Rolle ist fuer genau diesen Fall da —
    * eine Meldung, die eine Antwort verlangt und den Ablauf anhaelt. Sie
@@ -90,10 +86,10 @@
   /**
    * Zeigt die Rückfrage; liefert ein Promise mit true/false.
    *
-   * `text` ist ein Satz — oder, seit Web 23.4.0 (Backlog Nr. 404), eine
-   * LISTE VON ABSÄTZEN. Der Dialog war für „Wirklich löschen?" gebaut, und
-   * der Export stellte drei solche Fragen hintereinander, jede ein langer
-   * Fließtext in einem einzigen Absatz. Jetzt fragt er einmal, in Absätzen.
+   * `text` ist ein Satz — oder eine LISTE VON ABSÄTZEN. Der Dialog ist für
+   * „Wirklich löschen?" gebaut; wo eine Rückfrage mehr sagen muss (der
+   * Export), fragt sie einmal, in Absätzen, statt mehrere lange Fließtexte
+   * hintereinander zu stellen.
    *
    * JEDER ABSATZ ALS TEXT, NIE ALS HTML. Ein Absatz kann Werte von außen
    * tragen (Namen, Dateinamen, Zahlen); als Markup gesetzt, brächte er
@@ -152,7 +148,7 @@
       .then(ja => {
         if (!ja) return;
         f.dataset.confirmed = '1';
-        /* DEM DIRTY-TRACKING BESCHEID SAGEN (O11).
+        /* DEM DIRTY-TRACKING BESCHEID SAGEN.
          *
          * Traegt ein Formular BEIDES — `data-confirm` und `data-dirty-track`
          * —, fragt der Browser nach der bestaetigten Rueckfrage ein zweites
@@ -188,12 +184,11 @@
 
   /* Absendeknöpfe abfangen.
    *
-   * DIESER ZWEIG HAT BIS WEB 7.1.0 GEFEHLT, und das war nicht folgenlos:
-   * admin_sicherungen.php trug die Rückfrage an drei <button> — „Alle
-   * sichern", „Einspielen" und „Für NutzerIn freigeben". Gebunden wurde nur
-   * an <form> und an <a>; die drei Dialoge erschienen also NIE. Dass die
-   * Attribute dastanden, sah nach Absicherung aus und war keine — ausgerechnet
-   * vor dem Einspielen eines fremden Backups in ein Konto.
+   * OHNE DIESEN ZWEIG ERSCHIENE DIE RÜCKFRAGE AN EINEM <button> NIE:
+   * admin_sicherungen.php trägt sie an drei Knöpfen — „Alle sichern",
+   * „Einspielen" und „Für NutzerIn freigeben". Gebunden an <form> und <a>
+   * allein, sähe das Attribut nach Absicherung aus und wäre keine —
+   * ausgerechnet vor dem Einspielen eines fremden Backups in ein Konto.
    *
    * WARUM DER KNOPF ERNEUT GEKLICKT WIRD und nicht f.submit() gerufen: Nur der
    * tatsächlich betätigte Absendeknopf schickt sein name/value mit. Die drei

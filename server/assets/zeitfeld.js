@@ -1,4 +1,4 @@
-/* Gen-EM NAdoku — Zeiteingabe im 24-Stunden-Format (Auftragspunkt 4, E1).
+/* Gen-EM NAdoku — Zeiteingabe im 24-Stunden-Format.
  *
  * WARUM ES DIESE DATEI GIBT. <input type="time"> zeigt sein Format nach der
  * Sprach- bzw. Regionseinstellung des Betriebssystems an. Steht dort eine
@@ -10,7 +10,7 @@
  * Fehlerquelle.
  *
  * Deshalb: ein gewoehnliches Textfeld, dessen Format hier gesichert wird.
- * Datumsfelder bleiben nativ (E1) — dort ist die Anzeige kosmetisch, der Wert
+ * Datumsfelder bleiben nativ — dort ist die Anzeige kosmetisch, der Wert
  * ist ISO, und ein selbstgebauter Kalender waere mobil deutlich schlechter zu
  * bedienen.
  *

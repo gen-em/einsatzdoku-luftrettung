@@ -1,4 +1,4 @@
-/* Sichtprüfung des Referenzzustands im Browser (Abnahme B3).
+/* Sichtprüfung des Referenzzustands im Browser.
  *
  * WOFUER. Alles bis hierher ist über HTTP geprüft: Zahlen in der Datenbank,
  * Antworten der Endpunkte. Was das NICHT beantwortet, ist die Frage, ob die
@@ -15,7 +15,7 @@ import { motorWahl, starten } from '../../motor.mjs';
 const MODUL = process.env.PLAYWRIGHT_MODUL
   || '/opt/node22/lib/node_modules/playwright/index.mjs';
 const PW = (m => m.default ?? m)(await import(MODUL.startsWith('/') ? 'file://' + MODUL : MODUL));
-/* Die Engine wählt der Läufer (MOTOR=… oder --motor), R87. */
+/* Die Engine wählt der Läufer (MOTOR=… oder --motor). */
 const MOTOR = motorWahl(process.argv);
 
 const basis = process.argv[2] || 'https://127.0.0.1:8443';
@@ -27,7 +27,7 @@ mkdirSync(ordner, { recursive: true });
 const lokal = /^https:\/\/(127\.0\.0\.1|localhost)(:|\/)/.test(basis);
 const browser = await starten(PW, MOTOR);
 const kontext = await browser.newContext({ ignoreHTTPSErrors: lokal, viewport: { width: 1400, height: 1000 } });
-/* DER WARTUNGSLAUF BLEIBT AUS (S11-07, F-S11-77): Er packt und dünnt im
+/* DER WARTUNGSLAUF BLEIBT AUS: Er packt und dünnt im
    Browser aus, sobald eine Seite ihn anstößt (Startseite, Reiter Backup),
    und das Ausdünnen ändert die Punkte — mitten in einem Vergleich wäre das
    eine Abweichung, die keine ist. Die Antwort sagt „nichts fällig" — ein

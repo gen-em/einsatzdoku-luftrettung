@@ -2,7 +2,7 @@
 declare(strict_types=1);
 
 /**
- * Die Behandler des Fehlerprotokolls — stehen sie da, und nur dort? (P5c/AP3)
+ * Die Behandler des Fehlerprotokolls — stehen sie da, und nur dort?
  *
  * Anlass: Backlog Nr. 248, E-P5c-58. Seit Web 20.40.0 richtet `db.php` drei
  * Behandler ein (`systemmeldung_lib.php`): fuer Ausnahmen, fuer Warnungen und

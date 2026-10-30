@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 require_once __DIR__ . '/../auth_guard.php';
-require_once __DIR__ . '/../mission_fields_lib.php';   // mf_spalten_sql() (Schritt 15/AP6)
+require_once __DIR__ . '/../mission_fields_lib.php';   // mf_spalten_sql()
 
 /**
  * Einsaetze eines Jahres oder Monats — Grundlage der Zeitraum-Uebersicht.
@@ -12,8 +12,9 @@ require_once __DIR__ . '/../mission_fields_lib.php';   // mf_spalten_sql() (Schr
  * ueberall als `pat_blob` an den Browser, der sie selbst entschluesselt.
  */
 
-/* Nur lesen (M3-11). Die Uebersicht war fuer jede Methode offen — ein POST
- * mit einem Formular von fremder Seite bekam dieselbe Antwort wie ein GET.
+/* Nur lesen. Ohne Methodenpruefung waere die Uebersicht fuer jede Methode
+ * offen — ein POST mit einem Formular von fremder Seite bekaeme dieselbe
+ * Antwort wie ein GET.
  * Gelesen wird dabei nichts Fremdes (die Abfrage haengt an $userId), aber
  * ein lesender Endpunkt, der POST beantwortet, ist eine Einladung, die
  * niemand aussprechen wollte. */
@@ -22,9 +23,9 @@ api_methode('GET');
 $jahr  = (string)($_GET['y'] ?? '');
 $monat = (string)($_GET['m'] ?? '');
 if (!preg_match('/^\d{4}$/', $jahr)) { json_out(['error' => 'Ungültiges Jahr'], 400); }
-/* Der Wertebereich zaehlt, nicht nur die Ziffernzahl (M3-06).
+/* Der Wertebereich zaehlt, nicht nur die Ziffernzahl.
  *
- * Vorher genuegten zwei Ziffern. "00" und "13" kamen damit durch, und dann
+ * Genuegten zwei Ziffern, kaemen "00" und "13" durch, und dann
  * ging es schief: strtotime('2026-00-01') scheitert und liefert false,
  * date('Y-m-t', false) rechnet mit dem Zeitpunkt 0 weiter. Herausgekommen ist
  * kein Fehler, sondern ein FALSCHER ZEITRAUM — bei m=00 der Dezember des
@@ -43,20 +44,17 @@ if ($monat !== '') {
 }
 
 try {
-    /* DIE STATISTIK RECHNET NACH DIENSTTAG (E14). Der Zeitraum filtert deshalb
+    /* DIE STATISTIK RECHNET NACH DIENSTTAG. Der Zeitraum filtert deshalb
      * `days.day`, nicht `missions.started_at`: Ein Einsatz um 01:30 eines
      * Dienstes, der am Vortag begonnen hat, zaehlt zum Vortag — und faellt am
      * Monatsersten damit noch in den Vormonat. Die Einsatzsuche macht es
      * ausdruecklich anders (api/suchindex.php); der Unterschied ist gewollt und
      * im Handbuch erklaert.
      *
-     * Der Join auf `days` ist seit Web 6.0.0 der vorgesehene Weg (Konzept
-     * 4.11). Bis dahin trug jeder Einsatz sein Tagesdatum selbst. */
-    /* `ended_at` STATT DER PHASE-9-UNTERABFRAGE (Web 14.2.2, F-R64-05).
-     * Sie war die einzige Verwenderin von `p9_at` hier -- und eine
-     * korrelierte Unterabfrage je Zeile fuer einen Wert, der als Spalte
-     * danebensteht. */
-    /* Die `missions`-Spalten aus dem Register (Schritt 15/AP6); die drei
+     * Der Join auf `days` ist der vorgesehene Weg. */
+    /* `ended_at` STATT EINER PHASE-9-UNTERABFRAGE: eine korrelierte
+     * Unterabfrage je Zeile fuer einen Wert, der als Spalte danebensteht. */
+    /* Die `missions`-Spalten aus dem Register; die drei
      * Diensttag-Spalten stehen daneben — sie gehoeren zu `days`. */
     $st = db()->prepare('SELECT ' . mf_spalten_sql('range', 'm.')
                          . ', d.day, d.kind, d.vehicle_typ
@@ -69,10 +67,10 @@ try {
 
     $missions = [];
     foreach ($st->fetchAll() as $m) {
-        /* DAUER = BEGINN BIS ENDE (Web 14.2.2, F-R64-05). Vorher stand hier
-         * Phase 9; ein geschnittener oder importierter Einsatz hat keine und
-         * galt damit als „kein Ende", obwohl er abgeschlossen ist und ein
-         * `ended_at` traegt. Begruendung und Messung in `api/day.php`. */
+        /* DAUER = BEGINN BIS ENDE. Nicht Phase 9: Ein geschnittener oder
+         * importierter Einsatz hat keine und gaelte damit als „kein Ende",
+         * obwohl er abgeschlossen ist und ein `ended_at` traegt. Begruendung
+         * und Messung in `api/day.php`. */
         $dur = null;
         if ($m['ended_at'] !== null) {
             $dur = (new DateTime($m['ended_at']))->getTimestamp()
@@ -82,17 +80,17 @@ try {
             'id'         => (int)$m['id'],
             'day_id'     => (int)$m['day_id'],
             'day'        => (string)$m['day'],
-            /* Die ART DES DIENSTTAGS, an dem der Einsatz haengt (Etappe 3).
-             * 'air' | 'ground' | null (neutraler Diensttag, E26). Sie steuert
+            /* Die ART DES DIENSTTAGS, an dem der Einsatz haengt.
+             * 'air' | 'ground' | null (neutraler Diensttag). Sie steuert
              * im Browser den Tab, die Kacheln und die Karte — ohne sie muesste
              * die Uebersicht je Tab nachladen. */
             'kind'       => $m['kind'] !== null ? (string)$m['kind'] : null,
-            /* Der Diensttag-TYP — nur fuers Zeichen (E-S9-13). Tab, Kachelsatz
+            /* Der Diensttag-TYP — nur fuers Zeichen. Tab, Kachelsatz
              * und Karte haengen weiter an der Betriebsart; sie sagt, WOMIT
              * gefahren wurde, und genau das steuert die Felder. */
             'day_typ'    => $m['vehicle_typ'] !== null ? (string)$m['vehicle_typ'] : null,
             'start_hhmm' => fmt_local($m['started_at']),
-            /* CHRONOLOGISCHER SORTIERSCHLUESSEL (Schritt 15 AP9b, E-ZE-32).
+            /* CHRONOLOGISCHER SORTIERSCHLUESSEL.
              * `start_hhmm` allein taugt nicht zum Sortieren: Ein Dienst ueber
              * Mitternacht -- laut Handbuch „der klassische Fall" -- hat
              * Einsaetze um 23:50 und um 01:10, und als Zeichenkette steht
@@ -110,7 +108,7 @@ try {
             'secondary'  => (int)$m['secondary'] === 1,
             'false_alarm' => (int)$m['false_alarm'] === 1,
             'winch_cycles' => $m['winch_cycles'] !== null ? (int)$m['winch_cycles'] : null,
-            /* `site_ele_m` steht hier NICHT mehr (S11-05b): Die Hoehe des
+            /* `site_ele_m` steht hier NICHT: Die Hoehe des
              * Einsatzorts liegt im `pat_blob` (`ortshoehe`), und die Seite
              * liest sie dort nach dem Entsperren. */
             'pat_blob'   => !empty($m['pat_blob']) ? (string)$m['pat_blob'] : null,
@@ -123,13 +121,13 @@ try {
     // in der Statistiktabelle der Zeitraum-Uebersicht.
     //
     // Gezaehlt werden ZEILEN, nicht Kalendertage: Zwei Dienste an einem Tag sind
-    // seit E9 zwei Diensttage, und ein Durchschnitt „Einsaetze je Diensttag"
+    // zwei Diensttage, und ein Durchschnitt „Einsaetze je Diensttag"
     // waere sonst um den Faktor der Doppeltage zu hoch.
     //
-    // AUFGETEILT NACH ART (Etappe 3, E28/E31). Die Tabs rechnen mit
+    // AUFGETEILT NACH ART. Die Tabs rechnen mit
     // unterschiedlichen Divisoren: „Ø Einsaetze / Flugtag" im Luftrettungs-Tab
     // darf nur durch die luftgebundenen Diensttage teilen. Neutrale Diensttage
-    // (ohne Rettungsmittel, E26) tragen keine Art und stehen deshalb in einer
+    // (ohne Rettungsmittel) tragen keine Art und stehen deshalb in einer
     // eigenen Zahl — der Tab „Gemischt" zaehlt sie mit und weist sie aus, die
     // beiden Artentabs nicht. Ohne diese Zahl waere die Abweichung zwischen
     // „Gemischt" und der Summe der Artentabs nicht erklaerbar.
@@ -149,14 +147,14 @@ try {
         $jeArt[$art === 'air' || $art === 'ground' ? $art : 'neutral'] += $n;
     }
 
-    /* ---- Was der Zeitraum KONNTE, nicht was er getan hat (E-S9-04) --------
+    /* ---- Was der Zeitraum KONNTE, nicht was er getan hat -------------------
      *
-     * Bis Web 15.8.0 entschied die Zeitraumuebersicht ueber die beiden
-     * Windenkacheln aus der Einsatzliste: keine Winde geflogen, keine Kachel.
-     * Damit liess sich „null Windeneinsaetze" nicht von „Winde nicht
+     * Entschiede die Zeitraumuebersicht ueber die beiden Windenkacheln aus
+     * der Einsatzliste — keine Winde geflogen, keine Kachel —, liesse sich
+     * „null Windeneinsaetze" nicht von „Winde nicht
      * eingerichtet" unterscheiden — und das erste ist eine Aussage ueber den
      * Dienst, das zweite eine ueber die Stammdaten. Der Auftraggeber will die
-     * Aussage (PS-4). Also liefert die Antwort, welche Faehigkeiten die
+     * Aussage. Also liefert die Antwort, welche Faehigkeiten die
      * Diensttage des Zeitraums TRAGEN.
      *
      * NUR LUFT. `day_capabilities` fuehrt weder Konto noch Papierkorb, der
@@ -169,12 +167,10 @@ try {
      * Alttag enthaelt — und die Aenderung saehe richtig aus, waehrend sie nur
      * die Altlast zeigt.
      *
-     * DER ARTFILTER IST SEIT SCHRITT 15 AP9 DIE REGEL, NICHT MEHR NUR EINE
-     * HERLEITUNG AUS DER MIGRATION (E-ZE-31, 22.09.2026). Hier stand bis
-     * dahin, seit dem Demo-Ausbau sei er eine LUECKE (Backlog Nr. 198): Ein
-     * Rettungsmittel des Typs Bergwacht darf die Faehigkeiten auch
-     * bodengebunden fuehren (`veh_caps_erlaubt()`), sein Diensttag traegt sie
-     * dann in `day_capabilities`, und diese Abfrage uebergeht ihn.
+     * DER ARTFILTER IST DIE REGEL, NICHT NUR EINE HERLEITUNG AUS DER
+     * MIGRATION. Ein Rettungsmittel des Typs Bergwacht darf die Faehigkeiten
+     * auch bodengebunden fuehren (`veh_caps_erlaubt()`), sein Diensttag
+     * traegt sie dann in `day_capabilities`, und diese Abfrage uebergeht ihn.
      *
      * Der Auftraggeber hat das entschieden, und zwar so: Die AUSWERTUNG —
      * Kacheln und Tabellenspalten in Tages- und Zeitraumuebersicht — folgt
@@ -192,8 +188,8 @@ try {
      *
      * Was die beiden Windenkacheln angeht, bleibt es dabei: Sie gibt es nur
      * im LUFT-Kachelsatz, und sie in den Bodensatz zu nehmen waere eine
-     * Gestaltungsentscheidung (zehn Kacheln in vier Spalten) mit Mockup.
-     * Nach E-ZE-31 steht diese Frage nicht mehr an.
+     * Gestaltungsentscheidung (zehn Kacheln in vier Spalten) mit Mockup; sie
+     * steht nicht an.
      *
      * BERGWACHT FAEHRT MIT, obwohl heute keine Kachel daran haengt. Der
      * Schluessel spannt sich ueber VEHICLE_CAPABILITIES auf und waechst mit
@@ -216,14 +212,15 @@ try {
        ihre Antworten selbst und ging damit auch am `Cache-Control: no-store`
        vorbei, das json_out() setzt — obwohl der Kommentar dort „Zeitraum"
        ausdruecklich als einen der Endpunkte nennt, die es brauchen. Der
-       Unterschied ist nicht theoretisch: Die Antwort traegt Datum, Uhrzeit,
-       Einsatznummer und Koordinaten im Klartext.
+       Unterschied ist nicht theoretisch: Die Antwort traegt Datum, Uhrzeit
+       und den Standort des Diensttags im Klartext; Einsatznummer und
+       Ortsdaten liegen verschlossen darin.
        Mit der Umstellung entfaellt JSON_UNESCAPED_UNICODE — Umlaute stehen
        jetzt als \uXXXX in der Antwort. Fuer den Abnehmer ist das dasselbe:
        zeitraum.php liest mit res.json(). */
-    /* ---- Standorte des Zeitraums (E-P3-40, ab Web 9.6.0) -----------------
+    /* ---- Standorte des Zeitraums ------------------------------------------
      *
-     * Das Standort-Haus gehoert seit P3 auf JEDE Karte, sobald Koordinaten
+     * Das Standort-Haus gehoert auf JEDE Karte, sobald Koordinaten
      * vorliegen — Tages-, Einsatz- und Zeitraumkarte. Die Zeitraumkarte
      * bekommt dafuer die eingefrorenen Standorte der DIENSTTAGE des
      * Zeitraums, entdupliziert nach Koordinate: Ein Monat mit fuenf Diensten
@@ -231,7 +228,7 @@ try {
      * Haeuser.
      *
      * KLARTEXT, und das ist richtig so: `base_name`/`base_lat`/`base_lon`
-     * sind der eingefrorene Standort des Dienstes (E8), kein Patientendatum.
+     * sind der eingefrorene Standort des Dienstes, kein Patientendatum.
      * Sie stehen unverschluesselt in `days` und reisen wie `kind` und
      * `vehicle_name` mit. Die verschluesselten Angaben bleiben davon
      * unberuehrt im `pat_blob`. */

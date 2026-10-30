@@ -3,14 +3,13 @@ declare(strict_types=1);
 require_once __DIR__ . '/db.php';
 
 /**
- * Ratenschutz (Baustein B3).
+ * Ratenschutz.
  *
  * WARUM ES DIESE DATEI GIBT
- * Der bisherige Rateschutz bei der Anmeldung lag in der SITZUNG des
- * Aufrufers — wer das Cookie wegwirft, hat wieder fuenf Versuche frei. Das ist
- * kein Schutz, sondern eine Bequemlichkeitsbremse fuer versehentliche
- * Tippfehler. Die Bremse bei der Kopplung war eine feste Verzoegerung je
- * Anfrage; sie behindert parallele Anfragen ueberhaupt nicht.
+ * Ein Rateschutz in der SITZUNG des Aufrufers ist keiner — wer das Cookie
+ * wegwirft, hat wieder alle Versuche frei; das ist eine Bequemlichkeitsbremse
+ * fuer versehentliche Tippfehler. Eine feste Verzoegerung je Anfrage
+ * behindert parallele Anfragen ueberhaupt nicht.
  *
  * Diese Zaehlung liegt in der Datenbank und haengt an Kontokennung UND
  * IP-Adresse. Der Aufrufer kann sie nicht zuruecksetzen.
@@ -32,7 +31,7 @@ require_once __DIR__ . '/db.php';
  * alle sperren, bis jemand die Wartungsseite oeffnet — waere ein
  * selbstgebauter Ausfall.
  *
- * DASSELBE FENSTER GIBT ES JETZT FUER ZWEI SPALTEN (Web 20.10.0, P5a/AP6).
+ * DASSELBE FENSTER GIBT ES JETZT FUER ZWEI SPALTEN.
  * `stufe` und `stufe_bis` kommen mit einer Migration; zwischen Deploy und
  * `update.php` gibt es sie nicht. Deshalb steht die Leiter in einem ZWEITEN,
  * eigen gefangenen Statement: Die Grundzaehlung unten nennt die neuen Spalten
@@ -43,25 +42,23 @@ require_once __DIR__ . '/db.php';
  * fuer die Leiter, und ohne dass irgendetwas rot wuerde.
  *
  * ---------------------------------------------------------------------------
- * DIE SPERRLEITER (E-P5a-04, E-P5a-43)
+ * DIE SPERRLEITER
  * ---------------------------------------------------------------------------
  *
  * Eine Sperre dauert nicht mehr fest, sondern nach STUFE: 0 heisst „nie
  * gesperrt gewesen", 1 bis 4 sind die Sprossen. Mit jeder Sperre steigt die
  * Stufe; 24 h ohne Fehlversuch setzen sie zurueck (`stufe_bis`).
  *
- * DIE ERSTE SPROSSE IST 15 MINUTEN UND NICHT 10, und das ist eine benannte
- * Abweichung vom Konzept (E-P5a-43). Das Konzept nennt 10/20/30/60 — und der
- * Topf `login` sperrt heute fest 900 s, also 15 Minuten. Mit 10 als erster
- * Sprosse waere der ERSTE Verstoss nach dem Update MILDER als davor, und ein
- * Sicherheitspaket, das eine Schranke senkt, ohne es zu sagen, ist genau die
- * Art Fehler, die niemandem auffaellt. Die Leiter ist ausserdem eine
+ * DIE ERSTE SPROSSE IST 15 MINUTEN UND NICHT 10. Der Topf `login` sperrt
+ * ohne Leiter fest 900 s, also 15 Minuten. Mit 10 als erster Sprosse waere
+ * der ERSTE Verstoss MILDER als ohne Leiter, und eine Schranke, die still
+ * sinkt, ist genau die Art Fehler, die niemandem auffaellt. Die Leiter ist ausserdem eine
  * Einstellung; wer 10 will, traegt 10 ein.
  *
- * NICHT JEDER TOPF BEKOMMT EINE LEITER. `login`, `login_ip`, `salt` und seit
- * P5a/AP7 `ingest` und `ingest_ip` — sonst keiner:
+ * NICHT JEDER TOPF BEKOMMT EINE LEITER. `login`, `login_ip`, `salt`,
+ * `ingest` und `ingest_ip` — sonst keiner:
  *
- *   `reset` NICHT, obwohl das Konzept ihn nennt. Er sperrt heute 3600 s; jede
+ *   `reset` NICHT. Er sperrt 3600 s; jede
  *   Sprosse unterhalb der vierten waere SCHWAECHER als das. Dazu kommt das
  *   Schwerwiegendere: `reset_request.php` antwortet im gesperrten Fall
  *   wortgleich wie im erlaubten („falls es ein Konto gibt, ist eine Mail
@@ -72,11 +69,9 @@ require_once __DIR__ . '/db.php';
  *   `demo`/`demog`/`testmail`/`csp` NICHT: Die zaehlen MENGE, nicht
  *   Fehlversuche — es gibt dort niemanden, der eskaliert.
  *
- * DIE TRENNLINIE STAND BIS WEB 20.11.0 FALSCH DA (E-P5a-48). Sie lautete: bei
- * den Kopplungstoepfen „steht dahinter ein Geraet, das nicht lesen kann, was
- * auf der Seite steht". Auf `ingest.php` trifft das woertlich genauso zu — die
- * Regel haette also gegen die Leiter entschieden, die AP7 dort einbaut. Sie
- * war nicht falsch gemeint, sondern falsch formuliert.
+ * NICHT DIE TRENNLINIE „dahinter steht ein Geraet, das nicht lesen kann, was
+ * auf der Seite steht": Auf `ingest.php` trifft das woertlich genauso zu —
+ * die Regel entschiede also gegen die Leiter dort.
  *
  * DIE TRAGFAEHIGE TRENNLINIE IST: Unterbricht die laengere Sperre einen
  * Vorgang, der GERADE LAEUFT? Bei der Kopplung ja — jemand steht am Geraet
@@ -91,7 +86,7 @@ require_once __DIR__ . '/db.php';
  * der alte Topf bleibt zurueck und laeuft ab.
  *
  * ---------------------------------------------------------------------------
- * DIE VERLANGSAMUNG (E-P5a-05)
+ * DIE VERLANGSAMUNG
  * ---------------------------------------------------------------------------
  *
  * Alle Fehlversuche der Installation zusammen bilden ein Fenster (Topf
@@ -136,10 +131,10 @@ require_once __DIR__ . '/db.php';
  */
 const RATE_GRENZEN = [
     /* `leiter => true` heisst: Die Sperrdauer kommt aus `rate_leiter()` und
-     * steigt mit jeder Sperre (E-P5a-04). `sperre` bleibt trotzdem stehen —
+     * steigt mit jeder Sperre. `sperre` bleibt trotzdem stehen —
      * als Rueckfall fuer das Fenster zwischen Deploy und Migrationslauf, in
      * dem es die Spalte `stufe` noch nicht gibt. */
-    /* `login` ZAEHLT NUR DAS KONTO (seit Web 23.3.1, F-R17-36) — die Aufrufer
+    /* `login` ZAEHLT NUR DAS KONTO — die Aufrufer
      * geben `rate_nur_konto()` mit; die Adresse zaehlt `login_ip`. `salt`
      * zaehlt Konto UND Adresse mit Absicht: Er wird je Anmeldung einmal
      * gerufen, und 30 Abrufe je Anschluss in 15 min sind die Bremse gegen
@@ -147,16 +142,16 @@ const RATE_GRENZEN = [
     'login' => ['max' => 10, 'fenster' =>  900, 'sperre' =>  900, 'leiter' => true],
     'salt'  => ['max' => 30, 'fenster' =>  900, 'sperre' =>  900, 'leiter' => true],
 
-    /* `reset` OHNE LEITER, obwohl das Konzept ihn nennt — Begruendung im Kopf
-     * dieser Datei: Er sperrt heute eine Stunde, jede Sprosse unterhalb der
+    /* `reset` OHNE LEITER — Begruendung im Kopf
+     * dieser Datei: Er sperrt eine Stunde, jede Sprosse unterhalb der
      * vierten waere schwaecher, und sein Scheitern ist absichtlich still.
-     * Er zaehlt Konto UND Adresse (`rate_merkmale()`), und das ist gewollt
-     * (R17-22, F-R17-36): Fuenf Reset-Anfragen je Anschluss und Stunde
+     * Er zaehlt Konto UND Adresse (`rate_merkmale()`), und das ist gewollt:
+     * Fuenf Reset-Anfragen je Anschluss und Stunde
      * bremsen den Mailversand an fremde Postfaecher; ein gesperrter
      * Anschluss verliert dabei keine Anmeldung, nur den Link. */
     'reset' => ['max' =>  5, 'fenster' => 3600, 'sperre' => 3600],
 
-    /* DIE ANMELDUNG HAT ZWEI SCHWELLEN, UND DESHALB ZWEI TOEPFE (E-P5a-04).
+    /* DIE ANMELDUNG HAT ZWEI SCHWELLEN, UND DESHALB ZWEI TOEPFE.
      *
      * 10 Fehlversuche je Konto sind richtig — ein Mensch vertippt sich nicht
      * zehnmal. 10 je ADRESSE sind es nicht: Hinter einem Klinik-NAT teilen
@@ -177,20 +172,18 @@ const RATE_GRENZEN = [
      * gemacht hat. */
     'login_ip' => ['max' => 50, 'fenster' => 900, 'sperre' => 900, 'leiter' => true],
 
-    /* DIE MENGENBREMSE VON `ingest.php` (P5a/AP7, E-P5a-01/-02, -47, -48;
-     * R19, Backlog Nr. 17).
+    /* DIE MENGENBREMSE VON `ingest.php`.
      *
-     * SIE WAR DIE LETZTE ASYMMETRIE: `ingest.php` war der einzige Endpunkt
-     * ohne Ratenschutz — und zugleich der, an dem die Clients aus den Stores
-     * haengen (E-R45-6 nennt genau diese Kombination als Flutungsgefahr).
+     * `ingest.php` ist der Endpunkt, an dem die Clients aus den Stores
+     * haengen — ohne Ratenschutz eine Flutungsgefahr.
      *
-     * GEZAEHLT WERDEN NUR FEHLVERSUCHE (E-P5a-01 (1)). Ein gelungener Upload
+     * GEZAEHLT WERDEN NUR FEHLVERSUCHE. Ein gelungener Upload
      * geht nie auf das Kontingent — eine Uhr, die einen Dienst nachliefert,
      * darf beliebig viele Stuecke senden.
      *
-     * 30 UND NICHT 10, UND DAS IST DIE WICHTIGSTE ZAHL DES PAKETS. Gemessen
-     * am Referenzlauf (`tools/referenzdatensatz/einspielen/messprotokoll.json`,
-     * Backlog Nr. 17): 612 Anfragen, Spitze 3 an einem einzigen Ausloeser,
+     * 30 UND NICHT 10, UND DAS IST DIE WICHTIGSTE ZAHL HIER. Gemessen
+     * am Referenzlauf (`tools/referenzdatensatz/einspielen/messprotokoll.json`):
+     * 612 Anfragen, Spitze 3 an einem einzigen Ausloeser,
      * 199 Abstaende von 0 s — ein Dienst kommt in STOESSEN, nicht gleichmaessig.
      * Der Stoss, der die Grenze bestimmt, ist aber ein anderer: ein
      * SCHLUESSELWECHSEL. Danach liegen die Pakete eines ganzen Dienstes in der
@@ -200,7 +193,7 @@ const RATE_GRENZEN = [
      * gesperrt wird. Wer die Zahl auf 10 senkt, sperrt Uhren im Dienst aus,
      * und zwar genau dann, wenn jemand gerade neu gekoppelt hat.
      *
-     * ZWEI TOEPFE, WEIL ES ZWEI LAGEN SIND (E-P5a-01 (3)):
+     * ZWEI TOEPFE, WEIL ES ZWEI LAGEN SIND:
      *
      *   `ingest`     je GERAETEKENNUNG, wenn es die Kennung GIBT. Dahinter
      *                steht ein echtes Geraet mit einem veralteten Schluessel.
@@ -208,12 +201,12 @@ const RATE_GRENZEN = [
      *                erfundene Kennung laesst sich beliebig oft neu erfinden
      *                — ein Zaehler je Kennung waere dort wertlos.
      *
-     * BEIDE HABEN DIESELBE ZAHL, UND ZWAR ABSICHTLICH (E-P5a-47). Das Konzept
-     * nannte 50 fuer die Adresse. Verschiedene Schwellen sind ein
+     * BEIDE HABEN DIESELBE ZAHL, UND ZWAR ABSICHTLICH. Verschiedene
+     * Schwellen (etwa 50 fuer die Adresse) sind ein
      * EXISTENZORAKEL: Wer dieselbe geratene Kennung haemmert, bekaeme sie bei
      * existierender Kennung ab dem 31. Versuch abgewiesen, bei nicht
-     * existierender erst ab dem 51. Genau diese Auskunft hat M4-07 weiter
-     * unten in `ingest.php` mit einem Blindvergleich beseitigt; sie als
+     * existierender erst ab dem 51. Genau diese Auskunft beseitigt
+     * `ingest.php` mit einem Blindvergleich; sie als
      * Zaehlunterschied wieder einzubauen waere ein Rueckschritt durch die
      * Hintertuer. Mit 30 gegen 30 kommt die Antwort beide Male beim 31.
      * Versuch und mit demselben Rumpf.
@@ -222,9 +215,9 @@ const RATE_GRENZEN = [
      * ausschliesslich UNBEKANNTE Kennungen; ein gekoppeltes Geraet sendet nie
      * eine unbekannte. Der NAT-Einwand — ein Mobilfunkanbieter teilt EINE
      * Adresse unter Tausenden auf — trifft deshalb nur Geraete, deren Eintrag
-     * im Web GELOESCHT wurde (R47) und die weitersenden; die sollen aufhoeren.
+     * im Web GELOESCHT wurde und die weitersenden; die sollen aufhoeren.
      *
-     * WAS BLEIBT, STEHT IN E-P5a-47 und wird nicht beschoenigt: Eine
+     * WAS BLEIBT, wird nicht beschoenigt: Eine
      * zweistufige Probe unterscheidet weiterhin. Sie zu schliessen hiesse,
      * auch Fehlversuche bekannter Kennungen in den Adresstopf zu zaehlen —
      * dann sperrt ein einziges Geraet mit veraltetem Schluessel seine ganze
@@ -233,7 +226,7 @@ const RATE_GRENZEN = [
     'ingest'    => ['max' => 30, 'fenster' => 900, 'sperre' => 900, 'leiter' => true],
     'ingest_ip' => ['max' => 30, 'fenster' => 900, 'sperre' => 900, 'leiter' => true],
 
-    /* DIE BETREIBER-RUECKFRAGE ZUM SCHLUESSELBLATT (P5b/AP9, E-P5b-10, -21).
+    /* DIE BETREIBER-RUECKFRAGE ZUM SCHLUESSELBLATT.
      *
      * DREI VERSUCHE, NICHT ZEHN. Die Anmeldung laesst zehn zu, weil ein
      * Passwort getippt wird und Tippfehler dazugehoeren. Hier wird von einem
@@ -264,7 +257,7 @@ const RATE_GRENZEN = [
      * ist der Sinn des Hinweises „Betrieb -> Schluesselblatt neu drucken". */
     'blatt' => ['max' => 3, 'fenster' => 900, 'sperre' => 900, 'leiter' => true],
 
-    /* DER CODE-SCHRITT DER ANMELDUNG (P5c/AP5, E-P5c-53).
+    /* DER CODE-SCHRITT DER ANMELDUNG.
      *
      * FUENF VERSUCHE JE KONTO, MIT LEITER. Sechs Ziffern sind eine Million
      * Moeglichkeiten; mit drei gueltigen Fenstern trifft ein Rateversuch mit
@@ -280,7 +273,7 @@ const RATE_GRENZEN = [
      * denselben Topf — sonst waere er mit ihnen zu umgehen. */
     'totp' => ['max' => 5, 'fenster' => 900, 'sperre' => 900, 'leiter' => true],
 
-    /* DER NOTZUGANG DER EINZIGEN BETREIBERIN (Schritt 18, SR-04, E-SR-13).
+    /* DER NOTZUGANG DER EINZIGEN BETREIBERIN.
      *
      * FUENF JE STUNDE JE EINGETIPPTER ADRESSE, MIT LEITER. Die Seite
      * verlangt Datei, Datenbankwert und Passwort; wer alle drei hat,
@@ -293,34 +286,30 @@ const RATE_GRENZEN = [
      * Sperre selbst eine Auskunft darueber, ob es das Konto gibt. */
     'notweg' => ['max' => 5, 'fenster' => 3600, 'sperre' => 3600, 'leiter' => true],
 
-    /* UND DER ANSCHLUSS DES NOTZUGANGS (R17-22, F-R17-37). Wer die Adresse je
+    /* UND DER ANSCHLUSS DES NOTZUGANGS. Wer die Adresse je
      * Anfrage wechselte — erfundene reichen, der Blindvergleich rechnet
-     * trotzdem —, bekam bis Web 23.3.0 je Anfrage eine bcrypt-Rechnung ohne
-     * jede Grenze: Rechenlast auf einem Webspace mit wenigen Arbeitern. 20
+     * trotzdem —, bekaeme ohne diesen Topf je Anfrage eine bcrypt-Rechnung
+     * ohne jede Grenze: Rechenlast auf einem Webspace mit wenigen Arbeitern. 20
      * je Stunde und Anschluss sind viermal so viel, wie ein ehrlicher Versuch
      * je Adresse je bekommt, und das Muster ist das von `login_ip`. */
     'notweg_ip' => ['max' => 20, 'fenster' => 3600, 'sperre' => 3600, 'leiter' => true],
 
-    /* DER GLOBALE ZAEHLER SPERRT NIE (E-P5a-05). `max` steht auf der
+    /* DER GLOBALE ZAEHLER SPERRT NIE. `max` steht auf der
      * groesstmoeglichen Zahl, damit die Sperrbedingung in `rate_misserfolg()`
      * fuer diesen Topf niemals wahr wird — eine globale Sperre waere ein
      * Schalter, den jeder von aussen umlegt. Gelesen wird ausschliesslich
      * `versuche`, und was daraus folgt, steht in `rate_verlangsamung()`. */
     'global' => ['max' => PHP_INT_MAX, 'fenster' => 900, 'sperre' => 900],
 
-    /* KOPPLUNG: DREI ZAEHLUNGEN, DREI TOEPFE (Web 13.0.0, S5 E-S5-16), weil
+    /* KOPPLUNG: DREI ZAEHLUNGEN, DREI TOEPFE, weil
      * diese Tabelle am Topf haengt und nicht am Merkmal — drei verschiedene
      * Grenzen brauchen drei Eintraege.
      *
      *   pair        401 an status/bestaetigen/trennen, je IP — Kennung oder
      *               Schluessel unbekannt. DIESER TOPF HAT ZWEI VERBRAUCHER,
-     *               und wer an ihm dreht, dreht an beiden (B-S5-04,
-     *               berichtigt in Web 13.1.1):
+     *               und wer an ihm dreht, dreht an beiden:
      *                 pair.php   401 an den drei Anliegen
      *                 jobs.php   das Token des Wartungseinstiegs (99, 127)
-     *               Bis Web 22.2.0 war `gpx.php` der dritte (die
-     *               Download-Verweise der Spuren); es ist mit S11-05d
-     *               entfallen, der Browser baut GPX selbst.
      *               Deshalb ruft KEINER von ihnen `rate_erfolg('pair')`:
      *               Ein Erfolg im einen Verbraucher darf die Fehlversuche der
      *               anderen nicht loeschen.
@@ -330,10 +319,10 @@ const RATE_GRENZEN = [
      *               hinein; hundert machten den Topf wertlos gegen das
      *               Fuellen der Obergrenze (5000 Sitzungen aus 50 Adressen).
      *   pair_code   Fehlgriffe bei der Code-Eingabe im Web, je Konto UND IP.
-     *               Dieselben Zahlen wie `pair` (E-S5-06). Ein Code, der das
+     *               Dieselben Zahlen wie `pair`. Ein Code, der das
      *               Muster PAIR_RE nicht erfuellt, zaehlt NICHT — die
-     *               Datenbank wurde nicht gefragt, es war nichts zu erraten
-     *               (E-S5-17).
+     *               Datenbank wurde nicht gefragt, es war nichts zu erraten.
+     *               
      *
      * Die Obergrenze offener Sitzungen ist KEIN Topf, sondern eine
      * SQL-Zaehlung ueber unverfallene Zeilen (PAIR_SITZUNGEN_MAX, db.php). */
@@ -342,7 +331,7 @@ const RATE_GRENZEN = [
     'pair_code'  => ['max' => 10, 'fenster' =>  600, 'sperre' =>  600],
 
     /* DEMO ZAEHLT ANDERS ALS DIE VIER DARUEBER: nicht Fehlversuche, sondern
-     * GELUNGENE Anmeldungen am Demo-Konto (E-P1-20).
+     * GELUNGENE Anmeldungen am Demo-Konto.
      *
      * Warum ueberhaupt: Die Zugangsdaten dieses Kontos sind oeffentlich. Ein
      * Fehlversuchszaehler laeuft dort nie an — es gibt nichts zu erraten.
@@ -359,8 +348,8 @@ const RATE_GRENZEN = [
     'demo'  => ['max' => 20, 'fenster' => 3600, 'sperre' => 3600],
     'demog' => ['max' => 300, 'fenster' => 3600, 'sperre' => 3600],
 
-    /* TESTMAIL ZAEHLT WIE DEMO: die MENGE, nicht Fehlversuche (Backlog
-     * Nr. 120). Auf Betrieb -> Status steht seit Web 19.3.0 ein Knopf
+    /* TESTMAIL ZAEHLT WIE DEMO: die MENGE, nicht Fehlversuche. Auf Betrieb ->
+     * Status steht ein Knopf
      * „Testmail an mich"; er ist nur BetreiberInnen zugaenglich, es gibt also
      * nichts zu erraten. Begrenzt wird der Verbrauch am Mailrelais — und die
      * Zeit: Der Versand laeuft SYNCHRON in der Seitenanfrage, weil sein
@@ -374,7 +363,7 @@ const RATE_GRENZEN = [
      * demselben Grund wie in einstellungen.php. */
     'testmail' => ['max' => 3, 'fenster' => 3600, 'sperre' => 3600],
 
-    /* CSP-BERICHTE ZAEHLEN WIE DEMO: die MENGE (P5a/AP4, E-P5a-15).
+    /* CSP-BERICHTE ZAEHLEN WIE DEMO: die MENGE.
      *
      * `api/csp_bericht.php` nimmt Meldungen des Browsers entgegen und
      * braucht dafuer KEINE Anmeldung — ein Verstoss auf der Anmeldeseite ist
@@ -388,14 +377,14 @@ const RATE_GRENZEN = [
      * eine Zeile mit einem Zaehler. */
     'csp' => ['max' => 200, 'fenster' => 3600, 'sperre' => 3600],
 
-    /* ABWEICHUNG DES KONTOSCHLUESSELS ZAEHLT DIE MENGE (S11-03,
-     * `api/kontopaar.php`). Der Browser meldet, wenn der oeffentliche Teil
+    /* ABWEICHUNG DES KONTOSCHLUESSELS ZAEHLT DIE MENGE
+     * (`api/kontopaar.php`). Der Browser meldet, wenn der oeffentliche Teil
      * nicht zum privaten passt — einmal je Entsperren. Fuenf je Stunde und
      * Adresse reichen fuer jeden echten Fall; die Meldung soll den Reiter
      * System nicht fluten koennen. */
     'kontopaar' => ['max' => 5, 'fenster' => 3600, 'sperre' => 3600],
 
-    /* HEALTH ZAEHLT EBENSO DIE MENGE (P5c/AP6, E-P5c-17, -52).
+    /* HEALTH ZAEHLT EBENSO DIE MENGE.
      *
      * `api/health.php` ist ohne Sitzung erreichbar; der Token schuetzt die
      * Auskunft, nicht den Aufwand. 60 je Minute und Adresse: Ein Monitoring
@@ -405,7 +394,7 @@ const RATE_GRENZEN = [
      * kennt; der liest aus der 403 ohnehin nichts. */
     'health' => ['max' => 60, 'fenster' => 60, 'sperre' => 60],
 
-    /* DIE VORSCHAU DER RECHTSTEXTE ZAEHLT DIE MENGE (P5c/AP9, E-P5c-28).
+    /* DIE VORSCHAU DER RECHTSTEXTE ZAEHLT DIE MENGE.
      *
      * `api/rechtstext_vorschau.php` rendert, was im Feld steht — ohne zu
      * speichern. Das Skript fragt 0,4 s nach dem letzten Tastendruck; wer
@@ -417,8 +406,7 @@ const RATE_GRENZEN = [
      * betroffen, nur die Vorschau. Merkmal ist das Konto, nicht die Adresse. */
     'rt_vorschau' => ['max' => 120, 'fenster' => 300, 'sperre' => 60],
 
-    /* DIE REGISTRIERUNG HAT DREI TOEPFE, UND JEDER SCHUETZT ETWAS ANDERES
-     * (P5b/AP3, E-P5b-13, R37 (4)).
+    /* DIE REGISTRIERUNG HAT DREI TOEPFE, UND JEDER SCHUETZT ETWAS ANDERES.
      *
      * `reg` JE IP, 10 je Stunde. Wer sich registriert, tut das einmal. Zehn
      * Versuche decken Vertipper, Abbrueche und ein zweites Konto fuer die
@@ -459,18 +447,17 @@ const RATE_GRENZEN = [
 /**
  * IP-Adresse des Aufrufers, in der Form, in der sie als Merkmal taugt.
  *
- * BIS WEB 20.6.0 STAND HIER: „Kopfzeilen von Zwischenstationen
- * (X-Forwarded-For und Verwandte) werden BEWUSST NICHT ausgewertet: Sie
- * stammen vom Aufrufer und liessen sich zum Zuruecksetzen des Zaehlers frei
- * erfinden." Der Satz war richtig und hat die falsche Antwort gegeben: Hinter
+ * Kopfzeilen von Zwischenstationen (X-Forwarded-For und Verwandte) stammen
+ * vom Aufrufer und liessen sich zum Zuruecksetzen des Zaehlers frei
+ * erfinden. Sie gar nicht auszuwerten waere trotzdem die falsche Antwort: Hinter
  * einem Reverse Proxy ist `REMOTE_ADDR` die Adresse des Proxys, und dieser
  * Baustein zaehlt dann ALLE Nutzerinnen als eine — und sperrt sie gemeinsam
- * aus. Die IP-Grenzwerte fuer Klinik-NAT (R37) rechnen mit der Client-Adresse.
+ * aus. Die IP-Grenzwerte fuer Klinik-NAT rechnen mit der Client-Adresse.
  *
- * SEIT WEB 20.7.0 (E-P5a-17) entscheidet eine LISTE: `netz_client_ip()`
+ * Deshalb entscheidet eine LISTE: `netz_client_ip()`
  * wertet `X-Forwarded-For` genau dann aus, wenn `REMOTE_ADDR` in
  * `config.php` unter `netz.vertrauenswuerdige_proxys` steht. Die Vorgabe ist
- * **leer**, und leer heisst: exakt das Verhalten von vorher. Die Begruendung
+ * **leer**, und leer heisst: `REMOTE_ADDR`, nichts sonst. Die Begruendung
  * oben gilt also unveraendert fuer jede Installation, die nichts eintraegt —
  * und wer eintraegt, trifft eine Aussage ueber seine eigene Netztopologie.
  */
@@ -495,7 +482,7 @@ function rate_merkmale(?string $konto = null): array
 }
 
 /**
- * Das Adressmerkmal allein (P5a/AP7).
+ * Das Adressmerkmal allein.
  *
  * `ingest.php` braucht die beiden Merkmale EINZELN und in verschiedenen
  * Toepfen: die Kennung im Topf `ingest`, die Adresse im Topf `ingest_ip`.
@@ -525,13 +512,13 @@ function rate_merkmal_kennung(string $kennung): string
 }
 
 /**
- * Die Merkmalsliste eines Topfes, der NUR das Konto zaehlt (R17-22, F-R17-36).
+ * Die Merkmalsliste eines Topfes, der NUR das Konto zaehlt.
  *
  * `rate_merkmale($konto)` haengt immer die Adresse an — und ein Topf hat EINE
  * Schwelle. Im Topf `login` (10) sperrten damit zehn Fehlversuche von einem
  * Anschluss, gleich an welchen Konten, den ganzen Anschluss: eine Klinik
  * hinter einem NAT fuer bis zu eine Stunde, ausgeloest von jemandem, der zehn
- * erfundene Adressen tippt. Der Topf `login_ip` (50, R37) griff nie, weil 10
+ * erfundene Adressen tippt. Der Topf `login_ip` griff nie, weil 10
  * vor 50 kommt. Beim Schluesselblatt (3) ebenso. Wer einen Konto-Topf ruft,
  * gibt deshalb diese Liste mit; die Adresse zaehlt ein eigener Topf mit
  * eigener Schwelle (`login_ip`). `reset` und `salt` behalten Konto UND
@@ -545,7 +532,7 @@ function rate_nur_konto(string $konto): array
 }
 
 /* ===========================================================================
- * DIE LEITER, DIE VERLANGSAMUNG UND IHRE EINSTELLUNGEN (P5a/AP6)
+ * DIE LEITER, DIE VERLANGSAMUNG UND IHRE EINSTELLUNGEN
  * ======================================================================== */
 
 /** Sprossen der Sperrleiter in Sekunden, wenn nichts eingestellt ist. */
@@ -659,7 +646,7 @@ function rate_stufe_dauer(int $stufe): int
     return $leiter[min($stufe, count($leiter)) - 1];
 }
 
-/** Die hoechste Sprosse — fuer die Sammelmail (E-P5a-07). */
+/** Die hoechste Sprosse — fuer die Sammelmail. */
 function rate_stufe_hoechste(): int
 {
     return count(rate_leiter());
@@ -727,7 +714,7 @@ function rate_verlangsamung(bool $frisch = false): array
 }
 
 /**
- * Eine Sperre von Hand aufheben (E-P5a-04, Knopf in AP8).
+ * Eine Sperre von Hand aufheben (Knopf auf der Sicherheitsseite).
  *
  * EIGENE FUNKTION UND NICHT `rate_erfolg()`, und der Grund ist ein Fehler,
  * der ohne Meldung durchginge: `rate_erfolg()` bildet die Merkmale aus dem
@@ -757,7 +744,7 @@ function rate_sperre_aufheben(string $topf, string $merkmal, ?string $wer = null
 /**
  * Alle Toepfe eines Kontos leeren — nach einem gesetzten Passwort.
  *
- * WOGEGEN (E-P5a-45). `pw_handling.php` ruft heute keine einzige
+ * WOGEGEN. `pw_handling.php` ruft heute keine einzige
  * `rate_*`-Funktion. Wer sein Passwort ueber den Link zuruecksetzt, hat
  * gerade nachgewiesen, dass ihm das Postfach gehoert — und bleibt an der
  * Anmeldung trotzdem gesperrt. Bisher bis zu 15 Minuten; mit der Leiter bis
@@ -770,16 +757,15 @@ function rate_sperre_aufheben(string $topf, string $merkmal, ?string $wer = null
  */
 function rate_konto_freigeben(string $konto): void
 {
-    $konto = trim($konto);
-    if ($konto === '') { return; }
-    $merkmal = 'id:' . mb_substr(mb_strtolower($konto), 0, 180);
+    if (trim($konto) === '') { return; }
+    $merkmal = rate_merkmal_kennung($konto);
     foreach (['login', 'salt'] as $topf) {
         rate_sperre_aufheben($topf, $merkmal, 'Passwort gesetzt');
     }
 }
 
 /**
- * Ein Sicherheitsereignis vermerken (E-P5a-46).
+ * Ein Sicherheitsereignis vermerken.
  *
  * EIGENES try/catch UND AUSSERHALB DER ZAEHLUNG. Die Tabelle ist jung; sie
  * fehlt zwischen Deploy und Migrationslauf. Ein Protokoll, das seinen
@@ -853,7 +839,7 @@ function rate_misserfolg(string $topf, ?string $konto = null,
         // ALTEN 'fenster_start' sehen, deshalb wird dieser zuletzt gesetzt.
         // Andersherum verglichen sie gegen den soeben gesetzten Wert — die
         // Bedingung waere nie wahr und eine Sperre liefe nie ab.
-        /* EINE LAUFENDE SPERRE UEBERLEBT DEN FENSTERWECHSEL (P5a/AP6).
+        /* EINE LAUFENDE SPERRE UEBERLEBT DEN FENSTERWECHSEL.
          *
          * Hier stand `gesperrt_bis = IF(<Fenster abgelaufen>, NULL, <alt>)` ohne
          * weitere Bedingung. Das war folgenlos, solange bei ALLEN zehn
@@ -901,7 +887,7 @@ function rate_misserfolg(string $topf, ?string $konto = null,
              * steht `gesperrt_bis` in der Zukunft und `$sperren` findet
              * nichts mehr. Fehlt die Spalte `stufe` (Fenster zwischen Deploy
              * und Migrationslauf), tut die Leiter nichts und `$sperren`
-             * sperrt wie vor Web 20.10.0. */
+             * sperrt fest, ohne Stufen. */
             $neu = $hatLeiter ? rate_leiter_anwenden($pdo, $topf, $merkmal, $grenze) : null;
 
             $sperren->execute([$grenze['sperre'], $topf, $merkmal, $grenze['max']]);
@@ -909,7 +895,7 @@ function rate_misserfolg(string $topf, ?string $konto = null,
             if ($neu !== null) {
                 rate_ereignis('sperre', $topf, $merkmal, $neu['stufe'],
                               $neu['versuche'], $neu['bis']);
-                /* DIE HOECHSTE SPROSSE MELDET SICH (E-P5a-07). Nicht jede
+                /* DIE HOECHSTE SPROSSE MELDET SICH. Nicht jede
                  * Sperre — eine Vertipperin am Montagmorgen ist keine
                  * Meldung wert; die vierte Sperre desselben Merkmals
                  * innerhalb von 24 h ist es. */
@@ -941,7 +927,7 @@ function rate_misserfolg(string $topf, ?string $konto = null,
  * SOEBEN gesetzte Stufe — stuende es davor, griffe es die alte.
  *
  * `stufe_bis` WIRD ZULETZT GESETZT, und zwar bei JEDEM Fehlversuch, nicht nur
- * beim Sperren: Die Stufe faellt „nach 24 h ohne Fehlversuch" (E-P5a-04), und
+ * beim Sperren: Die Stufe faellt „nach 24 h ohne Fehlversuch", und
  * das ist etwas anderes als „24 h nach der letzten Sperre".
  */
 function rate_leiter_anwenden(PDO $pdo, string $topf, string $merkmal, array $grenze): ?array
@@ -951,7 +937,7 @@ function rate_leiter_anwenden(PDO $pdo, string $topf, string $merkmal, array $gr
     try {
         /* ---- SCHRITT 1: DER VERFALL, UND ZWAR BEI JEDEM FEHLVERSUCH -------
          *
-         * „Die Stufe faellt nach 24 h ohne Fehlversuch auf 0" (E-P5a-04) —
+         * „Die Stufe faellt nach 24 h ohne Fehlversuch auf 0" —
          * gemessen wird das im Augenblick des NAECHSTEN Fehlversuchs. Ist
          * `stufe_bis` bis dahin verstrichen, faengt die Leiter von vorn an;
          * sonst laeuft die Frist von hier neu.
@@ -1032,7 +1018,7 @@ function rate_zaehlen(string $topf, ?string $konto = null,
 }
 
 /**
- * Wie viele Fehlversuche stehen im laufenden Fenster? (P5b/AP9)
+ * Wie viele Fehlversuche stehen im laufenden Fenster?
  *
  * GEZAEHLT WIRD DAS KONTOMERKMAL, NICHT DIE ADRESSE. Die Zahl geht in eine
  * MELDUNG — „noch 2 Versuche" —, und die soll dem Menschen vor dem Bildschirm
@@ -1073,7 +1059,7 @@ function rate_versuche(string $topf, string $konto): int
  * hoher Wahrscheinlichkeit kein Angreifer, und mehrere Personen hinter einer
  * gemeinsamen Adresse sollen sich nicht gegenseitig aussperren.
  *
- * `$merkmale` UEBERSTIMMT DAS (P5a/AP7). `ingest.php` raeumt nach einem
+ * `$merkmale` UEBERSTIMMT DAS. `ingest.php` raeumt nach einem
  * gelungenen Upload NUR den Kennungstopf und ausdruecklich NICHT die Adresse:
  * Im Topf `ingest_ip` stehen ausschliesslich Fehlversuche mit UNBEKANNTEN
  * Kennungen, und ein gueltiger Upload sagt ueber die nichts aus. Wer ihn
@@ -1114,7 +1100,7 @@ function rate_gleiche_dauer(float $beginn, float $mindestSekunden = 0.35): void
 }
 
 /**
- * Dasselbe, aber mit der globalen Verlangsamung darin (E-P5a-05).
+ * Dasselbe, aber mit der globalen Verlangsamung darin.
  *
  * WARUM EIN EIGENER NAME UND KEIN DRITTER PARAMETER MIT VORGABE: Die
  * Verlangsamung darf NUR dort greifen, wo tatsaechlich gerechnet wurde. Ein
@@ -1149,7 +1135,7 @@ function rate_gesperrt_bis(string $topf, ?string $konto = null,
 }
 
 /**
- * Die laufende Sperre mit allem, was eine Meldung braucht (P5a/AP6).
+ * Die laufende Sperre mit allem, was eine Meldung braucht.
  *
  * @return array{bis:string, rest:int, stufe:int, merkmal:string, art:string}|null
  *         `art` ist 'konto' oder 'adresse' — WELCHES Merkmal greift.
@@ -1201,8 +1187,8 @@ function rate_sperre(string $topf, ?string $konto = null,
 }
 
 /**
- * Die laengste laufende Sperre ueber MEHRERE Toepfe — in EINER Abfrage
- * (P5a/AP7).
+ * Die laengste laufende Sperre ueber MEHRERE Toepfe — in EINER Abfrage.
+ * 
  *
  * WARUM NICHT ZWEIMAL `rate_sperre()`. `ingest.php` fragt bei JEDEM Upload,
  * bevor irgendetwas anderes geschieht; das ist der heisseste Weg der
@@ -1249,7 +1235,7 @@ function rate_sperre_paare(array $paare): ?array
 }
 
 /**
- * Alle laufenden Sperren — fuer die Statusseite und AP8.
+ * Alle laufenden Sperren — fuer die Status- und die Sicherheitsseite.
  *
  * @return list<array{topf:string, merkmal:string, art:string, stufe:int,
  *                    versuche:int, bis:string, rest:int}>
@@ -1270,8 +1256,7 @@ function rate_sperren_aktiv(int $grenze = 50): array
             $merkmal = (string)$z['merkmal'];
             $aus[] = ['topf'     => (string)$z['topf'],
                       'merkmal'  => $merkmal,
-                      /* `art` KOMMT SEIT P5a/AP8 MIT (E-P5a-08 nennt die Spalte
-                       * ausdruecklich). Die Ableitung stand bis dahin dreimal
+                      /* `art` KOMMT MIT. Die Ableitung stuende sonst dreimal
                        * im Bestand nachgebaut — in `rate_sperre()`, in
                        * `sicherheit_melden_pruefen()` und auf der Statusseite.
                        * Drei Stellen, drei Gelegenheiten, die Woerter
@@ -1289,7 +1274,7 @@ function rate_sperren_aktiv(int $grenze = 50): array
 }
 
 /* ===========================================================================
- * WAS DIE SICHERHEITSSEITE LIEST (P5a/AP8, E-P5a-08)
+ * WAS DIE SICHERHEITSSEITE LIEST
  *
  * DREI LESEFUNKTIONEN UND KEINE VIERTE. `betrieb_sicherheit.php` zeichnet und
  * rechnet nicht — dieselbe Trennung wie zwischen `status_lib.php` und
@@ -1299,7 +1284,7 @@ function rate_sperren_aktiv(int $grenze = 50): array
  * ======================================================================== */
 
 /**
- * Die Sicherheitsereignisse der letzten 30 Tage (E-P5a-09).
+ * Die Sicherheitsereignisse der letzten 30 Tage.
  *
  * DIE FRIST STEHT HIER UND IST KEINE EINSTELLUNG — sie ist dieselbe, mit der
  * der Job `aufraeumen` loescht. Eine Seite, die weiter zurueckblickt als der
@@ -1362,13 +1347,13 @@ function sicherheit_ereignisse(array $arten = [], ?array $toepfe = null,
 }
 
 /**
- * Geraete mit abgewiesenen Anmeldungen — die Treffer der Mengenbremse
- * (P5a/AP7).
+ * Geraete mit abgewiesenen Anmeldungen — die Treffer der Mengenbremse.
+ * 
  *
  * SIE STEHT HIER UND NICHT IN `status_lib.php`, obwohl die Statusseite
  * dieselbe Frage stellt: Zwei Abfragen auf dieselben zwei Spalten laufen
  * auseinander, sobald eine von beiden eine Bedingung dazubekommt. Die
- * Statuszeile nimmt seit P5a/AP8 diese Funktion.
+ * Statuszeile nimmt diese Funktion.
  *
  * @return list<array{id:int, name:string, anzahl:int, seit:?string}>
  */
@@ -1392,13 +1377,13 @@ function sicherheit_bremse_geraete(int $grenze = 50): array
         }
         return $aus;
     } catch (Throwable $ex) {
-        /* Die beiden Spalten gibt es erst nach der Migration aus P5a/AP7. */
+        /* Die beiden Spalten gibt es erst nach ihrer Migration. */
         return [];
     }
 }
 
 /**
- * Der Stand der Mailregel — an/aus, wann zuletzt, an wen (E-P5a-07, R83).
+ * Der Stand der Mailregel — an/aus, wann zuletzt, an wen.
  *
  * @return array{an:bool, zuletzt:?string, ziele:list<string>, stufe:int}
  */
@@ -1422,7 +1407,7 @@ function sicherheit_mailregel(): array
 }
 
 /* ===========================================================================
- * DIE SAMMELMAIL (E-P5a-07)
+ * DIE SAMMELMAIL
  * ======================================================================== */
 
 /** Schluessel in `app_state`. */
@@ -1438,8 +1423,8 @@ function rate_mail_an(): bool
 }
 
 /**
- * Die Stufe der Verlangsamung protokollieren, wenn sie GESTIEGEN ist
- * (P5a/AP8).
+ * Die Stufe der Verlangsamung protokollieren, wenn sie GESTIEGEN ist.
+ * 
  *
  * WARUM EIGENSTAENDIG UND NICHT IN `sicherheit_melden_pruefen()`: Jene
  * kehrt zurueck, wenn die Sammelmail abgeschaltet ist — das Protokoll haengt
@@ -1487,24 +1472,23 @@ function sicherheit_verlangsamung_vermerken(): void
  * (`adminbackup_lib.php`) ist das damit begruendet, dass die doppelte Mail
  * der teurere Fehler ist. Hier waere es umgekehrt — eine Sicherheitsmeldung,
  * die nicht ankommt, ist schlimmer als zwei —, und trotzdem steht die Marke
- * vorn: Seit Web 20.9.0 geht der Versand ueber die WARTESCHLANGE. Ein
+ * vorn: Der Versand geht ueber die WARTESCHLANGE. Ein
  * gescheiterter Versuch ist nicht verloren, sondern eingereiht. Damit gibt es
- * keinen Grund mehr, das Risiko einer Mailflut einzugehen — unter Beschuss
+ * keinen Grund, das Risiko einer Mailflut einzugehen — unter Beschuss
  * liefe diese Funktion sonst mehrmals je Sekunde.
  *
  * DIE VERLANGSAMUNGSSTUFE WIRD VERMERKT, und zwar nur, wenn sie STEIGT.
  * Sonst stuende nach einer Stunde Angriff ein Ereignis je Fehlversuch in der
  * Tabelle — das waere ein Protokoll, das seinen eigenen Gegenstand zudeckt.
  *
- * DAS PROTOKOLL HAENGT SEIT WEB 20.12.0 NICHT MEHR AN DER MAIL (P5a/AP8).
- * Bis dahin stand `if (!rate_mail_an()) { return; }` als ERSTE Zeile dieser
- * Funktion — und damit hing das Vermerken der Verlangsamungsstufe am
- * Mailschalter. Wer die Sammelmail abschaltete, weil er sie nicht braucht,
- * schaltete stillschweigend auch das Protokoll ab: Die Karte
- * „Verlangsamungsphasen" auf der Sicherheitsseite waere auf einer solchen
- * Installation dauerhaft leer geblieben, ohne dass irgendwo stuende, warum.
- * Protokollieren und Melden sind zwei Dinge; sie stehen jetzt in zwei
- * Funktionen.
+ * DAS PROTOKOLL HAENGT NICHT AN DER MAIL. Stuende
+ * `if (!rate_mail_an()) { return; }` als ERSTE Zeile dieser Funktion, hinge
+ * das Vermerken der Verlangsamungsstufe am Mailschalter. Wer die Sammelmail
+ * abschaltet, weil er sie nicht braucht, schaltete stillschweigend auch das
+ * Protokoll ab: Die Karte „Verlangsamungsphasen" auf der Sicherheitsseite
+ * bliebe auf einer solchen Installation dauerhaft leer, ohne dass irgendwo
+ * stuende, warum. Protokollieren und Melden sind zwei Dinge; sie stehen in
+ * zwei Funktionen.
  */
 function sicherheit_melden_pruefen(): void
 {
@@ -1578,7 +1562,7 @@ function sicherheit_melden_pruefen(): void
     }
 }
 
-/* ------------------------------------------------- Demo-Konto (E-P1-20) --
+/* ------------------------------------------------- Demo-Konto --
  *
  * Zwei Toepfe, weil zwei verschiedene Fragen dahinterstehen:
  *
@@ -1620,7 +1604,7 @@ function rate_demo_zaehlen(): void
 }
 
 
-/* ---- Registrierung (P5b/AP3) --------------------------------------------- */
+/* ---- Registrierung --------------------------------------------- */
 
 /* Wie RATE_DEMO_GLOBAL, und aus demselben Grund ausdruecklich uebergeben. */
 const RATE_REG_GLOBAL = ['alle'];

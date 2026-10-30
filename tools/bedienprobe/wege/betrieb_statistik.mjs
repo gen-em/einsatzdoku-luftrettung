@@ -1,9 +1,8 @@
 /* Wege der Seite Betrieb → Statistik (`betrieb_statistik.php`).
  * ===========================================================================
  *
- * Entstanden mit R4-23 (Backlog Nr. 122 a, Bild M-R4-23): die Zeitraumwahl
- * über den Reitern. Das Mockup war gerendert, nicht bedient (Prüfdokument R4,
- * Abschnitt 1) — dieser Weg bedient es.
+ * Die Zeitraumwahl über den Reitern. Das Mockup war gerendert, nicht
+ * bedient — dieser Weg bedient es.
  *
  * GEMESSEN WIRD, WAS STILL SCHIEFGEHEN KANN:
  *   - der Knopf „Anwenden" ist mit Skript fort, und der Wechsel von „Von"
@@ -11,8 +10,7 @@
  *   - der eigene Zeitraum kommt an: Karte „Einsätze im Zeitraum", Spalten mit
  *     Wochen- und Tagesschnitt, eine Pille mit Kreuz;
  *   - der Reiter behält ihn, und unter NutzerInnen steht bei einem Zeitraum
- *     in der Vergangenheit „—" statt einer Zahl, die es nicht gibt
- *     (F-R4-66, E-R4-55);
+ *     in der Vergangenheit „—" statt einer Zahl, die es nicht gibt;
  *   - das Kreuz nimmt ihn weg, und eine verkehrte Eingabe wird mit einer
  *     Meldung abgewiesen, statt still etwas anderes zu zeigen.
  */

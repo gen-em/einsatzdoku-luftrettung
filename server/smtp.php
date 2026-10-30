@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-/* Der eine Leser fuer config.php (Schritt 15 AP2). */
+/* Der eine Leser fuer config.php. */
 require_once __DIR__ . '/konfig_lib.php';
 
 /* DREI ABHAENGIGKEITEN, KEINE DAVON MIT DATENBANK — `konfig_lib.php` oben,
@@ -14,7 +14,7 @@ require_once __DIR__ . '/instanz_lib.php';
  * Sie laedt selbst nur `konfig_lib.php` — nichts auf dem Weg erreicht
  * `db.php`. */
 require_once __DIR__ . '/format_lib.php';
-/* `system_melden()` (P5c/AP3). Die Datei laedt ihrerseits nichts; der
+/* `system_melden()`. Die Datei laedt ihrerseits nichts; der
  * Versand kann so auch ohne `db.php` melden — dann nur im Rueckfall. */
 require_once __DIR__ . '/systemmeldung_lib.php';
 
@@ -108,24 +108,22 @@ function antwort_abschliessen(): bool {
  * Limit hin: Eine Kopplung darf nicht an einem langsamen Mailserver scheitern.
  */
 /**
- * Ist SMTP ueberhaupt eingerichtet? (S2/AP6)
+ * Ist SMTP ueberhaupt eingerichtet?
  *
- * WOFUER ES DIESE FUNKTION BRAUCHT. E-S2-15 verlangt zwei verschiedene Wege:
- * Bei ueberschrittener Speicherschwelle geht eine Mail an die Admin-Adresse —
+ * WOFUER ES DIESE FUNKTION BRAUCHT. Es gibt zwei verschiedene Wege: Bei
+ * ueberschrittener Speicherschwelle geht eine Mail an die Admin-Adresse —
  * „ohne eingerichtetes SMTP stattdessen dauerhafter Hinweis im
- * Admin-Bereich". Die Anwendung konnte diese beiden Faelle bis Web 11.2.0
- * nicht unterscheiden: `smtp_send()` liefert `false` fuer „Host falsch",
+ * Admin-Bereich". `smtp_send()` allein unterscheidet die beiden Faelle
+ * nicht: Es liefert `false` fuer „Host falsch",
  * „Passwort falsch", „Netz weg" UND „gar nicht eingerichtet". Ein
  * Fehlschlagen ist aber etwas anderes als ein Nicht-Eingerichtetsein — beim
  * ersten soll es einen Versuch und eine Fehlermeldung geben, beim zweiten
  * gar keinen Versuch und einen stehenden Hinweis.
  *
- * EINGERICHTET HEISST: HOST, BENUTZER UND PASSWORT (seit Web 23.3.1,
- * R17-22, F-R17-46, E-R17-58). Hier stand, ein Mailserver ohne
- * Authentifizierung sei eine gueltige Einrichtung — aber `smtp_send()`
- * schickte immer `AUTH LOGIN`, und ein Relais ohne Anmeldung lehnte das ab.
- * Die Einrichtung, die zwei Funktionen fuer gueltig erklaerten, versandte
- * nichts. Die Betreiberin hat entschieden: Die Anmeldung ist Pflicht.
+ * EINGERICHTET HEISST: HOST, BENUTZER UND PASSWORT. Ein Mailserver ohne
+ * Authentifizierung ist keine gueltige Einrichtung: `smtp_send()` schickt
+ * immer `AUTH LOGIN`, und ein Relais ohne Anmeldung lehnt das ab. Die
+ * Betreiberin hat entschieden: Die Anmeldung ist Pflicht.
  * Inhaltlich geprueft wird hier nichts — ob Benutzer und Passwort stimmen,
  * zeigt erst ein Versand oder die Testmail.
  */
@@ -138,12 +136,12 @@ function smtp_eingerichtet(): bool
 }
 
 /**
- * WAS AUS EINEM VERSAND WIRD (S8/AP4, Z-01).
+ * WAS AUS EINEM VERSAND WIRD.
  *
  * DIE FRAGE, DIE NIEMAND BEANTWORTEN KONNTE: „Kommt hier ueberhaupt Post
  * heraus?" `smtp_eingerichtet()` sagt nur, ob eine Adresse in der
  * `config.php` steht — nicht, ob der Server sie annimmt. Ein falsches
- * Passwort oder ein umgezogener Host fiel bisher erst auf, wenn jemand einen
+ * Passwort oder ein umgezogener Host fiele sonst erst auf, wenn jemand einen
  * Setz-Link erwartete, der nie ankam; im Fehlerprotokoll des Webspace stand
  * es, und dort sieht niemand nach.
  *
@@ -171,7 +169,7 @@ function smtp_versand_vermerken(bool $ok): void
 }
 
 /**
- * KOMMT EINE VERBINDUNG ZUSTANDE? Ohne einen Versand (P5a/AP2, PP-7).
+ * KOMMT EINE VERBINDUNG ZUSTANDE? Ohne einen Versand.
  *
  * `smtp_eingerichtet()` sagt, ob eine Adresse in der `config.php` steht;
  * „Testmail an mich" sagt, ob eine Nachricht ankommt. Dazwischen fehlte die
@@ -185,10 +183,9 @@ function smtp_versand_vermerken(bool $ok): void
  * Versands faerbt, waere eine Messung, die ihr Messobjekt veraendert.
  *
  * GEPRUEFT WIRD DER HOST, NICHT DAS PASSWORT — die Probe meldet sich nicht
- * an. Dass Benutzer und Passwort EINGETRAGEN sind, prueft sie seit Web
- * 23.3.1 vorab (F-R17-46): Bis dahin hiess es hier, ein Relais ohne
- * Authentifizierung sei gueltig, und die Probe war gruen, waehrend jeder
- * Versand an `AUTH LOGIN` scheiterte.
+ * an. Dass Benutzer und Passwort EINGETRAGEN sind, prueft sie vorab: Ein
+ * Relais ohne Authentifizierung waere sonst gruen, waehrend jeder Versand an
+ * `AUTH LOGIN` scheitert.
  *
  * @return array{ok: bool, grund: ?string}
  */
@@ -230,21 +227,16 @@ function smtp_probe(int $zeitlimit = 5): array
 
 function smtp_send(string $toEmail, string $subject, string $textBody,
                    int $zeitlimit = 15): bool {
-    /* Einmal laden, beides entnehmen (M1-14).
+    /* Einmal laden, beides entnehmen.
      *
-     * config.php wurde zweimal eingelesen — hier fuer den SMTP-Teil und
-     * weiter unten noch einmal fuer die Basisadresse im EHLO. Das ist nicht
-     * nur ein zweiter Dateizugriff: Zwei Ladevorgaenge koennen zwei
-     * verschiedene Staende sehen, wenn die Datei dazwischen ersetzt wird.
-     * Unwahrscheinlich, aber es gibt keinen Grund dafuer.
-     *
-     * SEIT SCHRITT 15 AP2 IST DAS NICHT MEHR MOEGLICH: `konfig()` liest die
-     * Datei einmal je Anfrage und merkt sich den Inhalt. Die drei
-     * Lesestellen dieser Datei sind damit drei Abfragen an denselben
-     * Speicher. */
+     * Zwei Ladevorgaenge — fuer den SMTP-Teil und fuer die Basisadresse im
+     * EHLO — koennten zwei verschiedene Staende sehen, wenn die Datei
+     * dazwischen ersetzt wird. `konfig()` liest die Datei einmal je Anfrage
+     * und merkt sich den Inhalt; die drei Lesestellen dieser Datei sind damit
+     * drei Abfragen an denselben Speicher. */
     $cfg = (array)konfig('smtp', []);
 
-    /* ZEILENUMBRUECHE IM EMPFAENGER ABLEHNEN (M1-14).
+    /* ZEILENUMBRUECHE IM EMPFAENGER ABLEHNEN.
      *
      * $toEmail geht ungeprueft in zwei Zeilen des Protokolls: in
      * "RCPT TO:<...>" und in den Kopf "To: <...>". Enthaelt die Adresse ein
@@ -253,7 +245,7 @@ function smtp_send(string $toEmail, string $subject, string $textBody,
      * Damit lassen sich stille Mitleser (Bcc) eintragen oder der Nachricht
      * ein fremder Inhalt anhaengen.
      *
-     * Seit Web 4.5.0 kommen alle Aufrufer aus email_pruefen() und koennen
+     * Alle Aufrufer kommen aus email_pruefen() und koennen
      * gar keine solche Adresse liefern. Diese Pruefung steht trotzdem hier:
      * Die Absicherung gehoert an die Stelle, die das Protokoll spricht, nicht
      * in die Disziplin der Aufrufer. */
@@ -270,7 +262,7 @@ function smtp_send(string $toEmail, string $subject, string $textBody,
         system_melden('smtp', 'unzulässige Empfängeradresse abgewiesen');
         return false;
     }
-    /* OHNE ANMELDEDATEN KEIN VERSUCH (F-R17-46). Bis Web 23.3.0 ging
+    /* OHNE ANMELDEDATEN KEIN VERSUCH. Sonst ginge
      * `base64_encode($cfg['user'])` ohne Pruefung hinaus: zwei Warnungen je
      * Mail im Reiter System, dann scheiterte das Relais an `AUTH LOGIN`. */
     if (trim((string)($cfg['user'] ?? '')) === '' || (string)($cfg['pass'] ?? '') === '') {
@@ -280,12 +272,12 @@ function smtp_send(string $toEmail, string $subject, string $textBody,
         return false;
     }
 
-    /* EINE FRIST, KEINE DAUER — und das war bis Web 20.8.0 falsch herum.
+    /* EINE FRIST, KEINE DAUER.
      *
-     * `$zeitlimit` ging an `stream_socket_client()` UND an
-     * `stream_set_timeout()`, und Letzteres gilt JE LESEOPERATION. Die
+     * Ginge `$zeitlimit` an `stream_socket_client()` UND an
+     * `stream_set_timeout()`, gaelte Letzteres JE LESEOPERATION. Die
      * Multiline-Schleife unten liest so lange, wie das vierte Zeichen ein
-     * `-` ist — jedes `fgets` bekam die vollen Sekunden neu. Danach folgen
+     * `-` ist — jedes `fgets` bekaeme die vollen Sekunden neu. Danach folgen
      * NEUN `$expect`-Aufrufe.
      *
      * Gerechnet: Ein Relais, das seine EHLO-Antwort in zwoelf
@@ -310,18 +302,17 @@ function smtp_send(string $toEmail, string $subject, string $textBody,
      * die Namensaufloesung des Hosts. Ein DNS-Server, der nicht antwortet,
      * haengt weiterhin so lange, wie das System ihm zugesteht — dagegen
      * hilft nur die Aufloesung selbst zu begrenzen, und das kann PHP nicht. */
-    /* WAS BEIM FEHLSCHLAG INS PROTOKOLL GEHT — und was NICHT (E-P5a-37).
+    /* WAS BEIM FEHLSCHLAG INS PROTOKOLL GEHT — und was NICHT.
      *
-     * Bis Web 20.7.0 stand dort `'SMTP: Versand an ' . $toEmail . '
-     * fehlgeschlagen'`. Das war die EINZIGE Stelle mit Personenbezug im
-     * Fehlerprotokoll — und sie widersprach der Zusage im Kopf dieser Datei
+     * Nicht der Empfaenger: Er waere die EINZIGE Stelle mit Personenbezug im
+     * Fehlerprotokoll — und widerspraeche der Zusage im Kopf dieser Datei
      * („ein Protokoll ueber Mailempfaenger ist etwas, das diese Anwendung
      * nicht fuehren will"), die `betrieb_status.php` als Zusage der
      * Statusseite wiederholt.
      *
-     * Jetzt nennt die Meldung eine KENNUNG und den GRUND. Der Empfaenger
+     * Die Meldung nennt eine KENNUNG und den GRUND. Der Empfaenger
      * steht in `mail_warteschlange` — dort gehoert er hin, dort verfaellt er
-     * nach 30 Tagen (E-P5a-09), und dort steht er neben derselben Kennung.
+     * nach 30 Tagen, und dort steht er neben derselben Kennung.
      * Wer einem Fehlschlag nachgeht, findet ueber die Kennung beides
      * zusammen; das Protokoll allein sagt nicht, wer gemeint war. */
     $kennung = strtoupper(bin2hex(random_bytes(4)));
@@ -396,11 +387,10 @@ function smtp_send(string $toEmail, string $subject, string $textBody,
              . "MIME-Version: 1.0\r\nContent-Type: text/plain; charset=UTF-8\r\n"
              . "Content-Transfer-Encoding: quoted-printable\r\n"
              . 'Date: ' . date(DATE_RFC2822) . "\r\n";
-    /* QUOTED-PRINTABLE (R17-22, Backlog Nr. 401, E-R17-63). Bis Web 23.3.0
-     * gingen Umlaute, Gedankenstriche und Anfuehrungszeichen als rohe
-     * 8-Bit-Bytes hinaus, ohne `Content-Transfer-Encoding` — nach RFC 2045
-     * gilt dann `7bit`, und ein strenger Empfaenger oder Weiterleiter darf
-     * die Zeichen verwerfen. Quoted-printable ist 7-Bit-sauber, haelt die
+    /* QUOTED-PRINTABLE. Rohe 8-Bit-Bytes ohne `Content-Transfer-Encoding`
+     * gelten nach RFC 2045 als `7bit`, und ein strenger Empfaenger oder
+     * Weiterleiter darf Umlaute, Gedankenstriche und Anfuehrungszeichen
+     * verwerfen. Quoted-printable ist 7-Bit-sauber, haelt die
      * Zeilen unter 76 Zeichen und braucht kein 8BITMIME beim Relais.
      * Reihenfolge: erst CRLF, dann kodieren (die Zeilenenden bleiben harte
      * Umbrueche), zuletzt das Dot-Stuffing — eine Zeile, die mit einem Punkt
@@ -424,8 +414,8 @@ function smtp_send(string $toEmail, string $subject, string $textBody,
  * Kennung und Grund des letzten Fehlschlags — oder `null`.
  *
  * DAMIT DIE KENNUNG NICHT INS LEERE ZEIGT. `smtp_send()` nennt im
- * Fehlerprotokoll nur noch eine Kennung und einen Grund, nie den Empfaenger
- * (E-P5a-37). Das ist nur dann eine Verbesserung und keine Verschlechterung,
+ * Fehlerprotokoll nur eine Kennung und einen Grund, nie den Empfaenger.
+ * Das ist nur dann eine Verbesserung und keine Verschlechterung,
  * wenn sich beides wieder zusammenfuehren laesst: Die Warteschlange schreibt
  * dieselbe Kennung in ihre Fehlerspalte, und die Unzustellbar-Liste zeigt
  * sie. Wer einem Fehlschlag nachgeht, hat dort den Empfaenger und im

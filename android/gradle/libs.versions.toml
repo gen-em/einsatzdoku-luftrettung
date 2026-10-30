@@ -1,43 +1,41 @@
 # ---------------------------------------------------------------------------
-# Fremdbestandteile -- eine Liste, eine Nummer je Bestandteil (E-S4-04).
+# Fremdbestandteile -- eine Liste, eine Nummer je Bestandteil.
 #
 # GRUNDSATZ: so wenige wie moeglich. HTTP laeuft ueber HttpURLConnection, JSON
 # ueber org.json, der Puffer ueber SQLiteOpenHelper -- alles drei Bordmittel
 # von Android und deshalb hier NICHT aufgefuehrt. Was hier steht, sind die zwei
-# zugelassenen Fremdbestandteile und ihr Pruefwerkzeug (bis 0.18.0 stand hier
-# "drei" -- ein Rest aus der Zeit vor R63, sechs Zeilen tiefer steht warum):
+# zugelassenen Fremdbestandteile und ihr Pruefwerkzeug:
 #
 #   AndroidX / Compose        Apache-2.0   Oberflaeche, Lebenszyklus
 #   play-services-wearable    proprietaer  ausschliesslich der Data Layer
 #
-# ZWEI STATT VIER, seit R63 (Backlog Nr. 84). Der Adress-QR ist ersatzlos
-# entfallen -- die App kennt genau eine Serveradresse, es gibt nichts mehr zu
-# scannen. Mit ihm gingen ZXing (QR-Erkennung) und die vier CameraX-Bausteine;
-# die App fragt seither nicht mehr nach der Kamera.
+# KEIN QR-SCAN, also weder ZXing (QR-Erkennung) noch CameraX: Die App kennt
+# genau eine Serveradresse, es gibt nichts zu scannen, und die App fragt
+# nicht nach der Kamera.
 #
 # Beide werden NUR ZUR BAUZEIT bezogen; die App laedt zur Laufzeit nichts
 # nach. Herkunft, Lizenz und -- fuer die proprietaere Wearable-Bibliothek --
-# die Vertraeglichkeit mit der AGPL werden in docs/Lizenzen.md nachgetragen
-# (Block D, E-S4-04). Bis dahin ist diese Datei die vollstaendige Liste.
+# die Vertraeglichkeit mit der AGPL stehen in docs/Lizenzen.md 6a; die Liste
+# selbst ist diese Datei.
 #
-# WARUM DIESE NUMMERN. compileSdk ist 37 (siehe handy/build.gradle.kts, seit
-# Android 0.16.0). Eine AndroidX-Bibliothek nennt ein MINDEST-compileSdk; die
-# Nummern hier sind durchweg Fassungen, die mit 37 auskommen. Wer eine hochzieht, prueft das
+# WARUM DIESE NUMMERN. compileSdk ist 37 (siehe handy/build.gradle.kts).
+# Eine AndroidX-Bibliothek nennt ein MINDEST-compileSdk; die Nummern hier
+# sind durchweg Fassungen, die mit 37 auskommen. Wer eine hochzieht, prueft das
 # mit -- AGP meldet es als Fehler, nicht als Warnung, und der Baulauf bricht.
 # ---------------------------------------------------------------------------
 
 [versions]
 agp = "9.4.1"
-# KOTLIN IST SEIT AGP 9 EINGEBAUT (AR-02, Backlog Nr. 65). AGP bringt ein
+# KOTLIN IST SEIT AGP 9 EINGEBAUT. AGP bringt ein
 # Kotlin-Gradle-Plugin als Laufzeitabhaengigkeit mit (bei 9.4.1: 2.2.10);
 # die Zahl hier hebt es an. Sie gilt fuer ZWEI Plugins, die zusammen wandern
-# muessen: das Kotlin-Plugin selbst (nur noch in der Wurzel, `apply false`,
+# muessen: das Kotlin-Plugin selbst (nur in der Wurzel, `apply false`,
 # um die Fassung festzulegen) und den Compose-Compiler, der an genau diese
 # Kotlin-Fassung gebunden ist.
 kotlin = "2.4.20"
 
 # --- AndroidX (Apache-2.0) ---
-# Stand der Android-Runde AR (24.09.2026). core-ktx, Compose-BOM und
+# Stand vom 24.09.2026. core-ktx, Compose-BOM und
 # wear-compose verlangen compileSdk 37 und AGP >= 9.1 (aar-metadata).
 coreKtx = "1.19.1"
 lifecycle = "2.11.0"
@@ -53,16 +51,15 @@ playServicesWearable = "20.0.1"
 junit = "4.13.2"
 robolectric = "4.16.1"
 # DAS ANDROID-ABBILD, MIT DEM ROBOLECTRIC LAEUFT -- als Abhaengigkeit und
-# nicht als Laufzeit-Download (Backlog Nr. 240, 20.09.2026).
+# nicht als Laufzeit-Download.
 #
 # Robolectric holt sich dieses Archiv (145 MB) sonst WAEHREND DES TESTLAUFS
 # selbst von Maven, ueber seinen eigenen `MavenArtifactFetcher` -- an Gradle
-# vorbei, ohne Wiederholung und ohne den Abhaengigkeits-Zwischenspeicher. Am
-# 20.09.2026 brach genau dieser Download auf einem Laeufer ab
-# (`SocketException: Connection reset by peer`), und der ganze Prueflauf war
-# rot: "HandyBildTest > classMethod FAILED, AssertionError at
-# MavenArtifactFetcher.java:129". `classMethod` ist der Klassenaufbau, kein
-# Prueffall -- es war also nie ein Testfehler.
+# vorbei, ohne Wiederholung und ohne den Abhaengigkeits-Zwischenspeicher.
+# Bricht dieser Download auf einem Laeufer ab (`SocketException: Connection
+# reset by peer`), ist der ganze Prueflauf rot: "HandyBildTest > classMethod
+# FAILED, AssertionError at MavenArtifactFetcher.java:129". `classMethod` ist
+# der Klassenaufbau, kein Prueffall -- es ist also nie ein Testfehler.
 #
 # DIE ZAHL 14 IST ANDROID 14 = API 34 und gehoert zu `sdk=34` aus
 # `src/test/resources/robolectric.properties`. Wer dort die Stufe aendert
@@ -74,7 +71,7 @@ robolectric = "4.16.1"
 robolectricAbbild = "14-robolectric-10818077-i7"
 androidxTestCore = "1.7.0"
 androidxTestJunit = "1.3.0"
-# Der Testlaeufer fuer INSTRUMENTIERTE Faelle (S4/D2). Er laeuft auf dem
+# Der Testlaeufer fuer INSTRUMENTIERTE Faelle. Er laeuft auf dem
 # Android-System statt in der JVM und traegt die neun Faelle, die Robolectric
 # nicht erreicht: der echte AndroidKeyStore (sechs) und die Erreichbarkeit der
 # Wearable-API (drei). `androidx.test.ext:junit` bringt ihn NICHT mit -- es

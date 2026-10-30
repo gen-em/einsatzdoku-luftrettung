@@ -6,7 +6,7 @@
  * des Browsers (assets/crypto.js). Das ist die Zusage des Projekts: Der
  * Server sieht das Passwort nie. Ein Skript, das diesen Schritt nachbaut,
  * pruefte den Weg nicht mehr, den eine NutzerIn tatsaechlich geht — und
- * genau der soll hier belegt werden (E-P1-10).
+ * genau der soll hier belegt werden.
  *
  * Aufruf:
  *   node passwort_setzen.mjs <url-mit-token> <passwort> [ausgabe.json]
@@ -28,7 +28,7 @@ import { motorWahl, starten } from '../../motor.mjs';
 const MODUL = process.env.PLAYWRIGHT_MODUL
   || '/opt/node22/lib/node_modules/playwright/index.mjs';
 const PW = (m => m.default ?? m)(await import(MODUL.startsWith('/') ? 'file://' + MODUL : MODUL));
-/* Die Engine wählt der Läufer (MOTOR=… oder --motor), R87. */
+/* Die Engine wählt der Läufer (MOTOR=… oder --motor). */
 const MOTOR = motorWahl(process.argv);
 
 const [, , url, passwort, ausgabe] = process.argv;
@@ -64,7 +64,7 @@ await seite.click('#gobtn');
 
 // Der Wiederherstellungsschluessel erscheint erst, wenn die Schluessel
 // erzeugt sind. Er MUSS bestaetigt werden, sonst speichert die Seite nicht.
-/* DEN GRUND NENNEN STATT 30 s ZU SCHWEIGEN (Backlog Nr. 156). Weist das
+/* DEN GRUND NENNEN STATT 30 s ZU SCHWEIGEN. Weist das
    Formular das Passwort ab, wird `#rcbox` nie sichtbar — der Aufruf lief
    dann in seine Zeitgrenze und warf einen Playwright-Fehler ueber einen
    Selektor. Die Seite sagt den Grund die ganze Zeit in `#state`; sie wurde

@@ -1,7 +1,7 @@
-// NAdoku Android -- ein Gradle-Projekt, zwei Module (E-S4-02).
+// NAdoku Android -- ein Gradle-Projekt, zwei Module.
 //
 // FREMDBESTANDTEILE NUR ZUR BAUZEIT. Die Bezugsquellen unten liefern
-// AndroidX/Compose, ZXing und play-services-wearable (E-S4-04). Zur Laufzeit
+// AndroidX/Compose, ZXing und play-services-wearable. Zur Laufzeit
 // laedt die App nichts nach -- der Grundsatz "keine fremde Quelle zur
 // Laufzeit" (CLAUDE.md 4) gilt fuer sie wie fuer die Weboberflaeche.
 //

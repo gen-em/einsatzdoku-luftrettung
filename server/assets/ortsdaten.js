@@ -1,14 +1,14 @@
 /**
- * Ortsdaten öffnen — Spurstücke und Einsatzhülle im Browser (S11-04c).
+ * Ortsdaten öffnen — Spurstücke und Einsatzhülle im Browser.
  *
- * WOFÜR. Seit Web 22 liegen Spur, Koordinaten der Phasen und Reanimation nur
- * noch als Gerätehüllen auf dem Server (Format: `tools/proben/huelle/
+ * WOFÜR. Spur, Koordinaten der Phasen und Reanimation liegen nur als
+ * Gerätehüllen auf dem Server (Format: `tools/proben/huelle/
  * referenz.py`); `api/mission.php` und `api/day.php` liefern sie aus, wie sie
  * liegen. Öffnen kann sie nur der Browser, mit dem privaten Schlüssel des
  * Kontos (`EdKontopaar.privat`). Diese Datei ist die EINE Stelle, die das tut
  * und daraus macht, was die Ansichten schon kennen: eine Punktfolge, Phasen
  * mit `lat`/`lon` und `track_idx`, Reanimationen als Ereignislisten. Die
- * Zeichenwege der Seiten bleiben, wie sie waren.
+ * Zeichenwege der Seiten brauchen deshalb keine eigene Fassung.
  *
  *   EdOrtsdaten.schluessel(ck)            privater und öffentlicher Teil
  *   EdOrtsdaten.spur(stuecke, art, ref, sperren, k)
@@ -18,30 +18,26 @@
  *   EdOrtsdaten.ladeplatz(el)             der Ladeplatz (ui_ladeplatz) mit
  *                                         300 ms Schwelle
  *   EdOrtsdaten.melden(e, art, id)        eine Hülle, die nicht aufging, an
- *                                         den Reiter System (S11-04d); die
+ *                                         den Reiter System; die
  *                                         Art aus dem Fehler geht vor
  *   EdOrtsdaten.einsatzZeiten(e)          die Zeiten des Formulars, wie der
- *                                         Server sie rechnet (S11-05b)
+ *                                         Server sie rechnet
  *   EdOrtsdaten.einsatzInnen(z, orte)     Innenform der Einsatzhülle
  *   EdOrtsdaten.einsatzVerschliessen(i, ref)  verschließen, Base64
- *   EdOrtsdaten.ortshoehe(punkte, phasen) Höhe des Einsatzorts (S11-05b)
+ *   EdOrtsdaten.ortshoehe(punkte, phasen) Höhe des Einsatzorts
  *   EdOrtsdaten.stueckeBauen(punkte, art, ref, {neu})  Punkte → Stücke
- *                                         (S11-05c: Schneiden, Löschen)
+ *                                         (Schneiden, Löschen)
  *   EdOrtsdaten.gepacktBauen(punkte, art, ref, {stufe, seqFrom, nOriginal})
  *                                         ein gepacktes Stück der Stufe 2/3
- *                                         (S11-07, E-S11-71)
  *   EdOrtsdaten.schluesselAus(pkcs8)      ein FREMDES Paar aus seinem privaten
- *                                         Teil (Freigabe, S11-06c)
- *   (`spur1Lesen()` — ein SPUR1-Blob einer Sicherung der Nutzlast 8 bis
- *   12 zu Punkten — stand hier von S11-06b bis Web 22.7.0; S11-12.)
+ *                                         Teil (Freigabe)
  *
- * REGELN BEIM ÖFFNEN (E-S11-37, -71, Konzept 3.4): Punkt i eines Stücks der
+ * REGELN BEIM ÖFFNEN: Punkt i eines Stücks der
  * Stufe 1 hat die Sequenznummer `seq_from + i`; ein Stück der Stufe 2 oder 3
  * (gepackt) deckt `seq_from` bis `seq_from + n_original − 1`, und Punkte
  * eines Gerätestücks darunter stecken schon darin; doppelte Nummern (ein Gerät, das seine Marke
  * verloren hat und anders stückelt) zählen einmal. Punkte in einer Sperrzeit
- * (ein herausgeschnittener Zeitraum) fallen weg. Höhe -32768 heißt: keine
- * (E-S11-39).
+ * (ein herausgeschnittener Zeitraum) fallen weg. Höhe -32768 heißt: keine.
  *
  * Braucht: EdCrypto (crypto.js), EdKontopaar (kontopaar.js), EdFormat.
  */
@@ -59,7 +55,7 @@
   }
 
   /* Vor jedem Gebrauch des Schlüssels: ein Paar, das nach dem Aufbau der
-     Seite entstand, abwarten bzw. nachholen (S11-05e, F-S11-61). */
+     Seite entstand, abwarten bzw. nachholen. */
   async function paarBereit() {
     if (typeof EdKontopaar !== 'undefined' && EdKontopaar.bereit) { await EdKontopaar.bereit(); }
   }
@@ -81,7 +77,7 @@
     return (sperren || []).some((s) => ts >= s.von && ts <= s.bis);
   }
 
-  /** Die gepackte Innenform (E-S11-71) öffnen: zlib-Strom → vier Spalten
+  /** Die gepackte Innenform öffnen: zlib-Strom → vier Spalten
       int32 big-endian mit Abständen → Punkte ohne eigene Nummer. */
   async function gepacktLesen(innen, n, tsVon) {
     const strom = new Blob([innen]).stream().pipeThrough(new DecompressionStream('deflate'));
@@ -105,12 +101,12 @@
     return aus;
   }
 
-  /** Der Ort einer Hülle der Stufe 2 oder 3 (E-S11-71). */
+  /** Der Ort einer Hülle der Stufe 2 oder 3. */
   const platzGepackt = (st) => st.seq_from + ':' + st.punkte + ':' + st.stufe + ':' + st.n_original;
 
   async function spur(stuecke, art, ref, sperren, k) {
     const nach = new Map();
-    /* ZUERST DIE GEPACKTEN (Stufe 2 und 3, E-S11-71). Ihre Punkte tragen keine
+    /* ZUERST DIE GEPACKTEN (Stufe 2 und 3). Ihre Punkte tragen keine
        eigene Nummer; das Stück deckt seq_from bis seq_from + n_original − 1,
        und was ein Gerätestück darunter trägt, steckt schon darin. */
     let marke = 0;
@@ -154,7 +150,7 @@
     return JSON.parse(new TextDecoder().decode(innen));
   }
 
-  /** Der Index des zeitlich nächsten Punkts — wie früher `track_idx` am Server. */
+  /** Der Index des zeitlich nächsten Punkts — daraus wird `track_idx`. */
   function naechster(punkte, ts) {
     if (ts == null || !punkte.length) { return null; }
     let best = null, abstand = Infinity;
@@ -225,8 +221,7 @@
   }
 
   /**
-   * Eine Hülle ging nicht auf — das soll die BetreiberIn erfahren (M-S11-01,
-   * Zustand d; S11-04d): ein Gerät, das falsch verschließt, oder ein Eingriff
+   * Eine Hülle ging nicht auf — das soll die BetreiberIn erfahren: ein Gerät, das falsch verschließt, oder ein Eingriff
    * in die Datenbank. Gemeldet wird nur Art, Kennung und Grund, nie Inhalt.
    * Ein fehlendes Schlüsselpaar ist kein Befund über die Hülle und wird nicht
    * gemeldet; ein Fehler ohne benannten Grund heißt `unbekannt`. Die Seite
@@ -243,11 +238,11 @@
   }
 
   /**
-   * DIE ZEITEN DES FORMULARS, IM BROWSER GERECHNET (S11-05b, E-S11-45).
+   * DIE ZEITEN DES FORMULARS, IM BROWSER GERECHNET.
    *
    * Warum hier: Die Reanimation steht nur in der Einsatzhülle, und die
-   * verschließt der Browser; ihre Zeiten (Sekunden seit Einsatzbeginn,
-   * E-S11-40) muss er deshalb selbst rechnen. Die Regeln sind die von
+   * verschließt der Browser; ihre Zeiten (Sekunden seit Einsatzbeginn)
+   * muss er deshalb selbst rechnen. Die Regeln sind die von
    * `einsatz_form.php` beim Speichern, Zeile für Zeile:
    *   - Phasen: Nummer 2 bis 9, eine Zeile ohne Zeit zählt nicht; sortiert
    *     nach Nummer, bei gleicher Nummer nach Eingabereihenfolge.
@@ -340,7 +335,7 @@
   }
 
   /**
-   * Die Innenform der Einsatzhülle (E-S11-40) aus gerechneten Zeiten und den
+   * Die Innenform der Einsatzhülle aus gerechneten Zeiten und den
    * Orten der Phasen. `orte` ist eine Liste {phase, lat, lon} in der
    * bisherigen Reihenfolge; je Phasennummer wird der Reihe nach vergeben —
    * dieselbe Regel wie beim Rückimport (`api/import_commit.php`): Wer eine
@@ -362,9 +357,8 @@
   }
 
   /**
-   * DIE HÖHE DES EINSATZORTS (S11-05b) — die Regel, die bis Web 22.7.0
-   * `compute_site_elevation()` im Server rechnete; seit S11 kann er es nicht
-   * mehr, weil er die Spur nicht sieht:
+   * DIE HÖHE DES EINSATZORTS — hier und nicht im Server, weil er die Spur
+   * nicht sieht:
    *   - Bezug: die früheste Phase 5, sonst die früheste Phase 6;
    *   - Wert: die Höhe des zeitlich nächsten Punkts, höchstens 300 s
    *     entfernt, und er muss selbst eine haben — kein Ausweichen auf
@@ -401,12 +395,11 @@
   const runde = (x) => Math.sign(x) * Math.round(Math.abs(x));
 
   /**
-   * PUNKTE ZU STÜCKEN (S11-05c) — die Gegenrichtung zu `spur()`, für die
+   * PUNKTE ZU STÜCKEN — die Gegenrichtung zu `spur()`, für die
    * Schreibwege des Browsers: Schneiden (die Punkte im Zeitraum als Spur des
    * neuen Einsatzes) und Löschen (die übrigen Punkte des Segments neu).
    * Innenform wie `gh_spur_innen()` und `referenz.py`: je Punkt 14 Byte,
-   * big-endian, Höhe in ganzen Metern (E-S11-66, bis zum 16.10.2026
-   * Dezimeter), -32768 = keine (E-S11-39).
+   * big-endian, Höhe in ganzen Metern, -32768 = keine.
    *
    * `neu: true` nummeriert ab 0 durch (ein neuer Einsatz hat eine eigene
    * Zählung); sonst bleiben die Sequenznummern, und ein Stück endet an jeder
@@ -448,7 +441,7 @@
   }
 
   /**
-   * EIN GEPACKTES STÜCK (S11-07, E-S11-71) — Stufe 2 (zusammengefügt) oder 3
+   * EIN GEPACKTES STÜCK — Stufe 2 (zusammengefügt) oder 3
    * (ausgedünnt), für Wartungslauf, Löschen auf einer gepackten Spur und das
    * Einspielen einer ausgedünnten. Eine Spur, ein Stück; die Punkte bekommen
    * keine Nummer, `seqFrom` und `nOriginal` sagen, welchen Bereich es deckt.
@@ -493,7 +486,7 @@
   }
 
   /**
-   * EIN FREMDES SCHLÜSSELPAAR (S11-06c) — für den Freigabeweg: Ein Paket der
+   * EIN FREMDES SCHLÜSSELPAAR — für den Freigabeweg: Ein Paket der
    * Verwaltung aus einem anderen Konto trägt dessen privaten Teil (PKCS8,
    * unter dem alten Inhaltsschlüssel). Geliefert wird dieselbe Form wie von
    * `schluessel()`: {priv, pub}, `pub` als SEC1 — die Hülle bindet ihn ein.

@@ -10,7 +10,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 
 /**
- * Die Gerätehülle auf dem KRYPTOANBIETER DES TELEFONS (S11-09).
+ * Die Gerätehülle auf dem KRYPTOANBIETER DES TELEFONS.
  *
  * WOFÜR ES DIESE DATEI GIBT. `GeraetehuelleTest` läuft unter Robolectric und
  * rechnet damit mit der Java-Kryptografie des Rechners (SunEC, SunJCE). Auf

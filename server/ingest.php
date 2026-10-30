@@ -1,17 +1,17 @@
 <?php
 declare(strict_types=1);
 require_once __DIR__ . '/db.php';
-require_once __DIR__ . '/spur_lib.php';   // Fortsetzungsmarke ueber beide Stufen (S2)
+require_once __DIR__ . '/spur_lib.php';   // Fortsetzungsmarke ueber beide Stufen
 require_once __DIR__ . '/validate_lib.php';
 require_once __DIR__ . '/diensttag_lib.php';
-require_once __DIR__ . '/geraete_lib.php';  // herkunft_ableiten() (R64)
-require_once __DIR__ . '/ratelimit_lib.php'; // Mengenbremse (P5a/AP7, R19)
-require_once __DIR__ . '/einsatz_lib.php';   // Kindtabellen (Schritt 15/AP5)
-require_once __DIR__ . '/mission_fields_lib.php';   // mf_spalten() (Schritt 15/AP6)
-require_once __DIR__ . '/format_lib.php';           // groesse_paar_text() (Schritt 15/AP7)
+require_once __DIR__ . '/geraete_lib.php';  // herkunft_ableiten()
+require_once __DIR__ . '/ratelimit_lib.php'; // Mengenbremse
+require_once __DIR__ . '/einsatz_lib.php';   // Kindtabellen
+require_once __DIR__ . '/mission_fields_lib.php';   // mf_spalten()
+require_once __DIR__ . '/format_lib.php';           // groesse_paar_text()
 
 /**
- * Den Vermerk am Geraet fortschreiben (P5a/AP7, E-P5a-02).
+ * Den Vermerk am Geraet fortschreiben.
  *
  * `abgewiesen_seit` ist der ERSTE Fehlversuch einer Serie, nicht der letzte —
  * `COALESCE` laesst ihn stehen. „Seit 14:20 abgewiesen, 47 Versuche" sagt der
@@ -44,7 +44,7 @@ function ingest_abweisung_vermerken(array $dev, bool $hatSpalten): void
  * Schreiben Geraete den Zeitraum dieses Diensttags noch fort?
  *
  * INGEST_ERSETZFENSTER_H Stunden ab dem Augenblick, in dem der Server den
- * TAG zum ersten Mal sah: `days.created_at` (seit Web 21.3.0, Nr. 158). Ein
+ * TAG zum ersten Mal sah: `days.created_at`. Ein
  * frischer Tag ist offen, ein nachgelieferter auch — er entsteht, wenn sein
  * erstes Paket ankommt —; ein alter nicht, und das gilt auch fuer einen
  * alten Tag, an dem kein Datensatz mehr steht.
@@ -55,12 +55,11 @@ function ingest_abweisung_vermerken(array $dev, bool $hatSpalten): void
  * seinem Datum ankam, bekam nie ein `ended_at`. Serverzeit gegen Serverzeit,
  * wie beim Ersetzfenster der Datensaetze selbst.
  *
- * BIS WEB 21.2.x HING DER ANKER AN DEN DATENSAETZEN: das juengste
- * `created_at` der uebrigen Einsaetze und Ruhesegmente des Tages, weil `days`
- * die Spalte nicht hatte. Zwei Tabellen fuer eine Frage, und ein Tag ohne
- * uebrige Datensaetze hatte keinen Anker und galt als offen. Der Unterschied
- * im Verhalten: Das Fenster gleitet nicht mehr mit jedem neuen Datensatz,
- * es zaehlt ab dem Tag (Konzept R4, F-R4-46).
+ * DER ANKER HAENGT NICHT AN DEN DATENSAETZEN (dem juengsten `created_at`
+ * der uebrigen Einsaetze und Ruhesegmente des Tages): Das waeren zwei
+ * Tabellen fuer eine Frage, ein Tag ohne uebrige Datensaetze haette keinen
+ * Anker und gaelte als offen, und das Fenster glitte mit jedem neuen
+ * Datensatz. So zaehlt es ab dem Tag.
  *
  * IM DEPLOY-FENSTER, solange `update.php` die Spalte noch nicht angelegt
  * hat, gilt der Tag als offen — wie bei `rest_segments` vor dessen
@@ -83,12 +82,11 @@ function ingest_tag_offen(PDO $pdo, int $dayId): bool
 
 /**
  * Der Datensatz wandert auf den neu bestimmten Diensttag, wenn sein
- * bisheriger im Papierkorb liegt (Backlog Nr. 33; zweite Gegenpruefung,
- * Wiederaufnahme). Der Upsert traegt `day_id` nur im INSERT -- mit Absicht,
+ * bisheriger im Papierkorb liegt. Der Upsert traegt `day_id` nur im INSERT -- mit Absicht,
  * damit eine Nachlieferung einen im Web umgehaengten Einsatz nicht
- * zurueckzieht. Fuer den Papierkorbfall hiess das bis hierher: Es entstand
- * ein neuer, leerer Tag, und der Einsatz blieb am geloeschten haengen --
- * halb sichtbar, genau der Zustand, den Nr. 33 beschreibt. Jetzt zieht
+ * zurueckzieht. Fuer den Papierkorbfall hiesse das: Es entstuende
+ * ein neuer, leerer Tag, und der Einsatz bliebe am geloeschten haengen --
+ * halb sichtbar. Deshalb zieht
  * er nach, und zwar nur in diesem einen Fall: bestehender Datensatz, sein
  * Tag geloescht (`$vorhandenerDayId` ist dann null), ein anderer bestimmt.
  */
@@ -101,8 +99,8 @@ function ingest_tag_nachziehen(PDO $pdo, string $tabelle, int $id, $existing, ?i
 }
 
 /** Hoechstens so viele Anlaeufe bei einem Gedraengel um eine Sperre (1205,
- *  1213), fuer den Rumpf und fuer die gemeinsamen Zeilen dahinter (Schritt 18,
- *  SR-05, E-SR-12). Drei: Mehr als zwei Wiederholungen hat die
+ *  1213), fuer den Rumpf und fuer die gemeinsamen Zeilen dahinter. Drei: Mehr
+ * als zwei Wiederholungen hat die
  *  Verbindungsprobe nie gebraucht, und danach antwortet die Uhr ohnehin selbst
  *  mit einem spaeteren Versuch. */
 const INGEST_ANLAEUFE = 3;
@@ -111,16 +109,16 @@ const INGEST_ANLAEUFE = 3;
  * Die Antwort, wenn ein Anlauf endgueltig scheitert — die eine Stelle fuer
  * beide Wiederholungsrahmen und die Arbeit danach.
  *
- * GEDRAENGEL ZUERST (P5a/AP9, E-P5a-52). `ingest.php` gibt seine 500 selbst
+ * GEDRAENGEL ZUERST. `ingest.php` gibt seine 500 selbst
  * aus und geht nicht ueber `json_fehler()` — die Unterscheidung muss deshalb
  * hier ein zweites Mal stehen. Ein Gedraengel ist nach dem LETZTEN Anlauf
  * eine 503 wie an der Verbindungsgrenze, und erst dann steht es im
- * Fehlerprotokoll (seit SR-05; bis dahin schon nach dem ersten).
+ * Fehlerprotokoll (bis dahin schon nach dem ersten).
  *
- * KENNUNG STATT SCHWEIGEN (M3-10/M4-06). Die Uhr zeigt nur, DASS der Upload
+ * KENNUNG STATT SCHWEIGEN. Die Uhr zeigt nur, DASS der Upload
  * scheiterte — mehr braucht sie auch nicht. Wer der Ursache nachgehen will,
  * hat eine: Der Text steht unter dieser Kennung im Protokoll, Reiter System
- * (seit P5c/AP3; bis dahin im Fehlerprotokoll des Webspace). Die Antwortform
+ * (bis dahin im Fehlerprotokoll des Webspace). Die Antwortform
  * bleibt — `JSON-Vertrag.md` 5.
  */
 function ingest_scheitern(Throwable $ex): never
@@ -152,24 +150,24 @@ function ingest_scheitern(Throwable $ex): never
  * Phasennummern. Eine erneut gesetzte Phase ist eine Korrektur und damit eine
  * Information (JSON-Vertrag, Abschnitt 3).
  *
- * ZUORDNUNG ZUM DIENSTTAG (seit Web 6.0.0, JSON-Vertrag 4.4). Einsaetze und
+ * ZUORDNUNG ZUM DIENSTTAG (JSON-Vertrag 4.4). Einsaetze und
  * Ruhe-Segmente haengen an `days.id`, nicht mehr am Datum. Zwei Wege fuehren
  * dorthin, und BEIDE bleiben:
  *
  *   1. `day_ref` — die von der Uhr bei "Einsatztag starten" erzeugte
  *      Dienstkennung. Sie wird in `day_refs` nachgeschlagen; ein Treffer
  *      liefert den Diensttag, auch wenn dieser inzwischen in einen anderen
- *      aufgenommen wurde (A8). Kein Treffer legt einen neuen Diensttag an.
+ *      aufgenommen wurde. Kein Treffer legt einen neuen Diensttag an.
  *   2. `(user_id, day)` als RUECKFALLEBENE fuer Uhr-Fassungen ohne `day_ref`.
  *      Sie ist nicht als Uebergang gedacht, sondern dauerhaft: Ein Update des
  *      Webs darf eine Uhr nicht ausser Betrieb setzen, die niemand aktualisiert
  *      hat. Der JSON-Vertrag steigt erst mit Etappe 4 auf 1.3; bis dahin
  *      schickt keine Uhr eine Kennung, und dieser Weg ist der einzige.
  *
- * Der Diensttag ist dabei immer NEUTRAL (E26): Die Uhr kennt die Einsatzart
- * nicht (E21) und traegt weder Standort noch Rettungsmittel bei. Beides wird im
+ * Der Diensttag ist dabei immer NEUTRAL: Die Uhr kennt die Einsatzart
+ * nicht und traegt weder Standort noch Rettungsmittel bei. Beides wird im
  * Web nachgetragen; bis dahin fehlen Rollen und artabhaengige Felder, waehrend
- * Zeiten, Phasen, Track und Reanimation vollstaendig erfasst werden (A7a).
+ * Zeiten, Phasen, Track und Reanimation vollstaendig erfasst werden.
  */
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') json_out(['error' => 'method'], 405);
@@ -179,15 +177,15 @@ if (strlen($raw) > (int)konfig('app.max_body_bytes')) json_out(['error' => 'too_
 
 /* --- Geraet authentifizieren -------------------------------------------------
  *
- * ANTWORTZEIT (M4-07): Bei unbekannter Gerätekennung kam die Abweisung frueher
+ * ANTWORTZEIT: Bei unbekannter Gerätekennung kam die Abweisung frueher
  * sofort, bei bekannter lief erst eine Pruefung des Schluessels. Der
  * Unterschied ist ohne jede Zugangsdaten messbar und beantwortet die Frage,
  * welche Geraetekennungen es gibt — und die Kennung ist die Haelfte dessen,
  * was ein Upload braucht. Deshalb laeuft auch der unbekannte Zweig gegen einen
  * festen Vergleichswert.
  *
- * SEIT WEB 13.0.0 IST DER SCHLUESSEL SHA-256, NICHT BCRYPT (S5, E-S5-42;
- * die Verfahrenswahl steht in db.php bei GERAET_VERGLEICHSWERT). Der
+ * DER SCHLUESSEL IST SHA-256, NICHT BCRYPT (die Verfahrenswahl steht in
+ * db.php bei GERAET_VERGLEICHSWERT). Der
  * Schluessel sind 24 Zufallsbytes — bcrypt bremste hier nichts als den Server,
  * 228 ms je Upload. Der Blindvergleich bleibt trotzdem: Beide Zweige gehen
  * dieselben Schritte, und hash_equals() vergleicht in konstanter Zeit. Ein
@@ -199,11 +197,10 @@ if (strlen($raw) > (int)konfig('app.max_body_bytes')) json_out(['error' => 'too_
 $deviceId = (string)($_SERVER['HTTP_X_DEVICE_ID'] ?? '');
 $apiKey   = (string)($_SERVER['HTTP_X_API_KEY']   ?? '');
 
-/* --- DIE MENGENBREMSE (P5a/AP7; E-P5a-01, -02, -47, -48; R19, Nr. 17) ------
+/* --- DIE MENGENBREMSE ------
  *
- * Bis Web 20.11.0 war dies der einzige Endpunkt der Anwendung OHNE
- * Ratenschutz. Das war kein Versehen, sondern eine offene Grundsatzfrage
- * (R19); mit E-P5a-01 ist sie entschieden, und die Asymmetrie endet hier.
+ * AUCH DIESER ENDPUNKT HAT RATENSCHUTZ — die Grundsatzfrage ist
+ * entschieden.
  *
  * SIE STEHT GETEILT: die PRUEFUNG hier oben, die ZAEHLUNG unten in den beiden
  * Zweigen, die mit 401 enden. Das ist wesentlich und nicht Geschmackssache.
@@ -214,7 +211,7 @@ $apiKey   = (string)($_SERVER['HTTP_X_API_KEY']   ?? '');
  *   bremst nichts.
  *
  *   Die ZAEHLUNG darf NUR an den beiden 401-Zweigen stehen. Gezaehlt werden
- *   Fehlversuche, nichts sonst (E-P5a-01 (1)). Ausdruecklich NICHT gezaehlt
+ *   Fehlversuche, nichts sonst. Ausdruecklich NICHT gezaehlt
  *   werden: 405 (falsche Methode), 413 (zu gross), 403 `device_disabled`
  *   (das Geraet ist bekannt, der Schluessel stimmt — abgeschaltet hat es die
  *   Betreiberin, und die soll es wieder einschalten koennen, ohne auf eine
@@ -224,12 +221,12 @@ $apiKey   = (string)($_SERVER['HTTP_X_API_KEY']   ?? '');
  *
  * WELCHER TOPF, das entscheidet sich unten an `$dev`: Eine bekannte Kennung
  * zaehlt in `ingest` je Kennung, eine unbekannte in `ingest_ip` je Adresse
- * (E-P5a-01 (3)).
+ *.
  * Beide Merkmale werden schon hier gebildet, damit die Pruefung mit EINER
  * Abfrage auskommt.
  *
  * DIE ANTWORT IST 429 MIT `Retry-After` und nennt NICHT, welcher Topf
- * gegriffen hat — das waere die Auskunft, die E-P5a-47 klein haelt.
+ * gegriffen hat — das waere eine Auskunft, die klein bleiben soll.
  *
  * `Retry-After` LIEST HEUTE KEIN CLIENT, und die Uhr KANN es nicht: Der
  * Rueckruf von Connect IQ bekommt `(code, data)` und keine Kopfzeilen. Die
@@ -244,15 +241,15 @@ if ($rateSperre !== null) {
     json_out(['error' => 'zu_viele_versuche'], 429);
 }
 
-/* Die Abfrage holt seit Web 14.0.0 zwei Spalten mehr: `geraet_art` und
+/* Die Abfrage holt zwei Spalten mehr: `geraet_art` und
  * `geraet_modell` wandern als MOMENTAUFNAHME an jeden Einsatz und jedes
- * Segment, das hier entsteht (R64). Sie kosten nichts — die Zeile wird
+ * Segment, das hier entsteht. Sie kosten nichts — die Zeile wird
  * ohnehin gelesen —, und sie sind der einzige Augenblick, in dem die Angabe
- * ueberhaupt zu haben ist: Danach kann das Geraet getrennt werden (R47),
+ * ueberhaupt zu haben ist: Danach kann das Geraet getrennt werden,
  * und `device_id` steht auf ON DELETE SET NULL.
  *
- * SEIT WEB 20.11.0 KOMMEN ZWEI WEITERE MIT: `abgewiesen_seit` und
- * `abgewiesen_anzahl` — der Vermerk am Geraet (E-P5a-02), den Kontoseite und
+ * ZWEI WEITERE KOMMEN MIT: `abgewiesen_seit` und
+ * `abgewiesen_anzahl` — der Vermerk am Geraet, den Kontoseite und
  * Statusseite zeigen. Sie stehen in DERSELBEN Abfrage und nicht in einer
  * zweiten, weil diese Zeile ohnehin gelesen wird.
  *
@@ -261,7 +258,7 @@ if ($rateSperre !== null) {
  * beiden Spalten NICHT. Ohne den Rueckfall wuerfe diese Abfrage, und weil sie
  * die erste jeder Anfrage ist, antwortete `ingest.php` in diesem Fenster auf
  * JEDEN Upload mit 500 — die Uhren verloren nichts, aber sie kaemen nicht
- * durch, bis jemand die Wartungsseite oeffnet. Dasselbe Fenster hat in AP6
+ * durch, bis jemand die Wartungsseite oeffnet. Dasselbe Fenster hat
  * schon einmal ein Statement geteilt (`ratelimit_lib.php`). */
 $devSpalten = 'id, user_id, api_key_hash, active, geraet_art, geraet_modell';
 $devVermerk = true;
@@ -285,15 +282,15 @@ if (!$dev) {
 if (!geraet_schluessel_gueltig($apiKey, (string)$dev['api_key_hash'])) {
     /* Bekannte Kennung, falscher Schluessel: der Kennungstopf. Das ist der
      * haeufige, harmlose Fall: eine Uhr mit veraltetem Schluessel. Sie
-     * verliert nichts — ihre Warteschlange bleibt, sie sendet spaeter
-     * (E-P5a-02). */
+     * verliert nichts — ihre Warteschlange bleibt, sie sendet spaeter.
+     * */
     rate_misserfolg('ingest', null, [$rateKennung]);
     ingest_abweisung_vermerken($dev, $devVermerk);
     json_out(['error' => 'auth'], 401);
 }
 if (!(int)$dev['active']) json_out(['error' => 'device_disabled'], 403);
 
-/* ---- KONTOSTATUS (P5b/AP2, E-P5b-12) -------------------------------------
+/* ---- KONTOSTATUS -------------------------------------
  *
  * NACH der Schluesselpruefung und nicht davor. Ein Angreifer mit einer
  * erfundenen Kennung soll nicht erfahren, in welchem Zustand ein Konto ist,
@@ -305,12 +302,12 @@ if (!(int)$dev['active']) json_out(['error' => 'device_disabled'], 403);
  * puffert — genau das soll sie tun. Der Unterschied steht im JSON-Rumpf
  * (`grund`), nicht im Code. **Damit braucht es keine Uhr-Stufe**: Die
  * bestehende Fassung tut schon das Richtige, sie sagt nur „abgemeldet", wo
- * „gesperrt" genauer waere. Das ist ein Backlog-Eintrag fuer die naechste
+ * „gesperrt" genauer waere. Das ist eine Aufgabe fuer eine naechste
  * Uhr-Auslieferung und kein Fehler.
  *
  * WAS NICHT PASSIERT: Es geht nichts verloren. Die Warteschlange der Uhr
  * bleibt, und nach dem Entsperren kommt der Rueckstand vollstaendig an —
- * dieselbe Zusage wie bei `401` und `429` (E-P5a-02).
+ * dieselbe Zusage wie bei `401` und `429`.
  *
  * DER TOPF BLEIBT UNBERUEHRT. Ein gesperrtes Konto ist kein Angriff; sein
  * Geraet sendet weiter, weil niemand es abgeschaltet hat. Zaehlte das hier
@@ -323,7 +320,7 @@ try {
     $stK->execute([(int)$dev['user_id']]);
     $kontoStatus = (string)($stK->fetchColumn() ?: 'aktiv');
 } catch (PDOException $ex) {
-    /* Die Spalte gibt es noch nicht (Migration aus P5b/AP2 steht aus).
+    /* Die Spalte gibt es noch nicht (Migration steht aus).
      * Dann gilt `aktiv` — die Uhr soll nicht dadurch stehenbleiben, dass
      * ein Update eingespielt, aber `update.php` noch nicht gefahren
      * wurde. */
@@ -332,21 +329,21 @@ if ($kontoStatus !== 'aktiv') {
     json_out(['error' => 'konto', 'grund' => $kontoStatus], 403);
 }
 
-/* ---- DIE MENGENGRENZE JE KONTO (P5b/AP6, E-P5b-04) -----------------------
+/* ---- DIE MENGENGRENZE JE KONTO -----------------------
  *
  * `507 Insufficient Storage` — und der Code ist mit Bedacht gewaehlt: Er
  * sagt „der Server hat keinen Platz mehr", und genau das ist der Fall. `403`
  * hiesse „du darfst nicht", `429` hiesse „nicht so schnell"; beides waere
  * falsch und wuerde die Uhr das Falsche tun lassen. Bei `507` wie bei `429`
- * behaelt sie ihre Warteschlange und sendet spaeter — das Konzept nennt es
- * ausdruecklich (E-P5b-04: „die Uhr behaelt ihre Warteschlange").
+ * behaelt sie ihre Warteschlange und sendet spaeter — so ausdruecklich
+ * gewollt („die Uhr behaelt ihre Warteschlange").
  *
  * DER GEMESSENE WERT KOMMT AUS DEM CACHE. Die Byte-Messung liest die
  * Blob-Laengen aller GPS-Daten eines Kontos; sie bei jedem Upload zu fahren
  * waere genau an dem Weg teuer, der schnell sein muss. Der Cache wird nach
  * dem Schub fortgeschrieben (unten) und im Job neu gemessen.
  *
- * BEARBEITEN UND LOESCHEN BLEIBEN FREI (E-P5b-04) — diese Grenze steht
+ * BEARBEITEN UND LOESCHEN BLEIBEN FREI — diese Grenze steht
  * ausschliesslich hier und im Import. Wer sie erreicht, muss aufraeumen
  * koennen; eine Grenze, die auch das Loeschen sperrt, ist eine Falle. */
 require_once __DIR__ . '/konten_einstellungen_lib.php';
@@ -354,7 +351,7 @@ $fuell = konto_fuellstand((int)$dev['user_id']);
 if ($fuell['voll']) {
     json_out(['error' => 'kontingent',
               /* Der SATZSCHLUSSPUNKT haengt beim Aufrufer: `groesse_paar_text()`
-               * endet auf „ MB", der Satz hier auf „ MB." (Schritt 15/AP7). */
+               * endet auf „ MB", der Satz hier auf „ MB.". */
               'grund' => 'Das Konto ist voll — ' . $fuell['einsaetze'] . ' von '
                        . $fuell['grenze_einsaetze'] . ' Einsätzen, '
                        . groesse_paar_text((int)$fuell['bytes'],
@@ -384,7 +381,7 @@ if ($devVermerk
     }
 }
 
-/* Demo-Konto: faelliger Reset VOR der Verarbeitung (E-P1-18).
+/* Demo-Konto: faelliger Reset VOR der Verarbeitung.
  *
  * Der zweite von zwei Ausloesepunkten — der andere steht in auth_guard.php
  * fuer Web-Anfragen. Ohne diesen hier bliebe ein Demo-Konto, mit dem nur
@@ -410,7 +407,7 @@ $clientRef = pruef_text($b['client_ref'] ?? null, 64, 'client_ref', $pruef);
 
 /* Der Kalendertag wird jetzt als KALENDERTAG geprueft, nicht nur als Muster.
  * Das alte Muster liess den 30. Februar durch; die Umwandlung haette ihn
- * anschliessend stillschweigend auf den 2. Maerz verschoben (B2). */
+ * anschliessend stillschweigend auf den 2. Maerz verschoben. */
 $day       = pruef_kalendertag($b['day'] ?? null, 'day', $pruef);
 $startedAt = pruef_utc($b['started_at'] ?? null, 'started_at', $pruef);
 
@@ -434,17 +431,16 @@ if (!is_array($b) || $clientRef === null || $startedAt === null || $day === null
 
 $endedAt = pruef_utc($b['ended_at'] ?? null, 'ended_at', $pruef);
 
-/* PASSEN DIE ZEITEN ZUM TAG? (zweite Gegenpruefung, Wiederaufnahme.)
+/* PASSEN DIE ZEITEN ZUM TAG?
  *
- * `day` und die Zeitpunkte kommen aus derselben Quelle, und bis hierher hat
- * niemand nachgesehen, ob sie einander widersprechen. Ein Paket mit
- * `day` 2026-08-09 und `started_at` 2001-01-01 lief durch, und der Zeitraum
- * des Diensttags wurde darauf gezogen -- ueber ingest.php nicht rueckholbar.
+ * `day` und die Zeitpunkte kommen aus derselben Quelle, und ohne diese
+ * Pruefung sieht niemand nach, ob sie einander widersprechen. Ein Paket mit
+ * `day` 2026-08-09 und `started_at` 2001-01-01 liefe durch, und der Zeitraum
+ * des Diensttags wuerde darauf gezogen -- ueber ingest.php nicht rueckholbar.
  *
- * DAS PAKET WIRD TROTZDEM ANGENOMMEN. Die erste Fassung dieser Pruefung hat
- * es mit 400 abgewiesen, und das war falsch: Es haette die falsch gestellte
- * Uhr ausgesperrt -- genau die, die Fund 2 der ersten Gegenpruefung wieder
- * hereingeholt hat. Ein Geraet, dessen Kalender nach einer Tiefentladung auf
+ * DAS PAKET WIRD TROTZDEM ANGENOMMEN. Es mit 400 abzuweisen waere falsch:
+ * Das sperrte die falsch gestellte Uhr aus. Ein Geraet, dessen Kalender nach
+ * einer Tiefentladung auf
  * 1970 steht, muss seine Daten loswerden koennen; sein Einsatz ist sichtbar
  * und loeschbar, und das ist die Zusage. Verworfen wird deshalb nicht der
  * Upload, sondern der WERT -- und zwar nur fuer das eine, wofuer er nicht
@@ -470,14 +466,14 @@ $final   = pruef_flag($b['final'] ?? null);
 $distanceM = pruef_zahl($b['distance_m'] ?? null, 0, 100000000, 'distance_m', $pruef);
 $ascentM   = pruef_zahl($b['ascent_m']   ?? null, 0, 100000,    'ascent_m',   $pruef);
 
-/* ---- KEINE KLARTEXT-ORTSDATEN MEHR (S11-04a, E-S11-09) ---------------------
+/* ---- KEINE KLARTEXT-ORTSDATEN MEHR ---------------------
  *
- * Seit Web 22 verschliessen Uhr und Handy Spur, Phasenkoordinaten und
+ * Uhr und Handy verschliessen Spur, Phasenkoordinaten und
  * Reanimation vor dem Senden mit dem oeffentlichen Schluessel des Kontos
  * (Format: `tools/proben/huelle/referenz.py`). Kommt eine dieser Angaben noch
  * im Klartext, ist das ein Geraet in einer alten Fassung — und der Server
  * nimmt sie NICHT an, auch nicht teilweise: `400` mit `error = klartext`,
- * und das Geraet parkt das Paket (E-S11-09, kein Uebergang). Wer sie still
+ * und das Geraet parkt das Paket (kein Uebergang). Wer sie still
  * verwerfen und den Rest annehmen liesse, quittierte Punkte, die nirgends
  * gespeichert sind; das Geraet loeschte sie.
  *
@@ -497,9 +493,9 @@ if ($klartext) {
               . '. Diese Fassung des Servers nimmt sie nur verschlossen an — Gerät aktualisieren und neu koppeln.'], 400);
 }
 
-/* ---- DAS SPURSTUECK (SPUR2, Konzept S11 3.4) --------------------------------
+/* ---- DAS SPURSTUECK (SPUR2) --------------------------------
  *
- * `track` traegt seit S11 keine Punkte mehr, sondern ein verschlossenes
+ * `track` traegt keine Punkte, sondern ein verschlossenes
  * Stueck: `seq_from`, `punkte`, `ts_von`, `ts_bis` im Klartext und `huelle`
  * (Base64). Ein kaputtes Stueck bricht die Anfrage ab — anders als ein
  * einzelner krummer Punkt frueher: Ein Stueck ist eine Einheit, und eine
@@ -507,7 +503,7 @@ if ($klartext) {
 $stueck = null;
 $seqFrom = 0;
 if (isset($b['track']) && $b['track'] !== null) {
-    /* Die Pruefung steht seit S11-05c in `pruef_spurstueck()`, weil der
+    /* Die Pruefung steht in `pruef_spurstueck()`, weil der
      * Browser beim Schneiden und Loeschen dieselben Stuecke schreibt. */
     $stueck = pruef_spurstueck($b['track'], 'track', $pruef);
     if ($stueck === null) {
@@ -519,9 +515,9 @@ if (isset($b['track']) && $b['track'] !== null) {
  * fragen (Fortsetzungsmarke, `kept_points`). */
 $nGesendet = $stueck['punkte'] ?? 0;
 
-/* ---- DIE EINSATZHUELLE (E-S11-36) ------------------------------------------
+/* ---- DIE EINSATZHUELLE ------------------------------------------
  * Phasenkoordinaten und Reanimation, verschlossen; nur bei `mission`. Sie
- * wird mit den Phasen ersetzt oder behalten (E-S11-38). */
+ * wird mit den Phasen ersetzt oder behalten. */
 $ortHuelle = null;
 if ($kind === 'mission' && ($b['ort_huelle'] ?? null) !== null) {
     $ortHuelle = pruef_huelle($b['ort_huelle'], GH_EINSATZ_MAX_BYTE, 'ort_huelle', $pruef);
@@ -532,29 +528,29 @@ if ($kind === 'mission' && ($b['ort_huelle'] ?? null) !== null) {
 
 $pdo = db();
 
-/* ---- DIE WIEDERHOLUNG (Schritt 18, SR-05; Nr. 210, E-SR-12) ----------------
+/* ---- DIE WIEDERHOLUNG ----------------
  *
  * Zwanzig Pakete desselben Geraets gleichzeitig ergaben in der
- * Verbindungsprobe bis Web 21.11.0 in drei Runden 39 Gedraengel (1213) — an
+ * Verbindungsprobe ohne diese Massnahmen in drei Runden 39 Gedraengel (1213) — an
  * drei Stellen: dem `UPDATE days` in `dt_zeitraum_fortschreiben()` (16), dem
  * Upsert auf `missions` (12) und `UPDATE devices SET last_seen` (10). Die
  * erste und die dritte Zeile teilen ALLE Pakete eines Tags bzw. eines Geraets:
  * Jeder Upload nimmt ueber die Fremdschluessel eine geteilte Sperre auf sie
  * und wollte sie spaeter in derselben Transaktion exklusiv — zwei davon warten
- * aufeinander, und InnoDB bricht einen ab. Die Antwort war seit Web 20.11.0
- * eine 503 (E-P5a-52), und das Geraet kam beim naechsten Versuch durch; die
- * Vermeidung stand aus.
+ * aufeinander, und InnoDB bricht einen ab. Die Antwort ist
+ * eine 503, und das Geraet kommt beim naechsten Versuch durch; vermeiden
+ * soll man es trotzdem.
  *
  * ZWEI TEILE. (1) Die beiden gemeinsamen Zeilen stehen HINTER dem Commit
  * (unten), als eigene kurze Anweisungen — beide sind idempotent (min/max,
  * NOW()), und wer sie erst nach dem Commit anfasst, haelt keine Sperre mehr,
  * waehrend er Punkte einfuegt. Das nimmt dem Deadlock seinen zweiten Arm
- * (E-SR-12 fuer `days`; `devices` hat erst die Messung gezeigt, E-SR-54).
+ * (fuer `devices` hat es erst die Messung gezeigt).
  * (2) Was bleibt — der Upsert —, faengt diese Schleife: hoechstens
  * INGEST_ANLAEUFE Anlaeufe bei 1205 und 1213, mit 50 bis 200 ms Abstand,
  * damit zwei Verlierer nicht im selben Takt wieder zusammenstossen.
  *
- * DER RUMPF BLEIBT, WO ER IST (E-SR-12, Weg B): eine Schleife um
+ * DER RUMPF BLEIBT, WO ER IST (Weg B): eine Schleife um
  * `beginTransaction()`/`try`, keine Zerlegung in Funktionen. Er gehoert zum
  * Geraetevertrag; ihn in eine Closure mit zwei Dutzend `use (&…)` zu heben,
  * waere die Art Umbau, bei der eine Variable still stehen bleibt.
@@ -574,7 +570,7 @@ $pdo = db();
 $pruefVorher = clone $pruef;
 for ($anlauf = 1; ; $anlauf++) {
     $pruef = clone $pruefVorher;
-    /* Uebergangene Listen (M4-02). Bleibt leer, wenn nichts uebergangen wurde;
+    /* Uebergangene Listen. Bleibt leer, wenn nichts uebergangen wurde;
      * nur dann erscheinen die Felder kept_* in der Antwort. */
     $behalten = [];
     $einsatzNeu = false;
@@ -597,7 +593,7 @@ for ($anlauf = 1; ; $anlauf++) {
          *      Papierkorb-Pruefung fehlte.
          *
          * Deshalb stehen sie jetzt VOR der Fallunterscheidung. Die Sperrliste
-         * unterscheidet seit Web 4.0.0 ueber owner_type, welche Art gemeint ist.
+         * unterscheidet ueber owner_type, welche Art gemeint ist.
          */
         $ownerTypePruef = $kind === 'mission' ? 'mission' : 'rest';
 
@@ -617,10 +613,10 @@ for ($anlauf = 1; ; $anlauf++) {
         // endgueltige Loeschen traegt ihn in die Sperrliste ein.
         $tabelle = $kind === 'mission' ? 'missions' : 'rest_segments';
         /* `created_at` gibt es bei rest_segments erst seit der Migration
-         * 2026_09_07_rest_segments_created_at (Nr. 134). Zwischen Deploy und
+         * 2026_09_07_rest_segments_created_at. Zwischen Deploy und
          * update.php fehlt die Spalte -- und ein SELECT, der sie nennt, wirft
-         * 1054 und antwortet 500, fuer JEDES Ruhesegment-Paket, auch ein neues
-         * (zweite Gegenpruefung, Wiederaufnahme). Deshalb wird sie nur genannt,
+         * 1054 und antwortet 500, fuer JEDES Ruhesegment-Paket, auch ein neues.
+         * Deshalb wird sie nur genannt,
          * wenn sie da ist; fehlt sie, faellt der Anker unten auf `started_at`
          * zurueck, wie der Kommentar dort verspricht. Eine Abfrage je Paket am
          * Informationsschema, nur fuer Ruhesegmente -- der Preis fuer einen
@@ -638,7 +634,7 @@ for ($anlauf = 1; ; $anlauf++) {
                       'next_seq' => $seqFrom + $nGesendet]);
         }
 
-        /* ---- Ersetzfenster (Backlog Nr. 134, K-14, F-SP-8) -------------------
+        /* ---- Ersetzfenster -------------------
          *
          * Ein BESTEHENDER Datensatz laesst sich nur INGEST_ERSETZFENSTER_H Stunden
          * lang von seinem Geraet veraendern -- gerechnet ab dem Augenblick, in
@@ -646,22 +642,20 @@ for ($anlauf = 1; ; $anlauf++) {
          * dem gesendeten `started_at`: Den bestimmt der Absender, und genau der
          * ist hier der Unsichere.
          *
-         * WARUM NICHT `started_at` (Nachbesserung 07.09.2026, Gegenpruefung des
-         * Web-Teils, Funde 2 und 5): Auch das gespeicherte `started_at` stammt
+         * WARUM NICHT `started_at`: Auch das gespeicherte `started_at` stammt
          * beim Anlegen vom Geraet. Eine Uhr mit falsch gestellter Zeit (Reset
          * ohne Zeitabgleich) legte ihren Einsatz mit einem Datum von vor Jahren
-         * an -- das Fenster war im selben Augenblick zu, der LAUFENDE Einsatz
-         * verlor Punkte und Phasen, und weil `next_seq` weiterwanderte, loeschte
-         * die Uhr sie als quittiert. Umgekehrt haette ein `started_at` in der
-         * Zukunft das Fenster nie geschlossen.
+         * an -- das Fenster waere im selben Augenblick zu, der LAUFENDE Einsatz
+         * verloere Punkte und Phasen, und weil `next_seq` weiterwandert, loeschte
+         * die Uhr sie als quittiert. Umgekehrt schloesse ein `started_at` in der
+         * Zukunft das Fenster nie.
          *
-         * UND WARUM NICHT DAS SPAETERE AUS BEIDEN (zweite Gegenpruefung, auf die
-         * Nachbesserung selbst): So stand es einen Nachmittag lang hier --
-         * `max(started_at, created_at)`, ein `started_at` in der Zukunft zaehlt
-         * nicht. Aber "in der Zukunft" wurde bei jedem Paket neu gegen jetzt
-         * gerechnet: Ein `started_at`, das beim Anlegen 99 Stunden vorn lag,
-         * zaehlte nicht, solange es vorn lag -- und wurde zum Anker, sobald die
-         * Zeit es eingeholt hatte. Das laengst geschlossene Fenster ging dann
+         * UND WARUM NICHT DAS SPAETERE AUS BEIDEN, also
+         * `max(started_at, created_at)`, wobei ein `started_at` in der Zukunft
+         * nicht zaehlt: "In der Zukunft" wird bei jedem Paket neu gegen jetzt
+         * gerechnet. Ein `started_at`, das beim Anlegen 99 Stunden vorn lag,
+         * zaehlte nicht, solange es vorn liegt -- und wuerde zum Anker, sobald die
+         * Zeit es eingeholt hat. Das laengst geschlossene Fenster ginge dann
          * noch einmal fuer 72 Stunden auf, und zwar zu einem Zeitpunkt, den das
          * Geraet bestimmt hatte. Wendet man "Zukunft zaehlt nicht" dagegen auf
          * den Augenblick des Anlegens an, ist ein `started_at` spaeter als
@@ -696,12 +690,11 @@ for ($anlauf = 1; ; $anlauf++) {
              * Geraetezeit. Ein Anker in der Zukunft hielte das Fenster offen,
              * bis die Zukunft vorbei ist; gekappt schliesst es in 72 h.
              *
-             * UND NIE FRUEHER ALS SEKUNDE 1 DER EPOCHE (zweite Gegenpruefung,
-             * Wiederaufnahme): strtotime('1970-01-01 00:00:00') ist 0, und 0 sah
-             * in der Fassung davor wie "kein Anker" aus -- ein Segment mit
-             * genau diesem Wert, dem einer Uhr ohne Zeitabgleich, hielt sein
-             * Fenster im Rueckfall fuer immer offen, waehrend eines mit 00:00:01
-             * nach 72 h zu war. "Kein Anker" ist jetzt null, nicht 0. */
+             * UND NIE FRUEHER ALS SEKUNDE 1 DER EPOCHE: strtotime('1970-01-01
+             * 00:00:00') ist 0, und 0 darf nicht wie "kein Anker" aussehen --
+             * ein Segment mit genau diesem Wert, dem einer Uhr ohne Zeitabgleich,
+             * hielte sein Fenster im Rueckfall sonst fuer immer offen, waehrend
+             * eines mit 00:00:01 nach 72 h zu ist. "Kein Anker" ist null, nicht 0. */
             if ($anker !== null) { $anker = max(1, min($anker, time())); }
             $fensterZu = $anker !== null && (time() - $anker) > INGEST_ERSETZFENSTER_H * 3600;
         }
@@ -720,7 +713,7 @@ for ($anlauf = 1; ; $anlauf++) {
         $vorhandenerDayId = ($existing && $existing['day_id'] !== null)
             ? (int)$existing['day_id'] : null;
 
-        /* … ES SEI DENN, DIESER TAG LIEGT IM PAPIERKORB (Backlog Nr. 33).
+        /* … ES SEI DENN, DIESER TAG LIEGT IM PAPIERKORB.
          *
          * Dann greift die normale Zuordnung, und die uebergeht Papierkorbeintraege
          * (dt_rueckfall, dt_zu_dayref) — es entsteht also ein anderer oder ein
@@ -742,7 +735,7 @@ for ($anlauf = 1; ; $anlauf++) {
             /* FENSTER ZU: Es wird nichts umgehaengt, also wird auch kein Diensttag
              * bestimmt. Sonst legte dt_rueckfall() einen neuen, LEEREN Tag an,
              * sobald der bisherige im Papierkorb liegt -- und der Datensatz
-             * bliebe trotzdem am alten haengen (Gegenpruefung, Fund 4). Der Wert
+             * bliebe trotzdem am alten haengen. Der Wert
              * wird unten nicht mehr gebraucht; er steht nur, damit kein Zweig
              * auf eine undefinierte Variable trifft. */
             $dayId = (int)($existing['day_id'] ?? 0);
@@ -760,15 +753,15 @@ for ($anlauf = 1; ; $anlauf++) {
             // weiterhin ergaenzt (Append-only, unkritisch).
             if ($existing && ((int)$existing['uhr_gesperrt'] === 1 || $fensterZu)) {
                 /* Zwei Gruende, derselbe Weg: Der Einsatz ist im Web bearbeitet
-                   worden (`uhr_gesperrt`), oder das Ersetzfenster ist zu
-                   (Nr. 134). In beiden Faellen bleiben Metadaten, Phasen und
+                   worden (`uhr_gesperrt`), oder das Ersetzfenster ist zu.
+                   In beiden Faellen bleiben Metadaten, Phasen und
                    Reanimation stehen. Der Unterschied steht weiter unten: Bei
                    `uhr_gesperrt` werden Punkte weiterhin ANGEHAENGT
                    (append-only, unkritisch), bei geschlossenem Fenster nicht --
                    dort ist der Absender der Unsichere, nicht der Inhalt. */
                 $ownerId = (int)$existing['id'];
                 $ownerType = 'mission';
-                /* Was uebergangen wurde, NENNEN (Nr. 134, JSON-Vertrag 5). Der
+                /* Was uebergangen wurde, NENNEN (JSON-Vertrag 5). Der
                    Zweig ueberspringt Metadaten, Phasen und Reanimation in einem;
                    ohne diese Zahlen saehe der Upload wie ein Erfolg aus, und die
                    ersetzten Phasen fehlten stillschweigend. Gezaehlt wird der
@@ -778,12 +771,12 @@ for ($anlauf = 1; ; $anlauf++) {
                     $zp->execute([$ownerId]);
                     $behalten['kept_phases'] = (int)$zp->fetchColumn();
                 }
-                /* Die Einsatzhuelle bleibt mit den Phasen stehen (E-S11-38). Seit
-                 * S11 kommt die Reanimation nur noch darin; `kept_resus` gibt es
-                 * nicht mehr, weil der Server Sitzungen nicht zaehlen kann
-                 * (E-S11-02) — `kept_ort` sagt nur: die Huelle blieb. */
+                /* Die Einsatzhuelle bleibt mit den Phasen stehen. Die
+                 * Reanimation kommt nur darin; `kept_resus` gibt es
+                 * nicht, weil der Server Sitzungen nicht zaehlen kann
+                 * — `kept_ort` sagt nur: die Huelle blieb. */
                 if ($ortHuelle !== null) { $behalten['kept_ort'] = 1; }
-                /* AUCH DIE METADATEN WERDEN GENANNT (Gegenpruefung, Fund 3). Ein
+                /* AUCH DIE METADATEN WERDEN GENANNT. Ein
                  * echtes Abschlusspaket traegt weder Phasen noch Punkte, sondern
                  * Ende, `final`, Strecke und Anstieg -- ohne dieses Feld saehe es
                  * bei geschlossenem Fenster wie ein Erfolg aus, und der Einsatz
@@ -797,7 +790,7 @@ for ($anlauf = 1; ; $anlauf++) {
             /* Upsert des Einsatzes (idempotent ueber device_id+client_ref)
              *
              * ---- COALESCE UND NICHT VALUES: EIN SPAETES PAKET DARF NICHTS
-             *      LOESCHEN (Web 13.0.1) ------------------------------------------
+             *      LOESCHEN ------------------------------------------
              *
              * Bis 13.0.0 stand hier `ended_at = VALUES(ended_at)` und dasselbe fuer
              * distance_m und ascent_m — waehrend `final` schon immer mit GREATEST
@@ -812,9 +805,8 @@ for ($anlauf = 1; ; $anlauf++) {
              *
              * DASS DAS VORKOMMT, IST KEIN GEDANKENSPIEL: Jede Wiederholung eines
              * frueheren Teilstuecks ist so ein Paket. Die Ingestprobe schickt
-             * genau das seit S2 (Teil 3, "Wiederholung unterhalb n_original") —
-             * sie hat nur nie hingesehen. Mit dem Nachsende-Speicher der
-             * Handy-App (S5-Zusatz, E2) wird die Reihenfolge vollends
+             * genau das (Teil 3, "Wiederholung unterhalb n_original"). Mit
+             * dem Nachsende-Speicher der Handy-App wird die Reihenfolge vollends
              * unzuverlaessig: Was beim Funkabriss liegenblieb, geht hinterher
              * heraus, und zwar nach dem, was inzwischen gesendet wurde.
              *
@@ -824,13 +816,12 @@ for ($anlauf = 1; ; $anlauf++) {
              * Der umgekehrte Fall — ein Ende soll wieder verschwinden — ist keiner:
              * `final` geht aus demselben Grund nie zurueck.
              *
-             * Gefunden bei der Gegenlesung des S5-Zusatzes (B5.3), nachgestellt
-             * gegen eine laufende Installation, seither Teil 7 der Ingestprobe. */
+             * Nachgestellt gegen eine laufende Installation; Teil 7 der
+             * Ingestprobe. */
             /* HERKUNFT UND MOMENTAUFNAHME STEHEN NUR IM INSERT-TEIL, nicht im
-             * Upsert (R64, E-R64-01/-05). Beides gilt "beim Anlegen" — wie
-             * `origin` seit jeher, das hier bis Web 13.3.0 gar nicht vorkam und
-             * still auf der Spaltenvorgabe 'watch' landete. Genau daher stammt der
-             * Fehler, den dieses Paket behebt: Ein Einsatz vom Android-Handy trug
+             * Upsert. Beides gilt "beim Anlegen" — wie
+             * `origin`. Fehlte `origin` hier, landete es still auf der
+             * Spaltenvorgabe 'watch', und ein Einsatz vom Android-Handy truege
              * die Plakette "Uhr".
              *
              * WARUM NICHT AUCH IM UPSERT: Ein zweites Paket zum selben Einsatz
@@ -838,7 +829,7 @@ for ($anlauf = 1; ; $anlauf++) {
              * denn, jemand hat das Geraet zwischendurch neu gekoppelt und anders
              * aufgeloest. Dann traegt der Einsatz weiter, was beim Anlegen galt.
              * Das IST die Momentaufnahme. */
-            /* SPALTEN AUS DEM REGISTER (Schritt 15/AP6, E-ZE-22), Zweck
+            /* SPALTEN AUS DEM REGISTER, Zweck
              * `ingest_neu`. Die Fragezeichen werden mitgezaehlt statt
              * hingeschrieben: Wer eine Spalte ergaenzt, ergaenzt sonst die Liste
              * und vergisst das Fragezeichen — und MariaDB meldet das erst zur
@@ -858,7 +849,7 @@ for ($anlauf = 1; ; $anlauf++) {
                            $dev['geraet_art'], $dev['geraet_modell']]);
             $ownerId = (int)$pdo->lastInsertId();
             $ownerType = 'mission';
-            /* FUER DEN MENGENZAEHLER (P5b/AP6): nur die NEUANLAGE zaehlt gegen
+            /* FUER DEN MENGENZAEHLER: nur die NEUANLAGE zaehlt gegen
              * die Einsatzgrenze. Ein Nachtrag zu einem bestehenden Einsatz —
              * und das ist der haeufige Fall, die Uhr schickt in Schueben —
              * bringt Punkte, aber keinen Einsatz. */
@@ -866,7 +857,7 @@ for ($anlauf = 1; ; $anlauf++) {
             ingest_tag_nachziehen($pdo, 'missions', $ownerId, $existing, $vorhandenerDayId, $dayId);
 
             /* ---- Phasenliste ersetzen — aber nur, wenn dabei nichts verlorengeht
-             *      (M4-02, JSON-Vertrag 3.1) ------------------------------------
+             *      (JSON-Vertrag 3.1) ------------------------------------
              *
              * WAS HIER FALSCH WAR
              * Die Bedingung lautete "Schluessel vorhanden und ein Feld". Eine
@@ -901,8 +892,8 @@ for ($anlauf = 1; ; $anlauf++) {
                     $at = pruef_utc($p['at'] ?? null, 'phases.at', $pruef);
                     $ph = pruef_phase($p['phase'] ?? null, 'phases.phase', $pruef);
                     if ($at === null || $ph === null) continue;
-                    /* Seit S11 nur Nummer und Zeit; die Koordinate steht in der
-                     * Einsatzhuelle (E-S11-36). Eine Phase MIT Koordinate hat
+                    /* Nur Nummer und Zeit; die Koordinate steht in der
+                     * Einsatzhuelle. Eine Phase MIT Koordinate hat
                      * der Eingang oben schon als Klartext abgewiesen. */
                     $neuePhasen[] = [$ph, $at];
                 }
@@ -917,7 +908,7 @@ for ($anlauf = 1; ; $anlauf++) {
                                      'lat' => null, 'lon' => null];
                     }
                     einsatz_phasen_ersetzen($pdo, $ownerId, $phasen);
-                    /* DIE EINSATZHUELLE GEHT MIT DEN PHASEN (E-S11-38). Sie traegt
+                    /* DIE EINSATZHUELLE GEHT MIT DEN PHASEN. Sie traegt
                      * die Koordinaten genau dieser Phasen und die Reanimation; der
                      * Server kann nur an den Phasen sehen, ob ein Paket weniger
                      * weiss als der gespeicherte Stand. Preis: Ein Geraet mit
@@ -934,7 +925,7 @@ for ($anlauf = 1; ; $anlauf++) {
                     // Behalten und NENNEN — sonst waere der uebergangene Upload von
                     // einem uebernommenen nicht zu unterscheiden (JSON-Vertrag 5).
                     // Der Grund hier ist immer derselbe: weniger Phasen als
-                    // gespeichert. Das geschlossene Ersetzfenster (Nr. 134) kommt
+                    // gespeichert. Das geschlossene Ersetzfenster kommt
                     // gar nicht bis hierher -- es faengt oben ab, VOR dem Upsert.
                     $behalten['kept_phases'] = $vorhandenePhasen;
                     if ($ortHuelle !== null) { $behalten['kept_ort'] = 1; }
@@ -950,13 +941,11 @@ for ($anlauf = 1; ; $anlauf++) {
                 if ($up->rowCount() === 0) { $behalten['kept_ort'] = 1; }
             }
 
-            /* DIE REANIMATION KOMMT SEIT S11 NUR IN DER EINSATZHUELLE
-             * (E-S11-02). `resus_sessions` und `resus_events` nehmen nichts mehr
-             * auf; ein Paket mit Reanimation im Klartext hat der Eingang oben
-             * abgewiesen. Seit Web 23 gibt es die Tabellen nicht mehr. */
+            /* DIE REANIMATION KOMMT NUR IN DER EINSATZHUELLE. Ein Paket mit
+             * Reanimation im Klartext hat der Eingang oben abgewiesen. */
             }   // Ende: nicht-manueller Einsatz
         } else { // rest_segment
-            /* COALESCE wie beim Einsatz oben (Web 13.0.1): Ein spaeter
+            /* COALESCE wie beim Einsatz oben: Ein spaeter
              * eintreffendes nicht-finales Paket traegt kein Ende und darf keines
              * loeschen.
              *
@@ -967,15 +956,15 @@ for ($anlauf = 1; ; $anlauf++) {
              * beide im Widerspruch: "12:00 – offen Uhr" OHNE "laeuft noch" — ein
              * Segment, das der Server fuer abgeschlossen haelt und dem trotzdem das
              * Ende fehlt. Wer die Seite las, sah einen Widerspruch ohne Ursache. */
-            /* Momentaufnahme wie beim Einsatz — aber KEINE Herkunftsspalte
-             * (E-R64-04): Gezaehlt werden Einsaetze, und woher ein Segment kommt,
+            /* Momentaufnahme wie beim Einsatz — aber KEINE Herkunftsspalte:
+             * Gezaehlt werden Einsaetze, und woher ein Segment kommt,
              * sagt sein Praefix (`r-` gegen `ar-`). Eine Spalte, die niemand
              * abfragt, waere geschrieben und nie gelesen. */
             if ($existing && $fensterZu) {
-                /* Ersetzfenster zu (Nr. 134): Der Stand bleibt, wie er ist -- und
+                /* Ersetzfenster zu: Der Stand bleibt, wie er ist -- und
                  * ein Ende, das das Paket bringt, wird GENANNT, damit ein spaetes
-                 * Abschlusspaket nicht wie ein Erfolg aussieht (Gegenpruefung,
-                 * Fund 3; das Segment bliebe sonst still fuer immer offen). */
+                 * Abschlusspaket nicht wie ein Erfolg aussieht (das Segment
+                 * bliebe sonst still fuer immer offen). */
                 $ownerId = (int)$existing['id'];
                 if ($endedAt !== null || $final) { $behalten['kept_meta'] = 1; }
             } else {
@@ -993,7 +982,7 @@ for ($anlauf = 1; ; $anlauf++) {
             $ownerType = 'rest';
         }
 
-        /* ---- Trackpunkte anhaengen (M4-06) ----------------------------------
+        /* ---- Trackpunkte anhaengen ----------------------------------
          *
          * WARUM HIER KEIN "INSERT IGNORE" MEHR STEHT
          * IGNORE unterdrueckt nicht nur den Schluesselkonflikt, sondern JEDEN
@@ -1016,10 +1005,10 @@ for ($anlauf = 1; ; $anlauf++) {
          * unvollstaendiger.
          *
          * Punkte, die an der WERTEPRUEFUNG scheitern, bleiben ein anderer Fall:
-         * Sie werden gezaehlt und in 'rejected' benannt (seit Web 4.2.0). Sie
+         * Sie werden gezaehlt und in 'rejected' benannt. Sie
          * erneut zu senden brauchte niemand — sie wuerden wieder abgelehnt.
          */
-        /* DER ZUSTAND DER SPUR, EINMAL — vor der Schleife (S2/AP3, E-S2-08).
+        /* DER ZUSTAND DER SPUR, EINMAL — vor der Schleife.
          *
          * `spur_stand()` ERSETZT den bisherigen Aufruf von spur_naechste_seq()
          * weiter unten, er kommt nicht dazu: zwei Abfragen vorher, zwei nachher.
@@ -1027,7 +1016,7 @@ for ($anlauf = 1; ; $anlauf++) {
          * eingehenden Punkten geschieht. */
         $stand = spur_stand($pdo, $ownerType, $ownerId);
 
-        /* DIE SPERRVERMERKE, EBENFALLS EINMAL — vor der Schleife (S4/A2, E-S4-53).
+        /* DIE SPERRVERMERKE, EBENFALLS EINMAL — vor der Schleife.
          *
          * Wurde aus dieser Spur ein Einsatz geschnitten, sind die Punkte des
          * geschnittenen Zeitraums dorthin gewandert. Das Geraet weiss davon
@@ -1052,7 +1041,7 @@ for ($anlauf = 1; ; $anlauf++) {
         $storedBytes = 0;
         $verworfen = 0;
         $gesperrt = 0;
-        /* ---- Ersetzfenster: auch keine Punkte mehr (Backlog Nr. 134) ---------
+        /* ---- Ersetzfenster: auch keine Punkte mehr ---------
          *
          * ANDERS ALS BEI `uhr_gesperrt`. Dort werden Punkte weiter angehaengt,
          * weil das Anhaengen unkritisch ist -- der Inhalt ist bearbeitet, die
@@ -1064,7 +1053,7 @@ for ($anlauf = 1; ; $anlauf++) {
          * senden, nicht in einer Schleife haengen bleiben. Was uebergangen wurde,
          * steht als `kept_points` in der Antwort -- ein stiller Verlust waere
          * genau der Fehler, gegen den die uebrigen `kept_*`-Felder gebaut sind. */
-        /* DAS STUECK ABLEGEN (SPUR2, S11-04a). Dieselben Regeln wie frueher je
+        /* DAS STUECK ABLEGEN (SPUR2). Dieselben Regeln wie frueher je
          * Punkt, jetzt je Stueck — der Server sieht nur Platz und Zeitraum
          * (Kopf von spur_lib.php, Abschnitt SPUR2):
          *
@@ -1072,7 +1061,7 @@ for ($anlauf = 1; ; $anlauf++) {
          *   ausgeduennt       Stufe 3: den Teil oberhalb der Marke verwerfen, zaehlen
          *   geschnitten       das GANZE Stueck im gesperrten Zeitraum: verwerfen
          *                     und zaehlen; teilweise: ablegen, der Browser blendet
-         *                     die gesperrten Punkte aus (E-S11-37)
+         *                     die gesperrten Punkte aus
          *
          * Quittiert wird in allen Faellen (die Marke wandert unten ueber das
          * Stueck hinweg), sonst sendet das Geraet endlos nach. */
@@ -1101,7 +1090,7 @@ for ($anlauf = 1; ; $anlauf++) {
             }
         }
 
-        /* DIE ANKUNFTSZEIT (S2/AP3, Grundlage der Karenz aus E-S2-06).
+        /* DIE ANKUNFTSZEIT (Grundlage der Karenz).
          *
          * `$stored > 0` und nicht `$nGesendet > 0`: Eine reine Wiederholung
          * schon gespeicherter Punkte laeuft in den Dublettenzweig und zaehlt
@@ -1118,20 +1107,20 @@ for ($anlauf = 1; ; $anlauf++) {
         }
 
 
-        /* DIE FORTSETZUNGSMARKE UEBER spur_lib.php (S2/AP1).
+        /* DIE FORTSETZUNGSMARKE UEBER spur_lib.php.
          *
-         * Bis Web 9.14.0 stand hier `MAX(seq)+1` ueber die Zeilen. Sobald die
-         * Punkte einer abgeschlossenen Spur im Blob liegen, gibt es diese Zeilen
-         * nicht mehr — die Marke fiele auf 0 zurueck, und die Uhr saendte den
+         * Kein `MAX(seq)+1` ueber Zeilen: Sobald die Punkte einer
+         * abgeschlossenen Spur zusammengefasst sind, gibt es diese Zeilen
+         * nicht — die Marke fiele auf 0 zurueck, und die Uhr saendte den
          * ganzen Dienst noch einmal. spur_naechste_seq() nimmt deshalb das
          * Groessere aus `n_original` des Blobs und der hoechsten Zeilennummer.
          *
          * Fuer die Uhr ist das ununterscheidbar vom bisherigen Verhalten; der
-         * JSON-Vertrag bleibt unveraendert (E-S2-08).
+         * JSON-Vertrag bleibt unveraendert.
          *
-         * DIE UNTERGRENZE `seq_from + Zahl der gesendeten Punkte` ist mit AP3
-         * dazugekommen und gilt ALLGEMEIN, nicht nur nach der Ausduennung
-         * (E-S2-25). Sie ist zugleich die Behebung eines vorhandenen Fehlers:
+         * DIE UNTERGRENZE `seq_from + Zahl der gesendeten Punkte` gilt
+         * ALLGEMEIN, nicht nur nach der Ausduennung.
+         * Sie ist zugleich die Behebung eines vorhandenen Fehlers:
          * Scheiterte der LETZTE Punkt eines Teilstuecks an der Wertepruefung,
          * meldete der Server eine Marke kleiner als die Punktzahl des Pakets —
          * und die Uhr raeumt erst bei `next_seq >= pointCount` auf
@@ -1148,14 +1137,13 @@ for ($anlauf = 1; ; $anlauf++) {
                        $seqFrom + $nGesendet);
 
         $bestaetigt = $pdo->commit();
-        /* Angenommen: Das Demo-Konto hat sich geaendert (Web 21.2.0, R4-14, Nr. 76). */
+        /* Angenommen: Das Demo-Konto hat sich geaendert. */
         if (demo_ist_demo((int)$dev['user_id'])) { demo_aenderung_vermerken(); }
         break;
     } catch (Throwable $ex) {
-        /* NUR ZURUECKROLLEN, WENN ETWAS OFFEN IST (Web 20.11.0, beim Einbau der
-         * Mengenbremse gefunden): Stand eine Ausnahme nach dem Commit, traf
-         * `rollBack()` auf keine offene Transaktion mehr und warf seinerseits —
-         * und diese zweite Ausnahme ersetzte die erste. Bei einem Deadlock hat
+        /* NUR ZURUECKROLLEN, WENN ETWAS OFFEN IST: Steht eine Ausnahme nach dem Commit, trifft
+         * `rollBack()` auf keine offene Transaktion mehr und wirft seinerseits —
+         * und diese zweite Ausnahme ersetzt die erste. Bei einem Deadlock hat
          * InnoDB die Transaktion schon abgebrochen; bei 1205 nur die Anweisung,
          * und der Rollback nimmt den Rest. Die Fortsetzungsmarke der Spur bleibt
          * so da, wo sie war, und die Uhr sendet dieselben Punkte erneut. */
@@ -1170,8 +1158,8 @@ for ($anlauf = 1; ; $anlauf++) {
 
 /* ---- Zeitraum des Diensttags fortschreiben (JSON-Vertrag 4.4) ---------
  *
- * SEIT WEB 21.11.1 HINTER DEM COMMIT (SR-05, E-SR-12), zusammen mit
- * `last_seen` des Geraets (E-SR-54): die zwei Zeilen, die alle Pakete eines
+ * HINTER DEM COMMIT, zusammen mit
+ * `last_seen` des Geraets: die zwei Zeilen, die alle Pakete eines
  * Tags bzw. eines Geraets teilen (siehe „Die Wiederholung" oben). Beide sind
  * idempotent und brauchen den Rumpf nicht; mit eigenem Wiederholungsrahmen.
  * Scheitern sie nach dem letzten Anlauf, antwortet die Anfrage 503 — der
@@ -1188,30 +1176,29 @@ for ($anlauf = 1; ; $anlauf++) {
  * um 00:40 des Folgetags endet, verlaengert den Dienst bis dahin — genau
  * der Fall, den der Testbestand als "Dienst ueber Mitternacht" fuehrt.
  *
- * NICHT BEI GESCHLOSSENEM FENSTER (Gegenpruefung, Fund 1): Die Zeiten
- * kommen vom Absender, und der ist dann der Unsichere. Bis zur
- * Nachbesserung lief diese Zeile unbedingt -- ein Paket mit
- * started_at 2001 und ended_at 2097 liess den Einsatz stehen, schrieb
+ * NICHT BEI GESCHLOSSENEM FENSTER: Die Zeiten
+ * kommen vom Absender, und der ist dann der Unsichere. Liefe diese Zeile
+ * unbedingt, liesse ein Paket mit
+ * started_at 2001 und ended_at 2097 den Einsatz stehen, schriebe
  * aber den Diensttag um, und ueber ingest.php ist das nicht rueckholbar
  * (started_at wandert nur nach vorn, ended_at nur nach hinten).
  *
- * UND NICHT AN EINEM DIENSTTAG, AN DEM NICHT MEHR GEARBEITET WIRD
- * (zweite Gegenpruefung, Wiederaufnahme): Das Fenster oben gilt nur fuer
+ * UND NICHT AN EINEM DIENSTTAG, AN DEM NICHT MEHR GEARBEITET WIRD:
+ *Das Fenster oben gilt nur fuer
  * einen BESTEHENDEN Datensatz. Ein Paket mit NEUEM client_ref hat keinen,
  * wird ueber `day` oder `day_ref` auf den alten Tag aufgeloest -- und
- * schrieb dessen Zeitraum genauso um, derselbe Schaden auf dem anderen
+ * schriebe dessen Zeitraum genauso um, derselbe Schaden auf dem anderen
  * Weg. Deshalb fragt ingest_tag_offen(), wann der TAG angelegt wurde
- * (`days.created_at`, seit Web 21.3.0; bis dahin die uebrigen
- * Datensaetze des Tages): Serverzeit, nicht die Zeiten des Absenders.
+ * (`days.created_at`): Serverzeit, nicht die Zeiten des Absenders.
  * Ein frischer Tag ist offen, ein aelterer als das Fenster nicht. Der
  * neue Datensatz wird trotzdem angelegt -- sichtbar, loeschbar, und er
  * ueberschreibt nichts.
  *
- * Die erste Fassung fragte den Tag nach SEINEN Zeiten, und die kommen
+ * Den Tag nach SEINEN Zeiten zu fragen genuegt nicht, denn die kommen
  * vom Absender: Ein Dienst, der spaeter als das Fenster nach seinem
- * Datum hochgeladen wurde (Uhr lange ohne Netz), bekam damit nie ein
- * `ended_at`. Gemessen an der eigenen Probe, nicht vermutet -- und der
- * Grund, warum der Anker jetzt am Anlegen haengt. Was absurde Zeiten
+ * Datum hochgeladen wird (Uhr lange ohne Netz), bekaeme damit nie ein
+ * `ended_at` -- gemessen an der eigenen Probe, nicht vermutet. Deshalb
+ * haengt der Anker am Anlegen. Was absurde Zeiten
  * angeht, sitzt der Schutz ohnehin frueher: pruef_zeit_zum_tag() weist
  * ein Paket ab, dessen Zeiten nicht zu seinem `day` passen. */
 for ($anlauf = 1; ; $anlauf++) {
@@ -1231,10 +1218,10 @@ for ($anlauf = 1; ; $anlauf++) {
 }
 
 try {
-    /* HIER STAND `compute_site_elevation()` (bis Web 22.0.4). Seit S11 sieht
-     * der Server die Spur nicht mehr und kann die Hoehe des Einsatzorts nicht
+    /* KEIN `compute_site_elevation()`. Der Server sieht die Spur
+     * nicht und kann die Hoehe des Einsatzorts nicht
      * rechnen; sie liegt im `pat_blob` und entsteht im Browser — beim
-     * Speichern im Formular (S11-05b) und im Wartungslauf (S11-07). Der Aufruf
+     * Speichern im Formular und im Wartungslauf. Der Aufruf
      * hatte zuletzt eine Nebenwirkung, die schlimmer war als keine Hoehe: Bei
      * einem Einsatz des Altbestands las er die Klartextspur und schrieb die
      * Spalte neu, die das Formular gerade geleert hatte. */
@@ -1251,13 +1238,12 @@ try {
     $antwort = ['ok' => true, 'id' => $ownerId,
                 'stored_points' => $stored, 'next_seq' => $nextSeq];
 
-    /* DEN MENGENZAEHLER FORTSCHREIBEN (P5b/AP6, E-P5b-18).
+    /* DEN MENGENZAEHLER FORTSCHREIBEN.
      *
      * DIE LAENGE DER EBEN ABGELEGTEN HUELLEN, nicht die des ganzen Kontos:
      * Die zu lesen hiesse, bei jedem Upload alle Stuecke zu zaehlen — genau
      * an dem Weg, der schnell sein muss. Die ganze Zahl kommt beim naechsten
-     * Joblauf. Bis Web 22.7.0 stand hier eine Schaetzung je Punkt
-     * (`SPUR_ZEILE_BYTE`, 48 Byte je Zeile in `track_points`).
+     * Joblauf.
      *
      * OHNE DIESE ZEILE griffe die Grenze erst einen Tag spaeter: Der Cache
      * bliebe auf dem Stand des letzten Jobs stehen, und ein Konto koennte
@@ -1271,7 +1257,7 @@ try {
          * Genauigkeit bis zum naechsten Job, aber keinen Upload. */
         system_melden('ingest', 'Mengenzähler nicht fortgeschrieben', $ex);
     }
-    /* Verworfene Punkte NENNEN, aber nicht in 'rejected' (S2/AP3, E-S2-08).
+    /* Verworfene Punkte NENNEN, aber nicht in 'rejected'.
      *
      * 'rejected' haengt an $pruef->sauber() und bedeutet laut Vertrag
      * „verworfene Einzelwerte", also einen Fehler in den Daten. Ein
@@ -1281,8 +1267,7 @@ try {
     if ($verworfen > 0) {
         $antwort['dropped_points'] = $verworfen;
     }
-    /* Punkte in einem geschnittenen Bereich NENNEN (S4/A2, Konzept 14,
-     * offener Punkt 3).
+    /* Punkte in einem geschnittenen Bereich NENNEN.
      *
      * EIGENES FELD UND NICHT `dropped_points`: Dort steht die Ausduennung —
      * „diese Spur ist fertig verdichtet". Hier steht etwas anderes: „diesen
@@ -1298,8 +1283,8 @@ try {
     if (!$pruef->sauber()) {
         $antwort['rejected'] = $pruef->nachUrsache();
     }
-    /* Eine uebergangene Liste ist genauso zu nennen wie ein verworfener Wert
-     * (M4-02): Der vorhandene Stand blieb, die gesendete Liste wurde NICHT
+    /* Eine uebergangene Liste ist genauso zu nennen wie ein verworfener Wert:
+     * Der vorhandene Stand blieb, die gesendete Liste wurde NICHT
      * uebernommen. Ohne diese Angabe sieht das aus wie ein Erfolg. */
     foreach ($behalten as $feld => $zahl) { $antwort[$feld] = $zahl; }
     json_out($antwort);
@@ -1308,7 +1293,6 @@ try {
      * der Antwort. Scheitert etwas davon, steht der Datensatz schon — die
      * Antwort ist trotzdem die des Scheiterns (500 mit Kennung, bei
      * Gedraengel 503), und die Uhr liefert nach, was dann eine Wiederholung
-     * ist. So stand es auch bis Web 21.11.0, damals im selben Fangblock wie
-     * der Rumpf. */
+     * ist. */
     ingest_scheitern($ex);
 }

@@ -8,7 +8,7 @@
 
 Rueckgabewert 0 = Rundlauf gelungen, 1 = nicht, 2 = Bedienfehler.
 
-WOGEGEN SIE GEBAUT IST (F4, E-KH-07)
+WOGEGEN SIE GEBAUT IST
 Die Kette hat bis zum 20.09.2026 geglaubt, was ihr die FTP-Aktion sagte. Ein
 gruener Upload-Schritt heisst aber nur: Die Bibliothek hat keinen Fehler
 gemeldet. Er heisst NICHT, dass die Dateien unter der Adresse liegen, die
@@ -20,12 +20,12 @@ loescht sie und prueft das Loeschen (danach 404). Das belegt den **lebenden**
 Weg vom FTP-Konto bis zur oeffentlichen Adresse, und zwar in der Richtung,
 in der er im Ernstfall benutzt wird.
 
-WARUM `curl` UND NICHT DIE FREMD-AKTION (E-KH-07)
+WARUM `curl` UND NICHT DIE FREMD-AKTION
 `curl` liegt auf jedem GitHub-Laeufer. Das ist bequem, aber nicht der Grund:
 Er ist bewusst ein **zweiter** FTPS-Client neben `SamKirkland/FTP-Deploy-Action`.
 Scheitert der Upload dort und die Zielprobe hier gelingt, liegt es an der
 Bibliothek; scheitern beide an derselben Stelle, liegt es an der Plattform.
-**Das ist der Trennschnitt, den F3 braucht** -- der `ECONNRESET` bei
+**Das ist der Trennschnitt, den der Fehler braucht** -- der `ECONNRESET` bei
 `ensureDir('api/')`, den bis heute niemand erklaeren kann. Ein Werkzeug, das
 denselben Client benutzt, könnte diese Frage nicht beantworten.
 
@@ -73,6 +73,8 @@ import urllib.error
 import urllib.parse
 import urllib.request
 
+import laeufer  # liegt neben dieser Datei: die Adresse des Laeufers
+
 # ZEITGRENZEN. Eine Probedatei von 64 Byte braucht keine Minute; laenger heisst
 # haengen, und ein haengender Kettenschritt kostet mehr als ein roter.
 FTP_ZEITGRENZE_S = 60
@@ -112,7 +114,7 @@ CURL_BEDIENFEHLER = 2
 # `--no-sessionid` schaltet sie ab ("Disable SSL session-ID reusing").
 #
 # HIER STAND `--no-ssl-session-reuse`, UND DEN GIBT ES NICHT. Gemessen im
-# ersten Trennversuch (Lauf 35534784406, 20.09.2026):
+# ersten Trennversuch (20.09.2026):
 #
 #     curl: option --no-ssl-session-reuse: is unknown
 #
@@ -130,7 +132,7 @@ SCHALTER_OHNE_SITZUNG = "--no-sessionid"
 # klang gut: `.htaccess` (Z. 64) antwortet auf jeden Pfad mit fuehrendem Punkt
 # mit 403, also laege eine vergessene Probedatei hinter einem zweiten Riegel.
 #
-# GEMESSEN (Lauf 35532390449, 19:30 UTC) WAR ES EIN DENKFEHLER: Der Riegel
+# GEMESSEN (20.09.2026, 19:30 UTC) WAR ES EIN DENKFEHLER: Der Riegel
 # sperrt nicht nur Fremde aus, sondern die Probe selbst. Der Rundlauf geht
 # FTPS hinauf und HTTPS zurueck -- und der Rueckweg lief in genau dieses 403.
 # Schlimmer als der Fehlschlag war die Diagnose: Die Probe meldete "Das
@@ -284,11 +286,11 @@ def sitzung_wiederverwendet(ausfuehrlich: str) -> bool | None:
     """Hat `curl` die TLS-Sitzung auf dem Datenkanal wiederverwendet?
 
     DREIWERTIG, UND DAS IST DER PUNKT (wie `plattform_pruefen()`,
-    `Technik.md` 5b.1): `True` belegt, `False` belegt das Gegenteil, **`None`
+    `Technik.md` 7.1): `True` belegt, `False` belegt das Gegenteil, **`None`
     heisst „nicht feststellbar"** — die Fassung dieses `curl` sagt nichts
     darueber. Ein `False` an dieser Stelle waere eine Behauptung ueber etwas,
     das gar nicht gemessen wurde, und genau daran ist am 20.09.2026 die
-    OPcache-Auskunft gescheitert (F-KH-U-05).
+    OPcache-Auskunft gescheitert.
     """
     if not ausfuehrlich:
         return None
@@ -534,7 +536,7 @@ def probe(basis: str, server: str, pfad: str, konto: str, passwort: str,
                 # DAS IST DIE STELLE, AN DER DIE AUSLIEFERUNGSAKTION STIRBT.
                 # `_openDir` listet ein eben angelegtes Verzeichnis über den
                 # Datenkanal. Gelingt der Upload und scheitert DAS hier, ist
-                # F3 auf diese eine Operation eingegrenzt.
+                # der Fehler auf diese eine Operation eingegrenzt.
                 rl, _, rerr = curl_ftp(
                     [*reuse.split(), "--list-only",
                      ftp_adresse(server, pfad.rstrip("/") + "/" + ordner) + "/"],
@@ -771,7 +773,7 @@ def sitzungsprobe(basis: str, server: str, pfad: str, konto: str, passwort: str,
                   lauf=subprocess.run) -> int:
     """Abruf, DANN ein Steuerbefehl — in DERSELBEN Sitzung. 0 = gelungen.
 
-    WARUM ES DAS GIBT (20.09.2026, F-KH-U-23). Der Stacktrace von F3 lautet
+    WARUM ES DAS GIBT (20.09.2026). Der Stacktrace des Fehlers lautet
     „Client **is closed** *because* read ECONNRESET (data socket)", und er
     steht an `sendIgnoringError("MKD api")`. `_openDir` sendet nur `MKD` und
     `CWD` — beides Steuerkanal, keine Datenverbindung (nachgelesen in
@@ -1324,7 +1326,7 @@ def selbstprobe() -> int:
            "…und sie liegt UNTER unserer — sonst käme sie nie zum Zuge",
            f"{hoch[0][i + 1]} s")
 
-    # DIE SITZUNGSPROBE (F-KH-U-23). Sie misst die Reihenfolge, in der die
+    # DIE SITZUNGSPROBE. Sie misst die Reihenfolge, in der die
     # Auslieferungsaktion stirbt: erst Datenkanal, dann Steuerkanal, EINE
     # Sitzung. Ginge sie in zwei Aufrufe auseinander, maesse sie wieder zwei
     # Sitzungen und koennte die Frage nicht stellen.
@@ -1503,6 +1505,11 @@ def main(argv: list[str]) -> int:
               "treten an die Stelle der Rundlaeufe. Eine von beiden.",
               file=sys.stderr)
         return 2
+
+    # Die aeussere Adresse des Laeufers zuerst: Scheitert spaeter der Abruf
+    # per HTTPS, nachdem FTPS ging, ist sie das, was ein Muster sichtbar
+    # macht. Kein Geheimnis, aber ueber `sag()` wie alles andere.
+    sag(laeufer.zeile(), [a.ftp_pass, a.ftp_konto])
 
     if a.mengenprobe is not None:
         if a.mengenprobe < 1 or a.mengenprobe > 500:

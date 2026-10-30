@@ -1,10 +1,9 @@
 /**
- * Eine Anfrage früh starten — noch während die Seite ihre Skripte lädt
- * (S11-04c, V1 aus Konzept S11 3.9, E-S11-33).
+ * Eine Anfrage früh starten — noch während die Seite ihre Skripte lädt.
  *
- * WOFÜR. Einsatz und Diensttag holen ihre Daten aus `api/`. Bis Web 22.0.2
- * begann die Anfrage erst, wenn alle Skripte der Seite geladen und
- * ausgeführt waren; gemessen (S11-13) lag dazwischen bei Drossel 6× rund ein
+ * WOFÜR. Einsatz und Diensttag holen ihre Daten aus `api/`. Ohne diese Datei
+ * beginnt die Anfrage erst, wenn alle Skripte der Seite geladen und
+ * ausgeführt sind; gemessen lag dazwischen bei Drossel 6× rund ein
  * Sechstel des Seitenaufbaus. Diese Datei steht im Kopf der Seite, liest die
  * Adresse aus `data-vorladen` ihres eigenen `<script>` und startet die
  * Anfrage sofort. Die Seite holt sie mit `EdVorladen.holen(url)` ab — und

@@ -43,17 +43,13 @@ import org.genem.nadoku.gemeinsam.Motiv
  * WARUM ES SIE GIBT. Dieselbe Ueberlegung wie in `server/ui.php` (Design.md,
  * drei Ebenen): Eine neue Ansicht setzt vorhandene Bausteine zusammen und
  * definiert nichts Eigenes. Ohne diese Ebene entstehen sechs Knopfvarianten,
- * die sich um zwei Pixel unterscheiden -- genau der Zustand, aus dem das
- * Stylesheet der Weboberflaeche in P3 herausgeholt wurde.
+ * die sich um zwei Pixel unterscheiden.
  *
  * MASSE. Die Bedienhoehe ist 48 dp -- die Plattformvorgabe von Android fuer
- * Beruehrziele, NICHT die 44 px der Weboberflaeche. Der Unterschied stand als
- * Fund B-S4-02 im Konzept und ist am 02.09.2026 als R58 entschieden worden:
- * Die Web-Zahl gilt fuer den Browser, die Android-Module folgen ihrer
- * Plattform. Ausschlaggebend war der Einsatzfall -- diese App wird MIT
- * HANDSCHUHEN bedient, und genau dafuer sind die 48 dp gedacht. Die Uhr hielt
- * sie ohnehin schon (UHR_BEDIENHOEHE), die beiden Module waren an dieser
- * Stelle also uneins; jetzt nicht mehr.
+ * Beruehrziele, NICHT die 44 px der Weboberflaeche. Die Web-Zahl gilt fuer
+ * den Browser, die Android-Module folgen ihrer Plattform. Ausschlaggebend ist
+ * der Einsatzfall -- diese App wird MIT HANDSCHUHEN bedient, und genau dafuer
+ * sind die 48 dp gedacht. Die Uhr haelt dieselbe Zahl (UHR_BEDIENHOEHE).
  */
 
 /** Hoehe jedes Bedienelements. Eine Zahl, keine Kompaktvariante. */
@@ -78,7 +74,7 @@ object Radius {
 /**
  * Die Kopfleiste: dunkelblau, weisse Bildmarke, Titel.
  *
- * DIE BILDMARKE BLEIBT AUCH IM LAUFENDEN DIENST SICHTBAR (E-S4-22a) -- sie
+ * DIE BILDMARKE BLEIBT AUCH IM LAUFENDEN DIENST SICHTBAR -- sie
  * steht im Kopf JEDER Ansicht, nicht nur auf der Startseite.
  */
 @Composable
@@ -88,13 +84,12 @@ fun Kopfleiste(titel: String, logoWahl: LogoWahl, modifier: Modifier = Modifier)
         modifier = modifier
             .fillMaxWidth()
             .background(Farbe.dunkelblau)
-            /* DIE STATUSLEISTE (Backlog Nr. 86).
+            /* DIE STATUSLEISTE.
              *
              * Seit `targetSdk = 36` zeichnet Android 15+ randlos, und zwar
              * ohne zu fragen: Die App bekommt die volle Flaeche, und die
-             * Systemleisten liegen DARUEBER. Bis Android 0.10.1 hat niemand
-             * das beruecksichtigt -- Uhrzeit und Akkusymbol standen auf der
-             * Kopfleiste, teils auf dem Titel.
+             * Systemleisten liegen DARUEBER. Ohne Ruecksicht darauf stuenden
+             * Uhrzeit und Akkusymbol auf der Kopfleiste, teils auf dem Titel.
              *
              * DIE REIHENFOLGE DER DREI ZEILEN IST DIE LOESUNG, nicht ihre
              * Anwesenheit: `background` VOR `windowInsetsPadding` faerbt die
@@ -128,7 +123,7 @@ fun Kopfleiste(titel: String, logoWahl: LogoWahl, modifier: Modifier = Modifier)
 /**
  * Eine Zustandszeile: farbiger Punkt, dann Text.
  *
- * Die drei Zustaende der Sync-Anzeige (Backlog Nr. 11) und die laufende
+ * Die drei Zustaende der Sync-Anzeige und die laufende
  * Aufzeichnung benutzen alle diese Zeile -- der Punkt traegt die Farbe, der
  * Text die Auskunft. Ein Punkt ist ein grafisches Objekt; sein Kontrast wird
  * gegen 3:1 gemessen, nicht gegen 4,5:1 (werkzeuge/kontraste.py).
@@ -146,8 +141,8 @@ fun Zustandszeile(text: String, punktfarbe: Color, schriftfarbe: Color, modifier
 }
 
 /**
- * Erklaerkasten auf Hellblau (E-S4-22a: Blau erklaert).
- * Bewusst anders als im Web, wo die Wahlliste hell-orange waehlt (E-P3-20).
+ * Erklaerkasten auf Hellblau (Blau erklaert).
+ * Bewusst anders als im Web, wo die Wahlliste hell-orange waehlt.
  */
 @Composable
 fun Hinweiskasten(text: String, modifier: Modifier = Modifier) {
@@ -208,22 +203,21 @@ fun KnopfNeutral(beschriftung: String, modifier: Modifier = Modifier, aufTippen:
     Knopfflaeche(beschriftung, Farbe.schnee, Farbe.dunkelblau, Farbe.gedaempft, modifier, aufTippen)
 
 /**
- * Beendende Handlung: VOLLFLAECHIG rot, weisse Schrift (E-S4-22a).
+ * Beendende Handlung: VOLLFLAECHIG rot, weisse Schrift.
  * Einsatz abschliessen, Dienst beenden, Geraet trennen. Auf einem Geraet im
  * Einsatz muss sie ohne Lesen erkennbar sein; die Rueckfrage faengt den
- * Fehltipp ab (E-S4-21b).
+ * Fehltipp ab.
  */
 @Composable
 fun KnopfBeenden(beschriftung: String, modifier: Modifier = Modifier, aufTippen: () -> Unit) =
     Knopfflaeche(beschriftung, Farbe.knopfBeendenFlaeche, Farbe.knopfBeendenSchrift, null, modifier, aufTippen)
 
 /**
- * Die Wahl aus zwei Moeglichkeiten, nebeneinander (E-S4-20).
+ * Die Wahl aus zwei Moeglichkeiten, nebeneinander.
  *
  * DIE GEWAEHLTE HAELFTE STEHT AUF HELLBLAU, nicht auf Hell-Orange wie die
- * Wahlliste im Web (E-P3-20). In der App waehlt Blau — damit die Rolle aus
- * Design.md 3.1 sichtbar wird. Der Unterschied ist mit der Freigabe vom
- * 31.08.2026 bestaetigt (E-S4-22a).
+ * Wahlliste im Web. In der App waehlt Blau — damit die Rolle aus
+ * Design.md 3.1 sichtbar wird. Der Unterschied ist freigegeben.
  */
 @Composable
 fun Zweierwahl(
@@ -302,7 +296,7 @@ fun Wahlzeile(
 }
 
 /**
- * Der rote Aufnahmepunkt (E-S4-22a).
+ * Der rote Aufnahmepunkt.
  *
  * Er steht auf JEDEM laufenden Bildschirm — Handy wie Uhr. Ein grafisches
  * Objekt, gemessen gegen 3:1 und nicht gegen 4,5:1

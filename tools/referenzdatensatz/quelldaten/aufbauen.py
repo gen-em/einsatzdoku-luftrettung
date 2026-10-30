@@ -47,7 +47,7 @@ TZ = ZoneInfo("Europe/Berlin")
 # 205 km/h.
 _TAFEL_PFAD = HIER.parent / "generator" / "routen" / "fahrzeiten.json"
 UTC = ZoneInfo("UTC")
-SAMEN = 20260101          # fester Zufallssamen (B2-Abnahme: Determinismus)
+SAMEN = 20260101          # fester Zufallssamen (Abnahme: Determinismus)
 
 # Reisegeschwindigkeit, aus der sich der ERREICHBARE Radius ergibt.
 # Ohne diese Bindung waehlte der Generator den Einsatzort frei aus dem
@@ -68,8 +68,7 @@ PUFFER_MIN = 12           # Mindestabstand zwischen zwei Einsaetzen
 def praefix(geraet: int, art: str) -> str:
     """Das Kennungs-Praefix eines Geraets, nach JSON-Vertrag 8.
 
-    GERAET 11 IST EINE GARMIN-UHR, GERAET 12 EIN ANDROID-HANDY (R64/AP4,
-    E-R64-21). Aus dem Praefix leitet der Server die Herkunft ab
+    GERAET 11 IST EINE GARMIN-UHR, GERAET 12 EIN ANDROID-HANDY. Aus dem Praefix leitet der Server die Herkunft ab
     (`herkunft_ableiten()` in server/geraete_lib.php): `m-`/`r-` sind die
     Uhr, `am-`/`ar-` das Handy. Solange beide Geraete `m-`/`r-` schickten,
     trug der ganze Referenzbestand `origin = watch` -- auch die Haelfte, die
@@ -310,7 +309,7 @@ class Werk:
                 "other_ema": None, "other_resources": mittel,
                 "crew_override": 0, "crew": {},
             },
-            # Die Notiz gehoert seit S9/AP7 zu den GESCHUETZTEN Angaben: Sie
+            # Die Notiz gehoert zu den GESCHUETZTEN Angaben: Sie
             # liegt im Ende-zu-Ende-verschluesselten pat_blob. Unter `felder`
             # stuende sie bei den Klartextspalten von `missions` — dort steht
             # nur noch die Notiz des DIENSTTAGS.
@@ -375,11 +374,11 @@ def main() -> int:
         basis = wegpunkte.basis_von(dn, {s["name"]: s for s in stammdaten["standorte"]})
         # EIN DIENSTTAG OHNE STANDORT BEKOMMT NICHTS ERZEUGT, und zwar von
         # selbst: Seine Zielzahl ist die Zahl seiner handgeschriebenen
-        # Prueffaelle (E-DA-14), `fehlend` ist damit null, und die Schleife
+        # Prueffaelle, `fehlend` ist damit null, und die Schleife
         # darunter laeuft gar nicht erst an. Das `Werk` entsteht trotzdem --
         # mit `standort = None` findet es keine Klinik, keine Bereitschaft und
         # kein weiteres Rettungsmittel, was richtig ist: Die Vorschlagslisten
-        # haengen am Standort (E15). Eine Sonderbehandlung hier waere eine
+        # haengen am Standort. Eine Sonderbehandlung hier waere eine
         # zweite Fassung derselben Aussage.
         werk = Werk(z, dn["art"], stammdaten, dn["standort"],
                     rm["faehigkeiten"], int(dn["day"][5:7]), basis)

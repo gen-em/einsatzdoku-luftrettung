@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """
-Kontraste der Token nachrechnen (P3, P-P3-05).
+Kontraste der Token nachrechnen.
 
-WOFUER. Anlage G des Konzepts fuehrt eine Kontrasttabelle. Eine abgeschriebene
+WOFUER. Die Gestaltungsrichtlinie fuehrt eine Kontrasttabelle. Eine abgeschriebene
 Tabelle veraltet in dem Augenblick, in dem jemand einen Token aendert — und
 merkt es nicht. Dieses Skript liest die Werte aus dem Stylesheet und rechnet
 sie nach; docs/Design.md wird daraus erzeugt, nicht gepflegt.
@@ -17,11 +17,11 @@ Aufruf:  python3 tools/screenshots/kontrast.py [--json]
 Rueckgabewert != 0, wenn ein Paar seine Schwelle verfehlt oder ein Paar des
 Stylesheets in keiner der beiden Listen steht.
 
-DIE LISTE IST NICHT MEHR DAS MASS (seit R4-08, Nr. 116). Bis dahin rechnete
+DIE LISTE IST NICHT MEHR DAS MASS. Frueher rechnete
 das Werkzeug nur, was in PAARE stand, und ein Paar, das dort fehlte, meldete
 keinen Fehler — so standen in der App der orange Rueckstandspunkt (2,23:1)
 und Rot als Schrift auf der Uhr unter dem Zielwert, waehrend jeder Lauf
-gruen war (B-S5Z-13, -15; fuer Android geloest mit E-AR-09). Jetzt leitet
+gruen war. Jetzt leitet
 `ableiten()` die Paare aus den Regeln des Stylesheets ab:
 
   - Steht in EINER Regel eine Vordergrundfarbe (`color`, `border*`,
@@ -103,21 +103,21 @@ PAARE = [
     ('Orange tief auf Rauch',             'orange-tief', 'rauch',      3.0, 'nur gross oder fett; Strich des aktiven Reiters'),
     ('Orange tief auf Orange hell',       'orange-tief', 'orange-hell', 3.0, 'Warnung, Auftakt fett'),
     # Der Zielzustand: aktive Kennzahl, aktiver Listenfilter, aktives
-    # Sprungziel. Die Kombination steht seit O6 in der Anwendung
+    # Sprungziel. Die Kombination steht in der Anwendung
     # (.kennzahl.aktiv, .listenfilter.aktiv) und wurde nie gerechnet —
-    # eingetragen mit S9/AP5, als das Sprungziel als dritte Stelle dazukam.
+    # eingetragen, als das Sprungziel als dritte Stelle dazukam.
     ('Dunkelblau auf Orange hell',        'dunkelblau', 'orange-hell', 4.5, 'aktives Sprungziel, aktive Kennzahl'),
     ('Rot auf Schnee (Gefahrknopf)',      'rot',        'schnee',      3.0, 'Rand und Schrift ab 18 px'),
     ('Blau als Fokusring',                'blau',       'schnee',      3.0, 'Rand'),
     ('Linie stark auf Schnee',            'linie-stark', 'schnee',     3.0, 'Rand von Bedienelementen'),
     ('Linie stark auf Rauch',             'linie-stark', 'rauch',      3.0, 'Rand von Bedienelementen'),
-    # P5c/AP1 (E-P5c-05, -55, -59; M-P5c-02 a): die Kopfleiste einer Anlage
-    # mit Etikett und der Umgebungsstreifen. Anlass: F-P5c-28 — das Orange
-    # des aktiven Punkts haette auf Rot 2,10 : 1 und fiele unter 3 : 1.
+    # Die Kopfleiste einer Anlage mit Etikett und der Umgebungsstreifen. Der
+    # Grund: Das Orange des aktiven Punkts haette auf Rot 2,10 : 1 und fiele
+    # unter 3 : 1.
     ('Weiss auf Rot (Kopfleiste Staging)', 'auf-dunkel', 'rot',        4.5, 'Kopfleiste mit Etikett'),
     ('Schnee auf Rot (Name im Kopf)',     'schnee',     'rot',         4.5, 'Name in der Kopfleiste mit Etikett'),
     ('Orange hell auf Rot (aktiver Punkt)', 'orange-hell', 'rot',      3.0, 'Strich des aktiven Kopfpunkts'),
-    # SEIT R4-08 AUS DEN REGELN ABGELEITET (Nr. 116): Diese acht standen in
+    # AUS DEN REGELN ABGELEITET: Diese acht standen in
     # style.css, aber in keiner Liste. Alle erreichen ihren Sollwert.
     ('Asphalt auf Sand',                  'asphalt',    'sand',        4.5, 'Nummer eines offenen Schritts (Erststart)'),
     ('Blau auf Blau hell (Zitatstrich)',  'blau',       'blau-hell',   3.0, 'Strich am Zitat im Handbuch'),
@@ -127,7 +127,7 @@ PAARE = [
     ('Primaerschrift auf Orange (Auswahl)', 'knopf-primaer-schrift', 'orange', 4.5, 'Zahl des aktiven Filters, gewaehlte Segmenttaste'),
     ('Rauch auf Dunkelblau (dunkler Fuss)', 'rauch',    'dunkelblau',  4.5, 'Fusszeile auf dunklem Grund'),
     ('Rot auf Rosa (rote Kennzahl)',      'rot',        'rosa',        3.0, 'Rahmen der roten Kennzahl'),
-    # R4-24 (Nr. 122 b, E-R4-60): die Diagramme der Statistik. Eine Saeule
+    # Die Diagramme der Statistik. Eine Saeule
     # ist eine Grafik (WCAG 1.4.11, 3 : 1). Der Hoechstwert steht in Orange
     # TIEF: Orange auf Schnee haette 2,23 : 1.
     ('Blau als Saeule auf Schnee',        'blau',       'schnee',      3.0, 'Saeule und Balken der Diagramme'),
@@ -163,7 +163,7 @@ AUSNAHMEN = [
      'Auskunft, mit der ein Fehlerbericht anfaengt, also ein zu LESENDER Text. '
      'Sie steht jetzt in --gedaempft (5,30:1). Wer diese Ausnahme kuenftig '
      'weiterreicht, pruefe zuerst, ob der Text gelesen werden soll.'),
-    # SEIT R4-08 (Nr. 116) — die Paare, die die Ableitung fand und die ihren
+    # Die Paare, die die Ableitung fand und die ihren
     # Sollwert nicht erreichen, jedes mit Grund.
     ('Weiss auf Orange tief (Primaerknopf unter dem Zeiger)', 'auf-dunkel', 'orange-tief',
      'E-R4-30: 4,42:1 bei 15 px, Gewicht 600 — knapp unter 4,5. Die Betreiberin '
@@ -271,7 +271,7 @@ def ohne_eintrag(text, tok, paare_liste=None, ausnahmen=None):
 
 
 def selbstprobe():
-    """Die zwei Fehler, die Nr. 116 ausgeloest haben, im Web nachgebaut."""
+    """Die zwei Fehler, um die es geht, im Web nachgebaut."""
     text = io.open(CSS, encoding='utf-8').read()
     tok = token_lesen()
     faelle = [

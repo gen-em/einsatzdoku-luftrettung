@@ -2,25 +2,19 @@
     <!-- Adresse der Installation. Die Domain genuegt — Schema und
          /ingest.php ergaenzt die App selbst; vollstaendige URLs bleiben
          ebenfalls gueltig.
-         VORGABE IST DIE OEFFENTLICHE INSTALLATION (R36, E-R49-8). Bis 2.0.0
-         stand hier nichts, mit der Begruendung "jede Installation hat ihren
-         eigenen Server". Das stimmte, als es nur Selbsthoster gab; seit es
-         eine oeffentliche Installation gibt, kostete es jede Trägerin einen
-         Weg durch die Garmin-Connect-Einstellungen, bevor sie ueberhaupt
-         koppeln konnte. Selbsthoster tragen hier ihre eigene Domain ein —
+         VORGABE IST DIE OEFFENTLICHE INSTALLATION. Ein leeres Feld kostete
+         jede Trägerin einen Weg durch die Garmin-Connect-Einstellungen,
+         bevor sie ueberhaupt koppeln konnte. Selbsthoster tragen hier ihre eigene Domain ein —
          das Feld bleibt ueberschreibbar. -->
     <property id="serverUrl" type="string">nadoku.gen-em.org</property>
-    <!-- KEINE ZUGANGSDATEN HIER (seit Uhr 4.1.0, E-R17-21, F-R17-12).
-         Bis 4.0.0 standen hier deviceId und apiKey, sichtbar und von Hand
-         eintragbar in Garmin Connect — der Alt-Weg aus der Zeit vor der
-         Kopplung. Seit 3.0.0 fuellte ihn niemand mehr, und er trug
+    <!-- KEINE ZUGANGSDATEN HIER. deviceId und apiKey waeren hier sichtbar
+         und von Hand eintragbar in Garmin Connect, und sie truegen
          Zugangsdaten durch eine fremde App. Die Kopplung legt sie im
          Storage ab ("cred"), wo Garmin Connect sie nicht sieht. -->
     <!-- Touchbedienung. Wirkt nur auf Geraeten, die UP/DOWN UND Touch haben
          (Fenix 7 und neuer). Auf Geraeten ohne UP/DOWN wird der Wert
-         ignoriert — ohne Touch waeren sie unbedienbar. Bis Uhr 4.0.0 las
-         niemand den Wert (F-R17-68); seit 4.1.0 verwirft die App bei "aus"
-         Wischen und Tippen auf ihren eigenen Seiten (Input.mc). -->
+         ignoriert — ohne Touch waeren sie unbedienbar. Bei "aus" verwirft die
+         App Wischen und Tippen auf ihren eigenen Seiten (Input.mc). -->
     <property id="touchEnabled" type="boolean">true</property>
     <!-- Welche Bildmarke der Startbildschirm zeigt:
          0 = luftgebunden (Vorgabe), 1 = bodengebunden, 2 = wechselnd.

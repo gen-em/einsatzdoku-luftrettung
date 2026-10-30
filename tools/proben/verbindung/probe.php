@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 /**
  * Verbindungsprobe — was tut die Anwendung, wenn die Datenbank keine
- * Verbindung mehr annimmt? (P5a/AP9, E-P5a-18)
+ * Verbindung mehr annimmt?
  *
  * Anlass: Nr. 210 — gleichzeitige Uploads auf denselben Diensttag liefen in Deadlocks
  *
@@ -12,7 +12,7 @@ declare(strict_types=1);
  * `max_user_connections` ausgeschoepft hat. Auf einem geteilten Webspace ist
  * die zweite Grenze die naheliegende — sie liegt regelmaessig bei 10 bis 30.
  *
- * Bis P5a/AP9 kam in diesem Fall eine **500** heraus, mit dem ungefilterten
+ * Frueher kam in diesem Fall eine **500** heraus, mit dem ungefilterten
  * Text der PDO-Ausnahme. Darin stehen Hostname und Benutzername der
  * Datenbank. Und fuer die Uhr ist eine 500 etwas anderes als eine 503: Der
  * JSON-Vertrag (Abschnitt 5) sagt zu 5xx „spaeter unveraendert erneut" — das
@@ -38,14 +38,13 @@ declare(strict_types=1);
  *   Teil 2  Null verlorene Uploads. Ein Teil der Verbindungen bleibt frei,
  *           mehrere Pakete laufen gleichzeitig; was 503 bekommt, wird
  *           wiederholt, wie die Uhr es tut. Am Ende muss JEDES Paket in der
- *           Datenbank stehen. Und seit Web 21.11.1 (Schritt 18, SR-05,
- *           Nr. 210): KEIN 503 aus dem Gedraengel um dieselbe Zeile, und
+ *           Datenbank stehen. Und: KEIN 503 aus dem Gedraengel um dieselbe Zeile, und
  *           keines im Fehlerprotokoll des eigenen Servers.
  *
  * ZWEI LAGEN IN TEIL 2. Mit wenigen freien Plaetzen (Vorgabe `--frei 2`)
  * trifft die Enge die Verbindungen — die 503 kommen dann von der Grenze, und
  * die Probe verlangt, dass es welche gibt. Laesst `--frei` alle Plaetze frei
- * (`--frei 20`, die Abnahme von Nr. 210), gibt es keine Enge, nur das
+ * (`--frei 20`, die Abnahme), gibt es keine Enge, nur das
  * Gedraengel: Dann laeuft EINE Runde, und verlangt sind 0 x 503. Die
  * Erwartung „Die Enge schlaegt durch" ist in dieser Lage nicht gefragt und
  * steht als solche da, nicht als erfuellt.
@@ -59,7 +58,7 @@ declare(strict_types=1);
  * Gleichzeitigkeit nicht garantieren kann.
  *
  * WAS SIE NICHT MISST:
- *   - **Z2-Last.** Das Konzept nennt „gegen Z2-Last" (500 Konten a 600
+ *   - **Volllast.** Das Konzept nennt „gegen Volllast" (500 Konten a 600
  *     Einsaetze). Das ist ein Bestand von 300 000 Einsaetzen und ein Tag
  *     Rechenzeit; diese Probe misst das VERHALTEN an der Grenze, nicht das
  *     Verhalten unter Bestandsgroesse. Der Bestand ist Sache des Messstands.
@@ -127,17 +126,17 @@ if ($rootPdo === null) {
 
 require_once $wurzel . '/db.php';
 require_once $wurzel . '/konto_lib.php';
-/* Seit S11-04a sendet die Probe wie ein Geraet ab Web 22: verschlossen. */
+/* Die Probe sendet wie ein Geraet: verschlossen. */
 require_once dirname(__DIR__) . '/huelle/geraet.php';
 $ghSec1 = gh_probe_paar()['sec1'];
 
 
 $pdo = db();
 
-/* DAS KONTO GEHT UEBER `konto_loeschen()`, NICHT UEBER `DELETE FROM users`
- * (R4-18, F-R4-63). Die Probe liefert 20 Pakete mit je 20 Punkten ein. Ein
+/* DAS KONTO GEHT UEBER `konto_loeschen()`, NICHT UEBER `DELETE FROM users`.
+ * Die Probe liefert 20 Pakete mit je 20 Punkten ein. Ein
  * DELETE auf `users` nimmt Einsaetze und Diensttage per Kaskade mit, die Spur
- * aber nicht — `track_stuecke` (bis Web 22.7.0 `track_points`) haengt ueber
+ * aber nicht — `track_stuecke` haengt ueber
  * `owner_type`/`owner_id` und hat keinen Fremdschluessel (CLAUDE.md 4, „Spuren nur ueber spur_lib.php").
  * Jeder Lauf der Hauptstufe liess so 400 Waisen zurueck, und die Jobprobe
  * des naechsten Laufs zaehlte sie mit: „erledigt=407 (erwartet 7)", sobald
@@ -200,7 +199,7 @@ $pdo->prepare('INSERT INTO devices (user_id, device_id, api_key_hash, label, act
                VALUES (?,?,?,?,1,?,?)')
     ->execute([$uid, $dev, geraet_schluessel_hash($key), 'Verbindungsprobe',
                'uhr', 'Forerunner 955']);
-/* Die Mengenbremse aus AP7 darf Teil 2 nicht dazwischenfunken: Sie laesst je
+/* Die Mengenbremse darf Teil 2 nicht dazwischenfunken: Sie laesst je
  * Kennung 30 Anfragen in 15 Minuten zu, und Teil 2 stellt mehr. */
 $pdo->exec("DELETE FROM rate_limits WHERE topf IN ('ingest','ingest_ip')");
 
@@ -214,7 +213,7 @@ if ($vorher === []) {
     exit(2);
 }
 
-// Seit Web 23.3.1 in `.zustand/` (R17-22, F-R17-47) — aus der Konstante,
+// Liegt in `.zustand/` — aus der Konstante,
 // damit Probe und Anwendung denselben Ort meinen.
 require_once $wurzel . '/wartung_lib.php';
 $zaehlDatei = UEBERLAST_DATEI;
@@ -336,15 +335,15 @@ pruefe($b['fehler'] !== '' && $b['belegt'] > 0,
        'Die Grenze laesst sich ausschoepfen',
        $b['belegt'] . ' Verbindungen belegt, dann: '
        . ($b['fehler'] !== '' ? $b['fehler'] : 'kein Fehler — die Grenze greift nicht'));
-/* DIE NUMMER GEHOERT IN DEN BERICHT. E-P5a-18 nennt 1040 und 1203; der Fall,
+/* DIE NUMMER GEHOERT IN DEN BERICHT. Die Anwendung nennt 1040 und 1203; der Fall,
  * den ein Hoster herstellt, ist 1226 (siehe UEBERLAST_CODES). Eine Probe,
  * die nur „es hat geklappt" meldete, haette den Unterschied verschluckt. */
 pruefe(preg_match('/\[(1040|1203|1226)\]/', $b['fehler']) === 1,
        '... und meldet eine der drei Nummern aus UEBERLAST_CODES',
        preg_match('/\[(\d+)\]/', $b['fehler'], $mm) === 1 ? 'Fehler ' . $mm[1] : '-');
-/* UND JEDE NUMMER AUCH UEBER DIE MELDUNG ALLEIN (R17-22, F-R17-48). Der
+/* UND JEDE NUMMER AUCH UEBER DIE MELDUNG ALLEIN. Der
  * Weg, den `ueberlast_erkannt()` den verlaesslichen nennt — die Meldung —,
- * kannte bis Web 23.3.0 die 1226 nicht; heute griff ein anderer Weg (der
+ * kannte einmal die 1226 nicht; da griff ein anderer Weg (der
  * Code), und die Probe oben war gruen ueber diesen. Hier traegt die Ausnahme
  * die Nummer NUR in der Meldung, wie bei einem Treiber, der den SQLSTATE in
  * `getCode()` legt. */
@@ -405,10 +404,10 @@ pruefe(str_contains($ing['kopf']['content-type'] ?? '', 'application/json'),
        '... und dem richtigen Inhaltstyp', $ing['kopf']['content-type'] ?? '-');
 
 /* `auth_salt.php` — der zweite JSON-Weg ausserhalb von `/api/` und der
- * Grund, warum `JSON_SKRIPTE_AUSSERHALB_API` in AP9 von zwei auf vier
+ * Grund, warum `JSON_SKRIPTE_AUSSERHALB_API` von zwei auf vier
  * gewachsen ist. Die Anmeldeseite holt hier ihr Salt per `fetch()`; eine
  * HTML-Seite an dieser Stelle laese sie „Anmeldung derzeit nicht möglich"
- * schreiben statt „ausgelastet" (Backlog Nr. 171, eine Ebene tiefer). */
+ * schreiben statt „ausgelastet" (eine Ebene tiefer). */
 $api = hole($basis . '/auth_salt.php', ['Content-Type: application/json'],
             (string)json_encode(['email' => 'verbindungsprobe@example.invalid']));
 pruefe($api['code'] === 503
@@ -452,7 +451,7 @@ echo "\n  Teil 2 — Enge statt Sperre: $pakete Pakete gleichzeitig\n";
  * `belegen_bis_voll()`. */
 while (count($gehalten) > max(0, $b['belegt'] - $frei2)) { array_pop($gehalten); }
 /* Keine Enge: Die Probe haelt keinen Platz mehr, und jede Anfrage bekommt
- * eine Verbindung. Gemessen wird dann allein das Gedraengel (Nr. 210). */
+ * eine Verbindung. Gemessen wird dann allein das Gedraengel. */
 $ohneEnge = count($gehalten) === 0;
 echo "    " . count($gehalten) . " von " . $b['belegt'] . " belegt, "
    . ($b['belegt'] - count($gehalten)) . " frei, $arbeiter Arbeiter, "
@@ -462,12 +461,12 @@ echo "    " . count($gehalten) . " von " . $b['belegt'] . " belegt, "
  * `days`-Zeile. Zwei Ursachen, ein Statuscode; ohne diese Differenz waere
  * „12 x 503" eine Zahl, die nicht sagt, was sie gemessen hat.
  *
- * BIS ZU DREI RUNDEN (P5c/AP3, F-P5c-98). Ob bei zwei freien Plaetzen eine
+ * BIS ZU DREI RUNDEN. Ob bei zwei freien Plaetzen eine
  * Anfrage an der Grenze abprallt, haengt daran, ob drei gleichzeitig eine
  * Verbindung halten — gemessen am 24.09.2026: 0, 1, 12 und 13 Abweisungen
  * in vier Laeufen. Mit EINEM freien Platz prallte es jedes Mal (16, 11, 18),
  * aber dann gibt es kein Gedraengel mehr, und um das geht es im Anlass dieser
- * Probe (Nr. 210). Deshalb: zwei Plaetze, und eine neue Runde mit neuen
+ * Probe. Deshalb: zwei Plaetze, und eine neue Runde mit neuen
  * Paketen, solange noch keine Abweisung an der Grenze gemessen ist.
  * Wiederholt wird das HERSTELLEN der Lage, nicht die Bewertung — jede Zusage
  * unten gilt fuer alle Pakete aller Runden. */
@@ -538,7 +537,7 @@ if ($ohneEnge) {
            'Die Enge schlaegt tatsaechlich auf die Verbindungen durch',
            "$ausGrenze Abweisungen am Zaehler");
 }
-/* KEIN GEDRAENGEL UM DIESELBE ZEILE (Nr. 210, Schritt 18, SR-05). Bis Web
+/* KEIN GEDRAENGEL UM DIESELBE ZEILE. Bis Web
  * 21.11.0 kamen hier in drei Runden zu 20 bei allen freien Plaetzen 39 x 503
  * heraus, an `days`, `missions` und `devices`. Seither stehen die zwei
  * gemeinsamen Zeilen hinter dem Commit, und der Rumpf laeuft bei 1205/1213
@@ -590,7 +589,7 @@ $inDb = (int)$q->fetchColumn();
 pruefe($inDb === $pakete * $runden, '0 verlorene Uploads: jedes Paket steht in der Datenbank',
        "$inDb von " . ($pakete * $runden));
 
-/* Seit S11-04a die Punkte der Stuecke (SPUR2), nicht mehr Zeilen. */
+/* Die Punkte der Stuecke (SPUR2), nicht Zeilen. */
 $q = $pdo->prepare('SELECT COALESCE(SUM(ts.punkte), 0) FROM track_stuecke ts
                       JOIN missions m ON m.id = ts.owner_id
                      WHERE ts.owner_type = ? AND m.user_id = ? AND m.client_ref LIKE ?');

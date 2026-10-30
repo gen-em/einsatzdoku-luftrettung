@@ -5,7 +5,7 @@ require_admin();
 require_once __DIR__ . '/demo_lib.php';
 
 /**
- * Demo-Konto verwalten (Phase P1, E-P1-08).
+ * Demo-Konto verwalten.
  *
  * DREI HANDLUNGEN, EINE DAVON HARMLOS:
  *   Anlegen        legt das Konto an und spielt die Fixture ein
@@ -26,9 +26,9 @@ require_once __DIR__ . '/demo_lib.php';
 
 $notice = null; $error = null; $bericht = null;
 
-/* UMLEITEN NACH DEM POST (Web 21.1.9, Backlog Nr. 250). Jede gelungene
+/* UMLEITEN NACH DEM POST. Jede gelungene
  * Handlung endet mit `flash_setzen()` und einer Umleitung auf diese Seite,
- * der Bericht des Laufs reist ueber die Sitzung mit (E-R4-33) — sonst legt
+ * der Bericht des Laufs reist ueber die Sitzung mit — sonst legt
  * Neuladen an, setzt zurueck oder entfernt ein zweites Mal. Ein Scheitern
  * bleibt auf der Seite: Anlegen und Zuruecksetzen rollen ihre Transaktion
  * zurueck, und `demo_entfernen()` loescht bei `ok=false` nichts
@@ -44,7 +44,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } elseif ($aktion === 'demo_reset') {
             $bericht = demo_zuruecksetzen();
             $notice = 'Demo-Konto auf den Standardzustand zurückgesetzt.';
-            /* NUR DER RESET VON HAND (P5c/AP2, E-P5c-38). Der selbsttätige
+            /* NUR DER RESET VON HAND. Der selbsttätige
              * schriebe bis zu 48 Einträge am Tag in den Reiter mit der langen
              * Frist — und verdeckte jeden anderen. */
             require_once __DIR__ . '/protokoll_lib.php';
@@ -65,13 +65,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
          * Satz, der FUER die Administration geschrieben ist („Es gibt bereits
          * ein Demo-Konto …"). Der ist die Auskunft und bleibt.
          *
-         * Alles andere kam bis Web 8.0.0 genauso heraus — auch
+         * Alles andere kaeme genauso heraus — auch
          * `SQLSTATE[23000] … Duplicate entry 'manual-2' for key 'device_id'`.
          * Das ist keine Meldung, sondern ein Fund fuer jemanden, der den Code
          * kennt. Die technische Ursache gehoert ins Fehlerprotokoll, in die
          * Seite gehoert, WAS los ist und dass nichts geaendert wurde —
          * Anlegen und Zuruecksetzen laufen in einer Transaktion und rollen
-         * zurueck. Das Entfernen NICHT mehr (Absatz am Ende).
+         * zurueck. Das Entfernen NICHT (Absatz am Ende).
          *
          * Die Kennung verbindet beides: Sie steht in der Meldung und im
          * Protokoll (fehler_kennung(), db.php).
@@ -101,13 +101,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                    . 'Einzelheiten stehen im Protokoll unter der Kennung '
                    . $kennung . '.';
         }
-        /* DAS ENTFERNEN IST SEIT WEB 21.1.8 KEINE TRANSAKTION (R4-10,
-         * E-R4-32). Es geht ueber `konto_loeschen()`, und das raeumt Backups
-         * und Spuren, bevor die Kontozeile faellt. Wirft es dazwischen, ist
-         * „es wurde nichts geaendert" falsch — bis Web 21.1.8 stand genau
-         * das hier. Ein zweites „Entfernen" fuehrt es zu Ende: Was schon fort
-         * ist, findet es nicht mehr, und den Rest raeumt es. Weil schon etwas
-         * geschehen sein kann, leitet auch dieses Scheitern um (E-R4-35). */
+        /* DAS ENTFERNEN IST KEINE TRANSAKTION. Es geht ueber
+         * `konto_loeschen()`, und das raeumt Backups und Spuren, bevor die
+         * Kontozeile faellt. Wirft es dazwischen, ist „es wurde nichts
+         * geaendert" falsch. Ein zweites „Entfernen" fuehrt es zu Ende: Was
+         * schon fort ist, findet es nicht mehr, und den Rest raeumt es. Weil
+         * schon etwas geschehen sein kann, leitet auch dieses Scheitern um. */
         if ($aktion === 'demo_entfernen') {
             $kennung ??= fehler_kennung($ex, 'admin_demo');
             flash_setzen('error', 'Das Entfernen ist mittendrin gescheitert — ein Teil '
@@ -148,11 +147,9 @@ if ($demoId !== null) {
         $st->execute([$demoId]);
         return (int)$st->fetchColumn();
     };
-    /* DREI PAPIERKORBZAHLEN, NICHT EINE. Bis Web 8.0.0 stand hier nur die
-     * der Einsaetze — solange der Papierkorb aus einem Nachlauf-Drehbuch kam,
-     * war das die einzige, die etwas aussagte. Seit er aus der Fixture kommt,
-     * meldet der Reset drei (`stats.papierkorb`), und eine Ansicht, die nur
-     * eine davon zeigt, laesst zwei Fehlerbilder unsichtbar.
+    /* DREI PAPIERKORBZAHLEN, NICHT EINE. Der Reset meldet drei
+     * (`stats.papierkorb`), und eine Ansicht, die nur eine davon zeigt,
+     * laesst zwei Fehlerbilder unsichtbar.
      *
      * Der Schluessel „im Papierkorb" bleibt unveraendert bei den Einsaetzen:
      * `browser/demo_pruefen.mjs` liest ihn. */
@@ -180,18 +177,12 @@ $restSek   = demo_reset_in();
 
 /* ---- Anzeige --------------------------------------------------------------
  *
- * UMGEBAUT IN O9C (Web 9.10.0). Bis Web 9.9.0 war diese Seite eine Folge von
- * <h2>-Ueberschriften mit einer `table.data`, einem `pre.mono` und drei
- * `button.btn-primary` in einem `div.rowactions` — Klassen, die es im neuen
- * Stylesheet nicht mehr gibt, weil ihre Regeln in den Bausteinen aufgegangen
- * sind. Sie stand deshalb seit O2 ohne Gestaltung da.
- *
- * DIE ZAHLEN STEHEN JETZT OBEN. Was man vor dem Klicken wissen will, ist
+ * DIE ZAHLEN STEHEN OBEN. Was man vor dem Klicken wissen will, ist
  * „steht da ueberhaupt etwas?" — vier Kacheln beantworten das in einem Blick,
- * wo vorher sieben Tabellenzeilen zu lesen waren. Die Papierkorbzahlen bleiben
+ * wo sonst sieben Tabellenzeilen zu lesen waeren. Die Papierkorbzahlen bleiben
  * Zeilen: Sie sind die Kontrollzahlen des Resets, nicht sein Ergebnis.
  *
- * DIE HANDLUNGEN STEHEN IN DER TITELZEILE, wie auf der Kontoseite (O9a): der
+ * DIE HANDLUNGEN STEHEN IN DER TITELZEILE, wie auf der Kontoseite: der
  * haeufige Fall als Knopf, der endgueltige im Aktionsmenue. Die Formulare
  * dazu liegen versteckt im Seitenkopf und werden ueber `form="…"` bedient —
  * dasselbe Verfahren wie dort.
@@ -283,17 +274,14 @@ ui_seite_start(['titel' => 'Demo-Konto']);
     <?= ui_kennzahl(['wert' => (string)$zahlen['Geräte'],       'label' => 'Geräte']) ?>
   </div>
 
-  <?php /* KEIN ZWEISPALTEN-RASTER MEHR. Es stand hier mit einer einzigen
-           Spalte darin — die rechte Haelfte blieb ab 1200 px leer, und mit
-           dem Zusammenlegen der beiden Erklaerkarten waere sie es endgueltig
-           geblieben. Drei Karten sind eine Spalte (Konzept AP5 (8): zwei
-           Spalten erst ab mehr als vier Karten). */ ?>
+  <?php /* KEIN ZWEISPALTEN-RASTER. Drei Karten sind eine Spalte; zwei
+           Spalten erst ab mehr als vier Karten. */ ?>
     <?php ui_karte_start(['titel' => 'Zustand', 'id' => 'k-zustand']); ?>
       <?php
       ui_zeile(['text' => 'Konto', 'klein' => (string)$email]);
       ui_zeile(['text' => 'Letzter Reset',
                 'klein' => $letzter > 0 ? fmt_local(gmdate('Y-m-d H:i:s', $letzter)) : 'unbekannt']);
-      /* ZWEI FRISTEN SEIT WEB 21.2.0 (R4-14, Nr. 76): 30 Minuten nach der
+      /* ZWEI FRISTEN: 30 Minuten nach der
        * ersten Aenderung, ohne Aenderung ein Tag nach dem letzten Reset.
        * Welche gilt, sagt die Zeile „Geändert" darueber. */
       ui_zeile(['text' => 'Geändert',
@@ -307,10 +295,7 @@ ui_seite_start(['titel' => 'Demo-Konto']);
       ?>
     <?php ui_karte_ende(); ?>
 
-    <?php /* DREI PAPIERKORBZAHLEN, NICHT EINE. Bis Web 8.0.0 stand hier nur
-             die der Einsaetze — solange der Papierkorb aus einem
-             Nachlauf-Drehbuch kam, war das die einzige, die etwas aussagte.
-             Seit er aus der Fixture kommt, meldet der Reset drei
+    <?php /* DREI PAPIERKORBZAHLEN, NICHT EINE. Der Reset meldet drei
              (`stats.papierkorb`), und eine Ansicht, die nur eine davon zeigt,
              laesst zwei Fehlerbilder unsichtbar. */ ?>
     <?php ui_karte_start(['titel' => 'Papierkorb', 'id' => 'k-papierkorb']); ?>
@@ -330,10 +315,8 @@ ui_seite_start(['titel' => 'Demo-Konto']);
          stehen sie auf null, hat das Einspielen etwas übersprungen.</p>
     <?php ui_karte_ende(); ?>
 
-  <?php /* DER BERICHT BLEIBT, DIE ERKLAERUNG GEHT (P5c/AP9, E-P5c-49). Bis
-           Web 21.0.0 stand hier die zugeklappte Karte „Was hier gilt" mit dem
-           Umfang des Resets und dem Bericht als letztem Abschnitt. Der Umfang
-           ist Erklaertext und steht jetzt im Handbuch 11.6; der Bericht ist
+  <?php /* DER BERICHT BLEIBT, DIE ERKLAERUNG GEHT. Der Umfang des Resets
+           ist Erklaertext und steht im Handbuch 11.6; der Bericht ist
            ein Messwert dieses Laufs und gehoert auf die Seite — als eigene,
            zugeklappte Karte, die es nur gibt, wenn es einen Bericht gibt. */ ?>
   <?php if ($bericht !== null): ?>

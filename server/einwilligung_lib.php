@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 /**
- * EINWILLIGUNGEN JE KONTO (P5b/AP4, E-P5b-05, -15).
+ * EINWILLIGUNGEN JE KONTO.
  *
  * ---------------------------------------------------------------------------
  * DREI HAEKCHEN, ZWEI WIRKUNGEN
@@ -11,8 +11,8 @@ declare(strict_types=1);
  *   Auftragsverarbeitung  „angenommen"            sperrt den naechsten Login
  *   Datenschutzerklaerung „zur Kenntnis genommen" zeigt einen Hinweis
  *
- * **Der Wortlaut traegt den rechtlichen Unterschied, die Form ist gleich**
- * (E-P5b-05). Eine Datenschutzerklaerung wird nicht „angenommen" — sie
+ * **Der Wortlaut traegt den rechtlichen Unterschied, die Form ist gleich.**
+ * Eine Datenschutzerklaerung wird nicht „angenommen" — sie
  * informiert, und Widerspruch dagegen ist kein Vertragsschluss, sondern ein
  * Recht. Ein Vertrag dagegen kommt durch Annahme zustande, und ohne sie darf
  * er nicht weiterlaufen.
@@ -24,8 +24,8 @@ declare(strict_types=1);
  * WAS „AKTUELLE FASSUNG" HEISST
  * ---------------------------------------------------------------------------
  *
- * `rechtstexte.stand_am`. Seit P5b/AP4 ist das ein `DATETIME` und nicht mehr
- * ein `DATE` — der Fehlerfund F3 des Konzepts: Zwei Aenderungen am selben Tag
+ * `rechtstexte.stand_am`. Das ist ein `DATETIME` und nicht
+ * ein `DATE`: Zwei Aenderungen am selben Tag
  * waeren sonst EINE Fassung, und wer die erste angenommen hat, gaelte als
  * Annehmer der zweiten.
  *
@@ -34,20 +34,19 @@ declare(strict_types=1);
  *
  * EIN TEXT OHNE `stand_am` VERLANGT NICHTS. Solange die Betreiberin kein
  * Standdatum gesetzt hat, gilt der Text als nicht in Kraft — sonst sperrte
- * ein leer angelegter Platzhalter alle Konten aus. Das ist der Zustand
- * zwischen dem Einspielen der Mechanik (AP4) und dem Einspielen der
- * geprueften Texte (R41, Zuarbeit).
+ * ein leer angelegter Platzhalter alle Konten aus. Das ist der Zustand,
+ * solange die geprueften Texte nicht eingespielt sind.
  *
  * ---------------------------------------------------------------------------
  * DER BESTAND HOLT NACH
  * ---------------------------------------------------------------------------
  *
- * Kein Konto hat vor P5b eine Einwilligung abgegeben, weil es nichts gab,
+ * Kein Konto hat eine Einwilligung abgegeben, bevor es Texte gab,
  * wozu. Beim ersten Login nach dem Einspielen der Texte landen deshalb ALLE
  * am Tor — und das ist richtig und kein Versehen: Es gibt keinen Weg, eine
  * Annahme rueckwirkend anzunehmen.
  *
- * WAS AM TOR ERREICHBAR BLEIBT (E-P5b-05): Abmelden, Export, Konto loeschen.
+ * WAS AM TOR ERREICHBAR BLEIBT: Abmelden, Export, Konto loeschen.
  * Wer nicht zustimmen will, muss an seine Daten kommen und gehen koennen —
  * ein Tor, das auch den Ausgang versperrt, waere Noetigung.
  */
@@ -106,23 +105,22 @@ function einwilligung_offen(int $userId): array
 /**
  * Welche Einwilligungstexte sind IN KRAFT? Schluessel => `stand_am`.
  *
- * Gebraucht von `registrieren.php` (P5b, Backlog Nr. 231): Die Registrierung
+ * Gebraucht von `registrieren.php`: Die Registrierung
  * darf nur verlangen, was es gibt. `einwilligung_offen()` beantwortet
  * dieselbe Frage fuer ein bestehendes Konto — hier gibt es noch keins, und
  * deshalb ist das eine eigene Funktion und kein Sonderfall der anderen.
  *
- * WARUM DAS NOETIG WAR. Bis Web 20.22.1 verlangte `registrieren.php` alle
- * Schluessel aus `RT_EINWILLIGUNG` als Pflichthaken, ohne `stand_am` auch nur
- * anzusehen. Solange die geprueften Texte nicht eingespielt sind — der
- * geplante Zustand bis E-P5b-24 —, musste eine Registrierende damit den Haken
- * „Ich nehme die Vereinbarung zur Auftragsverarbeitung (AVV) an" setzen,
- * waehrend `avv.php` „noch keine Vereinbarung zur Auftragsverarbeitung
- * hinterlegt." anzeigte. Sie nahm ein leeres Dokument an.
+ * WARUM DAS NOETIG IST. Verlangte `registrieren.php` alle Schluessel aus
+ * `RT_EINWILLIGUNG` als Pflichthaken, ohne `stand_am` anzusehen, muesste
+ * eine Registrierende, solange die geprueften Texte nicht eingespielt sind,
+ * den Haken „Ich nehme die Vereinbarung zur Auftragsverarbeitung (AVV) an"
+ * setzen, waehrend `avv.php` „noch keine Vereinbarung zur
+ * Auftragsverarbeitung hinterlegt." anzeigt. Sie naehme ein leeres Dokument
+ * an.
  *
- * Das Tor macht es seit jeher richtig (`einwilligung_offen()`, Zeile mit
+ * Das Tor macht es richtig (`einwilligung_offen()`, Zeile mit
  * „nicht in Kraft"); `docs/Technik.md` begruendet es: „Ein Text ohne
- * Standdatum verlangt nichts." Die Registrierung folgt dieser Regel jetzt
- * auch.
+ * Standdatum verlangt nichts." Die Registrierung folgt derselben Regel.
  *
  * FEHLT DIE TABELLE, ist nichts in Kraft — dieselbe Antwort wie bei
  * `einwilligung_offen()` und aus demselben Grund: Eine Anwendung, die nach

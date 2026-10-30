@@ -2,7 +2,7 @@
  * ===========================================================================
  *
  * WOFUER. Manche Handlungen brauchen mehr als eine Rückfrage: Das Einspielen
- * eines Backups will ein Zielkonto und eine abgetippte Adresse (E-P3-41).
+ * eines Backups will ein Zielkonto und eine abgetippte Adresse.
  * confirm.js kann das nicht — es baut seinen Dialog selbst und kennt nur Text
  * und zwei Knöpfe. Hier steht das Gegenstück: Der Dialog steht als <dialog
  * class="dialog"> IM MARKUP, mit Formular und allem, was er braucht; dieses
@@ -26,7 +26,7 @@
  * der Öffner nichts sagt, bleibt unberührt — das ist der Grund für die
  * Schleife über die Attribute des Öffners und nicht über die Felder.
  *
- * EIN AUSWAHLFELD, DESSEN EINTRÄGE ERST DER ÖFFNER KENNT (S8/AP3). „Backups
+ * EIN AUSWAHLFELD, DESSEN EINTRÄGE ERST DER ÖFFNER KENNT. „Backups
  * ohne Konto" trägt eine Zeile je ORDNER, und welches PAKET eingespielt
  * werden soll, wird im Dialog gewählt. Die Pakete unterscheiden sich je
  * Ordner — ein festes <option>-Gerüst im Markup gäbe es also nicht. Deshalb
@@ -40,12 +40,10 @@
  * kein Wert bereit, bleibt das Feld leer statt mit einem geratenen Eintrag
  * gefüllt.
  *
- * HAKEN UND RADIOS (S9/AP5-4). Bis Web 16.3.0 setzte `fuellen()` an jedem
- * Ziel `value` oder `textContent` — `checked` kam nicht vor, und je Schlüssel
- * wurde genau EIN Element getroffen (`querySelector`). Für die Stammdaten
- * reicht das nicht: Ein Rettungsmittel hat eine Betriebsart (zwei Radios),
- * bis fünf Besatzungsrollen und zwei Fähigkeiten (sieben Kästchen). Jetzt
- * gilt:
+ * HAKEN UND RADIOS. `value` oder `textContent` an je EINEM Element
+ * (`querySelector`) reicht für die Stammdaten nicht: Ein Rettungsmittel hat
+ * eine Betriebsart (zwei Radios), bis fünf Besatzungsrollen und zwei
+ * Fähigkeiten (sieben Kästchen). Deshalb gilt:
  *
  *   - Ein Ziel, das `checkbox` oder `radio` ist, bekommt `checked` statt
  *     `value` — und zwar aus einer MENGE: `data-w-rollen="pilot1,hemstc"`
@@ -54,9 +52,9 @@
  *   - Je Schlüssel werden ALLE Ziele bedient (`querySelectorAll`), nicht das
  *     erste. Sieben Kästchen tragen denselben `data-fuell`.
  *
- * PROGRAMMATISCH ÖFFNEN (`window.edDialog.auf`). Bis hierher war die ganze
- * Schnittstelle deklarativ, und eine Seite konnte keinen Dialog von sich aus
- * öffnen. Das braucht der Fehlerweg: Schlägt das Speichern fehl, zeichnet der
+ * PROGRAMMATISCH ÖFFNEN (`window.edDialog.auf`). Neben der deklarativen
+ * Schnittstelle kann eine Seite einen Dialog auch von sich aus öffnen. Das
+ * braucht der Fehlerweg: Schlägt das Speichern fehl, zeichnet der
  * Server die Seite mit dem vorbelegten Dialog und dessen Meldung, und das
  * Seitenskript öffnet ihn beim Laden. `blatt.js` hat für denselben Zweck
  * seit Langem `window.edBlatt.zu`.

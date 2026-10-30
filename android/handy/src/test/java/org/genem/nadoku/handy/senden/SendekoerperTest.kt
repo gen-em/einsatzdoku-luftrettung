@@ -69,7 +69,7 @@ class SendekoerperTest {
     }
 
     /**
-     * `track` ist seit 0.18.0 ein verschlossenes Spurstück (Vertrag 3):
+     * `track` ist ein verschlossenes Spurstück (Vertrag 3):
      * `seq_from`, `punkte`, `ts_von`, `ts_bis` im Klartext, dazu die Hülle —
      * und **keine** Liste `points` mehr, die der Server mit `400 klartext`
      * abwiese.
@@ -115,7 +115,7 @@ class SendekoerperTest {
 
     /**
      * `resus_sessions` geht **gar nicht** mit — nicht einmal als leere Liste.
-     * Die Reanimation bleibt bei der Garmin (E-R45-1). Eine leere Liste hieße
+     * Die Reanimation bleibt bei der Garmin. Eine leere Liste hieße
      * „es gibt keine"; ein fehlender Schlüssel heißt „dazu sage ich nichts",
      * und nur das ist wahr.
      */

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Halten die Steuerungsdokumente ihre Decken? (Konzept SD, Abschnitt 5)
+"""Halten die Steuerungsdokumente ihre Decken?
 
     python3 tools/steuerung/decken.py               # eine Zeile je Decke
     python3 tools/steuerung/decken.py --stellen     # dazu Datei und Zeile je Überschreitung
@@ -10,9 +10,9 @@ Rückgabewert 0 = jede Decke gehalten · 1 = eine gerissen · 2 = nicht gelaufen
 
 WOFÜR. Rahmenplan und Backlog sind bis zum Schnitt am 26.09.2026 auf 3 700
 und 11 300 Zeilen gewachsen, weil jede Fassung Erzähltext nachzog und nichts
-es maß (Nr. 177, 196, 199). Seit dem Schnitt gilt je Stelle eine Decke — die
-Zahlen unten, begründet in Konzept SD 5 —, und dieses Werkzeug hält sie im
-Prüfstand und im Tor. Eine Decke ist ein Prüfwert, kein Ziel (E-SD-27): Wer
+es maß. Seit dem Schnitt gilt je Stelle eine Decke — die
+Zahlen unten —, und dieses Werkzeug hält sie im
+Prüfstand und im Tor. Eine Decke ist ein Prüfwert, kein Ziel: Wer
 eine anheben will, begründet es in der Verlaufszeile und ändert sie HIER.
 
 GEMESSEN WIRD DIE FORM, NICHT DER SINN. Ob ein Statussatz stimmt, sieht nur
@@ -35,7 +35,7 @@ BACKLOG = 'docs/Backlog.md'
 ERLEDIGT = 'docs/Backlog-Erledigt.md'
 DATEIEN = (RAHMENPLAN, VERLAUF, BACKLOG, ERLEDIGT)
 
-# Die Decken (Konzept SD 5). Eine Zahl je Stelle; die Beschreibung sagt, was gezählt wird.
+# Die Decken. Eine Zahl je Stelle; die Beschreibung sagt, was gezählt wird.
 DECKEN = {
     'rahmenplan-zeilen': (500, 'Rahmenplan.md gesamt, Zeilen'),
     'rahmenplan-kopf': (15, 'Rahmenplan.md Kopf bis zur ersten `## `, Zeilen'),
@@ -62,7 +62,7 @@ DECKEN = {
 VOKABULAR = ('offen', 'Konzept', 'freigegeben', 'Umsetzung', 'gebaut', 'gemergt', 'blockiert')
 BERICHTIGUNG = re.compile(r'hier stand|stand bis (zur )?Fassung|berichtigt mit Fassung|ÜBERHOLT')
 EINTRAG = re.compile(r'^(\d+)\. ')
-# DIE TRENNZEILE VOR JEDEM EINTRAG (Nr. 340, R4-25, E-R4-62). Ohne sie
+# DIE TRENNZEILE VOR JEDEM EINTRAG. Ohne sie
 # rendert GitHub die Einträge als EINE Liste `<ol start="21">` und zählt fort:
 # neben Nr. 23 stand 22, neben Nr. 36 stand 23. Ein HTML-Kommentar beendet die
 # Liste und ist auf GitHub unsichtbar; der nächste Eintrag beginnt eine neue
@@ -224,7 +224,7 @@ def messen(wurzel):
     setze('backlog-schnittmenge', f'{len(offen)} offen, {len(erledigt)} erledigt',
           [(ERLEDIGT, erledigt[nr], f'Nr. {nr} steht auch in {BACKLOG}') for nr in schnitt])
 
-    # --- Rendering (Nr. 196) ------------------------------------------------
+    # --- Rendering ----------------------------------------------------------
     if not shutil.which('cmark-gfm'):
         raise NichtGelaufen('cmark-gfm fehlt (Ausbaustufe web)')
     r = subprocess.run(['cmark-gfm', '-e', 'table', '--to', 'html', os.path.join(wurzel, *BACKLOG.split('/'))],
@@ -238,7 +238,7 @@ def messen(wurzel):
           [(BACKLOG, 0, f'{li} <li>, aber {len(eintraege)} Einträge — ein Eintrag zerfällt oder eine Liste steckt in einem')]
           if li != len(eintraege) else [])
 
-    # --- Jede Nummer beginnt ihre eigene Liste (Nr. 340) ---------------------
+    # --- Jede Nummer beginnt ihre eigene Liste -------------------------------
     # Gezählt wird, was GitHub zeigt: je Eintrag eine Liste, deren `start` seine
     # Nummer ist (ohne `start` heißt 1). Ein Eintrag, der die Liste davor
     # fortsetzt, fehlt in der Folge — die Folgen weichen dann ab.
@@ -381,9 +381,9 @@ def selbstprobe(wurzel):
         ('backlog-codeblock', BACKLOG, f_codeblock), ('backlog-listenpunkte', BACKLOG, f_li),
         ('backlog-listenstart', BACKLOG, f_listenstart),
     ]
-    # UNABHÄNGIG VOM ZUSTAND DES BAUMS (F-SD-13): Die Selbstprobe zählt je
+    # UNABHÄNGIG VOM ZUSTAND DES BAUMS: Die Selbstprobe zählt je
     # Decke die Stellen VOR und NACH dem Riss. Ein Baum, der schon rot ist,
-    # bleibt damit prüfbar — die erste Gegenprobe im Tor (Nr. 332 mit einer
+    # bleibt damit prüfbar — die erste Gegenprobe im Tor (mit einer
     # 21. Zeile) fiel sonst hier, und `--stellen` kam nie dran.
     fehl = 0
     baum = {k: len(s) for k, (_, s) in messen(wurzel).items()}

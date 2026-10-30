@@ -1,4 +1,4 @@
-/* P-15 — Mengenbremse des Demo-Kontos (E-P1-20).
+/* Mengenbremse des Demo-Kontos.
  *
  * Sie zählt GELUNGENE Anmeldungen, nicht Fehlversuche. Geprüft wird deshalb
  * nicht, wie oft ein falsches Passwort durchgeht, sondern wie oft ein
@@ -7,19 +7,19 @@
  * Die Gegenprobe gehört dazu: Ein anderes Konto darf von der Sperre NICHT
  * betroffen sein. Ohne sie hieße „gesperrt" nur „irgendetwas ist kaputt".
  */
-/* Der Code-Schritt des Zweitfaktors steht EINMAL, in motor.mjs (P5c/AP5). */
-import { codeSchritt, motorWahl, starten } from '../../motor.mjs';
+/* Der Code-Schritt des Zweitfaktors steht EINMAL, in motor.mjs. */
+import { codeSchritt, motorWahl, starten, istOertlich } from '../../motor.mjs';
 
 const MODUL = process.env.PLAYWRIGHT_MODUL
   || '/opt/node22/lib/node_modules/playwright/index.mjs';
 const PW = (m => m.default ?? m)(await import(MODUL.startsWith('/') ? 'file://' + MODUL : MODUL));
-/* Die Engine wählt der Läufer (MOTOR=… oder --motor), R87. */
+/* Die Engine wählt der Läufer (MOTOR=… oder --motor). */
 const MOTOR = motorWahl(process.argv);
 const basis = process.argv[2] || 'https://127.0.0.1:8443';
 const grenze = parseInt(process.argv[3] || '20', 10);
 
 const browser = await starten(PW, MOTOR);
-const kontext = await browser.newContext({ ignoreHTTPSErrors: true });
+const kontext = await browser.newContext({ ignoreHTTPSErrors: istOertlich(basis) });
 const seite = await kontext.newPage();
 const befunde = [];
 
@@ -32,7 +32,7 @@ async function versuch(mail, pw) {
     seite.waitForNavigation({ waitUntil: 'domcontentloaded', timeout: 30000 }).catch(() => {}),
     seite.click('#loginform button[type="submit"]'),
   ]);
-  /* DER ZWEITFAKTOR (P5c/AP5, E-P5c-43). Die Gegenprobe meldet sich als
+  /* DER ZWEITFAKTOR. Die Gegenprobe meldet sich als
    * BetreiberIn an, und die hat einen: Ohne diesen Schritt stünde sie nach
    * dem Passwort im Code-Schritt unter `login.php`, und der Lauf meldete
    * „Die Demo-Sperre trifft auch ein anderes Konto" — einen Befund, der
@@ -66,7 +66,7 @@ else if (ersteSperre !== grenze + 1) {
 
 // Gegenprobe: ein anderes Konto bleibt unberührt.
 const andere = await versuch('admin@example.invalid', 'pruefstandzugang2026');
-/* Mit Grund, seit es den Zweitfaktor gibt (P5c/AP5): Ein Code-Schritt oder
+/* Mit Grund, seit es den Zweitfaktor gibt: Ein Code-Schritt oder
  * Einrichtungstor, das scheitert, ist etwas anderes als die Demo-Sperre —
  * der Befund darunter nennt nur die eine Deutung. */
 console.log(`Gegenprobe admin@example.invalid: ${andere.drin ? 'kommt herein'

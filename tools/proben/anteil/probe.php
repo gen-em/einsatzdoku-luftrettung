@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 /**
  * Anteilprobe — rechnet der Server den Server-Anteil richtig, und erkennt er
- * die fuenf Lagen aus E-S10-09? (S10, Schritt 9b)
+ * die fuenf Lagen?
  *
  * Anlass: Nr. 307 — die Huellenpruefung nahm edka1: auch fuer pat_wrap_rc an (Teil A3 haette es fangen muessen)
  *
@@ -15,7 +15,7 @@ declare(strict_types=1);
  * `app_state` von Hand verstellt. Hier werden sie hergestellt, gemessen und
  * wieder zurueckgestellt.
  *
- * SEIT R17-20 (Web 23.2.0) AUCH DIE ANMELDUNG, UEBER HTTP (Teil F): Der
+ * AUCH DIE ANMELDUNG, UEBER HTTP (Teil F): Der
  * Anmelde-Hash traegt einen Pfeffer aus `kdf_anteil`. Teil F meldet ein
  * Probenkonto an der laufenden Anlage an — mit altem Hash (still umgestellt),
  * mit Pfeffer, ohne Anteil (eigene Meldung, Systemmeldung, und nach der
@@ -29,11 +29,10 @@ declare(strict_types=1);
  *      im `finally` wiederhergestellt — auch bei einem Abbruch. War er vorher
  *      nicht da, wird die Zeile geloescht.
  *   2. `server/config.php`. Die Teile B, C und E stellen ihre Lagen IN DER
- *      DATEI her (`konfig_stellen()`, seit Schritt 15 — bis zum 29.09.2026
- *      stand hier „nur Teil D", und das stimmte seitdem nicht mehr); das
+ *      DATEI her (`konfig_stellen()`); das
  *      `finally` legt sie byte-gleich zurueck. Teil E ruft
- *      `anteil_wechseln()` und `anteil_neuanfang()` (seit der Nachpruefung
- *      von H-SR-06, F-SR-86), die ueber den Schreibweg der Anwendung schreiben
+ *      `anteil_wechseln()` und `anteil_neuanfang()`, die ueber den
+ *      Schreibweg der Anwendung schreiben
  *      (`config_eintrag_schreiben()`); Teil D prueft diesen Schreibweg
  *      selbst, und nur mit `--schreiben`.
  *   3. Die zwei Marken des Schluesselblatts (`schluesselblatt_bestaetigt_am`,
@@ -49,7 +48,7 @@ declare(strict_types=1);
  * kein Verhalten an Kopfzeilen. Die Probe laedt `db.php` und
  * `serverkrypto_lib.php` und ruft die Funktionen unmittelbar — dieselbe
  * Wahl wie `tools/proben/spur/`. Was AN DER OBERFLAECHE passiert, misst der
- * Browserlauf von AP2 und AP3; was hier gemessen wird, saehe man dort nicht.
+ * Browserlauf (`betriebslauf.mjs`, `umstellungslauf.mjs`); was hier gemessen wird, saehe man dort nicht.
  *
  * Aufruf:
  *   php tools/proben/anteil/probe.php               Teile A bis C
@@ -103,10 +102,8 @@ printf("  app_state.kdf_anteil_kennung vorher: %s\n",
 /**
  * Eine Anteilslage in `config.php` herstellen.
  *
- * BIS WEB 20.26.3 GING DAS IM SPEICHER: `$CFG['kdf_anteil'] = …`, und
- * `config_gemerktes_verwerfen()` sorgte dafuer, dass die Serverkrypto neu
- * las. Mit Schritt 15 AP2 ist die globale `$CFG` entfallen — die Anwendung
- * liest ueber `konfig()` aus der DATEI, und eine Zuweisung an `$CFG`
+ * IM SPEICHER GEHT DAS NICHT: Eine globale `$CFG` gibt es nicht — die
+ * Anwendung liest ueber `konfig()` aus der DATEI, und eine Zuweisung an `$CFG`
  * erreicht niemanden mehr. Sie scheitert nicht, sie tut nur nichts:
  * **22 der 55 Erwartungen dieser Probe standen danach still auf „nicht
  * erfuellt"** (gemessen 21.09.2026).
@@ -172,7 +169,7 @@ pruefe('Konto-Anteil ist 64 Hexzeichen',
        preg_match('/^[0-9a-f]{64}$/', $a7) === 1, true);
 pruefe('Konto-Anteil = HMAC-SHA256(anteil, "konto:7")',
        $a7, hash_hmac('sha256', 'konto:7', (string)$rohA));
-/* DIE TRENNUNG IST DER ZWECK (E-S10-03): Wer den Anteil EINES Kontos hat,
+/* DIE TRENNUNG IST DER ZWECK: Wer den Anteil EINES Kontos hat,
  * darf daraus keinen anderen bilden koennen. */
 pruefe('Konto 7 und Konto 8 bekommen Verschiedenes', $a7 !== $a8, true);
 pruefe('derselbe Konto, anderer Anteil ergibt Verschiedenes', $a7 !== $a7b, true);
@@ -204,27 +201,27 @@ pruefe('WRAP_RE nimmt edka1:', preg_match(WRAP_RE, 'edka1:ab12cd34:' . $b64) ===
 pruefe('WRAP_RE nimmt ohne Praefix', preg_match(WRAP_RE, $b64) === 1, true);
 pruefe('WRAP_RE weist eine halbe Kennung ab',
        preg_match(WRAP_RE, 'edka1:ab12cd3:' . $b64) === 1, false);
-/* DER BLOB BLEIBT UNBERUEHRT, und das ist die Aussage von S10 in einer Zeile:
+/* DER BLOB BLEIBT UNBERUEHRT, und das ist die Aussage des Anteils in einer Zeile:
  * Der Anteil steckt im Datenschluessel, der Datenschluessel oeffnet die
  * Huelle, und in der Huelle liegt derselbe Inhaltsschluessel wie vorher. Kein
  * Datensatz wird angefasst, wenn ein Konto umstellt. */
 pruefe('PAT_BLOB_RE nimmt edka1: NICHT',
        preg_match(PAT_BLOB_RE, 'edka1:ab12cd34:' . str_repeat('A', 60)) === 1, false);
 
-/* ---- B. Die fuenf Lagen aus E-S10-09 ------------------------------------- */
+/* ---- B. Die fuenf Lagen -------------------------------------------------- */
 
 teil('B. Die fuenf Lagen aus E-S10-09');
 
 /* 1. nicht eingerichtet — kein Wert, keine Marke. Der Zustand jeder
- *    Installation unmittelbar nach dem Ausrollen von S10. */
+ *    Installation, die den Anteil noch nie hatte. */
 stelle(null); marke(null);
 $z = anteil_zustand(true);
 pruefe('(1) nicht eingerichtet -> stand', $z['stand'], 'fehlt');
 pruefe('(1) nichts wird ausgeliefert', anteil_ausgeliefert(), null);
 pruefe('(1) die Marke bleibt leer', schluessel_marke_lesen('kdf_anteil_kennung'), null);
 
-/* 2. bereit — Wert da, Marke wird beim ersten Lesen nachgetragen
- *    (E-S10-U-02). Das ist der Griff „Anlegen" auf der Karte. */
+/* 2. bereit — Wert da, Marke wird beim ersten Lesen nachgetragen.
+ *    Das ist der Griff „Anlegen" auf der Karte. */
 stelle(A_HEX); marke(null);
 $z = anteil_zustand(true);
 pruefe('(2) bereit -> stand', $z['stand'], 'bereit');
@@ -303,8 +300,7 @@ stelle(A_HEX, null); marke($kA);
 pruefe('(8) ohne alten Wert ist es schlicht bereit',
        anteil_zustand(true)['stand'], 'bereit');
 
-/* DERSELBE WERT ZWEIMAL IST EINE WAISE, KEINE ROTATION (Nachpruefung H-SR-06,
- * F-SR-86) — eine Rotation, die zwischen ihren beiden Schreibschritten
+/* DERSELBE WERT ZWEIMAL IST EINE WAISE, KEINE ROTATION — eine Rotation, die zwischen ihren beiden Schreibschritten
  * abbrach. Bis dahin hiess sie „Rotation" mit sich selbst und sperrte den
  * Wechsel des Serverschluessels. */
 stelle(A_HEX, A_HEX); marke($kA);
@@ -312,7 +308,7 @@ $zw = anteil_zustand(true);
 pruefe('(8a) kdf_anteil_alt = kdf_anteil: bereit, ohne alte Kennung',
        [$zw['stand'], $zw['kennung_alt']], ['bereit', null]);
 
-/* ---- E. Die Rotation macht das Blatt faellig (Nr. 233, E-SR-11) ---------- */
+/* ---- E. Die Rotation macht das Blatt faellig ----------------------------- */
 
 teil('E. anteil_wechseln() setzt die Rueckfrage zum Blatt zurueck');
 
@@ -335,7 +331,7 @@ pruefe('(E4) mit dem Grund „anteil"', blatt_neu_weil(), 'anteil');
 blatt_bestaetigt();
 pruefe('(E5) die Antwort raeumt den Grund weg', blatt_neu_weil(), null);
 
-/* EINE WAISE WIRD UEBERSCHRIEBEN (F-SR-86): Die Rotation geht durch, der
+/* EINE WAISE WIRD UEBERSCHRIEBEN: Die Rotation geht durch, der
  * bisherige ist der Wert von vorher. */
 stelle(A_HEX, A_HEX); marke($kA);
 anteil_zustand(true);
@@ -344,9 +340,8 @@ pruefe('(E6) anteil_wechseln() ueber einer Waise gelingt, der bisherige ist A',
        [$okW, strtolower((string)konfig('kdf_anteil_alt', ''))], [true, A_HEX]);
 blatt_bestaetigt();
 
-/* AUCH DER NEUANFANG MACHT DAS BLATT FAELLIG (F-SR-82; gemessen erst mit der
- * Nachpruefung von H-SR-06, F-SR-86 — bis dahin bliebe ein Rueckbau der
- * Zeile gruen). Hergestellt wird die Lage „abweichend" ueber die Marke. */
+/* AUCH DER NEUANFANG MACHT DAS BLATT FAELLIG — sonst bliebe ein Rueckbau
+ * der Zeile gruen. Hergestellt wird die Lage „abweichend" ueber die Marke. */
 stelle(A_HEX, null); marke('deadbeef');
 pruefe('(E7) vorher: Lage abweichend', anteil_zustand(true)['stand'], 'abweichend');
 app_state_setzen(BLATT_BESTAETIGT_K, gmdate('Y-m-d H:i:s'));
@@ -424,9 +419,9 @@ if ($schreib) {
     echo "  (ohne --schreiben wird der Schreibweg nicht eigens geprueft)\n";
 }
 
-/* ---- F. Die Anmeldung mit Pfeffer, ueber HTTP (R17-20, E-R17-20, -44) -----
+/* ---- F. Die Anmeldung mit Pfeffer, ueber HTTP -----------------------------
  *
- * Der Anmelde-Hash traegt seit Web 23.2.0 einen Pfeffer aus `kdf_anteil`.
+ * Der Anmelde-Hash traegt einen Pfeffer aus `kdf_anteil`.
  * Hier ueber den echten Weg (`login.php` der laufenden Anlage, Vorgabe
  * http://127.0.0.1:8080, sonst `NADOKU_BASIS`):
  *   F1  mit Anteil: das richtige Token meldet an, ein Hash ohne Praefix

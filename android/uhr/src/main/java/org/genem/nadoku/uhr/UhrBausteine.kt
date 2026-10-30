@@ -31,10 +31,10 @@ import org.genem.nadoku.gemeinsam.Farbe
  * SIE SIND NICHT DIE DES HANDYS, und das ist Absicht: Ein rundes Display
  * schneidet an den Seiten ab, die Bedienung geschieht mit einem Finger und
  * oft mit Handschuhen, und der Grund ist Asphalt statt Rauch. Was beide
- * teilen, sind die **Farbrollen** (E-S4-22a) — Orange handelt, Blau erklärt
+ * teilen, sind die **Farbrollen** — Orange handelt, Blau erklärt
  * und bestätigt, Rot warnt und beendet.
  *
- * ALLE MASSE SIND BLIND GEWÄHLT (E-R45-7): Es gibt keinen Emulator und keine
+ * ALLE MASSE SIND BLIND GEWÄHLT: Es gibt keinen Emulator und keine
  * Uhr. Berührziele, Schriftgrößen und die Randabstände gehören am Gerät
  * nachgemessen und danach in den Wear-Teil von `docs/Geraete-Eingabe.md`.
  */
@@ -45,14 +45,14 @@ import org.genem.nadoku.gemeinsam.Farbe
  * Das ist kein Widerspruch zu `CLAUDE.md` 5, sondern dessen Zweck: Die 44 px
  * sind eine Untergrenze für Maus und Finger am Schreibtisch. Hier trifft ein
  * Finger im Einsatz ein rundes Display, oft mit Handschuh — Androids eigene
- * Empfehlung von 48 dp ist die kleinere Zumutung. **Seit R58 (02.09.2026)
- * gilt das für beide Module:** Das Handy führt dieselben 48 dp, die Web-Zahl
- * gilt für den Browser. Fund B-S4-02 ist damit entschieden, nicht mehr offen.
+ * Empfehlung von 48 dp ist die kleinere Zumutung. **Das gilt für beide
+ * Module:** Das Handy führt dieselben 48 dp, die Web-Zahl gilt für den
+ * Browser.
  */
 val UHR_BEDIENHOEHE: Dp = 48.dp
 
 
-/** Der eine große Knopf: Orange handelt, dunkelblaue Schrift (E-P3-15). */
+/** Der eine große Knopf: Orange handelt, dunkelblaue Schrift. */
 @Composable
 fun UhrKnopf(
     beschriftung: String,
@@ -97,7 +97,7 @@ fun UhrKnopfLeise(beschriftung: String, modifier: Modifier = Modifier, aufTippen
 }
 
 /**
- * Eine Zeile der Phasenliste (E-S4-21c) — **Übersicht und Direktwahl in
+ * Eine Zeile der Phasenliste — **Übersicht und Direktwahl in
  * einem**: Sie zeigt die gesetzten Zeiten und setzt beim Tippen.
  */
 @Composable
@@ -129,7 +129,7 @@ fun Phasenreihe(
             modifier = Modifier.weight(1f),
         )
         /* ALLE Zeiten, nicht die letzte: Eine erneut gesetzte Phase ist eine
-         * Korrektur und damit eine Information (E-R45-12). Blau bestätigt. */
+         * Korrektur und damit eine Information. Blau bestätigt. */
         Text(
             text = zeiten.joinToString(" · ")
                 .ifEmpty { androidx.compose.ui.res.stringResource(org.genem.nadoku.R.string.keine_zeit) },
@@ -140,8 +140,8 @@ fun Phasenreihe(
 }
 
 /**
- * Der rote Aufnahmepunkt — auf **jedem laufenden Bildschirm**, Handy wie Uhr
- * (E-S4-22a). Ein grafisches Objekt: gemessen gegen 3:1, nicht 4,5:1.
+ * Der rote Aufnahmepunkt — auf **jedem laufenden Bildschirm**, Handy wie
+ * Uhr. Ein grafisches Objekt: gemessen gegen 3:1, nicht 4,5:1.
  */
 @Composable
 fun Aufnahmepunkt(modifier: Modifier = Modifier) {

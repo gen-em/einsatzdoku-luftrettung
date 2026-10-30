@@ -2,13 +2,12 @@
 // Sendet Einsaetze und Ruhe-Segmente inkrementell (max. 500 Punkte/Request),
 // merkt sich pro Track die bestaetigte next_seq und raeumt nach final+komplett auf.
 //
-// SEIT UHR 4.0.0 VERSCHLOSSEN (S11-08). Spur, Phasenkoordinaten und
-// Reanimation gehen nur noch als Geraetehuelle hinaus (Huelle.mc): je
-// Anfrage ein Spurstueck (`track` mit `huelle`) und bei einem Einsatz die
-// Einsatzhuelle (`ort_huelle`). Ohne Kontoschluessel aus der Kopplung sendet
-// die Uhr nicht (E-S11-09) — der Server nimmt Klartext seit Web 22.0.1 ohnehin
-// nicht mehr an, und eine Uhr, die es trotzdem versuchte, bekaeme fuer jedes
-// Paket `400 klartext` und parkte ihren ganzen Bestand.
+// VERSCHLOSSEN. Spur, Phasenkoordinaten und Reanimation gehen nur als
+// Geraetehuelle hinaus (Huelle.mc): je Anfrage ein Spurstueck (`track` mit
+// `huelle`) und bei einem Einsatz die Einsatzhuelle (`ort_huelle`). Ohne
+// Kontoschluessel aus der Kopplung sendet die Uhr nicht — der Server nimmt
+// Klartext ohnehin nicht an, und eine Uhr, die es trotzdem versuchte,
+// bekaeme fuer jedes Paket `400 klartext` und parkte ihren ganzen Bestand.
 using Toybox.Communications;
 using Toybox.Application.Properties;
 using Toybox.Application.Storage;
@@ -17,7 +16,7 @@ using Toybox.Lang;
 // Traeger fuer den Web-Antwort-Rueckruf (method() gibt es nur auf Objekten).
 // Die Signatur muss exakt der entsprechen, die Communications fuer den
 // Rueckruf einer Webanfrage erwartet. (Bewusst ohne den Namen des Aufrufs:
-// Wer die Netzstellen zaehlt, soll sechs finden, nicht sieben — R17-21.)
+// Wer die Netzstellen zaehlt, soll sechs finden, nicht sieben.)
 class UploaderCb {
     function initialize() {}
     function onResponse(code as Lang.Number,
@@ -32,7 +31,7 @@ module Uploader {
     var _busy as Lang.Boolean = false;
     var lastError as Lang.String or Null = null;
 
-    /* IST DAS GERAET BEIM SERVER ABGEMELDET? (Backlog Nr. 159.)
+    /* IST DAS GERAET BEIM SERVER ABGEMELDET?
      *
      * 401 und 403 sagen nichts ueber das Paket, sondern ueber das GERAET: Es
      * wurde im Web geloescht, sein Schluessel passt nicht mehr, oder es steht
@@ -67,7 +66,7 @@ module Uploader {
         return true;
     }
 
-    /* IST DIESES PAKET DAUERHAFT ABGEWIESEN? (Backlog Nr. 159.)
+    /* IST DIESES PAKET DAUERHAFT ABGEWIESEN?
      *
      * Die Marke haelt im Storage, weil ein Neustart die Lage nicht aendert:
      * Was der Server als unbrauchbar zurueckgewiesen hat, bleibt unbrauchbar.
@@ -77,17 +76,16 @@ module Uploader {
         return Storage.getValue("bad_" + ref) != null;
     }
 
-    /* DIE FRIST DER GEPARKTEN (S11-08, E-S11-11, wie Android AN-2).
+    /* DIE FRIST DER GEPARKTEN (wie auf dem Handy).
      *
-     * Bis Uhr 4.0.0 war die Marke ein blosses `true` und ein geparktes Paket
-     * lag, bis jemand es verwarf -- unter Umstaenden fuer immer, mit seiner
-     * Spur. Eine Spur, die niemand mehr nachreichen wird, ist kein Beleg mehr,
-     * sondern ein Ortsdatensatz auf einem Geraet, das verlorengehen kann
-     * (F-R17-28, Lage H im Bedrohungsmodell). Seitdem traegt die Marke den
-     * Zeitpunkt des Parkens, und nach Const.PARK_FRIST_S raeumt jeder
-     * Sendelauf das Paket, bevor er sendet.
+     * Ohne Frist laege ein geparktes Paket, bis jemand es verwirft -- unter
+     * Umstaenden fuer immer, mit seiner Spur. Eine Spur, die niemand mehr
+     * nachreichen wird, ist kein Beleg mehr, sondern ein Ortsdatensatz auf
+     * einem Geraet, das verlorengehen kann (Lage H im Bedrohungsmodell).
+     * Deshalb traegt die Marke den Zeitpunkt des Parkens, und nach
+     * Const.PARK_FRIST_S raeumt jeder Sendelauf das Paket, bevor er sendet.
      *
-     * ALTE MARKEN (`true`) bekommen beim ersten Lauf den Zeitpunkt JETZT --
+     * ALTE MARKEN (ein blosses `true`, ohne Zeitpunkt) bekommen beim ersten Lauf den Zeitpunkt JETZT --
      * wann sie gesetzt wurden, weiss die Uhr nicht, und lieber dreissig Tage
      * zu spaet raeumen als ein Paket, das gestern abgewiesen wurde, sofort. */
     function parkFristPruefen() as Void {
@@ -110,13 +108,13 @@ module Uploader {
         for (var k = 0; k < weg.size(); k++) { verwerfen(weg[k]); }
     }
 
-    /* DIE FRIST DER ABMELDUNG (F-R17-28, E-R17-22).
+    /* DIE FRIST DER ABMELDUNG.
      *
-     * `abgemeldet` liegt im Speicher (siehe oben), und bis Uhr 4.0.0 hatte
-     * der Zustand keine Frist: Eine verlorene, im Web geloeschte Uhr hielt
-     * ihren Klartextpuffer -- Spur, Phasen, Reanimation -- unbegrenzt,
-     * waehrend geparkte Pakete nach dreissig Tagen gehen (Lage H im
-     * Bedrohungsmodell). Seitdem merkt sich die Uhr im Storage, WANN sie zum
+     * `abgemeldet` liegt im Speicher (siehe oben). Ohne Frist hielte eine
+     * verlorene, im Web geloeschte Uhr ihren Klartextpuffer -- Spur, Phasen,
+     * Reanimation -- unbegrenzt, waehrend geparkte Pakete nach dreissig
+     * Tagen gehen (Lage H im Bedrohungsmodell). Deshalb merkt sich die Uhr
+     * im Storage, WANN sie zum
      * ersten Mal 401 oder 403 bekam; das uebersteht Neustarts, an denen
      * `abgemeldet` vergessen wird. Eine angenommene Anfrage und jedes
      * Koppeln oder Trennen loeschen den Vermerk. Nach Const.PARK_FRIST_S
@@ -124,7 +122,7 @@ module Uploader {
      * mit -- der naechste Dienst bekommt bei der naechsten Abmeldung eine
      * neue Frist, statt sofort mitzugehen.
      *
-     * DER PREIS (E-R17-22): Ein Diensttag, der dreissig Tage nach der
+     * DER PREIS: Ein Diensttag, der dreissig Tage nach der
      * Abmeldung noch nicht gesendet ist, geht auf der Uhr verloren. Wer die
      * Uhr in der Frist neu koppelt, verliert nichts.
      *
@@ -179,13 +177,13 @@ module Uploader {
     function syncAll() as Void {
         if (_busy) { return; }
         /* DIE FRIST VOR DEM RIEGEL: Auch eine Uhr, die gerade weiss, dass sie
-         * abgemeldet ist, raeumt nach Ablauf (E-R17-22). */
+         * abgemeldet ist, raeumt nach Ablauf. */
         abmeldeFristPruefen();
         /* ABGEMELDET HEISST: gar nicht erst versuchen. Jede Anfrage kostet
-         * Funk und Akku und bekommt dieselbe Antwort, bis jemand neu koppelt
-         * (Backlog Nr. 159). */
+         * Funk und Akku und bekommt dieselbe Antwort, bis jemand neu
+         * koppelt. */
         if (abgemeldet) { return; }
-        /* OHNE SCHLUESSEL ODER OHNE VERSCHLUESSELUNG: ebenso nicht (S11-08).
+        /* OHNE SCHLUESSEL ODER OHNE VERSCHLUESSELUNG: ebenso nicht.
          * Die Sync-Seite sagt, was fehlt. */
         if (!Huelle.hatSchluessel() || !Huelle.bereit()) { return; }
         parkFristPruefen();
@@ -208,11 +206,11 @@ module Uploader {
     }
 
     function _findJob() as Lang.Dictionary or Null {
-        /* GEPARKTE WERDEN UEBERSPRUNGEN, NICHT ENTFERNT (Backlog Nr. 159).
+        /* GEPARKTE WERDEN UEBERSPRUNGEN, NICHT ENTFERNT.
          *
-         * Bis hierher stand ein dauerhaft abgewiesenes Paket vorn in der
-         * Schlange und blieb dort: Es wurde endlos wiederholt, und alles
-         * dahinter kam nie an. Ueberspringen loest die Blockade, ohne etwas
+         * Sonst stuende ein dauerhaft abgewiesenes Paket vorn in der
+         * Schlange und bliebe dort: Es wuerde endlos wiederholt, und alles
+         * dahinter kaeme nie an. Ueberspringen loest die Blockade, ohne etwas
          * wegzuwerfen -- die Spur bleibt, bis jemand sie ausdruecklich
          * verwirft. */
         for (var i = 0; i < Model.pendingMissions.size(); i++) {
@@ -255,7 +253,7 @@ module Uploader {
             _busy = false;
             return;
         }
-        // Kein Schluessel: nichts hinaus (S11-08). Die Sync-Seite sagt es.
+        // Kein Schluessel: nichts hinaus. Die Sync-Seite sagt es.
         if (!Huelle.hatSchluessel()) { _busy = false; return; }
         var d = job["data"] as Lang.Dictionary;
         var ref = d["ref"] as Lang.String;
@@ -273,7 +271,7 @@ module Uploader {
             "final" => d["final"] == true
         };
 
-        /* VERSCHLIESSEN (S11-08). Scheitert es, geht nichts hinaus: Eine
+        /* VERSCHLIESSEN. Scheitert es, geht nichts hinaus: Eine
          * Anfrage ohne Huelle quittierte der Server, und die Uhr raeumte
          * Punkte, die nie angekommen sind. Ohne Punkte faellt `track` weg --
          * der Server antwortet dann mit seiner eigenen Marke (Vertrag 3.1). */
@@ -295,8 +293,8 @@ module Uploader {
         // in der Warteschlange liegen, waehrend bereits der naechste laeuft —
         // mit der aktuellen Kennung landete er an dessen Diensttag.
         //
-        // NUR MITSCHICKEN, WENN SIE DA IST. Pakete aus der Zeit vor 1.8.0
-        // fuehren keine; fuer sie greift die Rueckfallebene ueber (Konto,
+        // NUR MITSCHICKEN, WENN SIE DA IST. Aeltere Pakete fuehren
+        // keine; fuer sie greift die Rueckfallebene ueber (Konto,
         // Datum), die der Server dauerhaft behaelt. Ein leeres Feld waere
         // dasselbe in umstaendlich.
         if (d["dref"] != null) { body["day_ref"] = d["dref"]; }
@@ -304,9 +302,8 @@ module Uploader {
         if (istEinsatz) {
             body["distance_m"] = (d["dist"] != null) ? d["dist"] : Track.distanceM.toNumber();
             body["ascent_m"]   = (d["asc"]  != null) ? d["asc"]  : Track.ascentM.toNumber();
-            /* Die Phasen tragen seit 4.0.0 nur Nummer und Zeit; die
-             * Koordinate steht in der Einsatzhuelle, ebenso die Reanimation
-             * (Vertrag 3, seit Web 22.0.1). */
+            /* Die Phasen tragen nur Nummer und Zeit; die Koordinate steht
+             * in der Einsatzhuelle, ebenso die Reanimation (Vertrag 3). */
             var phases = [];
             var raw = d["phases"] as Lang.Array<Lang.Array>;
             for (var i = 0; i < raw.size(); i++) {
@@ -345,11 +342,9 @@ module Uploader {
 
     /* Zugangsdaten aus der Kopplung (Storage "cred"). null = nicht gekoppelt.
      *
-     * NUR NOCH DIESER WEG (F-R17-12, E-R17-21). Bis Uhr 4.0.0 gab es daneben
-     * den Alt-Weg: Geraete-ID und API-Schluessel als App-Einstellungen, in
-     * Garmin Connect sichtbar und von Hand eintragbar. Seit Uhr 3.0.0 fuellte
-     * ihn die Kopplung nicht mehr, und er trug Zugangsdaten durch eine
-     * fremde App. Eine Uhr, die nur ueber ihn sendete, koppelt einmal neu. */
+     * NUR DIESER WEG. Geraete-ID und API-Schluessel als App-Einstellungen
+     * waeren in Garmin Connect sichtbar und von Hand eintragbar, und sie
+     * truegen Zugangsdaten durch eine fremde App. */
     function credentials() as Lang.Dictionary or Null {
         var c = Storage.getValue("cred");
         if (c instanceof Lang.Dictionary && c["d"] != null && c["k"] != null) {
@@ -385,10 +380,10 @@ module Uploader {
     // werden ergaenzt. Eine vollstaendige URL bleibt ebenso gueltig; sie
     // endet dann auf ".php" und wird nicht angefasst.
     //
-    // NUR HTTPS (F-R17-11, wie Android E-S4-14). Bis Uhr 4.0.0 blieb ein
-    // eingetragenes "http://" stehen, und Geraeteschluessel und Pakete gingen
-    // ab dem Telefon unverschluesselt. Jetzt wird es auf "https://" gehoben,
-    // ohne Ausnahmeschalter; die Prueffassung spricht ohnehin TLS (8443).
+    // NUR HTTPS (wie auf dem Handy). Bliebe ein eingetragenes "http://"
+    // stehen, gingen Geraeteschluessel und Pakete ab dem Telefon
+    // unverschluesselt. Deshalb wird es auf "https://" gehoben, ohne
+    // Ausnahmeschalter; die Prueffassung spricht ohnehin TLS (8443).
     function _serverUrl() as Lang.String {
         var u = Properties.getValue("serverUrl");
         if (!(u instanceof Lang.String) || u.length() == 0) { return ""; }
@@ -421,18 +416,18 @@ module Uploader {
                 Track.purge(ref);
                 Storage.deleteValue("ack_" + ref);    // Marken mit entsorgen
                 Storage.deleteValue("meta_" + ref);
-                /* UEBER DIE REFERENZ, NICHT UEBER DEN INDEX (F-R17-52).
+                /* UEBER DIE REFERENZ, NICHT UEBER DEN INDEX.
                  *
-                 * Bis Uhr 4.0.0 stand hier der Listenplatz, den `_findJob()`
-                 * beim Absenden gemessen hatte. Dazwischen liegt eine
-                 * Netzanfrage, und in der Zeit darf die Liste schrumpfen:
-                 * "Abgewiesene verwerfen" auf der Sync-Seite entfernt jedes
-                 * geparkte Paket -- und geparkte stehen gerade VOR dem
-                 * laufenden, weil `_findJob()` sie ueberspringt. Rueckte die
-                 * Liste um eins, traf das Entfernen ein ANDERES Paket: Es
-                 * verschwand, seine Spur blieb als Waise im Speicher, und der
-                 * Einsatz kam nie an. Lag der Platz danach hinter dem Ende,
-                 * brach die App im Rueckruf ab. Die Referenz kann nicht
+                 * Der Listenplatz, den `_findJob()` beim Absenden misst,
+                 * kann veralten: Dazwischen liegt eine Netzanfrage, und in
+                 * der Zeit darf die Liste schrumpfen. "Abgewiesene
+                 * verwerfen" auf der Sync-Seite entfernt jedes geparkte
+                 * Paket -- und geparkte stehen gerade VOR dem laufenden,
+                 * weil `_findJob()` sie ueberspringt. Rueckte die Liste um
+                 * eins, traefe das Entfernen ein ANDERES Paket: Es
+                 * verschwaende, seine Spur bliebe als Waise im Speicher, und
+                 * der Einsatz kaeme nie an. Laege der Platz danach hinter dem
+                 * Ende, braeche die App im Rueckruf ab. Die Referenz kann nicht
                  * veralten; steht sie nicht (mehr) in der Liste -- das
                  * laufende Paket des Dienstes steht nie dort --, wird nichts
                  * entfernt. Dieselbe Bauart wie `verwerfen()`. */
@@ -457,11 +452,10 @@ module Uploader {
              * Paketen ist nichts verkehrt, und sie werden gebraucht, sobald
              * jemand neu koppelt.
              *
-             * Bis Uhr 3.0.2 fiel das in denselben Zweig wie eine Stoerung und
-             * wurde endlos wiederholt. Weil ein Rueckstand zugleich das
-             * Trennen sperrte (Pair.start), war die Uhr danach nur noch durch
-             * Loeschen der App zu retten -- mit allem, was sie trug. Das ist
-             * der eigentliche Fund hinter Backlog Nr. 159. */
+             * Fiele das in denselben Zweig wie eine Stoerung, wuerde es
+             * endlos wiederholt. Weil ein Rueckstand zugleich das Trennen
+             * sperrt (Pair.start), waere die Uhr danach nur noch durch
+             * Loeschen der App zu retten -- mit allem, was sie traegt. */
             abgemeldet = true;
             abmeldungVermerken();      // die Frist beginnt beim ersten Mal
             lastError = null;
@@ -475,8 +469,8 @@ module Uploader {
              * Reverse Proxy, einer Firewall, einer vertippten Adresse in den
              * Einstellungen. Ein gesundes Paket dafuer zu parken waere
              * schlimmer als ein Versuch zuviel; ohne Kennzeichen wird deshalb
-             * weiter wiederholt, wie bisher. */
-            // Mit dem Zeitpunkt des Parkens: daran haengt die Frist (S11-08).
+             * weiter wiederholt. */
+            // Mit dem Zeitpunkt des Parkens: daran haengt die Frist.
             Storage.setValue("bad_" + ref, Util.epochNow());
             lastError = null;
             _busy = false;
@@ -501,7 +495,7 @@ module Uploader {
         return "payload".equals(kennung as Lang.String);
     }
 
-    /* EIN GEPARKTES PAKET ENDGUELTIG VERWERFEN (Backlog Nr. 159).
+    /* EIN GEPARKTES PAKET ENDGUELTIG VERWERFEN.
      *
      * Die Reihenfolge ist wesentlich: erst die Spur, dann die Marken, dann
      * der Eintrag aus der Liste. Wer die Marke `bad_` vorher loeschte, haette

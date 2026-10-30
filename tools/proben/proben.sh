@@ -1,12 +1,13 @@
 #!/usr/bin/env bash
-# Proben gegen die örtliche Installation — ein Läufer für die dreißig
-# Prüfungen, die eine Bibliothek oder einen Endpunkt messen (E-PK-24).
+# Proben gegen die örtliche Installation — ein Läufer für die Prüfungen,
+# die eine Bibliothek oder einen Endpunkt messen. Wie viele es
+# sind, sagt die Liste `RUF` unten; `alle` fährt jede.
 #
 # Aufruf:  bash tools/proben/proben.sh <name> [zusatz…]
 #          bash tools/proben/proben.sh alle
 #          bash tools/proben/proben.sh --liste
 #
-# Vor PK-04 waren das zwanzig Ordner mit zwanzig Anleitungen und zwanzig
+# Frueher waren das zwanzig Ordner mit zwanzig Anleitungen und zwanzig
 # Aufrufkonventionen — `probe.php`, `pruefe.mjs`, `probe.mjs`, `pruefen.php`,
 # je nachdem, wer sie geschrieben hatte. Die Messungen darunter sind
 # unverändert; die Abnahme steht im Prüfdokument.
@@ -18,7 +19,7 @@ cd "$WURZEL" || exit 1
 # Die Versandprobe braucht laufende Gegenstellen. Mit einem Wurzelpfad als
 # Argument misst sie gegen das, was dort läuft (auch die echten Server aus
 # `echte_gegenstellen.sh`); ohne startet dieser Läufer die Nachbauten aus
-# `gegenstellen.py` und hält sie danach an (RP-01, F-RP-09). Bis dahin stand
+# `gegenstellen.py` und hält sie danach an. Bis dahin stand
 # sie unter „nicht in alle", und im Prüfstand war sie rot, ohne zu messen.
 versand_mit_nachbau() {
     if [ $# -gt 0 ]; then php tools/proben/versand/probe.php "$@"; return; fi

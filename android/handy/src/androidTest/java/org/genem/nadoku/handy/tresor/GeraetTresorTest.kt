@@ -13,7 +13,7 @@ import org.junit.runner.RunWith
 import java.security.KeyStore
 
 /**
- * Die EINE Zeile, die der Prüfstand nicht erreicht (S4, Gerätetest).
+ * Die EINE Zeile, die der Prüfstand nicht erreicht (Gerätetest).
  *
  * WOFÜR ES DIESE DATEI GIBT. `PruefTresorschluessel` prüft den ganzen
  * Umschlag — AES-256-GCM, frischer Zufallswert, Rundlauf, kein Klartext auf
@@ -27,8 +27,7 @@ import java.security.KeyStore
  *
  *     ./gradlew :handy:connectedDebugAndroidTest
  *
- * Ein Emulator genügt und ist im Container erreichbar; die Annahme E-R45-8
- * („kein Emulator") ist widerlegt. Was ein Emulator NICHT belegt, steht am
+ * Ein Emulator genügt und ist im Container erreichbar. Was ein Emulator NICHT belegt, steht am
  * Ende dieser Datei.
  */
 @RunWith(AndroidJUnit4::class)
@@ -41,8 +40,8 @@ class GeraetTresorTest {
      *   D8: Space characters in SimpleName '...' are not allowed prior to
      *       DEX version 040
      *
-     * DEX 040 gibt es ab API 30; dieses Modul steht auf `minSdk = 26`
-     * (E-S4-03). Der Fehler faellt erst beim Dexen des Test-APK auf, nicht
+     * DEX 040 gibt es ab API 30; dieses Modul steht auf `minSdk = 26`. Der
+     * Fehler faellt erst beim Dexen des Test-APK auf, nicht
      * beim Uebersetzen -- wer die Namen zurueckaendert, merkt es also erst
      * zwei Minuten spaeter und an einer Meldung, die nicht nach dem Namen
      * klingt.

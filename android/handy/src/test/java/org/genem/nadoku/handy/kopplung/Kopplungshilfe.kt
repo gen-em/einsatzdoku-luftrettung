@@ -5,14 +5,11 @@ import org.genem.nadoku.handy.tresor.Schluesseltresor
 /**
  * Was in den Rundlauffällen den **Menschen im Browser** ersetzt.
  *
- * DAS PROBLEM, DAS DIESE DATEI LÖST. Seit der Umkehr der Kopplung (R49, S5)
- * gibt es keinen Kopplungscode mehr, den man vorab in eine Tabelle legen kann:
- * Er entsteht bei `pair.php` selbst, zusammen mit den Zugangsdaten, und lebt
- * zehn Minuten. Die drei Rundlaufklassen konnten sich bis Android 0.10.1
- * ihre Kopplung aus einer vorbereiteten `pair_codes`-Zeile holen — diese
- * Tabelle gibt es nicht mehr.
+ * DAS PROBLEM, DAS DIESE DATEI LÖST. Es gibt keinen Kopplungscode, den man
+ * vorab in eine Tabelle legen kann: Er entsteht bei `pair.php` selbst,
+ * zusammen mit den Zugangsdaten, und lebt zehn Minuten.
  *
- * Der Ablauf hat jetzt einen Schritt, den **kein Gerät tut**: Zwischen `start`
+ * Der Ablauf hat einen Schritt, den **kein Gerät tut**: Zwischen `start`
  * und `bestaetigen` trägt ein Mensch den Code im Browser ein. Ein Prüffall
  * muss diesen Schritt nachstellen, sonst bleibt die Sitzung ewig `offen` und
  * `bestaetigen ja` antwortet `409 nicht_beansprucht`.
@@ -74,17 +71,15 @@ object Kopplungshilfe {
     }
 
     /**
-     * Geräte, Sitzungen **und den Ratenschutz** des Prüfkontos abräumen
-     * (Backlog Nr. 95).
+     * Geräte, Sitzungen **und den Ratenschutz** des Prüfkontos abräumen.
      *
      * DER RATENSCHUTZ IST DER GRUND, WARUM DIESE FUNKTION MEHR TUT ALS
      * AUFRÄUMEN. `pair.php` lässt zwanzig `start`-Aufrufe je zehn Minuten und
-     * Absenderadresse zu (E-S5-33). Diese Klasse macht in einem Lauf mehr als
+     * Absenderadresse zu. Diese Klasse macht in einem Lauf mehr als
      * zwanzig — allein der Grenzfall bis zu acht —, und alle kommen von
      * `127.0.0.1`. Ohne das Leeren sperrt sich der Prüflauf **selbst** aus:
      * Der erste Durchgang läuft grün, der zweite meldet für jeden Fall
      * `429 zu_viele_versuche`, und wer das sieht, sucht den Fehler in der App.
-     * Genau das ist beim ersten Lauf dieses Pakets passiert.
      *
      * Der Ratenschutz ist hier **nicht der Prüfling** — er wird in
      * `tools/kopplungsprobe/` gegen den Endpunkt gemessen, wo er hingehört.
@@ -92,13 +87,13 @@ object Kopplungshilfe {
      * einer Zahl zu messen.
      *
      * WAS DIESE FUNKTION AUSDRÜCKLICH NICHT TUT: die **hochgeladenen Daten**
-     * abräumen — Diensttage, Einsätze, Ruhesegmente. Das tut seit R4-21
+     * abräumen — Diensttage, Einsätze, Ruhesegmente. Das tut
      * [datenAbraeumen], und zwar VORHER: Diese Funktion löscht die Geräte,
      * und danach wäre nicht mehr zu erkennen, welche Daten vom Lauf stammen.
      * Ein `DELETE` auf `missions` und `rest_segments` in dieser SQL-Zeile
      * scheidet weiter aus (`CLAUDE.md` 4): Es ließe die Spur als Waise zurück.
      * Die drei Kopplungstabellen bleiben dagegen auf dem `mariadb`-Weg — sie
-     * tragen keine Spur, und ihr Abräumen ist hier seit S5 gemessen.
+     * tragen keine Spur, und ihr Abräumen ist hier gemessen.
      */
     fun aufraeumen(kontoId: Int = KONTO_ID): String? = sqlAusfuehren(
         "DELETE FROM pair_sessions WHERE user_id = $kontoId OR user_id IS NULL; " +
@@ -108,13 +103,13 @@ object Kopplungshilfe {
 
     /**
      * Was die Geräte des Kontos hochgeladen haben, über die Wege der
-     * Anwendung abräumen (Backlog Nr. 95, R4-21).
+     * Anwendung abräumen.
      *
      * Ruft `android/werkzeuge/rundlauf_aufraeumen.php`: je Diensttag der
      * Geräte `trash_delete_day()` und `trash_purge_day()` — Einsätze,
      * Ruhesegmente, Spur und Sperrvermerke gehen über `spur_lib.php`, nicht
-     * über ein `DELETE`. Bis dahin blieben nach einem vollen Rundlauf 18
-     * Diensttage, 10 Einsätze und 28 Ruhesegmente im Konto 1.
+     * über ein `DELETE`. Ohne diesen Schritt bleiben nach einem vollen
+     * Rundlauf 18 Diensttage, 10 Einsätze und 28 Ruhesegmente im Konto 1.
      *
      * MUSS VOR `trennen()` UND VOR [aufraeumen] LAUFEN. Beide löschen die
      * Geräte, und `day_refs`, `missions` und `rest_segments` verweisen mit

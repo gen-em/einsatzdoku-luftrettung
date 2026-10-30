@@ -3,13 +3,13 @@
  * WOFUER. `vervielfaeltigen.py` legt eine Folge mehrteiliger `.edbak`-Dateien (Fassung 4)
  * ab; dieses Skript spielt sie nacheinander in das Messstandkonto ein — durch
  * den Browser, über `einstellungen.php?t=backup`, so wie eine NutzerIn es
- * täte. Kein SQL, kein Sonderendpunkt (Geist von R4).
+ * täte. Kein SQL, kein Sonderendpunkt.
  *
- * UND ES MISST DABEI. Der Einspielweg IST einer der Prüflinge: B-S2-03 sagt,
- * dass er lange vor 5000 Einsätzen bricht. Wo genau, steht nirgends — deshalb
+ * UND ES MISST DABEI. Der Einspielweg IST einer der Prüflinge: Er stand im Verdacht,
+ * lange vor 5000 Einsätzen zu brechen. Wo genau, steht nirgends — deshalb
  * hält dieses Skript je Datei fest, wie lange es gedauert hat, was die
  * Anwendung gemeldet hat und wie hoch der Haldenverbrauch des Browsers
- * gestiegen ist. Das ist die Ausgangsmessung, gegen die S2 später antritt.
+ * gestiegen ist. Das ist eine Ausgangsmessung.
  *
  * Aufruf:
  *   node einspielen.mjs [basis] [ordner] [ausgabe.json]
@@ -36,7 +36,7 @@ const bpw     = process.env.MESSSTAND_BACKUP_PASSWORT || 'nadokudemo0815';
  * DIESES SKRIPT FUELLT EIN KONTO MIT TAUSENDEN EINSAETZEN. In einem
  * Prüfkonto ist das der Zweck; in einem echten Konto wäre es ein Schaden, den
  * niemand mehr von Hand aufräumt, und auf der Referenzinstallation wäre der
- * Referenzstand hin — genau das ist dort schon einmal passiert (F-S1-D, und
+ * Referenzstand hin — genau das ist dort schon einmal passiert (die
  * die Lehre steht in `browser/demo_pruefen.mjs`).
  *
  * Der Riegel schließt deshalb NACH INNEN: Wer nicht POSITIV feststellen kann,
@@ -79,7 +79,7 @@ const verzeichnis = JSON.parse(readFileSync(`${ordner}/verzeichnis.json`, 'utf-8
 const lokal = /^https:\/\/(127\.0\.0\.1|localhost)(:|\/)/.test(basis);
 const browser = await chromium.launch();
 const kontext = await browser.newContext({ ignoreHTTPSErrors: lokal, acceptDownloads: true });
-/* DER WARTUNGSLAUF BLEIBT AUS (S11-07, F-S11-77): Er packt und dünnt im
+/* DER WARTUNGSLAUF BLEIBT AUS: Er packt und dünnt im
    Browser aus, sobald eine Seite ihn anstößt (Startseite, Reiter Backup),
    und das Ausdünnen ändert die Punkte — mitten in einem Vergleich wäre das
    eine Abweichung, die keine ist. Die Antwort sagt „nichts fällig" — ein
@@ -104,7 +104,7 @@ async function anmelden(mail, pw) {
     seite.click('#loginform button[type="submit"]'),
   ]);
   if (seite.url().includes('login.php')) { return false; }
-  /* DAS SCHLÜSSELPAAR ABWARTEN (F-S11-71, hier am 17.10.2026 gesehen): Die
+  /* DAS SCHLÜSSELPAAR ABWARTEN (hier am 17.10.2026 gesehen): Die
      erste Seite nach der Anmeldung legt es still an; wer vorher weitergeht,
      bricht das Anlegen ab, und das Einspielen meldet „kein Schlüsselpaar" —
      0 von 5096 Einsätzen. Dieselbe Warteschleife wie in kreislauf_edbak.mjs. */
@@ -122,8 +122,8 @@ async function anmelden(mail, pw) {
   return true;
 }
 
-/* AUF RÜCKFRAGE ODER ERGEBNIS WARTEN, WAS ZUERST KOMMT (F-S11-74). Bis
- * S11-11 wartete die Schleife bis zu 8 s auf eine Rückfrage, die nicht kam,
+/* AUF RÜCKFRAGE ODER ERGEBNIS WARTEN, WAS ZUERST KOMMT. Frueher
+ * wartete die Schleife bis zu 8 s auf eine Rückfrage, die nicht kam,
  * und die Uhr lief dabei: Alle 17 Dateien standen auf 8,1 s, gleich, wie
  * lange das Einspielen wirklich brauchte. */
 async function rueckfragen(hoechstens = 4) {
@@ -180,7 +180,7 @@ for (const eintrag of verzeichnis.dateien) {
     await seite.fill('#ipw', bpw);
     await seite.click('#impbtn');
     await rueckfragen();
-    /* AUF DIE MELDUNG WARTEN, NICHT AUF EINEN WORTLAUT (S2/AP5b).
+    /* AUF DIE MELDUNG WARTEN, NICHT AUF EINEN WORTLAUT.
      *
      * Hier stand eine Wortliste. Sie ist zweimal falsch gewesen: einmal, weil
      * der Abbruchtext keines der Woerter enthielt (kreislauf_edbak.mjs), und

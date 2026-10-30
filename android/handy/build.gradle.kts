@@ -1,13 +1,13 @@
-// NAdoku Handy -- die App, die aufzeichnet und sendet (Block B).
+// NAdoku Handy -- die App, die aufzeichnet und sendet.
 //
 // Sie ist der eigentliche Client des JSON-Vertrags: Vordergrunddienst mit
 // GPS, Puffer, Warteschlange, Kopplung. Die Uhr (Modul uhr/) ist nur
-// Fernbedienung und spricht ausschliesslich mit dieser App (E-R45-1, E-S4-11).
+// Fernbedienung und spricht ausschliesslich mit dieser App.
 
 import java.util.Properties
 
 plugins {
-    /* KEIN `kotlin.android` MEHR (AR-02): AGP 9 uebersetzt Kotlin selbst
+    /* KEIN `kotlin.android`: AGP 9 uebersetzt Kotlin selbst
      * ("built-in Kotlin"), und das alte Plugin daneben bricht den Bau ab.
      * Welche Kotlin-Fassung das ist, legt die Wurzel fest. */
     alias(libs.plugins.android.application)
@@ -15,8 +15,7 @@ plugins {
 }
 
 android {
-    /* DIESELBE ANWENDUNGS-ID WIE DAS UHR-MODUL, und das ist keine Wahl
-     * (E-S4-01): Der Wear Data Layer stellt Nachrichten nur zwischen Apps
+    /* DIESELBE ANWENDUNGS-ID WIE DAS UHR-MODUL, und das ist keine Wahl: Der Wear Data Layer stellt Nachrichten nur zwischen Apps
      * gleichen Pakets UND gleicher Signatur zu. Waeren die IDs verschieden,
      * kaeme keine einzige Nachricht von der Uhr an -- und zwar ohne
      * Fehlermeldung, die Zustellung bliebe einfach aus.
@@ -26,30 +25,29 @@ android {
      *
      * ENDGUELTIG. Eine spaetere Aenderung waere fuer jede Installation eine
      * andere App: neue Installation, verlorene Daten, verlorene Kopplung.
-     * Dieselbe Ansage steht im Manifest der Garmin-Uhr seit Uhr 2.0.0. */
+     * Dieselbe Ansage steht im Manifest der Garmin-Uhr. */
     namespace = "org.genem.nadoku"
-    /* 37 seit Android 0.16.0 (Konzept AR, E-AR-08): Compose 1.12, wear-compose
+    /* 37, weil Compose 1.12, wear-compose
      * 1.7 und core-ktx 1.19 verlangen es (aar-metadata: minCompileSdk=37). */
     compileSdk = 37
 
     defaultConfig {
         applicationId = "org.genem.nadoku"
 
-        /* Android 8.0 (E-S4-03, bestaetigt am 31.08.2026 als F-S4-A).
+        /* Android 8.0.
          * Ab hier verhalten sich Vordergrunddienste mit Benachrichtigungs-
          * kanal stabil; aeltere Geraete sind im Zielkreis nicht zu erwarten. */
         minSdk = 26
-        /* 37 seit Android 0.16.0 (E-AR-08): Es gelten die Regeln von Android 17.
-         * Durchsicht der 17 Verhaltensaenderungen: Konzept AR, AR-03. */
+        /* 37: Es gelten die Regeln von Android 17; seine
+         * Verhaltensaenderungen sind durchgesehen. */
         targetSdk = 37
 
         versionCode = rootProject.extra["nadokuVersionCode"] as Int
         versionName = rootProject.extra["nadokuVersionName"] as String
 
-        /* DIE SERVERADRESSE STEHT FEST (R63, Backlog Nr. 84).
+        /* DIE SERVERADRESSE STEHT FEST.
          *
-         * Bis Android 0.10.1 war sie ein Eingabefeld und kam wahlweise aus
-         * einem QR-Code. Beides entfaellt: Diese App spricht mit genau einer
+         * Sie ist kein Eingabefeld und kommt aus keinem QR-Code: Diese App spricht mit genau einer
          * Installation, und wer eine eigene betreibt, baut ein eigenes APK --
          * genau dafuer steht die Adresse HIER und nicht als Konstante im
          * Quelltext. Ein Selbsthoster aendert eine Zeile im Bauskript, nicht
@@ -79,14 +77,14 @@ android {
     }
 
     signingConfigs {
-        /* DER SIGNATURSCHLUESSEL LIEGT NICHT IM REPOSITORIUM (E-S4-16).
+        /* DER SIGNATURSCHLUESSEL LIEGT NICHT IM REPOSITORIUM.
          *
          * Er wird einmal erzeugt, dem Auftraggeber zur Verwahrung uebergeben
          * und ueber signatur.properties eingebunden -- eine Datei, die in
          * .gitignore steht, wie server/config.php. Fehlt sie, baut dieses
          * Projekt ein UNSIGNIERTES Release; genau so laeuft es im Container
-         * und spaeter im CI-Prueftor nach R40.4 (E-R45-9: signiert wird
-         * ausserhalb der CI, weil der Schluessel dort nichts verloren hat).
+         * und im Bau der Kette (signiert wird in einem eigenen Schritt ohne
+         * Gradle, weil der Schluessel im Bau nichts verloren hat).
          *
          * Jede spaetere Fassung MUSS mit demselben Schluessel signiert sein.
          * Android erkennt eine App an Paketname UND Signatur; ein Wechsel
@@ -115,7 +113,7 @@ android {
         }
     }
 
-    /* JDK 17 als Sprachstand (E-S4-02). Der Baulauf selbst laeuft im Container
+    /* JDK 17 als Sprachstand. Der Baulauf selbst laeuft im Container
      * auf JDK 21 -- das ist kein Widerspruch: Die Zahl hier legt fest, welchen
      * Bytecode und welchen Sprachumfang die App enthaelt, nicht, womit
      * uebersetzt wird. Siehe LIESMICH.md, Abschnitt "Werkzeugstaende". */
@@ -131,34 +129,31 @@ android {
 
     /* GEMEINSAMER QUELLTEXT OHNE DRITTES MODUL.
      *
-     * E-S4-02 legt ZWEI Module fest, handy/ und uhr/. Beide brauchen dieselben
+     * Es gibt ZWEI Module, handy/ und uhr/. Beide brauchen dieselben
      * Dinge: die Farb-Token, die Bildmarken, die Phasenliste, das Format der
      * Kennungen, das Nachrichtenformat des Data Layer. Ein drittes Modul waere
-     * der uebliche Gradle-Weg dafuer -- es waere aber auch eine Entscheidung,
-     * die das Konzept nicht getroffen hat.
+     * der uebliche Gradle-Weg dafuer.
      *
      * Stattdessen wird der gemeinsame Quelltext in BEIDE Module EINGEBUNDEN.
      * Er wird damit zweimal uebersetzt; das kostet Bauzeit und sonst nichts.
      * Was es einspart, ist eine Modulgrenze mit eigener Versionierung,
      * eigenem Manifest und eigener Lint-Auswertung fuer rund tausend Zeilen. */
     //
-    // SEIT AGP 9 UEBER `kotlin`, NICHT UEBER `java` (AR-02, F-AR-08). Das
-    // eingebaute Kotlin nimmt Kotlin-Dateien aus einem `java`-Verzeichnis
-    // nicht mehr an; bis Android 0.15.1 stand hier `java.srcDir(…)`.
+    // UEBER `kotlin`, NICHT UEBER `java`: Das eingebaute Kotlin von AGP 9
+    // nimmt Kotlin-Dateien aus einem `java`-Verzeichnis nicht an.
     sourceSets["main"].kotlin.directories += "../gemeinsam/quelle"
     sourceSets["main"].res.directories += "../gemeinsam/res"
     // Die Prüfvektoren der Gerätehülle für den instrumentierten Fall
-    // (S11-09, `GeraetehuelleGeraetTest`): gelesen an Ort und Stelle, nicht
+    // (`GeraetehuelleGeraetTest`): gelesen an Ort und Stelle, nicht
     // kopiert — sie liegen nur im Test-APK, nie in der App.
     sourceSets["androidTest"].assets.directories += "../../tools/proben/huelle"
 
     lint {
         /* Ein Lint-FEHLER haelt den Baulauf an; Warnungen werden gezaehlt und
-         * genannt, nicht versteckt (Abnahme B1).
+         * genannt, nicht versteckt.
          *
-         * DIE BERICHTSSCHALTER SIND WEG (AR-02). Bis Android 0.15.1 standen
-         * hier `textReport`, `htmlReport` und `xmlReport`; AGP 9 erzeugt
-         * alle Berichte immer und meldet die Schalter als veraltet. Gezaehlt
+         * KEINE BERICHTSSCHALTER: AGP 9 erzeugt alle Berichte immer und
+         * meldet `textReport`, `htmlReport` und `xmlReport` als veraltet. Gezaehlt
          * wird aus dem XML-Bericht unter build/reports/. */
         abortOnError = true
         warningsAsErrors = false
@@ -192,8 +187,7 @@ android {
                     /* DER FEHLSCHLAG BRINGT SEINEN GRUND MIT. `events(…)`
                      * nennt den Fall, nicht die Ursache; ohne die drei
                      * Zeilen hier steht im Protokoll ein Name und sonst
-                     * nichts. Am 20.09.2026 hat genau das eine Stunde
-                     * gekostet (Backlog Nr. 240). */
+                     * nichts. */
                     exceptionFormat =
                         org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
                     showExceptions = true
@@ -202,20 +196,21 @@ android {
 
                     /* DIE STANDARDAUSGABE NUR, WENN DER RUNDLAUF LÄUFT.
                      *
-                     * Sie stand bis zum 20.09.2026 auf `true` — für **eine**
-                     * Zeile: `KopplungRundlaufTest` gibt am Ende
-                     * "Rundlauf: N Geräte gekoppelt …" aus. Der Fall
-                     * überspringt sich aber selbst, wenn `nadoku.rundlauf`
-                     * leer ist, also im Prüftor IMMER.
+                     * Gebraucht wird sie für **eine** Zeile:
+                     * `KopplungRundlaufTest` gibt am Ende "Rundlauf: N Geräte
+                     * gekoppelt …" aus. Der Fall überspringt sich aber
+                     * selbst, wenn `nadoku.rundlauf` leer ist, also im
+                     * Prüftor IMMER.
                      *
-                     * Bezahlt wurde die eine Zeile mit rund 9000 Zeilen
-                     * CloseGuard-Stapelabzügen aus Robolectric, die elf
-                     * Sekunden abdecken und das Protokoll unlesbar machen —
-                     * die Fehlschlagzeile lag davor und war über die
-                     * Log-Schnittstelle nicht mehr erreichbar.
+                     * Stünde sie immer auf `true`, bezahlte man die eine
+                     * Zeile mit rund 9000 Zeilen CloseGuard-Stapelabzügen
+                     * aus Robolectric, die elf Sekunden abdecken und das
+                     * Protokoll unlesbar machen — die Fehlschlagzeile läge
+                     * davor und wäre über die Log-Schnittstelle nicht mehr
+                     * erreichbar.
                      *
                      * ABGESCHALTET WIRD NICHTS: Wer den Rundlauf anschaltet,
-                     * bekommt seine Ausgabe wie bisher. */
+                     * bekommt seine Ausgabe. */
                     showStandardStreams = rundlauf.isNotBlank()
                 }
             }
@@ -223,47 +218,46 @@ android {
     }
 }
 
-/* HIER STAND BIS ANDROID 0.15.1 `kotlin { compilerOptions { jvmTarget = 17 } }`.
- * Mit dem eingebauten Kotlin von AGP 9 folgt `jvmTarget` von selbst
+/* KEIN `kotlin { compilerOptions { jvmTarget = 17 } }`: Mit dem eingebauten
+ * Kotlin von AGP 9 folgt `jvmTarget` von selbst
  * `compileOptions.targetCompatibility` (oben, 17) -- eine zweite Angabe
- * derselben Zahl waere eine, die auseinanderlaufen kann (AR-02). */
+ * derselben Zahl waere eine, die auseinanderlaufen kann. */
 
-/* DAS ROBOLECTRIC-ABBILD KOMMT ÜBER GRADLE, NICHT ÜBER ROBOLECTRIC
- * (Backlog Nr. 240, 20.09.2026).
+/* DAS ROBOLECTRIC-ABBILD KOMMT ÜBER GRADLE, NICHT ÜBER ROBOLECTRIC.
  *
- * WAS VORHER GESCHAH. Robolectric holt sein Android-Archiv (`android-all-
+ * WAS SONST GESCHIEHT. Robolectric holt sein Android-Archiv (`android-all-
  * instrumented`, 145 MB) von sich aus **während des Testlaufs** von Maven —
  * über seinen eigenen `MavenArtifactFetcher`, an Gradle vorbei: ohne
  * Wiederholung, ohne Prüfsumme über den Abhängigkeitsauflöser, und ohne den
  * Zwischenspeicher, den ein Läufer aufbauen könnte. Der Ablageort ist
  * `~/.m2`, nicht der Gradle-Cache.
  *
- * Am 20.09.2026 brach dieser Download auf einem Läufer ab
- * (`SocketException: Connection reset by peer`) und färbte Stufe 1 rot:
+ * Bricht dieser Download auf einem Läufer ab
+ * (`SocketException: Connection reset by peer`), färbt er Stufe 1 rot:
  *
  *     HandyBildTest > classMethod FAILED
  *       java.lang.AssertionError at MavenArtifactFetcher.java:129
  *
- * `classMethod` ist der Klassenaufbau und kein Prüffall — es war also nie
- * ein Testfehler. Örtlich blieb es unsichtbar, weil das Archiv dort längst
- * im Zwischenspeicher lag; ein Läufer ist jedes Mal kalt.
+ * `classMethod` ist der Klassenaufbau und kein Prüffall — es ist also nie
+ * ein Testfehler. Örtlich bleibt es unsichtbar, weil das Archiv dort längst
+ * im Zwischenspeicher liegt; ein Läufer ist jedes Mal kalt.
  *
  * WARUM NICHT EINFACH DEN CACHE DES LÄUFERS AUFHEBEN. Das macht den Abbruch
  * seltener, nicht unmöglich: Beim ersten Lauf und nach jedem Ablauf des
  * Zwischenspeichers lädt Robolectric wieder. „Seltener" ist genau die Sorte
  * Lösung, die `CLAUDE.md` als Flake-Behandlung zurückweist.
  *
- * WIE ES JETZT LÄUFT. Das Archiv ist eine gewöhnliche Abhängigkeit in einer
+ * WIE ES LÄUFT. Das Archiv ist eine gewöhnliche Abhängigkeit in einer
  * eigenen Konfiguration; Gradle löst sie auf wie jede andere. `Sync` legt
  * genau diese eine Datei in einen Ordner, und Robolectric läuft **offline**
- * und nimmt sie von dort. Zur Testlaufzeit wird nichts mehr geholt.
+ * und nimmt sie von dort. Zur Testlaufzeit wird nichts geholt.
  *
  * DER PREIS steht im Versionskatalog: Die Abbildkennung ist fest verdrahtet
  * und gehört bei einer Änderung von `sdk=` oder einem Robolectric-Update
  * mitgezogen. Vergisst man es, bricht der Lauf mit einer klaren Meldung —
  * das ist der bessere Tausch gegen einen stillen Download. */
 // `create` statt `by configurations.creating`: Gradle 9.6 meldet den
-// Delegaten als veraltet (AR-02).
+// Delegaten als veraltet.
 val robolectricAbbild: Configuration = configurations.create("robolectricAbbild")
 
 val robolectricAbbildOrdner = layout.buildDirectory.dir("robolectric-abbild")
@@ -298,19 +292,14 @@ dependencies {
     implementation(libs.androidx.compose.ui.tooling.preview)
     debugImplementation(libs.androidx.compose.ui.tooling)
 
-    /* HIER STANDEN CAMERAX UND ZXING -- der QR-Scan der Kopplung (E-S4-15).
-     * Beide sind mit R63 (Backlog Nr. 84) entfallen: Der QR-Code trug die
-     * Serveradresse, und die App kennt jetzt genau eine. Damit gibt es nichts
-     * mehr zu scannen, und die App fragt nicht mehr nach der Kamera.
-     *
-     * Die Zeile bleibt als Vermerk stehen, weil der Wegfall einer
-     * Abhaengigkeit sonst nur eine Luecke ist: Wer spaeter einen QR-Weg
-     * vermisst, findet hier, dass es ihn gab und warum er weg ist. */
+    /* KEIN QR-SCAN, also weder CameraX noch ZXing: Ein QR-Code truege die
+     * Serveradresse, und die App kennt genau eine. Damit gibt es nichts zu
+     * scannen, und die App fragt nicht nach der Kamera. */
 
-    // Der Wear Data Layer (E-S4-10): der EINZIGE Grund fuer diese
-    // proprietaere Bibliothek. Beide Module brauchen sie -- die Uhr sendet,
-    // das Handy empfaengt und quittiert. Eintrag in docs/Lizenzen.md folgt in
-    // Block D (E-S4-04); bis dahin fuehrt gradle/libs.versions.toml die Liste.
+    // Der Wear Data Layer: der EINZIGE Grund fuer diese proprietaere
+    // Bibliothek. Beide Module brauchen sie -- die Uhr sendet, das Handy
+    // empfaengt und quittiert. Eintrag in docs/Lizenzen.md 6a; die Liste
+    // selbst fuehrt gradle/libs.versions.toml.
     implementation(libs.play.services.wearable)
 
     testImplementation(libs.junit)
@@ -319,8 +308,8 @@ dependencies {
     testImplementation(libs.androidx.test.core)
     testImplementation(libs.androidx.test.ext.junit)
 
-    /* INSTRUMENTIERT, also auf einem Android-System und nicht in der JVM
-     * (S4/D2). Daran haengt, was Robolectric nicht erreicht: der echte
+    /* INSTRUMENTIERT, also auf einem Android-System und nicht in der JVM.
+     * Daran haengt, was Robolectric nicht erreicht: der echte
      * `AndroidKeyStore` (`KeyStoreException: AndroidKeyStore not found`) und
      * die Erreichbarkeit der Wearable-API.
      *

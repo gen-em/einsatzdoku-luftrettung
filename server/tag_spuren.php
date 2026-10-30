@@ -6,7 +6,7 @@ require_once __DIR__ . '/spur_lib.php';
 require_once __DIR__ . '/format_lib.php';   // datum_text() fuer den Diensttag im Rueckweg
 
 /**
- * Die Spuren eines Diensttages, einzeln abrufbar (S2/AP4, E-S2-09).
+ * Die Spuren eines Diensttages, einzeln abrufbar.
  *
  * WOFUER. Der GPX-Abruf soll es je Einsatz UND je Ruhesegment geben. Fuer
  * Einsaetze gibt es dafuer eine Stelle — das Aktionsmenue der Einsatzansicht.
@@ -29,7 +29,7 @@ require_once __DIR__ . '/format_lib.php';   // datum_text() fuer den Diensttag i
  * MEHRFACHAUSWAHL. Wer eine ganze Schicht in ein Kartenprogramm ziehen will,
  * laedt sonst zwoelf Dateien einzeln herunter und sortiert sie dort wieder
  * zusammen. Ein Kaestchen je Zeile und eine Sammelleiste — derselbe Weg wie
- * in der NutzerInnen-Liste (E-P3-41) — machen daraus EINE Datei mit mehreren
+ * in der NutzerInnen-Liste — machen daraus EINE Datei mit mehreren
  * `<trk>`. Kein neuer Baustein: `ui_zeile(['vorn' => …])` traegt das Kaestchen
  * schon, `ui_speichern_leiste()` ist dieselbe Sammelleiste.
  *
@@ -38,8 +38,7 @@ require_once __DIR__ . '/format_lib.php';   // datum_text() fuer den Diensttag i
  * Sammelleiste erscheint erst, wenn etwas ausgewaehlt ist — und das entscheidet
  * das Skript. Die GPX-Verweise in den Zeilen sind davon unberuehrt.
  *
- * DIE SPUR IST SEIT S11 VERSCHLOSSEN (S11-04c). Bis Web 22.0.2 gingen ihre
- * Punkte hier im Klartext an den Browser. Jetzt bekommt er die Stuecke als
+ * DIE SPUR IST VERSCHLOSSEN. Der Browser bekommt die Stuecke als
  * Geraetehuellen und oeffnet sie mit dem privaten Schluessel des Kontos
  * (`assets/ortsdaten.js`); die Zeilen der Liste stehen sofort da, die Linien
  * entstehen danach. Den `pat_blob` fasst die Seite weiter nicht an.
@@ -72,7 +71,7 @@ $spuren = [];
 $nr = 0;
 foreach ([['mission', $einsaetze], ['rest', $ruhe]] as [$art, $liste]) {
     $ids = array_map(fn($r) => (int)$r['id'], $liste);
-    /* Die Stuecke als Huellen (S11-04c) — Platz, Zeitraum, Punktzahl im
+    /* Die Stuecke als Huellen — Platz, Zeitraum, Punktzahl im
      * Klartext, die Punkte verschlossen. */
     $stueckeAlle = $ids ? spur2_lesen_viele($pdo, $art, $ids) : [];
     foreach ($liste as $r) {
@@ -106,8 +105,8 @@ foreach ([['mission', $einsaetze], ['rest', $ruhe]] as [$art, $liste]) {
  * in der Reihenfolge der Einsätze) und bleibt davon unberührt; ebenso die
  * Farben auf der Karte, die nur die Einsätze der Reihe nach durchzählen.
  *
- * Der Sortierschlüssel: Beginn, Art, Kennung (bis Web 22.2.0 auch der von
- * `gpx.php`; seit S11-05d baut das Skript unten die Datei in dieser Folge).
+ * Der Sortierschlüssel: Beginn, Art, Kennung; das Skript unten baut die
+ * Datei in dieser Folge.
  * Damit steht die Datei in derselben Folge wie die Liste, aus der sie
  * ausgewählt wurde. */
 usort($spuren, fn($a, $b) => [$a['von'], $a['art'], $a['id']]
@@ -198,9 +197,8 @@ ui_geruest_start(['aktiv' => 'start', 'leiste' => 'diensttage', 'tag' => $dayId]
         } else {
             $plaketten = ui_plakette($s['n'] . ' Punkte', ['ton' => 'neutral']);
         }
-        /* SEIT S11-05d BAUT DER BROWSER DIE DATEI (`assets/gpx.js`); bis dahin
-         * zeigte der Knopf auf `gpx.php`, das die verschlossenen Stuecke nicht
-         * sah. Ein Knopf statt eines Verweises, weil es kein Ziel gibt. */
+        /* DER BROWSER BAUT DIE DATEI (`assets/gpx.js`). Ein Knopf statt
+         * eines Verweises, weil es kein Ziel gibt. */
         if ($s['n'] > 0) {
             $plaketten .= ' <button type="button" class="knopf knopf-leise" '
                 . 'data-gpx-spur="' . $i . '">GPX</button>';
@@ -242,9 +240,8 @@ ui_geruest_start(['aktiv' => 'start', 'leiste' => 'diensttage', 'tag' => $dayId]
   <?php ui_karte_ende(); ?>
 
   <?php if ($auswahlAn): ?>
-    <?php /* DAS FORMULAR SAMMELT NUR NOCH DIE AUSWAHL (S11-05d). Bis dahin
-             ging es per GET an `gpx.php`; seit der Browser die Datei baut,
-             faengt das Skript unten das Absenden ab und baut aus den
+    <?php /* DAS FORMULAR SAMMELT NUR DIE AUSWAHL. Das Skript unten
+             faengt das Absenden ab und baut aus den
              gewaehlten Spuren EINE Datei mit je einem <trk>. */ ?>
     <form id="f-gpxwahl" hidden></form>
     <?php ui_speichern_leiste([
@@ -266,7 +263,7 @@ ui_geruest_start(['aktiv' => 'start', 'leiste' => 'diensttage', 'tag' => $dayId]
 <script src="<?= asset('assets/map_layers.js') ?>"></script>
 <?php /* `geo.js` baut Kartenmarkierungen aus `edSymbol()` und braucht deshalb
          `symbol.js` VOR sich — sonst wirft es beim Laden „edSymbol is not
-         defined". `ui_geruest_ende()` laedt symbol.js seit S3 ohnehin und
+         defined". `ui_geruest_ende()` laedt symbol.js ohnehin und
          steht weiter oben; die eigene Zeile hier waere ein zweiter Abruf
          derselben Datei. */ ?>
 <script src="<?= asset('assets/geo.js') ?>"></script>

@@ -4,11 +4,11 @@ require_once __DIR__ . '/../auth_guard.php';      // liefert $userId
 require_once __DIR__ . '/../validate_lib.php';    // pruef_pat_blob()
 
 /**
- * api/pat_anheben.php — stille Anhebung der Einsatz-Notizen (S9/AP7, E-S9-01)
+ * api/pat_anheben.php — stille Anhebung der Einsatz-Notizen
  *
  * WAS HIER GESCHIEHT
- * Bis Web 19.0.0 lagen die Notizen des Einsatzes als Klartext in der Spalte
- * `missions.notes`. Sie gehoeren seither in den Ende-zu-Ende-verschluesselten
+ * Liegen die Notizen eines Einsatzes noch als Klartext in der Spalte
+ * `missions.notes`, gehoeren sie in den Ende-zu-Ende-verschluesselten
  * `pat_blob` — und dorthin kann sie nur der Browser bringen, denn nur er hat
  * den Schluessel. Dieser Endpunkt ist die beiden Haelften dieses Umzugs:
  *
@@ -24,8 +24,8 @@ require_once __DIR__ . '/../validate_lib.php';    // pruef_pat_blob()
  * Das ist der ganze Punkt der Zusage: Der Inhaltsschluessel liegt in der
  * Schluesselhuelle des Kontos und wird aus dem Passwort abgeleitet. Der Server
  * kennt ihn nicht und soll ihn nicht kennen. Ein Konto, das sich nie
- * entsperrt, behaelt deshalb seinen Klartext in der Spalte — derselbe Zustand
- * wie vor Web 19, nicht schlechter, und er verschwindet beim naechsten
+ * entsperrt, behaelt deshalb seinen Klartext in der Spalte — nicht
+ * schlechter als zuvor, und er verschwindet beim naechsten
  * Entsperren.
  *
  * ---- DIE WACHE JE ZEILE, UND WARUM SIE NOETIG IST -------------------------
@@ -104,7 +104,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
 
 api_methode();
 
-csrf_check();   // Feld ODER Kopfzeile X-CSRF (Nr. 67)
+csrf_check();   // Feld ODER Kopfzeile X-CSRF
 
 $b = api_rumpf();
 if (!isset($b['missions']) || !is_array($b['missions'])) {

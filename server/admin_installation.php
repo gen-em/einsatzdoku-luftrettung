@@ -4,48 +4,36 @@ require_once __DIR__ . '/auth_guard.php';
 require_admin();
 /* VOR dem POST-Zweig und nicht danach: Der Protokolleintrag entsteht beim
  * Speichern, und `function_exists('protokoll')` waere weiter unten `false`
- * gewesen — der Eintrag waere still ausgefallen (P5b/AP4). */
+ * gewesen — der Eintrag waere still ausgefallen. */
 require_once __DIR__ . '/protokoll_lib.php';
 
 /**
- * INSTALLATION — wie diese Anlage nach aussen auftritt (S8/AP3, E-S8-05/-12).
+ * INSTALLATION — wie diese Anlage nach aussen auftritt.
  *
- * AUS „RECHTSTEXTE" WIRD „INSTALLATION". Die Seite trug bis Web 15.1.0 zwei
- * Karten: Impressum und Datenschutz. Beide beantworten dieselbe Frage — was
- * zeigt diese Installation Menschen, die noch nicht angemeldet sind? —, und
- * das Logo beantwortet sie ebenso. Es lag auf der Wartungsseite, und das war
- * ein Befund (B-S8-10): Der Logo-Standard ist Gestaltung, keine Wartung.
+ * DIESE SEITE BEANTWORTET EINE FRAGE: Was zeigt diese Installation Menschen,
+ * die noch nicht angemeldet sind? Name, Adressen und Logo — jede Karte mit
+ * ihrem eigenen Knopf, weil jede eine Wahl ist, die sofort wirkt. Der
+ * Logo-Standard ist Gestaltung, keine Wartung. Die Rechtstexte stehen auf
+ * einer eigenen Seite, `admin_rechtstexte.php`, mit Reitern und einer
+ * Vorschau, die beim Tippen mitläuft.
  *
- * SEIT P5c/AP9 OHNE DIE RECHTSTEXTE (E-P5c-28). Sie stehen wieder auf einer
- * eigenen Seite, `admin_rechtstexte.php`, mit Reitern und einer Vorschau, die
- * beim Tippen mitläuft. Hier bleiben Name, Adressen und Logo — jede Karte mit
- * ihrem eigenen Knopf, weil jede eine Wahl ist, die sofort wirkt.
- *
- * WAS P5 HIER ERGAENZT (E-S8-12): Karten „Support-Adresse", „Registrierung"
- * und „Ankuendigungsbanner" — als weitere Karten DIESER Seite. Heute steht
- * dafuer kein Platzhalter (B-S8-11): Ein Kasten mit „kommt spaeter" ist eine
- * Zusage, die niemand gegeben hat.
+ * KEIN PLATZHALTER fuer kuenftige Karten: Ein Kasten mit „kommt spaeter" ist
+ * eine Zusage, die niemand gegeben hat.
  *
  */
 
 /**
- * Liegt der NEF-Platzhalter noch (E-P3-19)?
+ * Liegt der NEF-Platzhalter noch?
  *
  * Gefragt wird die DATEI, nicht eine Zahl im Code: Der Platzhalter traegt das
  * Wort in seinem Kopfkommentar, und sobald die echte Datei an seiner Stelle
  * liegt, verschwindet der Hinweis von selbst. Gelesen werden nur die ersten
  * 400 Byte — der Kommentar steht ganz oben.
- *
- * DIE DATEINAMEN HABEN SICH GEAENDERT. Erwartet wurde ein Ersatz 1:1 unter
- * gleichem Namen; gekommen ist er als 'gen-em_logo_nef*'. Beide Namen stehen
- * deshalb in der Liste: Eine aeltere Installation, die noch den Platzhalter
- * unter dem alten Namen traegt, soll den Hinweis weiterhin bekommen.
  */
 function logo_platzhalter_liegt(): array
 {
     $liegt = [];
-    foreach (['gen-em_logo_nef.svg', 'gen-em_logo_nef_weiss.svg',
-              'gen-em_logo_fahrzeug.svg', 'gen-em_logo_fahrzeug_weiss.svg'] as $datei) {
+    foreach (['gen-em_logo_nef.svg', 'gen-em_logo_nef_weiss.svg'] as $datei) {
         $pfad = __DIR__ . '/assets/images/' . $datei;
         if (!is_file($pfad)) { continue; }
         $f = @fopen($pfad, 'rb');
@@ -58,7 +46,7 @@ function logo_platzhalter_liegt(): array
 }
 
 /* Die drei Wahlmoeglichkeiten des Installationsstandards. „wechselnd" ist
- * seit Web 9.14.0 auch hier waehlbar (F-N1-C) — eine Installation, die beide
+ * auch hier waehlbar — eine Installation, die beide
  * Rettungsmittel fuehrt, hat denselben Grund dafuer wie eine einzelne Person.
  * Aufgeloest wird es in logo_standard_aufgeloest(). */
 const INSTALLATION_LOGOS = [
@@ -72,7 +60,7 @@ $logoMeldung = null;
 $nameMeldung = null;
 $adrMeldung  = null;
 
-/* UMLEITEN NACH DEM POST (Web 21.1.9, Backlog Nr. 250). Was gespeichert hat,
+/* UMLEITEN NACH DEM POST. Was gespeichert hat,
  * endet mit `flash_setzen()` und einer Umleitung in die Karte, die gehandelt
  * hat — Ort und Anker sind ihre `id`. Sonst wiederholt Neuladen das
  * Speichern. Ein abgewiesener Wert bleibt auf der Seite. */
@@ -80,7 +68,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     csrf_check();
 
     if (($_POST['action'] ?? '') === 'instanz_name') {
-        /* DER NAME DIESER INSTALLATION (P5a/AP5, E-P5a-35). Eigenes
+        /* DER NAME DIESER INSTALLATION. Eigenes
          * „Speichern", wie bei Logo und Adresssuche: Ein Tippfehler im Namen
          * soll die Rechtstexte nicht mit abweisen und umgekehrt. */
         [$ok, $meldung] = instanz_namen_setzen((string)($_POST['instanz_name'] ?? ''),
@@ -92,7 +80,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         $nameMeldung = ['fehler', $meldung];
     } elseif (($_POST['action'] ?? '') === 'instanz_adressen') {
-        /* DIE ADRESSEN DIESER INSTALLATION (P5a/AP5, E-P5a-40). Eigenes
+        /* DIE ADRESSEN DIESER INSTALLATION. Eigenes
          * „Speichern" wie beim Namen, und aus demselben Grund. */
         [$ok, $meldung] = instanz_adressen_setzen((string)($_POST['instanz_kontakt'] ?? ''),
                                                   (string)($_POST['betrieb_mail'] ?? ''));
@@ -143,10 +131,7 @@ ui_seite_start(['titel' => 'Installation']);
 
   <?php ui_meldung($notice, $error, 'ok', '  '); ?>
 
-  <?php /* EINE SPALTE SEIT P5c/AP9 (E-P5c-28, F-P5c-46). Bis Web 21.0.0 stand
-           rechts das Formular der vier Rechtstexte; sie haben eine eigene
-           Seite bekommen (`admin_rechtstexte.php`, Vorschau beim Tippen).
-           Übrig sind drei Karten — nach Design.md 9.26 kein Fall für zwei
+  <?php /* EINE SPALTE. Drei Karten — nach Design.md 9.26 kein Fall für zwei
            Spalten —, gesetzt mit der vorhandenen Variante
            `.form-raster-einspaltig`: höchstens Lesespalte breit, damit die
            kurzen Felder nicht über 1400 px laufen. `.form-spalte` bleibt,
@@ -248,7 +233,7 @@ ui_seite_start(['titel' => 'Installation']);
                             'optionen' => INSTALLATION_LOGOS]); ?>
           <?php $platzhalter = logo_platzhalter_liegt(); ?>
           <?php if ($platzhalter): ?>
-            <?php /* EINE MELDUNG, KEIN KARTENTEXT (P5c/AP9): Der Hinweis nennt
+            <?php /* EINE MELDUNG, KEIN KARTENTEXT: Der Hinweis nennt
                      einen Zustand, der von selbst verschwindet, sobald die
                      echten Dateien liegen — das ist, was `.meldung` sagt. */ ?>
             <?= ui_meldung_markup('info', 'Die echte Datei ersetzt ihn 1:1 — '
@@ -266,8 +251,6 @@ ui_seite_start(['titel' => 'Installation']);
   </div><?php /* .form-raster */ ?>
 
 <?php ui_geruest_ende(); ?>
-<?php /* KEINE SEITENSKRIPTE MEHR (P5c/AP9): `forms.js` hing an der
-         Speichern-Leiste der Rechtstexte, `kopieren.js` an deren
-         Textbausteinen — beide sind mit auf die Seite „Rechtstexte"
-         gezogen. Name, Adressen und Logo sind schlichte Formulare. */ ?>
+<?php /* KEINE SEITENSKRIPTE: Name, Adressen und Logo sind schlichte
+         Formulare. */ ?>
 <?php ui_seite_ende(); ?>

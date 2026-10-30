@@ -1,6 +1,6 @@
 <?php
 /**
- * Spaltenregister — `schema.sql` gegen `mf_missions_register()` (Schritt 15/AP6).
+ * Spaltenregister — `schema.sql` gegen `mf_missions_register()`.
  *
  * Zwei Fragen, zwei Zahlen:
  *
@@ -406,10 +406,9 @@ PHP;
         /* `export` mit einem Alias: Der Alias muss mitkommen, wenn er darf,
          * und wegbleiben, wenn nicht.
          *
-         * IN BACKTICKS, und die gehoeren zur Erwartung (Web 20.26.3,
-         * Nr. 267). `manual` ist auf MySQL 8.4.0 bis 8.4.10 auch als ALIAS
+         * IN BACKTICKS, und die gehoeren zur Erwartung. `manual` ist auf MySQL 8.4.0 bis 8.4.10 auch als ALIAS
          * ein reserviertes Wort; ohne die Backticks antwortete der Export
-         * dort mit 1064. Die Behebung lag bis zum Merge von Schritt 15 in
+         * dort mit 1064. Die Behebung lag einmal in
          * `backup_lib.php` und `api/export_data.php`; seit das Register
          * beide Listen liefert, steht sie in `mf_spalten()`.
          *
@@ -423,8 +422,7 @@ PHP;
                 in_array('uhr_gesperrt AS `manual`', $mit, true), true);
         $pruefe('mf_spalten: Alias aus', in_array('uhr_gesperrt', $ohneAlias, true), true);
         $pruefe('mf_spalten: Praefix', mf_spalten('range', 'm.')[0], 'm.id');
-        /* DIE SQL-FORM SETZT AUCH DEN NAMEN IN BACKTICKS (Web 21.1.9,
-         * Nr. 239), die blosse Liste nicht: Vier Aufrufer brauchen die Namen
+        /* DIE SQL-FORM SETZT AUCH DEN NAMEN IN BACKTICKS, die blosse Liste nicht: Vier Aufrufer brauchen die Namen
          * als Schluessel. Faellt eine der beiden Formen um, faellt es hier
          * auf und nicht erst an einem reservierten Wort. */
         $pruefe('mf_spalten_sql: Name in Backticks, Praefix davor',

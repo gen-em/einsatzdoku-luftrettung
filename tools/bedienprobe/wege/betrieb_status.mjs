@@ -1,14 +1,14 @@
 /* Wege der Seite Betrieb → Status (`betrieb_status.php`).
  * ===========================================================================
  *
- * Entstanden mit R4-11 (Backlog Nr. 250): Die Testmail leitet in die Karte
+ * Die Testmail leitet in die Karte
  * „E-Mail" um; Neuladen verschickt keine zweite. Welcher der drei Ausgänge
  * kommt (hinaus, wartet, nicht eingereiht), hängt am Versand der Anlage —
  * gemessen wird die Umleitung, nicht die Zustellung.
  *
  * DER WEG STELLT SEINEN STAND HER UND RÄUMT AB: Der Ratenschutz erlaubt drei
  * Testmails je Stunde und Konto; wer die Probe öfter fährt, stünde sonst vor
- * „Zu viele Testmails" (das bleibt ohne Umleitung stehen, E-R4-35). Der
+ * „Zu viele Testmails" (das bleibt ohne Umleitung stehen). Der
  * Zähler `testmail` wird vorher geleert, die Mail der Probe nachher aus der
  * Warteschlange genommen.
  */

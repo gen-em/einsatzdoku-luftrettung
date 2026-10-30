@@ -10,24 +10,24 @@ declare(strict_types=1);
  * Rueckgabe: 0 = jede Zeile GENAU auf ihrer Decke · 1 = eine darueber oder
  *            darunter · 2 = die Zaehlung kam nicht los
  *
- * DIE DECKE IST EINE RATSCHE (seit R17-19, F-R17-56, E-R17-37). Bis dahin
+ * DIE DECKE IST EINE RATSCHE. Frueher
  * meldete das Werkzeug nur „darueber". Eine Decke UEBER dem Ist blieb gruen —
- * und Z17 stand nach AP5 bei Ist 0 auf Decke 30: Dreissig neue Schreibstellen
+ * und Z17 stand einmal bei Ist 0 auf Decke 30: Dreissig neue Schreibstellen
  * an den Kindtabellen am Datenzugriff vorbei waeren gruen geblieben, genau der
  * Zustand, den der Kopf des Registers ausschliesst. Jetzt ist auch „darunter"
  * ein Befund: Wer eine Stelle entfernt, schreibt die Decke im selben Commit
  * herunter. Sonst steht die naechste stehengebliebene Decke wieder da, bis
  * jemand liest.
  *
- * WOGEGEN. R83 sagt, zentralisiert wird beim zweiten echten Verbraucher. Der
+ * WOGEGEN. Zentralisiert wird beim zweiten echten Verbraucher. Der
  * Beleg, aus dem die Entscheidung entstand, ist `edbak_groesse_text()`: Die
  * Funktion lag in `adminbackup_lib.php`, neun fremde Dateien luden die
  * Backup-Bibliothek nur, um Bytes lesbar zu machen — 43 Aufrufe in zehn
  * Dateien. Das ist nicht an einem Tag passiert und niemandem aufgefallen.
- * Schritt 15 raeumt rund vierzig solcher Muster auf; dieses Werkzeug haelt
+ * Rund vierzig solcher Muster sind aufgeraeumt; dieses Werkzeug haelt
  * das Ergebnis fest. Jedes Muster bekommt eine **Decke**; liegt der Ist-Wert
  * darueber, schlaegt die Zaehlung an. So kommt eine zweite Stelle nicht
- * unbemerkt zurueck (E-ZE-24).
+ * unbemerkt zurueck.
  *
  * WAS ES NICHT IST. Kein Linter, keine Codeanalyse, kein Urteil ueber
  * Qualitaet. Es zaehlt Vorkommen benannter Muster und vergleicht die Zahl mit
@@ -182,7 +182,6 @@ const ZH_SCRIPT_AUF = '~<script\b[^>]*>~i';
  */
 function zh_sichten(string $pfad, string $quelle): array
 {
-    $leer = str_repeat(' ', strlen($quelle));
     /* Zeilentreue Leerfassung: nur die Umbrueche bleiben. */
     $leer = preg_replace('~[^\n]~', ' ', $quelle);
 
@@ -332,12 +331,12 @@ function zh_zeile(string $text, int $versatz): int
  * meisten Zeilen messen die Anwendung, und `tools/` darf dort anders
  * aussehen (eine Probe DARF `session_start()` rufen).
  *
- * WOHER DIE SCHALTUNG KOMMT. Schritt 15 AP2 hat die globale `$CFG`
- * entfernt; Zeile Z04 bestaetigte 46 -> 0 und der Umbau galt als erledigt.
+ * WOHER DIE SCHALTUNG KOMMT. Als die globale `$CFG`
+ * entfiel, bestaetigte Zeile Z04 46 -> 0 und der Umbau galt als erledigt.
  * Z04 sah aber nur `server/`. FUENF PRUEFWERKZEUGE lasen oder setzten
  * dieselbe Globale, und 30 ihrer Erwartungen standen danach still auf
  * „nicht erfuellt" — ohne dass die Anwendung einen Fehler gehabt haette
- * (Backlog Nr. 257, gemessen 21.09.2026). Genau davor warnt `CLAUDE.md` 6
+ * (gemessen 21.09.2026). Genau davor warnt `CLAUDE.md` 6
  * in anderer Sache: Ein Lauf, der einen Bereich uebergeht, meldet keine
  * Null — er meldet gar nichts.
  */
@@ -376,9 +375,9 @@ function zh_bestand(bool $auch_tools = false): array
          * `config.php`, wo `base_url` natuerlich steht. Die Zeile war rot,
          * ohne dass sich eine Zeile Code geaendert haette. */
         if ($p === $wurzel . '/config.php') { continue; }
-        /* Der Rueckweg, den `konfig_stellen()` bis Web 23.0.3 fuer einen
-         * harten Abbruch HIER hinterlegte — eine Kopie, kein Quelltext. Seit
-         * R17-19 liegt er im Temp-Verzeichnis (F-R17-55); die Zeile bleibt
+        /* Der Rueckweg, den `konfig_stellen()` frueher fuer einen
+         * harten Abbruch HIER hinterlegte — eine Kopie, kein Quelltext. Heute
+         * liegt er im Temp-Verzeichnis; die Zeile bleibt
          * fuer eine liegengebliebene alte Kopie. */
         if (str_ends_with($p, '/config.php.vor-probe')) { continue; }
         $pfade[] = $p;
@@ -520,8 +519,8 @@ function zh_regel_konfig_lesestelle(string $rel, array $sichten, string $quelle)
 /**
  * Z07 — „Der Rumpf ist kein JSON-Objekt", von Hand beantwortet.
  *
- * Gemeint ist NUR der Eingang, nicht die inhaltliche Pruefung danach
- * (E-ZE-15). Der Unterschied haengt an der geprueften Variablen: `$b` ist der
+ * Gemeint ist NUR der Eingang, nicht die inhaltliche Pruefung danach.
+ * Der Unterschied haengt an der geprueften Variablen: `$b` ist der
  * Rumpf (aus `json_decode`), `$m` in `api/pat_anheben.php` ist ein Element
  * daraus — dessen `'format'` bleibt, wo es ist. Deshalb: Die Fehlerantwort
  * zaehlt, wenn ihre Bedingung `is_array()` auf eine Variable anwendet, die
@@ -637,14 +636,14 @@ function zh_regel_missions_handliste(string $rel, array $sichten, string $quelle
 
 /**
  * Z27 — `date('…')` ohne Zeitstempel: das ist „jetzt", in der Zeitzone der
- * `php.ini` (FF-1). Mit zweitem Argument rechnet die Funktion einen
+ * `php.ini`. Mit zweitem Argument rechnet die Funktion einen
  * uebergebenen Zeitpunkt um und ist damit nicht gemeint.
  *
  * UND DAS FORMAT MUSS EINE ZEICHENKETTE SEIN. `date(DATE_RFC2822)` in
  * `smtp.php` setzt den `Date:`-Kopf einer ausgehenden Mail; das Format traegt
  * den UTC-Versatz mit (`+0200`), die Angabe ist also vollstaendig und in
  * JEDER Serverzeitzone richtig. Sie ist kein „heute" und gehoert nicht zu
- * `heute_lokal()` (F-ZE-1). Ohne diese Bedingung meldet die Zeile sie als
+ * `heute_lokal()`. Ohne diese Bedingung meldet die Zeile sie als
  * fuenften Treffer — richtig gezaehlt, falsch zugeordnet.
  */
 function zh_regel_date_ohne_zeitstempel(string $rel, array $sichten, string $quelle): array
@@ -749,7 +748,7 @@ function zh_frisch_aufrufe(string $quelle): array
 }
 
 /**
- * Z43 — der frische Code (Schritt 18, SR-07, E-SR-20).
+ * Z43 — der frische Code.
  *
  * `ZF_FRISCH_HANDLUNGEN` in `db.php` ist die Liste, und JEDE HANDLUNG HAT
  * GENAU EINEN AUFRUF mit ihrem Namen als fester Zeichenkette. Gezaehlt wird,
@@ -809,14 +808,14 @@ function zh_regel_frischer_code(string $rel, array $sichten, string $quelle): ar
 }
 
 /**
- * Z45 — kein Markup im Text einer Meldung (R17-22, F-R17-49).
+ * Z45 — kein Markup im Text einer Meldung.
  *
  * `ui_meldung_markup()` maskiert seinen Text (Argument 2), `ui_meldung()`
  * reicht Hinweis und Fehler (Argument 1 und 2) dorthin weiter. Ein `<` in
  * einer FESTEN Zeichenkette dieser Argumente ist also ein Tag, das als Text
- * erscheint — zweimal im Bestand bis Web 23.3.0 (`<strong>` auf der
+ * erscheint — zweimal im Bestand (`<strong>` auf der
  * Sicherheitsseite, `<code>` auf der Dokuseite), und einmal davor auf der
- * Jobseite (Web 19.3.0). Gelesen wird der Tokenstrom: Klammern zaehlen,
+ * Jobseite. Gelesen wird der Tokenstrom: Klammern zaehlen,
  * Kommas auf Tiefe eins trennen die Argumente; Variablen und Aufrufe sieht
  * die Regel nicht — sie misst, was im Quelltext steht.
  *
@@ -859,8 +858,8 @@ function zh_regel_meldung_markup(string $rel, array $sichten, string $quelle): a
 
 /**
  * Die Lage einer Zeile: `DRUEBER`, `drunter` oder `genau` — und ob sie ein
- * Befund ist. Eigene Funktion, damit die Selbstprobe die Ratsche pruefen kann
- * (R17-19, F-R17-56): Seither ist auch `drunter` ein Befund.
+ * Befund ist. Eigene Funktion, damit die Selbstprobe die Ratsche pruefen kann:
+ * Seither ist auch `drunter` ein Befund.
  *
  * @return array{0:string,1:bool}  [Lage, Befund]
  */
@@ -918,7 +917,7 @@ function zh_selbstprobe(): int
          'handliste', null, 0, 'Tabelle steht HINTER der Liste — auch dann nicht'],
         ["<?php \$a = \$m['id']; \$b = \$m['notes'];",
          'handliste', null, 0, 'zwei Spaltennamen sind keine Liste'],
-        /* --- Meldungstext ohne Markup (Z45, F-R17-49) --------------------- */
+        /* --- Meldungstext ohne Markup (Z45) ------------------------------- */
         ["<?php echo ui_meldung_markup('warn', 'Jede <strong>x</strong>', 'A');",
          'meldung', null, 1, 'Tag im Text von ui_meldung_markup'],
         ["<?php echo ui_meldung_markup('warn', 'Text', 'Auftakt', '<a href=\"x\">k</a>');",
@@ -976,7 +975,7 @@ function zh_selbstprobe(): int
            $schief === 0 ? 'ok  ' : 'FEHL', 'Zeilentreue ueber ' . $geprueft . ' Sichten', 0, $schief);
     if ($schief === 0) { $ok++; }
 
-    /* DIE RATSCHE (R17-19, F-R17-56): Eine Decke ueber dem Ist ist ein
+    /* DIE RATSCHE: Eine Decke ueber dem Ist ist ein
      * Befund — der Fall Z17 (Ist 0, Decke 30) MUSS rot sein. */
     $ratsche = [
         [0, 30, 'drunter', true,  'Ist 0 unter Decke 30 (der Fall Z17) -> Befund'],

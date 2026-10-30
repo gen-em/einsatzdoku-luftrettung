@@ -2,7 +2,7 @@
 declare(strict_types=1);
 
 /**
- * DIE KONTO-RUECKFRAGE (P5b/AP9, E-P5b-09, -19, -20; Mockup M-P5b-02c, Teil 1).
+ * DIE KONTO-RUECKFRAGE.
  *
  * „Hast du dein Notfallblatt noch?" — nach 30 Tagen, nach 6 Monaten, dann
  * jaehrlich. Drei Zustaende in EINEM Dialog:
@@ -48,7 +48,7 @@ $rfRunde = (int)($rueckfrageStand['rueckfrage_runde'] ?? 0);
 $rfWann  = [0 => 'Vor <strong>30 Tagen</strong>',
             1 => 'Vor <strong>6 Monaten</strong>'][$rfRunde] ?? 'Vor <strong>einem Jahr</strong>';
 
-/* Ist „Spaeter" noch moeglich? Dreimal je Runde (E-P5b-19). Der Knopf bleibt
+/* Ist „Spaeter" noch moeglich? Dreimal je Runde. Der Knopf bleibt
  * danach stehen und sagt es — ein Knopf, der still verschwindet, liest sich
  * wie ein Fehler. */
 $rfGeschoben = (int)($rueckfrageStand['rueckfrage_verschoben'] ?? 0);

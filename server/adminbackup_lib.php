@@ -3,12 +3,12 @@ declare(strict_types=1);
 /**
  * Admin-Backups: Ablage im Dateisystem, Übersicht, Rückspielung.
  *
- * Zweck (Block A8): Administration soll Konten sichern und wiederherstellen
+ * Zweck: Administration soll Konten sichern und wiederherstellen
  * können, OHNE Einblick in die Daten zu erhalten. Das Rohpaket entsteht
  * serverseitig über edbak_build() und behält `pat_blob` als Chiffretext; die
  * Entschlüsselung passiert wie überall sonst erst im Browser.
  *
- * WARUM DAS DATEISYSTEM UND NICHT DIE DATENBANK (E16)
+ * WARUM DAS DATEISYSTEM UND NICHT DIE DATENBANK
  * Ein Paket liegt bei größeren Beständen im zweistelligen MB-Bereich, und
  * `max_allowed_packet` liegt auf geteiltem Webspace oft unveränderlich bei
  * 16 MB. Der zweite Grund wiegt schwerer: Ein Backup, das im selben
@@ -16,15 +16,14 @@ declare(strict_types=1);
  *
  * ZWEI SCHRANKEN GEGEN DEN ABRUF ÜBER DEN BROWSER
  *   1. `sicherungen/.htaccess` mit `Require all denied`.
- *   2. Der Ordnername ist die zufällige Kontokennung (E17) und damit auch
+ *   2. Der Ordnername ist die zufällige Kontokennung und damit auch
  *      dann nicht zu erraten, wenn (1) nicht greift — anderer Webserver,
  *      .htaccess abgeschaltet. Dasselbe Muster wie bei der Nachweisdatei der
- *      Ersteinrichtung (`server/.htaccess`, M1-11).
+ *      Ersteinrichtung (`server/.htaccess`).
  *
  * ZWINGEND: `sicherungen/` steht in der `exclude`-Liste des FTPS-Schritts
  * in `.github/workflows/ausliefern-lauf.yml` — **einmal**, für Staging und
- * Produktiv zugleich (seit Kette II/AP5; bis dahin je einmal in den beiden
- * FTPS-Schritten von `auslieferung.yml`, bis Web 20.3.0 in `deploy.yml`).
+ * Produktiv zugleich.
  * Ohne den Eintrag wäre die erste Auslieferung, die mit Löschabgleich
  * synchronisiert, zugleich das Ende aller Backups (`CLAUDE.md` 3).
  *
@@ -37,19 +36,19 @@ declare(strict_types=1);
  *       2026-08-16T18-22-31Z_a1b2c3d4.json   ein Paket
  *
  * Die Begleitdatei hält Anzeigename und E-Mail-Adresse fest, damit die
- * Zuordnung eine Kontolöschung überlebt (A8.2) — genau dafür gibt es den
+ * Zuordnung eine Kontolöschung überlebt — genau dafür gibt es den
  * Abschnitt „verwaiste Backups" in der Übersicht.
  */
 
 require_once __DIR__ . '/backup_lib.php';
 require_once __DIR__ . '/mail_lib.php';
-require_once __DIR__ . '/serverkrypto_lib.php';   // Siegel der Fassung 3 (S10/AP4)
-require_once __DIR__ . '/zip_lib.php';            // Archive bauen und öffnen (P5c/AP2, R83)
+require_once __DIR__ . '/serverkrypto_lib.php';   // Siegel der Fassung 3
+require_once __DIR__ . '/zip_lib.php';            // Archive bauen und öffnen
 require_once __DIR__ . '/format_lib.php';   // groesse_text(), zahl_text(), iso_utc(),
-                                            // datum_zeit_text(), prozent_wert() (Schritt 15/AP7)
+                                            // datum_zeit_text(), prozent_wert()
 
 /* ===========================================================================
- * FASSUNG 3 — DIE TEILE SIND VERSIEGELT (S10/AP4, E-S10-13, E-S10-U-11/-12)
+ * FASSUNG 3 — DIE TEILE SIND VERSIEGELT
  * ===========================================================================
  *
  * WARUM. Ein Adminpaket lag bis Fassung 2 als blankes JSON im ZIP: Name,
@@ -65,14 +64,14 @@ require_once __DIR__ . '/format_lib.php';   // groesse_text(), zahl_text(), iso_
  * mitgelesener Versand, ein Blick in den Ablageordner. `pat_blob` bleibt
  * unabhängig davon Ende-zu-Ende verschlüsselt; das Siegel liegt darüber.
  *
- * DER ZWECK BINDET DREI DINGE (E-S10-U-11): Konto, PAKET und Teil. Ohne den
+ * DER ZWECK BINDET DREI DINGE: Konto, PAKET und Teil. Ohne den
  * Paketnamen ließe sich ein Teil aus einem älteren Paket desselben Kontos
- * unterschieben — das Manifest führt nur Namen, keine Prüfsummen je Teil
- * (Fund F-7). Der Preis steht in `docs/Backup-Format.md`: **Wer ein Paket
+ * unterschieben — das Manifest führt nur Namen, keine Prüfsummen je Teil.
+ * Der Preis steht in `docs/Backup-Format.md`: **Wer ein Paket
  * umbenennt, macht es unlesbar.** Der Name ist schon heute die Identität in
  * der Ablage (`edbak_verzeichnis_abgleichen()`), ab jetzt steht es geschrieben.
  *
- * GZIP VOR DEM SIEGEL (E-S10-U-12). Versiegelte Teile sind Zufallsrauschen;
+ * GZIP VOR DEM SIEGEL. Versiegelte Teile sind Zufallsrauschen;
  * das ZIP kann sie nicht mehr packen, und die Begründung weiter unten („hier
  * ist es blankes JSON, der Packlauf lohnt sich also") fällt mit dieser
  * Fassung weg. Ohne Vorstufe wüchse das Paket am 5000er-Bestand von 11,42 MB
@@ -98,13 +97,13 @@ require_once __DIR__ . '/format_lib.php';   // groesse_text(), zahl_text(), iso_
  */
 const EDBAK_FASSUNG = 3;
 
-/** Der Siegelzweck der Begleitdatei eines Kontos (E-S10-U-14). */
+/** Der Siegelzweck der Begleitdatei eines Kontos. */
 function edbak_begleit_zweck(string $kennung): string
 {
     return 'adminkonto|' . $kennung;
 }
 
-/** Der Siegelzweck eines Paketteils: Konto, Paket, Teil (E-S10-U-11). */
+/** Der Siegelzweck eines Paketteils: Konto, Paket, Teil. */
 function edbak_teil_zweck(string $kennung, string $paket, string $teil): string
 {
     return 'adminpaket|' . $kennung . '|' . $paket . '|' . $teil;
@@ -140,11 +139,11 @@ function edbak_teil_siegeln(string $klartext, string $kennung,
  * (dieselbe Linie wie `sk_oeffnen()`); was die BetreiberIn braucht, ist der
  * Satz an der Oberfläche.
  *
- * `$siegelPflicht` (F-R17-35, R17-23): IST DAS MANIFEST VERSIEGELT, MUSS ES
- * JEDER TEIL SEIN. Bis Web 23.3.1 entschied das Präfix je Teil, und in einem
- * Fassung-3-Paket ging ein Teil, dem jemand das Siegel abgenommen und
- * Klartext hingelegt hatte, ohne Prüfung durch — die Bindung an Server,
- * Konto, Paket und Teilnamen fiel für diesen Teil weg. Die Aufrufer, die das
+ * `$siegelPflicht`: IST DAS MANIFEST VERSIEGELT, MUSS ES
+ * JEDER TEIL SEIN. Entschiede das Präfix je Teil, ginge in einem
+ * Fassung-3-Paket ein Teil, dem jemand das Siegel abgenommen und
+ * Klartext hingelegt hat, ohne Prüfung durch — die Bindung an Server,
+ * Konto, Paket und Teilnamen fiele für diesen Teil weg. Die Aufrufer, die das
  * Manifest schon geöffnet haben, geben dessen Siegel mit; ein unversiegelter
  * Teil ist dann `null`, wie einer mit falschem Siegel. Das Manifest selbst
  * wird ohne Pflicht gelesen — an ihm entscheidet sich die Fassung.
@@ -168,29 +167,26 @@ const EDBAK_SIEGEL_FEHLER =
     . 'Betrieb → Servereinstellungen.';
 
 /**
- * Vorbelegung der Aufbewahrung je Konto (E18, seit Web 9.8.0 einstellbar).
+ * Vorbelegung der Aufbewahrung je Konto (einstellbar).
  *
- * Bis Web 9.7.2 war die Zahl fest verdrahtet. Sie ist jetzt eine Regel der
- * Installation (`app_state.adminbackup_aufbewahrung`, Seite „Backups").
+ * Die Zahl ist eine Regel der Installation
+ * (`app_state.adminbackup_aufbewahrung`, Seite „Backups").
  *
- * ZWEI STATT DREI (S2/AP6, Entscheidung vom 31.08.2026). Das Konzept nennt
- * seit E-S2-14 die Zwei; Code und drei Dokumente standen auf drei. Der
- * Widerspruch ist zugunsten des Konzepts aufgelöst.
+ * ZWEI STATT DREI (entschieden).
  *
  * WAS DAS KOSTET, UND WER ES ZU SEHEN BEKOMMT: Eine Installation, die die
  * Einstellung nie angefasst hat, verliert beim nächsten Sichern je Konto den
  * ältesten von drei Ständen. Das geschieht nicht still — die Rückmeldung des
  * Laufs nennt jede verdrängte Datei, und das Handbuch sagt es an der Stelle,
- * an der die Zahl eingestellt wird. Wer drei behalten will, trägt drei ein;
- * die Einstellung gibt es seit Web 9.8.0.
+ * an der die Zahl eingestellt wird. Wer drei behalten will, trägt drei ein.
  */
 const EDBAK_AUFBEWAHRUNG_VORGABE = 2;
 
-/** Vorbelegung der Erinnerung in Tagen, änderbar im Admin-Bereich (A8.4). */
+/** Vorbelegung der Erinnerung in Tagen, änderbar im Admin-Bereich. */
 const EDBAK_INTERVALL_VORGABE = 30;
 
 /**
- * Wie viele Einträge in ein Fenster des Adminpakets gehen (S2/AP6).
+ * Wie viele Einträge in ein Fenster des Adminpakets gehen.
  *
  * DIESELBE ZAHL WIE IM BROWSER, aus einem anderen Grund. Beim Nutzerformat
  * kommt die 250 von `client_max_body_size` — die Fenster gehen dort als POST
@@ -211,7 +207,7 @@ const EDBAK_ADMIN_TEIL_PUNKTE = 250000;
 const EDBAK_ADMIN_SPUR_BLOCK = 25;
 
 /**
- * Präfix des Bauordners, in dem die Teile eines Backups entstehen (S2/AP6).
+ * Präfix des Bauordners, in dem die Teile eines Backups entstehen.
  *
  * Er ist ERKENNBAR, und das ist der Punkt: Bricht ein Lauf mitten im Bau ab,
  * bleibt ein solcher Ordner liegen. Vorher war das eine `.tmp`-Datei, die
@@ -223,7 +219,7 @@ const EDBAK_ADMIN_SPUR_BLOCK = 25;
 const EDBAK_BAU_PRAEFIX = '.bau-';
 
 /**
- * Vorgabe der Speichergrenze für `server/sicherungen/` in GB (E-S2-15).
+ * Vorgabe der Speichergrenze für `server/sicherungen/` in GB.
  *
  * Zwei GB, weil das die Größenordnung ist, die ein einfacher Webspace
  * mitbringt — und weil eine Grenze, die nie greift, keine ist. Einstellbar im
@@ -232,7 +228,7 @@ const EDBAK_BAU_PRAEFIX = '.bau-';
 const EDBAK_GRENZE_GB_VORGABE = 2;
 
 /**
- * Vorgabe der Warnschwellen in Prozent der Grenze (E-S2-15).
+ * Vorgabe der Warnschwellen in Prozent der Grenze.
  *
  * Zwei Schwellen und nicht eine: Die erste ist die Vorwarnung, bei der noch
  * Zeit zum Handeln bleibt; die zweite sagt, dass es jetzt eng wird. Je
@@ -259,12 +255,12 @@ function edbak_wurzel(): string
  * Das Backup-Verzeichnis anlegen und mit `.htaccess` sperren — oder sagen,
  * warum es nicht geht (null = steht).
  *
- * HERAUSGEZOGEN MIT F-R17-19 (R17-23). Bis Web 23.3.1 entstand die
- * Schutzdatei nur in `edbak_ablage_bereit()`, also beim ersten Sichern. Auf
- * einem frischen Webspace, auf dem `wiederherstellen.php` als Erstes laeuft,
- * fehlte sie — und eine nach `sicherungen/eingang/` gelegte Klartext-
- * `.sql.gz` war per HTTP abrufbar. Die Seite ruft jetzt diesen Teil, bevor
- * sie den Eingang liest. Er haengt bewusst NICHT an ext/zip: Die Sperre
+ * EIN EIGENER TEIL. Entstuende die Schutzdatei nur in
+ * `edbak_ablage_bereit()`, also beim ersten Sichern, fehlte sie auf einem
+ * frischen Webspace, auf dem `wiederherstellen.php` als Erstes laeuft — und
+ * eine nach `sicherungen/eingang/` gelegte Klartext-`.sql.gz` waere per HTTP
+ * abrufbar. Die Seite ruft diesen Teil, bevor sie den Eingang liest. Er haengt
+ * bewusst NICHT an ext/zip: Die Sperre
  * braucht keine ZIP-Dateien, und ein fehlendes zip darf sie nicht kosten.
  */
 function edbak_ablage_schuetzen(): ?string
@@ -301,7 +297,7 @@ function edbak_ablage_schuetzen(): ?string
  */
 function edbak_ablage_bereit(): array
 {
-    /* OHNE ext/zip GIBT ES KEINE BACKUP (S2/AP6).
+    /* OHNE ext/zip GIBT ES KEINE BACKUP.
      *
      * Seit dem Umbau auf das mehrteilige Rohpaket ist ein Adminpaket ein ZIP.
      * Fehlt die Erweiterung, soll das HIER auffallen — an der Stelle, die
@@ -341,7 +337,7 @@ function edbak_ordner(string $kennung): string
  * Akzeptanzkriterium 49 verlangt, dass die Kennung an keiner Stelle der
  * Oberfläche erscheint. Ein verborgenes Formularfeld ist zwar für Menschen
  * unsichtbar, steht aber im ausgelieferten Quelltext — und die Kennung ist die
- * ZWEITE SCHRANKE gegen den Abruf über den Browser (E17). Eine Schranke, die
+ * ZWEITE SCHRANKE gegen den Abruf über den Browser. Eine Schranke, die
  * man auf jeder Verwaltungsseite mitliest, ist keine.
  *
  * Der Handgriff ist die gekürzte Prüfsumme der Kennung. Er ist stabil (kein
@@ -379,9 +375,9 @@ function edbak_kennung_aus_handgriff(string $handgriff): ?string
 }
 
 /**
- * Dateiname eines Pakets: Zeitpunkt (sortierbar) plus Zufallsanteil (E16).
+ * Dateiname eines Pakets: Zeitpunkt (sortierbar) plus Zufallsanteil.
  *
- * Seit S2/AP6 endet er auf `.zip` — ein Adminpaket ist ein Archiv aus Kopf,
+ * Er endet auf `.zip` — ein Adminpaket ist ein Archiv aus Kopf,
  * Eintragsfenstern und Spurteilen. Die Endung ist zugleich die
  * Fassungserkennung: `.json` = die einteilige Fassung 1, `.zip` = Fassung 2.
  * Das kostet nichts und spart das Öffnen einer 94-MB-Datei, nur um zu
@@ -419,15 +415,15 @@ function edbak_begleit_lesen(string $kennung): array
     $vorgabe = ['lesbar' => false, 'email' => null, 'name' => null,
                 'account_key' => $kennung, 'letzte_sicherung' => null,
                 'sicherungen' => [], 'freigabe' => null];
-    /* OHNE GÜLTIGE KENNUNG NICHTS LESEN (H-SR-06, F-SR-82) — wie beim
-     * Schreiben seit Nr. 344. Eine leere Kennung ergäbe die Wurzel, und eine
-     * `konto.json`, die dort aus der Zeit vor Nr. 344 liegt, gälte sonst als
+    /* OHNE GÜLTIGE KENNUNG NICHTS LESEN — wie beim
+     * Schreiben. Eine leere Kennung ergäbe die Wurzel, und eine
+     * `konto.json`, die dort aus aelterer Zeit liegt, gälte sonst als
      * Begleitdatei eines Kontos. */
     if (!edbak_kennung_gueltig($kennung)) { return $vorgabe; }
     if (!is_file($pfad)) { return $vorgabe; }
     $roh = @file_get_contents($pfad);
     if ($roh === false) { return $vorgabe; }
-    /* SEIT S10/AP4 VERSIEGELT (E-S10-U-14). Das Präfix entscheidet: Eine
+    /* VERSIEGELT. Das Präfix entscheidet: Eine
      * Datei ohne `edsk1:` ist die alte, unversiegelte Fassung und wird
      * unverändert gelesen — sie versiegelt sich beim nächsten Schreiben von
      * selbst. Lässt sich eine versiegelte nicht öffnen, fällt sie in
@@ -444,7 +440,7 @@ function edbak_begleit_lesen(string $kennung): array
 
 function edbak_begleit_schreiben(string $kennung, array $daten): bool
 {
-    /* NUR IN EINEN KONTOORDNER (Nr. 344, Schritt 18, SR-03). Mit einer leeren
+    /* NUR IN EINEN KONTOORDNER. Mit einer leeren
      * Kennung — etwa aus einem Handgriff, der sich nicht auflösen lässt —
      * legte diese Funktion eine versiegelte `konto.json` in die WURZEL der
      * Ablage und meldete Erfolg. Dieselbe Prüfung wie in
@@ -457,11 +453,11 @@ function edbak_begleit_schreiben(string $kennung, array $daten): bool
      * sonst genau die Datei zerstören, die nach einer Kontolöschung die
      * einzige Zuordnung ist. */
     $tmp = $pfad . '.' . bin2hex(random_bytes(4)) . '.tmp';
-    /* VERSIEGELT (S10/AP4, E-S10-U-14). Diese Datei trug E-Mail und
+    /* VERSIEGELT. Diese Datei trüge sonst E-Mail und
      * Anzeigenamen im Klartext — neben dem Paket, also genau dort, wo die
      * Versiegelung der Teile nichts genützt hätte. Ohne sie stimmte die
      * Abnahmezahl „kein lesbarer Name, keine E-Mail" nur für das ZIP und
-     * nicht für den Ordner (Fund F-9). NICHT gzip-gepackt: Die Datei ist
+     * nicht für den Ordner. NICHT gzip-gepackt: Die Datei ist
      * ein paar hundert Bytes gross, da kostet der Rahmen mehr, als er
      * einspart. */
     try {
@@ -524,19 +520,19 @@ function edbak_zeit_aus_name(string $name): ?string
  * Backup erzeugen.
  *
  * Zusätzlich zum Ergebnis von edbak_build() werden `pat_wrap_rc` und
- * `pat_key_check` mitgesichert (E5). Ohne die Hülle liesse sich das Paket
+ * `pat_key_check` mitgesichert. Ohne die Hülle liesse sich das Paket
  * NUR in dasselbe Konto zurückspielen — der Hauptanwendungsfall ist aber das
  * neu aufgesetzte Konto, und dort ist die Hülle der einzige Weg vom
  * Wiederherstellungsschlüssel zum alten Inhaltsschlüssel.
  *
- * ADMINISTRATION SIEHT DABEI KEINEN KLARTEXT (E6): Weder `pat_blob` noch
+ * ADMINISTRATION SIEHT DABEI KEINEN KLARTEXT: Weder `pat_blob` noch
  * `pat_wrap_rc` sind ohne Kontopasswort bzw. Wiederherstellungsschlüssel
  * lesbar. `pat_wrap_rc` steht ausserdem schon heute in der Tabelle `users`,
  * auf die Administration ohnehin Zugriff hat — es entsteht kein neues Risiko.
  */
 function edbak_sicherung_erzeugen(int $userId): array
 {
-    /* OHNE SERVERSCHLÜSSEL ENTSTEHT KEIN PAKET (S10/AP4, E-S10-13).
+    /* OHNE SERVERSCHLÜSSEL ENTSTEHT KEIN PAKET.
      *
      * Derselbe Riegel wie beim Komplett-Backup (`komp_auftrag_starten()`),
      * und aus demselben Grund: Ein Adminpaket trägt seit Fassung 3 nur noch
@@ -556,7 +552,7 @@ function edbak_sicherung_erzeugen(int $userId): array
     [$bereit, $grund] = edbak_ablage_bereit();
     if (!$bereit) { return [false, $grund, null]; }
 
-    /* DIE GRENZE VOR DEM BAU (E-S2-14/15): abgelehnt mit Meldung, nie still
+    /* DIE GRENZE VOR DEM BAU: abgelehnt mit Meldung, nie still
      * verdraengt. Beim 5000er-Konto kostet der Bau 14 Sekunden — die erst
      * auszugeben und das Ergebnis dann wegzuwerfen waere bei „Alle sichern"
      * derselbe Preis je Konto. */
@@ -577,7 +573,7 @@ function edbak_sicherung_erzeugen(int $userId): array
 
     /* DER ORDNER ENTSTEHT ERST, WENN ES ETWAS HINEINZULEGEN GIBT.
      *
-     * Bis Web 9.9.0 stand das mkdir hier oben, vor edbak_build(). Scheiterte
+     * Frueher stand das mkdir hier oben, vor edbak_build(). Scheiterte
      * danach irgendetwas — kein Datenpaket, die Datei nicht schreibbar, eine
      * Speichergrenze mitten im Aufbau —, blieb ein LEERER Ordner ohne
      * Begleitdatei zurueck. Der ist kein Schoenheitsfehler: Die
@@ -587,7 +583,7 @@ function edbak_sicherung_erzeugen(int $userId): array
      * demselben Fehlschlag.
      *
      * edbak_build() braucht den Ordner nicht — es liefert eine Zeichenkette. */
-    /* ---- DER BAU LÄUFT IN FENSTERN, NICHT AM STÜCK (S2/AP6) -----------
+    /* ---- DER BAU LÄUFT IN FENSTERN, NICHT AM STÜCK -----------
      *
      * Hier stand `json_decode(edbak_build($userId), true)`: der ganze Bestand
      * als Zeichenkette, derselbe Bestand noch einmal als Feld, und beim
@@ -597,7 +593,7 @@ function edbak_sicherung_erzeugen(int $userId): array
      * der Sorte Webspace, für die diese Anwendung gebaut ist, war das
      * Admin-Backup eines großen Kontos schlicht unmöglich.
      *
-     * Jetzt derselbe Weg wie beim Nutzerformat seit Web 11.1.0: Kopf,
+     * Derselbe Weg wie beim Nutzerformat: Kopf,
      * Eintragsfenster, Spurteile — nur unversiegelt, denn ein Adminpaket
      * liegt ohnehin serverseitig und trägt `pat_blob` als Chiffretext.
      *
@@ -632,10 +628,9 @@ function edbak_sicherung_erzeugen(int $userId): array
         return [false, 'Der Bauordner lässt sich nicht anlegen.', null];
     }
 
-    /* DER PAKETNAME STEHT JETZT VORHER FEST (S10/AP4).
+    /* DER PAKETNAME STEHT JETZT VORHER FEST.
      *
-     * Bis Fassung 2 entstand er erst beim Packen, weiter unten. Seit
-     * E-S10-U-11 geht er in den Siegelzweck jedes Teils ein — also muss er
+     * Er geht in den Siegelzweck jedes Teils ein — also muss er
      * bekannt sein, BEVOR der erste Teil geschrieben wird. Er ist ohnehin
      * nur ein Zeitstempel plus vier Zufallsbytes und hängt an nichts, was
      * hier erst entsteht. */
@@ -678,7 +673,7 @@ function edbak_sicherung_erzeugen(int $userId): array
     }
     unset($kopfJson);
 
-    /* 'papierkorb' als Unterblock (E-S1-02). Seit Nutzlast 7 enthaelt jedes
+    /* 'papierkorb' als Unterblock. Seit Nutzlast 7 enthaelt jedes
      * Backup den Papierkorb; die Zahl daneben ist die einzige Stelle, an
      * der das SICHTBAR wird, ohne die Datei zu oeffnen. */
     $imPapierkorb = static function (array $zeilen): int {
@@ -699,19 +694,19 @@ function edbak_sicherung_erzeugen(int $userId): array
             'ruhezeiten' => 0,
         ],
     ];
-    /* WIE VIELE EINSAETZE GESCHUETZTE ANGABEN TRAGEN (S2/AP6).
+    /* WIE VIELE EINSAETZE GESCHUETZTE ANGABEN TRAGEN.
      *
      * Bis hierher hat `edbak_paket_hat_geschuetzte()` die Einsatzliste des
      * Pakets durchgesehen. Mit gefenstertem Kern steht sie dort nicht mehr —
-     * die Funktion haette still `false` geliefert und damit die Sperre aus
-     * E20 ausgehebelt: Ein Paket mit unlesbaren Angaben waere als „direkt
+     * die Funktion haette still `false` geliefert und damit die Sperre fuer
+     * geschuetzte Angaben ausgehebelt: Ein Paket mit unlesbaren Angaben waere als „direkt
      * einspielbar" durchgegangen. Der Erzeuger zaehlt es deshalb hier und
      * schreibt es ins Manifest. */
     $geschuetzte = 0;
-    /* Einsaetze mit Einsatzhuelle und Spuren aus Stuecken (S11-06c). Sie sind
+    /* Einsaetze mit Einsatzhuelle und Spuren aus Stuecken. Sie sind
      * an das Schluesselpaar DIESES Kontos gebunden und in einem anderen nur
-     * ueber den Freigabeweg lesbar — sie zaehlen deshalb fuer die Sperre aus
-     * E20 mit (`edbak_paket_hat_geschuetzte()`). */
+     * ueber den Freigabeweg lesbar — sie zaehlen deshalb fuer diese Sperre
+     * mit (`edbak_paket_hat_geschuetzte()`). */
     $verschlossen = 0;
     $index = [];
     $eintragsteile = 0;
@@ -724,8 +719,8 @@ function edbak_sicherung_erzeugen(int $userId): array
             || !is_array($f['missions']) || !is_array($f['rest_segments'])) {
             return $abbruch('Ein Eintragsfenster des Backups ist unvollständig.');
         }
-        /* NACHZAEHLEN, WAS ANGEKOMMEN IST — dieselbe Schranke wie im Browser
-         * (S2/AP5b). Die Schleife rueckt um das Fenster weiter, gleichgueltig
+        /* NACHZAEHLEN, WAS ANGEKOMMEN IST — dieselbe Schranke wie im Browser.
+         * Die Schleife rueckt um das Fenster weiter, gleichgueltig
          * wie viel zurueckkam; ein zu kurzes Fenster liesse Eintraege aus dem
          * Backup fallen, und die Meldung lautete trotzdem „fertig". */
         $bekommen = count($f['missions']) + count($f['rest_segments']);
@@ -776,12 +771,9 @@ function edbak_sicherung_erzeugen(int $userId): array
             $block = array_slice($dieser, $k, EDBAK_ADMIN_SPUR_BLOCK);
             $refNach = [];
             foreach ($block as $e) { $refNach[(int)$e['id']] = $e['spur_ref']; }
-            /* DIE VERSCHLOSSENEN STUECKE, WIE SIE LIEGEN (S11-06c) — der
-             * Server kann sie nicht oeffnen und muss es nicht. Bis Web 22.4.0
-             * kam nur der SPUR1-Blob mit, und eine Spur aus Stuecken fehlte in
-             * jeder Kontosicherung (F-S11-63); bis Web 22.7.0 standen Blob
-             * und Stuecke nebeneinander, der zweite Eintrag mit
-             * `fortsetzung`. Seit Web 23 gibt es nur noch Stuecke (S11-12). */
+            /* DIE VERSCHLOSSENEN STUECKE, WIE SIE LIEGEN — der
+             * Server kann sie nicht oeffnen und muss es nicht. Es gibt nur
+             * Stuecke. */
             $ids = array_keys($refNach);
             $stueckeNach = spur2_lesen_viele($pdo, $art, $ids);
             $anhaengen = function (array $eintrag, int $n) use (&$laufend, &$laufendePunkte,
@@ -840,7 +832,7 @@ function edbak_sicherung_erzeugen(int $userId): array
         'schluessel'  => [
             'pat_wrap_rc'   => $u['pat_wrap_rc'],
             'pat_key_check' => $u['pat_key_check'],
-            /* Der private Teil des Schluesselpaars (S11-06c), verschluesselt
+            /* Der private Teil des Schluesselpaars, verschluesselt
              * unter dem Inhaltsschluessel wie `pat_wrap_rc` ihn oeffnet. Mit
              * ihm oeffnet der Browser eines ANDEREN Kontos auf dem
              * Freigabeweg Huellen und Stuecke und verschliesst sie neu; der
@@ -865,12 +857,12 @@ function edbak_sicherung_erzeugen(int $userId): array
     }
 
     /* ---- Und alles in ein Archiv --------------------------------------- */
-    $name = $paketName;          // steht seit S10/AP4 schon oben fest
+    $name = $paketName;          // steht schon oben fest
     $tmp  = $ordner . '/' . $name . '.tmp';
-    /* UNGEPACKT SEIT FASSUNG 3 (S10/AP4): Die Teile sind gzip UND
+    /* UNGEPACKT SEIT FASSUNG 3: Die Teile sind gzip UND
      * versiegelt, und ein Siegel ist Zufallsrauschen — ein Packlauf darüber
      * kostet Zeit und bringt nichts. `zip_bauen()` speichert deshalb ohne
-     * Kompression, und seit P5c/AP2 steht das dort (E-P5c-57, R83). */
+     * Kompression, und das steht dort. */
     $teilePfade = [];
     foreach ($teile as $t) { $teilePfade[$t['name']] = $t['datei']; }
     $gebaut = zip_bauen($tmp, $teilePfade);
@@ -886,7 +878,7 @@ function edbak_sicherung_erzeugen(int $userId): array
         return [false, 'Das Backup liess sich nicht ablegen.', null];
     }
 
-    /* ---- ERST GEGENLESEN, DANN AUFRAEUMEN (S2/AP6) ---------------------
+    /* ---- ERST GEGENLESEN, DANN AUFRAEUMEN ---------------------
      *
      * Die Verdraengung entfernt aeltere Staende, und mit der Umstellung
      * entfernt sie zusaetzlich die einteiligen Pakete dieses Kontos
@@ -915,7 +907,7 @@ function edbak_sicherung_erzeugen(int $userId): array
         'umfang'  => $umfang,
     ];
     if (!edbak_begleit_schreiben($kennung, $begleit)) {
-        /* KEIN STILLES WEITERGEHEN (S2/AP6). Der Rueckgabewert wurde hier
+        /* KEIN STILLES WEITERGEHEN. Der Rueckgabewert wurde hier
          * verworfen. Das Backup liegt dann zwar, aber das Verzeichnis
          * kennt es nicht — und `edbak_pakete()` faellt fuer es auf den
          * Zeitstempel im Namen zurueck, ohne Umfang. Das ist kein
@@ -938,17 +930,17 @@ function edbak_sicherung_erzeugen(int $userId): array
 }
 
 /**
- * Älteste Backups entfernen, bis höchstens n übrig sind (E18).
+ * Älteste Backups entfernen, bis höchstens n übrig sind.
  *
  * KEINE ALTERSGRENZE. Bei rein manueller Auslösung würde eine Altersgrenze
  * genau das letzte vorhandene Backup entfernen, wenn lange kein neues
  * erzeugt wurde — also in der Lage, in der man es braucht. Die Anzahlgrenze
  * greift nur, wenn tatsächlich ein neueres existiert.
  *
- * Das ist die zugesagte Verdrängung und KEINE Löschhandlung im Sinne von
- * A8.8: Sie braucht deshalb keine Bestätigung (Akzeptanzkriterium 60).
+ * Das ist die zugesagte Verdrängung und KEINE Löschhandlung, die eine
+ * Bestätigung braucht.
  *
- * ZWEI PAKETE SIND AUSGENOMMEN (E-P3-41, Web 9.8.0). Die Zahl ist seit der
+ * ZWEI PAKETE SIND AUSGENOMMEN. Die Zahl ist seit der
  * einstellbaren Aufbewahrung nicht mehr fest, und wer sie auf 1 stellt,
  * hätte sonst zwei Zusagen gebrochen:
  *
@@ -964,12 +956,12 @@ function edbak_sicherung_erzeugen(int $userId): array
 function edbak_verdraengen(string $kennung): array
 {
     $pakete = edbak_pakete($kennung);          // neueste zuerst
-    /* DIE ZAHL JE KONTO (P5b/AP6, Backlog Nr. 48) — sie faellt auf die der
+    /* DIE ZAHL JE KONTO — sie faellt auf die der
      * Installation zurueck, wenn keine eigene gesetzt ist. */
     $grenze = max(1, edbak_aufbewahrung_konto($kennung));
     $weg = array_slice($pakete, $grenze);
 
-    /* DIE EINTEILIGEN PAKETE GEHEN MIT (S2/AP6, Entscheidung vom 31.08.2026).
+    /* DIE EINTEILIGEN PAKETE GEHEN MIT (Entscheidung vom 31.08.2026).
      *
      * Fassung 1 ist eine einzige JSON-Datei mit dem ganzen Bestand darin —
      * beim 5000er-Konto 94,28 MB gegen 11,42 MB derselben Daten als
@@ -1057,12 +1049,12 @@ function edbak_ordner_leeren(string $pfad): bool
 }
 
 /**
- * Liegengebliebene Bauordner und `.tmp`-Dateien eines Kontos entfernen (S2/AP6).
+ * Liegengebliebene Bauordner und `.tmp`-Dateien eines Kontos entfernen.
  *
  * WOFUER. Ein Lauf, der mitten im Bau abbricht — Zeitüberschreitung, Absturz,
  * volle Platte —, lässt Reste liegen. Sie zählen auf der Platte, tauchen in
- * keiner Liste auf und blockierten bis Web 11.2.0 dauerhaft das Löschen des
- * Ordners und damit einen Teil der Kontolöschung.
+ * keiner Liste auf und blockierten ohne diese Funktion dauerhaft das
+ * Löschen des Ordners und damit einen Teil der Kontolöschung.
  *
  * SIE WERDEN NICHT NACH ALTER GEFILTERT, sondern nach Zugehörigkeit: Was hier
  * entfernt wird, trägt das Präfix bzw. die Endung, die nur diese Bibliothek
@@ -1107,14 +1099,14 @@ function edbak_paket_kopf_lesen(string $kennung, string $datei): ?array
     if (edbak_paket_fassung($datei) === 2) {
         $roh = zip_eintrag($pfad, 'manifest.json');
         if ($roh === null) { return null; }
-        /* DIE FASSUNG STEHT IM MANIFEST, NICHT AM DATEINAMEN (S10/AP4, F-8).
+        /* DIE FASSUNG STEHT IM MANIFEST, NICHT AM DATEINAMEN.
          *
          * `edbak_paket_fassung()` liest die ENDUNG und liefert für jedes ZIP
          * weiterhin 2 — sie ist an sechs Stellen so gemeint und bleibt es.
          * Ob ein ZIP Fassung 2 oder 3 ist, entscheidet das Siegel des
          * Manifests: `manifest.json` ist der einzige Eintrag, den jeder
-         * Leser ohnehin anfasst. Das Konzept sagte „`sk_versiegelt()` am
-         * ersten Teil" — einen ersten Teil gibt es nicht, die vier Leser
+         * Leser ohnehin anfasst. „`sk_versiegelt()` am ersten Teil" ginge
+         * nicht — einen ersten Teil gibt es nicht, die vier Leser
          * greifen je einen benannten Eintrag. */
         $klar = edbak_teil_oeffnen($roh, $kennung, $datei, 'manifest.json');
         if ($klar === null) { return null; }
@@ -1135,18 +1127,18 @@ function edbak_paket_kopf_lesen(string $kennung, string $datei): ?array
     return $d;
 }
 
-/* `edbak_paket_lesen()` stand hier bis Web 22.7.0: Sie las ein Paket der
- * Fassung 1 am Stueck fuer den direkten Rueckweg und die Freigabe. Beide
- * nehmen seit Web 23 nur noch Fassung 2 (S11-12, E-S11-84). */
+/* Ein Paket der Fassung 1 am Stueck zu lesen gibt es nicht. Der direkte
+ * Rueckweg und die Freigabe
+ * nehmen nur noch Fassung 2. */
 
-/** Enthält das Paket überhaupt geschützte Angaben? Entscheidet den Sonderfall in A8.6. */
+/** Enthält das Paket überhaupt geschützte Angaben? Entscheidet den Sonderfall beim Einspielen. */
 function edbak_paket_hat_geschuetzte(array $paket): bool
 {
-    /* FASSUNG 2 SAGT ES SELBST (S2/AP6).
+    /* FASSUNG 2 SAGT ES SELBST.
      *
      * Bis hierher wurde die Einsatzliste des Pakets durchgesehen. Bei einem
      * gefensterten Kern steht sie dort nicht mehr — die Funktion haette still
-     * `false` geliefert, und damit waere die Sperre aus E20 weggefallen: Ein
+     * `false` geliefert, und damit waere die Sperre fuer geschuetzte Angaben weggefallen: Ein
      * Paket mit unlesbaren Angaben ginge als „direkt einspielbar" durch, und
      * die geschuetzten Angaben kaemen im Zielkonto als Chiffretext an, den
      * dort niemand oeffnen kann.
@@ -1155,7 +1147,7 @@ function edbak_paket_hat_geschuetzte(array $paket): bool
      * Manifest. Fehlt der Schluessel bei einem Fassung-2-Paket, wird
      * VORSICHTIG entschieden — „nicht erhoben" ist etwas anderes als „keine",
      * und der teurere der beiden Wege ist hier der sichere. */
-    /* SEIT S11-06c ZAEHLEN VERSCHLOSSENE ORTSDATEN MIT: Einsatzhuelle und
+    /* VERSCHLOSSENE ORTSDATEN ZAEHLEN MIT: Einsatzhuelle und
      * Spurstuecke sind an das Schluesselpaar des Ursprungskontos gebunden,
      * und ein anderes Konto oeffnet sie nur ueber den Freigabeweg. Ein Paket,
      * das sie traegt, darf darum nicht direkt in ein fremdes Konto. */
@@ -1171,7 +1163,7 @@ function edbak_paket_hat_geschuetzte(array $paket): bool
 }
 
 /**
- * Welcher Weg ist für dieses Paket und dieses Zielkonto zulässig? (E20)
+ * Welcher Weg ist für dieses Paket und dieses Zielkonto zulässig?
  *
  * Liefert 'direkt', 'freigabe' oder 'gesperrt', dazu die Begründung im
  * Klartext. Die Regel ist maschinell prüfbar und braucht keine Einschätzung
@@ -1189,9 +1181,9 @@ function edbak_weg(array $paket, array $ziel): array
                         . 'und bleiben lesbar.'];
     }
 
-    /* SONDERFALL, ausdrücklich benannt statt stillschweigend behandelt (P6).
+    /* SONDERFALL, ausdrücklich benannt statt stillschweigend behandelt.
      *
-     * Die Sperre aus E20 besteht, WEIL die geschützten Angaben mit einem
+     * Die Sperre besteht, WEIL die geschützten Angaben mit einem
      * Inhaltsschlüssel verschlüsselt sind, den nur der
      * Wiederherstellungsschlüssel öffnet. Enthält das Paket überhaupt keine
      * geschützten Angaben, gibt es nichts umzuschlüsseln — die Begründung
@@ -1219,7 +1211,7 @@ function edbak_weg(array $paket, array $ziel): array
                       . 'ausschliesslich bei der NutzerIn.'];
 }
 
-/** Freigabe setzen (A8.6): das Backup wird für ein Zielkonto sichtbar. */
+/** Freigabe setzen: das Backup wird für ein Zielkonto sichtbar. */
 function edbak_freigeben(string $kennung, string $datei, int $zielUserId): bool
 {
     if (!edbak_paketname_gueltig($datei)) { return false; }
@@ -1235,24 +1227,24 @@ function edbak_freigeben(string $kennung, string $datei, int $zielUserId): bool
 
 /**
  * Darf das Paket dieses Ordners an dieses Konto freigegeben werden?
- * (R17-20, F-R17-02, E-R17-46)
+ *
  *
  * WAS DAS PROBLEM WAR. Ein Admin gab das Paket JEDES Kontos an JEDES Konto
  * frei, sein eigenes eingeschlossen — ohne Protokoll, ohne Mail, ohne
  * frischen Code. Das Zielkonto bekam beim Einlösen den entsiegelten Bestand
  * des Herkunftskontos: Ort, Zeit, Klinik, Reanimation, Besatzung,
- * Diensttagsnotizen. `pat_blob` blieb zu, alles andere nicht. Genau den
- * Abzug, den Nr. 286 der Rolle admin genommen hat.
+ * Diensttagsnotizen. `pat_blob` bliebe zu, alles andere nicht — genau
+ * der Abzug, den die Rolle admin nicht bekommen soll.
  *
  * WAS JETZT GILT. Der Zweck der Freigabe ist „Konto neu aufgesetzt" — also
  * nur an das Herkunftskonto selbst (dieselbe Kennung) oder an ein Konto mit
  * DERSELBEN Adresse, wie sie in der Begleitdatei steht. Geprüft beim
  * Freigeben UND beim Einlösen (`edbak_freigabe_fuer()`): So werden auch
- * Freigaben wirkungslos, die vor Web 23.2.0 an ein fremdes Konto gingen.
+ * aeltere Freigaben wirkungslos, die an ein fremdes Konto gingen.
  *
  * PREIS: Wer sich mit einer neuen Adresse neu registriert hat, bekommt das
  * Paket erst, wenn die Verwaltung die Adresse angeglichen hat — und ein
- * Adresswechsel durch die Verwaltung gilt erst nach der Frist (E-R17-45).
+ * Adresswechsel durch die Verwaltung gilt erst nach der Frist.
  * Eine Begleitdatei, die sich nicht lesen lässt, nennt keine Adresse; dann
  * geht nur das Herkunftskonto selbst.
  */
@@ -1269,11 +1261,11 @@ function edbak_freigabe_erlaubt(string $kennung, array $ziel): bool
  * Die Freigabe erteilen — der EINE Weg für beide Seiten (`admin_user.php`,
  * `admin_sicherungen.php`). `[ok, Meldung]`.
  *
- * Bis Web 23.1.0 stand dieser Ablauf zweimal wortgleich in den Seiten; die
- * Regel, das Protokoll und die Mail dreimal zu ergänzen, hieße, beim
+ * Stuende dieser Ablauf wortgleich in den Seiten, hieße die Regel, das
+ * Protokoll und die Mail mehrfach zu ergänzen, beim
  * nächsten Mal eine davon zu vergessen.
  *
- * DIE MAIL GEHT AN HERKUNFTS- UND ZIELADRESSE (F-R17-02) — in aller Regel
+ * DIE MAIL GEHT AN HERKUNFTS- UND ZIELADRESSE — in aller Regel
  * dieselbe, dann eine. Sie ist die Spur, die eine Person ohne Zugang zum
  * Protokoll bekommt. Der frische Code steht in den Seiten, vor dem Token
  * (`zweitfaktor_frisch_verlangen('freigeben')`), wie bei jeder Handlung der
@@ -1348,7 +1340,7 @@ function edbak_freigabe_zielkonten(string $kennung): array
 /** Freigabe widerrufen, solange sie nicht eingelöst wurde (Akzeptanzkriterium 53). */
 function edbak_freigabe_widerrufen(string $kennung): bool
 {
-    /* Nr. 344: Ohne gültige Kennung gibt es keine Freigabe zu widerrufen —
+    /* Ohne gültige Kennung gibt es keine Freigabe zu widerrufen —
      * der Aufrufer meldet „ließ sich nicht widerrufen", statt Erfolg. */
     if (!edbak_kennung_gueltig($kennung)) { return false; }
     $begleit = edbak_begleit_lesen($kennung);
@@ -1367,9 +1359,9 @@ function edbak_freigabe_fuer(int $userId): ?array
 {
     $wurzel = edbak_wurzel();
     if (!is_dir($wurzel)) { return null; }
-    /* DIESELBE REGEL WIE BEIM FREIGEBEN (R17-20, E-R17-46): Eine Freigabe,
-     * die vor Web 23.2.0 an ein fremdes Konto ging, liegt noch in der
-     * Begleitdatei; sie wird hier wirkungslos statt eingelöst. */
+    /* DIESELBE REGEL WIE BEIM FREIGEBEN: Eine aeltere
+     * Freigabe an ein fremdes Konto kann noch in der Begleitdatei liegen; sie
+     * wird hier wirkungslos statt eingelöst. */
     $ich = edbak_ziel_konto($userId);
     if (!$ich) { return null; }
     foreach (scandir($wurzel) ?: [] as $n) {
@@ -1397,7 +1389,7 @@ function edbak_freigabe_eingeloest(string $kennung): void
     }
 }
 
-/** Ein einzelnes Backup löschen (A8.8). Wirkt sofort und endgültig (E23). */
+/** Ein einzelnes Backup löschen. Wirkt sofort und endgültig. */
 function edbak_paket_loeschen(string $kennung, string $datei): bool
 {
     if (!edbak_kennung_gueltig($kennung) || !edbak_paketname_gueltig($datei)) { return false; }
@@ -1413,13 +1405,13 @@ function edbak_ordner_loeschen(string $kennung): bool
     $ordner = edbak_ordner($kennung);
     if (!is_dir($ordner)) { return true; }
 
-    /* ERST DIE EIGENEN RESTE (S2/AP6). Ein abgebrochener Lauf hinterlaesst
+    /* ERST DIE EIGENEN RESTE. Ein abgebrochener Lauf hinterlaesst
      * einen Bauordner oder eine `.tmp`-Datei. Beide standen nicht auf der
      * Weissliste unten — und damit scheiterte das Loeschen des Kontoordners
      * dauerhaft an einem Rest, den die Anwendung selbst erzeugt hatte. */
     edbak_baureste_aufraeumen($kennung);
 
-    /* ERST PRUEFEN, DANN LOESCHEN (S2/AP6).
+    /* ERST PRUEFEN, DANN LOESCHEN.
      *
      * Die Pruefung stand IN der Schleife: Beim fuenften Eintrag abzubrechen
      * hiess, die ersten vier bereits geloescht zu haben — und dann `false` zu
@@ -1438,20 +1430,20 @@ function edbak_ordner_loeschen(string $kennung): bool
     return @rmdir($ordner);
 }
 
-/** Alle Backups eines Kontos entfernen (E25, Kontolöschung). */
+/** Alle Backups eines Kontos entfernen (Kontolöschung). */
 function edbak_konto_ordner_loeschen(?string $kennung): bool
 {
     return edbak_kennung_gueltig($kennung) ? edbak_ordner_loeschen((string)$kennung) : true;
 }
 
-/* ---- Erinnerung (A8.4) ---------------------------------------------------
+/* ---- Erinnerung ---------------------------------------------------
  *
  * Intervall und Zeitpunkt des letzten Backups passen in die vorhandene
  * Tabelle app_state; dafür braucht es keine neue Struktur. Die Anzeige folgt
  * dem Muster der Wartungswarnung in update.php: erst sagen, was ist, dann was
  * daraus folgt.
  */
-/* JE ANFRAGE EINMAL LESEN (O9b). Die Marken sind Einstellungen, keine
+/* JE ANFRAGE EINMAL LESEN. Die Marken sind Einstellungen, keine
  * Messwerte: Innerhalb eines Seitenaufrufs ändern sie sich nur, wenn diese
  * Anfrage sie selbst ändert — und dann schreibt edbak_marke_setzen() den neuen
  * Wert gleich mit in den Zwischenspeicher.
@@ -1479,7 +1471,7 @@ function edbak_marke_lesen(string $k): ?string
 }
 
 /**
- * Eine Marke schreiben. Liefert, OB es geklappt hat (S2/AP6).
+ * Eine Marke schreiben. Liefert, OB es geklappt hat.
  *
  * VORHER WAR DER RUECKGABETYP `void` UND DER `catch` LEER. Der Gedanke war
  * richtig: Eine nicht schreibbare Marke darf das Backup selbst nicht
@@ -1498,9 +1490,9 @@ function edbak_marke_lesen(string $k): ?string
  * ist. Eine stille Kuerzung waere hier das Schlimmste von allem — ein halbes
  * JSON, das beim naechsten Lesen als „kein Auftrag" durchgeht.
  */
-/* DIE ZAHL STEHT SEIT WEB 20.28.0 AN EINER STELLE (Schritt 15/AP4): Sie ist
+/* DIE ZAHL STEHT AN EINER STELLE: Sie ist
  * die Spaltenbreite von `app_state.v`, und die kennt `APP_STATE_MAX` in
- * `db.php`. Zwei Konstanten mit derselben 190 waren zwei Gelegenheiten, beim
+ * `db.php`. Zwei Konstanten mit derselben 190 waeren zwei Gelegenheiten, beim
  * naechsten Schemawechsel eine davon zu vergessen. Der Name bleibt —
  * `tools/proben/wiederherstellung/` prueft gegen ihn. */
 const EDBAK_MARKE_MAX = APP_STATE_MAX;
@@ -1522,7 +1514,7 @@ function edbak_intervall(): int
 }
 
 /**
- * Aufbewahrung in Paketen — die Zahl der INSTALLATION (E-P3-41, Web 9.8.0).
+ * Aufbewahrung in Paketen — die Zahl der INSTALLATION.
  *
  * Dieselbe Ablage wie das Erinnerungsintervall — app_state, kein neues
  * Schema. Der Wert 0 heisst „nie gesetzt"; dann gilt die Vorbelegung.
@@ -1534,7 +1526,7 @@ function edbak_aufbewahrung(): int
 }
 
 /**
- * Aufbewahrung JE KONTO (P5b/AP6, Backlog Nr. 48).
+ * Aufbewahrung JE KONTO.
  *
  * `users.backup_pakete` schlaegt die Zahl der Installation. `NULL` heisst
  * „die Zahl der Installation gilt" — nicht 0 und nicht dieselbe Zahl noch
@@ -1568,14 +1560,13 @@ function edbak_admin_mail_an(): bool
     return edbak_marke_lesen('adminbackup_mail') === '1';
 }
 
-/* ---- Stand EINES Kontos (E-P3-41) ----------------------------------------
+/* ---- Stand EINES Kontos ----------------------------------------
  *
- * Die Gesamtübersicht, die hier bis Web 21.1.6 stand, las ALLE Konten und
- * dazu je Konto eine Begleitdatei und ein Verzeichnis. Für die Kontoseite
- * war das die falsche Frage: Sie zeigt genau ein Konto, und bei mehreren
- * hundert Konten war die Übersicht dafür ein Verzeichnisdurchlauf über den
- * ganzen Bestand. Seit E-P3-41 und O9c rief sie niemand mehr; mit
- * Web 21.1.7 ist sie gestrichen (Backlog Nr. 175).
+ * KEINE GESAMTÜBERSICHT, die ALLE Konten und dazu je Konto eine
+ * Begleitdatei und ein Verzeichnis liest. Für die Kontoseite
+ * waere das die falsche Frage: Sie zeigt genau ein Konto, und bei mehreren
+ * hundert Konten waere die Übersicht dafür ein Verzeichnisdurchlauf über
+ * den ganzen Bestand.
  *
  * Zurück kommt, was die Karte „Backups" braucht: die Pakete, die
  * Freigabe, und der Stand als eines von fünf Worten. „nie" ist dabei nicht
@@ -1605,7 +1596,7 @@ function edbak_konto_stand(array $konto): array
 }
 
 /**
- * Ein Zeitpunkt wird zu einem Stand — die EINE Regel für beide Seiten (O9b).
+ * Ein Zeitpunkt wird zu einem Stand — die EINE Regel für beide Seiten.
  *
  * Kontoseite und NutzerInnen-Liste beantworten dieselbe Frage aus zwei
  * verschiedenen Quellen: die eine aus den Paketdateien, die andere aus den
@@ -1632,7 +1623,7 @@ function edbak_stand_werten(?string $letzte, ?int $intervall = null): array
             'letzte' => $letzte, 'tage' => $tage];
 }
 
-/* ---- Stand ALLER Konten mit EINEM Verzeichnisdurchlauf (O9b) --------------
+/* ---- Stand ALLER Konten mit EINEM Verzeichnisdurchlauf --------------
  *
  * Die NutzerInnen-Liste braucht zu jedem Konto ein Wort („aktuell",
  * „überfällig · 23 Tage", „nie gesichert") und zu allen Konten vier Zahlen.
@@ -1731,22 +1722,22 @@ function edbak_stand_aus_karte(?string $kennung, array $karte, ?int $intervall =
     return edbak_stand_werten($e['letzte'], $intervall);
 }
 
-/* ---- Zwei Zeilen für die Anzeige (O9) ------------------------------------
+/* ---- Zwei Zeilen für die Anzeige ------------------------------------
  *
- * Beide standen bis Web 9.7.2 in admin_sicherungen.php. Seit die Backups
- * eines Kontos auf dessen Kontoseite liegen (E-P3-41), brauchen sie zwei
+ * Weil die Backups eines Kontos auf dessen Kontoseite liegen, brauchen sie
+ * zwei
  * Seiten — und eine Formatierung, die an zwei Stellen doppelt steht, läuft
  * auseinander.
  */
 
 /**
- * Umfang eines Backups als eine Zeile — nur Zahlen, nie Inhalte (A8.7).
+ * Umfang eines Backups als eine Zeile — nur Zahlen, nie Inhalte.
  *
  * REIHENFOLGE UND TRENNER FOLGEN MOCKUP 40 („41 Diensttage · 138 Einsätze ·
  * 2,1 MB"): Diensttage zuerst, Mittelpunkt statt Komma. Ruhezeiten und
- * Papierkorb bleiben trotzdem stehen — das Mockup zeigt eine kurze Zeile,
+ * Papierkorb bleiben trotzdem stehen — eine kurze Zeile laege nahe,
  * aber die Zahl der gelöschten Datensätze ist die einzige Stelle, an der
- * sichtbar wird, was in einem Paket steckt, ohne es zu öffnen (E-S1-02).
+ * sichtbar wird, was in einem Paket steckt, ohne es zu öffnen.
  * Kürzen hiesse hier, eine Auskunft zu streichen, nicht ein Wort.
  */
 function edbak_umfang_text(array $p): string
@@ -1757,13 +1748,13 @@ function edbak_umfang_text(array $p): string
         $teile[] = (int)($z['diensttage'] ?? $z['flugtage'] ?? 0) . ' Diensttage';
         $teile[] = (int)($z['einsaetze'] ?? 0) . ' Einsätze';
         $teile[] = (int)($z['ruhezeiten'] ?? 0) . ' Ruhezeiten';
-        /* „davon im Papierkorb" (E-S1-02). Seit Nutzlast 7 steht der
+        /* „davon im Papierkorb". Seit Nutzlast 7 steht der
          * Papierkorb in jedem Backup und zaehlt in den drei Zahlen oben
          * MIT. Ohne diesen Zusatz waere aus „87 Einsätze" nicht zu erkennen,
          * dass fünf davon geloescht sind.
          *
-         * EINE ZAHL STATT DREI (O9). Bis Web 9.7.2 stand hier die Aufteilung
-         * nach Art („davon im Papierkorb: 5 Einsätze, 1 Diensttag, 5
+         * EINE ZAHL STATT DREI. Eine Aufteilung nach Art („davon im Papierkorb:
+         * 5 Einsätze, 1 Diensttag, 5
          * Ruhezeiten"). In der Zeile einer Karte, die halb so breit ist wie
          * die alte Tabelle, waren das drei Zeilen Umbruch für eine Angabe,
          * die man liest, um EINE Frage zu beantworten: Wie viel von dem
@@ -1771,7 +1762,7 @@ function edbak_umfang_text(array $p): string
          * Aufteilung stand im Weg. Bewusste Kürzung, keine Auslassung —
          * das Paket selbst führt die Zahlen weiter je Art.
          *
-         * Fehlt der Block (Backups vor S1), wird NICHTS angezeigt statt
+         * Fehlt der Block (sehr alte Backups), wird NICHTS angezeigt statt
          * einer Null: Eine Null behauptete „nichts im Papierkorb", richtig ist
          * „nicht erhoben". */
         $pk = $z['papierkorb'] ?? null;
@@ -1791,18 +1782,18 @@ function edbak_umfang_text(array $p): string
 function edbak_zeitpunkt_text(?string $iso): string
 {
     if (!$iso) { return 'unbekannt'; }
-    /* Mittelpunkt zwischen Datum und Uhrzeit (Mockup 40: „03.08.2026 ·
-     * 22:10") — derselbe Trenner wie in der Umfangszeile darunter. */
+    /* Mittelpunkt zwischen Datum und Uhrzeit („03.08.2026 · 22:10") — derselbe
+    Trenner wie in der Umfangszeile darunter. */
     try { return datum_zeit_text((string)$iso); }
     catch (Throwable) { return (string)$iso; }
 }
 
-/* ---- Zwei Helfer, die zwei Seiten brauchen (O9) ---------------------------
+/* ---- Zwei Helfer, die zwei Seiten brauchen ---------------------------
  *
- * Beide standen bis Web 9.7.2 in admin_sicherungen.php. Seit die Kontoseite
- * dieselben Handlungen anbietet, gaebe es sie zweimal — und zwei Fassungen
+ * Weil die Kontoseite dieselben Handlungen anbietet, gaebe es sie sonst
+ * zweimal — und zwei Fassungen
  * einer Sicherheitspruefung sind eine Gelegenheit, dass eine davon nachlaesst.
- * (Die alte Fassung von bestaetigung_passt() liess ausserdem den leeren
+ * (Eine lockere Fassung von bestaetigung_passt() liesse ausserdem den leeren
  * Sollwert durchgehen: Ein Konto ohne Adresse haette sich mit einer leeren
  * Eingabe bestaetigen lassen.)
  */
@@ -1818,7 +1809,7 @@ function edbak_ziel_konto(int $id): ?array
 }
 
 /**
- * Harte Bestätigung: die E-Mail-Adresse des ZIELKONTOS muss abgetippt sein (E21).
+ * Harte Bestätigung: die E-Mail-Adresse des ZIELKONTOS muss abgetippt sein.
  *
  * Abgetippt wird die Adresse des Ziels, nicht die der Herkunft. Das Risiko ist
  * nicht Datenverlust — edbak_restore() ergänzt und ersetzt nicht —, sondern das
@@ -1835,7 +1826,7 @@ function edbak_bestaetigung_passt(string $eingabe, string $soll): bool
     return $soll !== '' && strcasecmp(trim($eingabe), $soll) === 0;
 }
 
-/* ---- Zahlen der ganzen Ablage (O9c) --------------------------------------
+/* ---- Zahlen der ganzen Ablage --------------------------------------
  *
  * Die Regelseite nennt oben, wie viel in der Ablage liegt: Ordner, Pakete,
  * Bytes. Anders als die NutzerInnen-Liste kommt das NICHT ohne Verzeichnisse
@@ -1845,11 +1836,11 @@ function edbak_bestaetigung_passt(string $eingabe, string $soll): bool
  * Das ist hier vertretbar und in der Liste nicht: Diese Seite EXISTIERT, um
  * genau das zu beantworten, und sie wird selten geoeffnet. Die Liste dagegen
  * ist der Weg zu einem Konto und wird staendig aufgerufen. Gemessen an 209
- * Ordnern mit 421 Paketen: siehe Pruefprotokoll O9c.
+ * Ordnern mit 421 Paketen.
  */
 function edbak_ablage_zahlen(bool $frisch = false): array
 {
-    /* EINMAL JE ANFRAGE, NICHT EINMAL JE KONTO (S2/AP6).
+    /* EINMAL JE ANFRAGE, NICHT EINMAL JE KONTO.
      *
      * Seit die Zaehlung das ganze Verzeichnis wiegt, ist sie ein `du` ueber
      * alle Konten. Die Speichergrenze wird vor JEDEM Sichern geprueft — bei
@@ -1866,12 +1857,12 @@ function edbak_ablage_zahlen(bool $frisch = false): array
           'komplett' => 0, 'komplett_bytes' => 0, 'protokoll_bytes' => 0];
     if (!is_dir($wurzel)) { return $letzte = $z; }
 
-    /* DAS GANZE VERZEICHNIS, NICHT NUR DIE PAKETE (S2/AP6).
+    /* DAS GANZE VERZEICHNIS, NICHT NUR DIE PAKETE.
      *
-     * Bis Web 11.2.0 zaehlte diese Funktion ausschliesslich Dateien, die
-     * `edbak_paketname_gueltig()` bestanden. Alles andere im Ordner —
+     * Zaehlte diese Funktion ausschliesslich Dateien, die
+     * `edbak_paketname_gueltig()` bestehen, waere alles andere im Ordner —
      * Begleitdateien, `.htaccess`, liegengebliebene `.tmp`-Dateien und
-     * Bauordner eines abgebrochenen Laufs — war unsichtbar und zaehlte
+     * Bauordner eines abgebrochenen Laufs — unsichtbar und zaehlte
      * trotzdem auf der Platte.
      *
      * Fuer eine Anzeige mag das angehen. Fuer eine SPEICHERGRENZE ist es
@@ -1907,7 +1898,7 @@ function edbak_ablage_zahlen(bool $frisch = false): array
             }
         }
     }
-    /* DIE KOMPLETT-BACKUPS BEKOMMEN EINE EIGENE ZAHL (S2/AP8).
+    /* DIE KOMPLETT-BACKUPS BEKOMMEN EINE EIGENE ZAHL.
      *
      * Gewogen waren sie schon vorher — `$wiegen` geht ueber den ganzen Baum.
      * Sie landeten damit aber unter `sonstige_bytes`, und das ist die Zahl,
@@ -1933,11 +1924,11 @@ function edbak_ablage_zahlen(bool $frisch = false): array
             }
         }
     }
-    /* `pakete_bytes` seit Web 15.1.0: Der Speicherbalken (E-S8-18) zeigt
+    /* `pakete_bytes`: Der Speicherbalken zeigt
      * Konto-Backups und Komplett-Backups als getrennte Segmente, und dafuer
      * braucht er die erste Zahl. Sie fiel hier ohnehin an — sie hiess nur
      * `$inPaketen` und blieb in der Funktion. */
-    /* DIE ARCHIVE DES PROTOKOLLS (P5c/AP2, E-P5c-57) aus demselben Grund
+    /* DIE ARCHIVE DES PROTOKOLLS aus demselben Grund
      * wie die Komplett-Backups darüber: Gewogen und gegen die Grenze
      * gezählt waren sie ohnehin, aber als „auffälliger Rest". Eine eigene
      * Zahl — der Balken trägt sie im Segment der Konto-Backups mit, ein
@@ -1991,7 +1982,7 @@ function edbak_speicherstand(bool $frisch = false): array
 }
 
 /**
- * Darf noch gesichert werden? (E-S2-14: ablehnen mit Meldung, nie still
+ * Darf noch gesichert werden? (Ablehnen mit Meldung, nie still
  * verdrängen.)
  *
  * DIE PRUEFUNG STEHT VOR DEM BAU, nicht dahinter. Ein Paket erst zu bauen und
@@ -2010,7 +2001,7 @@ function edbak_grenze_pruefen(bool $frisch = false): array
 }
 
 /**
- * Je überschrittener Schwelle einmal melden (E-S2-15).
+ * Je überschrittener Schwelle einmal melden.
  *
  * DIE MARKE WIRD NACH DEM VERSAND GESETZT, nicht davor.
  *
@@ -2058,11 +2049,11 @@ function edbak_schwellen_melden(): array
     }
 
     /* An die Betreiberadresse aus den Einstellungen — und nur ersatzweise an
-     * ALLE mit Verwaltungsrechten, also auch an die BetreiberInnen (R75). Die
-     * Speichergrenze ist seit S8 eine Betriebseinstellung; wer sie aendern
-     * kann, muss von ihrem Erreichen erfahren. Die Auswahl steht seit
-     * E-P5a-40 in `mail_betriebsziele()` — an einer Stelle statt an drei,
-     * damit die naechste Rolle (Support, R38) nicht genau hier vergessen
+     * ALLE mit Verwaltungsrechten, also auch an die BetreiberInnen. Die
+     * Speichergrenze ist eine Betriebseinstellung; wer sie aendern
+     * kann, muss von ihrem Erreichen erfahren. Die Auswahl steht in
+     * `mail_betriebsziele()` — an einer Stelle statt an drei,
+     * damit die naechste Rolle (Support) nicht genau hier vergessen
      * wird. */
     $ziele = mail_betriebsziele();
     foreach ($offen as $s) {
@@ -2100,7 +2091,7 @@ function edbak_schwellen_melden(): array
     return $aus;
 }
 
-/* ---- Die Zaehler ueber alle Konten (O9c) ----------------------------------
+/* ---- Die Zaehler ueber alle Konten ----------------------------------
  *
  * Dieselbe Frage wie die Statuskacheln der NutzerInnen-Liste, aber ohne deren
  * Zeilendaten: eine schmale Abfrage (Kennung und Rolle) plus die Karte aus
@@ -2116,7 +2107,7 @@ function edbak_stand_zaehlen(): array
           'ueberfaellig' => 0, 'nie' => 0, 'ohne_kennung' => 0, 'unbekannt' => 0];
     foreach ($konten as $k) {
         /* Wie in admin_users.php: „Admins" zaehlt jedes Konto mit
-         * Verwaltungsrechten, BetreiberInnen eingeschlossen (R75). */
+         * Verwaltungsrechten, BetreiberInnen eingeschlossen. */
         if (rolle_darf_verwalten($k['role'])) { $z['admins']++; }
         $stand = edbak_stand_aus_karte($k['account_key'], $karte)['stand'];
         if (isset($z[$stand])) { $z[$stand]++; }
@@ -2150,17 +2141,17 @@ function edbak_faellige_konten(): array
     return $liste;
 }
 
-/* ---- Backups ohne Konto (O9c) -----------------------------------------
+/* ---- Backups ohne Konto -----------------------------------------
  *
  * Ordner, zu deren Kennung es keine Zeile in `users` (mehr) gibt — der Fall
- * „Konto geloescht und neu aufgesetzt" (A8.2). Sie sind der Grund, aus dem die
+ * „Konto geloescht und neu aufgesetzt". Sie sind der Grund, aus dem die
  * Uebersicht ueberhaupt aus dem VERZEICHNIS entsteht und nicht aus der
  * Datenbank: Eine Liste aus `users` verschwiege genau die Backups, um
  * derentwillen es sie gibt.
  *
- * Das ist die schmale Fassung der Gesamtübersicht, die bis Web 21.1.6
- * daneben stand: NUR die verwaisten Ordner. Die Konten selbst brauchen hier
- * nichts mehr — ihre Backups stehen seit Web 9.8.0 auf der Kontoseite.
+ * Das ist die schmale Fassung einer Gesamtübersicht: NUR die verwaisten
+ * Ordner. Die Konten selbst brauchen hier
+ * nichts mehr — ihre Backups stehen auf der Kontoseite.
  */
 function edbak_verwaiste(): array
 {
@@ -2187,7 +2178,7 @@ function edbak_verwaiste(): array
     return $liste;
 }
 
-/* ---- Die wöchentliche Erinnerung an die Administration (E-P3-41, O9c) -----
+/* ---- Die wöchentliche Erinnerung an die Administration -----
  *
  * ES GIBT KEINEN CRON. Auf diesem Webspace laeuft kein Zeitplan; was
  * regelmaessig geschieht, haengt am Aufraeumjob (run_cleanup_if_due, db.php),
@@ -2241,11 +2232,11 @@ function edbak_erinnerung_planen(): int
 
     $kern = edbak_erinnerung_text($faellig);
 
-    /* DER VERSAND BLEIBT HINTER DER ANTWORT — wie vor Web 20.8.0. Neu ist
-     * nur, WAS dort passiert: `mail_einreihen()` schreibt die Zeile in die
+    /* DER VERSAND BLEIBT HINTER DER ANTWORT. Dort passiert: `mail_einreihen()`
+     * schreibt die Zeile in die
      * Warteschlange und versucht sie einmal. Scheitert der Versuch, steht
-     * die Zeile da und der Mail-Job holt sie nach; bis Web 20.7.0 war eine
-     * hier verlorene Mail verloren, und die Marke oben stand schon. Genau
+     * die Zeile da und der Mail-Job holt sie nach; ohne Warteschlange waere
+     * eine hier verlorene Mail verloren, und die Marke oben stuende schon. Genau
      * diese Lage — Marke gesetzt, Mail weg, naechste Erinnerung in sieben
      * Tagen — ist der Grund fuer die Warteschlange. */
     register_shutdown_function(static function () use ($admins, $kern): void {
@@ -2327,7 +2318,7 @@ function edbak_erinnerung(): array
 }
 
 /**
- * Ein Adminpaket der Fassung 2 in ein Konto einspielen (S2/AP6).
+ * Ein Adminpaket der Fassung 2 in ein Konto einspielen.
  *
  * WOFUER. Fassung 2 liegt mehrteilig vor; sie am Stueck zu lesen und
  * `edbak_restore()` in einem Zug zu uebergeben waere genau die Spitze, die
@@ -2339,14 +2330,14 @@ function edbak_erinnerung(): array
  * `edbak_restore()` zu schicken, wie es der einteilige Weg tut, ginge nicht
  * schief — es ginge STILL schief: Nutzlast 8 traegt keine Punktlisten, der
  * Verweisweg faende keine `spur_ref`, und das Konto haette am Ende jeden
- * Einsatz, aber keine einzige Spur. Genau dieser Fall ist in F-S2-E einmal
+ * Einsatz, aber keine einzige Spur. Genau dieser Fall ist einmal
  * eingetreten und hat 91 208 Punkte gekostet.
  *
  * KEIN KLARTEXT UNTERWEGS. `pat_blob` wandert als Chiffretext durch; der
  * Server sieht ihn nicht offen, und er wird auch nicht umgeschluesselt. Wer
  * ein Paket in ein ANDERES Konto spielt, bekommt die geschuetzten Angaben
  * deshalb unlesbar — dafuer gibt es den Freigabeweg, auf dem der Browser der
- * NutzerIn sie mit ihrem eigenen Schluessel neu verschluesselt (E20).
+ * NutzerIn sie mit ihrem eigenen Schluessel neu verschluesselt.
  *
  * Rueckgabe: [bool $ok, ?string $meldung, ?array $stats].
  */
@@ -2365,7 +2356,7 @@ function edbak_paket_einspielen(string $kennung, string $datei, int $zielUserId)
     if ($zip === null) {
         return [false, 'Das Backup liess sich nicht öffnen.', null];
     }
-    /* JEDER TEIL GEHT DURCH DAS SIEGEL (S10/AP4). `edbak_teil_oeffnen()`
+    /* JEDER TEIL GEHT DURCH DAS SIEGEL. `edbak_teil_oeffnen()`
      * lässt einen unversiegelten Eintrag unverändert durch — so bleibt ein
      * Fassung-2-Paket lesbar, ohne dass hier eine Fassungsweiche steht. */
     $siegelPflicht = false;          // gesetzt, sobald das Manifest gelesen ist
@@ -2398,7 +2389,7 @@ function edbak_paket_einspielen(string $kennung, string $datei, int $zielUserId)
         $zip->close();
         return [false, 'Dem Backup fehlt ein lesbares Manifest.', null];
     }
-    $siegelPflicht = sk_versiegelt($mRoh);          // Fassung 3: jeder Teil (F-R17-35)
+    $siegelPflicht = sk_versiegelt($mRoh);          // Fassung 3: jeder Teil
     /* VOLLSTAENDIGKEIT VOR DEM ERSTEN SCHREIBEN. Ein fehlendes Teil soll
      * auffallen, solange das Zielkonto noch unberuehrt ist — nicht auf halber
      * Strecke, wenn schon die Haelfte drinsteht. */
@@ -2420,8 +2411,7 @@ function edbak_paket_einspielen(string $kennung, string $datei, int $zielUserId)
         $zip->close();
         /* Das Manifest ging auf, dieser Teil nicht: Dann fehlt er entweder,
          * oder er stammt aus einem anderen Paket — der Siegelzweck bindet
-         * den Paketnamen (E-S10-U-11), und genau das ist der Fall, den F-7
-         * meint. */
+         * den Paketnamen, und genau das ist der Fall, um den es hier geht. */
         return [false, 'Der Kopf des Backups fehlt oder gehört nicht zu diesem '
                      . 'Paket. Es wurde nichts geändert.', null];
     }
@@ -2439,10 +2429,9 @@ function edbak_paket_einspielen(string $kennung, string $datei, int $zielUserId)
     };
 
     try {
-        /* 'browser' SEIT WEB 23 (S11-12, E-S11-84): Ein Paket traegt Huellen
+        /* 'browser': Ein Paket traegt Huellen
          * und Stuecke, wie sie lagen; Klartext-Ortsdaten weist der Weg ab,
-         * wie den Browser. Bis Web 22.7.0 stand hier 'server', und der
-         * Server verschloss den Klartext alter Pakete selbst (E-S11-57). */
+         * wie den Browser. */
         $stats = edbak_restore($zielUserId, $kopf, null, 'browser');
         $offen = [];
         $dayMap = $stats['day_map'] ?? [];
@@ -2465,8 +2454,8 @@ function edbak_paket_einspielen(string $kennung, string $datei, int $zielUserId)
              * Eintragsweg gibt es erst ab Nutzlast 8, und das soll dastehen
              * statt sich daraus zu ergeben, dass niemand anders ihn ruft.
              *
-             * DIE ZAHL FOLGT DER GESCHRIEBENEN NUTZLAST (`EDBAK_NUTZLAST`,
-             * seit P5c/AP8; bis dahin stand hier 10, F-P5c-128). Sie zu
+             * DIE ZAHL FOLGT DER GESCHRIEBENEN NUTZLAST (`EDBAK_NUTZLAST`).
+             * Sie zu
              * setzen ist unbedenklich, weil alle Fassungen ab 8 denselben Weg
              * nehmen — den mit Spurverweisen — und die Felder der spaeteren
              * Fassungen samt und sonders optional sind. */
@@ -2480,8 +2469,8 @@ function edbak_paket_einspielen(string $kennung, string $datei, int $zielUserId)
             $dazu($summe, $s2);
             unset($f);
         }
-        /* DIE OFFENEN SPERRVERMERKE NACH DEM LETZTEN TEIL (Backlog Nr. 386,
-         * R17-23): Ihre Quelle — meist ein Ruhesegment — stand in einem
+        /* DIE OFFENEN SPERRVERMERKE NACH DEM LETZTEN TEIL: Ihre Quelle — meist
+         * ein Ruhesegment — stand in einem
          * spaeteren Teil als der Einsatz. Jetzt ist alles da. */
         foreach (array_chunk($offen, EDBAK_SCHNITTE_NACHREICHEN_MAX) as $stueck) {
             $dazu($summe, edbak_schnitte_nachreichen($zielUserId, $stueck));
@@ -2502,9 +2491,8 @@ function edbak_paket_einspielen(string $kennung, string $datei, int $zielUserId)
             foreach ((array)($t['spuren'] ?? []) as $e) {
                 $ziel = $karte[(int)($e['spur_ref'] ?? -1)] ?? null;
                 if ($ziel === null) { $spuren['ohne_ziel']++; continue; }
-                /* Verschlossene Stuecke, wie sie liegen. Ein SPUR1-Blob (bis
-                 * Web 22.7.0 verschloss ihn der Server hier) geht als `blob`
-                 * weiter und wird abgelehnt und gezaehlt (E-S11-84). */
+                /* Verschlossene Stuecke, wie sie liegen. Ein SPUR1-Blob geht als `blob`
+                 * weiter und wird abgelehnt und gezaehlt. */
                 $liste[] = ['owner_type' => $ziel['art'], 'owner_id' => $ziel['id'],
                             'stuecke' => isset($e['stuecke']) ? (array)$e['stuecke'] : null,
                             'stufe' => $e['stufe'] ?? null,
@@ -2530,23 +2518,20 @@ function edbak_paket_einspielen(string $kennung, string $datei, int $zielUserId)
 }
 
 /**
- * Ein Paket zurueckspielen — beide Fassungen, eine Tuer (S2/AP6).
+ * Ein Paket zurueckspielen — beide Fassungen, eine Tuer.
  *
  * WOFUER. Die Aufrufer im Adminbereich sollen nicht wissen muessen, welche
  * Fassung vor ihnen liegt. Vor allem sollen sie nicht in Versuchung geraten,
  * ein Fassung-2-Paket durch den einteiligen Weg zu schicken: Das ginge nicht
  * schief, sondern STILL schief — jeder Einsatz kaeme an, keine einzige Spur
- * (F-S2-E).
  *
  * Rueckgabe: [bool $ok, ?string $meldung, ?array $bericht].
  */
 function edbak_paket_zurueckspielen(string $kennung, string $datei, int $zielUserId): array
 {
-    /* NUR FASSUNG 2 (S11-12, E-S11-84). Das einteilige Paket der Fassung 1
-     * (bis Web 11) trug Orte, Reanimation und Spur im Klartext; bis
-     * Web 22.7.0 verschloss der Server sie hier mit dem oeffentlichen
-     * Schluessel des Zielkontos (E-S11-57), und dafuer brauchte das Konto ein
-     * Schluesselpaar. Alte Pakete gibt es nicht mehr; ein Paket der Fassung 2
+    /* NUR FASSUNG 2. Das einteilige Paket der Fassung 1
+     * trug Orte, Reanimation und Spur im Klartext und wird nicht
+     * angenommen; ein Paket der Fassung 2
      * bringt Huellen und Stuecke mit, und der Server verschliesst nichts. */
     if (edbak_paket_fassung($datei) !== 2) {
         return [false, 'Dieses Backup hat das einteilige Format einer Fassung vor Web 11 '
@@ -2557,7 +2542,7 @@ function edbak_paket_zurueckspielen(string $kennung, string $datei, int $zielUse
 }
 
 /**
- * EIN Teil eines mehrteiligen Pakets, GEÖFFNET (S2/AP6, seit S10/AP4 entsiegelt).
+ * EIN Teil eines mehrteiligen Pakets, GEÖFFNET (entsiegelt).
  *
  * Bis Fassung 2 kam der Eintrag roh aus dem ZIP — er war blankes JSON. Seit
  * Fassung 3 ist er gzip-gepackt und versiegelt, und der Browser der NutzerIn
@@ -2565,9 +2550,8 @@ function edbak_paket_zurueckspielen(string $kennung, string $datei, int $zielUse
  * Klartext-JSON zurück, wie eh und je; für den Aufrufer ändert sich nichts.
  *
  * WOFUER. Der Freigabeweg reicht das Paket an den Browser der NutzerIn — sie
- * ist die Einzige, die die geschuetzten Angaben umschluesseln kann. Bis
- * Web 12.0.0 ging das in EINER Antwort; beim 5000er-Konto waeren das 94 MB
- * gewesen, und auf dem Rueckweg ein POST derselben Groesse.
+ * ist die Einzige, die die geschuetzten Angaben umschluesseln kann. In EINER
+ * Antwort waeren das beim 5000er-Konto 94 MB, und auf dem Rueckweg ein POST derselben Groesse.
  *
  * Der Name wird gegen die Teileliste des Manifests geprueft und nicht gegen
  * ein Muster: Was nicht im Manifest steht, gibt es fuer diesen Weg nicht.
@@ -2579,7 +2563,7 @@ function edbak_paket_teil_lesen(string $kennung, string $datei, string $teil): ?
     if (!edbak_kennung_gueltig($kennung) || edbak_paket_fassung($datei) !== 2) { return null; }
     $zip = zip_oeffnen(edbak_ordner($kennung) . '/' . $datei);
     if ($zip === null) { return null; }
-    /* Das Manifest erst öffnen, dann lesen (S10/AP4). Es ist der Eintrag,
+    /* Das Manifest erst öffnen, dann lesen. Es ist der Eintrag,
      * der sagt, welche Teile es überhaupt gibt — ein Paket, dessen Manifest
      * sich nicht öffnen lässt, gibt auch keinen Teil heraus. */
     $mRoh = $zip->getFromName('manifest.json');
@@ -2590,16 +2574,16 @@ function edbak_paket_teil_lesen(string $kennung, string $datei, string $teil): ?
     if (!in_array($teil, $erlaubt, true)) { $zip->close(); return null; }
     $roh = $zip->getFromName($teil);
     $zip->close();
-    $siegelPflicht = sk_versiegelt((string)$mRoh);  // Fassung 3: jeder Teil (F-R17-35)
+    $siegelPflicht = sk_versiegelt((string)$mRoh);  // Fassung 3: jeder Teil
     if ($roh === false) { return null; }
     return edbak_teil_oeffnen($roh, $kennung, $datei, $teil, $siegelPflicht);
 }
 
-/* ---- Der Auftrag „Alle sichern" (S2/AP6, E-S2-14) ------------------------
+/* ---- Der Auftrag „Alle sichern" ------------------------
  *
  * WARUM EINE WARTESCHLANGE UND KEINE HEURISTIK.
  *
- * Bis Web 12.0.0 gab es keinen Merkzettel: „Alle sichern" sortierte die
+ * Frueher gab es keinen Merkzettel: „Alle sichern" sortierte die
  * Konten nach dem Alter ihres letzten Backups, arbeitete ab, bis die Zeit
  * knapp wurde, und verliess sich darauf, dass ein zweiter Klick dort
  * weitermacht, wo der erste aufgehoert hat — wer eben gesichert wurde, steht
@@ -2618,7 +2602,7 @@ function edbak_paket_teil_lesen(string $kennung, string $datei, string $teil): ?
  * vom Wartungsjob, in Schueben.
  *
  * KEINE AUTOMATISCHEN BACKUPS. Der Job arbeitet nur, wenn ein Auftrag
- * vorliegt — E-S2-19 hat naechtliche Konto-Backups ausdruecklich
+ * vorliegt — naechtliche Konto-Backups sind ausdruecklich
  * abgelehnt. Ohne Auftrag kostet er eine Abfrage.
  */
 
@@ -2626,7 +2610,7 @@ const EDBAK_AUFTRAG_SCHLUESSEL = 'adminbackup_auftrag';
 
 /**
  * EIN ZEIGER, KEINE LISTE — und das ist keine Sparsamkeit, sondern die
- * Konsequenz aus einem Fehlschlag (S2/AP6).
+ * Konsequenz aus einem Fehlschlag.
  *
  * Die erste Fassung legte die Kennungen aller offenen Konten als Feld in die
  * Marke. `app_state.v` ist `varchar(190)`; bei 31 Konten waren es schon 350
@@ -2691,7 +2675,7 @@ function edbak_auftrag_starten(): array
  *
  * @param callable $zeitLinks Sekunden, die noch bleiben.
  * @param float    $reserve   So viel Zeit muss fuer EIN Konto uebrig sein.
- * @return array{erledigt:int,offen:int,auftrag:?array}
+ * @return array{erledigt:int,offen:int,auftrag:?array,meldungen:list<string>}
  */
 function edbak_auftrag_schub(callable $zeitLinks, float $reserve): array
 {

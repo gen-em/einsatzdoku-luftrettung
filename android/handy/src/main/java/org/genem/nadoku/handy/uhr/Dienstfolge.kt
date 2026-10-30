@@ -1,16 +1,15 @@
 package org.genem.nadoku.handy.uhr
 
 /**
- * Was ein Uhr-Ereignis mit dem Vordergrunddienst macht (E-S5Z-08).
+ * Was ein Uhr-Ereignis mit dem Vordergrunddienst macht.
  *
- * WOZU EINE EIGENE KLASSE FÜR DREI ZEILEN. Bis 0.8.1 stand im `HandyHorcher`
- * genau eine Bedingung: `if (app.klammer.laeuft()) AufzeichnungsDienst.starten(this)`.
- * Sie startet — und **beendet nie**. Ein Dienstende von der Uhr schloss den
- * Dienst also im Puffer, während der Vordergrunddienst weiterlief: Ortung an,
- * Akku leer, Dauermeldung nach dem nächsten Auffrischen „Kein Dienst", und
- * **kein** DIENSTENDE-Sendelauf. Gesendet wurde erst beim nächsten
- * 15-Minuten-Takt — sofern der Dienst bis dahin überhaupt noch lief
- * (B-S5Z-04).
+ * WOZU EINE EIGENE KLASSE FÜR DREI ZEILEN. Eine einzige Bedingung im
+ * `HandyHorcher` — `if (app.klammer.laeuft()) AufzeichnungsDienst.starten(this)` —
+ * startet und **beendet nie**. Ein Dienstende von der Uhr schlösse den Dienst
+ * dann im Puffer, während der Vordergrunddienst weiterliefe: Ortung an, Akku
+ * leer, Dauermeldung nach dem nächsten Auffrischen „Kein Dienst", und
+ * **kein** DIENSTENDE-Sendelauf. Gesendet würde erst beim nächsten
+ * 15-Minuten-Takt — sofern der Dienst bis dahin überhaupt noch liefe.
  *
  * Die Entscheidung ist reine Rechnung und liegt deshalb hier: Sie ist auf der
  * JVM prüfbar, der `WearableListenerService` ist es nicht.
@@ -46,7 +45,7 @@ enum class Dienstfolge {
                 /* Lief vorher, läuft nicht mehr, und der Vordergrunddienst
                  * ist schon weg: Dann hat ihn das System abgeräumt. Was noch
                  * liegt, holt der Nachsende-Job beim nächsten App-Start ab
-                 * (E-S5Z-09) — hier ist nichts mehr zu retten. */
+                 * — hier ist nichts mehr zu retten. */
                 else -> NICHTS
             }
     }

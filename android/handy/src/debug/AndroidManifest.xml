@@ -7,7 +7,7 @@
     Grenzen: `res/xml/netzwerk_pruefstand.xml`.
 
     Das Release-Manifest bleibt unberuehrt — der ausgelieferte Stand spricht
-    weiterhin ausschliesslich HTTPS (E-S4-14).
+    ausschliesslich HTTPS.
 -->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <application android:networkSecurityConfig="@xml/netzwerk_pruefstand" />

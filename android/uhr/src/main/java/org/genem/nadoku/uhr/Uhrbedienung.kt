@@ -3,16 +3,14 @@ package org.genem.nadoku.uhr
 import org.genem.nadoku.gemeinsam.Phasen
 
 /**
- * Das Bedienmodell der Uhr (E-S4-21) — **als Zustandsmaschine, ohne
- * Oberfläche**.
+ * Das Bedienmodell der Uhr — **als Zustandsmaschine, ohne Oberfläche**.
  *
- * WARUM SO. Die Uhr ist blind gebaut: kein Emulator (E-R45-8), keine Uhr
- * (E-R45-7). Wäre das Bedienmodell in Composables verteilt, wäre es
+ * WARUM SO. Die Uhr ist blind gebaut: kein Emulator, keine Uhr. Wäre das Bedienmodell in Composables verteilt, wäre es
  * ungeprüft. Hier ist es eine reine Funktion — Zustand und Ereignis hinein,
  * Zustand und Wirkungen heraus —, und damit vollständig prüfbar. Was an der
  * Oberfläche bleibt, ist Zeichnen.
  *
- * DIE VIER TEILE VON E-S4-21:
+ * DIE VIER TEILE:
  *
  * **(a) Keine verlässliche Hardwaretaste.** Die Ein/Aus-Taste ist für Apps
  * gesperrt; freie Zusatztasten meldet `WearableButtons`, auf der
@@ -26,7 +24,7 @@ import org.genem.nadoku.gemeinsam.Phasen
  *
  * **(c) Die Phasenliste.** Halten öffnet sie: jede Zeile eine Phase mit ihren
  * Zeiten (ansehen), Tippen setzt sie jetzt (direkt wählen). Eine erneut
- * gesetzte Phase ist ein zweiter Eintrag (E-R45-12).
+ * gesetzte Phase ist ein zweiter Eintrag.
  *
  * **(d) Die Sperre.** Nach [sperrfristMs] ohne Bedienung sperrt die Anzeige:
  * Phase und Zeit bleiben lesbar, ein Tippen tut nichts, entsperrt wird durch
@@ -34,15 +32,15 @@ import org.genem.nadoku.gemeinsam.Phasen
  * gleichermaßen.
  *
  * **Haltedauer, Sperrfrist und Berührziele sind blind gewählt** und am Gerät
- * nachzumessen (E-R45-7); sie gehören in den Wear-Teil von
+ * nachzumessen; sie gehören in den Wear-Teil von
  * `docs/Geraete-Eingabe.md`.
  */
 class Uhrbedienung(
-    /** Richtwert 10 s (E-S4-21d). In den App-Einstellungen abschaltbar. */
+    /** Richtwert 10 s. In den App-Einstellungen abschaltbar. */
     private val sperrfristMs: Long = SPERRFRIST_MS,
     /** Richtwert 1 s. */
     private val haltedauerMs: Long = HALTEDAUER_MS,
-    /** Ist die Sperre eingeschaltet? Kommt vom Handy (E-S4-21d). */
+    /** Ist die Sperre eingeschaltet? Kommt vom Handy. */
     private val sperreAn: Boolean = true,
 ) {
 
@@ -79,16 +77,15 @@ class Uhrbedienung(
             is Uhrereignis.Dienstknopf -> dienstknopf(wach)
             is Uhrereignis.Bestaetigt -> bestaetigt(wach)
             is Uhrereignis.Verworfen -> Ergebnis(wach.copy(ansicht = grundansicht(wach)))
-            /* KEIN `else` MEHR (Android-Runde AR-02). Hier stand
-             * `else -> Ergebnis(wach)` fuer `Halten`, das oben schon
-             * zurueckgekehrt ist. Kotlin 2.4 erkennt das und meldet den Zweig
-             * als ueberfluessig. Ohne ihn bricht ein kuenftiges Ereignis, das
+            /* KEIN `else`. Ein `else -> Ergebnis(wach)` stuende fuer
+             * `Halten`, das oben schon zurueckgekehrt ist; Kotlin 2.4 erkennt
+             * das und meldet den Zweig als ueberfluessig. Ohne ihn bricht ein kuenftiges Ereignis, das
              * hier niemand behandelt, den Bau -- statt still nichts zu tun. */
         }
     }
 
     /**
-     * Der Durchlauf (E-S4-21b).
+     * Der Durchlauf.
      *
      * Ohne laufenden Dienst tut der große Knopf nichts — dort steht
      * „Dienst beginnen", und das ist ein eigenes Ereignis.
@@ -109,11 +106,11 @@ class Uhrbedienung(
     }
 
     /**
-     * Direktwahl aus der Liste (E-S4-21c).
+     * Direktwahl aus der Liste.
      *
      * Sie **setzt die gewählte Phase jetzt** — auch eine, die schon gesetzt
-     * ist. Das ist eine Korrektur und damit ein zweiter Eintrag (E-R45-12),
-     * kein Ersetzen.
+     * ist. Das ist eine Korrektur und damit ein zweiter Eintrag, kein
+     * Ersetzen.
      */
     private fun listenwahl(z: Uhrzustand, phase: Int): Ergebnis {
         if (!Phasen.uebertragbar(phase)) return Ergebnis(z)
@@ -153,7 +150,7 @@ class Uhrbedienung(
     }
 
     /**
-     * Die Sperre schließt nach der Frist (E-S4-21d).
+     * Die Sperre schließt nach der Frist.
      *
      * Sie greift nur im **laufenden Dienst**: Vor dem Dienst gibt es nichts zu
      * verstellen, und eine Startseite, die sich selbst sperrt, wäre eine Hürde
@@ -169,7 +166,7 @@ class Uhrbedienung(
      * Halten — der einzige Weg aus der Sperre.
      *
      * Ein zu kurzes Halten ist ein Tippen und tut gesperrt nichts. Im
-     * **entsperrten** Zustand öffnet ein Halten die Phasenliste (E-S4-21c);
+     * **entsperrten** Zustand öffnet ein Halten die Phasenliste;
      * das ist derselbe Griff mit zwei Bedeutungen, und der Unterschied ist der
      * Zustand — nicht die Dauer.
      */
@@ -201,7 +198,7 @@ class Uhrbedienung(
     }
 
     companion object {
-        /** Richtwert 10 s (E-S4-21d) — blind gewählt, am Gerät nachzumessen. */
+        /** Richtwert 10 s — blind gewählt, am Gerät nachzumessen. */
         const val SPERRFRIST_MS = 10_000L
 
         /** Richtwert 1 s — dito. */

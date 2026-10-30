@@ -10,18 +10,16 @@ require_once __DIR__ . '/adminbackup_lib.php';
 require_once __DIR__ . '/komplett_lib.php';
 require_once __DIR__ . '/sicherungsziel_lib.php';
 require_once __DIR__ . '/smtp.php';
-require_once __DIR__ . '/mail_lib.php';   // Lage der Warteschlange (P5a/AP5)
+require_once __DIR__ . '/mail_lib.php';   // Lage der Warteschlange
 require_once __DIR__ . '/plattform_lib.php';
-require_once __DIR__ . '/format_lib.php';   // groesse_text(), zeit_relativ(), datum_zeit_text() (AP7)
+require_once __DIR__ . '/format_lib.php';   // groesse_text(), zeit_relativ(), datum_zeit_text()
 
 /**
- * DIE ERHEBUNG DER STATUSSEITE — ohne eine Zeile Markup (S8/AP5).
+ * DIE ERHEBUNG DER STATUSSEITE — ohne eine Zeile Markup.
  *
- * WARUM DIESE DATEI ENTSTANDEN IST. Bis Web 15.3.3 stand alles in
- * `betrieb_status.php`: die Abfragen, die Ampelentscheidung und die Ausgabe.
- * Das reichte, solange nur diese eine Seite die Antwort brauchte. Mit dem
- * Zaehler am Menuepunkt „Status" (S8/AP5, Konzept (3)) braucht sie eine
- * zweite Stelle — und ein Zaehler, der seine eigene Rechnung anstellt, sagt
+ * WARUM ES DIESE DATEI GIBT. Die Antwort braucht nicht nur
+ * `betrieb_status.php`, sondern auch der Zaehler am Menuepunkt „Status" —
+ * eine zweite Stelle — und ein Zaehler, der seine eigene Rechnung anstellt, sagt
  * frueher oder spaeter etwas anderes als die Seite, auf die er fuehrt. Das
  * waere schlimmer als kein Zaehler: Er stuende auf „2", die Seite zeigte
  * drei Punkte, und niemand wuesste, welcher der beiden luegt.
@@ -30,7 +28,7 @@ require_once __DIR__ . '/format_lib.php';   // groesse_text(), zeit_relativ(), d
  * samt Ton; `betrieb_status.php` zeichnet sie, `status_ampel()` zaehlt sie.
  * Wer eine Zeile hinzufuegt, aendert eine Stelle, und beide ziehen nach.
  *
- * DIE AMPEL IST EINE TABELLE, KEINE MEINUNG (Konzept S8, Ampeltabelle):
+ * DIE AMPEL IST EINE TABELLE, KEINE MEINUNG (Ampeltabelle):
  *
  *   blau     es ist in Ordnung
  *   orange   es braucht Aufmerksamkeit, arbeitet aber
@@ -42,8 +40,8 @@ require_once __DIR__ . '/format_lib.php';   // groesse_text(), zeit_relativ(), d
  *
  * WAS DIE ERHEBUNG KOSTET. Jede Zeile hoechstens eine Abfrage oder einen
  * Dateizugriff; die teuerste Auskunft — die Groesse von Datenbank und
- * Dateien — kommt aus `app_state` und wurde im Aufraeumjob gemessen
- * (S8/AP2). Die Seite selbst baut sich damit in Millisekunden auf. Fuer den
+ * Dateien — kommt aus `app_state` und wurde im Aufraeumjob gemessen.
+ * Die Seite selbst baut sich damit in Millisekunden auf. Fuer den
  * Zaehler, der auf JEDER Seite des Einstellungsbereichs steht, ist das
  * trotzdem zu viel — dafuer gibt es `status_ampel()` mit Zwischenspeicher.
  */
@@ -58,7 +56,7 @@ function status_z(string $text, string $klein, string $ton, string $plakette,
 
 /**
  * Die handlungsfähigen Verwaltungskonten — die Zählung hinter der Zeile
- * „Verwaltungskonten" (P5c/AP5, E-P5c-56). Handlungsfähig: `status =
+ * „Verwaltungskonten". Handlungsfähig: `status =
  * 'aktiv'` und ein eingeschalteter Zweitfaktor; ohne dessen Spalten (vor
  * `update.php`) zählt jedes aktive Konto. Eigene Funktion, damit die
  * Zweitfaktorprobe die Zählung selbst prüfen kann und nicht den Satz, der
@@ -87,7 +85,7 @@ function status_verwaltungskonten(PDO $pdo): array
 /**
  * Die Zeile „Verwaltungskonten" aus der Zählung — Text, Ton und Plakette,
  * ohne Datenbank. Eigene Funktion, damit die Zweitfaktorprobe die Tabelle
- * der Fälle (Konzept P5c, AP5) mit gesetzten Zahlen prüfen kann statt nur
+ * der Fälle mit gesetzten Zahlen prüfen kann statt nur
  * mit dem Bestand, den die Anlage gerade hat.
  *
  * @param array{verwaltung:int, betreiberinnen:int, betreiberinnen_aktiv:int} $n
@@ -127,8 +125,8 @@ function status_verwaltungszeile(array $n): array
 }
 
 /**
- * Die Zeile „Rückweg-Prüfung" aus dem Ergebnis des Selbsttests (Konzept RW,
- * E-RW-11) — ohne Datenbank, damit die Probe die drei Lagen mit gesetzten
+ * Die Zeile „Rückweg-Prüfung" aus dem Ergebnis des Selbsttests — ohne
+ * Datenbank, damit die Probe die drei Lagen mit gesetzten
  * Werten prüfen kann.
  *
  * BLAU MIT DEM WEG, weil der Weg etwas sagt: `openssl` prüft in Millisekunden,
@@ -136,7 +134,7 @@ function status_verwaltungszeile(array $n): array
  * im Jahr geht, aber wer die Zahl sieht, soll nicht raten müssen, warum.
  * ORANGE, NICHT ROT, wenn der Selbsttest scheitert: Die Anwendung arbeitet,
  * nur der dritte Weg am Code-Schritt ist aus; Codes und Verwaltung tragen
- * weiter (E-RW-01, Alternative B als Boden).
+ * weiter (Alternative B als Boden).
  *
  * @param array{ok:bool, weg:string, ms:float} $t
  */
@@ -179,7 +177,7 @@ function status_erhebung(): array
     $lauf       = migrationen_lauf($pdo, false);
     $stand      = migrationen_stand($pdo);
     $schluessel = serverschluessel_da();
-    /* Die zwei Geheimnisse des Servers (S10, E-S10-09). Beide Zustände kommen
+    /* Die zwei Geheimnisse des Servers. Beide Zustände kommen
      * aus derselben Quelle wie die Karte in den Servereinstellungen — eine
      * Statusseite, die anders rechnet als die Seite, auf die sie verweist,
      * wäre eine zweite Wahrheit. */
@@ -189,8 +187,7 @@ function status_erhebung(): array
 
     /* Verwaiste Rundenzahlen: Konten, deren `kdf_iter` diese Fassung nicht
      * mehr anbietet. Sie können sich NICHT anmelden, und an der Anmeldemaske
-     * ist die Ursache nicht zu erkennen (siehe db.php, KDF_ITER_LISTE). Die
-     * Prüfung stand bis Web 15.0.0 auf der Wartungsseite. */
+     * ist die Ursache nicht zu erkennen (siehe db.php, KDF_ITER_LISTE). */
     $kdfListe = KDF_ITER_LISTE;
     $platz    = implode(',', array_fill(0, count($kdfListe), '?'));
     $stk = $pdo->prepare("SELECT kdf_iter, COUNT(*) AS n FROM users
@@ -200,12 +197,10 @@ function status_erhebung(): array
     $kdfVerwaist = $stk->fetchAll();
     $kdfSumme    = array_sum(array_column($kdfVerwaist, 'n'));
 
-    /* Konten, die noch auf einem ALTWERT der Liste stehen (Backlog Nr. 136,
-     * Fund F-9a-02). Die Zeile darunter meldete bisher nur verwaiste Werte —
-     * also den Fall, dass jemand einen Eintrag ZU FRUEH aus KDF_ITER_LISTE
-     * gestrichen hat. Die Frage davor beantwortete sie nicht: WANN darf er
-     * gestrichen werden? db.php nennt dafuer eine SQL-Abfrage von Hand, und
-     * SP-1 nimmt an, die Wartungsseite sage es. Sie sagte es nicht.
+    /* Konten, die noch auf einem ALTWERT der Liste stehen. Die Zeile darueber
+     * meldet nur verwaiste Werte — also den Fall, dass jemand einen Eintrag
+     * ZU FRUEH aus KDF_ITER_LISTE gestrichen hat. Die Frage davor beantwortet
+     * sie nicht: WANN darf er gestrichen werden? Das sagt diese Zeile.
      *
      * Solange hier eine Zahl > 0 steht, rechnet JEDE Anmeldung zweimal ab
      * (Uebergangszustand, db.php) — die Zahl ist damit auch die Auskunft
@@ -213,14 +208,12 @@ function status_erhebung(): array
     $kdfAlt = 0;
     $kdfDemoAlt = false;
     if (count($kdfListe) > 1) {
-        /* OHNE DAS DEMO-KONTO (Nachbesserung 07.09.2026, Gegenpruefung Fund
-         * 11). Es wird bei jedem Reset aus der Fixture eingespielt -- mit der
+        /* OHNE DAS DEMO-KONTO. Es wird bei jedem Reset aus der Fixture eingespielt -- mit der
          * Rundenzahl, die die Fixture traegt --, und die stille Anhebung
-         * ueberspringt es ausdruecklich (api/kdf_upgrade.php, E-P1-19: ein
+         * ueberspringt es ausdruecklich (api/kdf_upgrade.php: ein
          * Upgrade passte bis zum naechsten Reset nicht mehr zu seinen
          * oeffentlichen Zugangsdaten). Es zieht also nie nach, aus zwei
-         * Gruenden, nicht aus einem -- die erste Fassung dieses Kommentars
-         * nannte nur den Reset (zweite Gegenpruefung, Wiederaufnahme).
+         * Gruenden, nicht aus einem.
          * Gezaehlt stuende hier fuer immer "1 Konto unter dem Zielwert",
          * und die Zeile verloere den einen Zweck, den sie hat: zu sagen,
          * wann der Altwert weg darf. Das Demo-Konto bekommt deshalb seinen
@@ -232,8 +225,7 @@ function status_erhebung(): array
         $demoId = demo_id();
         /* NUR WERTE AUS DER LISTE: Ein Konto auf einem verwaisten Wert steht
          * schon in der roten Zahl darueber und zieht NICHT still nach -- es
-         * kann sich gar nicht anmelden. Bis zur Wiederaufnahme der zweiten
-         * Gegenpruefung zaehlte es hier trotzdem mit. */
+         * kann sich gar nicht anmelden. */
         $sta = $pdo->prepare("SELECT COUNT(*) FROM users
                               WHERE password_hash IS NOT NULL AND kdf_iter <> ? AND id <> ?
                                 AND kdf_iter IN ($platz)");
@@ -275,7 +267,7 @@ function status_erhebung(): array
         $wAktiv ? 'Wartung' : 'offen',
         'betrieb_updates.php');
 
-    /* ---- Umgebung (P5c/AP1, E-P5c-05, -55, -64) -------------------------
+    /* ---- Umgebung -------------------------
      *
      * STEHT IMMER DA, in beiden Richtungen gleichwertig. Die Plakette nennt
      * die Umgebung — den Namen aus `app.umgebung`, sonst „Produktiv" —, der
@@ -316,7 +308,7 @@ function status_erhebung(): array
             'blau', 'Produktiv');
     }
 
-    /* ---- Adresse der Anlage (R17-26, F-R17-75, E-R17-72 (2)) ------------
+    /* ---- Adresse der Anlage ---------------------------------------------
      *
      * WOFUER. `app.base_url` stand auf Produktiv wochenlang auf einer alten
      * Adresse, und nichts meldete es: Mail-Links, die `rp_id` der Passkeys,
@@ -334,7 +326,7 @@ function status_erhebung(): array
      * OHNE ANFRAGE (CLI, Jobs) KEINE ZEILE: Dort gibt es keinen Host, gegen
      * den sich vergleichen liesse, und eine Zeile „unbekannt" saehe niemand.
      * Die Datei bleibt zur Laufzeit unbeschreibbar — die Zeile sagt, WAS
-     * zu tun ist, und das Panel tut es nicht (Q-R17-20). */
+     * zu tun ist, und das Panel tut es nicht. */
     $anfrageHost = strtolower((string)preg_replace('/:\d+$/', '',
         (string)($_SERVER['HTTP_HOST'] ?? '')));
     if ($anfrageHost !== '') {
@@ -359,20 +351,19 @@ function status_erhebung(): array
         }
     }
 
-    /* ---- Verwaltungskonten: der Bus-Faktor (P5c/AP5, E-P5c-16, -44, -56,
-     *      -63; M-P5c-02d Bild 2) ------------------------------------------
+    /* ---- Verwaltungskonten: der Bus-Faktor ------------------------------
      *
      * HANDLUNGSFAEHIG heisst: `status = 'aktiv'` und — Admin und BetreiberIn
-     * sind Pflichtrollen — ein eingeschalteter Zweitfaktor (E-P5c-56). Ein
+     * sind Pflichtrollen — ein eingeschalteter Zweitfaktor. Ein
      * Konto ohne ihn landet nach der Anmeldung im Einrichtungstor und kann
      * bis dahin nichts; `betreiberinnen_zahl()` zaehlt dagegen jedes Konto
      * der Rolle, auch gesperrte, und bleibt fuer seinen Zweck (die letzte
      * BetreiberIn schuetzen) unveraendert.
      *
-     * DIE AMPEL HAENGT ALLEIN AN DEN BETREIBERINNEN (F-P5c-60): Wer weniger
+     * DIE AMPEL HAENGT ALLEIN AN DEN BETREIBERINNEN: Wer weniger
      * als zwei handlungsfaehige Verwaltungskonten hat, hat auch weniger als
      * zwei handlungsfaehige BetreiberInnen. Die Zahl der Verwaltungskonten
-     * waehlt nur den Text. ORANGE, NICHT ROT (E-P5c-44, -63): Rot hiesse
+     * waehlt nur den Text. ORANGE, NICHT ROT: Rot hiesse
      * „es arbeitet nicht", und jede frisch eingerichtete Anlage stuende
      * dauerhaft rot. Der Menuezaehler zaehlt Orange mit, und das ist gewollt.
      *
@@ -381,7 +372,7 @@ function status_erhebung(): array
      * ebenfalls. */
     $server[] = status_verwaltungszeile(status_verwaltungskonten($pdo));
 
-    /* ---- Rückweg-Prüfung (Konzept RW, E-RW-11) --------------------------
+    /* ---- Rückweg-Prüfung --------------------------
      *
      * Kann diese Anlage die Signaturen des Rückwegs prüfen? Das Ergebnis
      * kommt aus der Marke in `app_state` — der Selbsttest läuft einmal je
@@ -401,10 +392,10 @@ function status_erhebung(): array
 
     /* ROT UND MIT WEG: Ohne Serverschlüssel entsteht kein Komplett-Backup und
        kein Versand auf ein Backup-Ziel.
-       SEIT S10 MIT KENNUNG — und mit einer dritten Lage: „abweichend" heisst,
+       MIT KENNUNG — und mit einer dritten Lage: „abweichend" heisst,
        dass in `config.php` ein ANDERER Schlüssel steht als der, mit dem
-       versiegelt wurde. Das sah bis dahin aus wie ein beschädigtes Backup. */
-    /* SEIT WEB 21.12.0 MIT DER LAGE `rotation` (SR-03): blau und mit der Zahl
+       versiegelt wurde. Das saehe sonst aus wie ein beschädigtes Backup. */
+    /* MIT DER LAGE `rotation`: blau und mit der Zahl
      * der Stücke, die noch umzuhüllen sind — ein Zustand mit Ende, wie beim
      * Anteil. Die Zahl kommt aus dem Job (`jobs.rueckstand`), nicht aus einer
      * zweiten Zählung. */
@@ -416,13 +407,12 @@ function status_erhebung(): array
         require_once __DIR__ . '/schluesselwechsel_lib.php';
         $skZ = sw_zustand();
         /* `null` heißt bei `sw_rueckstand()` „fertig", „kein Zustand" ODER
-         * (seit der Nachmessung) „noch nicht gezählt" —
-         * hier getrennt (H-SR-06, F-SR-80): Ohne Zustand ist nichts umgehüllt,
+         * „noch nicht gezählt" —
+         * hier getrennt: Ohne Zustand ist nichts umgehüllt,
          * und „alles umgehüllt" wäre eine falsche Auskunft. */
         $skPhase = sw_zustand_passt($skZ, $skZustand) ? (string)($skZ['phase'] ?? '') : '';
         $skRest = $skPhase === '' ? null : sw_rueckstand($skZ);
-        /* Ungezählt (das Inventar warf beim Beginn) ist nicht „noch 0"
-         * (Nachmessung H-SR-06, F-SR-88). */
+        /* Ungezählt (das Inventar warf beim Beginn) ist nicht „noch 0". */
         $skGezaehlt = $skPhase === '' || sw_gezaehlt($skZ);
         $skWartet = $skPhase === '' ? null : sw_nachweis_wartet($skZ);
     }
@@ -462,10 +452,10 @@ function status_erhebung(): array
                 'abweichend' => 'abweichend'][$skZustand['stand']] ?? '?'),
         $skZustand['stand'] === 'bereit' ? null : 'betrieb_server.php#k-schluessel');
 
-    /* ---- Server-Anteil (S10, E-S10-09) ---------------------------------
+    /* ---- Server-Anteil ---------------------------------
      *
-     * DIE ZEILE, DIE ES OHNE S10 NICHT GEBEN MUSSTE — und die ohne sie die
-     * teuerste Störung der Anwendung unsichtbar liesse: Ein Anteil, der nicht
+     * OHNE DIESE ZEILE BLIEBE die
+     * teuerste Störung der Anwendung unsichtbar: Ein Anteil, der nicht
      * zu den Hüllen passt, sieht für JEDE NutzerIn gleichzeitig aus wie ein
      * falsches Passwort. Hier steht, was wirklich los ist, samt der Kennung,
      * die nachzutragen wäre.
@@ -476,21 +466,20 @@ function status_erhebung(): array
      * muss. Dieselbe Unterscheidung wie bei der Zeile darunter
      * („Schlüsselableitung"), und aus demselben Grund.
      *
-     * DAS DEMO-KONTO ZÄHLT NICHT MIT (Backlog Nr. 155): Es bleibt bauartbedingt
+     * DAS DEMO-KONTO ZÄHLT NICHT MIT: Es bleibt bauartbedingt
      * ohne Anteil, und es als „noch offen" zu führen hiesse, eine Zahl zu
-     * zeigen, die nie auf null geht. Genau dieser Fehler ist der Zeile
-     * „Schlüsselableitung" schon einmal unterlaufen. */
+     * zeigen, die nie auf null geht. Dieselbe Regel gilt fuer die Zeile
+     * „Schlüsselableitung". */
     $anOffen = (int)$anZaehlung['ohne'] + (int)$anZaehlung['alt'];
     if ($anZustand['stand'] === 'fehlt') {
         /* NEUTRAL UND NICHT ROT — die Ampel in `Design.md` 9.23 ist dazu
          * eindeutig: Rot heisst „arbeitet nicht, oder es geht etwas
          * verloren", neutral heisst „nicht eingerichtet". Ohne Server-Anteil
-         * arbeitet ALLES wie vor Web 20.0.0; es geht nichts verloren, es
+         * arbeitet ALLES wie ohne ihn; es geht nichts verloren, es
          * fehlt nur ein zusaetzlicher Schutz.
          *
-         * Das Konzept sah hier Rot vor (E-S10-09). Das ist beim Bauen
-         * verworfen worden, und zwar aus dem Grund, den die Ampeltabelle
-         * selbst nennt: Nach dem Merge steht JEDE Installation in diesem
+         * Kein Rot, und zwar aus dem Grund, den die Ampeltabelle
+         * selbst nennt: Eine frisch aktualisierte Installation steht in diesem
          * Zustand. Eine rote Zeile, die „alles in Ordnung, aber tu mal was"
          * bedeutet, bringt Rot das Lesen ab — und dann wird auch die Zeile
          * darueber nicht mehr gelesen, bei der Rot heisst, dass niemand mehr
@@ -577,7 +566,7 @@ function status_erhebung(): array
         $sp['stand'] !== null ? 'erreichbar' : 'ungemessen',
         'betrieb_server.php');
 
-    /* ---- DIE VERBINDUNGSGRENZE (P5a/AP9, E-P5a-18) ----------------------
+    /* ---- DIE VERBINDUNGSGRENZE ----------------------
      *
      * Die Zeile darueber sagt, dass die Datenbank erreichbar IST — das
      * beweist diese Seite dadurch, dass es sie gibt. Sie sagt nicht, wie oft
@@ -587,7 +576,7 @@ function status_erhebung(): array
      * niemandem auf, bis es auffaellt.
      *
      * DER ZAEHLER STEHT IN EINER DATEI, nicht in der Datenbank. Warum, steht
-     * bei `ueberlast_vermerken()` in `wartung_lib.php` (E-P5a-50): In dem
+     * bei `ueberlast_vermerken()` in `wartung_lib.php`: In dem
      * Moment, in dem gezaehlt werden muesste, gibt es keine Verbindung.
      *
      * WANN ORANGE — und warum nicht einfach „ab Spitze 10". Die Ampel soll
@@ -615,18 +604,17 @@ function status_erhebung(): array
         $ulPlak = 'in Ordnung';
     } else {
         $ulAkut  = $ul['stunde'] === gmdate('Y-m-d H') ? $ul['n'] : 0;
-        /* iso_utc_lesen() UND NICHT strtotime(x . ' UTC') — zwanzig Zeilen
-         * weiter unten liest zeit_relativ() DENSELBEN Wert, und bis AP7
-         * taten es zwei verschiedene Leser.
+        /* iso_utc_lesen() UND NICHT strtotime(x. ' UTC') — zwanzig Zeilen
+         * weiter unten liest zeit_relativ() DENSELBEN Wert, und dafuer
+         * gibt es einen Leser, nicht zwei.
          *
-         * ES GING DABEI NICHTS SCHIEF, und das ist ausdruecklich gemessen
+         * strtotime() GINGE DABEI NICHT SCHIEF, und das ist ausdruecklich gemessen
          * und nicht vermutet: Beide liefern fuer die MySQL-Form dasselbe
          * (50 000 Marken, 0 Abweichungen), und auch fuer die ISO-Form mit
-         * T und Z — PHP liest 'x UTC' mit abschliessendem Z klaglos. Der
-         * Gegenleser von AP7 hatte hier einen stillen Fehlschlag vermutet;
-         * nachgerechnet gibt es ihn nicht.
+         * T und Z — PHP liest 'x UTC' mit abschliessendem Z klaglos. Einen
+         * stillen Fehlschlag gibt es hier nachgerechnet nicht.
          *
-         * Umgestellt wird trotzdem, und zwar aus dem Grund, aus dem es
+         * Ein Leser ist es trotzdem, und zwar aus dem Grund, aus dem es
          * diesen Schritt gibt: Ein Wert, zwei Leser, und niemand haette
          * gemerkt, wenn einer von beiden sich geaendert haette. */
         $ulFrisch = $ul['letzt'] !== null
@@ -648,7 +636,7 @@ function status_erhebung(): array
     }
     $server[] = status_z('Verbindungen', $ulText, $ulTon, $ulPlak);
 
-    /* ---- DIE MODELLTABELLE UND IHR NACHLOESE-JOB (P5a/AP11, E-P5a-21) ---
+    /* ---- DIE MODELLTABELLE UND IHR NACHLOESE-JOB ---
      *
      * WOGEGEN. `pair.php` löst die Teilenummer einer Uhr im Moment der
      * Kopplung auf. Trifft sie dabei auf eine ältere Tabelle, bleibt das
@@ -692,17 +680,16 @@ function status_erhebung(): array
         . ' · gespeichert wird UTC',
         'neutral', PHP_SAPI);
 
-    /* ---- RATENSCHUTZ (P5a/AP6, E-P5a-05) --------------------------------
+    /* ---- RATENSCHUTZ --------------------------------
      *
      * ZWEI ZEILEN, NICHT EINE KARTE. Die vollstaendige Sicherheitssicht —
      * alle Sperren mit Knopf „aufheben", die Ereignisse der letzten 30 Tage,
-     * die Verlangsamungsphasen — ist eine UNTERSEITE von Status und wartet
-     * auf Mockup M-P5a-01 (E-P5a-08, AP8). Wer sie jetzt hier baut, baut sie
-     * zweimal.
+     * die Verlangsamungsphasen — ist eine UNTERSEITE von Status. Wer sie hier
+     * baut, baut sie zweimal.
      *
      * Was NICHT warten kann, ist die Verlangsamung: Sie aendert das Verhalten
      * der Anmeldung fuer alle, und eine Betreiberin, die nicht weiss, dass
-     * sie laeuft, sucht den Fehler am Server. E-P5a-05 nennt sie
+     * sie laeuft, sucht den Fehler am Server. Deshalb ist sie
      * ausdruecklich „orange". */
     require_once __DIR__ . '/ratelimit_lib.php';
     $vBremse = rate_verlangsamung(true);
@@ -718,14 +705,13 @@ function status_erhebung(): array
     $rsSperren = rate_sperren_aktiv(200);
     if ($rsSperren !== []) {
         /* `$rsZeile` und nicht `$sp` — jene Variable traegt in dieser Funktion
-         * seit S8 den SPEICHERSTAND, und die Schleife hat sie beim ersten
-         * Versuch ueberschrieben. Die Folge war kein Syntaxfehler, sondern
-         * ein 500er dreihundert Zeilen weiter unten
+         * den SPEICHERSTAND, und die Schleife ueberschriebe sie. Die Folge
+         * waere kein Syntaxfehler, sondern ein 500er dreihundert Zeilen weiter unten
          * (`speicher_ton(): Argument #2 must be of type array, null given`) —
          * und zwar NUR, wenn gerade etwas gesperrt war. */
         /* `art` KOMMT AUS DER BIBLIOTHEK, nicht aus einem zweiten
-         * `str_starts_with` hier (P5a/AP8). Die Ableitung stand dreimal im
-         * Bestand; jetzt steht sie einmal, in `rate_sperren_aktiv()`. */
+         * `str_starts_with` hier. Die Ableitung stand dreimal im
+         * Bestand; sie steht einmal, in `rate_sperren_aktiv()`. */
         $konten = 0; $adressen = 0; $hoechste = 0;
         foreach ($rsSperren as $rsZeile) {
             if ($rsZeile['art'] === 'konto') { $konten++; } else { $adressen++; }
@@ -742,7 +728,7 @@ function status_erhebung(): array
             'betrieb_sicherheit.php#k-sperren');
     }
 
-    /* ---- ABGEWIESENE GERAETEANMELDUNGEN (P5a/AP7, E-P5a-02) -------------
+    /* ---- ABGEWIESENE GERAETEANMELDUNGEN -------------
      *
      * Die zweite der beiden Stellen, an denen die Mengenbremse sichtbar wird;
      * die erste ist die Kontoseite am Geraet selbst. Hier steht sie, weil die
@@ -758,9 +744,8 @@ function status_erhebung(): array
      * IM TRY, WEIL ES DIE SPALTEN IM DEPLOY-FENSTER NOCH NICHT GIBT. Die
      * Statusseite ist genau die Seite, die in diesem Fenster aufgerufen wird
      * — sie darf daran nicht scheitern. */
-    /* SIE FRAGT NICHT SELBST, SIE RUFT (P5a/AP8). Bis Web 20.11.0 stand hier
-     * eine eigene Abfrage auf dieselben zwei Spalten, und die
-     * Sicherheitsseite haette eine zweite daneben gestellt. Zwei Abfragen auf
+    /* SIE FRAGT NICHT SELBST, SIE RUFT. Die Sicherheitsseite fragt
+     * dieselben zwei Spalten. Zwei Abfragen auf
      * denselben Bestand laufen auseinander, sobald eine von beiden eine
      * Bedingung dazubekommt. `sicherheit_bremse_geraete()` faengt den
      * Deploy-Fall selbst ab und liefert dann eine leere Liste. */
@@ -790,10 +775,10 @@ function status_erhebung(): array
         $smtpDa ? 'blau' : 'neutral',
         $smtpDa ? 'eingerichtet' : 'nicht eingerichtet');
 
-    /* SEIT WEB 15.3.0 WIRD DER VERSAND VERMERKT (Z-01). Vorher konnte niemand
+    /* DER VERSAND WIRD VERMERKT. Sonst koennte niemand
        sagen, ob je eine Mail hinausging: `smtp_eingerichtet()` prüft die
-       config.php, nicht den Mailserver. Ein falsches Passwort fiel erst auf,
-       wenn jemand einen Setz-Link erwartete. */
+       config.php, nicht den Mailserver. Ein falsches Passwort fiele erst auf,
+       wenn jemand einen Setz-Link erwartet. */
     if ($smtpLetzte === '') {
         $mail[] = status_z('Letzter Versand',
             $smtpDa
@@ -813,10 +798,10 @@ function status_erhebung(): array
             $gut ? 'zugestellt' : 'fehlgeschlagen');
     }
 
-    /* DIE WARTESCHLANGE (P5a/AP5, E-P5a-41). Bis Web 20.7.0 sagte die Zeile
-       „Letzter Versand" alles, was es zu sagen gab — sie sagte aber nur
+    /* DIE WARTESCHLANGE. Die Zeile
+       „Letzter Versand" sagt nur
        etwas über den LETZTEN Versuch. Eine Einladung, die vor zwei Tagen
-       scheiterte, war danach unsichtbar, und die Marke stand längst. Diese
+       scheiterte, wäre danach unsichtbar. Diese
        Zeile ist die fehlende Auskunft: Liegt etwas? Ist etwas endgültig
        liegengeblieben, und für wen?
 
@@ -988,10 +973,6 @@ function status_erhebung(): array
             . 'Server, dessen Ausfall der Grund für ein Backup wäre',
             'neutral', 'keines', 'admin_sicherungsziele.php');
     } else {
-        /* Bis Web 20.47.0 stand davor eine eigene Schublade fuer Ziele mit dem
-         * abgeschafften Protokoll FTP, orange „umzustellen" (S10/AP4,
-         * E-S10-U-15). Die Datenbank nimmt den Wert seit P5c/AP8 nicht mehr an
-         * (E-P5c-124). */
         $nieVersandt = array_values(array_filter($aktiv,
             static fn($z) => empty($z['letzter_lauf'])));
         $mitFehler = array_values(array_filter($aktiv,
@@ -1013,12 +994,11 @@ function status_erhebung(): array
     }
 
     /* ---- WÄCHST EIN ZIEL, OHNE DASS DORT JE ETWAS ENTFERNT WURDE?
-     *      (P5a/AP10, E-P5a-03) ------------------------------------------
+     *      ------------------------------------------
      *
      * Der Versand ergänzt nur. Bei zwei Sicherungen je Konto und Monat läuft
      * ein Ziel damit über kurz oder lang voll — und niemand merkt es hier,
-     * weil auf der Gegenstelle nichts von dieser Anwendung nachsieht. Genau
-     * das ist Backlog Nr. 49.
+     * weil auf der Gegenstelle nichts von dieser Anwendung nachsieht.
      *
      * DIE ZEILE FRAGT DIE ZIELE NICHT. Sie liest das Versandprotokoll: Ein
      * Ziel, auf das seit über einem Monat geschickt wird und von dem nie
@@ -1052,7 +1032,7 @@ function status_erhebung(): array
     }
 
     /* Speicher: derselbe Ton wie der Balken auf den Servereinstellungen —
-       `speicher_ton()` ist die eine Regel dafür (S8/AP2). */
+       `speicher_ton()` ist die eine Regel dafür. */
     $proz = (int)$sp['backups']['prozent'];
     $tonS = speicher_ton($proz, $sp['schwellen']);
     $backups[] = status_z('Speicher der Backups',
@@ -1073,7 +1053,7 @@ function status_erhebung(): array
         $ablageBereit ? 'beschreibbar' : 'nicht beschreibbar',
         'betrieb_server.php');
 
-    /* ---- Plattform (P5a/AP2, E-P5a-19) ----------------------------------
+    /* ---- Plattform ----------------------------------
      *
      * DIESELBE FUNKTION, DIE `install.php` VOR DER EINRICHTUNG FRAGT. Was die
      * Einrichtung verlangt, muss die Installation auch im dritten Jahr noch
@@ -1083,7 +1063,7 @@ function status_erhebung(): array
      *
      * MUSS-ABWEICHUNG IST ROT, EMPFOHLEN-ABWEICHUNG IST EIN HINWEIS. „Kein
      * Hinweis faerbt die Ampel" (Vorbereitung, Abschnitt 2): Die Ampel bleibt
-     * den Zustaenden vorbehalten, die Technik.md 4.99e nennt. Ein
+     * den Zustaenden vorbehalten, die Technik.md 4.26 nennt. Ein
      * abgeschalteter OPcache ist kein Betriebsproblem, und eine Zahl im
      * Menuepunkt, die davon kaeme, schickte jemanden auf die Suche nach einem
      * Fehler, den es nicht gibt. Deshalb steht bei Empfohlen `neutral`.
@@ -1112,7 +1092,7 @@ function status_erhebung(): array
                 'neutral', 'Hinweis');
             continue;
         }
-        /* `knapp` IST ERFUELLT, ABER NICHT MEHR LANGE (P5a/AP10, PP-5).
+        /* `knapp` IST ERFUELLT, ABER NICHT MEHR LANGE.
          * Heute trägt nur der freie Platz das Feld: rot unter dem Einfachen
          * des größten Komplett-Backups, orange unter dem Zweifachen. Ein
          * Befund ohne das Feld verhält sich wie vorher — `?? false`. */
@@ -1174,11 +1154,11 @@ function status_zaehlen(array $karten): array
 }
 
 /**
- * Die Lesekarte der `config.php` (R17-26, E-R17-72 (1), Q-R17-20).
+ * Die Lesekarte der `config.php`.
  *
- * WARUM ES SIE GIBT. Was in der Datei steht, sah bis Web 23.5.0 nur, wer per
- * FTP hineinschaute — `app.base_url` stand deshalb wochenlang auf einer
- * alten Adresse (F-R17-75). Die Datei bleibt zur Laufzeit unbeschreibbar;
+ * WARUM ES SIE GIBT. Was in der Datei steht, saehe sonst nur, wer per
+ * FTP hineinschaut — und ein falscher Wert wie `app.base_url` bliebe
+ * wochenlang unbemerkt. Die Datei bleibt zur Laufzeit unbeschreibbar;
  * diese Karte LIEST nur.
  *
  * EINE FESTE LISTE, KEIN DURCHLAUF ÜBER `konfig_alles()`. Ein Durchlauf
@@ -1259,7 +1239,7 @@ function status_konfig_zeilen(): array
 
 
 /* ---------------------------------------------------------------------------
- * DER ZWISCHENSPEICHER FÜR DEN MENÜZÄHLER (S8/AP5, Konzept (3))
+ * DER ZWISCHENSPEICHER FÜR DEN MENÜZÄHLER
  *
  * Der Zähler am Menüpunkt „Status" steht auf JEDER Seite des
  * Einstellungsbereichs. Die volle Erhebung dafür bei jedem Seitenaufruf zu
@@ -1319,7 +1299,7 @@ function status_ampel(): array
 
 
 /* ---------------------------------------------------------------------------
- * DIE ZÄHLER AM MENÜ (S8/AP5, Konzept (3))
+ * DIE ZÄHLER AM MENÜ
  *
  * Vier Menüpunkte tragen eine Zahl, wenn es etwas zu tun gibt:
  *

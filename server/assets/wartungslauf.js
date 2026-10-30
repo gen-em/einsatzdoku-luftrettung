@@ -1,36 +1,34 @@
 /**
- * Der Wartungslauf im Browser (S11-07; Konzept S11 3.5, E-S11-05, -25, -68
- * bis -74).
+ * Der Wartungslauf im Browser.
  *
- * WOFÜR. Bis Web 22 packten die Jobs `verdichtung` und `ausduennen` die Spuren
- * auf dem Server. Seit S11 sieht der Server keine Koordinate mehr; er weiß
- * nur noch, WAS fällig ist (Stufen, Zeiten, Vermerke stehen im Klartext).
- * Diese Datei tut, was die Jobs taten, mit dem Schlüssel des Kontos:
+ * WOFÜR. Der Server sieht keine Koordinate; er weiß nur, WAS fällig ist
+ * (Stufen, Zeiten, Vermerke stehen im Klartext). Verdichten und Ausdünnen
+ * der Spuren tut deshalb diese Datei, mit dem Schlüssel des Kontos:
  *
  *   1. die Liste der fälligen Spuren holen (`api/wartungslauf.php`, höchstens
- *      20 je Aufruf, E-S11-68);
+ *      20 je Aufruf);
  *   2. je Spur die Stücke öffnen (`EdOrtsdaten.spur()`; herausgeschnittene
- *      Punkte fallen dabei weg — jetzt endgültig, E-S11-37, -47);
+ *      Punkte fallen dabei weg — endgültig);
  *   3. nach der Frist von 31 Tagen ausdünnen (Douglas-Peucker 3D, 2 m / 3 m,
  *      Phasenpunkte geschützt — dieselbe Regel und dieselbe Prüfung wie
- *      `spur_ausduennen()` und `spur_ausduennung_pruefen()`, E-S2-05);
- *   4. EIN gepacktes Stück bauen (Stufe 2 oder 3, E-S11-71) und es zur Probe
+ *      `spur_ausduennen()` und `spur_ausduennung_pruefen()`);
+ *   4. EIN gepacktes Stück bauen (Stufe 2 oder 3) und es zur Probe
  *      wieder öffnen: Kommt nicht genau heraus, was hineinging, wird nichts
  *      geschickt (Rundlauf);
- *   5. bei Einsätzen eine fehlende Ortshöhe nachtragen (E-S11-72);
+ *   5. bei Einsätzen eine fehlende Ortshöhe nachtragen;
  *   6. tauschen lassen — der Server tut es nur, wenn sich nichts geändert hat.
  *
  * Ein 409 ist der Normalfall eines Wettlaufs (ein Gerät hat inzwischen
  * gesendet): Die Spur bleibt liegen, der nächste Lauf nimmt sie mit. Eine
  * Hülle, die nicht aufgeht, geht an den Reiter System und wird für diese
  * Sitzung ausgelassen. KEINE Antwort (`status: 0`, meist ein Seitenwechsel)
- * lässt nichts aus und beendet den Durchgang (seit Web 23.0.3, Nr. 393).
+ * lässt nichts aus und beendet den Durchgang.
  *
  *   EdWartungslauf.lauf({ck, fortschritt})   ein Durchgang; liefert
  *                                            {spuren, getauscht, liegen,
  *                                             fehler, hoehen}
  *   EdWartungslauf.still(wrap)               Startseite: ein Durchgang,
- *                                            unsichtbar (M-S11-02)
+ *                                            unsichtbar
  *   EdWartungslauf.karte({wrap, faellig, zustand})
  *                                            die Karte im Reiter Backup
  *   EdWartungslauf.ausduennen(punkte, zeiten)       Behalteliste (Indizes)
@@ -247,12 +245,12 @@
       return 'getauscht';
     }
     if (a.status === 409) { return 'liegt'; }
-    /* KEINE ANTWORT IST KEIN URTEIL ÜBER DIE SPUR (Web 23.0.3, Nr. 393).
+    /* KEINE ANTWORT IST KEIN URTEIL ÜBER DIE SPUR.
        `status: 0` heißt: Die Anfrage kam nie zurück — meist, weil die Seite
-       gerade verlassen wird. Bis dahin landete die Spur dafür auf der
-       Auslassliste, und zwar für den ganzen Tab: Wer die Startseite öffnete
-       und gleich weiterklickte, schob die Spur, die gerade dran war, aus dem
-       Wartungslauf, bis der Tab zu war. */
+       gerade verlassen wird. Landete die Spur dafür auf der Auslassliste,
+       dann für den ganzen Tab: Wer die Startseite öffnete und gleich
+       weiterklickte, schöbe die Spur, die gerade dran war, aus dem
+       Wartungslauf, bis der Tab zu ist. */
     if (a.status === 0) {
       throw Object.assign(new Error(a.meldung || 'Keine Antwort'), { grund: 'verbindung' });
     }
@@ -290,7 +288,7 @@
     return z;
   }
 
-  /* ---- Zwei Verwender (Mockup M-S11-02, Variante 1) ----------------------- */
+  /* ---- Zwei Verwender ----------------------------------------------------- */
 
   /** Den Inhaltsschlüssel, OHNE zu fragen: Der Lauf drängt sich nie mit
    *  einem Passwortdialog vor. */
@@ -299,7 +297,7 @@
     try { return await EdKeyGuard.contentKey(wrap); } catch (e) { return null; }
   }
 
-  /** STARTSEITE: ein Durchgang, unsichtbar, nach dem Entsperren (E-S11-68).
+  /** STARTSEITE: ein Durchgang, unsichtbar, nach dem Entsperren.
    *  Fehler bleiben still; eine Hülle, die nicht aufgeht, ist gemeldet. */
   async function still(wrap) {
     const ck = await schluesselStill(wrap);

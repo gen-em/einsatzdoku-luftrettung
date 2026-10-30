@@ -16,7 +16,7 @@ declare(strict_types=1);
  * Eine Zählung ohne Sollmaß bestätigt ihre eigene Liste.
  *
  * WAS SIE MISST. Das Sollmaß steht in `kennzeichnung-soll.md`: je
- * verschlüsseltem Feld (`CLAUDE.md` 4, `docs/Technik.md` 4.98) die Stelle im
+ * verschlüsseltem Feld (`CLAUDE.md` 4, `docs/Technik.md` 4.14) die Stelle im
  * Formular (`einsatz_form.php`) und in der Leseansicht (`einsatz.php`), an
  * der das Schloss stehen muss, in fünf Formen:
  *
@@ -161,8 +161,8 @@ function kz_pruefen(string $form, string $lese, string $ui, array $katalog, stri
                              && (bool)preg_match('~\$pat\s*=\s*!mf_ist_spalte\(\s*\$f\s*\)~', $text)
                              && (bool)array_filter(kz_arrays($text, 'ui_ortsfeld'), fn($a) =>
                                     preg_match("~'geschuetzt'\s*=>\s*\\\$pat~", $a)),
-                /* Ein von Hand gesetzter Kartentitel mit dem Zeichen (S11-05b,
-                 * die Reanimation der Leseansicht). */
+               /* Ein von Hand gesetzter Kartentitel mit dem Zeichen (die
+                * Reanimation der Leseansicht). */
                 'titel'   => (bool)preg_match('~<h2 class="karte-titel">\s*' . preg_quote($wert, '~')
                                  . '\s*<\?=\s*ui_symbol\(\s*\'schloss\'~', $text),
                 /* Das Feld gibt es an dieser Stelle nicht (die Ortshoehe wird

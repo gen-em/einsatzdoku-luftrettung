@@ -46,8 +46,7 @@ class ZeitTest {
     }
 
     /**
-     * Der Dienstbeginn traegt das Datum nur, wenn er nicht von heute ist
-     * (Backlog Nr. 160).
+     * Der Dienstbeginn traegt das Datum nur, wenn er nicht von heute ist.
      *
      * Der Fall dahinter: Wer den Dienst am Freitag nicht beendet, sieht am
      * Montag weiter "laeuft seit 07:00" -- von einem Dienst, der vor zwoelf
@@ -72,8 +71,8 @@ class ZeitTest {
     /**
      * Der Wochentag ist deutsch, auch auf einem englisch gestellten Geraet.
      *
-     * Im Emulatorlauf zu 0.15.0 stand dort "Tue 08.09." -- Locale.getDefault()
-     * folgte dem Geraet mitten in einen deutschen Satz hinein. Die App hat
+     * Sonst stuende dort "Tue 08.09." -- Locale.getDefault() folgte dem
+     * Geraet mitten in einen deutschen Satz hinein. Die App hat
      * nur deutsche Texte.
      */
     @Test fun derWochentagIstDeutschUnabhaengigVomGeraet() {

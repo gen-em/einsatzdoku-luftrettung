@@ -29,10 +29,9 @@ const EdPwQuality = (() => {
 
   /** Mindestlänge — für das Kontopasswort UND das Passwort einer
    *  Backup-Datei. Beide Stellen schützen dieselben Angaben; zwei
-   *  verschiedene Mindestlängen (10 und 8) waren nur historisch begründet.
+   *  verschiedene Mindestlängen hätten keinen Grund.
    *
-   *  12 STATT 10 seit dem Sofortpaket Sicherheit (Backlog Nr. 136, SP-2).
-   *  Gegen einen Datenbankabzug ist das Passwort die einzige Schranke — der
+   *  12 ZEICHEN. Gegen einen Datenbankabzug ist das Passwort die einzige Schranke — der
    *  Server sieht es nie und kann seine Güte nach Bauart nicht prüfen. Zwei
    *  Zeichen mehr sind dort mehr wert als jede Regel über Zeichenarten.
    *
@@ -67,27 +66,22 @@ const EdPwQuality = (() => {
     'deutschland', 'bayern', 'muenchen', 'berlin', 'hamburg',
     'hubschrauber', 'rettung', 'notarzt', 'einsatz', 'christoph', 'luftrettung',
     'klinik', 'krankenhaus', 'medizin', 'sanitaeter',
-    /* Bodengebundene Gegenstuecke (Web 8.0.1). Die Liste nannte bis dahin
-       nur die luftgebundenen Woerter — an einem NEF-Standort fehlte damit
+    /* Bodengebundene Gegenstuecke — ohne sie fehlte an einem NEF-Standort
        genau das, was dort naheliegt.
 
-       KEINE Kuerzel wie "nef", "rth", "naw". Seit der Nachbesserung zu SP-2
-       (Backlog Nr. 136) wird JEDER Eintrag gestrichen, auch "root" und
-       "test" mit vier Zeichen — die fruehere Schranke von sechs Zeichen ist
-       gefallen, weil unter der Anteilsregel ein NICHT gestrichenes kurzes
-       Wort dem Passwort gutgeschrieben wurde: "password-admin-admin" ging
-       mit Rest "adminadmin" durch, "Passwort-Admin-Login!" mit Rest
-       "adminlogin" als "stark". Ein Kuerzel mit drei Zeichen gehoert
+       KEINE Kuerzel wie "nef", "rth", "naw". JEDER Eintrag wird gestrichen,
+       auch "root" und "test" mit vier Zeichen — keine Schranke nach Laenge,
+       weil unter der Anteilsregel ein NICHT gestrichenes kurzes Wort dem
+       Passwort gutgeschrieben wuerde: "password-admin-admin" ginge mit Rest
+       "adminadmin" durch, "Passwort-Admin-Login!" mit Rest "adminlogin" als
+       "stark". Ein Kuerzel mit drei Zeichen gehoert
        trotzdem nicht hierher: "rth" steckt in "Arthur" und "Fuerth", und
        jeder Treffer zerlegt den Rest in Bruchstuecke, die sich beim
        Zusammenfuegen zu neuen Reihen oder Listenwoertern verbinden koennen.
        Die Liste hat keinen Eintrag unter vier Zeichen; wer einen aufnimmt,
        misst vorher nach.
-       "wache", "koeln", "sonne" und "blume" fehlen aus einem aelteren
-       Grund: Fuenfstellige Eintraege griffen bis zur Nachbesserung nur als
-       GANZES Wort (nach Abzug angehaengter Ziffern — "Hallo2026!!!" wurde
-       abgewiesen), nie als Teilstring. Das gilt nicht mehr — ob sie
-       aufgenommen werden, ist eine offene Entscheidung, keine dieser Datei.
+       "wache", "koeln", "sonne" und "blume" fehlen; ob sie aufgenommen
+       werden, ist eine offene Entscheidung, keine dieser Datei.
 
        KEIN "nadoku". Der kuenftige Produktname war vorgesehen, ist aber
        wieder herausgenommen: Der Vergleich ist ein Teilstring-Vergleich, und
@@ -111,8 +105,7 @@ const EdPwQuality = (() => {
        "swagenwagen" durch, Stufe "stark". */
     'notarztwagen', 'rettungswagen', 'notfallsanitaeter', 'rettungsdienst',
     'einsatzdoku',
-    /* Erweiterung Sofortpaket Sicherheit (Backlog Nr. 136, SP-2). Zwei
-       Gruppen, beide aus der Umgebung dieser Anwendung:
+    /* Zwei Gruppen, beide aus der Umgebung dieser Anwendung:
 
        DIENSTLICHE WOERTER, die auf einer Rettungswache naheliegen und in der
        Liste fehlten. "notarzt" und "rettung" standen schon da; was danebenlag,
@@ -189,15 +182,14 @@ const EdPwQuality = (() => {
    * angehängten Ziffern und die Reihen herausstreicht — und wie viele
    * Sonderzeichen es außerdem trägt.
    *
-   * WARUM ES DIESE FUNKTION GIBT (Sofortpaket Sicherheit, Backlog Nr. 136).
-   * Bis dahin wies die Prüfung JEDES Passwort ab, in dem irgendwo eines der
-   * Wörter vorkam. Das war mit der Empfehlung, die dieselbe Stufe aufstellt,
-   * nicht vereinbar: „Vier zufällige Wörter" ist der beste Rat, den man zur
-   * Passwortwahl geben kann — und „Anker-Winter-Regen-Glas" scheiterte
-   * daran, dass „winter" in der Liste steht. Eine Empfehlung, die die eigene
-   * Prüfung abweist, ist schlimmer als keine.
+   * WARUM ES DIESE FUNKTION GIBT. Eine Prüfung, die JEDES Passwort abweist,
+   * in dem irgendwo eines der Wörter vorkommt, ist mit der Empfehlung
+   * daneben nicht vereinbar: „Vier zufällige Wörter" ist der beste Rat, den
+   * man zur Passwortwahl geben kann — und „Anker-Winter-Regen-Glas"
+   * scheiterte daran, dass „winter" in der Liste steht. Eine Empfehlung,
+   * die die eigene Prüfung abweist, ist schlimmer als keine.
    *
-   * Gemessen wird deshalb nicht mehr das VORKOMMEN, sondern der ANTEIL: Was
+   * Gemessen wird deshalb nicht das VORKOMMEN, sondern der ANTEIL: Was
    * bleibt übrig, wenn man die geläufigen Teile wegnimmt? Bleiben weniger als
    * MIN_REST Zeichen, war das Passwort im Wesentlichen ein Listenwort mit
    * Beiwerk. „Winterurlaub2026" behält nichts (auch „urlaub" steht in der
@@ -208,14 +200,14 @@ const EdPwQuality = (() => {
    * Reihen und Wiederholungen (`ohneReihen()` weiter unten) — sonst füllte
    * „abcdefgh" die geforderten acht Zeichen, ohne einen Gedanken zu kosten.
    *
-   * LÄNGSTE ZUERST, UND NACH JEDEM TREFFER VON VORN. Die erste Fassung lief
-   * die Liste einmal in ihrer Reihenfolge durch und strich nur Einträge ab
-   * sechs Zeichen. Die Gegenprüfung fand darin drei Löcher mit einer
-   * Ursache: „rettung" stand vor „rettungswagen" und ließ „swagen" als Rest
-   * stehen; Wörter unter sechs Zeichen wurden nicht gestrichen und dem Rest
-   * GUTGESCHRIEBEN („password-admin-admin" → Rest „adminadmin"); und was das
-   * Streichen aus den Bruchstücken neu zusammensetzte, sah niemand mehr an
-   * („adminiadministratorstrator" → Rest „administrator"). Deshalb: die
+   * LÄNGSTE ZUERST, UND NACH JEDEM TREFFER VON VORN. Ein einziger Durchlauf
+   * in Listenreihenfolge, der nur Einträge ab sechs Zeichen streicht, hat
+   * drei Löcher mit einer Ursache: „rettung" steht vor „rettungswagen" und
+   * lässt „swagen" als Rest stehen; Wörter unter sechs Zeichen werden nicht
+   * gestrichen und dem Rest GUTGESCHRIEBEN („password-admin-admin" → Rest
+   * „adminadmin"); und was das Streichen aus den Bruchstücken neu
+   * zusammensetzt, sieht niemand mehr an („adminiadministratorstrator" →
+   * Rest „administrator"). Deshalb: die
    * Liste nach Länge absteigend, jeder Eintrag, und nach jedem Treffer wieder
    * beim längsten beginnen, bis keiner mehr trifft. Der Neustart nach JEDEM
    * Treffer ist nötig, nicht erst am Listenende — gemessen: mit Neustart am
@@ -226,13 +218,12 @@ const EdPwQuality = (() => {
    * ausgerechnet ein gut gewürfeltes Passwort durch. Angehängte Ziffern sind
    * die Jahreszahl hinter dem Wort und deshalb kein Beitrag.
    *
-   * SONDERZEICHEN ZÄHLEN MIT, EINS ZU EINS. `normal()` wirft sie weg, und die
-   * erste Fassung maß den Rest erst danach: Ein Passwort aus dem
-   * Passwortverwalter mit fünf Sonderzeichen auf zwölf Stellen fiel unter
-   * MIN_REST — gemessen je nach Zeichenvorrat 0,04 bis 15 % aller zufälligen
-   * Zwölfsteller (62, 70 und 80 Zeichen Vorrat), vorher keiner — und bekam
-   * dazu gesagt, es bestehe aus
-   * geläufigen Wörtern. Für
+   * SONDERZEICHEN ZÄHLEN MIT, EINS ZU EINS. `normal()` wirft sie weg; wer den
+   * Rest erst danach misst, lässt ein Passwort aus dem Passwortverwalter mit
+   * fünf Sonderzeichen auf zwölf Stellen unter MIN_REST fallen — gemessen je
+   * nach Zeichenvorrat 0,04 bis 15 % aller zufälligen Zwölfsteller (62, 70
+   * und 80 Zeichen Vorrat) — und sagt ihm dazu, es bestehe aus geläufigen
+   * Wörtern. Für
    * den Rateangriff ist ein Sonderzeichen so viel wert wie ein Buchstabe,
    * also zählt es wie einer. Trenner — Bindestrich, Unterstrich, Punkt,
    * Leerzeichen — zählen NICHT: „Winter-Urlaub-2026" ist kein besseres
@@ -305,16 +296,15 @@ const EdPwQuality = (() => {
    * `istMuster()` reicht dafür nicht: Es prüft die GANZE Zeichenkette, und
    * „2026aaaaaaaa" ist als Ganzes keine Reihe.
    *
-   * Gestrichen wird, was kein Gedanke ist. Die erste Fassung kannte eine
-   * Form: eine Folge mit gleichbleibendem Abstand 0, +1 oder −1 — dreimal
-   * dasselbe Zeichen, oder vier auf- bzw. absteigende. Die Wiederaufnahme
-   * der zweiten Gegenpruefung fuellte die acht Zeichen mit allem, was NICHT
-   * so gebaut ist: „abababab", „aabbccdd", „1q2w3e4r", „qazwsxed",
-   * „!@#$%^&*", „20242024" — 8064 von 8832 gefuzzten Listenwort-plus-Muster-
-   * Faellen gingen durch, die die alte Regel abgewiesen hatte. Deshalb jetzt
-   * fuenf Formen, je Stelle die laengste:
+   * Gestrichen wird, was kein Gedanke ist. Eine einzige Form — eine Folge
+   * mit gleichbleibendem Abstand 0, +1 oder −1, also dreimal dasselbe
+   * Zeichen oder vier auf- bzw. absteigende — reicht nicht: Die acht
+   * Zeichen lassen sich mit allem fuellen, was NICHT so gebaut ist:
+   * „abababab", „aabbccdd", „1q2w3e4r", „qazwsxed", „!@#$%^&*", „20242024"
+   * — 8064 von 8832 gefuzzten Listenwort-plus-Muster-Faellen gingen so
+   * durch. Deshalb fuenf Formen, je Stelle die laengste:
    *
-   *   1. gleiches Zeichen ab drei, Abstand ±1 ab vier (wie bisher);
+   *   1. gleiches Zeichen ab drei, Abstand ±1 ab vier;
    *   2. ein Tastaturweg ab vier Zeichen (Reihen, Ziffernreihe,
    *      Umschaltreihen; die dreistelligen Spalten ab drei), vor- oder
    *      rueckwaerts — mit Listenwort ab drei („qweasdzx" ist „qwe",
@@ -512,8 +502,7 @@ const EdPwQuality = (() => {
     if (gestrichen.length === 0) {
       /* Nichts gestrichen: Das Passwort besteht aus Trennern, die nicht
          zählen — und vielleicht aus ein paar Sonderzeichen, die die acht
-         nicht füllen. Die erste Fassung sagte auch dann „nichts übrig"
-         (Wiederaufnahme der zweiten Gegenpruefung). */
+         nicht füllen. Dann heisst es nicht „nichts übrig". */
       m = 'Bindestrich, Punkt, Unterstrich und Leerzeichen zählen nicht — '
         + (uebrig === 0 ? 'es bleibt nichts übrig.'
            : (uebrig === 1 ? 'es bleibt nur 1 Sonderzeichen' : 'es bleiben nur ' + uebrig + ' Sonderzeichen')
@@ -578,7 +567,7 @@ const EdPwQuality = (() => {
 
   const STUFEN = ['zu schwach', 'schwach', 'brauchbar', 'gut', 'stark'];
 
-  /* Der eine Rat, der wirklich hilft (SP-2, Backlog Nr. 136). Er steht in
+  /* Der eine Rat, der wirklich hilft. Er steht in
      jeder Meldung, die zu wenig Substanz bemängelt — zu kurz, ein
      Listenwort, nur Ziffern —, statt nur im Handbuch: Wer hier abgewiesen
      wird, hängt sonst ein Ausrufezeichen an und probiert es nochmal. Länge
@@ -619,11 +608,11 @@ const EdPwQuality = (() => {
 
   /**
    * Schreibt das Ergebnis in ein Element — als BALKEN aus vier Segmenten mit
-   * der Stufe daneben (E-P3-16, Mockup 11; ab Web 9.7.0).
+   * der Stufe daneben.
    *
-   * Vorher stand hier eine Textzeile in einer von fünf Farben, darunter Grün
-   * und Gelb — zwei Töne, die es in der Marke nicht gibt. Der Balken sagt
-   * dasselbe ohne fremde Farbe: Wie viele Segmente gefüllt sind, ist die
+   * Eine Textzeile in einer von fünf Farben bräuchte Grün und Gelb — zwei
+   * Töne, die es in der Marke nicht gibt. Der Balken sagt dasselbe ohne
+   * fremde Farbe: Wie viele Segmente gefüllt sind, ist die
    * Auskunft; die Farbe (rot / orange / dunkelblau) verstärkt sie nur.
    *
    * VIER SEGMENTE bei fünf Stufen (0..4): Stufe 0 füllt eines und färbt es

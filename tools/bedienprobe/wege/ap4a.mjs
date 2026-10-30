@@ -1,4 +1,4 @@
-/* Wege des Nachtragspakets AP4a — Kurzname im schmalen Band, Typ beim
+/* Wege der Gruppe `AP4a` — Kurzname im schmalen Band, Typ beim
  * Zusammenführen.
  * ===========================================================================
  *
@@ -8,7 +8,7 @@
  *   M-S9-09 Variante c Die Vorschau des Zusammenführens nennt den Typ, die
  *                      Wahlzeilen nennen Typ und Kurznamen
  *
- * WARUM DIESE WEGE UND NICHT DIE AUS AP4: Die beiden Wege in `ap4.mjs`
+ * WARUM DIESE WEGE UND NICHT DIE AUS `ap4.mjs`: Die beiden Wege in `ap4.mjs`
  * fahren bei 1280 px und lesen `textContent` — das liefert auch bei
  * `display:none` einen Wert. Sie belegen den Kurznamen in der Leiste, aber
  * NICHT seine Sichtbarkeit, und schon gar nicht die im Band 1024–1199 px,
@@ -49,7 +49,7 @@ async function tagAuf(k, tag) {
      seinem `await` (Z. 739, 783 ff.). Wer auf die Optionen wartet, liest
      unter Last ein leeres `#vehsel`, hält das für „kein Rettungsmittel" und
      stellt am Ende genau das wieder her: Der Diensttag verliert seine
-     Zuordnung, und niemand sieht es (F-S9-U-15, Gegenprobe 08.09.2026).
+     Zuordnung, und niemand sieht es (Gegenprobe 08.09.2026).
      `currentDayId` setzt `loadDay()` erst, wenn die Antwort da ist. */
   await k.seite.waitForFunction(
     (id) => typeof currentDayId !== 'undefined' && currentDayId !== null
@@ -74,7 +74,7 @@ async function zuordnungLesen(k, tag) {
    *
    * Gemessen am 15.09.2026: Nach einem Lauf der Klickprobe trug der
    * Diensttag „Konzert von Karl Marx" den Standort „Luftrettungsstation
-   * Hochkreuth", obwohl er bauartbedingt keinen hat (E-DA-08). Die Referenz
+   * Hochkreuth", obwohl er bauartbedingt keinen hat. Die Referenz
    * war zu dem Zeitpunkt längst exportiert — aufgefallen ist es nur, weil
    * jemand die Karte angesehen hat. Ein Prüfmittel, das den Bestand
    * verändert, den es prüft, ist schlimmer als keines. */
@@ -96,7 +96,7 @@ async function zuordnungLesen(k, tag) {
  * steht in `#savestate`. Die Zeitgrenze darf hier NICHT verschluckt werden:
  * Diese Funktion stellt im `finally` den Bestand zurück, und ein
  * stillschweigend gescheitertes Zurückstellen hinterlässt einen Diensttag mit
- * fremder Zuordnung, während der Weg „erfüllt" meldet (F-S9-U-16, Gegenprobe
+ * fremder Zuordnung, während der Weg „erfüllt" meldet (Gegenprobe
  * 08.09.2026). Deshalb: kein `catch` an der Grenze, und danach wird gelesen,
  * was wirklich dasteht. Stimmt es nicht, fliegt der Weg — auch aus dem
  * `finally` heraus, und das ist die Absicht.
@@ -108,7 +108,7 @@ async function zuordnen(k, tag, vehWert, baseWert) {
      Wechsel des Rettungsmittels selbst, und dann gibt es den alten Wert als
      Option nicht mehr. Geprüft wird deshalb unten nur das Rettungsmittel. */
   await k.seite.selectOption('#basesel', baseWert).catch(() => {});
-  /* ERST KLICKEN, WENN DIE ROLLEN DA SIND (Nr. 393, F-DM-10). Die Wahl löst
+  /* ERST KLICKEN, WENN DIE ROLLEN DA SIND. Die Wahl löst
      `rollenVorschau()` aus: Es holt die Rollen nach und baut `#crewfields`
      neu — ÜBER dem Knopf. Kam die Antwort zwischen Playwrights Zielsuche und
      dem Mausklick, rückte der Knopf weg, und der Klick traf daneben: In
@@ -118,12 +118,12 @@ async function zuordnen(k, tag, vehWert, baseWert) {
   await k.seite.waitForLoadState('networkidle', { timeout: 5000 }).catch(() => {});
   await k.seite.evaluate(() => {
     document.getElementById('savestate').textContent = '';
-    /* Für die Fehlermeldung (Nr. 393): Kam das Absenden an? */
+    /* Für die Fehlermeldung: Kam das Absenden an? */
     window.__abgeschickt = 0;
     document.getElementById('dayform').addEventListener('submit', () => { window.__abgeschickt++; }, { capture: true });
   });
   await k.seite.locator('#dayform button[type="submit"]').first().click();
-  /* 30 s STATT 15, UND DER TEXT IM FEHLER (Konzept DM, F-DM-10): In Firefox
+  /* 30 s STATT 15, UND DER TEXT IM FEHLER: In Firefox
      lief die Grenze im vollen Lauf einmal ab, einzeln nie, und der Weg sagte
      nur „Timeout". Jetzt wartet er auch auf einen Fehlertext und nennt, was
      in `#savestate` stand. */
@@ -136,7 +136,7 @@ async function zuordnen(k, tag, vehWert, baseWert) {
       'Zeitgrenze, #savestate: „' + await k.seite.evaluate(
         () => document.getElementById('savestate').textContent || '') + '"');
   if (!/gespeichert/i.test(stand)) {
-    /* DER ZUSTAND DER SEITE GEHÖRT IN DIE MELDUNG (Nr. 393): F-DM-10 kam
+    /* DER ZUSTAND DER SEITE GEHÖRT IN DIE MELDUNG: Der Fehlklick kam
        einmal in fünf Einzelläufen in Firefox, und „#savestate leer" sagt
        nicht, ob das Absenden ankam, ob `currentDayId` fehlte oder ob die
        Seite gewechselt hatte. */
@@ -191,7 +191,7 @@ export const wege = [
           const kurz = alle.filter(e => e.classList.contains('kurz'));
           /* SICHTBARKEIT ÜBER DIE GEMESSENE BREITE, nicht über den Text:
              `textContent` liefert auch bei `display:none` einen Wert — genau
-             daran belegen die AP4-Wege diese Regel NICHT. */
+             daran belegen die Wege in `ap4.mjs` diese Regel NICHT. */
           const sicht = e => e.getBoundingClientRect().width > 0;
           const ak = document.querySelector('.leiste-liste .akkordeon-inhalt');
           return {
@@ -205,7 +205,7 @@ export const wege = [
                Ziffern 76 bis 83 px breit, und `.eintrag-text` schrumpft
                nicht. Eine Probe, die `ellipsen === 0` verlangt, faellt je
                nach zugeordnetem Tag zufaellig gruen oder rot aus — genau das
-               hat die Gegenprobe am 08.09.2026 gefunden (F-S9-U-13).
+               hat die Gegenprobe am 08.09.2026 gefunden.
                Gemeldet wird deshalb die freie Breite; verlangt wird, dass
                der Kurzname im Band ueberhaupt STEHT. */
             ellipsen: kurz.filter(e => sicht(e) && e.scrollWidth > e.clientWidth + 1).length,
@@ -226,7 +226,7 @@ export const wege = [
         });
         await k.bild('ap4a-kurzname-im-band');
         const band = breite >= 1024 && breite < 1200;
-        const sollEin = band ? '4px' : '12px';   // Freigabe M-S9-11, Weg 2
+        const sollEin = band ? '4px' : '12px';   // freigegebene Einrueckung
         const sollSicht = band ? m.mitKurz : m.gesamt;
         /* SEIT DEM DEMO-AUSBAU SIND ES MEHRERE. Bis dahin trug KEIN Diensttag
            des Bestands einen Kurznamen, und dieser Weg setzte den einen, den
@@ -282,7 +282,7 @@ export const wege = [
         /* EIN DATUM MIT ZWEI DIENSTEN VERSCHIEDENER BETRIEBSART. Seit dem
            Demo-Ausbau gibt es DREI Kalendertage mit zwei Diensten, und an
            zweien davon sind beide bodengebunden (die Veranstaltungen laufen
-           abends nach einem NEF-Dienst, E-DA-04). Wer dort den einen auf das
+           abends nach einem NEF-Dienst). Wer dort den einen auf das
            luftgebundene Bergwacht-Rettungsmittel umstellt, macht die beiden
            erst unvereinbar — und die Vorschau zeigt statt der Zeile „Typ"
            eine Fehlermeldung. Gesucht wird deshalb das Paar, das heute schon

@@ -3,14 +3,14 @@ declare(strict_types=1);
 
 /**
  * Rollenprobe — erreicht jede Rolle genau das, was die Berechtigungsmatrix
- * sagt? (P5c/AP2, E-P5c-22)
+ * sagt?
  *
  * Anlass: Nr. 286 (ein Konto mit der Rolle admin erreichte Komplett-Backup
  * und Backup-Ziele — samt Klartext-Dump) und Nr. 149. Beide standen im Code,
  * und keine Prüfung fragte je eine Seite mit einer ANDEREN Rolle als der
  * BetreiberIn ab.
  *
- * DIE MATRIX STEHT NICHT HIER, SONDERN IN `docs/Technik.md` 4.99p, zwischen
+ * DIE MATRIX STEHT NICHT HIER, SONDERN IN `docs/Technik.md` 4.37, zwischen
  * `<!-- rollenprobe:anfang -->` und `<!-- rollenprobe:ende -->`. Die Probe
  * liest sie von dort. Zwei Listen derselben Sache — eine im Dokument, eine im
  * Werkzeug — laufen auseinander, sobald jemand eine Zeile an einer Stelle
@@ -20,41 +20,38 @@ declare(strict_types=1);
  * WIE EINE ZELLE GEMESSEN WIRD.
  *   - GET: der Statuscode (200, 303, 404). 403 heißt zusätzlich: Der Text ist
  *     der des Rollentors („Kein Zugriff" oder „… vorbehalten") — ein 403 aus
- *     einem anderen Grund zählte sonst als Tor. Bis AP4 stand dieser Satz
- *     hier, ohne dass `messen()` den Text las (F-P5c-101).
+ *     einem anderen Grund zählte sonst als Tor.
  *   - POST: mit einem ABSICHTLICH FALSCHEN Formular-Token. `403` heißt: das
  *     Rollentor antwortet. `durch` heißt: Die Antwort ist die
  *     Token-Ablehnung — die Rolle hat die Handlung erreicht, ausgeführt wird
  *     sie nicht. So läuft die Probe gefahrlos über „Stand löschen",
  *     „jetzt versenden" und „jetzt sichern".
  *
- * VIER PLATZHALTER (AP4, der dritte seit R4-18, der vierte seit R17-20):
+ * VIER PLATZHALTER:
  * `{ziel}` ist ein Konto der Rolle `user`, `{admin}` eines der Rolle
  * `admin`, `{support}` eines der Rolle `support`, `{betreiberin}` eine
- * zweite BetreiberIn — an ihr hat ein Admin keinen schreibenden Griff
- * (F-R17-07, Nr. 371). Die Kontoseite fragt die Rolle zweimal — ob die
+ * zweite BetreiberIn — an ihr hat ein Admin keinen schreibenden Griff.
+ * Die Kontoseite fragt die Rolle zweimal — ob die
  * Angemeldete das Zielkonto betreuen darf, dann je Handlung —, und beide
  * Tore stehen in der Matrix. `{support}` misst, dass der Support andere
- * Support-Konten nicht betreut (E-P5c-99); bis R4-18 stand das nur im Code
- * (Nr. 327).
+ * Support-Konten nicht betreut.
  *
  * UND WIRKUNGEN, denn `durch` sagt nur, dass eine Rolle die Handlung
  * erreicht, nicht, was sie dort tut:
- *   - Die Verwaltung loescht ein Konto mit Spur ueber `konto_loeschen()`
- *     (R4-10, Backlog Nr. 299): Das Konto ist fort, die Spur auch, der
+ *   - Die Verwaltung loescht ein Konto mit Spur ueber `konto_loeschen()`:
+ *     Das Konto ist fort, die Spur auch, der
  *     Protokolleintrag nennt den Weg `verwaltung`, `mengen:<id>` in
  *     `app_state` ist abgeraeumt — das vergass die Abschrift auf der
- *     Kontoseite bis Web 21.1.7 — und die Sperrliste seines Geraets auch
- *     (die raeumte bis dahin nur das Entfernen des Demo-Kontos).
+ *     Kontoseite einmal — und die Sperrliste seines Geraets auch
+ *     (die raeumte damals nur das Entfernen des Demo-Kontos).
  *   - Ein Rollenwechsel auf der Kontoseite schreibt genau einen Eintrag
- *     `rolle_geaendert`, ein Speichern ohne Wechsel keinen (E-P5c-38).
- *   - Nach einer Handlung leiten die Seiten unter Verwaltung und Betrieb um
- *     (R4-11, Backlog Nr. 250): je Seite ein harmloser Zweig, 302 auf das
+ *     `rolle_geaendert`, ein Speichern ohne Wechsel keinen.
+ *   - Nach einer Handlung leiten die Seiten unter Verwaltung und Betrieb um:
+ *     je Seite ein harmloser Zweig, 302 auf das
  *     genannte Ziel, die Meldung beim ersten GET einmal mehr als beim
- *     zweiten. Dazu die zwei Fehler der Backup-Ziele, die dabei auffielen
- *     (F-R4-35, -36).
- *   - Der Support (AP4, E-P5c-14, -40), mit GUELTIGEM Token: Menü, Liste
- *     ohne Konten mit Rechten, die Sicht aus M-P5c-02c und die
+ *     zweiten. Dazu die zwei Fehler der Backup-Ziele, die dabei auffielen.
+ *   - Der Support, mit GUELTIGEM Token: Menü, Liste
+ *     ohne Konten mit Rechten, die Sicht der Kontoseite und die
  *     Protokollreiter; der Setz-Link steht
  *     nicht in seiner Antwort, auch im Fehlfall nicht — und die Gegenprobe
  *     mit einem Admin zeigt ihn im selben Fall, sonst belegte das Fehlen
@@ -64,8 +61,8 @@ declare(strict_types=1);
  *
  * DIE KONTEN UND SITZUNGEN LEGT SIE SELBST AN (Muster Wartungsprobe; die
  * Anmeldung leitet das Token im Browser per PBKDF2 ab und ist mit `curl`
- * nicht nachzubilden). Seit P5c/AP5 tragen die Konten der Pflichtrollen
- * `totp_seit`, sonst führte das Einrichtungstor des Zweitfaktors jede ihrer
+ * nicht nachzubilden). Die Konten der Pflichtrollen
+ * tragen `totp_seit`, sonst führte das Einrichtungstor des Zweitfaktors jede ihrer
  * Anfragen auf `zweitfaktor.php` (Begründung bei „Konten" unten). Die beiden
  * Zeilen `totp_zuruecksetzen` der Matrix versteht die Probe ohne Sonderfall:
  * Das Tor der Handlung steht in `admin_user.php` vor `csrf_check()`, ein
@@ -74,24 +71,24 @@ declare(strict_types=1);
  * drei Zielkonten (`ziel`, `zieladmin`, `neu` im Status „unbestätigt") und
  * ein Gerät — nicht die Sandbox, und nicht vorhandene Konten: Eine Probe, die
  * von einem vorher angelegten Konto abhängt, ist nach `hochfahren.sh --neu`
- * rot, ohne gemessen zu haben (E-P5c-78). Aufgeräumt wird im Schluss, auch
+ * rot, ohne gemessen zu haben. Aufgeräumt wird im Schluss, auch
  * nach einem Abbruch: Konten (Geräte und Setz-Token fallen mit), Sitzungs-
  * dateien, ihre Protokolleinträge, die Mails der Probe in der Warteschlange.
  *
- * API-ENDPUNKTE SEIT KONZEPT RW (RW-02): Ihre Token-Ablehnung ist JSON
+ * API-ENDPUNKTE SEIT KONZEPT RW: Ihre Token-Ablehnung ist JSON
  * (`{"error":"csrf"}`, `csrf_check()` in `auth_guard.php`), nicht die Seite
  * mit dem Satz — `messen()` erkennt beide. Der erste ist
  * `api/rueckweg_anlegen.php`, den alle vier Rollen erreichen; dazu die
  * Wirkung: Jede Rolle legt mit gültigem Formular- UND Anmelde-Token ein
  * Paar ab.
  *
- * SEIT R17-20 DREI WEITERE WIRKUNGEN, mit gültigem Token: Das Demo-Konto
- * weist Status, Grenzen und Zweitfaktor ab (F-R17-42; die Probe zeigt
+ * DREI WEITERE WIRKUNGEN, mit gültigem Token: Das Demo-Konto
+ * weist Status, Grenzen und Zweitfaktor ab (die Probe zeigt
  * `DEMO_K_USER` für ihre Laufzeit auf ein eigenes Konto); eine zweite
  * BetreiberIn bleibt unverändert, wenn ein Admin sie sperren oder
- * umadressieren will (F-R17-07); ein Adresswechsel durch die Verwaltung ist
+ * umadressieren will; ein Adresswechsel durch die Verwaltung ist
  * unbestätigt, sperrt den Setz-Link, und die Seite der alten Adresse
- * widerspricht über einen Knopf, nicht über den Aufruf (F-R17-06, E-R17-45).
+ * widerspricht über einen Knopf, nicht über den Aufruf.
  *
  * WAS SIE NICHT PRÜFT: ob eine Handlung mit gültigem Token gelingt, außer
  * den Wirkungen oben (das tun Bedienwege und die Proben der Sache), und die
@@ -132,7 +129,7 @@ foreach (explode("\n", trim($t[1])) as $z) {
     }
     $zeilen[] = array_combine($spalten, $zellen);
 }
-/* ROLLEN SIND DIE SPALTEN, DIE ROLLEN HEISSEN (seit SR-07). Die letzte Spalte
+/* ROLLEN SIND DIE SPALTEN, DIE ROLLEN HEISSEN. Die letzte Spalte
  * „frischer Code" ist keine Rolle, sondern eine Markierung: `ja` heisst, die
  * Handlung steht in `ZF_FRISCH_HANDLUNGEN` — der Teil „Frischer Code" unten
  * misst an genau diesen Zeilen den Umweg. */
@@ -161,7 +158,7 @@ function hole(string $pfad, ?string $sid, ?array $koerper = null, ?string $json 
         curl_setopt($ch, CURLOPT_POSTFIELDS,
                     $json !== null ? (string)json_encode($koerper) : http_build_query($koerper));
     }
-    /* `ziel` ist die Kopfzeile `Location` — seit R4-11 (Nr. 250) misst die
+    /* `ziel` ist die Kopfzeile `Location` — so misst die
      * Probe, WOHIN eine Handlung umleitet, nicht nur, dass sie es tut. */
     $ziel = null;
     curl_setopt($ch, CURLOPT_HEADERFUNCTION, static function ($c, string $z) use (&$ziel): int {
@@ -180,8 +177,7 @@ function sitzung_ort(): string
     return is_dir($eigen) ? $eigen : (string)(session_save_path() ?: sys_get_temp_dir());
 }
 
-/** Die Bindung je angelegter Sitzung — Kennung → Cookiewert (seit Web 21.7.0,
- *  Schritt 18, SR-01). Ohne sie beendet `auth_guard.php` jede Sitzung dieser
+/** Die Bindung je angelegter Sitzung — Kennung → Cookiewert. Ohne sie beendet `auth_guard.php` jede Sitzung dieser
  *  Probe mit dem Grund `bindung`, und jede Zelle der Matrix stuende auf 200
  *  der Abmeldeseite statt auf dem Rollentor. */
 $BINDUNGEN = [];
@@ -193,10 +189,10 @@ function bindung_keks(string $sid): string
     return $w !== null ? '; ' . SITZUNG_COOKIES['bindung']['name'] . '=' . $w : '';
 }
 
-/** Eine Sitzung, wie `login.php` sie hinterlässt — mit Bindung (SR-01).
+/** Eine Sitzung, wie `login.php` sie hinterlässt — mit Bindung.
  *  VOR jeder Ausgabe anlegen.
  *
- *  FRISCH ALS VORGABE (seit SR-07): `login.php` setzt nach dem Code-Schritt
+ *  FRISCH ALS VORGABE: `login.php` setzt nach dem Code-Schritt
  *  `zf_frisch_bis`, und so misst die Matrix das Rollentor und das Token —
  *  den Umweg ohne frischen Code misst der eigene Teil darunter, mit
  *  `$frisch = false`. */
@@ -219,9 +215,9 @@ function sitzung_anlegen(int $uid, int $epoch, bool $frisch = true): array
 
 /* ---- Konten ------------------------------------------------------------------ */
 
-/* DIE PFLICHTROLLEN BEKOMMEN `totp_seit` (P5c/AP5, E-P5c-43, F-P5c-33).
+/* DIE PFLICHTROLLEN BEKOMMEN `totp_seit`.
  *
- * Seit AP5 führt `auth_guard.php` Support, Admin und BetreiberIn ohne
+ * `auth_guard.php` führt Support, Admin und BetreiberIn ohne
  * Zweitfaktor auf `zweitfaktor.php` — jede Seite mit 302, die API mit 403.
  * Ohne diese Zeile mäße die Probe für drei von vier Spalten das
  * Einrichtungstor statt des Rollentors: Jede Zelle stünde auf
@@ -254,7 +250,7 @@ foreach ($rollen as $rolle) {
     $epoch = (int)$pdo->query('SELECT session_epoch FROM users WHERE id = ' . $id)->fetchColumn();
     /* ZWEI SITZUNGEN JE ROLLE, beide jetzt — `session_start()` geht nur vor
      * der ersten Ausgabe: die frische fuer die Matrix, die unfrische fuer den
-     * Teil „Frischer Code" (SR-07). Die erste Fassung legte die zweite erst
+     * Teil „Frischer Code". Die erste Fassung legte die zweite erst
      * dort an, nach der Ausgabe der Matrix; jede Anfrage landete auf
      * `login.php`. */
     $konten[$rolle] = ['id' => $id, 'mail' => $mail] + sitzung_anlegen($id, $epoch)
@@ -262,8 +258,8 @@ foreach ($rollen as $rolle) {
 }
 /* Die Zielkonten — eigene Zeilen, nicht die Konten der Rollen: `ziel` für
  * den Rollenwechsel und die Handlungen an einem Konto der Rolle `user`,
- * `zieladmin` für den Platzhalter `{admin}`, `zielsupport` für `{support}`
- * (R4-18), `neu` für die Bestätigung einer Registrierung. */
+ * `zieladmin` für den Platzhalter `{admin}`, `zielsupport` für `{support}`,
+ * `neu` für die Bestätigung einer Registrierung. */
 function zielkonto(string $name, string $rolle, string $status = 'aktiv'): int
 {
     global $pdo;
@@ -278,12 +274,12 @@ $zielMail = 'rollenprobe-ziel@probe.invalid';
 $zielId   = zielkonto('ziel', 'user');
 $adminZiel = zielkonto('zieladmin', 'admin');
 $supportZiel = zielkonto('zielsupport', 'support');
-/* EINE ZWEITE BETREIBERIN (R17-20, F-R17-07, Nr. 371): Der Platzhalter
+/* EINE ZWEITE BETREIBERIN: Der Platzhalter
  * `{betreiberin}` misst, dass ein Admin an ihrem Konto keinen schreibenden
  * Griff hat. Ein eigenes Zielkonto, nicht das der Rolle — sonst stuende die
  * Probe auf ihrem eigenen Konto, und dort greifen andere Riegel. */
 $betreiberinZiel = zielkonto('zielbetreiberin', 'betreiberin');
-/* EIN DEMO-KONTO FUER DIE PROBE (R17-20, F-R17-42): `demo_id()` liest
+/* EIN DEMO-KONTO FUER DIE PROBE: `demo_id()` liest
  * `DEMO_K_USER`; die Probe zeigt die Marke fuer ihre Laufzeit auf ein
  * eigenes Konto und stellt sie im Schluss zurueck. Ein vorhandenes
  * Demo-Konto zu benutzen hiesse, an dessen Bestand zu haengen — und ohne
@@ -377,7 +373,7 @@ function messen(string $aufruf, array $konto): string
 }
 
 echo "Rollenprobe gegen $basis — " . count($zeilen) . ' Handlungen × ' . count($rollen)
-   . ' Rollen aus docs/Technik.md 4.99p' . "\n";
+   . ' Rollen aus docs/Technik.md 4.37' . "\n";
 foreach ($zeilen as $z) {
     foreach ($rollen as $rolle) {
         $soll = $z[$rolle];
@@ -386,13 +382,13 @@ foreach ($zeilen as $z) {
     }
 }
 
-/* ---- Der frische Code: der Umweg ohne ihn (Schritt 18, SR-07, E-SR-20) ------
+/* ---- Der frische Code: der Umweg ohne ihn -----------------------------------
  *
  * JE ZEILE MIT `ja` EINE ANFRAGE, mit dem Konto der KLEINSTEN Rolle, die die
  * Handlung darf — und einer Sitzung ohne `zf_frisch_bis`. Erwartet: 303 auf
  * `zweitfaktor.php?bestaetigen=1&zurueck=<die Seite der Handlung>`, nach einem
  * POST mit `nochmal=1`; bei einem Endpunkt unter `api/` 403 mit dem
- * JSON-Fehler `zweitfaktor_frisch` (SR-09 — ein Endpunkt springt nicht um,
+ * JSON-Fehler `zweitfaktor_frisch` (ein Endpunkt springt nicht um,
  * der Browser meldet es). Mit frischem Code (die Matrix darueber) geht
  * dieselbe Anfrage durch.
  *
@@ -495,7 +491,7 @@ if ($b === null) {
           $nach2 . ' → ' . $nach3 . ', Rolle jetzt ' . $rolleJetzt);
 }
 
-/* ---- Die Wirkungen des Supports (AP4, E-P5c-14, -40) ---------------------- */
+/* ---- Die Wirkungen des Supports ------------------------------------------- */
 
 echo "\nDer Support mit gültigem Token (E-P5c-14, -40)\n";
 $s = $konten['support'] ?? null;
@@ -528,7 +524,7 @@ if ($s === null || $a === null) {
     pruef(str_contains($ls, 'rollenprobe-ziel@') && !str_contains($ls, 'rollenprobe-zieladmin@')
           && str_contains($la, 'rollenprobe-zieladmin@'),
           'Liste: das Konto eines Admins fehlt beim Support, nicht beim Admin');
-    /* Die Sicht aus dem freigegebenen Bild (M-P5c-02c, E-P5c-66): drei
+    /* Die Sicht aus dem freigegebenen Bild: drei
      * Kacheln; die Kontoseite einspaltig, Mengen ohne Formular, keine
      * Konto-Backups, kein Löschen, kein Speichern. */
     pruef(str_contains($ls, 'kennzahl-raster-3') && str_contains($la, 'kennzahl-raster-4'),
@@ -608,7 +604,7 @@ if ($s === null || $a === null) {
           'Bestätigung an ein aktives Konto: abgewiesen, kein Eintrag');
 }
 
-/* ---- Die Löschung durch die Verwaltung (R4-10, Backlog Nr. 299) ----------
+/* ---- Die Löschung durch die Verwaltung -----------------------------------
  *
  * Ein eigenes Wegwerfkonto mit einem Einsatz, drei Spurpunkten, einem Geraet
  * mit einem Sperrvermerk und einem Mengenstand in `app_state` — genau das,
@@ -633,7 +629,7 @@ if ($a === null) {
     $pdo->prepare("INSERT INTO missions (user_id, client_ref, started_at) VALUES (?, ?, UTC_TIMESTAMP())")
         ->execute([$loeschId, 'rollenprobe-' . bin2hex(random_bytes(6))]);
     $loeschEinsatz = (int)$pdo->lastInsertId();
-    /* Drei Spurstuecke (bis Web 22.7.0 drei Zeilen in `track_points`). Die
+    /* Drei Spurstuecke. Die
      * Huelle ist Zufall — die Loeschung oeffnet nichts. */
     $pp = $pdo->prepare("INSERT INTO track_stuecke (owner_type, owner_id, seq_from, punkte, n_original,
                          ts_von, ts_bis, stufe, huelle, erstellt_am, geaendert_am)
@@ -677,7 +673,7 @@ if ($a === null) {
     } catch (Throwable) {}
 }
 
-/* ---- Umleiten nach POST (R4-11, Backlog Nr. 250) --------------------------
+/* ---- Umleiten nach POST ---------------------------------------------------
  *
  * Je Seite ein Zweig, der auf einer Prüfanlage HARMLOS gelingt — dieselben
  * Werte noch einmal speichern, eine Sperre aufheben, die es nicht gibt, ein
@@ -764,13 +760,13 @@ if ($b === null) {
     }
 
     /* NutzerInnen: ein Konto sichern, das es nicht gibt — die Zahl 0, der
-     * Grund und die Restauswahl reisen über die Sitzung mit (E-R4-33). */
+     * Grund und die Restauswahl reisen über die Sitzung mit. */
     $prg('NutzerInnen · Auswahl sichern', 'admin_users.php',
          ['action' => 'sichern_auswahl', 'auswahl' => '999999999'],
          'admin_users.php', '0 Konto-Backups erzeugt.');
 
     /* NutzerInnen: Konto anlegen. Ohne zugestellte Mail bleibt die Seite
-     * stehen und zeigt den Setz-Link (E-R4-33 — ein Token gehört nicht in die
+     * stehen und zeigt den Setz-Link (ein Token gehört nicht in die
      * Sitzungsdatei); mit zugestellter Mail leitet sie um, und der Link steht
      * nirgends. Beides ist richtig; falsch wäre der Link nach einer
      * Umleitung oder eine 200 ohne Link. */
@@ -807,7 +803,7 @@ if ($b === null) {
         else                       { app_state_setzen(JOB_PAUSE_SCHLUESSEL, $pauseVorher); }
     }
 
-    /* Servereinstellungen (Schritt 18, SR-02, Nr. 250, E-SR-37): bis Web
+    /* Servereinstellungen: bis Web
      * 21.7.0 die eine Betriebsseite ohne Umleitung. Zwei Karten, beide mit
      * dem Stand, der schon gilt — „Es gab nichts zu ändern", in der Karte.
      * Die Karte „Anmeldung" wird vorher einmal gespeichert: Beim ersten Mal
@@ -826,7 +822,7 @@ if ($b === null) {
          ['action' => 'kopfzeilen', 'hsts_tage' => (string)kopf_hsts_tage()]
          + (kopf_csp_scharf() ? ['csp_scharf' => '1'] : []),
          'betrieb_server.php#k-kopfzeilen', 'Es gab nichts zu ändern.');
-    /* Zwei Karten mehr (Nr. 250 sagt „jeder POST"): Protokoll und
+    /* Zwei Karten mehr („jeder POST"): Protokoll und
      * Adresssuche, wieder mit dem Stand, der gilt. Beide werden vorher einmal
      * gespeichert, aus demselben Grund wie die Anmeldung — die Adresssuche
      * zählt die Vorgabe beim ersten Mal als Änderung. */
@@ -863,13 +859,13 @@ if ($b === null) {
     }
 
     /* Status: die Testmail. Ohne eingerichteten Versand ändert der Klick
-     * nichts und bleibt stehen (E-R4-35); mit Versand leitet er um.
+     * nichts und bleibt stehen; mit Versand leitet er um.
      *
      * DER ZÄHLER WIRD VORHER GELEERT. Der Ratenschutz erlaubt drei Testmails
      * je Stunde — je Konto UND je Adresse, und die Adresse ist hier immer
      * 127.0.0.1. Wer die Probe in einer Stunde öfter fuhr, bekam „Zu viele
      * Testmails" (200, ohne Umleitung) und ein Rot, das nichts über die
-     * Seite sagte (erster Prüfstand von R4-11). */
+     * Seite sagte. */
     $pdo->exec("DELETE FROM rate_limits WHERE topf = 'testmail'");
     $r = hole('betrieb_status.php', $b['sid'], ['csrf' => $b['csrf'], 'action' => 'testmail']);
     if ($r['code'] === 302) {
@@ -885,16 +881,15 @@ if ($b === null) {
     }
 }
 
-/* ---- Backup-Ziele: Speichern und Nachsehen (R4-11, F-R4-35, F-R4-36) -----
+/* ---- Backup-Ziele: Speichern und Nachsehen -------------------------------
  *
  * Zwei Fehler der Seite, die beim Umbau auf die Umleitung auffielen, beide
  * still und beide mit Folgen für die Daten am Ziel:
  *   - Ein Hostwechsel sollte den gespeicherten SFTP-Hostschlüssel vergessen;
- *     die Seite las den alten Stand erst NACH dem Speichern und vergaß nie
- *     (F-R4-36).
+ *     die Seite las den alten Stand erst NACH dem Speichern und vergaß nie.
  *   - Scheiterte „Nachsehen, was dort liegt" bei offenem Formular, stand der
  *     Schalter „Auf dem Ziel aufräumen" danach auf aus — wer dann speicherte,
- *     schaltete die Aufbewahrung ab (F-R4-35).
+ *     schaltete die Aufbewahrung ab.
  * Ein Wegwerfziel auf 127.0.0.1, Port 1 (niemand hört dort, „Nachsehen"
  * scheitert sofort); der Schluss löscht es. */
 echo "\nBackup-Ziele: Speichern und Nachsehen (F-R4-35, -36)\n";
@@ -936,7 +931,7 @@ if ($b === null || !sz_tabelle_da()) {
     }
 }
 
-/* ---- Die Wirkung des Rückwegs: jede Rolle legt ein Paar ab (Konzept RW) ---
+/* ---- Die Wirkung des Rückwegs: jede Rolle legt ein Paar ab ----------------
  *
  * Die Matrixzeile sagt nur, dass jede Rolle den Endpunkt ERREICHT. Hier
  * gelingt es: gültiges Formular-Token, gültiges Anmelde-Token (die Konten
@@ -966,15 +961,15 @@ if (!db_hat_spalte($pdo, 'users', 'rw_seit')) {
     pruef($gelungen === count($konten), "$gelungen von " . count($konten) . ' Rollen');
 }
 
-/* ---- Die Wirkung der Riegel aus R17-20 --------------------------------------
+/* ---- Die Wirkung der Riegel -------------------------------------------------
  *
  * Die Matrix misst mit FALSCHEM Token: `403` heisst Rollentor, `durch` heisst
  * „erreicht". Was der Riegel des Demo-Kontos tut, sieht sie so nicht — er
  * steht HINTER dem Token. Hier mit gueltigem Token, als Admin:
- *   - Demo-Konto (F-R17-42): Status, Grenzen und Zweitfaktor werden
- *     abgewiesen, und die Zeile bleibt, wie sie war. Bis Web 23.1.0 sperrte
+ *   - Demo-Konto: Status, Grenzen und Zweitfaktor werden
+ *     abgewiesen, und die Zeile bleibt, wie sie war. Frueher sperrte
  *     ein POST von Hand das oeffentliche Konto.
- *   - Zweite BetreiberIn (F-R17-07): Status und Adresse bleiben, auch mit
+ *   - Zweite BetreiberIn: Status und Adresse bleiben, auch mit
  *     gueltigem Token und frischem Code — der Riegel steht vor beidem. */
 echo "\nRiegel mit gültigem Token (R17-20)\n";
 if (isset($konten['admin'])) {
@@ -1009,7 +1004,7 @@ if (isset($konten['admin'])) {
     }
 }
 
-/* ---- Adresswechsel durch die Verwaltung (R17-20, F-R17-06, E-R17-45) --------
+/* ---- Adresswechsel durch die Verwaltung -------------------------------------
  *
  * Mit gueltigem Token und frischem Code, als Admin am Konto `ziel`: Die
  * Adresse wechselt, ist aber unbestaetigt — der Setz-Link danach wird
@@ -1064,7 +1059,7 @@ if (isset($konten['admin'])) {
 }
 
 echo "\nStatistik-CSV: eine Formel als Modellname (R17-22, F-R17-45)\n";
-/* Den Modellnamen meldet das Geraet beim Koppeln selbst. Bis Web 23.3.0 stand
+/* Den Modellnamen meldet das Geraet beim Koppeln selbst. Frueher stand
  * er unbearbeitet in der CSV der BetreiberIn — `=1+1` wurde in Excel oder
  * LibreOffice zur Formel. Seither entschaerft `csv_zelle()` (format_lib.php)
  * mit einem Apostroph. Das Geraet legt die Probe von Hand an und raeumt es weg. */
@@ -1088,8 +1083,8 @@ if ($csvKonto !== null) {
 }
 
 echo "\nZeitraum mit Monat 13 (R17-22, F-R17-44)\n";
-/* `zeitraum.php?m=13` bestand bis Web 23.3.0 die Formpruefung: eine Warnung
- * im Reiter System und ein Titel ohne Monat. Seither gilt nur 01 bis 12. */
+/* `zeitraum.php?m=13` bestand einmal die Formpruefung: eine Warnung
+ * im Reiter System und ein Titel ohne Monat. Es gilt nur 01 bis 12. */
 $zrKonto = $konten['user'] ?? null;
 if ($zrKonto !== null) {
     $zrZahl = static fn (): int => (int)$pdo->query("SELECT COUNT(*) FROM protokoll_ereignisse

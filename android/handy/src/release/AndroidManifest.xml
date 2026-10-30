@@ -3,8 +3,8 @@
     Nur fuer das Release-APK (`org.genem.nadoku`).
 
     Es haengt die Netzsicherheitsregel des ausgelieferten Standes ein:
-    Klartext-HTTP ist fuer JEDE Adresse verboten, auch fuer eine IP-Adresse
-    (Backlog Nr. 142, Krypto-Review AN-1). Begruendung und Grenzen:
+    Klartext-HTTP ist fuer JEDE Adresse verboten, auch fuer eine IP-Adresse.
+    Begruendung und Grenzen:
     `res/xml/netzsicherheit.xml`.
 
     Das Gegenstueck fuer das Pruef-APK liegt unter `src/debug/`. Die beiden

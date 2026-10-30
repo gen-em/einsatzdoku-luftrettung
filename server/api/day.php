@@ -4,7 +4,7 @@ require_once __DIR__ . '/../auth_guard.php';
 require_once __DIR__ . '/../validate_lib.php';   // liefert $userId
 require_once __DIR__ . '/../mission_fields_lib.php';
 require_once __DIR__ . '/../diensttag_lib.php';
-require_once __DIR__ . '/../spur_lib.php';   // Spuren: Zeilen UND Blob (S2)
+require_once __DIR__ . '/../spur_lib.php';   // Spuren: Zeilen UND Blob
 
 /**
  * GET  api/day.php            -> { days: [{id, day, …}, …], latest: <id> }
@@ -12,7 +12,7 @@ require_once __DIR__ . '/../spur_lib.php';   // Spuren: Zeilen UND Blob (S2)
  *                             -> { vehicle_id, base_id, crew: [{role,label,
  *                                name:null}, …], presets: {…} } — der
  *                                Rollensatz und die Vorlagen zu einer noch
- *                                nicht gespeicherten Wahl (E-S9-11). Schreibt
+ *                                nicht gespeicherten Wahl. Schreibt
  *                                nichts.
  * GET  api/day.php?d=<id>     -> Tagesdaten: Diensttag-Meta, Besatzung,
  *                                Einsaetze (inkl. Track, Phasenzeiten),
@@ -27,26 +27,24 @@ require_once __DIR__ . '/../spur_lib.php';   // Spuren: Zeilen UND Blob (S2)
  *                                — oder statt `vehicle_id` ein
  *                                `adhoc: {name, typ, kind, base_id?,
  *                                base_name?}` fuer ein Rettungsmittel nur
- *                                fuer diesen Tag (E-S9-10); Antwort bei
+ *                                fuer diesen Tag; Antwort bei
  *                                Pruefmeldungen: 422 mit `felder`,
  *                                Header X-CSRF muss zum Session-Token passen
  *
- * DER SCHLUESSEL IST DIE KENNUNG, NICHT DAS DATUM (Web 6.0.0). Bis dahin nahm
- * dieser Endpunkt `?day=YYYY-MM-DD` und legte bei Bedarf eine Zeile an — das
- * Datum war der Schluessel, ein Upsert also die richtige Form. Seit E9 kann es
- * mehrere Diensttage je Kalendertag geben; ein Datum bestimmt keinen Tag mehr.
+ * DER SCHLUESSEL IST DIE KENNUNG, NICHT DAS DATUM. Es kann
+ * mehrere Diensttage je Kalendertag geben; ein Datum bestimmt keinen Tag.
  * Der POST ist deshalb ein reines UPDATE auf eine vorhandene Zeile: Angelegt
  * wird ein Diensttag in diensttag_neu.php oder von der Uhr, nicht als
  * Nebenwirkung des Speicherns.
  */
 
 // Dieser Endpunkt kennt zwei Methoden — jede andere ist ein Irrtum und wird
-// benannt, statt stillschweigend als GET behandelt zu werden (M3-11).
+// benannt, statt stillschweigend als GET behandelt zu werden.
 api_methode(['GET', 'POST']);
 
 try {
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-        csrf_check();   // Feld ODER Kopfzeile X-CSRF (Nr. 67)
+        csrf_check();   // Feld ODER Kopfzeile X-CSRF
         $b = api_rumpf();
         $dayId = isset($b['day_id']) ? (int)$b['day_id'] : 0;
         if ($dayId <= 0) {
@@ -80,7 +78,7 @@ try {
                                  . 'gespeichert. Bitte den Tag zuerst wiederherstellen '
                                  . '(Einstellungen → Papierkorb).'], 409);
         }
-        /* Leer heisst leer — "0" heisst "0" (M3-13).
+        /* Leer heisst leer — "0" heisst "0".
          *
          * Hier stand der Kurzschlussoperator ?:, der auf WAHRHEITSWERT
          * prueft. Die Zeichenkette "0" ist in PHP unwahr, ebenso wie "".
@@ -102,14 +100,14 @@ try {
         $pdo->beginTransaction();
         try {
             /* Standort und Rettungsmittel schreiben und alles Abgeleitete
-             * einfrieren (E8) — Art, Bezeichnungen, Standortkoordinaten,
+             * einfrieren — Art, Bezeichnungen, Standortkoordinaten,
              * Rollensatz und Faehigkeiten. Die Pruefung, ob die Kennungen der
              * NutzerIn ueberhaupt zur Verfuegung stehen, steckt in
              * dt_zuordnen(); sie muss zu der Liste passen, aus der index.php
              * die Auswahlfelder baut, sonst wird ein angebotener Eintrag beim
              * Speichern stillschweigend auf NULL zurueckgesetzt. */
-            /* ZWEITER WEG: EIN RETTUNGSMITTEL NUR FUER DIESEN TAG (S9/AP6,
-             * E-S9-10). Der Body traegt dann `adhoc: {name, typ, kind,
+            /* ZWEITER WEG: EIN RETTUNGSMITTEL NUR FUER DIESEN TAG. Der Body
+             * traegt dann `adhoc: {name, typ, kind,
              * base_id?, base_name?}` statt `vehicle_id`. Die Pruefung laeuft
              * ueber `validate_lib.php` wie jeder andere Schreibweg — die
              * Meldungen gehen an das Formular zurueck, und nichts wird
@@ -131,7 +129,7 @@ try {
                         $adhoc);
 
             // Besatzungsnamen. Nur Rollen, die der Diensttag anbietet — die
-            // Zeilenmenge in `day_crew` ist der eingefrorene Rollensatz (E8),
+            // Zeilenmenge in `day_crew` ist der eingefrorene Rollensatz,
             // und eine Rolle, die er nicht enthaelt, wird auch nicht angelegt.
             $crew = (isset($b['crew']) && is_array($b['crew'])) ? $b['crew'] : [];
             dt_crew_speichern($pdo, $dayId, $crew);
@@ -146,16 +144,16 @@ try {
         json_out(['ok' => true]);
     }
 
-    /* ---- VORSCHAU AUF DEN ROLLENSATZ (S9/AP6, E-S9-11) ----------------
+    /* ---- VORSCHAU AUF DEN ROLLENSATZ ----------------
      *
      * GET api/day.php?vorschau=<vehicle_id>[&base=<base_id>]
      * GET api/day.php?vorschau=adhoc&art=air|ground[&base=<base_id>]
      *   -> { vehicle_id, crew: [{role,label,name:null}, …], presets: {…} }
      *
-     * WOZU. Bis Web 18.0.0 entstanden die Besatzungsfelder AUSSCHLIESSLICH
-     * aus der Tagesantwort, also aus dem eingefrorenen `day_crew`. Wer im
-     * Formular ein anderes Rettungsmittel waehlte, sah die Felder der neuen
-     * Rollen erst NACH dem Speichern — und musste danach ein zweites Mal
+     * WOZU. Entstuenden die Besatzungsfelder AUSSCHLIESSLICH
+     * aus der Tagesantwort, also aus dem eingefrorenen `day_crew`, saehe, wer
+     * im Formular ein anderes Rettungsmittel waehlt, die Felder der neuen
+     * Rollen erst NACH dem Speichern — und muesste danach ein zweites Mal
      * speichern, um sie zu fuellen. Zwei Speichervorgaenge fuer eine
      * Handlung, und dazwischen eine Ansicht, die etwas anderes zeigt als die
      * Auswahl darueber.
@@ -175,14 +173,14 @@ try {
      * Fehler: Sie ist fuer diese NutzerIn schlicht kein Rettungsmittel.
      *
      * DER STANDORT KOMMT MIT, WENN DAS FORMULAR IHN NENNT. Die Vorlagen
-     * haengen am Standort des DIENSTTAGS (E15), nicht am Standort des
+     * haengen am Standort des DIENSTTAGS, nicht am Standort des
      * Rettungsmittels — und im Formular sind das zwei Auswahlfelder, die
      * auseinanderfallen koennen. Ohne `base` faellt die Vorschau auf den
      * Standort des Rettungsmittels zurueck; das ist der Regelfall und
      * zugleich das, was `dt_zuordnen()` speichern wuerde.
      *
-     * UND FUER EIN RETTUNGSMITTEL NUR FUER DIESEN TAG (Nr. 169, E-P5c-47,
-     * seit Web 21.0.0): `vorschau=adhoc` mit der gewaehlten Betriebsart.
+     * UND FUER EIN RETTUNGSMITTEL NUR FUER DIESEN TAG: `vorschau=adhoc` mit der
+     * gewaehlten Betriebsart.
      * Die Rollen sind die dieser Art — dieselbe Funktion, mit der
      * `dt_zuordnen()` sie beim Speichern einfriert. Eine andere Art als Luft
      * oder Boden liefert keine; der Standort kommt, wenn einer aus der
@@ -233,7 +231,7 @@ try {
          * ein Eintrag. Was die Anzeige braucht, um sie auseinanderzuhalten —
          * Uhrzeit, Art, Rettungsmittel —, kommt mit.
          *
-         * HOECHSTENS 120, UND DIE ANTWORT SAGT ES (Web 21.4.0, R4-17, Nr. 37).
+         * HOECHSTENS 120, UND DIE ANTWORT SAGT ES.
          * Bis hierher kappte die Liste still. `grenze` nennt die Zahl,
          * `gekappt` sagt, ob es aeltere gibt — gefragt wird dafuer nach einem
          * mehr, wie in der Leiste (`ui_leiste_diensttage()`). */
@@ -243,7 +241,7 @@ try {
         if ($gekappt) { $tage = array_slice($tage, 0, $grenze); }
         $liste = array_map(static function (array $t): array {
             /* Das Zeichen kommt aus dem TYP, wo einer steht — eine Funktion,
-               alle Stellen (E-S9-13). Ohne den zweiten Wert zeichnete diese
+               alle Stellen. Ohne den zweiten Wert zeichnete diese
                Liste die Betriebsart, waehrend die Leiste daneben den Typ
                zeichnet: zwei Zeichen fuer denselben Tag. */
             $sym = dt_art_symbol($t['kind'] === null ? null : (string)$t['kind'],
@@ -261,8 +259,8 @@ try {
                    darueber; den Kurznamen liest im Browser niemand — die
                    Leiste, die ihn zeigt, wird auf dem Server gerendert
                    (ui.php). Ein Feld, das niemand liest, sieht beim naechsten
-                   Lesen nach einer Zusage aus, die es nicht gibt. Wer es in
-                   AP5 oder AP6 braucht, traegt es dann ein. */
+                   Lesen nach einer Zusage aus, die es nicht gibt. Wer es braucht,
+                   traegt es dann ein. */
                 'base_name'    => $t['base_name'] !== null ? (string)$t['base_name'] : null,
                 'mehrfach'     => (bool)$t['mehrfach'],
             ];
@@ -281,10 +279,10 @@ try {
     if ($tag === null) { json_out(['error' => 'not_found'], 404); }
     $dayDeletedAt = $tag['deleted_at'];
 
-    /* Metadaten des Diensttags. ANGEZEIGT WERDEN DIE SNAPSHOT-SPALTEN (E8),
+    /* Metadaten des Diensttags. ANGEZEIGT WERDEN DIE SNAPSHOT-SPALTEN,
      * nicht die Stammdaten: `vehicle_name` und `base_name` stehen in `days`
      * und aendern sich nicht mehr, wenn das Rettungsmittel umbenannt oder
-     * geloescht wird (A4). Die Kennungen kommen daneben mit, weil das Formular
+     * geloescht wird. Die Kennungen kommen daneben mit, weil das Formular
      * seine Auswahlfelder darauf stellt — angezeigt werden sie nie. */
     $sym = dt_art_symbol($tag['kind'] === null ? null : (string)$tag['kind'],
                          $tag['vehicle_typ'] === null ? null : (string)$tag['vehicle_typ']);
@@ -294,9 +292,8 @@ try {
         'vehicle_name' => $tag['vehicle_name'] !== null ? (string)$tag['vehicle_name'] : null,
         'base_name'    => $tag['base_name']    !== null ? (string)$tag['base_name']    : null,
         'kind'         => $tag['kind'] === null ? null : (string)$tag['kind'],
-        /* DER TYP KOMMT SEIT S9/AP6 MIT (E-S9-10). Bis dahin brauchte ihn im
-         * Browser niemand — die Anzeige rechnet ihn in `art_symbol`/`art_text`
-         * mit ein, und die Leiste wird auf dem Server gerendert. Jetzt gibt es
+        /* DER TYP KOMMT MIT. Die Anzeige rechnet ihn in `art_symbol`/`art_text`
+         * mit ein, und die Leiste wird auf dem Server gerendert — aber es gibt
          * einen Leser: Ein Tag mit einem Rettungsmittel NUR FUER DIESEN TAG
          * hat keine `vehicle_id`, und das Formular muss seine drei Felder
          * wieder fuellen koennen. Ohne den Typ stuende dort beim naechsten
@@ -307,18 +304,18 @@ try {
         'notes'        => $tag['notes'] !== null ? (string)$tag['notes'] : null,
         'started_at'   => $tag['started_at'] !== null ? fmt_local((string)$tag['started_at']) : null,
         'ended_at'     => $tag['ended_at']   !== null ? fmt_local((string)$tag['ended_at'])   : null,
-        /* Standortkoordinate — ebenfalls eingefroren (E8) und deshalb aus
+        /* Standortkoordinate — ebenfalls eingefroren und deshalb aus
          * `days`, nicht aus den Stammdaten. Sie ist die Quelle des Abfahrtorts
          * „Standort"; eine spaetere Korrektur am Standort aendert an bereits
-         * erfassten Diensttagen nichts (A13p). */
+         * erfassten Diensttagen nichts. */
         'base_lat'     => $tag['base_lat'] !== null ? (float)$tag['base_lat'] : null,
         'base_lon'     => $tag['base_lon'] !== null ? (float)$tag['base_lon'] : null,
     ];
 
     /* Besatzung des Tages: die Zeilenmenge aus `day_crew`, mit Beschriftung aus
      * dem Rollenkatalog. Sie ist zugleich die Auskunft darueber, WELCHE Rollen
-     * dieser Diensttag anbietet — ein neutraler Tag liefert eine leere Liste
-     * (E26), und das Formular zeigt dann keine Besatzungsfelder (A7a). */
+     * dieser Diensttag anbietet — ein neutraler Tag liefert eine leere Liste,
+     * und das Formular zeigt dann keine Besatzungsfelder. */
     $crew = [];
     foreach (dt_crew($dayId) as $code => $name) {
         $crew[] = ['role'  => $code,
@@ -329,13 +326,13 @@ try {
     $meta['capabilities'] = dt_faehigkeiten($dayId);
 
     /* Besatzungs-Vorbelegungen als Vorschlagsliste je Rolle — DES STANDORTS,
-     * der am Diensttag hinterlegt ist (E15). Sie kommen mit der Tagesantwort,
+     * der am Diensttag hinterlegt ist. Sie kommen mit der Tagesantwort,
      * weil die Rollen selbst erst aus ihr hervorgehen: Welche Felder die
      * Uebersicht zeigt, entscheidet `day_crew`, und ohne die Vorschlaege in
      * derselben Antwort brauchte die Seite je Rollenwechsel eine zweite Abfrage.
      *
-     * Ohne Standort keine Vorschlaege. Das ist die Folge von E15 und kein
-     * Mangel: Eine standortuebergreifende Ebene gibt es nicht, also gibt es auch
+     * Ohne Standort keine Vorschlaege. Das ist kein Mangel: Eine
+     * standortuebergreifende Ebene gibt es nicht, also gibt es auch
      * keine Liste, aus der sich hier etwas anbieten liesse. Freitext bleibt
      * uneingeschraenkt moeglich. */
     $presets = [];
@@ -350,7 +347,7 @@ try {
     }
     $meta['presets'] = (object)$presets;
 
-    /* SPURPUNKTE GEBUENDELT HOLEN, NICHT JE EINSATZ EINZELN (M3-15).
+    /* SPURPUNKTE GEBUENDELT HOLEN, NICHT JE EINSATZ EINZELN.
      *
      * Hier stand eine vorbereitete Abfrage, die in zwei Schleifen je Einsatz
      * und je Ruhesegment erneut ausgefuehrt wurde. Ein Diensttag mit acht
@@ -365,20 +362,15 @@ try {
      * Die Reihenfolge innerhalb eines Besitzers kommt weiterhin aus dem SQL
      * (ORDER BY owner_id, seq); die Zuordnung im Speicher aendert sie nicht.
      */
-    /* DIE SPUREN OEFFNET DER BROWSER (S11-04c). Bis Web 22.0.2 stand hier
-     * `spur_lesen_viele()` mit [lat, lon] je Punkt im Klartext. Seit S11
-     * liefert die Antwort die verschlossenen Stuecke (`spur_stuecke`), und
-     * `assets/ortsdaten.js` macht daraus die Linien. Kein Uebergang
-     * (E-S11-36): Altbestand im Klartext zeigt die Tageskarte nicht mehr. */
+    /* DIE SPUREN OEFFNET DER BROWSER. Die Antwort liefert die
+     * verschlossenen Stuecke (`spur_stuecke`), und `assets/ortsdaten.js`
+     * macht daraus die Linien. */
 
-    /* SPALTEN DER TAGESTABELLE AUS DEM FELDKATALOG (Backlog Nr. 10).
+    /* SPALTEN DER TAGESTABELLE AUS DEM FELDKATALOG.
      *
-     * Hier standen `winch, bergwacht, secondary` fest im SELECT und weiter
-     * unten noch einmal im Aufbau der Antwort. mission_fields.php kennt den
-     * Schluessel 'day_col' — er war damit reine Dokumentation, und die dort
-     * definierte Spalte „abw. Crew" erschien nie. Beides kommt jetzt aus
-     * mf_tagesspalten(). (Seit Web 5.10.0 sind es wieder genau die drei
-     * genannten Spalten: „abw. Crew" ist aus dem Katalog abbestellt.)
+     * mission_fields.php kennt den Schluessel 'day_col'. SELECT und Aufbau
+     * der Antwort kommen aus mf_tagesspalten() — fest eingetragene Spalten
+     * machten den Schluessel zu reiner Dokumentation.
      *
      * Die Spaltennamen sind gegen [a-z][a-z0-9_]* geprueft (siehe
      * mission_fields_lib.php) und stammen aus einer Projektdatei, nicht aus
@@ -389,29 +381,27 @@ try {
     foreach ($tagesSpalten as $dc) { $spaltenSql .= ', ' . $dc['col']; }
 
     /* `start_src` steht im SELECT, obwohl es keine Spalte der Tagestabelle
-     * ist: Es ist die Zutat der Luftlinie auf der Tageskarte (E34/E35). Bis
-     * S11-05b standen `dest_lat` und `dest_lon` daneben; das Transportziel liegt
-     * seither im `pat_blob`, den der Browser hier ohnehin entschluesselt. Die Aufloesung der beiden
+     * ist: Es ist die Zutat der Luftlinie auf der Tageskarte. Das
+     * Transportziel liegt im `pat_blob`, den der Browser hier ohnehin
+     * entschluesselt. Die Aufloesung der beiden
      * Vorgaenger-Regeln geschieht im Browser — er hat die Einsaetze des Tages
      * ohnehin gemeinsam vorliegen und entschluesselt sie dort, wo der Server es
-     * gar nicht koennte (Konzept 4.6.1). */
-    /* DIE SPALTEN AUS DEM REGISTER, Zweck `tag` (S11-04b). Bis Web 22.0.1
-     * stand die Liste hier von Hand; mit `client_ref` fuer die Bindung der
-     * Huellen wurde sie zur Handliste von zehn Spalten, und die Zaehlung
-     * (Z18, E-ZE-22) schlug zu Recht an. */
+     * gar nicht koennte. */
+    /* DIE SPALTEN AUS DEM REGISTER, Zweck `tag` — keine Handliste
+     * von zehn Spalten; die Zaehlung (Z18) schluege zu Recht an. */
     $st = db()->prepare('SELECT ' . mf_spalten_sql('tag') . $spaltenSql . '
                          FROM missions WHERE user_id = ? AND day_id = ? AND deleted_at IS NULL
                          ORDER BY started_at');
     $st->execute([$userId, $dayId]);
     $missionZeilen = $st->fetchAll();
-    /* DIE STUECKE ALS GERAETEHUELLEN (S11-04b) — fuer den Browser, der sie
+    /* DIE STUECKE ALS GERAETEHUELLEN — fuer den Browser, der sie
      * oeffnet. */
     $stueckeEinsatz = spur2_lesen_viele(db(), 'mission',
         array_map(static fn($m) => (int)$m['id'], $missionZeilen));
 
     $missions = [];
     foreach ($missionZeilen as $m) {
-        /* DAUER = BEGINN BIS ENDE DES EINSATZES (Web 14.2.2, F-R64-05).
+        /* DAUER = BEGINN BIS ENDE DES EINSATZES.
          *
          * VORHER STAND HIER PHASE 9, und ohne sie war die Dauer `null` --
          * die Tabelle zeigte dann "kein Ende". Der Kommentar nannte das
@@ -424,8 +414,8 @@ try {
          * ein GESCHNITTENER (`api/schneiden.php` vergibt nur die Phasen 3, 4
          * und 7) und ein IMPORTIERTER, dessen Datei keine Endphase fuehrt.
          * Beide haben `final = 1` und ein `ended_at` -- und die Tabelle
-         * behauptete daneben "kein Ende". Seit R64/AP4 steht ein solcher
-         * Einsatz dauerhaft im Demo-Konto, also auf dem Produktivserver.
+         * behauptete daneben "kein Ende". Ein solcher Einsatz steht
+         * dauerhaft im Demo-Konto, also auf dem Produktivserver.
          *
          * "Dauer" heisst jetzt, was das Wort sagt: wie lange der Einsatz
          * gedauert hat. GEMESSEN, dass das keine bestehende Zeile aendert:
@@ -441,7 +431,7 @@ try {
         $zeile = [
             'id'         => (int)$m['id'],
             'start_hhmm' => fmt_local($m['started_at']),
-            /* CHRONOLOGISCHER SORTIERSCHLUESSEL (Schritt 15 AP9b, E-ZE-32).
+            /* CHRONOLOGISCHER SORTIERSCHLUESSEL.
              * `start_hhmm` allein taugt nicht zum Sortieren: Ein Dienst ueber
              * Mitternacht -- laut Handbuch „der klassische Fall" -- hat
              * Einsaetze um 23:50 und um 01:10, und als Zeichenkette steht
@@ -476,15 +466,14 @@ try {
         $missions[] = $zeile;
     }
 
-    /* DIE RUHESEGMENTE TRAGEN SEIT WEB 12.6.0 MEHR ALS IHRE PUNKTE (S4/A2b).
+    /* DIE RUHESEGMENTE TRAGEN MEHR ALS IHRE PUNKTE.
      *
-     * Bis hierher lieferte `rest_segments` nur die Linien fuer die Karte —
-     * eine Liste von Listen, ohne Kennung, ohne Zeiten. Fuer eine Karte
-     * reicht das; fuer die Karte „Ruhesegmente", an der geschnitten wird,
+     * Nur die Linien — eine Liste von Listen, ohne Kennung, ohne Zeiten —
+     * reichten fuer eine Karte; fuer die Karte „Ruhesegmente", an der geschnitten wird,
      * nicht: Sie braucht die Kennung (wohin der Schnitt geht), die Zeiten
      * (was zur Auswahl steht) und die Punktzahl (ob ueberhaupt etwas da ist).
      *
-     * `track` STAND BIS WEB 22.0.2 IM OBJEKT; seit S11-04c setzt ihn der
+     * `track` STEHT NICHT IM OBJEKT; ihn setzt der
      * Browser aus `spur_stuecke`, nachdem er sie geoeffnet hat (`index.php`,
      * `spurenOeffnen()`). */
     $st = db()->prepare('SELECT id, client_ref, started_at, ended_at, device_id, final
@@ -494,9 +483,9 @@ try {
     $st->execute([$userId, $dayId]);
     $restZeilen = $st->fetchAll();
     $restIds  = array_map(static fn($r) => (int)$r['id'], $restZeilen);
-    $stueckeRuhe = spur2_lesen_viele(db(), 'rest', $restIds);   // S11-04b, wie oben
+    $stueckeRuhe = spur2_lesen_viele(db(), 'rest', $restIds);   // wie oben
 
-    /* DIE GESPERRTEN BEREICHE JE SEGMENT (E-S4-53), damit die Bedienung
+    /* DIE GESPERRTEN BEREICHE JE SEGMENT, damit die Bedienung
      * anzeigen kann, was schon herausgeschnitten ist. Ohne diese Angabe
      * saehe die Zeitleiste eine Luecke, fuer die es keine Erklaerung gibt —
      * und jemand schnitte ein zweites Mal an derselben Stelle. */
@@ -556,18 +545,18 @@ try {
             'bis_ts'     => $ende !== null ? (int)strtotime($ende . ' UTC') : null,
             'final'      => (int)$r['final'] === 1,
             'device'     => $r['device_id'] !== null ? (int)$r['device_id'] : null,
-            /* Die Punkte der Stuecke (S11-04b) — die Klartextzahl `punkte`. */
+            /* Die Punkte der Stuecke — die Klartextzahl `punkte`. */
             'n'          => array_sum(array_column($stueckeRuhe[$rid] ?? [], 'punkte')),
-            /* S11-04b: die Stuecke als Huellen; `schnitte` darunter sind
+            /* Die Stuecke als Huellen; `schnitte` darunter sind
              * zugleich die Sperrzeiten, die der Browser beim Oeffnen
-             * ausblendet (E-S11-37). */
+             * ausblendet. */
             'client_ref' => (string)$r['client_ref'],
             'spur_stuecke' => $stueckeRuhe[$rid] ?? [],
             'schnitte'   => $sn,
         ];
     }
 
-    /* `zeitzone` (S11-05c): Der Browser schneidet und loescht seit S11-05c
+    /* `zeitzone`: Der Browser schneidet und loescht
      * selbst und rechnet Uhrzeiten des Diensttags dafuer so in Zeitpunkte um
      * wie `pruef_ortszeit_zu_utc()` (EdFormat.ortszeitZuEpoch). */
     $antwort = ['day_id' => $dayId, 'day' => (string)$tag['day'], 'meta' => $meta,

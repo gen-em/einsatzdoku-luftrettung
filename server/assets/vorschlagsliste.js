@@ -1,8 +1,7 @@
-/* Vorschlagsliste — EIN Baustein fuer jede Trefferliste unter einem Feld
- * (S9/AP1, E-S9-07).
+/* Vorschlagsliste — EIN Baustein fuer jede Trefferliste unter einem Feld.
  * ===========================================================================
  *
- * WARUM ES DIESE DATEI GIBT. Dieselbe Sache stand bis Web 15.5.2 in drei
+ * WARUM ES DIESE DATEI GIBT. Vor ihr stand dieselbe Sache in drei
  * Fassungen nebeneinander, und eine vierte kam vom Browser:
  *
  *   1  die Photon-Liste des Ortsfelds (`.loc-suggest` in assets/ortsfeld.js) —
@@ -14,7 +13,7 @@
  *
  * Aus dieser Doppelung sind zwei gemeldete Fehler geworden:
  *
- *   PS-2 (Backlog 102). Ein Mausklick ist `mousedown` -> `blur` -> `mouseup`
+ *   ERSTENS. Ein Mausklick ist `mousedown` -> `blur` -> `mouseup`
  *   -> `click`. Fassung 2 versteckte die Liste 150 ms nach `blur`; wer die
  *   Maus laenger haelt — am Schreibtisch keine Seltenheit —, findet den Knopf
  *   beim `mouseup` schon `hidden`, und der Browser feuert kein `click`. Die
@@ -22,7 +21,7 @@
  *   (`mousedown` mit `preventDefault`, vor `blur`) — nur eben an einer
  *   anderen Stelle.
  *
- *   PS-6 (Backlog 106) und Nr. 68. Das Transportziel trug Fassung 1 UND
+ *   ZWEITENS. Das Transportziel trug Fassung 1 UND
  *   Fassung 3 zugleich: Beim Tippen oeffneten zwei Listen uebereinander, und
  *   die native verdeckte die eigene. An den Besatzungsfeldern stand allein
  *   die native — auf dem Handy also nichts.
@@ -47,7 +46,7 @@
  *   `<datalist>` konnte das; ohne diesen Baustein waere ihr Ausbau ein
  *   Rueckschritt fuer alle, die nicht zeigen.
  *
- *   UEBERNAHME AUF `mousedown`, nie auf `click` — siehe PS-2 oben. Das ist
+ *   UEBERNAHME AUF `mousedown`, nie auf `click` — siehe ERSTENS oben. Das ist
  *   die eine Regel, die dieser Baustein nicht zur Wahl stellt.
  *
  * WAS ER NICHT KANN UND NICHT KENNEN MUSS: woher die Eintraege stammen. Er
@@ -86,11 +85,10 @@
      * Entitaet (`&amp;`) nicht mitten entzweigeschnitten wird.
      *
      * Die Hervorhebung ist `<b>`, nicht `<mark class="treffer">`: Der orange
-     * hinterlegte Treffer der Suche (E-P3-36) traegt dort eine Aussage — „hier
+     * hinterlegte Treffer der Suche traegt dort eine Aussage — „hier
      * steht dein Wort in einem langen Text". In einer Vorschlagsliste steht das
      * Wort immer am Anfang, und die Flaeche kaeme unter die Zeilenmarkierung
-     * (Rauch mit orangem Strich) zu liegen. So auch im freigegebenen Mockup
-     * M-S9-03.
+     * (Rauch mit orangem Strich) zu liegen.
      */
     function hervor(text, teil) {
         var m = maskiere(text);
@@ -214,7 +212,7 @@
 
             /* OB EINE GRUPPENZEILE ERSCHEINT, ENTSCHEIDET DER AUFRUFER, nicht
              * dieser Baustein: Er setzt `titel` oder laesst ihn weg. Der Grund
-             * ist, dass die Regel nicht mechanisch ist (M-S9-03): Das
+             * ist, dass die Regel nicht mechanisch ist: Das
              * Besatzungsfeld zeigt „Vorlagen des Standorts" auch als EINZIGE
              * Gruppe — dort sagt die Zeile, woher die Namen kommen und dass
              * Freitext daneben moeglich bleibt. Der Einsatzort zeigt allein
@@ -263,7 +261,7 @@
                         '</span>';
                     /* `mousedown` mit `preventDefault`: VOR dem `blur` des
                      * Feldes und ohne ihn auszuloesen. Ein `click` kaeme erst
-                     * nach `mouseup` — und damit womoeglich nie (PS-2). */
+                     * nach `mouseup` — und damit womoeglich nie. */
                     li.addEventListener('mousedown', function (ev) {
                         ev.preventDefault();
                         waehle(i);
@@ -293,7 +291,7 @@
                 markiere(aktiv - 1 < 0 ? zeilen.length - 1 : aktiv - 1);
             } else if (ev.key === 'Enter') {
                 /* Ohne Markierung uebernimmt Enter den ERSTEN Eintrag — so
-                 * verhielt sich die Rettungsmittel-Liste seit Web 7.0.0, und
+                 * verhielt sich die Rettungsmittel-Liste schon immer, und
                  * wer eine Liste offen hat und Enter drueckt, meint sie. */
                 ev.preventDefault();
                 waehle(aktiv >= 0 ? aktiv : 0);
@@ -318,5 +316,5 @@
         };
     }
 
-    global.EdVorschlaege = { init: init, hervor: hervor };
+    global.EdVorschlaege = { init: init };
 })(window);

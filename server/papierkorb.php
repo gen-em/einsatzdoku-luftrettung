@@ -4,19 +4,17 @@ require_once __DIR__ . '/auth_guard.php';
 require_once __DIR__ . '/trash_lib.php';
 require_once __DIR__ . '/einsatz_lib.php';
 require_once __DIR__ . '/diensttag_lib.php';
-require_once __DIR__ . '/format_lib.php';   // datum_text(), datum_zeit_text() (AP7)
+require_once __DIR__ . '/format_lib.php';   // datum_text(), datum_zeit_text()
 
 /**
  * Aktionen des Papierkorbs. Wiederherstellen laeuft direkt (harmlos,
  * jederzeit umkehrbar); das endgueltige Loeschen zeigt vorher eine
  * Zwischenseite mit dem Umfang.
  *
- * SCHLUESSEL IST DIE KENNUNG DES DIENSTTAGS (Web 6.0.0), nicht mehr das Datum.
- * Die frueheren Formatpruefungen auf 'YYYY-MM-DD' sind damit zu Pruefungen auf
- * eine positive Kennung geworden — dieselbe Absicherung an derselben Stelle,
- * nur fuer den neuen Schluessel (M5-08).
+ * SCHLUESSEL IST DIE KENNUNG DES DIENSTTAGS, nicht das Datum. Geprueft
+ * wird deshalb auf eine positive Kennung.
  *
- * DIE RUECKFRAGE BLEIBT EINE SEITE (P3/O11). Sie waere als Dialog schneller,
+ * DIE RUECKFRAGE BLEIBT EINE SEITE. Sie waere als Dialog schneller,
  * und genau das ist der Einwand: Was hier steht, will gelesen werden — der
  * Umfang, das Mitgeloeschte, die Unumkehrbarkeit. Ein Dialog, der einen
  * halben Bildschirm Text traegt, ist keiner mehr; und der Weg dorthin hat
@@ -35,10 +33,10 @@ if ($isPost && $action === 'restore_day' && $dayId > 0) {
     header('Location: index.php?d=' . (int)$dayId); exit;
 }
 if ($isPost && $action === 'restore_mission' && $id > 0) {
-    /* NICHT MEHR BEDINGUNGSLOS (Backlog Nr. 33). Liegt der Diensttag selbst im
+    /* NICHT BEDINGUNGSLOS. Liegt der Diensttag selbst im
      * Papierkorb, lehnt trash_restore_mission() ab — sonst entstuende ein
      * aktiver Einsatz an einem geloeschten Tag, also genau der halb sichtbare
-     * Zustand, den das Einspielen eines Backups seit E-S1-19 verweigert.
+     * Zustand, den auch das Einspielen eines Backups verweigert.
      * Die Meldung geht ueber die Sitzung, weil danach umgeleitet wird. */
     $ergebnis = trash_restore_mission($userId, $id);
     if ($ergebnis === 'tag_im_papierkorb') {
@@ -49,26 +47,25 @@ if ($isPost && $action === 'restore_mission' && $id > 0) {
     }
     header('Location: index.php'); exit;
 }
-/* Dieselbe Pruefung wie beim Wiederherstellen (M5-08).
+/* Dieselbe Pruefung wie beim Wiederherstellen.
  *
- * Vorher stand hier nur die Rueckfrage. Das Wiederherstellen — die UMKEHRBARE
- * Handlung — pruefte den Schluessel, das endgueltige Loeschen nicht. Die
- * Zwischenseite weiter unten prueft zwar auch, aber erst NACH diesem Block:
- * Ein POST mit confirm=ja kam nie dort an.
+ * Sie steht VOR allem anderen: Die Zwischenseite weiter unten prueft zwar
+ * auch, aber erst NACH diesem Block — ein POST mit confirm=ja kaeme dort nie
+ * an.
  *
- * Praktisch ausgenutzt haette man das kaum — trash_purge_day() arbeitet mit
- * vorbereiteten Anweisungen, eine unsinnige Kennung trifft schlicht nichts. Aber
- * die schwaechere Pruefung ausgerechnet am unumkehrbaren Weg ist die falsche
- * Richtung, und beim naechsten Umbau von trash_purge_day() waere sie die
- * Stelle, an der es weh tut. */
+ * Praktisch ausnutzen liesse sich eine fehlende Pruefung kaum —
+ * trash_purge_day() arbeitet mit vorbereiteten Anweisungen, eine unsinnige
+ * Kennung trifft schlicht nichts. Aber die schwaechere Pruefung ausgerechnet
+ * am unumkehrbaren Weg waere die falsche Richtung, und beim naechsten Umbau
+ * von trash_purge_day() waere sie die Stelle, an der es weh tut. */
 if ($isPost && $action === 'purge_day' && ($_POST['confirm'] ?? '') === 'ja'
     && $dayId > 0) {
     trash_purge_day($userId, $dayId);
     header('Location: index.php'); exit;
 }
 if ($isPost && $action === 'purge_mission' && ($_POST['confirm'] ?? '') === 'ja' && $id > 0) {
-    // Ebenso: Das Wiederherstellen verlangt $id > 0, das endgueltige Loeschen
-    // verlangte gar nichts (M5-08).
+    // Ebenso: Das endgueltige Loeschen verlangt $id > 0 wie das
+    // Wiederherstellen.
     trash_purge_mission($userId, $id);
     header('Location: index.php'); exit;
 }
@@ -84,19 +81,18 @@ $zeigeListe = ($action !== 'purge_day' && $action !== 'purge_mission');
 if (!$zeigeListe && $istTag) {
     $tag = dt_laden($userId, $dayId, true);
     if ($tag === null) { header('Location: papierkorb.php'); exit; }
-    /* HIER STAND EIN AUFRUF INS LEERE (P3/O11). `$scope = trash_scope_day(...)`
-     * wurde geholt und nie ausgegeben — die Zahl darunter kommt aus der
-     * eigenen Abfrage, weil trash_scope_day() nur NICHT-geloeschte Zeilen
-     * zaehlt und im Papierkorb alle markiert sind. Der Aufruf kostete je
-     * Einsatz drei weitere Abfragen. Er ist ersatzlos weg; die Funktion
-     * bleibt, `diensttag_loeschen.php` braucht sie wirklich. */
+    /* KEIN AUFRUF VON trash_scope_day() HIER: Die Zahl darunter kommt aus
+     * der eigenen Abfrage, weil trash_scope_day() nur NICHT-geloeschte
+     * Zeilen zaehlt und im Papierkorb alle markiert sind. Der Aufruf kostete
+     * je Einsatz drei weitere Abfragen. Die Funktion bleibt,
+     * `diensttag_loeschen.php` braucht sie wirklich. */
     $c = db()->prepare('SELECT COUNT(*) FROM missions
                         WHERE user_id = ? AND day_id = ? AND deleted_at IS NOT NULL');
     $c->execute([$userId, $dayId]);
     $anzahl = (int)$c->fetchColumn();
-    /* WAS NOCH AKTIV AM TAG HAENGT (Backlog Nr. 33). In aller Regel nichts —
+    /* WAS NOCH AKTIV AM TAG HAENGT. In aller Regel nichts —
      * aber wenn doch, geht es mit, und dann muss es hier stehen. Die Zahl
-     * oben zaehlt nur die geloeschten; sie war damit zu klein. */
+     * oben zaehlt nur die geloeschten. */
     $aktiv = trash_aktiv_am_tag($userId, $dayId);
 } elseif (!$zeigeListe) {
     $m = einsatz_laden($id, $userId, ['papierkorb' => 'ja']);
@@ -107,8 +103,8 @@ $trashDays     = $zeigeListe ? trash_list_days($userId) : [];
 $trashMissions = $zeigeListe ? trash_list_missions($userId) : [];
 
 /* Meldung aus der Sitzung abholen — dieselbe Mechanik wie in
- * einstellungen.php. Sie wird gebraucht, seit das
- * Zurueckholen eines Einsatzes abgelehnt werden kann (Backlog Nr. 33): Nach
+ * einstellungen.php. Sie wird gebraucht, weil das
+ * Zurueckholen eines Einsatzes abgelehnt werden kann: Nach
  * einer Umleitung ist eine Variable weg, und eine Handlung, die nichts tut
  * und nichts sagt, ist die schlechteste von beidem. */
 /* Diese Seite hinterlegt nur Fehler und leitet auf sich selbst um; ein
@@ -135,17 +131,17 @@ ui_seite_start(['titel' => $zeigeListe ? 'Papierkorb' : 'Endgültig löschen']);
     <?php endif; ?>
 
     <?php if ($trashDays): ?>
-      <?php /* Datum UND Dienstbeginn: Seit E9 können mehrere Diensttage auf
+      <?php /* Datum UND Dienstbeginn: Es können mehrere Diensttage auf
                einem Kalendertag liegen, und im Papierkorb sind sie ohne die
                Uhrzeit nicht auseinanderzuhalten. Rettungsmittel, Zahl der
                Einsätze und Löschzeitpunkt stehen in der Kleinzeile — aus den
-               eingefrorenen Spalten (E8). Die Tabelle davor hatte fünf
-               Spalten und lief bei 360 px waagerecht aus dem Bild. */ ?>
+               eingefrorenen Spalten. Eine Tabelle mit fünf Spalten
+               liefe bei 360 px waagerecht aus dem Bild. */ ?>
       <?php ui_karte_start(['titel' => 'Diensttage', 'zahl' => count($trashDays)]); ?>
         <?php foreach ($trashDays as $t):
               $tid = (int)$t['id'];
               $klein = [];
-              /* Kurzname, wenn einer gesetzt ist (Nr. 69) — die Kleinzeile ist
+              /* Kurzname, wenn einer gesetzt ist — die Kleinzeile ist
                  eine Plakettenzeile und traegt drei Angaben nebeneinander. */
               $klein[] = dt_rm_kurz($t) !== '' ? dt_rm_kurz($t) : 'ohne Rettungsmittel';
               $klein[] = (int)$t['einsaetze'] === 1
@@ -183,8 +179,8 @@ ui_seite_start(['titel' => $zeigeListe ? 'Papierkorb' : 'Endgültig löschen']);
       <?php ui_karte_start(['titel' => 'Einsätze', 'zahl' => count($trashMissions)]); ?>
         <?php foreach ($trashMissions as $t):
               $mid = (int)$t['id'];
-              /* Das ECHTE Einsatzdatum aus `started_at` (E14) — der Einsatz
-                 trägt seit Web 6.0.0 kein eigenes Datum mehr, und das seines
+              /* Das ECHTE Einsatzdatum aus `started_at` — der Einsatz
+                 trägt kein eigenes Datum, und das seines
                  Dienstes kann ein anderes sein. */
         ?>
           <form method="post" action="papierkorb.php" id="f-eins-<?= $mid ?>" class="nur-vorlesen">
@@ -262,9 +258,9 @@ ui_seite_start(['titel' => $zeigeListe ? 'Papierkorb' : 'Endgültig löschen']);
 
     <?php ui_karte_ende(); ?>
 
-    <?php /* AKTIVE EINTRÄGE AM GELÖSCHTEN TAG (Backlog Nr. 33). Sie gehen
-             seit Web 8.0.0 mit — vorher blieben sie ohne Diensttag zurück und
-             waren danach halb sichtbar. Deshalb stehen sie hier EINZELN und
+    <?php /* AKTIVE EINTRÄGE AM GELÖSCHTEN TAG. Sie gehen mit — sonst
+             blieben sie ohne Diensttag zurück und
+             wären danach halb sichtbar. Deshalb stehen sie hier EINZELN und
              als Zeilen mit ihren eigenen Wegen, nicht als Aufzählung: Wer
              einen behalten will, muss ihn erkennen und erreichen können.
 

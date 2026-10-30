@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 /**
  * DAS CODEBLATT — die zehn Wiederherstellungscodes des Zweitfaktors auf
- * Papier (P5c/AP5, E-P5c-41, -42; Mockup M-P5c-02b-codeblatt).
+ * Papier.
  *
  * ES SPEICHERT NICHTS. Die Codes kommen per POST aus der Seite, die sie eben
  * einmal gezeigt hat (Einrichtungstor oder Profilkarte), und gehen in dieselbe
@@ -20,10 +20,9 @@ declare(strict_types=1);
  * `totp_codes_erzeugen()` erzeugt (acht Zeichen aus `TOTP_CODE_ZEICHEN`);
  * alles andere fällt weg. Kein freier Text aus der Eingabe, kein Markup.
  *
- * DER BAUSTEIN IST `.blatt-druck` (E-P5c-08, M-P5c-01f) — dieses Blatt ist
- * sein erster Verwender; Schlüssel- und Notfallblatt sind mit AP9 nachgezogen.
- * Genau eine A4-Seite (`@page`), auf Staging mit der Umgebungszeile
- * (E-P5c-50).
+ * DER BAUSTEIN IST `.blatt-druck` — dasselbe wie beim Schlüssel- und
+ * Notfallblatt. Genau eine A4-Seite (`@page`), auf Staging mit der
+ * Umgebungszeile.
  */
 
 if (!is_file(__DIR__ . '/config.php')) { header('Location: install.php'); exit; }
@@ -35,8 +34,8 @@ require_once __DIR__ . '/instanz_lib.php';
 require_once __DIR__ . '/umgebung_lib.php';
 require_once __DIR__ . '/ui.php';
 /* `logo_src()` fragt `logo_stamm()`, und die steht in `session_lib.php`. Ohne
- * sie fiel das Blatt bis Web 21.0.0 still auf den Hubschrauber zurück, statt
- * der Wahl des Kontos zu folgen (F-P5c-149, E-P5c-30). */
+ * sie fiele das Blatt still auf den Hubschrauber zurück, statt der Wahl des
+ * Kontos zu folgen. */
 require_once __DIR__ . '/session_lib.php';
 
 /* Diese Seite zeigt Geheimnisse: in keinen Zwischenspeicher, in keine fremde

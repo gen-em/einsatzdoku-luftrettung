@@ -1,6 +1,6 @@
-"""Der Messstand — Klammer über alle Schritte (E-S2-23, R35).
+"""Der Messstand — Klammer über alle Schritte.
 
-WOFUER. S2 gibt Zielzahlen aus (E-S2-24): Suche unter 5 s, Tagesansicht unter
+WOFUER. Der Messstand hat Zielzahlen: Suche unter 5 s, Tagesansicht unter
 3 s, Backup unter 5 min, Wiederherstellung unter 15 min, Backup-Datei
 unter 25 MB, Spuren unter 3 MB je 1000 Einsätzen. Diese Zahlen brauchen zwei
 Dinge: einen Bestand, an dem sie gemessen werden können, und einen
@@ -113,22 +113,21 @@ def ziele_ermitteln() -> dict:
     den MEISTEN Spurpunkten; fuer „Diensttag mit Ruhe-Spuren oeffnen" der
     Diensttag mit den meisten Punkten in Ruhe-Segmenten. Beides ist der
     ungünstigste Fall des Bestands, nicht ein typischer: Die Leistungsgrenze
-    aus E-S11-15 gilt fuer JEDE Einzelansicht, also muss die teuerste sie
+    der Geraetehuellen gilt fuer JEDE Einzelansicht, also muss die teuerste sie
     halten. Die Punktzahl steht mit im Protokoll — eine Zeit ohne den
     Gegenstand daneben waere keine Auskunft (CLAUDE.md 6).
 
     WARUM HIER UND NICHT IM BROWSER. Die Wahl braucht Punktzahlen ueber den
     ganzen Bestand, und die gibt es nur ueber `spur_zahlen()` — Spuren nur
-    ueber `spur_lib.php` (CLAUDE.md 4), auch im Pruefmittel. Nach S11 zaehlt
-    dieselbe Funktion Klartextzahlen je Stueck (E-S11-18); die Wahl bleibt
-    dieselbe, und damit vergleicht S11-11 denselben Einsatz und denselben Tag.
+    ueber `spur_lib.php` (CLAUDE.md 4), auch im Pruefmittel. Dieselbe Funktion
+    zaehlt Klartextzahlen je Stueck; die Wahl bleibt dieselbe, und damit
+    vergleicht die Messung vorher und nachher denselben Einsatz und denselben Tag.
 
     ROT, NICHT LEER. Findet sich kein Einsatz mit Spur oder kein Tag mit
     Ruhe-Spur, bricht der Schritt ab, statt die Messung auszulassen.
     """
     skript = r"""
 $wurzel = getenv("EDOKU_WURZEL");
-require_once $wurzel . "/config.php";
 require_once $wurzel . "/db.php";
 require_once $wurzel . "/spur_lib.php";
 $pdo = db();
@@ -215,7 +214,7 @@ def schritt_server(a) -> None:
           "--ausgabe", str(pathlib.Path(a.ausgabe) / "serverprobe.json")])
 
 
-# Ziel des Schritts `statistik` (P5c/AP7, Konzept P5c, AP7 Abnahme).
+# Ziel des Schritts `statistik`.
 STATISTIK_ZIEL_S = 1.0
 
 
@@ -224,7 +223,7 @@ def schritt_statistik(a) -> None:
 
     WAS. Die drei Reiter der Seite, je dreimal abgerufen als BetreiberIn;
     gezaehlt wird der Median. Ziel: jeder unter einer Sekunde bei 5000
-    Einsaetzen (Konzept P5c, AP7). Dazu `EXPLAIN` fuer die beiden Abfragen,
+    Einsaetzen. Dazu `EXPLAIN` fuer die beiden Abfragen,
     die ueber alle Konten laufen -- aus `statistik_lib.php`, also GENAU die
     der Seite, nicht eine nachgeschriebene.
 
@@ -237,20 +236,20 @@ def schritt_statistik(a) -> None:
     ohne den Index `idx_missions_started` bricht ab -- sonst stuende eine
     gruene Zahl ohne Gegenstand im Bericht.
 
-    WELCHER PLAN VERLANGT WIRD, HAENGT AM ANTEIL (F-P5c-125). Die Herkunft
+    WELCHER PLAN VERLANGT WIRD, HAENGT AM ANTEIL. Die Herkunft
     liest 30 Tage -- dort MUSS der Index gewaehlt sein. Die Fensterabfrage
     liest ein ganzes Jahr, und der Messstandbestand liegt fast ganz darin
     (gemessen 24.09.2026: 4832 von 5366, 90 %); ein Tabellenscan ist dann
     billiger, und MariaDB waehlt ihn zu Recht. Verlangt wird dort nur, dass
     der Index zur Wahl steht (`possible_keys`); der Anteil steht im Bericht.
 
-    SEIT R4-23 AUCH DER EIGENE ZEITRAUM (Nr. 122 a). Die drei Reiter noch
+    AUCH DER EIGENE ZEITRAUM. Die drei Reiter noch
     einmal mit `von`/`bis` ueber die letzten 90 Tage -- dieselbe Zielzahl --,
     und `EXPLAIN` fuer die zwei Abfragen, die dann laufen
     (`statistik_zeitraum_sql()`, `statistik_herkunft_sql()` mit Grenzen). Dort
     MUSS der Index gewaehlt sein: 90 Tage sind ein Viertel des Jahres, und
     ein Tabellenscan waere der Fehler, den der Index verhindern soll.
-    Seit R4-24 dazu die Abfrage der Diagramme (`statistik_stunden_sql()`),
+    Dazu die Abfrage der Diagramme (`statistik_stunden_sql()`),
     ebenfalls mit gewaehltem Index.
     """
     import sitzung as sitzungsmodul
@@ -269,7 +268,7 @@ def schritt_statistik(a) -> None:
                 t0 = time.monotonic()
                 antwort = s.get(f"betrieb_statistik.php?r={r}{zusatz}")
                 zeiten.append(time.monotonic() - t0)
-                # Der Reiter traegt den Zeitraum in seiner Adresse (R4-23).
+                # Der Reiter traegt den Zeitraum in seiner Adresse.
                 aktiv = (f'class="reiter-punkt aktiv" href="?r={r}{zusatz.replace("&", "&amp;")}"'
                          f' aria-current="page">{text}<')
                 gemeint = not zusatz or 'Einsätze im Zeitraum' in antwort.text
@@ -287,7 +286,6 @@ def schritt_statistik(a) -> None:
 
     skript = r"""
 $wurzel = getenv("EDOKU_WURZEL");
-require_once $wurzel . "/config.php";
 require_once $wurzel . "/db.php";
 require_once $wurzel . "/demo_lib.php";
 require_once $wurzel . "/statistik_lib.php";
@@ -370,15 +368,15 @@ def main() -> int:
     p.add_argument("--einsaetze", type=int, default=5000)
     p.add_argument("--runden-je-datei", type=int, default=3)
     p.add_argument("--drossel", type=int, default=6)
-    # Laeufe je Einzelansicht der S11-Messungen; gezaehlt wird der Median
-    # (S11-01, E-S11-15). Die Massenwege laufen einmal.
+    # Laeufe je Einzelansicht der Huellen-Messungen; gezaehlt wird der Median.
+    # Die Massenwege laufen einmal.
     p.add_argument("--wiederholungen", type=int, default=5)
     p.add_argument("--frisch", action="store_true",
                    help="Messstandkonto vorher löschen (nur mit Präfix "
                         f"'{PRAEFIX}')")
     p.add_argument("--admin-email", default="admin@example.invalid")
     p.add_argument("--admin-passwort", default="pruefstandzugang2026")
-    # Das Geheimnis des Zweitfaktors (P5c/AP5, E-P5c-43) -- derselbe Schalter
+    # Das Geheimnis des Zweitfaktors -- derselbe Schalter
     # wie in `kreislauf.py`: leer heisst `NADOKU_TOTP`, sonst das der Sandbox.
     # Der Schritt `konto` meldet sich bis zu dreimal als Admin an; jede
     # Anmeldung verbraucht einen Zeitschritt, die dritte wartet deshalb

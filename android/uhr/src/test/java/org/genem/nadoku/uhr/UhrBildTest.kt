@@ -24,13 +24,13 @@ import java.security.MessageDigest
 private const val UhrBausteine_SOLL_DP = 48.0
 
 /**
- * Die Flächenfarben der Knöpfe: Orange handelt, Rot beendet (E-S4-22a).
+ * Die Flächenfarben der Knöpfe: Orange handelt, Rot beendet.
  * An ihnen erkennt die Messung ein Bedienelement im Bild.
  */
 private val KNOPFFARBEN = setOf(0xFFFF8F1F.toInt(), 0xFFD63338.toInt())
 
 /**
- * Bilder der Uhr-Ansicht OHNE Emulator und ohne Gerät (E-S4-49).
+ * Bilder der Uhr-Ansicht OHNE Emulator und ohne Gerät.
  *
  * WARUM NICHT `captureToImage()`. Der naheliegende Weg über
  * compose-ui-test scheitert unter Robolectric mit
@@ -83,11 +83,11 @@ class UhrBildTest {
         val bild = Bitmap.createBitmap(kante, kante, Bitmap.Config.ARGB_8888)
         ansicht.draw(Canvas(bild))
 
-        /* JE BAUART EIN ORDNER (Android 0.16.0, Konzept AR, F-AR-12). Bis
-         * dahin schrieben `testDebugUnitTest` und `testReleaseUnitTest` beide
-         * nach build/bilder/, und liegen blieb, was zuletzt fertig war --
-         * einmal die eine, einmal die andere Fassungszeile, je nach Reihenfolge
-         * der parallelen Aufgaben. Ein Bildvergleich braucht einen festen Stand. */
+        /* JE BAUART EIN ORDNER. Schrieben `testDebugUnitTest` und
+         * `testReleaseUnitTest` beide nach build/bilder/, bliebe liegen, was
+         * zuletzt fertig war -- einmal die eine, einmal die andere
+         * Fassungszeile, je nach Reihenfolge der parallelen Aufgaben. Ein
+         * Bildvergleich braucht einen festen Stand. */
         val ordner = File("build/bilder/${org.genem.nadoku.BuildConfig.BUILD_TYPE}")
         ordner.mkdirs()
         val ziel = File(ordner, "$name.png")
@@ -106,10 +106,10 @@ class UhrBildTest {
         val anteilFremd = 100.0 * (punkte.size - haeufigste) / punkte.size
 
         /* DIE KNOPFHÖHE WIRD NACHGEMESSEN, nicht angesehen. Sie ist die eine
-         * Zahl, die E-S4-41 zusagt (48 dp), und genau sie war falsch: Auf der
-         * kleinen Uhr staucht die Spalte den Knopf auf 35,5 dp, weil
+         * zugesagte Zahl (48 dp), und genau sie kann kippen: Ohne Bildlauf
+         * staucht die Spalte den Knopf auf der kleinen Uhr auf 35,5 dp, weil
          * `heightIn(min = …)` sich der Elternbeschränkung beugt. Ein Bild
-         * allein hätte das nicht gezeigt — es sah gut aus. */
+         * allein zeigt das nicht — es sieht gut aus. */
         val hoeheDp = knopfhoeheDp(punkte, kante)
 
         /* DER BESCHNITT WIRD GERECHNET, NICHT GEMALT. Der Direktweg zeichnet
@@ -138,8 +138,8 @@ class UhrBildTest {
          * Inhalt auf 192 dp) — dort auf jeden Punkt zu bestehen hieße, die
          * Ansicht auszudünnen, bis nichts mehr dasteht.
          *
-         * Der Gesamtwert wird trotzdem gemeldet: Er ist die Zahl, die B-S4-08b
-         * beziffert hat (13,55 % auf der Startseite, alles davon im Knopf). */
+         * Der Gesamtwert wird trotzdem gemeldet (mit dem Knopf ganz unten
+         * waren es 13,55 % auf der Startseite, alles davon im Knopf). */
         check(knopfDrausen == 0.0) {
             ("%s: %.2f %% der Knopffläche liegen außerhalb des runden Glases " +
                 "(B-S4-08b). Insgesamt außerhalb: %.2f %%.")
@@ -186,10 +186,10 @@ class UhrBildTest {
      */
     private fun knopfhoeheDp(punkte: IntArray, kante: Int): Double {
         /* ZWEI KNOPFFARBEN, NICHT EINE. Der handelnde Knopf ist orange, der
-         * beendende vollflächig rot (E-S4-22a) — „Einsatz abschließen" und
-         * „Dienst beenden" tragen Rot. Die erste Fassung dieser Messung suchte
-         * nur Orange und meldete für die laufende Ansicht 3,0 dp; das war kein
-         * Fehler der Oberfläche, sondern des Prüfmittels. */
+         * beendende vollflächig rot — „Einsatz abschließen" und „Dienst
+         * beenden" tragen Rot. Eine Messung, die nur Orange sucht, meldet für
+         * die laufende Ansicht 3,0 dp; das ist kein Fehler der Oberfläche,
+         * sondern des Prüfmittels. */
         val knopffarben = KNOPFFARBEN
         var beste = 0
         var laufend = 0
@@ -238,9 +238,9 @@ class UhrBildTest {
     }
 
     /**
-     * **Die Uhr sagt, wenn das Handy nichts aufzeichnet** (E-S5Z-15).
+     * **Die Uhr sagt, wenn das Handy nichts aufzeichnet.**
      *
-     * Der Fall, für den F-S5Z-01 mit (c) entschieden wurde: Ein Dienst, der
+     * Der Fall: Ein Dienst, der
      * an der Uhr begonnen wurde, während der Standort des Handys aus ist. Die
      * Uhr zeigt „keine Ortung · keine Aufzeichnung" — sonst stünde dort
      * „Dienst läuft" über einer Spur, die gar nicht entsteht.
@@ -269,15 +269,12 @@ class UhrBildTest {
     }
 
     /**
-     * **„Handy nicht erreichbar" — in Rosa, nicht in Rot** (Android 0.16.0,
-     * Konzept AR, F-AR-13).
+     * **„Handy nicht erreichbar" — in Rosa, nicht in Rot.**
      *
-     * Bis 0.16.0 stand diese Zeile in `marke_rot` auf Asphalt: 4,12:1 gegen
-     * die 4,5 fuer Schrift. Gefunden hat es die Vollstaendigkeitspruefung von
-     * `werkzeuge/kontraste.py` (Nr. 116). Der Fall steht HIER, weil der
-     * Emulator den Zustand nicht herbeifuehrt: Das Abbild mit Wear OS 5
-     * meldet eine Zustellung auch ohne Telefon und zeigt „Handy verbunden"
-     * (Konzept AR, F-AR-16).
+     * `marke_rot` auf Asphalt erreicht 4,12:1 gegen die 4,5 fuer Schrift.
+     * Der Fall steht HIER, weil der Emulator den Zustand nicht
+     * herbeifuehrt: Das Abbild mit Wear OS 5 meldet eine Zustellung auch
+     * ohne Telefon und zeigt „Handy verbunden".
      */
     @Test fun handyNichtErreichbar() {
         val z = Uhrzustand(handyErreichbar = false)
@@ -297,20 +294,18 @@ class UhrBildTest {
     }
 
     /**
-     * **Der Knopf hält die zugesagten 48 dp** (E-S4-41) — auf jeder Uhrgröße.
+     * **Der Knopf hält die zugesagten 48 dp** — auf jeder Uhrgröße.
      *
      * Die Zusicherung steht getrennt, weil sie das ist, worum es geht: Das
      * Bild ist der Beleg, die Zahl ist die Prüfung. Toleranz 1 dp für die
      * Rasterung auf ganze Bildpunkte.
      */
     /**
-     * **Keine zwei Bilder sind gleich** (F-P3-AQ).
+     * **Keine zwei Bilder sind gleich.**
      *
-     * Der Bilderlauf des Web meldete nach O9c „248 Bilder, 0 Überlauf" — 176
-     * davon zeigten die Anmeldeseite. Hier ist derselbe Fehler schon einmal
-     * von Hand gefunden worden: `sperreAn = false` malte byteweise dasselbe
-     * wie die Bodenmarke und wurde gestrichen. Diese Zeile sorgt dafür, dass
-     * es beim nächsten Mal auffällt, statt gelesen werden zu müssen.
+     * Ein Bilderlauf kann „248 Bilder, 0 Überlauf" melden, während 176 davon
+     * dieselbe Seite zeigen. Diese Zeile sorgt dafür, dass ein doppeltes Bild
+     * auffällt, statt gelesen werden zu müssen.
      *
      * Der Fall läuft **zuletzt**: Er braucht die Bilder der anderen. JUnit
      * ordnet Prüffälle nach einem festen Hash, nicht nach Quelltext — deshalb

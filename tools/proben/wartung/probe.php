@@ -3,10 +3,10 @@ declare(strict_types=1);
 
 /**
  * Wartungsprobe — schliesst der Wartungsmodus, was er schliessen soll, und
- * laesst er offen, was offen bleiben muss? (S5 Paket W, Konzept 6.1)
+ * laesst er offen, was offen bleiben muss?
  *
  * Anlass: Nr. 171 — Anmeldung im Wartungsmodus scheiterte: auth_salt.php bekam 503
- * Fall 35 misst seit R17-25 auch F-R17-72: Im Übergang auf 23.3.x lag die alte wartung.lock bis zum Ausschalten abrufbar im Webroot.
+ * Fall 35 misst auch die alte wartung.lock im Webroot, die im Übergang bis zum Ausschalten abrufbar lag.
  *
  * WOFUER. Der Wartungsmodus ist eine Sperre, und eine Sperre hat zwei Arten
  * zu scheitern. Sie kann zu WENIG sperren — dann laeuft eine Uhr waehrend
@@ -16,10 +16,10 @@ declare(strict_types=1);
  * `betrieb_updates.php`, und die Installation bleibt geschlossen, bis jemand
  * per SSH eine Datei loescht. Beide Richtungen misst diese Probe.
  *
- * SEIT S8/AP2 liegt der Schalter auf `betrieb_updates.php` statt auf
+ * Der Schalter liegt auf `betrieb_updates.php` statt auf
  * `update.php`, und die drei Betriebsseiten stehen in der Ausnahmeliste. Sie
  * MUESSEN dort stehen: Ohne den Eintrag antwortete ausgerechnet die Seite mit
- * dem Ausschalter mit 503 (F-S8-P-04). Genau das misst Erwartung 6.
+ * dem Ausschalter mit 503. Genau das misst Erwartung 6.
  *
  * UEBER ECHTES HTTP (Muster `tools/proben/kopplung/`): Geprueft wird ein
  * Verhalten, das an Kopfzeilen haengt — Statuscode, `Retry-After`,
@@ -27,7 +27,7 @@ declare(strict_types=1);
  * Funktionsaufruf zu sehen.
  *
  * SIE IST DIE EINZIGE PROBE, DIE DEN SCHALTER UMLEGT. Sie legt
- * `server/.zustand/wartung.lock` an (bis Web 23.3.1 `server/wartung.lock`) und raeumt sie im `finally` wieder weg — auch
+ * `server/.zustand/wartung.lock` an und raeumt sie im `finally` wieder weg — auch
  * wenn sie mittendrin abbricht. Wer sie auf einer Installation mit Betrieb
  * fahren wollte: nicht tun. Sie schliesst diese Installation fuer die Dauer
  * ihres Laufs.
@@ -40,8 +40,8 @@ declare(strict_types=1);
  * Cookie. Das ist genau das, was der Server nach einer gelungenen Anmeldung
  * vorfindet.
  *
- * SEIT WEB 20.26.0 REICHT DAFUER `session_save_path()` NICHT MEHR
- * (Schritt 16, E-SA-02). Die Anwendung legt ihre Sitzungen selbst in
+ * SEIT WEB 20.26.0 REICHT DAFUER `session_save_path()` NICHT MEHR.
+ * Die Anwendung legt ihre Sitzungen selbst in
  * `server/.sitzungen/` ab — aber nur im Web-Lauf; auf der Kommandozeile
  * richtet `sitzung_ablage()` bewusst nichts ein, damit ein Cron-Nutzer das
  * Verzeichnis nicht mit fremdem Eigentuemer anlegt. Diese Probe LAEUFT auf
@@ -51,7 +51,7 @@ declare(strict_types=1);
  * angemeldet", also aussehend wie ein Fehler der ANWENDUNG statt wie einer
  * der Probe.
  *
- * SEIT P5c/AP5 TRAEGT DIE BETREIBERIN `totp_seit` (E-P5c-43, F-P5c-33).
+ * DIE BETREIBERIN TRAEGT `totp_seit`.
  * Ohne Zweitfaktor fuehrte `auth_guard.php` sie auf `zweitfaktor.php` —
  * ausserhalb der Wartung, denn in ihr schweigt das Tor. Das trifft genau die
  * Faelle, in denen die Wartung aus ist: das Einschalten (13) und die offene
@@ -61,7 +61,7 @@ declare(strict_types=1);
  * entstehen hinter ihr, und den Code-Schritt misst die Zweitfaktorprobe.
  *
  * WAS SIE NICHT PRUEFT, und warum:
- *   - Das VERHALTEN DES DEPLOYS gegenueber `wartung.lock` (Konzept 6.3).
+ *   - Das VERHALTEN DES DEPLOYS gegenueber `wartung.lock`.
  *     Die Ausnahme in `auslieferung.yml` ist eine Zusage; bewiesen wird sie beim
  *     ersten Deploy im Wartungsmodus. Steht im Pruefdokument.
  *   - Wie die WARTUNGSSEITE AUSSIEHT. Sie misst, dass sie kommt und was
@@ -69,9 +69,9 @@ declare(strict_types=1);
  *   - Die ANMELDUNG selbst (Fall 10 sieht nur, dass die Seite kommt und den
  *     Balken traegt). Was nach einer gelungenen Anmeldung im Wartungsmodus
  *     geschieht — Admin weiter, alles andere sofort wieder abgemeldet
- *     (E-S5W-09) —, steht in Fall 18, und zwar am Code gelesen: `login.php` ist
+ *     —, steht in Fall 18, und zwar am Code gelesen: `login.php` ist
  *     ueber HTTP nur mit abgeleitetem Token zu erreichen. Drei Erwartungen,
- *     jede mit genannter Fundstelle. Seit P5c/AP5 steht das Tor in
+ *     jede mit genannter Fundstelle. Das Tor steht in
  *     `login_zugang()` und wird zweimal gefragt — nach dem Passwort und nach
  *     dem Code; Fall 18 liest beide Aufrufe.
  *
@@ -83,7 +83,6 @@ declare(strict_types=1);
  */
 
 $wurzel = dirname(__DIR__, 3) . '/server';
-require_once $wurzel . '/config.php';
 require_once $wurzel . '/db.php';
 require_once $wurzel . '/kopplung_lib.php';
 
@@ -152,11 +151,10 @@ function kopfzeile(array $a, string $name): ?string {
 /**
  * Ein Formular von `betrieb_updates.php` abschicken — und der Umleitung folgen.
  *
- * SEIT WEB 21.1.9 LEITET DIE SEITE NACH JEDER HANDLUNG UM (R4-11, Backlog
- * Nr. 250): Der POST antwortet 302, die Meldung kommt ueber die Sitzung auf
- * der Seite an, die danach geholt wird. Bis dahin stand sie im Rumpf der
- * POST-Antwort, und die Erwartungen 13, 27 und 31 lasen sie dort. Jetzt
- * lesen sie den Rumpf der Folgeseite — und verlangen die 302, damit ein
+ * DIE SEITE LEITET NACH JEDER HANDLUNG UM: Der POST antwortet 302, die
+ * Meldung kommt ueber die Sitzung auf der Seite an, die danach geholt wird.
+ * Die Erwartungen 13, 27 und 31
+ * lesen sie deshalb im Rumpf der Folgeseite — und verlangen die 302, damit ein
  * Rueckfall auf „POST gibt die Seite selbst aus" hier rot wird.
  *
  * @return array{code:int, ziel:?string, folge:array} `code` ist der des
@@ -183,7 +181,7 @@ function absenden(string $pfad, string $cookie, array $koerper): array {
  *
  * Gibt es `server/.sitzungen/`, ist das der Ort: Das Verzeichnis entsteht
  * beim ersten Web-Aufruf und wird von `sitzung_ablage()` gesetzt. Gibt es
- * es nicht, laeuft die Anwendung im Rueckfall auf dem Hosterpfad (E-SA-03),
+ * es nicht, laeuft die Anwendung im Rueckfall auf dem Hosterpfad,
  * und dann gilt wieder, was `session_save_path()` sagt.
  */
 function sitzung_ort(): string {
@@ -209,7 +207,7 @@ function sitzung_anlegen(int $uid, int $epoch): array {
 }
 
 /**
- * Eine HALBE Anmeldung, und zwar eine abgelaufene (P5c/AP5, E-P5c-53):
+ * Eine HALBE Anmeldung, und zwar eine abgelaufene:
  * `totp_halb` mit einer Frist in der Vergangenheit und KEIN `user_id`. So
  * steht die Sitzung da, wenn nach dem Passwort binnen fuenf Minuten kein
  * Code kam. `login.php` zeigt dann wieder das Passwortformular und schaltet
@@ -222,7 +220,7 @@ function sitzung_halb_anlegen(int $uid, string $email): string {
 }
 
 /** Die Bindung je geschriebener Sitzung — Kennung → Cookiewert (seit Web
- *  21.7.0, Schritt 18, SR-01). Ohne sie beendet `auth_guard.php` jede
+ *  21.7.0). Ohne sie beendet `auth_guard.php` jede
  *  Sitzung dieser Probe mit dem Grund `bindung`, bevor das Wartungstor
  *  gefragt ist, und `login.php` verwirft den halben Stand aus 12a nicht
  *  wegen der Frist, sondern wegen der Bindung. */
@@ -235,9 +233,9 @@ function bindung_keks(string $sid): string {
 }
 
 /** Eine Sitzungsdatei mit genau diesem Inhalt schreiben — und gebunden, wie
- *  `login.php` sie seit SR-01 hinterlaesst; liefert die Kennung.
+ *  `login.php` sie hinterlaesst; liefert die Kennung.
  *
- *  MIT FRISCHEM CODE (seit SR-07, E-SR-20), wie nach dem Code-Schritt: Das
+ *  MIT FRISCHEM CODE, wie nach dem Code-Schritt: Das
  *  Schluesselblatt (Fall 6a) verlangt ihn, und ohne ihn maesse die Probe den
  *  Umweg auf die Bestaetigung statt der Wartung. Den Umweg misst die
  *  Zweitfaktorprobe. */
@@ -257,7 +255,7 @@ function sitzung_schreiben(array $inhalt): string {
 }
 
 /**
- * Der PHP-Code einer Quelle — ohne Kommentare und ohne HTML (P5c/AP5).
+ * Der PHP-Code einer Quelle — ohne Kommentare und ohne HTML.
  *
  * Beides wird durch Leerzeichen ERSETZT, nicht entfernt: Versatz und
  * Zeilennummer bleiben die der Quelle, und die Probe kann sagen, wo sie
@@ -301,7 +299,7 @@ function sitzung_weg(string $sid): void {
 /* ---- Schalter ---------------------------------------------------------- */
 
 function wartung_setzen(string $inhalt): void {
-    zustand_verzeichnis();       // seit Web 23.3.1 in `.zustand/` (F-R17-47)
+    zustand_verzeichnis();       // in `.zustand/`
     file_put_contents(WARTUNG_DATEI, $inhalt);
     clearstatcache(true, WARTUNG_DATEI);
 }
@@ -315,13 +313,13 @@ function wartung_weg(): void {
 $emailAdmin = 'wartungsprobe-admin@example.invalid';
 $emailUser  = 'wartungsprobe-user@example.invalid';
 $pdo->prepare('DELETE FROM users WHERE email IN (?, ?)')->execute([$emailAdmin, $emailUser]);
-/* Rolle `betreiberin` seit S8/AP1: `betrieb_updates.php` — die Seite mit dem
+/* Rolle `betreiberin`: `betrieb_updates.php` — die Seite mit dem
  * Schalter — beginnt mit `require_betreiberin()`. Ein blosser `admin` kaeme
  * dort nicht hinein, und die Probe maesse dann den Waechter statt des Tors. */
 $pdo->prepare("INSERT INTO users (email, name, role, password_hash, kdf_salt, kdf_iter)
                VALUES (?, 'Wartungsprobe BetreiberIn', 'betreiberin', '', '', 320000)")->execute([$emailAdmin]);
 $uidAdmin = (int)$pdo->lastInsertId();
-/* Der Zweitfaktor der BetreiberIn gilt als eingerichtet (P5c/AP5, Kopf der
+/* Der Zweitfaktor der BetreiberIn gilt als eingerichtet (Kopf der
  * Datei). Das Tor fragt allein `totp_seit`; ein Geheimnis braucht keine Seite
  * dieser Probe. Ohne die Spalte (vor `update.php`) schweigt das Tor ohnehin. */
 if (db_hat_spalte($pdo, 'users', 'totp_seit')) {
@@ -425,7 +423,7 @@ pruefe($a5['code'] === 503 && ($a5['daten']['error'] ?? '') === 'maintenance'
        '5   api/… mit Sitzung -> 503 maintenance MIT meldung (E-S5W-10)',
        'HTTP ' . $a5['code'] . ' ' . substr($a5['rumpf'], 0, 60));
 
-/* HEALTH ANTWORTET IN DER WARTUNG AUS DEM TOR (P5c/AP6, E-P5c-52): 503
+/* HEALTH ANTWORTET IN DER WARTUNG AUS DEM TOR: 503
  * `maintenance`, OHNE Token-Pruefung — mit falschem Token dieselbe Antwort
  * wie ohne. Das Tor steht in `db.php`; `api/health.php` fuehrt keine Zeile
  * aus, und deshalb zaehlt auch sein Topf nichts. */
@@ -439,7 +437,7 @@ pruefe($a5h['code'] === 503 && ($a5h['daten']['error'] ?? '') === 'maintenance'
        'HTTP ' . $a5h['code'] . ' / ' . $a5i['code'] . ', Topf health ' . $healthZeilen);
 
 /* ======================================================================
- * Teil 2 — mit Wartung: was offen bleibt (E-S5W-04)
+ * Teil 2 — mit Wartung: was offen bleibt
  * ====================================================================== */
 echo "\n  Teil 2 — mit Wartung: was offen bleibt\n";
 
@@ -461,9 +459,9 @@ pruefe($a6b['code'] === 200 && $a6c['code'] === 200
        'jobs ' . $a6b['code'] . ', server ' . $a6c['code']
        . ', status ' . $a6d['code'] . ', statistik ' . $a6e['code']);
 
-/* DAS SCHLUESSELBLATT IST DIE SECHSTE AUSNAHMESEITE (S10/AP3).
+/* DAS SCHLUESSELBLATT IST DIE SECHSTE AUSNAHMESEITE.
  *
- * Es steht seit Web 20.1.0 in `WARTUNG_AUSNAHMEN`, und zwar aus einem Grund,
+ * Es steht in `WARTUNG_AUSNAHMEN`, und zwar aus einem Grund,
  * der genau hier zu messen ist: Die Lage, in der jemand den Server-Anteil vom
  * Blatt abliest, IST eine Wartungslage — `config.php` ist verlorengegangen
  * oder wird gerade wiederhergestellt. Waere die Seite gesperrt, stuende der
@@ -473,11 +471,11 @@ pruefe($a6f['code'] === 200,
        '6a  betrieb_schluesselblatt.php mit BetreiberIn-Sitzung -> 200 (S10/AP3)',
        'HTTP ' . $a6f['code']);
 
-/* WER IN DER AUSNAHMELISTE STEHT, ZEIGT DEN BALKEN (S8/AP8).
+/* WER IN DER AUSNAHMELISTE STEHT, ZEIGT DEN BALKEN.
  *
  * Der Balken ist die einzige Stelle, an der ein stehengebliebener
- * Wartungsmodus auffaellt — es gibt kein automatisches Ausschalten
- * (E-S5W-05). `betrieb_statistik.php` stand bis Web 15.5.1 als einzige der
+ * Wartungsmodus auffaellt — es gibt kein automatisches Ausschalten.
+ * `betrieb_statistik.php` stand einmal als einzige der
  * fuenf Ausnahmeseiten OHNE ihn da, und zwar unbemerkt: Erwartung 6 mass den
  * Statuscode, nicht den Balken. Ein Prueffall, der nur zaehlt, dass eine
  * Seite antwortet, sieht nicht, WAS sie antwortet. */
@@ -491,13 +489,13 @@ pruefe($ohneBalken === [],
        '6   ... und ALLE FUENF tragen den Balken „Wartungsmodus seit"',
        'ohne Balken: ' . implode(', ', $ohneBalken));
 
-/* KOMPLETT-BACKUP UND BACKUP-ZIELE SEIT P5c/AP9 (E-P5c-134).
+/* KOMPLETT-BACKUP UND BACKUP-ZIELE.
  *
- * Bis Web 21.0.0 antworteten beide im Wartungsmodus mit 503 — und die Seite
+ * Frueher antworteten beide im Wartungsmodus mit 503 — und die Seite
  * Updates bot, wenn der Torwaechter geschlossen hatte, einen Knopf zum
  * Komplett-Backup an, der genau dort hineinfuehrte. Gemessen wird hier, dass
  * beide antworten UND den Balken tragen: Ein Statuscode allein sagt nicht,
- * was die Seite zeigt (siehe oben, Web 15.5.1). */
+ * was die Seite zeigt (siehe oben). */
 $a6g = hole('admin_komplettsicherung.php', $sidAdmin);
 $a6h = hole('admin_sicherungsziele.php', $sidAdmin);
 pruefe($a6g['code'] === 200 && $a6h['code'] === 200
@@ -525,7 +523,7 @@ pruefe($a7['code'] !== 503,
        '7   betrieb_updates.php mit NUTZER-Sitzung: nicht 503 (Abweisung wie sonst)',
        'HTTP ' . $a7['code']);
 
-/* `update.php` ist seit S8/AP3 eine 302 auf betrieb_updates.php — offen
+/* `update.php` ist eine 302 auf betrieb_updates.php — offen
  * heisst hier also 302 und nicht 503. Genau das ist die Aussage: Die alte
  * Adresse bleibt im Wartungsmodus erreichbar und leitet weiter. */
 $a7b = hole('update.php', $sidAdmin);
@@ -542,7 +540,7 @@ $a9 = hole('jobs.php?token=falsch-und-zwar-eindeutig');
 pruefe($a9['code'] === 403 && ($a9['daten']['error'] ?? '') === 'token',
        '9   jobs.php mit falschem Token -> 403 token (wie heute)', 'HTTP ' . $a9['code']);
 
-/* 9a bis 9f  ZWEI TOKENS (Web 23.1.0, R17-19, F-R17-57, E-R17-34).
+/* 9a bis 9f  ZWEI TOKENS.
  *
  * Mit `aktion` nur POST und nur das Kettentoken, ohne `aktion` nur das
  * Job-Token. Gemessen hier und nicht in einer eigenen Probe, weil `jobs.php`
@@ -589,7 +587,7 @@ try {
            '9f  Token in der Adresse, Aktion im Rumpf -> 403 token (genau das Protokollleck)',
            'HTTP ' . $a9f['code']);
 
-    /* 9g, 9h  WER ZUERST ENTSTEHT (Gegenpruefung R17-19, E-R17-43). Bis dahin
+    /* 9g, 9h  WER ZUERST ENTSTEHT. Bis dahin
      * legte die Seite das Job-Token vor dem Kettentoken an, und auf einer
      * NEUEN Anlage uebernahm das Kettentoken danach dessen Wert — beide
      * blieben dauerhaft gleich. */
@@ -630,7 +628,7 @@ pruefe(str_contains($a10['rumpf'], 'Wartungsmodus seit'),
 pruefe(str_contains($a10['rumpf'], 'name="password"'),
        '10  ... und mit Anmeldeformular — die Verwaltung kommt hinein');
 
-/* 10a  UND DAS FORMULAR LAESST SICH AUCH ABSCHICKEN (Backlog Nr. 171).
+/* 10a  UND DAS FORMULAR LAESST SICH AUCH ABSCHICKEN.
  *
  * Erwartung 10 war gruen, waehrend der Rueckweg in Wahrheit zu war: Die
  * Seite kam mit Balken und Formular, aber `login.php` holt vor dem Absenden
@@ -659,7 +657,7 @@ $a11 = hole('wiederherstellen.php', $sidAdmin);
 pruefe($a11['code'] !== 503, '11  wiederherstellen.php mit Admin-Sitzung: nicht 503',
        'HTTP ' . $a11['code']);
 
-/* 11a  DER NOTZUGANG DER EINZIGEN BETREIBERIN (Schritt 18, SR-04). Im
+/* 11a  DER NOTZUGANG DER EINZIGEN BETREIBERIN. Im
  * Wartungsmodus steht sie, die den Zweitfaktor verloren hat, am haeufigsten
  * davor — nach einem Deploy, bis `update.php` gelaufen ist. Ohne Sitzung,
  * wie sie ankommt; und mit dem Formular, das sie braucht. */
@@ -673,7 +671,6 @@ pruefe($a12['code'] === 200, '12  assets/style.css -> 200 (statisch, ungetort)',
        'HTTP ' . $a12['code']);
 
 /* 12a  DIE INTEGRITAETSWACHE LAEUFT AUCH IM WARTUNGSMODUS DURCH
- *      (Backlog Nr. 140, SP-6).
  *
  * WARUM DAS HIERHER GEHOERT. Die Wache laeuft taeglich und vergleicht die
  * ausgelieferten Dateien und den Inline-Block der Anmeldeseite mit dem
@@ -687,14 +684,14 @@ pruefe($a12['code'] === 200, '12  assets/style.css -> 200 (statisch, ungetort)',
  * Inline-Block der Anmeldeseite ist derselbe wie in der Quelldatei -- der
  * Wartungsbalken steht im Markup, nicht im Skript. */
 /* EIN `?>` IM TAG BEENDET DAS TAG NICHT -- fuer HTML schon, fuer uns nicht.
- * Seit Web 20.7.0 traegt jedes Inline-Skript seinen CSP-Nonce, und in der
+ * Jedes Inline-Skript traegt seinen CSP-Nonce, und in der
  * QUELLE steht das als `<script<?= kopf_nonce_attr() ?>>`. Ein `[^>]*>` endet
  * am `>` des PHP-Schlusses, und der Block begann danach mit einem
  * ueberzaehligen `>` -- die Auslieferung hat es nicht, also stimmte keine
  * Pruefsumme mehr. Dieselbe Falle traf die Integritaetswache (Fund 23);
  * `$tagRest` ist ihre Antwort, hier in PCRE: erst ein PHP-Stueck am Stueck,
  * sonst ein einzelnes Zeichen, das kein `>` ist. */
-/* SEIT P5c/AP5 KENNT DIE SEITE EINEN HALBEN STAND (Passwort ja, Code nein).
+/* DIE SEITE KENNT EINEN HALBEN STAND (Passwort ja, Code nein).
  * Endet er ohne Anmeldung, raeumt ein Block das Vormerkfach
  * (`EdCrypto.vergissAbleitungen()`). Dieser Block steht IMMER in der
  * Passwortseite und schaltet ueber `data-vergessen` — sonst saehe die
@@ -703,7 +700,7 @@ pruefe($a12['code'] === 200, '12  assets/style.css -> 200 (statisch, ungetort)',
  * hier auffaellt statt still an der Wache vorbei:
  *
  *   - MIT ABGELAUFENER HALBER ANMELDUNG: Jeder PHP-freie Block der Quelle
- *     steht so da — dieselbe Aussage wie bis Web 20.41.
+ *     steht so da — dieselbe Aussage wie ohne halben Stand.
  *   - OHNE SITZUNG, also die Seite, die die Integritaetswache abruft, steht
  *     kein Block, den die Quelle nicht hat. Ein Balken IM Skript fiele hier
  *     auf. Nachsicht nur fuer so viele, wie die Quelle Bloecke MIT PHP darin
@@ -769,7 +766,7 @@ pruefe(str_contains($a14b['rumpf'], 'seit unbekannt'),
  * Ratenschutz zaehlen, Nutzlast lesen. Der Vergleich ist der Lauf aus
  * Teil 0 ohne Wartung.
  *
- * DER MEDIAN AUS FUENF, NICHT EIN ABRUF (F-P5c-165). Die 503 braucht hier
+ * DER MEDIAN AUS FUENF, NICHT EIN ABRUF. Die 503 braucht hier
  * 1,4 bis 1,9 ms, der Vergleich 3,3 bis 5,8 ms — aber ein einzelner Abruf
  * sprang in einem von zwoelf Laeufen auf 4,4 ms, und ein Vergleich zweier
  * Einzelwerte im Millisekundenbereich faerbt den Pruefstand dann rot, ohne
@@ -799,21 +796,20 @@ pruefe($rc === 0 && count($aus) > 3,
        'Rueckgabe ' . $rc . ', ' . count($aus) . ' Zeilen');
 
 /* Die Ausnahmeliste wird gegen die Entscheidung gezaehlt, nicht gegen sich
- * selbst: Wer eine Datei aus E-S5W-04 herausnimmt, soll hier scheitern und
+ * selbst: Wer eine Datei aus der Liste herausnimmt, soll hier scheitern und
  * nicht erst auf dem Produktivserver. */
-/* `auth_salt.php` ist mit Web 19.1.2 dazugekommen (Backlog Nr. 171):
+/* `auth_salt.php` steht in der Liste:
  * `login.php` stand schon in der Liste, war ohne diesen Nebenaufruf aber
  * nicht benutzbar — der Browser holt dort Salt und Rundenzahlen und leitet
  * ohne sie kein Token ab. Erwartung 10 meldete trotzdem gruen, weil sie das
  * Formular sah und nicht seinen Weg; Erwartung 10a misst ihn seither. */
-/* `betrieb_schluesselblatt.php` ist mit Web 20.1.0 dazugekommen (S10/AP3).
+/* `betrieb_schluesselblatt.php` steht in der Liste.
  * Die Begruendung steht bei Erwartung 6a: Wer den Server-Anteil vom Blatt
  * abliest, tut das in einer Wartungslage — die Seite hinter der Sperre waere
  * genau dann unerreichbar, wenn man sie braucht.
- * DIESE ZEILE WAR DER BEFUND VON AP5: Die Ausnahmeliste wuchs in AP3 auf 13
- * Eintraege, die Erwartung zaehlte weiter 12, und die Wartungsprobe stand
- * seither auf 1 nicht erfuellt — bemerkt hat es niemand, weil AP3 sie nicht
- * gefahren hat. Genau dafuer ist die Erwartung da. */
+ * Wuchs die Ausnahmeliste, und die Erwartung zaehlte weiter die alte Zahl,
+ * stand die Wartungsprobe auf 1 nicht erfuellt — bemerkt hat es einmal
+ * niemand, weil sie nicht gefahren wurde. Genau dafuer ist die Erwartung da. */
 $sollAusnahmen = ['betrieb_status.php', 'betrieb_sicherheit.php',
                   'betrieb_statistik.php',
                   'betrieb_updates.php', 'betrieb_jobs.php', 'betrieb_server.php',
@@ -829,21 +825,21 @@ pruefe($istAusnahmen === $sollAusnahmen,
        '17  Ausnahmeliste ist genau die aus E-S5W-04 + S8/AP2 + S8/AP4 + Nr. 171 + S10 + P5a/AP8 + P5c/AP9 + SR-07 + SR-04',
        implode(', ', $istAusnahmen));
 
-/* E-S5W-09 am Code: login.php muss `role` lesen und im Wartungsmodus fuer
+/* Die Regel am Code: login.php muss `role` lesen und im Wartungsmodus fuer
  * Nicht-Admins die Sitzung verwerfen. Ueber HTTP ist der Zweig nicht
  * erreichbar (das Token entsteht im Browser per PBKDF2), also wird die
  * Stelle gelesen — mit Nennung dessen, was gelesen wurde. */
 $loginQuelle = (string)file_get_contents($wurzel . '/login.php');
 pruefe(str_contains($loginQuelle, 'kdf_iter, logo_wahl, role'),
        '18  login.php liest `role` in seiner Nutzerabfrage (E-S5W-09 c)');
-/* SEIT P5c/AP5 STEHT DAS TOR IN EINER FUNKTION, und die Reihenfolge im Text
+/* DAS TOR STEHT IN EINER FUNKTION, und die Reihenfolge im Text
  * sagt nichts mehr. `login_zugang()` steht am Kopf der Datei, also VOR jedem
  * `rate_erfolg()`: Die alte Pruefung „Tor nach rate_erfolg im Text" war rot,
  * obwohl der Ablauf stimmt — und waere gruen, wenn jemand den AUFRUF vor das
  * rate_erfolg zoege. Gelesen wird deshalb der Ablauf: wo das Tor steht, wo
  * es aufgerufen wird und was davor steht. Es gibt zwei Aufrufe, weil es zwei
  * Schritte gibt — nach dem Passwort und nach dem Code; in den fuenf Minuten
- * dazwischen kann die Wartung eingeschaltet worden sein (E-P5c-53).
+ * dazwischen kann die Wartung eingeschaltet worden sein.
  *
  * Am PHP-Code ohne Kommentare (`nur_php_code()`), mit den Zeilennummern der
  * Quelle in der Ausgabe. */
@@ -875,24 +871,24 @@ $zugang    = $imAblauf('/\blogin_zugang\s*\(/');
 $vollenden = $imAblauf('/\banmeldung_vollenden\s*\(/');
 $erfolge   = $imAblauf("/\\brate_erfolg\\s*\\(\\s*'(\\w+)'/");
 
-/* Seit S8/AP1 fragt login.php nicht mehr `!== 'admin'`, sondern das Praedikat
- * `rolle_darf_verwalten()` — sonst haette die neue Rolle `betreiberin` als
+/* login.php fragt nicht `!== 'admin'`, sondern das Praedikat
+ * `rolle_darf_verwalten()` — sonst haette die Rolle `betreiberin` als
  * Nicht-Admin gegolten und sich waehrend der Wartung selbst ausgesperrt.
  *
- * `(false)` seit Web 19.1.3 (Backlog Nr. 126): An DIESER Stelle ist die
+ * `(false)`: An DIESER Stelle ist die
  * Rolle bekannt und reicht nicht — ein Rueckweg-Knopf fuehrte garantiert
  * auf ein 403. Die Probe prueft den Parameter mit, sonst faellt er beim
  * naechsten Umbau still weg.
  *
- * SEIT P5c/AP5 IN EINEM MUSTER, im Rumpf von `login_zugang()`: Bedingung,
- * `session_verwerfen()` und die Seite ohne Rueckweg in DEMSELBEN Zweig. Bis
- * dahin durfte `session_verwerfen();` irgendwo stehen — es steht auch im
+ * IN EINEM MUSTER, im Rumpf von `login_zugang()`: Bedingung,
+ * `session_verwerfen()` und die Seite ohne Rueckweg in DEMSELBEN Zweig. Sonst
+ * duerfte `session_verwerfen();` irgendwo stehen — es steht auch im
  * Zweig des Kontostatus darueber, und der haette die Erwartung allein
  * erfuellt. Am Code ohne Kommentare, weil ein `}` in einem Kommentar
  * zwischen den drei Stellen das Muster sonst still abbraeche.
  *
  * DAZU DER ABLAUF: Kein Aufruf von `anmeldung_vollenden()` — der Stelle, die
- * `user_id` setzt — ohne das Tor davor. Das ist E-S5W-09 im Ablauf mit
+ * `user_id` setzt — ohne das Tor davor. Das ist dieselbe Regel im Ablauf mit
  * Code-Schritt: Wer die Sitzung bekommt, ist vorher gefragt worden. */
 $ohneTor = [];
 $vorher  = 0;
@@ -912,7 +908,7 @@ pruefe(preg_match('/wartung_aktiv\(\)\s*&&\s*!rolle_darf_verwalten\([^{]*\{\s*se
 /* Und jeder Aufruf des Tors steht HINTER dem rate_erfolg seines Schritts:
  * nach dem Passwort hinter `rate_erfolg('login')`, nach dem Code hinter
  * `rate_erfolg('totp')`. Wer waehrend der Wartung richtig tippt, darf sich
- * danach nicht ausgesperrt finden (E-S5W-09 b) — fuer beide Toepfe. */
+ * danach nicht ausgesperrt finden — fuer beide Toepfe. */
 $stellen = []; $ohneErfolg = 0; $toepfe = [];
 $vorher  = 0;
 foreach ($zugang as [$pos]) {
@@ -943,12 +939,12 @@ pruefe(str_contains($seite['rumpf'], 'liefern ihre Daten danach')
        && str_contains($seite['rumpf'], 'zurück'),
        '19  ... und sagt beides: Geraete liefern nach, Formular ueber Zurueck');
 
-/* 19a  DER RUECKWEG (Backlog Nr. 126, Web 19.1.3).
+/* 19a  DER RUECKWEG.
  *
  * Bis dahin trug die Seite NULL Verweise — gemessen am gerenderten Markup —,
  * und der einzige Weg zurueck war, `betrieb_updates.php` von Hand zu tippen.
  * Das Handbuch (12.3) beschrieb den Weg trotzdem. Faellig geworden ist der
- * Punkt erst mit Nr. 171: Vorher kam man gar nicht erst so weit, weil sich
+ * Punkt erst, als die Anmeldung im Wartungsmodus ging: Vorher kam man gar nicht erst so weit, weil sich
  * das Anmeldeformular nicht abschicken liess. */
 pruefe(str_contains($seite['rumpf'], 'href="betrieb_updates.php"')
        && str_contains($seite['rumpf'], 'Zur Verwaltung'),
@@ -973,18 +969,18 @@ pruefe(count($logos) === 2,
        implode(', ', array_keys($logos)));
 
 /* ======================================================================
- * Teil 6 — Migrationen: EINE Zaehlweise (Backlog Nr. 149)
+ * Teil 6 — Migrationen: EINE Zaehlweise
  * ======================================================================
  *
  * DER FALL, DEN NIEMAND GEMESSEN HAT. Eine Migration, deren Schema schon
  * aktuell ist, die aber im Register fehlt, zaehlt als offen — Status und
- * Menue melden „1 Migration steht aus". Bis Web 15.5.2 sortierte die Seite
+ * Menue melden „1 Migration steht aus". Einmal sortierte die Seite
  * Updates dieselbe Zeile mit Status `ok` unter „Ausgefuehrt", meldete
  * daneben „Alles aktuell" und zeigte den Knopf nicht. Zwei Zaehlweisen fuer
  * einen Sachverhalt, und der Registervermerk war im Web nicht nachzuholen.
  *
  * Genau dieser Zustand stand am 06.09.2026 auf dem Produktivserver: Die
- * Rollenmigration aus S8 war von Hand ueber phpMyAdmin gelaufen (der
+ * Rollenmigration war von Hand ueber phpMyAdmin gelaufen (der
  * Web-Weg verlangte die Rolle, die sie erst vergibt), der Registervermerk
  * fehlte. Hier wird er nachgebaut.
  *
@@ -1070,7 +1066,7 @@ if ($bereit) {
      * „Ausstehende ausführen" steht auf dieser Seite ZWEIMAL: als Knopf und
      * als Schritt 4 im fuenfstufigen Ablauf der Karte „Wartungsmodus". Der
      * erste Entwurf suchte nur den Wortlaut — und war damit auch dann gruen,
-     * wenn der Knopf fehlte, also genau im Fehlerfall von Nr. 149. Gemessen
+     * wenn der Knopf fehlte, also genau im Fehlerfall. Gemessen
      * in der Gegenprobe gegen den Stand vor der Behebung: 26 gruen, obwohl
      * kein Knopf da war. `form="migform"` traegt nur der Knopf. */
     pruefe((bool)preg_match('/<button[^>]*form="migform"[^>]*>.*?Ausstehende ausführen/su',
@@ -1101,13 +1097,13 @@ if ($bereit) {
 }
 
 /* ======================================================================
- * Teil 7 — DER TORWAECHTER (P5a/AP3, E-P5a-20; R40 (4), Backlog Nr. 54)
+ * Teil 7 — DER TORWAECHTER
  * ======================================================================
  *
  * DER FALL: Der Katalog kennt eine Migration, das Register nicht — und
- * NIEMAND hat den Wartungsmodus eingeschaltet. Bis Web 20.5.0 blieb die
- * Installation dann offen, und wer in dieses Fenster geriet, bekam einen
- * Fehler aus einer halb umgebauten Datenbank. Seit AP3 schliesst die
+ * NIEMAND hat den Wartungsmodus eingeschaltet. Bliebe die
+ * Installation dann offen, bekaeme, wer in dieses Fenster geriet, einen
+ * Fehler aus einer halb umgebauten Datenbank. Deshalb schliesst die
  * Anwendung sich selbst.
  *
  * ER STEHT HINTER TEIL 6, weil er dieselbe Kennung braucht und weil Teil 6
@@ -1147,7 +1143,7 @@ if ($torBereit) {
            '29  ... und der Schalter steht auf „torwaechter"',
            'von ' . var_export(wartung_daten()['von'] ?? null, true));
     pruefe(str_contains($t1['rumpf'], 'selbst geschlossen')
-           && str_contains($t1['rumpf'], 'BetreiberIn ist informiert'),   // Hausform seit PK-04/5b (F-RP-03)
+           && str_contains($t1['rumpf'], 'BetreiberIn ist informiert'),   // Hausform
            '30  Die Wartungsseite nennt den Grund');
 
     /* Die Geraete bekommen ihr 503 als JSON — dieselbe Zusage wie in Teil 1,
@@ -1181,7 +1177,7 @@ if ($torBereit) {
            '31  ... und danach ist die Installation wieder offen',
            'HTTP ' . $t6['code']);
 
-    /* ---- Nr. 54: der Zwischenspeicher ueberlebt eine Wiederherstellung --- */
+    /* ---- Der Zwischenspeicher ueberlebt eine Wiederherstellung ----------- */
     $pdo->prepare('DELETE FROM schema_migrations WHERE id = ?')->execute([$kandidat]);
     $torWeg = $kandidat;
     /* KEIN Zuruecksetzen — genau so kaeme die Lage nach einem eingespielten
@@ -1220,16 +1216,16 @@ if ($torBereit) {
 }
 
 /* ======================================================================
- * Teil 8 — der Ort des Zustands (R17-22, F-R17-47, E-R17-59)
+ * Teil 8 — der Ort des Zustands
  * ==================================================================== */
 echo "\n  Teil 8 — der Ort des Zustands und der Uebergang\n";
-/* Bis Web 23.3.0 lagen `wartung.lock` und `ueberlast.json` im Webroot, und
- * keine `.htaccess`-Regel sperrte sie: Waehrend einer Wartung las jeder den
- * Namen des Kontos, das geschaltet hatte. Seither `.zustand/`. Gemessen wird
+/* Lagen `wartung.lock` und `ueberlast.json` im Webroot, sperrte sie
+ * keine `.htaccess`-Regel: Waehrend einer Wartung las jeder den
+ * Namen des Kontos, das geschaltet hatte. Deshalb `.zustand/`. Gemessen wird
  * der Ort, die eigene Sperre des Verzeichnisses und der Uebergang — die Kette
  * schaltet mit dem alten Code ein, also am alten Ort. Ob Apache die Sperre
  * auch ausliefert, misst der PHP-Server dieser Probe nicht (er liest keine
- * `.htaccess`); das ist P-R17-10 auf Staging. */
+ * `.htaccess`); das ist eine Handprüfung auf Staging. */
 wartung_weg();
 @unlink(WARTUNG_DATEI_ALT);
 pruefe(wartung_einschalten('Wartungsprobe') && is_file(WARTUNG_DATEI) && !is_file(WARTUNG_DATEI_ALT),
@@ -1245,9 +1241,9 @@ $r35 = hole('index.php');
 pruefe(wartung_aktiv() && $r35['code'] === 503,
        '35  Uebergang: eine Wartungsdatei am ALTEN Ort gilt noch (Kette schaltet mit altem Code)',
        'aktiv ' . (wartung_aktiv() ? 'ja' : 'nein') . ', HTTP ' . $r35['code']);
-/* F-R17-72 (Web 23.4.0): Die erste Frage nach dem Schalter — die Anfrage
- * eben hat sie gestellt — zieht die Datei um. Bis 23.3.2 lag sie bis zum
- * Ausschalten im Webroot und war unter Apache abrufbar (200). */
+/* Die erste Frage nach dem Schalter — die Anfrage
+ * eben hat sie gestellt — zieht die Datei um. Bliebe sie bis zum
+ * Ausschalten im Webroot, waere sie unter Apache abrufbar (200). */
 clearstatcache();
 pruefe(!is_file(WARTUNG_DATEI_ALT) && is_file(WARTUNG_DATEI)
        && str_contains((string)@file_get_contents(WARTUNG_DATEI), 'alte Fassung'),

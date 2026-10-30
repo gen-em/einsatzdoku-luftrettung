@@ -1,15 +1,15 @@
 <?php
 /* Die Gerätehilfe von der Kommandozeile — für Werkzeuge, die nicht in PHP
- * geschrieben sind (S11-04a).
+ * geschrieben sind.
  *
  * Anlass: Nr. 43 — das Einspielwerkzeug des Referenzbestands
  * (`tools/referenzdatensatz/einspielen/einspielen.py`) schickt seine Pakete
- * an `ingest.php`, und der nimmt seit Web 22 nur noch verschlossene
+ * an `ingest.php`, und der nimmt nur verschlossene
  * Ortsdaten an. Statt das Umbauen in Python ein zweites Mal zu schreiben,
  * ruft es diese Datei: EINE Umsetzung, `geraet.php`.
  *
  * Eingabe (stdin):  {"sec1": "<Base64, 65 Byte>", "pakete": [ … ]}
- * Ausgabe (stdout): [ … ] — dieselben Pakete in der Form ab Web 22
+ * Ausgabe (stdout): [ … ] — dieselben Pakete in der verschlossenen Form
  */
 declare(strict_types=1);
 

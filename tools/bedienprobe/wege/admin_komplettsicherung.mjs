@@ -1,7 +1,7 @@
 /* Wege der Seite Betrieb → Komplett-Backup (`admin_komplettsicherung.php`).
  * ===========================================================================
  *
- * Entstanden mit R4-11 (Backlog Nr. 250): Nach einer Handlung leitet die
+ * Nach einer Handlung leitet die
  * Seite um; Neuladen stößt keinen zweiten Durchgang an. Gespeichert werden
  * Plan und Aufbewahrung, wie sie stehen — der Weg ändert nichts.
  */

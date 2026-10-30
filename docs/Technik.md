@@ -783,7 +783,8 @@ Daten erst nach Server-Bestätigung.
 │   │                      Sollliste), seit R17-26 fremdsummen (Kopfsumme
 │   │                      jeder Datei unter assets/vendor/), seit R17-27
 │   │                      dokumente (Pfade, Zahlen, Kopfzeilen und die
-│   │                      Gliederung dieses Dokuments, Nr. 188). Ein
+│   │                      Gliederung dieses Dokuments, seit R17-28 auch
+│   │                      die Abschnittsverweise im Code, Nr. 188). Ein
 │   │                      Läufer (`pruefen.sh <name>|alle|--selbstprobe`),
 │   │                      ein LIESMICH. Vorher acht Ordner.
 │   ├── referenzdatensatz/ erfundener Beispielbestand (22 Diensttage,
@@ -1278,7 +1279,7 @@ Anwendung ohne Gerüst, deren Zweck der Ausdruck ist. `Cache-Control: no-store`,
 `Referrer-Policy: no-referrer`, `X-Robots-Tag: noindex`; Werte in
 Vierergruppen (`hex_vierergruppen()` in `db.php`). Sie steht in
 `WARTUNG_AUSNAHMEN` — die Lage, in der man sie braucht, ist eine Wartungslage.
-Das zugehörige `@media print` in `assets/style.css` (Abschnitt 26) war das
+Das zugehörige `@media print` in `assets/style.css` (Abschnitt 31) war das
 **erste** des Projekts. Seit Web 21.1.0 (P5c/AP9) baut das Blatt auf dem
 Druckblatt `.blatt-druck` wie Code- und Notfallblatt (`Design.md` 9.39):
 genau eine A4-Seite, je Wert eine Kachel mit sechzehn nummerierten Gruppen,
@@ -10197,6 +10198,19 @@ ganzen Bestand** — sonst sieht `geraeteklassen.py` kein neues Gerät. Lässt
 sich ein Archiv nicht entpacken oder liegt es eine Ebene zu tief, ist der
 Lauf rot. **Wer Geräte nachlädt, packt beide Archive neu**; sonst holt die
 Kette ohne Warnung den alten Stand.
+
+**Jedes Archiv trägt seine Summe im Repositorium** (seit Web 23.5.2,
+F-R17-66): `tools/uhr-pruefstand/geraetedateien.sha256`, eine Zeile je
+Archiv im Format von `sha256sum`. Geprüft wird vor dem Entpacken; passt die
+Summe nicht, ist der Lauf rot und die Datei gelöscht. **Warum im
+Repositorium und nicht neben den Archiven:** Der Uhr-Job der Auslieferung
+hält den Entwicklerschlüssel; wer die Ablage unter `CIQ_GERAETE_URL`
+beschreibt, tauschte eine Summe daneben gleich mit. Dort setzt der Lauf
+`CIQ_SUMMEN_PFLICHT=1`: Ein Archiv ohne Zeile ist rot, und den Rückfall auf
+Einzeldateien gibt es nicht — sie tragen keine Summe. Örtlich bleibt beides
+eine Warnung. **Wer die Archive neu packt, trägt die neuen Summen im selben
+Commit ein** (`sha256sum devices.tar fonts.tar`); sonst ist die nächste
+Uhr-Auslieferung rot.
 `aufbau` holt nur die drei Zielgeräte — für Stufe I und
 `geraeteklassen.py` braucht es `CIQ_ZIELE=alle`. Fehlen die
 Zeichensätze, übersetzt die App zwar, bricht aber beim ersten Zeichnen mit
@@ -10866,7 +10880,7 @@ werden kann:** PHP übersetzt eine Datei vollständig, bevor es die erste Zeile
 ausführt. Eine einzige `match`-Anweisung weiter unten, und die Besucherin auf
 PHP 8.0 bekommt statt der Erklärung einen Parse Error.
 
-`install.php` bleibt deshalb **PHP-7-lesbar**, und Stufe 1 des Prüftors zählt
+`install.php` bleibt deshalb **auf PHP 7.4 lesbar** (es benutzt `fn`), und Stufe 1 des Prüftors zählt
 das mit dem Tokenizer nach (`tools/quelltext/` `installweiche`) — für `install.php`
 **und** für `server/php_mindest.php`. Die Prüfung ist nicht vollständig —
 benannte Argumente und Eigenschaftenbeförderung sieht sie nicht —, und sie
@@ -12103,8 +12117,9 @@ Bilderzahl, die längst nicht mehr stimmte.
 | `tools/quelltext/pruefen.sh --selbstprobe`, dann `alle` | alle Selbstproben und alle fünfzehn Prüfungen grün (`tools/quelltext/LIESMICH.md`) — darunter seit BR-03 Backlog-Nummern (`bestand`), Python übersetzen (`pysyntax`) und Handbuch rendern (`handbuch`), bis dahin drei eigene Schritte |
 | `tools/screenshots/kontrast.py` | 0 Befunde |
 | Umgebungswert eine Ebene höher | alle sechs Namen leer (12.7, E-KH-28) |
-| `tools/kettenaufrufe/pruefen.py --probe`, dann ohne Schalter | Selbstprobe vollständig, 0 Befunde; jeder ungeprüfte Aufruf benannt; seit R17-19 dazu die zwei Riegel der Kette: jede fremde `uses:`-Zeile an einer SHA mit Fassung, die Ausnahmeliste hält ihre acht Pfade, jeder steht in `.gitignore`, keine `server/config.php*` eingecheckt |
+| `tools/kettenaufrufe/pruefen.py --probe`, dann ohne Schalter | Selbstprobe vollständig, 0 Befunde; jeder ungeprüfte Aufruf benannt; seit R17-19 dazu die zwei Riegel der Kette: jede fremde `uses:`-Zeile an einer SHA mit Fassung, die Ausnahmeliste hält ihre sieben Pfade, jeder steht in `.gitignore`, keine `server/config.php*` eingecheckt |
 | `tools/kette/tor.py`, `download_lib.mjs`, `tools/kette/freigabe.py`, `tools/kette/baumsuche.py`, je `--selbstprobe` | jede Lage erfüllt |
+| `tools/integritaetswache/wache.py --selbstprobe`, `tools/kette/appbau.sh --selbstprobe` | jede Erwartung erfüllt — seit R17-28 im Tor; bis dahin liefen sie nur im Prüfstand und in ihrem eigenen Lauf (Q-R17-22) |
 | `tools/spaltenregister/pruefen.php`, `tools/zaehlung/zaehlen.php`, je mit Selbstprobe | 0 Befunde, 0 Zeilen über der Decke — und seit R17-19 auch 0 darunter (Ratsche, F-R17-56) |
 | `tools/proben/proben.sh rechtstexte` | 0 Fehlschläge |
 | **Prüfbericht gegenlesen** (überall außer auf `main`) | `bericht.py lesen` rc 0: Baum, Stufe, Flächen, alle Riegel, keine rote und keine nicht gemessene Probe |
@@ -12619,7 +12634,10 @@ Abbruch, wenn einer fehlt.
 E-KH-07) steht **vor dem Backup-Tor**. Sie schreibt per FTPS eine Datei mit
 Zufallsnamen und Zufallsinhalt ins Zielverzeichnis, holt sie über HTTPS
 unter der Basisadresse der Umgebung zurück, vergleicht sie, löscht sie und
-prüft das Löschen (danach 404).
+prüft das Löschen (danach 404). Vorweg schreibt sie die äußere Adresse des
+Läufers ins Protokoll (`tools/kette/laeufer.py`, wie die Wache): Geht FTPS und
+der Abruf über HTTPS läuft ab, ist sie der Hinweis, ob der Hoster bestimmte
+Läufer sperrt (F-R17-74).
 
 **Seit AP5 läuft sie in beiden Umgebungen** — bis dahin nur auf Produktiv.
 Das ist keine Zugabe, sondern E-KH-17: Ein Tor, das nur dort steht, wo es
@@ -13249,10 +13267,15 @@ unbemerkt — das ist der eine Weg, auf dem die Wache still wird.
 
 **Was rot ist, steht oben im Protokoll; in dieser Reihenfolge lesen:**
 
-1. **„NICHT ERREICHBAR"** — die Anlage oder das Netz hat nicht geantwortet.
+1. **„ANLAGE NICHT ERREICHBAR"** (kein einziger Abruf kam durch, eine Zeile
+   mit Zahl und Fehlerart) **oder „NICHT ERREICHBAR"** mit einzelnen Dateien
+   — die Anlage oder das Netz hat nicht geantwortet. Die Zeile
+   „Läuferadresse" ganz oben sagt, von welcher Adresse der Lauf kam; sammelt
+   sich das Rot bei denselben Adressen, sperrt der Hoster Läufer (F-R17-74).
    Nach einer Stunde von Hand neu starten (Actions → „Integritaetswache" →
    *Run workflow*). Bleibt es, liegt es beim Hoster; eine Manipulation zeigt
-   sich so nicht.
+   sich so nicht. Die Adresse kommt von `api.ipify.org`, 5 s Grenze; geht
+   das nicht, steht „unbekannt" da, und die Wache misst trotzdem.
 2. **Teil 3 (Punktpfade)** — seit R17-19. Ein Punktpfad mit 404 statt 403
    heißt: Der Server liest `.htaccess` nicht mehr, oder sie ist verändert —
    dann ist die Sperre der Zustandsdatei, der Sitzungen und der übrigen

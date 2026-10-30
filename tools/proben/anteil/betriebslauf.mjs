@@ -1,12 +1,11 @@
 /* Betriebslauf — die Karte, das Blatt und die Zustände im ECHTEN Browser
- * (S10/AP3, E-S10-09 bis E-S10-12)
  * ===========================================================================
  *
  * WAS HIER GEMESSEN WIRD UND SONST NIRGENDS. `probe.php` prüft die
  * Zustandsmaschine als Funktion, `endpunkt.py` den Endpunkt, `umstellungslauf.mjs`
  * die stille Umstellung. Keiner von ihnen sieht die OBERFLÄCHE — und die
  * Zustände `abweichend` und `Rotation` sind genau die, die niemand je zu sehen
- * bekommt, bis sie eintreten. Nach AP2 standen sie im Prüfdokument unter „nicht
+ * bekommt, bis sie eintreten. Ohne diesen Lauf stünden sie unter „nicht
  * geprüft"; hier werden sie hergestellt, bedient und wieder zurückgestellt.
  *
  * SIE FASST `config.php` UND `app_state` AN und legt beides im `finally`
@@ -27,10 +26,11 @@ const MODUL = process.env.PLAYWRIGHT_MODUL
   || '/opt/node22/lib/node_modules/playwright/index.mjs';
 const PW = await import('file://' + MODUL);
 const pw = PW.default ?? PW;
-const { motorWahl, starten, nachDemPasswort, codeSchritt } = await import(
-  'file:///home/user/einsatzdoku-luftrettung/tools/motor.mjs');
+const { motorWahl, starten, nachDemPasswort, codeSchritt, istOertlich } = await import(
+  new URL('../../motor.mjs', import.meta.url).href);
 
-const WURZEL = '/home/user/einsatzdoku-luftrettung';
+/* Die Wurzel aus dem Ort dieser Datei, nicht ein fester Containerpfad. */
+const WURZEL = decodeURIComponent(new URL('../../../', import.meta.url).pathname).replace(/\/$/, '');
 const CONFIG = WURZEL + '/server/config.php';
 const SICHER = CONFIG + '.betriebslauf';
 const BASIS = 'https://127.0.0.1:8443';
@@ -40,7 +40,7 @@ const ADMIN = 'admin@example.invalid', ADMIN_PW = 'pruefstandzugang2026';
  * Abschnitt 8b will nach dem Reset etwas zu LESEN haben. */
 const UMLAUF = 'umlauf-csv@example.invalid', UMLAUF_PW = 'umlaufpruefung2026';
 /* Der Wiederherstellungsschlüssel des Admin-Kontos. Er entsteht beim
- * Einrichten der Testinstallation (`lokal_einrichten.sh`, Schritt 6) und
+ * Einrichten der Testinstallation (`lokal_einrichten.sh`) und
  * liegt seither in dieser Datei. OHNE IHN entfällt Abschnitt 8b — als
  * *nicht gemessen, mit Grund*, nicht als roter Haken. */
 const RC_DATEI = process.env.ADMIN_RC || '/tmp/admin-rc.json';
@@ -58,7 +58,7 @@ const teil = (n) => console.log(`\n${n}`);
 
 /** Ein Wert als PHP-Literal in EINFACHEN Anführungszeichen.
  *
- * DER TEURE FUND DIESES PAKETS (F-S10-AP3-05). Abschnitt 8b legt sechs Felder
+ * DER TEURE FUND DIESES PAKETS. Abschnitt 8b legt sechs Felder
  * des Admin-Kontos zurück, und die Werte standen als `JSON.stringify(...)` im
  * PHP-Code — also in DOPPELTEN Anführungszeichen. PHP ersetzt darin jede
  * Zeichenfolge, die wie eine Variable aussieht. Ein bcrypt-Hash sieht so aus:
@@ -88,7 +88,7 @@ const markeWeg = (k) => php(
  *
  * WARUM HIER GEWARTET WIRD. Die Anwendung verwirft nach jedem Schreiben den
  * Bytecode-Zwischenspeicher (`opcache_invalidate()` in
- * `config_eintrag_schreiben()`, aufgestellt in S2/AP7). Dieser Prüfstand
+ * `config_eintrag_schreiben()`). Dieser Prüfstand
  * schreibt an der Anwendung VORBEI und kann das nicht — er sitzt in einem
  * anderen Prozess. OPcache prüft den Zeitstempel aber nur alle
  * `opcache.revalidate_freq` Sekunden (Vorgabe 2), und `php -S` läuft mit
@@ -96,7 +96,7 @@ const markeWeg = (k) => php(
  * eingebaute Server heißt `cli-server`. Ohne die Wartezeit liest die nächste
  * Anfrage die ALTE config.php — der Lauf stand in Abschnitt 5 vor einer Karte
  * im Zustand `bereit` und wartete 30 Sekunden auf ein Eingabefeld, das es in
- * dieser Lage nicht gibt (F-S10-AP3-01). Das ist ein Fehler DIESES Werkzeugs,
+ * dieser Lage nicht gibt. Das ist ein Fehler DIESES Werkzeugs,
  * nicht der Anwendung. */
 const OPCACHE_RUHE = 2200;
 async function cfg(name, hex) {
@@ -114,7 +114,7 @@ const cfgLesen = (name) => {
 };
 
 const browser = await starten(pw, motor, {});
-const ctx = await browser.newContext({ ignoreHTTPSErrors: true });
+const ctx = await browser.newContext({ ignoreHTTPSErrors: istOertlich(BASIS) });
 const fehler = [];
 ctx.on('pageerror', e => fehler.push('JS: ' + e.message));
 ctx.on('console', m => {
@@ -125,7 +125,7 @@ ctx.on('console', m => {
 });
 const p = await ctx.newPage();
 
-/* DER FRISCHE CODE (Schritt 18, SR-07, E-SR-20). Das Blatt und jeder
+/* DER FRISCHE CODE. Das Blatt und jeder
  * Schluesselgriff verlangen einen Code, der hoechstens 15 Minuten alt ist.
  * Der Lauf meldet sich mit Code an und ist in der Regel frueher fertig; wird
  * er einmal langsamer, fuehrt das Blatt auf die Bestaetigung. `oeffne()` geht
@@ -149,12 +149,12 @@ const text = () => p.evaluate(() => document.body.innerText.replace(/\s+/g, ' ')
  * NICHT `form.requestSubmit()` UND NICHT `form.submit()`. `requestSubmit()`
  * löst das Ereignis `submit` aus, und `confirm.js` fängt es ab: Der Aufruf
  * kehrt zurück, es passiert nichts, und der Lauf misst danach eine Seite, die
- * sich nie geändert hat — so gelesen in Abschnitt 6 (F-S10-AP3-02).
+ * sich nie geändert hat — so gelesen in Abschnitt 6.
  * `form.submit()` ginge am Zuhörer vorbei, misst dann aber einen Weg, den
  * niemand geht. Der Prüfstand drückt deshalb den Knopf und beantwortet den
  * Dialog, wie es eine Betreiberin täte. */
 /** Nach dem Absenden des Passworts: warten, den Code-Schritt des
- * Zweitfaktors gehen und bei einem Fehlschlag ABBRECHEN (P5c/AP5, E-P5c-43).
+ * Zweitfaktors gehen und bei einem Fehlschlag ABBRECHEN.
  *
  * Hier stand `waitForURL(… !login.php)`. Seit dem Zweitfaktor steht die
  * Seite nach dem Passwort des Admin-Kontos WIEDER unter `login.php` und
@@ -177,7 +177,7 @@ async function angemeldetOderAbbruch(tab, konto) {
  * EIN EIGENER KONTEXT, KEIN ZWEITER TAB. Der Hauptkontext ist als
  * Betreiberin angemeldet; `/login.php` leitet dort sofort weiter, und der
  * Lauf wartete 30 Sekunden auf ein Anmeldefeld, das es auf der Zielseite
- * nicht gibt (F-S10-AP3-04). Ein eigener Kontext hat eigene Cookies — und
+ * nicht gibt. Ein eigener Kontext hat eigene Cookies — und
  * bildet zugleich ab, was gemeint ist: ein anderer Mensch, ein anderer
  * Browser.
  *
@@ -187,7 +187,7 @@ async function angemeldetOderAbbruch(tab, konto) {
  * passiert — und hält es für einen Beleg. */
 const nebenkontexte = [];
 async function tabAnmelden(konto, passwort) {
-  const k = await browser.newContext({ ignoreHTTPSErrors: true });
+  const k = await browser.newContext({ ignoreHTTPSErrors: istOertlich(BASIS) });
   nebenkontexte.push(k);
   k.on('pageerror', e => fehler.push('JS: ' + e.message));
   const tab = await k.newPage();
@@ -250,7 +250,7 @@ const adminFeld = (f) => php(`$s=db()->prepare("SELECT ${f} FROM users WHERE id=
  * seine geschützten Angaben NIE WIEDER heran — außer über seinen
  * Wiederherstellungsschlüssel.
  *
- * GENAU DAS IST PASSIERT (F-S10-AP3-08): Der Schnappschuss stand in
+ * GENAU DAS IST PASSIERT: Der Schnappschuss stand in
  * Abschnitt 7, also NACH 6b; zurückgelegt wurde auf einen Stand, der schon
  * umgestellt war, und das `finally` nahm den zugehörigen Anteil danach aus
  * `config.php`. `umlauf-csv@example.invalid` war anschließend ausgesperrt und
@@ -296,8 +296,8 @@ try {
          new RegExp('Kennung ' + kennung).test(blatt), true);
   /* DIE EINE STELLE, AN DER DER WERT STEHEN MUSS — in Vierergruppen.
    *
-   * SEIT P5c/AP9 JE GRUPPE EIN ELEMENT (`.blatt-druck-gruppe`, mit Nummer
-   * darüber). Bis dahin stand der Wert als ein Absatz mit Leerzeichen
+   * JE GRUPPE EIN ELEMENT (`.blatt-druck-gruppe`, mit Nummer
+   * darüber). Früher stand der Wert als ein Absatz mit Leerzeichen
    * (`.blatt-wert`), und der Seitentext enthielt ihn am Stück. Jetzt steht
    * zwischen den Gruppen ein Zeilenwechsel des Seitentexts; gelesen wird
    * deshalb die Kachel des Anteils, Gruppe für Gruppe. */
@@ -322,8 +322,8 @@ try {
   await p.setViewportSize({ width: 718, height: 1123 });
   await oeffne('/betrieb_schluesselblatt.php');
   const druck = await p.evaluate(() => {
-    /* JE WERT EINE KACHEL MIT SECHZEHN GRUPPEN (P5c/AP9, `.blatt-druck`).
-     * Bis dahin wurde hier ein Absatz `.blatt-wert` Gruppe für Gruppe über
+    /* JE WERT EINE KACHEL MIT SECHZEHN GRUPPEN (`.blatt-druck`).
+     * Früher wurde hier ein Absatz `.blatt-wert` Gruppe für Gruppe über
      * Textbereiche vermessen. Jetzt ist jede Gruppe ein eigenes Element;
      * zerschnitten ist eine Gruppe, deren TEXT auf zwei Zeilen liegt. */
     const kacheln = [...document.querySelectorAll('.blatt-kachel')];
@@ -570,8 +570,8 @@ try {
    *      Chiffretext geht wieder auf. Ein Reset, der die Daten verliert,
    *      gelingt auch. */
   if (!rcDa || ckVorher === null) {
-    /* NICHT GEMESSEN IST NICHT ERFUELLT (S10/AP5, dieselbe Lehre wie
-     * F-S10-AP5-04). Bis dahin stand hier nur ein `console.log`, und die
+    /* NICHT GEMESSEN IST NICHT ERFUELLT. Frueher stand hier nur ein
+     * `console.log`, und die
      * Schlusszeile meldete dann „40 von 40 erfüllt, 0 offen" — eine Zahl, die
      * grün aussieht und zehn Erwartungen verschweigt. Der Zähler trägt sie
      * jetzt bis in die Schlusszeile, wie es `umstellungslauf.mjs` tut. */
@@ -584,7 +584,7 @@ try {
     /* DER DIALOG WIRD ABSICHTLICH GERUFEN. Das Admin-Konto hat keine
      * geschützten Angaben — also fragt keine Seite von selbst danach, und
      * ein Lauf, der auf den Dialog wartet, wartet vergebens und nennt es
-     * einen Befund (so gelesen im ersten Durchgang, F-S10-AP3-06).
+     * einen Befund (so gelesen im ersten Durchgang).
      * `ensureContentKey()` ist derselbe Aufruf, den jede Seite mit
      * geschützten Angaben macht.
      *
@@ -697,7 +697,7 @@ try {
   /* NACHGEZÄHLT, NICHT ANGENOMMEN: alle sechs Felder gegen den Stand vom
    * Anfang. Ein halb zurückgelegtes Konto ist schlimmer als ein verstelltes,
    * denn der nächste Lauf bleibt an der Anmeldung stehen und sucht den Grund
-   * an der Anwendung (F-S10-AP3-05). */
+   * an der Anwendung. */
   const abweichend = U_FELDER.filter(f => adminFeld(f) !== String(adminVorher[f] ?? ''));
   console.log(`Konto ${ADMIN} zurückgelegt: `
     + (abweichend.length === 0

@@ -3,7 +3,6 @@ declare(strict_types=1);
 
 /**
  * DER RÜCKWEG BEIM ZWEITFAKTOR ÜBER DEN WIEDERHERSTELLUNGSSCHLÜSSEL
- * (Konzept RW, E-RW-01 bis -15; im P5c-Konzept AP5b).
  *
  * WAS ES IST. Wer Handy UND Wiederherstellungscodes verloren hat, schaltet
  * den Zweitfaktor am Code-Schritt der Anmeldung selbst ab — mit dem
@@ -13,14 +12,14 @@ declare(strict_types=1);
  * Herausforderung des Servers. Der Server prüft die Signatur gegen den
  * öffentlichen Teil.
  *
- * WARUM SO UND NICHT GEGEN `pat_key_check` (F-P5c-106). Die erste Fassung
- * (E-P5c-42) prüfte gegen einen Wert, der in der Datenbank steht — wer einen
- * Abzug hatte, legte ihn vor. Hier liegt in der Datenbank nur der
+ * WARUM SO UND NICHT GEGEN `pat_key_check`. Ein Wert, der in der Datenbank
+ * steht, taugt nicht als Nachweis — wer einen
+ * Abzug hat, legt ihn vor. Hier liegt in der Datenbank nur der
  * ÖFFENTLICHE Teil (`rw_oeffentlich`) und der private als Chiffretext unter
  * dem Inhaltsschlüssel (`rw_privat`, `edk1:`), den der Server nie kennt. Ein
  * Abzug kann damit prüfen, aber nicht signieren.
  *
- * DAS VERFAHREN (E-RW-03): ECDSA über P-256 (`secp256r1`) mit SHA-256, die
+ * DAS VERFAHREN: ECDSA über P-256 (`secp256r1`) mit SHA-256, die
  * Signatur im IEEE-Format — die 64 Byte `r‖s`, die WebCrypto liefert. Geprüft
  * über phpseclib (vendoriert für den SFTP-Adapter, `Lizenzen.md` 3a), das
  * `openssl` nimmt, wenn es SHA-256 kann, und sonst in reinem PHP rechnet
@@ -28,18 +27,18 @@ declare(strict_types=1);
  * zumutbar). `openssl_verify()` und `sodium` werden NICHT unmittelbar
  * gerufen: zwei Prüfwege wären zwei Stellen.
  *
- * DIE NACHRICHT BAUT DER SERVER SELBST (E-RW-04), aus der Sitzung und dem
+ * DIE NACHRICHT BAUT DER SERVER SELBST, aus der Sitzung und dem
  * Konto, nie aus dem, was der Browser schickt:
  *     nadoku-rw-v1|totp-rueckweg|<Kontonummer>|<Herausforderung, 64 hex>
  * Präfix und Zweck trennen die Domäne, die Kontonummer bindet an das Konto,
  * die Herausforderung macht sie einmalig.
  *
  * OB DIE ANLAGE PRÜFEN KANN, sagt `rw_selbsttest()` mit einem festen Vektor
- * aus einem Browser (E-RW-11); `rw_verfuegbar()` merkt sich das Ergebnis je
+ * aus einem Browser; `rw_verfuegbar()` merkt sich das Ergebnis je
  * Fassung und Plattform in `app_state` und schaltet den Weg. Ohne die
  * Spalten (vor `update.php`) ist der Weg stumm — `rw_spalten_da()`.
  *
- * DAS PAAR ENTSTEHT IM BROWSER (RW-02, E-RW-02): still nach der Anmeldung
+ * DAS PAAR ENTSTEHT IM BROWSER: still nach der Anmeldung
  * (`assets/unlock.js`, wenn `rw_zustand()` „fehlt" sagt) oder über den Knopf
  * „Rückweg erneuern" (`assets/rueckweg.js`); abgelegt wird es über
  * `api/rueckweg_anlegen.php`, nur mit dem Nachweis des Passworts.
@@ -57,7 +56,7 @@ const RW_KURVE   = 'secp256r1';
 /** Die Frist der Herausforderung — dieselbe wie die des halben Standes. */
 const RW_HERAUSFORDERUNG_S = 300;
 
-/* DER PRÜFVEKTOR DES SELBSTTESTS (E-RW-11). Ein Paar, das Chromium 141 am
+/* DER PRÜFVEKTOR DES SELBSTTESTS. Ein Paar, das Chromium 141 am
  * 24.09.2026 über WebCrypto erzeugt hat, und dessen Signatur über eine feste
  * Nachricht — also genau das Format, das später aus jedem Browser kommt. Der
  * Zweck `selbsttest` und die Kontonummer 0 trennen ihn von jeder echten
@@ -71,7 +70,7 @@ const RW_VEKTOR_SIGNATUR    = 'mesKy6cNZ2lXuh+gMN6IL5f4Qi2qUn2u7z5yvNlq7HFJnLsIs
 /** Die Marke des Selbsttests in `app_state`. */
 const RW_MARKE = 'rw_selbsttest';
 
-/** Die Nachricht, die der Browser signiert und der Server prüft (E-RW-04). */
+/** Die Nachricht, die der Browser signiert und der Server prüft. */
 function rw_nachricht(int $kontoId, string $herausforderungHex): string
 {
     return RW_PRAEFIX . '|' . RW_ZWECK . '|' . $kontoId . '|' . $herausforderungHex;
@@ -105,7 +104,7 @@ function rw_oeffentlich_laden(string $spkiB64): ?EC\PublicKey
  * Taugt dieser öffentliche Teil? Null heißt ja; sonst der Grund in einem
  * Satz. Geprüft werden Form (`RW_OEFFENTLICH_RE`) und Kurve — nicht, ob der
  * private Teil dazu passt: Das kann der Server nicht wissen, und deshalb
- * hängt das Schreiben am Passwortnachweis (E-RW-02, -06).
+ * hängt das Schreiben am Passwortnachweis.
  */
 function rw_oeffentlich_pruefen(string $spkiB64): ?string
 {
@@ -145,7 +144,7 @@ function rw_selbsttest_laeufe(bool $zaehlen = false): int
 }
 
 /**
- * Kann diese Anlage Signaturen des Rückwegs prüfen? (E-RW-11)
+ * Kann diese Anlage Signaturen des Rückwegs prüfen?
  *
  * Prüft den festen Vektor — richtig muss durchgehen, eine veränderte
  * Nachricht nicht — und sagt, auf welchem Weg und wie schnell.
@@ -204,7 +203,7 @@ function rw_marke_schluessel(): string
 }
 
 /**
- * Das zwischengespeicherte Ergebnis des Selbsttests (E-RW-11) — mit
+ * Das zwischengespeicherte Ergebnis des Selbsttests — mit
  * Schlüssel `ok`, `weg`, `ms`. Läuft EINMAL je Marke, nicht je Seitenaufruf:
  * 190 ms in reinem PHP auf jeder Anmeldeseite wären zu viel.
  */
@@ -236,7 +235,7 @@ function rw_verfuegbar(): bool
 
 /**
  * Gibt es die Spalten des Paars? Vor `update.php` nicht — dann ist der
- * Rückweg stumm (E-RW-05). Einmal je Aufruf gefragt.
+ * Rückweg stumm. Einmal je Aufruf gefragt.
  */
 function rw_spalten_da(?PDO $pdo = null): bool
 {
@@ -248,12 +247,12 @@ function rw_spalten_da(?PDO $pdo = null): bool
 }
 
 /**
- * Der Stand des Paars eines Kontos (RW-02; E-RW-02, -05, -07, -15).
+ * Der Stand des Paars eines Kontos.
  *
  *   'da'       das Konto hat ein Paar; `seit` sagt, seit wann (UTC)
  *   'fehlt'    es hat keins — der Browser legt nach der Anmeldung eins an
  *   'spalten'  die Migration steht aus; der Browser tut nichts
- *   'demo'     das Demo-Konto; es bekommt keins (E-RW-15)
+ *   'demo'     das Demo-Konto; es bekommt keins
  *
  * EIN SELECT MIT RÜCKFALL, KEINE VORABFRAGE. `information_schema` bei jedem
  * Seitenaufbau zu fragen kostete einen Umlauf für einen Zustand, den es nach
@@ -276,7 +275,7 @@ function rw_zustand(int $userId, ?PDO $pdo = null): array
         $st->execute([$userId]);
         $z = $st->fetch(PDO::FETCH_NUM);
     } catch (PDOException $ex) {
-        /* NUR DIE FEHLENDE SPALTE IST „spalten" (F-P5c-166). Jeder andere
+        /* NUR DIE FEHLENDE SPALTE IST „spalten". Jeder andere
          * Fehler der Datenbank bricht ab, statt als Deploy-Fenster zu gelten. */
         if ((string)$ex->getCode() !== '42S22') { throw $ex; }
         return ['stand' => 'spalten', 'seit' => null];
@@ -287,7 +286,7 @@ function rw_zustand(int $userId, ?PDO $pdo = null): array
 }
 
 /* ===========================================================================
- * DER WEG AM CODE-SCHRITT (RW-03; E-RW-01, -04, -08, -14)
+ * DER WEG AM CODE-SCHRITT
  * ===========================================================================
  *
  * Die Prüfung steht HIER und nicht in `login.php`, damit die Rückwegprobe
@@ -302,8 +301,8 @@ function rw_zustand(int $userId, ?PDO $pdo = null): array
 /**
  * Wird der Weg diesem Konto angeboten? Nur, wenn die Anlage prüfen kann
  * (`rw_verfuegbar()`), das Konto ein Paar hat und eine
- * Wiederherstellungs-Hülle — ohne sie öffnet der Zettel im Browser nichts
- * (E-RW-01, -11). Sonst steht am Code-Schritt kein Verweis, und ein POST
+ * Wiederherstellungs-Hülle — ohne sie öffnet der Zettel im Browser nichts.
+ * Sonst steht am Code-Schritt kein Verweis, und ein POST
  * dorthin wird abgewiesen.
  */
 function rw_angeboten(int $kontoId): bool
@@ -317,7 +316,7 @@ function rw_angeboten(int $kontoId): bool
 }
 
 /**
- * Eine neue Herausforderung in die halbe Sitzung (E-RW-04): 32 Zufallsbytes,
+ * Eine neue Herausforderung in die halbe Sitzung: 32 Zufallsbytes,
  * fünf Minuten gültig, einmal. Jede Anzeige des Schlüsselschritts stellt
  * eine neue; die vorige ist damit verbraucht.
  */
@@ -332,18 +331,18 @@ function rw_herausforderung_stellen(array &$halb): string
 /**
  * Den Rückweg prüfen: Signatur gegen die Herausforderung der halben Sitzung.
  *
- * DIE HERAUSFORDERUNG WIRD SOFORT VERBRAUCHT, gleich welcher Ausgang
- * (E-RW-04): Eine zweite Einsendung derselben Signatur findet keine mehr.
+ * DIE HERAUSFORDERUNG WIRD SOFORT VERBRAUCHT, gleich welcher Ausgang:
+ * Eine zweite Einsendung derselben Signatur findet keine mehr.
  * DIE NACHRICHT BAUT DIESE FUNKTION aus Konto und Herausforderung der
  * Sitzung — aus dem Rumpf kommt nur die Signatur.
  *
- * DER TOPF IST `totp`, mit denselben Merkmalen wie der Code (E-RW-14, 3.3):
+ * DER TOPF IST `totp`, mit denselben Merkmalen wie der Code:
  * Der Browser sendet nur, wenn die Hülle aufging; was hier scheitert, ist
  * eine Fälschung oder ein Programmfehler, und beides wird gezählt. Eine
  * abgelaufene oder fehlende Herausforderung zählt nicht — wer nach der
  * Mittagspause kommt, hat nichts versucht.
  *
- * DAS JA ZÄHLT UND VOLLZIEHT DER AUFRUFER (F-RW-21). Diese Funktion schaltet
+ * DAS JA ZÄHLT UND VOLLZIEHT DER AUFRUFER. Diese Funktion schaltet
  * nichts ab und zählt keinen Erfolg: `login.php` ruft `rate_erfolg()`, dann
  * das Tor `login_zugang()` — Kontostatus, Wartung —, und erst dahinter
  * `totp_abschalten()`. In der ersten Fassung stand das Abschalten hier, also
@@ -368,7 +367,7 @@ function rw_rueckweg_pruefen(array &$halb, string $signaturB64): array
      * Paar wurde der Schlüsselschritt nie gezeigt, also hat es nie eine
      * Herausforderung — in der anderen Reihenfolge hieße ein handgebauter
      * POST dorthin „abgelaufen", und die Seite böte an, es noch einmal zu
-     * versuchen (gefunden mit der Rückwegprobe, B8). */
+     * versuchen (gefunden mit der Rückwegprobe). */
     if (!rw_angeboten($kontoId)) { return ['ok' => false, 'grund' => 'nicht_angeboten']; }
     if (!preg_match('/^[0-9a-f]{64}$/', $herausforderung) || $bis < time()) {
         return ['ok' => false, 'grund' => 'abgelaufen'];

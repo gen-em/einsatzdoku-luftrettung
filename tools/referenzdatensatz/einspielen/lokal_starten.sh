@@ -14,7 +14,7 @@
 # Ein gewoehnliches `befehl &` bleibt in der Prozessgruppe der startenden
 # Shell. Endet die -- und in einer Werkzeugsitzung endet sie nach jedem
 # Befehl --, nimmt sie MariaDB, den PHP-Server und socat mit. Gemessen am
-# 22.09.2026 (Schritt 15 AP7): Der Bilderlauf brach bei 292 von 496 Seiten
+# 22.09.2026: Der Bilderlauf brach bei 292 von 496 Seiten
 # ab, und der naechste Lauf bekam ERR_CONNECTION_REFUSED; vier Pruefmittel
 # hintereinander liefen ins Leere, bevor die Ursache klar war.
 #
@@ -23,7 +23,9 @@
 set -e
 
 MYSQLD=${MYSQLD:-mysqld_safe}
-WURZEL=${WURZEL:-/home/user/einsatzdoku-luftrettung/server}
+# `$0`, nicht `BASH_SOURCE`: Das Skript laeuft unter `sh` und wird mit
+# `sh <pfad>` aufgerufen, nie eingebunden.
+WURZEL=${WURZEL:-$(cd "$(dirname "$0")/../../../server" && pwd)}
 ADRESSE=${ADRESSE:-127.0.0.1:8080}
 TLS_PORT=${TLS_PORT:-8443}
 TLS_DIR=${TLS_DIR:-/tmp/lokal-tls}
@@ -46,10 +48,10 @@ echo "MariaDB laeuft."
 # eingebaute Server EINE Anfrage zur Zeit, und davor terminiert socat TLS fuer
 # einen Browser, der sechs Verbindungen gleichzeitig und weitere auf Vorrat
 # oeffnet. Das hat dreimal einen Pruefstand rot gefaerbt, ohne dass die
-# Anwendung etwas falsch machte: WebKit hing beim zweiten Anmelden (F-RW-23,
-# Backlog Nr. 301), und zweimal kam die Bedienprobe nach der Anmeldung nicht
-# an ihre erste Seite (`net::ERR_TOO_MANY_RETRIES`; RW-04 und der Abschluss
-# von P5c) -- die Anfrage erreichte den Server nie. Die Anwendung zaehlt nichts
+# Anwendung etwas falsch machte: WebKit hing beim zweiten Anmelden, und
+# zweimal kam die Bedienprobe nach der Anmeldung nicht an ihre erste Seite
+# (`net::ERR_TOO_MANY_RETRIES`) -- die Anfrage erreichte den Server nie.
+# Die Anwendung zaehlt nichts
 # im Prozessspeicher (kein APCu); Sitzungen und Ratenbremsen liegen in Dateien
 # und in der Datenbank, und Produktiv bedient ohnehin viele Anfragen zugleich.
 # Dieselbe Zahl in `lokal_einrichten.sh`.
@@ -81,7 +83,7 @@ curl -s --noproxy '*' -o /dev/null -w "PHP-Server: HTTP %{http_code}\n" "http://
 # blankes HTTP geht es auch nicht -- da laesst der Simulator die Anfrage zwar
 # hinaus (der Server sieht sie), gibt der App die Antwort aber nicht: sie
 # bekommt -1001 SECURE_CONNECTION_REQUIRED. Gemessen am 03.09.2026 mit
-# tools/uhr-pruefstand/netzprobe/ (F-S5-11); mit CA im Systemspeicher kam 405 von pair.php
+# tools/uhr-pruefstand/netzprobe/; mit CA im Systemspeicher kam 405 von pair.php
 # durch, also die echte Antwort.
 #
 # Fuer alles andere aendert sich nichts: curl -k gilt weiter, und ein

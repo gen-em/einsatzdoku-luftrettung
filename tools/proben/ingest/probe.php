@@ -3,11 +3,11 @@ declare(strict_types=1);
 
 /**
  * Ingestprobe — nimmt die Uhr-Schnittstelle nach der Ausduennung noch das
- * Richtige an? (S2/AP3, E-S2-08)
+ * Richtige an?
  *
  * Anlass: Nr. 134 — Ersetzfenster verwarf Punkte eines laufenden Einsatzes, Antwort „ok"; Nr. 158 — ein Tag ohne Datensaetze hatte keinen Anker (Teil 9, Fall 14)
  *
- * WOFUER. AP3 aendert `ingest.php` an der gefaehrlichsten Stelle, die es
+ * WOFUER. `ingest.php` entscheidet an der gefaehrlichsten Stelle, die es
  * gibt: Punkte, die die Uhr schickt, werden unter bestimmten Umstaenden
  * VERWORFEN — und dann so quittiert, dass die Uhr sie loescht. Ein Fehler
  * dabei ist stiller, endgueltiger Datenverlust, und er faellt niemandem auf,
@@ -16,17 +16,17 @@ declare(strict_types=1);
  * Drei Faelle sind zu unterscheiden, und die Grenze zwischen ihnen ist die
  * STUFE der Spur, nicht ihre Punktzahl:
  *
- *   Stufe 1/2, seq >= n_original   annehmen  (Nachzuegler, E-S2-08)
+ *   Stufe 1/2, seq >= n_original   annehmen  (Nachzuegler)
  *   Stufe 3,   seq >= n_original   verwerfen und quittieren
  *   jede Stufe, seq <  n_original  still uebergehen (Wiederholung)
  *
- * SEIT WEB 13.0.1 KOMMT EINE ZWEITE FRAGE DAZU (Teil 7): Was macht so ein
+ * EINE ZWEITE FRAGE KOMMT DAZU (Teil 7): Was macht so ein
  * spaetes Paket mit den METADATEN? Es traegt kein Ende, keine Strecke, keinen
- * Anstieg — und ueberschrieb sie damit bis 13.0.0 mit NULL, waehrend `final`
- * auf 1 blieb. Teil 3 hat diesen Fall seit S2 gesendet, ohne hinzusehen.
+ * Anstieg — und ueberschrieb sie damit einmal mit NULL, waehrend `final`
+ * auf 1 blieb. Teil 3 hatte diesen Fall gesendet, ohne hinzusehen.
  *
- * SEIT WEB 20.40.0 (P5c/AP3, Teil 11): Scheitert die Annahme an der
- * Datenbank, antwortet `ingest.php` wie seit M3-10 mit `{"error":"server",
+ * TEIL 11: Scheitert die Annahme an der
+ * Datenbank, antwortet `ingest.php` mit `{"error":"server",
  * "kennung":…}` — und die Kennung steht jetzt im Reiter System statt im
  * Fehlerprotokoll des Webspace. Die Antwortform ist die Zusage an die
  * Geraete (`JSON-Vertrag.md` 5) und darf sich dabei nicht aendern.
@@ -50,14 +50,14 @@ declare(strict_types=1);
  */
 
 $wurzel = dirname(__DIR__, 3) . '/server';
-/* `config.php` wird NICHT mehr von Hand geladen (Web 20.27.0): `db.php`
+/* `config.php` wird NICHT mehr von Hand geladen: `db.php`
  * bringt `konfig_lib.php` mit, und der Rueckgabewert dieses `require` wurde
  * ohnehin weggeworfen. Die Tiefe ist 3 und nicht 2, seit die Probe unter
- * `tools/proben/` liegt (PK-04/2). */
+ * `tools/proben/` liegt. */
 require_once $wurzel . '/db.php';
 require_once $wurzel . '/spur_lib.php';
 require_once $wurzel . '/jobs_lib.php';
-/* SEIT S11-04a SENDET DIE PROBE WIE EIN GERAET AB WEB 22: Punkte als
+/* DIE PROBE SENDET WIE EIN GERAET: Punkte als
  * verschlossenes Stueck, Koordinaten und Reanimation in der Einsatzhuelle
  * (`tools/proben/huelle/geraet.php`). Das Schluesselpaar gehoert der Probe;
  * der Server prueft nur die Form der Huelle und kennt den Schluessel nicht. */
@@ -90,15 +90,15 @@ $pdo->prepare("INSERT INTO users (email, name, role, password_hash, kdf_salt, kd
                VALUES (?, 'Ingestprobe', 'user', '', '', 320000)")->execute([$email]);
 $uid = (int)$pdo->lastInsertId();
 
-/* ZWEI GERAETE, UND BEIDE MIT KENNUNG (R64, Teil 8).
+/* ZWEI GERAETE, UND BEIDE MIT KENNUNG (Teil 8).
  *
  * Das erste gibt sich als UHR aus, das zweite als HANDY. Beide brauchen Art
- * und Modell, denn seit Web 14.0.0 wandert diese Angabe als Momentaufnahme an
+ * und Modell, denn diese Angabe wandert als Momentaufnahme an
  * jeden Einsatz und jedes Segment — und die Probe ist die einzige Stelle, an
  * der sich das ueber echtes HTTP nachweisen laesst.
  *
  * WARUM ZWEI: Die Herkunft entsteht aus dem `client_ref`-PRAEFIX, und die
- * Geraeteart ist nur der Rueckfall fuer ein unbekanntes Praefix (E-R64-01).
+ * Geraeteart ist nur der Rueckfall fuer ein unbekanntes Praefix.
  * Mit einem Geraet liesse sich der Rueckfall nicht von der Regel
  * unterscheiden — beim Uhr-Geraet ist 'watch' beides. Das Handy-Geraet
  * trennt die Faelle: Ein Praefix, das die Regel nicht kennt, muss dort
@@ -119,7 +119,7 @@ $pdo->prepare('INSERT INTO devices (user_id, device_id, api_key_hash, label, act
     ->execute([$uid, $handyKennung, geraet_schluessel_hash($handyKey),
                'Ingestprobe Handy', 'handy', 'Google Pixel 8']);
 
-/* DREI WEITERE GERAETE FUER DIE MENGENBREMSE (Teil 10, P5a/AP7).
+/* DREI WEITERE GERAETE FUER DIE MENGENBREMSE (Teil 10).
  *
  * WARUM EIGENE UND NICHT DAS UHR-GERAET: Teil 10 sperrt absichtlich, und eine
  * Sperre auf der Kennung des Uhr-Geraets machte die Teile 1 bis 9 beim
@@ -162,12 +162,12 @@ $pdo->exec("DELETE FROM rate_limits WHERE topf IN ('ingest','ingest_ip')");
  */
 function senden(array $koerper, ?string $dev = null, ?string $key = null, bool $klartext = false): array {
     global $basis, $geraetKennung, $geraetKey, $ghPaar;
-    /* `$klartext` schickt das Paket so, wie eine Uhr vor Web 22 es schickte —
+    /* `$klartext` schickt das Paket so, wie eine aeltere Uhr es schickte —
      * nur fuer Teil 5, der genau die Abweisung prueft. */
     if (!$klartext) { $koerper = gh_probe_koerper($koerper, $ghPaar['sec1']); }
     $dev = $dev ?? $geraetKennung;
     $key = $key ?? $geraetKey;
-    /* DIE KOPFZEILEN KOMMEN SEIT WEB 20.11.0 MIT (P5a/AP7).
+    /* DIE KOPFZEILEN KOMMEN SEIT WEB 20.11.0 MIT.
      *
      * Bis dahin lieferte diese Funktion nur Code und Rumpf — und damit liess
      * sich die halbe Zusage der Mengenbremse nicht nachweisen: `Retry-After`
@@ -199,9 +199,9 @@ function senden(array $koerper, ?string $dev = null, ?string $key = null, bool $
             'kopf' => $kopf];
 }
 
-/* ---- DIE ZEITSTEMPEL LIEGEN IM ERSETZFENSTER (Backlog Nr. 134) ------------
+/* ---- DIE ZEITSTEMPEL LIEGEN IM ERSETZFENSTER ------------------------------
  *
- * Bis Web 15.5.2 standen hier feste Maerz-Daten. Seit dem Ersetzfenster ist
+ * Feste Maerz-Daten gehen hier nicht. Seit dem Ersetzfenster ist
  * das kein Detail mehr: Ein zweites Paket an einen Datensatz, dessen
  * `started_at` aelter als INGEST_ERSETZFENSTER_H ist, wird nicht mehr
  * uebernommen -- und die halbe Probe pruefte genau solche zweiten Pakete.
@@ -243,18 +243,18 @@ function paket(string $ref, int $seqFrom, int $n, bool $final = false,
             'track' => ['seq_from' => $seqFrom, 'points' => $punkte]];
 }
 
-/** Gespeicherte Punkte eines Einsatzes — seit S11-04a die Summe der Stuecke. */
+/** Gespeicherte Punkte eines Einsatzes — die Summe der Stuecke. */
 function zeilen(PDO $pdo, int $id): int {
     $q = $pdo->prepare("SELECT COALESCE(SUM(punkte), 0) FROM track_stuecke WHERE owner_type='mission' AND owner_id=?");
     $q->execute([$id]); return (int)$q->fetchColumn();
 }
 
 /** Die Spur eines Einsatzes durch EIN Stueck der Stufe 2 oder 3 ersetzen —
- *  wie es der Wartungslauf im Browser (S11-07) tun wird. Die Huelle traegt
+ *  wie es der Wartungslauf im Browser tun wird. Die Huelle traegt
  *  Zufall unter der richtigen Bindung; der Server sieht ohnehin nur die Form. */
 function stueck_zusammenfuegen(PDO $pdo, int $id, string $ref, int $nOriginal, int $punkte, int $stufe): void {
     global $ghPaar;
-    /* OHNE EINSATZ KEIN STUECK (S11-06, F-S11-69). Fand die Probe ihren
+    /* OHNE EINSATZ KEIN STUECK. Fand die Probe ihren
      * Einsatz nicht, schrieb sie hier ein Stueck an `owner_id` 0 — eine Waise,
      * die kein Aufraeumen findet und die die Jobprobe spaeter als fremd zaehlt. */
     if ($id <= 0) { throw new RuntimeException("stueck_zusammenfuegen(): kein Einsatz zu '$ref'"); }
@@ -381,13 +381,13 @@ pruefe(($g['daten']['dropped_points'] ?? -1) === 6
        'Gemischtes Paket: nur der Teil OBERHALB n_original zaehlt als verworfen',
        'dropped ' . ($g['daten']['dropped_points'] ?? '?') . ' (erwartet 6)');
 
-/* ---- Teil 5 — Klartext und kaputte Huellen werden abgewiesen (S11-04a) --- *
+/* ---- Teil 5 — Klartext und kaputte Huellen werden abgewiesen --- *
  *
- * BIS WEB 21 STAND HIER die Untergrenze von next_seq bei einem Punkt, den die
- * Wertepruefung verwarf (E-S2-25). Seit S11 sieht der Server keine Punkte
- * mehr; die Wertepruefung machen Geraet und Browser (E-S11-13). Geprueft wird
+ * FRUEHER STAND HIER die Untergrenze von next_seq bei einem Punkt, den die
+ * Wertepruefung verwarf. Der Server sieht keine Punkte
+ * mehr; die Wertepruefung machen Geraet und Browser. Geprueft wird
  * jetzt, was an ihre Stelle tritt: Klartext-Ortsdaten nimmt der Eingang nicht
- * an (E-S11-09), und eine Huelle muss die Form der Fassung 1 haben. */
+ * an, und eine Huelle muss die Form der Fassung 1 haben. */
 
 echo "\n  Teil 5 — Klartext-Ortsdaten und kaputte Huellen: 400 (S11-04a)\n";
 $k1 = senden(['kind' => 'mission', 'client_ref' => 'probe-2', 'day' => $tagVon($tsB),
@@ -438,16 +438,16 @@ $falsch = 'kein Fehler';
 try { gh_probe_oeffnen($abgelegt, $ghPaar['privat'], 'spur', 'probe-1', '0:3'); } catch (Throwable $ex) { $falsch = $ex->getMessage(); }
 pruefe($falsch === 'pruefwert', 'An einem anderen Einsatz geht sie NICHT auf', $falsch);
 
-/* Teil 6 (die Ortshoehe ueberlebt eine berichtigte Phasenzeit) IST MIT S11-04a
+/* Teil 6 (die Ortshoehe ueberlebt eine berichtigte Phasenzeit) IST
  * ENTFALLEN: Die Ortshoehe rechnete der Server aus Phasenkoordinate und Spur;
- * beides sieht er nicht mehr. Sie rechnet ab S11-05 der Browser und legt sie
- * in den pat_blob (E-S11-03). */
+ * beides sieht er nicht mehr. Sie rechnet der Browser und legt sie
+ * in den pat_blob. */
 
-/* ---- Teil 7 — Ein spaetes Paket darf nichts loeschen (Web 13.0.1) -------- */
+/* ---- Teil 7 — Ein spaetes Paket darf nichts loeschen --------------------- */
 
 echo "\n  Teil 7 — Was einmal dastand, bleibt stehen (B5.3)\n";
 
-/* WARUM DIESER TEIL SPAETER KAM ALS DIE PROBE. Teil 3 schickt seit S2 eine
+/* WARUM DIESER TEIL SPAETER KAM ALS DIE PROBE. Teil 3 schickt eine
  * "Wiederholung unterhalb n_original" — also genau so ein spaetes,
  * nicht-finales Paket — und hat nur nie nachgesehen, was es an den
  * Metadaten anrichtet. Es richtete etwas an: `ended_at`, `distance_m` und
@@ -512,7 +512,7 @@ $rMeta = meta($pdo, 'rest_segments', 'probe-spaet-r');
 pruefe(($rMeta['ended_at'] ?? null) === $alsDb($tsDe) && (int)($rMeta['final'] ?? 0) === 1,
        'Dasselbe am Ruhe-Segment: Ende bleibt, final bleibt', json_encode($rMeta));
 
-/* ---- Teil 8 — Herkunft und Momentaufnahme (R64, Web 14.0.0) -------------- */
+/* ---- Teil 8 — Herkunft und Momentaufnahme -------------------------------- */
 
 echo "\n  Teil 8 — Woher der Einsatz kommt und mit welchem Geraet (R64)\n";
 
@@ -520,7 +520,7 @@ echo "\n  Teil 8 — Woher der Einsatz kommt und mit welchem Geraet (R64)\n";
  * `herkunft_ableiten()` liesse sich mit sechs Zeilen aufrufen; was hier
  * geprueft wird, ist etwas anderes: dass die Angabe den ganzen Weg geht — von
  * der `devices`-Zeile ueber die Abfrage in `ingest.php` in den INSERT und in
- * die richtige Spalte. Genau dieser Weg war es, der bis Web 13.3.0 fehlte,
+ * die richtige Spalte. Genau dieser Weg war es, der einmal fehlte,
  * und zwar ohne dass irgendeine Antwort anders ausgesehen haette. */
 
 /** Die drei neuen Spalten eines Einsatzes oder Segments. */
@@ -551,14 +551,14 @@ pruefe(($h['origin'] ?? '') === 'watch'
        'Uhr-Einsatz (m-): origin=watch, Art und Modell der Uhr', json_encode($h));
 
 // 2. Das Android-Handy: Praefix `am-`, GEGEN die Geraeteart des Uhr-Geraets
-//    waere es 'watch' — genau der Fehler, den R64 behebt.
+//    waere es 'watch' — genau der Fehler, um den es hier geht.
 senden(paket('am-r64-1', 0, 3, true), $handyKennung, $handyKey);
 $h = herkunft($pdo, 'missions', 'am-r64-1');
 pruefe(($h['origin'] ?? '') === 'android'
        && ($h['geraet_art'] ?? '') === 'handy' && ($h['geraet_modell'] ?? '') === $pixel,
        'Handy-Einsatz (am-): origin=android, Art und Modell des Handys', json_encode($h));
 
-// 3. An der Wear-OS-Uhr begonnen, vom HANDY gesendet (E-S4-11). Dasselbe
+// 3. An der Wear-OS-Uhr begonnen, vom HANDY gesendet. Dasselbe
 //    Geraet wie oben — nur das Praefix unterscheidet die beiden Faelle.
 senden(paket('wm-r64-1', 0, 3, true), $handyKennung, $handyKey);
 $h = herkunft($pdo, 'missions', 'wm-r64-1');
@@ -578,7 +578,7 @@ $h = herkunft($pdo, 'missions', 'probe-r64-unbekannt2');
 pruefe(($h['origin'] ?? '') === 'watch',
        'GEGENPROBE: dasselbe an der Uhr ergibt origin=watch', json_encode($h));
 
-// 5. Die Segmente tragen die Momentaufnahme, aber keine Herkunft (E-R64-04).
+// 5. Die Segmente tragen die Momentaufnahme, aber keine Herkunft.
 senden(segment('r-r64-1'));
 $h = herkunft($pdo, 'rest_segments', 'r-r64-1');
 pruefe(($h['geraet_art'] ?? '') === 'uhr' && ($h['geraet_modell'] ?? '') === $fenix,
@@ -590,12 +590,12 @@ pruefe(($h['geraet_art'] ?? '') === 'handy' && ($h['geraet_modell'] ?? '') === $
        'Ruhe-Segment des Handys traegt Art und Modell', json_encode($h));
 
 /* 6. DIE ZUSICHERUNG, AN DER DER GANZE PUNKT HAENGT: Die Momentaufnahme wird
- *    NIE nachgezogen (E-R64-05). Hier wird das Geraet zwischen zwei Paketen
+ *    NIE nachgezogen. Hier wird das Geraet zwischen zwei Paketen
  *    umgeschrieben — so, wie eine spaetere Nachaufloesung es taete
  *    (tools/erzeugen/geraetemodelle-nachaufloesen.php). Der Einsatz muss weiter das
  *    tragen, was beim Anlegen galt; ein neuer Einsatz das Neue. Ginge die
  *    Momentaufnahme mit, waere sie keine — dann koennte man auch gleich ueber
- *    `device_id` lesen, und genau das trug nicht (R47). */
+ *    `device_id` lesen, und genau das trug nicht. */
 $pdo->prepare('UPDATE devices SET geraet_modell = ? WHERE device_id = ?')
     ->execute(['Nachtraeglich anders aufgeloest', $geraetKennung]);
 senden(paket('m-r64-1', 3, 3, true));
@@ -609,7 +609,7 @@ pruefe(($h['geraet_modell'] ?? '') === 'Nachtraeglich anders aufgeloest',
        'GEGENPROBE: ein NEUER Einsatz bekommt den neuen Wert', json_encode($h));
 
 
-/* ---- Teil 9 — Das Ersetzfenster (Backlog Nr. 134, K-14, F-SP-8) ----------
+/* ---- Teil 9 — Das Ersetzfenster ------------------------------------------
  *
  * WOGEGEN. Der Geraeteschluessel liegt auf der Uhr im Klartext. Wer sie
  * findet, kann Einsaetze hochladen und die Phasen BESTEHENDER Einsaetze
@@ -644,7 +644,7 @@ $phasenA = [['phase' => 2, 'at' => $tsC, 'lat' => 47.5, 'lon' => 11.5],
 $phasenB = [['phase' => 2, 'at' => $tsC, 'lat' => 40.0, 'lon' => 5.0],
             ['phase' => 3, 'at' => $tsCe, 'lat' => 40.1, 'lon' => 5.1]];
 
-/* SEIT S11-04a STEHT DIE KOORDINATE IN DER EINSATZHUELLE, nicht mehr in
+/* DIE KOORDINATE STEHT IN DER EINSATZHUELLE, nicht mehr in
  * `mission_phases`. Die Probe oeffnet sie mit ihrem eigenen Schluessel. */
 $zaehlPhasen = static function (PDO $pdo, string $ref): array {
     global $ghPaar;
@@ -839,7 +839,7 @@ pruefe($vId > 0 && ($v2['daten']['kept_points'] ?? -1) === 1,
  *     Tages nicht fort, an dem seit dem Fenster niemand mehr etwas angelegt
  *     hat (8b). Der Tag von $fId liegt ausserhalb (created_at vor 73 h).
  *
- *     SEIT WEB 21.3.0 AUCH DER TAG SELBST (R4-15, Nr. 158): Der Anker ist
+ *     SEIT WEB 21.3.0 AUCH DER TAG SELBST: Der Anker ist
  *     `days.created_at`, nicht mehr das juengste `created_at` seiner
  *     Datensaetze. Der Tag entstand in diesem Lauf und traegt „jetzt" —
  *     ohne diese Zeile galt er als offen, und 8b war rot, weil die Probe den
@@ -1053,7 +1053,7 @@ pruefe(($vt['daten']['ok'] ?? false) === true && isset($vt['daten']['rejected'])
        'HTTP ' . $vt['code'] . ', rejected ' . json_encode($vt['daten']['rejected'] ?? null)
        . ', Tag ' . json_encode($vtTag));
 
-/* (14) Ein alter Tag OHNE Datensaetze (Nr. 158, Web 21.3.0). Bis hierher
+/* (14) Ein alter Tag OHNE Datensaetze. Bis hierher
  *      fragte ingest_tag_offen() die uebrigen Datensaetze des Tages; ein Tag
  *      ohne sie hatte keinen Anker und galt als offen — ein neues Paket
  *      schrieb seinen Zeitraum um, egal wie alt er war. Jetzt fragt sie
@@ -1103,10 +1103,10 @@ printf("  Ergebnis des Fensters: innerhalb angenommen, ausserhalb abgewiesen und
        INGEST_ERSETZFENSTER_H);
 
 
-/* ---- Teil 10 — Die Mengenbremse (P5a/AP7, E-P5a-01/-02/-47/-48) ----------
+/* ---- Teil 10 — Die Mengenbremse ------------------------------------------
  *
- * WOFUER. Bis Web 20.10.0 war `ingest.php` der einzige Endpunkt der Anwendung
- * OHNE Ratenschutz. Seit 20.11.0 zaehlt er Fehlversuche — und was hier
+ * WOFUER. Lange war `ingest.php` der einzige Endpunkt der Anwendung
+ * OHNE Ratenschutz. Heute zaehlt er Fehlversuche — und was hier
  * geprueft wird, ist beides: dass die Bremse greift, UND dass sie nichts
  * bremst, was sie nicht bremsen soll. Der zweite Teil ist der wichtigere:
  * Eine Bremse, die gelungene Uploads mitnimmt, kostet Einsatzdaten.
@@ -1138,7 +1138,7 @@ $fehlversuch = static function (string $dev, string $key = 'falsch-falsch-falsch
 
 /* (1) VIERZEHN FEHLVERSUCHE SIND EIN SCHLUESSELWECHSEL, KEIN ANGRIFF.
  *
- * Das ist die Zahl, an der die Grenze haengt (E-P5a-02): 14 Teilstuecke in
+ * Das ist die Zahl, an der die Grenze haengt: 14 Teilstuecke in
  * einem Paket sind am Referenzlauf gemessen. Wer die Grenze auf 10 senkt,
  * sperrt eine Uhr aus, die gerade neu gekoppelt wurde. */
 $codes14 = [];
@@ -1173,7 +1173,7 @@ pruefe(($a31['daten']['topf'] ?? null) === null && count($a31['daten']) === 1,
 
 /* (3) `Retry-After` — die Kopfzeile, die das Paket zugesagt hat.
  *
- * Erste Sprosse der Leiter: 900 Sekunden (E-P5a-43; NICHT 10 Minuten, das war
+ * Erste Sprosse der Leiter: 900 Sekunden (NICHT 10 Minuten, das war
  * die Zahl des Konzepts, und sie waere MILDER als die Sperre davor). */
 $ra = (int)($a31['kopf']['retry-after'] ?? 0);
 pruefe($ra > 840 && $ra <= 900,
@@ -1189,7 +1189,7 @@ pruefe($ereignis === 1,
        'Genau EIN Sperrereignis — eines je Sperre, nicht eines je Fehlversuch',
        $ereignis . ' Zeile(n)');
 
-/* (4) DER VERMERK AM GERAET (E-P5a-02). Ohne ihn stuende eine Notaerztin vor
+/* (4) DER VERMERK AM GERAET. Ohne ihn stuende eine Notaerztin vor
  *     einer Uhr, die nichts mehr hochlaedt, und nichts sagte ihr, warum. */
 $vq = $pdo->prepare('SELECT abgewiesen_seit, abgewiesen_anzahl FROM devices WHERE device_id = ?');
 $vq->execute([$bremseKennung]);
@@ -1221,8 +1221,8 @@ pruefe($zaehlerLesen('ingest_ip', 'ip:127.0.0.1') === [],
        'Der Adresstopf ist leer — bekannte Kennungen zaehlen dort nicht',
        'keine Zeile');
 
-/* (6) WAS NICHT ZAEHLT. Gezaehlt werden Fehlversuche, nichts sonst
- *     (E-P5a-01 (1)). Drei Gegenproben: */
+/* (6) WAS NICHT ZAEHLT. Gezaehlt werden Fehlversuche, nichts sonst.
+ *     Drei Gegenproben: */
 $aus = senden(['kind' => 'mission', 'client_ref' => 'probe-bremse-aus',
                'day' => gmdate('Y-m-d'),
                'started_at' => gmdate('Y-m-d\TH:i:s\Z'),
@@ -1239,7 +1239,7 @@ pruefe($mies['code'] === 400 && $zaehlerLesen('ingest', 'id:' . $nachbarKennung)
 
 $gross = senden(['kind' => 'mission', 'client_ref' => 'probe-bremse-gross',
                  'day' => gmdate('Y-m-d'), 'started_at' => gmdate('Y-m-d\TH:i:s\Z'),
-                 /* `konfig()` statt `$CFG` (Web 20.27.0, Schritt 15 AP2). Hier
+                 /* `konfig()` statt `$CFG`. Hier
                   * stand die globale `$CFG`, und die gibt es nicht mehr:
                   * `(int)null` ist 0, der „zu grosse" Rumpf war damit 1000
                   * Byte gross, und die Erwartung „413 zaehlt nicht" bekam
@@ -1270,10 +1270,10 @@ pruefe($heil['code'] === 200 && (int)($vermerk2['abgewiesen_anzahl'] ?? -1) === 
 
 /* (8) UNBEKANNTE KENNUNG → ADRESSTOPF, UND ZWAR MIT DERSELBEN SCHWELLE.
  *
- * Das ist die Gegenprobe zu E-P5a-47: Waeren die Schwellen verschieden — 30
+ * Das ist die Gegenprobe zur gemeinsamen Schwelle: Waeren die Schwellen verschieden — 30
  * fuer die Kennung, 50 fuer die Adresse —, verriete die Zahl der Versuche bis
- * zum 429, ob es die geratene Kennung GIBT. Genau diese Auskunft hat M4-07
- * mit dem Blindvergleich beseitigt; sie als Zaehlunterschied wieder
+ * zum 429, ob es die geratene Kennung GIBT. Genau diese Auskunft beseitigt
+ * der Blindvergleich; sie als Zaehlunterschied wieder
  * einzubauen waere ein Rueckschritt durch die Hintertuer.
  *
  * DIESER ABSCHNITT SPERRT DIE ADRESSE. Danach geht nichts mehr durch — er
@@ -1312,7 +1312,7 @@ $pdo->exec("DELETE FROM rate_limits WHERE topf IN ('ingest','ingest_ip')");
 $pdo->exec("DELETE FROM sicherheit_ereignisse WHERE topf IN ('ingest','ingest_ip')");
 echo "  Ergebnis der Bremse: 14 ohne Sperre, 30 mit; Retry-After 900 s; Vermerk gesetzt und geraeumt.\n";
 
-/* ---- Teil 11 — Der Fehlfall (P5c/AP3, E-P5c-58) --------------------------
+/* ---- Teil 11 — Der Fehlfall ----------------------------------------------
  *
  * EIN AUSLOESER AUF `missions` macht aus dem naechsten Einfuegen einen
  * Datenbankfehler — deterministisch, ohne eine Zeile unter `server/`. Die
@@ -1349,7 +1349,7 @@ if ($ze !== null) {
                     AND JSON_UNQUOTE(JSON_EXTRACT(daten, '$.kennung')) = ?")->execute([$kf]);
 }
 
-/* ---- Teil 12 — Der Deadlock und die Wiederholung (Schritt 18, SR-05) -----
+/* ---- Teil 12 — Der Deadlock und die Wiederholung -------------------------
  *
  * Anlass: Nr. 210. Seit Web 21.11.1 laeuft der Rumpf von `ingest.php` bei
  * 1205 und 1213 bis zu dreimal. Die Verbindungsprobe zeigt, dass es seither
@@ -1367,7 +1367,7 @@ if ($ze !== null) {
  * nichts zum Doppeln uebrig (die Gegenprobe ohne Zuruecksetzen blieb
  * gruen).
  *
- * SEIT S11-04a IST DER VERWORFENE WERT EINE PHASE, kein Punkt: Punkte sieht
+ * DER VERWORFENE WERT IST EINE PHASE, kein Punkt: Punkte sieht
  * der Server nicht mehr. Eine Phase mit unmoeglicher Nummer wird im Rumpf
  * gemeldet, also VOR dem Ausloeser — dieselbe Lage wie vorher.
  *
@@ -1442,7 +1442,7 @@ try {
     jobs_pause(0);
     /* Aufraeumen: das Konto und alles daran. Die Kaskade nimmt missions mit;
      * Spuren haengen an keinem Fremdschluessel und muessen ausdruecklich weg
-     * (F-S2-B) — genau der Fund, den AP1 behoben hat. */
+     * — sonst blieben sie liegen. */
     $ids = $pdo->prepare('SELECT id FROM missions WHERE user_id = ?');
     $ids->execute([$uid]);
     $mIds = array_map('intval', $ids->fetchAll(PDO::FETCH_COLUMN));

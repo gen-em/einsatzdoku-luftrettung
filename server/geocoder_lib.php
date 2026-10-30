@@ -2,7 +2,7 @@
 declare(strict_types=1);
 
 /**
- * ADRESSSUCHE — die Einstellungen dazu (S9/AP2, E-S9-05, R79).
+ * ADRESSSUCHE — die Einstellungen dazu.
  *
  * WAS HIER STEHT UND WARUM AN EINER STELLE. Die Adresssuche haengt an drei
  * Werten, und alle drei werden an verschiedenen Enden der Anwendung gebraucht:
@@ -10,7 +10,7 @@ declare(strict_types=1);
  * von der Servereinstellung (was steht im Formular?), vom Profil (ist der
  * Kontoschalter ueberhaupt bedienbar?) und vom Datenschutztext (wen nenne
  * ich?). Ohne eine gemeinsame Stelle stuende die Vorgabeadresse an fuenf
- * Stellen — genau der Zustand, den AP2 abschafft.
+ * Stellen.
  *
  * DIE INSTALLATION IST DIE OBERGRENZE. `geocoder_an()` ist die einzige Frage,
  * die ein Aufrufer stellen sollte: Sie verundet beide Schalter. Wer sie
@@ -20,8 +20,8 @@ declare(strict_types=1);
  *
  * ABLAGE:
  *   app_state `adresssuche`   '0' = aus. Fehlt der Schluessel, ist sie AN —
- *                             das ist die Vorgabe aus F-SP-4, und sie gilt
- *                             auch fuer jede Installation, die vor S9 lief.
+ *                             das ist die Vorgabe, und sie gilt
+ *                             fuer jede Installation.
  *   app_state `geocoder_url`  die Dienstadresse. Fehlt sie, gilt VORGABE.
  *   users.adresssuche         TINYINT(1) NOT NULL DEFAULT 1, Migration
  *                             `2026_09_07_adresssuche_konto`.
@@ -62,7 +62,7 @@ function geocoder_state(string $k, bool $frisch = false): ?string
     return $c[$k] = app_state_lesen($k);
 }
 
-/** Schalter der Installation. Vorgabe: an (F-SP-4). */
+/** Schalter der Installation. Vorgabe: an. */
 function geocoder_installation_an(): bool
 {
     return geocoder_state(GEOCODER_K_AN) !== '0';

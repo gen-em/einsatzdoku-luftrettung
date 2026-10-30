@@ -1,8 +1,7 @@
 // NAdoku — die Geraetehuelle: Spur, Phasenkoordinaten und Reanimation
-// verschlossen senden (S11-08, Konzept S11 3.4 und 3.7, E-S11-17, -31).
+// verschlossen senden.
 //
-// WAS DAS IST. Seit Web 22.0.1 nimmt ingest.php Ortsdaten nur noch
-// verschlossen an und weist Klartext mit `400 klartext` ab. Die Uhr
+// WAS DAS IST. ingest.php nimmt Ortsdaten nur verschlossen an und weist Klartext mit `400 klartext` ab. Die Uhr
 // verschliesst mit dem OEFFENTLICHEN Schluessel des Kontos, den sie bei der
 // Kopplung bekommt (pair.php, `kontoschluessel`). Oeffnen kann sie selbst
 // nichts — und soll es nicht: Den privaten Teil hat nur der Browser der
@@ -13,14 +12,14 @@
 // (Fassung 1): Kennbyte 0x01 · fluechtiger oeffentlicher Schluessel (65 Byte
 // SEC1) · IV · AES-256-CBC · HMAC-SHA256, Schluessel ueber ECDH auf P-256
 // und HKDF. Die Bausteine hier stammen aus der Krypto-Probe
-// (tools/uhr-pruefstand/krypto-probe/, S11-02); dort sind sie gegen die
+// (tools/uhr-pruefstand/krypto-probe/); dort sind sie gegen die
 // Vektoren gemessen, auf drei Uhren im Simulator und auf der Fenix 6 Pro.
 //
-// GARMINS BYTEORDNUNG (F-S11-18). Toybox.Cryptography fuehrt Schluessel je
+// GARMINS BYTEORDNUNG. Toybox.Cryptography fuehrt Schluessel je
 // Koordinate little-endian und ohne das Praefix 0x04, und liefert das
 // gemeinsame Geheimnis Z im Simulator und auf der Fenix 6 Pro ebenfalls
-// little-endian. Fuer FR 945 und Venu 3s ist das angenommen, nicht gemessen
-// (E-S11-30). Deshalb ANNIMMT die App es nicht, sondern MISST es: Vor dem
+// little-endian. Fuer FR 945 und Venu 3s ist das angenommen, nicht gemessen.
+// Deshalb ANNIMMT die App es nicht, sondern MISST es: Vor dem
 // ersten Senden rechnet sie einen festen Fall aus der Referenz nach
 // (HuelleVektor.mc). Stimmt Z erst umgedreht, ist die Ordnung "le"; stimmt
 // danach das Pruefwort, traegt die ganze Kette. Stimmt keines, sendet sie
@@ -28,7 +27,7 @@
 // Datenverlust, und "Uhr kann nicht verschluesseln" auf der Sync-Seite ist
 // eine Auskunft.
 //
-// DIE ANZEIGE AUF DER UHR liest weiter den Klartextpuffer (E-R17-09): Die
+// DIE ANZEIGE AUF DER UHR liest den Klartextpuffer: Die
 // Uhr zeigt, was sie selbst aufgezeichnet hat; verschlossen wird erst auf
 // dem Weg hinaus.
 using Toybox.Lang;
@@ -45,7 +44,7 @@ module Huelle {
     const INFO = "nadoku-huelle-1";
 
     /* Storage-Schluessel. Der Kontoschluessel liegt als Base64 neben "cred"
-     * (Konzept 3.7) — als Zeichenkette, weil Storage nicht auf jeder
+     * — als Zeichenkette, weil Storage nicht auf jeder
      * Fassung ein ByteArray nimmt. Er ist oeffentlich; ihn zu kennen
      * erlaubt nur, Huellen FUER dieses Konto zu bauen. */
     const ABLAGE_SCHLUESSEL = "kschl";
@@ -54,8 +53,8 @@ module Huelle {
      * Byteordnung aendern. */
     const ABLAGE_PRUEFUNG = "kpruef";
 
-    const HOEHE_UNBEKANNT = -32768;   // E-S11-39
-    const HOEHE_GRENZE = 32767;       // E-S11-66: ganze Meter, geklemmt
+    const HOEHE_UNBEKANNT = -32768;
+    const HOEHE_GRENZE = 32767;       // ganze Meter, geklemmt
 
     // "be", "le", "kaputt" — oder null, solange nicht gemessen.
     var _ordnung as Lang.String or Null = null;
@@ -112,18 +111,18 @@ module Huelle {
         return e;
     }
 
-    // ---- Der Selbsttest (E-S11-30) ---------------------------------------
+    // ---- Der Selbsttest -------------------------------------------------
 
     /* Kann diese Uhr verschliessen? Beim ersten Aufruf je App-Fassung und
      * Firmware wird gemessen (zwei Schluesselvereinbarungen, auf der
      * Fenix 6 Pro rund 0,2 s), danach steht das Ergebnis im Storage.
      *
-     * NUR EIN GUELTIGES ERGEBNIS BLEIBT (F-R17-53). Bis Uhr 4.0.0 landete
-     * auch "kaputt" im Storage, und zwar fuer jede Ausnahme beim Messen --
-     * knapper Speicher beim ersten Start mit vollem Puffer, ein Watchdog
-     * mitten in den Schluesselvereinbarungen. Eine einmalige Ursache wurde
-     * so zum Dauerzustand: Die Uhr sendete nichts mehr, und nichts im Geraet
-     * setzte den Vermerk zurueck, bis ein Update die Kennung aenderte. Jetzt
+     * NUR EIN GUELTIGES ERGEBNIS BLEIBT. Landete auch "kaputt" im Storage,
+     * und zwar fuer jede Ausnahme beim Messen -- knapper Speicher beim
+     * ersten Start mit vollem Puffer, ein Watchdog mitten in den
+     * Schluesselvereinbarungen --, wuerde eine einmalige Ursache zum
+     * Dauerzustand: Die Uhr sendete nichts mehr, und nichts im Geraet
+     * setzte den Vermerk zurueck, bis ein Update die Kennung aendert. Also
      * gilt "kaputt" nur bis zum naechsten Start (`_ordnung` im Speicher)
      * und wird dann einmal neu gemessen. */
     function bereit() as Lang.Boolean {
@@ -177,16 +176,15 @@ module Huelle {
         return ergebnis;
     }
 
-    /* Den Vermerk des Selbsttests vergessen -- beim Trennen der Kopplung
-     * (F-R17-53): Neu koppeln soll ein frischer Anfang sein, auch fuer die
-     * Frage, ob diese Uhr verschliessen kann. Gemessen wird beim naechsten
+    /* Den Vermerk des Selbsttests vergessen -- beim Trennen der Kopplung:
+     * Neu koppeln soll ein frischer Anfang sein, auch fuer die Frage, ob diese Uhr verschliessen kann. Gemessen wird beim naechsten
      * `bereit()`. */
     function pruefungVergessen() as Void {
         _ordnung = null;
         Storage.deleteValue(ABLAGE_PRUEFUNG);
     }
 
-    // ---- Bausteine (aus der Krypto-Probe, S11-02) ------------------------
+    // ---- Bausteine (aus der Krypto-Probe) --------------------------------
 
     function umgedreht(b as Lang.ByteArray, von as Lang.Number, bis as Lang.Number) as Lang.ByteArray {
         var aus = new [bis - von]b;
@@ -263,7 +261,7 @@ module Huelle {
     }
 
     // Ein Schluesselpaar: aus festem d (big-endian, nur fuer den Selbsttest)
-    // oder neu erzeugt — je Huelle ein fluechtiges (E-S11-31).
+    // oder neu erzeugt — je Huelle ein fluechtiges.
     function paar(d as Lang.ByteArray or Null) as Cryptography.KeyPair {
         if (d == null) {
             return new Cryptography.KeyPair({
@@ -279,7 +277,7 @@ module Huelle {
             :protocol => Cryptography.KEY_AGREEMENT_ECDH,
             :privateKey => p.getPrivateKey()});
         /* Der erste Parameter heisst in der Signatur HashAlgorithm, gemeint
-         * ist KeyPairAlgorithm (F-S11-21) — daher der Cast. */
+         * ist KeyPairAlgorithm — daher der Cast. */
         ka.addKey(Cryptography.createPublicKey(
             Cryptography.KEY_PAIR_ELLIPTIC_CURVE_SECP256R1 as Cryptography.HashAlgorithm,
             sec1ZuGeraet(empfPub)));
@@ -348,7 +346,7 @@ module Huelle {
 
     /* Ein Spurstueck (Art "spur" oder "ruhe") aus den flachen Punkten von
      * Track.readPoints() — je Punkt lat, lon, ele, epoch. Innen 14 Byte je
-     * Punkt, big-endian (E-S11-31, -39, -66): Breite und Laenge in 1e-7 Grad
+     * Punkt, big-endian: Breite und Laenge in 1e-7 Grad
      * (int32), Hoehe in ganzen Metern (int16, -32768 = keine), Zeit relativ
      * zu ts_von (uint32). Platz "<seq_from>:<punkte>". */
     function spurstueck(art as Lang.String, ref as Lang.String, seqFrom as Lang.Number,
@@ -405,10 +403,10 @@ module Huelle {
         return (x as Lang.Double).format("%.7f");
     }
 
-    /* Die Einsatzhuelle (Art "einsatz", Platz leer; JSON-Vertrag 3.4,
-     * E-S11-40): {"fassung":1,"phasen":[{"phase","t","lat","lon"}],
+    /* Die Einsatzhuelle (Art "einsatz", Platz leer; JSON-Vertrag 3.4):
+     * {"fassung":1,"phasen":[{"phase","t","lat","lon"}],
      * "rea":[{"t","ereignisse":[{"art","t"}]}]}, alle Zeiten in Sekunden
-     * seit started_at (E-S11-18). Immer VOLLSTAENDIG — sie wird mit der
+     * seit started_at. Immer VOLLSTAENDIG — sie wird mit der
      * Phasenliste ersetzt (Vertrag 3.1), die Uhr schickt beide zusammen. */
     function einsatz(ref as Lang.String, d as Lang.Dictionary) as Lang.String {
         var beginn = _sekunden(d["startedAt"] as Lang.String);

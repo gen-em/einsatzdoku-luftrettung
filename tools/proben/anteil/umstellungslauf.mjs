@@ -1,12 +1,11 @@
 /* Umstellungslauf — stellt der BROWSER die Schlüsselhülle von selbst um?
- * (S10/AP2, E-S10-07)
  * ===========================================================================
  *
  * WAS HIER GEMESSEN WIRD, KANN KEIN ANDERES PRÜFMITTEL MESSEN.
  * `tools/proben/anteil/endpunkt.py` baut die neue Hülle selbst und schickt sie
  * an `api/kdf_upgrade.php` — damit ist gezeigt, dass der SERVER sie richtig
  * annimmt und richtig abweist. Ob `unlock.js` sie beim Anmelden von selbst
- * baut, steht damit NICHT fest. Das ist der eigentliche Vorgang von S10, und
+ * baut, steht damit NICHT fest. Das ist der eigentliche Vorgang, und
  * er läuft nur in einem echten Browser.
  *
  * SIE STELLT IHRE EIGENE VORAUSSETZUNG HER. Die Umstellung lässt sich je
@@ -35,8 +34,10 @@ const MODUL = process.env.PLAYWRIGHT_MODUL
   || '/opt/node22/lib/node_modules/playwright/index.mjs';
 const PW = await import('file://' + MODUL);
 const pw = PW.default ?? PW;
-const { motorWahl, starten, nachDemPasswort } = await import(
-  'file:///home/user/einsatzdoku-luftrettung/tools/motor.mjs');
+const { motorWahl, starten, nachDemPasswort, istOertlich } = await import(
+  new URL('../../motor.mjs', import.meta.url).href);
+/* Die Wurzel aus dem Ort dieser Datei, nicht ein fester Containerpfad. */
+const WURZEL = decodeURIComponent(new URL('../../../', import.meta.url).pathname).replace(/\/$/, '');
 
 const BASIS = 'https://127.0.0.1:8443';
 /* Das ADMIN-Konto hat 0 Einsätze (der Referenzbestand liegt im Demo- und in
@@ -55,7 +56,7 @@ const pruefe = (was, ist, soll) => {
 };
 
 const browser = await starten(pw, motor, {});
-const ctx = await browser.newContext({ ignoreHTTPSErrors: true });
+const ctx = await browser.newContext({ ignoreHTTPSErrors: istOertlich(BASIS) });
 
 /* Jeder Aufruf von api/kdf_upgrade.php wird mitgeschnitten — die Abnahme
  * verlangt „0 Aufrufe beim zweiten Anmelden". */
@@ -83,7 +84,7 @@ ctx.on('response', r => {
 const konsole = [];       // zählt: Fehler der Anwendung
 const umfeld = [];        // nennt: Fehler des Prüfstands
 /* JEDE ENGINE NENNT DEN ABBRUCH ANDERS, und das ist genau die Falle, gegen
- * die AP3b die drei Motoren eingeführt hat: Chromium sagt `ERR_ABORTED`,
+ * die die drei Motoren gedacht sind: Chromium sagt `ERR_ABORTED`,
  * WebKit `Load request cancelled`, Firefox `NS_BINDING_ABORTED`. Wer nur
  * gegen die Chromium-Schreibweise filtert, bekommt in den anderen beiden
  * eine rote Zahl für dasselbe harmlose Verhalten — oder, schlimmer, filtert
@@ -134,12 +135,12 @@ async function oeffne(p, pfad) {
 /**
  * Anmelden — und eine abgewiesene Anmeldung MELDEN statt auf sie zu warten.
  *
- * WARUM DAS NICHT NUR `waitForURL` IST. Beim Bauen von AP2 blieb dieser Lauf
+ * WARUM DAS NICHT NUR `waitForURL` IST. Beim Bauen blieb dieser Lauf
  * dreimal in der Zeitgrenze stehen, und die Meldung lautete „Timeout
  * 180000ms exceeded" — was aussieht wie ein hängender Server. Tatsächlich
  * stand auf der Anmeldeseite ein Satz: „Das Demo-Konto wird gerade sehr
  * häufig genutzt und ist vorübergehend gesperrt." Die Mengenbremse des
- * Demo-Kontos (E-P1-20: 20 Anmeldungen je Stunde) hatte zugeschlagen, weil
+ * Demo-Kontos (20 Anmeldungen je Stunde) hatte zugeschlagen, weil
  * die Probe selbst sie ausgelöst hatte.
  *
  * Drei Minuten warten und dann das Falsche melden ist die schlechteste
@@ -153,7 +154,7 @@ async function anmelden(mail, pass) {
   await seite.fill('input[name="email"]', mail);
   await seite.fill('input[name="password"]', pass);
   await seite.click('#loginform button[type="submit"]');
-  /* NICHT MEHR `waitForURL(… !login.php)` (P5c/AP5, E-P5c-43). Ein Konto
+  /* NICHT MEHR `waitForURL(… !login.php)`. Ein Konto
    * mit Zweitfaktor steht nach dem Passwort WIEDER unter `login.php` und
    * wird nach dem Code gefragt; `nachDemPasswort()` (motor.mjs) geht diesen
    * Schritt und meldet das Einrichtungstor als Scheitern. Die beiden Konten
@@ -181,7 +182,7 @@ console.log(`Umstellungslauf — Motor ${motor}`);
 {
   const r = spawnSync('python3',
     ['tools/proben/anteil/huelle_stellen.py', KONTO, KONTO_PW, 'edk1'],
-    { cwd: '/home/user/einsatzdoku-luftrettung', encoding: 'utf8' });
+    { cwd: WURZEL, encoding: 'utf8' });
   process.stdout.write('  ' + (r.stdout || r.stderr || '').trim() + '\n');
   if (r.status !== 0) {
     console.error('Die Voraussetzung liess sich nicht herstellen — Abbruch.');
@@ -294,8 +295,8 @@ if (await dlg.count()) {
          await tab.locator('dialog.dialog[open]').count(), 0);
 }
 /* DEN ZWEITEN TAB SCHLIESSEN, UND ZWAR SOFORT. Der Prüfstand fuhr gegen
- * `php -S`, und der bediente bis zum Abschluss von P5c EINE Anfrage zur Zeit
- * (seither vier Arbeiter, `lokal_starten.sh`). Ein zweiter offener Tab
+ * `php -S`, und der bediente früher EINE Anfrage zur Zeit
+ * (heute vier Arbeiter, `lokal_starten.sh`). Ein zweiter offener Tab
  * mit einer Karte hält die Leitung besetzt; der nächste Schritt wartete
  * daraufhin minutenlang auf eine Seite, die einzeln in 1,7 Sekunden da ist
  * (gemessen 14.09.2026). Das sah aus wie ein Fehler der Anmeldung und war
@@ -309,7 +310,7 @@ const demoFehler = await anmelden('demo@gen-em.org', 'nadokudemo0815');
 if (demoFehler) {
   /* NICHT GEMESSEN, UND WARUM — statt eines roten Hakens für etwas, das
    * die Anwendung richtig macht. Die Mengenbremse des Demo-Kontos
-   * (E-P1-20) lässt 20 Anmeldungen je Stunde zu; wer diesen Lauf mehrfach
+   * lässt 20 Anmeldungen je Stunde zu; wer diesen Lauf mehrfach
    * hintereinander fährt, löst sie aus. Das ist kein Fehler der
    * Umstellung, und es als einen zu zählen wäre eine falsche Zahl. */
   console.log(`  NICHT GEMESSEN — ${demoFehler}`);

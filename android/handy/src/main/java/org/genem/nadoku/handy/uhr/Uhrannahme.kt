@@ -15,7 +15,7 @@ import java.time.Duration
 import java.time.Instant
 
 /**
- * Die Annahme der Uhr-Ereignisse am Handy (E-S4-10).
+ * Die Annahme der Uhr-Ereignisse am Handy.
  *
  * VIER ZUSAGEN, UND JEDE HAT IHREN EIGENEN SCHUTZ:
  *
@@ -23,18 +23,17 @@ import java.time.Instant
  *    bekannte Nummer wird quittiert und nicht noch einmal gewirkt.
  * 2. **Kein zweiter Einsatz nach verlorener Quittung.** Selbst wenn die
  *    Buchführung versagte, führt die `wm-`-Kennung auf denselben Einsatz
- *    zurück (E-S4-09) — sie entsteht auf der Uhr und reist mit der gepufferten
+ *    zurück — sie entsteht auf der Uhr und reist mit der gepufferten
  *    Nachricht mit.
  * 3. **Kein halb gewirktes Ereignis.** Wirkung und Vermerk stehen in **einem**
  *    Schreibvorgang. Bräche es dazwischen ab, wäre das Ereignis entweder
  *    zweimal gewirkt oder gar nicht — beides unbemerkbar.
- * 4. **Kein fremder Absender, keine unmögliche Zeit** (seit 0.14.0, Backlog
- *    Nr. 144, Krypto-Review AN-4). Der Absender muss unter den verbundenen
+ * 4. **Kein fremder Absender, keine unmögliche Zeit.** Der Absender muss unter den verbundenen
  *    Knoten stehen ([absenderBekannt]), sonst gibt es weder Wirkung noch
  *    Quittung; die Zeit der Uhr darf weder vor dem laufenden Dienst noch in
  *    der Zukunft liegen ([plausibel]), sonst wird quittiert, aber nicht
- *    gewirkt. Bis dahin ruhte das Vertrauen ganz auf der Bibliothek —
- *    gleiches Paket, gleiche Signatur. Das bleibt der erste Boden.
+ *    gewirkt. Der erste Boden bleibt die Bibliothek — gleiches Paket,
+ *    gleiche Signatur.
  *
  * WARUM ZWEI SCHUTZE FÜR DASSELBE (1 und 2): Weil sie verschiedene Fehler
  * abfangen. Die Nummer schützt gegen die Doppelzustellung; die Kennung auch
@@ -43,16 +42,16 @@ import java.time.Instant
  * hereinkommt. Der Vertrag setzt beim Server dieselbe Art doppelten Bodens
  * (Idempotenz über `client_ref`), und aus demselben Grund.
  *
- * DIE ZEIT KOMMT VON DER UHR (E-R45-1) und nicht von der Ankunft: Die Uhr war
+ * DIE ZEIT KOMMT VON DER UHR und nicht von der Ankunft: Die Uhr war
  * dabei. Zwischen Auslösung und Zustellung können im Funkloch Minuten liegen.
  */
 class Uhrannahme(
     private val puffer: Puffer,
     private val klammer: Dienstklammer,
-    /** Der Modus für einen an der Uhr ausgelösten Dienst (E-S4-20). */
+    /** Der Modus für einen an der Uhr ausgelösten Dienst. */
     private val modus: () -> Modus = { Modus.MIT_PHASENKNOEPFEN },
     /**
-     * Der Ortungszustand als Kurzcode, oder `null` (E-S5Z-15).
+     * Der Ortungszustand als Kurzcode, oder `null`.
      *
      * Als Funktion und nicht als Wert: Zwischen dem Bau dieser Annahme und
      * der Antwort liegt das Wirken des Ereignisses — ein Dienststart kann den
@@ -64,11 +63,10 @@ class Uhrannahme(
 ) {
 
     /**
-     * Ist der Absender **unsere** Uhr? (Backlog Nr. 144, AN-4)
+     * Ist der Absender **unsere** Uhr?
      *
-     * Bis 0.13.0 ruhte das Vertrauen ganz auf der Bibliothek: Der Data Layer
-     * stellt nur zwischen Apps gleichen Pakets und gleicher Signatur zu. Das
-     * bleibt der erste Boden. Der zweite ist dieser Abgleich: Ein Knoten, der
+     * Der erste Boden ist die Bibliothek: Der Data Layer stellt nur zwischen
+     * Apps gleichen Pakets und gleicher Signatur zu. Der zweite ist dieser Abgleich: Ein Knoten, der
      * nicht in der Liste der verbundenen steht, bekommt **weder Wirkung noch
      * Quittung** — er ist nicht die gekoppelte Uhr.
      *
@@ -84,7 +82,7 @@ class Uhrannahme(
      * Ein Ereignis übernehmen und quittieren.
      *
      * @param empfangen der Augenblick des Empfangs am Handy — der Maßstab für
-     *   die Zeitplausibilität (Nr. 144); im Betrieb jetzt.
+     *   die Zeitplausibilität; im Betrieb jetzt.
      * @return die Quittung — **immer**, auch für eine Doppelzustellung. Genau
      *   dann ist sie am wichtigsten: Die Uhr liefert nach, weil die erste
      *   Quittung verlorenging, und ohne eine zweite täte sie es für immer.
@@ -122,7 +120,7 @@ class Uhrannahme(
     }
 
     /**
-     * Der Anzeigestand für die Uhr (E-S4-10).
+     * Der Anzeigestand für die Uhr.
      *
      * Er wird aus dem Puffer gelesen und nicht mitgeschrieben — dieselbe
      * Entscheidung wie in [Dienstklammer]: Ein Zustand im Arbeitsspeicher wäre
@@ -139,8 +137,8 @@ class Uhrannahme(
             laufendePhase = phasen.lastOrNull()?.nummer ?: Phasen.FREI,
             laufendeSeit = phasen.lastOrNull()?.at?.let { Zeit.hhmm(Instant.parse(it)) },
             phasen = phasen.map { Phasenmarke(it.nummer, Zeit.hhmm(Instant.parse(it.at))) },
-            /* DIE ANTWORT AUF EIN UHR-EREIGNIS TRÄGT DEN ORTUNGSZUSTAND MIT
-             * (E-S5Z-15). Damit erfährt die Uhr von einem Dienststart bei
+            /* DIE ANTWORT AUF EIN UHR-EREIGNIS TRÄGT DEN ORTUNGSZUSTAND MIT.
+             * Damit erfährt die Uhr von einem Dienststart bei
              * ausgeschaltetem Standort im selben Augenblick, in dem sie die
              * Quittung bekommt — ohne dass jemand das Handy aus der Tasche
              * holen muss. */
@@ -149,7 +147,7 @@ class Uhrannahme(
     }
 
     /**
-     * Ist die Zeit der Uhr plausibel? (Backlog Nr. 144, AN-4)
+     * Ist die Zeit der Uhr plausibel?
      *
      * Zwei Grenzen, beide mit [ZEITTOLERANZ] Spiel, weil zwei Uhren nie ganz
      * gleich gehen:
@@ -182,8 +180,7 @@ class Uhrannahme(
 }
 
 /**
- * Woher ein Ereignis kam — was der Data Layer über den Absender sagt
- * (Backlog Nr. 144, Krypto-Review AN-4).
+ * Woher ein Ereignis kam — was der Data Layer über den Absender sagt.
  *
  * @param knoten die Kennung des sendenden Knotens (`sourceNodeId`).
  * @param verbundene die zurzeit verbundenen Knoten, oder `null`, wenn die

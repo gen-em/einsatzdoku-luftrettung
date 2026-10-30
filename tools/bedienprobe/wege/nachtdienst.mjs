@@ -1,20 +1,18 @@
 /* Wege der Tagesübersicht an einem Nachtdienst (`index.php?d=…`).
  * ===========================================================================
  *
- * Entstanden mit R4-16 (Backlog Nr. 275): Der Referenzbestand trägt seit
+ * Der Referenzbestand trägt mit
  * dem Luftdienst D22 einen Dienst, an dem Einsätze vor UND nach Mitternacht
  * beginnen. Die Spalte „Beginn" sortiert über `start_sort` (Datum und Uhrzeit
- * in Ortszeit, E-ZE-32); über die Uhrzeit allein stünde 01:40 vor 23:50 —
- * still, ohne Meldung, in einer Reihenfolge, die richtig aussieht. Bis R4-16
- * gab es im Bestand keinen Tag, an dem das zu sehen gewesen wäre (AP9b in
- * Schritt 15 hat es an einem im Browser gebauten Tag belegt).
+ * in Ortszeit); über die Uhrzeit allein stünde 01:40 vor 23:50 —
+ * still, ohne Meldung, in einer Reihenfolge, die richtig aussieht.
  *
  * DER TAG WIRD ÜBER DEN INHALT GESUCHT, wie im Bilderlauf (`__TAG_NACHT__`):
  * ein Luftdienst, dessen Einsätze an zwei Ortsdaten beginnen. Findet sich
  * keiner, ist der Weg rot — ein Bestand ohne den Fall belegt nichts.
  *
- * DREI SCHNITTSTELLEN RECHNEN `start_sort`, und Nr. 275 hielt fest, dass das
- * nur gelesen, nicht gefahren war: `api/day.php` (Tagesübersicht),
+ * DREI SCHNITTSTELLEN RECHNEN `start_sort`, und das war
+ * nur gelesen, nicht gefahren: `api/day.php` (Tagesübersicht),
  * `api/range.php` (Zeitraum, nach `days.day` gefiltert) und
  * `api/suchindex.php` (Suche, nach dem echten Einsatzdatum). Der Weg holt den
  * Wert für jeden Einsatz des Nachtdienstes aus allen dreien und verlangt,

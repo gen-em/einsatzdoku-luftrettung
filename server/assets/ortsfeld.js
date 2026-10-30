@@ -1,17 +1,14 @@
 /* Ortsfeld — Bezeichnung + optionale Koordinaten, als wiederverwendbare
- * Komponente (Web 6.1.0).
+ * Komponente.
  *
- * WARUM ES DIESE DATEI GIBT. Das Einsatzort-Widget war bis Web 6.0.0 keine
- * Komponente, sondern ueber feste Element-Kennungen verdrahtet: `locaddr`,
- * `loclat`, `loclon`, `locstate` erschienen in rund 25 getElementById-Aufrufen
- * in eingebettetem JavaScript von einsatz_form.php — Photon-Abfrage,
- * Plus-Code-Erkennung, Chip, Zustandszeile und die Pruefung „Koordinaten ohne
- * Bezeichnung" hingen alle daran (Vorpruefung V8). Mit Etappe 2 sind SECHS
- * Verwendungen gefordert: Einsatzort, Abfahrtort, Zielklinik am Einsatz sowie
- * Standort- und Zielklinikpflege je auf Konto- und Adminebene. Sechs Kopien
- * derselben 250 Zeilen waeren sechs Fassungen, die auseinanderlaufen.
+ * WARUM ES DIESE DATEI GIBT. Photon-Abfrage, Plus-Code-Erkennung, Chip,
+ * Zustandszeile und die Pruefung „Koordinaten ohne Bezeichnung" werden an
+ * SECHS Stellen gebraucht: Einsatzort, Abfahrtort, Zielklinik am Einsatz
+ * sowie Standort- und Zielklinikpflege je auf Konto- und Adminebene. Sechs
+ * Kopien derselben 250 Zeilen, verdrahtet ueber feste Element-Kennungen,
+ * waeren sechs Fassungen, die auseinanderlaufen.
  *
- * Die Kennungen bildet die Komponente jetzt aus einem PRAEFIX. Das Markup dazu
+ * Die Kennungen bildet die Komponente deshalb aus einem PRAEFIX. Das Markup dazu
  * erzeugt ui_ortsfeld() (server/ui.php) — eine Verwendung besteht damit aus
  * einem PHP-Aufruf und einem EdOrtsfeld.init().
  *
@@ -20,19 +17,17 @@
  *   getrennteSuche: false   Das Textfeld IST das Suchfeld (Einsatzort,
  *                           manueller Abfahrtort). Wer eine Adresse waehlt,
  *                           uebernimmt sie als Bezeichnung — dort ist die
- *                           Adresse die Bezeichnung. Unveraendertes Verhalten
- *                           seit Web 3.x.
+ *                           Adresse die Bezeichnung.
  *
  *   getrennteSuche: true    Textfeld = NAME (Zielklinik, Standort). „Standort
  *                           Talwang" ist keine Adresse; wuerde die Suche das
  *                           Textfeld ueberschreiben, waere der Name weg. Ein
  *                           Treffer setzt deshalb nur die Koordinaten — und
  *                           faellt nur dann in das Namensfeld, wenn es leer
- *                           ist. SEIT O5 (E-P3-34) sucht hier kein zweites
- *                           Feld mehr, sondern das Namensfeld selbst.
- *                           SEIT S3/AP8 (E-S3-06) auch BEIM TIPPEN, nicht
- *                           mehr nur auf Klick — entprellt, ab drei Zeichen,
- *                           mit hoechstens einer offenen Anfrage. Die Lupe
+ *                           ist. Gesucht wird im Namensfeld selbst, kein
+ *                           zweites Feld — auch BEIM TIPPEN, nicht nur auf
+ *                           Klick: entprellt, ab drei Zeichen, mit
+ *                           hoechstens einer offenen Anfrage. Die Lupe
  *                           bleibt als ausdruecklicher Ausloeser.
  *
  * WAS IN BEIDEN FORMEN GLEICH BLEIBT und der eigentliche Grund fuer die
@@ -47,43 +42,38 @@
  *     stillschweigend ueberschreiben. Der Weg zurueck fuehrt ueber das Kreuz
  *     am Chip.
  *   - Koordinaten ohne Bezeichnung werden beim Absenden abgewiesen, eine
- *     Bezeichnung ohne Koordinaten ist zulaessig (E39).
+ *     Bezeichnung ohne Koordinaten ist zulaessig.
  *
  * ZWEI ABHAENGIGKEITEN, und nur zwei:
  *
  *   assets/locparse.js (EdLoc) ist OPTIONAL — fehlt sie, entfaellt die
  *   Formaterkennung, das Feld bleibt bedienbar.
  *
- *   assets/vorschlagsliste.js (EdVorschlaege) ist PFLICHT (S9/AP1, E-S9-07).
- *   Die Trefferliste war bis Web 15.5.2 hier eingebaut — dreissig Zeilen, die
- *   `mousedown` richtig machten und Pfeiltasten gar nicht kannten; daneben
- *   stand am Transportziel zusaetzlich eine native `<datalist>` mit den
- *   Stammdaten, die der Browser UEBER dem Feld zeichnete und mobil oft gar
- *   nicht (PS-6, Backlog 68). Beide sind fort: Es gibt EINE Liste, sie kommt
- *   aus dem Baustein, und sie zeigt Stammdaten und Adressen in GRUPPEN. Was
- *   davon erscheint, entscheidet weiterhin diese Datei — der Baustein weiss
- *   nicht, woher ein Eintrag stammt.
+ *   assets/vorschlagsliste.js (EdVorschlaege) ist PFLICHT. Es gibt EINE
+ *   Liste, keine eingebaute und keine native `<datalist>` daneben (die der
+ *   Browser UEBER dem Feld zeichnet und mobil oft gar nicht); sie kommt aus
+ *   dem Baustein, und sie zeigt Stammdaten und Adressen in GRUPPEN. Was
+ *   davon erscheint, entscheidet diese Datei — der Baustein weiss nicht,
+ *   woher ein Eintrag stammt.
  *
- *   assets/geocoder.js (EdGeocoder) ist PFLICHT (S9/AP2, E-S9-05). Die
- *   Dienstadresse stand bis Web 15.7.1 als Konstante `PHOTON` hier — fest
- *   eingetragen und von keinem Schalter zu erreichen, obwohl diese Komponente
- *   die Option `adresssuche` seit Web 6.1.0 kannte und kein Aufrufer sie je
- *   setzte. Jetzt entscheidet der Dienst selbst, ob er antwortet: Zwei
+ *   assets/geocoder.js (EdGeocoder) ist PFLICHT. Die Dienstadresse steht
+ *   nicht hier als Konstante, sondern dort: Der Dienst entscheidet selbst,
+ *   ob er antwortet. Zwei
  *   Schalter (Installation und Konto) und die Adresse stehen in den
  *   Einstellungen, und mit ihnen die drei Grenzen der Abfrage (400 ms, drei
- *   Zeichen, eine offene Anfrage). Diese Datei stellt nur noch die Frage.
+ *   Zeichen, eine offene Anfrage). Diese Datei stellt nur die Frage.
  */
 (function (global) {
     'use strict';
 
-    /* DIE DREI GRENZEN DER ABFRAGE (E-S3-06) stehen seit S9/AP2 in
+    /* DIE DREI GRENZEN DER ABFRAGE stehen in
      * assets/geocoder.js: 400 ms Entprellung, drei Zeichen Mindestlaenge,
      * hoechstens eine offene Anfrage. Sie gehoeren zum Dienst, nicht zum
      * Feld — und ein zweites Feld haette sie sonst ein zweites Mal gebraucht.
      * Die Lupe umgeht die Entprellung mit {sofort: true}, nicht die
      * Mindestlaenge. */
 
-    /* HOECHSTENS ZWEI STAMMDATENTREFFER ueber den Adressen (F10, E-S9-07).
+    /* HOECHSTENS ZWEI STAMMDATENTREFFER ueber den Adressen.
      * Die Zahl ist eine Entscheidung, keine Schaetzung: Die Stammdatengruppe
      * steht OBEN und schiebt die Adressen nach unten; drei Zielkliniken auf
      * einem 390-px-Schirm liessen von den Adressen nichts mehr uebrig. Wer
@@ -110,11 +100,10 @@
 
     function el(id) { return document.getElementById(id); }
 
-    /* DIE BESCHRIFTUNG EINES TREFFERS steht seit S9/AP2 in
-     * assets/geocoder.js — sie stand hier UND wortgleich in ortswahl.js
-     * (`label()`), zwei Fassungen derselben zehn Zeilen. Der Dienst liefert
-     * jetzt fertig: `haupt` fuer die erste Zeile, `neben` fuer die gedaempfte
-     * darunter, `voll` fuer das, was ins Feld wandert (F-S9-P-05). */
+    /* DIE BESCHRIFTUNG EINES TREFFERS steht in assets/geocoder.js, nicht
+     * hier UND in ortswahl.js. Der Dienst liefert fertig: `haupt` fuer die
+     * erste Zeile, `neben` fuer die gedaempfte darunter, `voll` fuer das,
+     * was ins Feld wandert. */
 
 
     /**
@@ -131,10 +120,10 @@
      *   vorschlaege            [{name, lat, lon}, …] — Stammdaten. Sie
      *                          erscheinen als eigene GRUPPE oben in der
      *                          Trefferliste, hoechstens zwei, schon bei
-     *                          Teiluebereinstimmung (E-S9-07/F10); ein
-     *                          Treffer setzt Name und Koordinaten (E38).
+     *                          Teiluebereinstimmung; ein
+     *                          Treffer setzt Name und Koordinaten.
      *                          Zusaetzlich fuellt eine GENAUE Namensgleichheit
-     *                          die Koordinaten weiterhin ohne Klick — wer den
+     *                          die Koordinaten ohne Klick — wer den
      *                          Namen abtippt oder einfuegt, bekommt sie mit.
      *   beiAenderung           Rueckruf nach jeder Wertaenderung
      * @returns {object} Steuerobjekt (siehe unten)
@@ -159,7 +148,7 @@
 
         /* ZWEI GRUENDE, WARUM DIE SUCHE RUHT: Der Aufrufer will sie nicht
          * (`adresssuche: false`, heute niemand), oder die Einstellung sagt
-         * nein — Installation oder Konto (E-S9-05). Beides fuehrt zum selben
+         * nein — Installation oder Konto. Beides fuehrt zum selben
          * Verhalten, und beides gehoert in EINE Variable: Der Zustandstext
          * unten liest sie, und ein Feld, das den einen Fall anders erklaert
          * als den anderen, erklaert nichts. */
@@ -196,13 +185,11 @@
                 /* Die Koordinaten selbst zeigt der Chip. Der Hinweis erklaert,
                  * warum hier keine Vorschlaege mehr erscheinen — sonst wirkt
                  * das Feld defekt. */
-                /* KURZ GENUG FUER EINE ZEILE (F-N1-I). Der Satz stand in der
-                 * Formularspalte auf zwei Zeilen und schob die Felder
-                 * darunter weg. Die Auskunft bleibt dieselbe; nur der Verweis
-                 * auf das Kreuz ist fort — es steht sichtbar daneben, und
-                 * seine Beschreibung im Text kostete mehr Platz, als sie
-                 * erklaerte (nebenbei ein Unicode-Zeichen weniger, Backlog
-                 * Nr. 42). */
+                /* KURZ GENUG FUER EINE ZEILE. Auf zwei Zeilen schoebe der
+                 * Satz in der Formularspalte die Felder darunter weg. Einen
+                 * Verweis auf das Kreuz braucht er nicht — es steht sichtbar
+                 * daneben, und seine Beschreibung im Text kostete mehr
+                 * Platz, als sie erklaerte. */
                 melde(adresssuche
                     ? 'Koordinaten gesetzt — dieses Feld ist die Bezeichnung. '
                       + 'Zum Suchen erst entfernen.'
@@ -218,13 +205,12 @@
          * die versteckten Felder. */
         function zeichne() {
             feld.placeholder = hatKoordinaten() ? platzhalterBez : platzhalterFrei;
-            /* SUCHFELD WEG, SOBALD DIE KOORDINATE STEHT (Web 7.0.0).
+            /* SUCHFELD WEG, SOBALD DIE KOORDINATE STEHT.
              *
-             * Bei getrennter Suche standen bisher drei Zeilen untereinander:
-             * die Bezeichnung, ein Suchfeld, das nichts mehr zu suchen hatte,
-             * und darunter der Chip mit dem Ergebnis. Das Suchfeld war ab
-             * diesem Moment funktionslos — die Zustandszeile sagte das auch,
-             * musste es aber sagen, weil es dastand.
+             * Bei getrennter Suche stuenden sonst drei Zeilen untereinander:
+             * die Bezeichnung, ein Suchfeld, das nichts mehr zu suchen hat,
+             * und darunter der Chip mit dem Ergebnis. Das Suchfeld waere ab
+             * diesem Moment funktionslos.
              *
              * Es kommt zurueck, sobald der Chip ueber sein ✕ entfernt wird:
              * Genau dann gibt es wieder etwas zu suchen. Ohne getrennte Suche
@@ -241,9 +227,8 @@
             var x = document.createElement('button');
             x.type = 'button';
             x.className = 'rmx';
-            /* DAS ZEICHEN IST EIN SYMBOL, KEIN MALZEICHEN (Backlog Nr. 42,
-             * M-MR-02 Variante C). Bis Web 19.4.1 stand hier das Malzeichen als
-             * Text; das Treffziel war so gross wie das Zeichen. Jetzt:
+            /* DAS ZEICHEN IST EIN SYMBOL, KEIN MALZEICHEN. Als Text waere das
+             * Treffziel so gross wie das Zeichen. Deshalb:
              * `schliessen` in 12 px, zentriert in einem 28-px-Ziel, das
              * unsichtbar ueber den Chiprand ragt (Stylesheet, .rmx).
              * edSymbol() liegt vor — `symbol.js` kommt aus ui_geruest_ende()
@@ -280,8 +265,9 @@
          *                 steht dann ALLEIN in der Liste — wer Zahlen tippt,
          *                 sucht keine Adresse.
          *   'stamm'       ein Stammdatensatz (nur da, wo `vorschlaege`
-         *                 uebergeben werden — heute allein am Transportziel,
-         *                 F9). Ein Treffer setzt NAME UND KOORDINATE (E38).
+         *                 uebergeben werden — heute allein am
+         *                 Transportziel). Ein Treffer setzt NAME UND
+         *                 KOORDINATE.
          *   'adresse'     ein Treffer der Adresssuche. Er setzt die
          *                 Koordinate, und den Namen nur, wenn das Feld die
          *                 Adresse selbst als Bezeichnung fuehrt.
@@ -302,11 +288,8 @@
         }
 
         /* Stammdatentreffer bei TEILUEBEREINSTIMMUNG, nicht erst bei
-         * Namensgleichheit (F-S9-K-01). Bis Web 15.5.2 kamen die Stammdaten
-         * ueber eine native `<datalist>` in die Seite, und die Komponente
-         * verglich daneben auf genaue Gleichheit — wer „Klin" tippte, sah die
-         * Vorschlaege nur, solange der Browser sie zeichnete, und mobil gar
-         * nicht. Jetzt filtert diese Funktion, und die Liste zeigt das
+         * Namensgleichheit: Wer „Klin" tippt, soll die Vorschlaege sehen,
+         * auch mobil. Diese Funktion filtert, und die Liste zeigt das
          * Ergebnis. */
         function stammTreffer(q) {
             var raus = [];
@@ -332,7 +315,7 @@
             }
             var gruppen = [];
             var stamm = stammTreffer(letzteAnfrage);
-            /* EINE GRUPPE IST KEINE GRUPPE (M-S9-03, Anmerkung 4). Am
+            /* EINE GRUPPE IST KEINE GRUPPE. Am
              * Einsatzort und am Abfahrtort gibt es keine Stammdaten; dort
              * stuende „Adressen" als Ueberschrift ueber allem, was da ist.
              * Die Zeilen tragen ihre Herkunft ohnehin im Symbol. */
@@ -382,7 +365,7 @@
                  * IST die Bezeichnung („Klinik Talwang"), nicht eine Adresse,
                  * die sie ueberschriebe. Ein Satz OHNE Koordinate leert sie —
                  * wer die Zielklinik wechselt, soll nicht die Koordinate der
-                 * vorherigen behalten (A13l). */
+                 * vorherigen behalten. */
                 feld.value = v.name;
                 letzterTreffer = feld.value.trim().toLowerCase();
                 setzeKoordinaten(
@@ -429,11 +412,10 @@
         }
 
         /* ---- Eingabe im Bezeichnungsfeld ---------------------------------- */
-        /* AUCH BEI GETRENNTER SUCHE (S3/AP8, E-S3-06). Bis Web 12.3.2 stand
-         * hier `if (nurKoordinaten) { zustand(); }` — bei Standort und
-         * Zielklinik lief die Suche also nur auf Klick. Jetzt sucht das Feld
-         * in beiden Bedienformen beim Tippen; was ein Treffer uebernimmt,
-         * bleibt unterschieden (bei getrennter Suche nur die Koordinaten). */
+        /* AUCH BEI GETRENNTER SUCHE. Das Feld sucht in beiden Bedienformen
+         * beim Tippen, auch bei Standort und Zielklinik; was ein Treffer
+         * uebernimmt, bleibt unterschieden (bei getrennter Suche nur die
+         * Koordinaten). */
         feld.addEventListener('input', function () {
             pruefeVorschlag();
             sucheTippen();
@@ -489,8 +471,7 @@
 
             /* IST DIE ADRESSSUCHE AUS, bleibt die Stammdatengruppe stehen —
              * sie kommt aus dem eigenen Bestand und hat mit dem Dienst nichts
-             * zu tun. Bis Web 15.5.2 verschwand hier die ganze Liste, weil es
-             * nur eine gab. */
+             * zu tun. */
             if (!adresssuche) { return; }
 
             /* Entprellung, Mindestlaenge und die eine offene Anfrage liegen im
@@ -520,11 +501,10 @@
                 feld.focus();
             });
         }
-        /* DER BLUR-AUFSCHUB STEHT JETZT IM BAUSTEIN (assets/vorschlagsliste.js,
-         * S9/AP1). Dort ist auch der Fund aufgeschrieben, der ihn eingefasst
-         * hat: Er darf nicht zuschlagen, wenn der Lupen-Knopf den Fokus nimmt
-         * und gleich zurueckgibt (F-P3-AJ). Eine zweite Fassung hier haette
-         * die Liste doppelt versteckt. */
+        /* DER BLUR-AUFSCHUB STEHT IM BAUSTEIN (assets/vorschlagsliste.js).
+         * Er darf nicht zuschlagen, wenn der Lupen-Knopf den Fokus nimmt
+         * und gleich zurueckgibt. Eine zweite Fassung hier versteckte die
+         * Liste doppelt. */
 
         zeichne();
         zustand();
@@ -554,7 +534,7 @@
             },
 
             /**
-             * Pruefung vor dem Absenden (E39, A13j): Koordinaten ohne
+             * Pruefung vor dem Absenden: Koordinaten ohne
              * Bezeichnung werden abgewiesen — sonst stuende in den Listen
              * wieder ein Zahlenfragment. Eine Bezeichnung ohne Koordinaten ist
              * ausdruecklich zulaessig.

@@ -13,11 +13,12 @@ python3 pruefen.py      # Vertrag, Folge, Krypto, Spuren
 
 ## Was es misst
 
-`erzeugen.py` schreibt Ingest-Anfragen samt Sendeplan, Formulardaten im
-**Klartext**, eine Importdatei, GPX und die Fußwege — was wohin, steht in
-seinem Kopf. Spuren entstehen in drei Arten (`spur.py`): fliegen, fahren
-auf der Straße aus `routen/`, gehen ab dem `zustieg` (E-DA-13).
-`pruefen.py` hält **jede** Anfrage gegen jede Grenze des JSON-Vertrags, dazu
+`erzeugen.py` schreibt Ingest-Anfragen samt Sendeplan (Ortsdaten im
+**Klartext** — das Einspielskript verschließt sie vor dem Senden),
+Formulardaten, eine Importdatei, GPX und die Fußwege; was wohin, steht in
+seinem Kopf. Spuren: fliegen, fahren aus `routen/`, gehen ab dem `zustieg`.
+`pruefen.py` hält **jede** Anfrage gegen jede Grenze des JSON-Vertrags, die
+für das Klartext-Format gilt, dazu
 lückenlose Teilstücke, den Krypto-Rundlauf, Tempo und Höhe je Spur und die
 Gehgeschwindigkeit je Fußweg (1,5–6,0 km/h).
 

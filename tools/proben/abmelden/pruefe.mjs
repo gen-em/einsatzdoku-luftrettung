@@ -1,31 +1,31 @@
 /* Belegt, was der Abmeldeweg im Browser zuruecklaesst: im sessionStorage des
-   Tabs und, seit R17-25, in der Ablage des Inhaltsschluessels (IndexedDB).
+   Tabs und in der Ablage des Inhaltsschluessels (IndexedDB).
    Aufruf:  node tools/proben/abmelden/pruefe.mjs
 
    Rueckgabewert: 0 = nach dem Abmelden liegt kein Schluesselmaterial mehr,
-   und die Faecher der Fassungen bis 23.3.x raeumt schon das Laden ·
+   und die Faecher aelterer Fassungen raeumt schon das Laden ·
    1 = etwas bleibt liegen (oder die Probe selbst ist gescheitert).
-   Bis R17-25 endete diese Probe immer mit 0, auch wenn sie „VERLETZT"
+   Frueher endete diese Probe immer mit 0, auch wenn sie „VERLETZT"
    schrieb — eine grüne Zahl ohne Gegenstand (Grundsatz 7).
 
    Anlass: Nr. 22 — der neue Datenschluessel (edk_neu) ueberlebte das Abmelden
-   Seit R17-25 (Nr. 370) misst sie auch die Ablage in IndexedDB, deren Loeschen asynchron ist.
+   Sie misst auch die Ablage in IndexedDB, deren Loeschen asynchron ist.
 */
 import * as PWM from '/opt/node22/lib/node_modules/playwright/index.mjs';
-const PW = PWM.default ?? PWM;
-/* Die Engine wählt der Läufer (MOTOR=… oder --motor), R87. */
-const MOTOR = motorWahl(process.argv);
 import { spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import { motorWahl, starten } from '../../motor.mjs';
+const PW = PWM.default ?? PWM;
+/* Die Engine wählt der Läufer (MOTOR=… oder --motor). */
+const MOTOR = motorWahl(process.argv);
 
 const hier  = path.dirname(fileURLToPath(import.meta.url));
 const wurzel = path.resolve(hier, '../../..');           // Projektwurzel
 const PORT  = 8731;
 
 // sessionStorage und IndexedDB brauchen eine echte Herkunft — file:// genuegt
-// nicht. Der Server aus Python bindet nur 127.0.0.1 (F-R17-20).
+// nicht. Der Server aus Python bindet nur 127.0.0.1.
 const srv = spawn('python3', ['-m', 'http.server', String(PORT), '--bind', '127.0.0.1',
                               '--directory', wurzel], { stdio: 'ignore' });
 await new Promise(r => setTimeout(r, 1500));

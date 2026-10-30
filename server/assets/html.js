@@ -19,11 +19,10 @@
  * dass die alte Fassung dafuer nicht taugt.
  *
  * WARUM EINE EIGENE DATEI UND NICHT missiontable.js
- * Die kanonische Fassung stand seit Web 4.0.0 in der gemeinsamen
- * Tabellenkomponente. Die wird aber nur von suche.php und zeitraum.php
+ * Die gemeinsame Tabellenkomponente wird nur von suche.php und zeitraum.php
  * geladen — einsatz.php, index.php und import.php brauchen die Maskierung
- * ebenfalls und haetten dafuer die vollstaendige Tabellenkomponente laden
- * muessen. Deshalb steht der Baustein jetzt fuer sich; EdMissionTable.escape
+ * ebenfalls und muessten dafuer die vollstaendige Tabellenkomponente laden.
+ * Deshalb steht der Baustein fuer sich; EdMissionTable.escape
  * bleibt als Weiterleitung bestehen, damit vorhandene Aufrufe gueltig bleiben.
  *
  * NICHT hierher gehoert xmlEscape() aus export.js: XML kennt &apos;, HTML5
@@ -52,7 +51,7 @@ const EdHtml = (() => {
 
   /* -------------------------------------------------------------------
    * EdHtml.meldung(ton, text, o) -- das eine Meldungs-Markup im Browser
-   *   (Schritt 15 AP8e, Zaehlzeile Z37)
+   *   (Zaehlzeile Z37)
    *
    * DAS GEGENSTUECK IST ui_meldung_markup() in server/ui.php. Wer hier
    * etwas aendert, aendert es dort mit -- sonst sehen die serverseitig

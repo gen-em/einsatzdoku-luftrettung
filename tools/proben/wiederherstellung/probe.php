@@ -2,7 +2,7 @@
 declare(strict_types=1);
 
 /**
- * Wiederherstellungsprobe — Beleg zu E-S1-04, E-S1-19 und Backlog Nr. 31/33/34/35.
+ * Wiederherstellungsprobe — Papierkorb und Rueckweg eines Backups.
  *
  * Anlass: Nr. 31, 33, 34, 35 — kaputte Datei kippte den Lauf, Waisenkind, Diensttag geraten
  *
@@ -11,31 +11,31 @@ declare(strict_types=1);
  * nicht ansieht. Vier Teile:
  *
  *   TEIL 1 — PAPIERKORB. Seit Nutzlast 7 traegt die Backup-Datei den
- *   Papierkorb mit (E-S1-01), und der Rueckweg muss zwei Regeln einhalten:
+ *   Papierkorb mit, und der Rueckweg muss zwei Regeln einhalten:
  *
- *     E-S1-04  `deleted_with_day` ist eine UND-Verknuepfung: der Wert aus der
+ *     REGEL 1  `deleted_with_day` ist eine UND-Verknuepfung: der Wert aus der
  *              DATEI sagt, ob der Eintrag am Tag hing, der ZIELTAG sagt, ob
  *              das hier ueberhaupt gelten kann. Wer nur den Zieltag prueft,
  *              macht aus jedem einzeln geloeschten Einsatz einen
  *              mitgeloeschten — er verschwindet aus `trash_list_missions()`
  *              und wird beim Wiederherstellen des Tages ungewollt mit aktiv.
- *     E-S1-19  Ein in der Datei AKTIVER Eintrag, dessen Zieltag hier im
+ *     REGEL 2  Ein in der Datei AKTIVER Eintrag, dessen Zieltag hier im
  *              Papierkorb liegt, wird abgelehnt und gezaehlt. Sonst stuende
  *              er an einem Tag, den die Tagesliste nicht zeigt.
  *
  *   TEIL 2 — EINE KAPUTTE DATEI DARF NUR SICH SELBST KOSTEN. Der Lauf haengt
  *   an EINER Transaktion: Was eine Ausnahme ausloest, reisst alles mit. Ein
- *   unbrauchbarer Zeitwert in einem Ruhesegment (Nr. 31) und eine doppelte
- *   Spurnummer (Nr. 35) taten das bis Web 8.0.0. Beide muessen die eine Zeile
+ *   unbrauchbarer Zeitwert in einem Ruhesegment und eine doppelte
+ *   Spurnummer taten das einmal. Beide muessen die eine Zeile
  *   beziehungsweise den einen Punkt kosten, nicht den Lauf.
  *
- *   TEIL 3 — KEIN WEG MEHR ZUM HALB SICHTBAREN EINSATZ (Nr. 33). Aktiv an
+ *   TEIL 3 — KEIN WEG MEHR ZUM HALB SICHTBAREN EINSATZ. Aktiv an
  *   einem GELOESCHTEN Diensttag ist derselbe Zustand, den Teil 1 beim
  *   Einspielen ablehnt — und die Anwendung selbst konnte ihn herstellen: ueber
  *   das Zurueckholen im Papierkorb, ueber eine Uhr-Kennung in `day_refs` und
  *   ueber das endgueltige Loeschen, das ein Waisenkind zuruecklies.
  *
- *   TEIL 4 — SCHRITT 1 DER WIEDERERKENNUNG RAET NICHT MEHR (Nr. 34). Der
+ *   TEIL 4 — SCHRITT 1 DER WIEDERERKENNUNG RAET NICHT MEHR. Der
  *   erste gefundene Einsatz bestimmte den Zieltag fuer den ganzen Datei-Tag.
  *   Jetzt zaehlen alle Kennungen; nur ein eindeutiges Ergebnis gilt.
  *
@@ -58,37 +58,22 @@ declare(strict_types=1);
  *     php tools/proben/wiederherstellung/probe.php /tmp/vorher
  *
  * Erwartet: **142 von 142** mit dem heutigen Stand, Rueckgabe 0 (gemessen
- * 27.10.2026, R17-23: fuenfzehn aus Teil 8 (F-R17-35), 15 (Nr. 386) und 16
- * (F-R17-34); davor 127 — hier stand noch 115: zwoelf Erwartungen seit
- * P5c/AP8, darunter Teil 14 (S11-06), waren ohne Spur dazugekommen,
- * derselbe Fehler ein drittes Mal).
- * (115 seit 25.09.2026, P5c/AP8: vier aus Teil 13; davor 111 — die 110 hier war seit
- * P5c/AP2 um eine zu klein und stand ohne Spur, derselbe Fehler wie am
- * 16.09.).
- * (94 bis S10/AP4 — Teil 8 hat mit der Fassung 3 vier Erwartungen dazu
- *  bekommen, Teil 12 acht. Am 16.09.2026 stand hier 106 und gemessen wurden
- *  105: eine Erwartung Unterschied, entstanden ohne Spur. Mit den fuenf
- *  neuen aus P5a/AP10 — Nr. 195, die Geraeteart auf dem Rueckweg — waren es
- *  110; die 111. kam mit RP-03. Wer die Zahl hier nicht mitfuehrt, hat beim
- *  naechsten Lauf keinen Vergleich, sondern nur ein Gefuehl.
+ * 27.10.2026). Wer die Zahl hier nicht mitfuehrt, hat beim naechsten Lauf
+ * keinen Vergleich, sondern nur ein Gefuehl — sie ist mehrfach ohne Spur
+ * gewachsen.
  *
- *  BIS RP-03 WAREN ZWEI DAVON AUF EINER LEEREN INSTALLATION ROT (Teil 10,
- *  Backlog Nr. 212): Der Sammelvorgang „Alle sichern" bekommt ein enges
- *  Zeitbudget und soll danach etwas offen lassen — bei zwei fast leeren
- *  Konten passten beide hinein. Seit RP-03 legt Teil 10 zwei Zusatzkonten
- *  an und faehrt eine gestellte Uhr; die Erwartung haengt damit am Bestand,
- *  nicht an der Geschwindigkeit der Maschine („2 erledigt, 2 von 4 offen").)
+ * Teil 10 legt zwei Zusatzkonten an und faehrt eine gestellte Uhr: Der
+ * Sammelvorgang „Alle sichern" bekommt ein enges Zeitbudget und soll danach
+ * etwas offen lassen — bei zwei fast leeren Konten passten beide hinein, und
+ * zwei Erwartungen waren auf einer leeren Installation rot. So haengt die
+ * Erwartung am Bestand, nicht an der Geschwindigkeit der Maschine („2
+ * erledigt, 2 von 4 offen").
  *
- * (Die Zahl stand bis Web 14.2.0 auf 30 und war seit Langem falsch — die
- * Probe ist auf elf Teile gewachsen. Sie ist ausserdem seit einiger Zeit
- * MITTEN IN TEIL 9 abgestuerzt, an einem fehlenden `require` fuer
- * `smtp.php`; alles dahinter lief nie. Beides ist mit R64/AP2 behoben.)
- *
- *   TEIL 13 — EINE 11er-DATEI MIT DER STANDORTAUSWAHL (P5c/AP8, Nr. 168):
+ *   TEIL 13 — EINE 11er-DATEI MIT DER STANDORTAUSWAHL:
  *   Das Feld der gefallenen Tabelle wird still ueberlesen, und die Sicherung
  *   danach traegt Nutzlast 12. Vier Erwartungen.
  *
- *   TEIL 11 — NUTZLAST 9: MOMENTAUFNAHME UND SPERRVERMERKE (R64, Nr. 63).
+ *   TEIL 11 — NUTZLAST 9: MOMENTAUFNAHME UND SPERRVERMERKE.
  *   Der Regelfall — ein Vermerk faehrt hin und kommt zurueck — steht im
  *   edbak-Kreislauf des Referenzbestands. Hier stehen die Grenzfaelle, die
  *   der Referenzbestand nicht zeigt: zweites Einspielen, verwaiste Quelle,
@@ -112,10 +97,10 @@ require_once $server . '/trash_lib.php';
  * dahinter (Teil 10, der Auftrag „Alle sichern") lief seitdem NIE, ohne dass
  * es jemandem auffiel: Der Abbruch kam nach dreiundvierzig gruenen Zeilen,
  * und wer nur auf die letzte Zeile sieht, sieht gar keine. Gefunden beim
- * Anhaengen von Teil 11 (R64/AP2). */
+ * Anhaengen von Teil 11. */
 require_once $server . '/smtp.php';
 require_once $server . '/konto_lib.php';
-require_once $server . '/kontopaar_lib.php';   // kp_ablegen() (S11-06)
+require_once $server . '/kontopaar_lib.php';   // kp_ablegen()
 
 $pdo = db();
 $fehler = 0; $gesamt = 0;
@@ -124,20 +109,20 @@ $sag = function (string $was, bool $ok, string $ist) use (&$fehler, &$gesamt) {
     if (!$ok) { $fehler++; }
     printf("  [%s] %-62s %s\n", $ok ? 'ok ' : 'FEHL', $was, $ist);
 };
-/* DIE PROBEKONTEN GEHEN UEBER `konto_loeschen()` (R4-21, F-R4-65). Bis
+/* DIE PROBEKONTEN GEHEN UEBER `konto_loeschen()`. Bis
  * dahin stand hier `DELETE FROM users`: Einsaetze und Tage gehen per Kaskade
  * mit, der Sperrvermerk aus Teil 5 (`deleted_refs`, Kennung „w-a") nicht —
  * die Tabelle hat keinen Fremdschluessel. Je Lauf blieb einer fuer ein Geraet
  * zurueck, das es nicht mehr gibt; gezaehlt am 27.09.2026: 6 von 6 Vermerken
  * der Anlage, einer je Pruefstandslauf. `konto_loeschen()` ist der Weg der
- * Verwaltung und raeumt Spur und Sperrliste mit ab (vgl. F-R4-63). */
+ * Verwaltung und raeumt Spur und Sperrliste mit ab. */
 $kontoWeg = function (int $uid): void {
     konto_loeschen($uid, true, 'probe');
 };
-/* JEDES PROBEKONTO BEKOMMT EIN SCHLUESSELPAAR (S11-06). Der Server-Weg
- * (`'server'`, seit Web 23 nur noch der Demo-Reset) verschliesst Orte,
+/* JEDES PROBEKONTO BEKOMMT EIN SCHLUESSELPAAR. Der Server-Weg
+ * (`'server'`, nur noch der Demo-Reset) verschliesst Orte,
  * Reanimation und Spur mit dem oeffentlichen Schluessel des Kontos und weist
- * ein Konto ohne Paar ab (E-S11-57). Der private Teil ist hier ein
+ * ein Konto ohne Paar ab. Der private Teil ist hier ein
  * Platzhalter — die Probe oeffnet nichts. */
 $konto = function (string $mail) use ($pdo, $kontoWeg): int {
     $alt = $pdo->prepare('SELECT id FROM users WHERE email = ?');
@@ -151,11 +136,11 @@ $konto = function (string $mail) use ($pdo, $kontoWeg): int {
     kp_ablegen($pdo, $id, $spki, 'edk1:' . str_repeat('QUJD', 16));
     return $id;
 };
-/* DER SERVER-WEG, wie ihn der Demo-Reset nimmt (S11-06; bis Web 22.7.0 auch
- * die Verwaltung). Diese Probe misst die Einspiellogik — Papierkorb,
+/* DER SERVER-WEG, wie ihn der Demo-Reset nimmt. Diese Probe misst die
+ * Einspiellogik — Papierkorb,
  * Wiedererkennung, Pruefschicht — an Dateien der Nutzlast 7 mit Klartext und
- * nimmt deshalb den Weg, der ihn annimmt und verschliesst. Seit Web 23 braucht
- * er den Rueckruf fuer den Blob (S11-12); hier laesst er den Blob, wie er ist
+ * nimmt deshalb den Weg, der ihn annimmt und verschliesst. Er braucht
+ * den Rueckruf fuer den Blob; hier laesst er den Blob, wie er ist
  * — Transportziel und Hoehe stehen in keiner der Dateien. */
 $blobGleich = static fn(?string $blob, array $zusatz): ?string => $blob;
 $restore = fn(int $uid, array $daten, ?array $karte = null): array
@@ -168,7 +153,7 @@ echo "Wiederherstellungsprobe\n";
 echo "  Quelle: $server\n";
 
 /* ==========================================================================
- * TEIL 1 — PAPIERKORB AUS DER DATEI (E-S1-04 / E-S1-19)
+ * TEIL 1 — PAPIERKORB AUS DER DATEI
  *
  * Ein einziger Diensttag, in der Datei GELOESCHT, und daran dreimal dieselbe
  * Staffelung — einmal als Einsatz, einmal als Ruhesegment:
@@ -179,7 +164,7 @@ echo "  Quelle: $server\n";
  *
  * Die Loeschzeitpunkte in der Datei liegen absichtlich in der Vergangenheit
  * und weit auseinander: Die letzte Erwartung prueft, dass KEINER davon in die
- * Datenbank kommt (E-S1-03).
+ * Datenbank kommt.
  * ====================================================================== */
 echo "\n  Teil 1 — Papierkorb aus der Datei (E-S1-04 / E-S1-19)\n";
 $uid = $konto('probe-papierkorb@example.invalid');
@@ -229,7 +214,7 @@ $r1 = $hole('rest_segments', 'p-r1');
 $r2 = $hole('rest_segments', 'p-r2');
 $r3 = $hole('rest_segments', 'p-r3');
 
-/* Die Papierkorbliste ist die Probe aufs Exempel fuer E-S1-04: Sie zeigt
+/* Die Papierkorbliste ist die Probe aufs Exempel fuer Regel 1 aus Teil 1: Sie zeigt
  * ausschliesslich `deleted_with_day = 0`. Steht m2 nicht darin, ist er fuer
  * die Benutzerin verschwunden. */
 $refsImPapierkorb = [];
@@ -271,12 +256,12 @@ $sag('Loeschzeitpunkt stammt aus dem Lauf, nicht aus der Datei (E-S1-03)',
 $weg($uid);
 
 /* ==========================================================================
- * TEIL 2 — EINE KAPUTTE DATEI KOSTET NUR SICH SELBST (Nr. 31 / Nr. 35)
+ * TEIL 2 — EINE KAPUTTE DATEI KOSTET NUR SICH SELBST
  *
  * Ein aktiver Diensttag mit zwei Einsaetzen und zwei Ruhesegmenten. Kaputt
  * sind: die Spur des ersten Einsatzes (zweimal `seq` = 1) und das zweite
  * Ruhesegment (`started_at` ist Text). Alles andere ist in Ordnung und MUSS
- * ankommen — genau das war bis Web 8.0.0 nicht so: Beide Faelle loesten eine
+ * ankommen — genau das war einmal nicht so: Beide Faelle loesten eine
  * Ausnahme aus, die ueber die Transaktion den ganzen Lauf zurueckrollte.
  * ====================================================================== */
 echo "\n  Teil 2 — kaputte Datei kostet nur sich selbst (Nr. 31 / Nr. 35)\n";
@@ -317,7 +302,7 @@ try {
 
 $sag('Der Lauf ueberlebt die kaputten Stellen ueberhaupt',
      $hin, $hin ? 'keine Ausnahme' : $meldung);
-/* UEBER `spur_zahlen()` (S11-06): Seit dem Verschliessen liegen die Punkte
+/* UEBER `spur_zahlen()`: Seit dem Verschliessen liegen die Punkte
  * in Stuecken, nicht mehr in `track_points`; die Zahl zaehlt beide. */
 $punkte = function (string $typ, string $ref) use ($pdo, &$uid): int {
     $tab = $typ === 'mission' ? 'missions' : 'rest_segments';
@@ -348,9 +333,9 @@ $sag('Die doppelten Nummern stehen in der Ablehnungsliste, nicht nur im Nichts',
 $weg($uid);
 
 /* ==========================================================================
- * TEIL 3 — DER HALB SICHTBARE EINSATZ HAT KEINEN WEG MEHR (Backlog Nr. 33)
+ * TEIL 3 — DER HALB SICHTBARE EINSATZ HAT KEINEN WEG MEHR
  *
- * Aktiv an einem GELOESCHTEN Diensttag — denselben Zustand, den E-S1-19 beim
+ * Aktiv an einem GELOESCHTEN Diensttag — denselben Zustand, den Regel 2 aus Teil 1 beim
  * Einspielen ablehnt, konnte die Anwendung selbst herstellen. Drei Wege
  * fuehrten hin, alle drei werden hier abgeklopft:
  *
@@ -394,7 +379,7 @@ $sag('(a) und der Einsatz bleibt dabei im Papierkorb liegen',
      (int)$nochWeg === 1, 'noch geloescht=' . (int)$nochWeg);
 
 // Tag zurueckholen -> jetzt muss es gehen. Der einzeln geloeschte bleibt
-// dabei liegen (E-S1-04), lässt sich aber einzeln zurueckholen.
+// dabei liegen, lässt sich aber einzeln zurueckholen.
 trash_restore_day($uid, $tagId);
 $antwort2 = trash_restore_mission($uid, $mA);
 $aktiv = $pdo->query("SELECT deleted_at IS NULL FROM missions WHERE id = $mA")->fetchColumn();
@@ -422,7 +407,7 @@ $sag('(b) die Kennung zeigt danach auf den neuen Tag',
 
 /* (c) ALTBESTAND: einen aktiven Einsatz an den geloeschten Tag haengen, wie
  *     ihn ein aelterer Stand hinterlassen haben kann. Von Hand gesetzt — die
- *     regulaeren Wege koennen es seit Web 8.0.0 nicht mehr. */
+ *     regulaeren Wege koennen es nicht mehr. */
 $pdo->exec("UPDATE missions SET deleted_at = NULL, deleted_with_day = 0,
                                 day_id = $tagId, device_id = $devId WHERE id = $mA");
 /* GEGEN EINEN AELTEREN STAND gibt es trash_aktiv_am_tag() noch nicht. Die
@@ -453,7 +438,7 @@ $sag('(c) und der aktive Einsatz ist fuer die Uhr gesperrt',
 $weg($uid);
 
 /* ==========================================================================
- * TEIL 4 — SCHRITT 1 DER WIEDERERKENNUNG RAET NICHT MEHR (Backlog Nr. 34)
+ * TEIL 4 — SCHRITT 1 DER WIEDERERKENNUNG RAET NICHT MEHR
  *
  * Im Ziel liegen zwei Einsaetze desselben Datei-Diensttags an VERSCHIEDENEN
  * Tagen (jemand hat einen verschoben). Schritt 1 nahm bisher den ersten
@@ -568,7 +553,7 @@ $sag('GEGENPROBE: dabei wird nichts als mehrdeutig gemeldet',
 $weg($uid);
 
 /* ======================================================================
- * Teil 5 — Nutzlast 8: die Spurkarte und die Wiederaufnahme (S2/AP5)
+ * Teil 5 — Nutzlast 8: die Spurkarte und die Wiederaufnahme
  *
  * Nutzlast 8 traegt keine Punktlisten, sondern je Spur eine `spur_ref`. Der
  * Rueckweg muss deshalb sagen, unter welcher Kennung er jede angelegt hat —
@@ -676,7 +661,7 @@ $sag('Endpunkt und Browser nennen dieselbe Hoechstzahl je Anfrage',
      isset($mE[1], $mB[1]) && $mE[1] === $mB[1],
      'Endpunkt ' . ($mE[1] ?? '—') . ', Browser ' . ($mB[1] ?? '—'));
 
-/* DASSELBE FUER DIE EINTRAGSFENSTER (S2/AP5b). Der Browser holt den Kern in
+/* DASSELBE FUER DIE EINTRAGSFENSTER. Der Browser holt den Kern in
  * Fenstern zu FENSTER Eintraegen; `api/backup_data.php` nimmt hoechstens
  * BACKUP_EINTRAEGE_MAX je Anfrage. Waere FENSTER groesser, antwortete der
  * Endpunkt mit 400 und das Backup braeche ab — laut, aber erst im Betrieb
@@ -695,15 +680,15 @@ $sag('Der Browser zaehlt nach, wie viele Eintraege ein Fenster brachte',
      (bool)preg_match('/statt \$\{soll\} Eintr/u', $browser),
      'Schranke gegen ein zu kurz geliefertes Fenster');
 
-/* ---- Der Widerspruch: Nutzlast 8 MIT Punktlisten (S2/AP6, F-S2-E) ------
+/* ---- Der Widerspruch: Nutzlast 8 MIT Punktlisten -----------------------
  *
  * WOFUER. Nutzlast 8 sagt zu, dass die Punkte in eigenen Teilen nachkommen.
  * Traegt eine Datei beides — Fassung 8 UND `track`-Listen —, wurden die
- * Punkte bis Web 11.1.0 stillschweigend uebergangen: Der Eintrag entstand
+ * Punkte einmal stillschweigend uebergangen: Der Eintrag entstand
  * ohne Spur, die Meldung lautete „fertig".
  *
- * Gefunden beim Aufbau des Pruefbestands fuer AP6: Der Vervielfaeltiger des
- * Messstands erbte seit Web 11.0.0 die Fassung aus der Referenz und schrieb
+ * Gefunden beim Aufbau eines Pruefbestands: Der Vervielfaeltiger des
+ * Messstands erbte die Fassung aus der Referenz und schrieb
  * `version: 8` in eine einteilige Datei. Ein Lauf legte 164 Einsaetze an und
  * verlor 91 208 Punkte.
  *
@@ -739,7 +724,7 @@ $sag('Die Punkte werden NICHT geschrieben (die Fassung entscheidet)',
 $abgelehnt = $stats8['rejected'] ?? [];
 $treffer = [];
 foreach ($abgelehnt as $grund => $zahl) {
-    /* GESUCHT WIRD DIE EIGENSCHAFT, NICHT DIE ZAHL (Web 14.2.0).
+    /* GESUCHT WIRD DIE EIGENSCHAFT, NICHT DIE ZAHL.
      * Bis dahin stand hier `str_contains($grund, 'Nutzlast 8')` — der einzige
      * faktische Gleichheitsvergleich gegen die 8 im ganzen Repositorium, und
      * zwar als Zeichenkettensuche 1200 Zeilen und zwei Verzeichnisse von der
@@ -757,23 +742,23 @@ $sag('GEGENPROBE: Nutzlast 8 OHNE Punktlisten meldet nichts dergleichen',
 $weg($uid8);
 
 /* ==========================================================================
- * Teil 8 — Das Adminpaket: Rundlauf und Siegel (S2/AP6, Fassung 3 seit S10/AP4)
+ * Teil 8 — Das Adminpaket: Rundlauf und Siegel (Fassung 3)
  *
- * WOFUER. Das Admin-Backup ist seit Web 11.2.0 ein mehrteiliges ZIP und
+ * WOFUER. Das Admin-Backup ist ein mehrteiliges ZIP und
  * wird in Fenstern gebaut. Zwei Dinge muessen dabei stimmen, und beide gehen
  * STILL schief, wenn sie es nicht tun:
  *
  *   1. Die Spuren. Ein Fassung-2-Kern traegt Nutzlast 8 — die Punkte stehen
  *      in eigenen Teilen. Wer ihn durch den einteiligen Weg schickt, bekommt
- *      jeden Einsatz und keine einzige Spur (F-S2-E, 91 208 Punkte).
- *   2. Die Sperre aus E20. `edbak_paket_hat_geschuetzte()` sah frueher in die
+ *      jeden Einsatz und keine einzige Spur (91 208 Punkte).
+ *   2. Die Sperre fuer geschuetzte Angaben. `edbak_paket_hat_geschuetzte()` sah frueher in die
  *      Einsatzliste des Pakets; die steht im gefensterten Kern nicht mehr.
  *      Ohne die Zahl im Manifest liefert sie still `false`, und ein Paket mit
  *      unlesbaren Angaben ginge als „direkt einspielbar" durch.
  * ====================================================================== */
 echo "\n  Teil 8 — Adminpaket Fassung 3: Rundlauf und Siegel (S2/AP6, S10/AP4)\n";
 require_once $server . '/adminbackup_lib.php';
-require_once $server . '/format_lib.php';   // groesse_text() (Schritt 15/AP7)
+require_once $server . '/format_lib.php';   // groesse_text()
 
 $quelle = $konto('probe-adminquelle@example.invalid');
 $kennung = bin2hex(random_bytes(8));
@@ -789,8 +774,8 @@ $restore($quelle, [
     ['client_ref' => 'a-m1', 'day_id' => 970, 'started_at' => '2026-07-08 06:00:00',
           /* Ein Chiffretext in der Form, die validate_lib.php verlangt
       * (`edk1:` plus mindestens 40 base64-Zeichen). Inhalt beliebig — er
-      * wird hier nie geoeffnet, und genau das ist der Punkt: Die Sperre aus
-      * E20 haengt daran, DASS er da ist, nicht daran, was drinsteht. */
+      * wird hier nie geoeffnet, und genau das ist der Punkt: Die Sperre
+      * haengt daran, DASS er da ist, nicht daran, was drinsteht. */
      'ended_at' => '2026-07-08 07:00:00',
      'pat_blob' => 'edk1:' . str_repeat('QUJD', 16),
      'track' => [[0, 47.10, 11.10, 700.0, 1783100000],
@@ -816,13 +801,13 @@ $sag('Sie ist ein ZIP (mehrteilig, am Namen erkennbar)',
 /* ZWEI ZAHLEN, DIE „FASSUNG" HEISSEN. `edbak_paket_fassung()` liest die
  * ENDUNG (2 = mehrteiliges ZIP) und bleibt bei 2, auch fuer ein Paket der
  * Fassung 3 — sie unterscheidet einteiliges JSON von mehrteiligem ZIP. Die
- * Fassung des FORMATS steht im Manifest und ist seit S10/AP4 die 3. Wer die
+ * Fassung des FORMATS steht im Manifest und ist die 3. Wer die
  * beiden verwechselt, bricht sechs Vergleichsstellen in adminbackup_lib.php. */
 $manifest = $datei6 ? edbak_paket_kopf_lesen($kennung, $datei6) : null;
 $sag('Das Manifest laesst sich ohne den Bestand lesen',
      is_array($manifest) && (int)($manifest['version'] ?? 0) === 3,
      is_array($manifest) ? 'Fassung ' . $manifest['version'] : 'nicht lesbar');
-/* DIE NUMMER ALLEIN IST KEIN BELEG (S10/AP4). Ein Paket, das „3" ins
+/* DIE NUMMER ALLEIN IST KEIN BELEG. Ein Paket, das „3" ins
  * Manifest schreibt und die Teile offen ablegt, kaeme hier durch. Gezaehlt
  * wird das Siegel an JEDEM Eintrag, am rohen Archiv. */
 $zipSiegel = [0, 0];
@@ -893,10 +878,10 @@ $sag('WIEDERAUFNAHME: ein zweiter Lauf legt nichts an und ueberschreibt nichts',
 
 /* Ein fehlendes Teil faellt auf, BEVOR etwas geschrieben wird.
  *
- * AM PAKET SELBST, NICHT AN EINER KOPIE (S10/AP4). Hier wurde bis dahin
+ * AM PAKET SELBST, NICHT AN EINER KOPIE. Hier wurde bis dahin
  * unter einem anderen Namen kopiert und aus der Kopie ein Teil geloescht.
- * Seit E-S10-U-11 bindet das Siegel den PAKETNAMEN — die Kopie ist damit
- * schon deshalb unlesbar, und die Probe maass den Namen statt das fehlende
+ * Das Siegel bindet den PAKETNAMEN — die Kopie ist damit
+ * schon deshalb unlesbar, und die Probe maesse den Namen statt das fehlende
  * Teil. Gearbeitet wird jetzt am Original, mit einer Sicherung ausserhalb
  * der Ablage; der Namensfall steht als eigene Erwartung darunter. */
 $pfad6 = edbak_ordner($kennung) . '/' . $datei6;
@@ -915,10 +900,10 @@ $sag('Ein fehlendes Teil wird benannt und nichts geschrieben',
 copy($sicher6, $pfad6);
 @unlink($sicher6);
 
-/* ---- Was das Siegel der Fassung 3 leisten soll (S10/AP4) ---------------
+/* ---- Was das Siegel der Fassung 3 leisten soll -------------------------
  *
  * Zwei Faelle, und beide gab es vorher nicht. Der erste ist der Preis von
- * E-S10-U-11 und muss deshalb belegt sein; der zweite ist ihr Zweck (F-7). */
+ * Namensbindung und muss deshalb belegt sein; der zweite ist ihr Zweck. */
 $umbenannt = '2026-07-08T00-00-00Z_deadbeef.zip';
 copy($pfad6, edbak_ordner($kennung) . '/' . $umbenannt);
 $ziel10 = $konto('probe-adminname@example.invalid');
@@ -931,7 +916,7 @@ $sag('Ein UMBENANNTES Paket wird abgewiesen (der Name gehoert zum Siegel)',
 @unlink(edbak_ordner($kennung) . '/' . $umbenannt);
 
 /* Ein Teil aus einem ANDEREN Paket desselben Kontos — genau die Luecke, die
- * F-7 benennt: Das Manifest fuehrt nur Namen, keine Pruefsummen je Teil. */
+ * eine Gegenpruefung benannt hat: Das Manifest fuehrt nur Namen, keine Pruefsummen je Teil. */
 [$okZ, , $infoZ] = edbak_sicherung_erzeugen($quelle);
 $fremdTeil = null;
 if ($okZ) {
@@ -962,9 +947,9 @@ $sag('Ein Teil aus einem ANDEREN Paket desselben Kontos wird abgewiesen',
 copy($sicher7, $pfad6);
 @unlink($sicher7);
 
-/* EIN UNVERSIEGELTER TEIL IN EINEM FASSUNG-3-PAKET (F-R17-35, R17-23).
+/* EIN UNVERSIEGELTER TEIL IN EINEM FASSUNG-3-PAKET.
  *
- * Bis Web 23.3.1 entschied das Praefix je Teil: Wer einem Teil das Siegel
+ * Frueher entschied das Praefix je Teil: Wer einem Teil das Siegel
  * abnahm und seinen Klartext hinlegte, kam durch — die Bindung an Server,
  * Konto, Paket und Teilnamen fiel fuer diesen Teil weg. Jetzt gilt: Ist das
  * Manifest versiegelt, muss es jeder Teil sein. Gemessen auf beiden Wegen,
@@ -1006,24 +991,24 @@ $sag('Ein liegengebliebener Bauordner blockiert die Loeschung nicht mehr',
      $geloescht ? 'Ordner weg' : ' NICHT geloescht');
 
 /* ALLE FUENF WEGWERFKONTEN, nicht drei. `$ziel10` und `$ziel11` sind bei
- * den beiden Negativfaellen aus S10/AP4 entstanden (umbenanntes Paket,
+ * den beiden Negativfaellen entstanden (umbenanntes Paket,
  * untergeschobener Teil) und hier nie geloescht worden — sie standen nach
  * jedem Lauf in `users` und wuchsen nicht weiter auf, weil `$konto()` sie
- * beim naechsten Mal ueberschreibt. Aufgefallen in AP5 beim Nachzaehlen der
+ * beim naechsten Mal ueberschreibt. Aufgefallen beim Nachzaehlen der
  * `@example.invalid`-Konten: zwei uebrig, wo keines uebrig sein sollte. Der
- * Kopf dieser Datei sagt „loescht sie am Ende wieder" — seit jetzt stimmt es. */
+ * Kopf dieser Datei sagt „loescht sie am Ende wieder" — und so ist es. */
 $weg($ziel9); $weg($ziel6); $weg($ziel10); $weg($ziel11); $weg($quelle);
 
 /* ==========================================================================
- * Teil 9 — Speichergrenze und Schwellen (S2/AP6, E-S2-14/15)
+ * Teil 9 — Speichergrenze und Schwellen
  *
  * ZWEI ZUSAGEN STEHEN HIER AUF DEM PRUEFSTAND:
  *
  *   „Bei Erreichen der Speichergrenze wird ABGELEHNT MIT MELDUNG, nie still
- *    verdraengt" (E-S2-14) — die Ablehnung muss VOR dem Bau kommen, sonst
+ *    verdraengt" — die Ablehnung muss VOR dem Bau kommen, sonst
  *    kostet sie beim grossen Konto vierzehn Sekunden fuer nichts.
  *
- *   „Je ueberschrittener Schwelle EINMAL melden" (E-S2-15) — und ohne
+ *   „Je ueberschrittener Schwelle EINMAL melden" — und ohne
  *    eingerichtetes SMTP stattdessen ein dauerhafter Hinweis.
  *
  * Die Marken liegen in app_state und gelten fuer die ganze Installation; sie
@@ -1103,7 +1088,7 @@ $sag('...und es liegt kein halbes Paket herum',
  * DASS DAS NIEMANDEM AUFFIEL, hat einen eigenen Grund: Die Probe ist eine
  * Zeile darueber an einem fehlenden `require` gestorben (`smtp.php`, s. o.),
  * und zwar nach dreiundvierzig gruenen Zeilen. Ein Abbruch mitten im Lauf
- * sieht aus wie ein Ende. Gefunden beim Anhaengen von Teil 11 (R64/AP2). */
+ * sieht aus wie ein Ende. Gefunden beim Anhaengen von Teil 11. */
 edbak_marke_setzen('adminbackup_grenze_gb', '0.000001');   // ~1 KB
 $schwellRest = edbak_wurzel() . '/' . EDBAK_BAU_PRAEFIX . 'schwelle';
 @mkdir(edbak_wurzel(), 0770, true);
@@ -1117,9 +1102,8 @@ $m9 = edbak_schwellen_melden();
  * messbar, dass die Schwellen ueberhaupt ANSCHLAGEN, aber nicht, was ohne
  * SMTP geschieht.
  *
- * Bis Web 14.2.0 stand hier die Erwartung fuer den ersten Fall unbedingt da.
- * Sie war auf einer Installation mit SMTP nicht erfuellbar — und ist nie
- * aufgefallen, weil die Probe eine Zeile darueber abbrach. */
+ * Die Erwartung fuer den ersten Fall steht deshalb nicht unbedingt da: Sie
+ * ist auf einer Installation mit SMTP nicht erfuellbar. */
 if (!smtp_eingerichtet()) {
     $sag('Ohne eingerichtetes SMTP wird nicht gemailt, sondern vermerkt',
          $m9['gemeldet'] === [] && $m9['hinweis'] === [70, 90],
@@ -1143,7 +1127,7 @@ edbak_ablage_zahlen(true);
 $weg($q9);
 
 /* ==========================================================================
- * Teil 10 — Der Auftrag „Alle sichern" (S2/AP6, E-S2-14)
+ * Teil 10 — Der Auftrag „Alle sichern"
  *
  * DREI ZUSAGEN:
  *
@@ -1167,11 +1151,11 @@ $sicherAuftrag = $markeVorher($pdo, 'adminbackup_auftrag');
 $pdo->prepare('DELETE FROM app_state WHERE k = ?')->execute(['adminbackup_auftrag']);
 $c = &edbak_marken_speicher(); $c = [];
 
-/* ZWEI KONTEN MEHR, NUR FUER DIESEN TEIL (RP-03, F-RP-10). Die Pruefung
+/* ZWEI KONTEN MEHR, NUR FUER DIESEN TEIL. Die Pruefung
  * braucht mehr Konten mit Kontokennung, als der knappe Schub schafft, und
  * danach noch zwei offene fuer die Wiederaufnahme. Eine frische Anlage hat
  * genau ZWEI (Verwaltung und Demo): Der Schub sicherte beide, und „hoert
- * dann auf" konnte nicht stimmen — rot seit PK-03 (F-PK-18), ohne dass die
+ * dann auf" konnte nicht stimmen — rot, ohne dass die
  * Anwendung falsch war. Sie stehen HINTER dem Bestand (hoehere id) und gehen
  * nach dem Teil wieder. */
 $zusatz10 = [];
@@ -1210,7 +1194,7 @@ $sag('Ein knapper Schub sichert wenigstens ein Konto und hoert dann auf',
 
 /* WIEDERAUFNAHME: Der naechste Schub faengt NICHT von vorn an.
  *
- * DER ZWEITE SCHUB NIMMT GENAU EIN KONTO (S10/AP4, 14.09.2026). Hier stand
+ * DER ZWEITE SCHUB NIMMT GENAU EIN KONTO (14.09.2026). Hier stand
  * `$tick = 2`, und das war an die Installation von damals gebunden: Der
  * Kommentar oben spricht von „alle 31 Konten" — mit dem Pruefkonten-Bestand
  * blieb nach zwei mal zwei Konten reichlich offen. Der Referenzbestand hat
@@ -1221,9 +1205,9 @@ $sag('Ein knapper Schub sichert wenigstens ein Konto und hoert dann auf',
  *
  * Mit einem Konto je Schub traegt die Pruefung ab ZWEI offenen Konten. Sind
  * es weniger, laesst sich Wiederaufnahme nicht messen — und NICHT GEMESSEN IST
- * ROT (E-KH-12, E-PK-46). Bis BR-03 stand im Zweig darunter `true`: Die Probe
- * meldete eine Erwartung als erfuellt, die sie nicht geprueft hatte (F-BR-04).
- * Seit RP-03 greift der Zweig auf frischer Anlage nicht mehr; greift er doch,
+ * ROT: Eine Probe, die im Zweig darunter `true` hat,
+ * meldet eine Erwartung als erfuellt, die sie nicht geprueft hat. Auf
+ * frischer Anlage greift der Zweig nicht; greift er doch,
  * sagt die Probe es mit Zahl und rot. */
 $a11 = edbak_auftrag_lesen();
 $sag('Der Zeiger steht auf dem zuletzt gesicherten Konto',
@@ -1282,7 +1266,7 @@ $c = &edbak_marken_speicher(); $c = [];
 
 
 /* ==========================================================================
- * TEIL 11 — NUTZLAST 9: MOMENTAUFNAHME UND SPERRVERMERKE (R64, Backlog Nr. 63)
+ * TEIL 11 — NUTZLAST 9: MOMENTAUFNAHME UND SPERRVERMERKE
  *
  * WOFUER. Bis Nutzlast 8 ueberlebte der Sperrvermerk eines Schnitts die
  * Konto-Sicherung nicht. Nach einem Wiedereinspielen lieferte ein Geraet mit
@@ -1328,7 +1312,7 @@ $paket9 = function (array $schnitte, array $zusatz = []) : array {
       ]],
       'missions' => [
         /* Der geschnittene Einsatz: traegt die Vermerke UND die
-         * Momentaufnahme, die er nach E-R64-06 von seiner Quelle geerbt hat. */
+         * Momentaufnahme, die er von seiner Quelle geerbt hat. */
         ['client_ref' => 'cut-s1', 'day_id' => 910,
          'started_at' => '2026-08-03 09:00:00', 'ended_at' => '2026-08-03 09:30:00',
          'origin' => 'schnitt', 'manual' => 1,
@@ -1385,7 +1369,7 @@ $sag('Dasselbe am Ruhesegment',
        && ($g3['geraet_modell'] ?? null) === 'fēnix 7 / fēnix 7 Solar',
      json_encode($g3, JSON_UNESCAPED_UNICODE));
 
-/* ---- Nr. 195: die Geraeteart auf dem RUECKWEG (P5a/AP10) ------------------
+/* ---- Die Geraeteart auf dem RUECKWEG --------------------------------------
  *
  * WAS FALSCH WAR. Beim Koppeln verengt `geraete_lib.php` die Geraeteart auf
  * die drei Werte aus `GERAET_ARTEN`; `docs/Technik.md` fuehrt das als Zusage.
@@ -1393,8 +1377,8 @@ $sag('Dasselbe am Ruhesegment',
  * LAENGE (16 Zeichen), also ging jede Zeichenkette durch. Beim Nachbarfeld
  * `origin` war es anders; die Asymmetrie stand ohne Begruendung da.
  *
- * WARUM DAS ZAEHLT: Genau diese Spalte soll der offene R42-Rest auswerten
- * (R64). Eine Zaehlung, die man durch das Bearbeiten der EIGENEN Sicherung
+ * WARUM DAS ZAEHLT: Genau diese Spalte soll eine kuenftige Auswertung lesen.
+ * Eine Zaehlung, die man durch das Bearbeiten der EIGENEN Sicherung
  * verunreinigen kann, taugt nicht als Betriebszahl.
  *
  * ZWEI ERWARTUNGEN, nicht eine: Der Wert muss NULL werden, UND es muss
@@ -1537,9 +1521,9 @@ $weg($uid11c);
 $weg($uid11);
 
 /* ==========================================================================
- * TEIL 12 — DER RUECKWEG, WENN DER SERVER-ANTEIL WEG IST (S10/AP5, E-S10-15)
+ * TEIL 12 — DER RUECKWEG, WENN DER SERVER-ANTEIL WEG IST
  *
- * DIE LAGE. `config.php` fuehrt seit S10 zwei Geheimnisse: den
+ * DIE LAGE. `config.php` fuehrt zwei Geheimnisse: den
  * Serverschluessel (oeffnet Sicherungen) und den Server-Anteil (geht in den
  * Datenschluessel jedes Kontos ein). Geht die Datei verloren und kommt aus
  * einer Sicherung ohne sie zurueck, steht die Marke `kdf_anteil_kennung` noch
@@ -1569,19 +1553,19 @@ echo "\n  Teil 12 — Der Rueckweg, wenn der Server-Anteil weg ist (S10/AP5)\n";
 require_once $server . '/serverkrypto_lib.php';
 require_once __DIR__ . '/../../sandbox/konfig_stellen.php';
 
-/* BIS WEB 20.26.3 WURDE DER ANTEIL IM SPEICHER VERSTELLT (`$CFG`). Die
- * globale `$CFG` ist mit Schritt 15 AP2 entfallen; die Anwendung liest ueber
- * `konfig()` aus der Datei, und eine Zuweisung erreicht niemanden mehr —
- * sie scheitert nicht, sie tut nur nichts. Teil 12 stand danach still auf
+/* DER ANTEIL WIRD NICHT IM SPEICHER VERSTELLT (`$CFG`). Eine
+ * globale `$CFG` gibt es nicht; die Anwendung liest ueber
+ * `konfig()` aus der Datei, und eine Zuweisung erreicht niemanden —
+ * sie scheitert nicht, sie tut nur nichts. Teil 12 stand damit einmal still auf
  * „nicht erfuellt" (gemessen 21.09.2026). `konfig_stellen()` geht denselben
  * Weg wie die Anwendung und legt den Urstand bytegleich zurueck, auch bei
  * einem Abbruch. */
 $anteilVorher = konfig('kdf_anteil');
-/* MARKE ZUERST LESEN, DANN DEN ZUSTAND FRAGEN (Gegenprobe zu AP5).
+/* MARKE ZUERST LESEN, DANN DEN ZUSTAND FRAGEN.
  *
  * `anteil_zustand()` ist nicht nur eine Auskunft: Fehlt die Marke in
  * `app_state` und steht ein Wert in `config.php`, SCHREIBT sie die Kennung
- * nach (E-S10-U-02). Das ist richtig — der erste Seitenaufruf taete es
+ * nach. Das ist richtig — der erste Seitenaufruf taete es
  * ohnehin —, aber ein Pruefmittel soll den Zustand nicht herstellen, den es
  * misst. Die Marke wird deshalb vorher gelesen, und ohne sie laeuft Teil 12
  * gar nicht erst an. */
@@ -1601,7 +1585,7 @@ if ($anteilVorher === null || ($standVorher['stand'] ?? '') !== 'bereit') {
     $huelleRc  = 'edk1:' . str_repeat('WFla', 16);
     /* `account_key` wie in Teil 8: Ohne Kontokennung legt
      * `edbak_sicherung_erzeugen()` kein Paket an — die Kennung ist der
-     * Ordnername der Ablage und geht in den Siegelzweck ein (S10/AP4). */
+     * Ordnername der Ablage und geht in den Siegelzweck ein. */
     $kennung12 = bin2hex(random_bytes(8));
     $pdo->prepare('UPDATE users SET pat_wrap_pw = ?, pat_wrap_rc = ?, pat_key_check = ?,
                           account_key = ? WHERE id = ?')
@@ -1624,13 +1608,13 @@ if ($anteilVorher === null || ($standVorher['stand'] ?? '') !== 'bereit') {
         /* Die Hülle des Kontos ist jetzt unbrauchbar — aber NICHT still: Die
          * Prüfschicht sagt, warum, und nennt den Anteil. Ein stiller
          * Fehlschlag sähe aus wie ein falsches Passwort (das ist die ganze
-         * Begründung der Zustandsmaschine, E-S10-03). */
+         * Begründung der Zustandsmaschine). */
         $grund12 = huelle_pw_pruefen($huelleNeu);
         $sag('(3) Die `edka1:`-Huelle wird abgewiesen — MIT Begruendung',
              is_string($grund12) && str_contains($grund12, 'Server-Anteil'),
              is_string($grund12) ? mb_substr($grund12, 0, 52) . '…' : 'null (durchgelassen!)');
 
-        /* DIE ZUSAGE AUS E-S10-04, und sie ist der Kern dieses Teils:
+        /* DIE ZUSAGE, und sie ist der Kern dieses Teils:
          * `pat_wrap_rc` haengt NICHT am Anteil. Der Verlust des Anteils ist
          * deshalb kein Datenverlust, sondern ein Passwort-Reset fuer alle. */
         $sag('(4) Die Wiederherstellungs-Huelle bleibt offen (E-S10-04)',
@@ -1656,8 +1640,8 @@ if ($anteilVorher === null || ($standVorher['stand'] ?? '') !== 'bereit') {
         $mid12 = (int)$pdo->query('SELECT id FROM missions WHERE user_id = ' . $uid12
                                   . " AND client_ref = 'anteil-1'")->fetchColumn();
         /* Die Spur wird ueber `spur_lib.php` gezaehlt und nicht per SQL —
-         * seit Web 10.0.0 liegt sie je nach Alter in `track_points` ODER als
-         * Blob in `track_blobs`, und wer eine der beiden Tabellen unmittelbar
+         * sie liegt in verschlossenen Stuecken (`track_stuecke`),
+         * und wer die Tabelle unmittelbar
          * liest, zaehlt frueher oder spaeter eine halbe Spur (CLAUDE.md 4). */
         $punkte12 = spur_zahlen($pdo, 'mission', [$mid12])[$mid12] ?? 0;
         $sag('(5) Ein Backup laesst sich TROTZDEM einspielen',
@@ -1678,7 +1662,7 @@ if ($anteilVorher === null || ($standVorher['stand'] ?? '') !== 'bereit') {
              'pat_wrap_pw, pat_wrap_rc, pat_key_check unveraendert');
 
         /* ZWEI GEHEIMNISSE IN EINER DATEI — und nur eines fehlt. Der
-         * Serverschluessel versiegelt die Adminpakete (S10/AP4); mit dem
+         * Serverschluessel versiegelt die Adminpakete; mit dem
          * Anteil hat er nichts zu tun. Waeren die beiden verquickt, waere der
          * Verlust des Anteils zugleich der Verlust aller Sicherungen. */
         [$ok12, $grundP12, $infoP12] = edbak_sicherung_erzeugen($uid12);
@@ -1709,19 +1693,19 @@ if ($anteilVorher === null || ($standVorher['stand'] ?? '') !== 'bereit') {
 }
 
 /* ==========================================================================
- * TEIL 13 — EINE ALTE DATEI MIT DER STANDORTAUSWAHL (P5c/AP8, R39, Nr. 168)
+ * TEIL 13 — EINE ALTE DATEI MIT DER STANDORTAUSWAHL
  *
  * DIE LAGE. Bis Nutzlast 11 trug jede Sicherung unter `stammdaten` die
- * Auswahl zentraler Standorte (E16), `user_bases`. Die Tabelle dazu ist mit
+ * Auswahl zentraler Standorte, `user_bases`. Die Tabelle dazu ist mit
  * der Migration `2026_09_25_zentrale_stammdaten` gefallen. Stuende die
  * Schleife noch im Rueckweg, die das Feld las, braeche JEDE Wiederherstellung
  * einer alten Datei mit 42S02 ab — auch die Kontosicherung und der
  * Demo-Reset. Das Feld wird deshalb still ueberlesen; diese Probe haelt das
  * fest, mit einem Namen darin, den es nirgends gibt.
  *
- * DAZU DER TAG MIT TAGESRETTUNGSMITTEL (E-P5c-123). Die Migration zieht fuer
+ * DAZU DER TAG MIT TAGESRETTUNGSMITTEL. Die Migration zieht fuer
  * den BESTAND die Rollen der Betriebsart nach; die Wiederherstellung tut es
- * nicht — sie legt an, was in der Datei steht (E8). Ein Tag ohne `crew` aus
+ * nicht — sie legt an, was in der Datei steht. Ein Tag ohne `crew` aus
  * einer alten Datei kommt also ohne Rollensatz zurueck, und das ist die
  * Entscheidung, nicht ein Versehen.
  *
@@ -1767,7 +1751,7 @@ try {
     $sag('(3) Der Tag mit Tagesrettungsmittel kommt wie in der Datei zurueck (E8, E-P5c-123)',
          $crew13 === 0, $crew13 . ' Rollenzeilen');
     $j13 = json_decode(edbak_build($uid13, true, ['kopf' => true]), true);
-    /* `EDBAK_NUTZLAST` und nicht 12 (S11-06a): Gemessen wird, dass die
+    /* `EDBAK_NUTZLAST` und nicht 12: Gemessen wird, dass die
      * geschriebene Fassung die Auswahl nicht mehr traegt — ab 12, und die
      * Zahl waechst mit jeder Fassung. */
     $sag('(4) Die Sicherung dieses Kontos traegt die aktuelle Nutzlast und die Auswahl nicht mehr',
@@ -1781,14 +1765,14 @@ try {
 }
 
 /* ==========================================================================
- * Teil 14 — Ortsdaten nur verschlossen (S11-06, E-S11-55 bis -57)
+ * Teil 14 — Ortsdaten nur verschlossen
  *
- * WOFUER. Seit S11-06 nimmt der Rueckweg Orte, Reanimation und Spur auf zwei
- * Arten an: Der Browserweg ('browser', seit Web 23 auch die Verwaltung)
+ * WOFUER. Der Rueckweg nimmt Orte, Reanimation und Spur auf zwei
+ * Arten an: Der Browserweg ('browser', auch die Verwaltung)
  * verlangt sie verschlossen und weist Klartext ab, bevor etwas liegt; der
  * Server-Weg ('server', nur der Demo-Reset) verschliesst sie selbst und weist
  * ein Konto ohne Paar ab. Dazu
- * reisen die Loeschvermerke (F-S11-52) und die Stuecke (F-S11-63) mit.
+ * reisen die Loeschvermerke und die Stuecke mit.
  * ====================================================================== */
 echo "\n  Teil 14 — Ortsdaten nur verschlossen (S11-06)\n";
 require_once $server . '/geraetehuelle_lib.php';
@@ -1815,8 +1799,8 @@ try {
              && $mZahl($uid14) === 0, ($grund ?? 'angenommen') . ', Einsaetze ' . $mZahl($uid14));
     }
 
-    /* (1b) Browserweg mit einer alten Nutzlast OHNE Klartext: Seit Web 23
-     * nimmt er nur Nutzlast 13 (S11-12, E-S11-85) — abgewiesen, nichts liegt. */
+    /* (1b) Browserweg mit einer alten Nutzlast OHNE Klartext: Er
+     * nimmt nur Nutzlast 13 — abgewiesen, nichts liegt. */
     $grund = null;
     try {
         edbak_restore($uid14, ['version' => 7, 'days' => [$tag14], 'rest_segments' => [],
@@ -1829,8 +1813,8 @@ try {
 
     /* (2) Browserweg nimmt Huelle und Stuecke an, wie sie der Browser baut:
      * Nutzlast 13, die Huelle im Eintrag, die Stuecke ueber die Spurkarte
-     * (`spur_ref` -> `edbak_spuren_schreiben()`). Bis Web 22.7.0 stand hier
-     * eine Nutzlast 7 mit `spur_stuecke` im Eintrag; der Weg ist gefallen. */
+     * (`spur_ref` -> `edbak_spuren_schreiben()`). Eine Nutzlast 7 mit
+     * `spur_stuecke` im Eintrag nimmt er nicht. */
     $sec14 = base64_decode((string)kp_fuer_geraet($pdo, $uid14));
     $huelle = base64_encode(gh_einsatz_verschliessen($sec14, 'b-m1', 1783584000,
         [['phase' => 4, 'ts' => 1783584600, 'lat' => 47.1, 'lon' => 11.1]], []));
@@ -1870,8 +1854,8 @@ try {
     $sm = $pdo->query("SELECT id, ort_huelle IS NOT NULL h FROM missions WHERE user_id = $uid14
                         AND client_ref = 's-m1'")->fetch(PDO::FETCH_ASSOC);
     $smid = (int)($sm['id'] ?? 0);
-    /* Seit Web 23 gibt es keine Spalte und keine Tabelle mehr, in die
-     * Klartext gehen koennte (S11-12); gezaehlt wird, ob es sie gibt. */
+    /* Es gibt keine Spalte und keine Tabelle, in die
+     * Klartext gehen koennte; gezaehlt wird, ob es sie gibt. */
     $klar = (db_hat_spalte($pdo, 'mission_phases', 'lat') ? 1 : 0)
           + (db_hat_tabelle($pdo, 'resus_sessions') ? 1 : 0)
           + (db_hat_tabelle($pdo, 'track_points') ? 1 : 0);
@@ -1891,7 +1875,7 @@ try {
          'loeschungen ' . count($rk[0]['loeschungen'] ?? []) . ', Huelle ' . (empty($mk[0]['ort_huelle']) ? 'nein' : 'ja')
          . ', n ' . ($mk[0]['n'] ?? '—'));
 
-    /* (6) Spurteile: ein Blob (SPUR1) wird abgelehnt — seit Web 23 auf jedem
+    /* (6) Spurteile: ein Blob (SPUR1) wird abgelehnt — auf jedem
      * Weg —, eine Fortsetzung zaehlt nicht. Der Inhalt des Blobs ist
      * gleichgueltig; abgelehnt wird an der Form. */
     $e1 = edbak_spuren_schreiben($pdo, $uid14, [['owner_type' => 'rest', 'owner_id' => $rid14,
@@ -1925,7 +1909,7 @@ try {
 }
 
 /* ==========================================================================
- * TEIL 15 — SPERRVERMERKE UEBER FENSTERGRENZEN (Backlog Nr. 386, R17-23)
+ * TEIL 15 — SPERRVERMERKE UEBER FENSTERGRENZEN
  *
  * DIE LAGE. Der Browser spielt eine Sicherung in Fenstern ein, und die
  * Sicherung schreibt alle Einsaetze vor allen Ruhesegmenten. Ein Vermerk,
@@ -2018,9 +2002,9 @@ try {
 }
 
 /* ==========================================================================
- * TEIL 16 — STAMMDATEN DURCH DIE PRUEFSCHICHT (F-R17-34, R17-23)
+ * TEIL 16 — STAMMDATEN DURCH DIE PRUEFSCHICHT
  *
- * Bis Web 23.3.1 gingen Namen und Koordinaten der Stammdaten roh in die
+ * Einmal gingen Namen und Koordinaten der Stammdaten roh in die
  * Datenbank. Ein Standortname mit Leerraum kam mit Leerraum an, eine
  * Koordinate ausserhalb des Bereichs blieb stehen, ein zu langer Name brach
  * im strikten SQL-Modus den Lauf. Jetzt: wie im Formular.

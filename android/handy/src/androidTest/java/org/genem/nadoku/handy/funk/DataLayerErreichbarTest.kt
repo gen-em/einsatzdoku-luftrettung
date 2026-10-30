@@ -14,14 +14,13 @@ import org.junit.runner.RunWith
 import java.util.concurrent.TimeUnit
 
 /**
- * Wie weit trägt der Wear Data Layer ohne ein zweites Gerät? (S4/D2)
+ * Wie weit trägt der Wear Data Layer ohne ein zweites Gerät?
  *
- * WOFÜR ES DIESE DATEI GIBT. `android/LIESMICH.md` führte den Data Layer als
- * ungeprüft mit der Begründung, er brauche „zwei gekoppelte Geräte **und** die
- * Play-Dienste; im Container gibt es beides nicht". Die zweite Hälfte davon
- * ist **falsch**: Das Wear-OS-3-Abbild bringt `com.google.android.gms` mit
- * (gemessen: 22.48.14). Dieser Prüffall stellt fest, wie weit es damit
- * tatsächlich trägt — statt es weiter anzunehmen.
+ * WOFÜR ES DIESE DATEI GIBT. Der Data Layer braucht zwei gekoppelte Geräte
+ * **und** die Play-Dienste. Die Play-Dienste gibt es im Container: Das
+ * Wear-OS-3-Abbild bringt `com.google.android.gms` mit (gemessen: 22.48.14).
+ * Dieser Prüffall stellt fest, wie weit es damit tatsächlich trägt — statt
+ * es anzunehmen.
  *
  * ER PRÜFT DIE ERREICHBARKEIT, NICHT DIE ZUSTELLUNG. Zustellen kann der Data
  * Layer erst mit einem Gegenüber. Was hier belegt wird, ist die Schicht

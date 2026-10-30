@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Quelltextprüfungen — ein Läufer für die fünfzehn Prüfungen, die nur Quelltext
-# lesen und im Tor laufen (E-PK-24, E-BR-08). `handbuch` braucht dazu
+# lesen und im Tor laufen. `handbuch` braucht dazu
 # `cmark-gfm` (Ausbaustufe web); fehlt es, endet sie mit rc 2, nicht grün.
 #
 # Aufruf:  bash tools/quelltext/pruefen.sh <name> [zusatz…]
@@ -12,9 +12,9 @@
 #          behandler linkprobe vollstaendigkeit textprobe bestand pysyntax
 #          handbuch anker kennzeichnung fremdsummen dokumente
 #
-# Vor PK-04 waren das acht Ordner mit acht Anleitungen und acht
-# Aufrufkonventionen; die Messungen darunter sind unverändert (Abnahme von
-# PK-04/1a: acht Ausgaben bytegleich vor und nach dem Umzug).
+# Frueher waren das acht Ordner mit acht Anleitungen und acht
+# Aufrufkonventionen; die Messungen darunter sind beim Umzug unverändert
+# geblieben (acht Ausgaben bytegleich vor und nach dem Umzug).
 set -uo pipefail
 
 WURZEL="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
@@ -23,13 +23,11 @@ cd "$WURZEL" || exit 1
 NAMEN=(installweiche sitzungshaertung csp jobregister migrationsregister
        behandler linkprobe vollstaendigkeit textprobe bestand pysyntax handbuch anker
        kennzeichnung fremdsummen dokumente)
-# Die vierzehn mit eingebauter Selbstprobe (`behandler` seit P5c/AP3, `anker` seit
-# P5c/AP9, `kennzeichnung` seit R4-06, `fremdsummen` seit R17-26, `dokumente`
-# seit R17-27). `linkprobe`
+# Die vierzehn mit eingebauter Selbstprobe. `linkprobe`
 # und `vollstaendigkeit` haben keine und hatten vor dem Umzug auch keine — das
-# ist kein Rückschritt, sondern ein Rest, den E-PK-24 mit dem gemeinsamen
+# ist kein Rückschritt, sondern ein Rest, den ein gemeinsamer
 # Rahmen erst noch einlöst. `textprobe` hatte eine, hinter `--probe`, und sie
-# lief bis BR-05 nirgends — `bestand` (Regel `selbst`) hält die Liste seither
+# lief lange nirgends — `bestand` (Regel `selbst`) hält die Liste deshalb
 # gegen den Code.
 SELBST=(installweiche sitzungshaertung csp jobregister migrationsregister behandler
         textprobe bestand pysyntax handbuch anker kennzeichnung fremdsummen dokumente)
@@ -42,16 +40,16 @@ starter() {   # starter <name> — womit die Datei gefahren wird
     esac
 }
 
-# DIE VOLLSTAENDIGKEIT MISST SEIT PK-04/5e GEGEN NULL (E-PK-16). Es gibt
+# DIE VOLLSTAENDIGKEIT MISST GEGEN NULL. Es gibt
 # keine Schwelle mehr: `pruefablauf.json` ruft sie ohne `--hoechstens` auf,
 # und das Werkzeug meldet jeden Befund. Diese Funktion reicht eine Schwelle
 # aus der Ablaufdatei nach, FALLS dort wieder eine steht -- sie tut heute
 # nichts, und das ist der Zustand, den sie halten soll.
 #
-# WAS SIE BIS DAHIN WAR: die eine Stelle fuer eine Zahl, die vorher an zwei
-# stand. PK-04/1c senkte den Bestand von 398 auf 18 und zog die Ablaufdatei
-# nach; die Kette blieb auf 398 und war seither rot, ohne dass es auffiel
-# (F-PK-23). Bis zum 22.09.2026 griff die Vorgabe ausserdem nur bei `alle`,
+# WAS SIE FRUEHER WAR: die eine Stelle fuer eine Zahl, die vorher an zwei
+# stand. Als der Bestand von 398 auf 18 sank und die Ablaufdatei nachzog,
+# blieb die Kette auf 398 und war rot, ohne dass es auffiel.
+# Bis zum 22.09.2026 griff die Vorgabe ausserdem nur bei `alle`,
 # und die Kette ruft EINZELN auf.
 zusatz() {
     [ "$1" = vollstaendigkeit ] || return 0
@@ -83,7 +81,7 @@ fall="${1:-}"
 
 case "$fall" in
   --liste)
-    # Maschinenlesbar, für den Bestandsriegel (BR-05): So sieht BASH die
+    # Maschinenlesbar, für den Bestandsriegel: So sieht BASH die
     # Listen — mit Kommentaren, `+=` und Anführungszeichen, wie sie gelten.
     # Bis dahin las der Riegel die Listen mit eigenen Mustern nach, und jede
     # Gegenprüfrunde fand eine Schreibweise, die er anders las als bash.

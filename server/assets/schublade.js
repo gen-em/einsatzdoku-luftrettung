@@ -6,10 +6,9 @@
  * Stylesheet entscheidet, welche Form erscheint. Dieses Skript öffnet und
  * schliesst sie — und sonst nichts.
  *
- * ES HAENGT AN DER KLASSE, NICHT AN EINER SEITE. Die Vormerkliste aus Konzept
- * P0 (10.5) nennt genau die Falle: „Wird die Seitenleiste zur Schublade, muss
- * der Mechanismus an der KLASSE haengen und nicht an ui_days_sidebar() —
- * sonst bleibt die Suchseite als einzige ohne Mobile-Menue." Deshalb sucht
+ * ES HAENGT AN DER KLASSE, NICHT AN EINER SEITE. Hinge der Mechanismus an
+ * ui_days_sidebar() statt an der KLASSE, bliebe die Suchseite als einzige
+ * ohne Mobile-Menue. Deshalb sucht
  * dieses Skript `.leiste` und `[data-schublade]`, und alle drei
  * Leisteninhalte (Diensttage, Einstellungen, Filter) bedienen sich daraus.
  *

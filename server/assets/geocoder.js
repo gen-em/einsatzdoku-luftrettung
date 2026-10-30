@@ -1,8 +1,7 @@
-/* Geocoder — die EINE Stelle, an der die Anwendung eine Adresse nachfragt
- * (S9/AP2, E-S9-05).
+/* Geocoder — die EINE Stelle, an der die Anwendung eine Adresse nachfragt.
  * ===========================================================================
  *
- * WARUM ES DIESE DATEI GIBT. Bis Web 15.7.1 stand die Dienstadresse zweimal
+ * WARUM ES DIESE DATEI GIBT. Vor ihr stand die Dienstadresse zweimal
  * fest im Code, und keine der beiden Stellen war abschaltbar:
  *
  *   assets/ortsfeld.js   die Vorwaertssuche beim Tippen (`…/api/?q=`). Die
@@ -17,22 +16,20 @@
  * Zeilen, die auseinanderlaufen konnten und es beim naechsten Feld getan
  * haetten.
  *
- * DER KRYPTO-REVIEW HAT DEN ABFLUSS BENANNT (K-6): Jede Anfrage traegt die
- * eingetippten Buchstaben zu einem Dritten, und beim Einsatzort sind das
- * Ortsangaben zu einem laufenden Einsatz. Die Umkehrsuche traegt die
- * Koordinate. R78/F-SP-4 hat entschieden, wie damit umzugehen ist: nicht
+ * DER ABFLUSS: Jede Anfrage traegt die eingetippten Buchstaben zu einem
+ * Dritten, und beim Einsatzort sind das Ortsangaben zu einem laufenden
+ * Einsatz. Die Umkehrsuche traegt die Koordinate. Der Umgang damit: nicht
  * abschaffen — die Adresssuche ist die bequemste Art, einen Ort zu setzen —,
  * sondern SAGEN und ABSCHALTBAR machen.
  *
- * ZWEI SCHALTER, EINE ADRESSE (E-S9-05):
+ * ZWEI SCHALTER, EINE ADRESSE:
  *
  *   je Installation   Betrieb -> Servereinstellungen, Karte „Adresssuche".
  *                     Sie ist die OBERGRENZE: Ist sie aus, hilft kein
  *                     Kontoschalter.
  *   je Konto          Einstellungen -> Profil, Karte „Datenschutz".
- *   die Adresse       dieselbe Karte, Feld „Dienst" — wer nach der
- *                     Hosting-Entscheidung (R36) einen eigenen Dienst
- *                     betreibt, traegt sie ein, und die Anfragen mit dem
+ *   die Adresse       dieselbe Karte, Feld „Dienst" — wer einen eigenen
+ *                     Dienst betreibt, traegt sie ein, und die Anfragen mit dem
  *                     Einsatzort verlassen das eigene Haus nicht. Kein Code,
  *                     keine Auslieferung.
  *
@@ -56,8 +53,8 @@
  * Photon ist ein frei betriebener Gemeinschaftsdienst, und eine Anfrage je
  * Tastendruck waere Missbrauch seiner Gutmuetigkeit:
  *
- *   ENTPRELL_MS      400 ms Ruhe nach dem letzten Tastendruck (E-S3-06
- *                    erlaubt 300–600). Bei fluessigem Tippen eines
+ *   ENTPRELL_MS      400 ms Ruhe nach dem letzten Tastendruck (vertretbar
+ *                    sind 300–600). Bei fluessigem Tippen eines
  *                    Ortsnamens entsteht damit genau EINE Anfrage. Die Lupe
  *                    umgeht sie mit `{sofort: true}`, nicht die Mindestlaenge.
  *   MINDESTZEICHEN   drei. Unter drei Zeichen sucht niemand ernsthaft.
@@ -92,18 +89,12 @@
         return global.GEO_AN === true && dienst() !== '';
     }
 
-    /** Der Rechnername des Dienstes — fuer den Hinweis am Feld. */
-    function host() {
-        try { return new URL(dienst()).host; }
-        catch (e) { return dienst(); }
-    }
-
     /* ---- Beschriftung eines Treffers -------------------------------------
      *
-     * EINE ZEILE FUERS FELD, ZWEI FUER DIE LISTE (M-S9-03/M-S9-04). Ins Feld
+     * EINE ZEILE FUERS FELD, ZWEI FUER DIE LISTE. Ins Feld
      * wandert `voll` — dort steht eine Adresse, kein Absatz. In der Liste
      * steht `haupt` oben und `neben` gedaempft darunter: Auf einem
-     * 390-px-Schirm schnitt die einzeilige Fassung genau dort ab, wo die
+     * 390-px-Schirm schneidet eine einzeilige Fassung genau dort ab, wo die
      * Unterscheidung zweier gleichnamiger Treffer beginnt. */
     function haupt(p) {
         var teile = [];
@@ -193,9 +184,5 @@
             .catch(function () { return ''; });
     }
 
-    global.EdGeocoder = {
-        an: an, dienst: dienst, host: host,
-        suche: suche, umkehr: umkehr,
-        MINDESTZEICHEN: MINDESTZEICHEN
-    };
+    global.EdGeocoder = { an: an, suche: suche, umkehr: umkehr };
 })(window);

@@ -29,7 +29,7 @@ import java.time.Instant
 import kotlin.random.Random
 
 /**
- * Warteschlange, Teilstücke und die **Funkabriss-Matrix** (Abnahme B4).
+ * Warteschlange, Teilstücke und die **Funkabriss-Matrix**.
  *
  * Gesendet wird über echtes HTTP an [PruefServer] — damit [HttpNetzweg] und
  * der Kopfzeilenweg mitgeprüft werden. Was der Server antwortet, stellt der
@@ -370,7 +370,7 @@ class SenderTest {
 
     // ---- rejected / kept_* --------------------------------------------------
 
-    /** Ein `ok: true` mit `rejected` ist kein sauberer Lauf (E-S4-06). */
+    /** Ein `ok: true` mit `rejected` ist kein sauberer Lauf. */
     @Test fun verworfeneWerteWerdenGemeldet() {
         einSegmentMitPunkten(10)
         server.status = 200
@@ -399,7 +399,7 @@ class SenderTest {
     /**
      * Der Rückstand zählt **nur abgeschlossene** Pakete. Das laufende Segment
      * darf nicht mitzählen — sonst stünde den ganzen Dienst über
-     * „Rückstand 1" (Backlog Nr. 11).
+     * „Rückstand 1".
      */
     @Test fun derRueckstandZaehltNurAbgeschlossenePakete() {
         val k = klammer()
@@ -442,10 +442,10 @@ class SenderTest {
         assertTrue(bericht.spaeterErneut)
     }
 
-    // ---- Der Kontoschlüssel (S11-09, E-S11-80) ------------------------------
+    // ---- Der Kontoschlüssel -------------------------------------------------
 
     /**
-     * Eine Kopplung ohne Kontoschlüssel — aus der Zeit vor 0.18.0 — holt ihn
+     * Eine Kopplung ohne Kontoschlüssel holt ihn
      * vor dem ersten Senden nach und sendet danach verschlossen.
      */
     @Test fun ohneKontoschluesselWirdErNachgeholt() {
@@ -480,20 +480,15 @@ class SenderTest {
         assertTrue(server.anfragen.isEmpty())
     }
 
-    /* HIER STAND `ohneServerAdresseWirdNichtGesendet`.
-     *
-     * Der Fall prüfte, dass ein Sendelauf ohne eingetragene Serveradresse gar
-     * nicht erst anfängt. Seit R63 (Backlog Nr. 84) gibt es diesen Zustand
-     * nicht mehr: Die Adresse ist eine Konstante des Baulaufs, kein Feld, das
-     * jemand leer lassen könnte. Ein Prüffall für einen unerreichbaren Zustand
-     * ist keine Zusicherung, sondern eine Behauptung über eine Fassung, die es
-     * nicht mehr gibt.
+    /* KEIN FALL „ohne Serveradresse wird nicht gesendet": Die Adresse ist
+     * eine Konstante des Baulaufs, kein Feld, das jemand leer lassen könnte.
+     * Ein Prüffall für einen unerreichbaren Zustand ist keine Zusicherung.
      *
      * Was an seine Stelle tritt, steht in ServeradresseTest: Eine unbrauchbare
      * `SERVER_BASIS` lässt den ERSTEN Zugriff werfen -- beim Bauen, nicht beim
      * Senden. */
 
-    // ---- Der Räumteil vor dem Senden (Backlog Nr. 114, AN-2) ---------------
+    // ---- Der Räumteil vor dem Senden ---------------------------------------
 
     /**
      * Jeder Sendelauf räumt zuerst: Ein abgewiesenes Paket, das älter ist als

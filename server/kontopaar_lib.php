@@ -2,7 +2,7 @@
 declare(strict_types=1);
 
 /**
- * DAS SCHLÜSSELPAAR DES KONTOS (S11-03; Konzept S11 3.1, E-S11-12, -14, -17)
+ * DAS SCHLÜSSELPAAR DES KONTOS
  * ===========================================================================
  *
  * WAS ES IST. Uhr und Handy verschließen Spur, Phasenkoordinaten und
@@ -17,7 +17,7 @@ declare(strict_types=1);
  *                   `edk1:` — nie `edka1:` (`KP_PRIVAT_RE`)
  *   kp_seit         wann es entstand
  *
- * WARUM VERSIEGELT (E-S11-14, F-S11-04). Wer nur die Datenbank beschreiben
+ * WARUM VERSIEGELT. Wer nur die Datenbank beschreiben
  * kann — ein Abzug mit Schreibrecht, eine Einspielung —, könnte sonst seinen
  * eigenen öffentlichen Schlüssel eintragen. Jedes Gerät, das danach koppelt,
  * verschlösse für ihn, und er läse die Ortsdaten aus derselben Datenbank. Das
@@ -31,7 +31,7 @@ declare(strict_types=1);
  * öffentlichen ab und meldet eine Abweichung (`kontopaar.js`).
  *
  * WARUM AM INHALTSSCHLÜSSEL UND NICHT AM SERVER-ANTEIL — wie `rw_privat`
- * (`docs/Technik.md` 4.99q): Der Wiederherstellungsschlüssel muss das Paar
+ * (`docs/Technik.md` 4.38): Der Wiederherstellungsschlüssel muss das Paar
  * allein öffnen. Ginge der Anteil verloren, wären sonst mit dem Paar alle
  * Ortsdaten des Kontos verloren.
  *

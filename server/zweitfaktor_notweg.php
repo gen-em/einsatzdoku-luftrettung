@@ -2,49 +2,48 @@
 declare(strict_types=1);
 /**
  * NOTZUGANG DER EINZIGEN BETREIBERIN — der Zweitfaktor ohne Gerät, Codes und
- * Notfallblatt (Schritt 18, SR-04; Backlog Nr. 249; E-SR-13, E-SR-24,
- * E-SR-81 bis -87).
+ * Notfallblatt.
  *
  * WOFUER ES DIESE SEITE GIBT. Wer den Zweitfaktor verliert, hat drei Wege
  * zurueck: die Wiederherstellungscodes, den Rueckweg mit dem Notfallblatt
- * (Konzept RW) und eine zweite BetreiberIn, die zuruecksetzt. Hat die
- * EINZIGE BetreiberIn alle drei nicht, blieb bis Web 21.12.2 nur SQL im
+ * und eine zweite BetreiberIn, die zuruecksetzt. Hat die
+ * EINZIGE BetreiberIn alle drei nicht, bliebe sonst nur SQL im
  * Datenbankwerkzeug des Hosters — an der Anwendung vorbei, ohne Protokoll,
  * ohne Mail. Diese Seite ist der vierte Weg, und sie verlangt DREI Dinge:
  *
- *   1. EINE DATEI IM ANWENDUNGSVERZEICHNIS (Schreibnachweis, E-SR-81). Die
+ *   1. EINE DATEI IM ANWENDUNGSVERZEICHNIS (Schreibnachweis). Die
  *      Seite nennt einen Namen, die BetreiberIn legt eine Datei dieses
  *      Namens per FTP an. Wer das kann, hat den Webspace — dasselbe
  *      Vertrauen wie bei dem, der heute SQL absetzt. Der Name haengt an der
- *      SITZUNG (E-SR-82): Eine liegengebliebene Datei aus einem
+ *      SITZUNG: Eine liegengebliebene Datei aus einem
  *      abgebrochenen Versuch gilt nicht mehr. Die Anwendung SCHREIBT hier
  *      nie eine Datei — eine Schreiboperation auf einen unangemeldeten
  *      Aufruf ist die falsche Antwort auf jede Frage (`wiederherstellen.php`).
- *   2. DEN WERT AUS DER DATENBANK, `app_state.notzugang_geheim` (E-SR-24):
+ *   2. DEN WERT AUS DER DATENBANK, `app_state.notzugang_geheim`:
  *      64 Hexzeichen, die nirgends in der Oberflaeche stehen, auch nicht auf
  *      dem Schluesselblatt. Er schuetzt gegen den, der Dateien nur LESEN
  *      kann (ein Webspace-Backup), und gegen den, der nur die Datenbank hat.
  *      Nach jedem gelungenen Notzugang wird er neu gewuerfelt.
- *   3. DAS PASSWORT DES KONTOS — als Token, wie bei der Anmeldung (E-SR-84):
+ *   3. DAS PASSWORT DES KONTOS — als Token, wie bei der Anmeldung:
  *      Das Passwort verlaesst den Browser nicht.
  *
- * EHRLICH DAZU (E-SR-24): Wer auf dem Webspace SCHREIBEN kann, kann auch eine
+ * EHRLICH DAZU: Wer auf dem Webspace SCHREIBEN kann, kann auch eine
  * PHP-Datei hochladen und hat damit die Datenbank. Gegen ihn hilft kein Wert
  * auf dem Server — das gilt fuer jeden Weg, den die Anwendung selbst anbietet.
  *
- * DIE TUER IST ENG (E-SR-13, E-SR-85). Sie oeffnet nur fuer ein Konto der
+ * DIE TUER IST ENG. Sie oeffnet nur fuer ein Konto der
  * Rolle BetreiberIn, aktiv, mit eingeschaltetem Zweitfaktor, und nur, wenn es
  * GENAU EINE BetreiberIn gibt (`betreiberinnen_zahl()` zaehlt jedes Konto der
  * Rolle, auch ein gesperrtes oder eingeladenes). Bei zweien setzt die andere
  * zurueck; eine Tuer, die dann offen bliebe, waere ein zweiter Weg ohne Not.
  *
- * SIE GIBT KEINE AUSKUNFT (K-11). Jede Lage — keine Datei, falscher Wert,
+ * SIE GIBT KEINE AUSKUNFT. Jede Lage — keine Datei, falscher Wert,
  * falsches Passwort, zwei BetreiberInnen, ein Admin-Konto, eine erfundene
  * Adresse — antwortet mit demselben Satz und derselben Dauer. Deshalb laufen
  * IMMER alle Pruefungen, ohne fruehe Rueckkehr, und erst danach wird
  * entschieden. Die Seite selbst sieht in jeder Lage gleich aus.
  *
- * SIE MELDET NIEMANDEN AN (E-SR-86, E-SR-87). Danach geht es ueber die
+ * SIE MELDET NIEMANDEN AN. Danach geht es ueber die
  * Anmeldung mit dem Passwort ins Einrichtungstor. Der Protokolleintrag traegt
  * deshalb den Urheber `job` — wie beim Passwort-Reset ueber den Mail-Link;
  * Text und `daten.weg = notweg` sagen, was es war.
@@ -73,7 +72,7 @@ const NOTWEG_MUSTER = 'zweitfaktor-notweg-';
 /** Die eine Antwort auf jede Lage, in der die Tuer zu bleibt. */
 const NOTWEG_NICHT_BEREIT = 'Der Notzugang steht für dieses Konto nicht bereit.';
 
-/* DER NAME HAENGT AN DER SITZUNG (E-SR-82). Gewuerfelt beim ersten Aufruf,
+/* DER NAME HAENGT AN DER SITZUNG. Gewuerfelt beim ersten Aufruf,
  * danach derselbe, bis die Sitzung endet oder der Notzugang gelang. */
 if (!isset($_SESSION['notweg']['datei'])
     || !nachweis_kennung_gueltig((string)$_SESSION['notweg']['datei'])) {
@@ -82,8 +81,8 @@ if (!isset($_SESSION['notweg']['datei'])
 $kennung = (string)$_SESSION['notweg']['datei'];
 $dateiname = NOTWEG_MUSTER . $kennung . '.txt';
 
-/* DER WERT ENTSTEHT BEIM ERSTEN AUFRUF, wenn er fehlt (E-SR-24). Die
- * Migration von SR-02 legt ihn auf einer bestehenden Anlage an; auf einer
+/* DER WERT ENTSTEHT BEIM ERSTEN AUFRUF, wenn er fehlt. Die
+ * Migration legt ihn auf einer bestehenden Anlage an; auf einer
  * frischen steht er hier zum ersten Mal. Ein Fehler der Datenbank aendert
  * an der Seite nichts — sie sieht gleich aus, und der Notzugang bleibt zu,
  * weil der Wert dann nicht passt. */
@@ -104,12 +103,12 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
     $feld = static fn(string $k): string => is_string($_POST[$k] ?? null) ? $_POST[$k] : '';
     $email = email_normalisieren($feld('email'));
     $merkmale = [rate_merkmal_kennung($email)];
-    $merkmaleIp = [rate_merkmal_ip()];    // F-R17-37: dazu der Anschluss
+    $merkmaleIp = [rate_merkmal_ip()];    // dazu der Anschluss
 
     if (!csrf_ok()) {
         /* Wie in `login.php`: Ein abgelaufenes Formular zaehlt nicht als
          * Versuch — es ist meistens eine Sitzung, die inzwischen abgelaufen
-         * ist. Dann gilt auch ein neuer Dateiname (E-SR-82). */
+         * ist. Dann gilt auch ein neuer Dateiname. */
         $fehler = 'Das Formular ist abgelaufen. Bitte die Seite neu laden — '
                 . 'und den Namen der Datei mit dem vergleichen, der dann oben steht.';
     } elseif (!rate_erlaubt('notweg', null, $merkmale)
@@ -151,7 +150,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
 
         rate_misserfolg('notweg', null, $merkmale);
         rate_misserfolg('notweg_ip', null, $merkmaleIp);
-        /* UND DIE VERLANGSAMUNG (F-R17-37): Hier wurde gerechnet (bcrypt oder
+        /* UND DIE VERLANGSAMUNG: Hier wurde gerechnet (bcrypt oder
          * Blindvergleich) — derselbe Grund wie im Fehlzweig der Anmeldung. */
         rate_global_misserfolg();
         $fehler = NOTWEG_NICHT_BEREIT;
@@ -180,7 +179,7 @@ function notweg_konto(string $email): ?array
 }
 
 /**
- * Stimmt das Passwort? DASSELBE VERFAHREN WIE `login.php` (E-SR-84): Der
+ * Stimmt das Passwort? DASSELBE VERFAHREN WIE `login.php`: Der
  * Browser schickt je Rundenzahl ein Token, der Server nimmt das zur
  * `kdf_iter` des Kontos passende. Ohne Konto oder ohne Passwort trotzdem
  * eine bcrypt-Rechnung gegen `AUTH_VERGLEICHSWERT` — sonst waere dieser
@@ -200,12 +199,12 @@ function notweg_passwort_passt(?array $u, string $tokensRoh): bool
     }
     if ($u !== null && $u['password_hash'] !== null) {
         $token = $tokenNach[(int)($u['kdf_iter'] ?? 0) ?: 310000] ?? '';
-        /* Ueber den Pfeffer (R17-20). `anteil_fehlt` ist hier ein Nein: Der
+        /* Ueber den Pfeffer. `anteil_fehlt` ist hier ein Nein: Der
          * Notweg ersetzt den Code, nicht die Anmeldung, und die sagt den
          * Grund selbst. */
         return anmeldehash_pruefen((int)$u['id'], $token, (string)$u['password_hash']) === 'ok';
     }
-    /* Derselbe Blindvergleich wie in `login.php` (Backlog Nr. 93): passt die
+    /* Derselbe Blindvergleich wie in `login.php`: passt die
      * Konstante zur Vorgabe, genuegt die Pruefung; sonst kostet ein Hash mit
      * der Vorgabe genauso viel. Nicht beides. */
     if (password_needs_rehash(AUTH_VERGLEICHSWERT, PASSWORD_DEFAULT)) {
@@ -236,7 +235,7 @@ function notweg_wert_passt(string $eingabe): bool
 }
 
 /**
- * Steht die Tuer fuer dieses Konto offen? (E-SR-13, E-SR-85.) Fragt IMMER
+ * Steht die Tuer fuer dieses Konto offen? Fragt IMMER
  * beide Zahlen ab, auch ohne Konto — dieselbe Arbeit in jeder Lage.
  */
 function notweg_tuer_offen(?array $u): bool
@@ -332,12 +331,11 @@ ui_kopf(['menue' => false]);
   </main>
 </div>
 <script src="<?= asset('assets/crypto.js') ?>"></script>
-<?php /* DASSELBE VERFAHREN WIE DIE ANMELDUNG (E-SR-84). Das Passwort
+<?php /* DASSELBE VERFAHREN WIE DIE ANMELDUNG. Das Passwort
          verlaesst den Browser nicht: Salz holen, je Rundenzahl das Token
          ableiten, nur die Token schicken. Anders als die Anmeldung legt diese
          Seite KEINE Ableitung ins Vormerkfach — sie meldet niemanden an.
-         Die zweite Kopie dieser Zeilen ist Backlog Nr. 358: `login.php` ist
-         fuer Schritt 18 zu (E-SR-14). */ ?>
+         `login.php` hat eine zweite Kopie dieser Zeilen. */ ?>
 <script<?= kopf_nonce_attr() ?>>
 document.getElementById('notwegform').addEventListener('submit', async ev => {
   const f = ev.target;

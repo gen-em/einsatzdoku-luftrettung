@@ -1,4 +1,4 @@
-/* Kreislauftest des Backups (Arbeitspaket B5, P-09).
+/* Kreislauftest des Backups.
  *
  * DIE FRAGE. Kommt derselbe Bestand nach einem vollstaendigen Umlauf
  * unveraendert wieder heraus?
@@ -45,7 +45,7 @@ function referenzDatei(ordner) {
 const MODUL = process.env.PLAYWRIGHT_MODUL
   || '/opt/node22/lib/node_modules/playwright/index.mjs';
 const PW = (m => m.default ?? m)(await import(MODUL.startsWith('/') ? 'file://' + MODUL : MODUL));
-/* Die Engine wählt der Läufer (MOTOR=… oder --motor), R87. */
+/* Die Engine wählt der Läufer (MOTOR=… oder --motor). */
 const MOTOR = motorWahl(process.argv);
 
 const basis   = process.argv[2] || 'https://127.0.0.1:8443';
@@ -61,7 +61,7 @@ const KACHELFEHLER = /ERR_TUNNEL_CONNECTION_FAILED|ERR_NAME_NOT_RESOLVED|tile\.|
 const lokal = /^https:\/\/(127\.0\.0\.1|localhost)(:|\/)/.test(basis);
 const browser = await starten(PW, MOTOR);
 const kontext = await browser.newContext({ ignoreHTTPSErrors: lokal, acceptDownloads: true });
-/* DER WARTUNGSLAUF BLEIBT AUS (S11-07, F-S11-77): Er packt und dünnt im
+/* DER WARTUNGSLAUF BLEIBT AUS: Er packt und dünnt im
    Browser aus, sobald eine Seite ihn anstößt (Startseite, Reiter Backup),
    und das Ausdünnen ändert die Punkte — mitten in einem Vergleich wäre das
    eine Abweichung, die keine ist. Die Antwort sagt „nichts fällig" — ein
@@ -90,10 +90,10 @@ async function anmelden(mail, pw) {
     seite.click('#loginform button[type="submit"]'),
   ]);
   if (seite.url().includes('login.php')) { return false; }
-  /* DAS SCHLÜSSELPAAR ABWARTEN (F-S11-71). Die erste Seite nach der
+  /* DAS SCHLÜSSELPAAR ABWARTEN. Die erste Seite nach der
      Anmeldung legt es still an; wer vorher weitergeht, bricht das Anlegen ab,
      das Anmelde-Token ist verbraucht, und das Einspielen meldet „kein
-     Schlüsselpaar". Am 16.10.2026 einmal so geschehen. Seit Konzept DM
+     Schlüsselpaar". Am 16.10.2026 einmal so geschehen. Heute
      steht die Schleife in `tools/motor.mjs` (`paarAbwarten()`). */
   if (!(await paarAbwarten(seite))) {
     befunde.push('Nach der Anmeldung entstand binnen 20 s kein Schlüsselpaar');
@@ -128,7 +128,7 @@ await seite.fill('#ipw', bpw);
 await seite.click('#impbtn');
 await rueckfragen();
 
-/* AUF DIE MELDUNG WARTEN, NICHT AUF EINEN WORTLAUT (S2/AP5b, F-S2-D).
+/* AUF DIE MELDUNG WARTEN, NICHT AUF EINEN WORTLAUT.
  *
  * Hier stand `/fertig|eingespielt|fehlgeschlagen|Fehler|falsch/`. Das ist
  * eine Wette darauf, welche Wörter die Anwendung benutzt — und sie ging

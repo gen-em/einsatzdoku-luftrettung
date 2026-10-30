@@ -40,7 +40,7 @@ import org.genem.nadoku.handy.uhr.Uhrannahme
 import java.time.Instant
 
 /**
- * Der Vordergrunddienst, der über den ganzen Dienst aufzeichnet (E-S4-05).
+ * Der Vordergrunddienst, der über den ganzen Dienst aufzeichnet.
  *
  * WARUM EIN VORDERGRUNDDIENST UND KEINE ACTIVITY. Ein Dienst dauert zwölf
  * Stunden; in dieser Zeit ist der Bildschirm aus, das Handy in der Tasche,
@@ -55,19 +55,19 @@ import java.time.Instant
  * `FOREGROUND_SERVICE_TYPE_LOCATION` ist ab Android 14 Pflicht und wird beim
  * Start mitgegeben; ohne ihn wirft das System `SecurityException`.
  *
- * **DIE ORTUNG LÄUFT ÜBER DEN `LocationManager`, NICHT ÜBER PLAY-DIENSTE**
- * (E-S4-04). Damit funktioniert die Kernfunktion — aufzeichnen und senden —
+ * **DIE ORTUNG LÄUFT ÜBER DEN `LocationManager`, NICHT ÜBER PLAY-DIENSTE.**
+ * Damit funktioniert die Kernfunktion — aufzeichnen und senden —
  * auch auf einem Gerät ohne Google-Dienste; nur die Uhr-Anbindung braucht sie.
  *
- * **DER DIENST BEHAUPTET NICHT MEHR, ER ZEICHNE AUF** (E-S5Z-01). Bis 0.7.7
- * sagte die Meldung „Aufzeichnung läuft", sobald die Freigabe erteilt war —
- * auch bei ausgeschaltetem Standort, ohne Empfang und bei zu grosser
- * Streuung, also in drei Lagen, in denen im Puffer nichts landet (B-S5Z-07).
- * Der [Ortungswaechter] misst jetzt, was tatsächlich ankommt; die Meldung und
- * die Zustandszeile folgen ihm, und bei einer Lücke wird gewarnt (E-S5Z-04).
+ * **DER DIENST BEHAUPTET NICHT, ER ZEICHNE AUF.** Sagte die Meldung
+ * „Aufzeichnung läuft", sobald die Freigabe erteilt ist, stünde es auch bei
+ * ausgeschaltetem Standort, ohne Empfang und bei zu grosser Streuung da,
+ * also in drei Lagen, in denen im Puffer nichts landet. Der
+ * [Ortungswaechter] misst, was tatsächlich ankommt; die Meldung und die
+ * Zustandszeile folgen ihm, und bei einer Lücke wird gewarnt.
  *
  * WAS HIER NICHT GEPRÜFT WERDEN KANN: alles, was diese Klasse ausmacht. Es
- * gibt keinen Emulator (E-R45-8), kein GPS und keine Möglichkeit,
+ * gibt keinen Emulator, kein GPS und keine Möglichkeit,
  * Samsungs „Apps im Tiefschlaf" nachzustellen. Geprüft ist die Logik
  * dahinter — [Ausduenner], [Ortungswaechter], [Ortungszuhoerer] und
  * [org.genem.nadoku.handy.dienst.Dienstklammer] — gegen synthetische
@@ -84,7 +84,7 @@ class AufzeichnungsDienst : LifecycleService() {
     private val taktgeber = Handler(android.os.Looper.getMainLooper())
 
     /**
-     * Läuft der 15-Minuten-Takt schon? (B-S5Z-14)
+     * Läuft der 15-Minuten-Takt schon?
      *
      * `onStartCommand` kommt öfter als einmal: `HandyHorcher` startet den
      * Dienst bei **jeder** Uhrnachricht. Wer den Takt dabei jedes Mal neu
@@ -95,7 +95,7 @@ class AufzeichnungsDienst : LifecycleService() {
     private var taktLaeuft = false
 
     /**
-     * Steht die Erinnerung an einen sehr langen Dienst schon? (Backlog Nr. 160)
+     * Steht die Erinnerung an einen sehr langen Dienst schon?
      *
      * Der Merker liegt im Speicher und nicht im Puffer: Er soll EINEN Lauf
      * des Aufzeichnungsdienstes ueberdauern, nicht den Dienst selbst. Wird
@@ -109,7 +109,7 @@ class AufzeichnungsDienst : LifecycleService() {
     private var waechter: Ortungswaechter? = null
 
     /**
-     * Der Akkuwächter (Backlog Nr. 82). Er lebt so lange wie der Dienst —
+     * Der Akkuwächter. Er lebt so lange wie der Dienst —
      * seine gemerkte Warnstufe gehört zu DIESEM Dienst und nicht zum Gerät:
      * Wer morgen wieder beginnt, soll die 25-Prozent-Warnung erneut bekommen.
      */
@@ -119,7 +119,7 @@ class AufzeichnungsDienst : LifecycleService() {
     private var letzterMeldungstext: String? = null
 
     /**
-     * Was die Uhr zuletzt **angezeigt** bekommen hat (E3).
+     * Was die Uhr zuletzt **angezeigt** bekommen hat.
      *
      * Verglichen wird die Anzeige, nicht der Zustand: Für die Uhr sehen
      * `STANDORT_AUS` und `KEIN_SIGNAL` gleich aus („keine Ortung"), und eine
@@ -129,17 +129,17 @@ class AufzeichnungsDienst : LifecycleService() {
     private var letzteUhranzeige: Ortungscode.Anzeige? = null
 
     /**
-     * Läuft das Dienstende gerade? (E-S5Z-07)
+     * Läuft das Dienstende gerade?
      *
      * Ab hier wird die Dauermeldung **nicht mehr** vom Wächter oder von einem
      * Punkt überschrieben: Sie sagt „Dienst beendet · sende …", bis der Lauf
-     * zurück ist. Und danach wird sie gar nicht mehr gestellt — genau das war
-     * B-S5Z-03, eine „andauernde" Meldung „Kein Dienst" ohne Dienst dahinter.
+     * zurück ist. Und danach wird sie gar nicht mehr gestellt — sonst stünde
+     * eine „andauernde" Meldung „Kein Dienst" ohne Dienst dahinter.
      */
     private var beendetGerade = false
 
     /**
-     * Der Rückruf des Netzes (E-S5Z-10, B-S5Z-05).
+     * Der Rückruf des Netzes.
      *
      * `onAvailable` kommt auf einem eigenen Faden des Systems; der Sprung auf
      * den Hauptfaden ist deshalb kein Stil, sondern nötig — [sendeWenn] fasst
@@ -156,8 +156,7 @@ class AufzeichnungsDienst : LifecycleService() {
     private var netzAngemeldet = false
 
     /**
-     * Ausgeschrieben statt als Lambda, und das ist kein Stil (E-S5Z-05,
-     * B-S5Z-01): Auf API 26–29 hat `LocationListener` vier abstrakte
+     * Ausgeschrieben statt als Lambda, und das ist kein Stil: Auf API 26–29 hat `LocationListener` vier abstrakte
      * Methoden. Begründung in [Ortungszuhoerer].
      */
     private val zuhoerer = Ortungszuhoerer(
@@ -187,15 +186,15 @@ class AufzeichnungsDienst : LifecycleService() {
         super.onStartCommand(intent, flags, startId)
 
         if (intent?.action == BEENDEN) {
-            /* DIE KLAMMER ZUERST (F-R17-54, R17-24). Bis 0.18.0 rief dieser
-             * Zweig nur das eigene `beenden()`: Ortung ab, Sendelauf,
-             * `stopSelf()`. Den Dienst im PUFFER schloss nur, wer die Klammer
-             * vorher selbst beendete — die Rückfrage der Hauptansicht und
-             * das Dienstende von der Uhr. Der Knopf „Dienst beenden" in der
-             * Akkuwarnung und in der Erinnerung nach 26 Stunden kommt aber
-             * direkt hierher; danach war die Aufzeichnung weg, der Dienst
-             * im Puffer offen, und der nächste „Dienst beginnen" setzte ihn
-             * fort. `klammer.beenden()` ist idempotent (`false`, wenn kein
+            /* DIE KLAMMER ZUERST. Das eigene `beenden()` allein — Ortung
+             * ab, Sendelauf, `stopSelf()` — schlösse den Dienst im PUFFER
+             * nicht. Die Rückfrage der Hauptansicht und das Dienstende von
+             * der Uhr beenden die Klammer selbst; der Knopf „Dienst beenden"
+             * in der Akkuwarnung und in der Erinnerung nach 26 Stunden kommt
+             * aber direkt hierher. Ohne diese Zeile wäre danach die
+             * Aufzeichnung weg, der Dienst im Puffer offen, und der nächste
+             * „Dienst beginnen" setzte ihn fort. `klammer.beenden()` ist
+             * idempotent (`false`, wenn kein
              * Dienst läuft) — die beiden anderen Wege bleiben richtig. */
             app.klammer.beenden()
             beenden()
@@ -253,20 +252,21 @@ class AufzeichnungsDienst : LifecycleService() {
     // ---- Senden ------------------------------------------------------------
 
     /**
-     * Der 15-Minuten-Takt (E-S4-07).
+     * Der 15-Minuten-Takt.
      *
      * Er läuft im Dienst und nicht in der Oberfläche: Gesendet werden muss
      * auch dann, wenn niemand hinsieht — das ist der ganze Sinn eines
      * Vordergrunddienstes.
      */
     private fun taktStarten() {
-        /* NUR EINMAL, UND MIT EIGENEM TOKEN (E-S5Z-23, B-S5Z-14). Vorher stand
-         * hier `removeCallbacksAndMessages(null)` — ohne Token, also die ganze
-         * Warteschlange des einen Handlers. Zwei Fehler in einer Zeile:
+        /* NUR EINMAL, UND MIT EIGENEM TOKEN. Ein
+         * `removeCallbacksAndMessages(null)` — ohne Token, also die ganze
+         * Warteschlange des einen Handlers — hätte zwei Fehler in einer
+         * Zeile:
          *
-         * 1. Sie löschte alles, was sonst noch am Handler hängt. Der
-         *    10-Sekunden-Wächter wäre beim ersten Uhrereignis still gestorben.
-         * 2. Sie setzte die 15-Minuten-Frist bei jedem `onStartCommand`
+         * 1. Es löschte alles, was sonst noch am Handler hängt. Der
+         *    10-Sekunden-Wächter stürbe beim ersten Uhrereignis still.
+         * 2. Es setzte die 15-Minuten-Frist bei jedem `onStartCommand`
          *    zurück — und `HandyHorcher` ruft den Dienst bei jeder
          *    Uhrnachricht. Ein von der Uhr geführter Dienst sendete damit bis
          *    zum Dienstende gar nicht. */
@@ -296,15 +296,14 @@ class AufzeichnungsDienst : LifecycleService() {
     /**
      * Einen Sendelauf anstoßen, wenn der Auslöser fällig ist.
      *
-     * ÜBER DEN SENDEAUSFÜHRER (E-S5Z-11) und nicht mehr über einen eigenen
-     * `Thread` je Anlass. Der alte Kommentar sagte, die Läufe überlappten
-     * nicht — er galt nur für den Takt; Oberfläche und Dienst starteten
-     * längst nebeneinander (B-S5Z-11).
+     * ÜBER DEN SENDEAUSFÜHRER und nicht über einen eigenen `Thread` je
+     * Anlass: Oberfläche und Dienst starten Läufe nebeneinander, und nur der
+     * Ausführer hält sie auseinander.
      *
-     * UND OHNE NACHPOSTEN DER DAUERMELDUNG. Hier stand
-     * `taktgeber.post { meldungAuffrischen() }`, und das lief auch dann noch,
-     * wenn der Dienst inzwischen gestoppt war: eine „andauernde" Meldung
-     * „Kein Dienst" ohne Dienst dahinter, die niemand wegbekam (B-S5Z-03).
+     * UND OHNE NACHPOSTEN DER DAUERMELDUNG. Ein
+     * `taktgeber.post { meldungAuffrischen() }` liefe auch dann noch, wenn
+     * der Dienst inzwischen gestoppt ist: eine „andauernde" Meldung
+     * „Kein Dienst" ohne Dienst dahinter, die niemand wegbekäme.
      * Der Text der Meldung folgt ohnehin dem Wächter — er hat sich durch
      * einen Sendelauf nie geändert.
      */
@@ -366,19 +365,17 @@ class AufzeichnungsDienst : LifecycleService() {
         if (!freigegeben) {
             // Ohne Freigabe gibt es nichts aufzuzeichnen. Der Dienst bleibt
             // trotzdem stehen: Meldung und Warnung sagen jetzt, dass die
-            // Ortung fehlt — das ist mehr, als ein stilles Beenden sagt, und
-            // seit E1 stimmt es auch (B-S5Z-02).
+            // Ortung fehlt — das ist mehr, als ein stilles Beenden sagt.
             Log.w(MARKE, "Ortungsfreigabe fehlt — es wird nichts aufgezeichnet.")
             return
         }
         try {
             /* 1 s und 0 m: Die Ausdünnung entscheidet, was übernommen wird,
-             * nicht der Abstandsfilter des Systems (E-S4-05). Ein
+             * nicht der Abstandsfilter des Systems. Ein
              * Systemfilter von 15 m sähe anders aus als die Regel der Uhr —
              * er kennt die 10-s-Bedingung nicht.
              *
-             * `MINDESTABSTAND_MS` ist ein MINDESTabstand, kein Takt
-             * (B-S5Z-12): Mehr als 1 Hz kommt nie, weniger jederzeit. Genau
+             * `MINDESTABSTAND_MS` ist ein MINDESTabstand, kein Takt: Mehr als 1 Hz kommt nie, weniger jederzeit. Genau
              * deshalb arbeitet der Wächter mit Fristen und nicht mit
              * Zählungen — eine ausbleibende Messung ist von einer
              * verlangsamten nicht zu unterscheiden.
@@ -406,7 +403,7 @@ class AufzeichnungsDienst : LifecycleService() {
         )
 
         /* DER WÄCHTER ZÄHLT, WAS DIE AUSDÜNNUNG ANNEHMEN WÜRDE, nicht was der
-         * Sensor meldet (E-S5Z-02) — sonst stünde „GPS ok", während jeder
+         * Sensor meldet — sonst stünde „GPS ok", während jeder
          * Fund wegen Streuung verworfen wird. `brauchbar()` ist dieselbe
          * Schwelle, die `nimm()` gleich anwendet. */
         val jetzt = jetztMs()
@@ -424,7 +421,7 @@ class AufzeichnungsDienst : LifecycleService() {
     // ---- Ortungswächter ----------------------------------------------------
 
     /**
-     * Den Wächter aufsetzen oder den vorhandenen nachziehen (E-S5Z-06).
+     * Den Wächter aufsetzen oder den vorhandenen nachziehen.
      *
      * ES WIRD NICHT BEI JEDEM `onStartCommand` EIN NEUER GEBAUT. Der Dienst
      * wird bei jeder Uhrnachricht erneut gestartet; ein neuer Wächter setzte
@@ -454,7 +451,7 @@ class AufzeichnungsDienst : LifecycleService() {
     }
 
     /**
-     * Der Akkutakt (Backlog Nr. 82) — **eigenes Token**, wie der Wächtertakt.
+     * Der Akkutakt — **eigenes Token**, wie der Wächtertakt.
      *
      * Zwei Minuten statt zehn Sekunden: Ein Akku fällt über Stunden. Die
      * Messung selbst kostet nichts — der Stand liegt als Sticky-Intent
@@ -513,9 +510,7 @@ class AufzeichnungsDienst : LifecycleService() {
      *
      * DER KNOPF GEHT DENSELBEN WEG WIE DIE RÜCKFRAGE DER HAUPTANSICHT: Die
      * Aktion [BEENDEN] schließt erst die Klammer und dann den Dienst
-     * (`onStartCommand()`). Bis 0.18.0 stand hier, er löse dieselbe Aktion
-     * aus „wie der in der Dauermeldung" — die Dauermeldung hat keinen Knopf,
-     * und die Aktion schloss die Klammer nicht (F-R17-54). Bei
+     * (`onStartCommand()`). Bei
      * [Akkustufe.KNAPP] fehlt er mit Absicht: Da ist Nachladen die richtige
      * Handlung, und ein Knopf, der das Aufgeben anbietet, bevor es naheliegt,
      * wird beim dritten Mal gedrückt, ohne gelesen zu werden.
@@ -568,7 +563,7 @@ class AufzeichnungsDienst : LifecycleService() {
     }
 
     /**
-     * Laeuft dieser Dienst ungewoehnlich lange? (Backlog Nr. 160)
+     * Laeuft dieser Dienst ungewoehnlich lange?
      *
      * Sie haengt am Waechtertakt, weil der sicher laeuft, solange
      * aufgezeichnet wird. Der Vergleich kostet nichts, und der Merker sorgt
@@ -637,7 +632,7 @@ class AufzeichnungsDienst : LifecycleService() {
     }
 
     /**
-     * Der Wächtertakt (Z-S5Z-03, 10 s) — **mit eigenem Token** (E-S5Z-23).
+     * Der Wächtertakt (10 s) — **mit eigenem Token**.
      *
      * Er misst die Stille: Ohne ihn fiele ein Signalverlust erst auf, wenn
      * wieder etwas ankommt, und das ist genau der Fall, der nie eintritt.
@@ -658,8 +653,7 @@ class AufzeichnungsDienst : LifecycleService() {
      * die Dauermeldung und die Warnung.
      *
      * Der Zustand liegt in [NAdokuApp.ortung] und nicht im Puffer — er ist
-     * ein Augenblickswert und überlebt einen Neustart bewusst nicht
-     * (E-S5Z-01). Nach einem Neustart wird er neu gemessen, nicht
+     * ein Augenblickswert und überlebt einen Neustart bewusst nicht. Nach einem Neustart wird er neu gemessen, nicht
      * wiederhergestellt; eine wiederhergestellte Aussage über den GPS-Empfang
      * von vorhin wäre wertlos.
      */
@@ -676,13 +670,13 @@ class AufzeichnungsDienst : LifecycleService() {
     }
 
     /**
-     * **Die Uhr erfährt es, ohne zu fragen** (E3).
+     * **Die Uhr erfährt es, ohne zu fragen.**
      *
-     * BIS 0.9.0 ERFUHR SIE ES NUR ALS ANTWORT auf ein eigenes Ereignis — wer
-     * einen Knopf drückte, bekam den Stand mitgeliefert. Wer keinen drückte,
-     * sah bis zum nächsten Druck „Dienst läuft", während das Handy längst
-     * nichts mehr aufzeichnete. Genau die Lücke, gegen die E-S4-10 an der
-     * Oberfläche gebaut ist.
+     * ERFÜHRE SIE ES NUR ALS ANTWORT auf ein eigenes Ereignis — wer einen
+     * Knopf drückt, bekommt den Stand mitgeliefert —, sähe, wer keinen
+     * drückt, bis zum nächsten Druck „Dienst läuft", während das Handy längst
+     * nichts mehr aufzeichnet. Genau gegen diese Lücke ist auch die
+     * Oberfläche gebaut.
      *
      * GEMELDET WIRD BEI JEDEM WECHSEL DER **ANZEIGE**, nicht des Zustands.
      * Für die Uhr sehen `STANDORT_AUS` und `KEIN_SIGNAL` gleich aus; eine
@@ -691,7 +685,7 @@ class AufzeichnungsDienst : LifecycleService() {
      *
      * NIE VOM HAUPTFADEN. `WearNachrichtenweg.sende()` blockiert je
      * `Tasks.await`, und der Wächtertakt läuft auf dem Main-Looper — von dort
-     * gesendet, stünde die Oberfläche bis zu zehn Sekunden (B4.6). Der
+     * gesendet, stünde die Oberfläche bis zu zehn Sekunden. Der
      * eigene Ausführer ist begründet in [NAdokuApp.uhrausfuehrer].
      *
      * EINE VERLORENE NACHRICHT WIRD NICHT NACHGELIEFERT, und das ist Absicht:
@@ -738,18 +732,16 @@ class AufzeichnungsDienst : LifecycleService() {
         ((jetztMs() - seitMs) / 60_000L).toInt().coerceAtLeast(1)
 
     /**
-     * **Das Dienstende hält den Vordergrunddienst, bis der Lauf zurück ist**
-     * (E-S5Z-07, Ablauf 5.1).
+     * **Das Dienstende hält den Vordergrunddienst, bis der Lauf zurück ist.**
      *
-     * DAS IST DER BELEGTE FEHLER DIESES PAKETS. Bis 0.8.1 stand hier:
-     * Sendefaden starten, `stopForeground`, `stopSelf` — in dieser
-     * Reihenfolge, ohne dazwischen zu warten. Der Lauf lief dann in einem
+     * SO NICHT: Sendefaden starten, `stopForeground`, `stopSelf` — in dieser
+     * Reihenfolge, ohne dazwischen zu warten. Der Lauf liefe dann in einem
      * Prozess **ohne Vordergrunddienst** weiter, und den darf Android
      * jederzeit abräumen; Samsung tut es besonders gern. Wer die App direkt
-     * nach „Beenden" wegwischte, verlor den Abschluss-Upload — und weil es
-     * keinen zweiten Versuch gab, blieb der Diensttag im Web ohne Ende
-     * stehen, bis der nächste Dienst lief. Die Diagnose des Vorfalls vom
-     * 02.09.2026 hat genau diesen Weg bestätigt (H2, Kette B1/B2).
+     * nach „Beenden" wegwischt, verlöre den Abschluss-Upload — und ohne
+     * zweiten Versuch bliebe der Diensttag im Web ohne Ende stehen, bis der
+     * nächste Dienst läuft. Die Diagnose eines Vorfalls am 02.09.2026 hat
+     * genau diesen Weg bestätigt.
      *
      * Die Zeitlimits des Netzwegs begrenzen die Wartezeit (15 s Verbindung,
      * 30 s Lesen je Anfrage, `Netzweg.kt`); ein Dienstende braucht rund
@@ -772,7 +764,7 @@ class AufzeichnungsDienst : LifecycleService() {
         // Die Meldung sagt jetzt, was geschieht — der Dienst steht noch.
         meldungStellen(getString(R.string.dienst_meldung_beendet_sendet))
 
-        // Dienstende ist ein Auslöser (E-S4-07): Was jetzt noch liegt, soll
+        // Dienstende ist ein Auslöser: Was jetzt noch liegt, soll
         // nicht bis zum nächsten Dienst warten.
         letzterVersuch = Instant.now()
         app.sendelauf { bericht ->
@@ -813,7 +805,7 @@ class AufzeichnungsDienst : LifecycleService() {
 
             /* Rückstand ohne `spaeterErneut`: Der Lauf hat getan, was ging,
              * und etwas ist trotzdem liegen geblieben — abgewiesene Pakete
-             * etwa. Ein Job hülfe nicht; die Ansicht zeigt es (E-S5Z-12). */
+             * etwa. Ein Job hülfe nicht; die Ansicht zeigt es. */
             rest > 0 -> Sendehinweis.stellen(
                 this,
                 resources.getQuantityString(R.plurals.hinweis_warten, rest, rest),
@@ -830,9 +822,9 @@ class AufzeichnungsDienst : LifecycleService() {
     // ---- Benachrichtigung --------------------------------------------------
 
     /**
-     * Kanäle gibt es ab Android 8.0 — und das IST unser minSdk (E-S4-03).
+     * Kanäle gibt es ab Android 8.0 — und das IST unser minSdk.
      *
-     * ZWEI KANÄLE, UND DAS IST DER PUNKT (E-S5Z-04). Android überlässt die
+     * ZWEI KANÄLE, UND DAS IST DER PUNKT. Android überlässt die
      * Einstellungen eines Kanals nach dem Anlegen der NutzerIn; „Aufzeichnung"
      * ist bewusst `LOW` und stumm und soll es bleiben. Eine Warnung, die
      * spürbar sein muss, kann deshalb nicht auf demselben Kanal liegen —
@@ -871,7 +863,7 @@ class AufzeichnungsDienst : LifecycleService() {
     }
 
     /**
-     * Der Text, den Dauermeldung **und** Zustandszeile tragen (4.3).
+     * Der Text, den Dauermeldung **und** Zustandszeile tragen.
      *
      * Ein Wortlaut für beide, weil zwei Wortlaute für denselben Zustand
      * früher oder später auseinanderlaufen — und weil die Dauermeldung die
@@ -928,7 +920,7 @@ class AufzeichnungsDienst : LifecycleService() {
      * aussähe.
      */
     private fun meldungAuffrischen() {
-        /* AB DEM DIENSTENDE NICHT MEHR (B-S5Z-03). Ab hier steht „Dienst
+        /* AB DEM DIENSTENDE NICHT MEHR. Ab hier steht „Dienst
          * beendet · sende …" und soll stehen bleiben, bis der Dienst geht;
          * danach darf gar nichts mehr gestellt werden. */
         if (beendetGerade) return
@@ -945,7 +937,7 @@ class AufzeichnungsDienst : LifecycleService() {
     // ---- Warnung (ID 3, Kanal „Warnungen") ---------------------------------
 
     /**
-     * Die Warnung: sichtbar in der Leiste, spürbar am Bein, stumm (E-S5Z-04).
+     * Die Warnung: sichtbar in der Leiste, spürbar am Bein, stumm.
      *
      * ANTIPPEN FÜHRT DORTHIN, WO ES ZU BEHEBEN IST. Bei ausgeschaltetem
      * Standort sind das die Systemeinstellungen — der Weg über die App wäre
@@ -1002,14 +994,14 @@ class AufzeichnungsDienst : LifecycleService() {
         const val KANAL = "aufzeichnung"
         const val KANAL_WARNUNG = "warnungen"
 
-        /** Z-S5Z-10: 1 Dauermeldung · 2 Hinweis Dienstende (E2) · 3 Warnung. */
+        /** 1 Dauermeldung · 2 Hinweis Dienstende · 3 Warnung. */
         const val MELDUNG_ID = 1
         const val WARNUNG_ID = 3
 
-        /** 4 Akkuwarnung (Backlog Nr. 82). */
+        /** 4 Akkuwarnung. */
         const val AKKUWARNUNG_ID = 4
 
-        /** 5 Erinnerung an einen sehr langen Dienst (Backlog Nr. 160). */
+        /** 5 Erinnerung an einen sehr langen Dienst. */
         const val DAUERWARNUNG_ID = 5
 
         /**
@@ -1023,8 +1015,8 @@ class AufzeichnungsDienst : LifecycleService() {
          * sieht die Erinnerung nie.
          *
          * Was sie verhindern soll, ist nicht der lange Dienst, sondern der
-         * VERGESSENE: Ein zweiter "Dienst beginnen" setzt den alten fort
-         * (E-R45-13), die Anzeige nennt nur die Uhrzeit, und das Handy
+         * VERGESSENE: Ein zweiter "Dienst beginnen" setzt den alten fort,
+         * die Anzeige nennt nur die Uhrzeit, und das Handy
          * zeichnet weiter auf -- auch am Wochenende, auch auf dem Weg nach
          * Hause. Die Aufzeichnung liegt im Klartext.
          */
@@ -1033,10 +1025,9 @@ class AufzeichnungsDienst : LifecycleService() {
         const val BEENDEN = "org.genem.nadoku.BEENDEN"
 
         /**
-         * Wie oft der Sensor **höchstens** melden soll (E-S4-05).
+         * Wie oft der Sensor **höchstens** melden soll.
          *
-         * Hiess bis 0.7.7 `TAKT_MS` mit dem Kommentar „1-s-Abtastung wie die
-         * Uhr". Das war halb richtig und deshalb irreführend (B-S5Z-12):
+         * Kein Takt wie die 1-s-Abtastung der Uhr:
          * `requestLocationUpdates` nimmt einen **Mindest**abstand, keinen
          * Takt. Mehr als 1 Hz kommt nie, weniger jederzeit — und genau
          * deshalb misst der [Ortungswaechter] Fristen statt Zählungen.
@@ -1044,7 +1035,7 @@ class AufzeichnungsDienst : LifecycleService() {
         const val MINDESTABSTAND_MS = 1000L
 
         /**
-         * Zwei Token an einem Handler (E-S5Z-23).
+         * Zwei Token an einem Handler.
          *
          * Sie sind kein Beiwerk: `removeCallbacksAndMessages(null)` löscht die
          * **ganze** Warteschlange. Ohne getrennte Token nähme der eine Takt
@@ -1058,7 +1049,7 @@ class AufzeichnungsDienst : LifecycleService() {
         private val TOKEN_AKKU = Any()
 
         /**
-         * **Läuft der Vordergrunddienst gerade?** (E-S5Z-08)
+         * **Läuft der Vordergrunddienst gerade?**
          *
          * Die Marke wird gebraucht, bevor irgendjemand `startService()` oder
          * `stopService()` ruft: Aus dem Hintergrund — und `HandyHorcher` ist

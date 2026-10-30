@@ -60,7 +60,7 @@ sealed interface Sitzungsstand {
      * die Antwort auf `bestaetigen ja` verlorenging — die Zugangsdaten sind
      * gültig, das Gerät gilt als gekoppelt.
      *
-     * @param kontoschluessel seit 0.18.0 (S11-09): der öffentliche Schlüssel
+     * @param kontoschluessel der öffentliche Schlüssel
      *   des Kontos aus der Antwort, `null` wenn das Konto noch keinen hat
      *   oder er unbrauchbar ist.
      */
@@ -94,7 +94,7 @@ sealed interface Trennergebnis {
      * **Nichts ist geschehen.** Abgeschlossene, noch nicht gesendete Pakete
      * gehören dem bisherigen Konto; nach einer Neukopplung gingen sie an das
      * neue. Das wäre kein Datenverlust, sondern schlimmer — fremde Einsätze in
-     * einem fremden Konto (Backlog Nr. 14).
+     * einem fremden Konto.
      */
     data class Rueckstand(val pakete: Int) : Trennergebnis
 
@@ -105,9 +105,7 @@ sealed interface Trennergebnis {
 /**
  * Koppeln und Trennen gegen `pair.php` (JSON-Vertrag 1a und 1b).
  *
- * DIE KOPPLUNG IST UMGEKEHRT WORDEN (R49, S5, Web 13.0.0). Bis Android 0.10.1
- * erzeugte das **Web** den Code und die App **sendete** ihn. Jetzt bittet das
- * Gerät um eine Sitzung, **zeigt** den Code, und ein Mensch tippt ihn im
+ * DAS GERÄT ZEIGT DEN CODE, nicht das Web: Das Gerät bittet um eine Sitzung, **zeigt** den Code, und ein Mensch tippt ihn im
  * Browser ein; zuletzt bestätigt das Gerät das Konto, das der Server nennt.
  * Drei Anliegen statt einem:
  *
@@ -115,8 +113,8 @@ sealed interface Trennergebnis {
  * 2. [nachfragen] — mit Kopfzeilen, höchstens alle fünf Sekunden.
  * 3. [bestaetigen] — mit Kopfzeilen, `ja` oder `nein`.
  *
- * WARUM DAS SICHERER IST ALS VORHER: Es gibt zwei Tore statt einem. Vorher
- * entschied allein, wer den Code kannte. Jetzt scheitert ein **fremdes Gerät
+ * WARUM DAS SICHER IST: Es gibt zwei Tore statt einem. Es entscheidet nicht
+ * allein, wer den Code kennt: Ein **fremdes Gerät
  * im eigenen Konto** an der Bestätigungsseite im Web (sie zeigt Art und
  * Modell), und das **eigene Gerät im fremden Konto** am Ja auf dem Gerät —
  * dort steht die maskierte Adresse, und eine fremde Domain fällt auf.
@@ -129,11 +127,10 @@ sealed interface Trennergebnis {
  * Was den Unterschied zwischen „schwebend" und „gültig" trägt, ist
  * [Schluesseltresor.gekoppelt] — es wird erst nach dem Ja gesetzt.
  *
- * DIE REIHENFOLGE IST ABFRAGEN → TRENNEN → NEU KOPPELN (Backlog Nr. 14). Der
- * Fall ist das geteilt genutzte Gerät: Bis zu dieser Regel führte der Weg
- * direkt in die Kopplung, und wenn sie fehlschlug, blieben die **alten**
- * Zugangsdaten stehen — das Gerät dokumentierte stillschweigend weiter auf das
- * vorherige Konto.
+ * DIE REIHENFOLGE IST ABFRAGEN → TRENNEN → NEU KOPPELN. Der Fall ist das
+ * geteilt genutzte Gerät: Führte der Weg direkt in die Kopplung und schlüge
+ * sie fehl, blieben die **alten** Zugangsdaten stehen — das Gerät
+ * dokumentierte stillschweigend weiter auf das vorherige Konto.
  *
  * ENTSCHIEDEN WIRD AM FELD `error`, NICHT AM ZAHLENCODE. Der Schlüssel benennt
  * die Ursache, der Code nur ihre Klasse — und `pair.php` kann denselben Code
@@ -143,20 +140,20 @@ class Kopplungsdienst(
     private val netzweg: Netzweg,
     private val tresor: Schluesseltresor,
     /**
-     * Die Basisadresse. Vorgabe ist die feste Adresse dieses Baulaufs (R63);
+     * Die Basisadresse. Vorgabe ist die feste Adresse dieses Baulaufs;
      * der Prüfstand setzt sie auf seine örtliche Installation.
      */
     private val basis: String = Serveradresse.BASIS,
     /**
      * Wie viele abgeschlossene, noch nicht bestätigte Pakete liegen?
      *
-     * Als Funktion und nicht als Zahl, weil die Warteschlange erst mit B4
-     * entsteht. Bis dahin liefert der Aufrufer 0 — und der Prüfstand liefert
-     * etwas anderes, damit die Sperre trotzdem belegt ist.
+     * Als Funktion und nicht als Zahl: Der Aufrufer liefert den Stand der
+     * Warteschlange — und der Prüfstand liefert etwas anderes, damit die
+     * Sperre belegt ist.
      */
     private val rueckstand: () -> Int = { 0 },
     /**
-     * Was beim Trennen mit der Kopplung geht (Backlog Nr. 114, Räumteil):
+     * Was beim Trennen mit der Kopplung geht:
      * die abgewiesenen Pakete. Als Funktion, weil dieser Dienst den Puffer
      * nicht kennt — und der Prüfstand zählt damit, ob geräumt wurde.
      */
@@ -168,9 +165,8 @@ class Kopplungsdienst(
      *
      * OHNE KOPFZEILEN — das Gerät hat noch keine. Der `geraet`-Block geht
      * **hier** mit und nicht erst beim Bestätigen: Die Kontoinhaberin soll auf
-     * der Bestätigungsseite im Browser sehen, *was* da koppeln will. (Konzept
-     * S4 Abschnitt 13 sagt an dieser Stelle „nach `bestaetigen`" — das ist
-     * überholt; maßgeblich ist Vertrag 1a.1.)
+     * der Bestätigungsseite im Browser sehen, *was* da koppeln will
+     * (Vertrag 1a.1).
      *
      * NICHT IDEMPOTENT. Jeder Aufruf legt eine neue Sitzung an und zählt gegen
      * die Adressgrenze. Deshalb ruft die Oberfläche ihn genau einmal je
@@ -320,12 +316,12 @@ class Kopplungsdienst(
     }
 
     /**
-     * Den Kontoschlüssel einer bestehenden Kopplung nachholen (S11-09,
-     * E-S11-80, nach dem Muster der Garmin, E-S11-79).
+     * Den Kontoschlüssel einer bestehenden Kopplung nachholen (nach dem
+     * Muster der Garmin).
      *
-     * WOZU. Eine Kopplung aus der Zeit vor 0.18.0 hat keinen Schlüssel, und
-     * eine an ein Konto ohne Schlüsselpaar auch nicht. Neu koppeln wäre keine
-     * Lösung: [trennen] verweigert, solange ein Rückstand besteht (Nr. 14),
+     * WOZU. Eine alte Kopplung kann ohne Schlüssel sein, und eine an ein
+     * Konto ohne Schlüsselpaar ist es. Neu koppeln wäre keine Lösung:
+     * [trennen] verweigert, solange ein Rückstand besteht,
      * und ohne Schlüssel lässt sich der Rückstand nicht senden. `status`
      * beantwortet jedes gekoppelte Gerät mit dem Schlüssel SEINES Kontos — mit
      * den eigenen Kopfzeilen gefragt, ist es dasselbe Konto.
@@ -378,9 +374,8 @@ class Kopplungsdienst(
 
         // LOKAL WIRD IMMER GETRENNT — vor der Auswertung, damit kein Zweig
         // daran vorbeikommt. Und mit der Kopplung gehen die abgewiesenen
-        // Pakete (Backlog Nr. 114, Räumteil): Sie gehören dem Konto, das
-        // hier zurückgegeben wird, und bis 0.13.0 überlebten sie jede
-        // Neukopplung.
+        // Pakete: Sie gehören dem Konto, das hier zurückgegeben wird, und
+        // dürfen keine Neukopplung überleben.
         tresor.loeschen()
         raeumen()
 
@@ -419,12 +414,12 @@ class Kopplungsdienst(
                 code == 401 -> Abweisung.SITZUNG_UNGUELTIG
                 code == 410 -> Abweisung.SITZUNG_ABGELAUFEN
                 code == 429 -> Abweisung.ZU_VIELE_VERSUCHE
-                /* EINE UMLEITUNG IST EIN SERVERFEHLER, seit 0.13.0.
+                /* EINE UMLEITUNG IST EIN SERVERFEHLER.
                  *
-                 * Vorher kam sie hier nie an: `HttpURLConnection` folgte ihr
-                 * von selbst — und nahm dabei den Geraeteschluessel im Kopf
-                 * mit. Seit `instanceFollowRedirects = false` (Netzweg.kt)
-                 * landet der 3xx hier, und er gehoert benannt: Die App
+                 * `HttpURLConnection` folgte ihr von selbst — und naehme
+                 * dabei den Geraeteschluessel im Kopf mit. Mit
+                 * `instanceFollowRedirects = false` (Netzweg.kt) landet der
+                 * 3xx hier, und er gehoert benannt: Die App
                  * spricht mit genau zwei Endpunkten einer fest eingebauten
                  * Adresse; eine Umleitung ist dort ein Fehler der
                  * Einrichtung. Ohne diese Zeile hiesse er "unbekannt", und
@@ -440,14 +435,8 @@ class Kopplungsdienst(
      * Der Freitext des Servers, sofern vorhanden. Er wird als **zweite Zeile**
      * angezeigt und ersetzt nie den eigenen Text: Die Meldungen von `pair.php`
      * sind für die Weboberfläche geschrieben — ganze Sätze in Fließtext.
-     * Dieselbe Überlegung wie in `Pair.mc`.
-     *
-     * BIS ZU DIESEM PAKET STAND HIER „ohne Umlaute". Das galt einmal und
-     * gilt seit S5 nicht mehr: `pair.php` schreibt „Es sind bereits 5
-     * Geräte …". Aufgefallen ist es an einem Prüffall, der auf den
-     * umlautlosen Text prüfte und deshalb gegen den heutigen Server
-     * fehlschlug — die Annahme war seit Web 13.0.0 falsch und stand
-     * unbemerkt in drei Dateien.
+     * Dieselbe Überlegung wie in `Pair.mc`. Die Meldungen tragen Umlaute:
+     * `pair.php` schreibt „Es sind bereits 5 Geräte …".
      */
     private fun meldungAus(o: JSONObject?): String? =
         o?.optString("meldung")?.ifEmpty { null }

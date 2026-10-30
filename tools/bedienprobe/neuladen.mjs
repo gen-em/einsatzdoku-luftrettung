@@ -1,11 +1,11 @@
-/* Neuladen nach einer Handlung — wiederholt der Browser etwas? (R4-11)
+/* Neuladen nach einer Handlung — wiederholt der Browser etwas?
  * ===========================================================================
  *
- * WOZU: Backlog Nr. 250. Eine Seite, die ihr POST-Ergebnis selbst ausgibt,
+ * WOZU: Eine Seite, die ihr POST-Ergebnis selbst ausgibt,
  * hinterlässt ein Formular im Verlauf des Browsers; „Neu laden" schickt es
- * noch einmal ab. Seit Web 21.1.9 leiten die Seiten unter Verwaltung und
- * Betrieb nach einer Handlung um, seit Web 21.8.0 auch `betrieb_server.php`
- * (Schritt 18, SR-02), und die Meldung kommt über die Sitzung an
+ * noch einmal ab. Die Seiten unter Verwaltung und Betrieb leiten nach
+ * einer Handlung um, auch `betrieb_server.php`,
+ * und die Meldung kommt über die Sitzung an
  * (`flash_setzen()`).
  *
  * WAS EIN WEG HIER MISST — drei Dinge, die nur ein Browser zeigt:
@@ -19,7 +19,7 @@
  *
  * NICHT UNTER `wege/`, weil der Läufer dort jede Datei als Wegdatei lädt
  * (dasselbe wie `probekonto.mjs`). Die Wege stehen in den Dateien ihrer
- * Seite (E-PK-15).
+ * Seite.
  */
 
 /**

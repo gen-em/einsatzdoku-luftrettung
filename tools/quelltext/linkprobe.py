@@ -9,7 +9,7 @@ die Vollstaendigkeitspruefung sieht das Stylesheet an. Der Fehler faellt
 deshalb erst im Betrieb auf — und dort auch nur dann, wenn jemand genau
 diesen Knopf drueckt.
 
-Genau so ist Backlog Nr. 148 entstanden: Die Ueberschneidungswarnung der
+Genau so ist ein Fehler entstanden: Die Ueberschneidungswarnung der
 Startseite verwies auf `diensttag_zusammenfuehren.php?ziel=`, die Seite liest
 `$_GET['d']`. Ergebnis war eine 404-Seite — und zwar in genau dem Fall, fuer
 den die Warnung gebaut ist. Zwei andere Verweise auf dieselbe Seite, keine
@@ -30,9 +30,9 @@ erste, und `&amp;` gilt als Trenner wie `&`. Drei Ergebnisse je Fund:
 WAS SIE NICHT KANN, und warum das kein Mangel ist:
 
   - Ein Verweis, dessen ZIEL erst zur Laufzeit entsteht, taucht hier nicht
-    auf. Zurzeit gibt es keinen. Bis Web 16.x baute `admin_stammdaten.php`
-    `$seite . '&ev=' . $vid`; die Zeile ist mit dem Umbau auf Dialoge
-    (S9/AP5-4) entfallen, die Seite selbst mit S9/AP5b. Kaeme ein solcher
+    auf. Zurzeit gibt es keinen; der letzte (`$seite . '&ev=' . $vid` in
+    `admin_stammdaten.php`) ist mit dem Umbau auf Dialoge entfallen, die
+    Seite selbst auch. Kaeme ein solcher
     Fall neu dazu, faende die Probe ihn nicht — deshalb steht der Hinweis
     hier statt in einer Ausnahmeliste, die ihn verschwinden liesse.
   - Sie prueft NAMEN, nicht WERTE. Ein `?d=<Kalendertag>` an einer Seite, die
@@ -60,10 +60,10 @@ SERVER = os.path.join(WURZEL, 'server')
 # Verzeichnisse, die nicht uns gehoeren: fremde Bibliotheken und Schriften.
 FREMD = ('vendor', 'fonts', 'demo')
 
-# EINE DATEI, DIE NICHT GELESEN WIRD (S10/AP5).
+# EINE DATEI, DIE NICHT GELESEN WIRD.
 #
 # `config.php` liegt nur auf installierten Instanzen, steht in `.gitignore`
-# und traegt seit S10 ZWEI Geheimnisse: den Serverschluessel und den
+# und traegt ZWEI Geheimnisse: den Serverschluessel und den
 # Server-Anteil. Sie hier auszunehmen hat zwei Gruende, und beide zaehlen:
 #
 #   1. DIE ZAHL SOLL REPRODUZIERBAR SEIN. Auf einem blanken Auscheck gibt es

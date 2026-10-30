@@ -7,30 +7,28 @@
     das APK auf einem Handy installieren — wo es nichts tut, weil es kein
     Handy ist.
 
-    KEINE INTERNET-BERECHTIGUNG, und das ist kein Versehen (E-S4-11): Die Uhr
+    KEINE INTERNET-BERECHTIGUNG, und das ist kein Versehen: Die Uhr
     spricht nur mit dem Handy, nie mit dem Server. Sie traegt keine
     Zugangsdaten; ein gestohlener Uhr-Speicher gibt nichts preis. Eine
     Berechtigung, die sie nicht braucht, waere die erste Stelle, an der das
     aufweicht.
 
     ALLOWBACKUP ist auch hier aus. Auf der Uhr liegt zwar kein Geheimnis, aber
-    der Ereignispuffer (C2) gehoert zu GENAU DIESEM Geraet und genau dieser
+    der Ereignispuffer gehoert zu GENAU DIESEM Geraet und genau dieser
     Kopplung — auf eine andere Uhr uebertragen waere er eine Quelle doppelter
     Einsaetze.
 
-    Der Data Layer (C2) braucht KEINE eigene Berechtigung: Er laeuft ueber die
-    Play-Dienste, und die pruefen Paketnamen und Signatur (E-S4-01).
+    Der Data Layer braucht KEINE eigene Berechtigung: Er laeuft ueber die
+    Play-Dienste, und die pruefen Paketnamen und Signatur.
 
-    DAMIT HAT DIE UHR SEIT 0.13.0 GAR KEINE BERECHTIGUNG MEHR. Bis dahin stand
-    hier WAKE_LOCK, und zwar unbenutzt: Im ganzen Modul und im gemeinsamen
-    Teil gibt es keinen Aufruf von `PowerManager` oder `newWakeLock`. Sie war
-    eine Berechtigung auf Vorrat — genau das, wogegen das Handy-Manifest an
-    zwei Stellen ausdruecklich argumentiert. Sie fragt zwar niemanden
-    (Normalstufe, kein Dialog), erscheint aber im Store-Eintrag, und eine App,
-    die nach etwas fragt, das sie nicht benutzt, erklaert sich schlechter als
-    eine, die nach gar nichts fragt.
+    DAMIT HAT DIE UHR GAR KEINE BERECHTIGUNG, auch nicht WAKE_LOCK: Im ganzen
+    Modul und im gemeinsamen Teil gibt es keinen Aufruf von `PowerManager`
+    oder `newWakeLock`. Sie waere eine Berechtigung auf Vorrat — genau das,
+    wogegen das Handy-Manifest an zwei Stellen ausdruecklich argumentiert.
+    Sie fragt zwar niemanden (Normalstufe, kein Dialog), erscheint aber im
+    Store-Eintrag, und eine App, die nach etwas fragt, das sie nicht benutzt,
+    erklaert sich schlechter als eine, die nach gar nichts fragt.
 
-    Gefunden bei der Play-Console-Vorbereitung (Schritt 6, Teil C).
     Braucht eine kuenftige Fassung sie doch — etwa, um waehrend einer
     Uebertragung wach zu bleiben —, kommt sie mit ihrem Aufrufer zurueck und
     nicht vorher.
@@ -42,8 +40,8 @@
         android:required="true" />
 
     <!--
-        KEIN `android:roundIcon` (Backlog Nr. 81). Es stand hier wie im
-        Handy-Modul auf demselben adaptiven Symbol wie `android:icon` — ein
+        KEIN `android:roundIcon`. Auf demselben adaptiven Symbol wie
+        `android:icon` waere es wie im Handy-Modul falsch belegt — ein
         Attribut aus Android 7.1, das ein fertig gerundetes Bild erwartet, kein
         adaptives. Bei minSdk 30 gibt es erst recht kein Geraet, das es
         braucht. Begruendung im Handy-Manifest.
@@ -82,7 +80,7 @@
         </activity>
 
         <!--
-            Der Empfang von Quittung und Anzeigestand (C2, E-S4-10).
+            Der Empfang von Quittung und Anzeigestand.
             Begruendung zu `exported` wortgleich im Handy-Manifest.
 
             Das System startet ihn AUCH OHNE laufende Ansicht — deshalb raeumt

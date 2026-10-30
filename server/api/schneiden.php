@@ -3,12 +3,12 @@ declare(strict_types=1);
 require_once __DIR__ . '/../auth_guard.php';   // liefert $userId
 require_once __DIR__ . '/../validate_lib.php';
 require_once __DIR__ . '/../einsatz_lib.php';
-require_once __DIR__ . '/../mission_fields_lib.php';   // mf_spalten() (Schritt 15/AP6)
+require_once __DIR__ . '/../mission_fields_lib.php';   // mf_spalten()
 require_once __DIR__ . '/../diensttag_lib.php';
 require_once __DIR__ . '/../spur_lib.php';
 
 /**
- * Schneidewerkzeug: aus einem Ruhesegment einen Einsatz machen (S4/A2b).
+ * Schneidewerkzeug: aus einem Ruhesegment einen Einsatz machen.
  *
  * POST api/schneiden.php   JSON-Body, Header X-CSRF wie bei api/day.php
  *
@@ -19,39 +19,36 @@ require_once __DIR__ . '/../spur_lib.php';
  *     beginn_tag: 0|1,            +1 = am Folgetag (Dienst ueber Mitternacht)
  *     ende_tag:   0|1,
  *     phasen: { "3": 'HH:MM'|null, "4": ..., "7": ... },   optional
- *     client_ref: 'cut-<16 Hex>',  seit S11-05c: die Kennung des neuen
+ *     client_ref: 'cut-<16 Hex>',  die Kennung des neuen
  *                                  Einsatzes, an die die Stuecke gebunden sind
  *     stuecke: [ {seq_from, punkte, ts_von, ts_bis, huelle}, … ] }
  *
  *   { action: 'rueckgaengig', mission_id: 42 }
  *
- *   { action: 'loeschen',          seit S11-05c (Backlog Nr. 161)
+ *   { action: 'loeschen',
  *     rest_id, beginn, ende, beginn_tag, ende_tag   wie oben
  *     stand:   [[seq_from, punkte], …]   was der Browser gelesen hat
  *     stuecke: [ … ]                     die uebrigen Punkte, neu verschlossen
  *     geloescht: 37 }                    wie viele Punkte wegfallen
  *
- * SEIT S11-05c SCHNEIDET DER BROWSER (E-S11-47). Der Server sieht die Punkte
- * eines Ruhesegments nicht mehr — sie liegen verschlossen in `track_stuecke`.
+ * DER BROWSER SCHNEIDET. Der Server sieht die Punkte
+ * eines Ruhesegments nicht — sie liegen verschlossen in `track_stuecke`.
  * Beim Schneiden oeffnet der Browser das Segment, nimmt die Punkte im Zeitraum
  * und verschliesst sie als Spur des neuen Einsatzes; das Segment bleibt, wie
- * es ist, und der Zeitraum wird dort gesperrt (`track_cuts`, E-S11-37) — beim
+ * es ist, und der Zeitraum wird dort gesperrt (`track_cuts`) — beim
  * Oeffnen fallen die Punkte darin weg. Die Ruecknahme loescht Einsatz und
  * Vermerk; die Punkte waren im Segment nie fort. Physisch fallen die
- * doppelten Punkte erst, wenn der Wartungslauf (S11-07) das Segment neu
- * packt. Bis Web 22.1.0 verschob der Server die Punkte selbst
- * (`spur_teilen()`); seit S11-04 fand er dabei keine mehr und antwortete
- * „kein einziger Punkt" (F-S11-50). Seit Web 23 gibt es die Funktion nicht
- * mehr (S11-12).
+ * doppelten Punkte erst, wenn der Wartungslauf das Segment neu
+ * packt.
  *
- * EIN SCHNITT VON VOR WEB 22.2.0 LAESST SICH NICHT MEHR ZURUECKNEHMEN
- * (F-S11-94). Er hat die Punkte aus dem Segment VERSCHOBEN; sie liegen seit
- * dem Einmalwerkzeug verschlossen am Einsatz, und das Segment hat sie nicht
+ * EIN ALTER SCHNITT LAESST SICH NICHT ZURUECKNEHMEN.
+ * Er hat die Punkte aus dem Segment VERSCHOBEN; sie liegen
+ * verschlossen am Einsatz, und das Segment hat sie nicht
  * mehr. Ein Rueckgaengig loeschte den Einsatz samt Punkten — sie waeren fort.
  * Erkannt wird ein solcher Schnitt an der Zeit: aelter als der Vermerk der
- * Migration `2026_10_15_loeschvermerk`, mit der S11-05c auf die Anlage kam.
+ * Migration `2026_10_15_loeschvermerk`.
  *
- * LOESCHEN IST ENDGUELTIG (Nr. 161). Dort verschliesst der Browser die
+ * LOESCHEN IST ENDGUELTIG. Dort verschliesst der Browser die
  * Punkte AUSSERHALB des Zeitraums neu, und der Server ersetzt die Stuecke des
  * Segments — nur, wenn sie noch so liegen, wie der Browser sie gelesen hat
  * (`spur2_tauschen()`). Ein Sperrvermerk ohne Einsatz haelt eine erneute
@@ -73,19 +70,19 @@ require_once __DIR__ . '/../spur_lib.php';
  * DER EINSATZ ENTSTEHT AUF DEM BESTANDSWEG. Virtuelles Geraet
  * `manual-<userId>`, `uhr_gesperrt = 1`, `client_ref` mit Praefix — woertlich
  * wie in `einsatz_form.php`. Das ist kein Zierrat: An diesen Merkmalen haengt, ob
- * der Einsatz durch Backup, Export und Papierkorb kommt (R24), und ob
+ * der Einsatz durch Backup, Export und Papierkorb kommt, und ob
  * `ingest.php` seine Phasen spaeter noch anfasst.
  *
- * SEINE HERKUNFT IST SEIT WEB 14.0.0 `schnitt` UND NICHT MEHR `manual`
- * (R64, E-R64-06). `uhr_gesperrt = 1` bleibt davon unberuehrt — das ist der
+ * SEINE HERKUNFT IST `schnitt` UND NICHT `manual`.
+ * `uhr_gesperrt = 1` bleibt davon unberuehrt — das ist der
  * Schutzschalter gegen das Ueberschreiben durch die Uhr, nicht eine Aussage
- * darueber, wer den Einsatz angelegt hat. Beides zusammenzuwerfen war der
+ * darueber, wer den Einsatz angelegt hat. Beides zusammenzuwerfen waere ein
  * Fehler: Ein geschnittener Einsatz ist gerade NICHT von Hand eingegeben, er
  * ist aus einer aufgezeichneten Spur herausgeschnitten.
  *
  * UND ER ERBT ART UND MODELL DER QUELLE. Das virtuelle Geraet weiss nichts;
- * das Segment, aus dem geschnitten wurde, traegt seine Momentaufnahme seit
- * R64 selbst. Am geschnittenen Einsatz steht damit beides: DASS er durch
+ * das Segment, aus dem geschnitten wurde, traegt seine Momentaufnahme
+ * selbst. Am geschnittenen Einsatz steht damit beides: DASS er durch
  * einen Schnitt entstand, und WELCHES Geraet die Spur aufgezeichnet hat, die
  * er jetzt fuehrt.
  *
@@ -96,7 +93,7 @@ require_once __DIR__ . '/../spur_lib.php';
  * die Bedienerin im Formular nach, das dafuer da ist.
  */
 
-/** Die drei Phasen, die der Schneide-Bereich als Abkuerzung anbietet (A0). */
+/** Die drei Phasen, die der Schneide-Bereich als Abkuerzung anbietet. */
 const SCHNITT_PHASEN = [3, 4, 7];
 
 /* ---- Schneiden ------------------------------------------------------------ */
@@ -175,8 +172,8 @@ function schnitt_stuecke(array $b, int $von, int $bis, bool $imZeitraum, Pruefli
     }
     $aus = []; $summe = 0;
     foreach (array_values($roh) as $i => $t) {
-        /* EIN GEPACKTES STUECK (Stufe 2, 3) nur beim Loeschen (S11-07,
-         * E-S11-74): Der Browser hat ein zusammengefuegtes oder ausgeduenntes
+        /* EIN GEPACKTES STUECK (Stufe 2, 3) nur beim Loeschen: Der Browser hat
+         * ein zusammengefuegtes oder ausgeduenntes
          * Segment geoeffnet und verschliesst den Rest in derselben Stufe. Ein
          * herausgeschnittener Einsatz faengt mit Geraetestuecken an. */
         $st = is_array($t) && (int)($t['stufe'] ?? 1) >= SPUR2_STUFE_GEPACKT && !$imZeitraum
@@ -210,7 +207,7 @@ function schnitt_ausfuehren(array $b, int $userId): never
     /* ---- Die Phasen ------------------------------------------------------
      *
      * OPTIONAL, UND DREI DAVON. Die vollstaendige Phasenliste wohnt im
-     * Einsatzformular (A0); hier stehen die drei, die man beim Schneiden
+     * Einsatzformular; hier stehen die drei, die man beim Schneiden
      * ohnehin weiss. Was durchkommt, geht durch `pruef_phase()` — ein Wert
      * ausserhalb 2 bis 9 ist kein Feld, das man stillschweigend uebergeht. */
     $phasen = [];
@@ -231,11 +228,11 @@ function schnitt_ausfuehren(array $b, int $userId): never
         $phasen[$ph] = $wann;
     }
 
-    /* ---- Kennung und Stuecke aus dem Browser (S11-05c) -------------------
+    /* ---- Kennung und Stuecke aus dem Browser -------------------
      *
      * Die Stuecke sind an die Kennung des NEUEN Einsatzes gebunden (Art
-     * `spur`, Konzept 3.2); der Browser vergibt sie deshalb, bevor es die
-     * Zeile gibt. `cut-` und 16 Hexziffern — dasselbe Praefix wie bisher. */
+     * `spur`); der Browser vergibt sie deshalb, bevor es die
+     * Zeile gibt. `cut-` und 16 Hexziffern — dasselbe Praefix wie immer. */
     $ref = (string)($b['client_ref'] ?? '');
     if (!preg_match('/^cut-[0-9a-f]{16}$/', $ref)) {
         json_out(['error' => 'eingabe', 'meldung' => 'Die Kennung des neuen Einsatzes fehlt. '
@@ -268,7 +265,7 @@ function schnitt_ausfuehren(array $b, int $userId): never
                                                               $phasen, $stuecke, $vonTs, $bisTs,
                                                               $genommen): int {
         $devId = geraet_virtuell_sicherstellen($pdo, $userId);
-        /* SPALTEN AUS DEM REGISTER (Schritt 15/AP6, E-ZE-22), Zweck
+        /* SPALTEN AUS DEM REGISTER, Zweck
          * `schnitt_neu`. DREI WERTE SIND FEST und stehen deshalb als Literal
          * in der Werteliste, nicht als Fragezeichen: `final` und
          * `uhr_gesperrt` sind 1 (ein geschnittener Einsatz ist fertig und
@@ -295,7 +292,7 @@ function schnitt_ausfuehren(array $b, int $userId): never
 
         /* DIE SPUR DES EINSATZES: die Stuecke, die der Browser aus den Punkten
          * im Zeitraum verschlossen hat. Das Segment bleibt unberuehrt; der
-         * Vermerk darunter sperrt den Zeitraum dort (E-S11-47). */
+         * Vermerk darunter sperrt den Zeitraum dort. */
         foreach ($stuecke as $st) {
             spur2_stueck_schreiben($pdo, 'mission', $misId, $st['seq_from'], $st['punkte'],
                                    $st['ts_von'], $st['ts_bis'], $st['huelle']);
@@ -312,15 +309,15 @@ function schnitt_ausfuehren(array $b, int $userId): never
         json_fehler($ex, 'schneiden');
     }
 
-    /* Hier stand bis Web 22.1.0 `compute_site_elevation()`. Der Server sieht die
-     * Spur nicht mehr; die Hoehe des Einsatzorts entsteht im Browser — beim
-     * Speichern im Formular (S11-05b) und im Wartungslauf (S11-07). */
+    /* Kein `compute_site_elevation()`. Der Server sieht die
+     * Spur nicht; die Hoehe des Einsatzorts entsteht im Browser — beim
+     * Speichern im Formular und im Wartungslauf. */
     $antwort = ['ok' => true, 'mission_id' => $misId, 'genommen' => $genommen];
     if (!$pruef->sauber()) { $antwort['rejected'] = $pruef->nachUrsache(); }
     json_out($antwort);
 }
 
-/* ---- Rückgängig (E-S4-17) ------------------------------------------------- */
+/* ---- Rückgängig ------------------------------------------------- */
 
 function schnitt_rueckgaengig(array $b, int $userId): never
 {
@@ -339,7 +336,7 @@ function schnitt_rueckgaengig(array $b, int $userId): never
     if (!$schnitte) { json_out(['error' => 'kein_schnitt',
         'meldung' => 'Dieser Einsatz ist nicht aus einem Segment geschnitten.'], 409); }
 
-    /* WAS AM EINSATZ HAENGT, HAELT DAS RUECKGAENGIG AUF (A0: „solange am
+    /* WAS AM EINSATZ HAENGT, HAELT DAS RUECKGAENGIG AUF („solange am
      * Einsatz nichts Weiteres hängt").
      *
      * Der Grund ist nicht Vorsicht, sondern Arithmetik: Das Rueckgaengig
@@ -365,8 +362,7 @@ function schnitt_rueckgaengig(array $b, int $userId): never
     $m = $c->fetch(PDO::FETCH_ASSOC);
     if ((int)($m['edited'] ?? 0) === 1) { $haengt[] = 'Änderungen im Einsatzformular'; }
     if ((int)($m['hatPat'] ?? 0) === 1) { $haengt[] = 'geschützte Angaben'; }
-    /* Die Reanimation liegt in der Einsatzhuelle (S11-05c; bis Web 22.7.0
-     * zaehlte hier zusaetzlich `resus_sessions`); ein geschnittener Einsatz
+    /* Die Reanimation liegt in der Einsatzhuelle; ein geschnittener Einsatz
      * hat keine, bis jemand ihn im Formular speichert. */
     if ((int)($m['hatOrt'] ?? 0) === 1) { $haengt[] = 'Phasenorte oder eine Reanimation'; }
 
@@ -377,8 +373,8 @@ function schnitt_rueckgaengig(array $b, int $userId): never
                              . 'über den Papierkorb löschen, wenn er weg soll.'], 409);
     }
 
-    /* DER ALTE SCHNITT (F-S11-94, siehe Kopf). Ohne Vermerk der Migration
-     * (eine Anlage vor Web 22.2.0) gibt es nur alte Schnitte. */
+    /* DER ALTE SCHNITT (siehe Kopf). Ohne Vermerk der Migration
+     * gibt es nur alte Schnitte. */
     $q = $pdo->prepare('SELECT applied_at FROM schema_migrations WHERE id = ?');
     $q->execute(['2026_10_15_loeschvermerk']);
     $s11Seit = $q->fetchColumn();
@@ -394,12 +390,11 @@ function schnitt_rueckgaengig(array $b, int $userId): never
 
     try {
         $zurueck = db_transaktion($pdo, function (PDO $pdo) use ($schnitte, $misId, $userId): int {
-        /* Die Punkte waren im Segment nie fort (seit S11-05c); zurueck
+        /* Die Punkte waren im Segment nie fort; zurueck
          * „kommen" sie, indem die Sperre faellt. Gemeldet wird, wie viele es
-         * beim Schnitt waren. Bis Web 22.7.0 schob hier `spur_teilen()` die
-         * Klartextpunkte alter Schnitte zurueck. */
+         * beim Schnitt waren. */
         $zurueck = array_sum(array_column($schnitte, 'n_punkte'));
-        /* DER VERMERK FAELLT MIT (E-S4-53). Bliebe er stehen, waere der
+        /* DER VERMERK FAELLT MIT. Bliebe er stehen, waere der
          * Zeitraum fuer immer gesperrt — und zwar unsichtbar. */
         schnitte_loeschen($pdo, 'ziel', [$misId]);
 
@@ -419,7 +414,7 @@ function schnitt_rueckgaengig(array $b, int $userId): never
     json_out(['ok' => true, 'zurueck' => $zurueck]);
 }
 
-/* ---- Ein Stück löschen (S11-05c, Backlog Nr. 161) ------------------------- */
+/* ---- Ein Stück löschen ------------------------- */
 
 function stueck_loeschen(array $b, int $userId): never
 {
@@ -429,8 +424,6 @@ function stueck_loeschen(array $b, int $userId): never
      'von' => $vonTs, 'bis' => $bisTs] = schnitt_segment_und_zeit($b, $userId, $pruef);
     $segId = (int)$seg['id'];
 
-    /* Bis Web 22.7.0 stand hier die Abweisung des Altbestands im Klartext
-     * (`spur1_vorhanden()`, 409 `altbestand`). Seit Web 23 gibt es keinen. */
     $geloescht = pruef_zahl($b['geloescht'] ?? null, 1, LIMIT_TRACKPUNKTE_SPUR, 'geloescht', $pruef);
     $stand = $b['stand'] ?? null;
     if ($geloescht === null || !is_array($stand)) {
@@ -482,7 +475,7 @@ function stueck_loeschen(array $b, int $userId): never
 
 try {
     api_methode();
-    csrf_check();   // Feld ODER Kopfzeile X-CSRF (Nr. 67)
+    csrf_check();   // Feld ODER Kopfzeile X-CSRF
     $b = api_rumpf();
 
     switch ((string)($b['action'] ?? '')) {

@@ -1,7 +1,7 @@
 /* Wege der Zeitraumübersicht mit Seitengrenze (`zeitraum.php`).
  * ===========================================================================
  *
- * Entstanden mit R4-17 (Backlog Nr. 37): Die Tabelle zeigt seit Web 21.4.0
+ * Die Tabelle zeigt
  * höchstens 200 Zeilen. Das Demo-Konto hat 109 Einsätze — an ihm entstünde
  * keiner der Zustände, um die es geht. Die Einsatzliste aus `api/range.php`
  * wird deshalb auf dem Weg in den Browser vervielfacht
@@ -39,8 +39,8 @@ export const wege = [
         /* Die Luftansicht: Nur die Artenansichten tragen Extremwert-Kacheln,
          * „Gemischt" hat vier Kacheln ohne Einsatzbezug. */
         await k.seite.locator('#artwahl input[value="air"] + label').click();
-        /* AUF DIE PINS WARTEN, NICHT AUF EINE UHR (R4-27). Seit Web 21.6.1
-         * zeichnet die Seite in Stuecken: Die Karte kommt ein Bild nach der
+        /* AUF DIE PINS WARTEN, NICHT AUF EINE UHR. Die Seite
+         * zeichnet in Stuecken: Die Karte kommt ein Bild nach der
          * Tabelle, und das Entschluesseln kann nach dem Klick noch laufen.
          * Bis dahin stand hier `waitForTimeout(300)` — ein Wettlauf, den die
          * Seite jetzt verlieren darf. Laeuft die Frist ab, liest `lies()` den

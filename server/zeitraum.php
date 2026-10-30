@@ -7,7 +7,7 @@ require_once __DIR__ . '/diensttag_lib.php';   // dt_art_symbole() fuer die Tabe
 /**
  * Alle Einsaetze eines Jahres oder Monats: Karte, Statistiktabelle und eine
  * Tabelle der Einsaetze — bewusst ohne Farbmarkierung und ohne Tagesnummer,
- * dafuer mit Datum, seit Web 21.4.0 mit 200 Zeilen je Seite (Karte und
+ * dafuer mit Datum, mit 200 Zeilen je Seite (Karte und
  * Kennzahlen bleiben beim ganzen Zeitraum). Die Daten holt der Browser von api/range.php und
  * entschluesselt die geschuetzten Angaben selbst (wie auf der Tagesuebersicht);
  * die Karten-Pins nutzen dieselben entschluesselten Koordinaten. Die Karte
@@ -18,11 +18,10 @@ require_once __DIR__ . '/diensttag_lib.php';   // dt_art_symbole() fuer die Tabe
 $jahr  = (string)($_GET['y'] ?? '');
 $monat = (string)($_GET['m'] ?? '');
 if (!preg_match('/^\d{4}$/', $jahr)) { header('Location: index.php'); exit; }
-/* NUR 01 BIS 12 — dieselbe Pruefung wie `api/range.php` (R17-22, F-R17-44).
- * Bis Web 23.3.0 bestand `m=13` (ebenso 00 oder 99) die Formpruefung: eine
- * Warnung im Reiter System, ein Titel ohne Monat, und `mktime()` rechnete
- * ins naechste Jahr. Ein ungueltiger Monat gilt jetzt als keiner — die
- * Seite zeigt das Jahr. */
+/* NUR 01 BIS 12 — dieselbe Pruefung wie `api/range.php`.
+ * Ein ungueltiger Monat (`m=13`, 00 oder 99) gilt als keiner — die Seite
+ * zeigt das Jahr. Sonst gaebe es eine Warnung im Reiter System, einen Titel
+ * ohne Monat, und `mktime()` rechnete ins naechste Jahr. */
 if ($monat !== '' && !preg_match('/^(0[1-9]|1[0-2])$/', $monat)) { $monat = ''; }
 
 $MONATSNAMEN = ['', 'Januar', 'Februar', 'März', 'April', 'Mai', 'Juni',
@@ -30,7 +29,7 @@ $MONATSNAMEN = ['', 'Januar', 'Februar', 'März', 'April', 'Mai', 'Juni',
 $titel = $monat !== ''
     ? $MONATSNAMEN[(int)$monat] . ' ' . $jahr
     : 'Jahr ' . $jahr;
-/* Spanne des Zeitraums fuer die Unterzeile (E-P3-37). Sie steht hier und
+/* Spanne des Zeitraums fuer die Unterzeile. Sie steht hier und
    nicht im Skript: Sie folgt aus Jahr und Monat, nicht aus den Daten — die
    Zahl der Diensttage traegt das Skript nach, sobald api/range.php da ist. */
 if ($monat !== '') {
@@ -45,7 +44,7 @@ ui_seite_start(['titel' => $titel, 'karte' => true]);
 <?php ui_geruest_start(['aktiv' => 'start', 'leiste' => 'diensttage',
                         'zeitraum' => ['jahr' => $jahr, 'monat' => $monat]]); ?>
     <?php
-    /* SEGMENTWAHL NACH ART (E-P3-37, vorher eine eigene Tableiste `.arttabs`).
+    /* SEGMENTWAHL NACH ART (vorher eine eigene Tableiste `.arttabs`).
        Sie steht in den Aktionen der Titelzeile — am Desktop rechts neben dem
        Titel, mobil vollbreit darunter. Der Baustein bringt die Bedienung mit:
        Radios in einer Gruppe wandern von sich aus mit den Pfeiltasten, der
@@ -78,14 +77,14 @@ ui_seite_start(['titel' => $titel, 'karte' => true]);
                                 'typ' => 'button', 'attr' => ' id="unlockbtn"'])]); ?>
     </div>
 
-    <?php /* Der Hinweis auf neutrale Diensttage (E31). Ohne ihn wäre nicht
+    <?php /* Der Hinweis auf neutrale Diensttage. Ohne ihn wäre nicht
              erklärbar, warum die Summe der beiden Artenansichten kleiner ist
              als „Gemischt". */ ?>
     <div id="neutralhinweis" hidden></div>
 
     <?php /* Die Kacheln entstehen im Browser: Welche es gibt und wie sie
-             heissen, hängt von der Ansicht ab (E-P3-37) und bei den
-             Windenkacheln zusätzlich vom Bestand (E30, A13d). Unter 720 px
+             heissen, hängt von der Ansicht ab und bei den
+             Windenkacheln zusätzlich vom Bestand. Unter 720 px
              sind VIER sichtbar, der Rest steht hinter „Weitere Statistik". */ ?>
     <div class="kennzahl-raster" id="kennzahlen" hidden></div>
     <button type="button" class="leiser-link kennzahl-mehr-knopf nur-unter-720"
@@ -99,7 +98,7 @@ ui_seite_start(['titel' => $titel, 'karte' => true]);
       <div class="karte-kopf">
         <h2 class="karte-titel">Einsätze</h2>
         <span class="karte-zahl" id="einsatzzahl"></span>
-        <?php /* Sortieren über dasselbe Blatt wie auf der Suchseite (E-P3-32):
+        <?php /* Sortieren über dasselbe Blatt wie auf der Suchseite:
                  auf dem Handy der einzige Weg zu einer anderen Ordnung, am
                  Desktop ein Aufklappmenü neben dem Tabellenkopf. */ ?>
         <div class="aktionen sortieren-aktion">
@@ -120,7 +119,7 @@ ui_seite_start(['titel' => $titel, 'karte' => true]);
         <p id="leer" class="feld-hinweis" hidden>In diesem Zeitraum sind keine Einsätze erfasst.</p>
         <?php /* Ab 720 px die Tabelle im eigenen Scrollbehälter, darunter die
                  dreizeilige Kachel mit Artzeichen und Datum — beide aus
-                 demselben Zeilenbestand (E-P3-32/37, missiontable.js). */ ?>
+                 demselben Zeilenbestand (missiontable.js). */ ?>
         <div class="tabelle-scroll nur-ab-720">
           <table class="tabelle" id="rangetable" hidden>
             <thead></thead>
@@ -134,15 +133,14 @@ ui_seite_start(['titel' => $titel, 'karte' => true]);
 <?php ui_krypto_bootstrap(); ?>
 <script src="<?= asset('assets/patient.js') ?>"></script>
 <?php /* Vorspann der Einsatztabelle (Artsymbole, Typsymbole, Katalogspalten)
-         — seit Schritt 15 AP9b an EINER Stelle, ui_tabellen_bootstrap() in
-         ui.php. Hier standen diese Zeilen wortgleich in zwei Dateien.
+         — an EINER Stelle, ui_tabellen_bootstrap() in ui.php.
          Er muss VOR assets/missiontable.js stehen. */
       ui_tabellen_bootstrap(); ?>
 <script src="<?= asset('assets/missiontable.js') ?>"></script>
 <script src="<?= asset('assets/vendor/leaflet/leaflet.js') ?>"></script>
 <script src="<?= asset('assets/map_fullscreen.js') ?>"></script>
 <script src="<?= asset('assets/map_layers.js') ?>"></script>
-<?php /* geo.js liefert das Standort-Haus (E-P3-40) und die Farben aus den
+<?php /* geo.js liefert das Standort-Haus und die Farben aus den
          Token — dieselbe Quelle wie auf Tages- und Einsatzkarte. */ ?>
 <script src="<?= asset('assets/geo.js') ?>"></script>
 <script<?= kopf_nonce_attr() ?>>
@@ -366,9 +364,11 @@ const KACHELSATZ = { air: KACHELN_LUFT, ground: KACHELN_BODEN, mix: KACHELN_GEMI
    immer zwei. */
 const SPALTEN_JE_SATZ = { air: 5, ground: 4, mix: 4 };
 
-/* Alle Kennzahlen in EINEM Durchlauf. Sie kommen unverschluesselt aus
+/* Alle Kennzahlen in EINEM Durchlauf. Fast alle kommen unverschluesselt aus
  * api/range.php, sind also sofort verfuegbar — unabhaengig von der lokalen
- * Entschluesselung der geschuetzten Felder (Ort/Alter/Diagnose).
+ * Entschluesselung der geschuetzten Felder (Ort/Alter/Diagnose). Die
+ * Ausnahme ist die hoechste Ortshoehe: Sie liegt im pat_blob und steht erst
+ * nach dem Entschluesseln in `site_ele_m`; vorher bleibt sie leer.
  *
  * Gleichstand bei den Extremwerten: Es gewinnt der zuerst gefundene Einsatz —
  * api/range.php liefert ORDER BY started_at, also der zeitlich frueheste.

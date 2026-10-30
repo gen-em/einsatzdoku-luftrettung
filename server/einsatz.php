@@ -1,9 +1,9 @@
 <?php
 declare(strict_types=1);
 require_once __DIR__ . '/auth_guard.php';
-require_once __DIR__ . '/mission_fields_lib.php';   // mf_pat_felder() (S9/AP7)
+require_once __DIR__ . '/mission_fields_lib.php';   // mf_pat_felder()
 require_once __DIR__ . '/einsatz_lib.php';
-require_once __DIR__ . '/geraete_lib.php';     // HERKUNFT_TEXTE (P5c/AP7)
+require_once __DIR__ . '/geraete_lib.php';     // HERKUNFT_TEXTE
 
 // Einsatz-ID einlesen und Eigentum pruefen (liefert auch den Diensttag fuer die
 // Seitenleiste). Ohne Treffer: sauberes 404.
@@ -12,7 +12,7 @@ $mRumpf = einsatz_laden($mid, $userId, ['spalten' => 'day_id']);
 if ($mRumpf === null) { ui_abbruch(404, 'Einsatz nicht gefunden.'); }
 $missionDayId = $mRumpf['day_id'] === null ? null : (int)$mRumpf['day_id'];
 $nachtrag = ($_GET['nachtrag'] ?? '') === '1';
-/* DIE ANFRAGE BEGINNT SCHON IM KOPF (S11-04c, V1, E-S11-33): `vorladen.js`
+/* DIE ANFRAGE BEGINNT SCHON IM KOPF: `vorladen.js`
  * startet `api/mission.php`, waehrend der Browser noch Skripte laedt; `init()`
  * holt die Antwort spaeter ab. Eine eigene kleine Datei und kein Inline-Skript,
  * weil die CSP Inline-Code nur mit Nonce zulaesst und der Kopf keinen traegt. */
@@ -22,7 +22,7 @@ ui_seite_start(['titel' => 'Einsatz', 'karte' => true,
 ?>
 
 <?php ui_geruest_start(['aktiv' => 'start', 'leiste' => 'diensttage', 'tag' => $missionDayId]); ?>
-  <?php /* Titelzeile nach E-P3-33: Rueckweg zum Diensttag, Titel „Einsatz N"
+  <?php /* Titelzeile: Rueckweg zum Diensttag, Titel „Einsatz N"
            (ab 720 px mit Uhrzeit), Unterzeile mit Zeitspanne,
            Herkunfts-Plakette und Rettungsmittel. „Bearbeiten" ist die eine
            Haupthandlung und steht als Primaerknopf am Titel; Verschieben und
@@ -30,7 +30,7 @@ ui_seite_start(['titel' => 'Einsatz', 'karte' => true,
            API-Antwort gefuellt — dieselbe Arbeitsteilung wie auf der
            Startseite. */ ?>
   <?php
-    /* DER SPURZUSTAND, EINMAL (S2/AP4, E-S2-09).
+    /* DER SPURZUSTAND, EINMAL.
      *
      * Er entscheidet zweierlei, und die beiden duerfen nicht auseinanderlaufen:
      * ob es den GPX-Abruf im Aktionsmenue ueberhaupt gibt, und was die Plakette
@@ -39,14 +39,12 @@ ui_seite_start(['titel' => 'Einsatz', 'karte' => true,
      * der API zu holen und dabei vielleicht etwas anderes zu erfahren. */
     require_once __DIR__ . '/spur_lib.php';
     $spurStand  = spur_stand(db(), 'mission', $mid);
-    /* DIE SUMME DER STUECKE, FUER JEDE STUFE (R17-22, F-R17-39). Bis Web
-     * 23.3.0 rechnete der Zweig fuer gepackte und ausgeduennte Spuren mit
-     * `n_gespeichert` — dem Feld des SPUR1-Blobs, das es seit Web 23.0.0
-     * nicht mehr gibt. Sobald der Wartungslauf eine Spur gepackt hatte, war
-     * die Zahl 0: kein „GPS-Daten als GPX", keine Plakette, und jeder Aufruf
-     * schrieb eine Warnung in den Reiter System. Seit SPUR2 ist die Summe der
-     * `punkte` die Zahl, die die Seite will — dieselbe Rechnung wie
-     * `tag_spuren.php`. */
+    /* DIE SUMME DER STUECKE, FUER JEDE STUFE: Die Summe der `punkte` ist
+     * die Zahl, die die Seite will — dieselbe Rechnung wie
+     * `tag_spuren.php`. Ein Feld des Einzelblobs gibt es nicht; mit ihm
+     * stuende nach dem Packen 0 da: kein „GPS-Daten als GPX", keine
+     * Plakette, und jeder Aufruf schriebe eine Warnung in den Reiter
+     * System. */
     $spurPunkte = spur_zahlen(db(), 'mission', [$mid])[$mid] ?? 0;
     $hatSpur = $spurPunkte > 0;
   ?>
@@ -62,7 +60,7 @@ ui_seite_start(['titel' => 'Einsatz', 'karte' => true,
         <?= ui_knopf(['text' => 'Bearbeiten', 'art' => 'primaer', 'symbol' => 'stift',
                       'href' => 'einsatz_form.php?id=' . $mid]) ?>
         <?php
-          /* DER GPX-ABRUF STEHT IM VORHANDENEN AKTIONSMENUE (S2/AP4).
+          /* DER GPX-ABRUF STEHT IM VORHANDENEN AKTIONSMENUE.
            *
            * Nicht als eigener Knopf an der Karte: Die Leaflet-Karte dieser
            * Seite ist kein Baustein `karte`, sondern ein blankes
@@ -89,8 +87,8 @@ ui_seite_start(['titel' => 'Einsatz', 'karte' => true,
                * — eine Spur endet am Einsatzort und tut damit dasselbe. Ohne
                * die Rueckfrage haette dieselbe Anwendung zwei Tueren mit zwei
                * verschiedenen Massstaeben. */
-              /* SEIT S11-05d BAUT DER BROWSER DIE DATEI (`assets/gpx.js`) — aus der
-               * geoeffneten Spur; `gpx.php` sah die verschlossenen Stuecke nicht.
+              /* DER BROWSER BAUT DIE DATEI (`assets/gpx.js`) — aus der
+               * geoeffneten Spur; der Server sieht die verschlossenen Stuecke nicht.
                * Deshalb kein Ziel im Link, sondern ein eigener Handler mit
                * derselben Rueckfrage (`edConfirm`). */
               $eintraege[] = ['text' => 'GPS-Daten als GPX',
@@ -135,7 +133,7 @@ ui_seite_start(['titel' => 'Einsatz', 'karte' => true,
   <?php endif; ?>
 
   <?php /* Der Zustand der geschuetzten Angaben als EINE Meldung ueber den
-           Karten (E-P3-33) — nicht mehr als Zeile in der Feldliste. Drei
+           Karten — nicht mehr als Zeile in der Feldliste. Drei
            Faelle, JS blendet den passenden ein: gesperrt (mit Entsperrknopf),
            entsperrt, unlesbar. */ ?>
   <div class="meldung meldung-info" id="lockbanner" role="status" hidden>
@@ -157,19 +155,17 @@ ui_seite_start(['titel' => 'Einsatz', 'karte' => true,
        nicht passt.</p>
   </div>
 
-  <?php /* Vier Karten in der Rangfolge aus E-P3-33, dazu Besatzung (sie stand
-           schon immer auf dieser Seite; die Karte ist ihre neue Huelle). Die
-           DOM-Reihenfolge ist die MOBILE Reihenfolge (Mockup 19): Angaben,
+  <?php /* Vier Karten in fester Rangfolge, dazu Besatzung. Die
+           DOM-Reihenfolge ist die MOBILE Reihenfolge: Angaben,
            Karte, Phasen, Reanimation. Ab 1200 px zieht das Raster Karte und
            Phasen in die rechte Spalte (klebend) und die Reanimation in die
-           linke — Mockup 20. Leere Felder werden nicht gerendert, leere
+           linke. Leere Felder werden nicht gerendert, leere
            Karten bleiben versteckt. */ ?>
   <div class="einsatz-raster">
-    <?php /* PLAKETTE AUCH HIER (S3/AP6, E-S3-16). F-N1-B hatte sie bewusst
-             nur an der PatientIn-Karte: Dort ist ALLES verschluesselt, hier
-             stehen drei geschuetzte Felder zwischen Klartextfeldern und
-             tragen ihr Schloss einzeln. Die Rueckmeldung vom 31.08.2026
-             verlangt sie trotzdem — und die Begruendung traegt: Wer wissen
+    <?php /* PLAKETTE AUCH HIER, nicht nur an der PatientIn-Karte, obwohl
+             dort ALLES verschluesselt ist und hier drei geschuetzte Felder
+             zwischen Klartextfeldern ihr Schloss einzeln tragen. Die
+             Begruendung: Wer wissen
              will, ob auf einer Seite geschuetzte Daten stehen, soll das an
              der Karte sehen und nicht Zeile fuer Zeile suchen muessen. Die
              Plakette sagt „hier stehen verschluesselte Angaben", die
@@ -186,10 +182,9 @@ ui_seite_start(['titel' => 'Einsatz', 'karte' => true,
       </div>
     </section>
 
-    <?php /* PLAKETTE STATT NEUN SCHLOESSERN (F-N1-B). Bis O4 trug jedes
-             geschuetzte Feld ein Schloss-Emoji; O4 hat sie durch EINE Meldung
-             ueber den Karten ersetzt — und damit die Auskunft verloren,
-             WELCHES Feld geschuetzt ist. Sie kommt zurueck, aber an der
+    <?php /* PLAKETTE STATT NEUN SCHLOESSERN. Ein Schloss an jedem
+             geschuetzten Feld waere hier Laerm, EINE Meldung ueber den Karten
+             verloere die Auskunft, WELCHES Feld geschuetzt ist. Deshalb an der
              richtigen Ebene: In dieser Karte ist ALLES verschluesselt, also
              sagt es die Karte einmal. Die drei geschuetzten Felder der
              Einsatz-Karte stehen zwischen Klartextfeldern und tragen ihr
@@ -213,15 +208,15 @@ ui_seite_start(['titel' => 'Einsatz', 'karte' => true,
     </section>
 
     <div class="einsatz-neben">
-      <?php /* Der Ladeplatz liegt IN der Kartenflaeche (M-S11-01, A); die
-               Phasenkarte steht sofort da und traegt ihren eigenen (E-S11-35). */ ?>
+      <?php /* Der Ladeplatz liegt IN der Kartenflaeche (A); die
+               Phasenkarte steht sofort da und traegt ihren eigenen. */ ?>
       <div class="geo-spalte"><div id="map" class="geo"><?= ui_ladeplatz('Ortsdaten werden geladen …', ['attr' => ' id="ortsdaten-lade"']) ?></div></div>
       <section class="karte karte-block-phasen" id="phasen-karte">
         <div class="karte-kopf">
           <h2 class="karte-titel">Einsatzphasen</h2>
           <span class="karte-zahl" id="phasendauer"></span>
         </div>
-        <?php /* „Einsatzphasen" statt „Phasen" (Web 7.0.0): Im Gespraech und
+        <?php /* „Einsatzphasen" statt „Phasen": Im Gespraech und
                  in der Uhr-App heisst es durchgaengig Einsatzphase, und eine
                  Ueberschrift, die anders heisst als die Sache, kostet bei
                  jedem Hinsehen einen Gedanken. */ ?>
@@ -229,15 +224,14 @@ ui_seite_start(['titel' => 'Einsatz', 'karte' => true,
       </section>
     </div>
 
-    <?php /* VERSTECKT, BIS ES ETWAS ZU ZEIGEN GIBT (F-N1-H). Die Karte stand
-             bisher immer da und sagte „keine" — auf einer Seite, auf der
-             jede andere leere Karte verschwindet (E-P3-33: „leere Felder
-             werden nicht gerendert, leere Karten bleiben versteckt"). Sie
-             war die einzige Ausnahme, und sie kostete auf jedem Einsatz ohne
-             Reanimation eine Karte Aufmerksamkeit fuer die Auskunft, dass
-             nichts passiert ist. Das Skript blendet sie ein, wenn es eine
+    <?php /* VERSTECKT, BIS ES ETWAS ZU ZEIGEN GIBT. Auf dieser Seite
+             verschwindet jede leere Karte („leere Felder werden nicht
+             gerendert, leere Karten bleiben versteckt"); eine Karte, die
+             „keine" sagt, kostete auf jedem Einsatz ohne Reanimation
+             Aufmerksamkeit fuer die Auskunft, dass nichts passiert ist. Das
+             Skript blendet sie ein, wenn es eine
              Sitzung gibt. */ ?>
-    <?php /* DAS SCHLOSS AM TITEL (S11-05b): Die Reanimation liegt seit S11-04 nur
+    <?php /* DAS SCHLOSS AM TITEL: Die Reanimation liegt nur
              in der Einsatzhuelle und steht hier erst nach dem Entsperren. Von
              Hand statt ueber `ui_karte_start()`, weil die Karte versteckt
              beginnt und ihre Zahl eine Kennung braucht — beides kann der
@@ -484,7 +478,7 @@ function hlPhase(idx, on){
  * am Ende der Einsatz-Karte statt zu verschwinden: Ein neues Katalogfeld
  * erscheint auch ohne Aenderung an dieser Liste. */
 const RANG_SONST = 900;
-<?php /* DIE VERSCHLUESSELTEN KATALOGFELDER (S9/AP7). Sie stehen NICHT in
+<?php /* DIE VERSCHLUESSELTEN KATALOGFELDER. Sie stehen NICHT in
          `m.fields` — jene Liste kommt aus den Spalten von `missions`, und ein
          Blobfeld ist keine. Ohne diese Konstante haette die Anzeige keine
          Beschriftung fuer sie. Rang und Zielkarte kommen wie bei jedem

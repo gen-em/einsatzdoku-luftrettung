@@ -24,7 +24,7 @@ import java.time.Instant
 import kotlin.random.Random
 
 /**
- * Die **Lebenszyklus-Matrix** (Abnahme B5, E-S4-08).
+ * Die **Lebenszyklus-Matrix**.
  *
  * Der Lebenszyklus ist der von `Model.mc` — und er ist die eine Stelle, an der
  * ein Fehler nicht auffällt, sondern still einen Einsatz kostet.
@@ -148,11 +148,11 @@ class LebenszyklusTest {
             k.naechstePhase())
     }
 
-    // ---- Mehrfache Einträge (E-R45-12) --------------------------------------
+    // ---- Mehrfache Einträge -------------------------------------------------
 
     /**
      * **Eine erneut gesetzte Phase ist ein zweiter Eintrag** und keine
-     * Korrektur am ersten (Vertrag 3, E-R45-12).
+     * Korrektur am ersten (Vertrag 3).
      */
     @Test fun doppeltePhaseneintraegeBleibenErhalten() {
         val k = klammer()
@@ -174,7 +174,7 @@ class LebenszyklusTest {
 
     // ---- Phasen-Koordinate --------------------------------------------------
 
-    /** Die Koordinate kommt aus der **eigenen Spur** (E-S4-10). */
+    /** Die Koordinate kommt aus der **eigenen Spur**. */
     @Test fun diePhasenKoordinateKommtAusDerEigenenSpur() {
         val k = dienstMitSpur()
         k.phaseSetzen(2)
@@ -324,7 +324,7 @@ class LebenszyklusTest {
     /**
      * Im Nur-Aufzeichnen-Modus entsteht **keine** `mission` — auch nicht
      * dadurch, dass jemand von außen eine Phase setzt. Der Modus blendet die
-     * Knöpfe aus; er ist kein Sonderweg in der Klammer (E-S4-20).
+     * Knöpfe aus; er ist kein Sonderweg in der Klammer.
      */
     @Test fun einNurAufzeichnenDienstErzeugtKeineMission() {
         val k = klammer()
@@ -339,7 +339,7 @@ class LebenszyklusTest {
 
     /**
      * **Der Moduswechsel mitten im Dienst ändert nichts am bereits
-     * Aufgezeichneten** (E-S4-20) — und ein Umstieg auf „mit Knöpfen"
+     * Aufgezeichneten** — und ein Umstieg auf „mit Knöpfen"
      * schließt das laufende Segment erst, wenn tatsächlich eine Phase gesetzt
      * wird.
      */

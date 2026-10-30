@@ -6,22 +6,21 @@ require_once __DIR__ . '/../demo_lib.php';
 require_once __DIR__ . '/../serverkrypto_lib.php'; // anteil_ausgeliefert(), huelle_anteil_kennung()
 
 /**
- * POST api/kdf_upgrade.php — die stille Umstellung (M2-01 Schritt 4; S10)
+ * POST api/kdf_upgrade.php — die stille Umstellung
  *
- * WAS DIESE DATEI SEIT S10 IST
- * Sie hiess einmal „Anhebung der Rundenzahl" und war genau das. Seit S10 ist
- * sie der eine Weg, auf dem sich die SCHLUESSELHUELLE eines Kontos still
- * ersetzen laesst — die Rundenzahl ist nur noch einer von zwei Anlaessen.
- * Der Name bleibt, weil er in `unlock.js` und in drei Dokumenten steht; was
- * die Datei tut, steht hier.
+ * WAS DIESE DATEI IST
+ * Der eine Weg, auf dem sich die SCHLUESSELHUELLE eines Kontos still
+ * ersetzen laesst — die Rundenzahl ist nur einer von zwei Anlaessen. Der
+ * Name („Anhebung der Rundenzahl") bleibt, weil er in `unlock.js` und in
+ * drei Dokumenten steht; was die Datei tut, steht hier.
  *
  * ZWEI ANLAESSE, DIESELBE MECHANIK
  *
- *   RUNDENZAHL (M2-01). Das Konto rechnet mit einer niedrigeren Rundenzahl
+ *   RUNDENZAHL. Das Konto rechnet mit einer niedrigeren Rundenzahl
  *   als der Zielwert. Der Browser hat sich soeben angemeldet, hat also das
  *   Passwort gehabt, und kann beide Ableitungen bilden.
  *
- *   HUELLENFASSUNG (S10, E-S10-07). Die Huelle des Kontos traegt noch kein
+ *   HUELLENFASSUNG. Die Huelle des Kontos traegt noch kein
  *   `edka1:`-Praefix — oder das eines ALTEN Server-Anteils, weil eine
  *   Rotation laeuft. Der Browser oeffnet sie mit dem passenden
  *   Datenschluessel, baut sie mit dem aktuellen Anteil neu und schickt sie
@@ -71,7 +70,7 @@ require_once __DIR__ . '/../serverkrypto_lib.php'; // anteil_ausgeliefert(), hue
  * ---- WARUM DER SITZUNGSZAEHLER NICHT ERHOEHT WIRD ------------------------
  *
  * Der Passwortwechsel erhoeht ihn und beendet damit alle anderen Sitzungen —
- * dort ist das der Zweck (M1-09). Hier waere es ein Fehler: Das Passwort hat
+ * dort ist das der Zweck. Hier waere es ein Fehler: Das Passwort hat
  * sich NICHT geaendert, niemand hat einen Verdacht geaeussert, und die
  * Anhebung laeuft ungefragt im Hintergrund. Wuerde sie Sitzungen beenden,
  * fluege bei jeder Anmeldung stillschweigend jedes andere offene Fenster
@@ -87,8 +86,7 @@ require_once __DIR__ . '/../serverkrypto_lib.php'; // anteil_ausgeliefert(), hue
  * ohne es zu merken. Am Regelfall aendert der Tausch nichts: `unlock.js` ist
  * der einzige Aufrufer und schickt `X-CSRF` immer mit, und `auth_guard.php`
  * legt das Sitzungstoken bei jeder angemeldeten Anfrage an, bevor diese Datei
- * laeuft (Backlog Nr. 67, Unterpunkt; der Hauptpunkt — ein API-Zweig in
- * `csrf_check()` — bleibt bei P5).
+ * laeuft.
  *
  * ---- WAS BEI EINEM FEHLSCHLAG PASSIERT -----------------------------------
  *
@@ -103,16 +101,15 @@ api_methode();
 /* Formular-Token zuerst — die Begruendung der Reihenfolge steht im
  * Kopfkommentar. auth_guard.php hat das Sitzungstoken bereits angelegt, also
  * ist die linke Seite hier nie leer. */
-csrf_check();   // Feld ODER Kopfzeile X-CSRF (Nr. 67)
+csrf_check();   // Feld ODER Kopfzeile X-CSRF
 
-/* Demo-Konto: Die Rundenzahl bleibt, wie sie ist (E-P1-19).
+/* Demo-Konto: Die Rundenzahl bleibt, wie sie ist.
  *
  * Das KDF-Upgrade tauscht Token-Hash, Rundenzahl und Schluesselhuelle — also
  * genau das Material, das die Fixture mitbringt. Liefe es durch, passte das
  * Konto bis zum naechsten Reset nicht mehr zu seinen oeffentlichen
  * Zugangsdaten. Die Rundenzahl des Demo-Kontos ist damit die der Fixture,
- * und die traegt heute den Altwert 320 000 (Backlog Nr. 155) — nicht die
- * Zielrundenzahl, wie es hier bis zur zweiten Gegenpruefung stand. Solange
+ * und die traegt den Altwert 320 000 — nicht die Zielrundenzahl. Solange
  * das so ist, bleibt der Altwert in KDF_ITER_LISTE; die Statuszeile
  * "Schluesselableitung" sagt es.
  *
@@ -141,13 +138,13 @@ if ($neuIter !== KDF_ITER_ZIEL) { json_out(['error' => 'iter'], 400); }
 // Nur nach oben. Eine Anhebung, die senkt, ist keine.
 if ($neuIter < $kdfIter) { json_out(['error' => 'nicht_noetig'], 400); }
 
-// Dieselbe Laengengrenze wie beim Passwortwechsel (M2-08): Die Pruefung
+// Dieselbe Laengengrenze wie beim Passwortwechsel: Die Pruefung
 // begrenzt, das Speichern schneidet NICHT ab.
 if ($wrapPw !== null && !preg_match(WRAP_RE, $wrapPw)) {
     json_out(['error' => 'wrap'], 400);
 }
 
-/* ---- Die Huellenfassung (S10, E-S10-07) --------------------------------
+/* ---- Die Huellenfassung --------------------------------------------------
  *
  * `$patWrapPw` kommt aus auth_guard.php und ist die Huelle, die HEUTE in der
  * Datenbank steht. Ihr Praefix gegen das der neuen gehalten sagt, ob sich die
@@ -157,7 +154,7 @@ $anteilKennung = anteil_ausgeliefert();
 $neuKennung    = $wrapPw === null ? null : huelle_anteil_kennung($wrapPw);
 $altKennung    = huelle_anteil_kennung($patWrapPw);
 
-/* DIESELBE PRUEFUNG WIE AN DEN DREI ANDEREN SCHREIBWEGEN (Fund F-3). Sie
+/* DIESELBE PRUEFUNG WIE AN DEN DREI ANDEREN SCHREIBWEGEN. Sie
  * deckt beide Richtungen ab: eine Huelle auf dem ALTEN Anteil, eine Huelle
  * OHNE Anteil, obwohl einer ausgeliefert wird, und eine Huelle MIT Anteil,
  * obwohl keiner ausgeliefert wird. Alle drei sind ein Fehler des Browsers
@@ -172,8 +169,8 @@ if (huelle_pw_pruefen($wrapPw, demo_ist_demo($userId)) !== null) {
 $huellenwechsel = $wrapPw !== null && $neuKennung !== $altKennung;
 
 /* Nichts zu tun: Die Rundenzahl stimmt schon, und die Huelle traegt bereits
- * die richtige Kennung. Frueher stand hier `<=` — seit S10 ist Gleichstand
- * ein gueltiger Anlass, sofern die Huelle wechselt. */
+ * die richtige Kennung. Gleichstand der Rundenzahl ist ein gueltiger Anlass,
+ * sofern die Huelle wechselt. */
 if ($neuIter === $kdfIter && !$huellenwechsel) {
     json_out(['error' => 'nicht_noetig'], 400);
 }
@@ -188,9 +185,9 @@ $st->execute([$userId]);
 $u = $st->fetch();
 if (!$u || $u['password_hash'] === null) { json_out(['error' => 'konto'], 400); }
 
-/* Nachweis: Wer das alte Token nennen kann, kennt das Passwort. SEIT R17-20
- * MIT RATENTOPF (F-R17-32): Bis dahin war dies die eine der sieben Stellen,
- * an denen eine erbeutete Sitzung ohne Sperre raten konnte. */
+/* Nachweis: Wer das alte Token nennen kann, kennt das Passwort. MIT
+ * RATENTOPF: Ohne ihn koennte eine erbeutete Sitzung hier ohne Sperre
+ * raten. */
 passwort_nachweis_json($userId, $altToken, 'nachweis');
 
 /* Huelle und Pruefsumme gehoeren zusammen und sind Pflicht, SOBALD das Konto
@@ -212,7 +209,7 @@ try {
      * Feld, das sich nicht aendern soll. */
     if ($neuIter > $kdfIter) {
         $pdo->prepare('UPDATE users SET password_hash = ?, kdf_iter = ? WHERE id = ?')
-            ->execute([anmeldehash_bilden($userId, $neuToken), $neuIter, $userId]);   // mit Pfeffer (R17-20)
+            ->execute([anmeldehash_bilden($userId, $neuToken), $neuIter, $userId]);   // mit Pfeffer
     }
     if ($u['pat_wrap_pw'] !== null) {
         /* Die Pruefsumme darf sich NICHT aendern: Es ist derselbe

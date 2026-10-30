@@ -7,11 +7,9 @@
  * import.php, index.php, suche.php, zeitraum.php — damit alle dieselbe
  * Altersberechnung und dieselbe Entschluesselungsschleife verwenden.
  *
- * (Der Kopf nannte bis Web 4.5.2 vier Seiten; import.php und suche.php waren
- * inzwischen dazugekommen, ohne dass er nachgezogen wurde. Eine Liste, die
- * nicht stimmt, ist schlechter als keine: Wer sie liest, glaubt zu wissen,
- * welche Seiten eine Aenderung hier trifft. einstellungen.php kam mit Web
- * 4.6.0 dazu — der Backup-Lauf benutzt seither entschluessleListe.)
+ * (Eine Liste, die nicht stimmt, ist schlechter als keine: Wer sie liest,
+ * glaubt zu wissen, welche Seiten eine Aenderung hier trifft. Wer eine
+ * Seite dazunimmt, traegt sie hier ein.)
  */
 (function () {
   'use strict';
@@ -103,8 +101,7 @@
     return n || v || '';
   }
 
-  /* "JJJJ-MM-TT" -> "TT.MM.JJJJ" -- seit Schritt 15 AP8d eine Weiterleitung
-   * auf `EdFormat.tag()`.
+  /* "JJJJ-MM-TT" -> "TT.MM.JJJJ" -- eine Weiterleitung auf `EdFormat.tag()`.
    *
    * DIE FUNKTION BLEIBT, DER RUMPF GEHT. Sie hat fuenf Aufrufstellen in vier
    * anderen Dateien -- suche.php, einsatz.php, export.js (zweimal) und
@@ -117,7 +114,7 @@
    * einzige mit einer; die drei anderen warfen bei null eine TypeError und
    * machten aus einem Zeitstempel still '14T10:00:00Z.08.2026'. `EdFormat.tag`
    * hat genau diese Wache uebernommen. Bliebe der Rumpf hier stehen, stuende
-   * die Regel nach AP8 an zwei Stellen statt an einer -- und die zweite waere
+   * die Regel an zwei Stellen statt an einer -- und die zweite waere
    * die, die beim naechsten Mal vergessen wird.
    *
    * ZEICHENGLEICH, UND ZWAR NACHGESEHEN: `EdFormat.tag` prueft ohne
@@ -156,20 +153,19 @@
   /**
    * Die Marke fuer einen unlesbaren Eintrag — als SYMBOL im Satz.
    *
-   * Bis Web 19.4.1 stand hier eine Konstante ZEICHEN_UNLESBAR mit dem
-   * Unicode-Warnzeichen als Text. Drei Dinge waren daran falsch: Es sah in
-   * jedem System anders aus, es nahm die Schriftfarbe der Meldung nicht an,
-   * und es war etwas anderes als die Marke, die dieselbe Sache in der Tabelle
-   * daneben traegt (`missiontable.js` benutzt dort seit P3 `edSymbol`).
+   * Nicht das Unicode-Warnzeichen als Text. Drei Dinge waeren daran falsch:
+   * Es saehe in jedem System anders aus, es naehme die Schriftfarbe der
+   * Meldung nicht an, und es waere etwas anderes als die Marke, die dieselbe
+   * Sache in der Tabelle daneben traegt (`missiontable.js` benutzt dort
+   * `edSymbol`).
    *
    * `symbol-text` macht es so gross wie die Schrift, in der es steht, und
    * setzt es auf die Grundlinie (Stylesheet, Abschnitt 3). Die Farbe kommt
    * aus `.meldung-warn .symbol` — dieselbe Regel, die auch das grosse Symbol
    * der Meldung faerbt.
    *
-   * EDSYMBOL LIEGT VOR. Der frueher hier stehende Vorbehalt („symbol.js wird
-   * auf dieser Seite nicht in jedem Fall geladen") trifft nicht zu:
-   * `ui_geruest_ende()` gibt `symbol.js` als ERSTES Skript aus, und alle
+   * EDSYMBOL LIEGT VOR. Der Vorbehalt „symbol.js wird auf dieser Seite nicht
+   * in jedem Fall geladen" trifft nicht zu: `ui_geruest_ende()` gibt `symbol.js` als ERSTES Skript aus, und alle
    * sieben Seiten, die patient.js laden, rufen es. Nachgemessen am
    * 14.09.2026 auf allen sieben: `typeof edSymbol === 'function'`.
    */
@@ -208,13 +204,11 @@
     let el = document.getElementById('patwarn');
     if (!zahl || !zahl.unlesbar) { if (el) { el.remove(); } return; }
     if (!el) {
-      /* DER MELDUNGS-BAUSTEIN, nicht mehr die alte `.alert`-Klasse (P3/O11).
-         Sie war eine Ausnahme der Uebergangsschicht und ist mit ihr gefallen;
-         eine Warnung ohne Regel saehe aus wie Fliesstext und waere keine.
+      /* DER MELDUNGS-BAUSTEIN, keine `.alert`-Klasse: Eine Warnung ohne
+         Regel saehe aus wie Fliesstext und waere keine.
          Das Markup ist dasselbe, das ui_meldung_markup() in PHP erzeugt —
          `role="status"`, weil die Meldung beim Aufbau der Seite entsteht und
-         nicht auf eine Handlung antwortet. Ohne Symbol: Es kaeme aus
-         assets/symbol.js, das diese Seite nicht in jedem Fall laedt. */
+         nicht auf eine Handlung antwortet. */
       el = document.createElement('div');
       el.id = 'patwarn';
       el.className = 'meldung meldung-warn';
@@ -222,7 +216,7 @@
       el.appendChild(document.createElement('p'));
       main.insertBefore(el, main.firstChild);
     }
-    /* innerHTML STATT textContent, seit der Satz ein Symbol traegt (Nr. 42).
+    /* innerHTML STATT textContent, weil der Satz ein Symbol traegt.
        Was hineingeht, ist ausschliesslich eigener Text, eine eigene Zahl und
        das Markup aus edSymbol() — nichts davon stammt aus Daten. */
     el.querySelector('p').innerHTML = hinweisUnlesbar(zahl);
@@ -239,19 +233,17 @@
    * @param {string} ck        Inhaltsschluessel (hex) oder null/leer
    * @returns {Promise<{ok:number, leer:number, unlesbar:number, gesperrt:boolean}>}
    */
-  /* IN STAPELN STATT EINZELN (E-S2-16, S2/AP9).
+  /* IN STAPELN STATT EINZELN.
    *
-   * Bis Web 12.1.0 lief diese Schleife streng nacheinander: ein `await` je
-   * Datensatz. Bei einem Konto mit 5000 Einsaetzen sind das 5000 Runden
-   * durch die Ereigniswarteschlange, und jede kostet mehr als das
-   * Entschluesseln selbst — GEMESSEN in S2/AP9: 4880 Entschluesselungen
-   * kosteten 387 ms, die Schleife um sie herum 1954 ms.
+   * Streng nacheinander — ein `await` je Datensatz — waeren es bei einem
+   * Konto mit 5000 Einsaetzen 5000 Runden durch die Ereigniswarteschlange,
+   * und jede kostet mehr als das Entschluesseln selbst — GEMESSEN: 4880
+   * Entschluesselungen kosteten 387 ms, die Schleife um sie herum 1954 ms.
    *
    * ZWEIHUNDERT UND NICHT ALLE AUF EINMAL. `Promise.all` ueber 5000 Eintraege
    * wuerde 5000 Chiffretexte gleichzeitig in den Speicher heben und die
    * WebCrypto-Warteschlange in einem Zug fuellen — auf einem Geraet mit
-   * wenig Speicher (Z3) ist das die falsche Richtung. Die Zahl steht so in
-   * E-S2-16.
+   * wenig Speicher ist das die falsche Richtung.
    *
    * DIE REIHENFOLGE DER ZUWEISUNG BLEIBT DIE DER LISTE: Innerhalb eines
    * Stapels wird gleichzeitig gerechnet, aber Ergebnis j gehoert zu Eintrag j.
@@ -307,13 +299,12 @@
         + markeUnlesbar() + ' gekennzeichnet.';
   }
 
-  /* `hinweisUnlesbar()` liefert seit Web 19.4.2 MARKUP, nicht mehr blossen
-   * Text — wer es einsetzt, nimmt innerHTML. Einziger Aufrufer ist
-   * zeigeUnlesbar() hier in der Datei. `ZEICHEN_UNLESBAR` ist mit dem Zeichen
-   * entfallen; es hatte keinen Aufrufer ausserhalb dieser Datei. */
+  /* `hinweisUnlesbar()` liefert MARKUP, nicht blossen Text — wer es
+   * einsetzt, nimmt innerHTML. Einziger Aufrufer ist zeigeUnlesbar() hier
+   * in der Datei. */
   /* -------------------------------------------------------------------
    * EdPat.listeLaden(liste, o) -- der Auftakt der drei Anzeigeseiten
-   *   (Schritt 15 AP8f, Zaehlzeile Z36)
+   *   (Zaehlzeile Z36)
    *
    * WAS ER UEBERNIMMT, und mehr ist es nicht: den Schluessel holen, das
    * Sperrbanner nach der Regel setzen, entschluesseln, zaehlen. Drei
@@ -378,5 +369,5 @@
 
   window.EdPat = { alterAm, alterAnzeige, alterText, name, datumDe,
                    entschluessle, entschluessleListe, listeLaden,
-                   hinweisUnlesbar, zeigeUnlesbar, markeUnlesbar };
+                   zeigeUnlesbar };
 })();

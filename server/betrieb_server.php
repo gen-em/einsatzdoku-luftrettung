@@ -5,49 +5,39 @@ require_betreiberin();
 require_once __DIR__ . '/speicher_lib.php';
 require_once __DIR__ . '/wartung_lib.php';
 require_once __DIR__ . '/geocoder_lib.php';
-require_once __DIR__ . '/serverkrypto_lib.php';   // Karte „Schlüssel des Servers" (S10)
+require_once __DIR__ . '/serverkrypto_lib.php';   // Karte „Schlüssel des Servers"
 require_once __DIR__ . '/format_lib.php';         // groesse_text(), datum_zeit_text()
 
 /**
- * BETRIEB → SERVEREINSTELLUNGEN (S8/AP2, E-S8-05, E-S8-18; Mockup 07 Fassung 2).
+ * BETRIEB → SERVEREINSTELLUNGEN.
  *
- * WAS HIER STEHT UND WARUM. Die Speichergrenze und die Warnschwellen lagen
- * unter „Backups", zwischen der Erinnerung und der Aufbewahrung. Sie gehoeren
- * nicht dorthin: Sie wirken auf die Konto-Backups UND auf die Komplett-Staende
- * (B-S8-06), und die Komplett-Seite verwies bisher mit einem Satz auf sie. Das
- * war einer der Gruende fuer Nr. 79.
+ * WAS HIER STEHT UND WARUM. Die Speichergrenze und die Warnschwellen
+ * gehoeren nicht unter „Backups": Sie wirken auf die Konto-Backups UND auf
+ * die Komplett-Staende.
  *
- * Jetzt liegen Grenze, Schwellen und Belegung an EINER Stelle — und zwar im
+ * Grenze, Schwellen und Belegung liegen an EINER Stelle — und zwar im
  * Betrieb, wo die uebrigen Einstellungen der Installation stehen. Was je Konto
  * gilt (Erinnerung, Aufbewahrung, Admin-Mail), bleibt bei den Konto-Backups.
  *
  * DIE SEITE IST EINSPALTIG AUF LESEBREITE, auch am Schreibtisch.
  *
- * DIESER ABSATZ HAT SEINE EIGENE BEGRUENDUNG UEBERLEBT, und das wird hier
- * vermerkt statt stillschweigend berichtigt. Er lautete: „Sie traegt zwei
- * Karten, und ein zweispaltiges Raster fuer zwei Karten waere Raster um des
- * Rasters willen (E-S8-18 — Zweispaltigkeit gilt ab mehr als vier Karten)."
- * Seit S8 sind fuenf Karten dazugekommen (Kopfzeilen, Ratenschutz,
- * CSP-Berichte, Schluessel des Servers, Konten), dazu Ankuendigung und
- * Protokoll; es sind ACHT (Stand Web 21.1.0), und die Zahl, die die
- * Einspaltigkeit begruendete, ist ueberschritten.
- *
- * EINSPALTIG BLEIBT SIE TROTZDEM, und zwar bis jemand das Gegenteil mit
+ * Es sind acht Karten. EINSPALTIG BLEIBT SIE TROTZDEM, bis jemand das
+ * Gegenteil mit
  * einem Mockup freigibt (`CLAUDE.md` 5): Die Karten hier sind keine Kacheln,
  * sondern Formulare mit langen Erklaerungstexten — sie leben von der
  * Lesebreite. Zwei Spalten haetten zur Folge, dass ein Hinweissatz, der
  * erklaert, warum eine Zahl nicht unter 15 gesetzt werden sollte, in einer
- * 40-Zeichen-Spalte steht. Der Befund gehoert ins Backlog, nicht in eine
- * stille Aenderung.
+ * 40-Zeichen-Spalte steht. Eine Aenderung daran wird nicht still
+ * gemacht.
  */
 
 $pdo = db();
 $notice = null; $error = null;
-/* Die Rueckfrage zur Demo-Anmeldung (P5b/AP7) — sie entsteht im
+/* Die Rueckfrage zur Demo-Anmeldung — sie entsteht im
  * Konten-Zweig und wird unten in der Karte gezeigt. */
 $demoFrage = false;
 
-/* ---- Ankuendigung und Rundmail (P5c/AP1, E-P5c-13, -55) ------------------
+/* ---- Ankuendigung und Rundmail ------------------
  *
  * EIN FORMULAR, DREI KNOEPFE: Speichern, Rundmail, Entfernen. Die Rundmail
  * SPEICHERT ZUERST, und das ist der Punkt: Was im Feld steht, ist das, was
@@ -96,7 +86,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'speic
     csrf_check();
     $teile = [];
 
-    /* ---- Speichergrenze (E-S2-15, zieht mit S8 hierher) ---------------- */
+    /* ---- Speichergrenze ---------------------------------------- */
     $gb = str_replace(',', '.', trim((string)($_POST['grenze'] ?? '')));
     if (!is_numeric($gb) || (float)$gb <= 0 || (float)$gb > 10000) {
         $error = 'Bitte eine Speichergrenze zwischen 0,1 und 10000 GB angeben.';
@@ -138,7 +128,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'speic
         }
     }
 
-    /* ---- Webspace laut Hosting (neu, E-S8-18) --------------------------- */
+    /* ---- Webspace laut Hosting (neu) --------------------------- */
     if ($error === null) {
         $roh = str_replace(',', '.', trim((string)($_POST['webspace'] ?? '')));
         if ($roh === '') {
@@ -154,7 +144,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'speic
         }
     }
 
-    /* ---- Kontingent der Datenbank (P5a/AP2, E-P5a-11) -------------------
+    /* ---- Kontingent der Datenbank -------------------
      *
      * ANDERS ALS DER WEBSPACE HAT ES EINE VORGABE (10 GB): Das ist die
      * Untergrenze Z2, die diese Anwendung tragen muss — eine Zusage des
@@ -165,7 +155,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'speic
      * Frage im Ruecken. */
     if ($error === null) {
         $roh = str_replace(',', '.', trim((string)($_POST['db_gb'] ?? '')));
-        /* BLEIBT BYTE-DIVISION (Z22, AP7): keine Anzeige, sondern ein
+        /* BLEIBT BYTE-DIVISION (Z22): keine Anzeige, sondern ein
          * Vergleichswert — er geht unten in `abs((float)$roh - $istGb)`
          * und wird nie ausgegeben. */
         $istGb = speicher_db_kontingent_bytes() / (1024 * 1024 * 1024);
@@ -190,7 +180,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'speic
     }
 }
 
-/* ---- Sicherheitskopfzeilen (P5a/AP4, E-P5a-15) ---------------------------
+/* ---- Sicherheitskopfzeilen ---------------------------
  *
  * EIGENES FORMULAR, wie die Adresssuche darunter und aus demselben Grund: Ein
  * Tippfehler in der Speichergrenze soll die CSP nicht mit abweisen.
@@ -223,7 +213,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'kopfz
     }
 }
 
-/* ---- Adresssuche (S9/AP2, E-S9-05, R79; Backlog Nr. 137) ------------------
+/* ---- Adresssuche ------------------
  *
  * EIGENE HANDLUNG, EIGENES FORMULAR. Sie hat mit dem Speicher nichts zu tun,
  * und ein gemeinsames „Speichern" ueber zwei Karten hinweg hiesse, dass ein
@@ -233,13 +223,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'raten
     csrf_check();
     require_once __DIR__ . '/ratelimit_lib.php';
 
-    /* ERST ALLES PRUEFEN, DANN ALLES SPEICHERN (P5a/AP6).
+    /* ERST ALLES PRUEFEN, DANN ALLES SPEICHERN.
      *
      * Die Nachbarkarten auf dieser Seite schreiben Wert fuer Wert und brechen
      * beim ersten Mangel ab — dann steht die Haelfte in der Datenbank und die
      * Meldung „nicht gespeichert" ist zur Haelfte falsch. `admin_installation.php`
-     * macht es seit S8 richtig und schreibt den Grund dazu; hier steht er
-     * wieder, weil es die naechste Karte sonst wieder falsch macht. */
+     * macht es richtig und schreibt den Grund dazu; hier steht er
+     * ebenso, weil es die naechste Karte sonst falsch macht. */
     $neuLeiter = null; $neuLogin = null; $neuLoginIp = null; $neuBremse = null;
 
     $pruefListe = static function (string $roh, int $anzahl, int $minWert,
@@ -303,12 +293,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'raten
     }
 }
 
-/* ---- Protokoll: Frist und Archiv (P5c/AP2, E-P5c-02, -03, -24) ----------
+/* ---- Protokoll: Frist und Archiv ----------
  *
  * ALLES ODER NICHTS, wie bei den Konten darunter: vier Werte, geprüft, dann
  * geschrieben. Was sich geändert hat, steht als EIN Eintrag im Protokoll —
  * Fristen ändern heißt, das Audit kürzer oder länger zu machen, und das
- * gehört selbst ins Audit (E-P5c-02: „Fristen ändern: BetreiberIn,
+ * gehört selbst ins Audit („Fristen ändern: BetreiberIn,
  * protokolliert"). */
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'protokoll') {
     csrf_check();
@@ -363,7 +353,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'geoco
     }
 }
 
-/* Der eine Handgriff der Rueckfrage (P5b/AP7): Demo-Anmeldung abschalten,
+/* Der eine Handgriff der Rueckfrage: Demo-Anmeldung abschalten,
  * ohne das ganze Formular noch einmal zu schicken. Eigener `action`, weil er
  * eine eigene Handlung ist — dieselbe Ordnung wie bei den Schluesseln. */
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'demo_aus') {
@@ -379,7 +369,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'demo_
             . 'bleibt; ein Umlegen des Schalters macht es sofort wieder zugänglich.';
 }
 
-/* ---- Konten: Registrierung, Fristen, Grenzen (P5b/AP1, E-P5b-14) --------
+/* ---- Konten: Registrierung, Fristen, Grenzen --------
  *
  * EINE KARTE, EIN FORMULAR, ALLES ODER NICHTS. Der Ratenschutz darueber hat
  * es vorgemacht und den Grund mitgeschrieben: Wer Wert fuer Wert schreibt und
@@ -387,16 +377,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'demo_
  * eine Meldung „nicht gespeichert", die zur Haelfte falsch ist. Hier steht es
  * wieder so — erst alles pruefen, dann alles schreiben.
  *
- * WAS IN DIESEM PAKET NOCH KEINEN VERBRAUCHER HAT, steht trotzdem schon hier:
- * Betriebsart, Freischaltfrist, Wegwerfadressen, Mengengrenzen und die
- * Aufbewahrung je Konto wirken erst mit AP3 bzw. AP6. Das Konzept sagt es so
- * (AP1: „alle Felder, noch ohne Verbraucher ausser Demo-Anmeldung"), und der
- * Grund ist die Reihenfolge: Die Registrierung liest ihre Betriebsart aus
- * `app_state`, und eine Einstellung, die es beim Bauen der Registrierung noch
- * nicht gibt, wird beim Bauen erfunden — an einer zweiten Stelle, mit einer
- * zweiten Vorgabe.
+ * ALLE WERTE STEHEN HIER, auch die, deren Verbraucher anderswo sitzen
+ * (Registrierung, Eingang, Konto-Backups): Eine Einstellung, die es beim
+ * Bauen eines Verbrauchers noch nicht gibt, wird beim Bauen erfunden — an
+ * einer zweiten Stelle, mit einer zweiten Vorgabe.
  *
- * DIE VORGABE DER BETRIEBSART IST „nur auf Einladung" (E-P5b-01), und das ist
+ * DIE VORGABE DER BETRIEBSART IST „nur auf Einladung", und das ist
  * nicht die Vorgabe, die nadoku selbst fahren wird. Sie ist die sicherste
  * Grundstellung fuer eine Selbsthosterin, die die Seite nie aufschlaegt —
  * heutiges Verhalten, keine offene Tuer durch Untaetigkeit.
@@ -474,14 +460,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'konte
         }
     }
 
-    /* ---- Demo-Anmeldung (der einzige Wert mit Verbraucher in AP1) ------- */
+    /* ---- Demo-Anmeldung ------------------------------------------------ */
     if ($error === null) {
         $neu[KONTEN_K_DEMO_ANMELDUNG] = empty($_POST['demo_anmeldung']) ? '0' : '1';
     }
 
-    /* Die Protokollfrist stand bis Web 20.38.0 hier. Seit P5c/AP2 hat sie
-     * eine eigene Karte, zusammen mit dem Archiv — und wird protokolliert,
-     * was sie hier nie wurde (`konten_einstellungen()` kannte sie nicht). */
+    /* Die Protokollfrist steht nicht hier: Sie hat eine eigene Karte,
+     * zusammen mit dem Archiv — und wird protokolliert. */
 
     if ($error === null) {
         $vorher = konten_einstellungen();
@@ -508,7 +493,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'konte
                 . $neu[KONTEN_K_GRENZE_EINSAETZE] . ' Einsätze / '
                 . $neu[KONTEN_K_GRENZE_MB] . ' MB je Konto.';
 
-        /* DIE RUECKFRAGE ZUR DEMO-ANMELDUNG (P5b/AP7, E-P5b-07).
+        /* DIE RUECKFRAGE ZUR DEMO-ANMELDUNG.
          *
          * Nur beim WECHSEL auf „nur auf Einladung" und nur, solange die
          * Demo-Anmeldung noch an ist. Wer die Tuer schliesst, hat meist auch
@@ -516,8 +501,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'konte
          * geschlossen sein und trotzdem ein Demo-Konto zum Vorzeigen haben.
          * Deshalb gefragt und nicht getan.
          *
-         * ALS ANGEBOT UND NICHT ALS BESTAETIGUNGSDIALOG. Das Konzept sagt
-         * „fragt die Seite einmal"; `data-confirm` (der vorhandene
+         * ALS ANGEBOT UND NICHT ALS BESTAETIGUNGSDIALOG. „Die Seite fragt
+         * einmal"; `data-confirm` (der vorhandene
          * Rueckfrage-Baustein) kann aber nur ja/nein ZUM ABSENDEN, nicht
          * „und schalte dabei noch etwas anderes ab". Ein Dialog, der das
          * koennte, waere ein NEUER Baustein und braeuchte eine Freigabe mit
@@ -532,12 +517,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'konte
     }
 }
 
-/* ---- Die Schlüssel des Servers (S10, E-S10-10 bis E-S10-12) -------------
+/* ---- Die Schlüssel des Servers -------------
  *
  * SECHS HANDGRIFFE, EIN FORMULARZWEIG. Sie stehen hier und nicht auf
  * „Backup-Ziele", weil sie die INSTALLATION betreffen und nicht die
  * Sicherung: Der Server-Anteil geht in den Datenschlüssel jedes Kontos ein,
- * mit Backups hat er nichts zu tun. Das Ordnungsprinzip ist R74/E-S8-12 —
+ * mit Backups hat er nichts zu tun. Das Ordnungsprinzip:
  * was alle trifft, steht im Betrieb.
  *
  * JEDER GRIFF IST EINE EIGENE HANDLUNG mit eigenem `action`, so wie Speicher
@@ -551,7 +536,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'konte
  */
 if ($_SERVER['REQUEST_METHOD'] === 'POST'
     && str_starts_with((string)($_POST['action'] ?? ''), 'schluessel_')) {
-    /* EIN FRISCHER CODE VOR JEDEM GRIFF (Schritt 18, SR-07, E-SR-20) — ein
+    /* EIN FRISCHER CODE VOR JEDEM GRIFF — ein
      * Aufruf fuer alle zehn (seit SR-03 mit den drei des Serverschluessels),
      * vor dem Token wie ein Rollentor. Ein
      * gemerkter, unbeaufsichtigter Rechner soll fuer einen Schluesselwechsel
@@ -608,8 +593,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST'
         $error  = $ok ? null : $was;
 
     } elseif ($aktion === 'schluessel_sk_wechseln') {
-        /* DER WECHSEL DES SERVERSCHLUESSELS (SR-03, Nr. 247). Der Haken ist
-         * Pflicht und wird in der Funktion geprueft (E-SR-63). Danach gleich
+        /* DER WECHSEL DES SERVERSCHLUESSELS. Der Haken ist
+         * Pflicht und wird in der Funktion geprueft. Danach gleich
          * ein Haeppchen mit dem Budget dieser Seite — die Zeilen (Zugaenge,
          * Zweitfaktor-Geheimnisse) sind dann meist schon umgehuellt, bevor
          * die Seite wieder dasteht. */
@@ -672,12 +657,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST'
     }
 }
 
-/* ---- Anmeldung: „Gerät merken" (Schritt 18, SR-02, E-SR-17) --------------
+/* ---- Anmeldung: „Gerät merken" --------------
  *
  * ZWEI ZAHLEN, KEINE DRITTE. Eine fuer NutzerInnen (Vorgabe 30 Tage), eine
  * fuer Support, Admin und BetreiberIn (Vorgabe 7) — die Verwaltung soll
  * kuerzer laufen als der Dienst. Keine persoenliche Wahl im Profil: Eine
- * Einstellung, die kaum jemand aendert, kostet nur Pflege (Q-SR-10).
+ * Einstellung, die kaum jemand aendert, kostet nur Pflege.
  *
  * GERECHNET WIRD BEIM PRUEFEN, nicht beim Merken (`totp_lib.php`): Wer hier
  * von 30 auf 7 Tage geht, meldet jedes aeltere Geraet sofort ab, und „aus"
@@ -716,19 +701,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'anmel
     }
 }
 
-/* ---- UMLEITEN NACH DEM POST (Schritt 18, SR-02, Backlog Nr. 250, E-SR-37) --
+/* ---- UMLEITEN NACH DEM POST --
  *
  * JEDER ERFOLG DIESER SEITE LEITET UM, mit `flash_setzen()` und dem Ort der
- * Karte, in der geklickt wurde — der Weg aus R4-11. Bis Web 21.7.0 gab die
- * Seite ihr POST-Ergebnis selbst aus, und „Neu laden" schickte die Handlung
+ * Karte, in der geklickt wurde — wie auf den anderen Seiten. Gaebe die
+ * Seite ihr POST-Ergebnis selbst aus, schickte „Neu laden" die Handlung
  * noch einmal: einen zweiten Schluesselwechsel, eine zweite Rundmail.
  *
  * EINE STELLE UND NICHT ZEHN. Die Zweige oben setzen weiter `$notice` und
  * `$error`; hier entscheidet sich, ob umgeleitet wird. Eine abgewiesene
- * Eingabe bleibt stehen — die Seite zeigt das Getippte wieder (E-R4-35).
+ * Eingabe bleibt stehen — die Seite zeigt das Getippte wieder.
  * Die Rundmail ist der eine Zweig, in dem auch ein Fehlschlag ein ERGEBNIS
  * ist: Die Ankuendigung ist dann schon gespeichert, und ein Neuladen haette
- * den Versand wiederholt (E-R4-34) — sie leitet deshalb auch mit `fehler` um.
+ * den Versand wiederholt — sie leitet deshalb auch mit `fehler` um.
  *
  * DIE RUECKFRAGE ZUR DEMO-ANMELDUNG reist in den Daten der Meldung mit
  * (`demo_frage`), statt die Umleitung aufzuhalten. */
@@ -744,14 +729,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $bsRundmailFehler = $bsAktion === 'rundmail' && $error !== null && $ankForm === null;
     /* „Jetzt weiterarbeiten" ist eine Handlung mit Ergebnis, keine abgewiesene
      * Eingabe — auch ein Fehlschlag wird umgeleitet, sonst schickte F5 den
-     * POST noch einmal (H-SR-06, F-SR-82; dieselbe Linie wie die Rundmail,
-     * E-R4-34). */
+     * POST noch einmal (dieselbe Linie wie die Rundmail). */
     $bsWeiterFehler = $bsAktion === 'schluessel_sk_weiter' && $error !== null;
     if ($bsOrt !== '' && (($notice !== null && $error === null) || $bsRundmailFehler
                           || $bsWeiterFehler)) {
         flash_setzen($error === null ? 'ok' : 'fehler', (string)($error ?? $notice), $bsOrt,
                      $demoFrage ? ['demo_frage' => true] : []);
-        /* 302 wie die elf Seiten aus R4-11, nicht 303: Ein Muster, und die
+        /* 302 wie die anderen Seiten, nicht 303: Ein Muster, und die
          * Rollenprobe misst es fuer alle mit derselben Zeile. */
         header('Location: betrieb_server.php#' . $bsOrt);
         exit;
@@ -785,9 +769,9 @@ $anZaehlung = anteil_zaehlung();
  * einer, damit kein Hexwert und kein Token in das Markup wandert
  * (`CLAUDE.md` 5).
  *
- * BIS WEB 20.6.0 STAND DIE BREITE ALS STILATTRIBUT AM ELEMENT. Ein
- * Stilattribut im Markup faellt unter `style-src` der CSP (P5a/AP4,
- * E-P5a-15); `el.style.width = …` faellt als CSSOM gar nicht darunter. Die
+ * DIE BREITE STEHT NICHT ALS STILATTRIBUT AM ELEMENT. Ein
+ * Stilattribut im Markup faellt unter `style-src` der CSP;
+ * `el.style.width = …` faellt als CSSOM gar nicht darunter. Die
  * drei Zeilen am Ende dieser Seite setzen die Breite deshalb nach dem
  * Aufbau. Ohne Skript bleibt der Balken leer — die Zahlen darunter in der
  * Legende stehen trotzdem, und das ist die Auskunft, auf die es ankommt.
@@ -808,7 +792,7 @@ function speicher_balken(array $teile, int $bezug, array $schwellen): string
 
     $h = '<div class="speicher-balken">';
     foreach ($teile as $t) {
-        /* BLEIBT HANDRECHNUNG (Z23, AP7): Das ist eine CSS-LAENGE, kein
+        /* BLEIBT HANDRECHNUNG (Z23): Das ist eine CSS-LAENGE, kein
          * Prozenttext. Sie rundet bewusst gar nicht — `data-breite` traegt
          * unten drei Nachkommastellen, `prozent_wert()` gaebe eine ganze
          * Zahl und liesse den Balken sichtbar springen. */
@@ -822,7 +806,7 @@ function speicher_balken(array $teile, int $bezug, array $schwellen): string
      * Balken, und der Balken ist ein Flex-Behälter. */
     if ($bezug > 0 && $schwellen) {
         $erste  = (int)min($schwellen);
-        /* BLEIBT HANDRECHNUNG (Z23, AP7): CSS-Laenge wie oben — die
+        /* BLEIBT HANDRECHNUNG (Z23): CSS-Laenge wie oben — die
          * Differenz `$erste - $bisher` wird ungerundet zur Breite der
          * Luecke vor dem Schwellenstrich. */
         $bisher = $nenner > 0 ? $summe * 100 / $nenner : 0;
@@ -852,7 +836,7 @@ function speicher_balken(array $teile, int $bezug, array $schwellen): string
 ui_seite_start(['titel' => 'Servereinstellungen']);
 ?>
 
-<?php /* Lesespalte (E-S8-18, Mockup 07) — damals zwei Karten mit viel
+<?php /* Lesespalte — damals zwei Karten mit viel
          Erklärtext; heute acht mit je einem Satz, einspaltig aus dem Grund
          im Kopf dieser Datei. */ ?>
 <?php ui_geruest_start(['aktiv' => 'einstellungen', 'leiste' => 'einstellungen',
@@ -865,7 +849,7 @@ ui_seite_start(['titel' => 'Servereinstellungen']);
   <?php if ($error !== null): ?><?= ui_meldung_markup('fehler', $error) ?><?php endif; ?>
 
 
-  <?php /* ---- Ankündigung (P5c/AP1, E-P5c-13, -55; Bild M-P5c-02 a) ---------
+  <?php /* ---- Ankündigung ---------
        ZUOBERST, wie im freigegebenen Bild: Sie ist die Karte, für die eine
        BetreiberIn diese Seite am häufigsten aufschlägt, und sie ist kurz.
        Die Schlüssel folgen unmittelbar darunter — ihre rote Lage steht
@@ -875,8 +859,8 @@ ui_seite_start(['titel' => 'Servereinstellungen']);
        Rückfrage hängt deshalb am Rundmail-KNOPF und nicht am Formular
        (confirm.js: „Wenn EIN Formular mehrere Absendeknöpfe hat …").
 
-       DER BYTEZÄHLER zählt Byte, nicht Zeichen — `app_state` fasst 190
-       (E-P5c-55). Den ersten Stand rechnet der Server, das Mitzählen
+       DER BYTEZÄHLER zählt Byte, nicht Zeichen — `app_state` fasst 190.
+       Den ersten Stand rechnet der Server, das Mitzählen
        `assets/ankuendigung.js`; ohne Skript steht der Stand beim Laden. */ ?>
   <?php
     $ankGesp = ankuendigung_gespeichert();
@@ -921,7 +905,7 @@ ui_seite_start(['titel' => 'Servereinstellungen']);
       <?php ui_feld(['name' => 'ank_bis', 'label' => 'Sichtbar bis', 'art' => 'date',
           'wert' => $ankWert['tag']]); ?>
       <?php /* Textfeld mit der Klasse `zeitfeld` statt type="time" — native
-               Zeitfelder zeigen je nach Systemsprache AM/PM (E1); die Maske
+               Zeitfelder zeigen je nach Systemsprache AM/PM; die Maske
                haengt an der Klasse (assets/zeitfeld.js). */ ?>
       <div class="feld">
         <label class="feld-label" for="f-ank_bis_zeit">Uhrzeit
@@ -948,7 +932,7 @@ ui_seite_start(['titel' => 'Servereinstellungen']);
                         'name' => 'action', 'wert' => 'ankuendigung_weg']) ?>
         <?php endif; ?>
       </div>
-      <?php /* EINE WERTANZEIGE, KEIN SATZ (P5c/AP9): Die Regel „höchstens eine
+      <?php /* EINE WERTANZEIGE, KEIN SATZ: Die Regel „höchstens eine
                je Tag" steht im einen Satz der Karte oben. */ ?>
       <p class="feld-klein"><?= $rundZuletzt !== null && $rundZuletzt !== ''
           ? 'Letzte Rundmail: ' . e(datum_zeit_text($rundZuletzt))
@@ -956,8 +940,8 @@ ui_seite_start(['titel' => 'Servereinstellungen']);
     </form>
   <?php ui_karte_ende(); ?>
 
-  <?php /* ---- Die Schlüssel des Servers (S10, E-S10-12) -------------------
-       SIE STEHT VOR DEM SPEICHER (seit P5c unter der Ankündigung). Die
+  <?php /* ---- Die Schlüssel des Servers -------------------
+       SIE STEHT VOR DEM SPEICHER (unter der Ankündigung). Die
        übrigen Karten dieser Seite melden Einstellungen; diese hier kann
        melden, dass sich niemand mehr anmelden kann. Eine rote Zeile unter einem Speicherbalken wird später
        gesehen als eine darüber.
@@ -972,10 +956,10 @@ ui_seite_start(['titel' => 'Servereinstellungen']);
      * `.plakette-blau`, `-neutral`, `-orange` und `-rot` — nachgezaehlt am
      * 14.09.2026. Ein `'ton' => 'ok'` ergibt eine Klasse ohne Regel, also
      * eine ungestaltete Plakette, und zwar ohne jede Fehlermeldung. Zwei
-     * Stellen im Bestand tun das schon (F-15). */
+     * Stellen im Bestand tun das schon. */
     $skTon = ['bereit' => 'blau', 'rotation' => 'blau', 'fehlt' => 'rot',
               'abweichend' => 'rot'][$skZustand['stand']] ?? 'neutral';
-    /* DER WECHSEL DES SERVERSCHLUESSELS (SR-03): Zustand des Jobs und die drei
+    /* DER WECHSEL DES SERVERSCHLUESSELS: Zustand des Jobs und die drei
      * Bedingungen vor dem Entfernen — aus derselben Quelle wie der Riegel in
      * `serverschluessel_alt_entfernen()`, damit Karte und Funktion nicht
      * zweierlei sagen. Nur waehrend eines Wechsels geladen. */
@@ -1019,8 +1003,7 @@ ui_seite_start(['titel' => 'Servereinstellungen']);
                   . $skZustand['kennung_alt'] . ' — versiegelt wird mit dem neuen, der '
                   . 'bisherige öffnet, was noch nicht umgehüllt ist'
             : ($skZustand['stand'] === 'fehlt'
-                /* EIN SATZ (E-P5c-06): „Fehlt. Ohne ihn …" waren zwei
-                   (Endzählung AP9, die einzige Kleinzeile über dem Soll). */
+                /* EIN SATZ: „Fehlt. Ohne ihn …" wären zwei. */
                 ? 'Fehlt — ohne ihn entsteht kein Komplett-Backup, kein '
                   . 'Konto-Backup und kein Versand auf ein Backup-Ziel'
                 : 'In config.php steht Kennung '
@@ -1043,9 +1026,9 @@ ui_seite_start(['titel' => 'Servereinstellungen']);
                   . $anZustand['kennung_alt'] . ' — beide werden ausgeliefert, '
                   . 'bis kein Konto mehr auf dem alten steht'
                 : ($anZustand['stand'] === 'fehlt'
-                    /* Kein Konzeptname im sichtbaren Text (C-4): „wie vor
-                       S10" hieß für niemanden etwas; die Statusseite sagt
-                       dasselbe mit der Fassung. */
+                    /* Kein Konzeptname im sichtbaren Text — er hieße für
+                       niemanden etwas; die Statusseite sagt dasselbe mit
+                       der Fassung. */
                     ? 'Nicht eingerichtet — alles läuft wie vor Web 20.0.0, nur '
                       . 'der Schutz gegen einen Datenbankabzug fehlt'
                     : 'In config.php steht Kennung '
@@ -1074,12 +1057,12 @@ ui_seite_start(['titel' => 'Servereinstellungen']);
           if ($anZaehlung['demo'] > 0) {
               $teile[] = 'das Demo-Konto bleibt ohne Anteil und zählt nicht mit';
           }
-          /* EIN SATZ JE KLEINZEILE (P5c/AP9): Dass der alte Anteil erst weg
-             darf, wenn kein Konto mehr auf ihm steht, stand bis Web 21.0.0 als
-             eigener Absatz unter den Knöpfen und steht jetzt hier. */
-          /* DREI LAGEN, NICHT ZWEI (C-5): Ist nichts mehr offen, stellt auch
-             niemand mehr um — bis Web 21.1.0 stand dann trotzdem „jedes Konto
-             stellt beim nächsten Anmelden von selbst um". */
+          /* EIN SATZ JE KLEINZEILE: Dass der alte Anteil erst weg
+             darf, wenn kein Konto mehr auf ihm steht, steht hier und nicht als
+             eigener Absatz unter den Knöpfen. */
+          /* DREI LAGEN, NICHT ZWEI: Ist nichts mehr offen, stellt auch
+             niemand mehr um; „jedes Konto stellt beim nächsten Anmelden von
+             selbst um" wäre dann falsch. */
           $umstellungRest = ($anZustand['kennung_alt'] !== null && $anZaehlung['alt'] > 0)
               ? ' — der alte Anteil bleibt, bis kein Konto mehr auf ihm steht'
               : ($anOffen > 0
@@ -1094,26 +1077,26 @@ ui_seite_start(['titel' => 'Servereinstellungen']);
           ]);
       }
 
-      /* DER WECHSEL DES SERVERSCHLÜSSELS IN DREI ZEILEN (SR-03, E-SR-15: die
+      /* DER WECHSEL DES SERVERSCHLÜSSELS IN DREI ZEILEN (die
          Lage `rotation` mit Zählung wie beim Anteil, kein neuer Baustein):
          wie weit das Umhüllen ist, was vor dem Entfernen noch fehlt, und —
          nur wenn es sie gibt — die Stücke, die mit keinem der beiden
-         aufgehen (E-SR-61). */
+         aufgehen. */
       if ($swB !== null) {
           $swRest   = sw_rueckstand($swZ);
           /* Ein Zustand, der zu einem anderen Schlüsselpaar gehört, zählt wie
-             keiner — das Häppchen legt einen neuen an (F-SR-80). */
+             keiner — das Häppchen legt einen neuen an. */
           $swPhase  = sw_zustand_passt($swZ, $skZustand) ? (string)($swZ['phase'] ?? '') : '';
           $swGesamt = (int)($swZ['gesamt'] ?? 0);
           /* Warf das Inventar beim Beginn, ist noch nichts gezählt — nicht
-             „noch 0 von 0" (Nachmessung H-SR-06, F-SR-88). */
+             „noch 0 von 0". */
           $swNoch = sw_gezaehlt($swZ) ? 'noch ' . (int)$swRest . ' von ' . $swGesamt
                                       : 'die Zahl der Stücke zählt das erste Häppchen';
           $swWartet = $swPhase === '' ? null : sw_nachweis_wartet($swZ);
-          /* OHNE AUSLÖSER GEHEN DATEIEN NUR MIT DEM KNOPF VORAN (H-SR-06,
-             F-SR-82): Am Huckepack-Weg (3 s) fängt der Job keine Datei an.
+          /* OHNE AUSLÖSER GEHEN DATEIEN NUR MIT DEM KNOPF VORAN: Am
+             Huckepack-Weg (3 s) fängt der Job keine Datei an.
              Ein Halbsatz, kein zweiter Satz — eine Kleinzeile bleibt eine
-             Zeile (Design.md, Nachprüfung H-SR-06, F-SR-87). */
+             Zeile (Design.md). */
           $swWeiter = '; der Job arbeitet in Häppchen weiter, Konto-Backups und Archive nur '
                     . 'mit eingerichtetem Auslöser oder über „Jetzt weiterarbeiten"';
           ui_zeile([
@@ -1152,11 +1135,11 @@ ui_seite_start(['titel' => 'Servereinstellungen']);
                 : implode(' ', $swB['fehlt']),
             'plaketten' => ui_plakette($swErfuellt . ' von 3', ['ton' => 'blau']),
           ]);
-          /* STÜCKE, DIE BEIM UMHÜLLEN WARFEN (H-SR-06, F-SR-81): Sie liegen
+          /* STÜCKE, DIE BEIM UMHÜLLEN WARFEN: Sie liegen
              noch unter dem bisherigen und halten Bedingung 1 zu. */
           $swFehler = array_values((array)($swZ['fehler'] ?? []));
-          /* Über der Decke von 20 zählt der Job weiter, nennt aber nicht
-             (Nachprüfung H-SR-06, F-SR-85). */
+          /* Über der Decke von 20 zählt der Job weiter, nennt aber nicht.
+             */
           $swFehlerMehr = sw_fehler_zahl($swZ) - count($swFehler);
           if ($swFehler !== []) {
               ui_zeile([
@@ -1229,7 +1212,7 @@ ui_seite_start(['titel' => 'Servereinstellungen']);
       <?php endif; ?>
       <?php if (in_array($anZustand['stand'], ['bereit', 'rotation'], true)
                 && $anZustand['kennung_alt'] === null
-                && $skZustand['stand'] !== 'rotation'): ?><?php /* E-SR-60: nicht
+                && $skZustand['stand'] !== 'rotation'): ?><?php /* nicht
                 neben einem Wechsel des Serverschlüssels */ ?>
         <form method="post" action="betrieb_server.php"
               data-confirm="Den Server-Anteil wechseln? Der bisherige bleibt stehen, bis kein Konto mehr auf ihm steht — die Umstellung läuft je Konto beim nächsten Anmelden. Danach ist ein NEUES Schlüsselblatt zu drucken; das alte gilt nicht mehr."
@@ -1239,7 +1222,7 @@ ui_seite_start(['titel' => 'Servereinstellungen']);
         </form>
       <?php endif; ?>
       <?php /* An DENSELBEN Größen wie die Zeile „Umhüllung" — sonst versprach
-               ihr Text einen Knopf, der fehlte (Nachprüfung H-SR-06, F-SR-87). */ ?>
+               ihr Text einen Knopf, der fehlte. */ ?>
       <?php if ($swB !== null && $swPhase !== 'fertig' && $swWartet === null): ?>
         <form method="post" action="betrieb_server.php">
           <?= csrf_field() ?><input type="hidden" name="action" value="schluessel_sk_weiter">
@@ -1265,16 +1248,15 @@ ui_seite_start(['titel' => 'Servereinstellungen']);
     </div>
 
 
-    <?php /* ---- Serverschlüssel wechseln (SR-03, E-SR-60, E-SR-63) ---------
+    <?php /* ---- Serverschlüssel wechseln ---------
              Nur aus `bereit` und nicht neben einer Anteil-Rotation — die
              Riegel stehen in `serverschluessel_wechseln()`, hier nur, damit
              kein Knopf dasteht, der sicher abgewiesen wird. Der Haken ist
              Pflicht und wird in der Funktion geprüft: Der Vorgang sagt beim
-             Start, was er nicht erreicht (E-SR-10). */ ?>
+             Start, was er nicht erreicht. */ ?>
     <?php if ($skZustand['stand'] === 'bereit' && $anZustand['stand'] !== 'rotation'): ?>
       <?php /* `.listen-form`: durch eine Linie von den Knöpfen darüber
-               abgesetzt — ohne sie klebte die Überschrift am Knopffuß (Bild
-               zu P-SR-05, F-SR-73). */ ?>
+               abgesetzt — ohne sie klebte die Überschrift am Knopffuß. */ ?>
       <form method="post" action="betrieb_server.php" class="listen-form"
             data-confirm="Den Serverschlüssel wechseln? Die Anlage hüllt danach in Häppchen um, was sie erreicht. Was auf dem Backup-Ziel liegt, bleibt unter dem bisherigen — das bisherige Blatt NICHT vernichten. Danach ein neues Blatt drucken."
             data-confirm-ok="Wechseln" data-confirm-tone="normal">
@@ -1291,7 +1273,7 @@ ui_seite_start(['titel' => 'Servereinstellungen']);
       </form>
     <?php endif; ?>
 
-    <?php /* ---- Nachtragen vom Blatt (E-S10-10) -------------------------- */ ?>
+    <?php /* ---- Nachtragen vom Blatt -------------------------- */ ?>
     <?php if ($skZustand['stand'] === 'abweichend' || $anZustand['stand'] === 'abweichend'): ?>
       <h3 class="listen-form-titel">Nachtragen vom Blatt</h3>
       <?php foreach ([
@@ -1328,7 +1310,7 @@ ui_seite_start(['titel' => 'Servereinstellungen']);
       <?php endforeach; ?>
     <?php endif; ?>
 
-    <?php /* ---- Neuanfang (E-S10-09, Zustand „Neuanfang") ---------------- */ ?>
+    <?php /* ---- Neuanfang (Zustand „Neuanfang") ---------------- */ ?>
     <?php if ($anZustand['stand'] === 'abweichend'): ?>
       <h3 class="listen-form-titel">Neuanfang <span class="feld-klein-inline">nur, wenn der Wert unwiederbringlich weg ist</span></h3>
       <div class="listen-form-fuss">
@@ -1399,7 +1381,7 @@ ui_seite_start(['titel' => 'Servereinstellungen']);
     <form method="post" action="betrieb_server.php">
       <?= csrf_field() ?><input type="hidden" name="action" value="speicher">
       <div class="fld-reihe">
-        <?php /* DIE DREI FORMULARWERTE BLEIBEN BYTE-DIVISION (Z22, AP7) — und
+        <?php /* DIE DREI FORMULARWERTE BLEIBEN BYTE-DIVISION (Z22) — und
                  zwar mit PUNKT als Dezimaltrenner. Derselbe POST-Zweig oben liest
                  sie mit `is_numeric()` und `(float)` wieder ein (Zeilen 54/55,
                  97/103, 121/132); `groesse_text()` schriebe „2,00 GB", und das
@@ -1437,7 +1419,7 @@ ui_seite_start(['titel' => 'Servereinstellungen']);
     </form>
 
     <?php
-      /* ---- Ablage und Reste: rein lesend (AB-08, zieht mit S8 hierher) --- */
+      /* ---- Ablage und Reste: rein lesend ------------------------- */
       ui_zeile([
         'text'  => 'Ablage',
         'klein' => (string)$sp['ablage']['pfad'],
@@ -1462,7 +1444,7 @@ ui_seite_start(['titel' => 'Servereinstellungen']);
     ?>
   <?php ui_karte_ende(); ?>
 
-  <?php /* ---- Sicherheitskopfzeilen (P5a/AP4, E-P5a-15, Backlog Nr. 8) --
+  <?php /* ---- Sicherheitskopfzeilen --
            Sie steht zwischen Speicher und Adresssuche: naeher an „was der
            Server tut" als an „was er speichert". */ ?>
   <?php
@@ -1515,11 +1497,11 @@ ui_seite_start(['titel' => 'Servereinstellungen']);
     <?php endif; ?>
   <?php ui_karte_ende(); ?>
 
-  <?php /* ---- Konten (P5b/AP1, E-P5b-14) ---------------------------------
+  <?php /* ---- Konten ---------------------------------
      *
      * VOR dem Ratenschutz und nach den Kopfzeilen: Was diese Installation
      * mit Konten TUT, steht vor dem, womit sie sich WEHRT. Beides gehoert
-     * auf diese Seite (R74/E-S8-12 — was alle trifft, steht im Betrieb),
+     * auf diese Seite (was alle trifft, steht im Betrieb),
      * aber die Betriebsart ist die Frage, die eine BetreiberIn zuerst
      * stellt.
      * ------------------------------------------------------------------- */ ?>
@@ -1541,7 +1523,7 @@ ui_seite_start(['titel' => 'Servereinstellungen']);
                FORMULAR steckt; der Baustein nimmt nur fertiges Markup fuer
                den Knopf, kein Formular darum.
 
-               DER TON HEISST `info` UND NICHT `blau` (Backlog Nr. 226).
+               DER TON HEISST `info` UND NICHT `blau`.
                Genau dieser Fehler stand hier: Die Toene sind
                `fehler, warn, ok, info, schutz`, und `meldung-blau` hat keine
                Regel im Stylesheet — der Kasten stand ungestaltet da, ohne
@@ -1619,11 +1601,11 @@ ui_seite_start(['titel' => 'Servereinstellungen']);
     </form>
   <?php ui_karte_ende(); ?>
 
-  <?php /* ---- Anmeldung (Schritt 18, SR-02, E-SR-15, -17; Q-SR-01, -10) -----
+  <?php /* ---- Anmeldung -----
      *
      * NACH DEN KONTEN: Wie lange ein Browser als bekannt gilt, ist eine Frage
      * an die Konten dieser Installation, keine an die Abwehr darunter. Aus
-     * vorhandenen Bausteinen (E-SR-15): zwei Auswahlfelder, ein Knopf.
+     * vorhandenen Bausteinen: zwei Auswahlfelder, ein Knopf.
      * ------------------------------------------------------------------- */
         require_once __DIR__ . '/totp_lib.php';
         $zfTageText = static fn(int $t): string => $t === 0 ? 'aus' : $t . ($t === 1 ? ' Tag' : ' Tage');
@@ -1660,9 +1642,8 @@ ui_seite_start(['titel' => 'Servereinstellungen']);
     </form>
   <?php ui_karte_ende(); ?>
 
-  <?php /* ---- Protokoll: Frist und Archiv (P5c/AP2, E-P5c-02, -03, -24) ----
-           Die Frist der Verwaltungseinträge stand bis Web 20.38.0 in der
-           Karte „Konten". Sie gehört zu dem, was sie begrenzt: dem
+  <?php /* ---- Protokoll: Frist und Archiv ----
+           Die Frist der Verwaltungseinträge gehört zu dem, was sie begrenzt: dem
            Protokoll und seinem Archiv. Gelesen wird das Protokoll unter
            Verwaltung → Protokoll; hier steht, wie lange es liegt. */
         require_once __DIR__ . '/protokoll_archiv_lib.php';
@@ -1705,11 +1686,11 @@ ui_seite_start(['titel' => 'Servereinstellungen']);
     </form>
   <?php ui_karte_ende(); ?>
 
-  <?php /* ---- Ratenschutz (P5a/AP6, E-P5a-04 bis -07) --------------------
+  <?php /* ---- Ratenschutz --------------------
            Sie steht NEBEN den Sicherheitskopfzeilen, weil beide dieselbe Frage
            beantworten: Was haelt jemanden auf, der es von aussen versucht?
            Die LISTE der laufenden Sperren steht bewusst NICHT hier, sondern
-           kommt nach Status -> Sicherheit (E-P5a-08, Mockup M-P5a-01) — wer
+           kommt nach Status -> Sicherheit — wer
            sie jetzt hier baut, baut sie zweimal. */ ?>
   <?php require_once __DIR__ . '/ratelimit_lib.php'; ?>
   <?php $vBr = rate_verlangsamung(true); ?>
@@ -1780,10 +1761,10 @@ ui_seite_start(['titel' => 'Servereinstellungen']);
     <?php endif; ?>
   <?php ui_karte_ende(); ?>
 
-  <?php /* ---- Adresssuche (S9/AP2, E-S9-05, R79) ------------------------
+  <?php /* ---- Adresssuche ------------------------
            Sie steht im Betrieb und nicht in den Kontoeinstellungen, weil sie
            die Installation betrifft: Wer sie hier abschaltet, schaltet sie
-           fuer alle ab (R74 (1) — BetreiberIn, trifft alle). Der Kontoschalter
+           fuer alle ab (BetreiberIn, trifft alle). Der Kontoschalter
            daneben steht im Profil und kann nur noch einschraenken. */ ?>
   <?php ui_karte_start(['titel' => 'Adresssuche', 'id' => 'k-adresssuche',
       'plakette' => geocoder_installation_an()
@@ -1813,7 +1794,7 @@ ui_seite_start(['titel' => 'Servereinstellungen']);
     </form>
   <?php ui_karte_ende(); ?>
 
-<?php /* DIE BALKENBREITEN — nach dem Aufbau, nicht im Markup (P5a/AP4).
+<?php /* DIE BALKENBREITEN — nach dem Aufbau, nicht im Markup.
          Siehe `speicher_balken()` oben: Ein `style`-Attribut faellt unter
          `style-src` der CSP, `el.style.width` nicht. Der Block traegt den
          Nonce der Anfrage. */ ?>

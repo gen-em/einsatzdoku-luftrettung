@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 /**
  * Schemaprobe — laeuft `schema.sql` und der Migrationskatalog auf der
- * Datenbank, gegen die sie laufen sollen? (Backlog Nr. 238)
+ * Datenbank, gegen die sie laufen sollen?
  *
  * WOGEGEN. Am 20.09.2026 scheiterte die Einrichtung auf dem neuen
  * Staging-Webspace mit `SQLSTATE[42000] … 1064 … near 'manual TINYINT(1) NOT
@@ -15,7 +15,7 @@ declare(strict_types=1);
  * BEIDE HATTEN DIESELBE URSACHE, und sie ist nicht SQL: Entwickelt und
  * geprueft wird gegen MariaDB, ausgeliefert wird gegen MySQL. MariaDB nimmt
  * beide Schreibweisen an und haelt MANUAL nicht fuer reserviert — die
- * Anwendung liess sich seit Web 20.16.5 auf MySQL UEBERHAUPT NICHT
+ * Anwendung liess sich einmal auf MySQL UEBERHAUPT NICHT
  * einrichten, und gemerkt hat es niemand, weil niemand es probiert hat.
  *
  * Diese Probe probiert es. Sie beantwortet vier Fragen mit Zahlen:
@@ -26,14 +26,14 @@ declare(strict_types=1);
  *           Migrationen — ohne einen einzigen Wert zu verlieren?
  *   FALL 3  Was tut eine Datenbank, deren Migrationsregister fehlt?
  *   FALL 4  Und eine, auf der die Umbenennung schon gelaufen ist?
- *   FALL 5  Sperrt der Rueckbau von R39 und FTP, solange Daten ihn verbieten,
- *           und laeuft er danach ohne Verlust und wiederholbar? (P5c/AP8)
+ *   FALL 5  Sperrt der Rueckbau der zentralen Standorte und FTP, solange Daten ihn verbieten,
+ *           und laeuft er danach ohne Verlust und wiederholbar?
  *   FALL 6  Bekommt jeder Diensttag sein `created_at` aus `started_at`,
  *           gekappt auf 1970-01-01 00:00:01 und auf jetzt — und traegt die
- *           Spalte danach KEIN `ON UPDATE`? (Schritt 17, R4-15, Nr. 158)
- *   FALL 7  Sperrt die Aufraeummigration nach S11, solange Klartext-Ortsdaten
+ *           Spalte danach KEIN `ON UPDATE`?
+ *   FALL 7  Sperrt die Aufraeummigration der Ortsdaten, solange Klartext-Ortsdaten
  *           stehen, nennt sie Konto und Einsatz, und laeuft sie mit Freigabe
- *           und auf einer sauberen Anlage? (S11-12, E-S11-19, -82, -83)
+ *           und auf einer sauberen Anlage?
  *
  * Fall 2 ist der wichtigste: Er legt Bestand an, migriert und vergleicht
  * Zeile fuer Zeile. Eine Migration, die Werte verliert, faellt hier auf.
@@ -116,7 +116,7 @@ function pruefe(string $was, bool $ok, string $detail = ''): void
  *
  * Ein gruener Lauf einer Pruefung, die immer gruen meldet, sieht genauso aus
  * wie einer, der nichts gefunden hat (dieselbe Begruendung wie bei
- * `tools/quelltext/ (migrationsregister)`). Die Selbstprobe braucht keine Datenbank: Sie
+ * `migrationsregister` in `tools/quelltext/`). Die Selbstprobe braucht keine Datenbank: Sie
  * prueft, dass `pruefe()` einen Fehlschlag auch als solchen zaehlt, und dass
  * `schema.sql` und `migration_lib.php` ueberhaupt dort liegen, wo die Probe
  * sie sucht. */
@@ -182,7 +182,7 @@ function frisch(): PDO
 function schema_einspielen(): void
 {
     global $opt, $DB, $WURZEL;
-    /* `--skip-ssl` NUR FUER DEN MARIADB-KLIENTEN (Nr. 236, gemessen 11.10.2026):
+    /* `--skip-ssl` NUR FUER DEN MARIADB-KLIENTEN (gemessen 11.10.2026):
      * Ab Klient 11.4 verlangt `mariadb` TLS als Vorgabe; der von Ubuntu 26.04
      * (11.8.6) bricht gegen den Dienstcontainer mariadb:10.6, der keines
      * anbietet, mit „ERROR 2026: SSL is required" ab. Die Probe misst das
@@ -327,7 +327,7 @@ $pdo = frisch();
 schema_oder_raus('Fall 2');
 
 /* DIE KULISSE SETZT DEN NEUEN NAMEN VORAUS -- und sagt es, statt daran zu
- * zerbrechen. Faehrt jemand die Probe gegen einen Stand VOR Web 20.25.0
+ * zerbrechen. Faehrt jemand die Probe gegen einen Stand VOR der Umbenennung
  * (etwa als Gegenprobe aus einem Arbeitsbaum), traegt `missions` noch
  * `manual`; die Zeile darunter antwortete dann mit `1054` und einem
  * Stapelabzug. Gemessen am 20.09.2026 beim Gegenlauf gegen MariaDB 10.6. */
@@ -342,7 +342,7 @@ if (!in_array('uhr_gesperrt', missions_spalten($pdo), true)) {
 
 /* Auf den Stand VOR der Umbenennung zurueckdrehen: Spalte heisst wieder
  * `manual`, die Kennung fehlt im Register. Das ist der Zustand jeder
- * Installation, die vor Web 20.25.0 eingerichtet wurde. */
+ * Installation, die vor der Umbenennung eingerichtet wurde. */
 $pdo->exec('ALTER TABLE missions CHANGE uhr_gesperrt `manual` TINYINT(1) NOT NULL DEFAULT 0');
 $pdo->exec("DELETE FROM schema_migrations WHERE id = '2026_09_20_uhr_gesperrt'");
 
@@ -430,14 +430,14 @@ pruefe('die Umbenennung wird uebersprungen — BEIDE Spalten fehlen',
        'ohne die zweite Bedingung braeche 1054 den ganzen Lauf');
 sag();
 
-/* ---- Fall 5: der Rueckbau von R39 und FTP (P5c/AP8, Nr. 168) --------------
+/* ---- Fall 5: der Rueckbau der zentralen Standorte und FTP -----------------
  *
  * DIE ERSTE ZERSTOERENDE MIGRATION MIT VORBEDINGUNG. Sie zieht `user_id` in
  * sechs Tabellen auf NOT NULL, wirft die Auswahltabelle der zentralen
  * Standorte weg und nimmt `ftp` aus dem ENUM der Sicherungsziele. Ob ein
  * `MODIFY` ueber einer Spalte mit Fremdschluessel auf jeder Fassung
  * durchgeht, ist genau die Sorte Frage, fuer die es diese Probe gibt
- * (Nr. 238) — die Sandbox kennt nur MariaDB.
+ * — die Sandbox kennt nur MariaDB.
  *
  * DREI LAEUFE UEBER DENSELBEN BESTAND:
  *   1. mit einer zentralen Zeile und einem FTP-Ziel — beide Migrationen
@@ -445,7 +445,7 @@ sag();
  *   2. nach dem Herstellen der Vorbedingung — beide laufen, der eigene
  *      Bestand bleibt Wert fuer Wert;
  *   3. ein zweites Mal, mit leerem Register — nichts geschieht, nichts wirft.
- * Dazu der Tag mit Tagesrettungsmittel (Nr. 169): Er bekommt im ersten Lauf
+ * Dazu der Tag mit Tagesrettungsmittel: Er bekommt im ersten Lauf
  * die Rollen seiner Art, auch waehrend die anderen beiden sperren.
  */
 sag('FALL 5 — Rueckbau zentraler Stammdaten und FTP (P5c/AP8)');
@@ -455,7 +455,7 @@ schema_oder_raus('Fall 5');
 $R39 = ['bases', 'vehicles', 'crew_presets', 'resources', 'bw_units', 'transport_dests'];
 $ID5 = ['2026_09_25_zentrale_stammdaten', '2026_09_25_ftp_entfernen',
         '2026_09_25_tagesrettungsmittel_rollen'];
-/* Den Stand VOR Web 21.0.0 herstellen: Spalten wieder NULL-faehig, die
+/* Den Stand VOR dem Rueckbau herstellen: Spalten wieder NULL-faehig, die
  * Auswahltabelle wieder da, `ftp` wieder im ENUM, die drei Kennungen aus dem
  * Register. */
 foreach ($R39 as $t) { $pdo->exec("ALTER TABLE `$t` MODIFY user_id INT UNSIGNED NULL"); }
@@ -559,7 +559,7 @@ pruefe('Lauf 3: mit leerem Register folgenlos — alle drei nur verbucht',
        && str_contains((string)($zeile5($lauf, $ID5[2])[3] ?? ''), 'Nicht nötig'));
 sag();
 
-/* ---- Fall 6: days.created_at (Schritt 17, R4-15, Nr. 158) -----------------
+/* ---- Fall 6: days.created_at ----------------------------------------------
  *
  * WARUM AUF ALLEN VIER. `TIMESTAMP` ist die Spaltenart, in der sich die
  * Fassungen unterscheiden: Mit `explicit_defaults_for_timestamp` = OFF (die
@@ -628,11 +628,11 @@ try { migrationen_lauf($pdo, true); } catch (Throwable $e) { $zweiter6 = false; 
 pruefe('der zweite Lauf ist folgenlos', $zweiter6 && !migrationen_ausstehend($pdo));
 sag();
 
-/* ---- Fall 7: die Klartext-Ortsdaten fallen (S11-12, E-S11-19, -82, -83) ----
+/* ---- Fall 7: die Klartext-Ortsdaten fallen ---------------------------------
  *
  * DIE ZWEITE ZERSTOERENDE MIGRATION MIT INHALTSSPERRE, und die erste, die
  * ganze Tabellen wirft. Sie sperrt, solange irgendwo noch Klartext steht, und
- * nennt Konto und Einsatz; eine Freigabe verwirft den Rest (E-S11-82).
+ * nennt Konto und Einsatz; eine Freigabe verwirft den Rest.
  *
  * DREI ANLAGEN:
  *   A. Altbestand in drei Formen (Phasenort, Transportziel, GPS-Punkte eines
@@ -647,8 +647,8 @@ $ID7 = '2026_10_19_klartext_weg';
 $alt7 = static function (): PDO {
     $pdo = frisch();
     schema_oder_raus('Fall 7');
-    /* Den Stand VOR Web 23 herstellen: die vier Tabellen und sechs Spalten,
-     * wie sie bis Web 22.7.0 in schema.sql standen. */
+    /* Den Stand VOR dem Verschliessen herstellen: die vier Tabellen und
+     * sechs Spalten, wie sie frueher in schema.sql standen. */
     $pdo->exec('ALTER TABLE mission_phases ADD COLUMN lat DOUBLE NULL, ADD COLUMN lon DOUBLE NULL');
     $pdo->exec('ALTER TABLE missions ADD COLUMN site_ele_m INT NULL,
                 ADD COLUMN transport_dest VARCHAR(190) NULL,

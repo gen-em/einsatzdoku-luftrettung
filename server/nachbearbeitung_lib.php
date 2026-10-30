@@ -1,24 +1,24 @@
 <?php
 declare(strict_types=1);
 /**
- * Einmalige Nachbearbeitung nach dem Umbau auf Diensttage (E24, A12).
+ * Einmalige Nachbearbeitung nach dem Umbau auf Diensttage.
  *
  * WARUM ES DIESE SEITE GIBT. Die Migration erledigt den mechanischen Teil, aber
  * zwei Zuordnungen lassen sich nicht ableiten, und Raten waere hier schlimmer
  * als Fragen:
  *
  *   1. STANDORT UND RETTUNGSMITTEL JE DIENSTTAG. Ein Flugtag ohne Verknuepfung
- *      hat keine Art, keine Rollen und keine artabhaengigen Felder (E26). Er
+ *      hat keine Art, keine Rollen und keine artabhaengigen Felder. Er
  *      funktioniert so — Zeiten, Phasen, Track und Reanimation sind vollstaendig
  *      —, aber er bleibt unvollstaendig dokumentiert.
- *   2. STANDORTZUORDNUNG DER STAMMDATEN. Der Standortbezug ist verbindlich
- *      (E15), Bestandsdaten haben aber keinen. Hatte eine NutzerIn genau einen
+ *   2. STANDORTZUORDNUNG DER STAMMDATEN. Der Standortbezug ist verbindlich,
+ *      Bestandsdaten haben aber keinen. Hatte eine NutzerIn genau einen
  *      Standort, hat die Migration zugeordnet; bei mehreren oder keinem blieb
  *      `base_id` leer und die Spalte NULLBAR — eine Neuinstallation traegt an
- *      derselben Stelle NOT NULL (Problem P6).
+ *      derselben Stelle NOT NULL.
  *
  * DIE SEITE VERSCHWINDET, SOBALD BEIDE LISTEN LEER SIND, und erst dann wird die
- * Bedingung angezogen. Das ist die zweistufige Regel aus A12: Erst wenn keine
+ * Bedingung angezogen. Das ist die zweistufige Regel: Erst wenn keine
  * Zuordnung mehr offen ist, gleichen sich migrierte Datenbank und
  * Neuinstallation vollstaendig.
  *
@@ -27,7 +27,7 @@ declare(strict_types=1);
  * einer Tabelle koennte davon abweichen — und der Merker waere dann die
  * Auskunft, die man glaubt, waehrend das Schema die ist, die gilt.
  *
- * SEIT WEB 16.0.0 GEHOERT `vehicles` NICHT MEHR ZUR ZWEITEN STUFE (E-S9-09).
+ * `vehicles` GEHOERT NICHT ZUR ZWEITEN STUFE.
  * `vehicles.base_id` ist wieder NULLBAR, und zwar dauerhaft und mit Absicht:
  * Die Typen ausser 'standard' brauchen keinen Standort. Die Auskunft
  * „Bedingung steht im Schema" gilt fuer diese eine Tabelle damit nicht mehr —
@@ -53,7 +53,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/db.php';
 
 /**
- * Die fuenf Stammdatentabellen mit Standortbezug (E15) und ihre Beschriftung.
+ * Die fuenf Stammdatentabellen mit Standortbezug und ihre Beschriftung.
  * Sie werden ANGEZEIGT, wenn eine Zeile ohne Standort offen ist.
  */
 const NB_STAMMDATEN = [
@@ -66,10 +66,10 @@ const NB_STAMMDATEN = [
 
 /**
  * Die Tabellen, deren `base_id` am Ende NOT NULL tragen soll — die zweite
- * Stufe aus A12.
+ * Stufe.
  *
- * SEIT WEB 16.0.0 SIND ES VIER, NICHT FUENF. `vehicles` fehlt hier bewusst:
- * Seine Spalte ist dauerhaft nullbar (E-S9-09), und ein `ALTER TABLE ... NOT
+ * ES SIND VIER, NICHT FUENF. `vehicles` fehlt hier bewusst:
+ * Seine Spalte ist dauerhaft nullbar, und ein `ALTER TABLE ... NOT
  * NULL` darauf naehme genau das zurueck, was die Migration
  * `2026_09_07_rettungsmittel_typ` hergestellt hat. Die ausfuehrliche
  * Begruendung steht im Kopf dieser Datei.
@@ -83,8 +83,8 @@ const NB_NOTNULL = ['crew_presets', 'transport_dests', 'resources', 'bw_units'];
  * entscheiden, welcher Dienst gemeint war. Papierkorb-Eintraege bleiben aussen
  * vor: Sie sind geloescht, und eine Zuordnung an ihnen waere Arbeit fuer nichts.
  *
- * EIN TAG OHNE STANDORT IST NICHT MEHR ZWANGSLAEUFIG OFFEN (E-S9-09,
- * Web 16.0.0). Traegt er ein Rettungsmittel eines Typs ohne Standortpflicht —
+ * EIN TAG OHNE STANDORT IST NICHT ZWANGSLAEUFIG OFFEN. Traegt er ein
+ * Rettungsmittel eines Typs ohne Standortpflicht —
  * Bergwacht, Veranstaltung, Sonstiges —, dann IST er vollstaendig zugeordnet;
  * ein Standort fehlt ihm nicht, es gibt keinen. Ohne diese Bedingung stuende er
  * dauerhaft in der Liste und im Zaehler „Zuordnung offen" der Seitenleiste, und
@@ -98,7 +98,7 @@ const NB_NOTNULL = ['crew_presets', 'transport_dests', 'resources', 'bw_units'];
 function nb_offene_tage(int $userId, int $limit = 500): array
 {
     // Die Bedingung steht in nb_tage_bedingung() — dieselbe, die
-    // nb_offene_tage_zahl() benutzt (Backlog Nr. 38).
+    // nb_offene_tage_zahl() benutzt.
     $b = nb_tage_bedingung();
 
     $q = db()->prepare('SELECT d.id, d.day, d.started_at, d.ended_at, d.kind,
@@ -116,9 +116,7 @@ function nb_offene_tage(int $userId, int $limit = 500): array
 /**
  * Eigene Stammdatensaetze ohne Standortzuordnung, je Tabelle.
  *
- * Bis Web 20.47.0 lieferte ein zweiter Aufruf die zentralen Eintraege
- * (`user_id IS NULL`) fuer die Admins; sie gibt es seit P5c/AP8 nicht mehr
- * (R39).
+ * Zentrale Eintraege (`user_id IS NULL`) gibt es nicht.
  *
  * @return array<string,list<array>>
  */
@@ -129,10 +127,10 @@ function nb_offene_stammdaten(int $userId): array
         // Die Tabellennamen stammen aus der Konstante oben, nicht aus einer
         // Anfrage. Ein Platzhalter ist fuer Tabellennamen ohnehin nicht moeglich.
         /* BEI RETTUNGSMITTELN IST DER FEHLENDE STANDORT NUR BEIM TYP 'standard'
-         * EIN MANGEL (E-S9-09, Web 16.0.0). Bergwacht, Veranstaltung und
+         * EIN MANGEL. Bergwacht, Veranstaltung und
          * Sonstiges duerfen ohne bestehen; sie hier zu melden hiesse, eine
          * Aufgabe zu stellen, die niemand erledigen kann und die nie kleiner
-         * wird. Offen bleibt der Fall, den A12 hinterlassen haben kann: ein
+         * wird. Offen bleibt der Fall, den die Migration hinterlassen haben kann: ein
          * Bestandsrettungsmittel ohne Standort, das die Migration auf
          * 'standard' gesetzt hat. */
         $nur = $tabelle === 'vehicles' ? " AND typ = 'standard'" : '';
@@ -153,14 +151,13 @@ function nb_offen_gesamt(int $userId): int
 {
     if (!nb_moeglich()) { return 0; }
 
-    /* ZAEHLEN, NICHT HOLEN (Backlog Nr. 38, Web 19.1.2).
+    /* ZAEHLEN, NICHT HOLEN.
      *
-     * Hier stand dreimal `count(...)` ueber volle Ergebnismengen — die Zahl
-     * der Seitenleiste liess sich also jede Zeile jedes offenen Diensttags
-     * samt Einsatzzahl-Unterabfrage kommen, um sie danach wegzuwerfen. Der
-     * Fehler faellt nur auf einer Installation auf, auf der die
-     * Nachbearbeitung noch laeuft; genau dort ist die Menge aber am
-     * groessten.
+     * `count(...)` ueber volle Ergebnismengen liesse fuer die Zahl der
+     * Seitenleiste jede Zeile jedes offenen Diensttags samt
+     * Einsatzzahl-Unterabfrage kommen, um sie danach wegzuwerfen. Das faellt
+     * nur auf einer Installation auf, auf der die Nachbearbeitung noch laeuft;
+     * genau dort ist die Menge aber am groessten.
      *
      * `nb_offene_tage()` bleibt unveraendert — die Liste braucht die Zeilen.
      * Damit Liste und Zahl nicht auseinanderlaufen koennen, steht die
@@ -174,10 +171,10 @@ function nb_offen_gesamt(int $userId): int
 /**
  * Die Bedingung „Diensttag offen" — EINE Stelle fuer Liste und Zahl.
  *
- * Sie stand bis Web 19.1.2 nur in `nb_offene_tage()`. Die Zahl daneben
- * entstand, indem dieselbe Abfrage gefahren und ihr Ergebnis gezaehlt wurde;
- * wer die Bedingung aendert und die zweite Stelle uebersieht, laesst Liste
- * und Zahl auseinanderlaufen. Jetzt gibt es nur eine.
+ * Sie steht nur hier. Entstuende die Zahl daneben, indem dieselbe Abfrage
+ * gefahren und ihr Ergebnis gezaehlt wird, liefen Liste und Zahl
+ * auseinander, sobald jemand die Bedingung aendert und die zweite Stelle
+ * uebersieht.
  *
  * @return array{sql: string, args: list<string>}
  */
@@ -214,7 +211,7 @@ function nb_offene_tage_zahl(int $userId): int
  * Die Tabellennamen stammen aus NB_STAMMDATEN, nicht aus einer Anfrage; ein
  * Platzhalter ist fuer Tabellennamen ohnehin nicht moeglich. Die Bedingung je
  * Tabelle ist dieselbe wie in nb_offene_stammdaten() — auch der Sonderfall
- * `vehicles`, wo nur der Typ 'standard' einen Mangel darstellt (E-S9-09).
+ * `vehicles`, wo nur der Typ 'standard' einen Mangel darstellt.
  */
 function nb_offene_stammdaten_zahl(int $userId): int
 {
@@ -238,13 +235,11 @@ function nb_offene_stammdaten_zahl(int $userId): int
  * Faellen gibt es nichts zu tun, und die Abfragen oben brauchen gar nicht zu
  * laufen.
  *
- * GEFRAGT WIRD `NB_NOTNULL`, NICHT `vehicles` (Web 16.0.0). Bis Web 15.9.0
- * hing die ganze Auskunft an der Nullbarkeit von `vehicles.base_id` — was
- * richtig war, solange diese Spalte nur waehrend der Nachbearbeitung nullbar
- * sein konnte. Seit E-S9-09 ist sie es dauerhaft, und die Frage haette
- * dauerhaft „ja" geantwortet. Die vier uebrigen Tabellen beantworten sie
- * weiterhin richtig: Stehen sie auf NOT NULL, ist A12 durch — und ein
- * Standard-Rettungsmittel ohne Standort kann seither nicht mehr entstehen,
+ * GEFRAGT WIRD `NB_NOTNULL`, NICHT `vehicles`. Hinge die Auskunft an der
+ * Nullbarkeit von `vehicles.base_id`, antwortete sie dauerhaft „ja" — die
+ * Spalte ist dauerhaft nullbar. Die vier uebrigen Tabellen beantworten sie
+ * richtig: Stehen sie auf NOT NULL, ist die zweite Stufe durch — und ein
+ * Standard-Rettungsmittel ohne Standort kann nicht mehr entstehen,
  * weil `pruef_rettungsmittel()` es auf allen drei Schreibwegen ablehnt.
  *
  * Das Ergebnis wird gemerkt: Es aendert sich innerhalb eines Seitenaufrufs
@@ -255,12 +250,12 @@ function nb_moeglich(): bool
     static $moeglich = null;
     if ($moeglich !== null) { return $moeglich; }
 
-    /* EINE ABFRAGE STATT VIER (Backlog Nr. 38, Web 19.1.2).
+    /* EINE ABFRAGE STATT VIER.
      *
-     * Hier lief `nb_spalte_nullbar()` je Tabelle einzeln — und der
-     * Kurzschluss half gerade dann nicht, wenn es darauf ankam: Er greift
-     * nur, wenn eine Spalte NOCH nullbar ist. Auf einer fertig
-     * nachbearbeiteten Installation, also im Regelfall, liefen alle vier.
+     * `nb_spalte_nullbar()` je Tabelle einzeln hilft mit Kurzschluss gerade
+     * dann nicht, wenn es darauf ankommt: Er greift nur, wenn eine Spalte
+     * NOCH nullbar ist. Auf einer fertig nachbearbeiteten Installation, also
+     * im Regelfall, liefen alle vier.
      * Gemessen an der lokalen Anlage: 4 Einzelabfragen 1,071 ms, eine
      * gemeinsame 0,355 ms — je Seitenaufbau, denn die Frage kommt aus der
      * Seitenleiste. */
@@ -277,8 +272,8 @@ function nb_moeglich(): bool
 /**
  * Ist `base_id` dieser Tabelle noch nullbar?
  *
- * Seit Web 19.1.2 fragt `nb_moeglich()` alle vier Tabellen in EINER Abfrage
- * (Backlog Nr. 38); diese Funktion bleibt, weil die beiden Laeufe weiter
+ * `nb_moeglich()` fragt alle vier Tabellen in EINER Abfrage; diese Funktion
+ * bleibt, weil die beiden Laeufe weiter
  * unten je Tabelle einzeln entscheiden muessen — sie ueberspringen die
  * fertigen und arbeiten an den offenen.
  */
@@ -306,7 +301,7 @@ function nb_spalte_nullbar(string $tabelle): bool
  *
  * Die Diensttage zaehlen hier NICHT mit: `days.base_id` und `days.vehicle_id`
  * bleiben dauerhaft nullbar, weil ein neutraler Diensttag der vorgesehene
- * Zustand ist (E26) und die Uhr staendig neue anlegt.
+ * Zustand ist und die Uhr staendig neue anlegt.
  *
  * @return array<string,int> Tabelle => Zahl offener Zeilen; leer heisst fertig
  */
@@ -323,13 +318,13 @@ function nb_stammdaten_offen_gesamt(): array
 }
 
 /**
- * Die zweite Stufe aus A12: `base_id` auf NOT NULL setzen.
+ * Die zweite Stufe: `base_id` auf NOT NULL setzen.
  *
  * Laeuft nur, wenn in KEINER der vier Tabellen noch eine Zeile ohne Standort
  * steht. Danach stimmen migrierte Datenbank und Neuinstallation in genau den
- * vier Spalten ueberein, in denen sie sich bis dahin unterschieden (P6).
- * `vehicles` ist seit Web 16.0.0 nicht mehr dabei — dort ist die Nullbarkeit
- * der gewollte Endzustand (E-S9-09).
+ * vier Spalten ueberein, in denen sie sich bis dahin unterschieden.
+ * `vehicles` ist nicht dabei — dort ist die Nullbarkeit der gewollte
+ * Endzustand.
  *
  * Idempotent: Eine Tabelle, deren Spalte schon NOT NULL traegt, wird
  * uebersprungen. Ein ALTER TABLE laeuft ausserhalb einer Transaktion — MySQL

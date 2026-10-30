@@ -3,15 +3,14 @@ package org.genem.nadoku.handy.kopplung
 import org.genem.nadoku.BuildConfig
 
 /**
- * Die Server-Adresse — **fest** seit R63 (Backlog Nr. 84).
+ * Die Server-Adresse — **fest**.
  *
- * WAS SICH GEÄNDERT HAT UND WARUM. Bis Android 0.10.1 war die Adresse ein
- * Eingabefeld, wahlweise gefüllt aus einem QR-Code (E-S4-15). Beides ist
- * ersatzlos entfallen. Der Grund ist nicht Bequemlichkeit, sondern der
- * Zuschnitt des Dienstes: Diese App gehört zu **einer** Installation. Ein
- * Adressfeld verlangte von jeder NutzerIn eine Angabe, die für alle dieselbe
- * ist — und war zugleich die einzige Stelle, an der ein Tippfehler die App
- * still an einen fremden Server hängen konnte.
+ * WARUM. Die Adresse ist kein Eingabefeld und kommt aus keinem QR-Code. Der
+ * Grund ist nicht Bequemlichkeit, sondern der Zuschnitt des Dienstes: Diese
+ * App gehört zu **einer** Installation. Ein Adressfeld verlangte von jeder
+ * NutzerIn eine Angabe, die für alle dieselbe ist — und wäre zugleich die
+ * einzige Stelle, an der ein Tippfehler die App still an einen fremden
+ * Server hängen könnte.
  *
  * WER EINE EIGENE INSTALLATION BETREIBT, baut ein eigenes APK. Die Adresse
  * steht deshalb im **Bauskript** (`buildConfigField SERVER_BASIS`), nicht als
@@ -19,29 +18,25 @@ import org.genem.nadoku.BuildConfig
  * Kotlin. Für den Prüfstand ist dasselbe Feld der Weg zur örtlichen
  * Installation (`-Pnadoku.serverBasis=http://127.0.0.1:8080/`).
  *
- * DIE TOLERANZREGELN BLEIBEN — sie haben nur ein anderes Gegenüber. Vorher
- * fingen sie ab, was ein Mensch abtippt; jetzt fangen sie ab, was jemand ins
- * Bauskript schreibt. `nadoku.gen-em.org` ohne Schema, mit `http://`, mit
- * angehängtem `pair.php`: In allen drei Fällen entsteht dieselbe Basis. Der
- * Unterschied zu früher ist, dass ein Fehler jetzt **beim Bauen** entsteht und
- * nicht bei der Kopplung — [BASIS] wirft, wenn nichts Brauchbares dasteht.
+ * DIE TOLERANZREGELN fangen ab, was jemand ins Bauskript schreibt.
+ * `nadoku.gen-em.org` ohne Schema, mit `http://`, mit angehängtem
+ * `pair.php`: In allen drei Fällen entsteht dieselbe Basis. Ein Fehler
+ * entsteht **beim Bauen** und nicht bei der Kopplung — [BASIS] wirft, wenn
+ * nichts Brauchbares dasteht.
  *
- * NUR HTTPS (E-S4-14). Ein eingetragenes `http://` wird zu `https://`, und es
- * gibt keinen Ausnahmeschalter — mit einer benannten Ausnahme, die **nur das
- * Prüf-APK** kennt (seit 0.14.0, Backlog Nr. 142): Im Debug-Bau behalten
+ * NUR HTTPS. Ein eingetragenes `http://` wird zu `https://`, und es gibt
+ * keinen Ausnahmeschalter — mit einer benannten Ausnahme, die **nur das
+ * Prüf-APK** kennt: Im Debug-Bau behalten
  * `localhost` und IPv4-Adressen ihr `http`, weil der Prüfstand ohne TLS gegen
  * `127.0.0.1:8080` spricht und eine Zwangsumleitung ihn ins Leere laufen
- * ließe. Im Release gilt HTTPS für **jede** Adresse, auch für eine IP: Bis
- * 0.13.0 galt die Ausnahme in beiden Bauarten, und wer sein APK mit einer
- * IP-Adresse als `SERVER_BASIS` baute, schickte den Geräteschlüssel auf
- * Android 8 im Klartext (Krypto-Review AN-1) — der Standardbau mit fester
- * Domain war nie betroffen. Dazu verbietet die Netzsicherheitsregel des
+ * ließe. Im Release gilt HTTPS für **jede** Adresse, auch für eine IP:
+ * Sonst schickte, wer sein APK mit einer IP-Adresse als `SERVER_BASIS` baut,
+ * den Geräteschlüssel auf Android 8 im Klartext. Dazu verbietet die Netzsicherheitsregel des
  * Release-Baus (`src/release/res/xml/netzsicherheit.xml`) Klartext auf
  * Systemebene: zwei Böden, damit ein Fehler in dieser Datei allein nicht
  * reicht. Ein Geräteschlüssel im Klartext wäre die Kopplung nicht wert.
  *
- * GESPEICHERT WIRD NICHTS MEHR. Die Basis ist eine Konstante des Baulaufs;
- * `Einstellungen.serverBasis` ist mit dieser Fassung entfallen.
+ * GESPEICHERT WIRD NICHTS. Die Basis ist eine Konstante des Baulaufs.
  */
 object Serveradresse {
 
@@ -70,7 +65,7 @@ object Serveradresse {
         val roh = eingabe?.trim() ?: return null
         if (roh.isEmpty()) return null
 
-        // 1. Schema abtrennen (E-S4-14). Ein anderes Schema als http/https ist
+        // 1. Schema abtrennen. Ein anderes Schema als http/https ist
         //    keine Server-Adresse, sondern ein Missverständnis oder ein
         //    Angriffsversuch — beides abweisen. Ob am Ende `https` steht,
         //    entscheidet Schritt 5 am Rechnernamen, nicht der Eingabetext.
@@ -107,8 +102,8 @@ object Serveradresse {
         if (!pfad.endsWith("/")) pfad = "$pfad/"
 
         // 5. Das Schema entsteht aus dem Rechnernamen, nicht aus der Eingabe.
-        //    HTTPS ist die Regel (E-S4-14). Die Ausnahme ist der Prüfstand,
-        //    und sie gilt NUR IM PRÜF-APK (`BuildConfig.DEBUG`, Nr. 142):
+        //    HTTPS ist die Regel. Die Ausnahme ist der Prüfstand,
+        //    und sie gilt NUR IM PRÜF-APK (`BuildConfig.DEBUG`):
         //    `localhost` und eine IPv4-Adresse behalten `http`, weil der
         //    örtliche PHP-Server ohne TLS antwortet. Im Release fällt auch
         //    eine IP-Adresse unter HTTPS — sie taugt ohnehin nicht als
@@ -153,10 +148,10 @@ object Serveradresse {
     fun ingest(basis: String): String = basis + "ingest.php"
     fun pair(basis: String): String = basis + "pair.php"
 
-    /* DIE BEIDEN RECHTSTEXTE (seit 0.13.0).
+    /* DIE BEIDEN RECHTSTEXTE.
      *
      * Sie stehen hier neben den zwei Endpunkten, weil sie dieselbe Herkunft
-     * haben: die eine eingebaute Serveradresse (R63). Eine zweite Adresse
+     * haben: die eine eingebaute Serveradresse. Eine zweite Adresse
      * fuer die Rechtstexte waere eine zweite Stelle, an der man sie aendern
      * muesste — und eine, an der sie auf ein anderes Haus zeigen koennten
      * als der Server, auf den die App ihre Daten schickt.

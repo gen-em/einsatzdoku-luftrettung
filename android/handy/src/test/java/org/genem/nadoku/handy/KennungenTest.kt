@@ -7,7 +7,7 @@ import org.junit.Test
 import org.genem.nadoku.gemeinsam.Kennungen
 import kotlin.random.Random
 
-/** Die Client-Kennungen (Vertrag 8, E-S4-09). */
+/** Die Client-Kennungen (Vertrag 8). */
 class KennungenTest {
 
     private class Merkzaehler(var wert: Long = 0) : Kennungen.Zaehlerspeicher {
@@ -27,7 +27,7 @@ class KennungenTest {
         assertEquals("wm", Kennungen.EINSATZ_UHR)
     }
 
-    /** Bauform der Uhr seit 1.7.0: Präfix, Zähler, zehnstelliger Zufall. */
+    /** Bauform der Uhr: Präfix, Zähler, zehnstelliger Zufall. */
     @Test fun bauform() {
         val k = Kennungen(Merkzaehler(41), Random(7))
         val kennung = k.einsatz()
@@ -47,7 +47,7 @@ class KennungenTest {
         assertTrue(!kennung.contains(" "))
     }
 
-    /** KEIN ZEITSTEMPEL — der Grund, warum die Uhr die Bauform 1.7.0 hat. */
+    /** KEIN ZEITSTEMPEL — der Grund für die Bauform der Uhr. */
     @Test fun keinZeitstempelInDerKennung() {
         val zaehler = Merkzaehler()
         val k = Kennungen(zaehler, Random(11))

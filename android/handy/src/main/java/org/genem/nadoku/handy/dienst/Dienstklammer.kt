@@ -12,13 +12,13 @@ import java.time.Instant
 
 /**
  * Die Dienstklammer — der Lebenszyklus, **wortgleich zur Garmin-Uhr**
- * (`Model.mc`, E-S4-08).
+ * (`Model.mc`).
  *
  * ```
  * Dienst beginnen  ->  day_ref (ad-) entsteht, erstes Ruhesegment (ar-) öffnet
  *   Phase 2..9     ->  ohne laufenden Einsatz: Einsatz (am-) beginnt,
- *                      Ruhesegment schließt                      [B5]
- *   Einsatz abschl.->  final + ended_at, danach neues Ruhesegment [B5]
+ *                      Ruhesegment schließt
+ *   Einsatz abschl.->  final + ended_at, danach neues Ruhesegment
  * Dienst beenden   ->  schließt beides (Sicherheitsnetz)
  * ```
  *
@@ -32,8 +32,8 @@ import java.time.Instant
  * Absturz der App oder einem Neustart des Handys findet [laufenderDienst] den
  * Dienst vor, in dem das Gerät steckt, und die Aufzeichnung geht weiter.
  *
- * EIN ZWEITER DIENSTSTART BEI LAUFENDEM DIENST ist kein neuer Dienst
- * (E-R45-13), sondern die Anzeige „läuft seit …". [beginnen] gibt deshalb den
+ * EIN ZWEITER DIENSTSTART BEI LAUFENDEM DIENST ist kein neuer Dienst,
+ * sondern die Anzeige „läuft seit …". [beginnen] gibt deshalb den
  * **laufenden** zurück, statt einen zweiten anzulegen — ein zweiter riss den
  * Dienst in zwei Diensttage, und niemand sähe es der App an.
  */
@@ -49,10 +49,10 @@ class Dienstklammer(
     fun laeuft(): Boolean = laufenderDienst() != null
 
     /**
-     * Dienst beginnen — oder den laufenden zurückgeben (E-R45-13).
+     * Dienst beginnen — oder den laufenden zurückgeben.
      *
      * @param zeitpunkt bei einem Dienststart **an der Uhr** deren Auslösezeit
-     *   (E-S4-10: „`started_at` ist die Auslösezeit der Uhr"), sonst jetzt.
+     *   („`started_at` ist die Auslösezeit der Uhr"), sonst jetzt.
      *   Der Unterschied kann Minuten betragen — die Uhr löst im Funkloch aus,
      *   das Handy erfährt es beim nächsten Kontakt.
      * @return der laufende Dienst und ob er soeben entstanden ist
@@ -67,7 +67,7 @@ class Dienstklammer(
 
         // Das erste Ruhesegment öffnet mit dem Dienst. Ohne es fiele die Zeit
         // bis zum ersten Einsatz aus der Spur — und genau aus ihr schneidet
-        // der Browser später die vergessenen Einsätze heraus (E-S4-17).
+        // der Browser später die vergessenen Einsätze heraus.
         ruhesegmentOeffnen(dienstRef, tag, augenblick)
 
         ausduenner.zuruecksetzen()
@@ -102,7 +102,7 @@ class Dienstklammer(
     }
 
     /**
-     * Den Modus während des Dienstes wechseln (E-S4-20).
+     * Den Modus während des Dienstes wechseln.
      *
      * **Verlustfrei:** Es wird nichts geschlossen und nichts geöffnet, nur
      * vermerkt. Bereits Gesendetes bleibt unberührt; ein Umstieg auf „mit
@@ -138,7 +138,7 @@ class Dienstklammer(
         return true
     }
 
-    // ---- Phasen und Einsätze (E-S4-08, B5) ---------------------------------
+    // ---- Phasen und Einsätze -----------------------------------------------
 
     /**
      * Die laufende Phase — die zuletzt gesetzte des laufenden Einsatzes.
@@ -152,7 +152,7 @@ class Dienstklammer(
     }
 
     /**
-     * Eine Phase setzen — **der Kern des Lebenszyklus** (E-S4-08).
+     * Eine Phase setzen — **der Kern des Lebenszyklus**.
      *
      * EINE PHASE 2–9 OHNE LAUFENDEN EINSATZ **STARTET** DEN EINSATZ und
      * schließt dabei das Ruhesegment. Das ist keine Bequemlichkeit, sondern
@@ -160,16 +160,16 @@ class Dienstklammer(
      * vorher „Einsatz beginnen". Dieselbe Stelle in `Model.setPhase()`.
      *
      * EIN ERNEUT GESETZTE PHASE IST EIN **ZWEITER EINTRAG**, keine Korrektur
-     * am ersten (E-R45-12, Vertrag 3): „Eine erneut gesetzte Phase ist eine
+     * am ersten (Vertrag 3): „Eine erneut gesetzte Phase ist eine
      * Korrektur und damit eine Information. Kein Client und kein Schreibweg
      * darf sie entdoppeln."
      *
      * @param quelle `handy` oder `uhr` — am Datensatz bleibt ablesbar, auf
      *   welchem Weg er entstand.
-     * @param zeitpunkt bei einem Ereignis der Uhr deren Zeitstempel (E-S4-10),
-     *   sonst jetzt.
+     * @param zeitpunkt bei einem Ereignis der Uhr deren Zeitstempel, sonst
+     *   jetzt.
      * @param einsatzRef bei einem Ereignis der Uhr die dort gebildete
-     *   `wm-`-Kennung (E-S4-09) — **der Idempotenz-Anker über den Funkabriss**:
+     *   `wm-`-Kennung — **der Idempotenz-Anker über den Funkabriss**:
      *   Gibt es zu ihr schon einen Einsatz, wird dieser weitergeführt, statt
      *   ein zweiter angelegt. Vom Handy aus ist sie null, dann bildet die App
      *   eine `am-`-Kennung.
@@ -195,7 +195,7 @@ class Dienstklammer(
             ?: einsatzRef?.let { puffer.paketNach(it) }
             ?: einsatzBeginnen(dienst.dienstRef, dienst.tag, zeitpunkt, einsatzRef)
 
-        /* DIE KOORDINATE KOMMT AUS DER EIGENEN SPUR (E-S4-10): der zeitlich
+        /* DIE KOORDINATE KOMMT AUS DER EIGENEN SPUR: der zeitlich
          * nächste Punkt innerhalb von ± 30 s, sonst null. Eine erfundene
          * Koordinate wäre schlimmer als keine — der Vertrag lässt null
          * ausdrücklich zu. */
@@ -209,7 +209,7 @@ class Dienstklammer(
     }
 
     /**
-     * Der Durchlauf: die nächste Phase (E-S4-21b).
+     * Der Durchlauf: die nächste Phase.
      *
      * Nach der letzten gibt es **keine** nächste — dort wird der Knopf zu
      * „Einsatz abschließen". `null` ist genau diese Auskunft und nicht etwa
@@ -219,8 +219,8 @@ class Dienstklammer(
     fun naechstePhase(): Int? = Phasen.naechste(laufendePhase())
 
     /**
-     * Den Einsatz abschließen — **ein eigener Bedienschritt**, nie automatisch
-     * (E-S4-08).
+     * Den Einsatz abschließen — **ein eigener Bedienschritt**, nie
+     * automatisch.
      *
      * `ended_at` ist die Zeit der **letzten Phase 9**, sonst der Augenblick
      * des Abschlusses. Der Unterschied ist keine Feinheit: Wer die Endzeit
@@ -301,7 +301,7 @@ class Dienstklammer(
         const val QUELLE_UHR = "uhr"
 
         /**
-         * Toleranz für die Phasen-Koordinate (E-S4-10). Bei 1-Hz-Abtastung und
+         * Toleranz für die Phasen-Koordinate. Bei 1-Hz-Abtastung und
          * einer Ausdünnung, die spätestens alle 10 s einen Punkt hält, ist der
          * nächste Punkt normalerweise Sekunden alt. 30 s decken den Fall ab,
          * dass die Uhr ein gepuffertes Ereignis nachliefert; darüber hinaus

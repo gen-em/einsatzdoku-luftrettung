@@ -318,7 +318,7 @@
         "herkunft-watch",
         "rea-mehrere-sitzungen"
       ],
-      "$warum_rea": "ZWEI SITZUNGEN an einem Einsatz. Der JSON-Vertrag (3) sieht 'resus_sessions' ausdrücklich als LISTE vor — auf der Uhr schließt „Aufzeichnung beenden\" eine Sitzung, ein erneuter Start eröffnet die nächste. Fachlich ist es der Rezidiv-Kreislaufstillstand während der Umlagerung."
+      "$warum_rea": "ZWEI SITZUNGEN an einem Einsatz. Der JSON-Vertrag sieht die Reanimation in der Einsatzhülle ausdrücklich als LISTE vor ('rea'; im Klartext-Format des Sendeplans 'resus_sessions') — auf der Uhr schließt „Aufzeichnung beenden\" eine Sitzung, ein erneuter Start eröffnet die nächste. Fachlich ist es der Rezidiv-Kreislaufstillstand während der Umlagerung."
     },
     {
       "client_ref": "m-11-9810640181",

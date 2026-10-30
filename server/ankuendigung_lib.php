@@ -4,7 +4,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/db.php';
 
 /**
- * ANKUENDIGUNG UND RUNDMAIL (P5c/AP1, E-P5c-13, -55, -56, -60; R38)
+ * ANKUENDIGUNG UND RUNDMAIL
  * ===========================================================================
  *
  *     ankuendigung()                 // die geltende, oder null
@@ -17,10 +17,10 @@ require_once __DIR__ . '/db.php';
  * WOFUER. Eine Wartung am Dienstagabend wusste bis hierher nur, wer die
  * BetreiberIn fragte. Die Ankuendigung steht als Streifen ueber jeder Seite
  * — auch ueber der Anmeldung, denn eine angekuendigte Wartung betrifft den,
- * der sich gerade anmelden will, am meisten (E-P5c-60) —, bis sie ablaeuft.
+ * der sich gerade anmelden will, am meisten —, bis sie ablaeuft.
  * Die Rundmail traegt denselben Text zu denen, die gerade nicht hinsehen.
  *
- * DREI `app_state`-SCHLUESSEL, KEINE MIGRATION (E-P5c-55). Der Text ist
+ * DREI `app_state`-SCHLUESSEL, KEINE MIGRATION. Der Text ist
  * deshalb hoechstens APP_STATE_MAX Byte lang (190); das Formular sagt es und
  * zaehlt mit. Fuer eine Zeile ueber jeder Seite ist das die richtige Laenge
  * — was laenger ist, gehoert in eine Mail oder ins Handbuch, nicht in einen
@@ -28,7 +28,7 @@ require_once __DIR__ . '/db.php';
  *
  * WEGKLICKEN JE SITZUNG, nicht je Browser. Wer die Ankuendigung schliesst,
  * sieht sie bis zum Abmelden nicht mehr; beim naechsten Anmelden steht sie
- * wieder da, bis sie ablaeuft (E-P5c-13). Gemerkt wird deshalb in der
+ * wieder da, bis sie ablaeuft. Gemerkt wird deshalb in der
  * Sitzung und nicht in einem Cookie oder im `localStorage` — beide
  * ueberlebten das Abmelden. `login.php` loescht die Marke beim Anmelden,
  * sonst truege ein Schliessen AUF der Anmeldeseite in die Sitzung danach
@@ -159,7 +159,7 @@ function ankuendigung_wegklicken(): void
 /* ---- Rundmail ------------------------------------------------------------ */
 
 /**
- * Die Konten, die eine Rundmail bekommen — „erreichbar" (E-P5c-56).
+ * Die Konten, die eine Rundmail bekommen — „erreichbar".
  *
  * DREI BEGRIFFE STATT EINMAL „AKTIV". Erreichbar heisst: Status `aktiv`,
  * Passwort gesetzt, nicht das Demo-Konto. Ein Konto ohne Passwort hat seine
@@ -203,7 +203,7 @@ function rundmail_heute_gesendet(): ?string
  *
  * @return array{ok:bool, zahl:int, meldung:string}
  *
- * NUR EINREIHEN, NICHT SOFORT VERSUCHEN (F-P5c-29). `mail_einreihen()`
+ * NUR EINREIHEN, NICHT SOFORT VERSUCHEN. `mail_einreihen()`
  * versucht jede Nachricht sofort, bis zu MAIL_BUDGET_S je Stueck — bei 40
  * Empfaengern und einem zaehen Mailserver hinge diese Seite bis zu 200 s.
  * Die Warteschlange traegt sie hinaus, zehn je Joblauf.
@@ -248,7 +248,7 @@ function rundmail_senden(): array
     /* EIN EINTRAG FUER DIE RUNDMAIL, NICHT EINER JE EMPFAENGER. Das
      * Protokoll sagt, wer wann was an wie viele geschickt hat; wer es im
      * Einzelnen bekommen hat, steht nirgends — und soll es auch nicht
-     * (E-P5c-38: der Reiter E-Mail nennt nie Empfaenger). */
+     * (der Reiter E-Mail nennt nie Empfaenger). */
     protokoll('verwaltung', 'rundmail',
               'Rundmail an ' . $eingereiht . ' von ' . count($ziele) . ' erreichbaren Konten eingereiht',
               ['eingereiht' => $eingereiht, 'erreichbar' => count($ziele)]);

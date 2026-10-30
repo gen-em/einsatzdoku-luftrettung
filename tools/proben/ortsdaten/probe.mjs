@@ -1,11 +1,9 @@
-/* Ortsdatenprobe — die Kette Gerät → Server → Browser mit Gerätehüllen
- * (S11-04b; Konzept S11 3.4, 3.5, E-S11-36 bis -40).
+/* Ortsdatenprobe — die Kette Gerät → Server → Browser mit Gerätehüllen.
  *
  * Anlass: Nr. 43, Nr. 387 — Spur, Phasenkoordinaten und Reanimation gehen
- * seit Web 22 verschlossen an den Server; ob der Browser sie aus den
+ * verschlossen an den Server; ob der Browser sie aus den
  * Antworten der Anwendung wieder öffnet, belegt keine Einzelprobe für sich.
- * Seit Web 23.0.2 auch: verworfene Werte beim Einspielen nennt die Meldung
- * (Schritt 16; bis dahin zeigte die Seite sie nicht).
+ * Dazu: verworfene Werte beim Einspielen nennt die Meldung.
  *
  * WAS SIE FÄHRT, gegen die örtliche Anlage:
  *   1. ein Wegwerfkonto (`pruefkonto.py`), anmelden — das Kontopaar entsteht
@@ -17,31 +15,31 @@
  *      (`EdKontopaar.privat`, `EdCrypto.geraetehuelleOeffnen`) und vergleicht
  *      mit dem Gesendeten — Punkt für Punkt, auch eine fehlende Höhe
  *   4. `api/day.php` liefert dasselbe für den Diensttag; ein Schnitt im
- *      Ruhesegment steht als Sperrzeit daneben (E-S11-37)
+ *      Ruhesegment steht als Sperrzeit daneben
  *   5. ein Stück an einem anderen Einsatz geht nicht auf (Bindung)
  *   6. die Einsatzansicht öffnet selbst: Spur, Phasen, Reanimation, kein
- *      Ladeplatz und keine Fehlermeldung danach (S11-04c)
+ *      Ladeplatz und keine Fehlermeldung danach
  *   7. die Diensttagsansicht öffnet die Stücke; die gesperrten Punkte des
- *      Ruhesegments fehlen (E-S11-37)
+ *      Ruhesegments fehlen
  *   8. die Spurenseite des Diensttags (`tag_spuren.php`) zeichnet beide Linien
  *   9. die Zeitrechnung des Browsers (`EdFormat.ortszeitZuEpoch`,
  *      `EdOrtsdaten.einsatzZeiten`) gleich der des Servers (`local_to_utc`),
- *      auch an beiden Zeitumstellungen (S11-05b)
+ *      auch an beiden Zeitumstellungen
  *  10. das Formular öffnet die Hülle, zeigt die Reanimation, speichert
  *      unverändert: Orte der Phasen und Reanimation bleiben, nichts im
- *      Klartext (F-S11-02, -41)
+ *      Klartext
  *  11. ein im Formular nachgetragener Einsatz mit Reanimation: alles in der
- *      Hülle (die Tabelle `resus_sessions` gibt es seit Web 23 nicht mehr)
- *  12. Transportziel und Höhe des Einsatzorts im Blob (S11-05b): im Formular
+ *      Hülle (eine Tabelle `resus_sessions` gibt es nicht)
+ *  12. Transportziel und Höhe des Einsatzorts im Blob: im Formular
  *      gesetzt und gespeichert, Klartextspalten leer, in keiner Antwort des
  *      Servers im Klartext, in der Ansicht nach dem Entsperren; Höhe aus der
  *      Spur zur Phase 5; „ambulant" speichert kein Ziel
- *  13. Schneiden, Rücknahme und ein Stück löschen in der Tagesansicht
- *      (S11-05c): der Einsatz bekommt verschlossene Stücke, das Segment bleibt
+ *  13. Schneiden, Rücknahme und ein Stück löschen in der Tagesansicht:
+ *      der Einsatz bekommt verschlossene Stücke, das Segment bleibt
  *      unberührt und gesperrt; die Rücknahme gibt alles frei; das Löschen
  *      schreibt das Segment ohne den Zeitraum neu, sperrt ihn und
  *      protokolliert; Gegenproben: veralteter Stand, erneute Lieferung
- *  15 (läuft vor 14) Export, Rückspielen und Zeitverschiebung (S11-05e): der
+ *  15 (läuft vor 14) Export, Rückspielen und Zeitverschiebung: der
  *      Export über die Oberfläche mit Haken trägt Phasenort und Reanimation
  *      aus der Hülle, die Spur aus den Stücken und Transportziel und Höhe
  *      aus dem Blob, ohne Haken nichts davon; die Datei mit „überschreiben"
@@ -51,12 +49,12 @@
  *      Stücke mit
  *  14. eine Einsatzhülle, in der Datenbank um ein Byte verändert, geht nicht
  *      auf: die Ansicht sagt es, und der Reiter System hat eine Meldung mit
- *      Art, Kennung und Grund — ohne Inhalt (S11-04d, M-S11-01 d); das
+ *      Art, Kennung und Grund — ohne Inhalt; das
  *      Formular verweigert dann das Speichern
  *  16 (läuft nach 14) Sichern über die Oberfläche, den Einsatz endgültig
  *      löschen, zurückspielen mit einer um ein Byte verlängerten Hülle: der
  *      Einsatz kommt ohne Hülle zurück, die Meldung ist orange und nennt
- *      `ort_huelle` (Web 23.0.2, Nr. 387)
+ *      `ort_huelle`
  *
  * Nur örtlich, weil sie die Datenbank liest und verändert.
  *
@@ -69,7 +67,7 @@ import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { randomBytes } from 'node:crypto';
-import { motorWahl, starten } from '../../motor.mjs';
+import { motorWahl, starten, istOertlich } from '../../motor.mjs';
 
 const HIER   = dirname(fileURLToPath(import.meta.url));
 const WURZEL = join(HIER, '..', '..', '..');
@@ -87,7 +85,7 @@ const PASSWORT = 'umlaufpruefung2026-ortsdaten';
 const KONTO = join(WURZEL, 'tools', 'referenzdatensatz', 'vergleich', 'pruefkonto.py');
 const MODUL = process.env.PLAYWRIGHT_MODUL || '/opt/node22/lib/node_modules/playwright/index.mjs';
 const PW = (m => m.default ?? m)(await import('file://' + MODUL));
-/* Die Engine wählt der Läufer (MOTOR=… oder --motor), R87. */
+/* Die Engine wählt der Läufer (MOTOR=… oder --motor). */
 const MOTOR = motorWahl(process.argv);
 
 let gesamt = 0, offen = 0;
@@ -107,7 +105,7 @@ function konto(befehl, rcDatei) {
 
 /* ---- Das Gesendete: im alten Format, die Gerätehilfe verschließt ---------- */
 /* Ein PHP-Ausdruck: 1, solange es noch eine Spalte oder Tabelle fuer
- * Klartext-Ortsdaten gibt (bis Web 22.7.0), sonst 0 (S11-12). */
+ * Klartext-Ortsdaten gibt, sonst 0. */
 const KLARTEXT_DA = '(db_hat_spalte(db(), "mission_phases", "lat") || db_hat_tabelle(db(), "resus_sessions")'
   + ' || db_hat_spalte(db(), "missions", "transport_dest") || db_hat_spalte(db(), "missions", "site_ele_m")'
   + ' || db_hat_tabelle(db(), "track_points") || db_hat_tabelle(db(), "track_blobs") ? 1 : 0)';
@@ -131,7 +129,7 @@ const einsatz = {
   track: { seq_from: 0, points: spurA } };
 const nachtrag = { kind: 'mission', client_ref: 'm-ortsdaten-1', day: tag, day_ref: 'd-ortsdaten-1',
   started_at: iso(jetzt), final: false, track: { seq_from: 5, points: spurB } };
-/* Ein zweites Ruhesegment für Schneiden und Löschen (S11-05c): zehn Punkte,
+/* Ein zweites Ruhesegment für Schneiden und Löschen: zehn Punkte,
    einer je Minute, damit ein Zeitraum aus Uhrzeiten eindeutig Punkte trifft. */
 const ruhe2Punkte = Array.from({ length: 10 }, (_, s) =>
   [47.70 + s * 0.001, 10.30 + s * 0.001, 700 + s, jetzt + 1000 + s * 60]);
@@ -152,8 +150,8 @@ try {
     $st->execute(['${ADRESSE}']); echo (int)$st->fetchColumn();`));
   pruefe(id > 0, '1  Wegwerfkonto angelegt', `Konto ${id}`);
 
-  const kontext = await browser.newContext({ ignoreHTTPSErrors: true });
-  /* DER WARTUNGSLAUF BLEIBT AUS (S11-07, F-S11-77): Er packt und dünnt im
+  const kontext = await browser.newContext({ ignoreHTTPSErrors: istOertlich(BASIS) });
+  /* DER WARTUNGSLAUF BLEIBT AUS: Er packt und dünnt im
      Browser aus, sobald eine Seite ihn anstößt (Startseite, Reiter Backup),
      und das Ausdünnen ändert die Punkte — mitten in einem Vergleich wäre das
      eine Abweichung, die keine ist. Die Antwort sagt „nichts fällig" — ein
@@ -197,7 +195,7 @@ try {
   const rid = Number(antworten[2].daten && antworten[2].daten.id);
   const rid2 = Number(antworten[3].daten && antworten[3].daten.id);
   const dayId = Number(php(`echo (int)db()->query("SELECT day_id FROM missions WHERE id = ${mid}")->fetchColumn();`));
-  /* Ein Schnitt im Ruhesegment: die mittleren Punkte gesperrt (E-S11-37). */
+  /* Ein Schnitt im Ruhesegment: die mittleren Punkte gesperrt. */
   php(`db()->prepare("INSERT INTO track_cuts (user_id, owner_type, owner_id, mission_id, von_ts, bis_ts, n_punkte, erstellt_am)
        VALUES (?, 'rest', ?, ?, ?, ?, 2, UTC_TIMESTAMP())")->execute([${id}, ${rid}, ${mid}, ${jetzt + 210}, ${jetzt + 220}]);`);
 
@@ -240,7 +238,7 @@ try {
 
   const gleich = (a, b) => a.length === b.length && a.every((p, i) =>
     Math.abs(p[0] - b[i][0]) < 1e-7 && Math.abs(p[1] - b[i][1]) < 1e-7
-    /* Höhe in ganzen Metern (E-S11-66): höchstens einen halben Meter daneben. */
+    /* Höhe in ganzen Metern: höchstens einen halben Meter daneben. */
     && (p[2] === null ? b[i][2] === null : Math.abs(p[2] - b[i][2]) <= 0.5 + 1e-6) && p[3] === b[i][3]);
   pruefe(JSON.stringify(r.stuecke) === '[[0,5],[5,5]]', '3  api/mission.php: zwei Stücke, Platz und Punktzahl',
          JSON.stringify(r.stuecke));
@@ -265,12 +263,11 @@ try {
   const inDb = php(`echo json_encode(db()->query("SELECT COUNT(*) n, SUM(punkte) p FROM track_stuecke ts
     JOIN missions m ON m.id = ts.owner_id AND ts.owner_type = 'mission' WHERE m.user_id = ${id}")->fetch(PDO::FETCH_ASSOC));`);
   pruefe(/"n":2/.test(inDb) && /"p":"?10/.test(inDb), '2  in der Datenbank: zwei Stücke, zehn Punkte', inDb);
-  /* Seit Web 23 (S11-12) gibt es keine Spalte und keine Tabelle mehr, in
-   * der Koordinate oder Reanimation im Klartext liegen koennten; bis dahin
-   * zaehlte die Probe deren Zeilen. */
+  /* Es gibt keine Spalte und keine Tabelle, in der Koordinate oder
+   * Reanimation im Klartext liegen koennten. */
   const klar = php(`echo ${KLARTEXT_DA};`);
   pruefe(klar === '0', '2  keine Spalte und keine Tabelle fuer Klartext-Ortsdaten', klar === '0' ? 'keine' : 'noch da');
-  /* 6 — die Einsatzansicht öffnet selbst (S11-04c): Spur gezeichnet, Phasen
+  /* 6 — die Einsatzansicht öffnet selbst: Spur gezeichnet, Phasen
    * und Reanimation aus der Hülle, der Ladeplatz wieder fort */
   await s.goto(`${BASIS}/einsatz.php?id=${mid}`, { waitUntil: 'networkidle' });
   await s.waitForFunction(() => document.querySelectorAll('#phasebody .phasen-zeile').length > 0,
@@ -290,7 +287,7 @@ try {
          `${e6.phasen} Phasen, ${e6.rea} Reanimationszeilen`);
   pruefe(e6.lade === 0 && e6.fehlerkasten === 0, '6  kein Ladeplatz mehr sichtbar, keine Fehlermeldung',
          `${e6.lade} sichtbar, ${e6.fehlerkasten} Fehler`);
-  /* 7 — die Diensttagsansicht öffnet die Stücke (S11-04c): Einsatz- und
+  /* 7 — die Diensttagsansicht öffnet die Stücke: Einsatz- und
    * Ruhespur gezeichnet, der Schnitt blendet Punkte aus */
   await s.goto(`${BASIS}/index.php?d=${dayId}`, { waitUntil: 'networkidle' });
   await s.waitForFunction(() => document.querySelectorAll('#map .leaflet-overlay-pane path').length >= 2,
@@ -317,7 +314,7 @@ try {
   }));
   pruefe(e8.linien >= 3 && e8.zeilen === 3 && e8.lade === 0,
          '8  tag_spuren.php: drei Zeilen, drei Linien, kein Ladeplatz', JSON.stringify(e8));
-  /* 9 — die Zeitrechnung des Browsers gegen PHP (S11-05b). Fälle: ein
+  /* 9 — die Zeitrechnung des Browsers gegen PHP. Fälle: ein
    * Sommertag, beide Zeitumstellungen direkt und über „+1 Tag". */
   const faelle = [['2026-07-01', '23:50', 0], ['2026-07-01', '00:10', 1], ['2026-03-29', '02:30', 0],
                   ['2026-03-28', '02:30', 1], ['2026-10-25', '02:30', 0], ['2026-10-24', '02:30', 1],
@@ -392,8 +389,7 @@ try {
   pruefe(/nicht gleich rechnen/.test(textW) && vorWaechter === nachWaechter,
          '10 Gegenprobe: verfälschte Phasenzeiten → nichts gespeichert', `${/nicht gleich rechnen/.test(textW)}, Hülle ${vorWaechter === nachWaechter ? 'gleich' : 'GEÄNDERT'}`);
 
-  /* 10 — Altbestand im Klartext gibt es seit Web 23 nicht mehr (S11-12);
-   * hier stand die Probe, dass das Formular ihn in die Hülle übernimmt. */
+  /* 10 — Altbestand im Klartext gibt es nicht mehr. */
 
   /* 11 — ein Einsatz, im Formular nachgetragen, mit Reanimation */
   await s.goto(`${BASIS}/einsatz_form.php?d=${dayId}`, { waitUntil: 'networkidle' });
@@ -419,7 +415,7 @@ try {
          && rea11 && rea11[0] && rea11[0][0].time === '10:05',
          '11 Nachtrag: Reanimation in der Hülle, keine Klartextzeile', JSON.stringify({ n11, rea: rea11 }).slice(0, 80));
 
-  /* 12 — Transportziel und Ortshöhe im Blob (S11-05b). Phase 5 auf die
+  /* 12 — Transportziel und Ortshöhe im Blob. Phase 5 auf die
    * Minute von Phase 4 (früher läge sie nach der Mitternachtsregel am
    * Folgetag); erwartet ist die Höhe des zeitlich nächsten gesendeten Punkts,
    * gerechnet wie `compute_site_elevation()`. */
@@ -442,7 +438,7 @@ try {
   }, hhmm5);
   await Promise.all([s.waitForURL(/einsatz\.php\?id=/, { timeout: 60000 }),
                      s.evaluate(() => document.getElementById('missionform').requestSubmit())]);
-  /* Seit Web 23 gibt es die vier Klartextspalten nicht mehr (S11-12). */
+  /* Die vier Klartextspalten gibt es nicht mehr. */
   const spalten12 = JSON.parse(php(`echo json_encode(['spalten' => (db_hat_spalte(db(), "missions", "transport_dest")
     || db_hat_spalte(db(), "missions", "dest_lat") || db_hat_spalte(db(), "missions", "site_ele_m")) ? 1 : null]);`));
   const roh12 = await s.evaluate(async (mid) => (await (await fetch('api/mission.php?id=' + mid)).text())
@@ -487,7 +483,7 @@ try {
   pruefe(!amb12.transport_dest && amb12.ortshoehe === hoeheSoll, '12 „ambulant": kein Ziel im Blob, Höhe bleibt',
          JSON.stringify(amb12).slice(0, 70));
 
-  /* 13 — Schneiden, Rücknahme, ein Stück löschen (S11-05c). Zeitraum: die
+  /* 13 — Schneiden, Rücknahme, ein Stück löschen. Zeitraum: die
    * Minute des vierten bis die des sechsten Punkts; erwartet sind die Punkte,
    * deren Zeit in [Minutenanfang 4., Minutenanfang 6.] liegt — gerechnet wie
    * der Server aus „HH:MM". */
@@ -574,12 +570,11 @@ try {
   pruefe(wieder13 === 10 - soll13, '13 Gegenprobe: erneute Lieferung bringt die gelöschten Punkte nicht zurück',
          `${wieder13} Punkte sichtbar`);
 
-  /* 15 — Export, Rückspielen, Wächter, Zeitverschiebung (S11-05e). Läuft VOR
+  /* 15 — Export, Rückspielen, Wächter, Zeitverschiebung. Läuft VOR
    * 14, weil 14 die Hülle von `mid` verdirbt. Transportziel und Höhe kommen
    * aus dem Blob von `mid`. Schritt 12 endet mit „ambulant" und damit ohne
-   * Ziel; das Ziel wird hier deshalb über das Formular wieder gesetzt. Bis
-   * Web 22.7.0 bekam `neuId` hier einen Altbestand in den Klartextspalten
-   * (S11-12). */
+   * Ziel; das Ziel wird hier deshalb über das Formular wieder gesetzt.
+   * */
   await s.goto(`${BASIS}/einsatz_form.php?id=${mid}`, { waitUntil: 'networkidle' });
   await s.waitForFunction(() => typeof PAT_CK !== 'undefined' && PAT_CK, null, { timeout: 30000 }).catch(() => null);
   await s.evaluate(() => {
@@ -699,8 +694,7 @@ try {
          && zahl15 === '0', '15 Klartext → 400 klartext, falsche Zeiten → 409 ortsdaten, nichts angelegt',
          JSON.stringify(k15) + ` · ${zahl15}`);
 
-  /* 15b  Import: ein Diensttag im Papierkorb neben einem aktiven (R17-22,
-     F-R17-40) und „overwrite" ohne Kennung (F-R17-41). Bis Web 23.3.0
+  /* 15b  Import: ein Diensttag im Papierkorb neben einem aktiven und „overwrite" ohne Kennung. Frueher
      sperrte EIN geloeschter Tag desselben Datums das ganze Datum — alle
      Einsaetze unter `ohne_diensttag`, obwohl `check` den aktiven Tag eben
      gemeldet hatte; und „overwrite" ohne `overwrite_id` legte einen Einsatz
@@ -797,13 +791,13 @@ try {
   const huelleNach = php(`echo md5((string)db()->query("SELECT ort_huelle FROM missions WHERE id = ${mid}")->fetchColumn());`);
   pruefe(/einsatz_form\.php/.test(s.url()) && huelleVor === huelleNach && await s.locator('#ortfehler').count() === 1,
          '14 Formular mit verdorbener Hülle: Speichern gesperrt, Hülle unverändert', s.url().replace(BASIS, ''));
-  /* 16 — verworfene Werte beim Einspielen (Web 23.0.2, Nr. 387). Bis
-   * Web 23.0.1 sammelte der Server jede Beanstandung in `stats.rejected`,
+  /* 16 — verworfene Werte beim Einspielen. Frueher
+   * sammelte der Server jede Beanstandung in `stats.rejected`,
    * die Seite las das Feld nirgends, und die Meldung blieb blau — auch wenn
    * eine abgewiesene Hülle Orte und Reanimation des Einsatzes mitnahm. Die
    * Probe sichert über die Oberfläche, löscht `mid` endgültig und spielt
    * die Datei zurück; dabei verlängert sie die Hülle dieses Einsatzes in der
-   * Anfrage um ein Byte. Das ist die Abnahme aus Nr. 387: orange Meldung mit
+   * Anfrage um ein Byte. Das ist die Abnahme: orange Meldung mit
    * dem Feld. Läuft NACH 14 — dort ist die Hülle schon gekippt, aber in der
    * Länge heil, und die Prüfschicht prüft nur Form und Größe. */
   const BPW = 'ortsdatenprobe-backup-2026';

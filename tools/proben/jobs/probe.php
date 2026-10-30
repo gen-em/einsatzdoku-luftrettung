@@ -2,7 +2,7 @@
 declare(strict_types=1);
 
 /**
- * Jobprobe — tut der Job-Rahmen, was er zusagt? (S2/AP2)
+ * Jobprobe — tut der Job-Rahmen, was er zusagt?
  *
  * Anlass: Nr. 37 — Wartung lag auf der Anfrage (4,07 s); der erste Rueckfall trug bis 18 s
  *
@@ -27,8 +27,7 @@ declare(strict_types=1);
  * beweist nichts ueber sein Zusammenspiel mit der Sperre (die auf COMMIT
  * angewiesen ist). Deshalb legt die Probe ihre eigenen Waisen an — Spurstuecke
  * auf Eigentuemerkennungen, die es garantiert nicht gibt — und raeumt am Ende
- * hinter sich auf. Bestehende Daten fasst sie nicht an. (Bis Web 22.7.0 waren
- * es Zeilen in `track_points` und Blobs in `track_blobs`; S11-12.)
+ * hinter sich auf. Bestehende Daten fasst sie nicht an.
  *
  * Aufruf:
  *   php tools/proben/jobs/probe.php
@@ -37,14 +36,13 @@ declare(strict_types=1);
  */
 
 $wurzel = dirname(__DIR__, 3) . '/server';
-require_once $wurzel . '/config.php';
 require_once $wurzel . '/db.php';
 require_once $wurzel . '/jobs_lib.php';
 require_once $wurzel . '/spur_lib.php';
 
 $pdo = db();
 
-/* ANGEHALTENE JOBS SIND KEIN FEHLSCHLAG, SONDERN EIN ABBRUCHGRUND (S2/AP10).
+/* ANGEHALTENE JOBS SIND KEIN FEHLSCHLAG, SONDERN EIN ABBRUCHGRUND.
  *
  * `kreislauf.py` haelt die Jobs waehrend seines Laufs an (`jobs_pause(1800)`)
  * und laesst sie danach wieder los. Wer diese Probe in derselben Zeit faehrt,
@@ -130,7 +128,7 @@ function marke_zuruecksetzen(PDO $pdo): void {
         ->execute([json_encode(['mission' => 0, 'rest' => 0]), 'waisen']);
 }
 
-/** Die Marke direkt VOR die Waisen der Probe legen (Schritt 17, R4-15).
+/** Die Marke direkt VOR die Waisen der Probe legen.
  *
  * Teil 2 fragt, ob jeder Ausloeser DIESELBE Arbeit tut — nicht, wie schnell ein
  * Durchgang ueber die ganze Anlage ist. Mit der Marke auf 0 musste der
@@ -212,7 +210,7 @@ foreach (['cli', 'token', 'anfrage'] as $ausloeser) {
 
 echo "\n  Teil 3 — Die gemeldete Zahl ist nachgerechnet\n";
 aufraeumen($pdo, $basisM, $basisR);
-/* FREMDE WAISEN ZAEHLEN, BEVOR GEZAEHLT WIRD (R4-18, F-R4-63). Teil 3 faehrt
+/* FREMDE WAISEN ZAEHLEN, BEVOR GEZAEHLT WIRD. Teil 3 faehrt
  * den Job von vorn und zaehlt, was er abraeumt — liegt in der Anlage noch
  * etwas, das eine andere Probe zurueckgelassen hat, stimmt die 7 nicht. Das
  * soll rot bleiben: Eine Waise in der Anlage ist ein Fehler, nicht Rauschen.
@@ -348,7 +346,7 @@ printf("  [--] %-62s %s\n", 'Nebenbei abgeraeumte ECHTE Waisen (kein Fehler)',
        ($gesamtVorher - $gesamtNachher) . ' Stuecke');
 
 /* ======================================================================
- * DIE ZAHL `geloescht` UEBERSTEHT DEN BERICHT (S10/AP5, neu gefasst P5c/AP8)
+ * DIE ZAHL `geloescht` UEBERSTEHT DEN BERICHT
  *
  * `jobs_lauf()` baut den Bericht je Job mit einem FESTEN Schluesselsatz neu
  * zusammen; ein Schluessel, den der Job zurueckgibt und den diese Liste
@@ -359,8 +357,8 @@ printf("  [--] %-62s %s\n", 'Nebenbei abgeraeumte ECHTE Waisen (kein Fehler)',
  * nimmt sie in den Bericht, und `jobs.php` haengt sie an die Cron-Zeile.
  *
  * BIS WEB 20.47.0 MASS DIESE STELLE `uebergangen`, die Zahl der Ziele mit
- * dem abgeschafften Protokoll FTP (S10/AP4). Mit dem ENUM-Wert ist sie
- * gefallen (E-P5c-124); die Falle, fuer die die Messung steht, nicht — und
+ * dem abgeschafften Protokoll FTP. Mit dem ENUM-Wert ist sie
+ * gefallen; die Falle, fuer die die Messung steht, nicht — und
  * `geloescht` nimmt denselben Weg.
  *
  * KEIN ZIEL WIRD ANGELEGT. Die Probe fasst `backup_targets` nicht an; sie
@@ -390,7 +388,7 @@ if (array_key_exists('uebersprungen', $berichtV['versand'] ?? [])) {
 }
 
 /* ======================================================================
- * TEIL 10 — DER JOB `mail` (P5a/AP5)
+ * TEIL 10 — DER JOB `mail`
  *
  * WAS HIER GEMESSEN WIRD UND WAS NICHT. Die Warteschlange selbst — Leiter,
  * Fristen, Endzustaende, Rahmen — misst `tools/proben/mail/` gegen eine

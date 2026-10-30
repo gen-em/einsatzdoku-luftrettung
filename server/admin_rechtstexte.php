@@ -6,17 +6,14 @@ require_once __DIR__ . '/rechtstexte_lib.php';
 require_once __DIR__ . '/protokoll_lib.php';
 
 /**
- * RECHTSTEXTE — die vier Texte, die diese Installation nach außen zeigt
- * (P5c/AP9, E-P5c-28, Backlog Nr. 121; Mockup M-P5c-01d, Variante 2).
+ * RECHTSTEXTE — die vier Texte, die diese Installation nach außen zeigt.
  *
- * WIEDER EINE SEITE. Von S8 bis Web 21.0.0 war diese Adresse eine
- * Weiterleitung auf „Installation", wo die vier Texte untereinander in der
- * rechten Spalte standen — jeder mit einer Vorschau des GESPEICHERTEN Stands
- * darunter. Eine Vorschau unter einem Feld von 18 Zeilen steht bei 900 px
- * Fensterhöhe gerade noch im Bild, bei 720 px nicht mehr: Man tippt oben und
- * sieht unten nichts. Hier steht ab 1200 px die Vorschau NEBEN dem Feld und
- * läuft beim Tippen mit (`assets/rechtstext_vorschau.js`); darunter stapelt
- * sie sich wie vorher, ist also nie schlechter.
+ * EINE EIGENE SEITE MIT VORSCHAU DANEBEN. Eine Vorschau unter einem Feld
+ * von 18 Zeilen steht bei 900 px Fensterhöhe gerade noch im Bild, bei
+ * 720 px nicht mehr: Man tippt oben und sieht unten nichts. Hier steht ab
+ * 1200 px die Vorschau NEBEN dem Feld und läuft beim Tippen mit
+ * (`assets/rechtstext_vorschau.js`); darunter stapelt sie sich, ist also nie
+ * schlechter.
  *
  * EIN TEXT JE REITER, EIN FORMULAR JE TEXT. Die Reiter sind Verweise
  * (`ui_reiter()`), keine Sichtwechsel im selben Formular: So braucht der
@@ -31,7 +28,7 @@ require_once __DIR__ . '/protokoll_lib.php';
  * zeigt die Vorschau den gespeicherten Stand, wie bisher.
  *
  * KEINE UNTERPUNKTE IN DER LEISTE: Die Seite trägt Reiter, und `menue.js`
- * baut dann keine (E-P5c-25).
+ * baut dann keine.
  */
 
 $k = (string)($_POST['schluessel'] ?? $_GET['t'] ?? 'impressum');
@@ -43,7 +40,7 @@ $notice = null; $error = null;
  * der gespeicherte Stand. Sonst wäre die Eingabe mit der Fehlermeldung weg. */
 $eingabe = null;
 
-/* UMLEITEN NACH DEM POST (Web 21.1.9, Backlog Nr. 250). Das Speichern endet
+/* UMLEITEN NACH DEM POST. Das Speichern endet
  * mit `flash_setzen()` und einer Umleitung auf den Reiter des Textes — sonst
  * speichert Neuladen ein zweites Mal und schreibt einen zweiten
  * Protokolleintrag. „Es gab nichts zu ändern" leitet ebenso um: Das Feld
@@ -92,11 +89,10 @@ if ($flash !== null) {
 $t = $eingabe ?? rt_lesen($k);
 $gespeichert = rt_lesen($k);
 $leer = rt_leer($gespeichert['inhalt']);
-/* MIT ZEITSTEMPEL, deshalb kein `datum_text()` (Schritt 15 AP7, benannte
- * Ausnahme, Register Z26): `stand` ist ein KALENDERTAG, keine UTC-Marke — eine
+/* MIT ZEITSTEMPEL, deshalb kein `datum_text()` (benannte Ausnahme,
+ * Register Z26): `stand` ist ein KALENDERTAG, keine UTC-Marke — eine
  * Umrechnung nach `app.timezone` verschöbe ihn. Gleiche Lage wie in
- * `rt_stand_markup()`. Bis Web 21.0.0 stand diese Zeile in
- * `admin_installation.php`. */
+ * `rt_stand_markup()`. */
 $kopfzahl = $gespeichert['stand'] !== null && strtotime($gespeichert['stand']) !== false
     ? 'Stand ' . date('d.m.Y', (int)strtotime($gespeichert['stand']))
     : 'ohne Standdatum';
@@ -114,11 +110,11 @@ ui_seite_start(['titel' => 'Rechtstexte']);
   <?php ui_meldung($notice, $error, 'ok', '  '); ?>
 
   <?php
-  /* DIE REITER TRAGEN `data-cancel-form` (F-P5c-57): Wer mit ungespeichertem
+  /* DIE REITER TRAGEN `data-cancel-form`: Wer mit ungespeichertem
      Text den Reiter wechselt, wird gefragt — nur dann; ohne Änderung folgt
      der Verweis wie jeder andere. Beschriftet aus `RT_TEXTE`: Der vierte heißt
-     „Vereinbarung zur Auftragsverarbeitung (AVV)", nicht „AVV" wie im Bild
-     (Gestaltungsvorgabe 4, 17.09.2026); unter 720 px rollt die Reihe. */
+     „Vereinbarung zur Auftragsverarbeitung (AVV)", nicht „AVV"; unter 720 px
+     rollt die Reihe. */
   $punkte = [];
   foreach (RT_TEXTE as $schl => $titel) {
       $punkte[] = ['text' => $titel, 'href' => '?t=' . $schl, 'aktiv' => $schl === $k,
@@ -186,12 +182,12 @@ ui_seite_start(['titel' => 'Rechtstexte']);
         <?php require_once __DIR__ . '/geocoder_lib.php'; ?>
         <?php $bausteine = geocoder_installation_an() ? 2 : 1; ?>
         <?php /* ZWEI TEXTBAUSTEINE, ZUGEKLAPPT. Die Anwendung liefert KEINEN
-                 Rechtstext mit (R32) — was darin steht, ist Sache der
+                 Rechtstext mit — was darin steht, ist Sache der
                  BetreiberIn. Was sie kann, ist VORSCHLAGEN, mit den Angaben,
                  die tatsächlich gelten. Der Baustein zur Adresssuche steht nur,
-                 solange sie eingeschaltet ist (S9/AP2): ein Absatz über eine
+                 solange sie eingeschaltet ist: ein Absatz über eine
                  Abfrage, die nicht stattfindet, wäre eine falsche Auskunft. Der
-                 zu den Sicherheitsereignissen steht immer (P5a/AP8): Den
+                 zu den Sicherheitsereignissen steht immer: Den
                  Ratenschutz gibt es in jeder Installation. */ ?>
         <?php ui_karte_start(['titel' => 'Textbausteine', 'id' => 'k-bausteine',
                               'vorschau' => $bausteine . ' zum Übernehmen']); ?>
@@ -207,12 +203,11 @@ ui_seite_start(['titel' => 'Rechtstexte']);
                 . 'sich abschalten: in deinem Profil unter „Datenschutz".',
                   'Vorschlag für den Abschnitt „Adresssuche"') ?>
           <?php endif; ?>
-          <?php /* DER LETZTE SATZ STIMMT SEIT WEB 20.39.0 NICHT MEHR SO
-                   (F-P5c-153): Bis Web 21.0.0 stand hier „Sicherungskopien der
-                   Datenbank können diese Angaben enthalten". Seit P5c/AP2 geht
-                   `sicherheit_ereignisse` OHNE ZEILEN ins Komplett-Backup
-                   (`KOMP_OHNE_ZEILEN`), und das Archiv des Protokolls führt die
-                   Sicherheitsereignisse ohne Merkmal und Person (E-P5c-39). */ ?>
+          <?php /* DER LETZTE SATZ SAGT NICHT „Sicherungskopien der Datenbank
+                   können diese Angaben enthalten": `sicherheit_ereignisse`
+                   geht OHNE ZEILEN ins Komplett-Backup (`KOMP_OHNE_ZEILEN`),
+                   und das Archiv des Protokolls führt die
+                   Sicherheitsereignisse ohne Merkmal und Person. */ ?>
           <?= ui_codeblock_lang(
                 '### Schutz vor unbefugten Anmeldeversuchen' . "\n\n"
               . 'Wenn bei der Anmeldung mehrfach ein falsches Passwort eingegeben '
@@ -232,8 +227,8 @@ ui_seite_start(['titel' => 'Rechtstexte']);
     </div><?php /* .form-spalte (links) */ ?>
 
     <div class="form-spalte">
-      <?php /* DIE VORSCHAU (M-P5c-01d, Zustände Teil 3). Ohne Skript: der
-               gespeicherte Stand, wie bisher. Mit Skript: nach 0,4 s Ruhe der
+      <?php /* DIE VORSCHAU. Ohne Skript: der
+               gespeicherte Stand. Mit Skript: nach 0,4 s Ruhe der
                getippte Text, vom Server gerendert; die Plakette sagt, welcher
                Stand gerade dasteht. Der Kasten rollt in sich und folgt dem Feld
                anteilig — ohne Quellzuordnung, das genügt für „ungefähr dort". */ ?>
@@ -266,10 +261,10 @@ ui_seite_start(['titel' => 'Rechtstexte']);
          die Speichern-Leiste unsichtbar, und zwar ohne Fehlermeldung.
          kopieren.js gehört zum Wertekasten der Textbausteine (Design.md 9.18). */ ?>
 <?php /* DAS TOKEN FÜR `EdApi` — ohne das Krypto-Rüstzeug, das diese Seite nicht
-         braucht (`ui_csrf_bootstrap()`, E-P5c-130). Fehlt es, antwortet der
+         braucht (`ui_csrf_bootstrap()`). Fehlt es, antwortet der
          Vorschau-Endpunkt 403, und die Plakette steht auf „nicht aktuell". */ ?>
 <?php ui_csrf_bootstrap(); ?>
 <?php /* html.js (EdHtml.meldung) und api.js (EdApi) stehen im Kopf jeder
-         Seite (ui_seite_start(); html.js seit Web 21.1.11). */ ?>
+         Seite (ui_seite_start()). */ ?>
 <?php ui_seite_ende(['skripte' => ['assets/forms.js', 'assets/kopieren.js',
                                    'assets/rechtstext_vorschau.js']]); ?>

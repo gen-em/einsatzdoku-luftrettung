@@ -136,7 +136,7 @@ def flug(von, nach, t0: int, t1: int, saat: str) -> list[tuple]:
 
 
 def fussweg(von, nach, t0: int, t1: int, saat: str) -> list[tuple]:
-    """Punkte eines Teilstuecks, das GEGANGEN wird (E-DA-13).
+    """Punkte eines Teilstuecks, das GEGANGEN wird.
 
     WOFUER. Ein Bergwachtnotarzt faehrt bis zum Parkplatz, zur Talstation oder
     zur Huettenzufahrt (`zustieg`) und geht von dort zum Patienten. Bis zum

@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """Erzeugt die Tabellen von docs/Design.md aus den Quellen.
 
-WARUM ES DIESES WERKZEUG GIBT. Das Konzept verlangt fuer O12 ausdruecklich
+WARUM ES DIESES WERKZEUG GIBT. Verlangt ist ausdruecklich
 eine Token-Tabelle, die aus dem Stylesheet *erzeugt* und nicht abgeschrieben
-ist (Konzept-P3-Oberflaeche.md, O12 Punkt 1). Der Grund ist derselbe wie bei
+ist. Der Grund ist derselbe wie bei
 jeder abgeschriebenen Zahl: Sie stimmt am Tag des Abschreibens und danach nie
 wieder. Eine Gestaltungsrichtlinie, deren Farbwerte von denen der Anwendung
 abweichen, ist schlimmer als keine — man glaubt ihr.
@@ -19,9 +19,9 @@ Abschnitte.
     python3 tools/erzeugen/design.py alle
     python3 tools/erzeugen/design.py schreiben   # ersetzt die vier in Design.md
 
-SCHREIBEN (seit R4-25, Nr. 209). Die Tabellen waren von Anfang an zum
+SCHREIBEN. Die Tabellen waren von Anfang an zum
 Einfügen gedacht, und eingefügt hat sie lange niemand: Als der Bestandsriegel
-sie mit R4-25 an diesen Erzeuger hielt, waren alle vier veraltet. Seither ist
+sie an diesen Erzeuger hielt, waren alle vier veraltet. Seither ist
 Stufe 1 rot, sobald eine Funktion in ui.php, eine Regel in style.css oder ein
 Symbol dazukommt — und vier Blöcke von Hand zu ersetzen, jedes Mal, ist genau
 die Arbeit, die dann unterbleibt. `schreiben` ersetzt jeden Block von seiner
@@ -57,12 +57,12 @@ def css_ohne_kommentare() -> str:
     erst auf, als sich die Zahl aus einem anderen Grund aenderte:
 
       * Die Schwellentabelle las „@media-Abfragen" aus dem Prosakopf und
-        nahm den halben :root-Block als Abfrage mit (S8/AP7).
+        nahm den halben :root-Block als Abfrage mit.
       * Die Bausteintabelle zaehlte fuer `ui_feld()` „+24 Unterklassen",
         wo es 18 gibt — jede Nennung einer Klasse in einem Kommentar zaehlte
         mit. Aufgefallen ist es erst, als eine EINZIGE neue Regel die Zahl um
         DREI erhoehte: Der Kommentar darueber nennt `.feld-eingabe` dreimal
-        beim Namen (S8/AP7). Elf der 34 Zeilen standen zu hoch.
+        beim Namen. Elf der 34 Zeilen standen zu hoch.
 
     Ein Kommentar erklaert das Stylesheet; er ist kein Stylesheet. Wer eine
     Regel, einen Selektor oder eine Abfrage zaehlt, zaehlt hier.
@@ -164,11 +164,11 @@ def tabelle_schwellen() -> str:
     """Die Medienabfragen mit einer Breite — die ganze Abfrage, nicht nur ihr
     Breitenteil.
 
-    WARUM DIE GANZE ABFRAGE. Bis Web 15.4.1 suchte der Ausdruck nach einer
+    WARUM DIE GANZE ABFRAGE. Ein frueherer Ausdruck suchte nach einer
     Klammer unmittelbar hinter `@media`, die eine Breite enthaelt. Eine
     zusammengesetzte Abfrage wie
     `@media (hover: hover) and (pointer: fine) and (min-width:1024px)`
-    (die zweite Bedienhoehe, S8/AP7) faengt aber mit `(hover: hover)` an —
+    (die zweite Bedienhoehe) faengt aber mit `(hover: hover)` an —
     sie fiel damit aus der Tabelle heraus, und die Tabelle behauptete
     Vollstaendigkeit, die sie nicht hatte. Jetzt wird die Abfrage bis zur
     geschweiften Klammer gelesen und aufgenommen, sobald irgendwo darin eine
@@ -277,11 +277,11 @@ def bausteine_lesen() -> list[dict]:
         'ui_geruest_ende': 'inhalt',
         'ui_leiste_diensttage': 'leiste-liste',
         'ui_leiste_einstellungen': 'leiste-liste',
-        # P5c/AP9: `.uebersicht-block` ist entfallen; die Hülle ist das Raster,
+        # `.uebersicht-block` ist entfallen; die Hülle ist das Raster,
         # die Bereiche sind Karten (`.karte-bereich`, Design.md 9.1).
         'ui_einstellungen_uebersicht': 'uebersicht-raster',
         'ui_ortsfeld': 'ortsfeld-zeile',
-        # P5c/AP1: Variante des Hinweisstreifens bzw. der Meldung (Design.md 9.36).
+        # Variante des Hinweisstreifens bzw. der Meldung (Design.md 9.36).
         'ui_umgebung_hinweis': 'hinweis-umgebung',
         'ui_ankuendigung': 'meldung-ankuendigung',
         'ui_seite_start': '', 'ui_seite_ende': '', 'ui_favicon': '',

@@ -22,9 +22,9 @@ import org.robolectric.RobolectricTestRunner
 import kotlin.random.Random
 
 /**
- * Bedienung und Funk zusammen (Abnahme C2, E-S4-10).
+ * Bedienung und Funk zusammen.
  *
- * HIER LIEGT DER FÜNFTE ABNAHMEFALL: **Dienststart an der Uhr ohne
+ * HIER LIEGT DER FALL **Dienststart an der Uhr ohne
  * erreichbares Handy** — schwebend angezeigt, keine Aufzeichnungslücke
  * verschwiegen. Dazu die Naht selbst: dass aus jeder Wirkung genau eine
  * Meldung wird und die `wm-`-Kennung nur dort entsteht, wo ein Einsatz
@@ -46,12 +46,11 @@ class UhrsteuerungTest {
     // ---- Was die Uhr weiss, bevor sie etwas versucht hat --------------------
 
     /**
-     * **Vor dem ersten Sendeversuch behauptet die Uhr nichts** (Fund B-S4-09).
+     * **Vor dem ersten Sendeversuch behauptet die Uhr nichts.**
      *
      * Der Anfangszustand ist weder „verbunden" noch „nicht erreichbar",
-     * sondern **unbekannt**. Vorher stand dort `true`, und die Startseite
-     * meldete „Handy verbunden", ohne dass je eine Nachricht hinausgegangen
-     * war — dieselbe Art Aussage, gegen die E-S4-47 gebaut ist.
+     * sondern **unbekannt**. Mit `true` meldete die Startseite „Handy
+     * verbunden", ohne dass je eine Nachricht hinausgegangen ist.
      */
     @Test fun vorDemErstenVersuchIstDerFunkstandUnbekannt() {
         assertNull("Nichts versucht, nichts behauptet", steuerung.zustand.handyErreichbar)
@@ -72,7 +71,7 @@ class UhrsteuerungTest {
     // ---- Dienststart ohne erreichbares Handy --------------------------------
 
     /**
-     * **Der schwebende Dienststart** (E-S4-10).
+     * **Der schwebende Dienststart.**
      *
      * „Ein an der Uhr ausgelöster Dienststart wirkt erst mit Zustellung ans
      * Handy — vorher läuft dort kein GPS." Die Uhr zeigt genau das: Dienst
@@ -123,7 +122,7 @@ class UhrsteuerungTest {
 
     // ---- Aus jeder Wirkung genau eine Meldung -------------------------------
 
-    /** Die `wm-`-Kennung entsteht **nur** beim eröffnenden Ereignis (E-S4-09). */
+    /** Die `wm-`-Kennung entsteht **nur** beim eröffnenden Ereignis. */
     @Test fun nurDieEroeffnendePhaseTraegtEineEinsatzkennung() {
         steuerung.ereignis(Uhrereignis.Dienstknopf(tipp()))
         steuerung.ereignis(Uhrereignis.GrosserKnopf(tipp()))   // Phase 2: eröffnet
@@ -156,7 +155,7 @@ class UhrsteuerungTest {
         assertEquals(2, kennungen.toSet().size)
     }
 
-    /** Der Zeitstempel ist der **der Uhr** und der des Auslösens (E-R45-1). */
+    /** Der Zeitstempel ist der **der Uhr** und der des Auslösens. */
     @Test fun dieMeldungTraegtDieZeitDerUhr() {
         uhrzeit = 1_784_279_400_000L
         steuerung.ereignis(Uhrereignis.Dienstknopf(tipp()))
@@ -181,7 +180,7 @@ class UhrsteuerungTest {
         assertEquals("Nummern lückenlos", (1L..6L).toList(), meldungen().map { it.nr })
     }
 
-    /** Ein gesperrtes Tippen meldet nichts — es tut ja nichts (E-S4-21d). */
+    /** Ein gesperrtes Tippen meldet nichts — es tut ja nichts. */
     @Test fun gesperrtWirdNichtsGemeldet() {
         steuerung.ereignis(Uhrereignis.Dienstknopf(tipp()))
         weg.leeren()
@@ -213,7 +212,7 @@ class UhrsteuerungTest {
         assertEquals("Und die Ansicht folgt", Ansicht.LAUFEND, z.ansicht)
     }
 
-    // ---- Der Ortungszustand des Handys (E-S5Z-15) --------------------------
+    // ---- Der Ortungszustand des Handys -------------------------------------
 
     @Test fun derOrtungszustandWirdUebernommen() {
         steuerung.standEingegangen(
@@ -223,9 +222,9 @@ class UhrsteuerungTest {
     }
 
     /**
-     * **`null` bleibt `null`.** Eine Handy-Fassung vor E1 schickt das Feld
+     * **`null` bleibt `null`.** Eine ältere Handy-Fassung schickt das Feld
      * nicht mit; die Uhr darf daraus nicht "alles gut" machen — sie zeigt
-     * dann nichts an, und das ist die einzige zutreffende Auskunft (B-S4-09).
+     * dann nichts an, und das ist die einzige zutreffende Auskunft.
      */
     @Test fun ohneAngabeBleibtDerOrtungszustandUnbekannt() {
         steuerung.standEingegangen(stand(dienstLaeuft = true))
@@ -250,7 +249,7 @@ class UhrsteuerungTest {
         assertEquals(Ortungscode.OK, steuerung.zustand.ortung)
     }
 
-    /** Der Modus kommt vom Handy — ohne Phasenknöpfe gibt es keine (E-S4-20). */
+    /** Der Modus kommt vom Handy — ohne Phasenknöpfe gibt es keine. */
     @Test fun derModusKommtVomHandy() {
         steuerung.standEingegangen(stand(dienstLaeuft = true).copy(modus = Modus.NUR_AUFZEICHNEN))
         assertFalse(steuerung.zustand.mitPhasen)
@@ -271,9 +270,9 @@ class UhrsteuerungTest {
     }
 
     /**
-     * **Ein Zeitschlag ohne Änderung zeichnet nicht** (R17-24). Bis 0.18.0
-     * rief jeder Zeitschlag [Uhrsteuerung]s Rückruf, auch wenn der Zustand
-     * gleich blieb — eine Neuzeichnung je Sekunde. Der erste Schlag darf
+     * **Ein Zeitschlag ohne Änderung zeichnet nicht** — sonst riefe jeder
+     * Zeitschlag [Uhrsteuerung]s Rückruf, auch wenn der Zustand gleich
+     * bleibt: eine Neuzeichnung je Sekunde. Der erste Schlag darf
      * etwas ändern (die Sperrfrist ist abgelaufen), die folgenden nicht.
      */
     @Test fun zeitschlagOhneAenderungMeldetNichts() {

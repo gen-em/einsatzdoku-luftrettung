@@ -5,7 +5,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.time.Instant
 
-/** Wann gesendet wird (E-S4-07). */
+/** Wann gesendet wird. */
 class SendetaktTest {
 
     private val takt = Sendetakt()
@@ -14,10 +14,9 @@ class SendetaktTest {
     /**
      * **Jedes von einem Menschen ausgelöste Ereignis sendet sofort.**
      *
-     * `WIEDERVERBINDUNG` stand hier bis 0.8.1 mit in der Liste und ist mit
-     * E2 herausgenommen — nicht, weil sich die Regel gelockert hätte,
-     * sondern weil dieser eine Auslöser **nicht** von einem Menschen kommt,
-     * sondern vom `ConnectivityManager`. Seine Bremse steht unten.
+     * `WIEDERVERBINDUNG` steht nicht in der Liste — nicht, weil die Regel
+     * lockerer wäre, sondern weil dieser eine Auslöser **nicht** von einem
+     * Menschen kommt, sondern vom `ConnectivityManager`. Seine Bremse steht unten.
      */
     @Test fun jedesEreignisSendetSofort() {
         val geradeEben = jetzt.minusSeconds(5)
@@ -30,7 +29,7 @@ class SendetaktTest {
         }
     }
 
-    // ---- Wiederverbindung (E-S5Z-10, Z-S5Z-05) -----------------------------
+    // ---- Wiederverbindung --------------------------------------------------
 
     /**
      * Ein flatterndes Mobilfunknetz meldet `onAvailable` im Sekundentakt, und
@@ -87,9 +86,8 @@ class SendetaktTest {
     }
 
     /**
-     * 900 s liegen dicht am gemessenen Median der Garmin (1 020 s, R19) —
-     * daran hängt die spätere Mengenbremse, die beide Clients gleich
-     * behandeln soll.
+     * 900 s liegen dicht am gemessenen Median der Garmin (1 020 s) — daran
+     * hängt die Mengenbremse, die beide Clients gleich behandeln soll.
      */
     @Test fun derAbstandBleibtBeiFuenfzehnMinuten() {
         org.junit.Assert.assertEquals(900L, Sendetakt.ABSTAND_S)

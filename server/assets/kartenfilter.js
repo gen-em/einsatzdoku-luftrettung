@@ -1,7 +1,7 @@
 /* Kartenfilter — eine lange Liste in einer Karte im Browser durchsuchen.
  * ==========================================================================
  *
- * S9/AP5, Mockup M-S9-06. Ein Feld mit Lupe über der Liste; Tippen blendet
+ * Ein Feld mit Lupe über der Liste; Tippen blendet
  * aus, was nicht passt. Ohne Anfrage, ohne Neuladen, ohne Adressänderung.
  *
  * WARUM IM BROWSER UND NICHT AUF DEM SERVER. Die Liste steht ohnehin schon
@@ -18,8 +18,7 @@
  * Buchstaben und sieht nach — er baut keine Abfrage.
  *
  * VIER DINGE, DIE EIN NAIVER FILTER FALSCH MACHT. Alle vier fallen beim
- * ersten Tastendruck auf, und drei davon stehen weder im Mockup noch im
- * Konzept:
+ * ersten Tastendruck auf:
  *
  *   1. DIE VERSTECKTEN FORMULARE. `sd_zeile()` legt die POST-Formulare
  *      (Löschen, Als Vorbelegung) NEBEN die Zeile, nicht hinein — sie tragen
@@ -35,17 +34,15 @@
  *      gefiltert. Ein Zwischentitel verschwindet mit seiner Gruppe — und mit
  *      ihm alles, was zu ihr gehört.
  *
- *   3. DIE ANLEGEN-FORMULARE — HEUTE EIN NETZ, KEIN WEG. In der
- *      Besatzungskarte stand bis Web 16.3.0 je ROLLE eines (`sd_form()` in
- *      der Rollenschleife) — fünf Stück an einem Standort mit fünf Rollen;
- *      blendete man nur Zeilen aus, standen unter einem einzigen Treffer vier
- *      verwaiste Formulare. Mit S9/AP5-4 sind sie samt `sd_form()` entfallen:
- *      Angelegt wird im Dialog, und der Öffner steht im Kartenkopf, also
- *      ausserhalb der gefilterten Liste. Die Regel bleibt trotzdem stehen —
- *      sie kostet nichts, sie beschreibt eine Absicht („ein Filter ist ein
+ *   3. DIE ANLEGEN-FORMULARE — EIN NETZ, KEIN WEG. Stünde je Gruppe ein
+ *      Anlegen-Formular in der Liste und blendete man nur Zeilen aus,
+ *      stünden unter einem einzigen Treffer verwaiste Formulare. Angelegt
+ *      wird im Dialog, und der Öffner steht im Kartenkopf, also ausserhalb
+ *      der gefilterten Liste. Die Regel bleibt trotzdem stehen — sie kostet
+ *      nichts, sie beschreibt eine Absicht („ein Filter ist ein
  *      Lesezustand, kein Eingabezustand"), und die nächste Liste mit einem
  *      Formular darin bekommt sie geschenkt statt noch einmal gefunden.
- *      Die Zahl im Prüfbericht ist seither 0 von 0.
+ *      Die Zahl im Prüfbericht ist 0 von 0.
  *
  *   4. DIE HINWEISE IN EINER GRUPPE. „Noch keine Einträge." steht je Rolle
  *      und wäre beim Filtern gelogen. Er hängt an der Gruppe und geht mit ihr.

@@ -5,8 +5,7 @@ require_once __DIR__ . '/../auth_guard.php';        // liefert $userId
 require_once __DIR__ . '/../einstieg_lib.php';
 
 /**
- * api/rueckfrage.php — die Antwort auf die Konto-Rueckfrage (P5b/AP9,
- * E-P5b-09, -19).
+ * api/rueckfrage.php — die Antwort auf die Konto-Rueckfrage.
  *
  * ===========================================================================
  * ZWEI ANTWORTEN, UND DIE DRITTE GIBT ES NICHT

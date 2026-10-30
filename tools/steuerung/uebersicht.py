@@ -9,13 +9,13 @@
 Rückgabewert 0 = jede Kopfzeile hält Grammatik und Ziel · 1 = eine nicht ·
 2 = nicht gelaufen (Backlog oder Fahrplan-Tabelle nicht lesbar).
 
-WOFÜR. Bis zum Schnitt (Konzept SD, 26.09.2026) führte der Rahmenplan in
+WOFÜR. Bis zum Schnitt am 26.09.2026 führte der Rahmenplan in
 Abschnitt 5 eine Zuordnung der offenen Backlog-Punkte zu Schritten — von
-Hand, und darum mit 96 Zeilen gegen 113 offene Punkte (Konzept SD 1.1). Seit
+Hand, und darum mit 96 Zeilen gegen 113 offene Punkte. Seit
 dem Schnitt steht die Zuordnung an EINER Stelle: in der Kopfzeile jedes
 Eintrags (`gehört zu`). Dieses Werkzeug liest sie und gibt die Übersicht aus,
 die Abschnitt 5 war — erzeugt, nicht gepflegt. Und es hält jede Kopfzeile an
-die Grammatik aus Konzept SD 4.6 und jedes Ziel an die Fahrplan-Tabelle.
+ihre Grammatik (Kopf von `docs/Backlog.md`) und jedes Ziel an die Fahrplan-Tabelle.
 """
 import argparse
 import os
@@ -30,8 +30,11 @@ WURZEL = os.path.dirname(os.path.dirname(HIER))
 BACKLOG = 'docs/Backlog.md'
 RAHMENPLAN = 'docs/Rahmenplan.md'
 
+# Das Vokabular des Stands steht HIER, einmal; `verschieben.py` liest es von
+# dort, statt eine zweite Liste zu fuehren.
+STAENDE = ('offen', 'teilweise', 'zurückgestellt', 'nur auf Anlass', 'nicht umsetzen')
 KOPFZEILE = re.compile(r'^(\d+)\. \*\*(.+?)\*\* · gehört zu: (.+?) · Stand: '
-                       r'(offen|teilweise|zurückgestellt|nur auf Anlass|nicht umsetzen) · seit (\d{2}\.\d{2}\.\d{4})$')
+                       r'(' + '|'.join(STAENDE) + r') · seit (\d{2}\.\d{2}\.\d{4})$')
 EINTRAG = re.compile(r'^(\d+)\. ')
 FESTE_ZIELE = ('nächste Backlog-Runde', 'Zuarbeit', 'Pflegeaufgabe', 'nach v1.0')
 
@@ -155,8 +158,8 @@ def lauf(wurzel, nur_pruefen, nur_ziel):
 
 def selbstprobe(wurzel):
     # DIE KENNUNG FUER DIE GEGENPROBE „mit Paket" KOMMT AUS DEM FAHRPLAN, nicht
-    # aus dem Kopf. Hier stand bis zum Abschluss von Schritt 17 fest `17 AP3` —
-    # und mit der Fahrplanzeile 17 ging die Gegenprobe, und Stufe 1 war rot.
+    # aus dem Kopf. Ein fester Wert wie `17 AP3` geht mit seiner
+    # Fahrplanzeile, und mit ihr die Gegenprobe — Stufe 1 wird rot.
     # Ein Schritt, der endet, nimmt seine Kennung mit; die erste, die noch
     # dasteht, gilt.
     kennung = fahrplan(wurzel)[0][0]

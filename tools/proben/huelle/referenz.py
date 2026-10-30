@@ -1,4 +1,4 @@
-"""Die Gerätehülle, Fassung 1 — Referenz und Prüfvektoren (S11-02, E-S11-17).
+"""Die Gerätehülle, Fassung 1 — Referenz und Prüfvektoren.
 
 Anlass: Nr. 43 — Spur, Phasenkoordinaten und Reanimation gehen verschlüsselt
 an den Server; drei Umsetzungen (Garmin, Android, Browser) müssen dasselbe
@@ -11,7 +11,7 @@ Browserprobe (`probe.mjs`, gegen `server/assets/crypto.js`), die Probe-App der U
 (`tools/uhr-pruefstand/krypto-probe/`) und später die Android-Prüffälle
 laufen. Wer das Format ändert, ändert es HIER und erzeugt die Vektoren neu.
 
-DAS FORMAT (Fassung 1, vorläufig bis zum Ergebnis der Uhrprobe, S11-02):
+DAS FORMAT (Fassung 1):
 
     Kennbyte   1 Byte    0x01 — die Fassung
     EPK       65 Byte    flüchtiger öffentlicher Schlüssel, P-256, SEC1
@@ -33,8 +33,8 @@ Erst verschlüsseln, dann prüfen: Wer öffnet, prüft das TAG vor jedem
 Entschlüsseln und vergleicht in fester Zeit. Die Bindung steht NICHT in der
 Hülle — der Öffnende setzt sie aus dem Datensatz zusammen, an dem die Hülle
 hängt. Eine Hülle, die jemand mit Schreibzugriff auf die Datenbank an einen
-anderen Einsatz hängt, geht dort nicht auf (E-S11-17). Die Zeiten gehören
-nicht dazu (E-S11-18).
+anderen Einsatz hängt, geht dort nicht auf. Die Zeiten gehören
+nicht dazu.
 
 AUFRUF
     python3 referenz.py erzeugen     # vektoren.json, Vektoren.mc und HuelleVektor.mc schreiben
@@ -62,7 +62,7 @@ HIER = pathlib.Path(__file__).resolve().parent
 WURZEL = HIER.parents[2]
 VEKTOREN = HIER / "vektoren.json"
 UHR_VEKTOREN = WURZEL / "tools" / "uhr-pruefstand" / "krypto-probe" / "source" / "Vektoren.mc"
-# Der Selbsttest der Uhr-App (S11-08, E-S11-30): EIN Fall, mit dem die App
+# Der Selbsttest der Uhr-App: EIN Fall, mit dem die App
 # beim ersten Senden ihre Byteordnung und die ganze Kette prüft.
 APP_VEKTOR = WURZEL / "watch" / "source" / "HuelleVektor.mc"
 
@@ -160,11 +160,11 @@ HOEHE_GRENZE = 32767
 
 
 def hoehe_innen(h: float | None) -> int:
-    """Höhe → int16 in GANZEN METERN (E-S11-66), gerundet von der Null weg wie
+    """Höhe → int16 in GANZEN METERN, gerundet von der Null weg wie
     PHPs `round()`, geklemmt auf ±32 767 m — ein Ausreißer läuft nicht über.
-    Bis zum 16.10.2026 stand hier ein Faktor 10 (Dezimeter, E-S11-31): Er
-    reichte nur bis 3276,7 m und lief darüber still in eine negative Höhe
-    (F-S11-64)."""
+    Bis zum 16.10.2026 stand hier ein Faktor 10 (Dezimeter): Er
+    reichte nur bis 3276,7 m und lief darüber still in eine negative Höhe.
+    """
     if h is None:
         return HOEHE_UNBEKANNT
     m = int(abs(h) + 0.5) * (1 if h >= 0 else -1)
@@ -172,17 +172,17 @@ def hoehe_innen(h: float | None) -> int:
 
 
 def innen_binaer(punkte: list[tuple[float, float, float | None, int]]) -> bytes:
-    """Die Innenform eines Spurstücks (E-S11-31, -66): je Punkt 14 Byte —
+    """Die Innenform eines Spurstücks: je Punkt 14 Byte —
     Breite und Länge in 1e-7 Grad (int32), Höhe in ganzen Metern (int16), Zeit
     in Sekunden relativ zu ts_von (uint32), alles big-endian. Ein Punkt ohne
-    Höhe trägt HOEHE_UNBEKANNT (-32768, E-S11-39); jede echte Höhe liegt
+    Höhe trägt HOEHE_UNBEKANNT (-32768); jede echte Höhe liegt
     zwischen -32 767 und 32 767 m."""
     return b"".join(struct.pack(">iihI", round(la * 1e7), round(lo * 1e7), hoehe_innen(h), t)
                     for la, lo, h, t in punkte)
 
 
 def gepackt_roh(punkte: list[tuple[float, float, float | None, int]], ts_von: int) -> bytes:
-    """Die Innenform der Stufen 2 und 3, VOR dem Packen (E-S11-71, „B fest"):
+    """Die Innenform der Stufen 2 und 3, VOR dem Packen („B fest"):
     vier Spalten zu je n Werten int32 big-endian — Breite, Länge (1e-7 Grad),
     Höhe (ganze Meter, HOEHE_UNBEKANNT = keine), Zeit (Sekunden seit ts_von) —,
     jeder Wert als Abstand zum vorigen derselben Spalte, der erste zu 0. Die
@@ -227,7 +227,7 @@ def gepackt_lesen(innen: bytes, n: int, ts_von: int) -> list[tuple[float, float,
 
 
 def platz_gepackt(seq_from: int, punkte: int, stufe: int, n_original: int) -> str:
-    """Der Ort einer Hülle der Stufe 2 oder 3 (E-S11-71): Stufe und Marke sind
+    """Der Ort einer Hülle der Stufe 2 oder 3: Stufe und Marke sind
     mitgebunden, damit der Server sie nicht umetikettieren kann."""
     return f"{seq_from}:{punkte}:{stufe}:{n_original}"
 
@@ -344,9 +344,9 @@ def uhr_vektoren(v: dict) -> str:
 
 
 def app_vektor(v: dict) -> str:
-    """Der Fall „kurz" als Monkey-C-Quelltext für die App (S11-08). Die App
+    """Der Fall „kurz" als Monkey-C-Quelltext für die App. Die App
     rechnet ihn mit festem flüchtigem Schlüssel und festem IV nach: stimmt Z
-    erst umgedreht, ist die Ordnung little-endian (F-S11-18); stimmt danach
+    erst umgedreht, ist die Ordnung little-endian; stimmt danach
     das TAG, trägt die ganze Kette — ECDH, HKDF, AES, HMAC, Bindung."""
     f = next(f for f in v["faelle"] if f["name"] == "kurz")
     return "\n".join([

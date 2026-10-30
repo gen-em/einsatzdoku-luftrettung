@@ -3,12 +3,12 @@ declare(strict_types=1);
 
 /**
  * Ankerprüfung — trifft jeder Verweis `hilfe.php#…` eine Überschrift des
- * Handbuchs? (P5c/AP9, E-P5c-06)
+ * Handbuchs?
  *
  * Anlass: Nr. 188 — kein Prüfmittel misst Verweise zwischen Dokumenten
  *
- * WOFUER. Seit AP9 verweist jede Karte unter Verwaltung und Betrieb auf die
- * Stelle im Handbuch, an der das Erklärende steht. Die Sprungmarke bildet
+ * WOFUER. Jede Karte unter Verwaltung und Betrieb auf die
+ * verweist auf die Stelle im Handbuch, an der das Erklärende steht. Die Sprungmarke bildet
  * `doku_marke()` aus dem Überschriftentext, und zwei gleiche Marken bekommen
  * `-2`. Wer eine Überschrift umformuliert, bricht damit still jeden Verweis
  * darauf: Der Browser springt nirgendwohin, und niemand merkt es. Die

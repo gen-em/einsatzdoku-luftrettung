@@ -1,15 +1,15 @@
-/* Weg der Passkeys (Einstellungen → Profil → Zweitfaktor; Schritt 18, SR-09).
+/* Weg der Passkeys (Einstellungen → Profil → Zweitfaktor).
  * ===========================================================================
  *
- * Entstanden mit SR-09 (E-SR-29 bis -32, Nr. 350). Nach der SEITE benannt
- * (E-PK-15), wie `einstellungen_profil_rueckweg.mjs` daneben.
+ * Nach der SEITE benannt,
+ * wie `einstellungen_profil_rueckweg.mjs` daneben.
  *
  *   einstellungen-profil-passkey   Code bestätigen → eine zweite Seite
  *                                  verdrängt die Herausforderung, der Server
  *                                  lehnt ab, der Knopf bleibt aus; das Netz
  *                                  reißt nach dem Absenden, der Knopf bleibt
  *                                  aus und die Meldung sagt „neu laden"
- *                                  (beides seit Web 21.11.2) → Passkey
+ *                                  → Passkey
  *                                  hinzufügen mit Bezeichnung → die Karte
  *                                  zeigt ihn → abmelden → anmelden → „Mit Passkey
  *                                  bestätigen" mit „Gerät merken" →
@@ -27,17 +27,17 @@
  * (`probe.mjs`: ein Weg, der nicht gefahren werden konnte, gilt als
  * verfehlt).
  *
- * DIE ADRESSE WIRD GESTELLT. Für eine IP-Adresse gibt es keine Passkeys
- * (E-SR-42), und die Sandbox steht auf 127.0.0.1. Der Weg setzt
+ * DIE ADRESSE WIRD GESTELLT. Für eine IP-Adresse gibt es keine Passkeys,
+ * und die Sandbox steht auf 127.0.0.1. Der Weg setzt
  * `app.base_url` auf dieselbe Anlage unter `localhost` und fährt seinen
  * eigenen Kontext dort; im `finally` legt er `config.php` byte-gleich zurück.
- * Die Sicherung für einen harten Abbruch liegt seit R17-19 im
+ * Die Sicherung für einen harten Abbruch liegt im
  * Temp-Verzeichnis (`SICHERUNG` unten), nicht mehr als `config.php.vor-probe`
  * im Webverzeichnis — dort stand sie mit allen Zugangsdaten unter einem
- * Namen, den jeder Webserver als Text ausliefert (F-R17-55, wie bei
+ * Namen, den jeder Webserver als Text ausliefert (wie bei
  * `tools/sandbox/konfig_stellen.php`). Nach beiden Schritten wartet er
  * 3,2 Sekunden — OPcache sieht die Datei erst nach `revalidate_freq` und
- * rechnet in ganzen Sekunden; 2,2 s reichten nicht immer (F-SR-31).
+ * rechnet in ganzen Sekunden; 2,2 s reichten nicht immer.
  *
  * EIN KONTO DER ROLLE user MIT DEM GEHEIMNIS DER SANDBOX
  * (`tools/zweitfaktor/pruefkonto.php`) — wie `zweitfaktor-merken`.
@@ -86,8 +86,9 @@ export const wege = [
         + 'über das Gerät: Verweis; neuer Browser: Code, kein Knopf',
     async fahren(k) {
       const motor = k.seite.context().browser().browserType().name();
-      /* NUR IN CHROMIUM (E-DM-05, Ausnahmeliste `tools/motoren-ausnahmen.md`):
-         Den virtuellen Authenticator gibt es nur über CDP. Seit R87 läuft
+     /* NUR IN CHROMIUM (Ausnahmeliste `tools/motoren-ausnahmen.md`):
+        Den virtuellen Authenticator gibt es nur über CDP. Die Bedienprobe
+        läuft in drei Engines; dieser eine Weg ist in Firefox und
          die Bedienprobe in drei Engines; dieser eine Weg ist in Firefox und
          WebKit ausdrücklich NICHT gemessen und sagt das — er zählt nicht als
          verfehlt, weil er dort nicht messbar ist, und nicht als gemessen,
@@ -143,8 +144,7 @@ export const wege = [
           };
         });
 
-        /* 1b. DIE HERAUSFORDERUNG VERDRÄNGT (Nachprüfung von H-SR-08, E-1;
-           nachgetragen mit der Nachprüfung der offenen Punkte). Eine zweite
+       /* 1b. DIE HERAUSFORDERUNG VERDRÄNGT. Eine zweite
            Seite derselben Sitzung lädt die Karte und stellt eine neue
            Herausforderung. Legt die erste danach an, erzeugt der Browser den
            Passkey, und der Server antwortet 400 „abgelaufen" — ohne Zeile
@@ -191,7 +191,7 @@ export const wege = [
         /* 1c. DAS NETZ REISST NACH DEM ABSENDEN (dritte Lesung, 3B-2). Die
            Anfrage kommt nie an, und ob der Server sie bekam, weiß der Browser
            nicht — der Passkey liegt aber schon im Authenticator. Der Knopf
-           bleibt aus, und die Meldung sagt „neu laden"; bis Web 21.11.1 sagte
+           bleibt aus, und die Meldung sagt „neu laden"; früher sagte
            sie es nur bei den zwei Antworten des Servers, die es selbst sagen. */
         await s.route('**/api/passkey_anlegen.php', r => r.abort());
         await s.fill('input[name="pk_bezeichnung"]', 'Abgerissen');

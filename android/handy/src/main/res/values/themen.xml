@@ -8,20 +8,19 @@
     Alles andere — Farben, Abstaende, Schriftgroessen — steht in Compose und
     holt seine Werte aus `farben.xml`.
 
-    DIE FARBEN DER SYSTEMLEISTEN STANDEN HIER UND SIND AUSGETRAGEN
-    (Backlog Nr. 86). `android:statusBarColor` und `android:navigationBarColor`
-    sind seit API 35 wirkungslos — Android zeichnet die Leisten durchsichtig
-    ueber der App und waehlt die Symbolfarbe selbst. Die beiden Zeilen taten
-    also nichts, sahen aber so aus, als sei die Sache geregelt: Sie waren der
-    Grund, warum die Ueberlappung so lange niemandem auffiel.
+    KEINE FARBEN DER SYSTEMLEISTEN. `android:statusBarColor` und
+    `android:navigationBarColor` sind seit API 35 wirkungslos — Android
+    zeichnet die Leisten durchsichtig ueber der App und waehlt die
+    Symbolfarbe selbst. Die beiden Zeilen taeten also nichts, saehen aber so
+    aus, als sei die Sache geregelt, und verdeckten eine Ueberlappung.
 
-    Was jetzt dafuer sorgt: `enableEdgeToEdge()` in HauptActivity (Symbolfarbe)
+    Was dafuer sorgt: `enableEdgeToEdge()` in HauptActivity (Symbolfarbe)
     und die Inset-Polster in `Bausteine.kt` und den drei Bildschirmen
     (Freihalten der Flaeche).
 
     Das Elternthema ist die PLATTFORM-Fassung (`android:Theme.Material.Light`),
     nicht die von AppCompat oder Material Components: Beide waeren eine weitere
-    Abhaengigkeit fuer nichts (E-S4-04).
+    Abhaengigkeit fuer nichts.
 
     Die Fensterfarbe ist `—rauch`, die Flaeche der Seite — nicht Weiss. Weiss
     ist in dieser Marke keine Flaeche (siehe farben.xml); ein weisses

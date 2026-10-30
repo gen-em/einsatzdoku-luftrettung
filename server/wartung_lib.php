@@ -4,7 +4,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/instanz_lib.php';   // nur fuer INSTANZ_KURZ_VORGABE — die Datei laedt nichts
 
 /**
- * WARTUNGSMODUS (S5 Paket W) — die Installation voruebergehend fuer alle
+ * WARTUNGSMODUS — die Installation voruebergehend fuer alle
  * ausser der Administration schliessen.
  *
  * WOZU. Ein Update laeuft heute so: Push auf `main`, FTPS laedt `server/`
@@ -19,13 +19,13 @@ require_once __DIR__ . '/instanz_lib.php';   // nur fuer INSTANZ_KURZ_VORGABE �
  * Unterschied zwischen „kaputt" und „gleich wieder da": Der JSON-Vertrag
  * sagt zu 5xx „spaeter unveraendert erneut versuchen" (Abschnitt 5), und
  * Uhr wie Handy halten sich daran — sie puffern und liefern nach. **Kein
- * Client wird dafuer geaendert** (E-S5W-08); das Verhalten ist seit S4 da
- * und im S4-Pruefprotokoll gemessen.
+ * Client wird dafuer geaendert**; das Verhalten ist da
+ * und gemessen.
  *
  * DREI EIGENSCHAFTEN, DIE DIESE DATEI TRAGEN MUSS
  *
- *   1. OHNE DATENBANK. Der Zustand steht in einer DATEI (`wartung.lock`,
- *      E-S5W-02), nicht in `app_state`. Der Wartungsmodus wird gerade
+ *   1. OHNE DATENBANK. Der Zustand steht in einer DATEI (`wartung.lock`),
+ *      nicht in `app_state`. Der Wartungsmodus wird gerade
  *      dann gebraucht, wenn die Datenbank umgebaut wird oder eine Migration
  *      auf halber Strecke gescheitert ist. Ein Schalter, der die Datenbank
  *      fragt, ob er schalten darf, ist im entscheidenden Moment stumm.
@@ -40,47 +40,43 @@ require_once __DIR__ . '/instanz_lib.php';   // nur fuer INSTANZ_KURZ_VORGABE �
  *
  *   3. DIE DATEI IST DER SCHALTER, NICHT IHR INHALT. Ist `wartung.lock` da,
  *      aber unlesbar oder kein gueltiges JSON, gilt die Wartung TROTZDEM;
- *      der Balken zeigt dann „seit unbekannt" (Konzept 4.1). Andersherum
+ *      der Balken zeigt dann „seit unbekannt". Andersherum
  *      waere es falsch: Ein Tippfehler im Inhalt darf keine Installation
  *      oeffnen, die jemand ausdruecklich geschlossen hat.
  *
  * WAS SIE NICHT IST. Kein Ersatz fuer `install.lock` (das sperrt nur den
- * Einrichter), keine Zeitsteuerung, kein automatisches Ausschalten
- * (E-S5W-05). Der Torwaechter aus Rahmenplan R40 (4) — Wartung automatisch
- * bei ausstehender Migration — ist P5 und wird denselben Zustand setzen.
+ * Einrichter), keine Zeitsteuerung, kein automatisches Ausschalten.
+ * Der Torwaechter — Wartung automatisch bei ausstehender Migration —
+ * setzt denselben Zustand (`migration_lib.php`).
  *
- * Konzept: `docs/konzepte/Konzept-S5-Zusatz-Wartungsmodus.md`.
- * Betriebsablauf: `docs/Technik.md`, Abschnitt 7 (Runbook).
+ * Betriebsablauf: `docs/Technik.md`, Abschnitt 13 (Runbook).
  */
 
-/* DER ZUSTAND DIESER INSTALLATION LIEGT IN `.zustand/` (seit Web 23.3.1,
- * R17-22, F-R17-47, E-R17-59).
+/* DER ZUSTAND DIESER INSTALLATION LIEGT IN `.zustand/`.
  *
- * Bis dahin lagen `wartung.lock` und `ueberlast.json` im Webroot neben
- * `install.lock`, und die `.htaccess` sperrte keine von beiden: Waehrend
- * einer Wartung lieferte `https://<host>/wartung.lock` jedem Abrufer ohne
+ * Laegen `wartung.lock` und `ueberlast.json` im Webroot, ungesperrt, lieferte
+ * `https://<host>/wartung.lock` waehrend einer Wartung jedem Abrufer ohne
  * Anmeldung den Namen oder die Anmeldeadresse des BetreiberIn-Kontos, das
- * geschaltet hatte (`von`), und `ueberlast.json` jederzeit, wann die Anlage
+ * geschaltet hat (`von`), und `ueberlast.json` jederzeit, wann die Anlage
  * am Limit war. Ein Punktverzeichnis sperrt schon die Punktregel der
  * `.htaccess` (wie `.sitzungen/`); `zustand_verzeichnis()` legt beim
  * Anlegen eine eigene `.htaccess` mit `Require all denied` dazu — der zweite
  * Riegel, falls die Punktregel fehlt. Das Verzeichnis liegt nur auf dem
- * Server: `.gitignore` UND Ausnahmeliste des Deploys (E-S5W-02).
+ * Server: `.gitignore` UND Ausnahmeliste des Deploys.
  *
  * DER UEBERGANG. Die Kette schaltet die Wartung mit dem ALTEN Code ein —
  * vor dem Hochladen —, also am alten Ort. Die neue Fassung erkennt eine
- * Datei dort deshalb noch (`WARTUNG_DATEI_ALT`) — seit Web 23.4.0 zieht sie
+ * Datei dort deshalb noch (`WARTUNG_DATEI_ALT`) und zieht
  * sie bei der ersten Frage nach dem Schalter nach `.zustand/` um
- * (`wartung_altdatei_umziehen()`, F-R17-72), bis dahin las sie sie nur mit
- * und loeschte sie erst beim Ausschalten — und raeumt eine alte
+ * (`wartung_altdatei_umziehen()`) — und raeumt eine alte
  * `ueberlast.json` beim ersten Zaehlen weg. Beides kann nach der ersten Auslieferung mit dieser Fassung
  * auf jeder Anlage fallen — nicht vorher. */
 const ZUSTAND_VERZEICHNIS = __DIR__ . '/.zustand';
 
-/** Der Schalter (E-S5W-02). */
+/** Der Schalter. */
 const WARTUNG_DATEI = ZUSTAND_VERZEICHNIS . '/wartung.lock';
 
-/** Der Schalter am alten Ort, bis Web 23.3.0 — nur noch gelesen und geloescht. */
+/** Der Schalter am alten Ort — nur noch gelesen und umgezogen. */
 const WARTUNG_DATEI_ALT = __DIR__ . '/wartung.lock';
 
 /**
@@ -110,12 +106,12 @@ function zustand_verzeichnis(): bool
     return true;
 }
 
-/** Hinweis an Browser und Werkzeuge, in Sekunden (E-S5W-12, F-S5W-04).
+/** Hinweis an Browser und Werkzeuge, in Sekunden.
  *  Die Geraete halten ihren eigenen Backoff; dieser Wert steuert sie nicht. */
 const WARTUNG_RETRY_S = 300;
 
 /**
- * Skripte, die auch im Wartungsmodus antworten (E-S5W-04).
+ * Skripte, die auch im Wartungsmodus antworten.
  *
  * Verglichen wird der DATEINAME des laufenden Skripts, nicht die Adresse:
  * `login.php` laedt `db.php` als allererstes (Zeile 4) — das Tor muss die
@@ -123,15 +119,15 @@ const WARTUNG_RETRY_S = 300;
  * Pfadmuster waere an dieser Stelle zu spaet und zu ungenau.
  *
  * Warum jede einzelne:
- *   betrieb_updates.php  die Arbeit selbst (seit Web 15.1.0) — sie traegt den
+ *   betrieb_updates.php  die Arbeit selbst — sie traegt den
  *                        Schalter UND die Migrationen. Ohne sie schaltete man
  *                        die Wartung ein und saesse davor: Die Seite, auf der
  *                        der Ausschalter steht, waere die erste, die 503
- *                        antwortet. Genau das ist in der Bedienpruefung von
- *                        S8/AP2 passiert (F-S8-P-04).
- *   update.php           der Notausgang und die alte Adresse. Sie wird in AP3
- *                        eine Weiterleitung (Nr. 77) und bleibt so lange in
- *                        der Liste: Eine Weiterleitung, die im Wartungsmodus
+ *                        antwortet. Genau das ist in einer Bedienpruefung
+ *                        passiert.
+ *   update.php           der Notausgang und die alte Adresse. Sie ist eine
+ *                        Weiterleitung und bleibt in der Liste: Eine
+ * Weiterleitung, die im Wartungsmodus
  *                        503 antwortet, fuehrt niemanden mehr auf die neue
  *                        Seite. Der CLI-Aufruf ist ohnehin nie getort.
  *   betrieb_jobs.php     der Zustand der Jobs waehrend der Wartung — das
@@ -141,14 +137,14 @@ const WARTUNG_RETRY_S = 300;
  *   betrieb_server.php   die Belegung. Wer waehrend eines Updates merkt, dass
  *                        die Grenze erreicht ist, muss sie hier anheben
  *                        koennen — sonst scheitert das Backup, das dem
- *                        Update vorausgehen soll. Seit S10/AP3 traegt sie
+ *                        Update vorausgehen soll. Sie traegt
  *                        dazu die Karte „Schluessel des Servers".
  *   betrieb_schluesselblatt.php
- *                        DAS BLATT ZUR KARTE (S10/AP3). Es steht hier aus
+ *                        DAS BLATT ZUR KARTE. Es steht hier aus
  *                        demselben Grund, aus dem betrieb_updates.php hier
  *                        steht: Die Karte ist erreichbar, ihr Druckknopf
  *                        fuehrte sonst auf eine 503-Seite — derselbe Griff
- *                        ins Leere wie F-S8-P-04, nur eine Ebene tiefer.
+ *                        ins Leere wie bei update.php, nur eine Ebene tiefer.
  *                        Und die Lage, in der man das Blatt braucht, ist
  *                        genau eine Wartungslage: Eine Sicherung ist auf
  *                        einen neuen Server eingespielt, `config.php` ist
@@ -160,12 +156,12 @@ const WARTUNG_RETRY_S = 300;
  *                        WAEHREND der Wartung — genau dann ist es
  *                        konsistent, weil niemand sonst schreibt.
  *   login.php            damit eine abgemeldete AdministratorIn hineinkommt.
- *                        Was danach geschieht, entscheidet login.php selbst
- *                        (E-S5W-09): Admin weiter, alles andere sofort
+ *                        Was danach geschieht, entscheidet login.php selbst:
+ *                        Admin weiter, alles andere sofort
  *                        wieder abgemeldet und auf die Wartungsseite.
- *   auth_salt.php        OHNE DIESE ZEILE IST login.php NUTZLOS (Nr. 171,
- *                        Web 19.1.2). Die Anmeldeseite kam waehrend der
- *                        Wartung, aber das Formular laesst sich nicht
+ *   auth_salt.php        OHNE DIESE ZEILE IST login.php NUTZLOS. Die
+ *                        Anmeldeseite kaeme waehrend der
+ *                        Wartung, aber das Formular liesse sich nicht
  *                        abschicken: Der Browser holt zuerst das Salt und
  *                        die Rundenzahlen von hier, und ohne sie leitet er
  *                        kein Token ab. Der Endpunkt laedt `db.php` und
@@ -185,7 +181,7 @@ const WARTUNG_RETRY_S = 300;
  */
 const WARTUNG_AUSNAHMEN = [
     'betrieb_status.php',
-    /* SEIT P5a/AP8. Aus demselben Grund wie die Elternseite, nur schaerfer:
+    /* Aus demselben Grund wie die Elternseite, nur schaerfer:
      * Auf der Sicherheitsseite steht der Knopf, mit dem sich eine Sperre
      * aufheben laesst. Wer im Wartungsmodus jemanden wieder hereinlassen
      * muss, braucht genau diese Seite — sie hinter der Sperre zu lassen
@@ -196,24 +192,23 @@ const WARTUNG_AUSNAHMEN = [
     'betrieb_jobs.php',
     'betrieb_server.php',
     'betrieb_schluesselblatt.php',
-    /* SEIT P5c/AP9 (E-P5c-134): Komplett-Backup und Backup-Ziele. Bis dahin
-     * antworteten beide im Wartungsmodus mit 503 — und genau dann braucht man
-     * sie: Schliesst der Torwaechter, weil eine Migration aussteht, sagt die
-     * Seite Updates „vorher sichern" und bot einen Knopf zum Komplett-Backup
-     * an, der in die Sperre fuehrte. Ebenso nannte die Vorbedingung der
-     * FTP-Migration die Backup-Ziele als Weg, und die waren zu. Beide Seiten
+    /* Komplett-Backup und Backup-Ziele. Antworteten beide im Wartungsmodus
+     * mit 503, fehlten sie genau dann, wenn man sie braucht: Schliesst der
+     * Torwaechter, weil eine Migration aussteht, sagt die Seite Updates
+     * „vorher sichern" und bietet einen Knopf zum Komplett-Backup an. Ebenso
+     * nennt die Vorbedingung der FTP-Migration die Backup-Ziele als Weg. Beide Seiten
      * erreicht nur die BetreiberIn (`require_betreiberin()`), und beide
      * zeigen den Balken. */
     'admin_komplettsicherung.php',
     'admin_sicherungsziele.php',
-    /* SEIT SR-07 (Schritt 18, E-SR-20): die Bestaetigung des frischen Codes.
+    /* SEIT SR-07: die Bestaetigung des frischen Codes.
      * Die Schluesselgriffe und das Blatt oben liegen im Wartungsmodus offen
      * und verlangen einen frischen Code; ohne diese Zeile fuehrte ihr Umweg
      * auf eine 503 — derselbe Griff ins Leere wie beim Schluesselblatt. Ein
      * Konto ohne Verwaltungsrolle kommt in der Wartung ohnehin nicht herein
-     * (`login.php`, E-S5W-09). */
+     * (`login.php`). */
     'zweitfaktor.php',
-    /* SEIT SR-04 (Schritt 18, E-SR-13): der Notzugang der einzigen
+    /* SEIT SR-04: der Notzugang der einzigen
      * BetreiberIn. Im Wartungsmodus steht sie, die den Zweitfaktor verloren
      * hat, am haeufigsten davor — nach einem Deploy ist die Wartung an, bis
      * `update.php` gelaufen ist, und dafuer muss sie hinein. Die Seite meldet
@@ -243,15 +238,14 @@ function wartung_aktiv(): bool
 }
 
 /**
- * Eine Datei am alten Ort nach `.zustand/` holen (F-R17-72, Web 23.4.0).
+ * Eine Datei am alten Ort nach `.zustand/` holen.
  *
  * WARUM. Die Kette schaltet die Wartung mit dem ALTEN Code ein, also im
- * Webroot. Bis 23.4.0 las die neue Fassung die Datei dort nur mit und
- * loeschte sie erst beim Ausschalten — bis dahin lieferte
+ * Webroot. Laege die Datei dort bis zum Ausschalten, lieferte
  * `https://<host>/wartung.lock` den Namen des schaltenden Kontos aus
- * (gemessen unter Apache 2.4.58 am 27.10.2026, 200). Blieb die Wartung
- * wegen einer Migration an, stand die Luecke aus F-R17-47 so lange offen.
- * Jetzt zieht die erste Frage nach dem Schalter — jede Anfrage stellt sie
+ * (gemessen unter Apache 2.4.58 am 27.10.2026, 200), solange die Wartung
+ * wegen einer Migration an bleibt. Deshalb zieht die erste Frage nach dem
+ * Schalter — jede Anfrage stellt sie
  * — die Datei um. `rename()` ist auf demselben Dateisystem atomar: Es gibt
  * keinen Augenblick, in dem die Wartung aus waere.
  *
@@ -274,17 +268,16 @@ function wartung_altdatei_umziehen(): void
 /**
  * Was in der Datei steht: `seit` (ISO-Zeit) und `von` (Anzeigename).
  *
- * Beide koennen null sein — die Datei ist der Schalter, nicht ihr Inhalt
- * (Konzept 4.1). Wer hier null bekommt, zeigt „seit unbekannt" und schaltet
+ * Beide koennen null sein — die Datei ist der Schalter, nicht ihr Inhalt.
+ * Wer hier null bekommt, zeigt „seit unbekannt" und schaltet
  * nicht etwa die Wartung ab.
  */
 function wartung_daten(): array
 {
     /* DIE AUSWAHL IST EINE WEISSE LISTE, und das bleibt so: Was hier
      * herauskommt, geht in eine Seite. Ein neuer Schluessel muss deshalb
-     * ausdruecklich aufgenommen werden — `wer` kam mit P5a/AP5 dazu und
-     * wurde beim ersten Versuch still verschluckt, weil nur die Datei ihn
-     * trug und diese Liste nicht. */
+     * ausdruecklich aufgenommen werden — fehlt er hier, wird er still
+     * verschluckt, weil nur die Datei ihn traegt und diese Liste nicht. */
     $leer = ['seit' => null, 'von' => null, 'wer' => null];
     if (!wartung_aktiv()) { return $leer; }
     $roh = @file_get_contents(file_exists(WARTUNG_DATEI) ? WARTUNG_DATEI : WARTUNG_DATEI_ALT);
@@ -302,13 +295,13 @@ function wartung_daten(): array
  * Auskunft, seit wann die Wartung wirklich steht.
  *
  * Rueckgabe false = die Datei liess sich nicht schreiben (Rechte). Der
- * Aufrufer sagt das MIT PFAD; nichts Stilles (Konzept 4.2).
+ * Aufrufer sagt das MIT PFAD; nichts Stilles.
  */
 function wartung_einschalten(string $von): bool
 {
     if (wartung_aktiv()) { return true; }
     /* DER NAME WIRD MITGESCHRIEBEN, WEIL DIE SEITE IHN SPAETER NICHT MEHR
-     * HOLEN KANN (P5a/AP5). Seit dem Instanznamen koennte die Wartungsseite
+     * HOLEN KANN. Seit dem Instanznamen koennte die Wartungsseite
      * „Gen-EM NAdoku" zeigen, waehrend die Installation „BW-Doku" heisst —
      * ausgerechnet auf der Seite, die Fremde zu sehen bekommen. Ihn dort
      * nachzuschlagen geht aber nicht: Diese Seite ist ohne Datenbank gebaut,
@@ -349,7 +342,7 @@ function wartung_cli(): bool
     return PHP_SAPI === 'cli' || PHP_SAPI === 'phpdbg';
 }
 
-/** Ist das laufende Skript von der Wartung ausgenommen (E-S5W-04)? */
+/** Ist das laufende Skript von der Wartung ausgenommen? */
 function wartung_ausnahme(): bool
 {
     $skript = basename((string)($_SERVER['SCRIPT_NAME'] ?? ''));
@@ -369,20 +362,18 @@ function wartung_ausnahme(): bool
 /**
  * Die Skripte ausserhalb von `/api/`, die JSON antworten.
  *
- * VIER, NICHT ZWEI — seit P5a/AP9. Fuer den WARTUNGSMODUS genuegten zwei:
+ * VIER, NICHT ZWEI. Fuer den WARTUNGSMODUS genuegten zwei:
  * `auth_salt.php` und `jobs.php` stehen in `WARTUNG_AUSNAHMEN`, das Tor
  * kehrt bei ihnen vorher um, und die Frage stellte sich nie.
  *
  * DIE UEBERLAST KENNT KEINE AUSNAHMEN. Wenn die Datenbank keine Verbindung
  * mehr annimmt, ist jede Seite betroffen — auch die, die im Wartungsmodus
- * absichtlich offen bleiben. Mit der alten Liste haette `auth_salt.php` eine
+ * absichtlich offen bleiben. Mit der kurzen Liste haette `auth_salt.php` eine
  * HTML-Seite an ein `fetch()` geliefert, das JSON erwartet, und die
  * Anmeldeseite haette daraus „Anmeldung derzeit nicht möglich" gemacht statt
- * „ausgelastet". Das ist genau der Fehler aus Backlog Nr. 171, einen Stock
- * tiefer.
+ * „ausgelastet". Das ist genau der Fehler der fehlenden Ausnahme, einen
+ * Stock tiefer.
  *
- *(Hier stand bis Web 22.2.0 ein Absatz, warum `gpx.php` NICHT dabei ist; die
- * Datei ist mit S11-05d entfallen, der Browser baut GPX selbst.)*
  *
  * Die Liste aendert am Wartungsmodus nichts: Beide neuen Eintraege stehen
  * ohnehin in `WARTUNG_AUSNAHMEN`.
@@ -400,7 +391,7 @@ function wartung_json_gefragt(): bool
 
 /**
  * DAS TOR. Genau ein Aufruf, in `db.php`, hinter `json_out()` und vor jeder
- * Datenbankverbindung (E-S5W-06).
+ * Datenbankverbindung.
  *
  * Es steht dort und nicht in `auth_guard.php`, weil `auth_guard.php` nur die
  * SEITEN durchlaufen. `ingest.php` und `pair.php` laden `db.php` direkt —
@@ -420,7 +411,7 @@ function wartung_tor(): void
 /** Die gemeinsamen Kopfzeilen beider Antworten. */
 function wartung_kopfzeilen(): void
 {
-    /* DIE SICHERHEITSKOPFZEILEN GELTEN AUCH HIER (P5a/AP4, E-P5a-15).
+    /* DIE SICHERHEITSKOPFZEILEN GELTEN AUCH HIER.
      *
      * Diese Datei laedt nichts (Eigenschaft 2 im Kopf) — `kopfzeilen_lib.php`
      * ist die eine Ausnahme, und sie ist es, weil jene Datei ihrerseits ohne
@@ -445,8 +436,7 @@ function wartung_kopfzeilen(): void
  * `error` ist die Zusage an die Clients (Vertrag 5xx: spaeter unveraendert
  * erneut). `meldung` ist fuer den Menschen vor dem Browser: `export.js`,
  * `import_ui.js` und `schneiden.js` zeigen sie heute schon an, ohne auf den
- * Zahlencode zu sehen — deshalb steht sie hier und deshalb war E-S5W-10
- * kostenlos.
+ * Zahlencode zu sehen — deshalb steht sie hier und deshalb kostet sie nichts.
  */
 function wartung_antwort_json(): never
 {
@@ -474,7 +464,7 @@ function wartung_antwort_json(): never
  * `logo_aufloesen()` — nur ohne Sitzung und ohne Datenbank. Wer ein eigenes
  * Logo eingestellt hat, sieht waehrend der Wartung eines der beiden
  * Standardlogos; das ist der Preis dafuer, dass diese Seite ohne Datenbank
- * auskommt (Konzept 4.3).
+ * auskommt.
  *
  * KEIN SKRIPT auf dieser Seite. Sie soll auch dann stehen, wenn die
  * Skriptdateien gerade zur Haelfte hochgeladen sind.
@@ -488,12 +478,12 @@ function wartung_antwort_seite(bool $rueckweg = true): never
 }
 
 /**
- * DAS GERUEST BEIDER STOERUNGSSEITEN (P5a/AP9).
+ * DAS GERUEST BEIDER STOERUNGSSEITEN.
  *
- * Es gibt seit AP9 ZWEI Seiten, die ohne Datenbank antworten muessen: die
+ * Es gibt ZWEI Seiten, die ohne Datenbank antworten muessen: die
  * Wartungsseite (503, die Installation ist absichtlich zu) und die
  * Ausgelastet-Seite (503, die Datenbank nimmt gerade keine Verbindung mehr
- * an, E-P5a-18). Sie unterscheiden sich in den WORTEN, nicht im Aufbau —
+ * an). Sie unterscheiden sich in den WORTEN, nicht im Aufbau —
  * Rahmen, Lesespalte, Logo, Stylesheet und der Verzicht auf jedes Skript
  * sind bei beiden dieselbe Ueberlegung.
  *
@@ -526,8 +516,8 @@ function stoerung_seite_html(string $titel, string $innen): string
     };
     $h = static fn(string $s): string => htmlspecialchars($s, ENT_QUOTES, 'UTF-8');
 
-    /* NUR DER VORSATZ „[Staging] ", keine Farbe und kein Streifen (P5c/AP1,
-     * E-P5c-55): Diese Seiten haben keine Kopfleiste, die rot werden
+    /* NUR DER VORSATZ „[Staging] ", keine Farbe und kein Streifen: Diese Seiten
+     * haben keine Kopfleiste, die rot werden
      * koennte, und sie sollen so wenig wie moeglich voraussetzen. Das
      * Etikett kommt aus `config.php` allein — `umgebung_lib.php` laedt nur
      * `konfig_lib.php`, keine Datenbank. */
@@ -560,15 +550,15 @@ function stoerung_seite_html(string $titel, string $innen): string
  * Bausteine aus dem Vorrat (Design.md 9): `.rahmen`, `.rahmen-lesespalte`,
  * `.inhalt`, `.text`, `.meldung`/`.meldung-warn`. Kein neuer Baustein —
  * deshalb brauchte diese Seite keine eigene Freigabe mit Mockup; ihr Text
- * steht wortgleich im Konzept (4.3) und ist damit freigegeben.
+ * ist freigegeben.
  */
 function wartung_seite_html(bool $rueckweg = true): string
 {
-    /* DER GRUND STEHT AUF DER SEITE, WENN ES EINEN GIBT (P5a/AP3, E-P5a-20).
+    /* DER GRUND STEHT AUF DER SEITE, WENN ES EINEN GIBT.
      *
      * `von` traegt seit dem Torwaechter nicht nur einen Namen, sondern auch
      * eine Herkunft: `torwaechter` (die Anwendung hat selbst geschlossen) und
-     * `kette` (der Auslieferungslauf, P5a/AP1). Beide sind etwas anderes als
+     * `kette` (der Auslieferungslauf). Beide sind etwas anderes als
      * „jemand hat den Schalter umgelegt", und wer davorsteht, soll es
      * erfahren — sonst sieht eine automatisch geschlossene Installation aus
      * wie eine vergessene.
@@ -606,18 +596,16 @@ function wartung_seite_html(bool $rueckweg = true): string
       . '      <p>Hast du gerade ein Formular abgeschickt: Geh im Browser'
       . ' <strong>zurück</strong> — die Eingaben stehen noch im Formular — und'
       . ' schick es später erneut ab.</p>' . "\n"
-      /* DER RUECKWEG IN DIE VERWALTUNG (Backlog Nr. 126).
+      /* DER RUECKWEG IN DIE VERWALTUNG.
        *
        * Bis hierher endete die Seite im Nichts: Wer sich waehrend der
        * Wartung anmeldete, landete auf der Startseite, und die zeigt
        * diese Seite — ohne einen einzigen Verweis. Der einzige Weg war,
        * `betrieb_updates.php` von Hand in die Adresszeile zu tippen.
        *
-       * FAELLIG GEWORDEN IST DAS ERST MIT NR. 171. Bis Web 19.1.2 liess
-       * sich das Anmeldeformular gar nicht abschicken (auth_salt.php
-       * stand nicht in der Ausnahmeliste) — wer nicht hereinkam, stand
-       * auch nicht vor der Sackgasse. Dies ist die zweite Haelfte
-       * derselben Reparatur.
+       * Das gehoert zur Ausnahme fuer auth_salt.php: Erst mit ihr laesst
+       * sich das Anmeldeformular abschicken, und wer hereinkommt, darf
+       * nicht vor einer Sackgasse stehen.
        *
        * REINES MARKUP, KEIN ui_knopf(). Diese Datei laedt nichts —
        * kein db.php, kein ui.php (Eigenschaft 2 im Dateikopf). Das
@@ -641,10 +629,10 @@ function wartung_seite_html(bool $rueckweg = true): string
  * (`betrieb_status.php`, `betrieb_sicherheit.php`, `betrieb_statistik.php`,
  * `betrieb_updates.php`, `betrieb_jobs.php`, `betrieb_server.php`) und
  * `login.php`. NICHT
- * `update.php` — die ist im Web seit S8/AP3 nur noch eine Weiterleitung.
+ * `update.php` — die ist im Web nur eine Weiterleitung.
  *
  * Er ist die einzige Stelle, an der ein stehengebliebener Wartungsmodus
- * auffaellt — es gibt kein automatisches Ausschalten (E-S5W-05). Deshalb
+ * auffaellt — es gibt kein automatisches Ausschalten. Deshalb
  * steht er oben und nennt Zeitpunkt und Konto; „seit unbekannt", wenn die
  * Datei keinen auswertbaren Inhalt hat.
  *
@@ -670,12 +658,12 @@ function wartung_balken(): string
          * eine Stunde daneben ist besser als eine leere Zeile. */
         $utc = str_replace(['T', 'Z'], [' ', ''], $d['seit']);
         $seit = 'seit ' . (function_exists('fmt_local')
-            ? fmt_local($utc, 'd.m.Y, H:i')   // derselbe Trenner wie datum_zeit_text() (E-P5c-37)
+            ? fmt_local($utc, 'd.m.Y, H:i')   // derselbe Trenner wie datum_zeit_text()
             : $utc . ' UTC');
     }
     $von = $d['von'] !== null ? ' von ' . $h($d['von']) : '';
 
-    /* ZWEI URHEBER SIND KEINE NAMEN (P5a). `torwaechter` und `kette` stehen
+    /* ZWEI URHEBER SIND KEINE NAMEN. `torwaechter` und `kette` stehen
      * im selben Feld wie „Philipp Chadid" — und „von torwaechter" laese sich
      * wie eine Person. Der Balken sagt deshalb, was gemeint ist. */
     $zusatz = match ((string)($d['von'] ?? '')) {
@@ -692,7 +680,7 @@ function wartung_balken(): string
 }
 
 /* ==========================================================================
- * DIE ZWEITE STOERUNG: AUSGELASTET            P5a/AP9, E-P5a-18, E-P5a-50/51
+ * DIE ZWEITE STOERUNG: AUSGELASTET
  * ==========================================================================
  *
  * WOGEGEN. MySQL/MariaDB kennt Grenzen fuer gleichzeitige Verbindungen:
@@ -704,10 +692,10 @@ function wartung_balken(): string
  * sie wird erreicht, wenn eine Handvoll Uhren gleichzeitig nachliefert,
  * waehrend jemand eine Sicherung zieht.
  *
- * Bis AP9 kam in diesem Fall eine **500** — mit dem ungefilterten Text der
- * PDO-Ausnahme, in dem der Hostname und der Benutzername der Datenbank
- * stehen. Zwei Fehler in einem: Die Anfrage ist nicht kaputt, sie ist
- * verfrueht; und was auf dem Bildschirm stand, ging niemanden etwas an.
+ * Ohne diese Seite kaeme in diesem Fall eine **500** — mit dem ungefilterten
+ * Text der PDO-Ausnahme, in dem der Hostname und der Benutzername der
+ * Datenbank stehen. Zwei Fehler in einem: Die Anfrage ist nicht kaputt, sie ist
+ * verfrueht; und was auf dem Bildschirm stuende, ginge niemanden etwas an.
  *
  * JETZT: **503** mit `Retry-After: 5`. Fuer die Geraete ist das dieselbe
  * Zusage wie der Wartungsmodus (JSON-Vertrag 5: 5xx heisst „spaeter
@@ -722,9 +710,9 @@ function wartung_balken(): string
  * verschiedene Fragen.
  *
  * ---------------------------------------------------------------------------
- * WARUM DER ZAEHLER IN EINER DATEI STEHT UND NICHT IN `app_state` (E-P5a-50)
+ * WARUM DER ZAEHLER IN EINER DATEI STEHT UND NICHT IN `app_state`
  * ---------------------------------------------------------------------------
- * Das Konzept sagt „Zaehler `db_ueberlast` in `app_state`". Das geht nicht,
+ * Ein „Zaehler `db_ueberlast` in `app_state`" geht nicht,
  * und zwar aus dem Grund, der den Zaehler ueberhaupt erst interessant macht:
  * **In dem Augenblick, in dem gezaehlt werden muesste, gibt es keine
  * Verbindung zur Datenbank.** `app_state_setzen()` braucht genau eine.
@@ -736,15 +724,14 @@ function wartung_balken(): string
  *
  * Erwogen und verworfen: den Vorfall in eine Datei schreiben und ihn beim
  * naechsten gelungenen Verbindungsaufbau nach `app_state` **nachtragen**.
- * Das haette den Buchstaben des Konzepts erfuellt und zwei Speicher fuer
- * eine Zahl gebraucht — genau die Bauform, die `app_state_lesen()` in
- * `db.php` gerade abgeloest hat („Fuenf Fassungen derselben zwei Zeilen").
+ * Das braeuchte zwei Speicher fuer
+ * eine Zahl — genau die Bauform, die `app_state_lesen()` in
+ * `db.php` abloest („Fuenf Fassungen derselben zwei Zeilen").
  * Eine Zahl, ein Ort.
  *
  * WAS DAS KOSTET: Die Datei liegt nur auf dem Server (`.gitignore` UND die
  * Ausnahmeliste des FTPS-Schritts in `ausliefern-lauf.yml`, wie
- * `wartung.lock` — seit Kette II/AP5 EINE Liste fuer beide Umgebungen,
- * bis dahin je eine in zwei Schritten), sie ueberlebt
+ * `wartung.lock` — EINE Liste fuer beide Umgebungen), sie ueberlebt
  * keinen Serverumzug, und sie steht nicht in der Sicherung. Fuer eine
  * Betriebszahl, die sagt „heute war es dreimal eng", ist das der richtige
  * Preis — sie ist ein Hinweis auf eine Einstellung des Hosters, kein
@@ -755,24 +742,24 @@ function wartung_balken(): string
  * und das waere die gruene Zahl, die nichts gemessen hat.
  */
 
-/** Der Zaehler. Liegt neben `wartung.lock` in `.zustand/` (seit Web 23.3.1,
- *  F-R17-47) und ist wie diese nur auf dem Server — `.gitignore` UND
+/** Der Zaehler. Liegt neben `wartung.lock` in `.zustand/` und ist wie diese nur
+ * auf dem Server — `.gitignore` UND
  *  Ausnahmeliste des Deploys. */
 const UEBERLAST_DATEI = ZUSTAND_VERZEICHNIS . '/ueberlast.json';
 
-/** Der Zaehler am alten Ort, bis Web 23.3.0 — wird beim Zaehlen geloescht. */
+/** Der Zaehler am alten Ort — wird beim Zaehlen geloescht. */
 const UEBERLAST_DATEI_ALT = __DIR__ . '/ueberlast.json';
 
-/** Hinweis an Browser und Werkzeuge, in Sekunden (E-P5a-18). */
+/** Hinweis an Browser und Werkzeuge, in Sekunden. */
 const UEBERLAST_RETRY_S = 5;
 
-/** Ab wie vielen Vorfaellen je Stunde die Statuszeile orange wird
- *  (E-P5a-18). Darunter ist es ein Ereignis, darueber eine Einstellung,
+/** Ab wie vielen Vorfaellen je Stunde die Statuszeile orange wird.
+ *  Darunter ist es ein Ereignis, darueber eine Einstellung,
  *  die nicht passt. */
 const UEBERLAST_ORANGE = 10;
 
 /**
- * Die DREI Fehlernummern, auf die es ankommt — E-P5a-18 nennt zwei (E-P5a-51).
+ * Die DREI Fehlernummern, auf die es ankommt — naheliegend waeren zwei.
  *
  * 1040 = `Too many connections` — der ganze Datenbankserver ist voll.
  * 1203 = `User %s already has more than 'max_user_connections' active
@@ -788,8 +775,8 @@ const UEBERLAST_ORANGE = 10;
  * Webspace setzt die zweite** — der Hoster gibt jedem Kunden seine Zahl, und
  * dafuer ist die GRANT-Grenze da. Gemessen am 16.09.2026 gegen MariaDB 10.11:
  * `ALTER USER 'nadoku'@'127.0.0.1' WITH MAX_USER_CONNECTIONS 3` und eine
- * vierte Verbindung ergeben **1226**, nicht 1203. Ohne diese Zeile haette
- * AP9 also genau den Fall nicht abgedeckt, fuer den es gebaut ist — und zwar
+ * vierte Verbindung ergeben **1226**, nicht 1203. Ohne diese Zeile waere
+ * also genau der Fall nicht abgedeckt, fuer den es gebaut ist — und zwar
  * still, mit einer gruenen Probe daneben, weil die Probe dieselbe Annahme
  * geteilt haette.
  *
@@ -851,11 +838,10 @@ function ueberlast_erkannt(Throwable $ex): bool
         return true;
     }
     if (in_array((int)$ex->getCode(), UEBERLAST_CODES, true)) { return true; }
-    /* DAS MUSTER KOMMT AUS DER LISTE (R17-22, F-R17-48). Bis Web 23.3.0
-     * stand hier `\[(1040|1203)\]` von Hand — der Weg, den der Kommentar
-     * oben den verlaesslichen nennt, kannte ausgerechnet 1226 nicht, die
-     * Nummer, die ein Hoster herstellt. Heute griff Weg 2; fiele er aus,
-     * waere 1226 eine 500 statt der 503 mit Wartezeit. Eine Liste, drei Wege. */
+    /* DAS MUSTER KOMMT AUS DER LISTE. Ein `\[(1040|1203)\]` von Hand — der
+     * Weg, den der Kommentar oben den verlaesslichen nennt — kennte
+     * ausgerechnet 1226 nicht, die Nummer, die ein Hoster herstellt; fiele
+     * Weg 2 aus, waere 1226 eine 500 statt der 503 mit Wartezeit. Eine Liste, drei Wege. */
     $muster = '/\[(' . implode('|', UEBERLAST_CODES) . ')\]/';
     return preg_match($muster, $ex->getMessage()) === 1;
 }
@@ -1008,7 +994,7 @@ function ueberlast_antwort(int $retry = UEBERLAST_RETRY_S): never
  * `betrieb_updates.php` waehrend der Wartung ausdruecklich antwortet. Hier
  * antwortet sie nicht: Die Verbindungsgrenze trifft jede Seite gleich, und
  * ein Verweis, der ins selbe 503 fuehrt, ist ein Griff ins Leere — derselbe
- * Fehler wie F-S8-P-04, nur andersherum.
+ * Fehler wie beim Wartungsmodus, nur andersherum.
  *
  * DER NAME DER INSTALLATION kommt aus der Vorgabe und nicht aus
  * `instanz_kurz()`: Jenes liest `app_state`, also die Datenbank, die gerade
@@ -1030,7 +1016,7 @@ function ueberlast_seite_html(): string
 }
 
 /* --------------------------------------------------------------------------
- * GEDRAENGEL IST AUCH KEIN DEFEKT          P5a/AP9, E-P5a-52 (Fund der Probe)
+ * GEDRAENGEL IST AUCH KEIN DEFEKT
  * --------------------------------------------------------------------------
  *
  * GEFUNDEN AM 16.09.2026 von `tools/proben/verbindung/`, und zwar nebenbei:
@@ -1054,11 +1040,11 @@ function ueberlast_seite_html(): string
  * `ausgelastet` statt 500, also dieselbe Zusage wie an der
  * Verbindungsgrenze. Fuer die Uhr aendert sich dadurch nichts an der
  * Datensicherheit — 5xx heisst im JSON-Vertrag ohnehin „spaeter unveraendert
- * erneut", und genau das tut sie seit S4. Es aendert sich, was die Meldung
+ * erneut", und genau das tut sie. Es aendert sich, was die Meldung
  * BEHAUPTET.
  *
- * DIE EIGENTLICHE ABHILFE STEHT SEIT WEB 21.11.1 IN `ingest.php` (Schritt
- * 18, SR-05, Nr. 210): Die zwei Zeilen, die alle Pakete teilen (`days` und
+ * DIE EIGENTLICHE ABHILFE STEHT IN `ingest.php`: Die zwei Zeilen, die alle
+ * Pakete teilen (`days` und
  * `devices.last_seen`), stehen hinter dem Commit, und der Rumpf laeuft bei
  * 1205 und 1213 bis zu drei Mal. Die Verbindungsprobe misst bei zwanzig
  * freien Plaetzen 0 Gedraengel. Die 503 bleibt fuer den Fall, dass auch der
@@ -1097,7 +1083,7 @@ function gedraengel_erkannt(Throwable $ex): bool
  * Datei und Zeile, ist dort ein Engpass, und den findet man durch Zaehlen
  * gleicher Zeilen, nicht durch Nachschlagen von Kennungen.
  *
- * RUECKFALL UND NICHT `system_melden()` (P5c/AP3, E-P5c-58): Die Anfrage
+ * RUECKFALL UND NICHT `system_melden()`: Die Anfrage
  * haengt gerade an einer Sperre; ein weiterer Schreibzugriff in derselben
  * Lage ist das Letzte, was sie braucht. Die Kennung, die
  * `system_rueckfall()` seither jeder Zeile gibt, schadet nicht — nach ihr
@@ -1110,8 +1096,7 @@ function gedraengel_vermerken(Throwable $ex, string $bereich): void
 }
 
 /**
- * Der Abstand vor dem naechsten Anlauf nach einem Gedraengel (seit Web
- * 21.11.1, Schritt 18, SR-05): 50 bis 200 ms, zufaellig — damit zwei
+ * Der Abstand vor dem naechsten Anlauf nach einem Gedraengel: 50 bis 200 ms, zufaellig — damit zwei
  * Verlierer desselben Deadlocks nicht im selben Takt wieder zusammenstossen.
  * Kurz, weil der andere Anlauf in der Regel gleich fertig ist; die Uhr
  * wartet auf die Antwort.

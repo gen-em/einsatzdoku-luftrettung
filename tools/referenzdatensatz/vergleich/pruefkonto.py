@@ -6,7 +6,7 @@
 
 KEIN ZWEITER ANLEGEWEG. `konto_anlegen()` und `konto_loeschen()` stehen in
 `kreislauf.py`; dieses Skript macht sie fuer Proben aufrufbar, die ihr
-eigenes Konto brauchen, statt auf das eines Kreislaufs zu warten (E-RP-02).
+eigenes Konto brauchen, statt auf das eines Kreislaufs zu warten.
 Geloescht wird nur, was mit `umlauf-` beginnt — der Riegel sitzt in
 `konto_loeschen()`, nicht hier.
 
@@ -35,12 +35,12 @@ def main() -> int:
     p.add_argument("--basis", default="https://127.0.0.1:8443")
     p.add_argument("--admin-email", default=kreislauf.ADMIN_VORGABE[0])
     p.add_argument("--admin-passwort", default=kreislauf.ADMIN_VORGABE[1])
-    # Das Geheimnis des Zweitfaktors (P5c/AP5, E-P5c-43) -- derselbe Schalter
+    # Das Geheimnis des Zweitfaktors -- derselbe Schalter
     # wie in `kreislauf.py`, mit derselben Bedeutung: leer heisst
     # `NADOKU_TOTP`, sonst das der Sandbox.
     p.add_argument("--admin-totp", default="",
                    help="Geheimnis des Zweitfaktors des Admin-Kontos (Base32)")
-    # Seit Konzept RW (RW-03): die Rolle des neuen Kontos und wohin der
+    # Die Rolle des neuen Kontos und wohin der
     # Wiederherstellungsschluessel geschrieben wird, den `passwort_setzen.mjs`
     # von der Seite liest. Die Rueckwegprobe braucht beides.
     p.add_argument("--rolle", default="user", choices=["user", "betreiberin"],

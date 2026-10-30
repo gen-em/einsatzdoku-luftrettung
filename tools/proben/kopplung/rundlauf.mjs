@@ -1,4 +1,4 @@
-/* Einsatzdoku — der Kopplungsrundlauf im Browser (S5 Paket B).
+/* Einsatzdoku — der Kopplungsrundlauf im Browser.
  *
  * WOFUER, UND WARUM NEBEN probe.php. Die Kopplungsprobe daneben fragt den
  * Endpunkt: Antwortet `pair.php` richtig? Diese Datei fragt den WEG: Kann ein
@@ -30,7 +30,7 @@
  * Rueckgabewert: 0 = alle Erwartungen erfuellt und keine Konsolenfehler.
  */
 import { mkdirSync } from 'node:fs';
-import { motorWahl, starten } from '../../motor.mjs';
+import { motorWahl, starten, istOertlich } from '../../motor.mjs';
 
 /* Denselben Neustart wie der Bilderlauf: Nodes fetch liest NODE_USE_ENV_PROXY
  * nur beim Prozessstart. Ohne Proxy geschieht hier nichts. */
@@ -45,7 +45,7 @@ if ((process.env.HTTPS_PROXY || process.env.https_proxy) && !process.env.NODE_US
 const MODUL = process.env.PLAYWRIGHT_MODUL
   || '/opt/node22/lib/node_modules/playwright/index.mjs';
 const PW = (m => m.default ?? m)(await import(MODUL.startsWith('/') ? 'file://' + MODUL : MODUL));
-/* Die Engine wählt der Läufer (MOTOR=… oder --motor), R87. */
+/* Die Engine wählt der Läufer (MOTOR=… oder --motor). */
 const MOTOR = motorWahl(process.argv);
 
 const argv = process.argv.slice(2);
@@ -56,10 +56,10 @@ const BILDER = wert('--bilder', '');
 const FINGER = argv.includes('--finger');
 const BREITE = Number(wert('--breite', '1280'));
 
-/* ---- ZWEI SOLLWERTE FUER DIE KNOPFHOEHE (Backlog Nr. 180) ----------------
+/* ---- ZWEI SOLLWERTE FUER DIE KNOPFHOEHE ----------------------------------
  *
- * Hier stand bis zum 13.09.2026 ein fest verdrahtetes `=== 44`. Seit
- * Web 15.5.0 gelten ZWEI Sollwerte (E-S8-09, R76): 44 px am Fingergeraet und
+ * Ein fest verdrahtetes `=== 44` reicht nicht: Es
+ * gelten ZWEI Sollwerte: 44 px am Fingergeraet und
  * unter 1024 px, 36 px am Zeigergeraet ab 1024 px. Dieser Rundlauf oeffnet
  * seinen Browser mit 1280 px als Zeigergeraet, mass also zu Recht 36 px und
  * meldete sie als Fehler -- ROT SEIT DEM 06.09.2026, und aufgefallen ist es
@@ -77,7 +77,7 @@ const pruefe = (ok, was, wert = '') => {
   console.log(`  [${ok ? 'ok ' : 'FEHL'}] ${was.padEnd(58)} ${wert}`);
 };
 
-/* ---- WAS NICHT ALS FEHLER ZAEHLT (Backlog Nr. 178) -----------------------
+/* ---- WAS NICHT ALS FEHLER ZAEHLT -----------------------------------------
  *
  * Hier stand bis zum 13.09.2026 EIN Ausdruck fuer alle drei Kanaele, geprueft
  * nur gegen den Text:
@@ -103,8 +103,8 @@ const pruefe = (ok, was, wert = '') => {
  *                 ist eine fremde Quelle -- und ERR_ABORTED auf JEDER
  *                 Herkunft: Dieser Rundlauf navigiert mehrfach, und eine
  *                 laufende Anfrage, die von der naechsten Navigation
- *                 ueberholt wird, meldet genau das (gemessen im Nachtrag zu
- *                 Nr. 176: 14 solche Abbrueche in der ersten Ladung nach der
+ *                 ueberholt wird, meldet genau das (gemessen: 14 solche
+ *                 Abbrueche in der ersten Ladung nach der
  *                 Anmeldung, 0 in den folgenden).
  *   pageerror     NIE Rauschen. Eine nicht abgefangene Ausnahme im eigenen
  *                 Code ist immer ein Fehler.
@@ -153,7 +153,7 @@ const bild = async (seite, name) => {
 /* ---- Selbstprobe der Rauschregeln ---------------------------------------
  *
  * Dreizehn Faelle, je mit Sollwert; jeder traegt EINE Regel. Die Faelle 5 und 6
- * sind der Grund fuer Nr. 178: ein 500er und ein 404 auf der eigenen Basis,
+ * sind der Grund fuer die Selbstprobe: ein 500er und ein 404 auf der eigenen Basis,
  * beide vorher verschluckt. Fall 8 haelt die Gegenrichtung fest -- ein
  * abgeraeumter Abruf bleibt Rauschen, sonst faerbt jede Navigation den Lauf
  * rot. Laeuft ohne Browser und ohne Server; das Playwright-Modul muss
@@ -217,10 +217,10 @@ if (argv.includes('--selbstprobe')) {
 console.log(`Kopplungsrundlauf gegen ${BASIS} (Konto ${DEMO.email})`);
 
 /* Der feste Chromium-Pfad gilt nur für Chromium; Firefox und WebKit bringt
- * Playwright selbst (R87). Wie im Bilderlauf, aufnehmen.mjs. */
+ * Playwright selbst. Wie im Bilderlauf, aufnehmen.mjs. */
 const browser = await starten(PW, MOTOR,
   { finger: FINGER, optionen: MOTOR === 'chromium' ? { executablePath: BROWSER } : {} });
-const ctx = await browser.newContext({ ignoreHTTPSErrors: true,
+const ctx = await browser.newContext({ ignoreHTTPSErrors: istOertlich(BASIS),
   viewport: { width: BREITE, height: 900 }, hasTouch: FINGER });
 const seite = await ctx.newPage();
 /* CDP gibt es nur in Chromium; gebraucht wird es nur im Fingerlauf (unten).
@@ -242,7 +242,7 @@ seite.on('requestfailed', r => {
 try {
 
 /* ---- Anmelden ------------------------------------------------------------
- * Das Anmelden dauert: Der Browser leitet das Token per PBKDF2 mit 320 000
+ * Das Anmelden dauert: Der Browser leitet das Token per PBKDF2 mit 600 000
  * Runden ab, und die Startseite baut den Demo-Bestand auf. Deshalb wird auf
  * die ADRESSE gewartet und nicht auf einen Leerlauf des Netzes — der tritt auf
  * der Anmeldeseite auch dann ein, wenn noch gar nichts abgeschickt wurde. */
@@ -366,7 +366,7 @@ await bild(seite, 'rundlauf-4-gekoppelt');
 
 /* ---- Was der Bilderlauf sonst misst, hier gleich mit ----------------------
  *
- * DIE EINGABEART HAELT NICHT VON SELBST (Fund aus S8/AP7, ausfuehrlich in
+ * DIE EINGABEART HAELT NICHT VON SELBST (ausfuehrlich in
  * tools/screenshots/aufnehmen.mjs): `hasTouch` am Kontext setzt sie richtig,
  * aber ein Vollseiten-Screenshot -- und dieser Rundlauf macht mehrere --
  * schiebt sie zurueck auf `hover:hover`/`pointer:fine`. Deshalb wird sie vor

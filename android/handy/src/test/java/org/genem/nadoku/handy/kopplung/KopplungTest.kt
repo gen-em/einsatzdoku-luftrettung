@@ -26,10 +26,9 @@ import java.io.File
  * [HttpNetzweg] mitgeprüft wird — Kopfzeilen, Fehlerstrom bei 4xx, Zeitlimit.
  * Eine Attrappe des [Netzweg] prüfte nur die Auswertung.
  *
- * DREI ANLIEGEN STATT EINEM (R49, S5). Die Fälle folgen dem Ablauf von 1a:
- * `start` legt die Sitzung an, `status` fragt nach, `bestaetigen` entscheidet.
- * Was früher ein Fall war („Code hin, Zugangsdaten zurück"), ist jetzt eine
- * Kette — und die interessanten Fälle liegen zwischen ihren Gliedern:
+ * DREI ANLIEGEN STATT EINEM. Die Fälle folgen dem Ablauf von 1a: `start`
+ * legt die Sitzung an, `status` fragt nach, `bestaetigen` entscheidet. Die
+ * Kopplung ist eine Kette — und die interessanten Fälle liegen zwischen ihren Gliedern:
  * schwebende Zugangsdaten, eine verlorene Antwort, ein Nein.
  */
 @RunWith(RobolectricTestRunner::class)
@@ -334,7 +333,7 @@ class KopplungTest {
         assertEquals("dev-1", a.kopfzeilen["X-Device-Id"])
     }
 
-    /** LOKAL WIRD IMMER GETRENNT (E-S4-12) — auch ohne Antwort des Servers. */
+    /** LOKAL WIRD IMMER GETRENNT — auch ohne Antwort des Servers. */
     @Test fun trennenOhneServerTrenntTrotzdemLokal() {
         tresor.speichern(Zugangsdaten("dev-1", "k1"))
         server.close()
@@ -345,7 +344,7 @@ class KopplungTest {
         assertEquals("geräumt wird auch dann (Nr. 114)", 1, geraeumt)
     }
 
-    /** Die Rückstandssperre (Backlog Nr. 14): NICHTS geschieht. */
+    /** Die Rückstandssperre: NICHTS geschieht. */
     @Test fun trennenMitRueckstandTutNichts() {
         tresor.speichern(Zugangsdaten("dev-1", "k1"))
         rueckstand = 3

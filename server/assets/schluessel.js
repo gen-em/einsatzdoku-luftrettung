@@ -1,6 +1,5 @@
 /**
- * Wiederherstellungsschlüssel erneuern — EINE Funktion, zwei Aufrufer
- * (P5b/AP9, E-P5b-20).
+ * Wiederherstellungsschlüssel erneuern — EINE Funktion, zwei Aufrufer.
  *
  * ===========================================================================
  * WAS SIE TUT, IN DER REIHENFOLGE, IN DER ES WICHTIG IST
@@ -13,7 +12,7 @@
  *   5. Beides an `api/schluessel_erneuern.php`
  *   6. Den Code zurückgeben, damit ihn jemand aufschreiben kann
  *
- * Die Schritte 1 bis 3 stehen seit Konzept RW (RW-02) als `oeffnen()` für
+ * Die Schritte 1 bis 3 stehen als `oeffnen()` für
  * sich: „Rückweg erneuern" (`assets/rueckweg.js`) braucht denselben
  * Inhaltsschlüssel mit derselben Wache, und eine zweite Fassung davon wäre
  * eine zweite Stelle, an der sie vergessen werden kann.
@@ -34,11 +33,11 @@
  * Schritt 4 diesen falschen Schlüssel, der Server nähme ihn an, und der neue
  * Zettel öffnete danach **nichts**. Der alte wäre schon überschrieben.
  *
- * Das ist der einzige Weg, auf dem dieses Paket Daten unzugänglich machen
+ * Das ist der einzige Weg, auf dem diese Funktion Daten unzugänglich machen
  * könnte, und deswegen steht die Prüfung hier und wird bei einer Abweichung
  * abgebrochen, bevor irgendetwas gesendet wird.
  *
- * ALTBESTAND OHNE PRÜFSUMME: Konten von vor Web 10 tragen `pat_key_check` als
+ * ALTBESTAND OHNE PRÜFSUMME: Ältere Konten tragen `pat_key_check` als
  * NULL. Dort kann nicht geprüft werden — dann wird auch nicht erneuert,
  * sondern gesagt, warum. Lieber ein Konto, das diese Funktion nicht hat, als
  * eines, das sie ungeprüft benutzt.
@@ -68,16 +67,8 @@
    *   anteile     { kennung: hex } — die ausgelieferten Anteile. Welcher
    *               davon gebraucht wird, sagt das Präfix von `wrapPw`; diese
    *               Funktion bekommt deshalb KEINE Zielkennung.
-   *   csrf        WIRD NICHT MEHR GELESEN -- und bleibt trotzdem stehen.
-   *               Seit Schritt 15 (AP8) geht Schritt 5 ueber
-   *               `EdApi.postForm()`, und das setzt das Feld `csrf` selbst,
-   *               aus der globalen `CSRF`. Genau daher nehmen ihn auch die
-   *               beiden Aufrufer -- dieselbe Quelle, derselbe Wert, also
-   *               zeichengleich. Gestrichen wird der Parameter dennoch
-   *               nicht: Das waere eine Schnittstellenaenderung an einer
-   *               Komponente mit zwei Verbrauchern, und dieses Paket aendert
-   *               kein Verhalten. Wer ihn weiter uebergibt, liegt nicht
-   *               falsch, sondern wirkungslos.
+   *   Kein `csrf`: Schritt 5 geht ueber `EdApi.postForm()`, und das setzt
+   *   das Feld selbst.
    * @returns {Promise<string>} der neue Wiederherstellungscode
    * @throws {Error} mit einer Meldung, die man anzeigen kann
    */
@@ -88,18 +79,18 @@
     const rc = EdCrypto.newRecoveryCode();
     const rk = await EdCrypto.recoveryKeyHex(rc);
     /* `encrypt()` UND NICHT `huelleBauen()` — die Wiederherstellungs-Hülle
-     * bekommt KEINEN Anteil (E-S10-04). Sie ist der Rückweg für den Fall,
+     * bekommt KEINEN Anteil. Sie ist der Rückweg für den Fall,
      * dass der Anteil verloren ist; hinge sie selbst daran, gäbe es keinen.
      * Der Server weist eine `edka1:`-Hülle hier ohnehin ab — aber die
      * richtige Stelle, sie gar nicht erst zu bauen, ist diese. */
     const wrapRc = await EdCrypto.encrypt(rk, ck);
 
     /* ---- 5: senden ------------------------------------------------------ */
-    /* UEBER EdApi (Schritt 15, AP8). Das Feld `csrf` haengt EdApi selbst an,
-     * die Erfolgsregel (HTTP UND Fachschluessel) liegt dort, und ein
-     * Netzfehler kommt als `status: 0` zurueck statt als Wurf -- der Aufrufer
-     * sieht dadurch einen deutschen Satz, wo bisher der Browsertext
-     * „Failed to fetch" stand.
+    /* UEBER EdApi. Das Feld `csrf` haengt EdApi selbst an, die
+     * Erfolgsregel (HTTP UND Fachschluessel) liegt dort, und ein
+     * Netzfehler kommt als `status: 0` zurueck statt als Wurf -- der
+     * Aufrufer sieht dadurch einen deutschen Satz statt des Browsertexts
+     * „Failed to fetch".
      *
      * EdApi NICHT beim Laden in eine Variable nehmen: Auf einstellungen.php
      * kommt `api.js` spaeter als diese Datei (siehe Kopf von assets/api.js).
@@ -112,10 +103,9 @@
     if (!antw.ok) {
       /* DER SATZ KOMMT FERTIG AUS EdApi. Dieser Endpunkt nennt sein
        * Satzfeld `text` statt `meldung`; die Vorrangkette in
-       * `grund()` (assets/api.js) liest es seit AP8 mit, und der
-       * Vorgangsname steht davor. Hier stand bis zum Gegenlesen ein
-       * eigener Griff auf `antw.daten.text`, der genau diesen
-       * Vorgangsnamen wieder verlor. */
+       * `grund()` (assets/api.js) liest es mit, und der Vorgangsname
+       * steht davor. Ein eigener Griff auf `antw.daten.text` verloere
+       * genau diesen Vorgangsnamen wieder. */
       throw new Error(antw.meldung);
     }
 
@@ -125,7 +115,7 @@
 
   /**
    * Die Schritte 1 bis 3: Passwort → Inhaltsschlüssel, gehalten gegen
-   * `pat_key_check`. Seit Konzept RW (RW-02) eine eigene Funktion, weil ein
+   * `pat_key_check`. Eine eigene Funktion, weil ein
    * zweiter Vorgang sie braucht: „Rückweg erneuern" (`assets/rueckweg.js`)
    * verpackt mit diesem Inhaltsschlüssel ein neues Schlüsselpaar. Die Wache
    * steht damit EINMAL, für beide.

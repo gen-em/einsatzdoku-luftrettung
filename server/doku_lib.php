@@ -2,8 +2,7 @@
 declare(strict_types=1);
 
 /**
- * HANDBUCH UND „WAS IST NADOKU" ALS SEITEN DER ANWENDUNG (P5b/AP8,
- * E-P5b-08, -22).
+ * HANDBUCH UND „WAS IST NADOKU" ALS SEITEN DER ANWENDUNG.
  *
  * Die Quelle bleibt Markdown im Repositorium — `docs/Handbuch.md` und
  * `docs/Was-ist-NAdoku.md`. Das ist die ganze Idee: auf GitHub editierbar,
@@ -30,8 +29,8 @@ declare(strict_types=1);
  * WARUM HIER KEIN CACHE STEHT, OBWOHL DAS KONZEPT EINEN VERLANGT
  * ---------------------------------------------------------------------------
  *
- * E-P5b-22 sagt: „Cache in `app_state` unter `doku:<name>:<hash>`". Das geht
- * nicht, und es ist auch nicht noetig:
+ * Ein Zwischenspeicher in `app_state` unter `doku:<name>:<hash>` liegt nahe.
+ * Er geht nicht, und er ist auch nicht noetig:
  *
  *   ES GEHT NICHT. `app_state.v` ist `VARCHAR(190)` (`APP_STATE_MAX` in
  *   `db.php`). Das gerenderte Handbuch ist **303 KB**. `app_state_setzen()`
@@ -78,12 +77,10 @@ declare(strict_types=1);
  */
 
 /* KEIN `db.php`. Diese Bibliothek braucht nichts daraus — keine Funktion,
- * keine Konstante —, und `db.php` bricht ohne `config.php` ab. Bis Web
- * 21.1.1 stand die Zeile trotzdem hier; die Ankerprüfung
- * (`tools/quelltext/anker.php`) laedt diese Datei, und in Stufe 1 gibt es
- * keine `config.php`: Der erste Lauf auf dem Pull Request von P5c war daran
- * rot, der Pruefstand mit seiner eingerichteten Anlage gruen. Die Seiten
- * laden `db.php` selbst (`doku_seite.php`). */
+ * keine Konstante —, und `db.php` bricht ohne `config.php` ab. Die
+ * Ankerprüfung (`tools/quelltext/anker.php`) laedt diese Datei, und in
+ * Stufe 1 gibt es keine `config.php`. Die Seiten laden `db.php` selbst
+ * (`doku_seite.php`). */
 require_once __DIR__ . '/vendor/Parsedown.php';
 
 /**
@@ -122,18 +119,6 @@ function doku_pfad(string $name): ?string
     }
 
     return null;
-}
-
-/**
- * Sind beide Dokumente da? Fuer die Statusseite.
- *
- * @return array<string, ?string> Schluessel => Pfad oder null
- */
-function doku_bestand(): array
-{
-    $aus = [];
-    foreach (array_keys(DOKU_DATEIEN) as $name) { $aus[$name] = doku_pfad($name); }
-    return $aus;
 }
 
 /**
@@ -196,7 +181,7 @@ final class DokuMarkdown extends Parsedown
      * Ueberschriften bekommen eine Sprungmarke — und h2/h3 landen im
      * Inhaltsverzeichnis.
      *
-     * NUR h2 UND h3 (E-P5b-22). Das Handbuch hat 13 h2, 54 h3 und 12 h4;
+     * NUR h2 UND h3. Das Handbuch hat 13 h2, 54 h3 und 12 h4;
      * mit den h4 haette das Verzeichnis 79 Eintraege und waere laenger als
      * mancher Abschnitt. Eine Marke bekommen die h4 trotzdem — verlinken
      * koennen soll man sie, nur nicht durch sie blaettern.
@@ -236,7 +221,7 @@ final class DokuMarkdown extends Parsedown
      *
      * KEIN `target="_blank"`, und deshalb ist `noopener` hier streng genommen
      * ueberfluessig — dieselbe Ueberlegung steht schon bei `rt_html()`. Es
-     * steht trotzdem da, weil E-P5b-22 es verlangt und weil es nichts kostet:
+     * steht trotzdem da, weil es nichts kostet:
      * Setzt jemand spaeter ein `target`, ist das Attribut schon an der
      * richtigen Stelle, statt dann vergessen zu werden.
      */
@@ -339,7 +324,7 @@ function doku_seite(string $name): ?array
     if ($md === false) { return null; }
 
     /* DIE ERSTE `#`-ZEILE IST DER TITEL UND WIRD HERAUSGENOMMEN. Die Seite
-     * hat ihr `<h1>` aus der Seitenhuelle (so zeichnet es M-P5b-01); ein
+     * hat ihr `<h1>` aus der Seitenhuelle; ein
      * zweites im Text waere zwei Ueberschriften erster Ordnung auf einer
      * Seite — fuer eine Vorleserin eine kaputte Gliederung. */
     $titel = null;

@@ -1,29 +1,21 @@
 <?php
 declare(strict_types=1);
 /**
- * WARTUNG — Notausgang auf der Kommandozeile, Weiterleitung im Web (S8/AP3).
+ * WARTUNG — Notausgang auf der Kommandozeile, Weiterleitung im Web.
  *
- * WAS AUS DIESER SEITE GEWORDEN IST. Sie trug bis Web 15.0.0 neun Bloecke auf
- * einer Flaeche: Wartungsmodus, Schluesselableitung, Logo, Umgebung,
- * Hintergrundjobs, Job-Ausloeser, Einsaetze ohne Diensttag, Migrationsliste
- * und den Balken darueber. Das war der Ausloeser fuer Backlog Nr. 77 und
- * einer der Befunde der S8-Sichtung (B-S8-03: vier Anliegen auf einer Seite).
- *
- * S8 teilt sie nicht auf, sondern loest sie AUF (E-S8-05). Wohin was gegangen
- * ist:
+ * IM WEB IST DIESE SEITE AUFGELOEST. Was einmal hier zusammen stand, steht
+ * heute an diesen Stellen:
  *
  *   Wartungsmodus, Migrationen, Fassung     -> betrieb_updates.php
  *   Hintergrundjobs, Ausloeser, Token       -> betrieb_jobs.php
  *   Speichergrenze, Schwellen, Ablage       -> betrieb_server.php
- *   Schluesselableitung, Umgebung           -> betrieb_status.php (AP4)
- *   Logo der Installation                   -> admin_installation.php (AP3)
- *   Einsaetze ohne Diensttag                -> ersatzlos entfallen (E-S8-17)
+ *   Schluesselableitung, Umgebung           -> betrieb_status.php
+ *   Logo der Installation                   -> admin_installation.php
  *
  * WARUM DIE DATEI TROTZDEM BLEIBT: der Notausgang `php update.php` auf der
  * Kommandozeile. Er laeuft ohne Sitzung — fuer den Fall, dass die Anmeldung
  * selbst von einer Migration abhaengt — und steht so in Runbook, Handbuch und
- * in jeder aelteren Anleitung. Der Web-Teil ist seit AP3 eine Weiterleitung
- * und bleibt es bis P6 (Nr. 77).
+ * in jeder aelteren Anleitung. Der Web-Teil ist eine Weiterleitung.
  */
 // Notausgang: Aufruf per Kommandozeile (SSH) laeuft ohne Web-Session —
 // fuer den Fall, dass der Login selbst von einer Migration abhaengt.
@@ -49,7 +41,7 @@ if (php_sapi_name() === 'cli') {
     foreach ($lauf['results'] as [$id, $label, $status, $detail, $zerstoert, $blockId, $web]) {
         printf("%-6s %-9s %-46s %s\n", strtoupper($status),
                $web !== null ? ('Web ' . $web) : '', $id, $detail);
-        /* Ohne Freigabe-Kennung ist es eine Vorbedingung (P5c/AP8): Sie wird
+        /* Ohne Freigabe-Kennung ist es eine Vorbedingung: Sie wird
          * hergestellt, nicht freigegeben — der Weg steht in der Zeile. */
         if ($status === 'stopp') {
             printf("%-6s %-46s %s\n", '', '',
@@ -61,17 +53,15 @@ if (php_sapi_name() === 'cli') {
     exit(0);
 }
 
-/* ---- Web: Weiterleitung auf Betrieb -> Updates (S8/AP3) -------------------
+/* ---- Web: Weiterleitung auf Betrieb -> Updates ---------------------------
  *
  * Ab hier ist der Web-Teil eine Weiterleitung. Was hier stand, steht in den
- * drei Betriebsseiten; die Logo-Karte ist mit AP3 auf „Installation" gezogen
- * und war der letzte Grund, warum diese Seite noch etwas anzeigte.
+ * Betriebsseiten.
  *
  * 302 UND NICHT 301: Eine dauerhafte Weiterleitung merkt sich der Browser, und
  * wer sie einmal falsch ausgeliefert hat, bekommt sie nicht mehr aus den
- * Zwischenspeichern heraus. Die Adresse verschwindet erst mit Nr. 77 in P6 —
- * bis dahin steht sie in Lesezeichen, im Runbook und in jeder aelteren
- * Anleitung.
+ * Zwischenspeichern heraus. Die Adresse steht in Lesezeichen, im Runbook und
+ * in jeder aelteren Anleitung.
  *
  * DER NOTAUSGANG DARUEBER BLEIBT UNBERUEHRT: `php update.php` fuehrt die
  * Migrationen weiter aus, ohne Sitzung, fuer den Fall, dass die Anmeldung

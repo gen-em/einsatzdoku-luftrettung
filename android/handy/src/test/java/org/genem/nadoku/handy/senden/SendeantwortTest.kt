@@ -21,7 +21,7 @@ class SendeantwortTest {
     }
 
     /**
-     * **Ein `ok: true` mit `rejected` ist kein reiner Erfolg** (E-S4-06).
+     * **Ein `ok: true` mit `rejected` ist kein reiner Erfolg.**
      * Der Upload ist angekommen, aber nicht vollständig übernommen.
      */
     @Test fun erfolgMitVerworfenenWerten() {

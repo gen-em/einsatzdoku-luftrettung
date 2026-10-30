@@ -2,7 +2,7 @@
 declare(strict_types=1);
 
 /**
- * DIE DOKUMENTSEITE — eine Fassung fuer beide (P5b/AP8, E-P5b-08, M-P5b-01).
+ * DIE DOKUMENTSEITE — eine Fassung fuer beide.
  *
  * `hilfe.php` und `ueber.php` sind drei Zeilen lang und setzen nur
  * `$dokuName`; alles Weitere steht hier. Dasselbe Muster wie bei
@@ -19,7 +19,7 @@ declare(strict_types=1);
  * hinter der Anmeldung hilft genau denen nicht, die nicht hineinkommen.
  *
  * SIE KENNT DIE SITZUNG TROTZDEM, weil der Kopf sich unterscheidet: angemeldet
- * mit Menue und Namen, sonst ohne Menue und mit „Anmelden" (M-P5b-01). Die
+ * mit Menue und Namen, sonst ohne Menue und mit „Anmelden". Die
  * Sitzung wird nur GEFRAGT, nicht erzwungen — wie in `rechtstext_seite.php`.
  *
  * ---------------------------------------------------------------------------
@@ -55,16 +55,16 @@ $dokuName = $dokuName ?? 'handbuch';
 if (!isset(DOKU_DATEIEN[$dokuName])) { $dokuName = 'handbuch'; }
 
 /* Das Handbuch bekommt das Inhaltsverzeichnis, „Was ist NAdoku" nicht: Es hat
- * vier Abschnitte und passt auf einen Bildschirm (M-P5b-01, Bild 2). */
+ * vier Abschnitte und passt auf einen Bildschirm. */
 $mitVerzeichnis = $dokuName === 'handbuch';
 $seitenTitel    = $dokuName === 'handbuch' ? 'Handbuch' : 'Was ist NAdoku?';
 
 /* ---- Laeuft eine Sitzung? Nur fragen, nicht erzwingen. ------------------- */
-/* NUR FRAGEN, NICHT ERZWINGEN — und seit Web 20.27.0 auch nicht mehr
- * ANLEGEN: Die Art `lesend` startet nur, wenn ein Sitzungscookie da ist
- * (F-ZE-2). Diese Seite ist ohne Anmeldung erreichbar; bis dahin bekam JEDER
- * Besucher eine Sitzung und seit Schritt 16 eine Datei in `.sitzungen/`,
- * auch jeder Bot. Fuer Angemeldete aendert sich nichts. */
+/* NUR FRAGEN, NICHT ERZWINGEN — und auch nicht ANLEGEN: Die Art `lesend`
+ * startet nur, wenn ein Sitzungscookie da ist. Diese Seite ist ohne
+ * Anmeldung erreichbar; sonst bekaeme JEDER Besucher eine Sitzung und eine
+ * Datei in `.sitzungen/`, auch jeder Bot. Fuer Angemeldete aendert sich
+ * nichts. */
 sitzung_starten('lesend');
 $angemeldet = !empty($_SESSION['user_id']);
 
@@ -82,7 +82,7 @@ $zurueck = $angemeldet
 
 ui_seite_start(['titel' => $seitenTitel]);
 
-/* ANGEMELDET DER VOLLE KOPF, SONST DER SCHMALE (M-P5b-01). Angemeldet ist
+/* ANGEMELDET DER VOLLE KOPF, SONST DER SCHMALE. Angemeldet ist
  * diese Seite ein Teil der Anwendung und soll sich so anfuehlen; ausgeloggt
  * ist sie eine Visitenkarte und braucht kein Menue, das ins Leere fuehrt. */
 if ($angemeldet) {
@@ -102,8 +102,8 @@ if ($angemeldet) {
                Er tritt genau dann ein, wenn jemand `server/` hochgeladen hat
                und `docs/` nicht — der haeufigste Fehler beim Selbsthosten.
                Deshalb steht hier, was zu tun ist, und nicht „Fehler". */ ?>
-      <?php /* Ohne `<code>` im Text (R17-22, F-R17-49): Der Baustein maskiert,
-               und wer `server/` ohne `docs/` hochlud, las die Tags als Text. */ ?>
+      <?php /* Ohne `<code>` im Text: Der Baustein maskiert, und wer
+               `server/` ohne `docs/` hochlaedt, liest die Tags als Text. */ ?>
       <?= ui_meldung_markup('warn',
           'Die Datei ' . DOKU_DATEIEN[$dokuName] . ' ist auf diesem '
         . 'Server nicht zu finden. Gesucht wird sie neben der Anwendung unter '
@@ -167,8 +167,8 @@ if ($angemeldet) {
         <?= $seite['html'] ?>
 
         <?php if (!$mitVerzeichnis): ?>
-          <?php /* DIE KNOEPFE AM ENDE RICHTEN SICH NACH DER BETRIEBSART
-                   (M-P5b-01, Anmerkung zu Bild 2): Bei „nur auf Einladung"
+          <?php /* DIE KNOEPFE AM ENDE RICHTEN SICH NACH DER BETRIEBSART:
+                   Bei „nur auf Einladung"
                    waere „Konto anlegen" ein Knopf, der auf eine Seite fuehrt,
                    die einem sagt, dass man nicht darf. */ ?>
           <div class="doku-wege">

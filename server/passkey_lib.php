@@ -2,30 +2,28 @@
 declare(strict_types=1);
 
 /**
- * PASSKEYS ALS ZWEITER FAKTOR (seit Web 21.10.0, Schritt 18, SR-09; Nr. 350;
- * E-SR-28 bis -36, E-SR-42; gehaertet mit der Gegenlesung H-SR-08 in Web
- * 21.11.0, F-SR-33 bis -52, E-SR-44 bis -53).
+ * PASSKEYS ALS ZWEITER FAKTOR.
  *
  * ===========================================================================
  * WAS EIN PASSKEY HIER IST — UND WAS NICHT
  * ===========================================================================
  *
- * Ein WEITERES VERFAHREN DESSELBEN FAKTORS (E-SR-29, -35): Voraussetzung ist
+ * Ein WEITERES VERFAHREN DESSELBEN FAKTORS: Voraussetzung ist
  * der eingeschaltete Zweitfaktor (TOTP); Codes und Rueckweg bleiben der
  * Notweg; `totp_abschalten()` nimmt die Passkeys mit, auf jedem Weg und in
- * derselben Transaktion (F-SR-38). Im Code-Schritt der Anmeldung ist er der
+ * derselben Transaktion. Im Code-Schritt der Anmeldung ist er der
  * dritte Weg neben App-Code und Wiederherstellungscode und zaehlt wie ein
- * App-Code (E-SR-32) — fuer den Haken „Geraet merken" und fuer den frischen
- * Code. Er haengt NICHT am Serverschluessel (E-SR-49): Laesst sich das
+ * App-Code — fuer den Haken „Geraet merken" und fuer den frischen
+ * Code. Er haengt NICHT am Serverschluessel: Laesst sich das
  * TOTP-Geheimnis nach einem Wiederanlauf nicht oeffnen, meldet er weiter an.
  *
  * NICHT: ein Ersatz des Passworts, eine Quelle fuer den Datenschluessel (kein
- * PRF, E-SR-28), ein Faktor ohne TOTP (Nr. 351). Und der Code-Schritt wird
+ * PRF), ein Faktor ohne TOTP. Und der Code-Schritt wird
  * durch ihn nicht phishingfest: Die Passkey-ANTWORT ist an die Adresse
- * gebunden, der App-Code daneben bleibt abfischbar (F-SR-44).
+ * gebunden, der App-Code daneben bleibt abfischbar.
  *
  * ===========================================================================
- * DIE EINE STELLE FUER WEBAUTHN (R83), OHNE FREMDBESTANDTEIL (E-SR-30)
+ * DIE EINE STELLE FUER WEBAUTHN, OHNE FREMDBESTANDTEIL
  * ===========================================================================
  *
  * Drei Teile, alle hier:
@@ -33,13 +31,13 @@ declare(strict_types=1);
  *   1. EIN CBOR-LESER fuer genau die Teilmenge, die Registrierung und COSE
  *      brauchen: Ganzzahlen, Byte- und Textketten, Listen und Karten
  *      BESTIMMTER Laenge, hoechstens acht Behaelter tief (Listen und Karten
- *      zaehlen, Werte darin nicht — F-SR-34). Fliesszahlen, Marken, einfache
+ *      zaehlen, Werte darin nicht). Fliesszahlen, Marken, einfache
  *      Werte, unbestimmte Laengen, doppelte Schluessel, Textschluessel, die
- *      wie eine Zahl aussehen (PHP machte aus "1" den Schluessel 1 —
- *      F-SR-34), und ein Rest hinter dem Element sind eine Ablehnung — ein
+ *      wie eine Zahl aussehen (PHP machte aus "1" den Schluessel 1),
+ *      und ein Rest hinter dem Element sind eine Ablehnung — ein
  *      Leser, der mehr annimmt, als er braucht, ist die Stelle, an der ein
- *      falsch gelesenes Laengenfeld einen fremden Schluessel durchlaesst
- *      (E-SR-36). Wo eine Karte verlangt ist (attestationObject,
+ *      falsch gelesenes Laengenfeld einen fremden Schluessel durchlaesst.
+ *      Wo eine Karte verlangt ist (attestationObject,
  *      COSE-Schluessel, Erweiterungen), prueft der Aufrufer die Art am
  *      Kopfbyte (`pk_cbor_art()`), denn gelesen sind Karte und Liste beide
  *      ein PHP-Feld.
@@ -48,14 +46,14 @@ declare(strict_types=1);
  *      `rpIdHash`, UP und AT, Zaehler, Kennung, COSE-Schluessel). Das Format
  *      der Attestation (`fmt`) wird gelesen und NICHT geprueft — verlangt
  *      wird `none`; wer den Hersteller des Authenticators wissen wollte,
- *      zahlte mit Datenschutz fuer nichts (E-SR-30, R36). Anmeldung: Art,
+ *      zahlte mit Datenschutz fuer nichts. Anmeldung: Art,
  *      Herausforderung, Ursprung, `rpIdHash`, UP, die Signatur ueber
- *      `authData ‖ sha256(clientDataJSON)`, der Zaehler (E-SR-33).
+ *      `authData ‖ sha256(clientDataJSON)`, der Zaehler.
  *   3. DIE SIGNATUR UEBER PHPSECLIB, wie beim Rueckweg: `Crypt/EC` fuer ES256
  *      (-7, P-256, DER-Signatur), `Crypt/RSA` fuer RS256 (-257, PKCS#1 v1.5
  *      mit SHA-256). Andere Verfahren gibt es nicht. RSA-Schluessel haben
- *      2048 bis 4096 Bit und einen ungeraden Exponenten von 3 bis 64 Bit
- *      (F-SR-33): Ohne Obergrenze kostete eine einzige Pruefung mit einem
+ *      2048 bis 4096 Bit und einen ungeraden Exponenten von 3 bis 64 Bit:
+ *      Ohne Obergrenze kostete eine einzige Pruefung mit einem
  *      selbst gebauten Schluessel Sekunden bis Minuten Rechenzeit, und mit
  *      e = 1 liesse sich die Signatur ohne Geheimnis rechnen.
  *
@@ -68,7 +66,7 @@ declare(strict_types=1);
  * aus. UP (die Nutzergeste) wird verlangt.
  *
  * ===========================================================================
- * WAS BEWUSST SO BLEIBT (H-SR-08, F-SR-44)
+ * WAS BEWUSST SO BLEIBT
  * ===========================================================================
  *
  * - DER IST NICHT GANZ STRENG: Die Form der ES256-Signatur prueft
@@ -88,13 +86,13 @@ declare(strict_types=1);
  *   der Sicherungszustand sonst nicht.
  *
  * ===========================================================================
- * DER EIGENE URSPRUNG KOMMT AUS DER KONFIGURATION (E-SR-42)
+ * DER EIGENE URSPRUNG KOMMT AUS DER KONFIGURATION
  * ===========================================================================
  *
  * `rp.id` ist der Host aus `app.base_url` (`app_url()`), der Ursprung dessen
  * Schema, Host und Port. NICHT die `Host`-Kopfzeile der Anfrage. Bestaetigt
  * von der Betreiberin am 28.09.2026; die Begruendung ist dabei berichtigt
- * worden (H-SR-08, F-SR-44): Vor einer nachgemachten Seite schuetzt vor allem
+ * worden: Vor einer nachgemachten Seite schuetzt vor allem
  * der BROWSER — er gibt einen Passkey fuer diese Adresse unter einer anderen
  * gar nicht heraus. Den Ausschlag geben drei Dinge: WebAuthn verlangt den
  * Abgleich mit dem Ursprung, den die Anlage ERWARTET, nicht mit dem, den die
@@ -109,9 +107,9 @@ declare(strict_types=1);
  * Folge: Passkeys gibt es nur unter der Adresse aus `app.base_url`; eine
  * IP-Adresse und eine Adresse ohne HTTPS taugen nicht (das verlangen die
  * Browser selbst). Ein Umlaut-Name wird in Punycode umgeschrieben, ein
- * abschliessender Punkt faellt weg (F-SR-40). JEDE ZEILE TRAEGT IHRE `rp_id`
- * (E-SR-48): Nach einem Umzug auf eine neue Adresse bietet die Anmeldung die
- * alten nicht mehr an, und die Karte zeigt sie als nicht nutzbar (F-SR-41).
+ * abschliessender Punkt faellt weg. JEDE ZEILE TRAEGT IHRE `rp_id`:
+ * Nach einem Umzug auf eine neue Adresse bietet die Anmeldung die
+ * alten nicht mehr an, und die Karte zeigt sie als nicht nutzbar.
  */
 
 require_once __DIR__ . '/db.php';
@@ -124,9 +122,9 @@ use phpseclib3\Crypt\PublicKeyLoader;
 use phpseclib3\Crypt\RSA;
 use phpseclib3\Math\BigInteger;
 
-/** Hoechstens so viele Passkeys je Konto und Adresse (E-SR-31, E-SR-48). */
+/** Hoechstens so viele Passkeys je Konto und Adresse. */
 const PK_HOECHSTENS = 10;
-/** So lange gilt die Herausforderung der Registrierung (E-SR-31). */
+/** So lange gilt die Herausforderung der Registrierung. */
 const PK_REG_S = 600;
 /** Die Bezeichnung, hoechstens so viele Zeichen; leer heisst „Passkey vom …". */
 const PK_BEZEICHNUNG_MAX = 40;
@@ -134,18 +132,18 @@ const PK_BEZEICHNUNG_MAX = 40;
 const PK_ALGS = [-7 => 'ES256', -257 => 'RS256'];
 /** Die Kennung eines Passkeys, hoechstens so viele Bytes (WebAuthn L2 5.1). */
 const PK_KENNUNG_MAX = 1023;
-/** Tiefer als acht Behaelter liest der CBOR-Leser nicht (E-SR-30, F-SR-34). */
+/** Tiefer als acht Behaelter liest der CBOR-Leser nicht. */
 const PK_CBOR_TIEFE = 8;
-/** RSA-Schluessel: so viele Bit, nicht weniger und nicht mehr (F-SR-33). */
+/** RSA-Schluessel: so viele Bit, nicht weniger und nicht mehr. */
 const PK_RSA_BITS_MIN = 2048;
 const PK_RSA_BITS_MAX = 4096;
 /** Der RSA-Exponent, hoechstens so viele Bytes (64 Bit). Die PKCS#1-Pruefung
  *  rechnet phpseclib immer selbst; die Potenz darin uebernimmt OpenSSL, und
  *  das tut es fuer JEDEN erlaubten Modul nur bis 64 Bit Exponent (ueber 3072
  *  Bit Modul lehnt es groessere ab) — darueber rechnete phpseclib die Potenz
- *  in reinem PHP (H-SR-08, Nachpruefung A-4). */
+ *  in reinem PHP. */
 const PK_RSA_E_BYTES_MAX = 8;
-/** Ein Feld der Antwort, dekodiert hoechstens so gross (F-SR-35) — auf das
+/** Ein Feld der Antwort, dekodiert hoechstens so gross — auf das
  *  Byte: `pk_feld()` rechnet die Laenge in Base64url ohne Fuellzeichen. Echte
  *  Antworten liegen unter zwei Kilobyte; mit `attestation: 'none'` gibt es
  *  keine Zertifikatskette. */
@@ -154,12 +152,12 @@ const PK_FELD_MAX = 32768;
  *  hoechstens so gross — vier Felder zu PK_FELD_MAX in Base64url und Rand. */
 const PK_ANTWORT_MAX = 196608;
 /** P-256: der Modul des Koerpers, 32 Byte gross-endian. Eine Koordinate darf
- *  nicht darueber liegen (F-SR-34, SEC 1 2.3.6). */
+ *  nicht darueber liegen (SEC 1 2.3.6). */
 const PK_P256_P = "\xff\xff\xff\xff\x00\x00\x00\x01\x00\x00\x00\x00\x00\x00\x00\x00"
                 . "\x00\x00\x00\x00\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff";
-/** Fehlerarten (Code von PkFehler): Was davon der Aufrufer NICHT als
- *  Fehlversuch zaehlt, steht in F-SR-37 — eine abgelaufene oder verdraengte
- *  Herausforderung und ein zurueckgelaufener Zaehler bei gueltiger Signatur. */
+/** Fehlerarten (Code von PkFehler): Der Aufrufer zaehlt NICHT als
+ *  Fehlversuch: eine abgelaufene oder verdraengte
+ *  Herausforderung und einen zurueckgelaufenen Zaehler bei gueltiger Signatur. */
 const PK_F_PRUEFUNG = 0;
 const PK_F_HERAUSFORDERUNG = 1;
 const PK_F_ZAEHLER = 2;
@@ -185,7 +183,7 @@ function pk_b64u(string $bytes): string
 
 /**
  * Streng: nur das Alphabet von Base64url, ohne Fuellzeichen, ohne Zeilenende,
- * und nur in der kanonischen Schreibweise; sonst null (F-SR-34). `\z` statt
+ * und nur in der kanonischen Schreibweise; sonst null. `\z` statt
  * `$`, weil `$` auch vor einem abschliessenden Zeilenumbruch passt; die
  * Rueckprobe, weil `base64_decode()` die Fuellbits des letzten Zeichens nicht
  * prueft („QR" gaebe dasselbe wie „QQ").
@@ -201,9 +199,9 @@ function pk_b64u_lesen(string $text): ?string
 }
 
 /**
- * Ein Feld der Antwort lesen: Text, Base64url, nicht groesser als PK_FELD_MAX
- * (F-SR-35). Ein Feld vom falschen JSON-Typ ist eine Ablehnung mit Grund —
- * bis Web 21.10.0 machte ein `(string)` aus einer Liste eine PHP-Warnung im
+ * Ein Feld der Antwort lesen: Text, Base64url, nicht groesser als PK_FELD_MAX.
+ * Ein Feld vom falschen JSON-Typ ist eine Ablehnung mit Grund —
+ * ein `(string)` machte aus einer Liste eine PHP-Warnung im
  * Reiter System, ausloesbar von jedem, der das Passwort hat.
  *
  * @throws PkFehler
@@ -213,7 +211,7 @@ function pk_feld(array $antwort, string $name): string
     $v = $antwort[$name] ?? null;
     if (!is_string($v)) { throw new PkFehler('Antwort: ' . $name . ' fehlt oder ist kein Text'); }
     /* ceil(PK_FELD_MAX * 4 / 3) Zeichen: genau PK_FELD_MAX Byte, keins mehr
-       (bis zur Nachpruefung von H-SR-08, B-2, liess `+ 4` zwei Byte zu viel zu). */
+       (`+ 4` liesse zwei Byte zu viel zu). */
     if (strlen($v) > intdiv(PK_FELD_MAX * 4 + 2, 3)) { throw new PkFehler('Antwort: ' . $name . ' zu gross'); }
     $roh = pk_b64u_lesen($v);
     if ($roh === null) { throw new PkFehler('Antwort: ' . $name . ' ist kein Base64url'); }
@@ -221,7 +219,7 @@ function pk_feld(array $antwort, string $name): string
 }
 
 /* ===========================================================================
- * 1. Der CBOR-Leser (RFC 8949, nur die Teilmenge von E-SR-30)
+ * 1. Der CBOR-Leser (RFC 8949, nur die oben genannte Teilmenge)
  * ======================================================================== */
 
 /**
@@ -254,9 +252,9 @@ function pk_cbor_art(string $b, int $pos): int
  *
  * `$tiefe` ist die Ebene dieses Elements (1 = oben). Gezaehlt werden nur
  * BEHAELTER: Eine Liste oder Karte auf Ebene neun ist eine Ablehnung, eine
- * Zahl darin auf Ebene neun nicht. Bis Web 21.10.0 stand die Pruefung am
- * Anfang jedes Elements, und acht Listen mit einer Zahl innen waren schon zu
- * tief — strenger, als Kopf, Doku und Probe sagten (F-SR-34).
+ * Zahl darin auf Ebene neun nicht. Stuende die Pruefung am
+ * Anfang jedes Elements, waeren acht Listen mit einer Zahl innen schon zu
+ * tief — strenger, als Kopf, Doku und Probe sagen.
  *
  * @throws PkFehler
  */
@@ -319,7 +317,7 @@ function pk_cbor_element(string $b, int &$pos, int $tiefe): mixed
                     throw new PkFehler('CBOR: Schluessel einer Karte ist weder Zahl noch Text');
                 }
                 /* EIN TEXTSCHLUESSEL, DER WIE EINE ZAHL AUSSIEHT, IST EINE
-                   ABLEHNUNG (F-SR-34). PHP macht aus dem Text "1" den
+                   ABLEHNUNG. PHP macht aus dem Text "1" den
                    Arrayschluessel 1 — ein COSE-Schluessel mit lauter
                    Textketten als Labels ginge sonst als echter durch. Hier
                    braucht es das nie: COSE-Labels sind Zahlen, die Schluessel
@@ -342,7 +340,7 @@ function pk_cbor_element(string $b, int &$pos, int $tiefe): mixed
  * Einen COSE-Schluessel (RFC 9053) in einen oeffentlichen Schluessel von
  * phpseclib ueberfuehren. Nur EC2/P-256 mit -7 und RSA mit -257.
  *
- * GENAU DIE LABELS, DIE ES BRAUCHT (F-SR-34, WebAuthn L2 5.8.5: „MUST NOT
+ * GENAU DIE LABELS, DIE ES BRAUCHT (WebAuthn L2 5.8.5: „MUST NOT
  * contain any other OPTIONAL parameters"): EC2 1, 3, -1, -2, -3; RSA 1, 3,
  * -1, -2. Ein weiteres — etwa -4, der private Teil — ist eine Ablehnung, nicht
  * etwas, das stillschweigend liegen bleibt.
@@ -370,7 +368,7 @@ function pk_cose_laden(mixed $cose): array
             }
             /* Eine Koordinate ab p ist kein Koerperelement — phpseclib
                rechnete modulo p und nahme sie als denselben Punkt an
-               („Reparatur statt Ablehnung", F-SR-34). Gleiche Laenge: Der
+               („Reparatur statt Ablehnung"). Gleiche Laenge: Der
                Bytevergleich ist der Zahlenvergleich. */
             if (strcmp($x, PK_P256_P) >= 0 || strcmp($y, PK_P256_P) >= 0) {
                 throw new PkFehler('COSE: Koordinate nicht kleiner als p');
@@ -386,11 +384,11 @@ function pk_cose_laden(mixed $cose): array
         if ($kty !== 3 || $n === null || $e === null || $n === '' || $e === '') {
             throw new PkFehler('COSE: kein RSA-Schluessel');
         }
-        /* DER EXPONENT (F-SR-33): ungerade, mindestens 3, hoechstens 64 Bit.
+        /* DER EXPONENT: ungerade, mindestens 3, hoechstens 64 Bit.
            e = 1 machte die Signatur zum Klartext; ein grosses e machte jede
            Pruefung teuer (gemessen: 4096 Bit Modul und Exponent 6 s). Der
            Modul: ungerade, 2048 bis 4096 Bit. BEIDE IN DER KUERZESTEN FORM
-           (RFC 8230 4, Nachpruefung A-5): ein fuehrendes Nullbyte ist eine
+           (RFC 8230 4): ein fuehrendes Nullbyte ist eine
            Ablehnung, keine Reparatur — wie die Koordinaten oben. */
         if ($e[0] === "\0" || $n[0] === "\0") { throw new PkFehler('COSE: RSA-Parameter nicht minimal'); }
         if (strlen($e) > PK_RSA_E_BYTES_MAX || (ord($e[-1]) & 1) === 0
@@ -413,10 +411,10 @@ function pk_cose_laden(mixed $cose): array
 
 /**
  * Den gespeicherten Schluessel (SPKI als PEM) laden — oder null. DIE GRENZEN
- * VON F-SR-33 GELTEN AUCH HIER (Nachpruefung A-6): Die Kosten entstehen bei
+ * DES ANLEGENS GELTEN AUCH HIER: Die Kosten entstehen bei
  * der Anmeldung, nicht beim Anlegen; eine Zeile ausserhalb der Grenzen (aus
- * einem Bestand vor Web 21.11.0 oder von Hand geschrieben) laedt nicht. ALLE
- * GRENZEN, nicht nur die Groessen (seit Web 21.11.2, dritte Lesung DA-2): Ein
+ * einem aelteren Bestand oder von Hand geschrieben) laedt nicht. ALLE
+ * GRENZEN, nicht nur die Groessen: Ein
  * Exponent 1 machte die Signatur ohne Geheimnis rechenbar — gerade an der
  * Stelle, an der sie geprueft wird. Ein fuehrendes Nullbyte kann ein
  * gespeicherter Schluessel nicht tragen; das SPKI ist schon kanonisch.
@@ -446,9 +444,9 @@ function pk_spki_laden(string $pem, int $alg): EC\PublicKey|RSA\PublicKey|null
  * ======================================================================== */
 
 /**
- * Der eigene Ursprung und die `rp.id` — aus `app.base_url` (E-SR-42).
+ * Der eigene Ursprung und die `rp.id` — aus `app.base_url`.
  *
- * DER HOST WIRD SO GESCHRIEBEN, WIE IHN DER BROWSER SCHICKT (F-SR-40): klein,
+ * DER HOST WIRD SO GESCHRIEBEN, WIE IHN DER BROWSER SCHICKT: klein,
  * ohne abschliessenden Punkt, ein Umlaut-Name in Punycode (`idn_to_ascii`).
  * Fehlt `intl`, taugt ein Umlaut-Name nicht — lieber keine Passkeys als ein
  * Abschnitt, in dem jeder Versuch mit „nicht angenommen" endet.
@@ -465,8 +463,8 @@ function pk_ursprung(): ?array
     if ($host === '' || filter_var(trim($host, '[]'), FILTER_VALIDATE_IP) !== false) { return null; }
     if (preg_match('/[^\x21-\x7e]/', $host)) {
         if (!function_exists('idn_to_ascii')) { return null; }
-        /* OHNE UEBERGANGSREGELN, wie der URL-Standard und damit der Browser
-           (Nachpruefung D-1): Mit IDNA_DEFAULT wurde aus „straße" „strasse",
+        /* OHNE UEBERGANGSREGELN, wie der URL-Standard und damit der Browser:
+           Mit IDNA_DEFAULT wurde aus „straße" „strasse",
            der Browser schickt „xn--strae-oqa". */
         $puny = idn_to_ascii($host, IDNA_NONTRANSITIONAL_TO_ASCII | IDNA_CHECK_BIDI | IDNA_CHECK_CONTEXTJ,
                              INTL_IDNA_VARIANT_UTS46);
@@ -506,7 +504,7 @@ function pk_tabelle_da(?PDO $pdo = null): bool
  * (`$_SESSION['passkey_reg']` bei der Registrierung, `totp_halb['passkey']`
  * im Code-Schritt, `$_SESSION['passkey_best']` auf der Bestaetigung). Mit
  * `$konto` traegt das Fach das Konto; `pk_ablage_passt()` prueft es bei der
- * Entnahme (F-SR-39: bis Web 21.10.0 trug es nur die Registrierung).
+ * Entnahme.
  *
  * @return string die Herausforderung, Base64url
  */
@@ -547,7 +545,7 @@ function pk_authdata_lesen(string $a, bool $mitSchluessel): array
     if (($flags & 0x10) !== 0 && ($flags & 0x08) === 0) { throw new PkFehler('authData: BS ohne BE'); }
     if ($at) {
         if (strlen($a) < $pos + 18) { throw new PkFehler('authData: Schluesselteil abgeschnitten'); }
-        $pos += 16;                                         // AAGUID — gelesen, nicht verwendet (E-SR-31)
+        $pos += 16;                                         // AAGUID — gelesen, nicht verwendet
         $lk = unpack('n', substr($a, $pos, 2))[1];
         $pos += 2;
         if ($lk < 1 || $lk > PK_KENNUNG_MAX || strlen($a) < $pos + $lk) {
@@ -560,8 +558,7 @@ function pk_authdata_lesen(string $a, bool $mitSchluessel): array
     }
     if (($flags & 0x80) !== 0) {
         /* Erweiterungen: gelesen, nicht verwendet — aber eine KARTE, wie
-           WebAuthn 6.1 sie definiert (F-SR-34; bis Web 21.10.0 ging jedes
-           einzelne Element durch). */
+           WebAuthn 6.1 sie definiert, nicht jedes beliebige Element. */
         if (pk_cbor_art($a, $pos) !== 5) { throw new PkFehler('authData: Erweiterungen sind keine Karte'); }
         pk_cbor_element($a, $pos, 1);
     }
@@ -574,7 +571,7 @@ function pk_authdata_lesen(string $a, bool $mitSchluessel): array
  * `clientDataJSON` pruefen: Art, Herausforderung, Ursprung, kein fremder
  * Rahmen.
  *
- * DIE HERAUSFORDERUNG DER ABLAGE MUSS EINE SEIN (F-SR-34): 43 Zeichen, wie
+ * DIE HERAUSFORDERUNG DER ABLAGE MUSS EINE SEIN: 43 Zeichen, wie
  * `pk_herausforderung_stellen()` sie stellt. Eine leere Ablage haette sonst
  * eine leere `challenge` angenommen — heute unerreichbar, aber eine Zeile.
  * `crossOrigin` zaehlt als fremder Rahmen, sobald es etwas anderes als
@@ -600,7 +597,7 @@ function pk_client_pruefen(string $json, string $art, string $herausforderung, s
 }
 
 /** Ablage vorhanden und nicht abgelaufen? Sonst eine Ablehnung, die der
- *  Aufrufer nicht als Fehlversuch zaehlt (F-SR-37). */
+ *  Aufrufer nicht als Fehlversuch zaehlt. */
 function pk_ablage_pruefen(array $ablage): string
 {
     if (!is_string($ablage['herausforderung'] ?? null) || (int)($ablage['bis'] ?? 0) < time()) {
@@ -649,9 +646,9 @@ function pk_registrierung_pruefen(array $ablage, array $antwort): array
 
         if (pk_cbor_art($att, 0) !== 5) { throw new PkFehler('attestationObject: keine Karte'); }
         $obj = pk_cbor_lesen($att);
-        /* `attStmt` ist eine Karte (Nachpruefung B-3): Gelesen sind Karte und
+        /* `attStmt` ist eine Karte: Gelesen sind Karte und
            Liste dasselbe PHP-Feld; eine nicht leere Liste faellt, die leere
-           Karte der Attestation `none` bleibt. Gelesen wird sie nicht (E-SR-30). */
+           Karte der Attestation `none` bleibt. Gelesen wird sie nicht. */
         $stmt = is_array($obj) ? ($obj['attStmt'] ?? null) : null;
         if (!is_array($obj) || !is_string($obj['fmt'] ?? null) || !is_array($stmt)
             || ($stmt !== [] && array_is_list($stmt))
@@ -675,7 +672,7 @@ function pk_registrierung_pruefen(array $ablage, array $antwort): array
 }
 
 /**
- * Die Form einer ES256-Signatur, ohne phpseclib (Nachpruefung A-1, A-2):
+ * Die Form einer ES256-Signatur, ohne phpseclib:
  * `30 L 02 lr r 02 ls s` — die Laenge der Folge kurz oder als `81 L`, und sie
  * geht genau auf; darin genau zwei INTEGER mit kurzer Laenge von 1 bis 33 Byte.
  * Eine fuehrende Null in r oder s bleibt erlaubt (phpseclib liest BER, und eine
@@ -701,21 +698,21 @@ function pk_es256_form(string $sig): bool
 
 /**
  * Eine Anmeldung (Assertion) pruefen — gegen die Passkeys DIESES Kontos an
- * DIESER Adresse (E-SR-48).
+ * DIESER Adresse.
  *
  * `$antwort`: `rawId`, `clientDataJSON`, `authenticatorData`, `signature`
- * (Base64url). Der Zaehler folgt E-SR-33: neu > alt oder beide 0 → gut; sonst
+ * (Base64url). Der Zaehler: neu > alt oder beide 0 → gut; sonst
  * Ablehnung, der Passkey bleibt, Protokoll `passkey_zaehler` mit seinem
- * Namen und hoechstens eine Mail je Tag an die Kontoadresse (E-SR-46,
- * F-SR-36). Das Fortschreiben ist atomar: Zwei gleichzeitige Anmeldungen mit
+ * Namen und hoechstens eine Mail je Tag an die Kontoadresse. Das Fortschreiben
+ * ist atomar: Zwei gleichzeitige Anmeldungen mit
  * demselben Stand (Original und Kopie) kommen nicht beide durch.
  *
  * Bei Erfolg werden Zaehler und `zuletzt_am` fortgeschrieben — sonst nichts,
- * und nichts ins Protokoll (E-SR-33: je Anmeldung waere Rauschen).
+ * und nichts ins Protokoll (je Anmeldung waere Rauschen).
  *
  * `art` einer Ablehnung: `herausforderung` (fehlt, abgelaufen, verdraengt)
  * und `zaehler` (Signatur gueltig, Stand zurueck) zaehlt der Aufrufer NICHT
- * als Fehlversuch (F-SR-37); `pruefung` schon.
+ * als Fehlversuch; `pruefung` schon.
  *
  * @return array{ok:true, id:int}|array{ok:false, grund:string, art:string}
  */
@@ -749,13 +746,13 @@ function pk_anmeldung_pruefen(int $userId, array $ablage, array $antwort): array
         if ($k === null) { throw new PkFehler('gespeicherter Schluessel laesst sich nicht laden'); }
         if ((int)$pk['alg'] === -7) {
             /* Eine ES256-Signatur ist eine ASN.1-Folge mit r und s. DIE FORM
-               PRUEFT `pk_es256_form()` SELBST, bevor phpseclib sie sieht
-               (Nachpruefung A-1, A-2): phpseclib liest BER, und eine Folge aus
+               PRUEFT `pk_es256_form()` SELBST, bevor phpseclib sie sieht:
+               phpseclib liest BER, und eine Folge aus
                32 KiB geschachtelter unbestimmter Laengen kostete dort 356 MiB
                und zwei Sekunden; eine Zeitangabe, ein fremdes Etikett oder
                eine konstruierte Bitkette endeten in ValueError, TypeError oder
                einer PHP-Warnung. Dahinter bleibt die Pruefung, dass phpseclib
-               zwei Zahlen gelesen hat (F-SR-34: die leere Folge). */
+               zwei Zahlen gelesen hat (die leere Folge). */
             if (!pk_es256_form($sig)) { throw new PkFehler('Signatur: keine DER-Folge mit r und s'); }
             $teile = EcSignaturAsn1::load($sig);
             if (!is_array($teile) || !($teile['r'] ?? null) instanceof BigInteger
@@ -764,7 +761,7 @@ function pk_anmeldung_pruefen(int $userId, array $ablage, array $antwort): array
             }
         } elseif ($k instanceof RSA\PublicKey && strlen($sig) !== intdiv($k->getLength() + 7, 8)) {
             /* RS256: Die Signatur ist so lang wie der Modul. phpseclib prueft
-               das auch, aber ohne Grund (Nachpruefung A-1). */
+               das auch, aber ohne Grund. */
             throw new PkFehler('Signatur: Laenge passt nicht zum Schluessel');
         }
         $daten = $auth . hash('sha256', $client, true);
@@ -781,7 +778,7 @@ function pk_anmeldung_pruefen(int $userId, array $ablage, array $antwort): array
                 ->execute([(int)$pk['id']]);
             $gut = true;
         } elseif ($neu > $alt) {
-            /* ATOMAR (F-SR-36): Nur, wenn der Stand noch der gelesene ist. Eine
+            /* ATOMAR: Nur, wenn der Stand noch der gelesene ist. Eine
                zweite Anmeldung, die im selben Augenblick denselben Stand
                gelesen hat, findet ihn nicht mehr und gilt als Kopie. Der neue
                Wert ist groesser als der alte — die Zeile aendert sich also
@@ -804,13 +801,13 @@ function pk_anmeldung_pruefen(int $userId, array $ablage, array $antwort): array
 /**
  * Ein zurueckgelaufener Zaehler: Protokoll mit dem Namen des Passkeys (orange,
  * jedes Mal) und eine Mail an die Kontoadresse, hoechstens eine je Passkey und
- * Tag (E-SR-46, F-SR-36).
+ * Tag.
  *
- * WARUM DIE MAIL. E-SR-33 liess den Passkey stehen, „sie sieht den Eintrag
+ * WARUM DIE MAIL. Der Passkey bleibt stehen, „sie sieht den Eintrag
  * und entscheidet" — den Reiter Verwaltung sieht die Rolle `user` aber nicht.
  * Ausloesen kann das nur, wer einen GUELTIGEN Schluessel hat und im
  * Code-Schritt vorher das Passwort: Es ist das staerkste Zeichen, das die
- * Anlage fuer ein erbeutetes Konto kennt, und bis Web 21.10.0 erfuhr die
+ * Anlage fuer ein erbeutetes Konto kennt, und ohne Mail erfuehre die
  * Betroffene davon nichts. Der Deckel steht in der Zeile (`gewarnt_am`) und
  * wird mit derselben Anweisung gesetzt, die ihn prueft.
  */
@@ -844,7 +841,7 @@ function pk_zaehler_warnen(int $userId, array $pk, int $alt, int $neu): void
 
 /**
  * Die Passkeys eines Kontos, aelteste zuerst — ALLE Adressen. `hier` sagt, ob
- * einer zur heutigen passt (E-SR-48); nur solche bietet die Anmeldung an.
+ * einer zur heutigen passt; nur solche bietet die Anmeldung an.
  *
  * @return list<array{id:int, kennung:string, rp_id:string, hier:bool, bezeichnung:string, angelegt_am:string, zuletzt_am:?string}>
  */
@@ -865,7 +862,7 @@ function pk_liste(int $userId): array
 
 /**
  * Wie viele Passkeys hat das Konto? Ohne `$alle` nur die der heutigen Adresse
- * — die, die der Code-Schritt anbieten kann (E-SR-48). Die Kontoseite der
+ * — die, die der Code-Schritt anbieten kann. Die Kontoseite der
  * Verwaltung zaehlt alle.
  */
 function pk_zahl(int $userId, bool $alle = false): int
@@ -884,7 +881,7 @@ function pk_zahl(int $userId, bool $alle = false): int
 }
 
 /**
- * Die Bezeichnung saeubern (F-SR-39): Steuer- und Formatzeichen und jeder
+ * Die Bezeichnung saeubern: Steuer- und Formatzeichen und jeder
  * Weissraum werden zu einem Leerzeichen, dann wird getrimmt — nach dem Muster
  * der Geraetetexte. Eine Bezeichnung aus lauter NBSP ist danach leer und
  * heisst „Passkey vom <Datum>"; ein Zeilenumbruch bricht keine Mail mehr um.
@@ -900,7 +897,7 @@ function pk_bezeichnung_saeubern(string $roh): ?string
  * Eine gepruefte Registrierung ablegen. Abgelehnt: der elfte an dieser
  * Adresse (`voll`), eine Kennung, die es schon gibt — auch bei einem anderen
  * Konto (`vorhanden`) —, eine zu lange Bezeichnung, und ein Konto, dessen
- * Zweitfaktor inzwischen aus ist (`zweitfaktor`, F-SR-38: Ein Zuruecksetzen
+ * Zweitfaktor inzwischen aus ist (`zweitfaktor`: Ein Zuruecksetzen
  * zwischen der Pruefung im Endpunkt und diesem Schreiben liess sonst eine
  * Zeile ohne Faktor zurueck, die beim naechsten Einschalten wieder galt).
  *
@@ -938,7 +935,7 @@ function pk_anlegen(int $userId, array $reg, string $bezeichnung): array
         /* Zwei Konten, die im selben Augenblick dieselbe Kennung ablegen: Die
            Sperre liegt auf der Kontozeile, nicht auf der Kennung — der
            eindeutige Schluessel faengt den zweiten, und das ist `vorhanden`,
-           kein 500 (F-SR-39). */
+           kein 500. */
         if ((string)$e->getCode() === '23000') { return ['ok' => false, 'grund' => 'vorhanden']; }
         throw $e;
     }
@@ -956,7 +953,7 @@ function pk_entfernen(int $userId, int $id): bool
 /**
  * Alle Passkeys eines Kontos entfernen — gerufen aus `totp_abschalten()`
  * (jeder Weg, in dessen Transaktion) und aus `totp_einrichtung_beginnen()`
- * (verwaiste, F-SR-38). Ein Protokolleintrag nur, wenn etwas geloescht wurde.
+ * (verwaiste). Ein Protokolleintrag nur, wenn etwas geloescht wurde.
  *
  * @return int Zahl der geloeschten
  */
@@ -977,7 +974,7 @@ function pk_alle_entfernen(int $userId, string $weg): int
 }
 
 /** Die Kennungen fuer `allowCredentials` / `excludeCredentials` (Base64url) —
- *  nur die der heutigen Adresse (E-SR-48). */
+ *  nur die der heutigen Adresse. */
 function pk_kennungen(int $userId): array
 {
     return array_column(array_filter(pk_liste($userId), static fn(array $p): bool => $p['hier']), 'kennung');

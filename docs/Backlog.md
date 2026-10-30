@@ -52,30 +52,12 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
 
 | Spanne | Zweig | seit |
 |---|---|---|
-| 400 bis 409 | `claude/new-session-lvb0x0` — Schritt 12b, Pakete R17-20 bis -30 (`Review-R17.md`); R17-18 und -19 auf `claude/modest-edison-byg7ay` und `claude/tender-feynman-3oyo13`, gemergt mit PR #122, bis R17-17 `claude/lucid-cannon-nvv86i`, gemergt mit PR #118; vergeben: 400 bis 408 (401, 404 bis 406 erledigt) | 26.10.2026 |
-| ab 410 | frei — höchste vergebene Nummer 408; frei blieben 394 bis 399 aus der Spanne von 19 (PR #112 bis #114), 389 aus der von 12a (PR #116), 372 bis 379 aus der von 12 (PR #103), 362 bis 369 aus der von PK, 359 aus der von 18 (PR #101), 348 und 349 aus der von 17, 338 aus der von AR | 20.10.2026 |
+| 400 bis 409 | `claude/new-session-lvb0x0` — Schritt 12b, Pakete R17-20 bis -30 (`Review-R17.md`); R17-18 und -19 auf `claude/modest-edison-byg7ay` und `claude/tender-feynman-3oyo13`, gemergt mit PR #122, bis R17-17 `claude/lucid-cannon-nvv86i`, gemergt mit PR #118; vergeben: 400 bis 409 (401, 404 bis 408 erledigt), die Spanne ist voll | 26.10.2026 |
+| ab 410 | frei — höchste vergebene Nummer 409; frei blieben 394 bis 399 aus der Spanne von 19 (PR #112 bis #114), 389 aus der von 12a (PR #116), 372 bis 379 aus der von 12 (PR #103), 362 bis 369 aus der von PK, 359 aus der von 18 (PR #101), 348 und 349 aus der von 17, 338 aus der von AR | 20.10.2026 |
 
 ---
 
 ## Offen
-
-<!-- -->
-
-21. **Die 43 weiteren Funde der A4-Nachlese sichten.** · gehört zu: 12b · Stand: offen · seit 23.08.2026
-     Die Erhebung „toter Code" in P0/A4 hat mit einer zweiten, breiteren
-     Methode 43 zusätzliche Kandidaten geliefert (Abschnitt 9.3 des
-     P0-Konzepts). Sie sind **nicht** freigegeben und **nicht** angefasst: Ein
-     großer Teil berührt Antwortverträge (`api/`, Export, Backup), und dort ist
-     „niemand liest es" keine hinreichende Begründung — ein Feld kann für ein
-     älteres Backup oder eine künftige Uhr-Fassung gebraucht werden. Eigenes
-     Paket mit eigener Freigabe. **Entschieden am 12.09.2026: an den P6-Review
-     übergeben** (R69). Die Quellliste — Abschnitt 9.3 des P0-Konzepts —
-     existiert nicht mehr; das Konzept steht im Rahmenplan (Abschnitt 8)
-     ausdrücklich als „nicht im Repositorium". Der Review geht ohnehin alles
-     durch und findet die Kandidaten neu; ein eigenes Paket vorher wäre Arbeit
-     ohne Liste. Zuordnung: **P6**.
-
-<!-- -->
 
 23. **`docs/JSON-Vertrag.md` 3.3 nennt eine Reanimationsart, die kein Schreibweg annimmt.** · gehört zu: 13 · Stand: offen · seit 23.08.2026
      Der Vertrag führt `beginn` unter den gültigen Werten
@@ -341,26 +323,6 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      frisches Konto liest seine Daten, Wortliste und Vollständigkeit melden
      keine ungenutzten Ausnahmen.
      Werdegang bis 26.09.2026: `docs/Backlog.md@f5bddc2`, Nr. 187.
-
-<!-- -->
-
-188. **Eine Dokumentenprobe: kein Prüfmittel misst Verweise zwischen Dokumenten.** · gehört zu: 12b · Stand: teilweise · seit 14.09.2026
-     Befund (S10-Nachlauf): „Linkprobe 117 Verweise, 0 Abweichungen" belegt
-     nichts über `docs/` — die Linkprobe liest `<seite>.php?…` in `server/`.
-     Die Fahrplanzeile zu Schritt 7 nannte acht Tage lang einen Konzeptpfad,
-     den es nicht mehr gab; die 34 Löschungen von Fassung 110 (24.09.2026)
-     wurden mit `grep` von Hand nachgezogen — zweiter Fall dieses Punkts.
-     Erledigt: die Ankerprüfung `hilfe.php#…` (`tools/quelltext/anker.php`,
-     Web 21.1.0) und **seit R17-27 die Dokumentenprobe**
-     `tools/quelltext/dokumente.py` in Stufe 1: Pfade in `docs/`, `README.md`,
-     `CLAUDE.md` und jeder `LIESMICH.md` gegen den Baum, mit begründeter
-     Ausnahmeliste; dazu Zahlen an Verzeichnissen, „Stand:"-Kopfzeilen und
-     die Gliederung von `Technik.md` (F-R17-59). Sie fand beim ersten Lauf
-     zehn veraltete Pfade und zwei veraltete Zahlen.
-     **Offen:** die Code-Bäume (`server/`, `tools/`, `android/`, `watch/`) —
-     mit Nr. 408, nach dem Kommentardurchgang. Abnahme dann: 0 Treffer
-     außerhalb der Ausnahmeliste, 0 ungenutzte Ausnahmen.
-     Werdegang bis 26.09.2026: `docs/Backlog.md@f5bddc2`, Nr. 188.
 
 <!-- -->
 
@@ -823,23 +785,6 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
 
 <!-- -->
 
-341. **Sechs Stylesheet-Regeln ohne Verwender und ein Fokus-Zweig, den kein Element erfüllt.** · gehört zu: 12b · Stand: offen · seit 26.09.2026
-     *Aufgenommen 26.09.2026 mit R4-05 (Konzept R4).* Die
-     Vollständigkeitsprüfung meldet nach R4-05 noch 13 Hinweise „Regel im
-     Stylesheet, im Markup nicht gefunden". Sieben haben einen Grund (vier
-     `geo-ring-`, zwei `zaehler-`, deren Werte erst JavaScript bzw. ein
-     Aufrufer wählt, und `leaflet-div-icon`, die Leaflet vergibt). Sechs
-     haben keinen Verwender: `feld-reihe` (nur im Kopf von `ui_feld()`
-     genannt), `karte-neben`, `kennzahl-raster-5`, `sd-titel`, `sd-zahl`,
-     `symbol-gefuellt` (gemessen 26.09.2026). Dazu der Zweig
-     `.focus-target[data-role=…]` in `fokus()` (`einstellungen.php`), den
-     heute kein Element erfüllt (F-R4-25).
-     *Weg:* im Aufräumpaket von P6 je Stelle nachsehen, ob ein Verwender
-     vergessen wurde oder sie weg kann; `Design.md` mitziehen.
-     *Abnahme:* Hinweise 13 → 7, jeder übrige mit Grund.
-
-<!-- -->
-
 342. **Die Einsatztabellen von Suche und Zeitraum rollen noch am Schreibtisch.** · gehört zu: nächste Backlog-Runde · Stand: offen · seit 26.09.2026
      *Aufgenommen 26.09.2026 mit R4-08 (F-R4-30),* gemessen vom Bilderlauf,
      der rollende Behälter seither nennt (Nr. 297). Die Tabelle in
@@ -1229,6 +1174,10 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      *Weg:* je Werkzeug entscheiden — in eine Probe hängen (Muster und
      `"motoren": true`) oder löschen; „von Hand" bleibt nur mit Grund.
      *Abnahme:* keine Zeile „von Hand" im Register ohne eigenen Grund.
+     *Ergänzt 30.10.2026 mit R17-28:* Die Sichtprüfung sucht die Diagnose
+     über „🔒" — das Schloss ist seit S10 ein SVG, sie meldet falsch rot.
+     Dazu `fixture/riegelprobe.php`: erwartet Rückgabe 0 von `erzeugen.php`,
+     das seit Web 23 mit 2 abbricht (Nr. 388); Teil 1 und 2 dauerhaft rot.
 
 <!-- -->
 
@@ -1310,15 +1259,22 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
 
 <!-- -->
 
-408. **Code-Kommentare zeigen auf die alten Abschnittsnummern von `Technik.md`.** · gehört zu: 12b · Stand: offen · seit 28.10.2026
-     *Aufgenommen 28.10.2026 mit R17-27 (Betreiberin: komplett neu
-     nummerieren, Kommentare später).* R17-27 hat `Technik.md` fortlaufend
-     neu nummeriert und die Verweise in den Dokumenten umgestellt; die
-     Kommentare in `server/`, `tools/`, `android/` und `watch/` nennen weiter
-     „Technik.md 4.99q", „5e.2", „6.5" und so fort. Die Zuordnung alt → neu
-     steht in `docs/Technik-Gliederung-alt-neu.md`.
-     *Weg:* im Kommentardurchgang von R17-28 je Verweis die neue Nummer
-     setzen (über die Konkordanz, nicht per Suchen und Ersetzen über bloße
-     Zahlen — „6.5" ist auch ein Teil von „Web 6.5.0"); danach die
-     Dokumentenprobe auf die Code-Bäume erweitern (Nr. 188). *Abnahme:* kein
-     Verweis „Technik.md <alte Nummer>" mehr außerhalb der Konkordanz.
+409. **Code-Kommentare erzählen noch Geschichte, ohne Kennung.** · gehört zu: nächste Backlog-Runde · Stand: offen · seit 30.10.2026
+     *Aufgenommen 30.10.2026 mit R17-28.* Der Kommentardurchgang hat
+     Kennungen, Backlog-Nummern und eigene Fassungsangaben aus den
+     Kommentaren genommen (E-R17-86). Stehen geblieben sind drei Gruppen:
+     (1) erzählende Sätze ohne Kennung — „früher stand hier …", „bis
+     dahin …", „seither …" —, rund 500 Stellen, gezählt 30.10.2026 über
+     `server/` (290), `tools/` (198), `android/` (17), `watch/` und
+     `.github/` (je 5 und 7); viele tragen den Grund einer Regel und
+     brauchen eine Umformulierung in die Gegenwart, kein Streichen.
+     (2) Kennungen in Zeichenketten — Meldungen, Prüfdaten der
+     Android-Tests, die Spaltentitel `(E8)` im Export — und in
+     `<!-- -->` und eingebetteten `<script>` der Seiten, 384 Stellen in
+     `server/`. (3) `watch/source/HuelleVektor.mc` wird aus
+     `tools/proben/huelle/referenz.py` erzeugt; seine Kennungen ändern sich
+     nur dort.
+     *Weg:* (1) Datei für Datei lesen, je Satz entscheiden; (2) nur, wo die
+     Zeichenkette niemanden außerhalb erreicht. Gegenprobe wie in R17-28:
+     Code ohne Kommentare vorher gegen nachher. *Abnahme:* (1) 0 Treffer
+     der Wortliste außerhalb einer begründeten Ausnahme.

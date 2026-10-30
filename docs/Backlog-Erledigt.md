@@ -9813,3 +9813,85 @@ zutreffen.
      trägt `data-pat-geladen`, der Weg wartet darauf; zehn Einzelläufe
      WebKit 60 von 60 Wegen grün. „Nr. 403 läuft direkt danach" war falsch
      (siehe Nr. 403).
+
+21. **Die 43 weiteren Funde der A4-Nachlese sichten.** · gehört zu: 12b · Stand: erledigt · seit 23.08.2026
+     Die Erhebung „toter Code" in P0/A4 hat mit einer zweiten, breiteren
+     Methode 43 zusätzliche Kandidaten geliefert (Abschnitt 9.3 des
+     P0-Konzepts). Sie sind **nicht** freigegeben und **nicht** angefasst: Ein
+     großer Teil berührt Antwortverträge (`api/`, Export, Backup), und dort ist
+     „niemand liest es" keine hinreichende Begründung — ein Feld kann für ein
+     älteres Backup oder eine künftige Uhr-Fassung gebraucht werden. Eigenes
+     Paket mit eigener Freigabe. **Entschieden am 12.09.2026: an den P6-Review
+     übergeben** (R69). Die Quellliste — Abschnitt 9.3 des P0-Konzepts —
+     existiert nicht mehr; das Konzept steht im Rahmenplan (Abschnitt 8)
+     ausdrücklich als „nicht im Repositorium". Der Review geht ohnehin alles
+     durch und findet die Kandidaten neu; ein eigenes Paket vorher wäre Arbeit
+     ohne Liste. Zuordnung: **P6**.
+     Erledigt 30.10.2026 mit R17-28 (Web 23.5.2): neu erhoben im Review
+     (Konzept 7.3.12 (c)), 24 Kandidaten. Gestrichen: sechs PHP-Funktionen,
+     elf Browser-Exporte (eine Funktion ganz), eine Python-Funktion. Behalten
+     mit Verwender: `Input.touchActive()` (R17-21), `ortsdaten.gepackt_bauen`
+     (Wartungslaufprobe) und die drei Exporte des Wartungslaufs (neue Probe,
+     Teil F); `Input.hasUpDown()` war schon fort.
+
+341. **Sechs Stylesheet-Regeln ohne Verwender und ein Fokus-Zweig, den kein Element erfüllt.** · gehört zu: 12b · Stand: erledigt · seit 26.09.2026
+     *Aufgenommen 26.09.2026 mit R4-05 (Konzept R4).* Die
+     Vollständigkeitsprüfung meldet nach R4-05 noch 13 Hinweise „Regel im
+     Stylesheet, im Markup nicht gefunden". Sieben haben einen Grund (vier
+     `geo-ring-`, zwei `zaehler-`, deren Werte erst JavaScript bzw. ein
+     Aufrufer wählt, und `leaflet-div-icon`, die Leaflet vergibt). Sechs
+     haben keinen Verwender: `feld-reihe` (nur im Kopf von `ui_feld()`
+     genannt), `karte-neben`, `kennzahl-raster-5`, `sd-titel`, `sd-zahl`,
+     `symbol-gefuellt` (gemessen 26.09.2026). Dazu der Zweig
+     `.focus-target[data-role=…]` in `fokus()` (`einstellungen.php`), den
+     heute kein Element erfüllt (F-R4-25).
+     *Weg:* im Aufräumpaket von P6 je Stelle nachsehen, ob ein Verwender
+     vergessen wurde oder sie weg kann; `Design.md` mitziehen.
+     *Abnahme:* Hinweise 13 → 7, jeder übrige mit Grund.
+     Erledigt 30.10.2026 mit R17-28 (Web 23.5.2): alle sechs Regeln ohne
+     Verwender gestrichen, dazu der Fokus-Zweig über `data-role` samt dem
+     Rückfall `<id>-<rolle>`; Hinweise 13 → 7, jeder übrige mit Grund (vier
+     `geo-ring-`, zwei `zaehler-`, `leaflet-div-icon`).
+
+188. **Eine Dokumentenprobe: kein Prüfmittel misst Verweise zwischen Dokumenten.** · gehört zu: 12b · Stand: erledigt · seit 14.09.2026
+     Befund (S10-Nachlauf): „Linkprobe 117 Verweise, 0 Abweichungen" belegt
+     nichts über `docs/` — die Linkprobe liest `<seite>.php?…` in `server/`.
+     Die Fahrplanzeile zu Schritt 7 nannte acht Tage lang einen Konzeptpfad,
+     den es nicht mehr gab; die 34 Löschungen von Fassung 110 (24.09.2026)
+     wurden mit `grep` von Hand nachgezogen — zweiter Fall dieses Punkts.
+     Erledigt: die Ankerprüfung `hilfe.php#…` (`tools/quelltext/anker.php`,
+     Web 21.1.0) und **seit R17-27 die Dokumentenprobe**
+     `tools/quelltext/dokumente.py` in Stufe 1: Pfade in `docs/`, `README.md`,
+     `CLAUDE.md` und jeder `LIESMICH.md` gegen den Baum, mit begründeter
+     Ausnahmeliste; dazu Zahlen an Verzeichnissen, „Stand:"-Kopfzeilen und
+     die Gliederung von `Technik.md` (F-R17-59). Sie fand beim ersten Lauf
+     zehn veraltete Pfade und zwei veraltete Zahlen.
+     **Offen:** die Code-Bäume (`server/`, `tools/`, `android/`, `watch/`) —
+     mit Nr. 408, nach dem Kommentardurchgang. Abnahme dann: 0 Treffer
+     außerhalb der Ausnahmeliste, 0 ungenutzte Ausnahmen.
+     Werdegang bis 26.09.2026: `docs/Backlog.md@f5bddc2`, Nr. 188.
+     Erledigt 30.10.2026 mit R17-28 (Web 23.5.2): Regel 5 `abschnitt` —
+     im Code (`server/`, `tools/`, `android/`, `watch/`, `.github/`, ohne
+     die zwei Fassungsgeschichten) nennt jeder Abschnittsverweis ein
+     Dokument, das es gibt, und eine Überschrift, die dort steht. 293
+     Verweise in 1 229 Dateien, 0 Befunde, 0 Ausnahmen; Selbstprobe 14 von
+     14. Beim ersten Lauf: neun Verweise auf ein `SPEC_Export.md`, das es
+     nie gab, und zwei Zeilennummern in der Ausnahmeliste der Textprobe.
+     Pfade und Zahlen in Code-Kommentaren liest sie nicht.
+
+408. **Code-Kommentare zeigen auf die alten Abschnittsnummern von `Technik.md`.** · gehört zu: 12b · Stand: erledigt · seit 28.10.2026
+     *Aufgenommen 28.10.2026 mit R17-27 (Betreiberin: komplett neu
+     nummerieren, Kommentare später).* R17-27 hat `Technik.md` fortlaufend
+     neu nummeriert und die Verweise in den Dokumenten umgestellt; die
+     Kommentare in `server/`, `tools/`, `android/` und `watch/` nennen weiter
+     „Technik.md 4.99q", „5e.2", „6.5" und so fort. Die Zuordnung alt → neu
+     steht in `docs/Technik-Gliederung-alt-neu.md`.
+     *Weg:* im Kommentardurchgang von R17-28 je Verweis die neue Nummer
+     setzen (über die Konkordanz, nicht per Suchen und Ersetzen über bloße
+     Zahlen — „6.5" ist auch ein Teil von „Web 6.5.0"); danach die
+     Dokumentenprobe auf die Code-Bäume erweitern (Nr. 188). *Abnahme:* kein
+     Verweis „Technik.md <alte Nummer>" mehr außerhalb der Konkordanz.
+     Erledigt 30.10.2026 mit R17-28 (Web 23.5.2): 37 Verweise im Code und
+     die in `pruefablauf.json` und `textprobe-ausnahmen.json` über die
+     Konkordanz umgestellt, dazu `install.php` „(5b.4)" → 7.5. Abnahme: 0
+     alte Nummern; die Dokumentenprobe misst es seither in Stufe 1 (Nr. 188).

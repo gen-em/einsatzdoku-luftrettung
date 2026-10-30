@@ -3,12 +3,12 @@ declare(strict_types=1);
 
 /**
  * Kopplungsprobe — tut `pair.php` mit seinen vier Anliegen das, was der
- * JSON-Vertrag 1a/1b zusagt? (S5, Paket A; Konzept Abschnitt 10.2)
+ * JSON-Vertrag 1a/1b zusagt?
  *
  * Anlass: Nr. 313 — die Fehlerzweige der Kopplung duerfen nicht verraten, welche Kennungen es gibt
  *
  * WOFUER. Die Kopplung ist der eine Weg, auf dem ein Geraet OHNE Anmeldung
- * Zugangsdaten zu einem Konto bekommt. Seit Web 13.0.0 laeuft sie umgekehrt:
+ * Zugangsdaten zu einem Konto bekommt. Sie laeuft umgekehrt:
  * Das Geraet zeigt den Code, ein Mensch tippt ihn im Web, das Geraet sagt Ja.
  * Jeder der drei Schritte hat Zustaende, Fristen und Fehlerzweige — und die
  * Fehlerzweige muessen sich in Laenge, Aufbau und DAUER gleichen, sonst
@@ -18,7 +18,7 @@ declare(strict_types=1);
  * Geprueft wird ein ENDPUNKT — Kopfzeilen, Statuscodes, Ruempfe, Antwortzeit.
  * Nur was ueber HTTP nicht erreichbar ist, laeuft gegen die Bibliothek:
  * die Dublettenschleife (den Zufall kann man ueber die Leitung nicht patchen),
- * das Beanspruchen (die Weboberflaeche dazu ist Paket B), die Maskierung,
+ * das Beanspruchen (die Weboberflaeche dazu misst `rundlauf.mjs`), die Maskierung,
  * der Aufraeumjob.
  *
  * SIE LEGT IHRE EIGENEN KONTEN AN und raeumt am Ende ab — auch die
@@ -30,13 +30,12 @@ declare(strict_types=1);
  * WAS SIE NICHT PRUEFT, und warum:
  *   - den TEXT der Kopplungsmail — es gibt keinen Mailserver im Pruefstand.
  *     Belegt wird nur, dass der Versandweg NACH der Antwort betreten wird
- *     (Fall 27: der gescheiterte Versuch steht im Reiter System — bis
- *     Web 20.39.0 war es eine Zeile im Protokoll des PHP-Servers, seit
- *     P5c/AP3 geht `smtp.php` ueber `system_melden()`). Der Text steht im
+ *     (Fall 27: der gescheiterte Versuch steht im Reiter System, `smtp.php`
+ *     geht ueber `system_melden()`). Der Text steht im
  *     Pruefdokument zur Sichtpruefung.
  *   - die Code-Eingabe im Web (Fall 24, Topf pair_code am Formular) — die
- *     entsteht in Paket B; hier laeuft nur der Topf selbst (Fall 23).
- *   - die Migration als Lauf — sie ist von Hand gefahren (Konzept 9,
+ *     misst `rundlauf.mjs`; hier laeuft nur der Topf selbst (Fall 23).
+ *   - die Migration als Lauf — sie ist von Hand gefahren (siehe
  *     Umsetzungsstand); hier wird nur der Zustand danach gelesen (Fall 29).
  *
  * Aufruf:
@@ -47,14 +46,13 @@ declare(strict_types=1);
  */
 
 $wurzel = dirname(__DIR__, 3) . '/server';
-require_once $wurzel . '/config.php';
 require_once $wurzel . '/db.php';
 require_once $wurzel . '/ratelimit_lib.php';
 require_once $wurzel . '/kopplung_lib.php';
 require_once $wurzel . '/spur_lib.php';
 require_once $wurzel . '/jobs_lib.php';
-require_once $wurzel . '/kontopaar_lib.php';   // S11-03: der Kontoschluessel in den Antworten
-require_once dirname(__DIR__) . '/huelle/geraet.php';   // S11-04a: senden wie ein Geraet ab Web 22
+require_once $wurzel . '/kontopaar_lib.php';   // der Kontoschluessel in den Antworten
+require_once dirname(__DIR__) . '/huelle/geraet.php';   // senden wie ein Geraet
 
 $basis     = rtrim($argv[1] ?? 'http://127.0.0.1:8080', '/');
 $pdo       = db();
@@ -270,12 +268,12 @@ $paket = ['kind' => 'mission', 'client_ref' => 'kopplungsprobe-1', 'day' => '202
           'final' => true,
           'track' => ['seq_from' => 0, 'points' => [[47.0, 11.0, 700.0, 1750000000],
                                                     [47.001, 11.001, 701.0, 1750000010]]]];
-/* Seit S11-04a verschlossen, wie ein Geraet ab Web 22 sendet (geraet.php). */
+/* Verschlossen, wie ein Geraet sendet (geraet.php). */
 $paket = gh_probe_koerper($paket, gh_probe_paar()['sec1']);
 $i1 = anfrage($paket, $dev, $key, 'POST', 'ingest.php');
 pruefe($i1['code'] === 401, '14a ingest.php mit schwebenden Zugangsdaten -> 401', "HTTP {$i1['code']}");
 
-/* FALL 27 LIEST DEN REITER SYSTEM (seit P5c/AP3). Die Marke ist die
+/* FALL 27 LIEST DEN REITER SYSTEM. Die Marke ist die
  * hoechste Zeile davor; gezaehlt wird, was danach mit „smtp:" beginnt. */
 $sysVorher = (int)$pdo->query("SELECT COALESCE(MAX(id), 0) FROM protokoll_ereignisse")->fetchColumn();
 $j = anfrage(['aktion' => 'bestaetigen', 'antwort' => 'ja'], $dev, $key);
@@ -311,7 +309,7 @@ $st = anfrage(['aktion' => 'status'], $dev, $key);
 pruefe($st['code'] === 200 && ($st['daten']['zustand'] ?? '') === 'gekoppelt',
        '13  status nach Anlage -> gekoppelt', $st['roh']);
 
-/* ---- Der Kontoschluessel (S11-03, Konzept S11 3.4, E-S11-14) -------------
+/* ---- Der Kontoschluessel -------------------------------------------------
  * Ein P-256-Paar aus openssl; abgelegt ueber `kp_ablegen()` (versiegelt).
  * Erwartet: `status` und `bestaetigen` liefern ihn als 65 Byte SEC1. Ein
  * Siegel, das zu einem ANDEREN Konto gehoert (umgehaengt), und ein
@@ -366,8 +364,8 @@ pruefe($i2['code'] === 200 && ($i2['daten']['ok'] ?? false) === true,
        '14b ingest.php nach dem Ja -> 200', "HTTP {$i2['code']}");
 
 /* Vor dem Trennen zwei Fehlversuche setzen: Der Topf `pair` gehoert nicht
- * uns allein — jobs.php zaehlt darin mit (bis Web 22.2.0 auch gpx.php). Ein gelungenes
- * `trennen` darf ihn deshalb NICHT leeren (Web 13.1.1). */
+ * uns allein — jobs.php zaehlt darin mit. Ein gelungenes
+ * `trennen` darf ihn deshalb NICHT leeren. */
 anfrage(['aktion' => 'status'], $dev, 'falsch-vor-trennen-1');
 anfrage(['aktion' => 'status'], $dev, 'falsch-vor-trennen-2');
 $vorTrennen = versuche($pdo, 'pair');
@@ -497,7 +495,7 @@ $eingefuegt = 0; $i = 0;
 $ins = $pdo->prepare('INSERT INTO pair_sessions (code, device_id, api_key_hash) VALUES (?,?,?)');
 while ($eingefuegt < PAIR_SITZUNGEN_MAX) {
     $i++;
-    // Codes aus einer Schleife, nicht aus Zufall (V-S5-10): ZZ + vier Stellen zur Basis 32
+    // Codes aus einer Schleife, nicht aus Zufall: ZZ + vier Stellen zur Basis 32
     $c = 'ZZ'; $x = $i;
     for ($k = 0; $k < 4; $k++) { $c .= PAIR_CHARS[$x % $n]; $x = intdiv($x, $n); }
     try {
@@ -519,7 +517,7 @@ $pdo->exec("DELETE FROM pair_sessions WHERE device_id LIKE 'dev-kopplungsprobe-l
 $lastIds = [];
 toepfe_leeren($pdo);
 
-// 23 — Topf pair_code (Bibliothek; das Formular dazu ist Paket B)
+// 23 — Topf pair_code (Bibliothek; das Formular dazu misst `rundlauf.mjs`)
 for ($i = 1; $i <= RATE_GRENZEN['pair_code']['max']; $i++) { rate_misserfolg('pair_code', $email); }
 pruefe(rate_erlaubt('pair_code', $email) === false,
        '23  ' . RATE_GRENZEN['pair_code']['max'] . ' Fehlgriffe im Topf pair_code -> gesperrt (Konto und IP)');
@@ -528,7 +526,7 @@ rate_erfolg('pair_code', $email);
 pruefe(rate_erlaubt('pair_code', $email) === true, '23  ein Treffer (rate_erfolg) leert den Topf');
 toepfe_leeren($pdo);
 
-// 24 — Formatfehler: die Regel, auf die Paket B sich stuetzt
+// 24 — Formatfehler: die Regel, auf die das Formular sich stuetzt
 pruefe(preg_match(PAIR_RE, 'AB0K7Q') === 0 && preg_match(PAIR_RE, 'ABOK7Q') === 0
        && preg_match(PAIR_RE, 'AB1K7Q') === 0 && preg_match(PAIR_RE, 'ABIK7Q') === 0
        && preg_match(PAIR_RE, 'AB3K7') === 0,
@@ -577,7 +575,7 @@ $tab = $pdo->query("SELECT table_name FROM information_schema.tables WHERE table
 pruefe($reg !== false && in_array('pair_sessions', $tab, true) && !in_array('pair_codes', $tab, true),
        '29  Register kennt die Migration, pair_sessions da, pair_codes weg',
        'status ' . var_export($reg, true) . ', Tabellen ' . implode(',', $tab));
-/* HIER STAND `$zahl === 41` (Z-19), UND DAS WAR EINE ZAHL MIT ABLAUFDATUM.
+/* HIER STAND `$zahl === 41`, UND DAS WAR EINE ZAHL MIT ABLAUFDATUM.
  *
  * Sie waechst mit jeder Migration. Beim Schreiben dieser Zeile waren es 41;
  * am 16.09.2026 sind es 51, und die Probe meldete seit Monaten einen Befund,

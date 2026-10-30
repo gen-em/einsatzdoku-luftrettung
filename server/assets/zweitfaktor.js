@@ -1,6 +1,5 @@
 /**
- * „Weiter" erst nach dem Haken — das Einrichtungstor des Zweitfaktors
- * (P5c/AP5, M-P5c-02b Bild 4, Schritt 2).
+ * „Weiter" erst nach dem Haken — das Einrichtungstor des Zweitfaktors.
  *
  * DIE CODES SIND NUR JETZT SICHTBAR. Der Server speichert von jedem nur
  * einen Prüfwert; wer weiterklickt, ohne sie gesichert zu haben, hat keinen

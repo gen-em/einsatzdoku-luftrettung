@@ -1,6 +1,6 @@
 <?php
 /**
- * DIE UNTERGRENZE DER PHP-FASSUNG — an genau einer Stelle (P5a/AP2, E-PP-03).
+ * DIE UNTERGRENZE DER PHP-FASSUNG — an genau einer Stelle.
  *
  * WARUM DIESE DATEI SO KLEIN IST UND SO ALT AUSSIEHT. Sie wird von der Weiche
  * am Kopf von `install.php` geladen, und die laeuft auf einer PHP-Fassung, die
@@ -9,7 +9,7 @@
  * uebersetzen koennen**. Kein `declare(strict_types=1)`, kein Rueckgabetyp,
  * kein `match`, keine Kurzschreibweise fuer Felder.
  *
- * WARUM ES SIE UEBERHAUPT GIBT. E-PP-03 verlangt, dass die Zahl an EINER
+ * WARUM ES SIE UEBERHAUPT GIBT. Die Zahl soll an EINER
  * Stelle im Code steht und nicht in drei Meldungstexten.
  * `plattform_lib.php` — der natuerliche Ort — ist PHP-8-Code (`match`), und
  * die Weiche darf ihn deshalb nicht laden. Ohne diese Datei stuende die 8.2

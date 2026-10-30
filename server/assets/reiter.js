@@ -1,10 +1,9 @@
 /* Reiter — der aktive ins Bild, der Rand verrät das Weiterrollen.
  * ===========================================================================
  *
- * Entstanden mit P5c/AP2 (E-P5c-25, Bild M-P5c-01a). Der Baustein selbst
- * braucht kein Skript: Jeder Reiter ist ein Verweis, der Server zeichnet den
- * aktiven (`ui_reiter()`). Dieses Skript tut zwei Dinge, die nur der Browser
- * weiß:
+ * Der Baustein selbst braucht kein Skript: Jeder Reiter ist ein Verweis, der
+ * Server zeichnet den aktiven (`ui_reiter()`). Dieses Skript tut zwei Dinge,
+ * die nur der Browser weiß:
  *
  * 1. DER AKTIVE REITER KOMMT INS BILD. Unter 720 px rollt die Reihe in ihrem
  *    eigenen Behälter; wer auf „System" (dem siebten) steht und die Seite neu

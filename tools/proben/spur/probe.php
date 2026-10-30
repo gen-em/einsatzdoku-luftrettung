@@ -3,14 +3,12 @@ declare(strict_types=1);
 
 /**
  * Spurprobe — haelt die Ausduennung ihre Zusage, und gehen die Wege von
- * `spur_lib.php` richtig mit den Stuecken um? (S2/AP1, seit S11-12 SPUR2)
+ * `spur_lib.php` richtig mit den Stuecken um?
  *
  * Anlass: Nr. 304 — der Rundlauf hielt int gegen float; 175 von 181 Spuren sahen veraendert aus
  *
- * WAS SIE SEIT WEB 23 MISST (S11-12). Bis Web 22.7.0 fuhr sie SPUR1: Rundlauf
- * Punkte -> Blob -> Punkte, Kopf, Verdichtung, die Leser vor und nach der
- * Verdichtung, den Schnitt mit `spur_teilen()`. Mit dem Klartext sind Format
- * und Funktionen gegangen. Geblieben sind zwei Fragen:
+ * WAS SIE MISST. Mit dem Klartext sind das Format SPUR1 und seine
+ * Funktionen gegangen. Geblieben sind zwei Fragen:
  *
  *   Teil 1  Die Ausduennung nach Douglas-Peucker (`spur_ausduennen()`) — die
  *           PHP-Fassung ist die Referenz, gegen die die Wartungslaufprobe den
@@ -31,7 +29,6 @@ declare(strict_types=1);
  */
 
 $wurzel = dirname(__DIR__, 3) . '/server';
-require_once $wurzel . '/config.php';
 require_once $wurzel . '/db.php';
 require_once $wurzel . '/spur_lib.php';
 require_once $wurzel . '/demo_lib.php';
@@ -99,7 +96,7 @@ foreach ($spuren as $k => [$punkte, $zeiten]) {
     $dpBehalten += count($duenn);
     /* Bleibt die Hoehenermittlung des Einsatzorts moeglich? Sie sucht
      * +/-300 s um den Phasenzeitpunkt; ohne den Schutz der Phasenpunkte ginge
-     * sie leer aus (B-S2-08). */
+     * sie leer aus. */
     foreach ($zeiten as $ts) {
         $phasenGesamt++;
         $nahV = PHP_INT_MAX; foreach ($punkte as $p) { $nahV = min($nahV, abs($p[4] - $ts)); }
@@ -193,7 +190,7 @@ pruefe(!db_hat_tabelle($pdo, 'track_points') && !db_hat_tabelle($pdo, 'track_blo
        'track_points, track_blobs');
 
 /* DIE PROBE LEGT IHRE STUECKE SELBST AN, in einer Transaktion, die am Ende
- * zurueckrollt. Bis zum vierten Pruefstand von S11-12 suchte sie im
+ * zurueckrollt. Suchte sie im
  * Demo-Konto einen Einsatz mit mehreren Stuecken der Stufe 1 — die gibt es
  * nach einem frischen Demo-Reset, nicht aber, sobald der Wartungslauf
  * (ausgeloest von jeder Probe, die die Startseite oeffnet) die Spuren

@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 /**
- * Was fuer ein Geraet hat sich gekoppelt (R42, Zwischenpaket S6).
+ * Was fuer ein Geraet hat sich gekoppelt.
  *
  * WOZU ES DIESE DATEI GIBT. Beim Koppeln schickt das Geraet einen Block
  * `geraet` mit (JSON-Vertrag, Abschnitt 1a). Er ist FREIWILLIG, er kommt in
@@ -31,7 +31,7 @@ declare(strict_types=1);
  * dauerhaft auf "unbekannt" — und zwar unwiederbringlich, weil die Teilenummer
  * dann nirgends mehr stuende. Mit ihr laesst sich jede Zeile spaeter erneut
  * aufloesen — und zwar wirklich:
- * `php tools/erzeugen/geraetemodelle-nachaufloesen.php` tut genau das (E-S6-6). Ohne
+ * `php tools/erzeugen/geraetemodelle-nachaufloesen.php` tut genau das. Ohne
  * dieses Werkzeug waere die dritte Spalte eine Zusage ohne Programm; besonders
  * `geraet_art` haengt daran, denn dort steht bis zum Nachaufloesen die
  * ungepruefte Selbstauskunft. Sie ist ausserdem die einzige Spalte, die die BEHAUPTUNG des
@@ -42,8 +42,8 @@ declare(strict_types=1);
  * eine Stueckzahl-Statistik nicht noetig, und in einer kleinen Gruppe ein
  * Personenbezug mehr, als die Frage rechtfertigt (JSON-Vertrag 1a). Auch
  * Displaymasse, Firmware und Plattformfassung werden hier NICHT gespeichert,
- * obwohl die Clients sie senden: R36 laesst die Geraetekennung als die eine
- * benannte Ausnahme zu — "welches Geraet", nicht "in welchem Zustand".
+ * obwohl die Clients sie senden: Die Geraetekennung ist die eine benannte
+ * Ausnahme — "welches Geraet", nicht "in welchem Zustand".
  */
 /* Die erzeugte Modelltabelle. Die Abfrage davor ist kein Zierrat: Sie laesst
  * eine Probe eine EIGENE Tabelle setzen, bevor diese Datei geladen wird
@@ -54,7 +54,7 @@ declare(strict_types=1);
 if (!defined('GERAETE_MODELLE')) { require_once __DIR__ . '/geraetemodelle.php'; }
 
 /**
- * Die erlaubten Geraetearten (R42).
+ * Die erlaubten Geraetearten.
  *
  * Eine Whitelist und kein ENUM in der Datenbank: Ein ENUM braucht fuer jede
  * neue Art eine Migration. Was hier nicht drinsteht, wird zu NULL — es wird
@@ -64,7 +64,7 @@ if (!defined('GERAETE_MODELLE')) { require_once __DIR__ . '/geraetemodelle.php';
 const GERAET_ARTEN = ['uhr', 'handy', 'sonstiges'];
 
 /**
- * Die erlaubten Herkunftswerte eines Einsatzes (R64, E-R64-02, E-R64-03).
+ * Die erlaubten Herkunftswerte eines Einsatzes.
  *
  * EIN WERT JE CLIENT-APP, nicht je Hersteller. `watch` ist die Garmin-App und
  * bleibt es; eine kuenftige App eines anderen Uhrenherstellers ist ein NEUER
@@ -76,15 +76,14 @@ const GERAET_ARTEN = ['uhr', 'handy', 'sonstiges'];
  * `android` UND `wear` KOMMEN VOM SELBEN GERAET. Beide sendet die Handy-App;
  * `wear` heisst „an der Uhr ausgeloest, ueber das Handy gesendet". Nur das
  * Praefix der `client_ref` trennt sie (`am-` gegen `wm-`), und deshalb schlaegt
- * es die Geraeteart (E-R64-01).
+ * es die Geraeteart.
  *
- * VARCHAR STATT ENUM (E-R64-03), dieselbe Begruendung wie eine Zeile hoeher
- * bei GERAET_ARTEN: Ein ENUM braucht fuer jeden neuen Client eine Migration.
- * Bis Web 13.3.0 war `origin` ein ENUM; die Migration dieses Pakets hat es
- * aufgeloest. Ein neuer Client kostet jetzt drei Eintraege — Vertrag,
- * diese Liste, Beschriftungen — und keine Schemaaenderung.
+ * VARCHAR STATT ENUM, dieselbe Begruendung wie eine Zeile hoeher bei
+ * GERAET_ARTEN: Ein ENUM braucht fuer jeden neuen Client eine Migration. Ein
+ * neuer Client kostet drei Eintraege — Vertrag, diese Liste, Beschriftungen —
+ * und keine Schemaaenderung.
  *
- * DIE REIHENFOLGE IST DIE DER BESCHRIFTUNGEN (E-R64-09) und nicht zufaellig:
+ * DIE REIHENFOLGE IST DIE DER BESCHRIFTUNGEN und nicht zufaellig:
  * erst die drei sendenden Clients, dann die drei Wege, auf denen ein Einsatz
  * ohne Geraet entsteht.
  */
@@ -92,12 +91,11 @@ const HERKUNFT_WERTE = ['watch', 'android', 'wear', 'manual', 'import', 'schnitt
 
 /**
  * Wie eine Herkunft in der Oberflaeche heisst — kurz fuer die Plakette am
- * Einsatz, lang fuer die Karte „Herkunft der Einsaetze" in der Statistik
- * (P5c/AP7, E-P5c-18, F-P5c-39).
+ * Einsatz, lang fuer die Karte „Herkunft der Einsaetze" in der Statistik.
  *
- * EIN KATALOG STATT ZWEIER LISTEN. Bis Web 20.46.0 standen die Woerter in
- * `einsatz.php` (als Skriptkonstante) und sonst nirgends; die Statistik haette
- * eine zweite Liste mit anderen Woertern gebraucht. Jetzt steht jede Herkunft
+ * EIN KATALOG STATT ZWEIER LISTEN. Sonst stuenden die Woerter in
+ * `einsatz.php` (als Skriptkonstante), und die Statistik braeuchte eine
+ * zweite Liste mit anderen Woertern. So steht jede Herkunft
  * einmal hier, beide Formen nebeneinander, und `einsatz.php` liest die kurze.
  *
  * NICHT HIER: die Werte des Exports (`EXPORT_ORIGIN_LABEL` in
@@ -106,7 +104,7 @@ const HERKUNFT_WERTE = ['watch', 'android', 'wear', 'manual', 'import', 'schnitt
  * Wort in der Oberflaeche aendert, braeche jede Auswertung, die sie liest.
  *
  * Die Schluessel sind genau `HERKUNFT_WERTE`, in derselben Reihenfolge; die
- * Geraeteprobe (Teil 7) haelt beides gegeneinander.
+ * Geraeteprobe haelt beides gegeneinander.
  */
 const HERKUNFT_TEXTE = [
     'watch'   => ['kurz' => 'Uhr',        'lang' => 'Garmin-Uhr'],
@@ -118,8 +116,7 @@ const HERKUNFT_TEXTE = [
 ];
 
 /**
- * Woher ein Einsatz stammt — abgeleitet aus seiner Client-Kennung
- * (R64, E-R64-01).
+ * Woher ein Einsatz stammt — abgeleitet aus seiner Client-Kennung.
  *
  * DAS PRAEFIX ENTSCHEIDET, DIE GERAETEART IST RUECKFALL. Das ist keine
  * Feinheit, sondern der Kern: `am-` und `wm-` kommen vom **selben** Geraet
@@ -158,19 +155,18 @@ function herkunft_ableiten(string $clientRef, ?string $geraetArt): string
     /* Unbekanntes Praefix: Die Geraeteart ist der Rueckfall, und ohne sie
      * gilt `watch` — die Vorgabe der Spalte, seit es sie gibt. Ein Einsatz
      * ohne erkennbare Herkunft als „Uhr" zu fuehren ist die historisch
-     * richtige Annahme: Bis Web 12.8.0 konnte gar nichts anderes senden. */
+     * richtige Annahme: Die Uhr war lange der einzige Sender. */
     return $geraetArt === 'handy' ? 'android' : 'watch';
 }
 
 /** Laengengrenzen der drei Spalten (schema.sql). */
 const GERAET_MAX_ART    = 16;
-/* 191 UND NICHT 64. Die 64 stand hier zuerst und war geraten — die
- * Gerätedateien waren noch nicht da. Sie liefern SAMMELNAMEN: Eine Teilenummer
+/* 191 UND NICHT 64. Die Gerätedateien liefern SAMMELNAMEN: Eine Teilenummer
  * bezeichnet die Hardware, und Garmin verkauft dieselbe Hardware unter
  * mehreren Namen ("fēnix 6X Pro / 6X Sapphire / … / quatix 6X Dual Power",
  * 153 Zeichen). 5 der 173 Modelle sind länger als 64. Der volle Name wird
  * gespeichert, weil er die Auskunft der Gerätedateien IST und die spätere
- * Zählung (P5) genau diese Hardwaregruppen zählen soll; gekürzt wird für die
+ * Zählung genau diese Hardwaregruppen zählen soll; gekürzt wird für die
  * ANZEIGE, siehe geraet_bezeichnung(). */
 const GERAET_MAX_MODELL = 191;
 const GERAET_MAX_TEIL   = 64;
@@ -204,7 +200,7 @@ function geraet_block_lesen(mixed $block): array
      * `teil` ist die Teilenummer der Garmin-Uhr ("006-B4261-00") und der
      * eigentliche Schluessel — sie ist eindeutig und aufloesbar. Das Handy
      * sendet dort ausdruecklich `null` und stattdessen `hersteller` und
-     * `modell` (E-S4-28). Die Reihenfolge ist deshalb: erst `teil`, dann der
+ * `modell`. Die Reihenfolge ist deshalb: erst `teil`, dann der
      * Handy-Zuschnitt. Ein Geraet, das beides schickt, ist keine der beiden
      * bekannten Formen; dann gilt die Teilenummer, weil sie die praezisere
      * Angabe ist.
@@ -282,7 +278,7 @@ function geraet_block_lesen(mixed $block): array
  */
 function geraet_modell_aufloesen(string $teil, ?array $tabelle = null): ?array
 {
-    /* `$tabelle` IST DIE NAHT FUER DIE PROBE (P5a/AP11). Ohne sie muesste
+    /* `$tabelle` IST DIE NAHT FUER DIE PROBE. Ohne sie muesste
      * `tools/proben/geraete/` gegen den AUSGELIEFERTEN Bestand messen — 325
      * Teilenummern, die sich mit dem naechsten Lauf des Erzeugers aendern
      * koennen, und damit gegen eine bewegliche Zielscheibe. Die Probe setzt
@@ -320,9 +316,9 @@ function geraet_art_text(?string $art): ?string
 /**
  * Der Name, unter dem ein frisch gekoppeltes Geraet in der Liste steht.
  *
- * BIS WEB 12.9.0 STAND DORT IMMER "Uhr". Das war richtig, solange nur
- * Garmin-Uhren koppeln konnten; seit der Handy-App (S4) hiess ein Handy in
- * der Geraeteliste "Uhr", bis jemand es umbenannte. Der Name ist frei
+ * DIE VORGABE FOLGT DER GERAETEART. Immer "Uhr" waere nur richtig, solange
+ * nur Garmin-Uhren koppeln koennen; ein Handy hiesse sonst in der
+ * Geraeteliste "Uhr", bis jemand es umbenennt. Der Name ist frei
  * waehlbar und bleibt es — das hier ist nur die Vorgabe.
  *
  * OHNE ANGABE BLEIBT ES "Uhr", mit Absicht: Ein Geraet, das keinen Block
@@ -361,22 +357,20 @@ function geraet_bezeichnung(?string $art, ?string $modell, ?string $teil): strin
 /**
  * Die oeffentliche Geraetekennung, gekuerzt fuer eine Listenzeile.
  *
- * WARUM GEKUERZT. Die Kennung ist seit Web 4.5.1 36 Zeichen lang
+ * WARUM GEKUERZT. Die Kennung ist 36 Zeichen lang
  * ("dev-" + 32 Hexziffern) und enthaelt kein Trennzeichen, an dem ein Browser
  * umbrechen koennte. Als Plakette in einer Zeile setzt sie damit eine
  * Mindestbreite durch, die dem Text daneben nichts uebrig laesst: Bei einem
  * kurz benannten Geraet ("Uhr", "Handy" — genau die Vorgabe nach dem Koppeln)
- * fiel die Kleinzeile auf ein Wort je Zeile zusammen. Im Bilderlauf zu S6 bei
- * 1024 px gesehen, und zwar auch am Stand VOR S6 — die laengere Kleinzeile hat
- * es nur sichtbar gemacht.
+ * fiele die Kleinzeile auf ein Wort je Zeile zusammen (im Bilderlauf bei
+ * 1024 px gesehen).
  *
  * ACHT ZEICHEN GENUEGEN. Wozu die Kennung in der Liste da ist: zwei Geraete
  * mit derselben Bezeichnung auseinanderhalten und eine Zeile in einer
  * Rueckfrage benennen. Dafuer reichen 32 Bit; die letzten beiden Zeichen
  * stehen dahinter, damit ein Vergleich mit der Kopplungs-E-Mail an beiden
- * Enden anfassen kann. Dieselbe Form benutzt der Adminbereich seit Web 9.7.2
- * (Mockup 40) — sie stand dort nur als Rechnung im Seitenquelltext und
- * gehoert an EINE Stelle, damit beide Listen dieselbe Kennung zeigen.
+ * Enden anfassen kann. Dieselbe Form benutzt der Adminbereich — sie gehoert
+ * an EINE Stelle, damit beide Listen dieselbe Kennung zeigen.
  *
  * Kurze Kennungen aus dem Altbestand (4 Zufallsbytes, 12 Zeichen) bleiben
  * unveraendert stehen — sie sind bereits kurz genug.

@@ -10,36 +10,31 @@ import org.genem.nadoku.gemeinsam.Modus
  * Die Einstellungen der App — alles, was **kein Geheimnis** ist.
  *
  * DIE TRENNUNG VOM TRESOR IST ABSICHT. `device_id` und `api_key` liegen
- * verschlüsselt in einer eigenen Datei (E-S4-13); hier steht, was ohne
+ * verschlüsselt in einer eigenen Datei; hier steht, was ohne
  * Schaden im Klartext stehen darf. Beides in eine Ablage zu werfen hieße, den
  * Schutz der strengeren an der schwächeren auszurichten — oder umgekehrt
  * Einstellungen zu verschlüsseln, die auf jedem Werbebanner stehen könnten.
  *
- * Die Server-Adresse steht hier nicht mehr — sie ist seit R63 (Nr. 84) eine
- * Konstante des Baulaufs (`Serveradresse.BASIS`). Bis 0.18.0 sagte dieser
- * Kopf noch, sie werde hier normalisiert gespeichert.
+ * Die Server-Adresse steht hier nicht — sie ist eine Konstante des Baulaufs
+ * (`Serveradresse.BASIS`).
  */
 class Einstellungen(kontext: Context) {
 
     private val ablage =
         kontext.applicationContext.getSharedPreferences(ABLAGE, Context.MODE_PRIVATE)
 
-    /* HIER STAND DIE SERVERADRESSE. Sie ist mit R63 (Backlog Nr. 84) eine
-     * Konstante des Baulaufs geworden (`Serveradresse.BASIS`) und damit keine
-     * Einstellung mehr -- eine Angabe, die fuer alle dieselbe ist, gehoert
-     * nicht in eine Ablage je Geraet.
+    /* KEINE SERVERADRESSE. Sie ist eine Konstante des Baulaufs
+     * (`Serveradresse.BASIS`) und keine Einstellung -- eine Angabe, die fuer
+     * alle dieselbe ist, gehoert nicht in eine Ablage je Geraet.
      *
-     * DER ALTBESTAND-EINTRAG `server_basis` GEHT BEIM ERSTEN ZUGRIFF (seit
-     * 0.18.1, R17-24). Bis dahin blieb er liegen, und ein Absatz an dieser
-     * Stelle erklaerte, warum das Loeschen sich nicht lohne. Die Zeile
-     * darunter kostet weniger als der Absatz, und eine Adresse, die niemand
-     * mehr liest, soll auch niemand mehr finden. */
+     * EIN ALTBESTAND-EINTRAG `server_basis` GEHT BEIM ERSTEN ZUGRIFF: Eine
+     * Adresse, die niemand mehr liest, soll auch niemand mehr finden. */
     init {
         if (ablage.contains(ALT_SERVER_BASIS)) ablage.edit { remove(ALT_SERVER_BASIS) }
     }
 
     /**
-     * Die Logo-Wahl (E-S4-22b). Vorgabe **„wechselnd"** — sie wird einmal je
+     * Die Logo-Wahl. Vorgabe **„wechselnd"** — sie wird einmal je
      * App-Start gewürfelt und bleibt dann stehen; das Würfeln selbst macht
      * [org.genem.nadoku.gemeinsam.Bildmarke].
      */
@@ -48,10 +43,10 @@ class Einstellungen(kontext: Context) {
         set(wert) = ablage.edit { putInt(LOGO, wert.zahl) }
 
     /**
-     * Die Sperre der Uhr (E-S4-21d), abschaltbar.
+     * Die Sperre der Uhr, abschaltbar.
      *
      * Sie steht hier und nicht auf der Uhr, weil die Uhr **keine eigenen
-     * Einstellungen** hat: Sie übernimmt sie über den Nachrichtenweg (C2) —
+     * Einstellungen** hat: Sie übernimmt sie über den Nachrichtenweg —
      * wie die Garmin, ohne Abstimmungsbedarf zwischen den Geräten.
      */
     var uhrSperre: Boolean
@@ -60,7 +55,7 @@ class Einstellungen(kontext: Context) {
 
     /**
      * Die zuletzt getroffene Moduswahl — sie ist die Vorgabe beim nächsten
-     * Dienstbeginn (E-S4-20). Wer immer ohne Knöpfe arbeitet, soll das nicht
+     * Dienstbeginn. Wer immer ohne Knöpfe arbeitet, soll das nicht
      * jeden Morgen neu einstellen müssen.
      */
     var letzterModus: Modus
@@ -68,7 +63,7 @@ class Einstellungen(kontext: Context) {
         set(wert) = ablage.edit { putString(MODUS, wert.gespeichert) }
 
     /**
-     * Wurde durch die Akku-Freistellung geführt? (E-S4-05)
+     * Wurde durch die Akku-Freistellung geführt?
      *
      * Nur ein Merker dafür, dass **gefragt** wurde — nicht dafür, dass die
      * Freistellung gilt. Ob sie hält, weiß nur das Gerät, und Samsungs „Apps
@@ -80,7 +75,7 @@ class Einstellungen(kontext: Context) {
         set(wert) = ablage.edit { putBoolean(AKKU, wert) }
 
     /**
-     * Wurde der Hinweis auf den Stromverbrauch gezeigt? (Backlog Nr. 82)
+     * Wurde der Hinweis auf den Stromverbrauch gezeigt?
      *
      * EIN ZWEITER MERKER NEBEN [akkuHinweisGezeigt], und das ist kein
      * Versehen: Die beiden Hinweise beantworten verschiedene Fragen und
@@ -118,7 +113,7 @@ class Einstellungen(kontext: Context) {
         const val AKKU = "akku_hinweis"
         const val VERBRAUCH = "verbrauch_hinweis"
         const val ZAEHLER = "kennungszaehler"
-        /** Bis R63 die Serveradresse; nur noch zum Entfernen (0.18.1). */
+        /** Der Schlüssel einer früher gespeicherten Serveradresse; nur noch zum Entfernen. */
         const val ALT_SERVER_BASIS = "server_basis"
     }
 }

@@ -1,19 +1,22 @@
 #!/usr/bin/env python3
-"""Generator des Referenzdatensatzes (Arbeitspaket B2).
+"""Generator des Referenzdatensatzes.
 
 Erzeugt aus den Quelldaten (`../quelldaten/`) alles, was der Einspiellauf
 braucht:
 
-  payloads/     Ingest-Anfragen, vertragskonform in Teilstuecken, in der
-                Reihenfolge, in der die Uhr sie senden wuerde
+  payloads/     Ingest-Anfragen in Teilstuecken, in der Reihenfolge, in
+                der die Uhr sie senden wuerde -- mit Ortsdaten, Spur und
+                Reanimation im KLARTEXT. So nimmt `ingest.php` sie nicht an;
+                das Einspielskript verschliesst sie vor dem Senden in
+                Geraetehuellen (`pakete_verschliessen()`)
   sendeplan.json  Soll-Sendeplan: wann welche Anfrage faellig ist
-                (Grundlage des Messprotokolls, E-P1-14 / R19)
+                (Grundlage des Messprotokolls)
   formular/     Daten fuer das Nachtragen ueber einsatz_form.php und fuer
                 die von Hand angelegten Einsaetze — im KLARTEXT; das
                 Verschluesseln passiert im Einspielskript mit dem
                 Kontoschluessel (krypto.py)
   import/       einsaetze.csv im Format export_csv_v1
-  gpx/          Sichtpruefformat, abgeleitet (E-P1-04)
+  gpx/          Sichtpruefformat, abgeleitet
   fusswege.json je Fussweg Strecke, Dauer und Gehgeschwindigkeit -- pruefen.py
                 misst gegen diese Datei, nicht gegen die Spur
   kennzahlen.json  Umfang in Zahlen
@@ -104,8 +107,7 @@ def iso_offset(ts: int) -> str:
 
 
 # --------------------------------------------------------------- Spuren bauen
-# Wie oft ist eine Strasse gesucht und nicht gefunden worden (R64/AP4,
-# B-R64-03)? Die Zahl steht am Ende des Laufs und ist die Antwort auf die
+# Wie oft ist eine Strasse gesucht und nicht gefunden worden? Die Zahl steht am Ende des Laufs und ist die Antwort auf die
 # stillste Falle dieses Werkzeugs.
 STRASSE_GEFUNDEN = 0
 STRASSE_ERSATZ = 0
@@ -122,8 +124,8 @@ def _routen_nachschlagen(routen: dict, ref: str, abschnitt: int):
     sich als Erfolg meldet -- 190 km/h Luftlinie statt der OSRM-Route,
     sichtbar erst auf der Karte.
 
-    Aufgefallen in R64/AP4: Dort wurden die Kennungen des Geraets 12 von
-    `m-`/`r-` auf `am-`/`ar-` umgestellt, und `routen_soll.json` schluesselt
+    Aufgefallen, als die Kennungen des Geraets 12 von
+    `m-`/`r-` auf `am-`/`ar-` umgestellt wurden, und `routen_soll.json` schluesselt
     genau auf diese Kennungen. Waere die Datei nicht mitgezogen worden,
     haetten alle 117 Strecken lautlos ihre Strassengeometrie verloren. Seit
     diesem Paket sagt der Lauf, wie oft er eine Strecke ersetzt hat; ein
@@ -335,7 +337,7 @@ def sendeplan(dienst: dict, pakete: list[dict]) -> list[dict]:
     Ein Ausloeser arbeitet die WARTESCHLANGE AB, nicht nur ein Paket:
     `onResponse` ruft `_next()`. Deshalb entstehen an einem Ausloeser so viele
     Anfragen, wie Teilstuecke offen sind — und genau das ist die Zahl, die
-    R19 braucht.
+    das Messprotokoll braucht.
 
     Reihenfolge wie in `_findJob()`: abgeschlossene Einsaetze, dann
     Ruhe-Segmente, dann der laufende Einsatz.
@@ -496,7 +498,7 @@ def csv_zeile(dienst: dict, einsatz: dict, phasen: list[dict]) -> dict:
         # Getrennt mit Komma: der Import zerlegt an Komma UND Semikolon, aber
         # ein Semikolon waere hier zugleich das Feldtrennzeichen der Datei.
         "weitere_rettungsmittel": ", ".join(f.get("other_resources") or []),
-        # SEIT S9/AP7 EINE GESCHUETZTE ANGABE: Die Notiz des Einsatzes liegt im
+        # EINE GESCHUETZTE ANGABE: Die Notiz des Einsatzes liegt im
         # Ende-zu-Ende-verschluesselten pat_blob und steht in den Quelldaten
         # deshalb unter `geschuetzt`, nicht unter `felder`. Die CSV-SPALTE
         # heisst unveraendert `notizen` und steht an derselben Stelle — der
@@ -550,7 +552,7 @@ def csv_wert(v) -> str:
     selbst benutzt — eine Zelle mit fuehrendem '=' als FORMEL, und ihr Wert
     ist danach leer. Gemessen: '=SUMME(B1:B2)' kommt als '' zurueck.
 
-    Der Import entfernt den Apostroph NICHT wieder (F-P1-G). Der
+    Der Import entfernt den Apostroph NICHT wieder. Der
     Referenzdatensatz fuehrt deshalb keine Formelzeichen ueber den CSV-Weg;
     diese Funktion ist trotzdem richtig — die Datei soll sein, was sie
     vorgibt zu sein.
@@ -691,7 +693,7 @@ def main() -> int:
         json.dumps(plan_gesamt, ensure_ascii=False, indent=1) + "\n", "utf-8")
     (AUS / "kennzahlen.json").write_text(
         json.dumps(zahl, ensure_ascii=False, indent=2) + "\n", "utf-8")
-    # DIE FUSSWEGE EINZELN, ZUM NACHMESSEN (E-DA-13). Der fertigen Spur sieht
+    # DIE FUSSWEGE EINZELN, ZUM NACHMESSEN. Der fertigen Spur sieht
     # niemand mehr an, welches Teilstueck gegangen wurde; `generator/pruefen.py`
     # misst die Gehgeschwindigkeit deshalb hier und nicht an den Punkten.
     (AUS / "fusswege.json").write_text(

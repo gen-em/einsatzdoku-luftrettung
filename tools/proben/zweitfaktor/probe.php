@@ -2,12 +2,11 @@
 declare(strict_types=1);
 
 /**
- * Zweitfaktorprobe — hält der Zweitfaktor, was E-P5c-15, -41, -42, -53, -54
- * zusagen? (P5c/AP5)
+ * Zweitfaktorprobe — hält der Zweitfaktor, was er zusagt?
  *
  * Anlass: Nr. 303 (F-P5c-31: die Code-Abfrage muss VOR der Sitzung stehen,
- * sonst gilt `user_id` schon als angemeldet), F-P5c-37 (Datenmodell, keine
- * Wiederholung), E-P5c-54 (Demo-Reset). Die Abnahme von AP5 verlangt die
+ * sonst gilt `user_id` schon als angemeldet), dazu das Datenmodell (keine
+ * Wiederholung) und der Demo-Reset. Die Abnahme verlangt die
  * RFC-Vektoren 6/6.
  *
  * WAS SIE MISST.
@@ -16,9 +15,9 @@ declare(strict_types=1);
  *      gegen dieselben Werte.
  *   2. Kein Code gilt zweimal (`totp_code_passt()` mit dem letzten Schritt), und
  *      ein Wiederherstellungscode wird normiert (Leerzeichen, Bindestrich, klein).
- *   2b. Ein Fehler der Datenbank schaltet den Zweitfaktor nicht stumm
- *      (F-P5c-166): `totp_spalten_da()` bricht mit einer gestörten
- *      Verbindung ab. `rw_zustand()` misst die Rückwegprobe (A7). Das Tor in
+ *   2b. Ein Fehler der Datenbank schaltet den Zweitfaktor nicht stumm:
+ *      `totp_spalten_da()` bricht mit einer gestörten
+ *      Verbindung ab. `rw_zustand()` misst die Rückwegprobe. Das Tor in
  *      `auth_guard.php` hat dieselbe Unterscheidung, gemessen ist es nicht
  *      (es läuft nur über HTTP, und dort lässt sich die Datenbank nicht
  *      gezielt stören).
@@ -34,37 +33,35 @@ declare(strict_types=1);
  *      durch.
  *   5. Die Selbstlöschung wird erst mit dem Code zurückgenommen, nicht schon
  *      mit dem Passwort.
- *   6. Der Demo-Reset leert die Spalten (E-P5c-54) — gemessen an
+ *   6. Der Demo-Reset leert die Spalten — gemessen an
  *      `demo_zweitfaktor_leeren()` und am Aufruf im Reset, nicht am Reset
- *      selbst (F-P5c-117).
- *   6b. Der Demo-Reset kommt nur nach einer Aenderung (Nr. 76, E-R4-10,
- *      E-R4-42): die Rechnung `demo_reset_faellig_ab()` als Tabelle, die
+ *      selbst.
+ *   6b. Der Demo-Reset kommt nur nach einer Aenderung: die Rechnung `demo_reset_faellig_ab()` als Tabelle, die
  *      Marke „nur die erste zaehlt" an `app_state`, und die zwei Setzstellen
  *      am Quelltext (POST mit Token in `auth_guard.php`, nach dem Commit in
  *      `ingest.php`). Den Reset selbst loest sie auch hier nicht aus.
- *   5b. „Gerät merken" (Schritt 18, SR-02, E-SR-07, -17, -18): Haken mit der
+ *   5b. „Gerät merken": Haken mit der
  *      Dauer der Rollengruppe, gemerkt nur nach App-Code, danach ohne Code;
  *      „Alle vergessen", Passwortwechsel, Abschalten und Ablauf vergessen;
  *      ein fremdes Cookie zählt nicht; Dauer 0 und eine verkürzte Dauer
  *      gelten sofort; der Aufräumschritt; Protokoll.
- *   5c. Der frische Code (SR-07, E-SR-20): Schlüsselblatt und Griff ohne
+ *   5c. Der frische Code: Schlüsselblatt und Griff ohne
  *      frischen Code → Bestätigung, zurück nur auf eine Seite der Liste.
- *   5d. Passkeys an der Anlage (SR-09, E-SR-31, -32): der Knopf im
+ *   5d. Passkeys an der Anlage: der Knopf im
  *      Code-Schritt, Anmeldung mit Passkey zählt wie ein App-Code (Gerät
  *      merken, frischer Code), eine falsche Signatur nicht; eine alte
  *      Herausforderung mit frischer Signatur und ein zurückgelaufener Zähler
  *      werden abgewiesen, aber nicht als Fehlversuch gezählt, der Zähler mit
- *      eigenem Text und einer Mail (seit H-SR-08); die Bestätigungsseite nimmt
+ *      eigenem Text und einer Mail; die Bestätigungsseite nimmt
  *      ihn; der Endpunkt ohne frischen Code 403 JSON, mit frischem Code legt
  *      er an (Protokoll, Mail); Entfernen über die Karte (Protokoll, Mail).
  *      Die Prüfung selbst misst die Passkeyprobe — hier geht es um die
  *      Anbindung.
- *   7. Der Bus-Faktor (E-P5c-16, -56): Ein Konto ohne Zweitfaktor zählt nicht
+ *   7. Der Bus-Faktor: Ein Konto ohne Zweitfaktor zählt nicht
  *      als handlungsfähig; dazu die Tabelle der Lagen (Rollenmix → Plakette
  *      und Ton) über `status_verwaltungszeile()` mit gesetzten Zahlen —
- *      der Bestand der Anlage zeigt immer nur eine davon (F-P5c-114).
- *   8. Der Notzugang der einzigen BetreiberIn (Schritt 18, SR-04, E-SR-13,
- *      -24, -81 bis -87): jede Sitzung ihr Name, ein Aufruf schreibt keine
+ *      der Bestand der Anlage zeigt immer nur eine davon.
+ *   8. Der Notzugang der einzigen BetreiberIn: jede Sitzung ihr Name, ein Aufruf schreibt keine
  *      Datei, der fehlende Wert entsteht beim Aufruf; zehn Lagen, in denen die
  *      Tür zu bleibt (ohne Datei, Datei einer anderen Sitzung, ohne Wert,
  *      falscher Wert, zwei BetreiberInnen, falsches Passwort, Admin-Konto,
@@ -142,7 +139,7 @@ pruefe(totp_code_normieren('K7QF2MX0') === null, 'eine Null ist kein Zeichen der
 
 /* ---- 2b. Ein Datenbankfehler schaltet den Zweitfaktor nicht stumm ----------
  *
- * F-P5c-166: `totp_spalten_da()` fing jeden Fehler und sagte dann „keine
+ * `totp_spalten_da()` fing einmal jeden Fehler und sagte dann „keine
  * Spalten" — und `login.php` meldete darauf ohne Code-Schritt an. Stumm sein
  * darf der Zweitfaktor nur, wenn die Spalte wirklich fehlt (SQLSTATE 42S22
  * bzw. `db_hat_spalte()` = nein); jeder andere Fehler bricht ab. Gemessen mit
@@ -188,7 +185,7 @@ register_shutdown_function(static function () use ($pdo, $uid, $merkmal): void {
 /** Eine Anfrage mit eigener Cookieführung: Das Sitzungscookie trägt `secure`,
  *  und curl schickt es über HTTP nicht zurück — deshalb von Hand.
  *
- *  EIN BEHÄLTER, NICHT EIN COOKIE (seit Web 21.7.0, Schritt 18, SR-01): Zur
+ *  EIN BEHÄLTER, NICHT EIN COOKIE: Zur
  *  Sitzung gehört das Bindungscookie `EDBIND`. Bis dahin hielt `$keks` nur
  *  das zuletzt gesetzte Cookie, und das reichte, weil es nur eines gab. Jetzt
  *  hält es alle, nach Namen; ein gelöschtes (leer oder `deleted`) fällt heraus. */
@@ -199,7 +196,7 @@ function http(string $methode, string $pfad, array $felder = [], ?string $json =
     $paare = [];
     foreach ($keks as $n => $v) { $paare[] = $n . '=' . $v; }
     $kopf = $paare !== [] ? ['Cookie: ' . implode('; ', $paare)] : [];
-    /* EIN JSON-RUMPF MIT `X-CSRF` (SR-09), wie `EdApi.postJson()` ihn schickt. */
+    /* EIN JSON-RUMPF MIT `X-CSRF`, wie `EdApi.postJson()` ihn schickt. */
     if ($json !== null) { $kopf[] = 'Content-Type: application/json'; $kopf[] = 'X-CSRF: ' . $csrf; }
     curl_setopt_array($ch, [CURLOPT_RETURNTRANSFER => true, CURLOPT_HEADER => true,
         CURLOPT_FOLLOWLOCATION => false, CURLOPT_HTTPHEADER => $kopf,
@@ -345,7 +342,7 @@ $r = code_senden($naechster());
 $st = (string)$pdo->query('SELECT status FROM users WHERE id = ' . $uid)->fetchColumn();
 pruefe($r['code'] === 302 && $st === 'aktiv', 'nach dem Code: angemeldet, Löschung zurückgenommen', "$st, HTTP {$r['code']}");
 
-/* ---- 5b. „Gerät merken" (Schritt 18, SR-02) ---------------------------------
+/* ---- 5b. „Gerät merken" -----------------------------------------------------
  *
  * DAS KONTO IST ADMIN, also Verwaltung: Vorgabe 7 Tage. Die zwei Einstellungen
  * stehen vorher fest auf ihren Vorgaben und nachher wieder auf dem Stand von
@@ -505,7 +502,7 @@ if (!zweitfaktor_geraete_da($pdo)) {
            'Passwortwechsel: Zeilen 0, die Meldung sagt es', 'HTTP ' . $p['code'] . ', Zeilen ' . $zeilen());
 
     /* 8b. Das neue Passwort über den Link vergisst ebenso (`pw_handling.php`).
-     * Bis SR-02 fuhr keine Probe diesen Weg bis zum Speichern. Das Konto hat
+     * Diesen Weg fährt die Probe bis zum Speichern. Das Konto hat
      * keine Hüllen, also ist es die Erstvergabe: Der Server prüft Form und
      * Anteil-Kennung der Hüllen, öffnen kann er sie nicht — gebaut werden sie
      * hier aus Zufall in der richtigen Form. Danach stehen Passwort, Salz und
@@ -563,7 +560,7 @@ if (!zweitfaktor_geraete_da($pdo)) {
     $keks = [];
 }
 
-/* ---- 5c. Der frische Code (Schritt 18, SR-07, E-SR-20) ----------------------
+/* ---- 5c. Der frische Code ---------------------------------------------------
  *
  * DAS KONTO WIRD FUER DIESEN TEIL BETREIBERIN: Das Schluesselblatt ist die
  * eine Handlung der Liste, die ein GET ist und bei Erfolg 200 antwortet —
@@ -668,18 +665,18 @@ if (!zweitfaktor_geraete_da($pdo)) {
     }
 }
 
-/* ---- 5d. Passkeys an der Anlage (Schritt 18, SR-09) -----------------------
+/* ---- 5d. Passkeys an der Anlage -------------------------------------------
  *
  * DIE ADRESSE WIRD GESTELLT: `app.base_url` auf `https://localhost:8443`, weil
- * es fuer eine IP-Adresse keine Passkeys gibt (E-SR-42). Die Anfragen gehen
+ * es fuer eine IP-Adresse keine Passkeys gibt. Die Anfragen gehen
  * weiter an `$basis` — geprueft wird der Ursprung in `clientDataJSON` gegen
  * die Konfiguration, nicht gegen den Host der Anfrage. Nach dem Stellen und
  * nach dem Zuruecklegen wartet die Probe 3,2 Sekunden: OPcache sieht eine
- * geaenderte `config.php` erst nach `revalidate_freq` (F-P5c-69), und er
+ * geaenderte `config.php` erst nach `revalidate_freq`, und er
  * rechnet mit der Anfragezeit in GANZEN Sekunden — nach einer Pruefung in
  * Sekunde L gilt die alte Fassung bis einschliesslich L+2. Die erste Fassung
- * wartete 2,2 s und war in einem von zwei Laeufen rot (F-SR-31; dieselbe
- * Falle wie F-P5c-123 in der Ratenprobe).
+ * wartete 2,2 s und war in einem von zwei Laeufen rot (dieselbe
+ * Falle wie in der Ratenprobe).
  *
  * DER PASSKEY WIRD UNMITTELBAR ABGELEGT, nicht ueber den Endpunkt: Diese
  * Probe misst die Anbindung an Anmeldung und Bestaetigung. Den Endpunkt
@@ -736,7 +733,7 @@ if (!pk_tabelle_da($pdo) || !zweitfaktor_geraete_da($pdo) || !db_hat_spalte($pdo
                $k === null ? 'kein Knopf' : 'rp.id ' . $k['rp-id']);
 
         // 2. Eine falsche Signatur gilt nicht und ZAEHLT als Fehlversuch
-        //    (E-SR-50 — die Haelfte, die bis zur Nachpruefung C-3 niemand mass)
+        //    (die Haelfte, die lange niemand mass)
         $versuche = static fn(): int => (int)$pdo->query("SELECT COALESCE(SUM(versuche), 0) FROM rate_limits
                                                            WHERE topf = 'totp' AND merkmal = " . $pdo->quote($merkmal))->fetchColumn();
         $systemZeilen = static fn(): int => (int)$pdo->query("SELECT COUNT(*) FROM protokoll_ereignisse
@@ -749,7 +746,7 @@ if (!pk_tabelle_da($pdo) || !zweitfaktor_geraete_da($pdo) || !db_hat_spalte($pdo
                'falsche Signatur: bleibt im Code-Schritt, Meldung, nicht angemeldet, ein Fehlversuch',
                "HTTP {$f['code']}, Versuche $vorV → " . $versuche());
 
-        // 2b. Das Feld als Liste (Nachpruefung B-1) und ueber dem Deckel
+        // 2b. Das Feld als Liste und ueber dem Deckel
         //     (B-4): abgewiesen und gezaehlt, ohne PHP-Warnung im Reiter System
         $vorS = $systemZeilen();
         $vorV = $versuche();
@@ -778,11 +775,10 @@ if (!pk_tabelle_da($pdo) || !zweitfaktor_geraete_da($pdo) || !db_hat_spalte($pdo
                "Anmeldung {$r['code']}, Gerät " . (isset($keks['EDGERAET']) ? 'ja' : 'nein')
                . ", Zähler {$zeile['zaehler']}, Blatt {$b['code']}");
 
-        // 4. Die Herausforderung gilt einmal — GETRENNT vom Zaehler gemessen
-        //    (H-SR-08, F-SR-43): eine frisch signierte Antwort mit hoeherem
+        // 4. Die Herausforderung gilt einmal — GETRENNT vom Zaehler gemessen:
+        //    eine frisch signierte Antwort mit hoeherem
         //    Zaehler, aber der Herausforderung von Schritt 3. Sie scheitert
-        //    nur an der Herausforderung, und das zaehlt nicht als Fehlversuch
-        //    (F-SR-37).
+        //    nur an der Herausforderung, und das zaehlt nicht als Fehlversuch.
         $g = $keks['EDGERAET'] ?? null;
         $keks = [];
         passwort();
@@ -795,7 +791,7 @@ if (!pk_tabelle_da($pdo) || !zweitfaktor_geraete_da($pdo) || !db_hat_spalte($pdo
                'alte Herausforderung, frische Signatur: abgewiesen, kein Fehlversuch', "HTTP {$w['code']}, Versuche $vorV → " . $versuche());
 
         // 4b. Zaehler zurueck (eine Kopie): abgewiesen, eigener Text, kein
-        //     Fehlversuch, eine Mail an die Kontoadresse (E-SR-46)
+        //     Fehlversuch, eine Mail an die Kontoadresse
         $k = $knopf($w['rumpf'], 'data-passkey-bestaetigen');
         $w = http('POST', 'login.php', ['csrf' => csrf_von($w['rumpf']), 'schritt' => 'code',
                                         'passkey_antwort' => $antwort($k, ['zaehler' => 1])]);
@@ -850,7 +846,7 @@ if (!pk_tabelle_da($pdo) || !zweitfaktor_geraete_da($pdo) || !db_hat_spalte($pdo
         $reg = pb_registrierung($neu, (string)($kr['herausforderung'] ?? ''), $pkU);
         // 6a. Rumpf ueber dem Deckel, Bezeichnung als Liste, 41 Zeichen: je
         //     abgewiesen, OHNE die Herausforderung zu verbrauchen — das gueltige
-        //     Anlegen danach nimmt dieselbe (F-SR-39, Nachpruefung E-4, B-4)
+        //     Anlegen danach nimmt dieselbe
         $gross = http('POST', 'api/passkey_anlegen.php', [], str_repeat(' ', PK_ANTWORT_MAX + 1), csrf_von($e['rumpf']));
         $liste = http('POST', 'api/passkey_anlegen.php', [],
                       (string)json_encode(['antwort' => $reg['antwort'], 'bezeichnung' => ['x']]), csrf_von($e['rumpf']));
@@ -881,7 +877,7 @@ if (!pk_tabelle_da($pdo) || !zweitfaktor_geraete_da($pdo) || !db_hat_spalte($pdo
                "HTTP {$noch['code']} " . substr($noch['rumpf'], 0, 60) . ", abgewiesen $abgew");
         // 6b. Eine Kennung, die es schon gibt, mit NEUER Herausforderung:
         //     nach aussen dieselbe Meldung wie jede andere Ablehnung, der
-        //     Grund steht im Protokoll (E-SR-45, F-SR-39)
+        //     Grund steht im Protokoll
         $e = http('GET', 'einstellungen.php?t=profil');
         $kr2 = $knopf($e['rumpf'], 'data-passkey-anlegen');
         $reg2 = pb_registrierung($neu, (string)($kr2['herausforderung'] ?? ''), $pkU, ['kennung' => $reg['kennung']]);
@@ -924,7 +920,7 @@ if (!pk_tabelle_da($pdo) || !zweitfaktor_geraete_da($pdo) || !db_hat_spalte($pdo
 
 /* ---- 6. Der Demo-Reset leert die Spalten ------------------------------------- */
 echo "== 6. Demo-Reset\n";
-/* NICHT `demo_zuruecksetzen()` SELBST (F-P5c-117). Der Reset spielt den
+/* NICHT `demo_zuruecksetzen()` SELBST. Der Reset spielt den
  * Demo-Bestand neu ein, die Einsätze bekommen neue Nummern — und die
  * GPX-Probe, die im Prüfstand danach läuft, fand ihre Referenz nicht mehr
  * (204 von 204 ohne Gegenstück). Gemessen wird der Schritt, der den
@@ -938,7 +934,7 @@ if ($demo === null) {
     demo_zweitfaktor_leeren($pdo, $demo);
     $z = $pdo->query("SELECT totp_seit IS NULL AND totp_schritt IS NULL FROM users WHERE id = $demo")->fetchColumn();
     pruefe((int)$z === 1, 'demo_zweitfaktor_leeren(): totp_seit und totp_schritt leer');
-    /* DAS PAAR DES RÜCKWEGS (Konzept RW, RW-02, E-RW-15): an derselben
+    /* DAS PAAR DES RÜCKWEGS: an derselben
      * Stelle geleert. Gestellt mit Unsinn in allen drei Spalten — geprüft
      * wird das Leeren, nicht die Form. Ohne die Spalten (vor `update.php`)
      * ist der Fall nicht gemessen und rot, statt still übersprungen. */
@@ -1064,9 +1060,9 @@ pruefe($zeile !== null && ($ohneAdmin['betreiberinnen'] >= 2) === ($zeile['ton']
        'Ampel: blau genau bei zwei handlungsfähigen BetreiberInnen, sonst orange',
        ($zeile['plakette'] ?? '?') . ' / ' . ($zeile['ton'] ?? '?'));
 
-/* DIE TABELLE DER FÄLLE (Konzept P5c, AP5; Texte M-P5c-02d): Rollenmix →
+/* DIE TABELLE DER FÄLLE: Rollenmix →
  * Plakette und Ton, mit gesetzten Zahlen statt mit dem Bestand. Die Ampel
- * hängt allein an „zwei BetreiberInnen handlungsfähig" (F-P5c-60). */
+ * hängt allein an „zwei BetreiberInnen handlungsfähig". */
 $faelle = [
     // [Verwaltung, BetreiberInnen handlungsfähig, BetreiberInnen aktiv] => [Plakette, Ton, Fall]
     [[1, 1, 1], ['nur 1', 'orange', '1 BetreiberIn allein']],
@@ -1083,9 +1079,9 @@ foreach ($faelle as [[$v, $b, $a], [$plakette, $ton, $fall]]) {
            "Fall „{$fall}\" → {$plakette} / {$ton}", $z['plakette'] . ' / ' . $z['ton']);
 }
 
-/* ---- 8. Der Notzugang der einzigen BetreiberIn (SR-04) -----------------------
+/* ---- 8. Der Notzugang der einzigen BetreiberIn -------------------------------
  *
- * WAS ER ZUSAGT (E-SR-13, E-SR-24, E-SR-81 bis -87): Datei, deren Namen die
+ * WAS ER ZUSAGT: Datei, deren Namen die
  * Seite nennt und die an der Sitzung hängt, Datenbankwert und Passwort — und
  * nur für das eine aktive BetreiberIn-Konto mit Zweitfaktor. Jede andere Lage
  * antwortet GLEICH (derselbe Rumpf, bis auf Token, Nonce und Dateinamen) und
@@ -1143,7 +1139,7 @@ $nwAufraeumen = static function () use ($pdo, $nwAndere, $nwMail, $nwZwei, $nwNi
     /* Gab es vorher keinen Wert (frische Anlage: die Migration wird
      * übersprungen, der Notzugang legt ihn erst beim ersten Aufruf an), dann
      * entfernt das Aufräumen den, den die Probe angelegt hat — sonst steht er
-     * danach da und die Prüfung „Wert wie vorher" schlägt an (Web 22.7.1). */
+     * danach da und die Prüfung „Wert wie vorher" schlägt an. */
     if ($nwWertVorher !== null) {
         app_state_setzen('notzugang_geheim', $nwWertVorher);
     } else {
@@ -1312,7 +1308,7 @@ try {
     $verschiedene = count(array_unique($rumpfe));
     pruefe($verschiedene === 1, count($rumpfe) . ' Lagen, ' . $verschiedene . ' Rumpf (bis auf Token, Nonce, Namen)',
            implode(', ', array_keys($rumpfe)));
-    /* NACHGEMESSEN WIRD NUR NACH OBEN, UND NUR DREIMAL (seit SR-08, F-SR-98).
+    /* NACHGEMESSEN WIRD NUR NACH OBEN, UND NUR DREIMAL.
      * bcrypt mit Kosten 12 braucht hier 0,23 bis 0,28 s, der Boden ist 0,35 s
      * — es bleiben rund 70 ms Luft. Eine Lage, die einmal mehr braucht, weil
      * gerade etwas anderes den Kern hat, färbte die Spanne rot: am 05.10.2026

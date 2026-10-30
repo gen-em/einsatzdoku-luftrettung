@@ -9,6 +9,7 @@ Verlauf bis zum Schnitt). Die Fassungszählung läuft fortlaufend weiter.
 
 | Fassung | Datum | Anlass | Was |
 |---|---|---|---|
+| 182 | 30.10.2026 | Zuarbeit | 6.1: Prüfliste R17 bis P-R17-39 (Läuferadresse, Gerätesummen, Selbstproben in Stufe 1; R17-28). |
 | 181 | 29.10.2026 | Zuarbeit | 6.1: P-R17-29 erledigt — SMTP-Benutzer und -Passwort in beiden `config.php` (Betreiberin, vor dem Zwischen-PR mit Web 23.5.1). |
 | 180 | 28.10.2026 | Zuarbeit | 6.1: Prüfliste R17 bis P-R17-38 (R17-26 fehlte seit Web 23.5.0, R17-27). Berichtigt: Die Zuarbeit zum Nachlösen nannte `tools/geraetemodelle/nachaufloesen.php`, seit PK-04 `tools/erzeugen/geraetemodelle-nachaufloesen.php` (Dokumentenprobe, R17-27). |
 | 179 | 28.10.2026 | Zuarbeit | 6.1: Prüfliste R17 um P-R17-34 und -35 (Bitwarden, Safari und neuer Tab nach Web 23.4.0, R17-25); die Hoster-Anfrage ist gestellt, offen ist die Antwort. |

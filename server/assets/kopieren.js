@@ -6,7 +6,7 @@
  * werden von einem Bildschirm in ein anderes Fenster uebertragen. Wer sie
  * abschreibt, macht Tippfehler; wer sie markiert, erwischt bei
  * `word-break:break-all` gern eine Zeile zu wenig. Ein Knopf macht daraus
- * einen Klick (E-S8-10, Backlog Nr. 78).
+ * einen Klick.
  *
  * DER KNOPF STEHT IM MARKUP AUF `hidden` UND WIRD HIER EINGEBLENDET. Ohne
  * JavaScript gaebe es sonst einen Knopf, der nichts tut — und das ist

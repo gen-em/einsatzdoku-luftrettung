@@ -1,4 +1,4 @@
-/* Der Mischfall im Papierkorb — Browserprüfung zu E-S1-04 (Fund F-S1-E).
+/* Der Mischfall im Papierkorb — Browserprüfung.
  *
  * DIE FRAGE. Ein Diensttag, an dem ein Einsatz EINZELN und ein anderer MIT
  * DEM TAG gelöscht wurde: Kommt diese Unterscheidung durch einen vollen
@@ -28,8 +28,8 @@
  * aus dem, was geprueft wird: Der Vergleich haelt den Papierkorb des Ziels
  * ABSOLUT gegen den der Quelle, und das geht nur auf, wenn das Ziel den ganzen
  * Bestand frisch bekommt. Traegt es ihn schon, ueberspringt die
- * Wiederherstellung alles (sie ERGAENZT und ersetzt nicht, E22) — samt des
- * Papierkorbzustands, um den es hier geht. Die Probe prueft das seit S2/AP10
+ * Wiederherstellung alles (sie ERGAENZT und ersetzt nicht) — samt des
+ * Papierkorbzustands, um den es hier geht. Die Probe prueft das
  * selbst und bricht mit einer Erklaerung ab, statt sechs Scheinbefunde zu
  * melden.
  *
@@ -49,7 +49,7 @@ import { motorWahl, starten } from '../../motor.mjs';
 const MODUL = process.env.PLAYWRIGHT_MODUL
   || '/opt/node22/lib/node_modules/playwright/index.mjs';
 const PW = (m => m.default ?? m)(await import(MODUL.startsWith('/') ? 'file://' + MODUL : MODUL));
-/* Die Engine wählt der Läufer (MOTOR=… oder --motor), R87. */
+/* Die Engine wählt der Läufer (MOTOR=… oder --motor). */
 const MOTOR = motorWahl(process.argv);
 
 const basis   = process.argv[2] || 'https://127.0.0.1:8443';
@@ -76,11 +76,11 @@ const browser = await starten(PW, MOTOR);
 const kontext = await browser.newContext({ ignoreHTTPSErrors: lokal, acceptDownloads: true });
 const seite = await kontext.newPage();
 const konsole = [];
-/* DER FILTER MUSS AUCH DIE ADRESSE ANSEHEN, nicht nur den Text (P3/O11).
+/* DER FILTER MUSS AUCH DIE ADRESSE ANSEHEN, nicht nur den Text.
  * Eine gescheiterte Kachel meldet sich als „Failed to load resource:
  * net::ERR_CONNECTION_RESET" — ohne jede URL im Text. Der Ausdruck oben lief
  * also ins Leere, und der Lauf zaehlte 12 Konsolenfehler, die keine waren;
- * die Bildaufnahme prueft seit O3 beides (tools/screenshots, istRauschen).
+ * die Bildaufnahme prueft beides (tools/screenshots, istRauschen).
  * Der Pruef-Browser kommt in dieser Umgebung nicht an tile.openstreetmap.org. */
 seite.on('console', m => {
   if (m.type() !== 'error') { return; }
@@ -136,11 +136,11 @@ schritt(`Als ${quelle} anmelden`);
  * ein einzeln gelöschter an einem AKTIVEN Tag). Wer hier „erwartet 1" schreibt,
  * misst den Referenzbestand mit und bekommt sieben Befunde, die keine sind.
  * Geprüft wird deshalb die VERÄNDERUNG gegenüber dem Grundstand. */
-/* DIE SELEKTOREN FOLGEN DEM UMBAU (P3/O11). Der Papierkorb hatte zwei Tabellen
+/* DIE SELEKTOREN FOLGEN DEM UMBAU. Der Papierkorb hatte zwei Tabellen
  * unter zwei <h2>; jetzt sind es zwei Karten mit Zeilen. Die Zahl steht
  * ausserdem im Kartenkopf — sie wird gegen die gezaehlten Zeilen gehalten,
  * damit ein Selektor, der ins Leere greift, nicht als „0 Eintraege" durchgeht.
- * Genau diese Sorte stiller Null hat F-S1-E fast durchrutschen lassen. */
+ * Genau diese Sorte stiller Null hat einen Fehler fast durchrutschen lassen. */
 const KARTE = (titel) => `.karte:has(.karte-titel:text-is("${titel}"))`;
 
 async function papierkorbZaehlen() {
@@ -242,7 +242,7 @@ if (!await anmelden(ziel, zielPw)) {
 }
 schritt(`Als ${ziel} anmelden`);
 
-/* DIE VORAUSSETZUNG DES ZIELKONTOS PRUEFEN (S2/AP10).
+/* DIE VORAUSSETZUNG DES ZIELKONTOS PRUEFEN.
  *
  * Der Vergleich weiter unten haelt den Papierkorb des Ziels ABSOLUT gegen den
  * der Quelle. Das ist richtig — aber nur, wenn das Zielkonto vorher LEER ist:
@@ -251,7 +251,7 @@ schritt(`Als ${ziel} anmelden`);
  *
  * Diese Voraussetzung stand nirgends und wurde nicht geprueft. Laeuft die
  * Probe ein zweites Mal gegen dasselbe Zielkonto, meldete sie SECHS Befunde,
- * darunter den schwersten, den sie kennt (F-S1-E) — und keiner war ein Mangel
+ * darunter den schwersten, den sie kennt — und keiner war ein Mangel
  * der Anwendung. Belegt am 01.09.2026 durch die Rueckmeldung des Einspielens:
  *
  *   „0 Einsaetze uebernommen ... Uebersprungen: 87 Einsaetze,
@@ -259,12 +259,12 @@ schritt(`Als ${ziel} anmelden`);
  *
  * DIE ZAHLEN IN DEM ZITAT SIND DIE VON DAMALS und werden nicht nachgezogen —
  * es ist eine woertliche Rueckmeldung vom 01.09.2026, kein Sollwert. Der
- * Bestand zaehlt seit R4-16 109 Einsaetze und 123 Ruhesegmente;
+ * Bestand zaehlt 109 Einsaetze und 123 Ruhesegmente;
  * die Probe liest die Meldung ohnehin nicht nach Zahlen, sondern nach
  * `0 Einsätze übernommen` (unten).
  *
  * Der Grund liegt in der Wiederherstellung selbst: Sie ERGAENZT und ersetzt
- * nicht (E22). Was schon da ist, wird uebersprungen — samt des
+ * nicht. Was schon da ist, wird uebersprungen — samt des
  * Papierkorbzustands, um den es hier geht.
  *
  * Sechs rote Zeilen aus einer unerfuellten Voraussetzung sind schlimmer als
@@ -297,7 +297,7 @@ await seite.setInputFiles('#bfile', datei);
 await seite.fill('#ipw', bpw);
 await seite.click('#impbtn');
 await rueckfragen();
-/* Auf die MELDUNG warten, nicht auf einen Wortlaut (S2/AP5b). Begründung
+/* Auf die MELDUNG warten, nicht auf einen Wortlaut. Begründung
    ausführlich in kreislauf_edbak.mjs: Ein Fortschrittstext ist reiner Text,
    ein Ergebnis ist `<div class="meldung meldung-…">`. Der frühere Ausdruck
    kannte den Abbruch nicht und wartete dann 300 s auf einen Zustand, den es
@@ -310,15 +310,15 @@ const impZustand = (await seite.locator('#impstate').textContent().catch(() => '
 const impTon = (await impMeldung.first().getAttribute('class').catch(() => '') || '');
 schritt(`Eingespielt — ${impZustand}`);
 pruefe(/meldung-ok/.test(impTon), `Einspielen nicht sauber: ${impZustand || '(kein Ergebnis)'}`);
-/* DIE VORAUSSETZUNG PRUEFEN, BEVOR GEPRUEFT WIRD (S2/AP10).
+/* DIE VORAUSSETZUNG PRUEFEN, BEVOR GEPRUEFT WIRD.
  *
  * Diese Probe braucht ein Zielkonto, das den Bestand NOCH NICHT hat. Der
- * Grund liegt in der Wiederherstellung selbst: Sie ERGAENZT und ersetzt nicht
- * (E22). Was schon da ist, wird uebersprungen — und mit ihm der geaenderte
+ * Grund liegt in der Wiederherstellung selbst: Sie ERGAENZT und ersetzt nicht.
+ * Was schon da ist, wird uebersprungen — und mit ihm der geaenderte
  * Papierkorbzustand, um den es hier geht.
  *
  * Laeuft die Probe ein zweites Mal gegen dasselbe Zielkonto, meldete sie
- * SECHS Befunde, darunter den schwersten, den sie kennt (F-S1-E). Keiner
+ * SECHS Befunde, darunter den schwersten, den sie kennt. Keiner
  * davon war ein Mangel der Anwendung. Belegt am 01.09.2026 durch die
  * Rueckmeldung des Einspielens selbst:
  *
@@ -397,11 +397,11 @@ if (tagTreffer === 1) {
   }
 }
 
-// ---- 4b. Zurückholen des einzelnen wird abgelehnt (Backlog Nr. 33) ------
+// ---- 4b. Zurückholen des einzelnen wird abgelehnt -----------------------
 /* Solange sein Diensttag im Papierkorb liegt, darf „Wiederherstellen" beim
  * einzeln gelöschten Einsatz NICHTS tun: Sonst stünde er aktiv an einem
- * gelöschten Tag — in der Suche sichtbar, in der Tagesübersicht nicht. Bis
- * Web 8.0.0 ging genau das mit einem Klick.
+ * gelöschten Tag — in der Suche sichtbar, in der Tagesübersicht nicht.
+ * Einmal ging genau das mit einem Klick.
  *
  * Die Zeile wird über das DATUM gesucht, nicht über nth(0): Der
  * Referenzbestand bringt einen zweiten einzeln gelöschten Einsatz mit, und

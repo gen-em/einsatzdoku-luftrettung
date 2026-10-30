@@ -2,7 +2,7 @@
  *
  * Anlass: Nr. 43 — drei Umsetzungen eines Formats müssen byte-gleich sein.
  *
- * WAS. Lädt `server/assets/crypto.js` (seit S11-03; bis dahin die Vorlage
+ * WAS. Lädt `server/assets/crypto.js` (frueher die Vorlage
  * `huelle.js`) in eine Seite und prüft dessen Gerätehülle gegen
  * `vektoren.json` aus `referenz.py`:
  *   je Fall    Z (ECDH), k_enc und k_mac (HKDF), die ganze Hülle byte-gleich

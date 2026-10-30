@@ -1,12 +1,11 @@
 /* GPX-Probe — baut und liest der Browser dieselben Dateien wie bisher der
- * Server, und kommt eine importierte Datei verschlossen an? (S11-05d; vorher
- * S2/AP4, E-S2-09, Backlog Nr. 3)
+ * Server, und kommt eine importierte Datei verschlossen an?
  *
  * Anlass: Nr. 130 — die DOCTYPE-Sperre des GPX-Imports liess UTF-16 durch (Teil 5); Nr. 259 — ein Demo-Reset machte den Referenzvergleich blind; Nr. 43 — seit S11 baut und liest der Browser GPX, der Server sieht keine Koordinate mehr
  *
- * WARUM NEU. Bis Web 22.2.0 war dies `probe.php`: `gpx.php` baute die Datei,
+ * WARUM NEU. Frueher war dies `probe.php`: `gpx.php` baute die Datei,
  * `gpx_lesen()` las sie, beides auf dem Server, und die Probe rief beides
- * unmittelbar. Seit S11-05d gibt es beides nicht mehr — `assets/gpx.js` baut
+ * unmittelbar. Beides gibt es nicht mehr — `assets/gpx.js` baut
  * und liest im Browser, weil nur der Browser die Spur oeffnen kann. Was die
  * alte Probe belegte, belegt diese an der neuen Stelle:
  *
@@ -14,10 +13,10 @@
  *           `DOMDocument::schemaValidate()` (PHP, `schema.php`) fuer jede
  *           Datei, die diese Probe zu sehen bekommt.
  *   Teil 1  DIESELBE DATEI WIE VORHER. `soll/` haelt Dateien und Dateinamen,
- *           die die letzte Fassung von `gpx_lib.php` (Web 22.2.0) aus
+ *           die die letzte Fassung von `gpx_lib.php` aus
  *           `soll/eingabe.json` gebaut hat. `EdGpx` baut aus derselben Eingabe
  *           Byte fuer Byte dasselbe — bis auf die Fassung in `creator` und
- *           EINE benannte Abweichung (F-S11-55): PHP schrieb 1e-7 als
+ *           EINE benannte Abweichung: PHP schrieb 1e-7 als
  *           `1.0E-7`, und das ist kein xsd:decimal.
  *   Teil 2  Der Referenzexport (211 GPX-Dateien aus `assets/export.js`):
  *           jede gelesen (`EdGpx.lesen`) und neu gebaut (`EdGpx.bauen`) —
@@ -43,7 +42,7 @@ import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { randomBytes, createHash } from 'node:crypto';
-import { motorWahl, starten } from '../../motor.mjs';
+import { motorWahl, starten, istOertlich } from '../../motor.mjs';
 
 const HIER   = dirname(fileURLToPath(import.meta.url));
 const WURZEL = join(HIER, '..', '..', '..');
@@ -61,7 +60,7 @@ const PASSWORT = 'umlaufpruefung2026-gpx';
 const KONTO = join(WURZEL, 'tools', 'referenzdatensatz', 'vergleich', 'pruefkonto.py');
 const MODUL = process.env.PLAYWRIGHT_MODUL || '/opt/node22/lib/node_modules/playwright/index.mjs';
 const PW = (m => m.default ?? m)(await import('file://' + MODUL));
-/* Die Engine wählt der Läufer (MOTOR=… oder --motor), R87. */
+/* Die Engine wählt der Läufer (MOTOR=… oder --motor). */
 const MOTOR = motorWahl(process.argv);
 
 /** Das vendorierte XSD und seine Pruefsumme (Herkunft: docs/Lizenzen.md). */
@@ -147,8 +146,8 @@ try {
   konto('anlegen', join(ordner, 'rc.json'));
   const id = Number(php(`$st = db()->prepare("SELECT id FROM users WHERE email = ?");
     $st->execute(['${ADRESSE}']); echo (int)$st->fetchColumn();`));
-  const kontext = await browser.newContext({ ignoreHTTPSErrors: true, acceptDownloads: true });
-  /* DER WARTUNGSLAUF BLEIBT AUS (S11-07, F-S11-77): Er packt und dünnt im
+  const kontext = await browser.newContext({ ignoreHTTPSErrors: istOertlich(BASIS), acceptDownloads: true });
+  /* DER WARTUNGSLAUF BLEIBT AUS: Er packt und dünnt im
      Browser aus, sobald eine Seite ihn anstößt (Startseite, Reiter Backup),
      und das Ausdünnen ändert die Punkte — mitten in einem Vergleich wäre das
      eine Abweichung, die keine ist. Die Antwort sagt „nichts fällig" — ein
@@ -171,7 +170,7 @@ try {
   const sec1 = php(`require_once "server/kontopaar_lib.php"; echo (string)kp_fuer_geraet(db(), ${id});`);
   pruefe(id > 0 && sec1.length > 80, '0  Wegwerfkonto angelegt, Kontopaar da', `Konto ${id}`);
 
-  /* Das Geraet sendet — verschlossen, wie seit S11-04 */
+  /* Das Geraet sendet — verschlossen */
   const devId = 'dev-gpxprobe', devKey = randomBytes(24).toString('hex');
   php(`db()->prepare("INSERT INTO devices (user_id, device_id, api_key_hash, label, active, geraet_art, geraet_modell)
        VALUES (?,?,?,?,1,'uhr','fēnix 6 Pro')")->execute([${id}, '${devId}', geraet_schluessel_hash('${devKey}'), 'GPX-Probe']);`);
@@ -195,7 +194,7 @@ try {
   console.log('\n  Teil 1 — dieselbe Datei wie bis Web 22.2.0 (soll/)');
   /* 3a  DIE GEPACKTE SPUR (R17-22, F-R17-39, Anlass: Nr. 43). Bis Web 23.3.0
      rechnete die Einsatzseite fuer Stufe 2 und 3 mit `n_gespeichert`, das es
-     seit S11-12 nicht mehr gibt: Zahl 0, kein Menueeintrag, eine Warnung je
+     nicht mehr gibt: Zahl 0, kein Menueeintrag, eine Warnung je
      Aufruf. Die Probe kannte nur Stufe 1. Hier wird die STUFE der Stuecke
      umgeschrieben — der Inhalt bleibt, und die Seite entscheidet nur nach
      Stufe und Punktzahl. Bewusst ein `UPDATE` statt eines echten Tauschs
@@ -229,7 +228,7 @@ try {
                                                         : EdGpx.dateiname(x[0], x[1], x[2], x[3]));
     return { aus, namen, fassung: document.documentElement.getAttribute('data-webversion') };
   }, eingabe);
-  /* DIE BENANNTE ABWEICHUNG (F-S11-55): PHP setzt Fliesskommazahlen unter
+  /* DIE BENANNTE ABWEICHUNG: PHP setzt Fliesskommazahlen unter
      1e-4 in Exponentschreibweise, und `1.0E-7` ist kein xsd:decimal — die
      alte Datei war an dieser Stelle ungueltig. Gezaehlt, nicht verschwiegen. */
   let byteGleich = 0, abweichung = 0; const teil1 = [];
@@ -319,7 +318,7 @@ try {
     await s.click('dialog[open] [data-act="yes"]');
   });
   const a3 = punkteAus(a.text);
-  pruefe(gleich(a3, spurM, 0.5 + 1e-6), /* ganze Meter, E-S11-66 */ '3  Einsatzansicht: die Datei enthält die gesendete Spur',
+  pruefe(gleich(a3, spurM, 0.5 + 1e-6), /* ganze Meter */ '3  Einsatzansicht: die Datei enthält die gesendete Spur',
          `${a3.length} Punkte, Datei ${a.name}`);
   pruefe(new RegExp(`^einsatz_${String(mid).padStart(6, '0')}_\\d{4}-\\d{2}-\\d{2}_\\d{4}_original\\.gpx$`).test(a.name)
          && /<desc>Originalspur — 6 Punkte<\/desc>/.test(a.text) && /<name>Einsatz \d+ — \d\d\.\d\d\.\d{4} \d\d:\d\d<\/name>/.test(a.text),

@@ -1,4 +1,4 @@
-/* Gen-EM NAdoku — die drei Blöcke der Einstellungsleiste (E-S8-07).
+/* Gen-EM NAdoku — die drei Blöcke der Einstellungsleiste.
  * ===========================================================================
  *
  * WOFUER. Fuer eine BetreiberIn stehen siebzehn Menuepunkte untereinander.
@@ -71,7 +71,7 @@
 
 
 /* ===========================================================================
- * UNTERPUNKTE: DIE KARTEN DER OFFENEN SEITE  (S8/AP5, E-S8-15)
+ * UNTERPUNKTE: DIE KARTEN DER OFFENEN SEITE
  *
  * Unter dem aktiven Menuepunkt stehen die Kartentitel der Seite als
  * Sprungmarken, und waehrend man liest, ist der Titel der obersten sichtbaren
@@ -90,9 +90,9 @@
  * ohnehin ein Skript.
  *
  * NUR KARTEN MIT `id`. Die id ist der Anker; eine Karte ohne id waere ein
- * Sprungziel ohne Sprung. Sie tragen den Vorsatz `k-` (S8/AP2 bis AP5).
+ * Sprungziel ohne Sprung. Sie tragen den Vorsatz `k-`.
  *
- * IN DER SCHUBLADE STEHEN SIE, ABER OHNE MARKIERUNG (Konzept AP5 (4)). Unter
+ * IN DER SCHUBLADE STEHEN SIE, ABER OHNE MARKIERUNG. Unter
  * 1024 px ist die Leiste ein Ueberbau, den man oeffnet, um woanders
  * hinzugehen — der Sprung zu einer Karte ist dort besonders nuetzlich, weil
  * die Seiten am Handy lang sind. Eine Markierung dagegen saehe niemand: Die
@@ -108,7 +108,7 @@
   var aktiv = document.querySelector('.leiste-liste a.eintrag.aktiv');
   var inhalt = document.getElementById('inhalt');
   if (!aktiv || !inhalt) { return; }
-  /* SEITEN MIT REITERN BEKOMMEN KEINE UNTERPUNKTE (P5c/AP2, E-P5c-25). Die
+  /* SEITEN MIT REITERN BEKOMMEN KEINE UNTERPUNKTE. Die
    * Reiter SIND die Gliederung der Seite; eine zweite daneben in der Leiste
    * nennte die Karten des gerade offenen Reiters und wechselte bei jedem
    * Reiterwechsel ihren Inhalt. */
@@ -154,7 +154,7 @@
 
   /* ---- Welche Karte ist gerade oben? ------------------------------------
    *
-   * JE SPALTE DIE OBERSTE SICHTBARE (Konzept AP5 (4)). Die langen Seiten
+   * JE SPALTE DIE OBERSTE SICHTBARE. Die langen Seiten
    * stehen ab 1200 px zweispaltig; dann sind zwei Karten zugleich „oben",
    * eine links und eine rechts, und nur eine davon fett zu setzen waere eine
    * Behauptung.
@@ -169,10 +169,10 @@
    *    DENSELBEN Saum als `rootMargin`, damit er genau dann meldet, wenn
    *    sich die Antwort aendert.
    *
-   * 2  Eine Karte ausserhalb der Spalten ist keine dritte Spalte. Auf der
-   *    Statusseite stand bis Web 21.1.0 „Was hier gilt" unter beiden Spalten; als eigener
-   *    Topf war sie immer die oberste ihres Topfes und damit dauerhaft fett —
-   *    drei Markierungen auf einmal. Hat die Seite Spalten, markieren nur
+   * 2  Eine Karte ausserhalb der Spalten ist keine dritte Spalte. Stuende
+   *    eine Karte unter beiden Spalten als eigener Topf, waere sie immer die
+   *    oberste ihres Topfes und damit dauerhaft fett — drei Markierungen auf
+   *    einmal. Hat die Seite Spalten, markieren nur
    *    Karten in einer Spalte; hat sie keine, ist die Seite der eine Topf.
    *
    * DER TOPF WIRD AN DER LAGE ERKANNT, nicht an der Fensterbreite. Das

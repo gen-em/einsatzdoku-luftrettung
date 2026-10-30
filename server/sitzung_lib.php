@@ -2,60 +2,47 @@
 declare(strict_types=1);
 
 /**
- * DIE SITZUNGSABLAGE — die Anwendung legt ihre Sitzungsdateien selbst ab
- * (Schritt 16, E-SA-01 bis E-SA-07, Backlog Nr. 241).
+ * DIE SITZUNGSABLAGE — die Anwendung legt ihre Sitzungsdateien selbst ab.
+ * 
  *
- * WOGEGEN. Bis Web 20.25.0 lag keine Zeile Code an `session.save_path`. Wo
- * PHP die Sitzungsdateien hinlegt, entschied damit allein der Hoster. Auf der
+ * WOGEGEN. Ohne Code an `session.save_path` entscheidet allein der Hoster,
+ * wo PHP die Sitzungsdateien hinlegt. Auf der
  * Staging-Anlage bei lima-city ist das ein GETEILTES Verzeichnis: `0773`,
- * Eigentuemer root, `gc_probability = 0`. Es ist gutgegangen, weil der Hoster
+ * Eigentuemer root, `gc_probability = 0`. Es geht gut, weil der Hoster
  * das Auflisten ueber das Web sperrt — die Anwendung haette es nicht gemerkt.
  * Fuer den Produktivserver ist derselbe Wert nie erhoben worden, fuer jede
  * Selbsthosterin ist er offen.
  *
  * WAS AUF DEM SPIEL STEHT, NUECHTERN. Eine Sitzungsdatei traegt KEIN
  * Schluesselmaterial; die Zusage der Ende-zu-Ende-Verschluesselung ist nicht
- * beruehrt. Ihr DATEINAME IST DIE SITZUNGSKENNUNG — aber seit Web 21.7.0
- * (Schritt 18, SR-01, Backlog Nr. 242) ist er allein keine Anmeldung mehr.
+ * beruehrt. Ihr DATEINAME IST DIE SITZUNGSKENNUNG — aber er
+ * ist allein keine Anmeldung.
  * Zur Sitzung gehoert ein zweites Cookie, die BINDUNG (`sitzung_binden()`
  * unten): 32 Zufallsbyte im Browser, in der Datei nur ihr SHA-256. Wer die
  * Datei liest — aus dem Verzeichnis, aus einem Webspace-Backup des Hosters —,
  * kennt die Kennung und den Hash, nicht das Cookie; `auth_guard.php` beendet
  * eine solche Sitzung mit dem Grund `bindung`, `login.php` verwirft einen
  * halben Stand ohne sie, und die lesenden Seiten behandeln sie als „nicht
- * angemeldet". Bis Web 21.6.1 stand hier: „Wer sie liest, ist angemeldet und
+ * angemeldet". Ohne Bindung hiesse es: „Wer sie liest, ist angemeldet und
  * sieht die Klartextliste aus `CLAUDE.md` 4; bei `role = admin` die
- * Verwaltung." Das war der Stand, den dieser Absatz beschrieb, und der Grund
- * fuer Schritt 16, den ORT zu sichern — die Bindung nimmt der Datei den
- * WERT.
+ * Verwaltung." Deshalb ist der ORT gesichert — und die Bindung nimmt der
+ * Datei den WERT.
  *
- * EINE AUFRUFSTELLE, NICHT NEUN — UND SEIT WEB 20.27.0 AUCH NICHT MEHR ZWEI
- * (E-SA-02, dann Schritt 15 AP2/E-ZE-06). Bis Web 20.26.3 standen neun
- * `session_start()` in neun Dateien, und `sitzung_ablage()` wurde an zwei
- * Stellen gerufen: in `db.php` (frueh, neben `wartung_tor()`) und in
- * `install.php`, das `db.php` nie laedt. Jetzt gibt es `sitzung_starten()`
- * am Ende dieser Datei — sie ruft `sitzung_ablage()` selbst, unmittelbar
- * bevor PHP die Sitzungsdatei anlegt. Die beiden Aufrufe von aussen sind
- * entfallen.
+ * EINE AUFRUFSTELLE: `sitzung_starten()` am Ende dieser Datei. Sie ruft
+ * `sitzung_ablage()` selbst, unmittelbar bevor PHP die Sitzungsdatei anlegt.
  *
- * WAS DAS AENDERT, UND ZWAR ZUM BESSEREN: Die Einrichtung der Ablage laeuft
- * nur noch, wenn wirklich eine Sitzung startet — nicht mehr bei jeder
- * Anfrage, die `db.php` laedt. Ein API-Aufruf ohne Sitzung fasst
- * `.sitzungen/` gar nicht mehr an.
+ * Die Einrichtung der Ablage laeuft damit nur, wenn wirklich eine Sitzung
+ * startet — nicht bei jeder Anfrage, die `db.php` laedt. Ein API-Aufruf ohne
+ * Sitzung fasst `.sitzungen/` gar nicht an. `sitzung_ablage()` steht VOR
+ * jedem Sitzungsstart — die erste Zeile nach der Cookie-Pruefung.
  *
- * WAS DAS NICHT AENDERT: Die Reihenfolge. `sitzung_ablage()` stand vorher
- * VOR jedem Sitzungsstart und steht es weiterhin — sie ist die erste Zeile
- * nach der Cookie-Pruefung.
+ * WARUM EINE STELLE: Fehlte der Aufruf an einem Sitzungsstart — etwa in
+ * `login.php` —, legte die Anmeldung die Sitzung beim Hoster ab, und
+ * `auth_guard.php` suchte sie in `.sitzungen/`. NIEMAND KOENNTE SICH
+ * ANMELDEN. Mit `sitzung_starten()` gibt es keinen zweiten Weg, an dem man
+ * den Aufruf vergessen koennte.
  *
- * Der erste Entwurf des Konzepts kannte nur DREI der neun und gab nur ihnen
- * den Aufruf. Darunter fehlte `login.php`: Die Anmeldung haette die Sitzung
- * beim Hoster abgelegt und `auth_guard.php` sie in `.sitzungen/` gesucht.
- * NIEMAND HAETTE SICH ANMELDEN KOENNEN. Das ist der Grund fuer die zentrale
- * Stelle, und er ist teuer bezahlt. Mit `sitzung_starten()` kann der Fall
- * nicht wiederkommen: Es gibt keinen zweiten Weg mehr, an dem man ihn
- * vergessen koennte.
- *
- * DIESE DATEI LAEDT NICHTS (E-SA-02). Weder `db.php` noch `config.php` —
+ * DIESE DATEI LAEDT NICHTS. Weder `db.php` noch `config.php` —
  * `db.php` ruft sie waehrend des eigenen Ladens, und `install.php` hat zu
  * diesem Zeitpunkt keine Konfiguration. `session_lib.php` (Abmelden, Logo,
  * CSRF) kam als Ort deshalb nicht in Frage: Sie laedt `db.php` in Zeile 3.
@@ -68,7 +55,7 @@ declare(strict_types=1);
  * `.sitzungen/.geprueft`: Ist ihr `mtime` juenger als eine Stunde, genuegt
  * ein `is_dir()`; sonst Probedatei, und bei Erfolg `touch`.
  *
- * `gc_probability = 0` IST KEIN FEINSCHLIFF, SONDERN NOTWENDIG (E-SA-06).
+ * `gc_probability = 0` IST KEIN FEINSCHLIFF, SONDERN NOTWENDIG.
  * Der Hoster stellt `gc_maxlifetime` ein — auf lima-city 1440 s, also 24
  * Minuten. Die Anwendung hat ihre EIGENE Frist von 30 Minuten
  * (`SESSION_TIMEOUT_S`). Liefe PHPs Zufallsraeumung mit, loeschte sie
@@ -76,7 +63,7 @@ declare(strict_types=1);
  * zusagt — und die Betroffene saehe eine Abmeldung ohne Grund. Geraeumt wird
  * deshalb vom Aufraeumjob (4.97a, Teil „Sitzungsdateien"), nicht vom Zufall.
  *
- * DER RUECKFALL IST KEINE VERSCHLECHTERUNG (E-SA-03). Scheitert das Anlegen
+ * DER RUECKFALL IST KEINE VERSCHLECHTERUNG. Scheitert das Anlegen
  * oder die Probe, gilt der Hosterpfad wie bisher — die Anwendung laeuft
  * weiter. Kein Anhalten, und kein Ausweichen nach `sys_get_temp_dir()`: Dort
  * ist dasselbe Problem, nur woanders. NEU ist allein, dass man den Rueckfall
@@ -86,13 +73,13 @@ declare(strict_types=1);
 /**
  * Wie lange eine Sitzung ohne Zutun gilt — 30 Minuten Inaktivitaet.
  *
- * SIE STAND BIS WEB 20.25.0 IN `auth_guard.php`, und dort war sie am
+ * SIE STEHT NICHT IN `auth_guard.php`, denn dort waere sie am
  * falschen Ort: Der Aufraeumjob laeuft ueber `jobs.php`, das `db.php` laedt,
  * aber nie `auth_guard.php`. Ein Raeumteil, der die Frist braucht, waere auf
  * der Kommandozeile an `Undefined constant` gestorben und am Huckepack-Weg
  * durchgelaufen — ein Fehler auf einem von drei Wegen, also der Sorte, die
- * erst im Betrieb auffaellt. Dasselbe Argument hat `PAIR_TTL_MIN` nach
- * `db.php` gebracht und nicht nach `kopplung_lib.php`.
+ * erst im Betrieb auffaellt. Dasselbe Argument gilt fuer `PAIR_TTL_MIN` in
+ * `db.php` und nicht in `kopplung_lib.php`.
  *
  * VERSCHOBEN UND NICHT VERDOPPELT: Eine zweite `const` desselben Namens ist
  * in PHP 8 kein Fatal, sondern eine Warnung — bei JEDER angemeldeten
@@ -102,7 +89,7 @@ declare(strict_types=1);
 const SESSION_TIMEOUT_S = 1800;
 
 /**
- * Karenz, die der Raeumteil auf die Frist legt (E-SA-06).
+ * Karenz, die der Raeumteil auf die Frist legt.
  *
  * Geraeumt wird nach `SESSION_TIMEOUT_S` PLUS dieser Stunde. Die Karenz ist
  * kein Sicherheitsabstand gegen Uhrenversatz, sondern gegen die eigene
@@ -112,7 +99,7 @@ const SESSION_TIMEOUT_S = 1800;
  */
 const SITZUNG_KARENZ_S = 3600;
 
-/** Wie lange die Markerdatei eine gelungene Probe verbuergt (E-SA-02). */
+/** Wie lange die Markerdatei eine gelungene Probe verbuergt. */
 const SITZUNG_MARKER_S = 3600;
 
 /** Der Pfad der eigenen Ablage — eine Stelle, drei Leser. */
@@ -136,7 +123,7 @@ function sitzung_cli(): bool
 
 /**
  * Was der letzte Lauf von `sitzung_ablage()` ergeben hat — fuer die
- * Statusseite (E-SA-03) und fuer `plattform_pruefen()`.
+ * Statusseite und fuer `plattform_pruefen()`.
  *
  * Ohne Argumente eine Auskunft, mit Argumenten die Eintragung. Dasselbe
  * Muster wie `db()`: ein `static` in der Funktion statt einer globalen
@@ -225,10 +212,9 @@ function sitzung_ablage(): void
     if ($gelaufen) { return; }
     $gelaufen = true;
 
-    /* JEDER AUSGANG VERMERKT SEINE LAGE. Bis Web 20.26.0 kehrten diese
-     * beiden stumm zurueck; die Statusseite stand dann auf dem Vorgabewert
-     * des `static` und nannte keinen Grund — nachgewiesen auf der
-     * Staging-Anlage. Drei von sechs Ausgaengen waren sichtbar, drei nicht. */
+    /* JEDER AUSGANG VERMERKT SEINE LAGE. Kehrten diese beiden stumm
+     * zurueck, stuende die Statusseite auf dem Vorgabewert des `static` und
+     * naennte keinen Grund — nachgewiesen auf der Staging-Anlage. */
     if (sitzung_cli()) {
         sitzung_ablage_stand('kommandozeile', false, null);
         return;
@@ -258,10 +244,10 @@ function sitzung_ablage(): void
      * `is_dir()` faengt die Anfrage ab, die zwischen Frage und `mkdir` von
      * einer anderen ueberholt wurde.
      *
-     * `0700` UND ZUSAETZLICH `chmod` (E-SA-02). Der Modus im `mkdir` ist ein
+     * `0700` UND ZUSAETZLICH `chmod`. Der Modus im `mkdir` ist ein
      * Wunsch, kein Ergebnis: Die `umask` des Prozesses maskiert ihn. Ohne
      * die zweite Zeile waere „0700" eine Absicht und keine Aussage — und
-     * genau diese Aussage ist auf nginx die EINZIGE Sicherung (E-SA-05).
+     * genau diese Aussage ist auf nginx die EINZIGE Sicherung.
      * `0700` ist im Bestand beispiellos; die sieben anderen `mkdir` legen
      * mit `0770` an. Hier ist die Gruppe zu viel: Auf geteiltem Webspace
      * steht in ihr, wer gerade zufaellig danebenwohnt. */
@@ -319,10 +305,10 @@ function sitzung_ablage_setzen(string $pfad): void
     session_save_path($pfad);
     ini_set('session.gc_probability', '0');
 
-    /* ZURUECKLESEN UND NICHT DEM RUECKGABEWERT GLAUBEN (Berichtigung
-     * 20.09.2026). Bis Web 20.26.0 stand hier `sitzung_ablage_merken(true,
-     * null)` — eine Behauptung ohne Messung, und damit genau das, was
-     * `docs/Technik.md` 5b.1 verbietet: „Wer nichts gemessen hat, darf nichts
+    /* ZURUECKLESEN UND NICHT DEM RUECKGABEWERT GLAUBEN. Ein blosses
+     * `sitzung_ablage_merken(true, null)` waere eine Behauptung ohne
+     * Messung, und damit genau das, was
+     * `docs/Technik.md` 7.1 verbietet: „Wer nichts gemessen hat, darf nichts
      * behaupten."
      *
      * DER RUECKGABEWERT TAUGT DAFUER NICHT. Gemessen am 20.09.2026 unter PHP
@@ -354,7 +340,7 @@ function sitzung_ablage_setzen(string $pfad): void
 }
 
 /**
- * Abgelaufene Sitzungsdateien der EIGENEN Ablage loeschen (E-SA-06).
+ * Abgelaufene Sitzungsdateien der EIGENEN Ablage loeschen.
  *
  * NUR `sess_*`, und das ist der wichtigste Satz dieser Funktion. Die
  * Markerdatei `.geprueft` bleibt stehen; sie ist kein Bestand, sondern der
@@ -412,7 +398,7 @@ function sitzung_dateien_zahlen(string $pfad): ?int
  *
  * `session_save_path()` liefert einen Leerstring, wenn nichts gesetzt ist —
  * dann nimmt PHP `sys_get_temp_dir()`. Die Auskunft muss den TATSAECHLICHEN
- * Ort nennen, sonst prueft E-SA-07 ein Verzeichnis, das niemand benutzt.
+ * Ort nennen, sonst prueft die Auflistungsprobe ein Verzeichnis, das niemand benutzt.
  *
  * Die Form `N;/pfad` (Streutiefe) kommt bei keinem der beiden Hoster vor,
  * wird hier aber trotzdem abgeschnitten: Ein Pfad mit Semikolon davor ist
@@ -433,10 +419,10 @@ function sitzung_wirksamer_pfad(): string
 /**
  * Der Name der Passwort-Sitzung.
  *
- * STAND BIS WEB 20.26.3 IN `pw_handling.php` und ist mit Schritt 15 AP2
- * hierher gezogen (E-ZE-12): Die Cookie-Parameter aller vier Arten stehen
- * jetzt in EINER Tabelle, und ein Name, der woanders liegt als die Tabelle,
- * die ihn braucht, ist genau die Trennung, die dieser Schritt aufhebt.
+ * STEHT HIER UND NICHT IN `pw_handling.php`: Die Cookie-Parameter aller
+ * vier Arten stehen in EINER Tabelle, und ein Name, der woanders liegt als
+ * die Tabelle, die ihn braucht, waere genau die Trennung, die es zu
+ * vermeiden gilt.
  *
  * EIGENER NAME, WEIL ES EINE ANDERE SITZUNG IST: Der Passwort-Weg traegt ein
  * Token und keine Anmeldung. Hiesse sie wie die Anmeldesitzung, loeschte ein
@@ -447,21 +433,19 @@ const PW_SESSION_NAME = 'EDPWSESS';
 
 /**
  * Die vier Arten und ihre Cookie-Parameter — gemessen am Bestand vor dem
- * Umzug (Schritt 15, Konzept Abschnitt 1.3), nicht neu erfunden.
+ * Umzug, nicht neu erfunden.
  *
  * `secure => null` heisst „haengt an HTTPS" (`!empty($_SERVER['HTTPS'])`).
  *
- * DREI ARTEN SETZEN `secure` FEST, EINE NICHT — seit Web 21.7.0 (Schritt 18,
- * SR-01, Backlog Nr. 251, E-SR-06). Schritt 15 hatte den Unterschied an diese
- * Stelle geholt und ausdruecklich NICHT entschieden (E-ZE-12): `app` und
- * `passwort` fest, `lesend` und `einrichtung` von HTTPS abhaengig.
+ * DREI ARTEN SETZEN `secure` FEST, EINE NICHT: `app`, `passwort` und
+ * `lesend` fest, `einrichtung` von HTTPS abhaengig.
  *
- *   `lesend`       jetzt FEST. Die Art startet nur mit einem vorhandenen
- *                  Cookie (F-ZE-2), und dieses Cookie setzt die Art `app` —
+ *   `lesend`       FEST. Die Art startet nur mit einem vorhandenen
+ *                  Cookie, und dieses Cookie setzt die Art `app` —
  *                  mit `secure`. Ueber HTTP kaeme es ohnehin nie an; das
  *                  feste `secure` aendert am Verhalten nichts und nimmt den
  *                  Unterschied aus der Tabelle.
- *   `einrichtung`  BLEIBT HTTPS-ABHAENGIG, und das ist Absicht (F-SR-06).
+ *   `einrichtung`  BLEIBT HTTPS-ABHAENGIG, und das ist Absicht.
  *                  Die Art laeuft auf einer Anlage, deren HTTPS-Lage die
  *                  Einrichterin erst herstellt (`install.php` sagt es vor
  *                  seinem Aufruf). Ein festes `secure` sperrte genau diese
@@ -469,8 +453,7 @@ const PW_SESSION_NAME = 'EDPWSESS';
  *                  HTTP nicht zurueck, und der Nachweis scheiterte ohne
  *                  Auskunft.
  *
- * `nur_mit_cookie` ist F-ZE-2 und war die einzige Verhaltensaenderung von
- * Schritt 15 AP2 — siehe `sitzung_starten()`.
+ * `nur_mit_cookie`: siehe `sitzung_starten()`.
  */
 const SITZUNG_ARTEN = [
     'app' => [
@@ -482,7 +465,7 @@ const SITZUNG_ARTEN = [
         'still'  => true,  'nur_mit_cookie' => true,
     ],
     'einrichtung' => [
-        /* HTTPS-abhaengig mit Absicht — F-SR-06, Absatz oben. */
+        /* HTTPS-abhaengig mit Absicht — Absatz oben. */
         'secure' => null,  'samesite' => 'Lax',    'name' => null,
         'still'  => false, 'nur_mit_cookie' => false,
     ],
@@ -493,14 +476,14 @@ const SITZUNG_ARTEN = [
 ];
 
 /**
- * Eine Sitzung starten — der einzige Weg dorthin (E-ZE-12, E-ZE-13).
+ * Eine Sitzung starten — der einzige Weg dorthin.
  *
  *     sitzung_starten('app');          // auth_guard, login, Abmelden
  *     sitzung_starten('lesend');       // Handbuch, Rechtstext, Notfallblatt
  *     sitzung_starten('einrichtung');  // install.php, wiederherstellen.php
  *     sitzung_starten('passwort');     // pw_handling.php
  *
- * Nach Schritt 15 AP2 gibt es in `server/` genau EINEN `session_start()`, und
+ * In `server/` gibt es genau EINEN `session_start()`, und
  * er steht hier. Der Stufe-1-Schritt „Sitzungshaertung" zaehlt das nach: Ein
  * zweiter Aufruf irgendwo ist ein Befund, nicht eine Ausnahme.
  *
@@ -514,19 +497,18 @@ const SITZUNG_ARTEN = [
  * WAS SIE TUT, in dieser Reihenfolge:
  *
  * 1. Laeuft schon eine Sitzung, ist nichts zu tun — `true`.
- * 2. Bei `lesend` OHNE Sitzungscookie: gar nicht erst anfangen (F-ZE-2).
+ * 2. Bei `lesend` OHNE Sitzungscookie: gar nicht erst anfangen.
  * 3. `sitzung_ablage()` — der Ablageort steht, BEVOR PHP die Datei anlegt.
  * 4. `session_name()`, aber nur bei `passwort`.
  * 5. Cookie-Parameter aus der Tabelle oben.
  * 6. `session.use_strict_mode` — unmittelbar davor, nicht irgendwo.
  * 7. `session_start()`, bei `lesend` mit `@`.
- * 8. Bei `lesend`: eine Anmeldung ohne Bindung gilt als keine (F-SR-15).
+ * 8. Bei `lesend`: eine Anmeldung ohne Bindung gilt als keine.
  *
- * F-SR-15 — DIE LESENDEN SEITEN PRUEFEN DIE BINDUNG HIER (seit Web 21.7.0,
- * Schritt 18, SR-01, E-SR-39). Handbuch, Rechtstexte, Notfall- und Codeblatt
+ * DIE LESENDEN SEITEN PRUEFEN DIE BINDUNG HIER. Handbuch, Rechtstexte, Notfall- und Codeblatt
  * laden kein `auth_guard.php` und lesen `user_id` selbst — fuer den
  * angemeldeten Kopf und die Kontoadresse auf dem Blatt. Eine gelesene
- * Sitzungsdatei haette dort auch nach SR-01 Kopf und Adresse gezeigt. Statt
+ * Sitzungsdatei zeigte dort sonst Kopf und Adresse. Statt
  * vier Seiten je eine Pruefung zu geben, prueft sie der eine Start: Traegt
  * die Sitzung eine Anmeldung und passt die Bindung nicht, wird sie
  * VERWORFEN, OHNE ZU SCHREIBEN (`session_abort()`), und die Seite sieht eine
@@ -534,15 +516,12 @@ const SITZUNG_ARTEN = [
  * angemeldete Seite mit Grund (`auth_guard.php`); eine lesende Seite soll
  * lesbar bleiben und nicht abmelden.
  *
- * F-ZE-2 — DIE EINZIGE VERHALTENSAENDERUNG DIESES PAKETS. Handbuch,
- * „Was ist NAdoku" und die Rechtstexte sind ohne Anmeldung erreichbar und
- * fragten die Sitzung nur, um den angemeldeten Kopf zeigen zu koennen. Sie
- * STARTETEN sie dabei aber — fuer jeden Besucher, auch fuer jeden Bot.
- * Seit Schritt 16 landet jede dieser Sitzungen als Datei in `.sitzungen/`.
- * Das Konzept Sitzungsablage behauptete, die drei Seiten pruefen auf das
- * Cookie; nachgemessen am 20.09.2026 taten sie es nicht (FF-2). Jetzt tun
- * sie es. **Fuer Angemeldete aendert sich nichts** — ihr Browser schickt das
- * Cookie, die Sitzung startet, der Kopf sieht aus wie vorher.
+ * NUR MIT COOKIE. Handbuch, „Was ist NAdoku" und die Rechtstexte sind ohne
+ * Anmeldung erreichbar und fragen die Sitzung nur, um den angemeldeten Kopf
+ * zeigen zu koennen. STARTETEN sie sie dabei, dann fuer jeden Besucher,
+ * auch fuer jeden Bot — und jede dieser Sitzungen laege als Datei in
+ * `.sitzungen/`. **Fuer Angemeldete aendert das nichts** — ihr Browser
+ * schickt das Cookie, die Sitzung startet, der Kopf sieht aus wie sonst.
  *
  * `@` NUR BEI `lesend`, und auch das ist Bestand und nicht neu: Diese drei
  * Seiten sollen lesbar bleiben, wenn die Sitzung aus irgendeinem Grund nicht
@@ -564,16 +543,15 @@ function sitzung_starten(string $art): bool
 
     $a = SITZUNG_ARTEN[$art];
 
-    /* F-ZE-2: ohne Cookie kein Start — und damit keine Sitzungsdatei. Der
+    /* Ohne Cookie kein Start — und damit keine Sitzungsdatei. Der
      * Name wird VOR der Abfrage gesetzt, sonst fragte `passwort` nach dem
      * falschen Cookie. (Heute traegt keine Art beides; die Reihenfolge
      * stimmt trotzdem, damit sie es koennte.) */
     if ($a['name'] !== null) { session_name($a['name']); }
     if ($a['nur_mit_cookie'] && !isset($_COOKIE[session_name()])) { return false; }
 
-    /* Der Ablageort steht, bevor PHP die Datei anlegt (E-SA-02, E-ZE-06).
-     * Bis Web 20.26.3 rief `db.php` das beim eigenen Laden und `install.php`
-     * noch einmal; beide Aufrufe sind mit AP2 entfallen. */
+    /* Der Ablageort steht, bevor PHP die Datei anlegt.
+     * Kein anderer Aufruf ruft das. */
     sitzung_ablage();
 
     session_set_cookie_params([
@@ -584,21 +562,21 @@ function sitzung_starten(string $art): bool
     ]);
     /* ZWEI ZEILEN, DIE ZUSAMMENGEHOEREN UND DESHALB NEBENEINANDER STEHEN.
      *
-     * `use_strict_mode` VOR `session_start()` (P5a/AP4a, E-P5a-38, Backlog
-     * Nr. 205). Ohne das uebernimmt PHP eine Sitzungskennung, die der Browser
+     * `use_strict_mode` VOR `session_start()`. Ohne das uebernimmt PHP eine
+     * Sitzungskennung, die der Browser
      * mitbringt, auch wenn es sie nie vergeben hat — Session-Fixation, und
-     * der Schutz haengt sonst an der `php.ini` des Hosters. Die Zeile stand
-     * bis Web 20.26.3 neunmal da; jetzt einmal, und genau hier.
+     * der Schutz haengt sonst an der `php.ini` des Hosters. Die Zeile steht
+     * einmal, und genau hier.
      *
      * EIN AUFRUF, NICHT ZWEI — und das ist keine Kosmetik fuer die Zaehlung,
-     * sondern deren Zweck: Nach diesem Paket steht in `server/` genau ein
+     * sondern deren Zweck: In `server/` steht genau ein
      * `session_start()`, und der Stufe-1-Schritt zaehlt das nach. Eine
-     * Fassung `$a['still'] ? @session_start() : session_start()` waeren
+     * Fassung `$a['still'] ? @session_start(): session_start()` waeren
      * zwei, und die Zeile stuende dauerhaft auf zwei statt auf eins.
      *
      * DAS `@` DER ART `lesend` IST DESHALB EINE MASKE UM DEN EINEN AUFRUF.
      * Sie nimmt E_WARNING und E_NOTICE weg — genau das, was `@` an den drei
-     * lesenden Seiten bis Web 20.26.3 unterdrueckt hat — und stellt danach
+     * lesenden Seiten unterdruecken wuerde — und stellt danach
      * her, was vorher galt. Fuer die anderen drei Arten bleibt jede Warnung
      * sichtbar; ein verschluckter Fehler waere dort das Gegenteil von
      * hilfreich.
@@ -614,7 +592,7 @@ function sitzung_starten(string $art): bool
     $lief = session_start();
     if ($maske !== null) { error_reporting($maske); }
 
-    /* F-SR-15 (Kopf dieser Funktion): nur `lesend`, weil die Art `app` ihre
+    /* Siehe Kopf dieser Funktion: nur `lesend`, weil die Art `app` ihre
      * Pruefung mit Grund in `auth_guard.php` und `login.php` hat. */
     if ($lief && $art === 'lesend' && !empty($_SESSION['user_id']) && !sitzung_bindung_ok()) {
         session_abort();
@@ -625,16 +603,15 @@ function sitzung_starten(string $art): bool
 }
 
 /* ===========================================================================
- * DIE ZUSATZCOOKIES — Bindung (SR-01) und das gemerkte Geraet (SR-02)
+ * DIE ZUSATZCOOKIES — Bindung und das gemerkte Geraet
  * ======================================================================== */
 
 /**
- * Die Cookies neben dem Sitzungscookie und ihre Parameter (Schritt 18,
- * SR-01, E-SR-05).
+ * Die Cookies neben dem Sitzungscookie und ihre Parameter.
  *
  * EINE TABELLE NEBEN `SITZUNG_ARTEN`, NICHT EIN `setcookie()` IN DER SEITE.
  * Neun Sitzungsstarts in vier Fassungen sind entstanden, weil jeder
- * abschrieb, was in der Naehe stand (Schritt 15). Ein drittes Cookie mit
+ * abschrieb, was in der Naehe stand. Ein drittes Cookie mit
  * eigenen Parametern in `login.php` waere der Anfang derselben Geschichte.
  * Gesetzt und geloescht wird jedes Cookie hier ueber je eine Funktion, und
  * die Sitzungshaertung zaehlt `setcookie()` ausserhalb dieser Datei und
@@ -651,7 +628,7 @@ const SITZUNG_COOKIES = [
         'name' => 'EDBIND', 'secure' => true, 'samesite' => 'Strict',
         'httponly' => true, 'dauer_s' => 0,
     ],
-    /* „GERAET MERKEN" (SR-02, E-SR-07). Dieselben Parameter wie die Bindung,
+    /* „GERAET MERKEN". Dieselben Parameter wie die Bindung,
      * bis auf die Lebensdauer: Die setzt `zweitfaktor_geraet_merken()` je
      * Anmeldung aus der Dauer der Rollengruppe (`$dauerS`). `Strict` reicht,
      * obwohl ein Verweis aus einer Mail seitenfremd ankommt: Geprueft wird
@@ -663,7 +640,7 @@ const SITZUNG_COOKIES = [
 ];
 
 /** Ein Zusatzcookie setzen — und in `$_COOKIE` nachtragen, damit dieselbe
- *  Anfrage es schon sieht. `$dauerS` ueberschreibt die Tabelle (SR-02). */
+ *  Anfrage es schon sieht. `$dauerS` ueberschreibt die Tabelle. */
 function sitzung_cookie_setzen(string $art, string $wert, ?int $dauerS = null): void
 {
     if (!isset(SITZUNG_COOKIES[$art])) {
@@ -709,7 +686,7 @@ function sitzung_cookie_lesen(string $art): ?string
 }
 
 /**
- * Die laufende Sitzung an diesen Browser binden (E-SR-04, Nr. 242).
+ * Die laufende Sitzung an diesen Browser binden.
  *
  * 32 Zufallsbyte ins Cookie, ihr SHA-256 in die Sitzung. Gerufen an ZWEI
  * Stellen in `login.php`: beim Anlegen des halben Stands (`totp_halb`) —
@@ -732,12 +709,11 @@ function sitzung_binden(): void
 /**
  * Gehoert die laufende Sitzung zu diesem Browser?
  *
- * FALSCH, WENN EINES VON BEIDEN FEHLT — und das ist der Punkt (E-SR-04):
- * Eine Sitzung, die vor Web 21.7.0 entstanden ist, traegt keinen Hash und
- * gilt NICHT weiter. Eine Uebernahme („ohne Hash gilt sie weiter") waere
+ * FALSCH, WENN EINES VON BEIDEN FEHLT — und das ist der Punkt:
+ * Eine Sitzung ohne Hash gilt NICHT. Eine Uebernahme („ohne Hash gilt sie weiter") waere
  * genau das Loch, das die Bindung schliesst: Die gelesene Datei haette
- * keinen Hash. Deshalb meldet sich nach dem Ausrollen jede Angemeldete
- * einmal neu an — dasselbe hat Schritt 16 getan (E-SA-08).
+ * keinen Hash. Eine Sitzung ohne Hash
+ * endet; wer sie hatte, meldet sich neu an.
  */
 function sitzung_bindung_ok(): bool
 {
@@ -747,9 +723,3 @@ function sitzung_bindung_ok(): bool
     return hash_equals($soll, hash('sha256', $wert));
 }
 
-/** Bindung aufheben: Cookie loeschen, Hash aus der Sitzung nehmen. */
-function sitzung_bindung_loeschen(): void
-{
-    sitzung_cookie_loeschen('bindung');
-    unset($_SESSION['bindung']);
-}

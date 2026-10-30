@@ -9,7 +9,7 @@ import javax.crypto.SecretKey
 import javax.crypto.spec.GCMParameterSpec
 
 /**
- * Verschlüsselt und entschlüsselt die Ablage des Tresors (E-S4-13).
+ * Verschlüsselt und entschlüsselt die Ablage des Tresors.
  *
  * ZWEI TEILE, GETRENNT GEHALTEN: die **Hülle** (AES-256-GCM mit frischem
  * Zufallswert je Schreibvorgang) und die **Herkunft des Schlüssels**. Die
@@ -81,7 +81,7 @@ abstract class GcmTresorschluessel : Tresorschluessel {
 }
 
 /**
- * Der Schlüssel liegt im **Android Keystore** (E-S4-13).
+ * Der Schlüssel liegt im **Android Keystore**.
  *
  * Er wird dort erzeugt und verlässt ihn nie: Die App bekommt kein
  * Schlüsselmaterial zu sehen, sondern nur einen Griff darauf. Wer das

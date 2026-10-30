@@ -2,24 +2,24 @@
 declare(strict_types=1);
 
 /**
- * Hintergrundarbeit in Haeppchen — der Rahmen (Konzept S2, E-S2-17/18).
+ * Hintergrundarbeit in Haeppchen — der Rahmen.
  *
  * WOFUER. Diese Anwendung hat bewusst keinen Cron: Sie soll auf einfachem
  * Webspace laufen, und dort gibt es oft keinen. Der einzige Zeitgeber war
  * bislang `run_cleanup_if_due()` — huckepack auf der Anfrage der ersten
  * Nutzerin des Tages. Das trug, solange die Arbeit klein war.
  *
- * Mit S2 wird sie das nicht mehr bleiben: Millionen Punkte verdichten und
+ * Das bleibt sie nicht: Millionen Punkte verdichten und
  * ausduennen laesst sich nicht in einer Webanfrage erledigen. Gemessen hat
- * schon die heutige Waisenpruefung bei 9,46 Mio. Zeilen **4,07 Sekunden**
+ * eine Waisenpruefung am Stueck bei 9,46 Mio. Zeilen **4,07 Sekunden**
  * gekostet — in genau der Anfrage, die jemand gerade gestellt hat; bei der
- * Zielmenge Z2 (190 Mio. Zeilen) waeren es Minuten.
+ * Zielmenge (190 Mio. Zeilen) waeren es Minuten.
  *
  * Deshalb drei Dinge:
  *
  * 1. **Haeppchen.** Jeder Lauf hat ein Zeitbudget und hoert auf, wenn es
  *    erschoepft ist. Wo er stehengeblieben ist, merkt er sich in `jobs`.
- * 2. **Drei Ausloeser** (E-S2-17). Ein CLI-Cron ist der empfohlene Regelfall;
+ * 2. **Drei Ausloeser**. Ein CLI-Cron ist der empfohlene Regelfall;
  *    wo es keinen gibt, tut es ein zeitgesteuerter Abruf der Adresse mit
  *    Token; und wo auch das nicht geht, laeuft es weiter huckepack. Damit
  *    bleibt die Hosterwahl offen, und die Anwendung bleibt in allen drei
@@ -29,13 +29,13 @@ declare(strict_types=1);
  *    dauerhaft scheitert, war bisher von einem laufenden nicht zu
  *    unterscheiden.
  *
- * WAS HIER NICHT STEHT: die Jobs selbst. Verdichtung und Ausduennung kommen
- * mit AP3; dieser Rahmen kennt sie ueber `jobs_katalog()` und sonst gar
+ * WAS HIER NICHT STEHT: die Jobs selbst. Dieser Rahmen kennt sie ueber
+ * `jobs_katalog()` und sonst gar
  * nicht.
  */
 
 require_once __DIR__ . '/db.php';
-require_once __DIR__ . '/format_lib.php';   // groesse_paar_text() fuer die Warnmail (Schritt 15/AP7)
+require_once __DIR__ . '/format_lib.php';   // groesse_paar_text() fuer die Warnmail
 
 /**
  * Zeitbudget eines Haeppchens in Sekunden, je nach Ausloeser.
@@ -67,8 +67,8 @@ const JOB_BUDGET_CLI     = 300.0;
  * Ohne ihn liefe ein nicht-taeglicher Job bei JEDER angemeldeten Anfrage —
  * und jede Seite truege bis zu drei Sekunden Wartung mit. Fuenf Minuten sind
  * fuer ein Sicherheitsnetz reichlich; wer es schneller braucht, richtet einen
- * der beiden anderen Ausloeser ein, und genau das ist die Empfehlung
- * (E-S2-17).
+ * der beiden anderen Ausloeser ein, und genau das ist die Empfehlung.
+ * 
  *
  * Fuer `cli` und `token` gilt der Abstand NICHT: Dort bestimmt der Zeitplan
  * die Haeufigkeit, und wer jede Minute aufruft, will das auch.
@@ -87,10 +87,10 @@ const JOB_ANFRAGE_PAUSE_S = 300;
 const JOB_SPERRE_VERFALL_S = 3600;
 
 /**
- * Ab wie viel belegtem Speicher ein Job sein Haeppchen beendet (S2/AP6).
+ * Ab wie viel belegtem Speicher ein Job sein Haeppchen beendet.
  *
- * DER RAHMEN HAT BIS WEB 12.0.0 NUR DIE ZEIT GEMESSEN. Das reichte, solange
- * jeder Job in Bloecken ueber Zeilen lief — dort waechst der Speicher mit der
+ * DER RAHMEN MISST NICHT NUR DIE ZEIT. Die reicht, solange
+ * ein Job in Bloecken ueber Zeilen laeuft — dort waechst der Speicher mit der
  * Blockgroesse und nicht mit dem Bestand. Der Backup-Job ist anders: Ein
  * einzelnes Konto kostet beim 5000er-Bestand 24 MB, und das ist die Groesse,
  * an der es klemmt, nicht die Sekunde.
@@ -112,17 +112,17 @@ function jobs_speicher_knapp(): bool
 const JOB_TOKEN_SCHLUESSEL = 'jobs_token';
 
 /** Schluessel des Kettentokens in `app_state` — die Aktionen der
- * Auslieferungskette (Web 23.1.0, R17-19, E-R17-34). */
+ * Auslieferungskette. */
 const KETTE_TOKEN_SCHLUESSEL = 'kette_token';
 
-/** Schluessel des Health-Tokens in `app_state` (Web 23.5.0, R17-26, E-R17-72).
+/** Schluessel des Health-Tokens in `app_state`.
  * Bis dahin stand es nur in `config.php` (`betrieb.health_token`). */
 const HEALTH_TOKEN_SCHLUESSEL = 'health_token';
 
 /**
  * Schluessel der Laufpause in `app_state` (UTC-Zeitstempel, bis wann).
  *
- * WOFUER (S2/AP3). Seit die Jobs Zeilen LOESCHEN und Blobs ERSETZEN, aendern
+ * WOFUER. Seit die Jobs Zeilen LOESCHEN und Blobs ERSETZEN, aendern
  * sie waehrend ihres Laufs den Bestand — und das trifft jede Messung, die
  * gerade nebenher laeuft. Aufgefallen ist es am Kreislauf: Er spielt ein
  * Backup in ein frisches Konto und exportiert es sofort wieder. Die
@@ -132,8 +132,8 @@ const HEALTH_TOKEN_SCHLUESSEL = 'health_token';
  * hineinging", sondern „hat der Job dazwischen zugeschlagen" — und je nach
  * Laufzeit faellt er mal so und mal so aus.
  *
- * Beim ersten Lauf nach AP3 war er sauber, aber nur ZUFAELLIG: Der
- * Mindestabstand des Huckepack-Wegs hatte gerade gegriffen. Eine Zahl, die
+ * Ein Lauf kann sauber sein, aber nur ZUFAELLIG: Der
+ * Mindestabstand des Huckepack-Wegs hat gerade gegriffen. Eine Zahl, die
  * vom Zufall abhaengt, ist kein Beleg.
  *
  * Die Pause gilt fuer ALLE drei Ausloeser, nicht nur fuer den Huckepack-Weg —
@@ -215,7 +215,7 @@ function jobs_katalog(): array
     require_once __DIR__ . '/mail_lib.php';
     require_once __DIR__ . '/protokoll_archiv_lib.php';
     $katalog = [
-        /* `mail` STEHT GANZ VORN, und das ist kein Zufall (P5a/AP5).
+        /* `mail` STEHT GANZ VORN, und das ist kein Zufall.
          *
          * `jobs_lauf()` arbeitet den Katalog der Reihe nach ab und
          * ueberspringt, was ins Restbudget nicht mehr passt — am
@@ -241,12 +241,10 @@ function jobs_katalog(): array
         'aufraeumen' => [
             'titel'        => 'Aufräumen',
             /* DIESE ZEILE IST SICHTBARER TEXT (Betrieb -> Hintergrundjobs)
-             * und wurde bis Web 20.25.0 VON HAND gefuehrt. Sie hinkte den
-             * Schritten dreimal hinterher — zuletzt um einen (15 von 16).
-             * Jetzt wird sie erzeugt: `job_aufraeumen_schritte()` kennt seine
+             * und wird erzeugt, nicht VON HAND gefuehrt — von Hand hinkte sie
+             * den Schritten hinterher: `job_aufraeumen_schritte()` kennt seine
              * Schritte, sie heissen dort bereits „Kopplungssitzungen",
-             * „Sperrereignisse", „Gerätevermerke". Das ist der Vorschlag aus
-             * Backlog Nr. 208, wortwoertlich. */
+             * „Sperrereignisse", „Gerätevermerke". */
             'beschreibung' => jobs_aufzaehlung(
                 array_keys(job_aufraeumen_schritte())),
             'taeglich'     => true,
@@ -271,7 +269,7 @@ function jobs_katalog(): array
             'rueckstand'   => 'job_konto_loeschung_rueckstand',
             'lauf'         => 'job_konto_loeschung',
         ],
-        /* ZWEI FRISTEN, ZWEI ZUSTAENDE, EIN JOB (E-P5b-02). Sie in zwei
+        /* ZWEI FRISTEN, ZWEI ZUSTAENDE, EIN JOB. Sie in zwei
          * Jobs zu trennen waere naheliegend und falsch: Beide raeumen
          * dieselbe Sache auf — eine Registrierung, aus der nichts geworden
          * ist —, beide gehen ueber `konto_loeschen()`, und beide sind
@@ -287,10 +285,9 @@ function jobs_katalog(): array
             'rueckstand'   => 'job_konto_verfall_rueckstand',
             'lauf'         => 'job_konto_verfall',
         ],
-        /* `verdichtung` und `ausduennen` standen hier bis Web 22.5 (S2/AP3).
-         * Seit S11-07 sieht der Server keine Koordinate mehr; Packen und
-         * Ausduennen tut der Wartungslauf im Browser (`assets/wartungslauf.js`,
-         * `api/wartungslauf.php`, E-S11-05). */
+        /* Keine Jobs `verdichtung` und `ausduennen`: Der Server sieht keine
+         * Koordinate; Packen und Ausduennen tut der Wartungslauf im Browser
+         * (`assets/wartungslauf.js`, `api/wartungslauf.php`). */
         /* DER BACKUP-JOB STEHT VOR `waisen`.
          *
          * Er arbeitet nur, wenn ein Auftrag vorliegt („Alle sichern"); ohne
@@ -305,8 +302,8 @@ function jobs_katalog(): array
             'rueckstand'   => 'job_adminbackup_rueckstand',
             'lauf'         => 'job_adminbackup',
         ],
-        /* DAS PROTOKOLLARCHIV STEHT VOR DEM VERSAND (P5c/AP2, E-P5c-03,
-         * -57): Ein fertiges Archiv geht so noch im selben Lauf hinaus. Es
+        /* DAS PROTOKOLLARCHIV STEHT VOR DEM VERSAND: Ein fertiges Archiv geht
+         * so noch im selben Lauf hinaus. Es
          * ist leicht — alle sieben Tage ein Zeitraum, im Regelfall eine
          * Abfrage auf die Marke und sonst nichts. */
         'protokoll_archiv' => [
@@ -318,8 +315,8 @@ function jobs_katalog(): array
             'rueckstand'   => 'protokoll_archiv_rueckstand',
             'lauf'         => 'protokoll_archiv_job',
         ],
-        /* DER SCHLUESSELWECHSEL STEHT VOR DEM VERSAND (Schritt 18, SR-03,
-         * E-SR-09): Ein umgehuelltes Archiv des Protokolls bekommt einen
+        /* DER SCHLUESSELWECHSEL STEHT VOR DEM VERSAND: Ein umgehuelltes Archiv
+         * des Protokolls bekommt einen
          * neuen Namen und geht so noch im selben Lauf hinaus — mit ihm hat das
          * Ziel eine Kopie unter dem neuen Schluessel. Ohne Wechsel kostet er
          * eine Abfrage (`serverschluessel_zustand()`) und ist fertig. */
@@ -333,7 +330,7 @@ function jobs_katalog(): array
             'rueckstand'   => 'job_schluesselwechsel_rueckstand',
             'lauf'         => 'job_schluesselwechsel',
         ],
-        /* DER VERSAND STEHT NACH DEM SICHERN UND VOR `waisen` (S2/AP7).
+        /* DER VERSAND STEHT NACH DEM SICHERN UND VOR `waisen`.
          * Nach dem Sichern, weil er schickt, was jenes erzeugt hat — in
          * derselben Reihenfolge kommt ein frisches Paket noch im selben Lauf
          * hinaus. Vor `waisen` aus demselben Grund wie dort beschrieben.
@@ -370,8 +367,8 @@ function jobs_katalog(): array
             'rueckstand'   => 'job_komplett_rueckstand',
             'lauf'         => 'job_komplett',
         ],
-        /* NACHLOESEN STEHT VOR `waisen` UND HINTER ALLEM ANDEREN (P5a/AP11,
-         * E-P5a-21). Er laeuft nur, wenn sich die Modelltabelle geaendert hat
+        /* NACHLOESEN STEHT VOR `waisen` UND HINTER ALLEM ANDEREN. Er laeuft
+         * nur, wenn sich die Modelltabelle geaendert hat
          * — also nach einem Update, das eine neue `geraetemodelle.php`
          * mitbringt, und sonst nie. Dann aber soll er durchkommen, und zwar
          * bevor das Sicherheitsnetz `waisen` das Restbudget nimmt. */
@@ -455,7 +452,6 @@ function jobs_einen_lauf(string $name, array $job, string $ausloeser,
                          callable $zeitLinks): array
 {
     $pdo = db();
-    $heute = (new DateTime('now'))->format('Y-m-d');
 
     // Zeile anlegen, falls es sie noch nicht gibt.
     $pdo->prepare('INSERT IGNORE INTO jobs (job) VALUES (?)')->execute([$name]);
@@ -474,8 +470,10 @@ function jobs_einen_lauf(string $name, array $job, string $ausloeser,
                     OR laeuft_seit < DATE_SUB(UTC_TIMESTAMP(), INTERVAL ? SECOND))';
     $p = [$ausloeser, $name, JOB_SPERRE_VERFALL_S];
     if (!empty($job['taeglich'])) {
-        $sql .= ' AND (letzter_lauf IS NULL OR DATE(letzter_lauf) < ?)';
-        $p[] = $heute;
+        /* „Heute" in UTC, wie `letzter_lauf`. Rechnete eine Seite in der
+         * Zeitzone von PHP, lag die Tagesgrenze bis zu zwei Stunden neben
+         * Mitternacht. */
+        $sql .= ' AND (letzter_lauf IS NULL OR DATE(letzter_lauf) < UTC_DATE())';
     } elseif ($ausloeser === 'anfrage') {
         /* Am Huckepack-Weg zusaetzlich der Mindestabstand. Ohne ihn traege
          * JEDE angemeldete Anfrage ein Haeppchen Wartung mit. */
@@ -507,15 +505,14 @@ function jobs_einen_lauf(string $name, array $job, string $ausloeser,
         $erledigt = (int)($e['erledigt'] ?? 0);
         $fertig   = (bool)($e['fertig'] ?? false);
         /* DER BERICHT WIRD MIT FESTEN SCHLÜSSELN NEU GEBAUT, und was hier
-         * nicht steht, fällt heraus. `geloescht` (P5a/AP10) wäre sonst im
+         * nicht steht, fällt heraus. `geloescht` wäre sonst im
          * Versandjob entstanden und auf dem Weg zur Ausgabe verschwunden —
          * eine Zahl, die es gibt und die niemand sieht: Was die
          * Aufbewahrungsregel auf einem Ziel entfernt hat, ist eine Handlung
          * auf einer FREMDEN Maschine. Sie gehoert in den Lauf, nicht nur in
-         * die Karte, die man dafuer aufrufen muss. (Bis Web 20.47.0 nahm
-         * denselben Weg `uebergangen`, die Zahl der FTP-Ziele, S10/AP4.) */
+         * die Karte, die man dafuer aufrufen muss. */
         $geloescht = (int)($e['geloescht'] ?? 0);
-        /* UND DIE DATEIEN (Schritt 16, E-SA-06). Derselbe Grund wie bei den
+        /* UND DIE DATEIEN. Derselbe Grund wie bei den
          * beiden Zeilen darueber: Was hier nicht abgeholt wird, entsteht im
          * Job und verschwindet auf dem Weg zur Ausgabe. */
         $geloeschtDateien = (int)($e['geloescht_dateien'] ?? 0);
@@ -550,8 +547,8 @@ function jobs_einen_lauf(string $name, array $job, string $ausloeser,
         ->execute([json_encode($zustand), $rueckstand, $fehler, $fehler,
                    $erledigt, $name]);
 
-    /* DER VERLAUF — damit ein WIEDERKEHRENDER Fehler sichtbar wird
-     * (P5a/AP5, E-P5a-09).
+    /* DER VERLAUF — damit ein WIEDERKEHRENDER Fehler sichtbar wird.
+     * 
      *
      * Die Zeile darueber setzt `letzter_fehler` beim naechsten Erfolg auf
      * NULL. Das ist fuer die Ampel richtig — sie soll sagen, was JETZT
@@ -623,17 +620,17 @@ function jobs_zustand(): array
  * saehe, warum der zeitgesteuerte Abruf nicht geht.
  *
  * Das Token ist ein Geheimnis wie ein Passwort — 32 Byte Zufall, hex. Wer es
- * hat, kann seit Web 23.1.0 genau eines: die faelligen Jobs laufen lassen,
+ * hat, kann genau eines: die faelligen Jobs laufen lassen,
  * also das, was der Zeitplan ohnehin jede Minute tut. Die Aktionen der
  * Auslieferungskette — Komplett-Backup, Wartungsmodus, Zustand, Pause —
  * oeffnet es nicht mehr; dafuer gibt es `kette_token()`.
  *
- * WARUM DIE TRENNUNG (R17-19, F-R17-57, E-R17-34). Dieses Token reist in der
+ * WARUM DIE TRENNUNG. Dieses Token reist in der
  * ADRESSE — ein „Cronjob per URL" beim Hoster kann nichts anderes —, und eine
  * Adresse steht im Zugriffsprotokoll des Hosters, mit Zeitstempel, so lange,
- * wie der Hoster es aufhebt. Bis Web 23.0.3 war es dasselbe Token, mit dem
- * die Kette den Produktivserver in die Wartung schaltet. Wer das Protokoll
- * las, hatte damit den Schalter. Jetzt hat er hoechstens einen Job-Lauf.
+ * wie der Hoster es aufhebt. Es ist NICHT das Token, mit dem
+ * die Kette den Produktivserver in die Wartung schaltet: Wer das Protokoll
+ * liest, hat damit hoechstens einen Job-Lauf, nicht den Schalter.
  */
 function jobs_token(bool $neu = false): string
 {
@@ -644,14 +641,14 @@ function jobs_token(bool $neu = false): string
         $wert = app_state_lesen(JOB_TOKEN_SCHLUESSEL);
         if ($wert !== null && $wert !== '') { return $wert; }
     }
-    /* ZUERST DAS KETTENTOKEN (R17-19, Gegenpruefung E-R17-43). Es uebernimmt
+    /* ZUERST DAS KETTENTOKEN. Es uebernimmt
      * beim ersten Lesen den Wert des Job-Tokens — gedacht fuer das Update
-     * einer Anlage, deren Kette den alten Wert kennt. Entstand das Job-Token
-     * vorher, auf einer NEUEN Anlage, uebernahm das Kettentoken danach dessen
-     * frischen Wert, und beide blieben dauerhaft gleich: die Trennung, die
-     * Web 23.1.0 bringen soll, gab es dort nie. Und wer nach dem Update
-     * zuerst das Job-Token erneuerte, gab dem Kettentoken den NEUEN Wert, den
-     * die Kette nicht kennt. Hier vorher gelesen, bekommt es auf einer neuen
+     * einer Anlage, deren Kette den alten Wert kennt. Entstuende das Job-Token
+     * vorher, auf einer NEUEN Anlage, uebernaehme das Kettentoken danach
+     * dessen frischen Wert, und beide blieben dauerhaft gleich — ohne
+     * Trennung. Und wer nach dem Update zuerst das Job-Token erneuerte, gaebe
+     * dem Kettentoken den NEUEN Wert, den die Kette nicht kennt. Hier vorher
+     * gelesen, bekommt es auf einer neuen
      * Anlage einen eigenen Zufallswert und beim Erneuern den bisherigen. */
     kette_token();
     $token = bin2hex(random_bytes(32));
@@ -662,8 +659,8 @@ function jobs_token(bool $neu = false): string
 }
 
 /**
- * Das Kettentoken — der Schluessel der Auslieferungskette zu `jobs.php`
- * (Web 23.1.0, R17-19, E-R17-34).
+ * Das Kettentoken — der Schluessel der Auslieferungskette zu `jobs.php`.
+ * 
  *
  * Wer es hat, kann die Aktionen der Kette ausloesen: ein Komplett-Backup
  * anstossen, den Wartungsmodus ein- und ausschalten, den Zustand abfragen,
@@ -679,7 +676,7 @@ function jobs_token(bool $neu = false): string
  * dem alten Token die Wartung ein und fragt DANACH, gegen die neue Fassung,
  * nach Zustand und `wartung_aus` — mit einem fremden Token bliebe die Anlage
  * in der Wartung stehen, und der Lauf waere rot. Getrennt sind beide, sobald
- * eines erneuert wird; das Runbook (`docs/Technik.md` 7) verlangt nach dem
+ * eines erneuert wird; das Runbook (`docs/Technik.md` 13) verlangt nach dem
  * ersten Deploy, beide zu erneuern, weil die alten Zugriffsprotokolle den
  * gemeinsamen Wert tragen.
  *
@@ -707,7 +704,7 @@ function kette_token(bool $neu = false): string
 
 /**
  * Das Health-Token — der Schluessel des Monitorings zu `api/health.php`
- * (seit Web 23.5.0 im Panel, R17-26, E-R17-72).
+ * (im Panel).
  *
  * BIS DAHIN NUR IN `config.php`. Wer es erneuern wollte, brauchte den
  * Dateizugang; jetzt erzeugt es Betrieb → Hintergrundjobs wie die beiden
@@ -755,25 +752,23 @@ function health_token_aus(): void
 /* ---- Die Jobs selbst ----------------------------------------------------- */
 
 /**
- * DIE SCHRITTE DES AUFRAEUMJOBS — EINE LISTE, DREI LESER (Backlog Nr. 208).
+ * DIE SCHRITTE DES AUFRAEUMJOBS — EINE LISTE, DREI LESER.
  *
- * WOGEGEN. Bis Web 20.25.0 stand diese Liste im Rumpf von `job_aufraeumen()`,
- * und daneben standen ZWEI von Hand gefuehrte Aufzaehlungen derselben
- * Schritte: die sichtbare `beschreibung` im Katalog und die Registerzeile in
- * `docs/Technik.md` 4.97a. Beide hinkten. Gemessen am 20.09.2026: 16 Schritte
+ * WOGEGEN. Stuende diese Liste im Rumpf von `job_aufraeumen()`, braeuchte
+ * es daneben ZWEI von Hand gefuehrte Aufzaehlungen derselben Schritte: die
+ * sichtbare `beschreibung` im Katalog und die Registerzeile in
+ * `docs/Technik.md` 4.7. Beide hinkten. Gemessen am 20.09.2026, vor dieser Liste: 16 Schritte
  * im Code, 15 in der sichtbaren Beschreibung („Sperrliste geloeschter
  * Kennungen" fehlte), „dreizehn" in der Registerzeile; der Jobkatalog selbst
  * fuehrt 11 Jobs, das Register nannte 9 (`mail` und `konto_verfall` fehlten).
- * Das war der dritte Anlauf an derselben Stelle: P5a/AP5 und P5a/AP8 haben
- * die Zahlen schon zweimal berichtigt, und beide Male wuchs der Abstand
- * wieder.
+ * Von Hand berichtigt, wuchs der Abstand jedes Mal wieder.
  *
- * DIE BESCHREIBUNG WIRD JETZT ERZEUGT (`jobs_katalog()`), nicht
- * danebengeschrieben — sie kann nicht mehr altern. Die Registerzeile in
+ * DIE BESCHREIBUNG WIRD ERZEUGT (`jobs_katalog()`), nicht
+ * danebengeschrieben — sie kann nicht altern. Die Registerzeile in
  * `docs/Technik.md` bleibt Prosa, weil sie mehr sagt als eine Liste; sie
  * wird aber nachgezaehlt, und zwar in Stufe 1 der Kette
  * (`tools/quelltext/jobregister.php`). Damit wandert das Problem nicht nur eine
- * Ebene weiter, wie Nr. 208 es befuerchtet.
+ * Ebene weiter.
  *
  * DIE SCHLUESSEL SIND SICHTBARER TEXT, und das war nicht immer so: Sie
  * stehen in der Fehlermeldung eines gescheiterten Schritts („Name: Meldung"),
@@ -792,13 +787,13 @@ function job_aufraeumen_schritte(array &$zahlen = []): array
     return [
         'Kopplungssitzungen' => function (PDO $pdo): void {
             /* Nur die VERFALLENEN: Bestaetigte und verworfene Sitzungen
-             * loescht pair.php sofort (E-S5-11). Die Obergrenze zaehlt
-             * verfallene Zeilen ohnehin nicht mit (E-S5-14) — dieser Schritt
+             * loescht pair.php sofort. Die Obergrenze zaehlt
+             * verfallene Zeilen ohnehin nicht mit — dieser Schritt
              * ist Hygiene, kein Schutz. */
             $pdo->exec('DELETE FROM pair_sessions
                         WHERE erstellt_am < DATE_SUB(NOW(), INTERVAL ' . PAIR_TTL_MIN . ' MINUTE)');
         },
-        /* SITZUNGSDATEIEN (Schritt 16, E-SA-06, Backlog Nr. 241).
+        /* SITZUNGSDATEIEN.
          *
          * DER ERSTE RAEUMTEIL, DER DAS DATEISYSTEM ANFASST — die fuenfzehn
          * anderen loeschen Zeilen. Deshalb steht die Arbeit selbst nicht
@@ -827,10 +822,10 @@ function job_aufraeumen_schritte(array &$zahlen = []): array
             $zahlen['sitzungen'] = sitzung_aufraeumen(
                 SESSION_TIMEOUT_S + SITZUNG_KARENZ_S);
         },
-        /* GEMERKTE GERAETE (Schritt 18, SR-02, E-SR-07). Hygiene, kein
+        /* GEMERKTE GERAETE. Hygiene, kein
          * Schutz: Eine abgelaufene Zeile oeffnet ohnehin nichts mehr, weil
-         * `zweitfaktor_geraet_erkannt()` die Dauer beim Pruefen rechnet
-         * (E-SR-17). Die Arbeit steht in `totp_lib.php`, neben dem Rest. */
+         * `zweitfaktor_geraet_erkannt()` die Dauer beim Pruefen rechnet.
+         * Die Arbeit steht in `totp_lib.php`, neben dem Rest. */
         'Gemerkte Geräte' => function (PDO $pdo) use (&$zahlen): void {
             require_once __DIR__ . '/totp_lib.php';
             $zahlen['geraete'] = zweitfaktor_geraete_aufraeumen($pdo);
@@ -840,29 +835,21 @@ function job_aufraeumen_schritte(array &$zahlen = []): array
                         WHERE deleted_at < DATE_SUB(NOW(), INTERVAL 90 DAY)');
         },
         'Ratenschutz-Zähler' => function (PDO $pdo): void {
-            /* DIE STUFE DARF NICHT MITGELOESCHT WERDEN, SOLANGE SIE GILT
-             * (P5a/AP6). Verschwindet die Zeile, ist die Stufe 0 — das ist
+            /* DIE STUFE DARF NICHT MITGELOESCHT WERDEN, SOLANGE SIE GILT.
+             * Verschwindet die Zeile, ist die Stufe 0 — das ist
              * der gewollte Verfall nach 24 h ohne Fehlversuch, und
              * `fenster_start` ist dafuer ein brauchbarer Anhalt. Brauchbar
              * ist aber nicht genau: `fenster_start` springt erst beim
              * naechsten Fehlversuch NACH Fensterablauf, kann der letzten
              * Eingabe also bis zu 15 Minuten vorauslaufen. `stufe_bis` ist
              * der ausdrueckliche Wert; wo es ihn gibt, gilt er. */
-            try {
-                $pdo->exec('DELETE FROM rate_limits
-                            WHERE fenster_start < DATE_SUB(NOW(), INTERVAL 1 DAY)
-                              AND (gesperrt_bis IS NULL OR gesperrt_bis < NOW())
-                              AND (stufe_bis IS NULL OR stufe_bis < NOW())');
-            } catch (Throwable $ex) {
-                /* Die Spalte `stufe_bis` gibt es noch nicht (Migration steht
-                 * aus) — dann die Fassung von vor Web 20.10.0. */
-                $pdo->exec('DELETE FROM rate_limits
-                            WHERE fenster_start < DATE_SUB(NOW(), INTERVAL 1 DAY)
-                              AND (gesperrt_bis IS NULL OR gesperrt_bis < NOW())');
-            }
+            $pdo->exec('DELETE FROM rate_limits
+                        WHERE fenster_start < DATE_SUB(NOW(), INTERVAL 1 DAY)
+                          AND (gesperrt_bis IS NULL OR gesperrt_bis < NOW())
+                          AND (stufe_bis IS NULL OR stufe_bis < NOW())');
         },
         'Sperrereignisse' => function (PDO $pdo): void {
-            /* 30 Tage, fest (E-P5a-09). Die Tabelle fuehrt IP- und
+            /* 30 Tage, fest. Die Tabelle fuehrt IP- und
              * E-Mail-Adressen im Klartext — sie ist genau die Art
              * Betriebsdatum, das nicht versehentlich Jahre liegen soll.
              *
@@ -875,14 +862,14 @@ function job_aufraeumen_schritte(array &$zahlen = []): array
                 /* Tabelle fehlt (Migration noch nicht gelaufen). */
             }
         },
-        /* CSP-BERICHTE: 30 TAGE, FEST (E-P5a-09). Betriebsdaten ohne
+        /* CSP-BERICHTE: 30 TAGE, FEST. Betriebsdaten ohne
          * Kontobezug verfallen nach 30 Tagen, und die Zahl ist KEINE
          * Einstellung — Sicherheitsdaten sollen nicht versehentlich Jahre
          * liegen. Geloescht wird nach `zuletzt`: Eine Meldung, die noch
          * gestern kam, ist frisch, auch wenn ihre Zeile drei Monate alt ist. */
         'Gerätevermerke' => function (PDO $pdo): void {
-            /* 30 TAGE, FEST (E-P5a-09 nennt die „Bremse-Treffer"). Der Vermerk
-             * `devices.abgewiesen_seit` / `abgewiesen_anzahl` (P5a/AP7) wird
+            /* 30 TAGE, FEST (auch fuer die „Bremse-Treffer"). Der Vermerk
+             * `devices.abgewiesen_seit` / `abgewiesen_anzahl` wird
              * sonst NUR beim naechsten gelungenen Upload geleert — und genau
              * den gibt es nicht mehr, wenn das Geraet endgueltig ausgemustert
              * ist. Ohne diesen Schritt truege ein verlorenes Geraet seine
@@ -901,7 +888,7 @@ function job_aufraeumen_schritte(array &$zahlen = []): array
                              WHERE abgewiesen_seit IS NOT NULL
                                AND abgewiesen_seit < DATE_SUB(UTC_TIMESTAMP(), INTERVAL 30 DAY)');
             } catch (Throwable $ex) {
-                /* Spalten fehlen (Migration aus P5a/AP7 noch nicht gelaufen). */
+                /* Spalten fehlen (Migration noch nicht gelaufen). */
             }
         },
         'CSP-Berichte' => function (PDO $pdo): void {
@@ -914,8 +901,8 @@ function job_aufraeumen_schritte(array &$zahlen = []): array
             }
         },
         'Mail-Warteschlange' => function (PDO $pdo): void {
-            /* 30 Tage (E-P5a-09 nennt „erledigte Warteschlangeneintraege"
-             * ausdruecklich). Geloescht wird ab `erstellt`, nicht ab
+            /* 30 Tage (auch fuer „erledigte Warteschlangeneintraege").
+             * Geloescht wird ab `erstellt`, nicht ab
              * `beendet`: Eine Zeile, die nie einen Endzustand erreicht, weil
              * die Installation stillag, soll trotzdem verfallen. */
             try {
@@ -926,11 +913,11 @@ function job_aufraeumen_schritte(array &$zahlen = []): array
             }
         },
         'Betriebsprotokoll' => function (PDO $pdo): void {
-            /* ZWEI FRISTEN, EIN SCHRITT (P5b/AP1, E-P5b-06). Der Reiter
+            /* ZWEI FRISTEN, EIN SCHRITT. Der Reiter
              * *Verwaltung* ist das Audit und bleibt 365 Tage, einstellbar
              * zwischen 90 und 1095; alle uebrigen verfallen nach 30 Tagen,
              * fest — dieselbe Zahl und derselbe Grund wie bei den Nachbarn
-             * darueber (E-P5a-09).
+             * darueber.
              *
              * Die Fristen stehen NICHT hier, sondern in
              * `protokoll_bereinigen()`: Sie gehoeren zu der Bibliothek, die
@@ -947,7 +934,7 @@ function job_aufraeumen_schritte(array &$zahlen = []): array
             }
         },
         'Mengen je Konto' => function (PDO $pdo): void {
-            /* DIE ECHTE ZAHL, EINMAL AM TAG (P5b/AP6, E-P5b-18).
+            /* DIE ECHTE ZAHL, EINMAL AM TAG.
              *
              * `ingest.php` schreibt den Zaehler nach jedem Schub GESCHAETZT
              * fort — hier wird er gemessen. Die Schaetzung darf danebenliegen;
@@ -963,9 +950,15 @@ function job_aufraeumen_schritte(array &$zahlen = []): array
             try {
                 require_once __DIR__ . '/konten_einstellungen_lib.php';
                 require_once __DIR__ . '/mail_lib.php';
-                foreach ($pdo->query('SELECT id, email FROM users')
+                /* NUR AKTIVE KONTEN, OHNE DAS DEMO-KONTO. Ein gesperrtes oder
+                 * unbestaetigtes Konto waechst nicht und liest keine Mail; das
+                 * Demo-Konto wird nachts zurueckgesetzt. Fuer sie taeglich
+                 * zu messen und eine Marke zu schreiben, kostete nur. */
+                require_once __DIR__ . '/demo_lib.php';
+                foreach ($pdo->query("SELECT id, email FROM users WHERE status = 'aktiv'")
                               ->fetchAll(PDO::FETCH_ASSOC) as $u) {
                     $uid = (int)$u['id'];
+                    if (demo_ist_demo($uid)) { continue; }
                     konto_mengen($uid, true);           // frisch messen
                     $f = konto_fuellstand($uid);
                     $marke = 'mengen_gemeldet:' . $uid;
@@ -986,9 +979,9 @@ function job_aufraeumen_schritte(array &$zahlen = []): array
             }
         },
         'Verwaiste Kontomarken' => function (PDO $pdo): void {
-            /* `mengen:<id>` UND `mengen_gemeldet:<id>` OHNE KONTO (P5b/AP6).
+            /* `mengen:<id>` UND `mengen_gemeldet:<id>` OHNE KONTO.
              *
-             * `konto_loeschen()` raeumt sie seit Web 20.21.0 mit — dieser
+             * `konto_loeschen()` raeumt sie mit — dieser
              * Schritt holt, was aus der Zeit davor liegt, und was eine
              * Loeschung an der Bibliothek vorbei hinterlassen hat (ein
              * `DELETE FROM users` von Hand in der Datenbank etwa).
@@ -1009,7 +1002,7 @@ function job_aufraeumen_schritte(array &$zahlen = []): array
             }
         },
         'Job-Verlauf' => function (PDO $pdo): void {
-            /* 30 Tage, keine Einstellung (E-P5a-09). Steht NEBEN den
+            /* 30 Tage, keine Einstellung. Steht NEBEN den
              * CSP-Berichten und nicht hinter „Speicher messen" /
              * „Warnschwellen melden": Die beiden muessen am Ende bleiben,
              * weil sie messen, was die Schritte davor hinterlassen haben.
@@ -1039,7 +1032,7 @@ function job_aufraeumen_schritte(array &$zahlen = []): array
             require_once __DIR__ . '/adminbackup_lib.php';
             edbak_erinnerung_planen();
         },
-        /* SPEICHER MESSEN (S8/AP2, E-S8-18).
+        /* SPEICHER MESSEN.
          *
          * Zwei Zahlen, die eine Seite nicht bei jedem Aufruf holen darf: die
          * Summe ueber `information_schema` und ein Verzeichnislauf ueber das
@@ -1060,20 +1053,18 @@ function job_aufraeumen_schritte(array &$zahlen = []): array
             require_once __DIR__ . '/speicher_lib.php';
             speicher_messen($pdo);
         },
-        /* WARNSCHWELLEN MELDEN (P5a/AP2, E-P5a-11).
+        /* WARNSCHWELLEN MELDEN.
          *
          * ER STEHT HINTER „Speicher messen", nicht davor: Sonst hielte die
          * Warnung die Zahlen von gestern gegen die Schwellen von heute.
          *
          * ZWEI AUFRUFE, ZWEI GESCHICHTEN. `speicher_kontingente_melden()`
          * ist neu und deckt Datenbank und Webspace ab. `edbak_schwellen_melden()`
-         * gibt es seit S8 und deckt die Speichergrenze der Backups ab —
-         * ABER NIEMAND HAT SIE JE GERUFEN. Nachgemessen am 15.09.2026:
+         * deckt die Speichergrenze der Backups ab — und HAT SONST KEINEN
+         * AUFRUFER. Nachgemessen am 15.09.2026, vor diesem Aufruf:
          * `grep -rn "schwellen_melden" --include=*.php` findet die Definition
          * und einen Aufruf in `tools/proben/wiederherstellung/probe.php`,
-         * sonst nichts. Geschrieben, geprueft, tot — dieselbe Klasse Fehler
-         * wie Backlog Nr. 89 („Dieser Job lief von Web 12.2.0 bis 12.9.2
-         * nie"). Der Aufruf steht jetzt hier, wo er hingehoert.
+         * sonst nichts. Der Aufruf steht hier, wo er hingehoert.
          *
          * BEIDE DUERFEN SCHEITERN, OHNE DEN JOB ZU KIPPEN: Die Schleife
          * darunter faengt jeden Fehler und meldet ihn mit Namen. Eine
@@ -1114,7 +1105,7 @@ function job_aufraeumen(PDO $pdo, array $zustand, callable $zeitLinks): array
     }
     /* `geloescht_dateien` UND NICHT `geloescht`. Den Schluessel `geloescht`
      * gibt es schon, und er heisst „auf einem FREMDEN Ziel entfernt"
-     * (Versandjob, P5a/AP10) — `jobs.php` druckt ihn als „am Ziel entfernt".
+     * (Versandjob) — `jobs.php` druckt ihn als „am Ziel entfernt".
      * Zwei Bedeutungen unter einem Namen waeren genau die Doppeldeutigkeit,
      * an der eine Zahl im Betrieb wertlos wird. */
     return ['zustand' => [], 'erledigt' => count($schritte), 'fertig' => true,
@@ -1122,33 +1113,31 @@ function job_aufraeumen(PDO $pdo, array $zustand, callable $zeitLinks): array
 }
 
 /**
- * Verwaiste Spuren — BEREICHSWEISE statt als Vollscan (E-S2-18).
+ * Verwaiste Spuren — BEREICHSWEISE statt als Vollscan.
  *
- * WAS DARAN NEU IST. Bis Web 10.0.0 lief hier ein Anti-Join ueber die GANZE
- * Tabelle:
+ * KEIN ANTI-JOIN UEBER DIE GANZE TABELLE wie:
  *
  *     DELETE tp FROM track_points tp
  *     LEFT JOIN missions m ON m.id = tp.owner_id
  *     WHERE tp.owner_type = 'mission' AND m.id IS NULL
  *
  * Gemessen kostete das bei 9,46 Mio. Zeilen 4,07 Sekunden — in der Anfrage
- * der ersten Nutzerin des Tages. Bei der Zielmenge Z2 (190 Mio. Zeilen) waeren
+ * der ersten Nutzerin des Tages. Bei der Zielmenge (190 Mio. Zeilen) waeren
  * es Minuten, und niemand wuesste, warum die Seite haengt.
  *
- * Jetzt wandert eine Marke ueber den Primaerschluessel. Je Haeppchen werden
+ * Stattdessen wandert eine Marke ueber den Primaerschluessel. Je Haeppchen werden
  * hoechstens JOB_WAISEN_BLOCK Eigentuemerkennungen angesehen; der Index
  * traegt die Abfrage, und der Lauf hoert auf, wenn das Budget zu Ende ist.
  * Am Ende der Tabelle faengt die Marke wieder von vorn an — es ist ein
- * Sicherheitsnetz, kein Hauptweg: Seit AP1 raeumen die Loeschwege selbst ab
- * (F-S2-B).
+ * Sicherheitsnetz, kein Hauptweg: Die Loeschwege raeumen selbst ab.
  */
 /**
- * BEANTRAGTE LOESCHUNGEN AUSFUEHREN (P5b/AP5, E-P5b-16).
+ * BEANTRAGTE LOESCHUNGEN AUSFUEHREN.
  *
  * WARUM HOECHSTENS FUENF JE LAUF. Eine Kontoloeschung ist teuer: Sie raeumt
  * die Spuren von Hand (die Kaskade erreicht sie nicht), loescht den
  * Backup-Ordner im Dateisystem und kaskadiert ueber jede Tabelle des Kontos
- * (fuenfzehn am 26.09.2026; hier stand bis Web 21.1.8 vierzehn). Bei
+ * (fuenfzehn am 26.09.2026). Bei
  * einem grossen Konto sind das Sekunden — am Huckepack-Weg steht dafuer ein
  * Budget von drei Sekunden fuer ALLE Jobs.
  *
@@ -1161,7 +1150,7 @@ function job_aufraeumen(PDO $pdo, array $zustand, callable $zeitLinks): array
  * DIE BACKUPS GEHEN MIT. `konto_loeschen()` bekommt `true` — die Nutzerin
  * hat ihre Loeschung beantragt, und die Zusage „danach ist nichts mehr
  * lesbar" ist der Grund, aus dem jemand das tut. Die Admin-Loeschung fragt
- * an dieser Stelle (E25); hier gibt es niemanden zu fragen, und die Antwort
+ * an dieser Stelle; hier gibt es niemanden zu fragen, und die Antwort
  * stuende ohnehin fest.
  */
 const JOB_KONTO_LOESCHUNG_BLOCK = 5;
@@ -1210,7 +1199,7 @@ function job_konto_loeschung_rueckstand(PDO $pdo, array $zustand): ?int
 const JOB_KONTO_VERFALL_BLOCK = 5;
 
 /**
- * Verfallene Registrierungen loeschen (P5b/AP3, E-P5b-02).
+ * Verfallene Registrierungen loeschen.
  *
  * UEBER `konto_loeschen()` UND NICHT PER `DELETE`: Die Kaskade erreicht die
  * GPS-Spuren nicht (sie haengen polymorph an `owner_type`/`owner_id`) und die
@@ -1255,8 +1244,8 @@ function job_konto_verfall(PDO $pdo, array $zustand, callable $zeitLinks): array
         if ($zeitLinks() <= 0.0) { break; }
         $r = konto_loeschen((int)$k['id'], true, 'verfall');
         if ($r['ok']) {
-            /* DIE MAIL NACH DER LOESCHUNG (R17-20): Seit `konto_loeschen()`
-             * die Warteschlange der Adresse leert (F-R17-21), naehme es eine
+            /* DIE MAIL NACH DER LOESCHUNG: Seit `konto_loeschen()`
+             * die Warteschlange der Adresse leert, naehme es eine
              * vorher eingereihte, noch wartende Mail mit. Scheitert die
              * Loeschung, geht keine Mail — das Konto besteht dann ja noch. */
             mail_einreihen('registrierung_verfallen', (string)$k['email'],
@@ -1309,8 +1298,7 @@ function job_waisen(PDO $pdo, array $zustand, callable $zeitLinks): array
             if ($zeitLinks() <= 2.0) { $fertig = false; break; }
 
             /* Die naechsten Eigentuemerkennungen der Spurstuecke, auf dem
-             * Primaerschluessel. Bis Web 22.7.0 kamen `track_points` und
-             * `track_blobs` als zwei weitere Orte einer Waise dazu (S11-12). */
+             * Primaerschluessel. */
             $ids = [];
             $st = $pdo->prepare('SELECT DISTINCT owner_id FROM track_stuecke
                                   WHERE owner_type = ? AND owner_id > ?
@@ -1320,8 +1308,8 @@ function job_waisen(PDO $pdo, array $zustand, callable $zeitLinks): array
 
             if (!$ids) {
                 /* Ende der Tabelle. Die Marke faengt wieder von vorn an: Das
-                 * hier ist ein Sicherheitsnetz, kein Hauptweg — seit AP1
-                 * raeumen die Loeschwege selbst ab (F-S2-B). Ein Netz, das
+                 * hier ist ein Sicherheitsnetz, kein Hauptweg — die
+                 * Loeschwege raeumen selbst ab. Ein Netz, das
                  * einmal durchlaeuft und dann liegen bleibt, ist keines.
                  *
                  * `durch` haelt fest, DASS der Durchlauf zu Ende kam. Ohne
@@ -1346,7 +1334,7 @@ function job_waisen(PDO $pdo, array $zustand, callable $zeitLinks): array
 
             if ($waisen) {
                 $weg = spur_loeschen($pdo, $typ, $waisen);
-                /* Sperrvermerke derselben Waisen mit (S4/A2). Sie haengen an
+                /* Sperrvermerke derselben Waisen mit. Sie haengen an
                  * keinem Fremdschluessel, genau wie die Stuecke, und das
                  * Netz waere ohne sie loechrig: Ein Vermerk zu einem Segment,
                  * das es nicht mehr gibt, sperrt einen Zeitraum, den niemand
@@ -1369,11 +1357,8 @@ function job_waisen(PDO $pdo, array $zustand, callable $zeitLinks): array
  * das der falsche Preis.
  *
  * Stattdessen der Fortschritt: wie viele Kennungen die Marke noch vor sich
- * hat. Die Abfrage laeuft auf dem Primaerschluessel. (Bis Web 22.7.0 fragte
- * sie `track_points` und `track_blobs`, nicht die Stuecke — der Rueckstand
- * sah die Stuecke also gar nicht.)
- */
-function job_waisen_rueckstand(PDO $pdo, array $z): ?int
+ * hat. Die Abfrage laeuft auf dem Primaerschluessel. */
+function job_waisen_rueckstand(PDO $pdo, array $z): int
 {
     $offen = 0;
     foreach (['mission', 'rest'] as $typ) {
@@ -1389,14 +1374,14 @@ function job_waisen_rueckstand(PDO $pdo, array $z): ?int
     return $offen;
 }
 
-/* ---- Job: Backups aller Konten (S2/AP6, E-S2-14) --------------------
+/* ---- Job: Backups aller Konten --------------------
  *
  * ER ARBEITET NUR AUF AUFTRAG. „Alle sichern" legt eine Warteschlange an
  * (`edbak_auftrag_starten()`); dieser Job leert sie in Schueben. Ohne Auftrag
  * kostet er eine Abfrage und meldet „fertig".
  *
- * WARUM NICHT AUTOMATISCH. E-S2-19 hat naechtliche Backups je Konto
- * ausdruecklich abgelehnt (Beschluss 29.08.2026). Der Job ist das Fuhrwerk
+ * WARUM NICHT AUTOMATISCH. Naechtliche Backups je Konto sind
+ * ausdruecklich abgelehnt. Der Job ist das Fuhrwerk
  * fuer die Schaltflaeche, kein Zeitplan.
  *
  * DIE RESERVE IST GROSS, und das ist Absicht: Ein Konto mit 5000 Einsaetzen
@@ -1422,7 +1407,7 @@ function job_adminbackup_rueckstand(PDO $pdo, array $zustand): ?int
 }
 
 
-/* ---- Versand auf die Backup-Ziele (S2/AP7, E-S2-22) ------------------- */
+/* ---- Versand auf die Backup-Ziele ------------------- */
 
 /**
  * Neue Pakete auf die aktiven Ziele schieben.
@@ -1456,14 +1441,13 @@ function job_versand(PDO $pdo, array $zustand, callable $zeitLinks): array
      * belegt, und zwar schärfer als es aussieht — `jobs_lauf()` setzt ihn,
      * wenn ein Job wegen einer Pause gar nicht gelaufen ist, und `jobs.php`
      * prüft ihn mit `isset()` und überspringt dann die GANZE Ergebniszeile.
-     * Deshalb hiess die Zahl der FTP-Ziele bis Web 20.47.0 `uebergangen`
-     * (S10/AP4, E-S10-U-09); sie ist mit P5c/AP8 gefallen. */
+     * Deshalb darf kein Schluessel fehlen. */
     return ['zustand' => [], 'erledigt' => $e['gesendet'], 'fertig' => $e['fertig'],
             'geloescht'   => (int)($e['geloescht'] ?? 0)];
 }
 
 /**
- * Geraetemodelle nachloesen (P5a/AP11, E-P5a-21; Backlog Nr. 80).
+ * Geraetemodelle nachloesen.
  *
  * ER LAEUFT NUR NACH EINER NEUEN TABELLE. Verglichen wird der Hash der
  * ausgelieferten `GERAETE_MODELLE` gegen den zuletzt verarbeiteten in
@@ -1542,7 +1526,7 @@ function job_versand_rueckstand(PDO $pdo, array $zustand): ?int
 }
 
 
-/* ---- Komplett-Backup der Installation (S2/AP8, E-S2-19 bis E-S2-21) ----- */
+/* ---- Komplett-Backup der Installation ----- */
 
 /**
  * Wie viel Zeit ein Lauf hoechstens fuer das Komplett-Backup verwendet.
@@ -1557,8 +1541,7 @@ function job_versand_rueckstand(PDO $pdo, array $zustand): ?int
 const KOMP_LAUF_MAX_S = 120.0;
 
 /* DER VORGABEWERT IST `null` UND NICHT `KOMP_RESERVE_S` — das ist der Kern
- * eines Fehlers, der von Web 12.2.0 bis 12.9.2 unbemerkt geblieben ist
- * (Backlog Nr. 89, gefunden in S7).
+ * eines Fehlers, der lange unbemerkt geblieben ist.
  *
  * `KOMP_RESERVE_S` steht in `komplett_lib.php`, und diese Datei wird erst
  * IM RUMPF geladen — so, wie es diese Datei mit allen schweren
@@ -1566,13 +1549,14 @@ const KOMP_LAUF_MAX_S = 120.0;
  * damit eine gewoehnliche Anfrage sie nicht mitschleppt. PHP wertet
  * Vorgabewerte aber BEIM AUFRUF aus, also vor der ersten Zeile des Rumpfs.
  * Ein Aufruf ohne viertes Argument — und genau so ruft `jobs.php` — endete
- * deshalb immer in `Error: Undefined constant "KOMP_RESERVE_S"`.
+ * deshalb mit dieser Konstante immer in `Error: Undefined constant
+ * "KOMP_RESERVE_S"`.
  *
- * WAS DAS GEKOSTET HAT: Das geplante Komplett-Backup lief nie. Der Plan
+ * WAS DAS KOSTET: Das geplante Komplett-Backup liefe nie. Der Plan
  * ("taeglich", "woechentlich", "monatlich") auf `admin_komplettsicherung.php`
- * war seit S2/AP8 ohne Wirkung; von Hand angestossen lief der Lauf, weil
- * `komp_schub()` denselben Vorgabewert erst nach dem Laden benutzt. Die
- * Wartungsseite zeigte den Job als "Fehler" — und niemand hat hingesehen.
+ * waere ohne Wirkung; von Hand angestossen liefe der Lauf, weil
+ * `komp_schub()` denselben Vorgabewert erst nach dem Laden benutzt. Der Job
+ * stuende auf "Fehler" — und niemand saehe hin.
  *
  * DIE FEHLERKLASSE ist "Vorgabewert aus einer erst im Rumpf geladenen
  * Datei". Sie ist in `server/` nachgezaehlt: genau diese eine Stelle. */
@@ -1598,7 +1582,7 @@ function job_komplett_rueckstand(PDO $pdo, array $zustand): ?int
     return komp_rueckstand_aus($zustand);
 }
 
-/* ---- Der Wechsel des Serverschluessels (Schritt 18, SR-03) ---------------
+/* ---- Der Wechsel des Serverschluessels ---------------
  *
  * Die Arbeit steht in `schluesselwechsel_lib.php`; hier nur der Anschluss an
  * den Katalog, geladen erst im Rumpf wie bei den anderen schweren Jobs. */

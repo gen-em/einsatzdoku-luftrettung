@@ -29,11 +29,10 @@ import java.time.Instant
 import kotlin.random.Random
 
 /**
- * **Wiedergabe der Referenz-Payloads** gegen das echte `ingest.php`
- * (Abnahme B4).
+ * **Wiedergabe der Referenz-Payloads** gegen das echte `ingest.php`.
  *
- * Aus den Strömen von B3 erzeugt die Sendelogik Anfrageketten, die
- * vollständig durchlaufen müssen:
+ * Aus den Positionsströmen der Ausdünnung erzeugt die Sendelogik
+ * Anfrageketten, die vollständig durchlaufen müssen:
  *
  * ```
  * 0 × rejected · 0 × kept_* · 0 × 400 · seq lückenlos · Chunkgrenze eingehalten
@@ -83,7 +82,7 @@ class SendeRundlaufTest {
     }
 
     @After fun abbauen() {
-        /* ZUERST DIE DATEN (Backlog Nr. 95, R4-21): Das Trennen loescht das
+        /* ZUERST DIE DATEN: Das Trennen loescht das
          * Geraet, und danach gehoerte nichts mehr erkennbar zu diesem Lauf. */
         if (basis.isNotEmpty()) {
             val fehler = Kopplungshilfe.datenAbraeumen()
@@ -94,7 +93,7 @@ class SendeRundlaufTest {
         }
         /* Auch hier den Ratenschutz leeren: Diese Klassen koppeln ebenfalls
          * über `start`, und alle drei Rundlaufklassen teilen sich den Topf
-         * von 127.0.0.1 (E-S5-33). Wer nur in einer aufräumt, sperrt die
+         * von 127.0.0.1. Wer nur in einer aufräumt, sperrt die
          * anderen aus. */
         if (basis.isNotEmpty()) Kopplungshilfe.aufraeumen()
         if (this::puffer.isInitialized) puffer.close()
@@ -103,9 +102,8 @@ class SendeRundlaufTest {
     }
 
     /**
-     * Eine Kopplung besorgen. Der Parameter `code` ist entfallen: Codes werden
-     * seit der Umkehr (R49) nicht mehr vorbereitet, sondern vom Server
-     * vergeben — [Kopplungshilfe] holt einen und ordnet ihn dem Prüfkonto zu.
+     * Eine Kopplung besorgen. Codes werden nicht vorbereitet, sondern vom
+     * Server vergeben — [Kopplungshilfe] holt einen und ordnet ihn dem Prüfkonto zu.
      */
     private fun koppeln() {
         val fehler = Kopplungshilfe.koppeln(Kopplungsdienst(HttpNetzweg(), tresor, basis), geraet)
@@ -135,7 +133,7 @@ class SendeRundlaufTest {
 
     /**
      * Ein vollständiger 12-h-Dienst als Ruhesegment-Kette — der
-     * Nur-Aufzeichnen-Fall (E-S4-20), und zugleich die längste Kette, die
+     * Nur-Aufzeichnen-Fall, und zugleich die längste Kette, die
      * dieser Client erzeugt.
      */
     @Test fun zwoelfStundenDienstLaeuftVollstaendigDurch() {

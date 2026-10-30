@@ -13,12 +13,12 @@ declare(strict_types=1);
  *
  * WOFUER. Fuenf Proben stellen Schluessellagen her, um zu pruefen, was die
  * Anwendung dann tut: ein anderer Serverschluessel, ein unbrauchbarer
- * Eintrag, gar keiner, ein Anteil ohne Marke. Bis Web 20.26.3 ging das ueber
+ * Eintrag, gar keiner, ein Anteil ohne Marke. Frueher ging das ueber
  * die globale `$CFG` — eine Zuweisung, und `serverschluessel(true)` las sie
  * beim naechsten Mal.
  *
- * WARUM ES DIESE DATEI GIBT. Mit Schritt 15 AP2 (Web 20.27.0) ist die
- * globale `$CFG` entfallen; die Anwendung liest ueber `konfig()` aus der
+ * WARUM ES DIESE DATEI GIBT. Die
+ * globale `$CFG` gibt es nicht; die Anwendung liest ueber `konfig()` aus der
  * Datei. Eine Zuweisung an `$CFG` erreicht seither NIEMANDEN mehr — sie
  * scheitert nicht, sie tut nur nichts. Gemessen am 21.09.2026: **30
  * Erwartungen in fuenf Proben** standen danach auf „nicht erfuellt", und
@@ -35,7 +35,7 @@ declare(strict_types=1);
  * `tools/motor.mjs`: fuenfmal geschrieben waere sie viermal richtig und
  * einmal falsch.
  *
- * DIE TIEFE IST ZWEI, NICHT EINS. Die vier Proben liegen seit PK-04/2 unter
+ * DIE TIEFE IST ZWEI, NICHT EINS. Die vier Proben liegen unter
  * `tools/proben/<name>/`, nicht mehr flach unter `tools/`. Der `../`-Zaehler
  * im `require_once` ist deshalb die Stelle, die bei einem Umzug bricht — und
  * zwar STILL, denn git fuehrt eine Umbenennung und eine Aenderung ohne
@@ -63,7 +63,7 @@ declare(strict_types=1);
  *
  * Nur die OBERSTE Ebene — mehr braucht keine der fuenf Proben, und eine
  * Punktpfad-Schreibweise waere eine Schnittstelle, die gegen einen Fall
- * entworfen ist (R83).
+ * entworfen ist.
  *
  * @param  array<string,?string> $werte  Schluessel => Wert, `null` entfernt
  * @param  ?string $pfad  Welche `config.php`? Ohne Angabe die der Anlage.
@@ -121,11 +121,11 @@ function konfig_stellen(array $werte, ?string $pfad = null): callable
     return $zurueck;
 }
 
-/* DIE MARKEN GEHOEREN ZUM STAND (Nr. 393).
+/* DIE MARKEN GEHOEREN ZUM STAND.
  *
  * Fehlt `server_key_kennung` oder `kdf_anteil_kennung` in `app_state`, legt
  * die Anwendung sie beim naechsten Lesen des Zustands an, mit dem Schluessel,
- * der GERADE in `config.php` steht (E-S10-U-02). Diese Datei ruft nach jedem
+ * der GERADE in `config.php` steht. Diese Datei ruft nach jedem
  * Schreiben `config_gemerktes_verwerfen()`, und das liest den Zustand neu. Auf
  * einer Anlage ohne Marke hielt die Datenbank danach also den Schluessel der
  * GESTELLTEN Lage fest, auch nachdem die Datei laengst zurueckgelegt war, und
@@ -198,12 +198,12 @@ function konfig_stellen_urstand(string $pfad, ?string $text, ?array $marken = nu
     /* EINE KOPIE AUF DER PLATTE, nicht nur im Speicher: Der haerteste
      * Abbruch ist der, bei dem PHP nichts mehr ausfuehrt.
      *
-     * UND ZWAR AUSSERHALB VON `server/` (R17-19, F-R17-55, E-R17-36). Bis
-     * Web 23.0.3 lag sie als `config.php.vor-probe` NEBEN der Datei, also im
-     * Webverzeichnis — mit Datenbankzugang, Serverschluessel, Anteil und
-     * SMTP-Passwort, unter einem Namen, der nicht auf `.php` endet und deshalb
-     * als Text ausgeliefert wird. Die `FilesMatch`-Regel deckte nur genau
-     * `config.php`, und nach einem `kill -9` blieb die Kopie liegen. */
+     * UND ZWAR AUSSERHALB VON `server/`. Als `config.php.vor-probe` NEBEN
+     * der Datei laege sie im Webverzeichnis — mit Datenbankzugang,
+     * Serverschluessel, Anteil und SMTP-Passwort, unter einem Namen, der
+     * nicht auf `.php` endet und deshalb als Text ausgeliefert wird. Eine
+     * `FilesMatch`-Regel, die nur genau `config.php` deckt, hilft dann
+     * nicht, und nach einem `kill -9` bliebe die Kopie liegen. */
     $sicherung = null;
     if ($text !== null) {
         $sicherung = konfig_stellen_sicherung($pfad);
@@ -225,7 +225,7 @@ function konfig_stellen_urstand(string $pfad, ?string $text, ?array $marken = nu
  * Wohin die Sicherung einer `config.php` kommt: ins Temp-Verzeichnis, je
  * Pfad ein eigener Name — `komplettprobe` stellt in einer Kopie, und zwei
  * Pfade duerfen einander die Sicherung nicht ueberschreiben. Nie unter
- * `server/` und nie im Repositorium (F-R17-55).
+ * `server/` und nie im Repositorium.
  */
 function konfig_stellen_sicherung(string $pfad): string
 {
@@ -253,7 +253,7 @@ function konfig_stellen_bytes(string $pfad, ?string $text): void
 }
 
 /** Wo liegt die `config.php` der Anlage? ZWEI Ebenen hoch: Die Datei liegt
- * seit Konzept BR unter tools/sandbox/ (E-BR-03 (4)). Mit einer Ebene zeigte
+ * unter tools/sandbox/. Mit einer Ebene zeigte
  * der Pfad auf tools/server/ — und der Rueckweg oben kehrt bei fehlendem
  * Verzeichnis STILL zurueck. */
 function konfig_stellen_pfad(): string

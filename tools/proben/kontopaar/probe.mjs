@@ -1,5 +1,4 @@
-/* Kontopaarprobe — das Schlüsselpaar des Kontos im Browser (S11-03; Konzept
- * S11 3.1, E-S11-14).
+/* Kontopaarprobe — das Schlüsselpaar des Kontos im Browser.
  *
  * Anlass: Nr. 43 — Uhr und Handy verschließen Ortsdaten für das Konto; der
  * Schlüssel dafür muss entstehen, zum privaten passen und darf nicht
@@ -12,7 +11,7 @@
  *      Eintrag `kontopaar_angelegt`
  *   2b. eine zweite Seite, aufgebaut WÄHREND das Paar entsteht (`KP_STAND`
  *      fehlt): `EdKontopaar.bereit()` holt den Schlüssel nach, und die Seite
- *      verschließt damit (S11-05e, F-S11-61 — vorher „kein Schlüsselpaar")
+ *      verschließt damit (statt „kein Schlüsselpaar")
  *   3. eine Seite, die den Schlüssel braucht: Abgleich passt, keine Meldung;
  *      eine Gerätehülle mit dem ausgelieferten öffentlichen Teil
  *      verschlossen geht mit dem privaten auf (Rundlauf über die Anwendung)
@@ -34,7 +33,7 @@ import { readFileSync, rmSync, mkdtempSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { motorWahl, starten } from '../../motor.mjs';
+import { motorWahl, starten, istOertlich } from '../../motor.mjs';
 
 const HIER   = dirname(fileURLToPath(import.meta.url));
 const WURZEL = join(HIER, '..', '..', '..');
@@ -52,7 +51,7 @@ const PASSWORT = 'umlaufpruefung2026-kontopaar';
 const KONTO = join(WURZEL, 'tools', 'referenzdatensatz', 'vergleich', 'pruefkonto.py');
 const MODUL = process.env.PLAYWRIGHT_MODUL || '/opt/node22/lib/node_modules/playwright/index.mjs';
 const PW = (m => m.default ?? m)(await import('file://' + MODUL));
-/* Die Engine wählt der Läufer (MOTOR=… oder --motor), R87. */
+/* Die Engine wählt der Läufer (MOTOR=… oder --motor). */
 const MOTOR = motorWahl(process.argv);
 
 let gesamt = 0, offen = 0;
@@ -91,7 +90,7 @@ try {
   const id = kontoId();
   pruefe(id > 0, '1  Wegwerfkonto angelegt', `Konto ${id}`);
 
-  const kontext = await browser.newContext({ ignoreHTTPSErrors: true });
+  const kontext = await browser.newContext({ ignoreHTTPSErrors: istOertlich(BASIS) });
   await kontext.route(/tile\.|opentopomap|arcgisonline|basemap\.at/i, r => r.abort());
   const s = await kontext.newPage();
   const fehler = [];
@@ -114,7 +113,7 @@ try {
                      s.click('#loginform button[type="submit"]')]);
   /* Die Startseite eines Kontos ohne Diensttag braucht den Schlüssel nicht;
    * `nachDerAnmeldung()` löst das Vormerkfach trotzdem auf, wenn ein Paar
-   * fehlt. Erst die Antwort, dann neu laden (F-RW-22). */
+   * fehlt. Erst die Antwort, dann neu laden. */
   const b = await kontext.newPage();
   b.on('pageerror', e => fehler.push(e.message));
   await b.goto(`${BASIS}/import.php`, { waitUntil: 'domcontentloaded' });

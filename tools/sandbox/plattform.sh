@@ -134,7 +134,7 @@ for t in "$@"; do
                     datenbank mysql84    mysql:8.4.0  3308 mysql   MYSQL
                     schemaproben ;;
         # NUR DIE SCHEMAPROBEN, gegen die laufenden Behälter und die örtliche
-        # MariaDB (P5c/AP2, F-P5c-88). Der Prüfstand rief bis dahin
+        # MariaDB. Der Prüfstand rief bis dahin
         # `schemaprobe/probe.php` ohne Zugangsdaten — als root ohne Passwort,
         # und das lehnt die örtliche MariaDB ab. Die Zugangsdaten je Fassung
         # stehen hier, also läuft auch der Prüfstand über diese Stelle. Läuft

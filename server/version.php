@@ -8424,5 +8424,21 @@ declare(strict_types=1);
  *   die Probe wartet darauf statt auf feste Pausen. Dass ein Mensch
  *   schneller tippt, als der Browser entschluesselt, verhindert die Marke
  *   nicht — sie macht den Zeitpunkt nur sichtbar. Korrektur; kein Schema.
- */
-const WEB_VERSION = '23.5.1';
+ * 23.5.2 — AUFRAEUMEN, UND DIE KOMMENTARE TRAGEN KEINE KENNUNGEN MEHR
+ *   (Schritt 12b, R17-28). Der groesste Teil ist unsichtbar: Die Kommentare
+ *   in Server, Browser, Uhr, Android und Werkzeugen verweisen nicht mehr auf
+ *   Beschluesse, Befunde, Pakete, Backlog-Nummern und eigene Fassungen
+ *   (E-R17-27, E-R17-86); die Geschichte steht hier, im Changelog und in
+ *   Git. Nur diese Datei und `android/version.properties` behalten sie.
+ *   Erzaehlende Saetze wie „frueher stand hier …" sind dort geblieben, wo
+ *   sie den Grund tragen — ein eigener Punkt im Backlog.
+ *   Gemessen, dass der Code gleich blieb, mit einem Vergleich ohne
+ *   Kommentare je Datei. Dazu die Aufraeumposten des Reviews: Karteileichen
+ *   gestrichen, tote Zweige seit Web 23 entfernt, sechs Stylesheet-Regeln
+ *   ohne Verwender, und eine Handvoll kleiner Fehler mit Wirkung — Export-
+ *   und Import-Hinweis nannten Transportziel und Reanimation als
+ *   Klartext, die Geraetehandgriffe meldeten Erfolg ohne Treffer, eine Dublette
+ *   hakte den Erststart ab, die Tagesgrenze der Jobs lag in zwei Zeitzonen,
+ *   die Inhaltspruefung vor Migrationen hielt eine 0 fuer leer, die
+ *   Trefferhervorhebung zerteilte `&amp;`. Korrektur; kein Schema. */
+const WEB_VERSION = '23.5.2';

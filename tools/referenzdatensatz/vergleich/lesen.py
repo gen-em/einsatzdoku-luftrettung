@@ -6,16 +6,14 @@ mehr steht, was sich bei jedem Export aendert.
   CSV-Archiv (.zip)   LIESMICH.txt, felder.csv, einsaetze.csv,
                       diensttage.csv, ruhezeiten.csv, tracks/*.gpx
   Backup (.edbak)  Container v4 (ZIP mit versiegelten Teilen; die
-                      einteiligen v2/v3 liest er seit Web 23 nicht
-                      mehr, S11-12), entsiegelt mit dem
+                      einteiligen v2/v3 liest er nicht), entsiegelt mit dem
                       Backup-Passwort; das innere JSON traegt die
                       geschuetzten Angaben im KLARTEXT (Backup-Format.md 2) —
                       deshalb ist es vergleichbar, ohne dass Chiffretext
                       angefasst wird.
 
 Fassung 4 wird beim Lesen wieder ZUSAMMENGESETZT: Die Spuren stehen dort als
-Punktlisten in eigenen Teilen (Nutzlast 13; bis 12 als SPUR1-Blobs, die dieser
-Leser bis Web 22.7.0 selbst dekodierte) und werden hier zu `track`-Listen an ihrem
+Punktlisten in eigenen Teilen (Nutzlast 13) und werden hier zu `track`-Listen an ihrem
 Einsatz beziehungsweise Ruhesegment aufgeloest. Der gelieferte Baum sieht
 danach aus wie der einer einteiligen Datei — sonst muessten normalisieren.py,
 vergleichen.py und beide Ausnahmelisten zweimal gepflegt werden, und die Zahl
@@ -59,10 +57,9 @@ def lesen_archiv(pfad: str) -> dict:
 
 # ------------------------------------------------------------------ .edbak
 #
-# Bis Web 22.7.0 las dieser Leser auch die einteiligen Container der
-# Fassungen 2 und 3 ("EDBAK2" 0x00 0x02/0x03). Die Anwendung nimmt sie seit
-# Web 23 nicht mehr an (S11-12, E-S11-85), und eine Referenz dieser Form gibt
-# es nicht mehr; ein Pruefmittel fuer ein Format ohne Gegenstand prueft nichts.
+# Die einteiligen Container der Fassungen 2 und 3 ("EDBAK2" 0x00 0x02/0x03)
+# liest dieser Leser nicht: Die Anwendung nimmt sie nicht an, und eine
+# Referenz dieser Form gibt
 #
 # Der Inhalt ist KLARTEXT: Der Browser entschluesselt vor dem Versiegeln,
 # damit sich das Backup in jedes Konto einspielen laesst
@@ -86,7 +83,7 @@ def lesen_edbak(pfad: str, passwort: str) -> dict:
 
 # ------------------------------------------------------- .edbak Fassung 4
 #
-# Aufbau (docs/Backup-Format.md, Konzept S2 3.2):
+# Aufbau (docs/Backup-Format.md):
 #
 #   ZIP (Speichern ohne Kompression)
 #     manifest.edbak         versiegelt, AAD "EDBAK4|manifest"
@@ -201,7 +198,7 @@ def lesen_edbak_v4(pfad: str, passwort: str) -> dict:
                                 .decode("utf-8"))
             art = t.get("art")
             if art == "kopf":
-                # NUR "kopf". Web 11.0.0 hatte hier ein "kern"; diese Fassung
+                # NUR "kopf". Eine fruehe Fassung hatte hier ein "kern"; diese Fassung
                 # ist nie ausgeliefert worden, und der Browser weist sie ab.
                 # Ein zweiter Leser, der grosszuegiger ist als der erste,
                 # pruefte ein Format, das es nicht gibt.
@@ -214,10 +211,10 @@ def lesen_edbak_v4(pfad: str, passwort: str) -> dict:
                 eintraege["missions"].extend(inhalt.get("missions", []))
                 eintraege["rest_segments"].extend(inhalt.get("rest_segments", []))
             else:
-                # PUNKTLISTEN (Nutzlast 13, S11-06a, E-S11-56) — dieselbe Form
+                # PUNKTLISTEN (Nutzlast 13) — dieselbe Form
                 # [seq, lat, lon, ele, ts] wie die `track`-Liste einer
                 # einteiligen Datei. Einen SPUR1-Blob (bis Nutzlast 12) liest
-                # dieser Leser seit Web 23 nicht mehr (S11-12, E-S11-85).
+                # dieser Leser nicht.
                 for eintrag in inhalt.get("spuren", []):
                     if "punkte" not in eintrag:
                         raise ValueError("Spurteil ohne Punktliste (SPUR1, Nutzlast 12 oder aelter)")
@@ -272,7 +269,7 @@ def lesen_edbak_v4(pfad: str, passwort: str) -> dict:
         "eintragsteile": sum(1 for t in teile if t.get("art") == "eintraege"),
         "teilenamen": [t["name"] for t in teile],
         # Die Zahl, an der der Einspielweg entscheidet, ob er vor unlesbaren
-        # Angaben warnt (S2/AP5b). Hier steht sie, damit ein Lauf sie NENNT
+        # Angaben warnt. Hier steht sie, damit ein Lauf sie NENNT
         # statt sie zu unterstellen: `None` heisst „das Manifest sagt nichts",
         # und das ist etwas anderes als eine Null.
         "unlesbar": manifest.get("unlesbar"),

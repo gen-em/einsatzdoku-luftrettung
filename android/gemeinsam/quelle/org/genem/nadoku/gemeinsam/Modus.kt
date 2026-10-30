@@ -1,7 +1,7 @@
 package org.genem.nadoku.gemeinsam
 
 /**
- * Wie dieser Dienst dokumentiert wird (E-S4-20).
+ * Wie dieser Dienst dokumentiert wird.
  *
  * DER MODUS IST KEIN SONDERWEG, sondern der benannte Grundzustand:
  * [NUR_AUFZEICHNEN] ist **exakt** das Verhalten eines Dienstes, in dem nie
@@ -17,10 +17,10 @@ package org.genem.nadoku.gemeinsam
  * und schneidet die Einsätze später im Browser heraus. Kein versehentlicher
  * Druck mit Handschuhen, ein Bildschirm ohne Frage.
  *
- * DER WECHSEL WÄHREND DES DIENSTES IST VERLUSTFREI (E-S4-20): Er blendet die
+ * DER WECHSEL WÄHREND DES DIENSTES IST VERLUSTFREI: Er blendet die
  * Knöpfe ein oder aus, bereits Gesendetes bleibt unberührt. Ein Umstieg auf
  * „mit Knöpfen" schließt das laufende Segment erst, wenn tatsächlich eine
- * Phase gesetzt wird — wie bisher.
+ * Phase gesetzt wird.
  */
 enum class Modus(val gespeichert: String) {
     MIT_PHASENKNOEPFEN("phasen"),

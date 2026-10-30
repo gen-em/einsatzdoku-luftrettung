@@ -4,19 +4,19 @@ require_once __DIR__ . '/db.php';
 require_once __DIR__ . '/email_lib.php';   // ist_dublettenfehler()
 
 /**
- * KOPPLUNGSSITZUNGEN (Web 13.0.0, S5 / R49) — die Schicht zwischen dem
+ * KOPPLUNGSSITZUNGEN — die Schicht zwischen dem
  * Endpunkt (pair.php), der Geraeteseite (einstellungen.php) und der
  * Kopplungsprobe (tools/proben/kopplung/).
  *
  * WARUM EINE EIGENE DATEI. Drei Stellen greifen auf dieselbe Tabelle zu, und
  * zwei Regeln daran duerfen nirgends verschieden ausgelegt werden:
  *
- *   1. Die Frist. EINE Frist ab `erstellt_am` fuer alles (E-S5-12): Anlegen,
+ *   1. Die Frist. EINE Frist ab `erstellt_am` fuer alles: Anlegen,
  *      Nachfragen, Eingeben im Web und das Ja am Geraet rechnen alle gegen
  *      dieselbe Bedingung (pair_frist_sql()). Wer sie an einer Stelle anders
  *      schriebe — etwa `>=` statt `>` —, haette zwei Fristen.
  *   2. Der Schiedsrichter. Beanspruchen ist ein UPDATE mit `user_id IS NULL`
- *      in der Bedingung und gilt nur bei rowCount() = 1 (E-S5-13). Zwei
+ *      in der Bedingung und gilt nur bei rowCount() = 1. Zwei
  *      Browser mit demselben Code: genau einer gewinnt, und zwar der, dessen
  *      Aenderung die Datenbank zuerst schreibt — nicht der, der zuerst
  *      gelesen hat.
@@ -35,7 +35,7 @@ function pair_frist_sql(): string
     return 'erstellt_am > DATE_SUB(NOW(), INTERVAL ' . PAIR_TTL_MIN . ' MINUTE)';
 }
 
-/** Zahl der unverfallenen Sitzungen — die Zaehlung hinter PAIR_SITZUNGEN_MAX (E-S5-14). */
+/** Zahl der unverfallenen Sitzungen — die Zaehlung hinter PAIR_SITZUNGEN_MAX. */
 function pair_sitzungen_offen(PDO $pdo): int
 {
     return (int)$pdo->query('SELECT COUNT(*) FROM pair_sessions WHERE ' . pair_frist_sql())
@@ -147,7 +147,7 @@ function pair_sitzung_nach_code(PDO $pdo, string $code): ?array
 /**
  * Der Code, wie ein Mensch ihn liest: zwei Dreiergruppen, „AB3 K7Q“.
  *
- * Dieselbe Form zeigt das Geraet (Konzept Z-03). Der Server SPEICHERT ihn ohne
+ * Dieselbe Form zeigt das Geraet. Der Server SPEICHERT ihn ohne
  * Trennzeichen; die Gruppierung ist reine Anzeige, und die Eingabe nimmt beide
  * Formen (pair_code_normalisieren()). Geteilt wird in der Mitte, damit die
  * Regel eine Aenderung von PAIR_LEN ueberlebt.
@@ -158,7 +158,7 @@ function pair_code_anzeigen(string $code): string
 }
 
 /**
- * Restzeit in Worten (Konzept Z-18): volle Minuten, unter einer Minute
+ * Restzeit in Worten: volle Minuten, unter einer Minute
  * Sekunden. „Noch 9 Minuten“ ist genauer, als es aussieht — die Zahl kommt vom
  * Server, nicht von der Uhr des Geraets.
  *
@@ -176,7 +176,7 @@ function pair_restzeit_text(int $sekunden): string
 }
 
 /**
- * Eine Sitzung verwerfen — der Abbruch im Web (S5 Paket B).
+ * Eine Sitzung verwerfen — der Abbruch im Web.
  *
  * DAS KONTO STEHT IN DER BEDINGUNG, nicht in einer vorherigen Abfrage: Wer
  * eine fremde Kennung schickt, loescht nichts, und die Antwort ist dieselbe.
@@ -194,7 +194,7 @@ function pair_sitzung_verwerfen(PDO $pdo, string $deviceId, int $userId): bool
  * Gibt es zu dieser Kennung schon ein Geraet in diesem Konto?
  *
  * Die eine Frage, die das Web nach dem Beanspruchen wiederholt stellt, bis das
- * Geraet Ja gesagt hat (E-S5-53). Sie steht hier und nicht als SQL in der
+ * Geraet Ja gesagt hat. Sie steht hier und nicht als SQL in der
  * Seite, damit der Endpunkt und die Seite dieselbe Antwort bekommen.
  */
 function pair_geraet_da(PDO $pdo, string $deviceId, int $userId): bool
@@ -205,7 +205,7 @@ function pair_geraet_da(PDO $pdo, string $deviceId, int $userId): bool
 }
 
 /**
- * Beanspruchen: das Konto an die Sitzung binden (E-S5-13).
+ * Beanspruchen: das Konto an die Sitzung binden.
  *
  * Gilt nur bei rowCount() = 1. `user_id IS NULL` steht in der BEDINGUNG, nicht
  * in einer vorherigen Abfrage — sonst faenden zwei gleichzeitige Klicks den

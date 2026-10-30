@@ -4,10 +4,9 @@ declare(strict_types=1);
 /**
  * Prueffutter fuer die Containerprobe: Spurteile der Nutzlast 13.
  *
- * Seit S11-06a traegt ein Spurteil je Spur eine PUNKTLISTE
+ * Ein Spurteil traegt je Spur eine PUNKTLISTE
  * ([seq, lat, lon, ele|null, ts]), die der Browser beim Sichern aus den
- * verschlossenen Stuecken oeffnet. Bis Web 22.7.0 baute dieses Werkzeug
- * SPUR1-Blobs mit `spur_kodieren()` (S11-12); die Probe belegt seitdem, dass
+ * verschlossenen Stuecken oeffnet. Die Probe belegt, dass
  * eine Punktliste durch Fassung 4 hindurch unveraendert ankommt.
  *
  * Ausgabe auf stdout: JSON mit `spuren` (spur_ref, stufe, n_original, n,

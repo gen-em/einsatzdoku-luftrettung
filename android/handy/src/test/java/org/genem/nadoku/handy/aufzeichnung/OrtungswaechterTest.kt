@@ -5,9 +5,9 @@ import org.junit.Assert.assertEquals
 import org.junit.Test
 
 /**
- * Der Ortungswächter (E-S5Z-06) — **die Entscheidungen, nicht die Syntax**.
+ * Der Ortungswächter — **die Entscheidungen, nicht die Syntax**.
  *
- * WARUM DIESE FÄLLE DAS GEWICHT TRAGEN. Was Paket E baut, ist am Gerät zu
+ * WARUM DIESE FÄLLE DAS GEWICHT TRAGEN. Was der Wächter tut, ist am Gerät zu
  * sehen und sonst nirgends: Es gibt in diesem Container keinen Emulator
  * (arm64 übersetzt der heutige QEMU2 nicht, x86_64 braucht KVM und
  * `/dev/kvm` fehlt), also kein `adb emu geo fix`, kein Abschalten des
@@ -56,7 +56,7 @@ class OrtungswaechterTest {
         assertEquals(Warnbefehl.NICHTS, w.anfangsbefehl(0))
     }
 
-    // ---- Erstfix-Frist (Z-S5Z-01, 120 s) -----------------------------------
+    // ---- Erstfix-Frist (120 s) ---------------------------------------------
 
     @Test
     fun nach_119_s_ohne_fund_sucht_er_noch() {
@@ -90,7 +90,7 @@ class OrtungswaechterTest {
         assertEquals(Ortungsstand.OK, w.stand)
     }
 
-    // ---- Betriebsfrist (Z-S5Z-02, 60 s) ------------------------------------
+    // ---- Betriebsfrist (60 s) ----------------------------------------------
 
     @Test
     fun aus_ok_heraus_macht_60_s_stille_kein_signal() {
@@ -172,7 +172,7 @@ class OrtungswaechterTest {
         assertEquals(Ortungsstand.SUCHT, w.stand)
     }
 
-    // ---- Warnung und Erinnerung (Z-S5Z-04, 600 s) --------------------------
+    // ---- Warnung und Erinnerung (600 s) ------------------------------------
 
     @Test
     fun die_erinnerung_kommt_nach_600_s_und_nicht_nach_599() {
@@ -228,7 +228,7 @@ class OrtungswaechterTest {
         )
     }
 
-    // ---- Die Bruecke zur Uhr (E3) ------------------------------------------
+    // ---- Die Bruecke zur Uhr -----------------------------------------------
 
     @Test
     fun jede_stufe_hat_genau_einen_code() {

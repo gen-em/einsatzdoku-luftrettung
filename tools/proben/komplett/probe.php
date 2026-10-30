@@ -2,12 +2,12 @@
 declare(strict_types=1);
 
 /**
- * KOMPLETTPROBE — der volle Zyklus des Komplett-Backups (S2/AP8).
+ * KOMPLETTPROBE — der volle Zyklus des Komplett-Backups.
  *
  *   php tools/proben/komplett/probe.php --pruefdb=edoku_probe [--nutzer=root] \
  *       [--passwort=…] [--ziel=/tmp/versandprobe]
  *
- * Sie fährt, was die Abnahme von AP8 verlangt: Komplett-Backup erzeugen ->
+ * Sie fährt, was die Abnahme verlangt: Komplett-Backup erzeugen ->
  * versiegeln -> öffnen -> in eine LEERE Datenbank einspielen -> Tabelle für
  * Tabelle vergleichen -> auf ein Backup-Ziel schieben.
  *
@@ -82,11 +82,11 @@ register_shutdown_function(static function () use ($tmp): void {
 require_once $srv . '/komplett_lib.php';
 require_once __DIR__ . '/../../sandbox/konfig_stellen.php';
 
-/* DIE MARKE DES SERVERSCHLUESSELS BLEIBT, WIE SIE WAR (Nr. 393).
+/* DIE MARKE DES SERVERSCHLUESSELS BLEIBT, WIE SIE WAR.
  *
  * `konfig_stellen()` ruft am Ende `config_gemerktes_verwerfen()`, und das
  * fragt `serverschluessel_zustand(true)`. Fehlt die Marke
- * `server_key_kennung`, LEGT DIESE FRAGE SIE AN (E-S10-U-02) — und zwar mit
+ * `server_key_kennung`, LEGT DIESE FRAGE SIE AN — und zwar mit
  * dem Schluessel, den der Prozess gerade liest: dem der ARBEITSKOPIE. Die
  * Datenbank ist aber die echte. Gemessen am 25.10.2026: frisch eingerichtete
  * Anlage, Marke noch nicht gesetzt; nach dieser Probe nannte sie den
@@ -178,8 +178,8 @@ pruef('Leere Binärdaten werden zur leeren Zeichenkette',
  * Teil 3 — Der Dump in Häppchen
  * ====================================================================== */
 kopf('Teil 3 — Der Dump entsteht in Häppchen');
-/* EIN SPERREREIGNIS MIT IP UND ADRESSE, damit Teil 6 einen Gegenstand hat
- * (P5c/AP2, E-P5c-57): Ohne Zeile in `sicherheit_ereignisse` wäre „ohne
+/* EIN SPERREREIGNIS MIT IP UND ADRESSE, damit Teil 6 einen Gegenstand hat:
+ * Ohne Zeile in `sicherheit_ereignisse` wäre „ohne
  * Zeilen im Dump" grün, ohne dass es etwas wegzulassen gab. Aufgeräumt wird
  * am Ende, auch wenn die Probe abbricht. */
 $ohneMerkmal = '203.0.113.' . random_int(10, 250);
@@ -207,7 +207,7 @@ while (true) {
     if ($runden > 500) { break; }
 }
 $dauer = microtime(true) - $anfangZeit;
-/* MEHR ALS EIN HÄPPCHEN BRAUCHT EINEN BESTAND, DER DAS HERGIBT (S10/AP4).
+/* MEHR ALS EIN HÄPPCHEN BRAUCHT EINEN BESTAND, DER DAS HERGIBT.
  * Am Referenzbestand (rund 18 000 Zeilen) ist der Dump in einem Zug fertig;
  * das ist keine Fehlfunktion, sondern eine kleine Datenbank. Gemeldet wird
  * die Zahl, nicht ein roter Haken — messbar ist die Häppchenteilung im
@@ -291,9 +291,9 @@ pruef('Ein veränderter Dateikopf macht die Datei unlesbar',
       $fehler(fn() => komp_oeffnen($verdreht, (string)serverschluessel(), fn() => null)) !== '',
       'der Kopf hängt über die Zusatzdaten an jedem Block');
 
-/* VERSIEGELN ÜBER MEHRERE HÄPPCHEN — erzwungen, nicht dem Zufall überlassen
- * (Nr. 328, F-P5c-170). Oben entscheidet die Laufzeit, ob die Häppchengrenze
- * ins Siegeln fällt; im Abschluss von P5c tat sie es einmal, und die Datei
+/* VERSIEGELN ÜBER MEHRERE HÄPPCHEN — erzwungen, nicht dem Zufall überlassen.
+ * Oben entscheidet die Laufzeit, ob die Häppchengrenze
+ * ins Siegeln fällt; einmal tat sie es, und die Datei
  * liess sich nicht öffnen. Hier schreibt jedes Häppchen genau einen Block,
  * aus einem Klartext von drei Blöcken — und am Ende muss derselbe Inhalt
  * herauskommen. Danach dasselbe mit einer Zieldatei, die zwischen zwei
@@ -361,7 +361,7 @@ pruef('Eine zu kurze Passphrase wird abgewiesen',
       $fehler(fn() => komp_ausgeben_passphrase($datei, 'kurz', fn() => null)) !== '');
 
 /* =========================================================================
- * Teil 6 — Die Form des Dumps (E-S2-20)
+ * Teil 6 — Die Form des Dumps
  * ====================================================================== */
 kopf('Teil 6 — Die Form des Dumps');
 $klar = $tmp . '/dump.sql';
@@ -401,7 +401,7 @@ foreach (array_keys($tabellen) as $t) {
 pruef('Jede Tabelle hat ein CREATE TABLE', $fehlt === [],
       $fehlt === [] ? count($tabellen) . ' Tabellen' : implode(', ', $fehlt));
 
-/* OHNE ZEILEN (P5c/AP2, E-P5c-57): Schema ja, Zeilen nein, und der Kopf
+/* OHNE ZEILEN: Schema ja, Zeilen nein, und der Kopf
  * sagt es. Die Gegenprobe ist das Sperrereignis aus Teil 3 — seine IP und
  * seine Adresse dürfen nirgends im Dump stehen. */
 pruef('Der Kopf nennt die Tabellen ohne Zeilen',
@@ -486,7 +486,7 @@ if ($pruefPdo !== null) {
     foreach (array_intersect($a, $b) as $t) {
         $q = '`' . str_replace('`', '``', $t) . '`';
         if (isset(KOMP_OHNE_ZEILEN[$t])) {
-            /* Schema ja, Zeilen nein (E-P5c-57) — hier leer, drüben nicht. */
+            /* Schema ja, Zeilen nein — hier leer, drüben nicht. */
             $ohneLeer += (int)$pruefPdo->query("SELECT COUNT(*) FROM $q")->fetchColumn() === 0 ? 1 : 0;
             $cA = (string)($pdo->query("SHOW CREATE TABLE $q")->fetch(PDO::FETCH_NUM)[1] ?? '');
             $cB = (string)($pruefPdo->query("SHOW CREATE TABLE $q")->fetch(PDO::FETCH_NUM)[1] ?? '');
@@ -527,8 +527,8 @@ if ($pruefPdo !== null) {
           . ($abweichung === ['jobs'] ? ' (erwartet: das Backup schreibt ihren eigenen Stand mit)' : ''));
 
     /* Eine unabhängige Gegenprobe an den Spurdaten: Sie sind der Grund für
-     * die Hexschreibweise der Binärspalten. Seit Web 23 die Hüllen der
-     * Spurstücke (S11-12); bis dahin die SPUR1-Blobs in `track_blobs` und die
+     * die Hexschreibweise der Binärspalten: die Hüllen der
+     * Spurstücke; früher die SPUR1-Blobs in `track_blobs` und die
      * Fließkommazahlen in `track_points`. */
     $hA = (string)$pdo->query("SELECT COALESCE(MD5(GROUP_CONCAT(SHA2(huelle,256) ORDER BY owner_type,owner_id,seq_from)),'-')
                                  FROM track_stuecke")->fetchColumn();
@@ -550,7 +550,7 @@ if ($pruefPdo !== null) {
  * ====================================================================== */
 kopf('Teil 8 — Wiederanlauf nach einem abgebrochenen Häppchen');
 /* DIESER TEIL BRAUCHT EINEN BESTAND, DER NICHT IN EIN HÄPPCHEN PASST
- * (S10/AP4, 14.09.2026).
+ * (14.09.2026).
  *
  * Er stellt einen Abbruch mitten im Dump nach. Läuft der Dump in EINEM Zug
  * durch — am Referenzbestand sind es 18 376 Zeilen und 438 KB, das ist in
@@ -563,7 +563,7 @@ kopf('Teil 8 — Wiederanlauf nach einem abgebrochenen Häppchen');
  * `gzread(false)` — ein TypeError, Rückgabewert 255, und die Teile 9 und 10
  * liefen nie. Die Zahl „76 von 76", die in der Anleitung steht, stammt aus
  * einer Zeit mit größerem Bestand; seither meldete diese Probe gar nichts
- * mehr (Fund F-S10-AP4-02).
+ * mehr.
  *
  * Jetzt wird nachgesehen und gesagt, was ist — eine Auskunft statt eines
  * Absturzes. Wer den Teil messen will, nimmt den Messstand
@@ -624,9 +624,9 @@ $anfang = (string)gzread($gzh, 4096);
 gzclose($gzh);
 pruef('Ist der Baustand verschwunden, beginnt der Lauf von vorn',
       /* BEIDE SCHREIBWEISEN, ueber dieselbe Funktion wie
-         wiederherstellen.php (S7, F-S7-04; seit R17-23 `komp_dump_eigen()`).
-         Bis dahin stand hier die Zeichenkette zweimal wortgleich — derselbe
-         Fehler wie dort (F-R17-33). */
+         wiederherstellen.php (`komp_dump_eigen()`).
+         Früher stand hier die Zeichenkette zweimal wortgleich — derselbe
+         Fehler wie dort. */
       function_exists('komp_dump_eigen') && komp_dump_eigen($anfang),
       'der Kopf steht wieder am Anfang');
 pruef('...und das wird im Zustand vermerkt', isset($verlorenR['neu_begonnen']),
@@ -635,11 +635,11 @@ komp_bau_weg((string)$z2['bau']);
 }
 
 /* =========================================================================
- * Teil 8a — Welcher Dump ist ein eigener? (F-R17-33, R17-23)
+ * Teil 8a — Welcher Dump ist ein eigener?
  *
  * `wiederherstellen.php` verlangt die Endmarke nur von einem EIGENEN Dump.
- * Bis Web 23.3.1 stand die alte Schreibweise der Kopfzeile dort zweimal
- * statt einmal, und ein abgebrochener Dump von vor S7 galt als fremd — er
+ * Früher stand die alte Schreibweise der Kopfzeile dort zweimal
+ * statt einmal, und ein abgebrochener alter Dump galt als fremd — er
  * ging ohne Endmarke durch. Drei Faelle, und der zweite ist der Befund.
  * ====================================================================== */
 kopf('Teil 8a — Welcher Dump ist ein eigener? (F-R17-33)');
@@ -707,11 +707,11 @@ if ($zielWurzel === '' || !is_dir($zielWurzel)) {
     } else {
         /* Ein Wegwerf-Ziel auf die örtliche Gegenstelle. Es wird am Ende
          * wieder entfernt — eine Probe, die Einträge hinterlässt, ist keine. */
-        /* FTPS UND NICHT MEHR FTP (S10/AP4, E-S10-14).
+        /* FTPS UND NICHT MEHR FTP.
          *
          * Hier stand `'protokoll' => 'ftp'` mit Port 2121 — und diese Probe
          * war damit das EINZIGE Werkzeug des Projekts, das ein `ftp`-Ziel
-         * wirklich anlegt. Der AP4-Zuschnitt nannte sie nicht; sobald
+         * wirklich anlegt. Der erste Zuschnitt nannte sie nicht; sobald
          * `sz_pruefen_eingabe()` das Protokoll abweist, scheitert schon das
          * Anlegen, und die sieben Erwartungen darunter laufen nicht mehr.
          * Aus 76/0 wäre 69/1 geworden — eine Probe, die nicht rot wird,
@@ -767,16 +767,16 @@ if ($zielWurzel === '' || !is_dir($zielWurzel)) {
 
 /* =========================================================================
  * Teil 11 — Zwei Geheimnisse in config.php, und keines gehoert ins Archiv
- *           (S10/AP5, E-S10-15; Zusage aus SP-3 „Was nicht ins Archiv gehoert")
+ *           (Zusage „Was nicht ins Archiv gehoert")
  *
- * DIE ZUSAGE. `config.php` traegt seit S10 zwei Geheimnisse: den
+ * DIE ZUSAGE. `config.php` traegt zwei Geheimnisse: den
  * Serverschluessel, der jede Sicherung versiegelt, und den Server-Anteil, der
  * in den Datenschluessel jedes Kontos eingeht. Das Komplettbackup sichert die
  * DATENBANK — `config.php` ist ausdruecklich NICHT darin, und das ist kein
  * Versehen, sondern der Sinn der Sache: Laege der Serverschluessel in der
  * Datei, die er versiegelt, waere das Siegel eine Verzierung.
  *
- * Bis AP5 stand diese Zusage ungemessen da. Sie ist billig zu messen und
+ * Ungemessen stand diese Zusage lange da. Sie ist billig zu messen und
  * teuer zu verlieren: Ein kuenftiger Eintrag in `app_state`, ein
  * Diagnosefeld, eine Fehlermeldung, die den Wert mitschreibt — und der
  * Serverschluessel laege im Archiv, ohne dass eine Zeile Code „falsch"
@@ -793,7 +793,7 @@ if ($zielWurzel === '' || !is_dir($zielWurzel)) {
 kopf('Teil 11 — Kein Geheimnis im Archiv, aber die Kennung (S10/AP5)');
 
 /* Die Zeile `global $kopieCfg, $echtCfg;` stand hier und war auf oberster Ebene
- * ohnehin wirkungslos. Entfallen mit Web 20.27.0 zusammen mit der globalen
+ * ohnehin wirkungslos. Entfallen zusammen mit der globalen
  * `$kopieCfg`: Beide Felder sind LOKAL — sie tragen, was in die `config.php` der
  * KOPIE geschrieben wurde, nicht was die Anwendung liest. */
 $anteilHex = strtolower((string)($kopieCfg['kdf_anteil'] ?? ''));
@@ -873,7 +873,7 @@ if ($dump === '') {
      * `schluessel_marke_setzen('kdf_anteil_kennung', …)` und legt die Marke an
      * — auf einer Installation, die noch keine hat, entstuende sie also durch
      * diese Probe. Das ist zwar dasselbe, was der erste Seitenaufruf ohnehin
-     * taete (E-S10-U-02), aber ein Pruefmittel soll den Zustand nicht
+     * taete, aber ein Pruefmittel soll den Zustand nicht
      * herstellen, den es misst. Deshalb der Riegel: ohne vorhandene Marke
      * wird dieser Block gar nicht erst betreten. */
     if (schluessel_marke_lesen('kdf_anteil_kennung') === null) {
@@ -886,10 +886,10 @@ if ($dump === '') {
     $anteilSicher = $kopieCfg['kdf_anteil'] ?? null;
     $standVor11   = anteil_zustand(true);
     try {
-        /* DIE LAGE WIRD IN DER DATEI DER KOPIE HERGESTELLT (Web 20.27.0).
+        /* DIE LAGE WIRD IN DER DATEI DER KOPIE HERGESTELLT.
          *
          * Hier stand `unset($kopieCfg['kdf_anteil'])`. Die globale `$kopieCfg` ist mit
-         * Schritt 15 AP2 entfallen; die Anwendung liest ueber `konfig()` aus
+         * entfallen; die Anwendung liest ueber `konfig()` aus
          * der Datei, und ein `unset` auf dem lokalen Feld erreicht niemanden
          * mehr — es scheitert nicht, es tut nur nichts. Der Stand blieb
          * „bereit" statt „abweichend" (gemessen 21.09.2026).

@@ -1,12 +1,12 @@
-/* Browserprobe des Messstands — misst die Zielzahlen aus E-S2-24 und die
- * Gerätebudgets aus Z3 (Konzept 3.5).
+/* Browserprobe des Messstands — misst die Zielzahlen und die
+ * Gerätebudgets.
  *
  * WOFUER. Ein Zielwert wie „Suche erste Anzeige ≤ 5 s auf dem Referenzgerät"
  * ist wertlos, solange ihn niemand nachmisst — und „fühlt sich schnell an" ist
- * keine Zahl. Diese Probe fährt die vier Wege, um die es in S2 geht, unter
+ * keine Zahl. Diese Probe fährt die vier Wege, um die es bei grossen Bestaenden geht, unter
  * gedrosselter CPU und schreibt zu jedem eine Zahl.
  *
- * DAS REFERENZGERAET (Z3) ist ein fünf Jahre altes Handy. Nachgestellt wird es
+ * DAS REFERENZGERAET ist ein fünf Jahre altes Handy. Nachgestellt wird es
  * durch `Emulation.setCPUThrottlingRate` mit Faktor 6. Das ist eine Näherung
  * und keine Messung an echter Hardware — es drosselt die Rechenzeit, nicht den
  * Speicher, nicht die GPU und nicht die Leitung. Wo das Ergebnis knapp ist,
@@ -16,15 +16,15 @@
  * WAS GEMESSEN WIRD, und warum genau das:
  *
  *   Zeit          Suche bis zur ersten Trefferanzeige, Tagesansicht,
- *                 Backup erstellen — die drei Wege aus E-S2-24.
+ *                 Backup erstellen — die drei Wege mit Zielzahl.
  *   JSON-Größe    Die größte Zeichenkette, die durch JSON.parse oder
- *                 JSON.stringify läuft. Z3 setzt hier 10 MB. Diese Zahl ist
+ *                 JSON.stringify läuft. Das Budget setzt hier 10 MB. Diese Zahl ist
  *                 der eigentliche Grund, aus dem der heutige Backup-Weg
- *                 bricht (B-S2-03) — sie wird deshalb direkt an der Quelle
+ *                 bricht — sie wird deshalb direkt an der Quelle
  *                 abgegriffen und nicht aus der Übertragungsgröße geschätzt.
  *   Halde         JSHeapUsedSize aus dem Protokoll der Entwicklerwerkzeuge,
- *                 Spitze über den ganzen Schritt. Z3 setzt 100 MB.
- *   PBKDF2        Wie oft `deriveBits` gerufen wurde. Z3 lässt EINE Ableitung
+ *                 Spitze über den ganzen Schritt. Das Budget setzt 100 MB.
+ *   PBKDF2        Wie oft `deriveBits` gerufen wurde. Das Budget lässt EINE Ableitung
  *                 je Vorgang zu; jede weitere kostet auf dem Referenzgerät
  *                 eine halbe bis eine Sekunde.
  *   Übertragung   Antwortbytes je Schritt und die größte POST-Nutzlast.
@@ -51,7 +51,7 @@ const bpw     = process.env.MESSSTAND_BACKUP_PASSWORT || 'nadokudemo0815';
 const lokal = /^https:\/\/(127\.0\.0\.1|localhost)(:|\/)/.test(basis);
 const browser = await chromium.launch();
 const kontext = await browser.newContext({ ignoreHTTPSErrors: lokal, acceptDownloads: true });
-/* DER WARTUNGSLAUF BLEIBT AUS (S11-07, F-S11-77): Er packt und dünnt im
+/* DER WARTUNGSLAUF BLEIBT AUS: Er packt und dünnt im
    Browser aus, sobald eine Seite ihn anstößt (Startseite, Reiter Backup),
    und das Ausdünnen ändert die Punkte — mitten in einem Vergleich wäre das
    eine Abweichung, die keine ist. Die Antwort sagt „nichts fällig" — ein
@@ -70,7 +70,7 @@ await kontext.addInitScript(() => {
               dokument: Math.random(), zustand: [] };
   window.__messstand = z;
 
-  /* DIE ZUSTANDSZEILE DES EXPORTS MIT ZEITSTEMPEL (S11-01): Jeder neue Text
+  /* DIE ZUSTANDSZEILE DES EXPORTS MIT ZEITSTEMPEL: Jeder neue Text
    * unter dem Exportknopf ist ein Abschnitt („Daten werden geladen…",
    * „Tracks 25 / 8174", „Archiv wird … gepackt…"). Daraus zerlegt der
    * GPX-Schritt seine Dauer. */
@@ -82,7 +82,7 @@ await kontext.addInitScript(() => {
     if (!l || l[1] !== t) { z.zustand.push([performance.now(), t]); }
   }).observe(document, { childList: true, subtree: true, characterData: true });
 
-  /* DIE LANGAUFGABEN DER SEITE (R4-27): Beginn und Ende jeder Aufgabe über
+  /* DIE LANGAUFGABEN DER SEITE: Beginn und Ende jeder Aufgabe über
    * 50 ms. Aus ihnen liest der Zeitraumschritt, wann der Hauptfaden zur
    * Ruhe kommt — die zweite Zahl neben „sichtbar". */
   try {
@@ -91,7 +91,7 @@ await kontext.addInitScript(() => {
     }).observe({ type: 'longtask', buffered: true });
   } catch (e) { /* ohne Langaufgaben bleibt `fertig_s` leer — gesagt, nicht geraten */ }
 
-  /* DIE ERSTE TABELLENZEILE, VON DER SEITE SELBST GEMESSEN (R4-17). Die
+  /* DIE ERSTE TABELLENZEILE, VON DER SEITE SELBST GEMESSEN. Die
    * Dauer unten ist die Zeit, bis Playwright die Zeile SIEHT — und das kann
    * es erst, wenn der gedrosselte Hauptfaden frei wird. Solange er
    * entschluesselt und das Layout rechnet, steht die Zeile schon da. Am
@@ -106,7 +106,7 @@ await kontext.addInitScript(() => {
     }
   }).observe(document, { childList: true, subtree: true });
 
-  /* DIE KRYPTO-ZEIT (S11-13): jeder Aufruf von decrypt, encrypt, deriveBits,
+  /* DIE KRYPTO-ZEIT: jeder Aufruf von decrypt, encrypt, deriveBits,
    * deriveKey und importKey mit Beginn und Ende. Die Aufrufe laufen
    * nebeneinander; gemeldet wird deshalb die Spanne vom ersten Beginn bis
    * zum letzten Ende und die Zahl, nicht eine Summe. */
@@ -158,7 +158,7 @@ await kontext.addInitScript(() => {
  * Ladeereignis.
  *
  * WAS DAMIT NICHT GEMESSEN WIRD: das Zeichnen der Kartenkacheln. Das ist
- * richtig so — S2 ändert an der Karte nichts, und die Kachelzeit hängt an
+ * richtig so — an der Karte aendert sich hier nichts, und die Kachelzeit hängt an
  * einer fremden Quelle. Im Prüfdokument steht es als Grenze des
  * Prüfmittels. */
 await kontext.route(/(^https?:\/\/[a-z]?\.?tile\.|opentopomap|arcgisonline|basemap\.at)/i,
@@ -236,7 +236,7 @@ async function messen(name, tun) {
     schritt: name,
     dauer_s: Math.round(dauer * 100) / 100,
     halde_spitze_mb: Math.max(spitze, await halde()),
-    /* Die Zaehler leben je DOKUMENT (S11-01, F-S11-14): Navigiert der Schritt,
+    /* Die Zaehler leben je DOKUMENT: Navigiert der Schritt,
      * beginnt die neue Seite bei null, und „nachher − vorher" kam als -1
      * heraus. Hat das Dokument gewechselt, zaehlt allein die neue Seite. */
     pbkdf2: !nachher ? null
@@ -247,7 +247,7 @@ async function messen(name, tun) {
     fehler,
   };
   if (ergebnis && typeof ergebnis === 'object') { Object.assign(messung, ergebnis); }
-  /* DIE ZERLEGUNG (S11-13): Zeitmarken der zuletzt geladenen Seite, in ms ab
+  /* DIE ZERLEGUNG: Zeitmarken der zuletzt geladenen Seite, in ms ab
    * ihrem Navigationsbeginn. Wofür: „sichtbar“ ist eine Zahl; wo sie
    * entsteht — Server, Skripte, api/, Entschlüsseln, belegter Hauptfaden —,
    * sagt erst diese Zeile. Gilt für die letzte Navigation des Schritts. */
@@ -283,7 +283,7 @@ async function messen(name, tun) {
   return messung;
 }
 
-/* ENTSPERREN, OHNE DIE MESSUNG ZU VERFAELSCHEN (S2/AP9).
+/* ENTSPERREN, OHNE DIE MESSUNG ZU VERFAELSCHEN.
  *
  * DIESE FUNKTION HAT VIER MESSWERTE VERDORBEN, und zwar lautlos. Sie wartete
  * VIER SEKUNDEN auf einen Entsperr-Dialog. Ist die Sitzung bereits entsperrt
@@ -291,7 +291,7 @@ async function messen(name, tun) {
  * Dialog nie, und die vier Sekunden liefen JEDES MAL vollstaendig ab. Sie
  * standen mitten im gemessenen Abschnitt.
  *
- * Die Ausgangsmessung von AP0 nennt „Suche 4,53 s" und „Tagesansicht 4,81 s".
+ * Die erste Ausgangsmessung nannte „Suche 4,53 s" und „Tagesansicht 4,81 s".
  * Beide liegen dicht ueber vier Sekunden, und das ist kein Zufall: Gemessen
  * wurde `max(4 s Wartezeit, tatsaechliche Dauer)`. Nachgemessen mit dieser
  * Fassung liegt die Suche bei 3,77 s — der wahre Wert lag die ganze Zeit
@@ -329,7 +329,7 @@ console.log(`Browserprobe gegen ${basis}, Drossel ${drossel}×, Konto ${konto}, 
   + `Prozessor ${cpus()[0]?.model || '?'} (${cpus().length} Kerne)`);
 const messungen = [];
 
-/* DER EICHLAUF (S11-13, F-S11-25): eine feste Rechenaufgabe im Browser unter
+/* DER EICHLAUF: eine feste Rechenaufgabe im Browser unter
  * derselben Drossel, dreimal, gezählt der Median. Wofür: Am 11. und
  * 13.10.2026 lieferte derselbe Code auf einem Prozessor desselben Namens
  * 1,33 und 2,11 s für dieselbe Seite — der Container lief nach einem
@@ -370,7 +370,7 @@ messungen.push(await messen('Anmelden', async () => {
  * deckelt sie bei 500 Einträgen — auch bei 1029 Diensttagen stehen also
  * höchstens 500 im Markup.
  *
- * SEIT WEB 21.4.0 SAGT SIE ES (R4-17, Nr. 37), und das misst dieser Schritt
+ * SEIT WEB 21.4.0 SAGT SIE ES, und das misst dieser Schritt
  * mit: Stehen 500 Verweise da, muss der Hinweis „… 500 jüngsten
  * Diensttage …" darunter stehen. Der Messstandbestand hat über 1000 Tage;
  * genau 500 (dann ohne Hinweis richtig) kommen hier nicht vor. Mehr als
@@ -389,7 +389,7 @@ messungen.push(await messen('Startseite (Tagesliste)', async () => {
 }));
 
 /* Die Tagesansicht ist erst fertig, wenn die Spur auf der Karte liegt — sie
- * kommt aus api/day.php und ist genau der Weg, den S2 umbaut. Auf das
+ * kommt aus api/day.php und ist genau der Weg, um den es hier geht. Auf das
  * Seitenladen zu warten hieße, auf die Kacheln zu warten. */
 messungen.push(await messen('Tagesansicht (Spur gezeichnet)', async () => {
   const verweis = seite.locator('aside a[href*="?d="]').first();
@@ -418,21 +418,21 @@ messungen.push(await messen('Suche — erste Trefferanzeige', async () => {
   return { trefferzahl: zahl };
 }));
 
-/* ---- DIE BEIDEN OFFENEN MESSUNGEN AUS BACKLOG Nr. 37 (P5a/AP9) ----------
+/* ---- DIE BEIDEN LANGE OFFENEN MESSUNGEN ---------------------------------
  *
- * SEIT WEB 21.4.0 HAT AUCH DIE ZEITRAUMUEBERSICHT IHREN DECKEL (R4-17): 200
+ * AUCH DIE ZEITRAUMUEBERSICHT HAT IHREN DECKEL: 200
  * Zeilen wie die Suche. Gemessen vorher, am 27.09.2026 im Pruefstand:
  * 88,11 s bei 4071 Einsaetzen und 4071 Zeilen (am 16.09.2026 auf einem
  * anderen Rechner 42,61 s bei 3983). Der Schritt unten ist seither auch
  * ein Riegel: Mehr als 200 Zeilen sind ein Fehler.
  *
  *
- * Nr. 37 nennt sie seit S2 als „was hier offen bleibt": die
+ * Lange offen geblieben waren die
  * Zeitraumuebersicht und die Nachbearbeitung bei 5000 Einsaetzen. Beide
- * fehlten dieser Probe, und deshalb konnte S2 sie nicht beantworten — nicht
+ * fehlten dieser Probe, und deshalb blieben sie unbeantwortet — nicht
  * weil der Bestand fehlte, sondern weil niemand hingesehen hat.
  *
- * WARUM SIE INTERESSANT SIND. Die Sondierung von P3 hat gemessen, dass
+ * WARUM SIE INTERESSANT SIND. Eine Sondierung hat gemessen, dass
  * `zeitraum.php` `EdMissionTable.erzeuge` OHNE `seite` aufruft: Es entstehen
  * so viele `<tr>`, wie der Zeitraum Einsaetze hat — bei 3500 waren es 854 ms
  * gegen 191 ms bei 82. Die Suche daneben ist bei 200 Zeilen gedeckelt und
@@ -446,8 +446,7 @@ messungen.push(await messen('Suche — erste Trefferanzeige', async () => {
  * Einsatzzahl steht mit im Protokoll. Eine Zeit ohne die Zahl daneben waere
  * keine Auskunft (CLAUDE.md 6).
  */
-/* SEIT R4-27 LAEUFT DIE UHR NUR UEBER DAS, WAS DIE ABNAHME MEINT (Nr. 37,
- * E-R4-64). Bis dahin begann sie mit dem Laden der STARTSEITE — die brauchte
+/* DIE UHR LAEUFT NUR UEBER DAS, WAS DIE ABNAHME MEINT. Frueher begann sie mit dem Laden der STARTSEITE — die brauchte
  * der Schritt nur, um das Jahr zu finden, und sie hat ihren eigenen Schritt
  * (rund 1,1 s) — und endete erst nach dem Zaehlen der Zeilen, das wartet,
  * bis der gedrosselte Hauptfaden frei wird. Am 28.09.2026 gemessen: 1,1 s
@@ -458,7 +457,7 @@ messungen.push(await messen('Suche — erste Trefferanzeige', async () => {
  * `fertig_s` — wann der Hauptfaden zur Ruhe kommt (Ende der letzten
  * Langaufgabe, von der Seite selbst ab ihrer Navigation gemessen). Die
  * erste ist die Abnahme, die zweite wird genannt, nicht gehalten: Die Seite
- * zeichnet seit Web 21.6.1 in Stuecken, und dadurch ist sie frueher zu sehen
+ * zeichnet in Stuecken, und dadurch ist sie frueher zu sehen
  * (Median 3,7 statt 5,8 s), aber rund 0,7 s spaeter fertig (7,0 statt
  * 6,3 s) — gemessen am 28.09.2026 mit genau diesem Schritt, je fuenf Laeufe. */
 await seite.goto(`${basis}/index.php`, { waitUntil: 'domcontentloaded', timeout: 180000 });
@@ -466,8 +465,9 @@ const zeitraumZiel = await seite.locator('aside a[href*="?d="]').first()
                                 .getAttribute('href').catch(() => null);
 const zeitraumJahr = (zeitraumZiel && /d=(\d{4})-/.exec(zeitraumZiel)?.[1])
   || String(new Date().getUTCFullYear());
-/* SEIT S11-01 EINE FUNKTION FUER JAHR UND MONAT — derselbe Weg, dieselben
- * zwei Zahlen (sichtbar, fertig); der Monat kommt in den S11-Messungen dazu. */
+/* EINE FUNKTION FUER JAHR UND MONAT — derselbe Weg, dieselben
+ * zwei Zahlen (sichtbar, fertig); der Monat kommt in den Messungen der
+ * Geraetehuellen dazu. */
 async function zeitraumMessen(name, abfrage, zusatz) {
 const zeitraum = await messen(name, async () => {
   await seite.goto(`${basis}/zeitraum.php?${abfrage}`,
@@ -555,17 +555,16 @@ messungen.push(await messen('Backup erstellen', async () => {
 
 /* ---- DIE VIER MESSUNGEN VON S11 (S11-01, E-S11-15) — Anlass: Nr. 43 ------
  *
- * WOFUER. S11 verschliesst Spur, Phasenkoordinaten und Reanimation in
+ * WOFUER. Die Anwendung verschliesst Spur, Phasenkoordinaten und Reanimation in
  * Geraetehuellen, die nur der Browser oeffnet. Damit wandert Arbeit vom
- * Server in den Browser, und E-S11-15 setzt eine Grenze: keine Einzelansicht
+ * Server in den Browser, und es gilt eine Grenze: keine Einzelansicht
  * mehr als 1,5-mal langsamer als vorher und keine ueber 1 s; die Massenwege
  * werden gemessen und benannt. Eine Grenze „gegen vorher" braucht ein
- * Vorher — gemessen auf dem heutigen Code, BEVOR sich etwas aendert, und
- * nach S11 mit genau diesen Schritten auf derselben Maschine noch einmal
- * (S11-11).
+ * Vorher — gemessen auf dem Code vor dem Verschliessen, und danach mit
+ * genau diesen Schritten auf derselben Maschine noch einmal.
  *
  * DIE VIERTE MESSUNG, „Backup erzeugen", steht nicht hier: Es ist der
- * Schritt „Backup erstellen" darueber, seit S2 im Messstand, und dazu die
+ * Schritt „Backup erstellen" darueber im Messstand, und dazu die
  * Speicherspitzen von `edbak_build()` in der Serverprobe. Ein zweiter
  * Schritt fuer dasselbe waere eine zweite Stelle fuer eine Pruefung
  * (Pruefablauf.md 1, Grundsatz 1).
@@ -584,7 +583,7 @@ messungen.push(await messen('Backup erstellen', async () => {
  *
  * WANN „FERTIG". Einsatz: die Spur liegt auf der Karte UND die Phasenzeilen
  * stehen. Diensttag: eine Spur liegt auf der Karte (alle Linien eines Tages
- * entstehen in derselben Aufgabe). Nach S11 kommen beide erst nach dem
+ * entstehen in derselben Aufgabe). Beide kommen erst nach dem
  * Oeffnen der Huelle — das ist die Mehrarbeit, die gemessen werden soll.
  * Das Entsperren selbst rennt gegen die Abschlussbedingung (`entsperren()`),
  * zaehlt also nur, wenn es wirklich noetig ist. */
@@ -658,10 +657,10 @@ if (!ziele || !ziele.einsatz || !ziele.tag) {
    * die Spuren eines Zeitraums in EINER Datei liefert; der Spur-Download
    * (`assets/gpx.js`) kennt nur eine Spur oder die Auswahl eines Diensttags. Zeitraum: das ganze Jahr
    * des neuesten Diensttags, wie die Zeitraumuebersicht. Personenbezogene
-   * Angaben an (sonst gibt es keine Spuren, A9), Passwortschutz wie
+   * Angaben an (sonst gibt es keine Spuren), Passwortschutz wie
    * vorbelegt an — gemessen wird der Weg, den eine NutzerIn geht. */
   /* Zweimal: mit Passwort (vorbelegt, der Weg einer NutzerIn) und ohne —
-   * der Unterschied ist die AES-Verschlüsselung des Archivs (S11-01). */
+   * der Unterschied ist die AES-Verschlüsselung des Archivs. */
   for (const pwOn of [true, false]) {
   const gpx = await messen(`GPX über einen Zeitraum (Export Profil B, Passwort ${pwOn ? 'an' : 'aus'})`, async () => {
     await seite.goto(`${basis}/import.php`, { waitUntil: 'domcontentloaded', timeout: 180000 });
@@ -696,7 +695,7 @@ if (!ziele || !ziele.einsatz || !ziele.tag) {
     await dl.saveAs(ziel);
     const meldung = (await seite.locator('#exp_state').textContent().catch(() => '') || '').trim();
     const spuren = Number(/(\d+) GPX-Tracks enthalten/.exec(meldung)?.[1] || 0);
-    /* Abschnitte (S11-01): ab „Daten werden geladen…" bis „Fertig". Die
+    /* Abschnitte: ab „Daten werden geladen…" bis „Fertig". Die
      * Zeilen „Tracks n / m" zählen zusammen als „Spuren laden und GPX bauen". */
     const zustand = await seite.evaluate(() => window.__messstand.zustand);
     const abschnitte = {};
@@ -719,7 +718,7 @@ if (!ziele || !ziele.einsatz || !ziele.tag) {
   messungen.push(gpx);
   }
 
-  /* DER MONAT IN DER ZEITRAUMUEBERSICHT (S11-01): der Monat mit den meisten
+  /* DER MONAT IN DER ZEITRAUMUEBERSICHT: der Monat mit den meisten
    * Einsaetzen im Jahr des neuesten Diensttags, gewaehlt von `messen.py`.
    * Wiederholt wie die Einzelansichten; Median von „sichtbar" und „fertig". */
   if (ziele.monat) {
@@ -747,7 +746,7 @@ if (!ziele || !ziele.einsatz || !ziele.tag) {
 const bestand = await seite.evaluate(() => document.title).catch(() => '');
 const ergebnis = {
   basis, konto, drossel, gemessen_am: new Date().toISOString(),
-  /* DIE MASCHINE (S11-01): Die Drossel bremst relativ zum Prozessor, auf dem
+  /* DIE MASCHINE: Die Drossel bremst relativ zum Prozessor, auf dem
    * die Probe laeuft. Ein Vorher-nachher-Vergleich gilt nur bei gleichem
    * Prozessor — deshalb steht er in jedem Protokoll. */
   maschine: { prozessor: cpus()[0]?.model || '?', kerne: cpus().length, eichung_ms,

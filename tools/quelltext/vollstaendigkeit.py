@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 """
-Vollstaendigkeitspruefung des Stylesheets (P3, Anlage E).
+Vollstaendigkeitspruefung des Stylesheets.
 
 WOFUER. Der Stilvergleich beantwortet die Frage "hat sich etwas geaendert?".
-In P3 aendert sich alles; die Frage ist eine andere: "ist etwas verlorengegangen,
+In einem Redesign aendert sich alles; die Frage ist eine andere: "ist etwas verlorengegangen,
 und steht jeder Wert an der einen Stelle, an die er gehoert?"
 
 Fuenf Pruefungen:
@@ -16,17 +16,17 @@ Fuenf Pruefungen:
      Verweise auf fehlende Symboldateien; Dateien ohne Verweis (Hinweis).
   4  Knopfregel -- jede Hoehenangabe an einer .knopf-Regel kommt aus --knopf.
      Dazu die TOENE: jeder Wert, den ui_plakette, ui_knopf, ui_kennzahl oder
-     ui_meldung_markup bekommt, hat eine Regel im Stylesheet (Backlog Nr. 36).
+     ui_meldung_markup bekommt, hat eine Regel im Stylesheet.
   5  Zusagen -- Regeln, die bisher nur im Kopf standen: kein natives
-     confirm()/alert()/prompt() ausser den begruendeten Rueckfaellen
-     (Backlog Nr. 47), und jede Seite mit eigener Huelle hat ihr Geruest
-     (Nr. 58). Ausnahmen mit Grund in zusagen.md.
-  6  Selektoren (R4-05, Nr. 36) -- jede Klasse, die JavaScript in
+     confirm()/alert()/prompt() ausser den begruendeten Rueckfaellen,
+     und jede Seite mit eigener Huelle hat ihr Geruest.
+     Ausnahmen mit Grund in zusagen.md.
+  6  Selektoren -- jede Klasse, die JavaScript in
      querySelector(All)/closest/matches/getElementsByClassName sucht, setzt
      irgendwo jemand: im Markup, an einer Klassen-Stelle als Zeichenkette,
      zusammengesetzt aus einem geschlossenen Vorrat -- oder sie steht mit
      Grund in selektoren.md. Ein Selektor, der ins Leere greift, ist in
-     JavaScript kein Fehler, sondern eine leere Liste (F-P3-AG).
+     JavaScript kein Fehler, sondern eine leere Liste.
 
 Dazu die Ausgabe: je Pruefung Zahl und Liste, Rueckgabewert != 0 bei Befund.
 
@@ -53,10 +53,10 @@ SYMBOLE = os.path.join(SERVER, 'assets', 'images', 'symbole')
 # Verzeichnisse, die nicht uns gehoeren: fremde Bibliotheken und Schriften.
 FREMD = ('vendor', 'fonts', 'demo')
 
-# EINE DATEI, DIE NICHT GELESEN WIRD (S10/AP5).
+# EINE DATEI, DIE NICHT GELESEN WIRD.
 #
 # `config.php` liegt nur auf installierten Instanzen, steht in `.gitignore`
-# und traegt seit S10 ZWEI Geheimnisse: den Serverschluessel und den
+# und traegt ZWEI Geheimnisse: den Serverschluessel und den
 # Server-Anteil. Sie hier auszunehmen hat zwei Gruende, und beide zaehlen:
 #
 #   1. DIE ZAHL SOLL REPRODUZIERBAR SEIN. Auf einem blanken Auscheck gibt es
@@ -216,7 +216,7 @@ def ohne_php_js_kommentare(text, ist_php):
     eigenen Code gibt es davon keines (nachgesehen am 13.09.2026) -- aber die
     Unterscheidung kostet nichts und nimmt der naechsten Fassung eine Falle.
 
-    IN PHP-DATEIEN NUR DIE CODE-BEREICHE (Backlog Nr. 184). Bis BV-01 ging
+    IN PHP-DATEIEN NUR DIE CODE-BEREICHE. Frueher ging
     der Abtaster auch durch das HTML einer Seite -- und dort gibt es keine
     Zeichenketten, wohl aber Anfuehrungszeichen im Fliesstext. Ein einzelnes
     ungepaartes `"` schickte ihn in den Zeichenketten-Modus, aus dem er erst
@@ -389,10 +389,10 @@ def liste_lesen(name, spalten=1):
     return [z for z in zeilen if len(z) >= spalten]
 
 
-# --------------------------------- Klassen an Literal-Stellen (R4-05, Nr. 331)
+# --------------------------------- Klassen an Literal-Stellen
 #
 # DIE 73 HINWEISE WAREN FAST ALLE KEINE. „Regel im Stylesheet, im Markup nicht
-# gefunden" hiess bis R4-05: nicht in class="..." und nicht in classList. Die
+# gefunden" hiess einmal: nicht in class="..." und nicht in classList. Die
 # meisten Klassen stehen aber an Stellen, die der Leser nicht kannte -- als
 # Option (`'klasse' => 'feld-fest'`), als Zusatzklasse eines Symbols
 # (`ui_symbol('winkel', 'symbol-rechts')`), als Leaflet-Behaelter
@@ -464,7 +464,7 @@ def pruefung_klassen(bericht):
     jetzt_css = css_klassen(lies(CSS)) if os.path.exists(CSS) else set()
     streich_zeilen = liste_lesen('vollstaendigkeit-streichliste.md', 3)
     streich = {z[0].strip('`') for z in streich_zeilen}
-    # ZWEI SORTEN AUF EINER LISTE (O11). Die meisten Eintraege sind Klassen,
+    # ZWEI SORTEN AUF EINER LISTE. Die meisten Eintraege sind Klassen,
     # die aus dem Markup VERSCHWINDEN — ihr Vorkommen dort waere ein Rest.
     # Einige wenige aber bleiben mit Absicht stehen: Skriptanker (`ac-form`,
     # `rollehaken`) und Behaelter ohne eigene Gestaltung (`form-spalte`). Sie
@@ -488,13 +488,13 @@ def pruefung_klassen(bericht):
     sicher, vermutet = markup_klassen(dateien)
     verwaist = sorted(k for k in sicher if k not in jetzt_css and k not in streich)
 
-    # ohne-regel.md — DAMIT DIE LISTE GELESEN WIRD (O12, Backlog Nr. 39).
+    # ohne-regel.md — DAMIT DIE LISTE GELESEN WIRD.
     # Von 29 Treffern waren 23 keine: acht Bruchstuecke zusammengesetzter
     # Klassennamen (das Werkzeug liest Zeichenketten, nicht ausgefuehrten
     # Code) und fuenfzehn Skriptanker und Behaelter, die zu Recht keine Regel
     # haben. Eine Liste, in der ein echter Fund neben 28 falschen steht, wird
     # nach dem dritten Mal nicht mehr gelesen — und findet dann auch den
-    # echten nicht (genau so ist F-P3-BA durchgerutscht).
+    # echten nicht (genau so ist ein Fehler durchgerutscht).
     #   [bleibt]  begruendet ohne Regel  -> kein Befund, nur eine Zahl
     #   [offen]   Frage noch offen       -> Befund, aber unter eigener
     #                                       Ueberschrift
@@ -521,7 +521,7 @@ def pruefung_klassen(bericht):
                  len([k for k in verwaist if k in or_bleibt]))
     bericht.befund('1 Klassen', 'ohne-regel.md: Eintrag ohne Vermerk', or_ohne_vermerk)
     bericht.befund('1 Klassen', 'ohne-regel.md: Eintrag ungenutzt', or_ungenutzt)
-    # DER BLINDE FLECK (O11): Eine Klasse, die GESTRICHEN ist und trotzdem noch
+    # DER BLINDE FLECK: Eine Klasse, die GESTRICHEN ist und trotzdem noch
     # im Markup steht, fiel bisher durch jedes Netz — `verwaist` schliesst sie
     # ausdruecklich aus (`k not in streich`), und `ohne` sieht nur die
     # Sollmenge. Die Streichliste behauptet dann, etwas sei ersetzt, und das
@@ -533,9 +533,9 @@ def pruefung_klassen(bericht):
                    ['%s  (%s)' % (k, ', '.join(sorted(sicher[k])[:3])) for k in noch_da])
     bericht.zahl('1 Klassen', 'davon ausdruecklich [bleibt] (Skriptanker, Behaelter)',
                  len([k for k in sicher if k in bleibt]))
-    # ZUSAMMENGESETZTE KLASSEN DER MELDUNG (Backlog Nr. 274, BV-02). Beide
+    # ZUSAMMENGESETZTE KLASSEN DER MELDUNG. Beide
     # Bausteine bauen die Tonklasse zur Laufzeit (`'meldung-' . $ton`), also
-    # steht `meldung-ok` nirgends als Literal. Bis BV-02 standen die Regeln
+    # steht `meldung-ok` nirgends als Literal. Frueher standen die Regeln
     # deshalb im Hinweis „im Markup nicht gefunden" -- und verschwaende eine
     # davon aus dem Stylesheet, meldete es niemand. Die Toene sind eine
     # GESCHLOSSENE Liste in beiden Bausteinen; die Pruefung liest sie dort,
@@ -549,7 +549,7 @@ def pruefung_klassen(bericht):
                     for t in sorted(php_toene ^ js_toene)])
     zusammengesetzt = {'meldung-' + t for t in php_toene | js_toene}
     bericht.zahl('1 Klassen', 'zusammengesetzt belegt (meldung-<ton>)', len(zusammengesetzt))
-    # R4-05 (Nr. 331): zwei weitere geschlossene Vorraete -- die Toene der
+    # Zwei weitere geschlossene Vorraete -- die Toene der
     # Bausteine aus ihren Aufrufen (Literal, beide Zweige einer Bedingung,
     # Vorgabe im Baustein; ton_uebergaben()) und die Staerkestufen der
     # Passwortguete aus `STUFEN`.
@@ -577,7 +577,7 @@ def pruefung_klassen(bericht):
                         set(sicher) | set(vermutet) | zusammengesetzt | set(literal_klassen(dateien)))
 
 
-# ------------------------------------------------------ 6. Selektoren (Nr. 36)
+# ------------------------------------------------------ 6. Selektoren
 SELEKTOR_RUF = re.compile(
     r'''\b(querySelector(?:All)?|closest|matches|getElementsByClassName)\s*\(\s*(['"`])((?:(?!\2).)*)\2''', re.S)
 
@@ -701,17 +701,17 @@ def pruefung_werte(bericht):
 # in EMOJI, und die beiden Listen ueberschneiden sich nicht. Ein Zeichen in
 # beiden Listen wuerde zweimal gemeldet, und die Summe stimmte nie.
 #
-# DIE TYPOGRAFIE IST RAUS (PK-04/1b, E-PK-16). Bis zum 22.09.2026 standen
+# DIE TYPOGRAFIE IST RAUS. Bis zum 22.09.2026 standen
 # hier auch `…` `→` `←` `«` `»` `‹` `›` `⋯` — Satzzeichen, die in Prosa
 # vorkommen und kein Symbol sind. Sie machten die Zahl aus: GEMESSEN am
 # 22.09.2026 fielen mit ihrem Wegfall 330 Treffer auf 14. Eine Zahl, die zu
 # 96 Prozent aus Gedankenstrichen und Auslassungspunkten besteht, ist keine
 # Messung, sondern Rauschen — und Rauschen liest niemand mehr nach dem
-# dritten Mal (Backlog Nr. 227).
+# dritten Mal.
 #
 # WER EIN ZEICHEN HIER EINTRAEGT, prueft vorher, ob es in Fliesstext
 # vorkommen kann. Kommt es vor, gehoert es nicht hierher: Kommentare blendet
-# die Pruefung seit BV-01 aus (Backlog Nr. 184), sichtbaren Fliesstext
+# die Pruefung aus, sichtbaren Fliesstext
 # nicht -- und jeder Prosatreffer dort waere ein Falschbefund.
 UNICODE_SYMBOLE = ('▸▾▴▿▲▼◂◃►◄✓✔✗✘✕✖×⚠★☆◌●○◆■□↑↓⌄⌃⌃⚙⋮❯❮'
                    '⇧⇩⊕⊖⊗✎✓')
@@ -723,8 +723,8 @@ EMOJI = re.compile('[\U0001F000-\U0001FAFF\U0001F900-\U0001F9FF]|\uFE0F')
 
 # JS-Escape-Folgen fuer dieselben Zeichen. WARUM DAS NOETIG IST:
 # `x.textContent = '\u00D7'` ist dasselbe Malzeichen wie `'\u00D7'`, nur anders
-# geschrieben \u2014 und bis Web 19.4.2 hat diese Pruefung es nicht gesehen.
-# Gefunden am 13.09.2026 beim Zeichnen von M-MR-02 (Fehlerfund 1): Der
+# geschrieben — und einmal hat diese Pruefung es nicht gesehen.
+# Gefunden am 13.09.2026 beim Zeichnen eines Mockups: Der
 # Koordinaten-Chip stand als Treffer da, der Rettungsmittel-Chip daneben
 # nicht, obwohl beide dasselbe taten. Eine Pruefung, die sich mit einer
 # anderen Schreibweise umgehen laesst, prueft nichts.
@@ -749,27 +749,27 @@ def pruefung_symbole(bericht):
     for pfad in quelldateien():
         t = lies(pfad)
         # ESCAPE-FOLGEN AUFLOESEN UND KOMMENTARE AUSBLENDEN -- das zweite
-        # erst seit BV-01 (Backlog Nr. 184), und der Weg dahin gehoert dazu.
+        # erst spaeter, und der Weg dahin gehoert dazu.
         #
-        # Bis dahin stand hier die Entscheidung dagegen (Web 19.4.2): Der
+        # Frueher stand hier die Entscheidung dagegen: Der
         # Abtaster verlor in PHP-Dateien mit HTML die Spur -- ein
         # ungepaartes `"` im Fliesstext schickte ihn in den
         # Zeichenketten-Modus --, und eine kleinere Zahl, die durch Wegsehen
-        # entsteht, ist schlechter als eine grosse, die alles zeigt. Seit
-        # BV-01 tastet er nur die Code-Bereiche ab. GEMESSEN beim Umstellen
+        # entsteht, ist schlechter als eine grosse, die alles zeigt. Heute
+        # tastet er nur die Code-Bereiche ab. GEMESSEN beim Umstellen
         # (24.09.2026): Unicode-Symbole 14 -> 5, Emoji 8 -> 0; alle 17
         # weggefallenen standen in Kommentaren (einzeln gelesen), die 5
         # bleibenden sind das Malzeichen im sichtbaren Text („3× …"), das
-        # Nr. 279 als Typografie gelesen hat.
+        # als Typografie gelesen wird.
         #
         # NUR FUER DIE ZEICHEN. Die Verweise auf Symboldateien und die
         # Inline-SVG liest die Pruefung weiter aus dem ganzen Quelltext:
         # Ein Verweis im Kommentar zaehlt dort seit jeher mit, und das zu
-        # aendern waere eine andere Entscheidung als die von Nr. 184.
+        # aendern waere eine andere Entscheidung als die, die dort gilt.
         markup = escapes_aufloesen(ohne_php_js_kommentare(t, pfad.endswith('.php')))
         istr_ui = pfad.endswith('ui.php')
         istr_js = pfad.endswith(os.sep + 'symbol.js')
-        # TAG_REST statt `[^>]*` (CLAUDE.md 6, Backlog Nr. 218): `t` ist die
+        # TAG_REST statt `[^>]*` (CLAUDE.md 6): `t` ist die
         # rohe PHP-Quelle. Heute traegt keines der 3 <svg>-Tags PHP im Rumpf
         # (gemessen 17.09.2026) -- das erste, das es tut, waere mit der kurzen
         # Form am `?>` abgeschnitten und der Inline-Svg damit ungezaehlt.
@@ -797,26 +797,26 @@ def pruefung_symbole(bericht):
     bericht.zahl('3 Symbole', 'davon im Code verwendet', len(vorhanden & verwendet))
     bericht.befund('3 Symbole', 'Inline-SVG mit Pfaden in PHP/JS', inline)
     # KEINE AUSNAHMELISTE FUER DIESE PRUEFUNG, und auch das ist entschieden.
-    # Das Konzept der Mockup-Runde sah eine vor (`ausnahmen.md`, E-MR-02);
+    # Ein frueherer Entwurf sah eine vor (`ausnahmen.md`);
     # diese Datei liest aber ausschliesslich die Token-Pruefung, ein Eintrag
-    # dort stuende wirkungslos da (nachgesehen 13.09.2026, E-MR-24). Die
+    # dort stuende wirkungslos da (nachgesehen 13.09.2026). Die
     # Zusagenliste aus Gruppe 5 waere der richtige Ort — nur bliebe dann eine
     # Liste mit rund hundert Eintraegen fuer „…" und „→", und die liest
     # niemand. Solange die Zahl aus Typografie besteht, ist sie eine ZAHL und
-    # kein Befund je Zeile; klein geworden ist sie mit Nr. 184 (BV-01), eine
+    # kein Befund je Zeile; klein geworden ist sie durch das Ausblenden der Kommentare, eine
     # engere Zeichenliste haette sie nicht kleiner gemacht.
-    # HINWEIS UND NICHT BEFUND (PK-04/1b, E-PK-16). Beide Zahlen stehen
+    # HINWEIS UND NICHT BEFUND. Beide Zahlen stehen
     # weiter da — eine Messung, die man behalten kann, wirft man nicht weg —,
     # aber sie halten keinen Lauf auf. Der Grund war die Kommentarfrage oben:
     # Von den damals 14 Symbolzeichen und 8 Emoji standen 17 in KOMMENTAREN
     # (`version.php` im Kopftext, `pwquality.js` in der Erklaerung zur
-    # Graphemzerlegung). Seit BV-01 fallen sie heraus; es bleiben 5 Mal-
+    # Graphemzerlegung). Heute fallen sie heraus; es bleiben 5 Mal-
     # zeichen im sichtbaren Text. Hinweis bleibt es trotzdem: Ein Befund, der
     # sich an Typografie entzuendet, laesst sich nicht abstellen, ohne die
     # Sache zu verschlechtern.
     #
     # WAS DAMIT NICHT GESAGT IST: dass die 14 in Ordnung sind. Sie gehoeren
-    # in Symboldateien und stehen als Rest im Backlog (Nr. 279).
+    # in Symboldateien und stehen als Rest im Backlog.
     bericht.hinweis('3 Symbole', 'Unicode-Zeichen als Symbol im Markup',
                     ['%s:%d  %s' % z for z in unicode_])
     bericht.hinweis('3 Symbole', 'Emoji im Markup', emoji)
@@ -849,13 +849,13 @@ def pruefung_knopf(bericht):
     bericht.befund('4 Knopf', 'Knopfhoehe nicht aus --knopf', verstoss)
 
 
-# ---- Toene gegen den Wertevorrat (Backlog Nr. 36) --------------------------
+# ---- Toene gegen den Wertevorrat -------------------------------------------
 #
 # DERSELBE FEHLER ZUM DRITTEN MAL, und deshalb steht hier jetzt ein Mittel.
 #
-#   `plakette-warn`  drei Stellen, behoben mit Web 10.3.0
-#   `plakette-ok`    zwei Stellen, gefunden 14.09.2026 (S10/AP3, F-15),
-#                    stehengelassen -- behoben mit P5b/AP9
+#   `plakette-warn`  drei Stellen, behoben
+#   `plakette-ok`    zwei Stellen, gefunden 14.09.2026,
+#                    stehengelassen -- spaeter behoben
 #   `plakette-info`  eine Stelle, 17.09.2026, von mir selbst eingebaut
 #
 # Jedes Mal dasselbe Bild: eine Plakette ohne Hintergrund, als blosser Text,
@@ -864,14 +864,14 @@ def pruefung_knopf(bericht):
 # auf, weil `ui_plakette()` den Namen erst zur Laufzeit zusammensetzt
 # (`'plakette-' . $ton`).
 #
-# DER BILLIGE SONDERWEG, den Nr. 36 beschreibt: Die Bausteine mit
+# DER BILLIGE SONDERWEG: Die Bausteine mit
 # GESCHLOSSENEM Wertevorrat kennen ihre erlaubten Werte selbst -- sie stehen
 # als Klassen im Stylesheet. Statt Klassennamen aufzuloesen, wird also jeder
 # uebergebene Wert gegen die vorhandenen Klassen gehalten.
 #
 # NUR LITERALE. Ein `'ton' => $ton` mit einer Variablen wird uebersprungen:
 # Was darin steht, weiss nur die Laufzeit. Das ist die Grenze dieses Mittels
-# und der Grund, warum es Nr. 36 nicht ganz schliesst.
+# und der Grund, warum es die Luecke nicht ganz schliesst.
 
 # Baustein => (Schluessel im Optionsfeld, Klassenpraefix)
 TON_BAUSTEINE = [
@@ -917,10 +917,10 @@ def _wert_ausdruck(spanne, start):
 
 
 def ton_uebergaben():
-    """Die Toene, die die Bausteine aus TON_BAUSTEINE bekommen (R4-05).
+    """Die Toene, die die Bausteine aus TON_BAUSTEINE bekommen.
 
     Rueckgabe {'werte': {praefix: {wert}}, 'stellen': [(datei, zeile, name,
-    schluessel, wert)], 'offen': [Fundstelle]}. BIS R4-05 NUR LITERALE: Ein
+    schluessel, wert)], 'offen': [Fundstelle]}. FRUEHER NUR LITERALE: Ein
     `'ton' => $x ? 'rot' : 'ok'` wurde uebersprungen, und von 39 solchen
     Uebergaben pruefte keine etwas. Jetzt: ein Literal ist ein Wert; eine
     Bedingung (`?:`, `??`) liefert die Literale ihrer Zweige; was dann noch
@@ -974,7 +974,7 @@ def pruefung_toene(bericht):
     ton = ton_uebergaben()
     praefixe = {n: p for n, _, p in TON_BAUSTEINE}
     for datei, zeile, name, schluessel, wert in ton['stellen']:
-        # `(?![\w-])` UND NICHT `\b` (R4-05): `\b` greift auch vor einem
+        # `(?![\w-])` UND NICHT `\b`: `\b` greift auch vor einem
         # Bindestrich, und `.knopf-leise-orange` galt dann als Regel fuer
         # `knopf-leise` -- verschwand die, meldete es niemand.
         if re.search(r'\.%s-%s(?![\w-])' % (praefixe[name], wert), css):
@@ -1003,13 +1003,13 @@ def pruefung_toene(bericht):
 # =========================================================== 5. Zusagen
 NATIVE_DIALOGE = re.compile(r'(?<![\w$.])(?:window\s*\.\s*)?(confirm|alert|prompt)\s*\(')
 
-# ---- Fremde Quellen zur Laufzeit (Backlog Nr. 179) -------------------------
+# ---- Fremde Quellen zur Laufzeit -------------------------------------------
 #
 # DIE ZUSAGE. CLAUDE.md 4: kein CDN, keine Google Fonts, kein externes Skript;
 # Schriften und Bibliotheken liegen unter server/assets/ mit Herkunft und
-# SHA-256 im Dateikopf. Bis Web 19.3.1 hat das KEIN Mittel nachgezaehlt, und
+# SHA-256 im Dateikopf. Lange hat das KEIN Mittel nachgezaehlt, und
 # eine CSP schickt die Anwendung auch nicht -- aufgefallen ist die Luecke, als
-# ein Kommentar im Bilderlauf sie an genau diese Datei weiterschob (Nr. 176).
+# ein Kommentar im Bilderlauf sie an genau diese Datei weiterschob.
 #
 # WARUM DAS MUSTER SO GROB IST -- und das ist Absicht. Ein Ausdruck, der nur
 # die Ladekonstrukte kennt (src=, <link href=, fetch(, url(), @import), findet
@@ -1070,14 +1070,14 @@ def zusagen_werten(bericht, name, treffer, listenname='vollstaendigkeit-zusagen.
 
     EINE AUSNAHME, DIE NICHTS MEHR ERKLAERT, IST EIN BEFUND. Sonst verwahrlost
     die Liste so still wie die Sache, gegen die sie schuetzt -- dieselbe Regel
-    wie bei ohne-regel.md (Backlog Nr. 39).
+    wie bei ohne-regel.md.
 
     DIE LISTE HAT VIER SPALTEN: Pruefung | Datei | Muster | Grund. Die erste
     sagt, zu welcher Pruefung die Zeile gehoert -- so tragen alle Zusagen EINE
     Liste, und ein Mensch sieht beim Lesen, wovon eine Zeile spricht. Die
     zweite ist die DATEI und nicht die Zeile: Eine Zeilennummer altert mit dem
     naechsten Paket, das die Datei anfasst (genau daran ist der Eintrag zu
-    `phasen-name` in ohne-regel.md gealtert, AP5).
+    `phasen-name` in ohne-regel.md gealtert).
     """
     regeln = [(z[1].strip('`'), z[2].strip('`'))
               for z in liste_lesen(listenname, 4)
@@ -1099,7 +1099,7 @@ def zusagen_werten(bericht, name, treffer, listenname='vollstaendigkeit-zusagen.
 def geruest_treffer():
     """Dateien mit Seitenhuelle, denen das Geruest fehlt -- und die Gegenrichtung.
 
-    DAS KRITERIUM IST `ui_seite_start(`, NICHT `require_admin()` (E-BR3-06).
+    DAS KRITERIUM IST `ui_seite_start(`, NICHT `require_admin()`.
     Die naeheliegende Regel waere "bindet die Wache ein und ruft kein Geruest";
     sie liefert heute 15 Treffer, und alle 15 sind richtig so -- Bibliotheken,
     Endpunkte ohne Seite, Seiten vor der Anmeldung, der Notausgang. Ein Mittel,
@@ -1125,7 +1125,7 @@ def geruest_treffer():
 
 
 def pruefung_zusagen(bericht):
-    """Zusagen, die bisher nur im Kopf standen (Backlog Nr. 47, 58).
+    """Zusagen, die bisher nur im Kopf standen.
 
     WOFUER. Die Anwendung gibt Versprechen, die kein Mittel nachzaehlt: "kein
     natives confirm()", "jede Seite hat ihr Geruest". Ein Versprechen ohne
@@ -1138,7 +1138,7 @@ def pruefung_zusagen(bericht):
     zusagen_werten(bericht, 'Seite ohne Geruest', ohne)
     # GEGENRICHTUNG ALS HINWEIS, NICHT ALS BEFUND: Geruest ohne Seitenhuelle
     # ist nicht zwangslaeufig falsch -- es KANN aber eine Seite ohne `<head>`
-    # sein, und genau eine war es (apk.php, behoben mit Web 19.3.1: die
+    # sein, und genau eine war es (apk.php, behoben: die
     # 404-Seite ging ohne Doctype und ohne Stylesheet hinaus). Deshalb steht
     # die Zahl da, auch wenn sie null ist.
     bericht.hinweis('5 Zusagen', 'Geruest ohne Seitenhuelle', gegen)
@@ -1157,7 +1157,7 @@ class Bericht:
     def befund(self, gruppe, was, liste, frei=None):
         """Eine Pruefung eintragen. `frei` ist die Ausnahmeliste dazu.
 
-        `frei` WIRKTE BIS ZUM 22.09.2026 NICHT (PK-04/1b). Der Parameter
+        `frei` WIRKTE BIS ZUM 22.09.2026 NICHT. Der Parameter
         stand in der Signatur, wurde uebergeben — und dann verworfen. Eine
         Ausnahme fuer `style=` liess sich also eintragen, und sie tat nichts:
         der Treffer blieb ein Befund, der Eintrag stand wirkungslos da. Das
@@ -1236,14 +1236,14 @@ class Bericht:
         # ---- Rueckgabewert: gegen eine SCHWELLE, nicht gegen Null ----------
         #
         # DIESES WERKZEUG MISST EINEN ALTBESTAND, KEINE GUETE. Die Zahl ist
-        # ein VERGLEICH gegen den Stand vor P3 — 366 davon sind Unicode-
+        # ein VERGLEICH gegen den Stand vor dem Redesign — 366 davon sind Unicode-
         # Zeichen im Markup, `style=`-Attribute in JavaScript und Emoji, die
         # seit Jahren dastehen und nicht in einem Zug verschwinden. „0
         # Befunde" ist deshalb kein erreichbarer Zustand, sondern ein Ziel.
         #
         # BIS WEB 20.8.0 GAB DIE FUNKTION TROTZDEM 1 ZURUECK, SOBALD DIE ZAHL
         # UEBER NULL LAG. Fuer einen Lauf von Hand war das gleichgueltig —
-        # man liest die Zahl. Als das Werkzeug mit P5a/AP1 in Stufe 1 der
+        # man liest die Zahl. Als das Werkzeug in Stufe 1 der
         # Auslieferungskette kam, war es ein Dauerrot: Der Pruefschritt
         # verlangte `exit 0` und bekam 366, bei JEDEM Push. Ein Tor, das
         # immer rot ist, sagt nichts mehr — und wird abgeschaltet.

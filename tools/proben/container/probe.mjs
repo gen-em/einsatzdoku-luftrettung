@@ -3,7 +3,7 @@
  *
  * Anlass: Nr. 309 — der alte Base64-Wandler brach bei einem Teil von 2 MB ab
  *
- * WOFUER (S2/AP5, E-S2-10). Fassung 4 zerlegt das Backup in versiegelte
+ * WOFUER. Fassung 4 zerlegt das Backup in versiegelte
  * Teile. Drei Dinge daran koennen schiefgehen, ohne dass es auffaellt:
  *
  *   1. Die Teile gehen wieder auf — aber nur in dem Browser, der sie
@@ -15,11 +15,10 @@
  *      vertauschtes Teil entsiegelt dann klaglos — mit demselben Passwort
  *      geht es ja auf —, und der Bestand eines anderen Kontos landet hier.
  *
- * DREI UMSETZUNGEN, EINE WAHRHEIT. Genau wie die GPX-Probe (AP4) haelt diese
+ * DREI UMSETZUNGEN, EINE WAHRHEIT. Genau wie die GPX-Probe haelt diese
  * Probe unabhaengige Wege gegeneinander:
  *
- *   PHP      baut Spurteile der Nutzlast 13 mit Punktlisten (spuren_bauen.php;
- *            bis Web 22.7.0 SPUR1-Blobs aus `spur_lib.php`)
+ *   PHP      baut Spurteile der Nutzlast 13 mit Punktlisten (spuren_bauen.php)
  *   Browser  `assets/crypto.js` + `assets/vendor/zipjs.min.js` versiegeln
  *            und packen — im ECHTEN Chromium, nicht in einem Nachbau
  *   Python   `vergleich/lesen.py` oeffnet und dekodiert wieder
@@ -43,7 +42,7 @@ import { motorWahl, starten } from '../../motor.mjs';
 const MODUL = process.env.PLAYWRIGHT_MODUL
   || '/opt/node22/lib/node_modules/playwright/index.mjs';
 const PW = (m => m.default ?? m)(await import(MODUL.startsWith('/') ? 'file://' + MODUL : MODUL));
-/* Die Engine wählt der Läufer (MOTOR=… oder --motor), R87. */
+/* Die Engine wählt der Läufer (MOTOR=… oder --motor). */
 const MOTOR = motorWahl(process.argv);
 
 const HIER   = dirname(fileURLToPath(import.meta.url));
@@ -80,7 +79,7 @@ const browser = await starten(PW, MOTOR);
 const lokal = /^https?:\/\/(127\.0\.0\.1|localhost)(:|\/|$)/.test(BASIS);
 try {
   const kontext = await browser.newContext({ ignoreHTTPSErrors: lokal });
-  /* DER WARTUNGSLAUF BLEIBT AUS (S11-07, F-S11-77): Er packt und dünnt im
+  /* DER WARTUNGSLAUF BLEIBT AUS: Er packt und dünnt im
      Browser aus, sobald eine Seite ihn anstößt (Startseite, Reiter Backup),
      und das Ausdünnen ändert die Punkte — mitten in einem Vergleich wäre das
      eine Abweichung, die keine ist. Die Antwort sagt „nichts fällig" — ein
@@ -280,8 +279,8 @@ try {
     /* ---- Formaterkennung ---- */
     berichte.art_zip  = EdCrypto.dateiArt(zipBytes);
     berichte.art_teil = EdCrypto.dateiArt(kopfBytes);
-    /* Eine einteilige Datei der Fassung 3 — seit Web 23 nur noch der Kopf
-       und Fuellbytes: `sealBackup()` ist mit S11-12 gefallen, die Erkennung
+    /* Eine einteilige Datei der Fassung 3 — nur noch der Kopf und
+       Fuellbytes: `sealBackup()` gibt es nicht mehr, die Erkennung
        bleibt, damit die Ablehnung sagen kann, was die Datei ist. */
     const alt = new Uint8Array(64);
     alt.set(te.encode('EDBAK2'), 0); alt[7] = 3;
@@ -338,9 +337,8 @@ try {
          `${b.art_zip} / ${b.art_teil} / ${b.art_alt} / ${b.art_fremd}`);
   pruefe(b.ist_backup_zip && b.ist_backup_teil,
          'ZIP und Teil gelten als Datei dieser Anwendung');
-  /* „Ein einzeln geoeffnetes Teil sagt, dass es ein Teil ist" stand hier bis
-     Web 22.7.0 und fragte `openBackup()`. Die Funktion ist mit S11-12
-     gefallen; die Meldung gibt jetzt `einstellungen.php` an der Art 'teil'
+  /* Ein einzeln geoeffnetes Teil: Die Meldung gibt
+     `einstellungen.php` an der Art 'teil'
      (oben: die Erkennung). */
 
   /* ---- Die Datei auf die Platte, dann Python ----------------------------- */

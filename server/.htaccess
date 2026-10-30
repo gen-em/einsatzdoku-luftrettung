@@ -3,14 +3,11 @@ RewriteEngine On
 RewriteCond %{HTTPS} !=on
 RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [R=301,L]
 
-# Zwei Ordner, die es im Webroot gibt und die niemand ueber HTTP braucht
-# (Backlog Nr. 129, K-9).
+# Zwei Ordner, die es im Webroot gibt und die niemand ueber HTTP braucht.
 #
 #   apk/    die signierten Android-Pakete. `apk.php` liefert sie aus und
-#           verlangt dafuer eine Anmeldung -- der ORDNER tat das nicht, und
+#           verlangt dafuer eine Anmeldung -- der ORDNER taete das nicht, und
 #           die Dateinamen sind vorhersagbar (`nadoku-0.13.0.apk`).
-#           `Technik.md` 4.97g sagte "nur angemeldet"; das galt fuer die
-#           Seite, nicht fuer den Ordner.
 #   demo/   `fixture.json.gz` mit dem Schluesselmaterial des Demo-Kontos.
 #           Harmlos -- das Passwort steht im Handbuch --, aber unnoetig.
 #
@@ -24,7 +21,7 @@ RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [R=301,L]
 # unverschluesselte Kanal mit einer Auskunft.
 RewriteRule ^(apk|demo)(/|$) - [F,L]
 
-# PUNKTDATEIEN NIEMALS AUSLIEFERN -- MIT GENAU EINER AUSNAHME (Nr. 213).
+# PUNKTDATEIEN NIEMALS AUSLIEFERN -- MIT GENAU EINER AUSNAHME.
 #
 # ANLASS. Die Auslieferungskette benutzt SamKirkland/FTP-Deploy-Action, und
 # die legt ihre Zustandsdatei `.ftp-deploy-sync-state.json` in das
@@ -65,21 +62,19 @@ RewriteRule "(^|/)\.(?!well-known/)" - [F,L]
 
 # Sensible Dateien niemals ausliefern
 #
-# `config\.php.*` UND NICHT NUR `config\.php` (Web 23.1.0, R17-19, F-R17-55,
-# E-R17-36): Jede Kopie daneben -- `config.php.bak`, `config.php~` eines
-# Editors, bis Web 23.0.3 die Sicherung `config.php.vor-probe` der Proben --
-# endet nicht auf `.php`, laeuft also nicht durch PHP und kaeme als Text
-# heraus, samt Datenbankzugang, Serverschluessel und Anteil. Die Proben legen
-# ihre Sicherung seither ausserhalb von `server/` ab; diese Zeile ist der
-# zweite Riegel fuer alles, was sonst noch so heisst. `(?i)` und `#?`
-# (Gegenpruefung R17-19): `Config.php.bak` kaeme sonst durch, ebenso die
-# Sicherung `#config.php#` von Emacs; `.#config.php` faengt schon die
-# Punktregel oben.
+# `config\.php.*` UND NICHT NUR `config\.php`: Jede Kopie daneben --
+# `config.php.bak`, `config.php~` eines Editors -- endet nicht auf `.php`,
+# laeuft also nicht durch PHP und kaeme als Text heraus, samt
+# Datenbankzugang, Serverschluessel und Anteil. Die Proben legen ihre
+# Sicherung ausserhalb von `server/` ab; diese Zeile ist der zweite Riegel
+# fuer alles, was sonst noch so heisst. `(?i)` und `#?`: `Config.php.bak`
+# kaeme sonst durch, ebenso die Sicherung `#config.php#` von Emacs;
+# `.#config.php` faengt schon die Punktregel oben.
 <FilesMatch "^(?i:#?config\.php.*|config\.example\.php|schema\.sql|db\.php|smtp\.php|auth_guard\.php|install\.lock)$">
   Require all denied
 </FilesMatch>
 
-# Nachweisdatei der Ersteinrichtung (M1-11). ZWEITE Schranke, nicht die erste:
+# Nachweisdatei der Ersteinrichtung. ZWEITE Schranke, nicht die erste:
 # Die Kennung steht bereits im DATEINAMEN und ist damit auch dann nicht zu
 # erraten, wenn diese Regel nicht greift (anderer Webserver, .htaccess
 # abgeschaltet). Ein Verzeichnislisting liefert kein verbreiteter Webserver
@@ -88,51 +83,41 @@ RewriteRule "(^|/)\.(?!well-known/)" - [F,L]
   Require all denied
 </FilesMatch>
 
-# Dasselbe fuer den Nachweis der Wiederherstellung (S2/AP8). Er entsteht nur
+# Dasselbe fuer den Nachweis der Wiederherstellung. Er entsteht nur
 # auf einer LEEREN Installation oder waehrend eines laufenden Einspielens --
 # also genau dann, wenn es noch keine Anmeldung gibt, die ihn schuetzen
-# koennte. Die erste Fassung dieser Datei kannte ihn nicht; die Regel war
-# damit fuer den einen Fall nicht da, fuer den es sie gibt.
+# koennte.
 <FilesMatch "^wiederher-nachweis-.*\.txt$">
   Require all denied
 </FilesMatch>
 
-# Und fuer den Notzugang der einzigen BetreiberIn (Schritt 18, SR-04). Hier
+# Und fuer den Notzugang der einzigen BetreiberIn. Hier
 # ist die Richtung umgekehrt: Die Seite NENNT den Namen, die BetreiberIn legt
-# die Datei per FTP an (Schreibnachweis, E-SR-81). Der Name ist also kein
+# die Datei per FTP an (Schreibnachweis). Der Name ist also kein
 # Geheimnis -- gesperrt wird trotzdem, weil in der Datei steht, was die
 # BetreiberIn hineinlegt, und das soll der Webserver niemandem ausliefern.
 <FilesMatch "^zweitfaktor-notweg-.*\.txt$">
   Require all denied
 </FilesMatch>
 
-# Security-Header -- SEIT WEB 20.7.0 NUR NOCH FUER DAS, WAS NICHT DURCH PHP
-# LAEUFT (P5a/AP4, E-P5a-15).
+# Security-Header -- NUR FUER DAS, WAS NICHT DURCH PHP LAEUFT.
 #
-# WAS SICH GEAENDERT HAT UND WARUM. Bis Web 20.6.0 standen hier vier
-# Kopfzeilen mit `Header always set` -- und `set` ERSETZT, was PHP gesetzt
-# hat. Solange PHP nichts setzte, war das die einzige Quelle und richtig so.
-# Seit `kopfzeilen_lib.php` setzt PHP sie selbst, und zwar auf JEDEM
+# `kopfzeilen_lib.php` setzt die Kopfzeilen selbst, und zwar auf JEDEM
 # Webserver: Diese Datei liest nur Apache. Auf nginx, Caddy oder LiteSpeed
-# stand die Installation vorher ohne `nosniff`, ohne `Referrer-Policy`, ohne
-# `X-Frame-Options` und ohne HSTS da, und niemand sah es.
+# stuende die Installation sonst ohne `nosniff`, ohne `Referrer-Policy`, ohne
+# `X-Frame-Options` und ohne HSTS da, und niemand saehe es. `Header always
+# set` hier ERSETZTE, was PHP gesetzt hat.
 #
 # `setifempty` STATT `set`: Damit fuehrt PHP, wo PHP laeuft, und diese Datei
 # springt nur dort ein, wo es nicht laeuft -- bei den statischen Dateien unter
 # `assets/` (Stylesheet, Schriften, Symbole, Skripte). Genau die brauchen
 # `nosniff` ebenso, und genau die bekommen es von PHP nie.
 #
-# `Strict-Transport-Security` IST HIER GANZ VERSCHWUNDEN, und das ist die
-# unangenehme Zeile: Sie stand auf `max-age=31536000` -- ein Jahr. Seit AP4
-# ist die Dauer eine EINSTELLUNG (Betrieb -> Servereinstellungen, Vorgabe
+# `Strict-Transport-Security` STEHT HIER NICHT: Die Dauer ist eine
+# EINSTELLUNG (Betrieb -> Servereinstellungen, Vorgabe
 # **ein Tag**, Stufen 1/7/365). Zwei Stellen fuer dieselbe Kopfzeile waeren
 # auf Apache keine Wiederholung, sondern ein Ueberschreiben: Die Einstellung
 # haette nichts bewirkt und trotzdem einen Wert angezeigt.
-#
-# **Der Preis, benannt:** Auf einer Installation, die bisher ein Jahr gesendet
-# hat, sinkt die Bindung nach dem Deploy auf einen Tag, bis jemand den Wert
-# hochstellt. Das steht im Pruefdokument als Punkt fuer die Betreiberin und
-# als Hinweis an der Einstellung selbst.
 Header always setifempty X-Content-Type-Options "nosniff"
 Header always setifempty X-Frame-Options "DENY"
 # strict-origin-when-cross-origin: sendet die Herkunft (ohne Pfad) auch an

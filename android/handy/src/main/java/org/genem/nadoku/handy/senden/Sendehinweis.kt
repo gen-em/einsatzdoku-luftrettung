@@ -10,7 +10,7 @@ import org.genem.nadoku.handy.HauptActivity
 import org.genem.nadoku.handy.aufzeichnung.AufzeichnungsDienst
 
 /**
- * Die Meldung nach dem Dienstende (ID 2, E-S5Z-07).
+ * Die Meldung nach dem Dienstende (ID 2).
  *
  * WOZU SIE DA IST. Nach „Dienst beenden" ist die App zu, das Handy in der
  * Tasche, und der Mensch geht nach Hause. Bleibt etwas ungesendet liegen, ist
@@ -29,7 +29,7 @@ import org.genem.nadoku.handy.aufzeichnung.AufzeichnungsDienst
  */
 object Sendehinweis {
 
-    /** Z-S5Z-10: 1 Dauermeldung · 2 Hinweis Dienstende · 3 Warnung. */
+    /** 1 Dauermeldung · 2 Hinweis Dienstende · 3 Warnung. */
     const val MELDUNG_ID = 2
 
     fun stellen(kontext: Context, text: String) {
@@ -48,8 +48,8 @@ object Sendehinweis {
             /* NICHT `setOngoing`: Wer sie wegwischt, hat sie zur Kenntnis
              * genommen — der Job läuft davon unberührt weiter. Eine Meldung,
              * die sich nicht wegwischen lässt, obwohl es nichts zu tun gibt,
-             * ist eine Zumutung (und war genau der Fehler B-S5Z-03: eine
-             * „andauernde" Meldung ohne Dienst dahinter). */
+             * ist eine Zumutung (eine „andauernde" Meldung ohne Dienst
+             * dahinter). */
             .setAutoCancel(true)
             .setSilent(true)
             .setCategory(NotificationCompat.CATEGORY_STATUS)
