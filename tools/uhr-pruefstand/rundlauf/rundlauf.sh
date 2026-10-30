@@ -23,7 +23,14 @@
 # Uhr koppelt, sagt „Gekoppelt, kein Schlüssel", sendet nicht; dann steht der
 # Schluessel wieder, START halten holt ihn, und erst danach gehen die Pakete.
 #
-# AUFRUF   bash tools/uhr-pruefstand/rundlauf/rundlauf.sh [--nachholen] [geraet]
+# DRITTE ART: --schrumpfen (F-R17-52, seit Uhr 4.1.0). Zwei geparkte Pakete
+# vor dem Einsatz; waehrend seiner letzten Anfrage verwirft die Prueffassung
+# alle geparkten (Haken in der Kopie von Uploader.mc, Rundlauf.mc). Danach
+# muss die Konsole "liste=0 spuren=0" melden und keinen Absturz. Bis 4.0.0
+# entfernte die Antwort den Eintrag ueber einen veralteten Listenplatz und
+# brach ab.
+#
+# AUFRUF   bash tools/uhr-pruefstand/rundlauf/rundlauf.sh [--nachholen|--schrumpfen] [geraet]
 #          (Vorgabe fenix6pro; braucht `pruefstand.sh aufbau` und die oertliche
 #          Anlage mit eigener CA, docs/Technik.md 5.2b)
 #
@@ -35,7 +42,9 @@ set -euo pipefail
 WURZEL="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
 P="$WURZEL/tools/uhr-pruefstand/pruefstand.sh"
 NACHHOLEN=0
+SCHRUMPFEN=0
 [ "${1:-}" = "--nachholen" ] && { NACHHOLEN=1; shift; }
+[ "${1:-}" = "--schrumpfen" ] && { SCHRUMPFEN=1; shift; }
 GERAET="${1:-fenix6pro}"
 BASIS="${CIQ_BASIS:-$HOME/.ciq-pruefstand}"
 APP="$BASIS/rundlauf-app"
@@ -90,6 +99,15 @@ sed -i 's|<property id="serverUrl" type="string">[^<]*</property>|<property id="
     "$APP/resources/settings/properties.xml"
 sed -i 's|        Track.restore();|        Track.restore();\n        Rundlauf.fuellen();|' "$APP/source/NAdokuApp.mc"
 grep -q 'Rundlauf.fuellen' "$APP/source/NAdokuApp.mc" || fehler "Einhaengen in NAdokuApp.onStart gescheitert"
+if [ "$SCHRUMPFEN" = 1 ]; then
+    sed -i 's|const SCHRUMPFEN = false;|const SCHRUMPFEN = true;|' "$APP/source/Rundlauf.mc"
+    # Haken 1 nach dem Absenden, Haken 2 nach jeder angenommenen Antwort.
+    sed -i 's|            opts, cb.method(:onResponse));|            opts, cb.method(:onResponse));\n        Rundlauf.waehrendAnfrage(ref);|' "$APP/source/Uploader.mc"
+    sed -i 's|            _next();   // weitere offene Chunks/Jobs|            _next();   // weitere offene Chunks/Jobs\n            Rundlauf.bericht();|' "$APP/source/Uploader.mc"
+    [ "$(grep -c 'Rundlauf\.' "$APP/source/Uploader.mc")" = 2 ] \
+        || fehler "Haken in Uploader.mc nicht eingesetzt (zwei erwartet)"
+    grep -q 'const SCHRUMPFEN = true;' "$APP/source/Rundlauf.mc" || fehler "Schalter in Rundlauf.mc nicht gesetzt"
+fi
 # Ausgabe erst sammeln: `| grep -q` schloesse die Pipe beim ersten Treffer,
 # und unter pipefail zaehlte das als Scheitern des Uebersetzens.
 BAU=$(bash "$P" bauen "$GERAET" "$APP/monkey.jungle" 2>&1) || true
@@ -149,3 +167,20 @@ sleep 4
 bash "$P" abbild "$ABBILD/4-gesendet.png" >/dev/null
 melde "Gegenpruefung"
 php "$WURZEL/tools/uhr-pruefstand/rundlauf/pruefen.php" "$EINSATZ" "$RUHE"
+if [ "$SCHRUMPFEN" = 1 ]; then
+    melde "Schrumpfen (F-R17-52): was meldet die Uhr?"
+    KONSOLE=$(bash "$P" konsole)
+    printf '%s\n' "$KONSOLE" | grep 'RL-SCHRUMPF' || true
+    s_fehl=0
+    if printf '%s\n' "$KONSOLE" | grep -q 'RL-SCHRUMPF verworfen=2 offen=1'; then
+        echo "  ok    waehrend der letzten Anfrage 2 geparkte verworfen, 1 Eintrag uebrig"
+    else echo "  FEHL  das Verwerfen waehrend der Anfrage kam nicht an"; s_fehl=$((s_fehl+1)); fi
+    if [ "$(printf '%s\n' "$KONSOLE" | grep 'RL-SCHRUMPF liste=' | tail -1)" = "RL-SCHRUMPF liste=0 spuren=0" ]; then
+        echo "  ok    nach der Antwort: Liste leer, kein Spurstueck uebrig"
+    else echo "  FEHL  nach der Antwort nicht leer (oder keine Antwort verarbeitet)"; s_fehl=$((s_fehl+1)); fi
+    if printf '%s\n' "$KONSOLE" | grep -qiE 'Error:|Exception|Out Of Bounds'; then
+        echo "  FEHL  Absturz in der Konsole"; s_fehl=$((s_fehl+1))
+    else echo "  ok    kein Absturz in der Konsole"; fi
+    echo "Schrumpfen: 3 Pruefungen, $s_fehl Fehlschlaege"
+    [ "$s_fehl" = 0 ] || exit 1
+fi

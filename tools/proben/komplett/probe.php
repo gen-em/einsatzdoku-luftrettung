@@ -623,18 +623,43 @@ $gzh = gzopen($bauRoh, 'rb');
 $anfang = (string)gzread($gzh, 4096);
 gzclose($gzh);
 pruef('Ist der Baustand verschwunden, beginnt der Lauf von vorn',
-      /* BEIDE SCHREIBWEISEN, wie in wiederherstellen.php (S7, F-S7-04):
-         Ein Dump, der vor der Begriffsumstellung entstanden ist, traegt
-         noch "Komplett-Backup der Installation". Wer hier nur die neue
-         Schreibweise sucht, laesst die Probe an einem alten Baustand
-         scheitern, ohne dass etwas kaputt waere. */
-      str_contains($anfang, 'Komplett-Backup der Installation')
-      || str_contains($anfang, 'Komplett-Backup der Installation'),
+      /* BEIDE SCHREIBWEISEN, ueber dieselbe Funktion wie
+         wiederherstellen.php (S7, F-S7-04; seit R17-23 `komp_dump_eigen()`).
+         Bis dahin stand hier die Zeichenkette zweimal wortgleich — derselbe
+         Fehler wie dort (F-R17-33). */
+      function_exists('komp_dump_eigen') && komp_dump_eigen($anfang),
       'der Kopf steht wieder am Anfang');
 pruef('...und das wird im Zustand vermerkt', isset($verlorenR['neu_begonnen']),
       (string)($verlorenR['neu_begonnen'] ?? '-'));
 komp_bau_weg((string)$z2['bau']);
 }
+
+/* =========================================================================
+ * Teil 8a — Welcher Dump ist ein eigener? (F-R17-33, R17-23)
+ *
+ * `wiederherstellen.php` verlangt die Endmarke nur von einem EIGENEN Dump.
+ * Bis Web 23.3.1 stand die alte Schreibweise der Kopfzeile dort zweimal
+ * statt einmal, und ein abgebrochener Dump von vor S7 galt als fremd — er
+ * ging ohne Endmarke durch. Drei Faelle, und der zweite ist der Befund.
+ * ====================================================================== */
+kopf('Teil 8a — Welcher Dump ist ein eigener? (F-R17-33)');
+$kopfNeu = "-- Einsatzdokumentation Notarzt — Komplett-Backup der Installation\n-- Erzeugt am: …\n";
+$kopfAlt = "-- Einsatzdokumentation Notarzt — Komplettsicherung der Installation\n-- Erzeugt am: …\n";
+$kopfFremd = "-- MySQL dump 10.13  Distrib 8.0.36, for Linux (x86_64)\n--\n-- Host: localhost\n";
+pruef('Ein Dump mit heutigem Kopf ist ein eigener', function_exists('komp_dump_eigen')
+      && komp_dump_eigen($kopfNeu), 'Komplett-Backup der Installation');
+pruef('Ein Dump mit dem Kopf von vor S7 ist ein eigener — er braucht die Endmarke',
+      function_exists('komp_dump_eigen') && komp_dump_eigen($kopfAlt),
+      'Komplettsicherung der Installation');
+pruef('Ein mysqldump ist ein fremder', function_exists('komp_dump_eigen')
+      && !komp_dump_eigen($kopfFremd), 'keine Endmarke verlangt');
+/* Und die Seite nimmt die Entscheidung von dort, nicht aus einer eigenen
+ * Liste: eine zweite Liste waere die Stelle, an der der Fehler wiederkaeme. */
+$whQuelle = (string)file_get_contents($srv . '/wiederherstellen.php');
+pruef('wiederherstellen.php fragt komp_dump_eigen() und fuehrt keine eigene Liste',
+      str_contains($whQuelle, 'komp_dump_eigen($anfang)')
+      && !str_contains($whQuelle, "str_contains(\$anfang, 'Komplett"),
+      'eine Stelle');
 
 /* =========================================================================
  * Teil 9 — Aufbewahrung, Speichergrenze, Rückstand

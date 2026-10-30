@@ -238,10 +238,11 @@ class SendingView extends WatchUi.View {
     }
 }
 
-class SendingDelegate extends WatchUi.BehaviorDelegate {
-    function initialize() { BehaviorDelegate.initialize(); }
+class SendingDelegate extends TastenDelegate {
+    function initialize() { TastenDelegate.initialize(); }
     // Waehrend des Sendens keine Aktionen — BACK ueberspringt das Warten
     function onBack() as Lang.Boolean {
+        if (Input.beruehrungVerwerfen()) { return true; }   // F-R17-68
         var dlg = new WatchUi.Confirmation("Sync unvollständig – trotzdem beenden?");
         WatchUi.pushView(dlg, new QuitConfirmDelegate(), WatchUi.SLIDE_LEFT);
         return true;
@@ -315,16 +316,17 @@ class QuickMenuView extends WatchUi.View {
     }
 }
 
-class QuickMenuDelegate extends WatchUi.BehaviorDelegate {
+class QuickMenuDelegate extends TastenDelegate {
 
     var _v as QuickMenuView;
 
     function initialize(v as QuickMenuView) {
-        BehaviorDelegate.initialize();
+        TastenDelegate.initialize();
         _v = v;
     }
 
     function onPreviousPage() as Lang.Boolean {           // UP: endlos
+        if (Input.beruehrungVerwerfen()) { return true; }   // F-R17-68
         var n = _v.items.size();
         _v.index = (_v.index - 1 + n) % n;
         WatchUi.requestUpdate();
@@ -332,12 +334,14 @@ class QuickMenuDelegate extends WatchUi.BehaviorDelegate {
     }
 
     function onNextPage() as Lang.Boolean {               // DOWN: endlos
+        if (Input.beruehrungVerwerfen()) { return true; }   // F-R17-68
         _v.index = (_v.index + 1) % _v.items.size();
         WatchUi.requestUpdate();
         return true;
     }
 
     function onSelect() as Lang.Boolean {                 // START
+        if (Input.beruehrungVerwerfen()) { return true; }   // F-R17-68
         var id = _v.items[_v.index][2];
         WatchUi.popView(WatchUi.SLIDE_RIGHT);
         if (id == :endDay) {
@@ -354,6 +358,7 @@ class QuickMenuDelegate extends WatchUi.BehaviorDelegate {
     }
 
     function onBack() as Lang.Boolean {
+        if (Input.beruehrungVerwerfen()) { return true; }   // F-R17-68
         WatchUi.popView(WatchUi.SLIDE_RIGHT);
         return true;
     }

@@ -79,6 +79,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
          * Adressen es gibt. */
         if ($u && demo_ist_demo((int)$u['id'])) { $u = false; }
 
+        /* KEIN SETZ-LINK AN EINE UNBESTAETIGTE ADRESSE (R17-20, F-R17-06,
+         * E-R17-45). Hat die Verwaltung die Adresse geaendert und die alte
+         * hat weder zugestimmt noch ist die Frist um, geht nichts hinaus —
+         * STILL, aus demselben Grund wie beim Demo-Konto: Die Antwort ist fuer
+         * jede Adresse dieselbe. Wer hier wartet, weiss es aus der Mail an die
+         * alte Adresse oder von der Verwaltung. */
+        if ($u) {
+            require_once __DIR__ . '/konto_lib.php';
+            if (adresse_unbestaetigt((int)$u['id']) !== null) { $u = false; }
+        }
+
         if ($u) {
             /* Hoechstens EIN gueltiger Token je Konto: Der neue entwertet
              * alle offenen. Sonst sammelten sich mit jeder Anfrage weitere

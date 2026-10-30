@@ -82,7 +82,7 @@ Welches Dokument zu welcher Änderung gehört, steht in Abschnitt 9
 ## 3. Deployment — Vorsicht
 
 **Seit Web 20.4.0 gibt es zwei Wege** (P5a/AP1, R67; Einzelheiten in
-`docs/Technik.md` 6). **Die Kette liegt seit Kette II/AP5 in zwei Dateien:**
+`docs/Technik.md` 12). **Die Kette liegt seit Kette II/AP5 in zwei Dateien:**
 `.github/workflows/auslieferung.yml` sagt, **wann** ausgeliefert wird (die
 Auslöser, die Jobs, die Freigabe), und
 `.github/workflows/ausliefern-lauf.yml` sagt, **was dabei geschieht** — die
@@ -100,12 +100,12 @@ ihn dort und damit für beide; das ist der Zweck (E-KH-14, -17).
   beide APKs nach `server/apk/` auf Produktiv; dort bleibt je Gerät nur die
   neueste Fassung. **Tag `uhr-vX.Y.Z`** → nach demselben Tor das Garmin-Paket
   als Artefakt des Laufs. Der Tag muss zur Fassung in der Datei passen (seit
-  PK-08, E-PK-53, -59, -60; `docs/Technik.md` 4.97g).
+  PK-08, E-PK-53, -59, -60; `docs/Technik.md` 4.13).
 
 **Staging liegt seit dem 20.09.2026 bei einem anderen Hoster als Produktiv**
 (lima-city, `staging-nadoku.gen-em.org`; E-KH-04). Vorher lag es im selben
 Webspace wie Produktiv, und das war der Fehler: Staging-PHP konnte Produktivs
-`config.php` lesen. Der Preis des Umzugs steht in `docs/Technik.md` 6.3a —
+`config.php` lesen. Der Preis des Umzugs steht in `docs/Technik.md` 12.5 —
 **Staging belegt kein Plattformverhalten von Produktiv mehr.** Eine Zahl, die
 Stufe 2 auf Staging misst (Zeitgrenzen, Speicher, `max_user_connections`),
 gilt für Staging und sonst nirgends. Wer eine ältere Quelle liest, findet
@@ -192,19 +192,23 @@ Protokoll oder einen alten Kommentar liest, liest das noch.
   bleibt die unabhängige Gegenprobe:
   `grep -rhoE 'uses: [^ ]+@[0-9a-f]{40}' .github/workflows/ | wc -l` gegen
   `grep -rh 'uses:' .github/workflows/ | grep -vc 'uses: \./'`.
-- `server/config.php`, `install.lock`, `server/wartung.lock`,
-  `server/ueberlast.json` (der Zähler der Verbindungsgrenze, P5a/AP9),
-  `server/sicherungen/`, `server/apk/` und — seit Web 20.26.0 —
-  `server/.sitzungen/` (die PHP-Sitzungsdateien, Schritt 16, E-SA-05) liegen
-  nur auf dem Server. Sie stehen in `.gitignore` **und** in der
-  Ausnahmeliste des FTPS-Schritts — beides muss so bleiben.
-  **Acht Pfade sind es, und die Zahl ist der Prüfwert** — seit R17-19
+- `server/config.php`, `install.lock`, `server/sicherungen/`,
+  `server/apk/`, — seit Web 20.26.0 — `server/.sitzungen/` (die
+  PHP-Sitzungsdateien, Schritt 16, E-SA-05) und — seit Web 23.3.1 —
+  `server/.zustand/` (Schalter des Wartungsmodus `wartung.lock` und Zähler
+  der Verbindungsgrenze `ueberlast.json`, R17-22, F-R17-47) liegen nur auf
+  dem Server. Sie stehen in `.gitignore` **und** in der Ausnahmeliste des
+  FTPS-Schritts — beides muss so bleiben.
+  **Sieben Pfade sind es, und die Zahl ist der Prüfwert** — seit R17-19
   gemessen vom zweiten Riegel in `tools/kettenaufrufe/` (Sollliste, dazu
   `.gitignore` und keine eingecheckte `server/config.php*`, F-R17-16,
-  -55). Die drei
+  -55). Die vier
   Verzeichnisse stehen dort zweimal, als Datei- und als Verzeichnismuster
   (`sicherungen/**` und `sicherungen/`), weil die Aktion beides getrennt
-  prüft; die fünf Dateien je einmal. *(Bis PK-06 stand hier „jeder steht
+  prüft; die drei Dateien je einmal. *(Bis Web 23.3.0 waren es acht Pfade:
+  `wartung.lock` und `ueberlast.json` lagen als Dateien im Webroot, und
+  während einer Wartung lieferte `https://<host>/wartung.lock` jedem den
+  Namen des schaltenden Kontos.)* *(Bis PK-06 stand hier „jeder steht
   zweimal" — das galt nur für die Verzeichnisse, F-PK-11.)*
   **Seit Kette II/AP5 steht die Liste EINMAL**, in
   `.github/workflows/ausliefern-lauf.yml` (E-KH-20 (1)). Bis dahin stand sie
@@ -256,10 +260,16 @@ davon aufweicht, wird nicht nebenbei gemacht, sondern angesprochen:
   Einsatzorts, dessen Beschreibung, der **manuelle Abfahrtort** (Adresse und
   Koordinate, seit Web 6.2.0) und — seit Web 19.0.0 — die **Notizen des
   Einsatzes** werden im Browser ver- und entschlüsselt (der Katalog steht in
-  `docs/Technik.md` 4.98). *(Der Abfahrtort fehlte in diesem Satz bis zum
+  `docs/Technik.md` 4.14). *(Der Abfahrtort fehlte in diesem Satz bis zum
   25.09.2026, obwohl er seit Web 6.2.0 im Block liegt — gefunden von der
   Gegenprüfung in Konzept BV, F-BV-13.)* Klartext dieser Felder geht nie an den Server, in
-  ein Log oder in eine API-Antwort.
+  ein Log oder in eine API-Antwort. **An Dritte aber schon, und das gehört
+  zur Zusage:** Die Adresssuche (Photon, `photon.komoot.io`, Vorgabe an)
+  bekommt getippte Adresse und gewählte Koordinate von Einsatz- und
+  Abfahrtort, die Kartendienste den Ausschnitt um den Einsatzort;
+  abschaltbar für die Installation und je Konto (`docs/Technik.md` 4.14,
+  Bedrohungsmodell Lage G, F-R17-09). „Keine fremde Quelle zur Laufzeit"
+  weiter unten meint Skripte, nicht Verbindungen.
   **Seit S11 (Web 22, Uhr 4.0.0, Android 0.18.0) ebenso verschlossen:** die
   GPS-Spur, die Koordinate **jeder Phase** (Phase 4 und 5 sind der
   Einsatzort) und der **Reanimationsverlauf** — in der **Gerätehülle**:
@@ -268,11 +278,13 @@ davon aufweicht, wird nicht nebenbei gemacht, sondern angesprochen:
   Teil unter dem Inhaltsschlüssel; der Server nimmt Klartext nicht mehr an
   (`400 klartext`). **Transportziel samt Koordinate und Ortshöhe** liegen im
   `pat_blob` (Feldkatalog, `'store' => 'pat'`). Format und Katalog:
-  `docs/Technik.md` 4.98 und 4.99s.
+  `docs/Technik.md` 4.14 und 4.40.
   **Im Klartext liegen dagegen:** die **Notizen des Diensttags**
   (`days.notes` — Betriebsnotizen, nicht die des Einsatzes), **Zeiten** und
   **Nummern der Phasen**, der **Umriss der Spurstücke** (Nummern,
-  Punktzahl, Zeitraum, Stufe), Strecke, Anstieg und Besatzungsnamen. Über
+  Punktzahl, Zeitraum, Stufe), Strecke, Anstieg und Besatzungsnamen —
+  vollständig steht die Liste in `docs/Technik.md` 4.14, samt den
+  Klartext-Freitexten wie „Namen / Infos" der Bergwacht (F-R17-25). Über
   die Zeiten findet einen Einsatz, wer weiß, wann er war — Ort, Spur,
   Klinik und Reanimation findet er nicht mehr.
   **Mit zwei Grenzen, die zur Zusage gehören:** (1) Die **Puffer auf
@@ -290,7 +302,7 @@ davon aufweicht, wird nicht nebenbei gemacht, sondern angesprochen:
   `mission_fields.php`), nicht über handgeschriebenes Markup: `mf_ist_spalte()`
   nimmt ein solches Feld dann von selbst aus jedem `SELECT`, `INSERT` und
   `UPDATE` auf `missions`. Wer ein weiteres Feld verschlüsselt, ergänzt den
-  Katalogeintrag, diesen Absatz **und** `docs/Technik.md` 4.98 — und schreibt
+  Katalogeintrag, diesen Absatz **und** `docs/Technik.md` 4.14 — und schreibt
   einen Anhebelauf für den Altbestand (`api/pat_anheben.php` ist das Muster;
   der Server kann nicht verschlüsseln, nur der Browser kann es).
   **Seit S10 hängt der Datenschlüssel zusätzlich am Server-Anteil**
@@ -300,7 +312,14 @@ davon aufweicht, wird nicht nebenbei gemacht, sondern angesprochen:
   nichts öffnen** — er kennt den Anteil, nicht die PBKDF2-Hälfte aus dem
   Passwort. Was sich ändert, ist die Rechnung des Angreifers: Ein
   Datenbankabzug allein reicht nicht mehr für einen Offline-Angriff auf das
-  Passwort. **`config.php` ist damit Schlüsselträger aller Konten** — das
+  Passwort — **seit Web 23.2.0 wahr, weil auch der Anmelde-Hash einen Pfeffer
+  aus `kdf_anteil` trägt** (`pf1:`, `anmeldehash_bilden()`, R17-20, E-R17-20,
+  -51), für jedes Konto, das sich seither angemeldet hat; das Demo-Konto ist
+  ausgenommen. *(Bis dahin stand der Satz hier, und er war falsch: Der Hash
+  war bcrypt des Tokens ohne Anteil, und an ihm ließ sich offline raten,
+  F-R17-01.)* Der Preis: Fehlt der Anteil, meldet sich niemand an, auch die
+  BetreiberIn nicht (E-R17-44, Runbook `Technik.md` 13).
+  **`config.php` ist damit Schlüsselträger aller Konten** — das
   Wiederanlaufpaket (vier Stücke) und das Schlüsselblatt sind Pflicht, nicht
   Empfehlung. Wer diesen Absatz zitiert, zitiert den nächsten Satz mit:
   **`pat_wrap_rc` hängt NICHT am Anteil.** Der Wiederherstellungsschlüssel
@@ -311,7 +330,7 @@ davon aufweicht, wird nicht nebenbei gemacht, sondern angesprochen:
   gilt für `rw_privat`**, den privaten Teil des Rückwegs beim Zweitfaktor:
   Er liegt als `edk1:` unter dem Inhaltsschlüssel und muss mit dem
   Wiederherstellungsschlüssel allein aufgehen (`RW_PRIVAT_RE = WRAP_RC_RE`,
-  `docs/Technik.md` 4.99q).
+  `docs/Technik.md` 4.38).
   **Zwei Zeichen tragen die Zusage in die Oberfläche:** ein Schloss an jedem
   verschlüsselten Feld, die Kleinzeile „Klartext — keine Patientendaten" an
   jedem Klartext-Freitextfeld. Sie schließen einander aus; die Wahl steht an
@@ -333,6 +352,15 @@ davon aufweicht, wird nicht nebenbei gemacht, sondern angesprochen:
   2.3, bis die Freigaberunde den Absatz nachzieht. Wer die Verschlüsselung,
   die Anmeldung, die Schlüsselablage eines Geräts oder die Kette ändert,
   schreibt das Modell fort.
+  **Der Inhaltsschlüssel im Browser** liegt seit Web 23.4.0 als nicht
+  extrahierbarer `CryptoKey` in IndexedDB, für alle Tabs, und der
+  Datenschlüssel wird nach dem Entsperren nicht aufbewahrt (R17-25, Nr. 370,
+  E-R17-76; `docs/Technik.md`, „Entsperren des Inhaltsschlüssels").
+  **Nicht extrahierbar ist er, nicht alles, was er öffnet:** Der private
+  Teil des Kontopaars (Ortsdaten) und `rw_privat` liegen unter ihm verpackt,
+  und ein Skript in der Seite kann sie auspacken und mitnehmen (E-R17-77).
+  Wer den Satz „der Schlüssel lässt sich nicht stehlen" schreibt, schreibt
+  diesen mit.
 - **Keine fremde Quelle zur Laufzeit.** Kein CDN, keine Google Fonts, kein
   externes Skript. Schriften und Bibliotheken liegen unter
   `server/assets/fonts/` bzw. `server/assets/vendor/`, mit Herkunft und
@@ -345,18 +373,22 @@ davon aufweicht, wird nicht nebenbei gemacht, sondern angesprochen:
 - **Feldkatalog statt Sonderfall.** Zusatzfelder werden in
   `mission_fields.php` beschrieben; Formular, Speichern, API und Anzeige ziehen
   von selbst nach. Ein neues Feld, das an fünf Stellen von Hand eingebaut wird,
-  ist ein Fehler. Vorgehen: `docs/Technik.md`, Abschnitt 7 (Runbook).
+  ist ein Fehler. Vorgehen: `docs/Technik.md`, Abschnitt 13 (Runbook).
 - **Die Uhr kennt keine Zugangsdaten.** Die Wear-OS-App (`android/uhr/`) hat
   weder Serveradresse noch API-Schlüssel; sie schickt ihre Ereignisse an das
   Handy, und das Handy sendet (E-S4-11). Eine verlorene Uhr gibt keinen Zugang
   preis. Wer das aufweicht — und sei es „nur zum Prüfen" —, nimmt der Bauform
   ihre Sicherheitsaussage. Der Prüfstand zählt die Schlüssel des
   Nachrichtenformats nach.
-- **Der Data Layer steckt hinter einer Schnittstelle.** `Nachrichtenweg`, eine
-  Umsetzung (`WearNachrichtenweg.kt`). Alles darüber kennt nur die
-  Schnittstelle — deshalb laufen die Prüffälle ohne Play-Dienste, und deshalb
-  ist die eine proprietäre Bibliothek des Projekts auf eine Datei begrenzt
-  (`docs/Lizenzen.md` 6a). Ein Aufruf am Weg vorbei ist ein Fehler.
+- **Der Data Layer steckt hinter einer Schnittstelle — das Senden.**
+  `Nachrichtenweg`, eine Umsetzung (`WearNachrichtenweg.kt`). Alles darüber
+  kennt nur die Schnittstelle — deshalb laufen die Prüffälle ohne
+  Play-Dienste. **Der Empfang kann nicht dahinter:** Ihn stellt das System
+  einem `WearableListenerService` zu, und den gibt es je Modul einmal
+  (`HandyHorcher.kt`, `UhrHorcher.kt`). Die eine proprietäre Bibliothek des
+  Projekts steckt damit in **drei** Dateien, nicht in einer (`docs/Lizenzen.md`
+  6a, F-R17-27); die Horcher reichen nur weiter. Ein Aufruf am Weg vorbei ist
+  ein Fehler.
 - **Spuren nur über `spur_lib.php`.** Seit Web 22 liegen GPS-Punkte als
   verschlossene Stücke in `track_stuecke` (SPUR2, `spur2_…`), seit Web 23
   nur noch dort (S11-12; bis dahin daneben der Altbestand als Zeilen in
@@ -366,10 +398,11 @@ davon aufweicht, wird nicht nebenbei gemacht, sondern angesprochen:
   liest, schreibt oder löscht, zeigt oder hinterlässt früher oder später
   eine halbe Spur, und zwar ohne Fehlermeldung. Es gibt genau einen Weg:
   `spur2_lesen()`, `spur2_lesen_viele()`, `spur2_stueck_schreiben()`,
+  `spur2_stand()`, `spur2_faellig()`, `spur2_wartung_tauschen()`, `spur_min_ts()`,
   `spur_zahlen()`, `spur_stand()`, `spur_naechste_seq()`,
   `spur_loeschen()`, `spur_zeit_verschieben()`. Ein neuer Verbraucher, der
   daran vorbeigeht, ist ein Fehler. Format und Begründung:
-  `docs/Technik.md`, Abschnitt 4.97; Nachweis: `php tools/proben/spur/probe.php`.
+  `docs/Technik.md`, Abschnitt 4.6; Nachweis: `php tools/proben/spur/probe.php`.
 
 - **Eine Stelle je Sache — und ein Register, das es nachzählt** (R83,
   Schritt 15). Diese Wege haben seither genau einen Eingang, und wer daneben
@@ -444,7 +477,7 @@ Es gibt **keine automatisierten Tests** für Web und Uhr; die Android-Module
 haben welche. Geprüft wird durch Lesen, im Browser, im Emulator und im
 Simulator. **Wo welche Prüfung läuft, mit welchem Mittel und ab welcher
 Stufe, steht in `docs/Pruefablauf.md`** — das ist die eine Stelle dafür. Die
-Arbeitsumgebung, ihre Ausbaustufen, die sieben Umgebungswerte und was sie
+Arbeitsumgebung, ihre Ausbaustufen, die Umgebungswerte und was sie
 **nicht** kann: `docs/Sandbox-Setup.md`.
 
 **Die acht Grundsätze** (ausgeführt in `docs/Pruefablauf.md` 1):
@@ -636,7 +669,7 @@ nicht später, nicht „in P6":
 - **Fremdbestandteile** (Bibliotheken, Schriften, Symbole, Dienste):
   `docs/Lizenzen.md`.
 - **Android-App** (`android/`): `android/LIESMICH.md` (Bauanleitung,
-  Entscheidungen, Prüfstand), `docs/Technik.md` 5a (wie es zusammenhängt),
+  Entscheidungen, Prüfstand), `docs/Technik.md` 6 (wie es zusammenhängt),
   `docs/Lizenzen.md` 6a (Fremdbestandteile — die Liste selbst steht in
   `android/gradle/libs.versions.toml`), `docs/Geraete-Eingabe.md` (Wear-Teil).
 - **Steuerungsdokumente** (`docs/Rahmenplan.md`, `Rahmenplan-Verlauf.md`,

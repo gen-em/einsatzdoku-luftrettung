@@ -29,6 +29,16 @@
       "braucht": "nichts",
       "bemerkung": "R4-06, Anlass Nr. 170. Je verschluesseltem Feld das Schloss in Formular und Leseansicht gegen die Sollliste tools/quelltext/kennzeichnung-soll.md, dazu die Kleinzeile an jedem Klartext-Freitextfeld des Katalogs. Web 19.1.0 zaehlte 8 Schloesser und die Zahl stimmte -- zwei fehlten trotzdem."
     },
+    "fremdsummen": {
+      "aufruf": "bash tools/quelltext/pruefen.sh fremdsummen",
+      "braucht": "nichts",
+      "bemerkung": "R17-26, F-R17-50 und -51. Rechnet die SHA-256 im Herkunftskopf jeder Datei unter server/assets/vendor/ nach und haelt sie gegen die Pruefsummentabelle in docs/Lizenzen.md. Bis dahin rechnete niemand nach: leaflet.css trug die Summe des Originals mit CRLF, openlocationcode.js lag ohne Kopf ausserhalb von vendor/."
+    },
+    "dokumente": {
+      "aufruf": "bash tools/quelltext/pruefen.sh dokumente",
+      "braucht": "nichts",
+      "bemerkung": "R17-27, Anlass Nr. 188 (F-R17-59). Jeder Pfad in docs/, README.md, CLAUDE.md und jeder LIESMICH.md gegen den Baum, mit begruendeter Ausnahmeliste (tools/quelltext/dokumente-ausnahmen.md); dazu Zahlen an Verzeichnissen gegen ls, keine Kopfzeile Stand:, die Gliederung von Technik.md fortlaufend. Rund fuenfzig Stellen in zwoelf Dokumenten waren veraltet, und keine zaehlte jemand nach."
+    },
     "anker": {
       "aufruf": "bash tools/quelltext/pruefen.sh anker",
       "braucht": "nichts",
@@ -277,9 +287,9 @@
       "bemerkung": "Konzept R4 (R4-04, Nr. 334, F-R4-17). Soll-Zahlen der Ausduennung gegen android/handy/src/test/resources/stroeme.txt -- im Pruefmodus, der vergleicht statt schreibt; ohne ihn aenderte die Probe den Baum und damit den Baum-Hash des Berichts."
     },
     "uhr-rundlauf": {
-      "aufruf": "bash tools/uhr-pruefstand/rundlauf/rundlauf.sh --nachholen fenix6pro && bash tools/uhr-pruefstand/rundlauf/rundlauf.sh fr945",
+      "aufruf": "bash tools/uhr-pruefstand/rundlauf/rundlauf.sh --nachholen fenix6pro && bash tools/uhr-pruefstand/rundlauf/rundlauf.sh --schrumpfen fr945",
       "braucht": "uhr",
-      "bemerkung": "S11-08: eine Prueffassung der App koppelt im Simulator an das Demo-Konto der oertlichen Anlage und sendet einen Einsatz (600 Punkte, Raender) und ein Ruhesegment verschlossen; pruefen.php oeffnet die Huellen mit dem Demo-Schluessel und haelt sie Wert fuer Wert gegen. Auf der Fenix zusaetzlich der Weg ohne Schluessel und das Nachholen (E-S11-79). Rund 8 min."
+      "bemerkung": "S11-08: eine Prueffassung der App koppelt im Simulator an das Demo-Konto der oertlichen Anlage und sendet einen Einsatz (600 Punkte, Raender) und ein Ruhesegment verschlossen; pruefen.php oeffnet die Huellen mit dem Demo-Schluessel und haelt sie Wert fuer Wert gegen. Auf der Fenix zusaetzlich der Weg ohne Schluessel und das Nachholen (E-S11-79), auf der FR945 seit R17-21 das Schrumpfen der Liste waehrend der letzten Anfrage (F-R17-52: zwei geparkte verworfen, danach Liste leer, kein Spurstueck, kein Absturz). Rund 8 min."
     },
     "uhr-stufe1": {
       "aufruf": "python3 tools/uhr-pruefstand/geraeteklassen.py \"$HOME/.Garmin/ConnectIQ/Devices\" --alle-liste /tmp/uhr-auswahl.txt && bash tools/uhr-pruefstand/pruefstand.sh reihe /tmp/uhr-auswahl.txt",
@@ -361,6 +371,8 @@
       "linkprobe",
       "anker",
       "kennzeichnung",
+      "fremdsummen",
+      "dokumente",
       "bestand",
       "syntax-py",
       "handbuch",
@@ -446,12 +458,13 @@
       "ab": "klein",
       "pfade": [
         "server/komplett_lib.php",
-        "server/admin_komplettsicherung.php"
+        "server/admin_komplettsicherung.php",
+        "server/wiederherstellen.php"
       ],
       "proben": [
         "komplettprobe"
       ],
-      "anlass": "count(null), F-S10-AP4-02; admin_komplettsicherung.php seit R4-11 (Nr. 250, F-R4-38): der Klickweg der Probe geht ueber diese Seite"
+      "anlass": "count(null), F-S10-AP4-02; admin_komplettsicherung.php seit R4-11 (Nr. 250, F-R4-38): der Klickweg der Probe geht ueber diese Seite; wiederherstellen.php seit R17-23 (F-R17-33): Teil 8a prueft, dass die Seite komp_dump_eigen() fragt"
     },
     {
       "id": "gpx",
@@ -461,7 +474,8 @@
         "server/api/gpx_import.php",
         "server/tag_spuren.php",
         "server/*export*.php",
-        "server/assets/export.js"
+        "server/assets/export.js",
+        "server/einsatz.php"
       ],
       "proben": [
         "gpxprobe"
@@ -488,7 +502,8 @@
       "pfade": [
         "server/mail_lib.php",
         "server/email_lib.php",
-        "server/ankuendigung_lib.php"
+        "server/ankuendigung_lib.php",
+        "server/smtp.php"
       ],
       "proben": [
         "mailprobe"
@@ -504,7 +519,8 @@
         "server/admin_*.php",
         "server/betrieb_*.php",
         "server/api/rechtstext_vorschau.php",
-        "docs/Technik.md"
+        "docs/Technik.md",
+        "server/zeitraum.php"
       ],
       "proben": [
         "rollenprobe"
@@ -589,7 +605,11 @@
       "id": "ratelimit",
       "ab": "klein",
       "pfade": [
-        "server/ratelimit_lib.php"
+        "server/ratelimit_lib.php",
+        "server/login.php",
+        "server/auth_guard.php",
+        "server/zweitfaktor_notweg.php",
+        "server/api/schluesselblatt_pruefen.php"
       ],
       "proben": [
         "ratenprobe"
@@ -659,13 +679,14 @@
         "server/serverkrypto_lib.php",
         "server/auth_salt.php",
         "server/assets/unlock.js",
-        "server/assets/crypto.js"
+        "server/assets/crypto.js",
+        "server/login.php"
       ],
       "proben": [
         "anteilprobe",
         "containerprobe"
       ],
-      "anlass": "S10-Kern, F-S10-AP3-03"
+      "anlass": "S10-Kern, F-S10-AP3-03; seit R17-20 auch login.php (Teil F der Anteilprobe: Anmeldung mit Pfeffer und ohne Anteil)"
     },
     {
       "id": "freigabe",
@@ -893,7 +914,8 @@
         "tools/proben/huelle/geraet_cli.php",
         "server/einstellungen.php",
         "server/admin_sicherungen.php",
-        "server/admin_user.php"
+        "server/admin_user.php",
+        "server/api/import_commit.php"
       ],
       "proben": [
         "ortsdatenprobe"

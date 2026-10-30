@@ -14,6 +14,781 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 23.5.1] — unveröffentlicht
+
+Schritt 12b, Zwischen-PR — eine Korrektur, damit der Prüfbericht grün sein
+kann (Backlog Nr. 407, F-R17-79). Kein Schema, kein `update.php`.
+
+### Behoben
+
+- **Web — das Einsatzformular sagt, wann es fertig entschlüsselt hat.** Die
+  Ortschips von Einsatz- und Abfahrtort setzt das Formular erst nach dem
+  Entschlüsseln, und das läuft asynchron neben dem Seitenaufbau her. Wer
+  vorher am Ortsfeld arbeitete — den Chip entfernte, das Feld leerte —, dem
+  setzte es den alten Ort hinterher wieder hinein. Die Bedienprobe traf das
+  in WebKit jeden dritten Lauf am Weg `ap2-treffer-setzt-nur-das-kreuz`, auch
+  auf dem Stand vor R17-26, und war damit rot, ohne dass sich am Ortsfeld
+  etwas geändert hatte. Gemessen: In 12 von 12 Aufrufen war das
+  Entschlüsseln beim Leeren nicht fertig, es endete 65 bis 144 ms später —
+  die feste Pause der Probe war 150 ms. Das Formular trägt jetzt
+  `data-pat-geladen` — `offen` nach dem Entschlüsseln, `gesperrt`, wenn der
+  Schlüssel fehlt —, und die Probe wartet darauf statt auf feste Pausen;
+  zehn Läufe in WebKit, 60 von 60 Wegen grün. **Was bewusst bleibt:** Ein
+  Mensch, der schneller tippt, als sein Browser entschlüsselt, kann den
+  Wettlauf weiter verlieren; die Marke macht den Zeitpunkt sichtbar, sie
+  sperrt das Feld nicht. Das Entschlüsseln dauert Millisekunden, und ein
+  gesperrtes Ortsfeld bei jedem Öffnen wäre der größere Schaden.
+
+### Mit dabei
+
+- **Werkzeuge — die Kontoanlage im Kreislauf sagt, was sie stattdessen
+  bekam.** Die Freigabeprobe in Chromium scheiterte im Gesamtlauf fünfmal an
+  „Kontoanlage ohne Einrichtungslink: unbekannt" (Backlog Nr. 403), und
+  niemand wusste, ob die Antwort eine Wartungsseite, die Anmeldung oder die
+  Liste ohne Meldung war. Zweimal nachgestellt, zweimal grün. Die Meldung
+  trägt jetzt die Seitenkennung der Antwort; trifft es wieder, steht die
+  Ursache im Bericht.
+
+## [Web 23.5.0] — unveröffentlicht
+
+Schritt 12b, Paket R17-26 — was in der `config.php` steht, wird sichtbar, ohne
+dass die Datei beschreibbar wird (F-R17-75, Q-R17-20, E-R17-72); das
+Health-Token zieht ins Panel; die drei Tokens unter Betrieb → Jobs verlangen
+beim Erneuern einen frischen Code (Q-R17-21, E-R17-73); die Herkunft der
+Browser-Bibliotheken stimmt wieder und wird nachgerechnet (F-R17-50, -51).
+Kein Schema, kein `update.php`.
+
+### Hinzugefügt
+
+- **Web — die Statusseite meldet, wenn `app.base_url` nicht zur Adresse
+  passt.** Auf Produktiv stand dort wochenlang eine alte Adresse, und nichts
+  hat es gemeldet: Links in Mails, die Passkeys, die gedruckten Blätter und
+  die Karte „Auslöser" bauten sich daraus, und der Cronjob per URL bekam einen
+  leeren Fehler. Gefunden hat es die Betreiberin, nicht die Anlage. Jetzt
+  vergleicht die Zeile „Adresse der Anlage" in der Karte Server den Host aus
+  `base_url` mit dem, unter dem die Seite aufgerufen ist — orange, wenn sie
+  auseinandergehen oder `base_url` fehlt, und dann zählt sie in der Meldung
+  oben mit. Verglichen wird nur der Host; hinter einem Proxy, der ihn
+  umschreibt, wäre die Zeile zu Unrecht orange, und das fällt auf, statt still
+  zu bleiben.
+- **Web — eine Lesekarte der `config.php` auf der Statusseite.** Eingeklappt
+  unter der Plattform, jede Einstellung eine Zeile. Datenbank- und
+  Mailpasswort, Serverschlüssel und Server-Anteil stehen nur als „gesetzt"
+  oder „leer" da, nie der Wert und nie seine Länge. Die Liste ist fest und
+  läuft nicht über die ganze Datei: Ein Durchlauf zeigte jeden künftigen
+  Schlüssel und früher oder später ein Geheimnis. Ändern lässt sich hier
+  nichts — die Datei ist zur Laufzeit bewusst unbeschreibbar; was im Panel
+  änderbar ist, kann auch eine übernommene Admin-Sitzung ändern.
+- **Web — das Health-Token wird unter Betrieb → Jobs erzeugt.** Karte
+  „Monitoring": erzeugen, erneuern, abschalten, kopieren — dieselben Bausteine
+  wie die zwei Tokens darüber. Bis hierher stand es nur in der `config.php`,
+  und wer es einrichten oder wechseln wollte, brauchte FTP. Ein Wert, der dort
+  noch steht, wird beim ersten Abruf übernommen; danach gilt die Datenbank,
+  und die Zeile in der Datei kann heraus. Wer abschaltet, schaltet ab — ein
+  leerer Eintrag wird nicht wieder aus der Datei gefüllt.
+
+### Geändert
+
+- **Web — die drei Tokens unter Betrieb → Jobs verlangen beim Erneuern einen
+  frischen Code.** Wer ein Token erneuert, legt das Monitoring, den Cronjob
+  oder die Kette still, bis der neue Wert eingetragen ist; eine übernommene
+  Sitzung konnte das bisher ohne Code. Jetzt steht die Handlung in der Liste
+  der Frische-Handlungen wie das Abschalten des Zweitfaktors, und das
+  Zählregister wacht, dass jede genau einmal gefragt wird.
+- **Web — `openlocationcode.js` liegt unter `assets/vendor/`**, mit Herkunft
+  und Summe im Kopf und einer Zeile in `docs/Lizenzen.md`. Die Datei ist
+  Googles Open Location Code (Apache-2.0), byte-gleich mit dem Stand
+  `2afe39f1` des Repositoriums — sie lag bisher ohne Kopf neben dem eigenen
+  Code, und die Zusage „jede Fremddatei mit Herkunft und SHA-256" galt für sie
+  nicht.
+
+### Behoben
+
+- **Web — die Prüfsumme im Kopf von `leaflet.css` passte nicht zur Datei**
+  (F-R17-50). Sie war über das npm-Original mit Windows-Zeilenenden
+  gerechnet, abgelegt ist die Datei mit Unix-Zeilenenden. Wer nachrechnete,
+  fand eine Abweichung, die kein Eingriff war — und lernte, Abweichungen zu
+  übergehen. Der Kopf nennt jetzt beide Summen und sagt, welche wofür gilt.
+- **Web (Prüfmittel) — die Prüfsummen hat bisher niemand nachgerechnet.**
+  `tools/quelltext/fremdsummen.py` läuft jetzt in Stufe 1 und rechnet jede
+  `.js`- und `.css`-Datei unter `assets/vendor/` gegen ihren Kopf und gegen
+  die Tabelle in `docs/Lizenzen.md`. Eine Datei, die außerhalb von `vendor/`
+  liegt, sieht sie nicht — so war `openlocationcode.js` lange unbemerkt;
+  diese Grenze bleibt.
+
+### Bewusst stehen gelassen
+
+- **Ein Datenbankabzug trägt jetzt auch das Health-Token**, wie seit jeher
+  die Tokens für Cronjob und Kette. Das Token öffnet nur eine Zustandsauskunft
+  ohne Daten; der Gewinn — einrichten und wechseln ohne FTP, mit frischem
+  Code — wiegt das auf. Das Bedrohungsmodell nennt es bei der Lage des
+  Datenbankabzugs.
+- **Die übrigen harmlosen Einstellungen** (Zeitzone, Logo, Absendername,
+  Größengrenze) bleiben in der Datei und im Panel nur lesbar, bis sie im
+  Alltag stören (E-R17-72 (4)).
+
+### Mit dabei: Die Dokumentation beschreibt den Bestand (R17-27)
+
+Schritt 12b, Paket R17-27 (Befunde F-R17-09, -10, -25, -27, -29, -59; Backlog
+Nr. 188). Kein Code der Anwendung; ausgeliefert wird davon nur das Handbuch
+(`server/doku/`), und die Fassung zählt es nicht.
+
+#### Geändert
+
+- **`docs/Technik.md` ist fortlaufend nummeriert.** Mit 14 700 Zeilen stand
+  sie nicht mehr in Reihenfolge: Die Abschnitte 4.99a2 bis 4.99c lagen
+  hinter „5. Uhr-App", 4.99d bis 4.99g hinter 5.2b, 4.99p bis 4.99s vor 4.99l,
+  „4.98a", „4.99", „5e" und „5e.1" gab es je zweimal, der Ratenschutz war ein
+  Unterabschnitt „5e" mitten in „5d", und die Konto-Backups standen ohne
+  Nummer hinter dem Backlog. Jetzt: Kapitel 1 bis 15, Abschnitte fortlaufend,
+  der Text nur verschoben — gemessen standen vor und nach dem Umsortieren
+  dieselben Zeilen da. Die Verweise in den Dokumenten sind umgestellt; die
+  Kommentare im Code nennen noch die alten Nummern, bis Backlog Nr. 408 sie
+  nachzieht. Was wohin kam, steht eingefroren in
+  `docs/Technik-Gliederung-alt-neu.md` (Entscheidung der Betreiberin).
+- **Die Kopfzeilen „Stand: …" sind fort** — in Handbuch, Technik,
+  Prüfablauf und Sandbox-Setup. Sie nannten Daten zwischen dem 06.09. und dem
+  19.10.2026 über Dokumenten, die seither oft geändert worden waren. Den Stand
+  eines Dokuments kennt Git. Das Bedrohungsmodell behält seine Liste, welcher
+  Teil gegen welche Fassung nachgelesen ist, unter diesem Namen statt
+  „Stand".
+
+#### Behoben
+
+- **Rund sechzig Stellen beschrieben einen Stand, den es nicht mehr gab**
+  (F-R17-29, -59). Das Handbuch sagte in Kapitel 6 zweimal, ältere Backups
+  ließen sich weiter einspielen, und einmal das Gegenteil — seit Web 23 geht
+  nur eines ab Web 22.5.0. Ein Export ohne Haken enthielt laut Handbuch noch
+  Transportziele und Reanimation; beide sind seit Web 22 geschützt.
+  `android/LIESMICH.md` nannte drei Klassen einer Kamera, die es seit Android
+  0.11.0 nicht mehr gibt, `server/vendor/HERKUNFT.md` einen Verwender von
+  phpseclib statt vier, `Technik.md` acht Töpfe mit Leiter statt neun, eine
+  Spalte `role` mit zwei Werten statt vier und über zwanzig Zeilennummern als
+  Fundstellen, die nach den Umbauten seit S5 nicht mehr trafen. Dazu
+  Rundenzahlen, Fassungen des Containers, Schrittzahlen und Pfade, die mit
+  PK-04 umgezogen waren. Wo eine Zahl stand, die ein Werkzeug zählt, steht sie
+  jetzt nicht mehr — oder mit dem Befehl daneben.
+- **Zwei Zusagen waren enger formuliert, als die Anwendung sie hält.**
+  `CLAUDE.md` 4 sagt jetzt, dass Adresssuche und Kartendienste getippte
+  Adresse, gewählte Koordinate und den Kartenausschnitt um den Einsatzort im
+  Klartext bekommen, und wo man sie abschaltet (F-R17-09); und dass die
+  Play-Dienste-Bibliothek in drei Dateien steckt, nicht in einer — der Empfang
+  kann nicht hinter die Schnittstelle (F-R17-27). Die Klartextliste verweist
+  auf `Technik.md` 4.14, die jetzt auch „Namen / Infos" der Bergwacht und die
+  übrigen Klartext-Freitexte nennt (F-R17-25). Im Bedrohungsmodell steht die
+  fehlende Rotation des Inhaltsschlüssels als bewusst offenes Restrisiko
+  (F-R17-10).
+- **Web (Prüfmittel) — kein Werkzeug las die Dokumente** (Nr. 188).
+  `tools/quelltext/dokumente.py` läuft jetzt in Stufe 1: jeder Pfad in
+  `docs/`, `README.md`, `CLAUDE.md` und jeder `LIESMICH.md` gegen den Baum,
+  jede Zahl an einem Verzeichnis gegen `ls`, keine Kopfzeile „Stand:", und
+  die Gliederung von `Technik.md` fortlaufend. Ein Pfad, den es nur auf dem
+  Server, in einem Archiv oder in einer früheren Fassung gibt, steht mit
+  Klasse und Grund in einer Ausnahmeliste. Der erste Lauf fand zehn veraltete
+  Pfade und zwei veraltete Zahlen; über den Stand davor gefahren meldet sie
+  114 Befunde.
+
+#### Bewusst stehen gelassen
+
+- **Die Kommentare im Code und die Arbeitsdokumente** unter `docs/konzepte/`
+  nennen weiter die alte Gliederung. Die Kommentare kommen mit R17-28 (Nr.
+  408); die Konzepte beschreiben den Stand, an dem sie geschrieben wurden.
+- **Der AVV-Satz „Schlüssel in zwei Teilen"** ist ein Rechtstext und folgt
+  mit Nr. 400.
+
+## [Web 23.4.0] — unveröffentlicht
+
+Schritt 12b, Paket R17-25 — der Inhaltsschlüssel als nicht extrahierbarer
+`CryptoKey` (Backlog Nr. 370), dazu drei Meldungen der Betreiberin aus dem
+Umschalten der CSP (Nr. 404, 405, 406) und zwei Befunde aus der Auslieferung
+von 23.1.0 (F-R17-72, -73). Kein Schema, kein `update.php`. Voraussetzung
+war die scharfe CSP auf Produktiv (seit dem 28.10.2026): Sie ist die erste
+Linie gegen ein Skript in der Seite, der `CryptoKey` die zweite.
+
+### Geändert
+
+- **Web — der Schlüssel für die geschützten Angaben lässt sich nicht mehr
+  aus dem Browser herauslesen.** Bis hierher lagen Daten- und
+  Inhaltsschlüssel als Hex im Speicher des Tabs. Ein Skript, das in die Seite
+  gerät, konnte beide lesen und mitnehmen — und weil der Inhaltsschlüssel nie
+  wechselt, öffnete ein einmal mitgenommener jeden späteren Datensatz, auch
+  nachdem die Lücke geschlossen war. Jetzt liegt er als `CryptoKey` mit
+  `extractable: false` in IndexedDB: Ein Skript kann entschlüsseln lassen,
+  solange es läuft, den Schlüssel aber nicht mitnehmen; der Browser verweigert
+  das Auslesen (gemessen in Chromium, Firefox und WebKit). Der Datenschlüssel
+  aus dem Passwort wird nach dem Entsperren gar nicht mehr aufbewahrt — wer
+  ihn braucht (Passwort ändern, Wiederherstellungsschlüssel erneuern), fragt
+  ohnehin nach dem Passwort.
+- **Web — ein neuer Tab fragt nicht mehr nach dem Passwort** (Nr. 406). Die
+  Ablage gilt für alle Tabs dieses Browsers; ein Link im neuen Tab und ein
+  wiederhergestellter Browser sind innerhalb der halben Stunde sofort
+  entsperrt. „Ein Tab, ein Schlüssel" war der Preis des alten Speicherorts,
+  keine Sicherheit: Ein Skript in einem Tab erreicht dieselbe Datenbank wie
+  die anderen, eine Trennung brächte nichts (Entscheidung der Betreiberin).
+- **Web — der Export fragt nur noch einmal, und nur mit Patientendaten**
+  (Nr. 404). Bis hierher kamen bis zu drei Rückfragen hintereinander, jede
+  ein langer Fließtext in einem einzigen Absatz; zwei davon wiederholten, was
+  auf der Seite schon steht. Jetzt fragt der Export nur, wenn
+  personenbezogene Angaben die Verschlüsselung verlassen, und dann einmal, in
+  Absätzen. „Ein Export ist kein Backup" steht in der Einleitung der
+  Exportkarte, mit Verweis auf das Backup. Der Bestätigungsdialog nimmt dafür
+  eine Liste von Absätzen — jeder als Text, nie als HTML; die rund vierzig
+  Rückfragen mit einem Satz bleiben, wie sie sind.
+
+### Behoben
+
+- **Web — Bitwarden bot beim Backup mit Kontopasswort ein neues Passwort an**
+  (Nr. 405). Backup- und Kontopasswort teilten sich ein Feld, das per Skript
+  seine Bedeutung wechselte; ein Passwortverwalter ordnet ein Feld aber beim
+  Laden ein. Jetzt stehen zwei Felder ab dem Laden im Markup, jedes mit seiner
+  einen Bedeutung, dazu verborgen der Anmeldename, und der Schalter blendet
+  nur um. Ob Bitwarden ausfüllt, zeigt der Prüfpunkt bei der Betreiberin — im
+  Container gibt es kein Bitwarden.
+- **Web — nach einem Passwortwechsel hätte jede Seite nach dem Passwort
+  gefragt.** Beim Bau gefunden, nicht ausgeliefert: Die Seite nach dem Erfolg
+  trägt noch die alte Hülle, weil die Anmeldeprüfung den Datensatz vor dem
+  Speichern liest, und der neue Datenschlüssel öffnet sie nicht. Bis 23.3.x
+  fiel das nicht auf, weil der Datenschlüssel im Tab blieb und die nächste
+  Seite neu entpackte. Jetzt wird der Inhaltsschlüssel schon beim Absenden an
+  alte und neue Hülle gebunden — er ist derselbe —, und das Vormerkfach für den
+  neuen Datenschlüssel fällt weg.
+- **Web — eine alte `wartung.lock` blieb nach dem Deploy abrufbar**
+  (F-R17-72). Die Kette schaltet die Wartung mit dem alten Code ein, also im
+  Webroot; 23.3.x las die Datei dort nur mit und löschte sie beim Ausschalten.
+  Blieb die Wartung wegen einer Migration an, lieferte die Datei so lange den
+  Namen des schaltenden Kontos aus. Jetzt zieht die erste Anfrage sie nach
+  `.zustand/` um.
+- **Web (Kette) — `tor.py` meldete eine Token-Ablehnung als fehlenden
+  `Date`-Kopf** (F-R17-73). Am 27.10.2026 kostete das drei Runden: Die Kette
+  sagte „Die Antwort trägt keinen `Date`-Kopf", und der Grund —
+  `{"error": "token"}` — stand eine Zeile darüber. Eine Ablehnung trägt jetzt
+  ihre Uhr mit, und `error` wird vor der Uhr ausgewertet. Berührt nur
+  `tools/`; die Fassung zählt es nicht.
+
+### Berichtigt
+
+- Im Eintrag zu Web 23.0.3 steht: „Auf Produktiv ist sie scharf (Auskunft der
+  Betreiberin, 25.10.2026)." Das beruhte auf einem Missverständnis — die CSP
+  stand auf Produktiv bis zum 28.10.2026 auf „nur melden". Die Adresssuche im
+  Einsatzformular war damals also nicht unter scharfer Regel bestätigt; sie
+  ist es seit dem Umschalten (Betreiberin, 28.10.2026). Der Eintrag bleibt
+  stehen, wie er war.
+
+### Bewusst stehen gelassen
+
+- **Die Ablage überlebt das Schließen des Browsers.** Geräumt wird sie beim
+  Abmelden, beim Anmelden, beim Ablauf der Sitzung und von der ersten Seite
+  nach Ablauf der halben Stunde. Wer den Browser schließt, ohne sich
+  abzumelden, lässt den Schlüssel bis dahin auf dem Gerät — der Speicher des
+  Tabs tat das nur mit Sitzungswiederherstellung. Das Handbuch sagt es dort,
+  wo das Entsperren steht.
+- **Was unter dem Schlüssel verpackt liegt, bleibt auspackbar.** Der private
+  Teil des Schlüsselpaars für die Ortsdaten liegt unter dem
+  Inhaltsschlüssel; ein Skript in der Seite kann ihn auspacken lassen und
+  mitnehmen. Ihn anders abzulegen hieße, das Verfahren aus S11 umzubauen
+  (Entscheidung der Betreiberin: als Grenze festhalten; Bedrohungsmodell,
+  Lage D).
+- **Ohne IndexedDB** (manche privaten Fenster) liegt der Schlüssel nur im
+  Speicher der Seite, und jede Seite fragt nach dem Passwort. Lästig, aber
+  ehrlich: Still geht nichts verloren.
+
+## [Android 0.18.1] — unveröffentlicht
+
+Schritt 12b, Paket R17-24 — Android (Befund F-R17-54 und die Aufräumposten
+aus Stück 9). Handy und Wear-Uhr, eine Zählung. Kein neues Nachrichtenformat,
+kein neuer Vertrag mit dem Server.
+
+### Behoben
+
+- **Android — „Dienst beenden" aus einer Benachrichtigung ließ den Dienst
+  offen.** Die Akkuwarnung ab 15 % und die Erinnerung nach 26 Stunden tragen
+  einen Knopf „Dienst beenden". Er beendete nur den Vordergrunddienst:
+  Ortung aus, ein Sendelauf, die Dauermeldung weg. Den Dienst im Puffer
+  schloss er nicht — das taten nur die Rückfrage der Hauptansicht und das
+  Dienstende von der Uhr, die beide die Klammer selbst schließen, bevor sie
+  den Vordergrunddienst beenden (F-R17-54). Wer den Knopf drückte, sah beim
+  nächsten Öffnen „Dienst läuft" ohne Aufzeichnung, im Web stand der
+  Diensttag ohne Ende, und der nächste „Dienst beginnen" setzte den alten
+  fort — genau der Fall, den die Erinnerung verhindern soll. Jetzt schließt
+  die Aktion zuerst die Klammer; das ist unschädlich für die anderen beiden
+  Wege, weil ein zweites Schließen nichts tut. Ein Prüffall schickt die
+  Aktion an den Dienst wie die Benachrichtigung und ist gegen 0.18.0 rot.
+  Wer den Knopf schon gedrückt hat, schließt den offenen Diensttag im Web.
+- **Android — die Hauptansicht las jede Sekunde drei Zahlen aus der
+  Datenbank.** Rückstand, Abgewiesene und Verwerfbare kamen über SQLite auf
+  dem Hauptfaden, auch wenn sich nichts geändert hatte; auf einem alten
+  Gerät mit vollem Puffer ein Ruckeln je Sekunde. Der Puffer zählt jetzt
+  seine Schreibvorgänge, und die Ansicht liest die drei Zahlen nur nach,
+  wenn sich der Zähler bewegt hat (Entscheidung der Betreiberin). Er steigt
+  erst nach dem Schreiben, sonst könnte die Ansicht einen halben Stand
+  lesen und stehen bleiben. Ein GPS-Punkt zählt mit Absicht nicht: Er
+  landet in einem offenen Paket und ändert keine der drei Zahlen; zählte er,
+  liefen die Abfragen im Dienst wieder fast jede Sekunde.
+- **Wear-Uhr — jede Sekunde eine Neuzeichnung ohne Anlass.** Der Zeitschlag
+  für die Sperrfrist setzte den Zustand jede Sekunde neu und zeichnete die
+  Ansicht, auch wenn alles gleich war. Jetzt zeichnet nur eine Änderung;
+  eine laufende Uhrzeit gibt es auf der Uhr nicht, also fehlt keine Sekunde.
+- **Wear-Uhr — eine unlesbare Zeile blieb für immer im Puffer.** Ein halbes
+  Schreiben konnte eine Zeile hinterlassen, die kein Ereignis mehr ist; sie
+  wurde nie quittiert, bei jedem Start erneut gesendet und mitgezählt. Sie
+  fällt jetzt beim Laden heraus und wird im Kopf des Puffers gezählt
+  (Entscheidung der Betreiberin: verwerfen, nicht beiseitelegen — zustellbar
+  ist sie ohnehin nicht).
+
+### Geändert
+
+- **Android — der Altbestand `server_basis` geht beim ersten Start.** Die
+  Serveradresse ist seit R63 eine Konstante des Baulaufs; der alte Eintrag
+  blieb liegen, und ein Absatz erklärte, warum das Löschen sich nicht lohne.
+  Die eine Zeile kostet weniger als der Absatz.
+- **Kommentare:** „derselbe Knopf wie in der Dauermeldung" (die keinen hat),
+  „drei zugelassene Fremdbestandteile" (es sind zwei, AndroidX/Compose und
+  `play-services-wearable`), der Kopf von `Einstellungen.kt` (die Adresse
+  steht dort nicht mehr). `Uhrsteuerung.zustand` trägt `@Volatile` wie die
+  gleiche Bauform auf dem Handy.
+
+### Bewusst stehen gelassen
+
+- **Der Rest der Hauptansicht bleibt am Sekundentakt.** Der Dienststand
+  trägt Angaben, die mit der Zeit laufen („seit …", „Ortung seit n min"),
+  und liest dafür weiter einige Zeilen aus dem Puffer. Ihn zu teilen wäre
+  ein eigenes Stück Arbeit mit eigenem Prüfweg am Gerät.
+
+## [Web 23.3.2] — unveröffentlicht
+
+Schritt 12b, Paket R17-23 — Sicherung und Wiederherstellung (Befunde
+F-R17-19, -33, -34, -35; dazu Backlog Nr. 386 auf Wunsch der Betreiberin).
+Kein Schema, kein `update.php`, keine neue Nutzlast: Vorhandene Sicherungen
+spielen sich unverändert ein, nur vollständiger.
+
+### Behoben
+
+- **Web — beim Einspielen einer größeren Sicherung gingen Sperrvermerke
+  verloren.** Der Browser spielt eine Sicherung in Fenstern zu 250 Einträgen
+  ein, und die Sicherung schreibt alle Einsätze vor allen Ruhesegmenten. Ein
+  Sperrvermerk — der Zeitraum, den ein Schnitt aus einem Ruhesegment in einen
+  Einsatz gelegt hat — kam deshalb in einem Fenster an, in dem es sein
+  Segment noch gar nicht gab, und wurde verworfen. Am Messstand traf es
+  147 von 147; der herausgeschnittene Zeitraum war danach im Segment wieder
+  sichtbar, die Punkte erschienen doppelt (Backlog Nr. 386, seit 16.10.2026
+  bekannt, seit 17.09.2026 im Code). Nachschlagen in der Datenbank allein
+  hätte nur Quellen aus früheren Fenstern gefunden. Deshalb gibt der Server
+  einen Vermerk, dessen Quelle noch fehlt, jetzt als „offen" zurück; nach dem
+  letzten Fenster schickt der Browser diese Vermerke noch einmal, und der
+  Server prüft sie neu, sucht Ziel und Quelle im Konto und zählt erst dann.
+  Dasselbe gilt für das Einlösen einer Freigabe und für das direkte
+  Einspielen eines Kontopakets durch die Verwaltung. Abnahme am Messstand:
+  147 übernommen, 0 verworfen, und der Messstand ist wieder grün — er war es
+  seit dem 16.10. nicht mehr.
+- **Web — auf einem frischen Webspace lag ein Klartext-Dump offen im Netz.**
+  `wiederherstellen.php` liest aus `sicherungen/eingang/`, und das Runbook
+  erlaubt dort auch einen unverschlüsselten Dump des Hosters. Die Sperrdatei
+  `sicherungen/.htaccess` entstand aber erst beim ersten Sichern — auf genau
+  der leeren Anlage, für die die Seite da ist, fehlte sie, und der Name eines
+  Komplett-Dumps ist sekundengenau ratbar (F-R17-19). Jetzt legt die Seite
+  die Sperre an, bevor sie den Eingang liest, und spielt nichts ein, solange
+  das nicht gelingt. Die Sperre hängt dabei nicht mehr an ext/zip. **Der
+  Knopf „Aufräumen" nimmt jetzt auch die Datei mit, aus der eingespielt
+  wurde** (Entscheidung der Betreiberin); bis dahin blieb sie liegen, und das
+  Runbook sagte es nicht.
+- **Web — ein abgebrochener Komplett-Dump von vor S7 ging ohne Endmarke
+  durch.** Die Seite verlangt die Endmarke nur von einem Dump dieser
+  Anwendung und erkennt ihn an der Kopfzeile, in zwei Schreibweisen — der
+  Kommentar daneben nannte das Weglassen der alten „den gefährlichsten
+  Fehlschluss, den eine Umbenennung anrichten kann". Genau das war bei der
+  Begriffsumstellung geschehen: Beide Zeichenketten lauteten „Komplett-Backup",
+  ein Dump mit „Komplettsicherung" galt als fremd (F-R17-33, E-R17-23). Die
+  Liste steht jetzt einmal, neben dem Erzeuger der Kopfzeile
+  (`komp_dump_eigen()` in `komplett_lib.php`), und die Komplettprobe hält
+  alle drei Fälle fest. Dieselbe Doppelung stand auch in der Probe selbst.
+- **Web — Stammdaten aus einer Sicherung umgingen die Prüfschicht.**
+  Standortname und Koordinaten, die Namen der Besatzung, Bergwacht,
+  Ressourcen und Zielkliniken gingen roh in die Datenbank — als einziger
+  Teil des Einspielens (F-R17-34). Ein zu langer Name brach im strikten
+  SQL-Modus den ganzen Lauf ab, im laxen wurde er gekappt und passte dann
+  nicht mehr zu den Rettungsmitteln, die auf ihn zeigen. Jetzt: Leerraum weg,
+  Länge wie im Schema, Koordinaten im Bereich, Meldung unter „verworfen";
+  die Verweise werden genauso geschnitten.
+- **Web — in einem versiegelten Kontopaket ging ein unversiegelter Teil
+  durch.** Ob ein Teil versiegelt sein muss, entschied sein eigenes Präfix.
+  Wer einem Teil das Siegel abnahm und den Klartext hinlegte, hob damit die
+  Bindung an Server, Konto, Paket und Teilnamen auf (F-R17-35, ein Hinweis:
+  wer das kann, hat Dateizugriff und damit ohnehin `config.php`). Jetzt gilt
+  das Siegel des Manifests für alle Teile; Pakete der Fassung 2 werden weiter
+  gelesen.
+
+### Bewusst stehen gelassen
+
+- **Die Reihenfolge in der Sicherung bleibt** — erst Einsätze, dann
+  Segmente. Sie umzudrehen hätte Nr. 386 nur für neue Dateien gelöst und die
+  `spur_ref`-Zählung verschoben; das Nachreichen hilft auch jeder Datei, die
+  schon an einem Backup-Ziel liegt.
+- **Die alte Schreibweise „Komplettsicherung" bleibt bis zum v1.0-Schnitt**
+  (R60), wie E-R17-23 es festlegt.
+
+## [Web 23.3.1] — unveröffentlicht
+
+Schritt 12b, Paket R17-22 — das Verhalten des Servers (Befunde F-R17-36 bis
+-41, -44 bis -49; Backlog Nr. 401). Kein Schema, kein `update.php`. **Eine
+Änderung an der Auslieferung:** Wartungsschalter und Überlastzähler liegen
+jetzt in `server/.zustand/` — siehe unten; die neue Fassung räumt den alten
+Ort selbst auf.
+
+### Behoben
+
+- **Web — zehn falsche Passwörter sperrten einen ganzen Anschluss.** Das
+  Handbuch der Technik versprach 10 Fehlversuche je Konto und 50 je
+  Anschluss. Gezählt wurde anders: Der Topf `login` bekam neben dem Konto
+  immer auch die Adresse des Anschlusses mit, und ein Topf hat **eine**
+  Schwelle. Zehn falsche Passwörter an zehn erfundenen Adressen sperrten
+  damit den Anschluss für bis zu eine Stunde — hinter einem Klinik-NAT alle,
+  die dort arbeiten —, lange bevor der Anschlusstopf mit seinen 50 griff
+  (F-R17-36). Dasselbe am Schlüsselblatt (3) und an den sieben Stellen, die
+  seit R17-20 das Passwort als Nachweis verlangen. Jetzt zählen diese Töpfe
+  nur das Konto (`rate_nur_konto()`), der Anschluss zählt allein in
+  `login_ip`. Reset und Salz zählen Konto **und** Anschluss weiter, mit
+  Absicht — dort sind wenige Anfragen je Anschluss gewollt. Die
+  Ratenprobe misst den Weg jetzt über die echte Anmeldeseite.
+- **Web — der Notzugang rechnete ohne Anschlussgrenze.** Er zählte nur die
+  eingetippte Adresse; wer sie je Anfrage wechselte, bekam unbegrenzt
+  bcrypt-Rechnungen auf einem Webspace mit wenigen Arbeitern (F-R17-37).
+  Jetzt gilt dazu ein Topf je Anschluss (20 je Stunde), und Fehlversuche
+  zählen in die globale Verlangsamung wie bei der Anmeldung.
+- **Web — „GPS-Daten als GPX" fehlte bei jeder gepackten Spur.** Seit Web
+  23.0.0 las die Einsatzseite für gepackte und ausgedünnte Spuren ein Feld,
+  das es nicht mehr gibt: Die Punktzahl war 0, Menüeintrag und Plakette
+  fehlten, und jeder Aufruf schrieb eine Warnung in den Reiter System
+  (F-R17-39). Der Wartungslauf packt Spuren bei jeder Anmeldung — betroffen
+  war also jedes Konto mit älteren Spuren. Jetzt zählt die Seite die Punkte
+  aller Stücke, für jede Stufe.
+- **Web — ein gelöschter Diensttag sperrte beim Import das ganze Datum.**
+  Lag an einem Tag ein Diensttag im Papierkorb, übersprang der Import das
+  Datum, auch wenn daneben ein aktiver stand; alle Einsätze landeten unter
+  „ohne Diensttag" (F-R17-40). Jetzt sperrt nur ein Datum, das
+  ausschließlich im Papierkorb liegt. Und „überschreiben" ohne Kennung des
+  vorhandenen Einsatzes legte einen neuen mit ungeprüfter Kennung an — eine
+  Nutzlast, die der Browser nie schickt; jetzt antwortet der Server mit 400
+  (F-R17-41).
+- **Web — Mails ohne Kodierung.** Umlaute, Gedankenstriche und
+  Anführungszeichen gingen als rohe 8-Bit-Bytes hinaus, ohne die Kopfzeile
+  `Content-Transfer-Encoding`; ein strenger Empfänger oder Weiterleiter darf
+  sie dann verwerfen (Backlog Nr. 401, gefunden in der Handprobe von
+  R17-20). Jetzt quoted-printable: 7-Bit-sauber, kurze Zeilen, gleich
+  lesbar, und unabhängig davon, was das Relais ankündigt.
+- **Web — ein Mailserver ohne Anmeldedaten galt als eingerichtet.** Zwei
+  Funktionen erklärten ein Relais ohne Authentifizierung für gültig, der
+  Versand schickte aber immer `AUTH LOGIN` und scheiterte (F-R17-46). Die
+  Betreiberin hat entschieden: Die Anmeldung ist Pflicht. Ohne Benutzer und
+  Passwort zeigt die Statusseite „nicht eingerichtet", die Probe sagt, was
+  fehlt, und es wird keine Verbindung aufgebaut.
+- **Web — Kleinigkeiten mit Folgen im Reiter System.** Das Umdatieren eines
+  Diensttags schrieb zwei Warnungen (F-R17-38); `zeitraum.php?m=13` eine
+  weitere und einen Titel ohne Monat (F-R17-44, jetzt gilt nur 01 bis 12).
+  Die Statistik-CSV der Gerätemodelle übernahm den Modellnamen, den das
+  Gerät selbst meldet, ungeprüft — `=1+1` wurde in Excel zur Formel
+  (F-R17-45); `csv_zelle()` in `format_lib.php` entschärft jetzt mit einem
+  Apostroph. Die Überlasterkennung kannte die Nummer 1226 auf dem Weg über
+  die Meldung nicht (F-R17-48); ihr Muster entsteht jetzt aus der Liste.
+  Und zwei Meldungen zeigten `<strong>` und `<code>` als Text (F-R17-49) —
+  sie sind ohne Tags geschrieben, und ein neuer Riegel in Stufe 1 (Z45) lässt
+  kein `<` mehr im Text einer Meldung zu.
+
+### Geändert
+
+- **Web — Wartungsschalter und Überlastzähler nicht mehr im Webroot.**
+  `wartung.lock` und `ueberlast.json` lagen neben `install.lock`, und keine
+  Regel sperrte sie: Während einer Wartung lieferte
+  `https://<host>/wartung.lock` jedem ohne Anmeldung den Namen oder die
+  Anmeldeadresse des Kontos, das geschaltet hatte; der Zähler sagte, wann
+  die Anlage am Limit war (F-R17-47). Beide liegen jetzt in
+  `server/.zustand/` — einem Punktverzeichnis, das die `.htaccess` sperrt,
+  mit einer eigenen Sperrdatei dazu (E-R17-59). **Für die eine Auslieferung
+  dazwischen** erkennt die neue Fassung eine Wartungsdatei am alten Ort noch
+  und löscht sie beim Ausschalten mit — die Kette schaltet vor dem
+  Hochladen mit dem alten Code ein. `.gitignore`, die Ausnahmeliste der
+  Kette und ihr Riegel zählen damit **sieben** statt acht Pfade
+  (`CLAUDE.md` 3). Wer per SSH schaltet: `server/.zustand/wartung.lock`.
+
+### Bewusst stehen gelassen
+
+- **CSP-Vorgabe** (F-R17-23): bleibt „aus", bis die Betreiberin in P-R17-04
+  bestätigt hat, dass Produktiv scharf läuft (E-R17-60).
+
+## [Web 23.3.0] — unveröffentlicht
+
+Schritt 12b, Paket R17-21 — gehört zu Uhr 4.1.0 (E-R17-56, F-R17-70). Kein
+Schema, kein `update.php`.
+
+### Entfernt
+
+- **Web — „Gerät ohne Code anlegen".** Die zugeklappte Karte am Ende der
+  Geräteseite legte ein Gerät von Hand an und zeigte Geräte-ID und
+  API-Schlüssel zum Abtippen — „bei Garmin in Garmin Connect unter den
+  App-Einstellungen". Genau diese Einstellungen gibt es seit Uhr 4.1.0 nicht
+  mehr (E-R17-21), und die Android-App hat sie nie gebraucht: Sie koppelt
+  über den Code, die Wear-OS-Uhr kennt keine Zugangsdaten. Ein Weg, der
+  Zugangsdaten auf einen Bildschirm legt, ohne dass ein Gerät sie noch
+  annimmt, ist nur noch Angriffsfläche. Er fällt deshalb ganz: die Karte,
+  die Aktion `add` in `einstellungen.php` und die Karte „Zugangsdaten des
+  neuen Geräts". **Geräte entstehen nur noch über die Kopplung.** Wer ein
+  eigenes Programm nach dem JSON-Vertrag gebaut hat und es von Hand
+  angelegt hätte, koppelt es wie eine Uhr (`pair.php`, Vertrag 1).
+
+### Behoben
+
+- **Web — der Erststart hakte „Uhr oder Handy koppeln" nie ab.** Den
+  dritten Schritt der Willkommenskarte auf der Startseite setzte nur die
+  Handanlage, die es jetzt nicht mehr gibt — nie das Koppeln, obwohl der
+  Schritt so heißt (F-R17-70, gefunden beim Entfernen). Wer seine Uhr
+  gekoppelt hatte, sah den Schritt weiter offen, bis er die Karte mit „nicht
+  mehr zeigen" wegklickte. Jetzt setzt `pair.php` ihn, sobald das Gerät
+  angelegt ist — nach dem Commit, damit eine Anzeige die Kopplung nicht
+  zurückrollen kann. Konten, die schon gekoppelt haben, bekommen den Haken
+  mit dem nächsten Koppeln; nachgetragen wird er nicht.
+
+## [Uhr 4.1.0] — unveröffentlicht
+
+Schritt 12b, Paket R17-21 — die Garmin-Uhr (Befunde F-R17-11, -12, -28,
+-52, -53 und der neue F-R17-68; die Aufräumposten der Uhr aus dem Review).
+Keine Server-Änderung; die Uhr spricht mit jedem Server ab Web 22.0.1.
+
+### Uhr — ein bestätigtes Paket geht über seine Referenz aus der Liste
+
+Nach der letzten Antwort eines Einsatzes nahm die Uhr den Eintrag aus der
+Warteschlange — über den **Listenplatz**, den sie beim Absenden gemessen
+hatte. Dazwischen liegt eine Netzanfrage, und in der Zeit darf die Liste
+schrumpfen: „Abgewiesene verwerfen" auf der Sync-Seite entfernt jedes
+geparkte Paket, und geparkte stehen gerade **vor** dem laufenden, weil die
+Uhr sie überspringt. Rückte die Liste um eins, traf das Entfernen ein
+anderes Paket — es verschwand, seine Spur blieb als Waise im Speicher, und
+der Einsatz kam nie an —, oder der Platz lag hinter dem Ende, und die App
+brach ab (F-R17-52). Der Review hatte das gelesen, nicht nachgespielt. Jetzt
+ist es nachgespielt: Ein neuer Fall im Rundlauf (`rundlauf.sh --schrumpfen`)
+legt zwei geparkte Pakete vor einen Einsatz und verwirft sie während seiner
+letzten Anfrage. Die alte Fassung bricht dort mit „Array Out Of Bounds" ab,
+das Ruhesegment dahinter kommt nie an; die neue entfernt über die Referenz,
+wie `verwerfen()` es schon tat, und hinterlässt eine leere Liste ohne ein
+einziges Spurstück.
+
+### Uhr — auch „abgemeldet" hat eine Frist
+
+Geparkte Pakete gehen seit Uhr 4.0.0 nach dreißig Tagen. Eine **abgemeldete**
+Uhr — im Web gelöscht oder auf inaktiv gestellt — hielt dagegen alle ihre
+Pakete ohne Frist, mit Spur, Phasen und Reanimation im Klartext des
+Gerätespeichers (F-R17-28, Lage H im Bedrohungsmodell). Jetzt merkt sie sich
+den Zeitpunkt der **ersten** Abmeldung im Speicher, über Neustarts hinweg,
+und verwirft dreißig Tage danach alle wartenden Pakete (E-R17-22). Die
+Sync-Seite sagt es in ihrer roten Zeile: „Abgemeldet, Daten bis 27.10."
+statt „Gerät nicht mehr angemeldet". Eine eigene dritte Zeile wäre
+deutlicher gewesen, schob auf der Venu 3s aber die Zahl der offenen Pakete
+in die Meldung — und zeigte dabei, dass der Satz im Code, bis zu fünf
+Zeilen überlappten nie, schon bei vier nicht stimmt (F-R17-69, Backlog
+Nr. 402). Eine angenommene Anfrage, ein neues Koppeln oder das Trennen
+löschen den Vermerk. **Der Preis:** Ein Diensttag, der dreißig Tage nach der Abmeldung
+noch nicht gesendet ist, geht auf der Uhr verloren; wer in der Frist neu
+koppelt, verliert nichts. **Was bleibt:** Eine Uhr, die nie wieder ein
+Telefon erreicht, erfährt nie, dass sie abgemeldet ist — für sie beginnt
+keine Frist.
+
+### Uhr — der Alt-Weg ist fort
+
+Geräte-ID und API-Schlüssel standen bis hierher zusätzlich als
+App-Einstellungen in Garmin Connect, sichtbar und von Hand eintragbar — der
+Weg aus der Zeit vor der Kopplung. Seit Uhr 3.0.0 füllte ihn niemand mehr,
+und er trug Zugangsdaten durch eine fremde App (F-R17-12, E-R17-21). Beide
+Einstellungen sind gestrichen, die Uhr liest nur noch die Zugangsdaten aus
+der Kopplung. **Eine Uhr, die noch über den Alt-Weg sendete** — vor 3.0.0
+von Hand eingerichtet und nie neu gekoppelt —, zeigt nach dem Update „Nicht
+eingerichtet" und koppelt einmal neu.
+
+**Bewusst nicht geändert:** Die **Serveradresse** bleibt eine Einstellung in
+Garmin Connect, und die Uhr bindet sie nicht an die Kopplung (E-R17-53). Wer
+sie dort umstellen kann, hält das Telefon mit der Begleit-App ohnehin in der
+Hand, und die sieht jede Anfrage (Lage M); umgeleitet würden der
+Geräteschlüssel — er erlaubt das Schreiben in das Konto, nicht das Lesen —
+und verschlossene Pakete. Das steht jetzt im Bedrohungsmodell.
+
+### Uhr — „http://" wird „https://"
+
+Eine eingetragene Adresse mit `http://` blieb bisher so stehen, und
+Geräteschlüssel und Pakete gingen ab dem Telefon unverschlüsselt (F-R17-11).
+Jetzt wird sie auf `https://` gehoben, ohne Ausnahmeschalter — wie auf
+Android seit E-S4-14 (E-R17-52). Abweisen wäre die Alternative gewesen; es
+hätte eine Uhr stumm gemacht, bis jemand die Einstellung findet.
+
+### Uhr — der Selbsttest merkt sich „kaputt" nicht mehr
+
+Der Selbsttest der Gerätehülle legte jedes Ergebnis im Speicher ab, auch
+„kaputt" — und zwar für jede Ausnahme beim Messen, etwa knappen Speicher
+beim ersten Start mit vollem Puffer. Eine einmalige Ursache wurde so zum
+Dauerzustand: Die Uhr sendete nichts mehr, zeigte „Verschlüsseln geht
+nicht", und nichts im Gerät setzte das zurück (F-R17-53). Jetzt bleiben nur
+die gültigen Ergebnisse; „kaputt" gilt bis zum nächsten Start und wird dann
+einmal neu gemessen (0,2 s auf der Fenix 6 Pro). Trennen vergisst den
+Vermerk mit, damit Neukoppeln ein frischer Anfang ist.
+
+### Uhr — der Schalter „Touchbedienung verwenden" wirkt
+
+Die Einstellung stand in Garmin Connect, und niemand las sie: Die einzige
+Funktion, die es tat, hatte keinen Aufrufer (F-R17-68, gefunden beim
+Aufräumen). Auf Fenix 7, Epix 2, FR965 und den anderen Uhren mit Tasten
+**und** Touch — sie stehen längst im Manifest, auch wenn Handbuch und
+Technik sie „noch nicht ausgeliefert" nannten — bewirkte der Schalter
+nichts. Jetzt verwirft die App bei „aus" Wischen und Tippen auf ihren
+eigenen Seiten und Menüs (E-R17-55). Weil Connect IQ nicht sagt, ob ein
+Blättern von der Taste oder vom Bildschirm kam, und das Roh-Ereignis einer
+belegten Geste gar nicht zustellt, merkt sich die App jede Taste: Ein
+Blättern ohne Taste davor kam vom Bildschirm. Geprüft im Simulator auf der
+Fenix 7 — Wischen bei „aus" verworfen, die Taste blättert, bei „an"
+blättert auch das Wischen. **Grenzen:** Auf Uhren ohne Touch und auf der
+Venu 3s (ohne Auf/Ab-Taste) ändert sich nichts. Die Rückfragen und die
+Liste „Zeiten" sind Bausteine des Systems; dort bleibt Tippen wirksam. Ein
+echtes Gerät hat das noch nicht gesehen.
+
+### Aufgeräumt
+
+`Input.hasUpDown()` (ohne Verwender) ist gestrichen; der Kopfsatz in
+`Util.mc`, die Datei sei noch nicht gegen das SDK übersetzt, auch — der
+Prüfstand übersetzt sie seit Nr. 13 für 99 Geräte. Die Markenfarben in
+`Ui.mc` nennen ihre Herkunft (`--orange`, `--blau`, `--rot`, `Design.md` 2),
+das Menü der Reanimation nimmt das Blau von dort statt einer eigenen Zahl.
+`Math.rand()` in `Util.newRef()` trägt den Vermerk, dass die Kennung kein
+Geheimnis ist; ein Kommentar im Uploader nennt den Netzaufruf nicht mehr
+beim Namen, damit wer die Netzstellen zählt sechs findet und nicht sieben.
+
+## [Web 23.2.0] — unveröffentlicht
+
+Schritt 12b, Paket R17-20 — Konten, Nachweise und Freigabe (Befunde
+F-R17-01, -02, -06 bis -08, -10, -21, -32, -42, -43 und der neue F-R17-67;
+Backlog Nr. 371). Kein Schema, kein `update.php`.
+
+### Neu
+
+- **Ein Pfeffer vor bcrypt.** Das Anmelde-Token entsteht im Browser aus dem
+  Passwort (PBKDF2) und lag als bcrypt-Hash in `users.password_hash`. Wer
+  nur die Datenbank hatte, konnte damit offline weiterraten — je Kandidat
+  PBKDF2 und bcrypt —, und ein gefundenes Passwort führte über eine
+  Anmeldung zum Server-Anteil und damit zu allen verschlossenen Angaben des
+  Kontos. Der Satz in `CLAUDE.md` 4 und `Technik.md` 3, ein Datenbankabzug
+  allein reiche seit S10 nicht mehr für einen Offline-Angriff auf das
+  Passwort, war deshalb falsch (F-R17-01). Jetzt steht dort
+  `pf1:<Anteil-Kennung>:bcrypt(HMAC(pfeffer, Token))`; der Pfeffer ist
+  `HMAC(kdf_anteil, "pfeffer:<Kontonummer>")` und verlässt den Server nie.
+  Ohne `config.php` lässt sich kein Kandidat mehr prüfen — der Satz ist
+  damit wahr, für jedes Konto, das sich seit dieser Fassung angemeldet hat.
+  **Umgestellt wird still bei der Anmeldung** (E-R17-20), in der
+  vorhandenen Spalte; ein Konto, das sich nie mehr anmeldet, behält den
+  alten Hash bis zum nächsten Reset. **Warum ein eigener Pfeffer und nicht
+  der Konto-Anteil**, wie der Review vorschlug (E-R17-51): Der Konto-Anteil
+  geht an jede angemeldete Sitzung, weil der Browser mit ihm die Hülle
+  öffnet. Wer eine Sitzung und einen Abzug hätte, könnte mit ihm weiter
+  offline raten. Ein eigener Ableitungszweck kostet nichts.
+  **Was das kostet** (E-R17-44): Fehlt der Anteil, zu dem ein Hash gehört,
+  meldet sich dieses Konto nicht mehr an — auch die BetreiberIn nicht, die
+  den Anteil sonst nach der Anmeldung vom Schlüsselblatt nachträgt. Die
+  Anmeldung sagt das ausdrücklich („Server-Anteil fehlt"), statt „Passwort
+  falsch" zu behaupten, und schreibt eine Systemmeldung — jeder Versuch zählt
+  dabei wie ein Fehlversuch, damit niemand den Reiter System fluten kann
+  (gefunden bei der Handprobe in der Sandbox, Anteilprobe Teil F); der Rückweg ist
+  „Passwort vergessen" mit dem Wiederherstellungsschlüssel, danach das
+  Nachtragen vom Blatt (Runbook in `Technik.md` 7). Das Demo-Konto bekommt
+  keinen Pfeffer — sein Passwort ist öffentlich.
+- **Eine Freigabe geht nur an das Herkunftskonto oder an dieselbe Adresse.**
+  Ein Admin gab das Konto-Backup *jedes* Kontos an *jedes* Konto frei, das
+  eigene eingeschlossen — ohne Protokoll, ohne Mail, ohne frischen Code —,
+  und das Zielkonto bekam beim Einlösen den entsiegelten Bestand: Orte,
+  Zeiten, Klinik, Reanimation, Besatzung, Diensttagsnotizen (F-R17-02).
+  Genau den Abzug, den Nr. 286 der Rolle admin genommen hatte. Der Zweck der
+  Freigabe ist „Konto neu aufgesetzt"; deshalb gilt jetzt dieselbe Adresse
+  wie in der Begleitdatei, geprüft beim Freigeben **und** beim Einlösen
+  (E-R17-46) — auch eine offene Freigabe aus der Zeit davor an ein fremdes
+  Konto wird damit wirkungslos. Dazu ein Protokolleintrag
+  „Konto-Backup freigegeben", eine Mail an Herkunfts- und Zieladresse und
+  ein frischer Code. Die zwei Abschriften des Ablaufs (Kontoseite,
+  Konto-Backups) sind eine Funktion, `edbak_freigabe_erteilen()`; die
+  Auswahl im Dialog zeigt nur noch Konten, an die es geht, und ohne solche
+  steht kein Knopf da.
+- **Ein Adresswechsel durch die Verwaltung ist sieben Tage unbestätigt.**
+  Die Verwaltung schrieb eine fremde Anmeldeadresse sofort um und konnte
+  gleich danach einen Setz-Link an die neue schicken — mit einer
+  übernommenen Adminsitzung der kürzeste Weg, ein Konto an sich zu ziehen
+  (F-R17-06). Die neue Adresse gilt weiter sofort, aber solange die alte
+  weder zugestimmt hat noch sieben Tage ohne Widerspruch vergangen sind,
+  geht **kein Setz-Link** hinaus — weder über die Verwaltung noch über
+  „Passwort vergessen" (dort still, damit die Seite für jede Adresse
+  dasselbe sagt). Die Mail an die alte Adresse trägt einen Link auf die neue
+  Seite `adresse_verwaltung.php`: zwei Knöpfe, Zustimmen oder Widersprechen.
+  Ein Widerspruch setzt die alte Adresse zurück, entwertet offene Setz-Links,
+  beendet alle Sitzungen des Kontos und schreibt jeder BetreiberIn eine
+  Mail. **Warum Knöpfe und kein Link, der gleich widerspricht:** Manche
+  Mailprogramme rufen Links vorab ab; ein solcher Link setzte Adressen
+  zurück, ohne dass jemand geklickt hat. **Keine Abkürzung** (E-R17-45),
+  auch nicht für die BetreiberIn — sie wäre genau der Weg einer
+  übernommenen Sitzung. Preis: Wer seine alte Adresse verloren hat, wartet
+  sieben Tage auf den Setz-Link. Gespeichert wird die Frist in `app_state`,
+  ohne Spalte (E-R17-50).
+- **Mails bei neuen Wiederherstellungscodes und bei einem erneuerten
+  Wiederherstellungsschlüssel.** Beides geschah bis dahin still, nur mit
+  einem Protokolleintrag, den die Rolle user nicht sieht. Wer Passwort und
+  Sitzung erbeutet hatte, entwertete so die Codes der Person oder ersetzte
+  ihren Rückweg, ohne dass sie es erfuhr (F-R17-43, -10).
+
+### Geändert
+
+- **Sieben Passwortnachweise, eine Funktion mit Ratentopf.** Adresswechsel,
+  Passwortwechsel, Kontolöschung und die stille Anhebung der Rundenzahl
+  (`api/kdf_upgrade.php`) prüften das Anmelde-Token ohne Ratentopf; mit
+  einer erbeuteten Sitzung ließ sich das Passwort dort online raten, ohne
+  Sperre (F-R17-32). Die drei Geschwister (`schluessel_erneuern`,
+  `kontopaar`, `rueckweg_anlegen`) hatten den Topf, jedes in einer eigenen
+  Abschrift. Jetzt tragen alle sieben `passwort_nachweis()` in
+  `auth_guard.php`: Topf `login` und Vergleich über den Pfeffer in einem
+  Aufruf, so dass keine achte Abschrift das eine ohne das andere haben kann
+  (E-R17-49). Zehn Fehlversuche dort sperren auch die Anmeldung — gewollt:
+  Es ist dasselbe Passwort.
+- **Frischer Code vor fünf weiteren Handlungen:** dem Download einer
+  Komplettsicherung (beide Arten, E-R17-48 — die Passphrase wählt, wer
+  herunterlädt), der Freigabe, dem Adresswechsel und dem Setz-Link durch die
+  Verwaltung, und neuen Wiederherstellungscodes. Das Schlüsselblatt verlangte
+  ihn schon; der Abzug, der mehr enthält, verlangte ihn nicht (F-R17-08).
+- **Ein Admin hat an BetreiberIn-Konten keinen schreibenden Griff** (Nr. 371,
+  F-R17-07). Riegel gab es nur für den Rollenwechsel und die letzte
+  BetreiberIn; eine zweite BetreiberIn ließ sich von einem Admin sperren,
+  löschen oder auf eine eigene Adresse umschreiben. Jetzt steht ein Riegel
+  vor **allen** Handlungen der Kontoseite (E-R17-47), damit eine spätere
+  neue Handlung ihn von selbst erbt; ansehen darf der Admin die Seite
+  weiter, mit gesperrten Feldern und ohne Knöpfe.
+- **Das Demo-Konto sperrt auch Status, Grenzen und Zweitfaktor** (F-R17-42).
+  Bis dahin hielt nur das Markup den Knopf fern, und ein POST von Hand
+  sperrte das öffentliche Konto — der Reset setzt den Status nicht zurück.
+
+### Behoben
+
+- **Die Selbstlöschung ging nie** (F-R17-67, gefunden beim Umbau). Das
+  Formular schickte das Passwort im Klartext, der Server verglich es mit dem
+  Hash — und der ist bcrypt des *Tokens*, nicht des Passworts. Jede
+  Löschung endete mit „Das Passwort war leer oder falsch". Der Kommentar
+  dazu sagte, die Karte lade kein `crypto.js`; der Reiter Profil lädt es.
+  Jetzt leitet das Formular das Token im Browser ab wie die Karten darüber;
+  das Passwort verlässt den Browser nicht mehr.
+- **Die Mailwarteschlange räumt die Adresse eines gelöschten Kontos ab**
+  (F-R17-21). `mail_konto_entfernen()` verlangte das in seinem Docblock bei
+  jeder Kontolöschung und hatte keinen Aufrufer; die Adresse blieb bis zu
+  30 Tage in der Warteschlange und in jeder Komplettsicherung dieser Zeit.
+  Der Verfalljob reiht seine Abschiedsmail deshalb erst *nach* der Löschung
+  ein, sonst nähme die Löschung sie mit.
+
+### Bewusst so
+
+- **Kein Umschlüsseln des Bestands.** Der Inhaltsschlüssel wechselt weiter
+  nie; wer ihn einmal hatte, liest auch spätere Abzüge (F-R17-10). Das ist
+  ein Restrisiko im Bedrohungsmodell (R17-27), keine Aufgabe dieses Pakets —
+  hier kommt nur die Mail dazu.
+- **`pat_key_check` bleibt die einzige Prüfung beim Reset.** Die Kette aus
+  F-R17-06 verliert zwei Glieder (keine Freigabe an sich selbst, kein
+  Setz-Link an eine frisch umgeschriebene Adresse), die Prüfung selbst
+  bleibt, wie sie ist; `Technik.md` 4.99q benennt ihre Schwäche.
+
 ## [Web 23.1.0] — unveröffentlicht
 
 Schritt 12b, Paket R17-19 — Kette und Werkzeuge (Befunde F-R17-03, -14

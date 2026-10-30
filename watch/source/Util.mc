@@ -1,5 +1,4 @@
 // NAdoku — gemeinsame Helfer
-// HINWEIS: Erster Wurf, noch nicht gegen das SDK kompiliert.
 using Toybox.Time;
 using Toybox.Time.Gregorian;
 using Toybox.Lang;
@@ -64,6 +63,12 @@ module Util {
             Math.srand(Time.now().value() ^ n);
             _refSeeded = true;
         }
+        /* MATH.RAND() GENUEGT HIER: Die Kennung ist kein Schluessel und kein
+         * Geheimnis. Der Zufall soll nur verhindern, dass zwei Kennungen
+         * nach einem Zuruecksetzen des Zaehlers zusammenfallen; die
+         * Eindeutigkeit traegt der Zaehler. Wer erraet, wie eine Kennung
+         * aussieht, gewinnt nichts -- ohne Geraeteschluessel nimmt der Server
+         * kein Paket an. */
         var a = Math.rand() & 0xFFFF;
         var b = Math.rand() & 0xFFFF;
         return kind + "-" + n.format("%d") + "-"
@@ -106,6 +111,13 @@ module Util {
         var wd = WD[((g.day_of_week as Lang.Number) - 1) % 7];
         return wd + ", " + (g.day as Lang.Number).format("%02d")
                   + "." + (g.month as Lang.Number).format("%02d") + ".";
+    }
+
+    // Tag und Monat eines Zeitpunkts, z. B. "25.11." (Frist der Abmeldung)
+    function datumAus(epoch as Lang.Number) as Lang.String {
+        var g = Gregorian.info(new Time.Moment(epoch), Time.FORMAT_SHORT);
+        return (g.day as Lang.Number).format("%02d")
+             + "." + (g.month as Lang.Number).format("%02d") + ".";
     }
 
     function epochNow() as Lang.Number {

@@ -15,7 +15,9 @@ using Toybox.Application.Storage;
 using Toybox.Lang;
 
 // Traeger fuer den Web-Antwort-Rueckruf (method() gibt es nur auf Objekten).
-// Die Signatur muss exakt der von makeWebRequest erwarteten entsprechen.
+// Die Signatur muss exakt der entsprechen, die Communications fuer den
+// Rueckruf einer Webanfrage erwartet. (Bewusst ohne den Namen des Aufrufs:
+// Wer die Netzstellen zaehlt, soll sechs finden, nicht sieben — R17-21.)
 class UploaderCb {
     function initialize() {}
     function onResponse(code as Lang.Number,
@@ -108,6 +110,60 @@ module Uploader {
         for (var k = 0; k < weg.size(); k++) { verwerfen(weg[k]); }
     }
 
+    /* DIE FRIST DER ABMELDUNG (F-R17-28, E-R17-22).
+     *
+     * `abgemeldet` liegt im Speicher (siehe oben), und bis Uhr 4.0.0 hatte
+     * der Zustand keine Frist: Eine verlorene, im Web geloeschte Uhr hielt
+     * ihren Klartextpuffer -- Spur, Phasen, Reanimation -- unbegrenzt,
+     * waehrend geparkte Pakete nach dreissig Tagen gehen (Lage H im
+     * Bedrohungsmodell). Seitdem merkt sich die Uhr im Storage, WANN sie zum
+     * ersten Mal 401 oder 403 bekam; das uebersteht Neustarts, an denen
+     * `abgemeldet` vergessen wird. Eine angenommene Anfrage und jedes
+     * Koppeln oder Trennen loeschen den Vermerk. Nach Const.PARK_FRIST_S
+     * verwirft der naechste Sendelauf ALLE wartenden Pakete und den Vermerk
+     * mit -- der naechste Dienst bekommt bei der naechsten Abmeldung eine
+     * neue Frist, statt sofort mitzugehen.
+     *
+     * DER PREIS (E-R17-22): Ein Diensttag, der dreissig Tage nach der
+     * Abmeldung noch nicht gesendet ist, geht auf der Uhr verloren. Wer die
+     * Uhr in der Frist neu koppelt, verliert nichts.
+     *
+     * WAS ES NICHT ABDECKT: Eine Uhr, die nie wieder ein Telefon erreicht,
+     * erfaehrt nie, dass sie abgemeldet ist -- die Frist beginnt dann nicht. */
+    const ABLAGE_ABGEMELDET = "abgem_seit";
+
+    function abmeldungVermerken() as Void {
+        if (!(Storage.getValue(ABLAGE_ABGEMELDET) instanceof Lang.Number)) {
+            Storage.setValue(ABLAGE_ABGEMELDET, Util.epochNow());
+        }
+    }
+
+    function abmeldungVergessen() as Void {
+        Storage.deleteValue(ABLAGE_ABGEMELDET);
+    }
+
+    /* Bis wann darf die Uhr die Pakete noch halten? null = keine Frist laeuft.
+     * Fuer die Sync-Seite. */
+    function abmeldeFristBis() as Lang.Number or Null {
+        var v = Storage.getValue(ABLAGE_ABGEMELDET);
+        if (!(v instanceof Lang.Number)) { return null; }
+        return (v as Lang.Number) + Const.PARK_FRIST_S;
+    }
+
+    function abmeldeFristPruefen() as Void {
+        var bis = abmeldeFristBis();
+        if (bis == null || Util.epochNow() <= bis) { return; }
+        var refs = [] as Lang.Array<Lang.String>;
+        for (var i = 0; i < Model.pendingMissions.size(); i++) {
+            refs.add(Model.pendingMissions[i]["ref"] as Lang.String);
+        }
+        for (var j = 0; j < Model.pendingRest.size(); j++) {
+            refs.add(Model.pendingRest[j]["ref"] as Lang.String);
+        }
+        for (var k = 0; k < refs.size(); k++) { verwerfen(refs[k]); }
+        abmeldungVergessen();
+    }
+
     /* WIE VIELE PAKETE STEHEN GEPARKT? Fuer die Anzeige (SyncView). */
     function geparkteZahl() as Lang.Number {
         var n = 0;
@@ -122,6 +178,9 @@ module Uploader {
 
     function syncAll() as Void {
         if (_busy) { return; }
+        /* DIE FRIST VOR DEM RIEGEL: Auch eine Uhr, die gerade weiss, dass sie
+         * abgemeldet ist, raeumt nach Ablauf (E-R17-22). */
+        abmeldeFristPruefen();
         /* ABGEMELDET HEISST: gar nicht erst versuchen. Jede Anfrage kostet
          * Funk und Akku und bekommt dieselbe Antwort, bis jemand neu koppelt
          * (Backlog Nr. 159). */
@@ -161,7 +220,7 @@ module Uploader {
             var mref = m["ref"] as Lang.String;
             if (istGeparkt(mref)) { continue; }
             if (_openPoints(mref) > 0 || !_isAcked(mref)) {
-                return { "kind" => "mission", "data" => m, "pendingIdx" => i };
+                return { "kind" => "mission", "data" => m };
             }
         }
         for (var i = 0; i < Model.pendingRest.size(); i++) {
@@ -169,16 +228,16 @@ module Uploader {
             var rref = r["ref"] as Lang.String;
             if (istGeparkt(rref)) { continue; }
             if (_openPoints(rref) > 0 || !_isAcked(rref)) {
-                return { "kind" => "rest_segment", "data" => r, "pendingIdx" => i };
+                return { "kind" => "rest_segment", "data" => r };
             }
         }
         var rest = Model.restSegment;        // lokal: Null-Pruefung greift nur so
         if (rest != null && _openPoints(rest["ref"] as Lang.String) > 0) {
-            return { "kind" => "rest_segment", "data" => rest, "pendingIdx" => -1 };
+            return { "kind" => "rest_segment", "data" => rest };
         }
         var mis = Model.mission;
         if (mis != null && _openPoints(mis["ref"] as Lang.String) > 0) {
-            return { "kind" => "mission", "data" => mis, "pendingIdx" => -1 };
+            return { "kind" => "mission", "data" => mis };
         }
         return null;
     }
@@ -270,7 +329,6 @@ module Uploader {
         // Kontext der laufenden Anfrage merken (Uploads laufen sequenziell,
         // daher genuegt eine einzelne Variable).
         _inflight = { "ref" => ref, "kind" => job["kind"],
-                      "pendingIdx" => job["pendingIdx"],
                       "final" => d["final"] == true };
 
         // Lokal statt ueber _cb: Die Typpruefung verfolgt eine Null-Pruefung
@@ -285,18 +343,17 @@ module Uploader {
             opts, cb.method(:onResponse));
     }
 
-    // Zugangsdaten: bevorzugt aus der Kopplung (Storage), sonst aus den
-    // App-Einstellungen (Properties, Alt-Weg). null = noch nicht gekoppelt.
+    /* Zugangsdaten aus der Kopplung (Storage "cred"). null = nicht gekoppelt.
+     *
+     * NUR NOCH DIESER WEG (F-R17-12, E-R17-21). Bis Uhr 4.0.0 gab es daneben
+     * den Alt-Weg: Geraete-ID und API-Schluessel als App-Einstellungen, in
+     * Garmin Connect sichtbar und von Hand eintragbar. Seit Uhr 3.0.0 fuellte
+     * ihn die Kopplung nicht mehr, und er trug Zugangsdaten durch eine
+     * fremde App. Eine Uhr, die nur ueber ihn sendete, koppelt einmal neu. */
     function credentials() as Lang.Dictionary or Null {
         var c = Storage.getValue("cred");
         if (c instanceof Lang.Dictionary && c["d"] != null && c["k"] != null) {
             return { "d" => c["d"], "k" => c["k"] };
-        }
-        var did = Properties.getValue("deviceId");
-        var key = Properties.getValue("apiKey");
-        if (did instanceof Lang.String && did.length() > 0
-            && key instanceof Lang.String && key.length() > 0) {
-            return { "d" => did, "k" => key };
         }
         return null;
     }
@@ -327,10 +384,16 @@ module Uploader {
     // Einstellungen (Vorgabe "nadoku.gen-em.org") — Schema und /ingest.php
     // werden ergaenzt. Eine vollstaendige URL bleibt ebenso gueltig; sie
     // endet dann auf ".php" und wird nicht angefasst.
+    //
+    // NUR HTTPS (F-R17-11, wie Android E-S4-14). Bis Uhr 4.0.0 blieb ein
+    // eingetragenes "http://" stehen, und Geraeteschluessel und Pakete gingen
+    // ab dem Telefon unverschluesselt. Jetzt wird es auf "https://" gehoben,
+    // ohne Ausnahmeschalter; die Prueffassung spricht ohnehin TLS (8443).
     function _serverUrl() as Lang.String {
         var u = Properties.getValue("serverUrl");
         if (!(u instanceof Lang.String) || u.length() == 0) { return ""; }
-        if (u.find("http") != 0) { u = "https://" + u; }
+        if (u.find("http://") == 0) { u = "https://" + (u.substring(7, u.length()) as Lang.String); }
+        else if (u.find("https://") != 0) { u = "https://" + u; }
         var len = u.length();
         var endsPhp = (len >= 4) && (u.substring(len - 4, len) as Lang.String).equals(".php");
         if (!endsPhp) {
@@ -349,6 +412,7 @@ module Uploader {
         if (code == 200 && data instanceof Lang.Dictionary && data["ok"] == true) {
             lastError = null;
             abgemeldet = false;        // eine angenommene Anfrage widerlegt es
+            abmeldungVergessen();
             var nextSeq = data["next_seq"] as Lang.Number;
             _setAcked(ref, nextSeq, true);
 
@@ -357,12 +421,31 @@ module Uploader {
                 Track.purge(ref);
                 Storage.deleteValue("ack_" + ref);    // Marken mit entsorgen
                 Storage.deleteValue("meta_" + ref);
-                var idx = ctx["pendingIdx"] as Lang.Number;
-                if (idx >= 0) {
-                    if ("mission".equals(ctx["kind"] as Lang.String)) { Model.pendingMissions.remove(Model.pendingMissions[idx]); }
-                    else { Model.pendingRest.remove(Model.pendingRest[idx]); }
-                    Model.save();
+                /* UEBER DIE REFERENZ, NICHT UEBER DEN INDEX (F-R17-52).
+                 *
+                 * Bis Uhr 4.0.0 stand hier der Listenplatz, den `_findJob()`
+                 * beim Absenden gemessen hatte. Dazwischen liegt eine
+                 * Netzanfrage, und in der Zeit darf die Liste schrumpfen:
+                 * "Abgewiesene verwerfen" auf der Sync-Seite entfernt jedes
+                 * geparkte Paket -- und geparkte stehen gerade VOR dem
+                 * laufenden, weil `_findJob()` sie ueberspringt. Rueckte die
+                 * Liste um eins, traf das Entfernen ein ANDERES Paket: Es
+                 * verschwand, seine Spur blieb als Waise im Speicher, und der
+                 * Einsatz kam nie an. Lag der Platz danach hinter dem Ende,
+                 * brach die App im Rueckruf ab. Die Referenz kann nicht
+                 * veralten; steht sie nicht (mehr) in der Liste -- das
+                 * laufende Paket des Dienstes steht nie dort --, wird nichts
+                 * entfernt. Dieselbe Bauart wie `verwerfen()`. */
+                var liste = Model.pendingRest;
+                if ("mission".equals(ctx["kind"] as Lang.String)) { liste = Model.pendingMissions; }
+                var weg = false;
+                for (var i = liste.size() - 1; i >= 0; i--) {
+                    if (ref.equals(liste[i]["ref"] as Lang.String)) {
+                        liste.remove(liste[i]);
+                        weg = true;
+                    }
                 }
+                if (weg) { Model.save(); }
             }
             _next();   // weitere offene Chunks/Jobs
         } else if (code == 401 || code == 403) {
@@ -380,6 +463,7 @@ module Uploader {
              * Loeschen der App zu retten -- mit allem, was sie trug. Das ist
              * der eigentliche Fund hinter Backlog Nr. 159. */
             abgemeldet = true;
+            abmeldungVermerken();      // die Frist beginnt beim ersten Mal
             lastError = null;
             _busy = false;
         } else if (code == 400 && _dauerhaftAbgewiesen(data)) {

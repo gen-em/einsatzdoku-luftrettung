@@ -1,6 +1,6 @@
 # Gen-EM NAdoku — Handbuch
 
-*Stand: 06.09.2026 · Für die technische Struktur siehe `Technik.md`, für
+*Für die technische Struktur siehe `Technik.md`, für
 Änderungen `CHANGELOG.md`.*
 
 > **Aufbau.** Kapitel 1 bis 10 gelten für **alle**: die Uhr, die
@@ -13,7 +13,8 @@
 
 Gen-EM NAdoku dokumentiert Notarzteinsätze direkt vom Handgelenk — luft-
 gebunden wie bodengebunden (RTH, NEF, NAW): Eine Uhr-App (derzeit für
-Garmin-Uhren: Fenix 6 Pro, Forerunner 945, Venu 3s) erfasst Einsatzphasen
+Garmin-Uhren — rund hundert Modelle, gebaut und geprüft an Fenix 6 Pro,
+Forerunner 945, Venu 3s; dazu eine Wear-OS-Uhr mit der Android-App) erfasst Einsatzphasen
 mit Zeitstempeln, GPS-Tracks und
 Reanimations-Ereignisse und lädt alles automatisch auf einen eigenen Server.
 Die Web-Oberfläche zeigt Diensttage mit Karte, Einsatz-Details
@@ -65,10 +66,16 @@ und verweisen für den Tastenweg hierher.
 Absicht — unter Einsatzbedingungen soll eine versehentliche Berührung nichts
 auslösen. In Menüs kann ein Tippen den gerade markierten Eintrag auswählen.
 
-Uhren mit Touchscreen **und** UP/DOWN-Tasten (Fenix 7 und neuer) werden noch
-nicht ausgeliefert. Für sie gibt es in den App-Einstellungen bereits den
-Schalter **„Touchbedienung verwenden"**; auf der Venu 3s hat er keine Wirkung,
-weil sie ohne Touch unbedienbar wäre.
+**Uhren mit Touchscreen und UP/DOWN-Tasten** (Fenix 7, Epix 2, FR965 und
+ähnliche) bedienst du mit denselben Tasten wie die Fenix 6 Pro. Für sie gibt
+es in den App-Einstellungen in Garmin Connect den Schalter **„Touchbedienung
+verwenden"** (Vorgabe: an). Steht er auf **aus**, verwirft die App Wischen und
+Tippen auf ihren eigenen Seiten und Menüs — es zählen nur noch die Tasten
+*(seit Uhr 4.1.0; bis dahin stand der Schalter da und bewirkte nichts)*. Die
+Rückfragen („Einsatztag beenden?" und ähnliche) und die Liste „Zeiten" sind
+Bausteine der Uhr selbst; dort wirkt ein Tippen weiter. Auf der Venu 3s hat
+der Schalter keine Wirkung, weil sie ohne Touch unbedienbar wäre, auf Uhren
+ohne Touchscreen ohnehin nicht.
 
 ### 2.1 Dienst beginnen und beenden
 
@@ -106,10 +113,14 @@ Abschnitt 2.2 gibt es erst im laufenden Dienst.
 > **Steht dort etwas in Rot?** Vier Meldungen sind möglich, und jede sagt dir,
 > was zu tun ist.
 >
-> „**Gerät nicht mehr angemeldet**" heißt: Der Server kennt diese Uhr nicht
-> mehr — sie wurde in den Einstellungen gelöscht oder abgeschaltet. Die Uhr
-> hört dann auf zu senden und **behält alles**; nichts geht verloren. Der Weg
-> zurück ist eine neue Kopplung (*lang START*).
+> „**Abgemeldet, Daten bis 27.10.**" *(seit Uhr 4.1.0; davor „Gerät nicht
+> mehr angemeldet")* heißt: Der Server kennt diese Uhr nicht mehr — sie wurde
+> in den Einstellungen gelöscht oder abgeschaltet. Die Uhr hört dann auf zu
+> senden und **behält alles — 30 Tage lang**, gezählt ab der ersten
+> Abmeldung. Danach verwirft sie alle ungesendeten Pakete: Eine Uhr, die
+> niemand mehr koppelt, soll Spur, Phasen und Reanimation nicht unbegrenzt
+> tragen. Das Datum in der Zeile ist der letzte Tag. Der Weg zurück ist eine
+> neue Kopplung (*lang START*); wer in der Frist koppelt, verliert nichts.
 >
 > „**1 abgewiesen**" heißt: Der Server hat dieses eine Paket dauerhaft
 > zurückgewiesen, es kommt nie an. Alles andere wird weiter gesendet. Mit
@@ -175,7 +186,11 @@ Seite kennt dafür drei Antworten:
 | Orange Zahl, darunter „Pakete offen" | So viele abgeschlossene Pakete warten noch |
 | Rot „Nicht eingerichtet" | Die Uhr kann gar nicht senden; darunter steht, was fehlt |
 
-Der dritte Fall ist der Zustand vor der Einrichtung. Darunter steht der
+Der dritte Fall ist der Zustand vor der Einrichtung. *Seit Uhr 4.1.0* zeigt
+ihn auch eine Uhr, die nie über den Code gekoppelt war, sondern vor Uhr 3.0.0
+von Hand mit Geräte-ID und API-Schlüssel in Garmin Connect eingerichtet: Diese
+Einstellungen liest die Uhr nicht mehr. Einmal koppeln, dann sendet sie
+weiter; was sie noch nicht gesendet hat, behält sie. Darunter steht der
 nächste Schritt — entweder „Erst Server-Adresse setzen" (das geschieht in
 Garmin Connect, nicht auf der Uhr) oder der Tastenweg zum Koppeln. Die
 Reihenfolge ist zwingend: Ohne Server-Adresse ist Koppeln nicht möglich.
@@ -433,10 +448,12 @@ Glas" ist leichter zu merken und schwerer zu raten als „Kl!n1k2026". Länge
 zählt hier mehr als Sonderzeichen, und das ist keine Geschmacksfrage, sondern
 die Rechnung eines Rateangriffs.
 
-**Warum das mehr wiegt als sonst.** Wer die Datenbank stiehlt, kann dein
-Passwort ausprobieren, so oft er will — auf seinem eigenen Rechner, ohne
-Sperre nach Fehlversuchen und ohne dass es jemand merkt. Der einzige Schutz
-dagegen ist ein Passwort, das sich nicht raten lässt. Der Server kann dabei
+**Warum das mehr wiegt als sonst.** Wer die Datenbank **und** die
+Konfigurationsdatei des Servers stiehlt, kann dein Passwort ausprobieren, so
+oft er will — auf seinem eigenen Rechner, ohne Sperre nach Fehlversuchen und
+ohne dass es jemand merkt. Die Datenbank allein reicht dafür seit Web 23.2.0
+nicht mehr (bis dahin reichte sie). Gegen beides zusammen hilft nur ein
+Passwort, das sich nicht raten lässt. Der Server kann dabei
 nicht helfen: Er sieht das Passwort nie (Abschnitt 5), also kann er seine Güte
 auch nicht prüfen. Was die Seite prüft, prüft dein Browser.
 
@@ -458,6 +475,12 @@ Stärke der Verschlüsselung — es schützt nicht nur den Zugang, sondern leite
 den Schlüssel ab, mit dem die geschützten Angaben eines Einsatzes
 verschlüsselt werden — Patientendaten, Einsatzort, Abfahrtort und Notizen;
 die vollständige Liste steht in Abschnitt 5.
+
+**„Dieser Installation fehlt der Server-Anteil"** statt „Anmeldung
+fehlgeschlagen" heißt: Dein Passwort kann richtig sein, aber dem Server fehlt
+ein Teil seiner Konfiguration, ohne den er es nicht prüfen kann (seit Web
+23.2.0). Die BetreiberIn ist informiert. Über „Passwort vergessen" und deinen
+Wiederherstellungsschlüssel kommst du trotzdem hinein.
 
 **Die erste Anmeldung nach dem Update dauert länger.** Seit Web 15.6.0 rechnet
 der Browser mit 600 000 statt 320 000 Runden; solange ein Konto noch auf der
@@ -736,6 +759,12 @@ um eine höhere Grenze bitten. Sie kann sie **je Konto** setzen (11.1).
 
 Unter dem Zahnrad → **Profil**, ganz unten. **Du brauchst niemanden zu fragen.**
 
+**Dein aktuelles Passwort** ist der Nachweis; es verlässt den Browser nicht.
+*(Bis Web 23.1.0 ging die Löschung an dieser Stelle nie — die Seite sagte
+immer „Passwort leer oder falsch", auch beim richtigen.)* Nach zehn falschen
+Passwörtern hier, beim Passwort- oder Adresswechsel ist eine Weile Pause;
+dieselbe Sperre gilt dann auch für die Anmeldung.
+
 **Was passiert:** Dein Konto wird sofort gesperrt und nach **30 Tagen**
 endgültig gelöscht. In dieser Zeit genügt eine **Anmeldung**, und die Löschung
 ist zurückgenommen — einen Knopf dafür brauchst du nicht. Mit Zweitfaktor
@@ -803,7 +832,10 @@ sich **nicht nachdrucken**. Bewahre es getrennt vom Handy auf. Auf der Seite
 „Zweitfaktor einrichten" wird **„Weiter"** erst frei, wenn du **„Ich habe die
 Codes gesichert."** angehakt hast. **„Neue Codes
 erzeugen"** gibt dir zehn neue; die alten und ein gedrucktes Blatt gelten dann
-nicht mehr. Die Karte zeigt, wie viele noch offen sind („8 von 10").
+nicht mehr. Seit Web 23.2.0 fragt die Seite dafür nach einem **frischen
+Code** (unten), und eine Mail an deine Adresse sagt, dass neue Codes erzeugt
+wurden — hat das jemand anderes getan, erfährst du es so. Die Karte zeigt,
+wie viele noch offen sind („8 von 10").
 
 **Anmelden.** Nach dem Passwort fragt die Seite nach dem **Code aus der App**;
 Leerzeichen sind egal. Ein Passwortmanager mit gespeichertem Einmalcode
@@ -905,7 +937,13 @@ Handlungen verlangen einen Code, der höchstens **15 Minuten** alt ist: die
 Griffe an den Schlüsseln des Servers und das Schlüsselblatt, auf der
 Kontoseite einer anderen Person Rolle wechseln, Zweitfaktor zurücksetzen und
 Konto löschen, das Ausschalten deines eigenen Zweitfaktors und — seit Web
-21.10.0 — einen Passkey hinzufügen oder entfernen. Hast du dich eben mit dem
+21.10.0 — einen Passkey hinzufügen oder entfernen. Seit Web 23.2.0 kommen
+dazu: **neue Wiederherstellungscodes** erzeugen (sie sind ein dauerhafter
+zweiter Faktor wie ein Passkey), und in der Verwaltung ein Komplett-Backup
+herunterladen, ein Konto-Backup freigeben, die Anmeldeadresse einer anderen
+Person ändern und ihr einen Setz-Link senden. Seit Web 23.5.0 außerdem unter
+Betrieb → Hintergrundjobs: eines der drei Tokens erneuern oder die
+Health-Abfrage abschalten. Hast du dich eben mit dem
 Code oder einem Passkey angemeldet, merkst du davon nichts. Kamst du über ein
 gemerktes Gerät herein oder ist die Anmeldung älter, erscheint die Seite
 **„Code bestätigen"** — Code aus der App (oder ein Wiederherstellungscode)
@@ -2541,27 +2579,28 @@ Er käme an keine Daten — aber dein Notfallblatt öffnete plötzlich nichts me
 und du erführest es erst, wenn du es brauchst.
 
 **Gesperrt: entsperren statt neu anmelden.** Die Anmeldung und der Schlüssel
-für die geschützten Angaben haben unterschiedliche Lebensdauern. Der Schlüssel
-gilt nur im jeweiligen Browser-Tab; die Anmeldung dagegen hält bis zu 30 Minuten
-ohne Aktivität. Deshalb kommt es im Alltag regelmäßig vor, dass du angemeldet
-bist, die geschützten Angaben aber gesperrt sind — typischerweise, wenn du einen
-Link in einem **neuen Tab** öffnest oder den **Browser neu gestartet** hast.
+für die geschützten Angaben haben getrennte Lebensdauern. Seit Web 23.4.0 gilt
+der Schlüssel **für alle Tabs** dieses Browsers: Öffnest du einen Link in
+einem neuen Tab oder stellt der Browser nach einem Neustart deine Tabs wieder
+her, sind die geschützten Angaben sofort lesbar — solange du in der letzten
+halben Stunde gearbeitet hast. Gesperrt bist du trotz Anmeldung nur noch in
+wenigen Fällen: nach einem Zurücksetzen des Passworts ohne
+Wiederherstellungsschlüssel, nach einer Anmeldung mit Passkey, oder in einem
+Browser, der keinen Speicher für den Schlüssel erlaubt (manche privaten
+Fenster) — dort fragt jede Seite.
 
-> **Ein Tab, ein Schlüssel — das ist gewollt.** Der Schlüssel wandert
-> ausdrücklich nicht zwischen Tabs. Wer die Anwendung in einem zweiten Tab
-> öffnet, bekommt dort den Entsperrdialog, obwohl er angemeldet ist. Das ist
-> kein Fehler, sondern der Preis dafür, dass der Schlüssel nur dort liegt, wo
-> gearbeitet wird.
+> **Bis Web 23.3.x hieß es „Ein Tab, ein Schlüssel“**, und jeder neue Tab
+> fragte nach dem Passwort. Das ist vorbei: Der Schlüssel liegt jetzt so im
+> Browser, dass ihn auch ein eingeschleustes Skript nicht herauslesen kann,
+> und diese Ablage teilen sich alle Tabs. **Die Kehrseite:** Schließt du den
+> Browser, ohne dich abzumelden, bleibt der Schlüssel auf diesem Gerät liegen,
+> bis du dich das nächste Mal anmeldest oder abmeldest oder bis eine Seite der
+> Anwendung nach Ablauf der halben Stunde geladen wird. **Auf einem fremden
+> oder geteilten Rechner meldest du dich deshalb immer ab.**
 
-**Beide Fristen zählen seit Web 12.9.0 gleich.** Vorher lief die Frist des
-Schlüssels ab dem **Entsperren**, die der Anmeldung dagegen ab der **letzten
-Bedienung**. Gemerkt hast du davon nichts — der Schlüssel wurde im Hintergrund
-stillschweigend neu erzeugt, ohne Nachfrage. Trotzdem gehört es geradegerückt:
-Solange du arbeitest, bleibt beides gültig; lässt du die Anwendung eine halbe
-Stunde liegen, wirst du abgemeldet und meldest dich neu an.
-
-Der Entsperrdialog erscheint dadurch **nicht seltener** — er hängt nicht an
-dieser Frist, sondern an den drei oben genannten Fällen.
+**Beide Fristen zählen gleich (seit Web 12.9.0).** Solange du arbeitest,
+bleibt beides gültig; lässt du die Anwendung eine halbe Stunde liegen, wirst
+du abgemeldet, und der Schlüssel ist fort.
 
 In diesem Fall erscheint ein Fenster **„Geschützte Angaben entsperren“**, das
 nach deinem Kontopasswort fragt. Nach der Eingabe sind Einsatznummer, Name,
@@ -2657,9 +2696,10 @@ Meldung nicht: Das entscheidet die Einstellung deines Browsers — meist der
 Download-Ordner, bei entsprechender Einstellung fragt er nach. Dasselbe gilt
 für den Datenexport unter **Einstellungen → „Export"**.
 
-**Ältere Backups kannst du weiterhin einspielen.** Umgekehrt gilt das
-nicht: Eine Datei aus Web 11.1.0 lässt sich in einer älteren Installation
-nicht öffnen — sie sagt das aber deutlich, statt „Passwort falsch" zu melden.
+**Welche Backups sich einspielen lassen:** seit Web 23 nur noch eines ab
+Web 22.5.0 (siehe unten, „Orte, Reanimation und GPS-Daten"). Umgekehrt lässt
+sich eine neuere Datei in einer älteren Installation nicht öffnen — sie sagt
+das aber deutlich, statt „Passwort falsch" zu melden.
 Wählst du versehentlich ein *einzelnes Teil* aus (etwa weil du die Datei
 entpackt hast), sagt die Anwendung auch das.
 
@@ -2746,15 +2786,19 @@ gibt es ein Passwort weniger zu verwahren, und die Datei ist genauso geschützt
 wie die Daten in der Datenbank. Ob das Passwort stimmt, prüft der Browser
 selbst; der Server bekommt es nicht zu sehen. Ist das Häkchen gesetzt, meldet
 sich auch der **Passwortverwalter** und bietet das gespeicherte
-Anmeldepasswort an — das Feld heißt dann für ihn dasselbe wie das auf der
-Anmeldeseite.
+Anmeldepasswort an: Seit Web 23.4.0 steht dafür ein eigenes Feld bereit, das
+er von Anfang an als Anmeldepasswort dieses Kontos erkennt. Vorher teilten sich
+Backup- und Kontopasswort ein Feld, und Bitwarden schlug dort ein neues
+Passwort vor statt des gespeicherten.
 
 Nicht geeignet ist das Kontopasswort, wenn die Datei an jemand anderen gehen
 soll — dann bekommt der Empfänger das Anmeldepasswort mit.
 
-**Backup-Dateien bleiben lesbar, auch nach einem Update.** In der Datei steht
-seit 5.0.0 vermerkt, mit welchen Einstellungen sie verschlüsselt wurde. Ältere
-Dateien lassen sich unverändert öffnen. Kommt eine Datei aus einer *neueren*
+**Ein geändertes Passwort macht ein Backup nicht unlesbar.** In der Datei steht
+seit 5.0.0 vermerkt, mit welchen Einstellungen sie verschlüsselt wurde; das
+Passwort, mit dem du sie gesichert hast, öffnet sie weiter. Einspielen lässt
+sich seit Web 23 aber nur ein Backup ab Web 22.5.0 (siehe oben). Kommt eine
+Datei aus einer *neueren*
 Fassung des Programms, sagt die Meldung genau das — und nicht „Passwort
 falsch".
 
@@ -2955,6 +2999,12 @@ Zwei Sonderfälle werden dabei erkannt:
   überschreiben oder trotzdem anlegen. Gelöschte Einsätze im Papierkorb
   zählen bewusst nicht als vorhanden.
 
+  **Ein gelöschter Diensttag sperrt sein Datum nicht mehr** *(seit Web
+  23.3.1)*. Liegt an einem Datum ein Diensttag im Papierkorb und daneben ein
+  aktiver, landen die Einsätze der Datei beim aktiven. Bis dahin übersprang
+  der Import das ganze Datum, solange der Papierkorb-Tag dort lag. Abgelehnt
+  wird ein Datum nur noch, wenn es **ausschließlich** im Papierkorb liegt.
+
   **„Überschreiben" löscht nichts, was die Datei nicht kennt** (seit Web
   5.8.0). Liefert die Datei zu einem Feld nichts, bleibt der gespeicherte Wert
   stehen. Das betrifft die Besatzung, Bergwacht-Infos, die weitere NotärztIn,
@@ -3000,8 +3050,9 @@ Rückimport der eigenen Exportformate ist da genauer — siehe „Zurücklesen" 
 Auf derselben Seite, unterhalb des Importbereichs, steht der **Export**. Er ist
 zum Weiterverarbeiten in anderen Programmen gedacht — **nicht als Backup**. Für
 ein vollständiges Backup gibt es Abschnitt 6. Dieser Satz stand lange nur hier
-im Handbuch; seit Web 19.3.0 steht er auch auf der Seite selbst, und die
-Backup-Seite verweist umgekehrt hierher.
+im Handbuch; seit Web 19.3.0 steht er auch auf der Seite selbst, seit Web
+23.4.0 in der Einleitung der Exportkarte mit einem Verweis auf das Backup, und
+die Backup-Seite verweist umgekehrt hierher.
 
 Wie beim Import passiert alles im Browser: Der Server liefert nur Rohdaten, die
 geschützten Angaben werden erst auf deinem Rechner entschlüsselt. Ohne den Haken
@@ -3066,11 +3117,10 @@ Option versprach.
   wird, gehört es zu den geschützten Angaben und steht nur noch mit Haken in
   der Datei.
 - **Weitere Rettungsmittel** („RTW Talwang") — Organisationskennungen.
-- Der **Verlauf einer Reanimation** älterer Einsätze, ohne Angabe, wen sie
-  betraf. Bei Einsätzen, deren Reanimation schon verschlüsselt liegt, steht er
-  seit Web 22.4.0 nur noch mit Haken in der Datei: Er geht nur mit deinem
-  Passwort auf, und ein Export ohne Haken fragt nicht danach. Bis alle alten
-  Einsätze umgestellt sind, ist eine Datei ohne Haken deshalb gemischt.
+- *Der **Verlauf einer Reanimation** stand hier bis Web 22.3.x. Seit Web
+  22.4.0 liegt er verschlüsselt und steht nur noch mit Haken in der Datei; er
+  geht nur mit deinem Passwort auf, und ein Export ohne Haken fragt nicht
+  danach. Seit Web 23 liegt jede Reanimation verschlüsselt.*
 - Die **Zeitpunkte** der Phasen. Sie tragen Alarmzeit, Endzeit und Dauer.
 - Der Haken **abweichende Besatzung**. Er sagt nur, *dass* sie abwich — sonst
   wäre nicht mehr zu erkennen, dass die leeren Namensspalten leer *gemacht*
@@ -3114,8 +3164,9 @@ Exportdatei ist zum Weitergeben gedacht.
 Exportierst du **ohne** personenbezogene Angaben, erscheint unter dem Kästchen
 ein Hinweis. Bis Web 5.7.0 sagte er, die Datei sei trotzdem personenbezogen —
 das stimmte damals und stimmt seit Web 5.8.0 nicht mehr. Was bleibt, sind
-**Betriebsangaben**: Einsatzzeiten, Transportziele, weitere Rettungsmittel und
-der Verlauf einer Reanimation. Kein Personenbezug, aber auch nichts, was ohne
+**Betriebsangaben**: Einsatzzeiten, Phasen und weitere Rettungsmittel —
+Transportziele und Reanimation gehören seit Web 22 zu den geschützten Angaben
+und fehlen ohne Haken. Kein Personenbezug, aber auch nichts, was ohne
 Weiteres in fremde Hände gehört. Der Schutz schaltet sich deshalb **nicht** von
 selbst ab; die Entscheidung bleibt bei dir. Zum Öffnen wird
 ein Zusatzprogramm gebraucht: **7-Zip** unter Windows, **Keka** oder **The
@@ -3126,6 +3177,14 @@ Das Passwort wird nirgends gespeichert und lässt sich nicht zurücksetzen. Geht
 es verloren, lässt sich die Datei **nicht mehr öffnen** — die Daten darin sind
 dann endgültig nicht mehr lesbar. Es gibt keinen Weg daran vorbei, auch nicht
 über die Anwendung.
+
+**Eine Rückfrage, nur mit Patientendaten (seit Web 23.4.0).** Gehen
+personenbezogene Angaben mit, fragt der Export einmal nach, bevor die Datei
+entsteht: was in ihr lesbar steht, und — je nachdem — dass das Passwort nicht
+wiederherstellbar ist und womit sich die Datei öffnen lässt, oder dass jeder
+sie öffnen kann, wenn du kein Passwort setzt. Ohne Patientendaten fragt er
+nicht. *Bis Web 23.3.x kamen bis zu drei Rückfragen hintereinander, die dritte
+mit „Dies ist kein Backup“; das steht jetzt in der Einleitung der Exportkarte.*
 
 **Der Dateiname sagt, was drin ist.** Er ist so aufgebaut:
 
@@ -3604,8 +3663,11 @@ Uhr, seit Web 12.8.0 auch das Handy mit der Android-App.
    Bis dahin läuft die Restzeit mit, und du kannst den Vorgang hier abbrechen.
 
 **Die Seite steht in der Reihenfolge, in der man sie braucht** *(seit Web
-15.4.1)*: koppeln, die Geräte ansehen, die App holen — und ganz unten,
-zugeklappt, die Ausnahme „Gerät ohne Code anlegen" (Abschnitt 10.1a).
+15.4.1)*: koppeln, die Geräte ansehen, die App holen. **Ein Gerät entsteht nur
+über die Kopplung** *(seit Web 23.3.0)*: Die zugeklappte Ausnahme „Gerät ohne
+Code anlegen", die Geräte-ID und API-Schlüssel zum Abtippen herausgab, ist
+entfallen — die Uhr-App nimmt solche Zugangsdaten seit Uhr 4.1.0 nicht
+mehr an, und die Android-App hat sie nie gebraucht.
 
 **Alle Handlungen an einem Gerät stehen in seinem Menü** — dem Knopf mit den
 drei Punkten am rechten Rand der Zeile, in jeder Bildschirmbreite. Darin:
@@ -3628,8 +3690,11 @@ Mehr dazu in Abschnitt 11.4a.
 > **Deaktivieren** oder **Entkoppeln** beendet das augenblicklich; die
 > hochgeladenen Daten bleiben in beiden Fällen erhalten. **Was die Uhr noch
 > nicht zugestellt hat, liegt auf ihr unverschlüsselt** (Abschnitt 5), und
-> Trennen löscht auf der Uhr nichts — wer sie findet und auslesen kann, sieht
-> diese Einsätze.
+> Trennen löscht auf der Uhr nicht sofort — wer sie findet und auslesen kann,
+> sieht diese Einsätze. *Seit Uhr 4.1.0* erfährt die Uhr beim nächsten
+> Sendeversuch, dass sie getrennt ist, und verwirft ihre ungesendeten Pakete
+> 30 Tage danach. Erreicht sie nie wieder ein Telefon, erfährt sie es nicht,
+> und die Daten bleiben liegen.
 >
 > Bis dahin gilt seit Web 15.6.0 eine Grenze: Ein Gerät darf einen
 > **bestehenden** Einsatz oder eine bestehende Ruhezeit nur noch **72 Stunden**
@@ -3710,7 +3775,7 @@ womit aufgezeichnet wurde. Jetzt bleibt sie am Einsatz stehen.
 **Sie wird nicht nachgezogen.** Koppelt dasselbe Gerät später neu oder wird sein
 Modellname nachträglich aufgelöst, ändert das an bestehenden Einsätzen nichts —
 dort steht weiter, was beim Anlegen galt. Sichtbar ist die Angabe im
-CSV-Export (Abschnitt 8), nicht in der Einsatzansicht.
+CSV-Export (Abschnitt 7.1), nicht in der Einsatzansicht.
 
 Ausgewertet wird die Gerätekennung unter Betrieb → Statistik (Abschnitt
 12.2): welche Modelle koppeln und aus welcher Quelle ein Einsatz stammt. Die
@@ -3746,14 +3811,6 @@ bessere Weg ist.
 
 Ist das Fach nicht da, liegt auf dieser Installation keine App-Datei. Frag
 die Verwaltung.
-
-### 10.1a Gerät ohne Code anlegen
-
-*Die Ausnahme, zugeklappt am Ende der Seite.* Für Geräte, die keinen Code
-anzeigen können. Du bekommst **Geräte-ID und API-Schlüssel** und trägst sie in
-der App ein — bei Garmin in Garmin Connect unter den App-Einstellungen. Beide
-Werte stehen anschließend in einem Kasten mit Knopf **„Kopieren"**; der
-Schlüssel wird **nur einmal** angezeigt, also sofort eintragen.
 
 ### 10.2 Was die App über die Aufzeichnung sagt
 
@@ -3821,6 +3878,13 @@ Installation.
 zwölf Stunden lang dieselbe Meldung, und die bei 10 % ginge darin unter.
 Hängst du das Gerät ans Kabel, verschwindet die Warnung; fällt der Stand
 später wieder, warnt dieselbe Schwelle erneut.
+
+**„Dienst beenden" in der Warnung beendet den Dienst ganz** — wie der Knopf
+in der App. *Bis Android 0.18.0 tat er das nicht:* Er hielt nur die
+Aufzeichnung an, der Dienst blieb offen, und im Web stand der Diensttag ohne
+Ende. Hast du den Knopf mit einer älteren Fassung gedrückt, schließe diesen
+Diensttag im Web von Hand. Dasselbe gilt für die Erinnerung „Dienst läuft
+seit N Stunden".
 
 **Die App beendet den Dienst nicht von selbst.** Das ist Absicht: Eine
 Abschaltung bei einem festen Ladestand beendete die Aufzeichnung **still**,
@@ -3972,7 +4036,28 @@ Darunter:
 | **Konto-Backups** | Die Pakete **dieses** Kontos mit Zeitpunkt, Umfang und Größe; im Kartenkopf der Zustand als Plakette und „Jetzt sichern". Läuft eine Freigabe, steht sie als blaue Zeile darüber. |
 | **Konto löschen** | Die Gefahrenzone, rot abgesetzt, ganz unten. |
 
-**Rolle wechseln, Zweitfaktor zurücksetzen und Konto löschen verlangen seit Web 21.9.0 einen frischen Code** (höchstens 15 Minuten alt, 3.1f). Ist er älter — etwa nach einer Anmeldung über ein gemerktes Gerät —, führt der Knopf zuerst auf „Code bestätigen"; danach steht die Kontoseite wieder da, mit dem Hinweis, die Handlung noch einmal auszulösen. Name und Adresse speichern ohne Rollenwechsel fragt nicht.
+**Rolle wechseln, Zweitfaktor zurücksetzen und Konto löschen verlangen seit Web 21.9.0 einen frischen Code** (höchstens 15 Minuten alt, 3.1f), **seit Web 23.2.0 auch Adresse ändern, Setz-Link senden und Freigeben**. Ist er älter — etwa nach einer Anmeldung über ein gemerktes Gerät —, führt der Knopf zuerst auf „Code bestätigen"; danach steht die Kontoseite wieder da, mit dem Hinweis, die Handlung noch einmal auszulösen. Nur den Namen speichern fragt nicht.
+
+**Das Konto einer BetreiberIn ändert nur eine BetreiberIn** (seit Web 23.2.0).
+Als Admin siehst du die Kontoseite einer BetreiberIn, mit gesperrten Feldern
+und ohne Knöpfe; jede Handlung daran — sperren, löschen, Adresse, Setz-Link,
+Backups, Geräte — antwortet mit „Kein Zugriff". Bis dahin ließ sich eine
+zweite BetreiberIn von einem Admin sperren, löschen oder auf eine andere
+Adresse umschreiben.
+
+**Ändert die Verwaltung die Anmeldeadresse, ist sie sieben Tage unbestätigt**
+(seit Web 23.2.0). Die neue Adresse gilt sofort für die Anmeldung, aber bis
+die **alte** Adresse zustimmt oder sieben Tage ohne Widerspruch vergehen,
+geht **kein Setz-Link** hinaus — „Setz-Link senden" sagt dann, bis wann, und
+„Passwort vergessen" verschickt nichts. Unter dem Adressfeld steht
+„unbestätigt bis …". An die alte Adresse geht eine Mail mit einem Link: Dort
+kann die Person den Wechsel bestätigen oder ihm **widersprechen** — dann gilt
+die alte Adresse wieder, alle Sitzungen des Kontos enden, und jede
+BetreiberIn bekommt eine Mail. **Warum:** Mit einer übernommenen
+Verwaltungssitzung war „Adresse ändern, dann Setz-Link" der kürzeste Weg, ein
+fremdes Konto zu übernehmen. **Der Preis:** Wer seine alte Adresse verloren
+hat, wartet sieben Tage auf den Setz-Link; eine Abkürzung gibt es nicht, auch
+nicht für die BetreiberIn.
 
 > Die Karte **„Abonnement · ab P5"** gibt es seit Web 15.2.0 nicht mehr. Sie
 > war ein reservierter Platz und hat auf jeder Kontoseite eine Zusage
@@ -4021,7 +4106,11 @@ Wort, das immer dasselbe sagt, sagt nichts.
   **anderes** Konto weiter — der Weg für ein neu aufgesetztes Konto. Die
   NutzerIn sieht es danach in ihrem eigenen Backup-Bereich und spielt es dort
   mit ihrem Wiederherstellungsschlüssel ein. Die Verwaltung bekommt zu keinem
-  Zeitpunkt Klartext zu sehen.
+  Zeitpunkt Klartext zu sehen. **Seit Web 23.2.0 nur an ein Konto mit
+  derselben E-Mail-Adresse** wie das Backup — der Knopf steht nur da, wenn es
+  eines gibt. Meist ist der Weg deshalb der verwaiste Ordner unter
+  „Backups ohne Konto" (11.4). Jede Freigabe steht im Protokoll, und an die
+  Adresse geht eine Mail.
 
 **Läuft eine Freigabe, sagt die Karte es** (seit Web 15.2.0). Eine blaue Zeile
 über den Paketen nennt, **für wen** freigegeben ist, **seit wann** und
@@ -4368,6 +4457,20 @@ ein Paket für ein Konto frei, und einspielen kann es nur die NutzerIn selbst,
 in ihrem Backup-Bereich, mit ihrem **Wiederherstellungsschlüssel**. Der liegt
 ausschließlich bei ihr — auch die Verwaltung hat ihn nicht, und ohne ihn
 öffnen sich die geschützten Angaben des Pakets nicht.
+
+**Freigeben lässt sich ein Paket seit Web 23.2.0 nur an ein Konto mit
+derselben E-Mail-Adresse**, wie sie zum Backup gehört — oder an das Konto,
+von dem es stammt. Der Knopf „Freigeben" steht nur an Ordnern, für die es ein
+solches Konto gibt, und die Auswahl im Dialog nennt nur diese. **Warum:**
+Beim Einspielen bekommt das Zielkonto alles, was nicht verschlüsselt ist —
+Zeiten, Besatzung, Notizen der Diensttage. Bis dahin ging das an **jedes**
+Konto, auch an das eigene der Verwaltung, still und ohne Spur. Jetzt steht
+jede Freigabe im Protokoll (Reiter Sicherung), an die Adresse geht eine Mail,
+und vorher fragt die Seite nach einem frischen Code. Eine ältere Freigabe an
+ein Konto mit anderer Adresse wird nicht mehr angeboten. **Hat sich die Person
+mit einer neuen Adresse neu registriert**, ändere zuerst die Adresse ihres
+neuen Kontos auf die alte — die Frist von sieben Tagen (11.1) gilt auch
+dann.
 
 **Seit Web 22.5.0 zählen Orte, Reanimation und GPS-Daten mit.** Sie liegen im
 Paket so verschlüsselt, wie sie im Konto lagen, gebunden an dessen
@@ -5043,7 +5146,7 @@ jede Seite trägt ein Anliegen. Was wohin gegangen ist:
 | Was du suchst | Wo es jetzt steht |
 |---|---|
 | Wartungsmodus, ausstehende Updates, Fassung | Betrieb → **Updates** |
-| Zustand der Hintergrundjobs, die drei Auslöser, das Job-Token und das Kettentoken | Betrieb → **Hintergrundjobs** |
+| Zustand der Hintergrundjobs, die drei Auslöser, das Job-Token, das Kettentoken und seit Web 23.5.0 das Health-Token | Betrieb → **Hintergrundjobs** |
 | Speichergrenze, Warnschwellen, Kontingente, Belegung, Ablage | Betrieb → **Servereinstellungen** |
 | CSP scharf schalten, HSTS-Dauer | Betrieb → **Servereinstellungen** |
 | Name und Logo der Installation | Verwaltung → **Installation** |
@@ -5064,7 +5167,9 @@ aufrufen.
 Oben steht eine Meldung mit einer Zahl — *„2 Punkte brauchen Aufmerksamkeit"*
 oder *„Alles läuft"*. Darunter vier Karten: **Server**, **E-Mail**,
 **Hintergrundjobs** und **Backups**, je Sache eine Zeile mit einer Plakette.
-Ganz unten, eingeklappt, eine fünfte: **Plattform** (seit Web 20.5.0).
+Ganz unten, eingeklappt, eine fünfte: **Plattform** (seit Web 20.5.0), und
+darunter, ebenso eingeklappt, seit Web 23.5.0 **„Einstellungen aus der
+config.php"**.
 
 **Neben dem Titel steht seit Web 20.12.0 ein zweiter Knopf: „Sicherheit".**
 Er führt auf die Unterseite, auf der steht, wer gerade ausgesperrt ist — und
@@ -5107,6 +5212,27 @@ der `config.php`. Oder das Etikett nennt eine Farbe, die die Anwendung nicht
 kennt; die Kopfleiste steht dann trotzdem rot. Einstellen lässt sich beides
 nur in der `config.php` (`docs/Technik.md`, Runbook).
 
+**Die Zeile „Adresse der Anlage"** (seit Web 23.5.0) steht darunter. Sie
+vergleicht die Adresse aus `app.base_url` in der `config.php` mit der, unter
+der du die Seite gerade aufgerufen hast — verglichen wird nur der Name des
+Servers, nicht der Pfad. Aus `base_url` bauen sich die Links in Mails, die
+Passkeys, die gedruckten Blätter und die Adresse unter Betrieb →
+Hintergrundjobs. Steht dort eine alte Adresse, laufen sie alle ins Leere,
+ohne dass es sonst jemand meldet. **Orange** heißt: Die beiden weichen ab,
+oder `base_url` fehlt. Stimmt die Adresse in der Datei und rufst du die Seite
+nur ausnahmsweise unter einem anderen Namen auf, ist nichts zu tun; sonst die
+Zeile in der `config.php` berichtigen (per FTP — hier lässt sie sich nicht
+ändern). Wer `base_url` umstellt, muss Passkeys neu anlegen; sie gehören zur
+alten Adresse.
+
+**Die Karte „Einstellungen aus der config.php"** (seit Web 23.5.0) zeigt, was
+in der Datei steht — eine Zeile je Einstellung. Passwörter und Schlüssel
+(Datenbank, Mailserver, Serverschlüssel, Server-Anteil) stehen nur als
+**„gesetzt"** oder **„leer"** da, nie der Wert. Ändern lässt sich hier nichts:
+Die Datei ist während des Betriebs bewusst nicht beschreibbar, damit auch eine
+übernommene Sitzung sie nicht ändern kann. Die Karte zählt nicht in der
+Meldung oben mit.
+
 **Die Zeile „Verwaltungskonten"** (seit Web 20.42.0) steht darunter und sagt,
 ob die Anlage **vertreten** ist. Gezählt werden **handlungsfähige** Konten
 mit Rolle Admin oder BetreiberIn: aktiv und mit eingerichtetem Zweitfaktor
@@ -5133,7 +5259,7 @@ zurücksetzt, wenn Handy und Codes fehlen. Blau „prüft" mit Weg und Dauer:
 „openssl" ist der schnelle, „reines PHP" der langsamere, beide tragen. Orange
 „abgeschaltet": Der Selbsttest ist gescheitert, der Rückweg wird bei der
 Anmeldung nicht angeboten; Codes und das Zurücksetzen durch die Verwaltung
-gehen weiter. Was dann zu tun ist, steht im Runbook (`docs/Technik.md` 7).
+gehen weiter. Was dann zu tun ist, steht im Runbook (`docs/Technik.md` 13).
 
 **Eine Testmail an dich selbst.** Im Kopf der Karte **E-Mail** steht seit
 Web 19.3.0 der Knopf **„Testmail an mich"**. Er schickt eine kurze Nachricht
@@ -5254,7 +5380,7 @@ Programm ablegen und hat damit alles — dagegen hilft keine Seite der
 Anwendung. Halte deshalb die Zugänge beim Hoster so sicher wie dein
 Passwort. **Und:** Hast du auch den Zugang zur Datenbank verloren, hilft der
 Notzugang nicht — dann führt der Weg über den Hoster und das
-Wiederanlaufpaket. Das Runbook in `docs/Technik.md` 7 nennt alle vier Wege in
+Wiederanlaufpaket. Das Runbook in `docs/Technik.md` 13 nennt alle vier Wege in
 ihrer Reihenfolge, als letzten das SQL von Hand.
 
 #### Die Zeile „Verbindungen" (seit Web 20.13.0)
@@ -5650,7 +5776,7 @@ Updates verlangt die Rolle **BetreiberIn**, und wenn ausgerechnet die
 ausstehende Migration diese Rolle einführt, kommt niemand auf die Seite, die
 sie ausführen müsste. Der Weg heraus führt über das Datenbankwerkzeug des
 Hosters (phpMyAdmin oder gleichwertig) — er steht mit den genauen Schritten im
-Runbook (`Technik.md`, Abschnitt 7). Danach steht die Migration hier als
+Runbook (`Technik.md`, Abschnitt 13). Danach steht die Migration hier als
 **„nicht nötig"**, und ein Druck auf „Ausstehende ausführen" trägt den Vermerk
 nach.
 
@@ -5659,8 +5785,10 @@ nach.
 an — die Anmeldung führt danach auf die Startseite, und die zeigt im
 Wartungsmodus die Wartungsseite. Dort steht der Knopf **„Zur Verwaltung"**,
 und der bringt dich zum Schalter zurück. Der zweite Weg: Wer Zugang zum
-Webspace hat, löscht die Datei `wartung.lock` neben den übrigen Serverdateien.
-Mehr als diese Datei ist der Schalter nicht.
+Webspace hat, löscht die Datei `wartung.lock` im Verzeichnis `.zustand/`
+neben den übrigen Serverdateien *(seit Web 23.3.1; vorher lag sie direkt
+dort — eine Datei am alten Ort gilt noch, also beide löschen)*. Mehr als
+diese Datei ist der Schalter nicht.
 
 > Beides hat bis September 2026 nicht funktioniert, und zwar nacheinander:
 > Bis Web 19.1.2 ließ sich das Anmeldeformular gar nicht abschicken, und bis
@@ -5767,9 +5895,18 @@ Anlage ausliefert, und reist nie in einer Adresse.
 **„Neues Token erzeugen"** macht jeweils das bisherige ungültig: beim
 Job-Token läuft ein Zeitplan-Eintrag beim Hoster danach ins Leere, beim
 Kettentoken scheitert die nächste Auslieferung, bis der neue Wert in GitHub
-steht. **Einmal nach dem Update auf Web 23.1.0 sollten beide erneuert
+steht. **Seit Web 23.5.0 fragt der Knopf nach einem frischen Code** des
+Zweitfaktors, wenn der letzte älter als eine Viertelstunde ist (3.1f) — wer
+ein Token erneuert, legt Zeitplan, Kette oder Monitoring still, und das soll
+eine fremde Sitzung nicht können. Nach dem Code steht die Seite wieder da;
+den Knopf dann noch einmal drücken.
+
+**Das dritte Token, seit Web 23.5.0: Monitoring.** In der Karte
+**„Monitoring"** steht das Health-Token für ein eigenes Monitoring
+(Abschnitt 12.9) — erzeugen, kopieren, erneuern oder die Abfrage ganz
+abschalten. Bis dahin stand es nur in der `config.php`. **Einmal nach dem Update auf Web 23.1.0 sollten beide erneuert
 werden**, weil das alte, gemeinsame Token in den Zugriffsprotokollen steht;
-die Schrittfolge steht im Runbook (`Technik.md` 7).
+die Schrittfolge steht im Runbook (`Technik.md` 13).
 
 ### 12.5 Servereinstellungen
 
@@ -6255,7 +6392,7 @@ Seite; P5c/AP9.)*
 **Der Weg zurück** heisst `wiederherstellen.php` und wird genau einmal
 gebraucht: wenn alles weg ist. Er arbeitet nur auf einer **leeren** Datenbank
 und verlangt einen Nachweis, dass man Zugriff auf das Verzeichnis der
-Anwendung hat. Die Schritte stehen im Runbook (`docs/Technik.md`, Abschnitt 7);
+Anwendung hat. Die Schritte stehen im Runbook (`docs/Technik.md`, Abschnitt 13);
 die Seite selbst führt durch sie hindurch.
 
 **Einmal im Halbjahr ausprobieren.** Ein Backup, das nie zurückgespielt
@@ -6270,8 +6407,16 @@ wurde, ist eine Vermutung.
 **Die Reihenfolge:** Datenbank anlegen (leer) · Anwendungsdateien hochladen ·
 `config.php` aus dem Wiederanlaufpaket daneben legen · Backup-Datei nach
 `sicherungen/eingang/` ·
-`wiederherstellen.php` · anmelden · **Betrieb → Updates**. Ausführlich steht
-es im Runbook, `docs/Technik.md`, Abschnitt 7.
+`wiederherstellen.php` · anmelden · **Betrieb → Updates** · **Aufräumen**.
+Ausführlich steht es im Runbook, `docs/Technik.md`, Abschnitt 13.
+
+**Aufräumen nimmt die Backup-Datei mit** (seit Web 23.3.2). Der Knopf am Ende
+löscht den ausgepackten Klartext, die Nachweisdatei und die Datei in
+`sicherungen/eingang/`, aus der eingespielt wurde — die Vorlage liegt ja am
+Backup-Ziel. Am besten legen Sie dort die versiegelte `.edk` ab; ein
+unverschlüsselter Dump vom Hoster (`.sql.gz`) geht auch, ist aber der Notweg.
+Den Ordner sperrt die Seite beim ersten Aufruf selbst gegen Abrufe über das
+Netz.
 
 **Der Serverschlüssel entscheidet.** Eine `.edk`-Datei mit dem Vermerk „mit
 dem Serverschlüssel" lässt sich nur mit *der* `config.php` öffnen, die beim
@@ -6283,7 +6428,7 @@ umgehüllt. Die Liste zeigt einen Stand von vorher mit **„bisheriger
 Schlüssel"**, solange der Wechsel läuft — er lässt sich dann weiter
 herunterladen und einspielen —, und danach mit **„anderer Schlüssel"**:
 Öffnen lässt er sich dann nur noch mit dem Wert vom bisherigen Blatt
-(Runbook, `docs/Technik.md` 7); hier herunterladen lässt er sich dann nicht
+(Runbook, `docs/Technik.md` 13); hier herunterladen lässt er sich dann nicht
 mehr, nur löschen. Neue Stände tragen seit Web 21.12.0 die Kennung ihres
 Schlüssels im Kopf. Wechselt der Schlüssel, während ein Stand gerade
 versiegelt wird, fängt die Anlage das Versiegeln mit dem neuen von vorn an
@@ -6447,14 +6592,20 @@ Seit Web 20.46.0 kann ein Überwachungsdienst — ein Uptime-Dienst, ein
 Nagios, ein `curl` im Cron — die Anlage fragen, ob sie läuft. Die Anwendung
 selbst meldet nichts nach draußen; sie antwortet nur, wenn sie gefragt wird.
 
-**Einrichten** geht über `config.php`, nicht über die Oberfläche: Dort steht
-ein langer Zufallswert als `betrieb.health_token`, und das Monitoring fragt
-`https://…/api/health.php` mit der Kopfzeile `X-Health-Token: <Wert>`. Kann
-dein Monitoring keine Kopfzeile setzen, geht auch
-`https://…/api/health.php?token=<Wert>` — dann steht der Wert im
+**Einrichten** geht seit Web 23.5.0 über die Oberfläche: **Betrieb →
+Hintergrundjobs**, Karte **Monitoring**, Knopf *Health-Token erzeugen*. Das
+Monitoring fragt dann `https://…/api/health.php` mit der Kopfzeile
+`X-Health-Token: <Wert>`. Kann dein Monitoring keine Kopfzeile setzen, geht
+auch `https://…/api/health.php?token=<Wert>` — dann steht der Wert im
 Zugriffsprotokoll des Hosters (seit Web 23.1.0 ist deshalb die Kopfzeile der
-empfohlene Weg). Die Schritte stehen im Runbook (`Technik.md` 7,
-„Health-Endpunkt einrichten"). Ohne Eintrag ist der Endpunkt aus.
+empfohlene Weg). In derselben Karte erzeugst du ein neues Token oder
+schaltest die Abfrage ab; beides fragt, wie bei den anderen beiden Tokens der
+Seite, noch einmal nach dem Code des Zweitfaktors.
+
+*Bis Web 23.4.x stand das Token als `betrieb.health_token` in `config.php`.*
+Ein Wert, der dort steht, wird beim ersten Abruf nach dem Update übernommen —
+ein laufendes Monitoring merkt nichts. Danach liest niemand die Zeile mehr;
+du kannst sie aus `config.php` löschen. Ohne Token ist der Endpunkt aus.
 
 **Was die Antwort sagt:**
 

@@ -180,10 +180,11 @@ class PairView extends WatchUi.View {
  * Andere Tasten sind hier bewusst unbelegt. BehaviorDelegate schluckt sie;
  * auf einem Touchgeraet heisst das insbesondere, dass ein Tippen auf den Code
  * nichts ausloest — es gibt hier nichts auszuwaehlen. */
-class PairDelegate extends WatchUi.BehaviorDelegate {
-    function initialize() { BehaviorDelegate.initialize(); }
+class PairDelegate extends TastenDelegate {
+    function initialize() { TastenDelegate.initialize(); }
 
     function onBack() as Lang.Boolean {
+        if (Input.beruehrungVerwerfen()) { return true; }   // F-R17-68
         Pair.abbrechen();
         return true;
     }

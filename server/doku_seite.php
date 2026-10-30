@@ -102,10 +102,12 @@ if ($angemeldet) {
                Er tritt genau dann ein, wenn jemand `server/` hochgeladen hat
                und `docs/` nicht — der haeufigste Fehler beim Selbsthosten.
                Deshalb steht hier, was zu tun ist, und nicht „Fehler". */ ?>
+      <?php /* Ohne `<code>` im Text (R17-22, F-R17-49): Der Baustein maskiert,
+               und wer `server/` ohne `docs/` hochlud, las die Tags als Text. */ ?>
       <?= ui_meldung_markup('warn',
-          'Die Datei <code>' . e(DOKU_DATEIEN[$dokuName]) . '</code> ist auf diesem '
+          'Die Datei ' . DOKU_DATEIEN[$dokuName] . ' ist auf diesem '
         . 'Server nicht zu finden. Gesucht wird sie neben der Anwendung unter '
-        . '<code>docs/</code> und innerhalb unter <code>doku/</code>.',
+        . 'docs/ und innerhalb unter doku/.',
           'Dieses Dokument fehlt.') ?>
       <p class="feld-hinweis">Beim Selbsthosten: Lade den Ordner
          <code>docs/</code> aus dem Repositorium mit hoch. Die

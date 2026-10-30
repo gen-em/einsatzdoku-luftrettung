@@ -188,10 +188,10 @@ $st->execute([$userId]);
 $u = $st->fetch();
 if (!$u || $u['password_hash'] === null) { json_out(['error' => 'konto'], 400); }
 
-// Nachweis: Wer das alte Token nennen kann, kennt das Passwort.
-if (!password_verify($altToken, (string)$u['password_hash'])) {
-    json_out(['error' => 'nachweis'], 403);
-}
+/* Nachweis: Wer das alte Token nennen kann, kennt das Passwort. SEIT R17-20
+ * MIT RATENTOPF (F-R17-32): Bis dahin war dies die eine der sieben Stellen,
+ * an denen eine erbeutete Sitzung ohne Sperre raten konnte. */
+passwort_nachweis_json($userId, $altToken, 'nachweis');
 
 /* Huelle und Pruefsumme gehoeren zusammen und sind Pflicht, SOBALD das Konto
  * eine Huelle hat. Ohne neue Huelle waere die alte nach dem Tausch nicht mehr
@@ -212,7 +212,7 @@ try {
      * Feld, das sich nicht aendern soll. */
     if ($neuIter > $kdfIter) {
         $pdo->prepare('UPDATE users SET password_hash = ?, kdf_iter = ? WHERE id = ?')
-            ->execute([password_hash($neuToken, PASSWORD_DEFAULT), $neuIter, $userId]);
+            ->execute([anmeldehash_bilden($userId, $neuToken), $neuIter, $userId]);   // mit Pfeffer (R17-20)
     }
     if ($u['pat_wrap_pw'] !== null) {
         /* Die Pruefsumme darf sich NICHT aendern: Es ist derselbe

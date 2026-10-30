@@ -98,12 +98,12 @@ await abwaehlen(seite, '#exp_pw');
 await seite.waitForTimeout(300);
 schritt(7, 'Mit Passwort schützen: AUS (die Referenz muss lesbar bleiben)');
 
-/* DREI RÜCKFRAGEN LIEGEN VOR DEM EXPORT.
-   assets/confirm.js baut je Aufruf ein eigenes <dialog> in die Seite und
-   wartet auf einen Klick. Der Export fragt bei personenbezogenen Angaben,
-   bei gesetztem Passwort und in jedem Fall „das ersetzt kein Backup" — wer
-   nur auf „Export erstellen" klickt und dann auf den Download wartet, wartet
-   ewig. Das ist keine Panne, sondern der Zweck der Dialoge. */
+/* EINE RÜCKFRAGE LIEGT VOR DEM EXPORT, wenn personenbezogene Angaben
+   mitgehen (seit Web 23.4.0, Backlog Nr. 404; bis dahin bis zu drei:
+   Klartext, Passwort, „das ersetzt kein Backup"). assets/confirm.js baut
+   ein <dialog> in die Seite und wartet auf einen Klick — wer nur auf
+   „Export erstellen" klickt und dann auf den Download wartet, wartet ewig.
+   Die Schleife unten bestätigt, so viele kommen. */
 async function rueckfragenBestaetigen(hoechstens = 4) {
   let n = 0;
   for (let i = 0; i < hoechstens; i++) {

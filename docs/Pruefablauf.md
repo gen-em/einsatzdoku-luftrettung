@@ -1,6 +1,6 @@
 # Prüfablauf — jede Prüfung einmal, an ihrer Stelle
 
-*Stand: 23.09.2026 · Arbeitsumgebung: `Sandbox-Setup.md` · Architektur und
+*Arbeitsumgebung: `Sandbox-Setup.md` · Architektur und
 Betrieb: `Technik.md` · Steuerung: `Rahmenplan.md` · Arbeitsanweisung:
 `CLAUDE.md`.*
 
@@ -204,9 +204,11 @@ Wer die versionierte Deny-Liste ändert, hebt Lage 2 ebenfalls auf; das fällt
 im Pull Request auf, weil `.claude/settings.json` dann in der Berührung
 steht.
 
-**Heutiger Umfang** (gezählt am 23.09.2026 am Quelltext, nach PK-05): Der
-Arbeitslauf `pruefung.yml` heißt „Prüfung" und führt drei Jobs —
-**`Schon gemessen?`** mit **2** Schritten, `Stufe 1` mit **15** und
+**Heutiger Umfang** (gezählt am 28.10.2026 am Quelltext, R17-27 —
+nachzählen: `awk 'NR>=75 && NR<231 && /^      - /' .github/workflows/pruefung.yml | wc -l`
+für `Stufe 1`): Der Arbeitslauf `pruefung.yml` heißt „Prüfung" und führt drei
+Jobs — **`Schon gemessen?`** mit **2** Schritten, `Stufe 1` mit **16** (bis
+R17-27 stand hier 15, F-R17-29) und
 `Schema gegen …` mit **4**; bis PK-05 waren es in `Stufe 1` **24**, bis BR-03
 **17** — drei Schritte sind in die Quelltextprüfungen gewandert (`bestand`,
 `pysyntax`, `handbuch`), einer kam dazu (`cmark-gfm` bereitstellen). Den
@@ -245,7 +247,7 @@ laufen je Engine einmal** (Grundsatz 8, R87); der Schritt holt alle drei
 samt Bibliotheken mit `playwright install --with-deps`, **in der Fassung
 des Prüfstands**: Sie steht einmal, in `PW_FASSUNG` von
 `tools/sandbox/aufbauen.sh`, und der Schritt liest sie dort (seit Nr. 393,
-`docs/Technik.md` 6.1a). Installiert wird sie aus der Sperrdatei
+`docs/Technik.md` 12.2). Installiert wird sie aus der Sperrdatei
 `tools/kette/stufe2-npm/package-lock.json` mit `npm ci`; nennt die eine
 andere Fassung, ist der Schritt rot (R17-19, F-R17-20). Der Job läuft auf
 `ubuntu-26.04` wie alle.
@@ -271,7 +273,7 @@ im Job `stufe2`, kein Schritt (8).
 ### 2.5 Station E — Produktiv
 
 Beim Tag `web-vX.Y.Z`, nach der Pflichtfreigabe durch die BetreiberIn und
-nach dem Backup-Tor. Der Ablauf steht in `Technik.md` 6; PK ändert ihn
+nach dem Backup-Tor. Der Ablauf steht in `Technik.md` 12; PK ändert ihn
 nicht. Dazu gehören der Zeiger-Zweig `produktion` und die Integritätswache,
 die gegen ihn vergleicht.
 
@@ -283,7 +285,7 @@ dem die Uhr keine Zugangsdaten kennt (`CLAUDE.md` 4): Ein Schlüssel, dessen
 Verlust jede spätere Fassung zu einer anderen Anwendung macht, gehört nicht
 dorthin, wo bei jedem Bau fremder Code mitläuft. **Gebaut mit PK-08**
 (Jobs `android` und `uhr`, `tools/kette/appbau.sh` und `apkablage.py`,
-`Technik.md` 4.97g). **Was die Kette dort prüft:** seit R17-19 zuerst das
+`Technik.md` 4.13). **Was die Kette dort prüft:** seit R17-19 zuerst das
 App-Tor (grüner Job `Stufe 1` auf demselben Baum, bei einem Tag der Commit
 auf `main`, F-R17-17), dann Tag gegen Fassung, den Bau in einem Job ohne
 Geheimnisse und mit Gradle-Verifikation (F-R17-03, -20), das Zertifikat
@@ -397,21 +399,21 @@ Zwei Dinge hängen mit daran, und beide sind gemessen:
 | `server/ingest.php`, `server/validate_lib.php` | klein | `ingestprobe` | stiller Datenverlust bei "ok" |
 | `server/jobs_lib.php`, `server/jobs.php` | klein | `jobprobe`, `jobregister` | Huckepack 18 s; Nr. 208 |
 | `server/backup_lib.php`, `server/adminbackup_*.php`, `server/import*.php` | klein | `wiederherstellung`, `containerprobe`, `kreislauf-edbak` | Nr. 31, 33, 34, 35 |
-| `server/komplett_lib.php`, `server/admin_komplettsicherung.php` | klein | `komplettprobe` | count(null), F-S10-AP4-02; admin_komplettsicherung.php seit R4-11 (Nr. 250, F-R4-38): der Klickweg der Probe geht ueber diese Seite |
-| `server/assets/gpx.js`, `server/api/gpx_import.php`, `server/tag_spuren.php`, `server/*export*.php`, `server/assets/export.js` | klein | `gpxprobe` | Nr. 130; Nr. 43 (seit S11-05d baut und liest der Browser GPX) |
+| `server/komplett_lib.php`, `server/admin_komplettsicherung.php`, `server/wiederherstellen.php` | klein | `komplettprobe` | count(null), F-S10-AP4-02; admin_komplettsicherung.php seit R4-11 (Nr. 250, F-R4-38): der Klickweg der Probe geht ueber diese Seite; wiederherstellen.php seit R17-23 (F-R17-33): Teil 8a prueft, dass die Seite komp_dump_eigen() fragt |
+| `server/assets/gpx.js`, `server/api/gpx_import.php`, `server/tag_spuren.php`, `server/*export*.php`, `server/assets/export.js`, `server/einsatz.php` | klein | `gpxprobe` | Nr. 130; Nr. 43 (seit S11-05d baut und liest der Browser GPX) |
 | `server/geraete_lib.php`, `server/pair.php`, `server/geraete*.php` | klein | `geraeteprobe`, `kopplungsprobe` | Edge, das sich "uhr" nennt; Nr. 178, 180 |
-| `server/mail_lib.php`, `server/email_lib.php`, `server/ankuendigung_lib.php` | klein | `mailprobe` | smtp_letzter_fehler(); Rundmail Nr. 296 |
-| `server/auth_guard.php`, `server/db.php`, `server/admin_*.php`, `server/betrieb_*.php`, `server/api/rechtstext_vorschau.php`, `docs/Technik.md` | klein | `rollenprobe` | Nr. 286, Nr. 149 |
+| `server/mail_lib.php`, `server/email_lib.php`, `server/ankuendigung_lib.php`, `server/smtp.php` | klein | `mailprobe` | smtp_letzter_fehler(); Rundmail Nr. 296 |
+| `server/auth_guard.php`, `server/db.php`, `server/admin_*.php`, `server/betrieb_*.php`, `server/api/rechtstext_vorschau.php`, `docs/Technik.md`, `server/zeitraum.php` | klein | `rollenprobe` | Nr. 286, Nr. 149 |
 | `server/login.php`, `server/auth_guard.php`, `server/totp_lib.php`, `server/zweitfaktor.php`, `server/zweitfaktor_teile.php`, `server/codeblatt.php`, `server/status_lib.php`, `server/demo_lib.php`, `server/pw_handling.php`, `server/einstellungen.php`, `server/betrieb_schluesselblatt.php`, `server/betrieb_server.php`, `server/zweitfaktor_notweg.php`, `server/nachweis_lib.php`, `tools/zweitfaktor/**` | klein | `zweitfaktorprobe` | F-P5c-31 (Code vor der Sitzung), F-P5c-37 (kein Code gilt zweimal), E-P5c-54 (Demo-Reset); seit SR-02 auch das Vergessen gemerkter Geraete beim Passwortwechsel (einstellungen.php) und -reset (pw_handling.php), E-SR-07; seit SR-07 der frische Code am Schluesselblatt und an den Schluesselgriffen (Teil 5c, E-SR-20); seit SR-09 Passkeys an Anmeldung und Bestaetigung (Teil 5d, E-SR-32); seit SR-04 der Notzugang der einzigen BetreiberIn mit seiner Nachweisdatei (Teil 8, Nr. 249) |
 | `server/rueckweg_lib.php`, `server/status_lib.php`, `server/vendor/phpseclib3/**`, `server/api/rueckweg_anlegen.php`, `server/assets/rueckweg.js`, `server/login.php`, `server/zweitfaktor.php`, `tools/proben/rueckweg/**`, `tools/bedienprobe/wege/einstellungen_profil_rueckweg.mjs` | klein | `rueckwegprobe`, `rollenprobe`, `bedienprobe` | Nr. 319 (F-P5c-106: Rueckweg pruefte gegen einen Wert aus der Datenbank), Konzept RW E-RW-03, -11, -12 |
 | `server/protokoll_lib.php`, `server/protokoll_archiv_lib.php`, `server/zip_lib.php`, `server/admin_protokoll.php`, `server/systemmeldung_lib.php` | klein | `protokollprobe`, `versandprobe` | F-P5c-18, F-P5c-19; versandprobe Teil 13 für die Archive auf dem Ziel (E-P5c-39); protokollprobe Teil 7 für das Fehlerprotokoll (Nr. 248) |
 | `server/sicherungsziel_lib.php`, `server/admin_sicherungsziele.php` | klein | `versandprobe` | halb englische Meldungen |
-| `server/ratelimit_lib.php` | klein | `ratenprobe` | Stufe fiel nie zurueck |
+| `server/ratelimit_lib.php`, `server/login.php`, `server/auth_guard.php`, `server/zweitfaktor_notweg.php`, `server/api/schluesselblatt_pruefen.php` | klein | `ratenprobe` | Stufe fiel nie zurueck |
 | `server/registrieren.php`, `server/assets/pow.js`, `server/assets/pow-worker.js`, `tools/bedienprobe/wege/registrieren.mjs` | klein | `ratenprobe`, `browserprobe-csp`, `bedienprobe` | Nr. 228 (SR-08, E-SR-26): die Rechenaufgabe vor der Registrierung -- Faelle und Dauer in der Ratenprobe (Abschnitt 12), der Worker unter scharfer Richtlinie in der CSP-Browserprobe, Zeit bis zur Loesung und gesperrter Knopf im Bedienweg registrieren; F-SR-96 (Felder als Liste) |
 | `server/wartung_lib.php`, `server/auth_guard.php`, `server/betrieb_updates.php` | klein | `wartungsprobe` | F-S8-P-04, Nr. 171; betrieb_updates.php seit R4-11 (Nr. 250, F-R4-38): die Probe schaltet ueber diese Seite |
 | `server/api/health.php`, `server/speicher_lib.php` | klein | `ratenprobe`, `wartungsprobe` | E-P5c-17, -52 (Health, P5c/AP6): Token, Felder, Migration und Menge in der Ratenprobe, die Antwort aus dem Tor in der Wartungsprobe |
 | `server/db.php`, `server/ingest.php`, `server/wartung_lib.php`, `tools/proben/verbindung/**` | klein | `verbindungsprobe` | Nr. 210. Seit Schritt 18 (SR-05, F-SR-08) auch ingest.php, wartung_lib.php und die Probe selbst: Sie misst das Gedraengel gleichzeitiger Uploads und lief bis dahin fuer eine Aenderung an ingest.php erst in haupt -- eine Korrektur am Deadlock haette die Probe, die ihn misst, nicht gefahren. |
-| `server/serverkrypto_lib.php`, `server/auth_salt.php`, `server/assets/unlock.js`, `server/assets/crypto.js` | klein | `anteilprobe`, `containerprobe` | S10-Kern, F-S10-AP3-03 |
+| `server/serverkrypto_lib.php`, `server/auth_salt.php`, `server/assets/unlock.js`, `server/assets/crypto.js`, `server/login.php` | klein | `anteilprobe`, `containerprobe` | S10-Kern, F-S10-AP3-03; seit R17-20 auch login.php (Teil F der Anteilprobe: Anmeldung mit Pfeffer und ohne Anteil) |
 | `server/*freigabe*.php`, `server/*schluessel*.php` | klein | `freigabeprobe` | F-S2-F |
 | `server/sitzung_lib.php`, `server/session_lib.php`, `server/assets/keyguard.js` | klein | `fristprobe`, `abmelde-probe`, `sitzungshaertung` | R44; Nr. 22; Nr. 205 |
 | `server/passkey_lib.php`, `server/api/passkey_anlegen.php`, `server/assets/passkey.js`, `server/vendor/phpseclib3/**`, `server/login.php`, `server/zweitfaktor.php`, `server/einstellungen.php`, `tools/proben/passkey/**`, `tools/bedienprobe/wege/einstellungen_profil_passkey.mjs` | klein | `passkeyprobe`, `zweitfaktorprobe`, `rollenprobe`, `bedienprobe` | Nr. 350 (Schritt 18, SR-09): Passkeys ohne WebAuthn-Bibliothek -- ein eigener CBOR-Leser und eine eigene Pruefung beider Zeremonien (E-SR-30, -36); die Gegenlesung H-SR-08 fand 41 Befunde, die die Probe bis dahin nicht sah (F-SR-43). |
@@ -426,7 +428,7 @@ Zwei Dinge hängen mit daran, und beide sind gemessen:
 | `.github/workflows/*.yml`, `tools/**` | klein | `kettenaufrufe` | Nr. 217 |
 | `android/**` | klein | `android-bau`, `android-kontraste`, `android-farbabgleich`, `android-bildmarken`, `android-stroeme` | E-PK-02 |
 | `server/kontopaar_lib.php`, `server/api/kontopaar.php`, `server/assets/kontopaar.js`, `server/assets/unlock.js`, `tools/proben/kontopaar/**` | klein | `kontopaarprobe` | Nr. 43 |
-| `server/ingest.php`, `server/spur_lib.php`, `server/api/mission.php`, `server/api/day.php`, `server/geraetehuelle_lib.php`, `tools/proben/ortsdaten/**`, `tools/proben/huelle/geraet.php`, `tools/proben/huelle/geraet_cli.php`, `server/einstellungen.php`, `server/admin_sicherungen.php`, `server/admin_user.php` | klein | `ortsdatenprobe` | Nr. 43; seit Web 23.0.2 auch die Meldung beim Einspielen (Schritt 16, Nr. 387) |
+| `server/ingest.php`, `server/spur_lib.php`, `server/api/mission.php`, `server/api/day.php`, `server/geraetehuelle_lib.php`, `tools/proben/ortsdaten/**`, `tools/proben/huelle/geraet.php`, `tools/proben/huelle/geraet_cli.php`, `server/einstellungen.php`, `server/admin_sicherungen.php`, `server/admin_user.php`, `server/api/import_commit.php` | klein | `ortsdatenprobe` | Nr. 43; seit Web 23.0.2 auch die Meldung beim Einspielen (Schritt 16, Nr. 387) |
 | `server/api/wartungslauf.php`, `server/spur_lib.php`, `server/validate_lib.php`, `tools/proben/wartungslauf/**` | klein | `wartungslaufprobe` | Nr. 43 |
 | `tools/proben/huelle/**`, `tools/uhr-pruefstand/krypto-probe/**`, `server/assets/crypto.js`, `server/geraetehuelle_lib.php` | klein | `huellenprobe`, `uhr-krypto` | Nr. 43 |
 | `watch/**`, `tools/uhr-pruefstand/**` | klein | `uhr-stufe1`, `uhr-rundlauf` | E-PK-02 |
@@ -437,7 +439,7 @@ Zwei Dinge hängen mit daran, und beide sind gemessen:
 | `server/assets/style.css`, `server/assets/images/gen-em_logo_*.png` | klein | `android-farbabgleich`, `android-bildmarken` | Nr. 334 (R4-04): Die App uebernimmt Farbwerte und Bildmarken aus dem Web (E-S4-22a). Wer sie dort aendert, erfaehrt hier, dass die App nachzieht -- ohne den Android-Bau, der dafuer nichts misst. |
 | `tools/motor.mjs`, `tools/pruefstand/motoren.md`, `tools/zweitfaktor/totp.mjs` | klein | `gpxprobe`, `freigabeprobe`, `fristprobe`, `abmelde-probe`, `containerprobe`, `huellenprobe`, `kontopaarprobe`, `ortsdatenprobe`, `wartungslaufprobe`, `browserprobe-csp`, `bedienprobe`, `bilderlauf`, `stilvergleich`, `kreislauf-csv`, `kreislauf-edbak`, `rueckwegprobe` | Nr. 390 — die Engine-Wahl und das Register gelten fuer jede Browserprobe; wer sie aendert, faehrt alle in drei Engines (R87) |
 
-**Die billigen Riegel laufen in jeder Stufe, ohne Muster:** `syntax-php`, `wortliste`, `vollstaendigkeit`, `kontraste`, `linkprobe`, `anker`, `kennzeichnung`, `bestand`, `syntax-py`, `handbuch`, `installweiche`, `behandler`, `sitzungshaertung`, `cspprobe`, `jobregister`, `migrationsregister`, `rechtstexte`, `kettenaufrufe`, `zaehlung`, `spaltenregister`, `steuerung`.
+**Die billigen Riegel laufen in jeder Stufe, ohne Muster:** `syntax-php`, `wortliste`, `vollstaendigkeit`, `kontraste`, `linkprobe`, `anker`, `kennzeichnung`, `fremdsummen`, `dokumente`, `bestand`, `syntax-py`, `handbuch`, `installweiche`, `behandler`, `sitzungshaertung`, `cspprobe`, `jobregister`, `migrationsregister`, `rechtstexte`, `kettenaufrufe`, `zaehlung`, `spaltenregister`, `steuerung`.
 
 **Stufenregel `migration`:** eine neue Kennung in `server/migration_lib.php` heißt mindestens **haupt** — E-P5c-36, E-P5c-88: Ein Paket mit Migration faehrt die Plattformmatrix, und die laeuft nur in haupt -- dort sind Nr. 238 und Nr. 267 gefunden worden. Ausgeloest von einer NEUEN Kennung im Katalog, nicht von einer Aenderung an der Datei: Die aendert sich auch ohne Migration (P5c/AP2, AP3).
 
@@ -856,7 +858,7 @@ misst mit einem Ersatz-`gradlew` die Umgebung des Gradle-Aufrufs (kein
 `APK_*`, nur die Positivliste, F-R17-03).
 
 **Wer das Läuferabbild wechselt** (die `runs-on`-Zeilen, `docs/Technik.md`
-6.1a), misst vorher dreifach, weil kein Teil allein reicht (Nr. 236):
+12.2), misst vorher dreifach, weil kein Teil allein reicht (Nr. 236):
 Stufe 1 und die Schemaprobe per Handlauf von `pruefung.yml` auf dem
 Arbeitszweig mit dem neuen Label; die Selbstproben der Kette und den
 Uhr-Bau örtlich in einem Container der neuen Ubuntu-Fassung; Stufe 2, die
@@ -956,10 +958,12 @@ hier steht, ist nur, **was grün heißt**:
 | `tools/quelltext/` `vollstaendigkeit` | 0 Befunde in sechs Prüfungen — ohne Schwelle seit PK-04/5e (E-PK-16); die sechste, Selektoren, seit R4-05 |
 | `tools/screenshots/` | 0 Überlauf, 0 Konsolenfehler, 0 Knöpfe falscher Höhe, 0 Karten außerhalb von `main.inhalt`; mit `--etikett NAME` zusätzlich 0 Abweichungen bei Titel und Kopfleiste (P5c/AP1). Rollende Behälter werden genannt und halten nicht auf (R4-08) |
 | `tools/screenshots/` `kontrast.py` | 0 Paare unter ihrem Sollwert, 0 Paare des Stylesheets ohne Eintrag in `PAARE` oder `AUSNAHMEN` (seit R4-08); Selbstprobe alle Fälle grün |
-| `tools/kettenaufrufe/` | 0 Befunde; jeder ungeprüfte Aufruf ist benannt; seit R17-19 dazu jede fremde `uses:`-Zeile an einer SHA mit Fassung und die Ausnahmeliste bei ihren acht Pfaden, `.gitignore` vollständig, keine eingecheckte `server/config.php*` |
-| `tools/quelltext/` `bestand` | 0 Befunde in allen vierzehn Regeln — ohne Decke, ohne Ausnahmeliste (E-BR-01); seit R4-25 stehen die vier erzeugten Tabellen in `Design.md` wie ihr Erzeuger sie ausgibt (Regel `design`) |
+| `tools/kettenaufrufe/` | 0 Befunde; jeder ungeprüfte Aufruf ist benannt; seit R17-19 dazu jede fremde `uses:`-Zeile an einer SHA mit Fassung und die Ausnahmeliste bei ihren sieben Pfaden (bis Web 23.3.0 acht), `.gitignore` vollständig, keine eingecheckte `server/config.php*` |
+| `tools/quelltext/` `bestand` | 0 Befunde in allen Regeln (`REGELN` in `bestand.py`, heute 15) — ohne Decke, ohne Ausnahmeliste (E-BR-01); seit R4-25 stehen die vier erzeugten Tabellen in `Design.md` wie ihr Erzeuger sie ausgibt (Regel `design`) |
 | `tools/quelltext/` `anker` | 0 Verweise `hilfe.php#…` ohne Ziel im gerenderten Handbuch; Selbstprobe 6 von 6 (falscher Anker rot, Kommentar zählt nicht, `-2` bei gleichem Titel) |
-| `tools/quelltext/` `kennzeichnung` | alle Kennzeichen der Sollliste stehen (heute 20 von 20: zehn Felder, Formular und Leseansicht), jedes Klartext-Freitextfeld trägt die Kleinzeile, 0 Blobfelder ohne Zeile; Selbstprobe 8 von 8 (die beiden Fehler aus 19.1.0 rot, Kommentar zählt nicht) |
+| `tools/quelltext/` `kennzeichnung` | alle Kennzeichen der Sollliste stehen (heute 26 von 26: 13 Felder, Formular und Leseansicht), jedes Klartext-Freitextfeld trägt die Kleinzeile, 0 Blobfelder ohne Zeile; Selbstprobe 8 von 8 (die beiden Fehler aus 19.1.0 rot, Kommentar zählt nicht) |
+| `tools/quelltext/` `fremdsummen` | jede Datei unter `server/assets/vendor/` (heute 6) mit Herkunftskopf, SHA-256 ohne den Kopf gleich der Kopfzeile und gleich der Tabelle in `Lizenzen.md` 3; 0 Befunde; Selbstprobe 7 von 7 (die Falle aus F-R17-50 und die Datei ohne Kopf aus F-R17-51 rot) |
+| `tools/quelltext/` `dokumente` | jeder Pfad in `docs/`, `README.md`, `CLAUDE.md` und jeder `LIESMICH.md` trifft den Baum oder steht mit Klasse und Grund in `dokumente-ausnahmen.md`; jede Zahl an einem Verzeichnis ist eine, die `ls` dort liefert; keine Kopfzeile „Stand:"; die Gliederung von `Technik.md` fortlaufend; 0 Befunde, 0 ungenutzte Ausnahmen; Selbstprobe 10 von 10 (falscher Pfad, ungenutzte Ausnahme, falsche Zahl in Text und Baum, Stand-Zeile, Doppel- und Fehlnummer rot) |
 | `tools/quelltext/` `pysyntax`, `handbuch` | 0 Syntaxfehler und 0 Warnungen (ungültige Escape-Folge, seit R4-07) bei mindestens einer Datei; beide Dokumente rendern, gültiges UTF-8, 0 Bilder aus fremder Quelle |
 | `./gradlew build` | 0 Lint-Fehler, 0 Fehlschläge |
 | `tools/stilvergleich/` | die gemessenen Abweichungen sind genau `geplant.txt` — ohne Datei: 0 (6.10) |
@@ -969,7 +973,7 @@ PK-04 hat zwei davon geändert: E-PK-16 hat der Vollständigkeit die
 Symbolzählung und ihre Schwelle genommen, E-PK-08 hat die Wortliste zur
 Textprobe erweitert.
 
-*Warum hier keine Zahl steht:* `docs/Technik.md` 6.2 trug die Zahl des
+*Warum hier keine Zahl steht:* `docs/Technik.md` 12.3 trug die Zahl des
 Bilderlaufs ein zweites Mal und stand bis Web 20.21.1 auf 366, während die
 Kette längst mit 377 lief. Eine Schwelle hat genau einen Ort, und das ist
 der Aufruf, der sie anwendet — seit PK-03 `tools/pruefstand/pruefablauf.json`.

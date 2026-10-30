@@ -172,6 +172,17 @@ function import_commit(array $b, int $userId): never
                                  . 'bitte die Seite neu laden. Es wurde nichts übernommen.'], 400);
         }
         if (($m['dup'] ?? 'insert') === 'skip') { continue; }
+        /* „overwrite" OHNE KENNUNG IST EINE KAPUTTE NUTZLAST (R17-22,
+         * F-R17-41, E-R17-61). Unten greift fuer sie der INSERT-Zweig, und bis
+         * Web 23.3.0 lief sie an der Kennungspruefung hier vorbei: ein neuer
+         * Einsatz mit leerer oder beliebiger `client_ref`. Der Browser schickt
+         * „overwrite" stets mit `overwrite_id`; wer es ohne schickt, bekommt
+         * eine klare Antwort statt einer stillen Umdeutung. */
+        if (($m['dup'] ?? '') === 'overwrite' && empty($m['overwrite_id'])) {
+            json_out(['error' => 'eingabe', 'meldung' => 'Ein zu überschreibender Einsatz nennt '
+                      . 'keinen vorhandenen (Zeile ' . ($i + 1) . '). Bitte die Seite neu laden. '
+                      . 'Es wurde nichts übernommen.'], 400);
+        }
         if (($m['dup'] ?? '') !== 'overwrite') {
             $ref = (string)($m['client_ref'] ?? '');
             if (!preg_match('/^imp-[0-9a-f]{24}$/', $ref) || isset($refsNeu[$ref])) {
@@ -235,7 +246,17 @@ function import_commit(array $b, int $userId): never
         foreach ($tage as $t) {
             $tag = pruef_kalendertag($t['day'] ?? null, 'tag.day', $pruef);
             if ($tag === null) { continue; }
-            if (isset($imPapierkorb[$tag])) {
+            /* ERST DER AKTIVE TAG, DANN DIE SPERRE (R17-22, F-R17-40). Ein
+             * Kalendertag darf seit E9 mehrere Diensttage tragen. Bis Web
+             * 23.3.0 sperrte ein einziger Tag desselben Datums im Papierkorb
+             * das ganze Datum — auch wenn daneben ein aktiver Diensttag stand,
+             * den `check` dem Browser eben noch gemeldet hatte; alle Einsaetze
+             * landeten unter `ohne_diensttag`. Abgelehnt wird jetzt nur, was
+             * KEINEN aktiven Tag hat und im Papierkorb liegt. */
+            $vorhandenQ->execute([$userId, $tag]);
+            $vorhanden = $vorhandenQ->fetchColumn();
+            $dayId = $vorhanden === false ? 0 : (int)$vorhanden;
+            if ($dayId === 0 && isset($imPapierkorb[$tag])) {
                 // Ablehnen statt zurueckholen (D1) — und sagen, dass es
                 // geschehen ist.
                 $tageUebersprungen++;
@@ -251,10 +272,6 @@ function import_commit(array $b, int $userId): never
                 $w = $txt($name, 120);
                 if ($w !== null) { $crew[(string)$rolle] = $w; }
             }
-
-            $vorhandenQ->execute([$userId, $tag]);
-            $vorhanden = $vorhandenQ->fetchColumn();
-            $dayId = $vorhanden === false ? 0 : (int)$vorhanden;
 
             if ($modus === 'insert' && $dayId === 0) {
                 /* Anlegen samt Einfrieren von Art, Rollensatz, Faehigkeiten und

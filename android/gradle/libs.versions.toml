@@ -3,8 +3,9 @@
 #
 # GRUNDSATZ: so wenige wie moeglich. HTTP laeuft ueber HttpURLConnection, JSON
 # ueber org.json, der Puffer ueber SQLiteOpenHelper -- alles drei Bordmittel
-# von Android und deshalb hier NICHT aufgefuehrt. Was hier steht, sind die drei
-# zugelassenen Fremdbestandteile und ihr Pruefwerkzeug:
+# von Android und deshalb hier NICHT aufgefuehrt. Was hier steht, sind die zwei
+# zugelassenen Fremdbestandteile und ihr Pruefwerkzeug (bis 0.18.0 stand hier
+# "drei" -- ein Rest aus der Zeit vor R63, sechs Zeilen tiefer steht warum):
 #
 #   AndroidX / Compose        Apache-2.0   Oberflaeche, Lebenszyklus
 #   play-services-wearable    proprietaer  ausschliesslich der Data Layer

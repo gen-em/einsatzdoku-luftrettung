@@ -120,14 +120,21 @@ function antwort_abschliessen(): bool {
  * ersten soll es einen Versuch und eine Fehlermeldung geben, beim zweiten
  * gar keinen Versuch und einen stehenden Hinweis.
  *
- * GEPRUEFT WIRD DER HOST, nicht die Zugangsdaten: Ein Mailserver ohne
- * Authentifizierung ist eine gueltige Einrichtung (ein Relay im selben
- * Rechenzentrum), einer ohne Adresse nicht.
+ * EINGERICHTET HEISST: HOST, BENUTZER UND PASSWORT (seit Web 23.3.1,
+ * R17-22, F-R17-46, E-R17-58). Hier stand, ein Mailserver ohne
+ * Authentifizierung sei eine gueltige Einrichtung — aber `smtp_send()`
+ * schickte immer `AUTH LOGIN`, und ein Relais ohne Anmeldung lehnte das ab.
+ * Die Einrichtung, die zwei Funktionen fuer gueltig erklaerten, versandte
+ * nichts. Die Betreiberin hat entschieden: Die Anmeldung ist Pflicht.
+ * Inhaltlich geprueft wird hier nichts — ob Benutzer und Passwort stimmen,
+ * zeigt erst ein Versand oder die Testmail.
  */
 function smtp_eingerichtet(): bool
 {
     $cfg = konfig('smtp', []);
-    return is_array($cfg) && trim((string)($cfg['host'] ?? '')) !== '';
+    return is_array($cfg) && trim((string)($cfg['host'] ?? '')) !== ''
+        && trim((string)($cfg['user'] ?? '')) !== ''
+        && (string)($cfg['pass'] ?? '') !== '';
 }
 
 /**
@@ -177,9 +184,11 @@ function smtp_versand_vermerken(bool $ok): void
  * weiterhin von Versanden erzaehlen. Eine Probe, die die Statistik des
  * Versands faerbt, waere eine Messung, die ihr Messobjekt veraendert.
  *
- * GEPRUEFT WIRD DER HOST, NICHT DAS PASSWORT — wie bei `smtp_eingerichtet()`
- * und aus demselben Grund: Ein Relais ohne Authentifizierung ist eine
- * gueltige Einrichtung.
+ * GEPRUEFT WIRD DER HOST, NICHT DAS PASSWORT — die Probe meldet sich nicht
+ * an. Dass Benutzer und Passwort EINGETRAGEN sind, prueft sie seit Web
+ * 23.3.1 vorab (F-R17-46): Bis dahin hiess es hier, ein Relais ohne
+ * Authentifizierung sei gueltig, und die Probe war gruen, waehrend jeder
+ * Versand an `AUTH LOGIN` scheiterte.
  *
  * @return array{ok: bool, grund: ?string}
  */
@@ -193,6 +202,10 @@ function smtp_probe(int $zeitlimit = 5): array
     $host  = trim((string)($cfg['host'] ?? ''));
     if ($host === '') {
         return ['ok' => false, 'grund' => 'In der config.php steht kein SMTP-Host.'];
+    }
+    if (trim((string)($cfg['user'] ?? '')) === '' || (string)($cfg['pass'] ?? '') === '') {
+        return ['ok' => false, 'grund' => 'In der config.php fehlen Benutzername oder Passwort '
+                                        . 'des Mailservers — ohne Anmeldung versendet NAdoku nicht.'];
     }
     $port = (int)($cfg['port'] ?? 465);
     $fp = @stream_socket_client('ssl://' . $host . ':' . $port,
@@ -255,6 +268,15 @@ function smtp_send(string $toEmail, string $subject, string $textBody,
         $GLOBALS['__smtp_fehler'] = ['kennung' => 'ADRESSE',
                                      'grund'   => 'Die Empfaengeradresse ist unbrauchbar.'];
         system_melden('smtp', 'unzulässige Empfängeradresse abgewiesen');
+        return false;
+    }
+    /* OHNE ANMELDEDATEN KEIN VERSUCH (F-R17-46). Bis Web 23.3.0 ging
+     * `base64_encode($cfg['user'])` ohne Pruefung hinaus: zwei Warnungen je
+     * Mail im Reiter System, dann scheiterte das Relais an `AUTH LOGIN`. */
+    if (trim((string)($cfg['user'] ?? '')) === '' || (string)($cfg['pass'] ?? '') === '') {
+        $GLOBALS['__smtp_fehler'] = ['kennung' => 'ANMELDUNG',
+                                     'grund'   => 'Benutzername oder Passwort des Mailservers fehlen in der config.php.'];
+        system_melden('smtp', 'Versand ohne Anmeldedaten in der config.php abgebrochen');
         return false;
     }
 
@@ -362,8 +384,8 @@ function smtp_send(string $toEmail, string $subject, string $textBody,
     $send('EHLO ' . (is_string($ehlo) && $ehlo !== '' ? $ehlo : 'localhost'));
     $ok = $ok && $expect('250');
     $send('AUTH LOGIN');                        $ok = $ok && $expect('334');
-    $send(base64_encode($cfg['user']));         $ok = $ok && $expect('334');
-    $send(base64_encode($cfg['pass']));         $ok = $ok && $expect('235');
+    $send(base64_encode((string)$cfg['user'])); $ok = $ok && $expect('334');
+    $send(base64_encode((string)$cfg['pass'])); $ok = $ok && $expect('235');
     $send('MAIL FROM:<' . $cfg['from'] . '>');  $ok = $ok && $expect('250');
     $send('RCPT TO:<' . $toEmail . '>');        $ok = $ok && $expect('250');
     $send('DATA');                              $ok = $ok && $expect('354');
@@ -372,8 +394,19 @@ function smtp_send(string $toEmail, string $subject, string $textBody,
              . 'To: <' . $toEmail . ">\r\n"
              . 'Subject: ' . mb_encode_mimeheader($subject) . "\r\n"
              . "MIME-Version: 1.0\r\nContent-Type: text/plain; charset=UTF-8\r\n"
+             . "Content-Transfer-Encoding: quoted-printable\r\n"
              . 'Date: ' . date(DATE_RFC2822) . "\r\n";
-    $body = preg_replace('/^\./m', '..', str_replace("\n", "\r\n", $textBody)); // Dot-Stuffing
+    /* QUOTED-PRINTABLE (R17-22, Backlog Nr. 401, E-R17-63). Bis Web 23.3.0
+     * gingen Umlaute, Gedankenstriche und Anfuehrungszeichen als rohe
+     * 8-Bit-Bytes hinaus, ohne `Content-Transfer-Encoding` — nach RFC 2045
+     * gilt dann `7bit`, und ein strenger Empfaenger oder Weiterleiter darf
+     * die Zeichen verwerfen. Quoted-printable ist 7-Bit-sauber, haelt die
+     * Zeilen unter 76 Zeichen und braucht kein 8BITMIME beim Relais.
+     * Reihenfolge: erst CRLF, dann kodieren (die Zeilenenden bleiben harte
+     * Umbrueche), zuletzt das Dot-Stuffing — eine Zeile, die mit einem Punkt
+     * beginnt, beendete sonst die Nachricht. */
+    $body = quoted_printable_encode(str_replace(["\r\n", "\n"], ["\n", "\r\n"], $textBody));
+    $body = preg_replace('/^\./m', '..', $body); // Dot-Stuffing
     $send($headers . "\r\n" . $body . "\r\n.");
     $ok = $ok && $expect('250');
     $send('QUIT');

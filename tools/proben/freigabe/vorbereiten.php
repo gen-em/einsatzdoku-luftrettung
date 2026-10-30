@@ -40,10 +40,25 @@ $quelleWeg = function () use ($pdo, $MAIL): void {
 
 if ($schritt === 'quelle') {
     $quelleWeg();
+    /* DER ZWECK DER FREIGABE IST „KONTO NEU AUFGESETZT" (R17-20, F-R17-02,
+     * E-R17-46): Seit Web 23.2.0 geht ein Paket nur an das Herkunftskonto
+     * oder an ein Konto mit derselben Adresse, wie sie in der Begleitdatei
+     * steht. Die Probe stellt genau das nach: Die Quelle traegt beim Sichern
+     * die Adresse des Zielkontos — das Zielkonto weicht dafuer kurz auf einen
+     * Platzhalter aus (die Adresse ist eindeutig) —, danach gibt die Quelle
+     * sie ab und heisst wie bisher. Bis Web 23.1.0 ging die Freigabe an ein
+     * beliebiges Konto, und genau das war der Befund. */
+    $zielAdresse = (string)$daten['ziel'];
+    $zielId = (int)$pdo->query('SELECT id FROM users WHERE email = '
+        . $pdo->quote($zielAdresse))->fetchColumn();
+    if (!$zielId) { fwrite(STDERR, "Zielkonto nicht gefunden\n"); exit(2); }
+    $pdo->prepare('UPDATE users SET email = ? WHERE id = ?')
+        ->execute(['probe-freigabe-platzhalter@example.invalid', $zielId]);
+    try {
     $pdo->prepare('INSERT INTO users (email, name, kdf_iter, role, session_epoch,
                                       account_key, pat_wrap_rc, pat_key_check)
                    VALUES (?,?,?,?,?,?,?,?)')
-        ->execute([$MAIL, 'Freigabeprobe', 310000, 'user', 0,
+        ->execute([$zielAdresse, 'Freigabeprobe', 310000, 'user', 0,
                    bin2hex(random_bytes(8)), $daten['wrap'], $daten['check']]);
     $uid = (int)$pdo->lastInsertId();
     $kennung = (string)$pdo->query("SELECT account_key FROM users WHERE id=$uid")->fetchColumn();
@@ -74,10 +89,11 @@ if ($schritt === 'quelle') {
 
     [$ok, $grund, $info] = edbak_sicherung_erzeugen($uid);
     if (!$ok) { fwrite(STDERR, "Backup: $grund\n"); exit(2); }
-
-    $zielId = (int)$pdo->query('SELECT id FROM users WHERE email = '
-        . $pdo->quote((string)$daten['ziel']))->fetchColumn();
-    if (!$zielId) { fwrite(STDERR, "Zielkonto nicht gefunden\n"); exit(2); }
+    /* Die Quelle gibt die Adresse ab, das Zielkonto bekommt sie zurueck. */
+    $pdo->prepare('UPDATE users SET email = ? WHERE id = ?')->execute([$MAIL, $uid]);
+    } finally {
+        $pdo->prepare('UPDATE users SET email = ? WHERE id = ?')->execute([$zielAdresse, $zielId]);
+    }
     /* Das Zielkonto leeren, damit die Zaehlung eindeutig ist — die Spur
      * zuerst, ueber `spur_lib.php` (CLAUDE.md 4), sonst bliebe sie verwaist. */
     require_once $w . '/spur_lib.php';
@@ -88,7 +104,16 @@ if ($schritt === 'quelle') {
     foreach (['missions', 'rest_segments', 'days'] as $t) {
         $pdo->prepare("DELETE FROM `$t` WHERE user_id = ?")->execute([$zielId]);
     }
-    edbak_freigeben($kennung, (string)$info['datei'], $zielId);
+    /* UEBER DEN EINEN WEG DER VERWALTUNG (`edbak_freigabe_erteilen()`):
+     * Regel, Protokoll und Mail. Davor der Gegenfall — an ein fremdes Konto
+     * geht es nicht, auch mit richtig abgetippter Adresse. */
+    $fremd = edbak_freigabe_erlaubt($kennung, ['account_key' => 'x', 'email' => 'fremd@example.invalid']);
+    [$erteilt, $erteiltText] = edbak_freigabe_erteilen($kennung, (string)$info['datei'], $zielId,
+                                                       $zielAdresse);
+    if (!$erteilt) { fwrite(STDERR, "Freigabe: $erteiltText\n"); exit(2); }
+    $protokolliert = (int)$pdo->query("SELECT COUNT(*) FROM protokoll_ereignisse
+                                        WHERE art = 'kontobackup_freigegeben'
+                                          AND betroffen_user_id = $zielId")->fetchColumn();
 
     $m = edbak_paket_kopf_lesen($kennung, (string)$info['datei']);
 
@@ -120,6 +145,7 @@ if ($schritt === 'quelle') {
                       'spurteile' => $m['spurteile'],
                       'zip_eintraege' => $eintraege, 'zip_versiegelt' => $versiegelt,
                       'begleit_versiegelt' => sk_versiegelt($begleitRoh),
+                      'fremd_erlaubt' => $fremd, 'protokolliert' => $protokolliert,
                       'quelle_blob' => (string)$daten['blob']]), "\n";
     exit(0);
 }

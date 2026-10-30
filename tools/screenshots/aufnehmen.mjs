@@ -244,7 +244,7 @@ const OHNE_WARTUNGSWEG = (WARTUNGSEITEN.length && !OERTLICH && !JOBS_TOKEN)
 if (OHNE_WARTUNGSWEG) {
   console.error(`WARNUNG: ${WARTUNGSEITEN.join(', ')} brauchen den `
     + `Wartungsmodus, und ${BASIS} liegt nicht auf diesem Rechner — die Datei `
-    + `server/wartung.lock wirkt dort nicht. Diese Seiten FALLEN AUS; der `
+    + `server/.zustand/wartung.lock wirkt dort nicht. Diese Seiten FALLEN AUS; der `
     + `Lauf misst die uebrigen und endet rot. Mit --jobs-token <Token> `
     + `(Betrieb → Hintergrundjobs) werden sie gemessen.`);
 }
@@ -1378,7 +1378,10 @@ const ausgefallen = [];
  * eine Datei, ruehrt der Lauf sie nicht an und loescht sie am Ende auch
  * nicht — sonst oeffnete ein Bilderlauf eine Installation, die jemand
  * ausdruecklich geschlossen hat. */
-const WARTUNGSDATEI = join(WURZEL, 'server', 'wartung.lock');
+// Seit Web 23.3.1 in `server/.zustand/` (R17-22, F-R17-47); der alte Ort im
+// Webroot gilt dort nur noch als Uebergang und wird hier nicht beschrieben.
+const WARTUNGSDATEI = join(WURZEL, 'server', '.zustand', 'wartung.lock');
+const WARTUNGSDATEI_ALT = join(WURZEL, 'server', 'wartung.lock');
 const TOR = join(WURZEL, 'tools', 'kette', 'tor.py');
 let wartungVonUns = false;
 
@@ -1422,9 +1425,10 @@ function wartungAn() {
     catch (ex) { return `Wartungsmodus nicht einschaltbar: ${ex.message}`; }
     return null;
   }
-  if (existsSync(WARTUNGSDATEI)) { return null; }   // fremde Wartung nicht anfassen
+  if (existsSync(WARTUNGSDATEI) || existsSync(WARTUNGSDATEI_ALT)) { return null; }   // fremde Wartung nicht anfassen
   wartungVonUns = true;
   try {
+    mkdirSync(dirname(WARTUNGSDATEI), { recursive: true });
     writeFileSync(WARTUNGSDATEI, JSON.stringify({
       seit: new Date().toISOString().replace(/\.\d+Z$/, 'Z'), von: 'Bilderlauf' }) + '\n');
   } catch (ex) { return `wartung.lock nicht schreibbar: ${ex.message}`; }

@@ -39,6 +39,9 @@ $pdo = db();
  * bleibt stehen. */
 $jobsMeldung = null;
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'jobs_token_neu') {
+    /* FRISCHER CODE (R17-26, Q-R17-21, E-R17-73), wie ein Rollentor VOR
+     * csrf_check(). Gilt fuer alle drei Tokens dieser Seite. */
+    zweitfaktor_frisch_verlangen('jobs_token_neu');
     csrf_check();
     try {
         jobs_token(true);
@@ -63,6 +66,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'jobs_
  * `JOBS_TOKEN` steht. */
 $ketteMeldung = null;
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'kette_token_neu') {
+    zweitfaktor_frisch_verlangen('kette_token_neu');
     csrf_check();
     try {
         kette_token(true);
@@ -76,6 +80,41 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'kette
     if ($ketteMeldung[0] === 'ok') {
         flash_setzen($ketteMeldung[0], $ketteMeldung[1], 'k-kette');
         header('Location: betrieb_jobs.php#k-kette');
+        exit;
+    }
+}
+
+/* Das Health-Token erzeugen oder die Abfrage abschalten (Web 23.5.0, R17-26,
+ * E-R17-72). Bis dahin stand es nur in `config.php`; wer es erneuern wollte,
+ * brauchte den Dateizugang. Derselbe Weg wie bei den beiden Tokens darueber.
+ * EIN Block fuer beide Handlungen, weil die Frische-Liste je Handlung genau
+ * einen Aufruf zaehlt (Z43). */
+$healthMeldung = null;
+$healthAktion  = (string)($_POST['action'] ?? '');
+if ($_SERVER['REQUEST_METHOD'] === 'POST'
+    && ($healthAktion === 'health_token_neu' || $healthAktion === 'health_token_aus')) {
+    zweitfaktor_frisch_verlangen('health_token');
+    csrf_check();
+    try {
+        if ($healthAktion === 'health_token_neu') {
+            $hatteEins = health_token() !== '';
+            health_token_neu();
+            $healthMeldung = ['ok', $hatteEins
+                ? 'Ein neues Health-Token steht bereit. Ein Monitoring mit dem bisherigen '
+                  . 'bekommt ab jetzt 403 — bitte dort austauschen.'
+                : 'Das Health-Token steht bereit. Trag es im Monitoring als Kopfzeile '
+                  . 'X-Health-Token ein.'];
+        } else {
+            health_token_aus();
+            $healthMeldung = ['ok', 'Die Health-Abfrage ist abgeschaltet; jede Anfrage '
+                                  . 'bekommt 403.'];
+        }
+    } catch (Throwable $ex) {
+        $healthMeldung = ['fehler', $ex->getMessage()];
+    }
+    if ($healthMeldung[0] === 'ok') {
+        flash_setzen($healthMeldung[0], $healthMeldung[1], 'k-health');
+        header('Location: betrieb_jobs.php#k-health');
         exit;
     }
 }
@@ -149,6 +188,7 @@ if ($flash !== null) {
     if ($flash['ort'] === 'k-zustand')       { $pauseMeldung ??= [$flash['ton'], $flash['text']]; }
     elseif ($flash['ort'] === 'k-ausloeser') { $jobsMeldung  ??= [$flash['ton'], $flash['text']]; }
     elseif ($flash['ort'] === 'k-kette')     { $ketteMeldung ??= [$flash['ton'], $flash['text']]; }
+    elseif ($flash['ort'] === 'k-health')    { $healthMeldung ??= [$flash['ton'], $flash['text']]; }
 }
 
 $jobs      = jobs_zustand();
@@ -171,6 +211,9 @@ if ($jobs !== []) {
         $ketteToken = kette_token();
     } catch (Throwable $ex) { $ketteToken = null; }
 }
+/* '' = keine Abfrage eingerichtet; null = nicht lesbar (Datenbank). */
+$healthToken = null;
+try { $healthToken = health_token(); } catch (Throwable $ex) { $healthToken = null; }
 
 ui_seite_start(['titel' => 'Hintergrundjobs']);
 ?>
@@ -356,6 +399,56 @@ ui_seite_start(['titel' => 'Hintergrundjobs']);
                                 . 'ungültig. Die nächste Auslieferung scheitert, bis '
                                 . 'das neue in GitHub als JOBS_TOKEN steht."'
                                 . ' data-confirm-ok="Neu erzeugen"']) ?>
+        </div>
+      </form>
+    <?php endif; ?>
+  <?php ui_karte_ende(); ?>
+
+  <?php /* ---- Monitoring (Web 23.5.0, R17-26, E-R17-72) ----------------------
+     *
+     * Das dritte Token, fuer `api/health.php`. Dieselben Bausteine wie in den
+     * zwei Karten darueber — Codeblock mit „Kopieren", Warnmeldung, leise
+     * Knoepfe mit Rueckfrage —, kein neuer (`CLAUDE.md` 5). Bis Web 23.4.x
+     * stand es nur in `config.php`. */ ?>
+  <?php ui_karte_start(['titel' => 'Monitoring', 'id' => 'k-health']); ?>
+    <?php if ($healthMeldung): ?>
+      <?= ui_meldung_markup($healthMeldung[0], $healthMeldung[1]) ?>
+    <?php endif; ?>
+    <p class="feld-hinweis">Mit diesem Token fragt ein eigenes Monitoring den Zustand
+       der Anlage ab — <code>api/health.php</code> mit der Kopfzeile
+       <code>X-Health-Token</code>. Die Antwort nennt Fassung, Datenbank, Migration,
+       Alter der Jobs und Speicher, keine Daten.
+       <a href="hilfe.php#12-9-health-endpunkt-fuer-das-eigene-monitoring">Wie das Monitoring fragt</a></p>
+    <?php if ($healthToken === null): ?>
+      <?= ui_meldung_markup('fehler', 'Das Health-Token ist gerade nicht lesbar.') ?>
+    <?php elseif ($healthToken === ''): ?>
+      <p class="feld-hinweis">Keine Abfrage eingerichtet — jede Anfrage bekommt 403.</p>
+      <form method="post" action="betrieb_jobs.php">
+        <?= csrf_field() ?><input type="hidden" name="action" value="health_token_neu">
+        <div class="listen-form-fuss">
+          <?= ui_knopf(['text' => 'Health-Token erzeugen', 'art' => 'leise', 'typ' => 'submit']) ?>
+        </div>
+      </form>
+    <?php else: ?>
+      <?= ui_meldung_markup('warn', 'Ein Geheimnis — nicht in eine Mail, nicht in ein '
+          . 'Ticket. In der Adresse statt der Kopfzeile steht es im Zugriffsprotokoll '
+          . 'des Hosters.') ?>
+      <?= ui_codeblock_lang($healthToken, 'Health-Token') ?>
+      <form method="post" action="betrieb_jobs.php">
+        <?= csrf_field() ?>
+        <div class="listen-form-fuss">
+          <?= ui_knopf(['text' => 'Neues Health-Token erzeugen', 'art' => 'leise',
+                        'typ' => 'submit',
+                        'attr' => ' name="action" value="health_token_neu"'
+                                . ' data-confirm="Das bisherige Health-Token wird damit '
+                                . 'ungültig. Ein Monitoring mit dem alten bekommt 403."'
+                                . ' data-confirm-ok="Neu erzeugen"']) ?>
+          <?= ui_knopf(['text' => 'Abfrage abschalten', 'art' => 'leise',
+                        'typ' => 'submit',
+                        'attr' => ' name="action" value="health_token_aus"'
+                                . ' data-confirm="Das Health-Token wird gelöscht. Jede '
+                                . 'Anfrage an api/health.php bekommt danach 403."'
+                                . ' data-confirm-ok="Abschalten"']) ?>
         </div>
       </form>
     <?php endif; ?>

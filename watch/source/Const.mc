@@ -40,12 +40,25 @@ module Const {
      *        muss einmal neu geschlossen werden, damit die Uhr den
      *        Schluessel bekommt. Dazu bekommen geparkte Pakete eine Frist
      *        von 30 Tagen (E-S11-11).
+     *   4.1  Feinschliff aus dem Review (R17-21): Das bestaetigte Paket geht
+     *        ueber seine Referenz aus der Liste, nicht ueber einen Platz,
+     *        der waehrend der Anfrage veralten konnte (F-R17-52); auch der
+     *        Zustand "abgemeldet" hat eine Frist von 30 Tagen (E-R17-22);
+     *        "http://" wird zu "https://" (F-R17-11); der Selbsttest merkt
+     *        sich "kaputt" nicht mehr dauerhaft (F-R17-53); der Schalter
+     *        "Touchbedienung verwenden" wirkt (F-R17-68). Der Alt-Weg --
+     *        Geraete-ID und API-Schluessel als App-Einstellungen -- ist fort
+     *        (E-R17-21): Eine Uhr, die noch ueber ihn sendete, koppelt
+     *        einmal neu. Neben-, nicht Hauptnummer: Seit 4.0 koppelt ohnehin
+     *        jede Uhr ueber den Code, und das Format auf dem Draht bleibt.
      */
-    const APP_VERSION = "4.0.0";
+    const APP_VERSION = "4.1.0";
 
     /* Wie lange ein geparktes (dauerhaft abgewiesenes) Paket auf der Uhr
      * liegen bleibt, bevor ein Sendelauf es raeumt (E-S11-11, wie Android
-     * AN-2): 30 Tage ab dem Parken. */
+     * AN-2): 30 Tage ab dem Parken. Seit Uhr 4.1.0 auch die Frist fuer
+     * ALLE Pakete einer abgemeldeten Uhr, ab der ersten Abmeldung
+     * (E-R17-22, Uploader.abmeldeFristPruefen). */
     const PARK_FRIST_S = 30 * 86400;
 
     /* Wie oft die Kopplungsansicht nachfragt, ob jemand den Code eingetragen

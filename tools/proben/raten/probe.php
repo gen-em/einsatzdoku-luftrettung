@@ -49,6 +49,13 @@ declare(strict_types=1);
  * rechnet die Loesung in PHP; ob der WORKER im Browser sie findet, misst der
  * Bedienweg `registrieren` der Bedienprobe, nicht diese Probe.
  *
+ * SEIT R17-20 AUCH DER PASSWORTNACHWEIS, UEBER HTTP (Abschnitt 12a): die
+ * sieben Stellen, die das Anmelde-Token verlangen, zaehlen alle in den Topf
+ * `login` (F-R17-32) — nach so vielen Fehlversuchen, wie er erlaubt, wird
+ * auch das richtige abgewiesen. Der Hash des Probenkontos traegt den
+ * Pfeffer (F-R17-01); die Gegenprobe zeigt, dass das richtige Token davor
+ * durchkommt.
+ *
  * SIE RAEUMT HINTER SICH AUF. Angelegt werden Zeilen in `rate_limits`,
  * `sicherheit_ereignisse` und `mail_warteschlange` unter eigenen Merkmalen
  * (Praefix `probe-`); am Ende sind sie weg, und die Zahl davor und danach
@@ -395,7 +402,7 @@ abschnitt('10  Welche Toepfe eine Leiter haben — und welche ausdruecklich nich
  * `notweg` (Notzugang der einzigen BetreiberIn, Schritt 18, SR-04) hat eine:
  * Fuenf Versuche je Stunde und eingetippter Adresse — wer Datei,
  * Datenbankwert und Passwort hat, braucht keine fuenf. */
-const TOEPFE_MIT_LEITER = ['blatt', 'ingest', 'ingest_ip', 'login', 'login_ip', 'notweg', 'salt', 'totp'];
+const TOEPFE_MIT_LEITER = ['blatt', 'ingest', 'ingest_ip', 'login', 'login_ip', 'notweg', 'notweg_ip', 'salt', 'totp'];
 
 $mitLeiter = []; $ohne = [];
 foreach (RATE_GRENZEN as $topf => $g) {
@@ -450,10 +457,23 @@ $health = static function (?string $token, ?string $kopf = null) use ($basis): a
  * erste Fassung wartete 1,2 s und sah beim leeren Eintrag noch den Token
  * des Falls davor (F-P5c-123). */
 $stellen = static function (array $werte): callable { $z = konfig_stellen($werte); sleep(3); return $z; };
+/* SEIT WEB 23.5.0 LIEGT DAS TOKEN IN `app_state` (R17-26, E-R17-72), nicht
+ * mehr in `config.php`; die Datei wird nur noch einmal gelesen, wenn der
+ * Eintrag ganz fehlt. Die Faelle unten stellen es deshalb dort — ohne
+ * Wartezeit, eine Datenbankzeile kennt keinen OPcache. Der Rueckweg legt den
+ * Stand von vorher zurueck, auch „kein Eintrag". */
+$tokenStellen = static function (string $wert) use ($pdo): callable {
+    $vorher = app_state_lesen('health_token');
+    app_state_setzen('health_token', $wert);
+    return static function () use ($vorher): void {
+        if ($vorher === null) { app_state_loeschen('health_token'); }
+        else { app_state_setzen('health_token', $vorher); }
+    };
+};
 $pdo->exec("DELETE FROM rate_limits WHERE topf = 'health'");
 
 $TOKEN = bin2hex(random_bytes(16));
-$zurueckKonfig = $stellen(['betrieb' => ['health_token' => $TOKEN]]);
+$zurueckKonfig = $tokenStellen($TOKEN);
 try {
     $ohne   = $health(null);
     $falsch = $health(bin2hex(random_bytes(16)));
@@ -549,7 +569,7 @@ try {
 
 /* ENDPUNKT AUS: leerer Eintrag. Dieselbe 403 wie ohne und mit falschem
  * Token — die Antwort verraet nicht, ob einer eingerichtet ist. */
-$zurueckKonfig = $stellen(['betrieb' => ['health_token' => '']]);
+$zurueckKonfig = $tokenStellen('');
 try { $aus = $health($TOKEN); } finally { $zurueckKonfig(); }
 pruef('Endpunkt aus (leerer Eintrag) → 403 `token`', $aus['code'] === 403 && ($aus['json']['error'] ?? '') === 'token',
       'HTTP ' . $aus['code']);
@@ -561,12 +581,36 @@ pruef('… alle drei 403 mit angeglichener Dauer (je mindestens 0,35 s, Spanne u
 /* DIE MENGE: 60 je Minute. Der Zaehler steht nach den Faellen oben auf
  * einigen Anfragen — geleert, dann genau 60 richtige, dann die 61. */
 $pdo->exec("DELETE FROM rate_limits WHERE topf = 'health'");
-$zurueckKonfig = $stellen(['betrieb' => ['health_token' => $TOKEN]]);
+$zurueckKonfig = $tokenStellen($TOKEN);
 try {
     $codes = [];
     for ($i = 1; $i <= 61; $i++) { $codes[$i] = $health($TOKEN)['code']; }
 } finally { $zurueckKonfig(); }
 $bis60 = array_count_values(array_slice($codes, 0, 60));
+
+/* DER UEBERGANG AUS `config.php` (R17-26). Fehlt der Eintrag ganz, nimmt der
+ * erste Abruf den Wert aus der Datei und legt ihn ab; ein LEERER Eintrag
+ * (abgeschaltet) wird nicht wieder aus der Datei gefuellt. Gegen den Stand
+ * vor 23.5.0: Dort galt allein die Datei — der zweite Fall gaebe 200. */
+$pdo->exec("DELETE FROM rate_limits WHERE topf = 'health'");
+$vorherEintrag = app_state_lesen('health_token');
+app_state_loeschen('health_token');
+$zurueckDatei = $stellen(['betrieb' => ['health_token' => $TOKEN]]);
+try {
+    $ueber = $health(null, $TOKEN);
+    $abgelegt = app_state_lesen('health_token');
+    app_state_setzen('health_token', '');
+    $leer = $health(null, $TOKEN);
+} finally {
+    $zurueckDatei();
+    if ($vorherEintrag === null) { app_state_loeschen('health_token'); }
+    else { app_state_setzen('health_token', $vorherEintrag); }
+}
+pruef('Übergang: ohne Eintrag gilt der Wert aus config.php, und er wird abgelegt (R17-26)',
+      $ueber['code'] === 200 && $abgelegt === $TOKEN,
+      'HTTP ' . $ueber['code'] . ', abgelegt ' . ($abgelegt === $TOKEN ? 'ja' : var_export($abgelegt, true)));
+pruef('… ein leerer Eintrag (abgeschaltet) wird nicht wieder aus der Datei gefüllt',
+      $leer['code'] === 403, 'HTTP ' . $leer['code']);
 pruef('60 Anfragen in einer Minute gehen durch, die 61. bekommt 429',
       ($bis60[200] ?? 0) === 60 && $codes[61] === 429,
       '1–60: ' . json_encode($bis60) . ' · 61: ' . $codes[61]);
@@ -898,6 +942,229 @@ $st->execute([$REG_MUSTER]);
 pruef('… und hinterher keine Probenkonten, Betriebsart wie vorher',
       (int)$st->fetchColumn() === 0 && _tor_lesen($pdo, 'konten_reg_art') === $regVorArt2,
       'Betriebsart ' . var_export(_tor_lesen($pdo, 'konten_reg_art'), true));
+
+/* ======================================================================== */
+abschnitt('12a  Passwortnachweis an sieben Stellen — ein Topf (R17-20, F-R17-32)');
+/* WAS DAS PROBLEM WAR. Sieben Stellen verlangen das Anmelde-Token, bevor sie
+ * etwas Folgenreiches tun; vier davon prueften es ohne Ratentopf. Mit einer
+ * erbeuteten Sitzung riet man dort ohne Sperre. Seit R17-20 laufen alle
+ * sieben ueber `passwort_nachweis()`.
+ *
+ * WIE GEMESSEN WIRD. Ein Probenkonto mit bekanntem Token — als Hash MIT
+ * Pfeffer (`anmeldehash_bilden()`), so dass derselbe Lauf den Pfeffer am
+ * Nachweis belegt —, eine Sitzung wie nach dem Code-Schritt. Je Stelle:
+ * so viele FALSCHE Token, wie der Topf `login` erlaubt, dann das RICHTIGE.
+ * Erwartet: Das richtige wird als „gesperrt" abgewiesen. Ohne Topf ginge es
+ * durch — und die Handlung geschaehe; die Gegenprobe ist deshalb das richtige
+ * Token vor den Fehlversuchen an einer harmlosen Stelle (`kontopaar` ohne
+ * gueltigen Schluessel: Der Nachweis gelingt, danach scheitert die Form).
+ * Zwischen den Stellen wird der Topf geleert. Das richtige Token loest an
+ * keiner Stelle etwas aus: Es kommt erst, wenn der Topf zu ist. */
+require_once $wurzel . '/server/sitzung_lib.php';
+require_once $wurzel . '/server/serverkrypto_lib.php';
+$NW_MAIL = 'probe-nachweis@ratenprobe.invalid';
+$pdo->prepare('DELETE FROM users WHERE email = ?')->execute([$NW_MAIL]);
+$pdo->prepare("INSERT INTO users (email, name, role, password_hash, kdf_salt, kdf_iter)
+               VALUES (?, 'Ratenprobe Nachweis', 'user', '', '', 310000)")->execute([$NW_MAIL]);
+$nwId  = (int)$pdo->lastInsertId();
+$nwTok = bin2hex(random_bytes(32));
+$nwHash = anmeldehash_bilden($nwId, $nwTok);
+$pdo->prepare('UPDATE users SET password_hash = ? WHERE id = ?')->execute([$nwHash, $nwId]);
+$nwEpoch = (int)$pdo->query('SELECT session_epoch FROM users WHERE id = ' . $nwId)->fetchColumn();
+$nwSid  = 'ratenprobe' . bin2hex(random_bytes(10));
+$nwCsrf = bin2hex(random_bytes(16));
+$nwBind = bin2hex(random_bytes(32));
+$nwOrt = is_dir(sitzung_ablage_pfad()) ? sitzung_ablage_pfad() : (string)(session_save_path() ?: sys_get_temp_dir());
+/* IN EINEM KINDPROZESS: Diese Probe hat laengst ausgegeben, und
+ * `session_start()` geht nur vor der ersten Ausgabe (die Rollenprobe legt
+ * ihre Sitzungen deshalb ganz oben an). Dieselbe Sitzung, wie `login.php`
+ * sie nach dem Code-Schritt hinterlaesst — mit Bindung (SR-01) und frischem
+ * Code. */
+$nwDaten = ['user_id' => $nwId, 'epoch' => $nwEpoch, 'last_seen' => time(), 'csrf' => $nwCsrf,
+            'bindung' => hash('sha256', $nwBind), 'zf_frisch_bis' => time() + 3600];
+$nwSkript = tempnam(sys_get_temp_dir(), 'ratenprobe-sitzung-');
+file_put_contents($nwSkript, '<?php session_save_path(' . var_export($nwOrt, true) . '); session_id('
+    . var_export($nwSid, true) . '); session_start(); $_SESSION = ' . var_export($nwDaten, true)
+    . '; session_write_close();');
+shell_exec(escapeshellarg(PHP_BINARY) . ' ' . escapeshellarg($nwSkript));
+@unlink($nwSkript);
+$nwKeks = 'PHPSESSID=' . $nwSid . '; ' . SITZUNG_COOKIES['bindung']['name'] . '=' . $nwBind;
+$nwHole = static function (string $pfad, array $felder, bool $json) use ($basis, $nwKeks, $nwCsrf): array {
+    $ch = curl_init($basis . '/' . $pfad);
+    $kopf = ['Cookie: ' . $nwKeks];
+    if ($json) { $kopf[] = 'Content-Type: application/json'; $kopf[] = 'X-CSRF: ' . $nwCsrf; }
+    else { $felder['csrf'] = $nwCsrf; }
+    curl_setopt_array($ch, [CURLOPT_RETURNTRANSFER => true, CURLOPT_POST => true,
+        CURLOPT_POSTFIELDS => $json ? (string)json_encode($felder) : http_build_query($felder),
+        CURLOPT_HTTPHEADER => $kopf, CURLOPT_TIMEOUT => 60, CURLOPT_PROXY => '']);
+    $rumpf = (string)curl_exec($ch);
+    $code = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    curl_close($ch);
+    return ['code' => $code, 'rumpf' => html_entity_decode($rumpf)];
+};
+$_SERVER['REMOTE_ADDR'] = '127.0.0.1';
+$nwMerkmale = [rate_merkmal_kennung($NW_MAIL), rate_merkmal_ip()];
+$nwLeeren = static function () use ($pdo, $nwMerkmale): void {
+    $in = implode(',', array_map([$pdo, 'quote'], $nwMerkmale));
+    $pdo->exec("DELETE FROM rate_limits WHERE topf = 'login' AND merkmal IN ($in)");
+    $pdo->exec("DELETE FROM sicherheit_ereignisse WHERE merkmal IN ($in)");
+};
+$nwMax = (int)(rate_grenze('login')['max'] ?? 10);
+/* Je Stelle: Pfad, Felder mit Token-Platzhalter, JSON?, „gesperrt"-Erkennung. */
+$nwFalsch = str_repeat('0', 64);
+$nwStellen = [
+    'kdf_upgrade (vorher ohne Topf)' => ['api/kdf_upgrade.php',
+        ['alt_token' => '@', 'neu_token' => str_repeat('1', 64), 'neu_iter' => KDF_ITER_ZIEL], true,
+        static fn (array $r): bool => $r['code'] === 429],
+    'Adresswechsel (vorher ohne Topf)' => ['einstellungen.php?t=profil',
+        ['action' => 'profile', 'name' => 'Ratenprobe Nachweis', 'email' => 'probe-nachweis-neu@ratenprobe.invalid',
+         'old_token' => '@'], false,
+        static fn (array $r): bool => str_contains($r['rumpf'], 'Zu viele falsche Passwörter')],
+    'Kontoloeschung (vorher ohne Topf, F-R17-67)' => ['einstellungen.php?t=profil',
+        ['action' => 'konto_loeschen', 'loesch_token' => '@'], false,
+        static fn (array $r): bool => str_contains($r['rumpf'], 'Zu viele falsche Passwörter')],
+    'Passwortwechsel (vorher ohne Topf)' => ['einstellungen.php?t=profil',
+        ['action' => 'password', 'old_token' => '@', 'new_token' => '', 'new_salt' => ''], false,
+        static fn (array $r): bool => str_contains($r['rumpf'], 'Zu viele falsche Passwörter')],
+    'schluessel_erneuern' => ['api/schluessel_erneuern.php', ['token' => '@'], false,
+        static fn (array $r): bool => $r['code'] === 429],
+    'kontopaar' => ['api/kontopaar.php', ['aktion' => 'anlegen', 'token' => '@'], true,
+        static fn (array $r): bool => $r['code'] === 429],
+    'rueckweg_anlegen' => ['api/rueckweg_anlegen.php', ['token' => '@'], true,
+        static fn (array $r): bool => $r['code'] === 429],
+];
+try {
+    /* Gegenprobe: das richtige Token geht durch den Nachweis (Topf leer). */
+    $nwLeeren();
+    $r = $nwHole('api/kontopaar.php', ['aktion' => 'anlegen', 'token' => $nwTok], true);
+    $fehler = (string)(json_decode($r['rumpf'], true)['error'] ?? '');
+    /* 400 MIT DEM FEHLER DER FORM: Der Nachweis ist bestanden, erst der
+     * fehlende Schluessel scheitert. Alles andere (401 Sitzung, 403 Passwort,
+     * 429) hiesse, die Probe misst nicht den Nachweis. */
+    pruef('Gegenprobe: richtiges Token mit Pfeffer besteht den Nachweis',
+          $r['code'] === 400 && !in_array($fehler, ['passwort', 'gesperrt', 'anteil', 'csrf'], true),
+          'HTTP ' . $r['code'] . ', error ' . ($fehler !== '' ? $fehler : '—'));
+    foreach ($nwStellen as $name => [$pfad, $felder, $json, $gesperrt]) {
+        $nwLeeren();
+        $mit = static fn (string $t): array => array_map(static fn ($v) => $v === '@' ? $t : $v, $felder);
+        for ($i = 0; $i < $nwMax; $i++) { $nwHole($pfad, $mit($nwFalsch), $json); }
+        $r = $nwHole($pfad, $mit($nwTok), $json);
+        pruef($name . ': nach ' . $nwMax . ' Fehlversuchen auch das richtige gesperrt',
+              $gesperrt($r), 'HTTP ' . $r['code']);
+    }
+    $nachH = (string)$pdo->query('SELECT password_hash FROM users WHERE id = ' . $nwId)->fetchColumn();
+    $nachM = (string)$pdo->query('SELECT email FROM users WHERE id = ' . $nwId)->fetchColumn();
+    pruef('… und das Konto ist unberuehrt (Hash, Adresse, keine Loeschung)',
+          $nachH === $nwHash && $nachM === $NW_MAIL, 'Adresse ' . $nachM);
+} finally {
+    $nwLeeren();
+    @unlink($nwOrt . '/sess_' . $nwSid);
+    $pdo->prepare('DELETE FROM protokoll_ereignisse WHERE betroffen_user_id = ? OR urheber_user_id = ?')
+        ->execute([$nwId, $nwId]);
+    $pdo->prepare('DELETE FROM users WHERE id = ?')->execute([$nwId]);
+}
+
+/* ======================================================================== */
+abschnitt('12b  Ein Anschluss, viele Konten — Anmeldung und Notzugang (R17-22, F-R17-36, -37)');
+/* WAS DAS PROBLEM WAR (F-R17-36). Der Topf `login` (10) zaehlte Konto UND
+ * Adresse. Zehn Fehlversuche von einem Anschluss — an zehn ERFUNDENEN
+ * Adressen — sperrten damit den ganzen Anschluss, lange bevor `login_ip` mit
+ * seinen 50 griff: eine Klinik hinter einem NAT, bis zu einer Stunde. Die
+ * Probe klopfte bis dahin nur `login_ip` allein und sah es nicht. Seit Web
+ * 23.3.1 zaehlt `login` nur das Konto.
+ *
+ * UND F-R17-37: Der Notzugang zaehlte nur die eingetippte Adresse. Wer sie
+ * je Anfrage wechselte, bekam unbegrenzt bcrypt-Rechnungen. Seit Web 23.3.1
+ * gibt es dazu `notweg_ip` (20 je Stunde).
+ *
+ * Beides UEBER HTTP, weil der Fehler im Aufruf der Seite lag, nicht in der
+ * Bibliothek. Die Adressen sind erfunden; sie zu probieren legt nichts an. */
+$_SERVER['REMOTE_ADDR'] = '127.0.0.1';
+$naIp = rate_merkmal_ip();
+$naLeeren = static function () use ($pdo, $naIp): void {
+    $q = $pdo->prepare("DELETE FROM rate_limits WHERE (merkmal = ? AND topf IN
+                          ('login', 'login_ip', 'salt', 'notweg', 'notweg_ip'))
+                          OR merkmal LIKE 'id:probe-nat-%'");
+    $q->execute([$naIp]);
+    $q = $pdo->prepare("DELETE FROM sicherheit_ereignisse WHERE merkmal = ? OR merkmal LIKE 'id:probe-nat-%'");
+    $q->execute([$naIp]);
+};
+/* Eine Seite mit eigener Sitzung: erst GET (Sitzung und Formular-Token),
+ * dann POST. Gibt den Rumpf der Antwort zurueck. */
+$naSeite = static function (string $pfad) use ($basis): Closure {
+    $keks = [];
+    $hole = static function (string $methode, array $felder = []) use ($basis, $pfad, &$keks): string {
+        $paare = [];
+        foreach ($keks as $n => $v) { $paare[] = $n . '=' . $v; }
+        $ch = curl_init($basis . '/' . $pfad);
+        curl_setopt_array($ch, [CURLOPT_RETURNTRANSFER => true, CURLOPT_HEADER => true,
+            CURLOPT_FOLLOWLOCATION => false, CURLOPT_TIMEOUT => 60, CURLOPT_PROXY => '',
+            CURLOPT_HTTPHEADER => $paare !== [] ? ['Cookie: ' . implode('; ', $paare)] : []]);
+        if ($methode === 'POST') {
+            curl_setopt($ch, CURLOPT_POST, true);
+            curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($felder));
+        }
+        $roh = (string)curl_exec($ch);
+        $kl = (int)curl_getinfo($ch, CURLINFO_HEADER_SIZE);
+        curl_close($ch);
+        if (preg_match_all('/^Set-Cookie:\s*([^=;\s]+)=([^;\r\n]*)/mi', substr($roh, 0, $kl), $m, PREG_SET_ORDER)) {
+            foreach ($m as $c) { $keks[$c[1]] = $c[2]; }
+        }
+        return html_entity_decode(substr($roh, $kl));
+    };
+    $csrf = preg_match('/name="csrf" value="([0-9a-f]+)"/', $hole('GET'), $m) ? $m[1] : '';
+    return static fn (array $felder): string => $hole('POST', ['csrf' => $csrf] + $felder);
+};
+$naFalsch = json_encode(['600000' => str_repeat('0', 64)]);
+try {
+    $naLeeren();
+    $max = (int)(rate_grenze('login')['max'] ?? 10);
+    $anmelden = $naSeite('login.php');
+    for ($i = 1; $i <= $max; $i++) {
+        $anmelden(['email' => 'probe-nat-' . $i . '@ratenprobe.invalid', 'tokens' => $naFalsch]);
+    }
+    $adr = stand('login', $naIp);
+    pruef($max . ' Fehlversuche an ' . $max . ' Konten: der Topf `login` zaehlt den Anschluss NICHT',
+          $adr === null, $adr === null ? 'keine Zeile' : 'Zeile mit ' . $adr['versuche'] . ' Versuchen');
+    $r = $anmelden(['email' => 'probe-nat-elf@ratenprobe.invalid', 'tokens' => $naFalsch]);
+    pruef('… und der elfte Versuch an einem weiteren Konto ist NICHT gesperrt',
+          !str_contains($r, 'Zu viele Anmeldeversuche'),
+          str_contains($r, 'Zu viele Anmeldeversuche von diesem Anschluss') ? 'Anschluss gesperrt'
+          : (str_contains($r, 'Zu viele Anmeldeversuche') ? 'Konto gesperrt' : 'normale Abweisung'));
+    $ip = stand('login_ip', $naIp);
+    pruef('… waehrend `login_ip` jeden mitzaehlt (' . ($max + 1) . ')',
+          $ip !== null && (int)$ip['versuche'] === $max + 1, 'Versuche ' . ($ip['versuche'] ?? '—'));
+    /* Gegenrichtung: Das KONTO wird weiter nach zehn gesperrt. */
+    for ($i = 1; $i <= $max; $i++) {
+        $anmelden(['email' => 'probe-nat-eins@ratenprobe.invalid', 'tokens' => $naFalsch]);
+    }
+    $r = $anmelden(['email' => 'probe-nat-eins@ratenprobe.invalid', 'tokens' => $naFalsch]);
+    pruef('… und ein Konto ist nach ' . $max . ' Fehlversuchen gesperrt, mit der Konto-Meldung',
+          str_contains($r, 'Zu viele Anmeldeversuche für diesen Namen'),
+          str_contains($r, 'Zu viele Anmeldeversuche von diesem Anschluss') ? 'Anschluss-Meldung'
+          : (str_contains($r, 'Zu viele Anmeldeversuche für diesen Namen') ? 'Konto-Meldung' : 'nicht gesperrt'));
+
+    /* F-R17-37: der Notzugang, Adresse je Anfrage gewechselt */
+    $naLeeren();
+    $nmax = (int)(rate_grenze('notweg_ip')['max'] ?? 0);
+    pruef('Der Topf `notweg_ip` steht auf 20 je Stunde', $nmax === 20, (string)$nmax);
+    $notweg = $naSeite('zweitfaktor_notweg.php');
+    for ($i = 1; $i <= $nmax; $i++) {
+        $notweg(['email' => 'probe-nat-n' . $i . '@ratenprobe.invalid', 'tokens' => $naFalsch,
+                 'wert' => str_repeat('0', 64)]);
+    }
+    $r = $notweg(['email' => 'probe-nat-n-letzt@ratenprobe.invalid', 'tokens' => $naFalsch,
+                  'wert' => str_repeat('0', 64)]);
+    pruef('Notzugang: nach ' . $nmax . ' Adressen von einem Anschluss ist der Anschluss gesperrt',
+          str_contains($r, 'Zu viele Versuche von diesem Anschluss'),
+          str_contains($r, 'Zu viele Versuche von diesem Anschluss') ? 'Anschluss-Meldung'
+          : (str_contains($r, 'Zu viele Versuche für diese Adresse') ? 'Adress-Meldung' : 'nicht gesperrt'));
+    $ein = stand('notweg', rate_merkmal_kennung('probe-nat-n1@ratenprobe.invalid'));
+    pruef('… und jede einzelne Adresse hat nur einen Versuch', $ein !== null && (int)$ein['versuche'] === 1,
+          'Versuche ' . ($ein['versuche'] ?? '—'));
+} finally {
+    $naLeeren();
+}
 
 /* ======================================================================== */
 aufraeumen();

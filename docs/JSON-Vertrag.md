@@ -74,12 +74,12 @@ Eine Ausnahme steht ausdrücklich darin: Die **Präfixe** der Client-Kennung
 
 | Header | Inhalt |
 |---|---|
-| `X-Device-Id` | Öffentliche Geräte-ID (vom Admin beim Anlegen des Geräts vergeben) |
-| `X-Api-Key` | Geheimer Geräteschlüssel (Klartext nur auf der Uhr; Server speichert Hash) |
+| `X-Device-Id` | Öffentliche Geräte-ID (vergibt die Kopplung, Abschnitt 1; seit Web 23.3.0 der einzige Weg — die Handanlage im Web ist entfallen, E-R17-56) |
+| `X-Api-Key` | Geheimer Geräteschlüssel (Klartext nur auf dem sendenden Gerät — der Uhr-App oder dem Handy; die Wear-OS-Uhr kennt keinen, E-S4-11; der Server speichert einen SHA-256) |
 
 Antwort bei ungültigem Schlüssel: `401 {"error":"auth"}`.
 
-## 1a. Kopplung (`pair.php`) — seit Uhr ‹Fassung› / Web 13.0.0
+## 1a. Kopplung (`pair.php`) — seit Uhr 3.0.0 / Web 13.0.0
 
 `pair.php` kennt **vier** Anliegen: `start`, `status` und `bestaetigen`
 (dieser Abschnitt) und `trennen` (Abschnitt 1b). Alle vier gehen per `POST`
@@ -251,7 +251,7 @@ Mit Kopfzeilen. `antwort` ist Pflicht und lautet `ja` oder `nein`:
 | `400 {"error":"payload"}` | `antwort` fehlt oder lautet etwas anderes als `ja` oder `nein`. Zählt **nicht** im Ratenschutz: Hier rät niemand, hier ist ein Client falsch gebaut |
 | `401 {"error":"auth"}` | Kennung unbekannt oder Schlüssel falsch — wie in 1a.2 |
 | `409 {"error":"nicht_beansprucht"}` | `ja`, aber noch hat kein Konto den Code eingegeben. **Die Sitzung bleibt bestehen**; ein Gerät, das sich an dieses Dokument hält, sendet `ja` nur nach `beansprucht` |
-| `409 {"error":"device_limit","meldung":"…"}` | das Konto hat bereits so viele Geräte, wie es haben darf (zwischen der Eingabe im Web und dem Ja kann eines von Hand dazugekommen sein). **Die Sitzung ist gelöscht**; erst ein Gerät im Web löschen, dann von vorn |
+| `409 {"error":"device_limit","meldung":"…"}` | das Konto hat bereits so viele Geräte, wie es haben darf (zwischen der Eingabe im Web und dem Ja kann eine zweite Kopplung fertig geworden sein; bis Web 23.2.0 auch ein von Hand angelegtes). **Die Sitzung ist gelöscht**; erst ein Gerät im Web löschen, dann von vorn |
 | `410 {"error":"abgelaufen"}` | Frist vorbei, und die Antwort war `ja`. Von vorn |
 | `429 {"error":"zu_viele_versuche","meldung":"…"}` | Ratenschutz |
 | `500 {"error":"server"}` | das Anlegen scheiterte. Die Sitzung besteht weiter; das Gerät darf wiederholen |
@@ -496,7 +496,7 @@ sie an das neue. Die Uhr verweigert das Trennen deshalb, solange
 - **Zeitstempel:** ISO 8601 in UTC mit `Z`-Suffix, Sekundenauflösung (`2026-07-16T08:31:05Z`). Track-Punkte nutzen kompakte Unix-Epochen (Sekunden, UTC).
 - **Idempotenz:** Jeder Einsatz und jedes Ruhe-Segment trägt eine von der Uhr erzeugte `client_ref` (eindeutig pro Gerät). Wiederholtes Senden derselben Daten ist unschädlich — **auch in der falschen Reihenfolge** (seit Web 13.0.1): Ein Feld, das ein Paket nicht trägt (`ended_at`, `distance_m` und `ascent_m` sind `null`, solange der Einsatz läuft), löscht auf dem Server nichts. Ein Wert überschreibt, ein `null` lässt stehen. Eine Berichtigung bleibt damit möglich; ein einmal gesetztes Ende verschwindet nicht mehr, so wenig wie `final` zurückgeht.
 - **Inkrementeller Track:** Track-Punkte werden mit fortlaufender Sequenznummer gesendet. Die Uhr sendet ab `seq_from`; der Server ignoriert bereits bekannte Sequenzen und antwortet mit `next_seq`, ab dem die Uhr weitersenden soll. Nach bestätigtem Empfang darf die Uhr ihren lokalen Puffer bis `next_seq` leeren.
-- **Diensttag:** Feld `day` (Format `YYYY-MM-DD`), ein **Ortsdatum**. Seit Vertrag 1.3 ist es **nicht mehr der Zuordnungsschlüssel**, sondern nur noch Sortier- und Anzeigedatum — die Zuordnung leistet `day_ref` (Abschnitt 2.1). **Die beiden Clients bilden es verschieden, und das ist erlaubt:** Die Uhr nimmt den Tag des jeweiligen Datensatzes (`Util.localDay()` beim Einsatz- bzw. Segmentbeginn), die Handy-App den Tag des **Dienstbeginns** für alle Pakete des Dienstes (`Dienstklammer.kt`). Bis zur Wiederaufnahme der zweiten Gegenprüfung stand hier die zweite Variante als einzige — sie beschrieb einen Uhr-Code, den es seit `52f0191` nicht mehr gibt. Wer eine Regel daraus ableiten will, muss wissen: **Der Abstand zwischen `day` und den Zeitstempeln eines Pakets ist nach oben nicht begrenzt.** Ein Dienst hat keine Höchstdauer, und ein zweiter Dienstbeginn bei laufendem Dienst setzt in der Handy-App den alten fort (E-R45-13). Der Server verlässt sich deshalb nirgends darauf (`docs/Technik.md` 4.99a2).
+- **Diensttag:** Feld `day` (Format `YYYY-MM-DD`), ein **Ortsdatum**. Seit Vertrag 1.3 ist es **nicht mehr der Zuordnungsschlüssel**, sondern nur noch Sortier- und Anzeigedatum — die Zuordnung leistet `day_ref` (Abschnitt 2.1). **Die beiden Clients bilden es verschieden, und das ist erlaubt:** Die Uhr nimmt den Tag des jeweiligen Datensatzes (`Util.localDay()` beim Einsatz- bzw. Segmentbeginn), die Handy-App den Tag des **Dienstbeginns** für alle Pakete des Dienstes (`Dienstklammer.kt`). Bis zur Wiederaufnahme der zweiten Gegenprüfung stand hier die zweite Variante als einzige — sie beschrieb einen Uhr-Code, den es seit `52f0191` nicht mehr gibt. Wer eine Regel daraus ableiten will, muss wissen: **Der Abstand zwischen `day` und den Zeitstempeln eines Pakets ist nach oben nicht begrenzt.** Ein Dienst hat keine Höchstdauer, und ein zweiter Dienstbeginn bei laufendem Dienst setzt in der Handy-App den alten fort (E-R45-13). Der Server verlässt sich deshalb nirgends darauf (`docs/Technik.md` 4.22).
 - **Nachzügler:** Bei fehlender Verbindung puffert die Uhr und sendet später identisch nach — keine Sonderfelder nötig.
 - **Die Ablage auf dem Server geht die Uhr nichts an** (Nachtrag S2, ohne
   Vertragsänderung). Seit Web 22 liegen Spurpunkte als verschlossene Stücke
@@ -509,7 +509,7 @@ sie an das neue. Die Uhr verweigert das Trennen deshalb, solange
   Abschnitt 5. Der Grund, es hier trotzdem zu nennen: Wer den Vertrag liest,
   um einen Fehler zu suchen, soll wissen, dass hinter „gespeichert" ab dieser
   Fassung mehr als eine Zeilentabelle steht (Einzelheiten in `docs/Technik.md`,
-  Abschnitt 4.97).
+  Abschnitt 4.6).
 - **Seit Web 22.0.1 (S11-04a) kommen Ortsdaten nur noch verschlossen**
   (Konzept S11, E-S11-09). Spur, Koordinate jeder Phase und Reanimation
   verschließt das Gerät vor dem Senden mit dem Kontoschlüssel aus der
@@ -734,7 +734,7 @@ Android 0.18.0 (S11-09).
 **Geräte senden nur diese Form (Stufe 1).** Die Stufen 2 und 3 — zusammengefügt
 und gepackt, ausgedünnt — entstehen seit Web 22.6.0 im Wartungslauf des
 Browsers und haben eine eigene Innenform (gepackte Spalten, Ort
-`seq_from:punkte:stufe:n_original`, `docs/Technik.md` 4.99s). Ein Gerät sieht
+`seq_from:punkte:stufe:n_original`, `docs/Technik.md` 4.40). Ein Gerät sieht
 davon nur die Wirkung auf die Marke: Unter `seq_from + n_original` eines
 gepackten Stücks ist alles schon da, und ein Stück über der Marke einer
 ausgedünnten Spur zählt als `dropped_points`.
@@ -757,7 +757,7 @@ Liste der Sitzungen, `art` eine Reanimationsart aus 3.3.
 Browser verschließt eine Einsatzhülle desselben Formats, wenn ein Einsatz im
 Web gespeichert wird — bei einem dort angelegten Einsatz gebunden an eine
 `client_ref` der Form `man-` und 16 Hexziffern. Die Zeiten rechnet er wie der
-Server (`docs/Technik.md` 4.99s); einem Gerät gegenüber ändert sich nichts.
+Server (`docs/Technik.md` 4.40); einem Gerät gegenüber ändert sich nichts.
 Ein so gespeicherter Einsatz trägt `uhr_gesperrt = 1`, und eine nachliefernde
 Uhr ersetzt seine Hülle nicht.
 
@@ -830,7 +830,7 @@ Zusätzlich können auftreten:
 > angenommen — nur der Zeitraum eines Diensttags, den der Server vor mehr
 > als 72 Stunden angelegt hat, wird von ihnen nicht mehr fortgeschrieben
 > (4.4; seit Web 21.3.0 zählt dafür `days.created_at`, bis dahin das jüngste
-> Anlegen eines seiner Datensätze). Der Grund steht in `docs/Technik.md` 4.99a2; für die
+> Anlegen eines seiner Datensätze). Der Grund steht in `docs/Technik.md` 4.22; für die
 > Uhr ändert sich nichts, was sie tun müsste.
 
 > **Zeiten, die nicht zum `day` passen, schreiben den Diensttag nicht fort**
@@ -904,7 +904,7 @@ Anliegen, und die Skript-Endpunkte unter `/api/`. Ausgenommen sind die
 Skripte, die die Wartung selbst braucht (`update.php`,
 `wiederherstellen.php`, `jobs.php`, `login.php`, `logout.php`,
 `install.php`); sie antworten wie sonst. Einzelheiten und Betriebsablauf:
-`docs/Technik.md`, Abschnitte 4.99c und 7.
+`docs/Technik.md`, Abschnitte 4.24 und 13.
 
 ## 6. Chunk-Größen
 

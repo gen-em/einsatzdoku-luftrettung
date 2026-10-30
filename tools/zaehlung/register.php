@@ -600,4 +600,16 @@ return [
  'regel' => ['art' => 'muster', 'muster' => '~[\'"]\*\.txt[\'"]|\{32\}\)\\\\\.txt~'],
  'start' => 4, 'decke_jetzt' => 0, 'decke_ziel' => 0],
 
+/* ---- R17-22: kein Markup im Meldungstext (F-R17-49) --------------------- */
+
+['kennung' => 'Z45', 'paket' => 'R17-22',
+ 'beschreibung' => 'Tag in einem Textargument von ui_meldung() oder ui_meldung_markup()',
+ 'grund' => 'F-R17-49: Der Baustein maskiert seinen Text; ein Tag darin '
+          . 'erscheint als Text. Zweimal im Bestand bis Web 23.3.0 '
+          . '(betrieb_sicherheit.php, doku_seite.php), einmal davor auf der '
+          . 'Jobseite. Hervorhebung traegt der Auftakt, Markup nur der Knopf.',
+ 'sicht' => 'php_mit_zeichenketten', 'bereich' => 'php', 'ausser' => [],
+ 'regel' => ['art' => 'eigen', 'name' => 'meldung_markup'],
+ 'start' => 2, 'decke_jetzt' => 0, 'decke_ziel' => 0],
+
 ];

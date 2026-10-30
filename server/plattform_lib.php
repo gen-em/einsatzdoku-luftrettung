@@ -367,7 +367,7 @@ function plattform_pruefen(?PDO $pdo = null, bool $mitNetz = false): array
     /* ---- 5 Schreibrechte, je mit Probedatei -------------------------------- */
     $orte = [
         'wurzel'  => ['Anwendungswurzel', __DIR__,
-                      '`wartung.lock` und bei der Einrichtung `config.php` und `install.lock`'],
+                      '`.zustand/` (Wartungsschalter, Überlastzähler) und bei der Einrichtung `config.php` und `install.lock`'],
         'ablage'  => ['Ablage der Sicherungen', __DIR__ . '/sicherungen',
                       'Konto-Backups und Komplett-Stände'],
         'tempdir' => ['Temporäres Verzeichnis', sys_get_temp_dir(),

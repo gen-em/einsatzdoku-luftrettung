@@ -179,9 +179,13 @@ if ($row && $_SERVER['REQUEST_METHOD'] === 'POST') {
                . 'Es wurde nichts geändert.';
     } else {
         try {
+            /* MIT PFEFFER (R17-20): `anmeldehash_bilden()` haengt den Hash an
+             * den aktuellen Anteil, wenn einer ausgeliefert wird — dieselbe
+             * Regel wie fuer die Huelle eine Zeile darueber. */
+            $istDemoKonto = demo_ist_demo((int)$row['user_id']);
             db_transaktion(db(), function (PDO $pdo) use ($erstvergabe, $neuTok, $neuSalt,
                                                           $neuIter, $wrapPw, $wrapRc,
-                                                          $keyChk, $row): void {
+                                                          $keyChk, $row, $istDemoKonto): void {
             if ($erstvergabe) {
                 // Passwort und BEIDE Huellen in einem Zug — ein Konto ohne
                 // Wiederherstellungs-Huelle waere nach einem Reset verloren.
@@ -190,7 +194,7 @@ if ($row && $_SERVER['REQUEST_METHOD'] === 'POST') {
                                                 pat_wrap_pw = ?, pat_wrap_rc = ?,
                                                 pat_key_check = ?
                                WHERE id = ?')
-                    ->execute([password_hash($neuTok, PASSWORD_DEFAULT), $neuSalt,
+                    ->execute([anmeldehash_bilden((int)$row['user_id'], $neuTok, $istDemoKonto), $neuSalt,
                                $neuIter, $wrapPw, $wrapRc,
                                $keyChk !== '' ? $keyChk : null,
                                (int)$row['user_id']]);
@@ -202,7 +206,7 @@ if ($row && $_SERVER['REQUEST_METHOD'] === 'POST') {
                                                 kdf_iter = ?,
                                                 pat_wrap_pw = ?, pat_key_check = ?
                                WHERE id = ?')
-                    ->execute([password_hash($neuTok, PASSWORD_DEFAULT), $neuSalt,
+                    ->execute([anmeldehash_bilden((int)$row['user_id'], $neuTok, $istDemoKonto), $neuSalt,
                                $neuIter, $wrapPw,
                                $keyChk !== '' ? $keyChk : null,
                                (int)$row['user_id']]);

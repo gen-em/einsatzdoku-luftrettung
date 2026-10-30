@@ -101,6 +101,7 @@ require_once __DIR__ . '/geraete_lib.php';
 require_once __DIR__ . '/kopplung_lib.php';
 require_once __DIR__ . '/kontopaar_lib.php';   // kp_fuer_geraet() (S11-03)
 require_once __DIR__ . '/format_lib.php';   // datum_zeit_text() fuer die Mailfelder (Schritt 15/AP7)
+require_once __DIR__ . '/einstieg_lib.php'; // erststart_erledigt() (R17-21, F-R17-70)
 
 /* DIE KOPFZEILEN SETZT `db.php` (P5a/AP4a, Nr. 203) — `json_out()`,
  * `json_roh_out()` oder, wo die Antwort nicht das Ende ist, `json_kopf()`.
@@ -309,6 +310,14 @@ if ($sitzung !== null) {
                            $frisch['geraet_art'], $frisch['geraet_modell'], $frisch['geraet_teil']]);
             $pdo->prepare('DELETE FROM pair_sessions WHERE id = ?')->execute([$sid]);
             $pdo->commit();
+            /* DER DRITTE SCHRITT DES ERSTSTARTS IST ERLEDIGT (F-R17-70).
+             * Bis Web 23.3.0 setzte ihn nur die Handanlage auf der
+             * Geraeteseite — der Weg, den kaum jemand ging und den R17-21
+             * gestrichen hat. Wer koppelte, sah „Uhr oder Handy koppeln" auf
+             * der Startseite weiter offen. Nach dem Commit: Der Vermerk ist
+             * eine Anzeige, er darf die Kopplung nicht zurueckrollen, und
+             * `erststart_erledigt()` faengt seine Fehler selbst. */
+            erststart_erledigt($ownerId, ERSTSTART_GERAET);
         }
     } catch (Throwable $ex) {
         if ($pdo->inTransaction()) { $pdo->rollBack(); }

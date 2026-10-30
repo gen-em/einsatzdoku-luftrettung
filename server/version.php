@@ -8311,5 +8311,118 @@ declare(strict_types=1);
  *   eine Nummer, die Nr. 393 vier Tage vorher schon vergeben hatte
  *   (F-R17-64). Ausgeliefert war keine der beiden; mit dem Merge von
  *   Nr. 393 behaelt die 23.0.3 deren Inhalt, und R17-18 geht in 23.1.0 auf.
+ * 23.2.0 — KONTEN, NACHWEISE UND FREIGABE (Schritt 12b, R17-20; F-R17-01,
+ *   -02, -06 bis -08, -10, -21, -32, -42, -43, -67). Der Anmelde-Hash
+ *   traegt einen PFEFFER: `pf1:<Anteil-Kennung>:bcrypt(HMAC(pfeffer,
+ *   Token))`, der Pfeffer aus `kdf_anteil` abgeleitet und nie ausgeliefert
+ *   (E-R17-20, -51). Bis dahin riet, wer nur die Datenbank hatte, offline
+ *   weiter; der Satz „ein Abzug allein genuegt nicht mehr" war falsch und
+ *   ist es fuer jedes Konto nicht mehr, das sich seither angemeldet hat —
+ *   die Umstellung laeuft still bei der Anmeldung, in der vorhandenen
+ *   Spalte. Preis: Fehlt der Anteil, meldet sich niemand an (E-R17-44);
+ *   jeder Versuch in diesem Zustand zaehlt wie ein Fehlversuch.
+ *   Sieben Stellen, die das Anmelde-Token als Nachweis verlangen, laufen
+ *   ueber `passwort_nachweis()` mit Ratentopf; vier rieten bis dahin ohne
+ *   Sperre — und die Selbstloeschung verglich das Klartext-Passwort mit
+ *   bcrypt(Token) und ging nie (F-R17-67). Eine Freigabe geht nur noch an
+ *   das Herkunftskonto oder an dieselbe Adresse, mit Protokoll und Mail;
+ *   ein Adresswechsel durch die Verwaltung ist sieben Tage unbestaetigt
+ *   und sperrt so lange den Setz-Link (neue Seite
+ *   `adresse_verwaltung.php`); ein Admin hat an BetreiberIn-Konten keinen
+ *   schreibenden Griff; frischer Code fuer Komplett-Download, Freigabe,
+ *   Adresswechsel, Setz-Link und neue Wiederherstellungscodes; Mails bei
+ *   neuen Codes und erneuertem Wiederherstellungsschluessel. Neben, weil
+ *   Mails, eine Seite und Riegel dazukommen; kein Schema (E-R17-50).
+ * 23.3.0 — KEINE HANDANLAGE VON GERAETEN MEHR (Schritt 12b, R17-21,
+ *   E-R17-56). Die Karte „Geraet ohne Code anlegen" auf der Geraeteseite
+ *   gab Geraete-ID und API-Schluessel zum Abtippen heraus; ihr einziger
+ *   Abnehmer war der Alt-Weg der Garmin-Uhr, und den streicht Uhr 4.1.0
+ *   (E-R17-21). Ein Weg, der Zugangsdaten auf einen Bildschirm legt, ohne
+ *   dass ein Geraet sie noch annimmt, ist nur noch Angriffsflaeche — er
+ *   faellt samt Aktion `add` und Zugangsdatenkarte. Geraete entstehen nur
+ *   noch ueber die Kopplung. Dabei gefunden (F-R17-70): Den dritten Schritt
+ *   des Erststarts („Uhr oder Handy koppeln") hakte nur die Handanlage ab,
+ *   nie das Koppeln; jetzt tut es `pair.php`. Neben, weil ein Weg durch die
+ *   Anwendung wegfaellt; kein Schema.
+ * 23.3.1 — SERVERVERHALTEN AUS DEM REVIEW (Schritt 12b, R17-22; F-R17-36 bis
+ *   -41, -44 bis -49; Backlog Nr. 401). Der Topf `login` zaehlte Konto UND
+ *   Anschluss mit einer Schwelle von 10 — zehn erfundene Adressen sperrten
+ *   einen Klinik-NAT; jetzt zaehlt er nur das Konto, `login_ip` den
+ *   Anschluss, wie Technik 5e.2 es immer versprach. Der Notzugang bremst
+ *   auch je Anschluss (`notweg_ip`). Die Einsatzseite verlor bei jeder
+ *   gepackten Spur „GPS-Daten als GPX"; ein Diensttag im Papierkorb sperrte
+ *   beim Import das ganze Datum; „overwrite" ohne Kennung legte an.
+ *   Mails gehen quoted-printable hinaus (Nr. 401), und ohne Benutzer und
+ *   Passwort gilt SMTP als nicht eingerichtet (E-R17-58). `wartung.lock`
+ *   und `ueberlast.json` liegen in `.zustand/` statt lesbar im Webroot
+ *   (E-R17-59); die Ausnahmeliste der Kette hat damit sieben statt acht
+ *   Pfade. Dazu Warnungen im Reiter System (Umdatieren, Monat 13), eine
+ *   CSV-Zelle als Formel, das Muster der Ueberlastnummern und zwei
+ *   Meldungen mit Tags als Text — samt Riegel Z45. Korrektur: kein neuer
+ *   Weg, kein Schema.
+ * 23.3.2 — SICHERUNG UND WIEDERHERSTELLUNG AUS DEM REVIEW (Schritt 12b,
+ *   R17-23; F-R17-19, -33, -34, -35; Backlog Nr. 386). Beim Einspielen in
+ *   Fenstern gingen die Sperrvermerke verloren, deren Ruhesegment in einem
+ *   spaeteren Fenster stand — die Sicherung schreibt alle Einsaetze vor
+ *   allen Segmenten, am Messstand also 147 von 147; jetzt werden sie nach
+ *   dem letzten Fenster nachgereicht und neu geprueft. Auf einem frischen
+ *   Webspace sperrt `wiederherstellen.php` den Backup-Ordner selbst, bevor
+ *   sie ihn liest, und das Aufraeumen nimmt die eingespielte Datei mit.
+ *   Ein abgebrochener Komplett-Dump von vor S7 galt als fremd und ging ohne
+ *   Endmarke durch (zwei wortgleiche Zeichenketten; die Liste steht jetzt in
+ *   `komplett_lib.php`). Stammdaten aus einer Sicherung gehen durch die
+ *   Pruefschicht, und in einem versiegelten Kontopaket muss jeder Teil
+ *   versiegelt sein. Korrektur: kein neuer Weg, kein Schema, keine neue
+ *   Nutzlast.
+ * 23.4.0 — DER INHALTSSCHLUESSEL ALS NICHT EXTRAHIERBARER CRYPTOKEY
+ *   (Schritt 12b, R17-25; Backlog Nr. 370, 404, 405, 406; F-R17-24, -72,
+ *   -73). Bis hierher lagen Daten- und Inhaltsschluessel als Hex im
+ *   sessionStorage des Tabs, und ein Skript in der Seite konnte beide
+ *   mitnehmen — der Inhaltsschluessel wechselt nie, ein mitgenommener
+ *   oeffnete jeden spaeteren Block. Jetzt liegt er als `CryptoKey` mit
+ *   `extractable: false` in IndexedDB, fuer alle Tabs (E-R17-76: ein neuer
+ *   Tab fragt nicht mehr nach dem Passwort), und der Datenschluessel lebt
+ *   nur so lange, wie eine Huelle geoeffnet wird. Preis, ausgesprochen: Die
+ *   Ablage ueberlebt das Schliessen des Browsers bis zum Abmelden, Anmelden
+ *   oder der ersten Seite nach Ablauf der Frist; was unter dem Schluessel
+ *   verpackt liegt (das Schluesselpaar der Ortsdaten), kann ein Skript weiter
+ *   auspacken (E-R17-77). Beim Bau gefunden: Die Seite nach einem
+ *   Passwortwechsel traegt noch die alte Huelle — der Schluessel wird jetzt an
+ *   alte und neue gebunden, das Vormerkfach `edk_neu` faellt. Dazu: eine
+ *   Rueckfrage statt drei beim Export, Absaetze im Bestaetigungsdialog
+ *   (Nr. 404); ein eigenes Kontopasswort-Feld samt Anmeldename auf der
+ *   Backup-Karte, damit ein Passwortverwalter es erkennt (Nr. 405); eine
+ *   alte `wartung.lock` zieht bei der ersten Anfrage nach `.zustand/` um
+ *   (F-R17-72). Neben, weil sich der Weg durch die Anwendung spuerbar
+ *   aendert (neuer Tab ohne Passwort, eine Rueckfrage weniger); kein Schema.
+ * 23.5.0 — WAS IN DER config.php STEHT, SIEHT MAN JETZT (Schritt 12b,
+ *   R17-26; F-R17-50, -51, -75; Q-R17-20, -21). `app.base_url` stand auf
+ *   Produktiv wochenlang auf einer alten Adresse, und nichts meldete es —
+ *   gefunden hat es die Betreiberin ueber einen leeren 500er beim Cronjob
+ *   per URL. Die Statusseite vergleicht jetzt den Host aus `base_url` mit
+ *   dem, unter dem sie aufgerufen ist, und faerbt die Zeile „Adresse der
+ *   Anlage" orange, wenn sie auseinandergehen; darunter liegt eine
+ *   eingeklappte Lesekarte der Datei, Geheimnisse nur als „gesetzt" oder
+ *   „leer". Die Datei bleibt zur Laufzeit unbeschreibbar (E-R17-72). Das
+ *   Health-Token zieht dagegen in die Datenbank und wird unter Betrieb →
+ *   Jobs erzeugt, erneuert oder abgeschaltet; ein Wert in der Datei wird
+ *   beim ersten Abruf uebernommen. Preis: Ein Datenbankabzug traegt es
+ *   jetzt, wie die zwei Tokens daneben. Alle drei Tokens verlangen beim
+ *   Erneuern einen frischen Code (E-R17-73). Dazu die Herkunft im Browser:
+ *   `leaflet.css` trug die Summe des Originals mit Windows-Zeilenenden,
+ *   `openlocationcode.js` lag ohne Kopf ausserhalb von `vendor/` — beide
+ *   berichtigt, und `fremdsummen` rechnet die Koepfe seither in Stufe 1
+ *   nach. Neben, weil zwei Auskuenfte und ein Bedienweg dazukommen; kein
+ *   Schema.
+ * 23.5.1 — DAS FORMULAR SAGT, WANN ES ENTSCHLUESSELT HAT (Schritt 12b,
+ *   Zwischen-PR; Backlog Nr. 407, F-R17-79). Das Einsatzformular setzt die
+ *   Ortschips erst nach dem Entschluesseln, asynchron; wer vorher am
+ *   Ortsfeld arbeitete, dem setzte es den alten Ort hinterher wieder
+ *   hinein. Die Bedienprobe traf das in WebKit jeden dritten Lauf und war
+ *   damit rot, ohne dass sich am Formular etwas geaendert hatte. Jetzt
+ *   traegt das Formular `data-pat-geladen` (`offen` oder `gesperrt`), und
+ *   die Probe wartet darauf statt auf feste Pausen. Dass ein Mensch
+ *   schneller tippt, als der Browser entschluesselt, verhindert die Marke
+ *   nicht — sie macht den Zeitpunkt nur sichtbar. Korrektur; kein Schema.
  */
-const WEB_VERSION = '23.1.0';
+const WEB_VERSION = '23.5.1';

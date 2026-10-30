@@ -71,7 +71,7 @@ if ($tab === 'standort') {
         exit;
     }
 }
-$notice = null; $error = null; $pwGewechselt = false; $newKey = null;
+$notice = null; $error = null; $pwGewechselt = false;
 /* Zweitfaktor (P5c/AP5): die Codes, einmal in der Antwort auf den POST, der
  * sie erzeugt hat, und die Meldungen der Karte — [Auftakt, Text]. */
 $zfCodes = null; $zfMeldung = null; $zfFehler = null;
@@ -127,6 +127,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     /* Ebenso vor dem Entfernen eines Passkeys (SR-09, E-SR-31). */
     if (($_POST['action'] ?? '') === 'passkey_entfernen') {
         zweitfaktor_frisch_verlangen('passkey_entfernen');
+    }
+    /* Und vor neuen Wiederherstellungscodes (R17-20, F-R17-43): Sie sind ein
+     * dauerhafter zweiter Faktor, und E-SR-31 verlangt fuer den Passkey aus
+     * genau diesem Grund den frischen Code. */
+    if (($_POST['action'] ?? '') === 'zf_codes_neu') {
+        zweitfaktor_frisch_verlangen('totp_codes_neu');
     }
     csrf_check();
     $action = $_POST['action'] ?? '';
@@ -221,18 +227,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
          * geaendert, und wer seine Adresse berichtigt, will nicht ueberall
          * abgemeldet werden. */
         $adressWechsel = ($email !== null && $email !== email_normalisieren($userEmail));
-        $nachweisOk = true;
-        if ($adressWechsel) {
-            $stp = db()->prepare('SELECT password_hash FROM users WHERE id = ?');
-            $stp->execute([$userId]);
-            $hash = (string)($stp->fetchColumn() ?: '');
-            $nachweisOk = $hash !== ''
-                && password_verify((string)($_POST['old_token'] ?? ''), $hash);
-        }
+        /* SEIT R17-20 MIT RATENTOPF (F-R17-32): `passwort_nachweis()` traegt
+         * Topf und Vergleich zusammen; bis dahin riet man hier ohne Sperre. */
+        $nachweis = $adressWechsel
+            ? passwort_nachweis($userId, (string)($_POST['old_token'] ?? ''))
+            : 'ok';
 
         if ($email === null) {
             $error = 'Bitte eine gültige E-Mail-Adresse angeben (höchstens 190 Zeichen).';
-        } elseif (!$nachweisOk) {
+        } elseif ($nachweis === 'gesperrt') {
+            $error = 'Zu viele falsche Passwörter. Bitte später erneut — es wurde nichts geändert.';
+        } elseif ($nachweis !== 'ok') {
             $error = 'Zum Ändern der E-Mail-Adresse ist das aktuelle Passwort nötig — '
                    . 'es war leer oder falsch. Es wurde nichts geändert.';
         } else {
@@ -315,12 +320,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
      * keine zweite Schranke. Der Fall, um den es geht, ist ein offener
      * Rechner in einer Wache.
      *
-     * ANDERS ALS BEIM ADRESSWECHSEL wird hier das PASSWORT selbst geprueft
-     * und nicht das abgeleitete Token: Diese Karte laedt kein `crypto.js`
-     * (sie entsperrt nichts), und ein Feld, das ein Token erwartet, braeuchte
-     * genau das. `password_verify()` gegen den Hash tut dasselbe — der
-     * Server sieht das Passwort in dieser einen Anfrage, und das ist
-     * derselbe Weg, den `login.php` ohnehin geht.
+     * WIE BEIM ADRESSWECHSEL DAS ABGELEITETE TOKEN (R17-20, F-R17-67). Bis
+     * Web 23.1.0 stand hier, die Karte pruefe das PASSWORT selbst gegen den
+     * Hash, weil sie kein `crypto.js` lade. Beides war falsch: Der Reiter
+     * Profil laedt `crypto.js` (`ui_krypto_bootstrap()`), und der Hash ist
+     * bcrypt des TOKENS, nicht des Passworts. Der Vergleich ging deshalb nie
+     * auf — eine Selbstloeschung war nicht moeglich, und die Seite sagte
+     * „Passwort falsch". Jetzt leitet das Formular das Token ab wie die
+     * Karten darueber, und `passwort_nachweis()` prueft mit Ratentopf.
      *
      * DEMO-KONTO NICHT. Es setzt sich nach jeder Aenderung selbst zurueck; eine
      * Loeschung mit 30 Tagen Karenz waere dort sinnlos und wuerde den
@@ -330,11 +337,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (demo_ist_demo($userId)) {
             $error = 'Das Demo-Konto lässt sich nicht löschen.';
         } else {
-            $stp = db()->prepare('SELECT password_hash, email FROM users WHERE id = ?');
+            $stp = db()->prepare('SELECT email FROM users WHERE id = ?');
             $stp->execute([$userId]);
             $z = $stp->fetch(PDO::FETCH_ASSOC) ?: [];
-            $hash = (string)($z['password_hash'] ?? '');
-            if ($hash === '' || !password_verify((string)($_POST['pw_loesch'] ?? ''), $hash)) {
+            $nachweis = passwort_nachweis($userId, (string)($_POST['loesch_token'] ?? ''));
+            if ($nachweis === 'gesperrt') {
+                $error = 'Zu viele falsche Passwörter. Bitte später erneut — es wurde nichts geändert.';
+            } elseif ($nachweis !== 'ok') {
                 $error = 'Das Passwort war leer oder falsch — es wurde nichts geändert.';
             } else {
                 $termin = konto_loeschung_beantragen($userId);
@@ -411,6 +420,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } elseif ($action === 'zf_codes_neu') {
             $zfCodes = totp_codes_erneuern($userId);
             if ($zfCodes !== null) {
+                /* Die Mail dazu (R17-20, F-R17-43) — an die Kontoadresse. */
+                mail_einreihen('zf_codes_erneuert', (string)$userEmail,
+                               ['link' => app_url('/einstellungen.php?t=profil#k-zweitfaktor')]);
                 $zfMeldung = ['Neue Codes erzeugt.', 'Die alten gelten ab jetzt nicht mehr.'];
             } else {
                 $zfZurueck = ['error', 'Der Zweitfaktor ist nicht eingeschaltet.'];
@@ -476,8 +488,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $st = db()->prepare('SELECT password_hash, pat_key_check FROM users WHERE id = ?');
         $st->execute([$userId]);
         $u = $st->fetch();
-        $oldOk = password_verify((string)($_POST['old_token'] ?? ''),
-                                 (string)$u['password_hash']);
+        /* Mit Ratentopf und Pfeffer (R17-20, F-R17-32). */
+        $nachweis = passwort_nachweis($userId, (string)($_POST['old_token'] ?? ''));
+        $oldOk = ($nachweis === 'ok');
         $newTok = (string)($_POST['new_token'] ?? '');
         $newSalt = (string)($_POST['new_salt'] ?? '');
         $wrapPw = (string)($_POST['wrap_pw'] ?? '');
@@ -485,7 +498,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $newIter = (int)($_POST['new_iter'] ?? 0);
         // Gespeicherte Pruefsumme des Inhaltsschluessels (NULL bei Altbestand)
         $chkSoll = $u['pat_key_check'] ?? null;
-        if (!$oldOk) {
+        if ($nachweis === 'gesperrt') {
+            $error = 'Zu viele falsche Passwörter. Bitte später erneut — das Passwort '
+                   . 'wurde NICHT geändert.';
+        } elseif (!$oldOk) {
             $error = 'Das aktuelle Passwort ist nicht korrekt.';
         } elseif (!preg_match('/^[0-9a-f]{64}$/', $newTok)
                   || !preg_match('/^[0-9a-f]{32}$/', $newSalt)) {
@@ -568,8 +584,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                                 kdf_iter = ?,
                                                 session_epoch = session_epoch + 1
                                WHERE id = ?')
-                    ->execute([password_hash($newTok, PASSWORD_DEFAULT), $newSalt,
-                               $newIter, $userId]);
+                    ->execute([anmeldehash_bilden($userId, $newTok, demo_ist_demo($userId)), $newSalt,
+                               $newIter, $userId]);   // mit Pfeffer (R17-20)
                 if ($patReady) {
                     // Pruefsumme mitschreiben: Bestandskonten bekommen sie
                     // hier erstmals, alle anderen bestaetigen den alten Wert.
@@ -640,36 +656,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 
-    /* ---- Geräte (Selbstverwaltung) ------------------------------------- */
-    if ($action === 'add') {
-        // Dieselbe Obergrenze wie beim Koppeln (MAX_GERAETE, db.php). Sie an
-        // nur einem der beiden Wege zu pruefen hiesse, sie gar nicht zu haben.
-        if (geraete_grenze_erreicht(db(), $userId)) {
-            $error = 'Es sind bereits ' . MAX_GERAETE . ' Geräte mit diesem Konto verbunden. '
-                   . 'Bitte zuerst ein nicht mehr genutztes Gerät löschen — Deaktivieren '
-                   . 'genügt nicht, die Zugangsdaten bleiben dabei bestehen.';
-        } else {
-            $label = trim($_POST['label'] ?? '');
-            /* SECHZEHN ZUFALLSBYTES WIE BEI DER KOPPLUNG (B-S5-01, S5 Paket B).
-             *
-             * Hier standen vier. Zwei Wege fuehrten damit zu derselben Spalte,
-             * der eine mit 32, der andere mit 128 Bit — und der schwaechere war
-             * ausgerechnet der, den niemand pruefte: Bei der Kopplung faengt
-             * der eindeutige Schluessel eine Dublette ab und die Uhr versucht
-             * es erneut; hier bekaeme die NutzerIn einen Datenbankfehler. Die
-             * Begruendung fuer 16 steht in pair.php (M4-08, Geburtstags-
-             * problem). Bestandsgeraete behalten ihre kurze Kennung — die
-             * Spalte ist VARCHAR(64), es ist keine Migration noetig, und
-             * geraet_kennung_kurz() kommt mit beiden Laengen zurecht. */
-            $devId = 'dev-' . bin2hex(random_bytes(16));
-            $key   = bin2hex(random_bytes(24));
-            db()->prepare('INSERT INTO devices (user_id, device_id, api_key_hash, label) VALUES (?,?,?,?)')
-                ->execute([$userId, $devId, geraet_schluessel_hash($key), $label ?: null]);
-            erststart_erledigt($userId, ERSTSTART_GERAET);   // Schritt 3 (P5b/AP9)
-            $newKey = ['device_id' => $devId, 'api_key' => $key];
-            $notice = 'Gerät angelegt. Schlüssel unten JETZT notieren — er wird nur einmal angezeigt.';
-        }
-    }
+    /* ---- Geräte (Selbstverwaltung) -------------------------------------
+     *
+     * KEINE HANDANLAGE MEHR (R17-21). Hier stand bis Web 23.2.0 die Aktion
+     * `add`: ein Geraet ohne Code anlegen und Geraete-ID und API-Schluessel
+     * von Hand in die App tragen. Der einzige Abnehmer war der Alt-Weg der
+     * Garmin-Uhr, und den gibt es seit Uhr 4.1.0 nicht mehr (E-R17-21); die
+     * Android-App koppelt seit jeher ueber den Code. Ein Weg, der Zugangsdaten
+     * zum Abtippen auf einen Bildschirm legt, ohne dass ein Geraet sie noch
+     * annimmt, ist nur noch Angriffsflaeche (E-R17-56). Geraete entstehen
+     * jetzt ausschliesslich ueber die Kopplung (`pair.php`). */
     if ($action === 'toggle') {
         db()->prepare('UPDATE devices SET active = 1 - active WHERE id = ? AND user_id = ?')
             ->execute([(int)($_POST['id'] ?? 0), $userId]);
@@ -1950,19 +1946,14 @@ ui_seite_start(['titel' => 'Einstellungen',
       });
     })();
 
-    /* Zweiter Teil des Passwortwechsels (M2-07): Das Vormerkfach aus dem
-     * vorigen Seitenaufruf aufloesen, bevor irgendetwas anderes geschieht. */
-    (() => {
-      const neu = sessionStorage.getItem('edk_neu');
-      if (neu === null) { return; }
-      sessionStorage.removeItem('edk_neu');
-      if (<?= $pwGewechselt ? 'true' : 'false' ?>) {
-        EdCrypto.clearSession();          // alten Inhaltsschluessel verwerfen
-        EdCrypto.setDataKey(neu);         // neuer Datenschluessel gilt ab jetzt
-      }
-      // Sonst: nichts tun. Der Wechsel ist nicht zustande gekommen, der alte
-      // Schluessel im Tab passt weiterhin zur gespeicherten Huelle.
-    })();
+    /* Zweiter Teil des Passwortwechsels (M2-07) — SEIT R17-25 OHNE
+     * VORMERKFACH. Bis 23.3.x lag hier der NEUE Datenschluessel einen
+     * Seitenwechsel lang im sessionStorage (`edk_neu`) und wurde nach dem
+     * Erfolg uebernommen. Jetzt bindet das Absenden den Inhaltsschluessel an
+     * BEIDE Huellen (unten), und es gibt nichts mehr zu uebernehmen. Ein
+     * Fach aus einem Tab, der ueber die Auslieferung offen war, wird
+     * geraeumt. */
+    try { sessionStorage.removeItem('edk_neu'); } catch (e) { /* kein Speicher */ }
 
     /* ---- Adresswechsel: Nachweis ableiten (Backlog Nr. 128, K-7) --------
      *
@@ -2047,10 +2038,12 @@ ui_seite_start(['titel' => 'Einstellungen',
         // Inhaltsschluessel des Moduls in die neue Passwort-Huelle umpacken.
         // Klappt das nicht, wird NICHT abgeschickt: ein geaendertes Passwort
         // ohne passende Huelle machte die geschuetzten Angaben unlesbar.
+        let ckFuerAblage = null;
         if (PAT_WRAP) {
           let ck;
           try {
             ck = await EdCrypto.huelleOeffnen(altDk, PAT_WRAP);
+            ckFuerAblage = ck;
           } catch (e) {
             st.textContent = 'Die geschützten Angaben lassen sich mit dem aktuellen '
                            + 'Passwort nicht entschlüsseln. Es wurde nichts geändert.';
@@ -2079,15 +2072,29 @@ ui_seite_start(['titel' => 'Einstellungen',
          * gaebe: "keine Angaben vorhanden". Ein FEHLGESCHLAGENER Vorgang
          * hinterliess also einen kaputten Zustand.
          *
-         * Jetzt wandert der neue Schluessel in ein VORMERKFACH. Nach dem
-         * Neuladen entscheidet die Antwort des Servers:
-         *   Erfolg    -> uebernehmen und Fach leeren
-         *   Fehlschlag-> Fach leeren, der alte Schluessel bleibt unberuehrt
+         * Von Web 7 bis 23.3.x wanderte der neue Schluessel deshalb in ein
+         * VORMERKFACH, und nach dem Neuladen entschied die Antwort des
+         * Servers. Seit R17-25 entscheidet sie nichts mehr — siehe unten. */
+        /* SEIT R17-25: KEIN VORMERKFACH MEHR, SONDERN ZWEI BINDUNGEN.
          *
-         * Das Vormerkfach liegt im sessionStorage, also im selben Tab und nur
-         * bis zu dessen Ende — dieselbe Lebensdauer wie der Schluessel, den
-         * es ersetzen soll. */
-        sessionStorage.setItem('edk_neu', neuDk);
+         * Der Inhaltsschluessel aendert sich beim Passwortwechsel nicht —
+         * nur die Huelle, die ihn verpackt. Er wird deshalb JETZT abgelegt,
+         * gebunden an die alte UND die neue Huelle: Nimmt der Server an,
+         * traegt die naechste Seite die neue und findet ihn; lehnt er ab,
+         * bleibt die alte und findet ihn ebenso. Den neuen Datenschluessel
+         * muss damit niemand mehr aufbewahren — bis 23.3.x lag er dafuer im
+         * sessionStorage (`edk_neu`).
+         *
+         * Gemessen beim Bau: Die Seite nach dem Erfolg traegt noch die ALTE
+         * Huelle in PAT_WRAP (auth_guard.php liest den Datensatz vor dem
+         * Speichern). Ein Weg, der dort mit dem neuen Datenschluessel
+         * oeffnen wollte, scheiterte — die zweite Bindung macht die Frage,
+         * welche Huelle die Seite traegt, gegenstandslos. */
+        if (PAT_WRAP && ckFuerAblage) {
+          await EdCrypto.inhaltAblegen(ckFuerAblage, [
+            await EdCrypto.wrapFingerprint(PAT_WRAP),
+            await EdCrypto.wrapFingerprint(document.getElementById('pw_wrap').value)]);
+        }
         f.dataset.ready = '1';
         f.submit();
       } catch (e) { st.textContent = 'Fehler bei der Schlüsselableitung.'; }
@@ -2163,20 +2170,65 @@ ui_seite_start(['titel' => 'Einstellungen',
         <p class="feld-hinweis"><strong>Willst du sie behalten, leite sie vorher
            aus</strong> — unter <a href="import.php">Import / Export</a>. Danach ist
            es zu spät.</p>
-        <form method="post"
+        <form method="post" id="loeschform"
               data-confirm="Konto wirklich zur Löschung anmelden? Es wird sofort gesperrt und nach <?= KONTO_KARENZ_TAGE ?> Tagen endgültig gelöscht. Eine Anmeldung in dieser Zeit nimmt die Löschung zurück."
               data-confirm-ok="Zur Löschung anmelden">
           <?= csrf_field() ?><input type="hidden" name="action" value="konto_loeschen">
-          <?php /* DAS PASSWORT ALS NACHWEIS, wie beim Adresswechsel — und
-                   zwar SERVERSEITIG geprueft. Ein offener Rechner in einer
-                   Wache ist der Fall, um den es geht. */ ?>
-          <?php ui_feld(['label' => 'Aktuelles Passwort', 'name' => 'pw_loesch',
+          <input type="hidden" name="loesch_token" id="loesch_tok">
+          <?php /* DAS PASSWORT ALS NACHWEIS, wie beim Adresswechsel — im
+                   Browser zum Token abgeleitet und SERVERSEITIG geprueft. Das
+                   Feld hat keinen Namen: Das Passwort verlaesst den Browser
+                   nicht (R17-20, F-R17-67). */ ?>
+          <?php ui_feld(['label' => 'Aktuelles Passwort', 'id' => 'loesch_pw',
                          'art' => 'password', 'pflicht' => true,
                          'attr' => ' autocomplete="current-password"']); ?>
           <div class="listen-form-fuss">
             <?= ui_knopf(['text' => 'Konto zur Löschung anmelden', 'art' => 'gefahr']) ?>
           </div>
         </form>
+        <script<?= kopf_nonce_attr() ?>>
+        /* ---- Kontoloeschung: Nachweis ableiten (R17-20, F-R17-67) --------
+         *
+         * AM FENSTER, IN DER ERFASSUNGSPHASE — und das ist tragend:
+         * `confirm.js` faengt das Absenden am `document` in der
+         * Erfassungsphase ab, haelt es an und schickt nach der Rueckfrage mit
+         * `f.submit()`, das kein Ereignis mehr ausloest. Ein Zuhoerer am
+         * Formular liefe nie. Am Fenster laeuft er davor: Token ableiten,
+         * dann `requestSubmit()` — jetzt mit Token, und erst dann fragt
+         * `confirm.js`.
+         *
+         * DAS PASSWORTFELD HAT KEINEN NAMEN und geht deshalb nie mit; es muss
+         * nicht geleert werden (geleert scheiterte `requestSubmit()` an
+         * `required`). Wer nach einem Abbruch das Passwort aendert, verwirft
+         * das abgeleitete Token. */
+        (() => {
+          const f = document.getElementById('loeschform');
+          const feldPw = document.getElementById('loesch_pw');
+          const feldTok = document.getElementById('loesch_tok');
+          if (!f || !feldPw || !feldTok) { return; }
+          window.addEventListener('submit', async ev => {
+            if (ev.target !== f || f.dataset.tokenBereit === '1') { return; }
+            ev.preventDefault();
+            ev.stopImmediatePropagation();
+            if (!feldPw.value) { feldPw.reportValidity(); return; }
+            try {
+              const k = await EdCrypto.deriveKeys(feldPw.value, KDF_SALT, KDF_ITER);
+              feldTok.value = k.authToken;
+              f.dataset.tokenBereit = '1';
+              f.requestSubmit();
+            } catch (e) {
+              feldPw.setCustomValidity('Dieser Browser unterstützt die nötige '
+                                     + 'Verschlüsselung nicht.');
+              feldPw.reportValidity();
+            }
+          }, true);
+          feldPw.addEventListener('input', () => {
+            feldPw.setCustomValidity('');
+            feldTok.value = '';
+            delete f.dataset.tokenBereit;
+          });
+        })();
+        </script>
       <?php endif; ?>
     <?php ui_karte_ende(); ?>
 
@@ -3050,7 +3102,7 @@ ui_seite_start(['titel' => 'Einstellungen',
 
   <?php endif; ?>
 
-    <script src="<?= asset('assets/openlocationcode.js') ?>"></script>
+    <script src="<?= asset('assets/vendor/openlocationcode.js') ?>"></script>
     <script src="<?= asset('assets/locparse.js') ?>"></script>
     <?php /* vorschlagsliste.js (EdVorschlaege) gehoert zur Ortsfeld-
              Komponente, seit die Trefferliste ein eigener Baustein ist
@@ -3250,21 +3302,31 @@ ui_seite_start(['titel' => 'Einstellungen',
          schwächer geschützt, und es ist ein Passwort weniger zu verwahren.
          <strong>Nicht</strong> geeignet, wenn die Datei an jemand anderen gehen soll.</p>
 
-      <?php /* `name="password"` UND `autocomplete` WIE BEI DER ANMELDUNG,
-               sobald der Schalter oben an ist (gemeldet 05.09.2026). Ein
-               Passwortverwalter entscheidet an genau diesen beiden Angaben,
-               ob er ein bekanntes Passwort anbietet oder ein neues vorschlägt:
-               `new-password` heisst „hier entsteht etwas Neues", und dann
-               bietet er nichts an — auch nicht, wenn das Feld in diesem
-               Augenblick nach dem Kontopasswort fragt. Das Umschalten
-               übernimmt der Schalter-Handler weiter unten. Der Ausgangswert
-               ist `new-password`, weil der Schalter aus ist. */ ?>
+      <?php /* ZWEI FELDER STATT EINES, DAS SEINE BEDEUTUNG WECHSELT (Nr. 405).
+               Bis 23.3.x war `bpw1` beides: das Backup-Passwort und, mit dem
+               Schalter, das Kontopasswort — `autocomplete` wechselte per
+               Skript von `new-password` auf `current-password` (gemeldet
+               05.09.2026). Ein Passwortverwalter ordnet ein Feld aber beim
+               Laden ein: Bitwarden bot am 28.10.2026 unter „Kontopasswort"
+               ein neu erzeugtes Passwort an. Jetzt stehen beide Felder ab dem
+               Laden im Markup, jedes mit seiner einen Bedeutung, und der
+               Schalter blendet nur um. Daneben der Anmeldename, verborgen und
+               als `username` gekennzeichnet: Ohne ihn weiß ein Verwalter
+               nicht, welcher seiner Einträge zu diesem Passwort gehört. */ ?>
+      <div id="bpwkfeld" hidden>
+        <input type="text" name="username" autocomplete="username" hidden readonly
+               value="<?= e($userEmail) ?>">
+        <?php ui_feld(['label' => 'Kontopasswort', 'id' => 'bpwk', 'name' => 'password',
+                       'art' => 'password', 'attr' => ' autocomplete="current-password"']); ?>
+      </div>
+      <div id="bpw1feld">
       <?php ui_feld(['label' => 'Passwort für das Backup', 'id' => 'bpw1',
-                     'name' => 'password',
+                     'name' => 'backup_passwort',
                      'art' => 'password', 'klasse' => 'bpw1-feld',
                      'klein' => 'Mindestens ' . PW_MIN_LAENGE . ' Zeichen.',
                      'attr' => ' minlength="' . PW_MIN_LAENGE . '" autocomplete="new-password"']); ?>
       <span class="pwstaerke" id="bpwguete"></span>
+      </div>
       <div id="bpw2label">
         <?php ui_feld(['label' => 'Passwort wiederholen', 'id' => 'bpw2',
                        'art' => 'password', 'attr' => ' autocomplete="new-password"']); ?>
@@ -3680,33 +3742,27 @@ ui_seite_start(['titel' => 'Einstellungen',
     const bpwGuete = document.getElementById('bpwguete');
     EdPwQuality.beobachte(bpw1, bpwGuete);
 
+    const bpwk = document.getElementById('bpwk');
     bpwKonto.addEventListener('change', () => {
       const an = bpwKonto.checked;
       document.getElementById('bpwkontohinweis').hidden = !an;
-      // Die Wiederholung entfällt: Ein falsch getipptes Kontopasswort fällt
-      // unten beim Öffnen der Hülle auf, nicht erst beim Öffnen der Datei.
+      /* Nur umblenden (Nr. 405): das Kontopasswort-Feld zeigen, das Feld
+         für ein eigenes Backup-Passwort samt Wiederholung und Güte
+         verbergen — oder umgekehrt. Die Wiederholung entfällt beim
+         Kontopasswort: Ein falsch getipptes fällt unten beim Öffnen der
+         Hülle auf, nicht erst beim Öffnen der Datei. */
+      document.getElementById('bpwkfeld').hidden = !an;
+      document.getElementById('bpw1feld').hidden = an;
       document.getElementById('bpw2label').hidden = an;
-      /* Die Beschriftung liegt seit O8c als eigenes <label class="feld-label">
-         neben dem Feld, nicht mehr als Textknoten davor — `parentElement
-         .firstChild` traf damit den Zeilenumbruch statt der Beschriftung. */
-      document.querySelector('label[for="bpw1"]').textContent = an
-        ? 'Kontopasswort'
-        : 'Passwort für das Backup';
-      document.querySelector('.bpw1-feld .feld-klein').hidden = an;
-      bpwGuete.hidden = an;
-      /* Das Feld wechselt seine BEDEUTUNG, also auch seine Ankuendigung an
-         den Passwortverwalter: an = das Kontopasswort, das er kennt
-         (`current-password`); aus = ein frisch zu waehlendes Backup-Passwort
-         (`new-password`). Mit dem festen `new-password` sah jeder Verwalter
-         hier ein neues Feld und bot nichts an. */
-      bpw1.autocomplete = an ? 'current-password' : 'new-password';
+      bpwk.value = '';
       bpw1.value = '';
+      bpw2.value = '';
       expState.textContent = '';
     });
 
     /** Prüft das eingegebene Passwort und liefert es zurück — oder null. */
     async function backupPasswort() {
-      const pw = bpw1.value;
+      const pw = bpwKonto.checked ? bpwk.value : bpw1.value;
       if (bpwKonto.checked) {
         if (pw === '') { melde(expState, 'Bitte das Kontopasswort eingeben.', 'fehler'); return null; }
         if (!PAT_WRAP) {
@@ -4260,6 +4316,38 @@ ui_seite_start(['titel' => 'Einstellungen',
       }
     }
 
+    /* OFFENE SPERRVERMERKE NACHREICHEN (Backlog Nr. 386, R17-23).
+       Die Sicherung schreibt alle Einsätze vor allen Ruhesegmenten. Ein
+       Vermerk, dessen Quelle ein Ruhesegment ist, kommt deshalb in einem
+       Fenster an, in dem es seine Quelle noch nicht gibt; der Server gibt
+       ihn als `schnitte_offen` zurück, statt ihn zu verwerfen. Nach dem
+       letzten Fenster gehen sie hier zurück — in Stücken zu 1000, der
+       Grenze des Servers (EDBAK_SCHNITTE_NACHREICHEN_MAX). Bis Web 23.3.1
+       gingen sie verloren, und der herausgeschnittene Zeitraum war im
+       Segment wieder sichtbar. Gezählt wird erst hier. */
+    async function schnitteNachreichen(offen, s, anzeige) {
+      for (let i = 0; i < offen.length; i += 1000) {
+        if (anzeige) { anzeige.textContent = 'Sperrvermerke werden zugeordnet…'; }
+        const a = await EdApi.postJson('api/backup_eintraege_restore.php',
+          { schnitte_offen: offen.slice(i, i + 1000) },
+          { vorgang: 'Das Zuordnen der Sperrvermerke' });
+        if (!a.ok) {
+          throw new Error(a.meldung + ' Die Einträge sind eingespielt; es fehlen '
+            + 'Sperrvermerke des Schneidens.');
+        }
+        const o = a.daten.stats || {};
+        for (const k of Object.keys(o.schnitte || {})) {
+          s.schnitte = s.schnitte || {};
+          s.schnitte[k] = (s.schnitte[k] || 0) + o.schnitte[k];
+        }
+        for (const [g, z] of Object.entries(o.skipped_reasons || {})) {
+          s.skipped_reasons = s.skipped_reasons || {};
+          s.skipped_reasons[g] = (s.skipped_reasons[g] || 0) + z;
+        }
+        verworfenDazu(s, o);
+      }
+    }
+
     function restoreBericht(s, zusatz) {
       const gruende = s.skipped_reasons && Object.keys(s.skipped_reasons).length
         ? ' — ' + Object.entries(s.skipped_reasons)
@@ -4559,6 +4647,7 @@ ui_seite_start(['titel' => 'Einstellungen',
          * eine Summe über alle Fenster — sonst meldete die Anwendung die
          * Zahlen des letzten Fensters als Ergebnis des Ganzen. */
         const spurKarte = Object.assign({}, out.spur_karte || {});
+        const schnitteOffen = [];
         if (fassung4.eintragsteile.length) {
           const dayMap = out.day_map || {};
           for (const [i, ti] of fassung4.eintragsteile.entries()) {
@@ -4601,7 +4690,9 @@ ui_seite_start(['titel' => 'Einstellungen',
             /* Bis Web 23.0.1 fiel `rejected` hier heraus (Nr. 387). */
             verworfenDazu(s, o.stats);
             Object.assign(spurKarte, o.spur_karte || {});
+            for (const c of (o.schnitte_offen || [])) { schnitteOffen.push(c); }
           }
+          await schnitteNachreichen(schnitteOffen, s, impState);
         }
 
         /* ---- Die Spuren hinterher (Konzept 3.2.4) ------------------------
@@ -4897,6 +4988,7 @@ ui_seite_start(['titel' => 'Einstellungen',
           let karte = Object.assign({}, out0.spur_karte || {});
 
           const nT = Number(fgPaket.eintragsteile || 0);
+          const schnitteOffen = [];
           for (let i = 1; i <= nT; i++) {
             fgState.textContent = `Einträge werden übertragen (Teil ${i} von ${nT})…`;
             const name = 'eintraege/' + String(i).padStart(4, '0') + '.json';
@@ -4912,7 +5004,9 @@ ui_seite_start(['titel' => 'Einstellungen',
             /* `rejected` ist ein Block, keine Zahl, und fiel hier bis
                Web 23.0.1 heraus (Nr. 387). */
             verworfenDazu(s, o.stats);
+            for (const c of (o.schnitte_offen || [])) { schnitteOffen.push(c); }
           }
+          await schnitteNachreichen(schnitteOffen, s, fgState);
 
           const nS = Number(fgPaket.spurteile || 0);
           for (let i = 1; i <= nS; i++) {
@@ -5346,50 +5440,6 @@ ui_seite_start(['titel' => 'Einstellungen',
       <?php endif; ?>
     <?php ui_karte_ende(); ?>
 
-    <?php /* ---- Gerät ohne Code anlegen (S8/AP6, Mockup 10) ----------------
-             DIE AUSNAHME STEHT ZUGEKLAPPT AM ENDE. Sie war bis Web 15.4.0 ein
-             Formular MITTEN in der Geräteliste, unter den Zeilen — an der
-             Stelle also, an der man nach dem Umbenennen sucht. Der Weg dahin
-             ist das Koppeln; von Hand angelegt wird nur, was keinen Code
-             zeigen kann.
-
-             NEUTRAL, NICHT PRIMÄR (B-S5-09): Die eine Haupthandlung dieses
-             Reiters ist „Weiter" an der Kopplungskarte. */ ?>
-    <?php if (!$editDev): ?>
-      <?php ui_karte_start(['titel' => 'Gerät ohne Code anlegen', 'id' => 'k-ohne-code',
-                            'zu' => true, 'vorschau' => 'Ausnahme · Zugangsdaten von Hand']); ?>
-        <p class="feld-hinweis">Für Geräte, die keinen Code anzeigen können. Du
-           bekommst Geräte-ID und API-Schlüssel und trägst sie in der App
-           ein — bei Garmin in Garmin Connect unter den App-Einstellungen.</p>
-        <form method="post" action="einstellungen.php?t=geraete">
-          <?= csrf_field() ?>
-          <input type="hidden" name="action" value="add">
-          <div class="listen-form-felder">
-            <?php ui_feld(['label' => 'Bezeichnung', 'name' => 'label', 'id' => 'devlabel',
-                           'platzhalter' => 'z. B. Ersatzuhr',
-                           'attr' => ' maxlength="120"']); ?>
-          </div>
-          <div class="listen-form-fuss">
-            <?= ui_knopf(['text' => 'Gerät anlegen', 'art' => 'neutral']) ?>
-          </div>
-        </form>
-      <?php ui_karte_ende(true); ?>
-    <?php endif; ?>
-
-    <?php if ($newKey): ?>
-      <?php ui_karte_start(['titel' => 'Zugangsdaten des neuen Geräts', 'id' => 'k-zugangsdaten']); ?>
-        <p class="feld-hinweis">Beide Werte in den Einstellungen der App
-           eintragen; als Server genügt die Domain.</p>
-        <p class="feld-klein">Bei Garmin stehen diese Einstellungen in Garmin Connect.</p>
-        <?php /* KLEINE STUFE MIT „KOPIEREN" (E-S8-10, Backlog Nr. 78). Die
-                 grosse Stufe ist fuer sechs Zeichen gemacht; Geraete-ID und
-                 API-Schluessel sind 36 beziehungsweise 64 Zeichen lang und
-                 standen darin in Plakatgroesse ueber drei Zeilen — und ohne
-                 Knopf, obwohl sie zum Abtippen gedacht sind. */ ?>
-        <?= ui_codeblock_lang((string)$newKey['device_id'], 'Geräte-ID') ?>
-        <?= ui_codeblock_lang((string)$newKey['api_key'], 'API-Schlüssel') ?>
-      <?php ui_karte_ende(); ?>
-    <?php endif; ?>
   <?php endif; ?>
 
   <script<?= kopf_nonce_attr() ?>>

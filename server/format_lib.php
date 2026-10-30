@@ -450,3 +450,26 @@ function prozent_text(int|float $teil, int|float $ganz, string $leer = ''): stri
     if ($ganz <= 0) { return $leer; }
     return (string)prozent_wert($teil, $ganz, 'kauf') . ' %';
 }
+
+/**
+ * Eine Zelle fuer eine CSV-Datei entschaerfen (R17-22, F-R17-45).
+ *
+ * Beginnt ein Text mit `=`, `+`, `-`, `@`, einem Tabulator oder einem
+ * Wagenruecklauf, liest Excel oder LibreOffice ihn beim Oeffnen als FORMEL
+ * (CSV-Injektion). In `betrieb_statistik.php` steht der Modellname in der
+ * Datei, und den setzt das Geraet beim Koppeln selbst — eine veraenderte App
+ * an einem beliebigen Konto schriebe so eine Formel in die Tabelle, die die
+ * BetreiberIn oeffnet. Ein fuehrender Apostroph macht daraus Text; das ist
+ * der Weg, den beide Programme selbst vorsehen.
+ *
+ * ZAHLEN BLEIBEN ZAHLEN: Eine Zahl (auch eine negative) wird nicht
+ * angefasst — sonst stuende vor jeder `-3` ein Apostroph, und die Spalte
+ * liesse sich nicht mehr rechnen. Entschaerft wird nur, was als
+ * Zeichenkette hereinkommt. Hier und nicht im Exportweg: Der naechste
+ * serverseitige Export bekommt sie mit, statt sie neu zu erfinden.
+ */
+function csv_zelle(mixed $wert): mixed
+{
+    if (!is_string($wert) || $wert === '') { return $wert; }
+    return preg_match('/^[=+\-@\t\r]/', $wert) === 1 ? "'" . $wert : $wert;
+}

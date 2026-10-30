@@ -142,6 +142,11 @@ async function dialogSchliessen(seite) {
  * ohne ihn misst die Probe an einem bearbeiteten Einsatz einen Ausgangszustand,
  * den ein frisch nachgetragener Einsatz nie hat. */
 async function ortLeeren(k, praefix) {
+  /* ERST NACH DEM ENTSCHLUESSELN (Nr. 407). patLaden() setzt den Ortschip
+   * asynchron; wer vorher leert, dem setzt es ihn wieder hinein, und der Weg
+   * misst einen Ort, den er nie gewaehlt hat. In WebKit jeder dritte Lauf.
+   * Die Marke setzt einsatz_form.php am Ende von patLaden(). */
+  await k.seite.waitForSelector('#missionform[data-pat-geladen]', { state: 'attached', timeout: 15000 });
   const x = k.seite.locator(`#${praefix}chips .rmx`);
   if (await x.count()) { await x.first().click(); await k.seite.waitForTimeout(200); }
   await k.seite.fill(`#${praefix}addr`, '');

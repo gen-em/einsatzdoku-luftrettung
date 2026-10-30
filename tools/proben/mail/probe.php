@@ -109,6 +109,7 @@ function mp_gegenstelle(string $art, float $verzug = 0.0): void
          . ' --port ' . $PORT . ' --art ' . escapeshellarg($art)
          . ' --verzug ' . $verzug
          . ' --zert ' . escapeshellarg($zert) . ' --schluessel ' . escapeshellarg($key)
+         . ' --mitschnitt ' . escapeshellarg($tmp . '/mitschnitt.eml')
          . ' > ' . escapeshellarg($log) . ' 2>&1 & echo $!';
     $pid = (int)trim((string)shell_exec($cmd));
     $GLOBALS['__mp_kind'] = $pid;
@@ -194,6 +195,11 @@ $beispiel = [
     // der Wechsel ueber die Karte, mit 'hand' einer, der von Hand in
     // config.php stand (E-SR-74) — die Schluesselwechselprobe reiht ihn ein.
     'weg'         => 'oberflaeche',
+    // Seit R17-20: die Frist eines Adresswechsels durch die Verwaltung
+    // (adresswechsel_verwaltung) und das Zielkonto einer Freigabe
+    // (kontobackup_freigegeben).
+    'bis'         => '02.11.2026 um 07:00 Uhr',
+    'ziel'        => 'ziel@beispiel.invalid',
 ];
 $fehlend = [];
 foreach ($katalog as $k => $e) {
@@ -281,6 +287,58 @@ pruef('Empfaenger, Betreff und Rumpf sind geleert',
       $z !== null && $z['empfaenger'] === null && $z['betreff'] === null && $z['text'] === null,
       'empfaenger=' . var_export($z['empfaenger'] ?? null, true));
 pruef('Zustellung unter 2 s', $d < 2.0, sprintf('%.2f s', $d));
+
+/* DIE KODIERUNG AUF DER LEITUNG (R17-22, Backlog Nr. 401). Bis Web 23.3.0
+ * gingen Umlaute und Gedankenstriche als rohe 8-Bit-Bytes hinaus, ohne
+ * `Content-Transfer-Encoding` — ein strenger Empfaenger darf sie verwerfen.
+ * Gemessen an dem, was die Gegenstelle mitgeschnitten hat: die Kopfzeile,
+ * jede Zeile 7-Bit und unter 77 Zeichen, und der dekodierte Rumpf ist
+ * wieder der Text mit seinen Umlauten. */
+$roh = (string)@file_get_contents($tmp . '/mitschnitt.eml');
+[$kopf, $rumpf] = array_pad(explode("\r\n\r\n", $roh, 2), 2, '');
+pruef('Kopfzeile Content-Transfer-Encoding: quoted-printable',
+      preg_match('/^Content-Transfer-Encoding: quoted-printable\r?$/mi', $kopf) === 1,
+      preg_match('/^Content-Transfer-Encoding:.*$/mi', $kopf, $cte) ? trim($cte[0]) : 'keine');
+$zeilen = $rumpf === '' ? [] : explode("\r\n", rtrim($rumpf, "\r\n"));
+$lang = array_filter($zeilen, static fn ($z) => strlen($z) > 76);
+pruef('Rumpf: jede Zeile 7-Bit und hoechstens 76 Zeichen',
+      $zeilen !== [] && preg_match('/[\x80-\xff]/', $rumpf) === 0 && $lang === [],
+      count($zeilen) . ' Zeilen, ' . count($lang) . ' zu lang, 8-Bit: '
+      . (preg_match('/[\x80-\xff]/', $rumpf) ? 'ja' : 'nein'));
+$klar = quoted_printable_decode(str_replace("\r\n..", "\r\n.", $rumpf));
+pruef('… und dekodiert wieder UTF-8 mit Umlauten und dem Link',
+      mb_check_encoding($klar, 'UTF-8') && preg_match('/[äöüß–„]/u', $klar) === 1
+      && str_contains($klar, $beispiel['link']),
+      mb_substr(preg_replace('/\s+/', ' ', $klar), 0, 60));
+
+/* ======================================================================== */
+abschnitt('3a  Ohne Benutzer oder Passwort — kein Versuch (R17-22, F-R17-46)');
+/* Bis Web 23.3.0 galt ein Mailserver ohne Anmeldedaten als eingerichtet,
+ * `smtp_send()` schickte trotzdem `AUTH LOGIN` mit zwei Warnungen und
+ * scheiterte. Die Betreiberin hat entschieden: Die Anmeldung ist Pflicht.
+ * Also: nicht eingerichtet, die Probe sagt warum, und `smtp_send()` baut
+ * gar keine Verbindung auf. */
+$ohne = $cfg;
+$ohne['smtp']['user'] = '';
+file_put_contents($cfgPfad, "<?php return " . var_export($ohne, true) . ";\n");
+konfig_verwerfen();
+$vorVerb = substr_count((string)@file_get_contents($tmp . '/gegenstelle.log'), 'Verbindung');
+try {
+    pruef('smtp_eingerichtet() ohne Benutzer: nein', smtp_eingerichtet() === false, '');
+    $pr = smtp_probe(3);
+    pruef('smtp_probe() sagt, was fehlt', !$pr['ok'] && str_contains((string)$pr['grund'], 'Benutzername oder Passwort'),
+          (string)$pr['grund']);
+    $ok = smtp_send($adr, 'Probe', "Text\n", 3);
+    $f  = smtp_letzter_fehler();
+    $nachVerb = substr_count((string)@file_get_contents($tmp . '/gegenstelle.log'), 'Verbindung');
+    pruef('smtp_send() scheitert mit Kennung ANMELDUNG, ohne zu verbinden',
+          $ok === false && ($f['kennung'] ?? '') === 'ANMELDUNG' && $nachVerb === $vorVerb,
+          'Kennung ' . ($f['kennung'] ?? '—') . ', Verbindungen ' . $vorVerb . ' → ' . $nachVerb);
+} finally {
+    file_put_contents($cfgPfad, "<?php return " . var_export($cfg, true) . ";\n");
+    konfig_verwerfen();
+}
+pruef('mit Benutzer und Passwort wieder eingerichtet', smtp_eingerichtet() === true, '');
 
 /* ======================================================================== */
 abschnitt('4  Ablehnung — Leiter, Grund, Kennung');

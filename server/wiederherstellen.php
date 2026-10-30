@@ -212,6 +212,23 @@ $nachweisOk = $darfNachweis
 $notice = null; $error = null;
 $stand = wh_stand_lesen();
 
+/* ---- Die Sperre der Ablage ZUERST (F-R17-19, R17-23) --------------------- *
+ *
+ * `sicherungen/.htaccess` entstand bis Web 23.3.1 erst beim ersten Sichern.
+ * Auf einem frischen Webspace — genau dem Ort, an dem diese Seite gebraucht
+ * wird — fehlte sie, und ein nach `eingang/` gelegter Klartext-Dump
+ * (`.sql.gz`, `.sql`) war per HTTP abrufbar, sein Name sekundengenau ratbar.
+ * Jetzt entsteht sie, bevor die Seite den Eingang liest. Nur unter derselben
+ * Bedingung wie der Nachweis: Auf einer laufenden Anlage schreibt ein
+ * unangemeldeter Aufruf nichts. Laesst sie sich nicht anlegen, wird nicht
+ * gearbeitet — ein offener Eingang ist schlimmer als ein verschobener
+ * Wiederanlauf. */
+$ablageFehler = $darfNachweis ? edbak_ablage_schuetzen() : null;
+if ($ablageFehler !== null) {
+    $error = $ablageFehler . ' Solange der Ordner nicht gesperrt ist, spielt diese '
+           . 'Seite nichts ein — ein Dump darin wäre über das Netz abrufbar.';
+}
+
 /* ---- „Leer" gilt fuers ANFANGEN, nicht fuers WEITERMACHEN ----------------- *
  *
  * DAS IST DIE BEHEBUNG EINES FEHLERS, DEN ERST DER LAUF GEZEIGT HAT. Die
@@ -229,7 +246,7 @@ $stand = wh_stand_lesen();
  * setzt Dateizugriff voraus — und genau den weist der Nachweis ohnehin nach.
  */
 $imLauf = in_array((string)($stand['phase'] ?? ''), ['einspielen', 'fertig'], true);
-$darfArbeiten = ($leer || $imLauf) && $dbFehler === null;
+$darfArbeiten = ($leer || $imLauf) && $dbFehler === null && $ablageFehler === null;
 
 /* ---- Die Handgriffe ------------------------------------------------------ */
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && $darfArbeiten) {
@@ -302,10 +319,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $darfArbeiten) {
                 $notice = 'Der Arbeitsstand wurde verworfen. Die Datei in „eingang" '
                         . 'bleibt liegen.';
             } elseif ($aktion === 'aufraeumen') {
+                /* DIE QUELLDATEI GEHT MIT (F-R17-19, R17-23, Entscheidung der
+                 * Betreiberin). Bis Web 23.3.1 blieb sie liegen, und das
+                 * Runbook sagte es nicht — ein Klartext-Dump eines Hosters
+                 * lag danach unbegrenzt im Webspace. Geloescht wird NUR die
+                 * Datei, aus der dieser Lauf eingespielt hat, und nur, wenn
+                 * sie im Eingang steht: Der Name kommt aus dem Arbeitsstand
+                 * und geht gegen die Liste von `wh_quellen()`. Die Vorlage
+                 * liegt ohnehin am Backup-Ziel oder beim Hoster. */
+                $quelleWeg = null;
+                $qName = (string)($stand['quelle'] ?? '');
+                if ($qName !== '' && in_array($qName, array_column(wh_quellen(), 'datei'), true)
+                    && @unlink(wh_eingang() . '/' . $qName)) {
+                    $quelleWeg = $qName;
+                }
                 wh_arbeit_weg();
                 nachweis_entfernen($nachweisMuster, $nachweis);
                 $stand = [];
-                $notice = 'Aufgeräumt: ausgepackter Klartext und Nachweisdatei sind weg.';
+                $notice = 'Aufgeräumt: ausgepackter Klartext und Nachweisdatei'
+                    . ($quelleWeg !== null
+                        ? ' sind weg, ebenso die Backup-Datei „' . $quelleWeg . '" in „eingang".'
+                        : ' sind weg.')
+                    . (wh_quellen() !== []
+                        ? ' In „eingang" liegt noch eine Backup-Datei, die keinem Lauf '
+                          . 'zuzuordnen ist — bitte von Hand löschen.'
+                        : '');
                 $nachweisOk = false;
             }
         }
@@ -397,16 +435,22 @@ function wh_auspacken(string $datei, string $passwort, array $stand): array
      * zugleich Text für Menschen und Erkennungsmarke für diese Stelle. Mit
      * der Begriffsumstellung heisst sie „Komplett-Backup der Installation";
      * jeder Dump, der VOR S7 erzeugt wurde und heute auf einem Server oder
-     * einem Backup-Ziel liegt, trägt aber noch „Komplett-Backup der
-     * Installation". Würde hier nur die neue Schreibweise gesucht, gälte ein
+     * einem Backup-Ziel liegt, trägt aber noch „Komplettsicherung der
+     * Installation" (bis Web 12.9.2). Würde hier nur die neue Schreibweise gesucht, gälte ein
      * solcher Dump als FREMD — und dann verlangt diese Stelle keine Endmarke
      * mehr und nähme einen abgebrochenen Stand klaglos an. Das ist der
      * gefährlichste Fehlschluss, den eine Umbenennung anrichten kann: Sie
      * schaltet eine Prüfung ab, ohne dass etwas rot wird. Die alte
-     * Schreibweise darf am v1.0-Schnitt weg (R60), nicht vorher. */
+     * Schreibweise darf am v1.0-Schnitt weg (R60), nicht vorher.
+     *
+     * GENAU DAS WAR GESCHEHEN (F-R17-33, behoben in R17-23, E-R17-23): Die
+     * Umstellung des Begriffs am 03.09.2026 hatte BEIDE Zeichenketten
+     * ersetzt, die zwei Zweige waren wortgleich, und ein abgebrochener Dump
+     * von vor S7 ging als fremder ohne Endmarke durch. Die Liste steht
+     * seither neben dem Erzeuger der Kopfzeile (`komp_dump_eigen()` in
+     * komplett_lib.php), und die Komplettprobe haelt sie fest. */
     $anfang = (string)file_get_contents($ziel, false, null, 0, 200);
-    $eigen  = str_contains($anfang, 'Komplett-Backup der Installation')
-           || str_contains($anfang, 'Komplett-Backup der Installation');
+    $eigen  = komp_dump_eigen($anfang);
     $endmarke = str_contains(wh_schwanz($ziel, 4096), KOMP_ENDMARKE);
     if ($eigen && !$endmarke) {
         @unlink($ziel);
@@ -746,8 +790,8 @@ ui_kopf(['menue' => false]);
     <?php if ($phase === 'fertig' || $phase === 'einspielen'): ?>
       <?php ui_karte_start(['titel' => 'Aufräumen']); ?>
         <p class="feld-hinweis">Entfernt den ausgepackten Klartext-Dump aus
-        <code>sicherungen/<?= WH_EINGANG ?>/<?= WH_ARBEIT ?>/</code> und die
-        Nachweisdatei. Die Backup-Datei selbst bleibt liegen.</p>
+        <code>sicherungen/<?= WH_EINGANG ?>/<?= WH_ARBEIT ?>/</code>, die
+        Nachweisdatei und die Backup-Datei, aus der eingespielt wurde.</p>
         <form method="post">
           <input type="hidden" name="csrf" value="<?= ui_e((string)$_SESSION['wh_csrf']) ?>">
           <input type="hidden" name="action" value="aufraeumen">

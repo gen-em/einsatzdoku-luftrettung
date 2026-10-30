@@ -52,8 +52,8 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
 
 | Spanne | Zweig | seit |
 |---|---|---|
-| 400 bis 409 | `claude/tender-feynman-3oyo13` — Schritt 12b, Pakete R17-19 bis -30 (`Review-R17.md`); R17-18 auf `claude/modest-edison-byg7ay` (aufgesetzt auf dessen Stand `8555478`), bis R17-17 `claude/lucid-cannon-nvv86i`, gemergt mit PR #118; vergeben: 400 | 25.10.2026 |
-| ab 410 | frei — höchste vergebene Nummer 400; frei blieben 394 bis 399 aus der Spanne von 19 (PR #112 bis #114), 389 aus der von 12a (PR #116), 372 bis 379 aus der von 12 (PR #103), 362 bis 369 aus der von PK, 359 aus der von 18 (PR #101), 348 und 349 aus der von 17, 338 aus der von AR | 20.10.2026 |
+| 400 bis 409 | `claude/new-session-lvb0x0` — Schritt 12b, Pakete R17-20 bis -30 (`Review-R17.md`); R17-18 und -19 auf `claude/modest-edison-byg7ay` und `claude/tender-feynman-3oyo13`, gemergt mit PR #122, bis R17-17 `claude/lucid-cannon-nvv86i`, gemergt mit PR #118; vergeben: 400 bis 408 (401, 404 bis 406 erledigt) | 26.10.2026 |
+| ab 410 | frei — höchste vergebene Nummer 408; frei blieben 394 bis 399 aus der Spanne von 19 (PR #112 bis #114), 389 aus der von 12a (PR #116), 372 bis 379 aus der von 12 (PR #103), 362 bis 369 aus der von PK, 359 aus der von 18 (PR #101), 348 und 349 aus der von 17, 338 aus der von AR | 20.10.2026 |
 
 ---
 
@@ -144,7 +144,7 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      Der Ausweg ist **nicht** eine Merkliste in der Datenbank — die behauptet
      „schon versandt" auch dann noch, wenn die Datei am Ziel gelöscht oder das
      Ziel neu aufgesetzt wurde, und diese Art Lüge fällt erst auf, wenn man das
-     Backup braucht (Begründung in Technik 4.97c). Denkbar ist stattdessen,
+     Backup braucht (Begründung in Technik 4.9). Denkbar ist stattdessen,
      die Liste je Ziel **einmal rekursiv** zu holen, wo das Protokoll es
      hergibt, und nur bei Zweifel nachzufragen. Erst messen, dann bauen.
 
@@ -220,7 +220,8 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      Befund: Rest von Nr. 59 (Speicherung, Web 12.9.0). Gebaut ist
      inzwischen fast alles: die Modelltabelle auf Betrieb → Statistik (S8/AP4,
      Web 15.3.0; 325 Teilenummern auf 173 Modelle), der Nachlöse-Job
-     (P5a/AP11, Web 20.15.0 — `nachaufloesen.php` ist nur noch Weg von Hand)
+     (P5a/AP11, Web 20.15.0 — `geraetemodelle-nachaufloesen.php` ist nur noch
+     Weg von Hand)
      und die Herkunft je Einsatz mit den drei Reitern der Statistik (P5c/AP7,
      Web 20.47.0, E-P5c-18, ohne Vorbedingung — E-P5c-45). Die User-Agent-
      Hälfte („Rechner zählen") ist gestrichen (R36: keine Neuerhebung).
@@ -238,7 +239,7 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      Der Rundlauf der Uhr-Kopplung sollte sechs Fälle belegen; der sechste —
      „Telefon aus der Reichweite" — ist im Simulator **nicht** herstellbar. Wird
      der Server getötet, sieht die App **HTTP 404**, keinen negativen Code
-     (dieselbe Eigenschaft, die `tools/netzprobe/` für den CA-Fehler gemessen
+     (dieselbe Eigenschaft, die `tools/uhr-pruefstand/netzprobe/` für den CA-Fehler gemessen
      hat: eine fehlgeschlagene TLS-Verbindung erscheint als 404). Der Zweig
      „`Keine Verbindung (n)`, Code bleibt stehen, Abfrage läuft weiter"
      (E-S5-25) bleibt damit ungeprüft, und er ist kein Randfall — er ist der
@@ -331,7 +332,7 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      Zu entfernen: beide Endpunkte samt Aufrufern, `KDF_ITER_LISTE` in
      `db.php` (damit auch das Vormerkfach der Anmeldung), die Statuszeile
      „Schlüsselableitung", die Lesetoleranz für `edk1:` (`WRAP_PRAEFIX_RE`)
-     und die Prüfmittel dazu (`anteilprobe/endpunkt.py` Teil E,
+     und die Prüfmittel dazu (`tools/proben/anteil/endpunkt.py` Teil E,
      `umstellungslauf.mjs`, `huelle_stellen.py`). Nicht mitgehen: die
      Formatkennung selbst und die Rotation des Server-Anteils (E-S10-11).
      Reihenfolge: in einem Paket mit Nr. 46, sobald keine Anlage mit
@@ -349,19 +350,16 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      Die Fahrplanzeile zu Schritt 7 nannte acht Tage lang einen Konzeptpfad,
      den es nicht mehr gab; die 34 Löschungen von Fassung 110 (24.09.2026)
      wurden mit `grep` von Hand nachgezogen — zweiter Fall dieses Punkts.
-     Weg: eine Probe nach dem Muster von `tools/linkprobe/`, die jeden Pfad-
-     und Dateinamensverweis in `docs/`, `server/`, `tools/`, `android/`,
-     `watch/` gegen `git ls-files` hält. Sie muss relative Pfade auflösen
-     (`api/day.php` = `server/api/day.php`, sonst über 200 Fehltreffer),
-     eingefrorene Dokumente auslassen (Archive, Changelog, `erledigt/`) und
-     eine begründete Ausnahmeliste führen (`config.php`, `wartung.lock`,
-     Ausgabeordner, geplante Dokumente).
-     Erledigt ist ein Teil: die Ankerprüfung `hilfe.php#…` gegen die
-     Handbuch-Überschriften (`tools/quelltext/anker.php`, Web 21.1.0, P5c
-     E-P5c-86) führt diese Nummer als Anlass.
-     Abnahme: 0 Treffer außerhalb der Ausnahmeliste, 0 ungenutzte Ausnahmen,
-     und die Zahl der geprüften Verweise steht dabei. Zuordnung P6 (R69),
-     früher, wenn vorher ein weiteres Konzept gelöscht wird.
+     Erledigt: die Ankerprüfung `hilfe.php#…` (`tools/quelltext/anker.php`,
+     Web 21.1.0) und **seit R17-27 die Dokumentenprobe**
+     `tools/quelltext/dokumente.py` in Stufe 1: Pfade in `docs/`, `README.md`,
+     `CLAUDE.md` und jeder `LIESMICH.md` gegen den Baum, mit begründeter
+     Ausnahmeliste; dazu Zahlen an Verzeichnissen, „Stand:"-Kopfzeilen und
+     die Gliederung von `Technik.md` (F-R17-59). Sie fand beim ersten Lauf
+     zehn veraltete Pfade und zwei veraltete Zahlen.
+     **Offen:** die Code-Bäume (`server/`, `tools/`, `android/`, `watch/`) —
+     mit Nr. 408, nach dem Kommentardurchgang. Abnahme dann: 0 Treffer
+     außerhalb der Ausnahmeliste, 0 ungenutzte Ausnahmen.
      Werdegang bis 26.09.2026: `docs/Backlog.md@f5bddc2`, Nr. 188.
 
 <!-- -->
@@ -499,10 +497,10 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      Registrierung sieht aus wie eine richtige (E-P5b-13). Gefährlicher ist
      die andere Zahl: Eine Klinikdomain auf der Liste erfährt nie, woran es
      lag. Jede Aktualisierung muss deshalb beide Messungen wiederholen.
-     Erledigt (Web 20.22.0, AP3): Liste (8 883 Domains) und
-     `tools/wegwerfdomains/aktualisieren.py`, das beide Richtungen misst
-     und nicht schreibt, wenn eine echte Domain getroffen wird; die Zeile im
-     Auslieferungs-Runbook (`Technik.md` 7).
+     Erledigt (Web 20.22.0, AP3): Liste (8 883 Domains) und das Werkzeug
+     (seit PK-04 `tools/erzeugen/wegwerfdomains.py`), das beide Richtungen
+     misst und nicht schreibt, wenn eine echte Domain getroffen wird; die
+     Zeile im Auslieferungs-Runbook (`Technik.md` 13).
      Offen: der Stand der Liste — Datum und Zahl — in Betrieb → Status nach
      dem Vorbild der Zeile Gerätemodelle (`status_lib.php`), damit eine
      veraltete Liste sichtbar ist statt still; und die Zahl steht doppelt
@@ -550,7 +548,7 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      was die Betreiberin tut — Migrationen zurücksetzen oder zweite Anlage,
      anmelden, `update.php`, wieder anmelden — vor dem Kreislauftest, dessen
      Meldung („Anmeldung gescheitert: unbekannt") das Schema nicht nennt.
-     Kette II fuhr den Weg von Hand (`Technik.md` 6); das Prüfmittel
+     Kette II fuhr den Weg von Hand (`Technik.md` 12); das Prüfmittel
      fehlt, sein Platz steht seit PK-06 als Kommentar am Ende von `stufe2`.
      Werdegang bis 26.09.2026: `docs/Backlog.md@f5bddc2`, Nr. 234.
 
@@ -624,7 +622,7 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      Speicherplatz auf einer konkreten Anlage; eine höhere Vorgabe änderte
      sie für jede Installation mit. Die Laufzusammenfassung nennt den
      Dateinamen und sagt, dass er verdrängt wird; das Runbook
-     (`Technik.md` 6.6b, Schritt 2) ebenso.
+     (`Technik.md` 12.12, Schritt 2) ebenso.
      Vorschlag an die Betreiberin (Prüfpunkt 28, vor M2): Aufbewahrung auf
      Staging auf 5 setzen; wie viele Tags man rückwirkend reparieren können
      will, weiß nur sie.
@@ -1101,38 +1099,6 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
 
 <!-- -->
 
-370. **Inhaltsschlüssel als nicht-extrahierbarer `CryptoKey`.** · gehört zu: 12b · Stand: offen · seit 11.10.2026
-     *Aufgenommen 11.10.2026 aus Schritt 12 (Bedrohungsmodell, E-R17-08; aus
-     Nr. 146, Teil 2).* Heute liegen Daten- und Inhaltsschlüssel als Hex im
-     `sessionStorage` (`crypto.js`, `setDataKey()`/`getContentKey()`). Ein
-     XSS kann sie mitnehmen — und weil der Inhaltsschlüssel nie rotiert wird
-     (F-R17-10), öffnet ein einmal gestohlener alle späteren Blöcke. Als
-     `CryptoKey` mit `extractable: false` in IndexedDB könnte ein XSS zwar
-     weiter entschlüsseln lassen, den Schlüssel aber nicht mitnehmen.
-     Umfang: IndexedDB statt `sessionStorage`, anderes Lebensdauermodell
-     („ein Tab, ein Schlüssel", Handbuch 5; die Frist aus `keyguard.js`
-     räumt den Eintrag selbst), alle `getContentKey`-Aufrufer, das
-     `aesKey()`-Fach, `tools/proben/frist/`. **Nach** der scharfen CSP
-     (F-R17-23): Die CSP ist die erste Linie, der `CryptoKey` die zweite.
-     Fable-Schritt in 12b; Begründung im Bedrohungsmodell 6.5.
-
-<!-- -->
-
-371. **Ein Admin darf BetreiberIn-Konten nicht sperren, löschen oder umadressieren.** · gehört zu: 12b · Stand: offen · seit 11.10.2026
-     *Aufgenommen 11.10.2026 aus Schritt 12 (Bedrohungsmodell, F-R17-07,
-     E-R17-11).* `admin_user.php` kennt gegenüber einem BetreiberIn-Konto
-     nur zwei Riegel: den Rollenwechsel und die letzte BetreiberIn. Ein Konto
-     der Rolle admin kann ein **zweites** BetreiberIn-Konto über
-     `konto_status` sperren, über `user_delete` löschen (mit frischem Code)
-     oder über `konto` die Anmeldeadresse ändern und es so aussperren. Die
-     Berechtigungsmatrix (`Technik.md` 4.99p) und die Rollenprobe messen nur
-     `{ziel}` = `user`. Entschieden: nicht erlaubt — Riegel in
-     `admin_user.php` (admin ⊂ betreiberin heißt auch: nach oben kein Griff),
-     eine Zeile in 4.99p, ein Fall in `tools/proben/rollen/`. Kleines Paket
-     in 12b.
-
-<!-- -->
-
 380. **Seitenaufbau: die Skripte jeder Seite kosten bei Drossel 6× 0,7 bis 1,5 s, bevor Daten geholt werden.** · gehört zu: 12b · Stand: offen · seit 13.10.2026
      *Aufgenommen 13.10.2026 mit S11-13 (Konzept S11, Vorschlag V2,
      E-S11-33).* Gemessen am Messstand (`tools/messstand/ausgangsmessung.md`,
@@ -1229,27 +1195,6 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
 
 <!-- -->
 
-386. **Einspielen in Fenstern verwirft Sperrvermerke, deren Quelle in einem anderen Fenster liegt.** · gehört zu: nächste Backlog-Runde · Stand: offen · seit 16.10.2026
-     *Aufgenommen 16.10.2026 bei der Nachprüfung von S11-06 (F-S11-73).*
-     Der Browser schickt die Einträge einer Sicherung in Fenstern zu 250 an
-     `api/backup_eintraege_restore.php`; `edbak_restore()` baut die Karte
-     Kennung → Kennnummer (`$refKarte`) je Aufruf neu. Ein Sperrvermerk,
-     dessen Ruhesegment in einem anderen Fenster stand, findet seine Quelle
-     nicht und wird verworfen („Sperrvermerk ohne Quelle"). Gemessen mit der
-     Sicherung des Messstands (5096 Einsätze, 5782 Ruhesegmente, 44
-     Fenster): 147 von 147 verworfen, obwohl alle 147 `quelle_ref` in der
-     Datei auf ein Ruhesegment zeigen — mit Nutzlast 12 (11.10.) und 13
-     (16.10.) gleich, also älter als S11; der Code steht seit dem
-     17.09.2026. Folge: Der herausgeschnittene Zeitraum ist im Ruhesegment
-     wieder sichtbar, die Punkte erscheinen doppelt. Kleine Bestände (ein
-     Fenster) trifft es nicht; der Kreislauf sieht es deshalb nie.
-     *Weg:* die Quelle bei fehlendem Karteneintrag in der Datenbank des
-     Zielkontos nachschlagen (Kennung und Art), oder die Vermerke erst nach
-     dem letzten Fenster schicken. *Abnahme:* dieselbe Sicherung, 147
-     übernommen, 0 verworfen.
-
-<!-- -->
-
 388. **Die Demo-Fixture lässt sich seit S11 nicht mehr aus dem Referenzkonto erzeugen.** · gehört zu: nächste Backlog-Runde · Stand: offen · seit 19.10.2026
      *Aufgenommen 19.10.2026 in S11-12 (F-S11-95).*
      `tools/referenzdatensatz/fixture/erzeugen.php` las das Referenzkonto
@@ -1320,7 +1265,60 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      Verweis „Grenze 2" in 0 (d) (die Grenze ist mit Web 23 gefallen).
      *Preis:* AVV und Nutzungsbedingungen sind auf Produktiv eingespielt;
      eine neue Fassung sperrt den Login bis zur Annahme (`Technik.md`
-     4.99j) — vorher die Ankündigung setzen.
+     4.31) — vorher die Ankündigung setzen.
      *Abnahme:* die neun Ausnahmen der Klasse `Bestand` in
      `textprobe-ausnahmen.json` (`avv-…`, `nb-…`) greifen nicht mehr und
      sind gestrichen, die Textprobe ist grün; P-R17-13 auf Produktiv.
+
+<!-- -->
+
+402. **Die Sync-Seite der Uhr überlappt ab vier Zeilen im unteren Block.** · gehört zu: 12b · Stand: offen · seit 26.10.2026
+     Gefunden in R17-21 (F-R17-69) beim Bau der Fristanzeige: Auf der
+     Venu 3s schob eine dritte Meldungszeile („Daten verfallen am …") den
+     Mittelblock „N Pakete offen" in die rote Zeile darunter — im Simulator
+     gesehen, zwei Texte übereinander. Der Kommentar in `SyncView.mc` sagt
+     das Gegenteil: „Gegengerechnet bis zu fuenf Zeilen im unteren Block …
+     es ueberlappt nichts." Die Untergrenze `y >= 34` hält die GPS-Zeile im
+     Kreis, aber nicht den Mittelblock über `untenY`. R17-21 hat die Zeile
+     deshalb in die erste gezogen (zwei Zeilen wie vorher); vier Zeilen gibt
+     es aber auch ohne sie, etwa Fehler, Kopplungsmeldung, Weg heraus und
+     Version. *Weg:* den Mittelblock bei Platzmangel verkleinern (kleinere
+     Zahl, `fitFont`) oder Zeilen des unteren Blocks zusammenlegen; dazu
+     eine Bildprobe im Uhr-Prüfstand mit vier und fünf Zeilen auf Fenix,
+     FR945 und Venu 3s. Den Kommentar berichtigen.
+
+<!-- -->
+
+403. **Die Freigabeprobe in Chromium scheitert im Gesamtlauf des Prüfstands an der Anlage ihres Prüfkontos.** · gehört zu: 12b · Stand: offen · seit 27.10.2026
+     *Aufgenommen 27.10.2026 nach R17-23 (Betreiberin: ja, vor R17-30).*
+     Dreimal in Folge — im ersten `neben`-Lauf von R17-21 und R17-22 und im
+     Lauf von R17-23 — brach `freigabeprobe [chromium]` nach 3 s ab:
+     `pruefkonto.py anlegen` meldet „Kontoanlage ohne Einrichtungslink:
+     unbekannt". Die Anmeldung als Admin gelang (sonst meldete das Werkzeug
+     „Anmeldung gescheitert"); erst die Antwort auf `user_add` trug keinen
+     Link und keinen erkennbaren Meldungstext. Einzeln gefahren ist die Probe
+     jedes Mal grün (25/0), in Firefox und WebKit auch im Gesamtlauf.
+     *Stand 29.10.2026:* bis dahin 5 von 7 Läufen rot. Vor ihr laufen nicht
+     die Bedienprobe (so stand es hier bis zum 29.10.), sondern Raten-,
+     Wartungs-, Verbindungs- und Anteilprobe; diese Folge und die alte sind
+     je einmal nachgestellt, beide grün. Die Meldung trägt seit Web 23.5.1
+     die Seitenkennung der Antwort. Folge bleibt: Trifft es im Bericht des
+     Pull Requests, ist er rot. *Weg:* beim nächsten Treffer an der
+     Seitenkennung die Ursache ablesen und beheben, nicht die Probe
+     wiederholen lassen. *Abnahme:* zwei Gesamtläufe `neben` ohne diesen
+     Abbruch.
+
+<!-- -->
+
+408. **Code-Kommentare zeigen auf die alten Abschnittsnummern von `Technik.md`.** · gehört zu: 12b · Stand: offen · seit 28.10.2026
+     *Aufgenommen 28.10.2026 mit R17-27 (Betreiberin: komplett neu
+     nummerieren, Kommentare später).* R17-27 hat `Technik.md` fortlaufend
+     neu nummeriert und die Verweise in den Dokumenten umgestellt; die
+     Kommentare in `server/`, `tools/`, `android/` und `watch/` nennen weiter
+     „Technik.md 4.99q", „5e.2", „6.5" und so fort. Die Zuordnung alt → neu
+     steht in `docs/Technik-Gliederung-alt-neu.md`.
+     *Weg:* im Kommentardurchgang von R17-28 je Verweis die neue Nummer
+     setzen (über die Konkordanz, nicht per Suchen und Ersetzen über bloße
+     Zahlen — „6.5" ist auch ein Teil von „Web 6.5.0"); danach die
+     Dokumentenprobe auf die Code-Bäume erweitern (Nr. 188). *Abnahme:* kein
+     Verweis „Technik.md <alte Nummer>" mehr außerhalb der Konkordanz.

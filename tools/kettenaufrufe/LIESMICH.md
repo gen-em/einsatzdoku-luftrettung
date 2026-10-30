@@ -18,7 +18,7 @@ Quelltext des Werkzeugs** — `argparse`, `case`-Zweige, `BEKANNT`-Mengen,
 Namenslisten der Sammelläufer. Dazu seit R17-19 zwei Riegel (F-R17-16):
 (1) jede fremde `uses:`-Zeile an einer 40-stelligen SHA, Fassung als
 Kommentar; (2) die Ausnahmeliste in `ausliefern-lauf.yml` gleich ihrer
-Sollliste (acht Pfade, Verzeichnisse als `x/**` und `x/`), jeder Serverpfad
+Sollliste (sieben Pfade seit Web 23.3.1, bis dahin acht; Verzeichnisse als `x/**` und `x/`), jeder Serverpfad
 außer `install.php` in `.gitignore`, keine `server/config.php*` eingecheckt.
 
 ## Was es braucht

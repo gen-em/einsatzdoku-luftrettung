@@ -132,6 +132,12 @@ try {
   pruefe(q.zip_eintraege > 0 && q.zip_versiegelt === q.zip_eintraege,
          'Jeder Eintrag im ZIP trägt das Siegel edsk1:',
          `${q.zip_versiegelt} von ${q.zip_eintraege} Einträgen`);
+  /* R17-20 (F-R17-02, E-R17-46): nur an Herkunft oder dieselbe Adresse, mit
+     Protokolleintrag. */
+  pruefe(q.fremd_erlaubt === false, 'Freigabe an ein fremdes Konto ist abgewiesen (R17-20)',
+         'erlaubt=' + q.fremd_erlaubt);
+  pruefe(q.protokolliert >= 1, 'Die Freigabe steht im Protokoll (R17-20)',
+         q.protokolliert + ' Einträge kontobackup_freigegeben');
   pruefe(q.begleit_versiegelt === true,
          'Auch die Begleitdatei konto.json ist versiegelt',
          q.begleit_versiegelt ? 'edsk1:' : 'im Klartext');
@@ -260,7 +266,8 @@ try {
    * sie hier als Chiffretext an, den niemand öffnen kann. */
   const ort = await seite.evaluate(async (n) => {
     try {
-      const k = await EdOrtsdaten.schluessel(await EdCrypto.getContentKey());
+      /* Seit R17-25 aus der Ablage (IndexedDB), nicht mehr aus dem Tab. */
+      const k = await EdOrtsdaten.schluessel((await EdCrypto.inhaltLesen()).schluessel);
       const innen = await EdOrtsdaten.einsatz({ ort_huelle: n.ort_huelle, client_ref: n.client_ref }, k);
       const punkte = await EdOrtsdaten.spur(n.stuecke, 'spur', n.client_ref, [], k);
       return { lat: innen.phasen[0].lat, rea: innen.rea.length, punkte: punkte.length };
@@ -272,7 +279,8 @@ try {
 
   /* ---- 6. Und der Klartext ist derselbe --------------------------------- */
   const klarZurueck = await seite.evaluate(async (blob) => {
-    const ck = await EdCrypto.getContentKey();
+    const eintrag = await EdCrypto.inhaltLesen();
+    const ck = eintrag && eintrag.schluessel;
     if (!ck) { return { fehler: 'Inhaltsschlüssel in dieser Sitzung nicht verfügbar' }; }
     try { return { klar: JSON.parse(await EdCrypto.decrypt(ck, blob)) }; }
     catch (e) { return { fehler: String(e.message || e) }; }

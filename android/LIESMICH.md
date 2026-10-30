@@ -9,12 +9,16 @@ Phasenknöpfe.
 Grundlage ist `docs/konzepte/Konzept-S4-Handy-Uhr-Client.md`; der Vertrag, gegen den
 gebaut wird, steht in `docs/JSON-Vertrag.md` und ist die führende Quelle.
 
-> **Stand: Arbeitspaket C2 — die Blöcke B und C sind damit fertig.** Das
-> Handy koppelt sich, zeichnet auf, dokumentiert Phasen und Einsätze und
-> sendet alles nach dem JSON-Vertrag. Die Uhr hat ihr Bedienbild und den
-> Nachrichtenweg dorthin: Sie puffert jedes Ereignis, bis das Handy quittiert,
-> und liefert wortgleich nach. Was fehlt, ist der Browserteil (Block A) und
-> die Übergabe (Block D).
+> **Stand: Android 0.18.1 (Schritt 12b, R17-24, 27.10.2026).** Das Handy
+> koppelt sich, zeichnet auf, dokumentiert Phasen und Einsätze und sendet
+> alles nach dem JSON-Vertrag — Spur und Phasenorte seit 0.18.0 verschlossen
+> (S11-09). Die Wear-Uhr ist Fernbedienung und puffert jedes Ereignis, bis
+> das Handy quittiert. **Was aussteht:** der Gerätetest, an dessen Ende die
+> erste 1.0.0 steht (E-R45-7), und am Gerät P-R17-11 (der Knopf „Dienst
+> beenden" in der Akkuwarnung, Prüfdokument des Reviews R17). Was der
+> Baulauf meldet, steht in Abschnitt 2 unter „Was der Baulauf heute meldet".
+> *(Bis 0.18.0 stand hier noch „Arbeitspaket C2" aus S4 — der Kasten war
+> seither nicht mehr nachgezogen worden.)*
 
 ---
 
@@ -36,7 +40,8 @@ android/
 ```
 
 Ein Push auf `main` mit Änderungen **unter `android/`** löst **kein Deploy**
-aus — die GitHub-Action lädt nur `server/` hoch (CLAUDE.md 3). Das ist der
+der App aus — ausgeliefert wird sie nur über einen Tag `android-vX.Y.Z`
+(seit PK-08; CLAUDE.md 3, `docs/Technik.md` 4.13 und 12.1). Das ist der
 Grund, warum die Blöcke B und C parallel zu S2/S3 laufen können.
 
 ## 2. Bauen
@@ -1052,7 +1057,7 @@ in den Signaturjob und werden dort gegen die Prüfsummen des Baus gehalten. Bis 
 („signiert wird außerhalb der CI"); die Kommentare in beiden
 `build.gradle.kts` nennen es noch — sie ändern hieße eine Android-Stufe ohne
 eine Zeile am APK (F-PK-49). Das Werkzeug ist `tools/kette/appbau.sh`, der
-Weg steht in `docs/Technik.md` 4.97g.
+Weg steht in `docs/Technik.md` 4.13.
 
 **Jede spätere Fassung muss mit demselben Schlüssel signiert sein.** Android
 erkennt eine App an Paketname **und** Signatur; ein Wechsel bedeutet für
@@ -1406,13 +1411,10 @@ so, wie `tools/uhr-pruefstand/` Stufe II für die Garmin-Uhr ist. Werkzeug:
   Hardware-Sicherheitsanker. `getEncoded() == null` gilt, aber „auch mit
   Root-Rechten nicht auslesbar" hängt am Trusted Execution Environment eines
   echten Geräts. Das bleibt auf der Prüfliste des Gerätetests.
-- **Die Kamera.** `QrKamera` ist eine Hülle um CameraX. Die frühere
-  Begründung — „ohne Emulator gibt es keine" — ist **überholt**: Den Emulator
-  gibt es, und sein AVD führt `hw.camera.back = emulated`. Ungeprüft ist die
-  Hülle trotzdem, nur aus einem anderen Grund: Die emulierte Kamera zeigt eine
-  Kunstszene, und ob ein QR-Code darin erkennbar bei ZXing ankommt, ist eine
-  eigene Frage. Geprüft ist, was dahinterliegt: die Erkennung (`QrLeser`) und
-  die Auswertung des Inhalts (`QrInhalt`).
+- *Die Kamera stand hier bis R17-27 als ungeprüfter Punkt. Die Klassen
+  `QrKamera`, `QrLeser` und `QrInhalt` gibt es seit Android 0.11.0 nicht mehr
+  — gekoppelt wird über den Code auf dem Gerät, nicht über einen QR-Code
+  (F-R17-59).*
 - **Der Vordergrunddienst.** `AufzeichnungsDienst` bekommt im Container weder
   GPS noch einen `LocationManager`. Geprüft ist die Logik dahinter —
   `Ausduenner` gegen fünf synthetische Ströme, `Dienstklammer` gegen echtes

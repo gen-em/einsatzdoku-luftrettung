@@ -77,17 +77,8 @@ if (!$u) {
 }
 
 $email = (string)$u['email'];
-if (!rate_erlaubt('login', $email)) {
-    json_out(['error' => 'gesperrt',
-              'text'  => 'Zu viele Fehlversuche. Bitte später erneut.'], 429);
-}
-
-$token = (string)($_POST['token'] ?? '');
-if ($token === '' || !password_verify($token, (string)$u['password_hash'])) {
-    rate_misserfolg('login', $email);
-    json_out(['error' => 'passwort',
-              'text'  => 'Das Passwort ist nicht korrekt.'], 403);
-}
+/* Topf und Vergleich in einer Funktion (R17-20, F-R17-32, E-R17-49). */
+passwort_nachweis_json($userId, (string)($_POST['token'] ?? ''), 'passwort', 'text');
 
 /* ---- Die neue Huelle ---------------------------------------------------- */
 
@@ -134,5 +125,10 @@ db()->prepare('UPDATE users SET pat_wrap_rc = ? WHERE id = ?')
 require_once __DIR__ . '/../protokoll_lib.php';
 protokoll('verwaltung', 'schluessel_erneuert',
           'Wiederherstellungsschlüssel erneuert', [], $userId);
+/* UND EINE MAIL (R17-20, F-R17-10): Das Protokoll sieht die Rolle user
+ * nicht. Wer Passwort und Sitzung erbeutet hat, ersetzte hier still den
+ * Rueckweg des Kontos — jetzt erfaehrt es die Person im Postfach. */
+require_once __DIR__ . '/../mail_lib.php';
+mail_einreihen('schluessel_erneuert', $email, ['link' => app_url('/einstellungen.php?t=profil')]);
 
 json_out(['ok' => true]);

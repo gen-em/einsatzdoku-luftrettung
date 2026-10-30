@@ -1506,7 +1506,7 @@ ui_seite_start(['titel' => $editing ? 'Einsatz bearbeiten' : 'Einsatz nachtragen
 <?php ui_krypto_bootstrap(); ?>
 <script src="<?= asset('assets/patient.js') ?>"></script>
 <script src="<?= asset('assets/forms.js') ?>"></script>
-<script src="<?= asset('assets/openlocationcode.js') ?>"></script>
+<script src="<?= asset('assets/vendor/openlocationcode.js') ?>"></script>
 <script src="<?= asset('assets/locparse.js') ?>"></script>
 <?php /* vorschlagsliste.js (EdVorschlaege) VOR ortsfeld.js: Die Komponente
          baut ihre Trefferliste beim Aufbau, und der Baustein muss dann
@@ -2077,13 +2077,26 @@ function ortsfeldPatSperren(zu) {
   });
 }
 
+/* FERTIG-MARKE AM FORMULAR (Web 23.5.1, Backlog Nr. 407).
+ *
+ * patLaden() laeuft asynchron: Erst nach dem Entschluesseln setzt es die
+ * Ortschips von Einsatz- und Abfahrtort. Wer vorher am Ortsfeld arbeitet,
+ * dem setzt es den alten Ort hinterher wieder hinein — die Bedienprobe hat
+ * das in WebKit jeden dritten Lauf gezeigt (F-R17-79), ein Mensch, der
+ * schneller tippt, als der Browser entschluesselt, ebenso. Die Marke
+ * `data-pat-geladen` sagt, wann das vorbei ist: `offen` nach dem
+ * Entschluesseln, `gesperrt`, wenn der Schluessel fehlt. Sie wird zu Beginn
+ * jedes Laufs geloescht, weil „Entsperren" ihn ein zweites Mal startet. */
+const PAT_FORM = document.getElementById('missionform');
 async function patLaden(){
+  delete PAT_FORM.dataset.patGeladen;
   PAT_CK = await EdUnlock.ensureContentKey(PAT_WRAP, KDF_SALT, KDF_ITER);
   if (!PAT_CK) {
     document.getElementById('patlocked').hidden = false;
     document.querySelectorAll(PAT_INPUTS).forEach(i => i.disabled = true);
     ortsfeldPatSperren(true);
     reaSperren(true);
+    PAT_FORM.dataset.patGeladen = 'gesperrt';
     return;
   }
   document.getElementById('patlocked').hidden = true;
@@ -2131,6 +2144,7 @@ async function patLaden(){
     if (o.start) { ortStart.setzen(o.start); }
   }
   zeigeAlter();   // sperrt das Altersfeld wieder, wenn ein Geburtsdatum steht
+  PAT_FORM.dataset.patGeladen = 'offen';
 }
 patLaden();
 document.getElementById('unlockbtn').addEventListener('click', () => patLaden());

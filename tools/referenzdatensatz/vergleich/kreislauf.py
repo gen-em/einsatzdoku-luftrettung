@@ -215,8 +215,12 @@ def konto_anlegen(basis: str, admin: AdminZugang, konto: str,
                                          "email": konto, "role": rolle})
     m = re.search(r"pw_handling\.php\?token=([0-9a-f]{64})", antwort.text)
     if not m:
+        # DIE SEITENKENNUNG GEHOERT DAZU (Nr. 403): Fuenfmal stand hier nur
+        # „unbekannt", und niemand wusste, ob die Antwort eine Wartungsseite,
+        # die Anmeldung oder die Liste ohne Meldung war.
         raise RuntimeError("Kontoanlage ohne Einrichtungslink: "
-                           + (sitzungsmodul.fehlertext(antwort.text) or "unbekannt"))
+                           + (sitzungsmodul.fehlertext(antwort.text) or "unbekannt")
+                           + " \u2014 " + sitzungsmodul.seitenkennung(antwort))
     link = f"{basis}/pw_handling.php?token={m.group(1)}"
     melde(f"  Konto {konto} angelegt.")
     lauf(["node", str(WURZEL / "einspielen" / "passwort_setzen.mjs"), link, passwort]

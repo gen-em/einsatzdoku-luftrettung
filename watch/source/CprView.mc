@@ -189,7 +189,7 @@ class CprMenuView extends WatchUi.View {
         ["ROSC",              0x00FF00, Const.R_ROSC],       // gruen
         ["Tod",               0xAAAAAA, Const.R_TOD],        // grau
         ["Rea BEENDEN",       0xFF0000, :stopRec],           // rot
-        ["Übersicht",         0x4280E5, :overview]           // Markenblau
+        ["Übersicht",         Ui.BLAU,  :overview]           // Markenblau
     ];
 
     var index as Lang.Number = 0;
@@ -239,16 +239,17 @@ class CprMenuView extends WatchUi.View {
     }
 }
 
-class CprMenuDelegate extends WatchUi.BehaviorDelegate {
+class CprMenuDelegate extends TastenDelegate {
 
     var _v as CprMenuView;
 
     function initialize(v as CprMenuView) {
-        BehaviorDelegate.initialize();
+        TastenDelegate.initialize();
         _v = v;
     }
 
     function onPreviousPage() as Lang.Boolean {           // UP-Taste bzw. Wischen RUNTER
+        if (Input.beruehrungVerwerfen()) { return true; }   // F-R17-68
         var n = CprMenuView.ITEMS.size();
         _v.index = (_v.index - 1 + n) % n;
         WatchUi.requestUpdate();
@@ -256,12 +257,14 @@ class CprMenuDelegate extends WatchUi.BehaviorDelegate {
     }
 
     function onNextPage() as Lang.Boolean {               // DOWN-Taste bzw. Wischen HOCH
+        if (Input.beruehrungVerwerfen()) { return true; }   // F-R17-68
         _v.index = (_v.index + 1) % CprMenuView.ITEMS.size();
         WatchUi.requestUpdate();
         return true;
     }
 
     function onSelect() as Lang.Boolean {                 // START bzw. Action
+        if (Input.beruehrungVerwerfen()) { return true; }   // F-R17-68
         var id = CprMenuView.ITEMS[_v.index][2];
         WatchUi.popView(WatchUi.SLIDE_RIGHT);
         if (id == :restart) {
@@ -287,6 +290,7 @@ class CprMenuDelegate extends WatchUi.BehaviorDelegate {
     }
 
     function onBack() as Lang.Boolean {
+        if (Input.beruehrungVerwerfen()) { return true; }   // F-R17-68
         WatchUi.popView(WatchUi.SLIDE_RIGHT);
         return true;
     }
@@ -386,12 +390,12 @@ class ResusOverviewView extends WatchUi.View {
     }
 }
 
-class ResusOverviewDelegate extends WatchUi.BehaviorDelegate {
+class ResusOverviewDelegate extends TastenDelegate {
 
     var _v as ResusOverviewView;
 
     function initialize(v as ResusOverviewView) {
-        BehaviorDelegate.initialize();
+        TastenDelegate.initialize();
         _v = v;
     }
 
@@ -408,10 +412,17 @@ class ResusOverviewDelegate extends WatchUi.BehaviorDelegate {
         return true;
     }
 
-    function onPreviousPage() as Lang.Boolean { return _step(-1); }
-    function onNextPage() as Lang.Boolean { return _step(1); }
+    function onPreviousPage() as Lang.Boolean {
+        if (Input.beruehrungVerwerfen()) { return true; }   // F-R17-68
+        return _step(-1);
+    }
+    function onNextPage() as Lang.Boolean {
+        if (Input.beruehrungVerwerfen()) { return true; }   // F-R17-68
+        return _step(1);
+    }
 
     function onSelect() as Lang.Boolean {
+        if (Input.beruehrungVerwerfen()) { return true; }   // F-R17-68
         var id = _v.items[_v.index][2];
         if (id == :resume) {
             WatchUi.popView(WatchUi.SLIDE_RIGHT);
@@ -424,6 +435,7 @@ class ResusOverviewDelegate extends WatchUi.BehaviorDelegate {
     }
 
     function onBack() as Lang.Boolean {
+        if (Input.beruehrungVerwerfen()) { return true; }   // F-R17-68
         WatchUi.popView(WatchUi.SLIDE_RIGHT);
         return true;
     }

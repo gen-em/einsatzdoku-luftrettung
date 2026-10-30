@@ -193,6 +193,31 @@ try {
 
   /* ---- Teil 1 — dieselbe Datei wie gpx_lib.php ---------------------------- */
   console.log('\n  Teil 1 — dieselbe Datei wie bis Web 22.2.0 (soll/)');
+  /* 3a  DIE GEPACKTE SPUR (R17-22, F-R17-39, Anlass: Nr. 43). Bis Web 23.3.0
+     rechnete die Einsatzseite fuer Stufe 2 und 3 mit `n_gespeichert`, das es
+     seit S11-12 nicht mehr gibt: Zahl 0, kein Menueeintrag, eine Warnung je
+     Aufruf. Die Probe kannte nur Stufe 1. Hier wird die STUFE der Stuecke
+     umgeschrieben — der Inhalt bleibt, und die Seite entscheidet nur nach
+     Stufe und Punktzahl. Bewusst ein `UPDATE` statt eines echten Tauschs
+     (`spur2_wartung_tauschen()` misst die Wartungslaufprobe): Gemessen wird
+     der Zweig der Seite, nicht das Packen. Danach zurueck auf 1. */
+  /* Der Schluesselname steht im Protokoll maskiert („…"), deshalb Text und Datei. */
+  const meldZahl = () => Number(php(`echo (int)db()->query("SELECT COUNT(*) FROM protokoll_ereignisse WHERE reiter = 'system' AND text LIKE '%Undefined array key%' AND daten LIKE '%einsatz.php%'")->fetchColumn();`));
+  const meldVor = meldZahl();
+  php(`db()->exec("UPDATE track_stuecke SET stufe = 2 WHERE owner_type = 'mission' AND owner_id = ${mid}");`);
+  try {
+    await s.goto(`${BASIS}/einsatz.php?id=${mid}`, { waitUntil: 'networkidle' });
+    const sp = await s.evaluate(() => (typeof SPUR !== 'undefined' ? SPUR : null));
+    const menue = await s.locator('[data-gpx-laden]').count();
+    const meldNach = meldZahl();
+    pruefe(sp && sp.hat === true && sp.stufe === 2 && sp.n === spurM.length && menue > 0,
+           '3a gepackte Spur (Stufe 2): Zahl und Menüeintrag „GPS-Daten als GPX" bleiben',
+           `SPUR ${JSON.stringify(sp)}, Menüeinträge ${menue}`);
+    pruefe(meldNach === meldVor, '3a … und keine Warnung „Undefined array key" aus einsatz.php im Reiter System', `${meldVor} → ${meldNach}`);
+  } finally {
+    php(`db()->exec("UPDATE track_stuecke SET stufe = 1 WHERE owner_type = 'mission' AND owner_id = ${mid}");`);
+  }
+
   await s.goto(`${BASIS}/tag_spuren.php?d=${dayId}`, { waitUntil: 'networkidle' });
   const eingabe = JSON.parse(readFileSync(join(HIER, 'soll', 'eingabe.json'), 'utf8'));
   const gebaut = await s.evaluate((e) => {

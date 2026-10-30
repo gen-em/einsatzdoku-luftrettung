@@ -1232,6 +1232,25 @@ const ZF_FRISCH_HANDLUNGEN = [
     // Endpunkt (403 JSON), Entfernen ein Formular der Karte.
     'passkey_anlegen'    => ['seite' => 'einstellungen.php',           'ort' => 'k-zweitfaktor'],
     'passkey_entfernen'  => ['seite' => 'einstellungen.php',           'ort' => 'k-zweitfaktor'],
+    // neue Wiederherstellungscodes (R17-20, F-R17-43) — derselbe Grund wie
+    // beim Passkey: ein dauerhafter zweiter Faktor.
+    'totp_codes_neu'     => ['seite' => 'einstellungen.php',           'ort' => 'k-zweitfaktor'],
+    // beide Downloads einer Komplettsicherung (R17-20, F-R17-08, E-R17-48):
+    // der entsiegelte Abzug aller Konten.
+    'komplett_herunterladen' => ['seite' => 'admin_komplettsicherung.php', 'ort' => ''],
+    // die Freigabe eines Konto-Backups an ein Zielkonto (F-R17-02)
+    'freigeben'          => ['seite' => 'admin_user.php',              'ort' => ''],
+    'freigeben_ablage'   => ['seite' => 'admin_sicherungen.php',       'ort' => ''],
+    // Adresswechsel und Setz-Link durch die Verwaltung (F-R17-06, E-R17-45)
+    'adresswechsel_verwaltung' => ['seite' => 'admin_user.php',        'ort' => ''],
+    // die drei Tokens der Hintergrundjobs (R17-26, Q-R17-21, E-R17-73): Ein
+    // neues Token gibt den Weg zu Jobs, Wartung und Backup bzw. zur
+    // Zustandsauskunft frei — eine uebernommene Sitzung soll das nicht
+    // ohne zweiten Faktor koennen.
+    'jobs_token_neu'     => ['seite' => 'betrieb_jobs.php',            'ort' => 'k-ausloeser'],
+    'kette_token_neu'    => ['seite' => 'betrieb_jobs.php',            'ort' => 'k-kette'],
+    'health_token'       => ['seite' => 'betrieb_jobs.php',            'ort' => 'k-health'],
+    'setzlink'           => ['seite' => 'admin_user.php',              'ort' => ''],
 ];
 
 /** Darf diese Rolle den Bereich Betrieb sehen und bedienen? */

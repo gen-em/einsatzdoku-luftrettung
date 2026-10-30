@@ -57,8 +57,12 @@ declare(strict_types=1);
  *     cp server/config.php /tmp/vorher/
  *     php tools/proben/wiederherstellung/probe.php /tmp/vorher
  *
- * Erwartet: **115 von 115** mit dem heutigen Stand, Rueckgabe 0 (gemessen
- * 25.09.2026, P5c/AP8: vier aus Teil 13; davor 111 — die 110 hier war seit
+ * Erwartet: **142 von 142** mit dem heutigen Stand, Rueckgabe 0 (gemessen
+ * 27.10.2026, R17-23: fuenfzehn aus Teil 8 (F-R17-35), 15 (Nr. 386) und 16
+ * (F-R17-34); davor 127 — hier stand noch 115: zwoelf Erwartungen seit
+ * P5c/AP8, darunter Teil 14 (S11-06), waren ohne Spur dazugekommen,
+ * derselbe Fehler ein drittes Mal).
+ * (115 seit 25.09.2026, P5c/AP8: vier aus Teil 13; davor 111 — die 110 hier war seit
  * P5c/AP2 um eine zu klein und stand ohne Spur, derselbe Fehler wie am
  * 16.09.).
  * (94 bis S10/AP4 — Teil 8 hat mit der Fassung 3 vier Erwartungen dazu
@@ -957,6 +961,40 @@ $sag('Ein Teil aus einem ANDEREN Paket desselben Kontos wird abgewiesen',
      substr((string)$grundM, 0, 62));
 copy($sicher7, $pfad6);
 @unlink($sicher7);
+
+/* EIN UNVERSIEGELTER TEIL IN EINEM FASSUNG-3-PAKET (F-R17-35, R17-23).
+ *
+ * Bis Web 23.3.1 entschied das Praefix je Teil: Wer einem Teil das Siegel
+ * abnahm und seinen Klartext hinlegte, kam durch — die Bindung an Server,
+ * Konto, Paket und Teilnamen fiel fuer diesen Teil weg. Jetzt gilt: Ist das
+ * Manifest versiegelt, muss es jeder Teil sein. Gemessen auf beiden Wegen,
+ * die einen Teil oeffnen: dem Einspielen und dem Teilweg des Browsers. */
+$sicher8 = sys_get_temp_dir() . '/whprobe-' . bin2hex(random_bytes(4)) . '.zip';
+copy($pfad6, $sicher8);
+$zk = new ZipArchive(); $zk->open($pfad6);
+$kopfKlar = edbak_teil_oeffnen((string)$zk->getFromName('kopf.json'), $kennung, $datei6, 'kopf.json');
+$zk->deleteName('kopf.json');
+$zk->close();
+$zk = new ZipArchive(); $zk->open($pfad6);
+$zk->addFromString('kopf.json', (string)$kopfKlar);
+$zk->close();
+$ziel12 = $konto('probe-adminoffen@example.invalid');
+[$okO, $grundO, ] = edbak_paket_einspielen($kennung, $datei6, $ziel12);
+$sag('(F-R17-35) Ein Teil ohne Siegel in einem versiegelten Paket wird abgewiesen',
+     is_string($kopfKlar) && !sk_versiegelt($kopfKlar) && $okO === false
+       && (int)$pdo->query("SELECT COUNT(*) FROM missions WHERE user_id = $ziel12")
+                   ->fetchColumn() === 0,
+     is_string($kopfKlar) ? substr((string)$grundO, 0, 62) : 'kopf.json nicht geoeffnet');
+$teilO = edbak_paket_teil_lesen($kennung, $datei6, 'kopf.json');
+$sag('(F-R17-35) ...und der Teilweg des Browsers gibt ihn nicht heraus',
+     $teilO === null, $teilO === null ? 'null' : strlen($teilO) . ' Byte geliefert');
+copy($sicher8, $pfad6);
+@unlink($sicher8);
+$teilG = edbak_paket_teil_lesen($kennung, $datei6, 'kopf.json');
+$sag('(F-R17-35) Gegenprobe: derselbe Teil MIT Siegel geht auf',
+     is_string($teilG) && is_array(json_decode($teilG, true)),
+     is_string($teilG) ? strlen($teilG) . ' Byte' : 'null');
+$weg($ziel12);
 
 /* Baureste blockieren die Ordnerloeschung nicht mehr. */
 @mkdir(edbak_ordner($kennung) . '/' . EDBAK_BAU_PRAEFIX . 'deadbeef');
@@ -1884,6 +1922,166 @@ try {
     $weg($uid14b);
 } finally {
     $weg($uid14);
+}
+
+/* ==========================================================================
+ * TEIL 15 — SPERRVERMERKE UEBER FENSTERGRENZEN (Backlog Nr. 386, R17-23)
+ *
+ * DIE LAGE. Der Browser spielt eine Sicherung in Fenstern ein, und die
+ * Sicherung schreibt alle Einsaetze vor allen Ruhesegmenten. Ein Vermerk,
+ * dessen Quelle ein Segment ist, kam deshalb in einem Fenster an, in dem es
+ * seine Quelle nicht gab, und wurde verworfen — am Messstand 147 von 147.
+ * Jetzt kommt er als `schnitte_offen` zurueck, und
+ * `edbak_schnitte_nachreichen()` loest ihn nach dem letzten Fenster auf.
+ *
+ * Gefahren wie der Browser: Kopf (Diensttage) allein, dann ein Fenster mit
+ * den Einsaetzen, dann eins mit den Segmenten, dann das Nachreichen.
+ * ====================================================================== */
+echo "\n  Teil 15 — Sperrvermerke ueber Fenstergrenzen (Nr. 386, R17-23)\n";
+$hatNachreichen = function_exists('edbak_schnitte_nachreichen');
+$fenster15 = function (int $u, array $p, bool $segmenteZuerst) use ($restore, $blobGleich): array {
+    $sK = $restore($u, ['version' => 9, 'days' => $p['days'], 'missions' => [], 'rest_segments' => []]);
+    $map = $sK['day_map'] ?? [];
+    $fM = ['version' => 9, 'missions' => $p['missions'], 'rest_segments' => []];
+    $fR = ['version' => 9, 'missions' => [], 'rest_segments' => $p['rest_segments']];
+    $erst = $segmenteZuerst ? $fR : $fM;
+    $dann = $segmenteZuerst ? $fM : $fR;
+    $s1 = edbak_restore($u, $erst, $map, 'server', $blobGleich, true);
+    $s2 = edbak_restore($u, $dann, $map, 'server', $blobGleich, true);
+    $offen = array_merge($s1['schnitte_offen'] ?? [], $s2['schnitte_offen'] ?? []);
+    $verworfen = ($s1['schnitte']['verworfen'] ?? 0) + ($s2['schnitte']['verworfen'] ?? 0);
+    $uebernommen = ($s1['schnitte']['uebernommen'] ?? 0) + ($s2['schnitte']['uebernommen'] ?? 0);
+    return [$offen, $verworfen, $uebernommen];
+};
+$uid15 = $konto('probe-fenster386@example.invalid');
+$uid15b = $konto('probe-fenster386b@example.invalid');
+$uid15c = $konto('probe-fenster386c@example.invalid');
+try {
+    [$offen15, $verw15, $uebn15] = $fenster15($uid15, $paket9([$guterVermerk]), false);
+    $sag('(1) Quelle in einem SPAETEREN Fenster: Vermerk kommt offen zurueck, nicht verworfen',
+         count($offen15) === 1 && $verw15 === 0 && $uebn15 === 0
+           && ($offen15[0]['ziel_ref'] ?? '') === 'cut-s1',
+         count($offen15) . ' offen, ' . $verw15 . ' verworfen');
+    $sN = $hatNachreichen ? edbak_schnitte_nachreichen($uid15, $offen15) : [];
+    $v15 = $vermerke($uid15);
+    $sag('(2) Nachgereicht: uebernommen, an der richtigen Quelle',
+         $hatNachreichen && (int)($sN['schnitte']['uebernommen'] ?? 0) === 1
+           && (int)($sN['schnitte']['verworfen'] ?? -1) === 0
+           && count($v15) === 1 && $v15[0]['owner_type'] === 'rest'
+           && $v15[0]['owner_id'] === $holeId('rest_segments', 'r-s1', $uid15)
+           && $v15[0]['von_ts'] === 1786000000,
+         $hatNachreichen ? json_encode($sN['schnitte'] ?? null) . ', ' . count($v15) . ' Vermerk(e)'
+                         : 'edbak_schnitte_nachreichen() fehlt');
+
+    [$offenB, $verwB, $uebnB] = $fenster15($uid15b, $paket9([$guterVermerk]), true);
+    $sag('(3) Quelle in einem FRUEHEREN Fenster: sofort uebernommen (aus dem Konto)',
+         count($offenB) === 0 && $verwB === 0 && $uebnB === 1 && count($vermerke($uid15b)) === 1,
+         count($offenB) . ' offen, ' . $uebnB . ' uebernommen');
+
+    /* Das Nachreichen glaubt dem Browser nicht: alles wird neu geprueft. */
+    if ($hatNachreichen) {
+        $basis = ['ziel_ref' => 'cut-s1'] + $guterVermerk;
+        $sF = edbak_schnitte_nachreichen($uid15c, [
+            $basis,                                                    // Ziel fehlt im Konto
+        ]);
+        $sag('(4) Nachreichen: ein Ziel, das es im Konto nicht gibt, wird verworfen',
+             (int)($sF['schnitte']['verworfen'] ?? 0) === 1
+               && (int)($sF['skipped_reasons']['schnitt_ohne_ziel'] ?? 0) === 1
+               && count($vermerke($uid15c)) === 0,
+             json_encode($sF['skipped_reasons'] ?? []));
+        $sW = edbak_schnitte_nachreichen($uid15, [
+            array_merge($basis, ['von_ts' => 1786001800, 'bis_ts' => 1786000000]),
+            array_merge($basis, ['quelle_ref' => 'r-gibt-es-nicht']),
+            array_merge($basis, ['quelle_art' => 'irgendwas']),
+            'kein Feld',
+        ]);
+        $sag('(5) Nachreichen prueft neu: Werte, Quelle, Art, Aufbau — vier verworfen',
+             (int)($sW['schnitte']['verworfen'] ?? 0) === 4
+               && (int)($sW['schnitte']['uebernommen'] ?? -1) === 0
+               && (int)($sW['skipped_reasons']['schnitt_werte'] ?? 0) === 1
+               && (int)($sW['skipped_reasons']['schnitt_ohne_quelle'] ?? 0) === 1
+               && (int)($sW['skipped_reasons']['schnitt_aufbau'] ?? 0) === 2
+               && str_contains(json_encode($sW['rejected'] ?? []), 'r-gibt-es-nicht')
+               && count($vermerke($uid15)) === 1,
+             json_encode($sW['skipped_reasons'] ?? []));
+        $zuViel = array_fill(0, EDBAK_SCHNITTE_NACHREICHEN_MAX + 2,
+                             array_merge($basis, ['quelle_ref' => 'r-gibt-es-nicht']));
+        $sG = edbak_schnitte_nachreichen($uid15c, $zuViel);
+        $sag('(6) Ueber der Grenze: der Rest zaehlt als verworfen, nichts faellt still heraus',
+             (int)($sG['schnitte']['verworfen'] ?? 0) === EDBAK_SCHNITTE_NACHREICHEN_MAX + 2,
+             'verworfen ' . (int)($sG['schnitte']['verworfen'] ?? 0));
+    } else {
+        $sag('(4)-(6) Nachreichen prueft neu', false, 'edbak_schnitte_nachreichen() fehlt');
+    }
+} finally {
+    $weg($uid15); $weg($uid15b); $weg($uid15c);
+}
+
+/* ==========================================================================
+ * TEIL 16 — STAMMDATEN DURCH DIE PRUEFSCHICHT (F-R17-34, R17-23)
+ *
+ * Bis Web 23.3.1 gingen Namen und Koordinaten der Stammdaten roh in die
+ * Datenbank. Ein Standortname mit Leerraum kam mit Leerraum an, eine
+ * Koordinate ausserhalb des Bereichs blieb stehen, ein zu langer Name brach
+ * im strikten SQL-Modus den Lauf. Jetzt: wie im Formular.
+ * ====================================================================== */
+echo "\n  Teil 16 — Stammdaten durch die Pruefschicht (F-R17-34, R17-23)\n";
+$uid16 = $konto('probe-stammdaten34@example.invalid');
+try {
+    $lang = str_repeat('Bereitschaft ', 12);                     // 156 Zeichen
+    $ausnahme16 = null; $s16 = [];
+    try {
+        $s16 = $restore($uid16, [
+            'version' => 12,
+            'stammdaten' => [
+                'bases' => [['name' => '  Wache Nord  ', 'lat' => '95.5', 'lon' => 11.25,
+                             'is_default' => 0],
+                            ['name' => '   ', 'lat' => null, 'lon' => null]],
+                'vehicles' => [['name' => 'RTH Probe', 'kind' => 'air', 'typ' => 'standard',
+                                'base_ref' => 'Wache Nord   ',
+                                'roles' => ['p1', 'hems'], 'capabilities' => []]],
+                'bw_units' => [['name' => $lang, 'base_ref' => 'Wache Nord']],
+                'transport_dests' => [['name' => ' Klinikum ', 'base_ref' => 'Wache Nord',
+                                       'lat' => 'abc', 'lon' => 200]],
+            ],
+            'days' => [], 'missions' => [], 'rest_segments' => [],
+        ]);
+    } catch (Throwable $e) { $ausnahme16 = $e; }
+    $sag('(1) Die Datei spielt ohne Ausnahme ein', $ausnahme16 === null,
+         $ausnahme16 === null ? 'ohne Ausnahme'
+             : get_class($ausnahme16) . ': ' . mb_substr($ausnahme16->getMessage(), 0, 60));
+    $b16 = $pdo->prepare('SELECT name, lat, lon FROM bases WHERE user_id = ?');
+    $b16->execute([$uid16]);
+    $basen = $b16->fetchAll(PDO::FETCH_ASSOC);
+    $sag('(2) Standortname ohne Leerraum, Breite ausserhalb des Bereichs verworfen, Laenge bleibt',
+         count($basen) === 1 && $basen[0]['name'] === 'Wache Nord'
+           && $basen[0]['lat'] === null && abs((float)$basen[0]['lon'] - 11.25) < 1e-9,
+         json_encode($basen, JSON_UNESCAPED_UNICODE));
+    $sag('(3) Ein Standort ohne Namen wird uebersprungen und gezaehlt',
+         (int)($s16['stammdaten_skipped'] ?? -1) === 1,
+         'uebersprungen ' . (int)($s16['stammdaten_skipped'] ?? -1));
+    $v16 = $pdo->prepare('SELECT v.name, b.name AS standort FROM vehicles v
+                            LEFT JOIN bases b ON b.id = v.base_id WHERE v.user_id = ?');
+    $v16->execute([$uid16]);
+    $fz = $v16->fetch(PDO::FETCH_ASSOC) ?: [];
+    $sag('(4) Das Rettungsmittel findet seinen Standort trotz Leerraum im Verweis',
+         ($fz['standort'] ?? null) === 'Wache Nord', json_encode($fz, JSON_UNESCAPED_UNICODE));
+    $w16 = $pdo->prepare('SELECT name FROM bw_units WHERE user_id = ?');
+    $w16->execute([$uid16]);
+    $wn = (string)$w16->fetchColumn();
+    $sag('(5) Ein zu langer Name wird auf die Spaltenlaenge gekuerzt und gemeldet',
+         mb_strlen($wn) === SD_NAME_MAX
+           && str_contains(json_encode($s16['rejected'] ?? []), 'bw_units.name'),
+         mb_strlen($wn) . ' Zeichen, ' . json_encode(array_keys($s16['rejected'] ?? []), JSON_UNESCAPED_UNICODE));
+    $t16 = $pdo->prepare('SELECT name, lat, lon FROM transport_dests WHERE user_id = ?');
+    $t16->execute([$uid16]);
+    $zl = $t16->fetch(PDO::FETCH_ASSOC) ?: [];
+    $sag('(6) Zielklinik: Name ohne Leerraum, unbrauchbare Koordinaten verworfen',
+         ($zl['name'] ?? null) === 'Klinikum' && array_key_exists('lat', $zl)
+           && $zl['lat'] === null && $zl['lon'] === null,
+         json_encode($zl, JSON_UNESCAPED_UNICODE));
+} finally {
+    $weg($uid16);
 }
 
 printf("\n  -> %d Erwartungen, %d nicht erfuellt\n", $gesamt, $fehler);

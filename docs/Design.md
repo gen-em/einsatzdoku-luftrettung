@@ -968,7 +968,7 @@ AGPL-3.0; siehe `docs/Lizenzen.md`.
 | `schloss-offen.svg` | Tabler Icons „lock-open" (MIT) | 5 |
 | `schloss.svg` | Tabler Icons „lock" (MIT) | 21 |
 | `server.svg` | Tabler Icons „server" (MIT) | 19 |
-| `sicherung.svg` | Tabler Icons „archive" (MIT) | 24 |
+| `sicherung.svg` | Tabler Icons „archive" (MIT) | 25 |
 | `sonstiges.svg` | Tabler Icons „dots-circle-horizontal" (MIT) | 78 |
 | `sortieren.svg` | Tabler Icons „arrows-sort" (MIT) | 4 |
 | `standort.svg` | Tabler Icons „map-pin" (MIT) | 26 |
@@ -985,7 +985,7 @@ AGPL-3.0; siehe `docs/Lizenzen.md`.
 | `winkel.svg` | Tabler Icons „chevron-down" (MIT) | 19 |
 | `zahnrad.svg` | Tabler Icons „settings" (MIT) | 2 |
 | `ziel-fern.svg` | Tabler Icons „cloud-upload" (MIT) | 1 |
-| `zurueck.svg` | Tabler Icons „arrow-left" (MIT) | 33 |
+| `zurueck.svg` | Tabler Icons „arrow-left" (MIT) | 34 |
 
 58 Dateien in `server/assets/images/symbole/`, dazu `LICENSE-tabler-icons.txt` und `LIESMICH.md`.
 **Nirgends genannt:** `luftlinie`, `reanimation`, `werkzeug`.
@@ -1018,6 +1018,7 @@ für eine Rückfrage — nicht für ein neues Element.
 | die eine Haupthandlung | `ui_knopf(['art' => 'primaer'])` | zwei primäre Knöpfe |
 | eine Handlung, die löscht | `ui_knopf(['art' => 'gefahr'])`, im Blatt `blatt-gefahr` | roten Text |
 | eine Rückfrage in **einem Satz** | `data-confirm="…"` (`assets/confirm.js`) | ein eigener Dialog |
+| eine Rückfrage, die **zwei oder drei kurze Absätze** braucht | `edConfirm([absatz, …], ok, ton, titel)` — jeder Absatz als Text (seit Web 23.4.0, Nr. 404) | mehrere Rückfragen hintereinander; ein Absatz Fließtext |
 | eine Rückfrage mit **Aufstellung** | eine eigene Seite mit Karte und Zeilen | einen Dialog mit viel Text |
 | der NutzerIn etwas sagen | `ui_meldung()` / `ui_meldung_markup($ton, …)` | ein `<p>` in Rot |
 | einen Zustand an einer Zeile zeigen | `ui_plakette($text, ['ton' => …])` | ein farbiges Wort |
@@ -1614,6 +1615,14 @@ Kopf und sprängen mit; das Mockup bleibt hier folgenlos.
 > Reanimationen, Ruhesegmente, Trackpunkte — bekommt eine eigene **Seite**.
 > Ein Dialog, der einen halben Bildschirm Text trägt, ist keiner mehr; und
 > der Weg zu einer Seite hat eine Adresse, die man zurückgehen kann.
+>
+> **Absätze sind keine Aufstellung** (seit Web 23.4.0, Backlog Nr. 404,
+> freigegeben mit Bild am 28.10.2026). Braucht eine Rückfrage zwei oder drei
+> kurze Sätze zu verschiedenen Dingen — was in der Datei steht, was mit dem
+> Passwort ist —, nimmt `edConfirm()` eine Liste; jeder Eintrag wird ein
+> eigenes `<p>` mit `textContent`, die Abstände kommen aus `.dialog-inhalt p`.
+> Vorher fragte der Export dreimal hintereinander. Eine Liste von
+> Datensätzen bleibt eine Seite.
 
 **Ein Formulardialog rollt in sich** (seit Web 17.0.0). Kopf und Fuß stehen
 fest, `.dialog-inhalt` bekommt `overflow-y:auto`; die Höhe ist auf
@@ -2727,7 +2736,7 @@ hieße, sie zweimal zu benennen; das Inhaltsverzeichnis steht als erstes
 Element im `<main>`, der Sprung landet also dort, wo das Mockup hinwill.
 
 **Eigene Funktion und keine Option an `ui_karte_ende()`:** Die hat als
-einziger Baustein kein `array $o`, dafür 115 Aufrufstellen.
+einziger Baustein kein `array $o`, dafür über hundert Aufrufstellen (`grep -c "ui_karte_ende("`, am 28.10.2026: 154).
 
 ### 9.34 Kopfzeile einer Tagesgruppe (`.imp-daygroup`)
 
@@ -3349,9 +3358,9 @@ Ergebnis.
 
 | Liste | wofür | Vermerke |
 |---|---|---|
-| `streichliste.md` | Klassen des alten Stylesheets, die es nicht mehr gibt, je mit ihrem Ersatz | `[bleibt]` für die, die als Skriptanker im Markup bleiben |
-| `ausnahmen.md` | Werte außerhalb der Token — Geometrie statt Gestaltung | — |
-| `ohne-regel.md` | Klassen im Markup, die keine Regel brauchen | `[bleibt]` = kein Befund, nur eine Zahl · `[offen]` = bleibt Befund, unter eigener Überschrift |
+| `tools/quelltext/vollstaendigkeit-streichliste.md` | Klassen des alten Stylesheets, die es nicht mehr gibt, je mit ihrem Ersatz | `[bleibt]` für die, die als Skriptanker im Markup bleiben |
+| `…-ausnahmen.md` | Werte außerhalb der Token — Geometrie statt Gestaltung | — |
+| `…-ohne-regel.md` | Klassen im Markup, die keine Regel brauchen | `[bleibt]` = kein Befund, nur eine Zahl · `[offen]` = bleibt Befund, unter eigener Überschrift |
 
 **Warum es die dritte gibt.** Die Gegenprobe „im Markup, aber ohne Regel" hat
 den Export-Knopf gefunden — und stellte diesen einen echten Fund neben

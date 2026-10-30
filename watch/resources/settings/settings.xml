@@ -3,14 +3,6 @@
              title="Server-Adresse (Vorgabe: nadoku.gen-em.org; Selbsthoster tragen ihre Domain ein)">
         <settingConfig type="alphaNumeric"/>
     </setting>
-    <setting propertyKey="@Properties.deviceId"
-             title="Geräte-ID (wird beim Koppeln automatisch gesetzt)">
-        <settingConfig type="alphaNumeric"/>
-    </setting>
-    <setting propertyKey="@Properties.apiKey"
-             title="API-Schlüssel (wird beim Koppeln automatisch gesetzt)">
-        <settingConfig type="alphaNumeric"/>
-    </setting>
     <setting propertyKey="@Properties.touchEnabled"
              title="Touchbedienung verwenden (nur bei Uhren mit Touch und UP/DOWN-Tasten)">
         <settingConfig type="boolean"/>

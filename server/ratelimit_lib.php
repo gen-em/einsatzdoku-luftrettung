@@ -139,12 +139,21 @@ const RATE_GRENZEN = [
      * steigt mit jeder Sperre (E-P5a-04). `sperre` bleibt trotzdem stehen —
      * als Rueckfall fuer das Fenster zwischen Deploy und Migrationslauf, in
      * dem es die Spalte `stufe` noch nicht gibt. */
+    /* `login` ZAEHLT NUR DAS KONTO (seit Web 23.3.1, F-R17-36) — die Aufrufer
+     * geben `rate_nur_konto()` mit; die Adresse zaehlt `login_ip`. `salt`
+     * zaehlt Konto UND Adresse mit Absicht: Er wird je Anmeldung einmal
+     * gerufen, und 30 Abrufe je Anschluss in 15 min sind die Bremse gegen
+     * das Abklappern von Adressen. */
     'login' => ['max' => 10, 'fenster' =>  900, 'sperre' =>  900, 'leiter' => true],
     'salt'  => ['max' => 30, 'fenster' =>  900, 'sperre' =>  900, 'leiter' => true],
 
     /* `reset` OHNE LEITER, obwohl das Konzept ihn nennt — Begruendung im Kopf
      * dieser Datei: Er sperrt heute eine Stunde, jede Sprosse unterhalb der
-     * vierten waere schwaecher, und sein Scheitern ist absichtlich still. */
+     * vierten waere schwaecher, und sein Scheitern ist absichtlich still.
+     * Er zaehlt Konto UND Adresse (`rate_merkmale()`), und das ist gewollt
+     * (R17-22, F-R17-36): Fuenf Reset-Anfragen je Anschluss und Stunde
+     * bremsen den Mailversand an fremde Postfaecher; ein gesperrter
+     * Anschluss verliert dabei keine Anmeldung, nur den Link. */
     'reset' => ['max' =>  5, 'fenster' => 3600, 'sperre' => 3600],
 
     /* DIE ANMELDUNG HAT ZWEI SCHWELLEN, UND DESHALB ZWEI TOEPFE (E-P5a-04).
@@ -283,6 +292,14 @@ const RATE_GRENZEN = [
      * (`rate_merkmal_kennung()`), auch eine erfundene — sonst waere die
      * Sperre selbst eine Auskunft darueber, ob es das Konto gibt. */
     'notweg' => ['max' => 5, 'fenster' => 3600, 'sperre' => 3600, 'leiter' => true],
+
+    /* UND DER ANSCHLUSS DES NOTZUGANGS (R17-22, F-R17-37). Wer die Adresse je
+     * Anfrage wechselte — erfundene reichen, der Blindvergleich rechnet
+     * trotzdem —, bekam bis Web 23.3.0 je Anfrage eine bcrypt-Rechnung ohne
+     * jede Grenze: Rechenlast auf einem Webspace mit wenigen Arbeitern. 20
+     * je Stunde und Anschluss sind viermal so viel, wie ein ehrlicher Versuch
+     * je Adresse je bekommt, und das Muster ist das von `login_ip`. */
+    'notweg_ip' => ['max' => 20, 'fenster' => 3600, 'sperre' => 3600, 'leiter' => true],
 
     /* DER GLOBALE ZAEHLER SPERRT NIE (E-P5a-05). `max` steht auf der
      * groesstmoeglichen Zahl, damit die Sperrbedingung in `rate_misserfolg()`
@@ -505,6 +522,26 @@ function rate_merkmal_ip(): string
 function rate_merkmal_kennung(string $kennung): string
 {
     return 'id:' . mb_substr(mb_strtolower(trim($kennung)), 0, 180);
+}
+
+/**
+ * Die Merkmalsliste eines Topfes, der NUR das Konto zaehlt (R17-22, F-R17-36).
+ *
+ * `rate_merkmale($konto)` haengt immer die Adresse an — und ein Topf hat EINE
+ * Schwelle. Im Topf `login` (10) sperrten damit zehn Fehlversuche von einem
+ * Anschluss, gleich an welchen Konten, den ganzen Anschluss: eine Klinik
+ * hinter einem NAT fuer bis zu eine Stunde, ausgeloest von jemandem, der zehn
+ * erfundene Adressen tippt. Der Topf `login_ip` (50, R37) griff nie, weil 10
+ * vor 50 kommt. Beim Schluesselblatt (3) ebenso. Wer einen Konto-Topf ruft,
+ * gibt deshalb diese Liste mit; die Adresse zaehlt ein eigener Topf mit
+ * eigener Schwelle (`login_ip`). `reset` und `salt` behalten Konto UND
+ * Adresse mit Absicht — dort sind wenige Anfragen je Anschluss gewollt.
+ *
+ * @return array<int, string>
+ */
+function rate_nur_konto(string $konto): array
+{
+    return [rate_merkmal_kennung($konto)];
 }
 
 /* ===========================================================================

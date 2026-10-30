@@ -699,6 +699,50 @@ try {
          && zahl15 === '0', '15 Klartext → 400 klartext, falsche Zeiten → 409 ortsdaten, nichts angelegt',
          JSON.stringify(k15) + ` · ${zahl15}`);
 
+  /* 15b  Import: ein Diensttag im Papierkorb neben einem aktiven (R17-22,
+     F-R17-40) und „overwrite" ohne Kennung (F-R17-41). Bis Web 23.3.0
+     sperrte EIN geloeschter Tag desselben Datums das ganze Datum — alle
+     Einsaetze unter `ohne_diensttag`, obwohl `check` den aktiven Tag eben
+     gemeldet hatte; und „overwrite" ohne `overwrite_id` legte einen Einsatz
+     mit ungepruefter Kennung an. Der geloeschte Tag wird von Hand angelegt
+     und am Ende wieder entfernt, ebenso der importierte Einsatz. */
+  php(`db()->prepare("INSERT INTO days (user_id, day, started_at, deleted_at) VALUES (?, ?, NOW(), NOW())")
+       ->execute([${id}, '${tag}']);`);
+  const refP = 'imp-' + 'c'.repeat(24);
+  /* Der Server legt Phase 2 zum Beginn an; die Phasenliste der Nutzlast muss
+   * sie nennen, sonst schlaegt der Waechter an (409 ortsdaten). */
+  const tsP = Number(php(`require_once "server/validate_lib.php";
+    echo (int)strtotime(local_to_utc('${tag}', '11:00', 0) . ' UTC');`));
+  let k15b;
+  try {
+    k15b = await s.evaluate(async ([tag, ref, ts]) => {
+      const ruf = async (b) => (await EdApi.postJson('api/import_commit.php', b, { vorgang: 'x' }));
+      const h = await EdOrtsdaten.einsatzVerschliessen({ fassung: 1, phasen: [], rea: [] }, ref);
+      const neben = await ruf({ action: 'commit', days: [{ day: tag, mode: 'keep' }],
+        missions: [{ day: tag, started_local: '11:00', dup: 'insert', client_ref: ref, ort_huelle: h,
+                     ort_phasen: [[2, ts]] }] });
+      const ohneId = await ruf({ action: 'commit', days: [{ day: tag, mode: 'keep' }],
+        missions: [{ day: tag, started_local: '11:30', dup: 'overwrite', client_ref: '' }] });
+      return { neben: [neben.status, neben.daten && neben.daten.days_skipped_trash,
+                       neben.daten && neben.daten.missions_inserted],
+               ohneId: [ohneId.status, ohneId.daten && ohneId.daten.error] };
+    }, [tag, refP, tsP]);
+    const tagDb = JSON.parse(php(`echo json_encode([
+      'neu' => db()->query("SELECT d.deleted_at IS NULL FROM missions m JOIN days d ON d.id = m.day_id
+                            WHERE m.user_id = ${id} AND m.client_ref = '${refP}'")->fetchColumn(),
+      'leer' => db()->query("SELECT COUNT(*) FROM missions WHERE user_id = ${id} AND (client_ref = '' OR client_ref IS NULL)")->fetchColumn()]);`));
+    pruefe(k15b.neben[0] === 200 && k15b.neben[1] === 0 && k15b.neben[2] === 1 && String(tagDb.neu) === '1',
+           '15b Import: ein gelöschter Tag desselben Datums sperrt den aktiven nicht',
+           JSON.stringify(k15b.neben) + ` · am aktiven Tag: ${tagDb.neu}`);
+    pruefe(k15b.ohneId[0] === 400 && k15b.ohneId[1] === 'eingabe' && String(tagDb.leer) === '0',
+           '15b „overwrite" ohne Kennung → 400 eingabe, nichts angelegt',
+           JSON.stringify(k15b.ohneId) + ` · ohne Kennung: ${tagDb.leer}`);
+  } finally {
+    php(`db()->exec("DELETE FROM missions WHERE user_id = ${id} AND client_ref = '${refP}'");
+         db()->prepare("DELETE FROM days WHERE user_id = ? AND day = ? AND deleted_at IS NOT NULL")
+             ->execute([${id}, '${tag}']);`);
+  }
+
   /* Zeitverschiebung: die Stücke wandern mit, die Hülle bleibt gültig */
   const vorZ = await s.evaluate(async (mid) => {
     const m = await (await fetch('api/mission.php?id=' + mid)).json();

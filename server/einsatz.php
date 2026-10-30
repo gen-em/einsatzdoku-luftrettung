@@ -39,9 +39,15 @@ ui_seite_start(['titel' => 'Einsatz', 'karte' => true,
      * der API zu holen und dabei vielleicht etwas anderes zu erfahren. */
     require_once __DIR__ . '/spur_lib.php';
     $spurStand  = spur_stand(db(), 'mission', $mid);
-    $spurPunkte = $spurStand['stufe'] === 1
-        ? (spur_zahlen(db(), 'mission', [$mid])[$mid] ?? 0)
-        : $spurStand['n_gespeichert'] + max(0, $spurStand['naechste_seq'] - $spurStand['n_original']);
+    /* DIE SUMME DER STUECKE, FUER JEDE STUFE (R17-22, F-R17-39). Bis Web
+     * 23.3.0 rechnete der Zweig fuer gepackte und ausgeduennte Spuren mit
+     * `n_gespeichert` — dem Feld des SPUR1-Blobs, das es seit Web 23.0.0
+     * nicht mehr gibt. Sobald der Wartungslauf eine Spur gepackt hatte, war
+     * die Zahl 0: kein „GPS-Daten als GPX", keine Plakette, und jeder Aufruf
+     * schrieb eine Warnung in den Reiter System. Seit SPUR2 ist die Summe der
+     * `punkte` die Zahl, die die Seite will — dieselbe Rechnung wie
+     * `tag_spuren.php`. */
+    $spurPunkte = spur_zahlen(db(), 'mission', [$mid])[$mid] ?? 0;
     $hatSpur = $spurPunkte > 0;
   ?>
   <div class="titelzeile">

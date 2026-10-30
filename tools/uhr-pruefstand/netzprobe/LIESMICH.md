@@ -31,7 +31,7 @@ aus einer eigenen CA (`lokal_starten.sh`).
 
 Konsole **405**, im Protokoll `[405]: GET /pair.php`. `−1001` heißt „kein
 TLS" — und die Anfrage ist **trotzdem hinaus**; die Messung steht in
-`docs/Technik.md` 5.2b. Wieder fahren nach einem SDK-Wechsel, auf einem
+`docs/Technik.md` 5.6. Wieder fahren nach einem SDK-Wechsel, auf einem
 neuen Zielgerät und wenn ein Rundlauf ohne Grund nichts empfängt.
 
 ## Was es nicht kann

@@ -1,0 +1,14 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Fristprobe — eine Seite, die nach Ablauf der Frist lädt</title>
+<script>
+'use strict';
+/* Teil (4) der Fristprobe (probe.html daneben): eine Seite, die nur
+ * crypto.js und keyguard.js lädt und nie nach dem Schlüssel fragt. Die Uhr
+ * kommt aus der Adresse, damit diese Seite dieselbe Zeit sieht wie die
+ * Probe. */
+const jetzt = Number(new URLSearchParams(location.search).get('jetzt')) || Date.now();
+Date.now = () => jetzt;
+</script>
+<script src="/server/assets/crypto.js"></script>
+<script src="/server/assets/keyguard.js"></script>

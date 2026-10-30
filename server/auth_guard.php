@@ -515,6 +515,68 @@ function rollen_auswahl(): array
 }
 
 /* ===========================================================================
+ * DER PASSWORTNACHWEIS EINER ANGEMELDETEN SITZUNG (R17-20, F-R17-32, E-R17-49)
+ * ======================================================================== */
+
+/**
+ * Kennt diese Sitzung das Passwort des Kontos? `ok`, `gesperrt`, `falsch`
+ * oder `anteil_fehlt`.
+ *
+ * WAS DAS PROBLEM WAR. Sieben Stellen verlangten das Anmelde-Token als
+ * Nachweis, bevor sie etwas Folgenreiches tun — Adresse, Passwort, Konto
+ * löschen, Rundenzahl, Wiederherstellungs-Hülle, Schlüsselpaar, Rückweg.
+ * Jede prüfte selbst, und vier davon ohne Ratentopf. Mit einer erbeuteten
+ * Sitzung ließ sich das Passwort dort online raten, ohne Sperre, gebremst
+ * nur von bcrypt; ein gefundenes Passwort öffnet mit dem Anteil der Sitzung
+ * alle `pat_blob` des Kontos.
+ *
+ * WAS JETZT GILT. Eine Funktion trägt Topf und Vergleich zusammen, so dass
+ * keine Abschrift das eine ohne das andere haben kann: der Topf `login` mit
+ * der Adresse des Kontos (derselbe wie das Anmeldeformular — zehn
+ * Fehlversuche hier sperren auch dort, und das ist gewollt), der Vergleich
+ * über den Pfeffer (`anmeldehash_pruefen()`). Ein Fehlversuch zählt, ein
+ * Erfolg leert den Topf NICHT: Der Nachweis ist keine Anmeldung, und wer
+ * angemeldet ist, soll sich mit ihm keine frischen Versuche verschaffen.
+ */
+function passwort_nachweis(int $userId, string $token): string
+{
+    require_once __DIR__ . '/ratelimit_lib.php';
+    $st = db()->prepare('SELECT email, password_hash FROM users WHERE id = ?');
+    $st->execute([$userId]);
+    $u = $st->fetch(PDO::FETCH_ASSOC);
+    if (!$u) { return 'falsch'; }
+    $email = (string)$u['email'];
+    // Nur das Konto (F-R17-36): Der Nachweis zaehlt im Konto-Topf der Anmeldung.
+    if (!rate_erlaubt('login', null, rate_nur_konto($email))) { return 'gesperrt'; }
+    $r = anmeldehash_pruefen($userId, $token, (string)($u['password_hash'] ?? ''));
+    if ($r === 'falsch') { rate_misserfolg('login', null, rate_nur_konto($email)); }
+    return $r;
+}
+
+/**
+ * Dasselbe für einen Endpunkt: bei Nein die JSON-Antwort und Schluss.
+ *
+ * Fehlercode und Name des Textfelds bleiben je Endpunkt, wie sie waren —
+ * die Browserseite liest sie (`passwort` bzw. `nachweis`; `meldung` bzw.
+ * `text`). Neu ist nur `anteil` (409): Der Hash nennt einen Anteil, den
+ * `config.php` nicht mehr trägt.
+ */
+function passwort_nachweis_json(int $userId, string $token, string $fehler = 'passwort',
+                                string $feld = 'meldung'): void
+{
+    $r = passwort_nachweis($userId, $token);
+    if ($r === 'ok') { return; }
+    if ($r === 'gesperrt') {
+        json_out(['error' => 'gesperrt', $feld => 'Zu viele Fehlversuche. Bitte später erneut.'], 429);
+    }
+    if ($r === 'anteil_fehlt') {
+        json_out(['error' => 'anteil', $feld => 'Dieser Installation fehlt der Server-Anteil, '
+                                             . 'mit dem das Passwort geschützt ist.'], 409);
+    }
+    json_out(['error' => $fehler, $feld => 'Das Passwort ist nicht korrekt.'], 403);
+}
+
+/* ===========================================================================
  * DER FRISCHE CODE (Schritt 18, SR-07, E-SR-20)
  * ===========================================================================
  *

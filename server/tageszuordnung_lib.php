@@ -228,9 +228,12 @@ function tz_tag_datum_aendern(int $userId, int $dayId, string $neuTag): array
     }
 
     try {
+        /* `$platzhalter` und `$werte` standen bis Web 23.3.0 mit im `use` —
+         * zwei Namen, die erst unten in der Zerlegung entstehen. PHP schrieb
+         * bei jeder Umdatierung zwei Warnungen in den Reiter System
+         * (R17-22, F-R17-38). */
         db_transaktion($pdo, function (PDO $pdo) use ($dayId, $delta, $mIds, $neuTag,
-                                                      $platzhalter, $rIds, $userId,
-                                                      $werte): void {
+                                                      $rIds, $userId): void {
             /* 1. Der Diensttag selbst — Datum UND eigener Zeitraum. `started_at`
              *    und `ended_at` sind echte Zeitstempel und gehoeren damit zu dem,
              *    was bei falsch gestellter Uhr mitwandert. Blieben sie stehen,

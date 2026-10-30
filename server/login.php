@@ -8,6 +8,7 @@ require_once __DIR__ . '/ratelimit_lib.php';
 require_once __DIR__ . '/demo_lib.php';
 require_once __DIR__ . '/totp_lib.php';
 require_once __DIR__ . '/rueckweg_lib.php';
+require_once __DIR__ . '/serverkrypto_lib.php'; // anmeldehash_pruefen() — der Pfeffer (R17-20)
 
 /* HTTPS ZUERST (P5a/AP4, E-P5a-16). Diese Seite ist die, auf der es
  * auffaellt: Ihr Sitzungscookie traegt `secure`, und ueber HTTP sendet der
@@ -647,7 +648,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !csrf_ok()) {
                . ($bis !== null ? ' — wieder ab ' . fmt_local($bis, 'H:i') . ' Uhr.' : '.')
                . ' Ein eigenes Konto ist davon nicht betroffen.';
         rate_gleiche_dauer($t0);
-    } elseif (!rate_erlaubt('login', $email) || !rate_erlaubt('login_ip', null)) {
+    } elseif (!rate_erlaubt('login', null, rate_nur_konto($email)) || !rate_erlaubt('login_ip', null)) {
         /* ZWEI TOEPFE, EINE MELDUNG — aber die Meldung sagt, WELCHER greift
          * (P5a/AP6). „Für diesen Namen gesperrt" waere schlicht falsch, wenn
          * in Wahrheit die Adresssperre haelt, und wer den Unterschied nicht
@@ -657,7 +658,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !csrf_ok()) {
          * Merkmal ist der EINGETIPPTE Name (`rate_merkmale()`), nicht die
          * Kontozeile — deshalb gibt die Sperre keine Kontoauskunft, und
          * deshalb darf sie ihn nennen. */
-        $sperre = rate_sperre('login', $email) ?? rate_sperre('login_ip', null);
+        $sperre = rate_sperre('login', null, rate_nur_konto($email)) ?? rate_sperre('login_ip', null);
         $bis = $sperre['bis'] ?? null;
         $error = ($sperre !== null && $sperre['art'] === 'adresse'
                     ? 'Zu viele Anmeldeversuche von diesem Anschluss.'
@@ -743,10 +744,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !csrf_ok()) {
             $tokenNach[310000] = $tokenNach[310000] ?? (string)$_POST['token'];
         }
 
+        /* DREI AUSGAENGE STATT ZWEI (R17-20, E-R17-44). `anteil_fehlt` heisst:
+         * Der Hash ist gepfeffert, und `config.php` traegt den Anteil nicht
+         * mehr, zu dem er gehoert. Das Passwort kann richtig sein — die Seite
+         * darf deshalb nicht „Passwort pruefen" sagen. */
+        $anteilFehlt = false;
         if ($u && $u['password_hash'] !== null) {
             $konto = (int)($u['kdf_iter'] ?? 0) ?: 310000;
             $token = $tokenNach[$konto] ?? '';
-            $ok = $token !== '' && password_verify($token, $u['password_hash']);
+            $pruef = anmeldehash_pruefen((int)$u['id'], $token, (string)$u['password_hash']);
+            $ok = ($pruef === 'ok');
+            $anteilFehlt = ($pruef === 'anteil_fehlt');
         } else {
             /* Unbekannte Adresse oder Konto ohne gesetztes Passwort: trotzdem
              * eine bcrypt-Rechnung, damit dieser Zweig nicht schneller ist.
@@ -783,7 +791,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !csrf_ok()) {
              * (E-S5W-09 b). Der Demo-Zaehler bleibt unten — er zaehlt die
              * NUTZUNG des Demo-Kontos, und wer sofort wieder abgemeldet wird,
              * hat es nicht benutzt. */
-            rate_erfolg('login', $email);
+            rate_erfolg('login', null, rate_nur_konto($email));
             // Auch den Zaehler des Salz-Endpunkts leeren — jede Anmeldung
             // verbraucht dort einen Versuch, und wer sich erfolgreich
             // anmeldet, soll sich nicht selbst aussperren.
@@ -796,6 +804,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !csrf_ok()) {
              * Angreifer ist, und genau dafuer gibt es `rate_erfolg()` seit
              * jeher auch fuer die IP. */
             rate_erfolg('login_ip', null);
+
+            /* ---- DIE STILLE UMSTELLUNG (R17-20, E-R17-20) ------------------
+             *
+             * Ein alter Hash ohne Pfeffer, einer unter dem vorigen Anteil oder
+             * einer mit alter bcrypt-Rundenzahl wird JETZT neu gebildet — das
+             * Token liegt nur in diesem Augenblick vor. Vor `login_zugang()`,
+             * weil auch eine Anmeldung, die danach an Wartung oder Status
+             * scheitert, das richtige Passwort bewiesen hat. Scheitert das
+             * Schreiben, bleibt der alte Hash gueltig; die Anmeldung geht
+             * weiter und der naechste Versuch holt es nach. */
+            if (anmeldehash_veraltet((string)$u['password_hash'], $istDemoAdresse)) {
+                try {
+                    db()->prepare('UPDATE users SET password_hash = ? WHERE id = ?')
+                        ->execute([anmeldehash_bilden((int)$u['id'], $token, $istDemoAdresse),
+                                   (int)$u['id']]);
+                } catch (Throwable $ex) {
+                    system_melden('login', 'Anmeldehash nicht umgestellt', $ex);
+                }
+            }
 
             /* ---- ZUGANG, DANN DER ZWEITE FAKTOR (P5c/AP5, E-P5c-53) --------
              *
@@ -834,17 +861,41 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !csrf_ok()) {
             }
             [$error, $sperreRest] = login_code_sperre($merkmale);
             $vergessen = true;
+        } elseif ($anteilFehlt) {
+            /* DER ANTEIL FEHLT (E-R17-44). Geraten werden kann hier nichts,
+             * weil ohne Anteil nichts geprueft wird — trotzdem ZAEHLT der
+             * Versuch wie ein Fehlversuch. Bis zur Handprobe in der Sandbox
+             * (26.10.2026) tat er es nicht: Jeder Versuch schrieb eine
+             * Systemmeldung, ohne Topf und ohne Bremse, und wer im Ernstfall
+             * eine bekannte Adresse beschoss, flutete den Reiter System. Die
+             * NutzerIn verliert dadurch nichts — sie kommt in diesem Zustand
+             * ohnehin nur ueber „Passwort vergessen" hinein, und das zaehlt in
+             * einem anderen Topf. Die Systemmeldung nennt kein Konto. */
+            rate_misserfolg('login', null, rate_nur_konto($email));
+            rate_misserfolg('login_ip', null);
+            rate_global_misserfolg();
+            system_melden('login', 'Anmeldung ohne Server-Anteil — ein Anmeldehash '
+                        . 'nennt einen Anteil, den config.php nicht trägt (Runbook: '
+                        . '„Der Server-Anteil fehlt")');
+            $error = 'Die Anmeldung ist gerade nicht möglich: Dieser Installation fehlt '
+                   . 'der Server-Anteil, mit dem die Anmeldedaten geschützt sind. Die '
+                   . 'BetreiberIn ist informiert. Mit „Passwort vergessen?" und dem '
+                   . 'Wiederherstellungsschlüssel kommst du trotzdem hinein.';
+            $vergessen = true;
+            rate_gleiche_dauer($t0);
         } else {
             /* DREI ZAEHLUNGEN AN EINEM FEHLVERSUCH (P5a/AP6):
              *   `login`     das eingetippte Konto — 10 je 15 min
              *   `login_ip`  der Anschluss        — 50 je 15 min
              *   `global`    die Installation     — Grundlage der Verlangsamung
              *
-             * `rate_misserfolg('login', $email)` zaehlt seit jeher BEIDE Merkmale
-             * dieses Topfes (Konto und IP). Das bleibt so — der zweite Topf ist
-             * nicht sein Ersatz, sondern die ZWEITE SCHWELLE: 10 je Konto ist
-             * richtig, 10 je Adresse waere es nicht. */
-            rate_misserfolg('login', $email);
+             * `login` zaehlt seit Web 23.3.1 NUR das Konto (R17-22, F-R17-36).
+             * Bis dahin stand hier, der Topf zaehle „seit jeher BEIDE Merkmale
+             * … das bleibt so" — und damit sperrten zehn Fehlversuche an zehn
+             * verschiedenen Konten den ganzen Anschluss, lange bevor
+             * `login_ip` mit seinen 50 je griff. 10 je Konto, 50 je Adresse
+             * steht in Technik.md 5e.2; jetzt haelt der Code es. */
+            rate_misserfolg('login', null, rate_nur_konto($email));
             rate_misserfolg('login_ip', null);
             rate_global_misserfolg();
 
@@ -1153,6 +1204,20 @@ ui_seite_start(['titel' => 'Anmelden', 'klasse' => 'anmeldung-body']);
   });
 })();
 </script>
+<?php /* DIE ABLAGE DES INHALTSSCHLUESSELS RAEUMEN, BEIM LADEN (R17-25).
+         Seit Web 23.4.0 liegt der Inhaltsschluessel in IndexedDB und
+         ueberlebt das Schliessen des Browsers. Wer hier ankommt, ist
+         abgemeldet oder meldet sich gleich an — in beiden Faellen gehoert
+         die Ablage geleert. Die Abmeldeseite stoesst das Loeschen an und
+         leitet sofort hierher weiter; ob ihr Vorgang den Seitenwechsel
+         ueberlebt, ist nicht zugesagt, dieser hier laeuft auf einer Seite,
+         die stehen bleibt. NUR die Ablage, NICHT das Vormerkfach: Der
+         Code-Schritt des Zweitfaktors ist ebenfalls diese Seite, und dort
+         wird das Fach von der Passworteingabe noch gebraucht.
+         PHP-frei und immer da, wie die Bloecke ringsum (Integritaetswache). */ ?>
+<script<?= kopf_nonce_attr() ?>>
+EdCrypto.inhaltLoeschen();
+</script>
 <?php if ($halb === null && !$rwErfolg): ?>
 <?php /* DAS VORMERKFACH RAEUMEN, WENN DER HALBE STAND OHNE ANMELDUNG ENDETE
          (P5c/AP5, E-P5c-53: abgebrochen, abgelaufen, gesperrt).
@@ -1179,8 +1244,10 @@ document.getElementById('loginform').addEventListener('submit', async ev => {
   try {
     state.textContent = 'Schlüssel wird abgeleitet…';
     // Schluessel einer frueheren Sitzung verwerfen — sonst wuerde ein alter
-    // Inhaltsschluessel weiterverwendet (etwa nach Kontowechsel im selben Tab).
-    EdCrypto.clearSession();
+    // Inhaltsschluessel weiterverwendet (etwa nach Kontowechsel im selben
+    // Browser). Seit R17-25 liegt er in IndexedDB, und das Loeschen ist erst
+    // fertig, wenn die Datenbank es bestaetigt: abwarten, bevor gesendet wird.
+    await EdCrypto.clearSession();
     const email = f.elements['email'].value.trim().toLowerCase();
     const pw = f.elements['password'].value;
     const r = await fetch('auth_salt.php', {

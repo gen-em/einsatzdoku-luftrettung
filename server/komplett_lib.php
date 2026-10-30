@@ -481,6 +481,38 @@ const KOMP_ROHNAME = 'dump.sql.gz';
 const KOMP_ENDMARKE = '-- EDKOMP-ENDE';
 
 /**
+ * Die Kopfzeilen, an denen ein Dump AUS DIESER ANWENDUNG zu erkennen ist.
+ *
+ * ZWEI SCHREIBWEISEN, UND DAS IST KEIN VERSEHEN (S7). Die Kopfzeile ist
+ * zugleich Text fuer Menschen und Erkennungsmarke fuer `wiederherstellen.php`:
+ * Ein eigener Dump muss die Endmarke tragen, ein fremder (`mysqldump`) nicht.
+ * Seit der Begriffsumstellung (S7, 03.09.2026) heisst sie „Komplett-Backup";
+ * ein Dump von vor Web 12.9.2 traegt „Komplettsicherung". Fehlte die alte
+ * Schreibweise hier, gaelte ein solcher Dump als FREMD, und ein abgebrochener
+ * Stand liefe ohne Endmarke durch — der gefaehrlichste Fehlschluss, den eine
+ * Umbenennung anrichten kann. Die alte darf am v1.0-Schnitt weg (R60).
+ *
+ * BIS WEB 23.3.1 STAND DIE LISTE IN `wh_auspacken()`, und genau dort war es
+ * geschehen (F-R17-33): Die Umstellung hatte beide Zeichenketten ersetzt, die
+ * zwei Zweige waren wortgleich. Hier steht sie neben dem Erzeuger der
+ * Kopfzeile (`komp_kopfzeilen()`) und ist ohne Seite pruefbar — die
+ * Komplettprobe haelt alle drei Faelle fest.
+ */
+const KOMP_KOPF_KENNUNGEN = [
+    'Komplett-Backup der Installation',      // seit S7, Web 12.9.2
+    'Komplettsicherung der Installation',    // davor
+];
+
+/** Stammt dieser Dump-Anfang (die ersten 200 Byte) aus dieser Anwendung? */
+function komp_dump_eigen(string $anfang): bool
+{
+    foreach (KOMP_KOPF_KENNUNGEN as $k) {
+        if (str_contains($anfang, $k)) { return true; }
+    }
+    return false;
+}
+
+/**
  * Ein Haeppchen Dump. Aendert `$z` und liefert ['zeilen' => int, 'fertig' => bool].
  *
  * `fertig` heisst hier: der SQL-Text ist vollstaendig. Die Versiegelung ist

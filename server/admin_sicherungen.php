@@ -64,6 +64,11 @@ $notice = null; $error = null; $bericht = null;
  * reist über die Sitzung mit (E-R4-33). Sonst wiederholt Neuladen die
  * Handlung. Eine Abweisung, die nichts geändert hat, bleibt auf der Seite. */
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    /* EIN FRISCHER CODE VOR DER FREIGABE (R17-20, F-R17-02), vor dem Token
+     * wie ein Rollentor — dieselbe Handlung wie auf der Kontoseite. */
+    if ((string)($_POST['action'] ?? '') === 'freigeben') {
+        zweitfaktor_frisch_verlangen('freigeben_ablage');
+    }
     csrf_check();
     $action  = (string)($_POST['action'] ?? '');
     /* Aus der Oberfläche kommt der Handgriff, nicht die Kennung (Kriterium 49).
@@ -248,25 +253,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     /* ---- Freigeben und widerrufen (A8.6) --------------------------------- */
     if ($action === 'freigeben') {
-        $ziel = edbak_ziel_konto((int)($_POST['ziel_user'] ?? 0));
-        $paket = edbak_paket_kopf_lesen($kennung, $datei);
-        if (!$ziel) {
-            $error = 'Zielkonto nicht gefunden.';
-        } elseif (!$paket) {
-            $error = 'Das Paket liess sich nicht lesen.';
-        } elseif (!edbak_bestaetigung_passt((string)($_POST['confirm_email'] ?? ''), (string)$ziel['email'])) {
-            $error = 'Die eingegebene E-Mail-Adresse stimmt nicht mit der des '
-                   . 'Zielkontos überein — es wurde nichts freigegeben.';
-        } elseif (edbak_freigeben($kennung, $datei, (int)$ziel['id'])) {
-            $notice = 'Freigegeben für ' . $ziel['email'] . '. Die NutzerIn sieht das '
-                    . 'Paket jetzt im eigenen Backup-Bereich und spielt es dort '
-                    . 'mit ihrem Wiederherstellungsschlüssel ein.';
-            flash_setzen('notice', $notice);
+        /* Regel, Protokoll und Mail an EINER Stelle (R17-20, F-R17-02). */
+        [$okF, $meldungF] = edbak_freigabe_erteilen($kennung, $datei,
+            (int)($_POST['ziel_user'] ?? 0), (string)($_POST['confirm_email'] ?? ''));
+        if ($okF) {
+            flash_setzen('notice', $meldungF);
             header('Location: admin_sicherungen.php');
             exit;
-        } else {
-            $error = 'Die Freigabe liess sich nicht speichern.';
         }
+        $error = $meldungF;
     }
     if ($action === 'widerrufen') {
         if (edbak_freigabe_widerrufen($kennung)) {
@@ -579,6 +574,13 @@ ui_seite_start(['titel' => 'Konto-Backups']);
                 . ' data-w-soll="' . e((string)($v['email'] ?? '')) . '"'
                 . ' data-w-unlesbar="' . ($v['lesbar'] ? '' : '1') . '"'
                 . ' data-w-pakete="' . e(implode("\n", $paketliste)) . '"';
+        /* DIE ZIELKONTEN DER FREIGABE JE ORDNER (R17-20, E-R17-46): nur das
+         * Herkunftskonto oder eines mit derselben Adresse. Gibt es keines,
+         * steht kein Knopf da — ein Dialog mit leerer Auswahl waere ein
+         * Umweg ins Nein. */
+        $zielePaket = array_map(static fn(array $z): string => $z['id'] . '|' . $z['email'],
+                                edbak_freigabe_zielkonten((string)$v['account_key']));
+        $wZiele = ' data-w-ziele="' . e(implode("\n", $zielePaket)) . '"';
         ui_zeile([
           'text'  => 'Kontokennung ' . $kennungKurz,
           'klein' => $herkunft . ' · ' . count($v['pakete'])
@@ -588,8 +590,10 @@ ui_seite_start(['titel' => 'Konto-Backups']);
           'aktionen' =>
               ui_knopf(['text' => 'Einspielen', 'art' => 'leise', 'typ' => 'button',
                         'attr' => ' data-dialog="dlg-einspielen"' . $wDaten])
-            . ui_knopf(['text' => 'Freigeben', 'art' => 'leise', 'typ' => 'button',
-                        'attr' => ' data-dialog="dlg-freigeben"' . $wDaten])
+            . ($zielePaket
+                ? ui_knopf(['text' => 'Freigeben', 'art' => 'leise', 'typ' => 'button',
+                            'attr' => ' data-dialog="dlg-freigeben"' . $wDaten . $wZiele])
+                : '')
             /* AKTIONSMENUE, NICHT ZEILENAKTIONEN (Mockup 08). Beides gibt es:
                `ui_zeilenaktionen()` zeigt die Eintraege ab 720 px als Knoepfe
                und nur darunter als Blatt — hier stuenden dann vier Knoepfe
@@ -682,7 +686,10 @@ ui_seite_start(['titel' => 'Konto-Backups']);
                  'attr' => ' data-fuell-optionen="pakete"',
                  'klein' => 'Jüngstes zuerst.']);
         ui_feld(['name' => 'ziel_user', 'label' => 'Freigeben für', 'art' => 'select',
-                 'optionen' => $zielwahl, 'pflicht' => true]);
+                 'optionen' => [], 'pflicht' => true,
+                 'attr' => ' data-fuell-optionen="ziele"',
+                 'klein' => 'Nur das Konto, von dem das Backup stammt, oder eines mit '
+                          . 'derselben E-Mail-Adresse.']);
         ui_feld(['name' => 'confirm_email', 'label' => 'E-Mail-Adresse des Kontos',
                  'pflicht' => true, 'attr' => ' autocomplete="off"',
                  'klein' => 'Zur Bestätigung abtippen.']);
