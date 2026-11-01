@@ -2,19 +2,18 @@
 declare(strict_types=1);
 
 /**
- * HEALTH — der Zustand der Anlage für ein fremdes Monitoring (P5c/AP6,
- * E-P5c-17, -52; R38).
+ * HEALTH — der Zustand der Anlage für ein fremdes Monitoring.
  *
  *     GET /api/health.php            Kopfzeile  X-Health-Token: <Token>
  *     GET /api/health.php?token=<Token>          (fuer Monitore ohne Kopfzeilen)
  *
- *     <Token> = das Health-Token aus Betrieb → Hintergrundjobs (seit Web
- *               23.5.0, `health_token()` in `jobs_lib.php`; bis dahin
- *               `betrieb.health_token` aus `config.php`, das beim ersten
- *               Lesen uebernommen wird, R17-26)
+ *     <Token> = das Health-Token aus Betrieb → Hintergrundjobs
+ *               (`health_token()` in `jobs_lib.php`; ein
+ *               `betrieb.health_token` aus `config.php` wird beim ersten
+ *               Lesen uebernommen)
  *
- * DIE KOPFZEILE IST DER EMPFOHLENE WEG (Web 23.1.0, R17-19, F-R17-22,
- * E-R17-35). Eine Adresse steht im Zugriffsprotokoll des Hosters, eine
+ * DIE KOPFZEILE IST DER EMPFOHLENE WEG. Eine Adresse steht im
+ * Zugriffsprotokoll des Hosters, eine
  * Kopfzeile nicht. Die Adresse bleibt, weil viele einfache Uptime-Dienste
  * keine Kopfzeile setzen koennen; wer sie nutzt, nimmt den Protokolleintrag
  * in Kauf — das Token oeffnet nur diese karge Auskunft. Stehen beide da,
@@ -25,7 +24,7 @@ declare(strict_types=1);
  * aus angebunden; der Endpunkt antwortet nur, wenn er gefragt wird.
  *
  * DIE ANTWORT, und sie ist absichtlich karg — keine Konten, keine Mengen,
- * nichts über den Hoster (E-P5c-17):
+ * nichts über den Hoster:
  *
  *   ok                    Datenbank erreichbar UND keine Migration ausstehend
  *   web_version           die ausgelieferte Fassung
@@ -42,12 +41,11 @@ declare(strict_types=1);
  * HTTP 200 bei `ok`, sonst 503 — ein Monitoring, das nur den Code liest,
  * sieht damit schon das Wesentliche.
  *
- * WAS NICHT HIER ANTWORTET (E-P5c-52): In der Wartung antwortet das Tor in
+ * WAS NICHT HIER ANTWORTET: In der Wartung antwortet das Tor in
  * `db.php`, bevor diese Datei eine Zeile ausführt — 503 mit
  * `{"error":"maintenance"}`, ohne Token-Prüfung. Bei Überlast antwortet
  * `db()` beim ersten Zugriff, und das ist der Ratenschutz unten, noch vor dem
- * Token: 503 mit `{"error":"ausgelastet"}` aus `ueberlast_antwort()`. Bis
- * Web 21.1.0 stand hier, auch das komme „aus dem Tor" (Gegenlesung AP11); ein
+ * Token: 503 mit `{"error":"ausgelastet"}` aus `ueberlast_antwort()`. Ein
  * POST bekommt deshalb bei Überlast 405, nicht 503. Ein Feld `wartung` gäbe
  * es nie mit `true`; es entfällt. Fassung und Wartungszustand sind
  * ohnehin öffentlich (Fußzeile, Wartungsseite).
@@ -69,7 +67,7 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/../db.php';
 require_once __DIR__ . '/../ratelimit_lib.php';
-require_once __DIR__ . '/../jobs_lib.php';   // health_token() (R17-26)
+require_once __DIR__ . '/../jobs_lib.php';   // health_token()
 
 api_methode('GET');
 $t0 = microtime(true);

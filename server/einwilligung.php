@@ -6,7 +6,7 @@ require_once __DIR__ . '/protokoll_lib.php';
 require_once __DIR__ . '/format_lib.php';   // datum_text() fuer die Fassungsdaten
 
 /**
- * DAS EINWILLIGUNGSTOR (P5b/AP4, E-P5b-05, -15).
+ * DAS EINWILLIGUNGSTOR.
  *
  * WER HIER LANDET, KOMMT NUR MIT DEN HAEKCHEN WEITER — oder gar nicht, und
  * dann muss er trotzdem an seine Daten kommen. Deshalb stehen unten drei
@@ -133,9 +133,9 @@ ui_seite_start(['titel' => 'Zustimmung nötig']);
           </p>
           <?php /* DER WORTLAUT KOMMT AUS DEM KATALOG und nicht aus dem
                    Markup: „angenommen" und „zur Kenntnis genommen" tragen
-                   den rechtlichen Unterschied (E-P5b-05), und ein Text, der
+                   den rechtlichen Unterschied, und ein Text, der
                    an zwei Stellen steht, laeuft auseinander. */ ?>
-          <?php /* EIN HAEKCHEN UND KEIN SCHALTER (Mockup M-P5b-02a, Tor).
+          <?php /* EIN HAEKCHEN UND KEIN SCHALTER.
                    Ein Schiebeschalter steht fuer eine Einstellung, die man
                    an- und ausmacht; hier wird eine Erklaerung abgegeben, und
                    die kennt nur eine Richtung. Der Satz kommt aus dem

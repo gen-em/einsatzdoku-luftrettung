@@ -7,7 +7,7 @@ uebrigen sind Betriebsalltag: Sie sollen plausibel sein und den Bestand auf
 eine realistische Dichte bringen, ohne dass jemand neunzig Mal dasselbe von
 Hand schreibt.
 
-NAMEN ERFUNDEN, GEOGRAPHIE ECHT (E-P1-02). Die Koordinaten liegen im Allgaeu
+NAMEN ERFUNDEN, GEOGRAPHIE ECHT. Die Koordinaten liegen im Allgaeu
 und am Alpenrand; ohne sie waeren Tracks, Hoehenprofile und Kartendarstellung
 nicht pruefbar. Ortsnamen, Strassen, Kliniken und Personen sind frei erfunden.
 """

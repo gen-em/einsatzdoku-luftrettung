@@ -589,7 +589,8 @@ Daten erst nach Server-Bestätigung.
 │   │                       ein eigener Entwurf), 24 x 24, currentColor, Anker
 │   │                       <g id="i">; dazu LICENSE-tabler-icons.txt und
 │   │                       LIESMICH.md mit der Zuordnung Datei -> Tabler-Name ->
-│   │                       Verwendung. Eingebunden per Verweis, nicht eingebettet
+│   │                       Verwendung. Eingebunden per Verweis auf den Vorrat
+│   │                       der Seite (ui_symbolvorrat(), seit Web 23.6.0)
 │   ├── favicon.ico        Browser-Symbol im Wurzelverzeichnis
 │   ├── config.example.php Vorlage der config.php (die selbst nur auf dem Server
 │   │                      liegt und vom Deploy ausgenommen ist)
@@ -783,7 +784,8 @@ Daten erst nach Server-Bestätigung.
 │   │                      Sollliste), seit R17-26 fremdsummen (Kopfsumme
 │   │                      jeder Datei unter assets/vendor/), seit R17-27
 │   │                      dokumente (Pfade, Zahlen, Kopfzeilen und die
-│   │                      Gliederung dieses Dokuments, Nr. 188). Ein
+│   │                      Gliederung dieses Dokuments, seit R17-28 auch
+│   │                      die Abschnittsverweise im Code, Nr. 188). Ein
 │   │                      Läufer (`pruefen.sh <name>|alle|--selbstprobe`),
 │   │                      ein LIESMICH. Vorher acht Ordner.
 │   ├── referenzdatensatz/ erfundener Beispielbestand (22 Diensttage,
@@ -1278,7 +1280,7 @@ Anwendung ohne Gerüst, deren Zweck der Ausdruck ist. `Cache-Control: no-store`,
 `Referrer-Policy: no-referrer`, `X-Robots-Tag: noindex`; Werte in
 Vierergruppen (`hex_vierergruppen()` in `db.php`). Sie steht in
 `WARTUNG_AUSNAHMEN` — die Lage, in der man sie braucht, ist eine Wartungslage.
-Das zugehörige `@media print` in `assets/style.css` (Abschnitt 26) war das
+Das zugehörige `@media print` in `assets/style.css` (Abschnitt 31) war das
 **erste** des Projekts. Seit Web 21.1.0 (P5c/AP9) baut das Blatt auf dem
 Druckblatt `.blatt-druck` wie Code- und Notfallblatt (`Design.md` 9.39):
 genau eine A4-Seite, je Wert eine Kachel mit sechzehn nummerierten Gruppen,
@@ -2349,6 +2351,25 @@ kann darin nicht suchen. Zusätzlich wäre ein Suchbegriff wie ein Nachname
 selbst schon ein Patientendatum — er darf den Browser gar nicht verlassen.
 `api/suchindex.php` nimmt deshalb **keine Suchparameter entgegen**; es liefert
 den kompletten aktiven Bestand der angemeldeten Person.
+
+**Die gezeigten Zeilen zuerst (seit Web 23.6.0, Nr. 381).** Suche und
+Zeitraumübersicht zeichnen ihre Tabelle, bevor sie entschlüsseln, und zeigen
+höchstens 200 Zeilen. `EdPat.listeLaden(liste, o)` nimmt dafür `o.zuerst`
+(die gezeigten Einträge, `tabelle.gezeigt()` aus `missiontable.js`) und
+`o.nachZuerst` (die Seite zeichnet die Zeilen lesbar und zeigt den
+Ladeplatz): Erst werden die gezeigten geöffnet, dann der Rest, und erst
+danach wird wie zuvor neu gefiltert und gezeichnet. Treffer allein in
+geschützten Feldern, der Altersfilter, die Pins und die Kennzahlen aus dem
+Block kommen also mit dem Rest. **Sortiert die Tabelle nach Ort, Alter oder
+Diagnose** (`tabelle.sortGeschuetzt()`), steht vorher nicht fest, welche
+Zeilen oben stehen; dann geht alles am Stück wie zuvor. Die Zählung
+(`zahl`) gilt in beiden Fällen für die ganze Liste. Gemessen (Messstand,
+Drossel 6×): geschützt lesbar nach rund 3,8 statt 6,1 s (Suche) und 3,0
+statt 5,7 s (Jahr); Trefferzahl und Reihenfolge in fünfzehn Fällen gleich.
+Das Entschlüsseln selbst kostet dabei 0,1 bis 1,3 s — der größere Teil der
+Zeit ist Aufbau und Zeichnen, nicht Krypto. Die Suche liest ihre
+Filterfelder einmal je Durchlauf (`einmal()` in `suche.php`), nicht für
+jeden Einsatz.
 
 **Seit Web 20.35.0 kommt `faehigkeiten` mit** (Schritt 15 AP9a, E-ZE-31) —
 dasselbe flache Objekt über `VEHICLE_CAPABILITIES` wie in `api/range.php`,
@@ -5884,7 +5905,7 @@ echtes APK.
 > ihrer Grenze in 3 (G1 bis G3). Dieser Abschnitt ist die Liste der
 > Blobfelder **und** der Klartextfelder; `CLAUDE.md` 4 verweist hierher, statt
 > sie zu wiederholen (F-R17-25). *(Bis R17-27 stand hier ein Verweis auf die
-> Klartextliste im Konzept `Review-R17.md`, I-07 — ein Arbeitsdokument, das
+> Klartextliste im Konzept `Review-R17.md` (gelöscht mit R17-30, letzter Stand `630756f0`), I-07 — ein Arbeitsdokument, das
 > mit dem Abschluss von 12b gelöscht wird.)*
 
 Der Server kann `missions.pat_blob` nicht lesen. Genau deshalb muss an einer
@@ -6486,7 +6507,7 @@ Die Bausteine im Einzelnen:
 | Schema fragen | `db.php` | `db_hat_tabelle()`, `db_hat_spalte()`, `db_hat_index()`, seit Web 20.41.0 `db_spalte_typ()` (der volle Spaltentyp, etwa die Werte eines ENUM — P5c/AP4), seit Web 21.0.0 `db_spalte_nullbar()` (ob die Spalte NULL zulässt — P5c/AP8) — sie nehmen ein `PDO`, **zwingend**: `tools/schemaprobe/` lässt Migrationen gegen ein frisch angelegtes Schema laufen, also gegen eine andere Verbindung als `db()`. Die privaten `_hat_*` in `migration_lib.php` reichen seit Web 20.29.0 nur noch durch (E-ZE-04: gelaufene Migrationen werden nicht umgebaut). |
 | Anfrage an den Server | `assets/api.js` (`EdApi`) | `EdApi.postJson(url, daten, o)` und `EdApi.postForm(url, felder, o)`, seit Web 20.34.0. Beide liefern `{ ok, status, daten, meldung }` und **werfen nie** — ein Netzfehler kommt als `status: 0`. Sie hängen das CSRF-Token selbst an (Kopfzeile bzw. Feld) und bauen den **einen** Satzbau `<Vorgang> ist fehlgeschlagen: <Grund>`. Vorrangkette des Grundes: `meldung` → `text` → `hinweis` → Ersatzsatz mit Kennung. **`error` steht nicht in der Kette** — es trägt Maschinenwörter, keine Sätze, und erscheint nur als Kennung in der Klammer. **`ok` ist ein Transport-Urteil**: Es prüft `daten.ok !== false`, nicht `=== true`, weil die lesenden Endpunkte gar kein `ok` schicken — wer ein fachliches `ok` braucht, prüft `a.daten.ok` mit. **Die Array-Regel von `postForm` ist sicherheitsrelevant**: Ein Feldwert, der ein Array ist, geht als `name[]` hinaus; ohne die Klammern liest PHP eine Zeichenkette, `is_array()` schlägt fehl, und die Schlüsselblatt-Rückfrage zählt einen Fehlversuch. **Die Datei steht im `<head>`** — nicht in der Immer-Liste, weil `ui_geruest_ende()` auf `einstellungen.php` und `import.php` **nach** den Seitenskripten steht und `unlock.js` dort zur Ladezeit sendet. |
 | Meldung im Browser | `assets/html.js` (`EdHtml.meldung`) | `EdHtml.meldung(ton, text, o)`, seit Web 20.34.0 — zeichengleich mit `ui_meldung_markup()` in `ui.php`; 200 von 200 Prüffällen ergaben denselben DOM-Baum. **Fünf Töne, geschlossene Liste, Wurf beim sechsten**, genau wie PHP. `o.auftakt` (fetter Vorspann, maskiert), `o.knopf` (fertiges Markup, unmaskiert), `o.roh` (Text **nicht** maskieren — ein benanntes Loch mit genau einem Verbraucher, der Erfolgsmeldung des Imports mit Link und Umbruch). Vorher: sieben eigenständige Nachbauten, keine zwei gleich, drei verschiedene Ton-zu-Symbol-Tabellen. **Seit Web 21.1.11** (R4-13) auch der Satz im Schneide-Bereich (`fehler` für einen Grund, `info` für den Erklärtext), die Rückmeldung über der Segmentliste und die Meldung im Entsperrdialog; `html.js` steht dafür im Kopf jeder Seite. Zwei Nachbauten bleiben bis Backlog Nr. 346 (`patient.js`, der Papierkorb-Hinweis in `index.php`); die Registerzeile Z37 zählt seither auch `className = '…meldung'`. **Die Tonklasse wird zusammengesetzt** — `tools/quelltext/` (`vollstaendigkeit`) sieht sie deshalb nicht und meldet `.meldung-ok` und `.meldung-schutz` als Regel ohne Markup. Das ist kein Befund, sondern die Eigenschaft des Bausteins. **Kein Tag im Text** — weder hier noch in `ui_meldung()`/`ui_meldung_markup()` (PHP): Beide maskieren, ein `<strong>` erscheint als Text. Seit Web 23.3.1 hält der Riegel **Z45** in `tools/zaehlung/` die PHP-Seite: kein `<` in einer festen Zeichenkette eines Textarguments (R17-22, F-R17-49; zwei Stellen bis dahin). Hervorhebung trägt der Auftakt. |
-| Auftakt der Patientenanzeige | `assets/patient.js` (`EdPat.listeLaden`) | `EdPat.listeLaden(liste, o)`, seit Web 20.34.0: Schlüssel holen, Sperrbanner nach der Regel setzen (sichtbar genau dann, wenn kein Schlüssel da ist **und** die Liste überhaupt einen `pat_blob` enthält), entschlüsseln, zählen. Gibt `{ ck, zahl }` zurück und **entscheidet nicht**: Tagesansicht und Zeitraum kehren bei fehlendem Schlüssel zurück, die **Suche nicht** — sie muss ihre Trefferliste auch gesperrt zeigen und dabei den Altersfilter sperren. `zeigeUnlesbar()` ruft der Aufrufer **nach** seiner Schleife. **`einstellungen.php` bleibt draußen** (Z36 endet bei 1): Es teilt nur den Aufruf, arbeitet mit Fenstern zu 250 aus einem Bestand von tausenden, und `hinweisUnlesbar()` wertet die **ganze** Liste aus — über ein Fenster gesagt wäre der Satz falsch. |
+| Auftakt der Patientenanzeige | `assets/patient.js` (`EdPat.listeLaden`) | `EdPat.listeLaden(liste, o)`, seit Web 20.34.0: Schlüssel holen, Sperrbanner nach der Regel setzen (sichtbar genau dann, wenn kein Schlüssel da ist **und** die Liste überhaupt einen `pat_blob` enthält), entschlüsseln, zählen. Seit Web 23.6.0 mit `zuerst`/`nachZuerst`: die gezeigten Einträge zuerst, dann der Rest (Suche und Zeitraum, Abschnitt Suche). Gibt `{ ck, zahl }` zurück und **entscheidet nicht**: Tagesansicht und Zeitraum kehren bei fehlendem Schlüssel zurück, die **Suche nicht** — sie muss ihre Trefferliste auch gesperrt zeigen und dabei den Altersfilter sperren. `zeigeUnlesbar()` ruft der Aufrufer **nach** seiner Schleife. **`einstellungen.php` bleibt draußen** (Z36 endet bei 1): Es teilt nur den Aufruf, arbeitet mit Fenstern zu 250 aus einem Bestand von tausenden, und `hinweisUnlesbar()` wertet die **ganze** Liste aus — über ein Fenster gesagt wäre der Satz falsch. |
 | Maskierung | `assets/html.js` (`EdHtml.escape`) | Eine Fassung, auch in Attributpositionen sicher (fünf Zeichen statt drei). Seit Web 4.6.0 in einer eigenen Datei statt in `missiontable.js` — die wird nur von zwei Seiten geladen, gebraucht wird die Maskierung auf fünf. `EdMissionTable.escape`/`.esc` bleiben als Weiterleitung. **Nicht dasselbe** wie `xmlEscape()` in `export.js`: GPX ist XML mit eigenen Regeln. |
 | Patientenanzeige | `assets/patient.js` | Eine Entschlüsselungsschleife statt fünf; unterscheidet sichtbar „keine Angaben" von „nicht lesbar". `entschluessleListe()` wird seit Web 4.6.0 von allen Aufrufern benutzt (Tages-, Zeitraum- und Suchansicht, Export, Import-Abgleich, Backup-Lauf) und schreibt je Einsatz `_pat` und `_patState`. |
 | Migrationsschutz | `migration_lib.php` (`migrationen_inhalt_zaehlen()`) | Destruktive Migrationen tragen `zerstoert` (Klartext, was verlorenginge) und optional `inhalt` (Spalten, deren Inhalt die Ausführung blockiert — einzeln freigebbar, wenn die Daten gesichert sind). **Seit Web 21.0.0 dazu `vorbedingung`** (P5c/AP8, E-P5c-125): eine Funktion, die zählt, was die Migration unmöglich machte, und `vorbedingung_weg`, der eine Satz, wie man es herstellt. Sie sperrt **ohne Freigabe-Kennung** — kein Häkchen auf Betrieb → Updates, ein eigener Hinweis in `php update.php` —, weil ein `MODIFY … NOT NULL` über einer NULL-Zeile nichts freizugeben hätte. Eine blockierte Migration hält die Kette **nicht** an — sie hat nichts getan, anders als ein Fehler. |
@@ -9732,8 +9753,10 @@ keine Punkte mehr, nur Stücke. Die eine Stelle zum Öffnen ist
 `assets/ortsdaten.js` (`EdOrtsdaten`): `spur()` öffnet Stücke, entdoppelt nach
 Sequenznummer und lässt gesperrte Punkte fort; `einsatz()` öffnet die
 Einsatzhülle; `fuerAnsicht()` füllt eine Antwort von `api/mission.php` so, wie
-die Einsatzansicht sie schon immer las; `ladeplatz()` steuert den Baustein
-`.ladeplatz` (Design 9.41) mit 300 ms Schwelle. **Kein Übergang** (E-S11-36):
+die Einsatzansicht sie schon immer las. Den Baustein `.ladeplatz` (Design
+9.41) mit 300 ms Schwelle steuert seit Web 23.6.0 `EdHtml.ladeplatz()` in
+`assets/html.js` — bis dahin `EdOrtsdaten.ladeplatz()`; Suche und Zeitraum
+brauchen ihn ohne Ortsdaten. **Kein Übergang** (E-S11-36):
 Altbestand im Klartext zeigte keine Karte, bis das Einmalwerkzeug ihn umgezogen hatte; seit Web 23 gibt es keinen mehr. Die Anfrage startet
 `assets/vorladen.js` schon im Kopf (V1, `EdVorladen.holen()`).
 
@@ -10197,6 +10220,19 @@ ganzen Bestand** — sonst sieht `geraeteklassen.py` kein neues Gerät. Lässt
 sich ein Archiv nicht entpacken oder liegt es eine Ebene zu tief, ist der
 Lauf rot. **Wer Geräte nachlädt, packt beide Archive neu**; sonst holt die
 Kette ohne Warnung den alten Stand.
+
+**Jedes Archiv trägt seine Summe im Repositorium** (seit Web 23.5.2,
+F-R17-66): `tools/uhr-pruefstand/geraetedateien.sha256`, eine Zeile je
+Archiv im Format von `sha256sum`. Geprüft wird vor dem Entpacken; passt die
+Summe nicht, ist der Lauf rot und die Datei gelöscht. **Warum im
+Repositorium und nicht neben den Archiven:** Der Uhr-Job der Auslieferung
+hält den Entwicklerschlüssel; wer die Ablage unter `CIQ_GERAETE_URL`
+beschreibt, tauschte eine Summe daneben gleich mit. Dort setzt der Lauf
+`CIQ_SUMMEN_PFLICHT=1`: Ein Archiv ohne Zeile ist rot, und den Rückfall auf
+Einzeldateien gibt es nicht — sie tragen keine Summe. Örtlich bleibt beides
+eine Warnung. **Wer die Archive neu packt, trägt die neuen Summen im selben
+Commit ein** (`sha256sum devices.tar fonts.tar`); sonst ist die nächste
+Uhr-Auslieferung rot.
 `aufbau` holt nur die drei Zielgeräte — für Stufe I und
 `geraeteklassen.py` braucht es `CIQ_ZIELE=alle`. Fehlen die
 Zeichensätze, übersetzt die App zwar, bricht aber beim ersten Zeichnen mit
@@ -10866,7 +10902,7 @@ werden kann:** PHP übersetzt eine Datei vollständig, bevor es die erste Zeile
 ausführt. Eine einzige `match`-Anweisung weiter unten, und die Besucherin auf
 PHP 8.0 bekommt statt der Erklärung einen Parse Error.
 
-`install.php` bleibt deshalb **PHP-7-lesbar**, und Stufe 1 des Prüftors zählt
+`install.php` bleibt deshalb **auf PHP 7.4 lesbar** (es benutzt `fn`), und Stufe 1 des Prüftors zählt
 das mit dem Tokenizer nach (`tools/quelltext/` `installweiche`) — für `install.php`
 **und** für `server/php_mindest.php`. Die Prüfung ist nicht vollständig —
 benannte Argumente und Eigenschaftenbeförderung sieht sie nicht —, und sie
@@ -12103,8 +12139,9 @@ Bilderzahl, die längst nicht mehr stimmte.
 | `tools/quelltext/pruefen.sh --selbstprobe`, dann `alle` | alle Selbstproben und alle fünfzehn Prüfungen grün (`tools/quelltext/LIESMICH.md`) — darunter seit BR-03 Backlog-Nummern (`bestand`), Python übersetzen (`pysyntax`) und Handbuch rendern (`handbuch`), bis dahin drei eigene Schritte |
 | `tools/screenshots/kontrast.py` | 0 Befunde |
 | Umgebungswert eine Ebene höher | alle sechs Namen leer (12.7, E-KH-28) |
-| `tools/kettenaufrufe/pruefen.py --probe`, dann ohne Schalter | Selbstprobe vollständig, 0 Befunde; jeder ungeprüfte Aufruf benannt; seit R17-19 dazu die zwei Riegel der Kette: jede fremde `uses:`-Zeile an einer SHA mit Fassung, die Ausnahmeliste hält ihre acht Pfade, jeder steht in `.gitignore`, keine `server/config.php*` eingecheckt |
+| `tools/kettenaufrufe/pruefen.py --probe`, dann ohne Schalter | Selbstprobe vollständig, 0 Befunde; jeder ungeprüfte Aufruf benannt; seit R17-19 dazu die zwei Riegel der Kette: jede fremde `uses:`-Zeile an einer SHA mit Fassung, die Ausnahmeliste hält ihre sieben Pfade, jeder steht in `.gitignore`, keine `server/config.php*` eingecheckt |
 | `tools/kette/tor.py`, `download_lib.mjs`, `tools/kette/freigabe.py`, `tools/kette/baumsuche.py`, je `--selbstprobe` | jede Lage erfüllt |
+| `tools/integritaetswache/wache.py --selbstprobe`, `tools/kette/appbau.sh --selbstprobe` | jede Erwartung erfüllt — seit R17-28 im Tor; bis dahin liefen sie nur im Prüfstand und in ihrem eigenen Lauf (Q-R17-22) |
 | `tools/spaltenregister/pruefen.php`, `tools/zaehlung/zaehlen.php`, je mit Selbstprobe | 0 Befunde, 0 Zeilen über der Decke — und seit R17-19 auch 0 darunter (Ratsche, F-R17-56) |
 | `tools/proben/proben.sh rechtstexte` | 0 Fehlschläge |
 | **Prüfbericht gegenlesen** (überall außer auf `main`) | `bericht.py lesen` rc 0: Baum, Stufe, Flächen, alle Riegel, keine rote und keine nicht gemessene Probe |
@@ -12619,7 +12656,10 @@ Abbruch, wenn einer fehlt.
 E-KH-07) steht **vor dem Backup-Tor**. Sie schreibt per FTPS eine Datei mit
 Zufallsnamen und Zufallsinhalt ins Zielverzeichnis, holt sie über HTTPS
 unter der Basisadresse der Umgebung zurück, vergleicht sie, löscht sie und
-prüft das Löschen (danach 404).
+prüft das Löschen (danach 404). Vorweg schreibt sie die äußere Adresse des
+Läufers ins Protokoll (`tools/kette/laeufer.py`, wie die Wache): Geht FTPS und
+der Abruf über HTTPS läuft ab, ist sie der Hinweis, ob der Hoster bestimmte
+Läufer sperrt (F-R17-74).
 
 **Seit AP5 läuft sie in beiden Umgebungen** — bis dahin nur auf Produktiv.
 Das ist keine Zugabe, sondern E-KH-17: Ein Tor, das nur dort steht, wo es
@@ -13249,10 +13289,15 @@ unbemerkt — das ist der eine Weg, auf dem die Wache still wird.
 
 **Was rot ist, steht oben im Protokoll; in dieser Reihenfolge lesen:**
 
-1. **„NICHT ERREICHBAR"** — die Anlage oder das Netz hat nicht geantwortet.
+1. **„ANLAGE NICHT ERREICHBAR"** (kein einziger Abruf kam durch, eine Zeile
+   mit Zahl und Fehlerart) **oder „NICHT ERREICHBAR"** mit einzelnen Dateien
+   — die Anlage oder das Netz hat nicht geantwortet. Die Zeile
+   „Läuferadresse" ganz oben sagt, von welcher Adresse der Lauf kam; sammelt
+   sich das Rot bei denselben Adressen, sperrt der Hoster Läufer (F-R17-74).
    Nach einer Stunde von Hand neu starten (Actions → „Integritaetswache" →
    *Run workflow*). Bleibt es, liegt es beim Hoster; eine Manipulation zeigt
-   sich so nicht.
+   sich so nicht. Die Adresse kommt von `api.ipify.org`, 5 s Grenze; geht
+   das nicht, steht „unbekannt" da, und die Wache misst trotzdem.
 2. **Teil 3 (Punktpfade)** — seit R17-19. Ein Punktpfad mit 404 statt 403
    heißt: Der Server liest `.htaccess` nicht mehr, oder sie ist verändert —
    dann ist die Sperre der Zustandsdatei, der Sitzungen und der übrigen

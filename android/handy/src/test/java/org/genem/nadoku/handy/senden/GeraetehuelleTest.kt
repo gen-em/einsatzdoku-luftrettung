@@ -25,7 +25,7 @@ import javax.crypto.spec.IvParameterSpec
 import javax.crypto.spec.SecretKeySpec
 
 /**
- * Die Gerätehülle gegen die Vektoren der Referenz (S11-09).
+ * Die Gerätehülle gegen die Vektoren der Referenz.
  *
  * Anlass: Nr. 43 — drei Umsetzungen (Garmin, Android, Browser) müssen
  * dasselbe Format byte-gleich schreiben, und nur ein gemeinsamer Satz fester
@@ -81,7 +81,7 @@ class GeraetehuelleTest {
         assertEquals(0L, Geraetehuelle.runden(-0.4))
     }
 
-    /** Höhe: ganze Meter, geklemmt; ohne Wert -32768 (E-S11-39, -66). */
+    /** Höhe: ganze Meter, geklemmt; ohne Wert -32768. */
     @Test fun hoeheGeklemmtUndUnbekannt() {
         val innen = Geraetehuelle.spurInnen(
             listOf(Rohpunkt(1.0, 2.0, null, 10), Rohpunkt(1.0, 2.0, 40_000.0, 11), Rohpunkt(-1.0, -2.0, 4500.5, 12)),

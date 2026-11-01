@@ -5,7 +5,7 @@ require_once __DIR__ . '/ui.php';
 require_once __DIR__ . '/konto_lib.php';
 
 /**
- * DEN WECHSEL DER ANMELDEADRESSE BESTAETIGEN (P5b/AP5, E-P5b-16).
+ * DEN WECHSEL DER ANMELDEADRESSE BESTAETIGEN.
  *
  * OHNE ANMELDUNG, UND DAS IST DER ZWECK. Wer diese Seite aufruft, hat den
  * Link aus dem Postfach der NEUEN Adresse — genau das ist der Nachweis, um

@@ -68,21 +68,20 @@ enum class Akkubefehl {
 }
 
 /**
- * Der Akkuwächter (Backlog Nr. 82, Erweiterung vom 04.09.2026) — **die
- * Zustandsmaschine ohne Android**.
+ * Der Akkuwächter — **die Zustandsmaschine ohne Android**.
  *
  * WOZU ER DA IST. Die Aufzeichnung braucht durchgehend GPS und ist damit über
- * einen langen Dienst der größte Stromverbraucher des Geräts. Bis hierher
- * sagte die App das einmal beim ersten Dienstbeginn und danach nie wieder —
- * ein Satz, den man im Januar liest und im Juli gebraucht hätte.
+ * einen langen Dienst der größte Stromverbraucher des Geräts. Sagte die App
+ * das nur einmal beim ersten Dienstbeginn und danach nie wieder, wäre es ein
+ * Satz, den man im Januar liest und im Juli gebraucht hätte.
  *
  * ER SCHALTET NICHTS AB, und das ist die eigentliche Entscheidung. Eine
  * automatische Abschaltung bei X % wäre die bequeme Lösung und die falsche:
  * Sie beendete die Aufzeichnung **still**, mitten im Dienst, genau in dem
  * Augenblick, in dem niemand auf das Handy sieht. Was in der Dokumentation
  * fehlt, fehlt hinterher unwiederbringlich — der Dienst lässt sich nicht
- * nachfahren. Das ganze Paket E (Android 0.8.0) ist dagegen gebaut worden,
- * dass die App etwas anderes tut, als sie sagt; hier dieselbe Linie. Der
+ * nachfahren. Die App tut nie etwas anderes, als sie sagt; hier dieselbe
+ * Linie. Der
  * Mensch entscheidet, die App sagt ihm nur rechtzeitig Bescheid.
  *
  * ER HÄLT KEINE UHR UND KEINEN FADEN. Jede Messung wird ihm übergeben; damit

@@ -68,7 +68,7 @@ def _ftp_lauf(wurzel, port, tls, zertpfad, passiv_von, passiv_bis):
     rechte = DummyAuthorizer()
     rechte.add_user(NUTZER, PASSWORT, wurzel, perm='elradfmwMT')
     # Ein zweites Konto, das NUR LESEN darf. Es ist die Gegenprobe fuer
-    # „das Ziel verweigert das Schreiben" — ein Fall, den die Abnahme von AP7
+    # „das Ziel verweigert das Schreiben" — ein Fall, den die Abnahme
     # ausdruecklich verlangt (Stichwort „Platz voll") und der sich mit
     # Dateirechten nicht herstellen laesst: Dieser Server laeuft als root, und
     # root ignoriert Rechtebits. Der Server muss es also selbst ablehnen.

@@ -6,17 +6,16 @@ require_once __DIR__ . '/adminbackup_lib.php';   // Ablagezahlen, Grenze, Schwel
 require_once __DIR__ . '/format_lib.php';        // iso_utc(), prozent_wert(), groesse_text()
 
 /**
- * SPEICHER DER INSTALLATION (S8/AP2, E-S8-18, Mockup 07 Fassung 2).
+ * SPEICHER DER INSTALLATION.
  *
  * ZWEI BALKEN, ZWEI BEZUEGE — und das ist der ganze Grund fuer diese Datei:
  *
  *   Backups              gegen die SPEICHERGRENZE (eine Einstellung)
  *   Installation gesamt  gegen den WEBSPACE LAUT HOSTING (eine Angabe)
  *
- * Die Grenze gab es schon; sie lag unter „Backups" und wirkte doch auch auf
- * die Komplett-Staende (B-S8-06). Der zweite Bezug ist neu und beantwortet die
- * Frage, die vorher niemand beantworten konnte: Wie viel von dem, was der
- * Hoster verkauft, ist eigentlich belegt?
+ * Die Grenze wirkt auf die Backups und auf die Komplett-Staende. Der zweite
+ * Bezug beantwortet die Frage: Wie viel von dem, was der Hoster verkauft,
+ * ist eigentlich belegt?
  *
  * WARUM DER FREIE WEBSPACE NICHT GEMESSEN WIRD. `disk_free_space()` liefert
  * auf gemeinsam genutztem Hosting den Datentraeger des HOSTS, nicht die Quota
@@ -42,7 +41,7 @@ const SPEICHER_K_DB       = 'speicher_db_bytes';
 const SPEICHER_K_DATEIEN  = 'speicher_dateien_bytes';
 const SPEICHER_K_STAND    = 'speicher_stand';
 const SPEICHER_K_WEBSPACE = 'webspace_gb';
-/* Das DB-Kontingent (P5a/AP2, E-P5a-11, PP-2). Warum eine ANGABE und keine
+/* Das DB-Kontingent. Warum eine ANGABE und keine
  * Messung: Kein Hoster macht das Kontingent abfragbar — `information_schema`
  * sagt, wie gross die Datenbank IST, nicht, wie gross sie sein DARF. */
 const SPEICHER_K_DB_GB    = 'db_gb';
@@ -50,13 +49,13 @@ const SPEICHER_K_DB_GB    = 'db_gb';
  * `adminbackup_schwellen_gemeldet`: Wer aufraeumt und wieder unter die
  * Schwelle faellt, soll beim naechsten Ueberschreiten erneut gewarnt werden. */
 const SPEICHER_K_GEMELDET = 'speicher_schwellen_gemeldet';
-/* Die drei Anteile, gemerkt bei der Messung (P5c/AP6, E-P5c-52): Datenbank
+/* Die drei Anteile, gemerkt bei der Messung: Datenbank
  * gegen ihr Kontingent, Backups gegen die Speichergrenze, alles gegen den
  * Webspace. `api/health.php` liest nur den hoechsten — ohne Verzeichnislauf
  * je Abruf. JSON, ein Wert je Anteil, `null` wo kein Bezug angegeben ist. */
 const SPEICHER_K_PROZENT  = 'speicher_prozent';
 
-/** Vorgabe des DB-Kontingents in GB — die Zielgroesse Z2 des S2-Konzepts. */
+/** Vorgabe des DB-Kontingents in GB. */
 const SPEICHER_DB_GB_VORGABE = 10.0;
 
 /**
@@ -127,7 +126,7 @@ function speicher_messen(PDO $pdo): array
     edbak_marke_setzen(SPEICHER_K_DATEIEN, (string)$datei);
     edbak_marke_setzen(SPEICHER_K_STAND, iso_utc());
 
-    /* DIE DREI ANTEILE GLEICH MIT (P5c/AP6). Die Ablage wird hier ohnehin
+    /* DIE DREI ANTEILE GLEICH MIT. Die Ablage wird hier ohnehin
      * gewogen — der Job darf, was ein Abruf von `api/health.php` nicht darf.
      * Dieselbe Rechnung wie `speicher_uebersicht()` und
      * `speicher_kontingente_melden()`: abgerundet, und ohne Bezug kein Wert. */
@@ -145,7 +144,7 @@ function speicher_messen(PDO $pdo): array
 
 /**
  * Der hoechste der drei gemerkten Anteile, in Prozent — `null`, solange
- * nichts gemessen ist oder keiner einen Bezug hat (P5c/AP6, E-P5c-52).
+ * nichts gemessen ist oder keiner einen Bezug hat.
  *
  * NUR LESEN. Die Zahl entsteht im Aufraeumjob (`speicher_messen()`); ein
  * Endpunkt, der je Minute gefragt wird, wiegt keine Verzeichnisse.
@@ -222,10 +221,10 @@ function speicher_uebersicht(): array
     $konto  = (int)$z['pakete_bytes'];
     $komp   = (int)$z['komplett_bytes'];
     /* `sonstige` sind Begleitdateien, `.htaccess` und Reste. Sie zaehlen auf
-     * die Grenze (das tun sie seit Web 11.2.0) und gehoeren deshalb in den
+     * die Grenze und gehoeren deshalb in den
      * Balken — als Teil der Konto-Backups, denn dort liegen sie. */
     $konto  += (int)$z['sonstige_bytes'];
-    /* Die Archive des Protokolls ebenso (P5c/AP2): Sie liegen in der Ablage
+    /* Die Archive des Protokolls ebenso: Sie liegen in der Ablage
      * und zählen auf ihre Grenze; ein eigenes Segment gibt es nicht. */
     $konto  += (int)($z['protokoll_bytes'] ?? 0);
     $backups = $konto + $komp;
@@ -287,23 +286,21 @@ function speicher_ton(int $prozent, array $schwellen): string
 }
 
 /* ---------------------------------------------------------------------------
- * WARNMAIL DER KONTINGENTE (P5a/AP2, E-P5a-11)
+ * WARNMAIL DER KONTINGENTE
  * ---------------------------------------------------------------------------
  *
- * ZWEI BEFUNDE AUF EINMAL, UND DER ZWEITE IST DER UNANGENEHMERE.
+ * ZWEI WARNUNGEN, EIN AUFRUF.
  *
- * 1. Das DB-Kontingent bekommt eine Warnung — das verlangt E-P5a-11. Bis
- *    hierher gab es fuer die Datenbank ueberhaupt keine Grenze: Die
- *    Statusseite nannte ihre Groesse, und das war alles. Wer bei 10 GB
+ * 1. Das DB-Kontingent bekommt eine Warnung. Ohne sie gaebe es fuer die
+ *    Datenbank ueberhaupt keine Grenze: Die Statusseite nennt ihre Groesse,
+ *    und das waere alles. Wer bei 10 GB
  *    ankommt, merkt es daran, dass der Hoster das Schreiben verweigert.
  *
  * 2. `edbak_schwellen_melden()` — die Warnung fuer die Speichergrenze der
- *    Backups, seit S8 vorhanden — WIRD IM BETRIEB VON NIEMANDEM AUFGERUFEN.
- *    Nachgemessen am 15.09.2026: `grep -rn "schwellen_melden" --include=*.php`
- *    findet die Definition und einen Aufruf in
- *    `tools/proben/wiederherstellung/probe.php`. Sonst nichts. Die Funktion
- *    ist geschrieben, geprueft und tot — dieselbe Klasse Fehler wie Backlog
- *    Nr. 89 („Dieser Job lief von Web 12.2.0 bis 12.9.2 nie"). Sie wird hier
+ *    Backups — HAT IM BETRIEB SONST KEINEN AUFRUFER. Nachgemessen am
+ *    15.09.2026, vor diesem Aufruf: `grep -rn "schwellen_melden"
+ *    --include=*.php` findet die Definition und einen Aufruf in
+ *    `tools/proben/wiederherstellung/probe.php`. Sonst nichts. Sie wird hier
  *    mitgerufen, statt eine zweite Mechanik danebenzustellen.
  *
  * DIE SCHWELLEN SIND DIESELBEN wie ueberall (`edbak_schwellen()`, Vorgabe

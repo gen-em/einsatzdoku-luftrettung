@@ -5,12 +5,11 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 /**
- * Wann nachgesendet wird (E-S5Z-09) — die reine Entscheidung.
+ * Wann nachgesendet wird — die reine Entscheidung.
  *
- * SIE IST DER KERN VON E2. Der belegte Fehler (Diagnose 1.3, H2) war, dass
- * es diese Entscheidung gar nicht gab: `spaeterErneut` hiess „später" ohne
- * ein Später. Diese Fälle prüfen, dass jetzt genau dann geplant wird, wenn
- * es hilft — und sonst nicht.
+ * SIE IST DER KERN DES NACHSENDENS. Ohne sie hiesse `spaeterErneut`
+ * „später" ohne ein Später. Diese Fälle prüfen, dass genau dann geplant
+ * wird, wenn es hilft — und sonst nicht.
  */
 class NachsendenTest {
 
@@ -40,7 +39,7 @@ class NachsendenTest {
     /**
      * Ein sauberer Lauf mit Rückstand plant nichts: Er hat gerade alles
      * versucht, was ging. Was übrig blieb, ist nicht durch Warten zu holen —
-     * abgewiesene Pakete etwa; die zeigt die Ansicht (E-S5Z-12).
+     * abgewiesene Pakete etwa; die zeigt die Ansicht.
      */
     @Test fun einSauberLaufMitRestPlantNichts() {
         assertFalse(Nachsenden.planen(sauber, rueckstand = 1, dienstLaeuft = false))

@@ -1,16 +1,15 @@
-/* Rückwegprobe, Browser-Teil — der echte Rückweg gegen die Anlage
- * (Konzept RW, RW-03; E-RW-12).
+/* Rückwegprobe, Browser-Teil — der echte Rückweg gegen die Anlage.
  *
  * Anlass: Nr. 319 (F-P5c-106) — der Rückweg nach E-P5c-42 prüfte gegen
  * einen Wert, den jeder Datenbankabzug enthält. Dazu Nr. 141 (Zweitfaktor).
  *
  * WAS SIE FÄHRT, zweimal — als NutzerIn und als BetreiberIn:
- *   1. ein Wegwerfkonto über den Anlegeweg des Kreislaufs (`pruefkonto.py`,
- *      E-RP-02); das Passwort setzt `passwort_setzen.mjs` im Browser und
+ *   1. ein Wegwerfkonto über den Anlegeweg des Kreislaufs (`pruefkonto.py`);
+ *      das Passwort setzt `passwort_setzen.mjs` im Browser und
  *      liest dabei den Wiederherstellungsschlüssel von der Seite
  *   2. anmelden — das Paar entsteht still (`RW_STAND` fehlt → da)
  *   3. den Zweitfaktor einschalten, mit dem Geheimnis von der Seite und dem
- *      Code-Rechner der Werkzeuge (E-P5c-43): NutzerIn über die Profilkarte,
+ *      Code-Rechner der Werkzeuge: NutzerIn über die Profilkarte,
  *      BetreiberIn im Einrichtungstor
  *   4. abmelden, anmelden → Code-Schritt → „Gerät und Codes verloren?"
  *   5. ein Tippfehler → das Zeichen steht in der Meldung
@@ -23,7 +22,7 @@
  *
  * WARUM NICHT „VORMERKFACH NACH DER STARTSEITE LEER": Die Startseite eines
  * Kontos ohne Diensttag braucht den Schlüssel nicht und lässt das Fach
- * liegen, wie nach jeder Anmeldung (F-RW-14 löst es nur auf, wenn ein Paar
+ * liegen, wie nach jeder Anmeldung (aufgelöst wird es nur, wenn ein Paar
  * FEHLT). Gemessen wird deshalb an der Seite, die es braucht.
  *
  * ALLE KRYPTO KOMMT AUS DER ANWENDUNG — `crypto.js` und `rueckweg.js` in der
@@ -67,9 +66,9 @@ const ADMIN  = [wert('--admin', 'admin@example.invalid'), wert('--admin-pw', 'pr
 const KONTO  = join(WURZEL, 'tools', 'referenzdatensatz', 'vergleich', 'pruefkonto.py');
 const PASSWORT = 'umlaufpruefung2026-rueckweg';
 const lokal = /^https?:\/\/(127\.0\.0\.1|localhost)(:|\/|$)/.test(BASIS);
-/* Der Motor (RW-04, Backlog Nr. 300; seit R87 über `tools/motor.mjs`):
+/* Der Motor (über `tools/motor.mjs`):
  * `--motor` oder MOTOR=…, Vorgabe Chromium. Der Prüfstand und Stufe 2
- * fahren alle drei (Konzept DM); die Kontoanlage über `pruefkonto.py` erbt
+ * fahren alle drei; die Kontoanlage über `pruefkonto.py` erbt
  * MOTOR und läuft in derselben Engine. */
 const MOTOR = motorWahl(process.argv);
 
@@ -109,7 +108,7 @@ const seite = s => new URL(s.url()).pathname.split('/').pop();
 
 /** Bis das Paar da ist: `RW_STAND` einer Seite mit Rüstzeug, neu geladen.
  *
- * ERST DIE ANTWORT DES ENDPUNKTS ABWARTEN, DANN NEU LADEN (RW-04, F-RW-22).
+ * ERST DIE ANTWORT DES ENDPUNKTS ABWARTEN, DANN NEU LADEN.
  * Das Paar entsteht im Browser nach der Schlüsselableitung, und die läuft
  * ohne Netzverkehr — `networkidle` meldet sich mitten darin. Wer dann neu
  * lädt, bricht sie ab. In Chromium war sie schneller als das Fenster, in
@@ -206,7 +205,7 @@ async function weg(browser, rolle) {
 
     /* 7: der richtige Zettel */
     await s.fill('#f-rs', rc);
-    /* AUF DEN SEITENWECHSEL WARTEN, nicht nur auf die Antwort (Nr. 393).
+    /* AUF DEN SEITENWECHSEL WARTEN, nicht nur auf die Antwort.
        `waitForLoadState('domcontentloaded')` kehrte sofort zurück — das
        ALTE Dokument war längst so weit —, und in Firefox kam die Antwort
        vor dem neuen Dokument: zwei von drei vollen Läufen am 20./21.10.2026
@@ -226,7 +225,7 @@ async function weg(browser, rolle) {
         s.click('a.knopf[href="index.php"]'),
       ]);
       await s.goto(`${BASIS}/suche.php`, { waitUntil: 'networkidle' });
-      /* Seit R17-25 bleibt nach dem Auflösen kein Datenschlüssel liegen,
+      /* Nach dem Auflösen bleibt kein Datenschlüssel liegen,
          sondern der Inhaltsschlüssel in der Ablage (IndexedDB). */
       const fach = await s.evaluate(async () => ({ vor: sessionStorage.getItem('edkvor'),
                                                    ck: !!(await EdCrypto.inhaltLesen()) }));

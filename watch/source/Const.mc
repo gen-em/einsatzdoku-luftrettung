@@ -6,63 +6,18 @@ module Const {
     /* Fassung der Uhr-App. Sie zaehlt GETRENNT von Web und Android, weil sie
      * getrennt ausgeliefert wird (CLAUDE.md 2); sie steht auf der Sync-Seite
      * und geht als "app" im geraet-Block an den Server.
-     *
-     * Wofuer die Hauptnummern stehen:
-     *   1.x  die urspruengliche App: Dienst, Einsatz, Phasen, Reanimation,
-     *        GPS-Spur, Warteschlange. Innerhalb der Reihe kamen die zweite
-     *        und dritte Geraeteklasse dazu (FR945, Venu 3s) und mit ihnen das
-     *        Eingabemodell in Input.mc.
-     *   2.0  neue Anwendungs-ID (manifest.xml). Fuer die Uhr ist das eine
-     *        ANDERE App — eigene Einstellungen, eigener Speicher, also auch
-     *        keine Kopplung mehr. Ein Umbau am Datenbestand des Geraets.
-     *   3.0  die Kopplung laeuft andersherum (S5, E-R49-1): Die Uhr ZEIGT
-     *        einen Code, statt einen einzutippen. Hauptnummer, weil es ein
-     *        spuerbar anderer Weg durch die Anwendung ist UND weil keine
-     *        aeltere Fassung mehr koppelt — der alte Weg setzte einen im Web
-     *        erzeugten Code voraus, und den gibt es nicht mehr (E-R49-7).
-     *        Bestehende Kopplungen sind davon nicht beruehrt: ingest.php und
-     *        Vertragsabschnitt 1 aendern sich nicht.
-     *   3.1  die Uhr unterscheidet eine STOERUNG von einer dauerhaften
-     *        Ablehnung (Backlog Nr. 159). Bis dahin lief jede Antwort ausser
-     *        Erfolg in denselben Zweig und wurde endlos wiederholt -- ein
-     *        Paket, das der Server nie annimmt, blockierte damit die ganze
-     *        Warteschlange, und weil ein Rueckstand zugleich das Trennen
-     *        sperrte, war die Uhr danach nur noch durch Loeschen der App zu
-     *        retten. Neben-, nicht Hauptnummer: Der Weg durch die Anwendung
-     *        bleibt derselbe, es kommen eine Anzeige und eine Taste dazu.
-     *   4.0  die Uhr VERSCHLIESST Spur, Phasenkoordinaten und Reanimation
-     *        (S11-08, Konzept S11): mit dem oeffentlichen Schluessel des
-     *        Kontos aus der Kopplung, je Anfrage ein Spurstueck und die
-     *        Einsatzhuelle (Huelle.mc). Hauptnummer, weil sich das Format
-     *        auf dem Draht aendert und es KEINEN Uebergang gibt (E-S11-09):
-     *        Der Server nimmt seit Web 22.0.1 nur noch Huellen an, eine Uhr
-     *        3.x kommt dort nicht mehr durch, und jede bestehende Kopplung
-     *        muss einmal neu geschlossen werden, damit die Uhr den
-     *        Schluessel bekommt. Dazu bekommen geparkte Pakete eine Frist
-     *        von 30 Tagen (E-S11-11).
-     *   4.1  Feinschliff aus dem Review (R17-21): Das bestaetigte Paket geht
-     *        ueber seine Referenz aus der Liste, nicht ueber einen Platz,
-     *        der waehrend der Anfrage veralten konnte (F-R17-52); auch der
-     *        Zustand "abgemeldet" hat eine Frist von 30 Tagen (E-R17-22);
-     *        "http://" wird zu "https://" (F-R17-11); der Selbsttest merkt
-     *        sich "kaputt" nicht mehr dauerhaft (F-R17-53); der Schalter
-     *        "Touchbedienung verwenden" wirkt (F-R17-68). Der Alt-Weg --
-     *        Geraete-ID und API-Schluessel als App-Einstellungen -- ist fort
-     *        (E-R17-21): Eine Uhr, die noch ueber ihn sendete, koppelt
-     *        einmal neu. Neben-, nicht Hauptnummer: Seit 4.0 koppelt ohnehin
-     *        jede Uhr ueber den Code, und das Format auf dem Draht bleibt.
      */
-    const APP_VERSION = "4.1.0";
+    const APP_VERSION = "4.1.1";
 
     /* Wie lange ein geparktes (dauerhaft abgewiesenes) Paket auf der Uhr
-     * liegen bleibt, bevor ein Sendelauf es raeumt (E-S11-11, wie Android
-     * AN-2): 30 Tage ab dem Parken. Seit Uhr 4.1.0 auch die Frist fuer
-     * ALLE Pakete einer abgemeldeten Uhr, ab der ersten Abmeldung
-     * (E-R17-22, Uploader.abmeldeFristPruefen). */
+     * liegen bleibt, bevor ein Sendelauf es raeumt (wie auf dem Handy):
+     * 30 Tage ab dem Parken. Zugleich die Frist fuer ALLE Pakete einer
+     * abgemeldeten Uhr, ab der ersten Abmeldung
+     * (Uploader.abmeldeFristPruefen). */
     const PARK_FRIST_S = 30 * 86400;
 
     /* Wie oft die Kopplungsansicht nachfragt, ob jemand den Code eingetragen
-     * hat (E-S5-32, Vertrag 1a.2: "hoechstens alle fuenf Sekunden").
+     * hat (Vertrag 1a.2: "hoechstens alle fuenf Sekunden").
      *
      * FEST IM CLIENT, kein Serverfeld. Bei zehn Minuten Frist sind das
      * hoechstens 120 Anfragen je Sitzung, und die Verzoegerung zwischen dem
@@ -72,9 +27,8 @@ module Const {
      * jederzeit nachtragen, ohne den Vertrag zu brechen (Clients ignorieren
      * unbekannte Felder).
      *
-     * Es ist eine BEDIENZAHL, keine Lastzahl: Seit Web 13.0.0 kostet eine
-     * status-Abfrage den Server einen SHA-256-Vergleich (E-S5-41/-42), nicht
-     * mehr eine bcrypt-Pruefung. */
+     * Es ist eine BEDIENZAHL, keine Lastzahl: Eine status-Abfrage kostet
+     * den Server einen SHA-256-Vergleich, keine bcrypt-Pruefung. */
     const PAIR_TAKT_MS = 5000;
 
     // Werte der App-Einstellung "logoWahl" (properties.xml). Zahlen, weil
@@ -86,16 +40,14 @@ module Const {
     // Phasen 1..9 (Index 0 unbenutzt). Der Einsatz-Abschluss ist KEIN
     // Zeitstempel mehr, sondern eine bestaetigte Aktion (Phase 10 entfaellt).
     //
-    // NEUTRALE BESCHRIFTUNGEN seit 1.8.0 (E20): Phase 3 hiess "Abflug", Phase 7
-    // "Landung KKH". Die Uhr laeuft seit Web 6.0.0 auch an bodengebundenen
-    // Diensten, und sie ERFAEHRT DIE ART NICHT (E21) — die Einordnung geschieht
+    // NEUTRALE BESCHRIFTUNGEN: Die Uhr laeuft auch an bodengebundenen
+    // Diensten, und sie ERFAEHRT DIE ART NICHT — die Einordnung geschieht
     // ausschliesslich im Web. Eine Beschriftung, die eine der beiden Arten
-    // benennt, waere an der anderen schlicht falsch, und die Uhr koennte sie
-    // nicht einmal umschalten.
+    // benennt ("Abflug", "Landung KKH"), waere an der anderen schlicht falsch,
+    // und die Uhr koennte sie nicht einmal umschalten.
     //
     // Uebertragen werden ohnehin NUMMERN, keine Beschriftungen (JSON-Vertrag
-    // Abschnitt 7). Diese Aenderung beruehrt den Vertrag also nicht; sie holt
-    // die Uhr nur dorthin, wo der Server seit Web 6.0.0 steht (Berichtigung B8).
+    // Abschnitt 7); die Beschriftung beruehrt den Vertrag also nicht.
     const PHASE_LABELS = [
         "", "Frei", "Alarmierung", "Ausrücken", "Ankunft Einsatzort",
         "Ankunft PatientIn", "Transportbeginn", "Ankunft Klinik",

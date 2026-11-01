@@ -7,8 +7,8 @@ require_once __DIR__ . '/../kontopaar_lib.php';
 require_once __DIR__ . '/../ratelimit_lib.php';
 
 /**
- * api/kontopaar.php — das Schlüsselpaar des Kontos (S11-03; Konzept S11 3.1,
- * E-S11-14). Drei Anliegen, alle POST mit JSON und CSRF:
+ * api/kontopaar.php — das Schlüsselpaar des Kontos. Drei Anliegen, alle POST
+ * mit JSON und CSRF:
  *
  *   {aktion:'anlegen', token, oeffentlich, privat}
  *        oeffentlich  SPKI in Base64 (ECDH, P-256) — darf jeder kennen
@@ -22,16 +22,16 @@ require_once __DIR__ . '/../ratelimit_lib.php';
  *        öffentlichen abgeleitet als den, den der Server ausliefert.
  *     -> 200 {ok:true}
  *
- *   {aktion:'zustand'}   (seit S11-05e)
+ *   {aktion:'zustand'}
  *        Der Stand des eigenen Paars, wie ihn `ui_krypto_bootstrap()` in die
  *        Seite schreibt: {stand, oeffentlich, privat} — der private Teil als
  *        Chiffretext unter dem Inhaltsschlüssel. Für eine Seite, die vor dem
- *        Anlegen aufgebaut wurde (F-S11-61). Liest nur das eigene Konto.
+ *        Anlegen aufgebaut wurde. Liest nur das eigene Konto.
  *     -> 200 {ok:true, stand, oeffentlich, privat}
  *
- *   {aktion:'oeffnen_fehler', art, id, grund}   (seit S11-04d)
- *        Eine Gerätehülle dieses Kontos ging im Browser nicht auf (M-S11-01,
- *        Zustand d). `art` spur|ruhe|einsatz, `id` der Einsatz bzw. das
+ *   {aktion:'oeffnen_fehler', art, id, grund}
+ *        Eine Gerätehülle dieses Kontos ging im Browser nicht auf. `art`
+ *        spur|ruhe|einsatz, `id` der Einsatz bzw. das
  *        Segment, `grund` einer der Gründe aus `crypto.js` (laenge, fassung,
  *        schluessel, pruefwert, polsterung) oder kein_paar. Kein Klartext —
  *        der Server erfährt nur, DASS und WARUM, nicht was darin stand.
@@ -80,7 +80,7 @@ if ($aktion === 'abweichung') {
     json_out(['ok' => true]);
 }
 if ($aktion === 'oeffnen_fehler') {
-    /* DIE MELDUNG AN DEN REITER SYSTEM (S11-04d, M-S11-01 d). Eine Huelle, die
+    /* DIE MELDUNG AN DEN REITER SYSTEM. Eine Huelle, die
      * nicht aufgeht, ist entweder ein Geraet, das falsch verschliesst, oder
      * ein Eingriff in die Datenbank (vertauschte Huelle, fremder Schluessel)
      * — beides will die Betreiberin wissen, und die Nutzerin sieht nur „laesst
@@ -116,7 +116,7 @@ $st = $pdo->prepare('SELECT id FROM users WHERE id = ?');
 $st->execute([$userId]);
 $u = $st->fetch(PDO::FETCH_ASSOC);
 if (!$u) { json_out(['error' => 'konto'], 404); }
-/* Topf und Vergleich in einer Funktion (R17-20, F-R17-32, E-R17-49). */
+/* Topf und Vergleich in einer Funktion. */
 passwort_nachweis_json($userId, (string)($b['token'] ?? ''));
 
 $oeffentlich = (string)($b['oeffentlich'] ?? '');

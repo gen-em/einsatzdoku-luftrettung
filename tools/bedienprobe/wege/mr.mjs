@@ -1,10 +1,10 @@
-/* Wege der Mockup-Runde 9c, Arbeitspaket AP4 — das Aktionsblatt (Nr. 124).
+/* Wege zum Aktionsblatt.
  * ===========================================================================
  *
  * Drei Wege, und jeder misst etwas, das ein Bild nicht zeigt:
  *
  *   MR-01  Der Öffner ist markiert, solange sein Blatt offen ist — an ALLEN
- *          vier Bauarten, nicht nur an den beiden Bausteinen (E-MR-25).
+ *          vier Bauarten, nicht nur an den beiden Bausteinen.
  *   MR-02  Das Blatt fährt auf und wieder zu, und danach ist es WIRKLICH weg
  *          (`hidden`), nicht bloß verschoben.
  *   MR-03  Am Schreibtisch fährt nichts, und das Aufklappmenü geht SOFORT zu
@@ -24,7 +24,7 @@
  */
 
 /* Die vier Bauarten von Öffnern, je an der Seite, auf der sie stehen.
- * Nachgezählt am Code (E-MR-25): 6 × `ui_aktionen()`, 9 ×
+ * Nachgezählt am Code: 6 × `ui_aktionen()`, 9 ×
  * `ui_zeilenaktionen()`, der Pin-Knopf des Ortsfelds, 3 handgeschriebene
  * Sortierblatt-Knöpfe. Hier steht je ein Vertreter — wer eine fünfte Bauart
  * baut, trägt sie dazu. */

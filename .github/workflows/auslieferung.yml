@@ -111,8 +111,8 @@ jobs:
   stufe2:
     name: Prüfung Stufe 2
     needs: staging
-    # Wieder auf 26.04 wie alle Jobs (Nr. 236), seit Nr. 393. Vom 20.10.2026
-    # an lief dieser Job als einziger auf 24.04 (F-DM-13): Playwright 1.56
+    # Wieder auf 26.04 wie alle Jobs. Vom 20.10.2026
+    # an lief dieser Job als einziger auf 24.04: Playwright 1.56
     # kannte 26.04 nicht und lud die WebKit-Fassung für 24.04, die gegen
     # `libicuuc.so.74`, `libxml2.so.2`, `libvpx.so.9` und `libx264` gebaut
     # ist — Bibliotheken, die es auf 26.04 unter keinem Namen gibt. Seit 1.63
@@ -121,8 +121,8 @@ jobs:
     # Zuordnung den Build für 24.04.
     runs-on: ubuntu-26.04
     # Ohne Zeitgrenze liefe ein hängender Job sechs Stunden, und so lange wartet
-    # jeder weitere Lauf dieser Umgebung in seiner Gruppe. 40 statt 20 seit
-    # R87: Kreislauf und Rückwegprobe laufen dreimal (am 19.10.2026 in
+    # jeder weitere Lauf dieser Umgebung in seiner Gruppe. 40 statt 20,
+    # weil Kreislauf und Rückwegprobe laufen dreimal (am 19.10.2026 in
     # Chromium allein 49 s und 144 s), dazu zwei Engines samt Bibliotheken.
     timeout-minutes: 40
     environment: staging
@@ -177,8 +177,8 @@ jobs:
           echo "Staging liefert die Anmeldeseite der Anwendung aus."
 
       - name: Punktdateien gesperrt, .well-known offen?
-        # Seit R17-19 EINE Stelle für Staging und Produktiv: Teil 3 der
-        # Integritätswache (F-R17-18). Bis dahin stand die Prüfung hier als
+        # EINE Stelle für Staging und Produktiv: Teil 3 der
+        # Integritätswache. Bis dahin stand die Prüfung hier als
         # Bash, und gegen Produktiv lief sie nie. Erwartet: Punktpfade 403
         # (nicht 404 — die Sperre greift vor der Dateisuche), `.well-known/`
         # nicht 403, keine Kopie der `config.php` mit 200.
@@ -216,23 +216,23 @@ jobs:
             echo '**Kreislauf: NICHT GEMESSEN** (kein `JOBS_TOKEN`) — der Lauf ist deshalb rot. Gemeint ist das Kettentoken: auf Staging unter Betrieb → Hintergrundjobs, Karte „Auslieferungskette“.' >> "$GITHUB_STEP_SUMMARY"
             exit 1
           fi
-          # FESTE FASSUNGEN MIT HASHES (R17-19, F-R17-20). Bis dahin
+          # FESTE FASSUNGEN MIT HASHES. Bis dahin
           # `pip -q install cffi cryptography` und `npm install playwright@…`
           # — die Fassung des Tages, in einem Job mit Staging-Passwort,
           # `STAGING_TOTP` und `JOBS_TOKEN`. Jetzt prüft pip jede Datei gegen
           # ihren SHA-256 und npm gegen die Integritätswerte der Sperrdatei.
           # `--ignore-installed`: Bringt das Abbild eine Fassung per apt mit,
           # kann pip sie nicht deinstallieren (kein RECORD) und bräche ab; so
-          # liegt die gepinnte daneben und gewinnt. `--only-binary :all:`
-          # (Gegenprüfung R17-19): Ohne Rad baute pip aus dem Quellstand, und
+          # liegt die gepinnte daneben und gewinnt. `--only-binary :all:`:
+          # Ohne Rad baute pip aus dem Quellstand, und
           # dessen Build-Abhängigkeiten prüft `--require-hashes` nicht.
           pip -q install --require-hashes --only-binary :all: --ignore-installed -r tools/kette/stufe2-anforderungen.txt
-          # DIE FASSUNG STEHT EINMAL, in `tools/sandbox/aufbauen.sh` (Nr. 393):
+          # DIE FASSUNG STEHT EINMAL, in `tools/sandbox/aufbauen.sh`:
           # Stufe 2 muss dieselben Engines messen wie der Prüfstand. Die
           # Sperrdatei trägt dieselbe Zahl ein zweites Mal — mit den
           # Integritätswerten, die eine Fassungszeile nicht hat. Gehen beide
           # auseinander, ist der Schritt rot, statt still eine andere Fassung
-          # zu messen (R17-19, nach dem Merge von Nr. 393).
+          # zu messen.
           PW_FASSUNG=$(sed -n 's/^PW_FASSUNG="\([0-9.]*\)"$/\1/p' tools/sandbox/aufbauen.sh)
           [ -n "$PW_FASSUNG" ] \
             || { echo "::error::PW_FASSUNG nicht in tools/sandbox/aufbauen.sh gefunden"; exit 1; }
@@ -250,17 +250,17 @@ jobs:
           export PLAYWRIGHT_MODUL="$PWD/tools/kette/stufe2-npm/node_modules/playwright/index.mjs"
           [ -f "$PLAYWRIGHT_MODUL" ] \
             || { echo "::error::Playwright-Modul fehlt unter $PLAYWRIGHT_MODUL"; exit 1; }
-          # DREI ENGINES (R87, Konzept DM/DM-04). Bis zum 19.10.2026 holte
+          # DREI ENGINES. Bis zum 19.10.2026 holte
           # dieser Schritt nur Chromium.
           #
           # Engines samt Systembibliotheken über `--with-deps`. Vom
           # 20.10.2026 an stand hier kurz eine Namensersetzung für Ubuntu
-          # 26.04 (F-DM-12, Lauf 132 rot); sie konnte nicht tragen, weil
+          # 26.04; sie konnte nicht tragen, weil
           # WebKit aus 1.56 die Bibliotheken von 24.04 in genau ihrer Fassung
-          # braucht (F-DM-13). Seit Nr. 393 kennt Playwright 26.04 selbst.
+          # braucht. Heute kennt Playwright 26.04 selbst.
           # Das Programm des Moduls aus der Sperrdatei, nicht `npx playwright@…`
-          # — sonst zöge npx eine zweite Kopie ohne Integritätsprüfung
-          # (F-R17-20). Über `.bin/`, nicht `node …/cli.js`: Der Riegel in
+          # — sonst zöge npx eine zweite Kopie ohne Integritätsprüfung.
+          # Über `.bin/`, nicht `node …/cli.js`: Der Riegel in
           # `tools/kettenaufrufe/` hielte einen Pfad unter `tools/` mit `.js`
           # für ein Werkzeug des Projekts, und das liegt erst nach `npm ci` da.
           tools/kette/stufe2-npm/node_modules/.bin/playwright install --with-deps chromium firefox webkit
@@ -293,7 +293,7 @@ jobs:
           export PLAYWRIGHT_MODUL="$PWD/tools/kette/stufe2-npm/node_modules/playwright/index.mjs"
           [ -f "$PLAYWRIGHT_MODUL" ] \
             || { echo "::error::Playwright-Modul fehlt unter $PLAYWRIGHT_MODUL"; exit 1; }
-          # Je Engine einmal (R87); `rueckweg/probe.mjs` liest MOTOR über
+          # Je Engine einmal; `rueckweg/probe.mjs` liest MOTOR über
           # `tools/motor.mjs`.
           rot=""
           for motor in chromium firefox webkit; do
@@ -309,7 +309,7 @@ jobs:
       # verlangt den ganzen Auslieferungslauf grün, nicht nur `staging`.
       #
       # PLATZ FÜR NR. 234 — „Deploy, Anmeldung, `update.php`“ in einem Zug gegen
-      # Staging (E-PK-21). Benannt und nicht gebaut; ein Schritt, der sich
+      # Staging. Benannt und nicht gebaut; ein Schritt, der sich
       # selbst überspringt, meldete grün ohne Messung (`Pruefablauf.md` 8).
 
   produktion:
@@ -436,7 +436,7 @@ jobs:
           } >> "$GITHUB_STEP_SUMMARY"
   # ---------------------------------------------------------------------------
   app-tor:
-    # DAS TOR DER APP-TAGS (R17-19, F-R17-17, E-R17-33). Bis Web 23.0.3 bauten
+    # DAS TOR DER APP-TAGS. Früher bauten
     # `android-v*` und `uhr-v*` jeden Commit, der Tag = Fassung trug und die
     # Freigabe bekam — auch einen nie geprüften. Jetzt wie beim Web: grüner
     # Job `Stufe 1` auf demselben Baum, und bei einem Tag liegt der Commit auf
@@ -478,8 +478,8 @@ jobs:
             --abstammung "$abstammung"
   # ---------------------------------------------------------------------------
   android-bau:
-    # BAUEN OHNE GEHEIMNISSE (R17-19, F-R17-03, E-R17-32). Dieser Job hat
-    # KEINE Umgebung und KEIN Geheimnis — mit Absicht. Bis Web 23.0.3 lief
+    # BAUEN OHNE GEHEIMNISSE. Dieser Job hat
+    # KEINE Umgebung und KEIN Geheimnis — mit Absicht. Früher lief
     # Gradle im selben Schritt wie die vier `APK_*`-Werte und erbte sie;
     # `System.getenv()` genügte jedem Plugin. Ein eigener Schritt hätte das
     # nicht geheilt: Ein Hintergrundprozess aus dem Bau lebt auf demselben
@@ -499,8 +499,8 @@ jobs:
       - name: Code auschecken
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         # Ohne: Der Checkout legte das Lauf-Token in `.git/config`, und Gradle
-        # läuft im selben Baum — `env -i` schützt die Umgebung, nicht die Datei
-        # (Gegenprüfung R17-19). Gebraucht wird es hier nicht.
+        # läuft im selben Baum — `env -i` schützt die Umgebung, nicht die Datei.
+        # Gebraucht wird es hier nicht.
         with:
           persist-credentials: false
 
@@ -539,10 +539,10 @@ jobs:
   # ---------------------------------------------------------------------------
   android:
     name: Android-Auslieferung
-    # Einmal je Fassung, hinter der Pflichtfreigabe der Umgebung `produktion`
-    # (E-PK-23); nicht `staging…` heißen, sonst zählte das Tor der grünen Läufe
-    # diesen Job mit. Seit R17-19 signiert er nur noch, was `android-bau`
-    # gebaut hat — Gradle läuft hier nicht (E-R17-32).
+    # Einmal je Fassung, hinter der Pflichtfreigabe der Umgebung `produktion`;
+    # nicht `staging…` heißen, sonst zählte das Tor der grünen Läufe
+    # diesen Job mit. Er signiert er nur noch, was `android-bau`
+    # gebaut hat — Gradle läuft hier nicht.
     needs: [app-tor, android-bau]
     if: startsWith(github.ref, 'refs/tags/android-v') || inputs.app_probelauf == 'android'
     runs-on: ubuntu-26.04
@@ -587,8 +587,8 @@ jobs:
           fi
 
       - name: Signieren, Zertifikat prüfen
-        # Signiert wird mit `apksigner`, außerhalb von Gradle (E-PK-63), auf
-        # einem Läufer, auf dem Gradle nie lief (E-R17-32).
+        # Signiert wird mit `apksigner`, außerhalb von Gradle, auf
+        # einem Läufer, auf dem Gradle nie lief.
         env:
           APK_SPEICHER_B64:        ${{ secrets.APK_SPEICHER_B64 }}
           APK_SPEICHER_PASSWORT:   ${{ secrets.APK_SPEICHER_PASSWORT }}
@@ -604,7 +604,7 @@ jobs:
 
       - name: Nach server/apk/ ablegen, ältere Fassungen löschen
         # Gelöscht wird erst, wenn die neue Datei zurückgeholt und gleich ist
-        # und ihren Namen trägt — nie davor (E-PK-59).
+        # und ihren Namen trägt — nie davor.
         env:
           FTP_SERVER:   ${{ secrets.FTP_SERVER }}
           FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
@@ -644,8 +644,8 @@ jobs:
   uhr:
     name: Uhr-Auslieferung (Garmin)
     # Das Paket bleibt ein Artefakt dieses Laufs; in den Connect-IQ-Store lädt
-    # es die Betreiberin von Hand (E-PK-61).
-    # Seit R17-19 hinter dem App-Tor (F-R17-17).
+    # es die Betreiberin von Hand.
+    # Hinter dem App-Tor.
     needs: app-tor
     if: startsWith(github.ref, 'refs/tags/uhr-v') || inputs.app_probelauf == 'uhr'
     runs-on: ubuntu-26.04
@@ -657,7 +657,7 @@ jobs:
 
       # `monkeyc` nimmt das Java vom PATH; ohne Festlegung wechselte es mit dem
       # Abbild (24.04: 17, 26.04: 25). 17 ist das, womit `uhr-v3.1.0` gebaut
-      # wurde (Nr. 236).
+      # wurde.
       - name: Java 17 für das Connect-IQ-SDK
         uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5
         with:
@@ -667,8 +667,11 @@ jobs:
       - name: Connect-IQ-SDK und alle Gerätedateien
         # `CIQ_ZIELE=alle`: `monkeyc -e` baut für jedes Gerät im Manifest, und
         # ein fehlendes Gerät bricht das Paket ab.
+        # CIQ_SUMMEN_PFLICHT: jedes Archiv gegen seine Summe im Repositorium,
+        # kein Rückfall auf ungeprüfte Einzeldateien.
         env:
           CIQ_GERAETE_URL: ${{ secrets.CIQ_GERAETE_URL }}
+          CIQ_SUMMEN_PFLICHT: '1'
         run: |
           if [ -z "${CIQ_GERAETE_URL:-}" ]; then
             echo "::error::CIQ_GERAETE_URL fehlt — ohne Gerätedateien kein Paket."

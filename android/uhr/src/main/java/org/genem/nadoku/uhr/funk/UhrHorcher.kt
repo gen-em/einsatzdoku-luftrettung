@@ -6,13 +6,13 @@ import org.genem.nadoku.gemeinsam.Nachrichtenformat
 import org.genem.nadoku.uhr.UhrApp
 
 /**
- * Was vom Handy hereinkommt (E-S4-10) — **die dünne Hülle auf der Uhr**.
+ * Was vom Handy hereinkommt — **die dünne Hülle auf der Uhr**.
  *
  * Sie entscheidet nichts: lesen, weiterreichen, fertig. Das System startet sie
  * auch dann, wenn keine Ansicht läuft — genau darum kommt eine Quittung an,
  * während die App geschlossen ist, und der Puffer räumt sich auf.
  *
- * **Nicht belegt** (E-R45-7, E-R45-8): dass diese Klasse überhaupt gerufen
+ * **Nicht belegt**: dass diese Klasse überhaupt gerufen
  * wird. Der Data Layer ist im Container nicht ausführbar. Belegt ist alles
  * dahinter — [Uhrsteuerung] und [Uhrfunk] gegen eine Attrappe.
  */

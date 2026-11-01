@@ -1,4 +1,4 @@
-/* Photon-Attrappe fuer die Klickprobe (S9/AP1, E-S9-16).
+/* Photon-Attrappe fuer die Klickprobe.
  * ===========================================================================
  *
  * WARUM EINE ATTRAPPE UND NICHT DER ECHTE DIENST. Zwei Gruende, und beide
@@ -6,7 +6,7 @@
  *
  *   1  DER PRUEFSTAND HAT KEINEN NETZZUGANG zu photon.komoot.io. In der
  *      Arbeitsumgebung setzt die Egress-Sperre Chromiums TLS-Handschlag
- *      zurueck (derselbe Befund wie bei den Kartenkacheln, F-P3-AC). Eine
+ *      zurueck (derselbe Befund wie bei den Kartenkacheln). Eine
  *      Probe, die auf eine Antwort wartet, die nie kommt, misst nur ihre
  *      eigene Zeitgrenze.
  *
@@ -77,7 +77,7 @@ export function antwortUmkehr() {
 }
 
 /* Die Adressen, gegen die Photon heute fest verdrahtet ist (ortsfeld.js:82,
- * ortswahl.js:34). Ab AP2 traegt die Installation ihre eigene; das Muster
+ * ortswahl.js:34). Traegt die Installation ihre eigene, das Muster
  * kommt dann aus der Einstellung, dieser Eintrag bleibt als Vorgabe. */
 export const MUSTER = ['**photon.komoot.io/**', '**/photon.komoot.io/**'];
 

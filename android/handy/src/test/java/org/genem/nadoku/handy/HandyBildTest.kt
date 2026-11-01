@@ -26,13 +26,12 @@ import java.security.MessageDigest
 /**
  * Bilder der **Handy**-Oberfläche, ohne Emulator und ohne Gerät.
  *
- * WARUM ES DIESEN FALL GIBT. Für die Uhr gab es seit C1 einen Bilderlauf
- * (`UhrBildTest`), für das Handy nicht — Oberflächenänderungen am Telefon
- * waren damit **gelesen und nicht gesehen**. Das fiel in E1 auf, als zwei
- * neue Bildschirmzustände entstanden (Sperre „Standort ausgeschaltet",
- * Zustandszeile ohne Signal) und es keinen Weg gab, sie anzusehen.
+ * WARUM ES DIESEN FALL GIBT. Ohne Bilderlauf wären Oberflächenänderungen am
+ * Telefon **gelesen und nicht gesehen** — etwa die Sperre „Standort
+ * ausgeschaltet" oder die Zustandszeile ohne Signal.
  *
- * DER WEG IST DERSELBE WIE BEI DER UHR (E-S4-49) und aus demselben Grund:
+ * DER WEG IST DERSELBE WIE BEI DER UHR (`UhrBildTest`) und aus demselben
+ * Grund:
  * `captureToImage()` aus `compose-ui-test` hängt sich unter Robolectric auf —
  * es wartet in einer `Thread.sleep`-Schleife auf genau den Faden, der
  * zeichnen müsste, und Robolectric hat nur einen. Gemessen, angeordnet und
@@ -44,23 +43,22 @@ import java.security.MessageDigest
  *
  * | Gemessen | Zusage | Woher sie kommt |
  * |---|---|---|
- * | Höhe der farbigen Knopfflächen | **48 dp** | R58 / `BEDIENHOEHE` — die App wird mit Handschuhen bedient |
+ * | Höhe der farbigen Knopfflächen | **48 dp** | `BEDIENHOEHE` — die App wird mit Handschuhen bedient |
  * | Ein Knopf liegt **im sichtbaren Bereich** | ohne Bildlauf bedienbar | ein Bildschirm, dessen Handlung unter dem Rand liegt, ist keiner |
  * | Kein Knopf **berührt den Bildrand** | er ist nicht beschnitten | die Karte hat Rand; wer ihn erreicht, ist zu breit |
- * | Bilder sind **paarweise verschieden** | jedes zeigt etwas anderes | F-P3-AQ |
+ * | Bilder sind **paarweise verschieden** | jedes zeigt etwas anderes | eine grüne Zahl über gleiche Bilder belegt nichts |
  *
  * **WAS DIESER FALL AUSDRÜCKLICH NICHT MISST: waagerechten Überlauf im Sinn
- * des Web-Bilderlaufs.** Die erste Fassung meldete ihn — und die Zahl war
- * wertlos: Jeder Bildschirm der App ruft `fillMaxSize()`, also gewinnt die
- * Einschränkung immer, und ein zu breites Kind wird von Compose **beschnitten
- * statt gemeldet**. „Verlangte Breite = Gerätebreite" stand deshalb in jeder
- * der 48 Zeilen, gleich was darin stand. Was an ihre Stelle getreten ist,
- * sind die zwei Zeilen darüber: Sie messen die Folge des Beschnitts, wo sie
+ * des Web-Bilderlaufs.** Die Zahl wäre wertlos: Jeder Bildschirm der App
+ * ruft `fillMaxSize()`, also gewinnt die Einschränkung immer, und ein zu
+ * breites Kind wird von Compose **beschnitten statt gemeldet**. „Verlangte
+ * Breite = Gerätebreite" stünde deshalb in jeder Zeile, gleich was darin
+ * steht. Was an ihre Stelle tritt, sind die zwei Zeilen darüber: Sie messen die Folge des Beschnitts, wo sie
  * jemanden trifft — an den Bedienelementen.
  *
- * **F-P3-AQ IST DER GRUND FÜR DIE DRITTE ZEILE.** Der Bilderlauf des Web
- * meldete nach O9c „248 Bilder, 0 Überlauf" — 176 davon zeigten die
- * Anmeldeseite. Eine grüne Zahl über 248 Bilder, von denen zwei Drittel
+ * **DER GRUND FÜR DIE DRITTE ZEILE.** Ein Bilderlauf kann „248 Bilder,
+ * 0 Überlauf" melden, während 176 davon die Anmeldeseite zeigen. Eine grüne
+ * Zahl über 248 Bilder, von denen zwei Drittel
  * dasselbe zeigen, ist kein Beleg, sondern eine Beruhigung. Dieser Fall
  * vergleicht deshalb die Prüfsummen aller erzeugten PNG und besteht darauf,
  * dass keine zweimal vorkommt.
@@ -104,11 +102,11 @@ class HandyBildTest {
 
     /**
      * Die Flächenfarben, an denen ein Bedienelement im Bild zu erkennen ist:
-     * Orange handelt, Rot beendet (E-S4-22a).
+     * Orange handelt, Rot beendet.
      */
     private val knopffarben = setOf(0xFFFF8F1F.toInt(), 0xFFD63338.toInt())
 
-    /** Die zugesagte Bedienhöhe (R58). Toleranz 1 dp für die Rasterung. */
+    /** Die zugesagte Bedienhöhe. Toleranz 1 dp für die Rasterung. */
     private val sollDp = 48.0
 
     /**
@@ -230,7 +228,7 @@ class HandyBildTest {
         "sperre-standort-aus" to dienst(standortAn = false),
         "dienst-ruhend-rueckstand" to dienst(rueckstand = 2),
 
-        // -- Im Dienst, je Ortungszustand (E-S5Z-01) --
+        // -- Im Dienst, je Ortungszustand --
         "laufend-ok" to dienst(laeuft = true, ortung = Ortungsstand.OK),
         "laufend-sucht" to dienst(laeuft = true, ortung = Ortungsstand.SUCHT),
         "laufend-kein-signal" to
@@ -251,7 +249,7 @@ class HandyBildTest {
             laeuft = true, ortung = Ortungsstand.OK, modus = Modus.NUR_AUFZEICHNEN,
         ),
 
-        /* SPÄT IM EINSATZ — der Fall, an dem B-S5Z-16 hing. Mit allen acht
+        /* SPÄT IM EINSATZ — der engste Fall. Mit allen acht
          * gesetzten Phasen ist die Liste am längsten; wenn „Einsatz
          * abschliessen" irgendwo unter die Faltkante rutscht, dann hier. */
         "laufend-einsatz-spaet" to dienst(
@@ -262,8 +260,8 @@ class HandyBildTest {
             },
         ),
 
-        // -- Was das Senden anzeigt (E2, E-S5Z-12) --
-        /* VERWERFEN (R4-22, Bild M-R4-22): mit Knopf und Hinweis; ohne Knopf,
+        // -- Was das Senden anzeigt --
+        /* VERWERFEN: mit Knopf und Hinweis; ohne Knopf,
          * wenn das abgewiesene Paket noch läuft; danach die Quittung. Die
          * Rückfrage selbst ist ein Dialog und hier nicht zu sehen (unten). */
         "sende-abgewiesen" to dienst(rueckstand = 2, abgewiesen = 3),
@@ -285,22 +283,19 @@ class HandyBildTest {
         ),
 
         // -- Nebenbildschirme --
-        /* VIER KOPPLUNGSBILDER STATT ZWEI (R49, R63). Vorher waren es die
-         * Wahlseite und das Abtippen; beide Wege gibt es nicht mehr. Was
-         * jetzt zu sehen sein muss, sind die vier Punkte des Ablaufs aus
-         * Vertrag 1a -- besonders die beiden mittleren, denn dort steht je
+        /* VIER KOPPLUNGSBILDER. Zu sehen sein muessen die vier Punkte des
+         * Ablaufs aus Vertrag 1a -- besonders die beiden mittleren, denn dort steht je
          * eine Zahl bzw. eine Adresse, die von diesem Bildschirm auf einen
          * anderen wandert. Genau dort faellt ein Umbruch oder ein
          * abgeschnittener Text auf. */
-        /* HIER STAND KURZ DER VERBRAUCHSHINWEIS (Backlog Nr. 82) — und der
-         * Versuch hat eine Grenze dieses Prüfmittels gefunden, die vorher
-         * niemand kannte: **Der Bilderlauf kann keine Dialoge.** Gemessen:
+        /* KEIN VERBRAUCHSHINWEIS, und das ist eine Grenze dieses
+         * Prüfmittels: **Der Bilderlauf kann keine Dialoge.** Gemessen:
          * 1 dp Inhalt bei allen drei Breiten, 0 Knöpfe. Ein Compose-
          * `AlertDialog` rendert in einem EIGENEN Fenster, und `captureToImage`
          * über die Wurzel-Composable sieht davon nichts.
          *
-         * Der Fall ist deshalb wieder heraus: Ein Bild, das leer ist, belegt
-         * nichts und zählt trotzdem in der Gesamtzahl mit. Was der Hinweis
+         * Ein Bild, das leer ist, belegt nichts und zählte trotzdem in der
+         * Gesamtzahl mit. Was der Hinweis
          * tut, steht stattdessen in `VerbrauchhinweisTest`; wie er AUSSIEHT,
          * ist am Emulator zu sehen — dort ist der Akku-Dialog derselben
          * Bauform belegt (docs/bilder/s4-rest/07-akku-hinweis.png).
@@ -419,12 +414,11 @@ class HandyBildTest {
             "Ungenutzte Ausnahmen in OHNE_HAUPTHANDLUNG: ${ungenutzt.joinToString()}"
         }
 
-        /* HIER STAND EINE PRUEFUNG, DIE NICHTS GEMESSEN HAETTE.
+        /* KEINE PRUEFUNG `knoepfeSichtbar > 0` -- sie maesse nichts.
          *
-         * Der Gedanke war: Wo keine Haupthandlung steht, steht wenigstens ein
-         * Ausweg -- also `knoepfeSichtbar > 0` verlangen. Der Lauf hat gezeigt,
-         * dass das nicht geht: `kopplung-code` traegt einen Abbrechen-Knopf
-         * und meldet trotzdem 0/0.
+         * Der Gedanke: Wo keine Haupthandlung steht, steht wenigstens ein
+         * Ausweg. Das geht nicht: `kopplung-code` traegt einen
+         * Abbrechen-Knopf und meldet trotzdem 0/0.
          *
          * DER GRUND IST EINE GRENZE DIESES PRUEFMITTELS: `knopfbaender()`
          * sucht die PRIMAER- und die BEENDEN-Farbe. Ein neutraler Knopf ist
@@ -437,8 +431,8 @@ class HandyBildTest {
          * Eine Pruefung, die das nicht kann, wird nicht so hingeschrieben,
          * als koennte sie es. Dass der Ausweg da ist, steht im Quelltext
          * (KopplungAnsicht, Zweig `Wartet`) und ist am Emulator zu sehen --
-         * nicht hier. Der Befund gehoert unter die Grenzen des Pruefmittels
-         * (Pruefdokument S4). */
+         * nicht hier. Der Befund gehoert unter die Grenzen des
+         * Pruefmittels. */
 
         // ---- 3. Kein Knopf beruehrt den Bildrand ---------------------------
         val randberuehrer = messungen.filter { it.amRand }
@@ -510,7 +504,7 @@ class HandyBildTest {
             )
         }
 
-        // ---- 6. F-P3-AQ: keine zwei Bilder sind gleich ---------------------
+        // ---- 6. keine zwei Bilder sind gleich ------------------------------
         val nachPruefsumme = messungen.groupBy { it.pruefsumme }.filter { it.value.size > 1 }
         check(nachPruefsumme.isEmpty()) {
             "Gleiche Bilder unter verschiedenem Namen (F-P3-AQ): " +
@@ -568,11 +562,11 @@ class HandyBildTest {
         val bild = Bitmap.createBitmap(breitePx, hoehePx, Bitmap.Config.ARGB_8888)
         ansicht.draw(Canvas(bild))
 
-        /* JE BAUART EIN ORDNER (Android 0.16.0, Konzept AR, F-AR-12). Bis
-         * dahin schrieben `testDebugUnitTest` und `testReleaseUnitTest` beide
-         * nach build/bilder/, und liegen blieb, was zuletzt fertig war --
-         * einmal "Fassung 0.16.0", einmal "0.16.0-pruef", je nach Reihenfolge
-         * der parallelen Aufgaben. Ein Bildvergleich braucht einen festen Stand. */
+        /* JE BAUART EIN ORDNER. Schrieben `testDebugUnitTest` und
+         * `testReleaseUnitTest` beide nach build/bilder/, bliebe liegen, was
+         * zuletzt fertig war -- einmal die Fassungszeile ohne, einmal die mit
+         * "-pruef", je nach Reihenfolge der parallelen Aufgaben. Ein
+         * Bildvergleich braucht einen festen Stand. */
         val ordner = File("build/bilder/${org.genem.nadoku.BuildConfig.BUILD_TYPE}")
         ordner.mkdirs()
         val ziel = File(ordner, "$name.png")

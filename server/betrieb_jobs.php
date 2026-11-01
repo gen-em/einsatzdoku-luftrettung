@@ -7,7 +7,7 @@ require_once __DIR__ . '/wartung_lib.php';
 require_once __DIR__ . '/format_lib.php';   // datum_zeit_text() fuer die Zeitangaben unten
 
 /**
- * BETRIEB → HINTERGRUNDJOBS (S8/AP2, E-S8-05).
+ * BETRIEB → HINTERGRUNDJOBS.
  *
  * ZWEI KARTEN, EINE FRAGE: Läuft die Arbeit, die niemand sieht — und wenn
  * nein, woran hängt es? „Zustand" beantwortet den ersten Teil, „Auslöser" den
@@ -17,21 +17,19 @@ require_once __DIR__ . '/format_lib.php';   // datum_zeit_text() fuer die Zeitan
  * WARUM DAS ÜBERHAUPT SICHTBAR SEIN MUSS: Die Wartung ist gegenüber der
  * Anfrage still. Ein dauerhaft scheiternder Job ist von einem laufenden sonst
  * nicht zu unterscheiden — bis irgendwann auffällt, dass der Papierkorb seit
- * Monaten voll ist. Backlog Nr. 89 ist genau dieser Fall: Das geplante
- * Komplett-Backup lief von Web 12.2.0 bis 12.9.2 NIE, und die Wartungsseite
- * zeigte es an — nur las es niemand.
+ * Monaten voll ist oder ein geplantes Komplett-Backup nie lief.
  */
 
 $pdo = db();
 
-/* Token fuer den Abruf ueber die Adresse neu erzeugen (S2/AP2).
+/* Token fuer den Abruf ueber die Adresse neu erzeugen.
  *
  * Ein neues Token macht das alte ungueltig. Das ist der Zweck: Wer den
  * bisherigen Zeitplan-Eintrag nicht mehr kennt oder ihn kompromittiert glaubt,
  * dreht hier ab. Die Folge — der alte Eintrag laeuft ins Leere — steht als
  * Rueckfrage daneben, damit sie niemanden ueberrascht.
  *
- * UMLEITEN NACH DEM POST (Web 21.1.9, Backlog Nr. 250): Ein neues Token
+ * UMLEITEN NACH DEM POST: Ein neues Token
  * endet mit `flash_setzen()` und einer Umleitung in die Karte „Auslöser" —
  * sonst erzeugt Neuladen ein zweites und macht das eben eingetragene
  * ungueltig. Das Token selbst reist nicht mit; die Seite liest es danach
@@ -39,7 +37,7 @@ $pdo = db();
  * bleibt stehen. */
 $jobsMeldung = null;
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'jobs_token_neu') {
-    /* FRISCHER CODE (R17-26, Q-R17-21, E-R17-73), wie ein Rollentor VOR
+    /* FRISCHER CODE, wie ein Rollentor VOR
      * csrf_check(). Gilt fuer alle drei Tokens dieser Seite. */
     zweitfaktor_frisch_verlangen('jobs_token_neu');
     csrf_check();
@@ -59,7 +57,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'jobs_
     }
 }
 
-/* Das Kettentoken neu erzeugen (Web 23.1.0, R17-19, E-R17-34) — derselbe
+/* Das Kettentoken neu erzeugen — derselbe
  * Weg wie beim Job-Token darueber: Umleitung nach dem POST, das Token reist
  * nicht mit. Die Folge ist eine andere: Nicht ein Zeitplan-Eintrag laeuft ins
  * Leere, sondern die naechste Auslieferung, bis das neue Token in GitHub als
@@ -84,9 +82,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'kette
     }
 }
 
-/* Das Health-Token erzeugen oder die Abfrage abschalten (Web 23.5.0, R17-26,
- * E-R17-72). Bis dahin stand es nur in `config.php`; wer es erneuern wollte,
- * brauchte den Dateizugang. Derselbe Weg wie bei den beiden Tokens darueber.
+/* Das Health-Token erzeugen oder die Abfrage abschalten — ohne Dateizugang.
+ * Derselbe Weg wie bei den beiden Tokens darueber.
  * EIN Block fuer beide Handlungen, weil die Frische-Liste je Handlung genau
  * einen Aufruf zaehlt (Z43). */
 $healthMeldung = null;
@@ -119,13 +116,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST'
     }
 }
 
-/* DIE JOBS ANHALTEN UND WIEDER FREIGEBEN (Backlog Nr. 118).
+/* DIE JOBS ANHALTEN UND WIEDER FREIGEBEN.
  *
- * Bis Web 19.3.0 ging das nur mit `php jobs.php --pause <Sekunden>`. Auf
+ * Mit `php jobs.php --pause <Sekunden>` allein ginge das nicht: Auf
  * geteiltem Hosting ist eine Kommandozeile die Ausnahme, nicht die Regel —
- * wer keine hat, konnte die Hintergrundarbeit nicht anhalten, wenn etwas
- * schieflief oder ein grosses Backup einzuspielen war. Die Seite zeigte den
- * Zustand an und nannte den Befehl, den sie selbst nicht ausloesen konnte.
+ * wer keine hat, koennte die Hintergrundarbeit nicht anhalten, wenn etwas
+ * schieflaeuft oder ein grosses Backup einzuspielen ist.
  *
  * SERVERSEITIG DERSELBE WEG: `jobs_pause()` aus `jobs_lib.php`, derselbe
  * Schluessel `jobs_pause_bis` in `app_state`, dieselbe Deckelung auf
@@ -147,7 +143,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST'
 $JOB_PAUSE_DAUERN = [900 => '15 Min.', 1800 => '30 Min.',
                      3600 => '1 Std.', 7200 => '2 Std.'];
 
-/* UMLEITEN NACH DEM POST (Web 21.1.9, Backlog Nr. 250): Anhalten und
+/* UMLEITEN NACH DEM POST: Anhalten und
  * Aufheben enden mit `flash_setzen()` und einer Umleitung in die Karte
  * „Zustand" — sonst setzt Neuladen die Pause ein zweites Mal, mit neuer
  * Frist. Eine Dauer, die nicht auf der Liste steht, aendert nichts und
@@ -194,7 +190,7 @@ if ($flash !== null) {
 $jobs      = jobs_zustand();
 $jobFehler = count(array_filter($jobs, fn($j) => !empty($j['letzter_fehler'])));
 $jobNie    = count(array_filter($jobs, fn($j) => $j['letzter_lauf'] === null));
-/* Eine ANGEHALTENE Wartung darf nicht aussehen wie eine arbeitende (S2/AP3).
+/* Eine ANGEHALTENE Wartung darf nicht aussehen wie eine arbeitende.
  * Die Pause laeuft zwar von selbst ab, aber bis dahin geschieht nichts — und
  * wer das nicht sieht, sucht den Fehler woanders. */
 $jobPause = jobs_pause_bis();
@@ -244,11 +240,10 @@ ui_seite_start(['titel' => 'Hintergrundjobs']);
                ginge nicht, und zwei Formulare ineinander erst recht nicht.
                Dasselbe Muster wie bei „Alle sichern" in admin_sicherungen.php.
 
-               UND DER TEXT TRUG BIS WEB 19.3.0 SICHTBARES MARKUP: Hier stand
-               `<code>php jobs.php --pause 0</code>`, aber
-               `ui_meldung_markup()` escapt seinen Text — auf der Seite waren
-               die spitzen Klammern zu lesen. Jetzt braucht es den Befehl
-               nicht mehr, der Knopf daneben tut es. */ ?>
+               UND DER TEXT TRAEGT KEIN MARKUP: `ui_meldung_markup()`
+               escapt seinen Text — ein `<code>` waere auf der Seite mit
+               spitzen Klammern zu lesen. Einen Befehl braucht es nicht, der
+               Knopf daneben tut es. */ ?>
       <form method="post" action="betrieb_jobs.php" id="f-jobpause-aus" hidden>
         <?= csrf_field() ?><input type="hidden" name="action" value="jobs_pause_aus">
       </form>
@@ -272,7 +267,7 @@ ui_seite_start(['titel' => 'Hintergrundjobs']);
         if ($j['rueckstand'] !== null && (int)$j['rueckstand'] > 0) {
             $plaketten .= ui_plakette('Rückstand ' . (int)$j['rueckstand'], ['ton' => 'orange']);
         }
-        /* DER FEHLERTEXT STEHT IN DER KLEINZEILE (Mockup 06) und nicht mehr
+        /* DER FEHLERTEXT STEHT IN DER KLEINZEILE und nicht
            als eigene Meldung darunter. Der Grund ist der Platz: Bei sieben
            Jobs stand die Zeile „Fehler" siebenmal möglich, und jede Meldung
            kostete eine eigene Fläche. Was der Fehler war, gehört an den Job —
@@ -286,16 +281,12 @@ ui_seite_start(['titel' => 'Hintergrundjobs']);
                   'plaketten' => $plaketten]);
       ?>
     <?php endforeach; endif; ?>
-    <?php /* ANHALTEN OHNE KOMMANDOZEILE (Backlog Nr. 118). Hier stand bis
-             Web 19.3.0: „Anhalten nur auf der Kommandozeile ... Ein Knopf dafür
-             wäre eine neue Funktion und steht im Backlog (Nr. 118)." Auf
-             geteiltem Hosting gibt es diese Kommandozeile in der Regel nicht.
+    <?php /* ANHALTEN OHNE KOMMANDOZEILE: Auf geteiltem Hosting gibt es diese
+             Kommandozeile in der Regel nicht.
 
-             DIE RUECKFRAGE NENNT DEN PREIS VOLLSTAENDIG. Der alte Text zählte
-             drei der sieben Jobs auf („verdichtet, ausgedünnt, aufgeräumt")
-             und ließ das geplante Komplett-Backup und den Mailversand weg —
-             harmlos, solange niemand danach entscheidet. Neben einem Knopf
-             ist es die Entscheidungsgrundlage. */ ?>
+             DIE RUECKFRAGE NENNT DEN PREIS VOLLSTAENDIG — alle sieben Jobs,
+             auch das geplante Komplett-Backup und den Mailversand. Neben
+             einem Knopf ist sie die Entscheidungsgrundlage. */ ?>
     <?php if ($jobs !== [] && $jobPause === null): ?>
       <form method="post" action="betrieb_jobs.php">
         <?= csrf_field() ?><input type="hidden" name="action" value="jobs_pause_an">
@@ -327,23 +318,22 @@ ui_seite_start(['titel' => 'Hintergrundjobs']);
     <?php endif; ?>
   <?php ui_karte_ende(); ?>
 
-  <?php /* ---- Auslöser (E-S2-17) ---------------------------------------------
+  <?php /* ---- Auslöser ---------------------------------------------
      *
      * Drei Wege zur selben Arbeit, damit die Hosterwahl offen bleibt. Die
      * Reihenfolge hier ist die Empfehlung: Kommandozeile zuerst.
      *
      * Das Token steht offen auf der Seite — sie ist ohnehin nur der
      * BetreiberIn zugänglich, und ein Geheimnis, das man erst aufklappen muss,
-     * wird beim Einrichten abgetippt statt kopiert. Genau dafür gibt es seit
-     * Web 15.1.0 den Knopf „Kopieren" (E-S8-10, Nr. 78). */ ?>
+     * wird beim Einrichten abgetippt statt kopiert. Dafür gibt es den Knopf
+     * „Kopieren". */ ?>
   <?php ui_karte_start(['titel' => 'Auslöser', 'id' => 'k-ausloeser']); ?>
     <?php if ($jobsMeldung): ?>
       <?= ui_meldung_markup($jobsMeldung[0], $jobsMeldung[1]) ?>
     <?php endif; ?>
-    <?php /* EIN SATZ JE KARTE (P5c/AP9, E-P5c-06). Bis Web 21.0.0 stand hier
-             ein Seitenkopf MITTEN IN DER KARTE und je Weg ein eigener Absatz;
-             das steht jetzt im Handbuch 12.4, „Die drei Auslöser, Budget und
-             Reihenfolge". Die Warnung zur Adresse bleibt als Meldung. */ ?>
+    <?php /* EIN SATZ JE KARTE. Die Erklaerung steht im Handbuch 12.4, „Die
+             drei Auslöser, Budget und Reihenfolge". Die Warnung zur Adresse
+             bleibt als Meldung. */ ?>
     <p class="feld-hinweis">Einer der drei Wege genügt; ohne Einrichtung läuft
        die Arbeit huckepack auf den Anfragen mit.
        <a href="hilfe.php#die-drei-ausloeser-budget-und-reihenfolge">Wie die drei Wege arbeiten</a></p>
@@ -372,7 +362,7 @@ ui_seite_start(['titel' => 'Hintergrundjobs']);
     <h3 class="listen-form-titel">3. Huckepack auf einer Anfrage <span class="feld-klein-inline">immer an</span></h3>
   <?php ui_karte_ende(); ?>
 
-  <?php /* ---- Auslieferungskette (Web 23.1.0, R17-19, E-R17-34) -------------
+  <?php /* ---- Auslieferungskette -------------
      *
      * Das zweite Token. Es steht neben den Auslösern und nicht darin, weil es
      * keiner ist: Mit ihm schaltet die Auslieferung Wartung und Backup. Die
@@ -404,12 +394,11 @@ ui_seite_start(['titel' => 'Hintergrundjobs']);
     <?php endif; ?>
   <?php ui_karte_ende(); ?>
 
-  <?php /* ---- Monitoring (Web 23.5.0, R17-26, E-R17-72) ----------------------
+  <?php /* ---- Monitoring ----------------------
      *
      * Das dritte Token, fuer `api/health.php`. Dieselben Bausteine wie in den
      * zwei Karten darueber — Codeblock mit „Kopieren", Warnmeldung, leise
-     * Knoepfe mit Rueckfrage —, kein neuer (`CLAUDE.md` 5). Bis Web 23.4.x
-     * stand es nur in `config.php`. */ ?>
+     * Knoepfe mit Rueckfrage —, kein neuer (`CLAUDE.md` 5). */ ?>
   <?php ui_karte_start(['titel' => 'Monitoring', 'id' => 'k-health']); ?>
     <?php if ($healthMeldung): ?>
       <?= ui_meldung_markup($healthMeldung[0], $healthMeldung[1]) ?>
@@ -453,7 +442,7 @@ ui_seite_start(['titel' => 'Hintergrundjobs']);
       </form>
     <?php endif; ?>
   <?php ui_karte_ende(); ?>
-  <?php /* DIE KARTE „WAS HIER GILT" IST MIT P5c/AP9 ENTFALLEN (E-P5c-49).
+  <?php /* KEINE KARTE „WAS HIER GILT":
            Budget, Reihenfolge, Anhalten auf der Kommandozeile und „Ein
            Rückstand ist kein Fehler" stehen im Handbuch 12.4. */ ?>
 

@@ -16,21 +16,20 @@ require_once __DIR__ . '/../mission_fields_lib.php';
  * nicht gebraucht.
  *
  * Verschluesselte Angaben (Einsatznummer, Name, Geburtsdatum, Alter, Diagnose,
- * Einsatzort, Beschreibung des Einsatzorts und seit S9/AP7 die NOTIZEN des
+ * Einsatzort, Beschreibung des Einsatzorts und die NOTIZEN des
  * Einsatzes) gehen wie ueberall als `pat_blob` unveraendert als Chiffretext
  * an den Browser. Der Server sieht sie nicht und filtert nicht danach —
  * deshalb nimmt dieser Endpunkt auch keinerlei Suchparameter entgegen.
  *
- * DIESER ABSATZ STIMMTE BIS WEB 19.0.0 NICHT. Zwei Bildschirmseiten weiter
- * stand `m.notes` in der Auswahl und im Datensatz — im Klartext, fuer den
- * GESAMTEN aktiven Bestand, bei jedem Aufruf der Suchseite und ohne dass
- * irgendjemand entsperrt haben musste. Die groesste Menge Freitext, die die
- * Anwendung ueberhaupt herausgibt, ging damit an der Zusage vorbei, waehrend
- * derselbe Kommentar das Gegenteil versprach. Wer hier kuenftig ein Feld
- * ergaenzt, gleiche diesen Absatz ab — er ist die Zusage, nicht ihre
+ * DIESER ABSATZ IST DIE ZUSAGE. Stuende hier `m.notes` in der Auswahl,
+ * ginge Freitext im Klartext fuer den GESAMTEN aktiven Bestand hinaus, bei
+ * jedem Aufruf der Suchseite und ohne dass irgendjemand entsperrt haben
+ * muesste — die groesste Menge Freitext, die die Anwendung ueberhaupt
+ * herausgibt. Wer hier kuenftig ein Feld ergaenzt, gleiche diesen Absatz ab —
+ * er ist die Zusage, nicht ihre
  * Beschreibung.
  *
- * DAS SUCHDATUM IST DAS ECHTE EINSATZDATUM (E14, Web 6.0.0). Es wird aus
+ * DAS SUCHDATUM IST DAS ECHTE EINSATZDATUM. Es wird aus
  * `started_at` in Ortszeit abgeleitet, nicht aus dem Datum des Diensttags. Ein
  * Einsatz um 01:30 eines Dienstes, der am Vortag begann, ist damit unter SEINEM
  * Datum zu finden — waehrend die Statistik ihn dem Diensttag zurechnet. Der
@@ -39,26 +38,22 @@ require_once __DIR__ . '/../mission_fields_lib.php';
  *
  * Abfragen: fuenf Stueck, unabhaengig von der Zahl der Einsaetze. Kein N+1 —
  * Einsaetze, Diensttage, Tagesbesatzung, abweichende Besatzung, weitere
- * Rettungsmittel. (Bis Web 5.10.0 waren es sechs; die Abfrage ueber die
- * Stammdatentabellen ist mit den Snapshot-Spalten des Diensttags entfallen.)
+ * Rettungsmittel.
  */
 
-// Nur lesen (M3-11) — derselbe Grund wie bei den uebrigen lesenden
+// Nur lesen — derselbe Grund wie bei den uebrigen lesenden
 // Endpunkten: Was nichts aendert, beantwortet auch kein POST.
 api_methode('GET');
 
 try {
     // ---- Einsaetze -------------------------------------------------------
     // Datentrennung nach user_id in JEDER Abfrage dieser Datei.
-    /* `edited` steht hier NICHT mehr (Backlog Nr. 15). Es war totes Nutzdatum:
-     * suche.php ist der einzige Abnehmer dieses Endpunkts und hat den Wert
-     * nirgends ausgewertet — die Spalte reiste bei jedem Aufruf durch die
-     * Antwort, ohne je gelesen zu werden. Der Bearbeitungsstand steht
-     * unveraendert in der Einsatzansicht (api/mission.php). */
+    /* `edited` steht hier NICHT: suche.php ist der einzige Abnehmer dieses
+     * Endpunkts und wertet den Wert nirgends aus. Der Bearbeitungsstand
+     * steht in der Einsatzansicht (api/mission.php). */
     $st = db()->prepare(
-        /* AUS DEM REGISTER (Schritt 15/AP6). `ended_at` steht dort an letzter
-         * Stelle dieses Zwecks — es kam mit Web 14.2.2 an die Phase-9-
-         * Unterabfrage heran und wurde hinten angehaengt (F-R64-05). */
+        /* AUS DEM REGISTER. `ended_at` steht dort an letzter
+         * Stelle dieses Zwecks. */
         'SELECT ' . mf_spalten_sql('suchindex', 'm.') . '
            FROM missions m
           WHERE m.user_id = ? AND m.deleted_at IS NULL
@@ -69,20 +64,14 @@ try {
 
     /* ---- Diensttage (Standort, Rettungsmittel, Art) ----------------------
      *
-     * Verknuepfung ueber `day_id`. Bis Web 5.10.0 lief sie ueber den
-     * natuerlichen Schluessel (user_id, day) und musste eine eigene Abfrage
-     * bleiben, weil `missions` und `days` beide crew_*-Spalten trugen. Beides
-     * ist entfallen — die Regel "days und missions nie joinen" ist ausdruecklich
-     * aufgehoben (Konzept 4.11). Als eigene Abfrage bleibt es trotzdem: Sie
+     * Verknuepfung ueber `day_id`. Als eigene Abfrage: Sie
      * laedt jeden Diensttag EINMAL statt einmal je Einsatz.
      *
-     * ANGEZEIGT WERDEN DIE SNAPSHOT-SPALTEN (E8): `vehicle_name` und
+     * ANGEZEIGT WERDEN DIE SNAPSHOT-SPALTEN: `vehicle_name` und
      * `base_name` stehen im Diensttag. Damit sind auch Dienste auffindbar,
      * deren Rettungsmittel oder Standort inzwischen umbenannt oder geloescht
      * wurde — und die Migration hat den Altfreitext `days.aircraft`/`days.base`
-     * genau dorthin gerettet (Berichtigung B6). Der Rueckfall auf die
-     * Altspalten, den diese Datei bis Web 5.10.0 brauchte, ist dadurch
-     * ersatzlos entfallen.
+     * genau dorthin gerettet.
      */
     $dq = db()->prepare(
         'SELECT id, day, kind, vehicle_name, vehicle_typ, vehicle_kurz, base_name
@@ -134,10 +123,10 @@ try {
         $dayId = $m['day_id'] !== null ? (int)$m['day_id'] : 0;
         $d     = $tage[$dayId] ?? null;
 
-        /* DAUER = BEGINN BIS ENDE (Web 14.2.2, F-R64-05). Vorher stand hier
-         * Phase 9; ein geschnittener oder importierter Einsatz hat keine und
-         * galt damit als „kein Ende", obwohl er abgeschlossen ist und ein
-         * `ended_at` traegt. Begruendung und Messung in `api/day.php`. */
+        /* DAUER = BEGINN BIS ENDE. Nicht Phase 9: Ein geschnittener oder
+         * importierter Einsatz hat keine und gaelte damit als „kein Ende",
+         * obwohl er abgeschlossen ist und ein `ended_at` traegt. Begruendung
+         * und Messung in `api/day.php`. */
         $dur = null;
         if ($m['ended_at'] !== null) {
             $dur = (new DateTime($m['ended_at']))->getTimestamp()
@@ -170,13 +159,13 @@ try {
         $missions[] = [
             'id'          => $id,
             'day_id'      => $dayId,
-            // Das ECHTE Einsatzdatum in Ortszeit (E14), nicht das des Diensttags.
+            // Das ECHTE Einsatzdatum in Ortszeit, nicht das des Diensttags.
             'day'         => fmt_local($m['started_at'], 'Y-m-d'),
             // Das Datum des Dienstes daneben: Die Suche zeigt beides, damit ein
             // Nachteinsatz nicht wie ein falsch zugeordneter aussieht.
             'dienst_day'  => $d !== null ? (string)$d['day'] : null,
             'start_hhmm'  => $hhmm,
-            /* CHRONOLOGISCHER SORTIERSCHLUESSEL (Schritt 15 AP9b, E-ZE-32).
+            /* CHRONOLOGISCHER SORTIERSCHLUESSEL.
              * `start_hhmm` allein taugt nicht zum Sortieren: Ein Dienst ueber
              * Mitternacht -- laut Handbuch „der klassische Fall" -- hat
              * Einsaetze um 23:50 und um 01:10, und als Zeichenkette steht
@@ -190,14 +179,14 @@ try {
             'start_min'   => $startMin,
             'duration_s'  => $dur,
             'distance_m'  => $m['distance_m'] !== null ? (int)$m['distance_m'] : null,
-            /* Die Klartextfelder der Etappe 2 (Web 6.1.0), soweit die Suche
+            /* Die Klartextfelder, soweit die Suche
              * sie auswertet. `dest_lat`/`dest_lon` und `start_src` bleiben
              * bewusst DRAUSSEN: Nach einer Koordinate oder nach der Herkunft
              * eines Abfahrtorts wird nicht gefiltert, und dieser Index fuehrt
              * grundsaetzlich nur, was die Suche auch benutzt (siehe Kopf). */
             'transport_mode' => $m['transport_mode'] !== null ? (string)$m['transport_mode'] : null,
             'na_escort'   => (int)$m['na_escort'] === 1,
-            /* `transport_dest` steht hier NICHT mehr (S11-05b): Es liegt im
+            /* `transport_dest` steht hier NICHT: Es liegt im
              * `pat_blob`, und die Suchseite liest es nach dem Entsperren
              * von dort — gesperrt findet die Suche keine Klinik. */
             'schockraum'  => (int)$m['schockraum'] === 1,
@@ -211,20 +200,20 @@ try {
             'bw_info'     => $m['bw_info'] !== null ? (string)$m['bw_info'] : null,
             'secondary'   => (int)$m['secondary'] === 1,
             'other_ema'   => $m['other_ema'] !== null ? (string)$m['other_ema'] : null,
-            /* 'notes' faellt hier weg (S9/AP7): Der Text liegt im `pat_blob`
+            /* 'notes' faellt hier weg: Der Text liegt im `pat_blob`
                daneben und wird im Browser entschluesselt — suche.php baut den
                Heuhaufen dann aus `m._pat.notes`. */
             // Standort, Rettungsmittel und Art aus den Snapshot-Spalten des
-            // Diensttags (E8) — nie aus den Stammdaten.
+            // Diensttags — nie aus den Stammdaten.
             'base'        => $d !== null && $d['base_name'] !== null ? (string)$d['base_name'] : null,
             'vehicle'     => $d !== null && $d['vehicle_name'] !== null ? (string)$d['vehicle_name'] : null,
             'kind'        => $d !== null && $d['kind'] !== null ? (string)$d['kind'] : null,
-            /* Der Diensttag-TYP steuert allein das Zeichen (E-S9-13); der
+            /* Der Diensttag-TYP steuert allein das Zeichen; der
                Filterwert bleibt `kind`. Ohne ihn zeichnete die Einsatztabelle
                die Betriebsart, waehrend die Leiste den Typ zeichnet. */
             'day_typ'     => $d !== null && $d['vehicle_typ'] !== null ? (string)$d['vehicle_typ'] : null,
-            /* Der Kurzname geht in den HEUHAUFEN, nicht in die Anzeige (E-S9-09,
-               Web 16.0.0). Die Leiste zeigt „BW Hoch", also tippt jemand
+            /* Der Kurzname geht in den HEUHAUFEN, nicht in die Anzeige. Die
+               Leiste zeigt „BW Hoch", also tippt jemand
                „BW Hoch" ins Suchfeld — und faende nichts, wenn nur die volle
                Bezeichnung durchsucht wuerde. Angezeigt wird weiter `vehicle`. */
             'vehicle_kurz' => $d !== null && $d['vehicle_kurz'] !== null ? (string)$d['vehicle_kurz'] : null,
@@ -234,7 +223,7 @@ try {
         ];
     }
 
-    /* ---- Faehigkeiten des Bestands (Schritt 15 AP9, E-ZE-31) -----------
+    /* ---- Faehigkeiten des Bestands -----------------------------------------
      *
      * Winde und Bergwacht bekommen in der Suchtabelle eine Spalte, wenn
      * IRGENDEIN Diensttag die Faehigkeit traegt — nicht erst, wenn jemand
@@ -243,7 +232,7 @@ try {
      * eingerichtet", und wer nachtragen will, muss die Spalte sehen.
      *
      * OHNE ARTFILTER, anders als api/range.php. Das ist entschieden und
-     * nicht vergessen (E-ZE-31): Die Zeitraumuebersicht wertet einen
+     * nicht vergessen: Die Zeitraumuebersicht wertet einen
      * Zeitraum aus und folgt dort der Betriebsart; die Suche sucht im
      * ganzen Bestand, und ein bodengebundener Bergwacht-Dienst ist genauso
      * ein Treffer wie ein luftgebundener. Ein Rettungsmittel des Typs

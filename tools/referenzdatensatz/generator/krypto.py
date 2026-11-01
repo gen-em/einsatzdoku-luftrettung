@@ -1,7 +1,7 @@
 """Krypto des Referenzdatensatzes — nachgebildet nach server/assets/crypto.js.
 
 WARUM NACHGEBILDET UND NICHT UMGANGEN. Das Einspielskript geht ueber die
-regulaeren Endpunkte (R4). `einsatz_form.php` nimmt `pat_blob` ausschliesslich
+regulaeren Endpunkte. `einsatz_form.php` nimmt `pat_blob` ausschliesslich
 als CHIFFRETEXT entgegen (`pruef_pat_blob`) — der Server hat den Schluessel
 bauartbedingt nicht. Ein Skript, das nachtragen will, muss also selbst
 verschluesseln, und zwar genau so, wie der Browser es taete. Sonst liest die
@@ -18,11 +18,11 @@ Die drei Groessen (docs/Backup-Format.md, assets/crypto.js):
   schluessel
   Chiffretext 'edk1:' + Base64(IV(12) || AES-256-GCM(Klartext))
 
-DER PRAEFIX IST PFLICHT fuer neu geschriebene Werte (M2-10, seit Web 5.1.0).
+DER PRAEFIX IST PFLICHT fuer neu geschriebene Werte.
 Aeltere Chiffretexte tragen ihn nicht; beide Formen sind gueltig und stehen
 dauerhaft nebeneinander, weil der Server sie nicht nachtragen kann.
 
-SEIT S10 HAENGT DER DATENSCHLUESSEL AM SERVER-ANTEIL (E-S10-04). Die
+DER DATENSCHLUESSEL HAENGT AM SERVER-ANTEIL. Die
 PBKDF2-Ableitung oben bleibt, wie sie ist; ihre erste Haelfte heisst jetzt
 HAELFTE und ist nicht mehr selbst der Datenschluessel:
 
@@ -116,7 +116,7 @@ def hkdf_sha256(ikm: bytes, salt: bytes, info: bytes, laenge: int) -> bytes:
 
     Ausgeschrieben statt aus `cryptography` geholt: Es sind vier Zeilen, und
     `hashlib`/`hmac` liegen in jeder Python-Installation. Ein weiterer
-    Fremdbestandteil fuer vier Zeilen waere ein schlechter Tausch (E-S10-15).
+    Fremdbestandteil fuer vier Zeilen waere ein schlechter Tausch.
     """
     prk = hmac.new(salt, ikm, hashlib.sha256).digest()
     aus, block, zaehler = b"", b"", 1
@@ -183,14 +183,14 @@ def pat_blob(geschuetzt: dict, inhaltsschluessel_hex: str) -> str | None:
     if not geschuetzt:
         return None
     o: dict = {}
-    # `notes` (seit S9/AP7 im Blob) und `ortshoehe` (seit S11-05b) fehlten
-    # hier bis S11-06e: Was nicht in dieser Liste stand, fiel still heraus --
-    # 85 Notizen des Referenzbestands kamen nie an (F-S11-66).
+    # `notes` und `ortshoehe` liegen im Blob. Was nicht in dieser Liste
+    # steht, faellt still heraus -- 85 Notizen des Referenzbestands kamen
+    # einmal nie an.
     for schluessel in ("dx", "dob", "age", "mission_no", "site_desc", "notes", "ortshoehe"):
         wert = geschuetzt.get(schluessel)
         if wert not in (None, ""):
             o[schluessel] = wert
-    # `transport_dest` ist seit S11-05b ein Ortsfeld im Blob, wie `loc`.
+    # `transport_dest` ist ein Ortsfeld im Blob, wie `loc`.
     for schluessel in ("loc", "start", "transport_dest"):
         wert = geschuetzt.get(schluessel)
         if wert and (wert.get("addr") or wert.get("lat") is not None):

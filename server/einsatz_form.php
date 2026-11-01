@@ -5,7 +5,7 @@ require_once __DIR__ . '/validate_lib.php';
 require_once __DIR__ . '/einsatz_lib.php';
 require_once __DIR__ . '/mission_fields_lib.php';
 require_once __DIR__ . '/diensttag_lib.php';
-/* `heute_lokal()` — AUSDRUECKLICH, nicht ueber `db.php` geerbt (Schritt 15 AP7). */
+/* `heute_lokal()` — AUSDRUECKLICH, nicht ueber `db.php` geerbt. */
 require_once __DIR__ . '/format_lib.php';
 $FIELDS = require __DIR__ . '/mission_fields.php';
 
@@ -15,7 +15,7 @@ $editing = $id > 0;
 /* ---- Diensttag bestimmen --------------------------------------------------
  *
  * Beim Bearbeiten kommt er aus dem Einsatz, beim Nachtragen aus `?d=<Kennung>`.
- * ER IST PFLICHT: Seit E9 bestimmt ein Datum keinen Diensttag mehr, und ohne
+ * ER IST PFLICHT: Ein Datum bestimmt keinen Diensttag, und ohne
  * Diensttag gaebe es keinen Standort, aus dem sich Vorschlagslisten ableiten,
  * und keinen Rollensatz, aus dem sich die Besatzungsfelder ergeben. Wer einen
  * Einsatz nachtragen will, waehlt vorher den Dienst — in der Uebersicht oder
@@ -35,14 +35,13 @@ if ($tag === null) {
 }
 $dayBaseId = $tag['base_id'] !== null ? (int)$tag['base_id'] : null;
 
-/* Rollen dieses Diensttags: der EINGEFRORENE Rollensatz aus `day_crew` (E8).
+/* Rollen dieses Diensttags: der EINGEFRORENE Rollensatz aus `day_crew`.
  * Er steuert, welche Besatzungsfelder sichtbar sind ('role_gate'). Ein
- * neutraler Diensttag hat keine Rollen (E26) — dann sind alle verborgen ausser
+ * neutraler Diensttag hat keine Rollen — dann sind alle verborgen ausser
  * den bereits belegten.
  *
  * EIN TAG MIT RETTUNGSMITTEL NUR FUER DEN TAG FUEHRT DIE ROLLEN SEINER
- * BETRIEBSART (Nr. 169, E-P5c-47, seit Web 21.0.0; bis dahin keine, E-S9-10,
- * F19). Genau DIESE, nicht die ganze Zeilenmenge: `dt_rollensatz_einfrieren()`
+ * BETRIEBSART. Genau DIESE, nicht die ganze Zeilenmenge: `dt_rollensatz_einfrieren()`
  * loescht beim Wechsel nur LEERE Rollen, damit ein versehentlicher Wechsel
  * keine Eingabe kostet — benannte Zeilen eines frueheren Rettungsmittels
  * bleiben stehen. Ohne den Filter haetten zwei Adhoc-Tage derselben Art
@@ -54,11 +53,11 @@ if (dt_ist_tagesrettungsmittel($tag)) {
     $dayRoles = array_intersect_key($dayRoles, array_flip(
         $tag['kind'] !== null ? dt_tagesrettungsmittel_rollen((string)$tag['kind']) : []));
 }
-/* Art und Faehigkeiten desselben Diensttags, beide EINGEFROREN (E8). Sie
+/* Art und Faehigkeiten desselben Diensttags, beide EINGEFROREN. Sie
  * steuern 'kind_gate' und 'cap_gate' genauso, wie `day_crew` 'role_gate'
  * steuert — gefragt wird immer der Dienst, nie das heutige Rettungsmittel.
  * Damit verlieren dokumentierte Einsaetze nichts, wenn Jahre spaeter der
- * Windenhaken am Hubschrauber fällt (A13e). */
+ * Windenhaken am Hubschrauber fällt. */
 $dayKind = $tag['kind'] !== null ? (string)$tag['kind'] : null;
 $dayCaps = dt_faehigkeiten($dayId);
 $CREW_FELDER = mf_crew_felder();
@@ -74,7 +73,7 @@ if ($editing) {
     foreach ($cq->fetchAll() as $z) { $missionCrew[(string)$z['role_code']] = (string)$z['name']; }
 }
 
-/* Andere Rettungsmittel: Vorbelegungen DES STANDORTS (E15) und bereits
+/* Andere Rettungsmittel: Vorbelegungen DES STANDORTS und bereits
  * zugeordnete Eintraege. Ohne Standort am Diensttag gibt es keine
  * Vorschlagsliste — Freitext bleibt uneingeschraenkt moeglich. */
 $rmVorlagen = [];
@@ -99,7 +98,7 @@ if (($_POST['f_other_resources'] ?? null) !== null && is_array($_POST['f_other_r
 $error = null;
 
 /* ---- Helfer: lokale Uhrzeit (Berlin) -> UTC-DATETIME ----------------------
-   local_to_utc() steht seit Web 2.8.0 in db.php (neben fmt_local), weil der
+   local_to_utc() steht in db.php (neben fmt_local), weil der
    Import denselben Weg braucht. Hier bewusst KEINE zweite Definition — PHP
    wuerde das mit einem Fatal Error quittieren. */
 
@@ -108,19 +107,18 @@ $mission = null; $phases = [];
 if ($editing) {
     $mission = einsatz_laden($id, $userId);
     if (!$mission) { ui_abbruch(404, 'Einsatz nicht gefunden.'); }
-    /* Nummer und Zeit; der Ort jeder Phase liegt in der Einsatzhuelle. Bis
-     * Web 22.7.0 kamen hier `lat`/`lon` des Altbestands mit (S11-05b). */
+    /* Nummer und Zeit; der Ort jeder Phase liegt in der Einsatzhuelle. */
     $ph = db()->prepare('SELECT phase, occurred_at FROM mission_phases
                          WHERE mission_id = ? ORDER BY occurred_at');
     $ph->execute([$id]);
     $phases = $ph->fetchAll();
 }
 
-/* ---- GPS-Aufzeichnung vorhanden? (Web 7.0.0) ------------------------------
+/* ---- GPS-Aufzeichnung vorhanden? ------------------------------
  *
  * Entscheidet, ob der ABFAHRTORT ueberhaupt im Formular steht. Er ist
  * ausschliesslich dazu da, ohne Track eine Linie auf die Karte zu bekommen
- * (E34) — liegt ein Track vor, zeichnet die Karte den tatsaechlich geflogenen
+ * — liegt ein Track vor, zeichnet die Karte den tatsaechlich geflogenen
  * oder gefahrenen Weg, und die Auswahl daneben ist eine Frage ohne Wirkung.
  *
  * Zwei Punkte reichen als Schwelle, weil erst zwei Punkte eine Linie ergeben:
@@ -142,24 +140,23 @@ if ($editing) {
 
 /* ---- Bezugsdatum der Uhrzeiten -------------------------------------------
  *
- * ES IST KEIN EINGABEFELD MEHR (Web 7.0.0). Bis Web 6.3.0 stand „Einsatzdatum"
- * als eigenes Feld im Formular — beim Bearbeiten schreibgeschuetzt, beim
- * Nachtragen aenderbar. Direkt darueber stand der Diensttag mit SEINEM Datum,
- * und in aller Regel waren beide gleich: zwei Datumsangaben, von denen die
- * zweite nichts hinzufuegte und trotzdem gelesen und geprueft werden musste.
+ * ES IST KEIN EINGABEFELD. Ein eigenes Feld „Einsatzdatum" stuende direkt
+ * unter dem Diensttag mit SEINEM Datum, und in aller Regel waeren beide
+ * gleich: zwei Datumsangaben, von denen die zweite nichts hinzufuegt und
+ * trotzdem gelesen und geprueft werden muss.
  *
- * Der eine Fall, fuer den das Feld da war, bleibt vollstaendig abgedeckt: der
+ * Der eine Fall, fuer den ein solches Feld da waere, ist abgedeckt: der
  * Einsatz NACH MITTERNACHT an einem Dienst, der am Vortag begann. Er wird
- * jetzt erkannt statt eingetippt (siehe unten, „Tageswechsel"). Das ist
- * ohnehin die verlaesslichere Quelle — der Dienst weiss, wann er angefangen
- * hat, und ein von Hand gesetztes Datum war eine Fehlerquelle mehr.
+ * erkannt statt eingetippt (siehe unten, „Tageswechsel"). Das ist
+ * die verlaesslichere Quelle — der Dienst weiss, wann er angefangen
+ * hat, und ein von Hand gesetztes Datum waere eine Fehlerquelle mehr.
  *
  * Beim BEARBEITEN bleibt es beim gespeicherten Datum aus `started_at` in
  * Ortszeit: Was einmal dokumentiert ist, verschiebt kein Formularaufruf.
  */
 $day = $editing ? fmt_local((string)$mission['started_at'], 'Y-m-d') : (string)$tag['day'];
 /* Der Tag VOR einem Tageswechsel beim Speichern: Der Browser rechnet die
- * Zeiten der Einsatzhuelle nach denselben Regeln (S11-05b) und braucht dafuer
+ * Zeiten der Einsatzhuelle nach denselben Regeln und braucht dafuer
  * den Ausgangstag, nicht den schon verschobenen. */
 $ortTag = $day;
 
@@ -176,7 +173,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
      * Formular. Die Pruefung bleibt trotzdem: Sie faengt einen unmoeglichen
      * Kalendertag ab, bevor local_to_utc() ihn stillschweigend verschiebt —
      * das Muster allein liess den 30. Februar durch, und die Phasenzeiten
-     * eines ganzen Einsatzes lagen danach am 2. Maerz (B2). */
+     * eines ganzen Einsatzes lagen danach am 2. Maerz. */
     if (pruef_kalendertag($day, 'Datum') === null) { $error = 'Ungültiges Datum.'; }
 
     // Phasenzeilen einsammeln. Vor der Mitternachts-Logik wird nach
@@ -199,7 +196,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         usort($eingesammelt, fn($a, $b) => $a['no'] <=> $b['no'] ?: $a['idx'] <=> $b['idx']);
 
-        /* ---- TAGESWECHSEL (Web 7.0.0, Ersatz fuer das Feld „Einsatzdatum") --
+        /* ---- TAGESWECHSEL (Ersatz fuer das Feld „Einsatzdatum") --
          *
          * Ein Dienst laeuft ueber Mitternacht. Wird zu ihm ein Einsatz
          * nachgetragen, dessen erste Phase VOR dem Dienstbeginn liegt, kann
@@ -213,7 +210,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
          *
          * NUR BEIM NACHTRAGEN. Ein bestehender Einsatz behaelt sein Datum;
          * verschoben wird er ueber „Aktionen -> Verschieben", nicht durch das
-         * erneute Speichern eines Formulars (E4). Und nur MIT bekanntem
+         * erneute Speichern eines Formulars. Und nur MIT bekanntem
          * Dienstbeginn — ohne ihn gibt es keine Grenze, an der sich der
          * Wechsel festmachen liesse. */
         $minuten = static function (string $hhmm): ?int {
@@ -249,7 +246,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     if (!$error && count($rows) === 0) {
-        /* Doppelt gesichert (M5-11).
+        /* Doppelt gesichert.
          *
          * Oben steht bereits eine Pruefung auf mindestens eine Phase — aber
          * nur im else-Zweig einer Fallunterscheidung. Kommt spaeter ein
@@ -265,19 +262,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $startedAt = $rows[0][1];
         $endedAt   = $rows[count($rows) - 1][1];
 
-        /* ---- DIE EINSATZHUELLE (S11-05b, E-S11-45) ---------------------------
+        /* ---- DIE EINSATZHUELLE ---------------------------
          *
          * Phasenorte und Reanimation kommen NUR noch verschlossen: Der Browser
          * rechnet die Zeiten, legt Orte und Reanimation in die Huelle und
-         * verschliesst sie mit dem oeffentlichen Kontoschluessel. Hier stand
-         * bis Web 22.0.4 das Einsammeln der Reanimation aus `rea[…]` — der
-         * Server sah Beginn und Ereignisse im Klartext und schrieb sie in
-         * `resus_sessions`, auch nachdem S11-04 sie aus dem Eingang der Geraete
-         * genommen hatte (F-S11-41).
+         * verschliesst sie mit dem oeffentlichen Kontoschluessel. Der Server
+         * sieht Beginn und Ereignisse der Reanimation nicht im Klartext.
          *
          * OHNE HUELLE KEIN SPEICHERN. Eine Sitzung ohne Schluessel kann keine
          * verschliessen; das Formular verlangt deshalb das Entsperren, bevor es
-         * absendet (Betreiberin, 14.10.2026). Kommt trotzdem keine, ist das ein
+         * absendet. Kommt trotzdem keine, ist das ein
          * Weg am Formular vorbei — gemeldet, nicht still mit der alten Huelle
          * gespeichert, deren Phasenzeiten dann nicht mehr passten.
          *
@@ -306,8 +300,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
         /* Die Kennung eines NEUEN Einsatzes vergibt der Server schon beim
-         * Aufbau der Seite (`$neuRef` unten): Die Huelle ist an sie gebunden
-         * (Konzept 3.2), und der Browser verschliesst, bevor es die Zeile gibt. */
+         * Aufbau der Seite (`$neuRef` unten): Die Huelle ist an sie gebunden,
+         *und der Browser verschliesst, bevor es die Zeile gibt. */
         $neuRefPost = (string)($_POST['client_ref'] ?? '');
         if (!$editing && !$error && !preg_match('/^man-[0-9a-f]{16}$/', $neuRefPost)) {
             $error = 'Die Kennung des neuen Einsatzes fehlt. Bitte die Seite neu laden.';
@@ -317,9 +311,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
          * Checkbox-Unterfelder werden nur gespeichert, wenn der Haken gesetzt
          * ist — sonst geleert (kein Geister-Inhalt hinter "Nein").
          *
-         * ZWEI ZIELE statt einem (Web 6.0.0): Felder mit 'store' => 'crew'
+         * ZWEI ZIELE statt einem: Felder mit 'store' => 'crew'
          * liegen nicht in `missions`, sondern als Zeile in `mission_crew`
-         * (E7, siehe mission_fields.php). Sie landen deshalb in $crewVals und
+         * (siehe mission_fields.php). Sie landen deshalb in $crewVals und
          * nicht in $fieldCols — ein Feldname, der in beiden Listen stuende,
          * ergaebe ein UPDATE auf eine Spalte, die es nicht gibt. */
         $fieldCols = []; $fieldVals = []; $crewVals = [];
@@ -329,9 +323,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if ($type === 'checkbox') {
                 $v = ($parentOn && isset($_POST['f_' . $col])) ? 1 : 0;
                 $fieldCols[] = $col; $fieldVals[] = $v;
-                /* Kinder einer Checkbox haengen am HAKEN, nicht an 'show_if'
-                 * (Vorpruefung V4). Dieser Zweig bleibt unveraendert — er ist
-                 * der, an dem der Windenblock haengt, und der darf sich nicht
+                /* Kinder einer Checkbox haengen am HAKEN, nicht an 'show_if'.
+                 * An diesem Zweig haengt der Windenblock, und der darf sich nicht
                  * nebenbei aendern. */
                 foreach (($f['children'] ?? []) as $cc => $cf) {
                     $readField($cc, $cf, $v === 1);
@@ -344,7 +337,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $v = ($raw === '') ? null : (string)(float)str_replace(',', '.', $raw);
             } elseif ($type === 'select') {
                 /* Geprueft wird gegen die WERTE, nicht gegen die Beschriftungen
-                 * (mf_optionen, Web 6.1.0): Bei der Transportart sind das zwei
+                 * (mf_optionen): Bei der Transportart sind das zwei
                  * verschiedene Listen. 'options_src' bleibt ungeprueft — dort
                  * sind Stammdaten die Quelle, und die sind aenderbar. */
                 $opts = $f['options'] ?? null;
@@ -361,7 +354,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $fieldCols[] = $col; $fieldVals[] = $v;
             }
             /* SONST: NICHTS. Ein Feld mit 'store' => 'pat' darf hier NICHT
-             * ankommen (S9/AP7).
+             * ankommen.
              *
              * Bis hierher stand ein blosses `else` — und das hiess: Alles, was
              * nicht Besatzung ist, ist eine Spalte. Fuer ein verschluesseltes
@@ -376,17 +369,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
              * Gefragt wird mf_ist_spalte() und nicht 'store' === 'pat',
              * damit die Antwort an EINER Stelle steht. */
 
-            /* ---- Ortsfeld: die beiden Koordinatenspalten daneben (E37) -----
+            /* ---- Ortsfeld: die beiden Koordinatenspalten daneben -----
              *
              * Sie sind FREIWILLIG und nur zusammen gueltig; pruef_ortspaar()
              * setzt beide Regeln durch. KOORDINATEN OHNE BEZEICHNUNG werden
-             * abgewiesen — dieselbe Regel wie beim Einsatzort (A13j): Sonst
+             * abgewiesen — dieselbe Regel wie beim Einsatzort: Sonst
              * stuende in den Listen ein Zahlenfragment, wo eine Klinik stehen
              * sollte. Der Browser faengt den Fall bereits ab; hier wird er
              * GEMELDET statt still bereinigt, damit ein Weg an der
              * Formularpruefung vorbei nicht unbemerkt Daten verliert. */
-            /* Nur fuer ein Ortsfeld im KLARTEXT. Ein verschluesseltes (seit
-             * S11-05b das Transportziel) schickt weder Namen noch Koordinaten
+            /* Nur fuer ein Ortsfeld im KLARTEXT. Ein verschluesseltes (etwa
+             * das Transportziel) schickt weder Namen noch Koordinaten
              * als Formularfeld; beides liegt im Blob, und die Spalten leert
              * unten der Blob-Zweig. */
             if ($type === 'loc' && mf_ist_spalte($f)) {
@@ -403,7 +396,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if (isset($ort['lon'])) { $fieldCols[] = $ort['lon']; $fieldVals[] = $lo; }
             }
 
-            /* WERTABHAENGIGE UNTERFELDER (V4, A5). Der Checkbox-Zweig oben ist
+            /* WERTABHAENGIGE UNTERFELDER. Der Checkbox-Zweig oben ist
              * vorher zurueckgekehrt; hier fallen alle uebrigen Typen durch, und
              * hier — und nur hier — wird 'show_if' ausgewertet. Ein
              * ausgeblendetes Unterfeld wird dadurch GELEERT statt einen
@@ -415,7 +408,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         };
         foreach ($FIELDS as $col => $f) { $readField($col, $f); }
 
-        /* ---- Abfahrtort: die REGEL, nicht der Ort (E34, Konzept 4.6.1) -----
+        /* ---- Abfahrtort: die REGEL, nicht der Ort -----
          *
          * Gespeichert wird in `missions.start_src` ausschliesslich, WOHER die
          * Koordinate stammt. Der Klartextwert verraet damit keinen Ort: Ein
@@ -467,7 +460,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
             }
 
-            /* DIE ALTE SPALTE GEHT MIT AUF NULL (S9/AP7).
+            /* DIE ALTE SPALTE GEHT MIT AUF NULL.
              *
              * Sobald der Browser einen Blob geliefert hat, steht der Inhalt
              * verschluesselt da — der Klartext daneben ist dann nicht nur
@@ -480,9 +473,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
              *
              * Die Namen kommen aus dem Katalog (mf_pat_felder()), nicht aus
              * einer Liste hier: Ein zweites verschluesseltes Katalogfeld
-             * (S11: Zielklinik) zieht damit von selbst nach. */
+             * (Zielklinik) zieht damit von selbst nach. */
             if ($blobGesetzt) {
-                /* `spalten` statt nur des Feldnamens (S11-05b): Ein Ortsfeld
+                /* `spalten` statt nur des Feldnamens: Ein Ortsfeld
                  * belegt im Altbestand auch seine Koordinatenspalten, und die
                  * sind ebenso Klartext wie der Name. */
                 foreach (mf_pat_felder() as $pf) {
@@ -501,7 +494,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (!$error) {
 
         try {
-            /* DER RAHMEN ENDET HIER, NICHT ERST AM `catch` (Schritt 15/AP5).
+            /* DER RAHMEN ENDET HIER, NICHT ERST AM `catch`.
              * Hinter dem frueheren `commit()` standen noch die Hoehenermittlung
              * und die Rettungsmittel-Zeilen — INNERHALB desselben `try`, dessen
              * `catch` ein unbedingtes `$pdo->rollBack()` hatte. Warf eine der
@@ -511,12 +504,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
              * hingehoert; was danach kommt, laeuft ohne ihn. */
             $id = db_transaktion(db(), function (PDO $pdo) use ($crewVals, $dayId, $editing,
                                                                $endedAt, $fieldCols, $fieldVals,
-                                                               $id, $neuRefPost, $readField,
+                                                               $id, $neuRefPost,
                                                                $rows, $startedAt, $userId): int {
                 if ($editing) {
                     $set = 'started_at = ?, ended_at = ?, uhr_gesperrt = 1, edited = 1';
                     /* Katalognamen in Backticks ueber `mf_bezeichner()` — die
-                     * eine Stelle dafuer (Web 21.1.9, Nr. 239); bis dahin
+                     * eine Stelle dafuer; bis dahin
                      * standen sie hier von Hand. */
                     foreach ($fieldCols as $c) { $set .= ', ' . mf_bezeichner($c) . ' = ?'; }
                     $pdo->prepare("UPDATE missions SET $set WHERE id = ? AND user_id = ?")
@@ -542,7 +535,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                  *
                  * Geschrieben werden nur BELEGTE Rollen. Eine Zeile mit name = NULL
                  * hat in `mission_crew` keine Bedeutung: Anders als bei `day_crew`,
-                 * wo die Zeilenmenge den Rollensatz bildet (E8), ist hier jede Zeile
+                 * wo die Zeilenmenge den Rollensatz bildet, ist hier jede Zeile
                  * eine Abweichung — und keine Abweichung ist keine Zeile. Ohne
                  * gesetzten Haken raeumt $readField die Werte ohnehin ab
                  * (Checkbox-Unterfelder), es bleibt dann nichts uebrig. */
@@ -567,10 +560,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 return $id;
             });
 
-            /* Hier stand `compute_site_elevation()` (bis Web 22.0.4). Die Hoehe
-             * des Einsatzorts rechnet seit S11-05b der Browser beim Absenden
+            /* Kein `compute_site_elevation()`. Die Hoehe
+             * des Einsatzorts rechnet der Browser beim Absenden
              * und legt sie in den Blob (`ortshoehe`); der Server sieht die
-             * Spur nicht mehr. */
+             * Spur nicht. */
 
             // Rettungsmittel als eigene Zeilen speichern (einzeln entfernbar).
             // Doppelte und leere Eintraege werden dabei verworfen.
@@ -604,15 +597,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $prefillRows[] = [2, ''];                          // Alarmierung als Startzeile
 }
 
-/* Die Reanimation liegt in der Einsatzhuelle (S11-05b); der Browser oeffnet
-   sie nach dem Entsperren und fuellt die Karte selbst (`ORT_HUELLE` unten).
-   Bis Web 22.7.0 stand hier die Vorbelegung des Altbestands aus
-   `resus_sessions` (`REA_START`). */
+/* Die Reanimation liegt in der Einsatzhuelle; der Browser oeffnet
+   sie nach dem Entsperren und fuellt die Karte selbst (`ORT_HUELLE` unten). */
 
-/* DIE EINSATZHUELLE FUER DEN BROWSER (S11-05b). Nach einem fehlgeschlagenen
+/* DIE EINSATZHUELLE FUER DEN BROWSER. Nach einem fehlgeschlagenen
    Absenden die eben verschlossene — sie traegt, was eingegeben war —, sonst
    die gespeicherte. Dazu der Beginn, auf den ihre Zeiten sich beziehen
-   (Sekunden seit `started_at`, E-S11-40). */
+   (Sekunden seit `started_at`). */
 $ortHuellePost = ($_SERVER['REQUEST_METHOD'] === 'POST') ? (string)($_POST['ort_huelle'] ?? '') : '';
 $ortHuelleB64 = $ortHuellePost !== '' ? $ortHuellePost
     : (($mission['ort_huelle'] ?? null) !== null ? base64_encode((string)$mission['ort_huelle']) : null);
@@ -638,7 +629,7 @@ unset($REA_ARTEN['beginn']);
 /**
  * Anzeigewert eines Katalogfeldes.
  *
- * ZWEI QUELLEN, seit die Besatzung normalisiert ist (E7): Felder mit
+ * ZWEI QUELLEN, seit die Besatzung normalisiert ist: Felder mit
  * 'store' => 'crew' stehen in `mission_crew` und nicht in der Zeile aus
  * `missions`. Ohne diese Unterscheidung waere jedes Besatzungsfeld beim
  * Bearbeiten leer — und beim Speichern waere der Name dann weg.
@@ -669,7 +660,7 @@ function ortWert(string $col, string $achse, string $spalte): string {
     return ($mission !== null && ($mission[$spalte] ?? null) !== null)
         ? (string)$mission[$spalte] : '';
 }
-/* 'karte' laedt das Leaflet-CSS: Der Kartendialog der Ortswahl (O5) braucht
+/* 'karte' laedt das Leaflet-CSS: Der Kartendialog der Ortswahl braucht
  * es; die Seite selbst zeigt weiterhin keine Karte. */
 ui_seite_start(['titel' => $editing ? 'Einsatz bearbeiten' : 'Einsatz nachtragen',
                 'karte' => true]);
@@ -677,7 +668,7 @@ ui_seite_start(['titel' => $editing ? 'Einsatz bearbeiten' : 'Einsatz nachtragen
 
 <?php ui_geruest_start(['aktiv' => 'start', 'leiste' => 'diensttage', 'tag' => $dayId]); ?>
   <?php
-    /* Titelzeile nach E-P3-34 (Mockup 22): Rueckweg dorthin, wo man herkam —
+    /* Titelzeile: Rueckweg dorthin, wo man herkam —
        beim Bearbeiten zum Einsatz, beim Nachtragen zum Diensttag. Der Titel
        nennt beim Bearbeiten die Tagesnummer des Einsatzes; die Unterzeile
        traegt, was frueher die Zeile "Diensttag: ..." sagte, samt der beiden
@@ -704,7 +695,7 @@ ui_seite_start(['titel' => $editing ? 'Einsatz bearbeiten' : 'Einsatz nachtragen
     if ($day !== (string)$tag['day']) {
         /* `$day` ist ein KALENDERTAG ('Y-m-d'), keine UTC-Marke — deshalb der
            Umsteller aus `diensttag_lib.php` und nicht `datum_text()`: er
-           dreht nur das Muster um und rechnet keine Zone (Schritt 15 AP7). */
+           dreht nur das Muster um und rechnet keine Zone. */
         $unterTeile[] = 'Einsatzdatum ' . dt_datum_lesbar($day);
     }
     $unter = e(implode(' · ', $unterTeile));
@@ -730,7 +721,7 @@ ui_seite_start(['titel' => $editing ? 'Einsatz bearbeiten' : 'Einsatz nachtragen
         endif; ?>
   <?php ui_meldung(null, $error); ?>
 
-  <?php /* `formcol` ist ersatzlos gestrichen (O11): Die Klasse hatte seit dem
+  <?php /* `formcol` ist ersatzlos gestrichen: Die Klasse hatte seit dem
            Neubau des Stylesheets keine Regel mehr — sie setzte frueher
            `display:flex;flex-direction:column`, was der normale Fluss ohnehin
            tut. */ ?>
@@ -740,15 +731,14 @@ ui_seite_start(['titel' => $editing ? 'Einsatz bearbeiten' : 'Einsatz nachtragen
 
     <?php /* ---- Feldrenderer und Stammdatenlisten ---------------------------
              Der Block STEHT HIER, weil die Gruppen unten ihn brauchen — die
-             erste („Einsatz") noch vor dem verschlüsselten Teil. Bis Web 6.3.0
-             stand er weiter unten und wurde in einem Rutsch über den ganzen
-             Katalog aufgerufen; jetzt ruft ihn jede Gruppe für ihre eigenen
+             erste („Einsatz") noch vor dem verschlüsselten Teil. Jede Gruppe
+             ruft ihn für ihre eigenen
              Felder auf. Ausgegeben wird hier nichts, es sind nur
              Definitionen. */ ?>
     <?php
       /* Optionslisten aus Stammdaten aufloesen (options_src).
        *
-       * STANDORTBEZOGEN (E15): Gezeigt werden die Eintraege des Standorts, der
+       * STANDORTBEZOGEN: Gezeigt werden die Eintraege des Standorts, der
        * am Diensttag hinterlegt ist, die eigenen des Kontos. Eine
        * standortuebergreifende Ebene gibt es nicht; ohne Standort am Diensttag
        * bleibt die Liste leer, und Freitext bleibt uneingeschraenkt moeglich. */
@@ -775,17 +765,17 @@ ui_seite_start(['titel' => $editing ? 'Einsatz bearbeiten' : 'Einsatz nachtragen
           }
           return $f['options'] ?? [];
       };
-      // Vorschlagslisten fuer Text-Felder mit suggest_src (Konzept Abschnitt 6.4):
+      // Vorschlagslisten fuer Text-Felder mit suggest_src:
       // die eigenen des Standorts, dedupliziert, alphabetisch; Freitext bleibt
       // uneingeschraenkt moeglich.
       //
-      // SEIT S9/AP1 (E-S9-07) GEHT DIE LISTE NICHT MEHR ALS <datalist> IN DAS
+      // DIE LISTE GEHT NICHT ALS <datalist> IN DAS
       // MARKUP, sondern als Daten an assets/vorschlagsliste.js. Die native
-      // Fassung zeichnete der Browser UEBER dem Feld — am Transportziel damit
-      // ueber der eigenen Liste (PS-6) —, und auf dem Handy zeigte sie oft
-      // gar nichts (Backlog 68). Der Inhalt ist derselbe geblieben.
+      // Fassung zeichnet der Browser UEBER dem Feld — am Transportziel damit
+      // ueber der eigenen Liste —, und auf dem Handy zeigt sie oft
+      // gar nichts.
       //
-      // Seit Web 5.5.0 auch 'crew:<rolle>' (E8). Die Abfrage ist dieselbe wie
+      // Auch 'crew:<rolle>'. Die Abfrage ist dieselbe wie
       // in $optSrc; der Unterschied liegt nicht in den Daten, sondern darin,
       // was mit ihnen geschieht: Bei 'options_src' IST die Liste die Auswahl,
       // bei 'suggest_src' ist sie nur ein Vorschlag.
@@ -794,8 +784,7 @@ ui_seite_start(['titel' => $editing ? 'Einsatz bearbeiten' : 'Einsatz nachtragen
       // verschiedene Rollen ab, ein Formular mit mehreren Feldern derselben
       // Quelle wuerde sie sonst mehrfach laden.
       //
-      // JEDE ZEILE TRAEGT NAME UND KOORDINATE (Web 6.1.0, E38). Bis dahin kam
-      // hier eine reine Namensliste; die Zielklinik hat seit Web 6.0.0
+      // JEDE ZEILE TRAEGT NAME UND KOORDINATE. Die Zielklinik hat
       // optionale Koordinaten, und ohne sie in derselben Antwort muesste das
       // Ortsfeld sie beim Uebernehmen eines Vorschlags nachladen. Rollen liefern
       // keine — dort bleiben beide Werte null, statt zwei Formen derselben
@@ -803,7 +792,7 @@ ui_seite_start(['titel' => $editing ? 'Einsatz bearbeiten' : 'Einsatz nachtragen
       /* Was das Skript unten fuer die Vorschlagslisten braucht: je Spalte die
        * Eintraege, die der Katalog dort vorschlaegt. Dasselbe Verfahren wie bei
        * $LOC_FELDER — die Daten reisen als JSON in die Seite, das Markup bleibt
-       * leer (E-S9-07). */
+       * leer. */
       $SUGGEST_FELDER = [];
       $suggestCache = [];
       $suggestSrc = function (array $f) use ($userId, $dayBaseId, &$suggestCache): array {
@@ -837,18 +826,17 @@ ui_seite_start(['titel' => $editing ? 'Einsatz bearbeiten' : 'Einsatz nachtragen
           }
           return $suggestCache[$src] = $liste;
       };
-      /* ROLLEN DES DIENSTTAGS — der eingefrorene Rollensatz aus `day_crew` (E8),
+      /* ROLLEN DES DIENSTTAGS — der eingefrorene Rollensatz aus `day_crew`,
        * oben als $dayRoles geladen. Er steuert, welche Besatzungsfelder sichtbar
        * sind ('role_gate').
        *
-       * WAS SICH GEAENDERT HAT: Bis Web 5.10.0 wurde hier der HUBSCHRAUBER des
-       * Flugtags befragt, und war keiner hinterlegt, wurden ALLE fuenf Rollen
-       * gezeigt — sonst waere der Haken funktionslos gewesen. Mit zwei
-       * Rettungsmittelarten waere das falsch: Ein neutraler Diensttag zeigte
+       * NICHT DER HUBSCHRAUBER DES TAGES: Ihn zu befragen und, war keiner
+       * hinterlegt, ALLE fuenf Rollen zu zeigen, waere mit zwei
+       * Rettungsmittelarten falsch: Ein neutraler Diensttag zeigte
        * dann Flugretter UND Fahrer. Ein Diensttag ohne Zuordnung hat keine
-       * Rollen (E26), also wird auch keine gezeigt — ausser den bereits
+       * Rollen, also wird auch keine gezeigt — ausser den bereits
        * belegten, die immer sichtbar bleiben. */
-      /* ---- Unterfelder mit 'show_if' einfassen (V4, A5) ---------------------
+      /* ---- Unterfelder mit 'show_if' einfassen ---------------------
        *
        * Die Regel steht am KIND, nicht am Kindercontainer: Zwei Geschwister
        * duerfen verschiedene Bedingungen tragen, und ein gemeinsamer Container
@@ -878,8 +866,7 @@ ui_seite_start(['titel' => $editing ? 'Einsatz bearbeiten' : 'Einsatz nachtragen
       $LOC_FELDER = [];
       /* Titel der Karte, in der gerade gerendert wird: Wiederholt ein
        * Feldlabel ihn woertlich („Notizen" in der Karte „Notizen"), bleibt es
-       * nur fuer das Vorlesen stehen — sichtbar sagt es der Kartenkopf schon
-       * (Mockup 22). */
+       * nur fuer das Vorlesen stehen — sichtbar sagt es der Kartenkopf schon. */
       $kartenTitel = '';
       $labelSichtbar = function (string $label) use (&$kartenTitel): string {
           return $label === $kartenTitel
@@ -887,24 +874,22 @@ ui_seite_start(['titel' => $editing ? 'Einsatz bearbeiten' : 'Einsatz nachtragen
               : e($label);
       };
 
-      /* ---- Kennzeichnung der Beschriftung (S9/AP7, E-S9-02) --------------
+      /* ---- Kennzeichnung der Beschriftung --------------
        *
        * ZWEI ZEICHEN, DIE EINANDER AUSSCHLIESSEN: Ein verschluesseltes Feld
        * traegt das SCHLOSS, ein Klartext-Freitextfeld die KLEINZEILE „Klartext
-       * — keine Patientendaten" (Katalogschluessel 'hinweis', Nr. 132). Beides
+       * — keine Patientendaten" (Katalogschluessel 'hinweis'). Beides
        * an einem Feld waere ein Widerspruch; deshalb steht die Wahl hier an
        * EINER Stelle und nicht in jedem Zweig von renderField().
        *
-       * DAS SCHLOSS STEHT RECHTS VOM WORT, nicht links. Das Konzept sagt
-       * „links neben der Beschriftung"; der vorhandene Baustein `.symbol-schutz`
-       * setzt es ueber `margin-left` dahinter, und genauso steht es seit
-       * Web 15 in der LESEANSICHT (`dtGeschuetzt()` in einsatz.php). Links
-       * hiesse eine neue CSS-Regel und damit eine neue Darstellung — die
-       * braeuchte Mockup und Freigabe (CLAUDE.md 5), fuer einen Unterschied,
-       * den niemand verlangt hat. Formular und Leseansicht zeigen dasselbe
+       * DAS SCHLOSS STEHT RECHTS VOM WORT, nicht links. Der vorhandene
+       * Baustein `.symbol-schutz` setzt es ueber `margin-left` dahinter, und
+       * genauso steht es in der LESEANSICHT (`dtGeschuetzt()` in einsatz.php).
+       * Links hiesse eine neue CSS-Regel und damit eine neue Darstellung — die
+       * braeuchte Mockup und Freigabe (CLAUDE.md 5). Formular und Leseansicht zeigen dasselbe
        * Zeichen an derselben Stelle; das ist mehr wert als der Wortlaut.
        *
-       * KEIN ZWEITES ZEICHEN FUER „OFFEN" (E-S9-02): Die Kleinzeile ist Text,
+       * KEIN ZWEITES ZEICHEN FUER „OFFEN": Die Kleinzeile ist Text,
        * kein Symbol. Ein zweites Symbol machte die Karte zum Zeichenteppich.
        */
       $feldKennzeichen = function (array $f) use (&$kartenTitel): string {
@@ -937,7 +922,7 @@ ui_seite_start(['titel' => $editing ? 'Einsatz bearbeiten' : 'Einsatz nachtragen
            * Ein belegtes Feld bleibt sichtbar, sonst kaeme man an einen Wert
            * nicht mehr heran, wenn der Diensttag spaeter das Rettungsmittel
            * wechselt, die Art die Rolle nicht vorsieht oder die Faehigkeit
-           * abgewaehlt wurde (A13e).
+           * abgewaehlt wurde.
            *
            * WAS „BELEGT" HEISST, haengt am Typ: Ein Textfeld ist belegt, wenn
            * etwas drinsteht; ein Haken erst, wenn er gesetzt ist. Ohne diese
@@ -948,7 +933,7 @@ ui_seite_start(['titel' => $editing ? 'Einsatz bearbeiten' : 'Einsatz nachtragen
           $hide = !$belegt && !mf_gates_erfuellt($f, $dayRoles, $dayKind, $dayCaps);
           $hideAttr = $hide ? ' hidden' : '';
           if ($type === 'resources') { ?>
-            <?php /* CHIPS IM FELD (Web 7.0.0). Die bereits gewählten
+            <?php /* CHIPS IM FELD. Die bereits gewählten
                      Rettungsmittel standen als eigene Zeile ÜBER dem
                      Eingabefeld — man tippte unten und sah oben, was schon da
                      war. Jetzt sitzen sie im Feld selbst und die Eingabe läuft
@@ -970,14 +955,13 @@ ui_seite_start(['titel' => $editing ? 'Einsatz bearbeiten' : 'Einsatz nachtragen
           <?php return; }
           if ($type === 'checkbox') {
               $on = ($val === '1' || $val === 1); ?>
-            <?php /* VORBELEGUNG (Web 7.0.0). Regel und Zielwert wandern als
+            <?php /* VORBELEGUNG. Regel und Zielwert wandern als
                      Datenattribute mit; ausgewertet werden sie im Skript unten.
 
-                     AUCH BEIM BEARBEITEN (berichtigt in Web 7.0.1). Zuerst
-                     stand hier `!$editing` — aus der Sorge, eine Vorbelegung
-                     koenne einen gespeicherten Wert still ueberschreiben. Die
-                     Sorge war unbegruendet, und die Bedingung hat das Feld
-                     genau dort abgeschaltet, wo man es am ehesten ausprobiert:
+                     AUCH BEIM BEARBEITEN. Die Sorge, eine Vorbelegung
+                     koenne einen gespeicherten Wert still ueberschreiben, ist
+                     unbegruendet, und ein `!$editing` schaltete das Feld
+                     genau dort ab, wo man es am ehesten ausprobiert:
                      beim Oeffnen eines vorhandenen Einsatzes.
                      Der Haken setzt sich NUR auf ein `change`-Ereignis der
                      Transportart hin — also nur, wenn jemand sie gerade
@@ -988,7 +972,7 @@ ui_seite_start(['titel' => $editing ? 'Einsatz bearbeiten' : 'Einsatz nachtragen
                      Datenaenderung hinter dem Ruecken. */
                   $vorbelegt = !empty($f['vorbelegt_bei'])
                       ? (array)$f['vorbelegt_bei'] : []; ?>
-            <?php /* Ja/Nein als SCHALTER (E-P3-34, Baustein aus O2): eine echte
+            <?php /* Ja/Nein als SCHALTER: eine echte
                      Checkbox mit Griff-Optik — Tastatur, Vorlesen und Absenden
                      kommen vom Browser. Die Klasse `parentcheck` und die
                      data-Attribute bleiben, die Skripte unten kennen sie. */ ?>
@@ -1040,17 +1024,17 @@ ui_seite_start(['titel' => $editing ? 'Einsatz bearbeiten' : 'Einsatz nachtragen
               </div>
             <?php endif; ?>
           <?php return; }
-          /* ---- ORTSFELD (E37) ------------------------------------------------
+          /* ---- ORTSFELD ------------------------------------------------
            * Bezeichnung, versteckte Koordinaten, Chip und Zustandszeile kommen
            * aus ui_ortsfeld(); belebt wird das Ganze von assets/ortsfeld.js. Die
            * Vorschlagsliste traegt hier KOORDINATEN mit — wer einen Eintrag
-           * uebernimmt, bekommt sie vorbelegt und kann sie ueberschreiben
-           * (A13l). */
+           * uebernimmt, bekommt sie vorbelegt und kann sie ueberschreiben.
+           * */
           if ($type === 'loc') {
               $sugg = $suggestSrc($f);
               $ort  = mf_ort_spalten($f);
               $praefix = 'f_' . $col . '_';
-              /* VERSCHLUESSELT (S11-05b): kein `name`, kein Wert im Markup,
+              /* VERSCHLUESSELT: kein `name`, kein Wert im Markup,
                * das Schloss an der Beschriftung. Gefuellt wird nach dem
                * Entsperren aus dem Blob (oder dem Altbestand, `PAT_ALT`),
                * eingesammelt beim Absenden ueber `werte()` der Komponente. */
@@ -1074,7 +1058,7 @@ ui_seite_start(['titel' => $editing ? 'Einsatz bearbeiten' : 'Einsatz nachtragen
                   'wert'        => $pat ? '' : $val,
                   /* Das fruehere zweite Suchfeld („Lokalisation …",
                    * Katalogschluessel 'such_label') ist dem Lupen-Knopf
-                   * gewichen (E-P3-34); die getrennte Uebernahme — nur die
+                   * gewichen; die getrennte Uebernahme — nur die
                    * Koordinaten, nie der Name — bleibt in ortsfeld.js. */
                   'lat_name'    => $pat ? null : 'f_' . $col . '_lat',
                   'lon_name'    => $pat ? null : 'f_' . $col . '_lon',
@@ -1082,7 +1066,7 @@ ui_seite_start(['titel' => $editing ? 'Einsatz bearbeiten' : 'Einsatz nachtragen
                   'lat'         => (!$pat && isset($ort['lat'])) ? ortWert($col, 'lat', $ort['lat']) : '',
                   'lon'         => (!$pat && isset($ort['lon'])) ? ortWert($col, 'lon', $ort['lon']) : '',
                   /* Der Katalog entscheidet, ob das Feld einen Pin-Knopf
-                   * bekommt (E-S9-06 d) — nicht diese Datei. */
+                   * bekommt — nicht diese Datei. */
                   'ortswahl'    => !empty($f['ortswahl']),
               ]);
               if (!empty($f['children'])) { ?>
@@ -1097,7 +1081,7 @@ ui_seite_start(['titel' => $editing ? 'Einsatz bearbeiten' : 'Einsatz nachtragen
               return;
           }
           if ($type === 'textarea') {
-              /* EIN VERSCHLUESSELTES FELD TRAEGT KEIN `name` (S9/AP7).
+              /* EIN VERSCHLUESSELTES FELD TRAEGT KEIN `name`.
                *
                * Dieselbe Regel wie bei den handgeschriebenen Feldern der Karte
                * „PatientIn": Ohne `name` schickt der Browser den Wert NICHT
@@ -1120,7 +1104,7 @@ ui_seite_start(['titel' => $editing ? 'Einsatz bearbeiten' : 'Einsatz nachtragen
             <?php /* MIT VORSCHLAGSLISTE: der Behaelter traegt `position:relative`
                      (`feld-vorschlag`), damit die Liste unter dem Feld haengt und
                      nicht am Seitenanfang. Gefuellt wird sie im Skript unten aus
-                     SUGGEST_FELDER — hier steht nur das leere <ul> (E-S9-07). */ ?>
+                     SUGGEST_FELDER — hier steht nur das leere <ul>. */ ?>
             <?php if (isset($f['suggest_src'])) { $SUGGEST_FELDER[$col] = $suggestSrc($f); } ?>
             <label class="<?= trim(($depth ? 'fld-sub ' : '')
                                  . (isset($f['suggest_src']) ? 'feld-vorschlag' : '')) ?>"<?= $hideAttr ?>><?= e($f['label']) . $feldKennzeichen($f) ?>
@@ -1143,7 +1127,7 @@ ui_seite_start(['titel' => $editing ? 'Einsatz bearbeiten' : 'Einsatz nachtragen
             <?php endif; ?>
       <?php };
 
-      /* ---- Gruppen (Web 7.0.0) ------------------------------------------
+      /* ---- Gruppen ------------------------------------------
        *
        * Der Katalog sagt, WOHIN ein Feld gehoert ('gruppe'); diese beiden
        * Helfer holen die Felder einer Gruppe und geben sie aus. Die
@@ -1169,7 +1153,7 @@ ui_seite_start(['titel' => $editing ? 'Einsatz bearbeiten' : 'Einsatz nachtragen
        * Rahmen mit einer Ueberschrift und nichts darin.
        *
        * Ein BELEGTES Feld zaehlt immer als sichtbar — dieselbe Regel wie im
-       * Renderer (A13e): Sonst kaeme man an einen dokumentierten Windeneinsatz
+       * Renderer: Sonst kaeme man an einen dokumentierten Windeneinsatz
        * nicht mehr heran, nachdem der Windenhaken am Hubschrauber gefallen ist. */
       $gruppeSichtbar = function (string $name) use ($gruppeFelder, $dayRoles, $dayKind, $dayCaps): bool {
           foreach ($gruppeFelder($name) as $col => $f) {
@@ -1184,7 +1168,7 @@ ui_seite_start(['titel' => $editing ? 'Einsatz bearbeiten' : 'Einsatz nachtragen
           $felder = $gruppeFelder($name);
           $offen = false;                 // laeuft gerade eine `.fld-reihe`?
           foreach ($felder as $col => $f) {
-              /* Schalter stehen IMMER untereinander (Mockup 22): Ein Griff
+              /* Schalter stehen IMMER untereinander: Ein Griff
                * neben einem Griff in halber Breite waere zum Tippen zu eng —
                * 'nebeneinander' gilt nur fuer Text- und Auswahlfelder. */
               $reihe = !empty($f['nebeneinander']) && ($f['type'] ?? 'text') !== 'checkbox';
@@ -1208,9 +1192,9 @@ ui_seite_start(['titel' => $editing ? 'Einsatz bearbeiten' : 'Einsatz nachtragen
              Eingabe: Welchem Dienst ein Einsatz gehört, ändert man über
              „Aktionen → Verschieben" (einsatz_verschieben.php) — dort ist die
              Nebenwirkung benannt, an einem frei beschreibbaren Feld wäre sie es
-             nicht (E4).
+             nicht.
 
-             DAS FELD „EINSATZDATUM" IST ENTFALLEN (Web 7.0.0). Es stand direkt
+             DAS FELD „EINSATZDATUM" IST ENTFALLEN. Es stand direkt
              unter dieser Zeile und zeigte in aller Regel dasselbe Datum noch
              einmal. Der Fall, für den es gedacht war — der Einsatz nach
              Mitternacht —, wird jetzt aus dem Dienstbeginn erkannt (siehe
@@ -1219,10 +1203,10 @@ ui_seite_start(['titel' => $editing ? 'Einsatz bearbeiten' : 'Einsatz nachtragen
              zu sehen, auf welchen Tag sich die Uhrzeiten beziehen. */ ?>
     <input type="hidden" name="day_id" value="<?= (int)$dayId ?>">
     <?php /* Die sichtbare "Diensttag:"-Zeile ist in die Unterzeile der
-             Titelzeile aufgegangen (O5). */ ?>
+             Titelzeile aufgegangen. */ ?>
 
     <input type="hidden" name="pat_blob" id="pat_blob">
-    <?php /* Die Einsatzhuelle (S11-05b): Phasenorte und Reanimation,
+    <?php /* Die Einsatzhuelle: Phasenorte und Reanimation,
              verschlossen im Browser; daneben seine Rechnung der Phasenzeiten
              fuer den Waechter beim Speichern und die Kennung, an die die
              Huelle gebunden ist. */ ?>
@@ -1253,12 +1237,11 @@ ui_seite_start(['titel' => $editing ? 'Einsatz bearbeiten' : 'Einsatz nachtragen
           $SCHLOSS = ui_symbol('schloss', 'symbol-schutz', 'Ende-zu-Ende-verschlüsselt');
           ui_karte_start(['titel' => 'PatientIn', 'zahl' => 'Ende-zu-Ende-verschlüsselt',
                           'klasse' => 'form-block-patientin']); ?>
-      <?php /* JEDES FELD TRAEGT DAS SCHLOSS (S9/AP7, E-S9-02). Die Karte hat
+      <?php /* JEDES FELD TRAEGT DAS SCHLOSS. Die Karte hat
                ihre Plakette „Ende-zu-Ende-verschluesselt" — und die beantwortet
                die Frage fuer die KARTE, nicht fuer die einzelne Zeile. Dieselbe
-               Ueberlegung hat in S3/AP6 das Schloss in die PatientIn-Karte der
-               LESEANSICHT gebracht (E-S3-16); das Formular zieht hier nach, und
-               beide Seiten zeigen jetzt dasselbe Zeichen an derselben Stelle.
+               Ueberlegung gilt fuer die PatientIn-Karte der
+               LESEANSICHT; beide Seiten zeigen dasselbe Zeichen an derselben Stelle.
                Katalogfelder bekommen es ueber $feldKennzeichen(); diese hier
                sind von Hand geschrieben und bekommen es von Hand. */ ?>
       <div id="patfields">
@@ -1289,15 +1272,14 @@ ui_seite_start(['titel' => $editing ? 'Einsatz bearbeiten' : 'Einsatz nachtragen
              das Skript zusammen mit `#patfields` sperrt, solange der Schlüssel
              zu ist. Die Auswahl des Abfahrtorts daneben ist Klartext und bleibt
              bedienbar (sie speichert nur eine REGEL, siehe unten). */ ?>
-      <?php /* Einsatzort und Ortsbeschreibung stehen IN der PatientIn-Karte
-               (E-P3-34, Mockup 22): Sie sind Teil des verschluesselten Blocks
+      <?php /* Einsatzort und Ortsbeschreibung stehen IN der PatientIn-Karte:
+               Sie sind Teil des verschluesselten Blocks
                und werden gemeinsam mit den Namensfeldern gesperrt. */ ?>
       <div id="patort">
-        <?php /* EINSATZORT — erste Verwendung der Ortsfeld-Komponente (V8).
-                 Hier stand bis Web 6.0.0 das Markup ausgeschrieben, und rund 25
-                 getElementById-Aufrufe weiter unten hingen an seinen Kennungen.
-                 Die Kennungen sind unverändert (locaddr, loclat, loclon,
-                 locsuggest, locstate, locchips) — nur erzeugt sie jetzt
+        <?php /* EINSATZORT — die Ortsfeld-Komponente. Rund 25
+                 getElementById-Aufrufe weiter unten haengen an ihren Kennungen
+                 (locaddr, loclat, loclon,
+                 locsuggest, locstate, locchips); sie erzeugt
                  ui_ortsfeld() aus dem Präfix „loc", und die Bedienung steht in
                  assets/ortsfeld.js.
 
@@ -1313,7 +1295,7 @@ ui_seite_start(['titel' => $editing ? 'Einsatz bearbeiten' : 'Einsatz nachtragen
                   'ortswahl'    => true,
               ]); ?>
         <?php /* Der Zusatz steht UNTER dem Feld, nicht zwischen Beschriftung
-                 und Eingabe (P3/O11). Bis dahin hielt ihn `label .muted` mit
+                 und Eingabe. Bis dahin hielt ihn `label .muted` mit
                  `display:block` in einer eigenen Zeile — eine Regel der
                  Uebergangsschicht, die mit ihr gefallen ist. Statt sie unter
                  neuem Namen wiederaufzubauen, steht der Zusatz jetzt dort, wo
@@ -1324,7 +1306,7 @@ ui_seite_start(['titel' => $editing ? 'Einsatz bearbeiten' : 'Einsatz nachtragen
         </label>
         <p class="feld-klein">Zufahrt, Besonderheiten, Lage vor Ort</p>
 
-        <?php /* ---- ABFAHRTORT (E34, Konzept 3.5.1) --------------------------
+        <?php /* ---- ABFAHRTORT --------------------------
                  Fällt die Uhr aus, fehlt der Track — die Karte bleibt leer,
                  obwohl der Einsatzort bekannt ist. Was fehlt, ist der Gegenpunkt.
 
@@ -1334,7 +1316,7 @@ ui_seite_start(['titel' => $editing ? 'Einsatz bearbeiten' : 'Einsatz nachtragen
                  steht hier im verschlüsselten Block, weil ein frei gewählter
                  Abfahrtort so schutzwürdig ist wie der Einsatzort (4.6.1).
 
-                 NUR OHNE GPS-AUFZEICHNUNG (Web 7.0.0). Liegt ein Track vor,
+                 NUR OHNE GPS-AUFZEICHNUNG. Liegt ein Track vor,
                  zeichnet die Karte den tatsächlich zurückgelegten Weg, und
                  diese Auswahl bliebe folgenlos — eine Frage, die nichts
                  bewirkt, gehört nicht ins Formular. Die gespeicherte Regel
@@ -1349,7 +1331,7 @@ ui_seite_start(['titel' => $editing ? 'Einsatz bearbeiten' : 'Einsatz nachtragen
                    Bezugspunkt der beiden Vorgänger-Auswahlen ist der zeitlich
                    unmittelbar vorangehende Einsatz DESSELBEN Diensttags. */
                 $startArten = [
-                    /* „Standort" statt „Standort des Diensttags" (Web 7.0.0):
+                    /* „Standort" statt „Standort des Diensttags":
                        Ein anderer Standort steht gar nicht zur Wahl, der Zusatz
                        war also kein Unterschied, sondern nur Länge — und für
                        die Bodenrettung klang „Diensttag" nach Flugbetrieb. */
@@ -1382,7 +1364,7 @@ ui_seite_start(['titel' => $editing ? 'Einsatz bearbeiten' : 'Einsatz nachtragen
     <?php ui_karte_ende(); ?>
 
     <?php /* ---- Karte "Einsatz": die Schalter (Sekundaer, Fehleinsatz) und
-             die Bergrettung (Winde, Bergwacht) in EINER Karte (Mockup 22).
+             die Bergrettung (Winde, Bergwacht) in EINER Karte.
              Die Bergrettungsfelder haengen an Faehigkeiten des Diensttags —
              fehlen sie und ist nichts belegt, stehen hier nur die zwei
              Schalter. */ ?>
@@ -1395,20 +1377,20 @@ ui_seite_start(['titel' => $editing ? 'Einsatz bearbeiten' : 'Einsatz nachtragen
              Transportart, NA-Begleitung, Transportziel samt Schockraum. Die
              Abhängigkeiten stehen im Katalog ('show_if'): „Ambulant" blendet
              NA-Begleitung und Transportziel aus, und der Server LEERT sie dann
-             auch (A5). */ ?>
+             auch. */ ?>
     <?php ui_karte_start(['titel' => 'Transport', 'klasse' => 'form-block-transport']); ?>
       <?php $gruppeRendern('transport'); ?>
     <?php ui_karte_ende(); ?>
     </div><?php /* .form-spalte (links) */ ?>
     <div class="form-spalte">
 
-    <?php /* ---- Weitere Rettungsmittel (offen, E-P3-34) --------------------- */ ?>
+    <?php /* ---- Weitere Rettungsmittel (offen) --------------------- */ ?>
     <?php ui_karte_start(['titel' => 'Weitere Rettungsmittel', 'klasse' => 'form-block-mittel']); ?>
       <?php $kartenTitel = 'Weitere Rettungsmittel'; $gruppeRendern('mittel'); $kartenTitel = ''; ?>
     <?php ui_karte_ende(); ?>
 
-    <?php /* ---- Abweichende Besatzung: zugeklappt, Vorschau "vom Diensttag"
-             (E-P3-34). Ist eine Abweichung gespeichert, ist die Karte OFFEN —
+    <?php /* ---- Abweichende Besatzung: zugeklappt, Vorschau "vom Diensttag".
+             Ist eine Abweichung gespeichert, ist die Karte OFFEN —
              ein gesetzter Haken hinter zugeklapptem Deckel waere verborgene
              Wahrheit. */ ?>
     <?php $besatzungAbw = fieldValue('crew_override') === '1';
@@ -1419,12 +1401,12 @@ ui_seite_start(['titel' => $editing ? 'Einsatz bearbeiten' : 'Einsatz nachtragen
       <?php $gruppeRendern('besatzung'); ?>
     <?php ui_karte_ende(true); ?>
 
-    <?php /* DIE NOTIZEN LIEGEN IM VERSCHLUESSELTEN BLOCK (E-S9-01, S9/AP7).
+    <?php /* DIE NOTIZEN LIEGEN IM VERSCHLUESSELTEN BLOCK.
              Der Rahmen `#patnotes` ist das Gegenstueck zu `#patfields` und
              `#patort`: Er sagt dem Riegel unten, was zu sperren ist, solange
              der Schluessel zu ist. Die Karte traegt deshalb dieselbe Zahl wie
              die Karte „PatientIn". */ ?>
-    <?php /* 'geschuetzt' => true: DAS SCHLOSS AN DEN KARTENTITEL (Web 19.1.1).
+    <?php /* 'geschuetzt' => true: DAS SCHLOSS AN DEN KARTENTITEL.
              Diese Karte hat genau ein Feld, und dessen Beschriftung heisst wie
              sie — $labelSichtbar() blendet sie aus, $feldKennzeichen() gibt
              deshalb nichts zurueck, und die Karte blieb als einzige des
@@ -1448,13 +1430,13 @@ ui_seite_start(['titel' => $editing ? 'Einsatz bearbeiten' : 'Einsatz nachtragen
     <?php endif; ?>
 
     <?php /* ---- GRUPPE 8: Einsatzphasen --------------------------------------
-             NACH UNTEN GEWANDERT (Web 7.0.0). Die Phasen standen ganz oben, vor
+             NACH UNTEN GEWANDERT. Die Phasen standen ganz oben, vor
              den PatientInnendaten — an der Stelle, an der man sie beim
              Nachtragen zuerst braucht. Beim BEARBEITEN, dem häufigeren Fall,
              stehen sie meist schon vollständig da und schoben alles andere nach
              unten. Jetzt stehen sie dort, wo sie hingehören: bei den
              Zeitangaben, unmittelbar über der Reanimation. */ ?>
-    <?php /* KEIN Hinweistext mehr (E-P3-34): Die Liste sortiert sich sofort
+    <?php /* KEIN Hinweistext mehr: Die Liste sortiert sich sofort
              beim Verlassen eines Zeitfelds — was sich selbst ordnet, muss
              nicht erklaeren, in welcher Reihenfolge man es eintraegt. Der
              Mitternachts-Hinweis steht im Handbuch. Die Zahl im Kopf
@@ -1467,9 +1449,9 @@ ui_seite_start(['titel' => $editing ? 'Einsatz bearbeiten' : 'Einsatz nachtragen
     <?php ui_karte_ende(); ?>
 
 
-    <?php /* ---- Reanimation: zugeklappt (E-P3-34); mit Bestand offen. ------- */ ?>
-    <?php /* SEIT S11-05b VERSCHLUESSELT: Die Reanimation liegt in der
-             Einsatzhuelle (E-S11-02); die Karte traegt deshalb das Schloss am
+    <?php /* ---- Reanimation: zugeklappt; mit Bestand offen. ------- */ ?>
+    <?php /* VERSCHLUESSELT: Die Reanimation liegt in der
+             Einsatzhuelle; die Karte traegt deshalb das Schloss am
              Titel, und ihre Felder haben keinen `name` — sie gehen nicht als
              Formularfeld an den Server, sondern in die Huelle. Was in der
              Huelle steht, zaehlt der Browser nach dem Entsperren nach. */ ?>
@@ -1488,14 +1470,11 @@ ui_seite_start(['titel' => $editing ? 'Einsatz bearbeiten' : 'Einsatz nachtragen
     </div><?php /* .form-spalte (rechts) */ ?>
     </div><?php /* .form-raster */ ?>
 
-    <?php /* KEINE KARTE „WAS HIER GILT" MEHR (Web 21.4.1, R4-20, Nr. 287).
-             Hier stand seit S9/AP7 die zugeklappte Legende zu Schloss,
-             Klartext und Server, am Ende und ueber die volle Breite. Seit
-             E-P5c-06 gehoert Erklaertext ins Handbuch, und die Seite traegt
-             einen Satz mit Verweis — er steht jetzt unter dem Titel. Die
-             Zeichen selbst bleiben an jedem Feld. */ ?>
+    <?php /* KEINE KARTE „WAS HIER GILT". Erklaertext gehoert ins
+             Handbuch, und die Seite traegt einen Satz mit Verweis — er steht
+             unter dem Titel. Die Zeichen selbst stehen an jedem Feld. */ ?>
 
-    <?php /* Speichern-Leiste statt Knopf am Ende (E-P3-29): Sie klebt unten
+    <?php /* Speichern-Leiste statt Knopf am Ende: Sie klebt unten
              und erscheint, sobald das Formular schmutzig ist (forms.js).
              KEIN "Verwerfen" und kein Abbrechen-Link mehr — der Rueckweg oben
              genuegt, und die beforeunload-Rueckfrage des Dirty-Trackings
@@ -1510,17 +1489,17 @@ ui_seite_start(['titel' => $editing ? 'Einsatz bearbeiten' : 'Einsatz nachtragen
 <script src="<?= asset('assets/locparse.js') ?>"></script>
 <?php /* vorschlagsliste.js (EdVorschlaege) VOR ortsfeld.js: Die Komponente
          baut ihre Trefferliste beim Aufbau, und der Baustein muss dann
-         stehen. Die Reihenfolge ist die Abhaengigkeit, nicht der Zufall
-         (E-S9-07). html.js (EdHtml.escape) steht seit Web 21.1.11 im Kopf. */ ?>
+         stehen. Die Reihenfolge ist die Abhaengigkeit, nicht der Zufall.
+         html.js (EdHtml.escape) steht im Kopf. */ ?>
 <script src="<?= asset('assets/vorschlagsliste.js') ?>"></script>
 <?php /* geocoder.js VOR ortsfeld.js und ortswahl.js: Beide fragen beim
-         Aufbau, ob die Adresssuche an ist (S9/AP2, E-S9-05). */ ?>
+         Aufbau, ob die Adresssuche an ist. */ ?>
 <script src="<?= asset('assets/geocoder.js') ?>"></script>
 <script src="<?= asset('assets/ortsfeld.js') ?>"></script>
 <script src="<?= asset('assets/vendor/leaflet/leaflet.js') ?>"></script>
 <script src="<?= asset('assets/map_layers.js') ?>"></script>
 <?php /* geo.js liefert die Ringpunkte und die Spurfarbe fuer die
-         aufgezeichnete Spur im Kartendialog (S9/AP2, E-S9-06 b). */ ?>
+         aufgezeichnete Spur im Kartendialog. */ ?>
 <script src="<?= asset('assets/geo.js') ?>"></script>
 <script src="<?= asset('assets/ortswahl.js') ?>"></script>
 <script src="<?= asset('assets/zeitfeld.js') ?>"></script>
@@ -1804,7 +1783,7 @@ function ortFehler(text) {
 
 // ---- PatientInnendaten & Einsatzort: lokale Ver-/Entschluesselung ------
 const PAT_PREV = <?= json_js($mission['pat_blob'] ?? null) ?>;
-<?php /* DIE VERSCHLUESSELTEN KATALOGFELDER (S9/AP7): Feldname => Schluessel im
+<?php /* DIE VERSCHLUESSELTEN KATALOGFELDER: Feldname => Schluessel im
          Blob. Aus mf_pat_felder(), nicht aus einer zweiten Liste — sonst
          liefen Katalog und Formular auseinander, und zwar still.
 
@@ -1818,7 +1797,7 @@ const PAT_PREV = <?= json_js($mission['pat_blob'] ?? null) ?>;
       foreach (mf_pat_felder() as $pcol => $pf) {
           $pv = $mission[$pcol] ?? null;
           if ($pv === null || (string)$pv === '') { continue; }
-          /* Ein Ortsfeld (S11-05b: das Transportziel) in der Form des Blobs,
+          /* Ein Ortsfeld (das Transportziel) in der Form des Blobs,
              {addr, lat, lon} — so fuellt `setzen()` der Komponente es. */
           $patAlt[$pcol] = $pf['typ'] === 'loc'
               ? ['addr' => (string)$pv,
@@ -1888,11 +1867,24 @@ let spurVersprechen = null;
  * Kontoschluessel geoeffnet, wie in der Einsatzansicht. Ohne Schluessel gibt
  * es keine Spur; das Versprechen wird dann NICHT behalten, damit ein Oeffnen
  * nach dem Entsperren sie doch zeigt. */
+/* EINE ANTWORT FUER BEIDE: Kartendialog und Speichern brauchen dieselbe
+ * Einsatzzeile samt Stuecken. Gehalten wird nur eine gelungene Antwort; eine
+ * gescheiterte holt der naechste Aufruf neu. */
+let missionVersprechen = null;
+function missionHolen() {
+  if (!missionVersprechen) {
+    missionVersprechen = fetch('api/mission.php?id=' + encodeURIComponent(SPUR_EINSATZ))
+      .then(r => r.ok ? r.json() : null)
+      .then(d => { if (!d) { missionVersprechen = null; } return d; })
+      .catch(() => { missionVersprechen = null; return null; });
+  }
+  return missionVersprechen;
+}
+
 function spurHolen() {
   if (SPUR_EINSATZ === null) { return Promise.resolve(null); }
   if (!spurVersprechen) {
-    spurVersprechen = fetch('api/mission.php?id=' + encodeURIComponent(SPUR_EINSATZ))
-      .then(r => r.ok ? r.json() : null)
+    spurVersprechen = missionHolen()
       .then(async d => {
         if (!d || !PAT_CK || !(d.spur_stuecke && d.spur_stuecke.length)) { spurVersprechen = null; return null; }
         const k = await EdOrtsdaten.schluessel(PAT_CK);
@@ -1904,14 +1896,13 @@ function spurHolen() {
   return spurVersprechen;
 }
 
-/* Die Spur MIT Hoehe und Zeit, fuer die Ortshoehe beim Speichern (S11-05b).
- * Eigene Abfrage neben `spurHolen()`: Der Kartendialog braucht nur Lage und
- * holt erst beim Oeffnen; das Speichern braucht die Hoehe und den Hinweis, ob
- * die Spur ausgeduennt ist. `null`, wenn es keine Spur gibt. */
+/* Die Spur MIT Hoehe und Zeit, fuer die Ortshoehe beim Speichern: Der
+ * Kartendialog braucht nur die Lage, das Speichern die Hoehe und den Hinweis,
+ * ob die Spur ausgeduennt ist. Die Antwort teilen sich beide
+ * (`missionHolen()`). `null`, wenn es keine Spur gibt. */
 async function ortSpurPunkte() {
   if (SPUR_EINSATZ === null || !PAT_CK) { return null; }
-  const r = await fetch('api/mission.php?id=' + encodeURIComponent(SPUR_EINSATZ));
-  const d = r.ok ? await r.json() : null;
+  const d = await missionHolen();
   if (!d || !(d.spur_stuecke && d.spur_stuecke.length)) { return null; }
   const k = await EdOrtsdaten.schluessel(PAT_CK);
   return { punkte: await EdOrtsdaten.spur(d.spur_stuecke, 'spur', d.client_ref, d.spur_sperren, k),
@@ -2192,10 +2183,10 @@ document.getElementById('missionform').addEventListener('submit', async ev => {
   const f = ev.target;
   if (f.dataset.patDone === '1') return;
 
-  /* KLARTEXT-ORTSFELDER ZUERST (A13j). Die Zielklinik ist ein gewoehnliches
-   * Formularfeld; ob ihre Koordinate eine Bezeichnung hat, darf nicht davon
-   * abhaengen, ob der Patientenschluessel gerade offen ist. Erst danach der
-   * Riegel unten, hinter dem der verschluesselte Teil liegt. */
+  /* DIE BEZEICHNUNG DER ORTSFELDER ZUERST. Ob eine Koordinate eine
+   * Bezeichnung hat, wird vor dem Riegel unten geprueft, hinter dem der
+   * verschluesselte Teil liegt: Ein fehlender Name soll gemeldet werden,
+   * bevor nach dem Schluessel gefragt wird. */
   for (const feld of ORTSFELDER) {
     if (!feld.pruefe(BEZ_FEHLT)) { ev.preventDefault(); return; }
   }
@@ -2362,7 +2353,7 @@ document.getElementById('addrow').addEventListener('click', ev => {
   // stehen weiter unten die Reanimationsereignisse, ebenfalls mit Auswahl.
   const rows = document.querySelectorAll('#phaserows .phasen-eingabe select');
   const last = rows.length ? parseInt(rows[rows.length - 1].value) : 1;
-  addRow(Math.min(last + 1, 10), '').focus();   // direkt per Tastatur bedienbar
+  addRow(Math.min(last + 1, 9), '').focus();   // direkt per Tastatur bedienbar
 });
 
 document.getElementById('addrea').addEventListener('click', ev => {

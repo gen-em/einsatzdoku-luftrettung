@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Erzeugnisse des Generators pruefen (Arbeitspaket B2).
+"""Erzeugnisse des Generators pruefen.
 
 Vier Pruefungen:
 
@@ -13,7 +13,7 @@ Vier Pruefungen:
   4. SPUR       -- Spuren liegen im Zeitfenster ihres Einsatzes, Hoehen und
                    Geschwindigkeiten sind plausibel
   5a. FUSSWEG   -- Gehgeschwindigkeit jedes Fusswegs gegen eine Vertrags-
-                   grenze, wie Flug- und Fahrgeschwindigkeit (E-DA-13)
+                   grenze, wie Flug- und Fahrgeschwindigkeit
   5. CSV        -- die Importdatei gegen die Parser der Anwendung: jede
                    Kopfzeile ist eine dem Profil `export_csv_v1` bekannte
                    Spalte, und jeder Wert genuegt der Regel des Parsers, der
@@ -169,17 +169,17 @@ def main() -> int:
 
     # ---- 3. Krypto: Rundlauf ---------------------------------------------
     #
-    # HKDF GEGEN DEN PRUEFVEKTOR, BEVOR IRGENDETWAS DAMIT GERECHNET WIRD (S10).
+    # HKDF GEGEN DEN PRUEFVEKTOR, BEVOR IRGENDETWAS DAMIT GERECHNET WIRD.
     #
     # `krypto.hkdf_sha256()` ist ausgeschrieben statt aus einer Bibliothek
-    # geholt — vier Zeilen, dafuer kein weiterer Fremdbestandteil (E-S10-15).
+    # geholt — vier Zeilen, dafuer kein weiterer Fremdbestandteil.
     # Der Preis dafuer ist, dass niemand sie fuer uns prueft. Und eine falsche
     # Schluesselableitung faellt nicht als Fehler auf: Sie liefert einen
     # Schluessel, nur eben nicht den, den der Browser rechnet — und das sieht
     # aus wie ein falsches Passwort.
     #
-    # Prueffall 1 aus RFC 5869, Anhang A.1. In AP1 einmal von Hand
-    # nachgerechnet (E-S10-U-03); seit AP5 rechnet ihn jeder Lauf nach.
+    # Prueffall 1 aus RFC 5869, Anhang A.1. Einmal von Hand
+    # nachgerechnet; heute rechnet ihn jeder Lauf nach.
     lauf.pruefe(
         krypto.hkdf_sha256(bytes.fromhex("0b" * 22),
                            bytes.fromhex("000102030405060708090a0b0c"),
@@ -326,7 +326,7 @@ def main() -> int:
                     f"{GRENZE_HOEHE[art]:.0f} m")
         geprueft += 1
 
-    # ---- 5a. Gehgeschwindigkeit der Fusswege (E-DA-13) ---------------------
+    # ---- 5a. Gehgeschwindigkeit der Fusswege -------------------------------
     #
     # WARUM GEGEN `fusswege.json` UND NICHT GEGEN DIE SPUR. Der fertigen Spur
     # sieht niemand mehr an, welches Teilstueck gegangen wurde: Die Punkte
@@ -449,7 +449,7 @@ def main() -> int:
 
     # Kommt jedes Feld, das die Datei traegt, beim Server auch an? gruppiere()
     # kopiert nur, was in UEBERNAHME steht — eine Liste, die schon einmal
-    # hinter EINFACHE_ZIELE zurueckgeblieben ist (Fund F-P1-H).
+    # hinter EINFACHE_ZIELE zurueckgeblieben ist.
     def js_liste(name: str) -> list[str]:
         m = re.search(r"var %s = \[(.*?)\];" % name, import_js, re.S)
         if not m:

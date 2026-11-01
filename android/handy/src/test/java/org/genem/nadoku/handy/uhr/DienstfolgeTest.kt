@@ -4,11 +4,11 @@ import org.junit.Assert.assertEquals
 import org.junit.Test
 
 /**
- * Was ein Uhr-Ereignis mit dem Vordergrunddienst macht (E-S5Z-08).
+ * Was ein Uhr-Ereignis mit dem Vordergrunddienst macht.
  *
- * Vier Zeilen, und die zweite ist der Fehler, gegen den E2 gebaut ist: Bis
- * 0.8.1 gab es sie nicht — ein Dienstende von der Uhr schloss den Dienst im
- * Puffer und liess den Vordergrunddienst laufen (B-S5Z-04).
+ * Vier Zeilen, und die zweite trägt das Gewicht: Ohne sie schlösse ein
+ * Dienstende von der Uhr den Dienst im Puffer und liesse den
+ * Vordergrunddienst laufen.
  */
 class DienstfolgeTest {
 

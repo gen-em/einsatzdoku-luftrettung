@@ -1,8 +1,6 @@
 /* ANKUENDIGUNG — Schliessen ohne Neuladen und der Bytezaehler
  * ==========================================================================
  *
- * Entstanden mit P5c/AP1 (E-P5c-13, -55, -60).
- *
  * 1. DAS KREUZ IM STREIFEN ist ein gewoehnliches Formular (`ankuendigung.php`,
  *    POST mit Token). Ohne dieses Skript schickt es ab und kommt auf dieselbe
  *    Seite zurueck — das geht ueberall, auch auf der Anmeldeseite. MIT dem

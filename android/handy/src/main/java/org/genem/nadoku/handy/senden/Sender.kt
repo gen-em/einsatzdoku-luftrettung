@@ -28,10 +28,10 @@ data class Sendebericht(
     val pausiert: Boolean = false,
     /** Kein Netz oder 5xx — später unverändert erneut. */
     val spaeterErneut: Boolean = false,
-    /** Vor dem Lauf geräumte abgewiesene Pakete (Backlog Nr. 114, Räumteil). */
+    /** Vor dem Lauf geräumte abgewiesene Pakete. */
     val geraeumt: Int = 0,
     /**
-     * Kein Kontoschlüssel, auch nach dem Nachholen nicht (S11-09): Das Konto
+     * Kein Kontoschlüssel, auch nach dem Nachholen nicht: Das Konto
      * hat noch kein Schlüsselpaar. Es ist nichts gesendet; der Lauf gilt
      * zugleich als [spaeterErneut], damit der Nachsende-Job es wieder
      * versucht — der Schlüssel entsteht beim nächsten Entsperren im Browser.
@@ -45,7 +45,7 @@ data class Sendebericht(
 }
 
 /**
- * Die Warteschlange — **wortgleich der Uhr** (`Uploader.mc`, E-S4-06).
+ * Die Warteschlange — **wortgleich der Uhr** (`Uploader.mc`).
  *
  * ```
  * 1. abgeschlossene Einsätze        (sie tragen die Dokumentation)
@@ -82,18 +82,18 @@ class Sender(
     private val netzweg: Netzweg,
     private val tresor: Schluesseltresor,
     /**
-     * Die Basisadresse. Seit R63 eine Konstante des Baulaufs und deshalb kein
-     * Lambda mehr: Vorher konnte sie sich zwischen zwei Sendeläufen ändern
-     * (die NutzerIn tippte eine neue ein), heute nicht. Der Parameter bleibt,
-     * damit der Prüfstand gegen seine örtliche Installation senden kann.
+     * Die Basisadresse. Eine Konstante des Baulaufs und deshalb kein
+     * Lambda: Sie ändert sich zwischen zwei Sendeläufen nicht. Der Parameter
+     * steht da, damit der Prüfstand gegen seine örtliche Installation senden
+     * kann.
      */
     private val basis: String = Serveradresse.BASIS,
     private val phasenLeser: (Long) -> List<Phaseneintrag> = { emptyList() },
     /** Die Uhr — einsetzbar, damit der Prüfstand die Räumfrist stellen kann. */
     private val jetzt: () -> Instant = Instant::now,
     /**
-     * Den Kontoschlüssel nachholen, wenn die Kopplung keinen trägt (S11-09,
-     * E-S11-80) — in der App `Kopplungsdienst.schluesselHolen()`. Als
+     * Den Kontoschlüssel nachholen, wenn die Kopplung keinen trägt — in der
+     * App `Kopplungsdienst.schluesselHolen()`. Als
      * Funktion, weil dieser Sender `pair.php` nicht kennt; der Prüfstand
      * zählt damit, ob geholt wurde.
      */
@@ -109,7 +109,7 @@ class Sender(
      * Fehlerpfad den Lauf beendet.
      */
     fun sendeAlles(): Sendebericht {
-        /* VOR DEM SENDEN RÄUMEN (Backlog Nr. 114, Räumteil): Abgewiesene
+        /* VOR DEM SENDEN RÄUMEN: Abgewiesene
          * Pakete, die älter sind als die Frist, verlassen den Puffer. Hier
          * und nicht in einem eigenen Zeitgeber, weil jeder Sendelauf ohnehin
          * der Augenblick ist, in dem die App auf den Puffer sieht — und weil
@@ -124,12 +124,12 @@ class Sender(
         val zugang = tresor.lesen()
             ?: return Sendebericht(spaeterErneut = true, geraeumt = geraeumt)
 
-        /* OHNE KONTOSCHLÜSSEL GEHT NICHTS HINAUS (S11-09, E-S11-09). Der
-         * Server nähme Klartext ohnehin nicht mehr an (`400 klartext`), und
-         * ein Handy, das es trotzdem versuchte, parkte seinen ganzen
-         * Rückstand als „abgewiesen". Erst nachholen — das ist der Weg, auf
-         * dem eine Kopplung aus der Zeit vor 0.18.0 zu einem kommt —, dann
-         * aufgeben, aber nur für diesen Lauf. */
+        /* OHNE KONTOSCHLÜSSEL GEHT NICHTS HINAUS. Der Server nähme Klartext
+         * ohnehin nicht an (`400 klartext`), und ein Handy, das es trotzdem
+         * versuchte, parkte seinen ganzen Rückstand als „abgewiesen". Erst
+         * nachholen — das ist der Weg, auf dem eine alte Kopplung ohne
+         * Schlüssel zu einem kommt —, dann aufgeben, aber nur für diesen
+         * Lauf. */
         val ksText = zugang.kontoschluessel ?: schluesselHolen()
             ?: return Sendebericht(spaeterErneut = true, ohneSchluessel = true, geraeumt = geraeumt)
         val kontoschluessel = java.util.Base64.getDecoder().decode(ksText)

@@ -10,7 +10,7 @@
 Rückgabewert 0 = in Ordnung · 1 = Befund (bei `--abdeckung`: Dateien ohne
 eigene Probe) · 2 = die Probe selbst kam nicht zum Laufen.
 
-EINE ZUORDNUNG, NICHT ZWANZIG. Bis PK-03 stand in jeder LIESMICH, wann ihr
+EINE ZUORDNUNG, NICHT ZWANZIG. Früher stand in jeder LIESMICH, wann ihr
 Werkzeug zu fahren sei — und in `CLAUDE.md` 6 eine zweite, kürzere Liste.
 Welche Probe zu einer Änderung gehörte, wusste man oder man wusste es nicht.
 
@@ -77,7 +77,7 @@ def mit_voraussetzungen(proben, a):
     """`nach` in pruefablauf.json: Eine Probe, die auf eine andere angewiesen
     ist, bekommt sie mit — und läuft NACH ihr. Sonst hinge ihr Grün an der
     Reihenfolge der Muster, und `--datei` wählte sie ohne ihre Voraussetzung
-    aus (F-RP-08: die Wegprobe braucht das Konto des csv-Kreislaufs)."""
+    aus (die Wegprobe braucht das Konto des csv-Kreislaufs)."""
     aus = []
 
     def rein(p, kette=()):
@@ -93,18 +93,18 @@ def mit_voraussetzungen(proben, a):
 
 
 # DIE FASSUNG STEHT EINMAL GELESEN — hier; `bericht.py` holt sie von hier.
-# Bis PK-05 las jede der beiden Dateien selbst, beide mit demselben Muster
-# `WEB_VERSION', '…'` (der Schreibweise von `define()`). Die Datei trägt seit
-# Web 20.8.0 `const WEB_VERSION = '…';` — das Muster traf nie, die Stufe hieß
-# still „klein", und die rote Lage „Stufe zu klein" konnte nie anschlagen
-# (F-PK-30). Deshalb: Wer die Fassung nicht lesen kann, sagt es und hört auf.
+# Lasen beide Dateien selbst, beide mit dem Muster
+# `WEB_VERSION', '…'` (der Schreibweise von `define()`), trafen sie
+# `const WEB_VERSION = '…';` nie — die Stufe hieß
+# still „klein", und die rote Lage „Stufe zu klein" konnte nie anschlagen.
+# Deshalb: Wer die Fassung nicht lesen kann, sagt es und hört auf.
 FASSUNG_RE = re.compile(r"WEB_VERSION'?\s*[,=]\s*'([0-9]+)\.([0-9]+)\.([0-9]+)'")
 UNLESBAR = 'unlesbar'
 
 
 def demo_proben(a):
     """Die Proben mit `"demo": true` — vor jeder schiebt der Prüfstand die
-    Marke des Demo-Resets (Nr. 322). Nur `true` zählt: Ein „ja" oder eine 1
+    Marke des Demo-Resets. Nur `true` zählt: Ein „ja" oder eine 1
     wäre in der Datei ein stiller Tippfehler, der nirgends auffiele."""
     return {n for n, d in a.get('proben', {}).items() if isinstance(d, dict) and d.get('demo') is True}
 
@@ -140,14 +140,14 @@ def fassung_arbeitsbestand():
         return None
 
 
-# ---- Stufenregeln (P5c/AP4, E-P5c-88) -------------------------------------
+# ---- Stufenregeln ---------------------------------------------------------
 #
-# EINE MIGRATION HEISST STUFE „haupt", AUCH BEI EINER NEBENNUMMER. E-P5c-36
-# stand bis AP4 nur im Konzept: Die Plattformmatrix läuft nur in haupt, und
-# dort sind Nr. 238 und Nr. 267 gefunden worden. Ausgelöst wird von einer
+# EINE MIGRATION HEISST STUFE „haupt", AUCH BEI EINER NEBENNUMMER. Die Regel
+# stand lange nur im Konzept: Die Plattformmatrix läuft nur in haupt, und
+# dort sind Fehler an Migrationen gefunden worden. Ausgelöst wird von einer
 # NEUEN KENNUNG im Katalog — nicht von einer Änderung an der Datei, die
-# ändert sich auch ohne Migration (AP2 hat dort einen Protokollaufruf
-# ergänzt, AP3 drei Meldungen umgestellt). Die Regel steht als Daten in
+# ändert sich auch ohne Migration (etwa um einen Protokollaufruf oder
+# umgestellte Meldungen). Die Regel steht als Daten in
 # `pruefablauf.json` (`stufenregeln`), damit sie in `Pruefablauf.md` 4
 # erzeugt dasteht und nicht nur hier.
 
@@ -188,8 +188,8 @@ def stufe_mit_regeln(stufe, grund, neu_je_regel, regeln):
 def stufe_aus_version(basis, commit=None, a=None):
     """commit=None heißt: der ARBEITSBESTAND, wie beim Baum-Hash. Gemessen wird
     vor dem Commit; wer die Fassung aus HEAD liest, sieht den Sprung nicht, der
-    erst mit dem Bericht committet wird — und das Tor meldet „Stufe zu klein"
-    (F-PK-33). Danach die Stufenregeln (E-P5c-88)."""
+    erst mit dem Bericht committet wird — und das Tor meldet „Stufe zu klein".
+    Danach die Stufenregeln."""
     neu = fassung_arbeitsbestand() if commit is None else fassung(commit)
     stufe, grund = stufe_aus_fassungen(fassung(basis), neu)
     regeln = (a if a is not None else lade()).get('stufenregeln', [])
@@ -205,7 +205,7 @@ def beruehrte(basis):
     WARUM DER ABGLEICH MIT `basis`: Mitten in einem Merge von `origin/main`
     (Pruefablauf.md 5.3) zeigt `git status` jede Datei, die `main` mitbringt,
     als geändert gegenüber HEAD. Berührt hat sie diese Arbeit nicht; im Tor
-    zählt der Unterschied gegen `main` (F-PK-39)."""
+    zählt der Unterschied gegen `main`."""
     roh = git('diff', '--name-only', f'{basis}...HEAD') + git('status', '--porcelain')
     neu, aus = set(), set()
     for z in roh.splitlines():
@@ -255,13 +255,13 @@ def selbstprobe(a):
         ('server/assets/style.css trifft „stylesheet"',  'server/assets/style.css', 'stylesheet', True),
         ('server/assets/unlock.js trifft „krypto"',      'server/assets/unlock.js', 'krypto', True),
         ('watch/source/App.mc trifft „uhr"',             'watch/source/App.mc', 'uhr', True),
-        # Ein Glob gegen eine VERSIONIERTE Datei. Bis BR-05 stand hier
+        # Ein Glob gegen eine VERSIONIERTE Datei. Früher stand hier
         # server/api/spurteil.php gegen das Muster server/api/spur*.php — eine
         # erfundene Datei gegen einen Pfad, der nie eine echte traf; die Probe
         # war grün, das Muster griff nie (Gegenprobe des Bestandsriegels).
         ('server/adminbackup_lib.php trifft „backup"',   'server/adminbackup_lib.php', 'backup', True),
-        # Die Spur-Endpunkte der Schnittstelle — seit Nr. 317 im Muster „spur";
-        # PK-03 hatte sie gemeint und server/api/spur*.php geschrieben.
+        # Die Spur-Endpunkte der Schnittstelle — im Muster „spur"; gemeint
+        # waren sie schon, als server/api/spur*.php geschrieben wurde.
         ('server/api/backup_spuren_restore.php trifft „spur"', 'server/api/backup_spuren_restore.php', 'spur', True),
         ('jede server-Datei trifft das Auffangmuster',   'server/beliebig.php', AUFFANG, True),
     ]
@@ -284,7 +284,7 @@ def selbstprobe(a):
                ('bei haupt Messstand und Schemaprobe', {'messstand', 'schemaprobe'} <= set(haupt)),
                ('bei haupt alles von neben',           set(neben) <= set(haupt))]
 
-    # `nach`: Die Voraussetzung kommt mit und läuft davor (RP-01).
+    # `nach`: Die Voraussetzung kommt mit und läuft davor.
     probe_a = {'proben': {'x': {}, 'y': {'nach': ['x']}, 'z': {'nach': ['y']}}}
     grenzen += [
         ('nach: die Voraussetzung kommt mit',   mit_voraussetzungen(['y'], probe_a) == ['x', 'y']),
@@ -295,7 +295,7 @@ def selbstprobe(a):
          'spaltenregister-wegprobe' in neben
          and neben.index('kreislauf-edbak') < neben.index('spaltenregister-wegprobe'))]
 
-    # `demo` (R4-04, Nr. 322): nur true zählt, und gegen die ECHTE Datei —
+    # `demo`: nur true zählt, und gegen die ECHTE Datei —
     # zwei Proben, die das Demo-Konto anmelden, tragen es, und jede, die es
     # trägt, braucht die Anlage (sonst gäbe es keine Marke zu schieben).
     dp = demo_proben(a)
@@ -308,7 +308,7 @@ def selbstprobe(a):
     ]
 
     # Die Fassung — gegen die ECHTE Schreibweise der Datei, nicht gegen eine
-    # ausgedachte. Genau das fehlte, als das Muster nie traf (F-PK-30).
+    # ausgedachte. Genau das fehlte, als das Muster nie traf.
     echt = open(os.path.join(WURZEL, 'server', 'version.php'), encoding='utf-8').read()
     grenzen += [
         ('die Fassung dieser Datei ist lesbar',  fassung_aus_text(echt) is not None),
@@ -321,7 +321,7 @@ def selbstprobe(a):
         ('unlesbar heißt unlesbar, nicht klein', stufe_aus_fassungen(None, (1, 2, 3))[0] == UNLESBAR),
     ]
 
-    # Die Stufenregel „migration" (E-P5c-88) — gegen den ECHTEN Katalog und
+    # Die Stufenregel „migration" — gegen den ECHTEN Katalog und
     # gegen die Formen, die sie nicht treffen darf.
     regel = {r['id']: r for r in a.get('stufenregeln', [])}.get('migration')
     if regel is None:

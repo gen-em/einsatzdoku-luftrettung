@@ -1,20 +1,18 @@
 /* FORMAT — die eine Stelle im Browser, an der aus einem Wert ein Text wird
  * ==========================================================================
  *
- * Entstanden in Schritt 15 AP7 (Zentralisierung, R83). Das Gegenstueck zu
- * server/format_lib.php: dieselben Regeln, dieselbe Schreibweise, damit
+ * Das Gegenstueck zu server/format_lib.php: dieselben Regeln, dieselbe
+ * Schreibweise, damit
  * dieselbe Zahl nicht je nach Weg zweimal verschieden dasteht.
  *
  * WER HIER ETWAS AENDERT, AENDERT ES DORT MIT. Das ist keine Hoeflichkeit,
- * sondern der Zweck der Datei: Vor diesem Paket rechnete die Seite
+ * sondern der Zweck der Datei: Vor ihr rechnete die Seite
  * `einstellungen.php` die Groesse der heruntergeladenen Sicherungsdatei in
  * einer Inline-Zeile selbst aus — und kam auf eine andere Schreibweise als
  * jede Serverseite daneben.
  *
- * AP8 BAUT SIE AUS (Zaehlzeile Z34): Dann kommen Datum, Zeit, Dauer und
- * Entfernung dazu, und `missiontable.js` wird der zweite Verbraucher. Bis
- * dahin steht hier genau, was einen Verbraucher hat — eine Funktion auf
- * Verdacht waere das Gegenteil von R83.
+ * HIER STEHT GENAU, WAS EINEN VERBRAUCHER HAT — eine Funktion auf Verdacht
+ * waere das Gegenteil einer Zentrale.
  *
  * KEIN MODUL, KEIN IMPORT. Die Datei wird als gewoehnliches <script> geladen
  * und legt `window.EdFormat` an — wie `EdHtml`, `EdSymbol` und die uebrigen.
@@ -57,7 +55,7 @@
         : EdFormat.zahl(n / (1024 * 1024), 1) + ' MB';
     },
 
-    /* ---- Tag, Dauer, Strecke (Schritt 15 AP8d, Zaehlzeile Z34) ---------
+    /* ---- Tag, Dauer, Strecke (Zaehlzeile Z34) --------------------------
      *
      * VIERZEHN DEFINITIONEN WAREN ES, IN FUENF DATEIEN -- und drei Sachen:
      * Tag, Dauer, Strecke. Der RECHENTEIL war ueber die Gruppen hinweg
@@ -72,9 +70,9 @@
      *   - DREI von vierzehn warfen bei null eine TypeError.
      *   - ZWEI von vierzehn hatten keinen einzigen Aufrufer.
      *
-     * DER LEERWERT IST DESHALB EIN PARAMETER und kein fester Wert. Genau
-     * das war der Fehler von AP7: Eine Funktion mit festem Fruehausstieg
-     * machte aus "- um -" ein "-". Hier steht der Leerwert an der
+     * DER LEERWERT IST DESHALB EIN PARAMETER und kein fester Wert. Eine
+     * Funktion mit festem Fruehausstieg macht aus "- um -" ein "-". Hier
+     * steht der Leerwert an der
      * Aufrufstelle, wie `prozent_text($leer = '')` es auf der PHP-Seite
      * haelt -- und das Markup des Gedankenstrichs bleibt dort, wo es
      * hingehoert: an der Aufrufstelle, nicht in der Zentrale. Zwei Stellen
@@ -102,9 +100,6 @@
      * '14T10:00:00Z.08.2026', `datumDe` den Leerstring. Absicht: Der
      * Zeitstempel TRAEGT den Tag, und ihn wegzuwerfen hilft niemandem.
      * Wer den Endanker braucht, prueft vor dem Aufruf.
-     * (Die erste Fassung dieses Kommentars behauptete, auch der
-     * Zeitstempel ergebe den Leerwert. Er tut es nicht -- gefunden beim
-     * Gegenlesen von AP8d.)
      */
     tag: function (iso, leer) {
       const t = String(iso == null ? '' : iso);
@@ -134,11 +129,11 @@
     /**
      * Dauer in Worten: '51min', '1h 06min'.
      *
-     * ZWEI BENANNTE AENDERUNGEN gegenueber dem Bestand, beide in AP8d
-     * entschieden und im Changelog einzeln aufgefuehrt:
+     * ZWEI BENANNTE AENDERUNGEN gegenueber dem Bestand, im Changelog
+     * einzeln aufgefuehrt:
      *
      * (1) DIE MINUTE IST IMMER ZWEISTELLIG. Die Tabellenfassung
-     *     (`fmtDur`, seit Web 4.0.0) schrieb '1h 06min', die Fassung der
+     *     (`fmtDur`) schrieb '1h 06min', die Fassung der
      *     Einsatzansicht (`fmtDauer`) '1h 6min'. Gemessen ueber 0 bis 1440
      *     Minuten: 231 von 1441 Werten (16,0 %) liefen auseinander. Der
      *     Kommentar ueber `fmtDauer` behauptete, die Schreibweise sei
@@ -181,9 +176,9 @@
      * Uhrzeit 'HH:MM' eines Zeitpunkts in Epochensekunden, in der Zeitzone
      * der Anlage (`tz`, `app.timezone`) -- wie `fmt_local()` auf dem Server.
      *
-     * SEIT S11-04c: Die Zeiten der Reanimation stehen in der Einsatzhuelle
-     * (relativ zum Beginn), und nur der Browser kennt sie; frueher formatierte
-     * sie der Server. Eine Stelle fuer diese Rechnung, nicht eine je Seite.
+     * Die Zeiten der Reanimation stehen in der Einsatzhuelle (relativ zum
+     * Beginn), und nur der Browser kennt sie. Eine Stelle fuer diese
+     * Rechnung, nicht eine je Seite.
      */
     uhrzeit: function (epochSekunden, tz, leer) {
       if (epochSekunden == null || isNaN(Number(epochSekunden))) {
@@ -240,8 +235,8 @@
      * Die Gegenrichtung zu `uhrzeit()`: Datum und „HH:MM" in der Zeitzone
      * der Anlage, plus `versatz` Tage, als Unix-Sekunden — oder null.
      *
-     * WOFUER (S11-05b). Die Zeiten der Reanimation stehen seit S11 nur in
-     * der Einsatzhuelle, als Sekunden seit Einsatzbeginn (E-S11-40), und die
+     * WOFUER. Die Zeiten der Reanimation stehen nur in der Einsatzhuelle,
+     * als Sekunden seit Einsatzbeginn, und die
      * Huelle verschliesst der Browser. Er muss deshalb aus den Eingaben des
      * Formulars dieselben Zeitpunkte rechnen wie der Server mit
      * `local_to_utc()` (db.php) — dieselbe Regel, nicht eine aehnliche.

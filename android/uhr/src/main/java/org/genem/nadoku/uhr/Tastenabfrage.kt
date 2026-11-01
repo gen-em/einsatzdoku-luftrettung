@@ -6,7 +6,7 @@ import android.view.KeyEvent
 import androidx.wear.input.WearableButtons
 
 /**
- * Meldet dieses Gerät eine **freie Zusatztaste**? (E-S4-21a)
+ * Meldet dieses Gerät eine **freie Zusatztaste**?
  *
  * WAS DAHINTERSTECKT. Wear-OS-Uhren haben mindestens die Ein/Aus-Taste, und
  * die ist für Apps grundsätzlich gesperrt. Manche Sportmodelle haben freie
@@ -19,7 +19,7 @@ import androidx.wear.input.WearableButtons
  * vollständig sein. Diese Klasse beantwortet deshalb eine Frage und trifft
  * keine Entscheidung.
  *
- * LÜNETTE UND KRONE SCROLLEN NUR und lösen nie eine Handlung aus (E-S4-21a) —
+ * LÜNETTE UND KRONE SCROLLEN NUR und lösen nie eine Handlung aus —
  * sie tauchen hier gar nicht auf, weil sie keine Tasten sind.
  *
  * UNGEPRÜFT: Es gibt keinen Emulator und keine Uhr. Was `WearableButtons`

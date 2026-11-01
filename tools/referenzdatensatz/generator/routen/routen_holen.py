@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""Strassengeometrie fuer die Bodeneinsaetze holen (E-P1-03).
+"""Strassengeometrie fuer die Bodeneinsaetze holen.
 
 EINMALIGER ABRUF, ERGEBNIS INS REPO. Der Generator laeuft danach OFFLINE:
 Er liest die hier abgelegten GeoJSON-Dateien und braucht kein Netz. Das ist
-der Kern von E-P1-03 -- ein Referenzdatensatz, dessen Erzeugung von einem
+der Kern der Sache -- ein Referenzdatensatz, dessen Erzeugung von einem
 fremden Dienst abhaengt, ist genau dann nicht mehr reproduzierbar, wenn
 dieser Dienst sich aendert oder verschwindet.
 
@@ -63,7 +63,7 @@ def teilstuecke() -> list[dict]:
             koords = s["wegpunkte"]
             namen = s.get("wegpunkt_namen") or []
             for i in range(len(koords) - 1):
-                # FUER EINEN FUSSWEG WIRD KEINE STRASSE GEHOLT (E-DA-13).
+                # FUER EINEN FUSSWEG WIRD KEINE STRASSE GEHOLT.
                 # OSRM antwortete darauf mit der naechstgelegenen Fahrstrasse
                 # -- also mit einer Geometrie, die der Generator gar nicht
                 # benutzt, und mit einer Datei, die `routen_soll.json` als

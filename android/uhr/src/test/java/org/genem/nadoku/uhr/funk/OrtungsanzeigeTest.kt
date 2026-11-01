@@ -6,7 +6,7 @@ import org.junit.Assert.assertNotEquals
 import org.junit.Test
 
 /**
- * Sechs Stufen, **drei** Anzeigen (E3).
+ * Sechs Stufen, **drei** Anzeigen.
  *
  * WOZU DIE ZUSAMMENFASSUNG ÜBERHAUPT GEPRÜFT WIRD. Sie beantwortet zwei
  * Fragen an zwei Enden, und sie muss beide gleich beantworten:
@@ -41,10 +41,10 @@ class OrtungsanzeigeTest {
     }
 
     /**
-     * **`null` ist STILL und nicht KEINE_ORTUNG.** Eine Handy-Fassung vor E1
+     * **`null` ist STILL und nicht KEINE_ORTUNG.** Eine ältere Handy-Fassung
      * schickt das Feld nicht mit; daraus „keine Ortung" zu machen wäre eine
      * Behauptung über etwas, das die Uhr nicht weiss — derselbe dritte
-     * Zustand wie bei `handyErreichbar` (B-S4-09).
+     * Zustand wie bei `handyErreichbar`.
      */
     @Test fun ohneAngabeZeigtDieUhrNichts() {
         assertEquals(Ortungscode.Anzeige.STILL, Ortungscode.anzeige(null))

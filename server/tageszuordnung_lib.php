@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 /**
- * Tages- und Einsatzzuordnung korrigieren (Block A5, Web 5.6.0).
+ * Tages- und Einsatzzuordnung korrigieren.
  *
  * Zwei Handlungen, die auf den ersten Blick dasselbe tun und es ausdruecklich
  * nicht tun:
@@ -13,7 +13,7 @@ declare(strict_types=1);
  *                             falschen Tag gelandet ist.
  *   tz_tag_datum_aendern()    Der ganze Tag liegt falsch, weil die UHR FALSCH
  *                             GESTELLT war. Dann sind Datum UND Uhrzeit falsch,
- *                             und die Zeitstempel ziehen mit (E3).
+ *                             und die Zeitstempel ziehen mit.
  *
  * Wer die beiden verwechselt, verschiebt Zeitstempel, die richtig waren. Die
  * Oberflaeche benennt den Unterschied deshalb ausdruecklich, und die beiden
@@ -24,18 +24,15 @@ declare(strict_types=1);
  * Markup — und die Pruefung, ob wirklich alles oder gar nichts geschieht,
  * liesse sich nur ueber die Seite fuehren.
  *
- * WAS SICH MIT WEB 6.0.0 GEAENDERT HAT. Beide Handlungen arbeiteten mit dem
- * DATUM als Schluessel. Seit dem Umbau auf Diensttage ist der Schluessel die
- * Kennung `days.id`, und das Datum ist nur noch Sortier- und Anzeigewert.
- * Drei Dinge sind dadurch entfallen:
+ * DER SCHLUESSEL IST DIE KENNUNG `days.id`, nicht das Datum; das Datum ist
+ * Sortier- und Anzeigewert. Daraus folgt dreierlei:
  *
- *   - Das Anlegen eines fehlenden Zieltags (tz_zieltag_sichern). Der Zieltag
- *     wird jetzt aus einer Liste vorhandener Diensttage gewaehlt; ein Datum
- *     ohne Tag gibt es als Ziel nicht mehr.
- *   - Die Kollisionspruefung beim Umdatieren. Sie entstand allein aus
- *     `UNIQUE KEY uq_user_day`; mehrere Diensttage an einem Kalendertag sind
- *     jetzt ausdruecklich zulaessig (E9, A1).
- *   - Das Mitwandern von Papierkorb-Eintraegen als eigene Regel. Sie haengen
+ *   - Ein fehlender Zieltag wird nicht angelegt. Der Zieltag wird aus einer
+ *     Liste vorhandener Diensttage gewaehlt; ein Datum ohne Tag gibt es als
+ *     Ziel nicht.
+ *   - Beim Umdatieren gibt es keine Kollisionspruefung: Mehrere Diensttage
+ *     an einem Kalendertag sind ausdruecklich zulaessig.
+ *   - Papierkorb-Eintraege brauchen keine eigene Regel. Sie haengen
  *     ueber `day_id` am Tag und wandern zwangslaeufig mit.
  */
 
@@ -83,7 +80,7 @@ function tz_tag_umfang(int $userId, int $dayId): array
 }
 
 /**
- * Einen einzelnen Einsatz einem anderen Diensttag zuordnen (A5.2).
+ * Einen einzelnen Einsatz einem anderen Diensttag zuordnen.
  *
  * Die UHRZEITEN BLEIBEN UNVERAENDERT — das ist der Unterschied zu
  * tz_tag_datum_aendern(). Hier wird eine Fehlzuordnung korrigiert, dort eine
@@ -95,7 +92,7 @@ function tz_tag_umfang(int $userId, int $dayId): array
  * (Akzeptanzkriterium 28).
  *
  * DER ZIELTAG WIRD NICHT ANGELEGT. Er wird aus den vorhandenen Diensttagen
- * gewaehlt — ein Datum allein bestimmt seit E9 keinen Tag mehr, und einen
+ * gewaehlt — ein Datum allein bestimmt keinen Tag, und einen
  * neuen anzulegen waere beim Verschieben eine Ueberraschung.
  *
  * @return array{ok:bool,meldung:string,day_id:int}
@@ -153,13 +150,13 @@ function tz_einsatz_verschieben(int $userId, int $missionId, int $zielDayId): ar
 }
 
 /**
- * Das Datum eines ganzen Diensttages aendern (A5.3).
+ * Das Datum eines ganzen Diensttages aendern.
  *
  * ALLES ODER NICHTS. Die Handlung fasst sechs Tabellen an; ein Abbruch in der
  * Mitte hinterliesse einen Bestand, in dem Einsaetze und ihre Phasen an
  * verschiedenen Tagen liegen. Die Transaktion ist deshalb nicht optional.
  *
- * DIE ZEITSTEMPEL ZIEHEN MIT (E3). Der Anwendungsfall ist die falsch gestellte
+ * DIE ZEITSTEMPEL ZIEHEN MIT. Der Anwendungsfall ist die falsch gestellte
  * Uhr — dabei sind Datum UND Uhrzeit falsch.
  *
  * Verschoben wird um die Differenz der beiden ORTSMITTERNACHTEN, nicht um
@@ -170,11 +167,8 @@ function tz_einsatz_verschieben(int $userId, int $missionId, int $zielDayId): ar
  * groesser oder kleiner und haelt die Ortszeit fest — und die Ortszeit ist das,
  * was jemand abgelesen und dokumentiert hat.
  *
- * KEINE KOLLISIONSPRUEFUNG MEHR (Web 6.0.0). Sie war die Folge des
- * Tagesschluessels `UNIQUE KEY uq_user_day`: Zwei Flugtage an einem Datum waren
- * ein Datenbankfehler, also musste die Umdatierung ein belegtes Zieldatum
- * ablehnen. Seit E9 sind mehrere Diensttage je Kalendertag der vorgesehene Fall
- * (A1) — es gibt nichts mehr zu kollidieren.
+ * KEINE KOLLISIONSPRUEFUNG. Mehrere Diensttage je Kalendertag sind der
+ * vorgesehene Fall — es gibt nichts zu kollidieren.
  *
  * @return array{ok:bool,meldung:string}
  */
@@ -228,10 +222,9 @@ function tz_tag_datum_aendern(int $userId, int $dayId, string $neuTag): array
     }
 
     try {
-        /* `$platzhalter` und `$werte` standen bis Web 23.3.0 mit im `use` —
-         * zwei Namen, die erst unten in der Zerlegung entstehen. PHP schrieb
-         * bei jeder Umdatierung zwei Warnungen in den Reiter System
-         * (R17-22, F-R17-38). */
+        /* `$platzhalter` und `$werte` stehen NICHT im `use` — zwei Namen,
+         * die erst unten in der Zerlegung entstehen. PHP schriebe sonst
+         * bei jeder Umdatierung zwei Warnungen in den Reiter System. */
         db_transaktion($pdo, function (PDO $pdo) use ($dayId, $delta, $mIds, $neuTag,
                                                       $rIds, $userId): void {
             /* 1. Der Diensttag selbst — Datum UND eigener Zeitraum. `started_at`
@@ -269,22 +262,19 @@ function tz_tag_datum_aendern(int $userId, int $dayId, string $neuTag): array
                         ->execute(array_merge([$delta], $werte));
                     /* Die Reanimation wandert mit, ohne dass hier etwas
                      * geschieht: Sie liegt in der Einsatzhuelle, ihre Zeiten
-                     * relativ zum Beginn (E-S11-18). Bis Web 22.7.0 standen
-                     * hier zwei UPDATE auf `resus_sessions`/`resus_events`. */
+                     * relativ zum Beginn. */
                 }
-                /* SPUREN UEBER spur_lib.php (S2/AP1) — ausserhalb der
+                /* SPUREN UEBER spur_lib.php — ausserhalb der
                  * Blockschleife, weil die Funktion selbst blockt. */
                 spur_zeit_verschieben($pdo, 'mission', $mIds, $delta);
-                /* UND DIE SPERRVERMERKE DES SCHNITTS (Web 14.2.0, R64).
+                /* UND DIE SPERRVERMERKE DES SCHNITTS.
                  *
-                 * Sie standen bis hierher still, waehrend alles andere wanderte —
-                 * ein Fehler seit Web 12.5.0, den erst die Sicherung sichtbar
-                 * gemacht hat. Was er anrichtet: Der Vermerk sperrt danach einen
-                 * Zeitraum, in dem die Spur gar nicht mehr liegt. Nachgelieferte
-                 * Punkte des tatsaechlichen Zeitraums kommen wieder durch, und
-                 * die Fahrt liegt in Einsatz UND Segment — wortgleich der
-                 * Schaden, gegen den Backlog Nr. 63 antritt. Seit Nutzlast 9
-                 * reist das falsche Fenster zusaetzlich in jede Sicherung.
+                 * Blieben sie stehen, waehrend alles andere wandert, sperrte
+                 * der Vermerk danach einen Zeitraum, in dem die Spur gar nicht
+                 * mehr liegt. Nachgelieferte Punkte des tatsaechlichen
+                 * Zeitraums kaemen wieder durch, und die Fahrt laege in
+                 * Einsatz UND Segment. Ausserdem reiste das falsche Fenster in
+                 * jede Sicherung.
                  *
                  * NACH QUELLE, wie in spur_lib.php begruendet: `von_ts`/`bis_ts`
                  * beschreiben einen Ausschnitt der QUELLspur. Wer zusaetzlich

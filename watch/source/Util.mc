@@ -9,7 +9,7 @@ using Toybox.Application.Storage;
 
 module Util {
 
-    // ---- Client-Kennung fuer Einsaetze und Ruhesegmente (M7-03) -----------
+    // ---- Client-Kennung fuer Einsaetze und Ruhesegmente --------------------
     //
     // WAS SIE IST
     // Die Kennung ("client_ref") ist der Anker der Idempotenz: Der Server

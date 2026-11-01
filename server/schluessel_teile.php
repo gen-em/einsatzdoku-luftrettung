@@ -2,8 +2,7 @@
 declare(strict_types=1);
 
 /**
- * DIE SCHLUESSELERNEUERUNG ALS MARKUP — zwei Abschnitte, zwei Dialoge
- * (P5b/AP9, E-P5b-20; Mockup M-P5b-02c, Zustaende 2 und 3).
+ * DIE SCHLUESSELERNEUERUNG ALS MARKUP — zwei Abschnitte, zwei Dialoge.
  *
  *   passwort    das Passwort, das der Server ohnehin nachprueft
  *   schluessel  der neue Wert, einmal sichtbar, mit Haken und Druckknopf
@@ -12,11 +11,11 @@ declare(strict_types=1);
  * WARUM DIESE DATEI UEBERHAUPT EXISTIERT
  * ---------------------------------------------------------------------------
  *
- * E-P5b-20 sagt: **eine Komponente, zwei Verbraucher** (R83). Das galt zuerst
- * nur fuer das Rechnen (`assets/schluessel.js`) und den Endpunkt. Beim Bau des
- * zweiten Verbrauchers — der Kontoseite unter Einstellungen — stand dieselbe
- * Anzeige ein zweites Mal vor mir: derselbe Codeblock, derselbe Haken,
- * derselbe Druckknopf, dieselbe Bedingung „Fertig erst nach dem Haken".
+ * **Eine Komponente, zwei Verbraucher.** Das gilt fuer das Rechnen
+ * (`assets/schluessel.js`) und den Endpunkt, und es gilt fuer die Anzeige:
+ * Der zweite Verbraucher — die Kontoseite unter Einstellungen — braucht
+ * denselben Codeblock, denselben Haken, denselben Druckknopf und dieselbe
+ * Bedingung „Fertig erst nach dem Haken".
  *
  * Zwei Fassungen davon waeren zwei Stellen, an denen der Haken vergessen
  * werden kann. Der Haken ist hier aber nicht Zierat: Hinter ihm steht ein

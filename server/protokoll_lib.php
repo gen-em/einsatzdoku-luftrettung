@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 /**
- * DAS BETRIEBSPROTOKOLL — der Schreibweg (P5b/AP1, E-P5b-12, V1).
+ * DAS BETRIEBSPROTOKOLL — der Schreibweg.
  *
  * ---------------------------------------------------------------------------
  * WAS HIER HINEINGESCHRIEBEN WIRD — UND WAS AUSDRUECKLICH NICHT
@@ -12,25 +12,24 @@ declare(strict_types=1);
  * Schluesselblatt bestaetigt; Mail versandt; Job gelaufen.
  *
  * NICHT: wer wann welchen Einsatz geoeffnet, gelesen oder exportiert hat.
- * Das ist V1, entschieden am 16.09.2026, und es ist keine Nachlaessigkeit,
+ * Das ist entschieden, und es ist keine Nachlaessigkeit,
  * sondern die Zusage: Diese Anwendung fuehrt KEIN Zugriffsprotokoll. Wer hier
  * einen Eintrag „Einsatz 417 angesehen" ergaenzen will, aendert eine
  * Programmentscheidung und nicht eine Funktion.
  *
- * KEINE IP-ADRESSEN (V2, E-P5b-06). Sie stehen ausschliesslich im Reiter
+ * KEINE IP-ADRESSEN. Sie stehen ausschliesslich im Reiter
  * *Sicherheit*, und der liegt in einer anderen Tabelle
- * (`sicherheit_ereignisse`, P5a/AP6) mit einer eigenen, festen Frist von 30
- * Tagen. Diese Trennung ist der Grund, warum P5b die bestehende Tabelle NICHT
+ * (`sicherheit_ereignisse`) mit einer eigenen, festen Frist von 30
+ * Tagen. Diese Trennung ist der Grund, warum dieses Protokoll jene Tabelle NICHT
  * anfasst: Zwei verschiedene Fristen und zwei verschiedene
  * Datenschutz-Begruendungen gehoeren nicht in eine Tabelle, die man
- * versehentlich gemeinsam aufbewahrt. Ob die beiden spaeter zusammenrueckten,
- * entscheidet 10c (V6).
+ * versehentlich gemeinsam aufbewahrt.
  *
  * ---------------------------------------------------------------------------
  * WARUM DAS SCHEITERN DES SCHREIBENS DIE HANDLUNG NICHT SCHEITERN LAESST
  * ---------------------------------------------------------------------------
  *
- * V7, so entschieden: **Still scheitern ist schlechter als laut, laut
+ * So entschieden: **Still scheitern ist schlechter als laut, laut
  * abbrechen ist schlechter als still.** Ein Protokoll, das eine
  * Kontoloeschung verhindert, weil seine Tabelle fehlt, ist ein Protokoll, das
  * den Betrieb anhaelt, um ueber den Betrieb zu berichten. Ein Protokoll, das
@@ -52,24 +51,22 @@ declare(strict_types=1);
  *
  * `verwaltung` ist das Audit und der einzige mit einer langen, EINSTELLBAREN
  * Frist (365 Tage, 90 bis 1095). Die uebrigen fuenf verfallen nach 30 Tagen,
- * fest — dieselbe Zahl wie bei den Sperrereignissen und aus demselben Grund
- * (E-P5a-09): Betriebsdaten sollen nicht versehentlich Jahre liegen.
+ * fest — dieselbe Zahl wie bei den Sperrereignissen und aus demselben Grund:
+ * Betriebsdaten sollen nicht versehentlich Jahre liegen.
  *
- * LESBAR IST DAS PROTOKOLL SEIT P5c/AP2 — Verwaltung -> Protokoll
+ * LESBAR IST DAS PROTOKOLL unter Verwaltung -> Protokoll
  * (`admin_protokoll.php`), SIEBEN Reiter. Der siebte, *Sicherheit*, liest
- * eine andere Tabelle (E-P5c-11), und drei weitere — *E-Mail*, *Jobs*,
- * *Ziele* — lesen die Tabellen, die ihre Sache ohnehin fuehren
- * (E-P5c-38): Keine doppelte Ablage, und der ENUM bleibt bei sechs Werten.
+ * eine andere Tabelle, und drei weitere — *E-Mail*, *Jobs*,
+ * *Ziele* — lesen die Tabellen, die ihre Sache ohnehin fuehren:
+ * Keine doppelte Ablage, und der ENUM bleibt bei sechs Werten.
  * Wie die Reiter gefuellt werden, steht unten bei DIE QUELLEN.
  *
  * ---------------------------------------------------------------------------
- * DER REITER SYSTEM (P5c/AP3)
+ * DER REITER SYSTEM
  * ---------------------------------------------------------------------------
  *
- * Bis Web 20.39.0 stand hier „Die `error_log()`-Aufrufe bleiben, wo sie
- * sind" — bis der Reiter System steht und jemand die Eintraege lesen kann.
- * Er steht seit AP2. Seit AP3 gehen die 75 Aufrufe ueber `system_melden()`
- * (`systemmeldung_lib.php`) hierher, mit Kennung und bereinigt; nur wenn die
+ * Meldungen gehen ueber `system_melden()` (`systemmeldung_lib.php`) hierher,
+ * mit Kennung und bereinigt; nur wenn die
  * Datenbank nicht antwortet, bleiben sie im Fehlerprotokoll des Webspace.
  */
 
@@ -93,8 +90,8 @@ const PROTOKOLL_REITER = [
 ];
 
 /**
- * Die sieben Reiter der Seite, in der Reihenfolge der Anzeige (E-P5c-02,
- * Bild M-P5c-01a). Jedes Ereignis hat genau einen, kein „Sonstiges".
+ * Die sieben Reiter der Seite, in der Reihenfolge der Anzeige. Jedes Ereignis
+ * hat genau einen, kein „Sonstiges".
  */
 const PROTOKOLL_SEITE_REITER = [
     'verwaltung' => 'Verwaltung',
@@ -110,7 +107,7 @@ const PROTOKOLL_SEITE_REITER = [
 const PROTOKOLL_K_FRIST_VERWALTUNG = 'protokoll_frist_verwaltung';
 const PROTOKOLL_K_FEHLER           = 'protokoll_fehler';
 
-/** Frist des Reiters *Verwaltung* in Tagen — Vorgabe und Grenzen (E-P5b-06). */
+/** Frist des Reiters *Verwaltung* in Tagen — Vorgabe und Grenzen. */
 const PROTOKOLL_FRIST_VORGABE = 365;
 const PROTOKOLL_FRIST_MIN     = 90;
 const PROTOKOLL_FRIST_MAX     = 1095;
@@ -132,13 +129,6 @@ function protokoll_frist_verwaltung(): int
     $n = (int)$v;
     return ($n >= PROTOKOLL_FRIST_MIN && $n <= PROTOKOLL_FRIST_MAX)
         ? $n : PROTOKOLL_FRIST_VORGABE;
-}
-
-/** Die Frist setzen. `false`, wenn sie ausserhalb der Grenzen liegt. */
-function protokoll_frist_verwaltung_setzen(int $tage): bool
-{
-    if ($tage < PROTOKOLL_FRIST_MIN || $tage > PROTOKOLL_FRIST_MAX) { return false; }
-    return app_state_setzen(PROTOKOLL_K_FRIST_VERWALTUNG, (string)$tage);
 }
 
 /* ---- Der Schreibweg ------------------------------------------------------ */
@@ -230,14 +220,8 @@ function protokoll_fehler_zahl(): int
     return (int)(app_state_lesen(PROTOKOLL_K_FEHLER) ?? '0');
 }
 
-/** Den Zaehler zuruecksetzen (Betrieb -> Status, nachdem jemand hingesehen hat). */
-function protokoll_fehler_quittieren(): bool
-{
-    return app_state_setzen(PROTOKOLL_K_FEHLER, '0');
-}
-
 /**
- * Ein Gerät umgeschaltet oder entkoppelt (P5c/AP2, E-P5c-38) — vier Stellen,
+ * Ein Gerät umgeschaltet oder entkoppelt — vier Stellen,
  * ein Satz: die Kontoseite der Verwaltung und die Einstellungen der NutzerIn,
  * je Umschalten und Entkoppeln.
  *
@@ -266,22 +250,22 @@ function protokoll_geraet(string $art, int $geraetId, int $userId, string $weg):
               ['geraet' => (string)$g['device_id'], 'weg' => $weg], $userId);
 }
 
-/* ---- Wer welchen Reiter sieht (E-P5c-02) ----------------------------------- */
+/* ---- Wer welchen Reiter sieht ----------------------------------- */
 
 /** Die Reiter, die jede verwaltende Rolle sieht — der Admin genau diese. Als
  *  Konstante, weil die Seite sie auch fuer die Meldung an den Support braucht
- *  („der Verwaltung vorbehalten" statt „der BetreiberIn", F-P5c-100). */
+ *  („der Verwaltung vorbehalten" statt „der BetreiberIn"). */
 const PROTOKOLL_REITER_VERWALTUNG = ['verwaltung', 'email', 'jobs', 'sicherung'];
 
 /**
  * Die Reiter, die die angemeldete Rolle sehen darf — in der Reihenfolge der
  * Anzeige.
  *
- * WAS DIE ROLLE NICHT DARF, ZEIGT DIE SEITE NICHT (E-P5c-10): kein
+ * WAS DIE ROLLE NICHT DARF, ZEIGT DIE SEITE NICHT: kein
  * ausgegrauter Reiter, kein „dafür fehlt dir das Recht". Die BetreiberIn
  * sieht alle sieben; der Admin die vier, die ohne IP-Adressen,
- * Zieldaten und Systemmeldungen auskommen. Der Support (seit P5c/AP4,
- * E-P5c-14) Verwaltung und E-Mail — lesend; eine Handlung gibt es auf der
+ * Zieldaten und Systemmeldungen auskommen. Der Support sieht Verwaltung und
+ * E-Mail — lesend; eine Handlung gibt es auf der
  * Seite fuer ihn nicht, das Archiv bleibt der BetreiberIn.
  *
  * @return list<string>
@@ -300,7 +284,7 @@ function protokoll_reiter_sichtbar(): array
     return [];
 }
 
-/* ---- Der Katalog: Art -> Beschriftung und Ton (E-P5c-26) ------------------- */
+/* ---- Der Katalog: Art -> Beschriftung und Ton ------------------- */
 
 /**
  * Jede Art als Wort und mit einem Ton — die Ampel aus `Design.md` 9.23:
@@ -318,7 +302,7 @@ function protokoll_reiter_sichtbar(): array
  * orange.
  */
 const PROTOKOLL_ARTEN = [
-    /* Verwaltung — seit P5b */
+    /* Verwaltung */
     'konto_angelegt'            => ['Konto angelegt', 'blau'],
     'konto_status'              => ['Kontostatus', 'neutral'],
     'konto_geloescht'           => ['Konto gelöscht', 'neutral'],
@@ -331,7 +315,7 @@ const PROTOKOLL_ARTEN = [
     'schluesselblatt_bestaetigt'=> ['Schlüsselblatt', 'blau'],
     'einstellungen_konten'      => ['Einstellungen', 'neutral'],
     'rundmail'                  => ['Rundmail', 'neutral'],
-    /* Verwaltung — neu mit P5c/AP2 (E-P5c-38) */
+    /* Verwaltung — Rollen, Setz-Links, Zweitfaktor */
     'rolle_geaendert'           => ['Rolle geändert', 'orange'],
     'setzlink_gesendet'         => ['Setz-Link', 'neutral'],
     'verifikation_gesendet'     => ['Bestätigung erneut', 'neutral'],
@@ -340,25 +324,25 @@ const PROTOKOLL_ARTEN = [
     'totp_ausgeschaltet'        => ['Zweitfaktor ausgeschaltet', 'orange'],
     'totp_zurueckgesetzt'       => ['Zweitfaktor zurückgesetzt', 'orange'],
     'totp_code_benutzt'         => ['Wiederherstellungscode', 'orange'],
-    /* Verwaltung — neu mit Konzept RW (RW-02, E-RW-14) */
+    /* Verwaltung — Rückweg */
     'rueckweg_angelegt'         => ['Rückweg eingerichtet', 'neutral'],
     'rueckweg_erneuert'         => ['Rückweg erneuert', 'neutral'],
-    /* Verwaltung — neu mit R17-20 (F-R17-06, E-R17-45) */
+    /* Verwaltung — Adresswechsel */
     'adresse_bestaetigt'        => ['Adresswechsel bestätigt', 'blau'],
     'adresse_widersprochen'     => ['Adresswechsel widersprochen', 'orange'],
-    /* Verwaltung — neu mit S11-03 (Konzept S11 3.1, E-S11-14) */
+    /* Verwaltung — Kontoschlüssel */
     'kontopaar_angelegt'        => ['Kontoschlüssel angelegt', 'neutral'],
     'kontopaar_abweichung'      => ['Kontoschlüssel weicht ab', 'orange'],
-    /* Verwaltung — neu mit Schritt 18 (SR-02, E-SR-07, -17) */
+    /* Verwaltung — gemerkte Geräte */
     'zweitfaktor_geraet_gemerkt'    => ['Gerät gemerkt', 'neutral'],
     'zweitfaktor_geraete_vergessen' => ['Geräte vergessen', 'neutral'],
     'einstellungen_anmeldung'   => ['Einstellungen', 'neutral'],
-    /* Verwaltung — neu mit Schritt 18 (SR-09, E-SR-33). Der Zaehler ist
+    /* Verwaltung — Passkeys. Der Zaehler ist
      * orange: ein Klon-Verdacht, den die Betroffene sehen soll. */
     'passkey_angelegt'          => ['Passkey angelegt', 'neutral'],
     'passkey_entfernt'          => ['Passkey entfernt', 'neutral'],
     'passkey_zaehler'           => ['Passkey-Zähler', 'orange'],
-    /* H-SR-08 (E-SR-45): eine abgewiesene Registrierung mit ihrem Grund —
+    /* Eine abgewiesene Registrierung mit ihrem Grund —
      * nach aussen heisst jede nur „nicht angenommen". */
     'passkey_abgewiesen'        => ['Passkey abgewiesen', 'neutral'],
     'geraet_umgeschaltet'       => ['Gerät umgeschaltet', 'neutral'],
@@ -369,12 +353,12 @@ const PROTOKOLL_ARTEN = [
     'migration_ausgefuehrt'     => ['Migration', 'blau'],
     'archiv_heruntergeladen'    => ['Archiv heruntergeladen', 'orange'],
     'frist_geaendert'           => ['Fristen', 'neutral'],
-    /* Sicherung — neu mit P5c/AP2 (E-P5c-38) */
+    /* Sicherung — Komplett-Backup */
     'komplett_erzeugt'          => ['Komplett-Backup erzeugt', 'blau'],
     'komplett_heruntergeladen'  => ['Komplett-Backup geladen', 'orange'],
     'komplett_eingespielt'      => ['Komplett-Backup eingespielt', 'orange'],
     'komplett_geloescht'        => ['Komplett-Backup gelöscht', 'neutral'],
-    /* Sicherung — neu mit Schritt 18 (SR-03, Nr. 247): der Wechsel des
+    /* Sicherung — der Wechsel des
      * Serverschluessels. Orange der Beginn — ein Eingriff an allen
      * Sicherungen, den jede BetreiberIn sehen soll; blau das Umhuellen mit
      * Nachweis (erledigt, gut); neutral das Entfernen des bisherigen. */
@@ -382,7 +366,7 @@ const PROTOKOLL_ARTEN = [
     'serverschluessel_umgehuellt'   => ['Serverschlüssel umgehüllt', 'blau'],
     'serverschluessel_alt_entfernt' => ['Bisheriger Serverschlüssel entfernt', 'neutral'],
     'kontobackup_eingespielt'   => ['Konto-Backup eingespielt', 'orange'],
-    /* neu mit R17-20 (F-R17-02): bis dahin hinterliess eine Freigabe keine Spur */
+    /* auch eine Freigabe hinterlaesst eine Spur */
     'kontobackup_freigegeben'   => ['Konto-Backup freigegeben', 'orange'],
     /* Sicherheit — Sicht auf `sicherheit_ereignisse` und `csp_berichte` */
     'sperre'                    => ['Sperre', 'orange'],
@@ -401,7 +385,7 @@ const PROTOKOLL_ARTEN = [
     /* Ziele — Sicht auf `sicherungsziel_dateien` */
     'ziel_gesendet'             => ['gesendet', 'blau'],
     'ziel_geloescht'            => ['dort gelöscht', 'neutral'],
-    /* System — `system_melden()` und die Behandler (P5c/AP3, SYSTEM_ARTEN) */
+    /* System — `system_melden()` und die Behandler (SYSTEM_ARTEN) */
     'stoerung'                  => ['Störung', 'orange'],
     'ausnahme'                  => ['Unerwarteter Fehler', 'rot'],
     'abbruch'                   => ['Abbruch', 'rot'],
@@ -429,7 +413,7 @@ function protokoll_art_ton(string $art, array $daten = []): string
     return PROTOKOLL_ARTEN[$art][1] ?? 'neutral';
 }
 
-/* ---- Die Quellen (E-P5c-11, -38) ------------------------------------------- *
+/* ---- Die Quellen ------------------------------------------- *
  *
  * JE REITER EINE BIS DREI QUELLEN, NIE EIN UNION. Die naheliegende Loesung —
  * ein `UNION ALL` ueber `protokoll_ereignisse`, `mail_warteschlange` und die
@@ -438,7 +422,7 @@ function protokoll_art_ton(string $art, array $daten = []): string
  * verschiedenen Vorgabe-Kollationen, und ein UNION ueber zwei Textspalten
  * verschiedener Kollation ist auf MySQL und MariaDB ein Fehler („Illegal mix
  * of collations"). Auf der oertlichen Anlage sind alle gleich; der Fehler
- * zeigte sich erst dort, wo niemand mehr hinsieht (Muster Nr. 238).
+ * zeigte sich erst dort, wo niemand mehr hinsieht.
  *
  * Deshalb fragt jede Quelle fuer sich, mit denselben Spaltennamen, und PHP
  * fuegt zusammen: Fuer Seite `s` holt jede Quelle ihre juengsten `s × 50`
@@ -511,7 +495,7 @@ function protokoll_quellen(string $reiter): array
 
         case 'email':
             /* NUR ART, ZUSTAND, ZEIT — nie Empfaenger, Betreff, Rumpf oder
-             * Fehlertext (E-P5c-38). Eine offene Zeile traegt einen Setz-Link
+             * Fehlertext. Eine offene Zeile traegt einen Setz-Link
              * mit gueltigem Token, und ein SMTP-Fehler nennt die Adresse, an
              * der er scheiterte. Beides gehoert nicht in eine Liste, die der
              * Admin sieht und die ins Archiv geht. */
@@ -612,7 +596,7 @@ function protokoll_arten_des_reiters(string $reiter): array
     return $aus;
 }
 
-/** Eine achtstellige Fehlerkennung (`fehler_kennung()`, AP3)? */
+/** Eine achtstellige Fehlerkennung (`fehler_kennung()`)? */
 function protokoll_ist_kennung(string $q): bool
 {
     return (bool)preg_match('/^[0-9a-f]{8}$/i', trim($q));
@@ -700,7 +684,7 @@ function protokoll_filter_sql(array $q, array $filter): array
         $args[] = $tage;
     }
     /* Ein fester Zeitraum [von, bis) und eine Fortsetzungsmarke — fuer das
-     * Archiv, das in Haeppchen liest (E-P5c-57). */
+     * Archiv, das in Haeppchen liest. */
     if (!empty($filter['von'])) { $wo .= ' AND ' . $q['zeit'] . ' >= ?'; $args[] = $filter['von']; }
     if (!empty($filter['bis'])) { $wo .= ' AND ' . $q['zeit'] . ' < ?';  $args[] = $filter['bis']; }
     if (!empty($filter['nach']) && is_array($filter['nach'])) {
@@ -724,7 +708,7 @@ function protokoll_filter_sql(array $q, array $filter): array
 
     $such = trim((string)($filter['q'] ?? ''));
     if ($such !== '') {
-        /* EIN SUCHFELD (E-P5c-26): Text, Konto (E-Mail oder Name von
+        /* EIN SUCHFELD: Text, Konto (E-Mail oder Name von
          * Urheber und Betroffenem), die Beschriftung einer Art — und, wo die
          * Quelle eine hat, die Fehlerkennung. Jede Spalte fuer sich mit
          * `LIKE ?`, nicht ueber `CONCAT_WS`: Das Verketten zweier Spalten
@@ -746,8 +730,8 @@ function protokoll_filter_sql(array $q, array $filter): array
              * `JSON_UNQUOTE()` haengt an der Engine: gemessen 24.09.2026
              * `utf8mb4_bin` auf MariaDB 10.11, MySQL 8.0 und 8.4 — dort
              * traefe „a1b2c3d4" nicht „A1B2C3D4" —, `utf8mb3_general_ci`
-             * nur auf MariaDB 10.6. Bis AP3 stand hier `strtolower`, und die
-             * Suche fand auf Produktiv und Staging nichts (F-P5c-89). */
+             * nur auf MariaDB 10.6. Mit `strtolower` faende die
+             * Suche auf Produktiv und Staging nichts. */
             $oder[] = $q['kennung'] . ' = ?';
             $args[] = strtoupper(trim($such));
         }
@@ -902,10 +886,10 @@ function protokoll_daten_zeilen(array $daten): array
  * Eintraege je Reiter der letzten 24 Stunden und gesamt — fuer die
  * Zaehlkarte auf Betrieb -> Status.
  *
- * SEIT P5c/AP2 UEBER DIE QUELLEN DER SEITE, nicht nur ueber
- * `protokoll_ereignisse`. Bis dahin standen E-Mail, Jobs und Ziele dort auf
- * null, obwohl ihre Tabellen voll waren — der Schreibweg kennt sie, geschrieben
- * wird aber woanders (E-P5c-38).
+ * UEBER DIE QUELLEN DER SEITE, nicht nur ueber
+ * `protokoll_ereignisse`. Sonst stuenden E-Mail, Jobs und Ziele dort auf
+ * null, obwohl ihre Tabellen voll sind — der Schreibweg kennt sie, geschrieben
+ * wird aber woanders.
  *
  * @return array{tag: array<string,int>, gesamt: array<string,int>, alle: int}
  */
@@ -921,7 +905,7 @@ function protokoll_zaehlkarte(): array
 }
 
 /**
- * Die Bereinigung — zwei Fristen, ein Lauf (E-P5b-06).
+ * Die Bereinigung — zwei Fristen, ein Lauf.
  *
  * Wird aus `job_aufraeumen()` gerufen. Eigene Funktion, damit die Fristen an
  * EINER Stelle stehen und der Job sie nicht noch einmal auslegt.

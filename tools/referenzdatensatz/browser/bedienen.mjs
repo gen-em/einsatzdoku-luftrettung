@@ -1,6 +1,6 @@
 /* Bedienhilfen für die Browserproben — an EINER Stelle.
  *
- * WOFUER. Seit P3 sind Kontrollkästchen und Segmentwahlen der Anwendung
+ * WOFUER. Seit dem Redesign sind Kontrollkästchen und Segmentwahlen der Anwendung
  * **unsichtbar**: `ui_schalter()` und `ui_segment()` (ui.php) rendern ein
  * `<input>` mit `position:absolute; opacity:0; width:0; height:0` und daneben
  * ein `<label for="…">`, das die sichtbare Taste ist (style.css, Abschnitt zu
@@ -10,12 +10,12 @@
  * `page.check()` klickt dagegen das Feld selbst und wartet darauf, dass es
  * sichtbar wird. Das wird es nie. Der Lauf endet nach 30 s mit
  * „element is not visible", und zwar an einer Stelle, an der die Anwendung
- * vollkommen in Ordnung ist. Genau daran ist der CSV-Kreislauf seit P3
- * gescheitert, ohne dass es jemandem aufgefallen wäre (F-S2-A, dieselbe
- * Familie: Prüfmittel nicht mit dem Redesign nachgezogen).
+ * vollkommen in Ordnung ist. Genau daran ist der CSV-Kreislauf einmal
+ * gescheitert, ohne dass es jemandem aufgefallen wäre (Prüfmittel nicht mit
+ * dem Redesign nachgezogen).
  *
  * WARUM EINE EIGENE DATEI und nicht zweimal dieselben sechs Zeilen: Vier
- * Kopien einer Fehlerlesung sind der Grund, aus dem F-S2-A ein halbes Jahr
+ * Kopien einer Fehlerlesung sind der Grund, aus dem dieser Fehler ein halbes Jahr
  * unbemerkt blieb. Zwei Kopien sind eine zu viel.
  *
  * NICHT für jedes Kästchen nötig. Ein gewöhnliches, sichtbares

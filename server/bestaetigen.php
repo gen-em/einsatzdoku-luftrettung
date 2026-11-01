@@ -4,7 +4,7 @@ require_once __DIR__ . '/db.php';
 require_once __DIR__ . '/konten_einstellungen_lib.php';
 
 /**
- * DIE SEITE NACH DER REGISTRIERUNG (P5b/AP3, E-P5b-02, -13).
+ * DIE SEITE NACH DER REGISTRIERUNG.
  *
  * Sie sagt, was jetzt gilt: freigeschaltet und anmeldbar, oder wartend mit
  * Frist. Mehr tut sie nicht — der Statuswechsel ist zu diesem Zeitpunkt
@@ -30,8 +30,8 @@ require_once __DIR__ . '/konten_einstellungen_lib.php';
  * WARUM EIN PARAMETER GENUEGT — UND KEINE SITZUNG
  * ---------------------------------------------------------------------------
  *
- * `pw_handling.php` fuehrt eine eigene Sitzung (`sitzung_starten('passwort')`,
- * seit Web 20.27.0; davor `pw_session_start()`), und
+ * `pw_handling.php` fuehrt eine eigene Sitzung (`sitzung_starten('passwort')`),
+ * und
  * der naheliegende Weg waere, den Stand dort abzulegen. Er ist nicht
  * genommen: Diese Seite muesste dafuer dieselbe Sitzung oeffnen, also
  * Sitzungsnamen, Cookie-Parameter und `use_strict_mode` nachbauen — eine

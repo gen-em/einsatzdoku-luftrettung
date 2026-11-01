@@ -2,7 +2,7 @@
 declare(strict_types=1);
 
 /**
- * E-Mail-Adressen: eine Schreibweise, eine Pruefung (M1-13).
+ * E-Mail-Adressen: eine Schreibweise, eine Pruefung.
  *
  * WARUM ES DIESE DATEI GIBT
  * Die Adresse ist die Kontokennung. Sie wurde an sieben Stellen entgegen-
@@ -17,13 +17,13 @@ declare(strict_types=1);
  *   einstellungen.php    trim(...)
  *   install.php          trim(...)
  *
- * DASS DAS BISHER FUNKTIONIERT HAT, LAG AN DER SORTIERREGEL DER DATENBANK,
+ * OHNE DIESE DATEI HAENGT DIE ANMELDUNG AN DER SORTIERREGEL DER DATENBANK,
  * nicht am Code: utf8mb4_unicode_ci vergleicht ohne Ruecksicht auf Gross- und
  * Kleinschreibung. Auf einer Installation mit unterscheidender Sortierregel
- * haette jede Anmeldung fehlgeschlagen, bei der die Adresse nicht exakt so
+ * schluege jede Anmeldung fehl, bei der die Adresse nicht exakt so
  * eingetippt wurde wie beim Anlegen — mit der Meldung "Anmeldung
- * fehlgeschlagen" und ohne jeden Hinweis auf die Ursache. Seit S6 (P0) legt
- * das Schema die Sortierregel ausdruecklich fest; diese Datei nimmt dem Code
+ * fehlgeschlagen" und ohne jeden Hinweis auf die Ursache. Das Schema legt
+ * die Sortierregel ausdruecklich fest; diese Datei nimmt dem Code
  * die Abhaengigkeit davon ganz.
  *
  * EIN FEHLER, DEN DAS NEBENBEI BEHEBT
@@ -80,8 +80,8 @@ function email_pruefen(?string $roh): ?string
 /**
  * Ist dieser Datenbankfehler ein Verstoss gegen einen eindeutigen Schluessel?
  *
- * Gebraucht an den beiden Stellen, an denen eine Adresse geaendert wird
- * (M1-16). Dort wurde bisher JEDER Datenbankfehler als "diese Adresse wird
+ * Gebraucht an den beiden Stellen, an denen eine Adresse geaendert wird.
+ * Ohne diese Unterscheidung waere JEDER Datenbankfehler "diese Adresse wird
  * bereits verwendet" gemeldet — eine Meldung, die bei einer vollen Platte
  * oder einer abgerissenen Verbindung die Fehlersuche zuverlaessig in die
  * falsche Richtung schickt.
@@ -99,18 +99,17 @@ function ist_dublettenfehler(PDOException $ex): bool
 
 /**
  * Hinweismail an die ALTE Adresse, wenn die Anmeldeadresse eines Kontos
- * gewechselt ist (Backlog Nr. 128, K-7).
+ * gewechselt ist.
  *
- * WOZU. Der Wechsel selbst ist jetzt nachweispflichtig (Profil: aktuelles
+ * WOZU. Der Wechsel selbst ist nachweispflichtig (Profil: aktuelles
  * Passwort; Verwaltung: eine Adminsitzung). Beides kann uebernommen sein --
  * und dann ist die Mail an die alte Adresse die EINZIGE Stelle, an der die
  * rechtmaessige Besitzerin davon erfaehrt. Sie geht deshalb an die alte
  * Adresse und nicht an die neue: Die neue gehoert im Missbrauchsfall dem
  * anderen.
  *
- * WAS SIE NICHT IST. Keine Bestaetigung der neuen Adresse -- der
- * Double-Opt-In kommt mit R37.6 in P5. Bis dahin gilt die neue Adresse
- * sofort; die Mail ist die Warnung, nicht das Tor.
+ * WAS SIE NICHT IST. Keine Bestaetigung der neuen Adresse -- die Mail ist
+ * die Warnung, nicht das Tor.
  *
  * SCHEITERT SIE, PASSIERT NICHTS WEITER. Der Wechsel ist zu diesem Zeitpunkt
  * geschrieben, und ihn zurueckzurollen, weil ein Mailserver klemmt, waere die
@@ -128,8 +127,8 @@ function profil_adresswechsel_melden(string $alt, string $neu,
      * keine Schlamperei, sondern tragend — auch wenn die zweite Zeile auf
      * Spalte 0 steht und deshalb wie ein Aufruf auf oberster Ebene aussieht.
      *
-     * WER SIE HINAUSSCHIEBT, BRICHT DIE SITZUNGSABLAGE (Schritt 16,
-     * E-SA-02). `mail_lib.php` laedt `db.php`. Auf oberster Ebene zoege diese
+     * WER SIE HINAUSSCHIEBT, BRICHT DIE SITZUNGSABLAGE. `mail_lib.php` laedt
+     * `db.php`. Auf oberster Ebene zoege diese
      * Zeile damit `db.php` in `email_lib.php`, von dort in `plattform_lib.php`
      * — und `sitzung_lib.php` laedt `plattform_lib.php` fuer die Schreibprobe,
      * gerufen aus `db.php`, WAEHREND `db.php` noch geladen wird.

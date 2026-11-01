@@ -1,18 +1,15 @@
 <?php
 declare(strict_types=1);
 /**
- * Diensttage: anlegen, zuordnen, einfrieren, auflisten (Web 6.0.0).
+ * Diensttage: anlegen, zuordnen, einfrieren, auflisten.
  *
- * WARUM DIESE DATEI ES GIBT. Bis Web 5.10.0 war ein Flugtag ein KALENDERTAG:
- * `days` trug `UNIQUE KEY (user_id, day)`, und Einsaetze fanden ihren Tag ueber
- * genau dieses Paar. Ein Tag brauchte deshalb nicht angelegt zu werden — er
- * ergab sich aus dem Datum. Seit dem Umbau auf Diensttage (E9) ist das anders:
- * Jeder Dienst ist eine EIGENE ZEILE mit eigener Kennung, mehrere pro
+ * WARUM DIESE DATEI ES GIBT. Ein Diensttag ist kein KALENDERTAG, der sich
+ * aus dem Datum ergibt: Jeder Dienst ist eine EIGENE ZEILE mit eigener Kennung, mehrere pro
  * Kalendertag sind zulaessig, und `missions.day_id` ist ein Fremdschluessel.
  * Damit wird das Anlegen zu einer echten Handlung mit Folgen — und die Folgen
  * stehen hier an einer Stelle, statt in sechs Seitendateien verstreut.
  *
- * DIE EINE REGEL, DIE ALLES ERKLAERT (E8): Alles, was ein Diensttag aus
+ * DIE EINE REGEL, DIE ALLES ERKLAERT: Alles, was ein Diensttag aus
  * Standort und Rettungsmittel ableitet — Art, Rollensatz, Faehigkeiten,
  * Bezeichnungen, Standortkoordinaten — wird beim Zuordnen KOPIERT.
  * `base_id`/`vehicle_id` bleiben daneben stehen, aber nur zum Filtern und
@@ -46,7 +43,7 @@ function dt_laden(int $userId, int $dayId, bool $mitPapierkorb = false): ?array
 }
 
 /**
- * Traegt dieser Diensttag ein Rettungsmittel NUR FUER DEN TAG (E-S9-10)?
+ * Traegt dieser Diensttag ein Rettungsmittel NUR FUER DEN TAG?
  *
  * Kennzeichen ist das Paar: keine Kennung in `vehicle_id`, aber ein
  * eingefrorener Name in `vehicle_name`. Ein Tag ohne jede Zuordnung hat
@@ -66,9 +63,9 @@ function dt_ist_tagesrettungsmittel(array $tag): bool
 /**
  * Besatzung eines Diensttags: role_code => ?name, in KATALOGREIHENFOLGE.
  *
- * Die Zeilenmenge ist der eingefrorene Rollensatz (E8): Welche Rollen ein
+ * Die Zeilenmenge ist der eingefrorene Rollensatz: Welche Rollen ein
  * Diensttag anbietet, sagt diese Tabelle — nicht das Rettungsmittel. Ein
- * neutraler Diensttag hat keine Zeilen und damit keine Rollen (E26).
+ * neutraler Diensttag hat keine Zeilen und damit keine Rollen.
  *
  * Eine Rolle, die der Katalog nicht (mehr) kennt, wird ANGEHAENGT statt
  * verschwiegen: Sie steht in der Datenbank, also gehoert sie angezeigt.
@@ -124,25 +121,24 @@ function dt_datum_lesbar(string $tag): string
 /**
  * Alle Artsymbole samt Textalternative — die EINE Fassung im Projekt.
  *
- * Der Schluessel `''` steht fuer den neutralen Diensttag (kein Rettungsmittel,
- * E26). Die Liste geht auch an den Browser: `zeitraum.php` und `suche.php`
+ * Der Schluessel `''` steht fuer den neutralen Diensttag (kein
+ * Rettungsmittel). Die Liste geht auch an den Browser: `zeitraum.php` und `suche.php`
  * setzen sie vor `assets/missiontable.js` als `ART_SYMBOLE`, damit die
  * Einsatztabelle dieselben Zeichen fuehrt wie die Tagesleiste. Eine zweite,
  * fest verdrahtete Liste in JavaScript waere die Stelle, an der beide beim
  * naechsten Symbolwechsel auseinanderlaufen (dieselbe Ueberlegung wie bei
- * CREW_ROLES, Befund P9).
+ * CREW_ROLES).
  *
- * SEIT P3/O2 STEHT HIER EIN DATEINAME, KEIN EMOJI (E-P3-18). Die beiden
- * Emoji fuer Hubschrauber und Rettungswagen wurden je Betriebssystem in
- * anderer Zeichnung, Farbe und Groesse gerendert und liessen sich weder
- * faerben noch auf Kontrast pruefen — und in
- * Tagesleiste, Tabellen und Rettungsmittel-Auswahl waren sie die einzige
- * Artauskunft neben dem Tooltip. Jetzt verweist `symbol` auf eine Datei unter
+ * HIER STEHT EIN DATEINAME, KEIN EMOJI. Emoji fuer Hubschrauber und
+ * Rettungswagen werden je Betriebssystem in anderer Zeichnung, Farbe und
+ * Groesse gerendert und lassen sich weder faerben noch auf Kontrast pruefen
+ * — und in Tagesleiste, Tabellen und Rettungsmittel-Auswahl sind sie die
+ * einzige Artauskunft neben dem Tooltip. `symbol` verweist auf eine Datei unter
  * assets/images/symbole/; ausgegeben wird sie mit ui_symbol() in PHP und
  * edSymbol() in JavaScript.
  *
  * `text` ist damit nicht weniger wichtig, sondern mehr: In einem <option>
- * laesst sich kein SVG unterbringen — dort steht seither das WORT.
+ * laesst sich kein SVG unterbringen — dort steht das WORT.
  *
  * @return array<string,array{symbol:string,text:string}>
  */
@@ -156,7 +152,7 @@ function dt_art_symbole(): array
 }
 
 /**
- * Art eines Diensttags als Symbol mit Textalternative (E27, A7c).
+ * Art eines Diensttags als Symbol mit Textalternative.
  *
  * In der Tagesleiste ist die Art bewusst KEINE eigene Spalte: Die Uebersichten
  * sind auf schmalen Geraeten ohnehin eng, und der Name des Rettungsmittels
@@ -175,15 +171,13 @@ function dt_art_symbol(?string $kind, ?string $typ = null): array
     $alle = dt_art_symbole();
     $art  = $alle[(string)$kind] ?? $alle[''];
 
-    /* DER TYP GEHT VOR DER BETRIEBSART (E-S9-13, M-S9-02, freigegeben
-     * 06.09.2026). Ein Bergwacht-Dienst traegt den Berg, gleich ob er in der
+    /* DER TYP GEHT VOR DER BETRIEBSART. Ein Bergwacht-Dienst traegt den Berg, gleich ob er in der
      * Luft oder am Boden gefahren wird: Das Typzeichen sagt, WORUM es geht,
      * die Betriebsart sagt, WOMIT — und wer auf eine Leiste voller Zeichen
      * sieht, sucht das Erste. Die Betriebsart geht dabei nicht verloren, sie
      * wandert in den Text: „Bergwacht, luftgebunden".
      *
-     * `$typ` WAR IN AP3 IMMER NULL — seit AP4 (Web 16.0.0) ist er es nicht
-     * mehr. Das Datenmodell kennt den Diensttag-Typ jetzt (`days.vehicle_typ`,
+     * Das Datenmodell kennt den Diensttag-Typ (`days.vehicle_typ`,
      * Migration `2026_09_07_rettungsmittel_typ`), und die Aufrufer geben ihn
      * mit: Leiste, Papierkorb, Loeschen, Zusammenfuehren, Nachbearbeitung,
      * `api/day.php`, `api/mission.php` und, ueber `TYP_SYMBOLE`, die
@@ -202,7 +196,7 @@ function dt_art_symbol(?string $kind, ?string $typ = null): array
 }
 
 /**
- * Die Zeichen der Diensttag-TYPEN (E-S9-13, Mockup M-S9-02).
+ * Die Zeichen der Diensttag-TYPEN.
  *
  * Getrennt von `dt_art_symbole()`, weil es zwei Dimensionen sind: Die
  * Betriebsart ist Luft oder Boden, der Typ ist Standard, Bergwacht,
@@ -214,7 +208,7 @@ function dt_art_symbol(?string $kind, ?string $typ = null): array
  * 24-px-Raster wie der uebrige Vorrat — Herkunft im Dateikopf und in
  * `docs/Design.md` 8.
  *
- * DIE BESCHRIFTUNG KOMMT AUS `VEHICLE_TYPEN` (db.php, Web 16.0.0), nicht aus
+ * DIE BESCHRIFTUNG KOMMT AUS `VEHICLE_TYPEN` (db.php), nicht aus
  * dieser Datei. Hier steht nur, WELCHE ZEICHNUNG zu welchem Typ gehoert — die
  * Zuordnung Datei zu Bedeutung, die db.php nichts angeht. Stuenden die
  * Beschriftungen doppelt, hiesse ein Typ eines Tages im Formular anders als
@@ -248,8 +242,8 @@ function dt_typ_symbole(): array
  *
  * Rueckgabe '' bei null und bei einem Typ, den der Katalog nicht kennt —
  * beides gibt es im Bestand: Diensttage ohne Rettungsmittel und Tage, deren
- * Rettungsmittel vor Web 16.0.0 zugeordnet wurde, tragen `vehicle_typ` NULL
- * (Migration `2026_09_07_rettungsmittel_typ`). Die Aufrufer setzen dafuer
+ * Rettungsmittel vor der Migration `2026_09_07_rettungsmittel_typ` zugeordnet
+ * wurde, tragen `vehicle_typ` NULL. Die Aufrufer setzen dafuer
  * ihren eigenen Platzhalter — ein „—" wie bei den Zeitangaben.
  */
 function dt_typ_label(?string $typ): string
@@ -260,7 +254,7 @@ function dt_typ_label(?string $typ): string
 
 /**
  * Welches der beiden Rettungsmittel beim Zusammenfuehren gewinnt — die EINE
- * Fassung dieser Regel (S9/AP4a).
+ * Fassung dieser Regel.
  *
  * Sie stand bis dahin nur in `dt_zusammenfuehren()`, also innerhalb der
  * Transaktion. Seit die Vorschau den Typ des Ergebnisses nennt, braucht sie
@@ -281,26 +275,24 @@ function dt_merge_rm_gewinner(array $ziel, array $quelle, string $wahl = 'ziel')
 }
 
 /**
- * Die Bezeichnung, unter der ein Diensttag SEIN Rettungsmittel zeigt (Nr. 69).
+ * Die Bezeichnung, unter der ein Diensttag SEIN Rettungsmittel zeigt.
  *
  * Der Kurzname, wenn einer gesetzt ist, sonst die volle Bezeichnung. Beides
- * steht eingefroren am Diensttag (E8) — diese Funktion sieht NICHT in den
+ * steht eingefroren am Diensttag — diese Funktion sieht NICHT in den
  * Stammdaten nach, und das ist der ganze Punkt: Ein Rettungsmittel, das
  * gestern „Alpenfalke 1" hiess und heute „AF1" heisst, aendert keinen einzigen
  * Diensttag von gestern.
  *
- * WO SIE GILT UND WO NICHT (E-S9-09, berichtigt am 08.09.2026). Kurzname
+ * WO SIE GILT UND WO NICHT. Kurzname
  * STATT der Bezeichnung an ZWEI Stellen, und nur dort:
  *   - die DIENSTTAGE-LEISTE, in jeder Breite — sie ist die schmalste Stelle,
  *     und dort soll die Person ihren eigenen Dienst wiedererkennen;
  *   - die Kleinzeile des PAPIERKORBS (`papierkorb.php`), die drei Angaben
  *     nebeneinander traegt und denselben Platzdruck hat.
- * Der Konzepttext nannte daneben Kacheln und Plaketten; das ist
- * zurueckgenommen, weil beide gar kein Rettungsmittel nennen und es dort
- * nichts zu ersetzen gab (Mockup M-S9-08, Fragen 3a und 3b). Wer eine dritte
+ * Kacheln und Plaketten gehoeren nicht dazu: Sie nennen gar kein
+ * Rettungsmittel. Wer eine dritte
  * Stelle aufmacht, traegt sie HIER ein — sonst steht die Regel bald neben
- * dem, was der Code tut, und das ist bei dieser Funktion schon einmal
- * passiert (F-S9-U-14, gefunden von der Gegenprobe am 08.09.2026).
+ * dem, was der Code tut.
  * Volle Bezeichnung: Formulare, Export, Sicherung, Suche und alles, was jemand
  * ausserhalb dieser Installation liest. Wer den Kurznamen an einer der zweiten
  * Stellen EINSETZT, macht aus einer Abkuerzung fuer den Hausgebrauch eine
@@ -382,8 +374,7 @@ function dt_standardwerte(int $userId): array
  * Muss zu den Listen passen, aus denen die Oberflaeche ihre Auswahlfelder baut
  * (dt_bases(), dt_vehicles()) — sonst wird ein angebotener Eintrag beim
  * Speichern stillschweigend auf NULL zurueckgesetzt. Beide Seiten fragen
- * seit Web 21.0.0 dasselbe: `user_id = ?`. Bis dahin kam „oder zentral und
- * ausgewaehlt" dazu, ueber die Auswahltabelle (E16, R39; gefallen mit P5c/AP8).
+ * dasselbe: `user_id = ?`.
  */
 function dt_base_erlaubt(PDO $pdo, int $userId, ?int $baseId): ?int
 {
@@ -396,10 +387,9 @@ function dt_base_erlaubt(PDO $pdo, int $userId, ?int $baseId): ?int
 /**
  * Wie dt_base_erlaubt(), fuer Rettungsmittel.
  *
- * EIN RETTUNGSMITTEL OHNE STANDORT IST VERFUEGBAR (Web 16.0.0, E-S9-09) —
- * es gehoert der NutzerIn, und mehr fragt diese Pruefung nicht. Die Fassung
- * bis Web 20.47.0 hatte dafuer einen eigenen Zweig fuer zentrale Eintraege;
- * weicht sie von `dt_vehicles()` ab, stuende ein Rettungsmittel im
+ * EIN RETTUNGSMITTEL OHNE STANDORT IST VERFUEGBAR —
+ * es gehoert der NutzerIn, und mehr fragt diese Pruefung nicht. Wiche sie
+ * von `dt_vehicles()` ab, stuende ein Rettungsmittel im
  * Auswahlfeld, und `dt_zuordnen()` setzte es beim Speichern wortlos auf NULL.
  */
 function dt_vehicle_erlaubt(PDO $pdo, int $userId, ?int $vehicleId): ?int
@@ -422,12 +412,9 @@ function dt_bases(int $userId): array
  * Die Rettungsmittel der NutzerIn, mit Betriebsart, Typ, Kurznamen und
  * Standortnamen.
  *
- * Ein Rettungsmittel OHNE Standort erscheint bewusst mit. Bis Web 15.9.0 galt
- * das den Bestandsdaten vor der Nachbearbeitung (Problem P6): Sonst
- * verschwaenden sie aus jeder Auswahl, bevor die Nachbearbeitung ueberhaupt
- * aufgerufen wurde. Seit E-S9-09 ist es der REGELFALL — Bergwacht,
- * Veranstaltung und Sonstiges brauchen keinen Standort. Die Zeile gilt damit
- * unveraendert weiter, nur aus einem staerkeren Grund.
+ * Ein Rettungsmittel OHNE Standort erscheint bewusst mit. Es ist der
+ * REGELFALL — Bergwacht, Veranstaltung und Sonstiges brauchen keinen
+ * Standort.
  */
 function dt_vehicles(int $userId): array
 {
@@ -468,7 +455,7 @@ function dt_vehicle_faehigkeiten(PDO $pdo, int $vehicleId): array
 /* ---- Anlegen und zuordnen ------------------------------------------------ */
 
 /**
- * Einen Diensttag anlegen (E9: jeder Start ein eigener).
+ * Einen Diensttag anlegen (jeder Start ein eigener).
  *
  * KEIN `INSERT IGNORE` und keine Pruefung auf ein vorhandenes Datum — das war
  * die Logik des Kalendertags und ist mit dem Tagesschluessel entfallen. Wer
@@ -495,7 +482,7 @@ function dt_anlegen(PDO $pdo, int $userId, string $day, ?string $startedAt = nul
 
 /**
  * Standort und Rettungsmittel eines Diensttags setzen und alles Abgeleitete
- * EINFRIEREN (E8).
+ * EINFRIEREN.
  *
  * Geschrieben werden: `vehicle_id`, `base_id` (Filter und Auswertung), die
  * Snapshot-Spalten `kind`, `base_name`, `base_lat`, `base_lon`, `vehicle_name`,
@@ -504,22 +491,22 @@ function dt_anlegen(PDO $pdo, int $userId, string $day, ?string $startedAt = nul
  *
  * WARUM AUCH BEIM SPAETEREN NACHTRAGEN NEU EINGEFROREN WIRD. Der Zeitpunkt des
  * Einfrierens ist der Zeitpunkt der ZUORDNUNG, nicht der des Anlegens. Ein von
- * der Uhr angelegter Diensttag ist zunaechst neutral (E26); wird die Zuordnung
- * nachgetragen (A7b) oder korrigiert, muss der Snapshot mitkommen — sonst
- * traegt der Tag eine Art ohne Bezeichnung oder umgekehrt. Was E8 ausschliesst,
- * ist etwas anderes: dass eine Aenderung AN DEN STAMMDATEN auf bestehende
+ * der Uhr angelegter Diensttag ist zunaechst neutral; wird die Zuordnung
+ * nachgetragen oder korrigiert, muss der Snapshot mitkommen — sonst
+ * traegt der Tag eine Art ohne Bezeichnung oder umgekehrt. Was das Einfrieren
+ * ausschliesst, ist etwas anderes: dass eine Aenderung AN DEN STAMMDATEN auf bestehende
  * Diensttage durchschlaegt. Das tut sie hier nicht, weil sie diese Funktion
- * nicht aufruft (A4).
+ * nicht aufruft.
  *
  * BELEGTE ROLLEN GEHEN NIE VERLOREN. Bietet das neue Rettungsmittel eine Rolle
  * nicht mehr an, deren Zeile aber einen Namen traegt, bleibt sie stehen —
  * dieselbe Regel wie in der Migration. Nur leere Zeilen werden entfernt.
  */
 /**
- * Den Rollensatz eines Diensttags auf `$soll` bringen (S9/AP6).
+ * Den Rollensatz eines Diensttags auf `$soll` bringen.
  *
  * Sie steht an einer Stelle, seit `dt_zuordnen()` zwei Wege hat: das
- * Rettungsmittel aus den Stammdaten und das nur fuer diesen Tag (E-S9-10).
+ * Rettungsmittel aus den Stammdaten und das nur fuer diesen Tag.
  * Beide frieren nach derselben Regel ein.
  *
  * WAS SIE NICHT TUT: eine Zeile mit NAMEN wegwerfen. Fehlende Rollen kommen
@@ -547,15 +534,15 @@ function dt_rollensatz_einfrieren(PDO $pdo, int $dayId, array $soll): void
 }
 
 /**
- * Die Rollen eines Tags mit einem Rettungsmittel NUR FUER DIESEN TAG
- * (P5c/AP8, Nr. 169, E-P5c-47): alle Rollen der gewaehlten Betriebsart.
+ * Die Rollen eines Tags mit einem Rettungsmittel NUR FUER DIESEN TAG:
+ * alle Rollen der gewaehlten Betriebsart.
  *
  * Das Tagesrettungsmittel hat keine `vehicle_roles`, aus denen sich ein Satz
- * ergaebe. Bis Web 20.47.0 bekam der Tag deshalb KEINEN, und die Besatzung
- * liess sich nicht erfassen (Weg c). Die Betriebsart ist dagegen
+ * ergaebe. Ohne diesen Satz bekaeme der Tag KEINEN, und die Besatzung
+ * liesse sich nicht erfassen. Die Betriebsart ist dagegen
  * ausdruecklich gewaehlt — geraten wird nichts.
  *
- * DER TYP ZAEHLT NICHT (E-P5c-126). `VEHICLE_TYPEN[…]['rollen']` sagt, ob ein
+ * DER TYP ZAEHLT NICHT. `VEHICLE_TYPEN[…]['rollen']` sagt, ob ein
  * GESPEICHERTES Rettungsmittel Rollen-Vorlagen fuehrt; bei Bergwacht,
  * Veranstaltung und Sonstiges fuehrt es keine. Das Tagesrettungsmittel hat
  * keine Vorlage, aus der sich waehlen liesse, und bekommt deshalb bei jedem
@@ -570,7 +557,7 @@ function dt_tagesrettungsmittel_rollen(string $kind): array
 
 /**
  * Tage mit einem Tagesrettungsmittel, die noch keinen Rollensatz tragen
- * (P5c/AP8, E-P5c-123) — id => Betriebsart.
+ * — id => Betriebsart.
  *
  * Erkannt wird der Tag an seiner Momentaufnahme: kein Verweis auf ein
  * Rettungsmittel, aber ein eingefrorener Name und eine Art. Dieselbe Form hat
@@ -597,12 +584,12 @@ function dt_tagesrettungsmittel_ohne_rollen(PDO $pdo, ?int $userId = null): arra
 }
 
 /**
- * Den Rollensatz dort nachtragen, wo er fehlt (P5c/AP8, E-P5c-123).
+ * Den Rollensatz dort nachtragen, wo er fehlt.
  *
  * Fuer die Migration `2026_09_25_tagesrettungsmittel_rollen`; geschrieben
  * werden nur leere Zeilen. NICHT fuer die Wiederherstellung: Die legt einen
- * Tag mit den eingefrorenen Angaben der Datei an, nicht neu abgeleitet (E8,
- * `edbak_restore()`) — ein Paket von vor Web 21.0.0 bringt einen solchen Tag
+ * Tag mit den eingefrorenen Angaben der Datei an, nicht neu abgeleitet
+ * (`edbak_restore()`) — ein aelteres Paket bringt einen solchen Tag
  * deshalb ohne Rollensatz zurueck. Die Zuordnung einmal neu zu speichern
  * traegt ihn nach.
  *
@@ -622,7 +609,7 @@ function dt_zuordnen(PDO $pdo, int $userId, int $dayId, ?int $vehicleId, ?int $b
 {
     /* ---- ZWEITER WEG: EIN RETTUNGSMITTEL NUR FUER DIESEN TAG -----------
      *
-     * (S9/AP6, E-S9-10.) `$adhoc` traegt das Ergebnis von
+     * `$adhoc` traegt das Ergebnis von
      * `pruef_tagesrettungsmittel()` — Bezeichnung, Typ, Betriebsart und
      * entweder eine Standortkennung oder einen Standortnamen als Freitext.
      * Es entsteht KEIN Stammdatensatz (F17): Was hier gespeichert wird, steht
@@ -636,9 +623,8 @@ function dt_zuordnen(PDO $pdo, int $userId, int $dayId, ?int $vehicleId, ?int $b
      * beim naechsten Feld auseinander.
      *
      * `$vehicleId` bleibt NULL, und der Weg kehrt vor den Bloecken unten
-     * zurueck: Der Rollensatz ist der der gewaehlten Betriebsart (Nr. 169,
-     * E-P5c-47 — bis Web 20.47.0 war er leer), Faehigkeiten gibt es keine
-     * (F19). */
+     * zurueck: Der Rollensatz ist der der gewaehlten Betriebsart,
+     * Faehigkeiten gibt es keine. */
     if ($adhoc !== null) {
         /* Die Kennung gewinnt, wenn sie der NutzerIn gehoert; sonst bleibt der
          * getippte Name stehen (Rueckfall, siehe `pruef_tagesrettungsmittel()`)
@@ -673,8 +659,8 @@ function dt_zuordnen(PDO $pdo, int $userId, int $dayId, ?int $vehicleId, ?int $b
 
     $kind = null; $vehicleName = null; $vehicleTyp = null; $vehicleKurz = null;
     if ($vehicleId !== null) {
-        /* TYP UND KURZNAME GEHOEREN IN DIESELBE MOMENTAUFNAHME (E8, E-S9-09,
-         * Web 16.0.0). Sie werden aus denselben Gruenden eingefroren wie
+        /* TYP UND KURZNAME GEHOEREN IN DIESELBE MOMENTAUFNAHME. Sie werden aus
+         * denselben Gruenden eingefroren wie
          * Bezeichnung und Betriebsart: Ein Rettungsmittel wird umbenannt,
          * umgestellt oder geloescht, und ein Diensttag von vor drei Monaten
          * darf davon nichts merken. */
@@ -842,7 +828,7 @@ function dt_rueckfall(PDO $pdo, int $userId, string $day, ?string $startedAt = n
     if ($id !== false) { return (int)$id; }
 
     // Kein Tag dieses Datums: einen neutralen anlegen. Standort und
-    // Rettungsmittel bleiben offen (E26) — die Uhr kennt sie nicht (E21).
+    // Rettungsmittel bleiben offen — die Uhr kennt sie nicht.
     return dt_anlegen($pdo, $userId, $day, $startedAt);
 }
 
@@ -851,7 +837,7 @@ function dt_rueckfall(PDO $pdo, int $userId, string $day, ?string $startedAt = n
  *
  * Die Kennung liegt in `day_refs`, nicht in `days`: Nach dem Zusammenfuehren
  * traegt ein Diensttag legitim MEHRERE Kennungen, und ein Nachschlagen findet
- * dann von selbst den Zieltag — ohne jede Umleitungslogik (Konzept 4.5).
+ * dann von selbst den Zieltag — ohne jede Umleitungslogik.
  *
  * Der Nachschlag geht ueber (device_id, day_ref), also ueber den eindeutigen
  * Schluessel der Tabelle. Die Nutzerkennung wird zusaetzlich geprueft: Ein
@@ -865,13 +851,13 @@ function dt_rueckfall(PDO $pdo, int $userId, string $day, ?string $startedAt = n
  * Rueckfallebene. Ohne diese Bindung entstuenden aus einem Dienst zwei — der
  * erste mit den bisherigen Einsaetzen, der zweite mit allen weiteren.
  *
- * EIN GELOESCHTER DIENSTTAG ZAEHLT NICHT (Backlog Nr. 33, seit Web 8.0.0).
+ * EIN GELOESCHTER DIENSTTAG ZAEHLT NICHT.
  *
  * Weder der Nachschlag ueber `day_refs` noch $vorhandenerDayId darf auf einen
  * Tag im Papierkorb fuehren. Sonst legte die naechste Nachlieferung einen
  * AKTIVEN Einsatz an einem GELOESCHTEN Tag an — den halb sichtbaren Zustand,
- * den E-S1-19 beim Einspielen eines Backups ablehnt und den die
- * Papierkorbseite seit Web 8.0.0 nicht mehr herstellen kann. Die Uhr weiss
+ * den das Einspielen eines Backups ablehnt und den die
+ * Papierkorbseite nicht mehr herstellen kann. Die Uhr weiss
  * nichts vom Papierkorb und liefert weiter; ohne diese Bedingung waere sie
  * die letzte offene Tuer.
  *
@@ -919,7 +905,7 @@ function dt_zu_dayref(PDO $pdo, int $userId, int $deviceId, string $dayRef,
     return $dayId;
 }
 
-/* ---- Zusammenfuehren (Konzept 3.4 und 4.5, E10-E13, E25) ----------------- */
+/* ---- Zusammenfuehren ----------------- */
 
 /**
  * Wie weit reicht "zeitlich benachbart" in der Kandidatenliste?
@@ -931,7 +917,7 @@ function dt_zu_dayref(PDO $pdo, int $userId, int $deviceId, string $dayRef,
  * Bruchstueck erst spaeter von Hand nachgetragen wurde.
  *
  * Eine laengere Liste waere nicht hilfreicher, sondern gefaehrlicher: Der
- * Vorgang ist nicht umkehrbar (E13), und je mehr Zeilen zur Wahl stehen, desto
+ * Vorgang ist nicht umkehrbar, und je mehr Zeilen zur Wahl stehen, desto
  * eher greift jemand daneben. Wer zwei weit auseinanderliegende Diensttage
  * zusammenfuehren will, datiert erst einen davon um (diensttag_datum.php).
  */
@@ -939,7 +925,7 @@ const DT_NACHBARSCHAFT_TAGE = 3;
 
 /**
  * Ab welcher Dauer eine zeitliche Ueberschneidung zweier Diensttage ein
- * Hinweis ist (R57, E-S4-76). In Minuten.
+ * Hinweis ist. In Minuten.
  *
  * WARUM ES EINE SCHWELLE BRAUCHT UND NICHT "groesser als null" GENUEGT: Der
  * eigene Dienstwechsel ueberschneidet sich regelmaessig um Minuten — wer den
@@ -947,8 +933,8 @@ const DT_NACHBARSCHAFT_TAGE = 3;
  * Ueberschneidung, die kein Fehler ist, sondern die Reihenfolge zweier
  * Handgriffe. Ein Hinweis, der dabei jedes Mal erscheint, wird nach dem
  * dritten Mal ueberlesen — und steht dann unbemerkt da, wenn er einmal
- * wirklich gemeint ist. Dieselbe Ueberlegung wie beim Geraete-Hinweis
- * (M4-10), nur dass dieser sich nicht bestaetigen laesst.
+ * wirklich gemeint ist. Dieselbe Ueberlegung wie beim Geraete-Hinweis,
+ * nur dass dieser sich nicht bestaetigen laesst.
  *
  * WARUM AUSGERECHNET 15: Der Fall, um den es geht, ist die vergessene Uhr im
  * Spind — sie zeichnet den ganzen Dienst mit, also Stunden. Zwischen "zwei
@@ -964,17 +950,18 @@ const DT_NACHBARSCHAFT_TAGE = 3;
 const DT_UEBERLAPPUNG_MIN = 15;
 
 /**
- * Diensttage, die sich mit diesem zeitlich ueberschneiden (R57, E-S4-76).
+ * Diensttage, die sich mit diesem zeitlich ueberschneiden.
  *
- * DER FALL, UM DEN ES GEHT (F-S4-D): Garmin und Handy sind gleichzeitig im
+ * DER FALL, UM DEN ES GEHT: Garmin und Handy sind gleichzeitig im
  * Dienst. Beide legen ueber `dt_anlegen()` einen eigenen Diensttag an, weil
  * `day_refs` je Geraet geschluesselt ist — das eine findet die Kennung des
  * anderen nicht. Es geht nichts verloren und nichts wird ueberschrieben:
  * **Es ist alles doppelt.** Zwei Diensttage, zwei Ruhesegment-Ketten,
  * derselbe reale Einsatz zweimal, zwei Spuren desselben Wegs. In der
- * Jahresstatistik zaehlt er doppelt, und bis hierher fiel das niemandem auf.
+ * Jahresstatistik zaehlt er doppelt, und ohne diese Funktion faellt das
+ * niemandem auf.
  *
- * DIESE FUNKTION AUTOMATISIERT NICHTS (E-S4-76 gegen E-S4-50). Die beiden
+ * DIESE FUNKTION AUTOMATISIERT NICHTS. Die beiden
  * Tage bleiben stehen — sie sind zwei vollstaendige Aufzeichnungen, und ein
  * stiller Automatismus muesste raten, welche gilt. Sie macht die Doppelung
  * nur **sichtbar**; was daraus folgt, entscheidet ein Mensch, und
@@ -1091,7 +1078,7 @@ function dt_dauer_lesbar(int $minuten): string
 }
 
 /**
- * Vertragen sich die Arten zweier Diensttage? (E11)
+ * Vertragen sich die Arten zweier Diensttage?
  *
  * Gleiche Art ja, ein neutraler passt zu beidem, `air` gegen `ground` nicht.
  * Der Grund fuer das Verbot steht in Abschnitt 3.4: Sonst landete ein Einsatz
@@ -1104,7 +1091,7 @@ function dt_art_vereinbar(?string $a, ?string $b): bool
     return $a === null || $b === null || $a === $b;
 }
 
-/** Art des Ergebnisses: der nicht-NULL-Wert, sonst NULL (Konzept 4.5 Nr. 1). */
+/** Art des Ergebnisses: der nicht-NULL-Wert, sonst NULL. */
 function dt_art_ergebnis(?string $a, ?string $b): ?string
 {
     return $a ?? $b;
@@ -1114,11 +1101,11 @@ function dt_art_ergebnis(?string $a, ?string $b): ?string
  * Kandidaten zum Aufnehmen in einen Zieldiensttag.
  *
  * Zeitlich benachbarte Diensttage derselben NutzerIn, ohne Papierkorbeintraege
- * und ohne den Zieltag selbst (Konzept 4.5).
+ * und ohne den Zieltag selbst.
  *
  * UNVEREINBARE TAGE WERDEN MITGELIEFERT, nicht weggelassen — mit `vereinbar`
  * auf `false`. Ein Kandidat, der schlicht fehlt, sieht aus wie ein Fehler der
- * Anwendung; A7 verlangt ausdruecklich eine VERSTAENDLICHE MELDUNG, und die
+ * Anwendung; verlangt ist eine VERSTAENDLICHE MELDUNG, und die
  * laesst sich nur an einer Zeile anbringen, die auch dasteht. Die Oberflaeche
  * zeigt sie als nicht waehlbar samt Grund.
  *
@@ -1204,11 +1191,11 @@ function dt_merge_pruefen(int $userId, int $zielId, int $quellId): array
 
 /**
  * Vorschau auf das Ergebnis: Zeitraum, Umfang und die Stellen, an denen die
- * beiden Tage sich widersprechen (Konzept 4.5 Nr. 2).
+ * beiden Tage sich widersprechen.
  *
  * ZUM ZEITRAUM. `started_at` wandert nach vorne, `ended_at` nach hinten — die
  * Regel von dt_zeitraum_fortschreiben(), hier auf zwei Diensttage angewandt:
- * Ein Dienst umschliesst alles, was in ihm dokumentiert ist (A6).
+ * Ein Dienst umschliesst alles, was in ihm dokumentiert ist.
  *
  * Ein NULL in `ended_at` heisst "noch nicht bekannt", nicht "endet nie". Das
  * Ergebnis nimmt deshalb das SPAETESTE BEKANNTE Ende und bleibt nur dann ohne,
@@ -1256,7 +1243,7 @@ function dt_merge_vorschau(int $userId, array $ziel, array $quelle,
 
     /* Rettungsmittel: nur eine Wahl, wenn BEIDE eines fuehren und es ein
      * anderes ist. Fuehrt nur einer eines, gewinnt er kampflos — dieselbe
-     * Regel wie bei der Art (E11), nur eine Ebene tiefer. */
+     * Regel wie bei der Art, nur eine Ebene tiefer. */
     if ($ziel['vehicle_id'] !== null && $quelle['vehicle_id'] !== null
         && ((int)$ziel['vehicle_id'] !== (int)$quelle['vehicle_id']
             || $txt($ziel['vehicle_name']) !== $txt($quelle['vehicle_name']))) {
@@ -1336,28 +1323,28 @@ function dt_merge_vorschau(int $userId, array $ziel, array $quelle,
 }
 
 /**
- * Zwei Diensttage zusammenfuehren (Konzept 4.5 Nr. 3, E10-E13).
+ * Zwei Diensttage zusammenfuehren.
  *
  * Der Zieltag bleibt, der aufgenommene verschwindet ENDGUELTIG — nicht ueber
- * den Papierkorb (E13): Dort laege ein leerer Tag, dessen Wiederherstellung die
+ * den Papierkorb: Dort laege ein leerer Tag, dessen Wiederherstellung die
  * Einsaetze nicht zurueckholen koennte, weil sie inzwischen am Zieltag haengen.
  * Ein Papierkorbeintrag, der beim Wiederherstellen etwas anderes ergibt als das
  * Geloeschte, ist schlimmer als gar keiner.
  *
- * EIN CODEPFAD FUER UHR- UND HANDTAGE (E10). Der Unterschied zwischen beiden
+ * EIN CODEPFAD FUER UHR- UND HANDTAGE. Der Unterschied zwischen beiden
  * sind allein die Zeilen in `day_refs`; sie wandern mit, und ein Handtag hat
  * eben keine. Eine zweite Fassung "fuer Uhrtage" haette denselben Code mit
  * einer Zeile mehr.
  *
- * DIE SPERRLISTE `deleted_refs` WIRD NICHT BEDIENT (Konzept 4.5 Nr. 4). Die
+ * DIE SPERRLISTE `deleted_refs` WIRD NICHT BEDIENT. Die
  * Uhr-Kennungen sind nicht verschwunden, sie zeigen jetzt auf den Zieltag —
  * genau deshalb liegen sie in einer eigenen Tabelle. Ein spaeterer Upload mit
- * einer Kennung des aufgenommenen Tags landet damit von selbst richtig (A8),
+ * einer Kennung des aufgenommenen Tags landet damit von selbst richtig,
  * ohne jede Umleitungslogik.
  *
  * $wahl entscheidet die Widersprueche aus dt_merge_vorschau(): je Schluessel
  * 'ziel' oder 'quelle'. Fehlt einer, gilt der Zieltag — der geoeffnete Tag ist
- * der, den die Nutzerin vor Augen hat (E25).
+ * der, den die Nutzerin vor Augen hat.
  *
  * Laeuft in der Transaktion des Aufrufers.
  *
@@ -1380,7 +1367,7 @@ function dt_zusammenfuehren(PDO $pdo, int $userId, int $zielId, int $quellId,
     /* ---- Einsaetze und Ruhesegmente umhaengen --------------------------- */
     /* AUCH DIE PAPIERKORBEINTRAEGE. `missions.day_id` steht auf
      * ON DELETE SET NULL; ein zurueckgelassener Einsatz verloere beim Entfernen
-     * des Quelltags still seinen Diensttag und waere verwaist (A11). Der
+     * des Quelltags still seinen Diensttag und waere verwaist. Der
      * Papierkorb selbst arbeitet mit `deleted_at`, nicht mit dem Diensttag —
      * das Wiederherstellen findet ihn am Zieltag genauso. */
     $u = $pdo->prepare('UPDATE missions SET day_id = ? WHERE user_id = ? AND day_id = ?');
@@ -1397,7 +1384,7 @@ function dt_zusammenfuehren(PDO $pdo, int $userId, int $zielId, int $quellId,
 
     /* ---- Zeitraum, Art und die gewaehlten Angaben ----------------------- */
     /* Beim Rettungsmittel entscheidet `dt_merge_rm_gewinner()` — dieselbe
-     * Funktion, die auch die Vorschau befragt (S9/AP4a). Vorher stand die
+     * Funktion, die auch die Vorschau befragt. Vorher stand die
      * Regel nur hier, und die Vorschau haette sie nachbauen muessen. */
     $vGewinner = dt_merge_rm_gewinner($ziel, $quelle, (string)($wahl['vehicle'] ?? 'ziel'));
 
@@ -1408,7 +1395,7 @@ function dt_zusammenfuehren(PDO $pdo, int $userId, int $zielId, int $quellId,
         $bGewinner = $ziel['base_id'] !== null ? $ziel : $quelle;
     }
 
-    /* Die Art folgt dem Rettungsmittel — sie ist aus ihm eingefroren (E8).
+    /* Die Art folgt dem Rettungsmittel — sie ist aus ihm eingefroren.
      * Ist der Gewinner neutral, bleibt die Art des anderen: Sie kommt dann aus
      * Bestandsdaten ohne Rettungsmittelbezug und darf nicht verschwinden. */
     $kind = $vGewinner['kind'] !== null
@@ -1426,7 +1413,7 @@ function dt_zusammenfuehren(PDO $pdo, int $userId, int $zielId, int $quellId,
     if ($notes !== null) { $notes = mb_substr($notes, 0, 2000); }
 
     /* TYP UND KURZNAME FOLGEN DEM GEWINNENDEN RETTUNGSMITTEL, wie Bezeichnung
-     * und Kennung daneben (Web 16.0.0). Sie hier zu vergessen waere kein
+     * und Kennung daneben. Sie hier zu vergessen waere kein
      * Fehler, den man saehe: Der Zieltag traege den NAMEN des einen und den
      * TYP des anderen Rettungsmittels — eine Zeile, die in sich stimmig
      * aussieht und es nicht ist. Deshalb stehen sie in derselben Klammer wie
@@ -1447,9 +1434,9 @@ function dt_zusammenfuehren(PDO $pdo, int $userId, int $zielId, int $quellId,
 
     /* ---- Faehigkeiten: der eingefrorene Satz des gewinnenden Tages ------ */
     /* NICHT aus `vehicle_capabilities` neu abgeleitet: Das waere ein Blick in
-     * die heutigen Stammdaten und damit genau der Durchgriff, den E8
-     * ausschliesst. Wurde der Windenhaken seit dem Dienst entfernt, verloere
-     * der Tag hier seine Windenfelder (A13e). */
+     * die heutigen Stammdaten und damit genau der Durchgriff, den das
+     * Einfrieren ausschliesst. Wurde der Windenhaken seit dem Dienst entfernt, verloere
+     * der Tag hier seine Windenfelder. */
     $capQuelle = (int)$vGewinner['id'];
     $caps = $pdo->prepare('SELECT capability FROM day_capabilities WHERE day_id = ?');
     $caps->execute([$capQuelle]);
@@ -1479,7 +1466,7 @@ function dt_zusammenfuehren(PDO $pdo, int $userId, int $zielId, int $quellId,
         $gibt = $name !== null && trim((string)$name) !== '';
         /* Nur BELEGTE Rollen des Verlierers wandern mit. Eine leere Zeile, die
            es nur dort gibt, waere eine Rolle, die das gewaehlte Rettungsmittel
-           gar nicht anbietet — der Rollensatz folgt dem Rettungsmittel (E8). */
+           gar nicht anbietet — der Rollensatz folgt dem Rettungsmittel. */
         if (!$hat && $gibt) { $ergebnis[$code] = $name; }
     }
 

@@ -8,10 +8,10 @@ require_once __DIR__ . '/diensttag_lib.php';
 require_once __DIR__ . '/format_lib.php';   // datum_text() fuer den Kartentitel
 
 /**
- * Einen Einsatz einem anderen Diensttag zuordnen (A5.2, Auftragspunkt 13).
+ * Einen Einsatz einem anderen Diensttag zuordnen.
  *
- * Eigene Seite statt eines stillen Freischaltens des Datumsfeldes im Formular
- * (E4): Die Nebenwirkung — der Einsatz wechselt die Tageszugehoerigkeit — waere
+ * Eigene Seite statt eines stillen Freischaltens des Datumsfeldes im
+ * Formular: Die Nebenwirkung — der Einsatz wechselt die Tageszugehoerigkeit — waere
  * an einem plötzlich beschreibbaren Feld nicht zu sehen. Eine bewusste,
  * benannte Handlung ist einem editierbaren Feld vorzuziehen.
  *
@@ -19,9 +19,7 @@ require_once __DIR__ . '/format_lib.php';   // datum_text() fuer den Kartentitel
  * anderen Fall — die falsch gestellte Uhr — und ist bei „Datum des Diensttags
  * ändern" richtig (diensttag_datum.php). Die Seite sagt das ausdruecklich.
  *
- * GEWAEHLT WIRD EIN DIENSTTAG, KEIN DATUM (Web 6.0.0). Bis dahin nahm die Seite
- * ein Datum entgegen, weil es je Kalendertag genau einen Flugtag gab; ein
- * fehlender wurde beim Verschieben angelegt. Seit E9 ist beides vorbei: Ein
+ * GEWAEHLT WIRD EIN DIENSTTAG, KEIN DATUM: Ein
  * Datum kann mehrere Dienste tragen, und einer davon ist gemeint. Die Liste
  * nennt deshalb die vorhandenen Diensttage mit allem, was sie unterscheidet —
  * Uhrzeit, Art, Rettungsmittel, Standort und Einsatzzahl. Angelegt wird hier
@@ -61,8 +59,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
    haengt, und ohne Papierkorb-Eintraege (dt_liste() laesst sie aus). Die Zahl
    ist gedeckelt — wo der Deckel greift, sagt der Hinweis unten, dass „nicht in
    der Liste" nicht „gibt es nicht" bedeutet. Gefragt wird nach einem mehr,
-   als gezeigt wird (Web 21.4.0, R4-17): Bis dahin galt „genau 400" als
-   gedeckelt, und bei genau 400 Tagen sagte der Hinweis, es gebe aeltere. */
+   als gezeigt wird: Sonst gaelte „genau 400" als gedeckelt, und bei genau
+   400 Tagen sagte der Hinweis, es gebe aeltere. */
 $LIMIT = 400;
 $tage = dt_liste($userId, $LIMIT + 1);
 $gedeckelt = count($tage) > $LIMIT;
@@ -97,7 +95,7 @@ foreach ($tage as $t) {
  * alles, was zwei Dienste eines Kalendertags unterscheidet — Uhrzeit, Wer,
  * Einsatzzahl und Art. Die Art steht als WORT am Ende: In einem <option>
  * laesst sich kein SVG unterbringen, und die Auskunft soll nicht an einer
- * Grafik haengen, die jedes Betriebssystem anders zeichnet (E-P3-18). */
+ * Grafik haengen, die jedes Betriebssystem anders zeichnet. */
 $zielOpt = ['' => '– Diensttag wählen –'];
 foreach ($auswahl as $a) {
     $zielOpt[(string)(int)$a['id']] = $a['text']

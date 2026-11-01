@@ -166,8 +166,9 @@ tools/klickprobe/ausgabe/
 # (seit PK-04); die Läufe in Firefox und WebKit schreiben daneben je einen
 # eigenen Ordner (Konzept DM) und gehören als Zahl in den Prüfbericht.
 tools/bedienprobe/ausgabe-*/
+tools/bedienprobe/ausgabe/bild/
 # Belegbild des Betriebslaufs (S10/AP3) — entsteht bei jedem Lauf neu
-tools/anteilprobe/ausgabe-*.png
+tools/proben/anteil/ausgabe-*.png
 # Bildschirmabzuege des Emulators (android/werkzeuge/emulator.sh, Vorgabe
 # `./emulator-bilder/`). Sie entstehen bei JEDEM Lauf neu und in Menge --
 # ein Paket wirft ein Dutzend ab, jedes rund 100 kB. Was davon etwas belegt,

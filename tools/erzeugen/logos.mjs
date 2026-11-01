@@ -7,14 +7,13 @@
  * keine sein, die jemand in einem Bildprogramm nachbaut — sonst driften
  * Logo und Favicon auseinander, sobald eine Farbe sich aendert.
  *
- * Genau das war der Fall: Die Logodateien trugen bis P3 Naeherungen der
+ * Genau das war der Fall: Die Logodateien trugen einmal Naeherungen der
  * Markenfarben (Rot E3322B statt D63338, Blau 587ABC statt 4280E5, Orange
  * F7941D statt FF8F1F), und das Favicon trug sie mit. Die verbindlichen
  * Markenwerte stehen in docs/Design.md, Abschnitt 2.
  *
  * WANN LAUFEN LASSEN. Immer, wenn eine Logodatei sich aendert — insbesondere,
- * wenn Philipp das echte NEF-Logo liefert und den Platzhalter ersetzt
- * (Konzept P3, 10.5).
+ * wenn Philipp das echte NEF-Logo liefert und den Platzhalter ersetzt.
  *
  * AUFRUF
  *   node tools/erzeugen/logos.mjs
@@ -62,7 +61,7 @@ for (const { quelle, ziel } of AUFGABEN) {
     `<img src="${daten}" style="width:100%;height:100%;object-fit:contain">` +
     `</body>`);
   await seite.waitForTimeout(150);
-  /* NACHSEHEN, OB DAS BILD UEBERHAUPT GELADEN HAT (S3/AP11).
+  /* NACHSEHEN, OB DAS BILD UEBERHAUPT GELADEN HAT.
    *
    * Es hatte einmal nicht: Ein XML-Kommentar mit einem doppelten Bindestrich
    * darin macht die SVG ungueltig — XML verbietet `--` im Kommentar. Der

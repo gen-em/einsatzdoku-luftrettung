@@ -9,10 +9,10 @@
 -- Impressum und Datenschutz ihren Leerzustand; die Anwendung laeuft weiter
 -- (rechtstexte_lib.php faengt die fehlende Tabelle ab).
 
--- Impressum und Datenschutzerklaerung dieser Installation (R32, P3/O10).
+-- Impressum und Datenschutzerklaerung dieser Installation.
 --
 -- WARUM EINE EIGENE TABELLE UND NICHT app_state. Dort ist der Wert
--- VARCHAR(190) — ein Impressum hat 400 bis 1500 Zeichen, eine
+-- VARCHAR — ein Impressum hat 400 bis 1500 Zeichen, eine
 -- Datenschutzerklaerung 8000 bis 20000. Der Speicher waere um den Faktor 50
 -- bis 100 zu klein, und ohne strict mode kuerzt MySQL still: Ein Rechtstext,
 -- der ab Zeichen 191 verschwindet, sieht in der Vorschau vollstaendig aus,
@@ -28,4 +28,5 @@ CREATE TABLE rechtstexte (
   schluessel VARCHAR(32) NOT NULL PRIMARY KEY,  -- 'impressum' | 'datenschutz'
   inhalt     MEDIUMTEXT NULL,                   -- Markdown-Quelle; NULL oder leer = nichts hinterlegt
   stand_am   DATE NULL                          -- das im Editor VON HAND gesetzte Standdatum; NULL = keine Standzeile
+                                                 -- (eine spaetere Migration hebt die Spalte auf DATETIME; das Schema in schema.sql ist der Stand)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

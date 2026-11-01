@@ -1,5 +1,5 @@
 <?php
-/* Rundlauf der Uhr — die Gegenseite (S11-08).
+/* Rundlauf der Uhr — die Gegenseite.
  *
  * Anlass: Nr. 43 — die Garmin-Uhr verschliesst seit Uhr 4.0.0 Spur,
  * Phasenkoordinaten und Reanimation; ob ihre Huellen dort aufgehen, wo sie
@@ -81,13 +81,13 @@ if ($m !== false) {
     $ph->execute([$m['id']]);
     $phasen = $ph->fetchAll(PDO::FETCH_ASSOC);
     pruefe(count($phasen) === 3, 'drei Phasen im Klartext (Nummer und Zeit): ' . count($phasen));
-    /* SEIT S11-12 (Web 23.0.0) GIBT ES DIE SPALTEN NICHT MEHR, und die
-     * Pruefung fragt deshalb die Tabelle, nicht die Zeilen. Bis R17-19 stand
-     * hier `SELECT … lat, lon FROM mission_phases` — geschrieben mit S11-08,
-     * zwei Tage bevor S11-12 die Spalten entfernte. Der Rundlauf laeuft nur,
+    /* DIE SPALTEN GIBT ES NICHT MEHR, und die
+     * Pruefung fragt deshalb die Tabelle, nicht die Zeilen. Einmal stand
+     * hier `SELECT … lat, lon FROM mission_phases` — geschrieben zwei Tage,
+     * bevor die Spalten entfielen. Der Rundlauf laeuft nur,
      * wenn `watch/` oder `tools/uhr-pruefstand/` beruehrt ist; so brach er
      * eine Woche lang mit „Unknown column 'lat'" ab, ohne dass ihn jemand
-     * fuhr (F-R17-63). Keine Spalte ist die schaerfere Aussage als „keine
+     * fuhr. Keine Spalte ist die schaerfere Aussage als „keine
      * Zeile mit Wert": Ein Klartext-Ort kann gar nicht mehr ankommen. */
     pruefe(!db_hat_spalte($pdo, 'mission_phases', 'lat') && !db_hat_spalte($pdo, 'mission_phases', 'lon'),
            'keine Koordinatenspalte in mission_phases (seit S11-12) — kein Ort im Klartext');

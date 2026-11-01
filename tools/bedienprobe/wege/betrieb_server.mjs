@@ -1,8 +1,8 @@
 /* Wege der Seite Betrieb → Servereinstellungen — Karte „Ankündigung".
  * ===========================================================================
  *
- * Entstanden mit P5c/AP1 (E-P5c-13, -55, -60). Der erste Weg, der nach der
- * SEITE heisst und nicht nach dem Paket (E-PK-15): Wer `betrieb_server.php`
+ * Der erste Weg, der nach der
+ * SEITE heisst und nicht nach dem Paket: Wer `betrieb_server.php`
  * aendert, findet hier, was auf ihr bedient wird.
  *
  *   betrieb-server-ankuendigung   setzen → erscheint → wegklicken → auf einer
@@ -10,24 +10,23 @@
  *                                 wieder da → entfernen
  *   betrieb-server-rundmail       die Rückfrage nennt die Zahl der
  *                                 erreichbaren Konten; Abbrechen sendet nichts
- *   betrieb-server-neuladen       Karte „Anmeldung" (Schritt 18, SR-02):
+ *   betrieb-server-neuladen       Karte „Anmeldung":
  *                                 speichern leitet in die Karte um, die
  *                                 Meldung steht dort einmal, Neuladen
- *                                 schickt nichts noch einmal (Nr. 250,
- *                                 `neuladen.mjs` wie die zehn aus R4-11)
+ *                                 schickt nichts noch einmal
+ *                                 (`neuladen.mjs` wie die übrigen Seiten)
  *   betrieb-server-frischer-code  über ein gemerktes Gerät angemeldet (kein
  *                                 Code): „Schlüsselblatt drucken" führt auf
  *                                 die Bestätigung, nach dem Code steht das
- *                                 Blatt da (Schritt 18, SR-07, E-SR-20;
- *                                 P-SR-13 als Maschinenweg)
+ *                                 Blatt da (als Maschinenweg)
  *   betrieb-server-schluesselwechsel  der Wechsel des Serverschlüssels im
- *                                 Browser (Schritt 18, SR-03): ohne Haken
+ *                                 Browser: ohne Haken
  *                                 abgewiesen, mit Haken gewechselt, das
  *                                 Blatt mit drei Kacheln auf EINER A4-Seite,
  *                                 „Jetzt weiterarbeiten", die Rückfrage mit
  *                                 dem Satz voran, „Alten Schlüssel
  *                                 entfernen" — und die Bilder der Karte in
- *                                 drei Lagen (P-SR-05)
+ *                                 drei Lagen
  *
  * DIE RUNDMAIL SELBST GEHT HIER NICHT HINAUS. Ob N Konten N Zeilen bekommen,
  * die Gegenstelle N annimmt und eine zweite am selben Tag abgewiesen wird,
@@ -54,7 +53,7 @@ const STREIFEN = '.hinweise .meldung-ankuendigung';
 function php(code) {
   return execFileSync('php', ['-r',
     'require "server/db.php"; require "server/ankuendigung_lib.php"; ' + code],
-    { cwd: process.env.ED_WURZEL || '/home/user/einsatzdoku-luftrettung',
+    { cwd: process.env.ED_WURZEL || WURZEL,
       encoding: 'utf-8' }).trim();
 }
 
@@ -184,7 +183,7 @@ export const wege = [
     soll: 'Karte „Anmeldung" speichern: POST → umgeleitet auf #k-anmeldung, Meldung '
         + 'einmal, Neuladen GET, kein zweiter Protokolleintrag',
     async fahren(k) {
-      /* DIE LETZTE BETRIEBSSEITE MIT UMLEITUNG (Schritt 18, SR-02): bis Web
+      /* DIE LETZTE BETRIEBSSEITE MIT UMLEITUNG: bis Web
        * 21.7.0 gab sie ihr Ergebnis selbst aus. Gespeichert wird ein Wert,
        * der sicher anders ist als der jetzige — sonst hieße die Meldung
        * „Es gab nichts zu ändern", und ins Protokoll käme nichts. */
@@ -286,7 +285,7 @@ export const wege = [
        * demselben Job zurück auf den alten Schlüssel, config.php byte-gleich.
        * Zwei Buchführungen für denselben Vorgang wären zwei, die auseinander
        * laufen. Ein eigenes Konto der Rolle BetreiberIn, angemeldet MIT Code —
-       * jeder Griff an der Karte verlangt ihn frisch (E-SR-20). */
+       * jeder Griff an der Karte verlangt ihn frisch. */
       const ADR = 'bedienprobe-schluessel@probe.invalid';
       const PW  = 'Bedienprobe-Schluessel-Leuchtturm-5';
       const PROBE = 'tools/proben/schluesselwechsel/probe.php';
@@ -356,21 +355,21 @@ export const wege = [
         schritte.push('Karte ' + (lageWechsel ? 'Lage Wechsel' : 'NICHT in der Lage Wechsel'));
         await k.bild('betrieb-server-schluessel-wechsel', s);
 
-        /* 3. Das Blatt: drei Kacheln — zwei ohne Server-Anteil (H-SR-06,
-         *    F-SR-82) —, EINE A4-Seite (E-SR-60: vier passten nicht; gemessen
-         *    P5c/AP9 mit drei 1013 von 1017 px — und die Zeile „Wann neu" ist
-         *    in der Lage Wechsel länger). */
+        /* 3. Das Blatt: drei Kacheln — zwei ohne Server-Anteil —, EINE
+         *    A4-Seite (vier passten nicht; gemessen mit drei 1013 von
+         *    1017 px — und die Zeile „Wann neu" ist in der Lage Wechsel
+         *    länger). */
         await s.goto(`${k.basis}/betrieb_schluesselblatt.php`, { waitUntil: 'domcontentloaded' });
         const kacheln = await s.locator('.blatt-kachel-name').allInnerTexts();
         const sollKacheln = Number(phpK('require_once "server/serverkrypto_lib.php"; '
           + 'echo anteil_zustand(true)["kennung"] !== null ? 3 : 2;'));
         await k.bild('schluesselblatt-wechsel', s);
-        /* DIE SEITENZAHL NUR IN CHROMIUM (E-DM-05, Register
+        /* DIE SEITENZAHL NUR IN CHROMIUM (Register
          * `tools/pruefstand/motoren.md`): `page.pdf()` gibt es nur in
          * Chromium. In Firefox und WebKit läuft der Weg ganz, nur die eine
          * A4-Seite zählt er dort nicht und sagt es — gezählt wird sie im
          * Chromium-Lauf derselben Probe. Ein echter Druck aus Firefox steht
-         * in den Prüflisten (P-P5c-20 ff.). */
+         * in den Prüflisten. */
         const motor = s.context().browser().browserType().name();
         let seiten = null;
         if (motor === 'chromium') {
@@ -385,7 +384,7 @@ export const wege = [
          *    mit acht Sekunden), und der Knopf stünde nie da. Deshalb beginnt
          *    der Durchgang hier von vorn — dieselbe Lage wie nach einem
          *    abgebrochenen Lauf, und jedes Stück ist dann schon „neu". */
-        /* Dazu die Frist vor dem Nachweis (zehn Minuten, E-SR-73) gekürzt —
+        /* Dazu die Frist vor dem Nachweis (zehn Minuten) gekürzt —
          * wie die Probe: Die Jobs stehen still, außer dem Bedienweg
          * versiegelt niemand. */
         phpK('require_once "server/schluesselwechsel_lib.php"; $z = sw_zustand(); '

@@ -1,12 +1,12 @@
 package org.genem.nadoku.handy.kopplung
 
 /**
- * Die drei Zustände der Sync-Anzeige (Backlog Nr. 11, E-S4-12).
+ * Die drei Zustände der Sync-Anzeige.
  *
  * Sie sind von der Garmin-Uhr übernommen, und zwar wörtlich — nicht aus
- * Bequemlichkeit, sondern weil dort schon einmal die falsche Auskunft stand:
- * „vollständig" bedeutete lange „nichts zu senden", und das war auch dann
- * wahr, wenn gar keine Kopplung bestand. Eine App, die „alles gesendet" sagt,
+ * Bequemlichkeit, sondern weil die falsche Auskunft naheliegt: „vollständig"
+ * als „nichts zu senden" wäre auch dann wahr, wenn gar keine Kopplung
+ * besteht. Eine App, die „alles gesendet" sagt,
  * während sie nirgendwohin sendet, ist schlimmer als eine, die schweigt.
  *
  * **„Vollständig" gilt deshalb nur, wenn Server UND Kopplung vorhanden sind.**

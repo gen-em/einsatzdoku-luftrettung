@@ -1,10 +1,9 @@
 /* API — die eine Stelle im Browser, an der eine Anfrage an den Server geht
  * ==========================================================================
  *
- * Entstanden in Schritt 15 AP8b (Zentralisierung, R83).
- *
- * WAS VORHER WAR. Zwanzig Sendestellen in neun Dateien, und der AUFRUF war
- * an allen zeichengleich: POST, genau zwei Kopfzeilen, `JSON.stringify`
+ * WARUM ES SIE GIBT. Vor ihr gab es zwanzig Sendestellen in neun Dateien,
+ * und der AUFRUF war an allen zeichengleich: POST, genau zwei Kopfzeilen,
+ * `JSON.stringify`
  * (bzw. `URLSearchParams` bei den vier Formularstellen), Token aus der
  * globalen `CSRF`. Auseinander gingen sie erst HINTER dem `fetch`, und zwar
  * auf sieben Achsen. Gemessen am 22.09.2026:
@@ -49,18 +48,15 @@
  * wie `EdFormat`, `EdKarte` und die uebrigen.
  *
  * DIE DATEI STEHT IM <head>, auf jeder Seite (`ui_seite_start()` in
- * server/ui.php). Sie stand einen Nachmittag lang in der Immer-Liste von
- * `ui_geruest_ende()`, und hier stand daneben, das trage schon, weil jeder
- * Aufruf in einem Zuhoerer stecke und erst nach dem Laden laufe.
- *
- * DIESER SATZ WAR FALSCH. Ein Gegenleser hat ihn mit Zeilennummern
- * widerlegt: Auf `einstellungen.php` und `import.php` kommt
- * `ui_geruest_ende()` NACH den Seitenskripten, und auf genau diesen beiden
- * laeuft `unlock.js` seinen Sendeweg zur LADEZEIT -- ueber `ck()` bzw.
- * `sperrstatus()` nach `ensureContentKey()` und `loeseVormerkung()`.
- * `EdApi` waere dort undefiniert gewesen, und der ReferenceError waere in
- * einen absichtlich stillen catch gefallen. Die KDF-Anhebung haette auf
- * zwei Seiten aufgehoert zu laufen, wortlos.
+ * server/ui.php), und NICHT in der Immer-Liste von `ui_geruest_ende()`. Die
+ * Annahme, das trage, weil jeder Aufruf in einem Zuhoerer stecke und erst
+ * nach dem Laden laufe, ist falsch: Auf `einstellungen.php` und `import.php`
+ * kommt `ui_geruest_ende()` NACH den Seitenskripten, und auf genau diesen
+ * beiden laeuft `unlock.js` seinen Sendeweg zur LADEZEIT -- ueber `ck()`
+ * bzw. `sperrstatus()` nach `ensureContentKey()` und `loeseVormerkung()`.
+ * `EdApi` waere dort undefiniert, und der ReferenceError fiele in einen
+ * absichtlich stillen catch. Die KDF-Anhebung hoerte auf zwei Seiten auf
+ * zu laufen, wortlos.
  *
  * Die Lehre steht hier, weil sie sich wiederholen wird: Eine Zusage ueber
  * die Ladereihenfolge ist nur so viel wert wie die Liste der Aufrufer, die
@@ -69,9 +65,9 @@
 (function () {
   'use strict';
 
-  /* Das Token steht seit Backlog Nr. 136 bedingungslos auf jeder Seite, die
-   * `ui_krypto_bootstrap()` zieht (`const CSRF = ...`), und seit P5c/AP9 auf
-   * jeder, die `ui_csrf_bootstrap()` ruft (ohne Schluesselmaterial). Die Wache ist
+  /* Das Token steht bedingungslos auf jeder Seite, die
+   * `ui_krypto_bootstrap()` zieht (`const CSRF = ...`), und auf jeder, die
+   * `ui_csrf_bootstrap()` ruft (ohne Schluesselmaterial). Die Wache ist
    * trotzdem da: Zwei Stellen im Bestand trugen sie, und eine Datei, die
    * einmal ohne Bootstrap eingebunden wird, soll keinen ReferenceError
    * werfen, sondern eine 403 bekommen -- die ist lesbar. */
@@ -95,8 +91,7 @@
      * hatte dafuer einen eigenen Helfer `fehlersatz()`, der `daten.text`
      * bevorzugte und damit den Vorgangsnamen verlor. Genau das soll die
      * Zentrale abschaffen. Die zwei Namen auf der Serverseite
-     * zusammenzufuehren waere die sauberere Loesung und gehoert nicht in
-     * dieses Paket (E-ZE-10). */
+     * zusammenzufuehren waere die sauberere Loesung und steht noch aus. */
     if (daten && typeof daten.text === 'string' && daten.text !== '') {
       return daten.text;
     }
@@ -149,9 +144,8 @@
      * hat, ist `ok` allein SCHWAECHER als seine alte Pruefung -- bei einer
      * 200 mit einem Rumpf ohne `ok` sagt EdApi "in Ordnung", der alte Code
      * sagte "Fehler". Ein solcher Aufrufer prueft `a.daten.ok` weiter mit.
-     * Gefunden hat das ein Gegenleser an `schluesselblatt.js`, wo die
-     * Rueckfrage sonst einen bedienbaren Knopf ohne Felder hinterlassen
-     * haette. */
+     * In `schluesselblatt.js` hinterliesse die Rueckfrage sonst einen
+     * bedienbaren Knopf ohne Felder. */
     const ok = antwort.ok && daten !== null
             && daten.error == null && daten.ok !== false;
     return {

@@ -11,16 +11,15 @@ declare(strict_types=1);
  *     konfig_alles()                          // die ganze Ablage
  *     konfig_verwerfen()                      // nach einem Schreibvorgang
  *
- * WOGEGEN. Bis Web 20.26.3 lag die Konfiguration an ZWEI Stellen gleichzeitig:
- * `db.php` las die Datei beim Laden in die globale `$CFG` (Zeile 9), und fuenf
- * weitere Dateien lasen sie bei Bedarf ein zweites Mal — `smtp.php` sogar
- * dreimal. Gemessen am 20.09.2026: **7 Lesestellen in 5 Dateien, 46 Zugriffe
- * auf `$CFG` in 11 Dateien**. Wer einen Wert brauchte, hatte die Wahl zwischen
- * `global $CFG` (setzt voraus, dass `db.php` schon geladen ist) und einem
- * eigenen `require` (liest die Datei noch einmal von der Platte). 10c bringt
- * drei weitere Schluessel mit (`app.umgebung`, `betrieb.health_token`,
- * `mail.postfach`) — jeder waere eine achte bis zehnte Lesestelle geworden
- * (E-ZE-02, E-ZE-14).
+ * WOGEGEN. Liegt die Konfiguration an ZWEI Stellen gleichzeitig — eine
+ * globale `$CFG`, die `db.php` beim Laden fuellt, und weitere Dateien, die
+ * die Datei bei Bedarf ein zweites Mal einlesen —, hat wer einen Wert braucht
+ * die Wahl zwischen `global $CFG` (setzt voraus, dass `db.php` schon geladen
+ * ist) und einem eigenen `require` (liest die Datei noch einmal von der
+ * Platte). Gemessen am 20.09.2026, vor dieser Datei: **7 Lesestellen in
+ * 5 Dateien, 46 Zugriffe auf `$CFG` in 11 Dateien**. Jeder neue Schluessel
+ * (`app.umgebung`, `betrieb.health_token`, `mail.postfach`) waere eine
+ * weitere Lesestelle geworden.
  *
  * DIESE DATEI LAEDT NICHTS, UND DAS IST KEINE SPARSAMKEIT, SONDERN BEDINGUNG.
  * Drei Verbraucher stehen VOR `db.php`:
@@ -46,8 +45,8 @@ declare(strict_types=1);
  * `konfig_verwerfen()`; die naechste Abfrage liest die Datei neu.
  * `config_eintrag_schreiben()` in `serverkrypto_lib.php` tut das ueber
  * `config_gemerktes_verwerfen()`. Ohne diesen Aufruf zeigte die Seite, die
- * gerade geschrieben hat, noch den alten Stand — derselbe Fehler wie in
- * S2/AP7, und er sieht aus wie „hat nicht gespeichert".
+ * gerade geschrieben hat, noch den alten Stand — und das saehe aus wie „hat
+ * nicht gespeichert".
  *
  * WAS DIESE DATEI NICHT TUT: schreiben. `config.php` wird an genau einer
  * Stelle geschrieben (`config_eintrag_schreiben()`), und die gehoert zur

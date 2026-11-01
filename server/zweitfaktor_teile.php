@@ -2,9 +2,9 @@
 declare(strict_types=1);
 
 /**
- * DIE TEILE DER ZWEITFAKTOR-EINRICHTUNG (P5c/AP5, M-P5c-02b) — zwei
+ * DIE TEILE DER ZWEITFAKTOR-EINRICHTUNG — zwei
  * Verwender: das Einrichtungstor `zweitfaktor.php` (Anmeldehülle, Bild 4)
- * und die Karte „Zweitfaktor" unter Einstellungen → Profil (Bild 2).
+ * und die Karte „Zweitfaktor" unter Einstellungen → Profil.
  *
  * EINE STELLE, DAMIT TOR UND KARTE NICHT AUSEINANDERLAUFEN — dieselbe
  * Überlegung wie bei `schluessel_teile.php`. Wer die Einrichtung einmal im
@@ -13,10 +13,10 @@ declare(strict_types=1);
  *
  * WAS DER AUFRUFER SELBST MACHT: das Formular darum, die Knöpfe darunter.
  * Im Tor ist es ein breiter Knopf „Einschalten", in der Karte stehen
- * „Einschalten" und „Abbrechen" nebeneinander (Mockup, Bild 2 a).
+ * „Einschalten" und „Abbrechen" nebeneinander.
  *
- * ZWEI SKRIPTE GEHÖREN DAZU: `assets/vendor/qrcode.js` und `assets/qr.js`
- * (QR-Code), dazu `assets/zweitfaktor.js` (Haken vor „Weiter"). Der
+ * ZWEI SKRIPTE GEHÖREN DAZU: `assets/vendor/qrcode.js` und `assets/qr.js`,
+ * dazu `assets/zweitfaktor.js` (Haken vor „Weiter"). Der
  * Aufrufer nimmt sie in `ui_seite_ende(['skripte' => …])` mit;
  * `ZF_SKRIPTE` nennt sie einmal.
  */

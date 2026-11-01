@@ -14,7 +14,7 @@ import org.robolectric.RobolectricTestRunner
 import java.io.File
 
 /**
- * Die Schlüsselablage (E-S4-13).
+ * Die Schlüsselablage.
  *
  * Der wichtigste Fall ist [keinKlartextImSpeicherabbild]: Er durchsucht das
  * **gesamte** App-private Verzeichnis nach dem Schlüssel — nicht nur die
@@ -61,7 +61,7 @@ class SchluesseltresorTest {
     }
 
     /**
-     * Die Abnahme aus dem Konzept: **kein Klartext im App-Speicherabbild.**
+     * Die tragende Zusicherung: **kein Klartext im App-Speicherabbild.**
      *
      * Durchsucht wird das ganze App-private Verzeichnis, nicht nur die
      * Tresordatei — denn so entsteht der Fehler, den dieser Fall sucht: nicht
@@ -132,7 +132,7 @@ class SchluesseltresorTest {
         assertNull(fremder.lesen())
     }
 
-    /** E-S4-13: kein Klartext in Logs — auch nicht beiläufig. */
+    /** Kein Klartext in Logs — auch nicht beiläufig. */
     @Test fun zugangsdatenZeigenSichNichtInDerTextfassung() {
         val text = zugang.toString()
         assertFalse("Der Schlüssel steht in toString()", text.contains(zugang.schluessel))

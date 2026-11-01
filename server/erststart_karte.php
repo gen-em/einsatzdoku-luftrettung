@@ -2,7 +2,7 @@
 declare(strict_types=1);
 
 /**
- * DIE ERSTSTART-KARTE (P5b/AP9, E-P5b-09, Mockup M-P5b-02b).
+ * DIE ERSTSTART-KARTE.
  *
  * Drei Schritte ueber der Tagesuebersicht: Standort (optional),
  * Rettungsmittel, Uhr oder Handy koppeln. Sie steht dort, solange etwas
@@ -22,7 +22,7 @@ declare(strict_types=1);
  * ---------------------------------------------------------------------------
  *
  * Die Knoepfe fuehren in die Wege, die es schon gibt: die Anlegen-Dialoge der
- * Stammdaten (S9) und die Geraeteseite. Der Rueckweg landet wieder hier, und
+ * Stammdaten und die Geraeteseite. Der Rueckweg landet wieder hier, und
  * der Schritt ist dann erledigt — vermerkt von der Stelle, die tatsaechlich
  * etwas angelegt hat, nicht von dieser Karte.
  *
@@ -85,16 +85,15 @@ $schritte = [
         'titel'  => 'Rettungsmittel anlegen',
         'klein'  => 'Womit du fährst oder fliegst: Name, Typ, Standort.',
         'knopf'  => 'Anlegen',
-        /* DASSELBE ZIEL WIE SCHRITT 1, und das ist kein Versehen: S9/AP5
-         * hat die beiden Reiter zusammengelegt (PS-12). „Rettungsmittel"
-         * stand bis Web 7.0.0 daneben; der Schnitt nach Taetigkeit hat sich
-         * nicht bewaehrt, weil beide DENSELBEN Bestand luden. Die Liste
-         * fuehrt jetzt auf je eine Standortseite, die alles traegt, was dort
-         * haengt.
+        /* DASSELBE ZIEL WIE SCHRITT 1, und das ist kein Versehen: Standorte
+         * und Rettungsmittel teilen sich einen Reiter. Ein Schnitt nach
+         * Taetigkeit bewaehrt sich nicht, weil beide DENSELBEN Bestand
+         * laden. Die Liste fuehrt auf je eine Standortseite, die alles
+         * traegt, was dort haengt.
          *
          * DIE ZWEI ZEILEN BLEIBEN TROTZDEM. Sie sind eine Merkliste, keine
          * Wegbeschreibung — und die Reihenfolge stimmt: Ein Rettungsmittel
-         * vom Typ `standard` VERLANGT einen Standort (E-S9-09, nachgesehen in
+         * vom Typ `standard` VERLANGT einen Standort (nachgesehen in
          * `validate_lib.php`). „Optional" an Schritt 1 heisst deshalb
          * „nicht fuer jede Betriebsart noetig", nicht „ueberfluessig". */
         'href'   => 'einstellungen.php?t=standorte',

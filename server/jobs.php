@@ -2,7 +2,7 @@
 declare(strict_types=1);
 
 /**
- * Der Job-Einstieg — ein Weg, drei Auslöser (Konzept S2, E-S2-17).
+ * Der Job-Einstieg — ein Weg, drei Auslöser.
  *
  * Diese Anwendung läuft auf einfachem Webspace, und dort gibt es oft keinen
  * Cron. Wer einen hat, soll ihn benutzen; wer keinen hat, soll trotzdem
@@ -13,11 +13,10 @@ declare(strict_types=1);
  *          * * * * *  php /pfad/zur/installation/jobs.php
  *
  *      Den Pfad dieser Anlage nicht abtippen, sondern kopieren: Betrieb →
- *      Hintergrundjobs baut die Zeile ueber `__DIR__` (E-S8-10). Einen
+ *      Hintergrundjobs baut die Zeile ueber `__DIR__`. Einen
  *      Unterordner `server/` gibt es auf einer Anlage nicht — der Deploy legt
- *      dessen Inhalt in die Wurzel des Webspace, und die Zeile, die hier bis
- *      Web 21.1.6 stand, lief beim Plesk-Cron in „Could not open input
- *      file" (Backlog Nr. 150).
+ *      dessen Inhalt in die Wurzel des Webspace, und eine Zeile mit
+ *      `server/` liefe beim Plesk-Cron in „Could not open input file".
  *
  *      Jede Minute ist unbedenklich: Ein Lauf, für den nichts zu tun ist,
  *      kostet zwei Abfragen. Die tägliche Aufräumarbeit läuft trotzdem nur
@@ -29,11 +28,11 @@ declare(strict_types=1);
  *          https://…/jobs.php?token=<Job-Token aus Betrieb → Hintergrundjobs>
  *
  *      Die Adresse steht im Zugriffsprotokoll des Hosters. Deshalb oeffnet
- *      dieses Token seit Web 23.1.0 nur noch den Job-Lauf und nichts sonst
+ *      dieses Token nur den Job-Lauf und nichts sonst
  *      (siehe „Zwei Tokens" unten).
  *
- *   3. HUCKEPACK AUF EINER ANFRAGE — der Rückfall, und bis Web 10.0.0 der
- *      einzige Weg. `auth_guard.php` stößt ihn bei einer angemeldeten
+ *   3. HUCKEPACK AUF EINER ANFRAGE — der Rueckfall. `auth_guard.php` stößt
+ *      ihn bei einer angemeldeten
  *      Anfrage an. Er bleibt eingeschaltet, damit eine Installation ohne
  *      jede Einrichtung nicht stillsteht; wer 1. oder 2. eingerichtet hat,
  *      merkt ihn nicht, weil dann nichts mehr zu tun ist.
@@ -41,9 +40,9 @@ declare(strict_types=1);
  * WAS DIESE DATEI NICHT TUT: arbeiten. Sie prüft, wer fragt, und ruft
  * `jobs_lauf()`. Die Jobs stehen in `jobs_lib.php`.
  *
- * SEIT P5a IST DER TOKEN-WEG AUCH DER EINSTIEG DER AUSLIEFERUNGSKETTE
- * (E-P5a-12). Er nimmt dafür einen Parameter `aktion` — seit Web 23.1.0
- * NUR im Rumpf einer POST-Anfrage und NUR mit dem Kettentoken:
+ * DER TOKEN-WEG IST AUCH DER EINSTIEG DER AUSLIEFERUNGSKETTE. Er nimmt
+ * dafür einen Parameter `aktion` — NUR im Rumpf einer POST-Anfrage und NUR
+ * mit dem Kettentoken:
  *
  *   (ohne)        wie bisher — alle fälligen Jobs, ein Häppchen
  *   komplett      NUR das Komplett-Backup, und zwar mit Auftrag: Steht keiner
@@ -62,11 +61,10 @@ declare(strict_types=1);
  *                 Zeit, Wartung an/aus, Migration ausstehend ja/nein,
  *                 `WEB_VERSION`
  *
- * ZWEI TOKENS (Web 23.1.0, R17-19, F-R17-57, E-R17-34). Bis Web 23.0.3
- * oeffnete EIN Token beides, den Job-Lauf und die Aktionen, und die Kette
- * schickte es als `?token=…` — also in jede Zeile des Zugriffsprotokolls
- * beim Hoster. Wer das Protokoll las, konnte die Anlage in die Wartung
- * schalten. Seither:
+ * ZWEI TOKENS. Oeffnete EIN Token beides, den Job-Lauf und die Aktionen, und
+ * reiste es als `?token=…` — also in jede Zeile des Zugriffsprotokolls
+ * beim Hoster —, koennte jeder, der das Protokoll liest, die Anlage in die
+ * Wartung schalten. Deshalb:
  *
  *   ohne `aktion`   das JOB-Token (`jobs_token()`), per GET oder POST — der
  *                   „Cronjob per URL" kann nur GET.
@@ -79,19 +77,19 @@ declare(strict_types=1);
  * Das eine Token oeffnet den Weg des anderen nicht (403 `token`). Einziger
  * Client der Aktionen ist `tools/kette/tor.py`.
  *
- * WARUM `pause` UEBER DIE ADRESSE ERREICHBAR SEIN MUSS (Web 20.16.0).
+ * WARUM `pause` UEBER DIE ADRESSE ERREICHBAR SEIN MUSS.
  * Der Kreislauftest haelt die Jobs an, bevor er ein Backup in ein frisches
  * Konto spielt — sonst verdichtet und duennt der Verdichtungsjob die
  * wiederhergestellten Spuren aus, und der Vergleich misst nicht mehr „kommt
  * zurueck, was hineinging", sondern „hat der Job dazwischen zugeschlagen".
  * Nachgemessen: ein Lauf ohne Pause verdichtete 125 Spuren des Umlaufkontos.
  *
- * Bis dahin gab es dafuer nur den Weg ueber die Kommandozeile, und der
+ * Der Weg ueber die Kommandozeile
  * verlangt, dass das Pruefmittel AUF DEMSELBEN RECHNER laeuft wie die
  * Installation. Stufe 2 der Kette laeuft aber auf einem GitHub-Laeufer gegen
  * ein fernes Staging: Dort gibt es keine `config.php`, keine Datenbank, und
  * `php server/jobs.php --pause` bricht mit „Failed to open stream" ab. Genau
- * so ist der erste echte Lauf gescheitert (17.09.2026, Backlog Nr. 219).
+ * so ist der erste echte Lauf gescheitert.
  *
  * WAS DIE AKTION DAMIT AN MACHT GIBT: Sie kann die Hintergrundjobs bis zu
  * `JOB_PAUSE_MAX_S` still stellen — weniger als `wartung_an`, das die ganze
@@ -121,10 +119,8 @@ declare(strict_types=1);
  * huckepack-Weg auslösen und damit den Job aus dem Job heraus starten.
  */
 
-/* BIS WEB 20.26.3 STAND HIER `require_once __DIR__ . '/config.php';` —
- * und der Rueckgabewert wurde weggeworfen. Die Zeile war ein Ueberbleibsel:
- * `db.php` lud die Datei ohnehin. Mit Schritt 15 AP2 liest sie `konfig()`,
- * einmal und fuer alle. */
+/* Kein eigenes `require` der `config.php`: `konfig()` liest sie, einmal und
+ * fuer alle. */
 require_once __DIR__ . '/db.php';
 require_once __DIR__ . '/jobs_lib.php';
 
@@ -143,7 +139,7 @@ if ($aufKommandozeile) {
             exit(0);
         }
         /* --pause: fuer Pruefmittel, die den Bestand messen, waehrend die
-         * Jobs ihn aendern wuerden (S2/AP3). Sie laeuft von selbst ab. */
+         * Jobs ihn aendern wuerden. Sie laeuft von selbst ab. */
         if (str_starts_with($arg, '--pause')) {
             $s = (int)(explode('=', $arg, 2)[1] ?? ($argv[array_search($arg, $argv, true) + 1] ?? 0));
             jobs_pause($s);
@@ -169,8 +165,8 @@ if ($aufKommandozeile) {
             !empty($b['geloescht']) ? ' · ' . (int)$b['geloescht'] . ' am Ziel entfernt' : '',
             /* „gelöscht" OHNE ZUSATZ heisst: hier, im eigenen Dateisystem.
              * Die Zeile darueber sagt „am Ziel entfernt" und meint eine
-             * FREMDE Maschine (Backup-Ziel, P5a/AP10). Heute fuellt diesen
-             * Zaehler nur der Aufraeumteil „Sitzungsdateien" (Schritt 16). */
+             * FREMDE Maschine (Backup-Ziel). Heute fuellt diesen
+             * Zaehler nur der Aufraeumteil „Sitzungsdateien". */
             !empty($b['geloescht_dateien']) ? ' · ' . (int)$b['geloescht_dateien'] . ' gelöscht' : '',
             $b['rueckstand'] !== null ? ' · Rückstand ' . $b['rueckstand'] : '',
             !empty($b['fehler']) ? ' · FEHLER: ' . $b['fehler'] : ''));
@@ -182,10 +178,9 @@ if ($aufKommandozeile) {
 
 $t0 = microtime(true);
 
-/* DIE KOPFZEILEN SETZT `json_roh_out()` (P5a/AP4a, Nr. 203). Hier standen
- * zwei `header()`-Zeilen; `nosniff` und `Referrer-Policy` fehlten, und das
- * ist an einem Endpunkt, der mit einem Token erreichbar ist und den Zustand
- * der Auslieferung ausgibt, kein Schoenheitsfehler. */
+/* DIE KOPFZEILEN SETZT `json_roh_out()`: `nosniff` und `Referrer-Policy`
+ * fehlen an einem Endpunkt nicht, der mit einem Token erreichbar ist und den
+ * Zustand der Auslieferung ausgibt. */
 require_once __DIR__ . '/ratelimit_lib.php';
 
 /* SPERRE VOR JEDER WEITEREN ARBEIT — dasselbe Muster wie in `pair.php`.
@@ -197,10 +192,10 @@ if (!rate_erlaubt('pair')) {
     json_out(['error' => 'zu_viele_versuche'], 429);
 }
 
-/* EINE AKTION IN DER ADRESSE IST 405 — VOR JEDEM TOKENVERGLEICH (Web 23.1.0,
- * E-R17-34). Die Antwort haengt nicht am Token und verraet deshalb nichts;
+/* EINE AKTION IN DER ADRESSE IST 405 — VOR JEDEM TOKENVERGLEICH. Die
+ * Antwort haengt nicht am Token und verraet deshalb nichts;
  * sie zaehlt auch nicht als Fehlversuch. Sie ist der Riegel dafuer, dass das
- * Kettentoken nie wieder in einer Adresse reist: Ein Werkzeug, das zurueck
+ * Kettentoken nie in einer Adresse reist: Ein Werkzeug, das zurueck
  * auf GET faellt, scheitert hier laut, statt grün zu loggen. */
 $aktionInAdresse = $_GET['aktion'] ?? null;
 if ($aktionInAdresse !== null && $aktionInAdresse !== '') {
@@ -252,7 +247,7 @@ if ($erwartet === '' || $token === '' || !hash_equals($erwartet, $token)) {
     json_out(['error' => 'token'], 403);
 }
 
-/* ---- 2b. Die Aktionen der Auslieferungskette (E-P5a-12) ------------------ */
+/* ---- 2b. Die Aktionen der Auslieferungskette ------------------------------ */
 
 /** Antwort schreiben und Schluss. */
 function kette_antwort(array $feld, int $code = 200): never
@@ -287,7 +282,7 @@ function kette_komplett_stand(): ?array
 /**
  * Steht eine Migration aus?
  *
- * UNGEPUFFERT, UND DAS BLEIBT SO. AP3 gibt `migration_lib.php` ein
+ * UNGEPUFFERT, UND DAS BLEIBT SO. `migration_lib.php` hat ein
  * `migrationen_ausstehend()` mit Zwischenspeicher — das braucht der
  * Torwächter, der die Frage bei JEDER Anfrage stellt. Hier fällt sie
  * höchstens zweimal je Auslieferung an; ein Zwischenspeicher wäre an dieser
@@ -321,7 +316,7 @@ if ($aktion === 'wartung_an' || $aktion === 'wartung_aus') {
     $ok = $aktion === 'wartung_an'
         ? wartung_einschalten('kette')
         : wartung_ausschalten();
-    /* Ein Eintrag nur, wenn der Schalter wirklich umlegte (P5c/AP2): Die
+    /* Ein Eintrag nur, wenn der Schalter wirklich umlegte: Die
      * Kette ruft `wartung_an` auch, wenn die Wartung schon steht, und ein
      * zweites „eingeschaltet" wäre eine falsche Auskunft. */
     if ($ok && $vorher !== wartung_aktiv()) {

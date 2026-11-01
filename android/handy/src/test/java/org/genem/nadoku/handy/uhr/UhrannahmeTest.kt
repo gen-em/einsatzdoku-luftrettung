@@ -26,11 +26,11 @@ import java.time.Instant
 import kotlin.random.Random
 
 /**
- * Die Annahme der Uhr-Ereignisse am Handy (Abnahme C2, E-S4-10).
+ * Die Annahme der Uhr-Ereignisse am Handy.
  *
- * HIER LIEGEN ZWEI DER FÜNF ABNAHMEFÄLLE: **Doppelzustellung nach verlorener
+ * HIER LIEGEN ZWEI DER TRAGENDEN FÄLLE: **Doppelzustellung nach verlorener
  * Quittung** (kein zweiter Einsatz, der `wm-`-Anker greift) und
- * **Phasenkonflikt Uhr/Handy** (beide Einträge gesendet). Die drei anderen
+ * **Phasenkonflikt Uhr/Handy** (beide Einträge gesendet). Die übrigen
  * liegen auf der Uhr-Seite, weil dort gepuffert wird.
  *
  * Robolectric, weil echtes SQLite läuft: Die Buchführung über die
@@ -89,7 +89,7 @@ class UhrannahmeTest {
     // ---- Der Dienststart der Uhr --------------------------------------------
 
     /**
-     * **`started_at` ist die Auslösezeit der Uhr** (E-S4-10) — nicht die
+     * **`started_at` ist die Auslösezeit der Uhr** — nicht die
      * Ankunft. Zwischen beiden können im Funkloch Minuten liegen, und der
      * Dienst begann, als die Uhr gedrückt wurde.
      */
@@ -208,13 +208,13 @@ class UhrannahmeTest {
     // ---- Phasenkonflikt Uhr/Handy -------------------------------------------
 
     /**
-     * **Phasenkonflikt: beide Einträge werden gesendet** (E-R45-12).
+     * **Phasenkonflikt: beide Einträge werden gesendet.**
      *
      * Handy und Uhr setzen dieselbe Phase, dreißig Sekunden auseinander. Es
      * entstehen **zwei** Einträge mit verschiedenen Quellen — und der
      * Datensatz ist danach **wieder sendepflichtig**, obwohl der Server ihn
      * schon einmal bestätigt hatte. Ohne diesen zweiten Teil stünde die
-     * Korrektur zwar im Puffer, käme aber nie an (Fund B-S4-05).
+     * Korrektur zwar im Puffer, käme aber nie an.
      */
     @Test fun einPhasenkonfliktErzeugtZweiEintraegeUndBeideGehenRaus() {
         annahme.uebernimm(meldung(Ereignisart.DIENST_BEGINNEN, "2026-07-16T05:00:00Z"))
@@ -241,7 +241,7 @@ class UhrannahmeTest {
     }
 
     /**
-     * Die Koordinate kommt aus der **eigenen Spur** des Handys (E-S4-10) —
+     * Die Koordinate kommt aus der **eigenen Spur** des Handys —
      * auch für ein Ereignis der Uhr, und auch dann, wenn der Punkt noch im
      * Ruhesegment liegt.
      */
@@ -293,7 +293,7 @@ class UhrannahmeTest {
         assertNull(puffer.offenesPaket(Paketzeile.ART_EINSATZ))
     }
 
-    // ---- Absender und Zeit (Backlog Nr. 144, Krypto-Review AN-4) -----------
+    // ---- Absender und Zeit ------------------------------------------------
 
     @Test fun derVerbundeneKnotenIstBekannt() {
         assertTrue(annahme.absenderBekannt(Absender("knoten-uhr", VERBUNDEN)))

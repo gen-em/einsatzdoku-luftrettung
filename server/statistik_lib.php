@@ -2,8 +2,7 @@
 declare(strict_types=1);
 
 /**
- * STATISTIK — die Fenster und die eine Zaehlung der Einsaetze
- * (P5c/AP7, E-P5c-18, R38, Nr. 191).
+ * STATISTIK — die Fenster und die eine Zaehlung der Einsaetze.
  *
  * WARUM EINE EIGENE DATEI FUER EINE ABFRAGE. `betrieb_statistik.php` ist eine
  * Seite; sie laesst sich nicht einbinden, ohne sie zu zeichnen. Der
@@ -13,16 +12,16 @@ declare(strict_types=1);
  * Abfrage, die niemand stellt. Deshalb steht sie hier, einmal, und beide
  * lesen sie.
  *
- * WAS SIE ZAEHLT (E-P5c-18, entschieden 20.09.2026): Einsaetze ab ihrem
+ * WAS SIE ZAEHLT: Einsaetze ab ihrem
  * BEGINN (`missions.started_at`, UTC), ohne Demo-Konto, ohne Papierkorb, in
- * Fenstern mit Unter- UND Obergrenze (F-P5c-39) — ein Beginn in der Zukunft
+ * Fenstern mit Unter- UND Obergrenze — ein Beginn in der Zukunft
  * liegt in keinem Fenster. Kein Verbund mit `days`: Ein Einsatz im
  * Papierkorb seines Tages traegt sein eigenes `deleted_at`
  * (`deleted_with_day`), und `day_id` darf leer sein.
  */
 
-/* Tage je Fenster => Spaltenkopf. Konten und Einsaetze fangen bei 24 h an
- * (R38); die Geraete bleiben bei den drei Fenstern aus S8 — eine Kopplung in
+/* Tage je Fenster => Spaltenkopf. Konten und Einsaetze fangen bei 24 h an;
+ * die Geraete bleiben bei drei Fenstern — eine Kopplung in
  * den letzten 24 Stunden ist keine Frage, die jemand stellt. „6 Monate" sind
  * 180 Tage, „1 Jahr" 365: Ein Monat ist keine feste Laenge. */
 const STAT_FENSTER_KONTEN    = [1 => '24 h', 7 => '7 Tage', 30 => '30 Tage', 180 => '6 Monate'];
@@ -30,14 +29,13 @@ const STAT_FENSTER_EINSAETZE = [1 => '24 h', 7 => '7 Tage', 30 => '30 Tage', 180
                                 365 => '1 Jahr'];
 const STAT_FENSTER_GERAETE   = [7 => '7 Tage', 30 => '30 Tage', 180 => '6 Monate'];
 
-/* DIE WAHL ÜBER DEN REITERN (R4-23, Nr. 122 a, Bild M-R4-23): vier feste
+/* DIE WAHL ÜBER DEN REITERN: vier feste
  * Fenster als Pillen, Tage => [Pille, Wortlaut in Kennzahl und Karte]. Sie
  * bestimmen die Kennzahl „Einsätze in …" und die Herkunft; die Tabellen
  * zeigen weiter jedes Fenster. Die Namen sind die der Spaltenköpfe
  * (`STAT_FENSTER_EINSAETZE`), nicht „180 Tage" wie im Mockup: Eine Pille
- * „180 Tage" über einer Spalte „6 Monate" wären zwei Namen für eine Sache
- * (E-R4-57). 30 Tage sind die Vorgabe — die Seite zeigte bis Web 21.4.1 nur
- * sie. */
+ * „180 Tage" über einer Spalte „6 Monate" wären zwei Namen für eine Sache.
+ * 30 Tage sind die Vorgabe. */
 const STAT_WAHL = [7   => ['7 Tage',   'in 7 Tagen'],
                    30  => ['30 Tage',  'in 30 Tagen'],
                    180 => ['6 Monate', 'in 6 Monaten'],
@@ -45,7 +43,7 @@ const STAT_WAHL = [7   => ['7 Tage',   'in 7 Tagen'],
 const STAT_WAHL_VORGABE = 30;
 
 /**
- * Der Zeitraum der Seite aus der Adresse (R4-23).
+ * Der Zeitraum der Seite aus der Adresse.
  *
  * Zwei Arten: ein festes Fenster (`t` aus `STAT_WAHL`, sonst die Vorgabe)
  * oder ein EIGENER Zeitraum (`von` und `bis`, beide `JJJJ-MM-TT`).
@@ -54,8 +52,8 @@ const STAT_WAHL_VORGABE = 30;
  * 31.05." meint den ganzen 31. Mai in Deutschland, nicht bis 02:00 Uhr MESZ.
  * Die Untergrenze ist der Beginn des ersten Tages, die Obergrenze der Beginn
  * des Tages NACH dem letzten — beide in UTC, weil `missions.started_at` in
- * UTC steht. Die Abfragen halten zusätzlich die Obergrenze JETZT
- * (F-P5c-39): Ein Beginn in der Zukunft liegt in keinem Zeitraum.
+ * UTC steht. Die Abfragen halten zusätzlich die Obergrenze JETZT: Ein
+ * Beginn in der Zukunft liegt in keinem Zeitraum.
  *
  * EIN BIS IN DER ZUKUNFT WIRD AUF HEUTE GEKÜRZT, sonst verdünnte er den
  * Schnitt je Tag mit Tagen, an denen noch niemand arbeiten konnte. Ein Von
@@ -63,7 +61,7 @@ const STAT_WAHL_VORGABE = 30;
  * einem Fehler gilt die Vorgabe, und `fehler` sagt, warum.
  *
  * @return array{art:string, tage:int, t?:int, von?:string, bis?:string,
- *               unten?:string, oben?:string, fehler?:string}
+ *               bis_utc?:string, unten?:string, oben?:string, fehler?:string}
  */
 function statistik_zeitraum(array $q): array
 {
@@ -156,7 +154,7 @@ function statistik_einsaetze_sql(): string
 
 /**
  * Die Bedingung EINES Zeitraums auf `m.started_at` — Unter- und Obergrenze,
- * und immer auch „nicht nach jetzt" (F-P5c-39). Ein festes Fenster rechnet
+ * und immer auch „nicht nach jetzt". Ein festes Fenster rechnet
  * mit `UTC_TIMESTAMP()` und hat keinen Platzhalter; ein eigener Zeitraum
  * hat zwei (Unter- und Obergrenze, UTC, die obere ausschließlich). Beide
  * lesen über `idx_missions_started`.
@@ -178,8 +176,8 @@ function statistik_bedingung_werte(array $z): array
 
 /**
  * Die Herkunft der Einsaetze im gewählten Zeitraum — dieselbe Bedingung wie
- * oben, gruppiert nach `origin` (E-P5c-45). Platzhalter: die Kennung des
- * Demo-Kontos, dann die der Bedingung. Bis Web 21.4.1 immer 30 Tage (R4-23).
+ * oben, gruppiert nach `origin`. Platzhalter: die Kennung des
+ * Demo-Kontos, dann die der Bedingung.
  */
 function statistik_herkunft_sql(array $z): string
 {
@@ -191,7 +189,7 @@ function statistik_herkunft_sql(array $z): string
 }
 
 /**
- * Einsätze und Konten mit Einsatz in EINEM Zeitraum (R4-23) — für den
+ * Einsätze und Konten mit Einsatz in EINEM Zeitraum — für den
  * eigenen Zeitraum; die festen Fenster rechnet `statistik_einsaetze_sql()`
  * in einer Abfrage. Platzhalter wie bei der Herkunft.
  */
@@ -204,15 +202,15 @@ function statistik_zeitraum_sql(array $z): string
 }
 
 /* ==========================================================================
- * DIE EINTEILUNG DER DIAGRAMME (R4-24, Nr. 122 b, Bild M-R4-24)
+ * DIE EINTEILUNG DER DIAGRAMME
  * ======================================================================== */
 
 /**
  * Die Fächer eines Zeitraums — eine Säule je Fach.
  *
- * JE TAG BIS 31 TAGE, JE WOCHE BIS 366, DARÜBER JE MONAT (E-R4-59). Das
- * Mockup zeigt Wochen über sechs Monate; bei „7 Tage" wären das zwei
- * Säulen, bei einem eigenen Zeitraum über drei Jahre 157 — beides sagt
+ * JE TAG BIS 31 TAGE, JE WOCHE BIS 366, DARÜBER JE MONAT. Feste Wochen
+ * ergaeben bei „7 Tage" zwei Säulen, bei einem eigenen Zeitraum über drei
+ * Jahre 157 — beides sagt
  * nichts. Die Wochen beginnen am Montag, wie der Kalender der Anwendung.
  *
  * IN ORTSZEIT (`app.timezone`), wie die Tagesgrenzen des Zeitraums: Ein
@@ -273,12 +271,12 @@ function statistik_fach(array $einteilung, ?string $utc): ?int
 }
 
 /**
- * Einsätze je Stunde und Konto im Zeitraum — der Stoff der Säulen (R4-24).
+ * Einsätze je Stunde und Konto im Zeitraum — der Stoff der Säulen.
  *
  * WARUM JE STUNDE UND NICHT JE TAG. Die Fächer sind Ortstage; gruppiert die
  * Datenbank nach UTC-Tag, landet ein Einsatz zwischen Mitternacht und
  * 02:00 Uhr MESZ im Vortag. `CONVERT_TZ` mit Zonennamen braucht
- * Zeitzonentabellen, die nicht jede Datenbank hat (F-R4-21). Stunden
+ * Zeitzonentabellen, die nicht jede Datenbank hat. Stunden
  * verschieben sich nur um ganze Stunden — PHP rechnet sie exakt um, und es
  * sind höchstens so viele Zeilen wie Einsätze. JE KONTO, damit dieselbe
  * Abfrage auch „Konten mit Einsatz" je Fach zählt. Platzhalter wie bei der

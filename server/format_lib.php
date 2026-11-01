@@ -5,8 +5,6 @@ declare(strict_types=1);
  * FORMAT — die eine Stelle, an der aus einem Wert ein Text fuer Menschen wird
  * ===========================================================================
  *
- * Entstanden in Schritt 15 AP7 (Zentralisierung, R83, E-ZE-23; F-ZE-1, F-ZE-3).
- *
  * WAS HIER STEHT: Groesse, Zahl, Anteil, Datum, Uhrzeit, relative Zeit, die
  * ISO-UTC-Marke und „heute". Also alles, was eine Zahl oder einen Zeitpunkt in
  * lesbaren Text verwandelt — und das Gegenstueck dazu, wo eines gebraucht wird.
@@ -38,7 +36,7 @@ declare(strict_types=1);
  *                 Sekundenwerte liefern verschiedenen Text (Einzelheiten bei
  *                 `zeit_relativ()`).
  *
- * WAS SIE LAEDT: nur `konfig_lib.php` (E-ZE-11). Das ist keine Sparsamkeit,
+ * WAS SIE LAEDT: nur `konfig_lib.php`. Das ist keine Sparsamkeit,
  * sondern Bedingung — `plattform_lib.php` wird von `install.php` geladen,
  * BEVOR es eine `config.php` gibt, und `smtp.php` laeuft im selben Weg. Wer
  * hier eine Fachbibliothek einbindet, nimmt dem Einrichter die Grundlage.
@@ -49,9 +47,9 @@ declare(strict_types=1);
  * keine Herkunft haben, sondern die eine Schreibweise des Hauses sein.
  *
  * DIE JS-SEITE HEISST GENAUSO. `server/assets/format.js` fuehrt `EdFormat`
- * mit denselben Regeln fuer den Browser (AP8 baut sie aus). Wer hier etwas
+ * mit denselben Regeln fuer den Browser. Wer hier etwas
  * aendert, aendert es dort mit — sonst zeigt dieselbe Zahl je nach Weg zwei
- * Schreibweisen, und genau davon handelt dieses Paket.
+ * Schreibweisen.
  */
 
 require_once __DIR__ . '/konfig_lib.php';
@@ -63,10 +61,10 @@ require_once __DIR__ . '/konfig_lib.php';
 /**
  * UTC-Zeitpunkt in Ortszeit (`app.timezone`), nach `$format`.
  *
- * STAND BIS WEB 20.31.0 IN `db.php` und ist hierher gezogen — mit 113
+ * STEHT HIER UND NICHT IN `db.php` — mit 113
  * Aufrufen in 37 Dateien der meistbenutzte Formatierer des Projekts, und
- * `datum_text()` und `datum_zeit_text()` unten bauen auf ihm auf. Haette er
- * in `db.php` bleiben sollen, muesste diese Datei die Datenbankdatei laden
+ * `datum_text()` und `datum_zeit_text()` unten bauen auf ihm auf. Stuende er
+ * in `db.php`, muesste diese Datei die Datenbankdatei laden
  * (oder die Rechnung ein zweites Mal fuehren) — beides waere das Gegenteil
  * dessen, wofuer es sie gibt.
  *
@@ -101,17 +99,14 @@ function datum_text(?string $utc): string
  * „22.09.2026 0000009 30:14" statt „22.09.2026 um 14:30". Und so ein Trenner
  * steht schon im Bestand — `einstellungen.php` baut „ um " aus zwei Aufrufen.
  *
- * DER TRENNER IST DAS KOMMA (P5c/AP9, E-P5c-37, Nr. 253): „TT.MM.JJJJ,
- * HH:MM", wie in den freigegebenen Mockups und auf dem Schluesselblatt.
- * Bis Web 21.0.0 liefen drei Trenner um — ein Leerzeichen (Vorgabe), ein
- * Mittelpunkt mit Leerzeichen (11 Aufrufer) und ein Komma (8) —, und
- * dieselbe Zeit stand auf zwei Seiten verschieden da. Schritt 15 hat sie
- * benannt, AP9 hat die Vorgabe umgestellt und das zweite Argument bei allen
- * 19 Aufrufern gestrichen. ZWEI BENANNTE AUSNAHMEN: „ um " in den
+ * DER TRENNER IST DAS KOMMA: „TT.MM.JJJJ, HH:MM", wie auf dem
+ * Schluesselblatt. Drei Trenner nebeneinander — Leerzeichen, Mittelpunkt,
+ * Komma — liessen dieselbe Zeit auf zwei Seiten verschieden dastehen. ZWEI
+ * BENANNTE AUSNAHMEN: „ um " in den
  * Mailtexten (`konto_lib.php`, `einstellungen.php`) — ein Satz, keine
- * Zeitangabe —, und das Leerzeichen im GPX-Spurnamen (bis Web 22.2.0
- * `gpx.php`, E-P5c-129): Der steht in der Datei, `Export-Format.md` legt ihn
- * fest; seit S11-05d bauen ihn `gpx.js` und `export.js` im Browser. Der Parameter bleibt dafuer; wer
+ * Zeitangabe —, und das Leerzeichen im GPX-Spurnamen: Der steht in der
+ * Datei, `Export-Format.md` legt ihn fest; `gpx.js` und `export.js` bauen
+ * ihn im Browser. Der Parameter bleibt dafuer; wer
  * ihn fuer etwas anderes braucht, fragt zuerst, ob es wirklich eine andere
  * Schreibweise sein soll.
  */
@@ -123,7 +118,7 @@ function datum_zeit_text(?string $utc, string $trenner = ', '): string
 
 /**
  * Ein Zeitraum: „13.09. – 19.09.2026", über einen Jahreswechsel
- * „28.12.2026 – 03.01.2027" (P5c/AP2, Archiv des Protokolls). Beide Enden
+ * „28.12.2026 – 03.01.2027". Beide Enden
  * in Ortszeit und EINSCHLIESSLICH — wer „bis 19.09." liest, meint den
  * ganzen 19.
  */
@@ -138,8 +133,8 @@ function zeitraum_text(?string $vonUtc, ?string $bisUtc): string
 }
 
 /**
- * Ein ORTSTAG kurz: '2026-09-21' → „21.09." — die Achse eines Diagramms
- * (R4-24). Anders als die Formatierer darüber nimmt er keinen UTC-Zeitpunkt,
+ * Ein ORTSTAG kurz: '2026-09-21' → „21.09." — die Achse eines Diagramms.
+ * Anders als die Formatierer darüber nimmt er keinen UTC-Zeitpunkt,
  * sondern einen Tag, der schon in Ortszeit gerechnet ist: Eine zweite
  * Umrechnung verschöbe ihn um einen Tag.
  */
@@ -150,7 +145,7 @@ function tag_kurz_text(string $tag): string
 
 /**
  * Zwei ORTSTAGE als Spanne: „29.08. – 28.09.2026", über einen Jahreswechsel
- * „27.09.2025 – 28.09.2026" (R4-24) — die Schreibweise von `zeitraum_text()`,
+ * „27.09.2025 – 28.09.2026" — die Schreibweise von `zeitraum_text()`,
  * aber für Tage, die schon in Ortszeit gerechnet sind.
  */
 function tage_spanne_text(string $von, string $bis): string
@@ -162,7 +157,7 @@ function tage_spanne_text(string $von, string $bis): string
 }
 
 /**
- * Ein Monat kurz: '2026-09-01' → „Sep. 2026", ohne Jahr „Sep." (R4-24).
+ * Ein Monat kurz: '2026-09-01' → „Sep. 2026", ohne Jahr „Sep.".
  * Wie `tag_kurz_text()` mit einem Ortstag, nicht mit einem UTC-Zeitpunkt.
  * Mai, Juni und Juli sind kurz genug und tragen keinen Punkt.
  */
@@ -183,9 +178,8 @@ function datum_stunde_text(?string $utc): string
 /**
  * Alter als Text: „gerade eben", „vor 12 Minuten", „vor 3 Stunden".
  *
- * HIESS BIS WEB 20.31.0 `status_alter()` und lag in `status_lib.php`. Daneben
- * stand eine ZWEITE Fassung als Inline-Ternaer in `betrieb_updates.php` — und
- * die beiden waren auseinandergelaufen. Lueckenlos nachgerechnet ueber
+ * EINE ZWEITE FASSUNG als Inline-Ternaer (in `betrieb_updates.php`) war von
+ * dieser auseinandergelaufen. Lueckenlos nachgerechnet ueber
  * 0 bis 200 000 Sekunden: **1 890 Sekundenwerte** lieferten verschiedenen
  * Text, in genau zwei zusammenhaengenden Baendern:
  *
@@ -196,9 +190,7 @@ function datum_stunde_text(?string $utc): string
  *                     Kopie wechselte bei 3 600 s auf Stunden, diese Fassung
  *                     erst bei 5 400 s).
  *
- * Ausserhalb dieser beiden Baender: null Abweichungen. Diese Fassung gilt
- * (E-ZE-23) — die Umstellung ist damit eine der fuenf namentlich benannten
- * sichtbaren Folgen des ganzen Schritts.
+ * Ausserhalb dieser beiden Baender: null Abweichungen. Diese Fassung gilt.
  *
  * DIE DRITTE FOLGE, die dabei mitkommt: Die Kopie fing eine unlesbare
  * Zeitmarke nicht ab (`strtotime()` liefert `false`, `time() - false` ist
@@ -225,11 +217,10 @@ function zeit_relativ(?string $utc): string
 /**
  * Der heutige Kalendertag in der APP-Zeitzone, als 'Y-m-d'.
  *
- * WARUM ES DIE FUNKTION GIBT (FF-1, F-ZE-1): `date('Y-m-d')` nimmt die
+ * WARUM ES DIE FUNKTION GIBT: `date('Y-m-d')` nimmt die
  * Zeitzone der `php.ini`, nicht `app.timezone`. Auf einem Server in UTC ist
  * zwischen 0 und 2 Uhr Ortszeit „heute" damit GESTERN — und genau dieser Wert
  * belegt das Datumsfeld eines neuen Diensttags vor und begrenzt es als `max`.
- * Das ist eine der fuenf namentlich benannten sichtbaren Folgen (E-ZE-10).
  *
  * OHNE FORMAT-PARAMETER, und das mit Absicht: Alle Verbraucher wollen
  * 'Y-m-d'. Ein optionaler Formatparameter machte daraus einen allgemeinen
@@ -306,9 +297,8 @@ function iso_utc_lesen(?string $iso): ?int
  * beim Aufrufer (' GB', ' Zeilen', ' Anweisungen'). Ein Einheitenparameter
  * haette also null Verbraucher und waere eine Verallgemeinerung auf Verdacht.
  *
- * HIESS BIS WEB 20.31.0 `stat_zahl()` und lag in `betrieb_statistik.php` —
- * in einer SEITE, nicht in einer Bibliothek. Ein zweiter Verbraucher konnte
- * sie gar nicht erreichen; die uebrigen 26 Stellen schrieben deshalb
+ * STEHT IN EINER BIBLIOTHEK, nicht in einer SEITE: Dort erreichte sie kein
+ * zweiter Verbraucher, und die uebrigen Stellen schrieben
  * `number_format(x, s, ',', '.')` von Hand.
  */
 function zahl_text(int|float $n, int $stellen = 0): string
@@ -319,17 +309,14 @@ function zahl_text(int|float $n, int $stellen = 0): string
 /**
  * Dateigrösse: KB unter einem Megabyte, MB darüber — und GB ab einem Gigabyte.
  *
- * DIE DRITTE STUFE KAM MIT DER SPEICHERGRENZE (S2/AP6). Sie wird in GB
+ * DIE DRITTE STUFE GEHOERT ZUR SPEICHERGRENZE. Sie wird in GB
  * angegeben (Vorgabe 2 GB); ohne diese Stufe hätte die Meldung „Die
  * Speichergrenze ist erreicht (2.048,0 MB von 2.048,0 MB)" gelautet — dieselbe
  * Zahl, die daneben als „2 GB" eingestellt wird, in einer anderen Einheit.
  *
- * HIESS BIS WEB 20.31.0 `edbak_groesse_text()` und lag in
- * `adminbackup_lib.php`. Zwei Dateien luden dafuer rund 2 600 Zeilen
- * Backup-Fachbibliothek samt deren Krypto- und Pruefschicht, und eine dritte
- * (`betrieb_sicherheit.php`) rief die Funktion, ohne sie je einzubinden — sie
- * war nur da, weil das Menue `status_lib.php` nachlud. Das ist der Beleg, aus
- * dem R83 entstanden ist.
+ * SIE STEHT HIER UND NICHT IN `adminbackup_lib.php`: Sonst luden Dateien
+ * dafuer rund 2 600 Zeilen Backup-Fachbibliothek samt deren Krypto- und
+ * Pruefschicht, oder sie riefen die Funktion, ohne sie einzubinden.
  *
  * DREI STUFEN MIT DREI VERSCHIEDENEN NACHKOMMASTELLEN, und das ist kein
  * Schreibfehler: GB zwei, MB eine, KB null. Wer hier „vereinheitlicht",
@@ -351,19 +338,15 @@ function groesse_text(int $bytes): string
  * Groesse mit abgeschnittenen Nachkommanullen und der Stufe „B":
  * „2 GB", „1,5 MB", „512 B", „unbegrenzt".
  *
- * HIESS BIS WEB 20.31.0 `plattform_groesse()` und lag in
- * `plattform_lib.php`. Ihr Kopfkommentar behauptete „dieselbe Schreibweise
- * wie `edbak_groesse_text()`" — DAS STIMMTE NIE. Nachgemessen: vierte Stufe
+ * SIE IST NICHT DIESELBE SCHREIBWEISE WIE `groesse_text()`: vierte Stufe
  * „B", abgeschnittene Nachkommanullen, GB mit EINER statt zwei Stellen. Aus
- * 2 GB wird hier „2 GB" und dort „2,00 GB"; dieselben Bytes sahen je nach
- * Seite anders aus.
+ * 2 GB wird hier „2 GB" und dort „2,00 GB".
  *
- * SIE BLEIBT TROTZDEM EINE ZWEITE FUNKTION, und das ist kein Rueckfall in den
- * alten Zustand: Sie ist eine ANDERE Schreibweise, nicht eine zweite Fassung
- * derselben. Die Plattformseite stellt Grenzwerte gegenueber („>= 128 MB"),
- * und dort ist „2 GB" richtig und „2,00 GB" Laerm. Was R83 verbietet, ist
- * dieselbe Sache an zwei Stellen — nicht zwei Sachen an zwei Stellen. Der
- * Unterschied steht jetzt im Kommentar statt in einer falschen Behauptung.
+ * SIE BLEIBT TROTZDEM EINE ZWEITE FUNKTION: Sie ist eine ANDERE
+ * Schreibweise, nicht eine zweite Fassung derselben. Die Plattformseite
+ * stellt Grenzwerte gegenueber („>= 128 MB"), und dort ist „2 GB" richtig
+ * und „2,00 GB" Laerm. Verboten ist dieselbe Sache an zwei Stellen — nicht
+ * zwei Sachen an zwei Stellen.
  */
 function groesse_kurz_text(int $b): string
 {
@@ -382,12 +365,11 @@ function groesse_kurz_text(int $b): string
  * Kontoseite (`einstellungen.php`), Warnmail (`jobs_lib.php`) und die
  * 507-Antwort an das Geraet (`ingest.php`). Vier Ausgabewege, ein Satz.
  *
- * DIE GEMEINSAME EINHEIT IST ENTSCHIEDEN, NICHT GEERBT (Auftraggeber,
- * 22.09.2026). Der andere Weg waere `groesse_text()` je Wert gewesen — aus
+ * DIE GEMEINSAME EINHEIT IST ENTSCHIEDEN, NICHT GEERBT (Auftraggeber). Der
+ * andere Weg waere `groesse_text()` je Wert gewesen — aus
  * „0 von 250 MB" wuerde dann „312 KB von 250,0 MB". Das ist genauer, aber es
  * ist eine sichtbare Textaenderung an vier Stellen UND im Antworttext an das
- * Geraet, und die Fuenferliste der benannten Ausnahmen (E-ZE-10) waechst
- * dafuer nicht.
+ * Geraet.
  *
  * `(int)round(x / 1048576)` wortgetreu wie an allen vier Stellen: Der
  * Grenzwert entsteht als `$g['mb'] * 1024 * 1024` und ist per Bauart ein
@@ -412,8 +394,7 @@ function groesse_paar_text(int $ist, int $grenze): string
  * der Wert eine SCHWELLE ausloest (die Warnung soll erst kommen, wenn die
  * Schwelle wirklich erreicht ist), kaufmaennisch dort, wo er nur gelesen
  * wird. Eine Funktion ohne diesen Schalter verschoebe den Ausloesezeitpunkt
- * der Speicher-Warnmail um bis zu einen Prozentpunkt, und das waere eine
- * sechste Ausnahme von E-ZE-10.
+ * der Speicher-Warnmail um bis zu einen Prozentpunkt.
  *
  * NICHT AUF 100 GEDECKELT: Ein uebervolles Kontingent soll 104 melden und
  * nicht 100. Wer deckeln will, tut es beim Aufrufer — `betrieb_server.php`
@@ -427,7 +408,7 @@ function prozent_wert(int|float $teil, int|float $ganz, string $rundung = 'ab'):
      * die Reihenfolge der Gleitkommaoperationen — bei `floor` kann das an
      * einer glatten Grenze kippen, und dann faellt eine Warnmail aus. Ein
      * Muster zu umgehen statt zu zentralisieren waere ausserdem genau das,
-     * wogegen das Register steht (E-ZE-24). */
+     * wogegen das Register steht. */
     $r = $teil * 100 / $ganz;
     return (int)($rundung === 'kauf' ? round($r) : floor($r));
 }
@@ -443,7 +424,7 @@ function prozent_wert(int|float $teil, int|float $ganz, string $rundung = 'ab'):
  * `prozent_wert()` richtig und nicht diese Funktion.
  *
  * RUNDET KAUFMAENNISCH, damit die Prozentzahl zu der Zahl daneben passt.
- * Hiess bis Web 20.31.0 `stat_anteil()` und lag in `betrieb_statistik.php`.
+ * RUNDET KAUFMAENNISCH, damit die Prozentzahl zu der Zahl daneben passt.
  */
 function prozent_text(int|float $teil, int|float $ganz, string $leer = ''): string
 {
@@ -452,7 +433,7 @@ function prozent_text(int|float $teil, int|float $ganz, string $leer = ''): stri
 }
 
 /**
- * Eine Zelle fuer eine CSV-Datei entschaerfen (R17-22, F-R17-45).
+ * Eine Zelle fuer eine CSV-Datei entschaerfen.
  *
  * Beginnt ein Text mit `=`, `+`, `-`, `@`, einem Tabulator oder einem
  * Wagenruecklauf, liest Excel oder LibreOffice ihn beim Oeffnen als FORMEL

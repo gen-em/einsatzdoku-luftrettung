@@ -2,25 +2,23 @@
 declare(strict_types=1);
 require_once __DIR__ . '/auth_guard.php';
 require_once __DIR__ . '/instanz_lib.php';
-require_once __DIR__ . '/umgebung_lib.php';   // Vorsatz im Titel (P5c/AP1, E-P5c-70)
+require_once __DIR__ . '/umgebung_lib.php';   // Vorsatz im Titel
 require_betreiberin();
-/* EIN FRISCHER CODE VOR DEM BLATT (Schritt 18, SR-07, E-SR-20): Die Seite
+/* EIN FRISCHER CODE VOR DEM BLATT: Die Seite
  * zeigt die Geheimnisse selbst. Vor jeder Ausgabe, damit der Umweg noch eine
  * Kopfzeile setzen kann. */
 zweitfaktor_frisch_verlangen('schluesselblatt');
 require_once __DIR__ . '/serverkrypto_lib.php';
 require_once __DIR__ . '/format_lib.php';   // datum_zeit_text() fuer die Zeitmarke des Blatts
-/* `ui.php` SEIT P5c/AP9 — nicht für das Gerüst (es gibt keins), sondern für
- * die Meldung: Das Blatt nimmt denselben Baustein wie Code- und Notfallblatt
- * (`ui_meldung_markup()`, mit Symbol, M-P5c-01f). Bis dahin stand die Warnung
- * von Hand gebaut da, ohne Symbol. */
+/* `ui.php` — nicht für das Gerüst (es gibt keins), sondern für die Meldung:
+ * Das Blatt nimmt denselben Baustein wie Code- und Notfallblatt
+ * (`ui_meldung_markup()`, mit Symbol). */
 require_once __DIR__ . '/ui.php';
 
 /**
- * DAS SCHLÜSSELBLATT — die einzige Seite, die die Geheimnisse ZEIGT
- * (S10, E-S10-10).
+ * DAS SCHLÜSSELBLATT — die einzige Seite, die die Geheimnisse ZEIGT.
  *
- * WOZU ES DAS GIBT. `config.php` ist seit S10 Schlüsselträger der ganzen
+ * WOZU ES DAS GIBT. `config.php` ist Schlüsselträger der ganzen
  * Installation: Der Serverschlüssel öffnet jede Sicherung, der Server-Anteil
  * geht in den Datenschlüssel jedes Kontos ein. Geht die Datei verloren, ist
  * beides weg — und ohne einen zweiten Ort ist es dann endgültig weg. Dieser
@@ -50,7 +48,7 @@ require_once __DIR__ . '/ui.php';
  *   3. Kein Gerüst, kein Menü, kein Verweis nach draussen. Wer sie aufruft,
  *      hat sie aufrufen wollen.
  *
- * KEIN GERÜST — DAS MUSTER IST `wartung_seite_html()` (S5 Paket W). Eine
+ * KEIN GERÜST — DAS MUSTER IST `wartung_seite_html()`. Eine
  * Seite, die gedruckt wird, soll kein Menü, keine Kopfleiste und keine
  * Schublade mitdrucken. Der Unterschied zur Wartungsseite ist, dass diese
  * hier ANGEMELDET ist; das Gerüst fehlt trotzdem, und zwar aus demselben
@@ -74,7 +72,7 @@ if (preg_match('/^[0-9a-f]{64}$/i', $skHex)) {
     $eintraege[] = ['name' => 'Serverschlüssel',
                     'eintrag' => 'server_key',
                     'hex' => $skHex,
-                    /* SEIT WEB 20.42.0 AUCH DIE ZWEITFAKTOR-GEHEIMNISSE (E-P5c-42):
+                    /* AUCH DIE ZWEITFAKTOR-GEHEIMNISSE:
                      * Ohne diesen Schlüssel prüft die Anmeldung keinen Code aus
                      * der App mehr — es bleiben die Wiederherstellungscodes, die
                      * NICHT an ihm hängen, und das Zurücksetzen durch die
@@ -83,13 +81,13 @@ if (preg_match('/^[0-9a-f]{64}$/i', $skHex)) {
                             . 'Zugänge der Backup-Ziele, Archive des Protokolls, die '
                             . 'Geheimnisse des Zweitfaktors und die Siegel der Kontoschlüssel.'];
 }
-/* DER BISHERIGE SERVERSCHLÜSSEL (SR-03, E-SR-10) — nur während eines
+/* DER BISHERIGE SERVERSCHLÜSSEL — nur während eines
  * Wechsels, und mit dem Satz, der das alte Blatt vor dem Reißwolf bewahrt:
  * Was auf einem Backup-Ziel liegt, öffnet für immer nur er. Das Datum ist der
  * Beginn des Wechsels; Stände von davor gehören zu ihm. Eine Waise
  * (`server_key_alt` = `server_key`, ein Wechsel, der zwischen seinen beiden
  * Schritten abbrach) ist keiner und bekommt keine zweite Kachel mit derselben
- * Kennung (Nachprüfung H-SR-06, F-SR-86). */
+ * Kennung. */
 if (preg_match('/^[0-9a-f]{64}$/i', $skAlt) && strcasecmp($skAlt, $skHex) !== 0) {
     require_once __DIR__ . '/schluesselwechsel_lib.php';
     $swBeginn = sw_zeit((string)(sw_zustand()['begonnen'] ?? ''));
@@ -122,15 +120,15 @@ $ohneSchema = preg_replace('#^https?://#', '', rtrim($adresse, '/')) ?? '';
 $jetzt   = datum_zeit_text(gmdate('Y-m-d H:i:s'));
 $umg     = umgebung();
 
-/* DAS LOGO IST DER STANDARD DER INSTALLATION, nicht die Wahl des Kontos
- * (E-P5c-30): Das Blatt gehört der Anlage, nicht der Person, die es druckt.
+/* DAS LOGO IST DER STANDARD DER INSTALLATION, nicht die Wahl des Kontos:
+ * Das Blatt gehört der Anlage, nicht der Person, die es druckt.
  * Dieselbe Auflösung wie die Kachel unter Verwaltung → Installation. */
 $logoStamm = logo_standard_aufgeloest() === 'fahrzeug'
            ? 'gen-em_logo_nef' : 'gen-em_logo_helicopter';
 
 $h = static fn(string $s): string => htmlspecialchars($s, ENT_QUOTES, 'UTF-8');
 
-/* DIE KOPFZEILEN VON HAND (P5a/AP4, E-P5a-15).
+/* DIE KOPFZEILEN VON HAND.
  *
  * Diese Seite baut ihre Huelle selbst und laeuft deshalb NICHT durch
  * `ui_seite_start()` — die eine Stelle, an der die Kopfzeilen sonst gesetzt
@@ -151,14 +149,11 @@ kopfzeilen_seite();
 <link rel="stylesheet" href="<?= $h(asset('assets/style.css')) ?>">
 </head>
 <body class="blatt-seite">
-<?php /* DER BAUSTEIN IST `.blatt-druck` (P5c/AP9, E-P5c-08, -30, M-P5c-01f) —
-         wie Code- und Notfallblatt. Bis Web 21.0.0 stand das Blatt in der
-         Lesespalte des Gerüsts (`.rahmen-lesespalte` + `.text`), mit dem Wert
-         als `.codeblock-wert.blatt-wert` und vier Absätzen „Was damit zu tun
-         ist". Jetzt genau eine A4-Seite: Kopf mit Marke und Kurzname, je Wert
+<?php /* DER BAUSTEIN IST `.blatt-druck` — wie Code- und Notfallblatt.
+         Genau eine A4-Seite: Kopf mit Marke und Kurzname, je Wert
          eine Kachel mit sechzehn nummerierten Gruppen, drei Zeilen darunter.
 
-         DIE ERKLÄRTEXT-REGEL HAT HIER EINE GRENZE (E-P5c-30): Dieses Blatt wird
+         DIE ERKLÄRTEXT-REGEL HAT HIER EINE GRENZE: Dieses Blatt wird
          gebraucht, wenn `config.php` weg ist — dann ist auch `hilfe.php` nicht
          sicher erreichbar. „Wozu" steht deshalb an der Kachel, „Wohin" in der
          Warnung, und der Verweis nennt zusätzlich den Weg ohne Server. */ ?>
@@ -179,7 +174,7 @@ kopfzeilen_seite();
 <?php foreach ($eintraege as $e): ?>
 <?php /* SECHZEHN NUMMERIERTE GRUPPEN, WEIL ES ABGETIPPT WIRD — im Ernstfall,
          unter Zeitdruck, von Papier. 64 Zeichen am Stück verliert das Auge;
-         und die Quartalsrückfrage (E-P5b-10) fragt „Serverschlüssel ·
+         und die Quartalsrückfrage fragt „Serverschlüssel ·
          Gruppe 11" — bis elf zählt auf Papier niemand gern. Beim Nachtragen
          werden Leerzeichen und Groß-/Kleinschreibung wieder entfernt, die
          Lesehilfe kostet also nichts. */ ?>
@@ -188,18 +183,18 @@ kopfzeilen_seite();
 <p><?= $h($e['wozu']) ?></p></section>
 <?php endforeach; ?>
 <h2>Was damit zu tun ist</h2>
-<?php /* ZWEI REGELN, NICHT EINE (SR-03, E-SR-10, F-SR-05). Bis Web 21.12.0
-         hieß es „alte Blätter vernichten" für alles — beim Serverschlüssel
-         vernichtete das den einzigen Schlüssel zu den Ständen auf dem Ziel. */ ?>
+<?php /* ZWEI REGELN, NICHT EINE. „Alte Blätter vernichten" für alles
+         vernichtete beim Serverschlüssel den einzigen Schlüssel zu den
+         Ständen auf dem Ziel. */ ?>
 <p><strong>Wann neu.</strong> Nach jeder Rotation — des Anteils oder des Serverschlüssels — und nach jedem Neuanfang. Alte Blätter des Anteils vernichten; das alte Blatt des Serverschlüssels behalten, bis das Backup-Ziel nichts mehr unter ihm trägt.</p>
 <p><strong>Zurücktragen.</strong> Betrieb → Servereinstellungen, „Nachtragen vom Blatt"; geschrieben wird nur, wenn die Kennung stimmt. Leerzeichen und Groß/Klein sind egal.</p>
-<?php /* KNAPP, WEIL ES SONST NICHT AUF EINE SEITE PASST (gemessen, P5c/AP9):
+<?php /* KNAPP, WEIL ES SONST NICHT AUF EINE SEITE PASST (gemessen):
          Im Härtefall — drei Werte, Kurzname 83 Zeichen, Adresse 62, dazu die
          Umgebungszeile — lief diese Zeile mit der langen Sprungmarke
          „#karte-schluessel-des-servers-seit-web-20-1-0" auf drei Zeilen und
          das Blatt auf zwei Seiten (1032 von 1017 px). Mit der Marke
          „#das-schluesselblatt" und ohne „Abschnitt …" sind es 1013 von 1017.
-         Der Rückfall aus M-P5c-02 — die Umgebungszeile in den Kopf — half
+         Der Rückfall — die Umgebungszeile in den Kopf — half
          dort nicht: Neben einem langen Kurznamen wird die rechte Kopfspalte
          dadurch höher, nicht kürzer (1051 px). */ ?>
 <p><strong>Mehr.</strong> Handbuch: <?= $h($ohneSchema !== '' ? $ohneSchema : '…') ?>/hilfe.php#das-schluesselblatt — ohne Server: <code>docs/Handbuch.md</code> auf github.com/gen-em/einsatzdoku-luftrettung.</p>

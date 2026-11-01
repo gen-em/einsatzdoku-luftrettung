@@ -17,7 +17,7 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 
 /**
- * Das Nachrichtenformat zwischen Uhr und Handy (Abnahme C2, E-S4-10).
+ * Das Nachrichtenformat zwischen Uhr und Handy.
  *
  * Robolectric, weil `org.json` gebraucht wird — in einem gewöhnlichen
  * JVM-Prüflauf sind die Klassen aus `android.jar` leere Hüllen.
@@ -48,7 +48,7 @@ class NachrichtenformatTest {
         assertEquals(s, Nachrichtenformat.liesStand(Nachrichtenformat.schreibe(s)))
     }
 
-    // ---- Der Ortungszustand (E-S5Z-15) -------------------------------------
+    // ---- Der Ortungszustand ------------------------------------------------
 
     @Test fun derOrtungszustandUeberstehtDenRundlauf() {
         val s = standmeldung(ortung = Ortungscode.STANDORT_AUS)
@@ -61,7 +61,7 @@ class NachrichtenformatTest {
 
     /**
      * **Der Fall, der die Vertraeglichkeit ausmacht:** eine Nachricht ohne das
-     * Feld — also von einer Handy-Fassung vor E1. Sie muss lesbar bleiben und
+     * Feld — also von einer älteren Handy-Fassung. Sie muss lesbar bleiben und
      * `null` liefern, nicht scheitern und nicht "ok" erfinden.
      */
     @Test fun eineNachrichtOhneDasFeldLiefertNullUndScheitertNicht() {
@@ -124,7 +124,7 @@ class NachrichtenformatTest {
     )
 
     /**
-     * **Kein Zugangsdatum verlässt das Handy** (E-S4-11).
+     * **Kein Zugangsdatum verlässt das Handy.**
      *
      * Gezählt wird, statt behauptet: Die Nachricht trägt genau sechs
      * Schlüssel, und kein weiterer darf sich später dazuschleichen. Ein

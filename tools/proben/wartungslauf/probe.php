@@ -2,8 +2,7 @@
 declare(strict_types=1);
 
 /**
- * Wartungslaufprobe, Serverteil — Liste der fälligen Spuren und Tausch
- * (S11-07b; Konzept S11 E-S11-05, -25, -68 bis -73).
+ * Wartungslaufprobe, Serverteil — Liste der fälligen Spuren und Tausch.
  *
  * Anlass: Nr. 43 — seit S11 sieht der Server keine Koordinate mehr; Packen und
  * Ausdünnen wandern aus den Jobs in den Browser, und der Server darf dabei
@@ -29,7 +28,6 @@ declare(strict_types=1);
  */
 
 $wurzel = dirname(__DIR__, 3) . '/server';
-require_once $wurzel . '/config.php';
 require_once $wurzel . '/db.php';
 require_once $wurzel . '/validate_lib.php';
 require_once $wurzel . '/spur_lib.php';
@@ -128,8 +126,8 @@ try {
     $pdo->prepare('UPDATE missions SET final = 1, deleted_at = UTC_TIMESTAMP() WHERE id = ?')->execute([$mid]);
     pruefe(in_liste(spur2_faellig($pdo, $uid, 20, $jetzt), 'mission', $mid) === null, 'im Papierkorb: nicht in der Liste');
     $pdo->prepare('UPDATE missions SET deleted_at = NULL WHERE id = ?')->execute([$mid]);
-    /* Hier stand bis Web 22.7.0 der Fall „mit Altbestand (track_points):
-     * nicht in der Liste" (E-S11-70). Die Tabelle gibt es nicht mehr. */
+    /* Einen Fall „mit Altbestand (track_points): nicht in der Liste" gibt
+     * es nicht: Die Tabelle gibt es nicht mehr. */
     pruefe(count(spur2_faellig($pdo, $uid, 20, $jetzt)) <= SPUR2_WARTUNG_MAX, 'höchstens ' . SPUR2_WARTUNG_MAX . ' je Anfrage');
     $z = spur2_faellig_zahl($pdo, $uid, $jetzt);
     pruefe($z['aufzeichnungen'] === 1 && $z['diensttage'] === 1, 'Zahl: 1 Aufzeichnung aus 1 Diensttag', json_encode($z));

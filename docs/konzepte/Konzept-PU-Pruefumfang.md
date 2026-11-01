@@ -25,7 +25,7 @@ der neuen Form aus E-PU-08.
 `origin/main` bei `9dd9790` (Web 23.5.1, Uhr 4.1.0, Android 0.18.1). Die
 Umsetzung setzt einen **neuen** Zweig auf `main` auf, sobald 12b gemergt ist
 (1.3).
-**Backlog-Spanne:** **410 bis 419** (E-SD-21, eingetragen mit PU-00 vor
+**Backlog-Spanne:** **420 bis 429** — umgebucht von 410 bis 419 beim Merge mit 12b am 01.11.2026, weil 12b dieselbe Spanne reserviert und 410, 411 vergeben hatte (E-SD-21, eingetragen mit PU-00 vor
 jeder Vergabe).
 
 > **Statusblock**
@@ -39,7 +39,7 @@ jeder Vergabe).
 > | Halt | **Umsetzung blockiert bis 12b gemergt ist** (1.3). |
 > | Fable-Schritte | keine |
 > | Fächerung | keine (Kopf) |
-> | Nummern | 410 bis 419 reserviert; vergeben: keine. |
+> | Nummern | 420 bis 429 reserviert (bis 01.11.2026 410 bis 419, umgebucht beim Merge mit 12b); vergeben: keine. |
 
 ---
 

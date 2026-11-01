@@ -5,7 +5,7 @@ declare(strict_types=1);
  * Spurspeicherung — die EINZIGE Stelle, die GPS-Aufzeichnungen liest,
  * schreibt, zaehlt und loescht (CLAUDE.md 4).
  *
- * SEIT WEB 23 NUR NOCH SPUR2 (S11-12, E-S11-19). Eine Aufzeichnung liegt als
+ * NUR SPUR2. Eine Aufzeichnung liegt als
  * Folge verschlossener Stuecke in `track_stuecke`: Geraetehuellen, die nur
  * der Browser des Kontos oeffnet. Der Server sieht je Stueck nur, wo es steht
  * (`seq_from`, `punkte`, `n_original`), welchen Zeitraum es abdeckt
@@ -13,12 +13,8 @@ declare(strict_types=1);
  * 2 zusammengefuegt und gepackt, 3 ausgeduennt). Damit rechnet er die
  * Fortsetzungsmarke, die Sperren und die Groesse; die Punkte sieht er nicht.
  *
- * BIS WEB 22.7.0 lag daneben der Altbestand im Klartext: Zeilen in
- * `track_points` und Blobs im Format SPUR1 in `track_blobs` (Web 10.0.0 bis
- * 22). Das Einmalwerkzeug hat ihn in Stuecke umgezogen; die Migration
- * `2026_10_19_klartext_weg` hat beide Tabellen geworfen, und mit ihnen sind
- * Kodieren, Dekodieren, Verdichten und das Lesen ueber zwei Speicher hinweg
- * gegangen. Alte Sicherungen mit SPUR1 gibt es nicht mehr (E-S11-85).
+ * Einen Altbestand im Klartext gibt es nicht: Die Migration
+ * `2026_10_19_klartext_weg` hat `track_points` und `track_blobs` geworfen.
  *
  * WAS BLEIBT, OBWOHL ES KEINE PUNKTE MEHR SIEHT: die Ausduennung nach
  * Douglas-Peucker. Sie laeuft im Browser (`assets/wartungslauf.js`); diese
@@ -32,7 +28,7 @@ require_once __DIR__ . '/validate_lib.php';
 
 
 /**
- * Toleranzen der Ausduennung (E-S2-05). Waagerecht und senkrecht GETRENNT:
+ * Toleranzen der Ausduennung. Waagerecht und senkrecht GETRENNT:
  * Eine rein zweidimensionale Ausduennung ebnet das Hoehenprofil eines Fluges
  * ein — der Punkt auf halber Steigung liegt in der Draufsicht genau auf der
  * Verbindungslinie und faellt weg.
@@ -160,7 +156,7 @@ function spur_hoehenanker(array $punkte): array
  *
  * VERBUNDEN WERDEN DIE BEIDEN TOLERANZEN ALS MAXIMUM DER NORMIERTEN WERTE:
  *
- *      s = max( waagerecht / 2 m , senkrecht / 3 m ),   behalten wenn s > 1
+ *      s = max( waagerecht / 2 m, senkrecht / 3 m ),   behalten wenn s > 1
  *
  * Das ist genau „beide Toleranzen eingehalten" (s <= 1 gilt dann und nur
  * dann, wenn waagerecht <= 2 m UND senkrecht <= 3 m) — und liefert zugleich
@@ -203,12 +199,11 @@ function spur_dp_abstand(array $punkte, array $anker, int $i, int $j, int $k,
 }
 
 /**
- * Die Pflichtpunkte einer Spur (E-S2-05): erster, letzter, und je
+ * Die Pflichtpunkte einer Spur: erster, letzter, und je
  * Schutzzeitpunkt der zeitnaechste Punkt.
  *
  * DIE WAHL BEI GLEICHSTAND IST NICHT GESCHMACK. Die Hoehenregel
- * (`EdOrtsdaten.ortshoehe()`, bis Web 22.7.0 `compute_site_elevation()` in
- * `site_elevation_lib.php`) sucht den zeitnaechsten Punkt mit `<` und behaelt
+ * (`EdOrtsdaten.ortshoehe()`) sucht den zeitnaechsten Punkt mit `<` und behaelt
  * damit den FRUEHEREN. Waehlte die Behalteliste den spaeteren, fiele der
  * eigentliche Gewinner weg — und das naechste Speichern im Formular schriebe
  * eine andere oder gar keine Hoehe, ohne Meldung. Am Referenzbestand faellt
@@ -238,7 +233,7 @@ function spur_schutzpunkte(array $punkte, array $zeiten): array
 }
 
 /**
- * Die Behalteliste einer Spur — Douglas-Peucker dreidimensional (E-S2-05).
+ * Die Behalteliste einer Spur — Douglas-Peucker dreidimensional.
  *
  * ABSCHNITTSWEISE, und das ist keine Feinheit. Die naheliegende Reihenfolge —
  * global ausduennen, dann die Pflichtpunkte hinterher einfuegen — bricht die
@@ -334,14 +329,13 @@ function spur_ausduenn_dauer_s(int $n, int $abschnittMax = SPUR_DP_ABSCHNITT_MAX
 }
 
 /**
- * Die Rundlaufpruefung der Stufe 3 (E-S2-07) — und sie ist eine ANDERE.
+ * Die Rundlaufpruefung der Stufe 3 — und sie ist eine ANDERE.
  *
  * Ein blosser Rundlauf (auspacken, vergleichen) ist hier WERTLOS: Die
  * Behalteliste stammt aus der Spur selbst, der Vergleich geht IMMER auf. Er
  * waere gruen, auch wenn die Ausduennung die halbe Spur an der falschen
  * Stelle wegwirft — und sie ist die letzte Instanz vor dem Ersetzen der
- * Stuecke, nach dem das Original weg ist. (Bis Web 22 stand hier der
- * Vergleich mit der SPUR1-Rundlaufpruefung.)
+ * Stuecke, nach dem das Original weg ist.
  *
  * Die Zusage der Stufe 3 lautet deshalb, in fuenf Teilen:
  *
@@ -446,7 +440,7 @@ function spur_zahlen(PDO $pdo, string $ownerType, array $ids): array
 }
 
 /**
- * Die Fortsetzungsmarke fuer das Geraet (E-S2-08, JSON-Vertrag): die
+ * Die Fortsetzungsmarke fuer das Geraet (JSON-Vertrag): die
  * naechste Sequenznummer, die es senden soll. Sie faellt nie zurueck — auch
  * nicht, wenn ein Stueck zusammengefuegt oder ausgeduennt wurde, denn dann
  * traegt es `n_original`.
@@ -459,7 +453,7 @@ function spur_naechste_seq(PDO $pdo, string $ownerType, int $ownerId): int
 /**
  * Der Zustand einer Spur in einem Blick — Stufe, Zahlen, Fortsetzungsmarke.
  *
- * `ingest.php` muss wissen, ob eine Spur AUSGEDUENNT ist (E-S2-08: dann
+ * `ingest.php` muss wissen, ob eine Spur AUSGEDUENNT ist (dann
  * werden Punkte verworfen und quittiert, statt angenommen). `stufe` ist 1,
  * wenn es noch kein Stueck gibt — damit muss der Aufrufer „keine Spur" nicht
  * von „Stufe 1" unterscheiden.
@@ -489,7 +483,7 @@ function spur_ist_ausgeduennt(array $stand): bool
 }
 
 /**
- * Die Schutzzeitpunkte einer Spur (E-S2-05) aus der Datenbank.
+ * Die Schutzzeitpunkte einer Spur aus der Datenbank.
  *
  * Fuer Ruhesegmente immer leer: Sie haben keine Phasen (`rest_segments` traegt
  * sie nicht), dort bleiben nur erster und letzter Punkt.
@@ -508,9 +502,8 @@ function spur_schutzzeiten(PDO $pdo, string $ownerType, int $ownerId): array
 /* ---- Groesse und Loeschen -------------------------------------------------- */
 
 /**
- * WIE VIELE BYTE DIE GPS-DATEN DIESER AUFZEICHNUNGEN BELEGEN (P5b/AP6,
- * E-P5b-18): die Huellen, wie sie liegen. `LENGTH()` ist genau. Bis Web 22
- * stand hier eine Schaetzung fuer die Zeilen in `track_points` daneben.
+ * WIE VIELE BYTE DIE GPS-DATEN DIESER AUFZEICHNUNGEN BELEGEN: die Huellen,
+ * wie sie liegen. `LENGTH()` ist genau.
  *
  * @return int Byte
  */
@@ -532,12 +525,11 @@ function spur_bytes(PDO $pdo, string $ownerType, array $ids): int
 /**
  * Eine Spur restlos entfernen.
  *
- * DIE EINZIGE STELLE, an der eine Spur geloescht wird (E-S2-18). Jeder
+ * DIE EINZIGE STELLE, an der eine Spur geloescht wird. Jeder
  * Loeschweg der Anwendung ruft sie; keiner loescht selbst. `track_stuecke`
  * haengt an keinem Fremdschluessel — die Tabelle ist polymorph, und MySQL
  * kennt keine bedingten Fremdschluessel. Ein Loeschweg, der das vergisst,
- * laesst Positionsdaten liegen; genau das ist bei der Kontoloeschung einmal
- * jahrelang passiert (F-S2-B).
+ * laesst Positionsdaten liegen, still und auf Dauer.
  *
  * @param list<int> $ids
  * @return array{stuecke:int} die Zahl der geloeschten Stuecke
@@ -590,7 +582,7 @@ function spur_min_ts(PDO $pdo, string $ownerType, array $ids): ?int
 /**
  * Alle Zeitstempel einer Spur um `$delta` Sekunden verschieben.
  *
- * Die Punkte eines Stuecks stehen RELATIV zu `ts_von` (E-S11-18); es genuegt
+ * Die Punkte eines Stuecks stehen RELATIV zu `ts_von`; es genuegt
  * also, `ts_von` und `ts_bis` zu verschieben. Die Huelle bleibt, wie sie ist,
  * und geht weiter auf, weil ihre Bindung die Zeiten nicht einschliesst.
  */
@@ -609,7 +601,7 @@ function spur_zeit_verschieben(PDO $pdo, string $ownerType, array $ids, int $del
 }
 
 /* ---------------------------------------------------------------------------
- * DIE SPERRVERMERKE DES SCHNITTS (S4/A2, E-S4-53; seit S11-05c E-S11-37, -47)
+ * DIE SPERRVERMERKE DES SCHNITTS
  *
  * Aus einem Ruhesegment wird ein Einsatz geschnitten: Der Browser oeffnet das
  * Segment, nimmt die Punkte im Zeitraum und verschliesst sie als Spur des
@@ -623,17 +615,14 @@ function spur_zeit_verschieben(PDO $pdo, string $ownerType, array $ids, int $del
  * und `ts_bis` jedes Stuecks sind Klartext. `ingest.php` fragt die Sperren
  * einmal je Upload ab (`schnitte_lesen()`).
  *
- * Ein Vermerk ohne Ziel (`mission_id` NULL) ist ein GELOESCHTES Stueck
- * (S11-05c, Nr. 161): Er haelt eine erneute Lieferung desselben Zeitraums
+ * Ein Vermerk ohne Ziel (`mission_id` NULL) ist ein GELOESCHTES Stueck:
+ * Er haelt eine erneute Lieferung desselben Zeitraums
  * auf.
  *
  * WIE track_stuecke GEHOERT AUCH track_cuts HINTER DIESE DATEI (CLAUDE.md 4):
  * Wer die Tabelle unmittelbar liest, bekommt frueher oder spaeter eine halbe
  * Auskunft — etwa, indem er den Vermerk zum Ziel loescht, aber nicht den zur
  * Quelle.
- *
- * Bis Web 22.1.0 verschob der Server die Klartextpunkte selbst
- * (`spur_teilen()`); mit dem Klartext ist die Funktion gegangen (S11-12).
  * ------------------------------------------------------------------------ */
 
 /**
@@ -643,7 +632,7 @@ function spur_zeit_verschieben(PDO $pdo, string $ownerType, array $ids, int $del
  * Einsatz an und vermerkt — das gehoert in EINE Transaktion, und die kann nur
  * er aufmachen; hier waere sie verschachtelt, und PDO kennt das nicht.
  *
- * DER ZEITPUNKT IST SEIT WEB 14.2.0 UEBERGEBBAR (R64, E-R64-12), und das ist
+ * DER ZEITPUNKT IST UEBERGEBBAR, und das ist
  * eine Zusage und keine Bequemlichkeit: Ein Vermerk ist ein EREIGNIS der
  * Vergangenheit — er sagt, wann geschnitten wurde. Kommt er aus einer
  * Sicherung zurueck, gehoert dort der urspruengliche Zeitpunkt hin und nicht
@@ -656,7 +645,7 @@ function spur_zeit_verschieben(PDO $pdo, string $ownerType, array $ids, int $del
  * ob er aus einer Datei kommt (dann `pruef_utc_oder_sql()`) oder aus dem
  * eigenen Programm (dann nicht).
  *
- * `$missionId` NULL (seit S11-05c): ein GELOESCHTER Zeitraum (Nr. 161) — die
+ * `$missionId` NULL: ein GELOESCHTER Zeitraum — die
  * Sperre gegen eine erneute Lieferung ohne Einsatz dahinter.
  *
  * @param string|null $erstelltAm UTC `Y-m-d H:i:s`, oder null fuer „jetzt"
@@ -677,14 +666,14 @@ function schnitt_vermerken(PDO $pdo, int $userId, string $quelleTyp, int $quelle
 }
 
 /**
- * Die Sperrvermerke zu VIELEN Einsaetzen auf einmal — fuer die Sicherung
- * (R64 / Backlog Nr. 63, Web 14.2.0).
+ * Die Sperrvermerke zu VIELEN Einsaetzen auf einmal — fuer die Sicherung.
+ * 
  *
  * WARUM ES DIESE FUNKTION GEBEN MUSS. `schnitte_zum_einsatz()` arbeitet auf
  * genau einem Ziel. Die Sicherung baut aber in Fenstern zu
  * `EDBAK_FENSTER` = 500 Einsaetzen (backup_lib.php) — je Fenster waeren das
- * 500 Einzelabfragen. Genau dieses N+1 hat M5-12 im Backup abgeschafft; es
- * hier wieder einzufuehren, kostete bei 5000 Einsaetzen 5000 Abfragen je
+ * 500 Einzelabfragen. Genau dieses N+1 vermeidet das Backup; es
+ * hier einzufuehren, kostete bei 5000 Einsaetzen 5000 Abfragen je
  * Sicherung. Der Ausweg „dann eben direktes SQL in backup_lib.php" ist
  * versperrt (CLAUDE.md 4) und waere auch der falsche: Genau die Aufloesung
  * unten ist das, was ein zweiter Verbraucher falsch machen wuerde.
@@ -772,12 +761,12 @@ function schnitte_zu_einsaetzen(PDO $pdo, int $userId, array $missionIds,
 }
 
 /**
- * Die LOESCHVERMERKE vieler Quellen auf einmal — fuer die Sicherung (S11-06b,
- * F-S11-52). Ein Loeschvermerk ist ein Sperrvermerk ohne Ziel
- * (`mission_id` NULL, seit S11-05c): Ein Zeitraum wurde aus einer Spur
+ * Die LOESCHVERMERKE vieler Quellen auf einmal — fuer die Sicherung. Ein
+ * Loeschvermerk ist ein Sperrvermerk ohne Ziel
+ * (`mission_id` NULL): Ein Zeitraum wurde aus einer Spur
  * geloescht, und eine erneute Lieferung derselben Punkte soll ihn nicht
  * wieder auffuellen. `schnitte_zu_einsaetzen()` geht ueber das Ziel und sieht
- * ihn deshalb nicht; bis Web 22.4.0 fehlte er in jeder Sicherung.
+ * ihn deshalb nicht; ohne diese Funktion fehlte er in jeder Sicherung.
  *
  * Er reist an seiner QUELLE mit, nicht an einem Einsatz — es gibt keinen.
  * Dieselbe feste Sortierung wie oben (`owner_id, id`).
@@ -803,21 +792,16 @@ function loeschvermerke_zu_quellen(PDO $pdo, int $userId, string $ownerType, arr
 }
 
 /**
- * Die Zeitfenster der Sperrvermerke einer Quelle mitverschieben
- * (Web 14.2.0, R64).
+ * Die Zeitfenster der Sperrvermerke einer Quelle mitverschieben.
+ * 
  *
- * WARUM DAS BIS HIERHER GEFEHLT HAT UND WARUM ES JETZT AUFFAELLT. Die
- * Umdatierung eines Diensttags (`tageszuordnung_lib.php`) verschiebt den Tag,
- * die Einsaetze, die Segmente, die Phasen, die Reanimationsereignisse — und
- * ueber `spur_zeit_verschieben()` auch jeden Spurpunkt. Die Sperrvermerke
- * blieben stehen. Solange sie nur in dieser Datenbank lagen, war das ein
- * Schoenheitsfehler mit Folgen im Verborgenen: Der Vermerk sperrte einen
- * Zeitraum, in dem die Spur nicht mehr liegt, nachgelieferte Punkte kamen
- * wieder durch, und die Fahrt lag in Einsatz UND Segment.
- *
- * Das ist wortgleich der Schaden, gegen den Backlog Nr. 63 antritt — und ab
- * Web 14.2.0 reist das falsche Fenster zusaetzlich in jede Sicherung.
- * Deshalb wird es hier behoben und nicht vertagt.
+ * WARUM ES DAS BRAUCHT. Die Umdatierung eines Diensttags
+ * (`tageszuordnung_lib.php`) verschiebt den Tag, die Einsaetze, die Segmente,
+ * die Phasen, die Reanimationsereignisse — und ueber `spur_zeit_verschieben()`
+ * auch jeden Spurpunkt. Blieben die Sperrvermerke stehen, sperrte der
+ * Vermerk einen Zeitraum, in dem die Spur nicht mehr liegt, nachgelieferte
+ * Punkte kaemen wieder durch, und die Fahrt laege in Einsatz UND Segment —
+ * und das falsche Fenster reiste zusaetzlich in jede Sicherung.
  *
  * VERSCHOBEN WIRD NACH QUELLE, NICHT NACH ZIEL. `von_ts` und `bis_ts`
  * beschreiben einen Ausschnitt der QUELLSPUR; wer zusaetzlich nach
@@ -848,7 +832,7 @@ function schnitte_zeit_verschieben(PDO $pdo, string $ownerType, array $ids,
  * Die gesperrten Zeitraeume einer Spur — EINE Abfrage, nicht eine je Punkt.
  *
  * Genau darum geht es an der einzigen heissen Stelle, an der sie gebraucht
- * werden (`ingest.php`, Konzept 14, offener Punkt 2): Der Aufrufer holt die
+ * werden (`ingest.php`): Der Aufrufer holt die
  * Liste einmal vor der Punktschleife und prueft darin. Eine Spur hat
  * ueblicherweise null Vermerke, oft einen, selten mehr als eine Handvoll —
  * die lineare Suche in `schnitt_gesperrt()` ist dann billiger als jeder
@@ -870,8 +854,8 @@ function schnitte_lesen(PDO $pdo, string $ownerType, int $ownerId): array
     $q->execute([$ownerType, $ownerId]);
     $aus = [];
     foreach ($q->fetchAll() as $r) {
-        /* `mission_id` NULL heisst: geloescht, nicht geschnitten (S11-05c,
-         * Nr. 161). Die Sperre gilt genauso; nur gibt es keinen Einsatz, zu
+        /* `mission_id` NULL heisst: geloescht, nicht geschnitten. Die Sperre
+         * gilt genauso; nur gibt es keinen Einsatz, zu
          * dem sie fuehrt, und keine Ruecknahme. */
         $aus[] = ['mission_id' => $r['mission_id'] !== null ? (int)$r['mission_id'] : null,
                   'von_ts' => (int)$r['von_ts'], 'bis_ts' => (int)$r['bis_ts']];
@@ -899,9 +883,9 @@ function schnitt_gesperrt(array $schnitte, int $ts): bool
 /**
  * Die Vermerke zu einem geschnittenen Einsatz — fuer das Rueckgaengig.
  *
- * `erstellt_am` braucht das Rueckgaengig seit Web 23 (S11-12): Ein Schnitt
- * von vor Web 22.2.0 hat die Punkte aus dem Segment VERSCHOBEN, einer danach
- * nicht — siehe `api/schneiden.php`.
+ * `erstellt_am` braucht das Rueckgaengig: Ein aelterer Schnitt hat die
+ * Punkte aus dem Segment VERSCHOBEN, ein neuerer nicht — siehe
+ * `api/schneiden.php`.
  *
  * @return list<array{id:int,owner_type:string,owner_id:int,von_ts:int,bis_ts:int,n_punkte:int,erstellt_am:string}>
  */
@@ -926,7 +910,7 @@ function schnitte_zum_einsatz(PDO $pdo, int $missionId): array
  * DREI WEGE, WEIL ES DREI ANLAESSE GIBT und keiner davon die anderen kennt:
  * das Rueckgaengig (nach Ziel), die Loeschung eines Einsatzes oder Segments
  * (nach Quelle) und die Kontoloeschung (nach Konto). Ohne den letzten bliebe
- * hier liegen, was bei den Spurpunkten jahrelang liegengeblieben ist (F-S2-B) —
+ * hier still liegen, was zum Konto gehoert —
  * und ein Zeitraum, in dem sich jemand aufgehalten hat, ist ein Ortsdatum.
  *
  * @return int Zahl der geloeschten Vermerke
@@ -970,17 +954,17 @@ function schnitte_loeschen_quelle(PDO $pdo, string $ownerType, array $ids): int
 }
 
 /* ===========================================================================
- * SPUR2 — SPURSTUECKE ALS GERAETEHUELLE (S11-04a, Konzept S11 3.3, E-S11-23)
+ * SPUR2 — SPURSTUECKE ALS GERAETEHUELLE
  * ===========================================================================
  *
- * Seit S11 bringt das Geraet keine Koordinaten mehr, sondern verschlossene
+ * Das Geraet bringt keine Koordinaten, sondern verschlossene
  * Stuecke: hoechstens 500 Punkte, verschlossen mit dem oeffentlichen
  * Schluessel des Kontos (Format: `tools/proben/huelle/referenz.py`). Der
  * Server sieht von einem Stueck nur, wo es steht (`seq_from`, `punkte`) und
  * welchen Zeitraum es abdeckt (`ts_von`, `ts_bis`). Damit rechnet er die
  * Fortsetzungsmarke und die Sperren; die Punkte selbst sieht nur der Browser.
  *
- * DIE REGELN DES EINGANGS, JE STUECK (bis Web 22 galten sie je Punkt):
+ * DIE REGELN DES EINGANGS, JE STUECK:
  *
  *   Wiederholung    dasselbe `seq_from` noch einmal: still uebergehen (der
  *                   Primaerschluessel faengt es ab).
@@ -989,28 +973,27 @@ function schnitte_loeschen_quelle(PDO $pdo, string $ownerType, array $ids): int
  *                   schon im zusammengefuegten Stueck. Ragt es darueber, wird
  *                   es abgelegt; die Ueberlappung loest der Browser ueber die
  *                   Sequenznummer auf (Punkt i hat `seq_from` + i).
- *   ausgeduennt     Stufe 3: den Teil oberhalb der Marke verwerfen und zaehlen
- *                   (E-S2-08).
+ *   ausgeduennt     Stufe 3: den Teil oberhalb der Marke verwerfen und zaehlen.
+ *                   
  *   geschnitten     liegt das GANZE Stueck in einem gesperrten Zeitraum,
  *                   verwerfen und zaehlen. Liegt es nur TEILWEISE darin, wird
  *                   es gespeichert, und der Browser blendet die gesperrten
  *                   Punkte beim Oeffnen aus — die Sperrzeiten sind Klartext.
- *                   Endgueltig fallen sie beim Zusammenfuegen (S11-07,
- *                   E-S11-37).
+ *                   Endgueltig fallen sie beim Zusammenfuegen.
  */
 
 /** Stufe eines Stuecks, wie es vom Geraet kommt. */
 const SPUR2_STUFE_GERAET = 1;
-/** Stufe eines zusammengefuegten und gepackten Stuecks (S11-07, E-S11-71):
+/** Stufe eines zusammengefuegten und gepackten Stuecks:
  *  Innenform „B fest", die Punkte ohne eigene Nummer; das Stueck deckt
  *  `seq_from` bis `seq_from + n_original - 1`. */
 const SPUR2_STUFE_GEPACKT = 2;
-/** Frist der Ausduennung in Tagen nach dem Ende (E-S11-25). */
+/** Frist der Ausduennung in Tagen nach dem Ende. */
 const SPUR2_AUSDUENN_FRIST_TAGE = 31;
-/** Hoechstens so viele Spuren je Anfrage des Wartungslaufs (E-S11-68). */
+/** Hoechstens so viele Spuren je Anfrage des Wartungslaufs. */
 const SPUR2_WARTUNG_MAX = 20;
-/** Stufe eines ausgeduennten Stuecks. Bis S11-07 entsteht sie nur beim
- *  Einspielen einer Sicherung, die eine ausgeduennte Spur traegt (S11-06b):
+/** Stufe eines ausgeduennten Stuecks. Beim Einspielen einer Sicherung, die eine
+ *  ausgeduennte Spur traegt, gilt:
  *  `n_original` reicht dann ueber `punkte` hinaus, und zwar am LETZTEN Stueck
  *  bis zur Originalzahl der Spur — so lesen es `spur2_stand()` (naechste
  *  Nummer) und `spur2_umriss()` (Summe) beide richtig. */
@@ -1053,7 +1036,7 @@ function schnitt_bereich_gesperrt(array $schnitte, int $von, int $bis): bool
  * Ein Stueck vom Geraet ablegen (Stufe 1). Gibt 1 zurueck, wenn es neu
  * abgelegt wurde, 0 bei einer Wiederholung desselben `seq_from`.
  *
- * `$stufe` und `$nOriginal` nur beim Einspielen einer Sicherung (S11-06b):
+ * `$stufe` und `$nOriginal` nur beim Einspielen einer Sicherung:
  * Eine ausgeduennte Spur kommt als Stufe 3 zurueck, damit sie nach dem
  * Einspielen nicht als vollstaendig gilt.
  *
@@ -1093,7 +1076,7 @@ function spur2_stueck_schreiben(PDO $pdo, string $ownerType, int $ownerId, int $
 }
 /**
  * DIE STUECKE EINES EIGENTUEMERS ERSETZEN — nur bei unveraendertem Stand
- * (S11-05c; derselbe Tausch dient S11-07 dem Wartungslauf).
+ * (derselbe Tausch dient dem Wartungslauf).
  *
  * Der Browser hat die Stuecke gelesen, geoeffnet, veraendert und neu
  * verschlossen; dazwischen kann ein Geraet weitere gesendet haben. `$stand`
@@ -1101,7 +1084,7 @@ function spur2_stueck_schreiben(PDO $pdo, string $ownerType, int $ownerId, int $
  * davon ab, wird NICHTS getauscht und `false` zurueckgegeben — die Seite laedt
  * neu und faengt von vorn an, statt ein eben angekommenes Stueck zu verlieren.
  *
- * AUCH STUFE 2 UND 3 (seit S11-07, E-S11-73/-74). Zwei Riegel halten, was
+ * AUCH STUFE 2 UND 3. Zwei Riegel halten, was
  * ein zusammengefuegtes oder ausgeduenntes Stueck traegt:
  *
  *   stufe   Die hoechste Stufe faellt nicht. Eine ausgeduennte Spur kommt
@@ -1163,7 +1146,7 @@ function spur2_tauschen(PDO $pdo, string $ownerType, int $ownerId, array $stand,
     return ['ok' => true, 'weg' => $weg, 'neu' => $n];
 }
 
-/** Bis wohin ein Stueck die Sequenz deckt (E-S11-71): ein gepacktes oder
+/** Bis wohin ein Stueck die Sequenz deckt: ein gepacktes oder
  *  ausgeduenntes bis `n_original`, ein Geraetestueck bis `punkte`. */
 function spur2_marke(int $seqFrom, int $punkte, int $nOriginal, int $stufe): int
 {
@@ -1171,25 +1154,25 @@ function spur2_marke(int $seqFrom, int $punkte, int $nOriginal, int $stufe): int
 }
 
 /**
- * DIE FAELLIGEN SPUREN DES WARTUNGSLAUFS (S11-07, E-S11-05, -25, -68 bis -73).
+ * DIE FAELLIGEN SPUREN DES WARTUNGSLAUFS.
  *
  * Der Server sieht keine Koordinate, aber genug, um zu entscheiden, WAS
  * faellig ist — Stufen, Zeiten, Vermerke stehen im Klartext:
  *
  *   zusammenfuegen  abgeschlossen (`final`), und es liegt ein Stueck der
- *                   Stufe 1 — keine Karenz mehr (E-S11-05, -69)
+ *                   Stufe 1 — keine Karenz mehr
  *   neu packen      ein Sperrvermerk ist juenger als das juengste Stueck: Die
  *                   herausgeschnittenen Punkte liegen noch darin und fallen
- *                   jetzt endgueltig (E-S11-37, -47)
- *   ausduennen      31 Tage nach dem Ende (E-S11-25); faellt es mit dem
+ *                   jetzt endgueltig
+ *   ausduennen      31 Tage nach dem Ende; faellt es mit dem
  *                   Zusammenfuegen zusammen, geht beides in einem Tausch
  *
- * NICHT im Papierkorb (E-S11-70).
+ * NICHT im Papierkorb.
  *
  * DER BROWSER BEKOMMT ALLES, WAS ER BRAUCHT, IN EINER ANTWORT: die Stuecke
  * mit Huellen, die Sperrzeiten, bei Einsaetzen die Phasenzeiten (Schutzpunkte
- * der Ausduennung, E-S2-05 — die Reanimation war nie einer, Technik 4.97)
- * und den `pat_blob` mit seiner Pruefsumme (Ortshoehe, E-S11-72).
+ * der Ausduennung — die Reanimation ist keiner, Technik 4.6)
+ * und den `pat_blob` mit seiner Pruefsumme (Ortshoehe).
  *
  * @return list<array<string,mixed>>
  */
@@ -1203,7 +1186,7 @@ function spur2_faellig(PDO $pdo, int $userId, int $max = SPUR2_WARTUNG_MAX, ?int
 
 /**
  * Wie viele Spuren faellig sind, und aus wie vielen Diensttagen — fuer die
- * Karte „GPS-Daten verdichten" (Reiter Backup, Mockup M-S11-02). Dieselbe
+ * Karte „GPS-Daten verdichten" (Reiter Backup). Dieselbe
  * Abfrage wie die Liste, ohne Huellen und ohne Obergrenze.
  *
  * @return array{aufzeichnungen:int, diensttage:int}
@@ -1317,14 +1300,14 @@ function spur2_faellig_fuellen(PDO $pdo, int $userId, array $kandidaten): array
 }
 
 /** Pruefsumme des `pat_blob`, an der der Tausch erkennt, ob ihn inzwischen
- *  jemand geaendert hat (E-S11-72). Auch fuer einen leeren Blob eindeutig. */
+ *  jemand geaendert hat. Auch fuer einen leeren Blob eindeutig. */
 function spur2_pat_pruefsumme(?string $blob): string
 {
     return hash('sha256', $blob === null ? "\0leer" : 'b:' . $blob);
 }
 
 /**
- * EIN TAUSCH DES WARTUNGSLAUFS (S11-07, E-S11-73). Prueft, was der Server
+ * EIN TAUSCH DES WARTUNGSLAUFS. Prueft, was der Server
  * pruefen kann, und tauscht in einer Transaktion: Stuecke und — wenn der
  * Browser eine Ortshoehe nachgetragen hat — den `pat_blob`.
  *
@@ -1388,7 +1371,7 @@ function spur2_wartung_tauschen(PDO $pdo, int $userId, string $art, int $id, arr
 }
 
 /**
- * Der Umriss der Stuecke je Spur (S11-06a): hoechste Stufe, Summe der
+ * Der Umriss der Stuecke je Spur: hoechste Stufe, Summe der
  * Originalzahlen, Summe der gespeicherten Punkte — ohne eine Huelle zu lesen.
  * Fuer die Angaben im Kern einer Sicherung (`edbak_build()`).
  *
@@ -1412,13 +1395,13 @@ function spur2_umriss(PDO $pdo, string $ownerType, array $ids): array
 
 /**
  * Die Stuecke mehrerer Spuren, wie sie liegen — fuer den Browser, der sie
- * oeffnet (S11-04b). Je Eigentuemer eine Liste, aufsteigend nach `seq_from`;
+ * oeffnet. Je Eigentuemer eine Liste, aufsteigend nach `seq_from`;
  * die Huelle als Base64, damit sie unveraendert in eine JSON-Antwort geht.
  *
  * DER SERVER OEFFNET NICHTS. Was hier herausgeht, ist Chiffretext mit den
  * Klartextzahlen, die der Browser fuer die Bindung braucht (`seq_from`,
  * `punkte`) und fuer die Zeiten (`ts_von`: die Punktzeiten in der Huelle
- * stehen relativ dazu, E-S11-18).
+ * stehen relativ dazu).
  *
  * @param list<int> $ids
  * @return array<int, list<array{seq_from:int,punkte:int,n_original:int,ts_von:int,ts_bis:int,stufe:int,huelle:string}>>

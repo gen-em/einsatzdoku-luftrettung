@@ -1,12 +1,12 @@
-/* Freitextsuche mit booleschen Operatoren (Baustein B10, Web 7.0.0).
+/* Freitextsuche mit booleschen Operatoren.
  *
  * WARUM ES DIESEN BAUSTEIN GIBT
  * Die Suche filtert vollstaendig im Browser — sie MUSS es, weil Name,
  * Diagnose, Einsatzort und Einsatznummer Ende-zu-Ende-verschluesselt sind und
- * der Server sie nicht lesen kann (siehe suche.php). Bis Web 6.3.0 war die
- * Auswertung eine Zeile: Jedes Wort musste irgendwo vorkommen, UND ueber die
- * Woerter, ODER ueber die Felder. Das traegt fuer den Regelfall und scheitert
- * an zwei Fragen, die im Betrieb immer wieder auftauchen:
+ * der Server sie nicht lesen kann (siehe suche.php). Die einfachste
+ * Auswertung waere eine Zeile: Jedes Wort muss irgendwo vorkommen, UND ueber
+ * die Woerter, ODER ueber die Felder. Das traegt fuer den Regelfall und
+ * scheitert an zwei Fragen, die im Betrieb immer wieder auftauchen:
  *
  *   „Alle Reanimationen ODER Polytraumata"   — zwei Begriffe, einer genuegt
  *   „Bergwacht, aber keine Winde"            — ein Begriff soll FEHLEN
@@ -16,8 +16,8 @@
  * Platzhalter, keine Bereiche — dafuer gibt es die Filterspalte, und sie ist
  * dort besser aufgehoben, weil sie Auswahllisten aus dem Bestand anbieten kann.
  *
- * DIE EINFACHE EINGABE BLEIBT EINFACH. Wer wie bisher zwei Woerter tippt,
- * bekommt wie bisher die UND-Verknuepfung: Zwischen zwei Begriffen ohne
+ * DIE EINFACHE EINGABE BLEIBT EINFACH. Wer zwei Woerter tippt, bekommt die
+ * UND-Verknuepfung: Zwischen zwei Begriffen ohne
  * Operator steht ein unsichtbares UND. Niemand muss die Operatoren kennen.
  *
  * Schreibweisen (Gross-/Kleinschreibung egal):
@@ -197,7 +197,7 @@
         return baum;
     }
 
-    /** Rueckfall: jedes Wort muss vorkommen (Verhalten bis Web 6.3.0). */
+    /** Rueckfall: jedes Wort muss vorkommen. */
     function einfach(q) {
         var w = q.toLowerCase().split(/\s+/).filter(Boolean);
         if (!w.length) { return null; }
@@ -225,15 +225,10 @@
         }
     }
 
-    /* mitOperatoren() ist mit A4 entfallen (T-06). Sie sollte laut Kommentar
-       "nur fuer den Hinweis" dienen — der Hinweis auf die Suchoperatoren ist
-       aber statisches Markup (<details class="suchsyntax"> in suche.php) und
-       wird von keinem Skript ein- oder ausgeblendet. Die Funktion war
-       exportiert und hatte nie einen Aufrufer. */
-    /* ---- Wörter für die Hervorhebung (P3/O6) -----------------------------
+    /* ---- Wörter für die Hervorhebung -------------------------------------
      *
-     * Die Trefferliste hinterlegt die gefundenen Wörter hell orange
-     * (E-P3-36). Dafür braucht sie die POSITIVEN Literale des Ausdrucks —
+     * Die Trefferliste hinterlegt die gefundenen Wörter hell orange.
+     * Dafür braucht sie die POSITIVEN Literale des Ausdrucks —
      * ohne die verneinten: Ein Wort, das gerade NICHT vorkommen darf, ist
      * kein Treffer und darf keinen markieren.
      *
@@ -281,12 +276,14 @@
             .map(function (w) { return w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); })
             .filter(function (w) { return w !== ''; });
         if (!teile.length) { return maskiert; }
-        /* Auf dem MASKIERTEN Text gesucht: Entitäten (&amp;) bleiben
-         * unangetastet, weil das Muster nur außerhalb von & … ; greift —
-         * hier reicht der einfache Weg, weil Suchwörter aus Buchstaben und
-         * Ziffern bestehen. */
-        var re = new RegExp('(' + teile.join('|') + ')', 'gi');
-        return maskiert.replace(re, '<mark class="treffer">$1</mark>');
+        /* Auf dem MASKIERTEN Text gesucht — und deshalb an den Entitäten
+         * vorbei: Ein Suchwort „amp" oder „lt" träfe sonst das Innere von
+         * `&amp;` und zerteilte es. Die Entität steht im Muster als erste
+         * Wahl und kommt unverändert zurück. */
+        var re = new RegExp('(&[#a-z0-9]+;)|(' + teile.join('|') + ')', 'gi');
+        return maskiert.replace(re, function (ganz, entitaet, wort) {
+            return entitaet ? entitaet : '<mark class="treffer">' + wort + '</mark>';
+        });
     }
 
     global.EdSuchtext = { pruefer: pruefer, woerter: woerter, hervor: hervor };

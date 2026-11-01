@@ -26,9 +26,8 @@ ui_seite_start(['titel' => 'Suche']);
 <?php /* Statt der Diensttage-Leiste: die Filter. Auf der Suchseite waeren
          einzelne Tage sinnlos, hier geht es gerade um den Gesamtbestand.
 
-         SEIT P3/O2 IST ES DIESELBE LEISTE wie ueberall — nicht mehr eine
-         eigene `.filterspalte`. Genau davor warnt die Vormerkliste aus
-         Konzept P0 (10.5): Haengt der Schubladenmechanismus an der Funktion
+         ES IST DIESELBE LEISTE wie ueberall — keine eigene
+         `.filterspalte`. Haengt der Schubladenmechanismus an der Funktion
          statt an der Klasse, bleibt die Suchseite als einzige ohne mobiles
          Menue. `ui_geruest_start()` mit leiste => 'filter' oeffnet die Leiste
          und ueberlaesst der Seite den Inhalt; ui_leiste_ende() schliesst sie
@@ -41,7 +40,7 @@ ui_seite_start(['titel' => 'Suche']);
        * Zwei kleine Erzeuger, damit die fünf Filtergruppen unten nicht
        * fünfmal dasselbe Markup ausschreiben. Sie stehen HIER und nicht in
        * ui.php: Der Dreiwert („egal / ja / nein") ist eine Eigenart der
-       * Suche, und die Filtergruppe ist das Akkordeon aus O2 mit einer
+       * Suche, und die Filtergruppe ist das Akkordeon mit einer
        * Zahl im Kopf. Was beide benutzen — Akkordeon, Segmentwahl —, kommt
        * aus dem gemeinsamen Vorrat. */
       $gruppe_auf = function (string $name, string $titel, bool $offen = false): void { ?>
@@ -49,7 +48,7 @@ ui_seite_start(['titel' => 'Suche']);
           <summary class="akkordeon-zeile">
             <?= ui_symbol('winkel', 'akkordeon-winkel') ?>
             <span class="akkordeon-text"><?= e($titel) ?></span>
-            <?php /* Zahl gesetzter Filter dieser Gruppe (E-P3-36) — blau, weil
+            <?php /* Zahl gesetzter Filter dieser Gruppe — blau, weil
                      sie einen Zustand nennt und keine Warnung ist. Gefüllt
                      wird sie im Skript, aus demselben Filterkatalog, aus dem
                      auch die Plaketten entstehen. */ ?>
@@ -61,7 +60,7 @@ ui_seite_start(['titel' => 'Suche']);
           </div>
         </details>
       <?php };
-      /* Dreiwert als Segmentwahl (E-P3-36, Mockup 27). Die gespeicherten
+      /* Dreiwert als Segmentwahl. Die gespeicherten
        * Werte bleiben '' / 'j' / 'n' — sie stehen in verschickten Links. */
       $dreiwert = function (string $id, string $titel): void { ?>
         <div class="feldblock" id="lab-<?= e(substr($id, 2)) ?>">
@@ -74,7 +73,7 @@ ui_seite_start(['titel' => 'Suche']);
     ?>
 
     <div class="leiste-liste">
-      <?php /* ---- FILTERGRUPPEN (Schnitt aus Web 7.0.0, Gestalt aus P3/O6) ---
+      <?php /* ---- FILTERGRUPPEN ---------------------------------------------------
                Die Spalte hatte sechs Blöcke, und drei davon liessen sich nicht
                erklären: „Zeit" enthielt Datum und Uhrzeit, „Werte" Alter,
                Strecke und Dauer, „Einsatz" einen einzigen Haken. Wer nach
@@ -89,15 +88,15 @@ ui_seite_start(['titel' => 'Suche']);
                Sie stehen in verschickten Links, und ein umbenannter Parameter
                bricht sie stillschweigend. */ ?>
       <?php $gruppe_auf('einsatz', 'Einsatz', true); ?>
-          <?php /* Von/bis nebeneinander (E-P3-36): Sie gehören zusammen und
+          <?php /* Von/bis nebeneinander: Sie gehören zusammen und
                    kosten untereinander die doppelte Höhe der Spalte.
 
-                   DER NAME STEHT ÜBER DEM PAAR, NICHT IM LINKEN FELD
-                   (F-N1-J). Vorher hieß die linke Beschriftung „Strecke von
-                   (km)" und die rechte „bis" — in einer 240 px breiten Leiste
-                   brach die linke auf zwei Zeilen um, die rechte nicht, und
-                   die beiden Eingabefelder standen auf verschiedener Höhe.
-                   Jetzt trägt ein `.feld-label` den Namen und die Felder
+                   DER NAME STEHT ÜBER DEM PAAR, NICHT IM LINKEN FELD.
+                   Hieße die linke Beschriftung „Strecke von (km)" und die
+                   rechte „bis", bräche in einer 240 px breiten Leiste die
+                   linke auf zwei Zeilen um, die rechte nicht, und die beiden
+                   Eingabefelder stünden auf verschiedener Höhe.
+                   Ein `.feld-label` trägt den Namen und die Felder
                    heißen „von" und „bis": gleich kurz, gleich hoch. Was die
                    Bildschirmleserin hört, bleibt vollständig — das steht im
                    `aria-label` des Feldes. */ ?>
@@ -159,7 +158,7 @@ ui_seite_start(['titel' => 'Suche']);
           <?php /* Der Fehleinsatz ist selten. Er erscheint nur, wenn im Bestand
                    überhaupt einer dokumentiert ist — sonst ergäbe „ja" dauerhaft
                    null Treffer und „nein" den ganzen Bestand — die Sichtbarkeit
-                   entsteht seit S3/AP9 aus dem Feldkatalog. */
+                   entsteht aus dem Feldkatalog. */
                 $dreiwert('f-fe', 'Fehleinsatz'); ?>
       <?php $gruppe_zu(); ?>
 
@@ -195,7 +194,7 @@ ui_seite_start(['titel' => 'Suche']);
           <label for="f-st">Standort <select id="f-st"></select></label>
           <label for="f-veh">Rettungsmittel <select id="f-veh"></select></label>
           <label for="f-art">Art <select id="f-art"></select></label>
-          <?php /* Ein Auswahlfeld je Besatzungsrolle des Katalogs (E4). Welche
+          <?php /* Ein Auswahlfeld je Besatzungsrolle des Katalogs. Welche
                    Rollen es gibt, sagt CREW_ROLES — nicht diese Seite. */
                 foreach (CREW_ROLES as $rc => $rolle): ?>
             <label for="f-crew-<?= e($rc) ?>"><?= e($rolle['label']) ?>
@@ -230,7 +229,7 @@ ui_seite_start(['titel' => 'Suche']);
       <?php $gruppe_zu(); ?>
     </div>
 
-    <?php /* Fuß der Leiste (E-P3-36): „Filter zurücksetzen" immer, „n Treffer
+    <?php /* Fuß der Leiste: „Filter zurücksetzen" immer, „n Treffer
              zeigen" nur in der Schublade — am Desktop steht die Trefferzahl
              ohnehin daneben, und der Knopf schlösse nichts. */ ?>
     <div class="leiste-fuss filterfuss">
@@ -252,10 +251,8 @@ ui_seite_start(['titel' => 'Suche']);
     <div class="meldung meldung-info" id="lockbanner" role="status" hidden>
       <?= ui_symbol('schloss', 'symbol-gross') ?>
       <?php /* DIE AUFZAEHLUNG IST EINE ZUSAGE, kein Zierrat: Wer sie liest,
-               schliesst daraus, was OHNE Entsperren durchsucht wird. Seit
-               S9/AP7 gehoeren die Notizen dazu — vorher waren sie das einzige
-               Freitextfeld, das auch gesperrt gefunden wurde, und dieser Satz
-               sagte nichts davon. Wer hier ein Feld ergaenzt, ergaenzt es
+               schliesst daraus, was OHNE Entsperren durchsucht wird. Die
+               Notizen gehoeren dazu. Wer hier ein Feld ergaenzt, ergaenzt es
                auch in `einsatz.php` und `index.php`; die drei Saetze nennen
                je das, was auf IHRER Seite verborgen bleibt. */ ?>
       <p>Geschützte Angaben sind gesperrt — Einsatznummer, Name, Geburtsdatum,
@@ -267,7 +264,7 @@ ui_seite_start(['titel' => 'Suche']);
       </div>
     </div>
 
-    <?php /* Suchfeld und Filterknopf in EINER Zeile (Mockup 27/28). Das Feld
+    <?php /* Suchfeld und Filterknopf in EINER Zeile. Das Feld
              ist 48 px hoch — es ist die Haupthandlung dieser Seite; der Knopf
              daneben steht nur, solange die Leiste eine Schublade ist. */ ?>
     <div class="suchzeile">
@@ -279,7 +276,7 @@ ui_seite_start(['titel' => 'Suche']);
         <button type="button" class="suchfeld-x" id="qleeren" hidden
                 title="Suchfeld leeren"><?= ui_symbol('schliessen', 'symbol-gross', 'Suchfeld leeren') ?></button>
       </div>
-      <?php /* Der Filterknopf traegt die Zahl gesetzter Filter (E-P3-36) —
+      <?php /* Der Filterknopf traegt die Zahl gesetzter Filter —
                dieselbe, die auch in den Gruppenkoepfen steht. Von Hand
                gebaut, weil ui_knopf() genau einen Text kennt und hier ein
                zweites Element danebensteht. */ ?>
@@ -314,7 +311,7 @@ ui_seite_start(['titel' => 'Suche']);
         weiter, so gut es geht.</p>
     </div>
 
-    <?php /* Die gesetzten Filter als blaue Plaketten mit ✕ (E-P3-36): Sie
+    <?php /* Die gesetzten Filter als blaue Plaketten mit ✕: Sie
              sagen im Inhalt, was in der Leiste steht — auf dem Handy ist die
              sonst zu. Jede Plakette nimmt ihren Filter zurück. */ ?>
     <div class="zeile-plaketten filterplaketten" id="filterplaketten" hidden></div>
@@ -324,7 +321,7 @@ ui_seite_start(['titel' => 'Suche']);
         <h2 class="karte-titel">Treffer</h2>
         <span class="karte-zahl" id="trefferzahl"></span>
         <?php /* Sortieren über ein Blatt — dieselben Spalten wie der
-                 Tabellenkopf, und auf dem Handy der einzige Weg (E-P3-32).
+                 Tabellenkopf, und auf dem Handy der einzige Weg.
                  Am Desktop erscheint dasselbe Markup als Aufklappmenü. */ ?>
         <div class="aktionen sortieren-aktion">
           <button type="button" class="karte-aktion karte-aktion-blau"
@@ -341,10 +338,14 @@ ui_seite_start(['titel' => 'Suche']);
         </div>
       </div>
       <div class="karte-inhalt">
+        <?php /* Solange nach den gezeigten Zeilen der übrige Bestand
+                 geöffnet wird: Treffer in geschützten Feldern und
+                 der Altersfilter kommen erst danach. */ ?>
+        <?= ui_ladeplatz('Weitere geschützte Angaben werden geöffnet …', ['attr' => ' id="treffer-lade"']) ?>
         <p id="leer" class="feld-hinweis" hidden>Keine Treffer.</p>
         <?php /* Ab 720 px die Tabelle im eigenen Scrollbehälter, darunter die
                  dreizeilige Kachel mit Artzeichen und Datum — beide aus
-                 demselben Zeilenbestand (E-P3-32/36, missiontable.js). */ ?>
+                 demselben Zeilenbestand (missiontable.js). */ ?>
         <div class="tabelle-scroll nur-ab-720">
           <table class="tabelle" id="suchtable" hidden>
             <thead></thead>
@@ -359,13 +360,12 @@ ui_seite_start(['titel' => 'Suche']);
 <?php ui_krypto_bootstrap(); ?>
 <script src="<?= asset('assets/patient.js') ?>"></script>
 <?php /* Vorspann der Einsatztabelle (Artsymbole, Typsymbole, Katalogspalten)
-         — seit Schritt 15 AP9b an EINER Stelle, ui_tabellen_bootstrap() in
-         ui.php. Hier standen diese Zeilen wortgleich in zwei Dateien.
+         — an EINER Stelle, ui_tabellen_bootstrap() in ui.php.
          Er muss VOR assets/missiontable.js stehen. */
       ui_tabellen_bootstrap(); ?>
 <script src="<?= asset('assets/missiontable.js') ?>"></script>
 <script src="<?= asset('assets/zeitfeld.js') ?>"></script>
-<?php /* Boolesche Freitextsuche (Baustein B10, Web 7.0.0). Eigene Datei, weil
+<?php /* Boolesche Freitextsuche. Eigene Datei, weil
          sie ohne die Seite prüfbar ist und keine Kenntnis von ihr braucht. */ ?>
 <script src="<?= asset('assets/suchtext.js') ?>"></script>
 <?php /* geo.js NUR wegen der Spurfarben: Sie stehen als Token in :root, und
@@ -455,14 +455,13 @@ const TRANSPORT_OPTIONEN = <?php
    aus CREW_ROLES (db.php, E4); die Kurznamen der fuenf Flugrollen sind
    historisch (c1…c5) und bleiben, weil sie in verschickten Links stehen. */
 const CREW_ROLLEN = <?= json_js(array_keys(CREW_ROLES)) ?>;
-<?php /* DIE VERSCHLUESSELTEN KATALOGFELDER (S9/AP7). Der Suchindex liefert sie
+<?php /* DIE VERSCHLUESSELTEN KATALOGFELDER. Der Suchindex liefert sie
          nicht mehr als Spalte; der Heuhaufen holt sie aus dem entschluesselten
          `_pat`. Die Liste kommt aus dem Katalog, damit ein zweites solches
-         Feld (S11: Zielklinik) von selbst durchsuchbar wird. */ ?>
+         Feld (Zielklinik) von selbst durchsuchbar wird. */ ?>
 const PAT_KAT = <?= json_js(mf_pat_felder()) ?>;
 const CREW_FILTER = <?php
-    /* Bis Web 5.10.0 standen die fuenf Filter einzeln im Katalog. Die
-     * Zuordnung Rolle -> Kurzname steht jetzt hier, an EINER Stelle: Die
+    /* Die Zuordnung Rolle -> Kurzname steht hier, an EINER Stelle: Die
      * historischen Namen muessen erhalten bleiben (verschickte Links), neue
      * Rollen brauchen aber auch einen. 'crew_<rolle>' ist eindeutig und
      * kollidiert mit keinem bestehenden Namen. */
@@ -473,7 +472,7 @@ const CREW_FILTER = <?php
                     'el'     => 'f-crew-' . $rc,
                     'art'    => 'text',
                     'gruppe' => 'wer',
-                    /* Anzeigename fuer die Plakettenzeile (E-P3-36) — aus dem
+                    /* Anzeigename fuer die Plakettenzeile — aus dem
                      * Rollenkatalog, nicht abgeschrieben. */
                     'titel'  => CREW_ROLES[$rc]['label']];
     }
@@ -692,16 +691,34 @@ function baueAuswahllisten() {
 
 /* ---- Filterlogik ---------------------------------------------------- */
 
+/* DIE FILTERFELDER EINMAL JE DURCHLAUF LESEN. trifft() fragt rund dreissig
+   Felder fuer JEDEN Einsatz; aus der Seite gelesen waeren das bei 5096
+   Einsaetzen 150 000 Abfragen, gemessen rund 0,4 s je Durchlauf bei Drossel
+   6×. anwenden() legt fuer seinen Durchlauf einen Zwischenspeicher an und
+   raeumt ihn danach; ausserhalb davon lesen die Helfer unmittelbar. */
+let feldspeicher = null;
+function einmal(schluessel, lies) {
+  if (feldspeicher === null) { return lies(); }
+  if (!feldspeicher.has(schluessel)) { feldspeicher.set(schluessel, lies()); }
+  return feldspeicher.get(schluessel);
+}
+
+function feld(id) {
+  return einmal('w:' + id, () => $(id).value);
+}
+
 function zahl(id) {
-  const v = $(id).value.trim();
-  if (v === '') { return null; }
-  const n = Number(v);
-  return isNaN(n) ? null : n;
+  return einmal('z:' + id, () => {
+    const v = $(id).value.trim();
+    if (v === '') { return null; }
+    const n = Number(v);
+    return isNaN(n) ? null : n;
+  });
 }
 
 function hakenWerte(id) {
-  return [...$(id).querySelectorAll('input[type=checkbox]')]
-    .filter(c => c.checked).map(c => c.value);
+  return einmal('h:' + id, () => [...$(id).querySelectorAll('input[type=checkbox]')]
+    .filter(c => c.checked).map(c => c.value));
 }
 
 /** ISO-Wochentag 1 (Mo) … 7 (So) — über UTC gerechnet, damit die Zeitzone
@@ -720,15 +737,17 @@ function minuten(v) {
 
 /** Dreiwert-Segmentwahl gegen einen Ja/Nein-Wert prüfen. */
 function dreiwert(id, wert) {
-  const an = $(id).querySelector('input:checked');
-  const v = an ? an.value : '';
+  const v = einmal('d:' + id, () => {
+    const an = $(id).querySelector('input:checked');
+    return an ? an.value : '';
+  });
   if (v === '') { return true; }
   return v === 'j' ? !!wert : !wert;
 }
 
 /** Auswahlwert gegen ein Feld prüfen — ohne Rücksicht auf Groß-/Kleinschreibung. */
 function gleich(id, wert) {
-  const v = $(id).value;
+  const v = feld(id);
   if (v === '') { return true; }
   return String(wert || '').trim().toLowerCase() === v.toLowerCase();
 }
@@ -791,11 +810,11 @@ function trifft(m) {
      irgendwo vorkommen" — UND über die Wörter, ODER über die Felder. */
   if (freitext !== null && !freitext(m._hay)) { return false; }
 
-  const dv = $('f-dv').value, db = $('f-db').value;
+  const dv = feld('f-dv'), db = feld('f-db');
   if (dv !== '' && m.day < dv) { return false; }
   if (db !== '' && m.day > db) { return false; }
 
-  const zv = minuten($('f-zv').value), zb = minuten($('f-zb').value);
+  const zv = minuten(feld('f-zv')), zb = minuten(feld('f-zb'));
   if (zv != null || zb != null) {
     if (m.start_min == null) { return false; }
     if (zv != null && zb != null && zv > zb) {
@@ -832,7 +851,7 @@ function trifft(m) {
     if (!gleich('f-crew-' + r, m.crew[r])) { return false; }
   }
 
-  const rm = $('f-rm').value;
+  const rm = feld('f-rm');
   if (rm !== '' && !m.resources.some(r => r.trim().toLowerCase() === rm.toLowerCase())) { return false; }
 
   if (!gleich('f-tz', m.transport_dest)) { return false; }
@@ -1109,7 +1128,9 @@ function anwenden() {
   freitext = EdSuchtext.pruefer(q);
   trefferworte = EdSuchtext.woerter(q);
   $('qleeren').hidden = q.trim() === '';
-  tabelle.setData(missions.filter(trifft));
+  feldspeicher = new Map();
+  try { tabelle.setData(missions.filter(trifft)); }
+  finally { feldspeicher = null; }
   fragmentSchreiben();
 }
 
@@ -1121,10 +1142,28 @@ async function entschluesselePat() {
      Altersfilter sperren — sonst saehe er benutzbar aus und lieferte
      stumm nichts. Genau deshalb gibt EdPat.listeLaden() zurueck, statt zu
      entscheiden (Schritt 15 AP8f). */
+  /* DIE GEZEIGTEN ZEILEN ZUERST. Die Tabelle zeigt 200
+     aus dem ganzen Bestand; die werden zuerst geoeffnet und neu gezeichnet,
+     dann der Rest, und erst danach wird wie zuvor neu gefiltert. Bis dahin
+     gilt die Trefferliste von vor dem Entsperren — Treffer in geschuetzten
+     Feldern und der Altersfilter kommen mit dem Rest, und das sagt der
+     Ladeplatz. Sortiert die Tabelle nach einer geschuetzten Spalte, steht
+     nicht fest, welche Zeilen oben stehen; dann wird alles am Stueck
+     geoeffnet. */
+  const lade = EdHtml.ladeplatz($('treffer-lade'));
+  const zuerst = tabelle.sortGeschuetzt() ? [] : tabelle.gezeigt();
   const { ck, zahl } = await EdPat.listeLaden(missions, {
     wrap: PAT_WRAP, salt: KDF_SALT, iter: KDF_ITER,
     banner: $('lockbanner'),
+    zuerst: zuerst,
+    nachZuerst: async () => {
+      zuerst.forEach(patUebernehmen);
+      tabelle.zeichne();
+      lade.zeige('Weitere geschützte Angaben werden geöffnet …');
+      await EdHtml.naechstesBild();
+    },
   });
+  lade.weg();
   entsperrt = !!ck;
   $('f-av').disabled = $('f-ab').disabled = !entsperrt;
   $('lab-av').classList.toggle('feld-gesperrt', !entsperrt);
@@ -1136,25 +1175,32 @@ async function entschluesselePat() {
      * auch nicht aussehen wie einer ohne Angaben. Beides entscheidet EdPat,
      * nicht diese Seite (M6-06, Baustein B8). _pat setzt die Schleife dort
      * bereits; hier bleibt nur, was die Suche daraus macht. */
-    for (const m of missions) {
-      if (m._patState !== 'ok') { continue; }
-      const o = m._pat;
-      m._dx  = o.dx != null ? o.dx : null;
-      m._age = EdPat.alterAnzeige(o, m.day);
-      if (o.loc && o.loc.addr) { m._ort = EdMissionTable.extractOrt(o.loc.addr); }
-      /* DAS TRANSPORTZIEL AUS DEM BLOB (S11-05b). Bis dahin lieferte der
-         Suchindex es im Klartext; jetzt steht es erst nach dem Entsperren
-         unter demselben Namen da, und Filter und Auswahlliste lesen es wie
-         vorher. */
-      m.transport_dest = (o.transport_dest && o.transport_dest.addr) || null;
-    }
+    missions.forEach(patUebernehmen);
     const tzGewaehlt = $('f-tz').value;   // eine Wahl aus dem Adressfilter bleibt stehen
     fuelleSelect('f-tz', optionen(missions.map(m => m.transport_dest).concat(tzGewaehlt || [])));
     $('f-tz').value = tzGewaehlt;
     EdPat.zeigeUnlesbar(zahl);
   }
-  missions.forEach(baueHeuhaufen);
+  /* Neu gebaut wird der Heuhaufen nur, wo der Block etwas beitraegt — fuer
+     alle anderen ist er derselbe wie beim Laden. */
+  missions.forEach(m => { if (m._pat) { baueHeuhaufen(m); } });
   anwenden();
+}
+
+/* Was die Suche aus einem geoeffneten Block liest. Einmal je Einsatz; fuer
+   die zuerst gezeigten laeuft es schon nach der ersten Stufe, und ein
+   zweiter Lauf schreibt dieselben Werte. */
+function patUebernehmen(m) {
+  if (m._patState !== 'ok') { return; }
+  const o = m._pat;
+  m._dx  = o.dx != null ? o.dx : null;
+  m._age = EdPat.alterAnzeige(o, m.day);
+  if (o.loc && o.loc.addr) { m._ort = EdMissionTable.extractOrt(o.loc.addr); }
+  /* DAS TRANSPORTZIEL AUS DEM BLOB (S11-05b). Bis dahin lieferte der
+     Suchindex es im Klartext; jetzt steht es erst nach dem Entsperren
+     unter demselben Namen da, und Filter und Auswahlliste lesen es wie
+     vorher. */
+  m.transport_dest = (o.transport_dest && o.transport_dest.addr) || null;
 }
 
 /* ---- Start ---------------------------------------------------------- */

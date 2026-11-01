@@ -8424,5 +8424,43 @@ declare(strict_types=1);
  *   die Probe wartet darauf statt auf feste Pausen. Dass ein Mensch
  *   schneller tippt, als der Browser entschluesselt, verhindert die Marke
  *   nicht — sie macht den Zeitpunkt nur sichtbar. Korrektur; kein Schema.
- */
-const WEB_VERSION = '23.5.1';
+ * 23.5.2 — AUFRAEUMEN, UND DIE KOMMENTARE TRAGEN KEINE KENNUNGEN MEHR
+ *   (Schritt 12b, R17-28). Der groesste Teil ist unsichtbar: Die Kommentare
+ *   in Server, Browser, Uhr, Android und Werkzeugen verweisen nicht mehr auf
+ *   Beschluesse, Befunde, Pakete, Backlog-Nummern und eigene Fassungen
+ *   (E-R17-27, E-R17-86); die Geschichte steht hier, im Changelog und in
+ *   Git. Nur diese Datei und `android/version.properties` behalten sie.
+ *   Erzaehlende Saetze wie „frueher stand hier …" sind dort geblieben, wo
+ *   sie den Grund tragen — ein eigener Punkt im Backlog.
+ *   Gemessen, dass der Code gleich blieb, mit einem Vergleich ohne
+ *   Kommentare je Datei. Dazu die Aufraeumposten des Reviews: Karteileichen
+ *   gestrichen, tote Zweige seit Web 23 entfernt, sechs Stylesheet-Regeln
+ *   ohne Verwender, und eine Handvoll kleiner Fehler mit Wirkung — Export-
+ *   und Import-Hinweis nannten Transportziel und Reanimation als
+ *   Klartext, die Geraetehandgriffe meldeten Erfolg ohne Treffer, eine Dublette
+ *   hakte den Erststart ab, die Tagesgrenze der Jobs lag in zwei Zeitzonen,
+ *   die Inhaltspruefung vor Migrationen hielt eine 0 fuer leer, die
+ *   Trefferhervorhebung zerteilte `&amp;`. Korrektur; kein Schema.
+ * 23.6.0 — SEITENAUFBAU UND MENGEN (Schritt 12b, R17-29; Backlog Nr. 380,
+ *   381, 382, 51). Gemessen vor dem Bauen, und die Messung widersprach den
+ *   Annahmen zweimal. Die Seiten waren nicht langsam, weil sie viele
+ *   Skripte laden, sondern weil die Tagesleiste auf jeder Seite rund 500
+ *   Symbole traegt und der Browser fuer jedes Symbol, das auf eine eigene
+ *   Datei verweist, ein eigenes SVG-Dokument baut. Jetzt traegt jede Seite
+ *   die Symbole einmal als Vorrat (`ui_symbolvorrat()`), und die Verweise
+ *   zeigen dorthin; die Dateien bleiben einzeln, einen Bauschritt gibt es
+ *   nicht. Bei Drossel 6× ist die Nachbearbeitung doppelt so schnell
+ *   aufgebaut, Einsatz und Diensttag rund ein Fuenftel. Und Suche und
+ *   Zeitraum warteten nicht hauptsaechlich auf das Entschluesseln: Das
+ *   kostete 0,1 bis 1,3 s von vier bis neun. Sie oeffnen jetzt die 200
+ *   gezeigten Zeilen zuerst, zeichnen sie lesbar und oeffnen den Rest
+ *   danach, mit dem vorhandenen Ladeplatz; die Suche liest ihre
+ *   Filterfelder einmal je Durchlauf statt fuer jeden Einsatz. Trefferzahl
+ *   und Reihenfolge sind dieselben, verglichen in fuenfzehn Faellen. Die
+ *   erste Antwort von Startseite und Anmelden (Nr. 382) war nicht langsam;
+ *   die alten Zahlen waren Einzellaeufe, in denen der Browser auf die
+ *   Vorseite wartete. Nebenbei: Die Einsatzansicht faengt einen
+ *   gescheiterten Abruf jetzt ab und zeigt die Ladefehler-Meldung; sichtbar
+ *   wurde der fehlende Fang erst, weil die Seite schneller fertig ist.
+ *   Neben; kein Schema. */
+const WEB_VERSION = '23.6.0';

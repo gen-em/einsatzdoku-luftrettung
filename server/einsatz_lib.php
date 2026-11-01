@@ -3,17 +3,16 @@ declare(strict_types=1);
 require_once __DIR__ . '/db.php';
 
 /**
- * Einsaetze: laden mit Besitzpruefung (Schritt 15/AP4, E-ZE-19).
+ * Einsaetze: laden mit Besitzpruefung.
  *
  * WARUM DIESE DATEI ES GIBT. „Einen Einsatz per Kennung holen und dabei
- * pruefen, dass er dem angemeldeten Konto gehoert" stand bis Web 20.28.0 an
- * ZWOELF Stellen in neun Dateien, jede mit ihrer eigenen Abfrage. Der
- * Unterschied zwischen ihnen war nie die Sache, sondern nur die
- * Spaltenliste und die Frage, wie der Papierkorb behandelt wird — mal
- * `deleted_at IS NULL`, mal `IS NOT NULL`, mal gar nicht. Genau das sind
- * jetzt die beiden Optionen.
+ * pruefen, dass er dem angemeldeten Konto gehoert" braucht es an vielen
+ * Stellen. Der Unterschied zwischen ihnen ist nie die Sache, sondern nur die
+ * Spaltenliste und die Frage, wie der Papierkorb behandelt wird —
+ * `deleted_at IS NULL`, `IS NOT NULL` oder gar nicht. Genau das sind die
+ * beiden Optionen.
  *
- * DIE BESITZPRUEFUNG IST DER PUNKT, nicht das Laden (M3-03, M3-12/M6-09).
+ * DIE BESITZPRUEFUNG IST DER PUNKT, nicht das Laden.
  * Sie gehoert IN die Abfrage und nicht davor oder danach: Eine Bedingung,
  * die nicht in der Abfrage steht, wird von nichts durchgesetzt. Bei zwoelf
  * handgeschriebenen Abfragen ist „steht `user_id = ?` da?" eine Frage, die
@@ -24,13 +23,13 @@ require_once __DIR__ . '/db.php';
  *   `trash_restore_mission()` (`trash_lib.php`) — sie fragt den Einsatz UND
  *   den Loeschzustand seines Diensttags in einem Verbund mit `days`. Ein
  *   zweiter Zugriff waere eine zweite Abfrage fuer eine Entscheidung, die
- *   zusammen getroffen werden muss (E-ZE-19).
+ *   zusammen getroffen werden muss.
  *
  *   `api/import_commit.php` — dort ist die Abfrage eine EINMAL vorbereitete
  *   Anweisung, die in der Import-Schleife bis zu 3000-mal ausgefuehrt wird,
  *   neben `$insE` und `$updE`. Ein Funktionsaufruf je Zeile bereitete sie
  *   3000-mal neu vor. Das ist keine Zentralisierung mehr, sondern ein
- *   Messstand-Thema (Schritt 15/AP4, AP4-b).
+ *   Messstand-Thema.
  */
 
 /**
@@ -68,7 +67,7 @@ function einsatz_laden(int $id, int $userId, array $o = []): ?array
     return $m === false ? null : $m;
 }
 
-/* ---- DIE VIER KINDTABELLEN (Schritt 15/AP5, E-ZE-21) ---------------------
+/* ---- DIE VIER KINDTABELLEN -------------------------------------------------
  *
  * Phasen, Reanimation, Rettungsmittel und Besatzung haengen mit
  * `ON DELETE CASCADE` am Einsatz und werden auf FUENF Wegen geschrieben:
@@ -128,9 +127,9 @@ function einsatz_anweisung(PDO $pdo, string $sql): PDOStatement
 /**
  * Phasen eines Einsatzes ersetzen.
  *
- * Nummer und Zeit, im Klartext. Der Ort jeder Phase liegt seit Web 22 in der
- * Einsatzhuelle (`missions.ort_huelle`); die Spalten `lat`/`lon` sind mit
- * Web 23 gefallen (S11-12). Ein `lat`/`lon` in `$phasen` wird uebergangen.
+ * Nummer und Zeit, im Klartext. Der Ort jeder Phase liegt in der
+ * Einsatzhuelle (`missions.ort_huelle`); Spalten `lat`/`lon` gibt es nicht.
+ * Ein `lat`/`lon` in `$phasen` wird uebergangen.
  *
  * @param list<array{phase:int, occurred_at:string}> $phasen
  * @param array{loeschen?:bool} $o
@@ -149,9 +148,7 @@ function einsatz_phasen_ersetzen(PDO $pdo, int $missionId, array $phasen, array 
     }
 }
 
-/* `einsatz_reas_ersetzen()` stand hier bis Web 22.7.0: Sie schrieb die
- * Reanimation in `resus_sessions`/`resus_events`. Seit Web 22 liegt sie in
- * der Einsatzhuelle, seit Web 23 gibt es die Tabellen nicht mehr (S11-12). */
+/* Die Reanimation schreibt hier niemand: Sie liegt in der Einsatzhuelle. */
 
 /**
  * Rettungsmittel-Zeilen ersetzen.

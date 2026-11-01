@@ -8,8 +8,7 @@ require_once __DIR__ . '/../ratelimit_lib.php';
 require_once __DIR__ . '/../demo_lib.php';
 
 /**
- * api/rueckweg_anlegen.php — das Schlüsselpaar des Rückwegs ablegen
- * (Konzept RW, RW-02; E-RW-02, -05, -06, -14, -15).
+ * api/rueckweg_anlegen.php — das Schlüsselpaar des Rückwegs ablegen.
  *
  * ===========================================================================
  * WAS HIER ANKOMMT, UND WAS DER SERVER DAVON PRÜFEN KANN
@@ -39,8 +38,8 @@ require_once __DIR__ . '/../demo_lib.php';
  * Zweitfaktor abschaltet. Ein Paar, dessen privaten Teil ein Fremder
  * selbst erzeugt hat, braucht keinen Wiederherstellungsschlüssel mehr —
  * er signiert die Herausforderung unmittelbar. Deshalb schreibt nur, wer
- * das Passwort nachweist (E-RW-02, -06), und deshalb bekommt dieses
- * Orakel keinen eigenen Topf, sondern teilt `login` (E-RW-14, wie
+ * das Passwort nachweist, und deshalb bekommt dieses
+ * Orakel keinen eigenen Topf, sondern teilt `login` (wie
  * `schluessel_erneuern.php`).
  *
  * ===========================================================================
@@ -52,7 +51,7 @@ require_once __DIR__ . '/../demo_lib.php';
  *                    UPDATE trägt die Bedingung selbst (`rw_oeffentlich IS
  *                    NULL`): Zwei Fenster, die gleichzeitig anlegen, legen
  *                    genau ein Paar ab, und das zweite bekommt 409.
- *   mit `ersetzen`   der Knopf „Rückweg erneuern" (E-RW-06). Protokoll
+ *   mit `ersetzen`   der Knopf „Rückweg erneuern". Protokoll
  *                    `rueckweg_erneuert` und die Mail `rueckweg_erneuert`
  *                    an die Kontoadresse — wer den Rückweg an sich nähme,
  *                    hinterließe eine Spur im Postfach.
@@ -60,7 +59,7 @@ require_once __DIR__ . '/../demo_lib.php';
  * Protokoll und Mail richten sich danach, ob VORHER ein Paar da war, nicht
  * nach dem Schalter: Ein `ersetzen` ohne Bestand ist ein Anlegen.
  *
- * DAS DEMO-KONTO BEKOMMT KEINS (E-RW-15): 403, mit und ohne `ersetzen`. Sein
+ * DAS DEMO-KONTO BEKOMMT KEINS: 403, mit und ohne `ersetzen`. Sein
  * Zweitfaktor ist gesperrt; ein Paar hätte dort keinen Verbraucher.
  *
  * VOR `update.php` gibt es die Spalten nicht. Der Browser fragt dann gar
@@ -88,7 +87,7 @@ if (!$u) { json_out(['error' => 'konto'], 404); }
 $email = (string)$u['email'];
 
 $b = api_rumpf();
-/* Topf und Vergleich in einer Funktion (R17-20, F-R17-32, E-R17-49). */
+/* Topf und Vergleich in einer Funktion. */
 passwort_nachweis_json($userId, (string)($b['token'] ?? ''));
 
 $oeffentlich = (string)($b['oeffentlich'] ?? '');

@@ -1,10 +1,10 @@
-/* Wege des Arbeitspakets AP6 — Tageszuordnung.
+/* Wege der Gruppe `AP6` — Tageszuordnung.
  * ===========================================================================
  *
  *   E-S9-11   Rollen sofort nach der Auswahl, ohne zu speichern
  *   E-S9-10   Ein Rettungsmittel nur für den Tag („Anderes Rettungsmittel …")
- *   Nr. 169   …und seit P5c/AP8 (Web 21.0.0) mit den Rollen seiner
- *             Betriebsart (E-P5c-47). Bis dahin führte ein solcher Tag keine;
+ *   Nr. 169   …und mit den Rollen seiner
+ *             Betriebsart. Früher führte ein solcher Tag keine;
  *             vier Wege hier maßen genau das und sind umgedreht, ein fünfter
  *             misst den Tag in der Luft. Das Konzept nannte dafür
  *             `wege/index.mjs` — die Wege zum Tagesfahrzeug stehen aber hier,
@@ -52,7 +52,7 @@ const ROLLEN_BODEN = ['driver', 'trainee', 'other'];
 const gleich = (a, b) => a.length === b.length && a.every((x, i) => x === b[i]);
 /* DIE ANDERE ART als die des Tages. Ein Umweg über das Tagesfahrzeug misst
    nur dann etwas, wenn dort KEIN Feld für die Namen des Tages steht — und
-   seit Nr. 169 steht dort eines, wenn die Art dieselbe ist. „other" teilen
+   heute steht dort eines, wenn die Art dieselbe ist. „other" teilen
    sich beide Arten: Ein Name dort steht auch im Feld der anderen Art, die
    übrigen nicht. */
 const andereArt = kind => (kind === 'ground' ? 'air' : 'ground');
@@ -69,9 +69,8 @@ async function zurueck(k, veh, base) {
 
 /** Das Formular „Diensttag-Daten" absenden und auf die ANTWORT warten.
  *
- * BIS WEB 21.11.2 WARTETE JEDER WEG HIER EINE FESTE ZEIT (1,2 bis 1,5 s) und
- * ging dann auf die nächste Seite. Im ersten Prüfstandslauf zu SR-05
- * (29.09.2026, F-SR-66) reichte das nicht: `p5c-ap8-adhoc-tag-in-der-luft`
+ * EIN FESTE ZEIT ZU WARTEN UND DANN AUF DIE NÄCHSTE SEITE ZU GEHEN (1,2 bis
+ * 1,5 s) reichte im Prüfstand nicht (29.09.2026): `p5c-ap8-adhoc-tag-in-der-luft`
  * scheiterte im `finally` an `#basesel`, 30 s unsichtbar. Unsichtbar ist es
  * genau dann, wenn der Tag auf „Anderes Rettungsmittel" steht
  * (`adhocAnpassen()` in `index.php`) — der Weg las also schon als Anfang
@@ -92,7 +91,7 @@ async function absenden(k) {
 
 /** Den Anfang lesen — und abbrechen, wenn der Weg von dort nicht zurückfände.
  *  Ein Tag, der schon auf „Anderes Rettungsmittel" steht, hat kein sichtbares
- *  Standortfeld, und `zurueck()` wartete darauf 30 s (F-SR-66). Die Meldung
+ *  Standortfeld, und `zurueck()` wartete darauf 30 s. Die Meldung
  *  sagt, was los ist, statt einer Zeitüberschreitung im `finally`. */
 async function anfangLesen(k) {
   const anfang = await stand(k);
@@ -293,7 +292,7 @@ export const wege = [
         await k.seite.waitForSelector('#tagdatenknopf', { timeout: 20000 });
         await k.seite.waitForTimeout(700);
         await k.seite.click('#tagdatenknopf');
-        /* Die Rollenfelder eines Adhoc-Tags zeichnet die Vorschau (Nr. 169). */
+        /* Die Rollenfelder eines Adhoc-Tags zeichnet die Vorschau. */
         await k.seite.waitForTimeout(900);
         const m = await k.seite.evaluate(() => ({
           veh:   document.getElementById('vehsel').value,
@@ -333,7 +332,7 @@ export const wege = [
     was: 'Besatzungsnamen überleben den Weg über das Tagesfahrzeug und zurück',
     soll: 'Die Namen stehen nach dem Umweg unverändert im Formular und in der Leseansicht',
     async fahren(k) {
-      /* DER FALL, DER EINEN STILLEN VERLUST KOSTETE (F-S9-U-34).
+      /* DER FALL, DER EINEN STILLEN VERLUST KOSTETE.
          Die Rollenvorschau kennt nur, was im Formular steht. Ist dort GAR
          NICHTS — beim Tagesfahrzeug gibt es keine Rollenfelder —, dann rendert
          sie beim Rückweg auf ein Rettungsmittel MIT Rollen lauter LEERE
@@ -349,8 +348,8 @@ export const wege = [
          der Zustand OHNE Felder bringt die Lücke zum Vorschein. Gegengeprobt
          am 09.09.2026 gegen beide Fassungen.
 
-         SEIT P5c/AP8 HAT DAS TAGESFAHRZEUG ROLLEN — die seiner Betriebsart
-         (Nr. 169). Der Umweg geht deshalb über die ANDERE Art als die des
+         DAS TAGESFAHRZEUG HAT ROLLEN — die seiner Betriebsart.
+         Der Umweg geht deshalb über die ANDERE Art als die des
          Tages: Dort steht für die Namen kein Feld, genau wie vorher in gar
          keinem. Die Lücke, die dieser Weg misst, bleibt damit erreichbar. */
       const tag = await tagMitBesatzung(k);
@@ -411,7 +410,7 @@ export const wege = [
          die Rollen des früheren Rettungsmittels an, ein FRISCH ANGELEGTER
          keine. Gefragt ist der Dienst.
 
-         SEIT P5c/AP8 FÜHRT DER DIENST DIE ROLLEN SEINER ART (Nr. 169). Die
+         DER DIENST FÜHRT DIE ROLLEN SEINER ART. Die
          Regel aus Frage 11 gilt weiter, nur mit einer anderen Menge: Ein Tag,
          der auf das Tagesfahrzeug der ANDEREN Art umgestellt wird, bietet
          dessen Rollen an, nicht die des früheren Rettungsmittels — auch wenn
@@ -484,7 +483,7 @@ export const wege = [
     soll: 'Dreimal p1, p2, hems, fr, other: in der Vorschau, nach dem Neuladen und im Einsatzformular',
     async fahren(k) {
       /* DIE ABNAHME AUS DEM KONZEPT, wörtlich: „Tag Luft zeigt p1, p2, hems,
-         fr, other" (E-P5c-47). Den Boden messen die Wege darüber. Gemessen
+         fr, other". Den Boden messen die Wege darüber. Gemessen
          wird an drei Stellen, weil es drei Wege zu derselben Menge gibt —
          die Vorschau (`api/day.php?vorschau=adhoc`), der eingefrorene Satz
          nach dem Speichern (`dt_zuordnen()`) und das Tor im Einsatzformular

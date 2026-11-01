@@ -2,20 +2,20 @@
 declare(strict_types=1);
 
 /**
- * Migrationsregister — steht `schema.sql` und `migration_lib.php` dasselbe? (P5a/AP1)
+ * Migrationsregister — steht `schema.sql` und `migration_lib.php` dasselbe?
  *
  * WOGEGEN. `migration_lib.php` fuehrt im Kopf eine Hausregel: „NEUE MIGRATION?
  * Ans ENDE von `migrationen_katalog()` anhaengen und die Kennung zusaetzlich am
  * Ende von `schema.sql` eintragen, damit Neuinstallationen sie nicht unnoetig
  * ausfuehren." Die Regel ist richtig und wurde trotzdem schon dreimal
  * vergessen — die Kommentare am Ende von `schema.sql` sagen es selbst
- * („Nachgetragen (Web 5.9.0): Beide Migrationen fehlten hier"). Die Folge ist
+ * („Nachgetragen: Beide Migrationen fehlten hier"). Die Folge ist
  * keine Fehlermeldung, sondern eine Neuinstallation, die Migrationen ansetzt,
  * die auf ihr nichts zu tun haben — und im schlimmsten Fall an einer bereits
  * vorhandenen Spalte haengenbleibt.
  *
  * Diese Pruefung beantwortet das mit einer Zahl statt mit Aufmerksamkeit. Sie
- * ist Stufe 1 des Prueftors (E-P5a-13) und braucht deshalb **keine
+ * ist Stufe 1 des Prueftors und braucht deshalb **keine
  * Installation**: keine Datenbank, keine `config.php`, kein Netz. Sie liest
  * zwei Dateien.
  *
@@ -316,8 +316,8 @@ function spalten_aus_rumpf(string $rumpf): array
          *
          * Die erste Zeile faengt `CONSTRAINT` ab, die zweite wurde als Spalte
          * `references` gelesen. Gefunden am 17.09.2026 an
-         * `konto_einwilligungen` (P5b/AP4): Der Schritt „Migrationsregister"
-         * in Stufe 1 war seit Web 20.19.0 rot, gemeldet wurde eine Spalte,
+         * `konto_einwilligungen`: Der Schritt „Migrationsregister"
+         * in Stufe 1 war einmal rot, gemeldet wurde eine Spalte,
          * die es nie gab.
          *
          * EINE SPALTE NAMENS `references` GAEBE ES NUR MIT RUECKSTRICHEN

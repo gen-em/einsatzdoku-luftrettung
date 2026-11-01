@@ -1,9 +1,9 @@
 /* Listenkopf — ein Auswahlfeld schickt die Suche ab.
  * ===========================================================================
  *
- * Entstanden mit P5c/AP2 (E-P5c-26, Bild M-P5c-01a). Der Listenkopf
- * (`ui_listenkopf()`) hat ein Suchfeld und Filterpillen; die Pillen sind
- * Verweise, das Suchfeld schickt mit der Eingabetaste ab. Ein Auswahlfeld
+ * Der Listenkopf (`ui_listenkopf()`) hat ein Suchfeld und Filterpillen; die
+ * Pillen sind Verweise, das Suchfeld schickt mit der Eingabetaste ab. Ein
+ * Auswahlfeld
  * („Art") hat beides nicht — ohne dieses Skript steht daneben ein Knopf
  * „Filtern", mit ihm geht die Auswahl sofort ab und der Knopf ist fort.
  *
@@ -11,7 +11,7 @@
  * steht in der Filterreihe, das Formular um das Suchfeld herum — im Bild
  * sind es zwei Zeilen, im Formular eine Anfrage.
  *
- * Seit Web 21.5.0 auch die Zeitraumwahl der Statistik (unten).
+ * Dazu die Zeitraumwahl der Statistik (unten).
  */
 (function () {
   'use strict';
@@ -28,7 +28,7 @@
     });
   });
 
-  /* ZEITRAUMWAHL (`ui_zeitraumwahl()`, R4-23, Bild M-R4-23). Zwei
+  /* ZEITRAUMWAHL (`ui_zeitraumwahl()`). Zwei
    * Datumsfelder schicken ab, sobald der Fokus das PAAR verlässt, beide
    * gefüllt sind und sich etwas geändert hat — nicht bei jeder Änderung: Ein
    * Datumsfeld meldet `change` schon, während die Jahreszahl getippt wird,

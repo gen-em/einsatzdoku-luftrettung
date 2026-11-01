@@ -9,21 +9,21 @@ Warnung · 2 = gemessen wurde nichts (keine Datei gefunden).
 
 WOFÜR. Viele Python-Werkzeuge haben keine Selbstprobe und werden selten von
 Hand gefahren. Ein Syntaxfehler darin fällt erst auf, wenn der Schritt
-läuft, der sie ruft — in Kette II/AP4 war das der Beweislauf gegen Produktiv,
+läuft, der sie ruft — einmal war das der Beweislauf gegen Produktiv,
 der nach 31 Sekunden an einem „ in `zustand.py` starb. Übersetzen kostet
 eine Sekunde und fängt alle.
 
-BIS BR-03 EIN SCHRITT IN STUFE 1, den Station B nie fuhr (F-BR-03). Seither
+FRÜHER EIN SCHRITT IN STUFE 1, den der Prüfstand nie fuhr. Heute
 die zehnte Quelltextprüfung, im Läufer und im Tor mit derselben Datei.
 
-WARNUNGEN SIND FEHLER (seit R4-07, Nr. 318). Eine ungültige Escape-Folge
+WARNUNGEN SIND FEHLER. Eine ungültige Escape-Folge
 (`"\d"` statt `r"\d"`) übersetzt heute mit einer Warnung — unter Python 3.11
 als unterdrückte `DeprecationWarning`, ab 3.12 als sichtbare `SyntaxWarning`
 im Tor —, und eine künftige Fassung macht einen `SyntaxError` daraus: Dann
 bricht das Werkzeug ab, statt zu prüfen. Übersetzt wird deshalb zweimal:
 einmal wie Python selbst (ein Fehler dort ist ein Syntaxfehler), einmal mit
 Warnungen als Fehler (was erst dort scheitert, ist eine Warnung). Beides ist
-rot, beide Zahlen stehen getrennt da. Bis R4-07 zählte die Prüfung „57
+rot, beide Zahlen stehen getrennt da. Einmal zählte die Prüfung „57
 Python-Werkzeuge geprüft, 0 mit Syntaxfehler", während das Tor zwei
 Warnungen ausgab.
 
@@ -42,7 +42,7 @@ WURZEL = os.path.dirname(os.path.dirname(HIER))
 
 def dateien(wurzel):
     # `-z`: sonst stünde ein Pfad mit Umlaut in Anführungszeichen mit
-    # Oktalfolgen da und wäre unsichtbar (Gegenprobe des Bestandsriegels, BR-05).
+    # Oktalfolgen da und wäre unsichtbar (Gegenprobe des Bestandsriegels).
     r = subprocess.run(['git', '-C', wurzel, 'ls-files', '-z', '-co', '--exclude-standard', '--', 'tools'],
                        capture_output=True, text=True)
     if r.returncode == 0:
@@ -101,7 +101,7 @@ def lauf(wurzel):
 
 
 def selbstprobe():
-    """Eine gute Datei, der Fehler aus Kette II/AP4, eine Warnung, ein leerer Baum."""
+    """Eine gute Datei, der Fehler aus `zustand.py`, eine Warnung, ein leerer Baum."""
     faelle = [
         ('GEGENPROBE: eine Datei, die übersetzt', {'tools/a/gut.py': 'x = 1\n'}, 0),
         ('ein deutsches Schlusszeichen beendet die Zeichenkette',

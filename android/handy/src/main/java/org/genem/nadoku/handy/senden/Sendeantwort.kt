@@ -5,8 +5,8 @@ import org.json.JSONObject
 /**
  * Die Antwort von `ingest.php`, ausgewertet (JSON-Vertrag 5).
  *
- * **EIN `ok: true` MIT `rejected` ODER `kept_*` IST KEIN REINER ERFOLG**
- * (E-S4-06): Der Upload ist angekommen, aber nicht vollständig übernommen.
+ * **EIN `ok: true` MIT `rejected` ODER `kept_*` IST KEIN REINER ERFOLG**:
+ * Der Upload ist angekommen, aber nicht vollständig übernommen.
  * Die beiden Fälle unterscheiden sich — `rejected` nennt einzelne verworfene
  * Werte, ein `kept_*` sagt, dass eine ganze Liste übergangen wurde und der
  * Serverstand unverändert blieb. Beides muss die App **anzeigen**; still

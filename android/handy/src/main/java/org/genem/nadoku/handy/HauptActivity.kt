@@ -68,22 +68,19 @@ import java.time.Instant
  * DER ZUSTAND KOMMT AUS DEM PUFFER, nicht aus dem Arbeitsspeicher. Deshalb
  * überlebt er den Absturz der App und den Neustart des Handys, und deshalb
  * fragt die Oberfläche ihn regelmäßig ab, statt ihn zu halten.
- *
- * STAND B3: Aufzeichnung und Dienstklammer stehen. Gesendet wird noch nichts
- * (B4), Phasen gibt es noch keine (B5) — der Rückstand ist deshalb fest 0.
  */
 class HauptActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        /* RANDLOS, UND ZWAR AUSDRUECKLICH (Backlog Nr. 86).
+        /* RANDLOS, UND ZWAR AUSDRUECKLICH.
          *
          * Seit `targetSdk = 36` bekommt die App die volle Flaeche ohnehin --
          * Android 15+ fragt nicht mehr. Der Aufruf aendert daran nichts; er
          * aendert, ob wir es WISSEN. Zwei Dinge kommen mit ihm:
          *
-         * 1. Die Systemleisten werden durchsichtig statt farbig. `themen.xml`
-         *    setzte dafuer `statusBarColor` -- ein Attribut, das seit API 35
-         *    wirkungslos ist und deshalb ausgetragen wurde.
+         * 1. Die Systemleisten werden durchsichtig statt farbig.
+         *    `statusBarColor` in `themen.xml` taete es nicht -- das Attribut
+         *    ist seit API 35 wirkungslos.
          * 2. Die Symbole der Leisten (Uhrzeit, Akku, Navigation) werden hell
          *    oder dunkel nach dem Untergrund gewaehlt. Bei uns liegt oben die
          *    dunkelblaue Kopfleiste, unten die helle Flaeche -- ohne diese
@@ -113,19 +110,18 @@ fun NAdokuOberflaeche(app: NAdokuApp) {
         Kopplungsdienst(
             netzweg = HttpNetzweg(),
             tresor = tresor,
-            /* DIE RÜCKSTANDSSPERRE IST JETZT ECHT (E-S4-12, Backlog Nr. 14):
+            /* DIE RÜCKSTANDSSPERRE:
              * Abgeschlossene, noch nicht bestätigte Pakete gehören dem
              * bisherigen Konto; nach einer Neukopplung gingen sie an das
              * neue. Das wäre kein Datenverlust, sondern schlimmer — fremde
              * Einsätze in einem fremden Konto. */
             rueckstand = { app.puffer.rueckstand() },
-            /* BEIM TRENNEN GEHEN DIE ABGEWIESENEN PAKETE MIT (Backlog Nr. 114,
-             * Räumteil): ohne Frist, weil sie dem Konto gehören, das hier
-             * zurückgegeben wird. */
+            /* BEIM TRENNEN GEHEN DIE ABGEWIESENEN PAKETE MIT: ohne Frist,
+             * weil sie dem Konto gehören, das hier zurückgegeben wird. */
             raeumen = { app.puffer.abgewieseneRaeumen(null) },
         )
     }
-    /* `LocalResources` statt `kontext.resources` (Android 0.16.0): Compose
+    /* `LocalResources` statt `kontext.resources`: Compose
      * 1.12 meldet den Weg ueber den Context als nicht konfigurationsfest
      * (Lint `LocalContextResourcesRead`). */
     val ressourcen = LocalResources.current
@@ -267,27 +263,23 @@ private fun GekoppelteOberflaeche(
     var akkuFrageOffen by remember { mutableStateOf(false) }
     var verbrauchFrageOffen by remember { mutableStateOf(false) }
     var verwerfFrageOffen by remember { mutableStateOf(false) }
-    /* Die Quittung „N Pakete verworfen" (R4-22). Hier und nicht in
+    /* Die Quittung „N Pakete verworfen". Hier und nicht in
      * `NAdokuApp`: Sie lebt mit der Oberfläche und ist nach einem Neustart
      * fort — eine Antwort auf eine Handlung, kein Zustand. */
     var verworfen by remember { mutableStateOf<Int?>(null) }
 
-    /* AUCH DIE FREIGABE WIRD ABGEFRAGT, NICHT GEHALTEN (B-S5Z-17).
+    /* AUCH DIE FREIGABE WIRD ABGEFRAGT, NICHT GEHALTEN.
      *
-     * `remember { … }` wertet einmal aus. Bis 0.10.1 war das der einzige
-     * Lesevorgang ausser dem Rückruf der Berechtigungsfrage — und damit sah
-     * die Ansicht eine Freigabe nicht, die anderswo erteilt wurde. Der Weg,
-     * auf dem das im Betrieb passiert, ist ausgerechnet der wichtigste: Wer
-     * einmal „Nicht mehr fragen" gewählt hat, bekommt von `freigabeFrage`
-     * keinen Dialog mehr; für sie oder ihn führt der einzige Weg über die
-     * Android-Einstellungen. Zurück in der App stand dann weiter
-     * „Ortung nicht freigegeben" — die App sagte jemandem, der das Problem
-     * gerade behoben hatte, es bestehe fort. Erst ein vollständiger Neustart
-     * räumte die Meldung weg.
-     *
-     * Gefunden am 03.09.2026 im Emulator, nicht durch Lesen: Der Abzug nach
-     * `Home` und Rückkehr war byteweise gleich dem davor (md5 08c9a62a…),
-     * der nach `force-stop` und Neustart war es nicht.
+     * `remember { … }` wertet einmal aus. Wäre das der einzige Lesevorgang
+     * ausser dem Rückruf der Berechtigungsfrage, sähe die Ansicht eine
+     * Freigabe nicht, die anderswo erteilt wurde. Der Weg, auf dem das im
+     * Betrieb passiert, ist ausgerechnet der wichtigste: Wer einmal „Nicht
+     * mehr fragen" gewählt hat, bekommt von `freigabeFrage` keinen Dialog
+     * mehr; für sie oder ihn führt der einzige Weg über die
+     * Android-Einstellungen. Zurück in der App stünde dann weiter „Ortung
+     * nicht freigegeben" — die App sagte jemandem, der das Problem gerade
+     * behoben hat, es bestehe fort. Erst ein vollständiger Neustart räumte
+     * die Meldung weg.
      *
      * Der Takt unten fragt ohnehin jede Sekunde den Puffer ab, mit genau
      * dieser Begründung. Die Freigabe hängt sich daran; `checkSelfPermission`
@@ -314,18 +306,18 @@ private fun GekoppelteOberflaeche(
         }
     }
 
-    /* Siehe die Begründung oben bei `ortungFrei` (B-S5Z-17). */
+    /* Siehe die Begründung oben bei `ortungFrei`. */
     LaunchedEffect(takt) {
         ortungFrei =
             ContextCompat.checkSelfPermission(kontext, Manifest.permission.ACCESS_FINE_LOCATION) ==
                 PackageManager.PERMISSION_GRANTED
     }
 
-    /* DIE DREI ZAHLEN DES PUFFERS LESEN NUR NACH EINER ÄNDERUNG (R17-24).
-     * Bis 0.18.0 hingen sie am Sekundentakt: drei SQLite-Abfragen je Sekunde
-     * auf dem Hauptfaden, auf einem alten Gerät mit vollem Puffer ein
-     * Ruckeln — obwohl sie sich nur mit einem Schreibvorgang ändern (Senden,
-     * Verwerfen, ein geschlossenes Paket). Jetzt liest der Takt nur den
+    /* DIE DREI ZAHLEN DES PUFFERS LESEN NUR NACH EINER ÄNDERUNG. Am
+     * Sekundentakt wären es drei SQLite-Abfragen je Sekunde auf dem
+     * Hauptfaden, auf einem alten Gerät mit vollem Puffer ein Ruckeln —
+     * obwohl sie sich nur mit einem Schreibvorgang ändern (Senden,
+     * Verwerfen, ein geschlossenes Paket). Deshalb liest der Takt nur den
      * Änderungszähler des Puffers, eine Zahl im Arbeitsspeicher; die drei
      * Abfragen laufen, wenn er sich bewegt hat. `stand` darunter bleibt am
      * Takt: Er trägt Angaben, die mit der Zeit laufen („seit …"). */
@@ -338,8 +330,8 @@ private fun GekoppelteOberflaeche(
 
     val stand = remember(takt, modus, ortungFrei) {
         val laufend = app.klammer.laufenderDienst()
-        /* WER DEN ORTUNGSZUSTAND KENNT, HÄNGT DAVON AB, OB EIN DIENST LÄUFT
-         * (E-S5Z-01). Läuft einer, ist der Vordergrunddienst die eine Quelle
+        /* WER DEN ORTUNGSZUSTAND KENNT, HÄNGT DAVON AB, OB EIN DIENST LÄUFT.
+         * Läuft einer, ist der Vordergrunddienst die eine Quelle
          * — er misst, die Ansicht liest. Läuft keiner, gibt es nichts zu
          * lesen; dann leitet die Ansicht selbst ab, was sie für die beiden
          * Sperren braucht. Der Sekundentakt oben holt es von selbst nach,
@@ -380,8 +372,8 @@ private fun GekoppelteOberflaeche(
         /* GEFRAGT WIRD NUR, WENN ES ETWAS ZU TUN GIBT. Steht die Freistellung
          * schon — etwa weil das Gerät sie von sich aus gewährt oder die
          * NutzerIn sie früher gesetzt hat —, wäre der Hinweis eine Frage nach
-         * etwas Erledigtem. Das Lesen des Zustands braucht keine Berechtigung
-         * (E-S4-52). */
+         * etwas Erledigtem. Das Lesen des Zustands braucht keine
+         * Berechtigung. */
         if (ortungFrei && !app.einstellungen.akkuHinweisGezeigt && !akkuFreigestellt(kontext)) {
             akkuFrageOffen = true
         }
@@ -402,7 +394,7 @@ private fun GekoppelteOberflaeche(
             aufJa = {
                 abschlussFrageOffen = false
                 app.klammer.einsatzAbschliessen()
-                // Einsatzabschluss ist ein Auslöser (E-S4-07).
+                // Einsatzabschluss ist ein Auslöser.
                 sendeImHintergrund(app)
                 takt++
             },
@@ -433,7 +425,7 @@ private fun GekoppelteOberflaeche(
             nein = stringResource(R.string.verwerfen_nein),
             aufJa = {
                 verwerfFrageOffen = false
-                /* DERSELBE WEG WIE BEIM TRENNEN (Nr. 114): ohne Frist, nur
+                /* DERSELBE WEG WIE BEIM TRENNEN: ohne Frist, nur
                  * abgeschlossene, samt Punkten, Phasen und leeren Dienstzeilen.
                  * Die Quittung nennt, was tatsächlich ging. */
                 verworfen = app.puffer.abgewieseneRaeumen(null).pakete
@@ -496,7 +488,7 @@ private fun GekoppelteOberflaeche(
             aufModus = { gewaehlt ->
                 modus = gewaehlt
                 app.einstellungen.letzterModus = gewaehlt
-                // Während des Dienstes: verlustfrei umschalten (E-S4-20).
+                // Während des Dienstes: verlustfrei umschalten.
                 app.klammer.modusWechseln(gewaehlt)
                 takt++
             },
@@ -507,8 +499,7 @@ private fun GekoppelteOberflaeche(
                     app.klammer.beginnen(modus)
                     AufzeichnungsDienst.starten(kontext)
                     if (!app.einstellungen.akkuHinweisGezeigt) akkuFrageOffen = true
-                    /* DER VERBRAUCHSHINWEIS, EINMAL JE INSTALLATION
-                     * (Backlog Nr. 82).
+                    /* DER VERBRAUCHSHINWEIS, EINMAL JE INSTALLATION.
                      *
                      * NACH dem Beginnen und nicht davor: Ein Dialog, der den
                      * Start aufhaelt, steht im Weg, wenn es losgeht. Der
@@ -517,8 +508,8 @@ private fun GekoppelteOberflaeche(
                      *
                      * NUR WENN DER AKKU-DIALOG NICHT OHNEHIN KOMMT: Zwei
                      * Kaesten uebereinander im selben Augenblick liest
-                     * niemand, und der Akku-Dialog traegt denselben Satz seit
-                     * diesem Paket in seinem zweiten Absatz. */
+                     * niemand, und der Akku-Dialog traegt denselben Satz in
+                     * seinem zweiten Absatz. */
                     if (!akkuFrageOffen && !app.einstellungen.verbrauchHinweisGezeigt) {
                         verbrauchFrageOffen = true
                     }
@@ -531,7 +522,7 @@ private fun GekoppelteOberflaeche(
             aufEinstellungen = { ansicht = Ansicht.Einstellungen },
             aufPhase = { nummer ->
                 app.klammer.phaseSetzen(nummer)
-                // Phasenwechsel ist ein Auslöser (E-S4-07).
+                // Phasenwechsel ist ein Auslöser.
                 sendeImHintergrund(app)
                 takt++
             },
@@ -543,20 +534,19 @@ private fun GekoppelteOberflaeche(
 /**
  * Einen Sendelauf anstoßen, ohne auf ihn zu warten.
  *
- * Die Ereignisauslöser aus E-S4-07 — Phasenwechsel und Einsatzabschluss —
+ * Die Ereignisauslöser — Phasenwechsel und Einsatzabschluss —
  * kommen aus der Oberfläche; der Takt selbst läuft im Vordergrunddienst.
  * Gewartet wird nicht: Ein Bedienschritt darf nicht am Netz hängen.
  */
 private fun sendeImHintergrund(app: NAdokuApp) {
-    /* ÜBER DEN SENDEAUSFÜHRER und nicht mehr über einen eigenen `Thread`
-     * (E-S5Z-11): Ein Phasenwechsel während eines laufenden Takt-Laufs
-     * erzeugte sonst zwei Läufe auf demselben Puffer (B-S5Z-11). */
+    /* ÜBER DEN SENDEAUSFÜHRER und nicht über einen eigenen `Thread`: Ein
+     * Phasenwechsel während eines laufenden Takt-Laufs erzeugte sonst zwei
+     * Läufe auf demselben Puffer. */
     app.sendelauf()
 }
 
 /**
- * Den Bericht des letzten Laufs in das übersetzen, was die Ansicht zeigt
- * (E-S5Z-12).
+ * Den Bericht des letzten Laufs in das übersetzen, was die Ansicht zeigt.
  *
  * DIE REGEL STEHT HIER UND NICHT IN DER ANSICHT: Eine Compose-Funktion, die
  * entscheidet, was „Keine Verbindung" heißt, ist weder prüfbar noch
@@ -596,14 +586,14 @@ private fun noetigeFreigaben(): Array<String> =
     }
 
 /**
- * Die Führung zur Akku-Freistellung (E-S4-05) — **auf dem Weg, den der Play
- * Store zulässt** (E-S4-52).
+ * Die Führung zur Akku-Freistellung — **auf dem Weg, den der Play Store
+ * zulässt**.
  *
  * SIE FÜHRT HIN UND ERZWINGT NICHTS. Geöffnet wird die **allgemeine Liste**
  * der Akku-Ausnahmen; dort sucht die NutzerIn NAdoku selbst heraus. Der
  * gezielte Dialog (`ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS`) wäre ein
  * Schritt weniger, verlangt aber eine Berechtigung, die gegen die
- * Inhaltsrichtlinie des Store verstößt (Fund B-S4-04). Ein Schritt mehr ist
+ * Inhaltsrichtlinie des Store verstößt. Ein Schritt mehr ist
  * der kleinere Preis als eine App, die nicht verteilt werden darf.
  *
  * Ob die Freistellung hält, zeigt ohnehin nur das Gerät — namentlich Samsungs
@@ -612,7 +602,7 @@ private fun noetigeFreigaben(): Array<String> =
  * drängt nicht wieder.
  */
 /**
- * Ist der **GPS-Anbieter** eingeschaltet? (E-S5Z-03)
+ * Ist der **GPS-Anbieter** eingeschaltet?
  *
  * ABSICHTLICH DER ANBIETER und nicht `isLocationEnabled()`: Im Modus
  * „Stromsparen" ist der Standort an und GPS aus — aufgezeichnet wird aber nur
@@ -632,7 +622,7 @@ private fun standortAn(kontext: Context): Boolean = try {
 }
 
 /**
- * Die Systemeinstellung für den Standort öffnen (E-S5Z-03).
+ * Die Systemeinstellung für den Standort öffnen.
  *
  * Die App kann den Standort nicht selbst einschalten, und das ist richtig so:
  * Es ist eine Systemeinstellung mit Wirkung auf jede App des Geräts. Sie
@@ -656,7 +646,7 @@ private fun standortEinstellungOeffnen(kontext: Context) {
 }
 
 /**
- * Einen Rechtstext im Browser oeffnen (seit 0.13.0).
+ * Einen Rechtstext im Browser oeffnen.
  *
  * DIESELBE BAUART WIE DIE BEIDEN EINSTELLUNGSWEGE DARUNTER: Die App oeffnet
  * eine Absicht und faengt den Fall ab, dass niemand sie annimmt. Der
@@ -681,8 +671,8 @@ private fun rechtstextOeffnen(kontext: Context, adresse: String) {
 
 private fun akkuEinstellungOeffnen(kontext: Context) {
     /* EIN EINZIGER WEG, KEIN RÜCKFALL. Die allgemeine Liste gibt es auf jedem
-     * Android ab 6.0; der Rückfall, den die frühere Fassung für fehlende
-     * Hersteller-Dialoge brauchte, ist damit gegenstandslos. */
+     * Android ab 6.0; ein Rückfall für fehlende Hersteller-Dialoge ist
+     * damit gegenstandslos. */
     val absicht = Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS)
         .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
     try {
@@ -721,8 +711,8 @@ private fun Rueckfrage(
     ja: String,
     aufJa: () -> Unit,
     aufNein: () -> Unit,
-    /* „Zurück" für die bisherigen drei Fragen; „Behalten" beim Verwerfen
-     * (R4-22), weil dort das Abbrechen etwas bewahrt, nicht zurückgeht. */
+    /* „Zurück" für die übrigen drei Fragen; „Behalten" beim Verwerfen,
+     * weil dort das Abbrechen etwas bewahrt, nicht zurückgeht. */
     nein: String = stringResource(R.string.trennen_nein),
 ) {
     AlertDialog(
@@ -752,7 +742,7 @@ internal fun Verbrauchhinweis(aufVerstanden: () -> Unit) {
      *
      * `onDismissRequest` setzt denselben Merker: Wer danebentippt, hat den
      * Text gesehen; ihn beim naechsten Dienst noch einmal zu zeigen, machte
-     * aus dem einmaligen Hinweis eine Dauerwarnung (Backlog Nr. 82). */
+     * aus dem einmaligen Hinweis eine Dauerwarnung. */
     AlertDialog(
         onDismissRequest = aufVerstanden,
         title = { Text(stringResource(R.string.verbrauch_titel), color = Farbe.dunkelblau) },

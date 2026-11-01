@@ -3,15 +3,14 @@ declare(strict_types=1);
 
 /**
  * DAS JOBREGISTER — steht in `docs/Technik.md` noch, was im Code steht?
- * (Backlog Nr. 208, Schritt 16)
  *
  * WOGEGEN. Der Jobkatalog in `server/jobs_lib.php` ist die Quelle; das
- * Register in `docs/Technik.md` 4.97a ist eine von Hand gefuehrte
- * Aufzaehlung daneben. Sie ist dreimal hinterhergehinkt — P5a/AP5, P5a/AP8
- * und zuletzt am 20.09.2026, gemessen: 11 Jobs im Code gegen 9 im Register
+ * Register in `docs/Technik.md` 4.7 ist eine von Hand gefuehrte
+ * Aufzaehlung daneben. Sie ist dreimal hinterhergehinkt —
+ * zuletzt am 20.09.2026, gemessen: 11 Jobs im Code gegen 9 im Register
  * (`mail` und `konto_verfall` fehlten), 16 Raeumschritte gegen „dreizehn".
  * Zweimal sind die Zahlen von Hand berichtigt worden, zweimal wuchs der
- * Abstand wieder. Nr. 208 verlangt deshalb ausdruecklich ein PRUEFMITTEL —
+ * Abstand wieder. Verlangt ist deshalb ausdruecklich ein PRUEFMITTEL —
  * „sonst wandert das Problem nur eine Ebene weiter".
  *
  * DIE SICHTBARE BESCHREIBUNG WIRD SEIT WEB 20.26.0 ERZEUGT
@@ -122,7 +121,7 @@ function jr_schluessel(string $quelle, string $funktion, string $start): array
     return $raus;
 }
 
-/** Die Jobnamen aus der Registertabelle in `docs/Technik.md` 4.97a. */
+/** Die Jobnamen aus der Registertabelle in `docs/Technik.md` 4.7. */
 function jr_register(string $md): array
 {
     $pos = strpos($md, '#### Der Katalog');
@@ -230,7 +229,7 @@ if ($schritte === []) {
 }
 foreach (array_diff($jobs, $regJobs) as $fehlt) {
     $befunde[] = "Der Job `$fehlt` steht im Katalog, aber nicht im Register "
-               . '(docs/Technik.md 4.97a, „Der Katalog").';
+               . '(docs/Technik.md 4.7, „Der Katalog").';
 }
 foreach (array_diff($regJobs, $jobs) as $zuviel) {
     $befunde[] = "Der Job `$zuviel` steht im Register, aber nicht im Katalog.";

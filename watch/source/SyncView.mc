@@ -83,21 +83,20 @@ class SyncView extends WatchUi.View {
             }
         }
 
-        /* --- Kann die Uhr ueberhaupt senden? (Backlog Nr. 11) ---------------
+        /* --- Kann die Uhr ueberhaupt senden? ---------------------------------
          *
-         * Die Seite beantwortet die Frage "ist alles uebertragen?". Bis
-         * hierher las sie dafuer allein Model.backlogCount() — und die Zahl
-         * beantwortet eine ANDERE Frage: "liegen abgeschlossene Pakete
-         * bereit?". Vor dem ersten Dienst ist sie zu Recht 0, und daraus wurde
-         * ein gruenes "Sync vollstaendig" ueber einen Weg, den die Uhr nie
-         * benutzt hat — waehrend unten in derselben Anzeige "Erst
-         * Server-Adresse setzen" stand. Zwei Aussagen, die einander
-         * widersprachen, nebeneinander.
+         * Die Seite beantwortet die Frage "ist alles uebertragen?". Dafuer
+         * reicht Model.backlogCount() allein nicht — die Zahl beantwortet eine
+         * ANDERE Frage: "liegen abgeschlossene Pakete bereit?". Vor dem ersten
+         * Dienst ist sie zu Recht 0, und daraus wuerde ein gruenes "Sync
+         * vollstaendig" ueber einen Weg, den die Uhr nie benutzt hat —
+         * waehrend unten in derselben Anzeige "Erst Server-Adresse setzen"
+         * stuende. Zwei Aussagen, die einander widersprechen, nebeneinander.
          *
          * Der gruene Zustand setzt deshalb BEIDES voraus: eine Server-Adresse
          * (App-Einstellungen) und eine Kopplung. Fehlt eines davon, tritt der
-         * Einrichtungszustand an seine Stelle, und der bisherige Fusszeilen-
-         * hinweis wird zur Hauptaussage.
+         * Einrichtungszustand an seine Stelle, und der Fusszeilenhinweis
+         * wird zur Hauptaussage.
          *
          * Reihenfolge wie bei der Einrichtung selbst — erst die Adresse, dann
          * koppeln. Ohne Adresse ist Koppeln gar nicht moeglich (Pair.request
@@ -130,9 +129,8 @@ class SyncView extends WatchUi.View {
         }
         /* Steht dieselbe Zeile schon in der Mitte, wird sie hier NICHT
          * wiederholt — dieselbe Regel wie beim Einrichtungsschritt weiter
-         * unten. Seit Uhr 3.0.0 kann das vorkommen: "Erst Server-Adresse
-         * setzen" ist der Text BEIDER Stellen, seit Pair.mc nicht mehr
-         * "Server-Domain" sagt. */
+         * unten. Das kann vorkommen: "Erst Server-Adresse setzen" ist der
+         * Text BEIDER Stellen. */
         var s = schritt;
         var doppelt = (einrichten && s != null && Pair.status != null
                        && s.equals(Pair.status as Lang.String));
@@ -149,38 +147,37 @@ class SyncView extends WatchUi.View {
                 lines.add([Pair.statusHint as Lang.String, Graphics.COLOR_LT_GRAY]);
             }
         }
-        /* ABGEMELDET UND ABGEWIESEN (Backlog Nr. 159).
+        /* ABGEMELDET UND ABGEWIESEN.
          *
          * Beides steht unten, weil beides einen Weg heraus hat und der
          * gehoert neben die Ursache. Und beides ueberlebt den naechsten
          * erfolgreichen Upload -- anders als `lastError`, das bei jeder
-         * angenommenen Anfrage auf null geht: Die alte Fassung zeigte
-         * "Upload 400" nur so lange, bis die uebersprungenen Pakete
-         * durchgelaufen waren, und danach wieder ein gruenes
+         * angenommenen Anfrage auf null geht: Daran gehaengt, zeigte die
+         * Seite "Upload 400" nur so lange, bis die uebersprungenen Pakete
+         * durchgelaufen sind, und danach wieder ein gruenes
          * "Sync vollstaendig". */
         if (Uploader.abgemeldet) {
-            /* Bis wann die Uhr die Pakete noch haelt (E-R17-22) -- in der
+            /* Bis wann die Uhr die Pakete noch haelt -- in der
              * ersten Zeile, nicht in einer dritten: Eine dritte rueckt den
              * Mittelblock auf der Venu 3s in die Meldung ("Pakete offen" auf
-             * "Gerät nicht mehr angemeldet", im Simulator gesehen beim Bau,
-             * R17-21). Ohne Vermerk -- er entsteht mit der ersten Abmeldung,
+             * "Gerät nicht mehr angemeldet", im Simulator gesehen). Ohne
+             * Vermerk -- er entsteht mit der ersten Abmeldung,
              * fehlt also praktisch nie -- bleibt der alte Wortlaut. */
             var bis = Uploader.abmeldeFristBis();
             lines.add([bis != null ? "Abgemeldet, Daten bis " + Util.datumAus(bis)
                                    : "Gerät nicht mehr angemeldet", Ui.ROT]);
             lines.add(["Neu koppeln: " + Input.lSelectHold(), Graphics.COLOR_LT_GRAY]);
         } else if (Uploader.hasCredentials() && !Huelle.hatSchluessel()) {
-            /* GEKOPPELT, ABER OHNE KONTOSCHLUESSEL (S11-08, E-S11-09). Der
-             * Fall nach dem Aufspielen von 4.0.0 auf eine gekoppelte Uhr --
-             * die alte Kopplung kannte keinen Schluessel -- und nach einer
+            /* GEKOPPELT, ABER OHNE KONTOSCHLUESSEL. Der Fall einer alten
+             * Kopplung, die noch keinen Schluessel kannte, und einer
              * Kopplung an ein Konto, das noch keines hat. Dieselbe Taste wie
-             * zum Koppeln, aber sie holt nur den Schluessel nach (Pair.start,
-             * E-S11-79) — kein Trennen, kein Code. Zwei Zeilen wie beim
-             * Abmelden; eine eigene Ansicht braucht es nicht (E-S11-76). */
+             * zum Koppeln, aber sie holt nur den Schluessel nach
+             * (Pair.start) — kein Trennen, kein Code. Zwei Zeilen wie beim
+             * Abmelden; eine eigene Ansicht braucht es nicht. */
             lines.add(["Kein Schlüssel", Ui.ROT]);
             lines.add(["Holen: " + Input.lSelectHold(), Graphics.COLOR_LT_GRAY]);
         } else if (Uploader.hasCredentials() && !Huelle.bereit()) {
-            /* Der Selbsttest ist gescheitert (E-S11-30): Diese Uhr rechnet
+            /* Der Selbsttest ist gescheitert: Diese Uhr rechnet
              * die Huelle anders als der Browser. Senden hiesse, Daten
              * hinauszuschicken, die niemand mehr oeffnen kann. Neu koppeln
              * hilft hier nicht -- die Zeile nennt deshalb keinen Weg,
@@ -225,8 +222,7 @@ class SyncView extends WatchUi.View {
          * Stelle, an der der Kreis zulaeuft.
          *
          * Traegt der untere Block drei Zeilen (Meldung, Weg heraus, Version —
-         * seit Uhr 3.0.0 der gewoehnliche Fall nach einer abgebrochenen
-         * Kopplung), rueckt untenY nach oben, der Mittelblock rueckt mit und
+         * der gewoehnliche Fall nach einer abgebrochenen Kopplung), rueckt untenY nach oben, der Mittelblock rueckt mit und
          * landet auf dieser Grenze. Bei 20 sitzt die GPS-Zeile dort, wo die
          * Sehne nur noch 122/112/182 px traegt (Fenix/FR945/Venu 3s) —
          * "GPS aus (kein Dienst)" braucht rund 140/130/230 px, und Ui.fitFont
@@ -241,26 +237,23 @@ class SyncView extends WatchUi.View {
          * Fall; wo Platz ist, zentriert die Zeile darueber ganz normal.
          *
          * WAS DIE GRENZE NICHT HAELT: den Mittelblock oberhalb von untenY.
-         * Hier stand bis Uhr 4.1.0, bis zu fuenf Zeilen im unteren Block
-         * ueberlappten nichts. Gemessen in R17-21 (F-R17-69): Auf der Venu 3s
-         * liegt "N Pakete offen" schon bei VIER Zeilen auf der obersten
-         * Meldung. Offen als Backlog Nr. 402. */
+         * Im Simulator gemessen: Auf der Venu 3s liegt "N Pakete offen" schon
+         * bei VIER Zeilen im unteren Block auf dessen oberster Meldung. Das
+         * ist offen. */
         if (y < Ui.s(dc, 34)) { y = Ui.s(dc, 34); }
 
-        /* AUCH DIESE ZEILE DURCH fitFont (Uhr-Layout_Regeln 4.2). Sie war die
-         * einzige der Seite ohne, und bis Uhr 2.0.0 fiel das nicht auf: Der
-         * untere Block trug im Regelfall nur die Versionszeile, der
-         * Mittelblock sass tief genug, und "GPS aus (kein Dienst)" passte.
+        /* AUCH DIESE ZEILE DURCH fitFont (Uhr-Layout_Regeln 4.2). Traegt der
+         * untere Block nur die Versionszeile, sitzt der Mittelblock tief
+         * genug, und "GPS aus (kein Dienst)" passt.
          *
-         * Mit 3.0.0 traegt der untere Block auf einem GEWOEHNLICHEN Weg drei
+         * Auf einem GEWOEHNLICHEN Weg traegt der untere Block aber drei
          * Zeilen — Meldung, Weg heraus, Version (etwa nach einem Abbruch der
          * Kopplung). untenY rueckt damit nach oben, der zentrierte
          * Mittelblock rueckt mit, und die GPS-Zeile landet dort, wo der Kreis
          * zulaeuft. Am 03.09.2026 auf der Venu 3s fotografiert: Sie las
          * "PS aus (kein Diens" — beide Enden fort, ohne Warnung und ohne
-         * Fehler. Auf dem Ausgangsstand desselben Geraets stand sie
-         * vollstaendig da; es ist also keine Altlast, sondern die Folge der
-         * zusaetzlichen Zeile.
+         * Fehler. Mit nur der Versionszeile stand sie auf demselben Geraet
+         * vollstaendig da; es ist also die Folge der zusaetzlichen Zeile.
          *
          * fontHint liefert auf der Venu die GROESSERE Schrift (ab 320 px), die
          * Zeile ist dort also breiter als auf den kleinen Geraeten — deshalb
@@ -316,7 +309,7 @@ class SyncView extends WatchUi.View {
         } else {
             /* RUECKSTAND UND ABGEWIESENE ZUGLEICH: Der Rueckstand bleibt die
              * Hauptaussage, denn er loest sich von selbst. Das Abgewiesene
-             * steht unten und verschwindet nicht mehr, sobald der Rest
+             * steht unten und verschwindet nicht, sobald der Rest
              * durchgelaufen ist. */
             dc.setColor(Ui.ORANGE, Graphics.COLOR_TRANSPARENT);
             dc.drawText(cx, y, Graphics.FONT_NUMBER_MILD, open.toString(),
@@ -339,7 +332,7 @@ class SyncView extends WatchUi.View {
     }
 }
 
-/* Die Rueckfrage vor dem Verwerfen (Backlog Nr. 159). */
+/* Die Rueckfrage vor dem Verwerfen. */
 class VerwerfenDelegate extends WatchUi.ConfirmationDelegate {
     function initialize() { ConfirmationDelegate.initialize(); }
     function onResponse(response) as Lang.Boolean {
@@ -360,10 +353,9 @@ class SyncDelegate extends ActionDelegate {
         _fromStart = fromStart;
     }
 
-    /* KURZER START: die geparkten Pakete verwerfen (Backlog Nr. 159).
+    /* KURZER START: die geparkten Pakete verwerfen.
      *
-     * Diese Taste war auf dieser Seite unbelegt, und sie ist der einzige
-     * Weg heraus, den die Uhr selbst anbieten kann: Ein abgewiesenes Paket
+     * Die Taste ist der einzige Weg heraus, den die Uhr selbst anbieten kann: Ein abgewiesenes Paket
      * kommt nie mehr an, und solange es liegt, haelt es seine Spur im
      * Speicher.
      *
@@ -385,9 +377,9 @@ class SyncDelegate extends ActionDelegate {
 
     // Geraete-Kopplung (START halten bzw. Action halten). NICHT direkt in die
     // Kopplung: Besteht schon eine, fragt Pair.start() zuerst und trennt sie
-    // ausdruecklich — Begruendung dort (Backlog Nr. 14). Seit 3.0.0 folgt
-    // darauf kein Eingabefeld mehr, sondern `start` und die Kopplungsansicht:
-    // Die Uhr ZEIGT den Code, das Web nimmt ihn entgegen (E-R49-1).
+    // ausdruecklich — Begruendung dort. Darauf folgt kein Eingabefeld,
+    // sondern `start` und die Kopplungsansicht: Die Uhr ZEIGT den Code, das
+    // Web nimmt ihn entgegen.
     function actSelectLong() as Lang.Boolean {
         Pair.start();
         return true;
@@ -406,10 +398,9 @@ class SyncDelegate extends ActionDelegate {
     // deshalb mit der Gegenbewegung wieder hinausfuehren, und nicht bloss
     // geschluckt werden.
     //
-    // Bis 3.0.1 stand hier derselbe Waechter wie bei actPageNext, ohne eigene
-    // Begruendung: "keine Nachbarseiten" galt fuer beide Richtungen. Fuer UP
-    // war das falsch — UP ist hier keine Nachbarseite, sondern der Rueckweg.
-    // Wer ihn drueckte, sass fest und kam nur mit BACK wieder heraus.
+    // Derselbe Waechter wie bei actPageNext ("keine Nachbarseiten") waere
+    // fuer UP falsch — UP ist hier keine Nachbarseite, sondern der Rueckweg.
+    // Wer ihn drueckte, saesse fest und kaeme nur mit BACK wieder heraus.
     function actPagePrev() as Lang.Boolean {
         if (_fromStart) { return actBack(); }
         Nav.go(-1); return true;

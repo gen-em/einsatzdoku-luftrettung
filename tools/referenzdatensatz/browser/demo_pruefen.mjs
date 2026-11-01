@@ -1,4 +1,4 @@
-/* Abnahme der Demo-Funktion (Arbeitspaket B6).
+/* Abnahme der Demo-Funktion.
  *
  * Fährt im Browser genau den Weg, den eine Administratorin ginge — und
  * danach den, den eine Besucherin geht. Kein SQL, keine Abkürzung.
@@ -14,7 +14,7 @@
  *
  * „NICHT GEMESSEN" IST EIN REGULAERER AUSGANG, und die Schlusszeile nennt ihn
  * mit Grund: Es gibt schon ein Demo-Konto (dann fehlt der Knopf „anlegen"),
- * oder die Mengenbremse des Demo-Kontos greift (E-P1-20, zwanzig Anmeldungen
+ * oder die Mengenbremse des Demo-Kontos greift (zwanzig Anmeldungen
  * je Stunde — zwei Laeufe hintereinander reichen). Wer sofort weitermessen
  * muss, leert den Topf ueber den Weg der Anwendung: `rate_erfolg('demo')` und
  * `rate_erfolg('demog')` mit gesetztem `$_SERVER['REMOTE_ADDR']`. Der
@@ -23,13 +23,13 @@
  * Lauf fuer einen ganzen.
  */
 import { writeFileSync, mkdirSync } from 'node:fs';
-/* Der Code-Schritt des Zweitfaktors steht EINMAL, in motor.mjs (P5c/AP5). */
+/* Der Code-Schritt des Zweitfaktors steht EINMAL, in motor.mjs. */
 import { codeSchritt, motorWahl, starten } from '../../motor.mjs';
 
 const MODUL = process.env.PLAYWRIGHT_MODUL
   || '/opt/node22/lib/node_modules/playwright/index.mjs';
 const PW = (m => m.default ?? m)(await import(MODUL.startsWith('/') ? 'file://' + MODUL : MODUL));
-/* Die Engine wählt der Läufer (MOTOR=… oder --motor), R87. */
+/* Die Engine wählt der Läufer (MOTOR=… oder --motor). */
 const MOTOR = motorWahl(process.argv);
 
 const basis   = process.argv[2] || 'https://127.0.0.1:8443';
@@ -43,7 +43,7 @@ mkdirSync(ordner, { recursive: true });
 
 /* KARTENKACHELN SIND KEIN KONSOLENFEHLER DIESER ANWENDUNG.
  *
- * Der Prüfstand hat keinen Weg ins Netz; jede Kachel scheitert. Bis S10/AP5
+ * Der Prüfstand hat keinen Weg ins Netz; jede Kachel scheitert. Früher
  * wurde am TEXT der Konsolenmeldung gefiltert — der trägt die Adresse aber
  * nicht immer: Nach mehreren Versuchen meldet Chromium nur noch
  * `Failed to load resource: net::ERR_TOO_MANY_RETRIES`, ohne zu sagen,
@@ -61,7 +61,7 @@ const kachelGescheitert = [];
 const lokal = /^https:\/\/(127\.0\.0\.1|localhost)(:|\/)/.test(basis);
 const browser = await starten(PW, MOTOR);
 const kontext = await browser.newContext({ ignoreHTTPSErrors: lokal, viewport: { width: 1500, height: 1100 } });
-/* DER WARTUNGSLAUF BLEIBT AUS (S11-07, F-S11-77): Er packt und dünnt im
+/* DER WARTUNGSLAUF BLEIBT AUS: Er packt und dünnt im
    Browser aus, sobald eine Seite ihn anstößt (Startseite, Reiter Backup),
    und das Ausdünnen ändert die Punkte — mitten in einem Vergleich wäre das
    eine Abweichung, die keine ist. Die Antwort sagt „nichts fällig" — ein
@@ -90,21 +90,21 @@ const pruefe = (ok, t) => { n++; if (!ok) befunde.push(t); };
 const melde = (t) => console.log('  ' + t);
 const ergebnis = { basis, schritte, pruefungen: 0, befunde, konsolenfehler: konsole };
 
-/* DIE MENGENBREMSE DES DEMO-KONTOS IST KEIN BEFUND (S10/AP5, wie F-11).
+/* DIE MENGENBREMSE DES DEMO-KONTOS IST KEIN BEFUND.
  *
- * E-P1-20: zwanzig Anmeldungen je Stunde und Adresse. Dieses Skript meldet
+ * Zwanzig Anmeldungen je Stunde und Adresse. Dieses Skript meldet
  * sich in fünf Abschnitten bis zu achtmal an — zwei Läufe hintereinander
  * reichen also, und beim dritten steht auf der Anmeldeseite:
  *
  *   „Das Demo-Konto wird gerade sehr häufig genutzt und ist vorübergehend
  *    gesperrt — wieder ab 21:55 Uhr."
  *
- * Bis S10/AP5 las das niemand. `anmelden()` gab `false` zurück, die Erwartung
+ * Früher las das niemand. `anmelden()` gab `false` zurück, die Erwartung
  * meldete „Anmeldung als Demo gescheitert", und der Abschnitt lief auf einer
  * Anmeldeseite weiter, bis irgendein Locator in eine Zeitgrenze rannte. Aus
  * einer wirksamen Schutzmassnahme wurde so ein Stapel roter Zeilen.
  *
- * Dieselbe Falle hat `umstellungslauf.mjs` in AP2 bekommen (F-11) und dort
+ * Dieselbe Falle hat `umstellungslauf.mjs` bekommen und dort
  * dieselbe Lösung: Der Grund wird gelesen und der Abschnitt als **nicht
  * gemessen** gezählt — nicht als erfüllt und nicht als verfehlt. */
 let nichtGemessen = 0;
@@ -120,7 +120,7 @@ async function anmelden(mail, pw) {
     seite.waitForNavigation({ waitUntil: 'domcontentloaded', timeout: 30000 }),
     seite.click('#loginform button[type="submit"]'),
   ]);
-  /* DER ZWEITFAKTOR (P5c/AP5, E-P5c-43). Die Administration dieses Laufs ist
+  /* DER ZWEITFAKTOR. Die Administration dieses Laufs ist
    * das Prüfkonto, eine BetreiberIn mit Zweitfaktor; nach dem Passwort fragt
    * `login.php` nach dem Code. `codeSchritt()` geht ihn. Das Einrichtungstor
    * meldet er als Scheitern — seine Adresse enthält `login.php` nicht, und
@@ -170,14 +170,14 @@ async function rueckfragen(hoechstens = 3) {
 async function zustand() {
   await seite.goto(`${basis}/admin_demo.php`, { waitUntil: 'domcontentloaded' });
   await seite.waitForTimeout(700);
-  /* ZWEI TRAEGER STATT EINER TABELLE (seit Web 9.10.0). Bis Web 9.9.0 stand
-     der ganze Zustand in einer `table.data`; O9c hat die Seite auf die
-     Bausteine umgestellt, und die Zahlen des Bestands sind jetzt Kacheln
+  /* ZWEI TRAEGER STATT EINER TABELLE. Frueher stand
+     der ganze Zustand in einer `table.data`; heute baut die Seite auf den
+     Bausteinen auf, und die Zahlen des Bestands sind jetzt Kacheln
      (`.kennzahl`: Wert oben, Beschriftung darunter), die uebrigen Angaben
      Zeilen (`.zeile`: Beschriftung oben, Wert darunter). Beide liefern zwei
      Zeilen Text — nur in umgekehrter Reihenfolge, und getrennt durch einen
      Umbruch statt durch einen Tabulator. */
-  /* GETEILT WIRD AN EINEM ODER MEHREREN UMBRUECHEN (S10/AP5).
+  /* GETEILT WIRD AN EINEM ODER MEHREREN UMBRUECHEN.
    *
    * `innerText` liefert fuer eine Kennzahlkachel heute `"83\n\nEinsätze"` —
    * zwei Umbrueche, weil Wert und Beschriftung zwei `<p>` sind. Geteilt wurde
@@ -209,7 +209,7 @@ async function zustand() {
        Versalien, und innerText liefert den GERENDERTEN Text — „EINSÄTZE",
        nicht „Einsätze". Ein Vergleich auf die Schreibweise im Markup fand
        hier nichts und meldete dreimal „undefined". Dieselbe Falle wie bei
-       der Diagnose-Beschriftung in P-07. */
+       der Diagnose-Beschriftung in `angriffswerte.mjs`. */
     if (k) { aus[k.toLowerCase()] = v; }
   }
   /* LEER IST EIN ERGEBNIS, KEIN ZUSTAND. Steht kein Zustand auf der Seite,
@@ -296,7 +296,7 @@ if (schritte.includes('anlegen')) {
   pruefe(await anmelden(admin, adminPw), 'Anmeldung als Administration gescheitert');
   await seite.goto(`${basis}/admin_demo.php`, { waitUntil: 'domcontentloaded' });
   await seite.waitForTimeout(700);
-  /* DEN KNOPF GIBT ES NUR, WENN ES NOCH KEIN DEMO-KONTO GIBT (S10/AP5).
+  /* DEN KNOPF GIBT ES NUR, WENN ES NOCH KEIN DEMO-KONTO GIBT.
    *
    * `admin_demo.php` zeigt entweder „Demo-Konto anlegen" ODER
    * „Zurücksetzen" — nie beides. Die Erwartung stand hier unbedingt und
@@ -335,7 +335,7 @@ if (schritte.includes('anlegen')) {
   pruefe((z['ruhesegmente'] || '') === '95', `Ruhesegmente: ${z['ruhesegmente']}`);
   pruefe((z['einsätze im papierkorb'] || '') === '5',
          `Papierkorb: ${z['einsätze im papierkorb']}`);
-  /* ZWEI, nicht drei (seit Web 8.0.1). Die Fixture fuehrt drei Eintraege,
+  /* ZWEI, nicht drei. Die Fixture fuehrt drei Eintraege,
      einer davon ist das virtuelle Geraet "Manuelle Einträge"; es wird nicht
      mehr eingespielt (demo_lib.php), und die Adminansicht zaehlt es auch
      nicht mehr mit (GERAETE_ECHT_SQL). Beides zusammen ergibt die Zahl, die
@@ -361,7 +361,7 @@ if (schritte.includes('lesen')) {
     seite.locator('#missions tbody tr').first().click(),
   ]);
   await seite.waitForTimeout(2500);
-  /* DAS SCHLOSS IST EIN SVG, KEIN EMOJI (S10/AP5).
+  /* DAS SCHLOSS IST EIN SVG, KEIN EMOJI.
    *
    * Hier stand `/diagnose\s*🔒\s*\n(.+)/i` — die Beschriftung, dann das
    * Schloss-Emoji, dann der Wert. `dtGeschuetzt()` in `einsatz.php` setzt das
@@ -433,8 +433,7 @@ if (schritte.includes('reset')) {
   const vorher = await zustand();
   melde(`vor dem Reset: ${JSON.stringify(vorher)}`);
   ergebnis.vor_reset = vorher;
-  /* DER KNOPF HEISST „Zurücksetzen", NICHT „Auf Standard zurücksetzen"
-   * (S10/AP5).
+  /* DER KNOPF HEISST „Zurücksetzen", NICHT „Auf Standard zurücksetzen".
    *
    * Hier stand der lange Text, und `hasText` fand nichts. Die Erwartung
    * meldete daraufhin richtig „Knopf fehlt" — und der Zweig darunter wurde
@@ -498,7 +497,7 @@ if (schritte.includes('sperren')) {
   if (await anmeldenOderBremse(demo, demoPw, 4, 'Abschnitt 5 (sperren)')) {
   await seite.goto(`${basis}/einstellungen.php?t=profil`, { waitUntil: 'domcontentloaded' });
   await seite.waitForTimeout(1200);
-  /* DAS FORMULAR HEISST `pfform`, UND SEIN KNOPF STEHT DARIN (S10/AP5).
+  /* DAS FORMULAR HEISST `pfform`, UND SEIN KNOPF STEHT DARIN.
    *
    * Hier stand `seite.locator('form').filter({ has: … }).locator('button')`
    * — „irgendein Knopf in irgendeinem Formular, das ein E-Mail-Feld
@@ -536,7 +535,7 @@ if (schritte.includes('sperren')) {
    * Absenden wieder den alten Wert — gemessen, nicht angenommen. */
   pruefe((await mailFeld.inputValue().catch(() => '')) === demo,
          'Die E-Mail-Adresse im Formular ist nach der Abweisung nicht mehr die alte');
-  /* DAS CSRF-TOKEN STEHT ALS `const`, NICHT AUF `window` (S10/AP5).
+  /* DAS CSRF-TOKEN STEHT ALS `const`, NICHT AUF `window`.
    *
    * `ui_krypto_bootstrap()` schreibt `const CSRF = …` in ein klassisches
    * Skript; eine Deklaration mit `const` landet NICHT am `window`-Objekt.
@@ -544,8 +543,8 @@ if (schritte.includes('sperren')) {
    * nicht, und der Endpunkt antwortete folgerichtig `403 {"error":"csrf"}`.
    *
    * Gemessen wurde damit die CSRF-Sperre — nicht das, was hier gemeint war:
-   * dass `api/kdf_upgrade.php` das Demo-Konto ÜBERSPRINGT (E-P1-19/E-S10-06).
-   * Das ist seit S10 die tragende Zusage an dieser Stelle: Das Demo-Konto
+   * dass `api/kdf_upgrade.php` das Demo-Konto ÜBERSPRINGT.
+   * Das ist die tragende Zusage an dieser Stelle: Das Demo-Konto
    * bekommt keinen Server-Anteil, seine Hülle bleibt `edk1:`, und die stille
    * Umstellung darf sie nicht anfassen.
    *
@@ -586,7 +585,7 @@ console.log(`Konsolenfehler:  ${konsole.length}`
        + `Prüfstand hat keinen Weg ins Netz, sie zählen nicht mit)` : ''));
 /* NICHT GEMESSEN IST NICHT ERFÜLLT. Die Zahl steht in der Schlusszeile und
  * nicht nur im Protokoll — sonst liest sich ein Lauf, der die Hälfte
- * übersprungen hat, wie ein vollständiger (dieselbe Lehre wie F-S10-AP5-04). */
+ * übersprungen hat, wie ein vollständiger. */
 if (nichtGemessen > 0) {
   console.log(`NICHT GEMESSEN:  ${nichtGemessen} — der Grund steht oben bei dem `
             + `Abschnitt, der übersprungen wurde.`);

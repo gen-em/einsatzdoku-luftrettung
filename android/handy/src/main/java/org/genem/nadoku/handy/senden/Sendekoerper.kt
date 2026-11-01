@@ -12,11 +12,10 @@ import org.json.JSONObject
  * Vertrags einzeln prüfen lässt: dass `ended_at` null ist, solange `final`
  * false ist; dass `day_ref` nur mitgeht, wenn es eines gibt.
  *
- * SEIT 0.18.0 VERSCHLOSSEN (S11-09). `track` ist ein Spurstück mit Hülle statt
- * einer Liste aus `[lat, lon, ele_m, epoch_s]`, und die Koordinaten der
- * Phasen stehen in der Einsatzhülle (`ort_huelle`) statt in `phases[]`
- * ([Geraetehuelle]). Bis 0.17.0 ging beides im Klartext — der Server weist
- * das seit Web 22.0.1 mit `400 klartext` ab.
+ * VERSCHLOSSEN. `track` ist ein Spurstück mit Hülle statt einer Liste aus
+ * `[lat, lon, ele_m, epoch_s]`, und die Koordinaten der Phasen stehen in der
+ * Einsatzhülle (`ort_huelle`) statt in `phases[]` ([Geraetehuelle]). Klartext
+ * weist der Server mit `400 klartext` ab.
  */
 object Sendekoerper {
 
@@ -61,8 +60,8 @@ object Sendekoerper {
              * gehört, zeigte im Browser die falschen Orte. */
             put("ort_huelle", Geraetehuelle.einsatz(paket.clientRef, paket.begonnenAt, phasen, kontoschluessel))
             /* `resus_sessions` wird NICHT gesendet — und zwar gar nicht, statt
-             * als leere Liste. Die Reanimation bleibt bei der Garmin
-             * (E-R45-1), das Handy dokumentiert sie nicht. Eine leere Liste
+             * als leere Liste. Die Reanimation bleibt bei der Garmin, das
+             * Handy dokumentiert sie nicht. Eine leere Liste
              * hieße „es gibt keine"; der Server ließe den vorhandenen Stand
              * dann zwar stehen (Vertrag 3.1) und meldete es als `kept_resus`
              * — aber gemeldet würde etwas, das nie eine Aussage war. Ein
@@ -86,8 +85,8 @@ object Sendekoerper {
                     JSONObject().apply {
                         put("phase", p.nummer)
                         put("at", p.at)
-                        // Die Koordinate steht seit 0.18.0 in der
-                        // Einsatzhülle, nicht hier (Vertrag 3).
+                        // Die Koordinate steht in der Einsatzhülle,
+                        // nicht hier (Vertrag 3).
                     }
                 )
             }

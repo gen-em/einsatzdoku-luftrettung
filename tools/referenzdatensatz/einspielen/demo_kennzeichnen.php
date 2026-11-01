@@ -4,22 +4,22 @@ declare(strict_types=1);
 /**
  * Das Referenzkonto der Pruefinstallation als DEMO-KONTO kennzeichnen.
  *
- * WOFUER, UND WARUM ES DIESES SKRIPT SEIT S10 BRAUCHT.
+ * WOFUER, UND WARUM ES DIESES SKRIPT BRAUCHT.
  *
  * `fixture/erzeugen.php` bricht ab, wenn die Schluesselhuelle des Kontos nicht
- * `edk1:` traegt (Backlog Nr. 155 / S10/AP5). Der Riegel ist richtig: Eine
+ * `edk1:` traegt. Der Riegel ist richtig: Eine
  * `edka1:`-Huelle haengt am Server-Anteil DIESER Installation, und die Fixture
  * reist auf eine andere -- das Demo-Konto kaeme dort herein und saehe nichts.
  *
  * Welche Fassung entsteht, entscheidet `pw_handling.php` in dem Augenblick, in
  * dem das Passwort gesetzt wird -- und zwar an einer einzigen Frage:
  * `demo_ist_demo($pwUserId)`. Zeigt `app_state.demo_user_id` auf das Konto,
- * baut der Browser die Huelle OHNE Anteil (E-P1-19); sonst MIT.
+ * baut der Browser die Huelle OHNE Anteil; sonst MIT.
  *
- * Damit steht der Neubau des Referenzbestands seit S10 vor einem Ring:
+ * Damit steht der Neubau des Referenzbestands vor einem Ring:
  *
  *   - Der Einspiellauf legt das Konto ueber den regulaeren Einladungsweg an
- *     (`stufe_konto`, E-P1-10) und setzt das Passwort im Browser.
+ *     (`stufe_konto`) und setzt das Passwort im Browser.
  *   - Zu diesem Zeitpunkt ist es ein KONTO WIE JEDES ANDERE, also bekommt es
  *     `edka1:`.
  *   - `demo_anlegen()` im Adminbereich kann die Kennzeichnung nicht
@@ -29,7 +29,7 @@ declare(strict_types=1);
  *
  * Dieses Skript setzt die Kennzeichnung -- mehr nicht. Es schreibt zwei Zeilen
  * in `app_state`, beide ueber die Konstanten aus `demo_lib.php`, und ruehrt
- * weder Bestand noch Schluesselmaterial an. R4 („kein roher SQL-Weg") meint
+ * weder Bestand noch Schluesselmaterial an. „Kein roher SQL-Weg" meint
  * die EINSATZDATEN; hier steht der Schalter der Installation.
  *
  * DIE ZWEITE ZEILE IST KEIN BEIWERK. Sobald die Kennzeichnung steht, prueft
@@ -82,7 +82,7 @@ $pdo->prepare('INSERT INTO app_state (k, v) VALUES (?, ?)
                ON DUPLICATE KEY UPDATE v = VALUES(v)')
     ->execute([DEMO_K_USER, (string)$id]);
 /* Resetmarke in die ZUKUNFT: `demo_reset_faellig_ab()` zaehlt die Frist ab
- * dem spaeteren von Marke und erster Aenderung (seit Web 21.2.0, R4-14); eine
+ * dem spaeteren von Marke und erster Aenderung; eine
  * Marke von morgen laesst den Reset waehrend des Aufbaus nicht faellig
  * werden, auch wenn der Aufbau das Konto aendert. */
 demo_reset_marke_setzen(time() + $frist);

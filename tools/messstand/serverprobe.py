@@ -3,7 +3,7 @@
 WOFUER. Die Browserprobe misst, was die Nutzerin merkt. Diese hier misst, was
 der geteilte Webspace merkt: wie viel Platz der Bestand belegt, wie lange die
 Wege der Anwendung laufen und wie hoch PHP dabei im Speicher steigt. Die
-Grenzen stehen in Z3 (Konzept 3.5): Laufzeit ≤ 30 s je Anfrage,
+Grenzen sind: Laufzeit ≤ 30 s je Anfrage,
 PHP-Speicherspitze ≤ 64 MB, POST ≤ 2 MB.
 
 DIE SPEICHERSPITZE WIRD NICHT GESCHAETZT, SONDERN GEMESSEN. `messwerte.php`
@@ -18,9 +18,7 @@ Grenze war, sieht man ihr nicht an. Der Weg hier ruft dieselben Funktionen der
 Anwendung auf — `edbak_build()` und die Abfragen der Ansichten — nur eben so,
 dass sich die Spitze ablesen lässt.
 
-SEIT WEB 23 (S11-12) MISST SIE `track_stuecke`. Bis Web 22.7.0 zählte sie
-Zeilen in `track_points` und maß den Bau des Backups am Stück; die Tabelle
-und der Bau am Stück sind gefallen. Eine Spur wiegt jetzt Bytes je PUNKT
+SIE MISST `track_stuecke`. Eine Spur wiegt Bytes je PUNKT
 (Hülle samt Index geteilt durch die Punkte der Tabelle), nicht je Zeile.
 
 Aufruf:
@@ -30,6 +28,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import pathlib
 import subprocess
 import sys
@@ -45,7 +44,6 @@ def php_messen(konto: str, optimieren: bool = False,
 declare(strict_types=1);
 $wurzel = getenv("EDOKU_WURZEL");
 $konto  = getenv("EDOKU_KONTO");
-require_once $wurzel . "/config.php";
 require_once $wurzel . "/db.php";
 
 $pdo = db();
@@ -191,7 +189,7 @@ echo json_encode($aus, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT), "\n";
     e = subprocess.run(
         ["php", "-d", "memory_limit=-1", "-r", skript.replace("<?php\n", "", 1)],
         capture_output=True, text=True,
-        env={**__import__("os").environ,
+        env={**os.environ,
              "EDOKU_WURZEL": str(SERVER), "EDOKU_KONTO": konto,
              "EDOKU_OPTIMIEREN": "ja" if optimieren else "nein",
              "EDOKU_WARTUNG": "ja" if wartung else "nein"})
@@ -201,14 +199,14 @@ echo json_encode($aus, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT), "\n";
 
 
 def php_fenster_messen(konto: str, fenster: int = 250) -> dict:
-    """Der Backup-Bau so, wie die Anwendung ihn seit Web 11.1.0 geht.
+    """Der Backup-Bau so, wie die Anwendung ihn geht.
 
     EIGENER PROZESS, und das ist der Punkt. `memory_get_peak_usage()` kennt
-    nur EIN Maximum je Prozess; bis Web 22.7.0 stand dort nach dem Bau am
-    Stueck schon ueber ein Gigabyte, und die Fenster bekaemen eine Zahl, die
+    nur EIN Maximum je Prozess; beim frueheren Bau am
+    Stueck stand dort schon ueber ein Gigabyte, und die Fenster bekaemen eine Zahl, die
     nichts ueber sie sagt.
 
-    UND MIT `memory_limit=64M`, nicht mit `-1`. Das ist die Z3-Grenze. Eine
+    UND MIT `memory_limit=64M`, nicht mit `-1`. Das ist die Grenze des Budgets. Eine
     Messung ohne Deckel sagt, wie viel gebraucht wurde; eine mit Deckel sagt
     zusaetzlich, dass es reicht — und faellt auf, wenn es das nicht mehr tut.
     """
@@ -217,7 +215,6 @@ declare(strict_types=1);
 $wurzel = getenv("EDOKU_WURZEL");
 $konto  = getenv("EDOKU_KONTO");
 $fenster = max(1, (int)getenv("EDOKU_FENSTER"));
-require_once $wurzel . "/config.php";
 require_once $wurzel . "/db.php";
 require_once $wurzel . "/backup_lib.php";
 $pdo = db();
@@ -255,12 +252,12 @@ echo json_encode([
     e = subprocess.run(
         ["php", "-d", "memory_limit=64M", "-r", skript.replace("<?php\n", "", 1)],
         capture_output=True, text=True,
-        env={**__import__("os").environ,
+        env={**os.environ,
              "EDOKU_WURZEL": str(SERVER), "EDOKU_KONTO": konto,
              "EDOKU_FENSTER": str(fenster)})
     if e.returncode != 0:
         # EIN ABBRUCH IST HIER DAS ERGEBNIS, kein Werkzeugfehler: Er heisst,
-        # dass der Fensterweg das Budget Z3 nicht mehr haelt.
+        # dass der Fensterweg das Budget nicht mehr haelt.
         return {"fenster": fenster, "fehler": (e.stderr.strip() or e.stdout.strip())[:400],
                 "memory_limit": "64M"}
     return json.loads(e.stdout)
@@ -315,8 +312,8 @@ def main() -> int:
                   f"{je_punkt * je_einsatz * 1000:.2f} MB "
                   f"(Zielwert E-S2-24 nach Ausdünnung: ≤ 3 MB)")
         print(f"Datenbank gesamt (alle Konten): {gesamt:.1f} MB")
-    # DER WEG, DEN DIE ANWENDUNG SEIT WEB 11.1.0 GEHT — eigener Prozess mit
-    # memory_limit=64M, s. php_fenster_messen(). Seit Web 23 der einzige.
+    # DER WEG, DEN DIE ANWENDUNG GEHT — eigener Prozess mit
+    # memory_limit=64M, s. php_fenster_messen(). Der einzige.
     f = php_fenster_messen(a.konto)
     werte["edbak_fenster"] = f
     if f.get("fehler"):

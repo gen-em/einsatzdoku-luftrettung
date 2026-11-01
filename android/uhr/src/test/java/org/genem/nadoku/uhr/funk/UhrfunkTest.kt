@@ -13,11 +13,11 @@ import org.robolectric.RobolectricTestRunner
 import kotlin.random.Random
 
 /**
- * Puffer, Quittung und Nachlieferung der Uhr (Abnahme C2, E-S4-10).
+ * Puffer, Quittung und Nachlieferung der Uhr.
  *
- * DREI DER FÜNF ABNAHMEFÄLLE LIEGEN HIER: Funkabriss mit Nachlieferung,
+ * DREI DER TRAGENDEN FÄLLE LIEGEN HIER: Funkabriss mit Nachlieferung,
  * Doppelzustellung nach verlorener Quittung, Uhr-Neustart mit gefülltem
- * Puffer. Die beiden anderen — kein zweiter Einsatz am Handy, Phasenkonflikt
+ * Puffer. Zwei weitere — kein zweiter Einsatz am Handy, Phasenkonflikt
  * — liegen auf der Gegenseite (`UhrannahmeTest` im Handy-Modul), weil dort
  * entschieden wird.
  *
@@ -187,7 +187,7 @@ class UhrfunkTest {
         assertNotEquals("Aber sie sind unterscheidbar", andere.uhrId, eine.uhrId)
     }
 
-    /** Die `wm-`-Kennung hat die Bauform aus E-S4-09 — Präfix, Zähler, Zufall. */
+    /** Die `wm-`-Kennung hat ihre Bauform — Präfix, Zähler, Zufall. */
     @Test fun dieEinsatzkennungTraegtDasUhrPraefix() {
         val f = funk()
         val eine = f.einsatzkennung()
@@ -200,12 +200,12 @@ class UhrfunkTest {
     }
 
     /**
-     * **Eine unlesbare Zeile bleibt nicht für immer** (R17-24).
+     * **Eine unlesbare Zeile bleibt nicht für immer.**
      *
      * Ein halbes Schreiben kann eine Zeile hinterlassen, die kein Ereignis
-     * ist. Bis 0.18.0 blieb sie: `quittieren()` nahm nur Zeilen mit lesbarer
-     * Nummer, `nachliefern()` schickte sie bei jedem Start, und sie zählte im
-     * Puffer mit. Jetzt fällt sie beim Laden heraus und wird gezählt; die
+     * ist. Bliebe sie, nähme `quittieren()` sie nie (nur Zeilen mit lesbarer
+     * Nummer), `nachliefern()` schickte sie bei jedem Start, und sie zählte
+     * im Puffer mit. Deshalb fällt sie beim Laden heraus und wird gezählt; die
      * lesbaren bleiben wortgleich.
      */
     @Test fun eineUnlesbareZeileFaelltBeimLadenHeraus() {

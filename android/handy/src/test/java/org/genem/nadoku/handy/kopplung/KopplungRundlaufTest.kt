@@ -18,20 +18,13 @@ import java.io.File
 
 /**
  * **Server-Rundlauf der Kopplung** gegen eine echte Installation
- * (Abnahme B2, neu geschnitten für Vertrag 1a).
+ * (Vertrag 1a).
  *
  * WAS HIER ANDERS IST ALS IN [KopplungTest]: Dort antwortet ein selbst
  * gebauter Prüfserver mit Antworten, die *nachgestellt* sind — die Fälle sind
  * dadurch vollständig, aber sie prüfen die Annahme mit, dass `pair.php`
  * tatsächlich so antwortet. Hier antwortet `pair.php` selbst. Beides wird
  * gebraucht: Der eine Lauf ist vollständig, der andere echt.
- *
- * DIESE KLASSE LIEF SEIT WEB 13.0.0 INS LEERE, und das war bekannt: Sie
- * koppelte über `Kopplungsdienst.koppeln(basis, code, geraet)` — den alten
- * Weg, den `pair.php` seither mit `400 {"error":"aktion"}` beantwortet.
- * `android/LIESMICH.md` beschrieb deshalb eine eigene Installation „vom Stand
- * vor S5". Das ist mit diesem Paket erledigt: Der Rundlauf läuft wieder gegen
- * den **aktuellen** Stand, und jener Abschnitt der Anleitung ist entfallen.
  *
  * VORBEREITUNG (steht im Prüfprotokoll, weil sie zum Ergebnis gehört):
  *
@@ -40,15 +33,15 @@ import java.io.File
  * ./gradlew :handy:testDebugUnitTest -Pnadoku.rundlauf=http://127.0.0.1:8080/
  * ```
  *
- * **Codes werden nicht mehr vorbereitet** — es gibt keine Tabelle mehr, in
- * die man sie legen könnte. Den Schritt, den sonst ein Mensch im Browser tut,
+ * **Codes werden nicht vorbereitet** — es gibt keine Tabelle, in die man
+ * sie legen könnte. Den Schritt, den sonst ein Mensch im Browser tut,
  * übernimmt [Kopplungshilfe]; ihr Dateikopf begründet, warum sie dafür
  * `mariadb` aufruft.
  *
  * ÜBER KLARTEXT-HTTP, nicht HTTPS: Die lokale Installation trägt ein
  * selbstsigniertes Zertifikat. Es in den Vertrauensspeicher des Prüflaufs zu
  * legen hieße, dem Prüfstand etwas beizubringen, was die App nie tun darf.
- * Dass die App für jeden echten Rechnernamen **nur** HTTPS spricht (E-S4-14),
+ * Dass die App für jeden echten Rechnernamen **nur** HTTPS spricht,
  * ist in [ServeradresseTest] belegt — dort, wo diese Regel wohnt.
  */
 @RunWith(RobolectricTestRunner::class)
@@ -66,12 +59,9 @@ class KopplungRundlaufTest {
         fw = "16", sdk = 36, app = "0.2.0",
     )
 
-    /* BENANNT, NICHT ALS NACHGESTELLTE LAMBDA (Android-Runde AR-02). Hier
-     * stand `Kopplungsdienst(…, basis) { rueckstand }`. Seit Nr. 114 ist der
-     * LETZTE Parameter aber `raeumen`, nicht `rueckstand` -- die Lambda ging
-     * dorthin, und der Rueckstand kam nie an. Gewirkt hat es nicht, weil kein
-     * Fall hier einen Rueckstand setzt; gefunden hat es Kotlin 2.4
-     * ("Expression is unused"). */
+    /* BENANNT, NICHT ALS NACHGESTELLTE LAMBDA. Der LETZTE Parameter von
+     * `Kopplungsdienst` ist `raeumen`, nicht `rueckstand` -- eine
+     * nachgestellte Lambda ginge dorthin, und der Rueckstand kaeme nie an. */
     private fun dienst(rueckstand: Int = 0) =
         Kopplungsdienst(HttpNetzweg(), tresor, basis, rueckstand = { rueckstand })
 
@@ -82,11 +72,11 @@ class KopplungRundlaufTest {
      * ist 5, und JUnit sichert keine Reihenfolge der Fälle zu. Ohne das
      * Aufräumen füllte der Grenzfall das Konto, und alles, was danach lief,
      * scheiterte an `device_limit` — an einem Zustand also, den ein anderer
-     * Prüffall hinterlassen hat. Genau das ist beim ersten Lauf passiert.
+     * Prüffall hinterlassen hat.
      *
-     * SEIT DER UMKEHR WIRD AUCH DIE SITZUNGSTABELLE GERÄUMT: Ein Fall, der
-     * mitten im Ablauf endet, lässt eine offene Sitzung zurück, und die zählt
-     * zehn Minuten lang gegen die Obergrenze des Servers (Backlog Nr. 95).
+     * AUCH DIE SITZUNGSTABELLE WIRD GERÄUMT: Ein Fall, der mitten im Ablauf
+     * endet, lässt eine offene Sitzung zurück, und die zählt zehn Minuten
+     * lang gegen die Obergrenze des Servers.
      */
     @After fun aufraeumen() {
         if (basis.isEmpty()) return
@@ -113,7 +103,7 @@ class KopplungRundlaufTest {
 
         val z = tresor.lesen()
         assertNotNull(z)
-        // Der Server vergibt seit Web 4.4.0 128 Bit: "dev-" + 32 Hexzeichen.
+        // Der Server vergibt 128 Bit: "dev-" + 32 Hexzeichen.
         assertTrue("Kennung: ${z!!.geraeteKennung}", z.geraeteKennung.startsWith("dev-"))
         assertEquals(36, z.geraeteKennung.length)
         assertTrue("Schlüssel zu kurz", z.schluessel.length >= 32)
@@ -252,12 +242,8 @@ class KopplungRundlaufTest {
         )
         /* Die Servermeldung wird durchgereicht: Sie sagt, was zu tun ist.
          *
-         * „Geräte" MIT UMLAUT, und das ist ein Fund dieses Pakets: Bis
-         * Android 0.10.1 suchte diese Zeile „Geraete". Sie ging durch,
-         * solange `pair.php` seine Meldungen ohne Umlaute schrieb — seit S5
-         * (Web 13.0.0) tut es das nicht mehr. Der Prüffall hätte den Wechsel
-         * bemerken müssen und hat es nicht, weil er gegen einen Server vom
-         * alten Stand lief (siehe Klassenkopf). */
+         * „Geräte" MIT UMLAUT: `pair.php` schreibt seine Meldungen mit
+         * Umlauten. */
         assertTrue(
             "Servermeldung fehlt: ${grenze!!.meldung}",
             grenze.meldung?.contains("Geräte") == true,

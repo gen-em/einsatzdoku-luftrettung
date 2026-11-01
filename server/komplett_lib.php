@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 /**
- * Komplett-Backup der Installation (S2/AP8, E-S2-19 bis E-S2-21).
+ * Komplett-Backup der Installation.
  *
  * WAS ES IST UND WOGEGEN ES HILFT. Das Admin-Backup (`adminbackup_lib.php`)
  * sichert ein KONTO. Dieses hier sichert die INSTALLATION: alle Konten,
@@ -13,11 +13,11 @@ declare(strict_types=1);
  * Serverschluessel — also genau das, womit sich diese Datei oeffnen laesst.
  * Beides in dieselbe Datei zu legen hiesse, das Schloss an den Schluessel zu
  * binden. `config.php` gehoert ins getrennt aufbewahrte WIEDERANLAUFPAKET
- * (docs/Technik.md, Abschnitt 7). Ebenfalls nicht drin: die Dateiablage unter
+ * (docs/Technik.md, Abschnitt 13). Ebenfalls nicht drin: die Dateiablage unter
  * `sicherungen/` — die Kontopakete sichern nichts, was nicht ohnehin in der
  * Datenbank steht, und wuerden die Datei vervielfachen.
  *
- * WARUM EIN EIGENER DUMP UND NICHT `mysqldump` (E-S2-20). Auf geteiltem
+ * WARUM EIN EIGENER DUMP UND NICHT `mysqldump`. Auf geteiltem
  * Webspace gibt es keine Kommandozeile und kein `exec()`; `mysqldump` ist dort
  * nicht vorhanden und nicht nachruestbar. Der Dump entsteht deshalb in PHP,
  * ueber genau die Verbindung, die die Anwendung ohnehin hat.
@@ -36,7 +36,7 @@ declare(strict_types=1);
  *   3. EDKOMP1       AES-256-GCM je Block, Zaehler in den Zusatzdaten
  *
  * WARUM JE HAEPPCHEN EIN EIGENES GZIP-GLIED. Der Dump entsteht in Haeppchen
- * ueber mehrere Anfragen hinweg (E-S2-20: „nie als Array am Stueck"). Ein
+ * ueber mehrere Anfragen hinweg („nie als Array am Stueck"). Ein
  * `deflate_init()`-Zustand laesst sich zwischen zwei Anfragen nicht
  * aufbewahren — er ist keine Zahl, sondern ein Fenster ueber die letzten 32 KB.
  * Deshalb schliesst jedes Haeppchen sein gzip-Glied ab und das naechste
@@ -66,7 +66,7 @@ declare(strict_types=1);
  * scharfen Schnappschuss braucht, faehrt das Backup nachts.
  *
  * DER CURSOR IST AUFGEFAECHERT UND NICHT EIN ZEILENKONSTRUKTOR, und das ist
- * gemessen und kein Geschmack (S2/AP8, 5000er-Bestand, `track_points` mit
+ * gemessen und kein Geschmack (5000er-Bestand, `track_points` mit
  * 917 331 Zeilen):
  *
  *   WHERE (a,b) > (?,?)                          type=index   0,1486 s
@@ -93,10 +93,10 @@ require_once __DIR__ . '/format_lib.php';      /* iso_utc() — ausdruecklich, n
 const KOMP_ORDNER = 'komplett';
 
 /**
- * TABELLEN MIT SCHEMA, ABER OHNE ZEILEN (P5c/AP2, E-P5c-57, F-P5c-20).
+ * TABELLEN MIT SCHEMA, ABER OHNE ZEILEN.
  *
  * Beide führen IP-Adressen (und `sicherheit_ereignisse` E-Mail-Adressen) und
- * verfallen bewusst nach 30 Tagen bzw. von selbst (E-P5a-09). Ein
+ * verfallen bewusst nach 30 Tagen bzw. von selbst. Ein
  * Komplett-Stand liegt länger und geht außer Haus — mit Zeilen hielte er,
  * was die Anwendung gerade nicht halten will.
  *
@@ -121,11 +121,11 @@ const KOMP_BAU_PRAEFIX = '.bau-';
 /**
  * Wie viele Staende aufbewahrt werden (Vorgabe).
  *
- * DIESELBE ZWEI WIE BEI DEN KONTO-BACKUPS (E-S2-14) und aus demselben
+ * DIESELBE ZWEI WIE BEI DEN KONTO-BACKUPS und aus demselben
  * Grund: Zwei Staende erlauben den Griff auf den vorletzten, wenn der letzte
  * beim Erzeugen etwas abbekommen hat. Drei erlauben das auch — und kosten ein
  * weiteres Mal die volle Datenbank auf einem Webspace, dessen Platz die
- * knappste Groesse der ganzen Anlage ist (E-S2-15).
+ * knappste Groesse der ganzen Anlage ist.
  */
 const KOMP_AUFBEWAHRUNG_VORGABE = 2;
 
@@ -372,7 +372,7 @@ function komp_enum_werte(string $columnType): array
 }
 
 /**
- * Die Tabellen in einspielbarer Reihenfolge (E-S2-20).
+ * Die Tabellen in einspielbarer Reihenfolge.
  *
  * Topologisch nach Fremdschluesseln: Was verwiesen wird, kommt vorher. Die
  * Datei setzt zwar `FOREIGN_KEY_CHECKS = 0` — ohne das koennte auch
@@ -467,7 +467,7 @@ function komp_wert(mixed $v, bool $binaer, bool $zahl): string
 
 /* ---- Der Dump in Haeppchen ------------------------------------------------ */
 
-/** Groesse eines INSERT-Stapels in Byte (E-S2-20: „INSERT-Stapel <= 1 MB"). */
+/** Groesse eines INSERT-Stapels in Byte („INSERT-Stapel <= 1 MB"). */
 const KOMP_STAPEL_BYTES = 1048576;
 
 /** Zeilen je Abfrage — und deutlich weniger, wenn eine Binaerspalte dabei ist. */
@@ -483,23 +483,23 @@ const KOMP_ENDMARKE = '-- EDKOMP-ENDE';
 /**
  * Die Kopfzeilen, an denen ein Dump AUS DIESER ANWENDUNG zu erkennen ist.
  *
- * ZWEI SCHREIBWEISEN, UND DAS IST KEIN VERSEHEN (S7). Die Kopfzeile ist
+ * ZWEI SCHREIBWEISEN, UND DAS IST KEIN VERSEHEN. Die Kopfzeile ist
  * zugleich Text fuer Menschen und Erkennungsmarke fuer `wiederherstellen.php`:
  * Ein eigener Dump muss die Endmarke tragen, ein fremder (`mysqldump`) nicht.
- * Seit der Begriffsumstellung (S7, 03.09.2026) heisst sie „Komplett-Backup";
- * ein Dump von vor Web 12.9.2 traegt „Komplettsicherung". Fehlte die alte
+ * Sie heisst „Komplett-Backup";
+ * ein aelterer Dump traegt „Komplettsicherung". Fehlte die alte
  * Schreibweise hier, gaelte ein solcher Dump als FREMD, und ein abgebrochener
  * Stand liefe ohne Endmarke durch — der gefaehrlichste Fehlschluss, den eine
- * Umbenennung anrichten kann. Die alte darf am v1.0-Schnitt weg (R60).
+ * Umbenennung anrichten kann. Die alte darf am v1.0-Schnitt weg.
  *
- * BIS WEB 23.3.1 STAND DIE LISTE IN `wh_auspacken()`, und genau dort war es
- * geschehen (F-R17-33): Die Umstellung hatte beide Zeichenketten ersetzt, die
- * zwei Zweige waren wortgleich. Hier steht sie neben dem Erzeuger der
+ * DIE LISTE STEHT NICHT IN `wh_auspacken()`, wo eine Umstellung beide
+ * Zeichenketten ersetzen und die zwei Zweige wortgleich machen kann. Hier
+ * steht sie neben dem Erzeuger der
  * Kopfzeile (`komp_kopfzeilen()`) und ist ohne Seite pruefbar — die
  * Komplettprobe haelt alle drei Faelle fest.
  */
 const KOMP_KOPF_KENNUNGEN = [
-    'Komplett-Backup der Installation',      // seit S7, Web 12.9.2
+    'Komplett-Backup der Installation',      // heutige Schreibweise
     'Komplettsicherung der Installation',    // davor
 ];
 
@@ -833,7 +833,7 @@ function komp_tabellenkopf(PDO $pdo, string $tab): array
 }
 
 /**
- * Die Kopfzeilen der Datei (E-S2-20: Version, Migrationsstand, Zeitpunkt).
+ * Die Kopfzeilen der Datei (Version, Migrationsstand, Zeitpunkt).
  *
  * DIE `SET`-ZEILEN STEHEN HIER UND WERDEN TROTZDEM VOM RUECKWEG NOCH EINMAL
  * GESETZT. Sie gelten je Verbindung; der Rueckweg arbeitet die Datei ueber
@@ -866,7 +866,7 @@ function komp_kopfzeilen(PDO $pdo, array $tabellen, array $z): array
         '-- NICHT ENTHALTEN: config.php (Datenbankzugang, Serverschlüssel, SMTP).',
         '-- Sie gehört ins getrennt aufbewahrte Wiederanlaufpaket; ohne den',
         '-- Serverschlüssel daraus ist eine versiegelte Fassung dieser Datei',
-        '-- nicht zu öffnen. Siehe docs/Technik.md, Abschnitt 7.',
+        '-- nicht zu öffnen. Siehe docs/Technik.md, Abschnitt 13.',
         '-- OHNE ZEILEN: ' . implode(', ', array_keys(KOMP_OHNE_ZEILEN))
             . ' — das Schema steht darin, die Zeilen nicht: IP- und',
         '-- E-Mail-Adressen mit eigener, kurzer Frist (E-P5a-09). Nach dem',
@@ -892,7 +892,7 @@ function komp_kopfzeilen(PDO $pdo, array $tabellen, array $z): array
 /* ---- Versiegelung: das Format EDKOMP1 ------------------------------------- */
 
 /**
- * Das Dateiformat des versiegelten Komplett-Backups (E-S2-21).
+ * Das Dateiformat des versiegelten Komplett-Backups.
  *
  *   "EDKOMP1\n"                                       8 Byte
  *   <Kopfzeile als JSON>"\n"                          eine Zeile, kein \n darin
@@ -904,8 +904,9 @@ function komp_kopfzeilen(PDO $pdo, array $tabellen, array $z): array
  * das 400 MB gegen ein Budget von 64 (Z3). Bloecke von 256 KB kosten
  * unabhaengig von der Dateigroesse denselben halben Megabyte.
  *
- * DER ZAEHLER STEHT IN DEN ZUSATZDATEN (wie E-S2-10), und zwar zusammen mit
- * der Angabe, ob es der LETZTE Block ist. Beides ist noetig:
+ * DER ZAEHLER STEHT IN DEN ZUSATZDATEN (wie bei den versiegelten Teilen
+ * eines Konto-Backups), und zwar zusammen mit der Angabe, ob es der LETZTE
+ * Block ist. Beides ist noetig:
  *   - ohne Zaehler liessen sich zwei Bloecke vertauschen, und die Prüfsumme
  *     jedes einzelnen bliebe richtig;
  *   - ohne die Endemarkierung liesse sich die Datei hinten abschneiden, und
@@ -974,10 +975,9 @@ function komp_kopf_bauen(array $angaben, ?array $kdf): string
         'block'    => KOMP_BLOCK,
         'kdf'      => $kdf,
     ];
-    /* DIE KENNUNG DES SERVERSCHLÜSSELS (seit Web 21.12.0, SR-03, F-SR-11,
-     * E-SR-67). Bis dahin zeigte nur der Versuch am ersten Block, ob ein
-     * Stand zum heutigen oder zum bisherigen Schlüssel gehört. Mit ihr liest
-     * sich die Liste ohne Öffnen, und die Bedingung „ein Stand unter dem
+    /* DIE KENNUNG DES SERVERSCHLÜSSELS. Ohne sie zeigte nur der Versuch am
+     * ersten Block, ob ein Stand zum heutigen oder zum bisherigen Schlüssel
+     * gehört. Mit ihr liest sich die Liste ohne Öffnen, und die Bedingung „ein Stand unter dem
      * neuen" des Wechsels hat etwas, woran sie ansetzt. Sie steht im Kopf und
      * damit über die Bindung in den Zusatzdaten jedes Blocks: Wer sie ändert,
      * macht die Datei unlesbar, statt sie einem anderen Schlüssel
@@ -1051,7 +1051,7 @@ function komp_siegel_schub(string $quelle, string $ziel, string $schluessel,
      * IST DIE DATEI KUERZER ALS DER ZUSTAND SAGT — oder weg —, beginnt die
      * Versiegelung von vorn. Anhaengen hiesse, Block `i` hinter ein Loch zu
      * schreiben, und die Datei liesse sich spaeter nicht oeffnen, ohne dass
-     * jetzt jemand etwas merkte (Nr. 328). */
+     * jetzt jemand etwas merkte. */
     $gueltig = (int)($z['siegel_bytes'] ?? 0);
     clearstatcache(true, $ziel);
     $da = is_file($ziel) ? (int)filesize($ziel) : -1;
@@ -1095,10 +1095,10 @@ function komp_siegel_schub(string $quelle, string $ziel, string $schluessel,
              * ERFRAGT. Auf einem Handle im Anhaengemodus (`'ab'`) beginnt
              * `ftell()` bei null und zaehlt nur, was DIESE Anfrage
              * geschrieben hat — der Kopf und die Bloecke frueherer Haeppchen
-             * fehlen darin. Bis Web 21.1.1 stand hier genau das; das naechste
-             * Haeppchen schnitt die Datei dann auf diese zu kleine Zahl
+             * fehlen darin. Das naechste
+             * Haeppchen schnitte die Datei dann auf diese zu kleine Zahl
              * zurueck, mitten in einen schon geschriebenen Block, und das
-             * Backup liess sich nie mehr oeffnen (Nr. 328, F-P5c-170).
+             * Backup liesse sich nie mehr oeffnen.
              * Gezaehlt wird erst nach einem vollstaendigen Schreiben: Ein
              * halber Block zaehlt nicht, und der naechste Lauf schneidet ihn
              * weg. */
@@ -1137,7 +1137,7 @@ function komp_oeffnen(string $pfad, string $schluessel, callable $hinaus): int
     $fh = fopen($pfad, 'rb');
     if ($fh === false) { throw new RuntimeException('Die Datei liess sich nicht öffnen.'); }
     fseek($fh, $k['ab']);
-    /* DIE GRÖSSE VOM GEÖFFNETEN HANDLE, NICHT `filesize()` (Web 23.0.3).
+    /* DIE GRÖSSE VOM GEÖFFNETEN HANDLE, NICHT `filesize()`.
      * `filesize()` geht über den Stat-Cache von PHP, und der kennt die Datei
      * womöglich aus einem früheren Aufruf DIESES Prozesses — kürzer, als sie
      * jetzt ist. Dann hält diese Schleife einen mittleren Block für den
@@ -1195,7 +1195,7 @@ function komp_oeffnen(string $pfad, string $schluessel, callable $hinaus): int
  * Lässt sich der ERSTE Block dieser Datei mit diesem Schlüssel öffnen?
  *
  * Die Antwort auf „welcher Schlüssel gehört zu diesem Stand", wenn der Kopf
- * keine Kennung trägt (Stände von vor Web 21.12.0) — und die Probe hinter
+ * keine Kennung trägt (ältere Stände) — und die Probe hinter
  * der Kennung, wenn er eine trägt: Ein Kopf ist eine Behauptung, der erste
  * Block der Beweis. Kostet einen Block (256 KiB), nicht die Datei.
  */
@@ -1227,10 +1227,10 @@ function komp_erster_block_oeffnet(string $pfad, string $schluessel): bool
  * (während eines Wechsels) oder keiner?
  *
  * ERST DER NEUE, DANN DER BISHERIGE — dieselbe Reihenfolge wie
- * `sk_oeffnen()` (SR-03, E-SR-08). Komplett-Stände werden nicht umgehüllt
- * (E-SR-21); ein Stand von vor dem Wechsel öffnet deshalb mit dem
+ * `sk_oeffnen()`. Komplett-Stände werden nicht umgehüllt;
+ * ein Stand von vor dem Wechsel öffnet deshalb mit dem
  * bisherigen, solange er in `config.php` steht, und danach nur noch mit dem
- * Wert vom bisherigen Blatt (E-SR-10).
+ * Wert vom bisherigen Blatt.
  *
  * @return array{0:?string, 1:string} [Schlüssel oder null, 'neu'|'alt'|'keiner']
  */
@@ -1284,7 +1284,7 @@ function komp_plan_setzen(string $plan): bool
 /**
  * Ist ein neues Komplett-Backup faellig?
  *
- * DER PLAN SAGT NICHT WANN, SONDERN OB — wie beim Versand (E-S2-17). Wann
+ * DER PLAN SAGT NICHT WANN, SONDERN OB — wie beim Versand. Wann
  * ueberhaupt etwas laeuft, entscheidet der eingerichtete Ausloeser (Cron oder
  * Token-Aufruf); der Plan sagt nur, wie lange der letzte Stand her sein darf.
  * Zwei Uhren nebeneinander waeren zwei Wahrheiten.
@@ -1352,11 +1352,10 @@ function komp_zustand_setzen(array $z): bool
  * Tabelle — jede Patientendiagnose (verschlüsselt), jeder Schlüsselumschlag,
  * jede Adresse. Sie unversiegelt in `sicherungen/` liegen zu lassen hiesse,
  * die Ende-zu-Ende-Zusage an genau der Stelle zu unterlaufen, an der es am
- * wenigsten auffiele. E-S2-21 verlangt die Versiegelung ohnehin, sobald die
+ * wenigsten auffiele. Die Versiegelung ist ohnehin Pflicht, sobald die
  * Datei das Haus verlaesst; hier verlaesst sie es spaetestens mit dem
  * Versand. Der Schlüssel wird unter Betrieb → Servereinstellungen
- * nachgetragen (seit Web 20.1.0; bis dahin stand die Karte auf der Seite
- * „Backup-Ziele", und dieser Satz zeigte dorthin).
+ * nachgetragen.
  */
 function komp_auftrag_starten(): array
 {
@@ -1368,7 +1367,7 @@ function komp_auftrag_starten(): array
     }
     [$bOk, $bMeldung] = komp_bereit();
     if (!$bOk) { return ['ok' => false, 'meldung' => (string)$bMeldung]; }
-    /* DIE SPEICHERGRENZE GILT AUCH HIER (E-S2-15). Ein Komplett-Backup ist
+    /* DIE SPEICHERGRENZE GILT AUCH HIER. Ein Komplett-Backup ist
      * die groesste einzelne Datei der Ablage; es an der Grenze vorbei
      * anzulegen hiesse, den Webspace mit genau dem vollzuschreiben, was ihn
      * retten soll. */
@@ -1425,14 +1424,14 @@ function komp_schub(PDO $pdo, array &$z, callable $zeitLinks, float $reserve = K
     try {
         return komp_schub_lauf($pdo, $z, $zeitLinks, $reserve);
     } catch (Throwable $ex) {
-        /* ---- KLARTEXT NICHT LIEGEN LASSEN (Backlog Nr. 133, K-13) --------
+        /* ---- KLARTEXT NICHT LIEGEN LASSEN --------
          *
          * Im Bauordner liegt `dump.sql.gz` -- eine UNVERSCHLUESSELTE Abschrift
          * jeder Tabelle, also genau das, wogegen die Versiegelung gebaut ist.
-         * Bis Web 15.5.2 blieb er nach einem Fehlschlag stehen, und zwar bis
-         * zum naechsten FAELLIGEN Lauf: Nur wer einen neuen Auftrag anlegt,
-         * raeumte die Reste (`komp_baureste_aufraeumen($bau)`). Bei einem
-         * woechentlichen Plan sind das bis zu sieben Tage Klartext.
+         * Bliebe er nach einem Fehlschlag stehen, bis zum naechsten FAELLIGEN
+         * Lauf — nur wer einen neuen Auftrag anlegt, raeumt die Reste
+         * (`komp_baureste_aufraeumen($bau)`) —, waeren das bei einem
+         * woechentlichen Plan bis zu sieben Tage Klartext.
          *
          * WAS DAS KOSTET, gehoert dazu: "Fortsetzen" nimmt einen gescheiterten
          * Lauf nicht mehr auf -- der Dump ist weg, der naechste faengt von vorn
@@ -1463,15 +1462,15 @@ function komp_schub(PDO $pdo, array &$z, callable $zeitLinks, float $reserve = K
  * Passt der gemerkte Kopf noch zum Schlüssel, der jetzt in `config.php`
  * steht? Wenn nicht: Kopf mit der heutigen Kennung neu, Versiegelung von vorn.
  *
- * WECHSELT DER SCHLÜSSEL ZWISCHEN ZWEI SIEGEL-HÄPPCHEN (H-SR-06, F-SR-79,
- * E-SR-72). Jedes Häppchen ist ein eigener Prozess und nimmt den Schlüssel,
+ * WECHSELT DER SCHLÜSSEL ZWISCHEN ZWEI SIEGEL-HÄPPCHEN. Jedes Häppchen ist ein
+ * eigener Prozess und nimmt den Schlüssel,
  * der gerade in `config.php` steht; der Kopf mit der Kennung entstand beim
- * Übergang vom Dump. Bis Web 21.12.0 lagen danach die ersten Blöcke unter dem
- * bisherigen, die übrigen unter dem neuen, und der Kopf nannte den
- * bisherigen: Die Liste zeigte „bisheriger Schlüssel", das Einspielen brach
+ * Übergang vom Dump. Ohne Vorkehrung lägen danach die ersten Blöcke unter
+ * dem bisherigen, die übrigen unter dem neuen, und der Kopf nennte den
+ * bisherigen: Die Liste zeigte „bisheriger Schlüssel", das Einspielen bräche
  * mitten in der Datei ab, und die Aufbewahrung verdrängte für diesen Stand
- * einen lesbaren. Fiel der Wechsel genau zwischen Dump und erstes
- * Siegel-Häppchen, log der Kopf. Der Wechsel wartet nicht auf das Backup —
+ * einen lesbaren. Fiele der Wechsel genau zwischen Dump und erstes
+ * Siegel-Häppchen, löge der Kopf. Der Wechsel wartet nicht auf das Backup —
  * im Ernstfall zählt jede Minute —; das Backup fängt die Versiegelung neu
  * an, wie der Archivjob es auch tut. Der Dump bleibt: Er ist Klartext und
  * hängt an keinem Schlüssel. Ein Kopf mit Passphrase (`kdf`) trägt keine
@@ -1481,7 +1480,7 @@ function komp_schub(PDO $pdo, array &$z, callable $zeitLinks, float $reserve = K
  * misst, ohne die ganze Datenbank abzuschreiben.
  *
  * DIE KENNUNG KOMMT VOM AUFRUFER, AUS DEM SCHLÜSSEL, MIT DEM ER SIEGELT
- * (Nachprüfung H-SR-06, F-SR-87) — nicht aus `konfig()`. Beide sagen heute
+ * — nicht aus `konfig()`. Beide sagen heute
  * dasselbe, aber nur, weil `config_gemerktes_verwerfen()` beide zugleich
  * verwirft; ein Kopf mit der neuen Kennung über Blöcken unter dem alten wäre
  * ein Kopf, der lügt.
@@ -1513,12 +1512,12 @@ function komp_schub_lauf(PDO $pdo, array &$z, callable $zeitLinks, float $reserv
 
     /* Kein Auftrag: Faelligkeit pruefen und gegebenenfalls einen anlegen. */
     if (!in_array($stand, ['dump', 'siegel'], true)) {
-        /* ZUERST DIE RESTE, DANN DIE FAELLIGKEIT (Backlog Nr. 133). Steht kein
+        /* ZUERST DIE RESTE, DANN DIE FAELLIGKEIT. Steht kein
          * Auftrag, ist jeder Bauordner ein Rest -- aus einem Absturz mitten im
          * Lauf, den kein `catch` sieht (PHP-Fatal, abgeschossener Prozess,
-         * Zeitgrenze des Webspace). Bis Web 15.5.2 wurde er erst geraeumt, wenn
-         * das naechste Backup FAELLIG war; jetzt raeumt ihn jeder Aufraeumlauf,
-         * auch der, bei dem nichts ansteht. */
+         * Zeitgrenze des Webspace). Ihn raeumt jeder Aufraeumlauf,
+         * auch der, bei dem nichts ansteht — nicht erst der, bei dem das
+         * naechste Backup FAELLIG ist. */
         komp_baureste_aufraeumen();
         if (!komp_faellig() || !serverschluessel_da()) {
             return ['erledigt' => 0, 'fertig' => true];
@@ -1559,57 +1558,56 @@ function komp_schub_lauf(PDO $pdo, array &$z, callable $zeitLinks, float $reserv
         if ($zeitLinks() < $reserve) { return ['erledigt' => $erledigt, 'fertig' => false]; }
     }
 
-    if ($stand === 'siegel') {
-        $schluessel = serverschluessel();
-        if ($schluessel === null) {
-            throw new RuntimeException('Der Serverschlüssel ist verschwunden; '
-                . 'das Backup lässt sich nicht versiegeln.');
-        }
-        komp_kopf_angleichen($z, (string)schluessel_kennung(bin2hex($schluessel)));
-        $ziel = $bauPfad . '/ziel.edk';
-        $e = komp_siegel_schub($roh, $ziel, $schluessel, (string)$z['kopfzeile'],
-                               $z, $zeitLinks, $reserve);
-        $erledigt += $e['bloecke'];
-        if (!$e['fertig']) { return ['erledigt' => $erledigt, 'fertig' => false]; }
-
-        /* Fertig: erst umhaengen, dann den Bauordner raeumen. Andersherum
-         * stuende bei einem Absturz dazwischen weder das eine noch das andere
-         * da. */
-        $endziel = komp_wurzel() . '/' . (string)$z['name'];
-        if (!@rename($ziel, $endziel)) {
-            throw new RuntimeException('Das fertige Backup liess sich nicht ablegen: ' . $endziel);
-        }
-        @chmod($endziel, 0640);
-        clearstatcache(true, $endziel);
-        $bytes = (int)@filesize($endziel);
-        komp_bau_weg((string)$z['bau']);
-        $weg = komp_verdraengen();
-
-        $z = [
-            'stand'      => 'fertig',
-            'name'       => (string)$z['name'],
-            'begonnen'   => (string)($z['begonnen'] ?? ''),
-            'beendet'    => iso_utc(),
-            'zeilen'     => (int)($z['zeilen'] ?? 0),
-            'tabellen'   => count($z['folge'] ?? []),
-            'roh_bytes'  => (int)($z['roh_bytes'] ?? 0),
-            'bytes'      => $bytes,
-            'verdraengt' => $weg,
-            'warnung'    => array_values(array_unique($z['warnung'] ?? [])),
-        ];
-        /* REITER SICHERUNG (P5c/AP2, E-P5c-38): Es gibt keine Tabelle, die
-         * festhält, wann ein Komplett-Stand entstand — der Dateiname sagt es,
-         * bis die Aufbewahrung ihn verdrängt. Der Eintrag hält es länger.
-         * Verdrängte Stände stehen in `daten`, nicht in je einem Eintrag. */
-        require_once __DIR__ . '/protokoll_lib.php';
-        protokoll('sicherung', 'komplett_erzeugt',
-            'Komplett-Backup ' . $z['name'] . ' erzeugt (' . groesse_text($bytes) . ', '
-            . zahl_text((int)$z['zeilen']) . ' Zeilen in ' . (int)$z['tabellen'] . ' Tabellen)'
-            . ($weg ? ' — ' . count($weg) . ' älterer Stand verdrängt' : ''),
-            ['datei' => $z['name'], 'bytes' => $bytes, 'verdraengt' => $weg]);
-        return ['erledigt' => $erledigt, 'fertig' => true];
+    /* Hier steht der Lauf immer im Siegel: Ein Dump, der nicht fertig ist,
+     * ist oben schon zurueckgekehrt, und ein anderer Stand kommt am Riegel
+     * ganz oben nicht vorbei. */
+    $schluessel = serverschluessel();
+    if ($schluessel === null) {
+        throw new RuntimeException('Der Serverschlüssel ist verschwunden; '
+            . 'das Backup lässt sich nicht versiegeln.');
     }
+    komp_kopf_angleichen($z, (string)schluessel_kennung(bin2hex($schluessel)));
+    $ziel = $bauPfad . '/ziel.edk';
+    $e = komp_siegel_schub($roh, $ziel, $schluessel, (string)$z['kopfzeile'],
+                           $z, $zeitLinks, $reserve);
+    $erledigt += $e['bloecke'];
+    if (!$e['fertig']) { return ['erledigt' => $erledigt, 'fertig' => false]; }
 
+    /* Fertig: erst umhaengen, dann den Bauordner raeumen. Andersherum
+     * stuende bei einem Absturz dazwischen weder das eine noch das andere
+     * da. */
+    $endziel = komp_wurzel() . '/' . (string)$z['name'];
+    if (!@rename($ziel, $endziel)) {
+        throw new RuntimeException('Das fertige Backup liess sich nicht ablegen: ' . $endziel);
+    }
+    @chmod($endziel, 0640);
+    clearstatcache(true, $endziel);
+    $bytes = (int)@filesize($endziel);
+    komp_bau_weg((string)$z['bau']);
+    $weg = komp_verdraengen();
+
+    $z = [
+        'stand'      => 'fertig',
+        'name'       => (string)$z['name'],
+        'begonnen'   => (string)($z['begonnen'] ?? ''),
+        'beendet'    => iso_utc(),
+        'zeilen'     => (int)($z['zeilen'] ?? 0),
+        'tabellen'   => count($z['folge'] ?? []),
+        'roh_bytes'  => (int)($z['roh_bytes'] ?? 0),
+        'bytes'      => $bytes,
+        'verdraengt' => $weg,
+        'warnung'    => array_values(array_unique($z['warnung'] ?? [])),
+    ];
+    /* REITER SICHERUNG: Es gibt keine Tabelle, die
+     * festhält, wann ein Komplett-Stand entstand — der Dateiname sagt es,
+     * bis die Aufbewahrung ihn verdrängt. Der Eintrag hält es länger.
+     * Verdrängte Stände stehen in `daten`, nicht in je einem Eintrag. */
+    require_once __DIR__ . '/protokoll_lib.php';
+    protokoll('sicherung', 'komplett_erzeugt',
+        'Komplett-Backup ' . $z['name'] . ' erzeugt (' . groesse_text($bytes) . ', '
+        . zahl_text((int)$z['zeilen']) . ' Zeilen in ' . (int)$z['tabellen'] . ' Tabellen)'
+        . ($weg ? ' — ' . count($weg) . ' älterer Stand verdrängt' : ''),
+        ['datei' => $z['name'], 'bytes' => $bytes, 'verdraengt' => $weg]);
     return ['erledigt' => $erledigt, 'fertig' => true];
 }
 
@@ -1669,7 +1667,7 @@ function komp_kdf_runden(): int
 /**
  * Ein abgelegtes Backup entsiegeln und den Klartext hinausgeben.
  *
- * DAS IST DIE FASSUNG FUER `mysql` UND phpMyAdmin (E-S2-20). Sie geht nicht
+ * DAS IST DIE FASSUNG FUER `mysql` UND phpMyAdmin. Sie geht nicht
  * ueber die Leitung nach draussen, sondern an die Administratorin, die sich
  * eben angemeldet hat und ohnehin jede Zeile dieser Datenbank sehen kann.
  * Was das Haus verlaesst — der Versand aufs Backup-Ziel — ist immer die
@@ -1694,7 +1692,7 @@ function komp_ausgeben_klar(string $datei, callable $hinaus): int
 }
 
 /**
- * Ein abgelegtes Backup unter einer PASSPHRASE ausgeben (E-S2-21).
+ * Ein abgelegtes Backup unter einer PASSPHRASE ausgeben.
  *
  * Es wird dabei nicht doppelt verschlüsselt, sondern UMGESIEGELT: mit dem
  * Serverschlüssel geoeffnet, mit dem abgeleiteten Schluessel wieder
@@ -1767,7 +1765,7 @@ function komp_schluessel_fuer(array $kopf, ?string $passwort, ?string $pfad = nu
             throw new RuntimeException('Diese Datei ist mit dem Serverschlüssel versiegelt; '
                 . 'er steht aber nicht in config.php. Er gehört ins Wiederanlaufpaket.');
         }
-        /* WÄHREND EINES WECHSELS (SR-03) auch der bisherige — am ersten Block
+        /* WÄHREND EINES WECHSELS auch der bisherige — am ersten Block
          * entschieden, wenn die Datei bekannt ist. Ohne Datei bleibt es der
          * aktuelle; `komp_oeffnen()` sagt dann, dass er nicht passt. */
         if ($pfad !== null) {

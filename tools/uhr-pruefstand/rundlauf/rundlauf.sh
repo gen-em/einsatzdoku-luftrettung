@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Rundlauf der Uhr — koppeln, verschlossen senden, auf dem Server oeffnen (S11-08).
+# Rundlauf der Uhr — koppeln, verschlossen senden, auf dem Server oeffnen.
 #
 # Anlass: Nr. 43 — seit Uhr 4.0.0 verschliesst die Garmin-Uhr Spur,
 # Phasenkoordinaten und Reanimation. Uebersetzen und Selbsttest zeigen, dass
@@ -17,13 +17,13 @@
 #      START bestaetigen
 #   4. warten, bis beide Pakete angekommen sind, dann pruefen.php
 #
-# ZWEITE ART: --nachholen (E-S11-79, F-S11-80). Das Demo-Konto steht beim
+# ZWEITE ART: --nachholen. Das Demo-Konto steht beim
 # Koppeln OHNE oeffentlichen Schluessel da (die Spalte wird fuer diesen
 # Augenblick geleert und danach — auch bei Abbruch — zurueckgeschrieben). Die
 # Uhr koppelt, sagt „Gekoppelt, kein Schlüssel", sendet nicht; dann steht der
 # Schluessel wieder, START halten holt ihn, und erst danach gehen die Pakete.
 #
-# DRITTE ART: --schrumpfen (F-R17-52, seit Uhr 4.1.0). Zwei geparkte Pakete
+# DRITTE ART: --schrumpfen. Zwei geparkte Pakete
 # vor dem Einsatz; waehrend seiner letzten Anfrage verwirft die Prueffassung
 # alle geparkten (Haken in der Kopie von Uploader.mc, Rundlauf.mc). Danach
 # muss die Konsole "liste=0 spuren=0" melden und keinen Absturz. Bis 4.0.0
@@ -32,7 +32,7 @@
 #
 # AUFRUF   bash tools/uhr-pruefstand/rundlauf/rundlauf.sh [--nachholen|--schrumpfen] [geraet]
 #          (Vorgabe fenix6pro; braucht `pruefstand.sh aufbau` und die oertliche
-#          Anlage mit eigener CA, docs/Technik.md 5.2b)
+#          Anlage mit eigener CA, docs/Technik.md 5.6)
 #
 # DER DEMO-RESET wird fuer die Dauer des Laufs aufgeschoben (Marke auf jetzt,
 # danach zurueck) — am 17.10.2026 hat er mitten im ersten Versuch das eben

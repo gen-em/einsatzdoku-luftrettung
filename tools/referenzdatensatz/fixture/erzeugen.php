@@ -2,7 +2,7 @@
 declare(strict_types=1);
 
 /**
- * Demo-Fixture aus dem Referenzkonto erzeugen (Arbeitspaket B6, E-P1-08).
+ * Demo-Fixture aus dem Referenzkonto erzeugen.
  *
  * Aufruf (auf der Maschine, auf der die Referenzinstallation laeuft):
  *   php tools/referenzdatensatz/fixture/erzeugen.php [email] [ziel.json]
@@ -26,7 +26,7 @@ declare(strict_types=1);
  *
  * VORHER DIE JOBS ANHALTEN — sonst stimmt die Punktzahl nicht.
  *
- *     php server/jobs.php --pause 1800      (0 hebt auf; seit Web 19.3.0
+ *     php server/jobs.php --pause 1800      (0 hebt auf; es
  *                                            geht es auch als Knopf unter
  *                                            Betrieb -> Hintergrundjobs)
  *
@@ -36,23 +36,23 @@ declare(strict_types=1);
  * Aufzeichnungen — und zwar ohne jede Meldung. Gemessen am 12.09.2026:
  * 47 576 statt 55 861 Punkten, also 8285 weniger, nach einer Sitzung mit
  * einigen hundert Seitenaufrufen. Die Zahl steht am Ende des Laufs; wer sie
- * nicht gegen die erwartete haelt, merkt es nicht. (Erwartet sind seit R4-16
- * 67 292 Punkte, davor seit dem Demo-Ausbau 63 752; die 55 861 oben sind der
+ * nicht gegen die erwartete haelt, merkt es nicht. (Erwartet sind
+ * 67 292 Punkte; die 55 861 oben sind der
  * Stand, an dem die Ausduennung gemessen wurde, und bleiben als Messprotokoll
  * stehen.)
  */
 
-/* SEIT WEB 23 VERWEIGERT (S11-12, F-S11-95, Backlog Nr. 388).
+/* VERWEIGERT.
  *
  * Der Weg oben setzt zweierlei voraus, das es nicht mehr gibt: einen
- * `edbak_build()` am Stueck mit Punktlisten (seit Web 23 nur noch Kopf und
- * Fenster, ohne Punkte) und eine Spur, die der Server lesen kann (seit S11
- * verschlossen). Schon seit Web 22 haette das Skript eine Fixture OHNE Spur,
- * Phasenorte und Reanimation geschrieben — still, mit einer Punktzahl von
+ * `edbak_build()` am Stueck mit Punktlisten (heute nur noch Kopf und
+ * Fenster, ohne Punkte) und eine Spur, die der Server lesen kann (sie ist
+ * verschlossen). Das Skript schriebe eine Fixture OHNE Spur,
+ * Phasenorte und Reanimation — still, mit einer Punktzahl von
  * null am Ende. Die eingecheckte Fixture (`server/demo/fixture.json.gz`,
- * Nutzlast 7 mit Klartext aus dem Repositorium, E-S11-20) ist davon nicht
- * betroffen; neu erzeugen laesst sie sich erst wieder, wenn Nr. 388 einen Weg
- * hat. Bis dahin bricht das Skript ab, statt eine halbe Fixture abzulegen. */
+ * Nutzlast 7 mit Klartext aus dem Repositorium) ist davon nicht
+ * betroffen; neu erzeugen laesst sie sich erst wieder, wenn es dafuer einen
+ * Weg gibt. Bis dahin bricht das Skript ab, statt eine halbe Fixture abzulegen. */
 fwrite(STDERR, "erzeugen.php ist seit Web 23 ausser Betrieb: Der Server kann die Spur "
              . "nicht mehr lesen, und edbak_build() baut kein Backup am Stueck mehr. "
              . "Siehe Backlog Nr. 388.\n");
@@ -80,13 +80,13 @@ if ($u['role'] !== 'user') {
     fwrite(STDERR, "Das Demo-Konto muss die Rolle 'user' haben, hat aber '{$u['role']}'.\n");
     exit(2);
 }
-/* ZIELRUNDENZAHL, SONST ABBRUCH (Backlog Nr. 155).
+/* ZIELRUNDENZAHL, SONST ABBRUCH.
  *
  * Die Fixture bringt die Rundenzahl des Kontos mit (`konto.kdf_iter` unten),
  * und der Demo-Reset schreibt sie unveraendert nach `users.kdf_iter`. Steht
  * sie unter KDF_ITER_ZIEL, kann der Altwert NIE aus KDF_ITER_LISTE
  * verschwinden: `api/kdf_upgrade.php` ueberspringt das Demo-Konto
- * ausdruecklich (E-P1-19, weil ein Upgrade bis zum naechsten Reset nicht mehr
+ * ausdruecklich (weil ein Upgrade bis zum naechsten Reset nicht mehr
  * zu den oeffentlichen Zugangsdaten passte). Die Fixture wird bei jedem Reset
  * eingespielt und haelt den Altwert damit dauerhaft am Leben.
  *
@@ -102,9 +102,9 @@ if ((int)$u['kdf_iter'] !== KDF_ITER_ZIEL) {
     exit(2);
 }
 
-/* DIE DEMO-HUELLE BLEIBT `edk1:`, SONST ABBRUCH (S10, E-S10-15).
+/* DIE DEMO-HUELLE BLEIBT `edk1:`, SONST ABBRUCH.
  *
- * Seit S10 haengt der Datenschluessel zusaetzlich am Server-Anteil aus
+ * Der Datenschluessel haengt zusaetzlich am Server-Anteil aus
  * `config.php`. Eine Huelle, die damit gebildet wurde, traegt das Praefix
  * `edka1:<kennung>:` — und sie laesst sich nur auf DER Installation oeffnen,
  * deren Anteil diese Kennung hat.
@@ -119,7 +119,7 @@ if ((int)$u['kdf_iter'] !== KDF_ITER_ZIEL) {
  * Dass es nicht dazu kommt, ist heute an zwei Stellen abgesichert, und beide
  * sind fuer sich allein zu wenig:
  *
- *   - `api/kdf_upgrade.php` ueberspringt das Demo-Konto (E-P1-19), die stille
+ *   - `api/kdf_upgrade.php` ueberspringt das Demo-Konto, die stille
  *     Umstellung fasst es also nicht an. Das ist eine Zusage ueber den
  *     REGULAEREN Weg — sie sagt nichts ueber eine Huelle, die jemand von Hand
  *     gesetzt hat oder die aus einem anderen Bestand stammt.
@@ -129,12 +129,12 @@ if ((int)$u['kdf_iter'] !== KDF_ITER_ZIEL) {
  *     mit eigenem SQL und kommt dort nicht vorbei.
  *
  * Deshalb steht der Riegel hier, an der Stelle, an der die Datei entsteht.
- * Dieselbe Bauart wie der Riegel auf `KDF_ITER_ZIEL` darueber (Nr. 155): Wer
+ * Dieselbe Bauart wie der Riegel auf `KDF_ITER_ZIEL` darueber: Wer
  * eine Fixture erzeugt, die spaeter niemanden mehr hereinlaesst, soll es
  * JETZT erfahren und nicht nach dem Deploy.
  *
  * `pat_wrap_rc` wird mitgeprueft, obwohl sie nie einen Anteil tragen darf
- * (`huelle_rc_pruefen()`, E-S10-04): Sie ist der einzige Rueckweg, wenn der
+ * (`huelle_rc_pruefen()`): Sie ist der einzige Rueckweg, wenn der
  * Anteil verlorengeht, und eine Fixture, die ihn mit einem Anteil verbindet,
  * nimmt dem Demo-Konto genau den. Zwei Zeilen, die nie zuschlagen sollten —
  * das ist der Sinn eines Riegels. */
@@ -163,14 +163,14 @@ $id = (int)$u['id'];
  * OHNE das virtuelle Geraet "Manuelle Einträge" (GERAETE_ECHT_SQL). Es traegt
  * die Kontonummer im Namen und gilt nur fuer das Konto, aus dem diese Fixture
  * stammt; im Demo-Konto entsteht es bei Bedarf mit der richtigen Nummer von
- * selbst. Bis Web 8.0.0 stand es mit in der Datei und brach das Anlegen des
+ * selbst. Stuende es mit in der Datei, braeche es das Anlegen des
  * Demo-Kontos ab, sobald eine Installation beide Bestaende fuehrte
  * (device_id ist global eindeutig). Der Filter in demo_lib.php faengt das
  * auch fuer bereits ausgelieferte Fixtures ab; hier kommt es gar nicht erst
  * hinein. */
-/* ART UND MODELL WANDERN MIT (Web 14.2.0, R64). Sonst zeigte das Demo-Konto
+/* ART UND MODELL WANDERN MIT. Sonst zeigte das Demo-Konto
  * auf der Geraeteseite „Gerät unbekannt", waehrend seine Einsaetze die
- * Momentaufnahme tragen — und die Abnahme von R64 verlangt ausdruecklich,
+ * Momentaufnahme tragen — und die Abnahme der Momentaufnahme verlangt ausdruecklich,
  * dort Modelle zu sehen. */
 $st = $pdo->prepare('SELECT device_id, api_key_hash, label, geraet_art, geraet_modell
                      FROM devices
@@ -179,11 +179,11 @@ $st->execute([$id]);
 $geraete = $st->fetchAll(PDO::FETCH_ASSOC);
 
 /* ---- Bestand, serverseitig (Chiffretext bleibt Chiffretext) -------------- */
-/* MIT PAPIERKORB — und dafuer ist seit S1 nichts mehr zu tun. `edbak_build()`
- * nimmt ihn von sich aus mit (E-S1-01), und `edbak_restore()` bringt ihn als
- * Papierkorb zurueck (E-S1-03/04). Bis Web 7.3.1 brauchte es hier ein Flag
- * und danach ein Nachlauf-Drehbuch, das die Eintraege ueber die regulaeren
- * Loeschwege wieder in den Papierkorb legte; beides ist entfallen. */
+/* MIT PAPIERKORB — und dafuer ist nichts mehr zu tun. `edbak_build()`
+ * nimmt ihn von sich aus mit, und `edbak_restore()` bringt ihn als
+ * Papierkorb zurueck. Ein Flag oder ein Nachlauf-Drehbuch, das die
+ * Eintraege ueber die regulaeren Loeschwege wieder in den Papierkorb legt,
+ * braucht es nicht. */
 $daten = json_decode(edbak_build($id), true);
 if (!is_array($daten)) { fwrite(STDERR, "edbak_build lieferte kein JSON\n"); exit(2); }
 
@@ -201,13 +201,13 @@ if ($mitKlartext > 0) {
 
 /* ---- Papierkorb: nur noch ZAEHLEN, nicht mehr nachstellen ----------------
  *
- * Bis Web 7.3.1 stand hier ein Nachlauf-Drehbuch: eine Liste der Kennungen,
+ * Frueher stand hier ein Nachlauf-Drehbuch: eine Liste der Kennungen,
  * die der Demo-Reset nach dem Einspielen ueber die regulaeren Loeschwege
  * wieder in den Papierkorb legen sollte. Das war noetig, solange das
- * Backup-Format keine geloeschten Eintraege kannte (E-P1-21).
+ * Backup-Format keine geloeschten Eintraege kannte.
  *
  * Seit Nutzlast 7 traegt `daten` den Papierkorb selbst, und `edbak_restore()`
- * bringt ihn als Papierkorb zurueck. Das Drehbuch ist entfallen (E-S1-10);
+ * bringt ihn als Papierkorb zurueck. Das Drehbuch ist entfallen;
  * die Zahlen werden nur noch fuer die Ausgabe unten ermittelt, damit der
  * Erzeuger sagen kann, was in der Fixture steckt. */
 $papierkorb = ['einsaetze' => 0, 'diensttage' => 0, 'ruhezeiten' => 0];
@@ -224,7 +224,7 @@ foreach (($daten['rest_segments'] ?? []) as $r) {
 /* ---- Zusammensetzen ------------------------------------------------------ */
 $fx = [
     'format'      => 'einsatzdoku-demo-fixture',
-    /* FORMAT 2 (E-S1-10): ohne den Block `nachlauf`. Die Pflichtfelder sind
+    /* FORMAT 2: ohne den Block `nachlauf`. Die Pflichtfelder sind
      * dieselben (`konto`, `daten`), und `demo_fixture_laden()` bleibt
      * tolerant — eine Fixture der Version 1 laesst sich weiterhin einspielen.
      * Die Nummer kennzeichnet, dass der Block weg ist, sie sperrt nichts. */
@@ -248,9 +248,9 @@ $fx = [
 ];
 
 /* GEPACKT ABLEGEN. Unkomprimiert sind es rund 3,1 MB — im Wesentlichen
- * 67 292 Spurpunkte als JSON-Zahlen (seit S1 mit denen des Papierkorbs).
+ * 67 292 Spurpunkte als JSON-Zahlen (mit denen des Papierkorbs).
  * Diese Datei liegt unter server/ und geht damit bei jedem Deploy ueber FTPS
- * mit; gepackt sind es rund 930 KB (Stand R4-16). Gelesen wird sie ohnehin nur beim
+ * mit; gepackt sind es rund 930 KB. Gelesen wird sie ohnehin nur beim
  * Anlegen und beim Reset, und `gzdecode()` darauf kostet Bruchteile einer
  * Sekunde.
  *

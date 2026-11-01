@@ -429,7 +429,7 @@ Zwei Dinge hängen mit daran, und beide sind gemessen:
 | `android/**` | klein | `android-bau`, `android-kontraste`, `android-farbabgleich`, `android-bildmarken`, `android-stroeme` | E-PK-02 |
 | `server/kontopaar_lib.php`, `server/api/kontopaar.php`, `server/assets/kontopaar.js`, `server/assets/unlock.js`, `tools/proben/kontopaar/**` | klein | `kontopaarprobe` | Nr. 43 |
 | `server/ingest.php`, `server/spur_lib.php`, `server/api/mission.php`, `server/api/day.php`, `server/geraetehuelle_lib.php`, `tools/proben/ortsdaten/**`, `tools/proben/huelle/geraet.php`, `tools/proben/huelle/geraet_cli.php`, `server/einstellungen.php`, `server/admin_sicherungen.php`, `server/admin_user.php`, `server/api/import_commit.php` | klein | `ortsdatenprobe` | Nr. 43; seit Web 23.0.2 auch die Meldung beim Einspielen (Schritt 16, Nr. 387) |
-| `server/api/wartungslauf.php`, `server/spur_lib.php`, `server/validate_lib.php`, `tools/proben/wartungslauf/**` | klein | `wartungslaufprobe` | Nr. 43 |
+| `server/api/wartungslauf.php`, `server/assets/wartungslauf.js`, `server/spur_lib.php`, `server/validate_lib.php`, `tools/proben/wartungslauf/**` | klein | `wartungslaufprobe` | Nr. 43 |
 | `tools/proben/huelle/**`, `tools/uhr-pruefstand/krypto-probe/**`, `server/assets/crypto.js`, `server/geraetehuelle_lib.php` | klein | `huellenprobe`, `uhr-krypto` | Nr. 43 |
 | `watch/**`, `tools/uhr-pruefstand/**` | klein | `uhr-stufe1`, `uhr-rundlauf` | E-PK-02 |
 | `server/**` | neben | `ingestprobe`, `spurprobe`, `jobprobe`, `komplettprobe`, `wiederherstellung`, `gpxprobe`, `geraeteprobe`, `kopplungsprobe`, `mailprobe`, `versandprobe`, `ratenprobe`, `wartungsprobe`, `freigabeprobe`, `fristprobe`, `abmelde-probe`, `containerprobe`, `browserprobe-csp`, `bedienprobe`, `bilderlauf`, `kreislauf-csv`, `kreislauf-edbak`, `spaltenregister-wegprobe`, `protokollprobe`, `rollenprobe`, `zweitfaktorprobe`, `rueckwegprobe`, `sitzungsprobe`, `passkeyprobe`, `schluesselwechselprobe` | Pruefablauf.md 3, Zeile neben: alle Proben gegen die oertliche Installation, beide Kreislaeufe, Bilderlauf aller Seiten in zehn Breiten (acht bis R4-08), Bedienprobe. Bis PK-05 gab es dieses Muster nicht -- eine Nebenstufe mass dasselbe wie eine Korrekturstufe (F-P5c-49, E-P5c-32). protokollprobe und rollenprobe kamen mit P5c/AP2 und fehlten hier bis AP3 (F-P5c-90). zweitfaktorprobe kam mit P5c/AP5 und steht hier im selben Paket, rueckwegprobe ebenso mit RW-01, sitzungsprobe mit SR-01, passkeyprobe mit SR-09, schluesselwechselprobe mit SR-03. |
@@ -855,7 +855,11 @@ Integritätswache — die Punktpfade 403, `.well-known/` offen, keine Kopie der
 `config.php` mit 200 — gegen Produktiv in `integritaet.yml` und gegen Staging
 in Stufe 2 (`wache.py --teil punktpfade`, F-R17-18); `appbau.sh --selbstprobe`
 misst mit einem Ersatz-`gradlew` die Umgebung des Gradle-Aufrufs (kein
-`APK_*`, nur die Positivliste, F-R17-03).
+`APK_*`, nur die Positivliste, F-R17-03). **Seit R17-28 laufen die
+Selbstproben von Wache und App-Bau zusätzlich in Stufe 1** (Q-R17-22) — ein
+Werkzeug der Kette steht im Tor, das es benutzt. Der Uhr-Job der
+Auslieferung prüft die Gerätedateien der Uhr-Plattform vor dem Entpacken gegen ihre
+Summen im Repositorium (`CIQ_SUMMEN_PFLICHT=1`, F-R17-66).
 
 **Wer das Läuferabbild wechselt** (die `runs-on`-Zeilen, `docs/Technik.md`
 12.2), misst vorher dreifach, weil kein Teil allein reicht (Nr. 236):
@@ -963,7 +967,7 @@ hier steht, ist nur, **was grün heißt**:
 | `tools/quelltext/` `anker` | 0 Verweise `hilfe.php#…` ohne Ziel im gerenderten Handbuch; Selbstprobe 6 von 6 (falscher Anker rot, Kommentar zählt nicht, `-2` bei gleichem Titel) |
 | `tools/quelltext/` `kennzeichnung` | alle Kennzeichen der Sollliste stehen (heute 26 von 26: 13 Felder, Formular und Leseansicht), jedes Klartext-Freitextfeld trägt die Kleinzeile, 0 Blobfelder ohne Zeile; Selbstprobe 8 von 8 (die beiden Fehler aus 19.1.0 rot, Kommentar zählt nicht) |
 | `tools/quelltext/` `fremdsummen` | jede Datei unter `server/assets/vendor/` (heute 6) mit Herkunftskopf, SHA-256 ohne den Kopf gleich der Kopfzeile und gleich der Tabelle in `Lizenzen.md` 3; 0 Befunde; Selbstprobe 7 von 7 (die Falle aus F-R17-50 und die Datei ohne Kopf aus F-R17-51 rot) |
-| `tools/quelltext/` `dokumente` | jeder Pfad in `docs/`, `README.md`, `CLAUDE.md` und jeder `LIESMICH.md` trifft den Baum oder steht mit Klasse und Grund in `dokumente-ausnahmen.md`; jede Zahl an einem Verzeichnis ist eine, die `ls` dort liefert; keine Kopfzeile „Stand:"; die Gliederung von `Technik.md` fortlaufend; 0 Befunde, 0 ungenutzte Ausnahmen; Selbstprobe 10 von 10 (falscher Pfad, ungenutzte Ausnahme, falsche Zahl in Text und Baum, Stand-Zeile, Doppel- und Fehlnummer rot) |
+| `tools/quelltext/` `dokumente` | jeder Pfad in `docs/`, `README.md`, `CLAUDE.md` und jeder `LIESMICH.md` trifft den Baum oder steht mit Klasse und Grund in `dokumente-ausnahmen.md`; jede Zahl an einem Verzeichnis ist eine, die `ls` dort liefert; keine Kopfzeile „Stand:"; die Gliederung von `Technik.md` fortlaufend; im Code (`server/`, `tools/`, `android/`, `watch/`, `.github/`, ohne die zwei Fassungsgeschichten) nennt jeder Abschnittsverweis ein Dokument, das es gibt, und eine Nummer, die dort als Überschrift steht; 0 Befunde, 0 ungenutzte Ausnahmen; Selbstprobe 14 von 14 (falscher Pfad, ungenutzte Ausnahme, falsche Zahl in Text und Baum, Stand-Zeile, Doppel- und Fehlnummer, Code-Verweis auf fehlenden Abschnitt — auch über einen Zeilenumbruch — und auf fehlendes Dokument rot) |
 | `tools/quelltext/` `pysyntax`, `handbuch` | 0 Syntaxfehler und 0 Warnungen (ungültige Escape-Folge, seit R4-07) bei mindestens einer Datei; beide Dokumente rendern, gültiges UTF-8, 0 Bilder aus fremder Quelle |
 | `./gradlew build` | 0 Lint-Fehler, 0 Fehlschläge |
 | `tools/stilvergleich/` | die gemessenen Abweichungen sind genau `geplant.txt` — ohne Datei: 0 (6.10) |

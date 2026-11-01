@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-/* Der eine Leser fuer config.php (Schritt 15 AP2). Laedt selbst nichts. */
+/* Der eine Leser fuer config.php. Laedt selbst nichts. */
 require_once __DIR__ . '/konfig_lib.php';
 
 /**
@@ -11,8 +11,8 @@ require_once __DIR__ . '/konfig_lib.php';
  *     umgebung()           // ['name' => 'Staging', 'farbe' => 'rot', …] oder null
  *     umgebung_praefix()   // '[Staging] ' oder ''
  *
- * WOFUER (P5c/AP1, E-P5c-05, Backlog Nr. 243). Staging und Produktiv sahen
- * bis hierher gleich aus. Wer zwei Reiter offen hat, eines mit jeder Anlage,
+ * WOFUER. Staging und Produktiv saehen sonst gleich aus. Wer zwei Reiter
+ * offen hat, eines mit jeder Anlage,
  * sieht den Unterschied an der Adresszeile — und nur dort. Das Etikett macht
  * ihn an drei Stellen sichtbar: im Seitentitel, an der Farbe der Kopfleiste
  * und in einer Zeile ueber dem Inhalt.
@@ -21,7 +21,7 @@ require_once __DIR__ . '/konfig_lib.php';
  * die Kette: Eine Ableitung raet, und eine Anlage, die falsch geraten wird,
  * traegt das falsche Etikett mit voller Ueberzeugung. `config.php` sagt es,
  * oder es gibt kein Etikett — und dann verhaelt sich die Anlage wie die
- * Produktivanlage. Die Statusseite sagt beides (E-P5c-64).
+ * Produktivanlage. Die Statusseite sagt beides.
  *
  * DIESE DATEI LAEDT NUR `konfig_lib.php`, und das ist Bedingung: `ui.php`
  * zieht sie in der Seitenhuelle nach, und die Seitenhuelle laeuft auch im
@@ -36,7 +36,7 @@ require_once __DIR__ . '/konfig_lib.php';
  * gegen die Kopfleiste (`kontrast.py`) und eine Freigabe mit Mockup
  * (`CLAUDE.md` 5) — und damit mehr als einen Eintrag hier. Ein unbekannter
  * Wert wird deshalb nicht ignoriert, sondern ROT gezeichnet und auf der
- * Statusseite benannt (E-P5c-55): Wer „lila" eintraegt, will eine Kennzeichnung,
+ * Statusseite benannt: Wer „lila" eintraegt, will eine Kennzeichnung,
  * und keine Kennzeichnung waere die schlechtere Antwort.
  */
 const UMGEBUNG_FARBEN = ['rot'];

@@ -14,6 +14,281 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 23.6.0] — unveröffentlicht
+
+Schritt 12b, Paket R17-29 — Seitenaufbau und Mengen (Backlog Nr. 380, 381,
+382, mit Nr. 51). Kein Schema, kein `update.php`. Zuerst gemessen, dann
+gebaut — und die Messung hat zwei der drei Annahmen widerlegt, mit denen die
+Punkte im Backlog standen. Alle Zahlen: Messstand mit 5096 Einsätzen, Drossel
+6×, Mediane; die Tabelle steht in `tools/messstand/ausgangsmessung.md`.
+
+### Geändert
+
+- **Web — die Symbole stehen einmal je Seite, nicht einmal je Verwendung.**
+  Die Annahme in Nr. 380 war, die 15 bis 28 Skripte je Seite kosteten die
+  Zeit bis zum Aufbau. Das Profil sagte etwas anderes: Alles JavaScript der
+  Einsatzseite zusammen kostet rund 0,5 s; der Rest geht in Parsen, Stil,
+  Layout — und in rund 500 SVG-Dokumente. Jedes Symbol verwies auf seine
+  eigene Datei (`<use href="assets/images/symbole/haus.svg#i">`), und dafür
+  baut der Browser je Verweis ein eigenes Dokument; die Tagesleiste trägt
+  500 Diensttage mit je einem Symbol, auf jeder Seite. Jetzt trägt jede
+  Seite die Symbole einmal als unsichtbaren Vorrat am Anfang des `<body>`
+  (`ui_symbolvorrat()`), und die Verweise zeigen dorthin (`#sym-haus`).
+  Die Nachbearbeitung — eine Seite, die fast nur aus der Leiste besteht —
+  ist bis `DOMContentLoaded` doppelt so schnell (1,78 → 0,85 s), Einsatz
+  und Diensttag rund ein Fünftel. **Was bleibt:** Die Symbole liegen
+  weiter als einzelne Dateien, und es gibt keinen Bauschritt — der Vorrat
+  entsteht bei jeder Anfrage aus ihnen. Seiten mit eigener Hülle
+  (Notfallblatt, Wartung) verweisen weiter auf die Datei; `edSymbol()` im
+  Browser nimmt den Vorrat, wo er steht, sonst ebenfalls die Datei. Der
+  Preis sind rund 17 kB mehr je Seite, gepackt ein Bruchteil. Der Vorrat
+  ist über das SVG-Attribut `display="none"` verborgen, ohne Regel im
+  Stylesheet. Die Bilder sind gleich geblieben: fünf Seiten in Chromium,
+  Firefox und WebKit pixelweise verglichen, 14 von 15 ohne jede
+  Abweichung, eines mit 26 Pixeln in einem Bereich, der auch alt gegen alt
+  von Lauf zu Lauf rauscht. Ein erster Entwurf setzte den Vorrat absolut
+  statt ihn zu verbergen; das verschob in Chromium drei Pixel einer
+  Knopfecke und im Stilvergleich das Katalogblatt.
+- **Web — Suche und Zeitraumübersicht öffnen die gezeigten Zeilen zuerst.**
+  Beide zeigen 200 Zeilen aus einem Bestand von tausenden und öffneten vor
+  der ersten lesbaren Diagnose alle (Nr. 381). Das Entschlüsseln selbst ist
+  dabei der kleinere Posten — 1,25 s von 6,1 bei der Suche, 0,7 von 5,7 im
+  Jahr —, die Schätzung „50 bis 65 %" im Backlog ging von der Krypto aus.
+  Jetzt öffnen beide die gezeigten 200, zeichnen sie lesbar und öffnen den
+  Rest danach; der vorhandene Ladeplatz sagt solange „Weitere geschützte
+  Angaben werden geöffnet …". Erst danach wird wie zuvor neu gefiltert:
+  Treffer, die nur in geschützten Feldern stehen, der Altersfilter, die
+  Pins der Karte und die Kennzahlen aus dem Block kommen mit dem Rest.
+  Sortiert die Tabelle nach Ort, Alter oder Diagnose, steht vorher nicht
+  fest, welche Zeilen oben stehen; dann wird wie bisher alles am Stück
+  geöffnet. Geschützt lesbar ist die Suche nach 3,8 statt 6,1 s, das Jahr
+  nach 3,0 statt 5,7 s, der Monat nach 2,1 statt 4,0 s — die Symbole oben
+  tragen dazu bei. **Was es kostet:** Die Suche ist insgesamt 0,25 s
+  später fertig, weil sie einmal mehr zeichnet — derselbe Tausch, den die
+  Zeitraumübersicht seit Web 21.6.1 macht: Wer die Seite öffnet, will
+  zuerst die Liste lesen. **Was gleich bleibt:** Trefferzahl, Reihenfolge,
+  Kennzahlen und Pins, verglichen in fünfzehn Fällen (Freitext, ODER,
+  Wochentag, Winde, Zeitraum, drei Sortierungen nach geschützten Spalten)
+  über 34 006 Zeilen, alter gegen neuen Stand.
+- **Web — die Suche liest ihre Filterfelder einmal je Durchlauf.** Rund
+  dreißig Felder wurden für jeden Einsatz neu aus der Seite gelesen, bei
+  5096 Einsätzen 150 000 Abfragen und rund 0,4 s je Durchlauf. Der Suchtext
+  wird nach dem Entsperren nur noch für Einsätze mit geschütztem Block neu
+  gebaut.
+- **Web — `vorladen.js` steht auf der Tagesübersicht nur noch einmal.** Mit
+  gewähltem Tag lud die Seite es im Kopf und noch einmal im Rumpf.
+- **Web — der Ladeplatz und „ein Bild abwarten" stehen in `EdHtml`.** Beide
+  lagen in `ortsdaten.js` bzw. in der Zeitraumübersicht; Suche und Zeitraum
+  brauchen sie jetzt ebenfalls, und `ortsdaten.js` lädt keine der beiden.
+
+### Behoben
+
+- **Web — die Einsatzansicht fing einen gescheiterten Abruf nicht ab.**
+  Scheiterte `api/mission.php` — Netz weg, oder die Seite wurde verlassen,
+  während der Abruf noch lief —, blieb ein unbehandelter Fehler in der
+  Konsole, und der Ladeplatz drehte weiter. Jetzt steht die vorhandene
+  Meldung „Einsatz nicht geladen" da, wie auf dem Diensttag, und der
+  Ladeplatz geht weg. Sichtbar wurde es, weil die Seite mit dem
+  Symbolvorrat schneller fertig ist: Die Ortsdatenprobe verließ sie in
+  Firefox öfter, solange der Abruf noch lief — vorher 4 von 4 grün, mit
+  dem Vorrat 2 von 4, mit dem Fang 4 von 4. Dazu fängt `vorladen.js` einen
+  vorgeladenen Abruf, der scheitert, bevor die Seite ihn abholt, still ab;
+  wer ihn abholt, bekommt den Fehler wie zuvor. Gemessen mit einem
+  abgewiesenen `api/mission.php` in drei Engines: Meldung, kein Ladeplatz,
+  0 Seitenfehler (vorher 1 bis 2).
+
+### Nicht geändert
+
+- **Web — Startseite und Anmelden: die erste Antwort war nicht langsam.**
+  Nr. 382 stand mit 0,93 und 2,15 s bis zur ersten Antwort bei 6×, aus
+  Einzelläufen. Fünfmal nachgemessen, getrennt nach Weiterleitung,
+  Abschicken und Server: Der Server rechnet 20 bis 30 ms, das Anmelden samt
+  Weiterleitung braucht rund 90 ms bis zur Antwort von `index.php`, bei 6×
+  wie ungedrosselt. Einzelne Läufe zeigen 230 bis 380 ms, weil der Browser
+  die Anfrage erst schickt, wenn die gedrosselte Vorseite frei wird — das
+  war die alte Zahl. Beim Anmelden gehen rund 0,8 s in die Ableitung des
+  Schlüssels (absichtlich) und danach der Aufbau der Startseite. Gebaut
+  wurde nichts.
+- **Weitere Skripte je Seite sind nicht gestrichen.** Was eine Seite nicht
+  braucht, wäre einzeln nachzuweisen, und der Gewinn läge nach dem Profil
+  bei Zehntelsekunden. Ein Bauschritt (Skripte zusammenfassen) ist mit
+  E-R17-24 ausgeschlossen.
+
+### Mit dabei
+
+- **Werkzeuge — der Messstand misst „geschützt lesbar" und zerlegt die
+  erste Antwort** (`tools/messstand/browserprobe.mjs`, Anlass Nr. 381 und
+  382). Suche und Zeitraum melden neben „sichtbar" den ersten Neuaufbau der
+  Tabelle nach dem ersten Entschlüsseln; jede Zerlegung trennt
+  Weiterleitung, Wartezeit vor der Anfrage und Serverzeit. „Sichtbar" allein
+  sagte bei beiden Seiten nur, wann die gesperrten Zeilen standen.
+
+## [Web 23.5.2] — unveröffentlicht
+
+Schritt 12b, Paket R17-28 — Aufräumen. Kein Schema, kein `update.php`. Der
+größte Teil ist unsichtbar: Die Kommentare im Quelltext tragen keine
+Kennungen und keine Fassungsangaben mehr. Daneben eine Handvoll kleiner Fehler mit Wirkung,
+die das Review beim Lesen gefunden hatte, und die Werkzeuge der Kette.
+
+### Behoben
+
+- **Web — Export und Import sagten, Transportziel und Reanimation blieben
+  ohne Haken in der Datei.** Der Hinweis unter „Personenbezogene Angaben
+  einschließen" und die `LIESMICH.txt` jedes Exports ohne Haken nannten die
+  Zielklinik und den Reanimationsverlauf als „Betriebsangaben, die bleiben"
+  (F-R17-61). Seit S11 liegen beide verschlossen und fehlen ohne Haken —
+  die Datei verriet also weniger als angekündigt. Jetzt sagen beide Texte,
+  was wirklich drinsteht; die Liste mit Haken nennt Transportziel und
+  Reanimation dazu. Sieben Kommentare, die dasselbe falsch erzählten, sind
+  nachgezogen. Das Vergleichsarchiv des CSV-Kreislaufs
+  (`tools/referenzdatensatz/referenz/`) trägt den neuen Text — nur seine
+  `LIESMICH.txt`, die Tabellen und Spuren darin sind Byte für Byte gleich;
+  eine Ausnahmeregel hätte jede künftige Abweichung dieser Datei
+  verschluckt.
+- **Web — drei Handgriffe an Geräten meldeten Erfolg ohne Treffer.**
+  Umschalten, Umbenennen und Löschen unter Einstellungen → Geräte sagten
+  „Status geändert.", „Bezeichnung gespeichert." und „Gerät gelöscht." auch
+  dann, wenn die Kennung nicht zum Konto gehörte. Jetzt kommt in diesem Fall
+  „Dieses Gerät gibt es in deinem Konto nicht (mehr)."
+- **Web — ein doppelt angelegter Standort hakte den Erststart ab.** Der
+  Vermerk „Standort angelegt" stand vor dem Anlegen; eine Dublette, die
+  nichts anlegt, zählte trotzdem. Er steht jetzt dahinter.
+- **Web — die Tagesgrenze der täglichen Jobs lag bis zu zwei Stunden neben
+  Mitternacht.** „Heute" rechnete PHP in seiner Zeitzone, der letzte Lauf
+  stand in UTC. Beide Seiten rechnen jetzt in UTC.
+- **Web — die Inhaltsprüfung vor einer Migration hielt eine 0 für leer.**
+  Sie zählte `<> ''` auch auf Zahlenspalten, und MySQL vergleicht dort `''`
+  als 0: Eine Ortshöhe von 0 m sperrte nicht. Jetzt nur noch bei Text.
+  Gemessen an einer Wegwerftabelle: alt fand 1 von 2 Werten, neu 2 von 2.
+- **Web — die Trefferhervorhebung der Suche zerteilte `&amp;`.** Ein
+  Suchwort wie „amp" traf das Innere einer Entität im maskierten Text. Die
+  Hervorhebung geht jetzt an Entitäten vorbei.
+- **Web — „Mengen je Konto" lief über alle Konten.** Auch über gesperrte,
+  unbestätigte und das Demo-Konto, und schrieb für jedes täglich eine Marke.
+  Jetzt nur über aktive Konten ohne das Demo-Konto.
+- **Web — eine Freischaltungsmail ohne Link wäre durchgegangen.** Die
+  Pflichtliste der Mail `freigeschaltet` war leer, ihr Text liest den Link.
+- **Werkzeuge — der Sperrlisten-Schritt des Einspielens schickte
+  Klartext.** `ingest.php` weist Ortsdaten im Klartext seit S11 ab; der
+  Schritt maß eine Abweisung statt der Sperrliste. Er verschließt die
+  Pakete jetzt wie die Stufe `ingest` und bricht bei einer Abweisung ab
+  (F-R17-82; der Schritt läuft in keinem regelmäßigen Lauf).
+
+### Geändert
+
+- **Web — die Kommentare im Quelltext tragen keine Kennungen und keine
+  Fassungsangaben mehr** (E-R17-27, E-R17-86). Verweise auf Beschlüsse, Befunde, Fragen,
+  Pakete, Backlog-Nummern und eigene Fassungen sind aus den Kommentaren von
+  Server, Browser, Uhr, Android und Werkzeugen gestrichen; ein Grund, der
+  heute noch gilt, steht ohne Datum da. Die Geschichte steht im Changelog,
+  im Kopf von `server/version.php` und `android/version.properties` und in
+  Git. **Gemessen, dass sich am Code nichts geändert hat:** je Datei der
+  Code ohne Kommentare vorher gegen nachher — PHP über `php -w`, Browser,
+  Kotlin und Monkey C über einen Tokenvergleich, Python über den
+  Syntaxbaum. 576 geänderte Dateien, 549 mit gleichem Code; abweichend nur
+  die drei Fassungsdateien und die erweiterte Dokumentenprobe, die 23 ohne
+  Tokenvergleich (Dokumente, JSON, ProGuard, `.htaccess`) von Hand
+  verglichen. Gezählt über Server, Browser, Uhr, Android und Werkzeuge ohne
+  die zwei Fassungsgeschichten: 10 229 Verweise vorher, 1 224 nachher — der
+  Rest steht in Zeichenketten und Prüfdaten, in den 87 `Anlass:`-Zeilen der
+  Prüfmittel, im Zentralisierungsregister bei den Beschlüssen der
+  Betreiberin und in HTML-Kommentaren der Seiten. Die alten Abschnittsnummern von `Technik.md` im Code
+  sind über die Konkordanz umgestellt (Nr. 408, 37 Stellen). **Was bewusst
+  bleibt:** Erzählende Sätze („früher stand hier …", „bis dahin …") sind
+  stehen geblieben, wo sie den Grund einer Regel tragen — rund 500 Stellen,
+  die eine eigene Lesung brauchen, nicht ein Streichen (Nr. 409). Ebenso
+  Kennungen in Zeichenketten (Prüfdaten, Meldungen, Spaltentitel) und in
+  Kommentaren innerhalb von HTML und eingebetteten Skripten der Seiten.
+- **Web — `config.example.php` und der Kopf von `serverkrypto_lib.php`
+  nennen alle Zwecke des Serverschlüssels** (F-R17-26): auch Zweitfaktor,
+  Konto-Backups und Protokollarchive. Wer `config.php` und die Datenbank
+  hat, öffnet damit den zweiten Faktor aller Konten — keine
+  Patientendaten. Der Kommentar zu `kdf_anteil` sagte noch, ohne ihn liefe
+  alles wie vor S10; seit dem Pfeffer am Anmelde-Hash meldet sich ohne ihn
+  niemand an.
+- **Web — die Luftlinie liest ihre Farbe aus dem Token `--blau`** statt
+  aus einem Hexwert im Skript; zwei Pixelwerte im Stylesheet laufen über
+  `--kopf` und `--symbol-klein`; der Abschnitt „Druck" heißt 31 statt
+  zum zweiten Mal 26.
+- **Web — die Rückfrage und das Schlüsselblatt melden eine abgelehnte
+  Antwort in der Konsole**, nicht mehr nur einen Netzfehler.
+
+### Entfernt
+
+- **Web — Karteileichen** (Nr. 21): sechs PHP-Funktionen ohne Aufrufer
+  (`serverschluessel_zeile`, `sitzung_bindung_loeschen`,
+  `adresse_vormerkung_loeschen`, `protokoll_frist_verwaltung_setzen`,
+  `protokoll_fehler_quittieren`, `doku_bestand`), elf Browser-Exporte
+  ohne Verwender außerhalb ihrer Datei (die Funktionen dahinter bleiben,
+  wo die Datei sie selbst braucht; `EdGeocoder.host` fällt ganz) und
+  `ph_zeiten` im Referenzdatensatz. Die drei Exporte des Wartungslaufs
+  bleiben — sie haben jetzt eine Probe (unten).
+- **Web — sechs Stylesheet-Regeln ohne Verwender** (Nr. 341):
+  `feld-reihe`, `karte-neben`, `kennzahl-raster-5`, `sd-titel`, `sd-zahl`,
+  `symbol-gefuellt`, dazu der Fokus-Zweig über `data-role`, den kein
+  Element erfüllte. Die Vollständigkeitsprüfung meldet 7 statt 13 Hinweise,
+  jeder übrige mit Grund.
+- **Web — tote Zweige seit Web 23:** die Vollausgabe am Ende von
+  `edbak_build()`, die unerreichbare Weiche in `komp_schub_lauf()`, die
+  Meldung „Noch kein Standort" auf der Seite eines Standorts, der
+  Rückfall auf eine Ratenschutz-Tabelle ohne `stufe_bis`, die Prüfung auf
+  den Platzhalter unter den alten Logo-Namen (F-R17-80).
+
+### Mit dabei
+
+- **Werkzeuge — die Dokumentenprobe liest jetzt auch den Code** (Nr. 188):
+  Ein Verweis wie „`Technik.md` 4.14" in einem Kommentar muss ein Dokument
+  nennen, das es gibt, und eine Nummer, die dort als Überschrift steht.
+  Nach einer neuen Gliederung zeigt ein solcher Wegweiser sonst still auf
+  den falschen Abschnitt. Beim ersten Lauf fand sie neun Verweise auf ein
+  `SPEC_Export.md`, das es im Repositorium nie gab — sie zeigen jetzt auf
+  `docs/Export-Format.md` oder fallen —, und zwei Zeilennummern in der
+  Ausnahmeliste der Textprobe, die als Abschnitt gelesen wurden. Die zwei
+  Fassungsgeschichten nimmt sie aus: Sie nennen die Nummern von damals.
+- **Werkzeuge — die Garmin-Gerätedateien tragen eine Prüfsumme im
+  Repositorium** (F-R17-66, E-R17-88). `devices.tar` und `fonts.tar` werden
+  vor dem Entpacken gegen `tools/uhr-pruefstand/geraetedateien.sha256`
+  geprüft; im Auslieferungslauf der Uhr ist die Summe Pflicht, und der
+  langsame Rückfall auf Einzeldateien ohne Summe ist dort rot. Bis dahin kamen
+  die Dateien ungeprüft in den Job, in dem der Entwicklerschlüssel liegt.
+  Wer die Archive neu packt, trägt die Summe im selben Commit ein. Gemessen
+  in fünf Lagen gegen einen örtlichen Testserver.
+- **Werkzeuge — Wache und Zielprobe schreiben die Adresse des Läufers ins
+  Protokoll, und die Wache sagt „Anlage nicht erreichbar"** (F-R17-74 (b)
+  und (c), E-R17-71, -89). Kam kein einziger Abruf durch, steht eine Zeile
+  mit Zahl und Fehlerart statt hundert Dateien — rot bleibt es. Die Adresse
+  kommt von `api.ipify.org` (5 s, sonst „unbekannt"); der Abruf trägt keine
+  Daten der Anwendung.
+- **Werkzeuge — die Selbstproben von Wache und App-Bau laufen in Stufe 1**
+  (Q-R17-22, E-R17-74).
+- **Werkzeuge — die Wartungslauf-Probe misst die drei Exporte
+  unmittelbar** (E-R17-87): Die Behalteliste des Browsers ist dieselbe wie
+  die von `spur_lib.php`, die Prüfung findet einen fehlenden letzten und
+  einen um 71 m verschobenen Punkt, `lauf()` packt ein fälliges Segment. In
+  drei Engines je 24 von 24.
+- **Werkzeuge — Aufräumposten:** sieben Werkzeuge rechnen den Pfad aus
+  ihrem Ort statt aus einem festen Containerpfad; 13 Browserwerkzeuge lassen
+  das Zertifikat nur an der örtlichen Anlage durch; acht Proben binden
+  `config.php` nicht mehr von Hand ein; Mail- und Ratenprobe setzen
+  Einstellungen auf ihren Vorwert zurück statt auf leer; die Versandprobe
+  schaltet stillgelegte Ziele auch bei einem Abbruch wieder ein;
+  `monkeydo` wird über seine Prozessnummer beendet; die Bedienprobe schreibt
+  die Engine in den Bericht statt „Nur Chromium".
+
+## [Uhr 4.1.1] — unveröffentlicht
+
+Schritt 12b, Paket R17-28. Keine Änderung am Verhalten: Die Kommentare im
+Quelltext tragen keine Kennungen und keine Fassungsangaben mehr (siehe
+Web 23.5.2). Der Code ist derselbe, gemessen mit einem Tokenvergleich ohne
+Kommentare.
+
+## [Android 0.18.2] — unveröffentlicht
+
+Schritt 12b, Paket R17-28. Keine Änderung am Verhalten: Die Kommentare im
+Quelltext tragen keine Kennungen und keine Fassungsangaben mehr (siehe
+Web 23.5.2). Der Code ist derselbe, gemessen mit einem Tokenvergleich ohne
+Kommentare.
+
 ## [Web 23.5.1] — unveröffentlicht
 
 Schritt 12b, Zwischen-PR — eine Korrektur, damit der Prüfbericht grün sein

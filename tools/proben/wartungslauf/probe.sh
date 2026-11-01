@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Wartungslaufprobe (S11-07): Serverteil, dann der Weg im Browser.
+# Wartungslaufprobe: Serverteil, dann der Weg im Browser.
 # Anlass: Nr. 43 — Packen und Ausdünnen wandern aus den Jobs in den Browser.
 set -u
 WURZEL="$(cd "$(dirname "$0")/../../.." && pwd)"

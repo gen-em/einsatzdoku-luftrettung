@@ -8,7 +8,7 @@ import org.genem.nadoku.gemeinsam.Quittung
 import org.genem.nadoku.gemeinsam.Uhrmeldung
 
 /**
- * Der Funk der Uhr: melden, puffern, nachliefern (E-S4-10).
+ * Der Funk der Uhr: melden, puffern, nachliefern.
  *
  * DAS VERSPRECHEN LAUTET: **Kein Ereignis geht verloren, und keines wirkt
  * zweimal.** Die erste Hälfte hält der Puffer — gemerkt wird, bevor gesendet
@@ -39,7 +39,7 @@ class Uhrfunk(
      * Wurde der letzte Sendeversuch zugestellt?
      *
      * `null`, solange es keinen gab. Ein Vorgabewert `true` wäre eine
-     * Behauptung ohne Beobachtung (B-S4-09), ein Vorgabewert `false` eine
+     * Behauptung ohne Beobachtung, ein Vorgabewert `false` eine
      * Warnung ohne Anlass.
      */
     var handyErreichbar: Boolean? = null
@@ -53,7 +53,7 @@ class Uhrfunk(
     fun bestaetigt(nr: Long): Boolean = nr <= puffer.quittiertBis
 
     /**
-     * Eine `wm-`-Kennung bilden (E-S4-09) — für ein Ereignis, das einen
+     * Eine `wm-`-Kennung bilden — für ein Ereignis, das einen
      * Einsatz **eröffnet**.
      *
      * Sie entsteht **auf der Uhr** und reist mit der gepufferten Nachricht
@@ -91,7 +91,7 @@ class Uhrfunk(
     }
 
     /**
-     * Alles Wartende erneut senden — **unverändert** (E-S4-10).
+     * Alles Wartende erneut senden — **unverändert**.
      *
      * Die Reihenfolge bleibt die des Entstehens: Der Dienststart muss vor der
      * ersten Phase ankommen, sonst legte das Handy die Phase in einen Dienst,

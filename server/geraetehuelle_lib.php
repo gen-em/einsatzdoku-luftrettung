@@ -2,7 +2,7 @@
 declare(strict_types=1);
 
 /**
- * DIE GERÄTEHÜLLE AUF DEM SERVER — verschließen, nie öffnen (S11-04a)
+ * DIE GERÄTEHÜLLE AUF DEM SERVER — verschließen, nie öffnen
  * ===========================================================================
  *
  * Das Format (Fassung 1) steht im Kopf von `tools/proben/huelle/referenz.py`,
@@ -13,12 +13,9 @@ declare(strict_types=1);
  * WARUM DER SERVER ÜBERHAUPT VERSCHLIESST. Verschließen braucht nur den
  * ÖFFENTLICHEN Schlüssel des Kontos; öffnen kann nur, wer den privaten hat,
  * und den hat nur der Browser nach dem Entsperren. Der Server verschließt an
- * zwei Stellen: beim Zurücksetzen des Demobestands (E-S11-20, S11-06) und in
+ * zwei Stellen: beim Zurücksetzen des Demobestands und in
  * den Proben, die den Eingang wie ein Gerät bedienen — dort sind die Daten
- * erfunden und kommen aus dem Repositorium. Bis Web 22.7.0 kam das direkte
- * Einspielen einer alten Kontosicherung durch die Verwaltung dazu
- * (E-S11-57); alte Pakete gibt es nicht mehr (S11-12, E-S11-84).
- * **Eine Funktion zum
+ * erfunden und kommen aus dem Repositorium. **Eine Funktion zum
  * Öffnen gibt es hier mit Absicht nicht** — wer sie schriebe, gäbe dem
  * Server einen Weg, den er nach der Zusage aus `CLAUDE.md` 4 nicht hat.
  *
@@ -114,10 +111,10 @@ function gh_verschliessen(string $klar, string $empfSec1, string $art, string $c
 }
 
 /**
- * Spurpunkte in die binäre Innenform (E-S11-31): je Punkt 14 Byte,
+ * Spurpunkte in die binäre Innenform: je Punkt 14 Byte,
  * big-endian — Breite und Länge in 1e-7 Grad (int32), Höhe in ganzen Metern
- * (int16, geklemmt auf ±32 767; bis zum 16.10.2026 Dezimeter, E-S11-66), Zeit relativ zu `ts_von` in Sekunden (uint32). Ohne Höhe:
- * -32768 (`GH_HOEHE_UNBEKANNT`, E-S11-39).
+ * (int16, geklemmt auf ±32 767), Zeit relativ zu `ts_von` in Sekunden
+ * (uint32). Ohne Höhe: -32768 (`GH_HOEHE_UNBEKANNT`).
  *
  * @param list<array{0:float,1:float,2:?float,3:int}> $punkte [lat, lon, ele, ts]
  */
@@ -137,10 +134,10 @@ function gh_spur_innen(array $punkte, int $tsVon): string
 }
 
 /**
- * Die Einsatzhülle aus Klartext bauen (S11-06c) — Innenform wie der Browser
+ * Die Einsatzhülle aus Klartext bauen — Innenform wie der Browser
  * (`EdOrtsdaten.einsatzInnen()`) und die Gerätehilfe der Proben:
  * {"fassung":1, "phasen":[{phase,t,lat,lon}], "rea":[{t, ereignisse:[{art,t}]}]},
- * alle Zeiten in Sekunden seit `$beginn` (E-S11-18, -40).
+ * alle Zeiten in Sekunden seit `$beginn`.
  *
  * @param list<array{phase:int, ts:int, lat:?float, lon:?float}> $phasen
  * @param list<array{ts:int, ereignisse:list<array{art:string, ts:int}>}> $reas
@@ -167,7 +164,7 @@ function gh_einsatz_verschliessen(string $sec1, string $ref, int $beginn,
 }
 
 /**
- * Punkte zu verschlossenen Stücken (S11-06c) — die Regel von
+ * Punkte zu verschlossenen Stücken — die Regel von
  * `EdOrtsdaten.stueckeBauen()`: Ein Stück endet an jeder Lücke der
  * Punktnummern und nach höchstens 2000 Punkten (`LIMIT_TRACKPUNKTE_ANFRAGE`),
  * Punkt i eines Stücks ist `seq_from + i`.
@@ -199,7 +196,5 @@ function gh_stuecke_bauen(string $sec1, string $art, string $ref, array $punkte)
     return $aus;
 }
 
-/* `gh_gepackt_bauen()` stand hier bis Web 22.7.0: Der direkte Einspielweg
- * der Verwaltung legte damit eine ausgedünnte SPUR1-Spur aus einem älteren
- * Paket als gepacktes Stück ab. Alte Pakete gibt es nicht mehr (S11-12,
- * E-S11-84); gepackt wird nur im Browser (`EdOrtsdaten.gepacktBauen()`). */
+/* `gh_gepackt_bauen()` gibt es hier nicht: Gepackt wird nur im Browser
+ * (`EdOrtsdaten.gepacktBauen()`). */

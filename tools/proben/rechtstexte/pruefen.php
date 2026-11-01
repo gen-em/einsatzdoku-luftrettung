@@ -2,7 +2,7 @@
 declare(strict_types=1);
 
 /**
- * Angriffsprobe für den Rechtstext-Renderer (R32, P3/O10).
+ * Angriffsprobe für den Rechtstext-Renderer.
  *
  * Anlass: Nr. 311 — rt_html() ist der eine Weg, auf dem aus einer Eingabe HTML wird
  *
@@ -62,7 +62,7 @@ function probe(string $gruppe, string $was, string $eingabe,
 }
 
 /* ==========================================================================
- * A — Was er können MUSS (E-P3-38: Überschriften, Absätze, Listen, Links)
+ * A — Was er können MUSS (Überschriften, Absätze, Listen, Links)
  * ======================================================================== */
 
 probe('A Umfang', 'Überschrift ## wird h2',

@@ -1,8 +1,8 @@
-/* P-07 — Angriffswerte stehen inert in allen Einsatztabellen (Arbeitspaket B4).
+/* Angriffswerte stehen inert in allen Einsatztabellen.
  *
  * WORUM ES GEHT. Vier geschützte Freitextfelder des Referenzdatensatzes tragen
  * absichtlich Markup, das ein Browser ausführen WÜRDE, käme es ungeprüft in
- * die Seite (E-P1-15, R20):
+ * die Seite:
  *
  *   Diagnose            <img src=x onerror="alert('R20-dx')">…
  *   Ortsbeschreibung    "><script>alert('R20-ort')</script>…
@@ -33,7 +33,7 @@
  * sind die Einsaetze gar nicht gerendert und „nichts passiert" sagt nichts —,
  * dann Einsatzseite und Formular des Einsatzes 2026-0335. Ueberall: kein
  * Dialog, keine Konsolenmeldung, der Wert steht als TEXT da. Gefunden hat die
- * Probe F-P1-I (Web 7.2.1): Die Spalte „Alter" gab ihren Wert unmaskiert aus.
+ * Probe einen Fehler: Die Spalte „Alter" gab ihren Wert unmaskiert aus.
  */
 import { writeFileSync, mkdirSync } from 'node:fs';
 import { motorWahl, starten } from '../../motor.mjs';
@@ -41,7 +41,7 @@ import { motorWahl, starten } from '../../motor.mjs';
 const MODUL = process.env.PLAYWRIGHT_MODUL
   || '/opt/node22/lib/node_modules/playwright/index.mjs';
 const PW = (m => m.default ?? m)(await import(MODUL.startsWith('/') ? 'file://' + MODUL : MODUL));
-/* Die Engine wählt der Läufer (MOTOR=… oder --motor), R87. */
+/* Die Engine wählt der Läufer (MOTOR=… oder --motor). */
 const MOTOR = motorWahl(process.argv);
 
 const basis = process.argv[2] || 'https://127.0.0.1:8443';
@@ -59,7 +59,7 @@ const WERTE = [
   { name: 'Einsatznummer',      marker: "alert('R20-nr')",    text: '2026-0335' },
   { name: 'Einsatzort-Adresse', marker: "alert('R20-adr')",   text: 'Talstraße 7' },
   /* Das Altersfeld hat keinen harmlosen Textanteil — es IST die Nutzlast.
-     Es gehört trotzdem und gerade hierher: An ihm hing der Fund F-P1-I. */
+     Es gehört trotzdem und gerade hierher: An ihm hing ein Fund. */
   { name: 'Alter',              marker: "alert('R20-alter')", text: 'R20-alter' },
 ];
 

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Erzeuger — was Dateien HERSTELLT, nicht was prüft (E-PK-24).
+# Erzeuger — was Dateien HERSTELLT, nicht was prüft.
 #
 # Aufruf:  bash tools/erzeugen/erzeugen.sh <name> [zusatz…]
 #          bash tools/erzeugen/erzeugen.sh --liste

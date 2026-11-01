@@ -1,4 +1,4 @@
-"""Hilfe der Ortsdatenprobe (S11-05e): liest aus einem Export-Archiv (Profil B)
+"""Hilfe der Ortsdatenprobe: liest aus einem Export-Archiv (Profil B)
 die Zeilen bestimmter Einsaetze und die Punktzahl je GPX-Datei.
 
 Anlass: Nr. 43 — Export und Import tragen die Ortsdaten seit S11-05e

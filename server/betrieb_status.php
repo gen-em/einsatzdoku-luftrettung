@@ -3,18 +3,18 @@ declare(strict_types=1);
 require_once __DIR__ . '/auth_guard.php';
 require_betreiberin();
 require_once __DIR__ . '/status_lib.php';
-/* Der Ratenschutz fuer die Testmail (Backlog Nr. 120). `status_lib.php` zieht
+/* Der Ratenschutz fuer die Testmail. `status_lib.php` zieht
  * `smtp.php` nach, aber `ratelimit_lib.php` zieht niemand — ohne diese Zeile
  * gibt es einen Fatal Error beim ersten Klick, und zwar erst dann. */
 require_once __DIR__ . '/ratelimit_lib.php';
 require_once __DIR__ . '/mail_lib.php';
 
 /**
- * BETRIEB -> STATUS (S8/AP4, E-S8-16, Mockup 03).
+ * BETRIEB -> STATUS.
  *
  * EINE SEITE, DIE MAN ANSIEHT UND DANN WEISS, OB ETWAS ZU TUN IST.
  *
- * Der Befund dahinter (B-S8-03, B-S8-12): Die Auskunft ueber den Betrieb lag
+ * Der Befund dahinter: Die Auskunft ueber den Betrieb lag
  * verstreut — der Serverschluessel meldete sich als rote Karte auf der Seite
  * der Backup-Ziele, die Schluesselableitung als rote Karte auf der
  * Wartungsseite, der Speicherstand als Balken unter den Backups, die
@@ -23,8 +23,8 @@ require_once __DIR__ . '/mail_lib.php';
  * ist, musste sechs Seiten aufrufen und auf jeder wissen, worauf zu achten
  * ist.
  *
- * DIESE DATEI ZEICHNET NUR NOCH. Was gemessen und wie es bewertet wird, steht
- * seit Web 15.4.0 in `status_lib.php` — weil der Menuezaehler dieselbe
+ * DIESE DATEI ZEICHNET NUR. Was gemessen und wie es bewertet wird, steht
+ * in `status_lib.php` — weil der Menuezaehler dieselbe
  * Antwort braucht und ein Zaehler, der seine eigene Rechnung anstellt,
  * frueher oder spaeter etwas anderes sagt als die Seite, auf die er fuehrt.
  * Die Ampeltabelle und die Begruendung dazu stehen dort.
@@ -33,16 +33,15 @@ require_once __DIR__ . '/mail_lib.php';
  * geaendert wird auf der zustaendigen Seite.
  *
  * EINE AUSNAHME fuehrt nicht weg, sondern prueft an Ort und Stelle:
- * „Testmail an mich" (Backlog Nr. 120, Web 19.3.0, freigegeben am
- * 12.09.2026). Sie aendert keinen Bestand, sie prueft — und es GIBT keine
+ * „Testmail an mich" (freigegeben). Sie aendert keinen Bestand, sie prueft —
+ * und es GIBT keine
  * zustaendige Seite, auf die man verweisen koennte: SMTP steht allein in der
  * `config.php` und hat keine Oberflaeche.
- * HIER STANDEN BIS WEB 21.1.0 „ZWEI AUSNAHMEN", die zweite der fehlende
- * Serverschluessel „mit demselben Knopf" — die Zeile verweist seit S10 aber
- * auf die Karte „Schluessel des Servers" (`betrieb_server.php#k-schluessel`,
- * status_lib.php), erzeugt wird hier nichts (Endzaehlung AP9, C-3). Wer eine
- * Ausnahme hinzufuegt oder wegnimmt, schreibt diesen Satz mit; sonst
- * beschreibt er eine Seite, die es nicht mehr gibt.
+ * Der fehlende Serverschluessel ist KEINE zweite Ausnahme: Die Zeile
+ * verweist auf die Karte „Schluessel des Servers"
+ * (`betrieb_server.php#k-schluessel`, status_lib.php), erzeugt wird hier
+ * nichts. Wer eine Ausnahme hinzufuegt oder wegnimmt, schreibt diesen Satz
+ * mit; sonst beschreibt er eine Seite, die es nicht gibt.
  *
  * WELCHE KARTE IN WELCHER SPALTE STEHT, entscheidet DIESE Datei: Das ist
  * Anordnung, keine Auskunft. Links Server und E-Mail, rechts Hintergrundjobs
@@ -61,15 +60,14 @@ function status_zeile(array $z): void
     ]);
 }
 
-/* DIE TESTMAIL (Backlog Nr. 120).
+/* DIE TESTMAIL.
  *
  * DIE TESTMAIL IST DIE AUSNAHME VON „REIN LESEND". Freigegeben am
  * 12.09.2026: Sie fuehrt nicht weg, sondern prueft an Ort und Stelle. Fuer
  * SMTP gibt es ausserdem gar keine Seite, auf die man verweisen koennte — es
  * steht nur in der `config.php` und hat keine Oberflaeche. Der Kopf dieser
  * Datei und das Handbuch (12.1) sagen es; eine Zusage, die die Seite nicht
- * mehr beschreibt, waere schlimmer als keine. (Hier stand bis Web 21.1.0
- * „die zweite Ausnahme" und die Karte „Was hier gilt" — beide sind fort.)
+ * mehr beschreibt, waere schlimmer als keine.
  *
  * DER ZWEIG STEHT VOR `status_karten()`. Sonst zeigt die Zeile „Letzter
  * Versand" den Stand von VOR dem Versand: `smtp_send()` vermerkt ihn selbst
@@ -88,20 +86,17 @@ function status_zeile(array $z): void
  *    gezeigt werden soll — `mail_einreihen()` versucht die Zeile sofort,
  *    mit `MAIL_BUDGET_S` = 5 s.
  *
- *    HIER STAND BIS WEB 20.8.0 EINE RECHNUNG, DIE STIMMTE — und ein Limit,
- *    das sie nur abmilderte: „bei 15 s koennte ein haengender Mailserver die
- *    Seite ueber zwei Minuten halten, weil jeder Protokollschritt sein
- *    eigenes Limit hat." Das war richtig beobachtet und an der falschen
- *    Stelle behoben: Diese Datei setzte 5 s, die uebrigen neun Aufrufstellen
- *    blieben bei 15 s — darunter der Aufraeumjob, der HUCKEPACK auf der
+ *    Bei 15 s je Protokollschritt koennte ein haengender Mailserver die
+ *    Seite ueber zwei Minuten halten, weil jeder Schritt sein eigenes Limit
+ *    hat. Das gehoert nicht hier behoben, sondern fuer alle zehn
+ *    Aufrufstellen — darunter der Aufraeumjob, der HUCKEPACK auf der
  *    Anfrage einer Unbeteiligten laeuft.
  *
- *    `smtp_send()` rechnet seit Web 20.8.0 mit einer FRIST statt einer Dauer
- *    (P5a/AP5). Gemessen gegen ein Relais mit 26 s Lesezeit: 5 s Limit
- *    ergaben vorher 31,06 s und ergeben jetzt 5,00 s; 15 s ergaben 41,07 s
- *    und ergeben 15,00 s. Und das Limit steht seither NICHT MEHR HIER,
- *    sondern einmal in `mail_lib.php` — genau die Verteilung auf zehn
- *    Aufrufstellen, aus der der Fehler entstand, gibt es nicht mehr.
+ *    `smtp_send()` rechnet mit einer FRIST statt einer Dauer.
+ *    Gemessen gegen ein Relais mit 26 s Lesezeit: 5 s Limit
+ *    ergeben 5,00 s statt 31,06 s mit einer Dauer; 15 s ergeben 15,00 s
+ *    statt 41,07 s. Und das Limit steht NICHT HIER, sondern einmal in
+ *    `mail_lib.php` — nicht verteilt auf zehn Aufrufstellen.
  * 3. KEIN `antwort_abschliessen()`. Die uebrigen Verwender entkoppeln den
  *    Versand oder verwerfen sein Ergebnis — hier ist das Ergebnis der Zweck.
  *
@@ -114,12 +109,12 @@ function status_zeile(array $z): void
  *
  * NICHT PROTOKOLLIERT WIRD DIE EMPFAENGERADRESSE: `smtp.php` fuehrt
  * ausdruecklich kein Protokoll ueber Mailempfaenger, und diese Zusage bleibt
- * — seit E-P5a-37 haelt sie auch die Fehlermeldung ein, die bis dahin
- * „Versand an <Adresse> fehlgeschlagen" schrieb. Die Adresse steht in der
+ * — auch die Fehlermeldung haelt sie ein; sie nennt nicht
+ * „Versand an <Adresse> fehlgeschlagen". Die Adresse steht in der
  * Warteschlange, solange die Zeile offen oder unzustellbar ist; das ist der
  * Ort dafuer, nicht das Protokoll (Reiter System).
  *
- * UMLEITEN NACH DEM POST (Web 21.1.9, Backlog Nr. 250): Ein Versand endet mit
+ * UMLEITEN NACH DEM POST: Ein Versand endet mit
  * `flash_setzen()` und einer Umleitung in die Karte „E-Mail" — sonst
  * verschickt Neuladen eine zweite Testmail und zaehlt sie mit. Das gilt fuer
  * alle drei Ausgaenge, weil der Zaehler schon davor steht. „Kein SMTP" und
@@ -184,18 +179,18 @@ ui_seite_start(['titel' => 'Status']);
       'titel' => 'Status',
       'unter' => 'Was diese Installation gerade meldet — geändert wird auf der '
                . 'Seite, auf die die Zeile führt.',
-      /* ZWEI HANDLUNGEN NEBEN DEM TITEL, seit P5a/AP8 die Unterseite
-         „Sicherheit" dazugekommen ist. `ui_aktionen()` ist der Baustein fuer
+      /* ZWEI HANDLUNGEN NEBEN DEM TITEL, mit der Unterseite
+         „Sicherheit". `ui_aktionen()` ist der Baustein fuer
          Handlungen DER SEITE; die Titelzeile reicht ihr Markup durch. Die
          Unterseite steht bewusst NICHT als achtzehnter Eintrag in der
-         Leiste (E-P5a-08) — sie haengt an Status, und hier ist der Weg
+         Leiste — sie haengt an Status, und hier ist der Weg
          dorthin. */
       /* OHNE SYMBOL, und das ist eine Entscheidung. Der Vorrat haette
          `schloss` — aber das Zeichen ist in dieser Anwendung schon zweifach
          belegt: Es traegt die Zusage „Ende-zu-Ende-verschluesselt"
          (`CLAUDE.md` 4) und auf dem Geraete-Reiter den Zustand „aktiv". Eine
-         dritte Bedeutung waere genau die Verwechslungsgefahr, wegen der
-         Mockup 13 fuenf neue Zeichen bekommen hat. Ein NEUES Zeichen braucht
+         dritte Bedeutung waere genau die Verwechslungsgefahr, die neue
+         Zeichen vermeiden sollen. Ein NEUES Zeichen braucht
          eine Freigabe; der Knopf braucht keins. */
       'aktionen' => ui_knopf(['text' => 'Sicherheit',
                               'art' => 'neutral', 'href' => 'betrieb_sicherheit.php'])
@@ -206,11 +201,9 @@ ui_seite_start(['titel' => 'Status']);
   <?= wartung_balken() ?>
 
   <?php
-  /* DIE MELDUNG OBEN ZAEHLT, WAS DIE KARTEN GEFUNDEN HABEN. Bis Web 15.3.3
-     entstand sie zuletzt und wurde ueber einen Puffer nach vorn geschoben —
-     die Zeilen kannten ihren Ton erst beim Zeichnen. Seit die Erhebung in
-     `status_lib.php` steht, liegt die Zahl vor dem ersten Zeichen fest; der
-     Puffer ist damit fort. */
+  /* DIE MELDUNG OBEN ZAEHLT, WAS DIE KARTEN GEFUNDEN HABEN. Die Erhebung
+     steht in `status_lib.php`; die Zahl liegt damit vor dem ersten Zeichen
+     fest, und es braucht keinen Puffer, der sie nach vorn schiebt. */
   if ($z['rot'] > 0 || $z['orange'] > 0) {
       $teile = [];
       if ($z['rot'] > 0)    { $teile[] = $z['rot'] . ($z['rot'] === 1 ? ' Punkt arbeitet nicht' : ' Punkte arbeiten nicht'); }
@@ -237,7 +230,7 @@ ui_seite_start(['titel' => 'Status']);
   <div class="form-spalte">
     <?php foreach (['k-server', 'k-mail'] as $id): $k = $nach($id); ?>
       <?php /* DIE KOPFAKTION HAENGT AN DER KARTE, NICHT AN EINER ZEILE
-               (Backlog Nr. 120, freigegeben 12.09.2026). Sie gehoert der
+               (freigegeben 12.09.2026). Sie gehoert der
                Karte E-Mail als Ganzes: Geprueft wird der Versand, und den
                beschreiben beide Zeilen zusammen. Damit bleibt `status_lib.php`
                unberuehrt — die Datei sagt in ihrem Kopf, dass sie misst und
@@ -282,8 +275,8 @@ ui_seite_start(['titel' => 'Status']);
   </div><?php /* .form-spalte (rechts) */ ?>
   </div><?php /* .form-raster */ ?>
 
-  <?php /* DIE PLATTFORM STEHT UEBER DIE GANZE BREITE UND NICHT IN EINER SPALTE
-           (P5a/AP2). Sie hat mehr Zeilen als die vier anderen Karten zusammen
+  <?php /* DIE PLATTFORM STEHT UEBER DIE GANZE BREITE UND NICHT IN EINER SPALTE.
+           Sie hat mehr Zeilen als die vier anderen Karten zusammen
            — in einer Spalte machte sie das Raster so schief, dass die rechte
            Spalte auf halber Hoehe endete. Ueber die ganze Breite ist sie
            ausserdem das, was sie ist: die Auskunft UNTER der Anwendung, nicht
@@ -302,7 +295,7 @@ ui_seite_start(['titel' => 'Status']);
     <?php foreach ($kp['zeilen'] as $zeile) { status_zeile($zeile); } ?>
   <?php ui_karte_ende(true); ?>
 
-  <?php /* DIE LESEKARTE DER config.php (R17-26, E-R17-72 (1)). Gebaut wie die
+  <?php /* DIE LESEKARTE DER config.php. Gebaut wie die
            Plattform darueber — eingeklappt, Zeilen mit Plakette, kein neuer
            Baustein. Sie LIEST nur; Geheimnisse stehen als „gesetzt" oder
            „leer" da, die Liste und ihre Begruendung stehen in
@@ -316,17 +309,16 @@ ui_seite_start(['titel' => 'Status']);
     <?php foreach (status_konfig_zeilen() as $zeile) { status_zeile($zeile); } ?>
   <?php ui_karte_ende(true); ?>
 
-  <?php /* ---- Betriebsprotokoll: eine Zaehlkarte (P5b/AP1, P5c/AP2) -------
+  <?php /* ---- Betriebsprotokoll: eine Zaehlkarte -------
      *
      * WARUM HIER NUR ZAHLEN STEHEN UND KEINE EINTRAEGE. Die Eintraege stehen
-     * seit P5c/AP2 unter Verwaltung → Protokoll, mit Reitern, Suche und
+     * unter Verwaltung → Protokoll, mit Reitern, Suche und
      * Archiv; jede Zeile hier fuehrt auf ihren Reiter. Diese Karte bleibt
-     * der Beleg, dass geschrieben wird — und zaehlt seither ueber dieselben
-     * Quellen wie die Seite, also auch E-Mail, Jobs und Ziele, die bis dahin
-     * auf null standen (E-P5c-38).
+     * der Beleg, dass geschrieben wird — und zaehlt ueber dieselben
+     * Quellen wie die Seite, also auch E-Mail, Jobs und Ziele.
      *
      * DIE FEHLERZEILE IST DER EIGENTLICHE ZWECK. Ein Protokoll, dessen
-     * Schreiben scheitert, laesst die Handlung weiterlaufen (V7) — richtig
+     * Schreiben scheitert, laesst die Handlung weiterlaufen — richtig
      * so, aber dann muss es jemandem auffallen. Hier faellt es auf.
      * ------------------------------------------------------------------- */ ?>
   <?php require_once __DIR__ . '/protokoll_lib.php';
@@ -356,14 +348,14 @@ ui_seite_start(['titel' => 'Status']);
           'plakette' => $pz['tag'][$r] . ' heute · ' . $pz['gesamt'][$r] . ' gesamt',
           'ton'   => $pz['gesamt'][$r] > 0 ? 'blau' : 'neutral']); ?>
     <?php endforeach; ?>
-  <?php /* OHNE `true` (P5c/AP9, F-P5c-140): Die Karte ist weder zugeklappt
+  <?php /* OHNE `true`: Die Karte ist weder zugeklappt
            noch hat sie eine Vorschau, sie oeffnet also ein <section>. Bis Web
            21.0.0 stand hier `ui_karte_ende(true)` und schloss mit </details> —
            der Browser liess das <section> offen, und die folgende Karte
            rutschte hinein. */ ?>
   <?php ui_karte_ende(); ?>
 
-  <?php /* DIE KARTE „WAS HIER GILT" IST MIT P5c/AP9 ENTFALLEN (E-P5c-49): Die
+  <?php /* KEINE KARTE „WAS HIER GILT": Die
            Ampel, die zwei Ausnahmen und das Alter der Zahlen stehen im
            Handbuch 12.1. */ ?>
 

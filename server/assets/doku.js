@@ -1,5 +1,5 @@
 /**
- * Das Inhaltsverzeichnis der Dokumentseite (P5b/AP8, M-P5b-01).
+ * Das Inhaltsverzeichnis der Dokumentseite.
  *
  * Zwei Dinge, mehr nicht: Das Suchfeld filtert die Liste, und der Abschnitt,
  * den man gerade liest, wird hervorgehoben.

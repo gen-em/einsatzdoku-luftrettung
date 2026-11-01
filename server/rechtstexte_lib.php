@@ -2,7 +2,7 @@
 declare(strict_types=1);
 
 /**
- * Impressum und Datenschutzerklärung — Ablage und Darstellung (R32, P3/O10).
+ * Impressum und Datenschutzerklärung — Ablage und Darstellung.
  *
  * DIE ANWENDUNG LIEFERT KEINEN RECHTSTEXT MIT. Was darin steht, ist Sache des
  * Betreibers dieser Installation; wir stellen nur die beiden Seiten, den
@@ -13,7 +13,7 @@ declare(strict_types=1);
  * WARUM EIN EIGENER RENDERER UND KEINE BIBLIOTHEK. Das Projekt hat keine
  * composer.json und keinen Autoloader; unter `assets/vendor/` liegt
  * ausschließlich Browser-JavaScript. Eine PHP-Bibliothek hätte hier keinen
- * Ort — und der Umfang, den E-P3-38 verlangt (Überschriften, Absätze, Listen,
+ * Ort — und der Umfang, den die Seiten brauchen (Überschriften, Absätze, Listen,
  * Links), ist klein genug, dass eine eigene Fassung überschaubarer bleibt als
  * die Konfiguration einer fremden.
  *
@@ -31,15 +31,15 @@ declare(strict_types=1);
  * sagt es ausdrücklich.
  */
 
-/* `zahl_text()` fuer die Zeichenzahlen in den Pruefmeldungen (Schritt 15 AP7).
+/* `zahl_text()` fuer die Zeichenzahlen in den Pruefmeldungen.
  * AUSDRUECKLICH eingebunden, auch wenn die Ladekette sie mitbraechte. */
 require_once __DIR__ . '/format_lib.php';
 
 /**
  * Die Dokumente: Schlüssel => Überschrift der Seite.
  *
- * SEIT P5b/AP4 SIND ES VIER. Nutzungsbedingungen und die Vereinbarung zur
- * Auftragsverarbeitung kommen mit den Einwilligungen dazu (E-P5b-05, -15):
+ * ES SIND VIER. Nutzungsbedingungen und die Vereinbarung zur
+ * Auftragsverarbeitung gehoeren zu den Einwilligungen:
  * Beide werden bei der Registrierung **angenommen**, beide sperren bei einer
  * neuen Fassung den nächsten Login. Die Datenschutzerklärung wird dagegen
  * nur **zur Kenntnis genommen** — der Wortlaut trägt den rechtlichen
@@ -54,7 +54,7 @@ const RT_TEXTE = [
     'datenschutz'         => 'Datenschutzerklärung',
     'nutzungsbedingungen' => 'Nutzungsbedingungen',
     /* DER RECHTSBEGRIFF, NICHT DIE KURZFORM (Gestaltungsvorgabe des
-     * Auftraggebers vom 17.09.2026, Konzept P5b Abschnitt 6, Punkt 4).
+     * Auftraggebers).
      * „Vereinbarung zur Auftragsverarbeitung" ist der Ausdruck aus
      * Art. 28 DSGVO; „Datenschutzvereinbarung" waere mit der
      * Datenschutzerklaerung verwechselbar, und „Auftragsverarbeitung"
@@ -92,7 +92,7 @@ const RT_LEERTEXT = [
 ];
 
 /**
- * Welche Dokumente eine Einwilligung verlangen — und welcher Art (E-P5b-05).
+ * Welche Dokumente eine Einwilligung verlangen — und welcher Art.
  *
  * `annahme` sperrt den nächsten Login, bis die aktuelle Fassung angenommen
  * ist. `kenntnis` zeigt einen Hinweis, der mit demselben Häkchen quittiert
@@ -107,20 +107,17 @@ const RT_EINWILLIGUNG = [
     /* DREI SCHLUESSEL JE EINTRAG, UND JEDER HAT SEINEN EIGENEN ZWECK:
      *
      *   `art`   entscheidet die WIRKUNG — `annahme` sperrt den naechsten
-     *           Login, `kenntnis` zeigt nur einen Hinweis (E-P5b-05).
+     *           Login, `kenntnis` zeigt nur einen Hinweis.
      *   `wort`  ist die Kurzform fuer das PROTOKOLL und fuer die
      *           Kontoseite: „angenommen" gegen „zur Kenntnis genommen".
      *   `vorn`/`hinten` sind der SATZ AM HAEKCHEN, mit dem verlinkten
      *           Titel dazwischen.
      *
-     * WARUM DER SATZ IM PRAESENS STEHT. Bis Web 20.22.1 baute das Markup
-     * ihn selbst zusammen: „Ich habe die Nutzungsbedingungen angenommen."
-     * Das ist die Aussage ueber eine Vergangenheit, die es nicht gibt —
-     * angenommen wird in dem Augenblick, in dem der Haken gesetzt und das
-     * Formular abgeschickt wird. Eine Erklaerung, die sich auf einen
-     * frueheren Zeitpunkt beruft, erklaert nichts; der Auftraggeber hat es
-     * am 17.09.2026 angemerkt, und das Mockup M-P5b-02a hatte es von
-     * Anfang an richtig.
+     * WARUM DER SATZ IM PRAESENS STEHT. „Ich habe die Nutzungsbedingungen
+     * angenommen." waere die Aussage ueber eine Vergangenheit, die es nicht
+     * gibt — angenommen wird in dem Augenblick, in dem der Haken gesetzt und
+     * das Formular abgeschickt wird. Eine Erklaerung, die sich auf einen
+     * frueheren Zeitpunkt beruft, erklaert nichts.
      *
      * UND WARUM ER HIER STEHT UND NICHT IM MARKUP: Er steht an ZWEI
      * Stellen — auf der Registrierungsseite und am Einwilligungstor. Zwei
@@ -329,7 +326,7 @@ function rt_saeubern(string $t): string
  * werden muss, und sie lässt sich einzeln durchspielen — siehe
  * `tools/proben/rechtstexte/`.
  *
- * WAS SIE KENNT (E-P3-38, mehr nicht):
+ * WAS SIE KENNT (mehr nicht):
  *   `#` und `##`  →  <h2>          (die Seite hat ihr <h1> aus der Titelzeile)
  *   `###`         →  <h3>
  *   `- ` / `* `   →  <ul><li>
@@ -338,7 +335,7 @@ function rt_saeubern(string $t): string
  *   [Text](Ziel)  →  <a href="Ziel">Text</a>, wenn das Ziel erlaubt ist
  *
  * WAS SIE NICHT KENNT, UND WARUM:
- *   **fett**, *kursiv*  — E-P3-38 nennt sie nicht. Jede Erweiterung ist eine
+ *   **fett**, *kursiv*  — nicht vorgesehen. Jede Erweiterung ist eine
  *                         Vertragsänderung, keine Formatierung.
  *   ![Bild](url)        — holte eine fremde Quelle zur Laufzeit und bräche
  *                         damit eine feste Zusage des Projekts (CLAUDE.md §4).
@@ -474,7 +471,7 @@ function rt_stand_markup(?string $stand): string
     if ($stand === null || $stand === '') { return ''; }
     $ts = strtotime($stand);
     if ($ts === false) { return ''; }
-    /* MIT ZEITSTEMPEL, deshalb kein `datum_text()` (Schritt 15 AP7, benannte
+    /* MIT ZEITSTEMPEL, deshalb kein `datum_text()` (benannte
      * Ausnahme): `$stand` ist ein KALENDERTAG aus dem Editor, keine UTC-Marke.
      * `strtotime()` legt ihn auf Mitternacht der php.ini-Zone, `date()` liest
      * ihn in derselben Zone zurueck — der Tag bleibt der Tag. `datum_text()`

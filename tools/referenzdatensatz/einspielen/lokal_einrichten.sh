@@ -12,7 +12,7 @@
 #
 # WAS ES NICHT NACHBAUT: den Browserschritt. Passwort, Salz, Inhalts-
 # schluessel, beide Schluesselhuellen und der Wiederherstellungsschluessel
-# entstehen ausschliesslich mit der WebCrypto des Browsers (E-P1-10). Dieses
+# entstehen ausschliesslich mit der WebCrypto des Browsers. Dieses
 # Skript ruft dafuer `passwort_setzen.mjs` -- den vorhandenen, geprueften
 # Weg -- und baut nichts nach.
 #
@@ -21,7 +21,7 @@
 #   admin@example.invalid / pruefstandzugang2026   kreislauf.py, aufnehmen.mjs
 #   demo@gen-em.org  / nadokudemo0815   Handbuch, aufnehmen.mjs, spurprobe
 #   bilderlauf-admin@probe.invalid, bilderlauf-support@probe.invalid
-#                    (pruefkonten.sh)       aufnehmen.mjs, seit R4-08
+#                    (pruefkonten.sh)       aufnehmen.mjs
 # Wer sie aendert, gibt sie jedem Werkzeug einzeln mit.
 #
 # Aufruf:  sh tools/referenzdatensatz/einspielen/lokal_einrichten.sh
@@ -62,7 +62,7 @@ curl -s --noproxy '*' --retry 20 --retry-delay 1 --retry-all-errors \
 
 echo "== 3. Formular-Token und Nachweis holen"
 # Der Nachweis steht im DATEINAMEN einer Datei, die install.php beim ersten
-# Aufruf in server/ anlegt (M1-11): Wer sie lesen kann, hat Zugriff auf das
+# Aufruf in server/ anlegt: Wer sie lesen kann, hat Zugriff auf das
 # Verzeichnis. Deshalb erst aufrufen, dann den Namen lesen.
 CSRF=$(curl -s --noproxy '*' -c "$JAR" "http://$ADRESSE/install.php" \
        | grep -o 'name="csrf" value="[0-9a-f]*"' | head -1 | sed 's/.*value="//;s/"//')
@@ -97,7 +97,7 @@ sh "$WURZEL/tools/referenzdatensatz/einspielen/lokal_starten.sh" >/dev/null
 
 echo "== 6. Admin-Passwort im Browser setzen"
 cd "$WURZEL/tools/referenzdatensatz/einspielen"
-# OHNE ROHRLEITUNG (Backlog Nr. 156). Hier stand `node ... | sed 's/^/   /'`.
+# OHNE ROHRLEITUNG. Hier stand `node ... | sed 's/^/   /'`.
 # /bin/sh ist dash, und der Rueckgabewert einer Rohrleitung ist der des
 # LETZTEN Glieds -- `sed` gelingt immer. Das `set -e` oben griff deshalb
 # nicht: Scheiterte das Setzen des Passworts, lief das Skript weiter und
@@ -128,14 +128,14 @@ echo "== 6a. Handbuch und Bilder nach server/doku kopieren"
 # DAS IST NICHT KOSMETIK: Der Bilderlauf meldete dafuer **48 Konsolenfehler**
 # (drei fehlende Bilder x 16 Breiten) und ging mit Rueckgabe 1 aus. Wer die
 # Zahl nicht zuordnen kann, sucht sie in der eigenen Aenderung. Gemessen am
-# 21.09.2026 in Schritt 15 AP2; nach dem Kopierschritt 0. Backlog Nr. 255.
+# 21.09.2026; nach dem Kopierschritt 0.
 mkdir -p "$SERVER/doku"
 cp "$WURZEL/docs/Handbuch.md" "$WURZEL/docs/Was-ist-NAdoku.md" "$SERVER/doku/"
 if [ -d "$WURZEL/docs/bilder" ]; then cp -r "$WURZEL/docs/bilder" "$SERVER/doku/"; fi
 echo "   Handbuch, Was-ist-NAdoku und $(ls "$WURZEL/docs/bilder" 2>/dev/null | wc -l) Bilder"
 
 echo "== 6b. Zweitfaktor des Pruefkontos mit bekanntem Geheimnis"
-# SEIT P5c/AP5 (E-P5c-43). Das Pruefkonto ist eine BetreiberIn, und fuer sie
+# Das Pruefkonto ist eine BetreiberIn, und fuer sie
 # ist der Zweitfaktor Pflicht: Ohne ihn landete jedes Werkzeug nach der
 # Anmeldung im Einrichtungstor. Das Geheimnis ist das der Sandbox; die
 # Rechner unter tools/zweitfaktor/ kennen es. Kein Schalter, der die Pflicht
@@ -143,8 +143,8 @@ echo "== 6b. Zweitfaktor des Pruefkontos mit bekanntem Geheimnis"
 php "$WURZEL/tools/zweitfaktor/pruefkonto.php" "$ADMIN"
 
 echo "== 6c. Pruefkonten der Rollen admin und support"
-# SEIT R4-08 (Nr. 297): Der Bilderlauf nimmt die reine Admin-Sicht und die
-# des Supports auf; bis dahin meldete sich seine Rolle `admin` als
+# Der Bilderlauf nimmt die reine Admin-Sicht und die
+# des Supports auf; ohne sie meldete sich seine Rolle `admin` als
 # BetreiberIn an. Dasselbe Skript ruft `hochfahren.sh` bei jedem Start.
 sh "$WURZEL/tools/referenzdatensatz/einspielen/pruefkonten.sh"
 

@@ -1,6 +1,5 @@
 /**
  * Die Konto-Rückfrage — „Hast du dein Notfallblatt noch?"
- * (P5b/AP9, E-P5b-09, -19, -20; Mockup M-P5b-02c, Teil 1).
  *
  * ===========================================================================
  * EIN DIALOG, DREI ABSCHNITTE, EIN EINZIGER ZUSTAND
@@ -47,7 +46,7 @@
 (function () {
   'use strict';
 
-  /* ZWEI VERBRAUCHER, EIN SKRIPT (E-P5b-20, R83).
+  /* ZWEI VERBRAUCHER, EIN SKRIPT.
    *
    *   `[data-rueckfrage]`  der Dialog nach der Anmeldung — mit Abschnitt 1
    *                        (der Frage), geht beim Laden von selbst auf und
@@ -97,28 +96,24 @@
    * Anmelden wieder, und das ist die richtige Richtung für einen Fehler
    * dieser Art.
    *
-   * DER SENDER IST `EdApi.postForm` (Schritt 15 AP8, Zaehlzeile Z29). Er
-   * setzt `csrf`, `credentials` und die Kopfzeile selbst und WIRFT NIE --
-   * deshalb steht hier kein `catch` mehr. Kein `o.vorgang` und keine
+   * DER SENDER IST `EdApi.postForm` (Zaehlzeile Z29). Er setzt `csrf`,
+   * `credentials` und die Kopfzeile selbst und WIRFT NIE -- deshalb steht
+   * hier kein `catch`. Kein `o.vorgang` und keine
    * Anzeige: Die Stille dieser Stelle ist gewollt, siehe oben.
    *
-   * WARUM DAS PROTOKOLL AN `daten === null` HAENGT UND NICHT AN `!ok`. Es
-   * soll genau die Faelle melden, die frueher das `catch` erreichten, und
-   * das waren zwei: ein abgebrochenes `fetch` UND eine Antwort, die kein
-   * JSON war. Der zweite ist der wichtigere -- eine leere Sitzung leitet
-   * `auth_guard.php` auch auf `/api/` nach `login.php` um, und dann kommt
-   * HTML mit HTTP 200 zurueck. An `!ok` gehaengt erschiene die Zeile
-   * zusaetzlich bei einer 403 oder 400 mit gueltigem JSON; das waere
-   * strenger als heute und damit eine Verhaltensaenderung. Dass diese
-   * beiden Antworten hier ungeprueft durchlaufen, ist ein Befund und in
-   * AP8 bewusst nicht behoben. */
+   * GEMELDET WIRD JEDER FEHLSCHLAG, nicht nur der ohne Antwort: ein
+   * abgebrochenes `fetch`, eine Antwort, die kein JSON war (eine leere
+   * Sitzung leitet `auth_guard.php` auch auf `/api/` nach `login.php` um,
+   * und dann kommt HTML mit HTTP 200), UND eine 400 oder 403 mit gueltigem
+   * JSON. Die Frist bleibt in allen Faellen faellig, und die Frage kommt
+   * wieder; die Konsole sagt, warum. Eine Anzeige gibt es weiterhin nicht. */
   let gemeldet = false;
   async function antworte(antwort) {
     gemeldet = true;
     if (!mitFrage) { return null; }
     const ergebnis = await EdApi.postForm('api/rueckfrage.php', { antwort: antwort });
-    if (ergebnis.daten === null) {
-      console.error('Rückfrage nicht gemeldet:', ergebnis.meldung);
+    if (!ergebnis.ok) {
+      console.error('Rückfrage nicht gemeldet:', ergebnis.status, ergebnis.meldung);
     }
     return ergebnis.daten;
   }
@@ -166,7 +161,7 @@
     melde('');
     erzeugen.disabled = true;
     try {
-      /* DIE KOMPONENTE (E-P5b-20, R83). Sie rechnet, prüft gegen
+      /* DIE KOMPONENTE. Sie rechnet, prüft gegen
        * `pat_key_check` und sendet; sie wirft mit einer Meldung, die man
        * anzeigen kann. Zwei Verbraucher haben sie: dieser Dialog und die
        * Kontoseite unter Einstellungen. */
@@ -177,7 +172,6 @@
         wrapPw:   PAT_WRAP,
         keyCheck: typeof PAT_KEY_CHECK !== 'undefined' ? PAT_KEY_CHECK : null,
         anteile:  typeof KONTO_ANTEILE !== 'undefined' ? KONTO_ANTEILE : null,
-        csrf:     typeof CSRF !== 'undefined' ? CSRF : '',
       });
 
       /* AB HIER IST DER ALTE SCHLÜSSEL UNGÜLTIG. Der Wert steht auf dem

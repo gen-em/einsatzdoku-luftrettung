@@ -1,7 +1,7 @@
 /* Wege der Seite Betrieb → Backup-Ziele (`admin_sicherungsziele.php`).
  * ===========================================================================
  *
- * Entstanden mit R4-11 (Backlog Nr. 250): Nach einer Handlung leitet die
+ * Nach einer Handlung leitet die
  * Seite um; Neuladen schickt nichts noch einmal — beim Speichern eines Ziels
  * hieße das: samt Passwort. Gespeichert wird der Versandschalter, wie er
  * steht — der Weg ändert nichts und braucht kein erreichbares Ziel.

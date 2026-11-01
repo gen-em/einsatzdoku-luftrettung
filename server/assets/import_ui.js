@@ -7,8 +7,8 @@
  * steckt in import.js, die Formatkenntnis in import_profiles.js.
  *
  * Erwartet aus der Seite: PAT_WRAP, KDF_SALT, KDF_ITER, CSRF, EdCrypto, EdUnlock,
- * EdApi, EdHtml, ImportCore, ImportProfile. Das CSRF-Token liest seit
- * Schritt 15 (AP8) EdApi selbst; diese Datei fasst es nicht mehr an.
+ * EdApi, EdHtml, ImportCore, ImportProfile. Das CSRF-Token liest EdApi
+ * selbst; diese Datei fasst es nicht an.
  */
 (function () {
     'use strict';
@@ -40,28 +40,25 @@
 
     // ------------------------------------------------------------- Anzeigen
 
-    /* Fehler und Warnungen als MELDUNGS-BAUSTEIN (E-P3-16, ab Web 9.7.2).
-     * Vorher waren beides graue `.alert`-Kästen — ein Fehler, der den Import
-     * verhindert, sah aus wie ein Hinweis zum Dateiformat. Der Text stammt
-     * teils aus der gelesenen Datei und wird deshalb maskiert.
+    /* Fehler und Warnungen als MELDUNGS-BAUSTEIN — ein Fehler, der den
+     * Import verhindert, darf nicht aussehen wie ein Hinweis zum
+     * Dateiformat. Der Text stammt teils aus der gelesenen Datei und wird
+     * deshalb maskiert.
      *
-     * Das Markup baut seit Schritt 15 (AP8) EdHtml.meldung() -- dieselbe
-     * Stelle wie ui_meldung_markup() in server/ui.php. Hier stand bis dahin
-     * ein eigener Nachbau mit einer eigenen Ton-Tabelle, die nur zwei Zweige
-     * kannte: alles ausser fehler/warn bekam das Hinweiszeichen. Fuer 'ok'
-     * war das falsch, und genau deshalb stand die Erfolgsmeldung der
-     * Uebernahme weiter unten von Hand ausgeschrieben da. */
+     * Das Markup baut EdHtml.meldung() -- dieselbe Stelle wie
+     * ui_meldung_markup() in server/ui.php, kein eigener Nachbau mit einer
+     * eigenen Ton-Tabelle. */
     function fehler(text) {
         var el = $('fehler');
         el.innerHTML = text ? EdHtml.meldung('fehler', text) : '';
         el.hidden = !text;
     }
 
-    /* Maskierung: eine Fassung fuer das ganze Projekt (B7, assets/html.js).
-     * Hier stand eine eigene Kopie, die das einfache Anfuehrungszeichen
-     * ausliess — folgenlos, solange jedes Attribut mit doppelten
+    /* Maskierung: eine Fassung fuer das ganze Projekt (assets/html.js).
+     * Keine eigene Kopie: Eine, die etwa das einfache Anfuehrungszeichen
+     * auslaesst, waere folgenlos, solange jedes Attribut mit doppelten
      * Anfuehrungszeichen geschrieben wird, und genau deshalb eine Falle fuer
-     * die naechste Aenderung (M6-03, M6-05). */
+     * die naechste Aenderung. */
     var esc = EdHtml.escape;
 
     // ------------------------------------------------------- Profil und Datei
@@ -101,9 +98,9 @@
     function passwortAbfragen(text) {
         return new Promise(function (aufloesen) {
             var d = document.createElement('dialog');
-            /* Dialog-Baustein aus P3/O2 — dieselben Klassen wie in confirm.js
-             * und ui.php (Stylesheet-Abschnitt 15). Das style-Attribut am
-             * Feld ist mit dem Baustein .feld-eingabe entfallen. */
+            /* Dialog-Baustein — dieselben Klassen wie in confirm.js
+             * und ui.php (Stylesheet-Abschnitt 15). Das Feld traegt den
+             * Baustein .feld-eingabe, kein style-Attribut. */
             d.className = 'dialog';
             d.innerHTML =
                 '<div class="dialog-inhalt"><p data-text></p>' +
@@ -243,7 +240,7 @@
 
     /**
      * Abgleich mit dem Bestand — dem Server gehen nur noch Datum und Uhrzeit
-     * hinaus, die Einsatznummer sieht er seit Web 2.9.0 nicht mehr (sie liegt
+     * hinaus, die Einsatznummer sieht er nicht (sie liegt
      * verschluesselt im pat_blob). Fuer den Abgleich ueber die Nummer liefert
      * 'check' je vorhandenem Einsatz zusaetzlich seinen pat_blob mit; der
      * Browser entschluesselt diese hier lokal und baut daraus den Index
@@ -293,10 +290,9 @@
         for (var tag in (d.days || {})) {
             if (!Object.prototype.hasOwnProperty.call(d.days, tag)) { continue; }
             var missions = d.days[tag].missions || [];
-            // Entschluesseln samt Fehlerbehandlung an einer Stelle (M6-06,
-            // Baustein B8). Ein Datensatz, der nicht zum Schluessel passt,
-            // liefert hier keine Einsatznummer — er wird uebersprungen, wie
-            // zuvor auch. Dass er unlesbar ist, faellt auf den Anzeigeseiten
+            // Entschluesseln samt Fehlerbehandlung an einer Stelle. Ein
+            // Datensatz, der nicht zum Schluessel passt, liefert hier keine
+            // Einsatznummer — er wird uebersprungen. Dass er unlesbar ist, faellt auf den Anzeigeseiten
             // auf; die Dublettenpruefung ist dafuer der falsche Ort.
             await EdPat.entschluessleListe(missions, ck);
             for (var i = 0; i < missions.length; i++) {
@@ -326,7 +322,7 @@
     }
 
     /* Rollenkatalog aus CREW_ROLES (server/db.php), von import.php gesetzt.
-     * Rueckfall: der Stand vor Web 6.0.0. */
+     * Rueckfall: die fuenf Flugrollen. */
     var ROLLEN = (typeof CREW_ROLLEN !== 'undefined' && CREW_ROLLEN.length)
         ? CREW_ROLLEN : ['p1', 'p2', 'hems', 'fr', 'other'];
     var LABELS = (typeof CREW_LABELS !== 'undefined' && CREW_LABELS)
@@ -350,14 +346,13 @@
 
     // ------------------------------------------------------------ Zeichnen
 
-    /* ---- Der Kopf einer Tagesgruppe (Mockup-Runde 9c, M-MR-01) ------------
+    /* ---- Der Kopf einer Tagesgruppe ---------------------------------------
      *
      * Drei kurze Bauer statt einer langen Zeichenkette. Der Grund ist nicht
      * Aesthetik: Die Kopfzeile entsteht an ZWEI Stellen — einmal fuer
-     * „Nicht zuordenbar", einmal je Diensttag —, und bis Web 19.3.1 hatte
-     * jede ihr eigenes Markup. Genau so hat die Gruppe „Nicht zuordenbar"
-     * ihre Zaehlung in Klammern behalten, waehrend die Tagesgruppen daneben
-     * mit Punkten gliederten.
+     * „Nicht zuordenbar", einmal je Diensttag. Mit eigenem Markup je Stelle
+     * liefen sie auseinander, etwa Zaehlung in Klammern hier, Gliederung
+     * mit Punkten dort.
      */
     function kopfzeile(spalten, inhalt) {
         return '<tr class="imp-daygroup"><td colspan="' + spalten + '">' +
@@ -370,12 +365,12 @@
     function plakette(ton, text) {
         return '<span class="plakette plakette-' + ton + '">' +
                edSymbol('warnung') + esc(text) + '</span>';
-        /* OHNE ZUSATZKLASSE: `symbol-klein` ist ein TOKEN, keine Klasse — der
-         * Aufruf hat bis Web 19.4.1 nichts bewirkt. Die Groesse kommt aus
+        /* OHNE ZUSATZKLASSE: `symbol-klein` ist ein TOKEN, keine Klasse — als
+         * Klasse bewirkte es nichts. Die Groesse kommt aus
          * `.plakette .symbol` (14 px), und die gilt fuer jede Plakette. */
     }
 
-    /* DATUM WIE UEBERALL SONST (F-MR-2). `t.day` ist ISO, weil die Datei es
+    /* DATUM WIE UEBERALL SONST. `t.day` ist ISO, weil die Datei es
      * so liefert und der Server es so speichert — in der Oberflaeche steht
      * es deutsch. EdPat.datumDe() ist dieselbe Funktion, die jede andere
      * Seite benutzt; patient.js liegt auf dieser Seite vor import_ui.js. */
@@ -452,9 +447,8 @@
             var b = (S.bestand && S.bestand.days[t.day]) || null;
             var konflikt = tagKonflikt(t);
             /* Kopfzeile der Tagesgruppe: die BELEGTEN Rollen, hoechstens drei.
-               Bis Web 5.10.0 standen hier fest „P1" und „HEMS" — mit sieben
-               Rollen waere das die falsche Auswahl, weil ein bodengebundener
-               Dienst beide gar nicht kennt. */
+               Fest „P1" und „HEMS" waere bei sieben Rollen die falsche
+               Auswahl, weil ein bodengebundener Dienst beide gar nicht kennt. */
             var belegt = ROLLEN.filter(function (r) { return t.crew[r]; }).slice(0, 3);
             var crewText = belegt.length
                 ? belegt.map(function (r) { return (LABELS[r] || r) + ' ' + t.crew[r]; }).join(', ')
@@ -495,14 +489,11 @@
     }
 
     function zeileHtml(z, dup, m) {
-        /* KEIN Klassenattribut mehr an der Vorschauzeile (PK-04/5e). Es trug
-         * `imp-row imp-<status>` und bei Bedarf `imp-dupe` und `imp-skipped` --
-         * fuenf Klassen, von denen KEINE eine Regel im Stylesheet hat und keine
-         * als Selektor gelesen wird. Der Zustand steht seit F-MR-1 in einer
-         * PLAKETTE (orange fuer die abweichende Crew, rot fuer „nicht
+        /* KEIN Klassenattribut an der Vorschauzeile. Der Zustand steht in
+         * einer PLAKETTE (orange fuer die abweichende Crew, rot fuer „nicht
          * zuordenbar"), nicht in der Zeilenfarbe; gefiltert wird ueber
-         * `z.status` und `dublette(m)`, nicht ueber CSS. Uebrig blieb ein
-         * Attribut, das niemand liest. */
+         * `z.status` und `dublette(m)`, nicht ueber CSS. Eine Klasse waere
+         * ein Attribut, das niemand liest. */
         var hinweise = z.issues.map(function (i) { return i.spalte + ': ' + i.text; }).join(' | ');
         return '<tr' + (hinweise ? ' title="' + esc(hinweise) + '"' : '') + '>' +
             '<td class="dash">' + z.srcRow + (m && m.crew_override ? ' <span title="abweichende Besatzung">*</span>' : '') + '</td>' +
@@ -546,7 +537,7 @@
             var lokal = (m.phasesLocal || {})[n] || null;
             if (!p && !lokal) { continue; }
             if (p && !p.at && !lokal && p.lat === null && p.lon === null) { continue; }
-            /* `lat`/`lon` gehen seit S11-05e nicht mehr an den Server — sie
+            /* `lat`/`lon` gehen nicht an den Server — sie
                wandern in die Einsatzhuelle (ortsdatenBauen), und der Server
                weist sie in der Nutzlast ab. Hier bleiben sie fuer die Huelle. */
             out.push({
@@ -577,23 +568,22 @@
     }
 
     /**
-     * DIE ORTSDATEN EINES EINSATZES, VERSCHLOSSEN (S11-05e, E-S11-51, -52).
+     * DIE ORTSDATEN EINES EINSATZES, VERSCHLOSSEN.
      *
-     * Bis Web 22.3.0 gingen Phasenorte, Reanimation, Transportziel samt
-     * Koordinate und Ortshöhe offen an den Server. Jetzt:
+     * Phasenorte, Reanimation, Transportziel samt Koordinate und Ortshöhe
+     * gehen nicht offen an den Server, sondern:
      *   - Transportziel und Ortshöhe in den pat_blob (`transport_dest`
-     *     {addr, lat, lon}, `ortshoehe`), wie das Formular seit S11-05b;
+     *     {addr, lat, lon}, `ortshoehe`), wie im Formular;
      *   - Phasenorte und Reanimation in die Einsatzhülle, mit den Zeiten
-     *     relativ zum Beginn (E-S11-40).
+     *     relativ zum Beginn.
      * Die Zeiten rechnet der Browser nach denselben Regeln wie der Server
      * (Bezugstag der Alarmzeit, `local` auf dem Diensttag, automatische
      * Phase 2) und schickt die fertige Phasenliste mit; der Server vergleicht
      * sie mit dem, was er schreibt (Wächter wie im Formular).
      *
-     * ÜBERSCHREIBEN FÜHRT ZUSAMMEN (Betreiberin, 16.10.2026, E-S11-52): Was
-     * die Datei nicht nennt, bleibt — Orte der Phasen (je Phasennummer der
-     * Reihe nach), die Reanimation, und im Blob jeder Eintrag. (Bis
-     * Web 22.7.0 zog dabei auch der Altbestand im Klartext mit um.)
+     * ÜBERSCHREIBEN FÜHRT ZUSAMMEN: Was die Datei nicht nennt, bleibt — Orte
+     * der Phasen (je Phasennummer der Reihe nach), die Reanimation, und im
+     * Blob jeder Eintrag.
      *
      * @param {Object} m      die Zeile aus der Datei
      * @param {Object} aus    der Eintrag der Nutzlast (wird ergänzt)
@@ -745,7 +735,7 @@
         for (i = 0; i < S.tage.length; i++) {
             t = S.tage[i];
             vorhanden = (S.bestand && S.bestand.days[t.day]) || null;
-            // Besatzung als Objekt role_code => name (E7), nicht als
+            // Besatzung als Objekt role_code => name, nicht als
             // Spaltensatz. Leere Rollen bleiben draussen: `day_crew` bekommt
             // seine Zeilenmenge aus dem Rettungsmittel, nicht aus der Datei.
             var crewObj = {};
@@ -784,7 +774,7 @@
                 }
                 if (m.pat.dx) { pat.dx = m.pat.dx; }
                 if (m.pat.site_desc) { pat.site_desc = m.pat.site_desc; }
-                // Notizen des Einsatzes (S9/AP7) — verschluesselt wie alles
+                // Notizen des Einsatzes — verschluesselt wie alles
                 // andere hier; die Zeilenumbrueche bleiben unangetastet.
                 if (m.pat.notes) { pat.notes = m.pat.notes; }
                 if (m.pat.loc && (m.pat.loc.addr || m.pat.loc.lat !== undefined)) {
@@ -794,7 +784,7 @@
                     if (typeof m.pat.loc.lon === 'number') { pat.loc.lon = m.pat.loc.lon; }
                     if (!Object.keys(pat.loc).length) { delete pat.loc; }
                 }
-                // Manueller Abfahrtort (Web 6.1.0) — gleicher Aufbau wie `loc`,
+                // Manueller Abfahrtort — gleicher Aufbau wie `loc`,
                 // eigener Schluessel `start`. Nur er liegt im Blob; die REGEL
                 // daneben (start_src) ist Klartext.
                 if (m.pat.start && (m.pat.start.addr || m.pat.start.lat !== undefined)) {
@@ -828,7 +818,7 @@
                        laege dann 24 Stunden zu frueh (F-P1-K). */
                     date_local: m.einsatzdatum || null,
                     started_local: m.alarm,
-                    /* `transport_dest` liegt seit S11-05e im pat_blob. */
+                    /* `transport_dest` liegt im pat_blob. */
                     winch: m.winch ? 1 : 0,
                     resources: m.resources || [],
                     crew_override: m.crew_override ? 1 : 0,
@@ -844,11 +834,11 @@
                     }()),
                     pat_blob: blob,
 
-                    // Ab Web 2.10.0: Felder, die nur der Rueckimport der
-                    // eigenen Exportformate liefert. Profile, die sie nicht
-                    // kennen, senden hier ueberall null/0 — der Server setzt
-                    // dann dieselben Werte wie vor dieser Version.
-                    /* `site_ele_m` liegt seit S11-05e im pat_blob (`ortshoehe`). */
+                    // Felder, die nur der Rueckimport der eigenen
+                    // Exportformate liefert. Profile, die sie nicht kennen,
+                    // senden hier ueberall null/0 — der Server setzt dann
+                    // seine Vorgabewerte.
+                    /* `site_ele_m` liegt im pat_blob (`ortshoehe`). */
                     distance_m: nummerOderNull(m.distance_m),
                     ascent_m: nummerOderNull(m.ascent_m),
                     schockraum: m.schockraum ? 1 : 0,
@@ -860,17 +850,17 @@
                     bw_unit: m.bw_unit || null,
                     bw_info: m.bw_info || null,
                     other_ema: m.other_ema || null,
-                    /* `notes` faellt aus der Nutzlast (S9/AP7): Der Text steht
+                    /* `notes` faellt aus der Nutzlast: Der Text steht
                        im `pat_blob` oben. Wer ihn hier wieder einfuegte,
                        schickte ihn im Klartext an den Server. */
 
-                    // Ab Web 6.1.0: Transportart, Fehleinsatz,
-                    // Zielklinik-Koordinate und Abfahrtortregel (E17/E34/E37).
+                    // Transportart, Fehleinsatz, Zielklinik-Koordinate und
+                    // Abfahrtortregel.
                     transport_mode: m.transport_mode || null,
                     na_escort: m.na_escort ? 1 : 0,
                     false_alarm: m.false_alarm ? 1 : 0,
                     /* Zielkoordinate im pat_blob, Phasenorte und Reanimation
-                       in der Einsatzhuelle (S11-05e). */
+                       in der Einsatzhuelle. */
                     start_src: m.start_src || null,
 
                     phases: eintrag.phases,
@@ -880,7 +870,7 @@
                 });
 
                 /* `ended_utc` und `final`: NUR, WENN DIE DATEI DIE SPALTE
-                 * FUEHRT (Backlog Nr. 28).
+                 * FUEHRT.
                  *
                  * Der Unterschied ist der ganze Punkt. Ein WEGGELASSENES Feld
                  * heisst „die Datei sagt dazu nichts" — der Server bleibt beim
@@ -889,11 +879,11 @@
                  * heisst „die Zelle ist leer" — und ein leeres Ende ist eine
                  * Aussage: Der Einsatz ist nicht abgeschlossen.
                  *
-                 * Bis Web 7.3.1 ging `ended_utc: m.ended || null` immer
-                 * hinaus, und beide Faelle sahen serverseitig gleich aus. Ein
-                 * nicht abgeschlossener Einsatz kam deshalb mit Ende = Beginn
-                 * und final = 1 zurueck — im Ueberschreiben-Modus auch dann,
-                 * wenn er im Bestand richtig stand (Fund F-P1-M). */
+                 * Ginge `ended_utc: m.ended || null` immer hinaus, saehen
+                 * beide Faelle serverseitig gleich aus. Ein nicht
+                 * abgeschlossener Einsatz kaeme dann mit Ende = Beginn und
+                 * final = 1 zurueck — im Ueberschreiben-Modus auch dann,
+                 * wenn er im Bestand richtig stand. */
                 var letzte = missionen[missionen.length - 1];
                 if (fuehrt('ended')) { letzte.ended_utc = m.ended || null; }
                 if (fuehrt('final')) { letzte.final = m.final ? 1 : 0; }
@@ -915,7 +905,7 @@
         try {
             S.nutzlast = await baueNutzlast();
         } catch (e) {
-            /* Eine Zeile, deren Ortsdaten sich nicht bauen lassen (S11-05e):
+            /* Eine Zeile, deren Ortsdaten sich nicht bauen lassen:
                Der Import bleibt gesperrt, und der Satz sagt, welche. */
             S.nutzlast = null;
             $('bereit').innerHTML = EdHtml.meldung('fehler', e.message || String(e));
@@ -960,22 +950,20 @@
          * unbequem: AB HIER IST DIE TRANSAKTION DURCH. Der Server hat
          * geschrieben, der Vorgang ist nicht mehr rueckgaengig zu machen.
          *
-         * Bis Schritt 15 lag der ganze Rumpf in EINEM try, dessen catch
-         * sagte „... es wurde nichts gespeichert." -- und das war HIER
-         * bereits falsch. Beim Umbau auf EdApi fiel das try zunaechst ganz
-         * weg (EdApi wirft nicht mehr), und damit waere ein Fehler in der
-         * Anzeige eine unbehandelte Ablehnung geworden: Knopf gesperrt,
-         * Anzeige auf „Uebernahme laeuft", Daten gespeichert, niemand
-         * erfaehrt es. Gefunden beim Gegenlesen.
+         * Ein gemeinsames try mit dem Senden, dessen catch „... es wurde
+         * nichts gespeichert." sagt, waere HIER bereits falsch. Ganz ohne
+         * try (EdApi wirft nicht) waere ein Fehler in der Anzeige eine
+         * unbehandelte Ablehnung: Knopf gesperrt, Anzeige auf „Uebernahme
+         * laeuft", Daten gespeichert, niemand erfaehrt es.
          *
-         * Jetzt steht hier ein eigenes try mit einem Satz, der stimmt. */
+         * Deshalb steht hier ein eigenes try mit einem Satz, der stimmt. */
         try {
 
         /* Übersprungene und verworfene Werte AUFSCHLÜSSELN.
          *
          * „40 übersprungen" ist nicht deutbar: Es kann „alles war schon
-         * da" heißen (gut) oder „alles war kaputt" (schlecht). Vorher
-         * fielen vier verschiedene Ursachen in diese eine Zahl. */
+         * da" heißen (gut) oder „alles war kaputt" (schlecht). In diese
+         * eine Zahl fallen mehrere verschiedene Ursachen. */
         var ursachen = {
             bereits_vorhanden:    'bereits vorhanden',
             auswahl:              'von dir übersprungen',
@@ -992,17 +980,13 @@
             verworfen.push(esc(u) + ' (' + d.rejected[u] + '×)');
         }
 
-        /* Das Ergebnis als Meldung mit Haken (E-P3-16). DIE EINZIGE
+        /* Das Ergebnis als Meldung mit Haken. DIE EINZIGE
            STELLE MIT ROHEM MARKUP IM MELDUNGSTEXT: Der Bericht traegt
            einen Zeilenumbruch, eine Kleinzeile und einen Link auf den
            ersten Tag. Dafuer gibt es `roh: true` -- und dafuer sind die
            eingesetzten Werte oben EINZELN maskiert: esc(u),
            esc(teile.join(...)), esc(d.first_day_id). Wer hier einen Wert
-           ergaenzt, maskiert ihn beim Zusammenbauen, nicht hier.
-           Bis Schritt 15 (AP8) stand das Markup hier von Hand da, mit
-           edSymbol('haken') ausgeschrieben, weil die eigene Ton-Tabelle
-           dieser Datei fuer 'ok' den Kreis-i geliefert haette -- eine
-           Umgehung, und damit der Beweis fuer den Defekt. */
+           ergaenzt, maskiert ihn beim Zusammenbauen, nicht hier. */
         zustand.innerHTML = EdHtml.meldung('ok',
             'Fertig: ' + d.missions_inserted + ' Einsätze angelegt, '
             + d.missions_overwritten + ' überschrieben, ' + d.missions_skipped + ' übersprungen'
@@ -1012,14 +996,12 @@
                ? '<br><span class="feld-klein-inline">Einzelne Werte verworfen: '
                  + verworfen.join(', ') + '. Die Einsätze wurden trotzdem angelegt.</span>'
                : '')
-            /* KENNUNG STATT DATUM (Backlog Nr. 151). Hier stand
-               `index.php?day=<Kalendertag>`; gelesen wird `d`, und dort
-               erwartet die Startseite eine Diensttags-KENNUNG. Zweimal
-               falsch also — der Parametername UND die Form des Werts —,
-               und beides scheiterte STILL: `index.php` faellt auf
-               `dt_neuester()` zurueck und zeigte den juengsten Tag. Wer
-               nach einem Import klickte, landete auf einer plausibel
-               aussehenden Seite, die nicht die versprochene war. */
+            /* KENNUNG STATT DATUM. Gelesen wird `d`, und dort erwartet die
+               Startseite eine Diensttags-KENNUNG, keinen Kalendertag. Ein
+               falscher Parameter scheitert STILL: `index.php` faellt auf
+               `dt_neuester()` zurueck und zeigt den juengsten Tag. Wer
+               nach einem Import klickt, landete auf einer plausibel
+               aussehenden Seite, die nicht die versprochene ist. */
             + (d.first_day_id ? ' <a href="index.php?d=' + esc(d.first_day_id) + '">Ersten Tag öffnen</a>' : ''),
             { roh: true });
 
@@ -1066,7 +1048,7 @@
         $('vehsel').addEventListener('change', function () { bereitschaft(); });
         $('basesel').addEventListener('change', function () { bereitschaft(); });
 
-        /* Die Zeilenwahl ist seit Web 9.7.2 eine Segmentwahl (E-P3-35): drei
+        /* Die Zeilenwahl ist eine Segmentwahl: drei
          * Zustände, von denen genau einer gilt. Gehorcht wird `change` an der
          * Gruppe, nicht `click` an je einem Knopf — sonst löste die
          * Tastaturbedienung nichts aus, die der Browser bei Radios von selbst

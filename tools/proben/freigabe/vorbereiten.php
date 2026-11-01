@@ -14,7 +14,6 @@ declare(strict_types=1);
  *   pruefen  <json mit ziel-email>                   -> pat_blob im Zielkonto
  */
 $w = dirname(__DIR__, 3) . '/server';
-require_once $w . '/config.php';
 require_once $w . '/db.php';
 require_once $w . '/adminbackup_lib.php';
 
@@ -24,12 +23,12 @@ $pdo     = db();
 $MAIL    = 'probe-freigabe-quelle@example.invalid';
 
 /* Die Quelle MIT IHREN PAKETEN UND IHRER SPUR entfernen — ueber
- * `konto_loeschen()`, den Weg der Verwaltung (wie die Verbindungsprobe seit
- * F-R4-63). Bis RP ging nur die Zeile in `users` (F-RP-14: ein Ordner unter
- * `server/sicherungen/` blieb liegen), danach Ordner und Zeile. Ein DELETE
+ * `konto_loeschen()`, den Weg der Verwaltung (wie die Verbindungsprobe).
+ * Ging nur die Zeile in `users`, bliebe ein Ordner unter
+ * `server/sicherungen/` liegen. Ein DELETE
  * auf `users` nimmt Einsaetze per Kaskade mit, die Spurstuecke aber nicht:
- * Seit S11-12 (F-S11-98) laeuft diese Probe wieder bis zur Spur, und jeder
- * Lauf liess ein verwaistes Stueck zurueck, das die Jobprobe des naechsten
+ * Diese Probe laeuft bis zur Spur, und jeder
+ * Lauf liesse ein verwaistes Stueck zurueck, das die Jobprobe des naechsten
  * Laufs mitzaehlte („erledigt=8 (erwartet 7)"). */
 require_once $w . '/konto_lib.php';
 $quelleWeg = function () use ($pdo, $MAIL): void {
@@ -40,13 +39,12 @@ $quelleWeg = function () use ($pdo, $MAIL): void {
 
 if ($schritt === 'quelle') {
     $quelleWeg();
-    /* DER ZWECK DER FREIGABE IST „KONTO NEU AUFGESETZT" (R17-20, F-R17-02,
-     * E-R17-46): Seit Web 23.2.0 geht ein Paket nur an das Herkunftskonto
+    /* DER ZWECK DER FREIGABE IST „KONTO NEU AUFGESETZT": Ein Paket geht nur an das Herkunftskonto
      * oder an ein Konto mit derselben Adresse, wie sie in der Begleitdatei
      * steht. Die Probe stellt genau das nach: Die Quelle traegt beim Sichern
      * die Adresse des Zielkontos — das Zielkonto weicht dafuer kurz auf einen
      * Platzhalter aus (die Adresse ist eindeutig) —, danach gibt die Quelle
-     * sie ab und heisst wie bisher. Bis Web 23.1.0 ging die Freigabe an ein
+     * sie ab und heisst wie bisher. Frueher ging die Freigabe an ein
      * beliebiges Konto, und genau das war der Befund. */
     $zielAdresse = (string)$daten['ziel'];
     $zielId = (int)$pdo->query('SELECT id FROM users WHERE email = '
@@ -62,9 +60,9 @@ if ($schritt === 'quelle') {
                    bin2hex(random_bytes(8)), $daten['wrap'], $daten['check']]);
     $uid = (int)$pdo->lastInsertId();
     $kennung = (string)$pdo->query("SELECT account_key FROM users WHERE id=$uid")->fetchColumn();
-    /* Das Paar der Quelle (S11-06c): Der Serverweg verschliesst Orte,
+    /* Das Paar der Quelle: Der Serverweg verschliesst Orte,
      * Reanimation und Spur damit, und das Paket traegt den privaten Teil.
-     * Seit Web 23 geht diesen Weg sonst nur der Demo-Reset (S11-12); er
+     * Diesen Weg geht sonst nur der Demo-Reset; er
      * verlangt einen Rechenweg fuer den Block. Der Block kommt hier fertig
      * aus dem Browser und traegt weder Ziel noch Hoehe — er bleibt, wie er ist. */
     require_once $w . '/kontopaar_lib.php';
@@ -117,14 +115,14 @@ if ($schritt === 'quelle') {
 
     $m = edbak_paket_kopf_lesen($kennung, (string)$info['datei']);
 
-    /* WIE VIELE EINTRÄGE SIND VERSIEGELT — am ROHEN ZIP gezählt (S10/AP4).
+    /* WIE VIELE EINTRÄGE SIND VERSIEGELT — am ROHEN ZIP gezählt.
      *
      * Die Fassungsnummer aus dem Manifest sagt, was das Paket von sich
      * behauptet; sie sagt nicht, dass die Teile auch wirklich versiegelt
      * sind. Gezählt wird deshalb das Präfix `edsk1:` an jedem Eintrag, am
      * unveränderten Archiv — eine Zahl, die das Gemessene benennt
      * (`CLAUDE.md` 6). Die Begleitdatei zählt getrennt: Sie liegt NEBEN dem
-     * Paket und wäre sonst der Ort, an dem die E-Mail offen stünde (F-9). */
+     * Paket und wäre sonst der Ort, an dem die E-Mail offen stünde. */
     $zipPfad = edbak_ordner($kennung) . '/' . (string)$info['datei'];
     $z = new ZipArchive();
     $eintraege = 0; $versiegelt = 0;
@@ -151,7 +149,7 @@ if ($schritt === 'quelle') {
 }
 
 /* Hat das Zielkonto schon sein Schluesselpaar? Es entsteht im Browser beim
- * ersten Entsperren nach der Anmeldung, nebenlaeufig (S11-03). */
+ * ersten Entsperren nach der Anmeldung, nebenlaeufig. */
 if ($schritt === 'paar') {
     $q = $pdo->prepare('SELECT kp_oeffentlich IS NOT NULL FROM users WHERE email = ?');
     $q->execute([(string)$daten['ziel']]);
@@ -171,7 +169,7 @@ if ($schritt === 'pruefen') {
         'angekommen' => $r !== false,
         'pat_blob'   => $r['pat_blob'] ?? null,
         'punkte'     => $mid ? (spur_zahlen($pdo, 'mission', [$mid])[$mid] ?? 0) : 0,
-        /* Fuer den Browser der Probe (S11-06c): Huelle und Stuecke, wie sie
+        /* Fuer den Browser der Probe: Huelle und Stuecke, wie sie
          * im Zielkonto liegen — er oeffnet sie mit dessen Paar. */
         'client_ref' => $r['client_ref'] ?? null,
         'ort_huelle' => ($r['ort_huelle'] ?? null) !== null ? base64_encode((string)$r['ort_huelle']) : null,

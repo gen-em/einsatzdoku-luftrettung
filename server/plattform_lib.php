@@ -1,23 +1,23 @@
 <?php
 declare(strict_types=1);
 
-/* Der eine Leser fuer config.php (Schritt 15 AP2). Laedt seinerseits nichts —
+/* Der eine Leser fuer config.php. Laedt seinerseits nichts —
  * diese Datei darf `db.php` nicht erreichen. */
 require_once __DIR__ . '/konfig_lib.php';
 
 /**
- * DAS PLATTFORMPROFIL — eine Prueffunktion fuer zwei Leser (P5a/AP2, E-P5a-19).
+ * DAS PLATTFORMPROFIL — eine Prueffunktion fuer zwei Leser.
  *
- * WOZU. Bis Web 20.4.0 prueft `install.php` genau vier Erweiterungen (`zip`,
- * `zlib`, `openssl`, `mbstring`) und sonst nichts: keine PHP-Version, kein
+ * WOZU. Prueft der Einrichter nur vier Erweiterungen (`zip`, `zlib`,
+ * `openssl`, `mbstring`) und sonst nichts — keine PHP-Version, kein
  * `pdo_mysql`, keine Weblimits, keine Datenbankfassung, keine
- * Verbindungsgrenze. Eine Installation auf PHP 8.0 faellt erst beim ersten
+ * Verbindungsgrenze —, faellt eine Installation auf PHP 8.0 erst beim ersten
  * Formular mit einem Fatal Error auf; ein `memory_limit` von 32 MB erst beim
  * ersten grossen Export; eine `max_user_connections` von 2 erst dann, wenn
  * zwei Uhren gleichzeitig senden. Alle drei sind Eigenschaften der
  * PLATTFORM, und alle drei sind vorher messbar.
  *
- * ZWEI STUFEN, MEHR NICHT (E-PP-01):
+ * ZWEI STUFEN, MEHR NICHT:
  *
  *   muss       Fehlt es, laeuft die Anwendung nicht — und sagt es.
  *              `install.php` prueft es VOR der Einrichtung, die Statusseite
@@ -27,7 +27,7 @@ require_once __DIR__ . '/konfig_lib.php';
  *              Handgriff mehr. Auf der Statusseite ein HINWEIS, keine
  *              Ampelfarbe.
  *
- * DIE REGEL IST DAUERHAFT, DIE ZAHL IST EIN STAND (E-PP-03). Fuer Versionen
+ * DIE REGEL IST DAUERHAFT, DIE ZAHL IST EIN STAND. Fuer Versionen
  * gilt: eine Fassung, die vom Hersteller noch mit Sicherheitskorrekturen
  * versorgt wird. Die Zahlen unten sind der Stand vom 15.09.2026 und stehen an
  * EINER Stelle — hier, als Konstanten. Wer sie in einen Meldungstext
@@ -35,14 +35,14 @@ require_once __DIR__ . '/konfig_lib.php';
  *
  * WAS SIE NICHT IST. Keine Beschreibung des heutigen Tarifs und keine
  * Anleitung fuer einen bestimmten Hoster. Ein Hosterwechsel aendert
- * `config.php`, keine Codezeile (E-PP-04).
+ * `config.php`, keine Codezeile.
  *
  * EHRLICHKEIT UEBER DAS NICHT MESSBARE. `ok` ist dreiwertig: `true`
  * erfuellt, `false` nicht erfuellt, **`null` nicht feststellbar**. Der freie
  * Plattenplatz ist der Fall, auf den es ankommt — `disk_free_space()` liefert
  * auf geteiltem Webspace den Datentraeger des HOSTS und nicht das Kontingent
  * dieses Kontos. Eine Zahl im Terabyte-Bereich waere schlimmer als keine: Man
- * glaubte, es sei Platz (PP-5, dieselbe Ueberlegung wie in
+ * glaubte, es sei Platz (dieselbe Ueberlegung wie in
  * `speicher_lib.php`).
  *
  * WER DIESE DATEI LAEDT, HAT NOCH NICHTS GEAENDERT. Sie misst und gibt
@@ -51,12 +51,12 @@ require_once __DIR__ . '/konfig_lib.php';
 
 require_once __DIR__ . '/email_lib.php';
 
-/* `groesse_kurz_text()` fuer die Byte-Angaben der Befunde (Schritt 15 AP7).
+/* `groesse_kurz_text()` fuer die Byte-Angaben der Befunde.
  * AUSDRUECKLICH, nicht ueber eine Ladekette geerbt — und unbedenklich vor der
  * Einrichtung: `format_lib.php` laedt nur `konfig_lib.php`, wie diese Datei. */
 require_once __DIR__ . '/format_lib.php';
 
-/* ---- Die Zahlen, an einer Stelle (E-PP-03) ------------------------------- */
+/* ---- Die Zahlen, an einer Stelle ------------------------------- */
 
 /* Untergrenze PHP: `PLATTFORM_PHP_MIN`, definiert in `php_mindest.php`.
  *
@@ -65,10 +65,10 @@ require_once __DIR__ . '/format_lib.php';
  * enthaelt `match` und waere auf der Fassung, die abgewiesen werden soll,
  * schon beim Uebersetzen ein Parse Error. Die Zahl liegt deshalb in einer
  * eigenen, absichtlich altertuemlich geschriebenen Datei; beide laden sie
- * (E-PP-03: eine Stelle, nicht drei Meldungstexte). */
+ * (eine Stelle, nicht drei Meldungstexte). */
 require_once __DIR__ . '/php_mindest.php';
 
-/* DIE SITZUNGSABLAGE (Schritt 16, E-SA-04 und E-SA-07, Backlog Nr. 241).
+/* DIE SITZUNGSABLAGE.
  * Sie liefert den Pfad, die Dateizahl und das Ergebnis des Einrichtungslaufs
  * fuer die beiden Befunde weiter unten. Kein Zyklus: `sitzung_lib.php` laedt
  * auf oberster Ebene NICHTS und holt diese Datei erst im Rumpf von
@@ -232,7 +232,7 @@ function plattform_db_variable(PDO $pdo, string $name): ?string
 }
 
 /**
- * Gibt es die Funktion `$name`? Dreiwertig wie `ok` (Web 21.1.7, Nr. 266):
+ * Gibt es die Funktion `$name`? Dreiwertig wie `ok`:
  * true aufrufbar · false nicht vorhanden (die Erweiterung fehlt) · **null
  * abgeschaltet** — der Hoster hat sie in `disable_functions`, und dann ist
  * NICHT MESSBAR, was sie haette sagen sollen.
@@ -241,8 +241,8 @@ function plattform_db_variable(PDO $pdo, string $name): ?string
  * abgeschaltete Funktion sagt es `false`. Auf Staging (lima-city) steht
  * `opcache_get_status` in `disable_functions`; die Statusseite zeigte dort
  * „OPcache: aus", waehrend die `phpinfo()` derselben Anlage „Up and Running"
- * meldete (F-KH-U-05). Behauptet hatte die Anwendung etwas, das sie nicht
- * messen konnte — das verbietet `docs/Technik.md` 5b.1.
+ * meldete. Die Anwendung behauptete etwas, das sie nicht messen konnte —
+ * das verbietet `docs/Technik.md` 7.1.
  */
 function plattform_funktion(string $name): ?bool
 {
@@ -259,10 +259,10 @@ function plattform_befund(string $schluessel, string $name, string $stufe,
                           string $klein = '', ?string $einstellung = null,
                           bool $knapp = false): array
 {
-    /* `knapp` IST DIE DRITTE LAGE (P5a/AP10, PP-5). `ok` kennt drei
+    /* `knapp` IST DIE DRITTE LAGE. `ok` kennt drei
      * Zustaende — erfuellt, nicht erfuellt, nicht messbar —, und das genuegt
      * fuer die meisten Befunde: Eine PHP-Fassung ist alt genug oder nicht.
-     * Beim freien Platz ist es anders. PP-5 verlangt dort ZWEI Schwellen:
+     * Beim freien Platz ist es anders. Dort gelten ZWEI Schwellen:
      * rot unter dem Einfachen des groessten Komplett-Backups (das naechste
      * schlaegt fehl) und orange unter dem Zweifachen (das uebernaechste
      * wird eng). `ok = true` mit `knapp = true` ist genau das: erfuellt,
@@ -295,10 +295,8 @@ function plattform_pruefen(?PDO $pdo = null, bool $mitNetz = false): array
     $b = [];
 
     /* OB WIR AUF DER KOMMANDOZEILE STEHEN, WIRD EINMAL GEFRAGT und von drei
-     * Befunden benutzt (HTTPS, die beiden zur Sitzungsablage). Die Zeile
-     * stand bis Web 20.25.0 mitten in der Funktion beim HTTPS-Befund; der
-     * vierte Schreibort braucht sie aber 170 Zeilen frueher, und eine zweite
-     * Zuweisung desselben Namens ist genau die Art Doppelung, die
+     * Befunden benutzt (HTTPS, die beiden zur Sitzungsablage). Eine zweite
+     * Zuweisung desselben Namens waere genau die Art Doppelung, die
      * auseinanderlaeuft. `sitzung_cli()` ist die eine Fassung — dieselbe, die
      * `wartung_cli()` benutzt, `phpdbg` eingeschlossen. */
     $cli = sitzung_cli();
@@ -385,12 +383,12 @@ function plattform_pruefen(?PDO $pdo = null, bool $mitNetz = false): array
                      : (string)$p['grund']);
     }
 
-    /* ---- 5a Der vierte Schreibort: die Sitzungsablage (E-SA-04, Nr. 241) ---
+    /* ---- 5a Der vierte Schreibort: die Sitzungsablage ---
      *
      * EMPFOHLEN UND NICHT MUSS, anders als die drei darueber. Die drei sind
      * Muss, weil es ohne sie NICHT GEHT — ohne beschreibbare Wurzel keine
-     * `config.php`, ohne Ablage kein Backup. Dieser hier hat einen Rueckfall
-     * (E-SA-03): Scheitert er, legt PHP die Sitzungen weiter dort ab, wo der
+     * `config.php`, ohne Ablage kein Backup. Dieser hier hat einen Rueckfall:
+     * Scheitert er, legt PHP die Sitzungen weiter dort ab, wo der
      * Hoster hinzeigt, und die Anwendung laeuft vollstaendig. Muss waere
      * ausserdem scharf fuer eine Eigenschaft, die heute keine Installation
      * erfuellt — und haette den Einrichter gesperrt, statt ihn zu warnen.
@@ -427,7 +425,7 @@ function plattform_pruefen(?PDO $pdo = null, bool $mitNetz = false): array
                           : (string)$sProbe['grund']);
     }
 
-    /* ---- 5b Ist die Sitzungsablage fuer Fremde auflistbar? (E-SA-07) -------
+    /* ---- 5b Ist die Sitzungsablage fuer Fremde auflistbar? -------
      *
      * DIESER BEFUND MISST DEN WIRKSAMEN ORT, nicht den gewuenschten — und
      * genau darin liegt sein Wert. Richtet die Anwendung ihre eigene Ablage
@@ -488,16 +486,14 @@ function plattform_pruefen(?PDO $pdo = null, bool $mitNetz = false): array
               . ($anzahl === null ? '' : ', ' . $anzahl
                  . ($anzahl === 1 ? ' Datei' : ' Dateien'));
     }
-    /* DER SATZ KOMMT AUS DEM ZUSTAND, DIE FARBE AUS DER MESSUNG
-     * (Berichtigung 20.09.2026). Bis Web 20.26.0 stand hier ein fest
+    /* DER SATZ KOMMT AUS DEM ZUSTAND, DIE FARBE AUS DER MESSUNG. Ein fest
      * verdrahtetes „konnte kein eigenes Verzeichnis einrichten", gedruckt
-     * allein daraufhin, dass der gemessene Pfad nicht der eigene war. Auf der
-     * Staging-Anlage war dieser Satz nachweislich falsch: Das Verzeichnis war
+     * allein daraufhin, dass der gemessene Pfad nicht der eigene ist, war auf
+     * der Staging-Anlage nachweislich falsch: Das Verzeichnis war
      * angelegt und beschreibbar, nur hat die Anlage den gesetzten Pfad nicht
      * uebernommen. Eine Ursache zu drucken, die man nicht gemessen hat, ist
      * schlimmer als keine — sie schickt die BetreiberIn auf die Suche nach
      * einem Schreibrecht, das nicht fehlt.
-     *
      * DIE LAGE DES VERZEICHNISSES STEHT MIT IN DIESER ZEILE, und das ist
      * Absicht: Der vierte Schreibort ist Stufe `empfohlen` und im guten Fall
      * unsichtbar — ausgerechnet die Zeile, die den Widerspruch sofort gezeigt
@@ -513,7 +509,7 @@ function plattform_pruefen(?PDO $pdo = null, bool $mitNetz = false): array
       . ' Der Dateiname einer Sitzungsdatei IST die Sitzungskennung - wer sie '
       . 'liest, ist angemeldet. Wirksam: ' . $wirk);
 
-    /* `config.php` beschreibbar ist EMPFOHLEN, nicht Muss (PP-5): Die
+    /* `config.php` beschreibbar ist EMPFOHLEN, nicht Muss: Die
      * Backup-Ziele, der Serverschluessel und der Server-Anteil bieten dann
      * einen Knopf; sonst die eine Zeile zum Eintragen von Hand. */
     $cfg   = __DIR__ . '/config.php';
@@ -537,11 +533,11 @@ function plattform_pruefen(?PDO $pdo = null, bool $mitNetz = false): array
         if (function_exists('komp_staende')) {
             foreach (komp_staende() as $s) { $groesstes = max($groesstes, (int)$s['groesse']); }
         }
-        /* ZWEI SCHWELLEN, NICHT EINE (P5a/AP10, PP-5). Bis Web 20.13.0
-         * stand hier nur die untere: `ok` war wahr, sobald der freie Platz
-         * das Einfache des groessten Komplett-Backups erreichte — waehrend
-         * die Sollzeile daneben das Zweifache versprach. Eine Zeile, die eine
-         * Zahl nennt und eine andere prueft, ist schlimmer als keine.
+        /* ZWEI SCHWELLEN, NICHT EINE. Nur die untere zu pruefen hiesse:
+         * `ok` waere wahr, sobald der freie Platz das Einfache des groessten
+         * Komplett-Backups erreicht — waehrend die Sollzeile daneben das
+         * Zweifache verspricht. Eine Zeile, die eine Zahl nennt und eine
+         * andere prueft, ist schlimmer als keine.
          *
          *   unter dem Einfachen   rot     — das naechste Backup schlaegt fehl
          *   unter dem Zweifachen  orange  — das uebernaechste wird eng
@@ -621,7 +617,7 @@ function plattform_pruefen(?PDO $pdo = null, bool $mitNetz = false): array
           . 'aber die Geräte liefern später.');
     }
 
-    /* ---- 9 Kontingent der Datenbank (E-P5a-11) ------------------------------ */
+    /* ---- 9 Kontingent der Datenbank ------------------------------ */
     if ($pdo !== null && function_exists('speicher_db_kontingent_bytes')) {
         $konting = speicher_db_kontingent_bytes();
         $ist     = (int)(function_exists('edbak_marke_lesen')
@@ -674,7 +670,7 @@ function plattform_pruefen(?PDO $pdo = null, bool $mitNetz = false): array
                 . 'die config.php.');
     }
 
-    /* ---- 11 Vertrauenswuerdige Proxys — reine Auskunft (E-PP-08) ----------- */
+    /* ---- 11 Vertrauenswuerdige Proxys — reine Auskunft ----------- */
     $proxys = [];
     $roh = konfig('netz.vertrauenswuerdige_proxys', []);
     if (is_array($roh)) { $proxys = $roh; }

@@ -5,7 +5,7 @@
 # SVG in server/assets/images/. Bis hierher lagen sie ohne Rezept im
 # Repositorium: Wer eine Groesse ergaenzen wollte, musste raten, mit welcher
 # Breite und welcher Ausrichtung die vorhandenen entstanden waren. Dasselbe
-# Problem beschreibt tools/erzeugen/ (logos)LIESMICH.md fuer das Favicon — „das PNG ist
+# Problem beschreibt tools/erzeugen/LIESMICH.md (Abschnitt logos) fuer das Favicon — „das PNG ist
 # eine Ableitung und soll keine sein, die jemand in einem Bildprogramm
 # nachbaut".
 #
@@ -13,7 +13,7 @@
 # sie PIXELGLEICH (geprueft mit `compare -metric AE`, Ergebnis 0 fuer alle vier
 # Dateien, die es vorher schon gab) — bis zum 13.09.2026 stand hier das
 # staerkere "bitgleich", das dieses Messmittel nicht deckt. Warum:
-# LIESMICH.md, Abschnitt "Warum es dieses Werkzeug gibt" (Backlog Nr. 94).
+# LIESMICH.md, Abschnitt "Warum es dieses Werkzeug gibt".
 #
 # Anleitung: LIESMICH.md im selben Verzeichnis.
 

@@ -11,7 +11,7 @@ declare(strict_types=1);
  * ungeprüften Selbstauskunft des Geräts. Die Garmin-App sendet dort fest
  * `"uhr"`; ein Radcomputer wäre damit dauerhaft als Uhr gezählt, obwohl die
  * Gerätedateien es besser wissen. Genau dafür steht die Rohangabe in einer
- * eigenen Spalte (E-S6-1): Sie hält den Schlüssel bereit, mit dem sich jede
+ * eigenen Spalte: Sie hält den Schlüssel bereit, mit dem sich jede
  * Zeile später erneut auflösen lässt. **Dieses Skript ist das „später".**
  *
  * WANN ES GEBRAUCHT WIRD. Nach jedem Lauf von `erzeugen.py` — also wenn die
@@ -44,7 +44,7 @@ declare(strict_types=1);
  * BRAUCHT SHELL-ZUGRIFF. Auf einem Webspace ohne SSH gibt es diesen Weg
  * nicht; dort holen die betroffenen Geräte ihre Angabe bei der nächsten
  * Kopplung nach. Das ist eine Grenze und keine Ausrede — sie steht deshalb
- * auch in `LIESMICH.md` und in `docs/Technik.md`, Abschnitt 7.
+ * auch in `LIESMICH.md` und in `docs/Technik.md`, Abschnitt 13.
  */
 
 if (PHP_SAPI !== 'cli') {
@@ -62,7 +62,7 @@ if (!is_file($serverPfad . '/db.php')) {
 }
 require_once $serverPfad . '/db.php';
 require_once $serverPfad . '/geraete_lib.php';
-/* DIE LOGIK STECKT SEIT WEB 20.15.0 IN DER BIBLIOTHEK (P5a/AP11, E-P5a-21).
+/* DIE LOGIK STECKT SEIT WEB 20.15.0 IN DER BIBLIOTHEK.
  *
  * Sie stand bis dahin HIER, und das war die Grenze der Sache: Auf einem
  * Webspace ohne SSH gibt es diesen Weg nicht, und die betroffenen Geraete

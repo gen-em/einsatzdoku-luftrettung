@@ -1,31 +1,30 @@
-"""Aus einem Referenz-Backup einen Großbestand bauen (E-S2-23, R35).
+"""Aus einem Referenz-Backup einen Großbestand bauen.
 
-WOFUER. S2 verspricht, dass 5000 Einsätze in einem Konto tragen (Z1). Diese
+WOFUER. Die Anwendung verspricht, dass 5000 Einsätze in einem Konto tragen. Diese
 Zusage lässt sich nur an 5000 Einsätzen prüfen, und die muss jemand herstellen
 können — reproduzierbar, ohne Handarbeit und ohne an der Prüfschicht vorbei.
 
 DER WEG. Das Referenz-Backup wird geöffnet, ihre Nutzlast **r-mal** mit
 versetzten Zeiten und eigenen Kennungen vervielfältigt und als Folge
 mehrteiliger `.edbak`-Dateien (Fassung 4, Nutzlast 13) wieder versiegelt.
-Bis Web 22.7.0 waren es einteilige Dateien mit Nutzlast 7; seit Web 23 nimmt
-der Einspielweg nur noch Nutzlast 13 (S11-12, E-S11-85, Backlog Nr. 46). Eingespielt werden sie über
+Der Einspielweg nimmt nur Nutzlast 13. Eingespielt werden sie über
 den **regulären** Wiederherstellungsweg im Browser (`einspielen.mjs`) — kein
-SQL, kein Sonderendpunkt (Geist von R4). Was dabei entsteht, ist damit ein
+SQL, kein Sonderendpunkt. Was dabei entsteht, ist damit ein
 Bestand, den die Anwendung selbst so angelegt hätte.
 
 WARUM NICHT EINFACH SQL. Weil ein per SQL erzeugter Bestand die Frage nicht
 beantwortet, die der Messstand stellt. Er misst nicht nur „wie schnell ist die
 Suche bei 5000 Einsätzen", sondern auch „kommen 5000 Einsätze überhaupt durch
-den Einspielweg" — und die zweite Antwort ist die interessantere (B-S2-03).
+den Einspielweg" — und die zweite Antwort ist die interessantere.
 
 WIE DER VERSATZ GEWAEHLT IST. Jede Runde verschiebt **alle** Zeitangaben um
 `-runde × abstand` Tage und zusätzlich um `+runde` Minuten. Beides zusammen
 ist nötig:
 
   * Die Tage sorgen dafür, dass der Bestand in die Vergangenheit wächst. Das
-    ist kein Schönheitsgrund: Die Ausdünnung (E-S2-03) greift sechs Monate
+    ist kein Schönheitsgrund: Die Ausdünnung greift sechs Monate
     nach Einsatzende, und ein Bestand, der nur in der Zukunft liegt, ließe
-    AP3 nichts zu tun.
+    der Ausdünnung nichts zu tun.
   * Die Minuten sorgen dafür, dass zwei Runden einander nicht auffressen. Die
     Wiedererkennung des Einspielwegs kennt zwei Schritte (`backup_lib.php`):
     Schritt 1 sucht über die Einsatzkennungen — die sind hier je Runde eigen,
@@ -39,7 +38,7 @@ Die Referenz spannt vom 17.01. bis zum 27.12.2026, also 344 Tage. Der Abstand
 zwischen zwei Runden ist mit drei Tagen bewusst KLEINER: Die Runden sollen
 sich überlagern, sonst reichte der Bestand über Jahrzehnte und die
 Zeitstempel liefen aus dem Wertebereich der Spurzeiten (`INT UNSIGNED`,
-Unix-Epoche; seit Web 23 `track_stuecke.ts_von`/`ts_bis`).
+Unix-Epoche; `track_stuecke.ts_von`/`ts_bis`).
 
 WAS NICHT VERVIELFAELTIGT WIRD: die Stammdaten (Standorte, Rettungsmittel,
 Besatzungen, Zielkliniken) und die Kontoangaben. Sie stehen in jeder Datei
@@ -59,8 +58,8 @@ Tagen zwangsläufig auf den Papierkorbdaten früherer — und verlieren sie
 mitsamt ihren Einsätzen.
 
 Der Papierkorb ist für einen MENGENPRUEFSTAND ohnehin nicht die Frage: Was
-er beim Sichern und Zurückspielen bedeutet, prüfen der Kreislauf (R24) und
-`tools/proben/wiederherstellung/` (R27), und die tun es gründlicher, als ein
+er beim Sichern und Zurückspielen bedeutet, prüfen der Kreislauf und
+`tools/proben/wiederherstellung/`, und die tun es gründlicher, als ein
 58-fach kopierter Papierkorb es je könnte. Hier gilt deshalb: gelöschte Tage,
 Einsätze und Ruhesegmente werden NICHT mitvervielfältigt. Damit trägt jede
 Runde genau 104 Einsätze, 118 Ruhesegmente und 21 Diensttage (Referenz vom
@@ -73,8 +72,8 @@ AUFRUF
     python3 vervielfaeltigen.py --einsaetze 5000 --ziel /tmp/messstand
     python3 vervielfaeltigen.py --runden-je-datei 2      # kleinere Pakete
 
-Wie viele Einsätze in eine Datei gehen, entschied bis Web 22.7.0
-`post_max_size` des Zielservers: Die einteilige Datei ging am Stück hinauf
+Wie viele Einsätze in eine Datei gehen, entschied bei der einteiligen Datei
+`post_max_size` des Zielservers: Sie ging am Stück hinauf
 (rund 28 KB je Einsatz, bei 8 MB also rund 280 Einsätze). Seit Fassung 4
 schickt der Browser Kopf, Fenster zu 250 Einträgen und Spurteile einzeln;
 die Grenze trifft nur noch das einzelne Teil. Der Vorgabewert bleibt bei drei
@@ -196,12 +195,12 @@ def runde_bauen(quelle: dict, runde: int, abstand_tage: int) -> dict:
         sek = int(delta.total_seconds())
         for pt in (n.get("track") or []):
             pt[4] = int(pt[4]) + sek
-        # Sperrvermerke des Schnitts (Nutzlast 9, R64). Sie kämen über die
+        # Sperrvermerke des Schnitts (Nutzlast 9). Sie kämen über die
         # tiefe Kopie oben unverändert mit — mit der `quelle_ref` der Runde 0
         # und einem Zeitfenster, das um `delta` danebenläge, während die Spur
         # wandert. Beim Einspielen zeigten dann alle Runden auf DIESELBE
         # Quelle oder es würde alles verworfen; beides verfälscht genau die
-        # Zahlen, für die dieser Bestand da ist (R35).
+        # Zahlen, für die dieser Bestand da ist.
         for c in (n.get("schnitte") or []):
             c["quelle_ref"] = _kennung(c["quelle_ref"], runde)
             c["von_ts"] = int(c["von_ts"]) + sek

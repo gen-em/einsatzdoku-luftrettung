@@ -2,7 +2,7 @@
 declare(strict_types=1);
 
 /**
- * NACHLOESEN DER GERAETEMODELLE — Bibliothek und Job (P5a/AP11, E-P5a-21).
+ * NACHLOESEN DER GERAETEMODELLE — Bibliothek und Job.
  *
  * WOFUER. `pair.php` loest die Teilenummer einer Garmin-Uhr im Moment der
  * Kopplung auf, und nur dann. Trifft sie dabei auf eine leere oder aeltere
@@ -11,16 +11,16 @@ declare(strict_types=1);
  * Uhr-App sendet dort fest `"uhr"`; ein Radcomputer waere damit dauerhaft als
  * Uhr gezaehlt, obwohl die Geraetedateien es besser wissen.
  *
- * Genau dafuer steht die Rohangabe in einer eigenen Spalte (E-S6-1): Sie
+ * Genau dafuer steht die Rohangabe in einer eigenen Spalte: Sie
  * haelt den Schluessel bereit, mit dem sich jede Zeile spaeter erneut
  * aufloesen laesst.
  *
- * WARUM AUS DEM SKRIPT EINE BIBLIOTHEK WURDE. `tools/erzeugen/
- * geraetemodelle-nachaufloesen.php` kann es seit Web 12.9.1 — aber nur ueber die
+ * WARUM EINE BIBLIOTHEK UND NICHT NUR DAS SKRIPT. `tools/erzeugen/
+ * geraetemodelle-nachaufloesen.php` kann es auch — aber nur ueber die
  * Kommandozeile, und **auf einem Webspace ohne SSH gibt es diesen Weg
  * nicht**. Dort holten die betroffenen Geraete ihre Angabe erst bei der
- * naechsten Kopplung nach, also womoeglich nie. Die Zahl, die Backlog Nr. 80
- * auswerten will, haengt damit daran, ob jemand SSH hat.
+ * naechsten Kopplung nach, also womoeglich nie. Jede Zahl ueber die
+ * Geraetearten hinge damit daran, ob jemand SSH hat.
  *
  * DREI REGELN, UNVERAENDERT AUS DEM SKRIPT:
  *
@@ -49,7 +49,7 @@ require_once __DIR__ . '/geraete_lib.php';
 /** Der Stand in `app_state`: Hash der Tabelle, Zeitpunkt, zwei Zahlen. */
 const GM_STAND_SCHLUESSEL = 'geraetemodelle_stand';
 
-/** Wie viele Zeilen ein Block ansieht (E-P5a-21). */
+/** Wie viele Zeilen ein Block ansieht. */
 const GM_BLOCK = 200;
 
 /** Zeitpolster, unter dem der Job keinen weiteren Block mehr beginnt. */
@@ -167,7 +167,7 @@ function gm_nachaufloesen(PDO $pdo, int $block, bool $schreiben,
      * waere die Arbeit des Blocks weg, den man gerade geschafft hat.
      *
      * Der Aufrufer kann schon eine offen haben; `db_transaktion()` erkennt
-     * das und oeffnet dann keine zweite (E-ZE-20). */
+     * das und oeffnet dann keine zweite. */
     $raus['geschrieben'] += db_transaktion($pdo, function (PDO $pdo) use ($raus): int {
         $up = $pdo->prepare('UPDATE devices SET geraet_art = ?, geraet_modell = ?
                               WHERE id = ?');

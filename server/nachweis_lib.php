@@ -2,13 +2,13 @@
 declare(strict_types=1);
 /**
  * NACHWEISDATEIEN — wer eine Datei im Anwendungsverzeichnis nennen oder
- * anlegen kann, hat Zugriff auf den Webspace (M1-11; Schritt 18, SR-04).
+ * anlegen kann, hat Zugriff auf den Webspace.
  *
- * EINE STELLE FUER DREI SEITEN (R83). Bis Web 21.12.2 stand die Mechanik
- * wortgleich in `install.php` und `wiederherstellen.php` — glob, Kennung aus
+ * EINE STELLE FUER DREI SEITEN. Die Mechanik — glob, Kennung aus
  * dem Namen, Reste weg, 128 Bit Zufall, Datei schreiben, Eingabe
- * vergleichen. Der Notzugang (`zweitfaktor_notweg.php`) waere die dritte
- * Kopie geworden; die Register-Zeile Z44 haelt fest, dass es keine wird.
+ * vergleichen — braeuchten sonst `install.php`, `wiederherstellen.php` und
+ * der Notzugang (`zweitfaktor_notweg.php`) je in eigener Kopie; die
+ * Register-Zeile Z44 haelt fest, dass es keine gibt.
  *
  * ZWEI RICHTUNGEN, DIESELBE DATEI
  *
@@ -18,7 +18,7 @@ declare(strict_types=1);
  *   es noch keine Anlage gibt, die etwas zu verlieren haette — und es ist
  *   die einzige Richtung, die ohne FTP-Programm geht.
  *
- *   SCHREIBNACHWEIS (`zweitfaktor_notweg.php`, E-SR-81): Die Seite NENNT den
+ *   SCHREIBNACHWEIS (`zweitfaktor_notweg.php`): Die Seite NENNT den
  *   Namen, die Person legt die Datei per FTP an, die Seite prueft nur, ob
  *   sie liegt. Belegt: Sie kann dort SCHREIBEN — dasselbe Vertrauen wie bei
  *   dem, der SQL im Datenbankwerkzeug absetzt. Hier schreibt die Anwendung
@@ -99,7 +99,7 @@ function nachweis_vorhandene(string $muster): array
  * alten Staenden und gehen.
  *
  * Fuer den Schreibnachweis ist das die falsche Funktion: Dort haengt der
- * Name an der Sitzung (E-SR-82), und die Seite schreibt nichts.
+ * Name an der Sitzung, und die Seite schreibt nichts.
  */
 function nachweis_finden_oder_wuerfeln(string $muster): string
 {

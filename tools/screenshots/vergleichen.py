@@ -4,7 +4,7 @@
 WOZU. Der Bilderlauf selbst misst Ueberlauf, Konsolenfehler und Knopfhoehen.
 Er beantwortet damit NICHT die Frage, die ein Umbau ohne beabsichtigte
 Gestaltungsaenderung stellt: **Hat sich ein Pixel bewegt?** Ein Paket, das
-Formatierung zentralisiert (Schritt 15 AP7, F-ZE-3), steht und faellt mit
+Formatierung zentralisiert, steht und faellt mit
 dieser Frage — 0 Ueberlauf und 0 Konsolenfehler meldet auch eine Seite, die
 seit gestern ein anderes Datum zeigt.
 
@@ -49,8 +49,8 @@ Wer ein Paket mit Versionsstufe belegen will, faehrt `--nur-text`.
 
 DER TEXTVERGLEICH IST KEIN ECHTER DIFF, mit Absicht: Eine eingefuegte Zeile
 verschiebt alles dahinter — die richtige Lautstaerke fuer einen Umbau, der
-keinen Buchstaben aendern darf. Ein weggesicherter Lauf ohne `texte/` (vor
-Schritt 15 AP7) meldet NICHT GEMESSEN, keine Null.
+keinen Buchstaben aendern darf. Ein weggesicherter Lauf ohne `texte/` (ein
+alter) meldet NICHT GEMESSEN, keine Null.
 
 `--erwartet` nennt Seiten, deren Abweichung in DIESEM Lauf beabsichtigt ist
 (Praefix des Dateinamens ohne Breite). Sie werden gezaehlt und benannt, aber
@@ -118,7 +118,7 @@ def seite_von(dateiname: str) -> str:
     Textabzug (`…-1280.txt`) blieb der Name damit ungekuerzt, die
     Seitenbindung einer Ausnahme (`seiten`) lief ins Leere, und die Ausnahme
     meldete sich als tot — waehrend die Abweichung als offen gezaehlt wurde.
-    Gefunden in Schritt 15 AP7 beim ersten seitengebundenen Eintrag.
+    Gefunden beim ersten seitengebundenen Eintrag.
     """
     stamm = dateiname
     for endung in (".png", ".txt"):
@@ -271,7 +271,7 @@ def main() -> int:
               f"({zeilen_zahl} Zeilen)")
         print(f"  nur im alten Lauf:           {len(t_nur_vor):4d}")
         print(f"  nur im neuen Lauf:           {len(t_nur_nach):4d}")
-        if zeilen_offen and "--werte" in sys.argv:
+        if zeilen_offen and a.werte:
             print("\n  ZEILEN MIT ANDEREM WERT (--werte):")
             for name, unterschiede in zeilen_offen[:40]:
                 print(f"    {name}")
@@ -363,7 +363,7 @@ def form(zeile) -> str:
     aus „05“ wird dasselbe „#“. Eine FUEHRENDE NULL ist damit
     unsichtbar, nicht nur eine andere Rundung bei gleicher Stellenzahl.
 
-    Gemessen am 22.09.2026 (Schritt 15 AP8d): Die Einsatzansicht schrieb
+    Gemessen am 22.09.2026: Die Einsatzansicht schrieb
     „2h 5min“ und schreibt jetzt „2h 05min“ — auf acht Aufnahmen
     derselben Seite. Dieser Vergleich meldete trotzdem „488 von 496
     formgleich“, und das war richtig gerechnet und irrefuehrend gelesen.

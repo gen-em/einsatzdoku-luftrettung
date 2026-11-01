@@ -1,20 +1,20 @@
 <?php
 declare(strict_types=1);
 /**
- * DIE EINSTELLUNGEN RUND UM KONTEN (P5b/AP1, E-P5b-14).
+ * DIE EINSTELLUNGEN RUND UM KONTEN.
  *
  * ---------------------------------------------------------------------------
  * WARUM EINE EIGENE DATEI UND NICHT DIE SEITE
  * ---------------------------------------------------------------------------
  *
- * R83: Zentralisiert wird beim zweiten echten Verbraucher — aber der ORT
- * steht vorher fest, „Bibliotheksdatei statt Seite, damit der zweite
- * Verbraucher ohne Umbau zugreifen kann". Hier sind die zweiten Verbraucher
- * schon namentlich bekannt und stehen im Konzept: `registrieren.php` (AP3)
- * liest die Betriebsart, `login.php` (AP7) die Demo-Anmeldung, `ingest.php`
- * (AP6) die Mengengrenzen, der Job `konto_verfall` (AP3) die Freischaltfrist.
- * Sie in `betrieb_server.php` zu schreiben und spaeter herauszuziehen waere
- * derselbe Umbau, nur spaeter und mit vier Aufrufern mehr.
+ * Zentralisiert wird beim zweiten echten Verbraucher — aber der ORT steht
+ * vorher fest, „Bibliotheksdatei statt Seite, damit der zweite Verbraucher
+ * ohne Umbau zugreifen kann". Hier sind die Verbraucher namentlich bekannt:
+ * `registrieren.php` liest die Betriebsart, `login.php` die Demo-Anmeldung,
+ * `ingest.php` die Mengengrenzen, der Job `konto_verfall` die
+ * Freischaltfrist. Sie in `betrieb_server.php` zu schreiben und spaeter
+ * herauszuziehen waere derselbe Umbau, nur spaeter und mit vier Aufrufern
+ * mehr.
  *
  * NICHT hier: die Protokollfrist. Sie steht in `protokoll_lib.php`, wo auch
  * die Bereinigung sie liest — eine Frist an zwei Stellen laeuft auseinander,
@@ -26,18 +26,18 @@ declare(strict_types=1);
  * DIE VORGABEN SIND DIE VORSICHTIGEN, NICHT DIE, DIE NADOKU FAEHRT
  * ---------------------------------------------------------------------------
  *
- * Betriebsart `einladung` (E-P5b-01): das heutige Verhalten. Eine
+ * Betriebsart `einladung`: das heutige Verhalten. Eine
  * Selbsthosterin, die diese Seite nie aufschlaegt, bekommt keine offene
  * Registrierung durch Untaetigkeit. nadoku selbst schaltet zum Betriebsstart
  * auf `freischaltung` — von Hand, sichtbar, mit einem Protokolleintrag.
  *
- * Wegwerfadressen abweisen: an. Demo-Anmeldung: an (R25 — das Demo-Konto ist
- * Bestandteil, und es abzuschalten ist die Ausnahme).
+ * Wegwerfadressen abweisen: an. Demo-Anmeldung: an — das Demo-Konto ist
+ * Bestandteil, und es abzuschalten ist die Ausnahme.
  */
 
 require_once __DIR__ . '/db.php';
 
-/* ---- Die drei Betriebsarten (E-P5b-01) ----------------------------------- */
+/* ---- Die drei Betriebsarten ----------------------------------------------- */
 
 /**
  * Wert in `app_state` => sichtbarer Text.
@@ -62,23 +62,23 @@ const KONTEN_K_WEGWERF         = 'konten_wegwerf';
 const KONTEN_K_WEGWERF_EIGENE  = 'konten_wegwerf_eigene';
 const KONTEN_K_GRENZE_EINSAETZE = 'konten_grenze_einsaetze';
 const KONTEN_K_GRENZE_MB       = 'konten_grenze_mb';
-/* Backlog Nr. 48 wird NICHT als eigene Installationsvorgabe gefuehrt: Die
- * gibt es schon — `app_state.adminbackup_aufbewahrung`, gepflegt unter
- * Verwaltung -> Konto-Backups. Eine zweite Zahl daneben waere genau die Art
- * Doppelung, die R83 verhindern soll. Was P5b/AP6 ergaenzt, ist die
- * UEBERSCHREIBUNG je Konto (`users.backup_pakete`). */
+/* Die Zahl der Konto-Backups wird NICHT als eigene Installationsvorgabe
+ * gefuehrt: Die gibt es schon — `app_state.adminbackup_aufbewahrung`,
+ * gepflegt unter Verwaltung -> Konto-Backups. Eine zweite Zahl daneben waere
+ * genau die Art Doppelung, die es zu verhindern gilt. Was hier dazukommt,
+ * ist die UEBERSCHREIBUNG je Konto (`users.backup_pakete`). */
 const KONTEN_K_DEMO_ANMELDUNG  = 'konten_demo_anmeldung';
 
 /* ---- Vorgaben und Grenzen ------------------------------------------------ */
 
-/** Verfall wartender Registrierungen, in Tagen (E-P5b-02). */
+/** Verfall wartender Registrierungen, in Tagen. */
 const KONTEN_REG_FRIST_VORGABE = 30;
 const KONTEN_REG_FRIST_MIN     = 1;
 const KONTEN_REG_FRIST_MAX     = 365;
 
 /**
- * Verfall UNBESTAETIGTER Registrierungen, in Stunden. FEST, keine Einstellung
- * (R37 (3), E-P5b-02).
+ * Verfall UNBESTAETIGTER Registrierungen, in Stunden. FEST, keine
+ * Einstellung.
  *
  * Zwei Fristen, zwei Zustaende, ein Job. Diese hier ist fest, weil sie eine
  * Sicherheitsfrist ist und keine Betriebsfrist: Ein unbestaetigtes Konto ist
@@ -87,7 +87,7 @@ const KONTEN_REG_FRIST_MAX     = 365;
  */
 const KONTEN_UNBESTAETIGT_H = 48;
 
-/** Mengengrenze je Konto (E-P5b-04). */
+/** Mengengrenze je Konto. */
 const KONTEN_GRENZE_EINSAETZE_VORGABE = 5000;
 const KONTEN_GRENZE_MB_VORGABE        = 250;
 
@@ -182,9 +182,9 @@ function konten_wegwerf_eigene(): array
     return array_values(array_filter(array_map('trim', explode(',', $roh))));
 }
 
-/* ---- Wegwerfadressen (E-P5b-03, E-P5b-23) -------------------------------- */
+/* ---- Wegwerfadressen ------------------------------------------------------ */
 
-/** Die mitgelieferte Liste; sie wird NIE zur Laufzeit geholt (R36). */
+/** Die mitgelieferte Liste; sie wird NIE zur Laufzeit geholt. */
 const WEGWERF_DATEI = __DIR__ . '/wegwerfdomains.txt';
 
 /**
@@ -271,13 +271,13 @@ function konten_grenze_mb(): int
     return $n > 0 ? $n : KONTEN_GRENZE_MB_VORGABE;
 }
 
-/** Ist die Anmeldung am Demo-Konto zugelassen? (E-P5b-07) */
+/** Ist die Anmeldung am Demo-Konto zugelassen? */
 function konten_demo_anmeldung_an(): bool
 {
     return konten_einstellungen()[KONTEN_K_DEMO_ANMELDUNG] === '1';
 }
 
-/* ---- Mengen je Konto (P5b/AP6, E-P5b-04, -18) ---------------------------- */
+/* ---- Mengen je Konto ------------------------------------------------------ */
 
 /**
  * Wie viel dieses Konto belegt — Einsaetze und Byte.
@@ -288,7 +288,7 @@ function konten_demo_anmeldung_an(): bool
  *
  * Die Byte-Messung liest die Blob-Laengen aller GPS-Daten eines Kontos. Beim
  * Demo-Bestand (gut 100 Einsaetze, unter 70 000 Punkte) sind das Millisekunden; bei der
- * Zielmenge aus E-S2-24 ist es das nicht mehr. Sie liefe sonst bei JEDEM
+ * Zielmenge eines grossen Bestands ist es das nicht mehr. Sie liefe sonst bei JEDEM
  * Upload, und `ingest.php` ist genau der Weg, der schnell sein muss.
  *
  * Deshalb: gecacht in `app_state` unter `mengen:<id>`, erneuert im Job
@@ -393,7 +393,7 @@ function konto_grenzen(int $userId): array
                         ? (int)$z['grenze_einsaetze'] : konten_grenze_einsaetze(),
         'mb'           => $z['grenze_mb'] !== null
                         ? (int)$z['grenze_mb'] : konten_grenze_mb(),
-        /* Backlog Nr. 48: die Zahl der Konto-Backups. `null` heisst „die
+        /* Die Zahl der Konto-Backups. `null` heisst „die
          * Zahl der Installation gilt" (`edbak_aufbewahrung()`). */
         'backup_pakete' => $z['backup_pakete'] !== null
                         ? (int)$z['backup_pakete'] : null,

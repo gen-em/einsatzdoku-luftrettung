@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 /**
- * Das Handbuch als Seite der Anwendung (P5b/AP8, E-P5b-08).
+ * Das Handbuch als Seite der Anwendung.
  *
  * Der Inhalt ist `docs/Handbuch.md` aus dem Repositorium — dieselbe Datei,
  * die auf GitHub steht und durch die Wortliste laeuft. Die Seite selbst ist

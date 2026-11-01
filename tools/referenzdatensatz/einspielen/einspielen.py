@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
-"""Einspiellauf des Referenzdatensatzes (Arbeitspaket B3).
+"""Einspiellauf des Referenzdatensatzes.
 
 Spielt den erzeugten Datensatz ueber die REGULAEREN Wege in eine
-Installation ein — kein roher SQL-Weg (R4). Die vier Wege sind die aus
-B-01 des Konzepts:
+Installation ein — kein roher SQL-Weg. Die vier Wege:
 
   1. `ingest.php`        Geraeteschnittstelle: Diensttage, Einsaetze,
                          Ruhe-Segmente, Phasen, Reanimationen, Spur
@@ -13,7 +12,7 @@ B-01 des Konzepts:
   4. Weboberflaeche      Papierkorb (`einsatz_loeschen.php`,
                          `diensttag_loeschen.php`, `papierkorb.php`)
 
-Der CSV-Import laeuft bewusst NICHT hier, sondern im Browser (B4).
+Der CSV-Import laeuft bewusst NICHT hier, sondern im Browser.
 
 Stufen einzeln aufrufbar:
     python3 einspielen.py --stufen konto,stammdaten,geraet
@@ -25,6 +24,7 @@ from __future__ import annotations
 import argparse
 import base64
 import json
+import os
 import pathlib
 import re
 import subprocess
@@ -40,7 +40,7 @@ sys.path.insert(0, str(WURZEL / "generator"))
 sys.path.insert(0, str(WURZEL / "quelldaten"))
 
 import krypto           # noqa: E402
-import ortsdaten        # noqa: E402  (Huellen und Stuecke wie der Browser, S11-06e)
+import ortsdaten        # noqa: E402  (Huellen und Stuecke wie der Browser)
 import sitzung as sitzungsmodul   # noqa: E402
 from sitzung import fehlertext    # noqa: E402  (eine Stelle, siehe dort)
 
@@ -48,8 +48,8 @@ QUELLE = WURZEL / "quelldaten"
 AUSGABE = WURZEL / "generator" / "ausgabe"
 TZ = ZoneInfo("Europe/Berlin")
 
-# Zugangsdaten des Referenzkontos (F-P1-01). Beide sind ueber die Befehlszeile
-# umstellbar: Die KREISLAUFPRUEFUNG (B5) legt ein zweites, frisches Konto an und
+# Zugangsdaten des Referenzkontos. Beide sind ueber die Befehlszeile
+# umstellbar: Die KREISLAUFPRUEFUNG legt ein zweites, frisches Konto an und
 # fuellt dort nur die Stammdaten, damit der CSV-Import ueberhaupt ein
 # Rettungsmittel zur Auswahl hat. Ohne diesen Schalter muesste sie das Konto
 # nachbauen -- und damit einen zweiten Weg pflegen.
@@ -59,7 +59,7 @@ DEMO_PASSWORT = "nadokudemo0815"
 ALLE_STUFEN = ["konto", "stammdaten", "geraet", "ingest", "zuordnen",
                "nachtragen", "manuell", "papierkorb", "sperrliste", "schneiden"]
 # `schneiden` STEHT AM ENDE und nicht, wie das Konzept es zuerst vorsah,
-# zwischen `zuordnen` und `nachtragen` (E-R64-22). Der Grund sind die drei
+# zwischen `zuordnen` und `nachtragen`. Der Grund sind die drei
 # Stufen dazwischen: `nachtragen`, `papierkorb` und `sperrliste` suchen ihre
 # Einsaetze ueber `start_hhmm` -- die erste bricht bei zwei Treffern ab, die
 # zweite nimmt still `treffer[0]`. Ein geschnittener Einsatz waere ab der
@@ -69,7 +69,7 @@ ALLE_STUFEN = ["konto", "stammdaten", "geraet", "ingest", "zuordnen",
 
 
 class Lauf:
-    """Zustand ueber die Stufen hinweg — und das Messprotokoll (E-P1-14)."""
+    """Zustand ueber die Stufen hinweg — und das Messprotokoll."""
 
     def __init__(self, basis: str, zustand: pathlib.Path) -> None:
         self.basis = basis
@@ -95,7 +95,7 @@ def melde(text: str) -> None:
 
 # ---------------------------------------------------------------- 1. Konto
 def stufe_konto(lauf: Lauf, admin: tuple[str, ...]) -> None:
-    """Demo-Konto ueber den REGULAEREN Einladungsweg anlegen (E-P1-10).
+    """Demo-Konto ueber den REGULAEREN Einladungsweg anlegen.
 
     Nicht per SQL und nicht mit einem Sonderendpunkt: Das Konto entsteht so,
     wie jedes andere entsteht — Admin legt an, es gibt einen Einrichtungslink,
@@ -126,12 +126,12 @@ def stufe_stammdaten(lauf: Lauf) -> None:
     st = json.loads((QUELLE / "stammdaten.json").read_text("utf-8"))
 
     def speichern(daten: dict) -> None:
-        # MIT ?t: Seit P3/O2 zeigt einstellungen.php ohne `t` die UEBERSICHT
-        # und beendet sich VOR der POST-Verarbeitung (E-P3-11) — ein POST ohne
-        # Parameter versandete stillschweigend (Fund F-P3-AF in O5).
+        # MIT ?t: einstellungen.php zeigt ohne `t` die UEBERSICHT
+        # und beendet sich VOR der POST-Verarbeitung — ein POST ohne
+        # Parameter versandete stillschweigend.
         s.csrf_auffrischen("einstellungen.php?t=standorte")
         antwort = s.post("einstellungen.php?t=standorte", {**daten, "csrf": s.csrf})
-        # Fehlerkasten seit P3 als Meldungs-Baustein; die alte Klasse davor.
+        # Fehlerkasten heute als Meldungs-Baustein; die alte Klasse davor.
         fehler = fehlertext(antwort.text)
         if fehler:
             raise RuntimeError(f"{daten.get('action')}: {fehler}")
@@ -146,7 +146,7 @@ def stufe_stammdaten(lauf: Lauf) -> None:
             speichern({"action": "base_default", "id": ids["standorte"][b["name"]]})
 
     for r in st["rettungsmittel"]:
-        # TYP, KURZNAME UND "OHNE STANDORT" (S9/AP4, E-S9-09).
+        # TYP, KURZNAME UND "OHNE STANDORT".
         #
         # `standort` nennt die Karte, aus der das Formular kommt. Traegt der
         # Eintrag `ohne_standort`, geht statt der Kennung eine 0 hinaus -- das
@@ -154,17 +154,16 @@ def stufe_stammdaten(lauf: Lauf) -> None:
         # `dt_base_erlaubt()` macht daraus NULL. Ob der Typ das darf,
         # entscheidet weiterhin die Pruefschicht (Pflicht nur bei "standard").
         #
-        # BIS ZUM 13.09.2026 STAND HIER EIN EIGENES FELD `ohne_standort=1`.
-        # Das war bis Web 16.3.0 richtig: Damals war es ein Haken neben der
-        # Standortauswahl. Web 16.3.0 hat ihn durch den ersten Eintrag der
+        # EIN EIGENES FELD `ohne_standort=1` GEHT NICHT. Es war einmal ein
+        # Haken neben der Standortauswahl, und den hat der erste Eintrag der
         # Auswahlliste ersetzt -- mit Begruendung (der Haken "schlug eine
         # verborgene Standortkennung; wer ihn setzte, sah nicht, WAS er damit
         # ueberschrieb"). Das Feld las seither niemand mehr, und weil daneben
         # weiterhin eine echte Kennung stand, bekamen BEIDE Eintraege einen
         # Standort. Aufgefallen ist es erst am Referenzbestand: 0 von 6 statt
-        # 2 von 6 ohne Standort (Backlog Nr. 174). Heute sind es VIER von
+        # 2 von 6 ohne Standort. Heute sind es VIER von
         # ZEHN -- der Demo-Ausbau hat zwei Veranstaltungs-Rettungsmittel ohne
-        # Standort dazugelegt (E-DA-08). Wer die Zahl auf null fallen sieht,
+        # Standort dazugelegt. Wer die Zahl auf null fallen sieht,
         # hat denselben Fehler wieder.
         #
         # Die Lehre steht in der LIESMICH: Ein Sender, der ein Feld schickt,
@@ -212,14 +211,14 @@ def kennungen(s) -> dict:
     html = s.get("diensttag_neu.php").text
 
     def lesen(feld: str, aufbereiten) -> dict:
-        # NICHT auf "<select name=..." verankern. Seit P3/O11 (Web 9.12.0)
-        # rendert der Baustein ui_feld() das Feld als
+        # NICHT auf "<select name=..." verankern. Der
+        # Baustein ui_feld() rendert das Feld als
         # `<select class="feld-eingabe" id="..." name="...">` — `name` steht
         # also nicht mehr vorn. Der alte Ausdruck fand nichts mehr, lieferte
         # ein leeres Verzeichnis, und die Stammdaten-Stufe brach zwei Zeilen
         # spaeter mit einem KeyError auf den STANDORTNAMEN ab. Die Ursache
         # stand nirgends: Es sah aus, als fehle ein Standort, der in der
-        # Datenbank laengst lag (F-S2-A).
+        # Datenbank laengst lag.
         #
         # Jetzt wird das oeffnende Tag als Ganzes gesucht und darin nach dem
         # Namen gefragt. Damit ist die Reihenfolge der Attribute egal.
@@ -239,9 +238,8 @@ def kennungen(s) -> dict:
             gefunden[aufbereiten(re.sub(r"\s+", " ", roh).strip())] = int(wert)
         return gefunden
 
-    # Der Standort steht schlicht da. Bis Web 20.47.0 konnte „ (zentral)"
-    # dahinter stehen; das schrieb diensttag_neu.php fuer zentrale Standorte
-    # (R39, mit P5c/AP8 gefallen).
+    # Der Standort steht schlicht da. Frueher konnte „ (zentral)"
+    # dahinter stehen; das schrieb diensttag_neu.php fuer zentrale Standorte.
     standorte = lesen("base_id", lambda x: x.strip())
     # Das Rettungsmittel traegt ein Artzeichen davor und den Standort dahinter:
     # „🚁 Alpenfalke 1 · Luftrettungsstation Hochkreuth". Beides gehoert zur
@@ -257,25 +255,23 @@ def _geraete_ids(s) -> set[str]:
 
     UEBER DIE FORMULARKENNUNG, nicht ueber die Nachbarschaft der Felder. Die
     Geraeteliste rendert je Geraet ein eigenes Loeschformular
-    `<form … id="f-devdel-<id>">`; die Knoepfe verweisen mit `form=` darauf
-    (P3/O11). Zwei aeltere Ausdruecke suchten nebeneinanderliegende
+    `<form … id="f-devdel-<id>">`; die Knoepfe verweisen mit `form=` darauf.
+    Zwei aeltere Ausdruecke suchten nebeneinanderliegende
     <input>-Felder und fanden seither NICHTS -- das Aufraeumen lief leer, und
     jeder Wiederholungslauf hinterliess ein weiteres unbrauchbares Geraet,
-    bis die Grenze von fuenf je Konto erreicht war und `add` still scheiterte
-    (F-S2-A).
+    bis die Grenze von fuenf je Konto erreicht war und `add` still scheiterte.
     """
     return set(re.findall(r'id="f-devdel-(\d+)"', s.get("einstellungen.php?t=geraete").text))
 
 
 def stufe_geraet(lauf: Lauf) -> None:
-    """Die zwei Referenzgeraete -- ueber den ECHTEN Kopplungsweg (E-R64-15).
+    """Die zwei Referenzgeraete -- ueber den ECHTEN Kopplungsweg.
 
     WARUM NICHT MEHR ueber die Geraeteseite (`action=add`). Der kurze Weg legt
     ein Geraet mit Beschriftung an und sonst nichts: `geraet_art` und
-    `geraet_modell` bleiben NULL. Seit Web 14.0.0 kopiert `ingest.php` beide
-    Spalten beim Anlegen an jeden Einsatz und jedes Segment (Momentaufnahme,
-    R64) -- mit NULL an der Quelle trug der ganze Referenzbestand eine leere
-    Momentaufnahme, und der edbak-Kreislauf belegte fuer R64 nichts. Art und
+    `geraet_modell` bleiben NULL. `ingest.php` kopiert beide
+    Spalten beim Anlegen an jeden Einsatz und jedes Segment (Momentaufnahme) -- mit NULL an der Quelle trug der ganze Referenzbestand eine leere
+    Momentaufnahme, und der edbak-Kreislauf belegte fuer die Momentaufnahme nichts. Art und
     Modell entstehen AUSSCHLIESSLICH in `pair.php` im Ja-Zweig; einen
     Nachtragsweg gibt es nicht.
 
@@ -284,7 +280,7 @@ def stufe_geraet(lauf: Lauf) -> None:
       1. `POST pair.php {"aktion":"start","geraet":{...}}`, OHNE Kopfzeilen.
          Die Antwort traegt Code, Kennung und Schluessel im JSON -- damit
          faellt das Abklauben des Markups weg, das frueher an jeder
-         Umgestaltung der Seite zerbrach (F-S2-A).
+         Umgestaltung der Seite zerbrach.
       2. Zustand sichern, SOFORT. Der Schluessel geht genau einmal ueber die
          Leitung; ein Abbruch zwischen Schritt 1 und 4 hinterliesse sonst
          eine Kopplungssitzung, zu der niemand mehr den Schluessel hat.
@@ -310,7 +306,7 @@ def stufe_geraet(lauf: Lauf) -> None:
     NICHTS setzt den Topf zurueck (kein `rate_erfolg('pair_start')` im Baum).
     Zwei Geraete je Lauf heisst zehn Laeufe je zehn Minuten. Wer beim
     Entwickeln oefter fahren muss, raeumt den Topf so ab, wie es
-    `tools/proben/kopplung/probe.php` tut -- hier steht kein SQL (R4).
+    `tools/proben/kopplung/probe.php` tut -- hier steht kein SQL.
     """
     s = lauf.demo_sitzung()
     if lauf.zustand.get("geraete"):
@@ -394,13 +390,25 @@ def stufe_geraet(lauf: Lauf) -> None:
 
 
 # --------------------------------------------------------------- 4. Ingest
+def pakete_verschliessen(sec1: bytes, roh: list[dict]) -> list[dict]:
+    """Pakete im Format des Sendeplans (Ortsdaten im Klartext) in das Format
+    bringen, das `ingest.php` annimmt: Phasenorte, Reanimation und Spur in
+    Gerätehüllen, verschlossen mit dem Kontoschlüssel. Dieselbe Gerätehilfe
+    wie in den Proben (`tools/proben/huelle/geraet_cli.php`)."""
+    umbau = subprocess.run(
+        ["php", str(HIER.parents[2] / "tools" / "proben" / "huelle" / "geraet_cli.php")],
+        input=json.dumps({"sec1": base64.b64encode(sec1).decode("ascii"), "pakete": roh}),
+        capture_output=True, text=True, check=True)
+    return json.loads(umbau.stdout)
+
+
 def stufe_ingest(lauf: Lauf) -> None:
     """Sendeplan abspielen — in der Reihenfolge, in der die Uhr senden wuerde.
 
-    DAS MESSPROTOKOLL (E-P1-14 / R19) entsteht hier. Es haelt die SOLL-Zeit
+    DAS MESSPROTOKOLL entsteht hier. Es haelt die SOLL-Zeit
     fest, nicht die Wanduhr des Replays: Das Einspielen laeuft in Sekunden ab,
     wo der Dienst zwoelf Stunden dauerte. Fuer die Bemessung einer Mengenbremse
-    in P5 zaehlt, wie eine Uhr im BETRIEB sendet, nicht wie schnell ein Skript
+    zaehlt, wie eine Uhr im BETRIEB sendet, nicht wie schnell ein Skript
     schaufelt.
     """
     plan = json.loads((AUSGABE / "sendeplan.json").read_text("utf-8"))
@@ -410,7 +418,7 @@ def stufe_ingest(lauf: Lauf) -> None:
     messung: list[dict] = []
     fehler = 0
 
-    # SEIT WEB 22 VERSCHLOSSEN (S11-04a, E-S11-09). Der Sendeplan liegt im
+    # SEIT WEB 22 VERSCHLOSSEN. Der Sendeplan liegt im
     # alten Format vor (Punkte, Koordinaten und Reanimation im Klartext);
     # `ingest.php` nimmt das nicht mehr an. Umgebaut wird mit DERSELBEN
     # Geraetehilfe wie in den Proben (`tools/proben/huelle/geraet.php`), in
@@ -420,11 +428,7 @@ def stufe_ingest(lauf: Lauf) -> None:
     offen = [e for e in plan if e["datei"] not in bereits]
     sec1 = s.kontoschluessel()
     roh = [json.loads((AUSGABE / e["datei"]).read_text("utf-8")) for e in offen]
-    umbau = subprocess.run(
-        ["php", str(HIER.parents[2] / "tools" / "proben" / "huelle" / "geraet_cli.php")],
-        input=json.dumps({"sec1": base64.b64encode(sec1).decode("ascii"), "pakete": roh}),
-        capture_output=True, text=True, check=True)
-    verschlossen = dict(zip((e["datei"] for e in offen), json.loads(umbau.stdout)))
+    verschlossen = dict(zip((e["datei"] for e in offen), pakete_verschliessen(sec1, roh)))
     melde(f"  {len(offen)} Pakete verschlossen (Kontoschlüssel {sec1[:4].hex()}…).")
 
     for eintrag in plan:
@@ -477,9 +481,9 @@ def stufe_ingest(lauf: Lauf) -> None:
 
 # ------------------------------------------------------------ 5. Zuordnen
 def stufe_zuordnen(lauf: Lauf) -> None:
-    """Neutrale Diensttage zuordnen — ueber `POST api/day.php` (B-03).
+    """Neutrale Diensttage zuordnen — ueber `POST api/day.php`.
 
-    VORHER WIRD DER NEUTRALE ZUSTAND BEOBACHTET (E-P1-11). Er ist kein
+    VORHER WIRD DER NEUTRALE ZUSTAND BEOBACHTET. Er ist kein
     Nebenprodukt, sondern eine Zusage des Datenmodells: Ein von der Uhr
     angelegter Diensttag hat keine Art, keine Rollen und keine artabhaengigen
     Felder. Das wird hier gezaehlt und im Zustand festgehalten, damit es
@@ -507,7 +511,7 @@ def stufe_zuordnen(lauf: Lauf) -> None:
         if not passend:
             raise RuntimeError(f"{d['kennung']}: kein Diensttag zu {dn['day']} {stunde}")
         tag = passend[0]
-        # DER DIENSTTAG OHNE STANDORT (E-DA-08). `base_id: ""` ist der Weg,
+        # DER DIENSTTAG OHNE STANDORT. `base_id: ""` ist der Weg,
         # den auch das Formular geht: `dt_base_erlaubt()` macht daraus NULL.
         # Die Kennung ganz WEGZULASSEN taete es nicht -- `api/day.php` liesse
         # den Standort dann stehen, wie er ist, und ein zweiter Lauf haette
@@ -536,7 +540,7 @@ def formularfelder(daten: dict, s, bestand: dict | None = None) -> list:
     nicht und koennte den Inhalt gar nicht pruefen. Das ist keine Luecke,
     sondern die Zusage: Klartext dieser Felder geht nie an den Server.
 
-    SEIT S11-06e WIE DAS FORMULAR AB WEB 22.1.0 (F-S11-43). Phasenorte und
+    WIE DAS FORMULAR. Phasenorte und
     Reanimation gehen in die Einsatzhuelle, verschlossen mit dem oeffentlichen
     Schluessel des Kontos und gebunden an die `client_ref`; die Phasenzeiten
     gehen als `ort_phasen` mit, und der Server haelt sie gegen seine eigene
@@ -566,7 +570,7 @@ def formularfelder(daten: dict, s, bestand: dict | None = None) -> list:
             felder[f"f_{spalte}"] = str(wert)
     if f.get("start_src"):
         felder["start_src"] = f["start_src"]
-    # Die Zielklinik liegt seit S11-05b im Blob, mit ihren Koordinaten.
+    # Die Zielklinik liegt im Blob, mit ihren Koordinaten.
     if f.get("transport_dest") or f.get("dest_lat") is not None:
         ziel = {"addr": f.get("transport_dest") or ""}
         if f.get("dest_lat") is not None and f.get("dest_lon") is not None:
@@ -624,7 +628,7 @@ def formularfelder(daten: dict, s, bestand: dict | None = None) -> list:
         innen_phasen.append({"phase": nr, "t": t - beginn,
                              "lat": o.get("lat") if o else None,
                              "lon": o.get("lon") if o else None})
-    ref = bestand["client_ref"] if bestand is not None else "man-" + __import__("os").urandom(8).hex()
+    ref = bestand["client_ref"] if bestand is not None else "man-" + os.urandom(8).hex()
     liste.append(("ort_huelle", ortsdaten.einsatz_verschliessen(
         {"fassung": 1, "phasen": innen_phasen, "rea": rea_innen}, sec1, ref)))
     liste.append(("ort_phasen", json.dumps([[nr, t] for nr, t in phasen_ts])))
@@ -704,7 +708,7 @@ def stufe_manuell(lauf: Lauf) -> None:
 # ------------------------------------------------------------ 8. Papierkorb
 def stufe_papierkorb(lauf: Lauf) -> None:
     """Dauerzustand herstellen: ein gelöschter Einsatz und ein gelöschter
-    Diensttag (E-P1-21).
+    Diensttag.
 
     Ueber die regulaeren Loeschwege, nicht per SQL: `einsatz_loeschen.php`
     und `diensttag_loeschen.php` setzen `deleted_at` und — beim Diensttag —
@@ -744,7 +748,7 @@ def stufe_papierkorb(lauf: Lauf) -> None:
 
 # ------------------------------------------------------------ 9. Sperrliste
 def stufe_sperrliste(lauf: Lauf) -> None:
-    """E-P1-16: senden, löschen, endgültig entfernen, ERNEUT senden.
+    """Senden, löschen, endgültig entfernen, ERNEUT senden.
 
     Erwartet wird, dass der Einsatz NICHT wieder entsteht. Ohne diese Sperre
     könnte eine Uhr mit gepufferten Daten jeden gelöschten Einsatz wieder
@@ -779,9 +783,20 @@ def stufe_sperrliste(lauf: Lauf) -> None:
     protokoll = {"schritte": []}
     vorher = zaehle()
 
-    for p in dateien:                                     # 1. senden
-        s.s.post(f"{lauf.basis}/ingest.php", data=p.read_text("utf-8"),
-                 headers=kopf, timeout=60)
+    # Ortsdaten im Klartext weist `ingest.php` ab (400 klartext) — die Pakete
+    # werden verschlossen wie in der Stufe `ingest`, sonst misst der Schritt
+    # eine Abweisung statt der Sperrliste.
+    pakete = pakete_verschliessen(s.kontoschluessel(),
+                                  [json.loads(p.read_text("utf-8")) for p in dateien])
+
+    def senden() -> None:
+        for koerper in pakete:
+            r = s.s.post(f"{lauf.basis}/ingest.php", data=json.dumps(koerper),
+                         headers=kopf, timeout=60)
+            if r.status_code >= 400:
+                raise RuntimeError(f"ingest.php antwortet {r.status_code}: {r.text[:200]}")
+
+    senden()                                              # 1. senden
     nach_senden = zaehle()
     protokoll["schritte"].append({"schritt": "gesendet", "einsaetze": nach_senden})
 
@@ -806,9 +821,7 @@ def stufe_sperrliste(lauf: Lauf) -> None:
            {"action": "purge_mission", "id": mid, "confirm": "ja", "csrf": s.csrf})
     protokoll["schritte"].append({"schritt": "endgueltig_geloescht", "einsaetze": zaehle()})
 
-    for p in dateien:                                     # 4. erneut senden
-        s.s.post(f"{lauf.basis}/ingest.php", data=p.read_text("utf-8"),
-                 headers=kopf, timeout=60)
+    senden()                                              # 4. erneut senden
     nachher = zaehle()
     protokoll["schritte"].append({"schritt": "erneut_gesendet", "einsaetze": nachher})
 
@@ -834,10 +847,10 @@ def stufe_sperrliste(lauf: Lauf) -> None:
 
 # ----------------------------------------------------------- 10. Schneiden
 def stufe_schneiden(lauf: Lauf) -> None:
-    """Aus einem Ruhesegment einen Einsatz schneiden (E-R64-16).
+    """Aus einem Ruhesegment einen Einsatz schneiden.
 
     WOFUER. Der Referenzbestand hatte keinen Schnitt -- und damit keinen
-    Sperrvermerk in `track_cuts`. Backlog Nr. 63 (der Vermerk muss die
+    Sperrvermerk in `track_cuts`. Die Zusage (der Vermerk muss die
     Konto-Sicherung ueberstehen) war deshalb nur ueber eine eigens gebaute
     Probe zu belegen. Mit einem Schnitt IM Bestand prueft ihn der Demo-Reset
     auf dem Produktivserver bei jedem Reset von selbst.
@@ -892,8 +905,8 @@ def stufe_schneiden(lauf: Lauf) -> None:
                     f"{quelle['beginn'][11:16]} — erwartet war genau eines")
             rest_id = treffer[0]["id"]
 
-            # SEIT S11-05c SCHNEIDET DER BROWSER -- und darum hier das Werkzeug
-            # (F-S11-53): Segment oeffnen, die Punkte im Zeitraum nehmen und als
+            # DER BROWSER SCHNEIDET -- und darum hier das Werkzeug:
+            # Segment oeffnen, die Punkte im Zeitraum nehmen und als
             # Spur des neuen Einsatzes verschliessen, gebunden an dessen Kennung.
             # Der Zeitraum wird wie auf dem Server gerechnet (`local_to_utc()`).
             seg = treffer[0]
@@ -907,7 +920,7 @@ def stufe_schneiden(lauf: Lauf) -> None:
             if not drin:
                 raise RuntimeError(f"{kennung}: im Zeitraum {sc['beginn'][11:16]}–"
                                    f"{sc['ende'][11:16]} liegt kein Punkt des Segments")
-            ref = "cut-" + __import__("os").urandom(8).hex()
+            ref = "cut-" + os.urandom(8).hex()
             antwort = s.json_post("api/schneiden.php", {
                 "action": "schneiden", "rest_id": rest_id,
                 "beginn": sc["beginn"][11:16], "ende": sc["ende"][11:16],
@@ -935,10 +948,10 @@ def stufe_schneiden(lauf: Lauf) -> None:
                   f"{o.get('mission_id')}, {o.get('genommen')} Punkte gewandert, "
                   f"{o.get('geblieben')} geblieben, {len(sc['phasen'])} Phasen")
 
-    # SO VIELE, WIE IN DEN QUELLDATEN STEHEN (E-DA-11). Die Zeile hiess bis
+    # SO VIELE, WIE IN DEN QUELLDATEN STEHEN. Die Zeile hiess bis
     # zum Demo-Ausbau `!= 1`. Sie ist nicht gestrichen, sondern an die Quelle
     # gebunden: Ein Schnitt, der still ausfaellt, bliebe sonst unbemerkt -- und
-    # mit ihm der Sperrvermerk, den Backlog Nr. 63 im Bestand haben will.
+    # mit ihm der Sperrvermerk, den die Zusage im Bestand haben will.
     soll = sum(len(json.loads(pfad.read_text("utf-8")).get("schnitte", []))
                for pfad in sorted((QUELLE / "dienste").glob("D*.json")))
     if len(getan) != soll:
@@ -955,7 +968,7 @@ def main() -> int:
     p.add_argument("--stufen", default=",".join(ALLE_STUFEN))
     p.add_argument("--admin-email", default="admin@example.invalid")
     p.add_argument("--admin-passwort", default="pruefstandzugang2026")
-    # Das Geheimnis des Zweitfaktors (P5c/AP5, E-P5c-43): Das Admin-Konto ist
+    # Das Geheimnis des Zweitfaktors: Das Admin-Konto ist
     # eine Pflichtrolle. Leer heisst `NADOKU_TOTP`, sonst das der Sandbox --
     # gegen eine andere Anlage (`--basis`) gehoert deren Geheimnis hierher.
     # Das Demo-Konto braucht keines; nur die Stufe `konto` meldet sich als

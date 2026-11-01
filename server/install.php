@@ -8,7 +8,7 @@ declare(strict_types=1);
  * Diese Datei benötigt selbst KEINE config.php.
  *
  * ---------------------------------------------------------------------------
- * DIESE DATEI BLEIBT PHP-7-LESBAR (P5a/AP2, PP-1)
+ * DIESE DATEI BLEIBT AUF PHP 7.4 LESBAR
  * ---------------------------------------------------------------------------
  *
  * PHP übersetzt eine Datei VOLLSTÄNDIG, bevor es die erste Zeile ausführt.
@@ -17,6 +17,8 @@ declare(strict_types=1);
  * Datei `match`, `?->`, `: never`, `enum`, `readonly` oder ein Attribut
  * `#[…]`, bekäme eine Besucherin auf PHP 8.0 statt der Meldung unten einen
  * Parse Error — also genau die stumme Wand, die die Prüfung verhindern soll.
+ * Die Grenze liegt bei 7.4, nicht bei 7.0: Die Datei benutzt `fn` (7.4).
+ * Eine ältere Fassung bietet kein Hoster mehr an.
  *
  * **Wer hier PHP-8-Syntax einbaut, hebelt die Prüfung aus.** Stufe 1 des
  * Prüftors (`.github/workflows/pruefung.yml`) zählt die gängigen Formen nach;
@@ -31,7 +33,7 @@ declare(strict_types=1);
  */
 
 /* ---- Die Weiche. Nur Syntax, die jedes PHP 5.3 noch versteht. ------------ */
-/* Die Zahl steht in `php_mindest.php` und nur dort (E-PP-03). Jene Datei ist
+/* Die Zahl steht in `php_mindest.php` und nur dort. Jene Datei ist
  * aus demselben Grund so altertuemlich geschrieben wie dieser Block. */
 require __DIR__ . '/php_mindest.php';
 if (version_compare(PHP_VERSION, PLATTFORM_PHP_MIN, '<')) {
@@ -62,13 +64,13 @@ if (version_compare(PHP_VERSION, PLATTFORM_PHP_MIN, '<')) {
     exit;
 }
 
-// E-Mail-Normalisierung (M1-13). Diese Datei laeuft VOR der Ersteinrichtung
+// E-Mail-Normalisierung. Diese Datei laeuft VOR der Ersteinrichtung
 // und kann weder db.php noch validate_lib.php laden — beide brauchen die
 // config.php, die es hier noch nicht gibt. Deshalb die abhaengigkeitsfreie
 // email_lib.php, dieselbe Fassung wie im Rest der Anwendung.
 require_once __DIR__ . '/email_lib.php';
 
-/* DER NAME DIESER INSTALLATION (P5a/AP5, E-P5a-35). `instanz_lib.php` laedt
+/* DER NAME DIESER INSTALLATION. `instanz_lib.php` laedt
  * selbst nichts und laeuft deshalb auch hier, vor der Ersteinrichtung — es
  * gibt weder `app_state` noch eine Verbindung, und die Funktionen fallen von
  * selbst auf die Vorgaben zurueck.
@@ -81,19 +83,18 @@ require_once __DIR__ . '/email_lib.php';
  * Grund; sie ist die einzige, die sie behaelt. */
 require_once __DIR__ . '/instanz_lib.php';
 
-/* DIE SEITENHUELLE MUSS HIER STEHEN, NICHT IN render_page() (Web 9.10.1).
+/* DIE SEITENHUELLE MUSS HIER STEHEN, NICHT IN render_page().
  *
- * Sie stand seit P3/O2 in render_page() selbst — an der Stelle, an der sie
- * gebraucht wird. Das war falsch, und zwar toedlich: Die Aufrufer BAUEN ihr
- * Argument mit ui_meldung_markup() (Zeile 62), ui_knopf() (Zeile 66) und
- * ui_symbol(), und PHP wertet Argumente VOR dem Aufruf aus. Die Huelle wurde
- * also erst geladen, nachdem die Funktionen daraus schon gebraucht worden
- * waren. Jeder der drei Zweige endete in „Call to undefined function".
+ * In render_page() selbst — an der Stelle, an der sie gebraucht wird —
+ * waere sie toedlich falsch: Die Aufrufer BAUEN ihr Argument mit
+ * ui_meldung_markup() (Zeile 62), ui_knopf() (Zeile 66) und ui_symbol(), und
+ * PHP wertet Argumente VOR dem Aufruf aus. Die Huelle wuerde also erst
+ * geladen, nachdem die Funktionen daraus schon gebraucht wurden. Jeder der
+ * drei Zweige endete in „Call to undefined function".
  *
- * DAS TRAF JEDE NEUINSTALLATION: index.php leitet ohne config.php hierher,
- * und der Deploy liefert diese Datei aus. Aufgefallen ist es niemandem, weil
- * der Einrichter genau einmal im Leben einer Installation laeuft — und die
- * bestehende laeuft laengst. Gefunden bei der Bestandsaufnahme zu O10.
+ * DAS TRAEFE JEDE NEUINSTALLATION: index.php leitet ohne config.php hierher.
+ * Auffallen wuerde es niemandem, weil der Einrichter genau einmal im Leben
+ * einer Installation laeuft — und die bestehende laeuft laengst.
  *
  * ui.php hat auf oberster Ebene keine Abhaengigkeit und laeuft deshalb auch
  * hier, VOR der Ersteinrichtung: Es gibt zu diesem Zeitpunkt weder config.php
@@ -106,7 +107,7 @@ $configPath = __DIR__ . '/config.php';
 $lockPath   = __DIR__ . '/install.lock';
 $schemaPath = __DIR__ . '/schema.sql';
 
-/* Sitzung des Einrichters wie die der Anwendung absichern (M1-19).
+/* Sitzung des Einrichters wie die der Anwendung absichern.
  *
  * Hier stand ein blankes session_start(). Die Anwendung setzt an ihrer
  * Sitzung seit jeher httponly/secure/SameSite — der Einrichter nicht, obwohl
@@ -122,8 +123,8 @@ $schemaPath = __DIR__ . '/schema.sql';
  * SameSite=Lax statt Strict: Der Einrichter wird typischerweise ueber einen
  * Link aus einer Anleitung oder dem Kundenmenue des Hosters geoeffnet.
  */
-/* DIE SITZUNGSABLAGE — DIE ZWEITE UND LETZTE AUFRUFSTELLE (Schritt 16,
- * E-SA-02, Backlog Nr. 241). Die erste steht in `db.php`.
+/* DIE SITZUNGSABLAGE — DIE ZWEITE UND LETZTE AUFRUFSTELLE. Die erste steht
+ * in `db.php`.
  *
  * Diese Datei ist die einzige der neun mit einem Sitzungsstart, die `db.php`
  * NICHT laedt — zum Zeitpunkt des Einrichtens gibt es keine `config.php`.
@@ -133,7 +134,7 @@ $schemaPath = __DIR__ . '/schema.sql';
  *
  * `sitzung_lib.php` laedt nichts und ist damit hier ladbar. Sie ist
  * PHP-8-Code und steht deshalb HINTER der Weiche oben — wie `ui.php` und
- * `plattform_lib.php` auch (5b.4).
+ * `plattform_lib.php` auch (docs/Technik.md 7.5).
  *
  * UND VOR `session_set_cookie_params()`, nicht dazwischen: `tools/quelltext/sitzungshaertung.php`
  * misst, dass `use_strict_mode` hoechstens zwoelf Zeilen vor dem
@@ -141,10 +142,9 @@ $schemaPath = __DIR__ . '/schema.sql';
  * schoebe die Haertung aus dem Fenster und machte Stufe 1 der Kette rot —
  * mit einem Befund, der sachlich falsch waere. */
 require_once __DIR__ . '/sitzung_lib.php';
-/* EINE ZEILE STATT SECHS (Schritt 15 AP2, E-ZE-06/-12). Bis Web 20.26.3
- * standen hier `sitzung_ablage()`, die Cookie-Parameter, die Haertung und
- * der Start einzeln; `sitzung_starten()` tut beides in derselben
- * Reihenfolge. Die Art `einrichtung` ist `Lax` und HTTPS-abhaengig — diese
+/* EINE ZEILE STATT SECHS. `sitzung_starten()` erledigt
+ * `sitzung_ablage()`, die Cookie-Parameter, die Haertung und den Start in
+ * derselben Reihenfolge. Die Art `einrichtung` ist `Lax` und HTTPS-abhaengig — diese
  * Seite laeuft auf einer Anlage, die noch keine `config.php` hat und deren
  * HTTPS-Lage die Einrichterin erst herstellt. */
 sitzung_starten('einrichtung');
@@ -169,7 +169,7 @@ $errors = [];
 $done = false;
 $setupLink = '';
 
-/* ---- Nachweis von Dateisystemzugriff (M1-11, D9) --------------------------
+/* ---- Nachweis von Dateisystemzugriff (D9) --------------------------
  *
  * WAS DIESE SEITE OHNE IHN IST
  * Ein unangemeldeter Endpunkt, der eine Datenbank einrichtet, das erste
@@ -209,9 +209,9 @@ $setupLink = '';
  * schreiben liesse, koennte einer BetreiberIn mitten in der Einrichtung die
  * Kennung unter den Haenden wegziehen.
  *
- * DIE MECHANIK STEHT SEIT WEB 21.13.0 IN `nachweis_lib.php` (Schritt 18,
- * SR-04): Hier und in `wiederherstellen.php` stand sie wortgleich, und der
- * Notzugang waere die dritte Kopie geworden. Was hier bleibt, ist der Text
+ * DIE MECHANIK STEHT IN `nachweis_lib.php`: Sie wird hier, in
+ * `wiederherstellen.php` und im Notzugang gebraucht, und drei Kopien liefen
+ * auseinander. Was hier bleibt, ist der Text
  * der Datei und die Entscheidung, wann sie geht.
  */
 require_once __DIR__ . '/nachweis_lib.php';
@@ -249,7 +249,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         'from' => $in('smtp_from'), 'from_name' => $in('smtp_from_name') ?: INSTANZ_KURZ_VORGABE,
     ];
 
-    /* Nachweis zuerst pruefen (M1-11).
+    /* Nachweis zuerst pruefen.
      *
      * Vor allem anderen: Wer ihn nicht hat, soll auch keine Rueckmeldung
      * darueber bekommen, ob eine Datenbankverbindung zustande kaeme. Der
@@ -282,11 +282,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!is_readable($schemaPath)) {
         $errors[] = 'schema.sql wurde nicht gefunden (muss neben install.php liegen).';
     }
-    /* DAS PLATTFORMPROFIL, MUSS-STUFE (P5a/AP2, E-P5a-19).
+    /* DAS PLATTFORMPROFIL, MUSS-STUFE.
      *
-     * BIS WEB 20.4.0 STANDEN HIER VIER ERWEITERUNGEN und sonst nichts — keine
-     * PHP-Version, kein `pdo_mysql`, keine Weblimits, keine Schreibprobe. Die
-     * Liste ist seither `plattform_pruefen()`, und zwar dieselbe, die die
+     * NICHT NUR ERWEITERUNGEN, sondern auch PHP-Version, `pdo_mysql`,
+     * Weblimits und Schreibprobe. Die Liste ist `plattform_pruefen()`, und
+     * zwar dieselbe, die die
      * Statusseite im Betrieb fragt: Was die Einrichtung verlangt, muss die
      * Installation auch im dritten Jahr noch erfüllen, und zwei Listen liefen
      * dafür auseinander.
@@ -315,14 +315,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 
-    /* ERST FRAGEN, OB DIE DATENBANK LEER IST (Web 21.1.7, Backlog Nr. 291).
+    /* ERST FRAGEN, OB DIE DATENBANK LEER IST.
      *
      * `schema.sql` legt 41 von 42 Tabellen ohne `IF NOT EXISTS` an, und DDL
      * bestaetigt in MySQL still — eine Transaktion haelt nichts zurueck.
      * Scheiterte die Einrichtung nach dem Schema, standen die Tabellen, und
      * der naechste Versuch brach am ersten `CREATE` ab, mit einer Meldung,
      * die in jedem Fall „eine leere Datenbank verwenden" riet — auch beim
-     * ersten Fehlschlag, der mit der Datenbank nichts zu tun hatte (Nr. 288).
+     * ersten Fehlschlag, der mit der Datenbank nichts zu tun hatte.
      * Jetzt steht die Frage vor dem ersten `CREATE`, mit der Zahl; und die
      * zwei Schritte danach melden je ihren eigenen Satz. */
     if (!$errors && $pdo !== null) {
@@ -344,7 +344,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!$errors && $pdo !== null) {
         try {
             /* HIER STAND EIN HAEKCHEN "Vorhandene Tabellen vorher loeschen"
-             * (M1-11, D9). Es ist ersatzlos entfallen.
+             * (D9). Es ist ersatzlos entfallen.
              *
              * Es war die einzige Stelle im ganzen Projekt, an der ein
              * unangemeldeter Aufruf jede Tabelle der Datenbank haette leeren
@@ -372,14 +372,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
              * Es wird ueber pw_handling.php im Browser gesetzt; dort entstehen
              * zugleich Inhalts- und Wiederherstellungsschluessel.
              *
-             * DAS ERSTE KONTO IST DIE BETREIBERIN (R75, Web 15.0.0). Wer eine
+             * DAS ERSTE KONTO IST DIE BETREIBERIN. Wer eine
              * Installation einrichtet, ist per Definition die, die sie
              * betreibt — und sie ist in diesem Augenblick die Einzige. Legte
              * die Einrichtung ein Admin-Konto an, stuende die frische
              * Installation ohne Zugang zu ihrem eigenen Betriebsbereich da:
              * Serverschluessel, Wartungsmodus, Migrationen, Speichergrenze.
              * Der Weg zurueck fuehrte ueber die Datenbank. */
-            /* JETZT MIT TRANSAKTIONSKLAMMER (P5b/AP2, E-P5b-11).
+            /* JETZT MIT TRANSAKTIONSKLAMMER.
              *
              * Hier standen zwei `INSERT` ohne Klammer, und das war die
              * gefaehrlichste der vier Token-Stellen: Ein Abbruch zwischen
@@ -396,8 +396,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
              *
              * DIE KLAMMER SELBST (`db_transaktion()`) kommt aus
              * `transaktion_lib.php`, die `konto_lib.php` ohne Konfiguration
-             * laedt. Bis Web 20.37.2 stand sie in `db.php`, und hier brach
-             * jede Neueinrichtung ab (Nr. 288). */
+             * laedt. Stuende sie in `db.php`, braeche hier
+             * jede Neueinrichtung ab. */
             require_once __DIR__ . '/konto_lib.php';
             $angelegt = konto_anlegen($adminEmail, '', 'betreiberin',
                                       'einrichtung', 'aktiv', $pdo);
@@ -412,23 +412,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     // config.php schreiben + Sperre setzen
     if (!$errors) {
-        /* BEIDE GEHEIMNISSE DES SERVERS ENTSTEHEN HIER UND NIRGENDWO SONST
-         * (E-S2-21 / S2/AP7 fuer den Schluessel, E-S10-02 / S10 fuer den
-         * Anteil). Eine neue Installation bekommt beide mit, ohne dass jemand
+        /* BEIDE GEHEIMNISSE DES SERVERS ENTSTEHEN HIER UND NIRGENDWO SONST.
+         * Eine neue Installation bekommt beide mit, ohne dass jemand
          * daran denken muss; eine bestehende traegt sie ueber Betrieb →
          * Servereinstellungen nach, Karte „Schluessel des Servers".
          *
          * SIE TUN VERSCHIEDENES. Der SERVERSCHLUESSEL versiegelt, was der
          * Server ohne Browser lesen koennen muss — die Zugangsdaten der
-         * Backup-Ziele, das Komplettbackup und (seit S10) die Adminpakete.
+         * Backup-Ziele, das Komplettbackup und die Adminpakete.
          * Der SERVER-ANTEIL geht in die Ableitung des Datenschluessels ein,
          * mit dem der Browser die Schluesselhuelle des Kontos oeffnet; der
          * Server kann damit nichts oeffnen, aber ein Datenbankabzug allein
-         * reicht seither nicht mehr fuer einen Offline-Angriff.
+         * reicht nicht fuer einen Offline-Angriff.
          *
-         * BEIDE GEHOEREN INS WIEDERANLAUFPAKET. Es hat seit S10 VIER Stuecke:
+         * BEIDE GEHOEREN INS WIEDERANLAUFPAKET. Es hat VIER Stuecke:
          * config.php, Serverschluessel, Server-Anteil, Zugang zum Ziel. Das
-         * steht in docs/Technik.md, Abschnitt 7, und im Kopf dieser
+         * steht in docs/Technik.md, Abschnitt 13, und im Kopf dieser
          * config.php gleich mit — denn wer die Datei zum ersten Mal oeffnet,
          * liest sie und nicht das Runbook. */
         $config = [
@@ -465,7 +464,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } else {
             @chmod($configPath, 0640);
             file_put_contents($lockPath, 'installed ' . date('c') . "\n");
-            // Nachweisdatei hat ihren Zweck erfuellt (M1-11). Sie bleibt nicht
+            // Nachweisdatei hat ihren Zweck erfuellt. Sie bleibt nicht
             // liegen — eine Datei mit einem Geheimnis im Namen soll nicht
             // laenger existieren als noetig.
             nachweis_entfernen($nachweisMuster, $nachweis);
@@ -518,7 +517,7 @@ function render_form(array $v, array $errors, string $nachweis,
        gespeichert und die Datenbank wird angelegt. Der Einrichter läuft nur
        dieses eine Mal.</p>
 
-    <?php /* Maskierung HIER, an der Ausgabestelle (M1-18).
+    <?php /* Maskierung HIER, an der Ausgabestelle.
        Vorher maskierten zwei der zehn Meldungen ihren variablen Teil selbst,
        und die Ausgabe gab alles unmaskiert weiter. Das ging gut, solange
        niemand eine elfte Meldung mit Fremdtext ergänzt — genau die wäre dann
@@ -530,11 +529,10 @@ function render_form(array $v, array $errors, string $nachweis,
     <form method="post" autocomplete="off">
       <input type="hidden" name="csrf" value="<?= h($_SESSION['inst_csrf']) ?>">
 
-      <?php /* FUENF KARTEN STATT FUENF <fieldset> (O10). Die Elementregeln
-               fuer fieldset/legend standen in der Uebergangsschicht des
-               Stylesheets; sie sind mit O11 gefallen, und der Einrichter
-               staende sonst jetzt ohne Gestaltung da. Eine Karte mit Titel
-               ist ohnehin das, was E-P3-35 fuer eine Feldgruppe vorsieht. */ ?>
+      <?php /* FUENF KARTEN STATT FUENF <fieldset>. Fuer fieldset/legend
+               hat das Stylesheet keine Elementregeln, und der Einrichter
+               staende sonst ohne Gestaltung da. Eine Karte mit Titel
+               ist ohnehin das, was die Gestaltung fuer eine Feldgruppe vorsieht. */ ?>
 
       <?php ui_karte_start(['titel' => 'Nachweis']); ?>
         <?php if (!$nachweisOk): ?>
@@ -636,40 +634,32 @@ function render_form(array $v, array $errors, string $nachweis,
 }
 
 function render_page(string $title, string $body): void {
-    /* Die Seitenhuelle kommt aus ui.php — wie ueberall sonst (P0/A2).
+    /* Die Seitenhuelle kommt aus ui.php — wie ueberall sonst.
        Geladen wird sie am DATEIANFANG, nicht hier; die Begruendung steht
-       dort (Web 9.10.1).
+       dort.
 
-       SEIT P3/O2 GILT DAS GEMEINSAME STYLESHEET (Backlog Nr. 18, E-P3-02).
-       Bis Web 8.0.1 brachte diese Seite ihre Gestaltung im Kopf mit — 17
-       Hexwerte, eigene Knopf- und Meldungsklassen, eine zweite Schriftgroesse
-       —, und die Begruendung dafuer lautete: Der Einrichter soll auch dann
-       bedienbar aussehen, wenn am Stylesheet etwas fehlt.
+       ES GILT DAS GEMEINSAME STYLESHEET, keine eigene Gestaltung
+       im Kopf — auch nicht mit der Begruendung, der Einrichter solle bedienbar
+       aussehen, wenn am Stylesheet etwas fehlt.
 
-       Der Preis war hoeher als der Nutzen. Der Einrichter war die einzige
-       Seite, die bei einer Farbaenderung nicht mitzog, die einzige mit einer
-       eigenen `.btn-link`-Regel (die im Stylesheet daneben deshalb nie
-       greifen konnte — Backlog Nr. 18) und die einzige ohne Fusszeile. Und
+       Der Preis waere hoeher als der Nutzen: eine Seite, die bei einer
+       Farbaenderung nicht mitzieht, mit eigenen Regeln, die die des
+       Stylesheets ueberdecken, und ohne Fusszeile. Und
        das Stylesheet liegt neben ihm im selben Verzeichnis: Faellt es aus,
        ist die Anwendung ohnehin nicht eingerichtet.
 
        Der relative Pfad funktioniert hier, weil der Einrichter im selben
        Verzeichnis liegt wie die Anwendung; ohne asset() fehlt nur der
        Erkennungswert an der Adresse, und der Einrichter laeuft genau einmal. */
-    /* DIE OEFFENTLICHE HUELLE, nicht die der Anmeldung (O10).
+    /* DIE OEFFENTLICHE HUELLE, nicht die der Anmeldung.
      *
-     * Bis Web 9.10.1 stand hier `anmeldung-body` mit `.anmeldung-karte`: die
-     * dunkelblaue Flaeche und die schmale Karte des Anmeldeformulars. Die ist
-     * fuer zwei Zeilen gemacht — der Einrichter traegt fuenf Feldgruppen und
-     * half sich schon mit `.anmeldung-breit`, was der Sache nach die
-     * Lesespalte ist, nur unter falschem Namen. Dazu hatte die Kopfleiste
-     * dieselbe Farbe wie die Flaeche darunter (beide --dunkelblau), das Logo
-     * schwebte also ohne sichtbare Leiste.
+     * Nicht `anmeldung-body` mit `.anmeldung-karte`: Die dunkelblaue Flaeche
+     * und die schmale Karte des Anmeldeformulars sind fuer zwei Zeilen
+     * gemacht — der Einrichter traegt fuenf Feldgruppen. Dazu haette die
+     * Kopfleiste dieselbe Farbe wie die Flaeche darunter (beide
+     * --dunkelblau), das Logo schwebte also ohne sichtbare Leiste.
      *
-     * Das Konzept widersprach sich an dieser Stelle: E-P3-38 nennt „dunkle
-     * Huelle", Tabelle 5.4 fuehrt den Einrichter unter „Oeffentlich". Es gilt
-     * die Tabelle — dieselbe Huelle wie Abbruchseite, Impressum und
-     * Datenschutz. */
+     * Es gilt dieselbe Huelle wie Abbruchseite, Impressum und Datenschutz. */
     ui_seite_start(['titel' => $title]);
     ui_kopf(['menue' => false]);
     echo '<div class="rahmen rahmen-lesespalte">' . "\n";

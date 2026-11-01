@@ -8,9 +8,8 @@ zweimal.
 DIE TRENNUNG, DIE DAHINTER STECKT. Trackpunkte und Phasenkoordinaten gehoeren
 in der Anwendung NICHT zu den geschuetzten Angaben des Formulars (`pat_blob`,
 darin die ADRESSE des Einsatzorts, `loc.addr`), sondern liegen getrennt davon:
-seit Web 22 verschlossen in der Geraetehuelle (`track_stuecke`,
-`missions.ort_huelle`), bis dahin im Klartext (`track_points`, seit Web 10
-als SPUR1 in `track_blobs`; `mission_phases`). Ein Einsatz ohne geschuetzte Angaben hat deshalb sehr wohl
+verschlossen in der Geraetehuelle (`track_stuecke`,
+`missions.ort_huelle`). Ein Einsatz ohne geschuetzte Angaben hat deshalb sehr wohl
 eine Spur — sie kommt dann aus `spur`, nicht aus `geschuetzt`.
 
 Wegpunkte:
@@ -20,7 +19,7 @@ Wegpunkte:
   ort          Einsatzort: `spur.ort`, sonst `geschuetzt.loc`
   ziel         Transportziel: `spur.ziel`, sonst `felder.dest_lat/dest_lon`
   zustieg      der Punkt, bis zu dem GEFAHREN wird: Parkplatz, Talstation,
-               Huettenzufahrt (`spur.zustieg`, Demo-Ausbau E-DA-13)
+               Huettenzufahrt (`spur.zustieg`, Demo-Ausbau)
   ort_vorher   Einsatzort des VORIGEN Einsatzes (start_src='prev_site')
   ziel_vorher  Transportziel des VORIGEN Einsatzes (start_src='prev_dest')
 
@@ -73,7 +72,7 @@ def _koord(x):
     return None if lat is None or lon is None else (float(lat), float(lon))
 
 
-#: Teilstuecke, die zu Fuss zurueckgelegt werden (E-DA-13).
+#: Teilstuecke, die zu Fuss zurueckgelegt werden.
 FUSS_PAARE = {("zustieg", "ort"), ("ort", "zustieg")}
 
 
@@ -90,7 +89,7 @@ def basis_von(dienst: dict, standorte: dict) -> tuple[float, float] | None:
     """Wo der Dienst beginnt und endet.
 
     `spur_ausgangspunkt` GEWINNT, wenn er dasteht. Er steht seit dem
-    Demo-Ausbau nur noch an Diensten OHNE Standort (E-DA-09) -- an einem
+    Demo-Ausbau nur noch an Diensten OHNE Standort -- an einem
     Standort mit Koordinaten waere er eine zweite Wahrheit, und `pruefen.py`
     laesst ihn dort nicht mehr zu. Ein Tag ohne Standort traegt
     `dienst['standort'] = None`; `standorte.get(None)` liefert dann nichts,
@@ -152,7 +151,7 @@ def aufloesen(dienst: dict, einsatz: dict, vorheriger: dict | None,
 # Der Kommentar dort begruendete das mit: „Sie steht zweimal, weil Quelldaten
 # und Generator sonst voneinander abhingen; die Regel selbst ist kurz."
 #
-# Kurz war sie. Mit dem Wegpunkt `zustieg` (E-DA-13) ist sie es nicht mehr:
+# Kurz war sie. Mit dem Wegpunkt `zustieg` ist sie es nicht mehr:
 # Vier Teilstuecke und drei Phasenfenster verlangen eine Zuteilung, und die
 # passt in keine sechs Zeilen. Zwei Fassungen davon hiessen, dass das
 # Pruefskript die Erreichbarkeit eines ANDEREN Ablaufs misst als den, den der
@@ -219,7 +218,7 @@ def phasenfenster(einsatz: dict, dienst: dict, legs: int) -> list[tuple[int, int
 #
 # WOFUER. Bis zum Demo-Ausbau hatte jede Route hoechstens zwei Teilstuecke
 # (`basis -> ort -> ziel`), und `_fenster` gab je Teilstueck eines der drei
-# Phasenfenster zurueck. Mit dem Wegpunkt `zustieg` (E-DA-13) sind es vier:
+# Phasenfenster zurueck. Mit dem Wegpunkt `zustieg` sind es vier:
 # hinfahren, hingehen, zurueckgehen, wegfahren. Fuer vier Teilstuecke gibt es
 # aber keine vier Phasen — der Ablauf zwischen Transportbeginn (6) und Ankunft
 # Klinik (7) ist EINE Spanne, in der zweierlei passiert.

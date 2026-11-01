@@ -15,18 +15,12 @@ declare(strict_types=1);
  * Spalten der Tagestabelle (index.php), abgeleitet aus dem Schluessel
  * 'day_col' des Feldkatalogs.
  *
- * Bis Web 5.4.0 waren diese Spalten an drei Stellen hartkodiert — im SELECT
- * und im JSON-Aufbau von api/day.php sowie im Tabellenkopf und im
- * Zeilenaufbau von index.php. 'day_col' war dadurch reine Dokumentation: Die
- * Spalte „abw. Crew" stand seit Web 2.6.0 im Katalog und erschien trotzdem
- * nicht. Seither ist DIESE Funktion die einzige Stelle, die den Katalog fuer
- * die Tagestabelle auswertet; ein neuer Eintrag mit 'day_col' erscheint ohne
- * weitere Codeaenderung (Backlog Nr. 10).
- *
- * Die Probe aufs Exempel lief in Web 5.10.0 rueckwaerts: „abw. Crew" wurde
- * wieder abbestellt, und dafuer genuegte es, zwei Schluessel im Katalog zu
- * streichen — Tabellenkopf, Zeilenaufbau, Sortierung und der SELECT in
- * api/day.php zogen von selbst nach.
+ * DIESE Funktion ist die einzige Stelle, die den Katalog fuer die
+ * Tagestabelle auswertet — SELECT und JSON-Aufbau von api/day.php,
+ * Tabellenkopf und Zeilenaufbau von index.php. Ein neuer Eintrag mit
+ * 'day_col' erscheint ohne weitere Codeaenderung, und ein gestrichener
+ * verschwindet ebenso: Tabellenkopf, Zeilenaufbau, Sortierung und der
+ * SELECT ziehen von selbst nach.
  *
  * Unterfelder werden mit durchsucht: Ein Haken unter einem Haken darf
  * ebenfalls eine Spalte bekommen. Die Reihenfolge folgt dem Katalog.
@@ -43,7 +37,7 @@ declare(strict_types=1);
  *            Breiten- oder Sonderregel in style.css, wenn eine Spalte eine
  *            braucht. Die Ausrichtung kommt nicht von hier: Hakenspalten
  *            (`art` = 'check') erhalten im Markup zusaetzlich `haken-spalte`.
- *   'cap'    Faehigkeit aus 'cap_gate', sonst ''. Seit Schritt 15 AP9.
+ *   'cap'    Faehigkeit aus 'cap_gate', sonst ''.
  *
  * WOZU 'cap' DA IST -- und wozu nicht. Diese Funktion FILTERT NICHT. Sie
  * kennt keinen Diensttag (sie nimmt keinen Parameter und cacht statisch),
@@ -51,12 +45,11 @@ declare(strict_types=1);
  * OHNE Seitenwechsel, die Entscheidung faellt also ohnehin im Browser.
  * Geliefert wird die Bedingung, angewendet wird sie dort.
  *
- * Bis Schritt 15 AP9 fiel die Bedingung unterwegs heraus: 'cap_gate' stand
- * im Katalog, `mf_gates_erfuellt()` wertete es aus -- aber nur fuer das
- * Einsatzformular. Die Tagestabelle bekam es nie zu sehen, und so trugen
- * ALLE 69 Diensttage des Referenzbestands die Windenspalte, auch die ohne
- * Winde. Die Regel, die jetzt gilt, steht in E-ZE-31: Anzeige nach
- * Betriebsart UND Faehigkeit, Bearbeitung nach Faehigkeit allein.
+ * Ohne 'cap' fiele die Bedingung unterwegs heraus: `mf_gates_erfuellt()`
+ * wertet 'cap_gate' nur fuer das Einsatzformular aus, und die Tagestabelle
+ * truege die Windenspalte an jedem Diensttag, auch an denen ohne Winde. Die
+ * Regel: Anzeige nach Betriebsart UND Faehigkeit, Bearbeitung nach
+ * Faehigkeit allein.
  *
  * @return list<array{col:string,art:string,label:string,klasse:string,cap:string}>
  */
@@ -145,7 +138,7 @@ function mf_crew_felder(): array
  * Verschluesselte Felder des Katalogs: Feldname => ['blob' => Schluessel im
  * `pat_blob`, 'label' => Beschriftung].
  *
- * Abgeleitet aus 'store' => 'pat' (S9/AP7), genau wie mf_crew_felder() aus
+ * Abgeleitet aus 'store' => 'pat', genau wie mf_crew_felder() aus
  * 'store' => 'crew'. Der Blobschluessel ist der Feldname, sofern nicht
  * 'blob_key' etwas anderes sagt — die aelteren Blobschluessel des Formulars
  * (`last`, `first`, `dob`, `dx`, `loc`, …) stehen NICHT im Katalog: Sie
@@ -161,13 +154,12 @@ function mf_crew_felder(): array
  * Mal zu fuehren: Formular (Rendern und Fuellen), Anzeige, Export, Sicherung,
  * Import.
  *
- * `typ` ist der Feldtyp — ein Ortsfeld ('loc', seit S11-05b das
+ * `typ` ist der Feldtyp — ein Ortsfeld ('loc', etwa das
  * Transportziel) liegt im Blob als {addr, lat, lon} und nicht als Text.
  * `spalten` sind die Klartextspalten, die das Feld im Altbestand belegt:
  * das Feld selbst und bei einem Ortsfeld seine Koordinatenspalten. Das
  * Formular leert sie, sobald der Blob steht. Ein Feld mit `ohne_spalte`
- * (seit Web 23 das Transportziel, S11-12) hat keine — die Spalten sind
- * gefallen.
+ * (das Transportziel) hat keine.
  *
  * @return array<string,array{blob:string,label:string,typ:string,spalten:list<string>}>
  */
@@ -200,13 +192,13 @@ function mf_pat_felder(): array
  * Ist dieses Feld eine Spalte in `missions`?
  *
  * Zwei Feldarten sind es nicht: 'resources' (eigene Zeilen in
- * `mission_resources`) und alles mit 'store' — seit Web 6.0.0 die Besatzung in
- * `mission_crew` ('crew'), seit S9/AP7 die Notizen im verschluesselten
+ * `mission_resources`) und alles mit 'store' — die Besatzung in
+ * `mission_crew` ('crew'), die Notizen im verschluesselten
  * `pat_blob` ('pat'). Beide duerfen nicht in ein SELECT, INSERT oder UPDATE
  * auf `missions` geraten; bei 'pat' waere es zusaetzlich ein Bruch der
  * Verschluesselungszusage (CLAUDE.md 4).
  *
- * Ein Ortsfeld ('loc', seit Web 6.1.0) IST eine Spalte — es traegt die
+ * Ein Ortsfeld ('loc') IST eine Spalte — es traegt die
  * Bezeichnung. Seine beiden Koordinatenspalten stehen daneben und kommen aus
  * mf_ort_spalten(); wer alle Spalten eines Feldes braucht, fragt BEIDE
  * Funktionen.
@@ -223,9 +215,10 @@ function mf_ist_spalte(array $f): bool
  * Koordinatenspalten eines Ortsfeldes: ['lat' => …, 'lon' => …].
  *
  * Leer bei jedem anderen Feldtyp. Die Namen stehen im Katalog ('lat_col',
- * 'lon_col') statt aus dem Feldnamen abgeleitet zu werden: `transport_dest`
- * lag bis Web 22.7.0 in `dest_lat`/`dest_lon`, und eine Ableitung ueber ein Namensmuster
- * waere geraten. Sie landen unmaskiert in einem UPDATE, deshalb dieselbe
+ * 'lon_col') statt aus dem Feldnamen abgeleitet zu werden: eine
+ * Ableitung ueber ein Namensmuster waere geraten (`transport_dest` und
+ * `dest_lat`/`dest_lon` passen nicht zusammen). Sie landen unmaskiert in einem
+ * UPDATE, deshalb dieselbe
  * Namenspruefung wie bei den Tagesspalten — sie faengt einen Tippfehler ab,
  * der sonst als SQL-Fehler ohne erkennbaren Bezug auftauchen wuerde.
  *
@@ -251,7 +244,7 @@ function mf_ort_spalten(array $f): array
 /**
  * Optionen eines Auswahlfeldes als `wert => beschriftung`.
  *
- * DER GESPEICHERTE WERT IST NICHT IMMER DIE BESCHRIFTUNG (Web 6.1.0). Bis dahin
+ * DER GESPEICHERTE WERT IST NICHT IMMER DIE BESCHRIFTUNG. Bis dahin
  * war er es immer: 'options' war eine einfache Liste, und was dort stand, ging
  * genau so in die Spalte. Mit der Transportart geht das nicht mehr auf — die
  * Spalte ist ein `ENUM('air','ground','ambulant')`, angezeigt gehoert „Luft",
@@ -281,13 +274,13 @@ function mf_optionen(array $opts): array
 }
 
 /**
- * Wertabhaengiges Unterfeld: Soll es bei diesem Elternwert erscheinen? (E17)
+ * Wertabhaengiges Unterfeld: Soll es bei diesem Elternwert erscheinen?
  *
  * `'show_if' => ['field' => '<elternspalte>', 'not_in' => ['<wert>', …]]`
  *
- * Bis Web 6.0.0 gab es bedingte Unterfelder ausschliesslich unter Checkboxen —
- * unter einem `select` wurden Kinder immer gerendert und immer gespeichert
- * (Vorpruefung V4). `show_if` schliesst diese Luecke fuer den einen Fall, um den
+ * Ohne `show_if` gaebe es bedingte Unterfelder nur unter Checkboxen —
+ * unter einem `select` wuerden Kinder immer gerendert und immer gespeichert.
+ * `show_if` schliesst diese Luecke fuer den einen Fall, um den
  * es fachlich geht: Transport „Ambulant" hat weder NA-Begleitung noch
  * Zielklinik.
  *
@@ -333,11 +326,11 @@ function mf_show_if(array $f, $elternwert, string $elternCol = ''): bool
  *   'cap_gate'  => 'winch'|…       — Faehigkeit (`day_capabilities`)
  *
  * Sie sind UND-verknuepft und arbeiten alle mit den EINGEFRORENEN Angaben des
- * Diensttags (E8), nie mit den heutigen Stammdaten: Wird der Windenhaken Jahre
+ * Diensttags, nie mit den heutigen Stammdaten: Wird der Windenhaken Jahre
  * spaeter am Hubschrauber entfernt, aendert das an dokumentierten Einsaetzen
- * nichts (A13e).
+ * nichts.
  *
- * Ein NEUTRALER Diensttag (kind === null, E26) erfuellt weder `kind_gate` noch
+ * Ein NEUTRALER Diensttag (kind === null) erfuellt weder `kind_gate` noch
  * `cap_gate` und hat keine Rollen — dort bleiben alle gefilterten Felder
  * verborgen, ausser den bereits belegten. Diese Ausnahme entscheidet der
  * Aufrufer, nicht diese Funktion: Ob ein Feld BELEGT ist, weiss nur er.
@@ -359,28 +352,20 @@ function mf_gates_erfuellt(array $f, array $rollen, ?string $kind, array $faehig
     return true;
 }
 
-/* ---- DAS SPALTENREGISTER VON `missions` (Schritt 15/AP6, E-ZE-22) --------
+/* ---- DAS SPALTENREGISTER VON `missions` --------
  *
- * `missions` hat 41 Spalten, und sieben Stellen fuehrten eine eigene Liste
- * davon: der Export, das Backup, die beiden Import-Anweisungen, der
- * Suchindex, die Zeitraumansicht und die Einsatzansicht (letztere mit
- * `SELECT *`). Elf Handlisten, jede in ihrer eigenen Reihenfolge, und keine
- * sagte, warum eine Spalte fehlt.
+ * Sieben Stellen brauchen eine Liste der Spalten von `missions`: der
+ * Export, das Backup, die beiden Import-Anweisungen, der Suchindex, die
+ * Zeitraumansicht und die Einsatzansicht. Eigene Handlisten liefen
+ * auseinander, jede in ihrer eigenen Reihenfolge, und keine sagte, warum
+ * eine Spalte fehlt; ein `SELECT *` truege tote Altspalten in jedes Backup.
  *
- * WAS DAS KOSTET, steht in `backup_lib.php`: Die tote Altspalte
- * `other_resources` ging jahrelang in jedes Backup, weil dort `SELECT *`
- * stand — ein Feld, das seit Monaten niemand mehr fuellte und das beim
- * Einspielen verworfen wurde.
+ * `transport_dest`, `dest_lat`, `dest_lon` und `site_ele_m` sind keine
+ * Spalten: Transportziel und Ortshoehe liegen im `pat_blob`. Im Export und
+ * in der Sicherung bestimmt die Position nur die Reihenfolge der Schluessel
+ * im JSON; die Spalten der CSV-Datei legt `assets/export.js` fest.
  *
- * SEIT WEB 23 (S11-12) FEHLEN VIER SPALTEN: `transport_dest`, `dest_lat`,
- * `dest_lon` und `site_ele_m`. Transportziel und Ortshoehe liegen seit
- * Web 22 im `pat_blob`; die Spalten trugen nur noch Altbestand und sind mit
- * der Migration `2026_10_19_klartext_weg` gefallen. Die Positionen der
- * uebrigen Spalten sind dabei je Zweck nachgerueckt — im Export und in der
- * Sicherung aendert das nur die Reihenfolge der Schluessel im JSON, die
- * Spalten der CSV-Datei legt `assets/export.js` fest.
- *
- * JETZT FUEHRT DAS REGISTER JEDE SPALTE GENAU EINMAL und sagt je Zweck, ob
+ * DAS REGISTER FUEHRT JEDE SPALTE GENAU EINMAL und sagt je Zweck, ob
  * sie dabei ist — und an welcher Stelle. Die Zahl ist die Position in der
  * erzeugten Liste; `mf_spalten()` sortiert danach. Ein Alias steht als
  * `[Position, 'name']` daneben (`uhr_gesperrt AS manual`).
@@ -531,7 +516,7 @@ function mf_missions_gruende(): array
  * @param string $praefix Tabellenalias mit Punkt (`'x.'`, `'m.'`) oder leer
  * @param bool   $alias   Alias mitschreiben (`uhr_gesperrt AS manual`) — fuer
  *                        `INSERT`/`UPDATE` ist er falsch und muss weg
- * @param bool   $sql     Spaltennamen in Backticks (Web 21.1.9, Nr. 239).
+ * @param bool   $sql     Spaltennamen in Backticks.
  *                        Ohne: bloße Namen, und das ist die Vorgabe, weil vier
  *                        Aufrufer sie als Schluessel brauchen (`$werte[$c]`,
  *                        `$fest[$c]`, `array_diff()`). Wer SQL-Text will, nimmt
@@ -546,11 +531,10 @@ function mf_spalten(string $zweck, string $praefix = '', bool $alias = true,
         if (!isset($zwecke[$zweck])) { continue; }
         $e = $zwecke[$zweck];
         $nr = is_array($e) ? $e[0] : $e;
-        /* DER ALIAS STEHT IN BACKTICKS, IMMER (Web 20.26.3, hierher gezogen
-         * beim Merge von Schritt 15). `manual` ist auf MySQL 8.4.0 bis
+        /* DER ALIAS STEHT IN BACKTICKS, IMMER. `manual` ist auf MySQL 8.4.0 bis
          * 8.4.10 auch als ALIAS ein reserviertes Wort; ohne die Backticks
-         * antwortete der Export dort mit 1064, und die Sicherung kam nie an
-         * (Staging, MySQL 8.4.10, Kennung 097D7622, Nr. 267).
+         * antwortet der Export dort mit 1064, und die Sicherung kommt nie an
+         * (gemessen auf Staging, MySQL 8.4.10, Kennung 097D7622).
          *
          * Die Backticks stehen HIER und nicht im Register, und das ist
          * Absicht: Sie sind eine Eigenschaft des SQL-Texts, nicht des
@@ -585,13 +569,11 @@ function mf_spalten(string $zweck, string $praefix = '', bool $alias = true,
  * Die Spaltenliste eines Zwecks als SQL-Text — mit jedem Spaltennamen in
  * Backticks.
  *
- * BACKTICKS AUCH UM DEN NAMEN, NICHT NUR UM DEN ALIAS (Web 21.1.9, Backlog
- * Nr. 239). Bis dahin setzten drei `INSERT`s und ein `UPDATE` ihre
- * Spaltenliste mit `implode()` ueber die blossen Namen zusammen, und in die
- * Liste der Sicherung fliessen ueber `$extraCols` Namen, die noch dazukommen.
- * Heute ist keiner reserviert (Nr. 238); die Bauform war der Punkt — genau so
- * eine Stelle haette auf MySQL 8.4.0 bis 8.4.10 das Einspielen verhindert.
- * Jetzt macht diese Datei SQL-Text aus Spaltennamen, und nur sie:
+ * BACKTICKS AUCH UM DEN NAMEN, NICHT NUR UM DEN ALIAS. In die Liste der
+ * Sicherung fliessen ueber `$extraCols` Namen, die noch dazukommen. Heute
+ * ist keiner reserviert; die Bauform ist der Punkt — eine Spaltenliste per
+ * `implode()` ueber die blossen Namen haette auf MySQL 8.4.0 bis 8.4.10
+ * das Einspielen verhindert. Diese Datei macht SQL-Text aus Spaltennamen, und nur sie:
  * `mf_spalten_sql()` fuer einen Zweck, `mf_liste_sql()` fuer eine Liste,
  * die ein Aufrufer selbst erweitert, `mf_bezeichner()` fuer einen Namen.
  */

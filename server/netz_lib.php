@@ -1,13 +1,12 @@
 <?php
 declare(strict_types=1);
 
-/* Der eine Leser fuer config.php (Schritt 15 AP2). Laedt seinerseits nichts —
+/* Der eine Leser fuer config.php. Laedt seinerseits nichts —
  * diese Datei darf `db.php` nicht erreichen. */
 require_once __DIR__ . '/konfig_lib.php';
 
 /**
  * VERTRAUENSWUERDIGE PROXYS — wer darf sagen, woher eine Anfrage kommt?
- * (P5a/AP4, E-P5a-17; Vorbereitung E-PP-08, F-PP-3)
  *
  * DIE FRAGE DAHINTER. `ratelimit_lib.php` liest seit jeher nur `REMOTE_ADDR`
  * und begruendet das so: „Kopfzeilen von Zwischenstationen (X-Forwarded-For
@@ -36,7 +35,7 @@ require_once __DIR__ . '/konfig_lib.php';
  * anzuhaengen — das ist die uebliche Einstellung und die einzige, bei der
  * die Frage eine eindeutige Antwort hat.)
  *
- * DIESELBE LISTE GILT FUER `X-Forwarded-Proto` (E-P5a-16). Wer die
+ * DIESELBE LISTE GILT FUER `X-Forwarded-Proto`. Wer die
  * Client-Adresse faelschen koennte, koennte sonst auch „diese Anfrage kam
  * ueber HTTPS" behaupten und damit den HTTPS-Zwang und HSTS aushebeln.
  *
@@ -100,8 +99,7 @@ function netz_in_bereich(string $ip, string $muster): bool
 /**
  * Steht die unmittelbare Gegenstelle (`REMOTE_ADDR`) in der Liste?
  *
- * Ohne Eintrag: immer `false` — und damit gilt ueberall das Verhalten von vor
- * Web 20.7.0.
+ * Ohne Eintrag: immer `false` — und damit gilt ueberall `REMOTE_ADDR`.
  */
 function netz_proxy_vertrauenswuerdig(): bool
 {

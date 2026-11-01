@@ -2,7 +2,7 @@
 declare(strict_types=1);
 
 /**
- * Die APK-Dateien der Android-Apps (S4/A1, E-S4-16).
+ * Die APK-Dateien der Android-Apps.
  *
  * WO SIE LIEGEN UND WARUM DORT. In `server/apk/`, und zwar NUR auf dem
  * Server: Das Verzeichnis steht in `.gitignore` UND in der Ausnahmeliste des
@@ -76,10 +76,9 @@ function apk_liste(): array
  */
 function apk_sha_lesbar(string $sha): string
 {
-    /* Seit Web 20.1.0 ueber `hex_vierergruppen()` (db.php): Dieselbe Rechnung
-     * stand mit S10 ein zweites Mal im Projekt, fuer das Schluesselblatt. Zwei
-     * Fassungen derselben Formatierung laufen frueher oder spaeter
-     * auseinander, und dann sieht ein Wert an zwei Stellen verschieden aus,
-     * obwohl er derselbe ist. */
+    /* Ueber `hex_vierergruppen()` (db.php): Dieselbe Rechnung braucht auch
+     * das Schluesselblatt. Zwei Fassungen derselben Formatierung laufen
+     * frueher oder spaeter auseinander, und dann sieht ein Wert an zwei
+     * Stellen verschieden aus, obwohl er derselbe ist. */
     return hex_vierergruppen($sha);
 }

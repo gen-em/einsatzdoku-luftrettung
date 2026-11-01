@@ -9,10 +9,10 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 /**
- * Das Bedienmodell der Uhr (Abnahme C1, E-S4-21).
+ * Das Bedienmodell der Uhr.
  *
  * **Reine JVM, keine Oberfläche.** Genau darum geht es: Die Uhr ist blind
- * gebaut — es gibt keinen Emulator (E-R45-8) und keine Uhr (E-R45-7). Was in
+ * gebaut — es gibt keinen Emulator und keine Uhr. Was in
  * Composables verteilt wäre, bliebe ungeprüft. Hier ist das Bedienmodell eine
  * Funktion, und diese Fälle sind der einzige Beleg, den es vor dem Gerätetest
  * gibt.
@@ -53,7 +53,7 @@ class UhrbedienungTest {
         assertNull("Nach Phase 9 gibt es keine nächste", z.naechstePhase)
     }
 
-    /** **Der Abschluss kommt nur nach Rückfrage** (E-S4-21b). */
+    /** **Der Abschluss kommt nur nach Rückfrage.** */
     @Test fun derAbschlussKommtNurNachRueckfrage() {
         var z = imDienst.copy(einsatzLaeuft = true, laufendePhase = Phasen.LETZTE)
 
@@ -113,7 +113,7 @@ class UhrbedienungTest {
     }
 
     /**
-     * **Eine Korrektur wird ein zweiter Eintrag** (E-R45-12).
+     * **Eine Korrektur wird ein zweiter Eintrag.**
      *
      * Die Uhr meldet die Phase erneut; sie ersetzt nichts. Dass daraus am
      * Server zwei Einträge werden, prüft `MissionRundlaufTest` — hier zählt,
@@ -201,7 +201,7 @@ class UhrbedienungTest {
         assertTrue(bedienung.verarbeite(z, Uhrereignis.FreieTaste(tick())).wirkungen.isEmpty())
     }
 
-    /** Abschaltbar (E-S4-21d): dann sperrt nichts. */
+    /** Abschaltbar: dann sperrt nichts. */
     @Test fun dieSperreLaesstSichAbschalten() {
         val ohne = Uhrbedienung(sperreAn = false)
         val z = imDienst.copy(letzteBedienungMs = 0)
@@ -224,7 +224,7 @@ class UhrbedienungTest {
 
     // ---- (a) Die freie Taste ------------------------------------------------
 
-    /** **Mit gemeldeter Taste löst sie „nächste Phase" aus** (E-S4-21a). */
+    /** **Mit gemeldeter Taste löst sie „nächste Phase" aus.** */
     @Test fun dieFreieTasteTutDasselbeWieDerGrosseKnopf() {
         val z = imDienst.copy(einsatzLaeuft = true, laufendePhase = 4)
 
@@ -236,7 +236,7 @@ class UhrbedienungTest {
         assertEquals(ueberKnopf.zustand.laufendePhase, ueberTaste.zustand.laufendePhase)
     }
 
-    /** **Ohne Taste bleibt alles per Touch bedienbar** (E-S4-21a). */
+    /** **Ohne Taste bleibt alles per Touch bedienbar.** */
     @Test fun ohneTasteBleibtAllesPerTouchBedienbar() {
         // Es gibt keinen Zustand und kein Ereignis, das eine Taste voraussetzt:
         // Der ganze Durchlauf, die Liste, der Abschluss und das Dienstende
@@ -272,7 +272,7 @@ class UhrbedienungTest {
 
     /**
      * **Im Nur-Aufzeichnen-Modus zeigt die Uhr nur Dienst beginnen/beenden**
-     * (E-S4-20) — und kein Phasendruck bewirkt etwas.
+     * — und kein Phasendruck bewirkt etwas.
      */
     @Test fun imNurAufzeichnenModusGibtEsKeinePhasen() {
         val z = imDienst.copy(modus = Modus.NUR_AUFZEICHNEN)

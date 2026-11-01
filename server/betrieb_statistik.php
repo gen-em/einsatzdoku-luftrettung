@@ -4,20 +4,19 @@ require_once __DIR__ . '/auth_guard.php';
 require_betreiberin();
 require_once __DIR__ . '/geraete_lib.php';
 require_once __DIR__ . '/demo_lib.php';
-require_once __DIR__ . '/statistik_lib.php';   // Fenster, Zaehlung der Einsaetze (P5c/AP7)
+require_once __DIR__ . '/statistik_lib.php';   // Fenster, Zaehlung der Einsaetze
 require_once __DIR__ . '/format_lib.php';   // zahl_text(), prozent_text(), prozent_wert(),
-                                            // datum_zeit_text(), heute_lokal() (Schritt 15/AP7)
+                                            // datum_zeit_text(), heute_lokal()
 
 /**
- * BETRIEB -> STATISTIK (S8/AP4; seit Web 20.47.0 mit drei Reitern, P5c/AP7,
- * E-P5c-18, Bild M-P5c-01b).
+ * BETRIEB -> STATISTIK, mit drei Reitern.
  *
  * WOZU. „Wie viele Konten hat diese Installation, was fuer Geraete koppeln
  * sich, wird sie ueberhaupt benutzt?" — Fragen, die eine BetreiberIn einmal
  * im Quartal stellt. Die NutzerInnen-Liste zaehlt Konten, die Geraeteseite
  * zaehlt je Konto; die Summe ueber alles zieht nur diese Seite.
  *
- * DREI REITER, EIN MENUEEINTRAG (E-P5c-18, -25). NutzerInnen · Einsaetze ·
+ * DREI REITER, EIN MENUEEINTRAG. NutzerInnen · Einsaetze ·
  * Geraete, als Verweise `?r=nutzer|einsaetze|geraete`; Betrieb behaelt seine
  * sieben Eintraege, und die Seite heisst weiter „Statistik" — kein Name
  * „Betriebslage". Ueber den Reitern stehen die vier Kennzahlen, jede fuehrt in
@@ -36,45 +35,43 @@ require_once __DIR__ . '/format_lib.php';   // zahl_text(), prozent_text(), proz
  * auszugeben. Die Bezugsgroesse steht deshalb an jeder Karte: „von 11"
  * meint elf ECHTE Konten.
  *
- * EINE ZAEHLUNG DER EINSAETZE: AB IHREM BEGINN (E-P5c-18, entschieden
- * 20.09.2026). Gezaehlt wird nach `missions.started_at` — Pflichtfeld, UTC,
- * mit eigenem Index (`idx_missions_started`, Nr. 191) —, ohne Demo-Konto und
- * ohne Papierkorb. Bis Web 20.46.0 zaehlte diese Seite nach Diensttag, wie
- * die Statistik der NutzerIn; das ist entfallen, und mit ihm der Streit, ob
- * „Bestand" das eine oder das andere meint (Nr. 192). PREIS: Ein Einsatz, der
+ * EINE ZAEHLUNG DER EINSAETZE: AB IHREM BEGINN. Gezaehlt wird nach
+ * `missions.started_at` — Pflichtfeld, UTC,
+ * mit eigenem Index (`idx_missions_started`) —, ohne Demo-Konto und
+ * ohne Papierkorb — nicht nach Diensttag wie die Statistik der NutzerIn,
+ * damit „Bestand" nur eines meint. PREIS: Ein Einsatz, der
  * nach Mitternacht beginnt, gehoert hier zum Tag seines Beginns, in der
  * Statistik der NutzerIn zum Dienst des Vortags — die Summe hier kann um
  * einzelne Einsaetze von der Summe der NutzerInnen-Statistiken abweichen.
  * Das Handbuch (12.2) sagt es; der Satz unter der Karte sagt, wie gezaehlt
  * wird.
  *
- * JEDES FENSTER HAT EINE OBERGRENZE (F-P5c-39, ergaenzt 23.09.2026): „7 Tage"
+ * JEDES FENSTER HAT EINE OBERGRENZE: „7 Tage"
  * heisst zwischen jetzt minus sieben Tagen und JETZT. Ein Einsatz mit einem
  * Beginn in der Zukunft (vorausgeplant, oder eine Uhr mit falscher Zeit)
- * erscheint nur unter „gesamt". Vorher hatten die Fenster nur eine
- * Untergrenze und zaehlten ihn in jedem mit.
+ * erscheint nur unter „gesamt". Mit nur einer Untergrenze zaehlte jedes
+ * Fenster ihn mit.
  *
- * „AKTIV" NACH R38: angemeldet ODER eines der echten Geraete hat sich im
+ * „AKTIV": angemeldet ODER eines der echten Geraete hat sich im
  * Fenster gemeldet (`devices.last_seen`, ohne das virtuelle Geraet der
  * Handeintraege — `geraete_echt_sql()`). Wer nur mit der Uhr arbeitet und
  * sich nie im Browser anmeldet, ist aktiv; die Zeile „Angemeldet" allein
  * saehe ihn nicht.
  *
- * WEAR OS ERSCHEINT NICHT, UND DAS IST KEIN VERSEHEN (Z-02, geklaert am
- * 05.09.2026). Die Wear-OS-App hat weder Serveradresse noch Schluessel
- * (E-S4-11, `CLAUDE.md` 4) — sie koppelt nicht, sie schickt ihre Ereignisse
+ * WEAR OS ERSCHEINT NICHT, UND DAS IST KEIN VERSEHEN. Die Wear-OS-App hat weder
+ * Serveradresse noch Schluessel
+ * (`CLAUDE.md` 4) — sie koppelt nicht, sie schickt ihre Ereignisse
  * an das Handy, und das Handy ist das Geraet. Eine Zeile „Wear-OS-Uhren"
  * waere dauerhaft null und verschwiege, dass es sie hier nicht zu zaehlen
  * gibt. Statt der Zeile steht deshalb ein Satz — unter dem Reiter Geraete.
  * (Die HERKUNFT „Wear-OS-Uhr" unter Einsaetze ist etwas anderes: an der Uhr
  * begonnen, vom Handy gesendet. Sie zaehlt Einsaetze, keine Geraete.)
  *
- * DER ZEITRAUM IST WAEHLBAR (seit Web 21.5.0, R4-23, Nr. 122 a, Bild
- * M-R4-23). Vier Pillen bestimmen Kennzahl und Herkunft, Von/Bis einen
+ * DER ZEITRAUM IST WAEHLBAR. Vier Pillen bestimmen Kennzahl und Herkunft, Von/Bis einen
  * eigenen Zeitraum; dann hat jede Tabelle eine Spalte „im Zeitraum". Die
  * Regeln stehen in `statistik_zeitraum()`, die Reihe in `ui_zeitraumwahl()`.
  * „Aktiv", „angemeldet" und „gemeldet" gibt es dort nur bis heute
- * (F-R4-66, E-R4-55) — Begruendung bei `$bisHeute`.
+ * — Begruendung bei `$bisHeute`.
  *
  * DIE ZEITRAEUME SIND TABELLEN, kein neuer Baustein: eine Zeile je Kennzahl,
  * eine Spalte je Fenster. „6 Monate" heisst 180 Tage, „1 Jahr" 365 — ein
@@ -93,7 +90,7 @@ const STAT_SPALTEN = ['modell' => 'Gerät', 'hersteller' => 'Hersteller', 'art' 
 
 $reiter = isset(STAT_REITER[(string)($_GET['r'] ?? '')]) ? (string)$_GET['r'] : 'nutzer';
 
-/* DER ZEITRAUM (R4-23, Nr. 122 a, Bild M-R4-23). Ein festes Fenster (`t`)
+/* DER ZEITRAUM. Ein festes Fenster (`t`)
  * bestimmt die Kennzahl „Einsätze in …" und die Herkunft; die Tabellen
  * zeigen weiter jedes Fenster. Ein EIGENER Zeitraum (`von`, `bis`) macht aus
  * jeder Tabelle eine Spalte „im Zeitraum". Die Regeln stehen in
@@ -101,7 +98,7 @@ $reiter = isset(STAT_REITER[(string)($_GET['r'] ?? '')]) ? (string)$_GET['r'] : 
 $zeitraum = statistik_zeitraum($_GET);
 $eigen    = $zeitraum['art'] === 'eigen';
 $zAdresse = statistik_zeitraum_adresse($zeitraum);
-/* „AKTIV", „ANGEMELDET" UND „GEMELDET" NUR BIS HEUTE (F-R4-66, E-R4-55).
+/* „AKTIV", „ANGEMELDET" UND „GEMELDET" NUR BIS HEUTE.
  * Gespeichert ist je Konto nur die LETZTE Anmeldung, je Gerät nur die
  * letzte Meldung. Reicht der Zeitraum bis heute, ist „zuletzt nach dem
  * Beginn" dasselbe wie „im Zeitraum"; endet er früher, zählte dieselbe
@@ -122,7 +119,7 @@ function stat_klein(string $anteil, string $text = ''): string
 
 /**
  * Liegt ein Zeitpunkt (UTC) im EIGENEN Zeitraum — Untergrenze einschließlich,
- * Obergrenze ausschließlich, und nicht nach jetzt (R4-23)?
+ * Obergrenze ausschließlich, und nicht nach jetzt?
  */
 function stat_im_zeitraum(?string $wann, array $z, int $jetzt): bool
 {
@@ -135,7 +132,7 @@ function stat_im_zeitraum(?string $wann, array $z, int $jetzt): bool
 /**
  * Liegt ein Zeitpunkt (UTC, wie ihn die Datenbank fuehrt) im Fenster der
  * letzten `$tage` Tage — MIT Obergrenze? Ein Zeitpunkt in der Zukunft liegt
- * in keinem Fenster (F-P5c-39).
+ * in keinem Fenster.
  */
 function stat_im_fenster(?string $wann, int $tage, int $jetzt): bool
 {
@@ -192,10 +189,10 @@ if ($eigen) {
 }
 
 /* ======================================================================== */
-/* ---- Die Diagramme (R4-24, Nr. 122 b, Bild M-R4-24) --------------------
+/* ---- Die Diagramme --------------------
  *
  * Eine Einteilung des gewählten Zeitraums in Tage, Wochen oder Monate
- * (`statistik_einteilung()`, E-R4-59), eine Säule je Fach. Die Einsätze je
+ * (`statistik_einteilung()`), eine Säule je Fach. Die Einsätze je
  * Fach kommen aus EINER Abfrage je Stunde und Konto — dieselbe liefert die
  * Konten mit Einsatz je Fach für die kleinen Vielfachen unter NutzerInnen.
  * „Neu angelegt" und „gekoppelt" zählt PHP aus den Zeilen, die die Reiter
@@ -235,9 +232,9 @@ function stat_saeulen(array $faecher, array $zahlen): array
 
 /**
  * Der Satz unter einem Diagramm: Einteilung, erster und letzter Tag des
- * Zeitraums mit Jahreszahl, und was angebrochen sein kann. Bis R4-24 nannte
- * er die Anfänge des ersten und letzten Fachs ohne Jahr — „22.09. bis
- * 28.09." über ein ganzes Jahr las sich wie eine Woche.
+ * Zeitraums mit Jahreszahl, und was angebrochen sein kann. Die Anfänge des
+ * ersten und letzten Fachs ohne Jahr — „22.09. bis 28.09." über ein ganzes
+ * Jahr — läsen sich wie eine Woche.
  */
 function stat_achsensatz(array $einteilung): string
 {
@@ -275,12 +272,12 @@ if ($reiter === 'nutzer') {
     $st->execute([$demoId]);
     $konten = $st->fetchAll();
 
-    /* AUS DEM KATALOG, NICHT VON HAND (P5c/AP4, F-P5c-36). */
+    /* AUS DEM KATALOG, NICHT VON HAND. */
     $nachRolle = array_fill_keys(array_keys(ROLLEN), 0);
-    /* „OHNE GERAET" ZAEHLT NUR ECHTE GERAETE (Nr. 190). Das virtuelle Geraet
+    /* „OHNE GERAET" ZAEHLT NUR ECHTE GERAETE. Das virtuelle Geraet
      * der Handeintraege entsteht beim ersten Formular, beim Import, beim
      * Schneiden und beim GPX-Import — wer ausschliesslich von Hand
-     * dokumentiert, hatte damit eine Geraetezeile und fiel bis Web 20.46.0
+     * dokumentiert, hat damit eine Geraetezeile und fiele sonst
      * aus genau der Gruppe heraus, die die Kleinzeile meint. */
     $ohneGeraet = 0;
     foreach ($konten as $k) {
@@ -290,7 +287,7 @@ if ($reiter === 'nutzer') {
 
     $kontenZeit = ['aktiv' => [], 'angemeldet' => [], 'angelegt' => []];
     if ($eigen) {
-        /* Eine Spalte „im Zeitraum" (R4-23). Zu „aktiv" und „angemeldet"
+        /* Eine Spalte „im Zeitraum". Zu „aktiv" und „angemeldet"
          * siehe `$bisHeute` oben. */
         $kontenZeit['aktiv']['z'] = $bisHeute ? count(array_filter($konten,
             static fn($k) => stat_im_zeitraum($k['last_login'] ?? null, $zeitraum, $jetzt)
@@ -318,10 +315,9 @@ if ($reiter === 'nutzer') {
 
 /* ---- Reiter Einsätze ---------------------------------------------------- */
 if ($reiter === 'einsaetze') {
-    /* HERKUNFT IM GEWÄHLTEN ZEITRAUM (E-P5c-45, Nr. 80; bis Web 21.4.1 fest
-     * 30 Tage, R4-23). Summen einer vorhandenen
+    /* HERKUNFT IM GEWÄHLTEN ZEITRAUM. Summen einer vorhandenen
      * Spalte, nur fuer die BetreiberIn — keine Datenschutz-Vorbedingung,
-     * anders als Nr. 80 fuer die Momentaufnahme am Einsatz verlangt. Alle
+     * anders als bei der Momentaufnahme am Einsatz. Alle
      * sechs Werte aus `HERKUNFT_WERTE`, auch mit 0: Eine fehlende Zeile saehe
      * aus wie eine Herkunft, die es nicht gibt. */
     $st = $pdo->prepare(statistik_herkunft_sql($zeitraum));
@@ -379,8 +375,8 @@ if ($reiter === 'geraete') {
      * zusammengezogen, weil `Build.MANUFACTURER` ohne `Build.MODEL` wertlos
      * ist).
      *
-     * ABGELEITET WIRD UEBER DIE ART, NICHT UEBER DIE TEILENUMMER (Abweichung
-     * vom S8-Konzept, begruendet). `geraet_teil` bleibt leer, wenn eine
+     * ABGELEITET WIRD UEBER DIE ART, NICHT UEBER DIE TEILENUMMER. `geraet_teil`
+     * bleibt leer, wenn eine
      * aeltere Uhr-Fassung nichts ueber sich meldet — im Referenzbestand steht
      * bei der `fēnix 7` genau das, und die Regel „Teilenummer vorhanden ->
      * Garmin" machte daraus den Hersteller „fēnix". Ueber die ART geht es
@@ -414,7 +410,7 @@ if ($reiter === 'geraete') {
 
     /* Sortierung ueber die Adresse, ohne Skript — dasselbe Muster wie die
      * NutzerInnen-Liste. Vorgabe: Anteil (also Geraetezahl) absteigend. Der
-     * Reiter `r` reist in jedem Verweis mit (F-P5c-39): Ohne ihn fuehrte ein
+     * Reiter `r` reist in jedem Verweis mit: Ohne ihn fuehrte ein
      * Klick auf einen Spaltenkopf zurueck auf den Reiter NutzerInnen. */
     $sort     = isset(STAT_SPALTEN[(string)($_GET['sort'] ?? '')]) ? (string)$_GET['sort'] : 'geraete';
     $richtung = ($_GET['richtung'] ?? '') === 'auf' ? 'auf' : 'ab';
@@ -447,7 +443,7 @@ if ($reiter === 'geraete') {
         fputcsv($out, ['Gerät', 'Hersteller', 'Art', 'Geräte', 'Anteil Geräte %',
                        'NutzerInnen', 'Anteil NutzerInnen %'], ';', '"', '');
         foreach ($modelle as $m) {
-            /* Name, Hersteller und Art durch `csv_zelle()` (F-R17-45): Den
+            /* Name, Hersteller und Art durch `csv_zelle()`: Den
              * Modellnamen meldet das Geraet beim Koppeln selbst. */
             fputcsv($out, [csv_zelle($m['name']), csv_zelle($m['hersteller']), csv_zelle($m['art']),
                            $m['geraete'], prozent_wert($m['geraete'], $geraeteZahl, 'kauf'),
@@ -481,7 +477,7 @@ function stat_kopf(string $key, string $text, string $sort, string $richtung): s
  * Anteil als Kleinzeile unter der Zahl.
  *
  * @param array<int|string,string> $fenster  Tage => Spaltenkopf; bei einem
- *        eigenen Zeitraum (R4-23) Schlüssel wie 'z', 'w', 'd'
+ *        eigenen Zeitraum Schlüssel wie 'z', 'w', 'd'
  * @param list<array{0:string,1:string,2:array<int,int|string>,3:?int}> $zeilen
  *        [Titel, Unterzeile, Werte je Fenster, Bezug fuer den Anteil oder null].
  *        Ein Wert als Text (der Schnitt, „—") steht so da und traegt keinen
@@ -503,7 +499,7 @@ function stat_zeitraumtabelle(array $fenster, array $zeilen): void
                 * Spalte (vier und fuenf Fenster bei 360 px) stand sonst „100"
                 * ueber „%". Im Markup und nicht als `white-space` im Stylesheet —
                 * die Eigenschaft erbt, und der Stilvergleich sah sie an 116
-                * fremden Elementen seiner Probe (F-P5c-126, Nr. 321). */
+                * fremden Elementen seiner Probe. */
                . ($bezug !== null && !is_string($w)
                    ? '<span class="zeile-klein">'
                      . str_replace(' ', '&nbsp;', e(prozent_text($w, $bezug))) . '</span>' : '')
@@ -527,9 +523,9 @@ ui_seite_start(['titel' => 'Statistik']);
   ]); ?>
 
   <?php /* DER WARTUNGSBALKEN GEHOERT AUF JEDE SEITE, DIE IM WARTUNGSMODUS
-           NOCH ANTWORTET (S8/AP8). Diese Seite steht in
+           NOCH ANTWORTET. Diese Seite steht in
            `WARTUNG_AUSNAHMEN`; der Balken ist die einzige Stelle, an der ein
-           stehengebliebener Wartungsmodus auffaellt (E-S5W-05). */ ?>
+           stehengebliebener Wartungsmodus auffaellt. */ ?>
   <?= wartung_balken() ?>
 
   <div class="kennzahl-raster kennzahl-raster-4">
@@ -544,7 +540,7 @@ ui_seite_start(['titel' => 'Statistik']);
   </div>
 
   <?php
-  /* DIE ZEITRAUMWAHL ZWISCHEN KENNZAHLEN UND REITERN (R4-23, Bild M-R4-23):
+  /* DIE ZEITRAUMWAHL ZWISCHEN KENNZAHLEN UND REITERN:
    * Sie gilt für alle drei Reiter, also steht sie über ihnen. */
   $pillen = [];
   foreach (STAT_WAHL as $t => [$pille]) {
@@ -574,7 +570,7 @@ ui_seite_start(['titel' => 'Statistik']);
   ui_reiter(['label' => 'Bereiche der Statistik', 'punkte' => $punkte]);
 
   /* Die Zeile, die bei eigenem Zeitraum unter jeder Tabelle steht, die
-   * „aktiv", „angemeldet" oder „gemeldet" führt (F-R4-66, E-R4-55). */
+   * „aktiv", „angemeldet" oder „gemeldet" führt. */
   $nurBisHeute = $eigen && !$bisHeute
       ? ' „—" heißt: nur zählbar, wenn der Zeitraum bis heute reicht — gespeichert ist '
       : '';
@@ -587,11 +583,10 @@ ui_seite_start(['titel' => 'Statistik']);
     <?php ui_karte_start(['titel' => 'Konten je Zeitraum', 'id' => 'k-konten-zeit',
                           'zahl' => 'von ' . zahl_text($kontenZahl)]); ?>
       <?php
-      /* ZWEI KLEINE VIELFACHE (Bild M-R4-24, Zustand B; angepasst nach
-       * E-R4-55): „mit Einsatz" und „neu angelegt" haben verschiedene
+      /* ZWEI KLEINE VIELFACHE: „mit Einsatz" und „neu angelegt" haben verschiedene
        * Größenordnungen, also je ein Diagramm mit eigener Skala. „Aktiv" und
        * „angemeldet" je Fach gibt es nicht — die Anlage kennt nur die letzte
-       * Anmeldung (F-R4-66). */
+       * Anmeldung. */
       $werteM = stat_saeulen($faecher, $kontenJeFach);
       $werteN = stat_saeulen($faecher, $angelegtJeFach);
       ?>
@@ -666,7 +661,7 @@ ui_seite_start(['titel' => 'Statistik']);
           'unter' => stat_achsensatz($einteilung),
       ]) ?>
       <?php
-      /* EINE SPALTE UND DER SCHNITT (Bild M-R4-23, Zustand B): Ein eigener
+      /* EINE SPALTE UND DER SCHNITT (Zustand B): Ein eigener
        * Zeitraum ist verschieden lang, erst Wochen- und Tagesschnitt machen
        * ihn mit einem anderen vergleichbar. Nur für die Einsätze — ein
        * Schnitt der NutzerInnen je Tag wäre keine Zahl, die jemand fragt. */
@@ -716,7 +711,7 @@ ui_seite_start(['titel' => 'Statistik']);
     <?php ui_karte_start(['titel' => 'Herkunft der Einsätze', 'id' => 'k-herkunft',
                           'zahl' => zahl_text($imZeitraum) . ' ' . $zeitraumText]); ?>
       <?php
-      /* ANTEILE ALS BALKEN (R4-24, Bild M-R4-24) statt Zeilen mit Plakette:
+      /* ANTEILE ALS BALKEN statt Zeilen mit Plakette:
        * Nebeneinander an einer gemeinsamen Linie liest das Auge den Anteil
        * genauer als an einer Zahl allein. Alle sechs Herkünfte, auch mit 0. */
       $zeilen = [];
@@ -777,7 +772,7 @@ ui_seite_start(['titel' => 'Statistik']);
                       'plaketten' => ui_plakette((string)$deaktiviert,
                           ['ton' => $deaktiviert > 0 ? 'orange' : 'neutral'])]); ?>
 
-      <?php /* DER SATZ STATT EINER ZEILE (Z-02). Siehe Kopfkommentar. */ ?>
+      <?php /* DER SATZ STATT EINER ZEILE. Siehe Kopfkommentar. */ ?>
       <p class="feld-klein"><strong>Wear-OS-Uhren erscheinen hier nicht</strong>, weil
          sie über das gekoppelte Handy senden.
          <a href="hilfe.php#12-2-statistik">Handbuch: Statistik</a></p>

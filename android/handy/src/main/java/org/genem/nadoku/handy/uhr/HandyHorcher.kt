@@ -9,11 +9,11 @@ import org.genem.nadoku.handy.NAdokuApp
 import org.genem.nadoku.handy.aufzeichnung.AufzeichnungsDienst
 
 /**
- * Was von der Uhr hereinkommt (E-S4-10) — **die dünne Hülle am Handy**.
+ * Was von der Uhr hereinkommt — **die dünne Hülle am Handy**.
  *
  * Sie liest, reicht an [Uhrannahme] weiter und antwortet zweimal: mit der
  * Quittung und mit dem Anzeigestand. Entschieden wird hier nichts — auch
- * nicht, ob der Absender die eigene Uhr ist (seit 0.14.0, Nr. 144): Die
+ * nicht, ob der Absender die eigene Uhr ist: Die
  * Knotenliste kommt vom Data Layer, die Entscheidung aus [Uhrannahme].
  *
  * DIE QUITTUNG GEHT AUCH BEI EINER DOPPELZUSTELLUNG ZURÜCK. Genau dann ist
@@ -25,7 +25,7 @@ import org.genem.nadoku.handy.aufzeichnung.AufzeichnungsDienst
  * in der Tasche liegt und niemand die App geöffnet hat. Ohne diese Zeile
  * stünde in der Uhr „Dienst läuft" und es liefe keine Aufzeichnung.
  *
- * **Nicht belegt** (E-R45-7, E-R45-8): dass diese Klasse gerufen wird.
+ * **Nicht belegt**: dass diese Klasse gerufen wird.
  */
 class HandyHorcher : WearableListenerService() {
 
@@ -43,7 +43,7 @@ class HandyHorcher : WearableListenerService() {
 
         val weg = WearNachrichtenweg(this)
 
-        /* WER SCHICKT DAS? (Backlog Nr. 144, Krypto-Review AN-4.) Der Data
+        /* WER SCHICKT DAS? Der Data
          * Layer stellt nur zwischen Apps gleichen Pakets und gleicher
          * Signatur zu — das ist der erste Boden. Der zweite: Der Absender
          * muss unter den verbundenen Knoten stehen. Steht er dort nicht,
@@ -56,7 +56,7 @@ class HandyHorcher : WearableListenerService() {
             return
         }
 
-        /* VOR dem Wirken gelesen — danach ist es zu spät (E-S5Z-08). */
+        /* VOR dem Wirken gelesen — danach ist es zu spät. */
         val liefVorher = app.klammer.laeuft()
         val quittung = annahme.uebernimm(meldung)
         val laeuftNachher = app.klammer.laeuft()
@@ -65,15 +65,14 @@ class HandyHorcher : WearableListenerService() {
         weg.sende(Nachrichtenformat.PFAD_STAND, Nachrichtenformat.schreibe(annahme.stand()))
 
         /* WAS MIT DEM VORDERGRUNDDIENST GESCHIEHT, entscheidet eine reine
-         * Funktion (E-S5Z-08). Hier stand bis 0.8.1 nur `starten` — ein
-         * Dienstende von der Uhr beendete ihn nie: Ortung lief weiter, kein
-         * DIENSTENDE-Lauf, und das Web sah den Dienst bis zum nächsten Takt
-         * als laufend (B-S5Z-04).
+         * Funktion. Nur `starten` genügt nicht — ein Dienstende von der Uhr
+         * beendete ihn dann nie: Ortung liefe weiter, kein DIENSTENDE-Lauf,
+         * und das Web sähe den Dienst bis zum nächsten Takt als laufend.
          *
          * Der `try` um `starten()` ist kein Beiwerk: Ab Android 12 ist
          * `startForegroundService` aus dem Hintergrund beschränkt, und ob
          * der Weg über einen `WearableListenerService` unter eine Ausnahme
-         * fällt, ist nicht belegt (B-S5Z-08, B4.2). Fliegt sie, ist die
+         * fällt, ist nicht belegt. Fliegt sie, ist die
          * Aufzeichnung nicht gestartet — aber die Quittung ist raus und die
          * App lebt. Der Absturz wäre das schlechtere Ergebnis. */
         when (Dienstfolge.aus(liefVorher, laeuftNachher, AufzeichnungsDienst.steht)) {

@@ -1,5 +1,5 @@
 /* Karten-Bedienelemente: Vollbild fuer alle Kartenseiten, dritte Groesse nur
- * fuer die Tagesuebersicht (Backlog Nr. 45, AP3 der Mockup-Runde).
+ * fuer die Tagesuebersicht.
  *
  * Vollbildmodus fuer Leaflet-Karten: ein wiederverwendbares Control fuer
  * alle Kartenseiten (Tagesuebersicht, Einsatzansicht, Zeitraum-Uebersicht).
@@ -77,8 +77,7 @@
         btn.href = '#';
         // Vollbild-Symbol (vier Ecken-Pfeile), Inline-SVG statt externer
         // Icon-Bibliothek.
-        /* Das Zeichen kommt aus dem Symbolvorrat (E-P3-18) — hier stand
-         * einer der Inline-SVG-Pfade des Bestands. */
+        /* Das Zeichen kommt aus dem Symbolvorrat. */
         btn.innerHTML = edSymbol('vollbild', 'symbol-gross', 'Vollbild');
         L.DomEvent.disableClickPropagation(wrap);
         L.DomEvent.on(btn, 'click', L.DomEvent.stop)
@@ -106,21 +105,22 @@
     document.addEventListener('webkitfullscreenchange', nachUmschalten);
   };
 
-  /* ---- Dritte Kartengroesse (Backlog Nr. 45, M-MR-03, F-MR-7 bis F-MR-10) --
+  /* ---- Dritte Kartengroesse ------------------------------------------
    *
    * WOFUER. Zwischen der Hoehe nach Fensterbreite (160/220/300 px) und dem
-   * Vollbild lag nichts. Wer mehr von der Spur sehen wollte, musste die Seite
-   * verlassen. Ein Knopf, ein Zustand — und je nach Breite zwei Wirkungen:
-   * bis 1599 px wird die Karte hoeher, ab 1600 px breit (E-MR-16). Beides
+   * Vollbild laege sonst nichts. Wer mehr von der Spur sehen will, muesste
+   * die Seite verlassen. Ein Knopf, ein Zustand — und je nach Breite zwei
+   * Wirkungen: bis 1599 px wird die Karte hoeher, ab 1600 px breit. Beides
    * macht dieselbe Klasse `.geo-gross`; WELCHE Wirkung sie hat, entscheidet
    * das Stylesheet (Abschnitt 30). Hier steht die Schwelle 1600 NICHT.
    *
-   * NUR AUF DER TAGESUEBERSICHT. `attachFullscreenControl()` haengt an vier
-   * Karten; dieses Control wird ausdruecklich einzeln gerufen. Die Einsatz-
+   * NUR AUF DER TAGESUEBERSICHT. `attachFullscreenControl()` haengt an jeder
+   * Karte, die `map_layers.js` baut; dieses Control wird ausdruecklich
+   * einzeln gerufen. Die Einsatz-
    * ansicht und die Zeitraumuebersicht haben keine Liste unter der Karte,
    * die vom Hoeherwerden etwas haette.
    *
-   * DER ZUSTAND WIRD GEMERKT (F-MR-8), je Browser und Geraet, nicht je Konto:
+   * DER ZUSTAND WIRD GEMERKT, je Browser und Geraet, nicht je Konto:
    * Wer am Schreibtisch gross arbeitet, will das am Handy nicht zwangslaeufig.
    * `localStorage` kann werfen (privates Fenster, geblockte Seitendaten) und
    * leer zurueckkommen — beides faengt `gemerkt()`/`merken()` ab, und die
@@ -175,7 +175,7 @@
         knopf = L.DomUtil.create('a', '', wrap);
         knopf.href = '#';
         knopf.setAttribute('role', 'button');
-        /* BEIDE ZEICHEN IM KNOPF (E-MR-19), das Stylesheet blendet je Breite
+        /* BEIDE ZEICHEN IM KNOPF, das Stylesheet blendet je Breite
          * eines aus. `aria-hidden` an beiden: Die Auskunft steht im
          * aria-label, und ein Vorleser soll nicht zwei Zeichen ansagen, von
          * denen eines unsichtbar ist. */

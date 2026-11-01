@@ -31,7 +31,7 @@ import org.genem.nadoku.handy.aufzeichnung.Ortungsstand
 import org.genem.nadoku.handy.puffer.Raeumung
 
 /**
- * Wie der letzte Sendelauf ausgegangen ist (E-S5Z-12).
+ * Wie der letzte Sendelauf ausgegangen ist.
  *
  * Die Ansicht bekommt das **fertig entschieden** und nicht als
  * `Sendebericht`: Sie soll anzeigen, nicht auswerten. Sonst stünde die Regel,
@@ -52,7 +52,7 @@ enum class Sendeausgang {
     PAKET_ABGEWIESEN,
 
     /**
-     * Kein Kontoschlüssel, auch nach dem Nachholen nicht (S11-09): Das Konto
+     * Kein Kontoschlüssel, auch nach dem Nachholen nicht: Das Konto
      * hat noch keines. Nichts gesendet, nichts verloren; nach einer Anmeldung
      * im Web holt der nächste Lauf ihn von selbst.
      */
@@ -76,12 +76,12 @@ data class Dienststand(
     /**
      * Ist der GPS-Anbieter eingeschaltet? Vor dem Dienst entscheidet er
      * zusammen mit [ortungFreigegeben] darüber, ob überhaupt begonnen werden
-     * kann (E-S5Z-03).
+     * kann.
      */
     val standortAn: Boolean = true,
     /**
      * Der Ortungszustand des **laufenden** Dienstes; `null`, solange keiner
-     * läuft oder der Wächter noch nichts gemessen hat (E-S5Z-01).
+     * läuft oder der Wächter noch nichts gemessen hat.
      */
     val ortung: Ortungsstand? = null,
     /**
@@ -103,11 +103,11 @@ data class Dienststand(
  *
  * **Ein Bildschirm, eine Frage.** Vor dem Dienst gibt es einen Knopf und eine
  * Wahl: mit Phasenknöpfen dokumentieren oder nur aufzeichnen und später im
- * Browser schneiden (E-S4-20). Im Dienst ist die Anzeige das Wesentliche —
- * die Phasenknöpfe kommen mit B5, im Nur-Aufzeichnen-Modus gibt es gar keine.
+ * Browser schneiden. Im Dienst ist die Anzeige das Wesentliche — dazu die
+ * Phasenknöpfe; im Nur-Aufzeichnen-Modus gibt es gar keine.
  *
- * DER ROTE PUNKT UND DIE BILDMARKE STEHEN AUF JEDEM LAUFENDEN BILDSCHIRM
- * (E-S4-22a): der Punkt, weil man einer App im Einsatz ansehen muss, dass sie
+ * DER ROTE PUNKT UND DIE BILDMARKE STEHEN AUF JEDEM LAUFENDEN BILDSCHIRM:
+ * der Punkt, weil man einer App im Einsatz ansehen muss, dass sie
  * aufzeichnet; die Marke, weil sie nicht nur auf der Startseite zur Marke
  * gehört.
  */
@@ -137,7 +137,7 @@ fun DienstAnsicht(
             .fillMaxSize()
             .background(Farbe.rauch)
             /* Die Navigationsleiste unten -- und im Querformat die seitliche
-             * Geste (Backlog Nr. 86). Wie oben gilt: `background` zuerst, damit
+             * Geste. Wie oben gilt: `background` zuerst, damit
              * die Flaeche bis zum Rand faerbt, das Padding danach, damit der
              * Inhalt nicht darunter geraet. */
             .windowInsetsPadding(WindowInsets.navigationBars),
@@ -154,7 +154,7 @@ fun DienstAnsicht(
                     sendeergebnis, sendelaufLaeuft, aufJetztSenden, aufVerwerfen,
                 )
 
-                /* ZWEI SPERREN, IN DIESER REIHENFOLGE (E-S5Z-03). Erst die
+                /* ZWEI SPERREN, IN DIESER REIHENFOLGE. Erst die
                  * Freigabe, dann der Standort: Ohne Freigabe nützt der
                  * eingeschaltete Standort nichts, und zwei Meldungsblöcke
                  * übereinander wären eine Zumutung mit Handschuhen.
@@ -209,7 +209,7 @@ private fun Zustandsblock(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(Abstand.zwei),
         ) {
-            /* DER AUFNAHMEPUNKT BLEIBT IN JEDEM ZUSTAND (E-S4-22a): Er
+            /* DER AUFNAHMEPUNKT BLEIBT IN JEDEM ZUSTAND: Er
              * zeigt den DIENST, nicht das Signal. Die Zeile daneben sagt,
              * was der Punkt nicht sagen kann. */
             Aufnahmepunkt()
@@ -219,8 +219,8 @@ private fun Zustandsblock(
             )
         }
     }
-    /* DIE ADRESSE STEHT WEITER DA, OBWOHL SIE FEST IST (R63). Sie ist keine
-     * Einstellung mehr, sondern eine Auskunft: Wohin sendet dieses Gerät? Bei
+    /* DIE ADRESSE STEHT DA, OBWOHL SIE FEST IST. Sie ist keine
+     * Einstellung, sondern eine Auskunft: Wohin sendet dieses Gerät? Bei
      * einem selbstgebauten APK (Selbsthoster, Pruefstand) ist das die einzige
      * Stelle, an der es sichtbar wird -- und dort ist die Frage echt. */
     Zustandszeile(
@@ -236,23 +236,21 @@ private fun Zustandsblock(
         } else {
             stringResource(R.string.sync_vollstaendig)
         },
-        /* `orangeTief` UND NICHT `orange` (B-S5Z-13). Der Punkt ist ein
-         * grafisches Objekt und braucht nach WCAG 1.4.11 3,0 : 1 gegen die
-         * Fläche. `marke_orange` auf `marke_schnee` erreicht 2,23 : 1 —
-         * gefunden erst beim Nachrechnen ALLER Token für E-S5Z-22, weil
-         * `werkzeuge/kontraste.py` eine feste Paarliste führt und dieses
-         * Paar nicht enthielt. `marke_orange_tief` erreicht 4,32 : 1; das
-         * Paar steht jetzt in der Liste. */
+        /* `orangeTief` UND NICHT `orange`. Der Punkt ist ein grafisches
+         * Objekt und braucht nach WCAG 1.4.11 3,0 : 1 gegen die Fläche.
+         * `marke_orange` auf `marke_schnee` erreicht 2,23 : 1,
+         * `marke_orange_tief` 4,32 : 1; das Paar steht in der Liste von
+         * `werkzeuge/kontraste.py`. */
         punktfarbe = if (rueckstand > 0) Farbe.orangeTief else Farbe.blau,
         schriftfarbe = Farbe.gedaempft,
     )
 
-    /* WAS DER SERVER ABGEWIESEN HAT, STAND BIS 0.8.1 NIRGENDS (B-S5Z-06).
+    /* WAS DER SERVER ABGEWIESEN HAT, STEHT HIER.
      *
      * Ein Paket mit 400 wird als `fehlerhaft` gemerkt und nicht wiederholt —
-     * das ist richtig (Vertrag 5). Es fiel damit aber auch aus dem Rückstand
-     * und aus der Anzeige: Die App sagte „Alles gesendet", während beim
-     * Server ein Segment offen blieb. Rot, weil hier tatsächlich etwas
+     * das ist richtig (Vertrag 5). Es fällt damit aber auch aus dem Rückstand,
+     * und ohne diese Zeile sagte die App „Alles gesendet", während beim
+     * Server ein Segment offen bleibt. Rot, weil hier tatsächlich etwas
      * verloren ist und niemand es von selbst merkt. */
     if (abgewiesen > 0) {
         Zustandszeile(
@@ -261,17 +259,16 @@ private fun Zustandsblock(
             ),
             punktfarbe = Farbe.rot, schriftfarbe = Farbe.rotTief,
         )
-        /* VERWERFEN (seit 0.17.0, Backlog Nr. 114, R4-22, Bild M-R4-22).
-         * Ohne Weg wurde die rote Zeile zur Tapete: Sie stand, bis nach
-         * 30 Tagen die Frist räumte, und niemand konnte etwas tun.
+        /* VERWERFEN. Ohne Weg würde die rote Zeile zur Tapete: Sie stünde,
+         * bis nach 30 Tagen die Frist räumt, und niemand könnte etwas tun.
          *
          * NEUTRAL, NICHT ROT: Verwerfen beendet die Ansicht nicht — Rot
          * bleibt „Dienst beenden" unten vorbehalten —, und den Fehltipp
-         * fängt die Rückfrage (E-S4-21b). Der Knopf steht nur, wenn er etwas
+         * fängt die Rückfrage. Der Knopf steht nur, wenn er etwas
          * verwirft ([Puffer.verwerfbar]): Ein laufendes Paket mit 400 wird
          * noch beschrieben und gehört erst nach dem Dienst dazu. Der Hinweis
          * darunter sagt, was die rote Zeile bedeutet und was ohne Zutun
-         * geschieht (Q-R4-25). */
+         * geschieht. */
         if (verwerfbar > 0) {
             KnopfNeutral(stringResource(R.string.abgewiesene_verwerfen)) { aufVerwerfen() }
         }
@@ -358,7 +355,7 @@ private fun androidx.compose.foundation.layout.ColumnScope.RuhenderDienst(
         color = Farbe.dunkelblau, fontSize = 24.sp, fontWeight = FontWeight.SemiBold,
         modifier = Modifier.align(Alignment.CenterHorizontally),
     )
-    // Die Vorgabe ist die zuletzt getroffene Wahl (E-S4-20).
+    // Die Vorgabe ist die zuletzt getroffene Wahl.
     Zweierwahl(
         links = stringResource(R.string.modus_phasen),
         rechts = stringResource(R.string.modus_nur_aufzeichnen),
@@ -366,8 +363,8 @@ private fun androidx.compose.foundation.layout.ColumnScope.RuhenderDienst(
     ) { links ->
         aufModus(if (links) Modus.MIT_PHASENKNOEPFEN else Modus.NUR_AUFZEICHNEN)
     }
-    /* KEIN „Dienst beginnen", solange eine der beiden Sperren steht
-     * (E-S5Z-03). Der Knopf verschwindet, statt beim Druck abzulehnen: Eine
+    /* KEIN „Dienst beginnen", solange eine der beiden Sperren steht. Der
+     * Knopf verschwindet, statt beim Druck abzulehnen: Eine
      * Ablehnung müsste erklärt werden, und über dem Knopf steht die
      * Erklärung schon. */
     if (stand.ortungFreigegeben && stand.standortAn) {
@@ -399,8 +396,7 @@ private fun androidx.compose.foundation.layout.ColumnScope.LaufenderDienst(
     )
 
     if (stand.modus == Modus.NUR_AUFZEICHNEN) {
-        // KEIN Phasenknopf — kein versehentlicher Druck mit Handschuhen
-        // (E-S4-20).
+        // KEIN Phasenknopf — kein versehentlicher Druck mit Handschuhen.
         Hinweiskasten(stringResource(R.string.modus_nur_aufzeichnen_hinweis))
     } else {
         Phasenteil(
@@ -414,7 +410,7 @@ private fun androidx.compose.foundation.layout.ColumnScope.LaufenderDienst(
         )
     }
 
-    /* DER WECHSEL WÄHREND DES DIENSTES IST VERLUSTFREI (E-S4-20). Er blendet
+    /* DER WECHSEL WÄHREND DES DIENSTES IST VERLUSTFREI. Er blendet
      * die Knöpfe ein oder aus, bereits Gesendetes bleibt unberührt — deshalb
      * ein neutraler Knopf und keine Rückfrage: Es geht nichts verloren. */
     KnopfNeutral(
@@ -429,16 +425,16 @@ private fun androidx.compose.foundation.layout.ColumnScope.LaufenderDienst(
         )
     }
 
-    // Beendende Handlung: vollflächig rot, mit Rückfrage (E-S4-22a).
+    // Beendende Handlung: vollflächig rot, mit Rückfrage.
     KnopfBeenden(stringResource(R.string.dienst_beenden)) { aufBeenden() }
 }
 
 /**
- * Der Wortlaut zum Ortungszustand (4.3).
+ * Der Wortlaut zum Ortungszustand.
  *
  * `null` faellt mit [Ortungsstand.SUCHT] zusammen, und das ist richtig:
  * Beides heisst, dass die App es noch nicht weiss. Sie darf dann nicht
- * „GPS ok" sagen — das war der Fehler von 0.7.7 (B-S5Z-07).
+ * „GPS ok" sagen.
  */
 @Composable
 private fun ortungstext(stand: Dienststand): String {
@@ -456,10 +452,10 @@ private fun ortungstext(stand: Dienststand): String {
 }
 
 /**
- * Die Farbe dazu — **drei Stufen, nicht sechs** (E-S5Z-22).
+ * Die Farbe dazu — **drei Stufen, nicht sechs**.
  *
  * Alle vier Zustaende, in denen nichts aufgezeichnet wird, sind rot und
- * unterscheiden sich am Wortlaut. Das Konzept sah fuer `UNGENAU` Orange vor;
+ * unterscheiden sich am Wortlaut. Orange fuer `UNGENAU` geht nicht:
  * nachgerechnet traegt kein vorhandenes Orange Text auf Schnee
  * (`marke_orange` 2,23 : 1, `marke_orange_tief` 4,32 : 1 — beide unter AA).
  * `rotTief` erreicht 7,58 : 1. Die farbliche Abstufung „warnt" gegen „fehlt
@@ -507,7 +503,7 @@ private fun VorschauLaufendNurAufzeichnen() = DienstAnsicht(
     aufOrtungFreigeben = {}, aufStandortEinschalten = {}, aufEinstellungen = {},
 )
 
-/** Der Fall, den 0.7.7 verschwieg: Dienst läuft, aufgezeichnet wird nichts. */
+/** Der Fall, der nicht verschwiegen werden darf: Dienst läuft, aufgezeichnet wird nichts. */
 @Preview(showBackground = true)
 @Composable
 private fun VorschauLaufendOhneSignal() = DienstAnsicht(

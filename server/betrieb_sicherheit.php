@@ -3,23 +3,21 @@ declare(strict_types=1);
 require_once __DIR__ . '/auth_guard.php';
 require_betreiberin();
 require_once __DIR__ . '/ratelimit_lib.php';
-// BEHEBUNG, NICHT FORMSACHE (AP7, R83): Bis Web 20.31.0 rief diese Seite
-// edbak_groesse_text(), ohne adminbackup_lib.php je einzubinden — die Funktion
-// war nur da, weil ui_seite_start() das Menue baut und
-// ui_einstellungen_punkte() dafuer status_lib.php nachlaedt. Aus genau diesem
-// Befund ist dieses Paket entstanden; jetzt haengt die Seite an der Sache selbst.
+// AUSDRUECKLICH EINGEBUNDEN, nicht ueber Umwege: Eine Funktion, die nur da
+// ist, weil ui_seite_start() das Menue baut und dafuer status_lib.php
+// nachlaedt, haengt am Zufall. Die Seite haengt an der Sache selbst.
 require_once __DIR__ . '/format_lib.php';
 
 /**
- * BETRIEB -> STATUS -> SICHERHEIT (P5a/AP8, E-P5a-08).
+ * BETRIEB -> STATUS -> SICHERHEIT.
  *
- * WOFUER ES DIESE SEITE GIBT. Der Ratenschutz aus AP6 und die Mengenbremse
- * aus AP7 arbeiten still. Auf der Statusseite stehen davon drei Zeilen —
+ * WOFUER ES DIESE SEITE GIBT. Der Ratenschutz und die Mengenbremse
+ * arbeiten still. Auf der Statusseite stehen davon drei Zeilen —
  * „Verlangsamung", „Gesperrt", „Abgewiesene Geraete" —, und die sagen, DASS
  * etwas ist. Wer wissen will, WER gesperrt ist, seit wann, auf welcher
- * Sprosse, und wer es wieder aufheben will, fand bis Web 20.11.0 nichts.
+ * Sprosse, und wer es wieder aufheben will, findet es hier.
  *
- * WARUM EINE UNTERSEITE UND KEIN MENUEPUNKT (E-P5a-08). Fuer eine
+ * WARUM EINE UNTERSEITE UND KEIN MENUEPUNKT. Fuer eine
  * BetreiberIn stehen siebzehn Eintraege in der Leiste; ein achtzehnter fuer
  * eine Seite, die man an guten Tagen nie braucht, waere an der falschen
  * Stelle teuer. Die Seite haengt deshalb an Status, wo die drei Zeilen
@@ -37,33 +35,31 @@ require_once __DIR__ . '/format_lib.php';
  * WAS HIER IM KLARTEXT STEHT, UND WARUM DAS EINE ENTSCHEIDUNG IST
  * -------------------------------------------------------------------------
  *
- * IP-Adressen und E-Mail-Adressen, beides unverschluesselt (E-P5a-08,
- * E-P5a-46). Ohne sie waere die Liste „irgendwo war irgendwer gesperrt" und
+ * IP-Adressen und E-Mail-Adressen, beides unverschluesselt. Ohne sie waere
+ * die Liste „irgendwo war irgendwer gesperrt" und
  * damit wertlos: Man kann eine Sperre nicht aufheben, ohne zu wissen, welche.
  *
  * DIE FOLGE WIRD BENANNT, NICHT UEBERGANGEN: Die Liste fuehrt IP- und
  * E-Mail-Adressen, und der Datenschutztext der Installation gehoert deshalb
  * nachgezogen; einen Textbaustein dafuer schlaegt `admin_rechtstexte.php`
  * (Reiter Datenschutzerklärung) vor — die Anwendung liefert keinen
- * Rechtstext mit, R32, sie kann nur vorschlagen. BIS WEB 20.38.0 stand hier
- * auch, `sicherheit_ereignisse` fahre in jeder Komplettsicherung mit; seit
- * P5c/AP2 geht die Tabelle OHNE ZEILEN hinein (`KOMP_OHNE_ZEILEN`).
+ * Rechtstext mit, sie kann nur vorschlagen. In die Komplettsicherung geht
+ * `sicherheit_ereignisse` OHNE ZEILEN (`KOMP_OHNE_ZEILEN`).
  *
  * -------------------------------------------------------------------------
- * SECHS KARTEN, WIE E-P5a-08 SIE NENNT
+ * SECHS KARTEN
  * -------------------------------------------------------------------------
  *
- * Bis P5a/AP10 waren es fuenf — „Loeschungen auf Sicherungszielen" kam erst
- * mit der Loeschregel je Ziel (E-P5a-03), denn eine Karte, die sagt „hier
- * steht noch nichts, weil es die Sache noch nicht gibt", ist keine Auskunft,
- * sondern Laerm. Hier stand bis Web 21.1.0 noch „fuenf, nicht sechs".
+ * Eine Karte, die sagt „hier steht noch nichts, weil es die Sache noch nicht
+ * gibt", ist keine Auskunft, sondern Laerm — jede der sechs hat ihren
+ * Gegenstand.
  *
  * -------------------------------------------------------------------------
- * NUR VORHANDENE BAUSTEINE (Konzept 2.5)
+ * NUR VORHANDENE BAUSTEINE
  * -------------------------------------------------------------------------
  *
  * Karte, Zeile, Plakette, Zeilenaktionen, Meldung, Knopf, Wertekasten. Keine
- * TABELLE, obwohl die Mockup-Skizze fuer die erste Karte eine nennt:
+ * TABELLE:
  * `docs/Design.md` 9.0 fuehrt „eine Liste von Eintraegen" ausdruecklich auf
  * `ui_zeile()` in einer Karte und die `<table>` unter „nicht"; die Tabelle
  * ist dort fuer „Zahlen nebeneinander vergleichen" vorgesehen und ist im
@@ -99,10 +95,10 @@ require_once __DIR__ . '/mail_lib.php';
  * `wer` in `sicherheit_ereignisse` leer, und das Ereignis „aufgehoben" sagte
  * nicht, wer aufgehoben hat — also genau das, wofuer es da ist.
  *
- * UMLEITEN NACH DEM POST (Web 21.1.9, Backlog Nr. 250): Aufheben endet mit
+ * UMLEITEN NACH DEM POST: Aufheben endet mit
  * `flash_setzen()` und einer Umleitung auf diese Seite — sonst schickt
  * Neuladen den Klick ein zweites Mal. Auch „gibt es nicht mehr" leitet um —
- * das ist das Ergebnis des Versuchs, kein Eingabefehler (E-R4-34). Fehlen
+ * das ist das Ergebnis des Versuchs, kein Eingabefehler. Fehlen
  * Topf oder Merkmal, ist nichts geschehen, und die Seite bleibt. */
 $meldung = null;
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'aufheben') {
@@ -146,8 +142,8 @@ $sperren   = rate_sperren_aktiv(200);
 $bremse    = rate_verlangsamung(true);
 $ereign    = sicherheit_ereignisse([], null, 200);
 $geraete   = sicherheit_bremse_geraete();
-/* Die sechste Karte (P5a/AP10). Sie hat in AP8 gefehlt, weil es weder
- * Tabelle noch Schreibweg gab — beides entsteht mit der Aufbewahrungsregel. */
+/* Die sechste Karte. Tabelle und Schreibweg entstehen mit der
+ * Aufbewahrungsregel. */
 require_once __DIR__ . '/sicherungsziel_lib.php';
 $loeschungen = sz_loeschungen();
 $mailregel = sicherheit_mailregel();
@@ -248,9 +244,9 @@ ui_seite_start(['titel' => 'Sicherheit']);
           ? ui_plakette('Stufe ' . $bremse['stufe'], ['ton' => 'orange'])
           : ui_plakette('ruhig', ['ton' => 'blau'])]); ?>
     <?php if ($bremse['stufe'] > 0): ?>
-      <?php /* OHNE TAGS IM TEXT (R17-22, F-R17-49): `ui_meldung_markup()`
-               maskiert den Text, und bis Web 23.3.0 stand hier zweimal
-               `<strong>` — die BetreiberIn las die Tags als Text. Die
+      <?php /* OHNE TAGS IM TEXT: `ui_meldung_markup()`
+               maskiert den Text — ein `<strong>` hier laese die
+               BetreiberIn als Text. Die
                Hervorhebung traegt der Auftakt; ein Riegel in Stufe 1 haelt
                es so (`tools/zaehlung/`, Zeile `meldung-markup`). */ ?>
       <?= ui_meldung_markup('warn', 'Jede fehlgeschlagene Anmeldung wartet zurzeit '
@@ -325,8 +321,8 @@ ui_seite_start(['titel' => 'Sicherheit']);
   <?php ui_karte_ende(); ?>
 
   <?php /* ---- 4. Ereignisse ---------------------------------------------- */ ?>
-  <?php /* DIE KURZSICHT BLEIBT, DIE GANZE LISTE STEHT IM PROTOKOLL (P5c/AP2,
-           E-P5c-10): Hier wird aufgehoben; gesucht, gefiltert und geblättert
+  <?php /* DIE KURZSICHT BLEIBT, DIE GANZE LISTE STEHT IM PROTOKOLL:
+           Hier wird aufgehoben; gesucht, gefiltert und geblättert
            wird im Reiter Sicherheit, zusammen mit den CSP-Berichten. */ ?>
   <?php ui_karte_start(['titel' => 'Ereignisse der letzten 30 Tage', 'id' => 'k-ereignisse',
       'zahl' => $ereign['gesamt'] > 0 ? (string)$ereign['gesamt'] : null,
@@ -334,11 +330,10 @@ ui_seite_start(['titel' => 'Sicherheit']);
     <?php /* WAS HIER NICHT STEHT, UND ZWAR AUSDRUECKLICH: Ein Sperrereignis
              entsteht nur an den acht Toepfen MIT LEITER — `login`,
              `login_ip`, `salt`, `ingest`, `ingest_ip`, `blatt`, `totp` und
-             seit Schritt 18, SR-04, `notweg`. Die uebrigen sperren ueber den
+             `notweg`. Die uebrigen sperren ueber den
              Rueckfallweg OHNE Protokollzeile. Ohne diesen Satz liest sich
              eine kurze Liste als „es war fast nichts", obwohl die meisten
-             Toepfe gar nicht berichten. (Hier stand bis Web 21.13.0 „fuenf"
-             und „neun" — die Zahl im Satz darunter war laengst sieben.) */ ?>
+             Toepfe gar nicht berichten. */ ?>
     <p class="feld-hinweis">Vermerkt werden nur die acht Töpfe mit Sperrleiter,
        nicht jede Sperre.
        <a href="hilfe.php#11-4b-sicherheit-wer-ausgesperrt-ist-und-wie-man-ihn-wieder-hereinlaesst">Handbuch: welche Töpfe</a></p>
@@ -377,13 +372,7 @@ ui_seite_start(['titel' => 'Sicherheit']);
     <?php endif; ?>
   <?php ui_karte_ende(); ?>
 
-  <?php /* ---- 5. Löschungen auf Sicherungszielen (P5a/AP10, E-P5a-08) ----
-           SIE HAT IN AP8 GEFEHLT, und zwar mit Ansage: Es gab damals weder
-           Tabelle noch Schreibweg noch einen `app_state`-Schlüssel, aus dem
-           sich etwas hätte zeigen lassen. Eine Karte, die sagt „hier steht
-           noch nichts, weil es die Sache noch nicht gibt", wäre kein Befund
-           gewesen, sondern Lärm.
-
+  <?php /* ---- 5. Löschungen auf Sicherungszielen ----
            SIE STEHT AUF DIESER SEITE UND NICHT BEI DEN ZIELEN, weil sie
            dieselbe Frage beantwortet wie ihre Nachbarn: Was hat diese
            Installation getan, das jemand nachvollziehen können muss? Eine
@@ -444,7 +433,7 @@ ui_seite_start(['titel' => 'Sicherheit']);
     ]); ?>
   <?php ui_karte_ende(); ?>
 
-  <?php /* DIE KARTE „WAS HIER GILT" IST MIT P5c/AP9 ENTFALLEN (E-P5c-49): Klartext,
+  <?php /* KEINE KARTE „WAS HIER GILT": Klartext,
            30 Tage, die eine Handlung und der Datenschutztext stehen im
            Handbuch 11.4b. */ ?>
 

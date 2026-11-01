@@ -2,7 +2,7 @@
 declare(strict_types=1);
 
 /**
- * Helfer der Protokollprobe, Teil 7 (P5c/AP3) — Fehler provozieren, ohne eine
+ * Helfer der Protokollprobe, Teil 7 — Fehler provozieren, ohne eine
  * Datei unter `server/` anzulegen.
  *
  * ALS ROUTER eines eigenen `php -S` (die Probe startet ihn auf einem freien
@@ -15,7 +15,7 @@ declare(strict_types=1);
  * AUF DER KOMMANDOZEILE zwei Faelle, die kein Webserver braucht:
  *   --ausnahme  eine ungefangene Ausnahme (Rueckgabewert 255, Kennung auf stderr)
  *   --ohne-db   die eigene Datenbankverbindung trennen und dann melden —
- *               Rueckfall statt Schleife (E-P5c-58); gibt die Kennung und
+ *               Rueckfall statt Schleife; gibt die Kennung und
  *               die Dauer als JSON aus
  */
 
@@ -29,8 +29,8 @@ if (PHP_SAPI === 'cli') {
     }
     if ($fall === '--ohne-db') {
         /* DIE VERBINDUNG VON AUSSEN TRENNEN, nicht `config.php` tauschen: Ein
-         * Tausch haette fuer die Dauer der Probe die ganze Anlage getroffen
-         * (F-P5c-86). So trifft es nur diesen Prozess — `db()` haelt die
+         * Tausch haette fuer die Dauer der Probe die ganze Anlage getroffen.
+         * So trifft es nur diesen Prozess — `db()` haelt die
          * getrennte Verbindung in seinem `static` und oeffnet keine neue. */
         $id = (int)db()->query('SELECT CONNECTION_ID()')->fetchColumn();
         $zweite = new PDO((string)konfig('db.dsn'), (string)konfig('db.user'),
@@ -64,7 +64,7 @@ switch ($fall) {
 
     case 'probe-halbseite':
         /* Erst ein Stueck Seite, dann die Ausnahme — mit Ausgabepuffer,
-         * wie beim Hoster (F-P5c-97). Das Stueck darf nicht vor der
+         * wie beim Hoster. Das Stueck darf nicht vor der
          * Fehlerseite stehen. */
         echo "<!doctype html><title>x</title><p>HALBE SEITE</p>\n";
         throw new RuntimeException('nach einer halben Seite');

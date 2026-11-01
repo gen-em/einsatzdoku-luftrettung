@@ -3,16 +3,16 @@ package org.genem.nadoku.gemeinsam
 import kotlin.random.Random
 
 /**
- * Die Client-Kennungen (`client_ref`, `day_ref`) — JSON-Vertrag 8, E-S4-09.
+ * Die Client-Kennungen (`client_ref`, `day_ref`) — JSON-Vertrag 8.
  *
  * DIE KENNUNG IST DER ANKER DER IDEMPOTENZ: Der Server erkennt an ihr, ob ein
  * Upload denselben Einsatz betrifft wie ein früherer. Sie muss auf **diesem
  * Gerät** eindeutig sein und darf sich niemals wiederholen — der eindeutige
  * Schlüssel auf dem Server lautet (Gerätekennung, `client_ref`).
  *
- * DIE BAUFORM IST DIE DER UHR SEIT 1.7.0: Präfix, fortlaufender Zähler im
- * Gerätespeicher, Zufallsanteil. **Kein Zeitstempel.** Die Uhr hatte einen,
- * und das hatte zwei Folgen, die für ein Handy genauso gelten:
+ * DIE BAUFORM IST DIE DER UHR: Präfix, fortlaufender Zähler im
+ * Gerätespeicher, Zufallsanteil. **Kein Zeitstempel.** Ein Zeitstempel hätte
+ * zwei Folgen, die für ein Handy genauso gelten:
  *
  *   1. Springt die Uhrzeit zurück (Zurücksetzen, Zeitzonenwechsel im
  *      Flugmodus, ein automatisch gestellter Netzzeitgeber), entstehen erneut
@@ -25,9 +25,9 @@ import kotlin.random.Random
  * Zusicherung; der Zufallsanteil verhindert, dass sich Reihenfolge oder
  * Zeitpunkt ablesen lassen.
  *
- * DIE PRÄFIXE DES HANDYS (E-S4-09): `am-` Einsatz, `ar-` Ruhesegment,
+ * DIE PRÄFIXE DES HANDYS: `am-` Einsatz, `ar-` Ruhesegment,
  * `ad-` Dienst. Der an der Uhr ausgelöste Einsatz trägt `wm-` und wird **auf
- * der Uhr** gebildet (C2) — er ist der Idempotenz-Anker über den Funkabriss.
+ * der Uhr** gebildet — er ist der Idempotenz-Anker über den Funkabriss.
  * Der Server prüft Präfixe nicht; sie stehen im Vertrag, weil an ihnen
  * Verhalten hängt (die Sperrliste beim endgültigen Löschen) und weil am
  * Datensatz ablesbar bleiben soll, auf welchem Weg er entstand.
@@ -68,7 +68,7 @@ class Kennungen(
         const val RUHESEGMENT = "ar"
         const val DIENST = "ad"
 
-        /** Kennung der Uhr für einen dort ausgelösten Einsatz (E-S4-09). */
+        /** Kennung der Uhr für einen dort ausgelösten Einsatz. */
         const val EINSATZ_UHR = "wm"
 
         /** Vertrag 3.2: höchstens 64 Zeichen. */

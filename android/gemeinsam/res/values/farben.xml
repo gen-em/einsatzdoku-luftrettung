@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-    Farb-Token der App (E-S4-22a).
+    Farb-Token der App.
 
     JEDER FARBWERT DER APP STEHT HIER UND NIRGENDS SONST. Das ist dieselbe
     Regel wie im Web (`:root` in server/assets/style.css, CLAUDE.md 5) und aus
@@ -24,11 +24,11 @@
                           Geraet trennen, Abschluss-Rueckfrage der Uhr. Auf
                           einem Geraet im Einsatz muss die beendende Handlung
                           ohne Lesen erkennbar sein; die Rueckfrage
-                          (E-S4-21b) faengt den Fehltipp ab.
+                          faengt den Fehltipp ab.
 
-    DER UNTERSCHIED ZUM WEB, mit der Freigabe vom 31.08.2026 bestaetigt:
-    Auswahlflaechen (Moduswahl, Logo-Wahl, Hinweiskaesten) stehen auf
-    HELLBLAU, nicht auf Hell-Orange wie die Wahlliste im Web (E-P3-20). In der
+    DER UNTERSCHIED ZUM WEB, freigegeben: Auswahlflaechen (Moduswahl,
+    Logo-Wahl, Hinweiskaesten) stehen auf HELLBLAU, nicht auf Hell-Orange wie
+    die Wahlliste im Web. In der
     App waehlt Blau, damit die Rolle aus 3.1 sichtbar wird.
 -->
 <resources>
@@ -68,16 +68,16 @@
 
     <!-- ==== Was hier BEWUSST NICHT steht ===============================
 
-         Ein eigener Farbwert fuer die App entsteht nicht (E-S4-22a) — auch
+         Ein eigener Farbwert fuer die App entsteht nicht — auch
          nicht fuer die Uhr. Zwei Stellen waeren dafuer in Frage gekommen:
 
-           Der Grund der Uhr. Das Mockup zeigt reines Schwarz (#000). Genommen
-           wird stattdessen `marke_asphalt` (#1A0500): Auf einem OLED-Display
-           sind 26/5/0 von 255 praktisch dieselbe abgeschaltete Flaeche und
-           derselbe Stromverbrauch, aber es ist ein Wert der Marke und kein
-           neuer. Der Entscheidungstext gilt, nicht die Skizze.
+           Der Grund der Uhr. Naheliegend waere reines Schwarz (#000).
+           Genommen wird stattdessen `marke_asphalt` (#1A0500): Auf einem
+           OLED-Display sind 26/5/0 von 255 praktisch dieselbe abgeschaltete
+           Flaeche und derselbe Stromverbrauch, aber es ist ein Wert der Marke
+           und kein neuer.
 
-           Die Nebenschrift der Uhr. Das Mockup zeigt #B9B2A9. Genommen wird
+           Die Nebenschrift der Uhr. Naheliegend waere #B9B2A9. Genommen wird
            `marke_sand` (#D4C7AD, 11,80:1 auf Asphalt gegen 19,71:1 fuer Weiss)
            — deutlich zweite Ebene und trotzdem weit ueber AA.
 

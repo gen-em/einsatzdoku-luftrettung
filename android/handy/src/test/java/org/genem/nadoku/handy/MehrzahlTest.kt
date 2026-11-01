@@ -11,13 +11,13 @@ import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 
 /**
- * Die drei Texte mit Zahl stehen seit Android 0.16.0 als `<plurals>`
- * (Konzept AR, E-AR-10); seit 0.17.0 dazu die vier des Verwerfens (R4-22).
+ * Die drei Texte mit Zahl stehen als `<plurals>`, dazu die vier des
+ * Verwerfens.
  *
- * Bis dahin waren es `<string>`, und zwei davon kamen tatsaechlich mit 1 vor:
- * Die Restzeit der Kopplung rundet bei genau 60 s auf „1" Minute und zaehlt
- * unter einer Minute bis 1 Sekunde herunter. Dort stand „Noch 1 Minuten" und
- * „Noch 1 Sekunden". Lint meldete es seit 0.15.0 als `PluralsCandidate`.
+ * Als `<string>` kaemen zwei davon tatsaechlich mit 1 vor: Die Restzeit der
+ * Kopplung rundet bei genau 60 s auf „1" Minute und zaehlt unter einer
+ * Minute bis 1 Sekunde herunter. Dort stuende „Noch 1 Minuten" und „Noch 1
+ * Sekunden". Lint meldet es als `PluralsCandidate`.
  *
  * `qualifiers = "de"`: Die Mehrzahlregel haengt an der Sprache, nicht an der
  * Datei. Die App hat nur deutsche Texte, und die Regel soll die deutsche sein.
@@ -46,7 +46,7 @@ class MehrzahlTest {
     }
 
     /**
-     * Verwerfen (R4-22): Titel, Text und Quittung folgen der Zahl. Der
+     * Verwerfen: Titel, Text und Quittung folgen der Zahl. Der
      * Hinweis unter der roten Zeile nimmt die Zahl der Pakete nur für die
      * Form; eingesetzt wird die Frist (`Raeumung.FRIST_TAGE`).
      */

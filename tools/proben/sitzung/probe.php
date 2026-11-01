@@ -2,10 +2,10 @@
 declare(strict_types=1);
 
 /**
- * Sitzungsprobe — ist eine gelesene Sitzungsdatei wertlos? (Schritt 18, SR-01)
+ * Sitzungsprobe — ist eine gelesene Sitzungsdatei wertlos?
  *
  * Anlass: Nr. 242 — der Dateiname war die Sitzung; wer `sess_<id>` las, aus dem
- * Verzeichnis oder einem Webspace-Backup, war angemeldet (E-SA-09).
+ * Verzeichnis oder einem Webspace-Backup, war angemeldet.
  *
  * WAS SIE MISST, über HTTP gegen die örtliche Anlage, mit einem eigenen Konto
  * der Rolle `user` und einem Zweitfaktor mit bekanntem Geheimnis:
@@ -17,12 +17,12 @@ declare(strict_types=1);
  *   3. Dieselbe Kennung ohne `EDBIND` (und mit einem falschen): Seite →
  *      Abmeldeseite mit `ende=bindung`, API → 401 `grund: bindung`; die Sitzung
  *      ist danach auch für den Browser mit Cookie beendet.
- *   4. Eine Sitzungsdatei ohne Hash — so, wie jede von vor Web 21.7.0 aussieht
+ *   4. Eine Sitzungsdatei ohne Hash — so, wie eine ältere aussieht
  *      und wie eine gelesene aussähe — endet mit `bindung`, auch mit Cookie.
- *   5. Die lesenden Seiten (F-SR-15): Das Notfallblatt zeigt die Kontoadresse
+ *   5. Die lesenden Seiten: Das Notfallblatt zeigt die Kontoadresse
  *      einer gebundenen Sitzung und keine ohne Bindung.
  *   6. Abmelden löscht beide Cookies.
- *   7. Die Anmeldeseite hat einen Text zum Grund `bindung` (F-SR-07).
+ *   7. Die Anmeldeseite hat einen Text zum Grund `bindung`.
  *
  * WAS SIE NICHT MISST: wie ein echter Browser zwei `Strict`-Cookies bei einer
  * Weiterleitung behandelt (Bedienprobe, Chromium) — hier führt die Probe die
@@ -271,7 +271,7 @@ pruefe($r['code'] === 200 && str_contains($r['rumpf'], $bindungEnde),
 pruefe(!is_file($ort . '/sess_' . $alt2) || !str_contains((string)file_get_contents($ort . '/sess_' . $alt2), 'user_id'),
        '… und die Datei trägt danach keine Anmeldung mehr');
 
-/* ---- 5. Die lesenden Seiten (F-SR-15) --------------------------------------- */
+/* ---- 5. Die lesenden Seiten ------------------------------------------------- */
 echo "== 5. Lesende Seite: Notfallblatt\n";
 $wert = bin2hex(random_bytes(32));
 $gebunden = sitzung_schreiben(['user_id' => $uid, 'epoch' => $epoch, 'last_seen' => time(),

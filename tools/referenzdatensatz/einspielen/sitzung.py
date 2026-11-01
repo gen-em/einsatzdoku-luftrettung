@@ -3,14 +3,14 @@
 KEIN SONDERZUGANG. Dieses Modul meldet sich so an, wie der Browser es tut:
 Salz und Rundenzahl vom Salz-Endpunkt holen, daraus PBKDF2 ableiten, das
 ABGELEITETE TOKEN an login.php schicken. Das Passwort verlaesst das Skript
-nie -- genauso wenig, wie es den Browser verlaesst (R4, B-02).
+nie -- genauso wenig, wie es den Browser verlaesst.
 
 Danach steht der Inhaltsschluessel zur Verfuegung: Er liegt passwortverpackt
 in `users.pat_wrap_pw` und wird von jeder angemeldeten Seite als Konstante
 `PAT_WRAP` mitgegeben (ui.php). Das Skript packt ihn mit dem dataKey aus --
 derselbe Weg, den crypto.js im Browser geht.
 
-SEIT P5c/AP5 AUCH DEN CODE-SCHRITT (E-P5c-43, F-P5c-33). Ein Konto mit
+AUCH DEN CODE-SCHRITT. Ein Konto mit
 Zweitfaktor bekommt nach dem Passwort keine Sitzung, sondern die Frage nach
 dem Code. Das Skript beantwortet sie, wie die App es taete: mit dem Code aus
 `tools/zweitfaktor/totp.py`. Auch das ist kein Sonderzugang -- das Pruefkonto
@@ -40,14 +40,15 @@ from totp import naechster_code  # noqa: E402
 def fehlertext(html: str) -> str | None:
     """Die Fehlermeldung einer Seite lesen — an EINER Stelle.
 
-    WARUM HIER UND NICHT VIERMAL VERTEILT. Bis Web 9.14.0 stand die Suche nach
-    `alert-danger` an vier Stellen dieser Datei. Diese Klasse ist mit P3
+    WARUM HIER UND NICHT VIERMAL VERTEILT. Frueher stand die Suche nach
+    `alert-danger` an vier Stellen dieser Datei. Diese Klasse ist mit dem
+    Redesign
     verschwunden; Meldungen kommen seither aus `ui_meldung_markup()` als
     `<div class="meldung meldung-fehler" role="alert"><svg…><p>…</p></div>`.
     Drei der vier Stellen haben danach schlicht NICHTS mehr gefunden — und
     weil ein nicht gefundener Fehler wie „kein Fehler" aussieht, liefen
     abgelehnte Formulare als Erfolg durch. Genau das ist die stille Variante
-    des Fundes F-S2-A, und sie ist die gefaehrlichere.
+    eines Fehlers, und sie ist die gefaehrlichere.
 
     Beide Fassungen werden gelesen: die heutige und die alte, damit der Lauf
     auch gegen einen aelteren Stand noch etwas findet.
@@ -56,7 +57,7 @@ def fehlertext(html: str) -> str | None:
          or re.search(r'alert-danger[^>]*>(.*?)</', html, re.S))
     if not m:
         # DIE STOERUNGS- UND DIE WARTUNGSSEITE TRAGEN DIE KLASSE NICHT
-        # (Kette II, F-KH-U-06, 20.09.2026). `stoerung_seite_html()` und
+        # (20.09.2026). `stoerung_seite_html()` und
         # `wartung_antwort_seite()` in `server/wartung_lib.php` bauen auf
         # <h1> und <p class="text"> -- gemessen: `grep -c meldung-fehler`
         # ueber jene Datei ergibt 0.
@@ -77,7 +78,7 @@ def fehlertext(html: str) -> str | None:
             roh = re.sub(r"<[^>]+>", " ", " \u00b7 ".join(m.groups()))
             return re.sub(r"\s+", " ", roh).strip() or None
         return None
-    # Auszeichnung raus, Leerraum zusammenziehen — die Meldung traegt seit P3
+    # Auszeichnung raus, Leerraum zusammenziehen — die Meldung traegt heute
     # ein <strong> fuer den Auftakt.
     roh = re.sub(r"<[^>]+>", " ", m.group(1))
     return re.sub(r"\s+", " ", roh).strip() or None
@@ -92,7 +93,7 @@ def seitenkennung(antwort) -> str:
     ueberhaupt ein Sitzungscookie gesetzt wurde.
 
     SIE STEHT HIER, WEIL EINE ABWEISUNG OHNE MELDUNG KEIN RANDFALL IST.
-    Am 20.09.2026 (Kette II, F-KH-U-06) scheiterten zwei Kettenlaeufe gegen
+    Am 20.09.2026 scheiterten zwei Kettenlaeufe gegen
     Staging an `Anmeldung gescheitert: unbekannt`. Die drei naheliegenden
     Ursachen -- ausstehende Migration, zu schwache Rolle, gesperrtes Konto --
     liessen sich von Hand alle ausschliessen, und danach war der Lauf am
@@ -120,7 +121,7 @@ def seitenkennung(antwort) -> str:
 
 
 def ist_code_schritt(antwort) -> bool:
-    """Steht die Anmeldung zwischen Passwort und Code? (P5c/AP5)
+    """Steht die Anmeldung zwischen Passwort und Code?
 
     WORAN ES ZU ERKENNEN IST: an `login.php` MIT dem Formular `codeform`.
     Die Adresse allein reicht nicht -- auf `login.php` endet auch jede
@@ -199,13 +200,13 @@ class Sitzung:
         es nur, wenn die Anlage nach dem Passwort den Code-Schritt zeigt;
         ein Konto ohne Zweitfaktor meldet sich an wie bisher.
 
-        JEDE ANMELDUNG MIT CODE VERBRAUCHT EINEN ZEITSCHRITT (E-P5c-54): Der
+        JEDE ANMELDUNG MIT CODE VERBRAUCHT EINEN ZEITSCHRITT: Der
         Server nimmt keinen Code zweimal. Zwei Anmeldungen desselben Kontos
         binnen 30 Sekunden gehen ohne Warten durch, die dritte wartet bis zum
         naechsten Fenster -- das regelt der Zaehler in `totp.py`.
         """
-        # Das Anmeldeformular traegt seit Web 15.6.0 ein CSRF-Token
-        # (Backlog Nr. 127). Ohne einen GET auf login.php gibt es weder Sitzung
+        # Das Anmeldeformular traegt ein CSRF-Token.
+        # Ohne einen GET auf login.php gibt es weder Sitzung
         # noch Token, und der POST endet mit "Das Formular ist abgelaufen" --
         # eine Meldung, die wie ein Passwortfehler aussieht und keiner ist.
         seite = self.get("login.php").text
@@ -223,7 +224,7 @@ class Sitzung:
         # ueber die Antwort, welche Konten es gibt und mit welcher Zahl sie
         # rechnen. Der Browser leitet deshalb fuer JEDE ab und schickt alle
         # Token; der Server greift sich das passende heraus und macht genau
-        # EINE bcrypt-Pruefung (login.php, M2-01).
+        # EINE bcrypt-Pruefung (login.php).
         roh = salz.get("iter") or [310000]
         runden_liste = [int(r) for r in (roh if isinstance(roh, list) else [roh])]
         token_nach = {}
@@ -241,7 +242,7 @@ class Sitzung:
             "tokens": json.dumps(token_nach),
         }, allow_redirects=True)
 
-        # ---- Der Code-Schritt (P5c/AP5, E-P5c-43, F-P5c-33) --------------
+        # ---- Der Code-Schritt --------------------------------------------
         #
         # Mit Zweitfaktor antwortet `login.php` auf das richtige Passwort mit
         # 303 auf sich selbst und zeigt dort `codeform`. Bis dahin gibt es
@@ -252,7 +253,7 @@ class Sitzung:
         if ist_code_schritt(antwort):
             antwort = self._code_schicken(antwort, totp)
 
-        # DAS EINRICHTUNGSTOR (P5c/AP5, E-P5c-53). Ein Konto mit Pflichtrolle
+        # DAS EINRICHTUNGSTOR. Ein Konto mit Pflichtrolle
         # (Support, Admin, BetreiberIn) OHNE Zweitfaktor bekommt eine Sitzung,
         # aber jede Seite schickt es auf `zweitfaktor.php`, und die API
         # antwortet 403. Die Pruefung darunter saehe davon nichts -- die
@@ -287,19 +288,19 @@ class Sitzung:
         self.kdf_iter = int(self.konstante(html, "KDF_ITER") or runden_liste[0])
         self.haelfte = self.ableitungen.get(self.kdf_iter, data_key)
         # Das Token zur Rundenzahl dieses Kontos: der Passwortnachweis, den
-        # `api/kontopaar.php` beim Anlegen verlangt (S11-04a) -- derselbe, den
+        # `api/kontopaar.php` beim Anlegen verlangt -- derselbe, den
         # der Browser aus dem Vormerkfach der Anmeldung nimmt.
         self.token = token_nach.get(str(self.kdf_iter))
 
-        # ---- Der Server-Anteil (S10, E-S10-04) ---------------------------
+        # ---- Der Server-Anteil -------------------------------------------
         #
-        # Seit S10 ist die PBKDF2-Haelfte nicht mehr selbst der
+        # Die PBKDF2-Haelfte ist nicht selbst der
         # Datenschluessel: Traegt die Huelle das Praefix `edka1:<kennung>:`,
         # kommt der Datenschluessel aus HKDF(Haelfte, Konto-Anteil). Den
         # Anteil liefert die angemeldete Seite als `KONTO_ANTEILE` — sie ist
         # dieselbe Quelle, aus der auch der Browser ihn nimmt.
         #
-        # DIESES SKRIPT STELLT NICHT UM (E-S10-15). Es liest, was dasteht;
+        # DIESES SKRIPT STELLT NICHT UM. Es liest, was dasteht;
         # ein Konto, das nur ueber den Pruefstand angemeldet war, bleibt auf
         # `edk1:`. Der Umstellungslauf braucht einen echten Browser, und das
         # ist die Grenze dieses Pruefmittels.
@@ -328,8 +329,8 @@ class Sitzung:
         werden, ohne dass das Geheimnis falsch ist: Der Zaehler in `totp.py`
         gilt je Rechner, und hat ein anderer -- ein zweiter Laeufer, ein
         Browser -- im selben 30-Sekunden-Fenster schon einen Code dieses
-        Kontos eingeloest, nimmt der Server ihn kein zweites Mal
-        (E-P5c-54). Der naechste Code liegt im naechsten Fenster und geht
+        Kontos eingeloest, nimmt der Server ihn kein zweites Mal.
+        Der naechste Code liegt im naechsten Fenster und geht
         durch. Ein zweites Nein dagegen heisst fast immer: das Geheimnis
         einer anderen Anlage. Weitere Versuche aendern daran nichts und
         zaehlen nur die fuenf Fehlversuche bis zur Sperre herunter -- die
@@ -382,7 +383,7 @@ class Sitzung:
 
     def kontoschluessel(self) -> bytes:
         """Der oeffentliche Schluessel des Kontos (SEC1, 65 Byte) -- und, wenn
-        das Konto noch keinen hat, das Paar anlegen (S11-04a).
+        das Konto noch keinen hat, das Paar anlegen.
 
         WIE DER BROWSER (`assets/kontopaar.js`): ECDH P-256, der oeffentliche
         Teil als SPKI, der private als PKCS8 in Base64, verschluesselt mit dem
@@ -421,7 +422,7 @@ class Sitzung:
         return spki[-65:]
 
     def kontopaar(self):
-        """Oeffentlicher (SEC1) und privater Schluessel des Kontos (S11-06e) --
+        """Oeffentlicher (SEC1) und privater Schluessel des Kontos --
         wie der Browser nach dem Entsperren: der private Teil aus `KP_PRIVAT`,
         mit dem Inhaltsschluessel geoeffnet. Das Werkzeug oeffnet damit Huellen
         und Stuecke, wo ein Browser sie oeffnen wuerde (`ortsdaten.py`)."""

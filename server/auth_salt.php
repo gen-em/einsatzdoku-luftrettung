@@ -15,9 +15,9 @@ declare(strict_types=1);
  * ZEICHENVORRAT, AUFBAU und DAUER der Antwort — und, sobald weitere Angaben
  * hinzukommen, auch deren WERTE.
  *
- * ---- DIE RUNDENZAHL (seit Web 5.0.0, M2-01 Schritt 2) --------------------
+ * ---- DIE RUNDENZAHL ------------------------------------------------------
  *
- * Genau dieser Fall ist eingetreten, und der Hinweis von damals ist eingeloest:
+ * Das gilt fuer die Rundenzahl:
  * Der Endpunkt nennt die Rundenzahl NICHT je Konto, sondern als feste Liste
  * aus db.php — fuer jede Adresse dieselbe. Naehme er den Wert aus der
  * Nutzerzeile, waere waehrend einer Umstellung jede Adresse, die den alten
@@ -31,10 +31,10 @@ declare(strict_types=1);
 require_once __DIR__ . '/db.php';
 require_once __DIR__ . '/ratelimit_lib.php';
 
-/* DIE KOPFZEILEN SETZT `json_roh_out()`, nicht diese Datei (P5a/AP4a,
- * Nr. 203). Hier stand eine einzelne `header()`-Zeile ganz oben —
- * `Content-Type` und sonst nichts. Ihr fehlten `nosniff`, `Referrer-Policy`
- * und vor allem `Cache-Control: no-store`, und DIESER ENDPUNKT LIEFERT EINEN
+/* DIE KOPFZEILEN SETZT `json_roh_out()`, nicht diese Datei. Eine einzelne
+ * `header()`-Zeile mit `Content-Type` und sonst nichts liesse `nosniff`,
+ * `Referrer-Policy` und vor allem `Cache-Control: no-store` weg, und DIESER
+ * ENDPUNKT LIEFERT EINEN
  * WERT JE KONTO (das Salt der Schluesselableitung). Eine zwischengespeicherte
  * Antwort waere hier nicht nur unsauber, sondern falsch: Der Endpunkt ist
  * unangemeldet erreichbar, ein Zwischenspeicher auf dem Weg unterschiede die
@@ -63,8 +63,7 @@ $t0 = microtime(true);
 const SALT_MINDESTDAUER = 0.05;
 
 $b = json_decode(file_get_contents('php://input'), true);
-// Gemeinsame Schreibweise (M1-13). Bisher stand die Normalisierung hier
-// als einzige Stelle richtig — jetzt an allen acht Stellen dieselbe.
+// Gemeinsame Schreibweise, an allen Stellen dieselbe.
 $email = email_normalisieren($b['email'] ?? '');
 
 /* Sperre VOR jeder Arbeit pruefen. Der Endpunkt ist ohne Anmeldung erreichbar

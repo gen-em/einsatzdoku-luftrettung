@@ -9,27 +9,23 @@ require_once __DIR__ . '/ratelimit_lib.php';
 /**
  * Zuruecksetzen anfordern.
  *
- * DREI DINGE MUSSTEN SICH AENDERN
+ * DREI DINGE, AUF DIE ES ANKOMMT
  *
- *  1. MENGE (M1-08). Der Endpunkt war ohne Anmeldung erreichbar und ohne jede
- *     Begrenzung: Er taugte als Adressenpruefer und als Mailschleuder auf
- *     fremde Postfaecher. Jetzt zaehlt jede Anfrage (rate_zaehlen).
+ *  1. MENGE. Der Endpunkt ist ohne Anmeldung erreichbar; ohne Begrenzung
+ *     taugte er als Adressenpruefer und als Mailschleuder auf fremde
+ *     Postfaecher. Deshalb zaehlt jede Anfrage (rate_zaehlen).
  *
- *  2. DAUER (M1-07). Der Antworttext war fuer beide Faelle derselbe, die
- *     Dauer nicht: Bei vorhandenem Konto lief ein vollstaendiges
- *     Mailgespraech, sonst kam die Antwort sofort. Eine einzige Anfrage je
- *     Adresse genuegte, um die Konten zu finden. Jetzt wird die Antwort
- *     ABGESCHLOSSEN, bevor der Versand beginnt (antwort_abschliessen), und
- *     beide Zweige liegen zusaetzlich auf derselben Mindestdauer.
+ *  2. DAUER. Der Antworttext ist fuer beide Faelle derselbe, die Dauer
+ *     waere es ohne Vorkehrung nicht: Bei vorhandenem Konto liefe ein
+ *     vollstaendiges Mailgespraech, sonst kaeme die Antwort sofort. Eine
+ *     einzige Anfrage je Adresse genuegte, um die Konten zu finden. Deshalb
+ *     wird die Antwort ABGESCHLOSSEN, bevor der Versand beginnt
+ *     (antwort_abschliessen), und beide Zweige liegen zusaetzlich auf
+ *     derselben Mindestdauer.
  *
- *  3. MENGE GUELTIGER TOKENS. Jede Anfrage legte einen weiteren Token an;
- *     alle blieben eine Stunde lang gueltig. Jetzt entwertet ein neuer den
- *     alten — es gibt zu jedem Zeitpunkt hoechstens einen.
- *
- *     (Bis Web 12.9.4 stand hier "dasselbe Muster wie bei den Kopplungscodes
- *     (einstellungen.php)". Seit S5 gibt es dort kein solches Muster mehr:
- *     Eine Kopplungssitzung gehoert einem GERAET, nicht einem Konto, und ein
- *     Konto kann mehrere nebeneinander haben — jede mit eigener Frist.)
+ *  3. MENGE GUELTIGER TOKENS. Ein neuer Token entwertet den alten — es gibt
+ *     zu jedem Zeitpunkt hoechstens einen. Sonst blieben alle eine Stunde
+ *     lang gueltig.
  *
  *     Bewusst NICHT umgesetzt: den vorhandenen Token einfach stehen lassen
  *     und keine zweite Mail schicken. Das erreicht dieselbe Zahl gueltiger
@@ -65,7 +61,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $st->execute([$email]);
         $u = $st->fetch();
 
-        /* Das Demo-Konto bekommt keinen Reset-Link (E-P1-19).
+        /* Das Demo-Konto bekommt keinen Reset-Link.
          *
          * Sein Passwort ist oeffentlich und steht im Handbuch; ein
          * Zuruecksetzen kann es nur unbrauchbar machen. Die Adresse ist
@@ -79,8 +75,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
          * Adressen es gibt. */
         if ($u && demo_ist_demo((int)$u['id'])) { $u = false; }
 
-        /* KEIN SETZ-LINK AN EINE UNBESTAETIGTE ADRESSE (R17-20, F-R17-06,
-         * E-R17-45). Hat die Verwaltung die Adresse geaendert und die alte
+        /* KEIN SETZ-LINK AN EINE UNBESTAETIGTE ADRESSE. Hat die Verwaltung
+         * die Adresse geaendert und die alte
          * hat weder zugestimmt noch ist die Frist um, geht nichts hinaus —
          * STILL, aus demselben Grund wie beim Demo-Konto: Die Antwort ist fuer
          * jede Adresse dieselbe. Wer hier wartet, weiss es aus der Mail an die
@@ -95,9 +91,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
              * alle offenen. Sonst sammelten sich mit jeder Anfrage weitere
              * gueltige Links an, und jeder einzelne davon reicht aus.
              *
-             * Seit P5b/AP2 tut das `reset_token_ausstellen()` — dieselbe
-             * Funktion, die auch die Verwaltung und der Einrichter rufen
-             * (Backlog Nr. 202 Paket 1). */
+             * Das tut `reset_token_ausstellen()` — dieselbe
+             * Funktion, die auch die Verwaltung und der Einrichter rufen. */
             require_once __DIR__ . '/konto_lib.php';
             $token = reset_token_ausstellen((int)$u['id'], TOKEN_RESET_S);
             $link = app_url('/pw_handling.php?token=' . $token);
@@ -111,7 +106,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 /* Fuer logo_src(): Ohne session_lib.php faende es logo_stamm() nicht und
  * fiele still auf den Hubschrauber zurueck, gleich was die Installation
- * eingestellt hat — F-P3-AN, eine Seite weiter. */
+ * eingestellt hat. */
 require_once __DIR__ . '/session_lib.php';
 require_once __DIR__ . '/ui.php';   // Seitenhuelle; laedt selbst nichts nach
 ui_seite_start(['titel' => 'Passwort zurücksetzen', 'klasse' => 'anmeldung-body']);
@@ -119,11 +114,10 @@ ui_seite_start(['titel' => 'Passwort zurücksetzen', 'klasse' => 'anmeldung-body
 <main class="anmeldung">
  <?php ui_hinweise(); ?>
  <div class="anmeldung-karte">
-  <?php /* DAS LOGO STEHT JETZT AUCH HIER (O10). Diese Seite ist die
+  <?php /* DAS LOGO STEHT AUCH HIER. Diese Seite ist die
            Nachbarin der Anmeldung — dieselbe dunkelblaue Fläche, dieselbe
-           Karte —, und sie war die einzige der drei ohne Marke. logo_src()
-           braucht dafür session_lib.php; die Datei lädt sie seit Web 9.10.1
-           ohnehin (F-P3-AN). */ ?>
+           Karte —, und ohne Marke waere sie die einzige der drei. logo_src()
+           braucht dafür session_lib.php; die Datei lädt sie ohnehin. */ ?>
   <img src="<?= e(logo_src()) ?>" alt="" class="anmeldung-logo">
   <h1 class="anmeldung-titel">Passwort setzen</h1>
   <?php if ($done): ?>
@@ -153,7 +147,7 @@ ui_seite_ende();
  * Ab hier laeuft nichts mehr, was die aufrufende Seite noch zu sehen bekommt.
  * Das Mailgespraech dauert je nach Mailserver Sekunden — es darf nicht in der
  * Antwortzeit stecken, sonst ist die Dauer die Auskunft, die der gleiche
- * Antworttext gerade verhindern soll (M1-07). */
+ * Antworttext gerade verhindern soll. */
 if ($mailAuftrag !== null) {
     antwort_abschliessen();
     mail_einreihen($mailAuftrag[0], $mailAuftrag[1], $mailAuftrag[2]);

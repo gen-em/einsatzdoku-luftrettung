@@ -5,17 +5,14 @@ declare(strict_types=1);
  * TRANSAKTION — der eine Rahmen um eine Datenbanktransaktion
  * ===========================================================================
  *
- * Entstanden in Schritt 15 AP5 (Zentralisierung, R83, E-ZE-20) — damals in
- * `db.php`. Eigene Datei seit Web 20.37.3 (Backlog Nr. 288).
- *
  * WARUM EINE EIGENE DATEI. `install.php` legt das erste Konto ueber
- * `konto_anlegen()` an, und das laeuft seit Schritt 15 in diesem Rahmen. Der
+ * `konto_anlegen()` an, und das laeuft in diesem Rahmen. Der
  * Einrichter laeuft aber, BEVOR es eine `config.php` gibt, und `db.php`
  * verweigert sich ohne sie mit Absicht (Kopf dort). `konto_lib.php` laedt
- * `db.php` deshalb nur mit Konfiguration — und so stand `db_transaktion()`
- * genau dem einen Aufrufer nicht zur Verfuegung, fuer den die Klammer am
- * wichtigsten ist. Von Web 20.30.0 bis 20.37.2 liess sich keine neue Anlage
- * einrichten: „Call to undefined function db_transaktion()".
+ * `db.php` deshalb nur mit Konfiguration — in `db.php` stuende
+ * `db_transaktion()` genau dem einen Aufrufer nicht zur Verfuegung, fuer den
+ * die Klammer am wichtigsten ist: Keine neue Anlage liesse sich einrichten
+ * („Call to undefined function db_transaktion()").
  *
  * DESHALB LAEDT DIESE DATEI NICHTS und braucht nichts ausser PDO — dieselbe
  * Bedingung wie bei `email_lib.php`, `konfig_lib.php` und `format_lib.php`.
@@ -30,7 +27,7 @@ declare(strict_types=1);
  * deshalb per `require_once` genau diese Datei.
  */
 
-/* ---- EIN TRANSAKTIONSRAHMEN (Schritt 15/AP5, E-ZE-20) --------------------
+/* ---- EIN TRANSAKTIONSRAHMEN -----------------------------------------------
  *
  * 33 Stellen in 22 Dateien schrieben denselben Rahmen von Hand, und der
  * Tokenizer hat sie in drei Bauformen sortiert:
@@ -62,13 +59,11 @@ declare(strict_types=1);
  * steht er einmal.
  *
  * DIE AUSNAHME, NAMENTLICH: `ingest.php`. Sein Rahmen spannt sich ueber 670
- * Zeilen, gehoert zum Geraetevertrag und hat seit Web 21.11.1 eine
- * Deadlock-Behandlung (Schritt 18, SR-05, Backlog Nr. 210): eine Schleife mit
- * hoechstens drei Anlaeufen um `beginTransaction()`/`try`, die zwei Zeilen,
- * die alle Pakete teilen, hinter dem Commit. Der Rahmen steht dort und nicht
- * hier als `db_transaktion_wiederholt()`, solange es den einen Verbraucher
- * gibt (R83: zentralisiert wird beim zweiten). Schritt 15 hat ihn nicht
- * angefasst.
+ * Zeilen, gehoert zum Geraetevertrag und hat eine Deadlock-Behandlung: eine
+ * Schleife mit hoechstens drei Anlaeufen um `beginTransaction()`/`try`, die
+ * zwei Zeilen, die alle Pakete teilen, hinter dem Commit. Der Rahmen steht
+ * dort und nicht hier als `db_transaktion_wiederholt()`, solange es den
+ * einen Verbraucher gibt (zentralisiert wird beim zweiten).
  */
 
 /**

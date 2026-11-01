@@ -56,7 +56,7 @@ jobs:
           [ -n "$baum" ] || messen "eigener Baum nicht ermittelt"
           echo "Eigener Baum: $baum"
 
-          # DIE SUCHE STEHT IN tools/kette/baumsuche.py (E-BR-09), mit Selbstprobe in Stufe 1. Fenster 30 ist die Kostengrenze DIESES Aufrufers (E-TB-09).
+          # DIE SUCHE STEHT IN tools/kette/baumsuche.py, mit Selbstprobe in Stufe 1. Fenster 30 ist die Kostengrenze DIESES Aufrufers.
           rc=0
           treffer=$(python3 tools/kette/baumsuche.py --baum "$baum" --fenster 30 --ereignis pull_request --erster) || rc=$?
           case "$rc" in
@@ -85,7 +85,7 @@ jobs:
           fetch-depth: 0    # die Gegenlesung braucht origin/main und den PR-Kopf
 
       - name: Fassungen nennen — was misst hier eigentlich?
-        # Erst zuweisen, dann ausgeben: Ein Fehler in `$(…)` als echo-Argument bliebe grün — eine unlesbare Fassung ist rot (F-PK-30).
+        # Erst zuweisen, dann ausgeben: Ein Fehler in `$(…)` als echo-Argument bliebe grün — eine unlesbare Fassung ist rot.
         run: |
           web=$(php -r "require 'server/version.php'; echo WEB_VERSION;")
           uhr=$(grep -oE 'APP_VERSION *= *"[0-9.]+"' watch/source/Const.mc | grep -oE '[0-9.]+')
@@ -162,6 +162,13 @@ jobs:
       - name: Tore der Kette — geht das Backup-Tor auch zu?
         run: python3 tools/kette/tor.py --selbstprobe
 
+      - name: Wache und App-Bau — gehen ihre Selbstproben?
+        # Beide liefen nur im Prüfstand und in ihrem eigenen Lauf; das Tor sah
+        # sie nicht. Ohne Netz, ohne SDK, ohne Schlüssel.
+        run: |
+          python3 tools/integritaetswache/wache.py --selbstprobe
+          bash tools/kette/appbau.sh --selbstprobe
+
       - name: Warten auf einen Download — sagt es, wenn keiner kommt?
         run: node tools/referenzdatensatz/browser/download_lib.mjs --selbstprobe
 
@@ -196,8 +203,8 @@ jobs:
         run: bash tools/proben/proben.sh rechtstexte
 
       - name: Prüfbericht gegenlesen — passt er zu diesem Stand?
-        # Überall außer auf main, auch beim Handlauf auf einem Zweig: Sonst setzte ein Handlauf auf dem PR-Kopf ein grünes „Stufe 1" ohne Gegenlesung (E-PK-43).
-        # Streng (E-PK-42): Baum im Bericht = Baum des Kopfs; nach „Update branch" rot, die Meldung sagt den Weg.
+        # Überall außer auf main, auch beim Handlauf auf einem Zweig: Sonst setzte ein Handlauf auf dem PR-Kopf ein grünes „Stufe 1" ohne Gegenlesung.
+        # Streng: Baum im Bericht = Baum des Kopfs; nach „Update branch" rot, die Meldung sagt den Weg.
         # Jeder Riegelwert hängt am Ausgang seines Schritts: Wer einen Riegelschritt streicht, bekommt „nicht-gelaufen" statt einer stehen gebliebenen 0.
         if: github.ref != 'refs/heads/main'
         env:
@@ -227,7 +234,7 @@ jobs:
           { echo '### Prüfbericht'; echo '```'; cat /tmp/gegenlesung.txt; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
           exit "$rc"
 
-  # Fassungen bewusst fest: mysql:8.4.0 reserviert MANUAL (Nr. 238), mariadb:10.6 ist PLATTFORM_MARIADB_MIN — nicht anheben.
+  # Fassungen bewusst fest: mysql:8.4.0 reserviert MANUAL, mariadb:10.6 ist PLATTFORM_MARIADB_MIN — nicht anheben.
   schema:
     name: Schema gegen ${{ matrix.db.name }}
     needs: schon-gemessen
@@ -241,7 +248,7 @@ jobs:
           - name: MySQL 8.4.0
             image: mysql:8.4.0
             klient: mysql
-            # Nur über TCP: Über den Socket meldet sich schon der temporäre Einrichtungsserver gesund (F-TB-12).
+            # Nur über TCP: Über den Socket meldet sich schon der temporäre Einrichtungsserver gesund.
             gesund: mysqladmin ping -h 127.0.0.1 --protocol=tcp -uroot -pschemaprobe
           - name: MariaDB 10.6
             image: mariadb:10.6

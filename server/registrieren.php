@@ -11,7 +11,7 @@ require_once __DIR__ . '/rechtstexte_lib.php';
 require_once __DIR__ . '/einwilligung_lib.php';
 
 /**
- * SELBSTREGISTRIERUNG (P5b/AP3, E-P5b-01, -02, -03, -13).
+ * SELBSTREGISTRIERUNG.
  *
  * ---------------------------------------------------------------------------
  * DIE SEITE GIBT KEINE AUSKUNFT UEBER KONTEN
@@ -22,7 +22,7 @@ require_once __DIR__ . '/einwilligung_lib.php';
  * ausschliesslich in der Mail, und die landet im Postfach des Besitzers und
  * nicht auf dem Bildschirm dessen, der das Formular abgeschickt hat.
  *
- * Das Muster ist `reset_request.php` (M1-07): Antwort abschliessen, DANN
+ * Das Muster ist `reset_request.php`: Antwort abschliessen, DANN
  * versenden, und beide Zweige auf derselben Mindestdauer. Ohne das waere die
  * DAUER die Auskunft, die der gleiche Text gerade verhindert — ein
  * vollstaendiges Mailgespraech dauert Sekunden, ein `return` nicht.
@@ -31,22 +31,21 @@ require_once __DIR__ . '/einwilligung_lib.php';
  * DAS PASSWORT WIRD HIER NICHT GESETZT, UND DAS HAT EINEN ZWINGENDEN GRUND
  * ---------------------------------------------------------------------------
  *
- * Der Datenschluessel haengt seit S10 am Server-Anteil, und der wird per
+ * Der Datenschluessel haengt am Server-Anteil, und der wird per
  * `HMAC(kdf_anteil, 'konto:<id>')` aus der **Kontonummer** abgeleitet
- * (`serverkrypto_lib.php`, E-S10-17). Eine Registrierungsseite hat die
+ * (`serverkrypto_lib.php`). Eine Registrierungsseite hat die
  * Kontonummer nicht — das Konto entsteht ja erst mit ihr. Der Browser kann
  * `pat_wrap_pw` also nicht bilden, und eine Huelle ohne Anteil weist
  * `huelle_pw_pruefen()` ab, sobald die Installation einen ausliefert.
  *
  * Deshalb: **Konto zuerst, Schluessel danach** — genau wie beim
- * Einladungsweg, den E-P5b-13 als Vorbild nennt. Diese Seite legt das Konto
+ * Einladungsweg, der als Vorbild dient. Diese Seite legt das Konto
  * `unbestaetigt` an und verschickt einen Link auf `pw_handling.php`; dort
  * entstehen Passwort, Datenschluessel und Wiederherstellungsschluessel auf
  * dem einen gepruefteren Weg, den es dafuer gibt, und dort ist die
  * Kontonummer da. Danach fuehrt `pw_handling.php` auf `bestaetigen.php`.
  *
- * Das freigegebene Mockup M-P5b-02a zeichnet die Passwortfelder auf dieser
- * Seite. Die Abweichung ist am 17.09.2026 mit dem Auftraggeber geklaert:
+ * KEINE PASSWORTFELDER AUF DIESER SEITE, mit dem Auftraggeber geklaert:
  * lieber zwei Felder weniger als ein zweiter Weg, auf dem ein Anteil das
  * Haus verlaesst.
  *
@@ -62,26 +61,25 @@ require_once __DIR__ . '/einwilligung_lib.php';
  *     bestimmt.
  *  3. Die drei Toepfe `reg` (IP), `regg` (global) und `regz` (Zieladresse) —
  *     Begruendung in `ratelimit_lib.php`.
- *  4. DIE RECHENAUFGABE (seit Web 21.14.0, Schritt 18, SR-08, E-SR-26) —
+ *  4. DIE RECHENAUFGABE —
  *     ein Proof-of-Work: Der Server stellt beim Zeichnen des Formulars eine
  *     Aufgabe, `assets/pow-worker.js` sucht im Browser eine Zahl, mit der
  *     SHA-256 ueber Aufgabe und Zahl mit `POW_BITS` Nullbits beginnt, und
  *     der Server prueft das mit EINER Rechnung. Sie laeuft, waehrend die
  *     Person tippt; spuerbar wird sie nur fuer ein Skript, das das Formular
- *     sofort und tausendfach abschickt. R37 (4) nannte sie „notfalls"; seit
- *     dem 27.09.2026 ist sie per Entscheidung der Betreiberin gebaut, nicht
- *     auf Anlass (Backlog Nr. 228). GEPRUEFT WIRD SIE ZUERST: Sie eroeffnet
- *     den stillen Teil (E-SR-88), vor Honeypot, Stempel und Toepfen.
+ *     sofort und tausendfach abschickt. Sie ist per Entscheidung der Betreiberin gebaut, nicht
+ *     auf Anlass. GEPRUEFT WIRD SIE ZUERST: Sie eroeffnet
+ *     den stillen Teil, vor Honeypot, Stempel und Toepfen.
  *
  * ALLE VIER SCHEITERN STILL. Wer gefangen wird, bekommt dieselbe Antwort wie
  * jeder andere. Eine Meldung „Honeypot gefuellt" waere eine Bauanleitung.
  *
  * ---------------------------------------------------------------------------
- * SEIT SR-08 HAT DIE SEITE EINE SITZUNG — ABER NUR, WENN SIE OFFEN IST
+ * DIE SEITE HAT EINE SITZUNG — ABER NUR, WENN SIE OFFEN IST
  * ---------------------------------------------------------------------------
  *
  * Die Aufgabe muss EINMAL gelten, und das weiss nur, wer sie sich gemerkt
- * hat (E-SR-92, Q-SR-19). Ein signierter Wert wie der Zeitstempel liesse
+ * hat. Ein signierter Wert wie der Zeitstempel liesse
  * sich innerhalb seiner Frist beliebig oft vorzeigen. Deshalb startet die
  * Seite die Sitzung der Anwendung wie `login.php` — aber nur bei offener
  * Registrierung: Eine Anlage „nur auf Einladung" setzt hier weiter kein
@@ -90,7 +88,7 @@ require_once __DIR__ . '/einwilligung_lib.php';
  * Preis, und er steht im Cookie-Baustein des Handbuchs (11.5a).
  *
  * OHNE JAVASCRIPT GEHT ES NICHT, und das war vorher nur fuer den ganzen Weg
- * wahr (F-SR-92): `pw_handling.php` brauchte es schon immer, diese Seite
+ * wahr: `pw_handling.php` brauchte es schon immer, diese Seite
  * nicht. Seit der Rechenaufgabe scheiterte eine Absendung ohne Skript still
  * — deshalb steht unter dem Knopf ein Satz, den `pow.js` wegnimmt, sobald es
  * laeuft.
@@ -99,21 +97,21 @@ require_once __DIR__ . '/einwilligung_lib.php';
 /** Wie `RESET_MINDESTDAUER` — deckt Abfrage, Anlage und Tokenausgabe ab. */
 const REG_MINDESTDAUER = 0.5;
 
-/** Mindestens so lange muss das Formular offen gewesen sein (R37 (4)). */
+/** Mindestens so lange muss das Formular offen gewesen sein. */
 const REG_MINDESTDAUER_FORMULAR = 4;
 
 /** Danach ist der Zeitstempel verbraucht — ein Formular, das zwei Stunden
  *  offen lag, ist kein Mensch mehr, sondern ein Wiederholungslauf.
- *  SEIT SR-08 AUCH DIE FRIST DER RECHENAUFGABE (E-SR-93, Q-SR-20): Das
- *  Konzept sah zehn Minuten vor; wer so lange die Nutzungsbedingungen liest,
- *  bekaeme die Danke-Karte und keine Mail. Eine Zahl fuer beides, weil beide
+ *  AUCH DIE FRIST DER RECHENAUFGABE: Bei zehn Minuten
+ *  bekaeme, wer so lange die Nutzungsbedingungen liest,
+ *  die Danke-Karte und keine Mail. Eine Zahl fuer beides, weil beide
  *  dasselbe fragen — wie lange darf ein Formular offen liegen. */
 const REG_FORMULAR_GILT_S = 7200;
 
 /**
  * Die Schwierigkeit der Rechenaufgabe: so viele Nullbits muss
- * SHA-256(aufgabe . loesung) vorn haben. Im Mittel 2^16 Versuche im Browser,
- * eine Rechnung auf dem Server (SR-08, E-SR-26).
+ * SHA-256(aufgabe. loesung) vorn haben. Im Mittel 2^16 Versuche im Browser,
+ * eine Rechnung auf dem Server.
  *
  * HERKUNFT — gemessen am 05.10.2026 in Chromium 141 (Arbeitsumgebung, vier
  * Kerne), mit dem Worker aus `assets/pow-worker.js`, je 30 Laeufe:
@@ -122,19 +120,19 @@ const REG_FORMULAR_GILT_S = 7200;
  * Ziel war der Median unter einer Sekunde ungedrosselt und unter drei auf
  * dem alten Diensthandy, dafuer steht die gedrosselte Zeile. Gedrosselt
  * wurde NICHT ueber die Entwicklerwerkzeuge des Browsers: Deren Drosselung
- * erreicht keinen Worker (F-SR-95, gemessen), sondern ueber eine CPU-Quote
+ * erreicht keinen Worker (gemessen), sondern ueber eine CPU-Quote
  * des Betriebssystems auf ein Viertel dessen, was der Lauf ungedrosselt
  * verbraucht. 17 Bit haetten den gedrosselten Median auf rund 2,6 s gehoben
  * — unter drei, aber ohne Spielraum fuer ein Ersatzmodell, das ein echtes
- * Handy nur naehert. Die Zahlen stehen im Pruefdokument von Konzept SR.
+ * Handy nur naehert. Die Zahlen sind gemessen.
  *
  * WER SIE AENDERT: Eine Stufe weniger halbiert die Zeit. Ist das alte
  * Diensthandy spuerbar langsamer als drei Sekunden, ist es hier eins weniger
- * (P-SR-14) — und eine neue Messung gehoert dann in den Kommentar.
+ * — und eine neue Messung gehoert dann in den Kommentar.
  */
 const POW_BITS = 16;
 
-/** So viele offene Aufgaben haelt eine Sitzung (E-SR-89). Zwei Reiter oder
+/** So viele offene Aufgaben haelt eine Sitzung. Zwei Reiter oder
  *  ein nach einem sichtbaren Fehler neu gezeichnetes Formular sollen die
  *  erste Aufgabe nicht still entwerten; mehr als fuenf braucht kein Mensch. */
 const POW_OFFEN_HOECHSTENS = 5;
@@ -204,13 +202,13 @@ function pow_aufgabe_neu(): string
  * Ist die Rechenaufgabe geloest? Eine SHA-256, unter einer Millisekunde.
  *
  * DIE AUFGABE IST DANACH VERBRAUCHT, OB SIE GELOEST WAR ODER NICHT — ein
- * Absenden, eine Aufgabe (E-SR-89). Sonst liesse sich eine geloeste Aufgabe
+ * Absenden, eine Aufgabe. Sonst liesse sich eine geloeste Aufgabe
  * so oft vorzeigen, wie die Toepfe es zulassen, und die Rechnung waere
  * einmal bezahlt statt je Versuch.
  *
  * `false` bei jedem Zweifel — fremde, abgelaufene oder schon benutzte
  * Aufgabe, eine Loesung, die keine Dezimalzahl mit hoechstens zwoelf Stellen
- * ist (E-SR-91), zu wenige Nullbits. Wie beim Stempel macht der Aufrufer
+ * ist, zu wenige Nullbits. Wie beim Stempel macht der Aufrufer
  * daraus keine Meldung.
  */
 function pow_ok(string $aufgabe, string $loesung): bool
@@ -237,14 +235,14 @@ $offen      = konten_reg_offen();
 $mitFrei    = konten_reg_freischaltung();
 $fristTage  = konten_reg_frist_tage();
 
-/* WELCHE TEXTE GELTEN GERADE (Backlog Nr. 231). Einmal gelesen und sowohl
+/* WELCHE TEXTE GELTEN GERADE. Einmal gelesen und sowohl
  * fuer die Pruefung als auch fuer das Markup benutzt: Wuerden beide Seiten
  * getrennt fragen, koennte die BetreiberIn zwischen Anzeige und Absenden
  * einen Text in Kraft setzen, und das Formular verlangte einen Haken, den es
  * nie gezeigt hat. */
 $ewInKraft = einwilligung_in_kraft();
 
-/* DIE SITZUNG NUR BEI OFFENER REGISTRIERUNG (E-SR-92). HTTPS davor wie in
+/* DIE SITZUNG NUR BEI OFFENER REGISTRIERUNG. HTTPS davor wie in
  * `login.php`: Das Sitzungscookie traegt `secure`, und ueber HTTP kaeme es
  * nie zurueck — jede Absendung scheiterte dann still an der Aufgabe. */
 if ($offen) {
@@ -254,7 +252,7 @@ if ($offen) {
 
 $t0 = microtime(true);
 
-/* FELDER NUR ALS ZEICHENKETTE (seit Web 21.14.0, F-SR-96). Bis dahin endete
+/* FELDER NUR ALS ZEICHENKETTE. Bis dahin endete
  * `email[]=…` in einem TypeError und einer 500, `name[]`, `website[]` und
  * `zeit[]` in je einer PHP-Warnung im Reiter System — beides ohne Auskunft,
  * aber eine Einladung, den Reiter mit Zeilen zu fuellen. Eine Liste ist hier
@@ -272,24 +270,22 @@ if ($offen && $_SERVER['REQUEST_METHOD'] === 'POST') {
     $name  = trim($feld('name'));
     $done  = true;        // die Antwort ist in jedem Fall dieselbe
 
-    /* DIE HAEKCHEN SIND DAS EINZIGE, WAS EINE MELDUNG BEKOMMT (E-P5b-05).
+    /* DIE HAEKCHEN SIND DAS EINZIGE, WAS EINE MELDUNG BEKOMMT.
      * Sie sind keine Sicherheitsvorkehrung, sondern eine Willenserklaerung:
      * Wer sie vergisst, hat sich vertippt und nicht angegriffen — und eine
      * stille Ablehnung liesse ihn raten, warum keine Mail kommt. */
-    /* NUR WAS IN KRAFT IST. Bis Web 20.22.1 lief die Schleife ueber
-     * `RT_EINWILLIGUNG` und verlangte damit auch die Annahme von Texten, die
-     * gar nicht hinterlegt sind — siehe `einwilligung_in_kraft()`. */
+    /* NUR WAS IN KRAFT IST. Eine Schleife ueber `RT_EINWILLIGUNG` verlangte
+     * auch die Annahme von Texten, die gar nicht hinterlegt sind — siehe
+     * `einwilligung_in_kraft()`. */
     $fehlt = [];
     foreach (array_keys($ewInKraft) as $schluessel) {
         if (empty($_POST['ew'][$schluessel])) { $fehlt[] = RT_TEXTE[$schluessel]; }
     }
 
     if ($fehlt) {
-        /* DIE MELDUNG ZAEHLT MIT. Sie sagte bis Web 20.22.2 „Ohne alle drei",
-         * und das stimmte nur, solange es immer drei waren. Seit die Seite
-         * zeigt, was in Kraft ist, kann auch eines fehlen — dann stand dort
-         * „Es fehlt noch: Nutzungsbedingungen. Ohne alle drei". Gefunden im
-         * Prueffall mit einem einzigen geltenden Text. */
+        /* DIE MELDUNG ZAEHLT MIT. „Ohne alle drei" stimmt nur, solange es
+         * immer drei sind. Die Seite zeigt, was in Kraft ist, und dann kann
+         * auch eines fehlen. */
         $done  = false;
         $error = (count($fehlt) === 1
                     ? 'Es fehlt noch: ' . $fehlt[0] . '. Ohne diese Zustimmung '
@@ -304,11 +300,11 @@ if ($offen && $_SERVER['REQUEST_METHOD'] === 'POST') {
          * Mail hinausgeht — und ob ueberhaupt eine. */
         $mailGeht = false;
 
-        /* DIE RECHENAUFGABE ZUERST (SR-08, E-SR-88). Sie eroeffnet den
+        /* DIE RECHENAUFGABE ZUERST. Sie eroeffnet den
          * stillen Teil und verbraucht ihre Aufgabe auch dann, wenn danach
          * eine andere Bremse greift. Vor den beiden sichtbaren Pruefungen
-         * oben steht sie NICHT: Die sind ein Vertipper und keine Bremse
-         * (E-P5b-05), und das Formular wird danach ohnehin mit einer neuen
+         * oben steht sie NICHT: Die sind ein Vertipper und keine Bremse,
+         * und das Formular wird danach ohnehin mit einer neuen
          * Aufgabe gezeichnet. */
         $gerechnet = pow_ok($feld('pow_aufgabe'), $feld('pow_loesung'));
 
@@ -338,11 +334,10 @@ if ($offen && $_SERVER['REQUEST_METHOD'] === 'POST') {
                     $neu = konto_anlegen($email, $name, 'user', 'registrierung',
                                          'unbestaetigt', null, TOKEN_REGISTRIERUNG_S);
 
-                    /* DIE HAEKCHEN FESTHALTEN (Backlog Nr. 231, E-P5b-05:
-                     * „Gespeichert je Konto mit Fassungskennung und Zeit").
-                     * Bis Web 20.22.1 geschah das NICHT: Die Seite verlangte
-                     * die Haken und vergass sie im selben Atemzug — der
-                     * einzige Schreibweg lag am Tor beim Login.
+                    /* DIE HAEKCHEN FESTHALTEN („Gespeichert je Konto mit
+                     * Fassungskennung und Zeit"). Sonst verlangte die Seite
+                     * die Haken und vergaesse sie im selben Atemzug — der
+                     * einzige Schreibweg laege am Tor beim Login.
                      *
                      * HIER UND NICHT ERST AM TOR, weil hier der Vertrag
                      * geschlossen wird. Die NutzerIn erklaert mit dem Absenden
@@ -395,7 +390,7 @@ if ($offen && $_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 /* Fuer logo_src(): ohne session_lib.php faende es logo_stamm() nicht und
- * fiele still auf den Hubschrauber zurueck (F-P3-AN). */
+ * fiele still auf den Hubschrauber zurueck. */
 require_once __DIR__ . '/session_lib.php';
 require_once __DIR__ . '/ui.php';   // Seitenhuelle; laedt selbst nichts nach
 ui_seite_start(['titel' => 'Konto anlegen', 'klasse' => 'anmeldung-body']);
@@ -441,11 +436,11 @@ $unterzeile = match ($art) {
         : 'Nach der Bestätigung deiner Adresse legst du dein Passwort fest und '
           . 'kannst sofort loslegen. Wegwerfadressen werden nicht angenommen.') ?>
 
-    <?php /* DIE RECHENAUFGABE (SR-08): Bitzahl und Adresse des Workers kommen
+    <?php /* DIE RECHENAUFGABE: Bitzahl und Adresse des Workers kommen
              als Attribute aus derselben Konstante und aus `asset()` — mit
              Erkennungswert, damit ein geaenderter Worker nicht aus dem
-             Zwischenspeicher kommt, und ohne zweite Zahl im Skript
-             (E-SR-90). */ ?>
+             Zwischenspeicher kommt, und ohne zweite Zahl im Skript.
+             */ ?>
     <form method="post" data-pow data-pow-bits="<?= POW_BITS ?>"
           data-pow-worker="<?= e(asset('assets/pow-worker.js')) ?>">
       <?php ui_feld(['name' => 'email', 'label' => 'E-Mail', 'art' => 'email',
@@ -459,7 +454,7 @@ $unterzeile = match ($art) {
                               . 'Lässt sich später ändern.',
                      'attr' => ' maxlength="120" autocomplete="name"']); ?>
 
-      <?php /* DER HONEYPOT (R37 (4)).
+      <?php /* DER HONEYPOT.
                `.nur-vorlesen` statt `display:none`, weil ein Feld, das der
                Browser nicht darstellt, auch kein Bot ausfuellt — dann finge
                die Falle nichts.
@@ -479,11 +474,11 @@ $unterzeile = match ($art) {
 
       <?php /* DIE HAEKCHEN — Wortlaut aus dem Katalog und nicht aus dem
                Markup: „angenommen" und „zur Kenntnis genommen" tragen den
-               rechtlichen Unterschied (E-P5b-05), und ein Text, der an zwei
+               rechtlichen Unterschied, und ein Text, der an zwei
                Stellen steht, laeuft auseinander.
 
                ES SIND NICHT IMMER DREI. Gezeigt wird, was in Kraft ist
-               (Backlog Nr. 231) — solange die geprueften Texte fehlen, also
+               — solange die geprueften Texte fehlen, also
                keines. Das ist kein Fehler, sondern dieselbe Regel, nach der
                das Tor beim Login arbeitet: Ein Text ohne Standdatum verlangt
                nichts. Wer sich in diesem Zustand registriert, wird beim
@@ -501,8 +496,8 @@ $unterzeile = match ($art) {
         <?= ui_knopf(['text' => 'Konto anlegen', 'art' => 'primaer', 'breit' => true,
                       'attr' => ' data-pow-knopf']) ?>
       </div>
-      <?php /* OHNE SKRIPT STEHT HIER EIN SATZ, MIT SKRIPT ZUNAECHST NICHTS
-               (F-SR-92): `pow.js` nimmt ihn weg, sobald es laeuft, und
+      <?php /* OHNE SKRIPT STEHT HIER EIN SATZ, MIT SKRIPT ZUNAECHST NICHTS:
+               `pow.js` nimmt ihn weg, sobald es laeuft, und
                schreibt „Sicherheitspruefung laeuft …" hinein, wenn jemand
                schneller abschickt, als der Worker rechnet. Der Knopf steht
                frei im Markup, wie in `zweitfaktor.js` — gesperrt wird er nur
@@ -521,7 +516,7 @@ ui_seite_ende(['skripte' => $offen && !$done ? ['assets/pow.js'] : []]);
  * Ab hier laeuft nichts mehr, was die aufrufende Seite zu sehen bekommt. Das
  * Mailgespraech dauert je nach Mailserver Sekunden; stuende es in der
  * Antwortzeit, waere die DAUER die Auskunft, die der gleiche Antworttext
- * gerade verhindert (M1-07). */
+ * gerade verhindert. */
 if ($mailAuftrag !== null) {
     antwort_abschliessen();
     mail_einreihen($mailAuftrag[0], $mailAuftrag[1], $mailAuftrag[2]);

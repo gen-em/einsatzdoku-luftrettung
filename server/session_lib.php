@@ -3,7 +3,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/db.php';
 
 /**
- * Sitzungsende mit Raeumung im Browser (Baustein B6).
+ * Sitzungsende mit Raeumung im Browser.
  *
  * WARUM ES DIESE DATEI GIBT
  * Es gibt zwei Wege, auf denen eine Sitzung endet, und sie verhalten sich
@@ -33,8 +33,7 @@ require_once __DIR__ . '/db.php';
  *  landet in der Adresszeile und darf nicht frei setzbar sein. */
 const SESSION_ENDE_GRUENDE = ['abgemeldet', 'abgelaufen', 'passwort', 'konto',
                               'gesperrt', 'bindung', 'ende'];
-/* `gesperrt` kam mit P5b/AP2 dazu, `bindung` mit Web 21.7.0 (Schritt 18,
- * SR-01, F-SR-07), und bei beiden gilt der Satz aus dem Kopf dieser Datei:
+/* Fuer jeden Grund — auch `gesperrt` und `bindung` — gilt der Satz aus dem Kopf dieser Datei:
  * Zu JEDEM Grund gehoeren ZWEI Texte — die Zwischenseite in
  * `session_beenden()` und die Meldung in `session_ende_text()`. Wer einen
  * Grund ergaenzt und nur einen Text schreibt, hinterlaesst an der anderen
@@ -63,7 +62,7 @@ function session_verwerfen(): void
         setcookie(session_name(), '', time() - 42000,
                   $p['path'], $p['domain'], $p['secure'], $p['httponly']);
     }
-    /* Das Bindungscookie geht mit (Schritt 18, SR-01): Es gehoert zu genau
+    /* Das Bindungscookie geht mit: Es gehoert zu genau
      * dieser Sitzung und ist ohne sie nur noch ein Zufallswert im Browser. */
     sitzung_cookie_loeschen('bindung');
     session_destroy();
@@ -84,8 +83,8 @@ function session_beenden(string $grund = 'abgemeldet'): never
 
     /* Auch das Abmelden braucht die Sitzung, die es beendet — und zwar
      * dieselbe Art wie die Anmeldung, sonst spraeche es ein anderes Cookie
-     * an. `sitzung_starten()` kehrt sofort zurueck, wenn schon eine laeuft
-     * (Schritt 15 AP2). Wer eine Sitzung beendet, soll keine
+     * an. `sitzung_starten()` kehrt sofort zurueck, wenn schon eine laeuft.
+     * Wer eine Sitzung beendet, soll keine
      * untergeschobene Kennung beenden — dafuer sorgt dort die Haertung. */
     sitzung_starten('app');
     $_SESSION = [];
@@ -94,7 +93,7 @@ function session_beenden(string $grund = 'abgemeldet'): never
         setcookie(session_name(), '', time() - 42000,
                   $p['path'], $p['domain'], $p['secure'], $p['httponly']);
     }
-    sitzung_cookie_loeschen('bindung');   // SR-01: beide Cookies, siehe session_verwerfen()
+    sitzung_cookie_loeschen('bindung');   // beide Cookies, siehe session_verwerfen()
     session_destroy();
 
     $ziel = 'login.php?ende=' . rawurlencode($grund);
@@ -168,9 +167,8 @@ function session_ende_text(?string $grund): string
          * durchprobiert, erfaehrt hier nichts, was er nicht schon weiss. */
         'gesperrt'   => 'Dieses Konto ist gesperrt. Wende dich an die Verwaltung '
                       . 'dieser Installation.',
-        /* ZWEI ANLAESSE, EIN TEXT (Schritt 18, SR-01). Der haeufige ist
-         * harmlos: einmal nach dem Update auf Web 21.7.0, weil keine
-         * aeltere Sitzung eine Bindung traegt, und immer dann, wenn die
+        /* ZWEI ANLAESSE, EIN TEXT. Der haeufige ist
+         * harmlos: eine aeltere Sitzung ohne Bindung, oder die
          * Cookies dieser Seite geloescht wurden. Der seltene ist der, fuer
          * den es die Bindung gibt — jemand kam mit einer Sitzungskennung
          * ohne das zweite Cookie. Der Text nennt die harmlosen, weil sie
@@ -180,10 +178,9 @@ function session_ende_text(?string $grund): string
                       . 'wurde beendet. Das geschieht einmal nach einem Update der '
                       . 'Anwendung und wenn die Cookies dieser Seite gelöscht wurden. '
                       . 'Bitte melde dich neu an.',
-        /* NACH DEM NOTZUGANG (Schritt 18, SR-04, E-SR-87). Die Seite meldet
+        /* NACH DEM NOTZUGANG. Die Seite meldet
          * niemanden an; sie schickt hierher. Der Satz steht hier und nicht
-         * in `login.php`, weil `login.php` fuer Schritt 18 zu ist (E-SR-14)
-         * — und weil er dorthin gehoert, wo die anderen Gruende stehen. Er
+         * in `login.php`, weil er dorthin gehoert, wo die anderen Gruende stehen. Er
          * verraet nichts: Wer die Adresse mit `?ende=notweg` aufruft, liest
          * einen Satz, den das Handbuch auch enthaelt. */
         'notweg'     => 'Der Zweitfaktor ist über den Notzugang zurückgesetzt. Melde '
@@ -195,13 +192,13 @@ function session_ende_text(?string $grund): string
 
 
 /* ---------------------------------------------------------------------------
- * LOGO-WAHL JE PROFIL  (E-P3-20, ab Web 9.7.0)
+ * LOGO-WAHL JE PROFIL 
  *
  * Vier Werte stehen in `users.logo_wahl`:
  *
  *   ''             Standard der Installation — der Vorgabewert. Wer nie
  *                  gewaehlt hat, folgt dem Standard, und der kann sich
- *                  aendern (die Wahl dafuer entsteht in O9).
+ *                  aendern.
  *   'hubschrauber' Hubschrauber (RTH)
  *   'fahrzeug'     Fahrzeug (NEF)
  *   'wechselnd'    je Anmeldung neu gewuerfelt
@@ -220,9 +217,9 @@ function session_ende_text(?string $grund): string
 const LOGO_STANDARD_VORGABE = 'hubschrauber';
 
 /**
- * Der Standard DIESER Installation (E-P3-19/20, einstellbar seit Web 9.10.0).
+ * Der Standard DIESER Installation, einstellbar.
  *
- * Bis Web 9.9.0 war das eine Konstante. Jetzt steht der Wert in `app_state`
+ * Der Wert steht in `app_state`
  * und laesst sich in der Wartung umstellen — eine Installation, die
  * ueberwiegend am Boden faehrt, soll nicht dauerhaft einen Hubschrauber im
  * Kopf tragen.
@@ -276,9 +273,8 @@ function logo_aufloesen(?string $wahl): string
  * Anmeldung; sonst spraenge das Logo beim Blaettern.
  *
  * Der Leerstring dagegen BLEIBT stehen und wird erst in logo_stamm()
- * aufgeloest. Bis Web 9.9.0 wurde auch er hier festgeschrieben — das war
- * richtig, solange der Standard eine Konstante war. Seit er eine Einstellung
- * ist, waere es falsch: Wer ihn in der Wartung umstellt, saehe die Wirkung
+ * aufgeloest. Ihn hier festzuschreiben waere falsch: Wer ihn in der Wartung
+ * umstellt, saehe die Wirkung
  * erst, wenn sich jede NutzerIn neu angemeldet hat. Jetzt wirkt sie sofort,
  * und zwar bei genau denen, die keine eigene Wahl getroffen haben.
  */
@@ -293,15 +289,15 @@ function logo_sitzung_setzen(?string $wahl): void
  *
  * DIE EINE STELLE, an der aus der Sitzung ein Dateiname wird — ui_logo()
  * (Kopfleiste) und favicon_tags() (Browser-Symbol) fragen beide hier.
- * Kopfleiste und Favicon wechseln damit zwangslaeufig gemeinsam (E-P3-20);
+ * Kopfleiste und Favicon wechseln damit zwangslaeufig gemeinsam;
  * zwei getrennte Abfragen waeren zwei Gelegenheiten, es auseinanderlaufen
  * zu lassen.
  */
 /**
  * Der Installationsstandard, aufgeloest auf ein tatsaechliches Logo.
  *
- * WARUM NICHT logo_standard() DIREKT (F-N1-C): Seit die Installation selbst
- * „wechselnd" waehlen kann, ist ihr Standard nicht mehr zwangslaeufig ein
+ * WARUM NICHT logo_standard() DIREKT: Die Installation kann selbst
+ * „wechselnd" waehlen; ihr Standard ist also nicht zwangslaeufig ein
  * Dateiname. Wuerde logo_stamm() den Rohwert weiterreichen, faelle
  * „wechselnd" durch jede Abfrage und landete stumm beim Hubschrauber — die
  * Einstellung waere da und taete nichts.
@@ -344,10 +340,10 @@ function logo_stamm(): string
 
 /* ---- Formular-Token (CSRF) ------------------------------------------------
  *
- * WARUM DAS HIER STEHT UND NICHT MEHR IN `auth_guard.php`. Bis Web 15.6.0
- * lagen Erzeugung und Pruefung dort — also hinter der Anmeldung. Damit war die
- * eine Seite, die den Schutz am noetigsten braucht, die einzige ohne ihn: das
- * ANMELDEFORMULAR (Backlog Nr. 127, K-8). Eine fremde Seite konnte einen
+ * WARUM DAS HIER STEHT UND NICHT IN `auth_guard.php`. Dort laegen Erzeugung
+ * und Pruefung hinter der Anmeldung. Damit waere die eine Seite, die den
+ * Schutz am noetigsten braucht, die einzige ohne ihn: das ANMELDEFORMULAR. Eine
+ * fremde Seite konnte einen
  * abgemeldeten Browser per Top-Level-POST in ein Angreiferkonto anmelden; was
  * danach eingegeben wurde, landete dort. `session_lib.php` laedt `login.php`
  * ohnehin, `auth_guard.php` ebenfalls — die Funktionen stehen damit an EINER
@@ -377,22 +373,21 @@ function csrf_field(): string
  *
  * DER CAST IST KEINE FORMSACHE. `csrf[]=x` macht aus $_POST['csrf'] ein Feld,
  * und `hash_equals()` verlangt zwei Zeichenketten — ohne Cast endet die
- * Anfrage in einem TypeError und damit in einer 500 (K-15). Ein Angreifer
+ * Anfrage in einem TypeError und damit in einer 500. Ein Angreifer
  * gewinnt dadurch nichts ausser einer haesslichen Fehlerseite, aber eine
  * Pruefung, die sich selbst zum Absturz bringen laesst, ist keine.
  */
 function csrf_ok(): bool
 {
     $mit = $_POST['csrf'] ?? '';
-    /* DER ZWEITE WEG: DIE KOPFZEILE (P5a/AP4, Backlog Nr. 67, R21).
+    /* DER ZWEITE WEG: DIE KOPFZEILE.
      *
      * Die zwoelf JSON-Endpunkte schicken ihr Token als `X-CSRF` — sie senden
-     * einen JSON-Rumpf und haben kein Formularfeld. Bis Web 20.6.0 pruefte
-     * jeder von ihnen die Kopfzeile SELBST, mit derselben handgeschriebenen
-     * Zeile: `hash_equals($_SESSION['csrf'] ?? '', $_SERVER['HTTP_X_CSRF'] ?? '')`.
+     * einen JSON-Rumpf und haben kein Formularfeld. Pruefte jeder von
+     * ihnen die Kopfzeile SELBST, mit derselben handgeschriebenen Zeile:
+     * `hash_equals($_SESSION['csrf'] ?? '', $_SERVER['HTTP_X_CSRF'] ?? '')`.
      * Zwoelf Kopien einer Sicherheitspruefung sind zwoelf Gelegenheiten, eine
-     * davon beim naechsten Umbau zu vergessen — und genau das meint Nr. 67
-     * mit „die JSON-Endpunkte laufen an `csrf_check()` vorbei".
+     * davon beim naechsten Umbau zu vergessen.
      *
      * Das Formularfeld hat Vorrang; die Kopfzeile greift nur, wenn keines da
      * ist. Beide werden mit `hash_equals()` gegen denselben Sitzungswert
@@ -405,7 +400,7 @@ function csrf_ok(): bool
     return $soll !== '' && hash_equals($soll, $mit);
 }
 
-/* ---- MELDUNGEN UEBER EINE UMLEITUNG HINWEG (Schritt 15/AP3, E-ZE-16) -----
+/* ---- MELDUNGEN UEBER EINE UMLEITUNG HINWEG -----
  *
  * Post/Redirect/Get: Wer ein Formular abschickt, soll den Erfolg nicht als
  * POST-Ergebnis sehen, sondern nach einer Umleitung — sonst fragt der Browser
@@ -431,8 +426,7 @@ function csrf_ok(): bool
  * beiden entfallenen Sitzungsschluessel; die Seiten, die sie setzen, geben
  * den Text in `ui_meldung($notice, $error)` — `notice` in den Hinweis-,
  * `error` in den Fehlerkasten. `ok`, `fehler`, `warn` und `info` sind die
- * Toene von `ui_meldung_markup()` (Design.md 9.5) und kamen mit Web 21.1.9
- * dazu (R4-11, Backlog Nr. 250): Die Seiten unter Betrieb und die
+ * Toene von `ui_meldung_markup()` (Design.md 9.5): Die Seiten unter Betrieb und die
  * Installation melden in der Karte, die gehandelt hat, und mit allen vier
  * Toenen. Sie auf zwei zu stauchen, haette aus „Die Pause ist aufgehoben"
  * einen Hinweis und aus „Diese Sperre gibt es nicht mehr" einen Fehler
@@ -454,7 +448,7 @@ const FLASH_TOENE = ['notice', 'error', 'ok', 'fehler', 'warn', 'info'];
  * @param array  $daten Ein Ergebnis, das mehr ist als ein Satz — die Schritte
  *                      einer Verbindungspruefung, ein Einspielbericht, der
  *                      Lauf der Migrationen, die Restauswahl beim
- *                      Sammelsichern (E-R4-33). Es liegt bis zum Abholen in
+ *                      Sammelsichern. Es liegt bis zum Abholen in
  *                      der Sitzungsdatei auf dem Server: KEIN GEHEIMNIS
  *                      HIERHER — ein Setz-Link etwa bleibt auf der Seite, die
  *                      ihn erzeugt hat, und wird nicht umgeleitet.

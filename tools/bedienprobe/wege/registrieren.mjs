@@ -1,5 +1,4 @@
-/* Weg der Registrierung mit Rechenaufgabe (`registrieren.php`; Schritt 18,
- * SR-08, E-SR-26, Nr. 228). Nach der SEITE benannt (E-PK-15).
+/* Weg der Registrierung mit Rechenaufgabe (`registrieren.php`). Nach der SEITE benannt.
  * ===========================================================================
  *
  *   registrieren   Registrierung vorübergehend offen → neun Mal die Seite
@@ -14,10 +13,10 @@
  * NUR UNGEDROSSELT. Das Konzept wollte auch eine Lage mit vierfacher
  * CPU-Drosselung über die Entwicklerwerkzeuge (`setCPUThrottlingRate`). Die
  * erreicht keinen Worker — gemessen, und Chromium lehnt sie am Worker-Ziel
- * ausdrücklich ab (F-SR-95). Eine Lage, die nur die Seite drosselt, hätte
+ * ausdrücklich ab. Eine Lage, die nur die Seite drosselt, hätte
  * eine grüne Zahl ohne Gegenstand geliefert. Die gedrosselte Zahl steht im
- * Prüfdokument von Konzept SR, gemessen mit einer CPU-Quote des
- * Betriebssystems; P-SR-14 misst auf dem alten Diensthandy.
+ * Prüfdokument, gemessen mit einer CPU-Quote des
+ * Betriebssystems; eine Handprüfung misst auf dem alten Diensthandy.
  *
  * DER VERZÖGERTE WORKER ist eine Route, die die Datei sieben Sekunden
  * zurückhält. Ohne sie wäre die Lösung bei 16 Bit fast immer da, bevor die
@@ -68,7 +67,7 @@ export const wege = [
       const konsole = [];
       try {
         const s = await kontext.newPage();
-        /* ABGEBROCHENE SCHRIFTABRUFE ZÄHLEN NICHT (Konzept DM, F-DM-08). Der
+        /* ABGEBROCHENE SCHRIFTABRUFE ZÄHLEN NICHT. Der
          * Weg lädt die Seite neunmal schnell hintereinander; Firefox meldet
          * dabei jede Schrift, deren Abruf das nächste Laden abbricht, als
          * Fehler „downloadable font: download failed … status=2152398850" —

@@ -11,7 +11,7 @@
 set -euo pipefail
 
 SDK_VERSION="${CIQ_SDK_VERSION:-9.2.0}"
-# DIE PRUEFSUMME DES SDK (R17-19, F-R17-20). Bis dahin kam das SDK ohne jede
+# DIE PRUEFSUMME DES SDK. Bis dahin kam das SDK ohne jede
 # Pruefung — auch im Uhr-Job der Auslieferung, mit dem das Store-Paket fuer
 # 99 Uhren entsteht. Garmin veroeffentlicht keine Summe; diese ist die eines
 # Abrufs vom 25.10.2026 (`connectiq-sdk-lin-9.2.0-2026-06-09-92a1605b2.zip`,
@@ -124,7 +124,7 @@ bibliotheken() {
     curl -sS -O --max-time 600 "$pool/w/webkit2gtk/libwebkit2gtk-4.0-37_${wk}_amd64.deb"
     curl -sS -O --max-time 600 "$pool/w/webkit2gtk/libjavascriptcoregtk-4.0-18_${wk}_amd64.deb"
     curl -sS -O --max-time 300 "$pool/i/icu/libicu70_70.1-2_amd64.deb"
-    # PRUEFSUMMEN DER VIER PAKETE (R17-19, F-R17-20). Sie werden per
+    # PRUEFSUMMEN DER VIER PAKETE. Sie werden per
     # `LD_LIBRARY_PATH` in den Simulator geladen; ohne Pruefung lief, was
     # der Spiegel an dem Tag lieferte. Die Summen stehen so im Paketindex von
     # Ubuntu 22.04 (`jammy` fuer libsoup und libicu, `jammy-security` fuer
@@ -332,6 +332,7 @@ archiv_holen() {
         return 1
     fi
     printf '   %s MB\n' "$(( $(stat -c%s "$datei") / 1048576 ))"
+    summe_pruefen "$name" "$datei"
     erster=$(tar -tf "$datei" 2>/dev/null | head -1 || true)
     local ebene=0
     case "$erster" in "$ordner"/*) ebene=1 ;; "./$ordner"/*) ebene=2 ;; esac
@@ -340,11 +341,47 @@ archiv_holen() {
     rm -f "$datei"
 }
 
-# Kein stilles Zurueckfallen (CLAUDE.md 6, E-P5a-13): Der langsame Weg ist
+# DIE SUMME STEHT IM REPOSITORIUM, NICHT NEBEN DER DATEI.
+# `geraetedateien.sha256` traegt je Archiv eine Zeile im Format von
+# `sha256sum`. Geprueft wird VOR dem Entpacken: Wer die Ablage unter
+# CIQ_GERAETE_URL beschreibt, soll keine Geraetedatei in den Job bringen, in
+# dem der Entwicklerschluessel der Uhr liegt. Eine Summe neben der Datei
+# haette er gleich mit getauscht.
+#   - Summe passt          -> weiter
+#   - Summe passt nicht    -> rot, die Datei wird geloescht
+#   - kein Eintrag         -> rot, wenn CIQ_SUMMEN_PFLICHT=1 (die Kette),
+#                             sonst eine Warnung
+# Wer die Archive neu packt, traegt die neuen Summen im selben Commit ein
+# (LIESMICH.md, „Was es braucht“).
+SUMMEN_DATEI="${CIQ_SUMMEN_DATEI:-$WURZEL/tools/uhr-pruefstand/geraetedateien.sha256}"
+summe_pruefen() {
+    local name="$1" datei="$2" soll ist
+    soll=$(awk -v n="$name" '$2 == n { print $1 }' "$SUMMEN_DATEI" 2>/dev/null || true)
+    if [ -z "$soll" ]; then
+        if [ "${CIQ_SUMMEN_PFLICHT:-0}" = "1" ]; then
+            rm -f "$datei"
+            fehler "$name hat keine Pruefsumme in tools/uhr-pruefstand/geraetedateien.sha256 — ohne sie wird hier nichts entpackt."
+        fi
+        printf '\033[33mWARNUNG:\033[0m %s ohne Pruefsumme entpackt (geraetedateien.sha256)\n' "$name" >&2
+        return
+    fi
+    ist=$(sha256sum "$datei" | cut -d' ' -f1)
+    if [ "$ist" != "$soll" ]; then
+        rm -f "$datei"
+        fehler "$name weicht von seiner Pruefsumme ab (soll ${soll:0:16}…, ist ${ist:0:16}…). Neu gepackt? Dann die Summe im Repositorium nachtragen."
+    fi
+    melde "$name: Pruefsumme stimmt"
+}
+
+# Kein stilles Zurueckfallen (CLAUDE.md 6): Der langsame Weg ist
 # gruen, aber er ist nicht der vorgesehene, und wer nur auf die Farbe sieht,
 # merkt sonst nie, dass die Archive fehlen.
 rueckfall_melden() {
-    local text="$1 fehlt unter CIQ_GERAETE_URL — Rueckfall auf Einzeldateien (langsam). Packen: docs/Technik.md 5.2b."
+    # Einzeldateien tragen keine Summe. Wo sie Pflicht ist, gibt es den
+    # Rueckfall deshalb nicht.
+    [ "${CIQ_SUMMEN_PFLICHT:-0}" = "1" ] \
+        && fehler "$1 fehlt unter CIQ_GERAETE_URL — ohne Archiv keine Pruefsumme, und ohne Pruefsumme kein Rueckfall auf Einzeldateien (CIQ_SUMMEN_PFLICHT=1)."
+    local text="$1 fehlt unter CIQ_GERAETE_URL — Rueckfall auf Einzeldateien (langsam). Packen: docs/Technik.md 5.6."
     if [ -n "${GITHUB_ACTIONS:-}" ]; then
         echo "::warning::$text"
         [ -n "${GITHUB_STEP_SUMMARY:-}" ] \
@@ -400,8 +437,8 @@ bauen() {
 
 anzeige_starten() {
     umgebung
-    # EINE ANZEIGE, DIE ANTWORTET, NICHT EINE, DIE IN DER LISTE STEHT
-    # (F-S11-93). Ein Xvfb, dem `beenden` eben das Ende geschickt hat, steht
+    # EINE ANZEIGE, DIE ANTWORTET, NICHT EINE, DIE IN DER LISTE STEHT.
+    # Ein Xvfb, dem `beenden` eben das Ende geschickt hat, steht
     # noch einen Augenblick in der Prozessliste. Bis zum 18.10.2026 reichte
     # das hier als „laeuft", und der Simulator kam danach ohne Anzeige hoch
     # ("Can't create a GtkStyleContext without a display connection") — im
@@ -436,7 +473,7 @@ simulator_starten() {
     # Aufruf startete einen WEITEREN Simulator. Zwei davon auf derselben
     # Anzeige schiessen einander ab: Der Bildabzug bleibt schwarz oder zeigt
     # das Fenster des anderen, ohne dass irgendwo ein Fehler steht.
-    # Gemessen am 03.09.2026 waehrend der Bildstrecke von Paket C — die ersten
+    # Gemessen am 03.09.2026 waehrend einer Bildstrecke — die ersten
     # zehn Abzuege waren deshalb leer. `pgrep -x` prueft den Prozessnamen und
     # ist gegen den Aufrufpfad unempfindlich.
     pgrep -x simulator >/dev/null && { melde "Simulator laeuft bereits"; return; }
@@ -479,11 +516,19 @@ starten() {
     [ -n "$vorhanden" ] && melde "Hinweis: gespeicherte App-Einstellungen aktiv ($vorhanden) — 'einstellungen-leeren' setzt sie zurueck"
     # Eine vorherige Sitzung zuerst beenden: monkeydo laeuft weiter, solange die
     # App laeuft, und zwei gleichzeitige Verbindungen blockieren einander.
-    pkill -f "monkeydo" 2>/dev/null || true
+    # UEBER DIE PROZESSNUMMER, wie in `kryptoprobe`: `pkill -f monkeydo`
+    # traefe jede Shell, deren Befehlszeile das Wort enthaelt. `setsid` macht
+    # den Lauf zum Gruppenfuehrer; die Gruppe nimmt Java mit.
+    if [ -f "$BASIS/monkeydo.pid" ]; then
+        local alt; alt=$(cat "$BASIS/monkeydo.pid")
+        kill -- "-$alt" 2>/dev/null || kill "$alt" 2>/dev/null || true
+        rm -f "$BASIS/monkeydo.pid"
+    fi
     melde "App laden: $geraet"
     : >"$BASIS/konsole.log"
     setsid nohup monkeydo "$AUSGABE/$geraet.prg" "$geraet" \
         >"$BASIS/konsole.log" 2>&1 </dev/null &
+    echo "$!" >"$BASIS/monkeydo.pid"
     sleep "$wartezeit"
     konsole
 }
@@ -508,7 +553,7 @@ reihe() {
     # Ausfall sieht deshalb nach einem Geraeteproblem aus und ist keins.
     export JAVA_TOOL_OPTIONS="-Djava.awt.headless=true"
     # CIQ_JUNGLE uebersetzt ein anderes Projekt fuer dieselbe Liste — die
-    # Krypto-Probe (S11-02) laeuft so ueber alle Geraete der App. Ohne den
+    # Krypto-Probe laeuft so ueber alle Geraete der App. Ohne den
     # Wert bleibt es die App selbst.
     local jungle="${CIQ_JUNGLE:-$WURZEL/watch/monkey.jungle}"
     local ok=0 mangel=0 fehlend=0
@@ -559,14 +604,14 @@ kryptoreihe() { CIQ_JUNGLE="$KRYPTO_JUNGLE" reihe "$@"; }
 
 kryptoprobe() {
     local geraete="${*:-$ZIEL_GERAETE}" schlecht=0 g pid log
-    # FRISCHER SIMULATOR (S11-08, F-S11-83). Im Pruefstand vom 17.10.2026
+    # FRISCHER SIMULATOR. Im Pruefstand vom 17.10.2026
     # blieb die Ausgabe auf allen drei Geraeten 120 s leer — 0 von 3 —, mit
     # einem Simulator, der seit Stunden durch Handlaeufe gelaufen war. Einzeln
     # nachgefahren, frisch und nach einem Rundlauf: 7 gut, 0 Fehler, 16 s.
     # Die Ursache ist nicht gefunden; der Altzustand ist der einzige
     # Unterschied, und ein Lauf soll nicht den Zustand eines frueheren messen.
     #
-    # NUR DEN SIMULATOR, NICHT DIE ANZEIGE (F-S11-86). Bis zum 18.10.2026 stand
+    # NUR DEN SIMULATOR, NICHT DIE ANZEIGE. Bis zum 18.10.2026 stand
     # hier `beenden`, und das raeumt auch Xvfb ab. `anzeige_starten` fand den
     # sterbenden Xvfb danach noch in der Prozessliste, startete keinen neuen,
     # und der Simulator kam ohne Anzeige hoch ("Can't create a GtkStyleContext
@@ -596,9 +641,9 @@ kryptoprobe() {
 # Teuer (rund eine Minute je Geraet), deshalb nur fuer die Vertreter der
 # Klassen. monkeydo wird bewusst direkt gestartet und wieder beendet statt
 # ueber starten() — in einer Schleife blockiert das sonst (s. LIESMICH).
-# DIE TASTENFOLGE (Backlog Nr. 92, S11-08). Bis dahin fotografierte
+# DIE TASTENFOLGE. Bis dahin fotografierte
 # `bildreihe` nur den Startbildschirm; wer eine andere Ansicht brauchte, baute
-# sich eine eigene Schleife (S5 Paket C). Jetzt nimmt sie als drittes Argument
+# sich eine eigene Schleife. Jetzt nimmt sie als drittes Argument
 # eine Folge, durch Kommas getrennt, die nach dem Laden und VOR dem Abzug
 # gefahren wird:
 #   Down              Tastendruck (xdotool-Name)
@@ -753,7 +798,7 @@ beenden() {
     # geladener App und altem Zustand.
     pkill -x simulator 2>/dev/null || true
     pkill -f "Xvfb $ANZEIGE" 2>/dev/null || true
-    # Abwarten, bis beide fort sind (F-S11-93) — sonst haelt der naechste
+    # Abwarten, bis beide fort sind — sonst haelt der naechste
     # Start den sterbenden Xvfb fuer lebendig.
     for _ in $(seq 1 20); do
         pgrep -x simulator >/dev/null || pgrep -f "Xvfb $ANZEIGE" >/dev/null || break

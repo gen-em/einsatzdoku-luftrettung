@@ -1,13 +1,13 @@
 /**
  * Export — Profil A (Standard-Excel) und Profil C (GuteSeele-Layout).
  *
- * Profil B (Vollständiges CSV inkl. GPX, ZIP mit optionaler AES-256-
- * Verschlüsselung via zip.js) ist seit Paket E3 mit umgesetzt.
+ * Dazu Profil B (Vollständiges CSV inkl. GPX, ZIP mit optionaler AES-256-
+ * Verschlüsselung via zip.js).
  *
  * Erwartet aus der Seite: PAT_WRAP, KDF_SALT, KDF_ITER, APP_TZ, WEB_VERSION,
  * KONTO_NAME, KONTO_MAIL, EdApi (assets/api.js -- sendet und holt sich das
- * CSRF-Token selbst), EdFormat (assets/format.js -- steht seit Schritt 15
- * AP8d im Kopf jeder Seite), EdCrypto, EdUnlock, EdPat, EdPwQuality,
+ * CSRF-Token selbst), EdFormat (assets/format.js -- steht im Kopf jeder
+ * Seite), EdCrypto, EdUnlock, EdPat, EdPwQuality,
  * ImportProfile, XLSX (vendor/xlsx.full.min.js), zip (vendor/zipjs.min.js),
  * edConfirm (confirm.js).
  *
@@ -17,23 +17,22 @@
  * stillschweigend ignoriert, cell.s-Stile werden nicht in die styles.xml
  * übernommen — beides sind kostenpflichtige Pro-Funktionen von SheetJS).
  * Spaltenbreiten, Autofilter und echte Datumszellen funktionieren dagegen.
- * SPEC_Export.md 3.1 verlangt "fett" und "Fensterfixierung" — das wird hier
- * bewusst ausgelassen statt einer kaputten Datei. Bitte bei der Abnahme
- * gegenprüfen, ob das so tragbar ist oder eine andere Lösung nötig wird.
+ * Fette Schrift und Fensterfixierung fallen deshalb bewusst weg, statt eine
+ * kaputte Datei zu schreiben (docs/Export-Format.md 2).
  */
 (function () {
     'use strict';
 
     var $ = function (id) { return document.getElementById(id); };
 
-    /* EINE RÜCKFRAGE STATT DREI (Backlog Nr. 404, Web 23.4.0).
+    /* EINE RÜCKFRAGE STATT DREI.
      *
-     * Bis 23.3.x fragte der Export bis zu dreimal hintereinander: Klartext
-     * in der Datei, Passwort merken, „Dies ist kein Backup" — jede Frage ein
-     * langer Fließtext in einem Absatz. Zwei davon wiederholten, was ohnehin
-     * auf der Seite steht: Der Hinweis zum Passwort steht unter dem Feld,
-     * und dass ein Export kein Backup ist, sagt jetzt die Einleitung der
-     * Karte (import.php). Gefragt wird nur noch, wo etwas Unumkehrbares
+     * Drei Fragen hintereinander — Klartext in der Datei, Passwort merken,
+     * „Dies ist kein Backup", jede ein langer Fließtext in einem Absatz —
+     * wären zu viel; zwei davon wiederholten, was ohnehin auf der Seite
+     * steht: Der Hinweis zum Passwort steht unter dem Feld, und dass ein
+     * Export kein Backup ist, sagt die Einleitung der Karte (import.php).
+     * Gefragt wird nur, wo etwas Unumkehrbares
      * geschieht — Patientendaten verlassen die Verschlüsselung —, und dann
      * einmal, in Absätzen (`edConfirm` mit einer Liste, confirm.js). */
     var DIALOG_TITEL = 'Export mit Patientendaten';
@@ -84,8 +83,8 @@
 
     /** ISO-8601-UTC -> 'YYYY-MM-DD' in der App-Zeitzone.
      *
-     * Gebraucht fuer das ECHTE Einsatzdatum: Seit sich der Diensttag vom
-     * Kalendertag geloest hat (E9), traegt der Einsatz kein eigenes Datum mehr,
+     * Gebraucht fuer das ECHTE Einsatzdatum: Der Diensttag ist vom
+     * Kalendertag geloest, der Einsatz traegt kein eigenes Datum,
      * und das seines Dienstes kann ein anderes sein. Die Umrechnung laeuft
      * ueber dieselbe Intl-Formatierung wie hhmmLocal(), damit Datum und Uhrzeit
      * einer Zeile nicht aus zwei verschiedenen Rechnungen stammen. */
@@ -113,11 +112,9 @@
 
     /** Dauer zwischen zwei UTC-Zeitstempeln als 'HH:MM', oder null.
      *
-     * SEIT SCHRITT 15 AP8d AUS `EdFormat` (assets/format.js, Zaehlzeile Z34).
-     * Gerechnet wird dort dasselbe: erst auf ganze Minuten runden, dann in
-     * Stunden und Minuten teilen, beide Teile zweistellig. Die zwei benannten
-     * Aenderungen des Pakets -- zweistellige Minute und kein '60min' mehr --
-     * treffen diese Stelle deshalb NICHT; sie hielt es schon immer so.
+     * AUS `EdFormat` (assets/format.js, Zaehlzeile Z34). Gerechnet wird dort:
+     * erst auf ganze Minuten runden, dann in Stunden und Minuten teilen,
+     * beide Teile zweistellig.
      *
      * DER LEERWERT null STEHT AUSDRUECKLICH DA, obwohl `dauerUhr()` ihn als
      * Vorgabe fuehrt. Der Rueckgabewert landet in einer Zelle einer
@@ -140,17 +137,15 @@
     /* Rollenkatalog. Die Liste kommt aus CREW_ROLES (server/db.php) und wird
      * von der einbindenden Seite als CREW_ROLLEN gesetzt (import.php). Der
      * Rueckfall steht da, damit diese Datei auch ohne sie laeuft — er ist die
-     * Rollenmenge vor Web 6.0.0, also der Stand, den ein Bestand ohne
-     * bodengebundene Rettungsmittel hat. */
+     * Rollenmenge eines Bestands ohne bodengebundene Rettungsmittel. */
     var ROLLEN = (typeof CREW_ROLLEN !== 'undefined' && CREW_ROLLEN.length)
         ? CREW_ROLLEN : ['p1', 'p2', 'hems', 'fr', 'other'];
 
     /** Effektive Besatzung nach 3.4: bei crew_override und belegter Rolle am
      *  Einsatz der Einsatzwert, sonst der des Diensttags.
      *
-     *  Beides sind seit Web 6.0.0 Objekte role_code => name (`mission_crew` und
-     *  `day_crew`, E7) und keine Spaltensaetze mehr. Die Regel selbst ist
-     *  unveraendert. */
+     *  Beides sind Objekte role_code => name (`mission_crew` und
+     *  `day_crew`), keine Spaltensaetze. */
     function effectiveCrew(mission, dayRow) {
         var mc = mission.crew || {};
         var dc = (dayRow && dayRow.crew) ? dayRow.crew : {};
@@ -203,7 +198,7 @@
         return a.daten;
     }
 
-    /** Zweite Schranke (A9): entfernt alle personenbezogenen Angaben aus dem
+    /** Zweite Schranke: entfernt alle personenbezogenen Angaben aus dem
      *  geladenen Bestand, bevor irgendein Profil ihn zu sehen bekommt.
      *
      *  api/export_data.php liefert diese Felder bei fehlendem Haken schon gar
@@ -211,20 +206,17 @@
      *  zweite, und sie steht aus einem Grund da: Sie wirkt an EINER Stelle für
      *  alle drei Profile. Wer später ein viertes Profil ergänzt, muss nicht
      *  wissen, welche Felder unter die Schranke fallen — sie sind dann schon
-     *  weg. Der umgekehrte Aufbau (jedes Profil prüft selbst) hat genau die
-     *  Lücke erzeugt, die zu A9 geführt hat: Die Phasenkoordinaten waren in
-     *  Profil B nicht abgedeckt, obwohl pat_ort_lat/lon es waren.
+     *  weg. Der umgekehrte Aufbau (jedes Profil prüft selbst) lässt Lücken:
+     *  etwa Phasenkoordinaten, die in einem Profil nicht abgedeckt sind,
+     *  obwohl pat_ort_lat/lon es sind.
      *
-     *  DRAUSSEN bleiben bewusst: bw_unit (eine Einrichtung, keine Person;
-     *  Kriterium 74) und weitere_rettungsmittel (Organisationskennungen) —
+     *  DRAUSSEN bleiben bewusst: bw_unit (eine Einrichtung, keine Person)
+     *  und weitere_rettungsmittel (Organisationskennungen) —
      *  je einzeln vom Auftraggeber entschieden, Begründungen in
      *  docs/Export-Format.md.
      *
-     *  SEIT S11-05e UNTER DER SCHRANKE: das Transportziel samt Koordinate
-     *  (seit Web 22.1.0 im pat_blob, Betreiberin 16.10.2026, E-S11-53) und
-     *  die Einsatzhülle — damit auch die Reanimation (E-S11-54). Bis
-     *  Web 22.7.0 stand der Reanimationsverlauf des Altbestands noch ohne
-     *  Haken in der Datei; seit Web 23 gibt es keinen mehr (S11-12). */
+     *  EBENFALLS UNTER DER SCHRANKE: das Transportziel samt Koordinate (im
+     *  pat_blob) und die Einsatzhülle — damit auch die Reanimation. */
     function entpersonalisieren(data) {
         (data.days || []).forEach(function (d) {
             d.crew = {};
@@ -235,10 +227,8 @@
             m.crew = {};
             m.bw_info = null;
             m.other_ema = null;
-            /* `m.notes` gibt es hier nicht mehr (S9/AP7): Die Notiz steckt im
-               `pat_blob`, und der wird zwei Zeilen weiter unten geleert. Die
-               Zeile ersatzlos zu streichen ist richtig — sie stehen zu lassen
-               waere harmlos, aber sie behauptete, es gaebe noch eine Spalte. */
+            /* Kein `m.notes`: Die Notiz steckt im `pat_blob`, und der wird
+               zwei Zeilen weiter unten geleert. */
             m.site_ele_m = null;
             m.pat_blob = null;
             m.pat = null;
@@ -249,7 +239,7 @@
             m.client_ref = null;
             // Phase 4 ist "Ankunft Einsatzort", Phase 5 "Ankunft PatientIn" —
             // diese Punkte SIND der Ort des Geschehens. Der Zeitpunkt bleibt:
-            // Er trägt Alarmzeit, Endzeit und Dauer (Kriterium 73).
+            // Er trägt Alarmzeit, Endzeit und Dauer.
             (m.phases || []).forEach(function (p) { p.lat = null; p.lon = null; });
         });
 
@@ -258,10 +248,9 @@
 
     /** Entschlüsselt pat_blob je Einsatz zu m.pat (null bei Fehler/Fehlen).
      *
-     *  Die Schleife samt Fehlerbehandlung stand hier ausgeschrieben — eine von
-     *  fünf fast gleichen im Projekt (M6-06). Sie liegt jetzt in EdPat
-     *  (Baustein B8); hier bleibt die Übersetzung auf die Feldnamen, die der
-     *  Export erwartet.
+     *  Die Schleife samt Fehlerbehandlung liegt in EdPat, an einer Stelle
+     *  für das ganze Projekt; hier bleibt die Übersetzung auf die
+     *  Feldnamen, die der Export erwartet.
      *
      *  Liefert die Zählung zurück: Ein Export, der Patientendaten enthalten
      *  SOLL und sie stillschweigend weglässt, weil der Schlüssel nicht passt,
@@ -276,11 +265,10 @@
     }
 
     /**
-     * DIE ORTSDATEN DER SEIT S11 VERSCHLOSSENEN EINSÄTZE (S11-05e) — nur mit
-     * Haken, nach `decryptPatients()`:
+     * DIE VERSCHLOSSENEN ORTSDATEN DER EINSÄTZE — nur mit Haken, nach
+     * `decryptPatients()`:
      *   - Transportziel und Ortshöhe aus dem pat_blob (`transport_dest`
-     *     {addr, lat, lon}, `ortshoehe`). Bis Web 22.7.0 kam daneben der
-     *     Altbestand aus Spalten.
+     *     {addr, lat, lon}, `ortshoehe`).
      *   - Phasenorte und Reanimation aus der Einsatzhülle. Die Phasen werden
      *     über Nummer und Zeit zugeordnet, wie in der Einsatzansicht
      *     (`EdOrtsdaten.fuerAnsicht`); die Reanimation füllt `resus`.
@@ -335,10 +323,9 @@
 
     /* ------------------------------------------------------- Profil A --- */
 
-    /* 'star' heisst seit Web 5.8.0 (A9): faellt unter die Schranke
-     * "Personenbezogene Angaben einschliessen". Vorher stand es allein fuer
-     * die Patientendaten. Der Schluesselname bleibt — er beschreibt die
-     * Markierung in der Kopfzeile, nicht ihren Anlass.
+    /* 'star' heisst: faellt unter die Schranke "Personenbezogene Angaben
+     * einschliessen" — nicht nur Patientendaten. Der Schluesselname
+     * beschreibt die Markierung in der Kopfzeile, nicht ihren Anlass.
      *
      * Profil A ENTFERNT diese Spalten, wenn der Haken aus ist, statt sie leer
      * zu lassen: Hier liest ein Mensch, und eine leere Spalte waere nur
@@ -346,8 +333,8 @@
      * Maschine) und Profil C muss sie behalten, weil seine Spaltenfolge von
      * der Jahresliste vorgegeben ist. */
     /* Die Besatzungsspalten entstehen aus dem Rollenkatalog (CREW_ROLES,
-     * server/db.php): fünf Flugrollen bis Web 5.10.0, jetzt zusätzlich Fahrer
-     * und Praktikant. Sie tragen die Beschriftung des Katalogs, damit Formular
+     * server/db.php): die fünf Flugrollen und dazu Fahrer und Praktikant.
+     * Sie tragen die Beschriftung des Katalogs, damit Formular
      * und Tabelle dieselben Begriffe verwenden — und damit das Importprofil
      * `export_excel_v1` sie über CREW_LABELS wiedererkennt, ohne eine zweite
      * Liste zu führen.
@@ -360,8 +347,8 @@
     });
 
     var SPALTEN_A = [
-        // Neutral benannt (Abschnitt 3.9) — der Wert kommt aus der
-        // eingefrorenen Bezeichnung des Diensttags (E8).
+        // Neutral benannt — der Wert kommt aus der
+        // eingefrorenen Bezeichnung des Diensttags.
         { label: 'Rettungsmittel', star: false },
         { label: 'Standort', star: false },
         { label: 'Einsatzdatum', star: false },
@@ -381,28 +368,26 @@
         // 'Sekundärtransport' ist der Wortlaut aus mission_fields.php — die
         // Tabelle soll dieselben Begriffe verwenden wie das Formular.
         { label: 'Sekundärtransport', star: false },
-        // Seit S11-05e unter der Schranke: das Ziel liegt im pat_blob (E-S11-53).
+        // Unter der Schranke: das Ziel liegt im pat_blob.
         { label: 'Transportziel', star: true },
         { label: 'Schockraum', star: false },
         { label: 'Windeneinsatz', star: false },
         { label: 'Windenzyklen gesamt', star: false },
         { label: 'Bergwacht', star: false },
-        // Einheit, nicht Person — dieselbe Klasse wie Transportziel, das nach
-        // Kriterium 74 ausdruecklich enthalten bleibt. 'Bergwacht: Namen /
-        // Infos' (bw_info) gibt es in Profil A nicht.
+        // Einheit, nicht Person — sie bleibt ausdruecklich enthalten.
+        // 'Bergwacht: Namen / Infos' (bw_info) gibt es in Profil A nicht.
         { label: 'Bergwacht-Einheit', star: false },
         // Organisationskennungen ("RTW Talwang"). Vom Auftraggeber als
         // Grenzfall entschieden: bleibt enthalten.
         { label: 'Weitere Rettungsmittel', star: false },
         // Aus dem Einsatzort gerechnet und damit grob ortsverratend.
         { label: 'Höhe Einsatzort (m)', star: true },
-        // Neutral: Die Tabelle führt beide Arten (Abschnitt 3.9).
+        // Neutral: Die Tabelle führt beide Arten.
         { label: 'Kilometer', star: false },
-        /* Seit S9/AP7 ist die Notiz verschluesselt. `star: true` bleibt und
-           bedeutet jetzt zweierlei: Ohne den Haken fuer personenbezogene
-           Angaben faellt der Blob schon serverseitig weg, und ohne Entsperren
-           gaebe es auch mit Haken nichts zu lesen. Die Warnung „keine
-           Patientendaten!" ist mit der Verschluesselung entfallen. */
+        /* Die Notiz ist verschluesselt. `star: true` bedeutet zweierlei:
+           Ohne den Haken fuer personenbezogene Angaben faellt der Blob schon
+           serverseitig weg, und ohne Entsperren gaebe es auch mit Haken
+           nichts zu lesen. */
         { label: 'Notizen', star: true }
     ]);
 
@@ -458,7 +443,7 @@
                     return (m.distance_m === null || m.distance_m === undefined)
                         ? '-' : Number((m.distance_m / 1000).toFixed(1));
                 case 'Notizen': {
-                    /* AUS DEM ENTSCHLUESSELTEN BLOCK (S9/AP7). `pat` ist
+                    /* AUS DEM ENTSCHLUESSELTEN BLOCK. `pat` ist
                        null, solange nicht entsperrt wurde — dann steht hier
                        „-", wie bei jeder anderen geschuetzten Angabe. Die
                        Ersetzung der Zeilenumbrueche bleibt: Eine Tabellenzelle
@@ -468,9 +453,8 @@
                     return n === '' ? '-' : n;
                 }
                 /* Besatzung: die Spalte trägt ihre Rolle als 'rolle' bei sich
-                   (CREW_SPALTEN_A). Bis Web 5.10.0 stand hier ein Zweig je
-                   Flugrolle — mit sieben Rollen wären es sieben gewesen, und
-                   eine achte hätte man vergessen. */
+                   (CREW_SPALTEN_A). Ein Zweig je Rolle wären sieben, und eine
+                   achte vergäße man. */
                 default:
                     if (c.rolle) { return txtOrDash(eff[c.rolle]); }
                     return '-';
@@ -480,10 +464,9 @@
 
     function buildProfilA(data, opts) {
         var cols = SPALTEN_A.filter(function (c) { return !c.star || opts.patient; });
-        /* NACH KENNUNG, NICHT NACH DATUM (E9). Bis Web 5.10.0 war das Datum der
-         * Schlüssel eines Flugtags; zwei Dienste an einem Kalendertag hätten
-         * sich hier gegenseitig überschrieben, und der zweite hätte die
-         * Besatzung des ersten getragen. */
+        /* NACH KENNUNG, NICHT NACH DATUM. Mit dem Datum als Schlüssel
+         * überschrieben sich zwei Dienste an einem Kalendertag hier
+         * gegenseitig, und der zweite trüge die Besatzung des ersten. */
         var daysById = {};
         (data.days || []).forEach(function (d) { daysById[d.id] = d; });
 
@@ -613,16 +596,14 @@
     // Kopie, weil der Server hierfuer keinen Endpunkt anbietet (I2: keine
     // zusaetzlichen Aufrufe) — bei Aenderung an den Server-Konstanten bitte
     // hier mitziehen.
-    /* PHASE 3 UND 7 SIND NEUTRAL BENANNT (E20, Web 6.2.0). Bis dahin hiessen
-     * die Spalten `phase_03_abflug` und `phase_07_landung_krankenhaus` — Worte
-     * aus der Luftrettung in einem Format, das beide Arten führt. Serverseitig
-     * heissen die Phasen schon seit Web 6.0.0 „Ausrücken" und „Ankunft Klinik"
-     * (PHASE_LABELS in db.php); der Export war die letzte Stelle, an der die
-     * alten Namen standen.
+    /* PHASE 3 UND 7 SIND NEUTRAL BENANNT. `phase_03_abflug` und
+     * `phase_07_landung_krankenhaus` wären Worte aus der Luftrettung in einem
+     * Format, das beide Arten führt. Serverseitig heissen die Phasen
+     * „Ausrücken" und „Ankunft Klinik" (PHASE_LABELS in db.php).
      *
      * Der RUECKWEG bleibt offen: `assets/import_profiles.js` führt die beiden
-     * alten Spaltennamen als Zweitnamen auf dasselbe Ziel. Eine Exportdatei von
-     * gestern lässt sich also unverändert wieder einlesen. */
+     * alten Spaltennamen als Zweitnamen auf dasselbe Ziel. Eine ältere
+     * Exportdatei lässt sich also unverändert wieder einlesen. */
     var PHASE_SLUGS = {
         2: 'alarmierung', 3: 'ausruecken', 4: 'ankunft_einsatzort',
         5: 'ankunft_patientin', 6: 'transportbeginn', 7: 'ankunft_klinik',
@@ -671,7 +652,7 @@
 
     /** Dauer zwischen zwei UTC-Zeitstempeln als nackte Minutenzahl, sonst ''.
      *
-     * SEIT SCHRITT 15 AP8d AUS `EdFormat` (assets/format.js, Zaehlzeile Z34).
+     * AUS `EdFormat` (assets/format.js, Zaehlzeile Z34).
      *
      * DER LEERWERT IST HIER DER LEERSTRING und nicht null wie bei
      * `durationHHMM()` daneben -- das ist kein Versehen, sondern das
@@ -700,9 +681,9 @@
      * Maskierung EINER Zelle. Zwei voneinander unabhängige Vorkehrungen:
      *
      * 1. QUOTING nach RFC 4180 — Trennzeichen, Anführungszeichen und
-     *    Zeilenumbrüche. Das war hier schon immer richtig gelöst.
+     *    Zeilenumbrüche.
      *
-     * 2. FORMEL-NEUTRALISIERUNG (M5-04). Tabellenprogramme werten eine Zelle,
+     * 2. FORMEL-NEUTRALISIERUNG. Tabellenprogramme werten eine Zelle,
      *    die mit = + - @ beginnt, als Formel aus — AUCH in Anführungszeichen,
      *    denn das Quoting gehört zum CSV-Format und nicht zum Zellinhalt. Ein
      *    fremder Text der Form =HYPERLINK(...) oder =cmd|... wird damit beim
@@ -744,9 +725,7 @@
      *  Ohne Haken bleiben die pat_-Spalten vorhanden und leer. Anders als Profil A
      *  (dort liest ein Mensch, und eine leere Spalte waere nur Ballast) liest hier
      *  eine Maschine — ein je nach Haken wechselnder Spaltensatz zwingt jeden
-     *  Importer, zwei Faelle zu unterscheiden. Weicht bewusst von SPEC_Export.md
-     *  4.3 ("Patientendaten entfallen ohne den Haken") ab; nach Ruecksprache
-     *  entschieden. */
+     *  Importer, zwei Faelle zu unterscheiden. */
     function buildCsvText(fieldDefs, rows) {
         var out = '\uFEFF' + csvRow(fieldDefs.map(function (f) { return f.feld; }));
         rows.forEach(function (ctx) { out += csvRow(fieldDefs.map(function (f) { return f.get(ctx); })); });
@@ -767,14 +746,13 @@
 
     /* ---- Besatzungsspalten aus dem Rollenkatalog -------------------------
      *
-     * Bis Web 5.10.0 standen zehn Spalten ausgeschrieben da: fünf für die
-     * Besatzung des Diensttags, fünf für die tatsächliche des Einsatzes. Mit den
-     * bodengebundenen Rollen wären es vierzehn geworden, und jede neue Rolle
-     * hätte hier, im Blatt Diensttage und in den Importprofilen gleichzeitig
-     * nachgezogen werden müssen. Die Quelle ist CREW_ROLES (server/db.php).
+     * Ausgeschrieben wären es je Rolle zwei Spalten — eine für die Besatzung
+     * des Diensttags, eine für die tatsächliche des Einsatzes —, bei sieben
+     * Rollen vierzehn, und jede neue Rolle müsste hier, im Blatt Diensttage
+     * und in den Importprofilen gleichzeitig nachgezogen werden. Die Quelle ist CREW_ROLES (server/db.php).
      *
-     * Der Spaltenname bleibt `<prefix><rolle>` — genau der bisherige. Die fünf
-     * Flugrollen behalten damit ihre Spaltennamen, und der verlustfreie
+     * Der Spaltenname ist `<prefix><rolle>`. Die fünf Flugrollen behalten
+     * damit ihre Spaltennamen, und der verlustfreie
      * Rückweg über das Importprofil `export_csv_v1` bleibt bestehen.
      */
     function crewSpalten(prefix, wozu, holen) {
@@ -790,7 +768,7 @@
         });
     }
 
-    /** Art des Diensttags als Exportwert. Leer = ohne Zuordnung (E26). */
+    /** Art des Diensttags als Exportwert. Leer = ohne Zuordnung. */
     function ART_TEXT(kind) {
         if (kind === 'air') { return 'luft'; }
         if (kind === 'ground') { return 'boden'; }
@@ -802,17 +780,14 @@
     var FIELD_DEFS_EINSAETZE = [
         { feld: 'einsatz_id', typ: 'int', einheit: '', beschreibung: 'interne ID, Bezugsschlüssel für tracks/', get: function (c) { return c.m.id; } },
         /* 'diensttag' ist das Datum des DIENSTES, 'datum' das des EINSATZES.
-           Bis Web 5.10.0 waren beide identisch (missions.day) und die zweite
-           Spalte nur eine Bequemlichkeit für Tabellenprogramme. Seit sich der
-           Diensttag vom Kalendertag gelöst hat (E9), können sie
+           Der Diensttag ist vom Kalendertag gelöst, deshalb können sie
            auseinanderfallen: Ein Einsatz um 01:30 gehört zum Dienst des
-           Vortags. Beide Spalten stehen deshalb weiter da, jetzt aber mit
-           unterschiedlicher Bedeutung — und die Beschreibung sagt sie. */
+           Vortags. Beide Spalten stehen deshalb da, mit unterschiedlicher
+           Bedeutung — und die Beschreibung sagt sie. */
         { feld: 'diensttag', typ: 'date', einheit: '', beschreibung: 'Datum des Diensttags (days.day)', get: function (c) { return c.m.day; } },
         { feld: 'diensttag_id', typ: 'int', einheit: '', beschreibung: 'interne ID des Diensttags — Bezugsschlüssel zum Blatt Diensttage', get: function (c) { return c.m.day_id; } },
         { feld: 'datum', typ: 'date', einheit: '', beschreibung: 'Datum des Einsatzes in Ortszeit — bei einem Dienst über Mitternacht NICHT identisch zu diensttag', get: function (c) { return dateOnlyLocal(c.m.started_at, APP_TZ); } },
-        /* DER RUECKFALL AUF DEN EINSATZBEGINN IST KEIN SCHOENHEITSFEHLER
-           (Fund F-R64-03, R64/AP4).
+        /* DER RUECKFALL AUF DEN EINSATZBEGINN IST KEIN SCHOENHEITSFEHLER.
 
            Die Spalte hiess immer „Alarmzeit" und kam aus Phase 2. Der EIGENE
            Import liest sie aber als den START des Einsatzes: In
@@ -846,9 +821,9 @@
         // bleibt trotzdem herkunft = uhr.
         { feld: 'edited', typ: '0/1', einheit: '', beschreibung: 'nach dem Anlegen verändert (missions.edited) — unabhängig von der Herkunft, nicht zu verwechseln mit manual', get: function (c) { return c.m.edited; } },
 
-        /* Neutral benannt (Abschnitt 3.9): 'hubschrauber' hiess die Spalte bis
-           Web 5.10.0 und passte nur zur Luftrettung. Der Wert kommt aus der
-           eingefrorenen Bezeichnung des Diensttags (E8), nicht aus den
+        /* Neutral benannt: 'hubschrauber' passte nur zur Luftrettung. Der
+           Wert kommt aus der eingefrorenen Bezeichnung des Diensttags, nicht
+           aus den
            Stammdaten — ein umbenanntes Rettungsmittel ändert an einem
            ausgeleiteten Dienst nichts. */
         { feld: 'rettungsmittel', typ: 'text', einheit: '', beschreibung: 'Bezeichnung des Rettungsmittels (Diensttag, eingefroren)', get: function (c) { return c.day ? orEmpty(c.day.vehicle) : ''; } },
@@ -884,7 +859,7 @@
         .concat([2, 3, 4, 5, 6, 7, 8, 9].reduce(function (acc, n) {
             // Phase 4 = Ankunft Einsatzort, Phase 5 = Ankunft PatientIn: Diese
             // Punkte SIND der Ort des Geschehens und fallen deshalb unter die
-            // Schranke (A9). Die Zeitpunkte oben tun das nicht — sie tragen
+            // Schranke. Die Zeitpunkte oben tun das nicht — sie tragen
             // Alarmzeit, Endzeit und Dauer.
             acc.push({
                 feld: 'phase_0' + n + '_lat', typ: 'dec', einheit: '',
@@ -899,13 +874,12 @@
             return acc;
         }, []))
         .concat([
-            // Neutral beschrieben (A13f): Der Spaltenname war es schon, die
-            // Erläuterung in felder.csv sagte weiterhin „Flugstrecke".
+            // Neutral beschrieben, nicht „Flugstrecke".
             { feld: 'strecke_m', typ: 'int', einheit: 'm', beschreibung: 'Einsatzstrecke (distance_m)', get: function (c) { return numOrEmpty(c.m.distance_m); } },
             { feld: 'hoehenmeter_m', typ: 'int', einheit: 'm', beschreibung: 'Höhenmeter (ascent_m)', get: function (c) { return numOrEmpty(c.m.ascent_m); } },
             { feld: 'hoehe_einsatzort_m', typ: 'int', einheit: 'm', beschreibung: 'Höhe des Einsatzorts', pers: true, get: function (c) { return numOrEmpty(c.m.site_ele_m); } },
 
-            // Felder der Etappe 2 (Web 6.1.0). Alle im Klartext, deshalb ohne
+            // Alle im Klartext, deshalb ohne
             // `pers` — Ausnahme sind die drei pat_start_*-Spalten weiter unten,
             // die wie der Einsatzort im pat_blob liegen.
             { feld: 'transport_art', typ: 'text', einheit: '', beschreibung: 'Transportart (missions.transport_mode): air | ground | ambulant — im Formular „Luft", „Boden", „Ambulant"; leer = nicht angegeben', get: function (c) { return orEmpty(c.m.transport_mode); } },
@@ -946,7 +920,7 @@
             { feld: 'pat_ort_beschreibung', typ: 'text', einheit: '', beschreibung: 'pat_blob.site_desc (bis Web 3.2.0: Spalte site_desc)', pers: true, get: function (c) { return c.pat ? orEmpty(c.pat.site_desc) : ''; } },
             // Manueller Abfahrtort: nur bei abfahrt_regel = manual belegt. Er
             // liegt im pat_blob und ist deshalb `pers` — anders als die REGEL
-            // daneben, die keinen Ort verrät (Konzept 4.6.1).
+            // daneben, die keinen Ort verrät.
             { feld: 'pat_start_adresse', typ: 'text', einheit: '', beschreibung: 'pat_blob.start.addr — manueller Abfahrtort', pers: true, get: function (c) { return (c.pat && c.pat.start) ? orEmpty(c.pat.start.addr) : ''; } },
             { feld: 'pat_start_lat', typ: 'dec', einheit: '', beschreibung: 'pat_blob.start.lat', pers: true, get: function (c) { return (c.pat && c.pat.start && c.pat.start.lat != null) ? c.pat.start.lat : ''; } },
             { feld: 'pat_start_lon', typ: 'dec', einheit: '', beschreibung: 'pat_blob.start.lon', pers: true, get: function (c) { return (c.pat && c.pat.start && c.pat.start.lon != null) ? c.pat.start.lon : ''; } },
@@ -955,7 +929,7 @@
             { feld: 'track_datei', typ: 'text', einheit: '', beschreibung: 'relativer Pfad unter tracks/, oder leer', get: function (c) { return c.trackFile || ''; } },
             { feld: 'track_punkte', typ: 'int', einheit: '', beschreibung: 'Anzahl Trackpunkte', get: function (c) { return c.m.track_points; } },
 
-            /* DIE MOMENTAUFNAHME DES GERÄTS (R64, E-R64-10) — ganz am Ende und
+            /* DIE MOMENTAUFNAHME DES GERÄTS — ganz am Ende und
                nicht neben 'herkunft'. Zwei Gründe: Wer schon Auswertungen auf
                diese Datei gebaut hat, zählt Spalten von links; und die beiden
                beschreiben nicht den Einsatz, sondern das Gerät, das ihn
@@ -963,7 +937,7 @@
                'track_punkte', nicht zu den Einsatzfeldern.
 
                LEER HEISST UNBEKANNT und nicht "kein Gerät": Nur die Kopplung
-               kennt Art und Modell (seit Web 12.9.0). Von Hand angelegte,
+               kennt Art und Modell. Von Hand angelegte,
                importierte und ältere Einsätze haben nichts zu melden — deshalb
                ist die Zelle leer und trägt nicht das Wort „unbekannt". */
             { feld: 'geraet_art', typ: 'text', einheit: '', beschreibung: 'Art des aufzeichnenden Geräts, festgehalten beim Anlegen (missions.geraet_art): uhr | handy | sonstiges; leer = unbekannt', get: function (c) { return orEmpty(c.m.geraet_art); } },
@@ -971,7 +945,7 @@
         ]);
 
     var FIELD_DEFS_DIENSTTAGE = [
-        /* Die Kennung steht VORN und ist der Bezugsschlüssel: Seit E9 können
+        /* Die Kennung steht VORN und ist der Bezugsschlüssel: Es können
            mehrere Diensttage auf einem Kalendertag liegen, das Datum benennt
            also keine Zeile mehr. `diensttag_id` in einsaetze.csv zeigt hierher. */
         { feld: 'diensttag_id', typ: 'int', einheit: '', beschreibung: 'interne ID des Diensttags', get: function (c) { return c.d.id; } },
@@ -989,7 +963,7 @@
         .concat([
         { feld: 'notizen', typ: 'text', einheit: '', beschreibung: 'days.notes', pers: true, get: function (c) { return orEmpty(c.d.notes); } },
         { feld: 'anzahl_einsaetze', typ: 'int', einheit: '', beschreibung: 'Anzahl Einsätze an diesem Diensttag im Export', get: function (c) { return c.count; } },
-        /* TYP UND KURZNAME (E-S9-09, Web 16.0.0) — GANZ AM ENDE und nicht neben
+        /* TYP UND KURZNAME — GANZ AM ENDE und nicht neben
            'rettungsmittel'. Derselbe Grund wie bei der Geräte-Momentaufnahme
            weiter oben: Wer schon Auswertungen auf diese Datei gebaut hat, zählt
            Spalten von links. Eine Spalte in der Mitte einzusetzen verschiebt
@@ -1001,7 +975,7 @@
            ließen sich die beiden in der Datei nicht auseinanderhalten.
 
            DER KURZNAME STEHT NEBEN DER BEZEICHNUNG, NICHT AN IHRER STELLE.
-           `rettungsmittel` bleibt der volle Name (E-S9-09): Wer die Datei
+           `rettungsmittel` bleibt der volle Name: Wer die Datei
            auswertet, kennt die Abkürzung des Hauses nicht. Die Spalte macht den
            Export vollständig, sie ersetzt nichts. */
         { feld: 'typ', typ: 'text', einheit: '', beschreibung: 'Typ des Rettungsmittels, eingefroren beim Anlegen (E8): standard | bergwacht | veranstaltung | sonstiges; leer = ohne Rettungsmittel', get: function (c) { return orEmpty(c.d.vehicle_typ); } },
@@ -1018,8 +992,8 @@
         { feld: 'final', typ: '0/1', einheit: '', beschreibung: 'abgeschlossen', get: function (c) { return c.r.final; } },
         { feld: 'track_datei', typ: 'text', einheit: '', beschreibung: 'relativer Pfad unter tracks/, oder leer', get: function (c) { return c.trackFile || ''; } },
         { feld: 'track_punkte', typ: 'int', einheit: '', beschreibung: 'Anzahl Trackpunkte', get: function (c) { return c.r.track_points; } },
-        // Wie bei einsaetze.csv (R64). Eine Spalte 'herkunft' gibt es hier
-        // NICHT: Das Ruhesegment trägt keine (E-R64-04).
+        // Wie bei einsaetze.csv. Eine Spalte 'herkunft' gibt es hier
+        // NICHT: Das Ruhesegment trägt keine.
         { feld: 'geraet_art', typ: 'text', einheit: '', beschreibung: 'Art des aufzeichnenden Geräts, festgehalten beim Anlegen (rest_segments.geraet_art): uhr | handy | sonstiges; leer = unbekannt', get: function (c) { return orEmpty(c.r.geraet_art); } },
         { feld: 'geraet_modell', typ: 'text', einheit: '', beschreibung: 'Modell des aufzeichnenden Geräts, festgehalten beim Anlegen (rest_segments.geraet_modell); leer = unbekannt', get: function (c) { return orEmpty(c.r.geraet_modell); } }
     ];
@@ -1030,8 +1004,7 @@
      *  die ohne Haken leer bleiben. Die Datei ist die Formatbeschreibung, nicht
      *  ein Inhaltsverzeichnis dieses einen Laufs.
      *
-     *  Die Spalte 'personenbezogen' ist mit Web 5.8.0 dazugekommen (A9). Sie
-     *  macht die Schranke maschinenlesbar: Wer die Dateien einliest, kann
+     *  Die Spalte 'personenbezogen' macht die Schranke maschinenlesbar: Wer die Dateien einliest, kann
      *  daraus ableiten, welche leeren Zellen leer GEMACHT wurden und welche nie
      *  gefüllt waren — ohne diese Angabe sehen beide gleich aus. Die
      *  Kennzeichnung sitzt am Feldkatalog selbst (Schlüssel 'pers'), damit ein
@@ -1079,10 +1052,12 @@
             '  - weitere Namen: bw_info (Bergwacht: Namen / Infos), other_ema',
             '    (andere NotärztIn)',
             '  - Freitext: notizen beim Diensttag (die des Einsatzes stehen oben',
-            '    bei den Patientendaten — sie sind seit Web 19 verschlüsselt)',
+            '    bei den Patientendaten)',
             '  - Ortsangaben: die Koordinaten der Phasen (Phase 4 = Ankunft',
             '    Einsatzort, Phase 5 = Ankunft PatientIn), hoehe_einsatzort_m',
-            '    und, falls gewählt, die GPS-Daten als GPX unter tracks/'
+            '    und, falls gewählt, die GPS-Daten als GPX unter tracks/',
+            '  - Transportziel: transport_dest (Zielklinik) mit ziel_lat, ziel_lon',
+            '  - Reanimation: rea_json, der Verlauf einer Reanimation'
         ] : [
             'Diese Datei enthält KEINE der nachstehenden Gruppen — die Spalten sind',
             'vorhanden und leer:',
@@ -1092,13 +1067,14 @@
             '  - notizen bei Einsatz und Diensttag',
             '  - Koordinaten der Phasen und hoehe_einsatzort_m',
             '  - GPS-Daten als GPX (der Ordner tracks/ fehlt vollständig)',
+            '  - Transportziel: transport_dest, ziel_lat, ziel_lon',
+            '  - Reanimation: rea_json',
             '',
-            'Enthalten bleiben dagegen: transport_dest (Zielklinik) und bw_unit',
-            '(Bergwacht-Einheit) — beides Einrichtungen, keine Personen —,',
-            'weitere_rettungsmittel (Organisationskennungen) sowie rea_json, der',
-            'Verlauf einer Reanimation ohne Angabe, wen sie betraf. Die Zeitpunkte',
-            'der Phasen bleiben ebenfalls: Sie tragen Alarmzeit, Endzeit und Dauer.',
-            'crew_abweichend bleibt gesetzt und sagt, DASS die Besatzung abwich.'
+            'Enthalten bleiben dagegen: bw_unit (Bergwacht-Einheit) — eine',
+            'Einrichtung, keine Person — und weitere_rettungsmittel',
+            '(Organisationskennungen). Die Zeitpunkte der Phasen bleiben ebenfalls:',
+            'Sie tragen Alarmzeit, Endzeit und Dauer. crew_abweichend bleibt',
+            'gesetzt und sagt, DASS die Besatzung abwich.'
         ]).concat([
             '',
             'Der Spaltensatz ist in jedem Export gleich — ein Programm, das diese',
@@ -1131,12 +1107,11 @@
             'Dateien maschinell liest, entfernt einen führenden Apostroph aus',
             'Textspalten.',
             '',
-            /* 'rettungsmittel', nicht 'hubschrauber': Die Spalte heisst seit
-               Web 5.10.0 so (FIELD_DEFS_EINSAETZE weiter oben), und
-               'hubschrauber' gibt es in keiner erzeugten Datei mehr. Der
-               Text stand ausgerechnet in der Datei, deren Zweck die
-               Formatbeschreibung ist — wer sich danach richtet, sucht eine
-               Spalte, die nicht da ist. */
+            /* 'rettungsmittel', nicht 'hubschrauber': So heisst die Spalte
+               (FIELD_DEFS_EINSAETZE weiter oben), und 'hubschrauber' gibt es
+               in keiner erzeugten Datei. Diese Datei ist die
+               Formatbeschreibung — wer sich danach richtet, soll keine
+               Spalte suchen, die nicht da ist. */
             'rettungsmittel, standort und die Tagesbesatzung stehen sowohl in',
             'einsaetze.csv als auch in diensttage.csv — beabsichtigt, damit die',
             'Einsatztabelle allein ein vollständiges Bild ergibt. Bei Abweichungen',
@@ -1153,16 +1128,15 @@
 
     /** GPX 1.1, ein <trk> mit einem <trkseg>. Punkte kommen sortiert vom Server. */
     function buildGpx(points, name, genTimeIso) {
-        /* `creator` BENENNT DIE SOFTWARE, NICHT DIE INSTALLATION (P5a/AP5,
-         * Weg B). Der Name dieser Anlage haengt seit Web 20.8.0 an
-         * `instanz_kurz()` und ist umbenennbar — dieses Feld ist davon
+        /* `creator` BENENNT DIE SOFTWARE, NICHT DIE INSTALLATION. Der Name
+         * dieser Anlage haengt an `instanz_kurz()` und ist umbenennbar — dieses Feld ist davon
          * ausgenommen, weil GPX 1.1 `creator` als das ERZEUGENDE PROGRAMM
          * beschreibt. Die Begruendung steht vollstaendig in
          * `docs/Export-Format.md` 3.5.
          *
          * DIESELBE ZEICHENKETTE WIE BEIM SPUR-DOWNLOAD. Es gibt zwei Stellen,
          * die einen GPX-Kopf schreiben — diese hier und `creator()` in
-         * `assets/gpx.js` (bis Web 22.2.0 `gpx_creator()` auf dem Server).
+         * `assets/gpx.js`.
          * Gehen sie auseinander, erzeugt dieselbe Anwendung zwei verschiedene
          * Angaben. Die Fassung kommt aus `<html data-webversion>`; fehlt sie
          * (Einrichter), bleibt der Name allein stehen. */
@@ -1185,19 +1159,16 @@
     }
 
     async function fetchTrack(ownerType, ids) {
-        /* DEN RUMPF LESEN, NICHT NUR DEN STATUS (Backlog Nr. 97). Hier
-           stand ein throw mit dem nackten Statuscode im Text -- die
-           Antwort wurde verworfen, und im Wartungsmodus las die Person
-           „Serverfehler beim Laden der Tracks (503)" statt des Satzes, den
-           der Server mitschickt. Wer das liest, liest den alten Stand: Seit
-           AP8 entscheidet es nicht mehr diese Stelle, sondern EdApi -- und
-           zwar fuer BEIDE Sendestellen dieser Datei nach derselben Regel.
-           Die Uneinheitlichkeit, gegen die Nr. 97 half, ist damit nicht nur
-           hier behoben, sondern aufgehoben. */
+        /* DEN RUMPF LESEN, NICHT NUR DEN STATUS. Ein throw mit dem nackten
+           Statuscode verwuerfe die Antwort, und im Wartungsmodus laese die
+           Person „Serverfehler beim Laden der Tracks (503)" statt des
+           Satzes, den der Server mitschickt. Das entscheidet nicht diese
+           Stelle, sondern EdApi -- und zwar fuer BEIDE Sendestellen dieser
+           Datei nach derselben Regel. */
         var a = await EdApi.postJson('api/export_data.php',
             // 'patient: true' ist hier keine Wahl, sondern eine Zusicherung:
-            // GPX-Spuren gibt es nur im Export MIT personenbezogenen Angaben
-            // (A9), und der Server weist die Anfrage sonst ab. Der Aufruf
+            // GPX-Spuren gibt es nur im Export MIT personenbezogenen Angaben,
+            // und der Server weist die Anfrage sonst ab. Der Aufruf
             // erfolgt ausschliesslich aus diesem Zweig.
             { action: 'track', owner_type: ownerType, ids: ids, patient: true },
             { vorgang: 'Das Laden der Aufzeichnungen' });
@@ -1206,9 +1177,8 @@
     }
 
     /**
-     * Eine Spur aus der Antwort von `action: 'track'` (S11-05e): der
-     * geöffneten Stücke, nach Zeit. Liefert [[lat, lon, ele, ts], …] wie
-     * bisher. (Bis Web 22.7.0 kam der Altbestand im Klartext dazu.)
+     * Eine Spur aus der Antwort von `action: 'track'`: der geöffneten
+     * Stücke, nach Zeit. Liefert [[lat, lon, ele, ts], …].
      */
     async function spurPunkte(eintrag, art, k) {
         var punkte = (eintrag && eintrag.stuecke && eintrag.stuecke.length)
@@ -1223,7 +1193,7 @@
      *  mission_id/rest_id welche Datei bekommen hat (für track_datei in den CSVs). */
     async function buildTracks(data, onProgress) {
         var genTime = new Date().toISOString();
-        /* Der Schlüssel der Stücke (S11-05e) — der Export mit GPX läuft nur
+        /* Der Schlüssel der Stücke — der Export mit GPX läuft nur
            mit Haken, die Sitzung ist also entsperrt. */
         var k = await EdOrtsdaten.schluessel(await EdUnlock.ensureContentKey(PAT_WRAP, KDF_SALT, KDF_ITER));
         var files = [];
@@ -1343,11 +1313,10 @@
 
     var state = null;
 
-    /* Bei „Alles" verschwinden die Zeitraumfelder VOLLSTÄNDIG (A6.3, Web
-     * 5.7.0). Vorher blieben sie sichtbar und ausgegraut — ein Feld, das
-     * dasteht und sich nicht bedienen lässt, wirft die Frage auf, was daran
-     * kaputt ist. Beantwortet ist sie damit nicht, denn die Antwort steht
-     * eine Zeile darüber in der Zeitraumwahl.
+    /* Bei „Alles" verschwinden die Zeitraumfelder VOLLSTÄNDIG, statt
+     * ausgegraut stehen zu bleiben — ein Feld, das dasteht und sich nicht
+     * bedienen lässt, wirft die Frage auf, was daran kaputt ist. Die
+     * Antwort steht eine Zeile darüber in der Zeitraumwahl.
      *
      * Die Felder bleiben IM FORMULAR, nur eben verborgen: runExport() liest
      * sie weiterhin (und verwirft sie bei „Alles"), und `disabled` bleibt
@@ -1362,7 +1331,7 @@
 
     function gewaehltesFormat() { return $('exp_fmt').value; }
 
-    /* GPX-Spuren gibt es nur MIT personenbezogenen Angaben (A9).
+    /* GPX-Spuren gibt es nur MIT personenbezogenen Angaben.
      *
      * Eine Flugspur endet am Einsatzort — sie nennt ihn genauer als jede
      * Koordinatenspalte. Die Wahl verschwindet deshalb, sobald die Schranke
@@ -1381,9 +1350,9 @@
      *  Das Datum ist der Tag der Erstellung, nicht der Zeitraum — der steht in
      *  der Datei selbst (Titelzeile bzw. LIESMICH.txt).
      *
-     *  SEIT WEB 6.2.0 'einsatzdokumentation' statt 'luftrettungsdokumentation'
-     *  (Konzept 3.9). Ein Archiv mit bodengebundenen Notarzteinsaetzen hiess
-     *  sonst nach einer Rettungsart, die darin gar nicht vorkommt — und der
+     *  'einsatzdokumentation', nicht 'luftrettungsdokumentation': Ein Archiv
+     *  mit bodengebundenen Notarzteinsaetzen hiesse sonst nach einer
+     *  Rettungsart, die darin gar nicht vorkommt — und der
      *  Dateiname ist die Angabe, die man noch sieht, wenn die Datei laengst in
      *  einem fremden Ordner liegt. Aeltere Dateien behalten ihren Namen; der
      *  Import erkennt Dateien an der Kopfzeile, nicht am Namen. */
@@ -1419,8 +1388,8 @@
      * liesse sich eine Datei ohne personenbezogene Angaben nicht von einer
      * aelteren Datei ohne Markerlogik unterscheiden.
      *
-     * SEIT WEB 5.8.0 'mit-pers'/'ohne-pers' statt 'mit-pat'/'ohne-pat' (A9).
-     * Die Umbenennung ist kein Feinschliff: Der Dateiname ist die Angabe, die
+     * 'mit-pers'/'ohne-pers', nicht 'mit-pat'/'ohne-pat'. Das ist kein
+     * Feinschliff: Der Dateiname ist die Angabe, die
      * man noch sieht, wenn die Datei laengst in einem fremden Ordner liegt.
      * 'ohne-pat' an einer Datei mit Besatzungsnamen und Einsatzkoordinaten
      * waere dort die falsche Auskunft — und zwar genau die, auf die sich
@@ -1469,19 +1438,19 @@
         syncFormat();
     }
 
-    /* Hinweis unter dem Passwortkästchen (A6.4, Web 5.7.0; Text nach A9).
+    /* Hinweis unter dem Passwortkästchen.
      *
      * Er erscheint, sobald die Datei OHNE personenbezogene Angaben erzeugt
      * würde. Was er ausdrücklich NICHT tut: den Passwortschutz selbst
-     * abschalten (E31). Ein Haken, der einen Schutz als Nebenwirkung
+     * abschalten. Ein Haken, der einen Schutz als Nebenwirkung
      * ausschaltet, ist genau die unsichtbare Wirkung, die dieses Projekt an
      * anderen Stellen vermeidet.
      *
-     * Seine Begründung hat sich mit A9 gedreht: Bis Web 5.7.0 lautete sie
-     * "die Datei ist trotzdem personenbezogen" — seit die Schranke Besatzung,
-     * Notizen und Phasenkoordinaten mit abdeckt, stimmt das nicht mehr.
-     * Geblieben ist Betriebswissen (Zeiten, Transportziele, Rettungsmittel,
-     * Reanimationsverlauf), und das ist Grund genug für die Vorbelegung. */
+     * Die Datei ist ohne Haken nicht personenbezogen — die Schranke deckt
+     * Besatzung, Notizen und Phasenkoordinaten mit ab. Es bleibt aber
+     * Betriebswissen (Zeiten, Phasen, Rettungsmittel), und das ist Grund
+     * genug für die Vorbelegung. Transportziel und Reanimation
+     * liegen verschlossen und fehlen ohne Haken. */
     function syncSchutzhinweis() {
         var hint = $('exp_pw_hint');
         if (!hint) { return; }
@@ -1491,10 +1460,9 @@
     /** Passwortfelder müssen übereinstimmen und die Güteprüfung bestehen —
      *  sonst bleibt der Knopf gesperrt mit Begründung (1.1).
      *
-     *  Die Mindestlänge lag hier bei 8 und damit unter der des Kontos (10),
-     *  obwohl beide dieselben Angaben schützen: In dieser Datei stehen die
-     *  Patientendaten im Klartext, sobald der Haken gesetzt ist. Seit Web
-     *  4.7.0 gilt überall dieselbe Regel aus EdPwQuality (M2-03, D4).
+     *  Es gilt dieselbe Regel aus EdPwQuality wie für das Konto, denn beide
+     *  schützen dieselben Angaben: In dieser Datei stehen die
+     *  Patientendaten im Klartext, sobald der Haken gesetzt ist.
      *
      *  KEIN Angebot, das Kontopasswort zu verwenden — anders als bei der
      *  Backup. Eine Exportdatei ist zum Weitergeben gedacht; wer sie mit
@@ -1545,7 +1513,7 @@
             syncPasswordGate();
             return;
         }
-        // Ohne personenbezogene Angaben gibt es keine Tracks (A9) — die Wahl
+        // Ohne personenbezogene Angaben gibt es keine Tracks — die Wahl
         // ist dann gar nicht sichtbar, und der Server wiese die Anfrage ohnehin
         // ab. Hier steht sie trotzdem, damit der Aufruf nicht davon abhängt,
         // welchen Zustand ein verborgenes Kästchen zufällig behalten hat.
@@ -1555,9 +1523,9 @@
         goBtn.disabled = true;
         try {
             // Die Rueckfragen liegen bewusst INNERHALB von try: Scheitert hier
-            // etwas, soll es als Meldung sichtbar werden. Vorher standen sie
-            // davor — ein Fehler im Dialog brach den Export dann still ab,
-            // ohne dass irgendetwas unter dem Knopf stand.
+            // etwas, soll es als Meldung sichtbar werden. Stuenden sie
+            // davor, braeche ein Fehler im Dialog den Export still ab, ohne
+            // dass irgendetwas unter dem Knopf stuende.
             if (patient) {
                 var absaetze = [DIALOG_PATIENT].concat(pwOn ? DIALOG_MIT_PASSWORT : [DIALOG_OHNE_PASSWORT]);
                 if (!await window.edConfirm(absaetze, 'Export erstellen', 'normal', DIALOG_TITEL)) { return; }
@@ -1565,7 +1533,7 @@
 
             setState('Daten werden geladen…');
             var data = await fetchMeta(von, bis, patient);
-            // Zweite Schranke (A9): Der Server hat die Felder schon nicht
+            // Zweite Schranke: Der Server hat die Felder schon nicht
             // geliefert; hier fallen sie ein zweites Mal weg, bevor irgendein
             // Profil den Bestand zu sehen bekommt.
             if (!patient) { entpersonalisieren(data); }

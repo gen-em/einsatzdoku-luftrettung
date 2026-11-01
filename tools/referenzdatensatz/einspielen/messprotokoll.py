@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Messprotokoll aus dem Einspiellauf (E-P1-14, Vorarbeit zu R19).
+"""Messprotokoll aus dem Einspiellauf.
 
 WAS GEMESSEN WIRD UND WAS NICHT. Gemessen wird das SENDEVERHALTEN EINER UHR,
 nicht die Geschwindigkeit dieses Skripts. Das Einspielen laeuft in Minuten ab,
@@ -9,7 +9,7 @@ dem Sendeplan — sie folgen den Ausloesern der Uhr (`Uploader.syncAll`:
 stuendlich waehrend der Aufzeichnung, bei jedem Einsatzende, bei Dienstende).
 
 Das ist eine ERHEBUNG, keine Schutzmassnahme. Ob und wie eine Mengenbremse
-fuer `ingest.php` aussieht, entscheidet P5 — auf dieser Grundlage.
+fuer `ingest.php` aussieht, entscheidet sich auf dieser Grundlage.
 
 Aufruf:  python3 messprotokoll.py [--lauf lauf.json]
 Schreibt: messprotokoll.json und messprotokoll.md

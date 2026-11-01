@@ -1,13 +1,13 @@
 <?php
 declare(strict_types=1);
 /**
- * ANKUENDIGUNG SCHLIESSEN — das Kreuz im Streifen (P5c/AP1, E-P5c-13, -60).
+ * ANKUENDIGUNG SCHLIESSEN — das Kreuz im Streifen.
  *
  * Nimmt nur POST mit Formular-Token und merkt sich in der Sitzung, dass
  * DIESE Ankuendigung geschlossen ist (`ankuendigung_wegklicken()`).
  *
  * OHNE `auth_guard.php`, und das ist der Zweck: Die Ankuendigung steht auch
- * auf der Anmeldeseite (E-P5c-60), und dort ist niemand angemeldet. Die
+ * auf der Anmeldeseite, und dort ist niemand angemeldet. Die
  * Wache wuerde das Schliessen dort mit einer Weiterleitung auf genau die
  * Seite beantworten, von der es kam. Mehr als eine Marke in der eigenen
  * Sitzung kann hier niemand setzen — ein Angreifer, der das Token haette,

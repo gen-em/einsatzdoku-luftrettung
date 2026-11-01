@@ -8,27 +8,26 @@
 #          --schreiben legt die gemessenen Abweichungen als Liste der
 #          geplanten ab (geplant.txt) — siehe unten
 #
-# ANLASS (21.09.2026, F-PK-20): In `pruefablauf.json` stand
+# ANLASS (21.09.2026): In `pruefablauf.json` stand
 # `python3 tools/stilvergleich/proben.py` — ohne Argumente. `proben.py` baut
 # aber nur die vier Proben und gibt ohne Argumente seine Anleitung aus; der
 # Vergleich ist `stilvergleich.js`, und der braucht den ALTEN Stand. Jeder
 # Lauf, der `style.css` beruehrte, war damit rot, ohne etwas gemessen zu
 # haben — eine rote Zahl ohne Gegenstand ist so schaedlich wie eine gruene.
 #
-# UND: `stilvergleich.js` ist CJS und macht `require('playwright')`. Es geht
-# damit an `tools/motor.mjs` vorbei, das genau diese Stelle loest. Playwright
-# liegt in diesem Abbild unter /opt/node22/lib/node_modules, nicht im
-# Projekt — deshalb die Zeile NODE_PATH unten. Das ist ein Pflaster;
-# `stilvergleich.js` auf den Motor zu heben, gehoert nach PK-04.
+# UND: `stilvergleich.js` startet die Engine ueber `starten()` aus
+# `tools/motor.mjs`, laedt Playwright selbst aber noch per `require` — und
+# das liegt in diesem Abbild unter /opt/node22/lib/node_modules, nicht im
+# Projekt. Deshalb die Zeile NODE_PATH unten.
 #
-# DIE LISTE DER GEPLANTEN ABWEICHUNGEN (P5c/AP1, F-P5c-72): Steht
+# DIE LISTE DER GEPLANTEN ABWEICHUNGEN: Steht
 # `tools/stilvergleich/geplant.txt`, ist der Lauf gruen, wenn die gemessenen
 # Abweichungen genau diese Liste sind — nicht weniger, nicht mehr. Fehlt sie
 # oder ist sie leer, gilt wie bisher: null Abweichungen. Der Weg bei einer
 # gewollten Gestaltungsaenderung: `gegen.sh --schreiben`, die Datei lesen,
 # committen.
 #
-# NACH DEM MERGE WIRD SIE NICHT MEHR GELEERT (Nr. 330, 26.09.2026). Die
+# NACH DEM MERGE WIRD SIE NICHT MEHR GELEERT (26.09.2026). Die
 # Liste des Vergleichsstands geht als `--geerbt` mit: Eine Zeile, die dort
 # wortgleich steht und nicht gemessen wird, zaehlt nicht. Bis dahin war das
 # ein Handgriff nach jedem Merge, und wer ihn vergass, bekam beim naechsten

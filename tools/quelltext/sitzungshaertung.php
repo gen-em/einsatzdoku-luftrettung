@@ -8,14 +8,14 @@ declare(strict_types=1);
  * Aufruf:  php tools/quelltext/sitzungshaertung.php [--selbstprobe]
  * Rückgabe: 0 = keine Befunde · 1 = Befunde · 2 = die Probe kam nicht los
  *
- * WOGEGEN, ERSTER TEIL. Bis Web 20.9.1 stand `ini_set('session.use_strict_mode',
+ * WOGEGEN, ERSTER TEIL. Einmal stand `ini_set('session.use_strict_mode',
  * '1')` an genau zwei Stellen — `install.php` und `wiederherstellen.php` —,
  * also ausgerechnet den beiden Wegen, die KEINE Anmeldesitzung tragen. Auf den
  * fuenf Wegen, die eine tragen, fehlte sie. Ohne sie uebernimmt PHP eine
  * Sitzungskennung, die der Browser mitbringt, auch wenn es sie nie vergeben
  * hat — Session-Fixation, und der Schutz hing an der `php.ini` des Hosters.
  *
- * WOGEGEN, ZWEITER TEIL (Schritt 15 AP2, E-ZE-13). Seit Web 20.27.0 gibt es
+ * WOGEGEN, ZWEITER TEIL. Es gibt
  * in `server/` genau EINEN `session_start()`, und er steht in
  * `sitzung_lib.php` in `sitzung_starten()`. Vorher waren es neun in vier
  * Fassungen, und der Unterschied zwischen ihnen stand nirgends. Diese Probe
@@ -32,8 +32,8 @@ declare(strict_types=1);
  * Cookie-Parameter der vier Arten neu erfinden muessen. Genau so sind die
  * neun entstanden.
  *
- * WOGEGEN, DRITTER TEIL (Schritt 18, SR-01, E-SR-05). Seit Web 21.7.0 gehoert
- * zur Sitzung ein zweites Cookie, die Bindung, und mit SR-02 kommt ein
+ * WOGEGEN, DRITTER TEIL. Zur Sitzung gehoeren ein zweites Cookie, die
+ * Bindung, und ein drittes.
  * drittes. Ihre Parameter stehen in `SITZUNG_COOKIES` neben den Arten, und
  * gesetzt wird ueber `sitzung_cookie_setzen()`. Deshalb zaehlt die Probe
  * auch `setcookie()` und `setrawcookie()`:
@@ -71,7 +71,7 @@ declare(strict_types=1);
 
 const ABSTAND = 12;   // so viele Zeilen davor darf die Haertung stehen
 const HEIMAT  = 'server/sitzung_lib.php';   // wo der eine Aufruf stehen darf
-/** Wo `setcookie()` stehen darf (e) — E-SR-05. */
+/** Wo `setcookie()` stehen darf (e). */
 const COOKIE_ORTE = ['server/sitzung_lib.php', 'server/session_lib.php'];
 
 /** Echte Aufrufe einer Funktion (Vorgabe `session_start`) — Zeilennummern.
@@ -146,7 +146,7 @@ if (in_array('--selbstprobe', $argv, true)) {
                $passt ? 'ok  ' : 'FEHL', $was, $erwartet, $offen);
         if ($passt) { $ok++; }
     }
-    /* (e) `setcookie()` nur an zwei Orten (SR-01, E-SR-05). */
+    /* (e) `setcookie()` nur an zwei Orten. */
     $keksFaelle = [
         ["<?php setcookie('EDBIND', 'x');", 'server/sitzung_lib.php', 0, 'setcookie in sitzung_lib.php'],
         ["<?php setcookie(session_name(), '');", 'server/session_lib.php', 0, 'setcookie in session_lib.php'],

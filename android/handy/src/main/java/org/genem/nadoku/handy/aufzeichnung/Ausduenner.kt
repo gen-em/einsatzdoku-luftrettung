@@ -18,17 +18,17 @@ data class Rohpunkt(
 )
 
 /**
- * Die Ausdünnung — **wortgleich die der Garmin-Uhr** (`Track.mc`, E-S4-05).
+ * Die Ausdünnung — **wortgleich die der Garmin-Uhr** (`Track.mc`).
  *
  * Ein Punkt wird übernommen, wenn seit dem letzten **übernommenen**
  * mindestens 15 m zurückgelegt wurden **oder** mindestens 10 s vergangen
  * sind, und nie öfter als einmal je Sekunde.
  *
  * WARUM NICHT EINE EIGENE, BESSERE REGEL. Weil zwei Messungen an dieser Zahl
- * hängen: die R19-Messung des Sendeverhaltens (Spitze 14 Anfragen an einem
- * Auslöser, Median 1 020 s Abstand) und der Messstand aus S2. Ein Client mit
- * eigener Abtastidee machte beide wertlos — und die Mengenbremse, die aus
- * ihnen entsteht (P5/R19), träfe die beiden Clients dann verschieden.
+ * hängen: die Messung des Sendeverhaltens (Spitze 14 Anfragen an einem
+ * Auslöser, Median 1 020 s Abstand) und der Messstand der Spuren. Ein Client
+ * mit eigener Abtastidee machte beide wertlos — und die Mengenbremse, die auf
+ * ihnen ruht, träfe die beiden Clients dann verschieden.
  *
  * DER VERGLEICH GEHT GEGEN DEN LETZTEN ÜBERNOMMENEN PUNKT, nicht gegen den
  * letzten gesehenen. Das ist der Unterschied zwischen „alle 10 s ein Punkt im
@@ -55,7 +55,7 @@ class Ausduenner {
     var anstiegM: Double = 0.0
         private set
 
-    /** Der zuletzt übernommene Punkt — für die Phasen-Koordinate (B5). */
+    /** Der zuletzt übernommene Punkt — für die Phasen-Koordinate. */
     val letzterPunkt: Rohpunkt? get() = letzte
 
     /**
@@ -64,7 +64,7 @@ class Ausduenner {
      */
     fun nimm(punkt: Rohpunkt): Boolean {
         // ERST DIE GENAUIGKEIT -- die Regel steht in `brauchbar()`, weil der
-        // Ortungswächter dieselbe braucht (E-S5Z-02).
+        // Ortungswächter dieselbe braucht.
         if (!brauchbar(punkt)) return false
 
         val vorher = letzte
@@ -117,7 +117,7 @@ class Ausduenner {
     companion object {
         /**
          * Ist der Fund brauchbar — verwirft die Ausdünnung ihn **nicht wegen
-         * Streuung**? (E-S5Z-02)
+         * Streuung**?
          *
          * WARUM DIESE ZEILE ÖFFENTLICH IST UND NICHT MITTEN IN [nimm] STEHT.
          * Der [Ortungswaechter] muss dieselbe Frage beantworten: Er zeigt an,
@@ -157,7 +157,7 @@ class Ausduenner {
         /** `Const.THIN_MIN_GAP_S` der Uhr. */
         const val MINDESTABSTAND_S = 1L
 
-        /** Blind gewählt, am Gerät nachzumessen (E-R45-7). */
+        /** Blind gewählt, am Gerät nachzumessen. */
         const val HOECHSTE_STREUUNG_M = 100f
 
         private const val ERDRADIUS_M = 6_371_000.0

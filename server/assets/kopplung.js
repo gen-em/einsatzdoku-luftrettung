@@ -1,5 +1,4 @@
-/* Gen-EM NAdoku — die Geraeteseite laedt nach, wenn das Geraet Ja gesagt hat
- * (S5 Paket B, E-S5-53).
+/* Gen-EM NAdoku — die Geraeteseite laedt nach, wenn das Geraet Ja gesagt hat.
  *
  * WOFUER. Nach der Eingabe des Codes steht die Karte „Am Geraet bestaetigen"
  * und wartet — auf eine Handlung, die woanders geschieht: Die Person schaut
@@ -15,8 +14,8 @@
  * fuehrt zum selben Ergebnis. Deshalb steht hier auch nichts, was die Seite
  * erst aufbaut — sie ist fertig, wenn diese Datei laedt.
  *
- * SECHS BEDINGUNGEN, damit aus der Bequemlichkeit kein zweites Problem wird
- * (E-S5-53). Sie stehen unten je an ihrer Stelle noch einmal:
+ * SECHS BEDINGUNGEN, damit aus der Bequemlichkeit kein zweites Problem wird.
+ * Sie stehen unten je an ihrer Stelle noch einmal:
  *   1. Ein Endpunkt, der genau eine Frage beantwortet und KEINE Eingabe nimmt.
  *   2. Gefragt wird nach dem Vorgang der eigenen Sitzung, nicht nach „hat sich
  *      irgendetwas geaendert".
@@ -97,10 +96,9 @@
     try {
       const a = await fetch(quelle, { credentials: 'same-origin' });
       if (!a.ok) {
-        /* WARTUNG IST KEINE STOERUNG (Backlog Nr. 97). Hier stand nur
-           `throw new Error('HTTP ' + a.status)`; der Rumpf wurde verworfen,
-           und nach drei Takten las die Person „Die Verbindung zum Server
-           ist gerade gestört" — inhaltlich falsch, die Verbindung steht ja,
+        /* WARTUNG IST KEINE STOERUNG. Wer den Rumpf verwirft, laesst die
+           Person nach drei Takten „Die Verbindung zum Server ist gerade
+           gestört" lesen — inhaltlich falsch, die Verbindung steht ja,
            der Server hat bewusst geantwortet. Waehrend einer Wartung wird
            die Kopplung ohnehin nicht fertig; also sofort aussteigen statt
            dreimal nachzufragen. Der Dreifehler-Rueckzug bleibt fuer alles

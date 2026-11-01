@@ -1,20 +1,18 @@
 <?php
 declare(strict_types=1);
 require_once __DIR__ . '/auth_guard.php';
-/* NUR DIE BETREIBERIN (P5c/AP2, E-P5c-31, Backlog Nr. 286). Bis Web 20.38.0
- * stand hier `require_admin()` — R75 und der Kopf der Rollen in `db.php`
- * sagten BetreiberIn, das Tor sagte Admin. Mangels Admin-Konten war die
- * Lücke nicht ausnutzbar; die Rollenprobe prüft sie seither je Handlung. */
+/* NUR DIE BETREIBERIN, wie der Kopf der Rollen in `db.php` sagt; die
+ * Rollenprobe prüft es je Handlung. */
 require_betreiberin();
 require_once __DIR__ . '/sicherungsziel_lib.php';
 require_once __DIR__ . '/format_lib.php';        // groesse_text(), datum_text(), datum_zeit_text()
 require_once __DIR__ . '/adminbackup_lib.php';    // edbak_aufbewahrung()
 
 /**
- * BACKUP-ZIELE — wohin die Backups geschoben werden (E-S2-22, S2/AP7).
+ * BACKUP-ZIELE — wohin die Backups geschoben werden.
  *
  * WARUM EINE EIGENE SEITE UND KEINE VIERTE KARTE AUF „BACKUPS".
- * Jene Seite ist seit P3/O9c ausdrücklich „die Regeln, und sonst nichts mehr"
+ * Jene Seite ist ausdrücklich „die Regeln, und sonst nichts mehr"
  * — Zahlen und Schalter, keine Liste. Hier steht eine Liste mit einem
  * Formular je Eintrag, dazu ein Handgriff („Verbindung prüfen"), der etwas
  * TUT und eine Weile dauert. Das ist der Zuschnitt einer Seite.
@@ -43,13 +41,13 @@ $notice = null; $error = null; $ergebnis = null;
 $bearbeiten = null;
 
 $tabelleDa = sz_tabelle_da();
-/* Ergebnis des Knopfes „Nachsehen“ (P5a/AP10) — null, solange niemand
+/* Ergebnis des Knopfes „Nachsehen“ — null, solange niemand
  * geklickt hat. Es wird NICHT gespeichert: Es ist eine Momentaufnahme der
  * Gegenstelle, und eine gespeicherte Momentaufnahme ist beim nächsten
  * Aufruf eine Behauptung. */
 $bestand = null;
 
-/* UMLEITEN NACH DEM POST (Web 21.1.9, Backlog Nr. 250). Was ein Ziel anlegt,
+/* UMLEITEN NACH DEM POST. Was ein Ziel anlegt,
  * ändert, entfernt, prüft oder versendet, endet mit `flash_setzen()` und einer
  * Umleitung auf dieselbe Ansicht (`neu`/`bearbeiten`, unten); das Ergebnis der
  * Verbindungsprüfung reist über die Sitzung mit. Sonst wiederholt Neuladen die
@@ -71,10 +69,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $schluessel = trim((string)($_POST['schluessel'] ?? ''));
         $schluesselNeu = $schluessel === '' ? null : $schluessel;
         if (($_POST['schluessel_weg'] ?? '') === '1') { $schluesselNeu = ''; }
-        /* DER ALTE STAND VOR DEM SPEICHERN (Web 21.1.9, gefunden in R4-11).
-         * Bis dahin stand `sz_lesen()` erst nach `sz_speichern()` und las
-         * die neue Zeile: Der Vergleich unten schlug nie an, und ein
-         * SFTP-Ziel auf neuem Host behielt den Abdruck des alten — die
+        /* DER ALTE STAND VOR DEM SPEICHERN.
+         * Stuende `sz_lesen()` erst nach `sz_speichern()`, laese es
+         * die neue Zeile: Der Vergleich unten schluege nie an, und ein
+         * SFTP-Ziel auf neuem Host behielte den Abdruck des alten — die
          * naechste Verbindung scheiterte als „ANDERER Hostschluessel". */
         $vorher = $id > 0 ? sz_lesen($id) : null;
         [$ok, $was] = sz_speichern($id > 0 ? $id : null, $_POST,
@@ -145,7 +143,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $satz = $e['gesendet'] . ($e['gesendet'] === 1 ? ' Datei' : ' Dateien')
               . ' an ' . $e['ziele'] . ($e['ziele'] === 1 ? ' Ziel' : ' Ziele')
               . ' gesendet (' . groesse_text($e['bytes']) . ').'
-              /* WAS DORT ENTFERNT WURDE, STEHT IM ERFOLGSSATZ (P5a/AP10).
+              /* WAS DORT ENTFERNT WURDE, STEHT IM ERFOLGSSATZ.
                * Eine Löschung auf einer fremden Maschine ist die Sorte
                * Handlung, die man nicht erst auf einer anderen Seite
                * nachlesen sollte. Die vollständige Liste steht in
@@ -200,7 +198,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             exit;
         }
     } elseif ($aktion === 'ziel_bestand' && $id > 0) {
-        /* ---- NACHSEHEN, WAS DORT LIEGT (P5a/AP10, E-P5a-03) --------------
+        /* ---- NACHSEHEN, WAS DORT LIEGT --------------
          *
          * AUF KNOPFDRUCK UND NICHT BEI JEDEM SEITENAUFRUF. Diese Auskunft
          * kostet eine Verbindung und je Ordner eine Listenabfrage; bei drei
@@ -209,7 +207,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
          * `sz_versand_rueckstand()`, und dieselbe wie beim Knopf „Verbindung
          * prüfen" daneben: Wer es wissen will, fragt.
          *
-         * SIE LÖSCHT NICHTS. Das ist die Grundlage aus E-P5a-03 — die
+         * SIE LÖSCHT NICHTS. Das ist die Grundlage — die
          * Anzeige beantwortet die Frage vielleicht schon, und dann braucht
          * es die Löschregel gar nicht. */
         $z = sz_lesen($id);
@@ -253,11 +251,11 @@ if ($bearbeiten !== null) {
 /* Nach einem misslungenen Speichern stehen die Eingaben im POST — sonst
  * tippt man alles noch einmal, nur um zu erfahren, dass der Port fehlt.
  *
- * NUR NACH „SPEICHERN" (Web 21.1.9, gefunden in R4-11). Bis dahin hing das
- * hier und am Schalter „Auf dem Ziel aufraeumen" unten an jedem POST mit
- * Fehler: „Nachsehen, was dort liegt" mit offenem Formular mischte
- * `csrf`, `id` und `action` in `$form`, und der Schalter stand danach auf
- * aus — wer dann speicherte, schaltete die Aufbewahrung am Ziel still ab. */
+ * NUR NACH „SPEICHERN". Hinge das hier und am Schalter „Auf dem Ziel
+ * aufraeumen" unten an jedem POST mit Fehler, mischte „Nachsehen, was dort
+ * liegt" mit offenem Formular `csrf`, `id` und `action` in `$form`, und der
+ * Schalter stuende danach auf aus — wer dann speicherte, schaltete die
+ * Aufbewahrung am Ziel still ab. */
 $speichernGescheitert = $_SERVER['REQUEST_METHOD'] === 'POST'
     && ($_POST['action'] ?? '') === 'ziel_speichern' && $error !== null;
 if ($speichernGescheitert && $bearbeiten !== null) {
@@ -265,9 +263,9 @@ if ($speichernGescheitert && $bearbeiten !== null) {
 }
 
 $schluesselDa = serverschluessel_da();
-/* `$vorschlag` ist mit S10 entfallen: Diese Seite wuerfelt keinen
- * Serverschluessel mehr — das tut die Karte „Schluessel des Servers" unter
- * Betrieb → Servereinstellungen (E-S10-12). Ein zweiter Ort, an dem bei jedem
+/* Diese Seite wuerfelt keinen
+ * Serverschluessel — das tut die Karte „Schluessel des Servers" unter
+ * Betrieb → Servereinstellungen. Ein zweiter Ort, an dem bei jedem
  * Neuladen ein anderer Schluessel entsteht, waere die Stelle, an der jemand
  * zwei davon eintraegt. */
 $aktiveZiele = count(array_filter($ziele, static fn($z) => (int)$z['aktiv'] === 1));
@@ -300,8 +298,8 @@ ui_seite_start(['titel' => 'Backup-Ziele']);
                          'href' => '?neu=1']))
           : '',
   ]); ?>
-  <?php /* DER BALKEN, WIE AUF JEDER AUSNAHMESEITE DES WARTUNGSMODUS — seit
-           P5c/AP9 steht diese Seite in WARTUNG_AUSNAHMEN (E-P5c-134). */ ?>
+  <?php /* DER BALKEN, WIE AUF JEDER AUSNAHMESEITE DES WARTUNGSMODUS — diese
+           Seite steht in WARTUNG_AUSNAHMEN. */ ?>
   <?= wartung_balken() ?>
 
   <?php ui_meldung($notice, $error, 'info', '  '); ?>
@@ -340,11 +338,11 @@ ui_seite_start(['titel' => 'Backup-Ziele']);
     <?php endif; ?>
   <?php endif; ?>
 
-  <?php /* ---- Was auf dem Ziel liegt (P5a/AP10, E-P5a-03) ----------------
-       DIE ANZEIGE IST DIE GRUNDLAGE, nicht die Löschregel. Backlog Nr. 49
-       sagt es so: „oder eine blosse Anzeige des Belegten am Ziel, damit die
-       Betreiberin es sieht und dort selbst entscheidet. Der zweite Weg
-       löscht nichts und beantwortet die Frage vielleicht schon."
+  <?php /* ---- Was auf dem Ziel liegt ----------------
+       DIE ANZEIGE IST DIE GRUNDLAGE, nicht die Löschregel: eine
+       blosse Anzeige des Belegten am Ziel, damit die Betreiberin es sieht
+       und dort selbst entscheidet. Sie löscht nichts und beantwortet die
+       Frage vielleicht schon.
 
        FREMDE DATEIEN STEHEN MIT EIGENER ZAHL DA. Sie sind der Grund, warum
        die Löschregel eine Herkunftsprobe braucht — und wer sie sieht, weiß
@@ -384,12 +382,12 @@ ui_seite_start(['titel' => 'Backup-Ziele']);
     <?php ui_karte_ende(); ?>
   <?php endif; ?>
 
-  <?php /* ---- Der Serverschlüssel steht jetzt woanders (S10, E-S10-12) --
-       DIE KARTE IST NACH BETRIEB → SERVEREINSTELLUNGEN GEZOGEN und dort mit
-       dem Server-Anteil zusammengelegt („Schlüssel des Servers"). Der Grund
-       ist das Ordnungsprinzip aus R74/E-S8-12: Der Serverschlüssel betrifft
-       nicht die Backup-Ziele, sondern die INSTALLATION — er versiegelt auch
-       das Komplett-Backup und, seit S10, die Konto-Backups. Er hier zu
+  <?php /* ---- Der Serverschlüssel steht woanders --
+       DIE KARTE STEHT UNTER BETRIEB → SERVEREINSTELLUNGEN, mit dem
+       Server-Anteil zusammen („Schlüssel des Servers"). Der Grund: Der
+       Serverschlüssel betrifft nicht die Backup-Ziele, sondern die
+       INSTALLATION — er versiegelt auch das Komplett-Backup und die
+       Konto-Backups. Er hier zu
        verwalten hiesse, ihn auf der Seite anzulegen, die ihn am wenigsten
        braucht.
 
@@ -420,8 +418,7 @@ ui_seite_start(['titel' => 'Backup-Ziele']);
         <?= csrf_field() ?><input type="hidden" name="action" value="versand_schalter">
         <?php ui_schalter(['name' => 'versand_auto', 'label' => 'Backups automatisch versenden',
                            'an' => $autoAn,
-                           /* DER SATZ WAR BIS WEB 20.13.0 UNEINGESCHRÄNKT
-                            * RICHTIG und ist es seit AP10 nicht mehr: Wo die
+                           /* „DER VERSAND LÖSCHT NICHTS" WÄRE FALSCH: Wo die
                             * Aufbewahrungsregel eines Ziels eingeschaltet
                             * ist, löscht der Versand dort sehr wohl. Eine
                             * Zusage, die neben einer Option steht, die sie
@@ -442,11 +439,11 @@ ui_seite_start(['titel' => 'Backup-Ziele']);
                     ? ui_plakette('keines', ['ton' => 'orange'])
                     : ui_plakette((string)$aktiveZiele, ['ton' => 'blau'])]);
       $rueck = $autoAn ? sz_versand_rueckstand() : null;
-      /* DREI GRÜNDE FÜR „KEINE ZAHL", UND JEDER SAGT SEINEN (Endzählung AP9,
-         B-1). Bis Web 21.1.0 stand in allen dreien „solange ein Ziel nie
-         erfolgreich lief" — auch bei abgeschaltetem Versand und ohne aktives
-         Ziel. Gezählt werden Konto-Backups, Komplett-Stände und Archive des
-         Protokolls; das Wort dafür ist „Sicherungen", nicht „Pakete" (B-2). */
+      /* DREI GRÜNDE FÜR „KEINE ZAHL", UND JEDER SAGT SEINEN — nicht in
+         allen dreien „solange ein Ziel nie erfolgreich lief", auch bei
+         abgeschaltetem Versand und ohne aktives Ziel. Gezählt werden
+         Konto-Backups, Komplett-Stände und Archive des
+         Protokolls; das Wort dafür ist „Sicherungen", nicht „Pakete". */
       $rueckKlein = !$autoAn ? 'keine Aussage — der Versand ist aus'
           : ($aktiveZiele === 0 ? 'keine Aussage — es gibt kein aktives Ziel'
           : ($rueck === null
@@ -476,9 +473,6 @@ ui_seite_start(['titel' => 'Backup-Ziele']);
       <?php foreach ($ziele as $z): ?>
         <?php
         $prot = strtoupper((string)$z['protokoll']);
-        /* Bis Web 20.47.0 stand vorn die rote Plakette „wird übergangen" fuer
-         * ein Ziel mit dem abgeschafften Protokoll FTP (S10/AP4); das ENUM
-         * kennt den Wert seit P5c/AP8 nicht mehr (E-P5c-124). */
         $plaketten = (int)$z['aktiv'] === 1
             ? ui_plakette('aktiv', ['ton' => 'blau'])
             : ui_plakette('abgeschaltet', ['ton' => 'neutral']);
@@ -495,8 +489,8 @@ ui_seite_start(['titel' => 'Backup-Ziele']);
         $klein = $prot . ' · ' . (string)$z['nutzer'] . '@' . (string)$z['host']
                . ':' . (int)$z['port'] . ' · ' . (string)$z['pfad'];
         if (($z['schluessel'] ?? null) !== null) { $klein .= ' · mit privatem Schlüssel'; }
-        /* DIE AUFBEWAHRUNG STEHT AN DER ZEILE, nicht nur im Formular
-         * (P5a/AP10). Eine Regel, die drüben löscht, gehört dorthin, wo man
+        /* DIE AUFBEWAHRUNG STEHT AN DER ZEILE, nicht nur im Formular.
+         * Eine Regel, die drüben löscht, gehört dorthin, wo man
          * die Ziele überfliegt — und zwar in BEIDEN Zuständen: „aus" ist hier
          * die Auskunft, dass dort nichts entfernt wird, und nicht ein
          * fehlender Satz. */
@@ -538,7 +532,7 @@ ui_seite_start(['titel' => 'Backup-Ziele']);
              'form' => 'zp-' . (int)$z['id']],
             /* NACHSEHEN STEHT NEBEN PRÜFEN, weil es dasselbe kostet: eine
              * Verbindung auf Knopfdruck. Es löscht nichts — das ist die
-             * Grundlage aus E-P5a-03, und die Löschregel darunter ist die
+             * Grundlage, und die Löschregel darunter ist die
              * Option, die man danach vielleicht gar nicht braucht. */
             ['text' => 'Nachsehen, was dort liegt', 'symbol' => 'lupe',
              'form' => 'zb-' . (int)$z['id']],
@@ -564,7 +558,7 @@ ui_seite_start(['titel' => 'Backup-Ziele']);
             'text' => (string)$z['name'],
             'klein' => $klein,
             'plaketten' => $plaketten,
-            /* ---- ALLES INS MENUE (P5a/AP10, `blatt_immer`) ---------------
+            /* ---- ALLES INS MENUE (`blatt_immer`) ---------------
              *
              * DIE ZEILE TRUEG SONST FUENF KNOEPFE. Mit „Nachsehen, was dort
              * liegt" ist die Knopfreihe zu breit geworden, und zwar gemessen:
@@ -574,7 +568,7 @@ ui_seite_start(['titel' => 'Backup-Ziele']);
              * dort nicht, egal wie sie heissen.
              *
              * `blatt_immer` IST DAFUER DA, und die Begründung im Baustein
-             * passt hier wörtlich (S8/AP6, Mockup 10): „Die Geräteliste trägt
+             * passt hier wörtlich: „Die Geräteliste trägt
              * drei Handlungen, von denen eine unumkehrbar ist. Als Knopfreihe
              * stünde ‚Entkoppeln' in Rot unmittelbar neben ‚Deaktivieren'."
              * Genau das war hier der Zustand — „Löschen" in Rot neben
@@ -589,10 +583,8 @@ ui_seite_start(['titel' => 'Backup-Ziele']);
         ]);
         if (($z['letzter_fehler'] ?? null) !== null) {
             /* DER FEHLER STEHT DA, BIS ER WEG IST. Ein Versand, der seit drei
-               Wochen scheitert, stand bis Web 20.39.0 sonst nur im Fehlerprotokoll
-               des Webspace — und an das kommt auf geteiltem Hosting nicht jede
-               BetreiberIn heran. Seit P5c/AP3 steht er auch im Protokoll unter
-               System; hier steht er trotzdem, weil man dort suchen muss. */
+               Wochen scheitert, steht auch im Protokoll unter System; hier
+               steht er trotzdem, weil man dort suchen muss. */
             ui_zeile(['text' => 'Zuletzt gescheitert',
                       'klein' => (string)$z['letzter_fehler'],
                       'plaketten' => ui_plakette(
@@ -607,10 +599,8 @@ ui_seite_start(['titel' => 'Backup-Ziele']);
   <?php /* ---- Anlegen und Ändern ------------------------------------- */ ?>
   <?php if ($bearbeiten !== null && $schluesselDa && $tabelleDa): ?>
     <?php $neu = $bearbeiten === 0; ?>
-    <?php /* Bis Web 20.47.0 stand hier der Zweig fuer ein ALTZIEL mit FTP: ein
-             Hinweis und ein leeres Protokollfeld statt einer geratenen Wahl
-             (S10/AP4, E-S10-U-13). Seit P5c/AP8 kennt die Datenbank den Wert
-             nicht mehr (E-P5c-124). */ ?>
+    <?php /* Das Protokoll FTP kennt die Datenbank nicht; ein Zweig fuer
+             ein solches Ziel ist hier nicht noetig. */ ?>
     <?php ui_karte_start(['titel' => $neu ? 'Neues Ziel' : 'Ziel bearbeiten',
                           'id' => 'zielform']); ?>
       <form method="post">
@@ -677,7 +667,7 @@ ui_seite_start(['titel' => 'Backup-Ziele']);
                            'klein' => 'Aus heisst: Es bleibt eingetragen, der Versand '
                                     . 'überspringt es aber.']); ?>
 
-        <?php /* ---- Die Aufbewahrung auf DEM ZIEL (P5a/AP10, E-P5a-03) ----
+        <?php /* ---- Die Aufbewahrung auf DEM ZIEL ----
                  SIE IST EINE OPTION UND NIE DIE VORGABE. Der Zweck eines
                  auswärtigen Ziels ist, den Ausfall dieses Servers zu
                  überleben — samt eines Fehlers, der HIER zu viel löscht.
@@ -708,12 +698,11 @@ ui_seite_start(['titel' => 'Backup-Ziele']);
           <?php ui_feld(['name' => 'behalten_konto', 'label' => 'Je Konto behalten',
                          'art' => 'number', 'attr' => 'min="1" max="999"',
                          'wert' => (string)($form['behalten_konto'] ?? 6),
-                         /* BIS WEB 21.0.0 STAND HIER FEST „zwei" (F-P5c-139) —
-                            die Vorgabe, nicht die Einstellung unter
-                            Verwaltung → Konto-Backups. Und es ist die VORGABE:
-                            Ein Konto kann eine eigene Zahl haben (seit P5b/AP6,
-                            `edbak_aufbewahrung_konto()`) — „sind es N" stimmte
-                            für solche Konten nicht (Endzählung AP9, B-3). */
+                         /* DIE EINSTELLUNG unter Verwaltung → Konto-Backups,
+                            keine feste Zahl. Und es ist die VORGABE:
+                            Ein Konto kann eine eigene Zahl haben
+                            (`edbak_aufbewahrung_konto()`) — „sind es N" stimmte
+                            für solche Konten nicht. */
                          'klein' => 'Hier auf dem Server gilt als Vorgabe '
                                   . edbak_aufbewahrung() . ' je Konto, am Ziel darf es '
                                   . 'mehr sein.']); ?>
@@ -735,8 +724,7 @@ ui_seite_start(['titel' => 'Backup-Ziele']);
   <?php endif; ?>
 
 <?php ui_geruest_ende(); ?>
-<?php /* `assets/kopieren.js` ist mit S10 entfallen: Es hing am
-         `ui_codeblock_lang()` der Serverschluessel-Karte, und die ist nach
-         Betrieb → Servereinstellungen gezogen (E-S10-12). Ein Skript ohne
-         Baustein laedt bei jedem Aufruf ein paar Kilobyte fuer nichts. */ ?>
+<?php /* Kein `assets/kopieren.js`: Diese Seite hat keinen
+         `ui_codeblock_lang()`. Ein Skript ohne Baustein laedt bei jedem
+         Aufruf ein paar Kilobyte fuer nichts. */ ?>
 <?php ui_seite_ende(); ?>

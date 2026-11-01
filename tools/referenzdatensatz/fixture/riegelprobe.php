@@ -2,7 +2,7 @@
 declare(strict_types=1);
 
 /**
- * Riegelprobe — haelt `erzeugen.php` eine Fixture mit Anteil auf? (S10/AP5)
+ * Riegelprobe — haelt `erzeugen.php` eine Fixture mit Anteil auf?
  *
  * DIE FRAGE. `fixture/erzeugen.php` schreibt die Schluesselhuelle des
  * Demo-Kontos unveraendert in die Fixture, und `demo_lib.php` schreibt sie
@@ -11,7 +11,7 @@ declare(strict_types=1);
  * mit Anteil (`edka1:<kennung>:`) ist dort nicht zu oeffnen: Das Demo-Konto
  * kaeme herein und saehe nichts, bei jedem Reset aufs Neue, ohne Meldung.
  *
- * E-S10-15 verlangt deshalb den Riegel in `erzeugen.php`. Diese Probe misst
+ * Verlangt ist deshalb der Riegel in `erzeugen.php`. Diese Probe misst
  * ihn — beide Richtungen, denn ein Riegel, der IMMER zuschlaegt, ist ebenso
  * kaputt wie einer, der es nie tut:
  *
@@ -22,8 +22,8 @@ declare(strict_types=1);
  *
  * WARUM DER NEGATIVFALL NICHTS UMSTELLT. Der naheliegende Weg waere, die
  * Huelle des Demo-Kontos kurz auf `edka1:` zu setzen und danach
- * zurueckzulegen. Genau dieser Weg hat in AP3 ein Konto gekostet
- * (F-S10-AP3-08): Eine Umhuellung ist nicht rueckrechenbar, und wer den
+ * zurueckzulegen. Genau dieser Weg hat einmal ein Konto gekostet:
+ * Eine Umhuellung ist nicht rueckrechenbar, und wer den
  * Schnappschuss eine Handlung zu spaet nimmt, sperrt das Konto dauerhaft aus.
  *
  * Deshalb wird hier NICHTS geschrieben. `erzeugen.php` nimmt das Konto als
@@ -127,10 +127,10 @@ pruef('2  ... die Meldung nennt `edka1:` und schreibt KEINE Datei',
 /*
  * ZWEI RIEGEL, ZWEI ORTE. Teil 1 und 2 messen den Riegel im ERZEUGER — er
  * verhindert, dass eine unbrauchbare Fixture entsteht. Der hier sitzt im
- * EINSPIELER (`demo_fixture_laden()`, Web 20.2.1) und verhindert, dass sie
+ * EINSPIELER (`demo_fixture_laden()`) und verhindert, dass sie
  * eingespielt wird. Der zweite ist nicht ueberfluessig: Der Erzeuger laeuft
  * auf der Referenzmaschine, die Datei kommt auf dem Produktivserver an.
- * Dieselbe Paarung wie bei der Rundenzahl (Backlog Nr. 155).
+ * Dieselbe Paarung wie bei der Rundenzahl.
  *
  * WAS DIESER TEIL ANFASST — und warum das vertretbar ist. Er legt die echte
  * `server/demo/fixture.json.gz` beiseite, schreibt eine verbogene an ihre
@@ -141,7 +141,7 @@ pruef('2  ... die Meldung nennt `edka1:` und schreibt KEINE Datei',
  *   1. Die Datei ist VERSIONIERT (`git ls-files server/demo/`). Geht etwas
  *      schief, stellt `git checkout -- server/demo/fixture.json.gz` sie her.
  *   2. Der Schaden waere ohnehin begrenzt: `demo_reset_wenn_faellig()` faengt
- *      jede Ausnahme ab und meldet sie (seit Web 20.40.0 in den Reiter
+ *      jede Ausnahme ab und meldet sie (in den Reiter
  *      System, `system_melden()`). Das Demo-Konto hoerte auf, sich
  *      zuruecksetzen — es ginge nichts verloren.
  *   3. Das `finally` legt zurueck, auch bei einem Abbruch, und die letzte
@@ -213,8 +213,8 @@ try {
      * Demo-Kontos (`auth_guard.php`, `ingest.php`). Wuerde die Ausnahme von
      * dort nach oben durchschlagen, machte eine verbogene Fixture die
      * oeffentliche Demo unbenutzbar — aus einem Riegel wuerde ein Ausfall.
-     * Die Funktion faengt deshalb `Throwable` und meldet es — seit
-     * Web 20.40.0 in den Reiter System. Die Probe zaehlt diese Meldung und
+     * Die Funktion faengt deshalb `Throwable` und meldet es — in den
+     * Reiter System. Die Probe zaehlt diese Meldung und
      * nimmt sie wieder heraus: Sie ist ein Nachweis und keine Stoerung der
      * Anlage, und der Bilderlauf danach soll einen leeren Reiter sehen.
      *
@@ -222,7 +222,7 @@ try {
      * wird nachgesehen, dass er `false` liefert und das Konto UNVERAENDERT
      * dasteht. Zurueckgestellt werden die Marken im selben Zug.
      *
-     * ZWEI MARKEN SEIT WEB 21.2.0 (R4-14, Nr. 76): Faellig ist der Reset erst
+     * ZWEI MARKEN SEIT WEB 21.2.0: Faellig ist der Reset erst
      * mit einer Aenderungsmarke. Nur den letzten Reset zurueckzuschieben
      * hiesse jetzt, gar keinen Versuch auszuloesen — und die Probe meldete
      * „0 Stoerungen", also rot, aber aus dem falschen Grund. */

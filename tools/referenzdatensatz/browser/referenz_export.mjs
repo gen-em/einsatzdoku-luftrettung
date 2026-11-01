@@ -1,4 +1,4 @@
-/* Referenz-Exporte erzeugen (Arbeitspaket B5, E-P1-12).
+/* Referenz-Exporte erzeugen.
  *
  * Zwei Dateien, beide im Browser gebaut — der Server sieht die geschützten
  * Angaben nie im Klartext:
@@ -8,7 +8,7 @@
  *                       Absicht: Das Archiv ist die Vergleichsgrundlage der
  *                       Regressionsläufe, und ein Vergleich von Chiffretext
  *                       verglich nur den Zufall der IVs.
- *   <…>.edbak           Backup mit dem festen Passwort aus F-P1-01.
+ *   <…>.edbak           Backup mit dem festen Passwort.
  *
  * Aufruf:
  *   node referenz_export.mjs [basis] [email] [passwort] [zielordner] [edbak-pw]
@@ -17,7 +17,7 @@ import { mkdirSync, writeFileSync } from 'node:fs';
 import { basename } from 'node:path';
 import { downloadMitFortschritt } from './download_lib.mjs';
 import { motorWahl, starten } from '../../motor.mjs';
-/* Kontrollkästchen und Segmenttasten sind seit P3 unsichtbar; bedient
+/* Kontrollkästchen und Segmenttasten sind seit dem Redesign unsichtbar; bedient
  * wird die Beschriftung. Warum und wie: bedienen.mjs. */
 const { ankreuzen, abwaehlen } = await import(
   new URL('./bedienen.mjs', import.meta.url).href);
@@ -25,7 +25,7 @@ const { ankreuzen, abwaehlen } = await import(
 const MODUL = process.env.PLAYWRIGHT_MODUL
   || '/opt/node22/lib/node_modules/playwright/index.mjs';
 const PW = (m => m.default ?? m)(await import(MODUL.startsWith('/') ? 'file://' + MODUL : MODUL));
-/* Die Engine wählt der Läufer (MOTOR=… oder --motor), R87. */
+/* Die Engine wählt der Läufer (MOTOR=… oder --motor). */
 const MOTOR = motorWahl(process.argv);
 
 const basis    = process.argv[2] || 'https://127.0.0.1:8443';
@@ -39,7 +39,7 @@ const KACHELFEHLER = /ERR_TUNNEL_CONNECTION_FAILED|ERR_NAME_NOT_RESOLVED|tile\.|
 const lokal = /^https:\/\/(127\.0\.0\.1|localhost)(:|\/)/.test(basis);
 const browser = await starten(PW, MOTOR);
 const kontext = await browser.newContext({ ignoreHTTPSErrors: lokal, acceptDownloads: true });
-/* DER WARTUNGSLAUF BLEIBT AUS (S11-07, F-S11-77): Er packt und dünnt im
+/* DER WARTUNGSLAUF BLEIBT AUS: Er packt und dünnt im
    Browser aus, sobald eine Seite ihn anstößt (Startseite, Reiter Backup),
    und das Ausdünnen ändert die Punkte — mitten in einem Vergleich wäre das
    eine Abweichung, die keine ist. Die Antwort sagt „nichts fällig" — ein
@@ -81,7 +81,7 @@ await seite.waitForTimeout(400);
 schritt(4, 'Format: CSV (Standard)');
 
 /* Reihenfolge beachten: „Personenbezogene Angaben" schaltet die GPX-Wahl
-   überhaupt erst frei (A9 — eine Flugspur endet am Einsatzort). Wer zuerst
+   überhaupt erst frei (eine Flugspur endet am Einsatzort). Wer zuerst
    GPX anhakt und danach die Personenangaben, hakt ins Leere. */
 await ankreuzen(seite, '#exp_pat');
 await seite.waitForTimeout(400);
@@ -99,8 +99,8 @@ await seite.waitForTimeout(300);
 schritt(7, 'Mit Passwort schützen: AUS (die Referenz muss lesbar bleiben)');
 
 /* EINE RÜCKFRAGE LIEGT VOR DEM EXPORT, wenn personenbezogene Angaben
-   mitgehen (seit Web 23.4.0, Backlog Nr. 404; bis dahin bis zu drei:
-   Klartext, Passwort, „das ersetzt kein Backup"). assets/confirm.js baut
+  mitgehen (eine, nicht mehr drei: Klartext, Passwort, „das ersetzt kein
+  Backup"). assets/confirm.js baut
    ein <dialog> in die Seite und wartet auf einen Klick — wer nur auf
    „Export erstellen" klickt und dann auf den Download wartet, wartet ewig.
    Die Schleife unten bestätigt, so viele kommen. */

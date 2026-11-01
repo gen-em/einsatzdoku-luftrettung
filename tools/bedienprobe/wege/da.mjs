@@ -1,8 +1,8 @@
-/* Wege des Pakets Demo-Ausbau (Schritt 9d).
+/* Wege des Pakets Demo-Ausbau.
  * ===========================================================================
  *
  *   DA-01  Der Stammdatendialog zeigt die Fähigkeits-Häkchen nach der Regel
- *          des TYPS und nicht nach der Betriebsart allein (AP0, Web 20.3.0).
+ *          des TYPS und nicht nach der Betriebsart allein.
  *
  * WARUM DIESER WEG UND KEIN BILD. Die Häkchen stehen im Markup jeder Seite —
  * `hidden` setzt sie das Skript des Dialogs, und zwar erst, wenn jemand Typ
@@ -186,8 +186,8 @@ export const wege = [
     soll: 'Gruppe „Bergrettung" vorhanden; Windeneinsatz gesetzt, Cycles 1, '
         + 'Cycles mit Patient 1, Luftverladung gesetzt, Bereitschaft „Bergwacht Felsgrat"',
     async fahren(k) {
-      /* DIE PROBE AUF DIE REGELÄNDERUNG AUS AP0, und zwar am fertigen
-         Bestand. Bis Web 20.3.0 verwarf die Prüfschicht die Fähigkeiten
+     /* DIE PROBE AUF DIE REGELÄNDERUNG, und zwar am fertigen
+        Bestand. Früher verwarf die Prüfschicht die Fähigkeiten
          eines bodengebundenen Bergwacht-Rettungsmittels still; der Diensttag
          trug dann keine, und `cap_gate` ließ die ganze Gruppe weg. Was hier
          gemessen wird, ist nicht die Regel, sondern ihre FOLGE: dass im
@@ -294,8 +294,8 @@ export const wege = [
     soll: 'Karte „Bergwacht" vorhanden (AP0: die Fähigkeit darf dort geführt werden), '
         + 'Besatzungskarte ohne Anlegen-Weg (Typ Bergwacht hat keine Rollen-Vorlagen)',
     async fahren(k) {
-      /* DER STANDORT, DEN ES OHNE AP0 NICHT GEBEN KÖNNTE. Die Karte
-         „Bergwacht-Bereitschaften" erschien bis Web 20.3.0 nur, wenn am
+     /* DER STANDORT, DEN ES OHNE DIE REGELÄNDERUNG NICHT GEBEN KÖNNTE. Die Karte
+        „Bergwacht-Bereitschaften" erschien früher nur, wenn am
          Standort ein LUFTgebundenes Rettungsmittel stand. Eine
          Bergwachtstation mit einem bodengebundenen Notarzt hätte danach das
          Feld „Bereitschaft" im Einsatz gehabt — und keinen Ort, an dem sich

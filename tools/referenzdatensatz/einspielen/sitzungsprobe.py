@@ -1,20 +1,20 @@
 #!/usr/bin/env python3
-"""Sitzungsprobe — oeffnet `sitzung.py` BEIDE Huellenfassungen? (S10/AP5)
+"""Sitzungsprobe — oeffnet `sitzung.py` BEIDE Huellenfassungen?
 
-DIE FRAGE. Seit S10 traegt eine Schluesselhuelle entweder das alte Praefix
+DIE FRAGE. Eine Schluesselhuelle traegt entweder das alte Praefix
 `edk1:` (Datenschluessel = PBKDF2-Haelfte) oder das neue `edka1:<kennung>:`
 (Datenschluessel = HKDF aus Haelfte und Konto-Anteil). Der Bestand fuehrt beide
 gleichzeitig und wird das noch eine Weile tun: Ein Konto stellt erst beim
 ersten Anmelden IM BROWSER um, und `sitzung.py` stellt ausdruecklich nicht um
-(E-S10-15) — sie liest, was dasteht.
+— sie liest, was dasteht.
 
 Damit haengt der ganze Pruefstand daran, dass `sitzung.py` beide Fassungen
 oeffnet. Tut sie es nicht, faellt das nicht als Fehler auf, sondern als etwas
 viel Unangenehmeres: `einspielen.py`, die Kreislaeufe und jede Probe, die sich
 anmeldet, laufen weiter und lesen leere oder falsche Angaben.
 
-Genau das war in AP1 die Begruendung, `sitzung.py` und `krypto.py` aus AP5
-vorzuziehen (E-S10-U-03, „sitzung.py waere eine Mine geworden"). Diese Probe
+Genau das war die Begruendung, `sitzung.py` und `krypto.py` frueh
+umzustellen („sitzung.py waere eine Mine geworden"). Diese Probe
 ist die Gegenrechnung dazu: Sie misst nach, dass die Mine entschaerft ist —
 an ZWEI echten Konten des Referenzbestands, nicht an einer Attrappe.
 
@@ -41,14 +41,14 @@ Die Konten kommen aus den Umgebungsvariablen oder aus den Vorgaben unten:
     SITZUNGSPROBE_ALT="konto:passwort"     erwartet `edk1:`
     SITZUNGSPROBE_NEU="konto:passwort"     erwartet `edka1:`
 
-Die Vorgaben sind seit R4-16 das Demo-Konto (ALT) und das Pruefkonto (NEU),
+Die Vorgaben sind das Demo-Konto (ALT) und das Pruefkonto (NEU),
 weil nur diese beiden auf JEDER frischen Anlage in der verlangten Fassung
 stehen: Das Demo-Konto bekommt bauartbedingt keinen Anteil und bleibt `edk1:`
-(E-S10-06, der Riegel in `demo_lib.php`), das Pruefkonto wird von der ersten
-Browserprobe auf `edka1:` umgestellt. Bis dahin standen hier das Pruefkonto
-als ALT und `umlauf-csv@` als NEU — auf einer mit `hochfahren.sh --neu`
-aufgebauten Anlage traegt das eine schon `edka1:` und das andere gar keine
-Huelle, und die Probe mass nichts (F-R4-53).
+(der Riegel in `demo_lib.php`), das Pruefkonto wird von der ersten
+Browserprobe auf `edka1:` umgestellt. Standen hier das Pruefkonto
+als ALT und `umlauf-csv@` als NEU, traegt auf einer mit `hochfahren.sh --neu`
+aufgebauten Anlage das eine schon `edka1:` und das andere gar keine
+Huelle, und die Probe mass nichts.
 
 Erwartet: **2 von 2**, Rueckgabe 0.
 

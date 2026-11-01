@@ -1,6 +1,5 @@
 /**
- * QR-Code aus einer Adresse — für die Einrichtung des Zweitfaktors
- * (P5c/AP5, E-P5c-41).
+ * QR-Code aus einer Adresse — für die Einrichtung des Zweitfaktors.
  *
  * WAS VON WEM KOMMT. Die Modulmatrix rechnet `qrcode-generator`
  * (assets/vendor/qrcode.js, MIT, lokal). Das SVG baut diese Datei selbst:

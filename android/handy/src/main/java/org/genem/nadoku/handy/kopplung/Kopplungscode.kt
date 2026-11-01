@@ -3,13 +3,10 @@ package org.genem.nadoku.handy.kopplung
 /**
  * Der sechsstellige Kopplungscode (JSON-Vertrag 1a, `pair.php`).
  *
- * DIE RICHTUNG HAT SICH GEDREHT (R49, S5). Bis Android 0.10.1 tippte die
- * NutzerIn den Code hier ein, und diese Klasse fing Vertipper ab, bevor der
- * Ratenschutz von `pair.php` sie zählte. Jetzt **erzeugt der Server** den Code
- * und die App **zeigt** ihn — geprüft wird also nicht mehr eine Eingabe,
- * sondern eine Serverantwort.
+ * **DER SERVER ERZEUGT** den Code und die App **zeigt** ihn — geprüft wird
+ * also keine Eingabe, sondern eine Serverantwort.
  *
- * WARUM DIE PRÜFUNG TROTZDEM BLEIBT, obwohl niemand mehr tippt: Ein `start`,
+ * WARUM ES DIE PRÜFUNG GIBT, obwohl niemand tippt: Ein `start`,
  * das etwas anderes als sechs Zeichen aus diesem Alphabet zurückgibt, ist kein
  * Code — und ein Bildschirm, der `null` oder eine leere Zeichenkette groß
  * anzeigt, schickt jemanden zum Browser, wo er nichts eintragen kann. Der

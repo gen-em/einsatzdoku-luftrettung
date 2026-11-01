@@ -1,7 +1,7 @@
 /* Wege der Seite Betrieb → Updates (`betrieb_updates.php`).
  * ===========================================================================
  *
- * Entstanden mit R4-11 (Backlog Nr. 250): Der Schalter des Wartungsmodus
+ * Der Schalter des Wartungsmodus
  * leitet in seine Karte um; Neuladen schaltet nicht ein zweites Mal und
  * schreibt keinen zweiten Protokolleintrag. Ein und wieder aus in einem Weg;
  * `server/.zustand/wartung.lock` räumt das `finally` in jedem Fall. Den Lauf der
@@ -17,7 +17,7 @@ import { join } from 'node:path';
 import { neuladenPruefen } from '../neuladen.mjs';
 import { php, WURZEL } from '../probekonto.mjs';
 
-// Seit Web 23.3.1 in `server/.zustand/` (R17-22, F-R17-47); der alte Ort
+// Liegt in `server/.zustand/`; der alte Ort
 // gilt als Uebergang noch als Wartung und zaehlt deshalb mit.
 const SPERRE = join(WURZEL, 'server', '.zustand', 'wartung.lock');
 const SPERRE_ALT = join(WURZEL, 'server', 'wartung.lock');

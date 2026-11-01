@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 /**
  * Ein Authenticator zum Nachbauen — fuer die Passkeyprobe und die
- * Zweitfaktorprobe (Schritt 18, SR-09).
+ * Zweitfaktorprobe.
  *
  * Anlass: Nr. 350. Die Proben messen `passkey_lib.php` ohne Browser: Sie
  * erzeugen mit phpseclib Schluesselpaare, bauen daraus `attestationObject`,
@@ -87,7 +87,7 @@ function pb_signieren(array $paar, string $daten): string
  * Eine Registrierung bauen. `$o` verstellt einzelne Teile fuer die
  * Ablehnungsfaelle: `art`, `herausforderung`, `ursprung`, `rp_id`, `flags`,
  * `cose` (roh, als PbKarte oder PbRoh), `rawId`, `zaehler`, `client` (weitere
- * Felder in `clientDataJSON`, etwa `crossOrigin` — seit H-SR-08).
+ * Felder in `clientDataJSON`, etwa `crossOrigin`).
  *
  * @return array{antwort: array, kennung: string}
  */

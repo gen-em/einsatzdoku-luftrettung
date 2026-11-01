@@ -22,7 +22,7 @@ sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent.parent / "quellda
 from wegpunkte import abstand_m  # noqa: E402,F401  -- EINE Definition, siehe dort
 
 # (lat, lon, Hoehe in m) -- reale Hoehen realer Orte; die NAMEN des Datensatzes
-# sind erfunden, die Geographie ist es nicht (E-P1-02).
+# sind erfunden, die Geographie ist es nicht.
 STUETZPUNKTE = [
     (47.7255, 10.3140,  700), (47.7010, 10.3390,  730), (47.7300, 10.3980,  750),
     (47.7530, 10.2280,  858), (47.7240, 10.2010,  894), (47.8020, 10.2200,  720),

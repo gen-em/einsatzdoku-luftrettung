@@ -3,20 +3,19 @@ declare(strict_types=1);
 
 /**
  * Passkeyprobe — liest `passkey_lib.php` richtig, und lehnt sie ab, was sie
- * ablehnen muss, AN DER STELLE, DIE SIE NENNT? (Schritt 18, SR-09; seit der
- * Gegenlesung H-SR-08 in Web 21.11.0)
+ * ablehnen muss, AN DER STELLE, DIE SIE NENNT?
  *
  * Anlass: Nr. 350 — Passkeys als zweiter Faktor, gebaut ohne
  * WebAuthn-Bibliothek: ein eigener CBOR-Leser und eine eigene Pruefung beider
- * Zeremonien (E-SR-30). Das ist der Code, bei dem ein falsch gelesenes
- * Laengenfeld einen fremden Schluessel annimmt (E-SR-36).
+ * Zeremonien. Das ist der Code, bei dem ein falsch gelesenes
+ * Laengenfeld einen fremden Schluessel annimmt.
  *
- * JEDE ABLEHNUNG PRUEFT IHREN GRUND (seit H-SR-08, F-SR-43). Bis Web 21.10.0
- * mass die Probe nur „nicht angenommen" — ein Fall „fremde rpId", der in
- * Wahrheit an der Signatur scheiterte, waere gruen geblieben, und eine
+ * JEDE ABLEHNUNG PRUEFT IHREN GRUND. Mass die Probe nur
+ * „nicht angenommen", waere ein Fall „fremde rpId", der in
+ * Wahrheit an der Signatur scheiterte, gruen geblieben, und eine
  * Pruefung, die hinter eine andere rutscht, ebenso. Jetzt steht neben jedem
  * Fall ein Stueck der erwarteten Meldung, und bei der Anmeldung dazu ihre Art
- * (`herausforderung`, `zaehler`, `pruefung` — F-SR-37).
+ * (`herausforderung`, `zaehler`, `pruefung`).
  *
  * WAS SIE MISST, ohne Browser und ohne HTTP, mit eigenen Konten:
  *   1. Der CBOR-Leser: Ganzzahlen (auch 8-Byte-Koepfe), Ketten, Listen,
@@ -44,8 +43,8 @@ declare(strict_types=1);
  *      gesetzt, AT gesetzt, falsche Signatur (beide Verfahren), eine leere
  *      DER-Folge, unbekannte Kennung, die Kennung eines anderen Kontos und
  *      einer anderen Adresse; ein zurueckgelaufener Zaehler mit Protokoll
- *      (Name des Passkeys, `daten.weg`) und hoechstens EINER Mail je Tag
- *      (E-SR-46); ZWEI GLEICHZEITIGE Anmeldungen mit demselben Zaehler — zwei
+ *      (Name des Passkeys, `daten.weg`) und hoechstens EINER Mail je Tag;
+ *      ZWEI GLEICHZEITIGE Anmeldungen mit demselben Zaehler — zwei
  *      Prozesse, von einer dritten Verbindung am `UPDATE` festgehalten —,
  *      von denen genau eine durchgeht; eine ES256-Signatur mit `81 L` und
  *      mit zusaetzlicher Null vor r geht durch. Der gespeicherte RSA-Schluessel
@@ -60,14 +59,13 @@ declare(strict_types=1);
  * WAS SIE NICHT MISST: einen echten Authenticator und einen echten Browser
  * (Bedienweg `einstellungen_profil_passkey.mjs`, Chromium mit virtuellem
  * Authenticator), die Anbindung an Anmeldung und Endpunkt (Zweitfaktorprobe,
- * Teil 5d). Bis Web 21.11.1 stand hier auch das atomare Fortschreiben des
- * Zaehlers unter zwei GLEICHZEITIGEN Anmeldungen — „laesst sich hier nicht
- * verlaesslich herstellen". Es liess sich: Die dritte Verbindung haelt beide
- * am `UPDATE`, bis beide dort stehen (Nachpruefung der offenen Punkte).
+ * Teil 5d). Das atomare Fortschreiben des Zaehlers unter zwei GLEICHZEITIGEN
+ * Anmeldungen misst sie: Die dritte Verbindung haelt beide
+ * am `UPDATE`, bis beide dort stehen.
  *
  * `app.base_url` WIRD FUER DEN LAUF AUF `https://localhost:8443` GESTELLT:
  * Die Sandbox steht auf einer IP-Adresse, und fuer eine IP gibt es keine
- * Passkeys (E-SR-42). Zurueckgelegt wird die Datei byte-gleich, auch nach
+ * Passkeys. Zurueckgelegt wird die Datei byte-gleich, auch nach
  * einem Abbruch (`konfig_stellen()`).
  *
  * Aufruf:  php tools/proben/passkey/probe.php
@@ -99,7 +97,7 @@ function cbor_fehler(string $b): ?string
 {
     try { pk_cbor_lesen($b); return null; } catch (PkFehler $f) { return $f->getMessage(); }
 }
-/** PHP-Warnungen eines Aufrufs zaehlen (Felder vom falschen Typ, F-SR-35). */
+/** PHP-Warnungen eines Aufrufs zaehlen (Felder vom falschen Typ). */
 function warnungen(callable $f): array
 {
     $n = 0;
@@ -121,7 +119,7 @@ $zurueck = konfig_stellen(['app' => $app]);
 $u = pk_ursprung();
 
 /* BEIDE KONTEN MIT EINGESCHALTETEM ZWEITFAKTOR: `pk_anlegen()` legt fuer ein
- * Konto ohne ihn nichts an (F-SR-38). Das dritte hat keinen. */
+ * Konto ohne ihn nichts an. Das dritte hat keinen. */
 $konto = static function (string $mail, string $name, bool $zf) use ($pdo): int {
     $pdo->prepare('DELETE FROM users WHERE email = ?')->execute([$mail]);
     $pdo->prepare("INSERT INTO users (email, name, role, password_hash, kdf_salt, kdf_iter, totp_seit)
@@ -213,7 +211,7 @@ pruefe($regRsa['ok'] && $regRsa['alg'] === -257, 'RS256: angenommen', $regRsa['g
 $kennRsa = $r['kennung'];
 
 /* EINE ERWEITERUNGSKARTE hinter dem Schluessel (ED), wie echte Authenticatoren
- * sie mit credProtect liefern — geht durch (F-SR-43). */
+ * sie mit credProtect liefern — geht durch. */
 $ablage = $h();
 $mitExt = pb_registrierung($ec, $ablage['herausforderung'], $u,
     ['flags' => 0xC1, 'cose' => new PbRoh(pb_cbor($ec['cose']) . pb_cbor(new PbKarte(['credProtect' => 2])))]);
@@ -275,7 +273,7 @@ $nein('RSA-Exponent gerade (65536)', 'Exponent', ['cose' => $rsaCose($rsaN, "\x0
 $nein('RSA-Exponent ueber 64 Bit', 'Exponent', ['cose' => $rsaCose($rsaN, "\x01" . str_repeat("\x00", 7) . "\x01")], $rsa);
 $gerade = $rsaN; $gerade[strlen($gerade) - 1] = chr(ord($gerade[-1]) & 0xfe);
 $nein('RSA-Modul gerade', 'Modul gerade', ['cose' => $rsaCose($gerade, "\x01\x00\x01")], $rsa);
-/* DIE GRENZEN VON INNEN (Nachpruefung A-3): was echte Authenticatoren liefern
+/* DIE GRENZEN VON INNEN: was echte Authenticatoren liefern
  * und die Werte genau an der Kante gehen durch; ein Bit, ein Byte darueber
  * nicht. Registrierung prueft keine Signatur — der COSE-Schluessel genuegt. */
 $ja = static function (string $was, array $o, array $paar) use ($u, $h): void {
@@ -305,21 +303,21 @@ $nein('clientDataJSON zu gross', 'zu gross', [], null, null,
 $nein('rawId mit Zeilenumbruch', 'kein Base64url', [], null, null,
       static fn(array $a): array => ['rawId' => $a['rawId'] . "\n"] + $a);
 pruefe(pk_b64u_lesen('QR') === null && pk_b64u_lesen('QQ') === "A", 'Base64url nur kanonisch („QR" abgelehnt, „QQ" gelesen)');
-/* DER FELDDECKEL AUF DAS BYTE (Nachpruefung B-2): PK_FELD_MAX geht, eins mehr nicht. */
+/* DER FELDDECKEL AUF DAS BYTE: PK_FELD_MAX geht, eins mehr nicht. */
 $feld = static function (int $n): string {
     try { return (string)strlen(pk_feld(['x' => pk_b64u(str_repeat("\0", $n))], 'x')); }
     catch (PkFehler $f) { return $f->getMessage(); }
 };
 pruefe($feld(PK_FELD_MAX) === (string)PK_FELD_MAX && str_contains($feld(PK_FELD_MAX + 1), 'zu gross'),
        'Felddeckel: ' . PK_FELD_MAX . ' Byte gehen, ' . (PK_FELD_MAX + 1) . ' nicht', $feld(PK_FELD_MAX + 1));
-/* DER GESPEICHERTE SCHLUESSEL (Nachpruefung A-6): ausserhalb der Grenzen laedt er nicht. */
+/* DER GESPEICHERTE SCHLUESSEL: ausserhalb der Grenzen laedt er nicht. */
 $spki = static fn(string $n, string $e): string => PublicKeyLoader::loadPublicKey((string)json_encode(
     ['kty' => 'RSA', 'n' => pk_b64u($n), 'e' => pk_b64u($e)]))->toString('PKCS8');
 pruefe(pk_spki_laden($spki($rsaN, "\x01\x00\x01"), -257) !== null
        && pk_spki_laden($spki($rsaN, "\x01" . str_repeat("\x00", 7) . "\x01"), -257) === null
        && pk_spki_laden($spki("\x01" . $n4096, "\x01\x00\x01"), -257) === null,
        'gespeicherter RSA-Schluessel: in den Grenzen geladen, Exponent ueber 64 Bit und 4097 Bit nicht');
-/* VON INNEN UND DIE UEBRIGEN GRENZEN (dritte Lesung DA-2, DA-3): Was die
+/* VON INNEN UND DIE UEBRIGEN GRENZEN: Was die
  * Registrierung annimmt, laedt auch — 4096 Bit, Exponent 3 und 64 Bit —, und
  * was sie ablehnt, laedt nicht: Exponent 1, gerader Exponent, gerader Modul. */
 $gerade = $rsaN; $gerade[strlen($gerade) - 1] = chr(ord($gerade[-1]) & 0xfe);
@@ -427,7 +425,7 @@ $nicht('die Kennung am falschen Konto', 'unbekannte Kennung', 'pruefung', [], $u
 $ablage = $h(); $ablage['bis'] = time() - 1;
 $nicht('abgelaufene Herausforderung (zaehlt nicht)', 'abgelaufen', 'herausforderung', [], 0, $ablage);
 
-/* EIN PASSKEY EINER ANDEREN ADRESSE (E-SR-48): gilt hier nicht, zaehlt nicht,
+/* EIN PASSKEY EINER ANDEREN ADRESSE: gilt hier nicht, zaehlt nicht,
  * wird nicht angeboten. */
 $fremdPaar = pb_paar(-7);
 $fremdKenn = random_bytes(32);
@@ -443,7 +441,7 @@ pruefe(pk_zahl($uid) === 2 && pk_zahl($uid, true) === 3 && !in_array(pk_b64u($fr
        pk_zahl($uid) . '/' . pk_zahl($uid, true));
 $nicht('Kennung einer anderen Adresse', 'unbekannte Kennung', 'pruefung', [], 0, null, $fremdPaar, $fremdKenn);
 
-/* DER ZAEHLER (E-SR-33, E-SR-46): zurueck → Ablehnung der Art `zaehler`,
+/* DER ZAEHLER: zurueck → Ablehnung der Art `zaehler`,
  * Protokoll mit Namen, eine Mail; ein zweites Mal am selben Tag keine zweite
  * Mail; nach einem Tag wieder eine. */
 $zaehle = static function (string $sql) use ($pdo): int { return (int)$pdo->query($sql)->fetchColumn(); };
@@ -474,7 +472,7 @@ pruefe(!$e['ok'] && $zaehle($mailSql) === 2, 'nach mehr als einem Tag: wieder ei
 $ablage = $h();
 $e = pk_anmeldung_pruefen($uid, $ablage, pb_anmeldung($ec, $kennEc, $ablage['herausforderung'], $u, ['zaehler' => 6]));
 pruefe($e['ok'], 'danach mit hoeherem Zaehler (6) wieder durch', $e['grund'] ?? '');
-/* DER WEG STEHT IM EINTRAG (dritte Lesung C3-3): Im Code-Schritt ist noch
+/* DER WEG STEHT IM EINTRAG: Im Code-Schritt ist noch
  * niemand angemeldet, und `protokoll()` schreibt dann den Urheber `job` —
  * `daten.weg` sagt der Verwaltung, woher der Versuch kam. Hier: keine Sitzung,
  * also `anmeldung`. */
@@ -483,7 +481,7 @@ $wegZ = json_decode((string)$pdo->query("SELECT daten FROM protokoll_ereignisse 
 pruefe(($wegZ['weg'] ?? '') === 'anmeldung', 'der Eintrag passkey_zaehler traegt daten.weg „anmeldung"',
        json_encode($wegZ));
 
-/* DIE ERLAUBTEN SCHREIBWEISEN (dritte Lesung DA-4): Eine gueltige ES256-Signatur
+/* DIE ERLAUBTEN SCHREIBWEISEN: Eine gueltige ES256-Signatur
  * mit der Laenge der Folge als `81 L` und mit einer zusaetzlichen Null vor r
  * geht durch — so sagt es der Kopf der Bibliothek. Die `81 L`-Form wird so
  * lange neu signiert, bis sie GENAU 73 Byte hat (r und s je 33 Byte, etwa
@@ -514,10 +512,9 @@ foreach (['l81' => 'Laenge der Folge als 81 L', 'null' => 'zusaetzliche Null vor
                           : ($zOk['ok'] ? 'durch' : $zOk['grund'])) . ' · ' . ($zLen ?? '—') . ' Byte');
 }
 
-/* DER ZAEHLER UNTER ECHTEM WETTLAUF (F-SR-36; nachgetragen mit der Nachpruefung
- * der offenen Punkte von H-SR-08). Bis dahin mass diese Probe die Regel nur
- * nacheinander, und dass zwei GLEICHZEITIGE Anmeldungen mit derselben Kennung
- * nicht beide durchgehen, war gelesen.
+/* DER ZAEHLER UNTER ECHTEM WETTLAUF. Misst eine Probe die Regel nur
+ * nacheinander, ist, dass zwei GLEICHZEITIGE Anmeldungen mit derselben Kennung
+ * nicht beide durchgehen, nur gelesen.
  *
  * ZWEI PROZESSE, EINE SPERRE. Eine dritte Verbindung haelt die Zeile des
  * Passkeys (`FOR UPDATE`). Die zwei Anmeldungen lesen ohne Sperre denselben
@@ -607,10 +604,10 @@ pruefe($nbsp['ok'] && $umbruch['ok'] && $namen === ['', 'Hand y'],
 pruefe(!pk_entfernen($uid2, $aEc['id']) && pk_zahl($uid) === PK_HOECHSTENS,
        'pk_entfernen() an einem fremden Konto: nichts');
 pruefe(pk_entfernen($uid, $aEc['id']) && pk_zahl($uid) === PK_HOECHSTENS - 1, 'pk_entfernen() am eigenen Konto: weg');
-/* ALLES ODER NICHTS (F-SR-38, Nachpruefung D-4): Scheitert das Loeschen der
+/* ALLES ODER NICHTS: Scheitert das Loeschen der
  * Passkeys, bleiben Faktor, Codes und gemerkte Geraete stehen. Ein Ausloeser
- * an `passkeys` schlaegt fuer dieses Konto fehl; bis Web 21.10.0 stand das
- * Loeschen hinter der Transaktion, und der Faktor war trotzdem aus. */
+ * an `passkeys` schlaegt fuer dieses Konto fehl; stuende das Loeschen hinter
+ * der Transaktion, waere der Faktor trotzdem aus. */
 $pdo->prepare("INSERT INTO totp_codes (user_id, hash) VALUES (?, 'x')")->execute([$uid]);
 $pdo->prepare('INSERT INTO vertraute_geraete (user_id, token_hash, angelegt_am) VALUES (?, ?, UTC_TIMESTAMP())')
     ->execute([$uid, hash('sha256', random_bytes(16))]);

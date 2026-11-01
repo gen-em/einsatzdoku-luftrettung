@@ -2,8 +2,7 @@
 declare(strict_types=1);
 
 /**
- * DIE BETREIBER-RUECKFRAGE ZUM SCHLUESSELBLATT (P5b/AP9, E-P5b-10, -21;
- * Mockup M-P5b-02c, Teil 2).
+ * DIE BETREIBER-RUECKFRAGE ZUM SCHLUESSELBLATT.
  *
  * Alle drei Monate, beim Anmelden, nur fuer die Rolle BetreiberIn: vier
  * zufaellig gewaehlte Vierergruppen vom Blatt abtippen.
@@ -30,9 +29,9 @@ declare(strict_types=1);
  * nichts. Das ist die Regel des ganzen Hauses („nie der Wert, immer die
  * Kennung"), und `betrieb_schluesselblatt.php` ist ihre einzige Ausnahme.
  *
- * Und kein Knopf „Schluessel erneuern". E-P5b-10 sagt, warum: Den
+ * Und kein Knopf „Schluessel erneuern": Den
  * Serverschluessel zu wechseln hiesse, jede versiegelte Sicherung neu zu
- * umhuellen — seit Web 21.12.0 gibt es diesen Vorgang (SR-03), und er steht
+ * umhuellen — diesen Vorgang gibt es, und er steht
  * unter Betrieb → Servereinstellungen, nicht in einem Dialog. Wer sein Blatt
  * verloren hat, druckt es neu; der Schluessel bleibt derselbe.
  */
@@ -46,8 +45,8 @@ declare(strict_types=1);
     <p class="meldung meldung-fehler" data-blatt-fehler role="alert" hidden></p>
 
     <?php
-      /* DER SATZ VORAN, WENN EINE ROTATION DIE FRAGE AUSGELÖST HAT (Nr. 233,
-         E-SR-11). Gefragt werden weiter nur die AKTUELLEN Werte; der
+      /* DER SATZ VORAN, WENN EINE ROTATION DIE FRAGE AUSGELÖST HAT.
+         Gefragt werden weiter nur die AKTUELLEN Werte; der
          bisherige wird genannt, nicht abgefragt — dass er auf dem Blatt
          steht, prüft der Ausdruck selbst: Er druckt ihn. */
       require_once __DIR__ . '/einstieg_lib.php';
@@ -74,8 +73,8 @@ declare(strict_types=1);
        Schlüsselblatt neu drucken</a> — das ändert keinen Schlüssel.</p>
   </div>
   <?php /* „SPAETER" HEISST HIER „BIS ZUR NAECHSTEN ANMELDUNG", NICHT
-           „7 TAGE" — und das ist eine Abweichung von E-P5b-10, die begruendet
-           sein will.
+           „7 TAGE" wie bei der Konto-Rueckfrage — und das will begruendet
+           sein.
  
            Die Konto-Rueckfrage schiebt um 7 Tage, weil sie DREI eigene
            Spalten am Konto hat (`rueckfrage_naechste`, `_runde`,

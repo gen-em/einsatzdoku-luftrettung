@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Kreislauftest: Referenz-Export in ein FRISCHES Konto und wieder heraus (B5).
+"""Kreislauftest: Referenz-Export in ein FRISCHES Konto und wieder heraus.
 
     Referenz  →  leeres Konto  →  erneut exportieren  →  vergleichen
 
@@ -32,13 +32,11 @@ ZWEI LAEUFE, ZWEI REFERENZEN:
                    derselbe Bestand nach einem Umlauf unveraendert wieder heraus?
   --art csv        referenz/*.zip
 
-Bis Web 22.7.0 gab es einen dritten Lauf, `--art edbak-alt`: die einteilige
-Datei mit Nutzlast 7 aus `referenz/altformat/` hinein, Fassung 4 heraus (R11).
-Seit Web 23 nimmt der Einspielweg nur noch Nutzlast 13; Lauf, Referenz und
-Ausnahmeliste sind mit S11-12 gefallen (E-S11-85, Backlog Nr. 46).
+Einen dritten Lauf mit der einteiligen Datei der Nutzlast 7 gibt es nicht:
+Der Einspielweg nimmt nur Nutzlast 13.
 
 `neueste()` verweigert die Arbeit, wenn der Ordner mehr als eine Datei je
-Format traegt — „sortiert und nimmt die erste" war der Fehler aus S1/C7.
+Format traegt — „sortiert und nimmt die erste" war ein frueherer Fehler.
 
 HTTPS, NICHT HTTP. Das Sitzungs-Cookie traegt `Secure`. Chromium schickt es
 auch ueber http://127.0.0.1, Pythons `requests` nicht: Die Anmeldung geht
@@ -111,14 +109,14 @@ def lauf(befehl: list[str], **kw) -> subprocess.CompletedProcess:
 UMLAUF_PRAEFIX = "umlauf-"
 
 # Die Vorgaben der OERTLICHEN Pruefanlage — eine Stelle, damit Proben, die ein
-# Umlaufkonto benutzen (Wegprobe, Freigabeprobe; RP-01), sie hier lesen statt
+# Umlaufkonto benutzen (Wegprobe, Freigabeprobe), sie hier lesen statt
 # sie abzuschreiben. Zugaenge einer fernen Anlage kommen nie hierher.
 UMLAUF_PASSWORT = "umlaufpruefung2026"
 ADMIN_VORGABE = ("admin@example.invalid", "pruefstandzugang2026")
 
-# DER ADMIN-ZUGANG IST SEIT P5c/AP5 EIN TUPEL AUS ZWEI ODER DREI STUECKEN:
+# DER ADMIN-ZUGANG IST EIN TUPEL AUS ZWEI ODER DREI STUECKEN:
 # Adresse, Passwort und -- wahlweise -- das Geheimnis des Zweitfaktors in
-# Base32 (E-P5c-43). Er wird unveraendert an `Sitzung.anmelden(*admin)`
+# Base32. Er wird unveraendert an `Sitzung.anmelden(*admin)`
 # weitergereicht; fehlt das dritte Stueck oder ist es leer, rechnet der
 # Code-Rechner mit `NADOKU_TOTP` oder dem Geheimnis der Sandbox. So bleibt
 # ein Aufrufer, der nur Adresse und Passwort kennt, gueltig, und es entsteht
@@ -135,7 +133,7 @@ def konto_loeschen(basis: str, admin: AdminZugang, konto: str,
     """Loescht ein PRUEFKONTO ueber den Adminbereich, falls es besteht.
 
     `praefix` ist der Riegel und hat den Umlauf-Vorgabewert. Ein zweites
-    Werkzeug mit eigenen Pruefkonten (der Messstand aus S2) benennt hier sein
+    Werkzeug mit eigenen Pruefkonten (der Messstand) benennt hier sein
     eigenes Praefix, statt sich einen zweiten Loeschweg zu schreiben — der
     waere ein zweiter Weg, den niemand pflegt, und ausgerechnet einer, der
     Konten loescht. Weggelassen werden darf das Praefix nicht: Ein leerer
@@ -153,17 +151,17 @@ def konto_loeschen(basis: str, admin: AdminZugang, konto: str,
     if konto not in html:
         return False
 
-    # DIE KENNUNG STEHT VOR DER ADRESSE, NICHT DARIN (P3/O11, F-P3-BB).
+    # DIE KENNUNG STEHT VOR DER ADRESSE, NICHT DARIN.
     #
-    # Bis Web 9.8.x war die Kontenzeile <a href="admin_user.php?id=N">adresse</a>,
+    # Frueher war die Kontenzeile <a href="admin_user.php?id=N">adresse</a>,
     # und der Ausdruck `id=(\d+)"[^>]*>([^<]+)</a>` holte beides in einem Griff.
-    # Mit dem Umbau der Liste (P3/O9b) stimmt das nicht mehr: Ab 720 px ist sie
+    # Mit dem Umbau der Liste stimmt das nicht mehr: Ab 720 px ist sie
     # eine Tabelle, deren Zeile die Kennung in `data-ziel` traegt und deren
     # Verweis „Öffnen" heisst; darunter ist sie eine `.zeile`, deren Verweis den
     # Text in ein <span class="zeile-haupt"> wickelt. In beiden Faellen findet
     # `>([^<]+)</a>` die Adresse nicht — der Ausdruck lieferte NULL Paare.
     #
-    # Aufgefallen ist es erst in O11, weil `--frisch` nur dann hier hereinlaeuft,
+    # Aufgefallen ist es erst spaet, weil `--frisch` nur dann hier hereinlaeuft,
     # wenn das Umlaufkonto schon besteht; beim ersten Lauf auf einer frischen
     # Datenbank endet die Funktion eine Zeile hoeher mit `return False`.
     #
@@ -178,14 +176,14 @@ def konto_loeschen(basis: str, admin: AdminZugang, konto: str,
         raise RuntimeError(f"Kennung von {konto} nicht gefunden")
     kennung = treffer[-1].group(1)
 
-    # DAS LOESCHEN LIEGT AUF DER KONTOSEITE, NICHT IN DER LISTE (P3/O9a, E-P3-41).
+    # DAS LOESCHEN LIEGT AUF DER KONTOSEITE, NICHT IN DER LISTE.
     #
-    # Bis Web 9.8.x nahm `admin_users.php` ein `action=user_del` mit der
+    # Frueher nahm `admin_users.php` ein `action=user_del` mit der
     # Kennung entgegen. Seit die Kontoseite die Drehscheibe ist, steht die
     # Loeschung dort — `admin_user.php?id=N` mit `action=user_delete` — und sie
     # verlangt eine ZWEITE STUFE: Die E-Mail-Adresse muss abgetippt werden,
     # serverseitig geprueft. Der alte Aufruf lief ins Leere und meldete nichts;
-    # die Funktion merkte es erst an der Gegenprobe unten (F-P3-BB).
+    # die Funktion merkte es erst an der Gegenprobe unten.
     #
     # `sicherungen_mit=1` ist die Vorbelegung der Oberflaeche: Zum Umlaufkonto
     # gehoerende Admin-Backups gehen mit. Genau das ist hier richtig — ein
@@ -204,7 +202,7 @@ def konto_anlegen(basis: str, admin: AdminZugang, konto: str,
                   passwort: str, rolle: str = "user", rc_datei: str | None = None) -> None:
     """Konto ueber den Einladungsweg anlegen und das Passwort im Browser setzen.
 
-    `rolle` und `rc_datei` seit Konzept RW (RW-03): Die Rueckwegprobe braucht
+    `rolle` und `rc_datei`: Die Rueckwegprobe braucht
     auch eine BetreiberIn, und sie braucht den Wiederherstellungsschluessel,
     den `passwort_setzen.mjs` von der Seite liest — ohne ihn gibt es den
     Rueckweg nicht zu gehen. `rc_datei` ist die Ausgabedatei dieses
@@ -215,7 +213,7 @@ def konto_anlegen(basis: str, admin: AdminZugang, konto: str,
                                          "email": konto, "role": rolle})
     m = re.search(r"pw_handling\.php\?token=([0-9a-f]{64})", antwort.text)
     if not m:
-        # DIE SEITENKENNUNG GEHOERT DAZU (Nr. 403): Fuenfmal stand hier nur
+        # DIE SEITENKENNUNG GEHOERT DAZU: Fuenfmal stand hier nur
         # „unbekannt", und niemand wusste, ob die Antwort eine Wartungsseite,
         # die Anmeldung oder die Liste ohne Meldung war.
         raise RuntimeError("Kontoanlage ohne Einrichtungslink: "
@@ -233,8 +231,7 @@ def konto_anlegen(basis: str, admin: AdminZugang, konto: str,
 
 def umlauf_edbak(a) -> tuple[str, str]:
     """Backup -> frisches Konto -> Backup: Fassung 4 hinein, Fassung 4
-    heraus, ein echter Rundlauf. (Bis Web 22.7.0 gab es daneben den Lauf
-    `edbak-alt` mit der einteiligen Nutzlast 7; siehe Kopf.)"""
+    heraus, ein echter Rundlauf."""
     quelle = neueste(a.referenz, "*.edbak")
     melde(f"[Backup] Referenz: {quelle.name}")
     ordner = pathlib.Path(a.ausgabe) / a.art
@@ -275,7 +272,7 @@ def jobs_pause(sekunden: int, basis: str = "", token: str = "") -> None:
     gilt für alle Auslöser. Es gibt ihn über ZWEI Zugänge, und welcher passt,
     hängt daran, wo die Installation steht:
 
-    MIT TOKEN: über `jobs.php`, `aktion=pause` (seit Web 23.1.0 per POST mit dem
+    MIT TOKEN: über `jobs.php`, `aktion=pause` (per POST mit dem
     Kettentoken), gefahren von `tools/kette/tor.py`
     — dem einen Client dieser Schnittstelle. Das ist der Weg für eine FERNE
     Installation.
@@ -288,7 +285,7 @@ def jobs_pause(sekunden: int, basis: str = "", token: str = "") -> None:
     fernes Staging. Dort gibt es keine `config.php`, und der Lauf brach ab mit
     „require_once(.../server/config.php): Failed to open stream". Der Aufruf
     war nicht falsch geschrieben — das Werkzeug nahm an, `--basis` sei
-    derselbe Rechner (17.09.2026, Backlog Nr. 219).
+    derselbe Rechner (17.09.2026).
     """
     if token:
         tor = WURZEL.parents[1] / "tools" / "kette" / "tor.py"
@@ -334,7 +331,7 @@ def main() -> int:
     p.add_argument("--backup-passwort", default="nadokudemo0815")
     p.add_argument("--admin-email", default=ADMIN_VORGABE[0])
     p.add_argument("--admin-passwort", default=ADMIN_VORGABE[1])
-    # DAS GEHEIMNIS DES ZWEITFAKTORS (P5c/AP5, E-P5c-43, F-P5c-33). Das
+    # DAS GEHEIMNIS DES ZWEITFAKTORS. Das
     # Pruefkonto ist eine BetreiberIn, und fuer sie ist der Zweitfaktor
     # Pflicht; ohne Code kaeme der Kreislauf nicht ueber die Anmeldung. Die
     # Kette gibt `STAGING_TOTP` hierher.
@@ -375,9 +372,9 @@ def main() -> int:
 
     melde(f"Kreislauf {a.art} — Zielkonto {a.konto}")
 
-    # DIE HINTERGRUNDJOBS ANHALTEN (S2/AP3).
+    # DIE HINTERGRUNDJOBS ANHALTEN.
     #
-    # Seit Web 10.2.0 verdichten und dünnen die Jobs Spuren aus — sie LÖSCHEN
+    # Die Jobs verdichten und dünnen Spuren aus — sie LÖSCHEN
     # Zeilen und ERSETZEN Blobs. Der Kreislauf spielt ein Backup in ein
     # frisches Konto und exportiert sie sofort wieder; die wiederhergestellten
     # Einsätze sind alt, der Verdichtungsjob hält sie für reif, und was älter
@@ -385,7 +382,7 @@ def main() -> int:
     # mehr „kommt zurück, was hineinging", sondern „hat der Job dazwischen
     # zugeschlagen".
     #
-    # Beim ersten Lauf nach AP3 ging es gut — aber nur, weil der
+    # Beim ersten Lauf ging es gut — aber nur, weil der
     # Mindestabstand des Huckepack-Wegs zufällig gerade griff. Nachgemessen:
     # ein Lauf ohne Pause verdichtete 125 Spuren des Umlaufkontos.
     #
@@ -393,7 +390,7 @@ def main() -> int:
     # unten trotzdem ausdrücklich aufgehoben, damit ein abgebrochener Lauf die
     # Installation nicht bis zum Ablauf lahmlegt.
     #
-    # ÜBER WELCHEN ZUGANG, entscheidet `--jobs-token` (Web 20.16.0, Nr. 219):
+    # ÜBER WELCHEN ZUGANG, entscheidet `--jobs-token`:
     # mit Token über `jobs.php` (`aktion=pause`), ohne Token über die
     # Kommandozeile. Der zweite Weg setzt eine Installation auf DIESER
     # Rechner voraus — gegen ein fernes Staging scheitert er.

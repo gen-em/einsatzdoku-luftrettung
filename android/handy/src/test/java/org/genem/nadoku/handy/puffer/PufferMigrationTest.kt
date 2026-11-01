@@ -12,7 +12,7 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 
 /**
- * Die erste Schema-Migration des Puffers (C2): **sie verliert nichts.**
+ * Die erste Schema-Migration des Puffers: **sie verliert nichts.**
  *
  * WARUM DAS EINEN EIGENEN PRÜFFALL WERT IST. Im Puffer liegt der einzige Ort,
  * an dem eine noch nicht gesendete Aufzeichnung existiert. Der bequeme Weg —

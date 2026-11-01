@@ -4,18 +4,17 @@ import java.time.Duration
 import java.time.Instant
 
 /**
- * **Wann** gesendet wird (E-S4-07): ereignisgetrieben, nicht dauernd.
+ * **Wann** gesendet wird: ereignisgetrieben, nicht dauernd.
  *
  * Gesendet wird bei **Phasenwechsel, Einsatzabschluss, Dienstende und
  * Wiederverbindung**, dazwischen alle 15 Minuten.
  *
- * WARUM NICHT ÖFTER. Zwei Messungen hängen daran. Die R19-Messung des
+ * WARUM NICHT ÖFTER. Zwei Messungen hängen daran. Die Messung des
  * Garmin-Verhaltens ergab einen **Median von 1 020 s** zwischen zwei Anfragen
- * und eine Spitze von 14 Anfragen an einem Auslöser; auf diesen Zahlen ruht
- * die Mengenbremse, die in P5 entsteht, und die Mengengrenze je Konto
- * (R37.10). Ein zweiter Client, der alle dreißig Sekunden sendet, machte
- * beide Zahlen wertlos — und die spätere Bremse träfe die beiden Clients
- * verschieden.
+ * und eine Spitze von 14 Anfragen an einem Auslöser; auf diesen Zahlen ruhen
+ * die Mengenbremse und die Mengengrenze je Konto. Ein zweiter Client, der
+ * alle dreißig Sekunden sendet, machte beide Zahlen wertlos — und die Bremse
+ * träfe die beiden Clients verschieden.
  *
  * 15 Minuten (900 s) liegen dicht am gemessenen Median und sind zugleich der
  * längste Abstand, nach dem ein Funkloch noch als „gerade eben" durchgeht.
@@ -34,21 +33,18 @@ class Sendetakt(
 
     /** Was den Sendelauf ausgelöst hat. */
     enum class Ausloeser {
-        /** Eine Phase wurde gesetzt (B5). */
+        /** Eine Phase wurde gesetzt. */
         PHASENWECHSEL,
 
-        /** Ein Einsatz wurde abgeschlossen (B5). */
+        /** Ein Einsatz wurde abgeschlossen. */
         EINSATZABSCHLUSS,
 
         /** Der Dienst wurde beendet. */
         DIENSTENDE,
 
         /**
-         * Das Netz ist wieder da (E-S5Z-10).
-         *
-         * War bis 0.8.1 deklariert und **nie benutzt** (B-S5Z-05) — ebenso
-         * wie die Berechtigung `ACCESS_NETWORK_STATE` im Manifest. E-S4-07
-         * sah den Auslöser vor; gebaut wurde er nicht.
+         * Das Netz ist wieder da. Dafür steht die Berechtigung
+         * `ACCESS_NETWORK_STATE` im Manifest.
          */
         WIEDERVERBINDUNG,
 
@@ -60,7 +56,7 @@ class Sendetakt(
      * @param letzterVersuch wann zuletzt gesendet wurde; `null` = noch nie
      */
     fun faellig(ausloeser: Ausloeser, jetzt: Instant, letzterVersuch: Instant?): Boolean {
-        /* DIE WIEDERVERBINDUNG IST EIN EREIGNIS MIT BREMSE (E-S5Z-10).
+        /* DIE WIEDERVERBINDUNG IST EIN EREIGNIS MIT BREMSE.
          *
          * Sie kommt nicht von einem Menschen, sondern vom
          * `ConnectivityManager` — und ein flatterndes Mobilfunknetz meldet
@@ -85,11 +81,11 @@ class Sendetakt(
     }
 
     companion object {
-        /** 15 Minuten — dicht am gemessenen Median der R19-Messung (1 020 s). */
+        /** 15 Minuten — dicht am gemessenen Median (1 020 s). */
         const val ABSTAND_S = 900L
 
         /**
-         * Z-S5Z-05: Mindestabstand zweier Läufe aus **Wiederverbindung**.
+         * Mindestabstand zweier Läufe aus **Wiederverbindung**.
          *
          * Eine Minute. Kürzer, und ein Funkloch am Straßenrand erzeugte einen
          * Lauf je Laternenmast; länger, und die Wiederverbindung verlöre

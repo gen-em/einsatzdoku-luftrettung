@@ -3,13 +3,13 @@ package org.genem.nadoku.handy.aufzeichnung
 import org.genem.nadoku.gemeinsam.Ortungscode
 
 /**
- * In welchem Zustand die Ortung ist (E-S5Z-01).
+ * In welchem Zustand die Ortung ist.
  *
  * SECHS STUFEN UND NICHT ZWEI, weil „GPS an" vier verschiedene Lagen
- * zusammenwarf, von denen drei bedeuten, dass **nichts aufgezeichnet wird**:
- * Standort aus, kein Empfang, Signal zu ungenau. Die App behauptete in allen
- * dreien, sie zeichne auf (B-S5Z-07) — genau die Art Aussage, gegen die
- * E-S4-10 und B-S4-09 gebaut sind.
+ * zusammenwirft, von denen drei bedeuten, dass **nichts aufgezeichnet wird**:
+ * Standort aus, kein Empfang, Signal zu ungenau. Mit zwei Stufen behauptete
+ * die App in allen dreien, sie zeichne auf — genau die Art Aussage, die
+ * diese App nirgends machen darf.
  *
  * Die Reihenfolge der Einträge ist die der Schwere: von „es fehlt die
  * Freigabe" bis „es läuft".
@@ -43,11 +43,11 @@ enum class Ortungsstand {
     /** Wird in diesem Zustand aufgezeichnet? Genau einer sagt ja. */
     val zeichnetAuf: Boolean get() = this == OK
 
-    /** Ist das ein Zustand, vor dem gewarnt werden muss (E-S5Z-04)? */
+    /** Ist das ein Zustand, vor dem gewarnt werden muss? */
     val warnt: Boolean get() = this != OK && this != SUCHT
 
     /**
-     * Der Kurzcode für die Standmeldung an die Uhr (E-S5Z-15).
+     * Der Kurzcode für die Standmeldung an die Uhr.
      *
      * Die Zeichenketten stehen in `gemeinsam/`, weil beide Module sie lesen —
      * hier steht nur die Zuordnung.
@@ -76,11 +76,11 @@ enum class Warnbefehl {
 }
 
 /**
- * Der Ortungswächter (E-S5Z-06) — **die Zustandsmaschine ohne Android**.
+ * Der Ortungswächter — **die Zustandsmaschine ohne Android**.
  *
  * WOZU ER DA IST. `requestLocationUpdates` meldet nicht, dass nichts kommt.
  * Ein Zuhörer, der nie gerufen wird, sieht genauso aus wie einer, der auf
- * seinen ersten Fund wartet — und beide sahen bisher aus wie „GPS an".
+ * seinen ersten Fund wartet — und beide sähen aus wie „GPS an".
  * Dieser Wächter misst die Stille und benennt sie.
  *
  * ER HÄLT KEINE UHR UND KEINEN FADEN. Jede Methode bekommt die Zeit
@@ -89,7 +89,7 @@ enum class Warnbefehl {
  * `SystemClock.elapsedRealtime()` und nicht die Wanduhr: Die GPS-Zeit und die
  * Systemzeit können springen, eine Frist darf das nicht mitmachen.
  *
- * BRAUCHBAR HEISST: DIE AUSDÜNNUNG VERWIRFT DEN FUND NICHT (E-S5Z-02). Der
+ * BRAUCHBAR HEISST: DIE AUSDÜNNUNG VERWIRFT DEN FUND NICHT. Der
  * Wächter zählt nicht Sensorereignisse, sondern das, was tatsächlich in den
  * Puffer geht — dieselbe Regel, nach der `Track.mc` speichert und
  * `SyncView.mc` anzeigt. Eine Anzeige, die eine andere Schwelle benutzte als
@@ -114,7 +114,7 @@ class Ortungswaechter(
     private var letzterRoherMs: Long? = null
     private var letzterBrauchbarerMs: Long? = null
 
-    /** Wann zuletzt gewarnt wurde — Grundlage der Erinnerung (Z-S5Z-04). */
+    /** Wann zuletzt gewarnt wurde — Grundlage der Erinnerung. */
     private var letzteWarnungMs: Long? = null
 
     /** Der aktuelle Zustand. */
@@ -130,7 +130,7 @@ class Ortungswaechter(
 
     /**
      * Der Anfangszustand kann schon ein Warnzustand sein — Dienststart bei
-     * ausgeschaltetem Standort ist genau der Fall aus F-S5Z-01.
+     * ausgeschaltetem Standort ist genau dieser Fall.
      */
     fun anfangsbefehl(jetztMs: Long): Warnbefehl = warnbefehl(jetztMs, gewechselt = true)
 
@@ -181,7 +181,7 @@ class Ortungswaechter(
         return fortschreiben(jetztMs)
     }
 
-    /** Der Takt (Z-S5Z-03): Fristen nachrechnen, ohne dass etwas geschah. */
+    /** Der Takt: Fristen nachrechnen, ohne dass etwas geschah. */
     fun tick(jetztMs: Long): Warnbefehl = fortschreiben(jetztMs)
 
     // ---- Innen -------------------------------------------------------------
@@ -235,7 +235,7 @@ class Ortungswaechter(
      * Wann gewarnt wird: bei jedem Wechsel **in** einen Warnzustand — auch
      * zwischen zwei Warnzuständen, denn der Grund ist ein anderer und der
      * Text auch —, und danach alle [ERINNERUNG_MS], solange er anhält
-     * (F-S5Z-03: Das Handy steckt in der Tasche; eine einzige Vibration in
+     * (Das Handy steckt in der Tasche; eine einzige Vibration in
      * einer Anfahrt ist überhörbar).
      */
     private fun warnbefehl(jetztMs: Long, gewechselt: Boolean): Warnbefehl {
@@ -257,7 +257,7 @@ class Ortungswaechter(
 
     companion object {
         /**
-         * Z-S5Z-01 — Frist bis zum ersten Fund, 120 s (F-S5Z-02).
+         * Frist bis zum ersten Fund, 120 s.
          *
          * Ein GPS-Kaltstart ohne Netzhilfe braucht typisch 30 bis 60 s, in
          * Gebäuden länger. Kürzer warnte im Kaltstart falsch; länger liesse
@@ -266,7 +266,7 @@ class Ortungswaechter(
         const val FRIST_ERSTFIX_MS = 120_000L
 
         /**
-         * Z-S5Z-02 — Frist ohne brauchbaren Fund im Betrieb, 60 s (F-S5Z-02).
+         * Frist ohne brauchbaren Fund im Betrieb, 60 s.
          *
          * Bei 1-Hz-Abtastung sind das 60 ausgefallene Messungen. Die
          * Ausdünnung hält spätestens alle 10 s einen Punkt
@@ -276,15 +276,15 @@ class Ortungswaechter(
         const val FRIST_BETRIEB_MS = 60_000L
 
         /**
-         * Z-S5Z-04 — Erinnerungsabstand der Warnung, 600 s (F-S5Z-03).
+         * Erinnerungsabstand der Warnung, 600 s.
          *
-         * Zehn Minuten: keine Dauerwarnung (Backlog 82), aber kein Dienst
+         * Zehn Minuten: keine Dauerwarnung, aber kein Dienst
          * läuft eine Stunde lang leer, ohne dass es jemand merkt.
          */
         const val ERINNERUNG_MS = 600_000L
 
         /**
-         * Z-S5Z-03 — Wächtertakt, 10 s.
+         * Wächtertakt, 10 s.
          *
          * Gleich [Ausduenner.HOECHSTABSTAND_S]: Feiner als der langsamste
          * erwartete Punkt braucht der Wächter nicht zu schauen.
@@ -294,7 +294,7 @@ class Ortungswaechter(
 }
 
 /**
- * Der Ortungszustand, wie ihn Dienst und Oberfläche teilen (E-S5Z-01, 4.4).
+ * Der Ortungszustand, wie ihn Dienst und Oberfläche teilen.
  *
  * Er wohnt in [org.genem.nadoku.handy.NAdokuApp.ortung] — **eine** Quelle im
  * Prozess. Zwei Exemplare wären zwei Wahrheiten über denselben Empfang, und

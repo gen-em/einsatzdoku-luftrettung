@@ -1,16 +1,16 @@
-/* Freigabeprobe — der Weg MIT Wiederherstellungsschlüssel (S2/AP6).
+/* Freigabeprobe — der Weg MIT Wiederherstellungsschlüssel.
  *
  * Anlass: Nr. 308 — die Freigabe war für niemanden zu sehen, der Weg mit Schlüssel tot
  *
  * DIE FRAGE. Eine Administration darf ein Backup mit geschützten Angaben
- * nicht unmittelbar in ein neu aufgesetztes Konto spielen (E20): Die Angaben
+ * nicht unmittelbar in ein neu aufgesetztes Konto spielen: Die Angaben
  * sind mit einem Inhaltsschlüssel verschlüsselt, den nur der
  * Wiederherstellungsschlüssel öffnet — und der liegt ausschliesslich bei der
  * NutzerIn. Sie gibt das Backup deshalb frei, und das Umschlüsseln
  * geschieht im Browser der NutzerIn.
  *
- * Dieser Weg war bis Web 12.0.0 NIE geprüft, und er hat auch nie
- * funktioniert (F-S2-F): Der Kasten, in dem der Schlüssel einzugeben ist,
+ * Dieser Weg war lange NIE geprüft, und er hat auch nie
+ * funktioniert: Der Kasten, in dem der Schlüssel einzugeben ist,
  * wurde von einem stillen TypeError verschluckt. Nach der Behebung wurde der
  * Fensterweg mit einer Quelle OHNE geschützte Angaben belegt — der Zweig mit
  * Schlüssel blieb offen, weil die Prüfkonten ihren Wiederherstellungsschlüssel
@@ -18,12 +18,11 @@
  *
  * Diese Probe schliesst die Lücke. Sie belegt vier Dinge:
  *
- *   1. Die Rückfrage nach dem Schlüssel erscheint überhaupt (F-S2-F).
+ *   1. Die Rückfrage nach dem Schlüssel erscheint überhaupt.
  *   2. Ein FALSCHER Schlüssel wird abgewiesen, und es wird nichts geschrieben.
  *   3. Scheitert das Vermerken der Freigabe (Netz weg), sagt die Seite
- *      „Fertig" mit Ton warn und „unklar" — die Daten sind da (Nr. 277,
- *      seit Web 21.1.7; bis dahin meldete sie das Einspielen als
- *      fehlgeschlagen).
+ *      „Fertig" mit Ton warn und „unklar" — die Daten sind da (früher
+ *      meldete sie das Einspielen als fehlgeschlagen).
  *   4. Mit dem richtigen kommen die Angaben an — mit einem ANDEREN
  *      Chiffretext als in der Quelle (umgeschlüsselt) und demselben Klartext.
  *
@@ -35,10 +34,10 @@
  * Aufruf:
  *   node tools/proben/freigabe/probe.mjs [basis] [ziel-email] [ziel-passwort]
  *
- * OHNE ZIELKONTO LEGT SIE SICH EINES AN (E-RP-02): `umlauf-freigabe@…` über
+ * OHNE ZIELKONTO LEGT SIE SICH EINES AN: `umlauf-freigabe@…` über
  * den Anlegeweg des Kreislaufs (`pruefkonto.py`), und räumt es danach weg.
- * Bis RP-01 arbeitete sie am Konto des edbak-Kreislaufs und war nur grün,
- * wenn der vorher gelaufen war (F-RP-07). Wer ein Konto nennt, bekommt es
+ * Früher arbeitete sie am Konto des edbak-Kreislaufs und war nur grün,
+ * wenn der vorher gelaufen war. Wer ein Konto nennt, bekommt es
  * unverändert — und es wird nicht gelöscht.
  */
 import { execFileSync } from 'node:child_process';
@@ -56,7 +55,7 @@ const KONTO  = join(HIER, '..', '..', 'referenzdatensatz', 'vergleich', 'pruefko
 const MODUL = process.env.PLAYWRIGHT_MODUL
   || '/opt/node22/lib/node_modules/playwright/index.mjs';
 const PW = (m => m.default ?? m)(await import('file://' + MODUL));
-/* Die Engine wählt der Läufer (MOTOR=… oder --motor), R87. */
+/* Die Engine wählt der Läufer (MOTOR=… oder --motor). */
 const MOTOR = motorWahl(process.argv);
 
 let gesamt = 0, offen = 0;
@@ -78,7 +77,7 @@ if (EIGENES) {
 const lokal = /^https?:\/\/(127\.0\.0\.1|localhost)(:|\/|$)/.test(BASIS);
 const browser = await starten(PW, MOTOR);
 const kontext = await browser.newContext({ ignoreHTTPSErrors: lokal });
-/* DER WARTUNGSLAUF BLEIBT AUS (S11-07, F-S11-77): Er packt und dünnt im
+/* DER WARTUNGSLAUF BLEIBT AUS: Er packt und dünnt im
    Browser aus, sobald eine Seite ihn anstößt (Startseite, Reiter Backup),
    und das Ausdünnen ändert die Punkte — mitten in einem Vergleich wäre das
    eine Abweichung, die keine ist. Die Antwort sagt „nichts fällig" — ein
@@ -102,7 +101,7 @@ try {
     const code = EdCrypto.newRecoveryCode();
     const ck   = EdCrypto.randomHex(32);
     const rc   = await EdCrypto.recoveryKeyHex(code);
-    /* Das Schlüsselpaar der Quelle (S11-06c), wie `EdKontopaar.anlegen()`
+    /* Das Schlüsselpaar der Quelle, wie `EdKontopaar.anlegen()`
        es baut: SPKI offen, PKCS8 unter dem Inhaltsschlüssel. */
     const kp = await crypto.subtle.generateKey({ name: 'ECDH', namedCurve: 'P-256' }, true,
                                                ['deriveBits']);
@@ -123,7 +122,7 @@ try {
 
   /* ---- 2. Quelle herrichten, sichern, freigeben ------------------------ */
   const q = php('quelle', { ...mat, ziel: ZIEL });
-  /* FASSUNG 3 SEIT S10/AP4 — und die Nummer allein ist kein Beleg. Ein
+  /* FASSUNG 3 — und die Nummer allein ist kein Beleg. Ein
    * Paket, das „3" ins Manifest schreibt und die Teile offen ablegt, käme
    * hier durch. Gezählt wird deshalb das Siegel an JEDEM ZIP-Eintrag und an
    * der Begleitdatei daneben. */
@@ -132,7 +131,7 @@ try {
   pruefe(q.zip_eintraege > 0 && q.zip_versiegelt === q.zip_eintraege,
          'Jeder Eintrag im ZIP trägt das Siegel edsk1:',
          `${q.zip_versiegelt} von ${q.zip_eintraege} Einträgen`);
-  /* R17-20 (F-R17-02, E-R17-46): nur an Herkunft oder dieselbe Adresse, mit
+  /* Nur an Herkunft oder dieselbe Adresse, mit
      Protokolleintrag. */
   pruefe(q.fremd_erlaubt === false, 'Freigabe an ein fremdes Konto ist abgewiesen (R17-20)',
          'erlaubt=' + q.fremd_erlaubt);
@@ -158,13 +157,13 @@ try {
     throw new Error(`Anmeldung als ${ZIEL} gescheitert. Das Konto muss bestehen `
       + `und dieses Passwort haben (drittes Argument).`);
   }
-  /* AUF DAS PAAR DES ZIELKONTOS WARTEN (S11-12). Es entsteht im Browser beim
+  /* AUF DAS PAAR DES ZIELKONTOS WARTEN. Es entsteht im Browser beim
    * ersten Entsperren nach der Anmeldung, nebenlaeufig. Ging die Probe ohne
    * es weiter, wies das Einspielen mit „kein Schlüsselpaar" ab — je nach
    * Zeitlage, im Pruefstand zweimal von vier Laeufen (22/9). Gewartet wird
    * hoechstens 20 s; danach scheitert die Probe mit diesem Grund.
    *
-   * UND ZWAR AUF DER ERSTEN SEITE (Konzept DM, F-DM-02). Das Paar entsteht
+   * UND ZWAR AUF DER ERSTEN SEITE. Das Paar entsteht
    * nur dort, weil nur dort das Anmelde-Token liegt; bis zum 19.10.2026
    * wartete die Probe erst auf einstellungen.php. In Chromium kam das Paar
    * trotzdem an, in Firefox und WebKit nie. Der Schluss, nicht gemessen:
@@ -174,7 +173,7 @@ try {
    * nach 1152 ms (Firefox), 596 ms (WebKit), 599 ms
    * (Chromium). Dass ein Mensch, der die erste Seite so schnell verlässt,
    * bis zur nächsten Anmeldung kein Paar hat, ist ein Befund an der
-   * Anwendung, nicht an der Probe: Backlog Nr. 392. */
+   * Anwendung, nicht an der Probe. */
   let paarDa = false;
   for (let i = 0; i < 40 && !paarDa; i++) {
     paarDa = php('paar', { ziel: ZIEL }).paar === true;
@@ -202,11 +201,11 @@ try {
   pruefe(nachFalsch.angekommen === false,
          '...und es wurde NICHTS geschrieben', 'kein Einsatz im Zielkonto');
 
-  /* ---- 5a. Richtiger Schlüssel, aber das Vermerken scheitert (Nr. 277) --
+  /* ---- 5a. Richtiger Schlüssel, aber das Vermerken scheitert --
    * Nur der POST an die Freigabe wird abgebrochen — der Abruf des Pakets
    * (GET) und das Einspielen laufen durch. So sieht ein Netzfehler genau
    * zwischen Einspielen und Vermerken aus, und das ist der Fall, in dem die
-   * Seite bis Web 21.1.6 „fehlgeschlagen" sagte, obwohl alles da war. */
+   * Seite früher „fehlgeschlagen" sagte, obwohl alles da war. */
   const nurVermerk = r => (r.request().method() === 'POST' ? r.abort('failed') : r.continue());
   await seite.route('**/api/adminbackup_freigabe.php', nurVermerk);
   await seite.fill('#freigabecode', mat.code);
@@ -261,12 +260,12 @@ try {
          'Der Chiffretext ist ein ANDERER als in der Quelle',
          'umgeschlüsselt, nicht durchgereicht');
 
-  /* ---- 5b. Hülle und Spur gehen mit dem Paar DIESES Kontos auf (S11-06c) -
+  /* ---- 5b. Hülle und Spur gehen mit dem Paar DIESES Kontos auf -
    * Die Quelle hat sie mit IHREM Paar verschlossen. Ohne Umschlüsseln kämen
    * sie hier als Chiffretext an, den niemand öffnen kann. */
   const ort = await seite.evaluate(async (n) => {
     try {
-      /* Seit R17-25 aus der Ablage (IndexedDB), nicht mehr aus dem Tab. */
+      /* Aus der Ablage (IndexedDB), nicht aus dem Tab. */
       const k = await EdOrtsdaten.schluessel((await EdCrypto.inhaltLesen()).schluessel);
       const innen = await EdOrtsdaten.einsatz({ ort_huelle: n.ort_huelle, client_ref: n.client_ref }, k);
       const punkte = await EdOrtsdaten.spur(n.stuecke, 'spur', n.client_ref, [], k);

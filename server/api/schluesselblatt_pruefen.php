@@ -8,8 +8,7 @@ require_once __DIR__ . '/../einstieg_lib.php';
 require_once __DIR__ . '/../ratelimit_lib.php';
 
 /**
- * api/schluesselblatt_pruefen.php — die Betreiber-Rueckfrage (P5b/AP9,
- * E-P5b-10, -21; Mockup M-P5b-02c, Teil 2).
+ * api/schluesselblatt_pruefen.php — die Betreiber-Rueckfrage.
  *
  * ===========================================================================
  * ES WIRD EINGEGEBEN, NICHT BESTAETIGT
@@ -59,9 +58,9 @@ require_once __DIR__ . '/../ratelimit_lib.php';
  * KEINE SCHLUESSELERNEUERUNG AN DIESER STELLE
  * ===========================================================================
  *
- * E-P5b-10 sagt es ausdruecklich, und es ist die wichtigste Grenze dieses
- * Endpunkts: Den Serverschluessel zu wechseln hiesse, jede versiegelte
- * Sicherung neu zu umhuellen. Das ist ein S10-Vorgang mit eigenem Ablauf,
+ * Das ist die wichtigste Grenze dieses Endpunkts: Den Serverschluessel zu
+ * wechseln hiesse, jede versiegelte Sicherung neu zu umhuellen. Das ist ein
+ * Vorgang mit eigenem Ablauf,
  * kein Knopf in einem Dialog. Wer sein Blatt verloren hat, DRUCKT ES NEU
  * (Betrieb -> Schluesselblatt) — der Schluessel aendert sich dabei nicht,
  * und genau deshalb ist das der richtige Weg.
@@ -73,7 +72,7 @@ csrf_check();
 /**
  * Die Werte, nach denen gefragt wird — in fester Reihenfolge.
  *
- * NUR DIE BEIDEN AUS E-P5b-10: Serverschluessel und Server-Anteil. Der
+ * NUR SERVERSCHLUESSEL UND SERVER-ANTEIL. Der
  * BISHERIGE Anteil (`kdf_anteil_alt`) steht waehrend einer Rotation auch auf
  * dem Blatt und wird hier NICHT gefragt — er verschwindet wieder, und eine
  * Frage, die je nach Betriebslage vier oder sechs Felder hat, verwirrt mehr,
@@ -221,7 +220,7 @@ rate_erfolg('blatt', null, rate_nur_konto($email));
 unset($_SESSION['blatt_fragen']);
 blatt_bestaetigt();
 
-/* PROTOKOLL OHNE WERTE, REITER VERWALTUNG (E-P5b-10: „Schluesselblatt
+/* PROTOKOLL OHNE WERTE, REITER VERWALTUNG („Schluesselblatt
  * bestaetigt, von …"). Der Reiter Sicherheit sammelt Sperren und Angriffe;
  * eine gelungene Bestaetigung ist eine Handlung der BetreiberIn und gehoert
  * ins Audit. Der FEHLVERSUCH geht den anderen Weg (siehe unten). */
@@ -242,10 +241,10 @@ function blatt_sperrtext(): string
 }
 
 /**
- * Der Fehlversuch ins Sicherheitsprotokoll — OHNE WERTE (E-P5b-21).
+ * Der Fehlversuch ins Sicherheitsprotokoll — OHNE WERTE.
  *
- * Nicht `protokoll()`: Der Reiter `sicherheit` existiert dort nicht (er kommt
- * mit S10c). Sperren und Fehlversuche gehen seit P5a nach
+ * Nicht `protokoll()`: Den Reiter `sicherheit` gibt es dort nicht.
+ * Sperren und Fehlversuche gehen nach
  * `sicherheit_ereignisse`, und dorthin gehoert auch dieser.
  */
 function protokoll_sicherheit_blatt(string $email, int $rest): void

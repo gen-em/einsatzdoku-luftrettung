@@ -1,13 +1,11 @@
 <?php
 declare(strict_types=1);
 /**
- * MIGRATIONEN — Katalog, Vorschau und Lauf (S8/AP2).
+ * MIGRATIONEN — Katalog, Vorschau und Lauf.
  *
- * WARUM DIESE DATEI SEIT WEB 15.1.0 GETRENNT STEHT. Der Katalog lag in
- * `update.php`, und `update.php` war zugleich die Wartungsseite. Mit S8 zerfaellt
- * die Wartungsseite in sechs Seiten des Blocks BETRIEB (E-S8-05); die
- * Migrationen ziehen nach `betrieb_updates.php`. Zwei Aufrufer brauchen den
- * Katalog seither:
+ * WARUM DIESE DATEI GETRENNT STEHT. Die Wartung verteilt sich auf die Seiten
+ * des Blocks BETRIEB; die Migrationen stehen unter `betrieb_updates.php`.
+ * Zwei Aufrufer brauchen den Katalog:
  *
  *   betrieb_updates.php   Vorschau und Lauf ueber die Oberflaeche
  *   update.php            der Notausgang auf der Kommandozeile (`php update.php`),
@@ -56,13 +54,12 @@ function _geraete_mit_datumsname(PDO $pdo): array
  * Installationen, die an unterschiedlichen Punkten stehen koennen. Die vier
  * Auskuenfte stehen deshalb hier und nicht als wiederholtes SQL im Ablauf.
  */
-/* DIE DREI REICHEN SEIT WEB 20.28.0 NUR NOCH DURCH (Schritt 15/AP4,
- * E-ZE-04). Der Rumpf steht in `db.php` als `db_hat_tabelle()`,
+/* DIE DREI REICHEN NUR DURCH. Der Rumpf steht in `db.php` als `db_hat_tabelle()`,
  * `db_hat_spalte()` und `db_hat_index()`; dort finden ihn auch die vier
  * Dateien, die `migration_lib.php` nicht laden.
  *
- * DIE NAMEN BLEIBEN, weil 42 gelaufene Migrationen sie rufen und E-ZE-04
- * sagt: Gelaufene Migrationen werden nicht umgebaut. NEUE Migrationen rufen
+ * DIE NAMEN BLEIBEN, weil 42 gelaufene Migrationen sie rufen, und
+ * gelaufene Migrationen werden nicht umgebaut. NEUE Migrationen rufen
  * `db_hat_*()` unmittelbar. */
 
 function _hat_tabelle(PDO $pdo, string $tabelle): bool
@@ -108,7 +105,7 @@ function _fk_name(PDO $pdo, string $tabelle, string $spalte): ?string
  *           installiert) -> wird als "uebersprungen" verbucht
  * 'sql'   : Liste der auszufuehrenden Statements
  * 'run'   : alternativ eine Funktion statt einer Anweisungsliste
- * 'web'   : Web-Fassung, mit der diese Migration ausgeliefert wurde (Web 7.0.0)
+ * 'web'   : Web-Fassung, mit der diese Migration ausgeliefert wurde
  *
  *           REINE AUSKUNFT — sie steuert nichts. Die Wartungsseite zeigt sie
  *           als eigene Spalte, und sie beantwortet die Frage, die man vor
@@ -122,7 +119,7 @@ function _fk_name(PDO $pdo, string $tabelle, string $spalte): ?string
  *           Gegenstand erschienen ist. Fehlt der Schluessel ganz, bleibt die
  *           Zelle leer — kein Fehler, nur keine Angabe.
  *
- * ---- Zwei Angaben fuer destruktive Migrationen (M6-01) ---------------------
+ * ---- Zwei Angaben fuer destruktive Migrationen ---------------------
  *
  * 'zerstoert' : Klartext, WAS unwiderruflich verlorengeht. Allein diese
  *               Angabe hebt die Migration in der Vorschau hervor.
@@ -130,7 +127,7 @@ function _fk_name(PDO $pdo, string $tabelle, string $spalte): ?string
  *               INHALT diese Migration vernichten wuerde. Steht dort etwas
  *               drin, wird die Migration NICHT ausgefuehrt, sondern gemeldet.
  * 'inhalt_wo' : (wahlweise) Funktion (PDO) -> Text, der nennt, WO der Inhalt
- *               steht — Konto und Datensatz (S11-12, E-S11-83). Er wird an die
+ *               steht — Konto und Datensatz. Er wird an die
  *               gesperrte Zeile gehaengt und nur gefragt, wenn sie sperrt.
  *
  * WARUM BEIDE UND NICHT EINE
@@ -153,7 +150,7 @@ function _fk_name(PDO $pdo, string $tabelle, string $spalte): ?string
  * bereits geloeschte Spalte hat keinen Inhalt mehr — ohne 'skip' waere sie
  * damit von einer vollen nicht zu unterscheiden.
  *
- * ---- Eine dritte Angabe: die Vorbedingung (P5c/AP8, E-P5c-125) -------------
+ * ---- Eine dritte Angabe: die Vorbedingung -------------
  *
  * 'vorbedingung'     : Funktion (PDO) -> Liste [was, Zahl, Beschreibung] wie
  *                      `migrationen_inhalt_zaehlen()`. Leer heisst: Die
@@ -257,8 +254,8 @@ function migrationen_katalog(): array
         'id'    => '2026_07_18_manuelle_einsaetze',
         'web'   => '1.2',
         'label' => 'Manuelle Einsätze: Schutzmarker + Zusatzfelder (Einsatznummer, Notizen)',
-        /* ZWEI NAMEN, EINE SPALTE (Nr. 238). Die Uhr-Sperre hiess bis
-         * Web 20.24.2 `manual` und heisst seit Web 20.25.0 `uhr_gesperrt`.
+        /* ZWEI NAMEN, EINE SPALTE. Die Uhr-Sperre hiess
+         * frueher `manual` und heisst `uhr_gesperrt`.
          * Diese Pruefung muss BEIDE Namen kennen, sonst legt sie auf einer
          * bereits umbenannten Datenbank ohne Registereintrag die Spalte ein
          * zweites Mal an -- leer, neben der vollen. Ein Fehler waere das
@@ -514,13 +511,13 @@ function migrationen_katalog(): array
         'web'   => '2.0.0',
         'label' => 'Tageszuordnung: Tag = lokales Datum des Einsatz-/Segmentbeginns (Wechsel 0:00); Bestand wird neu zugeordnet',
         'run'   => function (PDO $pdo): void {
-            /* MIT UMGESTELLT, OBWOHL E-ZE-04 GELAUFENE MIGRATIONEN IN RUHE
-             * LAESST: Hier stand `global $CFG`, und die Globale gibt es seit
-             * Web 20.27.0 nicht mehr. Stehen geblieben waere die Zeile nicht
+            /* MIT UMGESTELLT, OBWOHL GELAUFENE MIGRATIONEN SONST IN RUHE
+             * BLEIBEN: Hier stand `global $CFG`, und die Globale gibt es
+             * nicht. Stehen geblieben waere die Zeile nicht
              * neutral — sie fiele auf `Europe/Berlin` zurueck, und zwar
              * STILL. Auf einer Anlage mit anderer Zeitzone ordnete diese
              * Migration die Tage dann falsch zu. Das waere eine
-             * Verhaltensaenderung, und E-ZE-10 laesst keine zu. */
+             * Verhaltensaenderung, und die soll es nicht geben. */
             $tz  = new DateTimeZone((string)konfig('app.timezone', 'Europe/Berlin'));
             $utc = new DateTimeZone('UTC');
             foreach (['missions', 'rest_segments'] as $tab) {
@@ -603,14 +600,15 @@ function migrationen_katalog(): array
         'run'   => function (PDO $pdo): void {
             $pdo->exec('ALTER TABLE missions ADD COLUMN site_ele_m INT NULL AFTER ascent_m');
 
-            /* DER BACKFILL IST SEIT WEB 23 WEG (S11-12) — eine bewusste
-             * Ausnahme von E-ZE-04. Er rechnete die Hoehe mit
+            /* KEIN BACKFILL — eine bewusste
+             * Ausnahme von der Regel, gelaufene Migrationen nicht
+             * umzubauen. Er rechnete die Hoehe mit
              * `compute_site_elevation()` aus `track_points`; beide gibt es
              * nicht mehr, und `2026_10_19_klartext_weg` wirft die Spalte
-             * wieder. Eine Datenbank von vor Web 2.3.0, die heute alle
+             * wieder. Eine sehr alte Datenbank, die heute alle
              * Migrationen durchlaeuft, bekaeme die Werte nur, damit die
-             * spaetere Migration an ihnen sperrt. Die Hoehe rechnet seit
-             * Web 22 der Browser in den `pat_blob`. */
+             * spaetere Migration an ihnen sperrt. Die Hoehe rechnet der
+             * Browser in den `pat_blob`. */
         },
     ],
     [
@@ -764,16 +762,16 @@ function migrationen_katalog(): array
         'sql'   => [
             // Der Klartextbestand wurde vor dieser Auslieferung ueber eine
             // einmalige Rettungsseite gesichert und von Hand in den
-            // verschluesselten Block nachgetragen; die Seite ist seit Web 3.4.0
+            // verschluesselten Block nachgetragen; die Seite ist inzwischen
             // entfernt (Changelog). Ein automatischer Umzug war nie moeglich:
             // pat_blob entsteht ausschliesslich im Browser.
             //
             // ACHTUNG, DIE SPALTE WIRD GELOESCHT: Auf einer Installation, die
             // den Klartextbestand NICHT vorher gerettet hat, gingen die
-            // Beschreibungen des Einsatzorts hier verloren. Seit Web 4.7.0
+            // Beschreibungen des Einsatzorts hier verloren. Inzwischen
             // fangen 'zerstoert' und 'inhalt' oben genau diesen Fall ab: Steht
             // in der Spalte noch etwas, wird sie nicht geloescht, sondern
-            // gemeldet (M6-01).
+            // gemeldet.
             "ALTER TABLE missions DROP COLUMN site_desc",
         ],
     ],
@@ -789,7 +787,7 @@ function migrationen_katalog(): array
             return (int)$q->fetchColumn() > 0;
         },
         'sql'   => [
-            /* --- S1: Rundenzahl der Schluesselableitung je Konto -----------
+            /* --- Rundenzahl der Schluesselableitung je Konto -----------
              * BESONDERE SORGFALT. Nicht wegen der Datenmenge, sondern weil
              * die Aenderung die Schluesselableitung beruehrt und ein Fehler
              * dort ALLE KONTEN GLEICHZEITIG AUSSPERRT.
@@ -812,7 +810,7 @@ function migrationen_katalog(): array
                ADD COLUMN kdf_iter INT UNSIGNED NOT NULL DEFAULT 310000 AFTER kdf_salt',
             'UPDATE users SET kdf_iter = 310000 WHERE kdf_iter = 0',
 
-            /* --- S2: Pruefsumme des Inhaltsschluessels ---------------------
+            /* --- Pruefsumme des Inhaltsschluessels ---------------------
              * Bleibt fuer Bestandskonten LEER. Eine fehlende Pruefsumme ist
              * ein gueltiger Zustand: Konten ohne sie werden weiter
              * angenommen und bekommen sie beim naechsten Setzen des
@@ -823,7 +821,7 @@ function migrationen_katalog(): array
             'ALTER TABLE users
                ADD COLUMN pat_key_check CHAR(32) NULL AFTER pat_wrap_rc',
 
-            /* --- S3: Sitzungszaehler ---------------------------------------
+            /* --- Sitzungszaehler ---------------------------------------
              * Wird beim Passwortwechsel erhoeht und bei jeder Anfrage gegen
              * die Sitzung geprueft. Damit endet eine offene Sitzung, wenn das
              * Passwort gewechselt wird — heute laeuft sie weiter, was genau
@@ -833,7 +831,7 @@ function migrationen_katalog(): array
             'ALTER TABLE users
                ADD COLUMN session_epoch INT UNSIGNED NOT NULL DEFAULT 0 AFTER role',
 
-            /* --- S4: Ratenschutz -------------------------------------------
+            /* --- Ratenschutz -------------------------------------------
              * Zaehlung je Kontokennung UND je IP-Adresse, mit Zeitfenster.
              * Der Aufraeumjob entsorgt die Tabelle mit.
              * Einzige Schemaaenderung dieser Auslieferung, die bereits
@@ -851,7 +849,7 @@ function migrationen_katalog(): array
                INDEX idx_fenster (fenster_start)
              ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4",
 
-            /* --- S5: Sperrliste auch fuer Ruhe-Segmente ---------------------
+            /* --- Sperrliste auch fuer Ruhe-Segmente ---------------------
              * Die Sperrliste war an beiden Enden nur fuer Einsaetze
              * umgesetzt: Sie wurde nur fuer Einsaetze befuellt und nur im
              * Einsatz-Zweig abgefragt. Ein endgueltig geloeschtes
@@ -869,7 +867,7 @@ function migrationen_katalog(): array
                ADD UNIQUE KEY uq_dev_type_ref (device_id, owner_type, client_ref)',
             'ALTER TABLE deleted_refs DROP INDEX uq_dev_ref',
 
-            /* --- S6: Sortierregel der E-Mail-Spalte ausdruecklich festlegen -
+            /* --- Sortierregel der E-Mail-Spalte ausdruecklich festlegen -
              * Dass die Anmeldung heute trotz uneinheitlicher Normalisierung
              * der Adresse funktioniert, liegt ALLEIN an der
              * Standardsortierregel der Datenbank. Auf einer Installation mit
@@ -899,8 +897,8 @@ function migrationen_katalog(): array
         // liegen — also genau im Anwendungsfall.
         /* WARUM ES DIESE MIGRATION GIBT
          *
-         * Web 4.5.2 hat die Zeitzone der Datenbankverbindung ausdruecklich auf
-         * UTC gesetzt (M5-09). Vorher kam sie aus der Einstellung des
+         * Spaeter wurde die Zeitzone der Datenbankverbindung ausdruecklich auf
+         * UTC gesetzt. Vorher kam sie aus der Einstellung des
          * Datenbankservers — bei einer Ortszeit schrieb NOW() also um den
          * Zonenversatz vor der Weltzeit.
          *
@@ -964,7 +962,7 @@ function migrationen_katalog(): array
          * pair.php vergab beim Koppeln den Namen "Uhr (gekoppelt 11.08.2026)".
          * Dieselbe Angabe steht in devices.created_at, und beide werden
          * angezeigt — im Hinweis auf der Startseite stand das Datum deshalb
-         * zweimal hintereinander. Seit Web 5.0.1 heisst ein neu gekoppeltes
+         * zweimal hintereinander. Inzwischen heisst ein neu gekoppeltes
          * Geraet nur noch "Uhr"; der Altbestand traegt das Datum aber weiter.
          *
          * WARUM DAS HIER GEFAHRLOS IST
@@ -1000,7 +998,7 @@ function migrationen_katalog(): array
         'id'    => '2026_08_16_kontokennung',
         'web'   => '5.9.0',
         'label' => 'Kontokennung für die Konto-Backups (users.account_key)',
-        /* WARUM EINE EIGENE KENNUNG UND NICHT users.id ODER DIE ADRESSE (E17)
+        /* WARUM EINE EIGENE KENNUNG UND NICHT users.id ODER DIE ADRESSE
          *
          * Die Kennung ist der Ordnername des Admin-Backups. Sie muss
          * unveraenderlich sein und darf NIE ein zweites Mal vergeben werden.
@@ -1032,7 +1030,7 @@ function migrationen_katalog(): array
             return (int)$pdo->query('SELECT COUNT(*) FROM users WHERE account_key IS NULL')
                             ->fetchColumn() === 0;
         },
-        /* EIN ZWEITER LAUF IST FOLGENLOS (P9).
+        /* EIN ZWEITER LAUF IST FOLGENLOS.
          *
          * Die Spalte wird nur angelegt, wenn sie fehlt; gefuellt wird nur, wo
          * NULL steht. Ein erneuter Lauf findet dann nichts mehr zu tun und
@@ -1124,7 +1122,7 @@ function migrationen_katalog(): array
                 && !_hat_spalte($pdo, 'days', 'aircraft')
                 && _hat_spalte($pdo, 'crew_presets', 'base_id');
         },
-        /* ---- Ablauf in elf Schritten (Konzept 4.9) -------------------------
+        /* ---- Ablauf in elf Schritten ----------------------------------------
          *
          * REIHENFOLGE IST HIER KEIN GESCHMACK. `days` verweist auf `vehicles`,
          * `missions` auf `days` — jeder Fremdschluessel braucht sein Ziel
@@ -1137,7 +1135,7 @@ function migrationen_katalog(): array
          */
         'run'   => function (PDO $pdo): void {
 
-            /* -- 1. bases: Koordinaten fuer den Abfahrtort (Konzept 3.5.1) -- */
+            /* -- 1. bases: Koordinaten fuer den Abfahrtort -- */
             if (!_hat_spalte($pdo, 'bases', 'lat')) {
                 $pdo->exec('ALTER TABLE bases ADD COLUMN lat DECIMAL(9,6) NULL,
                                               ADD COLUMN lon DECIMAL(9,6) NULL');
@@ -1160,7 +1158,7 @@ function migrationen_katalog(): array
             if (!_hat_spalte($pdo, 'vehicles', 'base_id')) {
                 /* NULLABLE, nicht NOT NULL. Bestandsdaten haben keinen
                  * Standortbezug; die Nachbearbeitungsseite traegt ihn nach und
-                 * zieht die Bedingung erst danach an (E15, A12). */
+                 * zieht die Bedingung erst danach an. */
                 $pdo->exec('ALTER TABLE vehicles ADD COLUMN base_id INT UNSIGNED NULL AFTER user_id');
                 $pdo->exec('ALTER TABLE vehicles ADD FOREIGN KEY (base_id)
                             REFERENCES bases(id) ON DELETE CASCADE');
@@ -1196,7 +1194,7 @@ function migrationen_katalog(): array
                 $pdo->exec('ALTER TABLE vehicles DROP COLUMN is_default');
             }
 
-            /* Schritt 2a des Konzepts: BEIDE Faehigkeiten fuer den Bestand.
+            /* Schritt 2a: BEIDE Faehigkeiten fuer den Bestand.
              * Bisher standen Winden- und Bergwachtfelder an JEDEM Hubschrauber
              * zur Verfuegung. Ohne diesen Schritt verschwaende vorhandene
              * Dokumentation aus der Anzeige, sobald cap_gate greift. Das
@@ -1238,7 +1236,7 @@ function migrationen_katalog(): array
                 }
             }
 
-            /* FEHLENDE DIENSTTAGE NACHZIEHEN (A11: kein verwaister Einsatz).
+            /* FEHLENDE DIENSTTAGE NACHZIEHEN (kein verwaister Einsatz).
              * Es gibt Einsaetze und Ruhe-Segmente, zu deren Datum keine
              * `days`-Zeile existiert — bis hierher war das folgenlos, weil die
              * Verknuepfung ueber (user_id, day) gerechnet und nicht
@@ -1276,9 +1274,8 @@ function migrationen_katalog(): array
                               ON r.user_id = d.user_id AND r.day = d.day
                         ) WHERE d.ended_at IS NULL');
 
-            /* Schritt 3a: Snapshot-Spalten (E8).
-             * COALESCE auf die Altspalten ist die Zugabe gegenueber dem
-             * Konzept: Wo die Stammdaten-Verknuepfung fehlt, rettet sie den
+            /* Schritt 3a: Snapshot-Spalten.
+             * COALESCE auf die Altspalten: Wo die Stammdaten-Verknuepfung fehlt, rettet sie den
              * frueheren Freitext in den Snapshot, statt ihn beim Aufraeumen in
              * Schritt 11 zu verlieren. */
             $pdo->exec('UPDATE days d LEFT JOIN bases b ON b.id = d.base_id
@@ -1329,7 +1326,7 @@ function migrationen_katalog(): array
 
             /* Schritt 4: kind und day_crew, DREISTUFIG.
              *
-             * Der neutrale Zustand aus E26 gilt fuer NEUE Diensttage, nicht
+             * Der neutrale Zustand gilt fuer NEUE Diensttage, nicht
              * rueckwirkend — Bestandsdaten duerfen keine Besatzung verlieren.
              *   a) Rettungsmittel vorhanden  -> 'air', Zeilen fuer ALLE Rollen
              *      des Rettungsmittels, auch leere. Der Rollensatz ist damit
@@ -1454,7 +1451,7 @@ function migrationen_katalog(): array
                 }
             }
 
-            /* -- 10. Standortbezug der Stammdaten (E15) -------------------- *
+            /* -- 10. Standortbezug der Stammdaten -------------------- *
              *
              * ZWEISTUFIG, weil Bestandsdaten keinen Standortbezug haben:
              *   - genau EIN Standort im Zustaendigkeitsbereich -> zuordnen,
@@ -1466,7 +1463,7 @@ function migrationen_katalog(): array
              * die eigenen Standorte, fuer zentrale (user_id IS NULL) die
              * zentralen. Gibt es keinen einzigen Standort, legt die Migration
              * KEINEN an — ein erfundener Sammelstandort waere genau die zweite
-             * Ebene, die E15 vermeiden soll.
+             * Ebene, die der verbindliche Standortbezug vermeiden soll.
              */
             if (!_hat_spalte($pdo, 'transport_dests', 'lat')) {
                 $pdo->exec('ALTER TABLE transport_dests ADD COLUMN lat DECIMAL(9,6) NULL,
@@ -1497,7 +1494,7 @@ function migrationen_katalog(): array
              * Ohne diesen Schritt bliebe (user_id, name) eindeutig — und
              * dieselbe Zielklinik liesse sich nicht an zwei Standorten
              * anlegen. Genau diese Doppelpflege ist aber der bewusst
-             * hingenommene Preis von E15; sie zu verhindern kehrte die
+             * hingenommene Preis des verbindlichen Standortbezugs; sie zu verhindern kehrte die
              * Entscheidung um.
              *
              * REIHENFOLGE: erst den neuen Schluessel ANLEGEN, dann den alten
@@ -1556,7 +1553,7 @@ function migrationen_katalog(): array
 
             /* Zentrale Standorte, die in einem bestehenden Diensttag benutzt
              * wurden, ausdruecklich auswaehlen — sonst verschwinden sie aus
-             * den Auswahllisten (E16). */
+             * den Auswahllisten. */
             $pdo->exec('INSERT IGNORE INTO user_bases (user_id, base_id)
                         SELECT DISTINCT d.user_id, d.base_id
                         FROM days d JOIN bases b ON b.id = d.base_id
@@ -1582,7 +1579,7 @@ function migrationen_katalog(): array
         },
         /* LEERSTRING IST DER STANDARD, kein 'hubschrauber'. Wer nichts
          * gewaehlt hat, folgt dem Standard der Installation — und der kann
-         * sich aendern (E-P3-20; die Wahl dafuer entsteht in O9). Stuende
+         * sich aendern (die Wahl dafuer gibt es in der Wartung). Stuende
          * hier 'hubschrauber' als Vorgabe, haetten alle bestehenden Konten
          * eine ausdrueckliche Wahl getroffen, die sie nie getroffen haben,
          * und ein spaeterer Wechsel des Installationsstandards ginge an
@@ -1602,7 +1599,7 @@ function migrationen_katalog(): array
             return (int)$q->fetchColumn() > 0;
         },
         /* NULL FUER DEN BESTAND, kein NOW(). Die Kontoseite und die
-         * NutzerInnen-Liste zeigen „zuletzt angemeldet" (E-P3-41). Wuerde die
+         * NutzerInnen-Liste zeigen „zuletzt angemeldet". Wuerde die
          * Migration den Zeitpunkt der Migration eintragen, saehe der ganze
          * Bestand aus, als haette sich jedes Konto heute angemeldet — eine
          * erfundene Angabe genau in der Spalte, die man liest, um ungenutzte
@@ -1656,9 +1653,8 @@ function migrationen_katalog(): array
              * bedingten Fremdschluessel. Das ist eine bewusste Folge, keine
              * Nachlaessigkeit, und sie hat einen Preis: Beim Loeschen eines
              * Kontos raeumt die Kaskade diese Tabelle NICHT mit ab. Genau das
-             * ist bei track_points seit jeher so und ist erst in S2
-             * aufgefallen (F-S2-B) — deshalb loeschen die Loeschwege den Blob
-             * ab AP1 ausdruecklich mit, und der Wartungsjob bleibt nur das
+             * ist bei track_points ebenso — deshalb loeschen die Loeschwege den
+             * Blob ausdruecklich mit, und der Wartungsjob bleibt nur das
              * Sicherheitsnetz.
              *
              * MEDIUMBLOB (16 MB): Bei 3,58 Byte je Punkt sind das rund 4,7
@@ -1669,7 +1665,7 @@ function migrationen_katalog(): array
              * zusaetzlich im Blob-Kopf; hier steht sie als SPALTE, damit
              * next_seq (ingest.php) sie lesen kann, ohne den Blob anzufassen.
              *
-             * Der Index auf (stufe, geaendert_am) ist fuer die Jobs aus AP3:
+             * Der Index auf (stufe, geaendert_am) ist fuer die Verdichtungsjobs:
              * Sie suchen „Stufe 2, aelter als sechs Monate" und sollen dafuer
              * nicht die ganze Tabelle lesen. */
             "CREATE TABLE track_blobs (
@@ -1698,10 +1694,10 @@ function migrationen_katalog(): array
         'sql'   => [
             /* EINE ZEILE JE JOB, und sie ist mehr als ein Zeitstempel.
              *
-             * Bis Web 10.0.0 hielt `app_state` zwei Schluessel: den letzten
-             * Versuch und den letzten vollstaendigen Lauf. Das reichte,
-             * solange die Wartung in einem Zug durchlief. Sobald Arbeit in
-             * HAEPPCHEN anfaellt — und das tut sie ab AP3, wenn Millionen
+             * Zwei Schluessel in `app_state` — der letzte Versuch und der
+             * letzte vollstaendige Lauf — reichen, solange die Wartung in
+             * einem Zug durchlaeuft. Sobald Arbeit in
+             * HAEPPCHEN anfaellt — und das tut sie, wenn Millionen
              * Punkte zu verdichten sind —, braucht jeder Job zusaetzlich:
              *
              *   zustand      wo er stehengeblieben ist (JSON, Fortsetzungsmarke)
@@ -1743,7 +1739,7 @@ function migrationen_katalog(): array
             return (int)$q->fetchColumn() > 0;
         },
         'sql'   => [
-            /* DIE GROESSE, AUF DER E-S2-06 STEHT — und die es bislang nicht gab.
+            /* DIE GROESSE, AN DER DIE SPEICHERGRENZE HAENGT.
              *
              * Die Karenz lautet „final gesetzt und 14 Tage ohne neuen Punkt".
              * Dafuer braucht es eine ANKUNFTSZEIT, und im ganzen Schema gab es
@@ -1787,18 +1783,18 @@ function migrationen_katalog(): array
             return (int)$q->fetchColumn() > 0;
         },
         'sql'   => [
-            /* WOHIN DIE BACKUPS GESCHOBEN WERDEN (E-S2-22).
+            /* WOHIN DIE BACKUPS GESCHOBEN WERDEN.
              *
              * DER NAME IST NICHT `transport_dests`, UND ZWAR MIT ABSICHT. Die
-             * Tabelle `transport_dests` gibt es seit Web 4 — sie haelt die
+             * Tabelle `transport_dests` gibt es laengst — sie haelt die
              * Zielkliniken, also das Transportziel einer Patientin. Das
-             * Konzept nennt das hier ebenfalls „Transportziel"; im Adminbereich
+             * Wort liegt hier ebenfalls nahe: „Transportziel"; im Adminbereich
              * staenden damit zwei verschiedene Dinge unter demselben Wort, und
              * zwar zwei Klicks voneinander entfernt (Stammdaten gegen
              * Backups). Deshalb heisst es hier BACKUP-ZIEL. Der
              * Unterschied ist in
              * docs/konzepte/erledigt/Konzept-S2-Mengen-Spuren-Sicherung.md
-             * unter F-S2-G festgehalten.
+             * festgehalten.
              *
              * DIE GEHEIMNISSE STEHEN VERSIEGELT DRIN, NIE IM KLARTEXT.
              * `geheim` und `schluessel` tragen `edsk1:`-Chiffren aus
@@ -1859,7 +1855,7 @@ function migrationen_katalog(): array
             return (int)$q->fetchColumn() > 0;
         },
         'sql'   => [
-            /* EINE ZEILE JE SCHNITT — der Sperrvermerk aus E-S4-53.
+            /* EINE ZEILE JE SCHNITT — der Sperrvermerk.
              *
              * WAS DER SCHNITT IST: Wer einen vergessenen Einsatz nachtraegt,
              * schneidet ihn aus dem Ruhesegment heraus. Die Punkte WANDERN
@@ -1874,17 +1870,15 @@ function migrationen_katalog(): array
              * wieder auf. Der Vermerk sagt `ingest.php`, welchen Zeitraum es
              * an diesem Eigentuemer nicht mehr annehmen darf.
              *
-             * ZEITRAUM UND NICHT SEQUENZBEREICH — Abweichung vom Konzept,
-             * begruendet: Abschnitt 14 des Konzepts nennt `seq_von`/`seq_bis`.
-             * Das laesst sich beim Schnitt nicht ausfuellen. Die Punkte, um
+             * ZEITRAUM UND NICHT SEQUENZBEREICH. Ein `seq_von`/`seq_bis`
+             * laesst sich beim Schnitt nicht ausfuellen. Die Punkte, um
              * die es geht, sind noch NICHT geliefert; ihre Sequenznummern
              * vergibt `ingest.php` erst bei der Ankunft aus `seq_from`. Was
              * beim Schnitt bekannt ist, sind die Sequenzen der Punkte, die
              * schon dastehen — und die faengt `n_original` ohnehin ab. Der
              * Zeitraum dagegen steht fest, sobald die Bedienerin ihn gewaehlt
              * hat, und jeder eingehende Punkt traegt seine `ts` bei sich. Die
-             * Pruefung kostet damit keine zweite Abfrage je Punkt (Konzept
-             * 14, offener Punkt 2), sondern eine Abfrage je Upload.
+             * Pruefung kostet damit keine zweite Abfrage je Punkt, sondern eine Abfrage je Upload.
              *
              * POLYMORPH WIE track_points UND track_blobs, aus demselben
              * Grund und mit demselben Preis: kein Fremdschluessel, also
@@ -1892,7 +1886,7 @@ function migrationen_katalog(): array
              * die Kontoloeschung).
              *
              * `mission_id` ist das Ziel — der Einsatz, in den geschnitten
-             * wurde. Rueckgaengig (E-S4-17) braucht die Zuordnung: Es holt
+             * wurde. Rueckgaengig braucht die Zuordnung: Es holt
              * die Punkte zurueck UND loescht diese Zeile, sonst bliebe ein
              * Loch, das niemand mehr fuellen kann.
              *
@@ -1924,16 +1918,15 @@ function migrationen_katalog(): array
             return _hat_spalte($pdo, 'devices', 'geraet_art');
         },
         'sql'   => [
-            /* WAS FUER EIN GERAET HAT SICH HIER GEKOPPELT (R42, Backlog Nr. 59).
+            /* WAS FUER EIN GERAET HAT SICH HIER GEKOPPELT.
              *
              * Bis hierher wusste der Server nur, DASS ein Geraet gekoppelt ist.
              * Fuer die Frage "welche Geraete sollen wir kuenftig unterstuetzen"
              * gibt es keine brauchbare aeussere Quelle: Garmin veroeffentlicht
              * keine modellgenauen Zahlen, und der Connect-IQ-Store schluesselt
              * Installationen nicht nach Geraet auf. Wer es wissen will, muss
-             * selbst zaehlen. Die Uhr sendet die Angabe seit 1.9.0, die
-             * Handy-App seit 0.2.0 — `pair.php` hat sie bis Web 12.9.0
-             * stillschweigend verworfen.
+             * selbst zaehlen. Uhr und Handy-App senden die Angabe; ohne
+             * Spalte verwarf `pair.php` sie stillschweigend.
              *
              * ALLE DREI SIND NULL-BAR, UND ZWAR DAUERHAFT. Vier Wege legen ein
              * Geraet an, und nur einer von ihnen weiss etwas ueber das Geraet:
@@ -1950,9 +1943,9 @@ function migrationen_katalog(): array
              * Uhr wird nicht rueckwirkend gefragt, und es gaebe auch niemanden,
              * den man fragen koennte. Wer die Zahlen vollstaendig will, koppelt
              * neu — das ist der Preis dafuer, dass die Erhebung erst jetzt
-             * kommt, und er ist in R42 benannt.
+             * kommt.
              *
-             * WARUM DREI SPALTEN UND NICHT ZWEI. R42 nennt zwei (Art, Modell).
+             * WARUM DREI SPALTEN UND NICHT ZWEI (Art, Modell).
              * Die dritte haelt die ROHANGABE des Geraets — bei der Garmin-Uhr
              * die Teilenummer ("006-B4261-00"), beim Handy Hersteller und
              * Modell, wie das Geraet sie meldet. Der Grund ist die Aufloesung:
@@ -1966,9 +1959,9 @@ function migrationen_katalog(): array
              * BEHAUPTUNG DES GERAETS unveraendert festhaelt; `geraet_modell`
              * ist bereits eine Auslegung des Servers.
              *
-             * KEINE WEITEREN FELDER. Backlog Nr. 59 nennt daneben Displaymasse,
-             * Firmware, Plattform- und App-Fassung. Die stehen hier bewusst
-             * NICHT: R36 sagt "es wird nichts Neues erfasst", mit der
+             * KEINE WEITEREN FELDER. Displaymasse, Firmware, Plattform- und
+             * App-Fassung stehen hier bewusst NICHT: Es wird nichts Neues
+             * erfasst, mit der
              * Gerätekennung als der einen benannten Ausnahme — und die Ausnahme
              * ist die Frage "welches Geraet", nicht "in welchem Zustand". Die
              * Displaygroesse beantwortet keine Frage, die jemand gestellt hat.
@@ -2015,14 +2008,14 @@ function migrationen_katalog(): array
              * und die einzige verlaessliche Richtung ist eine neue.
              *
              * DER VOLLE NAME WIRD GESPEICHERT, gekuerzt wird erst fuer die
-             * Anzeige (geraet_modell_kurz()). Die spaetere Zaehlung (P5) soll
+             * Anzeige (geraet_modell_kurz()). Die spaetere Zaehlung soll
              * Hardwaregruppen zaehlen, und genau die bezeichnet der Sammelname;
              * ein beim Schreiben gekuerzter Name waere eine Auslegung, die sich
              * nicht mehr zurueckdrehen liesse.
              *
              * 191 UND NICHT 255: Die Zahl ist die alte Obergrenze fuer einen
              * utf8mb4-Index (767 Byte / 4). Ein Index liegt hier nicht drauf —
-             * aber wenn die Auswertung in P5 einen braucht, soll die Spalte ihn
+             * aber wenn eine Auswertung einen braucht, soll die Spalte ihn
              * tragen koennen, ohne dass jemand sie dafuer erneut anfassen muss.
              */
             "ALTER TABLE devices MODIFY geraet_modell VARCHAR(191) NULL",
@@ -2033,11 +2026,11 @@ function migrationen_katalog(): array
         'web'   => '13.0.0',
         'label' => 'Kopplung umgekehrt (S5): Sitzungstabelle pair_sessions, Tabelle pair_codes entfällt',
         'zerstoert' => 'Die Tabelle pair_codes mit allen Kopplungscodes wird gelöscht.',
-        /* BEWUSST OHNE Inhaltspruefung (M6-01, wie 2026_07_19_phase10_entfernen):
+        /* BEWUSST OHNE Inhaltspruefung (wie 2026_07_19_phase10_entfernen):
          * Ein Kopplungscode ist ein zehn Minuten gueltiger Zufallswert, den
          * die Weboberflaeche erzeugt hat — nichts davon ist von Hand
-         * eingegeben, und ab Web 13.0.0 loest ihn kein Geraet mehr ein
-         * (E-S5-28). Eine Inhaltspruefung hielte die Migration genau dort
+         * eingegeben, und loest ihn kein Geraet mehr ein.
+         * Eine Inhaltspruefung hielte die Migration genau dort
          * auf, wo jemand zuletzt einen Code erzeugt hat.
          *
          * WARUM DIE TABELLE WEG MUSS UND NICHT STEHEN BLEIBT: Eine Tabelle
@@ -2078,31 +2071,30 @@ function migrationen_katalog(): array
         },
         'sql'   => [
             /* WELCHES GERAET HAT DIESEN EINSATZ AUFGEZEICHNET — UND WELCHE APP?
-             * (R64, Backlog Nr. 83; Entscheidungen E-R64-01 bis -05, -11.)
              *
              * ZWEI FRAGEN, DIE DER BESTAND BIS HIER NICHT BEANTWORTEN KONNTE:
              *
              * 1. `missions.origin` kannte drei Werte — watch, manual, import.
-             *    Seit Web 12.8.0 sendet auch ein Android-Handy, und seit S4
-             *    laesst sich ein Einsatz an einer Wear-OS-Uhr beginnen. Beide
+             *    Auch ein Android-Handy sendet, und
+             *    es laesst sich ein Einsatz an einer Wear-OS-Uhr beginnen. Beide
              *    landeten auf `watch`: Ein Handy-Einsatz trug die Plakette
-             *    "Uhr". Und der Schnitt (api/schneiden.php, Web 12.5.0) legte
+             *    "Uhr". Und der Schnitt (api/schneiden.php) legte
              *    seinen neuen Einsatz als `manual` an, obwohl ihn niemand von
              *    Hand eingegeben hat.
-             * 2. `devices` weiss seit Web 12.9.0, WAS sich gekoppelt hat (Art,
+             * 2. `devices` weiss, WAS sich gekoppelt hat (Art,
              *    Modell, Rohangabe) — aber am Einsatz stand davon nichts, und
              *    der Verweis dorthin haelt nicht: `device_id` steht auf
              *    ON DELETE SET NULL, und Trennen ist der vorgesehene Normalfall
-             *    bei geteilter Uhr (R47, Backlog Nr. 14). Gemessen am
+             *    bei geteilter Uhr. Gemessen am
              *    02.09.2026: 82 von 82 Einsaetzen und 95 von 95 Segmenten des
              *    Demo-Kontos ohne Geraeteverweis, 76 davon mit origin='watch'.
              *
-             * WEG (b) AUS R64: MOMENTAUFNAHME STATT VERWEIS. Art und Modell
+             * MOMENTAUFNAHME STATT VERWEIS. Art und Modell
              * werden beim Anlegen an den Einsatz KOPIERT und danach nie wieder
              * angefasst. Das ist die ganze Zusage — und ihr Preis: Ein Einsatz,
              * dessen Modell beim Anlegen unbekannt war, traegt dauerhaft
              * "unbekannt", auch wenn `devices` spaeter neu aufgeloest wuerde
-             * (E-R64-05, angenommen). Dafuer ueberlebt die Angabe das Trennen,
+             * (angenommen). Dafuer ueberlebt die Angabe das Trennen,
              * das Loeschen des Geraets und die Konto-Sicherung — der Verweis
              * tut keines davon.
              *
@@ -2118,12 +2110,12 @@ function migrationen_katalog(): array
              * zu melden. Ein NOT NULL DEFAULT 'unbekannt' machte daraus eine
              * Aussage, wo keine ist. "Unbekannt" ist Sache der ANZEIGE.
              *
-             * VARCHAR(16) STATT ENUM FUER `origin` (E-R64-03): Ein ENUM braucht
+             * VARCHAR(16) STATT ENUM FUER `origin`: Ein ENUM braucht
              * fuer jeden neuen Client eine Migration. Der Wertevorrat steht
              * jetzt einmal im Code (`HERKUNFT_WERTE` in geraete_lib.php), die
              * Ableitung aus dem Praefix ebenso (`herkunft_ableiten()`). Die
              * drei UPDATEs unten sind die SQL-SPIEGELUNG genau dieser Funktion
-             * — bis Web 13.3.0 stand die Regel dreimal unterschiedlich da
+             * — sonst stuende die Regel dreimal unterschiedlich da
              * (Migration 2026_07_30, edbak_origin_edited(), ein Kommentar in
              * api/export_data.php), was der Kommentar in backup_lib.php
              * ausdruecklich verboten hatte.
@@ -2181,10 +2173,10 @@ function migrationen_katalog(): array
             return str_contains((string)$q->fetchColumn(), 'betreiberin');
         },
         'sql'   => [
-            /* DIE DRITTE ROLLE (R75, S8/AP1)
+            /* DIE DRITTE ROLLE
              *
              * WARUM UEBERHAUPT EINE ROLLE UND NICHT NUR EIN MENUEBLOCK. Die
-             * Sichtung in S8 hat zwei Zielgruppen in einer Rolle gefunden:
+             * Sichtung hat zwei Zielgruppen in einer Rolle gefunden:
              * Wer Konten anlegt und Rechtstexte pflegt (Admin), und wer den
              * Serverschluessel erzeugt, den Wartungsmodus schaltet,
              * Migrationen ausfuehrt und die Speichergrenze setzt
@@ -2199,7 +2191,7 @@ function migrationen_katalog(): array
              * beide wahr (auth_guard.php) und dieselbe Seite braucht keine
              * zweite Pruefung.
              *
-             * ALLE ADMINS WERDEN BETREIBERINNEN (F-S8-07, bestaetigt). Die
+             * ALLE ADMINS WERDEN BETREIBERINNEN (bestaetigt). Die
              * Alternative — nur das aelteste Admin-Konto — waere
              * sicherheitstechnisch enger und praktisch falsch: Sie naehme
              * bestehenden Admins ohne Ankuendigung Zugriff auf Seiten, die
@@ -2216,7 +2208,7 @@ function migrationen_katalog(): array
              * Wertevorrat offen (jede neue Client-App ein Wert). Rollen sind
              * das Gegenteil — sie werden bewusst und selten vergeben, und die
              * Datenbank darf und soll ausschliessen, was der Code nicht
-             * kennt. Die vierte Rolle (Support, R38) kostet dann eine
+             * kennt. Die vierte Rolle (Support) kostet dann eine
              * Migration, und das ist richtig so.
              *
              * KEIN `zerstoert`, KEIN `inhalt`: Es faellt nichts weg. Der
@@ -2232,13 +2224,12 @@ function migrationen_katalog(): array
         'id'    => '2026_09_07_rest_segments_created_at',
         'web'   => '15.6.0',
         'label' => 'rest_segments.created_at — der serverseitige Anker des Ersetzfensters (Nr. 134)',
-        /* ERLEDIGT IST SIE ERST, WENN ALLE DREI SCHRITTE DURCH SIND (zweite
-         * Gegenpruefung, 07.09.2026): Spalte da, keine Zeile mehr NULL, Spalte
-         * NOT NULL. Die erste Fassung fragte nur, ob die Spalte existiert --
-         * und die existiert schon nach dem ersten Schritt. Scheiterte der
-         * zweite (das UPDATE), verbuchte der naechste Klick die Migration als
-         * "nicht noetig", und jedes alte Segment trug die Migrationszeit als
-         * Anker: drei Tage lang wieder veraenderbar, genau die Luecke, die
+        /* ERLEDIGT IST SIE ERST, WENN ALLE DREI SCHRITTE DURCH SIND: Spalte da,
+         * keine Zeile mehr NULL, Spalte NOT NULL. Nur zu fragen, ob die Spalte
+         * existiert, genuegt nicht -- die existiert schon nach dem ersten
+         * Schritt. Scheiterte der zweite (das UPDATE), verbuchte der naechste
+         * Klick die Migration als "nicht noetig", und jedes alte Segment truege
+         * die Migrationszeit als Anker: drei Tage lang wieder veraenderbar, genau die Luecke, die
          * das Fenster schliesst. */
         'skip'  => function (PDO $pdo): bool {
             if (!_hat_spalte($pdo, 'rest_segments', 'created_at')) { return false; }
@@ -2250,7 +2241,7 @@ function migrationen_katalog(): array
             return (int)$pdo->query('SELECT COUNT(*) FROM rest_segments WHERE created_at IS NULL')->fetchColumn() === 0;
         },
         'run'   => function (PDO $pdo): void {
-            /* DER ANKER DES ERSETZFENSTERS (Nr. 134, Nachbesserung 07.09.2026)
+            /* DER ANKER DES ERSETZFENSTERS (Nachbesserung 07.09.2026)
              * ist der Augenblick, in dem der Server den Datensatz zum ersten
              * Mal gesehen hat: `created_at`. missions traegt die Spalte seit
              * jeher; rest_segments nicht -- ohne sie hinge das Fenster dort an
@@ -2263,15 +2254,15 @@ function migrationen_katalog(): array
              * lang wieder veraenderbar. Neue Zeilen bekommen den Vorgabewert,
              * und der ist dann richtig.
              *
-             * DREI SCHRITTE, JEDER FUER SICH WIEDERHOLBAR (zweite Gegenpruefung):
-             * Die erste Fassung war ein ALTER mit NOT NULL DEFAULT und ein
-             * UPDATE `created_at = started_at`. `started_at` ist DATETIME und
+             * DREI SCHRITTE, JEDER FUER SICH WIEDERHOLBAR. Ein einziges ALTER mit
+             * NOT NULL DEFAULT und ein UPDATE `created_at = started_at` genuegen
+             * nicht. `started_at` ist DATETIME und
              * nimmt jedes Jahr von 0000 bis 9999; `created_at` ist TIMESTAMP
              * und reicht von 1970-01-01 00:00:01 bis 2038-01-19. Ein einziges
              * Segment mit `started_at` 1970-01-01 00:00:00 -- der Wert einer
-             * Uhr ohne Zeitabgleich, und ingest.php nimmt ihn an -- liess das
+             * Uhr ohne Zeitabgleich, und ingest.php nimmt ihn an -- liesse das
              * UPDATE unter STRICT_TRANS_TABLES mit Fehler 1292 scheitern,
-             * nachdem das ALTER schon durch war. Deshalb: (1) Spalte NULL
+             * nachdem das ALTER schon durch ist. Deshalb: (1) Spalte NULL
              * anlegen, nur wenn sie fehlt; (2) fuellen, nur wo NULL, und dabei
              * in den Bereich der Spalte und auf hoechstens "jetzt" kappen --
              * ein `started_at` in der Zukunft darf nicht zum Anker werden;
@@ -2306,7 +2297,7 @@ function migrationen_katalog(): array
             return (int)$q->fetchColumn() > 0;
         },
         'sql'   => [
-            /* DER ZWEITE VON ZWEI SCHALTERN (E-S9-05, R79)
+            /* DER ZWEITE VON ZWEI SCHALTERN
              *
              * Der erste steht in `app_state` und gilt fuer die Installation;
              * dieser hier gilt je Konto. Die Installation ist die Obergrenze —
@@ -2314,7 +2305,7 @@ function migrationen_katalog(): array
              * „Datenschutz" zeigt ihn dann ausgegraut mit dem Satz, wer ihn
              * abgeschaltet hat.
              *
-             * VORGABE 1, ALSO AN. Das ist F-SP-4, und es ist keine
+             * VORGABE 1, ALSO AN. Das ist keine
              * Bequemlichkeit: Die Adresssuche ist der bequemste Weg, einen
              * Einsatzort zu setzen, und ein Bestand, der sie ueber Nacht
              * verliert, weil eine Migration lief, waere ein Rueckschritt, den
@@ -2346,7 +2337,7 @@ function migrationen_katalog(): array
             return _hat_spalte($pdo, 'vehicles', 'typ');
         },
         'sql'   => [
-            /* VIER TYPEN STATT ZWEI BETRIEBSARTEN (E-S9-09, Backlog Nr. 69)
+            /* VIER TYPEN STATT ZWEI BETRIEBSARTEN
              *
              * WAS `kind` BISHER ALLEIN TRUG. Ein Rettungsmittel hatte genau
              * eine Eigenschaft: luftgebunden oder bodengebunden. Daran hingen
@@ -2365,8 +2356,8 @@ function migrationen_katalog(): array
              * ein Bergwacht-Dienst. Haette man statt dessen `kind` um
              * 'bergwacht' erweitert, muesste jede Stelle, die heute
              * air/ground unterscheidet, kuenftig raten, welche Betriebsart
-             * dahintersteckt — und die Phasenbeschriftungen sind seit
-             * Web 6.0.0 gerade deswegen neutral (E20/E21), damit die Uhr die
+             * dahintersteckt — und die Phasenbeschriftungen sind gerade
+             * deswegen neutral, damit die Uhr die
              * Art nicht kennen muss.
              *
              * ENUM UND NICHT VARCHAR — anders als bei `origin`
@@ -2381,7 +2372,7 @@ function migrationen_katalog(): array
              * vorhandene Rettungsmittel ist ein Standard-Rettungsmittel; ein
              * eigenes UPDATE dafuer waere ein zweiter Weg zur selben Aussage.
              *
-             * KURZNAME: 16 ZEICHEN, FREIWILLIG (Nr. 69). Die Leiste, die
+             * KURZNAME: 16 ZEICHEN, FREIWILLIG. Die Leiste, die
              * Kacheln und die Plaketten zeigen ihn, wenn er gesetzt ist —
              * Formulare und Export zeigen weiter den vollen Namen. NULL heisst
              * „keiner", nicht „leer": Ein NOT NULL DEFAULT '' machte aus dem
@@ -2394,11 +2385,11 @@ function migrationen_katalog(): array
                           NOT NULL DEFAULT 'standard' AFTER kind,
                ADD COLUMN kurz VARCHAR(16) NULL AFTER name",
 
-            /* DER STANDORT WIRD FREIWILLIG (E-S9-09)
+            /* DER STANDORT WIRD FREIWILLIG
              *
              * Bis hier war `base_id` NOT NULL: Ohne Standort gab es kein
              * Rettungsmittel. Fuer ein Standard-Rettungsmittel bleibt das so —
-             * die Vorschlagslisten (E15) haengen am Standort, und ohne ihn
+             * die Vorschlagslisten haengen am Standort, und ohne ihn
              * waere die Tagesuebersicht leer. Die drei neuen Typen haben oft
              * keinen: Eine Bergwacht-Bereitschaft hat ein Einsatzgebiet, keine
              * Wache; ein Sanitaetsdienst hat einen Veranstaltungsort, der jedes
@@ -2414,8 +2405,8 @@ function migrationen_katalog(): array
              * DER FREMDSCHLUESSEL BLEIBT ON DELETE CASCADE. Das ist bewusst
              * KEINE Aenderung: Wer heute einen Standort loescht, loescht seine
              * Rettungsmittel mit, die Oberflaeche nennt vorher die Zahl und
-             * laesst bestaetigen (E15), und die Diensttage bleiben unberuehrt,
-             * weil sie ihre Angaben eingefroren haben (E8). ON DELETE SET NULL
+             * laesst bestaetigen, und die Diensttage bleiben unberuehrt,
+             * weil sie ihre Angaben eingefroren haben. ON DELETE SET NULL
              * klaenge freundlicher, waere aber falsch: Es machte aus jedem
              * Standard-Rettungsmittel eines ohne Standort — also einen
              * Datensatz, den die Pruefschicht nie angelegt haette — und zwar
@@ -2424,11 +2415,11 @@ function migrationen_katalog(): array
              * dadurch, dass anderswo etwas geloescht wurde. */
             "ALTER TABLE vehicles MODIFY base_id INT UNSIGNED NULL",
 
-            /* DER DIENSTTAG FRIERT AUCH DAS EIN (E8)
+            /* DER DIENSTTAG FRIERT AUCH DAS EIN
              *
              * `days` haelt seit jeher eine Momentaufnahme des Rettungsmittels —
              * Bezeichnung, Betriebsart, Standort samt Koordinate. Der Grund ist
-             * derselbe wie bei der Geraete-Momentaufnahme (R64): Der Verweis
+             * derselbe wie bei der Geraete-Momentaufnahme: Der Verweis
              * haelt nicht. Ein Rettungsmittel wird umbenannt, umgestellt oder
              * geloescht; ein Diensttag von vor drei Monaten darf davon nichts
              * merken. Typ und Kurzname sind Angaben derselben Art und gehoeren
@@ -2438,7 +2429,7 @@ function migrationen_katalog(): array
              * Diensttag ohne Rettungsmittel hat keinen Typ, und die meisten
              * Rettungsmittel haben keinen Kurznamen. Wo `vehicle_typ` NULL ist,
              * faellt die Anzeige auf die Betriebsart zurueck — das kann
-             * `dt_art_symbol()` seit Web 15.9.0 von selbst. */
+             * `dt_art_symbol()` von selbst. */
             "ALTER TABLE days
                ADD COLUMN vehicle_typ  ENUM('standard','bergwacht','veranstaltung','sonstiges')
                           NULL AFTER vehicle_name,
@@ -2513,7 +2504,7 @@ function migrationen_katalog(): array
              * wird nicht gelesen.
              *
              * DIE FRIST STAND SCHON FEST, bevor die Tabelle existierte:
-             * E-P5a-09 nennt „Job-Laeufe" unter dem, was der Aufraeumjob nach
+             * „Job-Laeufe" gehoeren zu dem, was der Aufraeumjob nach
              * 30 Tagen loescht — keine Einstellung. */
             'CREATE TABLE job_laeufe (
                id        INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
@@ -2539,7 +2530,7 @@ function migrationen_katalog(): array
         'sql'   => [
             /* DREI SPALTEN WERDEN GELEERT, SOBALD EINE ZEILE IHREN
              * ENDZUSTAND ERREICHT — und welche, haengt davon ab, WELCHER
-             * Endzustand (E-P5a-39).
+             * Endzustand.
              *
              * `text` faellt IMMER. Die Einladungs- und die Reset-Mail tragen
              * einen GUELTIGEN Token im Rumpf; bisher lebte der nur in der
@@ -2552,7 +2543,7 @@ function migrationen_katalog(): array
              * Adresse nicht.
              *
              * BEI UNZUSTELLBAR BLEIBEN SIE. „Die Einladung an X kam nie an"
-             * ist ohne X wertlos, und E-P5a-14 verlangt die Unzustellbar-Liste
+             * ist ohne X wertlos, und die Unzustellbar-Liste steht
              * ausdruecklich „mit Empfaenger und Grund". Das ist kein
              * Protokoll darueber, wer Post BEKOMMEN hat, sondern eine
              * Maengelliste — und wer sie sieht, kann ohnehin jede
@@ -2598,7 +2589,7 @@ function migrationen_katalog(): array
              * fuehrt genau EINE Zeile je (topf, merkmal) — die Stufe gehoert
              * deshalb dorthin und braucht keine eigene Tabelle.
              *
-             * `stufe` ZAEHLT AB 1, NICHT AB 0 (E-P5a-43). Das Konzept sagt an
+             * `stufe` ZAEHLT AB 1, NICHT AB 0. Eine Vorlage sagte an
              * einer Stelle „Stufe 0-3" und an der anderen „Sammelmail bei
              * Stufe 4"; beides zusammen geht nicht auf. Gewaehlt ist die
              * zweite Lesart, weil sie die ist, die jemand ausspricht:
@@ -2631,8 +2622,8 @@ function migrationen_katalog(): array
                ADD COLUMN stufe     TINYINT UNSIGNED NOT NULL DEFAULT 0,
                ADD COLUMN stufe_bis DATETIME NULL',
 
-            /* EIN INDEX AUF `gesperrt_bis` FEHLTE BISHER, und mit AP8 faellt
-             * das auf: „alle aktiven Sperren zeigen" ist eine Abfrage ueber
+            /* EIN INDEX AUF `gesperrt_bis` GEHOERT DAZU: „alle aktiven Sperren
+             * zeigen" ist eine Abfrage ueber
              * die ganze Tabelle. Sie ist heute klein; auf einer Installation
              * unter Beschuss ist sie es nicht. */
             'CREATE INDEX idx_gesperrt ON rate_limits (gesperrt_bis)',
@@ -2651,8 +2642,8 @@ function migrationen_katalog(): array
         'sql'   => [
             /* WOGEGEN. `rate_limits` haelt den ZUSTAND — wer ist gerade
              * gesperrt. Sobald die Sperre ablaeuft und der Aufraeumjob die
-             * Zeile wegnimmt, ist nichts mehr da. Dieselbe Luecke wie bei
-             * `jobs.letzter_fehler` vor Web 20.8.0: Man sieht, was JETZT
+             * Zeile wegnimmt, ist nichts mehr da. Dieselbe Luecke haette
+             * `jobs.letzter_fehler` allein: Man sieht, was JETZT
              * ansteht, nie, dass es wiederkehrt. Eine BetreiberIn, die
              * morgens nachsieht, ob in der Nacht jemand an der Tuer war,
              * findet heute nichts.
@@ -2664,18 +2655,18 @@ function migrationen_katalog(): array
              * Ueberlegung wie bei `job_laeufe`: Geschrieben wird, was etwas
              * AUSSAGT.
              *
-             * `merkmal` STEHT IM KLARTEXT, und das ist eine Entscheidung
-             * (E-P5a-46). Es enthaelt IP-Adressen und — bei Merkmalen der
+             * `merkmal` STEHT IM KLARTEXT, und das ist eine Entscheidung.
+             * Es enthaelt IP-Adressen und — bei Merkmalen der
              * Form `id:` an der Anmeldung — E-Mail-Adressen. Ohne sie waere
              * die Liste „irgendwo war irgendwer gesperrt" und damit wertlos;
-             * genau dieselbe Abwaegung wie bei der Unzustellbar-Liste
-             * (E-P5a-39). Die Folge ist benannt: `komp_tabellen()` zaehlt
+             * genau dieselbe Abwaegung wie bei der Unzustellbar-Liste.
+             * Die Folge ist benannt: `komp_tabellen()` zaehlt
              * seine Tabellen ueber SHOW FULL TABLES und hat keine
              * Ausnahmeliste — diese Tabelle liegt damit in JEDER
              * Komplettsicherung, und die 30-Tage-Frist gilt in der laufenden
              * Datenbank, nicht im versiegelten Abzug.
              *
-             * `art` STATT EINER ENUM: Die Liste waechst in P5c um
+             * `art` STATT EINER ENUM: Die Liste waechst um
              * Audit-Ereignisse, und eine ENUM zu erweitern ist eine
              * Migration. VARCHAR(24) kostet hier nichts. */
             'CREATE TABLE sicherheit_ereignisse (
@@ -2705,7 +2696,7 @@ function migrationen_katalog(): array
             return (int)$q->fetchColumn() > 0;
         },
         'sql'   => [
-            /* WOGEGEN (E-P5a-02). Ab Web 20.11.0 hat auch `ingest.php` eine
+            /* WOGEGEN. Auch `ingest.php` hat eine
              * Mengenbremse. Eine Uhr mit veraltetem Schluessel sperrt sich
              * damit selbst aus — hinnehmbar, kurz, und der Rueckstand bleibt
              * auf dem Geraet. Aber sie muss SICHTBAR sein: Sonst steht eine
@@ -2739,7 +2730,7 @@ function migrationen_katalog(): array
             return (int)$q->fetchColumn() > 0;
         },
         'sql'   => [
-            /* WOGEGEN (E-P5a-03, Backlog Nr. 49). Der Versand ERGAENZT nur;
+            /* WOGEGEN. Der Versand ERGAENZT nur;
              * auf der Gegenstelle loescht diese Anwendung nie. Das ist
              * Absicht und keine Luecke — der Zweck eines auswaertigen Ziels
              * ist, den Ausfall dieses Servers zu ueberleben, SAMT eines
@@ -2764,8 +2755,8 @@ function migrationen_katalog(): array
 
             /* DAS VERSANDPROTOKOLL — die zweite der drei Sicherungen.
              *
-             * WARUM EINE TABELLE UND NICHT `app_state` (E-P5a-56). Das
-             * Konzept sagt „Versandprotokoll in `app_state`". Das geht
+             * WARUM EINE TABELLE UND NICHT `app_state`. Ein
+             * „Versandprotokoll in `app_state`" liegt nahe. Das geht
              * nicht: `app_state.v` ist `VARCHAR(190)`, und die Frage, die
              * beantwortet werden muss, ist „hat DIESE Installation die Datei
              * X auf Ziel Y geschickt?" — eine Zeile je Datei und Ziel, bei
@@ -2775,7 +2766,7 @@ function migrationen_katalog(): array
              * DIE TABELLE TUT ZWEI DINGE, und das ist kein Zufall: Sie ist
              * das Versandprotokoll (was haben wir dorthin geschickt?) UND
              * das Loeschprotokoll (was haben wir dort entfernt, wann, warum?
-             * — E-P5a-03 verlangt beides). Zwei Tabellen dafuer waeren zwei
+             * — beides wird gebraucht). Zwei Tabellen dafuer waeren zwei
              * Fassungen derselben Zeile.
              *
              * `geloescht_am IS NULL` heisst „liegt dort" — soweit wir wissen.
@@ -2816,16 +2807,16 @@ function migrationen_katalog(): array
             return (int)$q->fetchColumn() > 0;
         },
         'sql'   => [
-            /* EINE TABELLE FUER SECHS REITER, UND EINE SIEBTE DANEBEN
-             * (E-P5b-12, V1, V2, V6).
+            /* EINE TABELLE FUER SECHS REITER, UND EINE SIEBTE DANEBEN.
+             * 
              *
-             * `sicherheit_ereignisse` (P5a/AP6) bleibt, wo sie ist, und wird
+             * `sicherheit_ereignisse` bleibt, wo sie ist, und wird
              * NICHT hierher gezogen. Der Grund ist keine Bequemlichkeit,
              * sondern die Frist: Dort stehen IP- und E-Mail-Adressen und
-             * verfallen nach 30 Tagen, fest (E-P5a-09). Hier steht das Audit
+             * verfallen nach 30 Tagen, fest. Hier steht das Audit
              * und bleibt bis zu drei Jahre. Zwei Fristen in einer Tabelle
              * sind eine Einladung, die kuerzere zu vergessen. Ob die beiden
-             * spaeter zusammenrueckten, entscheidet 10c (V6).
+             * spaeter zusammenrueckten, entscheidet 10c.
              *
              * `urheber_user_id` IST `0` UND NICHT `NULL`, wenn kein Mensch
              * gehandelt hat. `NULL` liesse offen, ob niemand handelte oder ob
@@ -2881,7 +2872,7 @@ function migrationen_katalog(): array
             return (int)$q->fetchColumn() > 0;
         },
         'sql'   => [
-            /* DER BESTAND WIRD `aktiv`, UND ZWAR OHNE AUSNAHME (E-P5b-12).
+            /* DER BESTAND WIRD `aktiv`, UND ZWAR OHNE AUSNAHME.
              *
              * Das ist die einzige richtige Vorgabe, und sie ist es aus einem
              * Grund, der nicht auf der Hand liegt: Jeder andere Wert waere
@@ -2900,7 +2891,7 @@ function migrationen_katalog(): array
              * `bestaetigt_am` BEKOMMT DEN BESTAND NICHT NACHTRAEGLICH: NULL
              * heisst hier „die Frage stellte sich nicht", und ein erfundenes
              * Datum waere schlimmer als eine Leerstelle — dieselbe
-             * Entscheidung wie bei `last_login` in Web 9.8.0. */
+             * Entscheidung wie bei `last_login`. */
             "ALTER TABLE users
                ADD COLUMN status ENUM('unbestaetigt','wartet','aktiv','gesperrt')
                    NOT NULL DEFAULT 'aktiv',
@@ -2910,7 +2901,7 @@ function migrationen_katalog(): array
                ADD COLUMN loeschung_am   DATETIME NULL",
 
             /* DER INDEX IST FUER DEN VERFALLJOB, nicht fuer die Anzeige.
-             * `konto_verfall` (AP3) und `konto_loeschung` (AP5) suchen
+             * `konto_verfall` und `konto_loeschung` suchen
              * beide „alle Konten in einem Zustand, deren Frist abgelaufen
              * ist" — ohne Index ein Vollscan ueber `users` bei jedem
              * Joblauf. Bei dreihundert Konten ist das nichts; die
@@ -2929,7 +2920,7 @@ function migrationen_katalog(): array
             return (int)$q->fetchColumn() > 0;
         },
         'sql'   => [
-            /* `stand_am` WIRD DATETIME (Fehlerfund F3 des Konzepts).
+            /* `stand_am` WIRD DATETIME.
              *
              * Es war `DATE`. Damit waeren zwei Aenderungen am selben Tag
              * EINE Fassung — und die NutzerIn, die die erste angenommen hat,
@@ -2948,7 +2939,7 @@ function migrationen_katalog(): array
              * BetreiberIn. */
             'ALTER TABLE rechtstexte MODIFY stand_am DATETIME NULL',
 
-            /* DIE EINWILLIGUNGEN JE KONTO (E-P5b-15).
+            /* DIE EINWILLIGUNGEN JE KONTO.
              *
              * EINE ZEILE JE KONTO UND SCHLUESSEL, nicht je Annahme: Der
              * Primaerschluessel ist `(user_id, schluessel)`, und eine neue
@@ -2990,12 +2981,12 @@ function migrationen_katalog(): array
             return (int)$q->fetchColumn() > 0;
         },
         'sql'   => [
-            /* BEIDE ADRESSEN BIS ZUM KLICK (E-P5b-16).
+            /* BEIDE ADRESSEN BIS ZUM KLICK.
              *
-             * Bis Web 20.19.0 schrieb `einstellungen.php` die neue Adresse
-             * SOFORT — mit Passwortnachweis und einer Hinweismail an die
+             * Schriebe `einstellungen.php` die neue Adresse SOFORT — mit
+             * Passwortnachweis und einer Hinweismail an die
              * alte, aber ohne jede Pruefung, ob die neue ueberhaupt
-             * erreichbar ist. Ein Tippfehler sperrte damit aus: Die
+             * erreichbar ist —, sperrte ein Tippfehler aus: Die
              * Anmeldung laeuft ueber die Adresse, und „Passwort vergessen"
              * schickt an eine Adresse, die es nicht gibt.
              *
@@ -3035,7 +3026,7 @@ function migrationen_katalog(): array
             return (int)$q->fetchColumn() > 0;
         },
         'sql'   => [
-            /* `NULL` HEISST „die Vorgabe der Installation gilt" (E-P5b-18).
+            /* `NULL` HEISST „die Vorgabe der Installation gilt".
              *
              * Nicht `0` und nicht die Vorgabe als Wert: Beides waere eine
              * Aussage ueber dieses eine Konto, wo keine getroffen wurde.
@@ -3043,7 +3034,7 @@ function migrationen_katalog(): array
              * Anhebung der Installationsvorgabe an den bestehenden Konten
              * nichts — und niemand saehe, warum.
              *
-             * `backup_pakete` ist Backlog Nr. 48: Wie viele Konto-Backups
+             * `backup_pakete`: Wie viele Konto-Backups
              * dieses Kontos aufgehoben werden, statt der Zahl der
              * Installation (`adminbackup_aufbewahrung`, Vorgabe 2). NICHT
              * eine Aufbewahrungsfrist fuer Einsaetze — die gibt es nicht und
@@ -3073,7 +3064,7 @@ function migrationen_katalog(): array
             return (int)$q->fetchColumn() > 0;
         },
         'sql'   => [
-            /* VIER SPALTEN, UND JEDE BEANTWORTET EINE FRAGE (E-P5b-09, -19).
+            /* VIER SPALTEN, UND JEDE BEANTWORTET EINE FRAGE.
              *
              * `erststart_stand` — WELCHE DER DREI SCHRITTE SIND ERLEDIGT.
              * Ein Bitfeld und keine drei Spalten: Die drei Schritte
@@ -3102,8 +3093,8 @@ function migrationen_katalog(): array
              * `rueckfrage_runde` — WELCHER ABSTAND ALS NAECHSTES GILT.
              * 0 = 30 Tage, 1 = 6 Monate, 2 und hoeher = jaehrlich.
              *
-             * `rueckfrage_verschoben` — WIE OFT SCHON „SPAETER". Bis 3
-             * (E-P5b-19); danach kommt die Frage wieder regulaer. Der
+             * `rueckfrage_verschoben` — WIE OFT SCHON „SPAETER". Bis 3;
+             * danach kommt die Frage wieder regulaer. Der
              * Zaehler steht hier und nicht in der Sitzung, weil „spaeter"
              * sonst durch Abmelden zurueckgesetzt waere — und damit
              * unbegrenzt. */
@@ -3132,7 +3123,7 @@ function migrationen_katalog(): array
         'id'    => '2026_09_20_uhr_gesperrt',
         'web'   => '20.25',
         'label' => 'Uhr-Sperre: Spalte missions.manual heisst jetzt uhr_gesperrt',
-        /* WARUM UEBERHAUPT (Backlog Nr. 238). MySQL fuehrt MANUAL von 8.4.0
+        /* WARUM UEBERHAUPT. MySQL fuehrt MANUAL von 8.4.0
          * bis 8.4.10 als RESERVIERTES WORT (ab 8.4.11 wieder nicht). Jede
          * ungequotete Nennung der Spalte brach dort mit Fehler 1064 -- und
          * das war nicht eine Stelle, sondern zehn: die Einrichtung selbst
@@ -3187,7 +3178,7 @@ function migrationen_katalog(): array
         'id'    => '2026_09_24_rolle_support',
         'web'   => '20.41',
         'label' => 'Vierte Rolle: Support (P5c/AP4, R38)',
-        /* DER SUPPORT (E-P5c-14, -40). Er sieht Konten der Rolle `user` und
+        /* DER SUPPORT. Er sieht Konten der Rolle `user` und
          * ihre Geraete, sendet Setz-Link und Verifikationsmail neu, ohne den
          * Link je zu sehen, und schaltet ein Geraet ab, aber nicht wieder an.
          * Mehr nicht: kein Einspielen, kein Loeschen, keine Rollen, keine
@@ -3205,7 +3196,7 @@ function migrationen_katalog(): array
          *
          * KEIN `zerstoert`: Es faellt nichts weg. Aelterer Code, der auf eine
          * Zeile mit `support` trifft, macht ueber `rolle_normieren()` einen
-         * `user` daraus — ein Ruecksetzen ueber AP4 hinweg sperrt niemanden
+         * `user` daraus — ein Ruecksetzen ueber diese Migration hinweg sperrt niemanden
          * aus und erweitert keine Rechte. */
         'skip'  => function (PDO $pdo): bool {
             return str_contains((string)db_spalte_typ($pdo, 'users', 'role'), "'support'");
@@ -3219,7 +3210,7 @@ function migrationen_katalog(): array
         'id'    => '2026_09_24_zweitfaktor',
         'web'   => '20.42',
         'label' => 'Zweitfaktor: Geheimnis, letzter Zeitschritt, Wiederherstellungscodes (P5c/AP5)',
-        /* DER ZWEITFAKTOR (E-P5c-54). Drei Spalten an `users` und eine Tabelle.
+        /* DER ZWEITFAKTOR. Drei Spalten an `users` und eine Tabelle.
          *
          * `totp_geheimnis` traegt das versiegelte Geheimnis (`edsk1:` …, rund
          * 90 Zeichen); `totp_seit` ist erst nach einem bestaetigten Code
@@ -3227,7 +3218,7 @@ function migrationen_katalog(): array
          * Einrichtung und schaltet nichts ein; `totp_schritt` haelt den
          * letzten angenommenen Zeitschritt, damit kein Code zweimal gilt.
          *
-         * `totp_codes` haengt NICHT am Serverschluessel (E-P5c-42): Sie sind
+         * `totp_codes` haengt NICHT am Serverschluessel: Sie sind
          * der Rueckweg fuer genau den Fall, dass er fehlt. `ON DELETE CASCADE`,
          * weil ein Code ohne Konto nichts mehr bedeutet — anders als ein
          * Protokolleintrag, der die Loeschung ueberleben soll.
@@ -3235,7 +3226,7 @@ function migrationen_katalog(): array
          * ERST DIE TABELLE, DANN DIE SPALTEN, und `skip` fragt nach beidem.
          * Scheitert das zweite Stueck, laeuft beim naechsten Aufruf das erste
          * dank `IF NOT EXISTS` ohne Fehler durch. Bis beides steht, ist der
-         * Zweitfaktor stumm (`totp_spalten_da()`, E-P5c-53): keine
+         * Zweitfaktor stumm (`totp_spalten_da()`): keine
          * Code-Abfrage, kein Tor. */
         'skip'  => function (PDO $pdo): bool {
             return db_hat_spalte($pdo, 'users', 'totp_seit') && db_hat_tabelle($pdo, 'totp_codes');
@@ -3259,15 +3250,15 @@ function migrationen_katalog(): array
         'id'    => '2026_09_24_rueckweg_schluesselpaar',
         'web'   => '20.43',
         'label' => 'Rückweg beim Zweitfaktor: Schlüsselpaar je Konto (Konzept RW)',
-        /* DAS PAAR DES RUECKWEGS (Konzept RW, E-RW-05). Drei Spalten an
+        /* DAS PAAR DES RUECKWEGS. Drei Spalten an
          * `users`, keine Tabelle: Die Herausforderung lebt in der halben
-         * Anmeldesitzung (E-RW-04), nicht in der Datenbank.
+         * Anmeldesitzung, nicht in der Datenbank.
          *
          * `rw_oeffentlich` ist der oeffentliche Teil (SPKI, Base64, 124
          * Zeichen fuer P-256), `rw_privat` der private als Chiffretext unter
          * dem Inhaltsschluessel (`edk1:`, rund 220 Zeichen), `rw_seit` der
          * Zeitpunkt des Entstehens. Leer heisst: noch kein Paar — es entsteht
-         * beim naechsten Anmelden (E-RW-02).
+         * beim naechsten Anmelden.
          *
          * EINE ANWEISUNG FUER ALLE DREI: `ALTER TABLE` legt sie gemeinsam an
          * oder gar nicht, und `skip` fragt nach der letzten. Bis sie steht,
@@ -3287,15 +3278,15 @@ function migrationen_katalog(): array
         'id'    => '2026_09_24_statistik_beginn',
         'web'   => '20.47',
         'label' => 'Statistik: Indizes auf Beginn und Papierkorb der Einsätze (P5c/AP7, Nr. 191)',
-        /* EINE ZAEHLUNG AB BEGINN DES EINSATZES (E-P5c-18, R38). Die
-         * Statistik der BetreiberIn zaehlt seit Web 20.47.0 ueber alle Konten
+        /* EINE ZAEHLUNG AB BEGINN DES EINSATZES. Die
+         * Statistik der BetreiberIn zaehlt ueber alle Konten
          * nach `missions.started_at`, in fuenf Fenstern mit Unter- UND
          * Obergrenze. Der vorhandene Index `idx_user_started` fuehrt mit
          * `user_id` und hilft einer Abfrage ueber alle Konten nicht; dieser
-         * fuehrt mit dem Beginn. Nr. 191 hat ihn seit S8 verlangt.
+         * fuehrt mit dem Beginn.
          *
-         * UND DER PAPIERKORB-INDEX, WO ER FEHLT (F-P5c-39, F-P5c-124).
-         * `idx_missions_deleted` legte bis Web 20.46.0 nur die Migration
+         * UND DER PAPIERKORB-INDEX, WO ER FEHLT.
+         * `idx_missions_deleted` legte nur die Migration
          * `2026_07_22_papierkorb` an; `schema.sql` kannte ihn nicht, und jede
          * FRISCH eingerichtete Anlage hat die Migration als 'skipped' ohne
          * ihn. Ihn nur in `schema.sql` nachzutragen machte kuenftige Anlagen
@@ -3325,17 +3316,16 @@ function migrationen_katalog(): array
         'web'   => '21.0',
         'label' => 'Stammdaten: jeder Eintrag gehört einem Konto, die Tabelle user_bases entfällt (P5c/AP8, R39, Nr. 168)',
         'zerstoert' => 'die Tabelle user_bases (Auswahl zentraler Standorte je Konto)',
-        /* DER RUECKBAU VON R39 (E-P5c-19, -48). Zentrale Stammdaten
-         * (`user_id IS NULL`) gibt es in der Oberflaeche seit Web 18.0.0 nicht
-         * mehr, die Verwaltung dafuer ist mit S9/AP5b gefallen. Stehen blieben
+        /* DER RUECKBAU ZENTRALER STAMMDATEN. Zentrale Stammdaten
+         * (`user_id IS NULL`) gibt es in der Oberflaeche nicht. Stehen blieben
          * das Schema, das sie zuliess, und die Tabelle, die sie einem Konto
          * zuordnete — und damit in jeder Abfrage ein „eigen ODER zentral".
          * Ab hier traegt jede der sechs Tabellen ein Konto, und die Datenbank
          * haelt das fest.
          *
-         * ZUERST GEZAEHLT, NICHT FREIGEBBAR (E-P5c-125). Steht irgendwo noch
+         * ZUERST GEZAEHLT, NICHT FREIGEBBAR. Steht irgendwo noch
          * eine Zeile ohne Konto, laeuft nichts, und die Zeile nennt, wo. Nach
-         * Auskunft der BetreiberIn tritt das nicht auf (E-P5c-48); die
+         * Auskunft der BetreiberIn tritt das nicht auf; die
          * Zaehlung schuetzt eine Anlage, in die jemand ein altes
          * Komplett-Backup einspielt — das bringt das alte Schema mit, und
          * diese Migration steht danach wieder aus.
@@ -3395,7 +3385,7 @@ function migrationen_katalog(): array
         'id'    => '2026_09_25_ftp_entfernen',
         'web'   => '21.0',
         'label' => 'Sicherungsziele: das Protokoll FTP fällt aus dem Schema (P5c/AP8, Nr. 46)',
-        /* DER REST AUS S10 (E-S10-14, E-P5c-124). Seit Web 20.2.0 ist FTP
+        /* DER REST VON FTP. FTP ist
          * weder waehlbar noch wird es beschickt; das ENUM behielt den Wert,
          * und ein Ziel, das noch darauf stand, wurde uebergangen. Mit dem Wert
          * faellt der ganze Weg dafuer — was die Datenbank nicht mehr annimmt,
@@ -3413,10 +3403,8 @@ function migrationen_katalog(): array
                           ->fetchColumn();
             return $n > 0 ? [['backup_targets.protokoll', $n, 'Sicherungsziele mit FTP']] : [];
         },
-        /* DER ORT STAND BIS WEB 21.1.0 FALSCH („Verwaltung → Sicherungsziele",
-         * F-P5c-159): Die Seite heisst Backup-Ziele und steht unter Betrieb —
-         * und sie war im Wartungsmodus gesperrt, in dem dieser Satz erscheint.
-         * Seit E-P5c-134 ist sie offen. */
+        /* DER ORT: Die Seite heisst Backup-Ziele und steht unter Betrieb — und
+         * sie ist im Wartungsmodus offen, in dem dieser Satz erscheint. */
         'vorbedingung_weg' => 'Unter Betrieb → Backup-Ziele auf SFTP oder FTPS '
             . 'umstellen oder löschen.',
         'sql'   => [
@@ -3427,8 +3415,8 @@ function migrationen_katalog(): array
         'id'    => '2026_09_25_tagesrettungsmittel_rollen',
         'web'   => '21.0',
         'label' => 'Diensttage mit anderem Rettungsmittel: Rollen der Betriebsart nachtragen (P5c/AP8, Nr. 169)',
-        /* NR. 169 FUER DEN BESTAND (E-P5c-47, E-P5c-123). Ein Tag mit einem
-         * Rettungsmittel NUR FUER DIESEN TAG bekommt seit Web 21.0.0 beim
+        /* ROLLEN FUER DEN BESTAND. Ein Tag mit einem
+         * Rettungsmittel NUR FUER DIESEN TAG bekommt beim
          * Zuordnen die Rollen seiner Betriebsart. Tage von vorher haben
          * keinen Rollensatz und damit kein Besatzungsfeld; diese Migration
          * traegt ihn nach — leere Zeilen, geloescht wird nichts.
@@ -3452,7 +3440,7 @@ function migrationen_katalog(): array
         'id'    => '2026_09_27_days_created_at',
         'web'   => '21.3',
         'label' => 'days.created_at — der Anker, ob Geräte den Zeitraum eines Diensttags noch fortschreiben (Nr. 158)',
-        /* DER TAG BEKOMMT SEINEN EIGENEN ANKER (Schritt 17, R4-15, Nr. 158).
+        /* DER TAG BEKOMMT SEINEN EIGENEN ANKER.
          * Ob Geraete den Zeitraum eines Diensttags noch fortschreiben, hing
          * bis hierher am juengsten `created_at` seiner Einsaetze und
          * Ruhesegmente (`ingest_tag_offen()`): eine Abfrage ueber zwei
@@ -3465,12 +3453,12 @@ function migrationen_katalog(): array
          * und erledigt erst, wenn alle drei stehen. Die vorhandenen Tage
          * bekommen ihr `started_at` — ohne eines den Tag selbst, 00:00 —,
          * nicht die Migrationszeit: Mit ihr waere jeder alte Tag nach dem
-         * Update drei Tage lang wieder offen (Q-R4-09). Gekappt auf den
+         * Update drei Tage lang wieder offen. Gekappt auf den
          * Bereich der Spalte (TIMESTAMP ab 1970-01-01 00:00:01) und auf
          * hoechstens jetzt, denn `started_at` ist DATETIME und kommt beim
          * Anlegen vom Geraet.
          *
-         * SCHEMAFRAGEN UEBER `db.php` (R83, E-ZE-04), nicht ueber
+         * SCHEMAFRAGEN UEBER `db.php`, nicht ueber
          * `information_schema` von Hand wie die Vorlage. */
         'skip'  => function (PDO $pdo): bool {
             if (!db_hat_spalte($pdo, 'days', 'created_at')) { return false; }
@@ -3494,25 +3482,24 @@ function migrationen_katalog(): array
         'id'    => '2026_09_28_vertraute_geraete',
         'web'   => '21.8',
         'label' => 'vertraute_geraete — „Gerät merken" beim Zweitfaktor (Schritt 18, SR-02); dazu der Wert des Notzugangs',
-        /* GEMERKTE GERAETE (Schritt 18, SR-02, E-SR-07). Eine Zeile je
+        /* GEMERKTE GERAETE. Eine Zeile je
          * gemerktem Browser: der SHA-256 des Cookies `EDGERAET`, das Konto,
          * wann gemerkt, wann zuletzt benutzt. KEIN User-Agent, KEIN
-         * Geraetename (R36). Gueltig ist eine Zeile, solange `angelegt_am`
-         * plus die heutige Dauer der Rollengruppe in der Zukunft liegt
-         * (E-SR-17); der Aufraeumjob loescht die abgelaufenen.
+         * Geraetename. Gueltig ist eine Zeile, solange `angelegt_am`
+         * plus die heutige Dauer der Rollengruppe in der Zukunft liegt;
+         * der Aufraeumjob loescht die abgelaufenen.
          *
          * DERSELBE TEXT WIE IN `schema.sql`, Zeichen fuer Zeichen in Spalten,
          * Schluesseln und Fremdschluessel. KEINE PROBE HAELT DAS FEST: Die
          * Schemaprobe spielt `schema.sql` auf vier Fassungen ein und prueft
-         * die Vorabliste, vergleicht aber migriert und frisch nicht (hier
-         * stand bis Web 21.10.0 das Gegenteil, F-SR-28; Nr. 353). Gemessen
+         * die Vorabliste, vergleicht aber migriert und frisch nicht. Gemessen
          * wurde es beim Bau von Hand — `SHOW CREATE TABLE` ohne den Zaehler
-         * `AUTO_INCREMENT`, zeichengleich (Pruefdokument SR).
+         * `AUTO_INCREMENT`, zeichengleich.
          *
-         * UND DER WERT DES NOTZUGANGS (E-SR-24): `app_state.notzugang_geheim`,
-         * 32 Zufallsbyte hex. Er gehoert zu SR-04 und steht hier, damit jenes
-         * Paket ohne eigene Migration auskommt — so hat es das Konzept
-         * entschieden. Eine frische Anlage (Migration `skipped`) legt ihn beim
+         * UND DER WERT DES NOTZUGANGS: `app_state.notzugang_geheim`,
+         * 32 Zufallsbyte hex. Er gehoert zum Notzugang und steht hier, damit
+         * dieser ohne eigene Migration auskommt. Eine frische Anlage (Migration
+         * `skipped`) legt ihn beim
          * ersten Aufruf des Notzugangs an. `INSERT IGNORE`: Ein vorhandener
          * Wert wird nie ueberschrieben. */
         'skip'  => function (PDO $pdo): bool {
@@ -3540,25 +3527,23 @@ function migrationen_katalog(): array
         'id'    => '2026_09_28_passkeys',
         'web'   => '21.10',
         'label' => 'passkeys — Passkeys als zweiter Faktor (Schritt 18, SR-09)',
-        /* PASSKEYS (Schritt 18, SR-09, E-SR-29 bis -33). Eine Zeile je
+        /* PASSKEYS. Eine Zeile je
          * Authenticator: die Kennung (Base64url, ascii_bin) mit ihrem SHA-256
          * als eindeutigem Schluessel, die Adresse (`rp_id`), der oeffentliche
          * Schluessel als SPKI, das Verfahren, der Zaehler, eine Bezeichnung,
          * drei Zeitpunkte. Mit dem Konto weg (Kaskade).
          *
-         * GEAENDERT AN ORT UND STELLE mit der Gegenlesung H-SR-08 (Web
-         * 21.11.0): `credential_hash`, `rp_id`, `gewarnt_am` dazu, der
-         * eindeutige Schluessel vom Text auf den Hash (F-SR-41, -42, -36).
-         * Erlaubt, weil 21.10.0 nirgends ausgeliefert war — keine Anlage
+         * GEAENDERT AN ORT UND STELLE: `credential_hash`, `rp_id`, `gewarnt_am` dazu, der
+         * eindeutige Schluessel vom Text auf den Hash.
+         * Erlaubt, weil die erste Fassung nirgends ausgeliefert war — keine Anlage
          * traegt die erste Fassung; die oertliche ist neu eingespielt.
          *
          * DERSELBE TEXT WIE IN `schema.sql`, Zeichen fuer Zeichen in Spalten,
          * Schluesseln und Fremdschluessel. KEINE PROBE HAELT DAS FEST: Die
          * Schemaprobe spielt `schema.sql` auf vier Fassungen ein und prueft
-         * die Vorabliste, vergleicht aber migriert und frisch nicht (hier
-         * stand bis Web 21.10.0 das Gegenteil, F-SR-28; Nr. 353). Gemessen
+         * die Vorabliste, vergleicht aber migriert und frisch nicht. Gemessen
          * wurde es beim Bau von Hand — `SHOW CREATE TABLE` ohne den Zaehler
-         * `AUTO_INCREMENT`, zeichengleich (Pruefdokument SR). */
+         * `AUTO_INCREMENT`, zeichengleich. */
         'skip'  => fn(PDO $pdo): bool => db_hat_tabelle($pdo, 'passkeys'),
         'run'   => function (PDO $pdo): void {
             $pdo->exec("CREATE TABLE IF NOT EXISTS passkeys (
@@ -3584,7 +3569,7 @@ function migrationen_katalog(): array
         'id'    => '2026_10_13_kontopaar',
         'web'   => '22.0',
         'label' => 'Schlüsselpaar des Kontos für die Gerätehülle (S11-03)',
-        /* DAS PAAR DES KONTOS (Konzept S11 3.1, S11-03). Drei Spalten an
+        /* DAS PAAR DES KONTOS. Drei Spalten an
          * `users`, wie beim Rückweg: `kp_oeffentlich` ist der oeffentliche
          * Teil (SPKI, Base64) VERSIEGELT mit dem Serverschluessel (Zweck
          * `kontopaar|<id>`, rund 210 Zeichen), `kp_privat` der private unter
@@ -3609,16 +3594,16 @@ function migrationen_katalog(): array
         'id'    => '2026_10_13_ortshuellen',
         'web'   => '22.0',
         'label' => 'Spurstuecke und Einsatzhuelle als Geraetehuellen (S11-04a)',
-        /* DER SPEICHER FUER VERSCHLOSSENE ORTSDATEN (Konzept S11 3.3). Eine
+        /* DER SPEICHER FUER VERSCHLOSSENE ORTSDATEN. Eine
          * neue Tabelle `track_stuecke` (Spurstuecke, SPUR2) und eine Spalte
-         * `missions.ort_huelle` (Phasenkoordinaten und Reanimation, E-S11-36).
+         * `missions.ort_huelle` (Phasenkoordinaten und Reanimation).
          * Beide nehmen ab dieser Fassung auf, was `ingest.php` von Uhr und Handy
-         * bekommt; Klartext nimmt der Eingang nicht mehr an (E-S11-09).
+         * bekommt; Klartext nimmt der Eingang nicht mehr an.
          *
          * NICHT ZERSTOEREND. `track_points`, `track_blobs`, die Koordinaten in
          * `mission_phases` und die Reanimationstabellen bleiben stehen, bis das
-         * Einmalwerkzeug (S11-10) den Bestand umgehuellt hat; geloescht werden
-         * sie erst mit der Aufraeumauslieferung (S11-12, E-S11-19).
+         * Einmalwerkzeug den Bestand umgehuellt hat; geloescht werden
+         * sie erst mit der Aufraeumauslieferung.
          *
          * `skip` fragt nach beiden. Nach einem abgebrochenen ersten Lauf
          * ueberspringt der zweite, was schon steht (1050, 1060). */
@@ -3648,12 +3633,12 @@ function migrationen_katalog(): array
         'id'    => '2026_10_15_loeschvermerk',
         'web'   => '22.2',
         'label' => 'Sperrvermerk ohne Einsatz: ein geloeschtes Stueck (S11-05c, Nr. 161)',
-        /* EIN ZEITRAUM, DER GELOESCHT IST, BLEIBT GESPERRT. Seit S11-05c laesst
-         * sich aus einem Ruhesegment ein Stueck loeschen (Backlog Nr. 161): Der
+        /* EIN ZEITRAUM, DER GELOESCHT IST, BLEIBT GESPERRT. Es laesst
+         * sich aus einem Ruhesegment ein Stueck loeschen: Der
          * Browser verschliesst die uebrigen Punkte neu, der Server ersetzt die
          * Stuecke. Eine Uhr, die ihre Marke verloren hat, koennte den Zeitraum
          * aber erneut senden — und die geloeschten Punkte waeren wieder da. Der
-         * Sperrvermerk haelt das auf, wie beim Schnitt (E-S11-37), nur ohne
+         * Sperrvermerk haelt das auf, wie beim Schnitt, nur ohne
          * Ziel: `mission_id` wird dafuer NULL-faehig. NULL heisst geloescht.
          *
          * NICHT ZERSTOEREND: Eine Spalte wird nur nachgiebiger. */
@@ -3668,19 +3653,19 @@ function migrationen_katalog(): array
         'id'    => '2026_10_19_klartext_weg',
         'web'   => '23.0',
         'label' => 'Aufraeumen nach S11: Klartext-Ortsdaten fallen (Spurpunkte, SPUR1-Blobs, Phasenorte, Reanimation, Transportziel, Ortshoehe)',
-        /* DIE AUFRAEUMAUSLIEFERUNG (S11-12, E-S11-19). Seit Web 22 liegen
+        /* DIE AUFRAEUMAUSLIEFERUNG. Es liegen
          * Spur, Phasenorte und Reanimation in Geraetehuellen (`track_stuecke`,
          * `missions.ort_huelle`), Transportziel und Ortshoehe im `pat_blob`.
          * Den Altbestand hat das Einmalwerkzeug im Browser jedes Kontos
-         * umgezogen (Web 22.7.0); hier fallen die Spalten und Tabellen, in
+         * umgezogen; hier fallen die Spalten und Tabellen, in
          * denen er lag.
          *
          * MIT SPERRE ('inhalt'): Steht irgendwo noch eine Zeile, laeuft
-         * nichts, und die Zeile nennt Konto und Einsatz ('inhalt_wo',
-         * E-S11-83). Umziehen kann nur der Browser des Kontos — der Server
+         * nichts, und die Zeile nennt Konto und Einsatz ('inhalt_wo').
+         * Umziehen kann nur der Browser des Kontos — der Server
          * hat den Schluessel nicht. Wer den Rest NICHT umziehen kann oder
-         * will, gibt die Migration auf der Seite Updates ausdruecklich frei
-         * (E-S11-82): Dann ist der Rest verworfen, und die Protokollzeile
+         * will, gibt die Migration auf der Seite Updates ausdruecklich frei:
+         * Dann ist der Rest verworfen, und die Protokollzeile
          * „AUF AUSDRÜCKLICHE FREIGABE" haelt fest, was es war.
          *
          * `skip` fragt nach dem LETZTEN Schritt jeder Art: Fehlt eine der
@@ -3733,19 +3718,19 @@ function migrationen_katalog(): array
     ];
 }
 
-/** Die sechs Stammdatentabellen mit `user_id` (P5c/AP8, Nr. 168). */
+/** Die sechs Stammdatentabellen mit `user_id`. */
 const MIG_STAMMDATEN_TABELLEN = ['bases', 'vehicles', 'crew_presets', 'resources',
                                  'bw_units', 'transport_dests'];
 
 /**
  * Wo noch Klartext-Ortsdaten stehen — fuer die Sperre der Migration
- * `2026_10_19_klartext_weg` (S11-12, E-S11-83): je Konto die Einsaetze und
+ * `2026_10_19_klartext_weg`: je Konto die Einsaetze und
  * Ruhesegmente, hoechstens zehn Nummern je Art. Fragt jede Tabelle und
  * Spalte erst, ob es sie noch gibt; nach einem Abbruch in der Mitte fehlt
  * ein Teil.
  *
- * Die Bedingungen standen bis Web 22.7.0 als `ou_einsatz_bedingung()` und
- * `ou_ruhe_bedingung()` im Einmalwerkzeug; mit ihm sind sie gegangen.
+ * Die Bedingungen `ou_einsatz_bedingung()` und `ou_ruhe_bedingung()` des
+ * Einmalwerkzeugs gibt es nicht mehr.
  */
 function mig_klartext_wo(PDO $pdo): string
 {
@@ -3800,13 +3785,16 @@ function mig_klartext_wo(PDO $pdo): string
     return implode('; ', $teile);
 }
 
-/* ---- Inhaltspruefung vor destruktiven Migrationen (M6-01) ------------------
+/* ---- Inhaltspruefung vor destruktiven Migrationen ------------------
  *
  * Liefert je Spalte aus 'inhalt', wie viele Zeilen dort etwas stehen haben.
  * Eine leere Rueckgabe heisst: Es ist nichts zu verlieren.
  *
  * Gezaehlt wird NICHT NULL und nicht leer — eine Spalte voller NULL-Werte ist
  * dasselbe wie eine leere Spalte, und ein leerer Text ist keine Angabe.
+ * „Nicht leer" gilt nur fuer Textspalten: Auf einer Zahlenspalte vergleicht
+ * MySQL `''` als 0, und eine Ortshoehe von 0 m oder eine Koordinate 0 galt
+ * dann als leer und sperrte nicht.
  *
  * Fehlt die Spalte bereits, wird sie uebergangen: Dann hat die Migration ihre
  * Arbeit getan, und die Frage stellt sich nicht mehr. Das ist auch der Grund,
@@ -3817,19 +3805,17 @@ function migrationen_inhalt_zaehlen(PDO $pdo, array $spalten): array
 {
     $gefunden = [];
     foreach ($spalten as [$tabelle, $spalte, $was]) {
-        $q = $pdo->prepare('SELECT COUNT(*) FROM information_schema.columns
-                            WHERE table_schema = DATABASE()
-                              AND table_name = ? AND column_name = ?');
-        $q->execute([$tabelle, $spalte]);
-        if ((int)$q->fetchColumn() === 0) { continue; }   // Spalte gibt es nicht mehr
+        $typ = db_spalte_typ($pdo, $tabelle, $spalte);
+        if ($typ === null) { continue; }   // Spalte gibt es nicht mehr
+        $text = (bool)preg_match('~^(var)?char|text|enum|set~i', $typ);
 
         /* Tabellen- und Spaltenname stehen fest im Code dieser Datei und
          * kommen von nirgendwo sonst her; sie lassen sich in einer
          * vorbereiteten Anweisung nicht als Parameter uebergeben. Die
-         * Rueckspielen ist die Abfrage oben: Was nicht in
-         * information_schema steht, kommt hier nicht an. */
+         * Rueckspielen ist die Abfrage oben: Was es im Schema nicht gibt,
+         * kommt hier nicht an. */
         $c = $pdo->query("SELECT COUNT(*) FROM `$tabelle`
-                          WHERE `$spalte` IS NOT NULL AND `$spalte` <> ''")->fetchColumn();
+                          WHERE `$spalte` IS NOT NULL" . ($text ? " AND `$spalte` <> ''" : ''))->fetchColumn();
         if ((int)$c > 0) { $gefunden[] = [$tabelle . '.' . $spalte, (int)$c, $was]; }
     }
     return $gefunden;
@@ -3886,8 +3872,8 @@ function migrationen_register(PDO $pdo): void
  *   ok     bereits angewendet, oder gerade erfolgreich gelaufen
  *   todo   steht an — oder wurde nach einem Abbruch nicht mehr versucht
  *   skip   nicht noetig (Schema aktuell), aber noch NICHT verbucht; nur in
- *          der Vorschau. Zaehlt als offen — der Knopf holt den Vermerk nach
- *          (Backlog Nr. 149). Nicht zu verwechseln mit dem Registerwert
+ *          der Vorschau. Zaehlt als offen — der Knopf holt den Vermerk nach.
+ *          Nicht zu verwechseln mit dem Registerwert
  *          `skipped`, der das Gegenteil sagt: verbucht.
  *   stopp  destruktiv und Daten stehen darin — laeuft nur nach Freigabe
  *   warn   Zustand nicht feststellbar (die skip-Pruefung hat geworfen)
@@ -3908,7 +3894,7 @@ function migrationen_lauf(PDO $pdo, bool $ausfuehren, array $forcieren = []): ar
     $results  = [];   // [id, label, status, detail, zerstoert, blockiertId, web]
     $gelaufen = false;
     $offen    = 0;    // Migrationen, die tatsaechlich etwas taeten
-    $blockiert = 0;   // destruktive Migrationen, die wegen Inhalt nicht laufen (M6-01)
+    $blockiert = 0;   // destruktive Migrationen, die wegen Inhalt nicht laufen
     $abbruch  = false; // ein Fehler hat die Kette angehalten
     $rest     = [];
 
@@ -3942,7 +3928,7 @@ function migrationen_lauf(PDO $pdo, bool $ausfuehren, array $forcieren = []): ar
         }
         if ($nichtNoetig) {
             if ($ausfuehren) {
-                /* ZWEI WOERTER, DIE FAST GLEICH AUSSEHEN (Backlog Nr. 149).
+                /* ZWEI WOERTER, DIE FAST GLEICH AUSSEHEN.
                  * Hier steht `skipped` — der Wert der REGISTERSPALTE
                  * `schema_migrations.status`, und er heisst: verbucht,
                  * ausgefuehrt wurde nichts. Acht Zeilen tiefer steht `skip` —
@@ -3959,10 +3945,10 @@ function migrationen_lauf(PDO $pdo, bool $ausfuehren, array $forcieren = []): ar
                  * Zaehler an Status und Menue faellt dadurch auf 0. Ohne diese
                  * Zeile meldete die Seite nach genau diesem Knopfdruck „Es war
                  * nichts anzuwenden." — die einzige Handlung, die dieser Fall
-                 * kennt, haette sich selbst dementiert (Nr. 149). */
+                 * kennt, haette sich selbst dementiert. */
                 $gelaufen = true;
             } else {
-                /* STATUS `skip`, NICHT `ok` (Backlog Nr. 149).
+                /* STATUS `skip`, NICHT `ok`.
                  *
                  * Diese Zeile zaehlt als offen (`$offen++` gleich darunter) —
                  * Status und Menuezaehler lesen genau diese Zahl. Mit dem
@@ -3985,11 +3971,11 @@ function migrationen_lauf(PDO $pdo, bool $ausfuehren, array $forcieren = []): ar
             continue;
         }
 
-        /* ---- Vorbedingung: kann sie ueberhaupt laufen? (P5c/AP8) --------
+        /* ---- Vorbedingung: kann sie ueberhaupt laufen? --------
          *
          * VOR der Inhaltspruefung und OHNE Freigabe-Kennung (Element 6 bleibt
-         * null): Was hier sperrt, laesst sich nicht wegklicken, nur herstellen
-         * (E-P5c-125). Die Kette laeuft weiter wie bei 'inhalt' — nichts ist
+         * null): Was hier sperrt, laesst sich nicht wegklicken, nur herstellen.
+         * Die Kette laeuft weiter wie bei 'inhalt' — nichts ist
          * geschehen, und die spaeteren Migrationen sollen nicht mit warten. */
         $fehlt = isset($m['vorbedingung']) ? ($m['vorbedingung'])($pdo) : [];
         if ($fehlt) {
@@ -4004,7 +3990,7 @@ function migrationen_lauf(PDO $pdo, bool $ausfuehren, array $forcieren = []): ar
             continue;
         }
 
-        /* ---- Inhalt: stuende etwas darin, das verlorenginge? (M6-01) ----
+        /* ---- Inhalt: stuende etwas darin, das verlorenginge? ----
          *
          * OHNE DIE SCHLEIFE ZU VERLASSEN. Das ist der Unterschied zu einem
          * FEHLER weiter unten: Eine blockierte Migration hat NICHTS getan —
@@ -4041,7 +4027,7 @@ function migrationen_lauf(PDO $pdo, bool $ausfuehren, array $forcieren = []): ar
         $freigegeben = (bool)$gefunden;
         try {
             if (isset($m['run'])) { ($m['run'])($pdo); }
-            /* Teilschritte zaehlen (M6-08).
+            /* Teilschritte zaehlen.
              *
              * Vorher meldete jede Migration "Erfolgreich angewendet." — auch
              * eine, bei der ALLE Teilschritte uebersprungen wurden, weil sie
@@ -4085,7 +4071,7 @@ function migrationen_lauf(PDO $pdo, bool $ausfuehren, array $forcieren = []): ar
             $results[] = [$m['id'], $m['label'], 'ok', $detail, $m['zerstoert'] ?? null, null,
                           $m['web'] ?? null];
             $gelaufen = true;
-            /* EIN EINTRAG JE AUSGEFÜHRTER MIGRATION (P5c/AP2, E-P5c-38). NUR,
+            /* EIN EINTRAG JE AUSGEFÜHRTER MIGRATION. NUR,
              * WENN ES DIE TABELLE SCHON GIBT: Die Migration, die sie anlegt,
              * läuft in diesem Lauf mit, und ein Eintrag davor scheiterte und
              * stünde als „nicht geschrieben" rot auf der Statusseite — ein
@@ -4112,10 +4098,10 @@ function migrationen_lauf(PDO $pdo, bool $ausfuehren, array $forcieren = []): ar
         }
     }
 
-    /* WAS NACH DEM ABBRUCH NOCH DASTAND, WIRD GENANNT (S8/AP2, F-S8-P-05).
+    /* WAS NACH DEM ABBRUCH NOCH DASTAND, WIRD GENANNT.
      *
-     * Bis Web 15.0.0 endete die Schleife hier einfach — und die Migrationen
-     * hinter der gescheiterten tauchten in KEINER Liste auf, weder als
+     * Endete die Schleife hier einfach, tauchten die Migrationen
+     * hinter der gescheiterten in KEINER Liste auf, weder als
      * ausstehend noch als erledigt. Auf der alten Wartungsseite fiel das kaum
      * auf, weil sie ohnehin alle 43 Zeilen zeigte. Auf der neuen Seite steht
      * eine ZAHL im Kartenkopf („2 Updates"), und die war damit falsch: Sie
@@ -4139,8 +4125,8 @@ function migrationen_lauf(PDO $pdo, bool $ausfuehren, array $forcieren = []): ar
         }
     }
 
-    /* DEN TORWAECHTER FORTSCHREIBEN — aber nur nach einem AUSGEFUEHRTEN Lauf
-     * (P5a/AP3, E-P5a-20).
+    /* DEN TORWAECHTER FORTSCHREIBEN — aber nur nach einem AUSGEFUEHRTEN Lauf.
+     * 
      *
      * Warum nicht auch in der Vorschau: `migrationen_ausstehend()` RUFT die
      * Vorschau, um den Zwischenspeicher zu fuellen. Schriebe die Vorschau ihn
@@ -4161,11 +4147,11 @@ function migrationen_lauf(PDO $pdo, bool $ausfuehren, array $forcieren = []): ar
 }
 
 /* ===========================================================================
- * DER TORWAECHTER (P5a/AP3, E-P5a-20; Rahmenplan R40 (4), Backlog Nr. 54)
+ * DER TORWAECHTER
  * ===========================================================================
  *
- * DIE FRAGE, DIE JEDE ANFRAGE STELLT. Bis Web 20.5.0 war „steht eine Migration
- * aus?" eine Frage AN DIE SEITE `betrieb_updates.php` — jemand musste sie
+ * DIE FRAGE, DIE JEDE ANFRAGE STELLT. „Steht eine Migration aus?" darf keine
+ * Frage nur AN DIE SEITE `betrieb_updates.php` sein — jemand muesste sie
  * aufrufen. Zwischen dem Hochladen neuer Dateien und diesem Aufruf erwartet
  * neuer Code Tabellen, die es noch nicht gibt; die Anwendung antwortet in
  * diesem Fenster mit 500, und zwar einer Uhr gegenueber, einem Handy
@@ -4187,7 +4173,7 @@ function migrationen_lauf(PDO $pdo, bool $ausfuehren, array $forcieren = []): ar
  *   1. diese Datei nach einem AUSGEFUEHRTEN Lauf (`migrationen_lauf(…, true)`)
  *      — sonst bliebe die Antwort „steht aus", obwohl gerade migriert wurde;
  *      der Hash aendert sich dabei ja nicht.
- *   2. `wiederherstellen.php` nach dem Einspielen (Backlog Nr. 54) — ein
+ *   2. `wiederherstellen.php` nach dem Einspielen — ein
  *      eingespielter Dump bringt den FREMDEN Registerstand der
  *      Quellinstallation mit, und der Hash passt trotzdem.
  *   3. der Deploy selbst, aber nur mittelbar: Er aendert den Katalog, also
@@ -4248,7 +4234,7 @@ function migrationen_tor_merken(PDO $pdo, bool $offen): void
 /**
  * Den Zwischenspeicher verwerfen — die naechste Anfrage prueft wieder echt.
  *
- * FUER `wiederherstellen.php` (Backlog Nr. 54). Ein eingespielter Dump bringt
+ * FUER `wiederherstellen.php`. Ein eingespielter Dump bringt
  * das Register der QUELLINSTALLATION mit; der Katalog-Hash dieser Installation
  * passt trotzdem, und der Zwischenspeicher behauptete danach den Stand von
  * vorher. Er wird deshalb weggeworfen, nicht neu gerechnet: Das Rechnen

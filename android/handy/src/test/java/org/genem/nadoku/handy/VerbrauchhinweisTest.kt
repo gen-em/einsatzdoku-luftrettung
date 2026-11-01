@@ -10,12 +10,12 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 
 /**
- * Der Hinweis auf den Stromverbrauch, einmal je Installation (Backlog Nr. 82).
+ * Der Hinweis auf den Stromverbrauch, einmal je Installation.
  *
  * WAS HIER GEPRÜFT WIRD UND WAS NICHT. Geprüft wird der **Merker** — dass er
  * frisch aus ist, gesetzt werden kann und einen neuen Zugriff überlebt. Das
  * ist die Zusicherung „einmal je Installation, nicht bei jedem Dienstbeginn",
- * und sie ist der Kern des Backlog-Punkts („Nicht als Dauerwarnung").
+ * und sie ist der Kern („Nicht als Dauerwarnung").
  *
  * NICHT geprüft wird, wie der Dialog aussieht. Der Bilderlauf kann das nicht:
  * Ein Compose-`AlertDialog` rendert in einem eigenen Fenster, und die

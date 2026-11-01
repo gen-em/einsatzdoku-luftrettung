@@ -2,29 +2,29 @@
 declare(strict_types=1);
 require_once __DIR__ . '/auth_guard.php';
 require_once __DIR__ . '/stammdaten_ui.php';   // sd_zeile(), sd_form()
-require_once __DIR__ . '/einstieg_lib.php';     // erststart_erledigt() (P5b/AP9)
+require_once __DIR__ . '/einstieg_lib.php';     // erststart_erledigt()
 require_once __DIR__ . '/demo_lib.php';
 require_once __DIR__ . '/validate_lib.php';   // WRAP_RE, Formatkennung, pruef_rettungsmittel()
 require_once __DIR__ . '/diensttag_lib.php';  // dt_bases(), dt_base_erlaubt(), Rollenkatalog
-/* TRASH_DAYS fuer die Rueckmeldung der Wiederherstellung (E-S1-08). Kommt
+/* TRASH_DAYS fuer die Rueckmeldung der Wiederherstellung. Kommt
  * ueber demo_lib.php ohnehin mit — aber eine Frist, die auf der Seite steht,
  * darf nicht an einem zufaelligen Umweg haengen. */
 require_once __DIR__ . '/trash_lib.php';
-/* Zwei Nachrichten dieses Reiters (P5b/AP5): die Bestaetigung der neuen
+/* Zwei Nachrichten dieses Reiters: die Bestaetigung der neuen
  * Anmeldeadresse und der Termin der beantragten Loeschung. Ohne diese Zeile
  * liefe `mail_einreihen()` in einen Fatal Error — und zwar genau in dem
  * Augenblick, in dem jemand sein Konto loeschen will. */
 require_once __DIR__ . '/mail_lib.php';
-require_once __DIR__ . '/apk_lib.php';    // APK-Karte des Geraete-Reiters (S4/A1)
-require_once __DIR__ . '/geraete_lib.php'; // Art und Modell in der Geraeteliste (S6)
-require_once __DIR__ . '/kopplung_lib.php';  // Kopplungssitzungen: Code suchen, beanspruchen (S5)
-require_once __DIR__ . '/ratelimit_lib.php'; // Topf `pair_code` an der Code-Eingabe (S5, E-S5-16)
-require_once __DIR__ . '/geocoder_lib.php'; // Adresssuche: beide Schalter (S9/AP2, E-S9-05)
-require_once __DIR__ . '/format_lib.php';   // datum_text(), datum_zeit_text(), groesse_text(), groesse_paar_text() (AP7)
+require_once __DIR__ . '/apk_lib.php';    // APK-Karte des Geraete-Reiters
+require_once __DIR__ . '/geraete_lib.php'; // Art und Modell in der Geraeteliste
+require_once __DIR__ . '/kopplung_lib.php';  // Kopplungssitzungen: Code suchen, beanspruchen
+require_once __DIR__ . '/ratelimit_lib.php'; // Topf `pair_code` an der Code-Eingabe
+require_once __DIR__ . '/geocoder_lib.php'; // Adresssuche: beide Schalter
+require_once __DIR__ . '/format_lib.php';   // datum_text(), datum_zeit_text(), groesse_text(), groesse_paar_text()
 
-/* OHNE `t` DIE ÜBERSICHT (E-P3-11, P3/O2).
+/* OHNE `t` DIE ÜBERSICHT.
  *
- * Das Zahnrad in der Kopfleiste führt seit P3 nicht mehr direkt auf den
+ * Das Zahnrad in der Kopfleiste führt nicht direkt auf den
  * Reiter „Profil", sondern auf diese Seite ohne Parameter. Auf dem Handy gibt
  * es keine sichtbare Leiste — ohne eine Übersicht käme man dort nur über die
  * Schublade an die übrigen Punkte, und ein Menüpunkt, der ungefragt auf einem
@@ -37,14 +37,14 @@ if (!isset($_GET['t'])) {
     exit;
 }
 
-$tab = $_GET['t'] ?? 'profil';
-/* „stammdaten" war bis Web 6.3.0 der Reiter, der alles trug. Er ist in zwei
+$tab = (string)$_GET['t'];
+/* „stammdaten" ist ein alter Reitername. Der Reiter ist in zwei
  * zerlegt (siehe ui_leiste_einstellungen) — der alte Name bleibt als WEICHE
  * stehen: Er steht in Lesezeichen, in verschickten Links und in älteren
  * Fassungen der Dokumentation. Ein „Seite nicht gefunden" dafür wäre der
  * schlechteste Umgang mit einer Umbenennung. */
 if ($tab === 'stammdaten') { $tab = 'standorte'; }
-/* „rettungsmittel" ist seit S9/AP5 kein eigener Reiter mehr: Was an einem
+/* „rettungsmittel" ist kein eigener Reiter: Was an einem
  * Standort haengt, steht auf SEINER Seite (`t=standort&s=<id>`). Der alte
  * Name bleibt als Weiche stehen, aus demselben Grund wie „stammdaten" darueber
  * — er steht in Lesezeichen und in aelteren Fassungen der Dokumentation. Wer
@@ -72,35 +72,35 @@ if ($tab === 'standort') {
     }
 }
 $notice = null; $error = null; $pwGewechselt = false;
-/* Zweitfaktor (P5c/AP5): die Codes, einmal in der Antwort auf den POST, der
+/* Zweitfaktor: die Codes, einmal in der Antwort auf den POST, der
  * sie erzeugt hat, und die Meldungen der Karte — [Auftakt, Text]. */
 $zfCodes = null; $zfMeldung = null; $zfFehler = null;
 
-/* DER TON DER HINWEISZEILE (S5 Paket B). Bis hierher war er fest 'info'. Die
- * abgeschlossene Kopplung ist aber ein Vollzug und kein Hinweis — sie bekommt
- * 'ok' mit dem Haken. Vorgabe bleibt 'info', jede vorhandene Meldung sieht aus
- * wie bisher. */
+/* DER TON DER HINWEISZEILE. Die
+ * abgeschlossene Kopplung ist ein Vollzug und kein Hinweis — sie bekommt
+ * 'ok' mit dem Haken. Vorgabe bleibt 'info', jede andere Meldung sieht aus
+ * wie gewohnt. */
 $noticeTon = 'info';
 
-/* ---- Die beiden Zustaende der Karte „Gerät koppeln" (S5, E-S5-01) ---------
+/* ---- Die beiden Zustaende der Karte „Gerät koppeln" ---------
  *
  * $koppelSitzung  Zustand 2: Der eingegebene Code passt zu einer offenen
  *                 Sitzung. Die Karte zeigt Art, Modell und Kennung und fragt
  *                 nach — beansprucht ist noch nichts.
  * $koppelWarten   Zustand 3: Die Sitzung gehoert jetzt diesem Konto, das
- *                 Geraet ist am Zug. Die Karte wartet und laedt nach
- *                 (E-S5-53). Der Zustand haengt an $_SESSION['pair_warten']
+ *                 Geraet ist am Zug. Die Karte wartet und laedt nach.
+ *                 Der Zustand haengt an $_SESSION['pair_warten']
  *                 und ueberlebt damit ein Neuladen, ohne im Adressfeld zu
  *                 stehen.
  *
  * Beide null: die Karte zeigt ihren Regelfall, das Eingabefeld. */
 $koppelSitzung = null; $koppelWarten = null;
 
-/* EIN FEHLER AUS EINEM DIALOG WIRD NICHT UMGELEITET (E-S9-19, S9/AP5-4).
+/* EIN FEHLER AUS EINEM DIALOG WIRD NICHT UMGELEITET.
  *
- * Bis Web 16.3.0 ging jeder Fehler denselben Weg wie jede Meldung: in die
- * Sitzung, Umleitung, Kasten am Seitenkopf. Fuer ein Formular unter der Liste
- * war das richtig — es stand nach dem Neuladen wieder da, mit seinen Werten.
+ * Ginge jeder Fehler denselben Weg wie jede Meldung — in die Sitzung,
+ * Umleitung, Kasten am Seitenkopf —: Fuer ein Formular unter der Liste
+ * waere das richtig — es stand nach dem Neuladen wieder da, mit seinen Werten.
  * Ein Dialog steht nach dem Neuladen NICHT wieder da: Er waere zu, die
  * Eingabe waere weg, und oben stuende „Bezeichnung fehlt." ueber einer Liste,
  * in der man gerade nichts eingegeben hat.
@@ -117,27 +117,27 @@ $koppelSitzung = null; $koppelWarten = null;
 $dlgFehler = null;
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    /* EIN FRISCHER CODE VOR DEM AUSSCHALTEN (Schritt 18, SR-07, E-SR-20), vor
+    /* EIN FRISCHER CODE VOR DEM AUSSCHALTEN, vor
      * dem Token wie ein Rollentor. Nur, wo Ausschalten ueberhaupt geht: Einer
      * Pflichtrolle erst den Code abzuverlangen und dann „Pflicht" zu sagen,
      * waere ein Umweg ins Nein. */
     if (($_POST['action'] ?? '') === 'zf_ausschalten' && !rolle_braucht_zweitfaktor($userRole)) {
         zweitfaktor_frisch_verlangen('totp_ausschalten');
     }
-    /* Ebenso vor dem Entfernen eines Passkeys (SR-09, E-SR-31). */
+    /* Ebenso vor dem Entfernen eines Passkeys. */
     if (($_POST['action'] ?? '') === 'passkey_entfernen') {
         zweitfaktor_frisch_verlangen('passkey_entfernen');
     }
-    /* Und vor neuen Wiederherstellungscodes (R17-20, F-R17-43): Sie sind ein
-     * dauerhafter zweiter Faktor, und E-SR-31 verlangt fuer den Passkey aus
-     * genau diesem Grund den frischen Code. */
+    /* Und vor neuen Wiederherstellungscodes: Sie sind ein
+     * dauerhafter zweiter Faktor, und der Passkey verlangt aus genau diesem
+     * Grund den frischen Code. */
     if (($_POST['action'] ?? '') === 'zf_codes_neu') {
         zweitfaktor_frisch_verlangen('totp_codes_neu');
     }
     csrf_check();
     $action = $_POST['action'] ?? '';
 
-    /* ---- Demo-Konto: die Identitaet ist gesperrt (E-P1-19) -------------
+    /* ---- Demo-Konto: die Identitaet ist gesperrt -------------
      *
      * GESPERRT IST AUSSCHLIESSLICH DIE IDENTITAET. Alles andere bleibt
      * offen — Stammdaten, Geraete, Kopplung, Einsaetze: Die Anwendung soll
@@ -201,18 +201,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         /* Ein unbekannter Wert wird zum Leerstring, nicht zum Fehler: Er
            bedeutet „Standard der Installation", und das ist der harmlose
            Ausgang. Die Liste steht in session_lib.php, damit Prüfung und
-           Auflösung dieselbe Quelle haben (E-P3-20). */
+           Auflösung dieselbe Quelle haben. */
         $logo = (string)($_POST['logo_wahl'] ?? '');
         if (!in_array($logo, LOGO_WAHLEN, true)) { $logo = ''; }
-        /* ---- Adresswechsel nur mit Passwortnachweis (Backlog Nr. 128, K-7)
+        /* ---- Adresswechsel nur mit Passwortnachweis
          *
-         * Bis Web 15.5.2 schrieb dieses Formular die Anmeldeadresse allein mit
-         * dem CSRF-Token um. Wer eine offene Sitzung uebernahm — geliehener
-         * Rechner, gestohlenes Cookie —, konnte die Adresse auf seine eigene
-         * setzen, sich den Setz-Link schicken lassen und das Konto uebernehmen.
-         * Die geschuetzten Angaben blieben zwar zu (der Reset-Weg verlangt den
+         * Schriebe dieses Formular die Anmeldeadresse allein mit dem CSRF-Token
+         * um, koennte, wer eine offene Sitzung uebernimmt — geliehener Rechner,
+         * gestohlenes Cookie —, die Adresse auf seine eigene setzen, sich den
+         * Setz-Link schicken lassen und das Konto uebernehmen. Die geschuetzten
+         * Angaben blieben zwar zu (der Reset-Weg verlangt den
          * Wiederherstellungsschluessel), aber die Klartextfelder nicht, und die
-         * rechtmaessige Besitzerin war ausgesperrt.
+         * rechtmaessige Besitzerin waere ausgesperrt.
          *
          * Derselbe Nachweis wie beim Passwortwechsel: das aus dem aktuellen
          * Passwort abgeleitete Token. Der Server sieht das Passwort auch hier
@@ -227,8 +227,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
          * geaendert, und wer seine Adresse berichtigt, will nicht ueberall
          * abgemeldet werden. */
         $adressWechsel = ($email !== null && $email !== email_normalisieren($userEmail));
-        /* SEIT R17-20 MIT RATENTOPF (F-R17-32): `passwort_nachweis()` traegt
-         * Topf und Vergleich zusammen; bis dahin riet man hier ohne Sperre. */
+        /* MIT RATENTOPF: `passwort_nachweis()` traegt
+         * Topf und Vergleich zusammen; sonst raete man hier ohne Sperre. */
         $nachweis = $adressWechsel
             ? passwort_nachweis($userId, (string)($_POST['old_token'] ?? ''))
             : 'ok';
@@ -243,16 +243,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } else {
             $altAdresse = (string)$userEmail;
             try {
-                /* DIE ADRESSE WIRD NICHT MEHR SOFORT GESCHRIEBEN (P5b/AP5,
-                 * E-P5b-16).
+                /* DIE ADRESSE WIRD NICHT SOFORT GESCHRIEBEN.
                  *
-                 * Bis Web 20.19.0 stand sie unmittelbar in der Zeile — mit
-                 * Passwortnachweis und einer Hinweismail an die alte, aber
-                 * OHNE jede Pruefung, ob die neue ueberhaupt erreichbar ist.
-                 * Ein Tippfehler sperrte damit aus: Die Anmeldung laeuft
-                 * ueber die Adresse, und „Passwort vergessen" schickt an
-                 * eine Adresse, die es nicht gibt. Der Weg zurueck fuehrte
-                 * ueber die Verwaltung — oder, auf einer
+                 * Stuende sie unmittelbar in der Zeile, ohne Pruefung, ob die
+                 * neue ueberhaupt erreichbar ist, sperrte ein Tippfehler aus:
+                 * Die Anmeldung laeuft ueber die Adresse, und „Passwort
+                 * vergessen" schickt an eine Adresse, die es nicht gibt. Der
+                 * Weg zurueck fuehrte ueber die Verwaltung — oder, auf einer
                  * Einzelinstallation, ueber die Datenbank.
                  *
                  * NAME UND LOGO GEHEN WEITER SOFORT. Sie sind harmlos, und
@@ -284,8 +281,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                    „wechselnd" fällt hier ein neuer Würfel — das ist richtig,
                    denn eine Wahl IST eine Gelegenheit zu würfeln. */
                 logo_sitzung_setzen($logo);
-                /* DIE MELDUNG SAGT, DASS DIE ADRESSE NOCH NICHT GILT
-                 * (P5b/AP5). Ein blosses „Profil gespeichert." waere hier
+                /* DIE MELDUNG SAGT, DASS DIE ADRESSE NOCH NICHT GILT.
+                 * Ein blosses „Profil gespeichert." waere hier
                  * die gefaehrlichste aller Auskuenfte: Die NutzerIn
                  * schlösse daraus, sie könne sich ab jetzt mit der neuen
                  * Adresse anmelden — und stünde beim nächsten Mal vor einer
@@ -297,7 +294,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     . $altAdresse . ' an.'
                     : 'Profil gespeichert.';
             } catch (PDOException $ex) {
-                /* NUR der Schluesselkonflikt heisst "bereits verwendet" (M1-16).
+                /* NUR der Schluesselkonflikt heisst "bereits verwendet".
                  * Jeder andere Datenbankfehler bekommt eine ehrliche Meldung —
                  * "diese Adresse wird bereits verwendet" bei einer vollen
                  * Platte kostet mehr Zeit als gar keine Meldung. */
@@ -313,21 +310,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     /* ---- Profil: Passwort (nur mit korrektem alten Passwort) ----------- */
-    /* ---- Konto zur Loeschung anmelden (P5b/AP5, E-P5b-16) --------------
+    /* ---- Konto zur Loeschung anmelden --------------
      *
      * DER PASSWORTNACHWEIS IST SERVERSEITIG, und er ist hier wichtiger als
      * beim Adresswechsel: Dort schuetzt die Bestaetigungsmail, hier gibt es
      * keine zweite Schranke. Der Fall, um den es geht, ist ein offener
      * Rechner in einer Wache.
      *
-     * WIE BEIM ADRESSWECHSEL DAS ABGELEITETE TOKEN (R17-20, F-R17-67). Bis
-     * Web 23.1.0 stand hier, die Karte pruefe das PASSWORT selbst gegen den
-     * Hash, weil sie kein `crypto.js` lade. Beides war falsch: Der Reiter
-     * Profil laedt `crypto.js` (`ui_krypto_bootstrap()`), und der Hash ist
-     * bcrypt des TOKENS, nicht des Passworts. Der Vergleich ging deshalb nie
-     * auf — eine Selbstloeschung war nicht moeglich, und die Seite sagte
-     * „Passwort falsch". Jetzt leitet das Formular das Token ab wie die
-     * Karten darueber, und `passwort_nachweis()` prueft mit Ratentopf.
+     * WIE BEIM ADRESSWECHSEL DAS ABGELEITETE TOKEN. Der Hash ist bcrypt des
+     * TOKENS, nicht des Passworts; ein Vergleich mit dem Passwort ginge nie
+     * auf. Der Reiter Profil laedt `crypto.js` (`ui_krypto_bootstrap()`),
+     * das Formular leitet das Token ab wie die Karten darueber, und
+     * `passwort_nachweis()` prueft mit Ratentopf.
      *
      * DEMO-KONTO NICHT. Es setzt sich nach jeder Aenderung selbst zurueck; eine
      * Loeschung mit 30 Tagen Karenz waere dort sinnlos und wuerde den
@@ -351,7 +345,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                /* ZWEI AUFRUFE UND NICHT datum_zeit_text($x, ' um '): Die Funktion
                                  * steigt bei leerem Wert frueh aus und liefert EINEN
                                  * Gedankenstrich; hier standen immer ZWEI ('– um –').
-                                 * Zeichengleichheit geht vor Kuerze (E-ZE-10). */
+                                 * Zeichengleichheit geht vor Kuerze. */
                                ['termin' => datum_text($termin) . ' um '
                                             . fmt_local($termin) . ' Uhr',
                                 'link'   => app_url('/login.php')]);
@@ -364,7 +358,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 
-    /* ---- Zweitfaktor (P5c/AP5, E-P5c-15, -41, -54; M-P5c-02b Bild 2) ----
+    /* ---- Zweitfaktor ----
      *
      * FUENF HANDLUNGEN, EINE KARTE: einrichten beginnen, einschalten (mit
      * einem bestaetigten Code), abbrechen, neue Codes, ausschalten.
@@ -375,9 +369,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
      * Pruefwert. Die drei anderen leiten um, wie jede Handlung ohne
      * Einmal-Anzeige.
      *
-     * AUSSCHALTEN NUR OHNE PFLICHT (E-P5c-15). Fuer Support, Admin und
-     * BetreiberIn setzt ihn die Verwaltung zurueck (E-P5c-42) oder, seit
-     * Konzept RW, die Person selbst mit dem Wiederherstellungsschluessel am
+     * AUSSCHALTEN NUR OHNE PFLICHT. Fuer Support, Admin und
+     * BetreiberIn setzt ihn die Verwaltung zurueck oder die Person selbst mit
+     * dem Wiederherstellungsschluessel am
      * Code-Schritt; der Knopf fehlt hier, und diese Pruefung haelt auch den
      * handgebauten POST ab.
      *
@@ -420,7 +414,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } elseif ($action === 'zf_codes_neu') {
             $zfCodes = totp_codes_erneuern($userId);
             if ($zfCodes !== null) {
-                /* Die Mail dazu (R17-20, F-R17-43) — an die Kontoadresse. */
+                /* Die Mail dazu — an die Kontoadresse. */
                 mail_einreihen('zf_codes_erneuert', (string)$userEmail,
                                ['link' => app_url('/einstellungen.php?t=profil#k-zweitfaktor')]);
                 $zfMeldung = ['Neue Codes erzeugt.', 'Die alten gelten ab jetzt nicht mehr.'];
@@ -428,7 +422,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $zfZurueck = ['error', 'Der Zweitfaktor ist nicht eingeschaltet.'];
             }
         } elseif ($action === 'zf_geraete_vergessen') {
-            /* „ALLE VERGESSEN" (SR-02, E-SR-07): nur am eigenen Konto — die
+            /* „ALLE VERGESSEN": nur am eigenen Konto — die
              * Kontoseite der Verwaltung setzt den Zweitfaktor zurueck, und
              * das vergisst mit. Das Cookie dieses Browsers geht mit; ohne
              * Zeile ist es ohnehin nur noch ein Zufallswert. */
@@ -455,7 +449,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 
-    /* ---- Einen Passkey entfernen (Schritt 18, SR-09, E-SR-31, -33) --------
+    /* ---- Einen Passkey entfernen --------
      *
      * NUR AM EIGENEN KONTO — `pk_entfernen()` fragt Kennung UND Konto. Die
      * Verwaltung entfernt keine einzelnen: Ihr „Zweitfaktor zurücksetzen"
@@ -488,7 +482,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $st = db()->prepare('SELECT password_hash, pat_key_check FROM users WHERE id = ?');
         $st->execute([$userId]);
         $u = $st->fetch();
-        /* Mit Ratentopf und Pfeffer (R17-20, F-R17-32). */
+        /* Mit Ratentopf und Pfeffer. */
         $nachweis = passwort_nachweis($userId, (string)($_POST['old_token'] ?? ''));
         $oldOk = ($nachweis === 'ok');
         $newTok = (string)($_POST['new_token'] ?? '');
@@ -507,7 +501,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                   || !preg_match('/^[0-9a-f]{32}$/', $newSalt)) {
             $error = 'Passwortwechsel unvollständig (JavaScript nötig).';
         } elseif ($newIter !== KDF_ITER_ZIEL) {
-            /* Nur der Zielwert (M2-01). Ein Passwortwechsel baut die Ableitung
+            /* Nur der Zielwert. Ein Passwortwechsel baut die Ableitung
              * vollstaendig neu auf; es gibt keinen Grund, dabei auf einem
              * Altwert zu landen. Eine frei waehlbare Rundenzahl waere ein Weg,
              * das eigene Konto auf einen absurd niedrigen Wert zu setzen — die
@@ -524,7 +518,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } elseif ($patReady
                   && ($huellenFehler = huelle_pw_pruefen($wrapPw,
                         demo_ist_demo($userId))) !== null) {
-            /* SEIT S10 (E-S10-08, Fund F-3): Die neue Huelle muss zum
+            /* Die neue Huelle muss zum
              * AKTUELLEN Server-Anteil gehoeren. Ohne diese Zeile schriebe ein
              * Passwortwechsel waehrend einer Rotation eine Huelle auf dem
              * ALTEN Anteil — unbrauchbar in dem Augenblick, in dem der alte
@@ -534,7 +528,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $error = 'Die Prüfsumme des Inhaltsschlüssels ist unbrauchbar — '
                    . 'das Passwort wurde NICHT geändert.';
         } elseif ($patReady && $chkSoll !== null && $keyChk !== $chkSoll) {
-            /* DIE ENTSCHEIDENDE PRUEFUNG (M1-12).
+            /* DIE ENTSCHEIDENDE PRUEFUNG.
              *
              * Der Server kann die neue Huelle nicht oeffnen — er kennt den
              * Schluessel nicht. Er kann bisher also NICHT erkennen, ob darin
@@ -566,7 +560,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $_SESSION['epoch'] = db_transaktion(db(), function (PDO $pdo) use (
                         $newTok, $newSalt, $newIter, $userId, $patReady, $wrapPw, $keyChk,
                         &$geraeteWeg): int {
-                /* Sitzungszaehler mit erhoehen (M1-09/D6).
+                /* Sitzungszaehler mit erhoehen.
                  *
                  * Wer sein Passwort wechselt, weil er Missbrauch vermutet,
                  * will genau eines erreichen: dass der andere draussen ist.
@@ -585,11 +579,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                                 session_epoch = session_epoch + 1
                                WHERE id = ?')
                     ->execute([anmeldehash_bilden($userId, $newTok, demo_ist_demo($userId)), $newSalt,
-                               $newIter, $userId]);   // mit Pfeffer (R17-20)
+                               $newIter, $userId]);   // mit Pfeffer
                 if ($patReady) {
                     // Pruefsumme mitschreiben: Bestandskonten bekommen sie
                     // hier erstmals, alle anderen bestaetigen den alten Wert.
-                    /* Kein Abschneiden mehr (M2-08).
+                    /* Kein Abschneiden mehr.
                      *
                      * mb_substr(..., 0, 4000) konnte nie greifen: WRAP_RE
                      * laesst hoechstens 4000 Zeichen durch, laengere Eingaben
@@ -614,12 +608,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                WHERE user_id = ? AND used_at IS NULL')
                     ->execute([$userId]);
 
-                /* DIE GEMERKTEN GERAETE GEHEN MIT (Schritt 18, SR-02,
-                 * E-SR-07), aus demselben Grund wie der Zaehler oben: Wer
+                /* DIE GEMERKTEN GERAETE GEHEN MIT, aus demselben Grund wie der Zaehler oben: Wer
                  * sein Passwort wechselt, weil er Missbrauch vermutet, will
                  * den anderen draussen haben — ein gemerkter Browser des
                  * Fremden ueberdauerte den Wechsel sonst, wie einst die
-                 * Sitzung (M1-09).
+                 * Sitzung.
                  *
                  * IN DERSELBEN TRANSAKTION, damit „Es wurde nichts geaendert"
                  * stimmt, wenn es scheitert: Hinter der Transaktion hiesse ein
@@ -630,7 +623,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $geraeteWeg = zweitfaktor_geraete_vergessen($userId, 'passwort');
 
                 /* Die EIGENE Sitzung zieht den neuen Stand mit und bleibt
-                 * bestehen (Abnahmekriterium A5: "alle ANDEREN Sitzungen").
+                 * bestehen ("alle ANDEREN Sitzungen").
                  * Der Browser hat den neuen Datenschluessel in diesem Moment
                  * bereits gesetzt; die handelnde Person hier abzumelden waere
                  * kein Sicherheitsgewinn, sondern nur laestig. */
@@ -647,7 +640,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         . 'Zurücksetzen sind ungültig.'
                         . ($geraeteWeg > 0 ? ' Gemerkte Geräte sind vergessen — die nächste '
                                            . 'Anmeldung fragt wieder nach dem Code.' : '');
-                /* Signal fuer das Browser-Skript (M2-07): Erst JETZT darf es
+                /* Signal fuer das Browser-Skript: Erst JETZT darf es
                  * den neuen Datenschluessel uebernehmen. */
                 $pwGewechselt = true;
             } catch (Throwable $ex) {
@@ -658,36 +651,47 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     /* ---- Geräte (Selbstverwaltung) -------------------------------------
      *
-     * KEINE HANDANLAGE MEHR (R17-21). Hier stand bis Web 23.2.0 die Aktion
-     * `add`: ein Geraet ohne Code anlegen und Geraete-ID und API-Schluessel
-     * von Hand in die App tragen. Der einzige Abnehmer war der Alt-Weg der
-     * Garmin-Uhr, und den gibt es seit Uhr 4.1.0 nicht mehr (E-R17-21); die
-     * Android-App koppelt seit jeher ueber den Code. Ein Weg, der Zugangsdaten
+     * KEINE HANDANLAGE. Ein Geraet ohne Code anzulegen und Geraete-ID und
+     * API-Schluessel von Hand in die App zu tragen, braucht kein Geraet; die
+     * Apps koppeln ueber den Code. Ein Weg, der Zugangsdaten
      * zum Abtippen auf einen Bildschirm legt, ohne dass ein Geraet sie noch
-     * annimmt, ist nur noch Angriffsflaeche (E-R17-56). Geraete entstehen
-     * jetzt ausschliesslich ueber die Kopplung (`pair.php`). */
+     * annimmt, ist nur Angriffsflaeche. Geraete entstehen
+     * ausschliesslich ueber die Kopplung (`pair.php`). */
+    /* EIN HANDGRIFF OHNE TREFFER IST KEIN ERFOLG. Gehoert die Kennung nicht
+     * zu diesem Konto (oder ist das Geraet inzwischen weg), sagen die drei
+     * Handgriffe das, statt „gespeichert" zu melden. */
+    $geraetDa = static function (int $id) use ($userId): bool {
+        $st = db()->prepare('SELECT 1 FROM devices WHERE id = ? AND user_id = ?');
+        $st->execute([$id, $userId]);
+        return (bool)$st->fetchColumn();
+    };
+    $geraetFehlt = 'Dieses Gerät gibt es in deinem Konto nicht (mehr).';
     if ($action === 'toggle') {
-        db()->prepare('UPDATE devices SET active = 1 - active WHERE id = ? AND user_id = ?')
-            ->execute([(int)($_POST['id'] ?? 0), $userId]);
-        require_once __DIR__ . '/protokoll_lib.php';
-        protokoll_geraet('geraet_umgeschaltet', (int)($_POST['id'] ?? 0), $userId, 'selbst');
-        $notice = 'Status geändert.';
+        $gid = (int)($_POST['id'] ?? 0);
+        $st = db()->prepare('UPDATE devices SET active = 1 - active WHERE id = ? AND user_id = ?');
+        $st->execute([$gid, $userId]);
+        if ($st->rowCount() === 0) {
+            $error = $geraetFehlt;
+        } else {
+            require_once __DIR__ . '/protokoll_lib.php';
+            protokoll_geraet('geraet_umgeschaltet', $gid, $userId, 'selbst');
+            $notice = 'Status geändert.';
+        }
     }
-    /* ---- Kopplung: den Code vom Gerät entgegennehmen (S5, E-S5-01) -------
+    /* ---- Kopplung: den Code vom Gerät entgegennehmen -------
      *
-     * DER ABLAUF HAT SICH UMGEDREHT. Bis Web 12.9.4 erzeugte diese Seite einen
-     * Code, und die Uhr tippte ihn. Jetzt zeigt das GERAET den Code, ein Mensch
+     * DER ABLAUF: Das GERAET zeigt den Code, ein Mensch
      * tippt ihn hier, und das Geraet hat das letzte Wort: Es sieht die
      * maskierte Adresse des Kontos und sagt Ja oder Nein.
      *
      * ZWEI SCHRITTE, ZWEI AKTIONEN, und das ist kein Umweg, sondern das erste
-     * der beiden Tore aus E-S5-05: `koppeln_pruefen` SUCHT die Sitzung und
+     * der beiden Tore: `koppeln_pruefen` SUCHT die Sitzung und
      * zeigt, was da koppeln will (Art, Modell, Kennung); `koppeln_bestaetigen`
      * BINDET sie ans Konto. Wer nur den Code hat, hat damit noch nichts
      * ausgeloest — er sieht ein Geraet und kann abbrechen. Das zweite Tor steht
      * am Geraet.
      *
-     * WAS ZAEHLT UND WAS NICHT (E-S5-17). Gezaehlt wird im Topf `pair_code`,
+     * WAS ZAEHLT UND WAS NICHT. Gezaehlt wird im Topf `pair_code`,
      * je Konto UND je Adresse:
      *   - Code passt nicht zum Muster  -> zaehlt NICHT. Die Datenbank wurde
      *     nicht gefragt; es ist nichts zu erraten, nur ein Vertipper.
@@ -696,7 +700,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
      *     Rateversuch zu unterscheiden, und selten genug.
      *
      * GELEERT WIRD DER TOPF ERST BEIM BEANSPRUCHEN, nicht schon beim Finden —
-     * und das weicht bewusst vom Wortlaut in Z-08 ab (E-S5-54). Ein Treffer im
+     * und das weicht bewusst vom Wortlaut der Vorlage ab. Ein Treffer im
      * Suchschritt verbraucht die Sitzung naemlich nicht: Wer sich ueber
      * `pair.php?aktion=start` selbst eine Sitzung holt, kennt einen gueltigen
      * Code, den er beliebig oft eingeben kann — und haette damit alle zehn
@@ -739,15 +743,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 } elseif (!pair_sitzung_beanspruchen(db(), $koppelCode, $userId)) {
                     /* Zwischen Suchen und Beanspruchen ist die Sitzung weg —
                      * abgelaufen, am Gerät verworfen oder von einem zweiten
-                     * Browserfenster genommen. Die Datenbank hat entschieden
-                     * (E-S5-13), und dieselbe Meldung wie oben genuegt: Der
+                     * Browserfenster genommen. Die Datenbank hat entschieden,
+                     * und dieselbe Meldung wie oben genuegt: Der
                      * Unterschied ginge nur einen Angreifer etwas an. */
                     rate_misserfolg('pair_code', $koppelKonto);
                     $error = 'Diesen Code kennt der Server nicht — er ist falsch, abgelaufen '
                            . 'oder schon verwendet. Auf dem Gerät einen neuen Code holen: '
                            . 'Sync-Seite → Gerät koppeln.';
                 } else {
-                    /* ---- UMLEITUNG STATT DIREKTER ANZEIGE (E-S5-53) --------
+                    /* ---- UMLEITUNG STATT DIREKTER ANZEIGE --------
                      *
                      * Der Wartezustand ist der einzige auf dieser Seite, der
                      * MINUTEN dauert und sich von selbst aendert: Das Geraet
@@ -782,31 +786,44 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
     if ($action === 'rename') {
+        /* Nachsehen statt `rowCount()`: Ein UPDATE auf denselben Namen trifft
+         * die Zeile und zaehlt trotzdem 0. */
+        $gid = (int)($_POST['id'] ?? 0);
         $lbl = mb_substr(trim($_POST['label'] ?? ''), 0, 120);
-        db()->prepare('UPDATE devices SET label = ? WHERE id = ? AND user_id = ?')
-            ->execute([$lbl !== '' ? $lbl : null, (int)($_POST['id'] ?? 0), $userId]);
-        $notice = 'Bezeichnung gespeichert.';
+        if (!$geraetDa($gid)) {
+            $error = $geraetFehlt;
+        } else {
+            db()->prepare('UPDATE devices SET label = ? WHERE id = ? AND user_id = ?')
+                ->execute([$lbl !== '' ? $lbl : null, $gid, $userId]);
+            $notice = 'Bezeichnung gespeichert.';
+        }
     }
     if ($action === 'delete') {
         // FK setzt device_id in Einsaetzen/Segmenten auf NULL -> Daten bleiben
-        require_once __DIR__ . '/protokoll_lib.php';
-        protokoll_geraet('geraet_geloescht', (int)($_POST['id'] ?? 0), $userId, 'selbst');
-        db()->prepare('DELETE FROM devices WHERE id = ? AND user_id = ?')
-            ->execute([(int)($_POST['id'] ?? 0), $userId]);
-        $notice = 'Gerät gelöscht. Bereits hochgeladene Daten bleiben erhalten.';
+        $gid = (int)($_POST['id'] ?? 0);
+        if (!$geraetDa($gid)) {
+            $error = $geraetFehlt;
+        } else {
+            /* Der Eintrag VOR dem Loeschen — danach weiss er nicht mehr,
+             * welches Geraet es war. */
+            require_once __DIR__ . '/protokoll_lib.php';
+            protokoll_geraet('geraet_geloescht', $gid, $userId, 'selbst');
+            db()->prepare('DELETE FROM devices WHERE id = ? AND user_id = ?')
+                ->execute([$gid, $userId]);
+            $notice = 'Gerät gelöscht. Bereits hochgeladene Daten bleiben erhalten.';
+        }
     }
 
     /* ---- Standorte und ihre Stammdaten ------------------------------------
      *
-     * DER STANDORT IST DER ANKER (E15). Jedes Rettungsmittel, jede Zielklinik,
+     * DER STANDORT IST DER ANKER. Jedes Rettungsmittel, jede Zielklinik,
      * jede Besatzungs-Vorbelegung, jedes weitere Rettungsmittel und jede
      * Bergwacht-Bereitschaft gehoert GENAU EINEM Standort. Eine zweite,
      * standortuebergreifende Ebene gibt es bewusst nicht — der Preis ist
      * Doppelpflege, der Gewinn ein Modell mit einer Regel statt mit zwei.
      *
      * Jede der Speicheraktionen unten prueft deshalb zuerst den Standort, und
-     * zwar mit dt_base_erlaubt(): Zulaessig sind die eigenen (bis Web
-     * 20.47.0 auch ausgewaehlte zentrale, E16/R39). Dieselbe Pruefung entscheidet in
+     * zwar mit dt_base_erlaubt(): Zulaessig sind die eigenen. Dieselbe Pruefung entscheidet in
      * api/day.php, welche Zuordnung ein Diensttag annehmen darf — zwei
      * verschiedene Fassungen davon waeren die Stelle, an der beide
      * auseinanderlaufen.
@@ -815,24 +832,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         global $userId;
         return dt_base_erlaubt(db(), $userId, isset($_POST['base_id']) ? (int)$_POST['base_id'] : null);
     };
-    /* DIE KENNUNG DER GESCHRIEBENEN ZEILE (S9/AP5-4). Sie wird gebraucht,
+    /* DIE KENNUNG DER GESCHRIEBENEN ZEILE. Sie wird gebraucht,
      * damit die Umleitung auf `#veh-7` zeigt und `:target` die neue Zeile
      * faerbt — ohne sie gaebe es nach dem Anlegen keine Rueckmeldung ausser
-     * einem Satz am Seitenkopf, und genau den nimmt E-S9-19 weg.
+     * einem Satz am Seitenkopf, und genau den gibt es hier nicht.
      *
      * DER FALL `lastInsertId() === 0` IST KEIN ERFOLG. Die vier einfachen
      * Listen schreiben mit `INSERT IGNORE`; greift der Eindeutigkeitsschluessel
      * (`uq_user_base_role_name` und Geschwister), fuegt MySQL nichts ein und
-     * meldet trotzdem keinen Fehler. Bis Web 16.3.0 sagte die Anwendung dann
-     * „Eintrag gespeichert." und es war keiner gespeichert. Jetzt sagt sie,
-     * dass es ihn schon gibt. */
+     * meldet trotzdem keinen Fehler. „Eintrag gespeichert." waere dann falsch;
+     * die Anwendung sagt, dass es ihn schon gibt. */
     $zielId = null;
     /* Die Kennung eines NEU angelegten Standorts — die Umleitung fuehrt auf
-     * seine Seite (E-S9-19), nicht auf die Liste, aus der er entstanden ist. */
+     * seine Seite, nicht auf die Liste, aus der er entstanden ist. */
     $baseNeu = null;
     /* Die Kennung des Rettungsmittels, das das Loeschen eines Standorts
      * ueberlebt hat — die Umleitung fuehrt auf seine Zeile unter „Ohne
-     * Standort" (M-S9-10 b). */
+     * Standort". */
     $ohneZiel = null;
     $sdNeuId = static function (string $dublettenmeldung) use (&$error): ?int {
         $id = (int)db()->lastInsertId();
@@ -861,17 +877,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($action === 'base_save') {
         $n = mb_substr(trim($_POST['name'] ?? ''), 0, 120);
         $bid = (int)($_POST['id'] ?? 0);
-        /* Optionale Koordinate (E37/E39). Die Regeln — nur zusammen, ausserhalb
-         * des Bereichs leer, Komma zulaessig — stehen seit Web 6.1.0 an EINER
-         * Stelle (pruef_ortspaar in validate_lib.php). Vorher gab es dieselbe
-         * kleine Umrechnung dreimal: hier, in admin_stammdaten.php (mit S9/AP5b
-         * gestrichen) und, mit dem Ortsfeld am Einsatz, waere sie ein viertes
-         * Mal entstanden. */
+        /* Optionale Koordinate. Die Regeln — nur zusammen, ausserhalb
+         * des Bereichs leer, Komma zulaessig — stehen an EINER
+         * Stelle (pruef_ortspaar in validate_lib.php). Sonst stuende dieselbe
+         * kleine Umrechnung hier und am Ortsfeld des Einsatzes ein zweites
+         * Mal. */
         [$lat, $lon] = pruef_ortspaar($_POST['lat'] ?? null, $_POST['lon'] ?? null);
-        /* EIN LEERER NAME BEKAM BIS WEB 16.3.0 KEINE ANTWORT (F-S9-U-28).
-         * Die Bedingung lautete `if ($n !== '')` — ohne `else`. Wer das Feld
-         * leer liess und absendete, sah die Seite neu geladen, keinen neuen
-         * Standort und keine Meldung. Das `required` im Markup faengt den
+        /* EIN LEERER NAME BEKOMMT EINE ANTWORT. Mit `if ($n !== '')` ohne
+         * `else` saehe, wer das Feld leer laesst und absendet, die Seite neu
+         * geladen, keinen neuen Standort und keine Meldung. Das `required` im Markup faengt den
          * Regelfall ab; es ist keine Pruefung, sondern eine Bequemlichkeit. */
         if ($n === '') {
             $error = 'Bitte einen Namen eintragen.';
@@ -880,13 +894,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 ->execute([$n, $lat, $lon, $bid, $userId]);
             $notice = 'Standort gespeichert. Bereits dokumentierte Diensttage bleiben unverändert.';
         } else {
-            /* ERSTSTART-SCHRITT 1 (P5b/AP9). Vermerkt wird HIER und nicht
-             * in der Karte: Nur diese Stelle weiss, dass tatsaechlich etwas
-             * entstanden ist. */
-            erststart_erledigt($userId, ERSTSTART_STANDORT);
             db()->prepare('INSERT IGNORE INTO bases (user_id, name, lat, lon) VALUES (?,?,?,?)')
                 ->execute([$userId, $n, $lat, $lon]);
-            /* „STANDORT ANLEGEN" LANDET AUF DER NEUEN SEITE (E-S9-19). Sie ist
+            /* „STANDORT ANLEGEN" LANDET AUF DER NEUEN SEITE. Sie ist
              * die Bestaetigung — und zugleich der Ort, an dem als Naechstes
              * etwas zu tun ist: Ein Standort ohne Rettungsmittel ist ein leeres
              * Fach. Eine Meldung „Standort gespeichert." ueber der Liste sagte
@@ -894,6 +904,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
              * `INSERT IGNORE` schweigt bei einer Dublette (eigener Bestand,
              * `uq_user_base_name`); `$sdNeuId()` macht daraus eine Meldung. */
             $baseNeu = $sdNeuId('Einen eigenen Standort dieses Namens gibt es schon.');
+            /* ERSTSTART-SCHRITT 1. Vermerkt wird HIER und nicht in der Karte,
+             * und erst NACH dem Anlegen: Nur hier steht fest, dass tatsaechlich
+             * ein Standort entstanden ist — eine Dublette legt nichts an. */
+            if ($baseNeu !== null) { erststart_erledigt($userId, ERSTSTART_STANDORT); }
         }
     }
     if ($action === 'base_default') {
@@ -914,17 +928,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $notice = 'Standard-Rettungsmittel gesetzt.';
         }
     }
-    /* `ub_toggle` STAND HIER BIS S9/AP5b (R39): die Auswahl zentraler
-     * Standorte fuer dieses Konto, der einzige Schreibweg in ihre Tabelle.
-     * Die Tabelle ist mit P5c/AP8 gefallen. */
+    /* Eine Auswahl zentraler Standorte (`ub_toggle`) gibt es nicht. */
     if ($action === 'base_del') {
-        /* DAS LOESCHEN NIMMT DIE STAMMDATEN DES STANDORTS MIT (E15,
-         * ON DELETE CASCADE) — MIT EINER AUSNAHME SEIT WEB 17.1.0 (M-S9-10,
-         * Variante b). Diensttage bleiben davon unberuehrt, weil sie ihre
-         * Angaben eingefroren haben (E8).
+        /* DAS LOESCHEN NIMMT DIE STAMMDATEN DES STANDORTS MIT
+         * (ON DELETE CASCADE) — MIT EINER AUSNAHME. Diensttage bleiben davon
+         * unberuehrt, weil sie ihre
+         * Angaben eingefroren haben.
          *
          * DIE AUSNAHME: Rettungsmittel der drei Typen ohne Standortpflicht
-         * duerfen seit E-S9-09 ohne Standort bestehen — dann darf das Loeschen
+         * duerfen ohne Standort bestehen — dann darf das Loeschen
          * eines Standorts sie auch nicht kosten. Sie bekommen `base_id = NULL`
          * und stehen danach unter „Ohne Standort". Der Fremdschluessel bleibt
          * `ON DELETE CASCADE`: `ON DELETE SET NULL` waere falsch, weil es
@@ -937,14 +949,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
          * Oberflaeche (`stammdaten_loeschfrage()`), hier wird geloescht. */
         $bid = (int)($_POST['id'] ?? 0);
         /* ZUERST PRUEFEN, OB ES EIN EIGENER STANDORT IST — und erst dann
-         * irgendetwas anfassen (Fund beim Gegenlesen von AP5-5). Das `DELETE`
+         * irgendetwas anfassen. Das `DELETE`
          * unten schuetzt sich selbst mit `AND user_id = ?` und tut bei einer
-         * fremden Kennung nichts. Das UPDATE davor tat es nicht: Ein
+         * fremden Kennung nichts. Das UPDATE davor taete es nicht: Ein
          * abgeschicktes `base_del` mit einer fremden Kennung haette den
          * eigenen Rettungsmitteln dort den Standort abgenommen, ohne dass ein
          * Standort geloescht worden waere — eine Datenaenderung ohne
-         * sichtbaren Anlass. (Bis Web 20.47.0 war der Fall ein zentraler
-         * Standort, R39.) */
+         * sichtbaren Anlass. */
         $q = db()->prepare('SELECT id FROM bases WHERE id = ? AND user_id = ?');
         $q->execute([$bid, $userId]);
         if ($q->fetchColumn() === false) {
@@ -959,7 +970,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $pdo->prepare('DELETE FROM user_defaults WHERE user_id = ? AND kind = "base" AND item_id = ?')
                     ->execute([$userId, $bid]);
                 /* UND DIE VORBELEGUNGEN DER RETTUNGSMITTEL, DIE MIT DEM
-                 * STANDORT FALLEN (Backlog Nr. 167).
+                 * STANDORT FALLEN.
                  *
                  * `user_defaults.item_id` traegt bewusst KEINEN
                  * Fremdschluessel: Die Spalte zeigt je nach `kind` auf
@@ -978,7 +989,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                  * DIE STELLE IST NICHT BELIEBIG. Vor
                  * `stammdaten_standort_loesen()` traefe die Unterabfrage auch
                  * die Rettungsmittel OHNE Standortpflicht — die ueberleben
-                 * aber (E-S9-09, Web 17.1.0) und behalten ihre Vorbelegung.
+                 * aber und behalten ihre Vorbelegung.
                  * Nach `DELETE FROM bases` sind die Zeilen in `vehicles`
                  * bereits kaskadiert fort und die Unterabfrage faende nichts
                  * mehr. Zwischen beiden ist das einzige Fenster. */
@@ -1002,8 +1013,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 : $geloest . ' Rettungsmittel ohne Standortpflicht stehen jetzt unter „Ohne Standort". ')
                             : '')
                         . 'Bereits dokumentierte Diensttage bleiben unverändert.';
-                /* DIE UMLEITUNG ZEIGT AUF DAS, WAS UEBERLEBT HAT (M-S9-10 b,
-                   „der neue Eintrag trägt `:target`"). Bei mehreren auf das erste:
+                /* DIE UMLEITUNG ZEIGT AUF DAS, WAS UEBERLEBT HAT („der neue
+                   Eintrag trägt `:target`"). Bei mehreren auf das erste:
                    Die Karte „Ohne Standort" ist zugeklappt, und das Skript am
                    Seitenende oeffnet die Vorfahren des Ankers. Ohne diese Zeile
                    landete man auf der Standortliste, und das Ueberlebende waere
@@ -1015,30 +1026,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if ($action === 'veh_save') {
         $vid = (int)($_POST['id'] ?? 0);
-        /* ALLE REGELN STEHEN IN DER PRUEFSCHICHT (Web 16.0.0, E-S9-09).
-         * Bis Web 15.9.0 standen sie hier ausgeschrieben — und ein zweites Mal
-         * in admin_stammdaten.php (seit S9/AP5b gestrichen), ein drittes Mal
-         * (kuerzer) beim Einspielen
-         * einer Sicherung. Mit dem Typ waeren daraus drei Fassungen von sieben
-         * Regeln geworden. `pruef_rettungsmittel()` liefert den fertigen
+        /* ALLE REGELN STEHEN IN DER PRUEFSCHICHT.
+         * Hier ausgeschrieben, stuenden sie ein zweites Mal (kuerzer) beim
+         * Einspielen einer Sicherung — zwei Fassungen von sieben Regeln.
+         * `pruef_rettungsmittel()` liefert den fertigen
          * Datensatz oder je Feld eine Meldung; die Dublettenpruefung bleibt
          * hier, weil sie den Bestand fragt und nicht die Eingabe.
          *
-         * DIE ART IST WEITER PFLICHT (Web 7.0.0) — die Begruendung steht jetzt
-         * an der Meldung in validate_lib.php: Bis Web 6.3.0 galt ein
-         * stillschweigendes „im Zweifel luftgebunden", das an einem Standort
-         * mit NEF erst auffiel, wenn im Einsatzformular Windenfelder erschienen. */
+         * DIE ART IST WEITER PFLICHT — die Begruendung steht jetzt
+         * an der Meldung in validate_lib.php: Ein stillschweigendes „im Zweifel
+         * luftgebunden" fiele an einem Standort mit NEF erst auf, wenn im
+         * Einsatzformular Windenfelder erschienen. */
         $geprueft = pruef_rettungsmittel([
             'name'    => $_POST['name'] ?? null,
             'kurz'    => $_POST['kurz'] ?? null,
             'typ'     => $_POST['typ']  ?? null,
             'kind'    => $_POST['kind'] ?? null,
-            /* DER STANDORT IST EIN AUSWAHLFELD (S9/AP5-4, E-S9-19). Bis
-             * Web 16.3.0 stand hier ein Haken „Ohne Standort", der die
-             * verborgene Kennung der Standortkarte schlug — man sah beim
-             * Setzen nicht, WAS man damit überschrieb, und ein Rettungsmittel
-             * von einem Standort auf einen anderen zu verschieben ging gar
-             * nicht. Jetzt kommt die Kennung aus dem Feld; „Ohne Standort"
+            /* DER STANDORT IST EIN AUSWAHLFELD, kein Haken „Ohne Standort", der
+             * eine verborgene Kennung schlaegt — man saehe beim Setzen nicht,
+             * WAS man damit überschreibt, und ein Rettungsmittel von einem
+             * Standort auf einen anderen zu verschieben ginge gar nicht. Die
+             * Kennung kommt aus dem Feld; „Ohne Standort"
              * ist dessen erster Eintrag mit dem Wert 0, und
              * `dt_base_erlaubt()` macht daraus null. Ob das zum Typ passt,
              * entscheidet weiterhin `pruef_rettungsmittel()`. */
@@ -1065,7 +1073,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                    VALUES (?,?,?,?,?,?)')
                         ->execute([$userId, $rm['base_id'], $rm['name'], $rm['kurz'], $rm['kind'], $rm['typ']]);
                     $vid = (int)$pdo->lastInsertId();
-                    /* ERSTSTART-SCHRITT 2 (P5b/AP9). Nur beim ANLEGEN, nicht
+                    /* ERSTSTART-SCHRITT 2. Nur beim ANLEGEN, nicht
                      * beim Bearbeiten — wer ein vorhandenes Rettungsmittel
                      * umbenennt, hat den Einstieg nicht gerade erledigt. */
                     erststart_erledigt($userId, ERSTSTART_RETTUNGSMITTEL);
@@ -1073,8 +1081,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 /* Rollen und Faehigkeiten vollstaendig ersetzen. Auf BEREITS
                  * DOKUMENTIERTE Diensttage wirkt das nicht: Ihr Rollensatz steht
                  * eingefroren in `day_crew`, ihr Faehigkeitssatz in
-                 * `day_capabilities` (E8). Das Abwaehlen der Winde kostet also
-                 * keine vorhandene Windendokumentation (A13e) — es aendert nur,
+                 * `day_capabilities`. Das Abwaehlen der Winde kostet also
+                 * keine vorhandene Windendokumentation — es aendert nur,
                  * was NEUE Diensttage dieses Rettungsmittels anbieten. */
                 $pdo->prepare('DELETE FROM vehicle_roles WHERE vehicle_id = ?')->execute([$vid]);
                 $insR = $pdo->prepare('INSERT IGNORE INTO vehicle_roles (vehicle_id, role_code) VALUES (?,?)');
@@ -1093,9 +1101,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
     if ($action === 'veh_del') {
-        /* Kein Retten von Bezeichnungen mehr: Der Diensttag hat sie eingefroren
-         * (E8), und der Fremdschluessel steht auf ON DELETE SET NULL. Ein
-         * geloeschtes Rettungsmittel beschaedigt damit keine Historie (A4). */
+        /* Kein Retten von Bezeichnungen mehr: Der Diensttag hat sie eingefroren,
+         * und der Fremdschluessel steht auf ON DELETE SET NULL. Ein
+         * geloeschtes Rettungsmittel beschaedigt damit keine Historie. */
         $vid = (int)($_POST['id'] ?? 0);
         db()->prepare('DELETE FROM user_defaults WHERE user_id = ? AND kind = "vehicle" AND item_id = ?')
             ->execute([$userId, $vid]);
@@ -1113,11 +1121,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($g['daten'] === null) {
             $error = reset($g['fehler']);
         } elseif ($cid > 0) {
-            /* DIE ROLLE WIRD MITGESCHRIEBEN (S9/AP5-4). Bis Web 16.3.0 stand
-             * hier nur `SET name = ?` — richtig, solange die Rolle eine
-             * verborgene Kennung im Formular je Rolle war und sich gar nicht
-             * ändern konnte. Der Dialog bietet sie als Feld an; ohne diese
-             * Spalte hätte eine Rollenänderung wortlos nichts getan.
+            /* DIE ROLLE WIRD MITGESCHRIEBEN. Der Dialog bietet sie als Feld
+             * an; mit nur `SET name = ?` taete eine Rollenänderung wortlos
+             * nichts.
              *
              * UND SIE KANN JETZT AUF EINE DUBLETTE LAUFEN: Der eindeutige
              * Schlüssel `uq_user_base_role_name` deckt Standort, Rolle und
@@ -1228,18 +1234,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
      * ihn dank des Ankers automatisch wieder und verhindert nebenbei das
      * erneute Absenden beim Neuladen der Seite.
      *
-     * Die Anker sind seit der Gliederung nach Standort (Konzept 3.8)
-     * STANDORTBEZOGEN: `sd-<Standortkennung>` oeffnet den Block dieses
+     * Die Anker sind STANDORTBEZOGEN: `sd-<Standortkennung>` oeffnet den Block dieses
      * Standorts. Nur die Standortliste selbst hat einen festen Anker. */
-    /* ZWEI ZIELE (Web 7.0.0, neu gefasst S9/AP5). Die Standortaktionen fuehren
+    /* ZWEI ZIELE. Die Standortaktionen fuehren
      * auf die LISTE zurueck, alles Uebrige auf die SEITE DES STANDORTS, an dem
      * es haengt.
      *
-     * Bis Web 16.2.1 stand hier `t=rettungsmittel` — der Reiter, der alles auf
-     * einmal zeigte. Den gibt es nicht mehr; die Weiche am Seitenkopf haette
-     * jede Aenderung an einem Rettungsmittel, einer Rolle, einer Zielklinik
-     * oder einer Bereitschaft auf die Liste geworfen. Der Anker haette dort
-     * nichts gefunden, und wer zehn Zielkliniken nacheinander eintraegt, waere
+     * Ein Ziel `t=rettungsmittel` — der alte Reiter, der alles auf einmal
+     * zeigte — waere falsch: Die Weiche am Seitenkopf wuerfe jede Aenderung an
+     * einem Rettungsmittel, einer Rolle, einer Zielklinik
+     * oder einer Bereitschaft auf die Liste. Der Anker faende dort
+     * nichts, und wer zehn Zielkliniken nacheinander eintraegt, waere
      * zehnmal zurueckgeklickt. Das Ziel steht deshalb unten, wo auch der
      * Standort feststeht — als ganze Adresse und nicht als Reitername. */
     $abschnitt = [
@@ -1253,7 +1258,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     ][$action] ?? null;
     /* Aktionen, die zu einem Standort gehoeren, springen in dessen Block
      * zurueck — und zwar in den UNTERBLOCK der jeweiligen Datenart
-     * (`sd-<Standort>-<Art>`, Web 7.0.0). Vorher genuegte `sd-<Standort>`, weil
+     * (`sd-<Standort>-<Art>`). Vorher genuegte `sd-<Standort>`, weil
      * der Block alles auf einmal zeigte; jetzt liegt jede Datenart in einem
      * eigenen aufklappbaren Abschnitt, und ohne die Art landete man wieder ganz
      * oben. Das Skript am Seitenende oeffnet alle Ebenen bis dorthin.
@@ -1269,8 +1274,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         'bw_save'  => 'bw',  'bw_del'  => 'bw',
     ][$action] ?? null;
     $zurueckZiel = 'einstellungen.php?t=standorte';
-    /* Der neu angelegte Standort zieht die Umleitung auf seine eigene Seite
-     * (E-S9-19). `#k-standort` ist die erste Karte darauf. */
+    /* Der neu angelegte Standort zieht die Umleitung auf seine eigene Seite.
+     * `#k-standort` ist die erste Karte darauf. */
     if ($baseNeu !== null) {
         $zurueckZiel = sd_seite($baseNeu);
         $abschnitt = 'k-standort';
@@ -1280,14 +1285,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $zurueckBase = (int)($_POST['base_id'] ?? 0);
         /* OHNE STANDORT GIBT ES KEINE SEITE, auf die man zurueckkehren
            koennte: Ein Rettungsmittel mit `base_id = null` haengt an keinem
-           Standort, und seine Karte steht auf der Liste (S9/AP5). Dorthin
+           Standort, und seine Karte steht auf der Liste. Dorthin
            also, und in ihren Abschnitt. */
         $abschnitt = $zurueckBase > 0
             ? ('sd-' . $zurueckBase . '-' . $unterblock)
             : 'sd-ohne-veh';
         if ($zurueckBase > 0) { $zurueckZiel = sd_seite($zurueckBase); }
-        /* AUF DIE GESCHRIEBENE ZEILE STATT AUF DEN ABSCHNITT (E-S9-19,
-           S9/AP5-4). Wer etwas angelegt hat, will es sehen — nicht den
+        /* AUF DIE GESCHRIEBENE ZEILE STATT AUF DEN ABSCHNITT. Wer
+           etwas angelegt hat, will es sehen — nicht den
            Anfang der Liste, in der es irgendwo steht. `:target` faerbt sie,
            `scroll-padding-top` setzt sie unter die Kopfleiste. Der
            Abschnittsanker bleibt der Rueckfall fuer das Loeschen: Die Zeile,
@@ -1297,15 +1302,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
     /* UMGELEITET WIRD, WENN ES EIN ZIEL GIBT — nicht, wenn es eine Meldung
-     * gibt. Bis Web 16.3.0 hing die Umleitung an `notice || error`; nimmt man
-     * dem Erfolgsfall seine Meldung weg (E-S9-19: „keine zusaetzliche
-     * Erfolgsmeldung"), waere beides null, es wuerde nicht umgeleitet, und
+     * gibt. Hinge die Umleitung an `notice || error`, waere im Erfolgsfall
+     * („keine zusaetzliche Erfolgsmeldung") beides null, es wuerde nicht umgeleitet, und
      * die Anwendung bliebe auf dem POST-Ergebnis stehen — ohne Anker, ohne
      * `:target` und mit der Neuladen-Warnung des Browsers. */
     if ($abschnitt !== null
         && ($zielId !== null || $baseNeu !== null || $notice !== null || $error !== null)) {
         /* NUR EINES VON BEIDEN KANN GESETZT SEIN — nachgelesen fuer jeden der
-         * 24 Handlungszweige (Schritt 15/AP3): Jeder ist eine if/elseif/else-Kette
+         * 24 Handlungszweige: Jeder ist eine if/elseif/else-Kette
          * oder ein try/catch, und der Demo-Riegel oben setzt `$action = ''`.
          * Deshalb traegt EIN Sitzungsschluessel, was vorher zwei trugen. */
         if ($error !== null)       { flash_setzen('error', $error); }
@@ -1322,7 +1326,7 @@ if ($flash !== null) {
     else                           { $notice = $flash['text']; }
 }
 
-/* ---- Wartet dieses Konto gerade auf ein Gerät? (S5, E-S5-53) --------------
+/* ---- Wartet dieses Konto gerade auf ein Gerät? --------------
  *
  * Der Zustand steht in der Sitzung und wird bei JEDEM Aufruf des Geräte-
  * Reiters gegen die Wirklichkeit gehalten — er ist eine Erinnerung, keine
@@ -1356,9 +1360,8 @@ if ($tab === 'geraete' && !empty($_SESSION['pair_warten'])) {
     }
 }
 
-/* Die Rollenbeschriftungen kommen aus CREW_ROLES (db.php, E4). Bis Web 5.10.0
- * stand hier eine zweite Liste mit fuenf Flugrollen; sie waere mit dem Katalog
- * auseinandergelaufen, sobald eine Rolle dazukommt. */
+/* Die Rollenbeschriftungen kommen aus CREW_ROLES (db.php). Eine zweite
+ * Liste liefe mit dem Katalog auseinander, sobald eine Rolle dazukommt. */
 $ROLE_LABELS = array_map(static fn(array $r): string => $r['label'], CREW_ROLES);
 
 $devices = []; $editDev = null; $devNeu = 0;
@@ -1367,7 +1370,7 @@ if ($tab === 'geraete') {
      * ein TIMESTAMP und kommt in der Zeitrechnung der Datenbank an. Ein
      * Vergleich gegen eine in PHP gebildete Grenze haette stillschweigend
      * angenommen, dass beide dieselbe Zeitzone benutzen. */
-    /* DIE BEIDEN ABGEWIESEN-SPALTEN MIT RUECKFALL (Web 20.11.0, P5a/AP7).
+    /* DIE BEIDEN ABGEWIESEN-SPALTEN MIT RUECKFALL.
        Zwischen dem Hochladen der Dateien und dem Aufruf von `update.php` gibt
        es sie nicht; ohne Rueckfall zeigte der Reiter Geraete in diesem Fenster
        eine Fehlerseite. Dieselbe Bauart wie in `ingest.php`. */
@@ -1392,12 +1395,11 @@ if ($tab === 'geraete') {
     }
 }
 /* Das Leaflet-Stylesheet nur, wo eine Karte entstehen kann: Die
-   Stammdatenreiter tragen seit S9/AP2 den Pin-Knopf am Ortsfeld und damit den
-   Kartendialog (E-S9-06 c). Auf den uebrigen Reitern waere es eine Datei fuer
+   Stammdatenreiter tragen den Pin-Knopf am Ortsfeld und damit den
+   Kartendialog. Auf den uebrigen Reitern waere es eine Datei fuer
    nichts. */
-/* DAS LEAFLET-STYLESHEET BRAUCHT JETZT DIE STANDORTSEITE. Bis Web 16.1.1
- * stand hier `['standorte','rettungsmittel']`; „rettungsmittel" gibt es nicht
- * mehr, und der Pin am Nur-Lage-Ortsfeld sitzt auf `t=standort`. Ohne diese
+/* DAS LEAFLET-STYLESHEET BRAUCHT AUCH DIE STANDORTSEITE: Der Pin am
+ * Nur-Lage-Ortsfeld sitzt auf `t=standort`. Ohne diese
  * Zeile faellt die Karte dort unformatiert zusammen — und zwar ohne
  * Fehlermeldung, was das Aergerliche daran ist. */
 ui_seite_start(['titel' => 'Einstellungen',
@@ -1419,7 +1421,7 @@ ui_seite_start(['titel' => 'Einstellungen',
     /* Die gespeicherte Wahl steht NICHT in der Sitzung — dort liegt ihr
        Ergebnis ('hubschrauber' oder 'fahrzeug'). Für das gesetzte Radio
        braucht es die Wahl selbst, und die wird genau hier gebraucht:
-       auth_guard.php liest bewusst nur, was jede Seite braucht (M1-20). */
+       auth_guard.php liest bewusst nur, was jede Seite braucht. */
     if (!isset($logoWahl)) {
         $lw = db()->prepare('SELECT logo_wahl FROM users WHERE id = ?');
         $lw->execute([$userId]);
@@ -1440,7 +1442,7 @@ ui_seite_start(['titel' => 'Einstellungen',
         <?php ui_feld(['label' => 'E-Mail-Adresse (Anmeldung)', 'name' => 'email',
                        'id' => 'pf_email',
                        'art' => 'email', 'wert' => $userEmail, 'pflicht' => true]); ?>
-        <?php /* NACHWEIS FUER DEN ADRESSWECHSEL (Backlog Nr. 128, K-7).
+        <?php /* NACHWEIS FUER DEN ADRESSWECHSEL.
                  Immer sichtbar und nie Pflicht: Ein Feld, das erst beim Tippen
                  erscheint, wird uebersehen, und wer nur den Namen aendert, soll
                  sein Passwort nicht suchen muessen. Der Hinweis sagt, wann es
@@ -1451,7 +1453,7 @@ ui_seite_start(['titel' => 'Einstellungen',
                                 . 'ist die Anmeldung zu diesem Konto. Name und Logo '
                                 . 'gehen ohne.',
                        'attr' => ' autocomplete="current-password"']); ?>
-        <?php /* DIE EIGENE ROLLE, NUR ZU LESEN (R75, Web 15.0.0).
+        <?php /* DIE EIGENE ROLLE, NUR ZU LESEN.
                  Sie steht hier, weil sie erklaert, warum zwei Konten
                  verschiedene Menues sehen — und weil es der einzige Ort ist,
                  an dem eine NutzerIn ihre eigene Rolle nachsehen kann.
@@ -1465,7 +1467,7 @@ ui_seite_start(['titel' => 'Einstellungen',
           Verwaltung, nicht hier.</p>
       <?php ui_karte_ende(); ?>
 
-      <?php /* LOGO-WAHL (E-P3-20, Mockup 13). Sie gilt für Kopfleiste UND
+      <?php /* LOGO-WAHL. Sie gilt für Kopfleiste UND
                Browser-Symbol; die Anmeldeseite zeigt immer den Standard, weil
                dort noch niemand angemeldet ist und die Wahl am Konto hängt. */ ?>
       <?php ui_karte_start(['titel' => 'Logo', 'id' => 'k-logo']); ?>
@@ -1483,30 +1485,29 @@ ui_seite_start(['titel' => 'Einstellungen',
         ]); ?>
       <?php ui_karte_ende(); ?>
 
-      <?php /* HIER STAND EIN ZWEITES `ui_karte_ende()` (Backlog Nr. 225).
-               Es schloss keine Karte, sondern gab ein `</div></section>` zu
-               viel aus — und weil der Parser fuer ein `</div>` ohne offenes
-               `div` das naechste nimmt, das er findet, schloss es
+      <?php /* EIN `ui_karte_ende()` JE KARTE. Ein zweites schloesse keine
+               Karte, sondern gaebe ein `</div></section>` zu viel aus — und
+               weil der Parser fuer ein `</div>` ohne offenes `div` das
+               naechste nimmt, das er findet, schloesse es
                `div.rahmen` samt `main.inhalt` und `form`. Alles danach
                (Datenschutz, Passwort, Mengen, Loeschkarte und dieser
-               Knopf) lag direkt am `body` und lief ueber die volle
+               Knopf) laege direkt am `body` und liefe ueber die volle
                Fensterbreite, unter der Seitenleiste hindurch.
 
-               WARUM ES ZEHN TAGE UNBEMERKT BLIEB: Kein Prüfmittel schlug an.
-               `scrollWidth` blieb gleich `innerWidth` — es lief nichts ueber,
-               es lag nur falsch —, die Konsole blieb still, die Knopfhoehen
-               stimmten. Gefunden beim Ansehen des Bildes zu AP6, nicht durch
-               eine Zahl. */ ?>
+               KEIN PRÜFMITTEL SCHLUEGE AN: `scrollWidth` bliebe gleich
+               `innerWidth` — es liefe nichts ueber, es laege nur falsch —, die
+               Konsole bliebe still, die Knopfhoehen stimmten. Sehen laesst es
+               sich nur am Bild. */ ?>
 
       <div class="listen-form-fuss">
         <?= ui_knopf(['text' => 'Profil speichern', 'art' => 'primaer']) ?>
       </div>
     </form>
 
-      <?php /* DATENSCHUTZ: die Adresssuche je Konto (S9/AP2, E-S9-05, R79).
+      <?php /* DATENSCHUTZ: die Adresssuche je Konto.
                Sie steht im Profil und nicht bei den Standorten, weil sie eine
                Entscheidung UEBER MICH ist und nicht ueber Daten: Was mein
-               Browser einen Dritten fragt, entscheide ich (R74 (1) —
+               Browser einen Dritten fragt, entscheide ich (die
                NutzerIn). Die Installation ist die Obergrenze; ist sie aus,
                steht der Schalter ausgegraut da und sagt, warum.
 
@@ -1560,7 +1561,7 @@ ui_seite_start(['titel' => 'Einstellungen',
       <input type="hidden" name="old_token" id="pw_oldtok">
       <input type="hidden" name="new_token" id="pw_newtok">
       <input type="hidden" name="new_salt" id="pw_newsalt">
-      <?php /* Rundenzahl, mit der das NEUE Passwort abgeleitet wurde (M2-01).
+      <?php /* Rundenzahl, mit der das NEUE Passwort abgeleitet wurde.
                Ohne sie stuende in der Nutzerzeile weiter die alte, und die
                naechste Anmeldung rechnete mit der falschen Zahl. */ ?>
       <input type="hidden" name="new_iter" id="pw_newiter">
@@ -1586,9 +1587,9 @@ ui_seite_start(['titel' => 'Einstellungen',
       <span class="feld-hinweis" id="pwstate"></span>
     </form>
 
-    <?php /* ---- Wiederherstellungsschluessel (P5b/AP9, E-P5b-20) ----------
+    <?php /* ---- Wiederherstellungsschluessel ----------
              DER ZWEITE VERBRAUCHER derselben Komponente, die auch die
-             Konto-Rueckfrage bedient (R83): `assets/schluessel.js` rechnet,
+             Konto-Rueckfrage bedient: `assets/schluessel.js` rechnet,
              `api/schluessel_erneuern.php` schreibt, `schluessel_teile.php`
              zeigt. Hier ohne Frage davor — wer freiwillig erneuert, ist
              nicht gefragt worden.
@@ -1613,8 +1614,8 @@ ui_seite_start(['titel' => 'Einstellungen',
       </div>
     <?php ui_karte_ende(); ?>
 
-    <?php /* ---- DIE KARTE „ZWEITFAKTOR" (P5c/AP5, M-P5c-02b Bild 1 und 2) --
-             Nach „Wiederherstellungsschlüssel", wie im Mockup (E-P5c-66).
+    <?php /* ---- DIE KARTE „ZWEITFAKTOR" --
+             Nach „Wiederherstellungsschlüssel", wie im Mockup.
              Vier Zustände: aus → wird eingerichtet → an (die Codes einmal
              sichtbar) → an. Die Teile, die das Einrichtungstor mit ihr
              teilt, stehen in `zweitfaktor_teile.php`.
@@ -1625,7 +1626,7 @@ ui_seite_start(['titel' => 'Einstellungen',
           require_once __DIR__ . '/zweitfaktor_teile.php';
           require_once __DIR__ . '/rueckweg_lib.php';
           $zf = totp_zustand($userId);
-          $rwZ = rw_zustand($userId);          // Konzept RW: Zeile, Satz, Knopf, Dialog
+          $rwZ = rw_zustand($userId);          // Rueckweg: Zeile, Satz, Knopf, Dialog
           $zfPflicht = rolle_braucht_zweitfaktor($userRole);
           $zfLeer = static function (int $n): string {
               return ['keiner', 'einer', 'zwei', 'drei', 'vier', 'fünf', 'sechs',
@@ -1664,7 +1665,7 @@ ui_seite_start(['titel' => 'Einstellungen',
                   'klein' => $zfLeer($zfBenutzt) . ' benutzt — neue Codes machen die alten ungültig',
                   'plaketten' => ui_plakette($zf['codes_offen'] . ' von ' . $zf['codes_alle'],
                                              ['ton' => 'blau'])]);
-        /* GEMERKTE GERAETE (SR-02, E-SR-07, -15, -17): Zahl und „Alle
+        /* GEMERKTE GERAETE: Zahl und „Alle
            vergessen". Der Knopf gehoert zum Formular `f-zf-geraete` unter
            der Karte (`form=`), weil die Zeile in keinem Formular steht.
            Vor `update.php` fehlt die Zeile — die Tabelle gibt es noch nicht. */
@@ -1682,7 +1683,7 @@ ui_seite_start(['titel' => 'Einstellungen',
                                       'attr' => ' form="f-zf-geraete" data-confirm="Alle gemerkten Geräte vergessen? Die nächste Anmeldung fragt dort wieder nach dem Code — auch an diesem." data-confirm-ok="Vergessen" data-confirm-tone="normal"'])
                           : '']);
         }
-        /* DER RUECKWEG (Konzept RW, E-RW-07; M-RW-01 Bild 4): die dritte
+        /* DER RUECKWEG: die dritte
            Zeile. Nur hier, bei eingeschaltetem Zweitfaktor — ausgeschaltet
            hat das Paar keinen Verbraucher. Vor `update.php` ('spalten')
            fehlt sie ganz; das Demo-Konto kommt hier nie an, sein
@@ -1698,21 +1699,21 @@ ui_seite_start(['titel' => 'Einstellungen',
                                . 'die Verwaltung zurück',
                       'plaketten' => ui_plakette('ab der nächsten Anmeldung')]);
         }
-        /* PASSKEYS (Schritt 18, SR-09; E-SR-29, -31): ein weiteres Verfahren
+        /* PASSKEYS: ein weiteres Verfahren
            dieses Faktors, deshalb hier und nur bei eingeschaltetem
-           Zweitfaktor. Vorhandene Bausteine (E-SR-15): eine Zeile je
+           Zweitfaktor. Vorhandene Bausteine: eine Zeile je
            Passkey, ein Feld, ein Knopf. „Hinzufügen" nur mit FRISCHEM Code —
            sonst der Verweis auf die Bestätigung, damit die Reihenfolge zu
-           sehen ist, bevor der Dialog der Plattform aufgeht (E-SR-31); der
+           sehen ist, bevor der Dialog der Plattform aufgeht; der
            Endpunkt prüft es noch einmal. Die Herausforderung entsteht hier,
            beim Aufbau, und gilt zehn Minuten einmal. Ohne taugliche Adresse
            (keine Domain, kein HTTPS) oder vor `update.php` fehlt der
-           Abschnitt ganz (E-SR-42). */
+           Abschnitt ganz. */
         require_once __DIR__ . '/passkey_lib.php';
         $pkDa = pk_verfuegbar();
         if ($pkDa) {
-            /* NUR DIE DER HEUTIGEN ADRESSE ZAEHLEN UND GELTEN (E-SR-48,
-               F-SR-41). Passkeys einer frueheren Adresse (nach einem Umzug
+            /* NUR DIE DER HEUTIGEN ADRESSE ZAEHLEN UND GELTEN. Passkeys einer
+               frueheren Adresse (nach einem Umzug
                oder einem Komplett-Stand von anderswo) stehen darunter, als
                nicht nutzbar gekennzeichnet, mit „Entfernen". */
             $pkAlle  = pk_liste($userId);
@@ -1777,12 +1778,12 @@ ui_seite_start(['titel' => 'Einstellungen',
         /* DAS GEHEIMNIS IST NICHT ZU OEFFNEN, wenn die Anlage einen anderen
            Serverschluessel hat als bei der Einrichtung (Wiederanlauf,
            eingespieltes Komplett-Backup). Die Anmeldung geht dann mit
-           Wiederherstellungscodes und Passkeys (E-SR-49); das soll hier
+           Wiederherstellungscodes und Passkeys; das soll hier
            stehen und nicht erst beim naechsten Anmelden auffallen. */
         if (totp_geheimnis($userId) === null) {
-            /* PASSKEYS HAENGEN NICHT AM SERVERSCHLUESSEL (E-SR-49) — sie
+            /* PASSKEYS HAENGEN NICHT AM SERVERSCHLUESSEL — sie
                bleiben hier der Weg hinein; Ausschalten oder Zuruecksetzen
-               nimmt sie aber mit (H-SR-08, F-SR-38), und das soll man
+               nimmt sie aber mit, und das soll man
                vorher lesen. */
             $pkNoch = !empty($pkListe);
             ui_meldung(null, ($zfPflicht
@@ -1804,7 +1805,7 @@ ui_seite_start(['titel' => 'Einstellungen',
           <?= ui_knopf(['text' => 'Neue Codes erzeugen', 'art' => 'neutral', 'name' => 'action',
                         'wert' => 'zf_codes_neu',
                         'attr' => ' data-confirm="Neue Codes erzeugen? Die bisherigen gelten danach nicht mehr — auch die auf einem gedruckten Codeblatt." data-confirm-ok="Neue Codes erzeugen" data-confirm-tone="normal"']) ?>
-          <?php if ($rwZ['stand'] === 'da'): /* E-RW-06: nur, wo ein Paar zu ersetzen ist */ ?>
+          <?php if ($rwZ['stand'] === 'da'): /* nur, wo ein Paar zu ersetzen ist */ ?>
           <?= ui_knopf(['text' => 'Rückweg erneuern', 'art' => 'neutral', 'typ' => 'button',
                         'attr' => ' data-rueckweg-auf']) ?>
           <?php endif; ?>
@@ -1851,7 +1852,7 @@ ui_seite_start(['titel' => 'Einstellungen',
       <?php require __DIR__ . '/schluessel_teile.php'; ?>
     </dialog>
 
-    <?php /* „RUECKWEG ERNEUERN" (Konzept RW, E-RW-06): derselbe Aufbau wie
+    <?php /* „RUECKWEG ERNEUERN": derselbe Aufbau wie
              der Passwortabschnitt von „Neuen Wiederherstellungsschluessel
              erzeugen" (`schluessel_teile.php`) — Kopf, ein Passwortfeld, eine
              Fehlerzeile, zwei Knoepfe. Kein zweiter Abschnitt: Es gibt nichts
@@ -1885,11 +1886,11 @@ ui_seite_start(['titel' => 'Einstellungen',
 
     <?php /* Ruestzeug der Verschluesselung (Baustein ui_krypto_bootstrap()),
              dazu pwquality.js: Passwortguete nach derselben Regel wie bei
-             Erstvergabe und Zuruecksetzen (B9, M2-02).
+             Erstvergabe und Zuruecksetzen.
              OHNE keyguard.js/unlock.js — dieser Reiter entsperrt nichts, er
              wechselt das Passwort.
 
-             `keycheck` SEIT P5b/AP9: `PAT_KEY_CHECK` ist die Wache der
+             `keycheck`: `PAT_KEY_CHECK` ist die Wache der
              Schluesselerneuerung — ohne sie verweigert `schluessel.js` den
              Dienst (der Kopf dort sagt, warum). */ ?>
     <?php ui_krypto_bootstrap(['skripte' => ['assets/crypto.js'],
@@ -2101,7 +2102,7 @@ ui_seite_start(['titel' => 'Einstellungen',
     });
     </script>
 
-    <?php /* ---- Was das Konto hält (P5b/AP6, E-P5b-04) ------------------
+    <?php /* ---- Was das Konto hält ------------------
        *
        * VOR der Löschkarte und nach dem Passwort: Wer wissen will, wie voll
        * sein Konto ist, sucht es bei den Angaben zum Konto — und nicht
@@ -2139,11 +2140,11 @@ ui_seite_start(['titel' => 'Einstellungen',
          <a href="import.php">Import / Export</a>.</p>
     <?php ui_karte_ende(); ?>
 
-    <?php /* ---- Konto löschen (P5b/AP5, E-P5b-16) ------------------------
+    <?php /* ---- Konto löschen ------------------------
        *
-       * WARUM ES DIESEN WEG GIBT: Bis Web 20.19.0 konnte eine NutzerIn ihr
-       * Konto nicht selbst loeschen — sie musste die Verwaltung bitten, und
-       * die loeschte sofort und unwiderruflich. Beides ist falsch herum:
+       * WARUM ES DIESEN WEG GIBT: Ohne ihn muesste eine NutzerIn die Verwaltung
+       * bitten, und die loeschte sofort und unwiderruflich. Beides waere
+       * falsch herum:
        * Ueber die eigenen Daten entscheidet, wem sie gehoeren, und eine
        * Loeschung ohne Frist ist ein Klick, der nicht zurueckzunehmen ist.
        *
@@ -2178,7 +2179,7 @@ ui_seite_start(['titel' => 'Einstellungen',
           <?php /* DAS PASSWORT ALS NACHWEIS, wie beim Adresswechsel — im
                    Browser zum Token abgeleitet und SERVERSEITIG geprueft. Das
                    Feld hat keinen Namen: Das Passwort verlaesst den Browser
-                   nicht (R17-20, F-R17-67). */ ?>
+                   nicht. */ ?>
           <?php ui_feld(['label' => 'Aktuelles Passwort', 'id' => 'loesch_pw',
                          'art' => 'password', 'pflicht' => true,
                          'attr' => ' autocomplete="current-password"']); ?>
@@ -2234,26 +2235,24 @@ ui_seite_start(['titel' => 'Einstellungen',
 
   <?php elseif ($tab === 'standorte' || $tab === 'standort'): ?>
     <?php
-      /* ---- Standorte und ihre Stammdaten — ZWEI REITER (Web 7.0.0) --------
+      /* ---- Standorte und ihre Stammdaten — ZWEI REITER --------
        *
-       * Bis Web 6.3.0 stand alles unter einem Punkt „Standortdaten": die Liste
-       * der Standorte, die Auswahl der zentralen, und darunter je Standort ein
-       * Block mit fünf Datenarten. Das war eine Seite, auf der man scrollte, um
-       * einen Standort anzulegen, und nochmal scrollte, um ein Rettungsmittel
-       * einzutragen — und der Name passte auf keines von beidem.
+       * Ein einziger Punkt „Standortdaten" mit der Liste der Standorte und
+       * darunter je Standort einem Block mit fünf Datenarten waere eine Seite,
+       * auf der man scrollt, um einen Standort anzulegen, und nochmal, um ein
+       * Rettungsmittel einzutragen.
        *
-       * Jetzt trennt der Schnitt nach der Tätigkeit:
+       * Deshalb trennt der Schnitt nach der Tätigkeit:
        *   „Standorte"       Standorte anlegen, bearbeiten, auswählen. Sonst nichts.
        *   „Rettungsmittel"  alles, was an einem ausgewählten Standort hängt.
        *
-       * DIE DATENHALTUNG IST UNVERÄNDERT: Der Standort bleibt der Anker (E15),
+       * DIE DATENHALTUNG IST UNVERÄNDERT: Der Standort bleibt der Anker,
        * jeder Eintrag gehört genau einem. Beide Reiter laden deshalb denselben
        * Bestand — der Block hier läuft für beide, gerendert wird danach je
        * Reiter.
        *
-       * ZENTRALE EINTRÄGE standen hier bis Web 20.47.0 mit dem Kennzeichen
-       * „systemweit", sichtbar und unveränderlich (R39). Seit P5c/AP8 trägt
-       * jeder Eintrag ein Konto, und die Abfragen fragen nur noch `user_id = ?`.
+       * KEINE ZENTRALEN EINTRÄGE: Jeder Eintrag trägt ein Konto, und die
+       * Abfragen fragen nur noch `user_id = ?`.
        */
       /* Präfixe der Ortsfelder dieses Reiters. Sie entstehen beim Rendern — je
        * Standort eines für die Zielklinik —, und die Belebung im Browser
@@ -2263,8 +2262,8 @@ ui_seite_start(['titel' => 'Einstellungen',
 
       $sdBases = dt_bases($userId);           // die eigenen
       $sdBaseIds = array_map(static fn($b) => (int)$b['id'], $sdBases);
-      /* [Kennung => Name] fuer die Standortauswahl im Rettungsmittel-Dialog
-         (S9/AP5-4). Sie entsteht HIER und nicht auf der Standortseite: Dort
+      /* [Kennung => Name] fuer die Standortauswahl im Rettungsmittel-Dialog.
+         Sie entsteht HIER und nicht auf der Standortseite: Dort
          ist `$sdBases` gleich auf den einen Standort der Seite verkuerzt, und
          eine Auswahl mit einem Eintrag waere keine. Zulaessig ist genau, was
          `dt_bases()` liefert — dieselbe Menge, die `dt_base_erlaubt()` beim
@@ -2272,9 +2271,7 @@ ui_seite_start(['titel' => 'Einstellungen',
       $sdBaseNamen = [];
       foreach ($sdBases as $b) { $sdBaseNamen[(int)$b['id']] = (string)$b['name']; }
 
-      /* Bis Web 20.47.0 eine eigene Abfrage — die Standortliste zeigte nur die
-       * eigenen, `dt_bases()` auch ausgewaehlte zentrale (R39). Seither
-       * dieselbe Menge. */
+      /* Dieselbe Menge wie `dt_bases()` — keine eigene Abfrage. */
       $eigene = $sdBases;
 
       /* Die Stammdaten aller verfuegbaren Standorte in EINER Abfrage je Art,
@@ -2296,12 +2293,11 @@ ui_seite_start(['titel' => 'Einstellungen',
           return $nach;
       };
       $sdVeh  = $sdLade('vehicles', 'id, name, kurz, kind, typ');
-      /* RETTUNGSMITTEL OHNE STANDORT — GEBUENDELT AM ENDE (E-S9-09, Web 16.0.0).
+      /* RETTUNGSMITTEL OHNE STANDORT — GEBUENDELT AM ENDE.
        * `$sdLade()` fragt `base_id IN (...)`, und daran faellt ein Rettungsmittel
        * ohne Standort heraus: Es stuende in der Auswahlliste eines Diensttags,
        * waere auf dieser Seite aber weder zu aendern noch zu loeschen. Die
-       * eigene Karte am Ende ist die kleinste Fassung dessen, was E-S9-18 als
-       * letzten Eintrag der Standortliste vorsieht; ihre Form bekommt sie in AP5. */
+       * eigene Karte am Ende ist der letzte Eintrag der Standortliste. */
       $sdVehOhne = [];
       foreach (db()->query('SELECT id, name, kurz, kind, typ, base_id
                               FROM vehicles
@@ -2337,21 +2333,17 @@ ui_seite_start(['titel' => 'Einstellungen',
       $DEF_BASE_ID = (int)($SD_DEF['base_id'] ?? 0);
       $DEF_VEH_ID  = (int)($SD_DEF['vehicle_id'] ?? 0);
 
-      /* FUENF GET-PARAMETER SIND MIT S9/AP5-4 ENTFALLEN: `ev`, `ec`, `et`,
-       * `er`, `ew`. Sie waren der Bearbeiten-Weg — ein Verweis auf dieselbe
-       * Seite, der ein Formular unter der Liste mit anderen Werten fuellte.
-       * Diese Formulare gibt es nicht mehr; „Bearbeiten" oeffnet einen
+      /* KEINE BEARBEITEN-PARAMETER FUER DIE LISTEN: „Bearbeiten" oeffnet einen
        * Dialog, und der bekommt seine Werte aus dem Oeffner, ohne dass die
-       * Seite neu laedt (E-S9-19). Mit ihnen ist `$pickIn()` gegangen, das
-       * nur sie bediente.
+       * Seite neu laedt.
        *
        * `eb` BLEIBT: Der Standort wird weiterhin in einem Formular unter der
-       * Liste bearbeitet — die drei Dialoge des Konzepts sind die der
+       * Liste bearbeitet — die drei Dialoge sind die der
        * LISTENKARTEN, und die Standortkarte ist keine Liste. */
       $editBase = null;
       foreach ($eigene as $b) { if ((int)$b['id'] === (int)($_GET['eb'] ?? 0)) { $editBase = $b; } }
 
-      /* DIE `data-w-`-KETTE EINES RETTUNGSMITTELS (S9/AP5-4).
+      /* DIE `data-w-`-KETTE EINES RETTUNGSMITTELS.
        *
        * Sie steht an einer Stelle, weil sie an vier gebraucht wird: „Anlegen"
        * im Kartenkopf der Standortseite, „Bearbeiten" in jeder Zeile dort,
@@ -2383,7 +2375,7 @@ ui_seite_start(['titel' => 'Einstellungen',
       };
 
       /* Zahl der Stammdatensaetze eines Standorts — fuer die Rueckfrage vor dem
-       * Loeschen (Konzept 4.2): Das Loeschen nimmt sie mit. */
+       * Loeschen: Das Loeschen nimmt sie mit. */
       $sdAnzahl = function (int $bid) use ($sdVeh, $sdCrew, $sdTd, $sdRes, $sdBw): int {
           $n = 0;
           foreach ([$sdVeh, $sdCrew, $sdTd, $sdRes, $sdBw] as $art) {
@@ -2391,11 +2383,10 @@ ui_seite_start(['titel' => 'Einstellungen',
           }
           return $n;
       };
-      /* DIE DREI ZAHLEN EINER STANDORTZEILE (M-S9-06). Sie zaehlen, was
+      /* DIE DREI ZAHLEN EINER STANDORTZEILE. Sie zaehlen, was
        * jemand an diesem Standort sucht — Rettungsmittel, Besatzung,
        * Zielkliniken. `$sdAnzahl()` daneben zaehlt ueber alle fuenf Arten,
-       * fuer die Loeschrueckfrage. (Bis Web 20.47.0 zaehlte sie nur die
-       * eigenen und diese auch die systemweiten, R39.) */
+       * fuer die Loeschrueckfrage. */
       $sdZahlen = function (int $bid) use ($sdVeh, $sdCrew, $sdTd): string {
           $n = static fn(array $art): int => count($art[$bid] ?? []);
           $eins = static fn(int $z, string $ein, string $viele): string
@@ -2405,19 +2396,19 @@ ui_seite_start(['titel' => 'Einstellungen',
                . $eins($n($sdTd), 'Zielklinik', 'Zielkliniken');
       };
 
-      /* ---- WELCHE ROLLEN GIBT ES AN DIESEM STANDORT? (Web 7.0.0) ----------
+      /* ---- WELCHE ROLLEN GIBT ES AN DIESEM STANDORT? ----------
        *
-       * Die Besatzungspflege zeigte bis Web 6.3.0 IMMER alle Rollen des
-       * Katalogs — an einem reinen NEF-Standort also auch Pilot 1, Pilot 2,
-       * HEMS-TC und Flugretter. Vier Überschriften mit vier leeren Tabellen und
-       * vier Eingabezeilen, für die es nie einen Eintrag geben wird.
+       * Zeigte die Besatzungspflege IMMER alle Rollen des Katalogs, stuenden an
+       * einem reinen NEF-Standort auch Pilot 1, Pilot 2, HEMS-TC und
+       * Flugretter — vier Überschriften mit vier leeren Tabellen und vier
+       * Eingabezeilen, für die es nie einen Eintrag geben wird.
        *
-       * Gefragt wird jetzt der Bestand: Eine Rolle erscheint, wenn mindestens
+       * Gefragt wird deshalb der Bestand: Eine Rolle erscheint, wenn mindestens
        * EIN Rettungsmittel dieses Standorts sie führt. Damit richtet sich die
        * Pflege nach dem, was am Standort tatsächlich fliegt und fährt.
        *
        * EINE BEREITS BELEGTE ROLLE BLEIBT — dieselbe Regel wie im
-       * Einsatzformular (A13e): Wer Vorbelegungen für eine Rolle hinterlegt hat
+       * Einsatzformular: Wer Vorbelegungen für eine Rolle hinterlegt hat
        * und später das zugehörige Rettungsmittel löscht, käme sonst an seine
        * eigenen Einträge nicht mehr heran, auch nicht zum Löschen. */
       $rollenAmStandort = function (int $bid) use ($sdVeh, $vehRollen, $sdCrew): array {
@@ -2433,18 +2424,16 @@ ui_seite_start(['titel' => 'Einstellungen',
     ?>
 
   <?php
-  /* Die beiden Bausteine der Stammdatenlisten stehen seit Web 9.10.0 in
-     `stammdaten_ui.php`: Dieselben Listen gab es systemweit noch einmal
-     (`admin_stammdaten.php`, mit S9/AP5b gestrichen), und ein Muster, das an
-     zwei Stellen steht, laeuft auseinander — genau das war der Befund, aus dem
-     in O8b die Schliessungen entstanden sind. Sie bleiben dort, auch mit nur
-     noch einem Aufrufer: Diese Datei hat ueber viertausend Zeilen, und die
+  /* Die beiden Bausteine der Stammdatenlisten stehen in
+     `stammdaten_ui.php`: Ein Muster, das an zwei Stellen steht, laeuft
+     auseinander. Die Bausteine bleiben dort, auch mit nur einem Aufrufer: Diese
+     Datei hat ueber viertausend Zeilen, und die
      Bausteine wieder hereinzuholen hiesse, den Befund umzukehren. */
   ?>
 
   <?php if ($tab === 'standorte'): ?>
     <?php ui_titelzeile(['titel' => 'Standorte']); ?>
-    <?php /* DREI ZEILEN ERKLÄRUNG, nicht zwei Absätze (E-P3-35). Der Bestand
+    <?php /* DREI ZEILEN ERKLÄRUNG, nicht zwei Absätze. Der Bestand
              hatte hier zwei Blöcke à fünf Zeilen; wer die Seite zum zehnten
              Mal öffnet, liest sie nicht mehr und muss trotzdem daran vorbei.
              Was wegfällt, steht an der Handlung selbst: Die Rückfrage beim
@@ -2464,8 +2453,8 @@ ui_seite_start(['titel' => 'Einstellungen',
             /* Die POST-Formulare stehen EINMAL und versteckt; die Knöpfe der
                Zeile und die des Aktionsblatts zeigen beide über `form` darauf
                (ui_zeilenaktionen). */ ?>
-        <?php /* DIE BEIDEN FORMULARE STEHEN JETZT AUF DER STANDORTSEITE
-                 (S9/AP5). Solange die Zeile Knoepfe trug, mussten sie hier
+        <?php /* DIE BEIDEN FORMULARE STEHEN JETZT AUF DER STANDORTSEITE.
+                 Solange die Zeile Knoepfe trug, mussten sie hier
                  liegen; jetzt ist die Zeile selbst der Verweis, und wer
                  loeschen will, sieht den Standort vorher an. */ ?>
         <?php
@@ -2475,7 +2464,7 @@ ui_seite_start(['titel' => 'Einstellungen',
         } else {
             $klein[] = 'ohne Lage';
         }
-        /* DIE GANZE ZEILE FUEHRT AUF DIE SEITE DES STANDORTS (M-S9-06).
+        /* DIE GANZE ZEILE FUEHRT AUF DIE SEITE DES STANDORTS.
            Damit fallen die Zeilenaktionen hier weg: Sie waeren Knoepfe IN
            einem Link, und das ist kein gueltiges Markup. Loeschen und „Als
            Vorbelegung" stehen im Aktionsmenue der Standortseite — dort, wo
@@ -2492,7 +2481,7 @@ ui_seite_start(['titel' => 'Einstellungen',
         ]);
       endforeach; ?>
 
-      <?php /* Das Formular bleibt IN der Karte unter der Liste (E-P3-35):
+      <?php /* Das Formular bleibt IN der Karte unter der Liste:
                „Hinzufügen" gehört zu dem, was darüber steht, und eine eigene
                Karte dafür trennte, was zusammengehört. „Bearbeiten" füllt
                dasselbe Formular und macht daraus „Standort bearbeiten". */ ?>
@@ -2503,21 +2492,18 @@ ui_seite_start(['titel' => 'Einstellungen',
           <input type="hidden" name="id" value="<?= $editBase ? (int)$editBase['id'] : 0 ?>">
           <div class="listen-form-felder">
             <?php /* Die Kennung `<praefix>addr` gehört dem LAGE-Suchfeld, nicht
-                     dem Namen: ortsfeld.js sucht in `el(p + 'addr')`. Bis
-                     Web 9.7.0 trug das Namensfeld sie — damals gab es kein
-                     zweites Feld, und die Suche lief bewusst im Namensfeld
-                     („getrennte Suche" übernahm nur die Koordinaten). Mit dem
-                     wiederhergestellten Lage-Feld (F-P3-AI) stünde die Kennung
-                     zweimal im Markup, und getElementById fände das erste —
+                     dem Namen: ortsfeld.js sucht in `el(p + 'addr')`. Truege
+                     das Namensfeld sie auch, stünde die Kennung zweimal im
+                     Markup, und getElementById fände das erste —
                      das Lage-Feld wäre Zierde. */ ?>
             <?php ui_feld(['label' => 'Name', 'name' => 'name', 'id' => 'sdbase-name',
                            'klasse' => 'focus-target', 'pflicht' => true,
                            'platzhalter' => 'z. B. Standort Talwang',
                            'wert' => (string)($editBase['name'] ?? ''),
                            'attr' => ' maxlength="120"']); ?>
-            <?php /* Koordinaten optional (E37/E39). Sie sind die Quelle des
+            <?php /* Koordinaten optional. Sie sind die Quelle des
                      Abfahrtorts „Standort" und werden beim Anlegen eines
-                     Diensttags eingefroren (E8). Mit GETRENNTEM Suchfeld:
+                     Diensttags eingefroren. Mit GETRENNTEM Suchfeld:
                      „Standort Talwang" ist keine Adresse, und eine Suche im
                      Namensfeld schriebe den Namen weg. */
                   $ORTSFELDER[] = 'sdbase'; ?>
@@ -2541,9 +2527,8 @@ ui_seite_start(['titel' => 'Einstellungen',
       </div>
     <?php ui_karte_ende(); ?>
 
-    <?php /* DIE KARTE „VORDEFINIERTE STANDORTE" STAND HIER BIS S9/AP5b:
-             die zentralen Standorte zum Aus- und Abwaehlen (E16). Mit R39
-             gestrichen; Tabelle und Schema folgten mit P5c/AP8. */ ?>
+    <?php /* Eine Karte „Vordefinierte Standorte" gibt es nicht: Zentrale
+             Standorte gibt es nicht. */ ?>
 
     <?php if (!$sdBases): ?>
       <?= ui_meldung_markup('info', 'Noch kein Standort verfügbar. Lege oben '
@@ -2552,19 +2537,16 @@ ui_seite_start(['titel' => 'Einstellungen',
           . 'keine Zielkliniken.') ?>
     <?php endif; ?>
 
-    <?php /* OHNE STANDORT (E-S9-09/E-S9-18).
-             Bergwacht, Veranstaltung und Sonstiges brauchen keinen Standort
-             (AP4). Diese Rettungsmittel haengen an keinem — also stehen sie
+    <?php /* OHNE STANDORT.
+             Bergwacht, Veranstaltung und Sonstiges brauchen keinen Standort.
+             Diese Rettungsmittel haengen an keinem — also stehen sie
              auf der LISTE und nicht auf der Seite eines Standorts, an dem sie
-             nichts zu suchen haben. Bis Web 16.2.1 standen sie unter der
-             letzten Standortkarte und erschienen damit auf JEDER
-             Standortseite; die Leiste zaehlte sie als siebten Unterpunkt mit.
+             nichts zu suchen haben — unter der letzten Standortkarte
+             erschienen sie auf JEDER Standortseite.
 
-             SEIT S9/AP5-4 HAT DIE KARTE IHR EIGENES „ANLEGEN". Vorher fuehrte
-             „Bearbeiten" auf die Seite des ERSTEN Standorts, weil dort das
-             einzige Rettungsmittel-Formular stand — eine fremde Seite fuer
-             einen Datensatz, der zu keiner gehoert, mit einem Haken „Ohne
-             Standort" darin, der die verborgene Standortkennung schlug. Der
+             DIE KARTE HAT IHR EIGENES „ANLEGEN". Fuehrte „Bearbeiten" auf
+             die Seite des ERSTEN Standorts, waere das eine fremde Seite fuer
+             einen Datensatz, der zu keiner gehoert. Der
              Dialog braucht keine fremde Seite: Er steht hier, und der
              Standort ist ein Feld darin. */ ?>
     <?php if ($sdVehOhne): ?>
@@ -2619,9 +2601,7 @@ ui_seite_start(['titel' => 'Einstellungen',
              Alles, was an einem ausgewählten Standort hängt. Ein Block je
              Standort, darin je Datenart ein eigener. */ ?>
     <?php
-      /* DIE SEITE EINES STANDORTS (S9/AP5, PS-12). Bis Web 16.1.1 stand hier
-         der Reiter „Rettungsmittel" und zeigte ALLE Standorte untereinander,
-         jeder als zugeklappte Karte. Jetzt fuehrt die Liste auf je eine
+      /* DIE SEITE EINES STANDORTS. Die Liste fuehrt auf je eine
          Seite, und die zeigt genau einen — aufgeklappt, weil es nichts mehr
          gibt, wovon man ihn unterscheiden muesste.
          Wer eine Kennung aufruft, die er nicht sieht, landet auf der Liste:
@@ -2638,8 +2618,8 @@ ui_seite_start(['titel' => 'Einstellungen',
       $sdBases = [$seiteB];
     ?>
     <?php
-      /* LOESCHEN UND „ALS VORBELEGUNG" STEHEN HIER, nicht mehr in der Liste
-         (S9/AP5): Die Zeile dort ist der Verweis auf diese Seite, und ein
+      /* LOESCHEN UND „ALS VORBELEGUNG" STEHEN HIER, nicht mehr in der Liste:
+         Die Zeile dort ist der Verweis auf diese Seite, und ein
          Knopf in einem Link ist kein gueltiges Markup. Zugleich ist es der
          bessere Ort — wer einen Standort loescht, hat vorher gesehen, was
          daran haengt. Die Formulare stehen EINMAL und versteckt, das
@@ -2662,9 +2642,8 @@ ui_seite_start(['titel' => 'Einstellungen',
       <?= csrf_field() ?><input type="hidden" name="action" value="base_default">
       <input type="hidden" name="id" value="<?= $sBid ?>">
     </form>
-    <?php /* DIE RUECKFRAGE TRENNT DIE ZAHL (M-S9-10 b, S9/AP5-5). Bis
-             Web 17.0.0 zaehlte sie ALLES mit — „6 werden mitgelöscht" —, und
-             eines davon blieb dann doch. Jetzt sagt sie „5 werden
+    <?php /* DIE RUECKFRAGE TRENNT DIE ZAHL. Zaehlte sie ALLES mit — „6
+             werden mitgelöscht" —, bliebe eines davon dann doch. Sie sagt „5 werden
              mitgelöscht, 1 bleibt", und das eine mit NAMEN: Ein
              Rettungsmittel, das einen Standort verlässt, ist eine Nachricht
              und keine Statistik. Der Satz steht in
@@ -2682,7 +2661,7 @@ ui_seite_start(['titel' => 'Einstellungen',
         'unter'    => e($sdZahlen($sBid)),
         'aktionen' => ui_zeilenaktionen(['titel' => (string)$seiteB['name'], 'eintraege' => $sAkt]),
     ]); ?>
-    <?php /* DREI ZEILEN (E-P3-35). Der Bestand hatte hier zwei Absätze zu je
+    <?php /* DREI ZEILEN. Der Bestand hatte hier zwei Absätze zu je
              sechs Zeilen; was wegfällt, steht an der Handlung selbst — die
              Löschrückfrage sagt, dass dokumentierte Diensttage bleiben. */ ?>
     <p class="seiten-erklaerung">Was an den ausgewählten
@@ -2691,17 +2670,9 @@ ui_seite_start(['titel' => 'Einstellungen',
        weitere Rettungsmittel und Bergwacht. Änderungen wirken nur auf neue
        Diensttage — dokumentierte haben ihre Angaben eingefroren.</p>
 
-    <?php if (!$sdBases): ?>
-      <?php ui_meldung('Noch kein Standort verfügbar. Ohne Standort gibt es keine '
-          . 'Rettungsmittel, keine Besatzungs-Vorbelegungen und keine Zielkliniken.',
-          null, 'info', '      ',
-          ['knopf' => ui_knopf(['text' => 'Zu den Standorten', 'art' => 'neutral',
-                                'href' => 'einstellungen.php?t=standorte'])]); ?>
-    <?php endif; ?>
-
     <?php foreach ($sdBases as $b): $bid = (int)$b['id']; ?>
       <?php /* Ein Block je Standort, darin je Datenart ein eigener. Die zweite
-               Ebene ist neu (Web 7.0.0): Ein Standort mit vier Rettungsmitteln,
+               Ebene ist neu: Ein Standort mit vier Rettungsmitteln,
                sieben Rollen und einem Dutzend Zielkliniken war aufgeklappt eine
                Bildschirmseite, durch die man zum Suchen scrollte.
                Die Bergwacht erscheint nur, wenn an diesem Standort ein
@@ -2724,10 +2695,8 @@ ui_seite_start(['titel' => 'Einstellungen',
         $anker = 'sd-' . $bid;
         $rollenHier = $rollenAmStandort($bid);
       ?>
-      <?php /* DAS INHALTSVERZEICHNIS ALS KENNZAHLEN (M-S9-07, das M-S9-06 an
-               dieser Stelle ueberholt: dort waren es Pillen mit Zahl, und die
-               Anmerkung 1 von M-S9-07 zieht diese Variante ausdruecklich
-               zurueck). Drei Kacheln, keine fuer „Standort" — der steht
+      <?php /* DAS INHALTSVERZEICHNIS ALS KENNZAHLEN, nicht als Pillen mit
+               Zahl. Drei Kacheln, keine fuer „Standort" — der steht
                darueber im Titel. Sie sind Verweise auf die Kartenkennungen;
                dieselben Kennungen holt sich `menue.js` fuer die Unterpunkte
                der Leiste.
@@ -2748,9 +2717,8 @@ ui_seite_start(['titel' => 'Einstellungen',
                          'href' => '#k-zielkliniken']) ?>
       </div>
 
-      <?php /* EINE KARTE JE ABSCHNITT, MIT KENNUNG (PS-12). Bis Web 16.2.1
-               war der ganze Standort EINE zugeklappte Karte, darin fuenf
-               Abschnitte. Jetzt traegt die Seite genau einen Standort, es
+      <?php /* EINE KARTE JE ABSCHNITT, MIT KENNUNG. Die Seite traegt
+               genau einen Standort, es
                gibt nichts mehr, wovon man ihn unterscheiden muesste — und
                jede Karte bekommt eine Kennung, an der die Kennzahlen und die
                Unterpunkte der Leiste haengen. */
@@ -2766,7 +2734,7 @@ ui_seite_start(['titel' => 'Einstellungen',
         ]); ?>
       <?php ui_nach_oben(); ui_karte_ende(); ?>
 
-      <?php /* „ANLEGEN" STEHT IM KARTENKOPF (E-S9-19, M-S9-07) und nicht mehr
+      <?php /* „ANLEGEN" STEHT IM KARTENKOPF und nicht mehr
                als Formular unter der Liste. Wer den zwoelften Eintrag anlegen
                wollte, rollte vorher an elf vorbei. */
             ui_karte_start(['titel' => 'Rettungsmittel', 'id' => 'k-rettungsmittel',
@@ -2781,7 +2749,7 @@ ui_seite_start(['titel' => 'Einstellungen',
           <?php if (!$vehListe): ?>
             <p class="feld-hinweis">Noch keine Rettungsmittel an diesem Standort.</p>
           <?php endif; ?>
-          <?php /* DIE SPRUNGLISTE AB SECHS (E-S9-14, Nr. 44, M-S9-05). Sie
+          <?php /* DIE SPRUNGLISTE AB SECHS. Sie
                    bekommen die Rettungsmittel und keine der anderen Listen:
                    Ihre Eintraege tragen ein Artzeichen, an dem man sie in
                    einer Pillenreihe wiedererkennt — ein Name allein taete das
@@ -2803,7 +2771,7 @@ ui_seite_start(['titel' => 'Einstellungen',
                 $rollenTxt = array_map('crew_role_label', $vehRollen[$vid] ?? []);
                 $capsTxt = array_map(static fn(string $c): string => VEHICLE_CAPABILITIES[$c] ?? $c,
                                      $vehCaps[$vid] ?? []);
-                /* DIE ART STEHT NICHT AUSGESCHRIEBEN DARUNTER (Web 7.0.0): Das
+                /* DIE ART STEHT NICHT AUSGESCHRIEBEN DARUNTER: Das
                    Symbol vor dem Namen sagt sie, und es trägt seine
                    Textalternative — die Auskunft hängt nicht an der Grafik.
                    Übrig bleibt, was man dem Symbol nicht ansieht. */
@@ -2811,12 +2779,7 @@ ui_seite_start(['titel' => 'Einstellungen',
                        . ($capsTxt ? ' · ' . implode(', ', $capsTxt) : '');
                 sd_zeile([
                     'name' => (string)$v['name'], 'klein' => $klein,
-                    /* DAS ARTZEICHEN STEHT JETZT WIRKLICH DA (F-S9-K-04).
-                       Der Kommentar darueber behauptete es seit Web 7.0.0,
-                       und `$sym = dt_art_symbol(...)` wurde dafuer sogar
-                       berechnet — benutzt hat es niemand, die Zeile zeigte
-                       nur Namen und Rollen. Jetzt steht es links wie in den
-                       Mockups, MIT Typ: `ui_artzeichen()` zeigt sonst fuer
+                    /* DAS ARTZEICHEN STEHT LINKS, MIT Typ: `ui_artzeichen()` zeigt sonst fuer
                        eine Bergwacht dasselbe Zeichen wie fuer ein NEF. */
                     'vorn' => ui_artzeichen((string)$v['kind'], '',
                                             (string)($v['typ'] ?? null)),
@@ -2871,7 +2834,7 @@ ui_seite_start(['titel' => 'Einstellungen',
                welche Rollen es führt.</p>
           <?php endif; ?>
           <?php foreach ($rollenHier as $rk): $rr = CREW_ROLES[$rk]; ?>
-            <?php /* h3 UND NICHT h4 (S9/AP5): Der doppelte Titel `h3.sd-titel`
+            <?php /* h3 UND NICHT h4: Der doppelte Titel `h3.sd-titel`
                      ist mit diesem Paket entfallen — er wiederholte Kartentitel
                      und Kartenzahl aus dem Kartenkopf Wort fuer Wort, und die
                      Mockups kennen ihn nicht. Bliebe die Rolle ein h4, klaffte
@@ -3035,7 +2998,7 @@ ui_seite_start(['titel' => 'Einstellungen',
           </section>
       <?php ui_nach_oben(); ui_karte_ende(); ?>
         <?php endif; ?>
-      <?php /* ---- DIE DIALOGE DER SEITE (E-S9-19, M-S9-07) ------------------
+      <?php /* ---- DIE DIALOGE DER SEITE ------------------
                Sie stehen EINMAL, am Ende, nicht je Liste und schon gar nicht
                je Rolle: Ein Dialog ist ein Ort, kein Bestandteil einer Zeile.
                Die Oeffner oben tragen, was den Fall ausmacht.
@@ -3105,29 +3068,27 @@ ui_seite_start(['titel' => 'Einstellungen',
     <script src="<?= asset('assets/vendor/openlocationcode.js') ?>"></script>
     <script src="<?= asset('assets/locparse.js') ?>"></script>
     <?php /* vorschlagsliste.js (EdVorschlaege) gehoert zur Ortsfeld-
-             Komponente, seit die Trefferliste ein eigener Baustein ist
-             (S9/AP1, E-S9-07). Reihenfolge = Abhaengigkeit.
+             Komponente, seit die Trefferliste ein eigener Baustein ist.
+             Reihenfolge = Abhaengigkeit.
 
              html.js (EdHtml.escape) STAND HIER UND IM REITER „BACKUP" — zweimal
              in einer Datei, und das ging nur, weil die Reiter einander
              ausschliessen: html.js deklariert auf oberster Ebene ein `const`,
              und eine zweite Deklaration im selben Dokument ist ein
-             SyntaxError (F-12). Seit Web 21.1.11 steht es im Kopf jeder Seite
-             (ui_seite_start()), und die Falle gibt es nicht mehr — wer es
-             hier wieder einbindet, stellt sie neu auf. */ ?>
+             SyntaxError. Es steht im Kopf jeder Seite (ui_seite_start()) —
+             wer es hier wieder einbindet, stellt die Falle neu auf. */ ?>
     <script src="<?= asset('assets/vorschlagsliste.js') ?>"></script>
     <script src="<?= asset('assets/geocoder.js') ?>"></script>
     <script src="<?= asset('assets/ortsfeld.js') ?>"></script>
-    <?php /* DIE KARTE KOMMT MIT S9/AP2 HIERHER (E-S9-06 c, Backlog Nr. 70).
-             Bis Web 15.7.1 hatte die Nur-Lage-Fassung des Ortsfelds keinen
-             Pin-Knopf — die Lage eines Standorts liess sich suchen oder
-             tippen, aber nicht auf der Karte zeigen. Dafuer braucht diese
-             Seite jetzt dieselben vier Bausteine wie das Einsatzformular. */ ?>
+    <?php /* DIE KARTE: Auch die Nur-Lage-Fassung des Ortsfelds hat einen
+             Pin-Knopf, damit sich die Lage eines Standorts auf der Karte
+             zeigen laesst. Dafuer braucht diese Seite dieselben vier
+             Bausteine wie das Einsatzformular. */ ?>
     <script src="<?= asset('assets/vendor/leaflet/leaflet.js') ?>"></script>
     <script src="<?= asset('assets/map_layers.js') ?>"></script>
     <script src="<?= asset('assets/geo.js') ?>"></script>
     <script src="<?= asset('assets/ortswahl.js') ?>"></script>
-    <?php /* DER KARTENFILTER (S9/AP5). Er steht bei den Skripten dieses
+    <?php /* DER KARTENFILTER. Er steht bei den Skripten dieses
              Zweiges und nicht im Geruest: Ihn gibt es bisher nur auf der
              Standortseite, und ein Skript, das auf jeder Seite laedt und auf
              fuenf von sechs nichts findet, ist Ballast. Er braucht keine
@@ -3260,7 +3221,7 @@ ui_seite_start(['titel' => 'Einstellungen',
 <?php endif; ?>
   <?php elseif ($tab === 'backup'): ?>
     <?php ui_titelzeile(['titel' => 'Backup']); ?>
-    <?php /* DREI ZEILEN (E-P3-35). Was in der Datei steht und warum das
+    <?php /* DREI ZEILEN. Was in der Datei steht und warum das
              Passwort zählt, gehört an die Handlung — es steht in der Karte
              „Backup erstellen", direkt über der Passwortwahl. */ ?>
     <p class="seiten-erklaerung">Sichert <strong>alle</strong> deine Daten in eine
@@ -3268,7 +3229,7 @@ ui_seite_start(['titel' => 'Einstellungen',
        deiner Wahl. Ver- und Entschlüsselung passieren vollständig in deinem
        Browser — der Server sieht die Inhalte nie. Dadurch lässt sich ein
        Backup auch in ein anderes Konto einspielen.
-       <?php /* DER RUECKWEG (Backlog Nr. 119). Der Verweis zeigte bisher nur
+       <?php /* DER RUECKWEG. Der Verweis zeigte bisher nur
                 in eine Richtung: Import / Export sagte nichts vom Backup, und
                 das Backup nichts vom Export. Beide Seiten bewegen die Daten
                 EINER NutzerIn — wer auf der falschen steht, soll die andere
@@ -3285,7 +3246,7 @@ ui_seite_start(['titel' => 'Einstellungen',
     </div>
 
     <?php ui_karte_start(['titel' => 'Backup erstellen', 'id' => 'k-erstellen']); ?>
-      <?php /* WAS IN DER DATEI STEHT, GEHÖRT VOR DIE PASSWORTWAHL (M2-03).
+      <?php /* WAS IN DER DATEI STEHT, GEHÖRT VOR DIE PASSWORTWAHL.
                Vorher stand hier „ohne dieses Passwort ist die Datei wertlos" —
                richtig, aber es beantwortet die falsche Frage. Wer ein Passwort
                wählt, muss wissen, WAS er damit schützt. */ ?>
@@ -3302,7 +3263,7 @@ ui_seite_start(['titel' => 'Einstellungen',
          schwächer geschützt, und es ist ein Passwort weniger zu verwahren.
          <strong>Nicht</strong> geeignet, wenn die Datei an jemand anderen gehen soll.</p>
 
-      <?php /* ZWEI FELDER STATT EINES, DAS SEINE BEDEUTUNG WECHSELT (Nr. 405).
+      <?php /* ZWEI FELDER STATT EINES, DAS SEINE BEDEUTUNG WECHSELT.
                Bis 23.3.x war `bpw1` beides: das Backup-Passwort und, mit dem
                Schalter, das Kontopasswort — `autocomplete` wechselte per
                Skript von `new-password` auf `current-password` (gemeldet
@@ -3350,21 +3311,21 @@ ui_seite_start(['titel' => 'Einstellungen',
         <?= ui_knopf(['text' => 'Backup einspielen', 'art' => 'primaer',
                       'typ' => 'button', 'attr' => ' id="impbtn"']) ?>
       </div>
-      <?php /* Herkunft der geöffneten Datei (M5-13). Steht ÜBER der
+      <?php /* Herkunft der geöffneten Datei. Steht ÜBER der
                Statuszeile, weil es die Frage beantwortet, die man VOR dem
                Einspielen hat: Ist das die richtige Datei? */ ?>
       <div id="impherkunft" hidden></div>
       <div id="impstate" class="zustandszeile"></div>
     <?php ui_karte_ende(); ?>
 
-    <?php /* ---- GPS-Daten verdichten (S11-07, Mockup M-S11-02, E-S11-68) ----
+    <?php /* ---- GPS-Daten verdichten ----
              Der Wartungslauf: Neue Aufzeichnungen liegen als ungepackte
              Stücke; der Browser fügt sie zusammen und dünnt sie nach 31 Tagen
              aus, weil der Server sie nicht lesen kann. Auf der Startseite
              läuft er still (20 je Aufruf); hier sieht man, was fällig ist,
              und er arbeitet es ab, solange der Reiter offen ist — ohne Knopf.
              Vorhandene Bausteine: Karte mit Plakette, `.tag-lese`,
-             `.zustandszeile` mit Ladeplatz und Balken (M-S11-01). */ ?>
+             `.zustandszeile` mit Ladeplatz und Balken. */ ?>
     <?php ui_karte_start(['titel' => 'GPS-Daten verdichten', 'id' => 'k-verdichten',
                           'plakette' => ui_plakette('verschlüsselt', ['ton' => 'blau'])]); ?>
       <p class="feld-hinweis">Neue Aufzeichnungen von Uhr und Handy liegen ungepackt.
@@ -3375,7 +3336,7 @@ ui_seite_start(['titel' => 'Einstellungen',
       <div id="vd-zustand" class="zustandszeile" role="status" aria-live="polite"></div>
     <?php ui_karte_ende(); ?>
 
-    <?php /* ---- Von der Administration freigegebenes Backup (A8.6) -------
+    <?php /* ---- Von der Administration freigegebenes Backup -------
              Erscheint NUR, wenn tatsächlich eine Freigabe vorliegt. Ein
              dauerhaft sichtbarer, meist leerer Block wäre eine Frage, die man
              sich bei jedem Besuch neu stellt.
@@ -3387,7 +3348,7 @@ ui_seite_start(['titel' => 'Einstellungen',
              ein solches Paket nicht einspielen — sie gibt es frei, und das
              Umschlüsseln passiert in diesem Browser. */ ?>
     <div id="freigabebox" hidden>
-      <?php /* DER TITEL BLEIBT „BACKUP" (S8/AP3, E-S8-06). Aus SICHT der
+      <?php /* DER TITEL BLEIBT „BACKUP". Aus SICHT der
                NutzerIn ist es genau das: ein Backup ihres Kontos, das sie
                einspielt. Dass es die Verwaltung angelegt hat, sagt der
                Hinweistext darunter — „Konto-Backup" ist der Name aus dem
@@ -3396,18 +3357,18 @@ ui_seite_start(['titel' => 'Einstellungen',
                nichts angeht. */ ?>
       <?php ui_karte_start(['titel' => 'Für dich freigegebenes Backup', 'id' => 'k-freigegeben']); ?>
         <p class="feld-hinweis" id="freigabeinfo"></p>
-        <?php /* DIE HÜLLE TRÄGT DIE KENNUNG, NICHT DAS FELD (F-S2-F).
+        <?php /* DIE HÜLLE TRÄGT DIE KENNUNG, NICHT DAS FELD.
                  `freigabeLaden()` blendet die Frage nach dem
                  Wiederherstellungsschlüssel aus, wenn das Paket keine
                  geschützten Angaben enthält — dafür braucht es ein Element,
                  das Beschriftung, Feld und Erklärung zusammen umfasst.
                  `ui_feld()` vergibt eine Kennung nur am Eingabefeld selbst.
 
-                 Bis Web 12.0.0 sprach das Skript trotzdem `freigabecodelabel`
-                 an. Die Kennung gab es nirgends, der Zugriff warf, und der
-                 Fehler landete im stillen `catch` von `freigabeLaden()` —
-                 zusammen mit der Zeile, die den Kasten sichtbar macht. Die
-                 Freigabe war damit für NIEMANDEN zu sehen. */ ?>
+                 Spraeche das Skript eine Kennung an, die es nirgends gibt,
+                 wuerfe der Zugriff, und der Fehler landete im stillen `catch`
+                 von `freigabeLaden()` — zusammen mit der Zeile, die den
+                 Kasten sichtbar macht. Die Freigabe waere fuer NIEMANDEN
+                 zu sehen. */ ?>
         <div id="freigabecodelabel">
         <?php ui_feld(['label' => 'Wiederherstellungsschlüssel', 'id' => 'freigabecode',
                        'platzhalter' => 'XXXX-XXXX-XXXX-XXXX',
@@ -3428,25 +3389,25 @@ ui_seite_start(['titel' => 'Einstellungen',
     </div>
 
     <?php /* Ruestzeug der Verschluesselung (Baustein ui_krypto_bootstrap()),
-             dazu pwquality.js fuer die Guetepruefung des Backup-Passworts
-             (B9, M2-03). */ ?>
+             dazu pwquality.js fuer die Guetepruefung des Backup-Passworts.
+             */ ?>
     <?php ui_krypto_bootstrap(['keycheck' => true, 'csrf' => true,
                                'guete' => true, 'einzug' => '    ']); ?>
-    <?php /* patient.js liefert die gemeinsame Entschluesselungsschleife
-             (Baustein B8), die der Backup-Lauf seit Web 4.6.0 benutzt. */ ?>
+    <?php /* patient.js liefert die gemeinsame Entschluesselungsschleife,
+             die der Backup-Lauf benutzt. */ ?>
     <?php /* html.js (im Kopf jeder Seite) liefert EdHtml.meldung() UND EdHtml.escape() -- melde()
-             baut sein Markup seit Schritt 15 AP8 darueber, und die Maskierung
+             baut sein Markup darueber, und die Maskierung
              steckt dort mit drin. Dass sie noetig ist, bleibt wahr: In dem
              Satz, den melde() nach einem gescheiterten Einspielen zeigt,
              steckt eine Fehlermeldung, die aus einer fremden Datei stammen
              kann. */ ?>
     <script src="<?= asset('assets/patient.js') ?>"></script>
     <?php /* ortsdaten.js oeffnet beim Sichern die Einsatzhuellen und die
-             Spurstuecke (S11-06a); kontopaar.js dazu bringt der Baustein
+             Spurstuecke; kontopaar.js dazu bringt der Baustein
              oben mit. */ ?>
     <script src="<?= asset('assets/ortsdaten.js') ?>"></script>
     <script src="<?= asset('assets/wartungslauf.js') ?>"></script>
-    <?php /* zip.js: Seit Containerfassung 4 (S2/AP5) ist ein Backup ein
+    <?php /* zip.js: Seit Containerfassung 4 ist ein Backup ein
              ZIP mit versiegelten Teilen — geschrieben beim Sichern, gelesen
              beim Einspielen. Dieselbe vendorierte Bibliothek, die der Export
              und der Import schon benutzen (assets/vendor/zipjs.min.js,
@@ -5074,9 +5035,8 @@ ui_seite_start(['titel' => 'Einstellungen',
 
   <?php else: ?>
     <?php ui_titelzeile(['titel' => 'Geräte']); ?>
-    <?php /* EIN SATZ MIT BELEGUNG UND GRENZE (Mockup 10). Vorher standen hier
-             drei Sätze, und die Belegung kam zuletzt — die Zahl, wegen der man
-             die Erklärung überhaupt liest. */ ?>
+    <?php /* EIN SATZ MIT BELEGUNG UND GRENZE: Die Belegung ist die Zahl,
+             wegen der man die Erklärung überhaupt liest. */ ?>
     <p class="seiten-erklaerung">Uhr oder Handy zeichnet den Dienst auf und
        liefert ihn hierher. <strong><?= count($devices) ?> von <?= MAX_GERAETE ?></strong>
        Plätzen belegt — deaktivierte zählen mit, erst Entkoppeln gibt einen Platz
@@ -5092,10 +5052,10 @@ ui_seite_start(['titel' => 'Einstellungen',
           . 'hier; danach kann es nichts mehr hochladen.', null, 'warn', '      '); ?>
     <?php endif; ?>
 
-    <?php /* ---- Die Karte „Gerät koppeln" in drei Zuständen (S5, E-S5-26) ----
-             „Gerät koppeln", nicht „Uhr koppeln" (S6): Seit S4 koppelt die
-             Handy-App über denselben Weg — und die Liste darunter sagt seit
-             Web 12.9.0 „Handy". Eine Überschrift, die „Uhr" sagt,
+    <?php /* ---- Die Karte „Gerät koppeln" in drei Zuständen ----
+             „Gerät koppeln", nicht „Uhr koppeln": Die Handy-App koppelt
+             über denselben Weg — und die Liste darunter sagt „Handy". Eine
+             Überschrift, die „Uhr" sagt,
              widerspricht der Zeile, die sie ankündigt.
 
              DREI ZUSTÄNDE, EINE KARTE, KEIN NEUER BAUSTEIN: erst die Eingabe,
@@ -5108,7 +5068,7 @@ ui_seite_start(['titel' => 'Einstellungen',
       <?php /* ---- Zustand 3: beansprucht, das Gerät ist am Zug -------------
                Diese Karte wartet, und sie wartet SICHTBAR: Sie sagt, worauf,
                auf welches Gerät und wie lange noch. Das Nachladen besorgt
-               `assets/kopplung.js` (E-S5-53); ohne JavaScript bleibt der Weg
+               `assets/kopplung.js`; ohne JavaScript bleibt der Weg
                vollständig — dann steht hier dieselbe Auskunft, und die Person
                lädt die Seite selbst neu, sobald sie am Gerät bestätigt hat. */ ?>
       <?php $kwRest = (int)$koppelWarten['rest_s']; ?>
@@ -5139,7 +5099,7 @@ ui_seite_start(['titel' => 'Einstellungen',
       <script src="<?= asset('assets/kopplung.js') ?>" defer></script>
 
     <?php elseif ($koppelSitzung !== null): ?>
-      <?php /* ---- Zustand 2: das erste der beiden Tore (E-S5-05a) ----------
+      <?php /* ---- Zustand 2: das erste der beiden Tore ----------
                Hier steht, WAS koppeln will — Art, Modell, gekürzte Kennung,
                Restzeit. Das ist der ganze Zweck dieses Zwischenschritts: Wer
                einen fremden Code eingetippt bekommt („gib mal AB3 K7Q ein"),
@@ -5206,7 +5166,7 @@ ui_seite_start(['titel' => 'Einstellungen',
                      jedes Zeichen für sich. Die Eingabe nimmt ihn mit und ohne
                      Leerzeichen und in jeder Schreibung — pair_code_normalisieren()
                      räumt das auf, bevor gesucht wird; deshalb maxlength 8 und nicht
-                     6. Der Platzhalter ist ein Phantasiecode (E-S3-13). */ ?>
+                     6. Der Platzhalter ist ein Phantasiecode. */ ?>
             <?php ui_feld([
                 'name'        => 'code',
                 'label'       => 'Code vom Gerät',
@@ -5229,22 +5189,22 @@ ui_seite_start(['titel' => 'Einstellungen',
       <?php foreach ($devices as $d):
             $did = (int)$d['id'];
             $aktiv = (int)$d['active'] === 1;
-            /* WAS FUER EIN GERAET DAS IST, steht vorn (S6/R42): Wer drei
+            /* WAS FUER EIN GERAET DAS IST, steht vorn: Wer drei
                Geraete gekoppelt hat, unterscheidet sie sonst nur an einer
                selbst vergebenen Bezeichnung — und die fehlt beim frisch
                gekoppelten Geraet gerade. Vorhandener Baustein, keine neue
                Darstellung: dieselbe Kleinzeile, die schon Zustand und letzten
                Kontakt traegt. */
-            /* DIE KLEINZEILE SAGT, WAS DAS GERAET IST UND SEIT WANN
-               (Mockup 10): Modell und Art, gekoppelt seit, zuletzt gemeldet.
-               „aktiv" steht nicht mehr darin — es war der Normalfall und
+            /* DIE KLEINZEILE SAGT, WAS DAS GERAET IST UND SEIT WANN:
+               Modell und Art, gekoppelt seit, zuletzt gemeldet.
+               „aktiv" steht nicht darin — es ist der Normalfall und
                damit die haeufigste Auskunft ohne Aussage; „deaktiviert" sagt
-               jetzt die Plakette. */
+               die Plakette. */
             $klein = geraet_bezeichnung($d['geraet_art'], $d['geraet_modell'], $d['geraet_teil'])
                    . ' · gekoppelt ' . datum_text($d['created_at'])
                    . ' · zuletzt gemeldet '
                    . ($d['last_seen'] ? datum_zeit_text($d['last_seen']) : 'nie');
-            /* ABGEWIESENE ANMELDUNGEN (Web 20.11.0, P5a/AP7, E-P5a-02).
+            /* ABGEWIESENE ANMELDUNGEN.
                Seit die Mengenbremse in `ingest.php` steht, sperrt sich eine
                Uhr mit veraltetem Schluessel selbst aus. Ohne diese Zeile stuende
                eine Notaerztin vor einem Geraet, das nichts mehr hochlaedt, und
@@ -5280,22 +5240,20 @@ ui_seite_start(['titel' => 'Einstellungen',
         <?php ui_zeile([
             'text'  => (string)($d['label'] ?? '') !== '' ? (string)$d['label'] : (string)$d['device_id'],
             'klein' => $klein,
-            /* ZWEI PLAKETTEN, BEIDE NUR IM AUSNAHMEFALL (Mockup 10): „neu"
+            /* ZWEI PLAKETTEN, BEIDE NUR IM AUSNAHMEFALL: „neu"
                orange (sieben Tage lang) und „deaktiviert" neutral. Das Datum
-               steht nicht mehr in der Plakette — es steht seit AP6 in der
-               Kleinzeile („gekoppelt 03.09.2026") und war zweimal dasselbe.
+               steht nicht in der Plakette, sondern in der Kleinzeile
+               („gekoppelt 03.09.2026").
 
-               DIE GEKUERZTE KENNUNG IST FORT. Sie stand hier seit S6, um zwei
-               gleich benannte Geraete auseinanderzuhalten; das leistet die
-               Kleinzeile mit Modell, Art und Kopplungsdatum besser, und die
-               Zeile hat vier Angaben statt fuenf. */
+               KEINE GEKUERZTE KENNUNG: Zwei gleich benannte Geraete haelt die
+               Kleinzeile mit Modell, Art und Kopplungsdatum auseinander. */
             'plaketten' => ((int)$d['ist_neu'] ? ui_plakette('neu', ['ton' => 'orange']) : '')
                 . ($abgewiesen > 0 ? ui_plakette('abgewiesen', ['ton' => 'orange']) : '')
                 . ($aktiv ? '' : ui_plakette('deaktiviert', ['ton' => 'neutral'])),
             'aktionen' => ui_zeilenaktionen([
                 'titel' => (string)($d['label'] ?? $d['device_id']),
-                /* ALLE HANDLUNGEN IM PUNKTE-MENUE, auch am Schreibtisch
-                   (Mockup 10). Als Knopfreihe stand „Entkoppeln" in Rot
+                /* ALLE HANDLUNGEN IM PUNKTE-MENUE, auch am Schreibtisch.
+                   Als Knopfreihe stuende „Entkoppeln" in Rot
                    unmittelbar neben „Deaktivieren", und zwar in jeder Zeile. */
                 'blatt_immer' => true,
                 'eintraege' => [
@@ -5304,7 +5262,7 @@ ui_seite_start(['titel' => 'Einstellungen',
                     ['text' => $aktiv ? 'Deaktivieren' : 'Aktivieren',
                      'symbol' => $aktiv ? 'schloss' : 'schloss-offen',
                      'art' => 'leise', 'form' => 'f-dev-' . $did],
-                    /* ENTKOPPELN STATT LOESCHEN (B-S8-21). Dasselbe Wort wie
+                    /* ENTKOPPELN STATT LOESCHEN. Dasselbe Wort wie
                        auf der Kontoseite und dasselbe, was tatsaechlich
                        geschieht: Der Schluessel wird ungueltig, die
                        hochgeladenen Daten bleiben. „Loeschen" las sich, als
@@ -5316,9 +5274,7 @@ ui_seite_start(['titel' => 'Einstellungen',
         ]); ?>
       <?php endforeach; ?>
 
-      <?php /* NUR NOCH DAS UMBENENNEN STEHT IN DIESER KARTE (S8/AP6). Das
-               Anlegen von Hand ist die Ausnahme und hat seit AP6 eine eigene,
-               zugeklappte Karte am Ende der Seite — die Reihenfolge der Seite
+      <?php /* NUR DAS UMBENENNEN STEHT IN DIESER KARTE. Die Reihenfolge der Seite
                folgt der Haeufigkeit: koppeln, ansehen, App holen, Ausnahme.
                Das Umbenennen dagegen gehoert zur Zeile, auf deren Punkte-Menue man
                gerade geklickt hat, und bleibt hier. */ ?>
@@ -5348,7 +5304,7 @@ ui_seite_start(['titel' => 'Einstellungen',
       <?php endif; ?>
     <?php ui_karte_ende(); ?>
 
-    <?php /* ---- App installieren (S8/AP6, Mockup 10, E-S8-11) -------------
+    <?php /* ---- App installieren -------------
              ZWEI WEGE, EIN RUECKFALL. Die Uhr-App kommt aus dem
              Connect-IQ-Store, die Handy- und Wear-OS-App aus dem Play Store;
              das APK auf diesem Server ist der Weg fuer den Fall, dass der
@@ -5396,15 +5352,15 @@ ui_seite_start(['titel' => 'Einstellungen',
       ]);
       ?>
 
-      <?php /* DAS APK KLAPPT AUF (Mockup 10). Es ist der Rueckfall, nicht der
+      <?php /* DAS APK KLAPPT AUF. Es ist der Rueckfall, nicht der
                Weg — zugeklappt sagt die Zeile, dass es ihn gibt, ohne ihn
                anzubieten. Die Karte zeigt, was auf dem Server LIEGT: Name,
                Groesse, Datum und der gerechnete SHA-256; von Hand gepflegt
                wird nichts.
 
-               DER DOWNLOAD IST EINE LEISE HANDLUNG (Mockup 10; vorher
-               neutral): Die eine Haupthandlung dieses Reiters bleibt „Weiter"
-               am Feld „Code vom Geraet" (S5, B-S5-07), und der Store steht
+               DER DOWNLOAD IST EINE LEISE HANDLUNG: Die eine Haupthandlung
+               dieses Reiters bleibt „Weiter"
+               am Feld „Code vom Geraet", und der Store steht
                darueber mit einem neutralen Knopf. */ ?>
       <?php $apks = apk_liste(); if ($apks): ?>
         <details class="apk-fach">
@@ -5421,8 +5377,7 @@ ui_seite_start(['titel' => 'Einstellungen',
                     'href' => 'apk.php?d=' . rawurlencode($apk['datei'])]),
             ]); ?>
             <?php /* DIE PRUEFSUMME STEHT IM WERTEKASTEN, nicht in der
-                     Kleinzeile. Mockup 10 zeigt sie dort gekuerzt
-                     (nur Anfang und Ende) — gekuerzt taugt sie aber fuer nichts:
+                     Kleinzeile. Gekuerzt (nur Anfang und Ende) taugt sie aber fuer nichts:
                      Wer nachrechnet, braucht alle 64 Zeichen, und wer nicht
                      nachrechnet, braucht sie gar nicht. Im Wertekasten steht
                      sie vollstaendig und mit einem Knopf, der sie in die
@@ -5457,20 +5412,15 @@ ui_seite_start(['titel' => 'Einstellungen',
    *
    * Deshalb läuft es jetzt von innen nach aussen über die Vorfahren: Jedes
    * <details> auf dem Weg wird geöffnet, danach wird gescrollt (erst dann steht
-   * die endgültige Position fest) und in das erste Eingabefeld gesprungen.
-   *
-   * Der frühere Sonderfall „besatzung-p1" (ID plus Rolle) bleibt erhalten: Er
-   * greift nur, wenn es zur vollen Kennung KEIN Element gibt — sonst hätte
-   * `sd-12-veh` als „Element sd mit Rolle 12-veh" gelesen werden können. */
+   * die endgültige Position fest) und in das erste Eingabefeld gesprungen. */
   (function(){
     function oeffneVorfahren(el){
       for (let p = el; p; p = p.parentElement) {
         if (p.tagName === 'DETAILS') { p.open = true; }
       }
     }
-    function fokus(d, rolle){
-      let f = rolle ? d.querySelector('.focus-target[data-role="' + rolle + '"]') : null;
-      if (!f) { f = d.querySelector('.focus-target'); }
+    function fokus(d){
+      let f = d.querySelector('.focus-target');
       /* `ui_feld()` setzt `klasse` an die HÜLLE `.feld`, nicht an das
          Eingabefeld. `.focus-target` traf deshalb ein `div`, `focus()` tat
          nichts, und der Rückfall darunter kam nie dran, weil `f` gefunden
@@ -5482,19 +5432,12 @@ ui_seite_start(['titel' => 'Einstellungen',
       if (f) { f.focus({ preventScroll: true }); }
     }
     function oeffne(hashId){
-      let d = document.getElementById(hashId);
-      let rolle = '';
-      if (!d) {
-        // Rückfall: „<id>-<rolle>" — nur wenn die volle Kennung nichts trifft.
-        const teil = hashId.split('-');
-        d = document.getElementById(teil[0]);
-        rolle = teil.slice(1).join('-');
-      }
+      const d = document.getElementById(hashId);
       if (!d) { return; }
       oeffneVorfahren(d);
       if (d.tagName === 'DETAILS') { d.open = true; }
       d.scrollIntoView({ block: 'start' });
-      fokus(d, rolle);
+      fokus(d);
     }
     /* NACH DEM LADEN, NICHT BEIM LESEN DES SKRIPTS (R4-05, F-R4-25). Der
        Browser verarbeitet den Anker der Adresse erst am Ende des Ladens, und
@@ -5515,5 +5458,5 @@ ui_seite_start(['titel' => 'Einstellungen',
          (`ui_codeblock_lang()`, Geräte-Reiter): Er blendet den Knopf ein und
          kopiert. Ohne das Skript bleibt der Wert lesbar und der Knopf
          verborgen — ein Knopf, der nichts tut, wäre schlechter als keiner. */ ?>
-<?php /* `assets/format.js` kommt seit AP8d aus dem Kopf (ui_seite_start()) */
+<?php /* `assets/format.js` kommt aus dem Kopf (ui_seite_start()) */
       ui_seite_ende(['skripte' => ['assets/kopieren.js']]); ?>

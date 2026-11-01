@@ -29,7 +29,7 @@ interface Netzweg {
 }
 
 /**
- * Der echte Sendeweg: `HttpURLConnection`, ein Bordmittel (E-S4-04).
+ * Der echte Sendeweg: `HttpURLConnection`, ein Bordmittel.
  *
  * KEINE FREMDE HTTP-BIBLIOTHEK. Was hier gebraucht wird, ist ein POST mit drei
  * Kopfzeilen und einem Zeitlimit. Dafür eine Bibliothek mitzunehmen, hieße,
@@ -40,8 +40,7 @@ interface Netzweg {
  * Funkloch, bis Android sie abräumt. Die Werte sind großzügig, weil die
  * Gegenseite ein Mobilfunknetz ist.
  *
- * KEIN CERTIFICATE PINNING — entschieden, nicht vergessen (Backlog Nr. 143,
- * Krypto-Review AN-3): feste Domain, rotierendes Zertifikat, und niemand,
+ * KEIN CERTIFICATE PINNING — entschieden, nicht vergessen: feste Domain, rotierendes Zertifikat, und niemand,
  * der Ersatzschlüssel pflegte. Die Begründung steht in `android/LIESMICH.md`,
  * Abschnitt „Warum kein Certificate Pinning".
  */
@@ -63,7 +62,7 @@ class HttpNetzweg(
                 connectTimeout = verbindungslimitMs
                 readTimeout = lesegrenzeMs
                 useCaches = false
-                /* KEINE UMLEITUNG WIRD BEFOLGT (seit 0.13.0).
+                /* KEINE UMLEITUNG WIRD BEFOLGT.
                  *
                  * Die Vorgabe der Plattform ist `true`: Antwortet die
                  * Gegenstelle mit 3xx, ruft `HttpURLConnection` die neue
@@ -79,7 +78,7 @@ class HttpNetzweg(
                  * Weiterleitung auf eine fremde Domaene, ein Netz, das sich
                  * dazwischensetzt. Eine Umleitung ist an dieser Stelle
                  * ohnehin kein erwarteter Fall: Die App spricht mit genau
-                 * zwei Endpunkten einer fest eingebauten Adresse (R63).
+                 * zwei Endpunkten einer fest eingebauten Adresse.
                  *
                  * FOLGE FUER DIE FEHLERBEHANDLUNG: Der 3xx kommt als
                  * `Netzantwort.Server(3xx, …)` heraus — die Stromwahl unten
@@ -91,9 +90,7 @@ class HttpNetzweg(
                  * er "unbekannt", und das sagt der Nutzerin nichts. Der Sendeweg
                  * ist davon unberuehrt: `Sendeantwort.lese()` behandelt
                  * alles ausser 200/400/401/413 als "spaeter erneut" — es
-                 * geht also kein Paket verloren.
-                 *
-                 * Gefunden bei der Play-Console-Vorbereitung (Schritt 6). */
+                 * geht also kein Paket verloren. */
                 instanceFollowRedirects = false
                 setRequestProperty("Content-Type", "application/json; charset=utf-8")
                 setRequestProperty("Accept", "application/json")
@@ -111,7 +108,7 @@ class HttpNetzweg(
         } catch (e: SSLException) {
             // Eigener Zweig, weil die Ursache eine andere ist: nicht "kein
             // Netz", sondern "die Gegenstelle ist nicht die, für die sie sich
-            // ausgibt". Nur HTTPS (E-S4-14) heisst auch: keinen Ausweg anbieten.
+            // ausgibt". Nur HTTPS heisst auch: keinen Ausweg anbieten.
             Netzantwort.KeineVerbindung("TLS: ${e.message}")
         } catch (e: IOException) {
             Netzantwort.KeineVerbindung(e.message ?: e.javaClass.simpleName)

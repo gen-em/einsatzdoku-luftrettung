@@ -47,24 +47,22 @@ import org.genem.nadoku.gemeinsam.Phasen
 /**
  * Der Einstieg der Uhr-App.
  *
- * SIE IST FERNBEDIENUNG, SONST NICHTS (E-S4-11): kein GPS, keine Kopplung,
- * keine Zugangsdaten, keine Reanimation. Was sie tut, ist Zeitstempel setzen
- * und ans Handy melden — das Handy quittiert (E-S4-10, C2).
+ * SIE IST FERNBEDIENUNG, SONST NICHTS: kein GPS, keine Kopplung, keine
+ * Zugangsdaten, keine Reanimation. Was sie tut, ist Zeitstempel setzen und
+ * ans Handy melden — das Handy quittiert.
  *
- * **STAND C2:** Bedienbild und Nachrichtenweg stehen. Die Ansicht entscheidet
- * nichts mehr selbst — sie reicht Ereignisse an [UhrApp] weiter und zeichnet,
+ * Die Ansicht entscheidet nichts selbst — sie reicht Ereignisse an [UhrApp] weiter und zeichnet,
  * was von dort zurückkommt. Der Zustand liegt in [org.genem.nadoku.uhr.funk.Uhrsteuerung],
  * nicht hier: Eine Quittung kann eintreffen, während gar keine Ansicht läuft.
  *
- * **BLIND GEBAUT.** Es gibt keinen Emulator (E-R45-8) und keine Uhr
- * (E-R45-7). Von dieser Ansicht existiert **kein Bildschirmfoto**. Geprüft
+ * **BLIND GEBAUT.** Es gibt keinen Emulator und keine Uhr. Von dieser Ansicht existiert **kein Bildschirmfoto**. Geprüft
  * ist, was dahinterliegt: [Uhrbedienung], vollständig und ohne Oberfläche.
  */
 class UhrActivity : ComponentActivity() {
 
     private var freieTaste: Int? = null
 
-    /** Was der Bildschirm meldet — in C2 kommt das Handy dazu. */
+    /** Was der Bildschirm meldet. */
     private var aufFreieTaste: (() -> Unit)? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -93,7 +91,7 @@ class UhrActivity : ComponentActivity() {
     }
 
     /**
-     * Die freie Zusatztaste löst „nächste Phase" aus (E-S4-21a).
+     * Die freie Zusatztaste löst „nächste Phase" aus.
      *
      * Nur die Kennung, die [Tastenabfrage] gemeldet hat — alles andere geht
      * ans System zurück. Wer Home oder Zurück belegte, nähme der NutzerIn den
@@ -121,14 +119,14 @@ fun UhrOberflaeche(
      * Er existiert, weil sich sonst nur die Startseite abbilden ließe: Ohne
      * Handy kommt die Ansicht nie in den laufenden Dienst, und gerade dort
      * steht der längste Text. Mit [app] wird er ignoriert; dann führt die
-     * Steuerung (E-S4-48).
+     * Steuerung.
      */
     anfang: Uhrzustand = Uhrzustand(),
 ) {
     /* OHNE [app] BLEIBT DIE ANSICHT FÜR SICH — das ist der Fall der
      * @Preview-Vorschau und nur der. In der App liegt der Zustand in der
      * Steuerung, weil eine Quittung eintreffen kann, während keine Ansicht
-     * läuft (E-S4-10). */
+     * läuft. */
     val bedienung = remember(sperreAn) { Uhrbedienung(sperreAn = sperreAn) }
     var zustand by remember { mutableStateOf(app?.zustand ?: anfang) }
 
@@ -142,7 +140,7 @@ fun UhrOberflaeche(
         else zustand = bedienung.verarbeite(zustand, ereignis).zustand
     }
 
-    // Die freie Taste tut dasselbe wie der große Knopf (E-S4-21a).
+    // Die freie Taste tut dasselbe wie der große Knopf.
     LaunchedEffect(freieTasteVorhanden) {
         tasteAnmelden { melde(Uhrereignis.FreieTaste(System.currentTimeMillis())) }
     }
@@ -197,7 +195,7 @@ fun UhrOberflaeche(
     }
 }
 
-/** Kachelkante der Bildmarke — Anteil der Displayhöhe (E-S4-22a). */
+/** Kachelkante der Bildmarke — Anteil der Displayhöhe. */
 @Composable
 private fun markenKachel(anteil: Float) =
     (LocalConfiguration.current.screenHeightDp * anteil).dp
@@ -220,7 +218,7 @@ private fun Marke(logoWahl: LogoWahl, anteil: Float) {
 private fun Startseite(z: Uhrzustand, logoWahl: LogoWahl, melde: (Uhrereignis) -> Unit) {
     Spalte {
         // Die Startseite trägt die Marke GRÖSSER als die laufenden Ansichten
-        // (E-S4-22a) — seit 0.7.3 mit 22 % statt 27 %, siehe MARKE_START.
+        // — 22 % statt 27 %, siehe MARKE_START.
         Marke(logoWahl, MARKE_START)
         Text(
             text = stringResource(R.string.app_name),
@@ -230,9 +228,9 @@ private fun Startseite(z: Uhrzustand, logoWahl: LogoWahl, melde: (Uhrereignis) -
         /* DER KNOPF STEHT ÜBER DER VERBINDUNGSZEILE, und das ist Geometrie,
          * keine Gewichtung: Der Kreis ist in der Mitte am breitesten. Ein
          * Bedienelement gehört dorthin, eine Statusanzeige nicht — sie wird
-         * gelesen, nicht getroffen. Vorher stand der Knopf ganz unten, wo der
-         * Kreis auf 55 dp zusammenläuft, und wurde an beiden Seiten gekappt
-         * (Fund B-S4-08b, gemessen: 13,55 % des Inhalts außerhalb des Glases). */
+         * gelesen, nicht getroffen. Ganz unten, wo der Kreis auf 55 dp
+         * zusammenläuft, würde der Knopf an beiden Seiten gekappt (gemessen:
+         * 13,55 % des Inhalts außerhalb des Glases). */
         UhrKnopf(stringResource(R.string.dienst_beginnen)) {
             melde(Uhrereignis.Dienstknopf(System.currentTimeMillis()))
         }
@@ -256,12 +254,12 @@ private fun Startseite(z: Uhrzustand, logoWahl: LogoWahl, melde: (Uhrereignis) -
 @Composable
 private fun LaufendeAnsicht(z: Uhrzustand, logoWahl: LogoWahl, melde: (Uhrereignis) -> Unit) {
     Spalte {
-        // Auf laufenden Ansichten ein Sechstel der Displayhöhe (E-S4-22a).
+        // Auf laufenden Ansichten ein Sechstel der Displayhöhe.
         Marke(logoWahl, MARKE_LAUFEND)
         Zustandszeile(z)
 
         if (!z.mitPhasen) {
-            // Nur-Aufzeichnen: nur Dienst beginnen/beenden (E-S4-20).
+            // Nur-Aufzeichnen: nur Dienst beginnen/beenden.
             Text(
                 text = stringResource(R.string.nur_aufzeichnen),
                 color = Farbe.sand, fontSize = 13.sp, textAlign = TextAlign.Center,
@@ -284,7 +282,7 @@ private fun LaufendeAnsicht(z: Uhrzustand, logoWahl: LogoWahl, melde: (Uhrereign
                 color = Farbe.sand, fontSize = 12.sp, textAlign = TextAlign.Center,
             )
         } else {
-            // Nach Phase 9 wird derselbe Knopf zum Abschluss (E-S4-21b).
+            // Nach Phase 9 wird derselbe Knopf zum Abschluss.
             UhrKnopf(
                 stringResource(R.string.einsatz_abschliessen),
                 flaeche = Farbe.rot, schrift = Farbe.aufDunkel,
@@ -296,10 +294,10 @@ private fun LaufendeAnsicht(z: Uhrzustand, logoWahl: LogoWahl, melde: (Uhrereign
         }
 
         /* DIE VERBINDUNGSZEILE STEHT ZULETZT — dieselbe Regel wie auf der
-         * Startseite (E-S4-51): Bedienelemente in die Mitte, wo der Kreis
-         * breit ist, Statusanzeigen an den Rand. Sie stand vorher zwischen
-         * Zustandszeile und Knopf und schob beide Knöpfe nach unten; gemessen
-         * blieben davon 1,66 % des Inhalts außerhalb des Glases. */
+         * Startseite: Bedienelemente in die Mitte, wo der Kreis breit ist,
+         * Statusanzeigen an den Rand. Zwischen Zustandszeile und Knopf
+         * schöbe sie beide Knöpfe nach unten; gemessen blieben davon 1,66 %
+         * des Inhalts außerhalb des Glases. */
         Verbindungszeile(z)
     }
 }
@@ -321,7 +319,7 @@ private fun Phasenliste(z: Uhrzustand, melde: (Uhrereignis) -> Unit) {
                 naechste = nummer == z.naechstePhase,
             ) { melde(Uhrereignis.ListenwahL(nummer, System.currentTimeMillis())) }
         }
-        // Der vorzeitige Abschluss steht in der Liste (E-S4-21c).
+        // Der vorzeitige Abschluss steht in der Liste.
         UhrKnopf(
             stringResource(R.string.einsatz_abschliessen),
             flaeche = Farbe.rot, schrift = Farbe.aufDunkel,
@@ -336,7 +334,7 @@ private fun Phasenliste(z: Uhrzustand, melde: (Uhrereignis) -> Unit) {
 private fun Rueckfrage(frage: String, ja: String, melde: (Uhrereignis) -> Unit) {
     Spalte {
         Text(text = frage, color = Farbe.aufDunkel, fontSize = 16.sp, textAlign = TextAlign.Center)
-        // Die beendende Handlung ist vollflächig rot (E-S4-22a).
+        // Die beendende Handlung ist vollflächig rot.
         UhrKnopf(ja, flaeche = Farbe.rot, schrift = Farbe.aufDunkel) {
             melde(Uhrereignis.Bestaetigt(System.currentTimeMillis()))
         }
@@ -347,7 +345,7 @@ private fun Rueckfrage(frage: String, ja: String, melde: (Uhrereignis) -> Unit) 
 }
 
 /**
- * Gesperrt (E-S4-21d): **Phase und Zeit bleiben lesbar**, unten steht der
+ * Gesperrt: **Phase und Zeit bleiben lesbar**, unten steht der
  * Hinweis zum Entsperren. Ein Tippen tut nichts; entsperrt wird durch Halten.
  */
 @Composable
@@ -372,10 +370,10 @@ private fun GesperrteAnsicht(z: Uhrzustand, logoWahl: LogoWahl) {
 private fun Zustandszeile(z: Uhrzustand) {
     Box(contentAlignment = Alignment.Center) {
         /* WAS NICHT AUFGEZEICHNET WIRD, STEHT HIER OBEN — und nicht unten in
-         * der Verbindungszeile, wo es hingehörte (E-S4-51: Statusanzeigen an
-         * den Rand).
+         * der Verbindungszeile, wo es hingehörte (Statusanzeigen an den
+         * Rand).
          *
-         * DER GRUND IST GEMESSEN, nicht überlegt (B-S5Z-17). Auf der 192-dp-Uhr
+         * DER GRUND IST GEMESSEN, nicht überlegt. Auf der 192-dp-Uhr
          * ist die laufende Ansicht mit Phasenknöpfen 221 dp hoch — die letzte
          * Zeile liegt unter dem Rand und ist ohne Bildlauf **nicht da**.
          * `UhrBildTest` hat es nachgewiesen: Drei Bilder mit drei
@@ -419,16 +417,14 @@ private fun Zustandszeile(z: Uhrzustand) {
 /**
  * Was der Funk gerade tut — und **was er noch nicht getan hat**.
  *
- * ROSA UND NICHT ROT, und das ist eine Berichtigung (B-S5Z-15). `marke_rot`
+ * ROSA UND NICHT ROT. `marke_rot`
  * als **Schrift** auf `marke_asphalt` erreicht 4,12 : 1 und bleibt damit unter
  * AA; als Fläche mit weisser Schrift (die beendenden Knöpfe) trägt dasselbe
  * Rot 4,78 : 1 und ist richtig. `marke_rosa` ist der helle Vertreter
- * derselben Familie und erreicht 15,94 : 1. Der Fehler stand seit C1 da und
- * fiel nicht auf, weil `werkzeuge/kontraste.py` eine feste Paarliste führt
- * und dieses Paar nicht enthielt — dieselbe Lücke wie bei B-S5Z-13. Beide
- * Paare stehen jetzt darin.
+ * derselben Familie und erreicht 15,94 : 1. Beide Paare stehen in der
+ * Liste von `werkzeuge/kontraste.py`.
  *
- * DIE SCHWEBENDE ZEILE IST DER KERN VON E-S4-10 an der Oberfläche: Ein an der
+ * DIE SCHWEBENDE ZEILE IST DER KERN DER QUITTUNG an der Oberfläche: Ein an der
  * Uhr ausgelöster Dienststart wirkt erst mit der Zustellung; vorher läuft am
  * Handy kein GPS. Eine Uhr, die in diesem Augenblick nur „Dienst läuft"
  * zeigte, verschwiege genau die Aufzeichnungslücke, die hinterher niemand
@@ -436,16 +432,15 @@ private fun Zustandszeile(z: Uhrzustand) {
  */
 @Composable
 private fun Verbindungszeile(z: Uhrzustand) {
-    /* „Wartet aufs Handy" und „keine Ortung" standen einmal HIER. Sie sind
-     * mit E1 in die Zustandszeile oben gewandert, weil diese Reihe auf der
-     * 192-dp-Uhr im Phasenmodus unter dem Rand liegt (B-S5Z-17, dort die
-     * Messung). Was bleibt, ist der Funkstand: Er ist eine Auskunft, keine
+    /* „Wartet aufs Handy" und „keine Ortung" stehen NICHT HIER, sondern in
+     * der Zustandszeile oben, weil diese Reihe auf der 192-dp-Uhr im
+     * Phasenmodus unter dem Rand liegt (dort die Messung). Was bleibt, ist der Funkstand: Er ist eine Auskunft, keine
      * Warnung, und darf unter den Rand rutschen. */
     Text(
         text = when {
             /* NOCH NICHTS VERSUCHT ist ein eigener Fall und nicht „verbunden".
              * Beim Start der App weiß die Uhr über das Handy genau nichts —
-             * das zu sagen ist die einzige zutreffende Auskunft (B-S4-09). */
+             * das zu sagen ist die einzige zutreffende Auskunft. */
             z.handyErreichbar == null -> stringResource(R.string.handy_unbekannt)
             z.handyErreichbar == false -> stringResource(R.string.handy_nicht_erreichbar)
             z.gepuffert > 0 -> androidx.compose.ui.res.pluralStringResource(
@@ -453,13 +448,11 @@ private fun Verbindungszeile(z: Uhrzustand) {
             )
             else -> stringResource(R.string.handy_verbunden)
         },
-        // Rot warnt, Blau bestätigt, Sand sagt nichts zu (E-S4-22a).
+        // Rot warnt, Blau bestätigt, Sand sagt nichts zu.
         //
-        // ROSA, NICHT ROT (Android 0.16.0, Konzept AR). `rot` als SCHRIFT auf
-        // Asphalt traegt 4,12:1 -- unter AA; dieselbe Stelle wie B-S5Z-15,
-        // nur eine Zeile weiter, und sie stand in keiner Paarliste. Gefunden
-        // hat sie die Vollstaendigkeitspruefung von `werkzeuge/kontraste.py`
-        // (Nr. 116). Rosa ist auf der Uhr die Schrift fuer "warnt".
+        // ROSA, NICHT ROT. `rot` als SCHRIFT auf Asphalt traegt 4,12:1 --
+        // unter AA; derselbe Fall wie im Kopf dieser Funktion, nur eine
+        // Zeile weiter. Rosa ist auf der Uhr die Schrift fuer "warnt".
         color = when (z.handyErreichbar) {
             null -> Farbe.sand
             true -> Farbe.blau
@@ -473,23 +466,22 @@ private fun Verbindungszeile(z: Uhrzustand) {
 /**
  * Die Grundspalte aller Uhr-Ansichten — **mit Bildlauf**.
  *
- * DER BILDLAUF IST DIE BEHEBUNG EINES FEHLERS, keine Bequemlichkeit
- * (Fund B-S4-08). Ohne ihn bekommt die Spalte die Displayhöhe als feste
+ * DER BILDLAUF BEHEBT EINEN FEHLER, er ist keine Bequemlichkeit. Ohne ihn
+ * bekommt die Spalte die Displayhöhe als feste
  * Obergrenze und **staucht ihre Kinder**, wenn der Inhalt nicht passt. Das
  * traf ausgerechnet den großen Knopf: `heightIn(min = 48.dp)` in
  * [UhrKnopf] beugt sich einer kleineren Elternbeschränkung, und auf der
- * 192-dp-Uhr blieben davon **35,5 dp** übrig — 26 % unter der Zusage aus
- * E-S4-41, und zwar genau auf den kleinen Uhren, für die die 48 dp gedacht
- * sind. Auf der 227-dp-Uhr stimmte es, weil dort der Platz reichte.
+ * 192-dp-Uhr blieben davon **35,5 dp** übrig — 26 % unter der Zusage von
+ * 48 dp, und zwar genau auf den kleinen Uhren, für die sie gedacht sind. Auf
+ * der 227-dp-Uhr stimmte es, weil dort der Platz reichte.
  *
  * Mit Bildlauf misst die Spalte ihre Kinder **unbeschränkt**: Der Knopf
  * bekommt seine 48 dp, und was nicht auf einmal aufs Glas passt, ist durch
  * Wischen erreichbar statt still abgeschnitten. Auf Wear OS ist der Bildlauf
- * die übliche Bedienung; [Phasenliste] benutzt ihn seit C1.
+ * die übliche Bedienung; [Phasenliste] benutzt ihn ebenso.
  *
- * Gefunden hat das kein Auge, sondern die Messung im Bild
- * (`UhrBildTest.pruefeBedienhoehe`) — das erste Ergebnis des neuen
- * Bildmittels (E-S4-49).
+ * Das sieht kein Auge, sondern die Messung im Bild
+ * (`UhrBildTest.pruefeBedienhoehe`).
  */
 @Composable
 private fun Spalte(inhalt: @Composable androidx.compose.foundation.layout.ColumnScope.() -> Unit) {
@@ -505,14 +497,14 @@ private fun Spalte(inhalt: @Composable androidx.compose.foundation.layout.Column
 }
 
 /**
- * Die Startseite trug die Marke nach der 27-%-Stufung der Garmin; seit 0.7.3
- * sind es **22 %** — die 27 % stammen von einem Gerät mit anderen
- * Proportionen und kosteten auf der 192-dp-Uhr genau die Höhe, die der große
- * Knopf braucht, um im Glas zu bleiben. Die alte Herleitung:
- * (`tools/uhr-bilder`: 70/260 des Bezugsgeräts), die laufenden Ansichten
- * **ein Sechstel** der Displayhöhe (E-S4-22a).
+ * Die Startseite traegt die Marke mit **22 %** und nicht nach der
+ * 27-%-Stufung der Garmin (`tools/uhr-bilder`: 70/260 des Bezugsgeräts) —
+ * die 27 % stammen von einem Gerät mit anderen Proportionen und kosteten
+ * auf der 192-dp-Uhr genau die Höhe, die der große Knopf braucht, um im
+ * Glas zu bleiben. Die laufenden Ansichten tragen **ein Sechstel** der
+ * Displayhöhe.
  *
- * Beides ist **blind gewählt** und am Gerät nachzumessen (E-R45-7); es gehört
+ * Beides ist **blind gewählt** und am Gerät nachzumessen; es gehört
  * danach in den Wear-Teil von `docs/Geraete-Eingabe.md`.
  */
 const val MARKE_START = 0.22f

@@ -2,40 +2,39 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/version.php';
-// E-Mail-Normalisierung (M1-13). Eigene Datei ohne Abhaengigkeiten, weil
+// E-Mail-Normalisierung. Eigene Datei ohne Abhaengigkeiten, weil
 // install.php sie ebenfalls braucht und dort noch keine config.php existiert.
 require_once __DIR__ . '/email_lib.php';
-/* Der eine Leser fuer config.php (Schritt 15 AP2, E-ZE-02/-14). Laedt
+/* Der eine Leser fuer config.php. Laedt
  * seinerseits NICHTS — Bedingung, nicht Sparsamkeit: `install.php` und
  * `sitzung_lib.php` brauchen ihn, ohne `db.php` zu laden.
  *
- * BIS WEB 20.26.3 STAND HIER `$CFG = require __DIR__ . '/config.php';` und
- * legte die Konfiguration als GLOBALE ab. Elf Dateien griffen mit
- * `global $CFG` darauf zu, fuenf weitere lasen die Datei ein zweites Mal —
- * zusammen 46 Zugriffe und 7 Lesestellen. Jetzt: `konfig('app.timezone')`.
+ * KEINE GLOBALE `$CFG` aus `require __DIR__ . '/config.php'`, auf die
+ * Dateien mit `global $CFG` zugreifen oder die sie ein zweites Mal einlesen,
+ * sondern: `konfig('app.timezone')`.
  *
- * UND ES IST KEIN `require` MEHR, das scheitern kann: Fehlt `config.php`
+ * UND ES IST KEIN `require`, das scheitern kann: Fehlt `config.php`
  * (die Anlage ist noch nicht eingerichtet), liefert jede Abfrage ihre
  * Vorgabe, statt dass die Datei mit einem Fatal abbricht. */
 require_once __DIR__ . '/konfig_lib.php';
-require_once __DIR__ . '/format_lib.php';   // fmt_local() u. a. (Schritt 15/AP7)
-/* Der Transaktionsrahmen `db_transaktion()` (Schritt 15/AP5, E-ZE-20). Stand
- * bis Web 20.37.2 hier; eigene Datei, weil der Einrichter ihn ohne
- * `config.php` braucht und diese Datei ohne sie abbricht (Nr. 288). */
+require_once __DIR__ . '/format_lib.php';   // fmt_local() u. a.
+/* Der Transaktionsrahmen `db_transaktion()`. Eigene
+ * Datei, weil der Einrichter ihn ohne
+ * `config.php` braucht und diese Datei ohne sie abbricht. */
 require_once __DIR__ . '/transaktion_lib.php';
 
 /* UND `db.php` VERLANGT `config.php` WEITERHIN HART.
  *
  * `konfig_lib.php` TOLERIERT die fehlende Datei — es muss, weil
  * `install.php` auf einer Anlage laeuft, die noch keine hat. `db.php` darf
- * das nicht erben: Bis Web 20.26.3 brach sie mit einem Fatal ab
- * (`require ... config.php: Failed to open stream`), und genau dabei bleibt
- * es. Ohne diese Zeile waere aus dem klaren Befund „config.php fehlt" eine
+ * das nicht erben: Sie bricht mit einem Fatal ab
+ * (`require ... config.php: Failed to open stream`). Ohne diese Zeile waere aus
+ * dem klaren Befund „config.php fehlt" eine
  * PDO-Ausnahme auf einem leeren DSN geworden — also die Meldung
  * „Datenbank nicht erreichbar" fuer ein Problem, das nichts mit der
  * Datenbank zu tun hat. Eine falsche Diagnose ist teurer als ein Abbruch.
  *
- * DAMIT AENDERT DIESES PAKET AUCH HIER KEIN VERHALTEN (E-ZE-10): Wer
+ * DAMIT AENDERT DIESES PAKET AUCH HIER KEIN VERHALTEN: Wer
  * `db.php` ohne `config.php` laedt, kommt nicht weiter — vorher wie
  * nachher. Was sich aendert, ist allein der Satz, den er dabei liest. */
 if (!is_file(__DIR__ . '/config.php')) {
@@ -44,7 +43,7 @@ if (!is_file(__DIR__ . '/config.php')) {
       . 'install.php anlegen und aufrufen (docs/Technik.md, Runbook).');
 }
 
-/* ---- DAS FEHLERPROTOKOLL (P5c/AP3, E-P5c-12, -58) --------------------------
+/* ---- DAS FEHLERPROTOKOLL --------------------------
  *
  * HIER UND GENAU EINMAL. Jede Seite, jeder Endpunkt und jeder Job laedt diese
  * Datei; ab dieser Zeile landet jede Ausnahme, die niemand faengt, und jede
@@ -61,13 +60,13 @@ register_shutdown_function('system_abbruch_pruefen');
 
 function db(): PDO {
     static $pdo = null;
-    /* DER RIEGEL GEGEN DIE SCHLEIFE (P5a/AP9). Siehe den Block unten. */
+    /* DER RIEGEL GEGEN DIE SCHLEIFE. Siehe den Block unten. */
     static $inUeberlast = false;
     if ($pdo === null) {
         try {
             $pdo = new PDO((string)konfig('db.dsn'), (string)konfig('db.user'),
                            (string)konfig('db.pass'), [
-                /* KEINE PERSISTENTEN VERBINDUNGEN (E-P5a-18). Die Zeile
+                /* KEINE PERSISTENTEN VERBINDUNGEN. Die Zeile
                  * fehlt hier mit Absicht: `PDO::ATTR_PERSISTENT` haelt die
                  * Verbindung ueber das Ende der Anfrage hinaus offen und
                  * belegt damit genau den Platz, um den es im Block unten
@@ -82,7 +81,7 @@ function db(): PDO {
                 PDO::ATTR_EMULATE_PREPARES   => false,
             ]);
         } catch (PDOException $ex) {
-            /* ---- DIE VERBINDUNGSGRENZE (P5a/AP9, E-P5a-18) --------------
+            /* ---- DIE VERBINDUNGSGRENZE --------------
              *
              * 1040 und 1203 heissen nicht „kaputt", sondern „gerade kein
              * Platz". Bis hierher kamen sie als 500 heraus, mit dem
@@ -118,7 +117,7 @@ function db(): PDO {
             }
             throw $ex;
         }
-        /* ZEITZONE DER VERBINDUNG AUSDRUECKLICH SETZEN (M5-09).
+        /* ZEITZONE DER VERBINDUNG AUSDRUECKLICH SETZEN.
          *
          * Ohne diese Zeile rechnet NOW() in der Zeitzone des Datenbank-
          * servers — und die ist eine Einstellung des Hosters, kein Teil
@@ -156,26 +155,22 @@ function db(): PDO {
     return $pdo;
 }
 
-/* DIE HILFEN FUER ZENTRALE STAMMDATEN STANDEN HIER BIS WEB 20.47.0 (R39).
- * `stammdaten_dup_global()` pruefte, ob ein eigener Name schon systemweit
- * vergeben war — die UNIQUE-Schluessel (user_id, name) greifen bei NULL nicht.
- * Seit P5c/AP8 traegt jeder Eintrag ein Konto, und der Schluessel haelt die
- * Dubletten selbst ab. `stammdaten_dup_personal_count()` fiel schon mit
- * `admin_stammdaten.php` (S9/AP5b). */
+/* KEINE HILFEN FUER ZENTRALE STAMMDATEN. Jeder Eintrag traegt ein Konto,
+ * und der UNIQUE-Schluessel (user_id, name) haelt die Dubletten selbst ab. */
 
 /* ---------------------------------------------------------------------------
- * EIN STANDORT WIRD GELOESCHT — WAS ES UEBERLEBT      S9/AP5-5, M-S9-10 (b)
+ * EIN STANDORT WIRD GELOESCHT — WAS ES UEBERLEBT
  * ---------------------------------------------------------------------------
  *
- * `vehicles_ibfk_2` steht auf ON DELETE CASCADE, und das ist E15 woertlich:
- * Was an einem Standort haengt, geht mit ihm. Seit E-S9-09 nimmt es dabei
+ * `vehicles_ibfk_2` steht auf ON DELETE CASCADE, und das ist gewollt:
+ * Was an einem Standort haengt, geht mit ihm. Es nimmt dabei
  * aber auch das mit, was ohne diesen Standort bestehen DUERFTE — Bergwacht,
- * Veranstaltung, Sonstiges. AP4 hat das bewusst stehen lassen und begruendet:
+ * Veranstaltung, Sonstiges. Das bleibt bewusst so:
  * `ON DELETE SET NULL` waere falsch, weil es JEDES Standard-Rettungsmittel
  * standortlos machte, also einen Datensatz erzeugte, den die Pruefschicht nie
  * anlegen wuerde.
  *
- * VARIANTE B (freigegeben 08.09.2026): Die Ausnahme ist Anwendungslogik VOR
+ * VARIANTE B (freigegeben): Die Ausnahme ist Anwendungslogik VOR
  * dem `DELETE`, kein Fremdschluessel. Ein `UPDATE`, das den drei Typen ohne
  * Standortpflicht den Standort abnimmt, laeuft in derselben Transaktion; der
  * Rest geht mit wie bisher.
@@ -186,12 +181,10 @@ function db(): PDO {
  * naechsten Typ auseinander, und zwar still: Ein Rettungsmittel wuerde
  * geloescht, das man haette anlegen duerfen.
  *
- * EINE AUFRUFSTELLE: `einstellungen.php` (eigene Standorte). Bis S9/AP5b
- * pflegte `admin_stammdaten.php` auch den systemweiten Bestand und uebergab
- * dafuer `$userId === null`; der Zweig ist mit P5c/AP8 gefallen (R39).
+ * EINE AUFRUFSTELLE: `einstellungen.php` (eigene Standorte).
  *
- * WARUM HIER UND NICHT IN `validate_lib.php`. Das Konzept schreibt „eine
- * Funktion neben `pruef_rettungsmittel()`" — gemeint ist: EINE Fassung fuer
+ * WARUM HIER UND NICHT IN `validate_lib.php`. „Eine Funktion neben
+ * `pruef_rettungsmittel()`" heisst: EINE Fassung fuer
  * beide Seiten. Die Datei selbst sagt in ihrem Kopf „Diese Datei aendert von
  * sich aus nichts"; ein `UPDATE` darin waere der erste Verstoss dagegen.
  * ------------------------------------------------------------------------ */
@@ -200,7 +193,7 @@ function db(): PDO {
  * Die Rettungsmittel eines Standorts, die sein Loeschen ueberleben.
  *
  * Gibt Kennung und Bezeichnung zurueck — die Rueckfrage nennt sie mit NAMEN
- * (M-S9-10, Anmerkung 3): Ein Rettungsmittel, das einen Standort verlaesst,
+ * (Anmerkung 3): Ein Rettungsmittel, das einen Standort verlaesst,
  * ist eine Nachricht und keine Statistik.
  *
  * @return list<array{id:int,name:string}>
@@ -246,18 +239,15 @@ function stammdaten_standort_loesen(int $baseId, int $userId): int
 }
 
 /**
- * Der Satz der Rueckfrage vor dem Loeschen eines Standorts (M-S9-10 b).
+ * Der Satz der Rueckfrage vor dem Loeschen eines Standorts.
  *
  * Er steht an EINER Stelle, weil er drei Zahlen zusammenbringt, die leicht
  * auseinanderlaufen: die Zahl der mitgeloeschten Saetze, die Zahl der
- * ueberlebenden Rettungsmittel und deren Namen. Bis Web 17.0.0 zaehlte die
- * Rueckfrage ALLES mit — sie sagte „6 werden mitgeloescht", und eines davon
- * blieb dann doch nicht.
+ * ueberlebenden Rettungsmittel und deren Namen. Zaehlte die
+ * Rueckfrage ALLES mit — „6 werden mitgeloescht" —, bliebe eines davon
+ * dann doch.
  *
- * BIS WEB 20.47.0 KANNTE SIE ZWEI FASSUNGEN, „eigene" und „systemweite"
- * (`$systemweit`, dazu `$zusatz` fuer die Zahl der Konten, die den Standort
- * gewaehlt hatten). Der Aufrufer dafuer ist mit S9/AP5b gefallen, die beiden
- * Angaben mit P5c/AP8 (R39).
+ * Sie kennt nur eigene Standorte.
  */
 function stammdaten_loeschfrage(string $name, int $anzahlGesamt, array $bleiben): string
 {
@@ -273,7 +263,7 @@ function stammdaten_loeschfrage(string $name, int $anzahlGesamt, array $bleiben)
         $satz .= 'Es hängen keine eigenen Stammdaten daran, die mitgelöscht würden. ';
     }
     if ($bleibt > 0) {
-        /* MIT NAMEN, NICHT MIT ZAHL (M-S9-10, Anmerkung 3). Bei mehr als
+        /* MIT NAMEN, NICHT MIT ZAHL (Anmerkung 3). Bei mehr als
            dreien wird die Aufzaehlung sonst laenger als der Rest des Textes;
            dann nur die Zahl und die ersten drei. */
         $namen = array_column($bleiben, 'name');
@@ -294,13 +284,13 @@ function stammdaten_loeschfrage(string $name, int $anzahlGesamt, array $bleiben)
  * Aendert sich die Datei, aendert sich die Adresse, und der Browser laedt
  * Stylesheet bzw. Skript neu — ohne dass jemand den Zwischenspeicher leeren muss.
  *
- * Seit Web 5.4.0 ist das der ZEITSTEMPEL DER DATEI, nicht mehr WEB_VERSION
- * (Backlog Nr. 9). Vorher entwertete jede Versionserhoehung den
- * Zwischenspeicher aller Dateien — auch derer, die sich nicht geaendert
- * hatten. Bei einer Korrekturfassung, die eine einzige Zeile im Stylesheet
- * anfasst, luden Besucher trotzdem saemtliche Skripte erneut.
+ * Das ist der ZEITSTEMPEL DER DATEI, nicht WEB_VERSION. Mit der Fassung
+ * entwertete jede Versionserhoehung den Zwischenspeicher aller Dateien —
+ * auch derer, die sich nicht geaendert haben. Bei einer Korrekturfassung,
+ * die eine einzige Zeile im Stylesheet anfasst, luden Besucher trotzdem
+ * saemtliche Skripte erneut.
  *
- * Zum Auslieferungsweg (Pruefschritt P8): Der FTP-Deploy uebertraegt nur
+ * Zum Auslieferungsweg: Der FTP-Deploy uebertraegt nur
  * Dateien, deren Inhalt sich geaendert hat — er fuehrt dafuer auf dem Server
  * eine Zustandsdatei mit Pruefsummen. Unveraenderte Dateien werden also nicht
  * angefasst und behalten ihren Zeitstempel; uebertragene bekommen den
@@ -345,7 +335,7 @@ function favicon_tags(): string {
     // unter welcher Adresse die Seite gerade aufgerufen wird.
     $basis = rtrim(str_replace('\\', '/', dirname((string)($_SERVER['SCRIPT_NAME'] ?? '/'))), '/');
 
-    /* DAS FAVICON FOLGT DER LOGO-WAHL (E-P3-20, ab Web 9.7.0). Kopfleiste
+    /* DAS FAVICON FOLGT DER LOGO-WAHL. Kopfleiste
      * und Browser-Symbol wechseln gemeinsam — ein Konto mit dem Fahrzeug in
      * der Kopfleiste und dem Hubschrauber im Tab waere ein Widerspruch, den
      * niemand erklaeren koennte. Die Auswahl trifft logo_stamm()
@@ -375,11 +365,11 @@ function favicon_tags(): string {
  * bliebe die Seite bei einem veralteten Eintrag in der config.php ohne Logo.
  */
 function logo_src(): string {
-    /* SEIT WEB 9.10.0 ENTSCHEIDET DIE LOGO-WAHL (F-P3-AN).
+    /* ES ENTSCHEIDET DIE LOGO-WAHL.
      *
      * Diese Funktion versorgt die beiden Seiten OHNE Sitzung — Anmeldung und
-     * Passwort setzen. Genau dort soll der Standard der Installation stehen
-     * (E-P3-20), und genau dort stand er nicht: Sie las `app.logo_path` aus
+     * Passwort setzen. Genau dort soll der Standard der Installation stehen,
+     * und genau dort stand er nicht: Sie las `app.logo_path` aus
      * der config.php, und der Einrichter schreibt dort den Hubschrauber
      * hinein. Ein Wechsel des Standards in der Wartung wirkte damit ueberall
      * ausser auf der Anmeldeseite — auf der einen Seite, die ihn zeigen soll.
@@ -407,13 +397,13 @@ function logo_src(): string {
  *
  * WOFUER. Zwei Stellen brauchen dasselbe: die SHA-256 des APK (wer sie
  * nachrechnet, verliert 64 Zeichen am Stueck beim dritten Blockwechsel) und
- * seit S10 die beiden Geheimnisse auf dem Schluesselblatt (die werden im
+ * die beiden Geheimnisse auf dem Schluesselblatt (die werden im
  * Ernstfall von Papier abgetippt).
  *
  * ER STEHT HIER UND NICHT IN EINER DER BEIDEN BIBLIOTHEKEN, weil sonst die
  * eine die andere laden muesste — `serverkrypto_lib.php` haengt nicht an
- * `apk_lib.php` und soll es nicht. Bis Web 20.1.0 stand die Rechnung zweimal
- * da, wortgleich; gefunden beim Gegenlesen des Konzepts S10 (F-16).
+ * `apk_lib.php` und soll es nicht. Zwei wortgleiche Fassungen der
+ * Rechnung liefen sonst auseinander.
  *
  * Der Wert selbst bleibt unveraendert; wer ihn kopiert, bekommt die
  * Leerzeichen mit und muss sie entfernen — beim Nachtragen vom Blatt tut das
@@ -424,13 +414,11 @@ function hex_vierergruppen(string $hex): string
     return trim(chunk_split($hex, 4, ' '));
 }
 
-/* `fmt_local()` STAND HIER BIS WEB 20.31.0 und liegt jetzt in
- * `format_lib.php` (Schritt 15 AP7). Der Name ist unveraendert, und diese
- * Datei laedt die neue oben — jeder der 113 Aufrufer findet die Funktion
- * also weiter, ohne etwas zu tun.
+/* `fmt_local()` LIEGT IN `format_lib.php`, und diese Datei laedt sie
+ * oben — jeder der 113 Aufrufer findet die Funktion, ohne etwas zu tun.
  *
- * WARUM SIE UMGEZOGEN IST: `datum_text()` und `datum_zeit_text()` bauen auf
- * ihr auf. Waere sie hiergeblieben, muesste `format_lib.php` die
+ * WARUM DORT: `datum_text()` und `datum_zeit_text()` bauen auf
+ * ihr auf. Laege sie hier, muesste `format_lib.php` die
  * Datenbankdatei laden — und die darf sie nicht laden, weil `install.php`
  * sie ueber `plattform_lib.php` erreicht, bevor es eine `config.php` gibt.
  * Die Rechnung ein zweites Mal zu fuehren waere das Gegenteil dessen,
@@ -465,14 +453,12 @@ function local_to_utc(string $day, string $hhmm, int $addDays = 0): ?string {
     return $dt->format('Y-m-d H:i:s');
 }
 
-/* Hier stand iso_to_sql() — ISO-8601 der Uhr nach DATETIME. Ihre einzigen
-   Aufrufer lagen in ingest.php und wurden mit Web 4.2.0 durch pruef_utc()
-   aus validate_lib.php ersetzt; die Funktion blieb als Rest stehen und war
-   seither ohne Verwendung (A4, T-01). Wer das Format wieder braucht, findet
+/* Kein iso_to_sql() — ISO-8601 der Uhr nach DATETIME pruefen und wandeln
+   tut pruef_utc() aus validate_lib.php. Wer das Format wieder braucht, findet
    die Umwandlung in pruef_utc(). */
 
 /**
- * EINE JSON-ANTWORT AUS FERTIGEM TEXT (P5a/AP4a, E-P5a-38, Backlog Nr. 203).
+ * EINE JSON-ANTWORT AUS FERTIGEM TEXT.
  *
  * WOGEGEN. Sieben Stellen gaben JSON aus, ohne durch `json_out()` zu gehen —
  * mit `header('Content-Type: application/json')` und `echo` von Hand. Zwei
@@ -508,7 +494,7 @@ function local_to_utc(string $day, string $hhmm, int $addDays = 0): ?string {
  * auf, `json_out()` ruft `json_roh_out()`.
  */
 function json_kopf(int $code = 200): void {
-    /* Der schmale Kopfzeilensatz der Endpunkte (P5a/AP4, E-P5a-15). Keine
+    /* Der schmale Kopfzeilensatz der Endpunkte. Keine
      * CSP — eine JSON-Antwort ist kein Dokument. `nosniff` dagegen ist genau
      * hier die wichtige Zeile. */
     require_once __DIR__ . '/kopfzeilen_lib.php';
@@ -516,7 +502,7 @@ function json_kopf(int $code = 200): void {
 
     http_response_code($code);
     header('Content-Type: application/json; charset=utf-8');
-    /* Kein Zwischenspeichern (M3-11).
+    /* Kein Zwischenspeichern.
      *
      * Bisher setzte GENAU EIN Endpunkt diesen Kopf: das Backup. Vier
      * weitere liefern denselben Chiffretext aus — Tagesdaten, Zeitraum,
@@ -542,7 +528,7 @@ function json_out(array $data, int $code = 200): never {
     json_roh_out((string)json_encode($data), $code);
 }
 
-/* ---- DER EINGANG DER ENDPUNKTE (Schritt 15/AP3, E-ZE-15, F-ZE-5) ---------
+/* ---- DER EINGANG DER ENDPUNKTE ---------
  *
  * Einundzwanzig Dateien unter `api/` begannen mit derselben Handarbeit:
  * Methode pruefen, Rumpf lesen, „leer?", „ist das ein JSON-Objekt?". Vier
@@ -554,8 +540,8 @@ function json_out(array $data, int $code = 200): never {
  *
  * ---- WARUM ZWEI FUNKTIONEN UND NICHT EINE --------------------------------
  *
- * Das Konzept sah EINEN Aufruf vor, `api_eingang()`, der Methode und Rumpf
- * zusammen erledigt. Das geht nicht, ohne Verhalten zu aendern, denn zwischen
+ * EIN Aufruf `api_eingang()`, der Methode und Rumpf zusammen erledigt,
+ * geht nicht, ohne Verhalten zu aendern, denn zwischen
  * beiden steht in ALLEN elf Rumpf-Dateien eine dritte Zeile:
  *
  *     Methode pruefen  ->  csrf_check()  ->  Rumpf lesen
@@ -569,7 +555,7 @@ function json_out(array $data, int $code = 200): never {
  *
  * Also zwei Funktionen, und die `csrf_check()`-Zeile bleibt, wo sie ist. CSRF
  * gehoert aus einem zweiten Grund nicht hier hinein: Ein Endpunkt ohne
- * Sitzung (10c AP6, `api/health.php`) braucht die Methodenpruefung und sonst
+ * Sitzung (`api/health.php`) braucht die Methodenpruefung und sonst
  * nichts.
  */
 /**
@@ -588,7 +574,7 @@ function api_methode(string|array $erlaubt = 'POST'): void {
  * Den Anfragerumpf lesen und als JSON-Objekt zurueckgeben.
  *
  * Antwortet selbst und bricht ab bei: leerem Rumpf (400 `leer`, mit dem
- * Hinweis auf `post_max_size` — er steht seit AP3 einmal, hier), Rumpf ist
+ * Hinweis auf `post_max_size` — er steht einmal, hier), Rumpf ist
  * kein JSON-Objekt (400 `format`) und, WENN `max_bytes` gesetzt ist, zu
  * grossem Rumpf (413 `zu_gross`).
  *
@@ -596,7 +582,7 @@ function api_methode(string|array $erlaubt = 'POST'): void {
  * keiner der elf Endpunkte die Rumpfgroesse — ein Konto-Backup kann zweistellig
  * megabytegross sein, und `app.max_body_bytes` (512 KB) ist die Grenze des
  * Geraete-Eingangs, nicht die der Weboberflaeche. Eine Vorgabe haette hier
- * eine Pruefung eingefuehrt, die es nicht gab (E-ZE-10).
+ * eine Pruefung eingefuehrt, die es nicht gab.
  *
  * INHALTLICHE Pruefungen bleiben beim Aufrufer: ob ein `format`-Feld den
  * richtigen Wert hat, ob `eintraege` da ist, ob die Liste zu lang ist. Der
@@ -623,7 +609,7 @@ function api_rumpf(array $o = []): array {
     return $b;
 }
 
-/* ---- DAS TOR DES WARTUNGSMODUS (S5 Paket W, E-S5W-06) --------------------
+/* ---- DAS TOR DES WARTUNGSMODUS -----------------------------------
  *
  * Hier und nicht in `auth_guard.php`: Dort liefen nur die SEITEN durch.
  * `ingest.php` und `pair.php` laden `db.php` direkt — und das sind die
@@ -640,24 +626,21 @@ function api_rumpf(array $o = []): array {
  * kehrt auf der Kommandozeile sofort zurueck. Steht keine `wartung.lock`,
  * kostet der Aufruf einen `file_exists()`.
  */
-/* DIE KOPFZEILEN STEHEN JEDER DATEI ZUR VERFUEGUNG, DIE `db.php` LAEDT
- * (P5a/AP4). `kopf_nonce_attr()` wird in 25 Inline-Bloecken gebraucht — auch
+/* DIE KOPFZEILEN STEHEN JEDER DATEI ZUR VERFUEGUNG, DIE `db.php` LAEDT.
+ * `kopf_nonce_attr()` wird in 25 Inline-Bloecken gebraucht — auch
  * in `session_lib.php`, das ohne `ui.php` auskommt. Eine Datei, die nur
  * Funktionen definiert, kostet nichts. */
 require_once __DIR__ . '/kopfzeilen_lib.php';
-require_once __DIR__ . '/instanz_lib.php';   // Name dieser Installation (P5a/AP5)
+require_once __DIR__ . '/instanz_lib.php';   // Name dieser Installation
 require_once __DIR__ . '/wartung_lib.php';
 wartung_tor();
 
-/* DIE SITZUNGSBIBLIOTHEK (Schritt 16, E-SA-02; Schritt 15/AP2, E-ZE-06).
+/* DIE SITZUNGSBIBLIOTHEK.
  *
- * BIS P5c/AP3 STAND HIER „EINE VON ZWEI AUFRUFSTELLEN" der Sitzungsablage,
- * die andere sei `install.php`, und eine Begruendung, warum der Aufruf hier
- * und nicht an den neun `session_start()` steht. Beides war seit Web 20.27.0
- * nicht mehr wahr: Bis Web 20.26.3 stand hier `sitzung_ablage();`; seither
- * gibt es nur noch EINEN Sitzungsstart, `sitzung_starten()`, und der richtet
+ * HIER WIRD DIE SITZUNGSABLAGE NICHT EINGERICHTET. Es gibt EINEN
+ * Sitzungsstart, `sitzung_starten()`, und der richtet
  * die Ablage selbst ein, unmittelbar bevor PHP die Sitzungsdatei anlegt —
- * also nicht mehr bei jeder Anfrage, die `db.php` laedt, ohne eine Sitzung
+ * also nicht bei jeder Anfrage, die `db.php` laedt, ohne eine Sitzung
  * zu starten (Register Z01/Z02 halten beides auf eins).
  *
  * WAS HIER BLEIBT, ist das Laden: `jobs_lib.php` braucht den Raeumteil,
@@ -670,7 +653,7 @@ require_once __DIR__ . '/sitzung_lib.php';
 function e(string $s): string { return htmlspecialchars($s, ENT_QUOTES, 'UTF-8'); }
 
 /**
- * Eine Abfrage ueber eine ID-Liste, in Bloecken ausgefuehrt (M3-15, M5-12).
+ * Eine Abfrage ueber eine ID-Liste, in Bloecken ausgefuehrt.
  *
  * WARUM SIE HIER STEHT
  * Dieselbe Aufgabe — "hole alle Unterzeilen zu diesen n Datensaetzen, aber
@@ -683,7 +666,7 @@ function e(string $s): string { return htmlspecialchars($s, ENT_QUOTES, 'UTF-8')
  * Die Vorlage traegt {IDS} an der Stelle der Platzhalterliste. Bewusst KEINE
  * Formatzeichenkette mit %s: Damit waere jedes weitere Prozentzeichen im
  * SQL-Text ein Formatbefehl, und ein kuenftiges LIKE '%tag%' wuerde
- * stillschweigend verstuemmelt (M3-14).
+ * stillschweigend verstuemmelt.
  *
  * Die Blockgroesse haelt Abstand zur Parametergrenze von MySQL/MariaDB und
  * verhindert Einzelanweisungen von mehreren hundert Kilobyte.
@@ -706,7 +689,7 @@ function sql_in_bloecken(PDO $pdo, string $sqlVorlage, array $ids,
 }
 
 /**
- * Einen Ausnahmefehler protokollieren und eine Kennung dafuer liefern (M3-10).
+ * Einen Ausnahmefehler protokollieren und eine Kennung dafuer liefern.
  *
  * WAS DARAN FALSCH WAR
  * Neun Endpunkte gaben den Text der Ausnahme unveraendert nach aussen:
@@ -727,7 +710,7 @@ function sql_in_bloecken(PDO $pdo, string $sqlVorlage, array $ids,
  * aussen geht eine Kennung. Sie ist kurz genug, um sie am Telefon
  * durchzugeben, und lang genug, um im Protokoll eindeutig zu sein.
  *
- * SEIT P5c/AP3 (E-P5c-58) steht der Text im Reiter System und nicht mehr im
+ * Der Text steht im Reiter System und nicht im
  * Fehlerprotokoll des Webspace, bereinigt wie jede fremde Meldung
  * (`systemmeldung_lib.php`); nur wenn die Datenbank nicht antwortet, geht er
  * mit derselben Kennung dorthin. Die ANTWORTFORM bleibt, auch auf dem
@@ -745,12 +728,12 @@ function fehler_kennung(Throwable $ex, string $bereich): string
 }
 
 /**
- * Die Standardantwort eines Endpunkts auf einen unerwarteten Fehler (M3-10).
+ * Die Standardantwort eines Endpunkts auf einen unerwarteten Fehler.
  * Beendet die Anfrage mit 500 und nennt nur die Kennung.
  */
 function json_fehler(Throwable $ex, string $bereich): never
 {
-    /* GEDRAENGEL IST KEIN DEFEKT (P5a/AP9, E-P5a-52). Ein Deadlock oder ein
+    /* GEDRAENGEL IST KEIN DEFEKT. Ein Deadlock oder ein
      * abgelaufener Sperrzeitraum sagt „noch einmal versuchen", nicht
      * „kaputt". Die Begruendung und der Fund stehen bei `gedraengel_erkannt()`
      * in `wartung_lib.php`. */
@@ -779,11 +762,10 @@ function json_fehler(Throwable $ex, string $bereich): never
  * GUELTIGEN Zustand erscheinen. Ohne sie erscheint er als unbekannte Phase —
  * und das ist er.
  *
- * NEUTRALE BESCHRIFTUNGEN seit Web 6.0.0 (Entscheidung E20): Phase 3 hiess
- * "Abflug", Phase 7 "Landung Krankenhaus". Beide Woerter passen nur zur
- * Luftrettung. Nummerierung und Bedeutung sind unveraendert — es sind
+ * NEUTRALE BESCHRIFTUNGEN: "Abflug" fuer Phase 3 oder "Landung Krankenhaus"
+ * fuer Phase 7 passten nur zur Luftrettung. Nummerierung und Bedeutung sind unveraendert — es sind
  * ausschliesslich die Beschriftungen, damit die Uhr die Einsatzart nicht
- * kennen muss (E21).
+ * kennen muss.
  */
 const PHASE_LABELS = [
     1 => 'Frei', 2 => 'Alarmierung', 3 => 'Ausrücken', 4 => 'Ankunft Einsatzort',
@@ -792,15 +774,15 @@ const PHASE_LABELS = [
 ];
 
 /**
- * Besatzungsrollen — fester Katalog im Code, NICHT in der Datenbank (E4).
+ * Besatzungsrollen — fester Katalog im Code, NICHT in der Datenbank.
  *
  * Welche Rollen ein Rettungsmittel besetzt, wird an ihm angehakt und liegt in
  * `vehicle_roles`; welche Rollen ein DIENSTTAG anbietet, ergibt sich aus der
- * Zeilenmenge in `day_crew` (eingefroren beim Anlegen, E8). Dieser Katalog
+ * Zeilenmenge in `day_crew` (eingefroren beim Anlegen). Dieser Katalog
  * liefert nur Beschriftung, Zugehoerigkeit und Reihenfolge.
  *
  * 'kind' = 'air' | 'ground' | 'both'. "Sonstige" ist ausdruecklich DIESELBE
- * Rolle bei beiden Arten (E6) und nicht zwei gleichnamige.
+ * Rolle bei beiden Arten und nicht zwei gleichnamige.
  *
  * DIE NOTAERZTIN IST KEINE ROLLE — sie ist die NutzerIn.
  *
@@ -817,15 +799,15 @@ const CREW_ROLES = [
 ];
 
 /**
- * Faehigkeiten eines Rettungsmittels (E29). Zwei getrennte Haken, weil ein
+ * Faehigkeiten eines Rettungsmittels. Zwei getrennte Haken, weil ein
  * Hubschrauber eine Winde fuehren kann, ohne in einer Bergwachtkooperation zu
  * stehen — und umgekehrt. Sie steuern die zugehoerigen Einsatzfelder allein
  * (`cap_gate` in mission_fields.php); eine zweite Pruefung auf die Betriebsart
  * gibt es dort bewusst nicht.
  *
- * WO SIE VORKOMMEN DUERFEN, sagt seit dem Demo-Ausbau nicht mehr die
+ * WO SIE VORKOMMEN DUERFEN, sagt nicht die
  * Betriebsart allein, sondern die Spalte `faehigkeiten` in VEHICLE_TYPEN —
- * ausgewertet von `veh_caps_erlaubt()`. E29 gilt weiter fuer die Typen
+ * ausgewertet von `veh_caps_erlaubt()`. Die Bindung an die Betriebsart gilt fuer die Typen
  * Standard, Veranstaltung und Sonstiges; der Typ BERGWACHT ist die benannte
  * Ausnahme. Der Grund steht dort.
  */
@@ -835,7 +817,7 @@ const VEHICLE_CAPABILITIES = [
 ];
 
 /**
- * Typen eines Rettungsmittels (E-S9-09, Web 16.0.0).
+ * Typen eines Rettungsmittels.
  *
  * ZWEI ACHSEN, NICHT EINE. `kind` ist die BETRIEBSART — Luft oder Boden — und
  * steuert weiter, was sie immer steuerte: Rollenkatalog, Faehigkeiten,
@@ -856,7 +838,7 @@ const VEHICLE_CAPABILITIES = [
  *   betriebsart   null = frei waehlbar; sonst der eine erlaubte Wert
  *   rollen        duerfen Rollen-Vorlagen (`vehicle_roles`) hinterlegt werden?
  *   standort      ist `base_id` Pflicht?
- *   faehigkeiten  'luft'  = nur luftgebunden (E29)
+ *   faehigkeiten  'luft'  = nur luftgebunden
  *                 'immer' = in BEIDEN Betriebsarten
  *
  * WARUM FAEHIGKEITEN JETZT EINE SPALTE SIND. Bis zum Demo-Ausbau stand hier,
@@ -914,7 +896,7 @@ function veh_caps_erlaubt(?string $typ, ?string $kind): bool
  * Rollen, die zu einer Einsatzart gehoeren, in Katalogreihenfolge.
  *
  * $kind === null (neutraler Diensttag) liefert bewusst eine LEERE Liste: Ein
- * Diensttag ohne Rettungsmittel bietet keine Rollen an (E26). Wer alle Rollen
+ * Diensttag ohne Rettungsmittel bietet keine Rollen an. Wer alle Rollen
  * braucht — etwa fuer den Export —, nimmt CREW_ROLES direkt.
  *
  * @return array<string,array{label:string,kind:string}>
@@ -936,10 +918,10 @@ function crew_role_label(string $code): string
 
 /* ---- Kopplungscodes: Alphabet, Laenge, Gueltigkeit -----------------------
  * An EINER Stelle, weil die Angaben an DREI Stellen gebraucht werden: beim
- * Erzeugen (pair.php, Anliegen `start` — seit Web 13.0.0 zeigt das GERAET den
- * Code, R49), beim Eintippen im Web (einstellungen.php, Muster PAIR_RE) und
- * beim Aufraeumen (jobs_lib.php). Frueher standen sie dreimal verschieden im
- * Code — das Pruefmuster liess vier bis acht Zeichen zu und ausdruecklich
+ * Erzeugen (pair.php, Anliegen `start` — das GERAET zeigt den
+ * Code), beim Eintippen im Web (einstellungen.php, Muster PAIR_RE) und
+ * beim Aufraeumen (jobs_lib.php). Dreimal verschieden im Code — das Pruefmuster
+ * liess vier bis acht Zeichen zu und ausdruecklich
  * auch solche, die das Alphabet gar nicht enthaelt.
  *
  * SECHS Zeichen aus 32 sind 30 Bit, also rund 1,07 Milliarden Moeglichkeiten.
@@ -951,8 +933,7 @@ function crew_role_label(string $code): string
  *
  * Zehn Minuten Gueltigkeit statt sechzig: Die Kopplung geschieht mit der Uhr
  * in der Hand. Sie zeigt den Code, und die Person tippt ihn unmittelbar
- * danach im Web ein — der Ablauf hat sich mit S5 umgedreht, die Naehe ist
- * dieselbe. EINE Frist ab `start` fuer alles (E-S5-12): Eingabe im Web und Ja
+ * danach im Web ein. EINE Frist ab `start` fuer alles: Eingabe im Web und Ja
  * am Geraet muessen in dieselben zehn Minuten fallen; die Eingabe verlaengert
  * nichts, beide Seiten zeigen die Restzeit.
  */
@@ -961,7 +942,7 @@ const PAIR_LEN     = 6;
 const PAIR_TTL_MIN = 10;
 const PAIR_RE      = '/^[' . PAIR_CHARS . ']{' . PAIR_LEN . '}$/';
 
-/* ---- Ersetzfenster der Geraete (Backlog Nr. 134, K-14, F-SP-8) ------------
+/* ---- Ersetzfenster der Geraete ------------
  *
  * WOGEGEN. Der Geraeteschluessel liegt auf der Garmin-Uhr im Klartext
  * (`watch/source/Pair.mc`; die Plattform hat nichts Besseres). Lesen kann ein
@@ -978,7 +959,7 @@ const PAIR_RE      = '/^[' . PAIR_CHARS . ']{' . PAIR_LEN . '}$/';
  * nicht ab dem gesendeten, den bestimmt der Absender. 48 h waeren knapper,
  * aber ein Freitagsdienst, der erst am Montag synchronisiert, kaeme nicht mehr
  * nach; 7 Tage deckten Urlaub mit Uhr im Koffer und gaeben einem Finder eine
- * ganze Woche. Entschieden am 06.09.2026 (F-SP-8).
+ * ganze Woche. Entschieden am 06.09.2026.
  *
  * WAS DANACH GESCHIEHT: `ok` OHNE zu ersetzen. Kein Fehler auf der Uhr -- sie
  * wuerde sonst endlos wiederholen --, aber in der Antwort benannt
@@ -988,7 +969,7 @@ const PAIR_RE      = '/^[' . PAIR_CHARS . ']{' . PAIR_LEN . '}$/';
  */
 const INGEST_ERSETZFENSTER_H = 72;
 
-/* ---- JSON in einem <script>-Block (Backlog Nr. 135, K-15) ----------------
+/* ---- JSON in einem <script>-Block ----------------
  *
  * WAS DAS PROBLEM IST. `json_encode()` maskiert `<` und `>` NICHT. Steht in
  * einem Wert die Zeichenfolge `</script>` -- ein Standortname, ein
@@ -1021,15 +1002,15 @@ function json_js($wert, int $mehr = 0): string
                                     | JSON_HEX_QUOT | JSON_UNESCAPED_UNICODE | $mehr);
 }
 
-/* ---- Obergrenze offener Kopplungssitzungen (S5, E-S5-14, E-S5-34) --------
+/* ---- Obergrenze offener Kopplungssitzungen --------
  *
- * Seit Web 13.0.0 legt jedes Geraet mit `start` OHNE Anmeldung eine Sitzung
+ * Jedes Geraet legt mit `start` OHNE Anmeldung eine Sitzung
  * an. Damit sich der Coderaum nicht mit fremden Sitzungen fuellen laesst
- * (Angriff E-R49-6: Sitzungen anlegen und auf Vertipper hoffen), haelt der
+ * (Sitzungen anlegen und auf Vertipper hoffen), haelt der
  * Server hoechstens so viele UNVERFALLENE Sitzungen, wie hier steht — der
  * 1001. `start` bekommt 429 `zu_viele_sitzungen`.
  *
- * ZUR ZAHL: R36 rechnet mit 1000 Konten; mehr gleichzeitige legitime
+ * ZUR ZAHL: Gerechnet wird mit 1000 Konten; mehr gleichzeitige legitime
  * Kopplungen gibt es nicht. Bei 1000 gefuellten Sitzungen trifft ein
  * Rateversuch im Web mit hoechstens 9,3e-7 — und laeuft dann noch in die
  * Rueckbestaetigung am Geraet.
@@ -1043,16 +1024,16 @@ function json_js($wert, int $mehr = 0): string
 const PAIR_SITZUNGEN_MAX = 1000;
 
 /**
- * E-Mail-Adresse fuer die Rueckbestaetigung am Geraet maskieren (E-S5-21).
+ * E-Mail-Adresse fuer die Rueckbestaetigung am Geraet maskieren.
  *
  * `vorname@beispieldomain.de` -> `vo***@beispieldomain.de`; ein lokaler Teil aus einem
  * Zeichen zeigt dieses eine (`a@b.de` -> `a***@b.de`). Kleingeschrieben.
  *
  * DIE DOMAIN BLEIBT VOLL, mit Absicht: Sie laesst die Traegerin ihr Konto
- * erkennen — darum geht es an dieser Stelle (E-R49-4: eigenes Geraet im
+ * erkennen — darum geht es an dieser Stelle (eigenes Geraet im
  * fremden Konto, die falsche Adresse faellt auf) — und gibt einem Ableser
  * nichts, was er nicht ohnehin weiss: Er hat die Person gerade zur Eingabe
- * bewegt. Die volle Adresse dagegen will R36 nicht auf einer Uhr.
+ * bewegt. Die volle Adresse dagegen gehoert nicht auf eine Uhr.
  *
  * Nur fuer den Dialog bestimmt, wird nirgends gespeichert.
  */
@@ -1065,15 +1046,14 @@ function email_maskieren(string $email): string
     return mb_substr($lokal, 0, 2) . '***' . ($domain !== '' ? '@' . $domain : '');
 }
 
-/* ---- Die Rollen (Web 15.0.0, S8/AP1; Rahmenplan R75; Support seit
- *      Web 20.41.0, P5c/AP4, R38) ---------------------------------------------
+/* ---- Die Rollen -------------------------------------------------------------
  *
  * VIER ROLLEN, und jede kann alles, was die vorige kann:
  *
  *   user          dokumentiert eigene Einsaetze
  *   support       hilft NutzerInnen: sieht Konten der Rolle `user` und ihre
  *                 Geraete, sendet Setz-Link und Bestaetigung neu, schaltet
- *                 ein Geraet ab — und sonst nichts (E-P5c-14, -40)
+ *                 ein Geraet ab — und sonst nichts
  *   admin         verwaltet Konten, Konto-Backups, Rechtstexte, Demo
  *   betreiberin   dazu der Bereich BETRIEB: Server, Speicher, Updates, Jobs,
  *                 Komplett-Backup, Backup-Ziele
@@ -1086,8 +1066,8 @@ function email_maskieren(string $email): string
  * DER SUPPORT IST KEINE EIGENE VERWALTUNG, sondern ihr schmaler Ausschnitt:
  * Was er darf, darf auch ein Admin (`rolle_darf_support()` ist fuer alle drei
  * wahr); was ein Admin darf, darf er fast alles NICHT. Die Seiten fragen deshalb
- * je Handlung, nicht je Seite — der POST-Verteiler ist nicht zentralisiert
- * (E-ZE-07), und eine Seitenwache haette den Support entweder ganz
+ * je Handlung, nicht je Seite — der POST-Verteiler ist nicht zentralisiert,
+ * und eine Seitenwache haette den Support entweder ganz
  * ausgesperrt oder ganz hereingelassen.
  *
  * WARUM HIER UND NICHT IN auth_guard.php. Die Wachen dort haengen an der
@@ -1112,7 +1092,7 @@ const ROLLEN = [
 
 /** Dieselben Rollen in der Mehrzahl, fuer Zaehlungen (Statistik). Hier und
  *  nicht an der Stelle, die zaehlt: Eine fuenfte Rolle fehlte sonst dort,
- *  wo niemand an sie denkt (F-P5c-36). */
+ *  wo niemand an sie denkt. */
 const ROLLEN_MEHRZAHL = [
     'user'        => 'NutzerInnen',
     'support'     => 'Support',
@@ -1148,7 +1128,7 @@ function rolle_darf_verwalten(?string $rolle): bool
 }
 
 /**
- * Darf diese Rolle die Handlungen des Supports (E-P5c-14)? Support, Admin und
+ * Darf diese Rolle die Handlungen des Supports? Support, Admin und
  * BetreiberIn — die EINE Andockstelle neben `rolle_darf_verwalten()`.
  */
 function rolle_darf_support(?string $rolle): bool
@@ -1158,14 +1138,14 @@ function rolle_darf_support(?string $rolle): bool
 }
 
 /** Ist diese Rolle genau der Support — und damit auf Konten der Rolle `user`
- *  und die schmalen Handlungen beschraenkt (E-P5c-40)? */
+ *  und die schmalen Handlungen beschraenkt? */
 function rolle_ist_support(?string $rolle): bool
 {
     return rolle_normieren($rolle) === 'support';
 }
 
 /**
- * Muss diese Rolle einen Zweitfaktor haben (P5c/AP5, E-P5c-15)? Support,
+ * Muss diese Rolle einen Zweitfaktor haben? Support,
  * Admin und BetreiberIn — jede Rolle, die fremde Konten sieht. Dieselbe Menge
  * wie `rolle_darf_support()`, und das ist kein Zufall: Wer an fremde Konten
  * herankommt, sichert den eigenen Zugang doppelt. Ein eigener Name, weil die
@@ -1177,8 +1157,8 @@ function rolle_braucht_zweitfaktor(?string $rolle): bool
 }
 
 /**
- * Darf `$wer` den Zweitfaktor eines Kontos der Rolle `$ziel` zuruecksetzen?
- * (P5c/AP5, E-P5c-42): die BetreiberIn fuer alle Rollen, ein Admin nur fuer
+ * Darf `$wer` den Zweitfaktor eines Kontos der Rolle `$ziel` zuruecksetzen?:
+ * die BetreiberIn fuer alle Rollen, ein Admin nur fuer
  * Konten der Rolle user. Support-, Admin- und BetreiberIn-Konten setzt allein
  * die BetreiberIn zurueck — der Zweitfaktor schuetzt dort Rechte, die ein
  * Admin selbst nicht hat oder die ihm gleichen. Das eigene Konto schliesst der
@@ -1191,7 +1171,7 @@ function rolle_darf_zweitfaktor_zuruecksetzen(?string $wer, ?string $ziel): bool
         || ($wer === 'admin' && rolle_normieren($ziel) === 'user');
 }
 
-/* ---- Der frische Code (Schritt 18, SR-07, E-SR-20) ------------------------
+/* ---- Der frische Code ------------------------
  *
  * WAS FRISCH HEISST: In dieser Sitzung wurde in den letzten `ZF_FRISCH_S`
  * Sekunden ein Code aus der App oder ein Wiederherstellungscode eingegeben —
@@ -1227,23 +1207,23 @@ const ZF_FRISCH_HANDLUNGEN = [
     'user_delete'        => ['seite' => 'admin_user.php',              'ort' => ''],
     // den eigenen Zweitfaktor ausschalten
     'totp_ausschalten'   => ['seite' => 'einstellungen.php',           'ort' => 'k-zweitfaktor'],
-    // Passkeys (SR-09, E-SR-31): Wer eine fremde Sitzung erbeutet hat, soll
+    // Passkeys: Wer eine fremde Sitzung erbeutet hat, soll
     // sich damit keinen dauerhaften zweiten Faktor anlegen. Anlegen ist ein
     // Endpunkt (403 JSON), Entfernen ein Formular der Karte.
     'passkey_anlegen'    => ['seite' => 'einstellungen.php',           'ort' => 'k-zweitfaktor'],
     'passkey_entfernen'  => ['seite' => 'einstellungen.php',           'ort' => 'k-zweitfaktor'],
-    // neue Wiederherstellungscodes (R17-20, F-R17-43) — derselbe Grund wie
+    // neue Wiederherstellungscodes — derselbe Grund wie
     // beim Passkey: ein dauerhafter zweiter Faktor.
     'totp_codes_neu'     => ['seite' => 'einstellungen.php',           'ort' => 'k-zweitfaktor'],
-    // beide Downloads einer Komplettsicherung (R17-20, F-R17-08, E-R17-48):
+    // beide Downloads einer Komplettsicherung:
     // der entsiegelte Abzug aller Konten.
     'komplett_herunterladen' => ['seite' => 'admin_komplettsicherung.php', 'ort' => ''],
-    // die Freigabe eines Konto-Backups an ein Zielkonto (F-R17-02)
+    // die Freigabe eines Konto-Backups an ein Zielkonto
     'freigeben'          => ['seite' => 'admin_user.php',              'ort' => ''],
     'freigeben_ablage'   => ['seite' => 'admin_sicherungen.php',       'ort' => ''],
-    // Adresswechsel und Setz-Link durch die Verwaltung (F-R17-06, E-R17-45)
+    // Adresswechsel und Setz-Link durch die Verwaltung
     'adresswechsel_verwaltung' => ['seite' => 'admin_user.php',        'ort' => ''],
-    // die drei Tokens der Hintergrundjobs (R17-26, Q-R17-21, E-R17-73): Ein
+    // die drei Tokens der Hintergrundjobs: Ein
     // neues Token gibt den Weg zu Jobs, Wartung und Backup bzw. zur
     // Zustandsauskunft frei — eine uebernommene Sitzung soll das nicht
     // ohne zweiten Faktor koennen.
@@ -1270,13 +1250,13 @@ function rolle_text(?string $rolle): string
  *
  * Als Konstante, damit die Liste der berechtigten Rollen an einer Stelle
  * steht. Wer sie in einer Abfrage ausschreibt, vergisst beim naechsten
- * Rollenzuwachs (Support-Rolle, R38) genau diese eine.
+ * Rollenzuwachs (Support-Rolle) genau diese eine.
  */
 const ROLLEN_VERWALTUNG_SQL = "role IN ('admin','betreiberin')";
 
 /**
  * SQL-Bedingung fuer „Konto ohne eigene Rechte" — das, was der Support sieht
- * und betreut (P5c/AP4, E-P5c-40). Aus demselben Grund eine Konstante wie die
+ * und betreut. Aus demselben Grund eine Konstante wie die
  * darueber. `alias` ist der Tabellenname davor, oder leer.
  */
 function rollen_ohne_rechte_sql(string $alias = ''): string
@@ -1317,9 +1297,9 @@ function ist_letzte_betreiberin(PDO $pdo, int $userId, ?string $rolle): bool
 /* ---- Fester Vergleichswert fuer unbekannte Kennungen ---------------------
  *
  * An EINER Stelle wird ein Geheimnis gegen einen gespeicherten bcrypt-Hash
- * geprueft: die Anmeldung (login.php, Auth-Token). Bis Web 12.9.4 auch an
- * den Geraetepfaden (ingest.php, pair.php) — seit 13.0.0 vergleichen die
- * gegen SHA-256 und haben ihren eigenen Vergleichswert (unten). Die Pruefung
+ * geprueft: die Anmeldung (login.php, Auth-Token). Die Geraetepfade
+ * (ingest.php, pair.php) vergleichen gegen SHA-256 und haben ihren eigenen
+ * Vergleichswert (unten). Die Pruefung
  * lief frueher nur, WENN es die Kennung gab. Bei unbekannter Kennung kam die
  * Abweisung sofort — und dieser Zeitunterschied beantwortet dieselbe Frage
  * wie eine unterschiedliche Meldung: Gibt es dieses Konto?
@@ -1329,17 +1309,17 @@ function ist_letzte_betreiberin(PDO $pdo, int $userId, ?string $rolle): bool
  * gehoert, das jemand einsetzen koennte. Seine einzige Aufgabe ist, denselben
  * Rechenaufwand zu erzeugen.
  *
- * ZUR RUNDENZAHL ($2y$12$, seit Web 19.1.2 — Backlog Nr. 93): Sie entspricht
+ * ZUR RUNDENZAHL ($2y$12$): Sie entspricht
  * der, mit der PASSWORD_DEFAULT auf PHP 8.4 arbeitet, also der Rundenzahl der
  * hier neu angelegten Hashes.
  *
- * WARUM DIE ZAHL ALLEIN NICHT REICHT. Sie stand von Web 5 bis 19.1.1 auf 10
- * (PHP 8.1 bis 8.3) und fiel mit PHP 8.4 aus dem Takt — gemessen am
+ * WARUM DIE ZAHL ALLEIN NICHT REICHT. Eine feste 10 (PHP 8.1 bis 8.3)
+ * fiel mit PHP 8.4 aus dem Takt — gemessen am
  * 12.09.2026: 231,3 ms fuer den bekannten Zweig gegen 57,9 ms fuer diesen
  * Wert, also Faktor 3,99. Verdeckt hat das nur die Mindestdauer von 0,35 s in
  * rate_gleiche_dauer(); auf einem langsameren Rechner kippt sie. Eine feste
  * Zahl geht beim naechsten Vorgabesprung wieder aus dem Takt, und auf einer
- * Installation mit PHP 8.1 bis 8.3 (Technik.md 11 verspricht >= 8.1) kehrt
+ * Installation mit PHP 8.1 bis 8.3 (Technik.md 7.4 verspricht >= 8.1) kehrt
  * sie das Leck sogar um: blind 231 ms gegen echt 58 ms, derselbe Abstand in
  * der anderen Richtung.
  *
@@ -1358,9 +1338,9 @@ function ist_letzte_betreiberin(PDO $pdo, int $userId, ?string $rolle): bool
  */
 const AUTH_VERGLEICHSWERT = '$2y$12$Q6vjbOl.EIszd6TOEs39Kexy6uGWwrczpmFVKXpNXU7HXBNWNndSW';
 
-/* ---- Geraeteschluessel: SHA-256 statt bcrypt (Web 13.0.0, S5 E-S5-42) ----
+/* ---- Geraeteschluessel: SHA-256 statt bcrypt ----
  *
- * WELCHES VERFAHREN ZU WELCHEM GEHEIMNIS GEHOERT (E-S5-41):
+ * WELCHES VERFAHREN ZU WELCHEM GEHEIMNIS GEHOERT:
  *
  *   aus einem Passwort abgeleitet  -> bcrypt (password_hash). Die Langsamkeit
  *       ist der Schutz, denn die Entropie bleibt die des Passworts — auch nach
@@ -1376,7 +1356,7 @@ const AUTH_VERGLEICHSWERT = '$2y$12$Q6vjbOl.EIszd6TOEs39Kexy6uGWwrczpmFVKXpNXU7H
  *       (serverkrypto_lib.php): die Zugangsdaten der Backup-Ziele.
  *
  * KEIN BESTANDSSCHUTZ, mit Absicht: Ab 1.0 gibt es genau eine, frisch
- * installierte Installation (R60). Ein bcrypt-Hash in devices passt seit
+ * installierte Installation. Ein bcrypt-Hash in devices passt seit
  * 13.0.0 nie mehr — das eine Bestandsgeraet koppelt einmal neu. Ein
  * Umhash-Pfad ("beim naechsten Upload") waere Code fuer einen Fall, den es
  * nicht geben soll.
@@ -1406,7 +1386,7 @@ function geraet_schluessel_gueltig(string $schluessel, string $hash): bool
     return hash_equals($hash, hash('sha256', $schluessel));
 }
 
-/* ---- Rundenzahl der Schluesselableitung (M2-01, S1) ----------------------
+/* ---- Rundenzahl der Schluesselableitung ----------------------
  *
  * WAS DIESE ZAHL IST
  * Der Browser leitet aus dem Passwort per PBKDF2-SHA256 mit dieser Rundenzahl
@@ -1466,16 +1446,16 @@ function geraet_schluessel_gueltig(string $schluessel, string $hash): bool
  *
  * 310000 ist am 14.08.2026 entfallen, nachdem die Abfrage 0 ergab.
  *
- * 600000 IST DER ZIELWERT SEIT DEM 07.09.2026 (Backlog Nr. 136, SP-1). 320000
+ * 600000 IST DER ZIELWERT SEIT DEM 07.09.2026. 320000
  * lag unter der Empfehlung (OWASP 2023, Bitwarden); gemessen kostet der Sprung
  * je Ableitung rund das Doppelte und halbiert die Rate des Angreifers.
  *
- * 320000 IST AM 12.09.2026 ENTFALLEN (Backlog Nr. 155), nach derselben
+ * 320000 IST AM 12.09.2026 ENTFALLEN, nach derselben
  * Abfrage wie 310000 am 14.08.2026: `SELECT COUNT(*) FROM users WHERE
  * kdf_iter = 320000` ergab **0**. Der Weg dahin war nicht die Abfrage
  * allein, sondern die Demo-Fixture: Sie brachte die alte Rundenzahl mit,
  * der Reset schrieb sie alle 30 Minuten zurueck, und die stille Anhebung
- * ueberspringt das Demo-Konto ausdruecklich (E-P1-19). Der Altwert konnte
+ * ueberspringt das Demo-Konto ausdruecklich. Der Altwert konnte
  * deshalb NIE von selbst verschwinden. Erst der Neubau des
  * Referenzbestands mit KDF_ITER_ZIEL hat das aufgeloest; zwei Riegel
  * halten es fest (fixture/erzeugen.php und demo_fixture_laden()).
@@ -1505,7 +1485,7 @@ const KDF_ITER_LISTE = [600000];
  * etwas anderes hinschreibt als dort, bekommt eine falsche BESCHRIFTUNG,
  * aber keine schwaechere Pruefung.
  *
- * 12 statt 10 seit dem Sofortpaket Sicherheit (Backlog Nr. 136, SP-2): Gegen
+ * 12 statt 10 seit dem Sofortpaket Sicherheit: Gegen
  * einen Datenbankabzug ist das Passwort die einzige Schranke, und zwei
  * Zeichen mehr sind dort mehr wert als jede Zeichenartenregel.
  */
@@ -1520,11 +1500,9 @@ const PW_MIN_LAENGE = 12;
  * neben den echten unauffaellig in der Liste. Die Grenze macht aus "faellt
  * niemandem auf" ein "geht nicht mehr, ohne dass jemand aufraeumt".
  *
- * (Bis Web 12.9.4 stand hier "wer einen Kopplungscode abfaengt, legt sich ein
- * Geraet an". Das trifft seit S5 nicht mehr: Der Code weist nichts aus, wer
- * ihn abliest, kann am Geraet nichts ausloesen — E-S5-03. Der Weg hinein ist
- * heute die Ueberredung, nicht das Abfangen; die Obergrenze wirkt gegen beide
- * gleich.)
+ * (Der Code weist nichts aus; wer ihn abliest, kann am Geraet nichts
+ * ausloesen. Der Weg hinein ist die Ueberredung, nicht das Abfangen; die
+ * Obergrenze wirkt gegen beide gleich.)
  *
  * WAS GEZAEHLT WIRD
  * Alle Geraete eines Kontos, AKTIVE WIE DEAKTIVIERTE — ein deaktiviertes
@@ -1546,7 +1524,7 @@ const PW_MIN_LAENGE = 12;
  * und sind trotzdem eine Zahl, bei der ein zusaetzlicher Eintrag auffaellt.
  */
 /* ---------------------------------------------------------------------------
- * DIE BEIDEN STORE-ADRESSEN (S8/AP6, R65)
+ * DIE BEIDEN STORE-ADRESSEN
  *
  * Sie stehen an genau EINER Stelle, und beide sind leer: Weder der
  * Beitrittslink des internen Play-Tests noch die Adresse der Uhr-App im
@@ -1582,12 +1560,12 @@ function geraet_virtuell(string $deviceId): bool
     return str_starts_with($deviceId, 'manual-');
 }
 
-/* ---- DAS VIRTUELLE GERAET AN EINER STELLE (Schritt 15/AP4, E-ZE-18) ------
+/* ---- DAS VIRTUELLE GERAET AN EINER STELLE ------
  *
  * „Manuelle Einträge" ist ein deaktiviertes Geraet je Konto, an dem alles
  * haengt, was nicht von einer Uhr kommt: Einsaetze aus dem Formular, aus dem
  * Import, aus dem Schneiden und aus dem GPX-Einlesen. Der Block „gibt es das
- * Geraet schon? sonst anlegen" stand bis Web 20.28.0 VIERMAL — zweimal als
+ * Geraet schon? sonst anlegen" stand einmal VIERMAL da — zweimal als
  * eigene Funktion (`schnitt_geraet()`, `gpx_import_geraet()`) und zweimal
  * eingebettet (`api/import_commit.php`, `einsatz_form.php`), jedes Mal mit
  * demselben zwanzigzeiligen Kommentar darueber.
@@ -1626,7 +1604,7 @@ function geraete_echt_sql(string $alias = ''): string
 /**
  * Das virtuelle Geraet dieses Kontos holen — und anlegen, wenn es fehlt.
  *
- * DIE NUTZERKENNUNG GEHOERT IN DIE ABFRAGE (M3-12/M6-09), und dieser Satz
+ * DIE NUTZERKENNUNG GEHOERT IN DIE ABFRAGE, und dieser Satz
  * stand bisher vier Mal fast wortgleich daneben: Gesucht wurde einmal allein
  * ueber `device_id`. Dass `manual-<id>` die Zugehoerigkeit im Namen traegt,
  * machte die Abfrage praktisch richtig — aber nur, weil eine Zeichenkette
@@ -1673,7 +1651,7 @@ function geraete_grenze_erreicht(PDO $pdo, int $userId): bool {
 /**
  * Geraete, die in den letzten GERAETE_NEU_TAGE Tagen hinzugekommen sind.
  *
- * Grundlage des Hinweises in der Oberflaeche (M4-10). Die eigentliche
+ * Grundlage des Hinweises in der Oberflaeche. Die eigentliche
  * Benachrichtigung ist die E-Mail beim Koppeln — sie erreicht die Person auch
  * dann, wenn sie sich gerade nicht anmeldet, und genau das ist der Fall, um
  * den es geht. Der Hinweis hier ist die zweite, langsamere Spur fuer alle, die
@@ -1700,7 +1678,7 @@ function geraete_grenze_erreicht(PDO $pdo, int $userId): bool {
  */
 function geraete_neu(PDO $pdo, int $userId): array {
     $seit = geraete_hinweis_stand($pdo, $userId);
-    /* Art, Modell und Rohangabe seit Web 12.9.0 mit (S6/R42): Der Hinweis
+    /* Art, Modell und Rohangabe mit: Der Hinweis
      * stellt die Frage „war ich das?", und „Uhr · Venu 3S" beantwortet sie
      * besser als „Uhr". Die Angabe kostet nichts — die Zeile wird ohnehin
      * gelesen. */
@@ -1720,7 +1698,8 @@ function geraete_neu(PDO $pdo, int $userId): array {
  * ---------------------------------------------------------------------------
  *
  * WARUM HIER. Die Tabelle wird an acht Stellen gelesen und geschrieben, und
- * bis Web 20.6.0 brachte JEDE ihren eigenen Zugriff mit: `edbak_marke_lesen()`
+ * braechte JEDE ihren eigenen Zugriff mit, waeren es Fassungen wie
+ * `edbak_marke_lesen()`
  * (`adminbackup_lib.php`), `schluessel_marke_lesen()` (`serverkrypto_lib.php`),
  * `geocoder_state()` (`geocoder_lib.php`), `_tor_lesen()`
  * (`migration_lib.php`), dazu blankes SQL in `smtp.php`, `auth_salt.php`,
@@ -1731,7 +1710,7 @@ function geraete_neu(PDO $pdo, int $userId): array {
  * DAS IST KEIN AUFRAEUMPAKET. Diese beiden Funktionen sind der Ort, an dem
  * die anderen zusammenlaufen KOENNEN; zusammengefuehrt sind sie nicht (das
  * waere eine Aenderung an fuenf Bibliotheken fuer einen Gewinn, den niemand
- * sieht — Backlog). Neue Verbraucher nehmen diese hier.
+ * sieht). Neue Verbraucher nehmen diese hier.
  *
  * `v` IST `VARCHAR(190)`. Wer mehr schreibt, bekommt `false` und eine Zeile
  * im Fehlerprotokoll — nicht einen stillen Abschnitt.
@@ -1755,7 +1734,7 @@ function app_state_lesen(string $k): ?string {
 /**
  * Passt der Wert in die Spalte? Sonst `true` und eine Zeile im Protokoll.
  *
- * EINE STELLE FUER DIE PRUEFUNG UND IHREN SATZ (Schritt 15/AP4). Sie stand
+ * EINE STELLE FUER DIE PRUEFUNG UND IHREN SATZ. Sie stand
  * dreifach, sobald es drei schreibende Helfer gab — und ein viertes Mal in
  * `edbak_marke_setzen()` mit einer eigenen Konstante derselben Zahl.
  *
@@ -1763,7 +1742,7 @@ function app_state_lesen(string $k): ?string {
  * Serverbetriebsart kuerzt MySQL zu lange Werte STILL statt abzuweisen. Eine
  * stille Kuerzung ist hier das Schlimmste von allem — ein halbes JSON, das
  * beim naechsten Lesen als „kein Auftrag" durchgeht. Genau das ist einmal
- * passiert (S2/AP6): Die Warteschlange von „Alle sichern" war laenger als
+ * passiert: Die Warteschlange von „Alle sichern" war laenger als
  * 190 Zeichen, niemand erfuhr davon, und die Schaltflaeche meldete „0 von 0
  * Konten gesichert".
  */
@@ -1787,12 +1766,10 @@ function app_state_setzen(string $k, string $v): bool {
     }
 }
 
-/* ---- VIER WEITERE HELFER (Schritt 15/AP4, E-ZE-17) -----------------------
+/* ---- VIER WEITERE HELFER -----------------------
  *
- * Der Absatz oben sagte bis Web 20.28.0: „Zusammengefuehrt sind sie nicht —
- * das waere eine Aenderung an fuenf Bibliotheken fuer einen Gewinn, den
- * niemand sieht." Gemessen waren es dann **27 Stellen in 17 Dateien**, und
- * der Gewinn ist sichtbar geworden: Jede dieser Stellen beantwortete die
+ * Gemessen waren es **27 Stellen in 17 Dateien**, und der Gewinn ist
+ * sichtbar: Jede dieser Stellen beantwortete die
  * Frage „was, wenn die Tabelle fehlt?" fuer sich, und sie beantworteten sie
  * verschieden — mal `try/catch` mit `null`, mal ohne, mal mit einem
  * `error_log`. Eine fehlende `app_state`-Tabelle (Migration noch nicht
@@ -1898,7 +1875,7 @@ function app_state_loeschen(string ...$k): void {
  * das falsch: KEINER der beiden Aufrufer hatte je einen `try/catch`. Fehlt
  * `app_state` (Migration noch nicht gelaufen), brach die Anfrage ab — und
  * `auth_salt.php` gehoert zum GERAETEVERTRAG, seine Antwortform ist
- * zeichengleich zu halten (Schritt 15, Abschnitt 0). Ein stillschweigend
+ * zeichengleich zu halten. Ein stillschweigend
  * erzeugtes, NICHT gespeichertes Geheimnis waere je Anfrage ein anderes:
  * Die Pseudo-Salts einer unbekannten Adresse waeren nicht mehr stabil, und
  * genau ihre Stabilitaet ist ihr Zweck. Lieber ein Abbruch als eine Antwort,
@@ -1932,10 +1909,10 @@ function app_state_einmalig(string $k, callable $erzeuger): string {
     return ($w === false || $w === null) ? $neu : (string)$w;
 }
 
-/* ---- DAS SCHEMA FRAGEN (Schritt 15/AP4, E-ZE-04) -------------------------
+/* ---- DAS SCHEMA FRAGEN -------------------------
  *
  * Die drei Fragen „gibt es diese Tabelle / diese Spalte / diesen Index?"
- * standen bis Web 20.28.0 doppelt: privat in `migration_lib.php`
+ * standen einmal doppelt: privat in `migration_lib.php`
  * (`_hat_tabelle()`, `_hat_spalte()`, `_hat_index()`) und noch einmal
  * handgeschrieben in vier Dateien, die `migration_lib.php` nicht laden —
  * `ingest.php` sagte das sogar im Kommentar dazu.
@@ -1947,7 +1924,7 @@ function app_state_einmalig(string $k, callable $erzeuger): string {
  * das falsche Schema — und zwar lautlos, denn `DATABASE()` haette
  * geantwortet.
  *
- * GELAUFENE MIGRATIONEN WERDEN NICHT UMGEBAUT (E-ZE-04). Die privaten
+ * GELAUFENE MIGRATIONEN WERDEN NICHT UMGEBAUT. Die privaten
  * `_hat_*` bleiben stehen und reichen nur noch durch; die 57
  * `information_schema`-Erwaehnungen in `migration_lib.php` bleiben, wo sie
  * sind. Registerzeile Z15 haelt ihre Zahl fest: Sie darf nicht steigen.
@@ -1975,7 +1952,7 @@ function db_hat_spalte(PDO $pdo, string $tabelle, string $spalte): bool {
  * Der Typ einer Spalte, wie die Datenbank ihn nennt (`enum('user',…)`,
  * `varchar(190)`) — oder null, wenn es sie nicht gibt.
  *
- * DER VIERTE HELFER (P5c/AP4). Eine Migration, die ein ENUM erweitert, muss
+ * DER VIERTE HELFER. Eine Migration, die ein ENUM erweitert, muss
  * fragen koennen, ob der neue Wert schon drinsteht; die drei `db_hat_*`
  * sagen nur, OB es die Spalte gibt. Frueher stand dafuer `information_schema`
  * von Hand in der Migration (`2026_09_03_rolle_betreiberin`); neue
@@ -1993,7 +1970,7 @@ function db_spalte_typ(PDO $pdo, string $tabelle, string $spalte): ?string {
 /**
  * Darf die Spalte NULL tragen? Null, wenn es sie nicht gibt.
  *
- * DER FUENFTE HELFER (P5c/AP8). Eine Migration, die eine Spalte auf
+ * DER FUENFTE HELFER. Eine Migration, die eine Spalte auf
  * `NOT NULL` zieht, muss fragen koennen, ob sie es schon ist — der Typ
  * (`db_spalte_typ()`) sagt das nicht, `int(10) unsigned` steht in beiden
  * Faellen da. Die Frage stand bis dahin von Hand in einer Migration
@@ -2053,7 +2030,7 @@ const RESUS_LABELS = [
  * nicht existiert (Migration noch nicht gelaufen).
  */
 /**
- * Taegliche Wartung — huckepack auf Web-Anfragen und Uhr-Uploads (M3-05).
+ * Taegliche Wartung — huckepack auf Web-Anfragen und Uhr-Uploads.
  *
  * WAS AN DER ALTEN FASSUNG FALSCH WAR
  * Die Tagesmarke wurde VOR der Arbeit gesetzt (richtig: verhindert
@@ -2073,7 +2050,7 @@ const RESUS_LABELS = [
  * DREI ÄNDERUNGEN
  *  1. Jeder Schritt hat seinen eigenen Fehlerblock. Einer, der scheitert,
  *     haelt die anderen sechs nicht auf.
- *  2. Fehler landen im Protokoll (seit P5c/AP3 Reiter System). Weiterhin still
+ *  2. Fehler landen im Protokoll (Reiter System). Weiterhin still
  *     GEGENUEBER DER ANFRAGE — die Wartung darf keine Seite kaputt machen —
  *     aber nicht mehr spurlos.
  *  3. Ein zweiter Zustandsschluessel haelt fest, wann zuletzt ein Lauf
@@ -2084,11 +2061,11 @@ const RESUS_LABELS = [
  * zwei gleichzeitige Anfragen beide aufraeumen; das ist der teurere Fehler.
  */
 function run_cleanup_if_due(): void {
-    /* SEIT WEB 10.1.0 IST DAS NUR NOCH DER DRITTE AUSLOESER (E-S2-17).
+    /* DAS IST NUR DER DRITTE AUSLOESER.
      *
      * Die Arbeit steht in `jobs_lib.php` und laeuft in HAEPPCHEN mit
-     * Zeitbudget. Der Grund ist gemessen: Die alte Waisenpruefung war ein
-     * Anti-Join ueber die ganze Tabelle und kostete bei 9,46 Mio. Zeilen
+     * Zeitbudget. Der Grund ist gemessen: Eine Waisenpruefung als
+     * Anti-Join ueber die ganze Tabelle kostete bei 9,46 Mio. Zeilen
      * **4,07 Sekunden** — in genau dieser Anfrage. Bei der Zielmenge Z2
      * (190 Mio. Zeilen) waeren es Minuten, und die erste NutzerIn des Tages
      * saehe eine haengende Seite, ohne zu erfahren, warum.
@@ -2103,7 +2080,7 @@ function run_cleanup_if_due(): void {
      * Abfragen.
      *
      * STILL GEGENUEBER DER ANFRAGE, wie bisher. Die Wartung darf keine Seite
-     * kaputtmachen; was scheitert, steht im Fehlerprotokoll UND seit AP2 in
+     * kaputtmachen; was scheitert, steht im Fehlerprotokoll UND in
      * der Tabelle `jobs`, wo die Wartungsseite es zeigt.
      */
     try {

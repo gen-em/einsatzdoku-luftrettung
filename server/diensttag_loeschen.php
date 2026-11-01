@@ -8,7 +8,7 @@ require_once __DIR__ . '/format_lib.php';   // zahl_text() fuer die Aufstellung
 /**
  * Zwischenseite fuer das Loeschen eines kompletten Diensttags.
  *
- * SIE BLEIBT EINE SEITE UND WIRD KEIN DIALOG (P3/O11). Was hier steht, ist
+ * SIE BLEIBT EINE SEITE UND WIRD KEIN DIALOG. Was hier steht, ist
  * eine Aufstellung: Einsaetze, Phasen, Reanimationen, Ruhesegmente,
  * Trackpunkte. Ein Dialog, der eine sechszeilige Aufstellung traegt, ist
  * keiner mehr — und die Aufstellung ist der Grund, warum es die Seite gibt.
@@ -30,9 +30,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['confirm'] ?? '') === 'ja')
 
 require_once __DIR__ . '/ui.php';   // auth_guard.php laedt sie bereits
 
-/* WELCHER Diensttag gemeint ist, muss dastehen: Seit E9 koennen mehrere auf
- * einem Kalendertag liegen, und das Datum allein benennt ihn dann nicht mehr.
- * Bezeichnungen kommen aus den eingefrorenen Spalten (E8). */
+/* WELCHER Diensttag gemeint ist, muss dastehen: Es koennen mehrere auf
+ * einem Kalendertag liegen, und das Datum allein benennt ihn dann nicht.
+ * Bezeichnungen kommen aus den eingefrorenen Spalten. */
 $wer = [];
 if ($tag['vehicle_name'] !== null && $tag['vehicle_name'] !== '') { $wer[] = (string)$tag['vehicle_name']; }
 if ($tag['base_name']    !== null && $tag['base_name']    !== '') { $wer[] = (string)$tag['base_name']; }
@@ -57,23 +57,21 @@ ui_seite_start(['titel' => 'Diensttag löschen']);
     <p>Es wird <strong>der komplette Diensttag</strong> gelöscht — nicht nur die
        Angaben zu Rettungsmittel und Besatzung. Das wandert mit:</p>
 
-    <?php /* ZEILEN STATT AUFZAEHLUNG (O11). In der Aufzaehlung stand die Zahl
-             vorn im Fliesstext („6 Einsätze mit allen Angaben") und war beim
+    <?php /* ZEILEN STATT AUFZAEHLUNG. In einer Aufzaehlung stuende die Zahl
+             vorn im Fliesstext („6 Einsätze mit allen Angaben") und waere beim
              Ueberfliegen nicht zu finden — genau die Zahlen aber sind der
-             Grund, warum diese Seite vor dem Loeschen steht. Jetzt links die
+             Grund, warum diese Seite vor dem Loeschen steht. Deshalb links die
              Sache, rechts die Zahl als Plakette. */ ?>
     <?php
       $posten = [
-        ['Einsätze mit allen Angaben',  (int)$scope['einsaetze'], null],
-        ['Phasen-Zeitstempel',          (int)$scope['phasen'],    null],
-        /* „Reanimations-Protokolle" bis Web 22.7.0 — siehe einsatz_loeschen.php. */
-        ['Ruhesegmente',                (int)$scope['segmente'],  null],
-        ['GPS-Trackpunkte',             (int)$scope['punkte'],    null],
+        ['Einsätze mit allen Angaben',  (int)$scope['einsaetze']],
+        ['Phasen-Zeitstempel',          (int)$scope['phasen']],
+        ['Ruhesegmente',                (int)$scope['segmente']],
+        ['GPS-Trackpunkte',             (int)$scope['punkte']],
       ];
-      foreach ($posten as [$was, $zahl, $klein]) {
+      foreach ($posten as [$was, $zahl]) {
           ui_zeile([
               'text'  => $was,
-              'klein' => $klein ?? '',
               /* Null in Rot waere falsch — nichts zu loeschen ist keine
                  Warnung. Rot bekommt, was tatsaechlich verlorengeht. */
               'plaketten' => ui_plakette(zahl_text($zahl),

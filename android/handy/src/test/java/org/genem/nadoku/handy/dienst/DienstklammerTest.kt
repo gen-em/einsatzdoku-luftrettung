@@ -23,7 +23,7 @@ import java.time.Instant
 import kotlin.random.Random
 
 /**
- * Die Dienstklammer samt **Wiederaufnahme** (E-S4-08, Abnahme B3).
+ * Die Dienstklammer samt **Wiederaufnahme**.
  *
  * Robolectric, weil hier echtes SQLite läuft — der Puffer ist der Ort, an dem
  * die Wiederaufnahme entsteht, und eine Attrappe prüfte genau ihn nicht.
@@ -78,7 +78,7 @@ class DienstklammerTest {
         assertFalse(segment.final)
     }
 
-    /** E-R45-13: Ein zweiter Dienststart ist kein neuer Dienst. */
+    /** Ein zweiter Dienststart ist kein neuer Dienst. */
     @Test fun einZweiterDienststartIstKeinNeuerDienst() {
         val klammer = neueKlammer()
         val erster = klammer.beginnen(Modus.MIT_PHASENKNOEPFEN)
@@ -121,7 +121,7 @@ class DienstklammerTest {
         assertEquals(Modus.NUR_AUFZEICHNEN, klammer.modus())
     }
 
-    /** E-S4-20: Der Wechsel während des Dienstes ist verlustfrei. */
+    /** Der Wechsel während des Dienstes ist verlustfrei. */
     @Test fun derModuswechselAendertNichtsAmBereitsAufgezeichneten() {
         val klammer = neueKlammer()
         klammer.beginnen(Modus.NUR_AUFZEICHNEN)
@@ -262,7 +262,7 @@ class DienstklammerTest {
         uhrzeit = Instant.parse("2026-07-16T17:00:00Z")
         klammer.beenden()
 
-        // Genau ein Ruhesegment, kein einziger Einsatz (E-S4-20).
+        // Genau ein Ruhesegment, kein einziger Einsatz.
         assertNull(puffer.offenesPaket(Paketzeile.ART_RUHESEGMENT))
         assertNull(puffer.offenesPaket(Paketzeile.ART_EINSATZ))
         assertEquals(1, zaehleArt(Paketzeile.ART_RUHESEGMENT))

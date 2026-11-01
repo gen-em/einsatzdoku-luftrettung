@@ -11,22 +11,22 @@ Rückgabewert mit `--erster`: 0 = ein Lauf mit diesem Baum und grünem Job
 Ohne `--erster`: 0, sobald die Liste geschrieben ist — auch leer. Das Urteil
 fällt dort `freigabe.py`, und eine leere Liste hält dessen Tor zu.
 
-WOFÜR (Konzept BR, E-BR-09). Die Frage stand bis BR-03 zweimal als Bash: in
+WOFÜR. Die Frage stand früher zweimal als Bash: in
 `pruefung.yml` („Schon gemessen?", Fenster 30, nur PR-Läufe, erster Treffer)
 und in `ausliefern-lauf.yml` (Produktionstor, Fenster 50, alle Läufe, Liste
-für `freigabe.py`) — die eine mit, die andere ohne Selbstprobe (F-BR-05 (a)).
+für `freigabe.py`) — die eine mit, die andere ohne Selbstprobe.
 Die Unterschiede sind Schalter geblieben; die Suche ist eine.
 
-WAS SIE TUT (Konzept TB). Die grünen Läufe von `pruefung.yml` holen —
+WAS SIE TUT. Die grünen Läufe von `pruefung.yml` holen —
 höchstens `--fenster` viele, wahlweise nur eines Ereignisses —, je Kopf-Commit
 den Baum aus der API, und NUR bei gleichem Baum die Jobs des Laufs: Gezählt
 wird der Job `Stufe 1` mit `success`, nicht der Lauf. Ein Lauf ist auch grün,
 wenn `Stufe 1` übersprungen wurde — der Push-Lauf auf `main`, der auf einen
-PR-Lauf verweist (F-TB-06).
+PR-Lauf verweist.
 
-DAS FENSTER IST EINE KOSTENGRENZE, KEIN SICHERHEITSWERT (E-TB-09), und
-deshalb Pflicht: Jeder Aufrufer nennt seine. Ein leerer Baum trifft nie
-(E-TB-04). Der Jobname ist zugleich die Pflichtprüfung des Rulesets — wer
+DAS FENSTER IST EINE KOSTENGRENZE, KEIN SICHERHEITSWERT, und
+deshalb Pflicht: Jeder Aufrufer nennt seine. Ein leerer Baum trifft nie.
+Der Jobname ist zugleich die Pflichtprüfung des Rulesets — wer
 ihn umbenennt, ändert `JOB` mit, sonst zählt die Suche still null.
 
 GESPROCHEN WIRD ÜBER `gh api`, wie vorher im Bash; `GH_TOKEN` und
@@ -84,7 +84,7 @@ def suchen(baum, fenster, ereignis, erster, api, repo):
                 aus['gescheitert'] += 1
         lb = baeume[kopf]
         ok, fertig = False, ''
-        if baum and lb == baum:                      # nur bei Treffer die Jobs (E-TB-09)
+        if baum and lb == baum:                      # nur bei Treffer die Jobs
             aus['treffer'] += 1
             jobs = api(f"repos/{repo}/actions/runs/{lauf.get('id')}/jobs")
             for j in (jobs or {}).get('jobs', []) if isinstance(jobs, dict) else []:

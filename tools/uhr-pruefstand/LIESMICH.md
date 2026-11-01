@@ -26,9 +26,9 @@ Daneben, je mit Anleitung: `netzprobe/`, `eingabe-probe/`, `krypto-probe/`
 
 ## Was es braucht
 
-`CIQ_GERAETE_URL` mit `devices.tar` und `fonts.tar` (`docs/Technik.md` 5.6);
-SDK und Simulator-Bibliotheken holt es selbst, seit R17-19 nur mit passender
-SHA-256 (`SDK_SHA256`, F-R17-20); Stufe II `Xvfb`.
+`CIQ_GERAETE_URL` mit `devices.tar` und `fonts.tar` (`docs/Technik.md` 5.6),
+geprüft gegen `geraetedateien.sha256` (neu gepackt → Summe im selben Commit;
+Pflicht mit `CIQ_SUMMEN_PFLICHT=1`); SDK nur mit `SDK_SHA256`; Stufe II `Xvfb`.
 
 ## Erwartete Zahl
 
@@ -37,4 +37,4 @@ Aufbau: **SDK 9.2.0 (Summe stimmt), 1332 Schriften, 99/99 Geräte, 0 fehlende Bi
 ## Was es nicht kann
 
 Kein echtes Gerät ersetzen (`docs/Geraete-Eingabe.md`), kein Bluetooth;
-`speicher-leeren` wirkt nur bei beendetem Simulator; Gerätedateien ohne Summe.
+`speicher-leeren` wirkt nur bei beendetem Simulator.

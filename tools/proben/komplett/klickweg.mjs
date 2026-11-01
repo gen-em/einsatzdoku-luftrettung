@@ -1,4 +1,4 @@
-/* KLICKWEG DER ADMINSEITE „Komplett-Backup" (S2/AP8).
+/* KLICKWEG DER ADMINSEITE „Komplett-Backup".
  * ===========================================================================
  *
  * WOFUER. `probe.php` prueft die Bibliothek darunter; hier wird geklickt. Die
@@ -28,12 +28,12 @@
  * Erwartet: 17 Pruefungen, 0 Befunde. Rueckgabewert 0, sonst 1.
  */
 
-/* Der Code-Schritt des Zweitfaktors steht EINMAL, in motor.mjs (P5c/AP5). */
-import { codeSchritt, motorWahl, starten } from '../../motor.mjs';
+/* Der Code-Schritt des Zweitfaktors steht EINMAL, in motor.mjs. */
+import { codeSchritt, motorWahl, starten, istOertlich } from '../../motor.mjs';
 
 const MODUL = process.env.PW_MODUL || '/opt/node22/lib/node_modules/playwright/index.mjs';
 const PWM = (m => m.default ?? m)(await import(MODUL.startsWith('/') ? 'file://' + MODUL : MODUL));
-/* Die Engine wählt der Läufer (MOTOR=… oder --motor), R87. */
+/* Die Engine wählt der Läufer (MOTOR=… oder --motor). */
 const MOTOR = motorWahl(process.argv);
 
 const BASIS = process.env.ED_BASIS || 'https://127.0.0.1:8443';
@@ -47,8 +47,8 @@ const pruef = (was, ok, dazu = '') => {
 };
 
 const browser = await starten(PWM, MOTOR);
-const kontext = await browser.newContext({ ignoreHTTPSErrors: true, acceptDownloads: true, viewport: { width: 1280, height: 900 } });
-/* DER WARTUNGSLAUF BLEIBT AUS (S11-07, F-S11-77): Er packt und dünnt im
+const kontext = await browser.newContext({ ignoreHTTPSErrors: istOertlich(BASIS), acceptDownloads: true, viewport: { width: 1280, height: 900 } });
+/* DER WARTUNGSLAUF BLEIBT AUS: Er packt und dünnt im
    Browser aus, sobald eine Seite ihn anstößt (Startseite, Reiter Backup),
    und das Ausdünnen ändert die Punkte — mitten in einem Vergleich wäre das
    eine Abweichung, die keine ist. Die Antwort sagt „nichts fällig" — ein
@@ -70,14 +70,14 @@ try {
    * wartet auf die AKTUELLE Seite, und die ist laengst geladen. Es braucht
    * `waitForNavigation` mit Frist, wie im Bilderlauf.
    *
-   * (Hier standen bis S10/AP5 zwei Luecken statt der beiden Namen und die
-   * Zahl 320 000, die es seit Backlog Nr. 155 nicht mehr gibt. Ein Kommentar,
+   * (Hier standen einmal zwei Luecken statt der beiden Namen und eine
+   * Zahl, die es nicht mehr gibt. Ein Kommentar,
    * der die Falle beschreiben soll, nennt die Funktion, die hineinfuehrt.) */
   await Promise.all([
     seite.waitForNavigation({ waitUntil: 'domcontentloaded', timeout: 60000 }),
     seite.click('#loginform button[type="submit"]'),
   ]);
-  /* DER ZWEITFAKTOR (P5c/AP5, E-P5c-43). Das Pruefkonto ist eine BetreiberIn
+  /* DER ZWEITFAKTOR. Das Pruefkonto ist eine BetreiberIn
    * mit Zweitfaktor: Nach dem Passwort steht die Seite wieder unter
    * `login.php` und fragt nach dem Code. `codeSchritt()` geht ihn und meldet
    * das Einrichtungstor (`zweitfaktor.php`) als Scheitern — dessen Adresse

@@ -6,23 +6,23 @@ require_once __DIR__ . '/diensttag_lib.php';
 require_once __DIR__ . '/ui.php';   // auth_guard.php laedt sie bereits
 
 /**
- * Einmalige Nachbearbeitung nach dem Umbau auf Diensttage (E24, A12).
+ * Einmalige Nachbearbeitung nach dem Umbau auf Diensttage.
  *
  * Zwei Listen, und beide gibt es nur, weil Raten hier schlimmer waere als
  * Fragen (die ausfuehrliche Begruendung steht im Kopf von
  * nachbearbeitung_lib.php):
  *
  *   1. Diensttage ohne Standort oder ohne Rettungsmittel. Sie funktionieren —
- *      Zeiten, Phasen, Track und Reanimation sind vollstaendig (A7a) —, haben
- *      aber keine Art, keine Rollen und keine artabhaengigen Felder (E26).
+ *      Zeiten, Phasen, Track und Reanimation sind vollstaendig —, haben
+ *      aber keine Art, keine Rollen und keine artabhaengigen Felder.
  *   2. Stammdatensaetze ohne Standortzuordnung. Der Standortbezug ist
- *      verbindlich (E15); wo die Migration ihn nicht ableiten konnte, blieb die
+ *      verbindlich; wo die Migration ihn nicht ableiten konnte, blieb die
  *      Spalte leer und NULLBAR.
  *
  * DIE SEITE VERSCHWINDET, SOBALD BEIDE LISTEN LEER SIND. Erst dann wird
  * `base_id` in den fuenf Stammdatentabellen auf NOT NULL gesetzt — die zweite
- * Stufe aus A12. Danach gleichen sich aktualisierte Installation und
- * Neuinstallation vollstaendig (Problem P6).
+ * Stufe. Danach gleichen sich aktualisierte Installation und
+ * Neuinstallation vollstaendig.
  */
 
 $notice = null; $error = null;
@@ -42,9 +42,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 /* Dieselbe Funktion, die auch das Formular und der Import
                  * benutzen: Sie schreibt die Kennungen UND friert Art,
                  * Bezeichnungen, Standortkoordinaten, Rollensatz und
-                 * Faehigkeiten ein (E8). Eine eigene Fassung hier waere die
+                 * Faehigkeiten ein. Eine eigene Fassung hier waere die
                  * Stelle, an der die Nachbearbeitung etwas anderes tut als das
-                 * Formular — und genau das darf sie nicht (A7b). */
+                 * Formular — und genau das darf sie nicht. */
                 db_transaktion(db(), function (PDO $pdo) use ($userId, $dayId): void {
                     dt_zuordnen($pdo, $userId, $dayId,
                                 isset($_POST['vehicle_id']) ? (int)$_POST['vehicle_id'] : null,
@@ -67,8 +67,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $error = 'Unbekannte Stammdatenart. Es wurde nichts geändert.';
         } else {
             /* Der Zielstandort muss der NutzerIn gehoeren — sonst entstuende
-             * eine Zuordnung, die in keiner Auswahlliste je erscheint. Den
-             * Zweig fuer zentrale Eintraege gab es bis Web 20.47.0 (R39). */
+             * eine Zuordnung, die in keiner Auswahlliste je erscheint.
+             * Zentrale Eintraege gibt es nicht. */
             if (dt_base_erlaubt(db(), $userId, $baseId) === null) {
                 $error = 'Bitte einen passenden Standort wählen. Es wurde nichts geändert.';
             } else {
@@ -256,9 +256,7 @@ ui_seite_start(['titel' => 'Zuordnung nachtragen']);
     <?php ui_karte_ende(); ?>
 
     <?php /* ---------------------------------------------------------- 2 --
-             STAMMDATEN. Bis Web 20.47.0 zwei Karten, eigene und (fuer Admins)
-             zentrale Eintraege; die zentralen gibt es seit P5c/AP8 nicht mehr
-             (R39). */ ?>
+             STAMMDATEN. Nur eigene Eintraege; zentrale gibt es nicht. */ ?>
       <?php ui_karte_start(['titel' => 'Eigene Einträge ohne Standort', 'zahl' => $sdOffen]); ?>
 
         <?php if (!$sdOffen): ?>
@@ -338,7 +336,7 @@ ui_seite_start(['titel' => 'Zuordnung nachtragen']);
            Standort steht trotzdem weiter oben in der Liste — dort ist der
            fehlende Standort eine Lücke, keine Absicht.</p>
         <?php if (ist_admin()): ?>
-          <?php /* Der Dialogtitel steht ausdruecklich dabei (O11): „Bestaetigen"
+          <?php /* Der Dialogtitel steht ausdruecklich dabei: „Bestaetigen"
                    waere hier zu wenig — es geht um eine Schemaaenderung, und
                    der Titel ist das erste, was ein Screenreader vorliest. */ ?>
           <form method="post" action="nachbearbeitung.php"

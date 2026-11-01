@@ -19,11 +19,10 @@
  * dass die alte Fassung dafuer nicht taugt.
  *
  * WARUM EINE EIGENE DATEI UND NICHT missiontable.js
- * Die kanonische Fassung stand seit Web 4.0.0 in der gemeinsamen
- * Tabellenkomponente. Die wird aber nur von suche.php und zeitraum.php
+ * Die gemeinsame Tabellenkomponente wird nur von suche.php und zeitraum.php
  * geladen — einsatz.php, index.php und import.php brauchen die Maskierung
- * ebenfalls und haetten dafuer die vollstaendige Tabellenkomponente laden
- * muessen. Deshalb steht der Baustein jetzt fuer sich; EdMissionTable.escape
+ * ebenfalls und muessten dafuer die vollstaendige Tabellenkomponente laden.
+ * Deshalb steht der Baustein fuer sich; EdMissionTable.escape
  * bleibt als Weiterleitung bestehen, damit vorhandene Aufrufe gueltig bleiben.
  *
  * NICHT hierher gehoert xmlEscape() aus export.js: XML kennt &apos;, HTML5
@@ -52,7 +51,7 @@ const EdHtml = (() => {
 
   /* -------------------------------------------------------------------
    * EdHtml.meldung(ton, text, o) -- das eine Meldungs-Markup im Browser
-   *   (Schritt 15 AP8e, Zaehlzeile Z37)
+   *   (Zaehlzeile Z37)
    *
    * DAS GEGENSTUECK IST ui_meldung_markup() in server/ui.php. Wer hier
    * etwas aendert, aendert es dort mit -- sonst sehen die serverseitig
@@ -126,5 +125,50 @@ const EdHtml = (() => {
       + '</div>';
   }
 
-  return { escape, meldung };
+  /**
+   * Der Ladeplatz einer Stelle (`ui_ladeplatz()`): `zeige(text, still)`
+   * merkt sich den Zustand und zeigt ihn erst nach 300 ms, `weg()` nimmt
+   * ihn — und einen noch nicht abgelaufenen Zeitgeber — wieder fort.
+   * Hier und nicht in `ortsdaten.js`, weil auch Seiten ohne Ortsdaten ihn
+   * brauchen (Suche und Zeitraum).
+   */
+  function ladeplatz(el) {
+    let uhr = null;
+    const setze = (text, still) => {
+      if (!el) { return; }
+      const t = el.querySelector('.ladeplatz-text');
+      if (t) { t.textContent = text; }
+      el.classList.toggle('ladeplatz-still', !!still);
+    };
+    return {
+      zeige(text, still) {
+        setze(text, still);
+        if (el && el.hidden && uhr === null) {
+          uhr = setTimeout(() => { uhr = null; el.hidden = false; }, 300);
+        }
+      },
+      weg() {
+        if (uhr !== null) { clearTimeout(uhr); uhr = null; }
+        if (el) { el.hidden = true; }
+      },
+    };
+  }
+
+  /**
+   * Ein Bild abwarten: Der Browser darf zeichnen, bevor es weitergeht.
+   * `setTimeout(…, 100)` DANEBEN, weil ein Tab im Hintergrund kein Bild
+   * zeichnet und `requestAnimationFrame` dort nie feuert — die Seite stuende
+   * sonst still, bis jemand hinsieht. Gebraucht von Zeitraum und Suche
+   * zwischen Tabelle, Entschluesseln und Karte.
+   */
+  function naechstesBild() {
+    return new Promise(weiter => {
+      let fertig = false;
+      const los = () => { if (!fertig) { fertig = true; setTimeout(weiter, 0); } };
+      requestAnimationFrame(los);
+      setTimeout(los, 100);
+    });
+  }
+
+  return { escape, meldung, ladeplatz, naechstesBild };
 })();

@@ -8,7 +8,11 @@ Verwendungsort und die Quelle und ein `<g id="i">` als Anker für den Verweis.
 
 Ablage im Repo: `server/assets/images/symbole/` samt Lizenzdatei.
 Einbindung: `ui_symbol('haus')` in PHP, derselbe Aufruf in JS; kein Zeichen
-als Inline-Pfad im Code (Vollständigkeitsprüfung).
+als Inline-Pfad im Code (Vollständigkeitsprüfung). Jede Seite trägt die
+Zeichen dieses Ordners einmal als Vorrat (`ui_symbolvorrat()` in `ui.php`,
+gelesen bei jeder Anfrage aus den Dateien hier); die Verweise zeigen dorthin.
+Eine neue Datei braucht deshalb das `<g id="i">` — ohne es fehlt sie im
+Vorrat, und ihr Verweis nimmt die Datei selbst.
 
 Neue Zeichen: zuerst bei Tabler suchen (tabler.io/icons, gleiche Datei
 unverändert übernehmen und umbenennen); nur wenn nichts passt, eigener

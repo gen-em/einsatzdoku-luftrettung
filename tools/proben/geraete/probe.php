@@ -11,15 +11,15 @@ declare(strict_types=1);
  *
  * ## Wozu
  *
- * Der Block `geraet` einer Kopplung (JSON-Vertrag 1a, R42) ist der einzige
- * Teil von S6 mit echter Logik, und er hat drei Eigenschaften, die zusammen
+ * Der Block `geraet` einer Kopplung (JSON-Vertrag 1a) ist der einzige
+ * Teil der Kopplung mit echter Logik, und er hat drei Eigenschaften, die zusammen
  * unangenehm sind:
  *
  * 1. **Er ist freiwillig.** Fehlt er, ist er halb oder ist er Unsinn, muss die
  *    Kopplung trotzdem gelingen. Am anderen Ende steht jemand, der koppeln
  *    will — ein 500er wegen einer Statistikangabe wäre absurd.
  * 2. **Er kommt in zwei Formen.** Die Garmin-Uhr sendet eine Teilenummer, das
- *    Handy Hersteller und Modell (E-S4-28). Beide fallen auf dieselben drei
+ *    Handy Hersteller und Modell. Beide fallen auf dieselben drei
  *    Spalten.
  * 3. **Er ist eine Selbstauskunft.** Was ankommt, ist nicht geprüft — es kommt
  *    von einem Gerät, das sich beim Server erst noch vorstellt.
@@ -33,7 +33,7 @@ declare(strict_types=1);
  *
  * - Ob `pair.php` das Ergebnis wirklich in die Spalten schreibt. Das braucht
  *   eine Datenbank; der Weg dafür steht in `docs/konzepte/` beim jeweiligen
- *   Prüfdokument bzw. im Runbook (`docs/Technik.md`, Abschnitt 7).
+ *   Prüfdokument bzw. im Runbook (`docs/Technik.md`, Abschnitt 13).
  * - Ob die Modelltabelle richtig ist. Sie ist erzeugt
  *   (`tools/erzeugen/ (geraetemodelle)`); diese Probe setzt eine EIGENE, kleine Tabelle,
  *   damit sie nicht vom ausgelieferten Bestand abhängt.
@@ -107,7 +107,7 @@ pruefe('Uhr-Fassung vor 1.9.0: kein Block',
     null,
     ['art' => null, 'modell' => null, 'teil' => null]);
 
-/* ---- 2. Die Handy-Form (E-S4-28) ---------------------------------------- */
+/* ---- 2. Die Handy-Form -------------------------------------------------- */
 
 pruefe('Handy nach E-S4-28',
     ['art' => 'handy', 'teil' => null, 'hersteller' => 'Google', 'modell' => 'Pixel 8',
@@ -229,7 +229,7 @@ foreach ($namen as [$art, $erwartet]) {
 $kennungen = [
     // Die heutige Form: "dev-" + 32 Hexziffern = 36 Zeichen.
     ['dev-3edc01ce807de66ee8da916a0a15905d', 'dev-3edc…5d'],
-    // Altbestand vor Web 4.5.1: 4 Zufallsbytes = 12 Zeichen, bleibt ganz.
+    // Altbestand: 4 Zufallsbytes = 12 Zeichen, bleibt ganz.
     ['dev-ca7774d5',                          'dev-ca7774d5'],
     // Genau an der Grenze — 12 Zeichen bleiben, 13 werden gekürzt.
     ['dev-12345678',                          'dev-12345678'],
@@ -248,7 +248,7 @@ foreach ($kennungen as [$roh, $erwartet]) {
 }
 
 /* ======================================================================
- * Teil 2 — Der Nachloese-Job gegen die Datenbank (P5a/AP11, E-P5a-21)
+ * Teil 2 — Der Nachloese-Job gegen die Datenbank
  *
  * WOFUER. Teil 1 misst `geraet_block_lesen()`, also den Weg HEREIN. Der
  * Nachloese-Job geht den Weg spaeter noch einmal — fuer Zeilen, die beim
@@ -261,7 +261,7 @@ foreach ($kennungen as [$roh, $erwartet]) {
  * neue Modelltabelle wirklich nur bei den Zeilen an, die sie neu kennt?"
  * Dafuer braucht es zwei Tabellen — die kleine von oben und dieselbe um
  * einen Eintrag erweitert. `geraet_modell_aufloesen()` und
- * `gm_nachaufloesen()` nehmen sie deshalb als Parameter (P5a/AP11).
+ * `gm_nachaufloesen()` nehmen sie deshalb als Parameter.
  *
  * SIE AENDERT ZEILEN. Deshalb ein eigenes Konto mit eigenen Geraeten, und
  * `app_state` wird gemerkt und zurueckgeschrieben — sonst stuende auf der
@@ -427,7 +427,7 @@ if ($pdo === null) {
     $dbTeil = "gelaufen (Konto und app_state wiederhergestellt)";
 }
 
-/* ---- 7. Der Katalog der Herkuenfte (P5c/AP7, F-P5c-39) ------------------
+/* ---- 7. Der Katalog der Herkuenfte --------------------------------------
  *
  * `HERKUNFT_TEXTE` beschriftet dieselben Werte wie `HERKUNFT_WERTE` —
  * die Plakette am Einsatz liest die kurze Form, die Statistik die lange. Ein

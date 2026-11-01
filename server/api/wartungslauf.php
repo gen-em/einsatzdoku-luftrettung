@@ -6,9 +6,8 @@ require_once __DIR__ . '/../validate_lib.php';
 require_once __DIR__ . '/../spur_lib.php';
 
 /**
- * api/wartungslauf.php — der Wartungslauf im Browser (S11-07; Konzept S11
- * 3.5, E-S11-05, -25, -68 bis -74). Er löst die Jobs `verdichtung` und
- * `ausduennen` ab: Der Server sieht seit S11 keine Koordinate mehr und kann
+ * api/wartungslauf.php — der Wartungslauf im Browser. Der Server sieht
+ * keine Koordinate und kann weder packen noch ausdünnen.
  * weder packen noch ausdünnen. Er weiß aber, WAS fällig ist, und er tauscht
  * nur, was sich seit dem Lesen nicht geändert hat. Drei Anliegen, alle POST
  * mit JSON und CSRF:
@@ -22,21 +21,21 @@ require_once __DIR__ . '/../spur_lib.php';
  *
  *   {aktion:'zahl', auslassen?}
  *        Wie viele Spuren fällig sind und aus wie vielen Diensttagen — für
- *        die Karte „GPS-Daten verdichten" (Reiter Backup, M-S11-02).
+ *        die Karte „GPS-Daten verdichten" (Reiter Backup).
  *     -> 200 {ok:true, aufzeichnungen, diensttage}
  *
  *   {aktion:'tauschen', art, id, stand:[[seq_from, punkte], …],
  *    stueck:{seq_from, punkte, n_original, ts_von, ts_bis, stufe, huelle},
  *    pat?:{pruef, neu}}
  *        Das eine neue Stück (Stufe 2 oder 3) statt der gelesenen. `pat` nur,
- *        wenn der Browser eine fehlende Ortshöhe nachgetragen hat (E-S11-72).
+ *        wenn der Browser eine fehlende Ortshöhe nachgetragen hat.
  *     -> 200 {ok:true, weg, neu, pat?} · 400 eingabe · 409 stand | stufe |
  *        marke | form | frist | offen · 404 fehlt
  *
  * DER INHALT IST SACHE DES BROWSERS. Er öffnet, packt, dünnt aus, öffnet das
  * Ergebnis noch einmal und vergleicht (Rundlauf), bevor er schickt. Der
  * Server prüft die Form (`pruef_spurstueck_gepackt()`), Besitz, Abschluss,
- * Bestand, Marke und Frist (`spur2_wartung_tauschen()`, E-S11-73).
+ * Bestand, Marke und Frist (`spur2_wartung_tauschen()`).
  *
  * EIN 409 IST KEIN FEHLER, sondern der Normalfall eines Wettlaufs: Ein Gerät
  * hat inzwischen ein Stück gesendet, oder ein anderes Fenster war schneller.

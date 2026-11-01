@@ -3,7 +3,7 @@ package org.genem.nadoku.handy.kopplung
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
-/** Die drei Zustände der Sync-Anzeige (Backlog Nr. 11). */
+/** Die drei Zustände der Sync-Anzeige. */
 class SyncstandTest {
 
     @Test fun ohneServerAdresseNichtEingerichtet() {

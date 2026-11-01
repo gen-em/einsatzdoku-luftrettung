@@ -14,8 +14,8 @@
  * IMMER NUR EINES OFFEN. Zwei offene Menues uebereinander sind kein Zustand,
  * den jemand herbeifuehren will.
  *
- * SEIT WEB 19.6.0 FAEHRT ES AUF (Backlog Nr. 124, Weg b). Die Bewegung selbst
- * steht im Stylesheet — `.blatt{transform:translateY(100%)}` und
+ * ES FAEHRT AUF. Die Bewegung selbst steht im Stylesheet —
+ * `.blatt{transform:translateY(100%)}` und
  * `.blatt.blatt-auf{transform:none}`. Dieses Skript tut dafuer genau zwei
  * Dinge, und beide sind noetig:
  *

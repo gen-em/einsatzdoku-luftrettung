@@ -6,7 +6,7 @@ import android.location.LocationManager
 import android.os.Bundle
 
 /**
- * Der Zuhörer der Ortung — **ausgeschrieben, nicht als Lambda** (E-S5Z-05).
+ * Der Zuhörer der Ortung — **ausgeschrieben, nicht als Lambda**.
  *
  * WARUM DAS EINE EIGENE KLASSE IST UND KEIN `LocationListener { … }`. Ein
  * SAM-Lambda setzt genau **eine** Methode der Schnittstelle um. Auf Android 8
@@ -14,9 +14,9 @@ import android.os.Bundle
  * abstrakte Methoden; die anderen drei bekamen ihre Vorgabe erst mit API 30.
  * Ruft das System dort `onProviderDisabled`, endet das in einem
  * `AbstractMethodError`: Der Vordergrunddienst stirbt in genau dem
- * Augenblick, in dem jemand den Standort ausschaltet (B-S5Z-01). Abgeleitet
- * aus der Plattform-API, nicht beobachtet — es gibt in diesem Container kein
- * solches Gerät (Prüfliste 9.2 Punkt 16).
+ * Augenblick, in dem jemand den Standort ausschaltet. Abgeleitet aus der
+ * Plattform-API, nicht beobachtet — es gibt in diesem Container kein solches
+ * Gerät.
  *
  * `OrtungszuhoererTest` zählt per Reflexion nach, dass alle vier Methoden
  * hier **selbst deklariert** sind. Das ist der billigste Schutz gegen ein
@@ -25,7 +25,7 @@ import android.os.Bundle
  * ES WIRD NUR AUF DEN GPS-ANBIETER GEHÖRT. `requestLocationUpdates` ist auf
  * ihn angemeldet; ein Rückruf zu einem anderen Anbieter sagt über die
  * Aufzeichnung nichts aus, und das Netzwerk-Ortungssignal wäre ohnehin zu
- * grob (E-S5Z-02).
+ * grob.
  */
 class Ortungszuhoerer(
     private val aufFund: (Location) -> Unit,

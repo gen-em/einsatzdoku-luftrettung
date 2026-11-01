@@ -18,11 +18,11 @@ dem Werkzeug. Warum das ueberhaupt zwei Dinge sind, steht bei `stand_setzen()`.
 Rueckgabewert 0 = kein Unterschied, 1 = mindestens einer (oder etwas war nicht
 erreichbar), 2 = die Wache selbst ist kaputt.
 
-WOGEGEN SIE GEBAUT IST (SP-6, F-SP-9, Backlog Nr. 140)
+WOGEGEN SIE GEBAUT IST
 Der eine Angriff, gegen den keine Verschluesselung im Browser hilft, ist ein
 Server, der VERAENDERTEN CODE ausliefert: eine Zeile in `crypto.js`, und das
 naechste Passwort geht mit. VERHINDERN laesst sich das nur durch Zugangsschutz
-(Branch-Schutz, 2FA, R67). ERKENNEN laesst es sich hier -- und darum geht es.
+(Branch-Schutz, 2FA). ERKENNEN laesst es sich hier -- und darum geht es.
 
 WAS SIE ERKENNT: eine per FTP oder Hoster-Panel veraenderte Auslieferung. Das
 ist der wahrscheinlichste Weg, denn die FTPS-Zugangsdaten liegen als
@@ -30,7 +30,7 @@ GitHub-Secret und der Webspace hat ein Panel.
 
 WAS SIE NICHT ERKENNT: einen Angreifer mit Push-Recht -- der aendert beides,
 Repositorium und Auslieferung, und die Wache saehe zwei gleiche Summen.
-Dagegen steht SP-4. Ebenso wenig sieht sie PHP-Code, der nicht ausgeliefert
+Dagegen steht der Zugangsschutz. Ebenso wenig sieht sie PHP-Code, der nicht ausgeliefert
 wird; von ihm faengt sie genau den Teil, der Passwoerter beruehrt (den
 Inline-Block der Anmeldeseite, siehe unten).
 
@@ -103,10 +103,13 @@ import urllib.parse
 import urllib.request
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent / 'kette'))
+import laeufer  # noqa: E402 -- die Adresse des Laeufers fuers Protokoll
+
 WURZEL = Path(__file__).resolve().parents[2]
 
-# DER VERGLEICHSSTAND IST NICHT MEHR ZWANGSLAEUFIG DAS AUSGECHECKTE
-# REPOSITORIUM (AP2/E-KH-13, 20.09.2026).
+# DER VERGLEICHSSTAND IST NICHT ZWANGSLAEUFIG DAS AUSGECHECKTE
+# REPOSITORIUM.
 #
 # Bis dahin verglich die Wache die Auslieferung gegen `server/` NEBEN sich --
 # also gegen den Zweig, auf dem sie gerade lief, und das war `main`. Auf
@@ -114,7 +117,7 @@ WURZEL = Path(__file__).resolve().parents[2]
 # Sobald `main` einen Schritt weiter ist -- und das ist der Normalfall --,
 # meldete sie eine Abweichung, die keine war: Am 18.09.2026 waren es
 # 128 Dateien, 120 gleich, 2 abweichend, 6 x 404, allesamt die Dateien aus
-# P5a und P5b, die schlicht noch nicht ausgeliefert waren (Befund B6).
+# zwei Paketen, die schlicht noch nicht ausgeliefert waren.
 #
 # Sie wurde deshalb seit dem 17.09. TAEGLICH ROT. Eine Wache, die regelmaessig
 # grundlos rot wird, ist nach dem dritten Mal abgeschaltet -- und dann ist der
@@ -136,11 +139,11 @@ class VergleichsstandFehlt(Exception):
 def stand_setzen(pfad: str) -> None:
     """Legt fest, wogegen verglichen wird. Wirft, wenn dort nichts liegt.
 
-    FEHLENDER ZEIGER IST ROT MIT ANSAGE, NIE STILL GRUEN (E-KH-13). Gaebe es
+    FEHLENDER ZEIGER IST ROT MIT ANSAGE, NIE STILL GRUEN. Gaebe es
     hier einen Rueckfall auf das Verzeichnis neben dem Werkzeug, verglaeche
     die Wache nach einem misslungenen Auschecken wieder gegen `main` -- und
     zwar ohne dass es jemand merkte. Genau dieser stille Rueckfall ist der
-    Fehler, den AP2 behebt; er darf nicht durch die Hintertuer zurueckkommen.
+    Fehler, den der Zeiger behebt; er darf nicht durch die Hintertuer zurueckkommen.
     """
     global SERVER
     wurzel = Path(pfad).expanduser().resolve()
@@ -182,8 +185,8 @@ def stand_kennung(pfad: Path) -> str:
     tag = git('describe', '--tags', '--exact-match', commit) or 'kein Tag'
     return f'{commit[:7]} ({tag})'
 
-# DIE VORGABE IST MIT AP6 GEFALLEN (Kette II, E-KH-07). Hier stand bis zum
-# 21.09.2026 ein `… or` mit der Adresse des Produktivservers, und das war die bequeme
+# ES GIBT KEINE VORGABE. Frueher stand hier
+# ein `… or` mit der Adresse des Produktivservers, und das war die bequeme
 # Variante der gefaehrlichen Bauform: Wer `WACHE_BASIS` vergass oder
 # vertippte, bekam keine Fehlermeldung, sondern eine Wache, die IRGENDEINE
 # Anlage bewachte -- die fest eingebaute. Auf einer Selbsthoster-Installation
@@ -202,8 +205,7 @@ NICHT_PRUEFEN = {'.md'}
 # erreichbare -- die Wache hat keine Zugangsdaten und soll keine bekommen.
 SEITEN = ['login.php']
 
-# FORMULARE, DIE NUR MIT EINER SITZUNG IN DER SEITE STEHEN (seit Web 20.42.0,
-# P5c/AP5). Der Code-Schritt des Zweitfaktors steht in `login.php`, aber nur
+# FORMULARE, DIE NUR MIT EINER SITZUNG IN DER SEITE STEHEN. Der Code-Schritt des Zweitfaktors steht in `login.php`, aber nur
 # nach einem richtigen Passwort -- mit dem halben Stand `totp_halb` in der
 # Sitzung. Die Wache fragt ohne Sitzung und sieht ihn deshalb nie.
 #
@@ -215,16 +217,16 @@ SEITEN = ['login.php']
 # vollstaendig vergleicht. Die Selbstprobe haelt jeden Eintrag gegen die
 # Quelle: Eine Ausnahme ohne Gegenstand ist rot.
 #
-# SEIT WEB 20.45.0 (Konzept RW, RW-03) steht der Schluesselschritt daneben:
+# SEIT WEB 20.45.0 steht der Schluesselschritt daneben:
 # `?weg=schluessel` im selben halben Stand. Er nimmt den
 # Wiederherstellungsschluessel NICHT entgegen -- sein Feld hat keinen Namen,
 # gesendet wird eine Signatur --, und seine Skripte stehen immer in der
 # Seite, damit die Wache sie vergleicht.
 #
-# SEIT WEB 21.10.0 (SR-09) steht das Passkey-Formular im selben Schritt, und
+# Das Passkey-Formular steht im selben Schritt, und
 # nur, wenn das Konto einen Passkey hat. Es sendet eine Signatur, kein
-# Passwort. Nachgetragen erst mit Nr. 236 (11.10.2026): Bis dahin war die
-# Wache seit der Auslieferung von Web 21.14.0 jeden Tag rot, mit genau
+# Passwort. Ohne diesen Eintrag war die
+# Wache jeden Tag rot, mit genau
 # diesem Formular als einziger Abweichung — ein Fehlalarm, der jeden echten
 # verdeckt haette.
 BEDINGTE_FORMULARE = {'login.php': ['<form method="post" id="codeform">',
@@ -237,7 +239,7 @@ BEDINGTE_FORMULARE = {'login.php': ['<form method="post" id="codeform">',
 # Inline-Block; sein Inhalt wurde nie verglichen (Fund 22). `(?<![\w-])`
 # verlangt, dass vor `src` weder Buchstabe, Ziffer noch Bindestrich steht.
 # EIN `?>` IM TAG BEENDET DAS TAG NICHT -- fuer HTML schon, fuer uns nicht.
-# Seit Web 20.7.0 traegt jedes Inline-Skript seinen CSP-Nonce, und in der
+# Jedes Inline-Skript traegt seinen CSP-Nonce, und in der
 # QUELLE steht das so:
 #
 #     <script<?= kopf_nonce_attr() ?>>
@@ -271,12 +273,12 @@ SKRIPT_RE = re.compile(r'<script\b(?!' + TAG_REST + r'(?<![\w-])src\s*=)'
 # Fremdskript erkannt und uebersprungen -- der Verweis waere damit weder als
 # Block noch als Fremdskript gezaehlt worden: unsichtbar. Das ist derselbe
 # Fehler wie Fund 23 und Fund 27, nur noch nicht passiert. Deshalb hier
-# vorher (Backlog Nr. 218). Die lazy Form, damit der ERSTE src gilt.
+# vorher. Die lazy Form, damit der ERSTE src gilt.
 TAG_REST_KURZ = r'(?:<\?(?:php\b|=).*?\?>|[^>])*?'
 SRC_RE    = re.compile(r'<script\b' + TAG_REST_KURZ + r'(?<![\w-])src\s*=\s*(?:"([^"]*)"|\'([^\']*)\'|([^\s>]+))', re.I | re.S)
 # FORM_RE HAT DIESELBE SCHWAECHE GEHABT WIE SKRIPT_RE — und sie wurde beim
-# Beheben von Fund 23 uebersehen (Fund 27, 16.09.2026). `<form\b[^>]*>` endet
-# am ersten `>`, und seit Web 20.10.0 (P5a/AP6) traegt das Anmeldeformular
+# Beheben des ersten Fehlers uebersehen. `<form\b[^>]*>` endet
+# am ersten `>`, und das Anmeldeformular traegt
 # `data-sperre-rest="<?= (int)$sperreRest ?>"`. Der Tag brach also mitten im
 # PHP-Ausdruck ab.
 #
@@ -327,7 +329,7 @@ UMLENK_RE = re.compile(r'(?<![\w-])form(?:action|method|target|enctype)\s*=\s*'
 #
 # Warum trotzdem umgestellt: Weil die naechste Person nicht nachmessen soll,
 # welches der acht Tag-Muster dieser Datei die kurze Form vertraegt und
-# welches nicht. Drei Anlaeufe (Fund 23, Fund 27, Nr. 218) sind genug; ab
+# welches nicht. Drei Anlaeufe (Fund 23, Fund 27) sind genug; ab
 # hier liest jedes Tag-Muster den Rumpf gleich (CLAUDE.md 6).
 META_RE    = re.compile(r'<meta\b' + TAG_REST + r'(?<![\w-])http-equiv\s*=' + TAG_REST + r'>', re.I | re.S)
 EINBETT_RE = re.compile(r'<(?:iframe|frame|object|embed)\b' + TAG_REST + r'>', re.I | re.S)
@@ -363,9 +365,9 @@ PHP_RE    = re.compile(r'<\?(?:php\b|=)')
 HOLFEHLER = (OSError, ValueError, http.client.HTTPException)
 
 
-# ---- TEIL 3: DIE PUNKTPFADE (R17-19, F-R17-18, Abweichung E) ---------------
+# ---- TEIL 3: DIE PUNKTPFADE ------------------------------------------------
 #
-# Bis Web 23.0.3 mass die Sperre der Punktpfade nur Stufe 2 -- gegen STAGING,
+# Stufe 2 allein mass die Sperre der Punktpfade nur gegen STAGING,
 # und Staging liegt seit dem 20.09.2026 bei einem anderen Hoster
 # (`CLAUDE.md` 3: Staging belegt kein Plattformverhalten von Produktiv mehr).
 # Ob der Produktivserver `.htaccess` ueberhaupt liest, war nie gemessen. Jetzt
@@ -383,10 +385,10 @@ PUNKTPFADE = ['.ftp-deploy-sync-state.json', '.deploy-state-staging.json',
 # lautlos bis zum Ablauf. Erwartet ist „nicht 403" (404 auf eine leere
 # Adresse).
 WELL_KNOWN = '.well-known/acme-challenge/kettenpruefung'
-# KOPIEN DER `config.php` (F-R17-55). Sie liegen nicht da -- die Proben legen
-# ihre Sicherung seit Web 23.1.0 ausserhalb von `server/` ab. Erwartet ist
-# deshalb nur „nicht ausgeliefert": 403 (die `FilesMatch`-Regel seit 23.1.0)
-# oder 404 (eine Anlage vor 23.1.0). Ein 200 waere die Konfiguration als Text.
+# KOPIEN DER `config.php`. Sie liegen nicht da -- die Proben legen
+# ihre Sicherung ausserhalb von `server/` ab. Erwartet ist
+# deshalb nur „nicht ausgeliefert": 403 (die `FilesMatch`-Regel) oder 404
+# (eine aeltere Anlage ohne diese Regel). Ein 200 waere die Konfiguration als Text.
 KONFIG_KOPIEN = ['config.php.vor-probe', 'config.php.mailprobe', 'config.php.bak']
 
 
@@ -511,11 +513,11 @@ def huelle_srcs(quelle: str) -> list[str]:
     """Die Skripte, die die SEITENHUELLE einer Seite gibt (`ui_seite_start()`
     in `ui.php`), wenn die Seite sie aufruft.
 
-    SEIT WEB 20.34.0 (Schritt 15, AP8) stehen `assets/api.js` und
+    SEIT WEB 20.34.0 stehen `assets/api.js` und
     `assets/format.js` im Kopf JEDER Seite -- ausgegeben von `ui.php`, nicht
     von `login.php`. Die Wache kannte nur die Quelle der Seite und meldete
-    beide seither taeglich als ZUSAETZLICH (Lauf 124 gegen Produktiv,
-    24.09.2026, F-P5c-110): ein Fehlalarm, und eine Wache, die jeden Tag rot
+    beide seither taeglich als ZUSAETZLICH (gegen Produktiv,
+    24.09.2026): ein Fehlalarm, und eine Wache, die jeden Tag rot
     ist, schaut bald niemand mehr an. Gelesen wird die Huelle aus DEMSELBEN
     Vergleichsstand wie die Seite (`SERVER`), nicht als feste Liste -- sonst
     liefe die Liste der naechsten Aenderung an `ui.php` hinterher.
@@ -724,16 +726,39 @@ def assets() -> list[Path]:
     return raus
 
 
+def unerreichbar_melden(unerreichbar: list[str], erreicht: int) -> list[str]:
+    """Die Zeilen zu „nicht erreichbar".
+
+    Kam KEIN Abruf durch, ist das eine Aussage ueber die Anlage, nicht ueber
+    hundert Dateien: eine Zeile „Anlage nicht erreichbar" mit Zahl und
+    Fehlerarten. Rot bleibt es trotzdem -- eine Wache, die nicht messen
+    konnte, hat nichts bestaetigt. Kam auch nur einer durch, steht jede
+    Zeile einzeln da: Dann fehlt etwas Bestimmtes."""
+    if not unerreichbar:
+        return []
+    if erreicht == 0:
+        arten: dict[str, int] = {}
+        for z in unerreichbar:
+            art = z.split(': ', 1)[1] if ': ' in z else z
+            arten[art] = arten.get(art, 0) + 1
+        haeufig = sorted(arten.items(), key=lambda kv: -kv[1])[:3]
+        return [f'ANLAGE NICHT ERREICHBAR: keiner von {len(unerreichbar)} Abrufen kam durch '
+                f'({"; ".join(f"{n}x {a}" for a, n in haeufig)}). '
+                'Die Wache hat nichts verglichen.']
+    return ['NICHT ERREICHBAR:'] + [f'  {z}' for z in unerreichbar]
+
+
 def lauf(basis: str, unsicher: bool, teil: str = 'alle') -> int:
     basis = basis.rstrip('/')
     print(f'Integritaetswache gegen {basis}')
+    print(laeufer.zeile())
     if teil == 'punktpfade':
         # NUR TEIL 3 -- so ruft Stufe 2 die Wache gegen Staging. Ein Vergleich
         # der Dateien ergaebe dort nichts: Staging traegt den Arbeitsstand,
         # nicht den Zeiger `produktion`.
-        _, ab, weg = punktpfade_messen(basis, unsicher)
-        for z in weg:
-            print(f'    NICHT ERREICHBAR: {z}')
+        codes, ab, weg = punktpfade_messen(basis, unsicher)
+        for z in unerreichbar_melden(weg, sum(1 for c in codes.values() if c)):
+            print(f'    {z}')
         for z in ab:
             print(f'    ABWEICHUNG: {z}')
         if not ab and not weg:
@@ -742,7 +767,7 @@ def lauf(basis: str, unsicher: bool, teil: str = 'alle') -> int:
     # WAS GEMESSEN WIRD, STEHT UEBER DEM ERGEBNIS (`CLAUDE.md` 6: eine gruene
     # Zahl ist erst dann ein Beleg, wenn sie das Gemessene benennt). Ohne
     # diese Zeile sagt ein "Kein Unterschied" nicht, WOGEGEN kein Unterschied
-    # besteht -- und genau das war bei B6 die Frage.
+    # besteht -- und genau das war einmal die Frage.
     print(f'Vergleichsstand:  {SERVER.parent} — {stand_kennung(SERVER.parent)}')
     abweichung: list[str] = []
     unerreichbar: list[str] = []
@@ -750,6 +775,7 @@ def lauf(basis: str, unsicher: bool, teil: str = 'alle') -> int:
     # ---- Teil 1: die ausgelieferten Dateien ------------------------------
     dateien = assets()
     gleich = 0
+    erreicht = 0
     for p in dateien:
         rel = p.relative_to(SERVER).as_posix()
         try:
@@ -758,6 +784,7 @@ def lauf(basis: str, unsicher: bool, teil: str = 'alle') -> int:
             unerreichbar.append(f'{rel}: {ex}')
             continue
         soll, ist = sha(p.read_bytes()), sha(geliefert)
+        erreicht += 1
         if soll == ist:
             gleich += 1
         else:
@@ -781,6 +808,7 @@ def lauf(basis: str, unsicher: bool, teil: str = 'alle') -> int:
         except HOLFEHLER as ex:
             unerreichbar.append(f'{seite}: {ex}')
             continue
+        erreicht += 1
         ab, z = seite_vergleichen(seite, quelle.read_text(encoding='utf-8'), geliefert)
         abweichung.extend(ab)
         for k in summe:
@@ -798,22 +826,24 @@ def lauf(basis: str, unsicher: bool, teil: str = 'alle') -> int:
           + ('nichts davon zu viel' if zuviel == 0
              else f'{zuviel} ZU VIEL oder veraendert'))
 
-    # ---- Teil 3: die Punktpfade (R17-19, F-R17-18) ------------------------
-    _, ab3, weg3 = punktpfade_messen(basis, unsicher)
+    # ---- Teil 3: die Punktpfade -------------------------------------------
+    codes3, ab3, weg3 = punktpfade_messen(basis, unsicher)
     abweichung.extend(ab3)
     unerreichbar.extend(weg3)
+    erreicht += sum(1 for c in codes3.values() if c)
 
-    if unerreichbar:
-        print('\n  NICHT ERREICHBAR:')
-        for z in unerreichbar:
-            print(f'    {z}')
+    zeilen = unerreichbar_melden(unerreichbar, erreicht)
+    if zeilen:
+        print()
+        for z in zeilen:
+            print(f'  {z}')
     if abweichung:
         print('\n  ABWEICHUNG:')
         for z in abweichung:
             print(f'    {z}')
         print('\n  Die ausgelieferte Fassung ist nicht die des Repositoriums.')
         print('  Das kann ein vergessener Deploy sein — oder eine Manipulation.')
-        print('  Was zu tun ist, steht in docs/Technik.md, Abschnitt 7 (Runbook),')
+        print('  Was zu tun ist, steht in docs/Technik.md, Abschnitt 13 (Runbook),')
         print('  unter „Die Integritätswache ist rot". Vorher NICHTS ueberschreiben.')
     if not abweichung and not unerreichbar:
         print('\n  Kein Unterschied.')
@@ -821,7 +851,7 @@ def lauf(basis: str, unsicher: bool, teil: str = 'alle') -> int:
 
 
 def selbstprobe() -> int:
-    """Erkennt die Wache eine Abweichung ueberhaupt? (Backlog Nr. 140)
+    """Erkennt die Wache eine Abweichung ueberhaupt?
 
     Ohne diese Probe ist ein gruener Lauf eine Zahl ohne Aussage: Eine Wache,
     die IMMER gruen meldet, sieht genauso aus wie eine, die nichts findet.
@@ -938,7 +968,7 @@ def selbstprobe() -> int:
            'ABWEICHUNG ERKANNT: ein zusaetzlicher Inline-Block faellt auf',
            '; '.join(ab2)[:90])
 
-    # 4a. Die bedingten Formulare (Code-Schritt, seit Web 20.42.0): Jeder
+    # 4a. Die bedingten Formulare (Code-Schritt): Jeder
     #     Eintrag hat einen Gegenstand in der Quelle; fehlt es in der
     #     Auslieferung, ist das keine Abweichung; ein veraendertes schon.
     q_formen = tags(FORM_RE, quelle)
@@ -1019,7 +1049,7 @@ def selbstprobe() -> int:
            and SRC_RE.search('<script src="x"></script>') is not None,
            'Ein <script data-src=…> ist ein Inline-Block, kein Fremdskript',
            f'{bloecke(probe)}, src-Treffer: {SRC_RE.search(probe) is not None}')
-    # PHP VOR dem `src=` -- Backlog Nr. 218, vorbeugend statt nach dem Schaden.
+    # PHP VOR dem `src=` -- vorbeugend statt nach dem Schaden.
     # Mit `[^>]*?` fand SRC_RE diesen Verweis NICHT (`[^>]` kommt am `?>` nicht
     # vorbei), und SKRIPT_RE ueberging ihn ueber TAG_REST als Fremdskript. Er
     # war damit weder Block noch Fremdskript: unsichtbar. Heute steht so eine
@@ -1081,9 +1111,9 @@ def selbstprobe() -> int:
            f"{z9['handler_ist']} Attribute, {z9['jsurl_ist']} Adressen, Block verglichen")
 
     # ---- 10. Der Vergleichsstand laesst sich umstellen, und sein Fehlen
-    #          ist rot, nicht still gruen (AP2/E-KH-13) ---------------------
+    #          ist rot, nicht still gruen -----------------------------------
     #
-    # DAS IST DIE GEGENPROBE ZU B6. Bis zum 20.09.2026 verglich die Wache
+    # DAS IST DIE GEGENPROBE ZUM VERGLEICHSSTAND. Bis zum 20.09.2026 verglich die Wache
     # immer gegen das Verzeichnis neben sich. Dass sie es jetzt woandershin
     # richten kann, ist eine Zusage -- und eine Zusage ohne Gegenprobe ist
     # eine Behauptung. Alles hier rechnet auf der Platte, ohne Netz.
@@ -1131,7 +1161,7 @@ def selbstprobe() -> int:
     finally:
         globals()['SERVER'] = merker
 
-    # 9. TEIL 3, DIE PUNKTPFADE (R17-19, F-R17-18). Das Urteil ohne Netz:
+    # 9. TEIL 3, DIE PUNKTPFADE. Das Urteil ohne Netz:
     #    die gute Lage gruen, jede der vier schlechten rot.
     gut = {p: 403 for p in PUNKTPFADE}
     gut[WELL_KNOWN] = 404
@@ -1155,6 +1185,32 @@ def selbstprobe() -> int:
     pruefe(len(ab) == 1, 'Ein nicht gefragter Pfad ist ein Befund, kein Schweigen')
     pruefe(status_holen('http://127.0.0.1:9/.env') == 0,
            'status_holen: keine Verbindung -> 0, kein Abbruch')
+
+    # 10. Anlage nicht erreichbar: Kam kein Abruf durch, EINE
+    #     Zeile statt hundert -- und rot bleibt es. Kam einer durch, jede Zeile.
+    weg = [f'assets/d{i}.js: timed out' for i in range(100)] + ['login.php: timed out']
+    z0 = unerreichbar_melden(weg, 0)
+    pruefe(len(z0) == 1 and 'ANLAGE NICHT ERREICHBAR' in z0[0] and '101' in z0[0]
+           and '101x timed out' in z0[0],
+           'Kein Abruf kam durch: eine Zeile „Anlage nicht erreichbar" mit Zahl und Art',
+           z0[0][:90] if z0 else 'keine Zeile')
+    z1 = unerreichbar_melden(weg[:3], 5)
+    pruefe(len(z1) == 4 and z1[0] == 'NICHT ERREICHBAR:',
+           'Einer kam durch: jede unerreichbare Datei einzeln', f'{len(z1)} Zeilen')
+    pruefe(unerreichbar_melden([], 0) == [], 'Nichts unerreichbar: keine Zeile')
+    alt = os.environ.get('LAEUFER_ADRESSE_AUS')
+    os.environ['LAEUFER_ADRESSE_AUS'] = '1'
+    try:
+        a1 = laeufer.adresse()
+    finally:
+        if alt is None:
+            os.environ.pop('LAEUFER_ADRESSE_AUS', None)
+        else:
+            os.environ['LAEUFER_ADRESSE_AUS'] = alt
+    a2 = laeufer.adresse('http://127.0.0.1:9/', 1)
+    pruefe(a1.startswith('nicht erfragt') and a2.startswith('unbekannt ('),
+           'Laeuferadresse: abgeschaltet sagt es, ein Fehlschlag wird „unbekannt", kein Abbruch',
+           f'{a1} / {a2}')
 
     print(f'\n  -> {erwartungen} Erwartungen, {offen} nicht erfuellt')
     return 0 if offen == 0 else 1

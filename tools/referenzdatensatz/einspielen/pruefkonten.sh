@@ -11,14 +11,14 @@
 # DERSELBE WEG WIE JEDES ANDERE KONTO. `konto_anlegen()` legt das Konto mit
 # einem Setz-Token an (wie die Verwaltung), `passwort_setzen.mjs` setzt das
 # Passwort im Browser (Salz, Inhaltsschluessel und Huellen entstehen nur
-# dort, E-P1-10), `pruefkonto.php` gibt ihm den Zweitfaktor der Sandbox --
+# dort), `pruefkonto.php` gibt ihm den Zweitfaktor der Sandbox --
 # beide Rollen sind Pflichtrollen (`rolle_braucht_zweitfaktor()`). Nichts
 # davon ist nachgebaut.
 #
 # WIEDERHOLBAR. Ein Konto mit Passwort bleibt, wie es ist; eines ohne (ein
 # abgebrochener frueherer Lauf) bekommt einen neuen Setz-Token. Deshalb ruft
 # `tools/sandbox/hochfahren.sh` das Skript bei jedem Start: Eine Anlage, die
-# vor R4-08 eingerichtet wurde, bekommt die Konten nachgereicht, ohne dass
+# ohne sie eingerichtet wurde, bekommt die Konten nachgereicht, ohne dass
 # jemand `--neu` fahren und die Datenbank loeschen muss.
 #
 # Aufruf:  sh tools/referenzdatensatz/einspielen/pruefkonten.sh

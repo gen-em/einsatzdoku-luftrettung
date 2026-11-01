@@ -12,14 +12,12 @@ return [
         'logo_path' => 'assets/images/gen-em_logo_helicopter.svg',  // Logo auf Login- und Einrichtungsseite
         'max_body_bytes' => 524288,                   // 512 KB Ingest-Limit
         // Die KONTAKTADRESSE und die BETREIBERMAIL stehen NICHT hier, sondern
-        // unter Verwaltung -> Installation (P5a/AP5, E-P5a-40; bis Web 20.37.3
-        // stand hier „Betrieb -> Servereinstellungen", und dort sind sie
-        // nie gewesen). Grund: config.php wird zur Laufzeit nicht geschrieben
+        // unter Verwaltung -> Installation. Grund: config.php wird zur Laufzeit nicht geschrieben
         // — was hier steht, laesst sich nur ueber FTP aendern. Eine Adresse,
         // die in jeder Mail steht, muss eine BetreiberIn selbst umstellen
         // koennen.
         //
-        // ---- Umgebungsetikett (P5c/AP1, E-P5c-05) ----------------------
+        // ---- Umgebungsetikett ---------------------------------------------
         // NUR AUF EINER ANLAGE, DIE NICHT DIE PRODUKTIVANLAGE IST. Leer oder
         // fehlend heisst: keine Kennzeichnung — die Anlage verhaelt sich wie
         // die Produktivanlage, und die Statusseite sagt „Produktiv". Gesetzt,
@@ -30,7 +28,7 @@ return [
         //
         //   'umgebung' => ['name' => 'Staging', 'farbe' => 'rot'],
     ],
-    // ---- Betreff-Vorsatz der Mails (P5a, E-PP-09) -------------------------
+    // ---- Betreff-Vorsatz der Mails ----------------------------------------
     // Auf Staging '[Staging]': Jede Mail dieser Anlage traegt ihn vorn im
     // Betreff. Gehoert mit dem Etikett oben zusammen — steht der Vorsatz und
     // das Etikett nicht, warnt Betrieb -> Status („Praefix ohne Etikett").
@@ -45,10 +43,10 @@ return [
         'from' => 'noreply@example.invalid',
         'from_name' => 'Gen-EM NAdoku',
     ],
-    // ---- Netz: vertrauenswuerdige Proxys (P5a/AP4, E-P5a-17) ----------
+    // ---- Netz: vertrauenswuerdige Proxys ---------------------------------
     //
     // LEER LASSEN, WENN DIE ANWENDUNG DIREKT AM NETZ HAENGT. Dann rechnet der
-    // Ratenschutz mit REMOTE_ADDR — genau wie vor Web 20.7.0.
+    // Ratenschutz mit REMOTE_ADDR.
     //
     // Steht sie hinter einem Reverse Proxy, einem Loadbalancer oder einem
     // DDoS-Schutz, ist REMOTE_ADDR die Adresse DES PROXYS. Der Ratenschutz
@@ -66,12 +64,12 @@ return [
     'netz' => [
         'vertrauenswuerdige_proxys' => [],
     ],
-    // ---- Health-Endpunkt fuer das eigene Monitoring (P5c/AP6, E-P5c-17) -
+    // ---- Health-Endpunkt fuer das eigene Monitoring -----------------------
     //
-    // SEIT WEB 23.5.0 NICHT MEHR HIER (R17-26): Das Token wird unter
+    // DAS TOKEN STEHT NICHT HIER: Es wird unter
     // Betrieb -> Hintergrundjobs, Karte "Monitoring", erzeugt und liegt in
     // der Datenbank. Eine Zeile 'betrieb' => ['health_token' => '<Wert>'] in
-    // einer bestehenden config.php wird beim ersten Abruf nach dem Update
+    // einer bestehenden config.php wird beim ersten Abruf
     // uebernommen und danach nicht mehr gelesen; sie kann dann entfallen.
     // ---- Die zwei Geheimnisse des Servers -----------------------------
     // Beide 64 Hexzeichen. Der Installer wuerfelt sie; eine bestehende
@@ -79,20 +77,24 @@ return [
     // "Schluessel des Servers". Beide gehoeren ins Wiederanlaufpaket
     // (docs/Technik.md, Runbook) — das Schluesselblatt druckt sie.
     //
-    // server_key versiegelt Zugangsdaten der Backup-Ziele, Komplettbackup
-    // und Adminpakete. Ohne ihn laeuft die Anwendung, aber nichts verlaesst
+    // server_key versiegelt, was der Server ohne Browser lesen muss: die
+    // Zugangsdaten der Backup-Ziele, die Geheimnisse des Zweitfaktors (TOTP),
+    // die Konto-Backups der Verwaltung (Begleitdatei und Pakete), die
+    // Archive des Protokolls und das Komplettbackup. Wer config.php UND die
+    // Datenbank hat, oeffnet damit den zweiten Faktor aller Konten — keine
+    // Patientendaten. Ohne ihn laeuft die Anwendung, aber nichts verlaesst
     // versiegelt das Haus.
     'server_key' => '',
-    // server_key_alt steht nur waehrend eines Wechsels daneben (seit Web
-    // 21.12.0, Betrieb -> Servereinstellungen) und verschwindet, sobald alles
-    // umgehuellt ist. Was auf dem Backup-Ziel liegt, oeffnet danach nur noch
+    // server_key_alt steht nur waehrend eines Wechsels daneben (Betrieb ->
+    // Servereinstellungen) und verschwindet, sobald alles umgehuellt ist.
+    // Was auf dem Backup-Ziel liegt, oeffnet danach nur noch
     // der Wert vom bisherigen Schluesselblatt.
     // 'server_key_alt' => '',
-    // kdf_anteil geht in den Datenschluessel JEDES Kontos ein (S10). Ohne
-    // ihn laeuft alles wie vor S10 — der Schutz gegen den Datenbankabzug
-    // fehlt dann. Ein ANDERER Wert als der, mit dem die Huellen gebaut
-    // wurden, sperrt alle aus, bis er nachgetragen ist; der
-    // Wiederherstellungsschluessel oeffnet weiterhin ohne ihn.
+    // kdf_anteil geht in den Datenschluessel JEDES Kontos und in den
+    // Pfeffer des Anmelde-Hashes ein. Fehlt er oder steht ein ANDERER Wert
+    // darin als der, mit dem Huellen und Hashes gebaut wurden, meldet sich
+    // niemand an, auch die BetreiberIn nicht, bis er nachgetragen ist. Der
+    // Wiederherstellungsschluessel oeffnet die Daten weiterhin ohne ihn.
     'kdf_anteil' => '',
     // kdf_anteil_alt steht nur waehrend einer Rotation daneben und
     // verschwindet, sobald kein Konto mehr auf dem alten Anteil steht.

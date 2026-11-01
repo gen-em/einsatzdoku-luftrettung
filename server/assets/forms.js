@@ -10,7 +10,7 @@
  *                                              etwas eingegeben wurde
  * (die Formular-Attribute lassen sich auf demselben Formular kombinieren)
  *
- * Abbrechen (A4.1, Web 5.5.0): Ein leeres Formular ohne Nachfrage zu verlassen
+ * Abbrechen: Ein leeres Formular ohne Nachfrage zu verlassen
  * ist richtig — eine Rueckfrage, die immer kommt, wird weggeklickt und schuetzt
  * dann auch dort nicht mehr, wo etwas zu verlieren waere. Woran „etwas
  * eingegeben" erkannt wird, ist genau das Kennzeichen, das die Verlassen-
@@ -36,7 +36,7 @@
 
   const dirtyForms = new Set();
   /* Je Formular die Karten, in denen etwas geaendert wurde — fuer den
-     Hinweistext der Leiste (S8/AP3, Mockup 09). */
+     Hinweistext der Leiste. */
   const schmutzigeKarten = new WeakMap();
 
   function istFormularfeld(el) {
@@ -44,7 +44,7 @@
                 || el.tagName === 'TEXTAREA');
   }
 
-  /* Die Speichern-Leiste des Formulars (ui_speichern_leiste, E-P3-29) haengt
+  /* Die Speichern-Leiste des Formulars (ui_speichern_leiste) haengt
    * am selben Kennzeichen: Sie erscheint mit der ersten Aenderung und
    * verschwindet mit dem Absenden. Ein Formular ohne Leiste bleibt davon
    * unberuehrt. */
@@ -53,7 +53,7 @@
     if (l) { l.hidden = !an; }
   }
 
-  /* DIE LEISTE NENNT, WAS UNGESPEICHERT IST (S8/AP3, Mockup 09).
+  /* DIE LEISTE NENNT, WAS UNGESPEICHERT IST.
    *
    * „Es gibt ungespeicherte Änderungen" beantwortet die Frage nicht, die man
    * auf einer Seite mit drei Karten hat: WELCHE? Auf „Installation" stehen

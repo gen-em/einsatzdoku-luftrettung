@@ -1,34 +1,27 @@
 <?php
 declare(strict_types=1);
 /**
- * DER LEBENSZYKLUS EINES KONTOS (P5b/AP2, E-P5b-11, -12; R37 (1)).
+ * DER LEBENSZYKLUS EINES KONTOS.
  *
  * ---------------------------------------------------------------------------
  * WARUM ES DIESE DATEI GIBT
  * ---------------------------------------------------------------------------
  *
- * Ein Konto entsteht an vier Stellen und ein Token an vier Stellen, und bis
- * Web 20.16.5 brachte jede ihren eigenen Code mit:
+ * Ein Konto entsteht an vier Stellen und ein Token an vier Stellen:
  *
- *   admin_users.php    Konto + Kontokennung + 24-h-Setz-Token, in EINER
- *                      Transaktion (seit E17, mit dem Kommentar zum „halben
- *                      Zustand" davor)
- *   install.php        Konto (BetreiberIn) + 24-h-Token — OHNE Transaktion
+ *   admin_users.php    Konto + Kontokennung + 24-h-Setz-Token
+ *   install.php        Konto (BetreiberIn) + 24-h-Token
  *   admin_user.php     nur Token, 1 h, entwertet Vorgaenger
  *   reset_request.php  nur Token, 1 h, entwertet Vorgaenger
  *
- * VIER FASSUNGEN DERSELBEN SACHE, und sie waren nicht gleich: Die eine hatte
- * eine Transaktionsklammer, die andere nicht; zwei entwerteten die alten
- * Token, zwei nicht (was bei einer Neuanlage richtig ist, aber aus einem
- * anderen Grund). Die Laufzeiten standen als SQL-Literale im Text —
- * `INTERVAL 24 HOUR` an zwei Stellen, `INTERVAL 1 HOUR` an zwei anderen.
- *
- * Das ist Backlog Nr. 202 Paket 1 (Token). **10b loest es hier**, und zwar
- * nicht aus Ordnungsliebe: Die Selbstregistrierung aus AP3 waere die FUENFTE
- * Fassung geworden, und sie ist die einzige, die von aussen erreichbar ist.
+ * VIER FASSUNGEN DERSELBEN SACHE laufen auseinander: Die eine haette eine
+ * Transaktionsklammer, die andere nicht; Laufzeiten stuenden als SQL-Literale
+ * im Text. Deshalb steht es hier einmal — und zwar nicht aus Ordnungsliebe:
+ * Die Selbstregistrierung waere die FUENFTE Fassung, und sie ist die einzige,
+ * die von aussen erreichbar ist.
  *
  * ---------------------------------------------------------------------------
- * DIE VIER ZUSTAENDE EINES KONTOS (E-P5b-12, R37 (2))
+ * DIE VIER ZUSTAENDE EINES KONTOS
  * ---------------------------------------------------------------------------
  *
  *   unbestaetigt  Registriert, Adresse noch nicht bestaetigt. Verfaellt nach
@@ -38,8 +31,8 @@ declare(strict_types=1);
  *   aktiv         Der Normalfall. JEDES Bestandskonto bekommt ihn bei der
  *                 Migration — alles andere waere eine Aussage ueber Konten,
  *                 die es zum Zeitpunkt der Migration noch gar nicht gab.
- *   gesperrt      Von der Verwaltung gesperrt ODER in der Loeschkarenz
- *                 (E-P5b-16). `gesperrt_grund` unterscheidet beides.
+ *   gesperrt      Von der Verwaltung gesperrt ODER in der Loeschkarenz.
+ *                 `gesperrt_grund` unterscheidet beides.
  *
  * DER UEBERGANG IST NICHT FREI. `konto_status_setzen()` prueft ihn, und zwar
  * gegen eine Tabelle und nicht gegen eine Reihe von `if`-Zweigen: Ein Konto,
@@ -66,7 +59,7 @@ declare(strict_types=1);
  */
 
 /* `db.php` UND `protokoll_lib.php` NUR MIT KONFIGURATION — wegen des
- * Einrichters (dieselbe Falle wie in Nr. 223).
+ * Einrichters.
  *
  * `install.php` ist der vierte Aufrufer dieser Bibliothek und der einzige,
  * der laeuft, BEVOR es eine `config.php` gibt: Er schreibt sie erst, nachdem
@@ -74,31 +67,28 @@ declare(strict_types=1);
  * PDO-Verbindung mit — deshalb nimmt jede Funktion hier ein `?PDO` entgegen
  * und faellt nur ohne eines auf `db()` zurueck.
  *
- * Das Konzept sagt in E-P5b-11, alle vier Token-Stellen zoegen um. Das
- * stimmt — aber die vierte zieht nur um, wenn die Bibliothek ohne
- * Konfiguration ladbar ist. Waere sie es nicht, bliebe `install.php` als
- * fuenfte Fassung stehen, und zwar genau die, der die Transaktionsklammer
- * fehlte.
+ * Alle vier Token-Stellen nutzen diese Bibliothek — die vierte aber nur,
+ * wenn die Bibliothek ohne Konfiguration ladbar ist. Waere sie es nicht,
+ * bliebe `install.php` als eigene Fassung stehen.
  *
  * UND ALLES, WAS DIE FUNKTIONEN HIER AUF DEM WEG DES EINRICHTERS RUFEN, muss
- * deshalb OHNE diese Weiche geladen sein. Seit Schritt 15 legt
- * `konto_anlegen()` das Konto in `db_transaktion()` an — und die stand in
- * `db.php`, also hinter der Weiche. Von Web 20.30.0 bis 20.37.2 scheiterte
- * jede Neueinrichtung an „Call to undefined function db_transaktion()"
- * (Backlog Nr. 288). Der Rahmen steht seither in `transaktion_lib.php`, die
+ * deshalb OHNE diese Weiche geladen sein. `konto_anlegen()` legt das Konto
+ * in `db_transaktion()` an — stuende die in `db.php`, also hinter der
+ * Weiche, scheiterte jede Neueinrichtung an „Call to undefined function
+ * db_transaktion()". Der Rahmen steht deshalb in `transaktion_lib.php`, die
  * nichts laedt, und wird unten UNBEDINGT eingebunden. Wer hier eine weitere
  * Funktion aus einer bedingt geladenen Datei ruft, prueft den Einrichter mit
  * `bash tools/sandbox/hochfahren.sh --neu`. */
 if (is_file(__DIR__ . '/config.php')) {
     require_once __DIR__ . '/db.php';
     require_once __DIR__ . '/protokoll_lib.php';
-    /* Fuer KONTEN_UNBESTAETIGT_H (P5b/AP3). Ebenfalls bedingt, aus demselben
+    /* Fuer KONTEN_UNBESTAETIGT_H. Ebenfalls bedingt, aus demselben
      * Grund wie die beiden darueber: Die Bibliothek liest `app_state` und
      * braucht dafuer eine Datenbank. */
     require_once __DIR__ . '/konten_einstellungen_lib.php';
 }
 require_once __DIR__ . '/email_lib.php';
-require_once __DIR__ . '/transaktion_lib.php';   // db_transaktion(), auch ohne config.php (Nr. 288)
+require_once __DIR__ . '/transaktion_lib.php';   // db_transaktion(), auch ohne config.php
 
 /* ---- Zustaende ----------------------------------------------------------- */
 
@@ -128,7 +118,7 @@ const KONTO_UEBERGAENGE = [
     'gesperrt'     => ['aktiv'],
 ];
 
-/** Gruende einer Sperre. `selbstloeschung` ist die Karenz aus E-P5b-16. */
+/** Gruende einer Sperre. `selbstloeschung` ist die Karenz. */
 const KONTO_SPERRGRUND_SELBSTLOESCHUNG = 'selbstloeschung';
 
 /* ---- Laufzeiten der Token, als Konstanten statt als SQL-Literale --------- */
@@ -139,7 +129,7 @@ const TOKEN_EINLADUNG_S = 86400;
 /** Passwort zuruecksetzen: eine Stunde. */
 const TOKEN_RESET_S = 3600;
 
-/* DER BESTAETIGUNGSLINK DER REGISTRIERUNG GILT 48 STUNDEN (E-P5b-13) —
+/* DER BESTAETIGUNGSLINK DER REGISTRIERUNG GILT 48 STUNDEN —
  * genauso lange, wie ein unbestaetigtes Konto ueberhaupt stehen bleibt
  * (KONTEN_UNBESTAETIGT_H). Zwei verschiedene Zahlen waeren eine Falle: Ein
  * Link, der die Loeschung des Kontos ueberlebt, fuehrt auf eine Seite, die
@@ -210,7 +200,7 @@ function konto_anlegen(string $email, string $name, string $rolle,
 
     /* DAS PROTOKOLL STEHT AUSSERHALB DER TRANSAKTION, und das ist Absicht:
      * Ein Protokolleintrag, der nicht geschrieben werden kann, darf die
-     * Kontoanlage nicht zurueckrollen (V7). Innerhalb der Klammer waere er
+     * Kontoanlage nicht zurueckrollen. Innerhalb der Klammer waere er
      * genau das. */
     /* `function_exists` wegen des Einrichters: Er hat noch keine
      * `config.php` und damit kein `protokoll_lib.php`. Der Eintrag „erstes
@@ -262,8 +252,8 @@ function reset_token_ausstellen(int $userId, int $laufzeitS, ?PDO $pdo = null): 
 }
 
 /**
- * Die Bestaetigungsmail einer Registrierung noch einmal senden (P5c/AP4,
- * E-P5c-14, F-P5c-58) — fuer die Verwaltung und den Support.
+ * Die Bestaetigungsmail einer Registrierung noch einmal senden — fuer die
+ * Verwaltung und den Support.
  *
  * NUR FUER `unbestaetigt`. Das ist der Status, den allein die
  * Selbstregistrierung vergibt (siehe `konto_verfall_unbestaetigt()`); ein
@@ -278,7 +268,7 @@ function reset_token_ausstellen(int $userId, int $laufzeitS, ?PDO $pdo = null): 
  * Gueltigkeit (`reset_token_ausstellen()`: ein gueltiger Token je Konto).
  *
  * DER LINK GEHT NUR PER MAIL HINAUS und nie in die Antwort — auch nicht,
- * wenn die Mail nicht zugestellt wird (E-P5c-40). Wer ihn saehe, koennte das
+ * wenn die Mail nicht zugestellt wird. Wer ihn saehe, koennte das
  * Konto uebernehmen: `pw_handling.php` setzt auf einem Konto ohne
  * Wiederherstellungshuelle Passwort und Schluessel ohne weiteren Nachweis.
  *
@@ -361,7 +351,7 @@ function konto_status_setzen(int $userId, string $neu, ?string $grund = null): b
                         WHERE id = ?')->execute([$neu, $userId]);
     } elseif ($neu === 'wartet') {
         /* `wartet` HEISST: die Adresse ist bestaetigt, das Konto wartet auf
-         * die Freischaltung (E-P5b-02). Deshalb wird `bestaetigt_am` hier
+         * die Freischaltung. Deshalb wird `bestaetigt_am` hier
          * mitgeschrieben und nicht erst beim Freischalten.
          *
          * DARAN HAENGT EINE FRIST, und das ist der Grund: Die Verfallfrist
@@ -415,7 +405,7 @@ function konto_status_text(string $status, ?string $grund = null): string
     };
 }
 
-/* ---- Adresswechsel mit Bestaetigung (E-P5b-16) --------------------------- */
+/* ---- Adresswechsel mit Bestaetigung --------------------------- */
 
 /** Laufzeit des Bestaetigungslinks fuer eine neue Adresse: 24 Stunden. */
 const TOKEN_ADRESSE_S = 86400;
@@ -423,10 +413,10 @@ const TOKEN_ADRESSE_S = 86400;
 /**
  * Eine neue Anmeldeadresse vormerken und den Bestaetigungslink ausstellen.
  *
- * **Die alte bleibt die gueltige, bis der Klick kommt.** Bis Web 20.19.0
- * schrieb `einstellungen.php` die neue Adresse sofort — mit Passwortnachweis
- * und Hinweismail an die alte, aber ohne jede Pruefung, ob die neue
- * ueberhaupt erreichbar ist. Ein Tippfehler sperrte damit aus: Die Anmeldung
+ * **Die alte bleibt die gueltige, bis der Klick kommt.** Die neue Adresse
+ * sofort zu schreiben — auch mit Passwortnachweis und Hinweismail an die
+ * alte — hiesse, ohne Pruefung, ob die neue ueberhaupt erreichbar ist. Ein
+ * Tippfehler sperrte damit aus: Die Anmeldung
  * laeuft ueber die Adresse, und „Passwort vergessen" schickt an eine
  * Adresse, die es nicht gibt.
  *
@@ -490,7 +480,7 @@ function adresse_bestaetigen(string $token): array
         throw $ex;
     }
 
-    /* OHNE ADRESSEN IM TEXT (E-P5b-16). Das Protokoll haelt, DASS gewechselt
+    /* OHNE ADRESSEN IM TEXT. Das Protokoll haelt, DASS gewechselt
      * wurde, und die Kontonummer — nicht die beiden Adressen. Ein Audit, in
      * dem jede je benutzte Adresse eines Kontos steht, ist ein Verzeichnis
      * von Adressen und nicht ein Verzeichnis von Handlungen. */
@@ -501,25 +491,17 @@ function adresse_bestaetigen(string $token): array
     return ['ok' => true, 'grund' => '', 'alt' => $alt, 'neu' => $neu];
 }
 
-/** Eine vorgemerkte Adresse verwerfen (Abbruch durch die NutzerIn). */
-function adresse_vormerkung_loeschen(int $userId): void
-{
-    db()->prepare('UPDATE users SET email_neu = NULL, email_neu_token_hash = NULL,
-                          email_neu_bis = NULL WHERE id = ?')->execute([$userId]);
-}
-
 /* ---- Adresswechsel durch die Verwaltung: unbestaetigt bis zur Frist -------
  *
- * (R17-20, F-R17-06, E-R17-45)
  *
- * WAS DAS PROBLEM WAR. Die Verwaltung schrieb eine fremde Anmeldeadresse
- * sofort um und konnte gleich danach einen Setz-Link an die neue schicken.
- * Mit einer uebernommenen Adminsitzung war das die Kette zur Kontouebernahme:
- * Adresse auf eine eigene, Setz-Link, auf `pw_handling.php` neues Token und
- * eine Huelle mit bekanntem `key_check` (der kam bis R17-20 aus einer
- * Freigabe an sich selbst). Danach Anmeldung, Klartext und Geraete des
- * Kontos uebernommen. Die Hinweismail an die alte Adresse kam an — aber sie
- * konnte nichts aufhalten.
+ *
+ * DAS PROBLEM. Schriebe die Verwaltung eine fremde Anmeldeadresse
+ * sofort um, koennte sie gleich danach einen Setz-Link an die neue schicken.
+ * Mit einer uebernommenen Adminsitzung waere das die Kette zur
+ * Kontouebernahme: Adresse auf eine eigene, Setz-Link, auf `pw_handling.php`
+ * neues Token und eine Huelle mit bekanntem `key_check`. Danach Anmeldung,
+ * Klartext und Geraete des Kontos uebernommen. Eine Hinweismail an die alte
+ * Adresse kaeme an — aber sie koennte nichts aufhalten.
  *
  * WAS JETZT GILT. Die neue Adresse gilt sofort (Anmeldung, Anzeige), ist
  * aber UNBESTAETIGT: Solange geht kein Setz-Link hinaus, weder ueber die
@@ -534,7 +516,7 @@ function adresse_vormerkung_loeschen(int $userId): void
  * Zeichen, und eine Adresse darf 190 lang sein (`email_pruefen()`).
  *   adresse_offen:<id>  "<bis als Unixzeit>|<sha256 des Tokens>"
  *   adresse_alt:<id>    die alte Adresse
- * Keine Spalte in `users`, keine Migration (E-R17-50). `konto_loeschen()`
+ * Keine Spalte in `users`, keine Migration. `konto_loeschen()`
  * raeumt beide Zeilen mit.
  *
  * PREIS: Wer seine alte Adresse verloren hat, wartet sieben Tage auf den
@@ -629,10 +611,10 @@ function adresse_verwaltung_antwort(int $userId, string $token, string $antwort)
               'Adresswechsel durch die Verwaltung von der bisherigen Adresse widersprochen'
             . ($zurueck ? ' — zurückgesetzt' : ' — NICHT zurückgesetzt, die Adresse ist vergeben'),
               ['zurueck' => $zurueck], $userId);
-    /* AN JEDE BETREIBERIN EINE MAIL (E-R17-45): Ein Widerspruch heisst, dass
+    /* AN JEDE BETREIBERIN EINE MAIL: Ein Widerspruch heisst, dass
      * jemand mit Verwaltungsrechten eine fremde Adresse umgeschrieben hat,
      * die die Besitzerin nicht wollte — womoeglich eine uebernommene
-     * Sitzung. Ohne Adressen im Text, wie das Protokoll (E-P5b-16). */
+     * Sitzung. Ohne Adressen im Text, wie das Protokoll. */
     require_once __DIR__ . '/mail_lib.php';
     foreach (mail_betreiberinnen() as $an) {
         mail_einreihen('adresse_widerspruch', $an, [
@@ -654,7 +636,7 @@ function adresse_verwaltung_antwort(int $userId, string $token, string $antwort)
                                      . 'zurücksetzen. Die BetreiberIn ist informiert.'];
 }
 
-/* ---- Selbstloeschung mit Karenz (E-P5b-16) ------------------------------- */
+/* ---- Selbstloeschung mit Karenz ------------------------------- */
 
 /** Karenz zwischen Antrag und endgueltiger Loeschung, in Tagen. */
 const KONTO_KARENZ_TAGE = 30;
@@ -715,7 +697,7 @@ function konto_loeschung_faellig(int $grenze = 50): array
     return $st->fetchAll(PDO::FETCH_ASSOC);
 }
 
-/* ---- Verfall von Registrierungen (P5b/AP3, E-P5b-02) --------------------- */
+/* ---- Verfall von Registrierungen --------------------- */
 
 /**
  * Unbestaetigte Registrierungen, deren 48 Stunden um sind.
@@ -773,8 +755,8 @@ function konto_wartende_zahl(): int
 const KONTO_K_WARTEN_MARK = 'konten_warten_mail';
 
 /**
- * Die Verwaltung darueber unterrichten, dass Registrierungen warten
- * (E-P5b-02, Muster E-P5a-07).
+ * Die Verwaltung darueber unterrichten, dass Registrierungen warten.
+ * 
  *
  * EINE SAMMELMAIL, HOECHSTENS EINE JE STUNDE — und das ist der ganze Zweck
  * dieser Funktion. Eine Mail je Registrierung waere bei einer Anmeldewelle
@@ -788,7 +770,7 @@ const KONTO_K_WARTEN_MARK = 'konten_warten_mail';
  *
  * STILL, WENN ETWAS FEHLT. Eine Meldung, die nicht hinausgeht, darf die
  * Registrierung nicht mitreissen — sie ist ein Hinweis, nicht der Vorgang
- * (dieselbe Ueberlegung wie bei V7 und beim Protokoll).
+ * (dieselbe Ueberlegung wie beim Protokoll).
  */
 function konto_warten_melden(): void
 {
@@ -828,18 +810,14 @@ function konto_warten_melden(): void
 /* ---- Loeschen ------------------------------------------------------------ */
 
 /**
- * Ein Konto endgueltig loeschen — DER eine Weg (E-P5b-16, Backlog Nr. 299).
+ * Ein Konto endgueltig loeschen — DER eine Weg.
  *
- * Hier stand „derselbe Weg fuer die Admin-Loeschung und den Loeschjob", und
- * es stimmte bis Web 21.1.7 nur halb: Die Kontoseite der Verwaltung loeschte
- * selbst — Backups, Spuren, Sperrvermerke, Protokoll, `DELETE`, jedes davon
- * noch einmal hingeschrieben —, und das Entfernen des Demo-Kontos ein
- * drittes Mal. Zwei Abschriften sind zweimal auseinandergelaufen: Die
- * Verwaltung schrieb bis Web 20.40.0 keinen Protokolleintrag, und bis
- * Web 21.1.7 liess sie `mengen:<id>` in `app_state` liegen (Schritt 5 unten
- * kannte nur diese Funktion). Seither rufen alle Wege sie auf.
+ * Alle Wege rufen sie auf: die Kontoseite der Verwaltung, der Loeschjob
+ * und das Entfernen des Demo-Kontos. Eine Abschrift — Backups, Spuren,
+ * Sperrvermerke, Protokoll, `DELETE`, jedes davon noch einmal hingeschrieben
+ * — liefe auseinander, etwa ohne Protokolleintrag oder ohne Schritt 5 unten.
  *
- * @param bool   $mitSicherungen E25: Sollen die Konto-Backups mit? Wer
+ * @param bool   $mitSicherungen Sollen die Konto-Backups mit? Wer
  *                               loescht, entscheidet es ausdruecklich — die
  *                               Verwaltung fragt, alle anderen sagen `true`
  *                               und folgen der Zusage, dass nach der
@@ -860,8 +838,8 @@ function konto_warten_melden(): void
  *    liesse sich nur noch ueber die Uebersicht der verwaisten Backups finden.
  * 2. Die Spuren und Schnitte von Hand: Sie haengen an keinem Fremdschluessel
  *    (polymorph ueber `owner_type`/`owner_id`) und ueberleben die Kaskade.
- *    Das ist F-S2-B, gemessen mit 6 202 931 verwaisten Spurpunkten. Ebenso
- *    die Sperrliste der Geraete (`deleted_refs`, seit Web 21.1.8).
+ *    Ohne das blieben Ortsdaten verwaist liegen. Ebenso
+ *    die Sperrliste der Geraete (`deleted_refs`).
  * 3. Der Protokolleintrag VOR dem DELETE. `protokoll_ereignisse` hat
  *    absichtlich keinen Fremdschluessel auf `users`, aber der Urheber kommt
  *    aus der Sitzung, und die Zeile soll geschrieben sein, bevor irgendetwas
@@ -885,7 +863,7 @@ function konto_loeschen(int $userId, bool $mitSicherungen, string $weg): array
     $email   = (string)$zeile['email'];
     $kennung = (string)($zeile['account_key'] ?? '');
 
-    /* 1. Backups (E25) */
+    /* 1. Backups */
     if ($mitSicherungen) {
         $backupsFort = edbak_konto_ordner_loeschen($kennung !== '' ? $kennung : null);
         if (!$backupsFort) {
@@ -900,7 +878,7 @@ function konto_loeschen(int $userId, bool $mitSicherungen, string $weg): array
         }
     }
 
-    /* 2. Was die Kaskade nicht mitnimmt (F-S2-B) */
+    /* 2. Was die Kaskade nicht mitnimmt */
     foreach ([['mission', 'missions'], ['rest', 'rest_segments']] as [$typ, $tab]) {
         $ids = $pdo->prepare("SELECT id FROM `$tab` WHERE user_id = ?");
         $ids->execute([$userId]);
@@ -909,9 +887,8 @@ function konto_loeschen(int $userId, bool $mitSicherungen, string $weg): array
     schnitte_loeschen($pdo, 'konto', [$userId]);
     /* Die Sperrliste der Geraete (`deleted_refs`) haengt an der
      * Geraetekennung und an keinem Fremdschluessel — die Kaskade nimmt die
-     * Geraete, nicht ihre Sperrvermerke. Bis Web 21.1.7 raeumte sie nur das
-     * Entfernen des Demo-Kontos; seit es hier entlanggeht (Nr. 299), steht
-     * die Zeile hier, und jedes Konto bekommt sie. VOR dem `DELETE`: danach
+     * Geraete, nicht ihre Sperrvermerke. Die Zeile steht hier, und jedes
+     * Konto bekommt sie. VOR dem `DELETE`: danach
      * gibt es kein `devices.user_id` mehr, ueber das sie zu finden waeren. */
     $pdo->prepare('DELETE dr FROM deleted_refs dr
                    JOIN devices d ON d.id = dr.device_id
@@ -927,7 +904,7 @@ function konto_loeschen(int $userId, bool $mitSicherungen, string $weg): array
     $pdo->prepare('DELETE FROM users WHERE id = ?')->execute([$userId]);
 
     /* 5. WAS AN KEINEM FREMDSCHLUESSEL HAENGT: die `app_state`-Eintraege
-     *    dieses Kontos (P5b/AP6).
+     *    dieses Kontos.
      *
      * `mengen:<id>` und `mengen_gemeldet:<id>` sind Schluessel/Wert-Zeilen,
      * keine Tabelle mit `user_id` — die Kaskade erreicht sie nicht. Sie
@@ -950,7 +927,7 @@ function konto_loeschen(int $userId, bool $mitSicherungen, string $weg): array
     app_state_loeschen('mengen:' . $userId, 'mengen_gemeldet:' . $userId,
                        'adresse_offen:' . $userId, 'adresse_alt:' . $userId);
 
-    /* 6. DIE MAILWARTESCHLANGE DIESER ADRESSE (R17-20, F-R17-21). Der
+    /* 6. DIE MAILWARTESCHLANGE DIESER ADRESSE. Der
      *    Docblock von `mail_konto_entfernen()` verlangte diesen Aufruf bei
      *    jeder Kontoloeschung — es gab keinen. Die Adresse eines geloeschten
      *    Kontos blieb bis zu 30 Tage in der Warteschlange und in jeder

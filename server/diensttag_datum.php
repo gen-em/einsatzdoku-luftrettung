@@ -7,19 +7,17 @@ require_once __DIR__ . '/diensttag_lib.php';
 require_once __DIR__ . '/format_lib.php';   // zahl_text() fuer die Umfangszahlen
 
 /**
- * Das Datum eines Diensttages aendern (A5.3, Auftragspunkt 12).
+ * Das Datum eines Diensttages aendern.
  *
  * Der Anwendungsfall ist die FALSCH GESTELLTE UHR: Dabei sind Datum und
- * Uhrzeit gemeinsam falsch, und die Zeitstempel ziehen deshalb mit (E3). Wer
+ * Uhrzeit gemeinsam falsch, und die Zeitstempel ziehen deshalb mit. Wer
  * nur einen einzelnen Einsatz umhaengen will, dessen Uhrzeiten stimmen, ist
  * bei einsatz_verschieben.php richtig.
  *
- * KEINE KOLLISIONSPRUEFUNG MEHR (Web 6.0.0). Bis dahin verlangte die Seite ein
- * FREIES Zieldatum und fuehrte dafuer eine eigene Liste belegter Daten mit —
- * die Folge des Tagesschluessels `UNIQUE KEY uq_user_day`. Seit E9 sind mehrere
- * Diensttage je Kalendertag der vorgesehene Fall (A1); es gibt nichts mehr zu
- * kollidieren, und die Liste ist ersatzlos entfallen. Geblieben ist die
- * Rueckfrage, die beziffert, was betroffen ist.
+ * KEINE KOLLISIONSPRUEFUNG. Mehrere Diensttage je Kalendertag sind der
+ * vorgesehene Fall; es gibt nichts zu kollidieren, und die Seite verlangt
+ * kein freies Zieldatum. Was sie verlangt, ist die Rueckfrage, die beziffert,
+ * was betroffen ist.
  */
 
 $dayId = (int)($_POST['d'] ?? $_GET['d'] ?? 0);
@@ -69,7 +67,7 @@ ui_seite_start(['titel' => 'Datum des Diensttags ändern']);
 
   <?php ui_karte_start(['titel' => 'Diensttag ' . dt_lesbar($tag, true)]); ?>
 
-    <?php /* ZEILEN STATT AUFZAEHLUNG (O11) — dieselbe Ueberlegung wie in
+    <?php /* ZEILEN STATT AUFZAEHLUNG — dieselbe Ueberlegung wie in
              diensttag_loeschen.php: Die Zahlen sind der Grund, warum diese
              Seite vor der Aenderung steht, und in einer Aufzaehlung standen sie
              vorn im Fliesstext. */ ?>
@@ -108,11 +106,11 @@ ui_seite_start(['titel' => 'Datum des Diensttags ändern']);
     <?= ui_meldung_markup('warn', 'Alles davon wird gemeinsam geändert oder gar '
         . 'nicht.') ?>
 
-    <?php /* `data-dirty-track` UND `data-confirm` am selben Formular — bis
-             Web 9.11.0 fragte der Browser danach ein zweites Mal
+    <?php /* `data-dirty-track` UND `data-confirm` am selben Formular: Ohne
+             Absage fragte der Browser danach ein zweites Mal
              („Änderungen werden möglicherweise nicht gespeichert"), weil
-             forms.js vom Absenden nie erfuhr. confirm.js sagt jetzt ab
-             (F-P3-AY). Diese Seite war die einzige mit beiden Attributen. */ ?>
+             forms.js vom Absenden nie erfuhr. confirm.js sagt deshalb ab.
+             Diese Seite ist die einzige mit beiden Attributen. */ ?>
     <form method="post" action="diensttag_datum.php" id="datumform" data-dirty-track
           data-confirm="Das Datum dieses Diensttags wird geändert. Alle Zeitstempel wandern mit. Fortfahren?"
           data-confirm-titel="Datum des Diensttags ändern"

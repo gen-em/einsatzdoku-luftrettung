@@ -51,11 +51,11 @@ import shlex
 import sys
 
 WURZEL = pathlib.Path(__file__).resolve().parents[2]
-# `.yml` UND `.yaml` (Gegenpruefung R17-19): GitHub faehrt beide, und eine neue
+# `.yml` UND `.yaml`: GitHub faehrt beide, und eine neue
 # Datei `x.yaml` mit `uses: foo/bar@main` blieb sonst ungesehen.
 LAEUFE = sorted([*(WURZEL / '.github' / 'workflows').glob('*.yml'),
                  *(WURZEL / '.github' / 'workflows').glob('*.yaml')])
-# SEIT PK-03 AUCH DIE ZUORDNUNG DES PRUEFSTANDS. Sie fuehrt dieselbe Art von
+# AUCH DIE ZUORDNUNG DES PRUEFSTANDS. Sie fuehrt dieselbe Art von
 # Aufruf wie ein Kettenschritt — und sie ist beim ersten Lauf an genau
 # denselben Fehlern gescheitert (`--format` statt `--art`, ein `./gradlew`
 # im falschen Verzeichnis). Wer einen Aufruf dort aendert, faehrt dieses
@@ -83,7 +83,7 @@ PFAD    = r'((?:tools|server|android)/[\w./-]+\.(?:py|mjs|js|php|sh)|\./gradlew)
 # einem Anfuehrungszeichen, das einen Code-Text eroeffnet.
 AUFRUF_RE = re.compile(r'(?:' + STARTER + r'\s+)?(?<![\w/\'"$-])' + PFAD)
 CODE_MODUS_RE = re.compile(r'\b(?:php\s+-r|python3?\s+-c|node\s+-e)\b')
-# Wo eine Zeile in mehrere Befehle zerfaellt (BR-04). Nur mit Leerraum
+# Wo eine Zeile in mehrere Befehle zerfaellt. Nur mit Leerraum
 # davor und danach -- ein `|` in einem Muster ("a|b") trennt nichts.
 KETTE_RE = re.compile(r'\s+(?:&&|\|\||\|)\s+|;\s+')
 
@@ -110,7 +110,7 @@ def schalter_py(quelle: str) -> tuple[set[str], set[str], bool]:
         gefunden = True
         bekannt.add(m.group(3))
         # Ein Pflichtschalter EINES UNTERBEFEHLS ist keiner des Werkzeugs —
-        # er zählt nur, wenn der Aufruf diesen Unterbefehl nennt (F-PK-32).
+        # er zählt nur, wenn der Aufruf diesen Unterbefehl nennt.
         if re.search(r'required\s*=\s*True', m.group(4)) and m.group(1) not in unter:
             pflicht.add(m.group(3))
     if not gefunden:
@@ -128,9 +128,9 @@ def unterbefehle_py(quelle: str) -> dict[str, str]:
 
 
 def pflicht_je_befehl_py(quelle: str) -> dict[str, set[str]]:
-    """{Unterbefehl: seine Pflichtschalter}. Bis PK-05 zählte `required=True` im
+    """{Unterbefehl: seine Pflichtschalter}. Früher zählte `required=True` im
     Unterbefehl `schreiben` von `bericht.py` für JEDEN Aufruf, auch für
-    `bericht.py lesen` — ein Fehlalarm im Tor (F-PK-32)."""
+    `bericht.py lesen` — ein Fehlalarm im Tor."""
     je = {}
     for befehl, var in unterbefehle_py(quelle).items():
         je[befehl] = {m.group(1) for m in re.finditer(
@@ -167,7 +167,7 @@ LESER = {'.py': schalter_py, '.mjs': schalter_mjs, '.js': schalter_mjs,
 def namen_liste(quelle: str) -> list[str]:
     """Die Woerter aller `NAMEN=(…)` und `NAMEN+=(…)`, zeilenweise und
     kommentarfest -- dieselbe Lesart wie `bash_liste()` in
-    tools/quelltext/bestand.py. Bis BR-05 las hier ein Muster bis zur ersten
+    tools/quelltext/bestand.py. Früher las hier ein Muster bis zur ersten
     `)`: Ein Kommentar mit Klammer in der Liste zerlegte sie, und ein Name
     aus `NAMEN+=(…)` galt als unbekannt (Gegenprobe des Bestandsriegels)."""
     woerter: list[str] = []
@@ -194,7 +194,7 @@ def befehle_sh(quelle: str) -> set[str]:
     tools/ die Namen aus `NAMEN=(…)` oder den Schluesseln von
     `declare -A RUF=(…)`.
 
-    Bis BR-01 las die Pruefung nur `case "$befehl"` und sah bei
+    Früher las die Pruefung nur `case "$befehl"` und sah bei
     `pruefen.sh <name>` und `proben.sh <name>` keinen einzigen Namen: Von
     30 solchen Aufrufen (28 in pruefablauf.json, 2 in den Workflows) prueften
     alle nur die Schalter, und ein Tippfehler im Namen waere erst im Lauf
@@ -267,8 +267,8 @@ def pruefe_block(lauf: str, schritt: str, block: str) -> tuple[list[str], list[s
             continue
         if CODE_MODUS_RE.search(zeile):
             continue          # `php -r "…"` ist Programmtext, kein Aufruf
-        # EINE ZEILE KANN MEHRERE AUFRUFE TRAGEN (BR-04). `a && b`, `a || b`,
-        # `a | b`, `a; b`: Bis BR-04 nahm die Pruefung je Zeile den ERSTEN
+        # EINE ZEILE KANN MEHRERE AUFRUFE TRAGEN. `a && b`, `a || b`,
+        # `a | b`, `a; b`: Früher nahm die Pruefung je Zeile den ERSTEN
         # Aufruf und rechnete ihm jedes Wort dahinter zu. Der zweite Befehl
         # einer Kette blieb ungeprueft -- ein vertippter Unterbefehl von
         # `pruefstand.sh` hinter `geraeteklassen.py &&` meldete 0 Befunde --,
@@ -279,7 +279,7 @@ def pruefe_block(lauf: str, schritt: str, block: str) -> tuple[list[str], list[s
             # Kette nennen Werkzeuge beim Namen ("die Datei server/install.php
             # EINMAL von Hand hochladen") -- das ist Prosa, kein Aufruf. Ebenso
             # ein case-Muster (`*install.php*)`).
-            # EIN CASE-MUSTER HAT VOR SEINEM `)` KEINE OEFFNENDE KLAMMER. Bis BR-03
+            # EIN CASE-MUSTER HAT VOR SEINEM `)` KEINE OEFFNENDE KLAMMER. Früher
             # stand hier `[^|;&]*\)`, und das traf auch `x=$(werkzeug --schalter)`:
             # Jede Befehlsersetzung am Zeilenende ging ungeprueft durch.
             if re.match(r'(?:echo|printf)\b', zeile) or re.match(r'[^|;&(]*\)\s*$', zeile):
@@ -332,7 +332,7 @@ def pruefe_block(lauf: str, schritt: str, block: str) -> tuple[list[str], list[s
                 if not t.startswith('--'):
                     continue
                 # `x=$(werkzeug --schalter)`: Die schliessende Klammer der
-                # Befehlsersetzung haengt am letzten Wort. Bis BR-03 las die
+                # Befehlsersetzung haengt am letzten Wort. Früher las die
                 # Pruefung `--erster)` als Schalternamen (baumsuche.py).
                 name = t.split('=', 1)[0].rstrip(')')
                 if '$' in name:          # ein Schalter aus einer Variablen
@@ -368,10 +368,10 @@ def pruefe_block(lauf: str, schritt: str, block: str) -> tuple[list[str], list[s
 
 
 
-# ------------------------------------------- die zwei Riegel der Kette (R17-19)
+# ------------------------------------------- die zwei Riegel der Kette
 #
 # Anlass: F-R17-16. `CLAUDE.md` 3 nannte zwei Pruefwerte der Kette — „keine
-# fremde `uses:`-Zeile ohne SHA" und „sieben Pfade (bis Web 23.3.0 acht), die Zahl ist der Pruefwert"
+# fremde `uses:`-Zeile ohne SHA" und „sieben Pfade, die Zahl ist der Pruefwert"
 # — und kein Werkzeug mass sie; nur ein Handbefehl, und diese Anleitung
 # behauptete das Gegenteil („jede `uses:`-Zeile"). Beide stehen jetzt hier,
 # weil dieses Werkzeug die Arbeitslaeufe ohnehin Zeile fuer Zeile liest und in
@@ -379,7 +379,7 @@ def pruefe_block(lauf: str, schritt: str, block: str) -> tuple[list[str], list[s
 # Text — die Selbstprobe legt ihnen damit jeden Fehler hin, ohne das
 # Repositorium anzufassen.
 
-# AUCH IN DER FLOW-SCHREIBWEISE (Gegenpruefung R17-19): `- { uses: x@v7 }` ist
+# AUCH IN DER FLOW-SCHREIBWEISE: `- { uses: x@v7 }` ist
 # gueltiges YAML und laeuft; der Anker `^\s*(-\s+)?uses:` sah es nicht. Hinter
 # `{` oder `,` zaehlt `uses:` deshalb ebenso.
 USES_RE = re.compile(r'(?:^\s*(?:-\s+)?|[{,]\s*)uses:\s*([^\s,}]+)(.*)$')
@@ -392,7 +392,7 @@ def fremde_aktionen(texte: dict[str, str]) -> tuple[list[str], int, int]:
 
     Lokale Aufrufe (`./.github/workflows/…`) nehmen keinen Ref und sind
     ausgenommen. Ein Tag (`@v7`) oder ein Zweig ist rot: Er kann sich unter
-    dem Lauf aendern (E-KH-10). Ohne Kommentar ist die Zeile ebenfalls rot —
+    dem Lauf aendern. Ohne Kommentar ist die Zeile ebenfalls rot —
     wer eine Aktion aktualisiert, tauscht SHA UND Kommentar, und eine SHA
     ohne Fassung liest niemand nach.
 
@@ -423,13 +423,13 @@ def fremde_aktionen(texte: dict[str, str]) -> tuple[list[str], int, int]:
 # DIE SOLLLISTE der Ausnahmen (`CLAUDE.md` 3): drei Dateien, die nur auf dem
 # Server liegen oder nicht ausgeliefert werden, und vier Verzeichnisse — je
 # als `x/**` und `x/`, weil die Aktion beides getrennt prueft. SIEBEN PFADE.
-# Dazu drei allgemeine Muster, die keine Serverpfade sind. Bis Web 23.3.0
+# Dazu drei allgemeine Muster, die keine Serverpfade sind. Früher
 # waren es acht: `wartung.lock` und `ueberlast.json` lagen als Dateien im
-# Webroot und sind seither das Verzeichnis `.zustand/` (R17-22, F-R17-47).
+# Webroot und sind seither das Verzeichnis `.zustand/`.
 AUSNAHMEN_DATEIEN = ('config.php', 'install.php', 'install.lock')
 AUSNAHMEN_VERZEICHNISSE = ('sicherungen', 'apk', '.sitzungen', '.zustand')
 AUSNAHMEN_ALLGEMEIN = ('**/.git*', '**/.git*/**', '**/node_modules/**')
-# `install.php` liegt im Repositorium und wird nur nicht ausgeliefert (Nr. 214);
+# `install.php` liegt im Repositorium und wird nur nicht ausgeliefert;
 # alle anderen stehen AUCH in `.gitignore`.
 NICHT_IN_GITIGNORE = ('install.php',)
 
@@ -437,9 +437,9 @@ NICHT_IN_GITIGNORE = ('install.php',)
 def ausnahmen_bloecke(lauf_text: str) -> list[list[str]]:
     """Die Eintraege JEDES Blocks `exclude: |`, in der Reihenfolge der Datei.
 
-    ALLE, nicht der erste (Gegenpruefung R17-19): Bekaeme ein zweiter
+    ALLE, nicht der erste: Bekaeme ein zweiter
     Abgleich-Schritt eine eigene, kuerzere Liste, bliebe sie ungeprueft — und
-    genau die zweite Liste schliesst `CLAUDE.md` 3 aus (E-KH-20 (1))."""
+    genau die zweite Liste schliesst `CLAUDE.md` 3 aus."""
     zeilen = lauf_text.split('\n')
     bloecke: list[list[str]] = []
     for i, z in enumerate(zeilen):
@@ -524,7 +524,7 @@ def riegel_lauf() -> tuple[list[str], list[str]]:
         r = subprocess.run(['git', '-C', str(WURZEL), 'check-ignore', '-q', pfad])
         return r.returncode == 0
 
-    # UEBERALL, nicht nur `server/config.php*` (Gegenpruefung R17-19): Eine
+    # UEBERALL, nicht nur `server/config.php*`: Eine
     # Kopie in `server/api/` oder unter `tools/` ist dasselbe Leck.
     r = subprocess.run(['git', '-C', str(WURZEL), 'ls-files', '--',
                         ':(glob)**/config.php?*', ':(glob)config.php?*'],
@@ -563,7 +563,7 @@ def lauf() -> int:
             ges += n
             proben += 1
 
-    # Die zwei Riegel der Kette (R17-19, F-R17-16) — ihre Befunde zaehlen wie
+    # Die zwei Riegel der Kette — ihre Befunde zaehlen wie
     # die der Aufrufe.
     rab, rzeilen = riegel_lauf()
     alle_ab += rab
@@ -660,7 +660,7 @@ def selbstprobe() -> int:
         if not ok and ab:
             for a in ab:
                 melde(f'         {a}')
-    # Die Lesart der Namensliste, unmittelbar (BR-05): ein Kommentar mit
+    # Die Lesart der Namensliste, unmittelbar: ein Kommentar mit
     # Klammer darin und ein angehaengtes `NAMEN+=(…)`.
     liste = namen_liste('NAMEN=(eins   # die erste (siehe unten)\n       zwei)\nNAMEN+=(drei)\n')
     ok = liste == ['eins', 'zwei', 'drei']
@@ -668,7 +668,7 @@ def selbstprobe() -> int:
     melde(f'  [{"ok " if ok else "FEHL"}] {"NAMEN mit Kommentar (Klammer) und NAMEN+= (BR-05)":<52} '
           f'{" ".join(liste)}')
 
-    # DIE ZWEI RIEGEL DER KETTE (R17-19, F-R17-16). Je Riegel die Fehler,
+    # DIE ZWEI RIEGEL DER KETTE. Je Riegel die Fehler,
     # die er finden MUSS, und die Zeile, die er NICHT melden darf.
     sha = 'a' * 40
     riegel1 = [

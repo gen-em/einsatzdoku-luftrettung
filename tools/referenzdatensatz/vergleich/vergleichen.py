@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Zwei Exporte feldgenau vergleichen (Arbeitspaket B5, E-P1-13).
+"""Zwei Exporte feldgenau vergleichen.
 
 WOFUER. Das Projekt hat keine automatisierten Tests. Was es stattdessen haben
 kann, ist ein REFERENZZUSTAND und die Frage: Kommt derselbe Bestand nach einem
@@ -70,7 +70,7 @@ def _schluessel(zeilen: list[dict], felder: list[str]) -> dict:
 # Diensttage, die tatsaechlich verlorengehen. Ein Schluessel, der sich mit
 # den Daten aendert, verdeckt genau das, was er finden soll.
 #
-# Mehrere Dienste an einem Kalendertag sind seit E9 zulaessig; sie bekommen
+# Mehrere Dienste an einem Kalendertag sind zulaessig; sie bekommen
 # vom Schluessel eine laufende Nummer (`2026-03-28#1`).
 SCHLUESSEL_CSV = {
     "einsaetze":  ["diensttag", "beginn", "uhrzeit_ortszeit"],
@@ -92,8 +92,8 @@ SCHLUESSEL_EDBAK = {
 def _gerundet(ref, ist) -> bool:
     """Ist `ist` genau `ref` auf eine ganze Zahl gerundet, von der Null weg?
 
-    Fuer die Regel `gerundet` (E-S11-66): Die Hoehe eines Spurpunkts steht
-    seit Web 22.5.1 in ganzen Metern. Eine Abweichung um mehr als die
+    Fuer die Regel `gerundet`: Die Hoehe eines Spurpunkts steht
+    in ganzen Metern. Eine Abweichung um mehr als die
     Rundung — oder eine andere Rundung — trifft die Regel nicht.
     """
     try:
@@ -425,7 +425,7 @@ def _kennungen_verschieben(d: dict) -> None:
 
 
 def _papierkorb_zustand_aendern(d: dict) -> None:
-    """Einen AKTIVEN Einsatz in den Papierkorb setzen (E-S1-15, Hinprobe).
+    """Einen AKTIVEN Einsatz in den Papierkorb setzen (Hinprobe).
 
     Die Normalisierung ersetzt den Zeitwert durch eine Marke, den ZUSTAND aber
     nicht. Ein Eintrag, der in der einen Datei aktiv und in der anderen
@@ -442,7 +442,7 @@ def _papierkorb_zustand_aendern(d: dict) -> None:
 def _papierkorb_zeit_verschieben(d: dict) -> None:
     """Nur den ZEITPUNKT aller Papierkorbeintraege aendern (Gegenprobe).
 
-    Genau das passiert bei jedem Einspielen (E-S1-03): Die Frist beginnt neu.
+    Genau das passiert bei jedem Einspielen: Die Frist beginnt neu.
     Es darf NICHT gemeldet werden.
     """
     n = 0

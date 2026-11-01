@@ -249,7 +249,7 @@ class CprMenuDelegate extends TastenDelegate {
     }
 
     function onPreviousPage() as Lang.Boolean {           // UP-Taste bzw. Wischen RUNTER
-        if (Input.beruehrungVerwerfen()) { return true; }   // F-R17-68
+        if (Input.beruehrungVerwerfen()) { return true; }
         var n = CprMenuView.ITEMS.size();
         _v.index = (_v.index - 1 + n) % n;
         WatchUi.requestUpdate();
@@ -257,14 +257,14 @@ class CprMenuDelegate extends TastenDelegate {
     }
 
     function onNextPage() as Lang.Boolean {               // DOWN-Taste bzw. Wischen HOCH
-        if (Input.beruehrungVerwerfen()) { return true; }   // F-R17-68
+        if (Input.beruehrungVerwerfen()) { return true; }
         _v.index = (_v.index + 1) % CprMenuView.ITEMS.size();
         WatchUi.requestUpdate();
         return true;
     }
 
     function onSelect() as Lang.Boolean {                 // START bzw. Action
-        if (Input.beruehrungVerwerfen()) { return true; }   // F-R17-68
+        if (Input.beruehrungVerwerfen()) { return true; }
         var id = CprMenuView.ITEMS[_v.index][2];
         WatchUi.popView(WatchUi.SLIDE_RIGHT);
         if (id == :restart) {
@@ -290,7 +290,7 @@ class CprMenuDelegate extends TastenDelegate {
     }
 
     function onBack() as Lang.Boolean {
-        if (Input.beruehrungVerwerfen()) { return true; }   // F-R17-68
+        if (Input.beruehrungVerwerfen()) { return true; }
         WatchUi.popView(WatchUi.SLIDE_RIGHT);
         return true;
     }
@@ -413,16 +413,16 @@ class ResusOverviewDelegate extends TastenDelegate {
     }
 
     function onPreviousPage() as Lang.Boolean {
-        if (Input.beruehrungVerwerfen()) { return true; }   // F-R17-68
+        if (Input.beruehrungVerwerfen()) { return true; }
         return _step(-1);
     }
     function onNextPage() as Lang.Boolean {
-        if (Input.beruehrungVerwerfen()) { return true; }   // F-R17-68
+        if (Input.beruehrungVerwerfen()) { return true; }
         return _step(1);
     }
 
     function onSelect() as Lang.Boolean {
-        if (Input.beruehrungVerwerfen()) { return true; }   // F-R17-68
+        if (Input.beruehrungVerwerfen()) { return true; }
         var id = _v.items[_v.index][2];
         if (id == :resume) {
             WatchUi.popView(WatchUi.SLIDE_RIGHT);
@@ -435,7 +435,7 @@ class ResusOverviewDelegate extends TastenDelegate {
     }
 
     function onBack() as Lang.Boolean {
-        if (Input.beruehrungVerwerfen()) { return true; }   // F-R17-68
+        if (Input.beruehrungVerwerfen()) { return true; }
         WatchUi.popView(WatchUi.SLIDE_RIGHT);
         return true;
     }

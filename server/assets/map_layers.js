@@ -1,8 +1,8 @@
-/* Basis-Kartenlayer mit Umschalter: der bisherige Standard-OSM-Layer, zwei
+/* Basis-Kartenlayer mit Umschalter: der Standard-OSM-Layer, zwei
  * topographische Varianten mit Hoehenlinien (OpenHikingMap, OpenTopoMap) und
- * seit Web 7.0.0 ein Satellitenbild. Alle Anbieter liefern reine Kartenkacheln
+ * ein Satellitenbild. Alle Anbieter liefern reine Kartenkacheln
  * anhand des sichtbaren Kartenausschnitts -- es werden dabei keine Einsatz-
- * oder Patientendaten uebertragen, genau wie beim bisherigen OSM-Standardlayer
+ * oder Patientendaten uebertragen, genau wie beim OSM-Standardlayer
  * (kein Verstoss gegen das Prinzip "keine externen Anfragen mit
  * Standort-/Patientendaten", das sich auf Geocoding-Dienste bezieht).
  *
@@ -26,21 +26,20 @@
  * hinzu und haengt das Leaflet-eigene Layer-Control (kein Plugin, Teil von
  * Leaflet selbst) oben rechts an.
  *
- * UND SEIT WEB 15.3.1 STARTET ER DIE GROESSENUEBERWACHUNG (F-S8-P-10). Der
+ * UND ER STARTET DIE GROESSENUEBERWACHUNG. Der
  * Grund, warum sie ausgerechnet hier steht und nicht in einer eigenen Datei:
  * Diese Funktion ist der EINE Aufruf, den jede der fuenf Karten der Anwendung
  * macht -- Tag, Einsatz, Zeitraum, Tagesspuren, Ortswahl. Eine zweite Datei
  * haette fuenf Einbindungen und fuenf Aufrufe gebraucht, und eine Seite, die
- * einen davon vergisst, faellt nicht auf: Sie zeigt eine halbe Karte. Genau
- * das war der Fehler, den die Ueberwachung behebt. */
+ * einen davon vergisst, faellt nicht auf: Sie zeigt eine halbe Karte. */
 (function () {
   'use strict';
 
   /* ---------------------------------------------------------------------
    * EdKarte.anlegen(el, o) -- die eine Stelle, an der eine Karte entsteht
-   *   (Schritt 15 AP8, Zaehlzeile Z35)
+   *   (Zaehlzeile Z35)
    *
-   * WAS VORHER WAR. Vier Seiten bauten ihre Karte selbst auf, mit denselben
+   * WARUM ES SIE GIBT. Vorher bauten vier Seiten ihre Karte selbst auf, mit denselben
    * vier Zeilen in drei verschiedenen Reihenfolgen. Gemessen am 22.09.2026:
    * 4 von 4 riefen attachBaseLayers(), 4 von 4 attachFullscreenControl(),
    * 1 von 4 attachGroessenControl(), und KEINE setzte auch nur eine der
@@ -56,7 +55,7 @@
    *     und keine stille Karte am falschen Ort.
    *
    *   `groesse` -- den dritten Kartenknopf gibt es NUR auf der
-   *     Tagesuebersicht (Backlog Nr. 45): Sie ist die einzige Seite mit
+   *     Tagesuebersicht: Sie ist die einzige Seite mit
    *     einer Liste unter der Karte, die vom Hoeherwerden etwas hat.
    *     Vorgabe false, damit die drei anderen ihn nicht geschenkt bekommen.
    *
@@ -147,7 +146,7 @@
   };
 
   /* ---------------------------------------------------------------------
-   * DIE KARTE MUSS IHRE GROESSE NACHMESSEN  (F-S8-P-10)
+   * DIE KARTE MUSS IHRE GROESSE NACHMESSEN
    *
    * DER FEHLER. Leaflet misst seinen Behaelter EINMAL, bei L.map(), und
    * rechnet danach mit dem gemerkten Wert weiter. Es merkt von selbst nur
@@ -159,7 +158,7 @@
    * nach auf.
    *
    * WO ER AUFTRAT. Auf der Tagesuebersicht ab 1600 px: Dort steht die Karte
-   * in der rechten Spalte des Rasters (E-P3-31) und waechst mit der
+   * in der rechten Spalte des Rasters und waechst mit der
    * Einsatztabelle daneben -- und die entsteht erst, wenn die Daten da sind,
    * also NACH L.map(). Gemessen am 05.09.2026 bei 1920 x 1080:
    * Behaelter 400 x 840 px, Leaflet rechnete mit 400 x 324 px. 516 px,

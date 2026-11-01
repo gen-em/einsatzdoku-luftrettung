@@ -7,7 +7,7 @@ require_once __DIR__ . '/diensttag_lib.php';   // dt_art_symbole() fuer die Tabe
 /**
  * Alle Einsaetze eines Jahres oder Monats: Karte, Statistiktabelle und eine
  * Tabelle der Einsaetze — bewusst ohne Farbmarkierung und ohne Tagesnummer,
- * dafuer mit Datum, seit Web 21.4.0 mit 200 Zeilen je Seite (Karte und
+ * dafuer mit Datum, mit 200 Zeilen je Seite (Karte und
  * Kennzahlen bleiben beim ganzen Zeitraum). Die Daten holt der Browser von api/range.php und
  * entschluesselt die geschuetzten Angaben selbst (wie auf der Tagesuebersicht);
  * die Karten-Pins nutzen dieselben entschluesselten Koordinaten. Die Karte
@@ -18,11 +18,10 @@ require_once __DIR__ . '/diensttag_lib.php';   // dt_art_symbole() fuer die Tabe
 $jahr  = (string)($_GET['y'] ?? '');
 $monat = (string)($_GET['m'] ?? '');
 if (!preg_match('/^\d{4}$/', $jahr)) { header('Location: index.php'); exit; }
-/* NUR 01 BIS 12 — dieselbe Pruefung wie `api/range.php` (R17-22, F-R17-44).
- * Bis Web 23.3.0 bestand `m=13` (ebenso 00 oder 99) die Formpruefung: eine
- * Warnung im Reiter System, ein Titel ohne Monat, und `mktime()` rechnete
- * ins naechste Jahr. Ein ungueltiger Monat gilt jetzt als keiner — die
- * Seite zeigt das Jahr. */
+/* NUR 01 BIS 12 — dieselbe Pruefung wie `api/range.php`.
+ * Ein ungueltiger Monat (`m=13`, 00 oder 99) gilt als keiner — die Seite
+ * zeigt das Jahr. Sonst gaebe es eine Warnung im Reiter System, einen Titel
+ * ohne Monat, und `mktime()` rechnete ins naechste Jahr. */
 if ($monat !== '' && !preg_match('/^(0[1-9]|1[0-2])$/', $monat)) { $monat = ''; }
 
 $MONATSNAMEN = ['', 'Januar', 'Februar', 'März', 'April', 'Mai', 'Juni',
@@ -30,7 +29,7 @@ $MONATSNAMEN = ['', 'Januar', 'Februar', 'März', 'April', 'Mai', 'Juni',
 $titel = $monat !== ''
     ? $MONATSNAMEN[(int)$monat] . ' ' . $jahr
     : 'Jahr ' . $jahr;
-/* Spanne des Zeitraums fuer die Unterzeile (E-P3-37). Sie steht hier und
+/* Spanne des Zeitraums fuer die Unterzeile. Sie steht hier und
    nicht im Skript: Sie folgt aus Jahr und Monat, nicht aus den Daten — die
    Zahl der Diensttage traegt das Skript nach, sobald api/range.php da ist. */
 if ($monat !== '') {
@@ -45,7 +44,7 @@ ui_seite_start(['titel' => $titel, 'karte' => true]);
 <?php ui_geruest_start(['aktiv' => 'start', 'leiste' => 'diensttage',
                         'zeitraum' => ['jahr' => $jahr, 'monat' => $monat]]); ?>
     <?php
-    /* SEGMENTWAHL NACH ART (E-P3-37, vorher eine eigene Tableiste `.arttabs`).
+    /* SEGMENTWAHL NACH ART (vorher eine eigene Tableiste `.arttabs`).
        Sie steht in den Aktionen der Titelzeile — am Desktop rechts neben dem
        Titel, mobil vollbreit darunter. Der Baustein bringt die Bedienung mit:
        Radios in einer Gruppe wandern von sich aus mit den Pfeiltasten, der
@@ -78,14 +77,14 @@ ui_seite_start(['titel' => $titel, 'karte' => true]);
                                 'typ' => 'button', 'attr' => ' id="unlockbtn"'])]); ?>
     </div>
 
-    <?php /* Der Hinweis auf neutrale Diensttage (E31). Ohne ihn wäre nicht
+    <?php /* Der Hinweis auf neutrale Diensttage. Ohne ihn wäre nicht
              erklärbar, warum die Summe der beiden Artenansichten kleiner ist
              als „Gemischt". */ ?>
     <div id="neutralhinweis" hidden></div>
 
     <?php /* Die Kacheln entstehen im Browser: Welche es gibt und wie sie
-             heissen, hängt von der Ansicht ab (E-P3-37) und bei den
-             Windenkacheln zusätzlich vom Bestand (E30, A13d). Unter 720 px
+             heissen, hängt von der Ansicht ab und bei den
+             Windenkacheln zusätzlich vom Bestand. Unter 720 px
              sind VIER sichtbar, der Rest steht hinter „Weitere Statistik". */ ?>
     <div class="kennzahl-raster" id="kennzahlen" hidden></div>
     <button type="button" class="leiser-link kennzahl-mehr-knopf nur-unter-720"
@@ -99,7 +98,7 @@ ui_seite_start(['titel' => $titel, 'karte' => true]);
       <div class="karte-kopf">
         <h2 class="karte-titel">Einsätze</h2>
         <span class="karte-zahl" id="einsatzzahl"></span>
-        <?php /* Sortieren über dasselbe Blatt wie auf der Suchseite (E-P3-32):
+        <?php /* Sortieren über dasselbe Blatt wie auf der Suchseite:
                  auf dem Handy der einzige Weg zu einer anderen Ordnung, am
                  Desktop ein Aufklappmenü neben dem Tabellenkopf. */ ?>
         <div class="aktionen sortieren-aktion">
@@ -117,10 +116,14 @@ ui_seite_start(['titel' => $titel, 'karte' => true]);
         </div>
       </div>
       <div class="karte-inhalt">
+        <?php /* Solange nach den gezeigten Zeilen der übrige Zeitraum
+                 geöffnet wird: Pins der Karte und die Kennzahlen
+                 aus geschützten Angaben kommen erst danach. */ ?>
+        <?= ui_ladeplatz('Weitere geschützte Angaben werden geöffnet …', ['attr' => ' id="treffer-lade"']) ?>
         <p id="leer" class="feld-hinweis" hidden>In diesem Zeitraum sind keine Einsätze erfasst.</p>
         <?php /* Ab 720 px die Tabelle im eigenen Scrollbehälter, darunter die
                  dreizeilige Kachel mit Artzeichen und Datum — beide aus
-                 demselben Zeilenbestand (E-P3-32/37, missiontable.js). */ ?>
+                 demselben Zeilenbestand (missiontable.js). */ ?>
         <div class="tabelle-scroll nur-ab-720">
           <table class="tabelle" id="rangetable" hidden>
             <thead></thead>
@@ -134,15 +137,14 @@ ui_seite_start(['titel' => $titel, 'karte' => true]);
 <?php ui_krypto_bootstrap(); ?>
 <script src="<?= asset('assets/patient.js') ?>"></script>
 <?php /* Vorspann der Einsatztabelle (Artsymbole, Typsymbole, Katalogspalten)
-         — seit Schritt 15 AP9b an EINER Stelle, ui_tabellen_bootstrap() in
-         ui.php. Hier standen diese Zeilen wortgleich in zwei Dateien.
+         — an EINER Stelle, ui_tabellen_bootstrap() in ui.php.
          Er muss VOR assets/missiontable.js stehen. */
       ui_tabellen_bootstrap(); ?>
 <script src="<?= asset('assets/missiontable.js') ?>"></script>
 <script src="<?= asset('assets/vendor/leaflet/leaflet.js') ?>"></script>
 <script src="<?= asset('assets/map_fullscreen.js') ?>"></script>
 <script src="<?= asset('assets/map_layers.js') ?>"></script>
-<?php /* geo.js liefert das Standort-Haus (E-P3-40) und die Farben aus den
+<?php /* geo.js liefert das Standort-Haus und die Farben aus den
          Token — dieselbe Quelle wie auf Tages- und Einsatzkarte. */ ?>
 <script src="<?= asset('assets/geo.js') ?>"></script>
 <script<?= kopf_nonce_attr() ?>>
@@ -366,9 +368,11 @@ const KACHELSATZ = { air: KACHELN_LUFT, ground: KACHELN_BODEN, mix: KACHELN_GEMI
    immer zwei. */
 const SPALTEN_JE_SATZ = { air: 5, ground: 4, mix: 4 };
 
-/* Alle Kennzahlen in EINEM Durchlauf. Sie kommen unverschluesselt aus
+/* Alle Kennzahlen in EINEM Durchlauf. Fast alle kommen unverschluesselt aus
  * api/range.php, sind also sofort verfuegbar — unabhaengig von der lokalen
- * Entschluesselung der geschuetzten Felder (Ort/Alter/Diagnose).
+ * Entschluesselung der geschuetzten Felder (Ort/Alter/Diagnose). Die
+ * Ausnahme ist die hoechste Ortshoehe: Sie liegt im pat_blob und steht erst
+ * nach dem Entschluesseln in `site_ele_m`; vorher bleibt sie leer.
  *
  * Gleichstand bei den Extremwerten: Es gewinnt der zuerst gefundene Einsatz —
  * api/range.php liefert ORDER BY started_at, also der zeitlich frueheste.
@@ -694,17 +698,8 @@ function zeichneSegment(){
  * 0,7 s spaeter (7,0 statt 6,3 s) — die Bilder dazwischen kosten Zeit. Das
  * ist gewollt (E-R4-64): Wer die Seite oeffnet, will zuerst die Liste.
  *
- * `setTimeout(…, 100)` DANEBEN, weil ein Tab im Hintergrund kein Bild
- * zeichnet und `requestAnimationFrame` dort nie feuert — die Seite stuende
- * sonst still, bis jemand hinsieht. */
-function naechstesBild(){
-  return new Promise(weiter => {
-    let fertig = false;
-    const los = () => { if (!fertig) { fertig = true; setTimeout(weiter, 0); } };
-    requestAnimationFrame(los);
-    setTimeout(los, 100);
-  });
-}
+ * Das Abwarten eines Bildes steht in `EdHtml.naechstesBild()`,
+ * weil die Suche es ebenso braucht. */
 
 /* DIE KARTE EIN BILD SPAETER — und nur die letzte, die bestellt ist. Wechselt
  * der Tab in der Luecke, zeichnet zeichne() die Karte der neuen Ansicht
@@ -714,7 +709,7 @@ function naechstesBild(){
 let kartenLauf = 0;
 async function karteNachBild(liste){
   const lauf = ++kartenLauf;
-  await naechstesBild();
+  await EdHtml.naechstesBild();
   if (lauf !== kartenLauf) { return; }
   zeichneKarte(liste);
   if (fixierteMid != null) { wendeHervorhebungAn(fixierteMid); }
@@ -908,7 +903,7 @@ function zeigeFehler(msg){
   // Wechsel: Sonst zeigte ein sofort kopierter Link auf keine bestimmte.
 
   if (PAT_WRAP) {
-    await naechstesBild();   // die Tabelle erscheint, bevor alles entschluesselt wird
+    await EdHtml.naechstesBild();   // die Tabelle erscheint, bevor alles entschluesselt wird
     await entschluesselePat();
   }
 })();
@@ -921,36 +916,56 @@ async function entschluesselePat(){
   /* Schluessel, Banner, Entschluesseln und Zaehlen: EdPat.listeLaden()
      (Schritt 15 AP8f). Der Nachlauf bleibt hier — diese Seite vermerkt
      die Koordinate nur und ueberlaesst das Zeichnen dem Tab. */
+  /* DIE GEZEIGTEN ZEILEN ZUERST: erst die 200 der
+     Tabelle, die neu gezeichnet wird, dann der Rest; danach wie zuvor
+     Tabelle, Kennzahlen und Karte. Sortiert die Tabelle nach einer
+     geschuetzten Spalte, steht nicht fest, welche Zeilen oben stehen — dann
+     alles am Stueck. */
+  const lade = EdHtml.ladeplatz(document.getElementById('treffer-lade'));
+  const zuerst = tabelle.sortGeschuetzt() ? [] : tabelle.gezeigt();
   const { ck, zahl } = await EdPat.listeLaden(missions, {
     wrap: PAT_WRAP, salt: KDF_SALT, iter: KDF_ITER,
     banner: document.getElementById('lockbanner'),
+    zuerst: zuerst,
+    nachZuerst: async () => {
+      zuerst.forEach(patUebernehmen);
+      tabelle.zeichne();
+      lade.zeige('Weitere geschützte Angaben werden geöffnet …');
+      await EdHtml.naechstesBild();
+    },
   });
+  lade.weg();
   if (!ck) { return; }
-  for (const m of missions) {
-    if (m._patState !== 'ok') { continue; }
-    const o = m._pat;
-    if (o.dx != null) { m._dx = o.dx; }
-    const alter = EdPat.alterAnzeige(o, m.day);   // Alter zum jeweiligen Einsatztag
-    if (alter != null) { m._age = alter; }
-    if (o.loc && o.loc.addr) { m._ort = extractOrt(o.loc.addr); }
-    /* Die Koordinate wird am Einsatz VERMERKT, der Pin aber erst in
-       zeichneKarte() gesetzt: Welche Pins auf der Karte liegen, entscheidet
-       der Tab, und der kann nach dem Entschluesseln noch wechseln. */
-    if (o.loc && o.loc.lat != null) {
-      m._lat = o.loc.lat; m._lon = o.loc.lon; m._addr = o.loc.addr;
-    }
-    /* Die Hoehe des Einsatzorts (Kachel „Hoechster Einsatzort") liegt seit
-       S11-05b im Blob; gesperrt bleibt die Kachel leer. */
-    if (o.ortshoehe != null) { m.site_ele_m = Number(o.ortshoehe); }
-  }
+  missions.forEach(patUebernehmen);
   EdPat.zeigeUnlesbar(zahl);
   /* Immer neu zeichnen: Die Tabelle hat jetzt Ort, Alter und Diagnose, und
      die Karte ihre Pins. Ein „nur wenn sich etwas geaendert hat" waere hier
      eine zweite Buchfuehrung ueber dieselbe Schleife — die Ersparnis ist ein
      Neuaufbau der Tabelle, den niemand bemerkt. Zwischen Entschluesseln,
-     Tabelle und Karte zeichnet der Browser je ein Bild (naechstesBild()). */
-  await naechstesBild();
+     Tabelle und Karte zeichnet der Browser je ein Bild (EdHtml.naechstesBild()). */
+  await EdHtml.naechstesBild();
   zeichne({ karteDanach: true });
+}
+
+/* Was der Zeitraum aus einem geoeffneten Block liest. Einmal je Einsatz;
+   fuer die zuerst gezeigten laeuft es schon nach der ersten Stufe, und ein
+   zweiter Lauf schreibt dieselben Werte. */
+function patUebernehmen(m) {
+  if (m._patState !== 'ok') { return; }
+  const o = m._pat;
+  if (o.dx != null) { m._dx = o.dx; }
+  const alter = EdPat.alterAnzeige(o, m.day);   // Alter zum jeweiligen Einsatztag
+  if (alter != null) { m._age = alter; }
+  if (o.loc && o.loc.addr) { m._ort = extractOrt(o.loc.addr); }
+  /* Die Koordinate wird am Einsatz VERMERKT, der Pin aber erst in
+     zeichneKarte() gesetzt: Welche Pins auf der Karte liegen, entscheidet
+     der Tab, und der kann nach dem Entschluesseln noch wechseln. */
+  if (o.loc && o.loc.lat != null) {
+    m._lat = o.loc.lat; m._lon = o.loc.lon; m._addr = o.loc.addr;
+  }
+  /* Die Hoehe des Einsatzorts (Kachel „Hoechster Einsatzort") liegt seit
+     S11-05b im Blob; gesperrt bleibt die Kachel leer. */
+  if (o.ortshoehe != null) { m.site_ele_m = Number(o.ortshoehe); }
 }
 
 document.getElementById('unlockbtn').addEventListener('click', () => entschluesselePat());

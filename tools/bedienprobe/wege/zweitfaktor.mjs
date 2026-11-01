@@ -1,8 +1,7 @@
-/* Wege des Zweitfaktors (`zweitfaktor.php`, P5c/AP5).
+/* Wege des Zweitfaktors (`zweitfaktor.php`).
  * ===========================================================================
  *
- * Entstanden mit P5c/AP5 (E-P5c-41, -61, -87; Bild M-P5c-02b). Nach der
- * SEITE benannt (E-PK-15).
+ * Nach der SEITE benannt.
  *
  *   zweitfaktor-einrichten      Einrichtungstor für eine Pflichtrolle: der
  *                               QR-Code, gelesen mit jsQR aus einem Abzug,
@@ -10,8 +9,7 @@
  *                               otpauth-Adresse; mit dem Code eingeschaltet
  *                               stehen zehn Codes da, und „Weiter" wird erst
  *                               mit dem Haken frei
- *   zweitfaktor-merken          „Dieses Gerät n Tage merken" (Schritt 18,
- *                               SR-02): der Haken nennt die Dauer der
+ *   zweitfaktor-merken          „Dieses Gerät n Tage merken": der Haken nennt die Dauer der
  *                               Rollengruppe; angehakt fragt die nächste
  *                               Anmeldung im selben Browser keinen Code, und
  *                               das Profil zählt ein Gerät

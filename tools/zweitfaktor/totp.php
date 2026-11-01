@@ -2,7 +2,7 @@
 declare(strict_types=1);
 
 /**
- * DER CODE-RECHNER FÜR PHP (P5c/AP5, E-P5c-43). Einer je Sprache, nicht
+ * DER CODE-RECHNER FÜR PHP. Einer je Sprache, nicht
  * einer je Werkzeug — die beiden anderen sind `totp.mjs` und `totp.py`
  * daneben; alle drei rechnen dasselbe und teilen denselben Zähler.
  *
@@ -13,7 +13,7 @@ declare(strict_types=1);
  * (`PRUEF_TOTP_SANDBOX`, eingerichtet von `pruefkonto.php`). Auf Staging
  * reicht die Kette das Secret `STAGING_TOTP` durch.
  *
- * KEIN CODE GILT ZWEIMAL (E-P5c-54). Der Server nimmt nur einen Zeitschritt,
+ * KEIN CODE GILT ZWEIMAL. Der Server nimmt nur einen Zeitschritt,
  * der größer ist als der zuletzt angenommene. Zwei Anmeldungen im selben
  * 30-Sekunden-Fenster mit demselben Code — die zweite scheitert. Der Rechner
  * führt deshalb einen Zähler in einer Datei (`pruef_totp_zaehlerdatei()`),

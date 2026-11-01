@@ -1,8 +1,7 @@
 /* Wege der Seite Verwaltung → Rechtstexte (`admin_rechtstexte.php`).
  * ===========================================================================
  *
- * Entstanden mit P5c/AP9 (E-P5c-28, Backlog Nr. 121; Mockup M-P5c-01d,
- * Variante 2). Nach der SEITE benannt (E-PK-15).
+ * Nach der SEITE benannt.
  *
  *   admin-rechtstexte-vorschau   tippen → nach 0,4 s steht der getippte Text
  *                                in der Vorschau, vom Server gerendert, HTML
@@ -12,19 +11,22 @@
  *                                und speichert nichts
  *   admin-rechtstexte-neuladen   Speichern ohne Änderung leitet auf den Reiter
  *                                um; Neuladen speichert nicht noch einmal
- *                                (R4-11, Backlog Nr. 250)
  *
  * WER DIE SEITE UND DEN ENDPUNKT ERREICHT, misst die Rollenprobe
  * (`tools/proben/rollen/`) gegen die Matrix — hier geht es um das, was nur
  * ein Browser zeigt. Der erste Browserlauf fand genau so etwas: Die Seite
  * trug kein `CSRF`, der Endpunkt antwortete 403, und die Plakette stand auf
- * „nicht aktuell" (F-P5c-154).
+ * „nicht aktuell".
  *
  * BEIDE WEGE SPEICHERN NICHTS. Der Text der Nutzungsbedingungen wird vorher
  * und nachher aus der Datenbank gelesen; ein Unterschied ist ein Befund.
  */
 
 import { execFileSync } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
+/* Die Wurzel des Repositoriums aus dem Ort dieser Datei — kein fester
+   Containerpfad; `ED_WURZEL` geht weiter vor. */
+const WURZEL_HIER = fileURLToPath(new URL('../../../', import.meta.url));
 import { neuladenPruefen } from '../neuladen.mjs';
 
 const SEITE = k => `${k.basis}/admin_rechtstexte.php?t=nutzungsbedingungen`;
@@ -34,7 +36,7 @@ function gespeichert() {
   return execFileSync('php', ['-r',
     'require "server/db.php"; require "server/ui.php"; require "server/rechtstexte_lib.php"; '
     + 'echo json_encode(rt_lesen("nutzungsbedingungen"));'],
-    { cwd: process.env.ED_WURZEL || '/home/user/einsatzdoku-luftrettung',
+    { cwd: process.env.ED_WURZEL || WURZEL_HIER,
       encoding: 'utf-8' }).trim();
 }
 
@@ -154,7 +156,7 @@ export const wege = [
       zaehler: () => Number(execFileSync('php', ['-r',
         'require "server/db.php"; echo db()->query("SELECT COUNT(*) FROM protokoll_ereignisse '
         + 'WHERE art = \'rechtstext_geaendert\'")->fetchColumn();'],
-        { cwd: process.env.ED_WURZEL || '/home/user/einsatzdoku-luftrettung',
+        { cwd: process.env.ED_WURZEL || WURZEL_HIER,
           encoding: 'utf-8' }).trim()),
     }),
   },

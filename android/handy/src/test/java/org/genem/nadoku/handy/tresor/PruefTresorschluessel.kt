@@ -17,8 +17,7 @@ import javax.crypto.SecretKey
  * NICHT GEPRÜFT ist die eine überschriebene Methode von
  * [KeystoreTresorschluessel]: dass der Schlüssel im `AndroidKeyStore` entsteht
  * und ihn nicht verlässt. Robolectric bringt keinen `AndroidKeyStore` mit
- * (`KeyStoreException: AndroidKeyStore not found`), und ein Emulator steht
- * nicht zur Verfügung (E-R45-8). Diese eine Zeile steht auf der Prüfliste des
+ * (`KeyStoreException: AndroidKeyStore not found`). Diese eine Zeile steht auf der Prüfliste des
  * Gerätetests.
  */
 class PruefTresorschluessel : GcmTresorschluessel() {

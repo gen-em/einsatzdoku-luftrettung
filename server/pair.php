@@ -16,7 +16,7 @@ declare(strict_types=1);
  *                -> 200 {"ok":true, "kontoschluessel": "<Base64>"|null}. Nach
  *                Ja gibt es das Geraet, nach Nein die Sitzung nicht mehr.
  *
- * DER KONTOSCHLUESSEL (S11-03, Konzept S11 3.4, E-S11-09). Wer gekoppelt ist,
+ * DER KONTOSCHLUESSEL. Wer gekoppelt ist,
  * bekommt mit `bestaetigen` (Ja) UND mit `status` (`gekoppelt`) den
  * oeffentlichen Schluessel des Kontos: 65 Byte SEC1 (0x04 ‖ X ‖ Y) in Base64.
  * Damit verschliesst das Geraet Spur, Phasenkoordinaten und Reanimation
@@ -27,33 +27,33 @@ declare(strict_types=1);
  * Geraet ohne Schluessel sendet nicht und sagt „Neu koppeln“.
  *   trennen      mit Kopfzeilen. {"aktion":"trennen"} -> 200 {"ok":true}
  *                Die Uhr gibt ihre Kopplung zurueck, das Geraet wird geloescht
- *                (seit Web 9.15.0, Backlog Nr. 14 — Begruendung am Zweig).
+ *                (Begruendung am Zweig).
  *
- * DER ABLAUF HAT SICH MIT WEB 13.0.0 UMGEDREHT (S5; R49, E-R49-1 bis -8). Bis
- * 12.9.4 erzeugte das Web den Code, und die Uhr tippte ihn — sechs Zeichen
- * ueber einen TextPicker am Handgelenk. Jetzt ZEIGT das Geraet den Code, ein
+ * DAS GERAET ZEIGT DEN CODE, nicht umgekehrt — sechs Zeichen ueber einen
+ * TextPicker am Handgelenk zu tippen ist keine Bedienung. Das Geraet zeigt
+ * den Code, ein
  * Mensch tippt ihn im Browser, und das Geraet hat das letzte Wort: Es sieht
  * die maskierte Adresse des Kontos, das seinen Code eingegeben hat, und sagt
- * Ja oder Nein. Zwei Angriffsflaechen, zwei Tore (E-S5-05): Ein fremdes
+ * Ja oder Nein. Zwei Angriffsflaechen, zwei Tore: Ein fremdes
  * Geraet im eigenen Konto scheitert an der Bestaetigungsseite im Web (sie
  * zeigt Art und Modell); das eigene Geraet im fremden Konto scheitert am Ja
  * auf dem Geraet (die falsche Adresse faellt auf).
  *
- * DER CODE IST NUR FUER DEN MENSCHEN (E-S5-03). Er weist nirgends etwas aus;
+ * DER CODE IST NUR FUER DEN MENSCHEN. Er weist nirgends etwas aus;
  * wer ihn abliest, kann am Geraet nichts ausloesen. Was das Geraet ausweist,
  * sind Kennung und Schluessel aus `start` — und die sind bis zum Ja
- * SCHWEBEND (E-R49-2): Sie stehen in pair_sessions, nicht in devices, und
+ * SCHWEBEND: Sie stehen in pair_sessions, nicht in devices, und
  * ingest.php weist sie ab. Ohne Bestaetigung sind sie wertlos.
  *
  * Dieser Endpunkt ist OHNE ANMELDUNG erreichbar. Was ihn schuetzt, in der
  * Reihenfolge, in der es greift — jede Bremse VOR der Arbeit, die sie begrenzt:
  *
- *   1. Ratenschutz je Anliegen (ratelimit_lib.php, E-S5-16): `start` zaehlt
+ *   1. Ratenschutz je Anliegen (ratelimit_lib.php): `start` zaehlt
  *      JEDE Anfrage je IP (Topf pair_start); status, bestaetigen und trennen
  *      zaehlen 401 je IP (Topf pair). Die Code-Eingabe im Web hat ihren
  *      eigenen Topf (pair_code, einstellungen.php).
  *   2. Obergrenze offener Sitzungen (PAIR_SITZUNGEN_MAX, db.php), per SQL
- *      ueber unverfallene Zeilen (E-S5-14). `start` raeumt nichts vorab auf.
+ *      ueber unverfallene Zeilen. `start` raeumt nichts vorab auf.
  *   3. Genug Moeglichkeiten (PAIR_LEN aus PAIR_CHARS) und eine kurze Frist
  *      (PAIR_TTL_MIN), beides db.php — EINE Frist ab `start` fuer alles.
  *   4. Die Rueckbestaetigung am Geraet: das Tor, in das ein geratener Code
@@ -62,7 +62,7 @@ declare(strict_types=1);
  *      aendert nichts an der Wahrscheinlichkeit, aber viel daran, wie lange
  *      ein fremdes Geraet unbemerkt bliebe.
  *
- * KONSTANTE ANTWORTDAUER (E-S5-31): Jeder Zweig, der einem Fremden etwas
+ * KONSTANTE ANTWORTDAUER: Jeder Zweig, der einem Fremden etwas
  * sagen koennte, endet ueber abweisen() -> rate_gleiche_dauer(). Der
  * unbekannte Zweig rechnet gegen GERAET_VERGLEICHSWERT dieselben Schritte
  * wie der bekannte; die Ruempfe fuer „Kennung unbekannt“ und „Schluessel
@@ -70,17 +70,17 @@ declare(strict_types=1);
  * Geraetelimit) kommen OHNE Verzoegerung: Sie setzen die richtige Kennung UND
  * den richtigen Schluessel voraus und sagen einem Fremden nichts.
  *
- * WAS ZAEHLT UND WAS NICHT (E-S5-17): 401 zaehlt im Topf pair. Ein Rumpf ohne
+ * WAS ZAEHLT UND WAS NICHT: 401 zaehlt im Topf pair. Ein Rumpf ohne
  * oder mit unbekannter Aktion zaehlt nicht — das ist eine alte Uhr, kein
  * Raten. 410 und 409 zaehlen nicht („der Code war richtig, hier ist niemand
- * am Raten“). Und GELEERT WIRD DER TOPF HIER GAR NICHT MEHR (Web 13.1.1,
- * Begruendung am Ende der Datei): Ein gelungenes `status` duerfte den Zaehler
+ * am Raten“). Und GELEERT WIRD DER TOPF HIER GAR NICHT (Begruendung am Ende
+ * der Datei): Ein gelungenes `status` duerfte den Zaehler
  * ohnehin nicht leeren — sonst setzte ein Angreifer mit einer eigenen,
  * gueltigen Sitzung alle fuenf Sekunden zurueck, waehrend er daneben fremde
  * Kennungen durchprobiert. Und beim `trennen` war es schlimmer: Der Topf
- * `pair` gehoert auch `jobs.php` (bis Web 22.2.0 auch `gpx.php`).
+ * `pair` gehoert auch `jobs.php`.
  *
- * SCHLUESSEL LIEGEN ALS SHA-256 (E-S5-41, E-S5-42; db.php erklaert die
+ * SCHLUESSEL LIEGEN ALS SHA-256 (db.php erklaert die
  * Verfahrenswahl): 24 Zufallsbytes brauchen kein bcrypt, und 120
  * status-Abfragen je Sitzung haetten bei bcrypt rund 27 s Rechenzeit
  * gekostet. Der Klartext des Schluessels wird GENAU EINMAL uebertragen — in
@@ -89,8 +89,8 @@ declare(strict_types=1);
  *
  * EINE ALTE UHR (2.0.0 sendet {"code": ...}) bekommt 400 mit der Meldung
  * „Uhr-App aktualisieren“ — der einzige Kanal, auf dem sie erfaehrt, was zu
- * tun ist (E-S5-19). Eine Uebergangszeit mit beiden Wegen gibt es nicht
- * (E-R49-7): Der alte setzte einen im Web erzeugten Code voraus, und den gibt
+ * tun ist. Eine Uebergangszeit mit beiden Wegen gibt es nicht:
+ * Der alte setzte einen im Web erzeugten Code voraus, und den gibt
  * es nicht mehr. Bestehende Kopplungen sind davon nicht beruehrt.
  */
 require_once __DIR__ . '/db.php';
@@ -99,11 +99,11 @@ require_once __DIR__ . '/ratelimit_lib.php';
 require_once __DIR__ . '/smtp.php';
 require_once __DIR__ . '/geraete_lib.php';
 require_once __DIR__ . '/kopplung_lib.php';
-require_once __DIR__ . '/kontopaar_lib.php';   // kp_fuer_geraet() (S11-03)
-require_once __DIR__ . '/format_lib.php';   // datum_zeit_text() fuer die Mailfelder (Schritt 15/AP7)
-require_once __DIR__ . '/einstieg_lib.php'; // erststart_erledigt() (R17-21, F-R17-70)
+require_once __DIR__ . '/kontopaar_lib.php';   // kp_fuer_geraet()
+require_once __DIR__ . '/format_lib.php';   // datum_zeit_text() fuer die Mailfelder
+require_once __DIR__ . '/einstieg_lib.php'; // erststart_erledigt()
 
-/* DIE KOPFZEILEN SETZT `db.php` (P5a/AP4a, Nr. 203) — `json_out()`,
+/* DIE KOPFZEILEN SETZT `db.php` — `json_out()`,
  * `json_roh_out()` oder, wo die Antwort nicht das Ende ist, `json_kopf()`.
  * Hier stand eine einzelne `header()`-Zeile ganz oben; `nosniff`,
  * `Referrer-Policy` und `Cache-Control: no-store` fehlten. DIESE ANTWORT
@@ -123,7 +123,7 @@ function abweisen(int $status, string $fehler, bool $zaehlen = true, array $mehr
     json_out(['error' => $fehler] + $mehr, $status);
 }
 
-/** Antwort OHNE Verzoegerung — fuer Zweige, die einem Fremden nichts sagen (E-S5-31). */
+/** Antwort OHNE Verzoegerung — fuer Zweige, die einem Fremden nichts sagen. */
 function antworten(int $status, array $rumpf): never
 {
     json_out($rumpf, $status);
@@ -158,7 +158,7 @@ if ($aktion === 'start') {
         gesperrt('zu_viele_sitzungen', 'Der Server ist gerade ausgelastet. Bitte später erneut.');
     }
 
-    /* ---- Was fuer ein Geraet koppelt hier? (R42, S6) ----------------------
+    /* ---- Was fuer ein Geraet koppelt hier? ----------------------
      *
      * Der Block wird HIER gelesen und aufgeloest und liegt bis zum Ja in der
      * Sitzung; bestaetigen uebernimmt die drei Werte von dort in die
@@ -177,7 +177,7 @@ if ($aktion === 'start') {
         $geraet = ['art' => null, 'modell' => null, 'teil' => null];
     }
 
-    /* ---- Kennung 128 Bit (M4-08), Schluessel 192 Bit ------------------------
+    /* ---- Kennung 128 Bit, Schluessel 192 Bit ------------------------
      *
      * Die Kennung ist KEIN Geheimnis — sie steht im Kopf jeder Anfrage; die
      * Berechtigung haengt am Schluessel. Sechzehn Bytes machen ein zufaelliges
@@ -206,7 +206,7 @@ if (!rate_erlaubt('pair')) {
     gesperrt('zu_viele_versuche', 'Zu viele Kopplungsversuche. Bitte später erneut.');
 }
 if (!in_array($aktion, ['status', 'bestaetigen', 'trennen'], true)) {
-    // Ohne oder mit unbekannter Aktion: eine alte Uhr (E-S5-19) oder Unsinn.
+    // Ohne oder mit unbekannter Aktion: eine alte Uhr oder Unsinn.
     // Zaehlt nicht — hier raet niemand. Die Meldung hat 21 Zeichen und passt
     // in die Hinweiszeile der Uhr (ZEILE_MAX 26).
     abweisen(400, 'aktion', false, ['meldung' => 'Uhr-App aktualisieren']);
@@ -217,7 +217,7 @@ $apiKey = (string)($_SERVER['HTTP_X_API_KEY']   ?? '');
 $antwort = is_array($b) ? (string)($b['antwort'] ?? '') : '';
 $pdo = db();
 
-/* ---- Erst die Sitzung, dann das Geraet (E-S5-15) --------------------------
+/* ---- Erst die Sitzung, dann das Geraet --------------------------
  *
  * Eine Kennung steht entweder in pair_sessions (schwebend) oder in devices
  * (gekoppelt) — nie in beiden: bestaetigen legt das Geraet an und loescht die
@@ -250,7 +250,7 @@ if ($sitzung !== null) {
     }
 
     /* Nein — in JEDEM Zustand, auch verfallen: So bricht ein Geraet ab, das
-     * zurueck auf die Sync-Seite geht (E-S5-23). Ein `trennen` mit schwebenden
+     * zurueck auf die Sync-Seite geht. Ein `trennen` mit schwebenden
      * Zugangsdaten wirkt genauso: Es gibt kein Geraet, das sich trennen
      * liesse, nur eine Sitzung, die dann niemand mehr braucht. */
     if ($aktion === 'trennen' || $antwort === 'nein') {
@@ -262,7 +262,7 @@ if ($sitzung !== null) {
     if ($rest <= 0) { antworten(410, ['error' => 'abgelaufen']); }
     if ($sitzung['user_id'] === null) { antworten(409, ['error' => 'nicht_beansprucht']); }
 
-    /* ---- Das Geraet entsteht: eine Transaktion (E-S5-13) --------------------
+    /* ---- Das Geraet entsteht: eine Transaktion --------------------
      *
      * SELECT ... FOR UPDATE sperrt die Zeile; ein zweites Ja fuer dieselbe
      * Sitzung wartet und findet sie dann nicht mehr — es faellt unten in den
@@ -270,7 +270,7 @@ if ($sitzung !== null) {
      * Anlegen und Loeschen stehen in EINEM Commit: Scheitert eines, bleibt die
      * Sitzung bestehen, das Geraet bekommt 500 und darf wiederholen.
      *
-     * DAS GERAETELIMIT WIRD HIER NOCH EINMAL GEPRUEFT (E-S5-18), obwohl das
+     * DAS GERAETELIMIT WIRD HIER NOCH EINMAL GEPRUEFT, obwohl das
      * Web es beim Eingeben schon getan hat: Zwischen Klick und Ja kann ein
      * Geraet von Hand dazugekommen sein. Beanspruchte, unbestaetigte Sitzungen
      * zaehlen nicht mit — zwei gleichzeitige Kopplungen enden deterministisch
@@ -310,11 +310,9 @@ if ($sitzung !== null) {
                            $frisch['geraet_art'], $frisch['geraet_modell'], $frisch['geraet_teil']]);
             $pdo->prepare('DELETE FROM pair_sessions WHERE id = ?')->execute([$sid]);
             $pdo->commit();
-            /* DER DRITTE SCHRITT DES ERSTSTARTS IST ERLEDIGT (F-R17-70).
-             * Bis Web 23.3.0 setzte ihn nur die Handanlage auf der
-             * Geraeteseite — der Weg, den kaum jemand ging und den R17-21
-             * gestrichen hat. Wer koppelte, sah „Uhr oder Handy koppeln" auf
-             * der Startseite weiter offen. Nach dem Commit: Der Vermerk ist
+            /* DER DRITTE SCHRITT DES ERSTSTARTS IST ERLEDIGT. Sonst saehe,
+             * wer koppelt, „Uhr oder Handy koppeln" auf der Startseite weiter
+             * offen. Nach dem Commit: Der Vermerk ist
              * eine Anzeige, er darf die Kopplung nicht zurueckrollen, und
              * `erststart_erledigt()` faengt seine Fehler selbst. */
             erststart_erledigt($ownerId, ERSTSTART_GERAET);
@@ -332,7 +330,7 @@ if ($sitzung !== null) {
         echo json_encode(['ok' => true,
                           'kontoschluessel' => kp_fuer_geraet($pdo, (int)$frisch['user_id'])]);
 
-        /* ---- Den Kontoinhaber benachrichtigen (M4-10, E-S5-20) ---------------
+        /* ---- Den Kontoinhaber benachrichtigen ---------------
          *
          * Dies ist die Stelle, an der ein Geraet zum Konto DAZUKOMMT — und die
          * einzige, an der die betroffene Person es erfahren kann, ohne sich
@@ -389,20 +387,21 @@ if ($aktion === 'status') {
 if ($aktion === 'bestaetigen') {
     if (!in_array($antwort, ['ja', 'nein'], true)) { abweisen(400, 'payload', false); }
     /* Ja: Das Geraet gibt es schon — die Antwort auf das erste Ja ging
-     * verloren (Idempotenz, E-S5-15). Nein: Es gibt keine Sitzung mehr, die
+     * verloren (Idempotenz). Nein: Es gibt keine Sitzung mehr, die
      * sich verwerfen liesse; das Geraet bleibt stehen. Das ist die sichere
      * Richtung: Ein Nein, das ein fertiges Geraet loeschte, waere ein Trennen
-     * ohne Trennen-Mail (E-S5-48). */
+     * ohne Trennen-Mail. */
     antworten(200, ['ok' => true,
                     'kontoschluessel' => kp_fuer_geraet($pdo, (int)$dev['user_id'])]);
 }
 
-/* ---- Trennen: die Uhr gibt ihre Kopplung zurueck (Backlog Nr. 14) ---------
+/* ---- Trennen: die Uhr gibt ihre Kopplung zurueck ---------
  *
- * WOZU. Eine geteilt genutzte Uhr wechselt die Person. Bis Web 9.15.0 gab es
- * dafuer nur den Weg „neu koppeln“: Gelang das nicht, dokumentierte die Uhr
- * stillschweigend weiter auf das VORHERIGE Konto — niemand sah es ihr an. Die
- * Uhr trennt sich jetzt zuerst ausdruecklich, und erst danach koppelt sie neu.
+ * WOZU. Eine geteilt genutzte Uhr wechselt die Person. Gaebe es dafuer nur
+ * den Weg „neu koppeln“, dokumentierte die Uhr bei einem Fehlschlag
+ * stillschweigend weiter auf das VORHERIGE Konto — niemand saehe es ihr an.
+ * Die Uhr trennt sich deshalb zuerst ausdruecklich, und erst danach koppelt
+ * sie neu.
  *
  * ES WIRD GELOESCHT, NICHT DEAKTIVIERT. Ein deaktiviertes Geraet belegt
  * weiter einen der MAX_GERAETE Plaetze — und „zu viele Geraete“ ist genau der
@@ -417,18 +416,17 @@ try {
     antworten(500, ['error' => 'server']);
 }
 
-/* ---- HIER STAND `rate_erfolg('pair')`, UND ES WAR FALSCH (Web 13.1.1) -----
+/* ---- KEIN `rate_erfolg('pair')` HIER ---------------------------------------
  *
- * Der Gedanke dahinter war der der Anmeldung: Wer es richtig macht, soll nicht
+ * Der naheliegende Gedanke waere der der Anmeldung: Wer es richtig macht, soll nicht
  * an einem frueheren Vertippen haengenbleiben. An diesem Endpunkt gibt es
- * seit Web 13.0.0 aber nichts mehr zu vertippen — den Code tippt ein Mensch im
+ * aber nichts zu vertippen — den Code tippt ein Mensch im
  * WEB (Topf `pair_code`, mit eigenem `rate_erfolg`), und was hier ankommt,
  * sind Kopfzeilen einer Maschine. Ein Geraet, das seinen Schluessel zehnmal
  * falsch schickt, ist kaputt oder fremd; beidem hilft kein Nachlass.
  *
  * ENTSCHEIDEND IST ABER, DASS DER TOPF NICHT UNS ALLEIN GEHOERT. `pair` hat
- * ZWEI Verbraucher (bis Web 22.2.0 drei — `gpx.php` ist mit S11-05d
- * entfallen):
+ * ZWEI Verbraucher:
  *
  *   pair.php   401 an status/bestaetigen/trennen
  *   jobs.php   das Token des Wartungseinstiegs (jobs.php 99, 127)

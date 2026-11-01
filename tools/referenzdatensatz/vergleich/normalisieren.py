@@ -1,17 +1,17 @@
-"""Fluechtige Anteile aus einem eingelesenen Export entfernen (E-P1-13).
+"""Fluechtige Anteile aus einem eingelesenen Export entfernen.
 
 WAS FLUECHTIG IST UND WARUM. Zwei Exporte desselben Bestands sind nicht
 byteweise gleich, und das ist kein Fehler:
 
   interne IDs        gelten nur in der Datenbank, aus der der Export stammt
   Erzeugungszeit     steht im LIESMICH, im Dateinamen und in jeder GPX-Datei
-  App-Version        steht im LIESMICH — und seit Web 20.8.0 auch im
+  App-Version        steht im LIESMICH — und auch im
                      `creator` jeder GPX-Datei
   Trackdateinamen    tragen die interne Einsatz-ID
   deleted_at         Zeitpunkt des Loeschens — der Zustand bleibt vergleichbar
 
 `created_at` STAND HIER BIS WEB 7.3.1 und steht nicht mehr hier: Seit Web
-8.0.0 wird der Anlegezeitpunkt eines Einsatzes wieder eingespielt (E-S1-06),
+8.0.0 wird der Anlegezeitpunkt eines Einsatzes wieder eingespielt,
 also ist er kein fluechtiger Anteil mehr, sondern eine Angabe wie jede andere.
 Genau diese Normalisierung hatte den Verlust jahrelang verdeckt — der
 Kreislauf sah ihn nicht, weil das Werkzeug wegsah. Die Kopfangabe `created_at`
@@ -20,7 +20,7 @@ fluechtig.
 
 `deleted_at` DAGEGEN WIRD NORMALISIERT, ABER NICHT WEGGENOMMEN. Beim
 Einspielen entsteht der Papierkorbeintrag neu und bekommt den
-Einspielzeitpunkt (E-S1-03) — der Zeitwert kann also gar nicht ueberleben. Was
+Einspielzeitpunkt — der Zeitwert kann also gar nicht ueberleben. Was
 ueberleben MUSS, ist die Unterscheidung leer/gesetzt: „Papierkorbeintrag kommt
 als Papierkorbeintrag zurueck" ist die Aussage, die der Kreislauf belegen soll.
 Ein gesetzter Wert wird deshalb durch die Zeitmarke ersetzt, ein leerer bleibt
@@ -58,7 +58,7 @@ RE_GPX_NAME = re.compile(r"(<name>(?:Einsatz|Ruhezeit|Ruhe) )(\d+)( )")
 # geschrieben" (Weg B, siehe den Kopf von server/assets/gpx.js). Die FASSUNG
 # wird maskiert, genau wie `App-Version:` in der LIESMICH: Sie steigt bei
 # jeder Auslieferung, und der Referenz-Export enthaelt ueber 200 GPX-Dateien
-# (seit R4-16 211). Ohne diese Zeile meldete der Kreislauf bei JEDER
+# (211). Ohne diese Zeile meldete der Kreislauf bei JEDER
 # Auslieferung ebenso viele Unterschiede — und ein Werkzeug, das bei jeder
 # Auslieferung rauscht, wird abgeschaltet.
 #
@@ -214,8 +214,8 @@ def edbak(b: dict) -> dict:
     #
     # BEIDE FAELLE STEHEN SEIT DEM DEMO-AUSBAU IM BESTAND:
     #   - `Bergwacht Sonnenau` gibt es an ZWEI Standorten. Stammdaten sind je
-    #     Standort (E15), Dubletten ueber Standorte hinweg sind zulaessig --
-    #     und im Bestand gewollt (E-DA-10).
+    #     Standort, Dubletten ueber Standorte hinweg sind zulaessig --
+    #     und im Bestand gewollt.
     #   - An D06 liegen zwei Reanimationsereignisse in DERSELBEN Minute. Das
     #     ist kein Versehen: Der Dienst laeuft ueber die Fruehjahrsumstellung,
     #     und die Stunde danach gibt es nicht.

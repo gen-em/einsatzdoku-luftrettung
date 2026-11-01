@@ -1,11 +1,10 @@
 /* Der Marker-Satz der Karten — EINE Fassung für alle drei Kartenseiten.
  * ===========================================================================
  *
- * WOFUER (P3/O3, E-P3-40). Tages-, Einsatz- und Zeitraumkarte zeigten ihre
- * Marker bisher jede fuer sich: index.php und einsatz.php trugen denselben
- * SVG-Pfad fuer den Karten-Pin WOERTLICH doppelt, und Standort wie Zielklinik
- * waren nur als farbige Pins zu ahnen. Jetzt definiert dieses Modul den Satz
- * einmal:
+ * WOFUER. Tages-, Einsatz- und Zeitraumkarte zeigen dieselben Marker; trueg
+ * jede ihren eigenen Satz, stuende derselbe SVG-Pfad mehrfach im Code, und
+ * Standort wie Zielklinik waeren nur als farbige Pins zu ahnen. Dieses Modul
+ * definiert den Satz einmal:
  *
  *   Standort      Haus im weissen, dunkelblau umrandeten Schild + Namensschild
  *   Zielklinik    Klinik im selben Schild + Namensschild
@@ -16,9 +15,8 @@
  *                 der sie nicht gedraengt stehen
  *
  * FARBEN AUS DEN TOKEN. Die Spurfarben stehen in :root (--spur-1..8,
- * --spur-ruhe); dieses Modul liest sie ueber getComputedStyle. Die alte
- * COLORS-Liste in index.php mit fuenf markenfremden Werten (F-P3-H) ist damit
- * fort — eine zweite Farbliste im Code gibt es nicht mehr.
+ * --spur-ruhe); dieses Modul liest sie ueber getComputedStyle. Eine zweite
+ * Farbliste im Code gibt es nicht.
  *
  * Die Zeichnung der Marker steht im STYLESHEET (Abschnitt 21), nicht hier:
  * Dieses Modul baut nur Markup aus edSymbol() und den Klassen des Bausteins.
@@ -41,31 +39,31 @@
 
   /* ---- Schilder (Standort, Zielklinik) --------------------------------- */
 
-  /* ---- Der Markerversatz, und warum er entstand (S3/AP7) ---------------
+  /* ---- Der Markerversatz, und warum `iconSize` ausdruecklich steht -----
    *
-   * Bis Web 12.3.1 sassen Standort und Zielklinik umso weiter oestlich, je
-   * weiter herausgezoomt wurde. Die Ursache ist eine Kette aus drei Gliedern,
-   * von denen jedes fuer sich richtig aussah:
+   * Ohne ihn sitzen Standort und Zielklinik umso weiter oestlich, je weiter
+   * herausgezoomt wird. Die Ursache ist eine Kette aus drei Gliedern, von
+   * denen jedes fuer sich richtig aussieht:
    *
    *  1  `.geo-schild` ist eine Flex-SPALTE mit `align-items:center`. Das
    *     Wurzelelement wird damit so breit wie sein BREITESTES Kind.
-   *  2  Das breiteste Kind war das Namensschild (`white-space:nowrap`),
-   *     nicht der Kasten. Bei einem Kliniknamen von neunzehn Zeichen rund
-   *     150 px statt 44.
+   *  2  Ist das breiteste Kind ein Namensschild (`white-space:nowrap`) und
+   *     nicht der Kasten, sind es bei einem Kliniknamen von neunzehn
+   *     Zeichen rund 150 px statt 44.
    *  3  `iconSize: null` laesst Leaflet die Groesse aus dem Markup nehmen,
-   *     und `iconAnchor: [22, 22]` verankerte auf 22 px vom linken Rand DES
+   *     und `iconAnchor: [22, 22]` verankert auf 22 px vom linken Rand DES
    *     WURZELELEMENTS — also rund 50 px links der Kastenmitte.
    *
    * Das ergibt einen KONSTANTEN Pixelversatz: herausgezoomt sind dieselben
    * 50 px Kilometer, hereingezoomt Meter. Er waechst mit der Laenge des
-   * Namens — was den Fehler so lange harmlos aussehen liess.
+   * Namens — was den Fehler lange harmlos aussehen laesst.
    *
-   * Mit der Streichung des Namensschilds verschwaende er von selbst. Die
-   * Behebung setzt `iconSize` TROTZDEM ausdruecklich: Wer dem Marker
+   * Ohne Namensschild tritt er nicht auf. `iconSize` steht TROTZDEM
+   * ausdruecklich: Wer dem Marker
    * kuenftig etwas danebenstellt — eine Plakette, eine Zahl —, traegt den
    * Fehler sonst wieder ein, und zwar wieder ohne Fehlermeldung.
    *
-   * ring: '' | 'start' | 'ende' | 'beide' — Ringe der Spur (E-P3-33). Sie
+   * ring: '' | 'start' | 'ende' | 'beide' — Ringe der Spur. Sie
    * liegen als box-shadow AUSSERHALB des Kastens und aendern seine Groesse
    * nicht; der Anker bleibt richtig. */
   var SCHILD_PX = 30;
@@ -81,7 +79,7 @@
   }
 
   /* Der zweite Parameter ist der NAME und bleibt in der Aufrufliste, obwohl
-   * das Schild ihn seit S3/AP7 nicht mehr zeigt: Die drei Kartenseiten geben
+   * das Schild ihn nicht zeigt: Die drei Kartenseiten geben
    * ihn weiter, und er landet im Popup, das ihre Aufrufer selbst binden.
    * Ihn hier zu streichen hiesse, drei Aufrufstellen anzufassen, ohne dass
    * sich etwas aendert. */
@@ -101,8 +99,7 @@
    * aendert beides — sonst wandert der Anker. Token: --geo-kreis,
    * --geo-schild, --geo-ringpunkt.
    *
-   * S9/AP3 hat alle drei verkleinert (M-S9-01 V1, E-S9-12): Schild 36 -> 30,
-   * Kreis 32 -> 28, Ringpunkt 16 -> 14. Die Anker rechnen sich daraus und
+   * Schild 30, Kreis 28, Ringpunkt 14. Die Anker rechnen sich daraus und
    * ziehen von selbst nach. */
   var KREIS_PX = 28;
 
@@ -119,25 +116,19 @@
    * Ziel) — derselbe Farbcode wie die Raender am Schild: blau = Start,
    * rot = Ende, Doppelrand = beides.
    *
-   * AUCH HIER STEHT DAS MASS ZWEIMAL, und bis S9/AP3 stand es hier als
-   * nackte 16 ohne den Hinweis darueber: Das Gegenstueck im Stylesheet ist
+   * AUCH HIER STEHT DAS MASS ZWEIMAL: Das Gegenstueck im Stylesheet ist
    * `--geo-ringpunkt`. Wer eines aendert, aendert beides — sonst sitzt der
    * Ring um eine halbe Randstaerke neben dem Spuranfang, und das faellt
    * niemandem auf, weil es keine Fehlermeldung gibt.
    *
-   * DIE ZEICHNUNG IST 14 px, DIE ANTIPPFLAECHE 24 (S9/AP3). Das Mockup
-   * M-S9-01 V1 setzt den Ring auf 14 px und ist so freigegeben — derselbe
-   * Beschluss (E-S9-12) nennt aber im selben Absatz 24 px als Untergrenze am
-   * Finger (WCAG 2.5.8), und dieser Ring IST antippbar: `einsatz.php` gibt
+   * DIE ZEICHNUNG IST 14 px, DIE ANTIPPFLAECHE 24. Der Ring ist auf 14 px
+   * freigegeben — 24 px sind aber die Untergrenze am Finger (WCAG 2.5.8),
+   * und dieser Ring IST antippbar: `einsatz.php` gibt
    * ihm einen Titel, also ein Popup. Beides zugleich geht nur so: Das
    * `divIcon` ist 24 px gross und traegt die 14-px-Zeichnung in seiner Mitte
    * (`.geo-ringpunkt-feld`, Stylesheet). Sichtbar aendert sich nichts, der
    * Finger trifft trotzdem. Der Anker bleibt die Mitte, also 12/12 — und
-   * damit weiter genau auf dem Spuranfang.
-   *
-   * Bis Web 15.8.0 war die Flaeche 16 px und lag damit ebenfalls unter der
-   * Grenze; der Fehler ist also aelter als dieses Paket und wird hier
-   * mitbehoben. */
+   * damit weiter genau auf dem Spuranfang. */
   var RINGPUNKT_PX = 14;
   var RINGFELD_PX  = 24;
 
@@ -162,7 +153,7 @@
     return m;
   }
 
-  /* ---- Richtungspfeile auf der Spur (E-P3-33/40) ------------------------
+  /* ---- Richtungspfeile auf der Spur -------------------------------------
    *
    * ERST AB EINER ZOOMSTUFE, BEI DER SIE NICHT GEDRAENGT STEHEN. Statt einer
    * festen Stufe wird in BILDSCHIRMPIXELN gerechnet: Ein Pfeil alle ~140 px
@@ -170,7 +161,7 @@
    * Abstaende ist. Beim Zoomen wird neu verteilt — herausgezoomt verschwinden
    * die Pfeile von selbst, weil die Spur kuerzer als die Schwelle wird.
    *
-   * Kein Zusatzmodul (Konzeptvorgabe O3): rund vierzig Zeilen Projektion
+   * Kein Zusatzmodul: rund vierzig Zeilen Projektion
    * reichen. Die Pfeile sind reine Anzeige — keyboard:false, kein Popup. */
   var ABSTAND_PX = 140;
 

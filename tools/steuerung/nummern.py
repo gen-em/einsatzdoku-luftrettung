@@ -9,10 +9,10 @@ Rückgabewert 0 = keine Nummer auf zwei Zweigen · 1 = eine Nummer steht
 doppelt · 2 = nicht gelaufen (kein Git, kein `origin/main`, Holen
 gescheitert) — nie still grün.
 
-WOFÜR (Nr. 339, E-BV-19). Zweimal an einem Tag ist eine Nummer aus der
-Spanne von BV auf `main` kollidiert (F-BV-14, F-BV-18), ohne dass jemand
+WOFÜR. Zweimal an einem Tag ist eine Nummer aus einer reservierten
+Spanne auf `main` kollidiert, ohne dass jemand
 eine sichtbare Regel verletzt hätte: Der Kopf des Backlogs verlangt, die
-Spanne vor dem ersten Push einzutragen (E-SD-21) — eingetragen wird sie aber
+Spanne vor dem ersten Push einzutragen — eingetragen wird sie aber
 auf dem eigenen Zweig, und „auf allen offenen Zweigen nachsehen" ist ein
 Blick, den kein Werkzeug abnahm. Stufe 1 sieht die anderen Zweige nicht;
 deshalb läuft dieses Werkzeug örtlich, im Prüfstand.
@@ -28,9 +28,9 @@ gegen denselben Vorfahren, für jeden anderen Remote-Zweig gegen
 und der eigene Remote-Zweig zählt nicht mit. Rot ist jede Nummer, die der
 Arbeitsbaum neu anlegt und ein anderer auch.
 
-UND NICHT, WAS DER ANDERE VOM EIGENEN ZWEIG GEERBT HAT (R4-11, F-R4-39).
-Zweigt ein Zweig vom eigenen ab statt von `main` — die Konzeptinstanz von
-18 tat das bei R4-10 —, trägt er dessen Nummern mit, und gegen `main`
+UND NICHT, WAS DER ANDERE VOM EIGENEN ZWEIG GEERBT HAT.
+Zweigt ein Zweig vom eigenen ab statt von `main` — eine Konzeptinstanz tat
+das einmal —, trägt er dessen Nummern mit, und gegen `main`
 gemessen sahen sie aus wie seine eigenen: vier Überschneidungen, keine
 davon echt. Abgezogen wird deshalb auch, was am gemeinsamen Vorfahren mit
 `HEAD` schon steht. Was der andere danach selbst anlegt, bleibt seins.

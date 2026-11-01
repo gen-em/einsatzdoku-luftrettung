@@ -1,5 +1,4 @@
-/* pow-worker.js — die Rechenaufgabe der Registrierung (Schritt 18, SR-08;
- * E-SR-26, E-SR-91).
+/* pow-worker.js — die Rechenaufgabe der Registrierung.
  *
  * GESUCHT IST EINE ZAHL `loesung`, für die SHA-256 über die Zeichen
  * `aufgabe + loesung` mit mindestens `bits` Nullbits beginnt. Der Server
@@ -14,11 +13,10 @@
  * (`{aufgabe, bits}`), eine heraus (`{loesung, versuche, ms}` oder
  * `{fehler}`).
  *
- * SHA-256 RECHNET DER WORKER SELBST (Web 23.0.1, Konzept DM, Q-DM-01). Bis
- * dahin ging jeder Versuch an `crypto.subtle.digest()`, in Bündeln zu 64 —
- * und jeder Aufruf erzeugt ein Promise, das mehr kostet als der Hash. In
- * Firefox lag der Median damit über dem Soll von einer Sekunde (1365, 544,
- * 1333 ms in drei Läufen). Gemessen für 65 536 Hashes, im Mittel eine Lösung
+ * SHA-256 RECHNET DER WORKER SELBST, nicht `crypto.subtle.digest()`: Dort
+ * erzeugt jeder Aufruf ein Promise, das mehr kostet als der Hash. In Firefox
+ * lag der Median mit WebCrypto in Bündeln zu 64 über dem Soll von einer
+ * Sekunde (1365, 544, 1333 ms in drei Läufen). Gemessen für 65 536 Hashes, im Mittel eine Lösung
  * bei 16 Bit: WebCrypto Chromium 1008, Firefox 1317, WebKit 522 ms; eigene
  * Rechnung 428, 243, 166 ms. Es ist ein Arbeitsnachweis, kein Geheimnis —
  * der Hash schützt nichts, er kostet nur Zeit, und der Server prüft ihn mit

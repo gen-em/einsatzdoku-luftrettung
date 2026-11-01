@@ -49,7 +49,7 @@ object Phasen {
     )
 
     /**
-     * Kurzform fuer die Phasenliste der Uhr (E-S4-21c). Nur dort, wo die lange
+     * Kurzform fuer die Phasenliste der Uhr. Nur dort, wo die lange
      * Form auf einem runden Display umbricht -- alles andere bleibt gleich,
      * damit nicht zwei Wortlaeufe nebeneinander entstehen.
      */
@@ -67,7 +67,7 @@ object Phasen {
     fun uebertragbar(phase: Int): Boolean = phase in UEBERTRAGEN
 
     /**
-     * Die naechste Phase im Durchlauf (E-S4-21b: 2 -> ... -> 9).
+     * Die naechste Phase im Durchlauf (2 -> ... -> 9).
      *
      * Nach der letzten gibt es KEINE naechste: Der Durchlaufknopf wird dort zu
      * "Einsatz abschliessen" mit Rueckfrage. `null` ist genau diese Auskunft --

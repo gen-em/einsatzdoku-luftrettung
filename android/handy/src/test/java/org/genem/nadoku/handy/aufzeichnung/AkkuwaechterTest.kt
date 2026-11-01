@@ -4,7 +4,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Test
 
 /**
- * Der Akkuwächter (Backlog Nr. 82) — **ohne Android und ohne Warten**.
+ * Der Akkuwächter — **ohne Android und ohne Warten**.
  *
  * Er bekommt jede Messung übergeben, wie [Ortungswaechter] seine Zeit. Was
  * hier geprüft wird, ist die Zusicherung, an der der ganze Punkt hängt:

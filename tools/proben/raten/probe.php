@@ -10,7 +10,7 @@ declare(strict_types=1);
  * Aufruf:  php tools/proben/raten/probe.php
  * Rueckgabe: 0 = keine Befunde · 1 = Befunde · 2 = die Probe kam nicht los
  *
- * WAS SIE MISST. Das Konzept nennt als Abnahme von P5a/AP6 einen
+ * WAS SIE MISST. Die Abnahme verlangt einen
  * „Pruefkonten-Lauf": 10 Fehlversuche -> Sperre, weitere -> laenger, nach 24 h
  * wieder von vorn, 200 Fehlversuche -> Antwortzeit >= 1 s, gleiche Antwortzeit
  * fuer Namen mit und ohne Konto, Sammelmail genau einmal je Stunde.
@@ -36,24 +36,24 @@ declare(strict_types=1);
  * - **Die Wirkung auf einen echten Angriff.** 200 Fehlversuche in einer
  *   Schleife sind keine 200 Anfragen aus 50 Netzen.
  *
- * SEIT P5c/AP6 AUCH DER HEALTH-ENDPUNKT, UND DER UEBER HTTP (Abschnitt 11,
- * Abnahme AP6: „in den vorhandenen Proben statt einer neuen"). Dort zaehlt der
+ * AUCH DER HEALTH-ENDPUNKT, UND DER UEBER HTTP (Abschnitt 11, „in den
+ * vorhandenen Proben statt einer neuen"). Dort zaehlt der
  * Topf `health` die MENGE, und die zeigt sich nur an echten Anfragen: 60
  * gehen durch, die 61. bekommt 429. Dazu die drei 403 mit gleicher Dauer, die
  * Felder der 200 und die 503 bei ausstehender Migration. Den Token stellt die
  * Probe in `config.php` (`tools/sandbox/konfig_stellen.php`) und legt den
  * vorigen Stand zurueck.
  *
- * SEIT SR-08 AUCH DIE REGISTRIERUNG, EBENSO UEBER HTTP (Abschnitt 12): die
+ * AUCH DIE REGISTRIERUNG, EBENSO UEBER HTTP (Abschnitt 12): die
  * Rechenaufgabe als vierte stille Bremse von `registrieren.php`. Die Probe
  * rechnet die Loesung in PHP; ob der WORKER im Browser sie findet, misst der
  * Bedienweg `registrieren` der Bedienprobe, nicht diese Probe.
  *
- * SEIT R17-20 AUCH DER PASSWORTNACHWEIS, UEBER HTTP (Abschnitt 12a): die
+ * AUCH DER PASSWORTNACHWEIS, UEBER HTTP (Abschnitt 12a): die
  * sieben Stellen, die das Anmelde-Token verlangen, zaehlen alle in den Topf
- * `login` (F-R17-32) — nach so vielen Fehlversuchen, wie er erlaubt, wird
+ * `login` — nach so vielen Fehlversuchen, wie er erlaubt, wird
  * auch das richtige abgewiesen. Der Hash des Probenkontos traegt den
- * Pfeffer (F-R17-01); die Gegenprobe zeigt, dass das richtige Token davor
+ * Pfeffer; die Gegenprobe zeigt, dass das richtige Token davor
  * durchkommt.
  *
  * SIE RAEUMT HINTER SICH AUF. Angelegt werden Zeilen in `rate_limits`,
@@ -96,6 +96,13 @@ $vorher  = (int)$pdo->query('SELECT COUNT(*) FROM rate_limits')->fetchColumn();
 $vorherE = (int)$pdo->query('SELECT COUNT(*) FROM sicherheit_ereignisse')->fetchColumn();
 $vorherM = (int)$pdo->query('SELECT COUNT(*) FROM mail_warteschlange')->fetchColumn();
 
+/* DIE MARKEN BEKOMMEN IHREN VORWERT ZURUECK, nicht einen leeren: Auf einer
+ * Anlage mit gesetzter Bremse oder Mailmarke stellte die Probe sie sonst um. */
+$GLOBALS['ratenVorwerte'] = [];
+foreach ([RATE_K_MAIL_MARK, RATE_K_BREMSE_ST] as $k) {
+    $GLOBALS['ratenVorwerte'][$k] = (string)(app_state_lesen($k) ?? '');
+}
+
 function aufraeumen(): void
 {
     $pdo = db();
@@ -107,7 +114,12 @@ function aufraeumen(): void
         try { app_state_setzen($k, ''); } catch (Throwable $e) {}
     }
 }
-register_shutdown_function('aufraeumen');
+register_shutdown_function(function (): void {
+    aufraeumen();
+    foreach ($GLOBALS['ratenVorwerte'] as $k => $w) {
+        try { app_state_setzen($k, $w); } catch (Throwable $e) {}
+    }
+});
 aufraeumen();
 
 /** Zustand eines Merkmals lesen. */
@@ -379,27 +391,26 @@ abschnitt('10  Welche Toepfe eine Leiter haben — und welche ausdruecklich nich
 
 /* DIE LISTE IST DER SOLLWERT, UND DIE ZAHL KOMMT AUS IHR.
  *
- * Hier stand bis zum 21.09.2026 „Genau fuenf Toepfe haben eine Leiter" neben
- * einer fuenfelementigen Liste — dieselbe Zahl zweimal, einmal als Satz und
- * einmal als Aufzaehlung. Mit Web 20.24.0 (P5b/AP9) kam `blatt` dazu, die
- * Liste wurde nicht nachgezogen, und die Probe stand EINEN MONAT auf einem
+ * Eine Zahl, die als Satz neben einer Liste steht („Genau fuenf Toepfe
+ * haben eine Leiter"), steht zweimal da, einmal als Satz und
+ * einmal als Aufzaehlung. Kam `blatt` dazu und die
+ * Liste wurde nicht nachgezogen, stand die Probe EINEN MONAT auf einem
  * Befund, den niemand sah: Sie braucht eine laufende Anlage und haengt nicht
- * in Stufe 1. Gefunden am 21.09.2026 beim ersten Lauf nach Schritt 15 AP2
- * (Backlog Nr. 254).
+ * in Stufe 1.
  *
- * Jetzt rechnet die Ueberschrift ihre Zahl aus der Liste. Wer einen Topf
+ * Deshalb rechnet die Ueberschrift ihre Zahl aus der Liste. Wer einen Topf
  * ergaenzt, ergaenzt die Liste — und der Satz stimmt von selbst. Das ist
  * genau die Bauform, die der Backlog-Kopf fuer gezaehlte Werte verlangt.
  *
- * `blatt` (Schluesselblatt-Pruefung, S10) HAT eine Leiter, und das ist
+ * `blatt` (Schluesselblatt-Pruefung) HAT eine Leiter, und das ist
  * richtig: Wer die Vierergruppen raet, soll nach drei Fehlversuchen laenger
  * warten. Anmeldung und Anwendung bleiben dabei offen.
  *
- * `totp` (Code-Schritt der Anmeldung, P5c/AP5, E-P5c-53) hat eine: Fuenf
+ * `totp` (Code-Schritt der Anmeldung) hat eine: Fuenf
  * falsche Codes je Konto, dann waechst die Sperre — sechs Ziffern duerfen
  * nicht zu erraten sein.
  *
- * `notweg` (Notzugang der einzigen BetreiberIn, Schritt 18, SR-04) hat eine:
+ * `notweg` (Notzugang der einzigen BetreiberIn) hat eine:
  * Fuenf Versuche je Stunde und eingetippter Adresse — wer Datei,
  * Datenbankwert und Passwort hat, braucht keine fuenf. */
 const TOEPFE_MIT_LEITER = ['blatt', 'ingest', 'ingest_ip', 'login', 'login_ip', 'notweg', 'notweg_ip', 'salt', 'totp'];
@@ -435,8 +446,7 @@ require_once $wurzel . '/tools/sandbox/konfig_stellen.php';
 require_once $wurzel . '/server/migration_lib.php';
 require_once $wurzel . '/server/speicher_lib.php';
 $basis = rtrim($argv[1] ?? 'http://127.0.0.1:8080', '/');
-/* `$kopf`: das Token als Kopfzeile `X-Health-Token` (Web 23.1.0, F-R17-22,
- * E-R17-35) — der empfohlene Weg, weil eine Adresse im Zugriffsprotokoll des
+/* `$kopf`: das Token als Kopfzeile `X-Health-Token` — der empfohlene Weg, weil eine Adresse im Zugriffsprotokoll des
  * Hosters steht. `$token` geht dann NICHT in die Adresse, ausser beide sind
  * gesetzt (Fall „Kopfzeile gewinnt"). */
 $health = static function (?string $token, ?string $kopf = null) use ($basis): array {
@@ -452,12 +462,12 @@ $health = static function (?string $token, ?string $kopf = null) use ($basis): a
     return ['code' => $code, 'json' => json_decode($rumpf, true), 'dauer' => $dauer];
 };
 /* Der OPcache des PHP-Servers prueft den Zeitstempel von `config.php`
- * hoechstens alle ZWEI Sekunden (`opcache.revalidate_freq = 2`, F-P5c-69):
- * nach dem Stellen drei Sekunden warten, wie der Umschalter aus AP1. Die
+ * hoechstens alle ZWEI Sekunden (`opcache.revalidate_freq = 2`):
+ * nach dem Stellen drei Sekunden warten, wie der Umschalter des Wartungsmodus. Die
  * erste Fassung wartete 1,2 s und sah beim leeren Eintrag noch den Token
- * des Falls davor (F-P5c-123). */
+ * des Falls davor. */
 $stellen = static function (array $werte): callable { $z = konfig_stellen($werte); sleep(3); return $z; };
-/* SEIT WEB 23.5.0 LIEGT DAS TOKEN IN `app_state` (R17-26, E-R17-72), nicht
+/* SEIT WEB 23.5.0 LIEGT DAS TOKEN IN `app_state`, nicht
  * mehr in `config.php`; die Datei wird nur noch einmal gelesen, wenn der
  * Eintrag ganz fehlt. Die Faelle unten stellen es deshalb dort — ohne
  * Wartezeit, eine Datenbankzeile kennt keinen OPcache. Der Rueckweg legt den
@@ -526,7 +536,7 @@ try {
           && ($mig['json']['migration_ausstehend'] ?? null) === true,
           'HTTP ' . $mig['code']);
 
-    /* SPEICHER_PCT (E-P5c-117): Der Endpunkt liest, was `speicher_messen()`
+    /* SPEICHER_PCT: Der Endpunkt liest, was `speicher_messen()`
      * gemerkt hat, und nimmt den hoechsten Anteil. Erst gestellt (ein Wert
      * fehlt, der hoechste ist nicht der erste; dann gar keine Marke), dann
      * einmal gemessen und gegen die Balken von `speicher_uebersicht()`
@@ -588,7 +598,7 @@ try {
 } finally { $zurueckKonfig(); }
 $bis60 = array_count_values(array_slice($codes, 0, 60));
 
-/* DER UEBERGANG AUS `config.php` (R17-26). Fehlt der Eintrag ganz, nimmt der
+/* DER UEBERGANG AUS `config.php`. Fehlt der Eintrag ganz, nimmt der
  * erste Abruf den Wert aus der Datei und legt ihn ab; ein LEERER Eintrag
  * (abgeschaltet) wird nicht wieder aus der Datei gefuellt. Gegen den Stand
  * vor 23.5.0: Dort galt allein die Datei — der zweite Fall gaebe 200. */
@@ -622,8 +632,7 @@ pruef('Der Topf `health` hat keine Leiter (60 je Minute, eine Minute Sperre)',
 /* ======================================================================== */
 abschnitt('12  Registrierung ueber HTTP — die Rechenaufgabe (SR-08)');
 
-/* DIE VIERTE BREMSE VON `registrieren.php` (Schritt 18, SR-08, E-SR-26,
- * E-SR-88 bis -93). Ueber HTTP, weil sie aus Seite, Sitzung und Formular
+/* DIE VIERTE BREMSE VON `registrieren.php`. Ueber HTTP, weil sie aus Seite, Sitzung und Formular
  * besteht: Die Probe holt die Seite, liest Aufgabe und Bitzahl aus dem
  * Markup, rechnet die Loesung selbst (in PHP, dieselbe Rechnung wie der
  * Worker) und schickt ab. Gemessen wird, was ein Absender sieht — die
@@ -639,7 +648,7 @@ abschnitt('12  Registrierung ueber HTTP — die Rechenaufgabe (SR-08)');
  *
  * DIE DAUER: je Lage fuenf Absendungen, verglichen werden die Mediane der
  * stillen Faelle — ohne Loesung, falsche Loesung, abgelaufen, belegte,
- * Wegwerf- und freie Adresse. Soll: Spanne unter 50 ms (E-P5b-13).
+ * Wegwerf- und freie Adresse. Soll: Spanne unter 50 ms.
  */
 $REG_MUSTER = 'pow-%@probe.invalid';
 $regVorArt = _tor_lesen($pdo, 'konten_reg_art');
@@ -765,7 +774,7 @@ $regMails = static function (string $email, bool $erwartet = false) use ($pdo): 
 };
 
 $regRaeumen();
-/* NUR AUF EINLADUNG: KEINE SITZUNG (E-SR-92). Vor dem Oeffnen — eine Anlage,
+/* NUR AUF EINLADUNG: KEINE SITZUNG. Vor dem Oeffnen — eine Anlage,
  * die keine Registrierung anbietet, setzt hier weiter kein Cookie. */
 $pdo->exec("DELETE FROM app_state WHERE k = 'konten_reg_art'");
 $kZu = [];
@@ -778,7 +787,7 @@ app_state_setzen('konten_reg_art', 'offen');
 $regVorArt2 = $regVorArt;   // fuer den Bericht
 try {
     /* a. Die Seite selbst: Aufgabe, Bitzahl, Sitzung — und fuenf GETs in
-     *    derselben Sitzung halten hoechstens fuenf Aufgaben (E-SR-89). */
+     *    derselben Sitzung halten hoechstens fuenf Aufgaben. */
     $k = [];
     $s = $regHolen($k);
     pruef('GET registrieren.php: 200, Aufgabe (64 hex), Bitzahl, Sitzungscookie',
@@ -876,7 +885,7 @@ try {
           $r['danke'] && $regKonto('pow-reiter@probe.invalid') === 'unbestaetigt',
           var_export($regKonto('pow-reiter@probe.invalid'), true));
 
-    /* Felder als Liste — auch die alten: keine 500, keine Warnung (F-SR-96). */
+    /* Felder als Liste — auch die alten: keine 500, keine Warnung. */
     $k = [];
     $s = $regHolen($k);
     $pdo->exec("DELETE FROM rate_limits WHERE topf IN ('reg', 'regg', 'regz')");
@@ -947,7 +956,7 @@ pruef('… und hinterher keine Probenkonten, Betriebsart wie vorher',
 abschnitt('12a  Passwortnachweis an sieben Stellen — ein Topf (R17-20, F-R17-32)');
 /* WAS DAS PROBLEM WAR. Sieben Stellen verlangen das Anmelde-Token, bevor sie
  * etwas Folgenreiches tun; vier davon prueften es ohne Ratentopf. Mit einer
- * erbeuteten Sitzung riet man dort ohne Sperre. Seit R17-20 laufen alle
+ * erbeuteten Sitzung riet man dort ohne Sperre. Deshalb laufen alle
  * sieben ueber `passwort_nachweis()`.
  *
  * WIE GEMESSEN WIRD. Ein Probenkonto mit bekanntem Token — als Hash MIT
@@ -978,7 +987,7 @@ $nwOrt = is_dir(sitzung_ablage_pfad()) ? sitzung_ablage_pfad() : (string)(sessio
 /* IN EINEM KINDPROZESS: Diese Probe hat laengst ausgegeben, und
  * `session_start()` geht nur vor der ersten Ausgabe (die Rollenprobe legt
  * ihre Sitzungen deshalb ganz oben an). Dieselbe Sitzung, wie `login.php`
- * sie nach dem Code-Schritt hinterlaesst — mit Bindung (SR-01) und frischem
+ * sie nach dem Code-Schritt hinterlaesst — mit Bindung und frischem
  * Code. */
 $nwDaten = ['user_id' => $nwId, 'epoch' => $nwEpoch, 'last_seen' => time(), 'csrf' => $nwCsrf,
             'bindung' => hash('sha256', $nwBind), 'zf_frisch_bis' => time() + 3600];
@@ -1066,15 +1075,15 @@ try {
 
 /* ======================================================================== */
 abschnitt('12b  Ein Anschluss, viele Konten — Anmeldung und Notzugang (R17-22, F-R17-36, -37)');
-/* WAS DAS PROBLEM WAR (F-R17-36). Der Topf `login` (10) zaehlte Konto UND
+/* WAS DAS PROBLEM WAR. Der Topf `login` (10) zaehlte Konto UND
  * Adresse. Zehn Fehlversuche von einem Anschluss — an zehn ERFUNDENEN
  * Adressen — sperrten damit den ganzen Anschluss, lange bevor `login_ip` mit
  * seinen 50 griff: eine Klinik hinter einem NAT, bis zu einer Stunde. Die
- * Probe klopfte bis dahin nur `login_ip` allein und sah es nicht. Seit Web
- * 23.3.1 zaehlt `login` nur das Konto.
+ * Probe klopfte dabei nur `login_ip` allein und sah es nicht. Deshalb
+ * zaehlt `login` nur das Konto.
  *
- * UND F-R17-37: Der Notzugang zaehlte nur die eingetippte Adresse. Wer sie
- * je Anfrage wechselte, bekam unbegrenzt bcrypt-Rechnungen. Seit Web 23.3.1
+ * UND DER NOTZUGANG zaehlte nur die eingetippte Adresse. Wer sie
+ * je Anfrage wechselte, bekam unbegrenzt bcrypt-Rechnungen. Deshalb
  * gibt es dazu `notweg_ip` (20 je Stunde).
  *
  * Beides UEBER HTTP, weil der Fehler im Aufruf der Seite lag, nicht in der
@@ -1144,7 +1153,7 @@ try {
           str_contains($r, 'Zu viele Anmeldeversuche von diesem Anschluss') ? 'Anschluss-Meldung'
           : (str_contains($r, 'Zu viele Anmeldeversuche für diesen Namen') ? 'Konto-Meldung' : 'nicht gesperrt'));
 
-    /* F-R17-37: der Notzugang, Adresse je Anfrage gewechselt */
+    /* Der Notzugang, Adresse je Anfrage gewechselt */
     $naLeeren();
     $nmax = (int)(rate_grenze('notweg_ip')['max'] ?? 0);
     pruef('Der Topf `notweg_ip` steht auf 20 je Stunde', $nmax === 20, (string)$nmax);

@@ -6,29 +6,27 @@
 // jemand im Web eingetragen hat. Hat ein Konto ihn eingetragen, fragt die Uhr
 // zurueck — "Mit ph***@… koppeln?" —, und erst dieses Ja legt das Geraet an.
 // Voraussetzung: Server-Adresse in den App-Einstellungen (properties.xml);
-// Vorgabe ist seit 3.0.0 die oeffentliche Installation (E-R49-8).
+// Vorgabe ist die oeffentliche Installation.
 //
-// WAS SICH MIT 3.0.0 GEDREHT HAT (S5, E-R49-1)
-// Bis 2.0.0 erzeugte das Web den Code und die Traegerin tippte ihn auf der Uhr
-// ein — fuenf, spaeter sechs Zeichen ueber einen TextPicker. Das setzte
-// voraus, dass sie vorher am Rechner war, und die Texteingabe auf einem
-// Uhrendisplay war der unangenehmste Weg der ganzen Anwendung. Jetzt zeigt die
-// Uhr, und das Web nimmt entgegen. Der Kopf dieser Datei stand bis dahin auf
-// "UP halten" und "5 Zeichen" — beides war schon vor S5 falsch (B-S5-05).
+// WARUM DIE UHR ZEIGT UND NICHT TIPPT
+// Erzeugte das Web den Code und tippte die Traegerin ihn auf der Uhr ein,
+// setzte das voraus, dass sie vorher am Rechner war, und die Texteingabe auf
+// einem Uhrendisplay ist der unangenehmste Weg der ganzen Anwendung. Also
+// zeigt die Uhr, und das Web nimmt entgegen.
 //
-// DER CODE WEIST NICHTS AUS (E-S5-03). Er ist fuer den Menschen, der ihn
+// DER CODE WEIST NICHTS AUS. Er ist fuer den Menschen, der ihn
 // abliest und eintippt; wer ihn ueber die Schulter sieht, kann an der Uhr
 // nichts ausloesen. Was die Uhr ausweist, sind Kennung und Schluessel aus
 // `start` — und die sind bis zum Ja SCHWEBEND: Der Server kennt sie,
 // ingest.php weist sie aber mit 401 ab, weil es das Geraet noch nicht gibt.
 //
-// UND SIE LIEGEN BIS DAHIN NUR IM ARBEITSSPEICHER (E-S5-22). Erst
+// UND SIE LIEGEN BIS DAHIN NUR IM ARBEITSSPEICHER. Erst
 // `200 {"ok":true}` auf `bestaetigen ja` schreibt Storage "cred". Wer die App
 // vorher verlaesst, hat keine halbe Kopplung auf der Uhr stehen; die Sitzung
 // verfaellt serverseitig nach zehn Minuten. Das Kontolabel — die maskierte
 // E-Mail — steht nur im Dialog und wird NIE gespeichert.
 //
-// ZWEI TORE, NICHT EINES (E-R49-5). Die Bestaetigungsseite im Web faengt das
+// ZWEI TORE, NICHT EINES. Die Bestaetigungsseite im Web faengt das
 // fremde Geraet im eigenen Konto ab; die Rueckfrage hier faengt das eigene
 // Geraet im fremden Konto ab. Wer eines von beiden wegnimmt, laesst eine der
 // beiden Richtungen offen.
@@ -46,18 +44,19 @@ using Toybox.Timer;
 // Rumpf erraten, worauf er gerade antwortet — und `start`, `status` und
 // `bestaetigen` liefern im Erfolgsfall alle drei eine 200 mit einem anderen
 // Rumpf. Vier Klassen kosten vier Zeilen und keine Rateregel.
-/* JEDE ANTWORT BRINGT IHRE SITZUNG MIT. Bis zur Gegenlesung waren die drei
- * Traeger wiederverwendete Singletons ohne Kennung, und die Rueckrufe
- * entschieden an Modulflaggen — die aber sagen "laeuft gerade IRGENDEINE
- * Sitzung", nicht "laeuft DIESE". Zwei Anfragen koennen hier erstmals im
- * Projekt gleichzeitig offen sein (`bestaetigen nein` wird bewusst nicht
- * abgewartet, E-S5-23, und daneben laeuft schon der naechste `start`).
+/* JEDE ANTWORT BRINGT IHRE SITZUNG MIT. Wiederverwendete Traeger ohne
+ * Kennung, deren Rueckrufe an Modulflaggen entscheiden, reichen nicht: Die
+ * Flaggen sagen "laeuft gerade IRGENDEINE Sitzung", nicht "laeuft DIESE".
+ * Zwei Anfragen koennen hier gleichzeitig offen sein (`bestaetigen nein`
+ * wird bewusst nicht abgewartet, und daneben laeuft schon der naechste
+ * `start`).
  * Kommen sie vertauscht zurueck — Connect IQ sagt darueber nichts zu —, dann
  * beantwortet die Uhr die neue Sitzung mit dem Ergebnis der alten. Im
  * schlimmsten Fall schriebe ein `200 {"ok":true}` auf ein altes `nein` die
  * schwebenden Zugangsdaten der NEUEN Sitzung in Storage "cred": Die Uhr hielte
  * sich fuer gekoppelt, jeder Upload endete in 401, und ein Rueckstand
- * verhinderte sogar das Neukoppeln. Genau das schliesst E-S5-22 aus.
+ * verhinderte sogar das Neukoppeln. Genau das schliesst die fluechtige
+ * Sitzung (Kopf dieser Datei) aus.
  *
  * Deshalb traegt jeder Rueckruf, worauf er antwortet. Fuer `start` ist das
  * eine Laufnummer (eine Kennung gibt es da noch nicht), fuer die anderen die
@@ -96,7 +95,7 @@ class PairSpaeterCb {
     function fire() as Void { Pair.spaeterAblehnen(); }
 }
 
-/* Traeger fuer das Nachholen des Kontoschluessels (S11-08, E-S11-79). Er
+/* Traeger fuer das Nachholen des Kontoschluessels. Er
  * traegt die Geraetekennung, mit der gefragt wurde: Wird zwischen Frage und
  * Antwort getrennt oder neu gekoppelt, gehoert die Antwort zu einer Kopplung,
  * die es nicht mehr gibt, und darf keinen Schluessel ablegen. */
@@ -149,7 +148,7 @@ module Pair {
     /* Wohin der Code im Web gehoert — die zweite Zeile unter dem Code.
      *
      * KOMMA STATT PFEIL, UND ZWAR GEMESSEN. Ob "→" in den Geraeteschriften
-     * vorhanden ist, stand im Konzept als offener Punkt (Abschnitt 11).
+     * vorhanden ist, war offen.
      * Am 03.09.2026 im Simulator nachgesehen, fenix6pro, SDK 9.2.0, mit
      * "Einstellungen → Geräte" uebersetzt und fotografiert: Das Zeichen
      * erscheint als PLATZHALTER-RAUTE, nicht als Pfeil — der Fall aus
@@ -174,7 +173,7 @@ module Pair {
 
     /* --- Die schwebende Sitzung ------------------------------------------
      *
-     * ALLES HIER IST FLUECHTIG, und das ist die Zusage (E-S5-22). Keine dieser
+     * ALLES HIER IST FLUECHTIG, und das ist die Zusage. Keine dieser
      * Variablen wird gespeichert; ein App-Neustart laesst nichts zurueck.
      * Wer eine davon nach Storage schreibt, nimmt der Bauform ihre Aussage —
      * dann liegt auf der Uhr eine Kopplung, die es auf dem Server noch nicht
@@ -186,7 +185,7 @@ module Pair {
 
     /* Der Verbindungshinweis der Kopplungsansicht. Er steht dort UNTER dem
      * Code und ersetzt die Restzeit nicht: Ein Verbindungsfehler beendet die
-     * Sitzung nicht (E-S5-25) — sie lebt auf dem Server weiter, und die
+     * Sitzung nicht — sie lebt auf dem Server weiter, und die
      * Abfrage laeuft bis zur Frist. */
     var netzHinweis as Lang.String or Null = null;
 
@@ -216,8 +215,8 @@ module Pair {
      * Traegerin kann in dieser Zeit weiterblaettern oder mit BACK heraus. Die
      * Ansicht draengte sich dann ueber eine Seite, die sie nicht aufgerufen
      * hat — im schlimmsten Fall ueber den Rea-Countdown, wo die Ereignistasten
-     * tot waeren und BACK etwas anderes bedeutet. E-S5-24 sagt ausdruecklich
-     * "ueber der Sync-Seite". */
+     * tot waeren und BACK etwas anderes bedeutet. Sie gehoert ausdruecklich
+     * "ueber die Sync-Seite". */
     var _syncSichtbar as Lang.Boolean = false;
 
     /* Eine Warnung, die den unmittelbar folgenden Kopplungsweg ueberdauert.
@@ -235,7 +234,7 @@ module Pair {
     var _spaeterT as Timer.Timer or Null = null;
     var _spaeterCb as PairSpaeterCb or Null = null;
 
-    /* Meldet die Sync-Seite beim Erscheinen und Verschwinden (B8).
+    /* Meldet die Sync-Seite beim Erscheinen und Verschwinden.
      * Dass onHide auch feuert, wenn die Kopplungsansicht selbst darueber
      * geschoben wird, ist unschaedlich: onStart liest den Merker VOR dem
      * Schieben, und beim Zurueckkehren setzt onShow ihn wieder. */
@@ -243,12 +242,12 @@ module Pair {
 
     /* Einstieg fuer „Gerät koppeln" (Sync-Seite, Auswahltaste halten).
      *
-     * DER FALL IST DIE GETEILT GENUTZTE UHR (Backlog Nr. 14). Bis hierher
-     * fuehrte der Weg direkt in die Kopplung. Schlug sie fehl — kein Telefon
-     * in Reichweite, Geraetegrenze erreicht —, blieben die ALTEN Zugangsdaten
-     * stehen und die Uhr dokumentierte stillschweigend weiter auf das
-     * vorherige Konto. Niemand sah es ihr an, und die Person davor bekam
-     * Einsaetze, die sie nicht gefahren ist.
+     * DER FALL IST DIE GETEILT GENUTZTE UHR. Fuehrte der Weg direkt in die
+     * Kopplung und schlug sie fehl — kein Telefon in Reichweite,
+     * Geraetegrenze erreicht —, blieben die ALTEN Zugangsdaten stehen und die
+     * Uhr dokumentierte stillschweigend weiter auf das vorherige Konto.
+     * Niemand saehe es ihr an, und die Person davor bekaeme Einsaetze, die
+     * sie nicht gefahren ist.
      *
      * Die Reihenfolge ist deshalb ausdruecklich: abfragen -> trennen -> neu
      * koppeln. Scheitert das Koppeln danach, steht die Uhr SICHTBAR ohne
@@ -264,9 +263,9 @@ module Pair {
         _warnung = null;              // ein neuer Anlauf erbt keine alte Vormerkung
         if (!Uploader.hasCredentials()) { sitzungStarten(); return; }
 
-        /* GEKOPPELT, ABER OHNE KONTOSCHLUESSEL: holen statt neu koppeln
-         * (S11-08, E-S11-79, F-S11-80). Neu koppeln setzte Trennen voraus,
-         * und das verweigert die Uhr unten, solange ein Rueckstand besteht —
+        /* GEKOPPELT, ABER OHNE KONTOSCHLUESSEL: holen statt neu koppeln.
+         * Neu koppeln setzt Trennen voraus, und das verweigert die Uhr
+         * unten, solange ein Rueckstand besteht —
          * ohne Schluessel aber kann sie den Rueckstand nicht senden. Eine
          * Sackgasse. `pair.php status` beantwortet jede gekoppelte Uhr mit
          * dem Schluessel ihres Kontos; mit den eigenen Zugangsdaten gefragt,
@@ -284,15 +283,14 @@ module Pair {
             return;
         }
 
-        /* GEPARKTE PAKETE SPERREN DAS TRENNEN NICHT (Backlog Nr. 159).
+        /* GEPARKTE PAKETE SPERREN DAS TRENNEN NICHT.
          *
-         * Sie zaehlen seit Uhr 3.1.0 nicht mehr im Rueckstand, und das ist
-         * der Ausweg aus einer Sackgasse: Bis dahin verweigerte diese Stelle
-         * das Trennen, solange irgendetwas offen stand -- auch dann, wenn der
-         * Server es dauerhaft ablehnte oder das Geraet abgemeldet hatte.
-         * Senden ging nicht, Trennen ging nicht, Neukoppeln setzt Trennen
-         * voraus: Es blieb nur, die App zu loeschen, und das nahm alles
-         * Uebrige mit.
+         * Sie zaehlen nicht im Rueckstand, und das ist der Ausweg aus einer
+         * Sackgasse: Verweigerte diese Stelle das Trennen, solange irgendetwas
+         * offen steht -- auch dann, wenn der Server es dauerhaft ablehnt oder
+         * das Geraet abgemeldet hat --, ginge Senden nicht und Trennen nicht,
+         * und Neukoppeln setzt Trennen voraus: Es bliebe nur, die App zu
+         * loeschen, und das naehme alles Uebrige mit.
          *
          * Verworfen werden sie beim Trennen trotzdem -- sie gehoeren dem
          * bisherigen Konto. Die Rueckfrage sagt es, statt es zu tun und zu
@@ -307,7 +305,7 @@ module Pair {
                          new TrennenDelegate(), WatchUi.SLIDE_LEFT);
     }
 
-    /* Den Kontoschluessel nachholen (E-S11-79). Eine Anfrage, kein Takt:
+    /* Den Kontoschluessel nachholen. Eine Anfrage, kein Takt:
      * Wer die Taste haelt, bekommt die Antwort auf der Sync-Seite. */
     var _holtSchluessel as Lang.Boolean = false;
 
@@ -355,13 +353,13 @@ module Pair {
                 return;
             }
             /* Das Konto hat noch kein Schluesselpaar — es entsteht beim
-             * naechsten Entsperren im Browser (pair.php, S11-03). */
+             * naechsten Entsperren im Browser (pair.php). */
             status = "Erst im Web anmelden";
             statusHint = null;
             statusKind = :error;
         } else if (code == 401 || code == 403) {
             /* Das Geraet gibt es nicht mehr oder es ist inaktiv — derselbe
-             * Zustand wie beim Upload (Backlog Nr. 159), derselbe Weg. */
+             * Zustand wie beim Upload, derselbe Weg. */
             Uploader.abgemeldet = true;
             status = null;
             statusHint = null;
@@ -408,10 +406,9 @@ module Pair {
     }
 
     /* Zugangsdaten auf der Uhr loeschen: die aus der Kopplung
-     * (Storage). Bis Uhr 4.0.0 auch die von Hand eingetragenen (Properties,
-     * Alt-Weg, E-R17-21). */
+     * (Storage). */
     function lokalTrennen() as Void {
-        /* GEPARKTE PAKETE GEHEN MIT (Backlog Nr. 159).
+        /* GEPARKTE PAKETE GEHEN MIT.
          *
          * Sie gehoeren dem bisherigen Konto und koennen dorthin nie mehr
          * gelangen -- der Server hat sie abgelehnt oder kennt das Geraet
@@ -422,12 +419,10 @@ module Pair {
         Uploader.abgemeldet = false;
         Uploader.abmeldungVergessen();     // die Frist gehoert zur alten Kopplung
         Storage.deleteValue("cred");
-        // Der Kontoschluessel gehoert zur Kopplung und geht mit (S11-08).
+        // Der Kontoschluessel gehoert zur Kopplung und geht mit.
         Huelle.schluesselLoeschen();
-        /* Und der Vermerk des Selbsttests (F-R17-53): Neu koppeln ist ein
-         * frischer Anfang. Die Einstellungen `deviceId` und `apiKey` leerte
-         * diese Stelle bis Uhr 4.0.0 mit; seit dem Ende des Alt-Wegs gibt es
-         * sie nicht mehr (E-R17-21). */
+        /* Und der Vermerk des Selbsttests: Neu koppeln ist ein frischer
+         * Anfang. */
         Huelle.pruefungVergessen();
         Uploader.lastError = null;
     }
@@ -454,10 +449,10 @@ module Pair {
         sitzungStarten();
     }
 
-    /* Was fuer ein Geraet koppelt sich hier? (Statistik, Web-Konzept)
+    /* Was fuer ein Geraet koppelt sich hier? (Statistik)
      *
-     * WOZU. Bis hierher wusste der Server nur, DASS ein Geraet gekoppelt ist,
-     * nicht welches. Fuer die Frage "welche Uhren sollen wir kuenftig
+     * WOZU. Ohne diesen Block wuesste der Server nur, DASS ein Geraet
+     * gekoppelt ist, nicht welches. Fuer die Frage "welche Uhren sollen wir kuenftig
      * unterstuetzen" gibt es keine brauchbare aeussere Quelle: Garmin
      * veroeffentlicht keine modellgenauen Zahlen, und der Connect-IQ-Store
      * schluesselt Installationen nicht nach Geraet auf. Wer es wissen will,
@@ -472,10 +467,9 @@ module Pair {
      * Die Art steht fest auf "uhr": Eine Connect-IQ-App laeuft nur auf einem
      * Garmin-Geraet. Unterscheiden kann diese App Uhr und Radcomputer nicht —
      * die Geraetedateien koennen es, deshalb loest der Server die Teilenummer
-     * auf und seine Einstufung schlaegt diese Angabe (Web 12.9.0).
+     * auf und seine Einstufung schlaegt diese Angabe.
      *
-     * SEIT 3.0.0 GEHT DER BLOCK AN `start` statt neben den Code (Vertrag
-     * 1a.1). Er ist damit die einzige Auskunft, aus der die Bestaetigungsseite
+     * DER BLOCK GEHT AN `start` (Vertrag 1a.1). Er ist damit die einzige Auskunft, aus der die Bestaetigungsseite
      * im Web "Uhr · Venu 3S" bilden kann — ein Geraet, das nichts ueber sich
      * sagt, erscheint dort als "Gerät unbekannt". Eine Kopplung scheitert
      * daran trotzdem nie: Alle Felder sind fuer den Server freiwillig.
@@ -579,10 +573,10 @@ module Pair {
              * mit BACK heraus. Dann draengt sich die Kopplungsansicht NICHT
              * ueber eine Seite, die sie nicht aufgerufen hat — im Zweifel
              * ueber den Rea-Countdown, wo die Ereignistasten tot waeren und
-             * BACK etwas anderes bedeutet (E-S5-24: "ueber der Sync-Seite").
+             * BACK etwas anderes bedeutet (sie gehoert "ueber die Sync-Seite").
              * Die Sitzung wird stattdessen zurueckgegeben; `nein` ist in JEDEM
-             * Zustand erlaubt, auch `offen`. Gespeichert wurde nichts
-             * (E-S5-22), und die Meldung steht bereit, wenn die Sync-Seite das
+             * Zustand erlaubt, auch `offen`. Gespeichert wurde nichts,
+             * und die Meldung steht bereit, wenn die Sync-Seite das
              * naechste Mal aufgeschlagen wird. */
             if (!_syncSichtbar) { ablehnen("Abgebrochen"); return; }
 
@@ -620,10 +614,9 @@ module Pair {
             /* Unbekannter Fall. Der Zahlencode steht oben, weil er sicher
              * passt und fuer eine Fehlersuche taugt; die Servermeldung kommt
              * als zweite Zeile dazu, gekuerzt. Genau ueber diesen Weg erfaehrt
-             * eine Uhr 2.0.0 am neuen Server, was zu tun ist: Sie sendet
+             * eine Uhr mit dem alten Kopplungsweg, was zu tun ist: Sie sendet
              * `{"code": …}` ohne `aktion` und bekommt
-             * `400 {"error":"aktion","meldung":"Uhr-App aktualisieren"}`
-             * (E-S5-19). */
+             * `400 {"error":"aktion","meldung":"Uhr-App aktualisieren"}`. */
             if (dict != null && dict["meldung"] instanceof Lang.String) {
                 z2 = _kurz(dict["meldung"] as Lang.String);
             }
@@ -640,7 +633,7 @@ module Pair {
 
     /* Schritt 2: nachfragen, ob jemand den Code eingetragen hat.
      *
-     * HOECHSTENS ALLE PAIR_TAKT_MS UND NIE UEBERLAPPEND (E-S5-25). Der
+     * HOECHSTENS ALLE PAIR_TAKT_MS UND NIE UEBERLAPPEND. Der
      * Zeitgeber der Ansicht klopft alle zwei Sekunden an; hier wird
      * entschieden, ob daraus eine Anfrage wird. Zwei Bedingungen, beide
      * noetig: Die vorige Antwort muss da sein (sonst stapeln sich Anfragen,
@@ -652,7 +645,7 @@ module Pair {
         if (dev == null || key == null) { return; }
 
         /* Die Frist laeuft AUCH OHNE SERVER ab. Ein Verbindungsfehler beendet
-         * die Sitzung nicht (E-S5-25) — aber "bis zur Frist" heisst eben auch:
+         * die Sitzung nicht — aber "bis zur Frist" heisst eben auch:
          * an der Frist ist Schluss. Ohne diesen Zweig zeigte die Ansicht
          * "noch 0 s" und wartete auf ein 410, das nie kommt, wenn das Telefon
          * fort bleibt. */
@@ -728,8 +721,8 @@ module Pair {
             }
             if (zustand.equals("gekoppelt")) {
                 /* Die Antwort auf ein frueheres `bestaetigen ja` ist auf dem
-                 * Rueckweg verlorengegangen — das Geraet gibt es bereits
-                 * (E-S5-15). Ohne diesen Zweig haenge die Kopplung an einem
+                 * Rueckweg verlorengegangen — das Geraet gibt es bereits.
+                 * Ohne diesen Zweig haenge die Kopplung an einem
                  * einzigen Funkpaket: Der Server haette ein Geraet, von dem
                  * die Uhr nichts weiss. */
                 _fertig(dict);
@@ -758,7 +751,7 @@ module Pair {
 
         if (code < 0 || code >= 500) {
             /* Verbindungsfehler und Serverfehler beenden die Sitzung NICHT
-             * (E-S5-25; Vertrag 1a.3: "es darf wiederholen"). Sie lebt auf dem
+             * (Vertrag 1a.3: "es darf wiederholen"). Sie lebt auf dem
              * Server bis zur Frist; der Code bleibt gueltig, und wer das
              * Telefon wieder in Reichweite bringt, macht dort weiter. Die
              * Zeile steht deshalb UNTER dem Code und ersetzt ihn nicht. */
@@ -794,7 +787,7 @@ module Pair {
     /* Schritt 3: Ja oder Nein zu dem Konto, das der Server genannt hat.
      *
      * JA WIRD ABGEWARTET: Erst die 200 macht die Zugangsdaten gueltig, und
-     * erst dann duerfen sie in den Speicher (E-S5-22). Bis dahin steht die
+     * erst dann duerfen sie in den Speicher. Bis dahin steht die
      * Kopplungsansicht weiter — sie zeigt den Code und die Restzeit, was in
      * dieser Sekunde beides noch stimmt. */
     function bestaetigen(antwort as Lang.String) as Lang.Boolean {
@@ -824,7 +817,7 @@ module Pair {
 
     /* Nein — im Dialog abgelehnt oder mit BACK abgebrochen.
      *
-     * WIRD NICHT ABGEWARTET (E-S5-23, Muster R47). Lokal ist die Sache sofort
+     * WIRD NICHT ABGEWARTET. Lokal ist die Sache sofort
      * entschieden; die Sitzung stirbt serverseitig spaetestens mit der Frist.
      * Auf eine Antwort zu warten hiesse, die Traegerin vor einem Bildschirm
      * warten zu lassen, dessen Inhalt sie gerade abgelehnt hat.
@@ -850,7 +843,7 @@ module Pair {
          * `nein` der VORIGEN Sitzung die schwebenden Zugangsdaten der neuen in
          * Storage "cred" schreiben — die Uhr hielte sich fuer gekoppelt, jeder
          * Upload endete in 401, und ein Rueckstand verhinderte sogar das
-         * Neukoppeln. Genau das schliesst E-S5-22 aus. */
+         * Neukoppeln. Genau das schliesst die fluechtige Sitzung aus. */
         if (!ja) { return; }
         var dev = _dev;
         if (dev == null || !fuer.equals(dev)) { return; }
@@ -866,7 +859,7 @@ module Pair {
 
         if (fehler != null && fehler.equals("device_limit")) {
             /* 409 — zwischen dem Klick im Web und dem Ja hier kann von Hand
-             * ein Geraet dazugekommen sein (E-S5-18). Behebbar, und zwar nur
+             * ein Geraet dazugekommen sein. Behebbar, und zwar nur
              * im Web. Das gehoert in die Meldung; die Sitzung ist fort. */
             _sitzungBeenden("Zu viele Geräte", "Erst eines im Web löschen", :error);
             return;
@@ -891,7 +884,7 @@ module Pair {
              * ausgefuehrt hat, weiss die Uhr nicht — deshalb bleibt die
              * Sitzung ebenfalls stehen und die Abfrage laeuft weiter: Kam das
              * Ja an, antwortet das naechste `status` mit "gekoppelt" und die
-             * Kopplung schliesst sich von selbst (E-S5-15). Kam es nicht an,
+             * Kopplung schliesst sich von selbst. Kam es nicht an,
              * steht der Code weiter. */
             netzHinweis = (code < 0)
                           ? "Keine Verbindung (" + code.toString() + ")"
@@ -959,15 +952,15 @@ module Pair {
         ablehnen("Nicht gekoppelt");
     }
 
-    /* BACK in der Kopplungsansicht (E-S5-23). */
+    /* BACK in der Kopplungsansicht. */
     function abbrechen() as Void {
         ablehnen("Abgebrochen");
     }
 
     /* Geschafft: Die Zugangsdaten sind ab jetzt gueltig und duerfen — erst
-     * jetzt — in den Speicher (E-S5-22).
+     * jetzt — in den Speicher.
      *
-     * MIT IHNEN DER KONTOSCHLUESSEL (S11-08, pair.php `kontoschluessel`).
+     * MIT IHNEN DER KONTOSCHLUESSEL (pair.php `kontoschluessel`).
      * Beide Wege hierher tragen ihn — `bestaetigen` und `status` mit
      * "gekoppelt" —, weil die Kopplung ueber beide zustande kommen kann.
      * Fehlt er (`null`: das Konto hat noch kein Schluesselpaar, es entsteht
@@ -983,7 +976,7 @@ module Pair {
                          as Lang.Dictionary<Storage.KeyType, Storage.ValueType>);
         Uploader.lastError = null;
         Uploader.abgemeldet = false;
-        Uploader.abmeldungVergessen();     // E-R17-22: neue Kopplung, keine Frist
+        Uploader.abmeldungVergessen();     // neue Kopplung, keine Frist
         var ks = (dict != null) ? dict["kontoschluessel"] : null;
         if (!Huelle.schluesselSetzen(ks)) {
             /* Gekoppelt IST sie — das sagt die erste Zeile, gruen. Dass der
@@ -1004,7 +997,7 @@ module Pair {
      * Ein Weg fuer alle Ausgaenge — Erfolg, Ablehnung, Abbruch, Fehler. Wer
      * dafuer vier Wege pflegt, vergisst an einem davon das Vergessen; und
      * eine schwebende Sitzung, die im Speicher liegenbleibt, waere genau die
-     * halbe Kopplung, die E-S5-22 ausschliesst. */
+     * halbe Kopplung, die die fluechtige Sitzung ausschliesst. */
     function _sitzungBeenden(text as Lang.String, hinweis as Lang.String or Null,
                              art as Lang.Symbol) as Void {
         _sitzungVergessen();

@@ -1,9 +1,9 @@
-"""Ortsdaten wie der Browser — für das Einspielwerkzeug (S11-06e).
+"""Ortsdaten wie der Browser — für das Einspielwerkzeug.
 
 Anlass: Nr. 43 — seit S11-05b nimmt das Einsatzformular Phasenorte und
 Reanimation nur noch in der Einsatzhülle an, Transportziel und Ortshöhe nur im
-`pat_blob`; seit S11-05c schneidet der Browser und schickt verschlossene
-Stücke. `einspielen.py` bediente beides im alten Format (F-S11-43, -53). Diese
+`pat_blob`; der Browser schneidet und schickt verschlossene
+Stücke. `einspielen.py` bediente beides im alten Format. Diese
 Datei tut für das Werkzeug, was `assets/ortsdaten.js` für den Browser tut:
 Hüllen und Stücke öffnen und verschließen.
 
@@ -20,9 +20,9 @@ Hüllen und Stücke öffnen und verschließen.
 
 DAS FORMAT steht in `tools/proben/huelle/referenz.py` und nur dort; diese
 Datei benutzt dessen `verschliessen()` und `oeffnen()`. Die Regeln beim
-Öffnen sind die von `ortsdaten.js` (E-S11-37): Punkt i eines Stücks hat die
+Öffnen sind die von `ortsdaten.js`: Punkt i eines Stücks hat die
 Nummer `seq_from + i`, doppelte Nummern zählen einmal, Punkte in einer
-Sperrzeit fallen weg, Höhe -32768 heißt keine (E-S11-39).
+Sperrzeit fallen weg, Höhe -32768 heißt keine.
 """
 from __future__ import annotations
 
@@ -62,7 +62,7 @@ def einsatz_verschliessen(innen: dict, sec1: bytes, ref: str) -> str:
 
 
 def spur_oeffnen(stuecke: list, art: str, ref: str, sperren: list, priv) -> list[dict]:
-    """Wie `EdOrtsdaten.spur()`: Stücke der Stufe 2 und 3 (E-S11-71) zuerst —
+    """Wie `EdOrtsdaten.spur()`: Stücke der Stufe 2 und 3 zuerst —
     ihre Punkte tragen keine eigene Nummer; was ein Stück der Stufe 1 unter
     ihrer Marke trägt, steckt schon darin."""
     nach: dict[int, dict] = {}
@@ -129,7 +129,7 @@ def stuecke_bauen(punkte: list[dict], art: str, ref: str, sec1: bytes,
 
 def gepackt_bauen(punkte: list[dict], art: str, ref: str, sec1: bytes, stufe: int,
                   seq_from: int, n_original: int) -> dict:
-    """Ein Stück der Stufe 2 oder 3 (E-S11-71) aus Punkten {lat, lon, ele, ts}."""
+    """Ein Stück der Stufe 2 oder 3 aus Punkten {lat, lon, ele, ts}."""
     von = min(p["ts"] for p in punkte)
     innen = referenz.innen_gepackt([(p["lat"], p["lon"], p["ele"], p["ts"]) for p in punkte], von)
     platz = referenz.platz_gepackt(seq_from, len(punkte), stufe, n_original)

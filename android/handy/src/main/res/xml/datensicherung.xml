@@ -2,7 +2,7 @@
 <!--
     Ab Android 12 fragt das System nicht mehr `allowBackup` allein, sondern
     diese Regeln (Cloud-Sicherung und Geraeteuebertragung getrennt). Beide sind
-    LEER: Es wird nichts uebertragen (E-S4-13).
+    LEER: Es wird nichts uebertragen.
 
     Eine leere Regelmenge ist hier die vollstaendige Aussage — `allowBackup`
     ist ohnehin aus, aber ohne diese Datei meldet Lint die Luecke, und zu Recht:

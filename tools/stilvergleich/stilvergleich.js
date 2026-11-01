@@ -1,4 +1,4 @@
-/* AK-A3-3: Erscheinungsbild unveraendert — im Browser nachgerechnet.
+/* Erscheinungsbild unveraendert — im Browser nachgerechnet.
  *
  * Fuer jede Probe wird dieselbe DOM einmal mit dem alten und einmal mit dem
  * neuen Stylesheet geladen; danach werden fuer JEDES Element die berechneten
@@ -6,13 +6,13 @@
  * vorkommen. Gemessen wird bei mehreren Fensterbreiten, damit auch die
  * gesammelten Media Queries mitgeprueft werden.
  *
- * JE SEITE EIN DOKUMENT (R4-08, Nr. 321). Traegt eine Probe die Trennmarke
+ * JE SEITE EIN DOKUMENT. Traegt eine Probe die Trennmarke
  * aus proben.py (STUECK), wird jedes Stueck fuer sich geladen und gemessen,
  * und die Signatur nennt seine Quelle: `seiten.html[einsatz.php]`. Vorher
  * lagen alle Seiten in einem Dokument; eine Regel fuer Seite A aenderte dessen
  * Hoehe und damit `top`/`bottom` jedes absolut gesetzten Elements auf allen
  * Seiten — und eine Seite B, die ein solches Element dazubekam, brachte eine
- * ungeplante Signatur mit, ohne dass an ihr etwas geaendert war (F-P5c-126).
+ * ungeplante Signatur mit, ohne dass an ihr etwas geaendert war.
  * Jedes Stueck wird je Stylesheet EINMAL geladen und fuer alle Breiten nur
  * neu vermessen; das haelt die Laufzeit trotz sechzig Dokumenten klein.
  */
@@ -24,7 +24,7 @@ const SEP = String.fromCharCode(1);
 const STUECK = '<!--STILVERGLEICH-STUECK-->';   // wie in proben.py
 
 /* Die Stuecke einer Probe: [{quelle, html}]. Ohne Trennmarke ein Stueck ohne
- * Quelle — dann bleibt die Signatur, wie sie vor R4-08 war (katalog.html). */
+ * Quelle — dann bleibt die Signatur, wie sie ohne Quelle war (katalog.html). */
 function stuecke(html) {
   if (!html.includes(STUECK)) { return [{ quelle: '', html: html }]; }
   return html.split(STUECK).map(h => {
@@ -34,9 +34,8 @@ function stuecke(html) {
 }
 /* `--motor <name>` wird vor den Stellungsangaben herausgenommen, damit SP,
  * ALT und NEU an ihrer Stelle bleiben, gleich wo der Schalter steht. */
-/* `--geplant <datei>` und `--geplant-schreiben <datei>` ebenso (P5c/AP1,
- * F-P5c-72) — siehe unten bei GEPLANT; `--geerbt <datei>` seit dem
- * 26.09.2026 (Nr. 330). */
+/* `--geplant <datei>` und `--geplant-schreiben <datei>` ebenso — siehe unten bei GEPLANT; `--geerbt <datei>` seit dem
+ * 26.09.2026. */
 const SCHALTER = {};
 const ARGV = (() => {
   const a = process.argv.slice(2);
@@ -60,12 +59,12 @@ const PROBEN = (process.env.PROBEN || 'seiten.html,katalog.html').split(',');
  * vollstaendig, weil nichts sagt, dass sie es nicht ist. Die Kopfzeile nennt
  * die richtige Zahl — die Beispielliste tut es seither auch:
  *   BEISPIELE=99 node stilvergleich.js …
- * (S9/AP5-2, 08.09.2026) */
+ * (08.09.2026) */
 const BEISPIELE = parseInt(process.env.BEISPIELE || '8', 10);
-/* DREIZEHN BREITEN, NEU GEEICHT IN P3/O12.
+/* DREIZEHN BREITEN, NEU GEEICHT MIT DEM REDESIGN.
  *
- * Die alten neun (1400, 1100, 1000, 900, 720, 700, 560, 520, 500) stammen aus
- * P0 und lagen um die damaligen Schwellen. Das Redesign hat andere: 720, 1024,
+ * Die alten neun (1400, 1100, 1000, 900, 720, 700, 560, 520, 500) lagen um
+ * die damaligen Schwellen. Das Redesign hat andere: 720, 1024,
  * 1200 und 1600. Die Liste deckt jetzt jede davon von BEIDEN Seiten ab und
  * reicht bis 360 px hinunter — die schmalste Breite, die das Konzept zusagt.
  * Ohne 1024 und 1600 haette der Vergleich die halben Media-Bloecke nie
@@ -82,15 +81,15 @@ const LAYOUTMASSE = ['width', 'height', 'inline-size', 'block-size',
   'margin-inline-start', 'margin-inline-end', 'padding', 'padding-top',
   'padding-right', 'padding-bottom', 'padding-left'];
 
-/* DIE LISTE DER GEPLANTEN ABWEICHUNGEN (P5c/AP1, F-P5c-72).
+/* DIE LISTE DER GEPLANTEN ABWEICHUNGEN.
  *
- * `docs/Pruefablauf.md` 6.10 sagt seit PK-01: Bei einer beabsichtigten
+ * `docs/Pruefablauf.md` 6.10 sagt: Bei einer beabsichtigten
  * Gestaltungsaenderung ist das Ergebnis keine Null, sondern eine Liste, und
  * die wird gegen die Liste der geplanten Aenderungen gehalten. Gebaut war
  * davon nur die Null — der Rueckgabewert war 1 bei jeder Abweichung. Im
- * Pruefstand hiess das seit PK-05: Jede gewollte Aenderung an `style.css`
+ * Pruefstand hiess das: Jede gewollte Aenderung an `style.css`
  * macht den Bericht rot (Lage 5), und das Tor laesst keinen PR durch, der
- * gestaltet. Gefunden am ersten Paket, das es tat (P5c/AP1).
+ * gestaltet. Gefunden am ersten Paket, das es tat.
  *
  * JETZT: Jede Abweichung bekommt eine SIGNATUR — Probe, Element (Tag,
  * Klassen, Elternteil) und die Namen der geaenderten Eigenschaften,
@@ -104,7 +103,7 @@ const LAYOUTMASSE = ['width', 'height', 'inline-size', 'block-size',
  * `--geplant-schreiben <datei>` schreibt die gemessenen Signaturen hin; die
  * Datei steht dann im Diff des Pull Requests und wird dort gelesen.
  *
- * GEERBTE ZEILEN (`--geerbt <datei>`, Nr. 330). Mit dem Merge landet die
+ * GEERBTE ZEILEN (`--geerbt <datei>`). Mit dem Merge landet die
  * Liste auf `main`, und dort ist sie falsch: Das Stylesheet von `main` ist
  * dann das, gegen das sie geschrieben wurde, der nächste Lauf misst keine
  * ihrer Abweichungen mehr. Bis zum 26.09.2026 musste deshalb nach jedem Merge
@@ -153,7 +152,7 @@ function eigenschaften(css) {
   const cssNeu = fs.readFileSync(NEU, 'utf8');
   const props = [...new Set([...eigenschaften(cssAlt), ...eigenschaften(cssNeu)])];
 
-  /* DREI MOTOREN, EINE ZAHL JE MOTOR (AP3b, Nr. 183).
+  /* DREI MOTOREN, EINE ZAHL JE MOTOR.
    *
    * Dieser Vergleich misst DIFFERENZIELL — alt gegen neu INNERHALB eines
    * Motors. Engine-Eigenheiten kuerzen sich darin heraus, und genau deshalb
@@ -161,13 +160,13 @@ function eigenschaften(css) {
    * Motor eine neue Regel nicht, rechnet er „neu" wie „alt" und meldet
    * WENIGER Abweichungen. Die Aussage ist also nicht die Zahl, sondern ihre
    * UEBEREINSTIMMUNG ueber die drei Laeufe. Gemessen am 14.09.2026 an der
-   * einen Regel aus AP3b: 46 150 Elementmessungen und 104 Abweichungen in
+   * einen Regel: 46 150 Elementmessungen und 104 Abweichungen in
    * allen dreien — 8 Auswahlfelder mal 13 Breiten, und die einzige geaenderte
    * Eigenschaft ist `contain`. Je Motor 14 bis 18 Sekunden.
    *
    * `CHROMIUM=<pfad>` gilt weiter, aber nur fuer Chromium. Ohne ihn nimmt
    * Playwright jede Engine aus PLAYWRIGHT_BROWSERS_PATH, und zwar in der
-   * Fassung, die zu ihm gehoert. Bis Nr. 393 stand hier als Vorgabe der feste
+   * Fassung, die zu ihm gehoert. Frueher stand hier als Vorgabe der feste
    * Pfad `chromium-1194` — das Chromium von Playwright 1.56. Nach dem
    * Anheben haette der Vergleich damit ein Chromium gefahren, das kein
    * anderes Pruefmittel mehr misst. */
@@ -179,7 +178,7 @@ function eigenschaften(css) {
   let abweichungen = 0, gemessen = 0, ohneBox = 0;
 
   async function laden(html, css) {
-    /* OHNE `autofocus` (Nr. 393). Gemessen wird ohne Fokus — deshalb das
+    /* OHNE `autofocus`. Gemessen wird ohne Fokus — deshalb das
      * `blur()` unten. Firefox setzt den Autofokus aber erst NACH `load`, also
      * nach dem `blur()`, und dann stand am 21.10.2026 der Fokusrahmen des
      * Eingabefelds in `login.php` mal im alten, mal im neuen Stand: zwei von
@@ -200,7 +199,7 @@ function eigenschaften(css) {
      * hinweg startet die Uebergaenge des Stylesheets (`.blatt` faehrt mit
      * `--dauer`), und gemessen wuerde ein Zwischenwert — beim ersten
      * Nachstellen stand so `transform` an `.blatt` als Abweichung da, ohne
-     * dass eine Regel sie aenderte. Frisch geladen, wie bis R4-08 je Breite,
+     * dass eine Regel sie aenderte. Frisch geladen je Breite,
      * gibt es keinen Uebergang; `finish()` stellt denselben Endwert her.
      * Eine endlose Animation laesst sich nicht beenden — sie steht auf null. */
     await seite.evaluate(() => {
@@ -208,7 +207,7 @@ function eigenschaften(css) {
         try { a.finish(); } catch (e) { a.pause(); a.currentTime = 0; }
       }
     });
-    /* OHNE BOX KEIN PIXELMASS (Nr. 393). Inhalt eines geschlossenen
+    /* OHNE BOX KEIN PIXELMASS. Inhalt eines geschlossenen
      * `<details>` wird nicht gelayoutet; Firefox liefert für seine Breite
      * trotzdem einen Pixelwert — aus irgendeinem früheren Layout, nicht aus
      * dieser Breite. Am 21.10.2026 stand so `div.filterfelder` in
@@ -245,7 +244,7 @@ function eigenschaften(css) {
       }
       return { ohneBox, werte: out, gruppe: [...alle].map(el => {
         const g = el.closest('[data-paar]'); return g ? g.getAttribute('data-paar') : ''; }), wer: [...alle].map(el =>
-        /* WEISSRAUM IN DER KENNUNG WIRD EIN LEERZEICHEN (P5c/AP2, F-P5c-85):
+        /* WEISSRAUM IN DER KENNUNG WIRD EIN LEERZEICHEN:
          * Die Seitenprobe setzt Markup aus PHP-Zeichenketten zusammen, und
          * eine Kennung kann dabei einen Zeilenumbruch tragen. Die Signatur
          * stand dann ueber zwei Zeilen in `geplant.txt` und passte nie. */

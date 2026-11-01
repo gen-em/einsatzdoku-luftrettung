@@ -88,13 +88,12 @@
         },
 
         /**
-         * Wie trim, ABER MIT ZEILENUMBRUECHEN (Backlog Nr. 27).
+         * Wie trim, ABER MIT ZEILENUMBRUECHEN.
          *
          * `trim` zieht jede Leerraumfolge auf ein Leerzeichen zusammen — und
-         * \n ist Leerraum. Eine mehrzeilige Notiz kam damit einzeilig zurueck:
-         * Der Text war vollstaendig, seine GLIEDERUNG war weg, und niemand
-         * bekam davon etwas zu sehen. Gemessen im Kreislauf der Phase P1 an
-         * vier Notizen (Fund F-P1-L).
+         * \n ist Leerraum. Eine mehrzeilige Notiz kaeme damit einzeilig
+         * zurueck: Der Text waere vollstaendig, seine GLIEDERUNG waere weg,
+         * und niemand bekaeme davon etwas zu sehen.
          *
          * Hier wird deshalb nur INNERHALB einer Zeile zusammengezogen
          * (`[^\S\n]` ist Leerraum ausser dem Zeilenumbruch). Zeilenenden
@@ -462,13 +461,13 @@
     // Felder, die unveraendert nach zeile.mission durchgereicht werden.
     var EINFACHE_ZIELE = ['day', 'einsatzdatum', 'alarm', 'ended', 'final',
         'transport_dest', 'winch',
-        /* 'notes' steht hier nicht mehr (S9/AP7): Das Ziel heisst jetzt
-           'pat.notes' und laeuft ueber den verschluesselten Block. */
+        /* 'notes' steht nicht hier: Das Ziel heisst 'pat.notes' und laeuft
+           ueber den verschluesselten Block. */
         'site_ele_m', 'distance_m', 'ascent_m',
         'schockraum', 'secondary', 'winch_cycles', 'winch_cycles_pat',
         'winch_airload', 'bergwacht', 'bw_unit', 'bw_info', 'other_ema',
         'crew_override', 'rea',
-        // Etappe 2 (Web 6.1.0): gewoehnliche Spalten in `missions`, deshalb
+        // Gewoehnliche Spalten in `missions`, deshalb
         // hier und nicht im Sonderfall-Zweig darunter.
         'transport_mode', 'na_escort', 'false_alarm',
         'dest_lat', 'dest_lon', 'start_src'];
@@ -495,12 +494,11 @@
         case 'pat.age': zeile.pat.age = wert; break;
         case 'pat.dx': zeile.pat.dx = wert; break;
         case 'pat.site_desc': zeile.pat.site_desc = wert; break;
-        /* NOTIZEN (S9/AP7). Dieser `switch` ist eine ABSCHLIESSENDE Liste: Ein
-           Ziel ohne `case` faellt heraus, ohne Fehler und ohne Meldung. Genau
-           das ist beim Umzug passiert — das Profil zeigte auf `pat.notes`,
-           hier stand nichts, und der CSV-Kreislauf meldete 114 verlorene
-           Notizen. Wer ein Ziel in `import_profiles.js` ergaenzt, ergaenzt es
-           hier mit. */
+        /* NOTIZEN. Dieser `switch` ist eine ABSCHLIESSENDE Liste: Ein Ziel
+           ohne `case` faellt heraus, ohne Fehler und ohne Meldung — zeigt ein
+           Profil auf ein Ziel, das hier fehlt, gehen dessen Werte still
+           verloren. Wer ein Ziel in `import_profiles.js` ergaenzt, ergaenzt
+           es hier mit. */
         case 'pat.notes': zeile.pat.notes = wert; break;
         case 'pat.mission_no': zeile.pat.mission_no = wert; break;
         // Die drei Ortsangaben koennen in beliebiger Spaltenreihenfolge
@@ -650,7 +648,7 @@
 
             // Ein Diensttag OHNE Einsatz steht in Profil A als eine einzige Zeile
             // mit Rettungsmittel, Standort und Datum — alle uebrigen Zellen
-            // tragen "-" (SPEC_Export.md 3.2). Solche Zeilen legen den Diensttag
+            // tragen "-" (docs/Export-Format.md 2). Solche Zeilen legen den Diensttag
             // an, aber keinen Einsatz. Ohne diese Unterscheidung entstuende
             // beim Rueckimport ein Einsatz ohne Alarmzeit.
             z.dayOnly = !!(profil.emptyDayRows && z.mission.day && !z.mission.alarm);
@@ -677,13 +675,13 @@
             zeilen.push(z);
         }
 
-        /* WELCHE ZIELFELDER DIE DATEI UEBERHAUPT FUEHRT (Backlog Nr. 28).
+        /* WELCHE ZIELFELDER DIE DATEI UEBERHAUPT FUEHRT.
          *
-         * „Spalte fehlt" und „Zelle leer" sind zwei verschiedene Aussagen, und
-         * bis Web 7.3.1 waren sie ununterscheidbar: Beide endeten als `null`
-         * in `zeile.mission`. Fuer `ended` hatte das Folgen — der Server konnte
-         * ein leeres Ende nicht von einem fehlenden unterscheiden und setzte
-         * in beiden Faellen Ende = Beginn.
+         * „Spalte fehlt" und „Zelle leer" sind zwei verschiedene Aussagen,
+         * und in `zeile.mission` enden beide als `null`. Fuer `ended` hat das
+         * Folgen — ohne diese Liste koennte der Server ein leeres Ende nicht
+         * von einem fehlenden unterscheiden und setzte in beiden Faellen
+         * Ende = Beginn.
          *
          * Die Unterscheidung gehoert HIERHER, weil hier bekannt ist, welche
          * Ueberschriften die Datei traegt. `import_ui.js` sendet danach nur,
@@ -708,8 +706,8 @@
     // ------------------------------------------------------ Tagesgruppierung
 
     /* Rollenkatalog aus CREW_ROLES (server/db.php), von import.php als
-     * CREW_ROLLEN gesetzt. Der Rueckfall ist der Stand vor Web 6.0.0 — die
-     * fuenf Flugrollen —, damit diese Datei auch ohne die Vorgabe laeuft. */
+     * CREW_ROLLEN gesetzt. Der Rueckfall sind die fuenf Flugrollen, damit
+     * diese Datei auch ohne die Vorgabe laeuft. */
     var ROLLEN = (typeof CREW_ROLLEN !== 'undefined' && CREW_ROLLEN.length)
         ? CREW_ROLLEN : ['p1', 'p2', 'hems', 'fr', 'other'];
 
@@ -719,7 +717,7 @@
      * GEBUENDELT WIRD NACH KALENDERTAG, und das bleibt so. Eine Tabelle nennt
      * kein Dienstende und keine zweite Schicht; aus ihr laesst sich nicht
      * ableiten, ob zwei Einsaetze desselben Datums zu einem oder zu zwei
-     * Diensten gehoeren (E9). Der Import legt deshalb je Datum HOECHSTENS EINEN
+     * Diensten gehoeren. Der Import legt deshalb je Datum HOECHSTENS EINEN
      * Diensttag an. Wer zwei braucht, teilt sie danach mit
      * einsatz_verschieben.php auf — eine geratene Aufteilung waere schlechter
      * als eine, die jemand bewusst vornimmt.
@@ -743,13 +741,10 @@
      * ankam und hier fehlte, wurde in der Prueftabelle richtig angezeigt und
      * danach stillschweigend fallengelassen.
      *
-     * Genau das war bis Web 7.2.0 bei den sechs Feldern der Etappe 2 der
-     * Fall (transport_mode, na_escort, false_alarm, dest_lat, dest_lon,
-     * start_src): EINFACHE_ZIELE wurde erweitert, diese Liste nicht. Der
-     * CSV-Rueckweg, den Export-Format.md 5.1 ausdruecklich verlustfrei
-     * nennt, verlor Transportart, NA-Begleitung, Fehleinsatz,
-     * Zielkoordinate und Abfahrtortregel — ohne Hinweis, weil die Werte auf
-     * dem ganzen Weg bis zur Anzeige vollstaendig sind.
+     * Der CSV-Rueckweg, den Export-Format.md 5.1 ausdruecklich verlustfrei
+     * nennt, verloere damit Felder wie Transportart, NA-Begleitung oder
+     * Zielkoordinate — ohne Hinweis, weil die Werte auf dem ganzen Weg bis
+     * zur Anzeige vollstaendig sind.
      *
      * Was abweicht, und warum:
      *   ohne  'day'           ist der Gruppenschluessel, steht am Diensttag

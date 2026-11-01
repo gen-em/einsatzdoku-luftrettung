@@ -2,7 +2,7 @@
 <!--
     Klartext-HTTP fuer den Pruefstand — und AUSSCHLIESSLICH fuer ihn.
 
-    WARUM ES DIESE DATEI GEBEN MUSS. Die App spricht nur HTTPS (E-S4-14), und
+    WARUM ES DIESE DATEI GEBEN MUSS. Die App spricht nur HTTPS, und
     Android setzt dasselbe seit Fassung 9 von sich aus durch: Ein Aufruf an
     `http://` scheitert ohne Zutun der App. Das ist richtig und bleibt so.
 

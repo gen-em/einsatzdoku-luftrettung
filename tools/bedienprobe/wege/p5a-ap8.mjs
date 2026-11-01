@@ -1,4 +1,4 @@
-/* Wege des Pakets P5a/AP8 — Betrieb → Status → Sicherheit.
+/* Wege der Gruppe `P5a-AP8` — Betrieb → Status → Sicherheit.
  * ===========================================================================
  *
  *   E-P5a-08   Die Unterseite mit fünf Karten und dem einen Knopf, der
@@ -26,6 +26,10 @@
  */
 
 import { execFileSync } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
+/* Die Wurzel des Repositoriums aus dem Ort dieser Datei — kein fester
+   Containerpfad; `ED_WURZEL` geht weiter vor. */
+const WURZEL_HIER = fileURLToPath(new URL('../../../', import.meta.url));
 
 const SEITE   = k => `${k.basis}/betrieb_sicherheit.php`;
 const MERKMAL = 'id:klickprobe-ap8@example.invalid';
@@ -34,8 +38,8 @@ const TOPF    = 'login';
 /** Ein kurzes PHP-Stück gegen die örtliche Installation fahren. */
 function php(code) {
   return execFileSync('php', ['-r',
-    'require "server/config.php"; require "server/db.php"; ' + code],
-    { cwd: process.env.ED_WURZEL || '/home/user/einsatzdoku-luftrettung',
+    'require "server/db.php"; ' + code],
+    { cwd: process.env.ED_WURZEL || WURZEL_HIER,
       encoding: 'utf-8' }).trim();
 }
 

@@ -4,25 +4,23 @@ require_once __DIR__ . '/auth_guard.php';
 require_once __DIR__ . '/validate_lib.php';
 require_once __DIR__ . '/diensttag_lib.php';
 require_once __DIR__ . '/ui.php';   // auth_guard.php laedt sie bereits
-/* `heute_lokal()` — AUSDRUECKLICH, nicht ueber `db.php` geerbt (Schritt 15 AP7).
+/* `heute_lokal()` — AUSDRUECKLICH, nicht ueber `db.php` geerbt.
  * `date('Y-m-d')` naehme die Zone der php.ini: auf einem Server in UTC waere
- * „heute" zwischen 0 und 2 Uhr Ortszeit GESTERN (F-ZE-1). */
+ * „heute" zwischen 0 und 2 Uhr Ortszeit GESTERN. */
 require_once __DIR__ . '/format_lib.php';
 
 /**
  * Diensttag von Hand anlegen — fuer Dienste, an denen die Uhr nicht lief.
  *
- * ES WIRD IMMER EIN NEUER ANGELEGT (E9). Bis Web 5.10.0 stand hier ein
- * `INSERT IGNORE` und davor die Frage, ob es den Tag schon gibt: Ein Flugtag war
- * ein Kalendertag, und einen zweiten am selben Datum konnte es nicht geben.
- * Genau das hat sich geaendert — ein Hubschrauberdienst am Tag und ein
- * NEF-Nachtdienst am Abend sind zwei Diensttage an einem Datum (A1). Die
- * Doppelanlage-Pruefung ist deshalb ersatzlos entfallen.
+ * ES WIRD IMMER EIN NEUER ANGELEGT. Es gibt keine Frage, ob es den Tag schon
+ * gibt: Ein Hubschrauberdienst am Tag und ein NEF-Nachtdienst am Abend sind
+ * zwei Diensttage an einem Datum. Eine Doppelanlage-Pruefung gibt es deshalb
+ * nicht.
  *
  * Standort und Rettungsmittel werden hier gleich mit erfasst. Sie sind
- * freiwillig — ein Diensttag ohne sie ist neutral und funktioniert (E26) —, aber
+ * freiwillig — ein Diensttag ohne sie ist neutral und funktioniert —, aber
  * mit ihnen entstehen Art, Rollensatz und Faehigkeiten sofort, statt in der
- * Nachbearbeitung zu landen. Alles davon wird beim Anlegen EINGEFROREN (E8).
+ * Nachbearbeitung zu landen. Alles davon wird beim Anlegen EINGEFROREN.
  */
 
 $fehler = null;
@@ -126,7 +124,7 @@ ui_seite_start(['titel' => 'Diensttag anlegen']);
                  (`.feld`), nicht am Eingabefeld; ohne diese Klasse fiele die
                  Maske STILL aus, und das Feld nähme wieder alles an.
 
-                 Textfeld statt type="time" (E1): Native Zeitfelder zeigen je
+                 Textfeld statt type="time": Native Zeitfelder zeigen je
                  nach Systemsprache 12 Stunden mit AM/PM. */ ?>
         <div class="feld">
           <label class="feld-label" for="f-zeit">Dienstbeginn
@@ -166,7 +164,7 @@ ui_seite_start(['titel' => 'Diensttag anlegen']);
       <div class="listen-form-fuss">
         <?= ui_knopf(['text' => 'Diensttag anlegen', 'art' => 'primaer',
                       'symbol' => 'plus']) ?>
-        <?php /* Abbrechen mit Rückfrage (A4.1) — sie erscheint nur, wenn
+        <?php /* Abbrechen mit Rückfrage — sie erscheint nur, wenn
                  tatsächlich etwas geändert wurde. Beim unveränderten Vorschlag
                  wäre sie eine Frage nach nichts. Das Attribut gehört an einen
                  <a>; forms.js sucht `a[data-cancel-form]`. */ ?>

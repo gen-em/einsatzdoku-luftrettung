@@ -24,26 +24,23 @@ import org.genem.nadoku.gemeinsam.LogoWahl
 import org.genem.nadoku.handy.kopplung.Trennergebnis
 
 /**
- * Die App-Einstellungen (E-S4-22b, E-S4-21d, E-S4-12).
+ * Die App-Einstellungen.
  *
  * DREI DINGE, UND MEHR SOLL ES NICHT WERDEN: die Logo-Wahl, die Sperre der
- * Uhr und das Trennen. Die Verwaltung bleibt im Browser (R45) — eine App, die
+ * Uhr und das Trennen. Die Verwaltung bleibt im Browser — eine App, die
  * anfängt, Einsätze zu bearbeiten, ist der Anfang einer zweiten Anwendung.
  *
- * SEIT 0.13.0 STEHEN DARUNTER ZWEI VERWEISE, und sie sind keine vierte
- * Einstellung: Datenschutzerklärung und Impressum. Bis dahin führte die App
- * zu **keinem** Rechtstext — beide existierten nur in der Weboberfläche und
- * im Store-Eintrag. Eine App, die durchgehend den Standort aufzeichnet und
+ * DARUNTER STEHEN ZWEI VERWEISE, und sie sind keine vierte Einstellung:
+ * Datenschutzerklärung und Impressum. Eine App, die durchgehend den Standort aufzeichnet und
  * ihn an einen Server schickt, sollte von sich aus sagen können, wer diesen
  * Server betreibt und was dort geschieht; wer erst den Store öffnen muss, um
  * das zu erfahren, findet es nicht.
  *
  * Sie öffnen den Browser und keinen eingebauten Betrachter — ein WebView
  * wäre die einzige Stelle, an der fremdes Markup im Prozess dieser App liefe.
- * Aufgefallen bei der Play-Console-Vorbereitung (Schritt 6, Teil C).
  *
  * DIE SPERRE DER UHR STEHT HIER UND NICHT AUF DER UHR, weil die Uhr keine
- * eigenen Einstellungen hat: Sie übernimmt sie über den Nachrichtenweg (C2) —
+ * eigenen Einstellungen hat: Sie übernimmt sie über den Nachrichtenweg —
  * wie die Garmin, ohne Abstimmungsbedarf zwischen den Geräten.
  */
 @Composable
@@ -64,7 +61,7 @@ fun EinstellungenAnsicht(
             .fillMaxSize()
             .background(Farbe.rauch)
             /* Die Navigationsleiste unten -- und im Querformat die seitliche
-             * Geste (Backlog Nr. 86). Wie oben gilt: `background` zuerst, damit
+             * Geste. Wie oben gilt: `background` zuerst, damit
              * die Flaeche bis zum Rand faerbt, das Padding danach, damit der
              * Inhalt nicht darunter geraet. */
             .windowInsetsPadding(WindowInsets.navigationBars)
@@ -139,7 +136,7 @@ fun EinstellungenAnsicht(
 
             /* KEIN NEUER BAUSTEIN. `Karte`, `Text` und `KnopfNeutral` gibt
              * es; zwei Verweise rechtfertigen keine eigene Darstellung, und
-             * die Knopfhöhe von 48 dp gilt hier wie überall (R58). */
+             * die Knopfhöhe von 48 dp gilt hier wie überall. */
             Karte {
                 Text(
                     text = stringResource(R.string.einstellungen_recht),

@@ -1,4 +1,4 @@
-/* Wege des Arbeitspakets AP4 — Rettungsmittel: Typ, Kurzname, Standort optional.
+/* Wege der Gruppe `AP4` — Rettungsmittel: Typ, Kurzname, Standort optional.
  * ===========================================================================
  *
  *   E-S9-09  Vier Typen, ein Kurzname, der Standort wird freiwillig
@@ -14,13 +14,13 @@
  * DIE WEGE STELLEN HER UND STELLEN ZURÜCK. Der Referenzbestand ist der
  * Vergleichsstand der Kreisläufe; ein Weg, der ein Rettungsmittel stehen
  * lässt, verschiebt ihn. Jeder Weg, der etwas anlegt, räumt in `finally`
- * wieder ab — dasselbe Muster wie bei den Windenkacheln in AP3.
+ * wieder ab — dasselbe Muster wie bei den Windenkacheln in `ap3.mjs`.
  */
 
-/* ZWEI ADRESSEN STATT EINER (S9/AP5). Bis Web 16.1.1 stand alles auf dem
+/* ZWEI ADRESSEN STATT EINER. Früher stand alles auf dem
  * Reiter `t=rettungsmittel`; den gibt es nicht mehr. Was an einem Standort
  * haengt, steht auf SEINER Seite, und was an keinem haengt, auf der LISTE
- * (Karte „Ohne Standort", seit Web 16.2.2). Die Wege legen beides an —
+ * (Karte „Ohne Standort"). Die Wege legen beides an —
  * deshalb liest `liste()` beide Seiten und `loeschen()` sucht auf beiden.
  * Eine Probe, die nur die eine kennt, meldet „0 angelegt" fuer einen
  * Datensatz, der sehr wohl entstanden ist, und laesst ihn stehen. */
@@ -40,11 +40,11 @@ async function ersterStandort(k) {
 }
 
 /**
- * Ein Rettungsmittel anlegen — SEIT S9/AP5-4 IM DIALOG.
+ * Ein Rettungsmittel anlegen — IM DIALOG.
  *
- * Bis Web 16.3.0 stand unter der Liste ein Formular (`form.ac-form`); die
+ * Früher stand unter der Liste ein Formular (`form.ac-form`); die
  * Probe füllte es und drückte den Knopf. Das Formular gibt es nicht mehr:
- * „Anlegen" im Kartenkopf öffnet `#dlg-veh` (E-S9-19). Der Weg der Probe ist
+ * „Anlegen" im Kartenkopf öffnet `#dlg-veh`. Der Weg der Probe ist
  * damit ein Klick länger — und misst dafür genau das, was eine Person tut.
  *
  * `ohneStandort` ist kein Haken mehr, sondern der erste Eintrag der
@@ -61,7 +61,7 @@ async function anlegen(k, bid, { name, kurz, typ, kind, ohneStandort }) {
   await dlg.locator('input[name="kurz"]').fill(kurz || '');
   await dlg.locator('select[name="typ"]').selectOption(typ);
   /* BETRIEBSART UND STANDORT WERDEN HIER AM BROWSER VORBEI GESETZT, und das
-     ist der Kern dieser drei Wege (S9/AP5-4).
+     ist der Kern dieser drei Wege.
 
      Der Dialog sperrt bei „Veranstaltung" die Betriebsart „luftgebunden" und
      verbirgt bei „Standard" die Standortauswahl. Das ist RICHTIG SO — aber es
@@ -138,7 +138,7 @@ const ZEILEN_LESEN = () => {
 /**
  * ALLE Rettungsmittel mit ihren sichtbaren Angaben — ueber ALLE Seiten.
  *
- * Bis Web 16.1.1 stand der ganze Bestand auf einer Seite, und „6 insgesamt"
+ * Früher stand der ganze Bestand auf einer Seite, und „6 insgesamt"
  * war eine Abfrage. Jetzt traegt jede Standortseite die Rettungsmittel IHRES
  * Standorts und die Liste die Karte „Ohne Standort" — wer nur die erste
  * Seite liest, zaehlt 5 statt 6 und haelt den Referenzbestand fuer
@@ -183,7 +183,7 @@ async function loeschen(k, name, bid) {
     }, [ZEILEN_LESEN.toString(), name]);
     if (formular === null) { return false; }
     if (!formular) { throw new Error(`Löschformular von „${name}" ohne id`); }
-    /* AUF DIE SEITE WARTEN, NICHT AUF DIE UHR (Nr. 393). Hier standen fest
+    /* AUF DIE SEITE WARTEN, NICHT AUF DIE UHR. Hier standen fest
        400 ms nach dem Abschicken — dasselbe Muster, das im vierten vollen
        Prüfstand in `ap5.mjs` sechs Wege gekostet hat (dort `abschicken()`):
        Kommt die Antwort später, schlägt ihre Navigation in den nächsten
@@ -341,8 +341,8 @@ export const wege = [
       /* DIE ZAHL STEHT HIER UND WÄCHST MIT DEM BESTAND. Bis zum Demo-Ausbau
          waren es 2 von 6 — „Sanitätsdienst Seefest" und „Reserve Talwang".
          Dazu kamen die beiden Veranstaltungs-Rettungsmittel, die einen
-         Diensttag tragen (E-DA-08). Wer die Zahl auf 0 fallen sieht, hat
-         Backlog Nr. 174 wieder: Der Einspielweg verliert den leeren Standort,
+         Diensttag tragen. Wer die Zahl auf 0 fallen sieht, hat
+         den alten Fehler wieder: Der Einspielweg verliert den leeren Standort,
          und zwar still. */
       const OHNE_SOLL = 4, GESAMT_SOLL = 10;
       const l = await liste(k);
@@ -369,9 +369,9 @@ export const wege = [
       const seiteAuf = async () => {
         await k.gehZu(`${k.basis}/index.php?d=${tag}`);
         /* GEWARTET WIRD AUF `currentDayId`, NICHT AUF DIE OPTIONEN — die
-           dritte Stelle desselben Fehlers (F-S9-U-15, die ersten beiden in
-           `ap4a.mjs` und `probe.mjs`, behoben am 08.09.2026; diese hier ist
-           am 08.09.2026 in AP5-2 nachgezogen worden).
+          dritte Stelle desselben Fehlers (die ersten beiden in
+          `ap4a.mjs` und `probe.mjs`, behoben am 08.09.2026; diese hier ist
+          am 08.09.2026 nachgezogen worden).
            Die Optionen von `#vehsel` rendert `index.php` SERVERSEITIG aus
            `$SD_VEHICLES` — `options.length > 1` ist schon beim Parsen wahr
            und wartet auf gar nichts. Den WERT setzt erst `loadDay()` nach
@@ -384,7 +384,7 @@ export const wege = [
           (id) => typeof currentDayId !== 'undefined' && currentDayId !== null
                   && Number(currentDayId) === Number(id),
           tag, { timeout: 20000 });
-        /* UND ES IST ZUGEKLAPPT (E-P3-31): Die Karte zeigt den Lesezustand,
+        /* UND ES IST ZUGEKLAPPT: Die Karte zeigt den Lesezustand,
            „Bearbeiten" klappt das Formular auf. Ohne diesen Klick sind die
            Felder im Markup, aber nicht bedienbar — Playwright wartet dann
            sechzig Mal auf ein Element, das sichtbar werden soll und nicht
@@ -409,7 +409,7 @@ export const wege = [
         await k.seite.selectOption('#vehsel', vehWert);
         await k.seite.selectOption('#basesel', baseWert).catch(() => {});
         /* Erst klicken, wenn `rollenVorschau()` die Rollen über dem Knopf
-           nachgebaut hat — sonst rückt der Knopf weg (Nr. 393, `ap4a.mjs`). */
+           nachgebaut hat — sonst rückt der Knopf weg (`ap4a.mjs`). */
         await k.seite.waitForLoadState('networkidle', { timeout: 5000 }).catch(() => {});
         await k.seite.evaluate(() => document.getElementById('savestate').textContent = '');
         await k.seite.locator('#dayform button[type="submit"]').first().click();

@@ -1,4 +1,4 @@
-/* Wege des Arbeitspakets AP5 — Standortseiten: Sprungliste, Kartenfilter,
+/* Wege der Gruppe `AP5` — Standortseiten: Sprungliste, Kartenfilter,
  * Artzeichen, angesprungene Zeile.
  * ===========================================================================
  *
@@ -19,7 +19,7 @@
  * (Liste, sechs Pillen) — und räumt in `finally` alles wieder ab. Damit ist
  * die Schwelle in BEIDE Richtungen belegt, mit Zahlen, und der
  * Referenzbestand steht danach wie vorher. Dasselbe Muster wie in `ap4.mjs`
- * und bei den Windenkacheln in AP3.
+ * und bei den Windenkacheln in `ap3.mjs`.
  *
  * DER FILTER WIRD BEDIENT, NICHT GELESEN. `hidden` steht im DOM auch dann,
  * wenn die Regel `[hidden]{display:none}` fehlte; gemessen wird deshalb an
@@ -47,7 +47,7 @@ async function ersterStandort(k) {
  * Standort gibt — eine Rolle erscheint, sobald ein Rettungsmittel dieses
  * Standorts sie fuehrt (Handbuch 9.1). Ein Standort, an dem ausschliesslich
  * ein Rettungsmittel vom Typ BERGWACHT steht, hat gar keine: Der Typ fuehrt
- * keine Rollen-Vorlagen (E-S9-09). Seine Karte traegt dann weder Zeilen noch
+ * keine Rollen-Vorlagen. Seine Karte traegt dann weder Zeilen noch
  * einen Anlegen-Knopf.
  *
  * SEIT DEM DEMO-AUSBAU IST DAS DER ERSTE STANDORT DER LISTE:
@@ -71,7 +71,7 @@ async function standortMitBesatzung(k) {
                 + 'Rettungsmittel einen Rollensatz?');
 }
 
-/** Ein Rettungsmittel über den Dialog der Standortseite anlegen (S9/AP5-4). */
+/** Ein Rettungsmittel über den Dialog der Standortseite anlegen. */
 async function anlegen(k, bid, name) {
   await k.gehZu(SEITE(k, bid));
   await k.seite.click('.karte-aktion[data-dialog="dlg-veh"]');
@@ -116,7 +116,7 @@ async function loeschenAllg(k, bid, name, aktion) {
 
 /**
  * Ein verborgenes Formular abschicken und AUF DIE SEITE DANACH WARTEN, nicht
- * auf die Uhr (Nr. 393). Hier und im Aufräumen von
+ * auf die Uhr. Hier und im Aufräumen von
  * `ap5-standort-loeschen-variante-b` standen fest 400 und 500 ms. Im vierten
  * vollen Prüfstand (21.10.2026) reichten sie in Chromium nicht: Die Antwort
  * auf das Löschen (`…#sd-ohne-veh`) kam erst, als der nächste Weg schon
@@ -273,7 +273,7 @@ export const wege = [
         return {
           zeilen: Array.from(c.querySelectorAll(':scope > .zeile')).filter(sicht).length,
           titel: Array.from(c.querySelectorAll(':scope > .sd-rolle')).filter(sicht).length,
-          /* DIE FORMULARE IN DER LISTE SIND MIT S9/AP5-4 ENTFALLEN, und eine
+          /* DIE FORMULARE IN DER LISTE SIND ENTFALLEN, und eine
              Zahl, die nur noch „0 von 0" sagen kann, ist kein Beleg. Gezählt
              wird deshalb, was an ihre Stelle getreten ist: der Öffner im
              Kartenkopf. Er steht AUSSERHALB der gefilterten Liste und muss
@@ -353,13 +353,13 @@ export const wege = [
     },
   },
 
-  /* ---- Die Dialoge (S9/AP5-4, E-S9-19, M-S9-07) --------------------------
+  /* ---- Die Dialoge -------------------------------------------------------
    *
    * WARUM DIESE VIER WEGE UND KEIN BILD. Ein Bild zeigt einen offenen Dialog.
    * Es zeigt nicht, ob der Öffner ihn richtig gefüllt hat, ob ein abgelehntes
    * Speichern die Eingabe behält, ob der Typ die Felder umschaltet — und es
    * zeigt schon gar nicht, dass die GESCHLOSSENEN Dialoge geschlossen sind.
-   * Genau das war F-S9-U-27: `.dialog{display:flex}` schlug die
+   * Genau das ist geschehen: `.dialog{display:flex}` schlug die
    * Browservorgabe `dialog:not([open]){display:none}`, und alle fünf Dialoge
    * standen als Kästen am Seitenende — sichtbar erst auf einem
    * Vollseitenbild, unsichtbar in jedem Fensterausschnitt.
@@ -618,14 +618,14 @@ export const wege = [
     was: 'Eine Besatzungs-Vorbelegung lässt sich mit Rolle anlegen und landet auf ihrer Zeile',
     soll: 'Landung auf #crew-<id>, Zeile orange-hell, 0 Fehlermeldungen',
     async fahren(k) {
-      /* DIESER WEG FUHR BIS S9/AP5b ÜBER DIE VERWALTUNG (`admin_stammdaten.php`,
-         Backlog Nr. 163: systemweite Besatzungs-Vorbelegungen ließen sich seit
-         Web 9.10.0 nicht anlegen). Die Seite ist gestrichen (R39), der Punkt
+     /* DIESER WEG FUHR FRUEHER UEBER DIE VERWALTUNG (`admin_stammdaten.php`:
+        systemweite Besatzungs-Vorbelegungen ließen sich dort nicht
+        anlegen). Die Seite ist gestrichen, der Punkt
          damit gegenstandslos — der WEG aber nicht: Das Anlegen einer
          Besatzungs-Vorbelegung war auf der Kontoseite von keinem Prüffall
-         berührt, weil Nr. 163 sie nicht betraf. Ihn ersatzlos zu streichen
-         hieße, mit der Seite auch die Messung zu verlieren. Er misst jetzt
-         dieselbe Zusage (E-S9-19: Anlegen im Dialog landet auf der neuen
+         berührt, weil der alte Fehler sie nicht betraf. Ihn ersatzlos zu
+         streichen hieße, mit der Seite auch die Messung zu verlieren. Er misst
+         jetzt dieselbe Zusage (Anlegen im Dialog landet auf der neuen
          Zeile) am eigenen Bestand — und räumt hinterher auf. */
       const NAME = 'KP Prüfperson';
       const bid = await standortMitBesatzung(k);
@@ -664,7 +664,7 @@ export const wege = [
     },
   },
 
-  /* ---- Standort löschen, Variante b (S9/AP5-5, M-S9-10) -----------------
+  /* ---- Standort löschen, Variante b -------------------------------------
    *
    * DER FALL WIRD HERGESTELLT UND WIEDER ABGERÄUMT. Ihn am Referenzbestand
    * zu messen hieße, einen der beiden Standorte zu löschen — mit ihm gingen
@@ -684,7 +684,7 @@ export const wege = [
       const GEHT   = 'KP Standardfalke';
       let seite = null;
       try {
-        /* Standort anlegen — er landet auf seiner eigenen Seite (E-S9-19). */
+        /* Standort anlegen — er landet auf seiner eigenen Seite. */
         await k.gehZu(LISTE(k));
         await k.seite.fill('#sdbase-name', NAME);
         await Promise.all([
@@ -734,12 +734,12 @@ export const wege = [
           document.querySelector('form[id^="f-bdel-"]')?.getAttribute('data-confirm') || '');
         await k.bild('ap5-loeschen-rueckfrage');
 
-        /* AUF DIE SEITE WARTEN, NICHT AUF DIE UHR. Hier standen bis zum
-           Abschluss von P5c fest 600 ms — der einzige Weg, der ein Formular
-           abschickte, ohne auf die Navigation zu warten. Einzeln reichte
+        /* AUF DIE SEITE WARTEN, NICHT AUF DIE UHR. Mit fest 600 ms war das
+           der einzige Weg, der ein Formular abschickte, ohne auf die
+           Navigation zu warten. Einzeln reichte
            das; im Prüfstand unter Last nicht: Die Adresse trug schon
-           „#veh-…", die Seite lud noch, keine Zeile war Ziel, die Karte zu
-           (Prüfdokument P5c, 1j). Mit 250 ms statt 600 lässt sich genau
+           „#veh-…", die Seite lud noch, keine Zeile war Ziel, die Karte zu.
+           Mit 250 ms statt 600 lässt sich genau
            dieses Bild von Hand herstellen. */
         await Promise.all([
           k.seite.waitForNavigation({ waitUntil: 'load' }).catch(() => {}),

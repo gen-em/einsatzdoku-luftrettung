@@ -1,26 +1,26 @@
-/* Bildaufnahme aller Seiten in acht Breiten (P3, Anlage F).
+/* Bildaufnahme aller Seiten in zehn Breiten.
  * ===========================================================================
  *
- * WOFUER. P3 baut die Oberfläche neu, und die Frage nach jedem Arbeitspaket
- * ist immer dieselbe: Sieht die Seite in ALLEN Breiten so aus, wie sie soll —
+ * WOFUER. Baut ein Redesign die Oberfläche neu, ist die Frage nach jedem Schritt
+ * immer dieselbe: Sieht die Seite in ALLEN Breiten so aus, wie sie soll —
  * und ist unterwegs nichts verlorengegangen? Diese Frage beantwortet kein
  * Kaskadenvergleich; sie beantwortet nur ein Bild.
  *
  * Der Stilvergleich (tools/stilvergleich/) misst berechnete Werte und ist auf
  * „nichts hat sich geändert" gebaut. In einem beabsichtigten Redesign liefert
- * er Tausende Abweichungen, die niemand gegen einen Plan hält. Er ruht während
- * P3 und wird in O12 neu geeicht. Dieses Werkzeug tritt an seine Stelle — mit
+ * er Tausende Abweichungen, die niemand gegen einen Plan hält. Während eines
+ * Redesigns ruht er und wird danach neu geeicht. Dieses Werkzeug tritt an seine Stelle — mit
  * einer anderen Frage: nicht „was hat sich geändert?", sondern „stimmt es?"
  *
  * WAS ES MISST (und damit belegt, statt zu behaupten):
  *   - waagerechter Überlauf   scrollWidth > innerWidth  je Seite und Breite
  *   - Konsolenfehler          je Seite und Breite
- *   - Knopfhöhen              ZWEI Sollwerte seit Web 15.5.0 (E-S8-09, R76):
+ *   - Knopfhöhen              ZWEI Sollwerte:
  *                             44 px am Fingergerät und unter 1024 px,
  *                             36 px am Zeigergerät ab 1024 px. Benannte
  *                             Ausnahme: der Filterknopf neben dem
- *                             48-px-Suchfeld der Suche (O6)
- *   - Kontraste der Token     aus dem Stylesheet gerechnet (P-P3-05)
+ *                             48-px-Suchfeld der Suche
+ *   - Kontraste der Token     aus dem Stylesheet gerechnet
  *
  * AUFRUF
  *   sh tools/referenzdatensatz/einspielen/lokal_starten.sh    (einmal)
@@ -32,7 +32,7 @@
  * ZEIGER ODER FINGER. Ohne `--finger` laeuft der Browser als Zeigergeraet
  * (`hasTouch:false`) — das ist der Regelfall an einem Bildschirm ab 1024 px
  * und damit das, was die Bilder zeigen sollen. Mit `--finger` laeuft
- * derselbe Lauf als Fingergeraet; dort gelten ueberall 44 px. Das Konzept S8
+ * derselbe Lauf als Fingergeraet; dort gelten ueberall 44 px. Ein frueherer Entwurf
  * beschrieb es andersherum (Finger als Regel, Zeiger als Zugabe); gedreht
  * wurde es, weil ein Bildschirm ab 1024 px in aller Regel eine Maus hat und
  * die Bilder den Regelfall zeigen sollen. Beide Laeufe messen, nur der
@@ -43,7 +43,7 @@
  *   texte/<seite>-<breite>.txt        der SICHTBARE Text derselben Seite
  *                                     (document.body.innerText) — die Grundlage
  *                                     des Textvergleichs in vergleichen.py
- *   bogen/<seite>.png                 der Kontaktbogen, acht Breiten nebeneinander
+ *   bogen/<seite>.png                 der Kontaktbogen, alle Breiten nebeneinander
  *   bericht.md, bericht.json          Zahlen und Befunde
  *
  * SEITENLISTE seiten.json: je Zeile Name, Gruppe, Rolle (`aus` = abgemeldet,
@@ -51,16 +51,15 @@
  *   nicht 200 ist; `karte: true` wartet zusaetzlich auf Leaflet; `vorher`
  *   fuehrt Bedienschritte vor der Aufnahme aus (die bekannten stehen in
  *   `vorher()`); `vervielfachen: n` gibt die Einsatzliste aus
- *   `api/range.php` n-fach in den Browser (R4-17, `einsaetzeVervielfachen()`
+ *   `api/range.php` n-fach in den Browser (`einsaetzeVervielfachen()`
  *   in `tools/motor.mjs`) — fuer Zustaende, die erst ab 200 Einsaetzen
  *   entstehen. Platzhalter in `__GROSSBUCHSTABEN__` loest der Lauf aus dem
  *   Bestand auf — Kennungen gehoeren zu EINER Installation und stehen in
  *   keiner eingecheckten Datei.
  *
- * GRENZEN. Gemessen wird Chromium. WebKit (Safari, iOS) und Gecko (Firefox)
- * stehen in dieser Umgebung nicht zur Verfügung; was nur dort auffiele, fällt
- * hier nicht auf. Bedienzustände sind nur so weit erfasst, wie die Seitenliste
- * sie als `vorher`-Schritte führt.
+ * GRENZEN. Gemessen wird in der Engine, die der Lauf wählt (`--motor`,
+ * `tools/motor.mjs`); ein echter Safari ist WebKit nicht. Bedienzustände sind
+ * nur so weit erfasst, wie die Seitenliste sie als `vorher`-Schritte führt.
  */
 import { mkdirSync, writeFileSync, readFileSync, rmSync, existsSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
@@ -86,7 +85,7 @@ const MODUL = process.env.PLAYWRIGHT_MODUL
 const PW = await import(MODUL.startsWith('/') ? 'file://' + MODUL : MODUL);
 const { motorWahl, starten, codeSchritt, istEinrichtungstor, EINRICHTUNGSTOR_MELDUNG,
         einsaetzeVervielfachen, abgebrochenerSchriftabruf, harmloserResizeHinweis,
-        abgangBeobachten } =
+        abgangBeobachten, istOertlich } =
   await import(new URL('../motor.mjs', import.meta.url).href);
 
 const HIER   = dirname(fileURLToPath(import.meta.url));
@@ -99,7 +98,7 @@ const wert = (n, s) => { const i = argv.indexOf(n); return i >= 0 ? argv[i + 1] 
 const BASIS  = wert('--basis', 'https://127.0.0.1:8443');
 const DEMO   = { email: wert('--demo', 'demo@gen-em.org'),  pw: wert('--demo-pw', 'nadokudemo0815') };
 const ADMIN  = { email: wert('--admin', 'admin@example.invalid'), pw: wert('--admin-pw', 'pruefstandzugang2026') };
-/* DIE ROLLEN ADMIN UND SUPPORT (R4-08, Nr. 297). `--admin` bleibt das Konto
+/* DIE ROLLEN ADMIN UND SUPPORT. `--admin` bleibt das Konto
  * der Rolle `betreiberin` — so hiess der Schalter schon, als das Konto
  * admin@example.invalid BetreiberIn wurde, und die Kette kennt ihn. Die reine
  * Admin- und die Support-Sicht haben eigene Pruefkonten, angelegt von
@@ -113,7 +112,7 @@ const SKALA  = flag('--klein') ? 1 : 2;
 const FINGER = flag('--finger');
 const FILTER = (wert('--nur', '') || '').split(',').filter(Boolean);
 const MOTOR  = motorWahl(argv);
-/* JE ENGINE EIN ORDNER (Konzept DM): Der Prüfstand fährt den Lauf dreimal
+/* JE ENGINE EIN ORDNER: Der Prüfstand fährt den Lauf dreimal
  * hintereinander, und jeder Lauf leert seinen Ordner zuerst. Mit einem Ordner
  * für alle stand nach dem Prüfstand nur der Bericht von WebKit da — der von
  * Firefox mit seinem Konsolenfehler war weg. Chromium bleibt bei `ausgabe/`,
@@ -124,11 +123,11 @@ const AUSGABE = join(HIER, MOTOR === 'chromium' ? 'ausgabe' : `ausgabe-${MOTOR}`
  * `wartungAn()`. Ohne Token bleibt es beim lokalen Weg. */
 const JOBS_TOKEN = wert('--jobs-token', '');
 
-/* DAS UMGEBUNGSETIKETT (P5c/AP1, E-P5c-05). Mit `--etikett Staging` misst
+/* DAS UMGEBUNGSETIKETT. Mit `--etikett Staging` misst
  * der Lauf auf JEDER Seite, ob der Titel mit „[Staging] " beginnt und ob die
  * Kopfleiste — wo es eine gibt — `kopf-umgebung` traegt. Ohne den Schalter
  * misst er die Gegenrichtung: kein Vorsatz, keine rote Leiste. Anlass: Die
- * Abnahme von AP1 verlangt „Praefix auf allen Seiten, Kopfleiste rot auf
+ * Abnahme verlangt „Praefix auf allen Seiten, Kopfleiste rot auf
  * allen Seiten mit Kopfleiste" — ein Bild zeigt die Farbe, aber keines den
  * Seitentitel, und 58 Seiten von Hand aufzurufen ist keine Messung.
  * Die Lage selbst stellt der Aufrufer her (`app.umgebung` in `config.php`);
@@ -169,8 +168,8 @@ for (let i = 0; i < argv.length; i++) {
 /* Zehn Breiten, je mit einer realistischen Höhe. Die Höhe entscheidet nur
  * darüber, wie viel ohne Scrollen sichtbar ist — aufgenommen wird die ganze
  * Seite; sie steuert aber, was `position:sticky` und `100vh` tun.
- * 1200 UND 1600 SEIT R4-08 (E-R4-23, Nr. 297): die zwei Schwellen aus
- * Design.md 7, die bis dahin niemand knapp darüber gemessen hat. */
+ * 1200 UND 1600: die zwei Schwellen aus
+ * Design.md 7, die lange niemand knapp darüber gemessen hat. */
 const ALLE_BREITEN = [
   { b:  360, h:  800, art: 'Handy'   },
   { b:  390, h:  844, art: 'Handy'   },
@@ -184,7 +183,7 @@ const ALLE_BREITEN = [
   { b: 1920, h: 1080, art: 'Desktop' },
 ];
 
-/* ---- Die drei Stufen (--stufe, E-PK-14) ---------------------------------
+/* ---- Die drei Stufen (--stufe) ------------------------------------------
  *
  * klein  berührte Seiten (`--nur`), DREI Breiten, Chromium
  * neben  alle Seiten, zehn Breiten, Chromium
@@ -194,12 +193,12 @@ const ALLE_BREITEN = [
  * nannte zehn Seiten mit Container-Abfragen, `:has()`, `dvh` und `sticky`
  * und ließ Firefox und WebKit nur diese fahren — eine von Hand gepflegte
  * Liste, die in eine Richtung altert: Wer ein solches Merkmal neu einbaut,
- * muss daran denken. Der EINZIGE WebKit-Fund des Projekts (Nr. 185) lag auf
+ * muss daran denken. Der EINZIGE WebKit-Fund des Projekts lag auf
  * einer Seite, die NICHT darauf stand. Dreißig Minuten bei einer Hauptstufe
  * sind kein Preis, der eine Liste rechtfertigt, die das Gesuchte verfehlt.
  *
  * Ohne `--stufe` bleibt es bei allen zehn Breiten — so lief das Werkzeug
- * vor PK-04, und die Kette ruft es weiter so. */
+ * immer, und die Kette ruft es weiter so. */
 const STUFE = wert('--stufe', '');
 if (STUFE && !['klein', 'neben', 'haupt'].includes(STUFE)) {
   console.error(`Unbekannte Stufe: ${STUFE} (klein, neben, haupt)`);
@@ -213,14 +212,14 @@ const { seiten } = JSON.parse(readFileSync(join(HIER, 'seiten.json'), 'utf-8'));
 
 const liste = (() => {
   // WELCHE SEITEN. `--nur` filtert nach Namensanfang; ohne Filter alle.
-  // Die Risikoliste und `--risiko` sind mit E-PK-14 entfallen (Begründung
+  // Die Risikoliste und `--risiko` sind entfallen (Begründung
   // oben bei den Stufen).
   return FILTER.length
     ? seiten.filter(s => FILTER.some(f => s.name.startsWith(f)))
     : seiten;
 })();
 
-/* DER RIEGEL GEGEN EIN STILLES DURCHLAUFEN (Backlog Nr. 220).
+/* DER RIEGEL GEGEN EIN STILLES DURCHLAUFEN.
  *
  * Ein Eintrag mit `"wartung": true` braucht gegen eine FERNE Installation ein
  * `--jobs-token` — die lokale Datei wirkt dort nicht. Ohne den Riegel liefe
@@ -268,9 +267,9 @@ if (OHNE_WARTUNGSWEG) {
  *    der Gastgebername ueberall mitkaeme (Erklaerung im Absatz zu
  *    kachelAntwort() weiter unten).
  *
- * ---- WARUM KLASSE 3 AN DIE FUNDSTELLE GEBUNDEN IST (Backlog Nr. 176) -------
+ * ---- WARUM KLASSE 3 AN DIE FUNDSTELLE GEBUNDEN IST -------------------------
  *
- * Bis Runde 3 stand Klasse 3 in DEMSELBEN Muster wie Klasse 1, und geprueft
+ * Frueher stand Klasse 3 in DEMSELBEN Muster wie Klasse 1, und geprueft
  * wurde es gegen den Meldungstext. Damit fiel jeder Abruf auf dem EIGENEN
  * Server unter das Kartenrauschen, sobald er mit einem der Codes scheiterte:
  * ERR_CONNECTION_RESET, ERR_CONNECTION_CLOSED und ERR_ABORTED. Der Bericht
@@ -308,11 +307,11 @@ if (OHNE_WARTUNGSWEG) {
  * fremden Adresse, die gar nicht abgerufen werden duerfte. Hier stand zuerst,
  * das messe tools/quelltext/ (vollstaendigkeit) — das war FALSCH, als es hier stand:
  * Dessen Gruppe 5 kannte zwei Zusagen, und kein Werkzeug zaehlte "keine fremde
- * Quelle zur Laufzeit" nach. Seit dem 14.09.2026 tut es das (Backlog Nr. 179,
- * Pruefung `fremde Quelle`) — aber AM QUELLTEXT, nicht zur Laufzeit: Es
+ * Quelle zur Laufzeit" nach. Seit dem 14.09.2026 tut es das (Pruefung
+ * `fremde Quelle`) — aber AM QUELLTEXT, nicht zur Laufzeit: Es
  * meldet jede absolute Adresse in eigenem Code gegen eine Ausnahmeliste mit
  * Grund. Was zur Laufzeit dazukommt, sieht weiterhin niemand; eine
- * Content-Security-Policy schickt die Anwendung nicht (Backlog Nr. 181).
+ * Content-Security-Policy schickt die Anwendung nicht.
  *
  * SELBSTPROBE: `node tools/screenshots/aufnehmen.mjs --selbstprobe` haelt
  * diese Funktion gegen fuenfzehn gebaute Faelle und nennt die Zahl. Sie laeuft
@@ -367,10 +366,10 @@ function istRauschen(meldung, seitenAdresse) {
   // 2 Der Statuscode der Seite selbst — und WIRKLICH nur ein Statuscode.
   if (ort && seitenAdresse && ort.split('#')[0] === seitenAdresse.split('#')[0]
       && !VERBINDUNGSCODES.test(text)) return true;
-  // 3 Verbindungsfehler — aber nur auf einer NACHWEISBAR fremden Fundstelle
-  //   (Nr. 176). 'keine' zaehlt, siehe herkunft().
+  // 3 Verbindungsfehler — aber nur auf einer NACHWEISBAR fremden Fundstelle.
+  //   'keine' zaehlt, siehe herkunft().
   if (VERBINDUNGSCODES.test(text) && herkunft(ort) === 'fremd') return true;
-  // 4 Ein Schriftabruf, den das nächste Laden abbrach (Firefox, F-DM-08).
+  // 4 Ein Schriftabruf, den das nächste Laden abbrach (Firefox).
   if (abgebrochenerSchriftabruf(text)) return true;
   return false;
 }
@@ -378,7 +377,7 @@ function istRauschen(meldung, seitenAdresse) {
 /* ---- Selbstprobe der Rauschunterscheidung -------------------------------
  *
  * Zehn Faelle, je mit Sollwert. Der Punkt der Sache sind die Faelle 3 bis 5:
- * Sie sind der Grund fuer Nr. 176 und waren am alten Muster stumm. Fall 10
+ * Um sie geht es, und sie waren am alten Muster stumm. Fall 10
  * haelt die Gegenrichtung fest — ein Kachelabruf bleibt Rauschen. */
 const SELBSTPROBE = [
   { nr:  1, soll: 'rauschen', grund: 'Kachelserver, Verbindung zurueckgesetzt',
@@ -451,8 +450,8 @@ if (flag('--selbstprobe')) {
     console.log(`${ok ? ' ok ' : 'FEHL'}  ${String(f.nr).padStart(2)}  `
       + `soll ${f.soll.padEnd(8)} ist ${ist.padEnd(8)}  ${f.grund}`);
   }
-  /* 18 bis 23: der abgebrochene Abruf beim Verlassen der Seite (WebKit,
-   * Nr. 393). Er haengt an einem ZUSTAND — laeuft gerade eine Navigation? —,
+  /* 18 bis 23: der abgebrochene Abruf beim Verlassen der Seite (WebKit).
+   * Er haengt an einem ZUSTAND — laeuft gerade eine Navigation? —,
    * deshalb eine nachgebaute Seite mit eigener Uhr statt eines Browsers. */
   const ABGANG = [
     { nr: 18, soll: 'rauschen', grund: 'WebKit: Abruf waehrend laufender Navigation abgebrochen',
@@ -501,7 +500,7 @@ mkdirSync(join(AUSGABE, 'texte'), { recursive: true });
 
 const browser = await starten(PW, MOTOR, { finger: FINGER });
 
-/* Kartenkacheln liefert NODE, nicht der Browser (Fund aus O3).
+/* Kartenkacheln liefert NODE, nicht der Browser.
  *
  * Der Pruef-Browser kommt in der Claude-Umgebung nicht an tile.openstreetmap.org:
  * Direktverbindungen setzt die Egress-Sperre zurueck, und auch mit
@@ -551,7 +550,7 @@ const KACHELMUSTER = [
 /* Die eigentliche Anmeldung — als eigener Schritt, weil sie MITTEN IM LAUF
  * wiederholt werden muss (siehe `sitzungHalten`).
  *
- * Rueckgabe `{ ok, grund }` und nicht mehr nur ein Wahrheitswert (P5c/AP5):
+ * Rueckgabe `{ ok, grund }` und nicht mehr nur ein Wahrheitswert:
  * Scheitert der Zweitfaktor, steht der Grund nicht auf der Seite, die danach
  * zu lesen ist — im Einrichtungstor steht gar keiner. `grund` ist leer, wenn
  * die Seite selbst ihn traegt; `anmelden()` liest ihn dann wie bisher dort. */
@@ -566,7 +565,7 @@ async function anmeldenAuf(seite, rolle) {
     seite.click('#loginform button[type="submit"]'),
   ]);
 
-  /* DER CODE-SCHRITT DES ZWEITFAKTORS (P5c/AP5, E-P5c-43, F-P5c-33).
+  /* DER CODE-SCHRITT DES ZWEITFAKTORS.
    *
    * Das Pruefkonto `admin@example.invalid` ist eine BetreiberIn und hat einen
    * Zweitfaktor. Nach dem Passwort steht die Seite deshalb WIEDER unter
@@ -578,13 +577,13 @@ async function anmeldenAuf(seite, rolle) {
    * wichtigere Teil. Eine Pflichtrolle ohne Zweitfaktor landet auf
    * `zweitfaktor.php` — eine Adresse OHNE `login.php`. Die Pruefung darunter
    * liesse sie durch, und der Lauf fotografierte das Tor unter dem Namen
-   * jeder Admin-Seite: die Falle aus F-P3-AQ, diesmal mit einem Tor statt
+   * jeder Admin-Seite: die Falle der verlorenen Sitzung, diesmal mit einem Tor statt
    * der Anmeldeseite. */
   const zf = await codeSchritt(seite);
   if (!zf.ok) { return { ok: false, grund: zf.meldung }; }
   if (seite.url().includes('login.php')) { return { ok: false, grund: '' }; }
 
-  /* DAS EINWILLIGUNGSTOR DURCHKLICKEN (P5b/AP4, Web 20.19.0).
+  /* DAS EINWILLIGUNGSTOR DURCHKLICKEN.
    *
    * Hat die Installation Nutzungsbedingungen oder eine Vereinbarung zur
    * Auftragsverarbeitung in Kraft, landet JEDES angemeldete Konto auf
@@ -601,7 +600,7 @@ async function anmeldenAuf(seite, rolle) {
    * Anwendung, kein Hindernis des Prüfstands. Ein Bilderlauf, der es
    * aushebelte, misste eine Anwendung, die es so nicht gibt. */
   if (seite.url().includes('einwilligung.php')) {
-    /* HAEKCHEN, NICHT SCHALTER (seit Web 20.22.1). Bis dahin stand hier
+    /* HAEKCHEN, NICHT SCHALTER. Bis dahin stand hier
      * `.schalter-box`; das Tor fuehrte Schiebeschalter, und die sind durch
      * gewoehnliche Kontrollkaestchen ersetzt worden — eine
      * Willenserklaerung kennt nur eine Richtung.
@@ -610,7 +609,7 @@ async function anmeldenAuf(seite, rolle) {
      * innerhalb des Formulars) und nicht an einer Klasse aufgehaengt: Diese
      * Stelle ist beim Umbau umgefallen, weil sie eine Klasse kannte, die
      * die Anwendung geaendert hat. Der Fehler war gut zu sehen, weil die
-     * Anmeldung seit Web 20.21.1 die Meldung der Seite mitgibt — ohne sie
+     * Anmeldung die Meldung der Seite mitgibt — ohne sie
      * stuende hier nur „Anmeldung gescheitert". */
     const boxen = await seite.locator('form input[type=checkbox]').count();
     for (let i = 0; i < boxen; i++) {
@@ -628,11 +627,11 @@ async function anmeldenAuf(seite, rolle) {
 
 async function anmelden(rolle) {
   const kontext = await browser.newContext({
-    ignoreHTTPSErrors: true, deviceScaleFactor: SKALA,
+    ignoreHTTPSErrors: istOertlich(BASIS), deviceScaleFactor: SKALA,
     viewport: { width: 1280, height: 900 },
     hasTouch: FINGER,
   });
-  /* DER WARTUNGSLAUF BLEIBT AUS (S11-07, F-S11-77): Er packt und dünnt im
+  /* DER WARTUNGSLAUF BLEIBT AUS: Er packt und dünnt im
      Browser aus, sobald eine Seite ihn anstößt (Startseite, Reiter Backup),
      und das Ausdünnen ändert die Punkte — mitten in einem Vergleich wäre das
      eine Abweichung, die keine ist. Die Antwort sagt „nichts fällig" — ein
@@ -652,7 +651,7 @@ async function anmelden(rolle) {
      * Das ist richtiges Verhalten der Anwendung und kein Fehler des
      * Pruefstands — man muss es nur lesen koennen.
      *
-     * DER GRUND DES ZWEITFAKTORS GEHT VOR (P5c/AP5): Im Einrichtungstor
+     * DER GRUND DES ZWEITFAKTORS GEHT VOR: Im Einrichtungstor
      * steht keine Meldung, und „zweimal abgewiesen" steht nirgends auf der
      * Seite. */
     if (drin.grund) {
@@ -675,12 +674,12 @@ async function anmelden(rolle) {
     }
   });
   /* Seitenfehler zählen alle — außer dem einen Hinweis, den nur WebKit als
-   * Fehler wirft (F-DM-09, `harmloserResizeHinweis()` in motor.mjs). */
+   * Fehler wirft (`harmloserResizeHinweis()` in motor.mjs). */
   /* Ein Abruf, den das Verlassen der Seite abbrach, kommt hier gar nicht erst
-   * an — den hält `starten()` für alle Werkzeuge zurück (Nr. 393, motor.mjs). */
+   * an — den hält `starten()` für alle Werkzeuge zurück (motor.mjs). */
   seite.on('pageerror', e => { if (!harmloserResizeHinweis(e.message)) { fehler.push('pageerror: ' + e.message); } });
 
-  /* ---- Die Eingabeart haelt nicht von selbst (Fund aus S8/AP7) -----------
+  /* ---- Die Eingabeart haelt nicht von selbst -----------------------------
    *
    * `hasTouch` am Kontext setzt sie richtig — aber nur bis zum ersten
    * VOLLSEITEN-SCREENSHOT. Danach meldet der Browser wieder `hover: hover`
@@ -695,8 +694,8 @@ async function anmelden(rolle) {
    * und aendert nichts (gemessen). Was hilft, ist
    * `Emulation.setTouchEmulationEnabled`; die beiden Medienmerkmale folgen
    * daraus. Es wird deshalb vor JEDER Breite erneut gesendet. */
-  /* NUR CHROMIUM HAT CDP. Seit AP3b faehrt der Lauf auch Firefox und WebKit
-   * (Nr. 183); `newCDPSession` wirft dort. Der Aufruf haengt ohnehin am
+  /* NUR CHROMIUM HAT CDP. Der Lauf faehrt auch Firefox und WebKit;
+   * `newCDPSession` wirft dort. Der Aufruf haengt ohnehin am
    * Fingerlauf — der Zeigerlauf braucht ihn nicht (siehe unten). */
   const cdp = (FINGER && MOTOR === 'chromium') ? await kontext.newCDPSession(seite) : null;
   const eingabeart = async () => {
@@ -716,7 +715,7 @@ async function anmelden(rolle) {
   return { kontext, seite, fehler, rolle, eingabeart, setzeAdresse: (a) => { adresse = a; } };
 }
 
-/* FUENF ROLLEN SEIT R4-08 (Nr. 297). Drei davon sind Pflichtrollen mit
+/* FUENF ROLLEN. Drei davon sind Pflichtrollen mit
  * Zweitfaktor und teilen das Geheimnis der Sandbox; weil kein Code zweimal
  * gilt, wartet der Rechner zwischen ihren Anmeldungen bis zu einem
  * Zeitschritt (tools/zweitfaktor/totp.php). */
@@ -732,13 +731,13 @@ const rollen = { aus: await anmelden('aus'), demo: await anmelden('demo'),
  * NutzerIn ginge. */
 async function platzhalter() {
   const s = rollen.demo.seite;
-  /* UEBER DIE SITZUNGSWACHE (Web 9.10.1). Diese Funktion laeuft als erste im
+  /* UEBER DIE SITZUNGSWACHE. Diese Funktion laeuft als erste im
      Lauf und ist damit die erste, die einen faelligen Demo-Reset ausloest.
      Landete sie auf der Anmeldeseite, fand sie keine Einsatzzeile, lieferte
      ein leeres Verzeichnis — und alle vier Einsatzseiten wurden mit ihrem
      eigenen Platzhalter als Adresse aufgerufen. Der lokale Server antwortet
      darauf mit 200 und der Startseite; acht Bilder je Seite, alle falsch,
-     kein Fehler. Genau die Falle aus F-P3-AH, eine Ebene tiefer. */
+     kein Fehler. Genau die Falle der Seite ohne Parameter, eine Ebene tiefer. */
   await gehZu(rollen.demo, `${BASIS}/index.php`, 'index.php');
 
   /* Auf die ERSTE Einsatzzeile warten, nicht auf eine feste Zeit. Die
@@ -765,7 +764,7 @@ async function platzhalter() {
     einsatz = new URL(s.url()).searchParams.get('id');
   }
 
-  /* NULL STATT EINES RUECKFALLS. Bis Web 9.10.1 lieferte ein nicht
+  /* NULL STATT EINES RUECKFALLS. Frueher lieferte ein nicht
      aufloesbarer Platzhalter entweder 'index.php' (Tag-Seiten) oder gar
      keinen Eintrag (Einsatz-Seiten). Beides endete in einem Bild der
      falschen Seite unter dem richtigen Namen: einmal die Startseite als
@@ -779,16 +778,15 @@ async function platzhalter() {
     '__LOESCHEN__':    einsatz ? `einsatz_loeschen.php?id=${einsatz}`   : null,
     '__TAG_DATUM__':    tag ? `diensttag_datum.php?d=${tag}`    : null,
     '__TAG_LOESCHEN__': tag ? `diensttag_loeschen.php?d=${tag}` : null,
-    /* Die Zusammenfuehrung braucht ihren Zieltag genauso — sie stand bis O11
+    /* Die Zusammenfuehrung braucht ihren Zieltag genauso — sie stand einmal
        OHNE Parameter in der Seitenliste und lieferte deshalb 404 mit der
        Abbruchseite. Acht Bilder, alle von der falschen Seite, und der Lauf
-       meldete „kein Ueberlauf". Dieselbe Falle wie F-P3-AH und F-P3-AQ, ein
-       drittes Mal. */
+       meldete „kein Ueberlauf". Dieselbe Falle, ein drittes Mal. */
     '__TAG_ZUSAMMEN__': tag ? `diensttag_zusammenfuehren.php?d=${tag}` : null,
     '__TAG_SPUREN__':   tag ? `tag_spuren.php?d=${tag}`               : null,
   };
 
-  /* DIE STANDORTSEITE BRAUCHT IHREN STANDORT (S9/AP5). Sie ersetzt den
+  /* DIE STANDORTSEITE BRAUCHT IHREN STANDORT. Sie ersetzt den
      Reiter „Rettungsmittel", und dessen Adresse gibt es nicht mehr. Die
      Kennung kommt aus der Liste — ueber denselben Weg, den eine NutzerIn
      geht —, und ein nicht aufgeloester Platzhalter ist `null` und fuehrt
@@ -802,18 +800,18 @@ async function platzhalter() {
                        .getAttribute('href').catch(() => null);
   p['__STANDORT__'] = sHref || null;
 
-  /* `__ADMIN_STANDORT__` STAND HIER BIS S9/AP5b. Der Platzhalter zeigte auf
+  /* `__ADMIN_STANDORT__` GIBT ES NICHT MEHR. Der Platzhalter zeigte auf
      die Standortseite der systemweiten Stammdatenpflege; sie ist mit dem
-     Modell gestrichen (R39). Er war ohnehin nie aufloesbar — der
+     Modell gestrichen. Er war ohnehin nie aufloesbar — der
      Referenzbestand hat keinen zentralen Standort, und die acht Aufnahmen
-     fielen jedes Mal aus (F-S9-U-33). */
+     fielen jedes Mal aus. */
   const a = rollen.betreiberin.seite;
   await gehZu(rollen.betreiberin, `${BASIS}/admin_users.php`, 'admin_users.php');
   const href = await a.locator('a[href*="admin_user.php?id="]').first()
                       .getAttribute('href').catch(() => null);
   p['__KONTO__'] = href || null;
-  /* EIN KONTO, DAS AUCH DER SUPPORT OEFFNEN DARF (R4-08). Seine Liste zeigt
-     keine Konten mit Rechten (E-P5c-40) — der erste Eintrag dort ist also
+  /* EIN KONTO, DAS AUCH DER SUPPORT OEFFNEN DARF. Seine Liste zeigt
+     keine Konten mit Rechten — der erste Eintrag dort ist also
      eine NutzerIn, und die Kontoseite laesst sich in allen drei Rollen
      aufnehmen. `__KONTO__` bleibt, wie es war: das erste Konto der Liste der
      BetreiberIn. */
@@ -834,11 +832,11 @@ async function platzhalter() {
    *                          (D20) — kein Standortfeld, keine Rollen
    *   __EINSATZ_WINDE__      Einsatzansicht eines BODEN-Bergwachteinsatzes
    *                          mit Winde (D19) — die Windenkacheln, die es vor
-   *                          Web 20.3.0 am Boden nicht geben konnte
+   *                          einmal am Boden nicht geben konnte
    *   __TAG_LUFTLINIE__      Tageskarte eines Diensttags, dessen Einsaetze
    *                          Koordinaten, aber KEINE Spur haben (D21) — die
    *                          gestrichelten Luftlinien aus `start_src`,
-   *                          dem Transportziel im `pat_blob` (E34/E35)
+   *                          dem Transportziel im `pat_blob`
    *
    * GESUCHT WIRD UEBER DEN INHALT, NICHT UEBER EINEN NAMEN ODER EINE NUMMER.
    * Kennungen wandern bei jedem Neubau des Referenzbestands, und ein Name
@@ -873,15 +871,15 @@ async function platzhalter() {
     const i = await tagInhalt(t.id);
     const m = (i && i.missions) || [];
     if (!m.length) { continue; }
-    /* SEIT S11-04b heissen die Punkte `spur_stuecke` (verschlossen) und
-       nicht mehr `track`; bis zum 18.10.2026 fand die Suche deshalb keinen
-       Tag mit Spur, und zehn Aufnahmen blieben ohne Bild (F-S11-87). */
+    /* Die Punkte heissen `spur_stuecke` (verschlossen) und nicht mehr
+       `track`; bis zum 18.10.2026 fand die Suche deshalb keinen
+       Tag mit Spur, und zehn Aufnahmen blieben ohne Bild. */
     const mitSpur = m.filter((x) => (x.spur_stuecke || x.track || []).length > 0).length;
     if (!p['__TAG_OHNE_STANDORT__'] && mitSpur > 0) {
       p['__TAG_OHNE_STANDORT__'] = `index.php?d=${t.id}`;
     }
     if (!p['__TAG_LUFTLINIE__'] && mitSpur === 0
-        /* Das Transportziel liegt seit S11-05b im `pat_blob`; `dest_lat`
+        /* Das Transportziel liegt im `pat_blob`; `dest_lat`
            steht nicht mehr in der Antwort, und `undefined !== null` war
            immer wahr — jeder Tag ohne Spur galt als Luftlinientag. */
         && m.some((x) => x.pat_blob != null || x.start_src != null)) {
@@ -897,7 +895,7 @@ async function platzhalter() {
   }
 
   /* __TAG_SCHNITT__: ein Diensttag, dessen ERSTES Ruhesegment mit Punkten
-     mindestens 70 Minuten dauert (R4-13, Nr. 271/273). Die Bedienschritte
+     mindestens 70 Minuten dauert. Die Bedienschritte
      `schnitt-grund` und `schnitt-vorschau` oeffnen dessen Schneide-Bereich —
      das erste „Schneiden" auf der Seite — und brauchen Platz fuer eine
      Auswahl von 66 Minuten. Gesucht ueber den Inhalt, wie oben. */
@@ -914,7 +912,7 @@ async function platzhalter() {
   }
 
   /* __TAG_NACHT__: ein LUFTdienst, dessen Einsaetze an zwei Ortsdaten
-     beginnen (R4-16, Nr. 275, D22). Die Tagesansicht zeigt dann die Liste
+     beginnen (D22). Die Tagesansicht zeigt dann die Liste
      ueber Mitternacht; sortiert sie „Beginn" ueber die Uhrzeit allein, steht
      01:40 vor 23:50. `start_sort` traegt Datum UND Uhrzeit in Ortszeit. */
   p['__TAG_NACHT__'] = null;
@@ -935,17 +933,17 @@ async function platzhalter() {
 const PLATZ = await platzhalter();
 
 /* ---- Bedienschritte vor der Aufnahme -------------------------------------- */
-/* EIN UNBEKANNTER SCHRITT IST EIN FEHLER, kein Achselzucken (O11).
+/* EIN UNBEKANNTER SCHRITT IST EIN FEHLER, kein Achselzucken.
  *
  * Diese Funktion hatte kein `else`: Wer `"vorher": ["dialog"]` in die
  * Seitenliste schrieb, bekam anstandslos acht Bilder OHNE Dialog und einen
- * Bericht „0 Ueberlauf, 0 Konsolenfehler". Dieselbe Falle wie F-P3-AH
- * (Seite ohne Parameter), F-P3-AQ (verlorene Sitzung) und F-P3-AV (falscher
- * Statuscode) — zum vierten Mal, und jedes Mal ist das Muster dasselbe: Das
+ * Bericht „0 Ueberlauf, 0 Konsolenfehler". Dieselbe Falle wie die
+ * Seite ohne Parameter, die verlorene Sitzung und der falsche
+ * Statuscode — zum vierten Mal, und jedes Mal ist das Muster dasselbe: Das
  * Werkzeug tut etwas anderes als bestellt und meldet Erfolg.
  *
  * Rueckgabe: null bei Erfolg, sonst der Fehlertext. */
-/* ---- Die Kopplungskarte braucht ein GERAET auf der anderen Seite (S5) -----
+/* ---- Die Kopplungskarte braucht ein GERAET auf der anderen Seite ----------
  *
  * Zwei ihrer drei Zustaende entstehen erst, wenn jemand einen Code eingibt,
  * den ein Geraet gezeigt hat. Die Probe ist dieses Geraet: Sie holt sich ueber
@@ -954,9 +952,9 @@ const PLATZ = await platzhalter();
  * SQL-Handgriff; was fotografiert wird, ist der Zustand, den die Anwendung
  * wirklich zeigt.
  *
- * DER CODE WIRD JE SCHRITT EINMAL GEHOLT und ueber alle acht Breiten
+ * DER CODE WIRD JE SCHRITT EINMAL GEHOLT und ueber alle Breiten
  * wiederverwendet. Das ist kein Geiz, sondern noetig: Der Ratenschutz-Topf
- * `pair_start` laesst 20 Aufrufe je zehn Minuten und Adresse zu (E-S5-33).
+ * `pair_start` laesst 20 Aufrufe je zehn Minuten und Adresse zu.
  * Ein Lauf mit einer Sitzung je Breite braeuchte sechzehn und stuende damit
  * knapp vor der Sperre — zusammen mit `tools/proben/kopplung/rundlauf.mjs` im
  * selben Zeitfenster darueber.
@@ -1024,7 +1022,7 @@ async function vorher(seite, schritte, fehlerSammler) {
     }
     if (schritt === 'tagdaten-adhoc') {
       /* DAS FORMULAR „DIENSTTAG-DATEN" MIT AUFGEKLAPPTEM „ANDEREM
-         RETTUNGSMITTEL" (S9/AP6, E-S9-10). Das Konzept verlangt fuer diesen
+         RETTUNGSMITTEL". Das Konzept verlangt fuer diesen
          Zustand ein Bild und kein Mockup — die Felder sind vorhandene
          Bausteine, zu sehen ist nur, wie sie zusammenstehen.
 
@@ -1046,7 +1044,7 @@ async function vorher(seite, schritte, fehlerSammler) {
       continue;
     }
     if (schritt === 'notfallblatt') {
-      /* DAS NOTFALLBLATT MIT SCHLUESSEL (P5b/AP9).
+      /* DAS NOTFALLBLATT MIT SCHLUESSEL.
          `notfallblatt.php` nimmt den Wiederherstellungsschluessel per POST
          entgegen und speichert ihn nicht — es gibt also keine Adresse, unter
          der die gefuellte Fassung per GET zu haben waere. Genau das ist ihr
@@ -1074,8 +1072,8 @@ async function vorher(seite, schritte, fehlerSammler) {
         }),
       ]);
       await seite.waitForLoadState('networkidle');
-      /* SEIT P5c/AP9 steht der Schluessel in fuenf `.blatt-druck-gruppe`
-         (Druckblatt, M-P5c-01f); bis dahin in einem `.codeblock-wert`. */
+      /* Der Schluessel steht in fuenf `.blatt-druck-gruppe`
+         (Druckblatt); frueher in einem `.codeblock-wert`. */
       if ((await seite.locator('.blatt-druck-gruppe').count()) !== 5) {
         fehlerSammler.push('Notfallblatt ohne Schlüsselblock — der Code wurde '
                          + 'abgewiesen (Format?) oder die Seite hat den '
@@ -1084,7 +1082,7 @@ async function vorher(seite, schritte, fehlerSammler) {
       continue;
     }
     if (schritt === 'code-schritt') {
-      /* DER CODE-SCHRITT DER ANMELDUNG (P5c/AP5, M-P5c-02b Bild 3). Er steht
+      /* DER CODE-SCHRITT DER ANMELDUNG. Er steht
          nur nach einem richtigen Passwort da, und zwar fuer ein Konto MIT
          Zweitfaktor — also das Pruefkonto. Der Schritt meldet es bis zum
          Code an und haelt dort an; den Code gibt er nicht ein.
@@ -1108,7 +1106,7 @@ async function vorher(seite, schritte, fehlerSammler) {
       continue;
     }
     if (schritt === 'codeblatt') {
-      /* DAS CODEBLATT (P5c/AP5). `codeblatt.php` bekommt die Codes per POST
+      /* DAS CODEBLATT. `codeblatt.php` bekommt die Codes per POST
          und speichert sie nicht — wie beim Notfallblatt baut der Schritt das
          Formular nach, das Tor und Profilkarte abschicken. Die Codes sind
          die festen des Pruefkontos (`tools/zweitfaktor/pruefkonto.php`); die
@@ -1138,7 +1136,7 @@ async function vorher(seite, schritte, fehlerSammler) {
       continue;
     }
     if (schritt === 'schnitt-grund' || schritt === 'schnitt-vorschau') {
-      /* DER SCHNEIDE-BEREICH MIT SEINER MELDUNG (R4-13, Nr. 271, 273).
+      /* DER SCHNEIDE-BEREICH MIT SEINER MELDUNG.
          `schnitt-grund`: Ende gleich Beginn — der Grund „Das Ende liegt vor
          dem Beginn." muss als rote Meldung mit Symbol stehen.
          `schnitt-vorschau`: Beginn des Segments bis 66 Minuten danach — der
@@ -1173,8 +1171,8 @@ async function vorher(seite, schritte, fehlerSammler) {
       continue;
     }
     if (schritt === 'nachladezeile') {
-      /* DIE NACHLADEZEILE MUSS IN JEDER BREITE SICHTBAR SEIN (R4-17).
-         Bis Web 21.4.0 hing sie im Scrollbehaelter der Tabelle, und der ist
+      /* DIE NACHLADEZEILE MUSS IN JEDER BREITE SICHTBAR SEIN.
+         Frueher hing sie im Scrollbehaelter der Tabelle, und der ist
          unter 720 px ausgeblendet: Auf dem Handy gab es 200 Kacheln und
          keinen Knopf. „Da" (im DOM, nicht `hidden`) genuegte also nicht —
          gewartet wird auf SICHTBAR, und dann wird sie in den Ausschnitt
@@ -1203,7 +1201,7 @@ async function vorher(seite, schritte, fehlerSammler) {
   }
 }
 
-/* ---- DIE SITZUNGSWACHE (Web 9.10.1) ---------------------------------------
+/* ---- DIE SITZUNGSWACHE ----------------------------------------------------
  *
  * WAS HIER SCHIEFGING, UND WARUM ES NIEMAND SAH.
  *
@@ -1235,7 +1233,7 @@ async function vorher(seite, schritte, fehlerSammler) {
  * vermerkt. Ein fehlendes Bild ist eine Auskunft; ein falsches ist eine
  * Luege, die durch jede weitere Pruefung durchmarschiert.
  *
- * DER CODE-SCHRITT DES ZWEITFAKTORS (P5c/AP5) steht ebenfalls unter
+ * DER CODE-SCHRITT DES ZWEITFAKTORS steht ebenfalls unter
  * `login.php` und faellt damit unter diese Pruefung, ohne dass sie etwas
  * dazulernen muesste. DAS EINRICHTUNGSTOR (`zweitfaktor.php`) nicht — es
  * hat seine eigene Pruefung in `gehZu()`.
@@ -1260,7 +1258,7 @@ async function gehZu(rolle, adresse, zielPfad) {
       rolle.fehler.push('laden: ' + e.message);
       return { status, verloren };
     }
-    /* DER FRISCHE CODE (Schritt 18, SR-07, E-SR-20). Der Lauf dauert laenger
+    /* DER FRISCHE CODE. Der Lauf dauert laenger
        als die 15 Minuten, die ein Code frisch bleibt, und das
        Schluesselblatt schickt danach auf die Bestaetigung. Sie hat dasselbe
        Formular wie der Code-Schritt der Anmeldung; `codeSchritt()` geht sie,
@@ -1280,7 +1278,7 @@ async function gehZu(rolle, adresse, zielPfad) {
         return { status, verloren };
       }
     }
-    /* DAS EINRICHTUNGSTOR DES ZWEITFAKTORS (P5c/AP5, F-P5c-33). Eine
+    /* DAS EINRICHTUNGSTOR DES ZWEITFAKTORS. Eine
        Pflichtrolle ohne Zweitfaktor kommt auf keine andere Seite, und die
        Adresse enthaelt `login.php` nicht — `istAnmeldung()` sieht es also
        nicht, und ohne diese Zeilen hiesse jedes Bild der Rolle nach seiner
@@ -1301,7 +1299,7 @@ async function gehZu(rolle, adresse, zielPfad) {
     verloren = true;
     const neu = await anmeldenAuf(seite, rolle.rolle);
     if (!neu.ok) {
-      /* ABBRUCH, NICHT NUR EIN VERMERK (P5c/AP5). Bis dahin kehrte dieser
+      /* ABBRUCH, NICHT NUR EIN VERMERK. Bis dahin kehrte dieser
          Zweig ohne `abbruch` zurueck; die Seite stand dann auf der Anmeldung,
          lieferte 200, und der Lauf fotografierte sie unter dem Namen der
          gemeinten Seite — mit dem Fehler nur als Konsolenzeile daneben. Mit
@@ -1323,20 +1321,20 @@ const bericht = { basis: BASIS, skala: SKALA, seiten: [], knopf: [], etikett: []
 /* Aufnahmen, bei denen die Sitzung mitten im Lauf neu aufgebaut werden
  * musste (Demo-Reset), und solche, die deshalb GAR NICHT entstanden. */
 const verlorene = [];
-/* AUSGEFALLENE AUFNAHMEN, JE MIT GRUND (S9/AP5-6). Vorher stand hier eine
+/* AUSGEFALLENE AUFNAHMEN, JE MIT GRUND. Vorher stand hier eine
    Liste aus Zeichenketten, und der Bericht schrieb darueber pauschal „die
    Seite leitete auch nach einer Neuanmeldung auf die Anmeldung um". Es gibt
    aber ZWEI Gruende, und der zweite ist ein ganz anderer Befund: Ein
    Platzhalter, der sich nicht aufloesen laesst, heisst „diese Seite gibt es
-   im Bestand nicht" — nicht „die Sitzung ging verloren". Beim Lauf zu AP5-4
+   im Bestand nicht" — nicht „die Sitzung ging verloren". Bei einem Lauf
    meldete der Bericht acht verlorene Sitzungen, wo in Wahrheit acht Bilder
    einer Seite fehlten, die es ohne systemweiten Standort gar nicht gab (die
-   Seite ist mit S9/AP5b gefallen, R39).
+   Seite ist gefallen).
    Ein Pruefmittel, das den falschen Grund nennt, schickt die naechste Suche
    in die falsche Richtung. */
 const ausgefallen = [];
 
-/* ---- Der Wartungsmodus als Zustand der Installation (S5 Paket W) ---------
+/* ---- Der Wartungsmodus als Zustand der Installation ----------------------
  *
  * KEIN BEDIENSCHRITT IM BROWSER, deshalb nicht in vorher(): Die Wartungsseite
  * entsteht nicht dadurch, dass jemand etwas klickt, sondern dadurch, dass eine
@@ -1349,36 +1347,36 @@ const ausgefallen = [];
  * gegen ein fernes Staging: Die Datei entsteht dann im CHECKOUT, Staging
  * bleibt offen, `index.php` leitet den nicht angemeldeten Aufruf zur Anmeldung
  * um — acht Aufnahmen ohne Bild und acht Konsolenfehler, gemessen am
- * 17.09.2026 (Backlog Nr. 220).
+ * 17.09.2026.
  *
  * ES IST DER DRITTE FALL DERSELBEN ANNAHME. `kreislauf.py` hielt die Jobs
- * ueber die lokale Kommandozeile an (Nr. 219), `demo_kennzeichnen.php`
+ * ueber die lokale Kommandozeile an, `demo_kennzeichnen.php`
  * braucht `db()` auf dem Server — und hier der Wartungsschalter. Wer ein
  * Werkzeug gegen `--basis` misst und dabei in `server/` schreibt, baut diese
  * Annahme ein, ohne sie hinzuschreiben.
  *
  * ZWEI WEGE, und welcher passt, haengt an `--jobs-token`:
  *
- *   MIT TOKEN ueber `jobs.php` (`aktion=wartung_an`, seit Web 23.1.0 per POST
+ *   MIT TOKEN ueber `jobs.php` (`aktion=wartung_an`, per POST
  *   mit dem Kettentoken), gefahren von
  *   `tools/kette/tor.py` — dem einen Client dieser Schnittstelle. Derselbe
- *   Weg, den `kreislauf.py` seit Web 20.16.0 fuer die Job-Pause geht.
+ *   Weg, den `kreislauf.py` fuer die Job-Pause geht.
  *
  *   OHNE TOKEN ueber die Datei, wie bisher. Wer auf seinem Rechner misst,
  *   merkt von der Aenderung nichts.
  *
- * Ein Eintrag mit "wartung": true schaltet vor seinen acht Breiten ein und
+ * Ein Eintrag mit "wartung": true schaltet vor seinen Breiten ein und
  * danach wieder aus. Zusaetzlich haengt das Ausschalten am Prozessende:
  * Bliebe die Datei nach einem Abbruch liegen, waere JEDE weitere Aufnahme
  * ein Bild der Wartungsseite, und der Bericht meldete „0 Ueberlauf" fuer
- * zweihundert Bilder desselben Textes — genau die Falle aus F-P3-AQ, wo 176
+ * zweihundert Bilder desselben Textes — genau die Falle der verlorenen Sitzung, wo 176
  * von 248 Bildern die Anmeldeseite zeigten.
  *
  * EINE FREMDE WARTUNG WIRD NICHT ANGEFASST. Liegt beim Einschalten schon
  * eine Datei, ruehrt der Lauf sie nicht an und loescht sie am Ende auch
  * nicht — sonst oeffnete ein Bilderlauf eine Installation, die jemand
  * ausdruecklich geschlossen hat. */
-// Seit Web 23.3.1 in `server/.zustand/` (R17-22, F-R17-47); der alte Ort im
+// Liegt in `server/.zustand/`; der alte Ort im
 // Webroot gilt dort nur noch als Uebergang und wird hier nicht beschrieben.
 const WARTUNGSDATEI = join(WURZEL, 'server', '.zustand', 'wartung.lock');
 const WARTUNGSDATEI_ALT = join(WURZEL, 'server', 'wartung.lock');
@@ -1511,8 +1509,8 @@ for (const eintrag of liste) {
     }
   }
 
-  /* DIE EINSATZLISTE VERVIELFACHEN, wo die Seitenliste es verlangt
-   * (R4-17): nur fuer diesen Eintrag, ueber alle Breiten, danach wieder
+  /* DIE EINSATZLISTE VERVIELFACHEN, wo die Seitenliste es verlangt:
+   * nur fuer diesen Eintrag, ueber alle Breiten, danach wieder
    * weg. Die uebrigen Seiten sehen den echten Bestand. */
   const aufheben = eintrag.vervielfachen
     ? await einsaetzeVervielfachen(seite, '**/api/range.php*', eintrag.vervielfachen)
@@ -1531,7 +1529,7 @@ for (const eintrag of liste) {
     let hin = await gehZu(rolle, adresse, pfad);
     let status = hin.status;
 
-    /* ---- 404 NACH EINEM DEMO-RESET: KENNUNGEN NEU HOLEN (S8/AP7) --------
+    /* ---- 404 NACH EINEM DEMO-RESET: KENNUNGEN NEU HOLEN -----------------
      *
      * `platzhalter()` laeuft einmal, zu Beginn. Das Demo-Konto setzt sich
      * 30 Minuten nach der ersten Aenderung zurueck, ein voller Lauf dauert laenger als das — und
@@ -1561,7 +1559,7 @@ for (const eintrag of liste) {
         console.log(`${''.padEnd(34)} Kennung erneuert (Demo-Reset): ${eintrag.name} → ${pfad}`);
       }
     }
-    /* DER STATUS MUSS STIMMEN (O11). Eine Seite, die 404 liefert, zeigt die
+    /* DER STATUS MUSS STIMMEN. Eine Seite, die 404 liefert, zeigt die
        Abbruchseite — ein Bild davon unter dem Namen einer anderen Seite ist
        so wertlos wie ein Bild der Anmeldung. Erwartet wird 200; eine Seite,
        die es anders meint (03-abbruchseite), sagt das in der Seitenliste
@@ -1587,7 +1585,7 @@ for (const eintrag of liste) {
       }
     }
 
-    /* ---- ERST MESSEN, WENN DAS STYLESHEET GREIFT (Fund aus S8/AP7) ------
+    /* ---- ERST MESSEN, WENN DAS STYLESHEET GREIFT ------------------------
      *
      * `domcontentloaded` heisst nicht, dass `style.css` angewendet ist.
      * Gemessen an der Abbruchseite bei 1024 px: `getComputedStyle` lieferte
@@ -1604,7 +1602,7 @@ for (const eintrag of liste) {
               .getPropertyValue('--knopf').trim() !== '',
       null, { timeout: 5000 })
       .catch(async () => {
-        /* WAS STATTDESSEN DA STAND (Nr. 393). Am 20.10.2026 kam diese Zeile
+        /* WAS STATTDESSEN DA STAND. Am 20.10.2026 kam diese Zeile
            einmal in Firefox, an einer Breite einer Seite ohne Vorschritte;
            fünf Läufe derselben Seite danach waren grün. Ohne Zustand ist
            sie nicht zu erklären — jetzt nennt sie ihn. */
@@ -1634,8 +1632,8 @@ for (const eintrag of liste) {
           var pr = el.parentElement ? el.parentElement.getBoundingClientRect() : null;
           if (pr && pr.right > grenze + 1) { continue; }   // Elternteil laeuft auch ueber
 
-          /* WER IN EINEM SCROLLENDEN KASTEN STECKT, IST KEIN TAETER
-           * (P5b/AP8). Ein `<code>` in einem `<pre class="overflow-x:auto">`
+          /* WER IN EINEM SCROLLENDEN KASTEN STECKT, IST KEIN TAETER.
+           * Ein `<code>` in einem `<pre class="overflow-x:auto">`
            * reicht weit ueber den Rand hinaus — und wird von seinem
            * Elternteil abgeschnitten, also schiebt es die SEITE nicht. Beide
            * Bedingungen oben treffen trotzdem zu: Es laeuft ueber, und sein
@@ -1669,13 +1667,13 @@ for (const eintrag of liste) {
          `display:none` ist, und die Eintraege in einem geschlossenen
          Aktionsblatt. Ein Knopf, den es gerade nicht gibt, ist nicht zu hoch
          und nicht zu niedrig — er ist nicht da. */
-      /* `.sprungziel` MISST MIT (S9/AP5). Die Pille der Sprungliste ist
+      /* `.sprungziel` MISST MIT. Die Pille der Sprungliste ist
          `height:var(--knopf)` hoch, also 44/36 — aber sie traegt nicht
          `.knopf`, und eine Auswahl, die nur `.knopf` kennt, haette diese
-         Zusage nie gemessen. Genau so ist `.listenfilter` seit O6 ungemessen
-         geblieben und der Export-Knopf vier Monate ungestaltet (F-P3-BA).
+         Zusage nie gemessen. Genau so ist `.listenfilter` lange ungemessen
+         geblieben und der Export-Knopf vier Monate ungestaltet.
          Wer ein neues Bedienelement baut, traegt es hier ein. */
-      /* KARTEN, DIE AUS DEM SEITENGERUEST AUSGEBROCHEN SIND (Nr. 225).
+      /* KARTEN, DIE AUS DEM SEITENGERUEST AUSGEBROCHEN SIND.
          Eine Karte gehoert in `main.inhalt`. Haengt sie daneben — weil ein
          `ui_karte_ende()` zu viel `div.rahmen` mitgeschlossen hat —, liegt
          sie ueber die volle Fensterbreite unter der Seitenleiste hindurch.
@@ -1692,15 +1690,15 @@ for (const eintrag of liste) {
         .map(el => ((el.querySelector('h2, h3') || {}).textContent || '(ohne Titel)')
                     .trim().replace(/\s+/g, ' ').slice(0, 40)),
       karten: document.querySelectorAll('section.karte, details.karte').length,
-      /* BEHAELTER, DIE SELBST ROLLEN (R4-08, Nr. 297). `scrollWidth` des
+      /* BEHAELTER, DIE SELBST ROLLEN. `scrollWidth` des
          Dokuments sieht sie nicht: Eine Tabelle in `.tabelle-scroll` laeuft
          ueber und wird von ihrem Behaelter aufgefangen — die Seite bleibt
          schmal. Das ist oft gewollt (eine breite Tabelle am Handy), aber es
          ist eine Aussage ueber die Seite, und bis hierhin stand sie nirgends:
-         P5c/AP7 hat sie mit einem Skript im Arbeitsordner gemessen. Gezaehlt
+         Einmal wurde sie mit einem Skript im Arbeitsordner gemessen. Gezaehlt
          wird jeder sichtbare Behaelter mit `overflow-x: auto|scroll`, der
          mehr als 1 px rollt; genannt wird er mit seinem Mass. Er haelt den
-         Lauf NICHT auf (E-R4-31) — ein Behaelter, der rollen soll, rollt. */
+         Lauf NICHT auf — ein Behaelter, der rollen soll, rollt. */
       rollen: Array.from(document.querySelectorAll('body *'))
         .filter(el => {
           const ox = getComputedStyle(el).overflowX;
@@ -1718,7 +1716,7 @@ for (const eintrag of liste) {
                 || el.getAttribute('aria-label') || '(ohne Text)',
           hoehe: Math.round(el.getBoundingClientRect().height),
           /* Zwilling des grossen Suchfeldes: Der Filterknopf steht daneben
-           * und ist so hoch wie es — 48 statt 44 px. Die Regel P-P3-04
+           * und ist so hoch wie es — 48 statt 44 px. Die Regel
            * sichert eine MINDESTflaeche; groesser ist kein Verstoss, nur
            * ungleich. Damit die Zahl im Bericht trotzdem etwas heisst, wird
            * dieser eine Fall benannt statt stillschweigend geduldet. */
@@ -1731,13 +1729,13 @@ for (const eintrag of liste) {
     if (hin.abbruch) {
       /* KEIN BILD. Ein Bild der Anmeldeseite unter dem Namen einer anderen
          Seite ist schlimmer als gar keines: Es sieht wie ein Beleg aus.
-         Das Einrichtungstor bringt seinen eigenen Grund mit (P5c/AP5) —
+         Das Einrichtungstor bringt seinen eigenen Grund mit —
          „Anmeldung" waere dort die falsche Spur. */
       ausgefallen.push({ was: `${eintrag.name} @ ${b}`,
                          grund: hin.grund || 'Seite leitete auf die Anmeldung um' });
       rmSync(datei, { force: true });
     } else {
-      /* GANZSEITIG IST DIE REGEL UND NICHT DAS GESETZ (P5b/AP8).
+      /* GANZSEITIG IST DIE REGEL UND NICHT DAS GESETZ.
        *
        * `hilfe.php` zeigt das ganze Handbuch auf einer Seite: 305 KB HTML,
        * als Abzug 19 MB je Breite — und ab 1024 px scheiterte
@@ -1761,7 +1759,7 @@ for (const eintrag of liste) {
       try {
         await seite.screenshot({ path: datei, fullPage: ganz });
         bilder.push({ datei, b, art });
-        /* DER SICHTBARE TEXT DANEBEN (Schritt 15/AP7).
+        /* DER SICHTBARE TEXT DANEBEN.
          *
          * WARUM DAS BILD NICHT REICHT: Ein Umbau, der nur die Formatierung
          * zentralisiert, darf keinen Buchstaben aendern — und genau das
@@ -1821,7 +1819,7 @@ for (const eintrag of liste) {
       }
     }
     for (const k of mass.knoepfe) {
-      /* ZWEI SOLLWERTE (E-S8-09). 36 px gilt nur, wo beides zutrifft:
+      /* ZWEI SOLLWERTE. 36 px gilt nur, wo beides zutrifft:
        * Zeigergeraet UND mindestens 1024 px — dieselbe Bedingung wie im
        * Stylesheet. Eine Zahl hier, die dort nicht steht, machte den
        * Pruefstand zur zweiten Quelle. */
@@ -1918,7 +1916,7 @@ if (bericht.knopf.length) {
 }
 /* DIE SITZUNG STEHT IM BERICHT, nicht nur in der Konsole. Wer den Bericht
  * spaeter liest, muss sehen koennen, ob die Bilder ueberhaupt die gemeinten
- * Seiten zeigen — genau das war bis Web 9.10.1 nicht der Fall. */
+ * Seiten zeigen — genau das war einmal nicht der Fall. */
 bericht.sitzung = { neu_angemeldet: verlorene, ohne_bild: ausgefallen };
 if (verlorene.length || ausgefallen.length) {
   md += `\n## Sitzung\n\n`;
@@ -1962,7 +1960,7 @@ if (ausgefallen.length) {
   const teile = Object.entries(nachGrund).map(([g, n]) => `${n}× ${g}`).join(' · ');
   console.log(`OHNE BILD: ${ausgefallen.length} Aufnahmen — ${teile}`);
 }
-/* ---- Gegenprobe gegen doppelte Bilder (E-PK-14) -------------------------
+/* ---- Gegenprobe gegen doppelte Bilder -----------------------------------
  *
  * WOZU. Acht Breiten je Seite sind acht Dateien — und wenn das Werkzeug
  * die Breite nicht wirklich umstellt, sind es acht IDENTISCHE Dateien, bei
@@ -1971,7 +1969,7 @@ if (ausgefallen.length) {
  * Fall, gegen den Grundsatz 7 geschrieben ist.
  *
  * GEZAEHLT WIRD JE SEITE, nicht über den ganzen Ordner: Zwei Seiten dürfen
- * gleich aussehen (eine Rückfrage über derselben Seite), acht Breiten
+ * gleich aussehen (eine Rückfrage über derselben Seite), alle Breiten
  * DERSELBEN Seite nicht. */
 const doppelte = [];
 let gelesen = 0;

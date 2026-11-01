@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 /**
- * Datenschutzerklärung dieser Installation (R32).
+ * Datenschutzerklärung dieser Installation.
  *
  * Siehe impressum.php — beide Seiten teilen sich rechtstext_seite.php.
  */

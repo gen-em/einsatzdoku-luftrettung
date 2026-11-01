@@ -26,23 +26,22 @@ declare(strict_types=1);
  * require damit verdeckt. Wer eine Bibliothek prueft, muss sie so laden, wie
  * die Anwendung sie laedt — sonst prueft er seinen eigenen Aufbau mit.
  */
-require_once __DIR__ . '/einsatz_lib.php';   // Kindtabellen (Schritt 15/AP5)
+require_once __DIR__ . '/einsatz_lib.php';   // Kindtabellen
 require_once __DIR__ . '/validate_lib.php';
-require_once __DIR__ . '/spur_lib.php';   // Spuren: Zeilen UND Blob (S2)
+require_once __DIR__ . '/spur_lib.php';   // Spuren: Zeilen UND Blob
 require_once __DIR__ . '/mission_fields_lib.php';   // mf_ist_spalte(), mf_ort_spalten(), mf_spalten()
-require_once __DIR__ . '/geraete_lib.php';         // HERKUNFT_WERTE, herkunft_ableiten() (R64)
+require_once __DIR__ . '/geraete_lib.php';         // HERKUNFT_WERTE, herkunft_ableiten()
 
 /**
  * Wie viele Einsaetze beziehungsweise Ruhesegmente `edbak_build()` auf einmal
- * zusammensetzt (S2/AP5).
+ * zusammensetzt.
  *
  * NICHT DIE ABFRAGEN, SONDERN DER SPEICHER entscheidet diese Zahl. Die
- * Kindtabellen werden weiterhin gebuendelt geholt — das N+1, das M5-12
- * abgeschafft hat, kommt nicht zurueck; sie laufen nur je Fenster statt je
+ * Kindtabellen werden weiterhin gebuendelt geholt — ein N+1 kommt
+ * nicht zurueck; sie laufen nur je Fenster statt je
  * Konto. Bei 500 kostet ein 5000er-Bestand elf Durchgaenge zu vier Abfragen
  * statt vier ueber alles, und die Speicherspitze faellt von 92 MB unter das
- * Budget von 64 MB (Z3). Gemessen, nicht geschaetzt — die Zahlen stehen im
- * Konzept S2, AP5.
+ * Budget von 64 MB. Gemessen, nicht geschaetzt.
  */
 const EDBAK_FENSTER = 500;
 
@@ -50,12 +49,9 @@ const EDBAK_FENSTER = 500;
  * Die Nutzlast, die diese Fassung schreibt (Backup-Format 2; die Geschichte
  * der Zahlen steht bei `'version'` in `edbak_build()`).
  *
- * EINE STELLE SEIT P5c/AP8. Die Zahl stand bis dahin viermal: hier als
- * Literal, im Manifest der Admin-Sicherung und in den zwei Wegen, die
- * Eintragsteile einspielen. Drei davon sagten 10 und behaupteten im
- * Kommentar, sie folgten der geschriebenen Nutzlast — seit S9/AP7 schrieb
- * diese Datei 11 (F-P5c-128). Folgenlos, weil der Rueckweg nur `>= 8` fragt;
- * aber eine Zahl, die an drei Stellen nachgezogen werden muss, wird an einer
+ * EINE STELLE. Gebraucht wird die Zahl hier, im Manifest der
+ * Admin-Sicherung und in den zwei Wegen, die Eintragsteile einspielen; eine
+ * Zahl, die an mehreren Stellen nachgezogen werden muss, wird an einer
  * vergessen. `NUTZLAST_HOECHSTENS` (api/backup_restore.php) steht bewusst
  * NICHT hierauf: Die Obergrenze hebt nur, wer den Rueckweg vorbereitet hat.
  */
@@ -64,10 +60,8 @@ const EDBAK_NUTZLAST = 13;
 /**
  * Inneres Backup-JSON aufbauen.
  *
- * DER PAPIERKORB IST TEIL JEDES BACKUPS (E-S1-01). Bis Web 7.3.1 filterten
- * drei Abfragen hier auf `deleted_at IS NULL`, und ein Parameter
- * `$mitPapierkorb` schaltete den Filter fuer die Demo-Fixture ab. Beides ist
- * entfallen.
+ * DER PAPIERKORB IST TEIL JEDES BACKUPS. Keine Abfrage hier filtert auf
+ * `deleted_at IS NULL`, und es gibt keinen Schalter dafuer.
  *
  * WARUM DIE ENTSCHEIDUNG UMGEDREHT WURDE. Die alte Begruendung lautete: „Wer
  * ein Backup erstellt, sichert seinen Bestand, nicht seinen Abfall." Das
@@ -79,7 +73,7 @@ const EDBAK_NUTZLAST = 13;
  * ist ein ABBILD; ein Abbild, das einen Teil des Bestands weglaesst, ist
  * keines.
  *
- * KEINE WAHLMOEGLICHKEIT AUF DER BACKUP-SEITE (E-S1-02). Ein Haken
+ * KEINE WAHLMOEGLICHKEIT AUF DER BACKUP-SEITE. Ein Haken
  * „Papierkorb mitsichern" verschoebe die Entscheidung auf den Zeitpunkt, an
  * dem am wenigsten ueberlegt wird. Stattdessen nennen die Umfangsangaben
  * (Admin-Tabelle, Freigabe-Hinweis, `umfang.papierkorb` des Admin-Backups),
@@ -90,9 +84,9 @@ const EDBAK_NUTZLAST = 13;
  * einen Zustand, und `edbak_restore()` wertet ihn aus: Was hier geloescht ist,
  * kommt als Papierkorbeintrag zurueck. Der ZEITPUNKT wandert dabei nicht mit
  * — der Eintrag entsteht in der Zielinstallation neu und bekommt volle
- * 90 Tage (E-S1-03, docs/Backup-Format.md 2 und 3).
+ * 90 Tage (docs/Backup-Format.md 2 und 3).
  *
- * `$ohneSpuren` IST DER KERN DER FASSUNG 4 (S2/AP5, Konzept 3.2.1). Statt der
+ * `$ohneSpuren` IST DER KERN DER FASSUNG 4. Statt der
  * Punktlisten traegt jedes spurtragende Objekt dann eine fortlaufende
  * `spur_ref` und die Angaben `stufe`, `n_original` und `n`; die Punkte kommen
  * ueber `api/backup_spuren.php` in eigene Teile (seit Nutzlast 13 als
@@ -105,23 +99,21 @@ const EDBAK_NUTZLAST = 13;
  *
  * WARUM DIE NUMMER FORTLAUFEND IST und nicht die Datenbankkennung: Die
  * Kennung gilt nur in der Datenbank, aus der das Backup stammt — dieselbe
- * Ueberlegung wie beim Diensttag (E9) und beim Standortnamen (E15). `spur_ref`
+ * Ueberlegung wie beim Diensttag und beim Standortnamen. `spur_ref`
  * ist eine Nummer DIESES Vorgangs und sonst nichts.
  */
 function edbak_build(int $userId, bool $ohneSpuren = false,
                      ?array $fenster = null): string {
     $pdo = db();
 
-    /* ZWEI BETRIEBSARTEN, EINE FUNKTION (S2/AP5b).
+    /* ZWEI BETRIEBSARTEN, EINE FUNKTION.
      *
      *   ['kopf' => true]            nur der Kopf: Stammdaten und Diensttage
      *   ['ab' => x, 'anzahl' => y]  ein Fenster von Eintraegen
      *
-     * Bis Web 22.7.0 gab es eine dritte: `$fenster === null`, die ganze
-     * Nutzlast 7 mit Punktlisten aus `track_points`/`track_blobs` und der
-     * Reanimation aus `resus_sessions`. Seit S11 sieht der Server keine Punkte
-     * und keine Reanimation mehr, und mit den Tabellen ist sie gegangen
-     * (S11-12). `$ohneSpuren` ist seitdem immer wahr.
+     * Eine dritte Form mit Punktlisten und Reanimation gibt es nicht: Der
+     * Server sieht keine Punkte und keine Reanimation.
+     * `$ohneSpuren` ist seitdem immer wahr.
      *
      * WARUM NICHT ZWEI FUNKTIONEN. Weil dann zwei Stellen wuessten, wie aus
      * einem Einsatz JSON wird — und die naechste neue Spalte in zweien davon
@@ -139,7 +131,7 @@ function edbak_build(int $userId, bool $ohneSpuren = false,
 
     $u = $q('SELECT email, name, pat_key_check FROM users WHERE id = ?', [$userId])[0];
 
-    /* Umwandeln nur, wenn dabei auch eine Zahl herauskommt (M2-12).
+    /* Umwandeln nur, wenn dabei auch eine Zahl herauskommt.
      *
      * (float)$p['ele'] liefert fuer jede Eingabe klaglos ein Ergebnis: aus
      * "" wird 0.0, aus "Unfug" ebenfalls. Die Hoehe 0 ist aber ein GUELTIGER
@@ -157,11 +149,10 @@ function edbak_build(int $userId, bool $ohneSpuren = false,
     /* FASSUNG 4: statt der Punkte nur ihr Umriss — kein gelesener Punkt, und
      * die laufende Nummer, unter der der Spurteil die Stuecke wiederfindet.
      *
-     * DIE ZAHLEN BESCHREIBEN, WAS IN DER DATEI STEHT (Konzept S2 3.2.3): Eine
+     * DIE ZAHLEN BESCHREIBEN, WAS IN DER DATEI STEHT: Eine
      * Spur aus Geraetestuecken oder zusammengefuegt steht dort als Stufe 2
      * mit `n_original = n`, eine ausgeduennte als Stufe 3 mit der Zahl VOR
-     * der Ausduennung. `n` ist die Summe der gespeicherten Punkte. Bis Web 22
-     * kam ein SPUR1-Umriss dazu. */
+     * der Ausduennung. `n` ist die Summe der gespeicherten Punkte. */
     $spurVerzeichnis = [];
     $umrisse = function (string $type, array $ids) use ($pdo, &$indexVon): array {
         $nach = [];
@@ -181,7 +172,7 @@ function edbak_build(int $userId, bool $ohneSpuren = false,
     };
 
     $missions = [];
-    /* SPALTEN AUFZAEHLEN, NICHT ALLE NEHMEN (M5-07).
+    /* SPALTEN AUFZAEHLEN, NICHT ALLE NEHMEN.
      *
      * Vorher stand hier SELECT * und darunter ein unset() fuer die drei
      * internen Spalten. Das FORMAT des Backups war damit nicht definiert,
@@ -198,21 +189,20 @@ function edbak_build(int $userId, bool $ohneSpuren = false,
      * Kommt kuenftig eine Spalte hinzu, die mitgesichert werden soll, ist sie
      * hier einzutragen — und genau das ist der Punkt: Es ist eine
      * Entscheidung, keine Nebenwirkung. */
-    /* `uhr_gesperrt AS manual` — DER ALIAS IST PFLICHT, NICHT KOSMETIK
-     * (Nr. 238). Die Spalte heisst seit Web 20.25.0 `uhr_gesperrt`, der
+    /* `uhr_gesperrt AS manual` — DER ALIAS IST PFLICHT, NICHT KOSMETIK.
+     * Die Spalte heisst `uhr_gesperrt`, der
      * SCHLUESSEL IN DER DATEI bleibt `manual`: Jede bisher ausgelieferte
      * Sicherung traegt ihn, der Demo-Bestand ist selbst eine solche Datei,
      * und `edbak_restore()` weiter unten liest ihn unter diesem Namen.
      * Ohne den Alias hiesse der Schluessel in jeder NEUEN Datei still
      * `uhr_gesperrt` — und das Einspielen faende das Feld nicht mehr, ohne
      * eine einzige Fehlermeldung. */
-    /* AUS DEM REGISTER (Schritt 15/AP6, E-ZE-22). Die Liste stand hier von
+    /* AUS DEM REGISTER. Die Liste stand hier von
      * Hand; die Gruende, warum id, user_id, device_id und die tote
      * other_resources fehlen, stehen jetzt in `mf_missions_gruende()` und
      * damit neben den Spalten selbst statt in diesem Kommentar.
      *
-     * DER ALIAS STEHT IN BACKTICKS, und zwar seit dem Merge von Schritt 15
-     * in `mf_spalten()` statt hier (Web 20.26.3, Nr. 267): `manual` ist auf
+     * DER ALIAS STEHT IN BACKTICKS, und zwar in `mf_spalten()` statt hier: `manual` ist auf
      * MySQL 8.4.0 bis 8.4.10 auch als ALIAS ein reserviertes Wort. Ohne die
      * Backticks antwortete der Export dort mit 1064 und die Sicherung kam
      * nie an (Staging, MySQL 8.4.10, Kennung 097D7622). Die Behebung stand
@@ -237,12 +227,9 @@ function edbak_build(int $userId, bool $ohneSpuren = false,
      *                            niemand mehr fuellt und das beim
      *                            Einspielen verworfen wird.
      *
-     * DIE EINSATZORT-HOEHE reist im `pat_blob` (`ortshoehe`, seit Web 22).
-     * Bis Web 22.7.0 stand sie zusaetzlich als Spalte `site_ele_m` im Backup,
-     * wurde beim Einspielen aber nicht uebernommen, sondern neu gerechnet
-     * (`compute_site_elevation()`). Spalte und Rechnung sind mit Web 23
-     * gegangen (S11-12). */
-    /* IN FENSTERN, NICHT AUF EINMAL (S2/AP5).
+     * DIE EINSATZORT-HOEHE reist im `pat_blob` (`ortshoehe`) — eine
+     * Spalte dafuer gibt es nicht. */
+    /* IN FENSTERN, NICHT AUF EINMAL.
      *
      * WARUM. Hier standen vier Abfragen ueber ALLE Einsaetze eines Kontos —
      * Phasen, Rettungsmittel, Reanimation, abweichende Besatzung —, und ihre
@@ -251,8 +238,8 @@ function edbak_build(int $userId, bool $ohneSpuren = false,
      * bricht der Lauf ab; das Backup eines grossen Kontos scheitert also
      * auf genau der Sorte Webspace, fuer die diese Anwendung gebaut ist.
      *
-     * Die Abfragen bleiben gebuendelt — das N+1, das M5-12 abgeschafft hat,
-     * kommt nicht zurueck. Sie laufen nur je Fenster statt je Konto: aus vier
+     * Die Abfragen bleiben gebuendelt — ein N+1 kommt nicht zurueck. Sie laufen
+     * nur je Fenster statt je Konto: aus vier
      * Abfragen werden vier je 500 Einsaetzen, also elf mal vier statt vier.
      * Das ist der Preis, und er ist klein gegen einen Abbruch.
      *
@@ -305,8 +292,8 @@ function edbak_build(int $userId, bool $ohneSpuren = false,
 
     /* JE EINSATZ KODIEREN UND FREIGEBEN, statt erst alle zu sammeln.
      *
-     * Bis Web 11.0.0 stand hier `$missions[] = $m;`, und damit lagen drei
-     * Kopien desselben Bestands im Speicher: die Zeilen aus der Datenbank,
+     * Mit `$missions[] = $m;` laegen drei Kopien desselben Bestands im
+     * Speicher: die Zeilen aus der Datenbank,
      * das zusammengesetzte Feld und am Ende die JSON-Ausgabe.
      *
      * DAS FORMAT AENDERT SICH DABEI NICHT. Es entsteht dasselbe JSON; nur die
@@ -322,7 +309,7 @@ function edbak_build(int $userId, bool $ohneSpuren = false,
         foreach (sql_in_bloecken($pdo,
                 "SELECT id, $missionSpalten FROM missions
                   WHERE user_id = ? AND id IN ({IDS})", $fenster, [$userId]) as $r) {
-            /* Die Einsatzhuelle ist binaer (S11-06a); JSON nimmt sie nur als
+            /* Die Einsatzhuelle ist binaer; JSON nimmt sie nur als
              * Base64. Ohne Huelle bleibt das Feld weg — ein `null` saehe aus
              * wie „Huelle verloren", und das ist sie nicht. */
             if ($r['ort_huelle'] === null) { unset($r['ort_huelle']); }
@@ -330,8 +317,8 @@ function edbak_build(int $userId, bool $ohneSpuren = false,
             $zeilen[(int)$r['id']] = $r;
         }
 
-        /* Abweichende Besatzung je Einsatz (`mission_crew`, E7). Bis Web 5.10.0
-         * waren es fuenf Spalten in `missions`; sie stehen deshalb im Format
+        /* Abweichende Besatzung je Einsatz (`mission_crew`). Frueher waren es
+         * fuenf Spalten in `missions`; sie stehen deshalb im Format
          * jetzt als Objekt role_code => name. */
         $einsatzCrewNach = [];
         foreach (sql_in_bloecken($pdo,
@@ -341,11 +328,10 @@ function edbak_build(int $userId, bool $ohneSpuren = false,
             $einsatzCrewNach[(int)$c['mission_id']][(string)$c['role_code']] = $c['name'];
         }
 
-        /* Phasen und Rettungsmittel: je eine Abfrage statt je Einsatz
-         * (M5-12). Die Orte der Phasen und die Reanimation liegen seit Web 22
-         * in der Einsatzhuelle (`ort_huelle`); der Browser legt sie beim
-         * Sichern offen in den Kern (S11-06a). Bis Web 22.7.0 kamen hier
-         * `lat`/`lon` und `resus_sessions` des Altbestands mit. */
+        /* Phasen und Rettungsmittel: je eine Abfrage statt je Einsatz.
+         * Die Orte der Phasen und die Reanimation liegen in der
+         * Einsatzhuelle (`ort_huelle`); der Browser legt sie beim Sichern
+         * offen in den Kern. */
         $phasenNach = $mittelNach = [];
         foreach (sql_in_bloecken($pdo,
                 'SELECT mission_id, phase, occurred_at FROM mission_phases
@@ -360,7 +346,7 @@ function edbak_build(int $userId, bool $ohneSpuren = false,
                 $fenster) as $r) {
             $mittelNach[(int)$r['mission_id']][] = (string)$r['name'];
         }
-        /* ---- Die Sperrvermerke des Schnitts (Backlog Nr. 63, Nutzlast 9) --
+        /* ---- Die Sperrvermerke des Schnitts (Nutzlast 9) --
          *
          * EINE ABFRAGE JE FENSTER, ueber `spur_lib.php` — `track_cuts` ist
          * eine der drei Tabellen, an die nur diese Datei heranreicht
@@ -383,8 +369,8 @@ function edbak_build(int $userId, bool $ohneSpuren = false,
             $m['resources'] = $mittelNach[$mid]    ?? [];
             $m['crew']      = $einsatzCrewNach[$mid] ?? [];
             /* `schnitte` STEHT AN JEDEM EINSATZ, leer erlaubt — wie die vier
-             * Listen darueber und ausdruecklich anders als `track`/`spur_ref`
-             * (E-R64-07). Der Unterschied hat einen Grund: Ein fehlendes
+             * Listen darueber und ausdruecklich anders als `track`/`spur_ref`.
+             * Der Unterschied hat einen Grund: Ein fehlendes
              * `schnitte` waere zweideutig — „dieser Einsatz hat keine
              * Vermerke" oder „diese Fassung kennt sie nicht". Ein leeres
              * Feld sagt das erste. */
@@ -429,7 +415,7 @@ function edbak_build(int $userId, bool $ohneSpuren = false,
         unset($nach);
     }
     $spurNachRuhe = $umrisse('rest', $restIdsFenster);
-    /* Die Loeschvermerke des Segments (Nutzlast 13, F-S11-52). Wie `schnitte`
+    /* Die Loeschvermerke des Segments (Nutzlast 13). Wie `schnitte`
      * am Einsatz steht das Feld an JEDEM Segment, leer erlaubt: Ein fehlendes
      * hiesse in einer 13er-Datei nichts anderes als in einer 12er — „nicht
      * erhoben". */
@@ -453,14 +439,13 @@ function edbak_build(int $userId, bool $ohneSpuren = false,
 
     /* ---- Diensttage -------------------------------------------------------
      *
-     * DIE KENNUNG MUSS MIT (E9). Bis Web 5.10.0 war das Datum der Schluessel
-     * eines Flugtags und genuegte als Verweis; seit mehrere Diensttage auf einem
-     * Kalendertag liegen koennen, benennt es keine Zeile mehr. Einsaetze und
+     * DIE KENNUNG MUSS MIT. Das Datum benennt keine Zeile: Mehrere
+     * Diensttage koennen auf einem Kalendertag liegen. Einsaetze und
      * Ruhe-Segmente verweisen mit `day_id` hierher, und beim Einspielen wird die
      * Kennung auf die neu vergebene umgeschrieben.
      *
-     * ANGEZEIGT UND GESICHERT WERDEN DIE SNAPSHOT-SPALTEN (E8): `vehicle_name`,
-     * seit Nutzlast 10 auch `vehicle_typ` und `vehicle_kurz` (E-S9-09),
+     * ANGEZEIGT UND GESICHERT WERDEN DIE SNAPSHOT-SPALTEN: `vehicle_name`,
+     * seit Nutzlast 10 auch `vehicle_typ` und `vehicle_kurz`,
      * und `base_name` stehen im Diensttag selbst. Der frueher noetige Join auf
      * `aircraft` und `bases` ist damit entfallen — und mit ihm die Luecke, dass
      * ein geloeschtes Rettungsmittel ein Backup ohne Bezeichnung hinterliess.
@@ -473,9 +458,9 @@ function edbak_build(int $userId, bool $ohneSpuren = false,
      * ohne sie waere nach dem Einspielen nicht mehr erkennbar, welche Rollen ein
      * Dienst anbot.
      *
-     * `day_refs` MUSS ins Backup (Konzept 4.8): Sonst legt ein spaeter
+     * `day_refs` MUSS ins Backup: Sonst legt ein spaeter
      * eintreffender Upload derselben Uhr den Diensttag nach einer
-     * Wiederherstellung erneut an (A9, A8). */
+     * Wiederherstellung erneut an. */
     $days = [];
     /* IM FENSTERMODUS NICHT. Stammdaten und Diensttage stehen im KOPF, und der
      * kommt genau einmal. Sie in jedes Fenster zu legen hiesse, sie bei elf
@@ -531,7 +516,7 @@ function edbak_build(int $userId, bool $ohneSpuren = false,
     $defBaseId = (int)($q('SELECT item_id FROM user_defaults WHERE user_id = ? AND kind = "base"', [$userId])[0]['item_id'] ?? 0);
     $defVehId  = (int)($q('SELECT item_id FROM user_defaults WHERE user_id = ? AND kind = "vehicle"', [$userId])[0]['item_id'] ?? 0);
 
-    /* Standorte: mit Koordinaten (E37). Der Name bleibt der portable
+    /* Standorte: mit Koordinaten. Der Name bleibt der portable
      * Schluessel, an dem die uebrigen Stammdaten haengen. */
     $bases = $q('SELECT id, name, lat, lon FROM bases WHERE user_id = ? ORDER BY name', [$userId]);
     $baseNameById = [];
@@ -542,9 +527,9 @@ function edbak_build(int $userId, bool $ohneSpuren = false,
     }
     unset($b);
 
-    /* Rettungsmittel (bis Web 5.10.0: `aircraft`). Art, Rollen und
+    /* Rettungsmittel (`aircraft`). Art, Rollen und
      * Faehigkeiten gehoeren dazu; der Standort als NAME, weil Kennungen nur in
-     * dieser Datenbank gelten (E15). */
+     * dieser Datenbank gelten. */
     $vehZeilen = $q('SELECT id, name, kurz, kind, typ, base_id FROM vehicles
                      WHERE user_id = ? ORDER BY name', [$userId]);
     $vehIds = array_map(static fn($v) => (int)$v['id'], $vehZeilen);
@@ -566,7 +551,7 @@ function edbak_build(int $userId, bool $ohneSpuren = false,
         $vid = (int)$v['id'];
         $vehicles[] = [
             'name'         => (string)$v['name'],
-            /* Kurzname und Typ seit Nutzlast 10 (E-S9-09). `kurz` bleibt NULL,
+            /* Kurzname und Typ seit Nutzlast 10. `kurz` bleibt NULL,
              * wenn keiner gesetzt ist — ein Leerstring waere eine Angabe, wo
              * keine ist, und die Gegenseite muesste beide Faelle unterscheiden. */
             'kurz'         => $v['kurz'] !== null ? (string)$v['kurz'] : null,
@@ -579,11 +564,11 @@ function edbak_build(int $userId, bool $ohneSpuren = false,
         ];
     }
 
-    /* Die Auswahl zentraler Standorte (E16) stand hier bis Nutzlast 11. Mit
-     * P5c/AP8 gibt es keine zentralen Standorte mehr (R39); der Rueckweg
-     * ueberliest das Feld in alten Dateien. */
+    /* Die Auswahl zentraler Standorte steht nicht in der Datei — es gibt
+     * keine zentralen Standorte; der Rueckweg ueberliest das Feld in
+     * alten Dateien (bis Nutzlast 11). */
 
-    /* Die uebrigen Stammdaten tragen jetzt ihren Standort (E15) — ebenfalls als
+    /* Die uebrigen Stammdaten tragen jetzt ihren Standort — ebenfalls als
      * Name. Ohne ihn liesse sich nach dem Einspielen nicht entscheiden, zu
      * welchem Standort eine Zielklinik gehoert, und die Auswahllisten blieben
      * leer. */
@@ -605,7 +590,14 @@ function edbak_build(int $userId, bool $ohneSpuren = false,
      * abgerissener Lauf sich wieder einordnen kann. */
     if ($nurFenster) {
         $stueck = ['ab' => $ab, 'anzahl' => $bis - $ab, 'gesamt' => $eintraegeGesamt];
-        if ($ohneSpuren) { $stueck['_spur_index'] = $spurVerzeichnis; }
+        /* DAS VERZEICHNIS DER SPUREN ist ein ARBEITSFELD, das nicht in die
+         * Datei gehoert: Der Browser braucht die Datenbankkennung, um die
+         * Stuecke zu holen (`api/backup_spuren.php`); die Datei darf sie nicht
+         * tragen, denn sie gilt nur in DIESER Datenbank. Der Unterstrich ist
+         * die Marke fuer Arbeitsfelder; der Backup-Lauf loescht es vor dem
+         * Versiegeln, und die Containerprobe sieht nach. Im Kopf steht es
+         * nicht — er traegt keine Eintraege. */
+        $stueck['_spur_index'] = $spurVerzeichnis;
         $rumpf = json_encode($stueck, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
         return substr($rumpf, 0, -1)
              . ',"missions":[' . $missionsJson . ']'
@@ -614,13 +606,13 @@ function edbak_build(int $userId, bool $ohneSpuren = false,
 
     $data = [
         'format' => 'einsatzdoku-backup',
-        /* Nutzlastversion 7 (E-S1-07): Die Datei fuehrt jetzt den Papierkorb.
+        /* Nutzlastversion 7: Die Datei fuehrt jetzt den Papierkorb.
          * Der Container bleibt 3 und die Signatur `EDBAK2` unveraendert — nur
          * der INHALT hat sich geaendert.
          *
          * DER SPRUNG IST KENNZEICHNUNG, KEINE SPERRE, und das gehoert deutlich
          * gesagt: api/backup_restore.php nimmt weiterhin alles ab Version 6 an,
-         * und ein bereits AUSGELIEFERTER Stand (Web 7.3.1 und aelter) tut das
+         * und ein sehr alter AUSGELIEFERTER Stand tut das
          * auch. Der wertet `deleted_at` aber nicht aus und braechte den
          * Papierkorb einer Version-7-Datei als AKTIVEN Bestand zurueck. Das
          * laesst sich nachtraeglich nicht verhindern — eine Sperre haette in
@@ -630,7 +622,7 @@ function edbak_build(int $userId, bool $ohneSpuren = false,
          * Umgekehrt bleiben Version-6-Dateien vollstaendig einspielbar: Sie
          * enthalten keinen Papierkorb, `deleted_at` fehlt oder ist null, und
          * der Rueckweg legt sie als aktiven Bestand an — genau wie bisher. */
-        /* NUTZLAST 9 (R64 / Backlog Nr. 63, Web 14.2.0): wie 8, dazu die
+        /* NUTZLAST 9: wie 8, dazu die
          * Geraete-Momentaufnahme je Einsatz und Segment und die
          * Sperrvermerke des Schnitts je Einsatz (`schnitte`).
          *
@@ -639,7 +631,7 @@ function edbak_build(int $userId, bool $ohneSpuren = false,
          * Punktlisten, 8 und 9 tragen Verweise. Das ist der Unterschied, an
          * dem es haengt — nicht die Anwesenheit eines `track`-Feldes, denn
          * eine Spur ohne Punkte saehe genauso aus. Der Vergleich dafuer steht
-         * auf `>= 8` und bleibt es (E-R64-08); eine Anhebung auf `>= 9`
+         * auf `>= 8` und bleibt es; eine Anhebung auf `>= 9`
          * wuerfe jede vorhandene 8er-Datei in den Punktlisten-Zweig und
          * verloere still alle Spuren.
          *
@@ -652,11 +644,11 @@ function edbak_build(int $userId, bool $ohneSpuren = false,
          *
          * NUTZLAST 7 BLEIBT DIE PUNKTLISTEN-VARIANTE und traegt die neuen
          * Felder ebenfalls — sie unterscheidet sich weiter nur durch die
-         * Punkte. Sie wird weiterhin GELESEN (E-S2-12) und nur noch fuer die
-         * Demo-Fixture geschrieben. Mit NaDoku 1.0 faellt sie weg
-         * (Backlog Nr. 46).
+         * Punkte. Sie wird weiterhin GELESEN und nur noch fuer die
+         * Demo-Fixture geschrieben. Mit NaDoku 1.0 faellt sie weg.
+         * 
          *
-         * NUTZLAST 10 (E-S9-09 / Backlog Nr. 69, Web 16.0.0): wie 9, dazu am
+         * NUTZLAST 10: wie 9, dazu am
          * Rettungsmittel `typ` und `kurz`. Beides ist optional — eine 9er-Datei
          * bleibt lesbar, `typ` fehlt dann und wird 'standard', `kurz` bleibt
          * NULL. Die Zahl steigt trotzdem, und zwar aus demselben Grund wie bei
@@ -670,7 +662,7 @@ function edbak_build(int $userId, bool $ohneSpuren = false,
          * oder Verweise in der Datei stehen, und daran aendert die 10 nichts —
          * dieselbe Falle, vor der schon der Absatz zur 9 warnt.
          *
-         * 11 SEIT S9/AP7: Die Notizen des Einsatzes sind aus der Spalte
+         * 11: Die Notizen des Einsatzes sind aus der Spalte
          * `missions.notes` in den verschluesselten `pat`-Block gewandert. Eine
          * 11er-Datei traegt sie deshalb NUR dort — eine aeltere Installation,
          * die sie in der Spalte sucht, faende nichts und meldete trotzdem
@@ -682,21 +674,20 @@ function edbak_build(int $userId, bool $ohneSpuren = false,
          * `$extraCols` weiter unten) — der Anhebelauf holt sie danach in den
          * Blob.
          *
-         * 12 SEIT P5c/AP8 (Web 21.0.0): Die Auswahl zentraler Standorte in
-         * `stammdaten` faellt weg (R39), und ein Tag mit einem Rettungsmittel NUR FUER DIESEN TAG
-         * traegt die Rollen seiner Betriebsart in `crew` (Nr. 169). Eine
+         * 12: Die Auswahl zentraler Standorte in
+         * `stammdaten` faellt weg, und ein Tag mit einem Rettungsmittel NUR FUER DIESEN TAG
+         * traegt die Rollen seiner Betriebsart in `crew`. Eine
          * aeltere Installation laese beides ohne Schaden — ihr fehlte ein
          * Feld, das sie ueberliest, und die Rollen blendete sie aus. Die Zahl
-         * steigt trotzdem: Sie sagt, was in der Datei stehen KANN, und hinter
-         * AP8 liegt kein Rueckweg — Code vor Web 21.0.0 laeuft auf diesem
-         * Schema nicht (Hauptstufe). Umgekehrt bleiben 6 bis 11 lesbar;
-         * die Standortauswahl darin wird still ueberlesen (Backlog Nr. 46).
+         * steigt trotzdem: Sie sagt, was in der Datei stehen KANN, und dahinter
+         * liegt kein Rueckweg — aelterer Code laeuft auf diesem Schema
+         * nicht (Hauptstufe). Umgekehrt bleiben 6 bis 11 lesbar;
+         * die Standortauswahl darin wird still ueberlesen.
          *
-         * 13 SEIT S11-06a (Web 22.5.0): Orte der Phasen und Reanimation
+         * 13: Orte der Phasen und Reanimation
          * legt der Browser offen in den Kern, die Spurteile tragen
-         * Punktlisten. SEIT WEB 23 (S11-12, E-S11-85) liest der Rueckweg
-         * nur noch 13; die Punktlisten-Variante 7, die hier bis Web 22.7.0
-         * fuer die Demo-Fixture entstand, gibt es nicht mehr — die Fixture
+         * Punktlisten. Der Rueckweg liest nur 13; eine Punktlisten-Variante 7
+         * fuer die Demo-Fixture gibt es nicht — die Fixture
          * liegt eingefroren im Repositorium. Was oben zu 6 bis 12 steht, ist
          * Geschichte. */
         'version' => EDBAK_NUTZLAST,
@@ -711,8 +702,8 @@ function edbak_build(int $userId, bool $ohneSpuren = false,
          * ueberhaupt lesbar waere. Ohne diese Angabe bliebe nur Raten.
          *
          * Sie verraet nichts: Der Inhaltsschluessel ist 256 Bit Zufall, aus
-         * seinem Hashwert nicht zurueckrechenbar. Bei Konten aus der Zeit vor
-         * Web 4.0.0 kann sie fehlen (null) — dann ist die Zuordnung eben
+         * seinem Hashwert nicht zurueckrechenbar. Bei sehr alten Konten kann
+         * sie fehlen (null) — dann ist die Zuordnung eben
          * unbekannt, und das Einspielen sagt das auch. */
         'pat_key_check' => $u['pat_key_check'] ?? null,
         'stammdaten' => [
@@ -728,12 +719,12 @@ function edbak_build(int $userId, bool $ohneSpuren = false,
                                               WHERE user_id = ? ORDER BY name', [$userId]), $baseNameById),
         ],
         'days' => $days,
-        /* `missions` und `rest_segments` stehen hier NICHT — sie sind oben
-         * schon kodiert (s. dort) und werden unten angehaengt. */
+        /* `missions` und `rest_segments` stehen hier NICHT — sie kommen in
+         * den Fenstern (oben). */
     ];
 
     /* KARTEILEICHEN UNTER DEN SPERRVERMERKEN — nur, wenn es welche gab
-     * (Nutzlast 9, R64). Ein Vermerk, dessen Quelle sich nicht mehr aufloesen
+     * (Nutzlast 9). Ein Vermerk, dessen Quelle sich nicht mehr aufloesen
      * laesst, wird nicht geschrieben; dass er da war, gehoert trotzdem in die
      * Datei. Dasselbe Muster wie bei `spur_karte` im Rueckweg: Ein Feld, das
      * im Regelfall fehlt, ist kein Ballast — und ein Feld, das immer auf 0
@@ -744,34 +735,11 @@ function edbak_build(int $userId, bool $ohneSpuren = false,
      * `track_cuts` geschrieben. Beides gehoert nachgesehen. */
     if ($schnitteWaisen > 0) { $data['schnitte_verwaist'] = $schnitteWaisen; }
 
-    /* DAS VERZEICHNIS DER SPUREN — ein ARBEITSFELD, das nicht in die Datei
-     * gehoert (S2/AP5).
-     *
-     * Der Browser braucht die Datenbankkennung, um die Blobs zu holen
-     * (`api/backup_spuren.php`); die Datei darf sie nicht tragen, denn sie
-     * gilt nur in DIESER Datenbank — genau deshalb loescht `edbak_build()`
-     * `id` aus jedem Objekt (E9, E15).
-     *
-     * Beides zusammen geht nur so: Die Zuordnung steht getrennt und traegt den
-     * Unterstrich, den dieses Projekt fuer Arbeitsfelder benutzt (`_pat`,
-     * `_patState`). Der Backup-Lauf loescht sie, bevor er versiegelt — und
-     * die Containerprobe sieht nach, ob er es getan hat. */
-    /* NUR WO ES HINGEHOERT. Im Fenstermodus steht es oben (dort entsteht es);
-     * im KOPF hat es nichts zu suchen — er traegt keine Eintraege, das
-     * Verzeichnis waere leer, und ein leeres Arbeitsfeld in der Datei ist
-     * trotzdem ein Arbeitsfeld in der Datei. Die Containerprobe sieht nach. */
-    if (!$nurKopf) { $data['_spur_index'] = $spurVerzeichnis; }
-
-    /* DIE AUSGABE WIRD ZUSAMMENGESETZT, nicht in einem Zug kodiert.
-     *
-     * Die beiden grossen Listen liegen bereits als JSON vor; sie noch einmal
-     * durch `json_encode()` zu schicken hiesse, sie ein zweites Mal als Feld
-     * aufzubauen — und genau das sollte der Umbau vermeiden.
-     *
-     * Der Kopf endet auf `}`; die schliessende Klammer wird abgeschnitten,
-     * die Listen angehaengt und sie wieder gesetzt. `$data` traegt immer
-     * mindestens `format` und `version`, ist also nie `{}` — die Pruefung
-     * darunter sagt es trotzdem, statt sich darauf zu verlassen. */
+    /* Der Kopf endet auf `}`; die schliessende Klammer wird abgeschnitten,
+     * die Zahl der Eintraege angehaengt und sie wieder gesetzt. `$data`
+     * traegt immer mindestens `format` und `version`, ist also nie `{}` —
+     * die Pruefung darunter sagt es trotzdem, statt sich darauf zu
+     * verlassen. */
     $kopf = json_encode($data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
     if (!is_string($kopf) || substr($kopf, -1) !== '}' || strlen($kopf) < 3) {
         throw new RuntimeException('Der Kopf des Backups liess sich nicht bauen.');
@@ -779,14 +747,10 @@ function edbak_build(int $userId, bool $ohneSpuren = false,
     /* NUR DER KOPF: ohne Eintraege, dafuer mit ihrer Zahl. Der Browser
      * braucht sie, um die Fenster zu planen — und die Teilezahl muss
      * feststehen, bevor das erste Teil versiegelt wird (die Zusatzdaten
-     * tragen `<nr>/<gesamt>`). */
-    if ($nurKopf) {
-        return substr($kopf, 0, -1)
-             . ',"eintraege_gesamt":' . $eintraegeGesamt . '}';
-    }
+     * tragen `<nr>/<gesamt>`). Das Fenster ist oben schon zurueckgegeben;
+     * hier kommt nur noch der Kopf an. */
     return substr($kopf, 0, -1)
-         . ',"missions":[' . $missionsJson . ']'
-         . ',"rest_segments":[' . $restsJson . ']}';
+         . ',"eintraege_gesamt":' . $eintraegeGesamt . '}';
 }
 
 /* ======================= Import ======================= */
@@ -799,12 +763,7 @@ function edbak_build(int $userId, bool $ohneSpuren = false,
  * der Dateischluessel `manual` (Spalte `uhr_gesperrt`) 1 ist und kein
  * solches Praefix vorliegt.
  *
- * DIE REGEL STAND HIER BIS WEB 13.3.0 EIN ZWEITES MAL (R64). Der Kommentar
- * verlangte ausdruecklich, dass "Migration und Restore die Regel nicht
- * zweimal unterschiedlich hinschreiben" — und genau das war der Zustand: hier
- * in PHP, in der Migration 2026_07_30 in SQL und als Kommentar in
- * `api/export_data.php` ein drittes Mal. Als Android und Wear dazukamen, wuchs
- * nur eine der drei mit. Jetzt steht sie EINMAL, in `herkunft_ableiten()`
+ * DIE REGEL STEHT NICHT HIER, sondern EINMAL, in `herkunft_ableiten()`
  * (geraete_lib.php); die Migration 2026_09_04 spiegelt sie in SQL und sagt
  * das dort.
  *
@@ -815,8 +774,8 @@ function edbak_build(int $userId, bool $ohneSpuren = false,
  * `watch`, genau wie bisher.
  */
 /**
- * Die Geraeteart auf dem Rueckweg — dieselbe Verengung wie beim Koppeln
- * (P5a/AP10, Backlog Nr. 195).
+ * Die Geraeteart auf dem Rueckweg — dieselbe Verengung wie beim Koppeln.
+ * 
  *
  * WAS FALSCH WAR. `geraete_lib.php` verengt beim Koppeln auf die drei Werte
  * aus `GERAET_ARTEN`: Was nicht dazugehoert, wird `NULL`, und
@@ -827,7 +786,7 @@ function edbak_build(int $userId, bool $ohneSpuren = false,
  * `HERKUNFT_WERTE` gehalten); die Asymmetrie stand ohne Begruendung da.
  *
  * WARUM DAS ZAEHLT, obwohl es heute nirgends auffaellt: Genau diese Spalte
- * soll der offene R42-Rest auswerten („Herkunft je Einsatz", R64). Eine
+ * soll eine Auswertung zaehlen („Herkunft je Einsatz"). Eine
  * Zaehlung, die man durch das Bearbeiten der EIGENEN Sicherung verunreinigen
  * kann, taugt nicht als Betriebszahl. Ein Sicherheitsproblem ist es nicht.
  *
@@ -864,7 +823,7 @@ function edbak_origin_edited(array $m): array {
          * die Uhr-Sperre und wuerde nach dieser Regel als "bearbeitet" gelten,
          * obwohl ihn niemand angefasst hat. Der Zweig greift aber nur fuer
          * Dateien der Formatversion <= 3, und die sind aelter als der Schnitt
-         * (Web 12.5.0) — es kann keine solche Datei geben. Die Zeile
+         * — es kann keine solche Datei geben. Die Zeile
          * einzubauen hiesse, toten Code gegen einen unmoeglichen Fall zu
          * stellen; der Hinweis genuegt. */
         $edited = ((int)($m['manual'] ?? 0) === 1
@@ -876,7 +835,7 @@ function edbak_origin_edited(array $m): array {
 }
 
 /**
- * Klartext-Ortsdaten in einer Nutzlast des Browsers (S11-06b, E-S11-55) —
+ * Klartext-Ortsdaten in einer Nutzlast des Browsers —
  * der erste Fund als Pfad, sonst null. Dieselbe Liste wie im Eingang der
  * Geraete und im CSV-Import: Phasenorte, Reanimation, Transportziel samt
  * Koordinaten, Ortshoehe und Punktlisten. Ein leerer Text gilt nicht als
@@ -904,12 +863,12 @@ function edbak_klartext_fund(array $data): ?string
 
 /**
  * Der Satz zu den verworfenen Werten eines Einspielberichts — leer, wenn es
- * keine gab (Web 23.0.2, Backlog Nr. 387).
+ * keine gab.
  *
  * `edbak_restore()` nennt in `rejected` jede Beanstandung der Prüfschicht
- * („feld: grund" → Anzahl). Die Verwaltung zeigte das bis Web 23.0.1 nur als
- * Rohtext im Bericht und blau — seit S11 nimmt eine abgewiesene Ortshülle
- * aber Orte und Reanimation des Einsatzes mit, und das soll dastehen. Das
+ * („feld: grund" → Anzahl). Als Rohtext im Bericht und blau
+ * waere das zu wenig: Eine abgewiesene Ortshülle nimmt Orte und
+ * Reanimation des Einsatzes mit, und das soll dastehen. Das
  * Gegenstück im Browser ist `verworfenSatz()` in `einstellungen.php`.
  */
 function edbak_verworfen_satz(array $bericht): string
@@ -930,7 +889,7 @@ function edbak_verworfen_satz(array $bericht): string
 
 /** @return array Zusammenfassung (Zaehler) */
 /**
- * DREI BETRIEBSARTEN, EINE FUNKTION (S2/AP5b) — dieselbe Linie wie bei
+ * DREI BETRIEBSARTEN, EINE FUNKTION — dieselbe Linie wie bei
  * `edbak_build()`:
  *
  *   $dayMap === null, `days` in $data       alles auf einmal (Nutzlast 6/7)
@@ -950,7 +909,7 @@ function edbak_verworfen_satz(array $bericht): string
  * `user_id`, in einer Abfrage; was nicht diesem Konto gehoert, faellt heraus,
  * und die betroffenen Eintraege werden uebersprungen und gezaehlt.
  *
- * ZWEI HERKUENFTE DER ORTSDATEN (S11-06b/c, `$ortsdaten`):
+ * ZWEI HERKUENFTE DER ORTSDATEN (`$ortsdaten`):
  *
  *   'browser'  Der Browser hat Orte, Reanimation und Spur schon verschlossen
  *              (Einsatzhuelle `ort_huelle`; Stuecke ueber die Spurteile) und
@@ -958,18 +917,16 @@ function edbak_verworfen_satz(array $bericht): string
  *              Nutzlast mit Klartext-Ortsdaten wird ABGEWIESEN
  *              (`DomainException('klartext: …')`, der Endpunkt antwortet 400),
  *              vor jedem Schreiben — wie `ingest.php` und der CSV-Import.
- *              Seit Web 23 (S11-12) geht auch das direkte Einspielen einer
- *              Kontosicherung durch die Verwaltung diesen Weg: Ihre Pakete
- *              tragen Huellen und Stuecke, wie sie liegen (E-S11-84).
- *   'server'   NUR NOCH DER DEMO-RESET (S11-06d): Die Fixture liegt im
+ *              Auch das direkte Einspielen einer Kontosicherung durch
+ *              die Verwaltung geht diesen Weg: Ihre Pakete
+ *              tragen Huellen und Stuecke, wie sie liegen.
+ *   'server'   NUR NOCH DER DEMO-RESET: Die Fixture liegt im
  *              Klartext im Repositorium (Nutzlast 7, mit Punktlisten), und
  *              der Server verschliesst Orte, Reanimation und Spur mit dem
- *              oeffentlichen Schluessel des Kontos (E-S11-20, -57).
+ *              oeffentlichen Schluessel des Kontos.
  *              Transportziel und Ortshoehe legt `$blobZiel` in den Blob —
- *              ohne ihn ist dieser Weg nicht erlaubt: Seit Web 23 gibt es
- *              keine Spalten mehr, in denen sie liegen bleiben koennten.
- *              Bis Web 22.7.0 nahm ihn auch das direkte Einspielen der
- *              Verwaltung.
+ *              ohne ihn ist dieser Weg nicht erlaubt: Es gibt keine
+ *              Spalten, in denen sie liegen bleiben koennten.
  *
  * `$blobZiel` (nur der Demo-Reset): Wer den Inhaltsschluessel des Kontos
  * hat, kann Transportziel und Ortshoehe in den Blob legen. Der Rueckruf
@@ -1009,11 +966,11 @@ function edbak_restore(int $userId, array $data, ?array $dayMap = null,
     };
     $stats = ['missions' => 0, 'missions_skipped' => 0, 'rests' => 0, 'rests_skipped' => 0,
               'days' => 0, 'stammdaten' => 0, 'stammdaten_skipped' => 0,
-              /* Wie viel davon in den PAPIERKORB gegangen ist (E-S1-08). Die
+              /* Wie viel davon in den PAPIERKORB gegangen ist. Die
                * Zahlen stecken in den drei Zaehlern darueber MIT drin — sie
                * sagen nicht "zusaetzlich", sondern "davon". */
               'papierkorb' => ['einsaetze' => 0, 'diensttage' => 0, 'ruhezeiten' => 0],
-              /* DIE SPERRVERMERKE DES SCHNITTS (Nutzlast 9, Backlog Nr. 63).
+              /* DIE SPERRVERMERKE DES SCHNITTS (Nutzlast 9).
                *
                * DREI AUSGAENGE UND NICHT ZWEI, weil sie Verschiedenes
                * bedeuten: `uebersprungen` heisst „der Einsatz stand schon da"
@@ -1021,21 +978,21 @@ function edbak_restore(int $userId, array $data, ?array $dayMap = null,
                * keine Sperre wiederbeleben, die jemand bewusst
                * zurueckgenommen hat. `verworfen` heisst dagegen „konnte
                * nicht", und das ist ein Befund. Beides in eine Zahl zu legen
-               * waere derselbe Fehler wie bei den uebersprungenen Einsaetzen
-               * (M5-14): nicht deutbar.
+               * waere derselbe Fehler wie bei den uebersprungenen Einsaetzen:
+               * nicht deutbar.
                *
                * Der Block bleibt bis zum Schluss auf null, wenn die Datei
                * keine Vermerke trug — die Oberflaeche zeigt die Zeile dann
                * gar nicht. */
               'schnitte' => ['uebernommen' => 0, 'uebersprungen' => 0, 'verworfen' => 0]];
 
-    /* URSACHEN GETRENNT ZAEHLEN (M5-14).
+    /* URSACHEN GETRENNT ZAEHLEN.
      * "40 uebersprungen" ist nicht deutbar: Es kann heissen "alles war schon
      * da" (gut) oder "alles war kaputt" (schlecht). Genau diese Unterscheidung
      * braucht, wer eine Wiederherstellung beurteilen muss. */
     $grund = ['bereits_vorhanden' => 0, 'datum_oder_zeit' => 0, 'aufbau' => 0,
               'tag_im_papierkorb' => 0, 'tag_unbrauchbar' => 0,
-              /* NEU (E-S1-08): Einsaetze und Ruhesegmente, deren Diensttag aus
+              /* NEU: Einsaetze und Ruhesegmente, deren Diensttag aus
                * der Datei uebersprungen wurde. Sie liefen bisher unter
                * `datum_oder_zeit` — irrefuehrend, denn an ihrem Datum ist
                * nichts auszusetzen; es fehlt ihnen der Tag. Wer die Meldung
@@ -1047,7 +1004,7 @@ function edbak_restore(int $userId, array $data, ?array $dayMap = null,
                * `GRUND_TEXT` in einstellungen.php uebersetzt sie. */
               'schnitt_ohne_ziel' => 0, 'schnitt_ohne_quelle' => 0,
               'schnitt_werte' => 0, 'schnitt_aufbau' => 0,
-              /* NEU (Backlog Nr. 34): Die Einsaetze eines Datei-Diensttags
+              /* NEU: Die Einsaetze eines Datei-Diensttags
                * liegen im Ziel an MEHREREN verschiedenen Tagen. Schritt 1 der
                * Wiedererkennung liefert dann kein Ergebnis, der Fingerabdruck
                * entscheidet — und dass geraten werden musste, gehoert in die
@@ -1055,7 +1012,7 @@ function edbak_restore(int $userId, array $data, ?array $dayMap = null,
                * Einsaetze. */
               'tag_mehrdeutig' => 0];
 
-    /* EIN Loeschzeitpunkt fuer den ganzen Lauf (E-S1-03).
+    /* EIN Loeschzeitpunkt fuer den ganzen Lauf.
      *
      * Aus der Datei wird der ZUSTAND uebernommen (geloescht ja/nein), nicht
      * der Zeitpunkt: Der Eintrag entsteht in dieser Installation neu und
@@ -1081,12 +1038,9 @@ function edbak_restore(int $userId, array $data, ?array $dayMap = null,
         $tageImPapierkorb[(string)$dTrash] = true;
     }
     $pruef = new Pruefliste();
-    /* Die Hoehe des Einsatzorts traegt der `pat_blob` (`ortshoehe`). Bis
-     * Web 22.7.0 rechnete das direkte Einspielen sie aus den Punkten, die es
-     * verschloss, und schrieb sie in `missions.site_ele_m`; bis Web 22.4.0
-     * stand hier eine Liste `$hoeheOffen` dafuer (F-S11-45). */
+    /* Die Hoehe des Einsatzorts traegt der `pat_blob` (`ortshoehe`). */
 
-    /* DIE SPURKARTE (S2/AP5, Konzept 3.2.4).
+    /* DIE SPURKARTE.
      *
      * Nutzlast 8 traegt keine Punktlisten, sondern je Spur eine `spur_ref`.
      * Der Browser schickt die Blobs danach in eigenen Anfragen — und braucht
@@ -1097,7 +1051,7 @@ function edbak_restore(int $userId, array $data, ?array $dayMap = null,
      * die Nutzerin und wird angezeigt; das hier ist eine Arbeitsangabe. */
     $spurKarte = [];
 
-    /* DIE KENNUNGSKARTE (Nutzlast 9, Backlog Nr. 63).
+    /* DIE KENNUNGSKARTE (Nutzlast 9).
      *
      * `client_ref` aus der Datei -> Kennung im Zielkonto, je Art. Sie ist der
      * Anker, mit dem der dritte Durchgang die QUELLE eines Sperrvermerks
@@ -1132,7 +1086,7 @@ function edbak_restore(int $userId, array $data, ?array $dayMap = null,
     $neueEinsaetze = [];
 
     $nutzlast = (int)($data['version'] ?? 0);
-    /* DER BROWSERWEG NIMMT NUR NUTZLAST 13 (S11-12, E-S11-85). Die Endpunkte
+    /* DER BROWSERWEG NIMMT NUR NUTZLAST 13. Die Endpunkte
      * weisen eine aeltere Datei schon vorher ab (`409 version_alt`); diese
      * Zeile ist die Schranke, die nicht davon abhaengt. Der Serverweg ist
      * nur noch der Demo-Reset mit seiner Nutzlast 7 aus dem Repositorium. */
@@ -1141,7 +1095,7 @@ function edbak_restore(int $userId, array $data, ?array $dayMap = null,
     }
     $mitVerweisen = $nutzlast >= 8;
 
-    /* VERSCHACHTELUNGSFAEHIG (Web 7.3.0).
+    /* VERSCHACHTELUNGSFAEHIG.
      *
      * Diese Funktion hat ihre Transaktion bisher bedingungslos geoeffnet. Das
      * ging gut, solange sie genau einen Aufrufer hatte — api/backup_restore.php,
@@ -1162,9 +1116,9 @@ function edbak_restore(int $userId, array $data, ?array $dayMap = null,
         /* Stammdaten (INSERT IGNORE ueber die Unique-Schluessel). Was nicht
          * angelegt werden kann — kein Standort, eine Pruefung schlaegt an —,
          * wird uebersprungen und gezaehlt (Backup-Format 6.3/8). Bis Web
-         * 20.47.0 zaehlte dort auch „systemweit schon vorhanden" (R39). */
+         * 20.47.0 zaehlte dort auch „systemweit schon vorhanden". */
         $sd = $data['stammdaten'] ?? [];
-        /* Vorbereitete Anweisung, nicht eingesetzter Wert (M5-06).
+        /* Vorbereitete Anweisung, nicht eingesetzter Wert.
          *
          * $userId ist hier ein int aus der Sitzung — hineingeschmuggelt
          * werden kann nichts. Der Befund zielt auch nicht darauf: Diese vier
@@ -1176,12 +1130,11 @@ function edbak_restore(int $userId, array $data, ?array $dayMap = null,
         $hd->execute([$userId]);
         $hasDefBase = (bool)$hd->fetchColumn();
         $newDefBaseName = null;
-        /* DIE STAMMDATEN GEHEN DURCH DIE PRUEFSCHICHT (F-R17-34, R17-23).
-         * Bis Web 23.3.1 gingen Name und Koordinaten der Standorte, Namen der
-         * Besatzung, Bereitschaften, Ressourcen und Zielkliniken roh in die
-         * Datenbank — als einziger Teil dieses Laufs. Ein Name ueber der
-         * Spaltenlaenge brach im strikten SQL-Modus den ganzen Lauf mit 500
-         * ab, im laxen wurde er still gekappt und passte danach nicht mehr
+        /* DIE STAMMDATEN GEHEN DURCH DIE PRUEFSCHICHT.
+         * Gingen Name und Koordinaten der Standorte, Namen der Besatzung,
+         * Bereitschaften, Ressourcen und Zielkliniken roh in die Datenbank,
+         * braeche ein Name ueber der Spaltenlaenge im strikten SQL-Modus den
+         * ganzen Lauf mit 500 ab, im laxen wuerde er still gekappt und passte danach nicht mehr
          * zum `base_ref` der Rettungsmittel. Jetzt: Leerraum weg, Laenge wie
          * im Schema (`SD_NAME_MAX`, `SD_ZIEL_MAX`), Koordinaten als Zahl im
          * Bereich; was nicht taugt, wird gemeldet. Ein Eintrag ohne Namen
@@ -1192,7 +1145,7 @@ function edbak_restore(int $userId, array $data, ?array $dayMap = null,
             if (!is_array($b)) { $stats['stammdaten_skipped']++; continue; }
             $name = pruef_text($b['name'] ?? null, SD_NAME_MAX, 'bases.name', $pruef);
             if ($name === null) { $stats['stammdaten_skipped']++; continue; }
-            // Koordinaten kommen mit (E37); sie duerfen leer bleiben.
+            // Koordinaten kommen mit; sie duerfen leer bleiben.
             $st = $pdo->prepare('INSERT IGNORE INTO bases (user_id, name, lat, lon) VALUES (?,?,?,?)');
             $st->execute([$userId, $name,
                           pruef_breite($b['lat'] ?? null, 'bases.lat', $pruef),
@@ -1200,10 +1153,9 @@ function edbak_restore(int $userId, array $data, ?array $dayMap = null,
             $stats['stammdaten'] += $st->rowCount();
             if (!$hasDefBase && (int)($b['is_default'] ?? 0)) { $newDefBaseName = $name; }
         }
-        /* Standortkennung zum Namen. Der Name ist der portable Schluessel (E15):
+        /* Standortkennung zum Namen. Der Name ist der portable Schluessel:
          * Die Kennung aus der Backup-Datei gilt nur in der Datenbank, aus der
-         * sie stammt. Gesucht wird unter den eigenen Standorten (bis Web
-         * 20.47.0 auch unter den zentralen, R39). */
+         * sie stammt. Gesucht wird unter den eigenen Standorten. */
         $baseIdByName = function (?string $name) use ($pdo, $userId): ?int {
             $name = pruef_text($name, SD_NAME_MAX);       // wie beim Anlegen oben
             if ($name === null) { return null; }
@@ -1213,27 +1165,24 @@ function edbak_restore(int $userId, array $data, ?array $dayMap = null,
             return $id === false ? null : (int)$id;
         };
 
-        /* DIE AUSWAHL ZENTRALER STANDORTE (bis Nutzlast 11, E16) WIRD
+        /* DIE AUSWAHL ZENTRALER STANDORTE (bis Nutzlast 11) WIRD
          * UEBERLESEN, nicht gelesen: Die Tabelle, in die sie gehoerte, gibt
-         * es seit P5c/AP8 nicht mehr (R39). Die Schleife, die hier stand,
-         * liefe gegen sie mit 42S02 — in jeder Wiederherstellung, jeder
+         * es nicht. Eine Schleife hier liefe gegen sie mit 42S02 — in jeder
+         * Wiederherstellung, jeder
          * Kontosicherung und jedem Demo-Reset. Toleranz, die mit NaDoku 1.0
-         * faellt (Backlog Nr. 46). */
+         * faellt. */
 
-        /* Rettungsmittel samt Typ, Art, Rollen und Faehigkeiten (E3, E29, E-S9-09).
+        /* Rettungsmittel samt Typ, Art, Rollen und Faehigkeiten.
          *
-         * SEIT WEB 16.0.0 UEBER DIESELBE PRUEFUNG WIE DIE FORMULARE
-         * (`pruef_rettungsmittel()`, validate_lib.php). Vorher stand hier die
-         * duennste der drei Fassungen: `kind` fiel im Zweifel auf 'air',
-         * Rollen wurden ungefiltert uebernommen, und geprueft wurde nur, ob ein
-         * Name und ein Standort da waren. Genau die Reihenfolge, die der Kopf
-         * dieser Datei beklagt — je unvertrauenswuerdiger die Quelle, desto
+         * UEBER DIESELBE PRUEFUNG WIE DIE FORMULARE
+         * (`pruef_rettungsmittel()`, validate_lib.php) — nicht ueber eine
+         * duennere eigene Fassung. Sonst gaelte die Reihenfolge, die der Kopf
+         * dieser Datei beklagt: je unvertrauenswuerdiger die Quelle, desto
          * weniger Pruefung.
          *
-         * OHNE STANDORT WIRD JETZT ANGELEGT, WENN DER TYP ES ERLAUBT. Bis
-         * Web 15.9.0 trug `vehicles.base_id` NOT NULL, und ein Rettungsmittel
-         * ohne Standort war nach E15 kein gueltiger Zustand; seit E-S9-09 ist
-         * er es fuer die drei Typen ausser 'standard'. Ein Standard-Rettungs-
+         * OHNE STANDORT WIRD ANGELEGT, WENN DER TYP ES ERLAUBT: Fuer die drei
+         * Typen ausser 'standard' ist ein Rettungsmittel ohne Standort ein
+         * gueltiger Zustand. Ein Standard-Rettungs-
          * mittel ohne aufloesbaren Standort wird weiterhin uebersprungen — die
          * Pruefschicht sagt das, nicht diese Schleife.
          *
@@ -1270,11 +1219,11 @@ function edbak_restore(int $userId, array $data, ?array $dayMap = null,
                                        VALUES (?,?)');
                 foreach ($rm['roles'] as $rc) { $insR->execute([(int)$vid, $rc]); }
                 /* Was der Bestand an Faehigkeiten fuehren darf, entscheidet
-                 * `veh_caps_erlaubt()` — Typ und Betriebsart zusammen (E29 und
-                 * seine benannte Ausnahme fuer den Typ Bergwacht). Was die
+                 * `veh_caps_erlaubt()` — Typ und Betriebsart zusammen (mit der
+                 * benannten Ausnahme fuer den Typ Bergwacht). Was die
                  * Regel nicht zulaesst, wird verworfen statt gespeichert: sonst
                  * traege der Bestand einen Zustand, den die Oberflaeche nicht
-                 * herstellen kann. Das Verwerfen geschieht seit Web 16.0.0 in
+                 * herstellen kann. Das Verwerfen geschieht in
                  * `pruef_rettungsmittel()`; hier steht nur noch das Schreiben,
                  * und deshalb ERBT dieser Weg jede Aenderung der Regel, statt
                  * sie zu kopieren. */
@@ -1304,7 +1253,7 @@ function edbak_restore(int $userId, array $data, ?array $dayMap = null,
                                ON DUPLICATE KEY UPDATE item_id = VALUES(item_id)')->execute([$userId, $vid]);
             }
         }
-        /* Die uebrigen Stammdaten haengen jetzt an einem Standort (E15). Ohne
+        /* Die uebrigen Stammdaten haengen jetzt an einem Standort. Ohne
          * ihn wird nicht angelegt — die Spalte traegt nach der Nachbearbeitung
          * NOT NULL, und ein Eintrag ohne Standort erschiene in keiner
          * Auswahlliste. Der Fall wird gezaehlt. */
@@ -1358,12 +1307,9 @@ function edbak_restore(int $userId, array $data, ?array $dayMap = null,
          * Ruhe-Segmente der Datei verweisen mit der ALTEN `day_id`, in der
          * Datenbank gilt die neue.
          *
-         * KEIN `INSERT IGNORE` MEHR, und die Wiedererkennung braucht mehr als
-         * das Datum. Bis Web 5.10.0 verhinderte der Tagesschluessel
-         * `uq_user_day`, dass ein bereits vorhandener Flugtag ein zweites Mal
-         * entstand; das Einspielen konnte deshalb blind einfuegen. Seit E9 gibt
-         * es diesen Schluessel nicht — ein blindes INSERT legte bei jedem
-         * Einspielen derselben Datei neue Diensttage an.
+         * KEIN `INSERT IGNORE`, und die Wiedererkennung braucht mehr als
+         * das Datum. Es gibt keinen Tagesschluessel — ein blindes INSERT
+         * legte bei jedem Einspielen derselben Datei neue Diensttage an.
          *
          * ERKANNT WIRD IN ZWEI SCHRITTEN, und der erste ist der belastbare:
          *
@@ -1389,7 +1335,7 @@ function edbak_restore(int $userId, array $data, ?array $dayMap = null,
          * an ihm landen. */
         $dayIdMap = [];   // alte Kennung aus der Datei -> Kennung in dieser DB
 
-        /* LIEGT DER ZIELTAG IM PAPIERKORB? (E-S1-04)
+        /* LIEGT DER ZIELTAG IM PAPIERKORB?
          *
          * Die Antwort entscheidet ueber `deleted_with_day` der Einsaetze und
          * Ruhesegmente, die an ihm landen — und sie haengt am ZIEL, nicht an
@@ -1431,7 +1377,7 @@ function edbak_restore(int $userId, array $data, ?array $dayMap = null,
             $ref = (string)($mm['client_ref'] ?? '');
             if ($q > 0 && $ref !== '') { $refsJeQuelltag[$q][] = $ref; }
         }
-        /* SCHRITT 1 BELEGT, ER RAET NICHT MEHR (Backlog Nr. 34).
+        /* SCHRITT 1 BELEGT, ER RAET NICHT MEHR.
          *
          * Hier stand `… AND client_ref = ? AND day_id IS NOT NULL LIMIT 1`,
          * abgefragt fuer eine Kennung nach der anderen, und der ERSTE Treffer
@@ -1442,7 +1388,7 @@ function edbak_restore(int $userId, array $data, ?array $dayMap = null,
          *    verschoben, wanderte der ganze Datei-Tag mit — auch wenn er im
          *    Ziel unveraendert daneben lag.
          *  - Fuehrte der Treffer auf einen Tag im PAPIERKORB, wurden seither
-         *    (E-S1-19) alle aktiven Eintraege des Datei-Tags abgelehnt. Richtig
+         *    alle aktiven Eintraege des Datei-Tags abgelehnt. Richtig
          *    gezaehlt, aber angekommen ist nichts.
          *  - `LIMIT 1` ohne `ORDER BY`, und `client_ref` ist nur je
          *    `device_id` eindeutig: Bei zwei Uhren kann derselbe Wert zweimal
@@ -1483,17 +1429,17 @@ function edbak_restore(int $userId, array $data, ?array $dayMap = null,
             if ($tagWert === null) { $grund['tag_unbrauchbar']++; continue; }
             $altId = isset($d['id']) ? (int)$d['id'] : 0;
 
-            /* IST DIESER TAG IN DER DATEI GELOESCHT? (E-S1-03/05)
+            /* IST DIESER TAG IN DER DATEI GELOESCHT?
              *
              * Seit Nutzlast 7 traegt die Datei den Papierkorb. Der ZUSTAND
              * wird uebernommen, der Zeitpunkt nicht — siehe $loeschZeit oben. */
             $dateiGeloescht = ($d['deleted_at'] ?? null) !== null;
 
-            /* D1 — UND DER FALL HAT SEIT S1 ZWEI HAELFTEN (E-S1-05).
+            /* D1 — UND DER FALL HAT ZWEI HAELFTEN.
              *
              * (1) EIN AKTIVER DATEI-TAG, dessen DATUM im Zielkonto einen Tag
              *     im Papierkorb trifft, wird uebersprungen und gezaehlt. Das
-             *     ist unveraendertes Verhalten: Das Loeschen war eine bewusste
+             *     Loeschen war eine bewusste
              *     Handlung, und ein Einspielen soll sie nicht nebenbei
              *     rueckgaengig machen ("Ablehnen statt Zurueckholen").
              *
@@ -1512,8 +1458,8 @@ function edbak_restore(int $userId, array $data, ?array $dayMap = null,
              * Zwei geloeschte Tage desselben Datums (einer in der Datei, einer
              * im Ziel, verschiedener Fingerabdruck) duerfen damit nebeneinander
              * bestehen. Das ist richtig so: Der Papierkorb kennt keine
-             * Eindeutigkeit je Datum, und seit E9 gibt es sie auch bei den
-             * aktiven Tagen nicht mehr. */
+             * Eindeutigkeit je Datum, und auch bei den aktiven Tagen gibt
+             * es sie nicht. */
             if (!$dateiGeloescht && isset($tageImPapierkorb[$tagWert])) {
                 $grund['tag_im_papierkorb']++;
                 continue;
@@ -1525,7 +1471,7 @@ function edbak_restore(int $userId, array $data, ?array $dayMap = null,
             $vName     = $d['vehicle_name'] ?? null;
             $bName     = $d['base_name'] ?? null;
             /* TYP UND KURZNAME KOMMEN AUS DER DATEI, NICHT AUS DEN HEUTIGEN
-             * STAMMDATEN (E8, Nutzlast 10). Ein Blick auf `vehicles` waere
+             * STAMMDATEN (Nutzlast 10). Ein Blick auf `vehicles` waere
              * genau der Durchgriff, den das Einfrieren ausschliesst — und er
              * schluege bei jedem Tag fehl, dessen Rettungsmittel es hier gar
              * nicht gibt. Eine Datei aelterer Fassung hat die Felder nicht:
@@ -1570,7 +1516,7 @@ function edbak_restore(int $userId, array $data, ?array $dayMap = null,
             }
             if ($vorhanden !== false) {
                 /* ANGABEN WERDEN NICHT UEBERSCHRIEBEN — und das gilt auch fuer
-                 * den Loeschzustand (E-S1-05). Ein hier vorhandener Tag bleibt,
+                 * den Loeschzustand. Ein hier vorhandener Tag bleibt,
                  * wie er ist: Ein aktiver Zieltag wird nicht wegen der Datei
                  * geloescht, ein geloeschter nicht wegen der Datei
                  * zurueckgeholt. Was aus der Datei kommt, sind die FEHLENDEN
@@ -1590,12 +1536,12 @@ function edbak_restore(int $userId, array $data, ?array $dayMap = null,
                 continue;
             }
 
-            /* Angelegt wird mit den EINGEFRORENEN Angaben aus der Datei (E8) —
+            /* Angelegt wird mit den EINGEFRORENEN Angaben aus der Datei —
              * nicht ueber dt_zuordnen(), das sie aus den heutigen Stammdaten
              * frisch holen wuerde. Ein Backup soll den Bestand abbilden,
              * nicht ihn neu ableiten: Ein inzwischen umbenanntes Rettungsmittel
              * traegt in der Datei seinen damaligen Namen, und der gehoert
-             * zurueck (A4, A13p). Die Fremdschluessel werden daneben ueber den
+             * zurueck. Die Fremdschluessel werden daneben ueber den
              * NAMEN wieder verknuepft, soweit der Stammdatensatz existiert. */
             $vehId  = null;
             if (!empty($d['vehicle_ref'])) {
@@ -1606,8 +1552,8 @@ function edbak_restore(int $userId, array $data, ?array $dayMap = null,
             }
             $baseId = $baseIdByName(isset($d['base_ref']) ? (string)$d['base_ref'] : null);
 
-            /* DER ANKER DES TAGES (Web 21.3.0, R4-15, Nr. 158) steht NICHT in
-             * der Datei — die Nutzlast bleibt, wie sie ist (Q-R4-09). Er wird
+            /* DER ANKER DES TAGES steht NICHT in
+             * der Datei — die Nutzlast bleibt, wie sie ist. Er wird
              * gesetzt wie der Rueckfall der Migration: `started_at`, ohne
              * eines der Tag um 00:00, hoechstens jetzt. Mit der Vorgabe der
              * Spalte stuende an jedem eingespielten Tag die Zeit des
@@ -1636,7 +1582,7 @@ function edbak_restore(int $userId, array $data, ?array $dayMap = null,
             if ($dateiGeloescht) { $stats['papierkorb']['diensttage']++; }
             if ($altId > 0) { $dayIdMap[$altId] = $neuId; }
 
-            // Rollensatz und Faehigkeiten sind Teil des Snapshots (E8).
+            // Rollensatz und Faehigkeiten sind Teil des Snapshots.
             $insDC = $pdo->prepare('INSERT IGNORE INTO day_crew (day_id, role_code, name)
                                     VALUES (?,?,?)');
             foreach ((array)($d['crew'] ?? []) as $rc => $nm) {
@@ -1652,10 +1598,10 @@ function edbak_restore(int $userId, array $data, ?array $dayMap = null,
                 }
             }
 
-            /* UHR-KENNUNGEN WIEDERHERSTELLEN (Konzept 4.8, A9).
+            /* UHR-KENNUNGEN WIEDERHERSTELLEN.
              *
              * Ohne sie legt ein spaeter eintreffender Upload derselben Uhr den
-             * Diensttag erneut an — genau der Fall, den A8 ausschliesst. Die
+             * Diensttag erneut an — genau der Fall, den es auszuschliessen gilt. Die
              * Geraetekennung ist der oeffentliche Name; ein Geraet, das es hier
              * nicht (mehr) gibt, ergibt device_id = NULL, und die Kennung bleibt
              * trotzdem gespeichert. */
@@ -1677,7 +1623,7 @@ function edbak_restore(int $userId, array $data, ?array $dayMap = null,
         /* Einsaetze: Dublette = gleiche client_ref bei dieser NutzerIn */
         $exists = $pdo->prepare('SELECT id FROM missions WHERE user_id = ? AND client_ref = ?');
 
-        /* SPUR SCHREIBEN — EINE STELLE FUER BEIDE ARTEN (Backlog Nr. 31).
+        /* SPUR SCHREIBEN — EINE STELLE FUER BEIDE ARTEN.
          *
          * Es waren zwei, und sie waren verschieden: Der Einsatz begrenzte die
          * Menge, pruefte den Aufbau und liess pruef_breite/pruef_laenge ueber
@@ -1695,9 +1641,9 @@ function edbak_restore(int $userId, array $data, ?array $dayMap = null,
          * oder ein Text in `ele` bringt nicht einen Punkt zu Fall, sondern
          * ueber die Ausnahme die ganze Wiederherstellung.
          *
-         * UND DIE EINDEUTIGKEIT VON `seq` (Backlog Nr. 35). Der Wertebereich
-         * allein reicht nicht: `track_points` hatte bis Web 22.7.0 den
-         * Primaerschluessel (owner_type, owner_id, seq), und zwei Stuecke mit
+         * UND DIE EINDEUTIGKEIT VON `seq`. Der Wertebereich
+         * allein reicht nicht: eine Spur ist durch
+         * (owner_type, owner_id, seq) bestimmt, und zwei Stuecke mit
          * derselben Nummer widersprechen einander heute ebenso; zwei Punkte
          * mit derselben Nummer loesten also einen Schluesselkonflikt aus — und der reisst wieder den
          * gesamten Lauf mit. Ein eigener Export erzeugt keine Wiedergaenger;
@@ -1712,12 +1658,12 @@ function edbak_restore(int $userId, array $data, ?array $dayMap = null,
                               use ($pdo, $pruef, $sec1Holen): void {
             $gesehen = [];
             $gueltig = [];
-            /* ABLEHNEN STATT KAPPEN (F-S2-02).
+            /* ABLEHNEN STATT KAPPEN.
              *
-             * Bis Web 9.14.0 stand hier pruef_menge() mit derselben Konstante,
-             * die ingest.php je ANFRAGE anwendet — hier gilt sie aber je
-             * SPUR. Was die Uhr ueber viele Anfragen aufbauen darf, wurde beim
-             * Zurueckspielen bei 2000 Punkten abgeschnitten; die Datei trug
+             * Nicht pruef_menge() mit derselben Konstante, die ingest.php je
+             * ANFRAGE anwendet — hier gaelte sie je SPUR. Was die Uhr ueber
+             * viele Anfragen aufbauen darf, wuerde beim Zurueckspielen bei
+             * 2000 Punkten abgeschnitten; die Datei trug
              * die ganze Spur, zurueck kam ihr Anfang. In ein frisches Konto
              * eingespielt war der Verlust endgueltig.
              *
@@ -1743,8 +1689,7 @@ function edbak_restore(int $userId, array $data, ?array $dayMap = null,
                 $gueltig[] = [(int)$seq, (float)$la, (float)$lo, $ele, (int)$ts];
             }
             if (!$gueltig) { return; }
-            /* VERSCHLOSSEN, NICHT ALS ZEILEN (S11-06c). Bis Web 22.4.0 gingen
-             * die Punkte als Zeilen nach `track_points`. Hierher kommt nur
+            /* VERSCHLOSSEN, NICHT ALS ZEILEN. Hierher kommt nur
              * noch der Demo-Reset ('server'); der Browserweg schickt Stuecke,
              * und eine Punktliste haette ihn oben abgewiesen. */
             usort($gueltig, static fn($a, $b) => $a[0] <=> $b[0]);
@@ -1755,13 +1700,10 @@ function edbak_restore(int $userId, array $data, ?array $dayMap = null,
             }
         };
 
-        /* Hier stand bis Web 22.7.0 `$stueckeSchreiben`: Der Browser schickte
-         * zu einer Datei der Nutzlast 6 oder 7 die verschlossenen Stuecke im
-         * Eintrag (S11-06b). Der Browserweg nimmt seit Web 23 nur Nutzlast 13,
-         * deren Spuren ueber `api/backup_spuren_restore.php` kommen (E-S11-85). */
+        /* Kein `$stueckeSchreiben`: Der Browserweg nimmt nur Nutzlast 13,
+         * deren Spuren ueber `api/backup_spuren_restore.php` kommen. */
 
         /* EINE PUNKTLISTE IN NUTZLAST 8 IST EIN WIDERSPRUCH — UND WIRD GESAGT
-         * (S2/AP6, F-S2-E).
          *
          * Nutzlast 8 sagt zu, dass die Punkte NICHT im Eintrag stehen,
          * sondern als Blob in eigenen Teilen nachkommen. Der Zweig darueber
@@ -1772,8 +1714,8 @@ function edbak_restore(int $userId, array $data, ?array $dayMap = null,
          * Die Kehrseite hat gefehlt. Traegt eine Datei Nutzlast 8 UND
          * Punktlisten, wurden die Punkte hier stillschweigend uebergangen:
          * Der Eintrag entstand ohne Spur, und die Meldung lautete „fertig".
-         * Gefunden beim Aufbau des Pruefbestands fuer AP6 — der
-         * Vervielfaeltiger des Messstands erbte seit Web 11.0.0 die Fassung
+         * Gefunden beim Aufbau eines Pruefbestands — der
+         * Vervielfaeltiger des Messstands erbte die Fassung
          * aus der Referenz und schrieb `version: 8` in eine einteilige Datei
          * mit `track`-Listen. Ergebnis eines Laufs: 164 Einsaetze angelegt,
          * 91 208 Punkte verloren, ohne ein Wort.
@@ -1784,7 +1726,7 @@ function edbak_restore(int $userId, array $data, ?array $dayMap = null,
          * zu verweigern hiesse, aus einem Teilverlust einen Totalverlust zu
          * machen. Gemeldet wird er ueber die gemeinsame Pruefschicht, also
          * dort, wo die Nutzerin die Ablehnungen ohnehin liest. */
-        /* DIE MELDUNG NENNT DIE FASSUNG NICHT MEHR ALS ZAHL (Web 14.2.0).
+        /* DIE MELDUNG NENNT DIE FASSUNG NICHT MEHR ALS ZAHL.
          * Sie lautete woertlich „Die Datei nennt Nutzlast 8 …", und mit
          * Nutzlast 9 waere sie schlicht falsch gewesen. Sie nennt jetzt die
          * EIGENSCHAFT statt der Zahl — die gilt fuer 8, 9 und jede weitere
@@ -1806,24 +1748,23 @@ function edbak_restore(int $userId, array $data, ?array $dayMap = null,
          * Grundlage ist der Feldkatalog — er ist die eine Liste, gegen die auch
          * das Formular arbeitet. Drei Ergaenzungen, die er nicht hergibt:
          *
-         *  - mf_ist_spalte() statt einer Pruefung auf 'resources' allein: Seit
-         *    Web 6.0.0 liegt auch die BESATZUNG nicht mehr in `missions`
-         *    (`crew_p1` … als 'store' => 'crew'). Sie stand hier weiterhin in
-         *    der Liste; eine Datei mit einem Schluessel `crew_p1` — etwa eine
-         *    von Hand bearbeitete — haette ein INSERT auf eine Spalte erzeugt,
+         *  - mf_ist_spalte() statt einer Pruefung auf 'resources' allein: Auch
+         *    die BESATZUNG liegt nicht in `missions`
+         *    (`crew_p1` … als 'store' => 'crew'). Stuende sie in der Liste,
+         *    haette eine Datei mit einem Schluessel `crew_p1` — etwa eine
+         *    von Hand bearbeitete — ein INSERT auf eine Spalte erzeugt,
          *    die es nicht mehr gibt, und damit nicht eine Zeile, sondern die
          *    ganze Wiederherstellung zum Scheitern gebracht. Die Besatzung
          *    kommt unten aus `crew`.
-         *  - Die KOORDINATENSPALTEN der Ortsfelder (Web 6.1.0): Sie heissen
+         *  - Die KOORDINATENSPALTEN der Ortsfelder: Sie heissen
          *    nicht wie ihr Feld (`transport_dest` -> `dest_lat`/`dest_lon`) und
          *    stehen deshalb in mf_ort_spalten().
          *  - `start_src`, die Abfahrtortregel: kein Katalogfeld (siehe
          *    mission_fields.php), aber eine gewoehnliche Spalte, die gesichert
          *    wird und zurueckkommen muss.
-         *  - `created_at`, der Anlegezeitpunkt der ZEILE (E-S1-06, Backlog
-         *    Nr. 25). Er wurde immer gesichert und kam nie zurueck: Nach einer
-         *    Wiederherstellung trugen alle Einsaetze den Zeitpunkt des
-         *    Einspielens — am Referenzdatensatz gemessen 79 verschiedene Werte
+         *  - `created_at`, der Anlegezeitpunkt der ZEILE. Er wird gesichert und muss zurueck: Sonst
+         *    trugen nach einer Wiederherstellung alle Einsaetze den Zeitpunkt
+         *    des Einspielens — am Referenzdatensatz gemessen 79 verschiedene Werte
          *    davor, 5 danach. Die Angabe ist keine fachliche Zeit (das ist
          *    `started_at`), aber sie ist eine ANGABE, und ein Backup, das
          *    eine Angabe stillschweigend fallenlaesst, ist keine. Der Wert
@@ -1835,7 +1776,7 @@ function edbak_restore(int $userId, array $data, ?array $dayMap = null,
          * hier ein — sonst wird sie gesichert und beim Einspielen verworfen.
          *
          * NICHT hier stehen `deleted_at` und `deleted_with_day`: Sie werden
-         * nicht uebernommen, sondern nach E-S1-03/04 NEU BESTIMMT (Zustand aus
+         * nicht uebernommen, sondern NEU BESTIMMT (Zustand aus
          * der Datei, Zeitpunkt und Bindung an den Tag aus diesem Lauf). Sie
          * stehen deshalb unten ausdruecklich im INSERT. */
         $extraCols = [];
@@ -1848,7 +1789,7 @@ function edbak_restore(int $userId, array $data, ?array $dayMap = null,
         };
         $collectCols($FIELDS);
         // Alt-Backups: loc_* wird ignoriert
-        /* `notes` STEHT HIER, obwohl es seit S9/AP7 kein Katalogfeld mit
+        /* `notes` STEHT HIER, obwohl es kein Katalogfeld mit
          * Spalte mehr ist (mf_ist_spalte() sagt nein) — und genau deshalb
          * muss es von Hand dazu.
          *
@@ -1856,17 +1797,16 @@ function edbak_restore(int $userId, array $data, ?array $dayMap = null,
          * KLARTEXT in dieser Spalte. Faellt sie hier aus der Liste, wird sie
          * beim Einspielen stillschweigend verworfen: kein Fehler, keine
          * Meldung, eine Notiz weniger. Sie wird deshalb weiter geschrieben —
-         * und der Anhebelauf (Schritt 3) holt sie beim naechsten Entsperren
+         * und der Anhebelauf holt sie beim naechsten Entsperren
          * in den Blob. Eine Datei mit Nutzlast 11 oder neuer traegt an dieser
          * Stelle NULL und den Text im `pat`-Block; dann schreibt diese Spalte
          * NULL, was richtig ist.
          *
-         * Wenn P8 die Spalte entfernt (R60), faellt dieser Eintrag mit ihr —
+         * Wenn die Spalte entfernt wird, faellt dieser Eintrag mit ihr —
          * und mit ihm die Faehigkeit, eine 10er-Datei vollstaendig
          * einzuspielen. Das gehoert dann ausdruecklich entschieden. */
-        /* `transport_dest` stand hier von S11-05b bis Web 22.7.0 aus demselben
-         * Grund (F-S11-48). Seit Web 23 gibt es die Spalte nicht mehr; das
-         * Transportziel kommt im `pat_blob` (S11-12). */
+        /* `transport_dest` gibt es als Spalte nicht; das Transportziel kommt
+         * im `pat_blob`. */
         $extraCols = array_merge($extraCols, ['start_src', 'pat_blob', 'notes', 'created_at']);
 
         foreach (($data['missions'] ?? []) as $m) {
@@ -1874,7 +1814,7 @@ function edbak_restore(int $userId, array $data, ?array $dayMap = null,
             $exists->execute([$userId, (string)($m['client_ref'] ?? '')]);
             $vorhandenId = $exists->fetchColumn();
             if ($vorhandenId) {
-                /* DIE SPURKARTE BEKOMMT IHN TROTZDEM (S2/AP5).
+                /* DIE SPURKARTE BEKOMMT IHN TROTZDEM.
                  *
                  * Sonst gibt es keine Wiederaufnahme, und das ist kein
                  * Schoenheitsfehler: Bricht das Einspielen zwischen Kern und
@@ -1921,19 +1861,19 @@ function edbak_restore(int $userId, array $data, ?array $dayMap = null,
              */
             $startedAt = pruef_utc_oder_sql($m['started_at'] ?? null, 'started_at', $pruef);
             /* DER DIENSTTAG IST PFLICHT. `missions.day_id` ist ein
-             * Fremdschluessel; ohne ihn waere der Einsatz verwaist (A11). Die
+             * Fremdschluessel; ohne ihn waere der Einsatz verwaist. Die
              * Kennung aus der Datei wird ueber $dayIdMap auf die hier vergebene
              * umgeschrieben — fehlt sie dort, wurde der Diensttag uebersprungen
              * (Papierkorb, unbrauchbares Datum), und der Einsatz gehoert
-             * ebenfalls uebersprungen und gezaehlt. Bis Web 5.10.0 trug der
-             * Einsatz sein Datum selbst und konnte ohne Tag existieren. */
+             * ebenfalls uebersprungen und gezaehlt. Ein Einsatz traegt kein
+             * eigenes Datum und kann ohne Tag nicht existieren. */
             $altDayId = isset($m['day_id']) ? (int)$m['day_id'] : 0;
             $dayId    = $dayIdMap[$altDayId] ?? 0;
             if ($dayId === 0) {
-                /* ZWEI VERSCHIEDENE GRUENDE, GETRENNT GEZAEHLT (E-S1-08).
+                /* ZWEI VERSCHIEDENE GRUENDE, GETRENNT GEZAEHLT.
                  *
-                 * Bis Web 7.3.1 liefen beide unter `datum_oder_zeit`, und das
-                 * war irrefuehrend: Am Datum dieser Einsaetze ist nichts
+                 * Beide unter `datum_oder_zeit` laufen zu lassen, waere
+                 * irrefuehrend: Am Datum dieser Einsaetze ist nichts
                  * auszusetzen — ihr Diensttag wurde uebersprungen (Papierkorb
                  * im Ziel, unbrauchbares Datum am Tag). Wer die Rueckmeldung
                  * las, suchte den Fehler an der falschen Stelle und fand
@@ -1950,7 +1890,7 @@ function edbak_restore(int $userId, array $data, ?array $dayMap = null,
             }
             $endedAt = pruef_utc_oder_sql($m['ended_at'] ?? null, 'ended_at', $pruef);
 
-            /* LOESCHZUSTAND (E-S1-03/04/19). Aus der Datei kommt das OB, aus
+            /* LOESCHZUSTAND. Aus der Datei kommt das OB, aus
              * diesem Lauf der Zeitpunkt.
              *
              * `deleted_with_day` braucht BEIDE Seiten, und die erste Fassung
@@ -1967,14 +1907,14 @@ function edbak_restore(int $userId, array $data, ?array $dayMap = null,
              *
              * Richtig ist die UND-Verknuepfung: Der Wert aus der Datei sagt,
              * ob der Eintrag am Tag hing; der Zieltag sagt, ob das hier
-             * ueberhaupt gelten kann. E-S1-04 formuliert das als „nur wenn" —
+             * ueberhaupt gelten kann. Das heisst „nur wenn" —
              * eine notwendige, keine hinreichende Bedingung. */
             $mGeloescht = ($m['deleted_at'] ?? null) !== null;
             $zielTagWeg = !empty($zieltagGeloescht[$dayId]);
             $mitTag     = ($mGeloescht && $zielTagWeg
                            && (int)($m['deleted_with_day'] ?? 0) === 1) ? 1 : 0;
 
-            /* AKTIVER EINTRAG AN EINEM GELOESCHTEN ZIELTAG: ABLEHNEN (E-S1-19).
+            /* AKTIVER EINTRAG AN EINEM GELOESCHTEN ZIELTAG: ABLEHNEN.
              *
              * Die Gegenrichtung der Invariante. Landet ein in der Datei
              * AKTIVER Einsatz auf einem Zieltag, der hier im Papierkorb liegt,
@@ -1986,7 +1926,7 @@ function edbak_restore(int $userId, array $data, ?array $dayMap = null,
              * Das ist dieselbe Regel wie D1, nur eine Ebene tiefer: Was hier
              * im Papierkorb liegt, nimmt nichts Neues auf. Die Datumspruefung
              * oben kann den Fall nicht abfangen — sie vergleicht Kalenderdaten,
-             * und die Zuordnung ueber `client_ref` (Schritt 1) kann auf einen
+             * und die Zuordnung ueber `client_ref` kann auf einen
              * Tag ANDEREN Datums fuehren. */
             if (!$mGeloescht && $zielTagWeg) {
                 $stats['missions_skipped']++; $grund['tag_im_papierkorb']++; continue;
@@ -1995,7 +1935,7 @@ function edbak_restore(int $userId, array $data, ?array $dayMap = null,
             $oe = edbak_origin_edited($m);
 
             /* TRANSPORTZIEL UND ORTSHOEHE IN DEN BLOB — nur mit `$blobZiel`
-             * (Demo-Reset, S11-06d). Danach stehen sie nicht mehr in `$m`, und
+             * (Demo-Reset). Danach stehen sie nicht mehr in `$m`, und
              * die Spalten bleiben leer. */
             if ($blobZiel !== null) {
                 $zusatz = [];
@@ -2017,7 +1957,7 @@ function edbak_restore(int $userId, array $data, ?array $dayMap = null,
             }
 
             /* `geraet_art` und `geraet_modell` stehen in der FESTEN Liste und
-             * NICHT in `$extraCols` (E-R64-05). `$extraCols` kommt aus dem
+             * NICHT in `$extraCols`. `$extraCols` kommt aus dem
              * Formular-Feldkatalog (`mission_fields.php`) — die beiden stehen
              * dort nicht und koennten es auch nicht: Sie sind keine
              * Eingabefelder, sondern eine Momentaufnahme des Geraets. Wer sie
@@ -2026,19 +1966,17 @@ function edbak_restore(int $userId, array $data, ?array $dayMap = null,
              *
              * FEHLEN SIE IN DER DATEI (Nutzlast <= 8), wird NULL geschrieben —
              * und das ist richtig: „unbekannt" ist genau die Aussage. */
-            /* HIER WIRD AUS DEM DATEISCHLUESSEL WIEDER DIE SPALTE (Nr. 238).
+            /* HIER WIRD AUS DEM DATEISCHLUESSEL WIEDER DIE SPALTE.
              * Die SCHLUESSEL sind Spaltennamen (`uhr_gesperrt`), die WERTE
              * lesen den Dateischluessel (`$m['manual']`).
              *
-             * BIS WEB 20.30.0 WAREN ES ZWEI LISTEN — Spalten oben, Werte
-             * darunter, positionsgebunden; der Kommentar dort warnte davor.
-             * Wer eine der beiden Listen ergaenzt und die andere nicht,
-             * verschiebt stumm alle Werte dahinter — die Wiederherstellung
-             * schriebe dann die Geraeteart ins Loeschdatum, ohne dass
-             * irgendetwas rot wuerde. Passiert ist das nie; die Warnung war
-             * die einzige Sicherung. Jetzt traegt jeder Wert seinen
-             * Spaltennamen; die REIHENFOLGE kommt aus dem Register
-             * (Schritt 15/AP6, E-ZE-22, Zweck `backup_restore`).
+             * NICHT ZWEI LISTEN — Spalten oben, Werte darunter,
+             * positionsgebunden. Wer eine der beiden Listen ergaenzt und die
+             * andere nicht, verschoebe stumm alle Werte dahinter — die
+             * Wiederherstellung schriebe dann die Geraeteart ins Loeschdatum,
+             * ohne dass irgendetwas rot wuerde. Deshalb traegt jeder Wert
+             * seinen Spaltennamen; die REIHENFOLGE kommt aus dem Register
+             * (Zweck `backup_restore`).
              *
              * DIE SCHREIBREIHENFOLGE HIER BLEIBT DIE ALTE, und das mit
              * Absicht: `pruef_text()`, `pruef_zahl()` und `edbak_geraet_art()`
@@ -2076,7 +2014,7 @@ function edbak_restore(int $userId, array $data, ?array $dayMap = null,
                 if (!array_key_exists($c, $m)) { continue; }
                 if ($c === 'created_at') {
                     /* Unbrauchbarer Wert -> Spalte WEGLASSEN, nicht NULL
-                     * schreiben (E-S1-06). `missions.created_at` traegt eine
+                     * schreiben. `missions.created_at` traegt eine
                      * Datenbank-Vorgabe; ein ausdrueckliches NULL wuerde sie
                      * umgehen und die Zeile ohne Anlegezeitpunkt hinterlassen.
                      * Die Zeile bleibt in jedem Fall — ein Komfortwert darf
@@ -2093,7 +2031,7 @@ function edbak_restore(int $userId, array $data, ?array $dayMap = null,
                     : $m[$c];
                 $cols[] = $c; $vals[] = $wert;
             }
-            /* In Backticks ueber `mf_liste_sql()` (Web 21.1.9, Nr. 239): In
+            /* In Backticks ueber `mf_liste_sql()`: In
              * `$cols` fliessen ueber `$extraCols` Namen, die noch dazukommen. */
             $sql = 'INSERT INTO missions (' . mf_liste_sql($cols) . ') VALUES ('
                  . implode(',', array_fill(0, count($cols), '?')) . ')';
@@ -2105,9 +2043,8 @@ function edbak_restore(int $userId, array $data, ?array $dayMap = null,
             $merke('mission', $werte['client_ref'], $mid);
             $neueEinsaetze[$werte['client_ref']] = true;
 
-            /* Abweichende Besatzung (`mission_crew`, E7). Bis Web 5.10.0 waren
-             * es fuenf Spalten und wanderten ueber $extraCols mit; jetzt sind es
-             * Zeilen. Nur belegte Rollen: `mission_crew` fuehrt Abweichungen,
+            /* Abweichende Besatzung (`mission_crew`): Zeilen, nicht
+             * Spalten. Nur belegte Rollen: `mission_crew` fuehrt Abweichungen,
              * keine Leerzeilen. */
             /* `loeschen => false` ueberall hier: Der Einsatz ist gerade erst
              * angelegt worden, es gibt nichts zu ersetzen. `ignorieren` bei der
@@ -2156,14 +2093,14 @@ function edbak_restore(int $userId, array $data, ?array $dayMap = null,
                 $neueReas[] = ['started_at' => $rStart, 'events' => $ereignisse];
             }
 
-            /* DIE EINSATZHUELLE (S11-06b/c). Orte der Phasen und Reanimation
+            /* DIE EINSATZHUELLE. Orte der Phasen und Reanimation
              * liegen nur darin; die Phasen behalten Nummer und Zeit im
-             * Klartext. Seit Web 23 gibt es fuer beides keine Tabelle mehr.
+             * Klartext. Fuer beides gibt es keine Tabelle.
              *
              * Aus der Datei kommt sie, wenn der Browser sie gebaut hat oder
              * die Sicherung sie unlesbar mitbrachte (`ort_unlesbar`). Im
-             * Demo-Reset baut der Server sie aus dem Klartext der Fixture
-             * (E-S11-20). Im Browserweg kann es Klartext hier nicht geben —
+             * Demo-Reset baut der Server sie aus dem Klartext der Fixture.
+             * Im Browserweg kann es Klartext hier nicht geben —
              * `edbak_klartext_fund()` haette die Nutzlast oben abgewiesen. */
             $huelle = pruef_huelle($m['ort_huelle'] ?? null, GH_EINSATZ_MAX_BYTE,
                                    'ort_huelle', $pruef);
@@ -2182,8 +2119,8 @@ function edbak_restore(int $userId, array $data, ?array $dayMap = null,
                 $pdo->prepare('UPDATE missions SET ort_huelle = ? WHERE id = ? AND user_id = ?')
                     ->execute([$huelle, $mid, $userId]);
             }
-            /* Ohne `lat`/`lon` — `einsatz_phasen_ersetzen()` schreibt seit
-             * Web 23 nur Nummer und Zeit. */
+            /* Ohne `lat`/`lon` — `einsatz_phasen_ersetzen()` schreibt nur
+             * Nummer und Zeit. */
             einsatz_phasen_ersetzen($pdo, $mid, $neuePhasen, ['loeschen' => false]);
             /* ZWEI WEGE, UND DIE FASSUNG ENTSCHEIDET — nicht das Vorhandensein
              * eines `track`-Feldes. Eine Spur ohne Punkte saehe genauso aus
@@ -2206,7 +2143,7 @@ function edbak_restore(int $userId, array $data, ?array $dayMap = null,
 
         /* Ruhesegmente.
          *
-         * SIE ZAEHLEN IHRE GRUENDE JETZT MIT (E-S1-08). Bisher erhoehte sich
+         * SIE ZAEHLEN IHRE GRUENDE JETZT MIT. Bisher erhoehte sich
          * hier nur `rests_skipped`, und in einem Fall auch `datum_oder_zeit` —
          * „bereits vorhanden" fiel unter den Tisch. Bei 95 Ruhesegmenten und
          * einem wiederholten Einspielen ist das die haeufigste Ursache
@@ -2226,7 +2163,7 @@ function edbak_restore(int $userId, array $data, ?array $dayMap = null,
                 $merke('rest', $r['client_ref'] ?? null, (int)$vorhandenRId);
                 $stats['rests_skipped']++; $grund['bereits_vorhanden']++; continue;
             }
-            // Wie beim Einsatz: ohne Diensttag kein Ruhe-Segment (A11), und
+            // Wie beim Einsatz: ohne Diensttag kein Ruhe-Segment, und
             // die beiden Gruende dafuer werden getrennt gezaehlt.
             $altRDayId = isset($r['day_id']) ? (int)$r['day_id'] : 0;
             $rDayId    = $dayIdMap[$altRDayId] ?? 0;
@@ -2235,7 +2172,7 @@ function edbak_restore(int $userId, array $data, ?array $dayMap = null,
                 $grund[$altRDayId > 0 ? 'tag_uebersprungen' : 'datum_oder_zeit']++;
                 continue;
             }
-            /* PRUEFSCHICHT — SIE FEHLTE HIER VOLLSTAENDIG (Backlog Nr. 31).
+            /* PRUEFSCHICHT — SIE FEHLTE HIER VOLLSTAENDIG.
              *
              * `started_at` und `ended_at` gingen roh ins INSERT, `client_ref`
              * ohne Laengengrenze. `rest_segments.started_at` ist
@@ -2257,8 +2194,8 @@ function edbak_restore(int $userId, array $data, ?array $dayMap = null,
             }
             $rEnde = pruef_utc_oder_sql($r['ended_at'] ?? null, 'rest.ended_at', $pruef);
 
-            // Loeschzustand nach denselben Regeln wie beim Einsatz
-            // (E-S1-03/04/19), einschliesslich der UND-Verknuepfung mit dem
+            // Loeschzustand nach denselben Regeln wie beim Einsatz,
+            // einschliesslich der UND-Verknuepfung mit dem
             // Wert aus der Datei und der Ablehnung aktiver Eintraege an einem
             // geloeschten Zieltag.
             $rGeloescht = ($r['deleted_at'] ?? null) !== null;
@@ -2282,9 +2219,9 @@ function edbak_restore(int $userId, array $data, ?array $dayMap = null,
                            $rGeloescht ? $loeschZeit : null, $rMitTag]);
             $rid = (int)$pdo->lastInsertId();
             $merke('rest', $rRef, $rid);
-            /* Die Loeschvermerke (Nutzlast 13, F-S11-52): ein Sperrvermerk ohne
+            /* Die Loeschvermerke (Nutzlast 13): ein Sperrvermerk ohne
              * Ziel an seiner Quelle. Der Zeitpunkt kommt aus der Datei, wie bei
-             * den Schnitten (E-R64-12). */
+             * den Schnitten. */
             foreach (pruef_menge($r['loeschungen'] ?? [], 1000, 'rest.loeschungen', $pruef) as $lv) {
                 $von = is_array($lv) ? pruef_zahl($lv['von_ts'] ?? null, 0, 4294967295,
                                                   'rest.loeschungen.von_ts', $pruef) : null;
@@ -2313,7 +2250,7 @@ function edbak_restore(int $userId, array $data, ?array $dayMap = null,
         }
 
         /* ---- DRITTER DURCHGANG: die Sperrvermerke des Schnitts ------------
-         *      (Backlog Nr. 63, Nutzlast 9, E-R64-07/-12)
+         *      (Nutzlast 9)
          *
          * ER LAEUFT NACH BEIDEN SCHLEIFEN UND IN DERSELBEN TRANSAKTION. Nach
          * beiden, weil ein Vermerk auf ZWEI Datensaetze zeigt — das Ziel
@@ -2387,15 +2324,15 @@ function edbak_restore(int $userId, array $data, ?array $dayMap = null,
 
                 $qRef = $refSchluessel($c['quelle_ref'] ?? null);
                 $quelleId = $qRef !== '' ? ($refKarte[$art][$qRef] ?? 0) : 0;
-                /* NICHT IN DIESER DATEI — DANN IM KONTO (Backlog Nr. 386,
-                 * R17-23). Ein Fenster kennt nur seine eigenen Eintraege; eine
+                /* NICHT IN DIESER DATEI — DANN IM KONTO. Ein Fenster kennt nur
+                 * seine eigenen Eintraege; eine
                  * Quelle aus einem FRUEHEREN Fenster steht schon in der
                  * Datenbank, unter derselben Kennung. */
                 if ($quelleId === 0 && $qRef !== '') {
                     $quelleId = edbak_schnitt_quelle_suchen($pdo, $userId, $art, $qRef);
                 }
                 if ($quelleId === 0 && $qRef !== '' && $offenZurueck) {
-                    /* NOCH NICHT DA — NACHREICHEN, NICHT VERWERFEN (Nr. 386).
+                    /* NOCH NICHT DA — NACHREICHEN, NICHT VERWERFEN.
                      * Die Sicherung schreibt alle Einsaetze vor allen
                      * Ruhesegmenten; ein Vermerk, dessen Quelle ein Segment
                      * ist, kommt deshalb fast immer VOR ihr an. Der Aufrufer
@@ -2446,14 +2383,12 @@ function edbak_restore(int $userId, array $data, ?array $dayMap = null,
         throw $ex;
     }
 
-    /* Einsatzort-Hoehe (M5-05): Bis Web 22.4.0 stand hier eine Schleife, die
-     * sie nach dem Abschluss je Einsatz aus der Klartextspur rechnete. Seit
-     * S11-06 rechnet sie nur noch das direkte Einspielen, beim Verschliessen
-     * der Spur (`$spurSchreiben`); ein Fehlschlag kostet weiterhin nur die
-     * Anzeige und wird gezaehlt. */
+    /* Einsatzort-Hoehe: Die rechnet nur das direkte Einspielen, beim
+     * Verschliessen der Spur (`$spurSchreiben`); ein Fehlschlag kostet nur
+     * die Anzeige und wird gezaehlt. */
 
     if ($mitVerweisen) { $stats['spur_karte'] = $spurKarte; }
-    /* DIE ZUORDNUNG DER DIENSTTAGE GEHT ZURUECK (S2/AP5b), damit die Fenster
+    /* DIE ZUORDNUNG DER DIENSTTAGE GEHT ZURUECK, damit die Fenster
      * der Eintraege wissen, an welchen Tag sie gehoeren. Nur, wenn dieser Lauf
      * Diensttage vor sich hatte — sonst waere es die Zuordnung, die er selbst
      * mitbekommen hat, und die kennt der Aufrufer schon. */
@@ -2464,7 +2399,7 @@ function edbak_restore(int $userId, array $data, ?array $dayMap = null,
 /**
  * Die Werte eines Sperrvermerks aus einer Datei, geprueft — oder null.
  *
- * Herausgezogen mit Nr. 386 (R17-23), weil zwei Stellen sie brauchen: der
+ * Eine eigene Funktion, weil zwei Stellen sie brauchen: der
  * Fensterlauf in `edbak_restore()` und das Nachreichen danach. Zwei Kopien
  * derselben Pruefung wuerden auseinanderlaufen.
  *
@@ -2472,7 +2407,7 @@ function edbak_restore(int $userId, array $data, ?array $dayMap = null,
  * Die Obergrenze ist der 01.01.2100 — reichlich und trotzdem eine Grenze;
  * ein Wert daneben ist kein Zeitpunkt, sondern Unfug.
  *
- * `erstellt_am` REIST MIT (E-R64-12), anders als `deleted_at`. Ein Vermerk
+ * `erstellt_am` REIST MIT, anders als `deleted_at`. Ein Vermerk
  * sagt, WANN geschnitten wurde — ein Ereignis der Vergangenheit. Ist der Wert
  * unbrauchbar, entsteht der Vermerk trotzdem, dann eben mit dem Zeitpunkt des
  * Einspielens: Ein Komfortwert darf keine Sperre kosten.
@@ -2497,7 +2432,7 @@ function edbak_schnitt_werte(array $c, Pruefliste $pruef): ?array
 
 /**
  * Die Kennnummer einer Quelle (Einsatz oder Ruhesegment) im Zielkonto, ueber
- * ihre `client_ref` — 0, wenn es sie nicht gibt (Nr. 386, R17-23).
+ * ihre `client_ref` — 0, wenn es sie nicht gibt.
  *
  * Die Kennung ist je Konto eindeutig und reist mit jeder Sicherung; dieselbe
  * Kennung im selben Konto ist derselbe Eintrag. Der Papierkorb zaehlt mit:
@@ -2522,14 +2457,14 @@ const EDBAK_SCHNITTE_NACHREICHEN_MAX = 1000;
 
 /**
  * Sperrvermerke nachreichen, deren Quelle beim Einspielen ihres Fensters noch
- * nicht da war (Backlog Nr. 386, R17-23).
+ * nicht da war.
  *
  * WARUM ES DAS GIBT. Die Sicherung schreibt alle Einsaetze vor allen
- * Ruhesegmenten (`edbak_build()`), und das Einspielen geht in Fenstern. Bis
- * Web 23.3.1 baute jedes Fenster seine Karte Kennung → Kennnummer neu, und
- * ein Vermerk, dessen Ruhesegment spaeter kam, wurde verworfen — gemessen am
- * Messstand 147 von 147. Der herausgeschnittene Zeitraum war danach im
- * Segment wieder sichtbar.
+ * Ruhesegmenten (`edbak_build()`), und das Einspielen geht in Fenstern. Baute
+ * jedes Fenster seine Karte Kennung → Kennnummer neu, wuerde ein Vermerk,
+ * dessen Ruhesegment spaeter kommt, verworfen — gemessen am Messstand 147
+ * von 147. Der herausgeschnittene Zeitraum waere danach im Segment wieder
+ * sichtbar.
  *
  * WAS SIE NIMMT: die Eintraege, die `edbak_restore(…, offenZurueck: true)` in
  * `schnitte_offen` zurueckgab — der Vermerk aus der Datei, dazu `ziel_ref`.
@@ -2597,21 +2532,18 @@ function edbak_schnitte_nachreichen(int $userId, array $offen): array
 }
 
 /**
- * Die Spuren einer Sicherung in ein Konto schreiben (S2/AP6, seit S11-06
- * verschlossen).
+ * Die Spuren einer Sicherung in ein Konto schreiben (verschlossen).
  *
- * WOFUER ES DIESE FUNKTION GIBT. Bis Web 11.2.0 stand dieser Ablauf nur in
- * `api/backup_spuren_restore.php`. Das Admin-Backup braucht ihn seit dem
- * Umbau auf das mehrteilige Rohpaket ebenfalls — und ein zweiter Weg waere
+ * WOFUER ES DIESE FUNKTION GIBT. `api/backup_spuren_restore.php` und das
+ * Admin-Backup mit seinem mehrteiligen Rohpaket brauchen denselben Ablauf — und
+ * ein zweiter Weg waere
  * ein zweiter Ort, an dem die drei Dinge unten zu vergessen sind. Der
- * Endpunkt ist seitdem eine duenne Schale um diese Funktion.
+ * Endpunkt ist eine duenne Schale um diese Funktion.
  *
  * EINE FORM JE EINTRAG: `stuecke`, verschlossene Stuecke, wie sie der
  * Browser baut (`EdOrtsdaten.stueckeBauen()`) oder wie sie in einer
- * Kontosicherung liegen. Bis Web 22.7.0 nahm der direkte Weg der Verwaltung
- * daneben `blob` an — SPUR1 im Klartext, das der Server verschloss
- * (E-S11-57). Alte Pakete gibt es nicht mehr (E-S11-84); ein `blob` wird
- * seit Web 23 abgelehnt.
+ * Kontosicherung liegen. Ein `blob` (SPUR1 im Klartext) wird
+ * abgelehnt.
  *
  * DREI DINGE, DIE HIER PASSIEREN MUESSEN:
  *
@@ -2628,7 +2560,7 @@ function edbak_schnitte_nachreichen(int $userId, array $offen): array
  *    fortsetzen lassen, ohne doppelt zu schreiben. Ein Stueck, dessen `seq_from` schon liegt,
  *    laesst `spur2_stueck_schreiben()` aus. Ein Stueck, das NICHT schon liegt,
  *    wird geschrieben, auch wenn andere derselben Spur schon da sind: Der
- *    Browser teilt eine lange Spur auf mehrere Anfragen (S11-06b).
+ *    Browser teilt eine lange Spur auf mehrere Anfragen.
  *
  * Rumpf je Eintrag: {owner_type, owner_id, stuecke: [{seq_from, punkte,
  * ts_von, ts_bis, huelle, n_original?, stufe?}], stufe?, fortsetzung?}.
@@ -2636,7 +2568,7 @@ function edbak_schnitte_nachreichen(int $userId, array $offen): array
  */
 function edbak_spuren_schreiben(PDO $pdo, int $userId, array $liste): array
 {
-    /* Eigentum in EINER Abfrage je Art, nicht je Spur (M5-12). */
+    /* Eigentum in EINER Abfrage je Art, nicht je Spur. */
     $wunsch = ['mission' => [], 'rest' => []];
     foreach ($liste as $s) {
         $art = (string)($s['owner_type'] ?? '');
@@ -2672,11 +2604,11 @@ function edbak_spuren_schreiben(PDO $pdo, int $userId, array $liste): array
         }
         $stuecke = [];
         if (isset($s['stuecke']) && is_array($s['stuecke'])) {
-            /* DIE STUFE JE STUECK (S11-07, E-S11-71). Ein gepacktes Stueck
+            /* DIE STUFE JE STUECK. Ein gepacktes Stueck
              * (Stufe 2, 3) traegt seine Stufe selbst und laeuft durch
              * `pruef_spurstueck_gepackt()`; daneben koennen Geraetestuecke
              * liegen, die nach dem Zusammenfuegen ankamen. Ohne Stufe am Stueck
-             * (Pakete aus Web 22.5) zaehlt es als Stufe 1 — eine Stufe 3 in
+             * (aeltere Pakete) zaehlt es als Stufe 1 — eine Stufe 3 in
              * Zeilenform gab es nur dort, und ausgeliefert wurde sie nie. */
             $kaputt = false;
             foreach ($s['stuecke'] as $t) {

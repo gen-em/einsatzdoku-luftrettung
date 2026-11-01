@@ -9,7 +9,7 @@ Anlass: Nr. 188 — kein Prüfmittel misst Verweise zwischen Dokumenten
 Rückgabewert 0 = kein Befund · 1 = Befund (auch eine ungenutzte Ausnahme)
 · 2 = gemessen wurde nichts (kein Dokument gefunden).
 
-WOFÜR (R17-27, F-R17-59). Die Dokumentation war überall dort richtig, wo ein
+WOFÜR. Die Dokumentation war überall dort richtig, wo ein
 Werkzeug sie hielt, und dort falsch, wo niemand zählte: Pfade auf Dateien,
 die es nicht mehr gab, Zahlen neben Verzeichnissen, die längst andere waren,
 Kopfzeilen „Stand: 06.09.2026" über Dokumenten, die seither hundertmal
@@ -31,10 +31,19 @@ Reihenfolge standen. Vier Regeln, je eine für diese Klassen:
    nennt, steht mit Klasse und Grund in der Ausnahmeliste — gegen den Satz,
    nicht gegen die Zeile.
 3. `stand` — keine Kopfzeile „Stand: …" in den ersten acht Zeilen. Den Stand
-   eines Dokuments kennt Git (Entscheidung der Betreiberin, R17-27).
+   eines Dokuments kennt Git (Entscheidung der Betreiberin).
 4. `gliederung` — in `docs/Technik.md` sind die Kapitel `## N.` und die
    Abschnitte `### N.M` fortlaufend, ohne Lücke und ohne Doppel, und jede
    Überschrift dieser Ebenen trägt eine Nummer.
+5. `abschnitt` — im CODE (`server/`, `tools/`, `android/`, `watch/`,
+   `.github/`, ohne die Markdown-Dateien dort): Ein Verweis der Form
+   „`Technik.md` 4.14", „docs/Pruefablauf.md 6.4" oder „CLAUDE.md,
+   Abschnitt 4" nennt ein Dokument, das es gibt, und eine Nummer, die dort
+   als Überschrift steht. Das ist der Wegweiser, der nach einer neuen
+   Gliederung still auf den falschen Abschnitt zeigt. Ausgenommen sind die
+   zwei Fassungsgeschichten (`server/version.php`,
+   `android/version.properties`): Sie erzählen, was zur jeweiligen Fassung
+   galt, und nennen die Nummern von damals.
 
 WELCHE DOKUMENTE. `README.md`, `CLAUDE.md`, `docs/*.md` und jede
 `LIESMICH.md` im Baum — ohne die eingefrorenen (Changelog, Archive,
@@ -42,8 +51,9 @@ Verlauf, erledigte Backlog-Einträge, die Konkordanz der alten Gliederung)
 und ohne `docs/konzepte/`: Konzepte und Prüfdokumente sind Arbeitsprotokolle
 ihres Schritts und beschreiben den Stand, an dem sie geschrieben wurden.
 
-WAS SIE NICHT SIEHT. Verweise im Code (Kommentare in `server/`, `tools/`,
-`android/`, `watch/`) — Nr. 188 nennt sie, sie kommen mit Nr. 408 dazu.
+WAS SIE NICHT SIEHT. Im Code nur die Abschnittsverweise (Regel 5) — einen
+Pfad oder eine Zahl in einem Code-Kommentar liest sie nicht. Einen
+Verweis auf eine Zeilennummer („db.php 912") auch nicht.
 Ob ein Verweis auf die RICHTIGE Datei zeigt: Sie prüft, dass es das Ziel
 gibt. Und ob ein Satz stimmt, der keinen Pfad und keine Zahl trägt.
 """
@@ -58,6 +68,14 @@ HIER = os.path.dirname(os.path.abspath(__file__))
 WURZEL = os.path.dirname(os.path.dirname(HIER))
 AUSNAHMEN = 'tools/quelltext/dokumente-ausnahmen.md'
 TECHNIK = 'docs/Technik.md'
+CODE = ('server/', 'tools/', 'android/', 'watch/', '.github/')
+FASSUNGSGESCHICHTE = {'server/version.php', 'android/version.properties'}
+# „`Technik.md` 4.14", „docs/Pruefablauf.md 6.4", „CLAUDE.md, Abschnitt 4" —
+# „Abschnitt"/„Kapitel" auch nach einem Zeilenumbruch im Kommentar
+ABSCHNITT_RE = re.compile(r'(?<![\w/.-])((?:[\w.-]+/)*([A-Z][\w-]*\.md))`?'
+                          r'(?:`?,?\s+(?:(?:\*|//|#|--)\s+)?(?:Abschnitt|Kapitel) |`?,? )'
+                          r'(\d+(?:\.\d+)*[a-z]?)\b')
+UEBERSCHRIFT_RE = re.compile(r'^#+ (?:Abschnitt |Kapitel )?(\d+(?:\.\d+)*[a-z]?)\.?\s')
 EINGEFROREN = {
     'docs/CHANGELOG.md', 'docs/Rahmenplan-Archiv.md', 'docs/Rahmenplan-Archiv-2.md',
     'docs/Backlog-Erledigt.md', 'docs/Rahmenplan-Verlauf.md',
@@ -183,6 +201,26 @@ def ordner_aufloesen(o, doc, ordner):
     return t[0] if len(t) == 1 else None
 
 
+def nummern(wurzel, doc, vorrat={}):
+    """Die Nummern der Überschriften eines Dokuments, außerhalb von Codezäunen."""
+    schluessel = (wurzel, doc)
+    if schluessel not in vorrat:
+        s, zaun = set(), False
+        for zl in open(os.path.join(wurzel, doc), encoding='utf-8'):
+            if zl.startswith('```'):
+                zaun = not zaun
+            m = None if zaun else UEBERSCHRIFT_RE.match(zl)
+            if m:
+                s.add(m.group(1))
+        vorrat[schluessel] = s
+    return vorrat[schluessel]
+
+
+def code_dateien(dateien):
+    return sorted(f for f in dateien if f.startswith(CODE) and not f.endswith('.md')
+                  and f not in FASSUNGSGESCHICHTE)
+
+
 def ausnahme(regeln, text, genutzt):
     for r in regeln:
         if r[0].match(text):
@@ -260,6 +298,31 @@ def messen(wurzel):
                         and not ausnahme(regeln, m.group(0), genutzt)):
                     befunde.append(('zahl', f'{d}:{nr}', f'„{m.group(1)}" vor `{o}/` — ls zählt dort '
                                     + '/'.join(str(x) for x in sorted(zahlen_im_ordner(o, dateien, ordner)))))
+    # 5. abschnitt — Verweise aus dem Code
+    md = {}
+    for f in dateien:
+        if f.endswith('.md'):
+            md.setdefault(f.rsplit('/', 1)[-1], []).append(f)
+    for c in code_dateien(dateien):
+        try:
+            text = open(os.path.join(wurzel, c), encoding='utf-8').read()
+        except (UnicodeDecodeError, OSError):
+            continue
+        z['code_dateien'] += 1
+        for m in ABSCHNITT_RE.finditer(text):
+            z['abschnitte'] += 1
+            kand = md.get(m.group(2), [])
+            if m.group(1) != m.group(2):
+                kand = [k for k in kand if k.endswith(m.group(1))]
+            if any(m.group(3) in nummern(wurzel, k) for k in kand):
+                continue
+            if ausnahme(regeln, m.group(0), genutzt):
+                z['abschnitte_ausnahme'] += 1
+                continue
+            nr = text.count('\n', 0, m.start()) + 1
+            befunde.append(('abschnitt', f'{c}:{nr}', f'„{m.group(0)}" — '
+                            + ('das Dokument gibt es nicht' if not kand
+                               else f'keine Überschrift {m.group(3)} in {", ".join(kand)}')))
     # 4. gliederung von Technik.md
     if TECHNIK in docs:
         kap, ab, zaun = 0, 0, False
@@ -306,7 +369,8 @@ def lauf(wurzel):
     print(f"{z['dokumente']} Dokumente · {z['pfade']} Pfadverweise, davon {z['pfade_ausnahme']} "
           f"über {z['ausnahmen']} Ausnahmen · {z['zahlen']} Zahlen an Verzeichnissen "
           f"({z['zahlen_unaufgeloest']} nicht auflösbar) · {z['ueberschriften']} Überschriften "
-          f"in {TECHNIK} · {len(befunde)} Befunde")
+          f"in {TECHNIK} · {z['abschnitte']} Abschnittsverweise in {z['code_dateien']} Code-Dateien, "
+          f"davon {z['abschnitte_ausnahme']} über Ausnahmen · {len(befunde)} Befunde")
     if z['dokumente'] == 0:
         print('Kein Dokument gefunden — gemessen wurde nichts.')
         return 2
@@ -319,7 +383,9 @@ def selbstprobe():
         'README.md': '# R\n\nSiehe `docs/Technik.md`, `api/day.php` und [x](docs/Technik.md).\n',
         'docs/Technik.md': '# T\n\n## 1. A\n\n### 1.1 B\n\n## 2. C\n\n### 2.1 D\n\n### 2.2 E\n'
                            'Drei Dateien unter `server/sym/`.\n\n```\n├── server/\n│   ├── sym/   drei Zeichen\n```\n',
-        'server/api/day.php': '<?php\n', 'server/sym/a.svg': '', 'server/sym/b.svg': '', 'server/sym/c.svg': '',
+        # Der Verweis ist zerteilt, damit der echte Lauf ihn in dieser Datei nicht liest.
+        'server/api/day.php': '<?php\n// Siehe `docs/Technik' + '.md` 2.2 und Technik' + '.md, Abschnitt 1.\n',
+        'server/version.php': '<?php\n// Damals Technik' + '.md 9.9.\n', 'server/sym/a.svg': '', 'server/sym/b.svg': '', 'server/sym/c.svg': '',
         AUSNAHMEN: '| Muster | Klasse | Grund |\n|---|---|---|\n',
     }
     def mit(aend):
@@ -337,6 +403,15 @@ def selbstprobe():
         ('eine Kopfzeile „Stand:"', mit({'README.md': '# R\n\n*Stand: 06.09.2026*\n'}), 1),
         ('ein Abschnitt doppelt', mit({TECHNIK: '## 1. A\n\n### 1.1 B\n\n### 1.1 C\n'}), 1),
         ('ein Abschnitt ohne Nummer', mit({TECHNIK: '## 1. A\n\n### B\n'}), 1),
+        ('ein Code-Verweis auf einen Abschnitt, den es nicht gibt',
+         mit({'tools/x.py': '# Siehe Technik' + '.md 3.1\n'}), 1),
+        ('derselbe über einen Zeilenumbruch („Technik.md,\n# Abschnitt 7")',
+         mit({'tools/x.py': '# Siehe Technik' + '.md,\n# Abschnitt 7\n'}), 1),
+        ('ein Code-Verweis auf ein Dokument, das es nicht gibt',
+         mit({'tools/x.py': '# Siehe SPEC' + '.md 2.1\n'}), 1),
+        ('derselbe Code-Verweis mit Ausnahme',
+         mit({'tools/x.py': '# Siehe SPEC' + '.md 2.1\n',
+              AUSNAHMEN: '| `SPEC\\.md 2\\.1` | Fremd | liegt beim Auftraggeber |\n'}), 0),
         ('nichts da — gemessen wurde nichts', {AUSNAHMEN: ''}, 2),
     ]
     fehl = 0

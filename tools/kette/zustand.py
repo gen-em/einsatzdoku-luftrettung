@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Zustandsdatei der Auslieferungsaktion prüfen und anlegen (AP4, F-KH-U-25).
+"""Zustandsdatei der Auslieferungsaktion prüfen und anlegen.
 
 WARUM ES DAS GIBT. Die Auslieferungsaktion holt vor jeder Übertragung ihre
 Zustandsdatei vom Server (`getServerFiles` → `downloadFileList`). Fehlt sie,
@@ -137,7 +137,7 @@ def vorhanden(server: str, zielpfad: str, zustandspfad: str,
     nicht bloss ein Fehlalarm gewesen: Das Werkzeug haette auf dem
     Produktivserver **immer** „fehlt" gemeldet, auch wenn die Datei liegt --
     und sie dann ueberschrieben. Genau der Schaden, vor dem Vorsicht 1
-    schuetzen soll. Gefunden hat es die Nachmessung, im Lauf 35544269232.
+    schuetzen soll. Gefunden hat es die Nachmessung.
 
     `None` heisst: nicht feststellbar. Dann wird NICHT angelegt, denn eine
     vorhandene Datei zu ueberschreiben waere schlimmer als gar nichts zu tun.
@@ -297,7 +297,7 @@ def selbstprobe() -> int:
     pruefe(l.uploads == 0, "…und sie wird NICHT überschrieben", f"{l.uploads} Upload(s)")
     pruefe("nichts angefasst" in p.getvalue(), "…und das wird gesagt")
 
-    # DIE LAGE, DIE AM 20.09.2026 GEFEHLT HAT (Lauf 35544269232).
+    # DIE LAGE, DIE AM 20.09.2026 GEFEHLT HAT.
     # Die erste Fassung fragte per `--list-only`, also `NLST` -- und `NLST`
     # zeigt PUNKTDATEIEN NICHT. Die Zustandsdatei faengt mit einem Punkt an.
     # Das Werkzeug haette auf dem Produktivserver IMMER „fehlt" gemeldet,
@@ -327,7 +327,7 @@ def selbstprobe() -> int:
            f"{l2.heads} Abfragen")
 
     # DIE GEGENPROBE ZUR NACHMESSUNG: Der Upload meldet 0, die Datei liegt
-    # aber nicht. Genau das ist im Lauf 35544269232 passiert (aus dem
+    # aber nicht. Genau das ist am 20.09.2026 passiert (aus dem
     # falschen Grund) -- und die Nachmessung hat es gemeldet, statt
     # „angelegt" zu behaupten.
     class LaufStiller(Lauf):

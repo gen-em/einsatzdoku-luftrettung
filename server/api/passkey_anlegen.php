@@ -7,8 +7,7 @@ require_once __DIR__ . '/../passkey_lib.php';
 require_once __DIR__ . '/../demo_lib.php';
 
 /**
- * api/passkey_anlegen.php — einen Passkey ablegen (Schritt 18, SR-09;
- * E-SR-29 bis -31, -33).
+ * api/passkey_anlegen.php — einen Passkey ablegen.
  *
  * Der Browser hat mit `navigator.credentials.create()` einen Passkey erzeugt
  * (`assets/passkey.js`) und schickt als JSON:
@@ -17,26 +16,26 @@ require_once __DIR__ . '/../demo_lib.php';
  *   bezeichnung   optional, hoechstens 40 Zeichen
  *
  * VIER TORE, IN DIESER REIHENFOLGE. Der FRISCHE CODE vor dem Token, wie ein
- * Rollentor (E-SR-20, -31): Wer eine fremde Sitzung erbeutet hat, soll sich
+ * Rollentor: Wer eine fremde Sitzung erbeutet hat, soll sich
  * damit keinen dauerhaften zweiten Faktor anlegen — 403 JSON
  * `zweitfaktor_frisch`. Dann das Token. Dann der Zweitfaktor: Ein Passkey ist
- * ein Verfahren DIESES Faktors und setzt ihn voraus (E-SR-29, -35). Dann die
- * Anlage: Tabelle da und eine Adresse, fuer die es Passkeys gibt (E-SR-42).
+ * ein Verfahren DIESES Faktors und setzt ihn voraus. Dann die
+ * Anlage: Tabelle da und eine Adresse, fuer die es Passkeys gibt.
  *
  * DIE HERAUSFORDERUNG GILT EINMAL. Sie liegt in `$_SESSION['passkey_reg']`
  * (gestellt beim Aufbau der Karte, zehn Minuten) und wird weggenommen, sobald
  * die Pruefung beginnt, gleich welcher Ausgang — eine zweite Einsendung
- * findet keine. RUMPF UND BEZEICHNUNG WERDEN DAVOR GEPRUEFT (H-SR-08,
- * F-SR-39): Ein 400 wegen einer zu langen Bezeichnung verbrauchte sonst die
+ * findet keine. RUMPF UND BEZEICHNUNG WERDEN DAVOR GEPRUEFT: Ein 400 wegen
+ * einer zu langen Bezeichnung verbrauchte sonst die
  * Herausforderung, nachdem der Browser den Passkey schon erzeugt hatte.
  *
  * NACH AUSSEN HEISST JEDE ABLEHNUNG DER PRUEFUNG „NICHT ANGENOMMEN"
- * (E-SR-45) — auch „diese Kennung gibt es schon". Mit Attestation `none` ist
+ * — auch „diese Kennung gibt es schon". Mit Attestation `none` ist
  * die Kennung frei waehlbar; die eigene Antwort darauf haette verraten, ob
  * eine Kennung irgendwo auf der Anlage liegt. Der Grund steht im Protokoll
  * (`passkey_abgewiesen`), wo die Verwaltung ihn sieht.
  *
- * PROTOKOLL UND MAIL beim Anlegen (E-SR-33): `passkey_angelegt` und eine
+ * PROTOKOLL UND MAIL beim Anlegen: `passkey_angelegt` und eine
  * Nachricht an die Kontoadresse. Ein neuer zweiter Faktor an einem erbeuteten
  * Konto bliebe sonst still.
  */
@@ -58,8 +57,8 @@ if (!pk_verfuegbar()) {
                          . 'HTTPS und Domainnamen, und update.php muss gelaufen sein.'], 409);
 }
 
-/* DECKEL UND TYPEN ZUERST (H-SR-08, F-SR-35): hoechstens PK_ANTWORT_MAX, und
- * die Bezeichnung ist Text — eine Liste wurde bis Web 21.10.0 zu „Array". */
+/* DECKEL UND TYPEN ZUERST: hoechstens PK_ANTWORT_MAX, und die Bezeichnung
+ * ist Text — eine Liste wuerde sonst zu „Array". */
 $b = api_rumpf(['max_bytes' => PK_ANTWORT_MAX]);
 $antwort = is_array($b['antwort'] ?? null) ? $b['antwort'] : [];
 $bezeichnungRoh = $b['bezeichnung'] ?? '';
@@ -85,10 +84,10 @@ $abweisen = static function (string $grund) use ($userId): never {
 $reg = pk_registrierung_pruefen($ablage, $antwort);
 if (!$reg['ok'] && $reg['art'] === 'herausforderung') {
     /* KEINE, ABGELAUFENE ODER VERDRAENGTE HERAUSFORDERUNG: nichts geprueft,
-     * also keine Zeile „abgewiesen" (Nachpruefung von H-SR-08, E-1) — sonst
+     * also keine Zeile „abgewiesen" — sonst
      * schriebe jeder POST eine, und ein zweiter Reiter saehe in der
-     * Verwaltung aus wie ein Angriff. Dieselbe Regel wie beim Fehlversuch
-     * (E-SR-50). Verraten wird dabei nichts: Die Kennung ist noch nicht
+     * Verwaltung aus wie ein Angriff. Dieselbe Regel wie beim Fehlversuch.
+     * Verraten wird dabei nichts: Die Kennung ist noch nicht
      * gelesen. */
     json_out(['error' => 'abgelaufen',
               'meldung' => 'Die Anfrage ist abgelaufen. Bitte die Seite neu laden und noch einmal versuchen.'], 400);

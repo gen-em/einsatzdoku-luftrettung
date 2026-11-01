@@ -8,7 +8,7 @@ require_once __DIR__ . '/../ratelimit_lib.php';
 
 /**
  * api/schluessel_erneuern.php — einen neuen Wiederherstellungsschluessel
- * setzen (P5b/AP9, E-P5b-20).
+ * setzen.
  *
  * ===========================================================================
  * WAS HIER GESCHIEHT — UND VOR ALLEM, WAS NICHT
@@ -77,7 +77,7 @@ if (!$u) {
 }
 
 $email = (string)$u['email'];
-/* Topf und Vergleich in einer Funktion (R17-20, F-R17-32, E-R17-49). */
+/* Topf und Vergleich in einer Funktion. */
 passwort_nachweis_json($userId, (string)($_POST['token'] ?? ''), 'passwort', 'text');
 
 /* ---- Die neue Huelle ---------------------------------------------------- */
@@ -87,7 +87,7 @@ $wrapRc = (string)($_POST['wrap_rc'] ?? '');
 /* `huelle_rc_pruefen()` UND NICHT NUR EIN FORMATTEST. Sie weist eine
  * `edka1:`-Huelle ab — also eine, die am Server-Anteil haengt. Genau die
  * waere hier der Verlust des Rueckwegs: `pat_wrap_rc` oeffnet ohne Anteil,
- * und deshalb ist dessen Verlust kein Datenverlust (E-S10-04). Eine Huelle,
+ * und deshalb ist dessen Verlust kein Datenverlust. Eine Huelle,
  * die das aufgibt, sieht man dem Feld nicht an — bis es zu spaet ist. */
 $grund = huelle_rc_pruefen($wrapRc);
 if ($grund !== null) {
@@ -114,9 +114,7 @@ db()->prepare('UPDATE users SET pat_wrap_rc = ? WHERE id = ?')
  * REITER `verwaltung`, NICHT `sicherheit`. Den zweiten gibt es nicht:
  * `PROTOKOLL_REITER` kennt verwaltung, email, jobs, sicherung, ziele und
  * system. Ein unbekannter Reiter landet stillschweigend unter `system` und
- * schreibt eine Zeile ins Fehlerprotokoll — ich hatte hier zuerst
- * `sicherheit` stehen, weil E-P5b-06 einen Reiter dieses Namens ANKUENDIGT.
- * Er kommt mit 10c; bis dahin ist er keiner.
+ * schreibt eine Zeile ins Fehlerprotokoll.
  *
  * Und er waere hier auch der falsche: Der Reiter Sicherheit sammelt Sperren
  * und Angriffe (`sicherheit_ereignisse`, `rate_ereignis()`). Dies hier ist
@@ -125,9 +123,9 @@ db()->prepare('UPDATE users SET pat_wrap_rc = ? WHERE id = ?')
 require_once __DIR__ . '/../protokoll_lib.php';
 protokoll('verwaltung', 'schluessel_erneuert',
           'Wiederherstellungsschlüssel erneuert', [], $userId);
-/* UND EINE MAIL (R17-20, F-R17-10): Das Protokoll sieht die Rolle user
+/* UND EINE MAIL: Das Protokoll sieht die Rolle user
  * nicht. Wer Passwort und Sitzung erbeutet hat, ersetzte hier still den
- * Rueckweg des Kontos — jetzt erfaehrt es die Person im Postfach. */
+ * Rueckweg des Kontos — so erfaehrt es die Person im Postfach. */
 require_once __DIR__ . '/../mail_lib.php';
 mail_einreihen('schluessel_erneuert', $email, ['link' => app_url('/einstellungen.php?t=profil')]);
 

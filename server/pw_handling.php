@@ -3,15 +3,15 @@ declare(strict_types=1);
 require_once __DIR__ . '/db.php';
 require_once __DIR__ . '/instanz_lib.php';
 /* Fuer logo_src(): Die Seite hat keine Sitzung und zeigt den Standard der
- * Installation (E-P3-20). Ohne session_lib.php faende logo_src() logo_stamm()
- * nicht und fiele auf den Hubschrauber zurueck — F-P3-AN. */
+ * Installation. Ohne session_lib.php faende logo_src() logo_stamm()
+ * nicht und fiele auf den Hubschrauber zurueck. */
 require_once __DIR__ . '/session_lib.php';
 require_once __DIR__ . '/validate_lib.php';   // WRAP_RE, Formatkennung
-/* Der Server-Anteil dieses Kontos (S10) — diese Seite laeuft OHNE
+/* Der Server-Anteil dieses Kontos — diese Seite laeuft OHNE
  * auth_guard.php und muss die beiden Bibliotheken deshalb selbst holen. */
 require_once __DIR__ . '/serverkrypto_lib.php';
 require_once __DIR__ . '/demo_lib.php';
-require_once __DIR__ . '/totp_lib.php';      // zweitfaktor_geraete_vergessen() (SR-02)
+require_once __DIR__ . '/totp_lib.php';      // zweitfaktor_geraete_vergessen()
 
 /**
  * Passwort setzen — die einzige Stelle, an der ein Passwort ueber einen
@@ -37,13 +37,13 @@ require_once __DIR__ . '/totp_lib.php';      // zweitfaktor_geraete_vergessen() 
  * sich zwar anmelden laesst, dessen Daten aber unlesbar waeren.
  */
 
-/* WRAP_RE steht seit Web 5.1.0 in validate_lib.php — eine Fassung fuer die
- * drei Stellen, die eine Schluesselhuelle pruefen (M2-10). */
+/* WRAP_RE steht in validate_lib.php — eine Fassung fuer die
+ * drei Stellen, die eine Schluesselhuelle pruefen. */
 
-/* ---- Der Token gehoert nicht in die Adresszeile (M1-06) --------------------
+/* ---- Der Token gehoert nicht in die Adresszeile -----------------------------
  *
- * WAS DARAN FALSCH WAR
- * Der Token stand als Parameter in der Adresse. Damit landete er im Verlauf
+ * WAS DARAN FALSCH IST
+ * Steht der Token als Parameter in der Adresse, landet er im Verlauf
  * des Browsers, im Zugriffsprotokoll des Webservers, in jedem Screenshot der
  * Seite — und ueber die Herkunftsadresse potenziell bei jeder Gegenstelle, die
  * von dieser Seite aus angefragt wird. Wer ihn hat, kann das Passwort setzen.
@@ -68,11 +68,9 @@ require_once __DIR__ . '/totp_lib.php';      // zweitfaktor_geraete_vergessen() 
  * Zwei Namen, zwei Sitzungen, keine Wechselwirkung.
  */
 
-/* `PW_SESSION_NAME` UND `pw_session_start()` SIND MIT WEB 20.27.0 ENTFALLEN
- * (Schritt 15 AP2, E-ZE-12). Der Name steht jetzt in `sitzung_lib.php`,
- * neben der Tabelle der vier Arten, die ihn braucht; der Start heisst
- * `sitzung_starten('passwort')`. Die Art traegt dieselben Parameter wie
- * vorher — `secure` fest, `Lax`, eigener Sitzungsname — und dieselbe
+/* DER SITZUNGSNAME steht in `sitzung_lib.php`, neben der Tabelle der vier
+ * Arten, die ihn braucht; der Start heisst `sitzung_starten('passwort')`.
+ * Die Art traegt `secure` fest, `Lax`, eigenen Sitzungsnamen — und die
  * Haertung: Diese Sitzung traegt das Passwort-Token, eine untergeschobene
  * Kennung waere hier die teuerste von allen. */
 
@@ -104,11 +102,11 @@ $keinCookie = ($token === '' && $getauscht);
 
 $row = null;
 if (preg_match('/^[a-f0-9]{64}$/', $token)) {
-    /* `u.email` seit Web 20.10.0 (P5a/AP6): Wer sein Passwort setzt, hat
+    /* `u.email`: Wer sein Passwort setzt, hat
      * nachgewiesen, dass ihm das Postfach gehoert — und soll danach nicht an
      * einer Anmeldesperre haengenbleiben. Die Adresse ist das Merkmal, unter
      * dem der Ratenschutz zaehlt. */
-    /* `u.status` seit P5b/AP3: Ein Konto im Zustand `unbestaetigt` stammt
+    /* `u.status`: Ein Konto im Zustand `unbestaetigt` stammt
      * aus der Selbstregistrierung — nur sie legt diesen Zustand an. Wer
      * hier sein Passwort setzt, bestaetigt damit zugleich die Adresse. */
     $st = db()->prepare('SELECT r.id, r.user_id, u.email, u.pat_key_check, u.pat_wrap_rc,
@@ -125,7 +123,7 @@ if (preg_match('/^[a-f0-9]{64}$/', $token)) {
 $erstvergabe = $row !== null && $row['pat_wrap_rc'] === null;
 
 /* Die Kontonummer des Tokens — gebraucht fuer die Huellenpruefung unten und
- * fuer die Konstanten der Seite. Das Demo-Konto ist ausgenommen (E-P1-19). */
+ * fuer die Konstanten der Seite. Das Demo-Konto ist ausgenommen. */
 $pwUserIdPruef = $row !== null ? (int)$row['user_id'] : 0;
 
 $error = null; $done = false;
@@ -142,7 +140,7 @@ if ($row && $_SERVER['REQUEST_METHOD'] === 'POST') {
         // Kommt nur vor, wenn JavaScript fehlt oder abbricht.
         $error = 'Speichern unvollständig — bitte JavaScript aktivieren und erneut versuchen.';
     } elseif ($neuIter !== KDF_ITER_ZIEL) {
-        // Nur der Zielwert (M2-01): Diese Seite baut die Ableitung immer neu
+        // Nur der Zielwert: Diese Seite baut die Ableitung immer neu
         // auf und hat keinen Grund, auf einem Altwert zu landen.
         $error = 'Die Rundenzahl der Schlüsselableitung ist unbrauchbar. '
                . 'Es wurde nichts geändert.';
@@ -154,7 +152,7 @@ if ($row && $_SERVER['REQUEST_METHOD'] === 'POST') {
         $error = 'Die Schlüssel konnten nicht erzeugt werden. Es wurde nichts geändert.';
     } elseif (($huellenFehler = huelle_pw_pruefen($wrapPw, demo_ist_demo($pwUserIdPruef)))
               !== null) {
-        /* SEIT S10 (E-S10-08, Fund F-3): Die neue Huelle muss zum AKTUELLEN
+        /* DIE NEUE HUELLE muss zum AKTUELLEN
          * Server-Anteil gehoeren — oder zu keinem, wenn keiner ausgeliefert
          * wird. Ohne diese Zeile koennte ein Reset waehrend einer Rotation
          * eine Huelle auf dem ALTEN Anteil schreiben; unbrauchbar wuerde sie
@@ -179,7 +177,7 @@ if ($row && $_SERVER['REQUEST_METHOD'] === 'POST') {
                . 'Es wurde nichts geändert.';
     } else {
         try {
-            /* MIT PFEFFER (R17-20): `anmeldehash_bilden()` haengt den Hash an
+            /* MIT PFEFFER: `anmeldehash_bilden()` haengt den Hash an
              * den aktuellen Anteil, wenn einer ausgeliefert wird — dieselbe
              * Regel wie fuer die Huelle eine Zeile darueber. */
             $istDemoKonto = demo_ist_demo((int)$row['user_id']);
@@ -212,22 +210,22 @@ if ($row && $_SERVER['REQUEST_METHOD'] === 'POST') {
                                (int)$row['user_id']]);
             }
             /* ALLE offenen Tokens dieses Kontos entwerten, nicht nur den
-             * benutzten (M1-09). reset_request.php laesst seit Web 4.4.0 zwar
-             * nur noch einen gueltigen zu — aber der Einladungslink aus der
+             * benutzten. reset_request.php laesst zwar
+             * nur einen gueltigen zu — aber der Einladungslink aus der
              * Nutzerverwaltung ist 24 Stunden gueltig und entsteht auf einem
              * anderen Weg. Wer sein Passwort setzt, soll danach keinen
              * fremden Weg mehr offen haben. */
             $pdo->prepare('UPDATE password_resets SET used_at = NOW()
                            WHERE user_id = ? AND used_at IS NULL')
                 ->execute([(int)$row['user_id']]);
-            /* Sitzungszaehler erhoehen (M1-09/D6): beendet jede offene Sitzung
+            /* Sitzungszaehler erhoehen: beendet jede offene Sitzung
              * dieses Kontos. Hier ist keine davon die eigene — wer diese Seite
              * benutzt, ist nicht angemeldet. Genau der Fall, um dessentwillen
              * der Zaehler existiert: Passwort zuruecksetzen, weil jemand
              * anders drin ist. */
             $pdo->prepare('UPDATE users SET session_epoch = session_epoch + 1 WHERE id = ?')
                 ->execute([(int)$row['user_id']]);
-            /* DIE GEMERKTEN GERAETE GEHEN MIT (Schritt 18, SR-02, E-SR-07) —
+            /* DIE GEMERKTEN GERAETE GEHEN MIT —
              * derselbe Anlass wie der Zaehler darueber, und in derselben
              * Transaktion: Scheitert das Loeschen, ist auch das Passwort
              * nicht gesetzt, und „Speichern fehlgeschlagen" stimmt. Hinter
@@ -239,7 +237,7 @@ if ($row && $_SERVER['REQUEST_METHOD'] === 'POST') {
             });
             $done = true;
 
-            /* ---- DIE REGISTRIERUNG IST HIER ZU ENDE (P5b/AP3) ----------
+            /* ---- DIE REGISTRIERUNG IST HIER ZU ENDE ----------------------
              *
              * Ein Konto im Zustand `unbestaetigt` ist selbst registriert
              * worden — Einladung und Einrichtung legen `aktiv` an. Wer bis
@@ -247,7 +245,7 @@ if ($row && $_SERVER['REQUEST_METHOD'] === 'POST') {
              * geoeffnet und ein Passwort gesetzt: Damit ist die Adresse
              * bestaetigt, und der Double-Opt-In ist vollzogen.
              *
-             * WOHIN VON HIER haengt an der Betriebsart (E-P5b-01): bei
+             * WOHIN VON HIER haengt an der Betriebsart: bei
              * `offen` sofort `aktiv`, bei `freischaltung` erst `wartet`.
              *
              * NACH DEM COMMIT UND AUSSERHALB DER TRANSAKTION, aus demselben
@@ -264,22 +262,21 @@ if ($row && $_SERVER['REQUEST_METHOD'] === 'POST') {
                 if (konto_status_setzen((int)$row['user_id'], $ziel)) {
                     $regFertig = $ziel;
                     /* Die Verwaltung unterrichten — gedrosselt auf eine Mail
-                     * je Stunde, Muster E-P5a-07. Nur bei `wartet`: Ein
+                     * je Stunde. Nur bei `wartet`: Ein
                      * sofort aktives Konto hat niemand freizuschalten. */
                     if ($ziel === 'wartet') { konto_warten_melden(); }
                 }
             }
 
-            /* DIE ANMELDESPERRE DIESES KONTOS FAELLT (P5a/AP6, E-P5a-45).
+            /* DIE ANMELDESPERRE DIESES KONTOS FAELLT.
              *
-             * Bis Web 20.9.1 rief diese Datei keine einzige `rate_*`-Funktion.
-             * Wer sein Passwort ueber den Link zuruecksetzte — also gerade
-             * nachgewiesen hatte, dass ihm das Postfach gehoert —, blieb an
-             * der Anmeldung gesperrt: bis zu 15 Minuten. Mit der Sperrleiter
-             * waere daraus eine Stunde geworden, und die STUFE stuende danach
-             * noch 24 h, sodass die naechste Vertipperin sofort wieder eine
-             * Stunde draussen waere. Das Konzept sagt „der Passwort-Reset
-             * bleibt offen" — offen ist er nur, wenn er auch hilft.
+             * Wer sein Passwort ueber den Link zuruecksetzt — also gerade
+             * nachgewiesen hat, dass ihm das Postfach gehoert —, bliebe sonst
+             * an der Anmeldung gesperrt: bis zu 15 Minuten, mit der
+             * Sperrleiter eine Stunde, und die STUFE stuende danach noch
+             * 24 h, sodass die naechste Vertipperin sofort wieder eine Stunde
+             * draussen waere. Der Passwort-Reset soll offen bleiben — offen
+             * ist er nur, wenn er auch hilft.
              *
              * NUR DAS KONTO, NICHT DIE ADRESSE: Wer ein Postfach uebernommen
              * hat, soll damit nicht die Sperre einer ganzen Klinik aufheben.
@@ -290,7 +287,7 @@ if ($row && $_SERVER['REQUEST_METHOD'] === 'POST') {
             rate_konto_freigeben((string)($row['email'] ?? ''));
 
             // Der Token hat seinen Zweck erfuellt — die Sitzung dieser Seite
-            // wird nicht laenger gebraucht (M1-06).
+            // wird nicht laenger gebraucht.
             unset($_SESSION['pw_token']);
 
             /* Die Registrierung bekommt ihre eigene Schlusskarte
@@ -314,20 +311,17 @@ ui_seite_start([
     'klasse' => 'anmeldung-body',
 ]);
 ?>
-<?php /* HIER STAND EIN div mit der Klasse `login-wrap` — ohne schliessendes Tag und
-         ohne Regel im neuen Stylesheet. Entfernt (O10): Erst dadurch ist
+<?php /* KEIN div `login-wrap` HIER: Erst ohne ihn ist
          `<main class="anmeldung">` direktes Flex-Kind von `.anmeldung-body`,
-         und `flex:1 1 auto` greift — die Fusszeile sitzt jetzt unten am Rand
-         statt dicht unter der Karte. Sichtbare Aenderung, beabsichtigt. */ ?>
+         und `flex:1 1 auto` greift — die Fusszeile sitzt unten am Rand
+         statt dicht unter der Karte. */ ?>
 <main class="anmeldung">
  <?php ui_hinweise(); ?>
- <?php /* DIESELBE BREITE WIE DIE ANMELDUNG (O10). Die Karte war 760 px
-          breit (`.anmeldung-breit`), die Anmeldung daneben 400 — zwei
-          Seiten derselben Familie, die man unmittelbar nacheinander
-          sieht, sprangen dabei in der Breite. Der lange Erklaertext der
-          Erstvergabe hat die breite Karte einmal gerechtfertigt; er ist
-          aber Fliesstext, und bei 400 px liest er sich wie auf dem
-          Handy — was er dort ohnehin tut. */ ?>
+ <?php /* DIESELBE BREITE WIE DIE ANMELDUNG. Zwei Seiten derselben Familie,
+          die man unmittelbar nacheinander sieht, sollen nicht in der Breite
+          springen. Der lange Erklaertext der Erstvergabe ist Fliesstext, und
+          bei 400 px liest er sich wie auf dem Handy — was er dort ohnehin
+          tut. */ ?>
  <div class="anmeldung-karte">
   <img src="<?= e(logo_src()) ?>" alt="<?= e(instanz_kurz()) ?>" class="anmeldung-logo">
 
@@ -388,18 +382,18 @@ ui_seite_start([
          Passwort-Reset der einzige Weg zu deinen Daten — ausdrucken oder sicher ablegen.</p>
     </div>
 
-    <?php /* DER CODEBLOCK-BAUSTEIN statt dreier eigener Klassen (O10).
+    <?php /* DER CODEBLOCK-BAUSTEIN statt eigener Klassen.
              `.codeblock` traegt Festbreitenschrift, Groesse und Sperrung schon
              — er ist genau dafuer da: Werte, die von einem Bildschirm
-             abgeschrieben werden (Kopplungscode, Geraete-ID, jetzt auch der
-             Wiederherstellungsschluessel). Das Inline-`style` fuer die
-             Schriftgroesse entfaellt damit ebenfalls. */ ?>
+             abgeschrieben werden (Kopplungscode, Geraete-ID,
+             Wiederherstellungsschluessel). Ein Inline-`style` fuer die
+             Schriftgroesse braucht es damit nicht. */ ?>
     <div id="rcbox" class="codeblock" hidden>
       <p class="codeblock-titel">Dein Wiederherstellungsschlüssel</p>
       <p class="codeblock-wert" id="rccode"></p>
       <label><input type="checkbox" id="rcok">
         Ich habe den Schlüssel sicher notiert.</label>
-      <?php /* NOTFALLBLATT DRUCKEN (P5b/AP9, E-P5b-09). Der Knopf steht
+      <?php /* NOTFALLBLATT DRUCKEN. Der Knopf steht
                genau hier, weil der Schluessel genau hier zum EINZIGEN Mal
                sichtbar ist: `notfallblatt.php` bekommt ihn per POST aus
                diesem Formular und speichert nichts — der Server kennt ihn
@@ -423,7 +417,7 @@ ui_seite_start([
     <form method="post" id="pwform">
       <input type="hidden" name="new_token" id="new_token">
       <input type="hidden" name="new_salt"  id="new_salt">
-      <?php /* Rundenzahl der Ableitung (M2-01). Sie muss mitkommen, sonst
+      <?php /* Rundenzahl der Ableitung. Sie muss mitkommen, sonst
                stuende in der Nutzerzeile eine andere als die, mit der das
                Token entstanden ist — und die naechste Anmeldung scheiterte. */ ?>
       <input type="hidden" name="new_iter"  id="new_iter">
@@ -453,7 +447,7 @@ ui_seite_start([
     <form method="post" id="pwform">
       <input type="hidden" name="new_token" id="new_token">
       <input type="hidden" name="new_salt"  id="new_salt">
-      <?php /* Rundenzahl der Ableitung (M2-01). Sie muss mitkommen, sonst
+      <?php /* Rundenzahl der Ableitung. Sie muss mitkommen, sonst
                stuende in der Nutzerzeile eine andere als die, mit der das
                Token entstanden ist — und die naechste Anmeldung scheiterte. */ ?>
       <input type="hidden" name="new_iter"  id="new_iter">
@@ -462,7 +456,7 @@ ui_seite_start([
       <?php ui_feld(['id' => 'rc', 'label' => 'Wiederherstellungsschlüssel',
                      'pflicht' => true, 'platzhalter' => 'ABCD-EFGH-JKMN-PQRS-TVWX',
                      'attr' => ' autocomplete="off" autocapitalize="characters"']); ?>
-      <?php /* Sofortmeldung zur Eingabe (M2-06). Sie steht direkt am Feld,
+      <?php /* Sofortmeldung zur Eingabe. Sie steht direkt am Feld,
                weil sie waehrend des Abtippens hilft — nicht erst, wenn alles
                eingegeben ist und der Knopf gedrueckt wurde. */ ?>
       <p class="zustandszeile" id="rcstate"></p>
@@ -485,9 +479,8 @@ ui_seite_start([
 
 <?php if ($row && !$done): ?>
 <script src="<?= asset('assets/crypto.js') ?>"></script>
-<?php /* Passwortguete (Baustein B9). Er lag seit Web 4.0.0 fertig da und war
-         an keiner Stelle eingebunden — die Mindestlaenge stand hier als
-         HTML-Attribut und im Skript, die Staerkeanzeige gab es nicht (M2-02). */ ?>
+<?php /* Passwortguete: der Baustein mit Staerkeanzeige, statt die
+         Mindestlaenge nur als HTML-Attribut und im Skript zu fuehren. */ ?>
 <script src="<?= asset('assets/pwquality.js') ?>"></script>
 <script<?= kopf_nonce_attr() ?>>
 const ERSTVERGABE = <?= $erstvergabe ? 'true' : 'false' ?>;
@@ -495,7 +488,7 @@ const WRAP_RC = <?= json_js($erstvergabe ? null : $row['pat_wrap_rc']) ?>;
 // Zielwert der Rundenzahl (M2-01). Diese Seite baut die Ableitung immer neu
 // auf und nimmt deshalb nie einen Altwert.
 const KDF_ITER_ZIEL = <?= json_js(KDF_ITER_ZIEL) ?>;
-<?php /* ---- Der Server-Anteil (S10, E-S10-06) ----------------------------
+<?php /* ---- Der Server-Anteil ----------------------------------------------
  *
  * DIESE SEITE IST DIE EINE AUSNAHME VON „nur an die angemeldete Sitzung",
  * und sie ist keine: Wer hier steht, hat einen gueltigen, unverbrauchten
@@ -506,13 +499,13 @@ const KDF_ITER_ZIEL = <?= json_js(KDF_ITER_ZIEL) ?>;
  * beim naechsten Anmelden wieder umstellen zu lassen.
  *
  * Der Anteil gehoert zu `$row['user_id']` — dem Konto des Tokens —, nie zu
- * einem, das der Browser nennt. Und das Demo-Konto bekommt keinen (E-P1-19):
+ * einem, das der Browser nennt. Und das Demo-Konto bekommt keinen:
  * Sein Reset laeuft alle 30 Minuten und muss auf jeder Installation
  * dieselbe Fixture ergeben.
  *
  * Beim RESET braucht die Seite den Anteil ZWEIMAL und fuer Verschiedenes:
  * Die Wiederherstellungs-Huelle oeffnet OHNE ihn (`pat_wrap_rc` haengt nicht
- * am Anteil, E-S10-04) — das ist der Rueckweg, der auch dann traegt, wenn
+ * am Anteil) — das ist der Rueckweg, der auch dann traegt, wenn
  * der Anteil verloren ist. Die neue Passwort-Huelle wird MIT ihm gebaut. */ ?>
 <?php
     $pwUserId = (int)$row['user_id'];

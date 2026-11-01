@@ -1,8 +1,7 @@
 /* Wege der Seite Einstellungen → Profil (`einstellungen.php?t=profil`).
  * ===========================================================================
  *
- * Entstanden mit P5c/AP5 (E-P5c-15, -53, -54; Abnahme im Konzept, AP5). Nach
- * der SEITE benannt (E-PK-15).
+ * Nach der SEITE benannt.
  *
  *   einstellungen-profil-zweitfaktor
  *                  Eine NutzerIn schaltet den Zweitfaktor auf der
@@ -23,7 +22,7 @@
  * DAS VORMERKFACH ist `sessionStorage['edkvor']`: Die Anmeldeseite legt die
  * abgeleiteten Hälften dort ab, bevor sie das Passwort schickt. Der
  * Code-Schritt lädt kein `unlock.js` und öffnet nichts; bricht jemand ab,
- * räumt die Anmeldeseite das Fach (E-P5c-53). Gemessen wird VORHER (belegt)
+ * räumt die Anmeldeseite das Fach. Gemessen wird VORHER (belegt)
  * und NACHHER (leer) — ein Fach, das nie belegt war, wäre auch „leer".
  */
 

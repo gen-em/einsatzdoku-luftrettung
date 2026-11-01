@@ -1,8 +1,8 @@
 <?php
 declare(strict_types=1);
 require_once __DIR__ . '/../auth_guard.php';
-require_once __DIR__ . '/../mission_fields_lib.php';   // mf_spalten() (Schritt 15/AP6)   // liefert $userId
-require_once __DIR__ . '/../spur_lib.php';   // Spuren: Zeilen UND Blob (S2)
+require_once __DIR__ . '/../mission_fields_lib.php';   // mf_spalten()   // liefert $userId
+require_once __DIR__ . '/../spur_lib.php';   // Spuren: Zeilen UND Blob
 
 /**
  * Export: Rohdaten fuer alle drei Export-Profile (nur lesend).
@@ -18,34 +18,29 @@ require_once __DIR__ . '/../spur_lib.php';   // Spuren: Zeilen UND Blob (S2)
  *   { action:'track', owner_type:'mission'|'rest', ids:[42,43,...],
  *     patient: bool }
  *
- * Antwort (seit S11-05e):
+ * Antwort:
  *   { "42": { ref: 'm-…', stuecke: [{seq_from, punkte, …, huelle}],
  *             sperren: [{von, bis}] } }
- *   (bis Web 22.7.0 dazu `punkte` mit dem Altbestand im Klartext)
  *
  * WARUM EIN EIGENER ENDPUNKT: api/range.php bedient zeitraum.php und ist
  * bewusst schlank gehalten (keine Trackpunkte, kein Reanimationsdetail).
- * Eine Erweiterung dort wuerde diese Seite mitveraendern (SPEC_Export.md,
- * Abschnitt 2).
+ * Eine Erweiterung dort wuerde diese Seite mitveraendern.
  *
- * ANNAHME ZU 'patient': Die Anfrage-Skizze in SPEC_Export.md, Abschnitt 2.1
- * nennt nur from/to, aber Abschnitt "Festlegungen" verlangt ausdruecklich,
- * dass pat_blob bei fehlendem Haken schon HIER nicht mitgesendet wird ("nicht
- * erst im Browser weggelassen"). Das Flag 'patient' im Request ist daher die
- * naheliegende Ergaenzung dieser Luecke und wird hier so umgesetzt — bitte
- * bei der Abnahme von E1 gegenpruefen.
+ * WARUM 'patient' IM REQUEST: Ohne den Haken wird pat_blob schon HIER nicht
+ * mitgesendet, nicht erst im Browser weggelassen. Deshalb traegt die Anfrage
+ * neben from/to das Flag 'patient'.
  *
- * DAS FLAG HEISST 'patient', MEINT ABER MEHR (Web 5.8.0, Block A9).
+ * DAS FLAG HEISST 'patient', MEINT ABER MEHR.
  *
  * Der Schluessel im Request bleibt unveraendert, damit der Vertrag zwischen
  * assets/export.js und dieser Datei stabil bleibt. Was er ein- und
- * ausschliesst, ist seit A9 groesser: nicht mehr nur der pat_blob, sondern
+ * ausschliesst, ist groesser: nicht nur der pat_blob, sondern
  * personenbezogene Angaben insgesamt. Ohne das Flag liefert dieser Endpunkt
  *
  *   - keine Besatzungsnamen (day_crew, mission_crew),
  *   - kein bw_info ("Namen / Infos" der Bergwacht) und kein other_ema,
- *   - keine Tagesnotizen (days.notes) — die Notizen des EINSATZES stehen seit
- *     S9/AP7 im `pat_blob` und reisen mit ihm: Ohne Flag kommt kein Blob mit,
+ *   - keine Tagesnotizen (days.notes) — die Notizen des EINSATZES stehen
+ *     im `pat_blob` und reisen mit ihm: Ohne Flag kommt kein Blob mit,
  *     und mit Flag kommt er als Chiffretext, den nur der Browser oeffnet,
  *   - keine Koordinaten der Phasen (lat/lon; die Zeitpunkte bleiben, sie
  *     tragen Alarm- und Endzeit) und kein site_ele_m,
@@ -53,25 +48,24 @@ require_once __DIR__ . '/../spur_lib.php';   // Spuren: Zeilen UND Blob (S2)
  *   - und ueberhaupt keine Trackpunkte (action 'track' wird abgewiesen).
  *
  * WARUM DIE PHASENKOORDINATEN: Phase 4 ist "Ankunft Einsatzort", Phase 5
- * "Ankunft PatientIn". Diese Punkte SIND der Einsatzort. Bis Web 5.7.0 nannte
- * ein Export "ohne Patientendaten" ihn trotzdem, nur in einer anderen Spalte
+ * "Ankunft PatientIn". Diese Punkte SIND der Einsatzort. Ein Export "ohne
+ * Patientendaten" nennte ihn sonst trotzdem, nur in einer anderen Spalte
  * als pat_ort_lat/lon. Dasselbe gilt fuer die GPX-Spuren, die dort enden.
  *
- * DRAUSSEN BLEIBEN bewusst transport_dest (eine Einrichtung, keine Person),
- * bw_unit (dito), weitere_rettungsmittel (Organisationskennungen) und der
- * Reanimationsverlauf. Vom Auftraggeber je einzeln entschieden; die
- * Begruendungen stehen in docs/Export-Format.md.
+ * DRAUSSEN BLEIBEN bewusst bw_unit (eine Einrichtung, keine Person) und
+ * weitere_rettungsmittel (Organisationskennungen). Transportziel und
+ * Reanimationsverlauf gehoeren NICHT dazu: Das Ziel liegt im pat_blob, die
+ * Reanimation in der Einsatzhuelle, und beide gehen nur mit Haken mit. Je
+ * einzeln entschieden; die Begruendungen stehen in docs/Export-Format.md.
  *
  * Die Aufzaehlung ist nicht der einzige Ort, an dem die Schranke wirkt —
  * assets/export.js blendet dieselben Felder noch einmal aus. Das ist Absicht:
  * Wer hier eine Spalte ergaenzt und dort nicht, faellt auf; wer sich auf eine
  * der beiden Seiten allein verlaesst, nicht.
  *
- * mission_no: Seit der Migration 2026_07_29_einsatznummer_verschluesselt hat
- * missions KEINE mission_no-Spalte mehr (SPEC_Export.md, Abschnitt 10). Das
- * Feld "mission_no":null im Beispiel unter 2.1 ist daher ein Rest aus einer
- * frueheren Fassung und wird hier NICHT als eigenes Feld ausgegeben — die
- * Einsatznummer steckt ausschliesslich verschluesselt im pat_blob.
+ * mission_no: missions hat KEINE mission_no-Spalte. Die Einsatznummer steckt
+ * ausschliesslich verschluesselt im pat_blob und wird hier NICHT als eigenes
+ * Feld ausgegeben.
  *
  * I1 (Patientendaten verlassen den Browser nur verschluesselt): pat_blob wird
  * unveraendert als Chiffretext durchgereicht, nie entschluesselt.
@@ -88,28 +82,23 @@ require_once __DIR__ . '/../spur_lib.php';   // Spuren: Zeilen UND Blob (S2)
  * die deutschen Werte, und jede darauf aufbauende Auswertung bliebe sonst
  * stehen.
  *
- * Bis Web 3.3.2 wurde der Wert stattdessen bei jedem Export aus der Uhr-Sperre
- * und dem Praefix von 'client_ref' neu berechnet. Diese Regel stammt aus der
- * Zeit vor der Spalte 'origin' und lieferte fuer genau einen Fall etwas
- * Falsches: Ein von der Uhr aufgezeichneter und danach im Formular
- * bearbeiteter Einsatz bekommt 'uhr_gesperrt = 1' (einsatz_form.php) und
- * erschien deshalb als 'manuell', obwohl 'origin' korrekt auf 'watch' stand.
- * NICHT wieder einfuehren — die Spalte bedeutet ausschliesslich "die Uhr
- * ueberschreibt Metadaten, Phasen und Reanimation nicht mehr". Sie hiess bis
- * Web 20.24.2 'manual', und genau diese Verwechslung war der Grund fuer die
- * Umbenennung (Nr. 238); in der EXPORTDATEI heisst das Feld weiter 'manual'.
+ * Der Wert wird NICHT aus der Uhr-Sperre und dem Praefix von 'client_ref'
+ * berechnet. Diese Regel liefert fuer genau einen Fall etwas Falsches: Ein
+ * von der Uhr aufgezeichneter und danach im Formular bearbeiteter Einsatz
+ * bekommt 'uhr_gesperrt = 1' (einsatz_form.php) und erschiene deshalb als
+ * 'manuell', obwohl 'origin' korrekt auf 'watch' steht. Die Spalte bedeutet
+ * ausschliesslich "die Uhr ueberschreibt Metadaten, Phasen und Reanimation
+ * nicht mehr"; in der EXPORTDATEI heisst das Feld 'manual'.
  *
- * DIE ABLEITUNGSREGEL STEHT SEIT WEB 14.0.0 AN EINER STELLE (R64):
- * `herkunft_ableiten()` in geraete_lib.php. Bis dahin stand sie dreimal — in
- * der Migration 2026_07_30 (SQL), in `edbak_origin_edited()` (PHP) und als
- * Beschreibung in genau diesem Kommentar. Beim Einspielen wird sie weiterhin
+ * DIE ABLEITUNGSREGEL STEHT AN EINER STELLE:
+ * `herkunft_ableiten()` in geraete_lib.php. Beim Einspielen wird sie
  * gebraucht, weil Backups der Formatversion 3 und aelter die Spalten 'origin'
  * und 'edited' nicht kennen; HIER wird sie nicht gebraucht und nicht
  * angewendet — die Spalte steht in der Datenbank.
  */
 const EXPORT_ORIGIN_LABEL = [
     /* Die drei alten Werte bleiben WORTGLEICH — daran haengt die Zusage oben.
-     * Die drei neuen (R64, E-R64-09) sind so kurz und deutsch wie sie:
+     * Die drei neuen sind so kurz und deutsch wie sie:
      * `handy` fuer die Android-App, `wear` fuer den Einsatz, der an der
      * Wear-OS-Uhr begonnen und vom Handy gesendet wurde, `schnitt` fuer den,
      * der aus einem Ruhesegment herausgeschnitten wurde.
@@ -126,12 +115,8 @@ const EXPORT_ORIGIN_LABEL = [
     'schnitt' => 'schnitt',
 ];
 
-/* Die chunkweise IN(...)-Abfrage stand bis Web 4.5.3 HIER und war die einzige
- * Umsetzung im Projekt. Tagesansicht und Backup fragten stattdessen je
- * Datensatz einzeln — den Weg, den dieser Kommentar seit jeher beschreibt,
- * ist ihm niemand gefolgt, weil er nur hier zu finden war. Seit Web 4.6.0
- * steht er als sql_in_bloecken() in db.php und wird von allen drei Stellen
- * benutzt (M3-15, M5-12). */
+/* Die chunkweise IN(...)-Abfrage steht als sql_in_bloecken() in db.php und
+ * wird von Tagesansicht, Backup und Export benutzt. */
 
 /** UTC-DATETIME (aus DB, ohne Zonenangabe) -> ISO 8601 mit 'Z'. */
 function export_iso_utc(?string $utc): ?string
@@ -155,7 +140,7 @@ function export_meta(array $b, int $userId): never
     if ($to !== null && !preg_match('/^\d{4}-\d{2}-\d{2}$/', $to)) {
         json_out(['error' => 'zeitraum', 'meldung' => 'Ungültiges Bis-Datum.'], 400);
     }
-    /* Ein halber Zeitraum ist keine Angabe (M3-07).
+    /* Ein halber Zeitraum ist keine Angabe.
      *
      * Vorher griff der Filter nur, wenn BEIDE Grenzen gesetzt waren. Fehlte
      * eine, fiel die Bedingung stillschweigend weg — und statt der
@@ -177,19 +162,18 @@ function export_meta(array $b, int $userId): never
     }
 
     /* Kurzname aus dem Request, erweiterte Bedeutung — siehe Kopf der Datei.
-     * Die lokale Variable heisst deshalb NICHT $patient: Sie steuert seit A9
+     * Die lokale Variable heisst deshalb NICHT $patient: Sie steuert
      * ein Dutzend Spalten, von denen nur eine dem Patienten gehoert. */
     $pers = !empty($b['patient']);
 
     /* Zeitraumfilter. Er greift ueber den DIENSTTAG (`days.day`), nicht ueber
      * das Einsatzdatum: Ein Export soll ganze Dienste liefern, nicht Dienste
      * halbieren, deren Nachteinsaetze in den Folgemonat fielen. Dieselbe Regel
-     * wie in der Statistik (E14). Der Join ist seit Web 6.0.0 der vorgesehene
-     * Weg (Konzept 4.11).
+     * wie in der Statistik. Der Join ist der vorgesehene
+     * Weg.
      *
      * $whereTag gilt fuer `days` (Alias d), $whereEins fuer die daran haengenden
-     * Tabellen. Bis Web 5.10.0 war beides dieselbe Bedingung, weil jede Tabelle
-     * ihr Datum selbst trug. */
+     * Tabellen. */
     $whereTag  = ' AND d.deleted_at IS NULL';
     $whereEins = ' AND x.deleted_at IS NULL AND d.deleted_at IS NULL';
     $params = [$userId];
@@ -211,11 +195,11 @@ function export_meta(array $b, int $userId): never
     }
 
     /* ---- Diensttage --------------------------------------------------------
-     * BEZEICHNUNGEN KOMMEN AUS DEN SNAPSHOT-SPALTEN (E8), nicht aus den
+     * BEZEICHNUNGEN KOMMEN AUS DEN SNAPSHOT-SPALTEN, nicht aus den
      * Stammdaten. Der frueher noetige Join auf `aircraft` und `bases` ist damit
      * entfallen — und mit ihm die Luecke, dass ein geloeschtes Rettungsmittel
      * einen Export ohne Bezeichnung hinterliess. Ein Export mit IDs waere
-     * ausserhalb dieser Anwendung ohnehin wertlos (SPEC_Export.md, 2.1).
+     * ausserhalb dieser Anwendung ohnehin wertlos.
      *
      * Die personenbezogenen Spalten werden ohne Flag durch NULL ersetzt, statt
      * sie aus der Spaltenliste zu nehmen: Der ANTWORTAUFBAU bleibt dadurch in
@@ -231,7 +215,7 @@ function export_meta(array $b, int $userId): never
     $dayRows = $st->fetchAll();
     $dayIds  = array_map(static fn($r) => (int)$r['id'], $dayRows);
 
-    /* Besatzung der Diensttage: eine Zeile je Rolle (E7). Gebuendelt in EINER
+    /* Besatzung der Diensttage: eine Zeile je Rolle. Gebuendelt in EINER
      * Abfrage, nicht je Tag — ein Jahresexport hat dreihundert Tage. Ohne das
      * Flag bleibt sie leer; sie ist personenbezogen. */
     $crewByDay = [];
@@ -259,7 +243,7 @@ function export_meta(array $b, int $userId): never
             'started_at'   => export_iso_utc($r['started_at']),
             'ended_at'     => export_iso_utc($r['ended_at']),
             'kind'         => $r['kind'] !== null ? (string)$r['kind'] : null,
-            /* DER EXPORT ZEIGT DIE VOLLE BEZEICHNUNG (E-S9-09) — der Kurzname
+            /* DER EXPORT ZEIGT DIE VOLLE BEZEICHNUNG — der Kurzname
                steht daneben als eigene Spalte, nicht an ihrer Stelle: Er ist
                eine Abkuerzung fuer den Hausgebrauch, und wer die Datei
                auswertet, kennt sie nicht. */
@@ -276,29 +260,27 @@ function export_meta(array $b, int $userId): never
     /* ---- Einsaetze ---------------------------------------------------------
      * Die personenbezogenen Spalten stehen nur in der Spaltenliste, wenn das
      * Flag gesetzt ist — sie werden sonst gar nicht erst aus der Datenbank
-     * geholt, nicht nur beim Zusammenbau weggelassen. Bis Web 5.7.0 galt das
-     * allein fuer pat_blob (A9).
+     * geholt, nicht nur beim Zusammenbau weggelassen.
      *
      * crew_override bleibt in beiden Faellen erhalten: Der Haken sagt nur,
      * DASS die Besatzung an diesem Einsatz von der des Diensttags abwich, nicht
      * wer geflogen ist. Ohne ihn liesse sich nicht mehr erkennen, dass die
      * leeren Namensspalten leer gemacht wurden und nicht leer waren. */
-    /* `notes` steht hier NICHT mehr (S9/AP7): Die Notiz liegt im `pat_blob`
+    /* `notes` steht hier NICHT mehr: Die Notiz liegt im `pat_blob`
      * und faellt mit ihm — die Schranke wirkt fuer sie also weiter, aber ueber
      * den Blob statt ueber eine eigene Spalte. */
-    /* SPALTEN AUS DEM REGISTER (Schritt 15/AP6, E-ZE-22), Zweck `export`.
+    /* SPALTEN AUS DEM REGISTER, Zweck `export`.
      * Die vier Felder unter der Schranke kommen als `NULL AS spalte` zurueck,
      * wenn das Flag fehlt — die Form haengt an der SPALTE und nicht an ihrer
      * Stelle im SELECT. Wer ein Feld unter die Schranke nimmt, traegt es in
      * `$schranke` ein; die Liste selbst bleibt die des Registers. */
-    /* SEIT S11-05e AUCH KENNUNG UND HUELLE: `client_ref` und `ort_huelle`
+    /* AUCH KENNUNG UND HUELLE: `client_ref` und `ort_huelle`
      * braucht der Browser, um die Einsatzhuelle zu oeffnen. Transportziel und
-     * Ortshoehe liegen im `pat_blob` und gehen mit ihm (E-S11-53); bis
-     * Web 22.7.0 standen ihre Altbestandsspalten ebenfalls in dieser Liste. */
+     * Ortshoehe liegen im `pat_blob` und gehen mit ihm. */
     $schranke = ['bw_info', 'other_ema', 'pat_blob', 'client_ref', 'ort_huelle'];
     $einsCols = [];
     /* Zwei Listen desselben Zwecks, Stelle fuer Stelle: die blossen Namen zum
-     * Vergleichen, die SQL-Form (Namen in Backticks, Nr. 239) zum Einsetzen. */
+     * Vergleichen, die SQL-Form (Namen in Backticks) zum Einsetzen. */
     $sqlCols = mf_spalten('export', 'x.', true, true);
     foreach (mf_spalten('export') as $i => $sp) {
         $einsCols[] = (!$pers && in_array($sp, $schranke, true))
@@ -309,11 +291,10 @@ function export_meta(array $b, int $userId): never
      * die Reihenfolge einer SELECT-Liste ist das, was ein Leser vergleicht. */
     array_splice($einsCols, 2, 0, 'd.day');
     $st = $pdo->prepare(
-        /* DER ALIAS `manual` STEHT IN BACKTICKS (Web 20.26.3, Nr. 267) —
-         * jetzt aus mf_spalten(), nicht mehr von Hand. Auf MySQL 8.4.0 bis
+        /* DER ALIAS `manual` STEHT IN BACKTICKS —
+         * aus mf_spalten(), nicht von Hand. Auf MySQL 8.4.0 bis
          * 8.4.10 ist `manual` auch als ALIAS ein reserviertes Wort; ohne die
-         * Backticks antwortete der Export dort mit 1064. Die Behebung lag
-         * bis zum Merge von Schritt 15 in dieser Zeile; sie steht jetzt an
+         * Backticks antwortete der Export dort mit 1064. Die Behebung steht an
          * der einen Stelle, die aus dem Register SQL macht. */
         'SELECT ' . implode(', ', $einsCols) . "
          FROM missions x
@@ -335,7 +316,7 @@ function export_meta(array $b, int $userId): never
         /* Zeitpunkt ja, Ort nein: Die Phasenzeiten tragen Alarmzeit, Endzeit
          * und Dauer und muessen deshalb in jedem Export stehen (Kriterium 73).
          * Die Orte liegen in der Einsatzhuelle; `assets/export.js` oeffnet sie
-         * nur mit Haken und fuellt `lat`/`lon` (S11-05e). Die Schluessel
+         * nur mit Haken und fuellt `lat`/`lon`. Die Schluessel
          * stehen deshalb hier mit `null`. */
         foreach (sql_in_bloecken($pdo,
                 'SELECT mission_id, phase, occurred_at
@@ -356,7 +337,7 @@ function export_meta(array $b, int $userId): never
             $resourcesByMission[(int)$r['mission_id']][] = (string)$r['name'];
         }
 
-        /* Punktzahl je Einsatz ueber spur_lib.php (S2/AP1). Sie steuert den
+        /* Punktzahl je Einsatz ueber spur_lib.php. Sie steuert den
          * GPX-Export: export.js fragt nur Einsaetze mit `track_points > 0`
          * ueberhaupt ab. Stuende hier nach der Verdichtung eine 0, fiele der
          * Einsatz still aus dem Export heraus — deshalb zaehlt jetzt eine
@@ -364,7 +345,7 @@ function export_meta(array $b, int $userId): never
         $trackCountByMission = spur_zahlen($pdo, 'mission', $ids);
     }
 
-    /* Abweichende Besatzung je Einsatz: Zeilen aus `mission_crew` (E7),
+    /* Abweichende Besatzung je Einsatz: Zeilen aus `mission_crew`,
      * gebuendelt wie alles andere hier. Personenbezogen, also nur mit Flag. */
     $crewByMission = [];
     if ($pers && $ids) {
@@ -378,8 +359,8 @@ function export_meta(array $b, int $userId): never
     $missions = [];
     foreach ($missionRows as $r) {
         $id = (int)$r['id'];
-        /* RUECKFALL IST DER ROHWERT UND NICHT MEHR 'uhr' (R64, E-R64-09).
-         * Seit `origin` ein VARCHAR ist (Web 14.0.0), kann dort ein Wert
+        /* RUECKFALL IST DER ROHWERT UND NICHT MEHR 'uhr'.
+         * Seit `origin` ein VARCHAR ist, kann dort ein Wert
          * stehen, den diese Tabelle noch nicht kennt — ein kuenftiger Client.
          * Ihn als "uhr" auszuliefern waere die schlechteste aller Antworten:
          * falsch, und nicht als falsch zu erkennen. Der Rohwert ist im
@@ -396,14 +377,14 @@ function export_meta(array $b, int $userId): never
             'distance_m'       => $r['distance_m'] !== null ? (int)$r['distance_m'] : null,
             'ascent_m'         => $r['ascent_m'] !== null ? (int)$r['ascent_m'] : null,
             /* Ortshoehe und Transportziel (unten) aus dem `pat_blob`: Der
-             * Browser fuellt sie mit Haken (S11-05e). Die Schluessel bleiben
-             * im Vertrag, bis Web 22.7.0 kam der Altbestand aus Spalten. */
+             * Browser fuellt sie mit Haken. Die Schluessel bleiben
+             * im Vertrag. */
             'site_ele_m'       => null,
             'final'            => (int)$r['final'],
             'manual'           => (int)$r['manual'],
             'source'           => $source,
             'edited'           => (int)$r['edited'],
-            /* Die Momentaufnahme des Geraets (R64, E-R64-10). Sie geht als
+            /* Die Momentaufnahme des Geraets. Sie geht als
              * ROHWERT hinaus, nicht uebersetzt: `geraet_art` traegt dieselben
              * drei Werte wie die Geraeteseite (uhr | handy | sonstiges), und
              * `geraet_modell` ist ein Name, kein Schluessel. NULL wird zu
@@ -412,19 +393,18 @@ function export_meta(array $b, int $userId): never
             'geraet_art'       => $r['geraet_art'],
             'geraet_modell'    => $r['geraet_modell'],
             'transport_dest'   => null,
-            /* Die Einsatzhuelle (S11-05e): Phasenorte und Reanimation der seit
-             * S11-04 gesendeten Einsaetze. Nur mit Haken; `assets/export.js`
+            /* Die Einsatzhuelle: Phasenorte und Reanimation. Nur mit Haken; `assets/export.js`
              * oeffnet sie und fuellt daraus `phases[].lat/lon` und `resus`.
              * `started_ts` ist der Bezug ihrer Zeiten. */
             'client_ref'       => $r['client_ref'],
             'ort_huelle'       => $r['ort_huelle'] !== null ? base64_encode((string)$r['ort_huelle']) : null,
             'started_ts'       => $r['started_at'] !== null ? (int)strtotime($r['started_at'] . ' UTC') : null,
-            /* Die Felder der Etappe 2 (Web 6.1.0). Sie liegen im KLARTEXT und
-             * brauchen deshalb keine Personenbezugs-Markierung: Transportart
-             * und Fehleinsatz sind Aussagen ueber den Einsatz, die
-             * Zielklinik-Koordinate steht wie ihr Name unverschluesselt (E40),
-             * und `start_src` ist eine REGEL, kein Ort (Konzept 4.6.1). Der
-             * manuelle Abfahrtort selbst liegt im pat_blob und geht mit ihm. */
+            /* Transportart, Begleitung und Fehleinsatz liegen im KLARTEXT und
+             * brauchen keine Personenbezugs-Markierung: Sie sind Aussagen
+             * ueber den Einsatz. `start_src` ist eine REGEL, kein Ort. Die
+             * Zielklinik samt Koordinate und der manuelle Abfahrtort liegen
+             * im pat_blob und gehen nur mit ihm; `dest_lat`/`dest_lon` sind
+             * hier deshalb leer und werden im Browser aus dem Block gefuellt. */
             'transport_mode'   => $r['transport_mode'],
             'na_escort'        => (int)$r['na_escort'],
             'false_alarm'      => (int)$r['false_alarm'],
@@ -447,12 +427,12 @@ function export_meta(array $b, int $userId): never
             // Rollensatz bildet).
             'crew'             => (object)($crewByMission[$id] ?? []),
             'pat_blob'         => $pers && !empty($r['pat_blob']) ? (string)$r['pat_blob'] : null,
-            /* 'notes' entfaellt (S9/AP7) — der Text reist im 'pat_blob' eine
+            /* 'notes' entfaellt — der Text reist im 'pat_blob' eine
                Zeile darueber mit. */
             'track_points'     => $trackCountByMission[$id] ?? 0,
             'phases'           => $phasesByMission[$id] ?? [],
             'resources'        => $resourcesByMission[$id] ?? [],
-            /* Die Reanimation liegt in der Einsatzhuelle (S11-05e). */
+            /* Die Reanimation liegt in der Einsatzhuelle. */
             'resus'            => [],
         ];
     }
@@ -469,7 +449,7 @@ function export_meta(array $b, int $userId): never
     $restRows = $st->fetchAll();
     $restIds = array_map(static fn($r) => (int)$r['id'], $restRows);
 
-    // Punktzahl je Ruhesegment ueber spur_lib.php (S2/AP1), wie oben.
+    // Punktzahl je Ruhesegment ueber spur_lib.php, wie oben.
     $trackCountByRest = $restIds ? spur_zahlen($pdo, 'rest', $restIds) : [];
 
     $rests = array_map(static fn($r) => [
@@ -480,7 +460,7 @@ function export_meta(array $b, int $userId): never
         'ended_at'     => export_iso_utc($r['ended_at']),
         'final'        => (int)$r['final'],
         // Momentaufnahme wie beim Einsatz; eine Herkunft hat das Segment
-        // nicht (E-R64-04), sein Praefix sagt sie.
+        // nicht, sein Praefix sagt sie.
         'geraet_art'   => $r['geraet_art'],
         'geraet_modell' => $r['geraet_modell'],
         'track_points' => $trackCountByRest[(int)$r['id']] ?? 0,
@@ -493,7 +473,7 @@ function export_track(array $b, int $userId): never
 {
     $pdo = db();
 
-    /* Trackpunkte sind personenbezogene Angaben (A9).
+    /* Trackpunkte sind personenbezogene Angaben.
      *
      * Eine Flugspur endet am Einsatzort — sie nennt ihn genauer als jede
      * Koordinatenspalte und traegt zusaetzlich den Zeitverlauf dorthin. Ein
@@ -527,7 +507,7 @@ function export_track(array $b, int $userId): never
     if (!$ids) { json_roh_out('{}'); }
 
     // Datentrennung + Papierkorb: nur IDs zulassen, die dem Konto gehoeren
-    // und nicht geloescht sind (I3, I4).
+    // und nicht geloescht sind.
     $table = $ownerType === 'mission' ? 'missions' : 'rest_segments';
     $owned = sql_in_bloecken($pdo,
         "SELECT id, client_ref FROM `$table` WHERE user_id = ? AND deleted_at IS NULL AND id IN ({IDS})",
@@ -535,11 +515,8 @@ function export_track(array $b, int $userId): never
     $validIds = array_map(static fn($r) => (int)$r['id'], $owned);
 
     /* DIE VERSCHLOSSENEN STUECKE JE SPUR, mit `ref` (die Kennung, an die sie
-     * gebunden sind) und `sperren` (geschnittene oder geloeschte Zeitraeume,
-     * E-S11-37) — `assets/export.js` oeffnet sie mit `EdOrtsdaten.spur()`.
-     * Von S11-05e bis Web 22.7.0 stand daneben `punkte` mit dem Altbestand im
-     * Klartext (SPUR1); bis Web 22.3.0 nur dieser, und eine Spur seit S11-04
-     * fehlte im Export (F-S11-57). */
+     * gebunden sind) und `sperren` (geschnittene oder geloeschte Zeitraeume)
+     * — `assets/export.js` oeffnet sie mit `EdOrtsdaten.spur()`. */
     $result = [];
     foreach ($owned as $r) {
         $result[(string)$r['id']] = ['ref' => (string)$r['client_ref'],
@@ -555,17 +532,17 @@ function export_track(array $b, int $userId): never
         }
     }
 
-    /* UEBER `json_roh_out()`, nicht `json_out()` (P5a/AP4a, Nr. 203): Der
-     * Text steht fertig da, und er kann gross werden. Bis Web 20.9.0 stand
-     * hier `header()` + `echo` von Hand — OHNE `Cache-Control: no-store`.
-     * DIESE ANTWORT ENTHAELT GPS-SPURPUNKTE; ein Zwischenspeicher darf sie
+    /* UEBER `json_roh_out()`, nicht `json_out()`: Der
+     * Text steht fertig da, und er kann gross werden. Und `header()` + `echo`
+     * von Hand vergaessen `Cache-Control: no-store`. DIESE ANTWORT ENTHAELT
+     * GPS-SPURPUNKTE; ein Zwischenspeicher darf sie
      * nicht behalten. */
     json_roh_out($result ? (string)json_encode($result) : '{}');
 }
 
 try {
     api_methode();
-    csrf_check();   // Feld ODER Kopfzeile X-CSRF (Nr. 67)
+    csrf_check();   // Feld ODER Kopfzeile X-CSRF
 
     $b = api_rumpf();
 

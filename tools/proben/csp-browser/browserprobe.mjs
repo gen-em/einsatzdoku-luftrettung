@@ -1,4 +1,4 @@
-/* Browserprobe der Content-Security-Policy (P5a/AP4, E-P5a-15).
+/* Browserprobe der Content-Security-Policy.
  * ===========================================================================
  *
  * Anlass: Nr. 181 — CSP zur Laufzeit; ihr Meldeweg war tot, und „0 Berichte" sagte nichts
@@ -18,7 +18,7 @@
  * loest absichtlich einen Verstoss aus und sieht nach, ob er in
  * `csp_berichte` ankommt. Ohne sie waere „0 Berichte nach dem Bilderlauf" ein
  * wertloser Satz: Er saehe genauso aus, ob die Richtlinie sitzt ODER der
- * Meldeweg kaputt ist. Am 15.09.2026 war er kaputt (F-P5a-AP4-1), und genau
+ * Meldeweg kaputt ist. Am 15.09.2026 war er kaputt, und genau
  * diese Zeile hat es gefunden.
  *
  * VORAUSSETZUNG: eine laufende lokale Installation unter `--basis`
@@ -31,14 +31,14 @@
  * Aufruf:  node tools/proben/csp-browser/browserprobe.mjs
  * Rueckgabewert: 0 = alle Erwartungen erfuellt · 1 = mindestens eine nicht.
  */
-/* Der Code-Schritt des Zweitfaktors steht EINMAL, in motor.mjs (P5c/AP5). */
-import { codeSchritt, motorWahl, starten } from '../../motor.mjs';
+/* Der Code-Schritt des Zweitfaktors steht EINMAL, in motor.mjs. */
+import { codeSchritt, motorWahl, starten, istOertlich } from '../../motor.mjs';
 import { execFileSync } from 'node:child_process';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 /* Die Betriebsart der Registrierung stellt die Probe ueber PHP, wie die
- * Bedienprobe (`probekonto.mjs`) — Abschnitt 6, Rechenaufgabe (SR-08). */
+ * Bedienprobe (`probekonto.mjs`) — Abschnitt 6, Rechenaufgabe. */
 const WURZEL = join(dirname(fileURLToPath(import.meta.url)), '..', '..', '..');
 const php = code => execFileSync('php', ['-r', 'require "server/db.php"; ' + code],
                                  { cwd: WURZEL, encoding: 'utf-8' }).trim();
@@ -46,7 +46,7 @@ const php = code => execFileSync('php', ['-r', 'require "server/db.php"; ' + cod
 const MODUL = process.env.PLAYWRIGHT_MODUL
   || '/opt/node22/lib/node_modules/playwright/index.mjs';
 const PW = (m => m.default ?? m)(await import(MODUL.startsWith('/') ? 'file://' + MODUL : MODUL));
-/* Die Engine wählt der Läufer (MOTOR=… oder --motor), R87. */
+/* Die Engine wählt der Läufer (MOTOR=… oder --motor). */
 const MOTOR = motorWahl(process.argv);
 
 const argv  = process.argv.slice(2);
@@ -58,7 +58,7 @@ const erg = [];
 const ok = (n, b, d = '') => { erg.push([b, n, d]); };
 
 const browser = await starten(PW, MOTOR);
-const kontext = await browser.newContext({ ignoreHTTPSErrors: true,
+const kontext = await browser.newContext({ ignoreHTTPSErrors: istOertlich(BASIS),
                                            viewport: { width: 1440, height: 1000 } });
 const seite = await kontext.newPage();
 const fehler = [];
@@ -83,9 +83,9 @@ ok('script-src mit Nonce, ohne unsafe-inline',
    /script-src 'self' 'nonce-[^']+'/.test(csp) && !csp.includes("script-src 'self' 'unsafe-inline'"));
 ok('style-src self + style-src-attr unsafe-inline',
    csp.includes("style-src 'self'") && csp.includes("style-src-attr 'unsafe-inline'"));
-/* frame-ancestors NUR in der scharfen Fassung (Nr. 224): In einer
+/* frame-ancestors NUR in der scharfen Fassung: In einer
  * Report-Only-Kopfzeile ignoriert der Browser sie und warnt in der Konsole.
- * Bis RP-02 verlangte diese Zeile sie hier und war rot (F-RP-05). */
+ * Wer sie hier verlangt, ist rot. */
 ok('Report-Only: ohne frame-ancestors (Nr. 224)', !csp.includes('frame-ancestors'));
 ok('X-Content-Type-Options', kopf['x-content-type-options'] === 'nosniff');
 ok('X-Frame-Options', kopf['x-frame-options'] === 'DENY');
@@ -110,7 +110,7 @@ const imMarkup = await seite.evaluate(() => {
 ok('Inline-Skripte der Anmeldeseite tragen alle einen Nonce',
    imMarkup.ohne === 0, `${imMarkup.zahl} Bloecke, ${imMarkup.ohne} ohne`);
 
-/* DIE SEITE DES NOTZUGANGS (Schritt 18, SR-04) — die zweite Seite ohne
+/* DIE SEITE DES NOTZUGANGS — die zweite Seite ohne
  * Sitzung, auf der ein Passwort getippt wird. Ihr Inline-Skript leitet das
  * Token ab wie das der Anmeldeseite und muss denselben Nonce tragen. Danach
  * zurueck auf die Anmeldeseite: Schritt 2 fuellt deren Formular. */
@@ -131,7 +131,7 @@ await seite.fill('input[name="email"]', ADMIN.email);
 await seite.fill('input[name="password"]', ADMIN.pw);
 await Promise.all([ seite.waitForNavigation({ waitUntil: 'domcontentloaded', timeout: 30000 }),
                     seite.click('#loginform button[type="submit"]') ]);
-/* DER ZWEITFAKTOR (P5c/AP5, E-P5c-43). Die BetreiberIn hat einen; nach dem
+/* DER ZWEITFAKTOR. Die BetreiberIn hat einen; nach dem
  * Passwort fragt `login.php` nach dem Code. `codeSchritt()` geht ihn und
  * meldet das Einrichtungstor als Scheitern — dessen Adresse enthaelt
  * `login.php` nicht, und die Seitenrunde unten maesse sonst neunmal das Tor. */
@@ -180,7 +180,7 @@ const kacheln = await seite.evaluate(() => document.querySelectorAll('img.leafle
 ok('Karte stellt Kachelanfragen', kacheln > 0, `${kacheln} Kachel-Elemente im Baum`);
 const HOSTS = ['tile.openstreetmap.org', 'tile.openmaps.fr',
                'a.tile.opentopomap.org', 'server.arcgisonline.com'];
-/* GEZÄHLT WIRD DAS EREIGNIS, NICHT DIE KONSOLE (Konzept DM, F-DM-03). Bis
+/* GEZÄHLT WIRD DAS EREIGNIS, NICHT DIE KONSOLE. Bis
  * zum 19.10.2026 zählte die Probe Konsolenzeilen „Refused to load the
  * image" — so schreibt sie nur Chromium. Firefox schreibt „blocked the
  * loading of a resource (img-src)", WebKit „does not appear in the img-src
@@ -249,7 +249,7 @@ const lief = await seite.evaluate(() => {
 });
 ok('Inline-Skript OHNE Nonce laeuft nicht', lief === false, lief ? 'es lief' : 'blockiert');
 
-/* Ein Stilattribut — soll weiterhin gehen (E-P5a-32) */
+/* Ein Stilattribut — soll weiterhin gehen */
 const stil = await seite.evaluate(() => {
   const d = document.createElement('div');
   d.setAttribute('style', 'width:123px');
@@ -275,7 +275,7 @@ await seite.waitForTimeout(1500);
 const sheet = await seite.evaluate(() => typeof window.XLSX !== 'undefined');
 ok('import.php: SheetJS geladen und ausgefuehrt', sheet, sheet ? 'XLSX da' : 'XLSX fehlt');
 
-/* Die Rechenaufgabe der Registrierung unter der scharfen Richtlinie (SR-08).
+/* Die Rechenaufgabe der Registrierung unter der scharfen Richtlinie.
  * Der Worker kommt aus eigener Quelle und ist durch `worker-src 'self'`
  * gedeckt — die Tokenizer-Probe sieht ihn nicht, weil sie keine Skripte
  * liest. Erlaubnis UND Gegenprobe: Der eigene Worker liefert eine Loesung,
@@ -341,7 +341,7 @@ await seite.evaluate(() => {
 });
 await seite.waitForTimeout(2500);
 
-/* DAS BILD GEHT NACH /tmp, nicht ins Repositorium (RP, F-RP-13): Die Vorgabe
+/* DAS BILD GEHT NACH /tmp, nicht ins Repositorium (RP): Die Vorgabe
  * war eine eingecheckte Datei, die jeder Lauf ueberschrieb -- im Pruefstand
  * landete sie im gemessenen Baum und damit in jedem Commit. */
 const { tmpdir } = await import('node:os');

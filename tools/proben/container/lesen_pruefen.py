@@ -8,8 +8,7 @@ sagt, ob die Datei das Format haelt, das dokumentiert ist.
 Dieser Leser ist `tools/referenzdatensatz/vergleich/lesen.py` — derselbe, der
 im Kreislauf die Backups vergleicht. Er entsiegelt nach dem Rezept aus
 `docs/Backup-Format.md` und setzt die Punktlisten der Spurteile an ihre
-Objekte (bis Web 22.7.0 dekodierte er dabei SPUR1 mit einer eigenen
-Umsetzung).
+Objekte.
 
 Dazu die Schadensfaelle: Was passiert, wenn ein Teil FEHLT, wenn zwei
 VERTAUSCHT sind, wenn eines aus einem FREMDEN Backup stammt, wenn eine
@@ -26,8 +25,7 @@ import shutil
 import sys
 import zipfile
 
-# EINE EBENE TIEFER SEIT PK-04/2: Die Probe liegt jetzt unter
-# `tools/proben/container/`, nicht mehr unter `tools/containerprobe/`.
+# Die Probe liegt unter `tools/proben/container/`.
 # Zweimal `dirname` landete damit in `tools/proben/` statt in `tools/`, und
 # der Leser war nicht zu finden — `ModuleNotFoundError: No module named
 # 'lesen'`, mitten im Lauf und erst nach den ersten grünen Zeilen.
@@ -82,7 +80,7 @@ pruefe(not c["blobs_ohne_objekt"] and not c["objekte_ohne_blob"],
        f"{len(daten['missions'])} Einsaetze, {len(daten['rest_segments'])} Ruhesegmente")
 pruefe(not c["ueberzaehlige_dateien"], "Keine Datei im Archiv, die das Manifest nicht kennt")
 
-# GESPEICHERT UND NICHT GEPACKT (Konzept 3.2.1). Die Teile sind bereits gzip
+# GESPEICHERT UND NICHT GEPACKT. Die Teile sind bereits gzip
 # UND verschluesselt; ein zweiter Packlauf kostet Zeit und bringt nichts.
 # Gemessen wird das VERFAHREN je Eintrag (0 = gespeichert, 8 = deflate) und
 # nicht die Dateigroesse — bei kleinen Teilen ist der ZIP-Rahmen groesser als

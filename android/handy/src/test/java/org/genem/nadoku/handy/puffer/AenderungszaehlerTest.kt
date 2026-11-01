@@ -12,11 +12,11 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 
 /**
- * Der Änderungszähler des Puffers (R17-24).
+ * Der Änderungszähler des Puffers.
  *
- * WOFÜR. Die Hauptansicht las bis 0.18.0 jede Sekunde `rueckstand()`,
- * `abgewiesen()` und `verwerfbar()` über SQLite. Seither liest sie nur nach,
- * wenn [Puffer.aenderungen] sich bewegt hat. Das trägt nur, wenn **jede**
+ * WOFÜR. Die Hauptansicht liest `rueckstand()`, `abgewiesen()` und
+ * `verwerfbar()` nicht jede Sekunde über SQLite, sondern nur, wenn
+ * [Puffer.aenderungen] sich bewegt hat. Das trägt nur, wenn **jede**
  * Änderung, die eine der drei Zahlen bewegen kann, den Zähler bewegt — und
  * zwar erst, wenn sie geschrieben ist. Beides misst dieser Fall, dazu die
  * eine Ausnahme: ein Punkt im offenen Paket.

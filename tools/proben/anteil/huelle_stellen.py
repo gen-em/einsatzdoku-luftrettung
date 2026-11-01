@@ -1,4 +1,4 @@
-"""Die Schluesselhuelle eines Kontos auf eine bestimmte Fassung stellen (S10).
+"""Die Schluesselhuelle eines Kontos auf eine bestimmte Fassung stellen.
 
 WOZU. Der Umstellungslauf (`umstellungslauf.mjs`) misst, ob der Browser eine
 `edk1:`-Huelle beim Anmelden von selbst auf `edka1:` umstellt. Das laesst sich

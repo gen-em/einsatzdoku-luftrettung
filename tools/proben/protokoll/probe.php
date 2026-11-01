@@ -2,11 +2,11 @@
 declare(strict_types=1);
 
 /**
- * Protokollprobe — hält das Archiv, was E-P5c-39 zusagt? (P5c/AP2) Und das
- * Fehlerprotokoll, was E-P5c-12 und -58 zusagen? (P5c/AP3)
+ * Protokollprobe — hält das Archiv, was es zusagt? Und das
+ * Fehlerprotokoll?
  *
  * Anlass: Nr. 302 (F-P5c-18, -19); für Teil 7 Nr. 248 (F-P5c-21 bis -23).
- * `sicherheit_ereignisse` führt IP- und E-Mail-Adressen und verfällt bewusst nach 30 Tagen (E-P5a-09); das Archiv
+ * `sicherheit_ereignisse` führt IP- und E-Mail-Adressen und verfällt bewusst nach 30 Tagen; das Archiv
  * liegt 365 Tage und geht außer Haus. Stünden die Adressen darin, wäre die
  * 30-Tage-Zusage mit dem ersten Archiv gebrochen — und niemand sähe es, denn
  * das Archiv ist versiegelt.
@@ -18,8 +18,7 @@ declare(strict_types=1);
  *   2. Im ENTSIEGELTEN Archiv: 0 Treffer für `"ip:`, für ein IPv4- und ein
  *      IPv6-Muster und für eine Adresse in den Reitern Sicherheit und E-Mail
  *      — gegen eine eigens angelegte Sperre MIT IP und Adresse und eine Mail
- *      MIT Empfänger und Fehlertext. Verwaltung darf Adressen tragen
- *      (E-P5c-75).
+ *      MIT Empfänger und Fehlertext. Verwaltung darf Adressen tragen.
  *   3. Ein Archiv mit fremder Kennung im Namen wird erkannt und nicht
  *      geöffnet; ein umbenanntes lässt sich nicht öffnen (der Name steht im
  *      Siegel).
@@ -28,7 +27,7 @@ declare(strict_types=1);
  *   5. Der Download über die Seite liefert ein gewöhnliches ZIP und schreibt
  *      genau einen Eintrag `archiv_heruntergeladen`.
  *   6. Der Versand erkennt den Namen als eigene Sicherung.
- *   7. Das Fehlerprotokoll (AP3), über einen eigenen `php -S` mit
+ *   7. Das Fehlerprotokoll, über einen eigenen `php -S` mit
  *      `fehlerrouter.php`: Eine ungefangene Ausnahme steht mit Kennung im
  *      Reiter System, und die Fehlerseite nennt dieselbe; als JSON unter
  *      `/api/`; ohne Wert, Adresse, Anfrage-, Kopf- und Sitzungsmarke; `@`
@@ -77,7 +76,7 @@ $pdo->prepare('DELETE FROM users WHERE email = ?')->execute([$mail]);
 $pdo->prepare("INSERT INTO users (email, name, role, password_hash, kdf_salt, kdf_iter)
                VALUES (?, 'Protokollprobe', 'betreiberin', '', '', 320000)")->execute([$mail]);
 $uid = (int)$pdo->lastInsertId();
-/* MIT `totp_seit` (P5c/AP5, E-P5c-43, F-P5c-33). Eine BetreiberIn ohne
+/* MIT `totp_seit`. Eine BetreiberIn ohne
  * Zweitfaktor schickt `auth_guard.php` auf `zweitfaktor.php`; Download und
  * Kennungssuche (Teile 5 und 7) bekämen 302 statt der Seite und mäßen das
  * Tor statt des Protokolls. Das ist kein Abschalten der Pflicht: Das Tor
@@ -90,7 +89,7 @@ if (db_hat_spalte($pdo, 'users', 'totp_seit')) {
 $epoch = (int)$pdo->query('SELECT session_epoch FROM users WHERE id = ' . $uid)->fetchColumn();
 $sid = 'protokollprobe' . bin2hex(random_bytes(10));
 $csrf = bin2hex(random_bytes(16));
-/* DIE BINDUNG (seit Web 21.7.0, Schritt 18, SR-01): Ohne das zweite Cookie
+/* DIE BINDUNG: Ohne das zweite Cookie
  * beendet `auth_guard.php` diese Sitzung mit dem Grund `bindung`. Ihr Wert
  * steht unten auch unter den Marken, die das Fehlerprotokoll nicht tragen
  * darf — er ist ein Geheimnis der Sitzung wie ihre Kennung. */
@@ -153,11 +152,11 @@ app_state_loeschen(PROTOKOLL_K_ARCHIV_BEHALTEN);
 /* Ortsmitternacht vor drei Tagen, als UTC — die Grenzen des Archivs sind
  * Kalendertage der Anlage, nicht UTC-Tage.
  *
- * DREI KALENDERTAGE, NICHT 3 × 86 400 SEKUNDEN (R17-19). Am Tag der
+ * DREI KALENDERTAGE, NICHT 3 × 86 400 SEKUNDEN. Am Tag der
  * Zeitumstellung im Herbst hat der Tag 25 Stunden; in seiner letzten Stunde
  * landete `time() - 3 * 86400` auf dem Tag −2, die Probe zählte zwei
  * Zeiträume statt drei und war rot — gemessen am 25.10.2026 um 23:27 Ortszeit,
- * im Prüfstand von R17-19. Gerechnet wird deshalb im Kalender der Anlage. */
+ * im Prüfstand. Gerechnet wird deshalb im Kalender der Anlage. */
 $vorDrei = (new DateTimeImmutable('now', protokoll_archiv_zone()))->modify('-3 days')
     ->setTimezone(new DateTimeZone('UTC'))->format('Y-m-d H:i:s');
 $beginn = protokoll_archiv_tag_beginn($vorDrei);
@@ -232,8 +231,8 @@ echo "  (Verwaltung trägt $verwaltungAdressen Adressen — erlaubt, E-P5c-75)\n
 kopf('3 — Fremde Kennung und umbenanntes Archiv');
 /* Das Archiv MIT den angelegten Zeilen — das von vor zwei Tagen.
  *
- * ERKANNT AN DER ANGELEGTEN MAIL, nicht an „irgendeine Sicherheitszeile"
- * (S11-05e, F-S11-59). Bis dahin nahm die Schleife das letzte Archiv mit
+ * ERKANNT AN DER ANGELEGTEN MAIL, nicht an „irgendeine Sicherheitszeile".
+ * Bis dahin nahm die Schleife das letzte Archiv mit
  * Sicherheitszeilen; die Zweitfaktorprobe hinterlaesst aber bei jedem Lauf
  * eine Sperre, und drei Tage nach jedem Tag mit Pruefstand lag eine davon
  * im Archiv von Tag −3 — gewaehlt wurde dann das, und Teil 5 fand darin
@@ -298,13 +297,13 @@ kopf('6 — Der Versand erkennt die dritte Dateiart');
 pruef(sz_ist_sicherungsname(PROTOKOLL_ARCHIV_ORDNER, $erstes), 'Der Name gilt als eigene Sicherung', $erstes);
 pruef(!sz_ist_sicherungsname(PROTOKOLL_ARCHIV_ORDNER, 'urlaub.zip'), 'Ein fremder Name nicht', 'urlaub.zip');
 
-/* ---- 7. Das Fehlerprotokoll (P5c/AP3) ------------------------------------------ */
+/* ---- 7. Das Fehlerprotokoll ---------------------------------------------------- */
 kopf('7 — Das Fehlerprotokoll');
 $router = __DIR__ . '/fehlerrouter.php';
 $sock = stream_socket_server('tcp://127.0.0.1:0');
 $anschluss = (int)substr((string)stream_socket_get_name($sock, false), strrpos((string)stream_socket_get_name($sock, false), ':') + 1);
 fclose($sock);
-/* MIT AUSGABEPUFFER, wie ihn viele Hoster setzen (F-P5c-97) — `php -S`
+/* MIT AUSGABEPUFFER, wie ihn viele Hoster setzen — `php -S`
  * puffert sonst nicht, und der Fall „halbe Seite" waere nicht zu sehen. */
 $srvProz = proc_open(['php', '-d', 'output_buffering=4096', '-S', '127.0.0.1:' . $anschluss, '-t', $srv, $router],
                      [0 => ['file', '/dev/null', 'r'], 1 => ['file', '/dev/null', 'w'],

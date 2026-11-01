@@ -2,11 +2,10 @@
 declare(strict_types=1);
 
 /**
- * Schemalauf fuer die GPX-Probe (`probe.mjs`, S11-05d).
+ * Schemalauf fuer die GPX-Probe (`probe.mjs`).
  *
  * Anlass: Nr. 43 — seit S11-05d baut der Browser GPX; das amtliche Schema
- * prueft aber nur libxml, also PHP. Bis Web 22.2.0 stand dieser Lauf in
- * `probe.php` selbst.
+ * prueft aber nur libxml, also PHP.
  *
  * Aufruf:  php schema.php gpx11.xsd datei1.gpx [datei2.gpx …]
  * Ausgabe: JSON {datei: [Fehlermeldungen]} — leere Liste = gueltig.

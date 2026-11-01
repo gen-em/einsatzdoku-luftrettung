@@ -42,7 +42,7 @@ WURZEL = pathlib.Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(WURZEL / "tools" / "referenzdatensatz" / "einspielen"))
 sys.path.insert(0, str(WURZEL / "tools" / "referenzdatensatz" / "vergleich"))
 import sitzung as sitzungsmodul   # noqa: E402
-import kreislauf                  # noqa: E402 — Umlaufkonto und Passwort, EINE Stelle (RP-01)
+import kreislauf                  # noqa: E402 — Umlaufkonto und Passwort, EINE Stelle
 
 ok = 0
 fehl = 0
@@ -76,9 +76,8 @@ def punktreichstes_segment(uid: int) -> dict | None:
     """Das Ruhesegment mit den meisten GPS-Punkten.
 
     UEBER `spur_lib.php`, NICHT per SQL (CLAUDE.md 4): `spur_zahlen()` zaehlt
-    die Punkte der verschlossenen Stuecke ueber ihren Umriss. (Bis Web 22.7.0
-    lagen sie zusaetzlich als Zeilen in `track_points` oder als Blob in
-    `track_blobs`, und ein COUNT(*) fand die halbe Wahrheit.)
+    die Punkte der verschlossenen Stuecke ueber ihren Umriss. Ein COUNT(*)
+    an der Bibliothek vorbei faende die halbe Wahrheit.
     """
     php = ('$c = require "server/config.php";'
            '$p = new PDO($c["db"]["dsn"],$c["db"]["user"],$c["db"]["pass"],'
@@ -115,7 +114,7 @@ def teil_schnitt(s, uid: int) -> None:
     hh, mm = (int(x) for x in beginn.split(":"))
     bis = hh * 60 + mm + 20
     ende = f"{bis // 60:02d}:{bis % 60:02d}"
-    # SEIT S11-05c SCHNEIDET DER BROWSER: Er schickt die Punkte des Zeitraums
+    # DER BROWSER SCHNEIDET: Er schickt die Punkte des Zeitraums
     # als verschlossene Stuecke mit, gebunden an die Kennung des neuen
     # Einsatzes. Die Probe misst den INSERT aus dem Register, nicht die
     # Auswahl der Punkte; sie verschliesst deshalb drei eigene Punkte im
@@ -161,10 +160,10 @@ def teil_schnitt(s, uid: int) -> None:
     pruefe("Phasen angelegt",            [int(p["phase"]) for p in phasen], [3, 4])
 
 
-# Die Spalten, die Teil 2 liest — nicht `*`: Die Einsatzhuelle (seit S11-04a)
+# Die Spalten, die Teil 2 liest — nicht `*`: Die Einsatzhuelle
 # ist binaer und ginge nicht durch json_encode().
 # `transport_dest`, `dest_lat` und `site_ele_m` stehen nicht mehr darin: Die
-# Spalten sind mit Web 23 gefallen (S11-12); Ziel und Hoehe liegen im Blob.
+# Spalten sind gefallen; Ziel und Hoehe liegen im Blob.
 SPALTEN_WEG = ("bw_unit, bw_info, other_ema, distance_m, "
                "winch, winch_cycles, final, uhr_gesperrt, edited, false_alarm, pat_blob, "
                "ort_huelle IS NOT NULL AS hat_huelle")
@@ -186,7 +185,7 @@ def teil_import(s, uid: int) -> None:
                 .astimezone(zoneinfo.ZoneInfo("Europe/Berlin")).strftime("%H:%M"))
     print(f"  Einsatz {z['id']}, Diensttag {z['day']}, Beginn {ortszeit} Ortszeit")
 
-    # SEIT S11-05e verlangt der Import eine Einsatzhuelle und die fertige
+    # Der Import verlangt eine Einsatzhuelle und die fertige
     # Phasenliste (Waechter); Transportziel, Zielkoordinate und Hoehe nimmt er
     # nicht mehr im Klartext. Die Datei nennt hier keine Phasen, also bleiben
     # die vorhandenen — ergaenzt um Phase 2 zum Beginn, falls sie fehlt. Der
@@ -245,8 +244,8 @@ def teil_import(s, uid: int) -> None:
         pruefe(f"A: {feld}", int(r[feld]), soll)
 
     # Durchgang B — die DREI Felder unter der Schranke fehlen in der Datei.
-    # COALESCE muss genau diese drei halten und KEIN weiteres (A9, P10).
-    # `site_ele_m` war bis S11-05e das vierte; die Hoehe liegt jetzt im Blob.
+    # COALESCE muss genau diese drei halten und KEIN weiteres.
+    # `site_ele_m` war einmal das vierte; die Hoehe liegt jetzt im Blob.
     a = commit({"winch": 0, "crew_override": 0,
                 "distance_m": 999, "ascent_m": 1, "schockraum": 0, "secondary": 0,
                 "winch_cycles": None, "winch_cycles_pat": None, "winch_airload": 0,
@@ -267,9 +266,9 @@ def main() -> int:
     p = argparse.ArgumentParser(description="Wegprobe zum Spaltenregister")
     p.add_argument("--basis", default="https://127.0.0.1:8443")
     # OHNE ANGABE das Umlaufkonto des edbak-Kreislaufs, das der Pruefstand
-    # vorher faehrt (`nach` in pruefablauf.json, F-RP-08). NICHT das des
+    # vorher faehrt (`nach` in pruefablauf.json). NICHT das des
     # csv-Kreislaufs: Eine csv-Ausfuhr traegt keine GPS-Punkte, und Teil 1
-    # braucht ein Ruhesegment mit Spur (gemessen in RP-01). Bis RP-01 kamen
+    # braucht ein Ruhesegment mit Spur. Frueher kamen
     # Konto und Passwort aus zwei Umgebungswerten, die niemand setzte.
     p.add_argument("--konto", default=kreislauf.umlauf_konto("edbak"),
                    help="WEGWERFKONTO, nicht die Demo")

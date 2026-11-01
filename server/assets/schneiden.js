@@ -1,4 +1,4 @@
-/* Gen-EM NAdoku — Schneidewerkzeug in der Tagesansicht (S4/A2b, E-S4-17).
+/* Gen-EM NAdoku — Schneidewerkzeug in der Tagesansicht.
  *
  * WOFUER. Wer waehrend eines Einsatzes keinen Knopf gedrueckt hat, hat den
  * Einsatz nicht — seine Spur aber schon: Sie liegt im Ruhesegment, in dem das
@@ -10,13 +10,13 @@
  * schon 600 Zeilen lang und traegt Karte, Tabelle, Entschluesselung und
  * Diensttag-Formular. Der Schnitt ist davon unabhaengig — er liest die
  * Segmentliste und ruft einen Endpunkt. Als eigene Datei laedt er ausserdem
- * mit eigenem Zeitstempel nach (asset(), Backlog Nr. 9).
+ * mit eigenem Zeitstempel nach (asset()).
  *
  * DIE ZEITLEISTE IST EINE ANZEIGE, KEINE BEDIENUNG. Gefuehrt wird ueber die
  * Zeitfelder; die Leiste zeigt, was daraus wird. Ein Ziehen an den Griffen
  * waere eine zweite Eingabe fuer dieselbe Zahl, und die beiden liefen
- * auseinander — die eine auf die Minute, die andere auf das Pixel (Mockup A0,
- * Vorschlag 2: „führend sind die Felder").
+ * auseinander — die eine auf die Minute, die andere auf das Pixel
+ * („führend sind die Felder").
  */
 'use strict';
 const EdSchnitt = (() => {
@@ -24,8 +24,8 @@ const EdSchnitt = (() => {
   const esc = (t) => EdHtml.escape(t);
 
   let neuLaden = null;     // Rückruf: Tag neu holen, nachdem etwas geschnitten wurde
-  /* Datum des Diensttags und Zeitzone der Anlage (S11-05c): Seit der Browser
-     die Punkte selbst auswählt, muss er den Zeitraum so genau kennen wie der
+  /* Datum des Diensttags und Zeitzone der Anlage: Weil der Browser die
+     Punkte selbst auswählt, muss er den Zeitraum so genau kennen wie der
      Server (`pruef_ortszeit_zu_utc()`), nicht nur ungefähr wie die Vorschau. */
   let tagInfo = { tag: null, tz: null };
 
@@ -35,14 +35,13 @@ const EdSchnitt = (() => {
    *
    * Die Anwendung rechnet Zeiten IMMER auf dem Server in die App-Zeitzone
    * (`fmt_local()`); der Browser zeigt nur an — die Einsatztabelle bekommt
-   * seit jeher `start_hhmm` und keine UTC-Zeichenkette. Die erste Fassung
-   * dieser Datei tat es anders: Sie nahm `started_at` als UTC und rechnete
-   * mit `new Date(...)` in die Zone des BROWSERS um. Auf einem Rechner, dessen
-   * Zone zufaellig die der Anwendung ist, faellt das nie auf; im Container ist
-   * sie UTC, und der Schnitt griff zwei Stunden daneben und nahm null Punkte
-   * mit. Die Bedienung meldete dabei Erfolg.
+   * `start_hhmm` und keine UTC-Zeichenkette. Wer `started_at` als UTC nimmt
+   * und mit `new Date(...)` in die Zone des BROWSERS umrechnet, merkt es auf
+   * einem Rechner, dessen Zone zufaellig die der Anwendung ist, nie; im
+   * Container ist sie UTC, und der Schnitt griffe zwei Stunden daneben und
+   * naehme null Punkte mit. Die Bedienung meldete dabei Erfolg.
    *
-   * Jetzt liefert die API `start_hhmm`/`end_hhmm` (fertig formatiert),
+   * Deshalb liefert die API `start_hhmm`/`end_hhmm` (fertig formatiert),
    * `von_ts`/`bis_ts` (Epochensekunden, reine Geometrie) und
    * `start_tag`/`end_tag` (Kalendertage hinter dem Diensttag). Was der Browser
    * tut, ist Minutenarithmetik — und die kennt keine Zeitzone.
@@ -94,12 +93,10 @@ const EdSchnitt = (() => {
     return null;
   }
 
-  /* DIE DAUER KOMMT AUS EdFormat.dauer() (Web 21.1.11, Backlog Nr. 273).
-   * Hier stand eine eigene Funktion `dauer()` mit einer dritten
-   * Schreibweise — „1 h 6 min" mit Leerzeichen, waehrend der Rest der
-   * Anwendung „1h 06min" schreibt — und dem Rundungsfehler, den AP8d in
-   * EdFormat behoben hat: Stunden und Minuten getrennt gerechnet ergab
-   * 3599 s ein „60 min". Die beiden Aufrufer nehmen das Maximum mit 0 mit,
+  /* DIE DAUER KOMMT AUS EdFormat.dauer(), keine eigene Funktion: Sie
+   * braeuchte eine eigene Schreibweise und truege die Rundung von Stunden
+   * und Minuten selbst — getrennt gerechnet ergaebe 3599 s ein „60 min".
+   * Die beiden Aufrufer nehmen das Maximum mit 0 mit,
    * damit der Leerwert von EdFormat nie erreicht wird. */
 
   /** Ende des Segments — auch wenn es noch laeuft. */
@@ -111,10 +108,10 @@ const EdSchnitt = (() => {
 
   /* ---- Die Zeitleiste -----------------------------------------------------
    *
-   * GEWOEHNLICHE ELEMENTE MIT PROZENTBREITEN, kein SVG. Die erste Fassung war
-   * ein `<svg viewBox="0 0 640 120">` mit `width:100%`, wie im Mockup — und
-   * ein viewBox skaliert seine BESCHRIFTUNG mit: auf 1280 px stand die
-   * Uhrzeit richtig, auf 390 px war sie sechs Pixel hoch. Dieselbe Zahl in
+   * GEWOEHNLICHE ELEMENTE MIT PROZENTBREITEN, kein SVG. Ein
+   * `<svg viewBox="0 0 640 120">` mit `width:100%` skaliert seine
+   * BESCHRIFTUNG mit: auf 1280 px stuende die Uhrzeit richtig, auf 390 px
+   * waere sie sechs Pixel hoch. Dieselbe Zahl in
    * zwei Groessen, je nach Fenster. So bleibt der Text Text und nur der
    * Balken skaliert.
    *
@@ -137,7 +134,7 @@ const EdSchnitt = (() => {
                     ? ', gewählt ' + vonHhmm + ' bis ' + bisHhmm : ''))
           + '"><div class="schnitt-bahn"></div>';
 
-    /* Was früher schon herausgeschnitten wurde, wird gezeigt. Ohne diese
+    /* Was schon herausgeschnitten wurde, wird gezeigt. Ohne diese
      * Fläche sähe die Leiste eine Lücke ohne Erklärung, und jemand schnitte
      * ein zweites Mal an derselben Stelle. */
     (seg.schnitte || []).forEach(sn => {
@@ -209,10 +206,9 @@ const EdSchnitt = (() => {
       + '<div class="listen-form-fuss">'
       +   '<button class="knopf knopf-primaer" type="button" data-schneiden>'
       +     '<span>Einsatz erzeugen</span></button>'
-      /* ZEITRAUM LOESCHEN (S11-05c, Backlog Nr. 161): derselbe Zeitraum,
-         die andere Handlung — die Punkte darin endgueltig fort, mit
-         Rueckfrage. Ein vorhandener Baustein (`knopf-gefahr`), freigegeben
-         ohne Mockup am 15.10.2026. */
+      /* ZEITRAUM LOESCHEN: derselbe Zeitraum, die andere Handlung — die
+         Punkte darin endgueltig fort, mit Rueckfrage. Ein vorhandener
+         Baustein (`knopf-gefahr`). */
       +   '<button class="knopf knopf-gefahr" type="button" data-zeitraum-loeschen>'
       +     '<span>Zeitraum löschen</span></button>'
       +   '<button class="knopf knopf-leise" type="button" data-abbrechen>'
@@ -238,7 +234,7 @@ const EdSchnitt = (() => {
     }
     const vonTs = tsVon(seg, bv, bt), bisTs = tsVon(seg, ev, et);
     if (bisTs <= vonTs) { return { grund: 'Das Ende liegt vor dem Beginn.' }; }
-    /* GENAU, WIE DER SERVER RECHNET (S11-05c). `tsVon()` ist die Vorschau und
+    /* GENAU, WIE DER SERVER RECHNET. `tsVon()` ist die Vorschau und
        an der Zeitumstellung eine Stunde daneben (siehe dort); welche Punkte
        mitgehen, entscheidet die Umrechnung von `local_to_utc()` — der Server
        prueft die Stuecke gegen genau diesen Zeitraum. */
@@ -248,12 +244,11 @@ const EdSchnitt = (() => {
              vonGenau: vonGenau != null ? vonGenau : vonTs, bisGenau: bisGenau != null ? bisGenau : bisTs };
   }
 
-  /* DER SATZ UNTER DEN FELDERN ist eine Meldung aus dem Baustein (Web 21.1.11,
-   * Backlog Nr. 271): `fehler` fuer einen Grund, der das Schneiden verhindert,
-   * und fuer einen Fehlschlag des Servers; `info` fuer den Erklaertext. Bis
-   * dahin stand hier eine leere Huelle mit fester Klasse `meldung-info`, die
-   * per `textContent` befuellt wurde — ohne Symbol, und „Das Ende liegt vor
-   * dem Beginn." stand in blauer Hinweisflaeche statt in roter. Der Anker
+  /* DER SATZ UNTER DEN FELDERN ist eine Meldung aus dem Baustein: `fehler`
+   * fuer einen Grund, der das Schneiden verhindert, und fuer einen
+   * Fehlschlag des Servers; `info` fuer den Erklaertext. Eine leere Huelle
+   * mit fester Klasse `meldung-info` haette kein Symbol, und „Das Ende liegt
+   * vor dem Beginn." stuende in blauer Hinweisflaeche statt in roter. Der Anker
    * `data-vorher` sitzt am Behaelter, weil `EdHtml.meldung()` sein Markup
    * ohne fremde Attribute baut. */
   function vorher(el, ton, text) {
@@ -314,7 +309,7 @@ const EdSchnitt = (() => {
     });
 
     knopf.disabled = true;
-    /* DER BROWSER NIMMT DIE PUNKTE (S11-05c, E-S11-47). Er oeffnet das
+    /* DER BROWSER NIMMT DIE PUNKTE. Er oeffnet das
        Segment — ohne die schon geschnittenen oder geloeschten Zeitraeume —,
        nimmt die Punkte im gewaehlten Zeitraum und verschliesst sie als Spur
        des neuen Einsatzes, gebunden an dessen Kennung. Das Segment bleibt,
@@ -375,8 +370,9 @@ const EdSchnitt = (() => {
     /* Wie beim Schneiden: das try nur noch um das Nachladen. */
     try {
       await neuLaden();
-      /* Seit S11-05c waren die Punkte im Segment nie fort (nur gesperrt);
-         `zurueck` zaehlt nur noch Punkte eines Schnitts aus der Zeit davor. */
+      /* Die Punkte im Segment sind nach einem Schnitt nicht fort, nur
+         gesperrt; `zurueck` zaehlt nur Punkte eines Schnitts, der sie aus
+         dem Segment herausgenommen hatte. */
       melde('ok', 'Der Schnitt ist zurückgenommen — die GPS-Daten des Zeitraums '
                 + 'gehören wieder zum Ruhesegment, der Einsatz ist weg.');
     } catch (e) {
@@ -384,7 +380,7 @@ const EdSchnitt = (() => {
     }
   }
 
-  /* Die Punkte eines Segments, geoeffnet (S11-05c). `ohneSperren`: ohne die
+  /* Die Punkte eines Segments, geoeffnet. `ohneSperren`: ohne die
    * schon geschnittenen oder geloeschten Zeitraeume — so, wie die Karte sie
    * zeigt. Beim Loeschen dagegen ALLE Punkte, denn neu geschrieben wird das
    * ganze Segment, und ein geschnittener Zeitraum bleibt darin gesperrt. */
@@ -406,7 +402,7 @@ const EdSchnitt = (() => {
     return 'Die GPS-Daten von Ruhesegment Nr. ' + seg.id + ' lassen sich nicht öffnen. Es wurde nichts geändert.';
   }
 
-  /* ---- Ein Stück löschen (S11-05c, Backlog Nr. 161) ------------------------
+  /* ---- Ein Stück löschen ---------------------------------------------------
    *
    * ENDGUELTIG. Der Browser verschliesst die Punkte AUSSERHALB des Zeitraums
    * neu (mit ihren Sequenznummern), der Server ersetzt die Stuecke des
@@ -438,8 +434,8 @@ const EdSchnitt = (() => {
       + w.ev + ' werden endgültig gelöscht. Das lässt sich nicht rückgängig machen.',
       'Löschen', 'gefahr', 'GPS-Daten löschen');
     if (!ja) { knopf.disabled = false; return; }
-    /* AUF EINER GEPACKTEN SPUR (Stufe 2, 3) bleibt sie gepackt (S11-07,
-     * E-S11-74): ein Stück derselben Stufe, das mindestens bis zur alten Marke
+    /* AUF EINER GEPACKTEN SPUR (Stufe 2, 3) bleibt sie gepackt: ein Stück
+     * derselben Stufe, das mindestens bis zur alten Marke
      * deckt — Geräteteile, die nach dem Zusammenfügen kamen, gehen mit hinein. */
     const alle = seg.spur_stuecke || [];
     const stufe = Math.max(1, ...alle.map(st => st.stufe || 1));
@@ -479,11 +475,10 @@ const EdSchnitt = (() => {
     if (!ziel) { return; }
     const alt = ziel.parentNode.querySelector('[data-schnittmeldung]');
     if (alt) { alt.remove(); }
-    /* AUS DEM BAUSTEIN (Web 21.1.11, gefunden in R4-13, F-R4-42). Hier stand
-     * die Meldung von Hand — ein Absatz, dem die Klasse per Zuweisung an
-     * className gesetzt wurde, ohne Symbol —, und das Zaehlmuster von Z37
-     * sah sie nicht, weil es nur das Attribut im Markup suchte. Der
-     * Behaelter traegt den Anker data-schnittmeldung, damit die naechste
+    /* AUS DEM BAUSTEIN, nicht von Hand: Ein Absatz, dem die Klasse per
+     * Zuweisung an className gesetzt wird, haette kein Symbol, und das
+     * Zaehlmuster von Z37 saehe ihn nicht, weil es nur das Attribut im
+     * Markup sucht. Der Behaelter traegt den Anker data-schnittmeldung, damit die naechste
      * Meldung die alte findet. */
     const d = document.createElement('div');
     d.setAttribute('data-schnittmeldung', '');
@@ -500,7 +495,7 @@ const EdSchnitt = (() => {
                 + (seg.n > 0 ? seg.n + ' Punkte' : 'keine Aufzeichnung')
                 + (seg.final ? '' : ' · läuft noch');
 
-    /* Ein Vermerk OHNE Einsatz ist ein geloeschter Zeitraum (S11-05c): keine
+    /* Ein Vermerk OHNE Einsatz ist ein geloeschter Zeitraum: keine
        Plakette — die Punkte sind fort —, und keine Ruecknahme. */
     const schnitte = (seg.schnitte || []).filter(sn => sn.mission_id != null);
     let plaketten = '';
@@ -517,8 +512,8 @@ const EdSchnitt = (() => {
     }
     /* RUECKGAENGIG STEHT HIER — AM SEGMENT, NICHT AM EINSATZ.
      *
-     * Der freigegebene Mockup schlug die Zeile des geschnittenen EINSATZES
-     * vor. Die Einsatzliste ist aber eine sortierbare Tabelle mit einem
+     * Die Zeile des geschnittenen EINSATZES laege nahe. Die Einsatzliste ist
+     * aber eine sortierbare Tabelle mit einem
      * Spaltenkatalog (`mission_fields.php`) und hat keine Zeilenaktionen;
      * eine Aktionsspalte einzufuehren traefe alle drei Einsatztabellen
      * (Tagesansicht, Suche, Zeitraum) und waere eine neue Darstellung —
@@ -526,8 +521,7 @@ const EdSchnitt = (() => {
      *
      * Am Segment ist die Handlung ausserdem vollstaendig: Dort steht, was
      * fehlt, dorthin kommen die Punkte zurueck, und dort steht bereits die
-     * Plakette, die den Schnitt nennt. Die Abweichung ist im Konzept
-     * vermerkt und steht zur Entscheidung. */
+     * Plakette, die den Schnitt nennt. */
     schnitte.forEach(sn => {
       knoepfe += '<button class="knopf knopf-leise" type="button" data-rueck="'
                + sn.mission_id + '"><span>Schnitt zurücknehmen</span></button>';
@@ -594,18 +588,17 @@ const EdSchnitt = (() => {
     });
   }
 
-  /* ---- GPX-Import (S4/A3, E-S4-18) ------------------------------------------
+  /* ---- GPX-Import -----------------------------------------------------------
    *
    * Er wohnt in DIESER Datei und nicht in einer eigenen: Er endet dort, wo
    * der Schnitt anfaengt — die importierte Aufzeichnung wird ein
    * Ruhesegment, und die Einsaetze schneidet man danach heraus. Beide
    * bedienen dieselbe Karte, beide laden den Tag danach neu.
    *
-   * SEIT S11-05d LIEST UND VERSCHLIESST DER BROWSER. `EdGpx.lesen()` haelt
-   * dieselben Regeln wie bis Web 22.2.0 `gpx_lesen()` auf dem Server; die
-   * Punkte gehen als Stuecke unter dem oeffentlichen Kontoschluessel hinaus
-   * (`EdOrtsdaten.stueckeBauen`), gebunden an eine Kennung, die hier
-   * gezogen wird. Der Server sieht keine Koordinate mehr.
+   * DER BROWSER LIEST UND VERSCHLIESST. `EdGpx.lesen()` haelt die Regeln
+   * des Lesens; die Punkte gehen als Stuecke unter dem oeffentlichen
+   * Kontoschluessel hinaus (`EdOrtsdaten.stueckeBauen`), gebunden an eine
+   * Kennung, die hier gezogen wird. Der Server sieht keine Koordinate.
    */
   let gpxDaten = null;   // ArrayBuffer der gewaehlten Datei
 

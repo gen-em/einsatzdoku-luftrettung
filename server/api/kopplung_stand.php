@@ -5,7 +5,7 @@ require_once __DIR__ . '/../kopplung_lib.php';
 
 /**
  * GET api/kopplung_stand.php -> {"zustand": "…"} — wartet dieses Konto noch
- * auf ein Gerät, und hat es inzwischen Ja gesagt? (S5, E-S5-53)
+ * auf ein Gerät, und hat es inzwischen Ja gesagt?
  *
  * DER ENDPUNKT NIMMT KEINE EINGABE. Das ist Absicht und die kleinste
  * Angriffsfläche, die dieser Zweck zulässt: Welche Kopplungssitzung gemeint

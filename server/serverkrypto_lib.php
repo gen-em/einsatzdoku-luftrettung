@@ -9,51 +9,61 @@ require_once __DIR__ . '/validate_lib.php';
 require_once __DIR__ . '/konfig_lib.php';
 
 /**
- * DIE GEHEIMNISSE DES SERVERS — seit S10 sind es zwei.
+ * DIE GEHEIMNISSE DES SERVERS — es sind zwei.
  *
- * Der **Serverschlüssel** (`server_key`, seit S2/AP7) versiegelt, was der
- * Server ohne Browser lesen können muss: die Zugangsdaten der Backup-Ziele
- * und das Komplettbackup. Er öffnet keine Patientendaten und kann es auch
- * nicht.
+ * Der **Serverschlüssel** (`server_key`) versiegelt, was der Server ohne
+ * Browser lesen können muss — Zugangsdaten der Backup-Ziele, Geheimnisse des
+ * Zweitfaktors, Konto-Backups der Verwaltung, Archive des Protokolls und das
+ * Komplettbackup (die Liste steht unten). Er öffnet keine Patientendaten und
+ * kann es auch nicht.
  *
- * Der **Server-Anteil** (`kdf_anteil`, seit S10 / Schritt 9b, R78) tut etwas
+ * Der **Server-Anteil** (`kdf_anteil`) tut etwas
  * anderes: Er geht in die Ableitung des DATENSCHLÜSSELS ein, mit dem der
  * Browser die Schlüsselhülle des Kontos öffnet. Der Server kann damit
  * trotzdem nichts öffnen — er kennt den Anteil, nicht die PBKDF2-Hälfte aus
  * dem Passwort. Was sich ändert, ist die Rechnung des Angreifers: Wer nur
- * die Datenbank hat, hat seit S10 Salz, Rundenzahl und Hülle — aber nicht
- * mehr alles, was er zum Durchprobieren braucht (Krypto-Review K-3, Weg 1).
+ * die Datenbank hat, hat Salz, Rundenzahl und Hülle — aber nicht
+ * alles, was er zum Durchprobieren braucht.
  *
  * BEIDE LIEGEN IN config.php UND NICHT IN DER DATENBANK, und beim Anteil
  * wiegt der Grund schwerer als beim Serverschlüssel: Der Zweck ist der Fall
  * „jemand hat die Datenbank". Läge der Anteil in einer Tabelle, wäre er im
  * Abzug und der ganze Schritt gegenstandslos. Er gehört deshalb auch NICHT
- * ins Komplettbackup (SP-3, „Was nicht ins Archiv gehört").
+ * ins Komplettbackup („Was nicht ins Archiv gehört").
  *
- * WAS DAS FÜR DEN BETRIEB HEISST. `config.php` ist seit S10 Schlüsselträger
+ * WAS DAS FÜR DEN BETRIEB HEISST. `config.php` ist Schlüsselträger
  * ALLER Konten. Das Wiederanlaufpaket hat vier Stücke — `config.php`,
  * Serverschlüssel, Server-Anteil, Zugang zum Ziel —, und das Schlüsselblatt
  * (Betrieb → Servereinstellungen) ist Pflicht, nicht Empfehlung.
  * **Der Rückweg bleibt serverunabhängig:** `pat_wrap_rc` hängt NICHT am
  * Anteil. Wer ihn verliert, sperrt niemanden dauerhaft aus — jede NutzerIn
- * kommt über den Wiederherstellungsschlüssel wieder herein (E-S10-04).
+ * kommt über den Wiederherstellungsschlüssel wieder herein.
  *
  * ---------------------------------------------------------------------------
  *
- * DER SERVERSCHLÜSSEL — das eine Geheimnis, das der Server selbst hat
- * (E-S2-21, S2/AP7).
+ * DER SERVERSCHLÜSSEL — das eine Geheimnis, das der Server selbst hat.
+ * 
  *
  * WARUM ES IHN ÜBERHAUPT GIBT, OBWOHL DIESE ANWENDUNG SONST NICHTS WEISS
  * Diagnose, Alter und Einsatzort werden im Browser ver- und entschlüsselt;
- * der Server sieht sie nie. Das bleibt so. Ab AP7 gibt es aber zwei Dinge,
+ * der Server sieht sie nie. Das bleibt so. Es gibt aber zwei Dinge,
  * die der Server ohne jeden Browser lesen können MUSS, weil sie zu einem
  * Zeitpunkt gebraucht werden, an dem niemand angemeldet ist:
  *
  *   1. die Zugangsdaten der Backup-Ziele (Passwort, privater Schlüssel) —
  *      der Versandjob läuft nachts über den Job-Einstieg,
- *   2. das Komplettbackup der Installation (AP8), sobald es das Haus verlässt.
+ *   2. die Geheimnisse des Zweitfaktors (TOTP) — die Anmeldung prüft den
+ *      Code, bevor ein Schlüssel des Kontos offen ist,
+ *   3. die Konto-Backups der Verwaltung, Begleitdatei und jedes Paket,
+ *   4. die Archive des Protokolls, Manifest und Teile,
+ *   5. das Komplettbackup der Installation, sobald es das Haus verlässt.
  *
- * Beides ist kein Patientendatum. Der Serverschlüssel ist deshalb KEINE
+ * Maßgeblich sind die Aufrufer von `sk_versiegeln()`, nicht diese Liste; die
+ * Tabelle der Zwecke steht in `docs/Technik.md` (Der Serverschlüssel). Für
+ * den Angreifer heißt das: Wer `config.php` UND die Datenbank hat, öffnet den
+ * zweiten Faktor aller Konten. Patientendaten öffnet er damit nicht.
+ *
+ * Nichts davon ist ein Patientendatum. Der Serverschlüssel ist deshalb KEINE
  * Aufweichung der Zusage aus CLAUDE.md Abschnitt 4 — er schützt Betriebs-
  * geheimnisse, nicht Behandlungsdaten, und er kann die verschlüsselten Felder
  * auch nicht öffnen.
@@ -71,10 +81,9 @@ require_once __DIR__ . '/konfig_lib.php';
  * versiegeltes Komplettbackup ist Müll (das ist die schwere Folge). Das
  * Runbook in `docs/Technik.md` sagt es an der Stelle noch einmal.
  *
- * WAS PASSIERT, WENN ER SICH ÄNDERT — SEIT WEB 21.12.0 EIN VORGANG
- * (Schritt 18, SR-03, Nr. 247, E-SR-08, E-SR-09). Bis dahin gab es keinen
- * Wechsel: Wer `server_key` von Hand änderte, machte alles Versiegelte stumm.
- * Jetzt folgt der Wechsel dem Muster der Anteil-Rotation:
+ * WAS PASSIERT, WENN ER SICH ÄNDERT — EIN VORGANG.
+ * Wer `server_key` von Hand ändert, macht alles Versiegelte stumm.
+ * Deshalb folgt der Wechsel dem Muster der Anteil-Rotation:
  * `serverschluessel_wechseln()` legt den bisherigen als `server_key_alt` ab
  * und würfelt einen neuen; `sk_versiegeln()` versiegelt nur mit dem neuen,
  * `sk_oeffnen()` öffnet mit dem neuen und dann mit dem bisherigen. Der Job
@@ -85,7 +94,7 @@ require_once __DIR__ . '/konfig_lib.php';
  * Komplett-Stand unter dem neuen und der beantworteten Rückfrage, darf der
  * bisherige gehen (`serverschluessel_alt_entfernen()`, drei Riegel).
  * **Was auf einem Backup-Ziel liegt, bleibt unter dem bisherigen** — kein
- * Vorgang auf dem Server erreicht es (E-SR-10).
+ * Vorgang auf dem Server erreicht es.
  *
  * Und wenn doch einer von Hand geändert wird: Nichts Stilles. `sk_oeffnen()`
  * gibt `null` zurück, und jeder Aufrufer sagt dann, was Sache ist: „mit
@@ -168,13 +177,13 @@ function serverschluessel_kennung(): ?string
 }
 
 /**
- * Der BISHERIGE Serverschlüssel — gesetzt, solange ein Wechsel läuft
- * (SR-03, E-SR-08). Wortgleich gebaut wie `serverschluessel()` und
+ * Der BISHERIGE Serverschlüssel — gesetzt, solange ein Wechsel läuft.
+ * Wortgleich gebaut wie `serverschluessel()` und
  * `kdf_anteil_alt()`: Ein halber Wert öffnet nichts.
  *
  * Er versiegelt NIE, er öffnet nur — was noch unter ihm liegt, bis der Job
- * es umgehüllt hat, und was auf einem Backup-Ziel liegt, für immer
- * (E-SR-10). Aus `config.php` verschwindet er erst mit
+ * es umgehüllt hat, und was auf einem Backup-Ziel liegt, für immer.
+ * Aus `config.php` verschwindet er erst mit
  * `serverschluessel_alt_entfernen()`.
  */
 function serverschluessel_alt(bool $frisch = false): ?string
@@ -195,7 +204,7 @@ function serverschluessel_alt_kennung(): ?string
 }
 
 /**
- * 64 Hexzeichen in Vierergruppen — die Form fürs Papier (E-S10-10).
+ * 64 Hexzeichen in Vierergruppen — die Form fürs Papier.
  *
  * WOZU DIE GRUPPEN. Das Schlüsselblatt ist zum Abtippen da, und zwar im
  * Ernstfall: nach einem Wiederanlauf, unter Zeitdruck, von einem Ausdruck.
@@ -236,17 +245,6 @@ function schluessel_eingabe_normalisieren(string $roh): ?string
 function serverschluessel_neu(): string
 {
     return bin2hex(random_bytes(32));
-}
-
-/** Die Zeile, die in `config.php` gehört — genau so, wie sie dort steht.
- *
- *  Seit S10 nur noch der Name über `config_eintrag_zeile()`: Zwei Funktionen,
- *  die dieselbe Zeile bauen, laufen früher oder später auseinander, und dann
- *  steht auf der Seite eine Zeile, die die schreibende Funktion nicht
- *  wiederfindet. */
-function serverschluessel_zeile(string $hex): string
-{
-    return config_eintrag_zeile('server_key', $hex);
 }
 
 /**
@@ -299,8 +297,8 @@ function sk_oeffnen(string $paket, string $zweck): ?string
  * Öffnen — und sagen, WELCHER Schlüssel es war: `['klar' => …, 'mit' =>
  * 'neu'|'alt']` oder `null`.
  *
- * ERST DER NEUE, DANN DER BISHERIGE (SR-03, E-SR-08). Das Präfix `edsk1:`
- * trägt keine Kennung (F-SR-04); ob ein Paket zum alten Schlüssel gehört,
+ * ERST DER NEUE, DANN DER BISHERIGE. Das Präfix `edsk1:`
+ * trägt keine Kennung; ob ein Paket zum alten Schlüssel gehört,
  * zeigt der Versuch. Die Reihenfolge ist die der Häufigkeit: Nach dem
  * Umhüllen öffnet fast alles mit dem neuen, und ein zweiter Versuch kostet
  * nur, solange ein Wechsel läuft.
@@ -338,7 +336,7 @@ function sk_versiegelt(string $wert): bool
 }
 
 /* ===========================================================================
- * DER SERVER-ANTEIL AM DATENSCHLÜSSEL (S10, E-S10-02 bis E-S10-04)
+ * DER SERVER-ANTEIL AM DATENSCHLÜSSEL
  * ======================================================================== */
 
 /**
@@ -392,8 +390,8 @@ function kdf_anteil_neu(): string
  *
  *     kontoAnteil = HMAC-SHA256(schlüssel = kdf_anteil, nachricht = "konto:<id>")
  *
- * WARUM AUS DER KONTONUMMER UND NICHT AUS DEM SALZ (F-S10-1, E-S10-03). Die
- * Vorbereitung (SP-3) schlug das Salz vor. Das geht nicht: Passwortwechsel
+ * WARUM AUS DER KONTONUMMER UND NICHT AUS DEM SALZ. Die
+ * Vorbereitung schlug das Salz vor. Das geht nicht: Passwortwechsel
  * und Reset würfeln das NEUE Salz im Browser, und der Anteil dazu wäre dem
  * Browser in genau dem Augenblick unbekannt, in dem er die neue Hülle baut.
  * Es bräuchte einen zweiten Umlauf zum Server oder der Server müsste das Salz
@@ -415,7 +413,7 @@ function konto_anteil(int $userId, string $roh): string
 /**
  * Die Anteil-Kennung, die eine Schlüsselhülle im Präfix trägt — oder null.
  *
- * Eine Hülle mit Anteil lautet `edka1:<kennung>:<base64>` (E-S10-05); eine
+ * Eine Hülle mit Anteil lautet `edka1:<kennung>:<base64>`; eine
  * ohne Anteil `edk1:<base64>` oder ganz ohne Präfix (Altbestand). An dieser
  * einen Stelle wird das gelesen, serverseitig — der Server öffnet dabei
  * nichts und kann es auch nicht.
@@ -435,7 +433,7 @@ function huelle_anteil_kennung(?string $huelle): ?string
 
 /* ---- Marken in app_state ------------------------------------------------
  *
- * Zwei Schlüssel, beide erst seit S10: `kdf_anteil_kennung` (mit welchem
+ * Zwei Schlüssel: `kdf_anteil_kennung` (mit welchem
  * Anteil die Hüllen gebaut werden) und `server_key_kennung` (mit welchem
  * Serverschlüssel versiegelt wurde).
  *
@@ -446,7 +444,7 @@ function huelle_anteil_kennung(?string $huelle): ?string
  * bekommt: „Der Anteil ist nicht der, mit dem die Hüllen gebaut wurden."
  * Ohne sie sähe dieselbe Lage aus wie ein falsches Passwort, und zwar für
  * jede NutzerIn gleichzeitig. Das ist die stille Aussperrung, gegen die
- * diese zwei Zeilen stehen (SP-3).
+ * diese zwei Zeilen stehen.
  *
  * Ein Abzug der Datenbank gewinnt damit nichts: Eine Kennung ist ein
  * Fingerabdruck, kein Wert.
@@ -456,9 +454,8 @@ function huelle_anteil_kennung(?string $huelle): ?string
 function schluessel_marke_lesen(string $k): ?string
 {
     /* FEHLT `app_state`, LIEFERT DER HELFER `null` — er faengt selbst. Dann
-     * verhält sich die Installation wie vor S10, und das ist der richtige
-     * Zustand. Der eigene `try/catch` stand hier, solange die Abfrage hier
-     * stand; seit Schritt 15/AP4 waere er unerreichbar. */
+     * verhält sich die Installation wie ohne Server-Anteil, und das ist der
+     * richtige Zustand. Ein eigener `try/catch` hier waere unerreichbar. */
     return app_state_lesen($k);
 }
 
@@ -471,7 +468,7 @@ function schluessel_marke_setzen(string $k, string $v): void
 }
 
 /**
- * Der Zustand des Server-Anteils — die fünf Lagen aus E-S10-09.
+ * Der Zustand des Server-Anteils — fünf Lagen.
  *
  * Gibt zurück:
  *   stand        'fehlt' | 'bereit' | 'rotation' | 'abweichend'
@@ -482,11 +479,11 @@ function schluessel_marke_setzen(string $k, string $v): void
  * DIE VIER LAGEN UND WAS SIE BEDEUTEN
  *
  *   fehlt        Keine `kdf_anteil`-Zeile, keine Marke. Das ist der Zustand
- *                JEDER Installation unmittelbar nach dem Ausrollen von S10:
+ *                JEDER Installation, bevor ein Anteil angelegt ist:
  *                Es wird nichts ausgeliefert, die Hüllen bleiben `edk1:`, und
- *                die Anwendung läuft Zeile für Zeile wie vorher. S10 tut
+ *                die Anwendung läuft wie ohne Anteil. Es geschieht
  *                nichts, bis jemand auf der Karte „Anlegen" drückt — das ist
- *                Absicht und steht als fällige Zuarbeit im Rahmenplan.
+ *                Absicht.
  *   bereit       Wert und Marke stimmen überein. Der Regelfall.
  *   rotation     Es gibt einen zweiten, vorherigen Anteil. Beide werden
  *                ausgeliefert; die Umstellung läuft je Konto beim nächsten
@@ -497,9 +494,9 @@ function schluessel_marke_setzen(string $k, string $v): void
  *                und die Seite sagt das mit der erwarteten Kennung, statt
  *                „Passwort falsch" zu behaupten.
  *
- * DIE MARKE WIRD NACHGETRAGEN, WENN SIE FEHLT (E-S10-U-02). E-S10-09 sagt
- * „gesetzt bei der ersten Auslieferung"; die Abnahme von AP3 verlangt, dass
- * unmittelbar nach dem ANLEGEN Karte, Blatt und `app_state` dieselbe Kennung
+ * DIE MARKE WIRD NACHGETRAGEN, WENN SIE FEHLT. „Gesetzt bei der ersten
+ * Auslieferung" genuegt nicht: Unmittelbar nach dem ANLEGEN sollen Karte,
+ * Blatt und `app_state` dieselbe Kennung
  * zeigen — und beim Anlegen ist noch nichts ausgeliefert. Beides wird wahr,
  * indem diese Funktion die Marke nachträgt, sobald sie fehlt und ein
  * gültiger Wert dasteht. Sie wird sowohl von der Karte als auch von
@@ -507,7 +504,7 @@ function schluessel_marke_setzen(string $k, string $v): void
  *
  * Was dabei in Kauf genommen wird: Auf einer Installation ohne Marke
  * übernimmt die Funktion, WAS DASTEHT — auch einen falsch abgeschriebenen
- * Wert. Das ist derselbe Fall, den E-S10-10 benennt („Ohne Eintrag in
+ * Wert. Das ist derselbe Fall wie beim Schluesselblatt („Ohne Eintrag in
  * `app_state` gibt es nichts zu prüfen"), und er ist harmlos: In diesem
  * Zustand existiert keine `edka1:`-Hülle, gegen die man prüfen könnte.
  *
@@ -524,8 +521,7 @@ function anteil_zustand(bool $frisch = false): array
     $kennungAlt = schluessel_kennung((string)konfig('kdf_anteil_alt', ''));
     $erwartet   = schluessel_marke_lesen('kdf_anteil_kennung');
     /* Derselbe Wert zweimal ist keine Rotation, sondern eine Waise — wie beim
-     * Serverschlüssel (F-SR-78; beim Anteil nachgezogen mit der Nachprüfung
-     * von H-SR-06, F-SR-86). Sonst sperrte sie den Wechsel des
+     * Serverschlüssel. Sonst sperrte sie den Wechsel des
      * Serverschlüssels, bis jemand „alten Anteil entfernen" drückt. */
     if ($kennungAlt !== null && $kennungAlt === $kennung) { $kennungAlt = null; }
 
@@ -579,11 +575,11 @@ function anteil_ausgeliefert(): ?string
 /**
  * Darf diese Passwort-Hülle so gespeichert werden? `null` = ja, sonst der Grund.
  *
- * DIE EINE PRÜFUNG FÜR ALLE VIER SCHREIBWEGE (S10, Fund F-3). `pat_wrap_pw`
+ * DIE EINE PRÜFUNG FÜR ALLE VIER SCHREIBWEGE. `pat_wrap_pw`
  * wird an vier Stellen geschrieben — `pw_handling.php` bei Erstvergabe und
  * bei Reset, `einstellungen.php` beim Passwortwechsel und
- * `api/kdf_upgrade.php` bei der stillen Umstellung. Nach AP1 prüfte nur der
- * letzte, ob die Kennung im Präfix die aktuelle ist. Das genügt nicht: Ein
+ * `api/kdf_upgrade.php` bei der stillen Umstellung. Prüfte nur der
+ * letzte, ob die Kennung im Präfix die aktuelle ist, genügte das nicht: Ein
  * Passwortwechsel während einer Rotation könnte eine Hülle auf dem ALTEN
  * Anteil schreiben, und die wäre in dem Augenblick unbrauchbar, in dem
  * `kdf_anteil_alt` aus `config.php` verschwindet — also genau dann, wenn die
@@ -594,7 +590,7 @@ function anteil_ausgeliefert(): ?string
  * Server kann die Hülle nicht öffnen — was er prüfen kann, ist das Präfix,
  * und für diesen Fehler genügt das.
  *
- * DAS DEMO-KONTO IST AUSGENOMMEN und muss es sein (E-P1-19): Es bekommt
+ * DAS DEMO-KONTO IST AUSGENOMMEN und muss es sein: Es bekommt
  * keinen Anteil, seine Hülle bleibt `edk1:`. Der Aufrufer sagt das mit
  * `$istDemo`, statt dass diese Funktion `demo_lib.php` nachlädt — sie liegt
  * unter `db.php` und soll dort nicht hinaufgreifen.
@@ -625,7 +621,7 @@ function huelle_pw_pruefen(?string $wrap, bool $istDemo = false): ?string
  * Der eigene Ausdruck (`WRAP_RC_RE`) tut das schon; diese Funktion ist der
  * Ort, an dem die Begründung steht, und der Aufrufer, der beide Hüllen prüft,
  * ruft zwei Funktionen statt einer Regel zweimal. Wer `pat_wrap_rc` je an den
- * Anteil hängt, nimmt der Anwendung ihren Rückweg (E-S10-04).
+ * Anteil hängt, nimmt der Anwendung ihren Rückweg.
  */
 function huelle_rc_pruefen(?string $wrap): ?string
 {
@@ -645,7 +641,7 @@ function huelle_rc_pruefen(?string $wrap): ?string
  *
  * Im Regelfall einer, während einer Rotation zwei. Leer, wenn nichts
  * ausgeliefert wird. Das Demo-Konto fragt hier nicht an; darüber entscheidet
- * `auth_guard.php` (E-S10-06).
+ * `auth_guard.php`.
  */
 function konto_anteile(int $userId): array
 {
@@ -665,7 +661,7 @@ function konto_anteile(int $userId): array
 }
 
 /* ===========================================================================
- * DER PFEFFER VOR BCRYPT (R17-20, F-R17-01, E-R17-20, -44, -51)
+ * DER PFEFFER VOR BCRYPT
  * ======================================================================== */
 
 /**
@@ -675,7 +671,7 @@ function konto_anteile(int $userId): array
  * Kandidat PBKDF2 und bcrypt. Ein gefundenes Passwort führte über eine
  * Anmeldung zum Anteil und damit zu allen `pat_blob` des Kontos. Der Satz
  * „ein Abzug allein genügt nicht mehr für einen Offline-Angriff auf das
- * Passwort" (`CLAUDE.md` 4, `Technik.md` 3) war falsch (F-R17-01).
+ * Passwort" (`CLAUDE.md` 4, `Technik.md` 3) war falsch.
  *
  * WAS JETZT GILT. Gespeichert wird
  *
@@ -683,10 +679,10 @@ function konto_anteile(int $userId): array
  *     pfeffer = HMAC-SHA256(kdf_anteil, "pfeffer:<Kontonummer>")
  *
  * Ohne `config.php` lässt sich damit kein Kandidat mehr gegen den Hash
- * prüfen. Der Satz oben ist für jedes Konto wahr, das sich seit Web 23.2.0
- * angemeldet hat.
+ * prüfen. Der Satz oben ist für jedes Konto wahr, dessen Anmeldehash den Pfeffer
+ * traegt.
  *
- * WARUM EIN EIGENER SCHLÜSSEL UND NICHT DER KONTO-ANTEIL (E-R17-51). Der
+ * WARUM EIN EIGENER SCHLÜSSEL UND NICHT DER KONTO-ANTEIL. Der
  * Konto-Anteil (`konto_anteil()`) geht an jede angemeldete Sitzung, weil der
  * Browser mit ihm die Hülle öffnet. Wer eine Sitzung UND einen Abzug hat,
  * könnte mit ihm weiter offline raten. Der Pfeffer hat einen anderen
@@ -697,15 +693,15 @@ function konto_anteile(int $userId): array
  * muss wissen, mit welchem er prüft. Die Umstellung auf den neuen läuft je
  * Konto bei der nächsten Anmeldung, mit derselben Hülle zusammen.
  *
- * WAS DER PREIS IST (E-R17-44). Fehlt der Anteil, zu dem ein Hash gehört,
+ * WAS DER PREIS IST. Fehlt der Anteil, zu dem ein Hash gehört,
  * meldet sich dieses Konto nicht mehr an — auch die BetreiberIn nicht. Die
  * Anmeldung sagt es ausdrücklich (`anteil_fehlt`), statt „Passwort falsch"
  * zu behaupten. Der Rückweg ist „Passwort vergessen" mit dem
  * Wiederherstellungsschlüssel und danach das Nachtragen vom Schlüsselblatt
- * (Runbook, `Technik.md` 7).
+ * (Runbook, `Technik.md` 13).
  *
- * DAS DEMO-KONTO BEKOMMT KEINEN PFEFFER. Sein Passwort ist öffentlich
- * (E-P1-19), und es bekommt auch keinen Anteil.
+ * DAS DEMO-KONTO BEKOMMT KEINEN PFEFFER. Sein Passwort ist öffentlich,
+ * und es bekommt auch keinen Anteil.
  *
  * DIE LÄNGE GEHT AUF. bcrypt liest höchstens 72 Bytes; die HMAC als Hex sind
  * 64 Zeichen, genau so lang wie das Token vorher.
@@ -733,8 +729,8 @@ function pfeffer_anteil_roh(string $kennung): ?string
 /**
  * Der Wert für `users.password_hash` zu diesem Token.
  *
- * Mit Pfeffer, wenn ein Anteil ausgeliefert wird; sonst bcrypt allein — wie
- * vor Web 23.2.0. Das ist der Zustand jeder Installation ohne Anteil und
+ * Mit Pfeffer, wenn ein Anteil ausgeliefert wird; sonst bcrypt allein. Das ist
+ * der Zustand jeder Installation ohne Anteil und
  * der Zustand während einer Abweichung (`anteil_zustand()`), in der keine
  * neue Hülle mit Anteil entsteht.
  */
@@ -790,7 +786,7 @@ function anmeldehash_veraltet(string $hash, bool $istDemo = false): bool
 }
 
 /* ===========================================================================
- * SCHREIBEN IN config.php (S10, E-S10-10)
+ * SCHREIBEN IN config.php
  * ======================================================================== */
 
 /** Die Einträge, die diese Anwendung in `config.php` schreiben darf.
@@ -815,11 +811,11 @@ function config_eintrag_zeile(string $schluessel, string $hex): string
  * Drei Funktionen halten ihr Ergebnis in einer `static`. Ohne diese Zeilen
  * gäbe die Seite, die gerade geschrieben hat, im selben Aufruf noch den
  * alten Stand zurück — und zeigte nach dem Anlegen weiter „kein Anteil".
- * Genau dieser Fehler ist in S2/AP7 beim Serverschlüssel aufgetreten.
+ * Genau dieser Fehler ist beim Serverschlüssel einmal aufgetreten.
  */
 function config_gemerktes_verwerfen(): void
 {
-    /* ZUERST DIE KONFIGURATION SELBST (Schritt 15 AP2, E-ZE-14). Die vier
+    /* ZUERST DIE KONFIGURATION SELBST. Die vier
      * Zeilen darunter lesen ueber `konfig()` nach; stuende das Gemerkte noch,
      * holten sie sich genau den Stand zurueck, den sie wegwerfen sollen. */
     konfig_verwerfen();
@@ -841,24 +837,23 @@ const SCHLUESSEL_SPERRE_WARTEN_S = 5.0;
 
 /**
  * Eine Arbeit an den Schlüsseln in `config.php` UNTER DER SPERRE DES JOBS
- * `schluesselwechsel` (H-SR-06, F-SR-78).
+ * `schluesselwechsel`.
  *
- * WARUM. Bis Web 21.12.0 lief `serverschluessel_wechseln()` ohne Sperre, und
- * die Gegenlesung hat den Schaden ausgerechnet (K-1): Zwei Wechsel, die
+ * WARUM. Ohne Sperre geschaehe Folgendes: Zwei Wechsel, die
  * gleichzeitig abgeschickt werden — ein Doppelklick, zwei Fenster, zwei
  * BetreiberInnen —, lesen beide die Lage `bereit` und schreiben beide. Je
  * nach Verschränkung überschreibt der zweite den frisch gewürfelten
  * Schlüssel des ersten, nachdem ein Häppchen schon Zeilen unter ihm
  * umgehüllt hat; diese Zeilen öffnet danach kein Schlüssel mehr. Und ein
- * Häppchen des Jobs, das neben dem Wechsel lief, schrieb an seinem Ende
+ * Häppchen des Jobs, das neben dem Wechsel laeuft, schriebe an seinem Ende
  * seinen eigenen, alten Zustand über den, den `sw_beginnen()` gerade
- * angelegt hatte.
+ * angelegt hat.
  *
  * Und zwei gleichzeitige Schreiber teilen sich die Nebendatei
  * `config.neu.php` (`config_eintrag_schreiben()`): Der zweite überschreibt
  * die des ersten, und im ungünstigen Fall wird SEIN Inhalt unter dem Namen
- * des ersten an ihren Platz geschoben. Gemessen in der Gegenprobe zu
- * F-SR-78 — dort scheiterte der zweite am Umbenennen.
+ * des ersten an ihren Platz geschoben. Gemessen in einer Gegenprobe —
+ * dort scheiterte der zweite am Umbenennen.
  *
  * WARUM DIE JOBZEILE UND KEINE DATEI. Die Sperre ist dasselbe bedingte
  * `UPDATE … laeuft_seit` wie in `jobs_einen_lauf()` — damit schließen sich
@@ -891,8 +886,8 @@ function schluessel_unter_sperre(callable $arbeit): array
         $st->execute([SCHLUESSEL_SPERRE_JOB, $verfall]);
         if ($st->rowCount() === 1) { break; }
         if (microtime(true) >= $ende) {
-            /* SEIT WANN, UND WIE LANGE HÖCHSTENS (Nachprüfung H-SR-06,
-             * F-SR-86). Stirbt ein Häppchen an der Zeit- oder Speichergrenze,
+            /* SEIT WANN, UND WIE LANGE HÖCHSTENS. Stirbt ein Häppchen an der
+             * Zeit- oder Speichergrenze,
              * läuft kein `finally`, und die Sperre steht, bis sie verfällt —
              * „gleich noch einmal" allein ließe dann eine Stunde lang raten. */
             $seit = $pdo->prepare('SELECT laeuft_seit FROM jobs WHERE job = ?');
@@ -923,8 +918,8 @@ function schluessel_unter_sperre(callable $arbeit): array
 
 /**
  * Den ersten von zwei Schritten zurücknehmen — aber nur, wenn die Datei noch
- * den EIGENEN halben Zustand trägt: `$schluessel` steht noch auf `$altHex`
- * (Nachprüfung H-SR-06, F-SR-86). Scheiterte der zweite Schritt, weil dort
+ * den EIGENEN halben Zustand trägt: `$schluessel` steht noch auf `$altHex`.
+ * Scheiterte der zweite Schritt, weil dort
  * inzwischen ein anderer Wert steht, hat jemand an der Sperre vorbei
  * geschrieben (FTP, Editor) — etwa denselben Wechsel von Hand. Dann gehört der
  * gesicherte bisherige gerade NICHT weg; ohne ihn öffnete nichts mehr, was
@@ -962,7 +957,7 @@ function config_eintrag_in_datei(string $inhalt, string $schluessel): ?string
  *
  * Gibt `[true, hex]` zurück, wenn er drinsteht, sonst `[false, meldung]`.
  * `$hex === null` ENTFERNT den Eintrag (gebraucht für „alten Anteil
- * entfernen" nach einer Rotation, E-S10-11).
+ * entfernen" nach einer Rotation).
  *
  * WARUM DIESE FUNKTION ÜBERHAUPT SCHREIBT. Der Weg ohne sie hiesse: eine
  * Zeile abschreiben, per FTP in `config.php` einfügen, Datei hochladen. Das
@@ -971,12 +966,12 @@ function config_eintrag_in_datei(string $inhalt, string $schluessel): ?string
  * Schreiben nicht, bleibt der Weg von Hand; die Oberfläche zeigt dann die
  * fertige Zeile (`config_eintrag_zeile()`).
  *
- * ERSETZEN IST DIE AUSNAHME UND MUSS ANGESAGT WERDEN. Bis S10 konnte diese
- * Funktion nur ERGÄNZEN: Steht schon ein Wert da, bricht sie ab. Der Grund
+ * ERSETZEN IST DIE AUSNAHME UND MUSS ANGESAGT WERDEN. Die Regel ist
+ * ERGÄNZEN: Steht schon ein Wert da, bricht die Funktion ab. Der Grund
  * war und ist gut — ein überschriebener Serverschlüssel macht jedes
  * versiegelte Feld unlesbar, ein überschriebener Anteil jede Hülle.
  *
- * S10 braucht das Ersetzen trotzdem, und zwar für genau einen Fall: Nach
+ * Das Ersetzen braucht es trotzdem, und zwar für genau einen Fall: Nach
  * einem Wiederanlauf steht ein FALSCHER Wert in der Datei — abgeschrieben,
  * vertippt, aus der falschen Sicherung. Ihn nicht ersetzen zu können hiesse,
  * die Datei doch von Hand anzufassen. Deshalb:
@@ -987,7 +982,7 @@ function config_eintrag_in_datei(string $inhalt, string $schluessel): ?string
  *     Das Formular macht daraus ein Ankreuzfeld, das man bewusst setzt.
  *
  * Die Kennungsprüfung — „ist das der Wert, mit dem die Hüllen gebaut
- * wurden?" — steht NICHT hier, sondern beim Aufrufer (E-S10-10): Sie gilt
+ * wurden?" — steht NICHT hier, sondern beim Aufrufer: Sie gilt
  * fürs Nachtragen, nicht fürs Anlegen und nicht fürs Rotieren, und eine
  * Prüfung, die je nach Weg anders ausfällt, gehört nicht in die Funktion,
  * die schreibt.
@@ -1001,7 +996,7 @@ function config_eintrag_in_datei(string $inhalt, string $schluessel): ?string
  *      muss ein Feld ergeben, das JEDEN anderen Abschnitt unverändert enthält
  *      und den neuen Wert dazu. Erst dann ersetzt sie das Original.
  *
- * BEDINGTES ERSETZEN (seit Web 21.12.1, H-SR-06, F-SR-78). `$erwartet` ist
+ * BEDINGTES ERSETZEN. `$erwartet` ist
  * der Wert, der beim Ersetzen noch in der DATEI stehen muss — gelesen aus
  * dem Text, den diese Funktion gleich umschreibt, nicht aus dem, was der
  * Prozess beim Start gemerkt hat. Steht dort inzwischen ein anderer, hat
@@ -1076,8 +1071,8 @@ function config_eintrag_schreiben(string $schluessel, ?string $hex,
          * ZWEI SCHREIBWEISEN, UND DIE HÄUFIGERE STAND ZUERST NICHT DA. Der
          * Installer schreibt die Datei mit `var_export()`, und das ergibt
          * `return array (` — nicht `return [`. Nur `config.example.php`
-         * benutzt die kurze Form. Der erste Versuch traf deshalb ausgerechnet
-         * jede echte Installation nicht (Browserprobe S2/AP7).
+         * benutzt die kurze Form. Ein fester Abstand traefe deshalb ausgerechnet
+         * jede echte Installation nicht.
          *
          * Die Einrückung wird von der Zeile darunter ABGESCHRIEBEN:
          * `var_export` rückt zwei Zeichen ein, die Beispieldatei vier. Eine
@@ -1105,10 +1100,9 @@ function config_eintrag_schreiben(string $schluessel, ?string $hex,
      * ausgeführt und Abschnitt für Abschnitt mit dem verglichen, was gerade
      * gilt. Schlägt das fehl, bleibt das Original stehen.
      *
-     * VERGLICHEN WIRD ÜBER ALLE SCHLÜSSEL, NICHT ÜBER DREI BENANNTE. Bis S10
-     * standen `db`, `app` und `smtp` hier als Liste — und jeder vierte
-     * Abschnitt, den eine spätere Fassung dazunimmt, wäre stillschweigend
-     * ungeprüft geblieben. Dass die Liste heute noch stimmte, war Glück. */
+     * VERGLICHEN WIRD ÜBER ALLE SCHLÜSSEL, NICHT ÜBER DREI BENANNTE. Mit
+     * `db`, `app` und `smtp` als Liste bliebe jeder vierte Abschnitt, den eine
+     * spätere Fassung dazunimmt, stillschweigend ungeprüft. */
     $probe = null;
     try {
         $probe = include $tmp;
@@ -1146,7 +1140,7 @@ function config_eintrag_schreiben(string $schluessel, ?string $hex,
      * sie in derselben Sekunde ersetzt, in der die alte Fassung übersetzt
      * wurde, gilt sie als unverändert — und die nächste Anfrage liest
      * weiterhin die Datei OHNE den neuen Eintrag. Gemessen in der
-     * Browserprobe (S2/AP7): Die Seite meldete „steht jetzt in config.php",
+     * Browserprobe: Die Seite meldete „steht jetzt in config.php",
      * und der unmittelbar folgende Aufruf zeigte wieder „Serverschlüssel
      * fehlt". */
     if (function_exists('opcache_invalidate')) { @opcache_invalidate($pfad, true); }
@@ -1155,24 +1149,22 @@ function config_eintrag_schreiben(string $schluessel, ?string $hex,
      * Stand zurueck, und die Seite zeigte nach dem Anlegen weiter den
      * Hinweis, dass nichts da ist.
      *
-     * BIS WEB 20.26.3 WURDE HIER ZUSAETZLICH DIE GLOBALE `$CFG` VON HAND
-     * NACHGEFUEHRT (`unset` bzw. Zuweisung). Das entfaellt mit Schritt 15
-     * AP2: `konfig_verwerfen()` wirft das Gemerkte weg, und die naechste
+     * KEINE GLOBALE, DIE VON HAND NACHZUFUEHREN WAERE: `konfig_verwerfen()`
+     * wirft das Gemerkte weg, und die naechste
      * Abfrage liest die Datei, die eben geschrieben wurde. Damit kann der
-     * Speicher nicht mehr von der Datei abweichen — bisher haette eine
-     * vergessene der beiden Zeilen genau das erzeugt, und zwar still. */
+     * Speicher nicht von der Datei abweichen. */
     config_gemerktes_verwerfen();
     return [true, (string)$hex];
 }
 
 /* ===========================================================================
- * DIE VIER HANDGRIFFE AM SERVER-ANTEIL (S10, E-S10-10 und E-S10-11)
+ * DIE VIER HANDGRIFFE AM SERVER-ANTEIL
  *
  * Sie stehen hier und nicht in `betrieb_server.php`, weil jeder von ihnen aus
  * zwei Schritten besteht, die zusammengehören: `config.php` schreiben UND die
  * Marke in `app_state` nachziehen. Getrennt geschrieben wären sie vier Stellen,
  * an denen der eine Schritt ohne den anderen laufen kann — und eine Marke, die
- * nicht zum Wert passt, ist genau der Zustand „abweichend", gegen den S10
+ * nicht zum Wert passt, ist genau der Zustand „abweichend", gegen den der Server-Anteil
  * gebaut ist.
  * ======================================================================== */
 
@@ -1185,15 +1177,15 @@ function config_eintrag_schreiben(string $schluessel, ?string $hex,
  */
 function anteil_anlegen(): array
 {
-    /* Unter der Sperre wie jeder Griff an einen Schlüssel in config.php
-     * (H-SR-06, F-SR-78). */
+    /* Unter der Sperre wie jeder Griff an einen Schlüssel in config.php.
+     * */
     return schluessel_unter_sperre(static function (): array {
         if (kdf_anteil() !== null) {
             return [false, 'Es steht bereits ein Server-Anteil in config.php.'];
         }
         [$ok, $was] = config_eintrag_schreiben('kdf_anteil', kdf_anteil_neu());
         if (!$ok) { return [false, $was]; }
-        /* Die Marke setzt `anteil_zustand()` beim ersten Lesen nach (E-S10-U-02) —
+        /* Die Marke setzt `anteil_zustand()` beim ersten Lesen nach —
          * hier wird sie nur ausgelöst, damit die Karte gleich den Endzustand
          * zeigt und nicht erst nach dem nächsten Aufruf. */
         anteil_zustand(true);
@@ -1208,7 +1200,7 @@ function anteil_anlegen(): array
  * Würde er beim Wechsel verschwinden, wäre jedes Konto ausgesperrt, bis es sich
  * einmal angemeldet hat — und anmelden kann es sich nur, wenn es die Hülle
  * öffnen kann. Der alte Wert wird deshalb weiter ausgeliefert, bis die
- * Statuszeile sagt, dass niemand mehr auf ihm steht (E-S10-11).
+ * Statuszeile sagt, dass niemand mehr auf ihm steht.
  *
  * DIE REIHENFOLGE IST NICHT BELIEBIG: erst den alten Wert sichern, dann den
  * neuen setzen. Andersherum wäre der alte für die Dauer eines Fehlschlags
@@ -1217,9 +1209,9 @@ function anteil_anlegen(): array
 function anteil_wechseln(): array
 {
     /* Unter derselben Sperre wie der Wechsel des Serverschlüssels: Der Riegel
-     * E-SR-60 gilt in beide Richtungen, und zwei Rotationen, die einander
-     * gleichzeitig die Lage `bereit` ablesen, ließe er sonst beide durch
-     * (H-SR-06, F-SR-78). */
+     * gilt in beide Richtungen, und zwei Rotationen, die einander
+     * gleichzeitig die Lage `bereit` ablesen, ließe er sonst beide durch.
+     * */
     return schluessel_unter_sperre(static function (): array {
         $jetzt = kdf_anteil();
         if ($jetzt === null) {
@@ -1229,16 +1221,16 @@ function anteil_wechseln(): array
         $altHex = strtolower((string)konfig('kdf_anteil', ''));
         /* Eine Waise (`kdf_anteil_alt` = `kdf_anteil`, eine Rotation, die
          * zwischen den beiden Schritten abbrach) ist keine laufende Rotation
-         * und wird überschrieben — mit demselben Wert (Nachprüfung H-SR-06,
-         * F-SR-86, wie F-SR-78 beim Serverschlüssel). */
+         * und wird überschrieben — mit demselben Wert, wie beim
+         * Serverschlüssel. */
         $waise = strtolower((string)konfig('kdf_anteil_alt', '')) === $altHex;
         if (kdf_anteil_alt() !== null && !$waise) {
             return [false, 'Es läuft bereits eine Rotation. Erst den alten Anteil '
                          . 'entfernen, wenn kein Konto mehr auf ihm steht.'];
         }
-        /* NICHT NEBEN EINEM WECHSEL DES SERVERSCHLÜSSELS (E-SR-60). Das Blatt
+        /* NICHT NEBEN EINEM WECHSEL DES SERVERSCHLÜSSELS. Das Blatt
          * trüge sonst vier Kacheln und zwei Seiten; es passt mit drei gerade auf
-         * eine (gemessen P5c/AP9: 1013 von 1017 px). Der Riegel steht hier und
+         * eine (gemessen: 1013 von 1017 px). Der Riegel steht hier und
          * in `serverschluessel_wechseln()`, nicht nur am Knopf. */
         if (serverschluessel_zustand()['stand'] === 'rotation') {
             return [false, 'Es läuft gerade ein Wechsel des Serverschlüssels. Erst '
@@ -1258,9 +1250,9 @@ function anteil_wechseln(): array
             return [false, config_halbes_zuruecknehmen('kdf_anteil', 'kdf_anteil_alt', $altHex, $was2)];
         }
         anteil_zustand(true);     // schreibt die Marke auf die neue Kennung
-        /* DAS BLATT GEHÖRT NEU GEDRUCKT (Nr. 233, E-SR-11) — die Rückfrage kommt
+        /* DAS BLATT GEHÖRT NEU GEDRUCKT — die Rückfrage kommt
          * bei der nächsten Anmeldung jeder BetreiberIn, nicht erst im nächsten
-         * Quartal. Bis Web 21.12.0 fasste die Rotation die Marke nicht an. */
+         * Quartal. */
         require_once __DIR__ . '/einstieg_lib.php';
         blatt_neu_faellig('anteil');
         return [true, (string)schluessel_kennung($was2)];
@@ -1300,7 +1292,7 @@ function anteil_alt_entfernen(): array
  *
  * WAS DAS KOSTET, UND WAS NICHT. Jedes Konto mit `edka1:`-Hülle muss sein
  * Passwort über den **Wiederherstellungsschlüssel** neu setzen — der hängt
- * nicht am Anteil (E-S10-04). Es ist also ein Vorgang für alle und **kein
+ * nicht am Anteil. Es ist also ein Vorgang für alle und **kein
  * Datenverlust**. Genau deshalb steht der Knopf überhaupt da: Ohne ihn bliebe
  * eine Installation im Zustand „abweichend" stehen, in dem niemand mehr
  * hereinkommt und niemand etwas tun kann.
@@ -1310,8 +1302,8 @@ function anteil_alt_entfernen(): array
  */
 function anteil_neuanfang(): array
 {
-    /* Unter der Sperre wie jeder Griff an einen Schlüssel in config.php
-     * (H-SR-06, F-SR-78). */
+    /* Unter der Sperre wie jeder Griff an einen Schlüssel in config.php.
+     * */
     return schluessel_unter_sperre(static function (): array {
         /* NUR AUS DER LAGE „abweichend" HERAUS. Der Knopf steht auch nur dort —
          * aber ein Knopf, der bloss verborgen ist, wird trotzdem gedrückt: über
@@ -1340,9 +1332,9 @@ function anteil_neuanfang(): array
          * „abweichend" bestehen, und der Neuanfang täte nichts. */
         schluessel_marke_setzen('kdf_anteil_kennung', (string)schluessel_kennung($neu));
         anteil_zustand(true);
-        /* AUCH DER NEUANFANG MACHT DAS BLATT FÄLLIG (H-SR-06, F-SR-82): Der
+        /* AUCH DER NEUANFANG MACHT DAS BLATT FÄLLIG: Der
          * Anteil auf dem Blatt ist ab jetzt ein anderer, genau wie nach einer
-         * Rotation (Nr. 233). Bis Web 21.12.0 tat es nur `anteil_wechseln()`. */
+         * Rotation — wie bei `anteil_wechseln()`. */
         require_once __DIR__ . '/einstieg_lib.php';
         blatt_neu_faellig('anteil');
         return [true, (string)schluessel_kennung($neu)];
@@ -1350,21 +1342,21 @@ function anteil_neuanfang(): array
 }
 
 /**
- * Wie viele Konten stehen auf welcher Hüllenfassung? (E-S10-11)
+ * Wie viele Konten stehen auf welcher Hüllenfassung?
  *
  * GEZÄHLT WIRD AM PRÄFIX, IN SQL, OHNE EINE HÜLLE ZU ÖFFNEN — der Server
  * könnte es gar nicht. Genau dafür steht die Kennung vorn: Sie macht eine
  * Auskunft möglich, für die man sonst den Schlüssel bräuchte.
  *
- * Das Demo-Konto zählt **nicht mit** (E-P1-19): Es bleibt bauartbedingt auf
+ * Das Demo-Konto zählt **nicht mit**: Es bleibt bauartbedingt auf
  * `edk1:`, und es als „noch offen" zu führen hieße, eine Zahl zu zeigen, die
  * nie auf null geht. Denselben Fehler hat die Zeile „Schlüsselableitung"
- * schon einmal gemacht (Backlog Nr. 155).
+ * schon einmal gemacht.
  *
  * Konten ohne Hülle (`pat_wrap_pw IS NULL` — eingeladen, aber nie
  * eingerichtet) zählen ebenfalls nicht: Sie haben nichts umzustellen.
  *
- * SEIT R17-20 ZÄHLT AUCH DER ANMELDEHASH (E-R17-20). Er trägt die Kennung
+ * AUCH DER ANMELDEHASH ZÄHLT. Er trägt die Kennung
  * seines Anteils im Präfix (`pf1:`) und wird bei derselben Anmeldung
  * umgestellt wie die Hülle — aber in einem anderen Schritt. Steht die Hülle
  * schon auf dem neuen, der Hash noch auf dem alten (das Schreiben im Login
@@ -1414,7 +1406,7 @@ function anteil_zaehlung(): array
 }
 
 /**
- * Einen Wert vom Schlüsselblatt nachtragen (E-S10-10).
+ * Einen Wert vom Schlüsselblatt nachtragen.
  *
  * DER UNTERSCHIED ZU „ANLEGEN": Hier ist der Wert vorgegeben, und er wird
  * **gegen die Kennung geprüft, bevor irgendetwas geschrieben wird**. Das ist
@@ -1428,8 +1420,8 @@ function anteil_zaehlung(): array
  */
 function anteil_nachtragen(string $roh, bool $ersetzen): array
 {
-    /* Unter der Sperre wie jeder Griff an einen Schlüssel in config.php
-     * (H-SR-06, F-SR-78). */
+    /* Unter der Sperre wie jeder Griff an einen Schlüssel in config.php.
+     * */
     return schluessel_unter_sperre(static function () use ($roh, $ersetzen): array {
         $hex = schluessel_eingabe_normalisieren($roh);
         if ($hex === null) {
@@ -1461,18 +1453,17 @@ function anteil_nachtragen(string $roh, bool $ersetzen): array
  *
  * Denselben Ernstfall wie beim Anteil: Nach einem Wiederanlauf steht der
  * falsche Wert in `config.php`, und die Meldung „mit einem anderen
- * Serverschlüssel gespeichert" sagt nicht, welcher der richtige wäre. (Bis
- * Web 21.12.0 stand hier „er hat keine Rotation" — seit SR-03 hat er eine;
- * nachgetragen wird trotzdem nur der AKTUELLE, gegen die Marke. Den
- * bisherigen trägt der Wechsel selbst ein.)
+ * Serverschlüssel gespeichert" sagt nicht, welcher der richtige wäre. (Er hat
+ * eine Rotation; nachgetragen wird trotzdem nur der AKTUELLE, gegen die
+ * Marke. Den bisherigen trägt der Wechsel selbst ein.)
  *
- * Die Marke `server_key_kennung` entsteht bei der ersten Anzeige nach S10 —
+ * Die Marke `server_key_kennung` entsteht bei der ersten Anzeige —
  * dieselbe Mechanik wie beim Anteil.
  */
 function serverschluessel_nachtragen(string $roh, bool $ersetzen): array
 {
-    /* Unter der Sperre wie jeder Griff an einen Schlüssel in config.php
-     * (H-SR-06, F-SR-78). */
+    /* Unter der Sperre wie jeder Griff an einen Schlüssel in config.php.
+     * */
     return schluessel_unter_sperre(static function () use ($roh, $ersetzen): array {
         $hex = schluessel_eingabe_normalisieren($roh);
         if ($hex === null) {
@@ -1505,14 +1496,13 @@ function serverschluessel_nachtragen(string $roh, bool $ersetzen): array
  *   kennung_alt  Kennung des bisherigen (nur während eines Wechsels), oder null
  *   erwartet     Kennung aus app_state — die, mit der versiegelt wird
  *
- * `rotation` GIBT ES SEIT WEB 21.12.0 (SR-03, E-SR-08). Bis dahin kannte der
- * Serverschlüssel nur drei Lagen, weil es keinen Wechsel gab. Die Mechanik ist
+ * `rotation` IST DIE VIERTE LAGE, die des Wechsels. Die Mechanik ist
  * die des Anteils: Steht `server_key_alt` in `config.php` und nennt die Marke
  * noch ihn, wandert die Marke auf den neuen — ab da versiegelt alles mit dem
  * neuen, und der bisherige ist nur noch zum Öffnen da.
  *
  * Die Marke wird nachgetragen, sobald ein gültiger Schlüssel dasteht und noch
- * keine Marke existiert (E-S10-U-02).
+ * keine Marke existiert.
  */
 function serverschluessel_zustand(bool $frisch = false): array
 {
@@ -1523,9 +1513,9 @@ function serverschluessel_zustand(bool $frisch = false): array
     $kennung    = serverschluessel_kennung();
     $kennungAlt = serverschluessel_alt_kennung();
     $erwartet   = schluessel_marke_lesen('server_key_kennung');
-    /* EIN `server_key_alt` GLEICH DEM HEUTIGEN IST KEIN WECHSEL (H-SR-06,
-     * F-SR-78). So bleibt es stehen, wenn ein Wechsel zwischen seinen beiden
-     * Schreibschritten abbricht. Bis Web 21.12.0 hieß das Lage `rotation` —
+    /* EIN `server_key_alt` GLEICH DEM HEUTIGEN IST KEIN WECHSEL. So bleibt es
+     * stehen, wenn ein Wechsel zwischen seinen beiden
+     * Schreibschritten abbricht. Als Lage `rotation` gelesen, waere das
      * ein Wechsel des Schlüssels mit sich selbst, mit Job, Protokoll und
      * vorgemerktem Komplett-Stand. Er öffnet nichts, was der heutige nicht
      * öffnet; der nächste Wechsel überschreibt ihn. */
@@ -1557,7 +1547,7 @@ function serverschluessel_zustand(bool $frisch = false): array
 /**
  * Einen frischen Serverschlüssel erzeugen und eintragen.
  *
- * Seit S10 nur noch die halbe Funktion: Das Würfeln bleibt hier, das
+ * Nur die halbe Funktion: Das Würfeln bleibt hier, das
  * Schreiben macht `config_eintrag_schreiben()`. Ein zweiter, wortgleicher
  * Schreibweg daneben wäre die Stelle, an der der eine irgendwann eine
  * Gegenprobe bekommt und der andere nicht.
@@ -1569,8 +1559,8 @@ function serverschluessel_zustand(bool $frisch = false): array
  */
 function serverschluessel_eintragen(): array
 {
-    /* Unter der Sperre wie jeder Griff an einen Schlüssel in config.php
-     * (H-SR-06, F-SR-78). */
+    /* Unter der Sperre wie jeder Griff an einen Schlüssel in config.php.
+     * */
     return schluessel_unter_sperre(static function (): array {
         if (serverschluessel_da()) {
             return [false, 'Es steht bereits ein Serverschlüssel in config.php.'];
@@ -1580,8 +1570,7 @@ function serverschluessel_eintragen(): array
 }
 
 /* ===========================================================================
- * DER WECHSEL DES SERVERSCHLÜSSELS (Schritt 18, SR-03, Nr. 247, E-SR-08 bis
- * E-SR-11, E-SR-21, E-SR-22, E-SR-60 bis -63)
+ * DER WECHSEL DES SERVERSCHLÜSSELS
  *
  * Zwei Handgriffe, gebaut wie beim Anteil: `config.php` schreiben und die
  * Marke nachziehen gehören zusammen und stehen deshalb hier. Was danach
@@ -1597,12 +1586,12 @@ function serverschluessel_eintragen(): array
  *
  * WARUM DER BISHERIGE STEHEN BLEIBT. Alles Versiegelte ist mit ihm gebaut, und
  * der Job braucht ihn, um es umzuhüllen. Und was auf einem Backup-Ziel liegt,
- * öffnet für immer nur er (E-SR-10) — deshalb der Haken: Wer wechselt, soll
+ * öffnet für immer nur er — deshalb der Haken: Wer wechselt, soll
  * vorher gelesen haben, dass die Kopien dort unter dem bisherigen bleiben und
- * das bisherige Blatt aufbewahrt wird (E-SR-63). Die Prüfung steht hier, nicht
+ * das bisherige Blatt aufbewahrt wird. Die Prüfung steht hier, nicht
  * im Formular; ein zweiter Aufrufer erbte sie sonst nicht.
  *
- * NUR AUS DER LAGE `bereit`, UND NICHT NEBEN EINER ANTEIL-ROTATION (E-SR-60).
+ * NUR AUS DER LAGE `bereit`, UND NICHT NEBEN EINER ANTEIL-ROTATION.
  * Dieselbe Reihenfolge wie beim Anteil: erst den bisherigen sichern, dann den
  * neuen setzen — andersherum wäre der bisherige für die Dauer eines
  * Fehlschlags verloren, und mit ihm alles Versiegelte.
@@ -1616,7 +1605,7 @@ function serverschluessel_wechseln(bool $kopienVerstanden): array
                      . 'unter dem bisherigen Schlüssel bleiben und das bisherige Blatt '
                      . 'aufbewahrt wird. Es wurde nichts geändert.'];
     }
-    /* UNTER DER SPERRE (H-SR-06, F-SR-78): Die Prüfungen unten lesen die Lage,
+    /* UNTER DER SPERRE: Die Prüfungen unten lesen die Lage,
      * und zwischen Lesen und Schreiben darf niemand sonst schreiben — kein
      * zweiter Wechsel und kein Häppchen des Jobs. */
     return schluessel_unter_sperre(static function (): array {
@@ -1638,7 +1627,7 @@ function serverschluessel_wechseln(bool $kopienVerstanden): array
         $altHex = strtolower((string)konfig('server_key', ''));
 
         /* Steht noch ein `server_key_alt` gleich dem heutigen (ein Wechsel,
-         * der zwischen den beiden Schritten abbrach, F-SR-78), wird er
+         * der zwischen den beiden Schritten abbrach), wird er
          * überschrieben — mit demselben Wert. Einen ANDEREN überschreibt
          * dieser Schritt nie: Die Lage wäre dann `rotation`, und die ist oben
          * abgewiesen. */
@@ -1647,7 +1636,7 @@ function serverschluessel_wechseln(bool $kopienVerstanden): array
         if (!$ok) { return [false, $was]; }
 
         /* BEDINGT ERSETZEN: nur, wenn in der Datei noch der Wert steht, der
-         * gerade als `server_key_alt` gesichert wurde (F-SR-78). */
+         * gerade als `server_key_alt` gesichert wurde. */
         [$ok2, $was2] = config_eintrag_schreiben('server_key', serverschluessel_neu(), true,
                                                  $altHex);
         if (!$ok2) {
@@ -1657,7 +1646,7 @@ function serverschluessel_wechseln(bool $kopienVerstanden): array
         }
         $z = serverschluessel_zustand(true);      // die Marke wandert auf den neuen
         require_once __DIR__ . '/schluesselwechsel_lib.php';
-        /* DER BEGINN DARF DEN WECHSEL NICHT ZURÜCKNEHMEN (F-SR-80). Wenn
+        /* DER BEGINN DARF DEN WECHSEL NICHT ZURÜCKNEHMEN. Wenn
          * `sw_beginnen()` wirft, steht der neue Schlüssel schon in
          * `config.php` und versiegelt — ein Rückbau risse ihn aus dem, was er
          * schon versiegelt hat. Den fehlenden Beginn holt der Job nach: Er
@@ -1672,8 +1661,8 @@ function serverschluessel_wechseln(bool $kopienVerstanden): array
 }
 
 /**
- * Den bisherigen Serverschlüssel entfernen — erst, wenn drei Dinge stehen
- * (E-SR-09): alles umgehüllt und nachgewiesen, ein Komplett-Stand unter dem
+ * Den bisherigen Serverschlüssel entfernen — erst, wenn drei Dinge stehen:
+ * alles umgehüllt und nachgewiesen, ein Komplett-Stand unter dem
  * neuen jünger als der Beginn, und die Rückfrage zum Blatt seit dem Beginn
  * beantwortet.
  *

@@ -16,13 +16,13 @@
 // BACK            BACK                              kurz Zurueck, Wischen rechts
 //
 // DIE TASTENSPERRE (zwei Tasten gleichzeitig) ist KEIN Bedienwunsch, und die
-// App muss sie in BEIDEN Reihenfolgen erkennen. Bis 2.0.0 tat sie es nur in
-// einer: Sie merkte sich allein die Tasten, die sie selbst verfolgt (START
-// immer, UP/DOWN nur auf der Reanimationsseite). Wer UP ZUERST drueckte und
-// START dazu — die uebliche Handhaltung —, hinterliess keine Spur; START sah
-// ein leeres Feld, hielt sich fuer einen gewoehnlichen Langdruck und oeffnete
-// das Schnellmenue, waehrend die Uhr sperrte. Auf der Sync-Seite waere es seit
-// 3.0.0 eine angefangene Kopplung.
+// App muss sie in BEIDEN Reihenfolgen erkennen. Merkte sie sich allein die
+// Tasten, die sie selbst verfolgt (START immer, UP/DOWN nur auf der
+// Reanimationsseite), hinterliesse, wer UP ZUERST drueckt und START dazu —
+// die uebliche Handhaltung —, keine Spur; START saehe ein leeres Feld,
+// hielte sich fuer einen gewoehnlichen Langdruck und oeffnete das
+// Schnellmenue, waehrend die Uhr sperrt. Auf der Sync-Seite waere es eine
+// angefangene Kopplung.
 // Deshalb merkt onKeyPressed jede gedrueckte Taste, auch die, die es dem
 // System ueberlaesst (_fremdKey). Am Geraet gemeldet am 03.09.2026; im
 // Simulator NICHT nachstellbar (Geraete-Eingabe.md 6: Tastensperren bildet er
@@ -56,11 +56,7 @@ module Input {
         return (v == null) ? true : (v as Lang.Boolean);
     }
 
-    /* DER SCHALTER WIRKT (F-R17-68).
-     *
-     * Bis Uhr 4.0.0 las nur `touchActive()` die Einstellung, und niemand rief
-     * es auf: Der Schalter stand in Garmin Connect und bewirkte nichts --
-     * auch auf Fenix 7, Epix 2 und FR965, die laengst im Manifest stehen.
+    /* DER SCHALTER WIRKT -- auch auf Fenix 7, Epix 2 und FR965.
      *
      * WOHER EIN BEHAVIOR KOMMT, SAGT CONNECT IQ NICHT. `onNextPage` entsteht
      * aus DOWN und aus dem Wischen, `onSelect` aus START und aus dem Tippen,
@@ -184,7 +180,7 @@ class ActionDelegate extends WatchUi.BehaviorDelegate {
     }
 
     function onKeyPressed(evt as WatchUi.KeyEvent) as Lang.Boolean {
-        Input.tasteGesehen(true);              // F-R17-68
+        Input.tasteGesehen(true);
         var k = evt.getKey();
         // Zweite Taste waehrend der ersten: Das ist die Tastensperre der Uhr
         // (START + beliebige Taste) und kein Bedienwunsch. Alles schlucken.
@@ -228,7 +224,7 @@ class ActionDelegate extends WatchUi.BehaviorDelegate {
     }
 
     function onKeyReleased(evt as WatchUi.KeyEvent) as Lang.Boolean {
-        Input.tasteGesehen(false);             // F-R17-68
+        Input.tasteGesehen(false);
         var k = evt.getKey();
         /* Fremde Taste losgelassen -> vergessen. Bleibt das Loslassen aus,
          * weil die Uhr es waehrend der Sperre nicht mehr zustellt, heilt es
@@ -253,7 +249,7 @@ class ActionDelegate extends WatchUi.BehaviorDelegate {
     // liefert das System ueber dieselben Behaviors; eigener Wisch-Code ist
     // weder noetig noch moeglich (das Roh-Ereignis wird bei belegten Gesten
     // gar nicht erst zugestellt).
-    // Vom Bildschirm bei ausgeschaltetem Schalter: verworfen (F-R17-68).
+    // Vom Bildschirm bei ausgeschaltetem Schalter: verworfen.
     function onPreviousPage() as Lang.Boolean {
         if (Input.beruehrungVerwerfen()) { return true; }
         return actPagePrev();
@@ -289,10 +285,10 @@ class ActionDelegate extends WatchUi.BehaviorDelegate {
 }
 
 // ---------------------------------------------------------------------------
-// Basis der selbst gezeichneten Menues und der Warteseiten (F-R17-68)
+// Basis der selbst gezeichneten Menues und der Warteseiten
 // ---------------------------------------------------------------------------
 //
-// Sie werten Behaviors aus wie bisher, melden aber jede Taste an Input --
+// Sie werten Behaviors aus wie jeder BehaviorDelegate, melden aber jede Taste an Input --
 // sonst hielte `Input.beruehrungVerwerfen()` auch einen Tastendruck auf
 // diesen Seiten fuer eine Beruehrung. `false` laesst die Taste beim System,
 // genau wie ohne diese Methoden.

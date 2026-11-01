@@ -16,7 +16,7 @@ require_once __DIR__ . '/auth_guard.php';
  * assets/import_ui.js). Der Server bekommt Patientendaten nur als
  * Chiffretext zu sehen — deshalb kann es hier auch keinen Datei-Upload geben.
  *
- * Seit Web 2.10.0 sitzt darunter der Exportblock (assets/export.js). Er folgt
+ * Unter dem Import sitzt der Exportblock (assets/export.js). Er folgt
  * derselben Regel in die andere Richtung: api/export_data.php liefert nur
  * Rohdaten, der gesamte Dateiaufbau samt Entschluesselung passiert im Browser.
  * Die Feldlisten aller Formate stehen in docs/Export-Format.md.
@@ -35,20 +35,17 @@ ui_seite_start(['titel' => 'Import / Export']);
 ?>
 
 <?php ui_geruest_start(['aktiv' => 'einstellungen', 'leiste' => 'einstellungen', 'menue' => 'import']); ?>
-    <?php /* DER UNTERTITEL IST DIE ABGRENZUNG (Backlog Nr. 119). Der
+    <?php /* DER UNTERTITEL IST DIE ABGRENZUNG. Der
              Menuepunkt heisst „Import / Export" und verspricht damit alle Wege
              fuer Daten hinein und hinaus. Tatsaechlich traegt er zwei von
              acht: die Einsatzliste in beide Richtungen. Backup und GPS-Spuren
-             liegen anderswo — und stehen bis Web 19.3.0 auf dieser Seite
-             nirgends, auch nicht als Verweis. Der Name laesst sich nicht
+             liegen anderswo. Der Name laesst sich nicht
              enger fassen, ohne den Export zu verstecken („Einsatzliste" sagt
              nicht, dass man dort eine Datei herausbekommt); also grenzt ein
-             Satz ihn ein, und die Karte am Seitenende nennt den Rest.
-             Vorbild Zeichen fuer Zeichen: admin_sicherungen.php (B-S8-08). */ ?>
-    <?php /* DIE SEITE NENNT DIE ANDEREN WEGE (Backlog Nr. 119) — seit Web
-             21.4.1 in der Unterzeile und nicht mehr in einer Karte (R4-20,
-             Nr. 287, E-P5c-06). Bis dahin stand am Seitenende eine zugeklappte
-             Erklaerkarte mit vier Absaetzen; die stehen jetzt im
+             Satz ihn ein, und die Unterzeile nennt den Rest.
+             Vorbild Zeichen fuer Zeichen: admin_sicherungen.php. */ ?>
+    <?php /* DIE SEITE NENNT DIE ANDEREN WEGE — in der Unterzeile und nicht
+             in einer Karte. Die Erklaerung dazu steht im
              Handbuch, Kapitel 7, „Die übrigen Wege". Eine Seite, die „Import /
              Export" heisst und die anderen Wege weder traegt noch nennt,
              schickte jede Suche ins Leere — deshalb bleibt der Verweis auf
@@ -57,7 +54,7 @@ ui_seite_start(['titel' => 'Import / Export']);
              DIE ADRESSE STEHT NICHT ZWEIMAL: `einstellungen.php?t=backup`
              kommt aus ui_einstellungen_punkte() (ui.php) — von Hand
              abgeschrieben waere sie beim naechsten Umbau an zwei Stellen
-             falsch. Genau dieser Fehler war Backlog Nr. 151. */
+             falsch. */
       $punkte  = ui_einstellungen_punkte();
       $backupZ = 'einstellungen.php?t=backup';
       foreach ($punkte[0]['punkte'] as $pk) {
@@ -85,7 +82,7 @@ ui_seite_start(['titel' => 'Import / Export']);
     </div>
     <div id="fehler" hidden></div>
 
-    <?php /* DREI SCHRITTE, DREI KARTEN (E-P3-35). Schritt 2 und 3 sind
+    <?php /* DREI SCHRITTE, DREI KARTEN. Schritt 2 und 3 sind
              verborgen, bis der vorige getan ist — die Schrittfolge steht damit
              als Zahl im Kartenkopf und nicht als Überschrift im Fließtext. */ ?>
     <?php ui_karte_start(['titel' => '1. Datei wählen', 'id' => 'k-datei']); ?>
@@ -153,7 +150,7 @@ ui_seite_start(['titel' => 'Import / Export']);
            überspringen.</p>
         <?php /* `imp-roll` macht den Rollbereich zum Groessencontainer, damit die
                Kopfzeile einer Tagesgruppe die SICHTBARE Breite annehmen kann und
-               nicht die der Tabelle (Backlog Nr. 182, Stylesheet Abschnitt 29).
+               nicht die der Tabelle (Stylesheet Abschnitt 29).
                Eigene Klasse statt `.tabelle-scroll`: die traegt neun Stellen auf
                sechs Seiten, und `container-type` bringt Containment mit. */ ?>
         <div class="tabelle-scroll imp-roll"><table class="tabelle" id="tabelle"></table></div>
@@ -172,8 +169,8 @@ ui_seite_start(['titel' => 'Import / Export']);
     </div>
 
     <?php ui_karte_start(['titel' => 'Export', 'id' => 'exportform']); ?>
-      <?php /* „KEIN BACKUP" STEHT HIER UND NICHT MEHR IM DIALOG (Nr. 404).
-               Bis Web 23.3.x war es die dritte Rückfrage jedes Exports. */ ?>
+      <?php /* „KEIN BACKUP" STEHT HIER UND NICHT ALS RÜCKFRAGE IM
+               DIALOG. */ ?>
       <p class="feld-hinweis">Erzeugt eine Datei aus den vorhandenen Einsätzen dieses
          Kontos — zum Weiterverarbeiten in anderen Programmen. Der Aufbau der Datei
          passiert vollständig <strong>in deinem Browser</strong>. Ein Export ist
@@ -186,8 +183,7 @@ ui_seite_start(['titel' => 'Import / Export']);
                           'optionen' => ['range' => 'Von–Bis', 'all' => 'Alles']]); ?>
       </div>
       <?php /* Eigene Kennung, damit assets/export.js bei „Alles" die ganze
-               Zeile ausblenden kann statt nur die Felder auszugrauen
-               (A6.3). */ ?>
+               Zeile ausblenden kann statt nur die Felder auszugrauen. */ ?>
       <div id="exp_zeitraum_row" class="listen-form-felder">
         <?php ui_feld(['label' => 'Von', 'id' => 'exp_von', 'art' => 'date']); ?>
         <?php ui_feld(['label' => 'Bis', 'id' => 'exp_bis', 'art' => 'date']); ?>
@@ -205,15 +201,15 @@ ui_seite_start(['titel' => 'Import / Export']);
         <?php ui_schalter(['id' => 'exp_gpx', 'name' => 'exp_gpx', 'an' => true,
                            'label' => 'GPX-Tracks einschließen']); ?>
       </div>
-      <?php /* Tritt an die Stelle der GPX-Wahl, wenn die Schranke greift
-               (A9, Web 5.8.0). Ein Track endet am Einsatzort — er nennt
+      <?php /* Tritt an die Stelle der GPX-Wahl, wenn die Schranke greift.
+               Ein Track endet am Einsatzort — er nennt
                ihn genauer als jede Koordinatenspalte. Das gilt bodengebunden
                wie luftgebunden. */ ?>
       <p class="feld-hinweis" id="exp_gpx_pers_hint" hidden>Ohne personenbezogene Angaben
          entfallen die GPX-Tracks — ein Track endet am Einsatzort.</p>
 
-      <?php /* „Personenbezogene Angaben" statt „Patientendaten" (A9, Web
-               5.8.0). Der Haken schaltet seit dieser Fassung auch die Namen
+      <?php /* „Personenbezogene Angaben" statt „Patientendaten": Der Haken
+               schaltet auch die Namen
                der Besatzung, bw_info, den anderen Notarzt, die Notizen und
                die Koordinaten des Einsatzortes ab. Die Kennung exp_pat bleibt:
                Sie ist der Vertrag zu assets/export.js und
@@ -228,35 +224,33 @@ ui_seite_start(['titel' => 'Import / Export']);
                                   'attr' => ' id="exp_pat_unlock"'])]); ?>
       </div>
 
-      <?php /* Vorbelegt auf AN (A6.4, Web 5.7.0). In dieser Datei stehen die
+      <?php /* Vorbelegt auf AN. In dieser Datei stehen die
                geschützten Angaben im Klartext; der Schutz ist der Normalfall,
-               nicht die Ausnahme. Abwählen bleibt eine Handlung, Anwählen war
-               vorher eine — die Vorbelegung dreht nur um, welche der beiden
+               nicht die Ausnahme. Abwählen bleibt eine Handlung, Anwählen wäre
+               sonst eine — die Vorbelegung dreht nur um, welche der beiden
                man bewusst treffen muss. */ ?>
       <?php ui_schalter(['id' => 'exp_pw', 'name' => 'exp_pw', 'an' => true,
                          'label' => 'Mit Passwort schützen (AES-256)']); ?>
       <?php /* Erscheint nur ohne personenbezogene Angaben. Kein selbsttätiges
-               Abschalten (E31) — die Entscheidung von A6.4 bleibt, ihre
-               Begründung hat sich mit A9 geändert.
+               Abschalten.
 
-               BIS WEB 5.7.0 stand hier: "Personenbezogen ist sie trotzdem" —
-               denn die Schranke deckte nur die Patientendaten ab, Besatzung
-               und Phasenkoordinaten gingen mit. Seit A9 stimmt das nicht mehr,
-               und ein Hinweis, der etwas Falsches behauptet, ist schlimmer als
-               keiner: Wer ihm glaubt, hält eine harmlose Datei für brisant —
-               und beim nächsten Mal eine brisante für harmlos.
+               KEIN HINWEIS „Personenbezogen ist sie trotzdem": Die Schranke
+               deckt auch Besatzung und Phasenkoordinaten ab, und ein Hinweis,
+               der etwas Falsches behauptet, ist schlimmer als keiner: Wer ihm
+               glaubt, hält eine harmlose Datei für brisant — und beim
+               nächsten Mal eine brisante für harmlos.
 
                Der Schutz bleibt trotzdem vorbelegt. Was in der Datei bleibt,
-               ist Betriebswissen: wann geflogen wurde, wohin transportiert,
-               mit welchen Rettungsmitteln, mit welchem Reanimationsverlauf.
-               Kein Personenbezug, aber auch nichts, was ohne Weiteres in
-               fremde Hände gehört. */ ?>
+               ist Betriebswissen: wann geflogen wurde und mit welchen
+               Rettungsmitteln. Transportziel und Reanimation liegen
+               verschlossen und fehlen ohne Haken. Kein Personenbezug, aber
+               auch nichts, was ohne Weiteres in fremde Hände gehört. */ ?>
       <p class="feld-hinweis" id="exp_pw_hint" hidden>Ohne personenbezogene Angaben
-         enthält die Datei keine Namen, keine Notizen und keine Koordinaten des
-         Einsatzortes. <strong>Betriebsangaben bleiben enthalten:</strong>
-         Einsatzzeiten, Transportziele, weitere Rettungsmittel und der Verlauf
-         einer Reanimation. Der Passwortschutz lässt sich abwählen — eine
-         bewusste Entscheidung sollte es bleiben.</p>
+         enthält die Datei keine Namen, keine Notizen, keine Ortsangaben, kein
+         Transportziel und keinen Reanimationsverlauf.
+         <strong>Betriebsangaben bleiben enthalten:</strong> Einsatzzeiten,
+         Phasen und weitere Rettungsmittel. Der Passwortschutz lässt sich
+         abwählen — eine bewusste Entscheidung sollte es bleiben.</p>
       <div id="exp_pw_fields" hidden>
         <?php ui_feld(['label' => 'Passwort', 'id' => 'exp_pw1', 'art' => 'password',
                        'klein' => 'Mindestens ' . PW_MIN_LAENGE . ' Zeichen.',
@@ -271,12 +265,11 @@ ui_seite_start(['titel' => 'Import / Export']);
          zusätzlich 7-Zip (Windows) oder Keka bzw. The Unarchiver (macOS)
          benötigt; der Windows-Explorer kann solche Archive nicht öffnen.</p>
 
-      <?php /* DER EINE KNOPF, DEN O8c UEBERSEHEN HAT (F-P3-BA). Er trug
-               `btn-primary` — eine Klasse, die es seit dem Neubau des
-               Stylesheets (Web 9.0.0) nicht mehr gibt. Gemessen: 23 px hoch,
-               ohne Flaeche, ohne Rahmen, ohne Radius, in der Textschrift; der
-               Nachbar `#commit` daneben ist 44 px, orange, Bricolage. Die
-               Kennung `exp_go` bleibt — assets/export.js haengt daran. */ ?>
+      <?php /* KEIN `btn-primary`: Die Klasse gibt es im Stylesheet nicht.
+               Gemessen: 23 px hoch, ohne Flaeche, ohne Rahmen, ohne Radius,
+               in der Textschrift; der Nachbar `#commit` daneben ist 44 px,
+               orange, Bricolage. Die Kennung `exp_go` bleibt —
+               assets/export.js haengt daran. */ ?>
       <div class="listen-form-fuss">
         <?= ui_knopf(['text' => 'Export erstellen', 'art' => 'primaer',
                       'typ' => 'button', 'attr' => ' id="exp_go"']) ?>
@@ -287,14 +280,14 @@ ui_seite_start(['titel' => 'Import / Export']);
     <script src="<?= asset('assets/vendor/xlsx.full.min.js') ?>"></script>
     <script src="<?= asset('assets/vendor/zipjs.min.js') ?>"></script>
     <?php ui_krypto_bootstrap(['csrf' => true, 'einzug' => '    ']); ?>
-    <?php /* Passwortguete fuer das Archivpasswort des Exports (B9, M2-03). */ ?>
+    <?php /* Passwortguete fuer das Archivpasswort des Exports. */ ?>
     <script src="<?= asset('assets/pwquality.js') ?>"></script>
     <script src="<?= asset('assets/patient.js') ?>"></script>
-    <?php /* Ortsdaten der seit S11 verschlossenen Einsaetze (S11-05e): Der Export
+    <?php /* Ortsdaten der verschlossenen Einsaetze: Der Export
              oeffnet Einsatzhuelle und Spurstuecke, der Import verschliesst
              Phasenorte und Reanimation. */ ?>
     <script src="<?= asset('assets/ortsdaten.js') ?>"></script>
-    <?php /* ROLLENKATALOG FUER DIE SKRIPTE (E4).
+    <?php /* ROLLENKATALOG FUER DIE SKRIPTE.
              Er muss VOR import_profiles.js und import.js stehen: Beide leiten
              ihre Spaltenlisten beim Laden daraus ab. export.js und import_ui.js
              folgen weiter unten und sehen ihn dadurch ebenfalls.

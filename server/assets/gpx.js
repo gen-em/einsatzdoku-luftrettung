@@ -1,22 +1,19 @@
-/* GPX — Bauen und Lesen im Browser (S11-05d).
+/* GPX — Bauen und Lesen im Browser.
  * ==========================================================================
  *
- * WOFUER. Seit S11 liegen die GPS-Daten verschlossen auf dem Server
+ * WOFUER. Die GPS-Daten liegen verschlossen auf dem Server
  * (`track_stuecke`); oeffnen kann sie nur der Browser (`assets/ortsdaten.js`).
  * Damit gehoert die GPX-Datei hierher, in beide Richtungen:
  *   - BAUEN fuer den Abruf einer Spur oder einer Auswahl (Einsatzansicht,
- *     „GPS-Daten des Diensttages"). Bis Web 22.2.0 tat das `gpx_lib.php`
- *     hinter `gpx.php` — es las dabei nur den Klartextbestand und lieferte fuer
- *     eine verschlossene Spur eine leere Datei oder ein 404 (F-S11-54).
- *   - LESEN fuer den Import. Bis 22.2.0 ging die Datei an den Server, der sie
- *     las und die Punkte im Klartext ablegte; jetzt liest der Browser, und der
- *     Server bekommt nur verschlossene Stuecke (Konzept 3.6).
+ *     „GPS-Daten des Diensttages"). Der Server koennte es nicht: Er sieht
+ *     nur verschlossene Stuecke.
+ *   - LESEN fuer den Import. Der Browser liest die Datei, und der Server
+ *     bekommt nur verschlossene Stuecke.
  *
- * DIESELBE DATEI WIE VORHER. Aufbau, Beschreibungen, Stufentext und Dateinamen
- * sind die von `gpx_lib.php` bis Web 22.2.0, Zeile fuer Zeile — sie stehen in
- * `docs/Export-Format.md` 3.5, und wer eine Spur damals und heute laedt, soll
- * dieselbe Datei bekommen. Ebenso die Regeln des Lesens (`gpx_lesen()`):
- * UTF-8 Pflicht, Kodierungsdeklaration nur ASCII-vertraeglich, keine
+ * EIN FESTES FORMAT. Aufbau, Beschreibungen, Stufentext und Dateinamen
+ * stehen Zeile fuer Zeile in `docs/Export-Format.md` 3.5, und wer dieselbe
+ * Spur zweimal laedt, soll dieselbe Datei bekommen. Ebenso fest sind die
+ * Regeln des Lesens: UTF-8 Pflicht, Kodierungsdeklaration nur ASCII-vertraeglich, keine
  * Dokumenttyp-Deklaration, `time` Pflicht, Punkte nach Zeit sortiert.
  *
  *   EdGpx.bauenViele(spuren, name, erzeugtAm)   spuren: [{punkte, name, stufe, nOriginal}]
@@ -193,11 +190,9 @@
       throw fehler('Die Datei enthält ein Nullbyte und ist damit kein Text. Das deutet '
         + 'auf eine Kodierung wie UTF-16 hin — bitte als UTF-8 speichern und erneut versuchen.');
     }
-    /* NICHT STRENG, UND DAS IST DER BISHERIGE WEG. Bis Web 22.2.0 las der
-       Dateidialog mit `readAsText()`: Eine Latin-1-Datei kam mit Ersatzzeichen
-       an und wurde uebernommen (die Koordinaten sind ASCII). `gpx_lesen()`
-       wies ungueltiges UTF-8 zwar ab, sah es aber aus dem Browser nie. Dieser
-       Decoder tut, was `readAsText()` tat. */
+    /* NICHT STRENG, MIT ABSICHT. Dieser Decoder tut, was `readAsText()` tut:
+       Eine Latin-1-Datei kommt mit Ersatzzeichen an und wird uebernommen
+       (die Koordinaten sind ASCII). */
     let xml = new TextDecoder('utf-8', { ignoreBOM: true }).decode(roh);
     if (xml.trim() === '' || xml.replace(/^﻿/, '').trim() === '') { throw fehler('Die Datei ist leer.'); }
     const kod = /^﻿?\s*<\?xml\b[^>]*\bencoding\s*=\s*["']([^"']*)["']/i.exec(xml);
@@ -272,6 +267,5 @@
     return { punkte, name, segmente, ohneZeit, verworfen };
   }
 
-  window.EdGpx = { bauenViele, bauen, spurname, dateiname, dateinameTag, speichern, lesen,
-                   STUFE_DUENN };
+  window.EdGpx = { bauenViele, bauen, spurname, dateiname, dateinameTag, speichern, lesen };
 })();

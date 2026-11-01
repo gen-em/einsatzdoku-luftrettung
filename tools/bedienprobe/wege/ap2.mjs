@@ -1,4 +1,4 @@
-/* Wege des Arbeitspakets AP2 — Geocoder und Kartendialog (E-S9-05, E-S9-06).
+/* Wege der Gruppe `AP2` — Geocoder und Kartendialog.
  * ===========================================================================
  *
  *   P-05  Dialog aus vier Einbauorten                   Soll 4 von 4
@@ -32,10 +32,10 @@ async function einsaetze(k) {
   await k.seite.waitForFunction(
     () => typeof dayMissions !== 'undefined' && dayMissions.length,
     null, { timeout: 20000 });
-  /* OB EIN EINSATZ EINE SPUR HAT, SAGT DIE KLARTEXTZAHL, nicht `m.track`
-   * (Nr. 393, F4). `dayMissions` steht, bevor die Hüllen offen sind, und
+  /* OB EIN EINSATZ EINE SPUR HAT, SAGT DIE KLARTEXTZAHL, nicht `m.track`.
+   * `dayMissions` steht, bevor die Hüllen offen sind, und
    * `m.track` füllt `EdOrtsdaten` erst danach, EINEN EINSATZ NACH DEM
-   * ANDEREN (Konzept DM, F-DM-07). Bis Nr. 393 wartete der Weg, bis IRGENDEIN
+   * ANDEREN. Früher wartete der Weg, bis IRGENDEIN
    * Einsatz offen war, und nahm dann den ersten mit höchstens einem Punkt als
    * „ohne Spur" — in WebKit war das am 21.10.2026 Einsatz 1119 mit 393
    * Punkten, nur noch nicht geöffnet. Das Formular zeigt `#start_src` aber
@@ -62,13 +62,13 @@ async function einsaetze(k) {
 
 const formular = (k, id) => `${k.basis}/einsatz_form.php?id=${id}`;
 
-/* ---- Die vier Einbauorte des EINEN Dialogs (M-S9-04, Anmerkung 6) ---------
+/* ---- Die vier Einbauorte des EINEN Dialogs --------------------------------
  *
  * Sie stehen auf zwei Seiten (einsatz_form.php, einstellungen.php) in einer
  * Rolle, und jeder bringt seinen Weg dorthin selbst mit — samt dem Griff, der
  * ihn ueberhaupt sichtbar macht.
  *
- * ES WAREN FUENF, bis S9/AP5b `admin_stammdaten.php` gestrichen hat (R39);
+ * ES WAREN FUENF, bis `admin_stammdaten.php` gestrichen wurde;
  * der fuenfte war der Standort in der systemweiten Stammdatenpflege und die
  * einzige Stelle, die den Dialog in der Adminrolle zeigte. `ort.rolle` bleibt
  * trotzdem stehen: Es kostet nichts, und der naechste Einbauort kann wieder
@@ -142,7 +142,7 @@ async function dialogSchliessen(seite) {
  * ohne ihn misst die Probe an einem bearbeiteten Einsatz einen Ausgangszustand,
  * den ein frisch nachgetragener Einsatz nie hat. */
 async function ortLeeren(k, praefix) {
-  /* ERST NACH DEM ENTSCHLUESSELN (Nr. 407). patLaden() setzt den Ortschip
+  /* ERST NACH DEM ENTSCHLUESSELN. patLaden() setzt den Ortschip
    * asynchron; wer vorher leert, dem setzt es ihn wieder hinein, und der Weg
    * misst einen Ort, den er nie gewaehlt hat. In WebKit jeder dritte Lauf.
    * Die Marke setzt einsatz_form.php am Ende von patLaden(). */
@@ -209,11 +209,11 @@ export const wege = [
         throw new Error('kein Suchtreffer im Dialog (Attrappe erreichbar?)');
       }
       /* Auch hier mit gehaltener Maus — die Liste im Dialog ist derselbe
-       * Baustein wie am Ortsfeld und muss dieselbe Probe bestehen (P-01). */
+       * Baustein wie am Ortsfeld und muss dieselbe Probe bestehen. */
       await k.haltenUndKlicken(eintrag, 300);
       await k.seite.waitForTimeout(400);
 
-      /* NACH DEM TREFFER darf im FORMULAR nichts stehen (F1). */
+      /* NACH DEM TREFFER darf im FORMULAR nichts stehen. */
       const feldNachTreffer  = await k.seite.inputValue('#locaddr');
       const chipsNachTreffer = await k.seite.locator('#locchips .rmchip').count();
       const suchfeldWert     = await suchfeld.first().inputValue();

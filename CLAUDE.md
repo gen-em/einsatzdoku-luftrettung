@@ -348,8 +348,8 @@ davon aufweicht, wird nicht nebenbei gemacht, sondern angesprochen:
   `docs/Bedrohungsmodell.md`** (Schritt 12, Review R17 Stück 1) — Schutzziele,
   Angreiferlagen A bis P, jede Zusage mit ihrer Grenze, die Bausteine, die
   Restrisiken. Wo dieser Absatz und das Modell auseinandergehen, gilt das
-  Modell; die Abweichung steht als Befund in `docs/konzepte/Review-R17.md`
-  2.3, bis die Freigaberunde den Absatz nachzieht. Wer die Verschlüsselung,
+  Modell; die Abweichung steht als Befund im Konzept, das sie findet, bis
+  eine Freigaberunde den Absatz nachzieht (E-R17-99). Wer die Verschlüsselung,
   die Anmeldung, die Schlüsselablage eines Geräts oder die Kette ändert,
   schreibt das Modell fort.
   **Der Inhaltsschlüssel im Browser** liegt seit Web 23.4.0 als nicht

@@ -3,7 +3,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/db.php';
 
 /**
- * Gemeinsame Pruefschicht fuer Einsatzdaten (Baustein B1, samt B2).
+ * Gemeinsame Pruefschicht fuer Einsatzdaten.
  *
  * WARUM ES DIESE DATEI GIBT
  * Dieselben Tabellen werden ueber VIER unabhaengige Wege beschrieben:
@@ -13,20 +13,18 @@ require_once __DIR__ . '/db.php';
  *   Import     api/import_commit.php   Datei ueber den Browser Sitzung ja
  *   Backup  backup_lib.php          Datei beliebiger Herkunft
  *
- * Die Pruefungen liefen bisher an vier Stellen mit vier verschiedenen
- * Massstaeben — und zwar UMGEKEHRT zur Vertrauenswuerdigkeit der Quelle: Der
- * Import prueft neun Eigenschaften, das Wiedereinspielen eines Backups keine
- * einzige. Diese Datei ist die eine Stelle, auf die alle vier Wege umgestellt
- * werden.
+ * Vier Stellen mit vier Massstaeben laufen auseinander — und zwar gern
+ * UMGEKEHRT zur Vertrauenswuerdigkeit der Quelle: Eine Datei beliebiger
+ * Herkunft verdient die strengste Pruefung, nicht die mildeste. Diese Datei
+ * ist die eine Stelle fuer alle vier Wege.
  *
  * HERKUNFT DER REGELN
- * Die Pruefungen sind nicht neu erfunden, sondern aus api/import_commit.php
- * hierher gehoben — dort waren sie bereits geschrieben und erprobt. Neu sind
- * ausschliesslich: die Kalendertagspruefung (B2), die einheitlichen Grenzen
+ * Die Pruefungen stammen aus dem Import, wo sie geschrieben und erprobt
+ * waren; dazu kommen die Kalendertagspruefung, die einheitlichen Grenzen
  * des Patientenblocks und die Ursachenmeldung.
  *
  * LEITPRINZIP "KEIN STILLES SCHEITERN"
- * Jede Funktion unterscheidet zwei Faelle, die frueher beide als "null"
+ * Jede Funktion unterscheidet zwei Faelle, die sonst beide als "null"
  * endeten:
  *   - Der Wert war NICHT VORHANDEN  -> null, keine Meldung
  *   - Der Wert war UNGUELTIG        -> null UND ein Eintrag in der Pruefliste
@@ -71,7 +69,7 @@ const PAT_BLOB_MIN = 40;
 const PAT_BLOB_MAX = 60000;
 
 /**
- * Formatkennung vor einem Chiffretext (M2-10).
+ * Formatkennung vor einem Chiffretext.
  *
  * WARUM ES SIE GIBT
  * Ein Chiffretext bestand bisher aus Zufallswert und Nutzdaten, ohne jede
@@ -100,7 +98,7 @@ const PAT_BLOB_RE = '#^' . CHIFFRE_PRAEFIX_RE
                   . '[A-Za-z0-9+/=]{' . PAT_BLOB_MIN . ',' . PAT_BLOB_MAX . '}$#';
 
 /**
- * Kennung einer Schluesselhuelle MIT Server-Anteil (S10, E-S10-05).
+ * Kennung einer Schluesselhuelle MIT Server-Anteil.
  *
  * Eine solche Huelle lautet `edka1:<kennung>:<base64>`, wobei <kennung> die
  * acht Hexzeichen des Anteils sind, mit dem sie gebaut wurde. Der Chiffretext
@@ -118,20 +116,19 @@ const PAT_BLOB_RE = '#^' . CHIFFRE_PRAEFIX_RE
  *
  * `pat_wrap_rc` bekommt KEIN solches Praefix: Der Wiederherstellungsschluessel
  * haengt nicht am Anteil, und das ist der Rueckweg, wenn der Anteil verloren
- * geht (E-S10-04).
+ * geht.
  */
 const HUELLE_PRAEFIX = 'edka1:';
 
 /**
  * Zeichenvorrat einer Schluesselhuelle (pat_wrap_pw, pat_wrap_rc).
  *
- * Stand bis Web 5.0.1 dreimal im Projekt: als Konstante in pw_handling.php und
- * als wortgleiche Zeichenkette in einstellungen.php und api/kdf_upgrade.php.
- * Mit der Formatkennung waeren daraus drei Stellen geworden, die man einzeln
- * haette nachziehen muessen — und eine vergessene haette eine gueltige Huelle
- * abgewiesen, mit dem Ergebnis, dass ein Passwortwechsel scheitert.
+ * EINE Stelle: Drei wortgleiche Fassungen (pw_handling.php, einstellungen.php,
+ * api/kdf_upgrade.php) muesste man einzeln nachziehen — und eine vergessene
+ * wiese eine gueltige Huelle ab, mit dem Ergebnis, dass ein Passwortwechsel
+ * scheitert.
  *
- * SEIT S10 SIND ZWEI KENNUNGEN ERLAUBT, und zwar nur hier — `PAT_BLOB_RE`
+ * ZWEI KENNUNGEN SIND ERLAUBT, und zwar nur hier — `PAT_BLOB_RE`
  * bleibt unberuehrt. Das ist kein Versehen: Der Anteil steckt im
  * DATENSCHLUESSEL, und der oeffnet ausschliesslich die Huelle. Der
  * Inhaltsschluessel darin und damit jeder `pat_blob` sind unveraendert —
@@ -140,17 +137,17 @@ const HUELLE_PRAEFIX = 'edka1:';
 const WRAP_PRAEFIX_RE = '(?:edk1:|edka1:[0-9a-f]{8}:)?';
 
 /**
- * ZWEI AUSDRUECKE, WEIL ES ZWEI HUELLEN MIT VERSCHIEDENEN ZUSAGEN SIND
- * (S10, Fund F-2).
+ * ZWEI AUSDRUECKE, WEIL ES ZWEI HUELLEN MIT VERSCHIEDENEN ZUSAGEN SIND.
+ * 
  *
- * Bis Web 19.7.0 pruefte EINE Regel beide Huellen. Als `WRAP_RE` in AP1 die
- * Kennung `edka1:` dazunahm, galt das stillschweigend auch fuer
- * `pat_wrap_rc` — und damit haette eine Wiederherstellungs-Huelle am
- * Server-Anteil haengen koennen, ohne dass irgendetwas es aufgehalten haette.
+ * Pruefte EINE Regel beide Huellen, gaelte die Kennung `edka1:`
+ * stillschweigend auch fuer `pat_wrap_rc` — und damit koennte eine
+ * Wiederherstellungs-Huelle am Server-Anteil haengen, ohne dass irgendetwas
+ * es aufhielte.
  *
  * DAS WAERE DER VERLUST DES RUECKWEGS, also genau dessen, was die Zusage
  * verspricht: `pat_wrap_rc` oeffnet OHNE Anteil, und deshalb ist der Verlust
- * des Anteils kein Datenverlust (E-S10-04). Eine `edka1:`-Huelle dort waere
+ * des Anteils kein Datenverlust. Eine `edka1:`-Huelle dort waere
  * ein Konto, das nach dem Verlust des Anteils nicht mehr zu retten ist — und
  * man saehe es dem Feld nicht an, bis es zu spaet ist.
  *
@@ -164,7 +161,7 @@ const WRAP_RC_RE = '#^' . CHIFFRE_PRAEFIX_RE . '[A-Za-z0-9+/=]{20,4000}$#';
 const WRAP_RE    = WRAP_PW_RE;
 
 /**
- * Das Schlüsselpaar des Rückwegs (Konzept RW, E-RW-05).
+ * Das Schlüsselpaar des Rückwegs.
  *
  * `RW_OEFFENTLICH_RE`: der öffentliche Teil als SPKI in Base64 — für P-256
  * genau 124 Zeichen; der Spielraum 100 bis 200 lässt einen Kodierer mit
@@ -180,7 +177,7 @@ const RW_OEFFENTLICH_RE = '#^[A-Za-z0-9+/]{100,200}={0,2}$#';
 const RW_PRIVAT_RE      = WRAP_RC_RE;
 
 /**
- * Das Schlüsselpaar des Kontos (S11-03, Konzept S11 3.1; E-S11-12, -14).
+ * Das Schlüsselpaar des Kontos.
  *
  * Dieselben Formen wie beim Rückweg, aus demselben Grund: Der öffentliche
  * Teil ist SPKI in Base64 (ECDH auf P-256 hat dieselbe SPKI wie ECDSA), der
@@ -208,7 +205,7 @@ const LIMIT_PHASEN      = 500;
 const LIMIT_REA_SESSION = 20;
 const LIMIT_REA_EREIGN  = 200;
 const LIMIT_RESSOURCEN  = 40;
-/* Die Sperrvermerke eines Einsatzes in einer Sicherung (Nutzlast 9, R64).
+/* Die Sperrvermerke eines Einsatzes in einer Sicherung (Nutzlast 9).
  *
  * SIE STEHT HIER UND NICHT IN backup_lib.php, obwohl heute nur die Sicherung
  * sie braucht. Die Mengengrenzen sind Teil der gemeinsamen Pruefschicht
@@ -220,10 +217,8 @@ const LIMIT_RESSOURCEN  = 40;
  * Dienst waere schon viel. Wie ueberall hier schuetzt die Zahl vor einer
  * entgleisten Nutzlast, nicht vor Betrieb. */
 const LIMIT_SCHNITTE    = 200;
-/* ZWEI GRENZEN, WEIL ES ZWEI FRAGEN SIND (F-S2-02, entschieden 31.08.2026).
- *
- * Bis Web 9.14.0 stand hier EINE Konstante, und sie wurde an zwei Stellen
- * angewandt, die Verschiedenes meinen:
+/* ZWEI GRENZEN, WEIL ES ZWEI FRAGEN SIND. Die beiden Stellen meinen
+ * Verschiedenes:
  *
  *   ingest.php        die Punkte EINER ANFRAGE. Die Uhr sendet in Stuecken zu
  *                     UPLOAD_CHUNK_POINTS = 500 (Const.mc); gemessen an den
@@ -232,10 +227,10 @@ const LIMIT_SCHNITTE    = 200;
  *                     nie und schuetzt genau davor, wofuer sie da ist: einer
  *                     entgleisten Nutzlast.
  *
- *   backup_lib.php    die Punkte EINER GANZEN SPUR. Und dort war sie ein
- *                     Datenverlust: Was die Uhr ueber viele Anfragen
- *                     aufbauen darf, wurde beim Zurueckspielen bei 2000
- *                     gekappt. Erreichbar ist das ohne weiteres — THIN_MAX_GAP_S
+ *   backup_lib.php    die Punkte EINER GANZEN SPUR. Dort waere dieselbe
+ *                     Grenze ein Datenverlust: Was die Uhr ueber viele
+ *                     Anfragen aufbauen darf, wuerde beim Zurueckspielen
+ *                     bei 2000 gekappt. Erreichbar ist das ohne weiteres — THIN_MAX_GAP_S
  *                     garantiert einen Punkt alle 10 s, THIN_MIN_GAP_S erlaubt
  *                     einen je Sekunde; 2000 Punkte sind damit zwischen 33
  *                     Minuten und 5,5 Stunden Aufzeichnung. Aufgefallen ist
@@ -252,7 +247,7 @@ const LIMIT_SCHNITTE    = 200;
 const LIMIT_TRACKPUNKTE_ANFRAGE = 2000;
 const LIMIT_TRACKPUNKTE_SPUR    = 50000;
 
-/* DIE GERAETEHUELLE IN DER PRUEFSCHICHT (S11-04a, E-S11-13). Was der Server
+/* DIE GERAETEHUELLE IN DER PRUEFSCHICHT. Was der Server
  * nicht lesen kann, kann er nicht pruefen: Form und Groesse ja, Inhalt nein.
  * Den Inhalt pruefen das Geraet beim Erzeugen und der Browser beim Oeffnen.
  * Das Format steht in `tools/proben/huelle/referenz.py`:
@@ -262,13 +257,13 @@ const LIMIT_TRACKPUNKTE_SPUR    = 50000;
  * also mindestens 130 Byte, und die Laenge ohne Kopf und TAG ein Vielfaches
  * von 16. Die Obergrenzen folgen aus den Mengengrenzen darueber, nicht aus
  * dem Gefuehl: Ein Spurstueck traegt hoechstens LIMIT_TRACKPUNKTE_ANFRAGE
- * Punkte zu 14 Byte (E-S11-31), dazu Polsterung und Kopf. Die Einsatzhuelle
+ * Punkte zu 14 Byte, dazu Polsterung und Kopf. Die Einsatzhuelle
  * traegt JSON mit hoechstens LIMIT_PHASEN Phasen und LIMIT_REA_SESSION
  * Sitzungen zu LIMIT_REA_EREIGN Ereignissen; 256 KB sind das Vierfache des
  * groessten denkbaren Inhalts. */
 const GH_MIN_BYTE         = 130;
 const GH_STUECK_MAX_BYTE  = LIMIT_TRACKPUNKTE_ANFRAGE * 14 + 16 + 130;
-/** Ein gepacktes Stueck (Stufe 2/3, E-S11-71): hoechstens die ganze Spur,
+/** Ein gepacktes Stueck (Stufe 2/3): hoechstens die ganze Spur,
  *  16 Byte je Punkt ungepackt, dazu was `deflate` im schlimmsten Fall anhaengt. */
 const GH_GEPACKT_MAX_BYTE = LIMIT_TRACKPUNKTE_SPUR * 16 + 1024 + 130;
 const GH_EINSATZ_MAX_BYTE = 262144;
@@ -295,18 +290,12 @@ final class Pruefliste
     /** @var array<int, array{feld: string, grund: string}> */
     private array $eintraege = [];
 
-    /* ENTFALLEN MIT A4 (T-02 bis T-04): anzahl(), eintraege() und setBezug().
+    /* KEIN anzahl(), eintraege() oder setBezug(), und kein MERKMAL 'bezug'.
      *
      * Die vier Nutzer der Klasse — ingest.php, api/import_commit.php,
      * backup_lib.php und einsatz_form.php — benutzen ausschliesslich melde(),
-     * sauber(), nachUrsache() und text(); die drei anderen Methoden hatte in
-     * der gesamten Historie nie jemand aufgerufen.
-     *
-     * Mit setBezug() faellt das MERKMAL 'bezug' ganz weg, und zwar nicht als
-     * Beifang, sondern weil es transitiv tot war: Ohne Aufrufer blieb $bezug
-     * immer der Leerstring, jeder Eintrag trug also ein leeres Feld, und
-     * gelesen hat es ohnehin niemand — nachUrsache() wertet 'feld' und
-     * 'grund' aus, text() ebenso. */
+     * sauber(), nachUrsache() und text(). Ein Merkmal 'bezug' laese niemand —
+     * nachUrsache() wertet 'feld' und 'grund' aus, text() ebenso. */
 
     public function melde(string $feld, string $grund): void
     {
@@ -401,7 +390,7 @@ function pruef_flag($wert): int
 }
 
 /**
- * Kalendertag "JJJJ-MM-TT" (Baustein B2).
+ * Kalendertag "JJJJ-MM-TT".
  *
  * HINTERGRUND, und der ist der eigentliche Grund fuer diesen Baustein:
  * Die Datumsumwandlung liefert bei einem unmoeglichen Tag KEIN Fehlerergebnis,
@@ -466,7 +455,7 @@ function pruef_utc($wert, string $feld = 'Zeitpunkt', ?Pruefliste $p = null): ?s
         return null;
     }
     // Der Kalendertag wird vorab eigens geprueft: Die Umwandlung unten
-    // wuerde den 30. Februar sonst klaglos verschieben (siehe B2).
+    // wuerde den 30. Februar sonst klaglos verschieben.
     if (pruef_kalendertag(substr($wert, 0, 10), $feld, $p) === null) { return null; }
     try {
         $dt = new DateTime($wert, new DateTimeZone('UTC'));
@@ -513,11 +502,11 @@ function pruef_utc_oder_sql($wert, string $feld = 'Zeitpunkt', ?Pruefliste $p = 
  * Passt ein Zeitpunkt zum Kalendertag, unter dem er gemeldet wird?
  *
  * Die Uhr schickt zu jedem Datensatz einen `day` (Ortsdatum) UND Zeitpunkte
- * (UTC). Beide kommen aus derselben Quelle, und bis zur zweiten Gegenpruefung
- * hat niemand nachgesehen, ob sie zueinander passen: Ein Paket mit
- * `day` 2026-08-09 und `started_at` 2001-01-01 wurde angenommen, der Einsatz
+ * (UTC). Beide kommen aus derselben Quelle, und ohne Pruefung
+ * sieht niemand nach, ob sie zueinander passen: Ein Paket mit
+ * `day` 2026-08-09 und `started_at` 2001-01-01 wuerde angenommen, der Einsatz
  * mit 96 Jahren Dauer gespeichert und der Zeitraum des Diensttags darauf
- * gezogen (Nr. 134). Dagegen hilft keine Fensterregel, sondern nur die Frage,
+ * gezogen. Dagegen hilft keine Fensterregel, sondern nur die Frage,
  * ob die Angaben desselben Pakets einander widersprechen.
  *
  * DAS FENSTER IST BEWUSST SEHR WEIT: von Mitternacht des Vortags bis zum Ende
@@ -580,10 +569,9 @@ function pruef_zeit_zum_tag(?string $zeit, ?string $tag, string $feld = 'Zeitpun
 /**
  * Liegt das Ende vor dem Beginn?
  *
- * Bis zur Wiederaufnahme der zweiten Gegenpruefung hat das niemand gefragt.
- * Ein Paket mit vertauschten Zeiten wurde angenommen, und
- * dt_zeitraum_fortschreiben() zog daraufhin den Beginn des Diensttags auf das
- * ENDE nach vorn und sein Ende auf den BEGINN nach hinten -- der Tag wurde in
+ * Ohne diese Frage wuerde ein Paket mit vertauschten Zeiten angenommen, und
+ * dt_zeitraum_fortschreiben() zoege daraufhin den Beginn des Diensttags auf das
+ * ENDE nach vorn und sein Ende auf den BEGINN nach hinten -- der Tag wuerde in
  * beide Richtungen aufgezogen, mit Werten, die es so nie gab.
  *
  * Gleichstand ist erlaubt: Ein Einsatz von null Sekunden ist selten, aber
@@ -606,7 +594,7 @@ function pruef_ende_nach_beginn(?string $beginn, ?string $ende, string $feld = '
 /**
  * Ortszeit (App-Zeitzone) -> UTC, mit Kalendertagspruefung.
  *
- * Gegenstueck zu local_to_utc() in db.php, um B2 erweitert. Die dortige
+ * Gegenstueck zu local_to_utc() in db.php, um die Kalendertagspruefung erweitert. Die dortige
  * Fassung prueft Muster und Wertebereich der UHRZEIT bereits richtig, den
  * Kalendertag aber nicht.
  *
@@ -669,9 +657,9 @@ function pruef_laenge($wert, string $feld = 'Laengengrad', ?Pruefliste $p = null
 }
 
 /**
- * Ein Koordinaten-PAAR aus einem Formular (Web 6.1.0, E37/E39).
+ * Ein Koordinaten-PAAR aus einem Formular.
  *
- * Optionale Koordinaten gibt es seit Web 6.0.0 an Standorten und Zielkliniken,
+ * Optionale Koordinaten gibt es an Standorten und Zielkliniken,
  * seit 6.1.0 zusaetzlich am Einsatz (Zielklinik) — an fuenf Stellen, und an
  * dreien stand dieselbe kleine Umrechnung ausgeschrieben. Sie liegt jetzt hier.
  *
@@ -778,7 +766,7 @@ function pruef_pat_blob($wert, string $feld = 'Patientenblock', ?Pruefliste $p =
  * Geprueft wird die FORM: Base64 ohne fremde Zeichen, Laenge zwischen
  * GH_MIN_BYTE und `$maxByte`, Chiffretext ein Vielfaches von 16, Kennbyte der
  * Fassung 1, ein unkomprimierter Punkt als fluechtiger Schluessel. Ob die
- * Huelle aufgeht, kann nur der Browser sagen (E-S11-13).
+ * Huelle aufgeht, kann nur der Browser sagen.
  */
 function pruef_huelle($wert, int $maxByte, string $feld = 'Huelle', ?Pruefliste $p = null): ?string
 {
@@ -802,7 +790,7 @@ function pruef_huelle($wert, int $maxByte, string $feld = 'Huelle', ?Pruefliste 
  * Ein Spurstueck (SPUR2): `seq_from`, `punkte`, `ts_von`, `ts_bis` im
  * Klartext und die Huelle. Gibt es geprueft zurueck (Huelle binaer) oder
  * null. EINE Stelle fuer den Eingang der Geraete (`ingest.php`) und die
- * Schreibwege des Browsers (`api/schneiden.php`, S11-05c) — dieselben
+ * Schreibwege des Browsers (`api/schneiden.php`) — dieselben
  * Grenzen fuer beide, wie es die gemeinsame Pruefschicht verlangt.
  *
  * @return array{seq_from:int,punkte:int,ts_von:int,ts_bis:int,huelle:string}|null
@@ -818,7 +806,7 @@ function pruef_spurstueck($t, string $feld = 'track', ?Pruefliste $p = null): ?a
     if ($seqFrom < 0 || $n < 1 || $n > LIMIT_TRACKPUNKTE_ANFRAGE
         || $tsVon < 0 || $tsBis < $tsVon || $huelle === null) {
         /* Keine eigene Meldung fuer die Zahlen: Der Aufrufer nennt dann
-         * „Stueck unvollstaendig" (so seit S11-04a im Eingang). */
+         * „Stueck unvollstaendig" (so im Eingang). */
         return null;
     }
     return ['seq_from' => $seqFrom, 'punkte' => $n, 'ts_von' => $tsVon,
@@ -826,8 +814,8 @@ function pruef_spurstueck($t, string $feld = 'track', ?Pruefliste $p = null): ?a
 }
 
 /**
- * Ein gepacktes Spurstueck des Wartungslaufs (Stufe 2 oder 3, S11-07,
- * E-S11-71): wie `pruef_spurstueck()`, dazu Stufe und Marke, und die Grenzen
+ * Ein gepacktes Spurstueck des Wartungslaufs (Stufe 2 oder 3): wie
+ * `pruef_spurstueck()`, dazu Stufe und Marke, und die Grenzen
  * der ganzen Spur statt der einer Anfrage.
  *
  * @return array{seq_from:int,punkte:int,n_original:int,ts_von:int,ts_bis:int,stufe:int,huelle:string}|null
@@ -884,7 +872,7 @@ function pruef_menge($liste, int $max, string $feld = 'Liste', ?Pruefliste $p = 
  * Wie pruef_menge(), aber ABLEHNEND statt kappend.
  *
  * Fuer Listen, bei denen ein abgeschnittener Rest schlimmer ist als gar
- * keine Uebernahme — allen voran die Spur (F-S2-02). Gibt `null` zurueck,
+ * keine Uebernahme — allen voran die Spur. Gibt `null` zurueck,
  * wenn die Liste zu lang ist; die Meldung steht dann in der Pruefliste und
  * der Aufrufer ueberspringt den ganzen Datensatz.
  */
@@ -908,11 +896,11 @@ function ist_liste($wert): bool
 }
 
 /* ---------------------------------------------------------------------------
- * Stammdaten: Rettungsmittel (E-S9-09, Web 16.0.0)
+ * Stammdaten: Rettungsmittel
  * ------------------------------------------------------------------------ */
 
 /**
- * Groesste Laenge des Kurznamens (Nr. 69). Steht hier und nicht nur im Schema,
+ * Groesste Laenge des Kurznamens. Steht hier und nicht nur im Schema,
  * weil das Formular sie als `maxlength` braucht und die Sicherung sie beim
  * Einlesen kappt — dieselbe Zahl, eine Quelle.
  */
@@ -924,18 +912,14 @@ const RM_NAME_MAX = 64;
 /**
  * Ein Rettungsmittel pruefen — die eine Stelle fuer alle Schreibwege.
  *
- * WARUM DIESE FUNKTION IN DIESER DATEI STEHT. Bis Web 15.9.0 prueften die
- * Rettungsmittel drei Wege getrennt und ungleich:
+ * WARUM DIESE FUNKTION IN DIESER DATEI STEHT. Rettungsmittel werden ueber
+ * zwei Wege geschrieben:
  *
- *   einstellungen.php    veh_save        Konto        drei Regeln, mit Meldung
- *   admin_stammdaten.php veh_save        Verwaltung   dieselben drei, kopiert
- *   backup_lib.php       Einspielen      Datei        zwei, still uebergangen
+ *   einstellungen.php    veh_save        Konto        mit Meldung
+ *   backup_lib.php       Einspielen      Datei        still uebergangen
  *
- * Mit dem Typ kaemen an jeder der drei Stellen vier weitere Regeln dazu, und
- * die dritte Kopie waere dann die, die als erste veraltet. (Die mittlere Zeile
- * ist Geschichte: `admin_stammdaten.php` ist mit S9/AP5b gestrichen, es sind
- * jetzt zwei Schreibwege. Die Tabelle bleibt vollstaendig — sie begruendet,
- * warum es die Pruefschicht gibt, und dafuer zaehlt der damalige Stand.) Der Kopf dieser
+ * Mit dem Typ kaemen an jeder Stelle vier weitere Regeln dazu, und
+ * eine Kopie waere die, die als erste veraltet. Der Kopf dieser
  * Datei nennt Einsatzdaten als ihren Gegenstand; die Rettungsmittel sind der
  * erste STAMMDATENSATZ, der hier einzieht — aus demselben Grund, aus dem die
  * Einsatzdaten hier stehen: vier Wege, ein Massstab.
@@ -947,7 +931,7 @@ const RM_NAME_MAX = 64;
  *
  * ZWEI ARTEN VON RUECKMELDUNG, weil es zwei Arten von Aufrufern gibt. Die
  * Formulare zeigen einer Person einen Satz; sie lesen `fehler`, das je Feld
- * eine ausformulierte Meldung traegt (AP5 stellt sie in die Dialoge). Die
+ * eine ausformulierte Meldung traegt (die Dialoge zeigen sie). Die
  * Sicherung zaehlt und meldet nicht; sie uebergibt eine `Pruefliste` und
  * liest hinterher `nachUrsache()`. Beide bekommen dieselben Regeln.
  *
@@ -959,7 +943,7 @@ const RM_NAME_MAX = 64;
  *
  * Sie stehen an EINER Stelle, seit es zwei Verwendungen gibt: den
  * STAMMDATENSATZ (`pruef_rettungsmittel()`) und das Rettungsmittel NUR FUER
- * EINEN TAG (`pruef_tagesrettungsmittel()`, S9/AP6, E-S9-10). Beide fragen
+ * EINEN TAG (`pruef_tagesrettungsmittel()`). Beide fragen
  * dasselbe — welcher Typ, und welche Betriebsart laesst er zu —, und eine
  * zweite Fassung davon liefe beim naechsten Typ auseinander. Genau dieser
  * Fehler steht weiter unten als Begruendung der vier Stammdatenlisten.
@@ -987,7 +971,7 @@ function pruef_typ_betriebsart(array $roh, ?Pruefliste $p = null): array
     }
     $regeln = $typ !== null ? VEHICLE_TYPEN[$typ] : null;
 
-    /* BETRIEBSART — Pflicht seit Web 7.0.0, und bei einem Typ mit fester
+    /* BETRIEBSART — Pflicht, und bei einem Typ mit fester
      * Betriebsart nicht wahlfrei. „Fest" heisst hier: Der Wert wird gesetzt,
      * nicht abgelehnt. Das Formular zeigt das Feld ausgegraut, also kann ein
      * abweichender Wert nur aus einer gebauten Anfrage oder einer aelteren
@@ -1020,7 +1004,7 @@ function pruef_rettungsmittel(array $roh, ?Pruefliste $p = null): array
         $fehler['name'] = 'Bitte eine Bezeichnung für das Rettungsmittel eintragen.';
     }
 
-    /* KURZNAME — freiwillig, bis 16 Zeichen (Nr. 69). NULL heisst „keiner",
+    /* KURZNAME — freiwillig, bis 16 Zeichen. NULL heisst „keiner",
      * nicht „leer": Die Anzeige entscheidet daran, ob sie ihn statt der
      * Bezeichnung zeigt. */
     $kurz = pruef_text($roh['kurz'] ?? null, RM_KURZ_MAX, 'Kurzname', $p);
@@ -1029,8 +1013,8 @@ function pruef_rettungsmittel(array $roh, ?Pruefliste $p = null): array
         = pruef_typ_betriebsart($roh, $p);
     $fehler += $tkFehler;
 
-    /* STANDORT — Pflicht nur noch bei 'standard' (E-S9-09). Die Vorschlagslisten
-     * haengen am Standort (E15); ein Standard-Rettungsmittel ohne ihn hinterliesse
+    /* STANDORT — Pflicht nur noch bei 'standard'. Die Vorschlagslisten
+     * haengen am Standort; ein Standard-Rettungsmittel ohne ihn hinterliesse
      * eine leere Tagesuebersicht. Die drei anderen Typen haben oft keinen:
      * Eine Bergwacht-Bereitschaft hat ein Einsatzgebiet, ein Sanitaetsdienst
      * einen Ort, der jedes Mal woanders liegt. */
@@ -1043,12 +1027,12 @@ function pruef_rettungsmittel(array $roh, ?Pruefliste $p = null): array
     }
 
     /* ROLLEN-VORLAGEN — nur bei 'standard', und dort gefiltert auf die
-     * Betriebsart (E5/E6): Ein bodengebundenes Rettungsmittel kann keinen
+     * Betriebsart: Ein bodengebundenes Rettungsmittel kann keinen
      * Flugretter fuehren. Die Filterung geschieht hier und nicht nur im
      * Formular — ein Haken, den die Oberflaeche nicht anbietet, darf auch ueber
      * eine gesendete Anfrage nicht hereinkommen.
      *
-     * Bei den drei anderen Typen bleibt `vehicle_roles` leer (E-S9-09). Das ist
+     * Bei den drei anderen Typen bleibt `vehicle_roles` leer. Das ist
      * keine Einschraenkung der Dokumentation, sondern der VORLAGE: Der
      * Diensttag bekommt dann keinen Rollensatz angeboten (F19). */
     $rollen = [];
@@ -1063,7 +1047,7 @@ function pruef_rettungsmittel(array $roh, ?Pruefliste $p = null): array
 
     /* FAEHIGKEITEN — was der TYP in dieser BETRIEBSART zulaesst
      * (`veh_caps_erlaubt()` in db.php). Fuer Standard, Veranstaltung und
-     * Sonstiges heisst das weiter „nur luftgebunden" (E29); der Typ Bergwacht
+     * Sonstiges heisst das weiter „nur luftgebunden"; der Typ Bergwacht
      * darf sie in beiden Betriebsarten fuehren, weil ein Bergwachtnotarzt
      * hinfaehrt und geflogen wird.
      *
@@ -1100,58 +1084,53 @@ function pruef_rettungsmittel(array $roh, ?Pruefliste $p = null): array
 
 
 /* ---------------------------------------------------------------------------
- * DIE VIER EINFACHEN STAMMDATENLISTEN                          S9/AP5-4
+ * DIE VIER EINFACHEN STAMMDATENLISTEN
  *
  * Besatzungs-Vorbelegungen, Zielkliniken, weitere Rettungsmittel und
  * Bergwacht-Bereitschaften folgen demselben Muster: ein Name, ein Standort,
- * bei der Besatzung eine Rolle dazu. Bis Web 16.3.0 stand diese Pruefung
- * ACHTMAL ausgeschrieben — viermal in `einstellungen.php`, viermal in
- * `admin_stammdaten.php` — und die acht Fassungen waren nicht gleich (die
- * Verwaltungsseite ist mit S9/AP5b gestrichen; die ACHT ist die Zahl, die
- * diese Schicht begruendet hat, und bleibt deshalb stehen):
+ * bei der Besatzung eine Rolle dazu. Je Liste und Seite ausgeschrieben,
+ * laufen die Fassungen auseinander:
  *
- *   - Die Kontoansicht meldete bei LEEREM NAMEN gar nichts. Kein `notice`,
- *     kein `error`, also auch keine Umleitung: Der POST versickerte
- *     wortlos, und die Seite kam als POST-Ergebnis zurueck, als waere nichts
- *     gewesen. Die Verwaltung meldete an derselben Stelle „Bitte einen Namen
- *     eintragen." Mit einem Dialog faellt das auf, weil er zugeht.
- *   - Die Zielklinik hiess im Konto „Name" mit 190 Zeichen, in der Verwaltung
- *     „Bezeichnung" mit 120 im Formular und 190 im Handler.
+ *   - Eine meldet bei LEEREM NAMEN gar nichts. Kein `notice`,
+ *     kein `error`, also auch keine Umleitung: Der POST versickert
+ *     wortlos, und die Seite kommt als POST-Ergebnis zurueck, als waere nichts
+ *     gewesen; die andere meldet „Bitte einen Namen eintragen." Mit einem
+ *     Dialog faellt das auf, weil er zugeht.
+ *   - Die Zielklinik heisst hier „Name" mit 190 Zeichen, dort „Bezeichnung"
+ *     mit 120 im Formular und 190 im Handler.
  *
  * `CLAUDE.md` 4 sagt: Einsatzdaten laufen ueber die gemeinsame Pruefschicht,
- * alle Schreibwege, ohne Ausnahme. Fuer die Stammdaten galt das bisher nur
- * beim Rettungsmittel.
+ * alle Schreibwege, ohne Ausnahme. Fuer die Stammdaten gilt dasselbe.
  *
  * DIE OBERGRENZEN STEHEN HIER UND NICHT IM FORMULAR. `maxlength` im Markup
  * ist eine Bequemlichkeit fuer die Tippende, keine Regel — wer die Seite
  * umgeht, umgeht auch das Attribut. Die Zahlen sind die des Schemas.
  * ------------------------------------------------------------------------ */
 /**
- * EIN RETTUNGSMITTEL NUR FUER DIESEN TAG (S9/AP6, E-S9-10).
+ * EIN RETTUNGSMITTEL NUR FUER DIESEN TAG.
  *
  * WOFUER. Ein Dienst auf einem Fahrzeug, das dieses Konto sonst nie fuehrt —
- * die Aushilfe, das Fremdfahrzeug, der einmalige Sanitaetsdienst. Bis Web
- * 18.1.0 blieb dafuer nur, einen Stammdatensatz anzulegen, ihn einmal zu
+ * die Aushilfe, das Fremdfahrzeug, der einmalige Sanitaetsdienst. Sonst
+ * bliebe nur, einen Stammdatensatz anzulegen, ihn einmal zu
  * benutzen und danach in der Auswahl stehen zu lassen. Was hier entsteht,
  * steht AUSSCHLIESSLICH in der Momentaufnahme des Diensttags: kein
- * Stammdatensatz, keine Zeile in `vehicles` (F17).
+ * Stammdatensatz, keine Zeile in `vehicles`.
  *
  * WAS SIE MIT `pruef_rettungsmittel()` TEILT: Typ und Betriebsart, ueber
  * `pruef_typ_betriebsart()` — dieselbe Regel, eine Fassung.
  *
  * WORIN SIE SICH UNTERSCHEIDET, und warum:
  *
- *   - KEIN KURZNAME. Er ist eine Eigenschaft des Bestands (Nr. 69) und dient
+ *   - KEIN KURZNAME. Er ist eine Eigenschaft des Bestands und dient
  *     der Wiedererkennung in Listen. Was einen Tag lang existiert, wird nicht
  *     wiedererkannt.
  *   - DIE ROLLEN DER BETRIEBSART, KEINE FAEHIGKEITEN. Der Tag bekommt alle
- *     Rollen der gewaehlten Art (Nr. 169, E-P5c-47, seit Web 21.0.0 — bis
- *     dahin keine, F19) und keine Fluglisten; `day_capabilities` bleibt
+ *     Rollen der gewaehlten Art und keine Fluglisten; `day_capabilities` bleibt
  *     leer. Angehakt ist hier nichts, also gibt es nichts auszuwaehlen:
  *     Die Art ist die einzige Angabe, aus der sich ein Satz ergibt.
  *   - DER STANDORT IST FREIWILLIG — auch beim Typ „Standard". Am
  *     Stammdatensatz ist er dort Pflicht, weil die Vorschlagslisten an ihm
- *     haengen (E15) und ein Standard-Rettungsmittel ohne Standort eine leere
+ *     haengen und ein Standard-Rettungsmittel ohne Standort eine leere
  *     Tagesuebersicht hinterliesse. Hier bleiben die Besatzungsfelder ohne
  *     Standort aus der Liste Freitext ohne Vorschlaege — ein Preis, den ein
  *     Dienst von einem Tag tragen kann, und keine Regel wert.
@@ -1254,7 +1233,7 @@ function pruef_stammdaten(string $tabelle, array $roh, ?Pruefliste $p = null): a
     }
 
     /* DER STANDORT IST HIER IMMER PFLICHT — anders als beim Rettungsmittel,
-       das seit Web 16.0.0 ohne auskommen darf. Diese vier Listen sind
+       das ohne auskommen darf. Diese vier Listen sind
        Vorschlagslisten FUER einen Standort; ohne ihn haetten sie keinen Ort,
        an dem sie erscheinen. Das Schema sagt dasselbe: `base_id NOT NULL`. */
     $baseId = isset($roh['base_id']) && (int)$roh['base_id'] > 0

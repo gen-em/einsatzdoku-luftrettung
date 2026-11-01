@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-require_once __DIR__ . '/spur_lib.php';   // Spuren: Zeilen UND Blob (S2)
+require_once __DIR__ . '/spur_lib.php';   // Spuren: Zeilen UND Blob
 require_once __DIR__ . '/einsatz_lib.php';
 
 /**
@@ -19,11 +19,10 @@ require_once __DIR__ . '/einsatz_lib.php';
  * nicht einzeln im Papierkorb, sondern haengen am Diensttag und kehren mit ihm
  * gemeinsam zurueck.
  *
- * SCHLUESSEL IST SEIT WEB 6.0.0 DIE KENNUNG `days.id`, nicht mehr das Datum.
- * Alle Funktionen dieser Datei nehmen deshalb `int $dayId`. Inhaltlich aendert
- * sich nichts: `deleted_with_day` und die Sperrliste arbeiten unveraendert.
- * Entfallen ist allein das Anlegen einer Traegerzeile beim Loeschen — den
- * Diensttag, den es loescht, gibt es jetzt zwangslaeufig, weil die Einsaetze
+ * SCHLUESSEL IST DIE KENNUNG `days.id`, nicht das Datum.
+ * Alle Funktionen dieser Datei nehmen deshalb `int $dayId`. Eine Traegerzeile
+ * beim Loeschen braucht es nicht — den Diensttag, den es loescht, gibt es
+ * zwangslaeufig, weil die Einsaetze
  * mit einem Fremdschluessel auf ihn verweisen.
  */
 
@@ -44,7 +43,7 @@ function trash_scope_mission(int $userId, int $id): ?array {
         'mission'  => $m,
         'phasen'   => $one('SELECT COUNT(*) FROM mission_phases WHERE mission_id = ?', [$id]),
         // Ueber spur_lib.php, aus den Stuecken. Die Reanimation zaehlt hier
-        // nicht mehr (`reas` bis Web 22.7.0): Sie liegt in der Einsatzhuelle.
+        // nicht: Sie liegt in der Einsatzhuelle.
         'punkte'   => spur_zahlen(db(), 'mission', [$id])[$id] ?? 0,
     ];
 }
@@ -93,11 +92,8 @@ function trash_delete_mission(int $userId, int $id): void {
 
 function trash_delete_day(int $userId, int $dayId): void {
     db_transaktion(db(), function (PDO $pdo) use ($userId, $dayId): void {
-        /* Keine Traegerzeile mehr sicherstellen: Der Diensttag IST die Zeile,
-         * ohne die es die Einsaetze nicht gaebe (Fremdschluessel `day_id`).
-         * Bis Web 5.10.0 hing die Zuordnung am Datum und ein Tag konnte
-         * Einsaetze haben, ohne selbst zu existieren — dafuer war das
-         * INSERT IGNORE da. */
+        /* Keine Traegerzeile sicherstellen: Der Diensttag IST die Zeile,
+         * ohne die es die Einsaetze nicht gaebe (Fremdschluessel `day_id`). */
         $pdo->prepare('UPDATE days SET deleted_at = UTC_TIMESTAMP()
                        WHERE user_id = ? AND id = ? AND deleted_at IS NULL')
             ->execute([$userId, $dayId]);
@@ -115,7 +111,7 @@ function trash_delete_day(int $userId, int $dayId): void {
 /**
  * Einzeln geloeschten Einsatz zurueckholen.
  *
- * LIEFERT EINEN GRUND ZURUECK statt nichts (Backlog Nr. 33). Der Aufrufer
+ * LIEFERT EINEN GRUND ZURUECK statt nichts. Der Aufrufer
  * muss unterscheiden koennen, warum nichts passiert ist:
  *
  *   'ok'                zurueckgeholt
@@ -123,12 +119,12 @@ function trash_delete_day(int $userId, int $dayId): void {
  *   'nicht_gefunden'    kein solcher Eintrag (oder mit dem Tag geloescht,
  *                       dann gehoert er ueber trash_restore_day() zurueck)
  *
- * WARUM DIE ABLEHNUNG. Bis Web 8.0.0 fragte die Anweisung nur nach
- * `deleted_with_day = 0`. Ein einzeln geloeschter Einsatz, dessen Diensttag
- * danach ebenfalls geloescht wurde, steht aber weiterhin in der Liste des
- * Papierkorbs — ein Klick auf „Wiederherstellen" machte ihn AKTIV AN EINEM
- * GELOESCHTEN TAG. Und das ist der halb sichtbare Zustand, den E-S1-19 beim
- * Einspielen ausdruecklich ablehnt: in der Suche und auf der Einsatzseite
+ * WARUM DIE ABLEHNUNG. Ein einzeln geloeschter Einsatz, dessen Diensttag
+ * danach ebenfalls geloescht wurde, steht weiterhin in der Liste des
+ * Papierkorbs — ein Klick auf „Wiederherstellen" ohne diese Pruefung machte
+ * ihn AKTIV AN EINEM GELOESCHTEN TAG. Und das ist der halb sichtbare
+ * Zustand, den auch das Einspielen ausdruecklich ablehnt: in der Suche und
+ * auf der Einsatzseite
  * sichtbar, in Tagesuebersicht, Zeitraum, Export, Nachbearbeitung und
  * Papierkorb nicht; das Formular bricht ohne Diensttag ab. Was der Rueckweg
  * eines Backups nicht anlegen darf, darf die Oberflaeche erst recht nicht
@@ -210,11 +206,11 @@ function trash_purge_mission(int $userId, int $id): void {
 
     db_transaktion($pdo, function (PDO $pdo) use ($id, $m): void {
         trash_block_ref($pdo, $m);
-        // Zeilen UND Blob (E-S2-18). Beide haengen an keinem Fremdschluessel;
+        // Zeilen UND Blob. Beide haengen an keinem Fremdschluessel;
         // was hier nicht ausdruecklich geloescht wird, bleibt als Waise
-        // liegen — Positionsdaten ohne Eigentuemer (F-S2-B).
+        // liegen — Positionsdaten ohne Eigentuemer.
         spur_loeschen($pdo, 'mission', [$id]);
-        /* Sperrvermerke MIT (S4/A2). Zwei Richtungen, und beide muessen weg:
+        /* Sperrvermerke MIT. Zwei Richtungen, und beide muessen weg:
          * War dieser Einsatz aus einem Segment geschnitten, gehoert der
          * Vermerk am Segment jetzt zu einem Einsatz, den es nicht mehr gibt;
          * war er selbst Quelle eines Schnitts, gilt sein Zeitraum niemandem
@@ -229,16 +225,14 @@ function trash_purge_mission(int $userId, int $id): void {
 /**
  * Was haengt AKTIV an einem Diensttag, der im Papierkorb liegt?
  *
- * Normalerweise nichts: trash_delete_day() markiert alles mit. Es gibt aber
- * Wege, auf denen danach etwas Aktives dazukommt — bis Web 8.0.0 das
- * Zurueckholen eines einzeln geloeschten Einsatzes (jetzt abgelehnt, siehe
- * trash_restore_mission()) und die Uhr ueber eine Kennung in `day_refs`
- * (jetzt loest sie einen neuen Tag aus, siehe dt_zu_dayref()). Aus aelteren
- * Staenden koennen solche Eintraege noch liegen.
+ * Normalerweise nichts: trash_delete_day() markiert alles mit, und die
+ * Wege, auf denen danach etwas Aktives dazukaeme, sind zu
+ * (trash_restore_mission() lehnt ab, die Uhr loest ueber eine Kennung in
+ * `day_refs` einen neuen Tag aus, siehe dt_zu_dayref()). Aus aelteren
+ * Staenden koennen solche Eintraege aber noch liegen.
  *
  * Die Rueckfrage vor dem endgueltigen Loeschen MUSS sie nennen: Sie gehen
- * seit Web 8.0.0 mit (siehe trash_purge_day()), und bis dahin nannte die
- * Zwischenseite eine zu kleine Zahl.
+ * mit (siehe trash_purge_day()).
  */
 function trash_aktiv_am_tag(int $userId, int $dayId): array {
     $q = db()->prepare('SELECT m.id, m.started_at
@@ -257,15 +251,15 @@ function trash_aktiv_am_tag(int $userId, int $dayId): array {
 /**
  * Diensttag endgueltig entfernen — MIT ALLEM, was daran haengt.
  *
- * BIS WEB 8.0.0 STAND HIER `deleted_at IS NOT NULL`, und das liess ein
- * Waisenkind zurueck (Backlog Nr. 33): Ein aktiver Einsatz am geloeschten Tag
- * ueberlebte den ersten Schritt und verlor im zweiten seinen Diensttag —
- * `missions.day_id` traegt ON DELETE SET NULL. Danach stand er ohne Tag in der
- * Datenbank: in der Suche und auf der Einsatzseite sichtbar, in
- * Tagesuebersicht, Zeitraum, Export und Nachbearbeitung nicht, im Formular
- * nicht mehr zu oeffnen — und im Backup zwar enthalten, beim
- * Einspielen aber uebersprungen, weil ihm der Diensttag fehlt. Ein Datensatz
- * also, der gerettet aussah und beim naechsten Umlauf still verschwand.
+ * NICHT NUR `deleted_at IS NOT NULL` — das liesse ein Waisenkind zurueck:
+ * Ein aktiver Einsatz am geloeschten Tag ueberlebte den ersten Schritt und
+ * verloere im zweiten seinen Diensttag — `missions.day_id` traegt ON DELETE
+ * SET NULL. Danach stuende er ohne Tag in der Datenbank: in der Suche und
+ * auf der Einsatzseite sichtbar, in Tagesuebersicht, Zeitraum, Export und
+ * Nachbearbeitung nicht, im Formular nicht zu oeffnen — und im Backup zwar
+ * enthalten, beim Einspielen aber uebersprungen, weil ihm der Diensttag
+ * fehlt. Ein Datensatz also, der gerettet aussaehe und beim naechsten Umlauf
+ * still verschwaende.
  *
  * WARUM MITLOESCHEN UND NICHT ABLEHNEN. Ablehnen klingt vorsichtiger, ist aber
  * eine Sackgasse: Die NutzerIn sieht diese Einsaetze in keiner Liste und kann
@@ -281,10 +275,8 @@ function trash_purge_day(int $userId, int $dayId): void {
 
     /* ZUERST PRUEFEN, OB DER TAG UEBERHAUPT IM PAPIERKORB LIEGT.
      *
-     * Bis Web 8.0.0 ergab sich das von selbst: Jede Anweisung trug
-     * `deleted_at IS NOT NULL`, ein aktiver Tag wurde also von keiner
-     * getroffen. Seit die Einsaetze OHNE diese Bedingung geloescht werden,
-     * traegt allein das abschliessende DELETE sie noch — ein Aufruf auf einen
+     * Die Einsaetze werden OHNE `deleted_at IS NOT NULL` geloescht; allein
+     * das abschliessende DELETE traegt die Bedingung — ein Aufruf auf einen
      * AKTIVEN Tag loeschte damit seine Einsaetze und liesse den Tag stehen.
      * Kein heutiger Aufrufer tut das; die Bedingung gehoert trotzdem an den
      * Anfang und nicht ans Ende. */
@@ -303,7 +295,7 @@ function trash_purge_day(int $userId, int $dayId): void {
             $mLoeschen[] = (int)$m['id'];
             $pdo->prepare('DELETE FROM missions WHERE id = ?')->execute([(int)$m['id']]);
         }
-        // Spuren gebuendelt, Zeilen UND Blob (E-S2-18) — statt je Einsatz
+        // Spuren gebuendelt, Zeilen UND Blob — statt je Einsatz
         // einer eigenen DELETE-Anweisung.
         spur_loeschen($pdo, 'mission', $mLoeschen);
         schnitte_loeschen($pdo, 'ziel', $mLoeschen);
@@ -329,11 +321,11 @@ function trash_purge_day(int $userId, int $dayId): void {
 /* ---- Aufraeumjob: abgelaufene Papierkorb-Eintraege --------------------- */
 
 function trash_purge_expired(PDO $pdo): void {
-    /* Die Frist als Parameter, nicht im SQL-Text (M5-06).
+    /* Die Frist als Parameter, nicht im SQL-Text.
      *
      * TRASH_DAYS ist eine Konstante dieser Datei — eingesetzt wurde also
-     * nichts Fremdes. Trotzdem: Es waren die einzigen Stellen im Projekt,
-     * an denen ein Wert im Anweisungstext stand, und "das ist eine
+     * nichts Fremdes. Trotzdem: Ein Wert im Anweisungstext waere eine
+     * Ausnahme im Projekt, und "das ist eine
      * Konstante" muss man erst nachschlagen. INTERVAL nimmt keinen
      * Platzhalter, deshalb rechnet die Grenze hier in PHP. */
     $grenze = (new DateTimeImmutable('now', new DateTimeZone('UTC')))
@@ -372,11 +364,8 @@ function trash_list_days(int $userId): array {
     return $st->fetchAll();
 }
 
-/* Der Join auf `days` ist seit Web 6.0.0 der vorgesehene Weg (Konzept 4.11).
- * Die alte Regel "days und missions duerfen nie gejoint werden" entstand allein
- * aus den gleichnamigen crew_*-Spalten; mit deren Wegfall ist sie aufgehoben.
- * Hier wird sie gebraucht, weil der Papierkorb das Datum ANZEIGT, der Einsatz
- * es aber nicht mehr traegt. */
+/* Der Join auf `days` ist der vorgesehene Weg. Hier wird er gebraucht, weil
+ * der Papierkorb das Datum ANZEIGT, der Einsatz es aber nicht traegt. */
 function trash_list_missions(int $userId): array {
     $st = db()->prepare(
         'SELECT m.id, m.day_id, d.day, m.started_at, m.deleted_at

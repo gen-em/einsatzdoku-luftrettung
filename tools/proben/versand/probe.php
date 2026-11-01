@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 /**
  * VERSANDPROBE — die Adapter aus `server/sicherungsziel_lib.php` gegen echte
- * Server (S2/AP7).
+ * Server.
  *
  * Anlass: Nr. 139, 49 — stiller Rückfall auf Klartext-FTP; Löschen nähme Fremdes mit
  *
@@ -55,14 +55,13 @@ if ($echt) {
 const HOST     = '127.0.0.1';
 const PASSWORT = 'geheim-probe-2026';
 
-/* DER SERVERSCHLÜSSEL FÜR DIESEN LAUF (Web 20.27.0 neu gefasst).
+/* DER SERVERSCHLÜSSEL FÜR DIESEN LAUF.
  *
- * Bis Web 20.26.3 stand hier eine globale `$CFG`, die vor `server/` gesetzt
- * wurde; `serverkrypto_lib.php` las den Schlüssel daraus. Die Globale ist
- * mit Schritt 15 AP2 entfallen — die Anwendung liest über `konfig()` aus der
- * Datei, und eine Zuweisung an `$CFG` erreicht niemanden mehr. Sie
+ * Eine globale `$CFG`, die vor `server/` gesetzt wird, liest
+ * `serverkrypto_lib.php` nicht — die Anwendung liest über `konfig()` aus der
+ * Datei, und eine Zuweisung an `$CFG` erreicht niemanden. Sie
  * scheitert nicht, sie tut nur nichts; fünf Erwartungen dieser Probe standen
- * danach still auf „nicht erfüllt".
+ * damit still auf „nicht erfüllt".
  *
  * DER SATZ VON FRÜHER GILT WEITER — nur anders durchgesetzt. Hier stand:
  * „Eine Probe, die eine Konfiguration verändert, ist keine Probe mehr,
@@ -110,8 +109,8 @@ $p2 = sk_versiegeln('geheim123', 'ziel:7:pass');
 pruef('Zweimal versiegelt sind zwei verschiedene Chiffren', $p !== $p2);
 pruef('...und beide öffnen gleich', sk_oeffnen($p2, 'ziel:7:pass') === 'geheim123');
 $roh = base64_decode(substr($p, strlen(SK_PRAEFIX)), true);
-/* DAS LETZTE BYTE KIPPEN, NICHT ERSETZEN. Bis S11-12 stand hier ein `'X'`
- * als neues letztes Byte — war es schon `X` (1 zu 256), war nichts veraendert,
+/* DAS LETZTE BYTE KIPPEN, NICHT ERSETZEN. Ein `'X'`
+ * als neues letztes Byte reicht nicht — war es schon `X` (1 zu 256), war nichts veraendert,
  * und der Fall stand „OFFEN" (gesehen im Pruefstand am 19.10.2026). */
 $kaputt = SK_PRAEFIX . base64_encode(substr((string)$roh, 0, -1)
                                      . chr(ord(substr((string)$roh, -1)) ^ 0x01));
@@ -199,8 +198,8 @@ rundlauf('ftps', new ZielFtp(HOST, P_FTPS, NUTZER, PASSWORT, PFAD_FTP, true, tru
  * selbst ausgestelltes Zertifikat mit dem Namen „versandprobe-selbst-
  * ausgestellt" und ohne jede Vertrauenskette. Dass der Rundlauf oben
  * durchläuft, IST die Messung: `ext/ftp` prüft es nicht. */
-pruef('FTPS nimmt ein selbst ausgestelltes Zertifikat an', true,
-      'BEFUND: ext/ftp prüft kein Zertifikat — kein Schutz gegen Unterschieben');
+echo "  Hinweis: FTPS nimmt ein selbst ausgestelltes Zertifikat an — ext/ftp prüft\n"
+   . "  kein Zertifikat, kein Schutz gegen Unterschieben (dokumentiert, keine Prüfung).\n";
 
 kopf('Teil 5 — SFTP (phpseclib) gegen 127.0.0.1:' . P_SFTP);
 $sollAbdruck = trim((string)@file_get_contents($wurzel . '/fingerabdruck.txt'));
@@ -340,12 +339,12 @@ function zielAttrappe(int $id, string $prot, int $port, ?string $abdruck,
     ];
 }
 
-/* NUR NOCH ZWEI PROTOKOLLE GEHEN DURCH `sz_weg()` (S10/AP4, E-S10-14).
+/* NUR NOCH ZWEI PROTOKOLLE GEHEN DURCH `sz_weg()`.
  *
  * `ftp` steht hier nicht mehr: Es ist kein Weg mehr, sondern ein Fall für
  * die Abweisung darunter. Der ADAPTER `ZielFtp` wird weiter geprüft (oben,
  * `rundlauf('ftp', …)`) — er trägt auch FTPS, und seine Klartext-Betriebsart
- * bleibt prüfbar, solange es die Klasse gibt. Was AP4 abschafft, ist der
+ * bleibt prüfbar, solange es die Klasse gibt. Was abgeschafft ist, ist der
  * WEG dorthin, nicht die Klasse. */
 foreach ([['ftps', P_FTPS, null],
           ['sftp', P_SFTP, $sollAbdruck]] as $i => [$prot, $port, $abdruck]) {
@@ -364,11 +363,11 @@ pruef('Keine Probedatei ist auf einer der Gegenstellen liegengeblieben',
 
 /* ---- DER ENGPASS WEIST AB, STATT IM KLARTEXT ZU SENDEN ------------------
  *
- * E-S10-U-10: `sz_weg()` prüft POSITIV gegen den Katalog. Der zweite Fall
+ * `sz_weg()` prüft POSITIV gegen den Katalog. Der zweite Fall
  * ist der wichtigere — ein `ENUM`, das je nach `sql_mode` zum Leerstring
  * wird, fiel vorher auf `ZielFtp` OHNE TLS zurück, und dann gingen
  * Nutzername und Passwort offen über Port 21. Gemessen wird beides an
- * `sz_verbindung_pruefen()`, also an dem Weg, der bis AP4 gesendet hätte. */
+ * `sz_verbindung_pruefen()`, also an dem Weg, der früher gesendet hätte. */
 foreach (['ftp' => 'das abgeschaffte Protokoll',
           ''    => 'ein LEERES Protokoll (die ENUM-Falle)'] as $prot => $was) {
     $e = sz_verbindung_pruefen(zielAttrappe(400 + strlen($prot), $prot, P_FTP, null));
@@ -428,11 +427,11 @@ if ($db === null) {
     pruef('Die Chiffre eines Ziels öffnet nicht unter einer anderen Kennung',
           sz_geheim($verhaengt, 'geheim') === null);
 
-    /* DER DOPPELNAME UND DAS PROTOKOLL SIND ZWEI DINGE (S10/AP4).
+    /* DER DOPPELNAME UND DAS PROTOKOLL SIND ZWEI DINGE.
      *
      * Hier stand EIN Aufruf: derselbe Name UND `protokoll => 'ftp'`. Er wurde
      * abgewiesen — aber am NAMEN (`sicherungsziel_lib.php`, Doppelnamen-
-     * Prüfung), denn `ftp` war damals zulässig. Nach E-S10-14 wäre er weiter
+     * Prüfung), denn `ftp` war damals zulässig. Ohne das wäre er weiter
      * grün gewesen und hätte etwas anderes gemessen als draufsteht: eine
      * Erwartung, die stumpf wird, ohne rot zu werden (Fund F-G). Jetzt zwei
      * Aufrufe, jeder mit genau einem Grund. */
@@ -455,9 +454,9 @@ if ($db === null) {
           !in_array('ftp', array_column(sz_alle(), 'protokoll'), true),
           implode(', ', array_unique(array_column(sz_alle(), 'protokoll'))) ?: '(keine)');
 
-    /* UND DIE DATENBANK SELBST NIMMT ES NICHT MEHR AN (P5c/AP8, E-P5c-124).
-     * Bis Web 20.47.0 kannte das ENUM den Wert noch, und die Anwendung
-     * umschiffte ein solches Ziel (Plakette „wird übergangen"). Seither steht
+    /* UND DIE DATENBANK SELBST NIMMT ES NICHT MEHR AN.
+     * Ein ENUM, das den Wert noch kennt, zwingt die Anwendung, ein solches
+     * Ziel zu umschiffen (Plakette „wird übergangen"). Deshalb steht
      * er nicht mehr im Schema — gemessen am Typ der Spalte UND an einem
      * Schreibversuch an der Anwendung vorbei: Je nach `sql_mode` bricht er
      * ab oder macht einen Leerstring daraus, ein `ftp` steht danach nie da. */
@@ -605,7 +604,7 @@ if ($f === null) { $wegTs->loeschen('kontoY/t.zip'); }
 $wegTs->trennen();
 
 /* --- 11d: Kein Schreibrecht --------------------------------------------
- * Die Abnahme von AP7 nennt „Platz voll" ausdruecklich als Fehlerfall mit
+ * Die Abnahme nennt „Platz voll" ausdruecklich als Fehlerfall mit
  * verstaendlicher Meldung. Eine volle Platte laesst sich hier nicht
  * herstellen; ein gesperrtes Verzeichnis ist derselbe Weg durch den Adapter
  * (der Server antwortet mit 550 bzw. „Permission denied") und laesst sich
@@ -642,11 +641,11 @@ if ($sperre !== null) { @chmod($sperre, 0755); @rmdir($sperre); }
 @unlink($datei);
 
 /* ======================================================================
- * Teil 12 — Die Aufbewahrung auf dem Ziel (P5a/AP10, E-P5a-03, Nr. 49)
+ * Teil 12 — Die Aufbewahrung auf dem Ziel
  *
  * WOGEGEN. Der Versand ergaenzt nur; auf der Gegenstelle loescht diese
  * Anwendung nie. Bei zwei Sicherungen je Konto und Monat laeuft ein Ziel
- * damit ueber kurz oder lang voll. Seit Web 20.14.0 gibt es je Ziel eine
+ * damit ueber kurz oder lang voll. Deshalb gibt es je Ziel eine
  * Option dagegen — und drei Sicherungen, damit sie nicht zu viel mitnimmt.
  *
  * DIE FUENF FREMDEN DATEIEN SIND DER KERN DIESES TEILS. Ein auswaertiges
@@ -683,6 +682,15 @@ if ($db12 === null) {
     if ($vorherAktiv !== []) {
         $db12->exec('UPDATE backup_targets SET aktiv = 0 WHERE id IN ('
                   . implode(',', $vorherAktiv) . ')');
+        /* Auch bei einem Abbruch zurueck — nicht nur im `finally` unten: Ein
+         * `exit` oder ein fataler Fehler ginge daran vorbei, und die Anlage
+         * stuende ohne ihre Ziele da. Doppelt zurueckzuschreiben schadet nicht. */
+        register_shutdown_function(function () use ($vorherAktiv): void {
+            try {
+                db()->exec('UPDATE backup_targets SET aktiv = 1 WHERE id IN ('
+                         . implode(',', $vorherAktiv) . ')');
+            } catch (Throwable $e) { /* Datenbank weg: nichts mehr zu tun */ }
+        });
     }
     $db12->exec("DELETE FROM backup_targets WHERE name LIKE 'Versandprobe%'");
 
@@ -806,7 +814,7 @@ if ($db12 === null) {
     $l3 = sz_versand_schub($budget, 1.0);
     pruef('Ein dritter Lauf löscht nichts mehr — die Regel ist erfüllt',
           (int)$l3['geloescht'] === 0, (int)$l3['geloescht'] . ' gelöscht');
-    /* DIE ZAHL, DIE SAGT WARUM (E-P5a-57). Ohne sie wäre „0 gelöscht" auch
+    /* DIE ZAHL, DIE SAGT WARUM. Ohne sie wäre „0 gelöscht" auch
      * dann grün, wenn der dritte Lauf gar nichts mehr zu senden HÄTTE — und
      * der Kreislauf käme beim nächsten Paket zurück. Gemessen wird deshalb
      * die WIRKUNG des Riegels: drei Dateien liegen hier, gehen aber nicht
@@ -852,9 +860,9 @@ if ($db12 === null) {
 }
 
 /* ====================================================================
- * Teil 13 — Die Archive des Protokolls als dritte Dateiart (P5c/AP2)
+ * Teil 13 — Die Archive des Protokolls als dritte Dateiart
  *
- * ANLASS: E-P5c-39 sagt zwei Dinge über die Archive, und keines davon hatte
+ * ANLASS: Die Zusage sagt zwei Dinge über die Archive, und keines davon hatte
  * einen Gegenstand. Sie gehen mit dem Versand hinaus — die Protokollprobe
  * misst nur, dass der Name als eigene Sicherung erkannt wird, nicht, dass
  * eine Datei drüben ankommt. Und auf dem Ziel gilt für sie KEINE
@@ -912,7 +920,7 @@ if ($db13 === null) {
           is_int($zid13) ? "Kennung $zid13" : implode(' ', (array)$zid13));
     $zid13 = (int)$zid13;
 
-    /* NUR DIE EIGENEN ARCHIVE (Jahr 2020) — seit SR-08 (F-SR-97). Der
+    /* NUR DIE EIGENEN ARCHIVE (Jahr 2020). Der
      * Versand schickt JEDES Archiv im Ordner, auch ein echtes, das der Job
      * auf der Sandbox angelegt hat, sobald eine Woche voll ist. Am
      * 05.10.2026 lag eins da (Woche ab 28.09.), und die Zahl war 4 statt 3,

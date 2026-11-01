@@ -1,8 +1,8 @@
 <?php
 declare(strict_types=1);
 /**
- * INSTALLATION WIEDERHERSTELLEN — der Rückweg zum Komplett-Backup
- * (E-S2-20, S2/AP8).
+ * INSTALLATION WIEDERHERSTELLEN — der Rückweg zum Komplett-Backup.
+ * 
  *
  * WOFÜR ES DIESE SEITE GIBT. Der Webspace ist weg. Ein neuer steht, die
  * Anwendungsdateien sind hochgeladen, die `config.php` aus dem
@@ -18,7 +18,7 @@ declare(strict_types=1);
  *      suchen. Das ist die wichtigste der drei: Sie macht die Seite auf einer
  *      laufenden Anlage wirkungslos, unabhängig von allem anderen.
  *
- *   2. DER NACHWEIS. Dieselbe Bauart wie in `install.php` (M1-11): Die Seite
+ *   2. DER NACHWEIS. Dieselbe Bauart wie in `install.php`: Die Seite
  *      legt eine Datei mit zufälligem Namen im Anwendungsverzeichnis ab; wer
  *      deren Kennung eintragen kann, hat Zugriff auf das Verzeichnis. Ohne
  *      ihn wäre die Seite in dem Zeitfenster zwischen „Datenbank leer" und
@@ -32,9 +32,8 @@ declare(strict_types=1);
  *      ohne Anmeldung wäre genau das, was Schranke 2 verhindern soll, nur
  *      bequemer.
  *
- * WAS DIESE SEITE NICHT TUT: MIGRATIONEN. Das Konzept sieht den
- * Migrationslauf im Anschluss vor; er läuft hier trotzdem nicht mit, und
- * zwar aus dem Grund, aus dem `update.php` seit M6-01 zweistufig ist —
+ * WAS DIESE SEITE NICHT TUT: MIGRATIONEN. Der Migrationslauf im Anschluss
+ * läuft hier nicht mit, und zwar aus dem Grund, aus dem `update.php` zweistufig ist —
  * Migrationen können Spalten löschen, und deshalb steht zwischen Anzeigen und
  * Ausführen ein Knopf und eine angemeldete AdministratorIn. Eine Seite ohne
  * Anmeldung, die sie nebenbei mitlaufen liesse, nähme genau diese Absicherung
@@ -51,7 +50,7 @@ if (!file_exists($configPath)) {
     require_once __DIR__ . '/ui.php';
 require_once __DIR__ . '/instanz_lib.php';
     http_response_code(409);
-    /* DIESELBE OEFFENTLICHE HUELLE WIE DER EINRICHTER (O10, Tabelle 5.4):
+    /* DIESELBE OEFFENTLICHE HUELLE WIE DER EINRICHTER (Tabelle 5.4):
      * Kopf ohne Menue, Lesespalte, Fuss ohne Rechtslinks. Ohne `config.php`
      * gaebe es die Rechtstextseiten ohnehin nicht. */
     ui_seite_start(['titel' => 'Installation wiederherstellen']);
@@ -78,9 +77,8 @@ require_once __DIR__ . '/komplett_lib.php';
 require_once __DIR__ . '/format_lib.php';
 
 /* Eigene Sitzung — `auth_guard.php` gibt es hier nicht, es gibt ja keine
- * Konten. Dieselben Einstellungen wie im Einrichter (M1-19), und seit
- * Web 20.27.0 ist „dieselben" keine Zusage mehr, sondern dieselbe Zeile:
- * Art `einrichtung` (Schritt 15 AP2). */
+ * Konten. Dieselben Einstellungen wie im Einrichter, und zwar nicht als
+ * Zusage, sondern als dieselbe Zeile: Art `einrichtung`. */
 sitzung_starten('einrichtung');
 if (empty($_SESSION['wh_csrf'])) { $_SESSION['wh_csrf'] = bin2hex(random_bytes(32)); }
 
@@ -156,7 +154,7 @@ try {
         ? (int)$pdo->query('SELECT COUNT(*) FROM users')->fetchColumn() : 0;
     $leer = $konten === 0;
 } catch (Throwable $ex) {
-    /* NUR DIE KENNUNG, NICHT DER TEXT (Backlog Nr. 131, K-11). Diese Seite ist
+    /* NUR DIE KENNUNG, NICHT DER TEXT. Diese Seite ist
      * unangemeldet erreichbar -- sie MUSS es sein, denn sie arbeitet auf einer
      * Installation, in der es noch kein Konto gibt. Der Fehlertext einer
      * PDO-Ausnahme nennt Rechnernamen, oft den Datenbanknutzer und manchmal den
@@ -176,8 +174,8 @@ try {
  * an der Sitzung: Sonst läge nach jedem Aufruf — auch dem eines Neugierigen —
  * eine weitere Datei da, und niemand wüsste, welche die seine ist.
  *
- * Seit Web 21.13.0 nicht mehr wortgleich abgeschrieben, sondern dieselbe
- * Stelle: `nachweis_lib.php` (Schritt 18, SR-04, R83).
+ * Nicht wortgleich abgeschrieben, sondern dieselbe Stelle:
+ * `nachweis_lib.php`.
  */
 require_once __DIR__ . '/nachweis_lib.php';
 $nachweisMuster = 'wiederher-nachweis-';
@@ -212,13 +210,13 @@ $nachweisOk = $darfNachweis
 $notice = null; $error = null;
 $stand = wh_stand_lesen();
 
-/* ---- Die Sperre der Ablage ZUERST (F-R17-19, R17-23) --------------------- *
+/* ---- Die Sperre der Ablage ZUERST --------------------- *
  *
- * `sicherungen/.htaccess` entstand bis Web 23.3.1 erst beim ersten Sichern.
- * Auf einem frischen Webspace — genau dem Ort, an dem diese Seite gebraucht
- * wird — fehlte sie, und ein nach `eingang/` gelegter Klartext-Dump
- * (`.sql.gz`, `.sql`) war per HTTP abrufbar, sein Name sekundengenau ratbar.
- * Jetzt entsteht sie, bevor die Seite den Eingang liest. Nur unter derselben
+ * `sicherungen/.htaccess` entsteht, bevor die Seite den Eingang liest. Auf
+ * einem frischen Webspace — genau dem Ort, an dem diese Seite gebraucht
+ * wird — fehlte sie sonst, und ein nach `eingang/` gelegter Klartext-Dump
+ * (`.sql.gz`, `.sql`) waere per HTTP abrufbar, sein Name sekundengenau
+ * ratbar. Nur unter derselben
  * Bedingung wie der Nachweis: Auf einer laufenden Anlage schreibt ein
  * unangemeldeter Aufruf nichts. Laesst sie sich nicht anlegen, wird nicht
  * gearbeitet — ein offener Eingang ist schlimmer als ein verschobener
@@ -287,7 +285,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $darfArbeiten) {
                     if (($stand['phase'] ?? '') === 'fertig') {
                         $notice = 'Eingespielt: ' . zahl_text((int)$stand['statements'], 0)
                                 . ' Anweisungen. Die Installation steht wieder.';
-                        /* IN DIE EINGESPIELTE DATENBANK (P5c/AP2, E-P5c-38).
+                        /* IN DIE EINGESPIELTE DATENBANK.
                          * Das Protokoll der Quelle kam mit dem Dump; dieser
                          * Eintrag ist der erste danach und sagt, woher der
                          * Stand stammt. */
@@ -319,10 +317,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $darfArbeiten) {
                 $notice = 'Der Arbeitsstand wurde verworfen. Die Datei in „eingang" '
                         . 'bleibt liegen.';
             } elseif ($aktion === 'aufraeumen') {
-                /* DIE QUELLDATEI GEHT MIT (F-R17-19, R17-23, Entscheidung der
-                 * Betreiberin). Bis Web 23.3.1 blieb sie liegen, und das
-                 * Runbook sagte es nicht — ein Klartext-Dump eines Hosters
-                 * lag danach unbegrenzt im Webspace. Geloescht wird NUR die
+                /* DIE QUELLDATEI GEHT MIT (Entscheidung der Betreiberin).
+                 * Bliebe sie liegen, laege ein Klartext-Dump eines Hosters
+                 * unbegrenzt im Webspace. Geloescht wird NUR die
                  * Datei, aus der dieser Lauf eingespielt hat, und nur, wenn
                  * sie im Eingang steht: Der Name kommt aus dem Arbeitsstand
                  * und geht gegen die Liste von `wh_quellen()`. Die Vorlage
@@ -395,7 +392,7 @@ function wh_auspacken(string $datei, string $passwort, array $stand): array
     try {
         if ($gefunden['art'] === 'edk') {
             /* A1 — entsiegeln. */
-            /* MIT DER DATEI (SR-03): Während eines Wechsels öffnet ein Stand
+            /* MIT DER DATEI: Während eines Wechsels öffnet ein Stand
              * von davor mit dem bisherigen Schlüssel — der erste Block
              * entscheidet. */
             $schluessel = komp_schluessel_fuer((array)$gefunden['kopf'],
@@ -431,24 +428,20 @@ function wh_auspacken(string $datei, string $passwort, array $stand): array
      * Dump (`mysqldump`) hat keine — bei dem wird deshalb auch keine
      * verlangt, und die Seite sagt das offen.
      *
-     * ZWEI SCHREIBWEISEN, UND DAS IST KEIN VERSEHEN (S7). Die Kopfzeile ist
+     * ZWEI SCHREIBWEISEN, UND DAS IST KEIN VERSEHEN. Die Kopfzeile ist
      * zugleich Text für Menschen und Erkennungsmarke für diese Stelle. Mit
      * der Begriffsumstellung heisst sie „Komplett-Backup der Installation";
-     * jeder Dump, der VOR S7 erzeugt wurde und heute auf einem Server oder
+     * jeder aeltere Dump, der heute auf einem Server oder
      * einem Backup-Ziel liegt, trägt aber noch „Komplettsicherung der
-     * Installation" (bis Web 12.9.2). Würde hier nur die neue Schreibweise gesucht, gälte ein
+     * Installation". Würde hier nur die neue Schreibweise gesucht, gälte ein
      * solcher Dump als FREMD — und dann verlangt diese Stelle keine Endmarke
      * mehr und nähme einen abgebrochenen Stand klaglos an. Das ist der
      * gefährlichste Fehlschluss, den eine Umbenennung anrichten kann: Sie
      * schaltet eine Prüfung ab, ohne dass etwas rot wird. Die alte
-     * Schreibweise darf am v1.0-Schnitt weg (R60), nicht vorher.
+     * Schreibweise darf am v1.0-Schnitt weg, nicht vorher.
      *
-     * GENAU DAS WAR GESCHEHEN (F-R17-33, behoben in R17-23, E-R17-23): Die
-     * Umstellung des Begriffs am 03.09.2026 hatte BEIDE Zeichenketten
-     * ersetzt, die zwei Zweige waren wortgleich, und ein abgebrochener Dump
-     * von vor S7 ging als fremder ohne Endmarke durch. Die Liste steht
-     * seither neben dem Erzeuger der Kopfzeile (`komp_dump_eigen()` in
-     * komplett_lib.php), und die Komplettprobe haelt sie fest. */
+     * Die Liste steht neben dem Erzeuger der Kopfzeile (`komp_dump_eigen()`
+     * in komplett_lib.php), und die Komplettprobe haelt sie fest. */
     $anfang = (string)file_get_contents($ziel, false, null, 0, 200);
     $eigen  = komp_dump_eigen($anfang);
     $endmarke = str_contains(wh_schwanz($ziel, 4096), KOMP_ENDMARKE);
@@ -548,7 +541,7 @@ function wh_einspielen(array $stand, callable $zeitLinks): array
         $pdo->exec('SET UNIQUE_CHECKS = 1');
         $stand['phase'] = 'fertig';
         $stand['beendet'] = iso_utc();
-        /* DEN TORWAECHTER VERGESSEN LASSEN (P5a/AP3, Backlog Nr. 54).
+        /* DEN TORWAECHTER VERGESSEN LASSEN.
          *
          * Der eingespielte Dump bringt das `schema_migrations` der
          * QUELLINSTALLATION mit — und `app_state` gleich mit, also auch den
@@ -563,8 +556,8 @@ function wh_einspielen(array $stand, callable $zeitLinks): array
          * ohnehin. */
         require_once __DIR__ . '/migration_lib.php';
         migrationen_tor_zuruecksetzen($pdo);
-        /* DER ZUSTAND DES SCHLÜSSELWECHSELS GILT HIER NICHT ALS NACHWEIS
-         * (H-SR-06, F-SR-80). Der Dump bringt `jobs.zustand` mit — samt
+        /* DER ZUSTAND DES SCHLÜSSELWECHSELS GILT HIER NICHT ALS NACHWEIS.
+         * Der Dump bringt `jobs.zustand` mit — samt
          * „fertig" und Zeitpunkt des Nachweises der Anlage, die ihn schrieb.
          * Deren Dateien sind nicht die hiesigen; der Nachweis beginnt hier
          * von vorn. Scheitert das, bleibt das Einspielen trotzdem fertig. */
@@ -619,7 +612,7 @@ ui_kopf(['menue' => false]);
 
   <?php elseif (!$darfArbeiten): ?>
     <?php ui_karte_start(['titel' => 'Diese Installation ist in Betrieb']); ?>
-      <?php /* OHNE KONTENZAHL (Backlog Nr. 131, K-11). Sie stand hier fett und
+      <?php /* OHNE KONTENZAHL. Sie stand hier fett und
                war die Antwort auf eine Frage, die niemand stellen darf, der nicht
                angemeldet ist: wie gross ist diese Installation. Fuer die Aussage
                dieser Karte -- "hier passiert nichts mehr" -- braucht es sie nicht. */ ?>
@@ -690,8 +683,8 @@ ui_kopf(['menue' => false]);
            abfaengt — die beiden Wachen sind NICHT gleichwertig. Bei sql_bytes = 0
            und versatz > 0 rechnete die alte Form 100 * versatz / 1, die Funktion
            gaebe 0. Der Fall ist nicht erreichbar (ohne Datei gibt es keinen
-           Versatz), aber Zeichengleichheit wird belegt und nicht erschlossen
-           (E-ZE-10). Nachgemessen mit max(): 200 000 Paare, 0 Abweichungen. */
+           Versatz), aber Zeichengleichheit wird belegt und nicht erschlossen.
+           Nachgemessen mit max(): 200 000 Paare, 0 Abweichungen. */
         $anteil = prozent_wert((int)$stand['versatz'],
                                max(1, (int)$stand['sql_bytes']), 'kauf');
         ui_zeile(['text' => 'Quelle', 'klein' => (string)$stand['quelle'],
@@ -804,9 +797,8 @@ ui_kopf(['menue' => false]);
       <?php ui_karte_ende(); ?>
     <?php endif; ?>
 
-    <?php /* Hier stand bis Web 21.4.0 eine zugeklappte Erklaerkarte mit
-             Reihenfolge, Serverschluessel und „es wird nichts
-             zurueckgenommen" (R4-20, Nr. 287). Die drei Absaetze stehen jetzt
+    <?php /* Die Erklaerung — Reihenfolge, Serverschluessel und „es wird
+             nichts zurueckgenommen" — steht
              im Handbuch 12.6, „Der Wiederanlauf"; die Unterzeile verweist
              dorthin. `hilfe.php` braucht weder Anmeldung noch Tabellen —
              gemessen am 27.09.2026 an einer leeren Datenbank: HTTP 200, das

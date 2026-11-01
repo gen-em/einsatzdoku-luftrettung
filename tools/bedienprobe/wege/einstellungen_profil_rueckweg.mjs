@@ -2,8 +2,8 @@
  * (`einstellungen.php?t=profil`, Karte „Zweitfaktor").
  * ===========================================================================
  *
- * Entstanden mit Konzept RW, RW-02 (E-RW-02, -06, -07, -14, -15). Nach der
- * SEITE benannt (E-PK-15); die Anmeldung, an der das Paar entsteht, gehört
+ * Nach der
+ * SEITE benannt; die Anmeldung, an der das Paar entsteht, gehört
  * zum Weg, weil die Karte sonst nichts zu zeigen hätte.
  *
  *   einstellungen-profil-rueckweg

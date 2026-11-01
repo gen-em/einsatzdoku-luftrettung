@@ -6,7 +6,7 @@ require_once __DIR__ . '/../backup_lib.php';
 /**
  * POST api/backup_eintraege_restore.php — ein Fenster von Eintraegen.
  *
- * WOFUER (S2/AP5b). Der Kopf einer Fassung-4-Datei ist eingespielt; die
+ * WOFUER. Der Kopf einer Fassung-4-Datei ist eingespielt; die
  * Einsaetze und Ruhesegmente kommen danach in Fenstern. Zwei Gruende, und
  * beide sind gemessen:
  *
@@ -15,11 +15,9 @@ require_once __DIR__ . '/../backup_lib.php';
  *              Webserver, den niemand kennt: nginx deckelt in der Vorgabe bei
  *              1 MB. Ein Fenster von 250 Eintraegen ist 0,44 MB.
  *   SPEICHER   Denselben Kern am Stueck zu bauen kostet den Server 39,5 MB
- *              von 64 (Z3) — und das waechst mit dem Bestand: bei 187
+ *              von 64 — und das waechst mit dem Bestand: bei 187
  *              Eintraegen sind es 4,0 MB, bei 10 797 die genannten 39,5, also
  *              rund 3,3 kB je Eintrag. In Fenstern bleibt es bei 10,0 MB.
- *              (Bis Web 11.0.0 waren es 92 MB; das hat AP5 mit den Fenstern
- *              der Kindtabellen erledigt, nicht dieses Paket.)
  *
  * Rumpf: {"eintraege": {"missions": [...], "rest_segments": [...]},
  *         "day_map": {"<Datei-Kennung>": <Kennung hier>, …}}
@@ -33,10 +31,10 @@ require_once __DIR__ . '/../backup_lib.php';
  */
 
 api_methode();
-csrf_check();   // Feld ODER Kopfzeile X-CSRF (Nr. 67)
+csrf_check();   // Feld ODER Kopfzeile X-CSRF
 
 $b = api_rumpf();
-/* DER ABSCHLUSS (Backlog Nr. 386, R17-23): Nach dem letzten Fenster schickt
+/* DER ABSCHLUSS: Nach dem letzten Fenster schickt
  * der Browser die Sperrvermerke zurueck, deren Quelle beim Einspielen ihres
  * Fensters noch nicht da war — in Stuecken zu hoechstens
  * EDBAK_SCHNITTE_NACHREICHEN_MAX. `edbak_schnitte_nachreichen()` prueft sie
@@ -59,15 +57,15 @@ $eintraege = $b['eintraege'];
 /* Die Fassung steht im Kopf der Datei und wird hier mitgeschickt: Den
  * Eintragsweg gibt es erst ab Nutzlast 8, und das soll dastehen statt sich
  * daraus zu ergeben, dass niemand anders ihn ruft. Die Zahl folgt der
- * geschriebenen Nutzlast (`EDBAK_NUTZLAST`, seit P5c/AP8; bis dahin stand
- * hier 10, F-P5c-128) — unbedenklich, weil alle Fassungen ab 8 denselben Weg
+ * geschriebenen Nutzlast (`EDBAK_NUTZLAST`) — unbedenklich, weil alle
+ * Fassungen ab 8 denselben Weg
  * nehmen und die spaeteren Felder optional sind. */
 $eintraege['version'] = EDBAK_NUTZLAST;
 
 try {
     /* `offenZurueck`: Ein Vermerk, dessen Quelle in einem spaeteren Fenster
-     * steht, kommt als `schnitte_offen` zurueck statt verworfen zu werden
-     * (Nr. 386); der Browser reicht ihn nach dem letzten Fenster nach. */
+     * steht, kommt als `schnitte_offen` zurueck statt verworfen zu werden;
+     * der Browser reicht ihn nach dem letzten Fenster nach. */
     $stats = edbak_restore($userId, $eintraege,
                            is_array($b['day_map'] ?? null) ? $b['day_map'] : [], 'browser',
                            null, true);
@@ -78,7 +76,7 @@ try {
               'spur_karte' => $karte ?: new stdClass(),
               'schnitte_offen' => $offen]);
 } catch (DomainException $ex) {
-    /* Klartext-Ortsdaten (S11-06b): Der Browser verschliesst seit Web 22.5.0
+    /* Klartext-Ortsdaten: Der Browser verschliesst
      * Orte, Reanimation und Spur vor dem Senden; eine Nutzlast mit Klartext
      * kommt aus einer veralteten Seite oder von Hand. Nichts ist geschrieben
      * — `edbak_restore()` prueft vor der Transaktion. */

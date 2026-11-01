@@ -2,8 +2,8 @@
 declare(strict_types=1);
 require_once __DIR__ . '/../auth_guard.php';   // liefert $userId
 require_once __DIR__ . '/../validate_lib.php';
-require_once __DIR__ . '/../einsatz_lib.php';           // Kindtabellen (Schritt 15/AP5)
-require_once __DIR__ . '/../mission_fields_lib.php';   // mf_spalten() (Schritt 15/AP6)
+require_once __DIR__ . '/../einsatz_lib.php';           // Kindtabellen
+require_once __DIR__ . '/../mission_fields_lib.php';   // mf_spalten()
 require_once __DIR__ . '/../diensttag_lib.php';
 
 /**
@@ -29,27 +29,24 @@ require_once __DIR__ . '/../diensttag_lib.php';
  *                 resources:[], crew_override, crew: {<rolle>: name, ...},
  *                 pat_blob, dup:'insert'|'overwrite'|'skip', overwrite_id,
  *
- *                 // seit S11-05e: die Ortsdaten nur noch verschlossen
+ *                 // die Ortsdaten nur verschlossen
  *                 client_ref: 'imp-' + 24 Hex (nur beim Anlegen),
  *                 ort_huelle: Base64 (Einsatzhuelle), ort_phasen: [[nr, ts], …],
  *
- *                 // ab Web 2.10.0, alle optional (Rueckimport der eigenen
+ *                 // alle optional (Rueckimport der eigenen
  *                 // Exportformate; die Jahreslisten-Profile senden sie nicht)
  *                 ended_utc, final, distance_m, ascent_m,
  *                 schockraum, secondary, winch_cycles, winch_cycles_pat,
  *                 winch_airload, bergwacht, bw_unit, bw_info, other_ema,
  *                 phases: [{phase:2..9, at:'...Z'|null, local:'HH:MM'|null}] }] }
  *
- * KEINE ORTSDATEN IM KLARTEXT (S11-05e, Betreiberin 16.10.2026, E-S11-51).
- * Bis Web 22.3.0 nahm dieser Endpunkt `transport_dest`, `dest_lat`,
- * `dest_lon`, `site_ele_m`, `phases[].lat/lon` und `rea` offen entgegen und
- * schrieb sie in die Klartextspalten und -tabellen — der Weg, den das
- * Formular in S11-05b geschlossen hat, stand hier noch offen. Jetzt legt der
- * Browser Transportziel und Ortshoehe in den `pat_blob`, Phasenorte und
+ * KEINE ORTSDATEN IM KLARTEXT. `transport_dest`, `dest_lat`, `dest_lon`,
+ * `site_ele_m`, `phases[].lat/lon` und `rea` nimmt dieser Endpunkt nicht
+ * offen entgegen. Der Browser legt Transportziel und Ortshoehe in den `pat_blob`, Phasenorte und
  * Reanimation in die Einsatzhuelle (`ort_huelle`, verschlossen mit dem
  * oeffentlichen Kontoschluessel und gebunden an `client_ref`). Steht eines
  * der alten Felder trotzdem in der Nutzlast, antwortet der Endpunkt 400
- * `klartext` und schreibt nichts — wie `ingest.php` seit S11-04a.
+ * `klartext` und schreibt nichts — wie `ingest.php`.
  *
  * DER WAECHTER UEBER DIE ZEITEN, wie im Formular: Die Zeiten der Huelle sind
  * relativ zum Beginn; der Browser rechnet sie, der Server schreibt
@@ -57,7 +54,7 @@ require_once __DIR__ . '/../diensttag_lib.php';
  * Phasenliste mit (`ort_phasen`), und weicht sie von dem ab, was nach dem
  * Schreiben in `mission_phases` steht, wird NICHTS uebernommen.
  *
- * WEGGELASSEN IST NICHT LEER (Backlog Nr. 28). Fuer 'ended_utc' und 'final'
+ * WEGGELASSEN IST NICHT LEER. Fuer 'ended_utc' und 'final'
  * gilt eine Unterscheidung, die der Rest der Nutzlast nicht kennt:
  *
  *   Feld FEHLT      Die Datei fuehrt die Spalte nicht (Jahresliste, Excel).
@@ -68,10 +65,10 @@ require_once __DIR__ . '/../diensttag_lib.php';
  *                   ended_at = NULL, der Einsatz ist nicht abgeschlossen.
  *
  * Der Browser sendet die beiden Felder deshalb nur, wenn das Profil die
- * Spalte fuehrt (assets/import_ui.js). Bis Web 7.3.1 ging 'ended_utc' immer
- * hinaus, und ein nicht abgeschlossener Einsatz kam mit Ende = Beginn und
+ * Spalte fuehrt (assets/import_ui.js). Ginge 'ended_utc' immer
+ * hinaus, kaeme ein nicht abgeschlossener Einsatz mit Ende = Beginn und
  * final = 1 zurueck — im Ueberschreiben-Modus auch dann, wenn er im Bestand
- * richtig stand (Fund F-P1-M).
+ * richtig steht.
  *
  * ZEITEN IN DER NUTZLAST: 'started_local' ist Ortszeit (HH:MM) und bleibt es —
  * der Browser vergleicht damit unmittelbar die Zeiten aus der Datei. Die
@@ -87,10 +84,10 @@ require_once __DIR__ . '/../diensttag_lib.php';
  *
  * `first_day_id` ist die KENNUNG des fruehesten angelegten Diensttags
  * (`days.id`), nicht sein Datum — `index.php?d=` erwartet eine Kennung,
- * und ein Datum bestimmt seit E9 keinen Tag mehr (Backlog Nr. 151).
+ * und ein Datum bestimmt keinen Tag.
  *
  * WARUM SO WENIG: Die Anfrage enthaelt ausschliesslich Datum und Uhrzeit.
- * Name, Geburtsdatum, Diagnose, Einsatzort und seit Web 2.9.0 auch die
+ * Name, Geburtsdatum, Diagnose, Einsatzort und auch die
  * Einsatznummer bleiben im Browser — der Server kann und soll nicht wissen,
  * um welche Personen es geht. Fuer die Duplikaterkennung ueber die Nummer
  * liefert 'check' deshalb je vorhandenem Einsatz den pat_blob mit; der
@@ -135,7 +132,7 @@ function import_commit(array $b, int $userId): never
     $zahl = fn ($v, int $min, int $max) => pruef_zahl($v, $min, $max, 'Zahl', $pruef);
     $flag = static fn ($v): int => pruef_flag($v);
     $utc  = fn ($v) => pruef_utc($v, 'Zeitpunkt', $pruef);
-    /* Wert aus einer festen Liste (Web 6.1.0): Was nicht darin steht, wird zu
+    /* Wert aus einer festen Liste: Was nicht darin steht, wird zu
      * NULL. Gebraucht fuer die beiden ENUM-Spalten `transport_mode` und
      * `start_src` — ein unbekannter Wert liefe sonst als Datenbankfehler auf,
      * und der brächte den ganzen Import zu Fall statt nur eine Zelle. */
@@ -145,7 +142,7 @@ function import_commit(array $b, int $userId): never
     };
 
 
-    /* ---- Klartext-Ortsdaten abweisen (S11-05e, E-S11-51) ----------------
+    /* ---- Klartext-Ortsdaten abweisen ----------------
      * VOR der Transaktion und fuer die ganze Nutzlast: Ein Import ist alles
      * oder nichts, und eine Abweisung mitten in der Schleife liesse eine
      * offene Transaktion zurueck. */
@@ -172,9 +169,8 @@ function import_commit(array $b, int $userId): never
                                  . 'bitte die Seite neu laden. Es wurde nichts übernommen.'], 400);
         }
         if (($m['dup'] ?? 'insert') === 'skip') { continue; }
-        /* „overwrite" OHNE KENNUNG IST EINE KAPUTTE NUTZLAST (R17-22,
-         * F-R17-41, E-R17-61). Unten greift fuer sie der INSERT-Zweig, und bis
-         * Web 23.3.0 lief sie an der Kennungspruefung hier vorbei: ein neuer
+        /* „overwrite" OHNE KENNUNG IST EINE KAPUTTE NUTZLAST. Unten griffe fuer
+         * sie der INSERT-Zweig, an der Kennungspruefung vorbei: ein neuer
          * Einsatz mit leerer oder beliebiger `client_ref`. Der Browser schickt
          * „overwrite" stets mit `overwrite_id`; wer es ohne schickt, bekommt
          * eine klare Antwort statt einer stillen Umdeutung. */
@@ -197,15 +193,14 @@ function import_commit(array $b, int $userId): never
     $pdo = db();
     $pdo->beginTransaction();
     try {
-        /* Die Pruefung der Stammdaten-Kennungen steckt seit Web 6.0.0 in
+        /* Die Pruefung der Stammdaten-Kennungen steckt in
          * dt_zuordnen() (aufgerufen von dt_anlegen). Eine zweite Fassung hier
-         * waere die Stelle, an der beide auseinanderlaufen — bis Web 20.47.0
-         * pruefte sie dazu den Standort zentraler Rettungsmittel (E16, R39).
+         * waere die Stelle, an der beide auseinanderlaufen.
          */
 
         /* ---- Diensttage ----------------------------------------------------
          *
-         * JE KALENDERTAG HOECHSTENS EINER (E9). Eine Tabelle sagt nichts
+         * JE KALENDERTAG HOECHSTENS EINER. Eine Tabelle sagt nichts
          * darueber, ob zwei Einsaetze desselben Datums zu einem oder zu zwei
          * Diensten gehoeren; der Import legt deshalb einen an und ordnet alle
          * Einsaetze des Datums ihm zu. Aufteilen laesst sich das danach mit
@@ -246,12 +241,12 @@ function import_commit(array $b, int $userId): never
         foreach ($tage as $t) {
             $tag = pruef_kalendertag($t['day'] ?? null, 'tag.day', $pruef);
             if ($tag === null) { continue; }
-            /* ERST DER AKTIVE TAG, DANN DIE SPERRE (R17-22, F-R17-40). Ein
-             * Kalendertag darf seit E9 mehrere Diensttage tragen. Bis Web
-             * 23.3.0 sperrte ein einziger Tag desselben Datums im Papierkorb
-             * das ganze Datum — auch wenn daneben ein aktiver Diensttag stand,
-             * den `check` dem Browser eben noch gemeldet hatte; alle Einsaetze
-             * landeten unter `ohne_diensttag`. Abgelehnt wird jetzt nur, was
+            /* ERST DER AKTIVE TAG, DANN DIE SPERRE. Ein
+             * Kalendertag darf mehrere Diensttage tragen. Ein einziger Tag
+             * desselben Datums im Papierkorb darf nicht das ganze Datum
+             * sperren, wenn daneben ein aktiver Diensttag steht, den `check`
+             * dem Browser eben noch gemeldet hat; alle Einsaetze landeten sonst
+             * unter `ohne_diensttag`. Abgelehnt wird nur, was
              * KEINEN aktiven Tag hat und im Papierkorb liegt. */
             $vorhandenQ->execute([$userId, $tag]);
             $vorhanden = $vorhandenQ->fetchColumn();
@@ -264,7 +259,7 @@ function import_commit(array $b, int $userId): never
             }
             $modus = (string)($t['mode'] ?? 'keep');
 
-            // Besatzung als role_code => name (E7). Unbekannte Rollen fallen
+            // Besatzung als role_code => name. Unbekannte Rollen fallen
             // heraus: Der Katalog steht im Code, nicht in der Datei.
             $crew = [];
             foreach ((array)($t['crew'] ?? []) as $rolle => $name) {
@@ -275,7 +270,7 @@ function import_commit(array $b, int $userId): never
 
             if ($modus === 'insert' && $dayId === 0) {
                 /* Anlegen samt Einfrieren von Art, Rollensatz, Faehigkeiten und
-                 * Bezeichnungen (E8) — dieselbe Funktion, die auch die Uhr und
+                 * Bezeichnungen — dieselbe Funktion, die auch die Uhr und
                  * das Formular benutzen. Ohne sie traege der Diensttag eine
                  * Zuordnung ohne Art und ohne Rollen, und die Besatzung aus der
                  * Datei faende keine Zeile, in die sie geschrieben werden
@@ -308,13 +303,13 @@ function import_commit(array $b, int $userId): never
         $devId = geraet_virtuell_sicherstellen($pdo, $userId);
 
         /* ---- Einsaetze ---------------------------------------------------- */
-        // Die zusaetzlichen Felder ab Web 2.10.0 haengen hinten an. Profile,
+        // Die zusaetzlichen Felder haengen hinten an. Profile,
         // die sie nicht liefern, schreiben dort NULL beziehungsweise 0 — das
         // entspricht dem Zustand vor dieser Version.
-        /* `final` ist jetzt ein Platzhalter, kein Literal (Backlog Nr. 28).
+        /* `final` ist jetzt ein Platzhalter, kein Literal.
          * Es stand hier als `1` — ein nicht abgeschlossener Einsatz kam damit
          * abgeschlossen zurueck, obwohl die Exportdatei die Spalte fuehrt. */
-        /* SPALTEN AUS DEM REGISTER (Schritt 15/AP6, E-ZE-22), Zweck
+        /* SPALTEN AUS DEM REGISTER, Zweck
          * `import_neu`. ZWEI WERTE SIND FEST: `uhr_gesperrt` ist 1 (ein
          * importierter Einsatz gilt wie ein von Hand angelegter) und `origin`
          * ist 'import'. Sie stehen in `$festNeu` und damit an ihrer SPALTE,
@@ -327,18 +322,18 @@ function import_commit(array $b, int $userId): never
             'INSERT INTO missions (' . mf_spalten_sql('import_neu', '', false) . ')
              VALUES (' . implode(',', array_map(
                  static fn(string $c): string => $festNeu[$c] ?? '?', $spNeu)) . ')');
-        /* UEBERSCHREIBEN LOESCHT NICHTS, WAS DIE DATEI NICHT KENNT (P10, A9).
+        /* UEBERSCHREIBEN LOESCHT NICHTS, WAS DIE DATEI NICHT KENNT (P10).
          *
          * Die Felder unter der Export-Schranke stehen hier mit
          * COALESCE(?, spalte) statt mit einer nackten Zuweisung. Fuer die
          * Besatzung gilt dieselbe Haltung, dort jetzt in dt_crew_speichern():
          * geschrieben wird nur, was die Datei nennt.
          *
-         * Anlass ist Block A9: Ein Export OHNE personenbezogene Angaben laesst
+         * Der Grund: Ein Export OHNE personenbezogene Angaben laesst
          * Besatzung, bw_info, other_ema, Notizen und site_ele_m leer. Wer eine
-         * solche Datei zurueckspielt und dabei "ueberschreiben" waehlt, schrieb
-         * bis Web 5.7.0 NULL ueber Angaben, die im Bestand noch vollstaendig
-         * waren — der Export haette die Daten damit nicht nur nicht enthalten,
+         * solche Datei zurueckspielt und dabei "ueberschreiben" waehlt, schriebe
+         * sonst NULL ueber Angaben, die im Bestand noch vollstaendig
+         * sind — der Export haette die Daten damit nicht nur nicht enthalten,
          * sondern beim Rueckweg vernichtet. Bei pat_blob galt dasselbe schon
          * fuer den alten Patientendaten-Haken.
          *
@@ -348,13 +343,14 @@ function import_commit(array $b, int $userId): never
          * je Einsatz, ein Import vergisst ihn fuer den ganzen Jahrgang.
          *
          * NICHT betroffen sind die Felder ausserhalb der Schranke
-         * (transport_dest, bw_unit, distance_m, die Flags …): Sie stehen in
-         * jedem Export, ein leerer Wert ist dort eine Aussage. */
+         * (bw_unit, distance_m, die Flags …): Sie stehen in jedem Export,
+         * ein leerer Wert ist dort eine Aussage. Das Transportziel gehoert
+         * nicht dazu — es liegt im pat_blob. */
         /* `final` steht AUSSERHALB der COALESCE-Schranke und wird beim
          * Ueberschreiben mitgeschrieben — aber nur, wenn die Datei die Spalte
          * fuehrt. Sonst kommt hier der Wert an, der schon dasteht (unten
-         * gelesen), und das UPDATE aendert nichts. Beides zusammen ist der
-         * Punkt von Backlog Nr. 28: Ein Rueckimport des eigenen Exports darf
+         * gelesen), und das UPDATE aendert nichts. Beides zusammen sichert:
+         * Ein Rueckimport des eigenen Exports darf
          * einen nicht abgeschlossenen Einsatz nicht abschliessen, und ein
          * Import einer Jahresliste darf ihn nicht anfassen. */
         /* SPALTEN AUS DEM REGISTER, Zweck `import_aendern`. Drei Wertformen:
@@ -364,7 +360,7 @@ function import_commit(array $b, int $userId): never
          * ihrer Stelle — wer eine Spalte unter die Schranke nimmt, traegt sie
          * in `$schranke` ein und sonst nirgends. */
         $festAend = ['uhr_gesperrt' => '1', 'edited' => '1'];
-        /* `site_ele_m` STEHT SEIT S11-05e NICHT MEHR HIER: Die Hoehe zieht der
+        /* `site_ele_m` STEHT NICHT HIER: Die Hoehe zieht der
          * Browser beim Ueberschreiben in den `pat_blob` (`ortshoehe`), und die
          * Spalte wird geleert statt gehalten. */
         $schranke = ['pat_blob', 'bw_info', 'other_ema'];
@@ -372,7 +368,7 @@ function import_commit(array $b, int $userId): never
         $updE = $pdo->prepare(
             'UPDATE missions SET ' . implode(', ', array_map(
                 static function (string $c) use ($festAend, $schranke): string {
-                    $q = mf_bezeichner($c);   // Nr. 239: Namen in Backticks
+                    $q = mf_bezeichner($c);   // Namen in Backticks
                     if (isset($festAend[$c]))          { return "$q = {$festAend[$c]}"; }
                     if (in_array($c, $schranke, true)) { return "$q = COALESCE(?, $q)"; }
                     return "$q = ?";
@@ -380,18 +376,16 @@ function import_commit(array $b, int $userId): never
              WHERE id = ? AND user_id = ? AND deleted_at IS NULL');
         $hatPhase2 = $pdo->prepare(
             'SELECT id FROM mission_phases WHERE mission_id = ? AND phase = 2 LIMIT 1');
-        /* DIE SIEBEN ANWEISUNGEN FUER DIE KINDTABELLEN STANDEN HIER, damit sie
-         * in der Schleife nur EINMAL vorbereitet werden — `db.php` setzt
-         * `ATTR_EMULATE_PREPARES => false`, jedes `prepare()` ist ein
-         * Roundtrip. Seit Schritt 15/AP5 halten die vier
-         * `einsatz_*_ersetzen()` sie selbst vor (`einsatz_anweisung()`), und
-         * zwar je Verbindung und SQL-Text. Der Vorteil bleibt, die Anweisungen
-         * stehen aber nicht mehr hier. */
+        /* DIE ANWEISUNGEN FUER DIE KINDTABELLEN werden in der Schleife nur
+         * EINMAL vorbereitet — `db.php` setzt `ATTR_EMULATE_PREPARES => false`,
+         * jedes `prepare()` ist ein Roundtrip. Die vier
+         * `einsatz_*_ersetzen()` halten sie selbst vor (`einsatz_anweisung()`),
+         * und zwar je Verbindung und SQL-Text. */
 
         $neu = 0; $ersetzt = 0; $uebersprungen = 0;
-        /* ZWEI MERKER FUER DEN ERSTEN TAG, nicht einer (Backlog Nr. 151).
+        /* ZWEI MERKER FUER DEN ERSTEN TAG, nicht einer.
          * `$ersterTag` ist der KALENDERTAG und taugt nicht als Ziel eines
-         * Verweises: Seit E9 koennen mehrere Diensttage auf einem Datum
+         * Verweises: Es koennen mehrere Diensttage auf einem Datum
          * liegen, und `index.php` erwartet in `?d=` eine KENNUNG. Die
          * Kennung liegt in `$dayIdByDate[$tag]` bereit, aber nur INNERHALB
          * der Einsatzschleife — an der Stelle, an der die Antwort entsteht,
@@ -409,7 +403,7 @@ function import_commit(array $b, int $userId): never
         $grund = ['datum' => 0, 'uhrzeit' => 0, 'auswahl' => 0,
                   'fremd_oder_geloescht' => 0, 'ohne_diensttag' => 0];
 
-        // Zugehoerigkeit direkt feststellen (M3-03), statt sie aus der Zahl
+        // Zugehoerigkeit direkt feststellen, statt sie aus der Zahl
         // geaenderter Zeilen zu erschliessen.
         $gehoert = $pdo->prepare('SELECT final FROM missions
                                   WHERE id = ? AND user_id = ? AND deleted_at IS NULL');
@@ -421,7 +415,7 @@ function import_commit(array $b, int $userId): never
                 $grund['datum']++; $uebersprungen++; continue;
             }
             /* OHNE DIENSTTAG KEIN EINSATZ. `missions.day_id` ist ein
-             * Fremdschluessel; ein Einsatz ohne ihn waere verwaist (A11). Der
+             * Fremdschluessel; ein Einsatz ohne ihn waere verwaist. Der
              * Fall tritt ein, wenn der Tag im Papierkorb liegt oder der Modus
              * 'keep' auf ein Datum traf, zu dem es keinen offenen Diensttag
              * gibt — beides wird gezaehlt und in der Meldung genannt, nicht
@@ -435,20 +429,17 @@ function import_commit(array $b, int $userId): never
                 $grund['auswahl']++; $uebersprungen++; continue;
             }
 
-            /* Ortszeit mit Kalendertagspruefung (B2) — auf dem ECHTEN
+            /* Ortszeit mit Kalendertagspruefung — auf dem ECHTEN
              * Einsatzdatum, nicht auf dem Diensttag.
              *
              * DER UNTERSCHIED ZAEHLT NUR UEBER MITTERNACHT, und dort zaehlt er
              * ganz: Ein Einsatz um 01:38 eines Dienstes, der am Vortag begann,
-             * gehoert zum Folgetag. Bis Web 7.3.1 rechnete diese Stelle mit
-             * $tag (dem Diensttag) und legte ihn 24 Stunden zu frueh ab — vor
-             * dem Beginn des Dienstes, zu dem er gehoert. Gemessen im
-             * Kreislauf der Phase P1: zwei Einsaetze, beide exakt einen Tag
-             * daneben (Fund F-P1-K).
+             * gehoert zum Folgetag. Mit
+             * $tag (dem Diensttag) gerechnet, laege er 24 Stunden zu frueh — vor
+             * dem Beginn des Dienstes, zu dem er gehoert.
              *
-             * DIE ANGABE LAG DIE GANZE ZEIT IN DER DATEI. `export_csv_v1`
-             * fuehrt `diensttag` UND `datum` getrennt; die zweite Spalte war
-             * im Profil auf target:null gesetzt.
+             * DIE ANGABE LIEGT IN DER DATEI. `export_csv_v1`
+             * fuehrt `diensttag` UND `datum` getrennt.
              *
              * PLAUSIBILITAETSSCHRANKE: Uebernommen wird das Datum nur, wenn es
              * der Diensttag selbst ist oder der Tag darauf. Mehr kann es nicht
@@ -478,7 +469,7 @@ function import_commit(array $b, int $userId): never
             // ein AES-GCM-Chiffretext ueberhaupt sein kann.
             $blob = pruef_pat_blob($m['pat_blob'] ?? null, 'pat_blob', $pruef);
 
-            /* ENDZEIT UND ABSCHLUSS: WEGGELASSEN IST NICHT LEER (Nr. 28).
+            /* ENDZEIT UND ABSCHLUSS: WEGGELASSEN IST NICHT LEER.
              *
              * Fehlt das Feld, fuehrt die Datei die Spalte nicht (Jahresliste,
              * Excel) — dann bleibt es beim bisherigen Verhalten: Ende = Beginn,
@@ -487,14 +478,14 @@ function import_commit(array $b, int $userId): never
              * offen. `dt_zeitraum_fortschreiben()` vertraegt das (es zieht das
              * Dienstende nur bei einem vorhandenen Wert nach).
              *
-             * Bis Web 7.3.1 stand hier `?? $startedAt` hinter der Umwandlung,
-             * und der leere Fall war vom fehlenden nicht zu unterscheiden. */
+             * Kein `?? $startedAt` hinter der Umwandlung: Sonst waere der leere
+             * Fall vom fehlenden nicht zu unterscheiden. */
             $endedAt = array_key_exists('ended_utc', $m)
                 ? $utc($m['ended_utc'])
                 : $startedAt;
             $dateiFinal = array_key_exists('final', $m) ? $flag($m['final']) : null;
 
-            /* Abweichende Besatzung des Einsatzes: role_code => name (E7).
+            /* Abweichende Besatzung des Einsatzes: role_code => name.
              * Sie wird NACH dem Schreiben der Zeile in `mission_crew` gefuehrt,
              * nicht als Spalten hier — siehe unten. */
             $mCrew = [];
@@ -510,7 +501,7 @@ function import_commit(array $b, int $userId): never
              * Komma als Dezimaltrennzeichen zulaessig (validate_lib.php). Eine
              * eigene Fassung hier waere die vierte gewesen — und die erste, die
              * beim naechsten Umbau vergessen wird. */
-            /* Die Huelle des Einsatzes (S11-05e). Fehlt sie, ist das ein Weg am
+            /* Die Huelle des Einsatzes. Fehlt sie, ist das ein Weg am
              * Browser vorbei — dann wird nichts uebernommen. */
             $ortHuelle = pruef_huelle($m['ort_huelle'] ?? null, GH_EINSATZ_MAX_BYTE,
                                       'ort_huelle', $pruef);
@@ -518,17 +509,14 @@ function import_commit(array $b, int $userId): never
                 throw new DomainException('ortsdaten: Einsatzhülle fehlt oder ist unbrauchbar');
             }
 
-            /* JEDER WERT TRAEGT SEINEN SPALTENNAMEN (Schritt 15/AP6). Bis
-             * Web 20.30.0 war das eine Liste ohne Namen, die auf zwei
-             * Anweisungen mit 31 und 28 Spalten passen musste — wer eine
-             * Spalte einfuegte, zaehlte an drei Stellen nach. Jetzt ordnet
-             * das Register unten zu; die Reihenfolge hier ist nur noch die
+            /* JEDER WERT TRAEGT SEINEN SPALTENNAMEN. Eine Liste ohne Namen
+             * muesste auf zwei Anweisungen mit verschieden vielen Spalten
+             * passen — wer eine Spalte einfuegte, zaehlte an drei Stellen nach.
+             * Das Register unten ordnet zu; die Reihenfolge hier ist nur die
              * Lesereihenfolge. */
             $werte = [
                 /* TRANSPORTZIEL, ZIELKOORDINATE UND ORTSHOEHE LIEGEN IM
-                 * `pat_blob` (S11-05e); bis Web 22.7.0 wurden ihre
-                 * Altbestandsspalten hier geleert, seit Web 23 gibt es sie
-                 * nicht mehr (S11-12). */
+                 * `pat_blob`. */
                 'winch'          => $flag($m['winch'] ?? null),
                 'crew_override'  => $flag($m['crew_override'] ?? null),
                 'pat_blob'       => $blob,
@@ -543,13 +531,13 @@ function import_commit(array $b, int $userId): never
                 'bw_unit'        => $txt($m['bw_unit'] ?? null, 120),
                 'bw_info'        => $txt($m['bw_info'] ?? null, 190),
                 'other_ema'      => $txt($m['other_ema'] ?? null, 190),
-                /* `notes` NIMMT DIESER ENDPUNKT NICHT MEHR ENTGEGEN (S9/AP7).
+                /* `notes` NIMMT DIESER ENDPUNKT NICHT MEHR ENTGEGEN.
                  * Der Text steht im `pat_blob` daneben, den der Browser
                  * verschluesselt liefert. Waere die Spalte hier geblieben,
                  * koennte eine Nutzlast sie weiter im Klartext fuellen — der
                  * Import waere dann das Loch, das das Formular gerade
                  * geschlossen hat, und zwar eines, das niemandem auffiele. */
-                /* Etappe 2 (Web 6.1.0). Beide ENUM-Spalten werden gegen ihre
+                /* Etappe 2. Beide ENUM-Spalten werden gegen ihre
                  * Werteliste geprueft: Ein unbekannter Wert wird zu NULL statt
                  * die Zeile mit einem Datenbankfehler scheitern zu lassen — die
                  * Datei kommt von aussen, und eine Tabelle mit einer
@@ -613,7 +601,7 @@ function import_commit(array $b, int $userId): never
                 $ersetzt++;
             } else {
                 $kopf = ['user_id' => $userId, 'device_id' => $devId,
-                         /* Vom Browser gezogen (S11-05e): Die Huelle ist an
+                         /* Vom Browser gezogen: Die Huelle ist an
                           * die Kennung gebunden und vor der Zeile verschlossen. */
                          'client_ref' => (string)$m['client_ref'],
                          'day_id' => $dayId, 'started_at' => $startedAt,
@@ -632,7 +620,7 @@ function import_commit(array $b, int $userId): never
              *
              * VOLLSTAENDIG ERSETZEN, aber nur wenn die Datei ueberhaupt etwas
              * dazu sagt. Der Unterschied ist wesentlich und folgt derselben
-             * Ueberlegung wie COALESCE bei den Spalten oben (A9): Ein Export
+             * Ueberlegung wie COALESCE bei den Spalten oben: Ein Export
              * OHNE personenbezogene Angaben liefert keine Besatzung. Wer eine
              * solche Datei zurueckspielt, darf die vorhandene Abweichung nicht
              * verlieren — sie stand nie in der Datei, sie wurde nicht
@@ -672,12 +660,11 @@ function import_commit(array $b, int $userId): never
                  * Entdoppelung dienen. */
                 $phasen = pruef_menge($phasen, LIMIT_PHASEN, 'phases', $pruef);
 
-                /* KOORDINATEN UEBERLEBEN DAS ERSETZEN (P10, A9) — seit S11-05e im
+                /* KOORDINATEN UEBERLEBEN DAS ERSETZEN — im
                  * Browser: Er traegt die Orte des Bestands (Huelle oder
                  * Altbestand) je Phasennummer der Reihe nach in die neue Huelle,
-                 * wenn die Datei keine nennt. Hier entstehen nur noch die
-                 * Zeiten; bis Web 22.3.0 stand der Uebertrag an dieser Stelle,
-                 * im Klartext. */
+                 * wenn die Datei keine nennt. Hier entstehen nur die
+                 * Zeiten. */
                 einsatz_phasen_ersetzen($pdo, $id, []);   // leere Liste = nur loeschen
                 $neuePhasen = [];
                 foreach ($phasen as $p) {
@@ -686,7 +673,7 @@ function import_commit(array $b, int $userId): never
                     if ($nr === null) { continue; }
                     $wann = pruef_utc($p['at'] ?? null, 'phases.at', $pruef);
                     if ($wann === null && !empty($p['local'])) {
-                        // Ortszeit mit Kalendertagspruefung (B2)
+                        // Ortszeit mit Kalendertagspruefung
                         $wann = pruef_ortszeit_zu_utc($tag, (string)$p['local'], 0,
                                                       'phases.local', $pruef);
                     }
@@ -707,15 +694,10 @@ function import_commit(array $b, int $userId): never
             /* ---- Ortsdaten: die Huelle, der Waechter, der Altbestand -------
              *
              * DIE FERTIGE PHASENLISTE GEGEN DIE RECHNUNG DES BROWSERS (wie im
-             * Formular, S11-05b): nach Zeit und Nummer sortiert, damit die
+             * Formular): nach Zeit und Nummer sortiert, damit die
              * Reihenfolge des Schreibens keine Rolle spielt. Weicht sie ab,
              * passen die relativen Zeiten der Huelle nicht zu `mission_phases`
-             * — dann lieber gar nichts als eine Huelle mit verrutschten Orten.
-             *
-             * Bis Web 22.7.0 wurden danach die Phasenorte und Reanimations-
-             * zeilen des Altbestands geleert, die der Browser in die Huelle
-             * uebernommen hatte; bis Web 22.3.0 schrieb dieser Block die
-             * Reanimation aus der Datei in `resus_sessions`. */
+             * — dann lieber gar nichts als eine Huelle mit verrutschten Orten. */
             $istPhasen = $pdo->prepare('SELECT phase, occurred_at FROM mission_phases
                                          WHERE mission_id = ? ORDER BY occurred_at, phase, id');
             $istPhasen->execute([$id]);
@@ -764,10 +746,10 @@ function import_commit(array $b, int $userId): never
             'missions_overwritten'  => $ersetzt,
             'missions_skipped'      => $uebersprungen,
             // Aufgeschluesselt nach Ursache: Die blosse Zahl war nicht
-            // deutbar (M5-14).
+            // deutbar.
             'skipped_reasons'       => array_filter($grund),
             'rejected'              => $pruef->nachUrsache(),
-            /* DIE KENNUNG, NICHT DAS DATUM (Backlog Nr. 151). `first_day`
+            /* DIE KENNUNG, NICHT DAS DATUM. `first_day`
              * ist ersatzlos entfallen — es hatte genau einen Verbraucher
              * (`assets/import_ui.js`), und der wechselt im selben Paket.
              * Ein zurueckgelassener Schluessel ohne Leser ist die naechste
@@ -775,7 +757,7 @@ function import_commit(array $b, int $userId): never
             'first_day_id'          => $ersterTagId ?: null,
         ]);
     } catch (DomainException $ex) {
-        /* Die Ortsdaten passen nicht (S11-05e): fehlende Huelle oder Zeiten,
+        /* Die Ortsdaten passen nicht: fehlende Huelle oder Zeiten,
          * die der Browser anders gerechnet hat. Nichts wird uebernommen. */
         $pdo->rollBack();
         json_out(['error' => 'ortsdaten',
@@ -792,7 +774,7 @@ function import_commit(array $b, int $userId): never
 
 try {
     api_methode();
-    csrf_check();   // Feld ODER Kopfzeile X-CSRF (Nr. 67)
+    csrf_check();   // Feld ODER Kopfzeile X-CSRF
 
     $b = api_rumpf();
 
@@ -821,7 +803,7 @@ try {
 
         /* Datentrennung! Zusaetzlich nur nicht geloeschte Tage.
          *
-         * JE DATUM DER ERSTE offene Diensttag. Mehrere sind seit E9 zulaessig,
+         * JE DATUM DER ERSTE offene Diensttag. Mehrere sind zulaessig,
          * aber der Import kann sie nicht unterscheiden — er gruppiert nach
          * Kalendertag (siehe gruppiere() in assets/import.js). Genommen wird
          * deshalb derselbe, dem auch der Uebernahmelauf die Einsaetze zuordnet:
@@ -863,9 +845,9 @@ try {
             }
         }
 
-        /* Einsaetze dieser Tage. Der Join auf `days` ist seit Web 6.0.0 der
-         * vorgesehene Weg (Konzept 4.11); den frueheren Fall „Einsatz ohne
-         * angelegten Tag" gibt es nicht mehr — `day_id` ist ein Fremdschluessel.
+        /* Einsaetze dieser Tage. Der Join auf `days` ist der
+         * vorgesehene Weg; einen „Einsatz ohne
+         * angelegten Tag" gibt es nicht — `day_id` ist ein Fremdschluessel.
          * pat_blob geht als Chiffretext mit, damit der Browser die
          * Einsatznummer fuer den Dublettenabgleich lokal entschluesseln kann
          * (siehe Kopfkommentar). */
@@ -880,12 +862,10 @@ try {
         $st->execute(array_merge([$userId], $tage));
         $einsRows = $st->fetchAll();
 
-        /* DIE ORTSDATEN DES BESTANDS (S11-05e). Ueberschreibt der Import einen
+        /* DIE ORTSDATEN DES BESTANDS. Ueberschreibt der Import einen
          * Einsatz, baut der Browser dessen Huelle neu und braucht dafuer, was
          * schon da ist: die Huelle selbst (mit Kennung und Beginn) und die
-         * Phasenzeiten. Bis Web 22.7.0 kam der Altbestand im Klartext dazu
-         * (Phasenorte, Reanimation, Transportziel, Hoehe), den der Browser
-         * dabei umzog (S11-12). */
+         * Phasenzeiten. */
         $eIds = array_map(static fn($r) => (int)$r['id'], $einsRows);
         $phasenVon = [];
         if ($eIds) {

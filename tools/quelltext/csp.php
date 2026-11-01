@@ -2,9 +2,9 @@
 declare(strict_types=1);
 
 /**
- * Traegt die Content-Security-Policy noch? (P5a/AP4, E-P5a-15)
+ * Traegt die Content-Security-Policy noch?
  *
- * WOGEGEN. Seit Web 20.7.0 schickt jede Seite eine Richtlinie mit
+ * WOGEGEN. Jede Seite schickt eine Richtlinie mit
  * `script-src 'self' 'nonce-…'` — ohne `'unsafe-inline'`. Ein Inline-Skript
  * ohne Nonce wird vom Browser nicht mehr ausgefuehrt. Das ist genau der
  * Zweck; der Preis ist, dass ein VERGESSENER Nonce eine Seite still
@@ -55,7 +55,7 @@ declare(strict_types=1);
  *     Browser; dafuer ist der Bilderlauf da, und dafuer gibt es
  *     `api/csp_bericht.php`.
  *   · `style="…"`-Attribute. Sie sind ERLAUBT (`style-src-attr
- *     'unsafe-inline'`, E-P5a-32) und werden nur GEZAEHLT — die Zahl steht
+ *     'unsafe-inline'`) und werden nur GEZAEHLT — die Zahl steht
  *     im Bericht, damit ein Wachsen auffaellt.
  *
  * Aufruf:
@@ -153,7 +153,7 @@ function csp_sicht(string $quelle): string
  * erklaert, woher ein Baustein kommt --, meldet Regel 1 ein Skript ohne
  * Nonce, das es nicht gibt.
  *
- * Gemessen am 22.09.2026 (Schritt 15 AP8): EIN Befund in `zeitraum.php`,
+ * Gemessen am 22.09.2026: EIN Befund in `zeitraum.php`,
  * entstanden aus dem Satz „steht als <script src> ueber diesem Block".
  * Diese Pruefung haengt in Stufe 1; ein Fehlalarm faerbt die Kette rot,
  * ohne dass etwas falsch waere.
@@ -339,7 +339,7 @@ sort($dateien);
 
 /* Die Laufzeit-Stellen stehen in JavaScript, nicht in PHP: Leaflet-divIcons,
  * Zeilenvorlagen per innerHTML, die Balken der Schnittleiste. Sie bleiben
- * bewusst stehen (E-P5a-32) — `style-src-attr 'unsafe-inline'` laesst sie zu.
+ * bewusst stehen — `style-src-attr 'unsafe-inline'` laesst sie zu.
  * Die Zahl steht hier, weil sie sonst nirgends steht. */
 $stilJs = 0;
 $jsWurzel = $wurzel . '/assets';

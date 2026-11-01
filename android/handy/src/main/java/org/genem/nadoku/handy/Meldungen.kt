@@ -21,14 +21,6 @@ import org.genem.nadoku.handy.kopplung.Abweisung
  * Die Meldungen von `pair.php` sind für die Weboberfläche geschrieben — ganze
  * Sätze („Es sind bereits 5 Geräte mit diesem Konto verbunden …"). Sie sollen
  * sichtbar sein, aber nicht den eigenen Text verdrängen.
- *
- * HIER STAND „ohne Umlaute", und das war seit S5 falsch. Der Satz stammte aus
- * der Zeit, als `pair.php` seine Meldungen umlautfrei schrieb; Web 13.0.0 hat
- * das geändert, ohne dass es jemandem auffiel — die drei Stellen, die es
- * behaupteten, standen in Dateien, die niemand deswegen ansah. Gefunden hat
- * es ein Prüffall, der auf den umlautlosen Text prüfte (KopplungRundlaufTest,
- * `geraeteGrenzeGreiftUndIstErklaert`) und dabei nur deshalb durchging, weil
- * er gegen einen Server vom alten Stand lief.
  */
 object Meldungen {
 

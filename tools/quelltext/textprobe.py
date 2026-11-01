@@ -17,7 +17,7 @@ ungenutzten Regeln im Kreislaufvergleich (tools/referenzdatensatz/vergleich).
 WAS DIESES WERKZEUG NICHT KANN. Es findet Woerter, keine Perspektive. Ein
 Satz wie „das Rettungsmittel landet am Einsatzort" enthaelt kein Sperrwort
 und ist trotzdem von der Luft her gedacht. Dafuer gibt es kein Werkzeug,
-nur Lesen (Konzept P2, Paket D4, Schritt 11).
+nur Lesen.
 
 Aufruf (ueblich ueber den Laeufer: bash tools/quelltext/pruefen.sh textprobe):
     python3 tools/quelltext/textprobe.py                  # alle Bereiche
@@ -27,12 +27,12 @@ Aufruf (ueblich ueber den Laeufer: bash tools/quelltext/pruefen.sh textprobe):
     python3 tools/quelltext/textprobe.py --bericht /tmp/w.txt
     python3 tools/quelltext/textprobe.py --altbestand-schreiben --stand R4-07
 
-WAS „SICHTBAR" HEISST, ENTSCHEIDET DAS MUSTER (seit R4-07, Nr. 283). Jedes
+WAS „SICHTBAR" HEISST, ENTSCHEIDET DAS MUSTER. Jedes
 Muster der Sperrliste traegt ein Feld `sicht`: `sichtbar` (die Vorgabe) liest
 den Text ohne Kommentare, `mit_kommentaren` liest die Zeile, wie sie in der
 Datei steht. Die Klasse `namen` liest mit Kommentaren, die vier anderen
-ohne: E-P1-02 (keine realen Orte und Rufnamen) richtet sich gegen das
-oeffentliche Repositorium, und ein Kommentar steht darin (E-R4-19). Ein
+ohne: Die Regel „keine realen Orte und Rufnamen" richtet sich gegen das
+oeffentliche Repositorium, und ein Kommentar steht darin. Ein
 Luftbegriff in einem Kommentar dagegen erreicht niemanden, der die
 Anwendung bedient — dort bliebe die Null keine mehr, ohne dass etwas
 gewonnen waere.
@@ -56,10 +56,9 @@ WURZEL = HIER.parent.parent
 sys.path.insert(0, str(HIER))
 import zerlegen                                    # noqa: E402
 
-# Die Bereiche aus dem Konzept P2, Abschnitt 5.1 (Klassen A und B), seit
-# S4/D1 um die Android-Apps erweitert.
+# Die Bereiche (Klassen A und B), dazu die Android-Apps.
 #
-# DIE REGEL DAHINTER (S4, B-S4-06, auf Ansage vom 01.09.2026):
+# DIE REGEL DAHINTER (auf Ansage vom 01.09.2026):
 #
 #   Jeder sichtbare Text der Anwendung laeuft durch die Wortliste — gleich,
 #   in welchem Client er steht. Ein Bereich fehlt nicht, weil ein Verzeichnis
@@ -68,8 +67,8 @@ import zerlegen                                    # noqa: E402
 #   Client entsteht. Ein Lauf, der einen Client uebergeht, meldet keine Null —
 #   er meldet gar nichts.
 #
-# Genau das war passiert: Die Android-Apps entstanden in S4/B1, und der Lauf
-# nach C2 meldete 0 Treffer, ohne eine einzige Zeile der App angesehen zu
+# Genau das war passiert: Die Android-Apps entstanden, und der Lauf
+# danach meldete 0 Treffer, ohne eine einzige Zeile der App angesehen zu
 # haben. Der Fall, vor dem CLAUDE.md 6 warnt — eine gruene Zahl, die etwas
 # anderes gemessen hat.
 #
@@ -77,18 +76,18 @@ import zerlegen                                    # noqa: E402
 # und Pruefdokumente, Geraete-Eingabe.md und Uhr-Layout_Regeln.md
 # (plattformspezifisch, Klasse G), Backlog.md und tools/ (Klasse H).
 #
-# `watch/` IST SEIT S5/C DABEI, als Bereich `e` (Backlog 66, E-S5-40). Die
+# `watch/` IST DABEI, als Bereich `e`. Die
 # sichtbaren Texte der Garmin-App sind die aeltesten des Projekts und damit
 # die wahrscheinlichste Fundstelle; bis dahin waren sie als einziger Client
 # ungeprueft.
 #
-# UND ZWAR XML UND MONKEY C (E-S5-61). Backlog 66 nannte nur
+# UND ZWAR XML UND MONKEY C. Gemeint war zuerst nur
 # `watch/resources/**/*.xml` — das sind vier Zeichenketten (AppName und die
 # drei Namen der Bildmarken-Wahl). Die eigentlichen Texte der App stehen als
 # Literale im Quelltext: "Nicht eingerichtet", "Zu viele Geräte",
 # "Sync vollständig". Ein Bereich, der die XML ansieht und die `.mc` uebergeht,
 # meldete wieder eine Null ueber etwas, das er nicht gelesen hat — genau der
-# Fall B-S4-06, der die Regel oben ueberhaupt erst noetig gemacht hat.
+# Fall, der die Regel oben ueberhaupt erst noetig gemacht hat.
 BEREICHE: dict[str, dict] = {
     "a": {
         "titel": "server/*.php, server/api/*.php (sichtbare Texte, ohne Kommentare; `namen` mit)",
@@ -105,7 +104,7 @@ BEREICHE: dict[str, dict] = {
         "art": "js",
         "glob": ["server/assets/*.js"],
     },
-    # DAS STYLESHEET LAG IN KEINEM BEREICH (R4-07, F-R4-27), und in einem
+    # DAS STYLESHEET LAG IN KEINEM BEREICH, und in einem
     # seiner Kommentare stand eine reale Station. Fuer die vier anderen
     # Klassen gehoert es nicht her — es hat keinen sichtbaren Text, und ohne
     # Kommentare bliebe `flex-basis` fuer das Muster `basis`. Deshalb
@@ -155,20 +154,19 @@ BEREICHE: dict[str, dict] = {
             "docs/JSON-Vertrag.md",
             "docs/Design.md",
             "docs/Lizenzen.md",
-            # DIE BEIDEN REGELDOKUMENTE DER PRUEFKETTE, seit PK-01. Sie sind
+            # DIE BEIDEN REGELDOKUMENTE DER PRUEFKETTE. Sie sind
             # normative Dokumentation wie Technik.md und Design.md — und sie
             # stehen hier, weil die Regel es verlangt, die sie selbst
             # aufschreiben: Wer ein normatives Dokument hinzufuegt, traegt es
-            # im selben Paket ein, in dem es entsteht (B-S4-06,
+            # im selben Paket ein, in dem es entsteht (
             # docs/Pruefablauf.md 6.6). Ein Bereich fehlt nicht, weil eine
             # Datei jung ist, sondern weil ihn niemand eingetragen hat.
             "docs/Pruefablauf.md",
             "docs/Sandbox-Setup.md",
-            # DAS BEDROHUNGSMODELL, seit Schritt 12 (Review R17, Stueck 1,
-            # E-R17-01): normative Dokumentation neben Technik.md, eingetragen
-            # im selben Paket, in dem es entstanden ist (R17-02).
+            # DAS BEDROHUNGSMODELL: normative Dokumentation neben
+            # Technik.md, eingetragen im selben Paket, in dem es entstanden ist.
             "docs/Bedrohungsmodell.md",
-            # `Was-ist-NAdoku.md` STEHT HIER SEIT PK-04/5, und dass sie gefehlt
+            # `Was-ist-NAdoku.md` STEHT HIER, und dass sie gefehlt
             # hat, ist derselbe Fehler noch einmal: Sie wird AUSGELIEFERT --
             # `hochfahren.sh` kopiert sie nach `server/doku/`, `doku_lib.php`
             # rendert sie als Seite `was-ist-nadoku`. Damit ist sie sichtbarer
@@ -176,30 +174,30 @@ BEREICHE: dict[str, dict] = {
             # sah, weil der Bereich sie nicht las. Die Null darueber war keine
             # Aussage ueber diese Datei, sondern ueber ihr Fehlen in der Liste.
             "docs/Was-ist-NAdoku.md",
-            # DIE RECHTSTEXTE GEHOEREN HIERHER, seit 17.09.2026 (P5b, E-P5b-25).
+            # DIE RECHTSTEXTE GEHOEREN HIERHER, seit 17.09.2026.
             # Sie sind Entwuerfe in `docs/`, aber ihr Ziel ist die Tabelle
             # `rechtstexte`, und von dort rendern `nutzungsbedingungen.php`,
             # `avv.php` und `datenschutz.php` sie als Seiten der Anwendung.
-            # Damit sind sie sichtbarer Text und fallen unter R28 — sie standen
+            # Damit sind sie sichtbarer Text und fallen unter die Wortliste — sie standen
             # nur nicht in der Liste, weil sie nach ihr entstanden sind.
             #
             # DER LAUF MELDETE DESHALB EINE NULL, DIE NICHTS BEDEUTETE: Am
             # 17.09.2026 wurden alle drei Texte ueberarbeitet, die Wortliste
             # lief mit 0 Treffern und hatte keine Zeile davon angesehen. Das
-            # ist derselbe Fehler, den B-S4-06 fuer die Android-App
-            # festgehalten hat — ein Bereich fehlt nicht, weil er jung ist,
+            # ist derselbe Fehler, den es fuer die Android-App
+            # schon gegeben hat — ein Bereich fehlt nicht, weil er jung ist,
             # sondern weil ihn niemand eingetragen hat.
             "docs/rechtstexte/Nutzungsbedingungen.md",
             "docs/rechtstexte/AVV.md",
             "docs/rechtstexte/Datenschutzerklaerung.md",
         ],
     },
-    # DIE TEXTE FUER DIE STORES, seit R17-18 — NUR die Klasse `zusage`. Die
+    # DIE TEXTE FUER DIE STORES — NUR die Klasse `zusage`. Die
     # Beschreibung der Garmin-App geht von Hand in den Connect-IQ-Store und
     # ist der oeffentlichste Satz ueber die Verschluesselung der Uhr; sie lag
-    # in keinem Bereich (gefunden von der Gegenpruefung, E-R17-31). Die
+    # in keinem Bereich (gefunden von der Gegenpruefung). Die
     # anderen Klassen misst der Bereich nicht: Der Store-Text spricht von der
-    # Garmin-Uhr, und das ist dort Gegenstand (Klasse G, E-P2-15).
+    # Garmin-Uhr, und das ist dort Gegenstand (Klasse G).
     "g": {
         "titel": "docs/store/**/*.md — Texte fuer die Stores (nur `zusage`)",
         "art": "md",
@@ -219,7 +217,7 @@ def liste_namen() -> list[str]:
     """Die realen Rufnamen und Orte — GELESEN aus dem Referenzdatensatz.
 
     `VERBOTENE_NAMEN` in `tools/referenzdatensatz/quelldaten/pruefen.py`
-    (E-P1-02) ist die eine Liste. Eine Kopie hier ginge beim naechsten
+    ist die eine Liste. Eine Kopie hier ginge beim naechsten
     Eintrag auseinander, und zwar lautlos: Der Referenzdatensatz pruefte
     weiter gegen seine Liste, die Textprobe gegen eine aeltere.
 
@@ -250,7 +248,7 @@ def liste_lizenzen() -> list[str]:
     # teils nur als Rechnernamen in Rueckstrichen (`tile.openstreetmap.org`
     # in der Kartentabelle). Die erste Fassung dieser Funktion las nur die
     # Adressen — und meldete damit jede Kartenquelle als unerlaubt, obwohl
-    # alle drei seit P0 dort stehen. Eine Erlaubnisliste, die die Haelfte
+    # alle drei von Anfang an dort stehen. Eine Erlaubnisliste, die die Haelfte
     # ihrer Quelle nicht liest, ist keine.
     hosts = set(re.findall(r"https?://([a-z0-9.-]+)", t))
     hosts |= set(re.findall(r"`([a-z0-9][a-z0-9.-]*\.[a-z]{2,})`", t))
@@ -270,7 +268,7 @@ KLASSE_VON: dict[str, str] = {}
 KLASSEN: dict[str, str] = {}
 
 
-# `satz` (seit R17-18, F-R17-58) liest wie `sichtbar` ohne Kommentare, aber
+# `satz` liest wie `sichtbar` ohne Kommentare, aber
 # nicht je Zeile, sondern je SATZ. Warum, steht an `saetze()`.
 SICHTEN = ("sichtbar", "mit_kommentaren", "satz")
 
@@ -288,7 +286,7 @@ def lade_sperrliste_aus(d: dict) -> tuple[list[dict], list[dict]]:
                 raise SystemExit(f"Muster ohne {pflicht}: {m}")
         flags = 0 if m.get("gross") else re.IGNORECASE
         m = dict(m)
-        # PLATZHALTER ZUR LAUFZEIT FUELLEN (PK-04/1c). Zwei Regelklassen
+        # PLATZHALTER ZUR LAUFZEIT FUELLEN. Zwei Regelklassen
         # halten gegen eine Liste, die anderswo gepflegt wird; sie steht
         # deshalb NICHT in diesem Muster, sondern wird beim Lauf geholt.
         if m.get("quelle") == "namen":
@@ -318,8 +316,8 @@ ALTBESTAND = HIER / "textprobe-altbestand.json"
 def lade_altbestand() -> dict:
     """Was am Tag der Einfuehrung schon dastand — je (Datei, Muster) eine Zahl.
 
-    WARUM UEBERHAUPT (E-PK-08). Die vier Regelklassen aus PK-04/1c finden
-    einen Altbestand, den PK-04 Teilstueck 5 bereinigt. Ohne diese Datei
+    WARUM UEBERHAUPT. Die vier Regelklassen finden
+    einen Altbestand, der nach und nach bereinigt wird. Ohne diese Datei
     waere die Textprobe von der ersten Minute an rot und bliebe es, bis
     jemand ein paar hundert Stellen angefasst hat — und eine Pruefung, die
     dauerhaft rot ist, liest nach der zweiten Woche niemand mehr.
@@ -415,7 +413,7 @@ def passt(regel: dict, bereich: str, rel: str, zeilennr: int,
         return False
     if regel.get("datei") and not fnmatch.fnmatch(rel, regel["datei"]):
         return False
-    # EINE AUSNAHME OHNE `muster` GILT NUR FUER DIE KLASSE `luft` (PK-04/1c).
+    # EINE AUSNAHME OHNE `muster` GILT NUR FUER DIE KLASSE `luft`.
     #
     # Die 89 Ausnahmen ohne Musterfilter sind fuer die LUFTBEGRIFFE
     # geschrieben worden — sie sagen Dinge wie „dieser Abschnitt des
@@ -475,7 +473,7 @@ def _fallen_in(zeile: str, fallen: list[dict]) -> list[tuple[int, int, str]]:
 
 # ------------------------------------------------------- Die Sicht `satz`
 #
-# WARUM ES SIE GIBT (R17-18, F-R17-58). Die Klasse `zusage` sucht eine
+# WARUM ES SIE GIBT. Die Klasse `zusage` sucht eine
 # AUSSAGE, kein Wort: „die GPS-Daten … liegen im Klartext". In Markdown ist
 # ein Satz ueber mehrere Zeilen umbrochen, und die beiden Haelften stehen
 # fast nie in derselben Zeile. Gemessen am 25.10.2026 an den Dateien von
@@ -507,7 +505,7 @@ def _fallen_in(zeile: str, fallen: list[dict]) -> list[tuple[int, int, str]]:
 # Orte bleiben im alten Feld") erst recht nicht. Steht eine richtige Aussage
 # mit beiden Woertern in einem Satz, meldet sie sie, und die Stelle braucht
 # eine Ausnahme mit Begruendung — gemessen am 25.10.2026 von der
-# Gegenpruefung (E-R17-31): 29 von 55 erfundenen falschen Saetzen rot, ein
+# Gegenpruefung: 29 von 55 erfundenen falschen Saetzen rot, ein
 # Fehlalarm unter acht richtigen. Gegen das Erste hilft nur Lesen, gegen das
 # Zweite die Ausnahmeliste.
 
@@ -638,7 +636,7 @@ def _zeilen_treffer(zeilen: list[str], zeilen_roh: list[str], muster: list[dict]
     Kommentare (`zeilen`) oder wie in der Datei (`zeilen_roh`). Der Zerleger
     ist zeilentreu (Selbstprobe), deshalb gehoeren gleiche Nummern zur
     gleichen Zeile. Gezaehlt werden die Fallen nur in der sichtbaren
-    Fassung — die Zahl im Bericht bleibt, was sie vor R4-07 war.
+    Fassung — die Zahl im Bericht bleibt, was sie ohne das Feld war.
     """
     for nr, zeile in enumerate(zeilen, 1):
         roh = zeilen_roh[nr - 1] if nr <= len(zeilen_roh) else zeile
@@ -785,7 +783,7 @@ def bericht(ergebnisse: list[dict], regeln: list[dict], alle: bool,
         for r in unbeteiligt:
             aus.append(f"    nicht geprüft: {r['id']}  ({r['datei']})")
 
-    # NACH KLASSEN (PK-04/1c, E-PK-08). Eine Summe ueber fuenf Regelklassen
+    # NACH KLASSEN. Eine Summe ueber fuenf Regelklassen
     # sagt nicht, welche davon gewachsen ist.
     je_klasse: dict[str, int] = {}
     for e in ergebnisse:
@@ -839,7 +837,7 @@ def bericht(ergebnisse: list[dict], regeln: list[dict], alle: bool,
 
 
 def selbstprobe_sicht() -> tuple[int, int]:
-    """Liest ein Muster die Zeile, die sein Feld `sicht` sagt? (R4-07)
+    """Liest ein Muster die Zeile, die sein Feld `sicht` sagt?
 
     Vier Faelle an einer PHP-Datei mit einem erfundenen Namen im Kommentar
     und einem in einer Zeichenkette, dazu der Bereich mit `nur_klassen`
@@ -879,7 +877,7 @@ def selbstprobe_sicht() -> tuple[int, int]:
 
 
 def selbstprobe_satz() -> tuple[int, int]:
-    """Liest die Sicht `satz` je Satz — und haelt die Klasse `zusage` den alten Wortlaut? (R17-18)
+    """Liest die Sicht `satz` je Satz — und haelt die Klasse `zusage` den alten Wortlaut?
 
     Elf Faelle messen die Mechanik mit einem Probemuster: Ein umbrochener
     Satz wird gefunden und an seiner ersten Zeile gemeldet, die zeilenweise
@@ -889,11 +887,11 @@ def selbstprobe_satz() -> tuple[int, int]:
     verkettete PHP-Zeichenkette ist eine, vor einem Rueckstrich und nach
     „4.99s)." wird geteilt, ein Verzeichnisbaum ist kein Absatz.
     Fuenf Faelle messen die ECHTEN Muster der Klasse `zusage`: am Wortlaut,
-    den F-R17-58 gefunden hat, und an dem, der ihn ersetzt — das ist die
+    den die Gegenprüfung gefunden hat, und an dem, der ihn ersetzt — das ist die
     Probe, dass der Riegel auf dem alten Text rot waere, und sie laeuft bei
     jedem Lauf mit, nicht nur am Tag, an dem er gebaut wurde —, an einer
     Verneinung, an „nicht verschluesselt gespeichert" und am Umriss einer
-    Aufzeichnung (die drei Schaerfungen aus der Gegenpruefung, E-R17-31).
+    Aufzeichnung (die drei Schaerfungen aus der Gegenpruefung).
     """
     probe = {"id": "probe-satz", "_sicht": "satz",
              "_re": re.compile(r"^(?=.*?\bim\s+Klartext\b)(?=.*?\bGPS)", re.IGNORECASE)}
@@ -941,7 +939,7 @@ def selbstprobe_satz() -> tuple[int, int]:
         ("vor einem Rueckstrich wird geteilt",
          satz(["Die GPS-Daten sind verschlossen. `days.notes` liegt im Klartext."]), []),
         ("nach „4.99s).“ wird geteilt, nach „z. B.“ nicht",
-         satz(["Die GPS-Daten liegen verschlossen (Technik 4.99s). Im Klartext liegen die Zeiten."]), []),
+         satz(["Die GPS-Daten liegen verschlossen (Technik 4.40). Im Klartext liegen die Zeiten."]), []),
         ("ein Verzeichnisbaum im Zaun ist kein Absatz",
          satz(["```", "├── spur.php      GPS-Daten als Datei", "└── demo.php      liegt im Klartext", "```"]), []),
         ("Klasse `zusage`: der alte Wortlaut aus F-R17-58 ist rot (beide Muster)",
@@ -970,8 +968,8 @@ def main() -> int:
     p.add_argument("--alle", action="store_true",
                    help="auch die durch Ausnahmen erklärten Treffer auflisten")
     # `--selbstprobe` ist der Name, den der Läufer ruft (pruefen.sh, SELBST);
-    # bis BR-05 hieß der Schalter nur `--probe`, und die Selbstprobe lief
-    # nirgends (Nr. 315, gefunden von der Gegenprobe des Bestandsriegels).
+    # früher hieß der Schalter nur `--probe`, und die Selbstprobe lief
+    # nirgends (gefunden von der Gegenprobe des Bestandsriegels).
     p.add_argument("--selbstprobe", "--probe", dest="probe", action="store_true",
                    help="Selbstprobe des Zerlegers fahren und beenden")
     p.add_argument("--sperrliste", default=str(HIER / "textprobe-sperrliste.json"))

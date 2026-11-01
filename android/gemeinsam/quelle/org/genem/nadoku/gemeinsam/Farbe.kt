@@ -7,7 +7,7 @@ import androidx.compose.ui.res.colorResource
 import org.genem.nadoku.R
 
 /**
- * Die Farb-Token der Marke, so wie Compose sie braucht (E-S4-22a).
+ * Die Farb-Token der Marke, so wie Compose sie braucht.
  *
  * DIE WERTE STEHEN NICHT HIER. Sie stehen in `gemeinsam/res/values/farben.xml`,
  * und dieses Objekt holt sie von dort. Der Umweg ist Absicht: Die
@@ -57,16 +57,15 @@ object Farbe {
     val rosa: Color @Composable @ReadOnlyComposable get() = colorResource(R.color.marke_rosa)
 
     /**
-     * Der Primaerknopf traegt DUNKELBLAUE Schrift auf Orange, nicht weisse
-     * (E-P3-15): Weiss auf Orange sind 2,3:1 und damit unlesbar, Dunkelblau
-     * auf Orange 5,97:1. Dieselbe Entscheidung wie im Web -- die Mockups
-     * zeigen an dieser Stelle Weiss, der Entscheidungstext gilt.
+     * Der Primaerknopf traegt DUNKELBLAUE Schrift auf Orange, nicht weisse:
+     * Weiss auf Orange sind 2,3:1 und damit unlesbar, Dunkelblau auf Orange
+     * 5,97:1. Dieselbe Entscheidung wie im Web.
      */
     val knopfPrimaerFlaeche: Color @Composable @ReadOnlyComposable get() = orange
     val knopfPrimaerSchrift: Color @Composable @ReadOnlyComposable get() = dunkelblau
 
     /**
-     * Beendende Handlungen: vollflaechig rot mit weisser Schrift (E-S4-22a).
+     * Beendende Handlungen: vollflaechig rot mit weisser Schrift.
      * Das ist bewusst groesser aufgetragen als der rote Rahmen des
      * Web-Gefahrknopfs -- auf einem Geraet im Einsatz muss die beendende
      * Handlung ohne Lesen erkennbar sein. Weiss auf `--rot` sind 4,78:1 -- ueber AA.

@@ -2,40 +2,31 @@
 declare(strict_types=1);
 require_once __DIR__ . '/auth_guard.php';
 require_once __DIR__ . '/mail_lib.php';
-// Eine Rollenpruefung fuer alle Seiten (M1-15). Hier stand als einziger Stelle
-// eine handgeschriebene Fassung mit eigenem Wortlaut ("Nur fuer Admins.").
-// Seit P5c/AP4 betritt auch der Support die Seite; was er darf, fragt jede
+// Eine Rollenpruefung fuer alle Seiten. Auch der Support betritt die Seite; was er darf, fragt jede
 // Handlung fuer sich (`handlung_erlaubt()`, unten).
 require_support();
-// Loeschen entscheidet seit Web 5.8.0 auch ueber die Admin-Backups (E25);
-// seit Web 9.8.0 liegen die Backups des Kontos ganz hier (E-P3-41).
+// Loeschen entscheidet auch ueber die Admin-Backups;
+// die Backups des Kontos liegen ganz hier.
 require_once __DIR__ . '/adminbackup_lib.php';
 require_once __DIR__ . '/smtp.php';       // Passwort zuruecksetzen
-require_once __DIR__ . '/demo_lib.php';   // Demo-Konto erkennen (S3/AP10)
-require_once __DIR__ . '/geraete_lib.php'; // Art und Modell in der Geraeteliste (S6)
-// Groesse, Datum und Fuellstand kommen aus der einen Stelle (AP7, R83) — und
+require_once __DIR__ . '/demo_lib.php';   // Demo-Konto erkennen
+require_once __DIR__ . '/geraete_lib.php'; // Art und Modell in der Geraeteliste
+// Groesse, Datum und Fuellstand kommen aus der einen Stelle — und
 // zwar ausdruecklich hier eingebunden, nicht ueber eine Ladekette geerbt.
 require_once __DIR__ . '/format_lib.php';
 require_once __DIR__ . '/rueckweg_lib.php'; // rw_zustand(): Satz zum eigenen Zweitfaktor
 
 /**
- * KONTOSEITE — die Drehscheibe eines Kontos (E-P3-41, P3/O9).
+ * KONTOSEITE — die Drehscheibe eines Kontos.
  *
- * WAS SICH GEAENDERT HAT. Bis Web 9.7.2 war diese Seite eine Reihe von
- * Einzelformularen (Rolle, E-Mail, Name — jedes mit eigenem Speichern) und
- * einer Geraetetabelle; die BACKUPS eines Kontos standen woanders, auf
- * admin_sicherungen.php, in einer Tabelle ueber alle Konten. Wer zu einem
- * Konto etwas tun wollte, brauchte zwei Seiten und musste auf der zweiten
- * seine Zeile suchen.
- *
- * Jetzt liegt alles zu EINEM Konto hier: Kontodaten in einem Formular mit
+ * Alles zu EINEM Konto liegt hier: Kontodaten in einem Formular mit
  * einem Speichern, Geraete, Konto-Backups und die
  * Loeschung als abgesetzte Gefahrenzone. admin_sicherungen.php behaelt nur
- * die REGELN (O9c).
+ * die REGELN.
  *
- * WARUM DAS BEI DREIHUNDERT KONTEN DER RICHTIGE SCHNITT IST. Die alte
- * Uebersicht las fuer JEDES Konto ein Verzeichnis und eine Begleitdatei —
- * eine Seite, deren Arbeit mit der Zahl der Konten waechst, obwohl man immer
+ * WARUM DAS BEI DREIHUNDERT KONTEN DER RICHTIGE SCHNITT IST. Eine
+ * Uebersicht, die fuer JEDES Konto ein Verzeichnis und eine Begleitdatei
+ * liest, ist eine Seite, deren Arbeit mit der Zahl der Konten waechst, obwohl man immer
  * nur eines davon ansieht. Hier wird genau ein Ordner gelesen
  * (edbak_konto_stand); die Liste in admin_users.php kommt ohne Dateizugriff
  * aus.
@@ -58,7 +49,7 @@ $st->execute([$uid]);
 $u = $st->fetch();
 if (!$u) { ui_abbruch(404, 'NutzerIn nicht gefunden.', ['zurueck' => 'admin_users.php', 'zurueck_text' => 'Zu den NutzerInnen']); }
 
-/* DER SUPPORT SIEHT NUR KONTEN OHNE EIGENE RECHTE (P5c/AP4, E-P5c-40). Die
+/* DER SUPPORT SIEHT NUR KONTEN OHNE EIGENE RECHTE. Die
  * Kontoseite eines Admins, einer BetreiberIn oder eines anderen Supports ist
  * fuer ihn 403 — und zwar HIER, vor jeder Handlung: Mit einem angezeigten
  * Setz-Link koennte er ein frisch angelegtes Konto uebernehmen, auch eines
@@ -67,12 +58,12 @@ if (ist_support() && rolle_darf_support($u['role'] ?? null)) {
     ui_abbruch(403, 'Kein Zugriff — der Support betreut nur Konten von NutzerInnen.');
 }
 
-/* WAS DER SUPPORT HIER DARF (E-P5c-14): Setz-Link senden, ohne ihn zu sehen;
+/* WAS DER SUPPORT HIER DARF: Setz-Link senden, ohne ihn zu sehen;
  * die Bestaetigung einer Registrierung neu senden; ein Geraet abschalten,
  * nicht wieder an. Alles andere fragt `ist_admin()`. */
 const SUPPORT_HANDLUNGEN = ['pw_reset', 'verifikation', 'device_aus'];
 
-/* DAS DEMO-KONTO WIRD ZENTRAL VERWALTET (S3/AP10, E-S3-07).
+/* DAS DEMO-KONTO WIRD ZENTRAL VERWALTET.
  *
  * Es entsteht, setzt sich zurueck und verschwindet ueber den Reiter
  * „Demo-Konto“ — und nur dort. Was hier haengenbliebe, waere spaetestens
@@ -92,30 +83,30 @@ const SUPPORT_HANDLUNGEN = ['pw_reset', 'verifikation', 'device_aus'];
  * der Reset selbst wieder ab. */
 const DEMO_GESPERRT = ['konto', 'sichern', 'einspielen', 'freigeben',
                        'widerrufen', 'paket_loeschen', 'user_delete',
-                       /* seit R17-20 (F-R17-42): Bis dahin blendete nur das
-                        * Markup den Knopf aus, und ein POST von Hand sperrte
-                        * das oeffentliche Konto — der Reset setzt den Status
-                        * nicht zurueck, es blieb zu, bis jemand es oeffnete. */
+                       /* Nicht nur das Markup blendet den Knopf
+                        * aus: Ein POST von Hand sperrte sonst das oeffentliche
+                        * Konto — der Reset setzt den Status nicht zurueck, es
+                        * bliebe zu, bis jemand es oeffnet. */
                        'konto_status', 'konto_grenzen', 'totp_zuruecksetzen'];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action  = (string)($_POST['action'] ?? '');
-    /* ERST DIE ROLLE, DANN DAS TOKEN (E-P5c-85). Umgekehrt beantwortete die
+    /* ERST DIE ROLLE, DANN DAS TOKEN. Umgekehrt beantwortete die
      * Seite einem Support mit falschem Token jede Handlung gleich — und die
      * Rollenprobe koennte nicht sehen, welche er ueberhaupt erreicht. */
     handlung_erlaubt($action, SUPPORT_HANDLUNGEN);
-    /* NACH OBEN KEIN GRIFF (R17-20, F-R17-07, Nr. 371, E-R17-47). Ein Admin
+    /* NACH OBEN KEIN GRIFF. Ein Admin
      * konnte ein ZWEITES BetreiberIn-Konto sperren, loeschen oder auf eine
      * eigene Adresse umschreiben — Riegel gab es nur fuer den Rollenwechsel
      * und die letzte BetreiberIn. admin ⊂ betreiberin heisst auch: nach oben
      * kein Griff. Der Riegel steht vor ALLEN Handlungen und nicht je Handlung:
      * Eine neue Handlung, die jemand spaeter anfuegt, erbt ihn so von selbst.
-     * Ansehen bleibt erlaubt. Wie ein Rollentor vor dem Token (E-P5c-85). */
+     * Ansehen bleibt erlaubt. Wie ein Rollentor vor dem Token. */
     if (rolle_ist_betreiberin($u['role'] ?? null) && !ist_betreiberin()) {
         ui_abbruch(403, 'Kein Zugriff — ein Konto mit der Rolle „BetreiberIn" ändert nur '
                       . 'eine BetreiberIn.');
     }
-    /* DER ZWEITFAKTOR EINES KONTOS MIT RECHTEN (P5c/AP5, E-P5c-42): Ein
+    /* DER ZWEITFAKTOR EINES KONTOS MIT RECHTEN: Ein
      * Admin setzt nur Konten der Rolle user zurueck — ebenfalls vor dem
      * Token, aus demselben Grund wie die Zeile darueber. */
     if ($action === 'totp_zuruecksetzen'
@@ -123,7 +114,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         ui_abbruch(403, 'Kein Zugriff — den Zweitfaktor von Konten mit Rechten setzt '
                       . 'nur die BetreiberIn zurück.');
     }
-    /* EIN FRISCHER CODE (Schritt 18, SR-07, E-SR-20) vor drei Handlungen:
+    /* EIN FRISCHER CODE vor drei Handlungen:
      * Rolle wechseln, Zweitfaktor zuruecksetzen, Konto loeschen — nach dem
      * Rollentor, vor dem Token. Der Rollenwechsel ist Teil des Formulars
      * „Konto" und zaehlt nur, wenn sich die Rolle aendert; die Bedingung
@@ -134,10 +125,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
     if ($action === 'totp_zuruecksetzen') { zweitfaktor_frisch_verlangen('totp_zuruecksetzen'); }
     if ($action === 'user_delete')        { zweitfaktor_frisch_verlangen('user_delete'); }
-    /* SEIT R17-20 AUCH VOR DER FREIGABE (F-R17-02) — sie gibt den Bestand
+    /* AUCH VOR DER FREIGABE — sie gibt den Bestand
      * eines Kontos an ein anderes. */
     if ($action === 'freigeben')          { zweitfaktor_frisch_verlangen('freigeben'); }
-    /* UND VOR ADRESSWECHSEL UND SETZ-LINK (F-R17-06, E-R17-45) — die zwei
+    /* UND VOR ADRESSWECHSEL UND SETZ-LINK — die zwei
      * Glieder der Kette, mit der eine uebernommene Adminsitzung ein fremdes
      * Konto an sich zog. Der Adresswechsel zaehlt nur, wenn sich die Adresse
      * aendert; dieselbe Rechnung wie der Zweig unten (`email_pruefen()`). */
@@ -160,7 +151,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $kennung = (string)($u['account_key'] ?? '');
     $datei   = (string)($_POST['datei'] ?? '');
 
-    /* ---- Kontodaten: EIN Formular, EIN Speichern (E-P3-41) --------------
+    /* ---- Kontodaten: EIN Formular, EIN Speichern --------------
      *
      * Vorher waren es drei. Drei Formulare heissen drei Absendevorgaenge fuer
      * eine Aenderung, die man als eine denkt („Name und Rolle richtigstellen")
@@ -182,11 +173,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             return implode(', ', $t) . ' und ' . $letzt;
         };
         $name = trim((string)($_POST['name'] ?? ''));
-        /* DREI ROLLEN, DREI SCHRANKEN (R75, S8/AP1).
+        /* DREI ROLLEN, DREI SCHRANKEN.
          *
-         * Bis Web 14.2.2 stand hier ein Zweiwegvergleich und genau eine
-         * Schranke: „nicht sich selbst die Admin-Rolle entziehen". Mit der
-         * dritten Rolle kommen zwei dazu, und alle drei sitzen SERVERSEITIG —
+         * Zur Schranke „nicht sich selbst die Admin-Rolle entziehen" kommen
+         * mit der dritten Rolle zwei dazu, und alle drei sitzen SERVERSEITIG —
          * das Auswahlfeld unten blendet aus, was nicht angeboten wird, aber
          * ein POST von Hand kennt das Feld trotzdem.
          *
@@ -223,7 +213,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } elseif ($rollenwechsel) {
             db()->prepare('UPDATE users SET role = ? WHERE id = ?')->execute([$role, $uid]);
             $teile[] = 'Rolle';
-            /* EIN ROLLENWECHSEL IST EIN EINTRAG (P5c/AP2, E-P5c-38, F-P5c-17).
+            /* EIN ROLLENWECHSEL IST EIN EINTRAG.
              * Bis hierher stand er nirgends — ausgerechnet die Handlung, die
              * einem Konto Rechte gibt oder nimmt. Die Rollenprobe prüft, dass
              * genau einer entsteht. */
@@ -246,13 +236,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             try {
                 db()->prepare('UPDATE users SET email = ? WHERE id = ?')->execute([$email, $uid]);
                 $teile[] = 'E-Mail-Adresse';
-                /* Mail an die ALTE Adresse (Backlog Nr. 128, K-7) — seit
-                   R17-20 mit der Entscheidung darin (F-R17-06, E-R17-45). Die
+                /* Mail an die ALTE Adresse — mit der Entscheidung darin. Die
                    Verwaltung darf die Anmeldeadresse eines fremden Kontos
                    aendern; das ist ein legitimer Weg (jemand hat die Firma
-                   gewechselt) und war zugleich der kuerzeste Weg zur
+                   gewechselt) und waere zugleich der kuerzeste Weg zur
                    Kontouebernahme, wenn eine Adminsitzung uebernommen wurde:
-                   gleich danach ein Setz-Link an die neue. Jetzt ist die neue
+                   gleich danach ein Setz-Link an die neue. Deshalb ist die neue
                    Adresse unbestaetigt, bis die alte zustimmt oder die Frist
                    ohne Widerspruch vergeht, und solange geht kein Setz-Link
                    hinaus (`adresse_unbestaetigt()`). Die Mail geht an die
@@ -266,14 +255,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     'alt'  => (string)($offenAdr['alt'] ?? $u['email']), 'neu' => $email,
                     'bis'  => datum_zeit_text(iso_utc((int)($offenAdr['bis'] ?? time())), ' um ') . ' Uhr',
                     'link' => app_url('/adresse_verwaltung.php?konto=' . $uid . '&token=' . $tokAdr)]);
-                /* OHNE ADRESSEN IM TEXT (E-P5b-16) — derselbe Satz wie beim
+                /* OHNE ADRESSEN IM TEXT — derselbe Satz wie beim
                  * Wechsel durch die NutzerIn selbst, nur mit dem Weg. */
                 require_once __DIR__ . '/protokoll_lib.php';
                 protokoll('verwaltung', 'adresse_geaendert',
                     'Anmeldeadresse durch die Verwaltung geändert (Hinweis an die alte Adresse)',
                     ['weg' => 'verwaltung'], $uid);
             } catch (PDOException $ex) {
-                /* NUR der Schluesselkonflikt heisst "bereits verwendet" (M1-16).
+                /* NUR der Schluesselkonflikt heisst "bereits verwendet".
                  * Vorher wurde JEDER Datenbankfehler so gemeldet — eine volle
                  * Platte, eine abgerissene Verbindung, ein Rechteproblem: alles
                  * erschien als Dublette und schickte die Fehlersuche
@@ -296,7 +285,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 
-    /* ---- Passwort zuruecksetzen (E-P3-41) -------------------------------
+    /* ---- Passwort zuruecksetzen -------------------------------
      *
      * Setzt KEIN Passwort — das kann diese Seite nicht, und das ist der Punkt:
      * Die Daten sind mit dem Passwort der Person Ende-zu-Ende-verschluesselt.
@@ -309,7 +298,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
      * gueltiger Token in der Datenbank, von dem niemand weiss, ist die
      * schlechteste aller Lagen.
      */
-    /* ---- Status: sperren, entsperren, freischalten (P5b/AP2, E-P5b-12) --
+    /* ---- Status: sperren, entsperren, freischalten --
      *
      * DREI HANDGRIFFE, EIN ZWEIG. Sie sind dasselbe — ein Statuswechsel —,
      * und `konto_status_setzen()` entscheidet, ob er erlaubt ist; ein
@@ -323,7 +312,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
      * UND NICHT DIE LETZTE BETREIBERIN: Eine Installation ohne zugaengliches
      * Betreiberinnenkonto hat keinen Weg mehr zu Serverschluessel,
      * Migrationen und Wartungsmodus. Derselbe Grund wie beim Loeschen. */
-    /* ---- Grenzen und Aufbewahrung je Konto (P5b/AP6, Nr. 37, 48) -------
+    /* ---- Grenzen und Aufbewahrung je Konto -------
      *
      * LEER HEISST „die Vorgabe der Installation gilt" — an allen drei
      * Feldern. Nicht 0 und nicht die Vorgabe als Zahl: Traegt die Spalte den
@@ -399,7 +388,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 default    => 'Der Kontostatus wurde geändert.',
             };
 
-            /* ---- FREISCHALTUNG: die NutzerIn erfaehrt es (P5b/AP3, E-P5b-02)
+            /* ---- FREISCHALTUNG: die NutzerIn erfaehrt es
              *
              * NUR `wartet` -> `aktiv`. Beim Entsperren (`gesperrt` -> `aktiv`)
              * geht keine Mail: Wer gesperrt war, weiss in aller Regel warum,
@@ -432,15 +421,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $error = 'Das Demo-Konto bekommt keinen Setz-Link: Sein Passwort ist '
                    . 'öffentlich und steht im Handbuch (E-P1-19).';
         } elseif ($offenAdr !== null) {
-            /* KEIN SETZ-LINK AN EINE UNBESTAETIGTE ADRESSE (E-R17-45). */
+            /* KEIN SETZ-LINK AN EINE UNBESTAETIGTE ADRESSE. */
             $error = 'Die Anmeldeadresse dieses Kontos wurde von der Verwaltung geändert '
                    . 'und ist noch unbestätigt — bis zum '
                    . datum_zeit_text(iso_utc($offenAdr['bis']), ' um ') . ' Uhr' . ' oder bis die '
                    . 'bisherige Adresse zustimmt, geht kein Setz-Link hinaus.';
         } else {
-            /* Entwerten und Ausstellen in einer Funktion (P5b/AP2,
-             * Backlog Nr. 202 Paket 1). Die Regel „hoechstens ein gueltiger
-             * Token je Konto" galt hier schon; jetzt gilt sie an allen vier
+            /* Entwerten und Ausstellen in einer Funktion. Die Regel „hoechstens
+             * ein gueltiger Token je Konto" gilt an allen vier
              * Stellen, und die Stunde steht als `TOKEN_RESET_S` statt als
              * SQL-Literal. */
             require_once __DIR__ . '/konto_lib.php';
@@ -452,7 +440,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
              * angefordert. Der Unterschied steht im Katalog. */
             $zustellung = mail_einreihen('passwort_neu', (string)$u['email'], ['link' => $link]);
             /* Der Link selbst gehört NICHT ins Protokoll — er trägt ein
-             * gültiges Token (E-P5c-38). Das Protokoll hält, DASS einer
+             * gültiges Token. Das Protokoll hält, DASS einer
              * ausgestellt wurde, und ob er hinausging. */
             require_once __DIR__ . '/protokoll_lib.php';
             protokoll('verwaltung', 'setzlink_gesendet',
@@ -461,13 +449,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                    : ($zustellung === MAIL_WARTET ? 'wartet in der Warteschlange' : 'nicht verschickt')),
                 ['zustellung' => $zustellung], $uid);
             /* `wartet` zeigt den Link MIT — die Begruendung steht in
-             * `admin_users.php` bei derselben Stelle (E-P5a-54). Hier waere
+             * `admin_users.php` bei derselben Stelle. Hier waere
              * sie sogar noch dringender: Dies ist die Seite, auf der jemand
              * landet, WEIL die Einladung nicht angekommen ist. */
             if ($zustellung === MAIL_ZUGESTELLT) {
                 $notice = 'Setz-Link an ' . $u['email'] . ' verschickt — eine Stunde gültig.';
             } elseif (ist_support()) {
-                /* DER SUPPORT SIEHT DEN LINK NIE (E-P5c-40) — auch nicht, wenn
+                /* DER SUPPORT SIEHT DEN LINK NIE — auch nicht, wenn
                  * die Mail nicht hinausging. Wer ihn saehe, koennte das Konto
                  * uebernehmen; der Weg fuer diesen Fall fuehrt ueber jemanden,
                  * der verwalten darf. */
@@ -486,7 +474,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 
-    /* ---- Bestaetigung erneut senden (P5c/AP4, E-P5c-14) ------------------
+    /* ---- Bestaetigung erneut senden ------------------
      *
      * Nur fuer Registrierungen im Status `unbestaetigt`; der Link geht nur per
      * Mail hinaus und gilt nicht laenger als die Registrierung selbst
@@ -509,7 +497,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 
-    /* ---- Zweitfaktor zuruecksetzen (P5c/AP5, E-P5c-42) -------------------
+    /* ---- Zweitfaktor zuruecksetzen -------------------
      *
      * Geheimnis, Zeitschritt und Codes weg; `totp_abschalten()` schreibt den
      * Protokolleintrag `totp_zurueckgesetzt`. Die Mail geht an die
@@ -540,7 +528,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 
-    /* ---- Sichern (A8.3) -------------------------------------------------- */
+    /* ---- Sichern -------------------------------------------------- */
     if ($action === 'sichern') {
         [$ok, $grund, $erg] = edbak_sicherung_erzeugen($uid);
         if ($ok) {
@@ -553,7 +541,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 
-    /* ---- Einspielen (A8.6): Ziel ist DIESES Konto ------------------------
+    /* ---- Einspielen: Ziel ist DIESES Konto ------------------------
      *
      * Auf der Kontoseite gibt es nur ein sinnvolles Ziel — das Konto, dessen
      * Seite man aufhat. Ein Auswahlfeld mit allen Konten stuende hier fuer
@@ -567,7 +555,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
      */
     if ($action === 'einspielen') {
         $ziel  = edbak_ziel_konto($uid);
-        /* Nur der Kopf: edbak_weg() entscheidet aus dem Manifest (S2/AP6). */
+        /* Nur der Kopf: edbak_weg() entscheidet aus dem Manifest. */
         $paket = edbak_paket_kopf_lesen($kennung, $datei);
         if (!$ziel) {
             $error = 'Zielkonto nicht gefunden.';
@@ -590,7 +578,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     if ($okE) {
                         $notice = 'Konto-Backup eingespielt.';
                         /* Verworfene Werte nennen und orange melden
-                         * (Web 23.0.2, Nr. 387) — bis dahin blieb der
+                         * — bis dahin blieb der
                          * Bericht hier ganz ungelesen. */
                         $verworfen = edbak_verworfen_satz((array)$bericht);
                         if ($verworfen !== '') {
@@ -611,9 +599,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 
-    /* ---- Freigeben und widerrufen (A8.6) --------------------------------- */
+    /* ---- Freigeben und widerrufen --------------------------------- */
     if ($action === 'freigeben') {
-        /* Regel, Protokoll und Mail an EINER Stelle (R17-20, F-R17-02). */
+        /* Regel, Protokoll und Mail an EINER Stelle. */
         [$okF, $meldungF] = edbak_freigabe_erteilen($kennung, $datei,
             (int)($_POST['ziel_user'] ?? 0), (string)($_POST['confirm_email'] ?? ''));
         if ($okF) { $notice = $meldungF; } else { $error = $meldungF; }
@@ -623,9 +611,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         else { $error = 'Die Freigabe liess sich nicht widerrufen.'; }
     }
 
-    /* ---- Backup loeschen (A8.8) ---------------------------------------
+    /* ---- Backup loeschen ---------------------------------------
      *
-     * Die Haerte der Bestaetigung richtet sich danach, was verlorengeht (E24):
+     * Die Haerte der Bestaetigung richtet sich danach, was verlorengeht:
      * Bleibt danach mindestens ein weiteres Backup dieses Kontos, genuegt
      * die uebliche Rueckfrage. Ist es die LETZTE, ist zusaetzlich die
      * E-Mail-Adresse abzutippen — der Dialog verlangt sie dann.
@@ -651,7 +639,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($uid === $userId) {
             $error = 'Das eigene Konto kann hier nicht gelöscht werden.';
         } elseif (ist_letzte_betreiberin(db(), $uid, $u['role'] ?? null)) {
-            /* Dieselbe Zusage wie beim Zurueckstufen (R75), nur der andere
+            /* Dieselbe Zusage wie beim Zurueckstufen, nur der andere
              * Weg dorthin: Eine Installation ohne BetreiberIn hat keinen
              * Zugang mehr zu ihrem Betriebsbereich. */
             $error = 'Das ist das letzte Konto mit der Rolle „BetreiberIn" — es lässt '
@@ -660,30 +648,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } elseif (!edbak_bestaetigung_passt($eingabe, (string)$u['email'])) {
             $error = 'Die eingegebene E-Mail-Adresse stimmt nicht überein — nichts wurde gelöscht.';
         } else {
-            /* ÜBER DIE BACKUPS WIRD AUSDRÜCKLICH ENTSCHIEDEN (E25).
+            /* ÜBER DIE BACKUPS WIRD AUSDRÜCKLICH ENTSCHIEDEN.
              *
-             * Bis Web 5.8.0 sagte der Warntext unbedingt zu, dass nach der
-             * Löschung nichts mehr lesbar ist. Sobald Admin-Backups
-             * existieren, wäre das unwahr — das Backup überlebt die
+             * Ein Warntext, der unbedingt zusagt, dass nach der
+             * Löschung nichts mehr lesbar ist, wäre unwahr, sobald Admin-Backups
+             * existieren — das Backup überlebt die
              * Löschung und würde zum verwaisten Backup. Genau diese Zusage
              * ist aber der Grund, aus dem jemand eine Löschung verlangt.
              *
              * Umgekehrt ist das Überleben des Backups der Zweck der ganzen
              * Funktion. Beides verträgt sich nur, wenn die Entscheidung
-             * sichtbar getroffen wird. Die Vorbelegung folgt der bisherigen
-             * Zusage; das Abweichen ist eine bewusste Handlung.
+             * sichtbar getroffen wird. Die Vorbelegung folgt der Zusage; das
+             * Abweichen ist eine bewusste Handlung.
              *
              * Die Backups werden VOR dem Löschen der Zeile entfernt: Danach
              * wäre die Kontokennung fort, und der Ordner liesse sich nur noch
              * über die Übersicht der verwaisten Backups finden. */
             $mitSicherungen = ($_POST['sicherungen_mit'] ?? '1') === '1';
-            /* DER EINE WEG (Web 21.1.8, Backlog Nr. 299). Hier stand die
-             * Loeschung noch einmal ausgeschrieben — Backups, Spuren samt
-             * Blobs (F-S2-B: zwei Konten hinterliessen 6 202 931 verwaiste
-             * Punkte), Sperrvermerke, Protokoll, Kaskade. Die Abschrift ist
-             * zweimal hinter `konto_loeschen()` zurueckgeblieben: ohne
-             * Protokolleintrag bis Web 20.40.0, und bis Web 21.1.7 ohne das
-             * Abraeumen von `mengen:<id>` in `app_state`. Was diese Seite
+            /* DER EINE WEG: `konto_loeschen()` — Backups, Spuren, Sperrvermerke,
+             * Protokoll, Kaskade. Eine Abschrift hier bliebe frueher oder
+             * spaeter dahinter zurueck. Was diese Seite
              * zusaetzlich prueft — eigenes Konto, letzte BetreiberIn, die
              * abgetippte Adresse —, steht davor und bleibt hier. */
             require_once __DIR__ . '/konto_lib.php';
@@ -703,7 +687,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         protokoll_geraet('geraet_umgeschaltet', (int)($_POST['dev'] ?? 0), $uid, 'verwaltung');
         $notice = 'Gerätestatus geändert.';
     }
-    /* NUR AUS, NIE AN (P5c/AP4, E-P5c-14). Die Handlung des Supports: ein
+    /* NUR AUS, NIE AN. Die Handlung des Supports: ein
      * verlorenes Geraet stillegen. Wieder einschalten ist eine Entscheidung
      * ueber das Konto und bleibt der Verwaltung — `device_toggle` oben
      * schaltet in beide Richtungen und steht dem Support nicht offen. */
@@ -728,7 +712,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-/* EINE MELDUNG AUS EINER UMLEITUNG (seit Web 21.9.0, Schritt 18, SR-07). Diese
+/* EINE MELDUNG AUS EINER UMLEITUNG. Diese
  * Seite gibt ihr POST-Ergebnis selbst aus; umgeleitet wird hierher nur von
  * der Bestaetigung des frischen Codes („Code bestätigt — bitte die Handlung
  * noch einmal auslösen"). Ohne diese Zeilen laege die Meldung in der Sitzung,
@@ -755,19 +739,19 @@ $pakete  = $stand['pakete'];
 $freigabe = $stand['freigabe'];
 [$standText, $standTon] = edbak_stand_plakette($stand);
 $istIch  = $uid === $userId;
-/* DER SUPPORT SIEHT DIE SEITE, BEDIENT ABER NUR SEINE DREI HANDLUNGEN
- * (P5c/AP4, E-P5c-14). Was er nicht darf, steht nicht da — keine
+/* DER SUPPORT SIEHT DIE SEITE, BEDIENT ABER NUR SEINE DREI HANDLUNGEN.
+ * Was er nicht darf, steht nicht da — keine
  * ausgegrauten Knoepfe fuer Handlungen, die ihm 403 antworten; nur die
  * Kontodaten stehen gesperrt, wie beim Demo-Konto, damit er sie lesen kann. */
-/* NUR ANSEHEN (R17-20, E-R17-47): Ein Admin auf dem Konto einer BetreiberIn
+/* NUR ANSEHEN: Ein Admin auf dem Konto einer BetreiberIn
  * sieht die Seite wie der Support — Kontodaten gesperrt, keine Knoepfe —,
  * aber ohne dessen drei Handlungen; der POST-Riegel oben weist jede ab. */
 $nurAnsehen = rolle_ist_betreiberin($u['role'] ?? null) && !ist_betreiberin();
 $nurSupport = ist_support() || $nurAnsehen;
 $kStatusKopf = (string)($u['status'] ?? 'aktiv');
 
-/* Zielkonten der Freigabe (R17-20, E-R17-46): nur Konten mit DERSELBEN
- * Adresse wie die Begleitdatei — bis Web 23.1.0 waren es alle uebrigen.
+/* Zielkonten der Freigabe: nur Konten mit DERSELBEN
+ * Adresse wie die Begleitdatei.
  * Ohne das eigene Konto, denn „an sich selbst freigeben" ist der Fall, fuer
  * den es das Einspielen gibt. Meist ist die Liste leer, und dann steht auch
  * kein Knopf da: Der Weg fuer ein neu aufgesetztes Konto fuehrt ueber den
@@ -776,7 +760,7 @@ $zielkonten = array_values(array_filter(
     edbak_freigabe_zielkonten((string)($u['account_key'] ?? '')),
     static fn(array $z): bool => $z['id'] !== $uid));
 
-/* WER BEKOMMT DIE FREIGABE? (S8/AP3, B-S8-09) In der Begleitdatei steht nur
+/* WER BEKOMMT DIE FREIGABE? In der Begleitdatei steht nur
  * die Kennung des Zielkontos. Fuer die Zustandszeile braucht es die Adresse —
  * eine Abfrage, und nur dann, wenn ueberhaupt etwas freigegeben ist. Ist das
  * Zielkonto inzwischen geloescht, bleibt der Platz leer statt einer erfundenen
@@ -791,9 +775,9 @@ if ($freigabe && (int)($freigabe['ziel_user'] ?? 0) > 0) {
 
 /** Ist das Paket formal lesbar?
  *
- *  Seit S2/AP6 nur noch der KOPF: Bei Fassung 2 ist das das Manifest im ZIP,
- *  ein paar Kilobyte. Vorher wurde je Paket die ganze Datei gelesen und
- *  dekodiert — bei einem grossen Konto also, bei jedem Aufruf dieser Seite,
+ *  Nur der KOPF: Bei Fassung 2 ist das das Manifest im ZIP,
+ *  ein paar Kilobyte. Die ganze Datei je Paket zu lesen und zu dekodieren
+ *  hiesse bei einem grossen Konto, bei jedem Aufruf dieser Seite,
  *  zweimal 94 MB, nur um zwei Plaketten zu setzen.
  *
  *  Fassung 1 muss weiterhin ganz gelesen werden; ihr Format hat keinen
@@ -885,10 +869,10 @@ ui_seite_start(['titel' => ($u['name'] ?: $u['email']) . ' — Konto']);
   <?php endforeach; ?>
 
   <?php
-  /* BEIM DEMO-KONTO BLEIBT NUR DER WEG ZUM REITER (S3/AP10). Ein Aktionsmenü
+  /* BEIM DEMO-KONTO BLEIBT NUR DER WEG ZUM REITER. Ein Aktionsmenü
      voller Einträge, die alle abgewiesen würden, wäre eine Einladung ins
-     Leere — und „Setz-Link senden" (bis Web 20.40.0 „Passwort zurücksetzen")
-     hat dort seit E-P1-19 ohnehin keinen Sinn: Das Passwort des Demo-Kontos
+     Leere — und „Setz-Link senden"
+     hat dort ohnehin keinen Sinn: Das Passwort des Demo-Kontos
      ist öffentlich und steht im Handbuch. */
   $istDemoKopf = demo_ist_demo($uid);
   $aktionen = $istDemoKopf
@@ -898,9 +882,9 @@ ui_seite_start(['titel' => ($u['name'] ?: $u['email']) . ' — Konto']);
                   'art' => 'neutral', 'attr' => ' form="f-sichern"']));
   $eintraege = [];
   if ($nurAnsehen) {
-      /* Kein Eintrag: Hier aendert nur eine BetreiberIn (E-R17-47). */
+      /* Kein Eintrag: Hier aendert nur eine BetreiberIn. */
   } elseif (!$istDemoKopf && $nurSupport) {
-      /* „SETZ-LINK SENDEN" (E-P5c-62) — gesetzt wird kein Passwort, sondern
+      /* „SETZ-LINK SENDEN" — gesetzt wird kein Passwort, sondern
        * ein Link verschickt. Fuer den Support ohne Anzeige des Links. */
       $eintraege[] = ['text' => 'Setz-Link senden', 'symbol' => 'schloss-offen',
                       'form' => 'f-pwreset'];
@@ -949,7 +933,7 @@ ui_seite_start(['titel' => ($u['name'] ?: $u['email']) . ' — Konto']);
         'Der Link konnte nicht per E-Mail zugestellt werden. Er ist eine Stunde '
         . 'gültig — bitte auf einem anderen Weg an die Person selbst weitergeben. '
         . 'Die Ursache des Fehlschlags findet die BetreiberIn im Protokoll unter System.') ?>
-    <?php /* KLEINE STUFE MIT „KOPIEREN" (E-S8-10, Backlog Nr. 78). Der Link
+    <?php /* KLEINE STUFE MIT „KOPIEREN". Der Link
              ist über hundert Zeichen lang; in der grossen Stufe stand er
              gesperrt in Plakatgrösse über drei Zeilen — und ohne Knopf,
              obwohl er zum Weitergeben da ist. */ ?>
@@ -976,19 +960,19 @@ ui_seite_start(['titel' => ($u['name'] ?: $u['email']) . ' — Konto']);
                   'href' => 'admin_demo.php'])) ?>
   <?php endif; ?>
 
-  <?php /* EINSPALTIG FUER DEN SUPPORT (M-P5c-02c, E-P5c-66): Die rechte
+  <?php /* EINSPALTIG FUER DEN SUPPORT: Die rechte
            Spalte — Konto-Backups und Gefahrenzone — entfaellt fuer ihn ganz. */ ?>
   <div class="form-raster<?= $nurSupport ? ' form-raster-einspaltig' : '' ?>">
   <div class="form-spalte">
 
     <?php /* ---- Konto: ein Formular, ein Speichern ------------------------ */ ?>
     <?php /* „IM PROTOKOLL" führt auf den Reiter Verwaltung, gefiltert auf
-             dieses Konto — als Urheber oder als Betroffenes (P5c/AP2,
-             E-P5c-26). Der Filter steht dort als Pille mit Kreuz. */ ?>
+             dieses Konto — als Urheber oder als Betroffenes.
+             Der Filter steht dort als Pille mit Kreuz. */ ?>
     <?php ui_karte_start(['titel' => 'Konto',
         'aktion' => ['text' => 'Im Protokoll',
                      'href' => 'admin_protokoll.php?r=verwaltung&konto=' . $uid]]); ?>
-      <?php /* AUSGEGRAUT BEIM DEMO-KONTO (S3/AP10). Das `disabled` ist die
+      <?php /* AUSGEGRAUT BEIM DEMO-KONTO. Das `disabled` ist die
                ANZEIGE der Sperre, nicht die Sperre selbst — die sitzt oben im
                Schreibweg. Beides zusammen: Man sieht es, bevor man es
                versucht, und ein direkter POST kommt trotzdem nicht durch. */ ?>
@@ -1000,7 +984,7 @@ ui_seite_start(['titel' => ($u['name'] ?: $u['email']) . ' — Konto']);
           <?php ui_feld(['name' => 'name', 'label' => 'Name', 'wert' => (string)($u['name'] ?? ''),
                          'attr' => 'maxlength="120" placeholder="z. B. Vorname Nachname"']); ?>
           <?php
-            /* ROLLENFELD (R75). Drei Zustaende:
+            /* ROLLENFELD. Drei Zustaende:
              *
              *   offen      — die Angemeldete darf die Rolle dieses Kontos
              *                aendern; angeboten wird, was rollen_auswahl()
@@ -1010,7 +994,7 @@ ui_seite_start(['titel' => ($u['name'] ?: $u['email']) . ' — Konto']);
              *                ein verstecktes Feld DAHINTER traegt den
              *                unveraenderten Wert mit. Der Feldsatz ist der
              *                vorhandene Baustein fuer genau diesen Zweck
-             *                (S3/AP10) — ein blosses `disabled` am Auswahlfeld
+             *                — ein blosses `disabled` am Auswahlfeld
              *                waere UNSICHTBAR: `.feld-eingabe` setzt Farbe und
              *                Hintergrund selbst und ueberschreibt damit das,
              *                was der Browser sonst graut. Und OHNE das
@@ -1056,7 +1040,7 @@ ui_seite_start(['titel' => ($u['name'] ?: $u['email']) . ' — Konto']);
           <input type="hidden" name="role" value="<?= e($rolleWert) ?>">
         <?php endif; ?>
         <?php
-          /* UNBESTAETIGT? (R17-20, E-R17-45) Die Zeile sagt es am Feld — sonst
+          /* UNBESTAETIGT? Die Zeile sagt es am Feld — sonst
              wundert sich die Verwaltung, warum der Setz-Link abgewiesen wird. */
           require_once __DIR__ . '/konto_lib.php';
           $offenFeld = adresse_unbestaetigt($uid);
@@ -1067,7 +1051,7 @@ ui_seite_start(['titel' => ($u['name'] ?: $u['email']) . ' — Konto']);
                          . datum_zeit_text(iso_utc($offenFeld['bis']), ' um ') . ' Uhr — '
                          . 'bis dahin kein Setz-Link.'
                        : '']); ?>
-        <?php /* KNÖPFE WEG STATT AUSGEGRAUT beim Support (E-P5c-66): Ein
+        <?php /* KNÖPFE WEG STATT AUSGEGRAUT beim Support: Ein
                  grauer „Speichern" fragte, warum er nicht geht. */ ?>
         <?php if (!$nurSupport): ?>
         <div class="listen-form-fuss">
@@ -1078,7 +1062,7 @@ ui_seite_start(['titel' => ($u['name'] ?: $u['email']) . ' — Konto']);
       </form>
       <?php /* BEIM DEMO-KONTO GIBT ES KEIN AKTIONSMENÜ (siehe `$istDemoKopf`),
                und `pw_reset` wird dort abgewiesen — der Satz darunter
-               verwies bis Web 21.1.0 trotzdem darauf (Endzählung AP9, A-1). */ ?>
+               verweist deshalb nicht darauf. */ ?>
       <?php if ($istDemoKopf): ?>
       <p class="feld-hinweis">Das Passwort des Demo-Kontos ist öffentlich und wird
          nicht über einen Link gesetzt.
@@ -1094,7 +1078,7 @@ ui_seite_start(['titel' => ($u['name'] ?: $u['email']) . ' — Konto']);
       <?php endif; ?>
     <?php ui_karte_ende(); ?>
 
-    <?php /* ---- Status (P5b/AP2, E-P5b-12) ---------------------------------
+    <?php /* ---- Status ---------------------------------
        *
        * EIGENE KARTE UND NICHT EIN FELD IM FORMULAR DARUEBER. Name, Rolle
        * und Adresse sind Angaben ueber ein Konto; der Status ist eine
@@ -1105,10 +1089,10 @@ ui_seite_start(['titel' => ($u['name'] ?: $u['email']) . ' — Konto']);
     <?php require_once __DIR__ . '/konto_lib.php';
           require_once __DIR__ . '/konten_einstellungen_lib.php';   // KONTEN_UNBESTAETIGT_H
           $kStatus = (string)($u['status'] ?? 'aktiv');
-          /* EIN SATZ AN DIE VERWALTUNG, NICHT `konto_status_text()` (F-P5c-144).
-             Bis Web 21.0.0 stand hier der Text, den die NutzerIn beim Anmelden
+          /* EIN SATZ AN DIE VERWALTUNG, NICHT `konto_status_text()`.
+             Jener ist der Text, den die NutzerIn beim Anmelden
              liest — „Sieh in deinem Postfach nach", „Du bekommst eine
-             Nachricht" —, auf der Seite der Verwaltung. */
+             Nachricht" —, und gehoert nicht auf die Seite der Verwaltung. */
           $statusSatz = match ($kStatus) {
               'unbestaetigt' => 'Die Adresse ist noch nicht bestätigt; ohne Bestätigung '
                               . 'verfällt die Registrierung nach '
@@ -1193,7 +1177,7 @@ ui_seite_start(['titel' => ($u['name'] ?: $u['email']) . ' — Konto']);
       <?php endif; ?>
     <?php ui_karte_ende(); ?>
 
-    <?php /* ---- Zweitfaktor (P5c/AP5, E-P5c-42, M-P5c-02c Bild 5) ---------
+    <?php /* ---- Zweitfaktor ---------
              Eine Karte nach „Status". Zuruecksetzen: die BetreiberIn fuer
              alle Rollen, ein Admin fuer Konten der Rolle user
              (`rolle_darf_zweitfaktor_zuruecksetzen()`); das eigene Konto
@@ -1209,7 +1193,7 @@ ui_seite_start(['titel' => ($u['name'] ?: $u['email']) . ' — Konto']);
     <?php ui_karte_start(['titel' => 'Zweitfaktor', 'id' => 'karte-zweitfaktor',
         'plakette' => $zfZ['an'] ? ui_plakette('an', ['ton' => 'blau']) : ui_plakette('aus')]); ?>
       <?php if ($zfZ['an']): ?>
-        <?php /* Die Zahl der Passkeys (SR-09): nur die Zahl, keine Liste —
+        <?php /* Die Zahl der Passkeys: nur die Zahl, keine Liste —
                  entfernen kann sie die Person selbst, und „Zurücksetzen"
                  nimmt sie über totp_abschalten() mit. */
               require_once __DIR__ . '/passkey_lib.php';
@@ -1247,8 +1231,8 @@ ui_seite_start(['titel' => ($u['name'] ?: $u['email']) . ' — Konto']);
     <?php ui_karte_ende(); ?>
     <?php endif; ?>
 
-    <?php /* ---- Was das Konto halten darf (P5b/AP6, Nr. 37, 48) ----------
-             DER SUPPORT SIEHT DIE MENGEN, NICHT DAS FORMULAR (M-P5c-02c):
+    <?php /* ---- Was das Konto halten darf ----------
+             DER SUPPORT SIEHT DIE MENGEN, NICHT DAS FORMULAR:
              „Mein Upload geht nicht" hat oft eine volle Grenze als Grund, und
              das soll er sagen können. Die Grenzen zu aendern ist eine
              Entscheidung ueber das Konto und bleibt der Verwaltung. */ ?>
@@ -1307,7 +1291,7 @@ ui_seite_start(['titel' => ($u['name'] ?: $u['email']) . ' — Konto']);
       <?php endif; ?>
       <?php foreach ($devices as $d):
         $klein = [];
-        /* WAS FUER EIN GERAET (S6/R42) — an erster Stelle, weil es die Frage
+        /* WAS FUER EIN GERAET — an erster Stelle, weil es die Frage
            beantwortet, mit der jemand in den Adminbereich kommt: Womit
            arbeitet diese NutzerIn? Der Werdegang (gekoppelt, zuletzt gesehen)
            steht dahinter. */
@@ -1315,13 +1299,12 @@ ui_seite_start(['titel' => ($u['name'] ?: $u['email']) . ' — Konto']);
         if (!empty($d['created_at'])) { $klein[] = 'gekoppelt ' . datum_text($d['created_at']); }
         $klein[] = 'zuletzt gesehen ' . (!empty($d['last_seen'])
             ? datum_text($d['last_seen']) : 'nie');
-        /* DIE GERAETEKENNUNG BLEIBT SICHTBAR (Mockup 40: „Venu 3S ·
-           4F2A…91"). Sie stand bis Web 9.7.2 als eigene Tabellenspalte da
-           und ist das Einzige, woran sich eine Uhr in einer Rückfrage
+        /* DIE GERAETEKENNUNG BLEIBT SICHTBAR („Venu 3S ·
+           4F2A…91"). Sie ist das Einzige, woran sich eine Uhr in einer Rückfrage
            zweifelsfrei benennen lässt — zwei Geräte können dieselbe
            Bezeichnung tragen. In die Hauptzeile, nicht in die Kleinzeile:
            Sie gehört zum Namen des Geräts, nicht zu seiner Geschichte. */
-        /* Seit S6 steht die Rechnung in geraete_lib.php und nicht mehr hier:
+        /* Die Rechnung steht in geraete_lib.php und nicht hier:
            Der Geraete-Reiter braucht dieselbe Kuerzung, und zwei Fassungen
            derselben Kennung liefen frueher oder spaeter auseinander. */
         $kennungKurz = geraet_kennung_kurz((string)$d['device_id']);
@@ -1352,15 +1335,14 @@ ui_seite_start(['titel' => ($u['name'] ?: $u['email']) . ' — Konto']);
   <div class="form-spalte">
 
     <?php /* ---- Backups -----------------------------------------------
-             ENTFAELLT BEIM DEMO-KONTO (S3/AP10, E-S3-07): Es wird nicht
+             ENTFAELLT BEIM DEMO-KONTO: Es wird nicht
              gesichert. Sein Bestand ist erfunden, liegt als Fixture im
              Repositorium und wird bei jedem Reset daraus neu
              hergestellt — ein Backup davon waere eine Kopie einer Datei,
              die ohnehin im Git liegt. */ ?>
     <?php if (!$istDemo): ?>
-    <?php /* „JETZT SICHERN" IST DIE KARTENAKTION (Mockup 08). Sie stand
-             bisher nur als Knopf am Kartenfuss und ein zweites Mal in der
-             Titelzeile — am Kartenkopf steht sie dort, wo die Karte sagt,
+    <?php /* „JETZT SICHERN" IST DIE KARTENAKTION.
+             Am Kartenkopf steht sie dort, wo die Karte sagt,
              worum es geht, und der Fuss bleibt den seltenen Wegen. */ ?>
     <?php ui_karte_start(['titel' => 'Konto-Backups', 'zahl' => (string)count($pakete),
                           'id' => 'k-konto-backups',
@@ -1375,7 +1357,7 @@ ui_seite_start(['titel' => ($u['name'] ?: $u['email']) . ' — Konto']);
         <p class="feld-hinweis">Für dieses Konto gibt es noch kein Konto-Backup.</p>
       <?php endif; ?>
 
-      <?php /* ---- Zustandszeile der Freigabe (B-S8-09) --------------------
+      <?php /* ---- Zustandszeile der Freigabe --------------------
            *
            * DIE FREIGABE WAR EIN ZUSTAND OHNE ANZEIGE. Sichtbar war sie nur
            * als Plakette „freigegeben" an einer Paketzeile und als Eintrag
@@ -1419,13 +1401,13 @@ ui_seite_start(['titel' => ($u['name'] ?: $u['email']) . ' — Konto']);
         $istFreigabe = $freigabe && ($freigabe['datei'] ?? '') === $p['datei'];
         $lesbar = paket_lesbar($kennung, (string)$p['datei']);
         $zeit = edbak_zeitpunkt_text($p['erzeugt']);
-        /* NUR DER BEFUND TRAEGT EINE PLAKETTE (S8/AP3). „lesbar" stand
+        /* NUR DER BEFUND TRAEGT EINE PLAKETTE. „lesbar" stand
            bisher an JEDER Zeile — bei drei Paketen dreimal dasselbe Wort,
            das nie etwas anderes sagt. Dieselbe Ueberlegung wie bei den
            Statuskacheln der NutzerInnen-Liste: Null ist kein Befund. */
         $plaketten = $istFreigabe ? ui_plakette('freigegeben', ['ton' => 'blau']) : '';
         if (!$lesbar) { $plaketten .= ui_plakette('nicht lesbar', ['ton' => 'rot']); }
-        /* HART BESTÄTIGEN, WENN ES DIE LETZTE IST (E24). Bleibt ein weiteres
+        /* HART BESTÄTIGEN, WENN ES DIE LETZTE IST. Bleibt ein weiteres
            Paket dieses Kontos stehen, genügt die übliche Rückfrage. */
         $hart = count($pakete) === 1;
         $wPaket = ' data-w-datei="' . e((string)$p['datei'])
@@ -1434,9 +1416,9 @@ ui_seite_start(['titel' => ($u['name'] ?: $u['email']) . ' — Konto']);
           'text'  => $zeit,
           'klein' => edbak_umfang_text($p),
           'plaketten' => $plaketten,
-          /* „Einspielen" als leiser Knopf, „Löschen" eine Ebene tiefer
-             (Mockup 08 C, Regel 3). `ui_zeilenaktionen()` zeigte beide ab
-             720 px als Knopfreihe — die unumkehrbare Handlung stand damit
+          /* „Einspielen" als leiser Knopf, „Löschen" eine Ebene tiefer.
+             `ui_zeilenaktionen()` zeigte beide ab
+             720 px als Knopfreihe — die unumkehrbare Handlung stuende damit
              gleichrangig neben der harmlosen. */
           'aktionen' =>
               ui_knopf(['text' => 'Einspielen', 'art' => 'leise', 'typ' => 'button',
@@ -1449,10 +1431,10 @@ ui_seite_start(['titel' => ($u['name'] ?: $u['email']) . ' — Konto']);
               ]]),
         ]);
       endforeach; ?>
-      <?php /* DIE ZAHL DIESES KONTOS, NICHT DIE DER INSTALLATION (F-P5c-145).
-               Bis Web 21.0.0 stand hier `edbak_aufbewahrung()` — seit Web
-               20.21.0 kann die Karte „Mengen und Grenzen" daneben sie je Konto
-               überschreiben, und dann stimmte die Zahl nicht mehr. */ ?>
+      <?php /* DIE ZAHL DIESES KONTOS, NICHT DIE DER INSTALLATION.
+               Nicht `edbak_aufbewahrung()` — die Karte „Mengen und Grenzen"
+               daneben kann sie je Konto überschreiben, und dann stimmte die
+               Zahl nicht. */ ?>
       <p class="feld-hinweis">Aufbewahrt werden die letzten
          <?= edbak_aufbewahrung_konto($kennung) ?> Pakete, das jüngste und ein
          freigegebenes immer.
@@ -1467,13 +1449,10 @@ ui_seite_start(['titel' => ($u['name'] ?: $u['email']) . ' — Konto']);
     <?php ui_karte_ende(); ?>
     <?php endif; /* !$istDemo */ ?>
 
-    <?php /* DIE KARTE „ABONNEMENT · AB P5" IST FORT (S8/AP3, B-S8-11). Sie
-             stand seit Web 9.9.0 als reservierter Platz auf jeder Kontoseite
-             und sagte: Tarif, Laufzeit, Zahlungsstand — „kommt mit den
-             Abomodellen". Ein Kasten, der auf jeder Kontoseite eine Zusage
-             wiederholt, die niemand terminiert hat, ist kein Platzhalter,
-             sondern ein Versprechen. R33 steht im Rahmenplan; dort gehoert
-             es hin, und die Karte entsteht mit ihrem Inhalt. */ ?>
+    <?php /* KEINE KARTE „ABONNEMENT". Ein Kasten, der auf jeder Kontoseite
+             eine Zusage wiederholt, die niemand terminiert hat, ist kein
+             Platzhalter, sondern ein Versprechen. Die Karte entsteht mit
+             ihrem Inhalt. */ ?>
 
     <?php /* ---- Gefahrenzone ---------------------------------------------- */ ?>
     <?php ui_karte_start(['titel' => 'Konto löschen', 'klasse' => 'karte-gefahr',
@@ -1484,7 +1463,7 @@ ui_seite_start(['titel' => ($u['name'] ?: $u['email']) . ' — Konto']);
       <?php elseif ($istIch): ?>
         <p class="feld-hinweis">Das eigene Konto lässt sich hier nicht löschen.</p>
       <?php elseif ($istLetzteBetreiberin): ?>
-        <?php /* Dieselbe Zusage wie am Rollenfeld (R75) — hier gesagt, wo man
+        <?php /* Dieselbe Zusage wie am Rollenfeld — hier gesagt, wo man
                  die Handlung versucht, und nicht erst als Fehlermeldung
                  danach. Der Schreibweg faengt es trotzdem noch einmal. */ ?>
         <p class="feld-hinweis">Das letzte Konto mit der Rolle

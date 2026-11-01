@@ -1,12 +1,12 @@
 <?php
 declare(strict_types=1);
 require_once __DIR__ . '/db.php';
-/* Seit Web 9.7.0 fest statt nur im Abbruchzweig: logo_stamm() entscheidet
- * ueber Kopfleiste UND Favicon (E-P3-20), und beide werden auf JEDER
+/* Fest und nicht nur im Abbruchzweig: logo_stamm() entscheidet
+ * ueber Kopfleiste UND Favicon, und beide werden auf JEDER
  * angemeldeten Seite gebraucht — nicht nur, wenn eine Sitzung endet. */
 require_once __DIR__ . '/session_lib.php';
 
-/* ---- HTTPS ZUERST (P5a/AP4, E-P5a-16) -----------------------------------
+/* ---- HTTPS ZUERST -----------------------------------
  *
  * VOR `session_start()`, und das ist der Punkt: Das Sitzungscookie traegt
  * `secure`. Ueber HTTP sendet der Browser es nicht — die Anmeldung scheitert
@@ -14,17 +14,16 @@ require_once __DIR__ . '/session_lib.php';
  * `https_tor()` sagt es stattdessen. */
 https_tor();
 
-/* Cookie-Parameter, Haertung und Start stehen seit Web 20.27.0 an EINER
- * Stelle: `sitzung_starten()` in `sitzung_lib.php` (Schritt 15 AP2,
- * E-ZE-12). Vorher standen sie hier und in acht weiteren Dateien, in vier
- * Fassungen. Die Art `app` ist die Anmeldesitzung: `secure` fest, `Strict`. */
+/* Cookie-Parameter, Haertung und Start stehen an EINER
+ * Stelle: `sitzung_starten()` in `sitzung_lib.php`. Die Art `app` ist die
+ * Anmeldesitzung: `secure` fest, `Strict`. */
 sitzung_starten('app');
 
 if (empty($_SESSION['user_id'])) {
-    /* EIN DATENABRUF OHNE ANMELDUNG BEKOMMT 401 ALS JSON (P5c/AP5,
-     * E-P5c-53), keine Weiterleitung. Bis Web 20.41 folgte `fetch()` der
-     * Umleitung auf `login.php` und bekam HTML, wo es JSON erwartet — der
-     * Aufrufer sah einen Syntaxfehler statt „nicht angemeldet". Mit dem
+    /* EIN DATENABRUF OHNE ANMELDUNG BEKOMMT 401 ALS JSON, keine
+     * Weiterleitung. Sonst folgte `fetch()` der Umleitung auf `login.php`
+     * und bekaeme HTML, wo es JSON erwartet — der Aufrufer saehe einen
+     * Syntaxfehler statt „nicht angemeldet". Mit dem
      * Code-Schritt ist das der Normalfall einer halben Anmeldung: Es gibt
      * eine Sitzung, aber keine `user_id`. */
     if (ist_api_aufruf()) {
@@ -37,28 +36,28 @@ if (empty($_SESSION['user_id'])) {
 }
 $userId = (int)$_SESSION['user_id'];
 
-/* ---- DIE BINDUNG (Schritt 18, SR-01, E-SR-04, Backlog Nr. 242) -----------
+/* ---- DIE BINDUNG -----------
  *
- * UNMITTELBAR NACH `user_id`, VOR JEDER ANDEREN FRAGE. Bis Web 21.6.1 war
- * die Sitzungsdatei allein die Anmeldung: Wer `sess_<id>` las — aus dem
- * Verzeichnis, aus einem Webspace-Backup —, war angemeldet. Jetzt gehoert
+ * UNMITTELBAR NACH `user_id`, VOR JEDER ANDEREN FRAGE. Waere die
+ * Sitzungsdatei allein die Anmeldung, waere angemeldet, wer `sess_<id>`
+ * liest — aus dem Verzeichnis, aus einem Webspace-Backup. Deshalb gehoert
  * das Cookie `EDBIND` dazu, dessen SHA-256 in der Sitzung liegt
  * (`sitzung_binden()` in `login.php`). Fehlt es oder passt es nicht, endet
  * die Sitzung mit dem Grund `bindung` — als Seite mit Raeumung im Browser,
  * fuer `api/` als 401 JSON.
  *
- * KEINE UEBERNAHME ALTER SITZUNGEN, und das ist Absicht (E-SR-04): Eine
- * Sitzung von vor Web 21.7.0 traegt keinen Hash, genau wie eine gelesene
- * Datei. Wer sie weiter gelten liesse, liesse auch die Datei gelten. Nach
+ * KEINE UEBERNAHME ALTER SITZUNGEN, und das ist Absicht: Eine
+ * aeltere Sitzung ohne Hash sieht aus wie eine gelesene Datei. Wer sie weiter
+ * gelten liesse, liesse auch die Datei gelten. Nach
  * dem Ausrollen meldet sich deshalb jede Angemeldete einmal neu an (Runbook,
- * `docs/Technik.md` 7). Die Sitzung wird dabei auf dem Server BEENDET, nicht
+ * `docs/Technik.md` 13). Die Sitzung wird dabei auf dem Server BEENDET, nicht
  * nur abgewiesen: Eine Kennung, zu der jemand ohne Cookie kommt, gilt als
  * gelesen. */
 if (!sitzung_bindung_ok()) {
     sitzung_beenden_passend('bindung');
 }
 
-/* ---- DER TORWAECHTER (P5a/AP3, E-P5a-20; R40 (4), Backlog Nr. 54) --------
+/* ---- DER TORWAECHTER -----------------------------------------------------
  *
  * STEHT EINE MIGRATION AUS, SCHLIESST DIE ANWENDUNG SICH SELBST. Zwischen
  * dem Hochladen neuer Dateien und dem Aufruf von Betrieb → Updates erwartet
@@ -80,7 +79,7 @@ if (!sitzung_bindung_ok()) {
  * Geraete also weiter 500 statt 503. Verloren geht dabei nichts (5xx ist 5xx,
  * sie puffern und liefern nach), und fuer die Auslieferungskette ist das
  * Fenster null: Sie laesst den Wartungsmodus bei ausstehender Migration von
- * sich aus an (P5a/AP1, E-P5a-12). Fuer den Weg von Hand — Dateien
+ * sich aus an. Fuer den Weg von Hand — Dateien
  * hochladen, `update.php` — schliesst es die erste angemeldete Anfrage.
  *
  * ERST SCHALTEN, DANN DAS TOR NOCH EINMAL FRAGEN. `wartung_tor()` ist in
@@ -96,8 +95,8 @@ if (migrationen_ausstehend(db())) {
     wartung_tor();
 }
 
-/* Formular-Token bereitstellen. Die Erzeugung steht seit Web 15.6.0 in
-   `session_lib.php`, damit auch die Anmeldeseite sie hat (Backlog Nr. 127);
+/* Formular-Token bereitstellen. Die Erzeugung steht in
+   `session_lib.php`, damit auch die Anmeldeseite sie hat;
    hier wird sie einmal je angemeldeter Anfrage angestossen, damit
    `ui_krypto_bootstrap()` und die Formulare ein Token vorfinden. */
 csrf_token();
@@ -135,13 +134,13 @@ function sitzung_beenden_passend(string $grund): never {
 
 /* INAKTIVITAETS-TIMEOUT: nach 30 Minuten ohne Anfrage neu anmelden.
  *
- * `SESSION_TIMEOUT_S` STAND BIS WEB 20.25.0 HIER und ist mit Schritt 16 nach
- * `sitzung_lib.php` gewandert (ueber `db.php` Zeile 3 geladen). Der Grund
- * steht dort: Der Aufraeumteil „Sitzungsdateien" braucht dieselbe Frist, und
+ * `SESSION_TIMEOUT_S` STEHT IN `sitzung_lib.php` (ueber `db.php` Zeile 3
+ * geladen), nicht hier. Der Grund steht dort: Der Aufraeumteil
+ * „Sitzungsdateien" braucht dieselbe Frist, und
  * der Aufraeumjob laeuft ueber `jobs.php`, das `db.php` laedt, aber NIE diese
- * Datei. Hier haette die Konstante auf der Kommandozeile gefehlt und am
- * Huckepack-Weg gegolten — ein Fehler auf einem von drei Wegen. Dasselbe
- * Argument hat `PAIR_TTL_MIN` nach `db.php` gebracht. */
+ * Datei. Hier fehlte die Konstante auf der Kommandozeile und gaelte am
+ * Huckepack-Weg — ein Fehler auf einem von drei Wegen. Dasselbe
+ * Argument gilt fuer `PAIR_TTL_MIN` in `db.php`. */
 if (isset($_SESSION['last_seen']) && (time() - (int)$_SESSION['last_seen']) > SESSION_TIMEOUT_S) {
     /* ABGELAUFENE SITZUNG: ueber den gemeinsamen Weg beenden.
      *
@@ -160,7 +159,7 @@ if (isset($_SESSION['last_seen']) && (time() - (int)$_SESSION['last_seen']) > SE
 }
 $_SESSION['last_seen'] = time();
 
-/* ---- Die Nutzerzeile ist die Wahrheit, nicht die Sitzung (M1-05) ----------
+/* ---- Die Nutzerzeile ist die Wahrheit, nicht die Sitzung ----------
  *
  * Die Rolle wurde bei der Anmeldung EINMAL in die Sitzung geschrieben und nie
  * wieder geprueft. Zwei Folgen, beide unbegrenzt haltbar, solange die Sitzung
@@ -176,7 +175,7 @@ $_SESSION['last_seen'] = time();
  * keine zusaetzliche Abfrage, und die Sitzungskopie der Rolle entfaellt
  * ersatzlos.
  */
-/* Spalten benennen statt SELECT * (M1-20).
+/* Spalten benennen statt SELECT *.
  *
  * Diese Abfrage laeuft bei JEDER Anfrage. Mit * kam die ganze Zeile ins
  * Gedaechtnis des Prozesses, darunter password_hash — der Hash des
@@ -185,23 +184,22 @@ $_SESSION['last_seen'] = time();
  * damit ebenfalls, und zwar auf jeder einzelnen Seite.
  *
  * Der zweite Grund ist Lesbarkeit: Was diese Datei aus der Nutzerzeile
- * braucht, steht jetzt hier und nicht verteilt in acht Zugriffen weiter
- * unten. Kommt eine Spalte hinzu, wandert sie nicht mehr automatisch mit.
+ * braucht, steht hier und nicht verteilt in acht Zugriffen weiter
+ * unten. Kommt eine Spalte hinzu, wandert sie nicht automatisch mit.
  *
- * (name existiert seit der Migration von Web 2.x; wer die nicht gefahren hat,
- * kann sich schon heute nicht anmelden — die Spalte wird in ui.php gelesen.) */
-/* WARUM DAS SELECT ZWEIMAL DASTEHT (Hotfix nach dem P5b-Merge, 18.09.2026).
+ * (Die Spalte `name` setzt eine fruehe Migration voraus; ohne sie kann sich
+ * ohnehin niemand anmelden — die Spalte wird in ui.php gelesen.) */
+/* WARUM DAS SELECT ZWEIMAL DASTEHT.
  *
  * `status` und `gesperrt_grund` kommen aus der Migration
  * `2026_09_16_konto_lebenszyklus`. Zwischen dem Deploy und dem Aufruf von
- * `update.php` gibt es die beiden Spalten NICHT — und dieses SELECT warf
- * dann, ungefangen, mitten im Anmeldeweg.
+ * `update.php` gibt es die beiden Spalten NICHT — und ein einzelnes SELECT
+ * wuerfe dann, ungefangen, mitten im Anmeldeweg.
  *
- * DAS WAR EIN RIEGEL, KEIN SCHOENHEITSFEHLER: Ohne Anmeldung kein
+ * DAS WAERE EIN RIEGEL, KEIN SCHOENHEITSFEHLER: Ohne Anmeldung kein
  * `betrieb_updates.php`, ohne das keine Migration, ohne die keine Anmeldung.
- * Die Anlage stand mit HTTP 500 auf der Anmeldeseite und liess sich aus dem
- * Browser nicht mehr aufschliessen. Gemessen auf Staging am 18.09.2026,
- * unmittelbar nach dem Merge von PR #57.
+ * Die Anlage stuende mit HTTP 500 auf der Anmeldeseite und liesse sich aus
+ * dem Browser nicht mehr aufschliessen (auf Staging gemessen).
  *
  * DER RUECKFALL UND NICHT EINE VORABFRAGE: `information_schema` bei JEDEM
  * Seitenaufbau zu fragen kostet einen Roundtrip fuer einen Zustand, der nach
@@ -210,7 +208,7 @@ $_SESSION['last_seen'] = time();
  *
  * WAS DANACH GILT: Ohne die Spalten ist jedes Konto `aktiv` und ohne
  * Sperrgrund — die Vorgabewerte, die die Migration selbst setzt. Die
- * Anwendung laeuft also genau so weiter wie vor P5b, bis die Migration
+ * Anwendung laeuft also wie ohne Kontostatus weiter, bis die Migration
  * durch ist. */
 $WACHE_SPALTEN = 'id, email, name, role, session_epoch,
                   pat_wrap_pw, pat_key_check, kdf_salt, kdf_iter';
@@ -219,7 +217,7 @@ try {
                         FROM users WHERE id = ?');
     $u->execute([$userId]);
 } catch (Throwable $ex) {
-    /* RUECKFALL (E-P5c-58): Die Migration steht aus — ein Eintrag in eine
+    /* RUECKFALL: Die Migration steht aus — ein Eintrag in eine
      * Tabelle, die es vielleicht noch nicht gibt, ist hier der falsche Weg. */
     system_rueckfall('auth_guard', 'Lebenszyklus-Spalten fehlen — Migration '
                    . '2026_09_16_konto_lebenszyklus steht aus. Die Wache läuft '
@@ -236,19 +234,19 @@ if (!$row) {
     sitzung_beenden_passend('konto');
 }
 
-/* ---- Sitzungszaehler: Passwortwechsel beendet andere Sitzungen (M1-09/D6) --
+/* ---- Sitzungszaehler: Passwortwechsel beendet andere Sitzungen ----------
  *
  * Wer sein Passwort wechselt, WEIL er Missbrauch vermutet, will genau eines
- * erreichen: dass der andere draussen ist. Bisher erreichte er das nicht — die
- * offene Sitzung des Angreifers lief unbeeindruckt weiter, denn sie haengt am
+ * erreichen: dass der andere draussen ist. Ohne Zaehler liefe die
+ * offene Sitzung des Angreifers unbeeindruckt weiter, denn sie haengt am
  * Sitzungscookie und nicht am Passwort.
  *
- * users.session_epoch (S3, seit P0 im Schema) wird bei jedem Passwortwechsel
+ * users.session_epoch wird bei jedem Passwortwechsel
  * erhoeht. Jede Anfrage vergleicht ihren mitgefuehrten Stand dagegen; wer noch
  * den alten hat, fliegt hier heraus.
  *
  * Die Sitzung, die den Wechsel selbst ausloest, zieht ihren Stand mit (siehe
- * einstellungen.php) und bleibt bestehen. Abnahmekriterium A5 sagt "alle
+ * einstellungen.php) und bleibt bestehen. Gemeint sind "alle
  * ANDEREN Sitzungen"; die handelnde Person mitten im eigenen Vorgang
  * abzumelden waere kein Sicherheitsgewinn, sondern nur laestig.
  *
@@ -263,7 +261,7 @@ if (!isset($_SESSION['epoch'])) {
     sitzung_beenden_passend('passwort');
 }
 
-/* ---- Kontostatus (P5b/AP2, E-P5b-12) -------------------------------------
+/* ---- Kontostatus -------------------------------------
  *
  * HIER UND NICHT IN `login.php`: Dort faellt die Entscheidung frueher und
  * verhindert, dass ein gesperrtes Konto ueberhaupt eine Sitzung bekommt.
@@ -273,7 +271,7 @@ if (!isset($_SESSION['epoch'])) {
  * durch eine Anwendung, die ihm nicht mehr offensteht, bis die halbe Stunde
  * Untaetigkeit abgelaufen ist.
  *
- * DIE SELBSTLOESCHUNG IST DIE AUSNAHME (E-P5b-16): Waehrend der Karenz ist
+ * DIE SELBSTLOESCHUNG IST DIE AUSNAHME: Waehrend der Karenz ist
  * das Konto `gesperrt`, aber die Anmeldung IST der Rueckzug. Wer sich
  * anmeldet, nimmt die Loeschung zurueck — deshalb darf diese Pruefung ihn
  * nicht hinauswerfen. `login.php` erledigt die Ruecknahme; bis dahin laesst
@@ -296,7 +294,7 @@ if ($kontoStatus === 'unbestaetigt' || $kontoStatus === 'wartet') {
     sitzung_beenden_passend('gesperrt');
 }
 
-/* ---- Das Einrichtungstor des Zweitfaktors (P5c/AP5, E-P5c-53, -61) -------
+/* ---- Das Einrichtungstor des Zweitfaktors -------
  *
  * WER: Support, Admin und BetreiberIn (`rolle_braucht_zweitfaktor()`) ohne
  * eingeschalteten Zweitfaktor. Sie landen auf `zweitfaktor.php`, bis er
@@ -308,12 +306,12 @@ if ($kontoStatus === 'unbestaetigt' || $kontoStatus === 'wartet') {
  * hat den Code schon gegeben oder hat noch keinen Zweitfaktor.
  *
  * STUMM IN DREI FAELLEN, und jeder ist ein Riegel, kein Entgegenkommen:
- *   - Die Spalten fehlen (Deploy vor `update.php`, E-P5c-36). Ohne Anmeldung
+ *   - Die Spalten fehlen (Deploy vor `update.php`). Ohne Anmeldung
  *     kein `betrieb_updates.php`, ohne das keine Migration.
- *   - Die Wartung ist an (E-P5c-53). Die BetreiberIn muss
+ *   - Die Wartung ist an. Die BetreiberIn muss
  *     `betrieb_updates.php` immer erreichen.
- *   - Es gibt keinen Serverschluessel. Die Einrichtung verweigert ohne ihn
- *     (E-P5c-54); ein Tor, dessen einzige Tuer verschlossen ist, sperrte
+ *   - Es gibt keinen Serverschluessel. Die Einrichtung verweigert ohne ihn;
+ *     ein Tor, dessen einzige Tuer verschlossen ist, sperrte
  *     genau die BetreiberIn aus, die den Schluessel nachtragen soll.
  *
  * EINE ABFRAGE, NUR FUER DIE PFLICHTROLLEN, und nicht in `$WACHE_SPALTEN`:
@@ -335,7 +333,7 @@ if (rolle_braucht_zweitfaktor($row['role'] ?? null) && !wartung_aktiv()
         $zweitfaktorFehlt = (int)$zf->fetchColumn() === 0;
     } catch (PDOException $ex) {
         /* Nur die fehlende Spalte (42S22) ist das Deploy-Fenster; jeder andere
-         * Fehler bricht ab, statt das Tor zu öffnen (F-P5c-166). */
+         * Fehler bricht ab, statt das Tor zu öffnen. */
         if ((string)$ex->getCode() !== '42S22') { throw $ex; }
         $zweitfaktorFehlt = false;           // Spalten fehlen: stumm (s. o.)
     }
@@ -353,7 +351,7 @@ if (rolle_braucht_zweitfaktor($row['role'] ?? null) && !wartung_aktiv()
     }
 }
 
-/* ---- Das Einwilligungstor (P5b/AP4, E-P5b-05, -15) -----------------------
+/* ---- Das Einwilligungstor -----------------------
  *
  * WAS ES SPERRT UND WAS NICHT. Fehlt die Annahme der aktuellen Fassung von
  * Nutzungsbedingungen oder Auftragsverarbeitung, fuehrt jeder Weg auf
@@ -361,7 +359,7 @@ if (rolle_braucht_zweitfaktor($row['role'] ?? null) && !wartung_aktiv()
  * steht ein Hinweis oben auf jeder Seite und sonst nichts — der Unterschied
  * ist kein Rang, sondern die Rechtsnatur (siehe `einwilligung_lib.php`).
  *
- * DREI WEGE BLEIBEN OFFEN, und das ist Teil der Entscheidung (E-P5b-05):
+ * DREI WEGE BLEIBEN OFFEN, und das ist Teil der Entscheidung:
  * Abmelden, Export, Konto loeschen. Wer nicht zustimmen will, muss an seine
  * Daten kommen und gehen koennen; ein Tor, das auch den Ausgang versperrt,
  * waere Noetigung.
@@ -398,7 +396,7 @@ if (!ist_api_aufruf()) {
 $userRole = rolle_normieren($row['role'] ?? null);
 
 /**
- * Die EINE Rollenpruefung (M1-15).
+ * Die EINE Rollenpruefung.
  *
  * Vorher gab es drei Schreibweisen fuer dieselbe Frage: require_admin() in
  * drei Dateien, eine handgeschriebene Pruefung mit eigener Meldung in
@@ -407,7 +405,7 @@ $userRole = rolle_normieren($row['role'] ?? null);
  * naechsten Zusatz — etwa einer dritten Rolle — an vier Stellen richtig
  * geaendert.
  *
- * DIE DRITTE ROLLE IST DA (Web 15.0.0, R75), und der Satz oben hat sich
+ * DIE DRITTE ROLLE IST DA, und der Satz oben hat sich
  * bewahrheitet: Weil die Frage an einer Stelle steht, kostete sie hier eine
  * Zeile. `ist_admin()` heisst "darf verwalten" und ist fuer eine BetreiberIn
  * ebenfalls wahr — BetreiberIn ⊇ Admin ⊇ NutzerIn (Zielbild 5.3). Wer
@@ -426,12 +424,12 @@ function require_admin(): void {
 }
 
 /**
- * Darf die Angemeldete die Handlungen des Supports (P5c/AP4, E-P5c-14)?
+ * Darf die Angemeldete die Handlungen des Supports?
  *
  * Wahr fuer Support, Admin und BetreiberIn. Die Seitenwache der
- * Kontoverwaltung und des Protokolls ist seit AP4 `require_support()`; was
+ * Kontoverwaltung und des Protokolls ist `require_support()`; was
  * darueber hinausgeht, fragt JE HANDLUNG `ist_admin()` — und zwar VOR dem
- * Token (Muster E-P5c-85), damit die Rollenprobe das Rollentor von der
+ * Token, damit die Rollenprobe das Rollentor von der
  * Token-Ablehnung unterscheiden kann.
  */
 function darf_support(): bool {
@@ -440,7 +438,7 @@ function darf_support(): bool {
 }
 
 /** Ist die Angemeldete genau der Support — also auf Konten der Rolle `user`
- *  und die schmalen Handlungen beschraenkt (E-P5c-40)? */
+ *  und die schmalen Handlungen beschraenkt? */
 function ist_support(): bool {
     global $userRole;
     return rolle_ist_support($userRole);
@@ -456,7 +454,7 @@ function require_support(): void {
 /**
  * Das Rollentor fuer EINE Handlung auf einer Seite, die der Support betritt:
  * wer nicht verwalten darf, bekommt 403 — ausser, die Handlung steht in
- * `$fuerSupport`. VOR `csrf_check()` rufen (E-P5c-85).
+ * `$fuerSupport`. VOR `csrf_check()` rufen.
  *
  * @param list<string> $fuerSupport die Handlungen, die auch der Support darf
  */
@@ -495,7 +493,7 @@ function eigene_rolle(): string {
 }
 
 /**
- * Die Rollen, die die Angemeldete vergeben darf (R75).
+ * Die Rollen, die die Angemeldete vergeben darf.
  *
  * Nur eine BetreiberIn vergibt oder entzieht die Rolle „BetreiberIn". Ein
  * Admin bekommt die Option gar nicht erst zu sehen — er koennte sich sonst
@@ -507,7 +505,7 @@ function eigene_rolle(): string {
  */
 function rollen_auswahl(): array
 {
-    /* DEN SUPPORT VERGEBEN ADMIN UND BETREIBERIN (P5c/AP4). Er hat weniger
+    /* DEN SUPPORT VERGEBEN ADMIN UND BETREIBERIN. Er hat weniger
      * Rechte als ein Admin; wer Admins anlegen darf, darf auch ihn anlegen. */
     $o = ['user' => ROLLEN['user'], 'support' => ROLLEN['support'], 'admin' => ROLLEN['admin']];
     if (ist_betreiberin()) { $o['betreiberin'] = ROLLEN['betreiberin']; }
@@ -515,7 +513,7 @@ function rollen_auswahl(): array
 }
 
 /* ===========================================================================
- * DER PASSWORTNACHWEIS EINER ANGEMELDETEN SITZUNG (R17-20, F-R17-32, E-R17-49)
+ * DER PASSWORTNACHWEIS EINER ANGEMELDETEN SITZUNG
  * ======================================================================== */
 
 /**
@@ -546,7 +544,7 @@ function passwort_nachweis(int $userId, string $token): string
     $u = $st->fetch(PDO::FETCH_ASSOC);
     if (!$u) { return 'falsch'; }
     $email = (string)$u['email'];
-    // Nur das Konto (F-R17-36): Der Nachweis zaehlt im Konto-Topf der Anmeldung.
+    // Nur das Konto: Der Nachweis zaehlt im Konto-Topf der Anmeldung.
     if (!rate_erlaubt('login', null, rate_nur_konto($email))) { return 'gesperrt'; }
     $r = anmeldehash_pruefen($userId, $token, (string)($u['password_hash'] ?? ''));
     if ($r === 'falsch') { rate_misserfolg('login', null, rate_nur_konto($email)); }
@@ -577,7 +575,7 @@ function passwort_nachweis_json(int $userId, string $token, string $fehler = 'pa
 }
 
 /* ===========================================================================
- * DER FRISCHE CODE (Schritt 18, SR-07, E-SR-20)
+ * DER FRISCHE CODE
  * ===========================================================================
  *
  * Die Liste und die Frist stehen in `db.php` (`ZF_FRISCH_HANDLUNGEN`,
@@ -585,7 +583,7 @@ function passwort_nachweis_json(int $userId, string $token, string $fehler = 'pa
  * Sitzung brauchen. Gesetzt wird die Frist an zwei Stellen: im Code-Schritt
  * von `login.php` und auf der Bestaetigungsseite `zweitfaktor.php`.
  *
- * WIE EIN ROLLENTOR, also VOR `csrf_check()` (E-P5c-85): Die Rollenprobe soll
+ * WIE EIN ROLLENTOR, also VOR `csrf_check()`: Die Rollenprobe soll
  * den Umweg von der Token-Ablehnung unterscheiden koennen.
  */
 
@@ -663,21 +661,20 @@ function zweitfaktor_zurueck(string $roh): string
     return $m[1] . $abfrage . ($m[3] ?? '');
 }
 
-/* csrf_token(), csrf_field() und csrf_ok() stehen seit Web 15.6.0 in
+/* csrf_token(), csrf_field() und csrf_ok() stehen in
  * `session_lib.php` — die Anmeldeseite braucht sie und laedt diese Datei
- * nicht (Backlog Nr. 127). Hier bleibt nur der Abbruchweg, den es nur fuer
+ * nicht. Hier bleibt nur der Abbruchweg, den es nur fuer
  * angemeldete Seiten gibt. */
 function csrf_check(): void {
     if (csrf_ok()) { return; }
-    /* DER API-ZWEIG (P5a/AP4, Backlog Nr. 67, R21).
+    /* DER API-ZWEIG.
      *
      * `ui_abbruch()` liefert eine HTML-Seite aus. Ein `fetch()` bekaeme damit
      * Markup, wo es JSON erwartet, und meldete einen Syntaxfehler statt
      * „Formular-Token abgelaufen" — dieselbe Falle wie bei einer Sitzung, die
      * mitten in einer Anfrage endet (siehe `sitzung_beenden_passend()` oben).
      *
-     * Bis Web 20.6.0 gab es diesen Zweig nicht, und die zwoelf Endpunkte
-     * prueften deshalb jeder fuer sich. Jetzt fragen alle dieselbe Funktion:
+     * Alle zwoelf Endpunkte fragen dieselbe Funktion:
      * `csrf_ok()` nimmt Feld UND Kopfzeile, und hier faellt die Entscheidung,
      * in welcher Sprache das Nein kommt. */
     if (ist_api_aufruf()) { json_out(['error' => 'csrf'], 403); }
@@ -689,26 +686,26 @@ $userEmail = (string)$row['email'];
 $userName  = $row['name'] ?? null;
 
 // Pflicht-Verschlüsselung: aktiv, sobald der Inhaltsschluessel verpackt
-// vorliegt. Seit Web 2.7.0 entstehen Passwort und beide Huellen gemeinsam in
-// pw_handling.php — ein anmeldbares Konto ohne Huelle kann es nicht mehr
-// geben, deshalb entfaellt die frueher hier erzwungene Ersteinrichtung.
+// vorliegt. Passwort und beide Huellen entstehen gemeinsam in
+// pw_handling.php — ein anmeldbares Konto ohne Huelle kann es nicht
+// geben, deshalb gibt es hier keine erzwungene Ersteinrichtung.
 $patWrapPw = $row['pat_wrap_pw'] ?? null;
 $patReady  = $patWrapPw !== null;
-// Pruefsumme des Inhaltsschluessels (NULL bei Konten aus der Zeit vor Web
-// 4.0.0 — ein gueltiger Zustand, siehe M1-12).
+// Pruefsumme des Inhaltsschluessels (NULL bei sehr alten Konten — ein
+// gueltiger Zustand).
 $patKeyCheck = $row['pat_key_check'] ?? null;
 $kdfSalt     = $row['kdf_salt'] ?? null;
-/* Rundenzahl der Schluesselableitung dieses Kontos (M2-01).
+/* Rundenzahl der Schluesselableitung dieses Kontos.
  *
  * Sie gehoert zum Salz wie die Hausnummer zur Strasse: Wer mit dem einen
  * rechnet und das andere raet, bekommt einen anderen Schluessel. Beide werden
  * deshalb ueberall gemeinsam an den Browser gegeben.
  *
  * Der Rueckfall auf den Zielwert greift nur fuer Zeilen, die aelter sind als
- * die Spalte — sie kann seit P0 nicht mehr NULL sein. */
+ * die Spalte — sie kann nicht mehr NULL sein. */
 $kdfIter     = (int)($row['kdf_iter'] ?? KDF_ITER_ZIEL) ?: KDF_ITER_ZIEL;
 
-/* ---- Der Server-Anteil dieses Kontos (S10, E-S10-06) ---------------------
+/* ---- Der Server-Anteil dieses Kontos ---------------------
  *
  * NUR AN DIE ANGEMELDETE SITZUNG, UND NUR FUER DAS EIGENE KONTO. Das ist der
  * ganze Zuschnitt: Es gibt keinen Endpunkt, der den Anteil eines FREMDEN
@@ -717,7 +714,7 @@ $kdfIter     = (int)($row['kdf_iter'] ?? KDF_ITER_ZIEL) ?: KDF_ITER_ZIEL;
  * eines Kontos will, braucht dessen Sitzung; und wer die hat, hat ohnehin die
  * Huelle.
  *
- * DAS DEMO-KONTO BEKOMMT KEINEN (E-P1-19, Backlog Nr. 155). Seine Huelle
+ * DAS DEMO-KONTO BEKOMMT KEINEN. Seine Huelle
  * kommt aus der Fixture und muss auf JEDER Installation aufgehen — eine
  * Huelle, die am Anteil dieser einen Installation haengt, taete das nicht.
  * Es bekommt deshalb `null` und den Stand `'demo'`, und seine Huelle bleibt
@@ -747,7 +744,7 @@ require_once __DIR__ . '/ui.php';
 
 run_cleanup_if_due();   // taegliche Wartung, huckepack auf Web-Anfragen
 
-/* Demo-Konto: faelliger Reset VOR der Antwort (E-P1-18).
+/* Demo-Konto: faelliger Reset VOR der Antwort.
  *
  * Dasselbe Muster wie die Tageswartung darueber — anfragegetrieben, kein
  * Zeitdienst noetig. Der Unterschied ist die Reihenfolge: Hier wird
@@ -765,7 +762,7 @@ run_cleanup_if_due();   // taegliche Wartung, huckepack auf Web-Anfragen
 require_once __DIR__ . '/demo_lib.php';
 if (demo_ist_demo($userId)) {
     demo_reset_wenn_faellig();
-    /* DIE AENDERUNGSMARKE (Web 21.2.0, R4-14, Nr. 76): Jede POST des
+    /* DIE AENDERUNGSMARKE: Jede POST des
      * Demo-Kontos mit gueltigem Formular-Token zaehlt als Aenderung — NACH
      * dem Reset, damit sie zum neuen Fenster gehoert. `csrf_ok()` liest nur;
      * abweisen tut jede Seite selbst mit `csrf_check()`, und die kommt erst

@@ -17,23 +17,22 @@ import org.robolectric.RobolectricTestRunner
 import org.robolectric.Shadows.shadowOf
 
 /**
- * „Dienst beenden" aus einer Benachrichtigung schließt den Dienst im Puffer
- * (F-R17-54, R17-24).
+ * „Dienst beenden" aus einer Benachrichtigung schließt den Dienst im Puffer.
  *
  * DIE LAGE. Der Knopf in der Akkuwarnung (ab 15 %) und in der Erinnerung
  * nach 26 Stunden ist eine `PendingIntent` mit der Aktion
- * [AufzeichnungsDienst.BEENDEN] an den Vordergrunddienst. Bis 0.18.0 rief
- * der darauf nur sein eigenes `beenden()` — Ortung ab, Sendelauf,
- * `stopSelf()` —, und die Klammer blieb offen: Die Hauptansicht zeigte
- * danach „Dienst läuft" ohne Aufzeichnung, und der nächste „Dienst beginnen"
- * setzte den alten fort. Die zwei anderen Wege (Rückfrage der Hauptansicht,
- * Dienstende von der Uhr) schließen die Klammer vorher selbst; deshalb sah
- * kein Prüffall die Lücke — `LebenszyklusTest` und `DienstklammerTest`
- * prüfen die Klammer, keiner schickte die Aktion an den Dienst.
+ * [AufzeichnungsDienst.BEENDEN] an den Vordergrunddienst. Riefe der darauf
+ * nur sein eigenes `beenden()` — Ortung ab, Sendelauf, `stopSelf()` —,
+ * bliebe die Klammer offen: Die Hauptansicht zeigte danach „Dienst läuft"
+ * ohne Aufzeichnung, und der nächste „Dienst beginnen" setzte den alten
+ * fort. Die zwei anderen Wege (Rückfrage der Hauptansicht, Dienstende von
+ * der Uhr) schließen die Klammer vorher selbst; deshalb sieht kein anderer
+ * Prüffall die Lücke — `LebenszyklusTest` und `DienstklammerTest` prüfen
+ * die Klammer, keiner schickt die Aktion an den Dienst.
  *
  * DIESER FALL TUT GENAU DAS, was die Benachrichtigung tut: Er schickt den
  * Intent an `onStartCommand()` eines unter Robolectric erzeugten Dienstes
- * und sieht danach in den Puffer. Gegen 0.18.0 ist er rot.
+ * und sieht danach in den Puffer.
  */
 @RunWith(RobolectricTestRunner::class)
 class DienstBeendenTest {

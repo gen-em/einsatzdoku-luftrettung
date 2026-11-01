@@ -10,35 +10,34 @@ Rückgabewert 0 = keine Befunde · 1 = Befunde · 2 = die Prüfung selbst kam
 nicht zum Laufen (kein tools/, kein Backlog; in der Selbstprobe: ein
 Werkzeug fehlt).
 
-WOFÜR (Konzept BR). PK hat den DURCHLAUF einer Änderung als Riegel gebaut
-und den BESTAND als Regel gelassen: Anlass-Zeile, Fünf-Abschnitte-Form mit
-höchstens 40 Zeilen, Streichliste. Drei Tage nach PK-04 standen die Zahlen
-unter den Regeln, und niemand hatte es gemerkt, weil es niemand zählte. Eine
-Regel ohne Messung ist eine Hoffnung.
+WOFÜR. Der DURCHLAUF einer Änderung war schon ein Riegel, der BESTAND
+nur eine Regel: Anlass-Zeile, Fünf-Abschnitte-Form mit
+höchstens 40 Zeilen, Streichliste. Drei Tage nach dem Aufschreiben standen
+die Zahlen unter den Regeln, und niemand hatte es gemerkt, weil es niemand
+zählte. Eine Regel ohne Messung ist eine Hoffnung.
 
 WAS ER MISST — dreizehn Regeln, jede mit Namen im Befund:
 
-  form       jede LIESMICH.md unter tools/, auch in Unterordnern (E-BR-04):
+  form       jede LIESMICH.md unter tools/, auch in Unterordnern:
              genau die fünf Abschnitte aus 6.2 in dieser Reihenfolge,
              höchstens 40 Zeilen
   anleitung  jeder Ordner direkt unter tools/ hat eine LIESMICH.md
   anlass     deren Anleitung trägt GENAU EINE Zeile, die mit „Anlass:"
              beginnt und mindestens eine Backlog-Nummer nennt, die es gibt
-             (E-BR-07) — oder die Erzeugerform (E-BR-05), die einzige andere
+             — oder die Erzeugerform, die einzige andere
   inventur   der Ordner wird gerufen: `tools/<ordner>/` steht in
              pruefablauf.json, in einem Workflow, in tools/pruefstand/
-             pruefen.sh oder in docs/Sandbox-Setup.md (E-BR-03 (3))
-  lose       keine Datei direkt unter tools/ außer motor.mjs (E-BR-03 (4))
+             pruefen.sh oder in docs/Sandbox-Setup.md
+  lose       keine Datei direkt unter tools/ außer motor.mjs
   probe      jede Probe in tools/proben/proben.sh hat eine Einstiegsdatei,
              und deren Kopfkommentar trägt genau eine Anlass-Zeile mit
              Backlog-Nummer; kein Probenordner ohne Eintrag im Läufer
   backlog    keine Nummer zweimal, über docs/Backlog.md UND
-             docs/Backlog-Erledigt.md zusammen (seit SD-02) — bis BR-03 ein
-             eigener Schritt in Stufe 1, den Station B nie fuhr (F-BR-03)
+             docs/Backlog-Erledigt.md zusammen
 
 Die vier letzten sind die Schritte beim Einhängen eines Prüfmittels, deren
-Fehlen bis BR-05 niemand meldete (Nr. 315, gefunden von der Gegenlesung des
-Runbooks durch Befolgen, F-BR-19):
+Fehlen lange niemand meldete (gefunden von der Gegenlesung des Runbooks
+durch Befolgen):
 
   selbst     eine Quelltextprüfung, deren CODE den Schalter --selbstprobe
              auswertet, steht in SELBST von pruefen.sh — sonst läuft ihre
@@ -51,7 +50,7 @@ Runbooks durch Befolgen, F-BR-19):
              tools/quelltext/LIESMICH.md, so wie GitHub sie zeigt, mit Anlass
              in der Spalte „Anlass"; keine Zeile ohne oder mit fremdem Namen
              und keine mit mehr Zellen als die Kopfzeile. Die Spalte ist
-             KEINE Backlog-Nummer (E-BR-07)
+             KEINE Backlog-Nummer
   ablauf     pruefablauf.json ist vollständig und so, wie auswahl.py und das
              Tor es lesen: jede Probe erreichbar, jede Probe der Läufer
              aufgerufen, jeder Name definiert, kein Kreis in `nach`, keine
@@ -64,7 +63,7 @@ Runbooks durch Befolgen, F-BR-19):
              nirgends eine veraltete Kopie davon — erkannt an den ersten zwei
              Zellen einer Zeile oder am fetten Vorsatz, nicht an Gleichheit
 
-Die zwei letzten halten den Prüfstand an das Tor (Nr. 329, R4-02): Örtlich
+Die zwei letzten halten den Prüfstand an das Tor: Örtlich
 steht die Anlage, in Stufe 1 nicht — was dazwischen fällt, war im Prüfstand
 grün und im Pull Request rot, nach sechs Läufen.
 
@@ -78,10 +77,10 @@ grün und im Pull Request rot, nach sechs Läufen.
              Aufruf `bericht.py lesen --alle-riegel` von
              .github/workflows/pruefung.yml, und dort steht kein fremder
              Name — sonst ist der Riegel im Tor rot, und örtlich fährt diesen
-             Schritt niemand (F-P5c-172). Die Datei wird gelesen, nicht
+             Schritt niemand. Die Datei wird gelesen, nicht
              geschrieben
 
-Seit R4-25 (Nr. 209) hält eine vierzehnte Regel die erzeugten Tabellen der
+Eine vierzehnte Regel hält die erzeugten Tabellen der
 Gestaltungsrichtlinie an ihren Erzeuger — wie `tabelle` die Tabelle in
 Pruefablauf.md 4:
 
@@ -94,7 +93,7 @@ Pruefablauf.md 4:
              CLAUDE.md 5 nur, dass man es tun soll; gemessen hat es niemand,
              und alle vier Tabellen waren veraltet
 
-Seit Konzept DM (R87, Nr. 390) hält eine fünfzehnte Regel die
+Eine fünfzehnte Regel hält die
 Browserwerkzeuge an die drei Engines:
 
   motoren    jede Datei unter tools/, die einen Browser startet, steht genau
@@ -109,7 +108,7 @@ Browserwerkzeuge an die drei Engines:
              oder `starten(` im Quelltext ohne Kommentare — ein Start über
              eine Hilfsfunktion in einer anderen Datei sieht er nicht
 
-WIE ER LIEST — MIT DEN ECHTEN WERKZEUGEN, NICHT MIT NACHBAUTEN (BR-05).
+WIE ER LIEST — MIT DEN ECHTEN WERKZEUGEN, NICHT MIT NACHBAUTEN.
 Drei Gegenprüfrunden haben gezeigt: Wer Markdown, PHP und Bash mit eigenen
 Mustern nachliest, liest jede Runde eine andere Randschreibweise anders als
 das Original. Deshalb: Tabellen über `cmark-gfm` (wie GitHub), PHP über
@@ -122,18 +121,17 @@ nicht grün. Die vierte Runde fand danach keine Randschreibweise mehr, sondern
 Lücken im Umfang — sie sind zu, oder sie stehen unten als Grenze.
 
 JEDE BEFUNDSTELLE HAT EINE KENNUNG (KENNUNGEN unten), und die Selbstprobe
-schlägt an, wenn eine Kennung in keinem Fall fällt. Bis Runde 3 ließen sich
+schlägt an, wenn eine Kennung in keinem Fall fällt. Einmal ließen sich
 23 von 67 Befundstellen streichen, ohne dass die Selbstprobe es merkte.
 
 WAS ER NICHT MISST, und das ist die benannte Grenze: den Inhalt einer
 Anleitung, ob der Anlass zur Probe passt, ob ein Werkzeug überflüssig ist.
 Das bleibt Lesearbeit (docs/Pruefablauf.md 6.1). Positionsargumente eines
 Aufrufs sieht er so wenig wie kettenaufrufe — der Aufruf wird einmal von
-Hand gefahren (6.12, Nr. 316). Eine Selbstprobe, die ein gemeinsamer Rahmen
-auswertet (E-PK-24, nicht gebaut), sieht er nicht. Der Erzeuger der Tabelle
+Hand gefahren (6.12). Eine Selbstprobe, die ein gemeinsamer Rahmen
+auswertet (nicht gebaut), sieht er nicht. Der Erzeuger der Tabelle
 maskiert kein `|` und kein `*` — was er ausgibt, beglaubigt der Riegel.
-Aus Runde 4 benannt statt gebaut (Konzept BR, Abschnitt 7 — gelöscht, in der
-Historie unter d4e96e6): Den Schalter liest er nur
+Benannt statt gebaut: Den Schalter liest er nur
 als Zeichenkette in der Datei selbst — in einer Konstanten für getopt() oder
 in einem Hilfsmodul sieht er ihn nicht; Unterordner von tools/quelltext/
 durchsucht er nicht nach fremden Selbstproben; Konstanten in auswahl.py, die
@@ -152,7 +150,7 @@ GELESEN WIRD, WAS `git add -A` IN DEN BAUM LEGTE: versionierte und neue,
 nicht ignorierte Dateien. Eine Ausgabe wie tools/screenshots/ausgabe/ zählt
 nicht mit — sonst hinge die Zahl davon ab, wer wo zuletzt gemessen hat.
 
-KEINE DECKE, KEIN ALTBESTAND (E-BR-01). Der Riegel steht auf null, weil der
+KEINE DECKE, KEIN ALTBESTAND. Der Riegel steht auf null, weil der
 Altbestand im selben Konzept bereinigt wird. Wer hier eine Ausnahmeliste
 einführt, führt die Streichliste wieder ein, die niemand liest.
 """
@@ -174,8 +172,8 @@ ABSCHNITTE = ['Aufruf', 'Was es misst', 'Was es braucht', 'Erwartete Zahl',
               'Was es nicht kann']          # docs/Pruefablauf.md 6.2
 HOECHSTENS = 40
 ERZEUGER = 'Anlass: entfällt — Erzeuger (E-BR-05)'
-LOSE_ERLAUBT = {'motor.mjs'}                 # E-BR-03 (4), beim Namen — kein zweiter
-# Wo ein Ordner gerufen sein kann (E-BR-03 (3)). Workflows kommen als Muster dazu.
+LOSE_ERLAUBT = {'motor.mjs'}                 # beim Namen — kein zweiter
+# Wo ein Ordner gerufen sein kann. Workflows kommen als Muster dazu.
 RUFER = ['tools/pruefstand/pruefablauf.json', 'tools/pruefstand/pruefen.sh',
          'docs/Sandbox-Setup.md']
 REGELN = ['form', 'anleitung', 'anlass', 'inventur', 'lose', 'probe', 'backlog',
@@ -196,20 +194,19 @@ MOTOREN_REGISTER = 'tools/pruefstand/motoren.md'
 MOTOR_DATEI = 'tools/motor.mjs'
 MOTOREN_WEGE = ('Probe', 'Helfer', 'von Hand', 'nur Chromium', 'kein Test')
 # Was ohne config.php beim Laden abbricht (db.php prüft es in seinen ersten
-# Zeilen, Nr. 288) — erreicht eine Probe ohne Anlage eines davon, ist sie im
+# Zeilen) — erreicht eine Probe ohne Anlage eines davon, ist sie im
 # Tor rot.
 ANLAGE = ('server/db.php', 'server/config.php')
 PRUEFABLAUF = 'docs/Pruefablauf.md'
 MUSTER_FELDER = ['id', 'ab', 'pfade', 'proben', 'anlass']   # auswahl.py und erzeugen-doku lesen alle fünf
 # Die Schlüssel, die jemand liest (gemessen am Bestand 24.09.2026). Ein anderer
 # — `nach` am Muster, `Nach` an der Probe — wurde still übergangen, und die
-# Voraussetzung fehlte ohne Meldung (Gegenprobe BR-05, Runde 3).
+# Voraussetzung fehlte ohne Meldung.
 SCHLUESSEL = {
-    # `stufenregeln` lesen auswahl.py und bericht.py seit P5c/AP4 (E-P5c-88, Stufenregel
-    # `migration`); beim Aufnehmen von BR in den P5c-Zweig eingetragen.
+    # `stufenregeln` lesen auswahl.py und bericht.py (Stufenregel `migration`).
     'oben': {'beschreibung', 'fassung', 'muster', 'proben', 'riegel', 'stufen', 'stufenregeln'},
     'riegel': {'beschreibung', 'proben'},
-    'probe': {'aufruf', 'bemerkung', 'braucht', 'demo', 'motoren', 'nach'},    # `demo`: R4-04, Nr. 322; `motoren`: R87
+    'probe': {'aufruf', 'bemerkung', 'braucht', 'demo', 'motoren', 'nach'},    # `demo` und `motoren` lesen auswahl.py und pruefen.sh
     'muster': set(MUSTER_FELDER),
 }
 QUELLTEXT_SPRACHEN = ('.py', '.php')          # was der Riegel lesen kann — alles andere ist ein Befund
@@ -340,7 +337,7 @@ KENNUNGEN = {
 
 # Nur für die Selbstprobe: Werkzeuge, die als fehlend gelten sollen, und
 # Gruppen, die abbrechen sollen — damit das Auffangnetz in messen() eine
-# Probe hat und nicht nur ein Versprechen ist (Runde 4).
+# Probe hat und nicht nur ein Versprechen ist.
 _OHNE = set()
 _ABBRUCH = set()
 
@@ -365,7 +362,7 @@ def bef(kennung, text):
 def _ls_files(wurzel, *pfade):
     # `-z`: Ohne ihn setzt git einen Pfad mit Umlaut in Anführungszeichen mit
     # Oktalfolgen, `isfile()` findet ihn nicht, und die Datei ist für jede
-    # Regel unsichtbar (Gegenprobe BR-05, Runde 2).
+    # Regel unsichtbar.
     r = subprocess.run(['git', '-C', wurzel, 'ls-files', '-z', '-co', '--exclude-standard', '--', *pfade],
                        capture_output=True, text=True)
     if r.returncode != 0:
@@ -400,7 +397,7 @@ def ausserhalb_zaun(text):
     """(Zeilennummer, Zeile) außerhalb von Codeblöcken. Ein `## x` in einem
     Bash-Beispiel ist kein Abschnitt, ein `Anlass:` darin keine Zeile.
 
-    NACH COMMONMARK (Gegenprobe BR-05, Runde 2): Ein Zaun schließt nur mit
+    NACH COMMONMARK: Ein Zaun schließt nur mit
     demselben Zeichen und mindestens derselben Länge, und eine Zeile, die mit
     Code aus drei Backticks BEGINNT (```x``` im Text), öffnet keinen."""
     zaun = None                                   # (Zeichen, Länge) des offenen Zauns
@@ -432,8 +429,8 @@ BACKLOG_DATEIEN = ('docs/Backlog.md', 'docs/Backlog-Erledigt.md')
 
 def backlog_zeilen(wurzel):
     """{Nummer: [„Datei:Zeile"]} — jede Zeile, die mit „Zahl und Punkt" beginnt,
-    über BEIDE Backlog-Dateien (seit Konzept SD, SD-02: die offenen Punkte in
-    `Backlog.md`, die erledigten wörtlich in `Backlog-Erledigt.md`, E-SD-18).
+    über BEIDE Backlog-Dateien (die offenen Punkte in
+    `Backlog.md`, die erledigten wörtlich in `Backlog-Erledigt.md`).
     Eine Nummer, die in beiden steht, ist damit dieselbe Doppelung wie zweimal
     in einer — und die Anlass-Zeilen der Prüfmittel dürfen erledigte Nummern
     nennen, weil ein Anlass nicht verschwindet, wenn der Punkt erledigt ist.
@@ -442,7 +439,7 @@ def backlog_zeilen(wurzel):
     '^[0-9]+\\.'`): Auch ein Datum am Zeilenanfang zählt als Nummer. Das ist
     Absicht und steht im Kopf von Backlog.md — wer dort umbricht, setzt den
     Umbruch vor das Datum. Fehlt die zweite Datei, wird nur die erste gelesen
-    (die Selbstprobe baut nur `Backlog.md`; vor SD-02 gab es die zweite nicht)."""
+    (die Selbstprobe baut nur `Backlog.md`)."""
     aus = {}
     for datei in BACKLOG_DATEIEN:
         pfad = os.path.join(wurzel, *datei.split('/'))
@@ -531,7 +528,7 @@ def einstieg(wert, quelle):
     Gegenstellen), zählt der EINE Aufruf im Vordergrund. Eine Gegenstelle läuft
     im Hintergrund (`… &`). Fortsetzungszeilen (`\\` am Ende) werden vorher
     verbunden — sonst hielt der Riegel die zweite Zeile einer umbrochenen
-    Hintergrundzeile für einen Vordergrundaufruf (Gegenprobe BR-05, Runde 3)."""
+    Hintergrundzeile für einen Vordergrundaufruf."""
     pfad = re.search(r'(tools/proben/[\w./-]+\.(?:php|mjs|py|sh))', wert)
     if pfad:
         return pfad.group(1)
@@ -561,7 +558,7 @@ def _werkzeug(name):
 
 def laeufer_liste(wurzel, rel, schalter):
     """Die Ausgabe von `bash <rel> <schalter>` als Zeilen, oder None. So sieht
-    BASH die Listen — bis BR-05 las der Riegel sie mit eigenen Mustern, und
+    BASH die Listen — früher las der Riegel sie mit eigenen Mustern, und
     jede Gegenprüfrunde fand eine Schreibweise, die er anders las."""
     if not os.path.isfile(os.path.join(wurzel, rel)):
         return None
@@ -601,7 +598,7 @@ echo json_encode($aus, JSON_INVALID_UTF8_SUBSTITUTE);
 def php_zeichenketten(wurzel, dateien):
     """{Datei: (Zeichenketten, Zeichenketten in getopt())} über token_get_all
     — so, wie PHP die Datei liest: Kommentare, Heredocs und Text außerhalb von
-    `<?php` sind keine Zeichenketten. Bis BR-05 las hier ein eigener
+    `<?php` sind keine Zeichenketten. Früher las hier ein eigener
     Zustandsautomat, und ein `?>` in einem Kommentar oder ein Apostroph in
     einem Heredoc brachten ihn aus dem Tritt (Gegenprobe, Runden 2 und 3)."""
     if not dateien:
@@ -611,7 +608,7 @@ def php_zeichenketten(wurzel, dateien):
                        encoding='utf-8', errors='replace')
     # JSON_INVALID_UTF8_SUBSTITUTE: Eine Zeichenkette mit kaputtem UTF-8
     # ("\xC3\x28", die Hausform solcher Prüffälle) ließ json_encode scheitern und
-    # leerte den Leser für ALLE Dateien (Gegenprobe, Runde 4).
+    # leerte den Leser für ALLE Dateien (Gegenprobe).
     if r.returncode != 0 or not r.stdout.strip().startswith('{'):
         raise WerkzeugFehlt(f'php (rc {r.returncode}: {(r.stderr or r.stdout).strip()[:80]})')
     daten = json.loads(r.stdout)
@@ -701,7 +698,7 @@ class _TabellenLeser(html.parser.HTMLParser):
 
 def gfm_tabellen(wurzel, rel):
     """Die Tabellen einer Markdown-Datei, wie GitHub sie zeigt — gerendert von
-    cmark-gfm, nicht nachgebaut. Bis Runde 3 las ein eigener Leser, und drei
+    cmark-gfm, nicht nachgebaut. Früher las ein eigener Leser, und drei
     Runden fanden je neue Schreibweisen, die er anders las als GitHub."""
     cmark = _werkzeug('cmark-gfm')
     r = subprocess.run([cmark, '-e', 'table', '--sourcepos', '--to', 'html', rel], cwd=wurzel,
@@ -717,7 +714,7 @@ def gezeigt_leer(text):
     """Zeigt GitHub diese Zelle leer oder als bloße Striche? Gelesen am
     GERENDERTEN Text: Hervorhebung, Entitäten und Kommentare sind schon weg.
     Unsichtbare Zeichen zählen nicht — auch der weiche Trennstrich (`&shy;`)
-    nicht —, und `--` ist so leer wie `-` (Runde 4)."""
+    nicht —, und `--` ist so leer wie `-`."""
     t = re.sub(r'[\s\u00a0\u00ad\u200b\u200c\u200d\u2060\ufeff]+', '', text)
     return re.fullmatch(r'[-\u2010\u2012\u2013\u2014\u2212]*', t) is not None
 
@@ -727,7 +724,7 @@ def rohe_zellen(zeile):
     trennt: an jedem `|` ohne `\\` davor — auch in einer Code-Spanne —, je ein
     führendes und abschließendes `|` zählt nicht. GitHub wirft Zellen über
     der Zahl der Kopfzeile WEG: Ein `|` in `a|b` verschob so die Spalten, und
-    die Anlass-Spalte zeigte ein Stück der Beschreibung (Runde 4)."""
+    die Anlass-Spalte zeigte ein Stück der Beschreibung."""
     t = zeile.strip()
     if t.startswith('|'):
         t = t[1:]
@@ -741,7 +738,7 @@ def modul_aus(wurzel, rel, name):
 
     SEIN ORDNER STEHT DABEI VORN IN sys.path, wie beim Start als Skript. Ohne
     das galt ein auswahl.py, das ein Geschwistermodul einbindet, als „fehlt",
-    und `ab` und die Pfade blieben ungeprüft (Runde 4). Danach wird beides
+    und `ab` und die Pfade blieben ungeprüft. Danach wird beides
     zurückgesetzt: Ein Geschwistermodul dieses Auschecks darf nicht in den
     nächsten Auscheck hinüberreichen (die Selbstprobe misst viele)."""
     pfad = os.path.join(wurzel, rel)
@@ -769,10 +766,10 @@ def flaechen_aus(wurzel):
     """{Fläche: ([Ordner], Bauprobe)} — FLAECHEN aus dem geladenen bericht.py,
     oder None, wenn es nicht lesbar ist.
 
-    Eine Probe, die wie eine Fläche heißt, verschwände im Bericht (Runde 3).
+    Eine Probe, die wie eine Fläche heißt, verschwände im Bericht.
     Und eine Bauprobe, die das Muster für eine Datei der Fläche nicht
     auswählt, macht jede Berührung dort zur Sackgasse: Das Tor verlangt
-    „gebaut", und kein Lauf liefert es (Runde 4)."""
+    „gebaut", und kein Lauf liefert es."""
     mod = modul_aus(wurzel, ERZEUGER_DOKU, 'bestand_bericht')
     f = getattr(mod, 'FLAECHEN', None) if mod else None
     if not isinstance(f, dict) or not f:
@@ -831,7 +828,7 @@ def messen(wurzel):
     """(Befunde als [(Regel, Kennung, Text)], Zahlen). Wirft
     FileNotFoundError, wenn die Grundlage fehlt — das ist rc 2."""
     # Absolut: Der Erzeuger der Tabelle läuft mit cwd=wurzel, ein relativer
-    # Pfad hätte sich verdoppelt (Gegenprobe BR-05).
+    # Pfad hätte sich verdoppelt.
     wurzel = os.path.abspath(wurzel)
     if not os.path.isdir(os.path.join(wurzel, 'tools')):
         raise FileNotFoundError(os.path.join(wurzel, 'tools'))
@@ -844,7 +841,7 @@ def messen(wurzel):
     zahlen = {'ordner': len(ordner), 'anleitungen': len(anleitungen), 'erzeuger': [],
               'proben': 0, 'lose': [os.path.basename(p) for p in lose]}
 
-    # form — jede Anleitung, rekursiv (E-BR-04)
+    # form — jede Anleitung, rekursiv
     for p in anleitungen:
         text = lies(wurzel, p)
         n = zeilenzahl(text)
@@ -907,7 +904,7 @@ def messen(wurzel):
                                              f'{", ".join(sorted(LOSE_ERLAUBT))} (E-BR-03 (4))'))
 
     # probe — die Anlass-Zeile jeder Probe im Kopf ihrer Einstiegsdatei.
-    # UNBEDINGT: Fehlt der Läufer, ist das ein Befund (Runde 3).
+    # UNBEDINGT: Fehlt der Läufer, ist das ein Befund.
     liste = laeufer_liste(wurzel, PROBEN_LAEUFER, '--liste')
     ruf = {}
     if liste is None:
@@ -950,11 +947,11 @@ def messen(wurzel):
             befunde.append(bef('backlog-doppelt', f'Backlog: Nr. {nr} steht {len(zeilen)}-mal '
                                                   f'({", ".join(zeilen)})'))
 
-    # selbst, zeile, ablauf, tabelle — UNBEDINGT (Runde 2). Scheitert eine
+    # selbst, zeile, ablauf, tabelle — UNBEDINGT. Scheitert eine
     # Gruppe an einer Eingabe, die sie nicht erwartet, ist das ein Befund
     # DIESER Regel — kein Traceback, der die übrigen verschluckt. `tabelle`
     # ist eine eigene Gruppe: Hing sie an `ablauf`, fiel sie mit einem Komma
-    # zu viel in der Ablaufdatei still aus (Runde 4).
+    # zu viel in der Ablaufdatei still aus.
     for kennung, pruefung in (('selbst-abbruch', quelltext_pruefen), ('ablauf-abbruch', ablauf_pruefen),
                               ('tabelle-abbruch', tabelle_pruefen), ('anlage-abbruch', anlage_pruefen),
                               ('tor-abbruch', tor_pruefen), ('design-abbruch', design_pruefen),
@@ -1012,7 +1009,7 @@ def quelltext_pruefen(wurzel, alle, zahlen, ruf):
     # selbst — WER RUFT die Selbstproben? SELBST ist nur eine Liste; gefahren
     # wird sie von `pruefen.sh --selbstprobe`, und das steht in einem Workflow
     # oder einem Aufruf des Prüfstands. Fehlt der Aufruf, läuft keine, und
-    # alles darunter ist grün (Runde 4).
+    # alles darunter ist grün.
     if selbst and not selbstprobe_gerufen(wurzel):
         befunde.append(bef('selbst-tor', f'SELBST nennt {len(selbst)} Prüfungen, aber `{QUELLTEXT} --selbstprobe` '
                                          f'steht in keinem Workflow und keinem Aufruf von {ABLAUF} — '
@@ -1242,7 +1239,7 @@ def ablauf_pruefen(wurzel, alle, zahlen, ruf):
         elif isinstance(pf, list) and callable(passt):
             # Jeder Pfad muss eine Datei treffen — gelesen mit DEM Abgleicher des
             # Prüfstands. Der erste Treffer dieser Prüfung war `server/api/spur*.php`,
-            # der seit PK-03 keine Datei traf (Runde 3, F-BR-24).
+            # der lange keine Datei traf.
             for x in pf:
                 if not any(passt(f, [x]) for f in dateien_alle):
                     befunde.append(bef('ablauf-pfad-trifft-nie', f'{ABLAUF}: Muster {name}: „{x}" trifft keine '
@@ -1266,7 +1263,7 @@ def ablauf_pruefen(wurzel, alle, zahlen, ruf):
 
     # ablauf — `nach` im Kreis legt auswahl.py lahm (ValueError); jeder Kreis einmal
     # OHNE REKURSION: Eine Kette aus tausend `nach` brachte die rekursive
-    # Fassung an Pythons Grenze, und die Gruppe brach ab (Runde 4).
+    # Fassung an Pythons Grenze, und die Gruppe brach ab.
     kreise, zustand = [], {}
     for start in sorted(nach):
         if zustand.get(start):
@@ -1294,7 +1291,7 @@ def ablauf_pruefen(wurzel, alle, zahlen, ruf):
                                                      f'auswahl.py löst nach nur für Proben aus Mustern auf'))
 
     # ablauf — jede Probe erreichbar: vom Riegel aus, oder von einem Muster aus
-    # über `nach`. „Irgendwo genannt" reicht nicht (Runde 1).
+    # über `nach`. „Irgendwo genannt" reicht nicht.
     erreicht = set(r for r in riegel if r in proben)
     offen, gesehen_m = [x for x, _ in wurzeln if x in proben], set()
     while offen:
@@ -1309,7 +1306,7 @@ def ablauf_pruefen(wurzel, alle, zahlen, ruf):
             befunde.append(bef('ablauf-unerreichbar', f'{ABLAUF}: Probe {p} ist von keinem Muster und keinem '
                                                       f'Riegel aus erreichbar — sie läuft nie'))
 
-    # ablauf — jede Fläche des Berichts bekommt ihren Bau (Runde 4). Das Tor
+    # ablauf — jede Fläche des Berichts bekommt ihren Bau. Das Tor
     # verlangt „gebaut", sobald eine Datei der Fläche berührt ist, in JEDER
     # Stufe. Wählt das Muster die Bauprobe für eine solche Datei nicht aus,
     # ist jede Berührung dort rot, und kein Lauf kann es ändern. Gefragt wird
@@ -1338,7 +1335,7 @@ def ablauf_pruefen(wurzel, alle, zahlen, ruf):
                                                      f'Stufe {stufen[0]} wählt dafür {probe} aus — das Tor verlangt '
                                                      f'„{fl}=gebaut", und kein Lauf liefert es'))
 
-    # ablauf — jede Probe eines Läufers hat einen Aufruf in der Ablaufdatei (Runde 2)
+    # ablauf — jede Probe eines Läufers hat einen Aufruf in der Ablaufdatei
     aufrufe = ' '.join(d['aufruf'] for d in proben.values() if isinstance(d, dict) and isinstance(d.get('aufruf'), str))
     namen_q = [z.split('\t')[1] for z in (laeufer_liste(wurzel, QUELLTEXT, '--liste') or [])
                if z.startswith('NAME\t') and len(z.split('\t')) >= 2]
@@ -1420,7 +1417,7 @@ def tabelle_vergleichen(doku, soll):
 
 
 def design_pruefen(wurzel, alle, zahlen, ruf):
-    """Regel `design` (Nr. 209, R4-25) — die erzeugten Tabellen in Design.md
+    """Regel `design` — die erzeugten Tabellen in Design.md
     sind genau die Ausgabe von design.py, jede einmal, vier Marken.
 
     VERGLICHEN WIRD DER ROHE TEXT, als Ganzes: Der Erzeuger gibt je Teil einen
@@ -1463,7 +1460,7 @@ def kopie_schluessel(z):
     """Woran eine Zeile der erzeugten Tabelle zu erkennen ist, auch wenn sie
     veraltet ist: eine Tabellenzeile an ihren ersten ZWEI Zellen (Berührung
     und Stufe), eine Textzeile an ihrem fetten Vorsatz bis `:**`, sonst an
-    den ersten 30 Zeichen. Bis Runde 4 zählte nur die GLEICHE Zeile — die
+    den ersten 30 Zeichen. Früher zählte nur die GLEICHE Zeile — die
     alte Riegelzeile mit einer Probe weniger war nicht gleich, sondern alt."""
     t = z.strip()
     if len(t) < 20 or t.startswith('<!--') or re.fullmatch(r'[|\s:-]+', t):
@@ -1478,7 +1475,7 @@ def kopie_schluessel(z):
 
 # ------------------------------------------------------------------- Lauf
 
-# PHP liest PHP (E-BR-22): Je Datei die require/include-Stellen, ihr Ziel und
+# PHP liest PHP: Je Datei die require/include-Stellen, ihr Ziel und
 # ob sie im Rumpf einer Funktion stehen. Ein Ziel wird nur aus einer
 # POSITIVLISTE ausgewertet — Zeichenketten, Zahlen, __DIR__, __FILE__,
 # dirname(), realpath(), `.`, Klammern und Variablen, die vorher genauso
@@ -1698,7 +1695,7 @@ DIREKT_RE = re.compile(r'\.launch(?:PersistentContext)?\(')
 
 def motoren_pruefen(wurzel, alle, zahlen, ruf):
     """Regel `motoren` — startet jedes Browserwerkzeug über motor.mjs, und
-    steht es mit seinem Weg im Register (R87)?"""
+    steht es mit seinem Weg im Register?"""
     werkzeuge = {}
     for p in alle:
         if not p.startswith('tools/') or not p.endswith(('.mjs', '.js')) or p == MOTOR_DATEI:
@@ -1981,7 +1978,7 @@ def _design_doku(name='', eingriff=None):
 def _pruefstand_dateien():
     """Der ganze Prüfstand dieses Auschecks (alle .py) — nicht zwei Dateien
     beim Namen: Bindet bericht.py ein weiteres Modul ein, stürzte die
-    Selbstprobe sonst ab (Runde 3)."""
+    Selbstprobe sonst ab."""
     d = os.path.join(WURZEL, 'tools', 'pruefstand')
     return {f'tools/pruefstand/{n}': lies(WURZEL, f'tools/pruefstand/{n}')
             for n in sorted(os.listdir(d)) if n.endswith('.py')}
@@ -1992,7 +1989,7 @@ def _erzeugte_tabelle(name='', eingriff=None):
     für eine geänderte Fassung davon: eine VERALTETE Tabelle. Einmal je Name
     erzeugt, mit dem ECHTEN Erzeuger dieses Auschecks. Die Selbstprobe baut
     ihn nicht nach, und eine veraltete Kopie hängt so an keinem Ausgabeformat
-    — bis Runde 4 entstand sie durch Ersetzen von `| neben |`, und ein
+    — früher entstand sie durch Ersetzen von `| neben |`, und ein
     regelgerecht geänderter Erzeuger hätte sie still gleich gemacht."""
     if name not in _TABELLE:
         a = json.loads(ABLAUF_JSON)
@@ -2038,7 +2035,7 @@ def _grundbestand():
     """Ein Bestand, der jede Regel hält — mit Gegenproben darin: ein `##` im
     Codeblock, eine hervorgehobene Anlass-Zeile, die Erzeugerform, motor.mjs,
     eine ignorierte Ausgabe mit einer übergroßen Anleitung, eine Prüfung ohne
-    Selbstprobe (`zwei`), eine Anlass-Spalte mit Kürzel (E-BR-07), eine Probe,
+    Selbstprobe (`zwei`), eine Anlass-Spalte mit Kürzel, eine Probe,
     die nur über `nach` hängt, eine Gegenstelle im Hintergrund und die
     beiden Flächen des Berichts mit ihren Bauproben."""
     return {
@@ -2092,8 +2089,8 @@ def _grundbestand():
 
 class AnkerFehlt(Exception):
     """Ein Eingriff der Selbstprobe findet seinen Anker nicht mehr — ein roter
-    Fall, kein Absturz (Runde 3: eine regelgerechte Änderung am Erzeuger
-    brachte die Selbstprobe mit AssertionError zu Fall)."""
+    Fall, kein Absturz (einmal brachte eine regelgerechte Änderung am Erzeuger
+    die Selbstprobe mit AssertionError zu Fall)."""
 
 
 def _mehr(pfad, alt, neu):
@@ -2482,7 +2479,7 @@ FAELLE = [
      _und(_mehr(ERZEUGER_DOKU, "    melde('| Berührung | ab Stufe | Proben | Anlass |')",
                 "    melde('```')\n    melde('x')\n    melde('```')\n    melde('| Berührung | ab Stufe | Proben | Anlass |')"),
           _doku('| Berührung | ab Stufe | Proben | Anlass |', '```\nx\n```\n| Berührung | ab Stufe | Proben | Anlass |'))),
-    # anlage — Proben ohne Anlage laden weder db.php noch config.php (R4-02, Nr. 329)
+    # anlage — Proben ohne Anlage laden weder db.php noch config.php
     ('anlage — eine Quelltextprüfung lädt über eine Serverbibliothek db.php', 'anlage-db',
      _und(_setze('server/zwei.php', "<?php\nrequire_once __DIR__ . '/db.php';\n"), _setze('server/db.php', '<?php\n'))),
     ('anlage — eine Probe aus dem Läufer lädt config.php über eine Variable', 'anlage-db',
@@ -2499,7 +2496,7 @@ FAELLE = [
     ('anlage — ein require auf eine Datei, die es nicht gibt', 'anlage-unklar',
      _setze('server/zwei.php', "<?php\nrequire_once __DIR__ . '/fehlt.php';\n")),
     ('anlage — die Gruppe bricht ab', 'anlage-abbruch', _abbruch('anlage-abbruch')),
-    # tor — jeder Riegel steht im Aufruf von bericht.py lesen (R4-02, F-P5c-172)
+    # tor — jeder Riegel steht im Aufruf von bericht.py lesen
     ('tor — pruefung.yml fehlt', 'tor-datei', _weg(TOR)),
     ('tor — bericht.py lesen ohne --alle-riegel', 'tor-datei', _mehr(TOR, ' --alle-riegel', '')),
     ('tor — ein Riegel fehlt im Tor', 'tor-fehlt', _mehr(TOR, '            --riegel "q-eins=$q" \\\n', '')),
@@ -2510,7 +2507,7 @@ FAELLE = [
     ('GEGENPROBE: der Aufruf in einer Zeile statt umbrochen', None,
      _setze(TOR, 'run: python3 tools/pruefstand/bericht.py lesen --alle-riegel --riegel q-eins=1 --riegel "q-zwei=2"\n')),
     ('tor — die Gruppe bricht ab', 'tor-abbruch', _abbruch('tor-abbruch')),
-    # design (Nr. 209, R4-25)
+    # design
     ('design — eine Funktion in ui.php eingefügt, die Tabelle nicht neu erzeugt (die Abnahme)', 'design-abweichung',
      _mehr('server/ui.php', '<?php\n', "<?php\nfunction ui_mehr(): string { return '<b>'; }\n")),
     ('design — eine Regel in style.css neu, die Schwellen nicht neu erzeugt', 'design-abweichung',
@@ -2529,7 +2526,7 @@ FAELLE = [
     ('design — Design.md fehlt', 'design-doku-fehlt', _weg(DESIGN)),
     ('design — die Gruppe bricht ab', 'design-abbruch', _abbruch('design-abbruch')),
     ('GEGENPROBE: Text zwischen den Tabellen geändert', None, _mehr(DESIGN, 'Text.', 'Anderer Text.')),
-    # motoren — jede Browserprobe in drei Engines (R87, Konzept DM)
+    # motoren — jede Browserprobe in drei Engines
     ('motoren — das Register fehlt', 'motoren-register', _weg(MOTOREN_REGISTER)),
     ('motoren — ein Browserwerkzeug ohne Zeile (und seine Probe verwaist)', ('motoren-ohne-zeile', 'motoren-verwaist'),
      _mehr(MOTOREN_REGISTER, '| `tools/werkzeug/sicht.mjs` | Probe: zwei | |\n', '')),
@@ -2568,8 +2565,8 @@ def selbstprobe():
     die erwarteten Kennungen ergeben — dazu Gegenproben, die grün bleiben.
 
     EINE SELBSTPROBE, DIE NUR DEN GRÜNEN FALL FÄHRT, BELEGT NICHTS. Und eine,
-    die nur Regelnamen vergleicht, belegt nicht, welche Prüfung anschlug: Bis
-    Runde 3 ließen sich 23 von 67 Befundstellen streichen, und sie blieb grün.
+    die nur Regelnamen vergleicht, belegt nicht, welche Prüfung anschlug: Einmal
+    ließen sich 23 von 67 Befundstellen streichen, und sie blieb grün.
     Seither muss jede Kennung aus KENNUNGEN in einem Fall fallen."""
     melde('Selbstprobe des Bestandsriegels')
     melde()
@@ -2616,7 +2613,7 @@ def selbstprobe():
         if not ok:
             melde(f'         erwartet: {", ".join(sorted(soll)) or "keine Befunde"} · '
                   f'gemessen: {", ".join(sorted(ist)) or "keine"}')
-    # --wurzel als RELATIVER Pfad (bis BR-05 rot: der Erzeuger lief mit cwd=wurzel)
+    # --wurzel als RELATIVER Pfad (einmal rot: der Erzeuger lief mit cwd=wurzel)
     ordner = tempfile.mkdtemp(prefix='bestand-')
     try:
         _bauen(ordner, _grundbestand())

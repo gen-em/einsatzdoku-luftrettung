@@ -1,6 +1,6 @@
-"""Anteilprobe, Teil E — `api/kdf_upgrade.php` als Huellenfassung (S10, E-S10-07).
+"""Anteilprobe, Teil E — `api/kdf_upgrade.php` als Huellenfassung.
 
-WOFUER. Seit S10 ist dieser Endpunkt der eine Weg, auf dem sich die
+WOFUER. Dieser Endpunkt ist der eine Weg, auf dem sich die
 Schluesselhuelle eines Kontos still ersetzen laesst. Er entscheidet dabei ueber
 einen Fehler, der teuer und spaet auffaellt: eine Huelle, die auf den ALTEN
 Server-Anteil zurueckgestellt wird. Sie liesse sich in dem Augenblick nicht
@@ -116,7 +116,7 @@ def feld(spalte: str, uid: str) -> str:
 def demo_uhr() -> str | None:
     """Zeitpunkt des letzten Demo-Resets, oder None.
 
-    DIESELBE FALLE WIE IN DER KLICKPROBE (F-S10-AP3-09). Das Demo-Konto setzt
+    DIESELBE FALLE WIE IN DER KLICKPROBE. Das Demo-Konto setzt
     sich 30 Minuten nach der ersten Aenderung zurueck, und E10 misst genau dieses Konto. Faellt der
     Reset in den Lauf, verschwindet das Konto fuer den Bruchteil einer
     Sekunde, der Endpunkt antwortet 404, und der Lauf meldet **30 von 34** —
@@ -145,8 +145,8 @@ print(f"Anteilprobe, Teil E — {BASIS}")
 # auf `edka1:` — und das tut es nach jedem Lauf dieser Datei, nach dem
 # Umstellungslauf und nach jedem Anmelden im Browser —, dann antwortet der
 # Endpunkt mit 'nicht_noetig', und der Lauf meldet 11 offene Erwartungen, die
-# in Wahrheit nur eine falsche Ausgangslage sind. Genau so gelesen in S10/AP3:
-# 22 von 33, ohne dass an der Anwendung etwas fehlte (F-S10-AP3-03).
+# in Wahrheit nur eine falsche Ausgangslage sind. Genau so schon gelesen:
+# 22 von 33, ohne dass an der Anwendung etwas fehlte.
 #
 # `huelle_stellen.py` kann das rueckwaerts; hier wird es aufgerufen statt
 # nachgebaut, damit es EINE Umsetzung bleibt.
@@ -171,13 +171,13 @@ print(f"  Konto {uid}, Rundenzahl {iter_vorher}, "
       f"Huelle {wrap_vorher[:14]}…, ANTEIL_STAND {s.anteil_stand}")
 
 try:
-    # DIE VORAUSSETZUNG IST EINE ERWARTUNG, KEIN `print` (S10/AP5).
+    # DIE VORAUSSETZUNG IST EINE ERWARTUNG, KEIN `print`.
     #
     # Der Aufruf von `huelle_stellen.py` oben stellt die Ausgangslage her, und
-    # sein Fehlschlag stand bis AP5 nur als Meldung da. Der Lauf lief weiter,
+    # sein Fehlschlag stand frueher nur als Meldung da. Der Lauf lief weiter,
     # mass ab E4 eine bereits umgestellte Huelle — der Endpunkt antwortet dann
     # `nicht_noetig` — und meldete trotzdem seine Zahl. Genau so ist
-    # F-S10-AP3-03 entstanden: 22 von 33, ohne dass an der Anwendung etwas
+    # ein Befund entstanden: 22 von 33, ohne dass an der Anwendung etwas
     # fehlte. Eine Voraussetzung, die nur als Meldung dasteht, ist keine.
     teil("E0. Die Ausgangslage")
     pruefe("huelle_stellen.py hat die Huelle auf `edk1:` gestellt",
@@ -240,8 +240,8 @@ try:
     pruefe("die Huelle ist unveraendert", feld("pat_wrap_pw", uid), wrap_vorher)
 
     teil("E6. Die Umstellung bei GLEICHER Rundenzahl gelingt")
-    # Die eigentliche Neuerung: Bis S10 stand in kdf_upgrade.php `<=`, und
-    # dieser Aufruf waere mit 'nicht_noetig' abgewiesen worden.
+    # Der eigentliche Punkt: Stuende in kdf_upgrade.php `<=`,
+    # waere dieser Aufruf mit 'nicht_noetig' abgewiesen worden.
     r = ruf(koerper(huelle_neu))
     pruefe("HTTP-Status", r.status_code, 200)
     pruefe("ok", antwort(r).get("ok"), True)
@@ -276,7 +276,7 @@ try:
     # AM ROHTEXT DER SEITE gemessen, nicht am Ergebnis von `sitzung.py`: Jenes
     # macht aus `null` ein leeres Feld, damit es damit rechnen kann — und ein
     # leeres Feld ist etwas anderes als „dieses Konto bekommt nie einen".
-    # E-S10-06 verlangt ausdruecklich `null`.
+    # Verlangt ist ausdruecklich `null`.
     import re as _re
     roh = _re.search(r"const\s+KONTO_ANTEILE\s*=\s*(.+?);\s*$",
                      d.get("index.php").text, _re.M)

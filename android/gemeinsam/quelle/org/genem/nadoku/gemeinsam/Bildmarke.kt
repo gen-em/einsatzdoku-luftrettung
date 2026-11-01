@@ -15,10 +15,10 @@ import kotlin.random.Random
 
 /**
  * Die Logo-Wahl -- dieselbe Dreier-Wahl wie im Web-Konto (Design.md 2.3) und
- * an der Garmin-Uhr (`logoWahl`, Const.mc), E-S4-22b.
+ * an der Garmin-Uhr (`logoWahl`, Const.mc).
  *
  * Die Zahlen sind die der Garmin, damit die drei Stellen dieselbe Sprache
- * sprechen; gespeichert wird in den App-Einstellungen (B3).
+ * sprechen; gespeichert wird in den App-Einstellungen.
  */
 enum class LogoWahl(val zahl: Int) {
     LUFT(0),
@@ -44,7 +44,7 @@ enum class Motiv { LUFT, BODEN }
  *
  * WARUM DER WURF EIN OBJEKT-ZUSTAND IST und nicht bei jedem Aufruf neu
  * geschieht: "Wechselnd" heisst wechselnd von Start zu Start, nicht von
- * Bildschirm zu Bildschirm. Die Uhr wuerfelt eigenstaendig (E-S4-22b) -- sie
+ * Bildschirm zu Bildschirm. Die Uhr wuerfelt eigenstaendig -- sie
  * uebernimmt vom Handy die EINSTELLUNG, nicht den Wurf; damit brauchen die
  * beiden Geraete sich darueber nicht abzustimmen, wie schon bei der Garmin.
  */
@@ -67,8 +67,8 @@ object Bildmarke {
     /**
      * Anteil der Kachelbreite, den das Motiv einnimmt.
      *
-     * DIE STUFUNG GEHT UEBER DIE FLAECHE, NICHT UEBER DIE HOEHE (E-S4-22b,
-     * S3-Erkenntnis Punkt K). Die Luftmarke liegt quer (400,16 x 249,81, also
+     * DIE STUFUNG GEHT UEBER DIE FLAECHE, NICHT UEBER DIE HOEHE. Die
+     * Luftmarke liegt quer (400,16 x 249,81, also
      * 1,602:1), die Bodenmarke ist quadratisch (420 x 420). Auf gleiche Hoehe
      * gebracht, wirkt die quadratische deutlich schwerer.
      *

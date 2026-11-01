@@ -242,7 +242,7 @@ class SendingDelegate extends TastenDelegate {
     function initialize() { TastenDelegate.initialize(); }
     // Waehrend des Sendens keine Aktionen — BACK ueberspringt das Warten
     function onBack() as Lang.Boolean {
-        if (Input.beruehrungVerwerfen()) { return true; }   // F-R17-68
+        if (Input.beruehrungVerwerfen()) { return true; }
         var dlg = new WatchUi.Confirmation("Sync unvollständig – trotzdem beenden?");
         WatchUi.pushView(dlg, new QuitConfirmDelegate(), WatchUi.SLIDE_LEFT);
         return true;
@@ -326,7 +326,7 @@ class QuickMenuDelegate extends TastenDelegate {
     }
 
     function onPreviousPage() as Lang.Boolean {           // UP: endlos
-        if (Input.beruehrungVerwerfen()) { return true; }   // F-R17-68
+        if (Input.beruehrungVerwerfen()) { return true; }
         var n = _v.items.size();
         _v.index = (_v.index - 1 + n) % n;
         WatchUi.requestUpdate();
@@ -334,14 +334,14 @@ class QuickMenuDelegate extends TastenDelegate {
     }
 
     function onNextPage() as Lang.Boolean {               // DOWN: endlos
-        if (Input.beruehrungVerwerfen()) { return true; }   // F-R17-68
+        if (Input.beruehrungVerwerfen()) { return true; }
         _v.index = (_v.index + 1) % _v.items.size();
         WatchUi.requestUpdate();
         return true;
     }
 
     function onSelect() as Lang.Boolean {                 // START
-        if (Input.beruehrungVerwerfen()) { return true; }   // F-R17-68
+        if (Input.beruehrungVerwerfen()) { return true; }
         var id = _v.items[_v.index][2];
         WatchUi.popView(WatchUi.SLIDE_RIGHT);
         if (id == :endDay) {
@@ -358,7 +358,7 @@ class QuickMenuDelegate extends TastenDelegate {
     }
 
     function onBack() as Lang.Boolean {
-        if (Input.beruehrungVerwerfen()) { return true; }   // F-R17-68
+        if (Input.beruehrungVerwerfen()) { return true; }
         WatchUi.popView(WatchUi.SLIDE_RIGHT);
         return true;
     }

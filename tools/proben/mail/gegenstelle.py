@@ -18,14 +18,14 @@ Betriebsarten (`--art`):
   langsam   jede Antwort nach `--verzug` Sekunden      -> Fristprobe
   vielzeilig  EHLO-Antwort in 12 Fortsetzungszeilen,
               je `--verzug` Sekunden                   -> die Rechnung aus
-                                                          E-P5a-36 nachstellen
+                                                          der Zustellung nachstellen
   stumm     begruesst und schweigt dann                -> Abbruch
 
-`--mitschnitt DATEI` (seit R17-22, Nr. 401): Die Gegenstelle schreibt die
+`--mitschnitt DATEI`: Die Gegenstelle schreibt die
 zuletzt angenommene Nachricht — Kopf und Rumpf, so wie sie auf der Leitung
 stand — in diese Datei. Daran misst die Probe die Kodierung. Jede Verbindung
 steht als Zeile „Verbindung" im Log; daran misst sie, dass ohne Anmeldedaten
-gar nicht erst verbunden wird (F-R17-46).
+gar nicht erst verbunden wird.
 """
 import argparse, socket, ssl, sys, threading, time
 

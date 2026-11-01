@@ -67,11 +67,11 @@ fi
 # ---- 3a. Demo-Marke -------------------------------------------------------
 # Der Demo-Reset (30 Minuten nach der ersten Änderung, `demo_lib.php`) spielt den Demo-Bestand neu
 # ein, und seine Einsätze bekommen neue Kennungen. Welche Probe er traf,
-# entschied bis R4-04 die Reihenfolge der Muster — eine Voraussetzung, die
-# nirgends stand (Nr. 322). Jetzt schiebt der Prüfstand die Marke des letzten
+# entschied ohne Marke die Reihenfolge der Muster — eine Voraussetzung, die
+# nirgends stand. Jetzt schiebt der Prüfstand die Marke des letzten
 # Resets vor jeder Probe mit `"demo": true` auf „jetzt": dreißig Minuten ohne
 # Reset je Probe. Am Ende stellt er sie zurück, auch nach einem Abbruch.
-# NUR ÖRTLICH: Gegen Staging schreibt er nichts (E-PK-29).
+# NUR ÖRTLICH: Gegen Staging schreibt er nichts.
 demo_marke() {   # demo_marke lesen | demo_marke setzen <unix-sekunden>
     (cd "$WURZEL/server" && php -r 'require "db.php"; require_once "demo_lib.php";
         if (($argv[1] ?? "") === "setzen") { demo_reset_marke_setzen((int)$argv[2]); }
@@ -86,10 +86,10 @@ fi
 # ---- 4. Proben ------------------------------------------------------------
 melde "Proben (${#PROBEN[@]})"
 declare -A ZAHL; fehl=0; nicht=0; DREIFACH=0; WIEDERHOLT=0
-# DIE ENGINES JE STUFE (R87, E-DM-08): `klein` fährt die Browserproben in
+# DIE ENGINES JE STUFE: `klein` fährt die Browserproben in
 # Chromium allein, `neben` und `haupt` in allen drei. Bis zum 20.10.2026
-# (E-DM-07) liefen alle Stufen dreifach; ein voller Lauf dauerte damit
-# länger, als der Container ihn hält (F-DM-11). bericht.py liest es gegen.
+# liefen alle Stufen dreifach; ein voller Lauf dauerte damit
+# länger, als der Container ihn hält. bericht.py liest es gegen.
 if [ "$STUFE" = klein ]; then MOTOREN=(chromium); else MOTOREN=(chromium firefox webkit); fi
 for name in "${PROBEN[@]}"; do
     aufruf=$(python3 -c "
@@ -100,18 +100,18 @@ print(p['aufruf'] if p else '', p['braucht'] if p else '', 'demo' if p and p.get
       'drei' if p and p.get('motoren') is True else '', sep='\t')")
     befehl=$(printf '%s' "$aufruf" | cut -f1); braucht=$(printf '%s' "$aufruf" | cut -f2)
     demo=$(printf '%s' "$aufruf" | cut -f3); drei=$(printf '%s' "$aufruf" | cut -f4)
-    befehl=${befehl//\{stufe\}/$STUFE}   # der Bilderlauf misst je Stufe anders (PK-05)
+    befehl=${befehl//\{stufe\}/$STUFE}   # der Bilderlauf misst je Stufe anders
     if [ -z "$befehl" ]; then
         zeile "?     $name — steht nicht unter \"proben\" in pruefablauf.json"; fehl=$((fehl+1)); continue
     fi
-    # KEIN STILLES ÜBERSPRINGEN (E-KH-12). Was nicht laufen kann, wird
-    # GEZÄHLT und benannt — und steht seit E-PK-46 als „nicht-gemessen" im
-    # Bericht, wo das Tor es als rot liest. Bis dahin fehlte es dort ganz.
+    # KEIN STILLES ÜBERSPRINGEN. Was nicht laufen kann, wird
+    # GEZÄHLT und benannt — und steht als „nicht-gemessen" im
+    # Bericht, wo das Tor es als rot liest.
     ohne() { zeile "--    $name — $1"; nicht=$((nicht+1)); ZAHL[$name]=nicht-gemessen; }
     case "$braucht" in
       # Die Plattform, gegen die gebaut wird — aus `compileSdk` gelesen, nicht
-      # fest geschrieben (Nr. 335): Bis R4-02 stand hier `android-36`, und die
-      # Zeile war grün, wenn 36 lag und die gebrauchte 37.0 fehlte.
+      # fest geschrieben: Stünde hier `android-36`, wäre die
+      # Zeile grün, wenn 36 lag und die gebrauchte 37.0 fehlte.
       android) sdk=$(grep -oE '^\s*compileSdk\s*=\s*[0-9]+' "$WURZEL/android/handy/build.gradle.kts" | grep -oE '[0-9]+$')
                [ -n "$sdk" ] || { ohne "compileSdk in android/handy/build.gradle.kts nicht lesbar"; continue; }
                ls -d "${ANDROID_HOME:-/opt/android-sdk}/platforms/android-$sdk"* >/dev/null 2>&1 || {
@@ -124,8 +124,8 @@ print(p['aufruf'] if p else '', p['braucht'] if p else '', 'demo' if p and p.get
     # Voraussetzung, kein Absturz: `set -u` machte daraus „unbound variable"
     # und eine rote Probe (spaltenregister-wegprobe, 23.09.2026).
     # Nur was OHNE Vorgabe steht: `${ANDROID_HOME:-/opt/android-sdk}` bringt
-    # seine mit, und bis R4-02 galt der Android-Bau deshalb als „nicht
-    # gemessen", sobald ANDROID_HOME nicht exportiert war (F-R4-22). Der
+    # seine mit, und ohne diese Regel galt der Android-Bau als „nicht
+    # gemessen", sobald ANDROID_HOME nicht exportiert war. Der
     # Name wird besitzergreifend gelesen (`*+`), sonst träfe `ANDROID_HOM`.
     leer=""
     for v in $(printf '%s' "$befehl" | grep -oP '\$(?:\{[A-Z_][A-Z0-9_]*+(?!:?[-=])|[A-Z_][A-Z0-9_]*+)' | tr -d '${' | sort -u); do
@@ -135,7 +135,7 @@ print(p['aufruf'] if p else '', p['braucht'] if p else '', 'demo' if p and p.get
     if [ "$name" = syntax-php ]; then
         n=0; s=0
         # Gezählt wird, was `add -A` in den Baum legt (bericht.py baum_hash): auch
-        # neue, noch nicht vorgemerkte Dateien, keine gelöschten (F-PK-37).
+        # neue, noch nicht vorgemerkte Dateien, keine gelöschten.
         while IFS= read -r d; do
             [ -f "$WURZEL/$d" ] || continue
             n=$((n+1)); php -l "$WURZEL/$d" >/dev/null 2>&1 || s=$((s+1))
@@ -145,10 +145,10 @@ print(p['aufruf'] if p else '', p['braucht'] if p else '', 'demo' if p and p.get
         continue
     fi
     # Die Marke steht im Protokoll: Wer einen Reset mitten in einer Probe
-    # vermutet, sieht hier, ob sie geschoben war (Nr. 322).
-    # JE LAUF, NICHT JE PROBE (Nr. 393, F3). Seit R87 läuft eine Probe in
-    # `neben` dreimal hintereinander, und bis Nr. 393 stand die Marke vor
-    # dieser Schleife: dreißig Minuten für drei Läufe. Der Bilderlauf
+    # vermutet, sieht hier, ob sie geschoben war.
+    # JE LAUF, NICHT JE PROBE. Eine Probe läuft in
+    # `neben` dreimal hintereinander, und stand die Marke vor
+    # dieser Schleife, hieß das dreißig Minuten für drei Läufe. Der Bilderlauf
     # braucht in Chromium allein 26 davon; am 20.10.2026 begann der
     # WebKit-Lauf bei Minute 47, der Reset kam dazwischen, und 80 Aufnahmen
     # fielen aus, weil die Kennungen fehlten.
@@ -159,9 +159,9 @@ print(p['aufruf'] if p else '', p['braucht'] if p else '', 'demo' if p and p.get
             && zeile "      $name${1:+ [$1]}: Demo-Marke auf $(date -u -d "@$jetzt" +%H:%M:%S) UTC — kein Reset in den nächsten 30 min" \
             || zeile "      $name${1:+ [$1]}: Demo-Marke NICHT gesetzt — ein Demo-Reset kann diese Probe treffen"
     }
-    # Die Zeit je Probe steht in der Zeile (RP-01): Die Nebenstufe brauchte
+    # Die Zeit je Probe steht in der Zeile: Die Nebenstufe brauchte
     # 1 266 s, und niemand konnte sagen, wofür.
-    # DREI ENGINES (R87, Konzept DM), in `klein` eine. Eine Probe mit
+    # DREI ENGINES, in `klein` eine. Eine Probe mit
     # "motoren": true läuft einmal je Engine aus MOTOREN, mit MOTOR=… in der Umgebung — `tools/motor.mjs` liest
     # es, und jeder Zwischenschritt (php, python, bash) reicht es weiter. Grün
     # ist sie nur, wenn alle drei grün sind; rot nennt sie, welche nicht.
@@ -178,14 +178,14 @@ print(p['aufruf'] if p else '', p['braucht'] if p else '', 'demo' if p and p.get
             else
                 zeile "ROT   $name [$mo]  $((SECONDS - t1)) s  (siehe /tmp/pruefstand-$name-$mo.log)"; rot+=("$mo")
             fi
-            # Wiederholte Seitenwechsel in WebKit (E-DM-10, motor.mjs) und neu
-            # angemeldete Rollen, deren Seite nicht mehr antwortete (Bedienprobe,
-            # Nr. 393): genannt, nicht verschwiegen — grün bleibt grün, aber man
+            # Wiederholte Seitenwechsel in WebKit (motor.mjs) und neu
+            # angemeldete Rollen, deren Seite nicht mehr antwortete (Bedienprobe):
+            # genannt, nicht verschwiegen — grün bleibt grün, aber man
             # sieht, wie oft.
             w=$(grep -cE '^WebKit-(Wiederholung|Neuanmeldung):' "/tmp/pruefstand-$name-$mo.log" 2>/dev/null || true)
             [ "${w:-0}" -gt 0 ] && zeile "      $name [$mo]: $w Mal wiederholt (WebKit-Stolpern, E-DM-10: Seitenwechsel oder Neuanmeldung)"
             WIEDERHOLT=$((WIEDERHOLT + ${w:-0}))
-            # Was motor.mjs in WebKit zurückhält (Nr. 393): CSP-Berichte nach
+            # Was motor.mjs in WebKit zurückhält: CSP-Berichte nach
             # Screenshots, Abrufe, die ein Seitenwechsel abbrach. Genannt, nicht
             # verschwiegen — die Zeile steht am Ende des Probenprotokolls.
             grep -hE '^WebKit-(Screenshot|Seitenwechsel): ' "/tmp/pruefstand-$name-$mo.log" 2>/dev/null \
@@ -214,7 +214,7 @@ if [ -n "$DEMO_ALT" ]; then
 fi
 melde "Bericht"
 # Die Flächen leitet bericht.py aus Berührung UND Bau ab — „gebaut" nur nach
-# einem grünen Bau (F-PK-34, E-PK-44).
+# einem grünen Bau.
 args=(schreiben --stufe "$STUFE" --basis "$BASIS"
       --konfiguration "$([ "$STUFE" = haupt ] && echo alles || echo web)")
 for k in "${!ZAHL[@]}"; do args+=(--zahl "$k=${ZAHL[$k]}"); done
@@ -222,8 +222,7 @@ for k in "${!ZAHL[@]}"; do args+=(--zahl "$k=${ZAHL[$k]}"); done
 # gegen (bericht.py, Lage 6): Ein Bericht mit Browserproben ohne diese Zeile
 # ist rot.
 [ "$DREIFACH" -gt 0 ] && args+=(--zahl "motoren=$(IFS=+; echo "${MOTOREN[*]}")")
-# Ohne Bericht ist der Lauf rot, wie grün die Proben auch waren (BR-04,
-# Nr. 314): Bis dahin endete er hier mit rc 0 und „0 rot", auch wenn
+# Ohne Bericht ist der Lauf rot, wie grün die Proben auch waren: Bis dahin endete er hier mit rc 0 und „0 rot", auch wenn
 # bericht.py abgestürzt war — ein Lauf ohne Beleg, der sich als Beleg meldete.
 rcb=0; python3 "$HIER/bericht.py" "${args[@]}" || rcb=$?
 if [ "$rcb" -ne 0 ]; then
@@ -234,6 +233,6 @@ fi
 melde "$fehl rot, $nicht nicht gemessen, $(( ${#PROBEN[@]} - fehl - nicht )) grün · $SECONDS s"
 [ "$WIEDERHOLT" -gt 0 ] && zeile "$WIEDERHOLT Wiederholungen in WebKit (Seitenwechsel oder Neuanmeldung) — im Prüfdokument nennen (E-DM-10)"
 [ "$nicht" -gt 0 ] && zeile "Was nicht gemessen werden konnte, gehört in das Prüfdokument — an den Anfang."
-# Nicht gemessen ist nicht grün (E-KH-12, E-PK-46): Der Bericht trägt es, und
+# Nicht gemessen ist nicht grün: Der Bericht trägt es, und
 # das Tor liest es als rot — dann soll es der Lauf auch sein.
 exit $([ "$fehl" -gt 0 ] || [ "$nicht" -gt 0 ] && echo 1 || echo 0)

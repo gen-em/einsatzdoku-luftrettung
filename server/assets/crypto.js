@@ -6,10 +6,10 @@
  *      · Hälfte    (256 Bit): bleibt IM BROWSER, geht in den Datenschlüssel
  *      · authToken (256 Bit): geht statt des Passworts zum Server
  *    Der Server sieht das Passwort damit nie und kann nichts entschlüsseln.
- *  - SEIT S10 ist die Hälfte nicht mehr selbst der Datenschlüssel: Sie wird
+ *  - Die Hälfte ist nicht selbst der Datenschlüssel: Sie wird
  *    per HKDF mit dem SERVER-ANTEIL des Kontos gemischt, der aus `config.php`
  *    stammt und nur an die angemeldete Sitzung geht. Ein Datenbankabzug allein
- *    reicht damit nicht mehr für einen Offline-Angriff aufs Passwort — der
+ *    reicht damit nicht für einen Offline-Angriff aufs Passwort — der
  *    Server kann trotzdem nichts öffnen, er kennt die Hälfte nicht.
  *  - Ein zufälliger Inhaltsschlüssel (CK) verschlüsselt die eigentlichen
  *    Daten (AES-256-GCM). CK liegt doppelt verpackt auf dem Server:
@@ -21,16 +21,12 @@
 'use strict';
 const EdCrypto = (() => {
 
-  /* Rundenzahl der Ableitung — KEINE Konstante mehr (M2-01).
+  /* Rundenzahl der Ableitung — KEINE Konstante.
    *
-   * Sie stand hier fest verdrahtet, und damit war ihre Aenderung eine
-   * Aussperrung aller Bestandskonten: Aus demselben Passwort entstuende ein
-   * anderes Token, und der gespeicherte Hash passte nicht mehr. Der Wert
-   * kommt jetzt je Konto vom Server (users.kdf_iter).
-   *
-   * `ITER_ALT` (310 000) stand hier bis Web 22.7.0 fuer die einteiligen
-   * Backup-Dateien der Fassung 2, die die Rundenzahl nicht im Kopf trugen.
-   * Der Lesezweig ist mit S11-12 gefallen (E-S11-85). */
+   * Fest verdrahtet waere ihre Aenderung eine Aussperrung aller
+   * Bestandskonten: Aus demselben Passwort entstuende ein anderes Token, und
+   * der gespeicherte Hash passte nicht mehr. Der Wert kommt deshalb je Konto
+   * vom Server (users.kdf_iter). */
   const te = new TextEncoder(), td = new TextDecoder();
 
   /** Rundenzahl pruefen. Wirft statt zu raten — siehe deriveKeys. */
@@ -47,8 +43,7 @@ const EdCrypto = (() => {
   const fromHex = hex => new Uint8Array(
     (hex.match(/../g) || []).map(h => parseInt(h, 16)));
   const toB64 = buf => btoa(String.fromCharCode(...new Uint8Array(buf)));
-  /* EINE SCHLEIFE, NICHT `Uint8Array.from(atob(s), fn)` (Web 21.6.1, R4-27,
-   * Nr. 37). Die kurze Form läuft über den Iterator der Zeichenkette und ruft
+  /* EINE SCHLEIFE, NICHT `Uint8Array.from(atob(s), fn)`. Die kurze Form läuft über den Iterator der Zeichenkette und ruft
    * je Zeichen eine Funktion — beim Entschlüsseln eines Jahres mit 4071
    * Einsätzen waren das im Messstand 1027 ms von rund 1750 ms, mehr als das
    * Entschlüsseln selbst. Die Schleife braucht dort 123 ms, bei gleichem
@@ -66,24 +61,21 @@ const EdCrypto = (() => {
 
   /* ---- Schlüsselableitung aus dem Passwort ----------------------------
    *
-   * DIE RUNDENZAHL IST PFLICHT UND HAT KEINEN VORGABEWERT (M2-01).
+   * DIE RUNDENZAHL IST PFLICHT UND HAT KEINEN VORGABEWERT.
    *
-   * Das ist die wichtigste Absicherung dieses Umbaus. Ein Vorgabewert würde
-   * jede vergessene Aufrufstelle stillschweigend mit der alten Zahl rechnen
-   * lassen — und weil heute fast alle Konten noch die alte Zahl tragen, fiele
-   * das NICHT AUF. Es fiele erst an dem Tag auf, an dem jemand den Zielwert
+   * Das ist die wichtigste Absicherung hier. Ein Vorgabewert würde jede
+   * vergessene Aufrufstelle stillschweigend mit einer festen Zahl rechnen
+   * lassen — und solange die meisten Konten diese Zahl tragen, fiele das
+   * NICHT AUF. Es fiele erst an dem Tag auf, an dem jemand den Zielwert
    * anhebt, und dann als „Passwort falsch" bei Konten, die ihr Passwort
    * richtig eingegeben haben.
    *
    * Lieber ein lauter Fehler beim Entwickeln als ein leiser im Betrieb.
    */
-  /* SEIT S10 HEISST DIE ERSTE HAELFTE `haelfteHex` (E-S10-04). Sie IST der
-   * Datenschluessel nicht mehr; sie ist eine von zwei Zutaten — die andere
-   * ist der Server-Anteil. Der Name ist mitgewandert, obwohl das jede
-   * Aufrufstelle anfasst, und genau deshalb: Ein Feld, das nach dem
-   * Datenschluessel benannt ist und keiner ist, wird beim naechsten Mal
-   * wieder als einer benutzt. Der alte Name kommt im Code nicht mehr vor;
-   * wo er noch steht, erzaehlt er diese Umbenennung (version.php). */
+  /* DIE ERSTE HAELFTE HEISST `haelfteHex`. Sie IST nicht der
+   * Datenschluessel; sie ist eine von zwei Zutaten — die andere ist der
+   * Server-Anteil. Ein Feld, das nach dem Datenschluessel benannt ist und
+   * keiner ist, wird beim naechsten Mal wieder als einer benutzt. */
   async function deriveKeys(password, saltHex, iter) {
     pruefeRunden(iter, 'deriveKeys');
     const base = await crypto.subtle.importKey(
@@ -98,11 +90,10 @@ const EdCrypto = (() => {
     };
   }
 
-  /* ---- Der Server-Anteil (S10, E-S10-04 bis E-S10-08) -------------------
+  /* ---- Der Server-Anteil ------------------------------------------------
    *
-   * WAS SICH GEAENDERT HAT. Bis Web 19.7.0 war die erste Haelfte der
-   * PBKDF2-Ableitung unmittelbar der Datenschluessel. Seit S10 steht eine
-   * zweite Ableitung dazwischen:
+   * ZWEI ZUTATEN. Zwischen der ersten Haelfte der PBKDF2-Ableitung und dem
+   * Datenschluessel steht eine zweite Ableitung:
    *
    *     dk = HKDF-SHA256(ikm  = Haelfte (32 Byte),
    *                      salt = Konto-Anteil (32 Byte aus KONTO_ANTEILE),
@@ -111,7 +102,7 @@ const EdCrypto = (() => {
    * Der Konto-Anteil kommt vom Server und nur an die angemeldete Sitzung. Wer
    * die Datenbank hat, hat ihn NICHT — er liegt in `config.php`. Das ist der
    * ganze Gewinn: Ein Datenbankabzug allein genuegt nicht mehr, um ein
-   * Passwort offline durchzuprobieren (Krypto-Review K-3, Weg 1).
+   * Passwort offline durchzuprobieren.
    *
    * WARUM HKDF UND NICHT „die beiden Werte aneinanderhaengen und hashen".
    * HKDF ist genau fuer diesen Fall gemacht (RFC 5869): aus einem Geheimnis
@@ -124,7 +115,7 @@ const EdCrypto = (() => {
    * Wer eine `edka1:`-Huelle oeffnen will und keinen Anteil hat, bekommt
    * einen Fehler — keinen Rueckfall auf die Haelfte. Ein Rueckfall ergaebe
    * einen Schluessel, der nicht passt, und der Fehlschlag saehe aus wie ein
-   * falsches Passwort. Genau diese Verwechslung soll S10 abschaffen.
+   * falsches Passwort. Genau diese Verwechslung darf nicht entstehen.
    */
   const HUELLE_PRAEFIX = 'edka1:';
   const HKDF_INFO = 'edka1|dk';
@@ -187,12 +178,12 @@ const EdCrypto = (() => {
 
   /* ---- AES-256-GCM ----------------------------------------------------- */
 
-  /* DER IMPORTIERTE SCHLUESSEL WIRD GEMERKT (E-S2-16, S2/AP9).
+  /* DER IMPORTIERTE SCHLUESSEL WIRD GEMERKT.
    *
-   * Bis Web 12.1.0 rief jedes `encrypt()` und jedes `decrypt()` ein eigenes
-   * `crypto.subtle.importKey()`. Bei einem Datensatz faellt das nicht auf;
-   * die Suche eines Kontos mit 5000 Einsaetzen hat es GEMESSEN 4880-mal
-   * getan, fuer denselben Schluessel, mit derselben Verwendung.
+   * Riefe jedes `encrypt()` und jedes `decrypt()` ein eigenes
+   * `crypto.subtle.importKey()`, fiele das bei einem Datensatz nicht auf;
+   * die Suche eines Kontos mit 5000 Einsaetzen tat es GEMESSEN 4880-mal,
+   * fuer denselben Schluessel, mit derselben Verwendung.
    *
    * WAS GEMERKT WIRD, IST DAS VERSPRECHEN UND NICHT DER SCHLUESSEL. Im Fach
    * liegt die Promise, nicht der fertige `CryptoKey`. Der Unterschied zaehlt
@@ -204,8 +195,9 @@ const EdCrypto = (() => {
    * KEIN SICHERHEITSVERLUST: Hierher kommt nur, was als Hex vorliegt — ein
    * Wiederherstellungs-, Datei- oder fremder Schluessel beim Freigeben; das
    * Fach ist die engere Form (`extractable: false`). Der Inhaltsschluessel
-   * selbst kommt seit R17-25 schon als `CryptoKey` und geht oben vorbei. Das Fach wird beim Abmelden geraeumt
-   * (`clearSession`), damit nach dem Sperren auch dieses Stueck fort ist.
+   * selbst kommt schon als `CryptoKey` und geht oben vorbei. Das Fach wird
+   * beim Abmelden geraeumt (`clearSession`), damit nach dem Sperren auch
+   * dieses Stueck fort ist.
    *
    * EIN SCHEITERNDER IMPORT WIRD NICHT GEMERKT: Eine abgelehnte Promise im
    * Fach waere ein Fehler, der sich nicht mehr abschuetteln laesst — der
@@ -219,9 +211,9 @@ const EdCrypto = (() => {
   const schluesselfach = new Map();
 
   async function aesKey(keyHex, usages) {
-    /* EIN FERTIGER SCHLÜSSEL GEHT DURCH (R17-25, Nr. 370). Der
-     * Inhaltsschlüssel kommt seit Web 23.4.0 als nicht extrahierbarer
-     * `CryptoKey` aus der Ablage, nicht mehr als Hex. Jeder Verbraucher
+    /* EIN FERTIGER SCHLÜSSEL GEHT DURCH. Der Inhaltsschlüssel kommt als
+     * nicht extrahierbarer `CryptoKey` aus der Ablage, nicht als Hex.
+     * Jeder Verbraucher
      * reicht ihn an `encrypt()`/`decrypt()` weiter, und hier ist die eine
      * Stelle, an der beide Formen zusammenlaufen: Hex (Wiederherstellungs-,
      * Datei- und Datenschlüssel, ein fremder Schlüssel beim Freigeben) wird
@@ -240,10 +232,10 @@ const EdCrypto = (() => {
   }
 
   // Klartext (String) -> base64(iv || ciphertext)
-  /* ---- Formatkennung vor dem Chiffretext (M2-10) -----------------------
+  /* ---- Formatkennung vor dem Chiffretext -------------------------------
    *
-   * Ein Chiffretext bestand bis Web 5.0.1 aus Zufallswert und Nutzdaten, ohne
-   * jede Angabe darüber, mit welchem Verfahren er entstanden ist. Wird das
+   * Ein Chiffretext nur aus Zufallswert und Nutzdaten trüge keine Angabe
+   * darüber, mit welchem Verfahren er entstanden ist. Wird das
    * Verfahren je gewechselt — und irgendwann wird es das —, gibt es kein
    * Merkmal, an dem sich alt von neu unterscheiden ließe. Man müsste raten
    * und am Fehlschlag erkennen, dass man falsch geraten hat; ein
@@ -297,19 +289,19 @@ const EdCrypto = (() => {
     return td.decode(pt);
   }
 
-  /* ---- Schlüsselhüllen: öffnen und bauen (S10, E-S10-08) ---------------
+  /* ---- Schlüsselhüllen: öffnen und bauen -------------------------------
    *
    * WARUM DAFUER ZWEI EIGENE FUNKTIONEN UND NICHT `decrypt`/`encrypt`.
    * `decrypt()` liest die Kennung als FASSUNG DES VERFAHRENS und weist alles
    * ausser `edk1:` mit „neuere Programmfassung" ab. Eine Huelle traegt aber
-   * zwei verschiedene Dinge im Praefix: die Fassung UND, seit S10, die
-   * Kennung des Anteils. Beides in `decrypt()` zu vermengen hiesse, jedem
+   * zwei verschiedene Dinge im Praefix: die Fassung UND die Kennung des
+   * Anteils. Beides in `decrypt()` zu vermengen hiesse, jedem
    * Huellenwechsel eine Fehlermeldung mitzugeben — und die `pat_blob`-Seite
    * mit einer Kennung zu belasten, die dort nie vorkommt.
    *
    * Die Trennung ist zugleich die Antwort auf die Frage, WO die Kennung
    * ueberhaupt hingehoert: an die Huelle, nicht an den Datensatz. `encrypt()`
-   * und `decrypt()` bleiben deshalb Wort fuer Wort, wie sie waren.
+   * und `decrypt()` kennen deshalb keine Anteil-Kennung.
    */
 
   /** Eine Huelle oeffnen — beide Fassungen und der Bestand ohne Praefix. */
@@ -328,7 +320,7 @@ const EdCrypto = (() => {
    * `kennung` ist ANTEIL_KENNUNG aus der Seite: der Anteil, mit dem NEUE
    * Huellen entstehen. Ist sie null (kein Anteil ausgeliefert, oder
    * Demo-Konto), entsteht die Altfassung `edk1:` — der Weg bricht dann nicht,
-   * er stellt nur nicht um (E-S10-08).
+   * er stellt nur nicht um.
    */
   async function huelleBauen(dkHex, ckHex, kennung) {
     const roh = await encrypt(dkHex, ckHex);        // liefert `edk1:` + base64
@@ -364,15 +356,16 @@ const EdCrypto = (() => {
   })();
 
   /**
-   * Prüft einen eingegebenen Wiederherstellungsschlüssel (M2-06).
+   * Prüft einen eingegebenen Wiederherstellungsschlüssel.
    *
    * WARUM DAS NÖTIG IST
-   * Normalisiert und gehasht wurde bisher alles, was ankam — ohne zu prüfen,
-   * ob die Länge stimmt oder die Zeichen überhaupt aus dem Alphabet stammen.
+   * Ohne Prüfung würde alles normalisiert und gehasht, was ankommt — ohne
+   * Blick darauf, ob die Länge stimmt oder die Zeichen überhaupt aus dem
+   * Alphabet stammen.
    * Das Alphabet lässt die klassischen Verwechslungszeichen bewusst weg
    * (0/O, 1/I/L, U). Tippt jemand eines davon, bleibt es nach der
    * Normalisierung stehen, ergibt einen anderen Hashwert und damit einen
-   * falschen Schlüssel. Die Meldung lautete dann „passt nicht" — dieselbe
+   * falschen Schlüssel. Die Meldung lautete „passt nicht" — dieselbe
    * Meldung wie bei einem falschen Zettel.
    *
    * Und das passiert in genau der Lage, in der jemand ohnehin unter Druck
@@ -432,7 +425,7 @@ const EdCrypto = (() => {
 
   /* Aus dem (normalisierten) Code einen AES-Schlüssel machen.
    *
-   * Prüft VOR der Ableitung (M2-06) und wirft bei einer unbrauchbaren
+   * Prüft VOR der Ableitung und wirft bei einer unbrauchbaren
    * Eingabe — sonst entsteht klaglos ein Schlüssel, der nur eben nicht
    * passt, und der Unterschied zwischen Tippfehler und falschem Zettel geht
    * verloren. Wer die Unterscheidung selbst anzeigen will, ruft vorher
@@ -482,19 +475,19 @@ const EdCrypto = (() => {
     return toHex(d).slice(0, 16);
   }
 
-  /* ---- Die Ablage des Inhaltsschlüssels (R17-25, Backlog Nr. 370) -------
+  /* ---- Die Ablage des Inhaltsschlüssels ---------------------------------
    *
-   * WAS SICH GEÄNDERT HAT. Bis Web 23.3.x lagen Daten- und Inhaltsschlüssel
-   * als Hex im `sessionStorage` des Tabs (`edk`, `pck`). Ein Skript, das in
-   * die Seite gerät (Lage D), konnte beide lesen und mitnehmen — und weil der
-   * Inhaltsschlüssel nie wechselt (F-R17-10), öffnete ein einmal
-   * mitgenommener jeden späteren Block, auch nachdem die Lücke zu war.
+   * WARUM KEIN HEX IM `sessionStorage`. Lägen Daten- und Inhaltsschlüssel
+   * als Hex im `sessionStorage` des Tabs, könnte ein Skript, das in die
+   * Seite gerät (Lage D), beide lesen und mitnehmen — und weil der
+   * Inhaltsschlüssel nie wechselt, öffnete ein einmal mitgenommener jeden
+   * späteren Block, auch nachdem die Lücke zu ist.
    *
-   * Jetzt liegt EIN Ding in der Ablage: der Inhaltsschlüssel als `CryptoKey`
+   * Deshalb liegt EIN Ding in der Ablage: der Inhaltsschlüssel als `CryptoKey`
    * mit `extractable: false` (AES-GCM, `encrypt` und `decrypt`). Ein Skript
    * in der Seite kann damit weiter entschlüsseln lassen, solange es läuft,
    * den Schlüssel aber nicht herausholen. Der Datenschlüssel wird nach dem
-   * Entsperren nicht mehr aufbewahrt; wer ihn braucht (Passwort ändern,
+   * Entsperren nicht aufbewahrt; wer ihn braucht (Passwort ändern,
    * Wiederherstellungsschlüssel und Rückweg erneuern), fragt ohnehin nach dem
    * Passwort und leitet ihn neu ab.
    *
@@ -503,20 +496,20 @@ const EdCrypto = (() => {
    * der Browser gibt ihn beim Lesen als dasselbe nicht extrahierbare Objekt
    * zurück.
    *
-   * WAS DAS KOSTET, AUSGESPROCHEN (E-R17-76):
+   * WAS DAS KOSTET, AUSGESPROCHEN:
    *   (1) Die Ablage gilt für den URSPRUNG, nicht für den Tab: Alle Tabs
    *       dieser Anlage teilen den Schlüssel. Das ist gewollt — ein neuer Tab
-   *       fragt nicht mehr nach dem Passwort (Nr. 406). Eine Trennung je Tab
+   *       fragt nicht nach dem Passwort. Eine Trennung je Tab
    *       brächte nichts: Ein Skript in einem Tab erreicht dieselbe Datenbank.
    *   (2) Die Ablage überlebt das Schließen des Browsers. Geräumt wird sie
    *       beim Abmelden, beim Anmelden, beim Ablauf der Sitzung und von jeder
    *       Seite, die nach Ablauf der Frist lädt (`keyguard.js`). Wer den
    *       Browser schließt, ohne sich abzumelden, lässt sie bis dahin auf der
-   *       Platte liegen — `sessionStorage` tat das nur mit
+   *       Platte liegen — `sessionStorage` täte das nur mit
    *       Sitzungswiederherstellung (Bedrohungsmodell, Lage F).
    *   (3) Was unter dem Inhaltsschlüssel verpackt liegt, kann ein Skript in
    *       der Seite weiter auspacken — das private Schlüsselpaar der
-   *       Ortsdaten etwa (E-R17-77). Nicht extrahierbar ist der
+   *       Ortsdaten etwa. Nicht extrahierbar ist der
    *       Inhaltsschlüssel, nicht alles, was er öffnet.
    *
    * OHNE INDEXEDDB (gesperrter Speicher, manche privaten Fenster) liegt der
@@ -586,7 +579,7 @@ const EdCrypto = (() => {
     } catch (e) { return null; }
   }
 
-  /** Die Frist von vorn zählen lassen (R44): nur der Zeitstempel. */
+  /** Die Frist von vorn zählen lassen: nur der Zeitstempel. */
   async function inhaltAnfassen(eintrag) {
     eintrag.zeit = Date.now();
     if (ablageImSpeicher) { return; }
@@ -601,13 +594,13 @@ const EdCrypto = (() => {
     catch (e) { /* keine Ablage — dann liegt dort auch nichts */ }
   }
 
-  /* DIE FÄCHER DER FASSUNGEN BIS 23.3.x. Ein Tab, der über die Auslieferung
-   * hinweg offen war, trägt dort noch Daten- und Inhaltsschlüssel als Hex;
-   * niemand liest sie mehr, aber liegen bleiben sollen sie nicht. Jede Seite
+  /* ALTE FÄCHER. Ein Tab, der über eine Auslieferung hinweg offen war, kann
+   * dort noch Daten- und Inhaltsschlüssel als Hex tragen; niemand liest
+   * sie, aber liegen bleiben sollen sie nicht. Jede Seite
    * mit diesem Skript räumt sie beim Laden. */
   const ALTE_FAECHER = ['edk', 'pck', 'pckb', 'pckt'];
   try { ALTE_FAECHER.forEach(k => sessionStorage.removeItem(k)); } catch (e) { /* kein Speicher */ }
-  /* ---- Vormerkfach für die Anmeldung (M2-01) ---------------------------
+  /* ---- Vormerkfach für die Anmeldung -----------------------------------
    *
    * WARUM ES DAS BRAUCHT
    * Die Anmeldung leitet für mehrere Rundenzahlen ab, weiß aber nicht, welche
@@ -623,16 +616,15 @@ const EdCrypto = (() => {
    * beliebiges neues Token setzen — das wäre nichts anderes als eine
    * Passwortänderung ohne Kenntnis des Passworts.
    *
-   * DAS FELD HIESS BIS S10 `dk` UND HEISST JETZT `hf`. Es hielt schon immer
-   * dieselben Bytes; seit S10 sind sie nicht mehr der Datenschlüssel, sondern
-   * dessen erste Zutat (E-S10-04). Ein Feld, das `dk` heißt und keiner ist,
-   * wird beim nächsten Mal wieder als einer benutzt. Ein Fach aus der Zeit
-   * davor liefert `holeAbleitungen()` als `null` zurück — dann erscheint der
-   * Entsperrdialog, und das ist das richtige Verhalten für eine Anmeldung,
+   * DAS FELD HEISST `hf`, NICHT `dk`. Seine Bytes sind nicht der
+   * Datenschlüssel, sondern dessen erste Zutat. Ein Feld, das `dk` heißt
+   * und keiner ist, wird beim nächsten Mal wieder als einer benutzt. Ein
+   * Fach in älterer Form liefert `holeAbleitungen()` als `null` zurück —
+   * dann erscheint der Entsperrdialog, und das ist das richtige Verhalten für eine Anmeldung,
    * die über einen Deploy hinweg unterwegs war.
    *
-   * SEIT S10 LIEGT ES NACH JEDER ANMELDUNG DA, nicht mehr nur bei mehreren
-   * Rundenzahlen (E-S10-07). Der Grund: Ob die Hülle dieses Kontos den Anteil
+   * ES LIEGT NACH JEDER ANMELDUNG DA, nicht nur bei mehreren
+   * Rundenzahlen. Der Grund: Ob die Hülle dieses Kontos den Anteil
    * braucht, weiß erst die angemeldete Seite — `login.php` kennt weder
    * `KDF_ITER` noch `PAT_WRAP`. Das Fach ist damit einen Seitenwechsel lang
    * belegt statt gar nicht; geräumt wird es unverändert von der ersten Seite,
@@ -652,25 +644,24 @@ const EdCrypto = (() => {
   }
   const vergissAbleitungen = () => sessionStorage.removeItem(S_VOR);
 
-  /* DAS VORMERKFACH DES PASSWORTWECHSELS GEHOERT MIT GERAEUMT (Nr. 22, V-10).
+  /* DAS VORMERKFACH DES PASSWORTWECHSELS GEHOERT MIT GERAEUMT.
    *
    * einstellungen.php legt beim Passwortwechsel den NEUEN Datenschluessel
    * unter 'edk_neu' ab und loest das Fach beim naechsten Aufruf desselben
-   * Reiters wieder auf (M2-07). Auf diesem Weg ist es einen Seitenwechsel
+   * Reiters wieder auf. Auf diesem Weg ist es einen Seitenwechsel
    * lang belegt und danach leer.
    *
    * Kommt der Aufruf aber nie — die Uebertragung bricht ab, die Nutzerin geht
-   * zurueck oder meldet sich ab —, blieb ein vollwertiger Datenschluessel im
-   * sessionStorage des Tabs liegen, und zwar ueber das Abmelden hinaus:
-   * clearSession() kannte nur 'edk', 'pck' und 'edkvor'. Pruefdokument P0,
-   * Punkt V-10, erwartet nach dem Abmelden weder Daten- noch
-   * Inhaltsschluessel — fuer dieses eine Fach traf das nicht zu.
+   * zurueck oder meldet sich ab —, bliebe ohne diese Zeile ein vollwertiger
+   * Datenschluessel im sessionStorage des Tabs liegen, und zwar ueber das
+   * Abmelden hinaus. Nach dem Abmelden soll aber weder Daten- noch
+   * Inhaltsschluessel uebrig sein.
    *
    * Auf dem aufloesenden Weg aendert die Zeile nichts: Dort wird 'edk_neu'
    * ausgelesen und entfernt, BEVOR clearSession() laeuft. */
   const S_NEU = 'edk_neu';
 
-  /* SEIT R17-25 ASYNCHRON. Das Löschen in IndexedDB ist ein Vorgang, der
+  /* ASYNCHRON. Das Löschen in IndexedDB ist ein Vorgang, der
    * erst fertig ist, wenn die Datenbank es bestätigt; ein Seitenwechsel
    * gleich danach kann ihn abbrechen. Die Anmeldung wartet deshalb darauf,
    * bevor sie sendet. Die Abmeldeseite wartet NICHT (das brach Aufrufe ab,
@@ -683,7 +674,7 @@ const EdCrypto = (() => {
       sessionStorage.removeItem(S_NEU);
     } catch (e) { /* kein Speicher */ }
     vergissAbleitungen();
-    /* DAS SCHLUESSELFACH GEHOERT MIT GERAEUMT (S2/AP9). Im Regelfall laedt
+    /* DAS SCHLUESSELFACH GEHOERT MIT GERAEUMT. Im Regelfall laedt
        die Seite nach dem Abmelden ohnehin neu, und damit ist der Speicher des
        Skripts fort. Wird `clearSession()` aber OHNE Seitenwechsel gerufen,
        laege dort weiterhin ein brauchbarer `CryptoKey` — auffindbar nur mit
@@ -695,14 +686,12 @@ const EdCrypto = (() => {
 
   /* ---- Backup-Container ------------------------------------------------
    *
-   * Seit Web 23 gibt es nur noch die mehrteilige Fassung 4 (unten). Die
-   * einteiligen Fassungen 2 und 3 ("EDBAK2" 0x00 0x02/0x03, ein einziger
-   * AES-GCM-Container) schrieb der Browser bis Web 10 und las sie bis
-   * Web 22.7.0 (`sealBackup()`, `openBackup()`); mit S11-12 sind beide
-   * gefallen (E-S11-85, Backlog Nr. 46). `dateiArt()` erkennt eine solche
-   * Datei weiter, damit die Ablehnung sagen kann, was sie ist.
+   * Es gibt nur die mehrteilige Fassung 4 (unten). Die einteiligen
+   * Fassungen 2 und 3 ("EDBAK2" 0x00 0x02/0x03, ein einziger
+   * AES-GCM-Container) werden nicht gelesen; `dateiArt()` erkennt eine
+   * solche Datei, damit die Ablehnung sagen kann, was sie ist.
    *
-   * WARUM DIE RUNDENZAHL IM KOPF STEHT (S7): Stuende sie nur als Konstante
+   * WARUM DIE RUNDENZAHL IM KOPF STEHT: Stuende sie nur als Konstante
    * im Code, machte ihr Anheben jede erzeugte Datei unlesbar — mit der
    * Meldung eines falschen Passworts. Jedes Teil der Fassung 4 traegt sie.
    *
@@ -726,13 +715,13 @@ const EdCrypto = (() => {
     return new Uint8Array(await new Response(s).arrayBuffer());
   }
   async function gunzip(bytes) {
-    /* Verfuegbarkeit pruefen wie beim Packen (M2-11).
+    /* Verfuegbarkeit pruefen wie beim Packen.
      *
-     * gzip() oben fragt seit jeher nach, ob CompressionStream existiert, und
-     * legt das Teil sonst ungepackt an. gunzip() fragte nicht — auf
-     * einem Browser ohne DecompressionStream endete das Oeffnen eines
-     * gepackten Backups in einem ReferenceError, der weiter oben als
-     * "Passwort falsch oder Datei beschaedigt" ankam.
+     * gzip() oben fragt nach, ob CompressionStream existiert, und legt das
+     * Teil sonst ungepackt an. Fragte gunzip() nicht, endete auf einem
+     * Browser ohne DecompressionStream das Oeffnen eines gepackten Backups
+     * in einem ReferenceError, der weiter oben als "Passwort falsch oder
+     * Datei beschaedigt" ankaeme.
      *
      * Das ist die denkbar irrefuehrendste Auskunft: Die Datei ist in Ordnung,
      * das Passwort stimmt, und die betroffene Person tippt es zehnmal neu.
@@ -749,7 +738,7 @@ const EdCrypto = (() => {
 
   /* ---- Containerfassung 4: ein ZIP mit versiegelten Teilen -------------
    *
-   * WOFUER (Konzept S2, E-S2-10). Ein Backup mit 5000 Einsaetzen traegt
+   * WOFUER. Ein Backup mit 5000 Einsaetzen traegt
    * rund drei Millionen Spurpunkte. Als EINE Zeichenkette ist das ein
    * Browserschritt jenseits jedes Budgets — und der Rueckweg ein POST, den
    * kein Webspace annimmt. Fassung 4 zerlegt die Datei deshalb in Teile:
@@ -760,9 +749,9 @@ const EdCrypto = (() => {
    *   spuren/0001.edbak …     je Teil eine Liste {spur_ref, punkte, stufe, …}
    *                           (seit Nutzlast 13; bis Nutzlast 12 {spur_ref, blob}, SPUR1)
    *
-   * Bis Web 11.0.0 stand statt Kopf und Eintragsteilen EIN `kern.edbak`.
-   * Auch der war bei grossen Bestaenden zu gross — fuer den Speicher des
-   * Servers wie fuer einen POST; seit 11.1.0 zerfaellt er in Fenster.
+   * Kopf und Eintragsteile sind getrennt, kein einzelner `kern.edbak`: Der
+   * waere bei grossen Bestaenden zu gross — fuer den Speicher des Servers
+   * wie fuer einen POST; deshalb zerfaellt er in Fenster.
    *
    * JEDES TEIL IST DERSELBE AES-GCM-CONTAINER wie bisher — mit zwei
    * Unterschieden, und beide haben einen Grund:
@@ -957,8 +946,8 @@ const EdCrypto = (() => {
    *
    * 'zip'   beginnt mit „PK" — Fassung 4 (ob wirklich ein `manifest.edbak`
    *         darin steckt, sagt erst der ZIP-Leser; das gehoert dorthin)
-   * 'edbak' die einteilige Datei der Fassungen 2 und 3 — seit Web 23 nur
-   *         noch erkannt, um sie mit Grund abzulehnen
+   * 'edbak' die einteilige Datei der Fassungen 2 und 3 — nur erkannt, um
+   *         sie mit Grund abzulehnen
    * 'teil'  ein einzelnes Teil der Fassung 4, aus dem ZIP herausgeloest
    * null    etwas anderes
    */
@@ -984,7 +973,7 @@ const EdCrypto = (() => {
   }
 
   /* ======================================================================
-   * DIE GERÄTEHÜLLE, Fassung 1 (S11-03; Konzept S11 3.2, 3.2a, E-S11-17)
+   * DIE GERÄTEHÜLLE, Fassung 1
    * ======================================================================
    *
    * Uhr, Handy und Browser verschließen Spur, Phasenkoordinaten und
@@ -999,13 +988,13 @@ const EdCrypto = (() => {
    *   info = "nadoku-huelle-1" ‖ Empfänger) → k_enc ‖ k_mac
    *
    * NICHT VERWECHSELN mit `huelleOeffnen()`/`huelleBauen()` darüber: Das ist
-   * die Hülle des Inhaltsschlüssels unter dem Datenschlüssel (S10). Diese
+   * die Hülle des Inhaltsschlüssels unter dem Datenschlüssel. Diese
    * hier heißt deshalb durchweg „Gerätehülle“.
    *
    * ERST PRÜFEN, DANN ENTSCHLÜSSELN: `geraetehuelleOeffnen()` vergleicht den
    * Prüfwert in fester Zeit, bevor es AES anfasst. Ein Fehler trägt `.grund`
    * ('laenge', 'fassung', 'schluessel', 'pruefwert', 'polsterung',
-   * 'bindung-zu-lang') — die Ansicht nennt ihn am Einsatz (E-S11-13).
+   * 'bindung-zu-lang') — die Ansicht nennt ihn am Einsatz.
    */
   const GH_FASSUNG = 1;
   const GH_KOPF = 1 + 65 + 16;
@@ -1118,23 +1107,23 @@ const EdCrypto = (() => {
   }
 
   return { deriveKeys, encrypt, decrypt, randomHex,
-           /* Server-Anteil und Hüllen (S10) */
+           /* Server-Anteil und Hüllen */
            datenschluessel, datenschluesselZu,
            huelleOeffnen, huelleBauen, huelleKennung,
            HUELLE_PRAEFIX,
            newRecoveryCode, recoveryKeyHex,
            pruefeRecoveryCode, recoveryCodeMeldung, RC_CHARS, RC_LEN,
            contentKeyCheck, wrapFingerprint,
-           /* Ablage des Inhaltsschlüssels (R17-25) — gelesen von keyguard.js */
+           /* Ablage des Inhaltsschlüssels — gelesen von keyguard.js */
            inhaltAblegen, inhaltLesen, inhaltAnfassen, inhaltLoeschen, clearSession,
            CHIFFRE_PRAEFIX,
            merkeAbleitungen, holeAbleitungen, vergissAbleitungen,
            isBackupFile,
-           /* Containerfassung 4 (S2/AP5) */
+           /* Containerfassung 4 */
            CONTAINER_VERSION_4, backupSchluessel, aadManifest, aadTeil,
            sealTeil, openTeil, sealTeilJson, openTeilJson, teilKopf,
            toB64Gross, fromB64Gross, sha256Hex, dateiArt,
-           /* Gerätehülle (S11-03) */
+           /* Gerätehülle */
            geraetehuelleVerschliessen, geraetehuelleOeffnen, geraetehuelleBindung,
            geraetehuelleAbleiten: ghAbleiten,
            spkiZuSec1 };

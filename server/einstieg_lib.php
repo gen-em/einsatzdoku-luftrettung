@@ -2,7 +2,7 @@
 declare(strict_types=1);
 
 /**
- * WAS NACH DER ANMELDUNG FAELLIG IST (P5b/AP9, E-P5b-09, -10, -19).
+ * WAS NACH DER ANMELDUNG FAELLIG IST.
  *
  * Nach dem Anmelden koennen vier Dinge anstehen. Diese Bibliothek sagt,
  * welches — und zwar genau EINES, in dieser Reihenfolge:
@@ -16,9 +16,8 @@ declare(strict_types=1);
  * DER VIERTE IST KEIN DIALOG, UND DAS IST ABSICHT
  * ---------------------------------------------------------------------------
  *
- * E-P5b-19 schreibt „die Seite zeigt genau einen Dialog" und zaehlt alle vier
- * in einer Reihe auf. Das Mockup M-P5b-02b sagt es genauer, und es ist
- * freigegeben: **„Die Karte steht ueber der Tagesuebersicht, nicht als
+ * Die Seite zeigt hoechstens einen Dialog — und der Erststart ist keiner:
+ * **„Die Karte steht ueber der Tagesuebersicht, nicht als
  * Dialog: Wer sie ignoriert, arbeitet trotzdem."**
  *
  * Der Unterschied ist keine Geschmacksfrage. Die Rueckfragen sind
@@ -34,7 +33,7 @@ declare(strict_types=1);
  * DAS EINWILLIGUNGSTOR STEHT HIER NUR IN DER LISTE, NICHT IM CODE
  * ---------------------------------------------------------------------------
  *
- * Es ist eine Umleitung in `auth_guard.php` (AP4) und laeuft, bevor eine
+ * Es ist eine Umleitung in `auth_guard.php` und laeuft, bevor eine
  * Seite ueberhaupt etwas ausgibt. Wer hier ankommt, hat es schon hinter sich.
  * Genannt wird es dennoch, weil die Reihenfolge sonst unvollstaendig waere
  * und der naechste Leser sie fuer dreistellig hielte.
@@ -63,7 +62,7 @@ const ERSTSTART_ALLE          = 7;
 const ERSTSTART_NIE = -1;
 
 /**
- * Abstaende der Konto-Rueckfrage, nach Runde (E-P5b-09).
+ * Abstaende der Konto-Rueckfrage, nach Runde.
  *
  * 30 Tage, dann 6 Monate, dann jaehrlich. Als `DateInterval`-Angaben und
  * nicht als Tageszahlen: „6 Monate" sind je nach Jahreszeit 181 bis 184 Tage,
@@ -72,11 +71,11 @@ const ERSTSTART_NIE = -1;
  */
 const RUECKFRAGE_ABSTAENDE = ['P30D', 'P6M', 'P1Y'];
 
-/** „Spaeter" schiebt um 7 Tage, hoechstens dreimal (E-P5b-19). */
+/** „Spaeter" schiebt um 7 Tage, hoechstens dreimal. */
 const RUECKFRAGE_SPAETER      = 'P7D';
 const RUECKFRAGE_SPAETER_MAX  = 3;
 
-/** Die Betreiber-Rueckfrage kommt alle 3 Monate (E-P5b-10). */
+/** Die Betreiber-Rueckfrage kommt alle 3 Monate. */
 const BLATT_ABSTAND = 'P3M';
 
 /** Schluessel in `app_state` fuer die letzte Bestaetigung des Schluesselblatts. */
@@ -85,8 +84,8 @@ const BLATT_BESTAETIGT_K = 'schluesselblatt_bestaetigt_am';
 /**
  * Was ist fuer dieses Konto faellig? `null`, wenn nichts.
  *
- * `$uebergehen` NENNT, WAS IN DIESER SITZUNG SCHON WEGGEKLICKT WURDE
- * (P5b/AP9). Ohne diesen Parameter verdeckt eine weggeklickte Frage alle
+ * `$uebergehen` NENNT, WAS IN DIESER SITZUNG SCHON WEGGEKLICKT WURDE.
+ * Ohne diesen Parameter verdeckt eine weggeklickte Frage alle
  * folgenden: Wer die Schluesselblatt-Frage vertagt, saehe bis zur naechsten
  * Anmeldung auch die Konto-Rueckfrage nicht und den Erststart nicht — denn
  * die Faelligkeit selbst ist unveraendert, und diese Funktion gibt nur die
@@ -319,7 +318,7 @@ function rueckfrage_spaeter(int $userId): bool
 }
 
 /**
- * Ist die Betreiber-Rueckfrage faellig? (E-P5b-10)
+ * Ist die Betreiber-Rueckfrage faellig?
  *
  * INSTALLATIONSWEIT UND NICHT JE KONTO: Es gibt EIN Schluesselblatt, und wer
  * es bestaetigt, bestaetigt es fuer die Anlage. Zwei BetreiberInnen sollen
@@ -352,14 +351,12 @@ function blatt_bestaetigt(): void
 const BLATT_NEU_WEIL_K = 'schluesselblatt_neu_weil';
 
 /**
- * Ein Wert hat gewechselt — das Blatt gehoert neu gedruckt (Nr. 233, E-SR-11).
+ * Ein Wert hat gewechselt — das Blatt gehoert neu gedruckt.
  *
- * GERUFEN AUS BEIDEN ROTATIONEN, dem Anteil und dem Serverschluessel. Bis Web
- * 21.12.0 fasste keine von beiden das Datum der letzten Bestaetigung an: Die
- * Rueckfrage kam erst mit dem naechsten Quartal, und dann ohne den Wert, der
- * inzwischen dazugekommen war. Nr. 233 sagt selbst, wo es zu schliessen ist:
- * „Der Rotationsvorgang selbst sollte sagen, dass das Blatt neu gedruckt
- * gehoert — er ist die Stelle, an der es auffaellt."
+ * GERUFEN AUS BEIDEN ROTATIONEN, dem Anteil und dem Serverschluessel. Ohne
+ * diesen Aufruf kaeme die Rueckfrage erst mit dem naechsten Quartal, und dann
+ * ohne den Wert, der inzwischen dazugekommen ist. Der Rotationsvorgang ist
+ * die Stelle, an der es auffaellt.
  *
  * DIE MARKE WIRD GELOESCHT, NICHT ZURUECKDATIERT. Kein Datum heisst faellig
  * (`blatt_faellig()`), und ein erfundenes Datum stuende genau in dem Feld,

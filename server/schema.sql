@@ -3,11 +3,11 @@
 -- DIE UNTERGRENZE STAND HIER BIS WEB 20.24.2 AUF "MySQL >= 5.7 / MariaDB >=
 -- 10.2" und war damit doppelt falsch: Sie widersprach `plattform_lib.php`
 -- (PLATTFORM_MYSQL_MIN = '8.0', PLATTFORM_MARIADB_MIN = '10.6') und
--- `docs/Technik.md` 7, und sie stimmte auch fuer sich genommen nicht --
+-- `docs/Technik.md` 13, und sie stimmte auch fuer sich genommen nicht --
 -- `DEFAULT (UTC_TIMESTAMP())` weiter unten braucht MySQL 8.0.13. Erzwungen
 -- wird die Grenze nicht; sie beschreibt, wogegen geprueft wird.
 --
--- REIHENFOLGE DER TABELLEN. Seit dem Umbau auf Diensttage (Web 6.0.0) ist
+-- REIHENFOLGE DER TABELLEN. Seit dem Umbau auf Diensttage ist
 -- `days` der Anker des Datenmodells: `missions` und `rest_segments` verweisen
 -- mit `day_id` darauf, `days` selbst auf `bases` und `vehicles`. Die Stammdaten
 -- und `days` stehen deshalb VOR `missions` — ein Fremdschluessel laesst sich
@@ -24,13 +24,13 @@ CREATE TABLE users (
   pat_wrap_pw   TEXT NULL,                           -- Inhaltsschluessel, passwortverpackt (Pflicht-Verschlüsselung)
   pat_wrap_rc   TEXT NULL,                           -- Inhaltsschluessel, mit Wiederherstellungsschluessel verpackt
   pat_key_check CHAR(32) NULL,                       -- Pruefsumme des Inhaltsschluessels (im Browser gerechnet); NULL = Altbestand
-  role          ENUM('user','admin','betreiberin','support') NOT NULL DEFAULT 'user',  -- BetreiberIn ⊇ Admin ⊇ Support ⊇ NutzerIn (R75, E-P5c-14)
+  role          ENUM('user','admin','betreiberin','support') NOT NULL DEFAULT 'user',  -- BetreiberIn ⊇ Admin ⊇ Support ⊇ NutzerIn
   session_epoch INT UNSIGNED NOT NULL DEFAULT 0,     -- wird beim Passwortwechsel erhoeht; beendet offene Sitzungen
-  account_key   CHAR(16) NULL UNIQUE,                -- Ordnername der Admin-Sicherung; einmalig vergeben, danach unveraenderlich (E17)
-  logo_wahl     VARCHAR(20) NOT NULL DEFAULT '',     -- '' = Standard der Installation, sonst 'hubschrauber' | 'fahrzeug' | 'wechselnd' (E-P3-20)
-  adresssuche   TINYINT(1) NOT NULL DEFAULT 1,       -- Adressvorschlaege aus dem Internet; die Installation ist die Obergrenze (app_state.adresssuche, E-S9-05/R79)
+  account_key   CHAR(16) NULL UNIQUE,                -- Ordnername der Admin-Sicherung; einmalig vergeben, danach unveraenderlich
+  logo_wahl     VARCHAR(20) NOT NULL DEFAULT '',     -- '' = Standard der Installation, sonst 'hubschrauber' | 'fahrzeug' | 'wechselnd'
+  adresssuche   TINYINT(1) NOT NULL DEFAULT 1,       -- Adressvorschlaege aus dem Internet; die Installation ist die Obergrenze (app_state.adresssuche)
   last_login    DATETIME NULL,                       -- UTC, letzte erfolgreiche Anmeldung; NULL = noch nie (Kontoseite, NutzerInnen-Liste)
-  -- LEBENSZYKLUS (P5b/AP2, E-P5b-12). Der Bestand wird bei der Migration
+  -- LEBENSZYKLUS. Der Bestand wird bei der Migration
   -- `aktiv`: Jeder andere Wert waere eine Aussage ueber Konten, die es vor
   -- der Pruefung schon gab. `bestaetigt_am` bleibt dort NULL — „die Frage
   -- stellte sich nicht", und ein erfundenes Datum waere schlimmer als eine
@@ -38,9 +38,9 @@ CREATE TABLE users (
   status        ENUM('unbestaetigt','wartet','aktiv','gesperrt') NOT NULL DEFAULT 'aktiv',
   bestaetigt_am  DATETIME NULL,                      -- wann die Adresse bestaetigt wurde; NULL = nicht noetig (Einladung, Einrichtung)
   gesperrt_seit  DATETIME NULL,
-  gesperrt_grund VARCHAR(64) NULL,                   -- 'selbstloeschung' ist die Karenz (E-P5b-16), sonst freier Grund der Verwaltung
+  gesperrt_grund VARCHAR(64) NULL,                   -- 'selbstloeschung' ist die Karenz, sonst freier Grund der Verwaltung
   loeschung_am   DATETIME NULL,                      -- Ende der Loeschkarenz; der Job raeumt danach endgueltig ab
-  -- ADRESSWECHSEL MIT BESTAETIGUNG (P5b/AP5, E-P5b-16). Die ALTE Adresse
+  -- ADRESSWECHSEL MIT BESTAETIGUNG. Die ALTE Adresse
   -- bleibt die gueltige, bis der Klick kommt: Ein Tippfehler in der neuen
   -- sperrte sonst aus, weil die Anmeldung ueber die Adresse laeuft.
   -- KEIN UNIQUE auf email_neu — zwei Konten duerfen dieselbe Adresse
@@ -50,16 +50,16 @@ CREATE TABLE users (
   email_neu            VARCHAR(190) NULL,
   email_neu_token_hash CHAR(64) NULL,
   email_neu_bis        DATETIME NULL,
-  -- GRENZEN JE KONTO (P5b/AP6, E-P5b-18; Backlog Nr. 37 und 48). NULL heisst
+  -- GRENZEN JE KONTO. NULL heisst
   -- „die Vorgabe der Installation gilt" — nicht 0 und nicht die Vorgabe als
   -- Zahl: Traegt die Spalte den Wert, aendert eine spaetere Anhebung der
   -- Vorgabe an bestehenden Konten nichts, und niemand saehe, warum.
   grenze_einsaetze INT UNSIGNED NULL,
   grenze_mb        INT UNSIGNED NULL,
-  -- Backlog Nr. 48: wie viele Konto-Backups dieses Kontos aufgehoben werden,
+  -- Wie viele Konto-Backups dieses Kontos aufgehoben werden,
   -- statt der Zahl der Installation (`adminbackup_aufbewahrung`, Vorgabe 2).
   backup_pakete    SMALLINT UNSIGNED NULL,
-  -- Erststart und Besitz-Rueckfragen (P5b/AP9, E-P5b-09, -19).
+  -- Erststart und Besitz-Rueckfragen.
   -- Bitfeld der drei Erststart-Schritte (Standort, Rettungsmittel, Geraet);
   -- **-1 heisst „nicht mehr zeigen"** und ist deshalb kein UNSIGNED. Warum
   -- ein Stand und nicht eine Abfrage auf die Stammdaten: „ich will keinen
@@ -77,21 +77,21 @@ CREATE TABLE users (
   -- weil „spaeter" sonst durch Abmelden zurueckgesetzt und damit unbegrenzt
   -- waere.
   rueckfrage_verschoben TINYINT UNSIGNED NOT NULL DEFAULT 0,
-  -- ZWEITFAKTOR (P5c/AP5, E-P5c-54). Das Geheimnis versiegelt mit dem
+  -- ZWEITFAKTOR. Das Geheimnis versiegelt mit dem
   -- Serverschluessel, Zweck `totp|<id>`; eingeschaltet erst mit `totp_seit`
   -- (nach einem bestaetigten Code); `totp_schritt` ist der letzte angenommene
   -- Zeitschritt — kein Code gilt zweimal.
   totp_geheimnis VARCHAR(200) NULL,
   totp_seit      DATETIME NULL,
   totp_schritt   BIGINT UNSIGNED NULL,
-  -- RUECKWEG BEIM ZWEITFAKTOR (Konzept RW, E-RW-05). Der oeffentliche Teil
+  -- RUECKWEG BEIM ZWEITFAKTOR. Der oeffentliche Teil
   -- eines ECDSA-Paars (P-256, SPKI in Base64) und der private als Chiffretext
   -- unter dem Inhaltsschluessel (`edk1:`, nie `edka1:`) — ein Abzug kann
   -- damit pruefen, aber nicht signieren. `rw_seit`: wann es entstand.
   rw_oeffentlich VARCHAR(255) NULL,
   rw_privat      TEXT NULL,
   rw_seit        DATETIME NULL,
-  -- SCHLUESSELPAAR DES KONTOS (S11-03, Konzept S11 3.1). ECDH auf P-256 fuer
+  -- SCHLUESSELPAAR DES KONTOS. ECDH auf P-256 fuer
   -- die Geraetehuelle: der oeffentliche Teil (SPKI, Base64) VERSIEGELT mit dem
   -- Serverschluessel (Zweck `kontopaar|<id>`), der private als Chiffretext
   -- unter dem Inhaltsschluessel (`edk1:`, nie `edka1:`). `kp_seit`: wann es
@@ -106,7 +106,7 @@ CREATE TABLE users (
   INDEX idx_email_neu_token (email_neu_token_hash)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- WIEDERHERSTELLUNGSCODES DES ZWEITFAKTORS (P5c/AP5, E-P5c-42). Zehn je
+-- WIEDERHERSTELLUNGSCODES DES ZWEITFAKTORS. Zehn je
 -- Konto, mit password_hash() — sie haengen NICHT am Serverschluessel und
 -- sind deshalb der Rueckweg, wenn das Geheimnis nicht mehr zu oeffnen ist.
 CREATE TABLE totp_codes (
@@ -118,11 +118,11 @@ CREATE TABLE totp_codes (
   CONSTRAINT fk_totp_codes_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- Gemerkte Geraete des Zweitfaktors (Web 21.8.0, Schritt 18, SR-02, E-SR-07).
+-- Gemerkte Geraete des Zweitfaktors.
 -- Im Browser liegt ein Zufallswert im Cookie EDGERAET, hier nur sein SHA-256.
 -- Kein User-Agent, kein Geraetename. Gueltig ist eine Zeile, solange
 -- angelegt_am plus die HEUTIGE Dauer der Rollengruppe in der Zukunft liegt
--- (E-SR-17) — gerechnet beim Pruefen, nicht beim Merken.
+-- — gerechnet beim Pruefen, nicht beim Merken.
 CREATE TABLE vertraute_geraete (
   id          INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   user_id     INT UNSIGNED NOT NULL,
@@ -134,19 +134,18 @@ CREATE TABLE vertraute_geraete (
   CONSTRAINT fk_vertraute_geraete_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- Passkeys als zweiter Faktor (Web 21.10.0, Schritt 18, SR-09, E-SR-29 bis -33).
+-- Passkeys als zweiter Faktor.
 -- Ein weiteres Verfahren desselben Faktors: nur neben eingeschaltetem TOTP.
 -- credential_id: die Kennung des Authenticators, Base64url — ascii_bin, weil
 -- Base64url Gross- und Kleinschreibung unterscheidet; 1364 Zeichen fassen die
 -- 1023 Bytes, die WebAuthn hoechstens erlaubt. credential_hash: SHA-256 der
 -- Kennung (hex) — der eindeutige Schluessel liegt hier und nicht auf der
--- Kennung selbst, damit kein Index ueber 767 Byte reicht (H-SR-08, F-SR-42).
--- rp_id: die Adresse, fuer die der Passkey entstand (H-SR-08, F-SR-41) —
+-- Kennung selbst, damit kein Index ueber 767 Byte reicht.
+-- rp_id: die Adresse, fuer die der Passkey entstand —
 -- angeboten und geprueft wird nur, was zur heutigen passt. oeffentlich: SPKI
 -- als PEM, bei der Registrierung aus COSE ueberfuehrt. alg: -7 (ES256) oder
 -- -257 (RS256). gewarnt_am: die letzte Mail wegen eines zurueckgelaufenen
--- Zaehlers (hoechstens eine je Tag, F-SR-36). Kein User-Agent, keine AAGUID
--- (E-SR-31).
+-- Zaehlers (hoechstens eine je Tag). Kein User-Agent, keine AAGUID.
 CREATE TABLE passkeys (
   id              INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   user_id         INT UNSIGNED NOT NULL,
@@ -179,14 +178,14 @@ CREATE TABLE devices (
   id           INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   user_id      INT UNSIGNED NOT NULL,
   device_id    VARCHAR(64) NOT NULL UNIQUE,          -- oeffentlich, Header X-Device-Id
-  api_key_hash VARCHAR(255) NOT NULL,                -- SHA-256 (hex) des Geraeteschluessels; bis Web 12.9.4
-                                                     -- bcrypt (E-S5-42) -- die Breite bleibt, ein Wechsel des
+  api_key_hash VARCHAR(255) NOT NULL,                -- SHA-256 (hex) des Geraeteschluessels; die Breite
+                                                     -- bleibt, ein Wechsel des
                                                      -- Verfahrens soll keine Migration kosten
   label        VARCHAR(64) NULL,
   active       TINYINT(1) NOT NULL DEFAULT 1,        -- deaktiviert = Upload gesperrt, Daten bleiben
   last_seen    TIMESTAMP NULL,
   created_at   TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  -- Was fuer ein Geraet hat sich hier gekoppelt (R42). Alle drei sind NULL-bar
+  -- Was fuer ein Geraet hat sich hier gekoppelt. Alle drei sind NULL-bar
   -- und bleiben es: Ein von Hand angelegtes Geraet meldet nichts ueber sich,
   -- eine aeltere Uhr-Fassung ebenfalls nicht -- und eine Kopplung darf an
   -- einer Statistikangabe NIE scheitern (JSON-Vertrag 1a).
@@ -194,7 +193,7 @@ CREATE TABLE devices (
   geraet_modell VARCHAR(191) NULL,                   -- aufgeloest; Sammelnamen werden lang,
                                                      -- der laengste hat 153 Zeichen
   geraet_teil   VARCHAR(64) NULL,                    -- Rohangabe des Geraets, siehe update.php
-  -- Abgewiesene Anmeldungen (Web 20.11.0, P5a/AP7, E-P5a-02). Seit dort hat
+  -- Abgewiesene Anmeldungen. Seit dort hat
   -- auch ingest.php eine Mengenbremse; eine Uhr mit veraltetem Schluessel
   -- sperrt sich damit selbst aus. Diese zwei Spalten machen das SICHTBAR --
   -- auf der Kontoseite und auf Betrieb -> Status. Beide werden bei der
@@ -208,25 +207,24 @@ CREATE TABLE devices (
 -- ===========================================================================
 -- STAMMDATEN
 --
--- Der Standort ist der Anker (Entscheidung E15): Jedes Rettungsmittel, jede
+-- Der Standort ist der Anker: Jedes Rettungsmittel, jede
 -- Zielklinik, jede Besatzungs-Vorbelegung, jedes weitere Rettungsmittel und
 -- jede Bergwacht-Bereitschaft gehoert GENAU EINEM Standort. Eine zweite,
 -- standortuebergreifende Ebene gibt es bewusst nicht — der Preis dafuer ist
 -- Doppelpflege, der Gewinn ein Modell mit einer Regel statt mit zwei.
 --
--- Jeder Eintrag gehoert einem Konto (`user_id NOT NULL`, seit Web 21.0.0).
--- Bis dahin hiess NULL „zentral", und eine eigene Tabelle ordnete zentrale
--- Standorte den Konten zu (R39); beides ist mit P5c/AP8 gefallen.
+-- Jeder Eintrag gehoert einem Konto (`user_id NOT NULL`).
+-- NULL heisst nicht „zentral"; zentrale Standorte gibt es nicht.
 -- ===========================================================================
 
 CREATE TABLE bases (
   id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-  user_id INT UNSIGNED NOT NULL,                   -- das Konto (seit Web 21.0.0 Pflicht, R39)
+  user_id INT UNSIGNED NOT NULL,                   -- das Konto (Pflicht)
   name VARCHAR(120) NOT NULL,
   -- Optionale Koordinaten, Quelle des Abfahrtorts 'base' (Konzept 3.5.1).
   -- Freiwillig: ein Standort ohne Koordinaten steht als Abfahrtort schlicht
   -- nicht zur Auswahl. Beim Anlegen eines Diensttags werden sie nach
-  -- days.base_lat/base_lon EINGEFROREN (E8) — eine spaetere Korrektur wirkt
+  -- days.base_lat/base_lon EINGEFROREN — eine spaetere Korrektur wirkt
   -- nur auf neue Diensttage, ein Wachenumzug ist ein eigener Standort.
   lat DECIMAL(9,6) NULL,
   lon DECIMAL(9,6) NULL,
@@ -234,26 +232,26 @@ CREATE TABLE bases (
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- Rettungsmittel (bis Web 5.10.0: `aircraft`). Die Art ist binaer (E3) und
+-- Rettungsmittel (`aircraft`). Die Art ist binaer und
 -- entscheidet ueber Besatzungsrollen und sichtbare Einsatzfelder.
 CREATE TABLE vehicles (
   id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-  user_id INT UNSIGNED NOT NULL,                   -- das Konto (seit Web 21.0.0 Pflicht, R39)
-  -- Seit Web 16.0.0 NULL-faehig: Die Typen ausser 'standard' brauchen keinen
-  -- Standort (E-S9-09). Die Pflicht bei 'standard' steht in validate_lib.php,
+  user_id INT UNSIGNED NOT NULL,                   -- das Konto (Pflicht)
+  -- NULL-faehig: Die Typen ausser 'standard' brauchen keinen
+  -- Standort. Die Pflicht bei 'standard' steht in validate_lib.php,
   -- nicht hier — die Datenbank kann sie nicht auf eine zweite Spalte beziehen,
   -- ohne den Fehler an der Pruefschicht vorbei als SQL-Fehler zu melden.
   -- ON DELETE CASCADE bleibt: Loeschen eines Standorts nimmt seine
-  -- Standard-Rettungsmittel mit (E15). Den Typen ohne Standortpflicht nimmt
-  -- die Anwendung vorher den Standort ab (`stammdaten_standort_loesen()`,
-  -- seit Web 17.1.0) — sie bleiben ohne Standort bestehen.
+  -- Standard-Rettungsmittel mit. Den Typen ohne Standortpflicht nimmt
+  -- die Anwendung vorher den Standort ab (`stammdaten_standort_loesen()`)
+  -- — sie bleiben ohne Standort bestehen.
   base_id INT UNSIGNED NULL,
-  name VARCHAR(64) NOT NULL,                       -- bis Web 5.10.0: `registration`
-  kurz VARCHAR(16) NULL,                           -- Kurzname fuer Leiste, Kacheln, Plaketten (Nr. 69)
+  name VARCHAR(64) NOT NULL,
+  kurz VARCHAR(16) NULL,                           -- Kurzname fuer Leiste, Kacheln, Plaketten
   -- `kind` ist die BETRIEBSART (Luft/Boden) und steuert Rollen, Faehigkeiten,
   -- Kachelsatz und Hoehe. `typ` ist die ART DES DIENSTES und davon unabhaengig:
-  -- Eine Bergwacht fliegt oder faehrt, und beides ist ein Bergwacht-Dienst
-  -- (E-S9-09). ENUM und nicht VARCHAR, weil der Wertevorrat geschlossen ist.
+  -- Eine Bergwacht fliegt oder faehrt, und beides ist ein Bergwacht-Dienst.
+  -- ENUM und nicht VARCHAR, weil der Wertevorrat geschlossen ist.
   kind ENUM('air','ground') NOT NULL,
   typ ENUM('standard','bergwacht','veranstaltung','sonstiges') NOT NULL DEFAULT 'standard',
   UNIQUE KEY uq_user_name (user_id, name),
@@ -262,7 +260,7 @@ CREATE TABLE vehicles (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- Besetzte Rollen je Rettungsmittel. Die Rollenkennungen stammen aus dem
--- festen Katalog CREW_ROLES in db.php (E4), NICHT aus der Datenbank — deshalb
+-- festen Katalog CREW_ROLES in db.php, NICHT aus der Datenbank — deshalb
 -- VARCHAR und kein ENUM: eine neue Rolle braucht dann keine Schemaaenderung.
 CREATE TABLE vehicle_roles (
   vehicle_id INT UNSIGNED NOT NULL,
@@ -271,7 +269,7 @@ CREATE TABLE vehicle_roles (
   FOREIGN KEY (vehicle_id) REFERENCES vehicles(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- Faehigkeiten je Rettungsmittel: 'winch' | 'bergwacht' (E29). Zwei getrennte
+-- Faehigkeiten je Rettungsmittel: 'winch' | 'bergwacht'. Zwei getrennte
 -- Haken — ein Hubschrauber kann eine Winde fuehren, ohne in einer
 -- Bergwachtkooperation zu stehen, und umgekehrt. WELCHES Rettungsmittel sie
 -- fuehren darf, entscheidet `veh_caps_erlaubt()` (db.php) aus Typ UND
@@ -288,10 +286,9 @@ CREATE TABLE vehicle_capabilities (
 
 CREATE TABLE crew_presets (
   id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-  user_id INT UNSIGNED NOT NULL,                   -- das Konto (seit Web 21.0.0 Pflicht, R39)
+  user_id INT UNSIGNED NOT NULL,                   -- das Konto (Pflicht)
   base_id INT UNSIGNED NOT NULL,
-  -- Bis Web 5.10.0 ein ENUM('p1','p2','hems','fr','other'). Jetzt VARCHAR,
-  -- damit neue Rollen ohne Schemaaenderung moeglich sind (Katalog: db.php).
+  -- VARCHAR und kein ENUM, damit neue Rollen ohne Schemaaenderung moeglich sind (Katalog: db.php).
   role_code VARCHAR(16) NOT NULL,
   name VARCHAR(120) NOT NULL,
   UNIQUE KEY uq_user_base_role_name (user_id, base_id, role_code, name),
@@ -302,7 +299,7 @@ CREATE TABLE crew_presets (
 -- Vorbelegung: weitere Rettungsmittel (RTW, NEF, weitere Hubschrauber ...)
 CREATE TABLE resources (
   id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-  user_id INT UNSIGNED NOT NULL,                   -- das Konto (seit Web 21.0.0 Pflicht, R39)
+  user_id INT UNSIGNED NOT NULL,                   -- das Konto (Pflicht)
   base_id INT UNSIGNED NOT NULL,
   name VARCHAR(120) NOT NULL,
   UNIQUE KEY uq_user_base_res (user_id, base_id, name),
@@ -312,7 +309,7 @@ CREATE TABLE resources (
 
 CREATE TABLE bw_units (
   id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-  user_id INT UNSIGNED NOT NULL,                   -- das Konto (seit Web 21.0.0 Pflicht, R39)
+  user_id INT UNSIGNED NOT NULL,                   -- das Konto (Pflicht)
   base_id INT UNSIGNED NOT NULL,
   name VARCHAR(120) NOT NULL,
   UNIQUE KEY uq_user_base_name (user_id, base_id, name),
@@ -321,14 +318,14 @@ CREATE TABLE bw_units (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- Vorbelegung: Zielkliniken (Vorschlagsliste fuer das Transportziel; das
--- Feld selbst ist Freitext ohne FK-Referenz und liegt seit Web 22 im
+-- Feld selbst ist Freitext ohne FK-Referenz und liegt im
 -- pat_blob, Feldkatalog 'store' => 'pat').
 CREATE TABLE transport_dests (
   id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-  user_id INT UNSIGNED NOT NULL,                   -- das Konto (seit Web 21.0.0 Pflicht, R39)
+  user_id INT UNSIGNED NOT NULL,                   -- das Konto (Pflicht)
   base_id INT UNSIGNED NOT NULL,
   name VARCHAR(190) NOT NULL,
-  -- Optionale Koordinaten (E37). Werden AM EINSATZ eingefroren
+  -- Optionale Koordinaten. Werden AM EINSATZ eingefroren
   -- (im pat_blob, dest_lat/dest_lon), nicht ueber den Namen aufgeloest: das Feld
   -- ist Freitext mit Vorschlagsliste, eine Aufloesung ueber Namensgleichheit waere
   -- bruechig — ein umbenannter Eintrag verloere seine Koordinate.
@@ -358,11 +355,11 @@ CREATE TABLE user_defaults (
 --
 -- Ein Diensttag beginnt mit "Einsatztag starten" und endet mit "Einsatztag
 -- beenden"; er traegt echte Start- und Endzeiten. JEDER Start erzeugt einen
--- eigenen Diensttag (E9) — mehrere pro Kalendertag sind zulaessig, etwa ein
+-- eigenen Diensttag — mehrere pro Kalendertag sind zulaessig, etwa ein
 -- Hubschrauberdienst am Tag und ein NEF-Nachtdienst am Abend. Deshalb ist
 -- `day` NICHT mehr Schluessel, sondern nur noch Sortier- und Anzeigedatum.
 --
--- EINGEFRORENE ANGABEN (E8). Alles, was der Diensttag aus Standort und
+-- EINGEFRORENE ANGABEN. Alles, was der Diensttag aus Standort und
 -- Rettungsmittel ableitet — Art, Rollensatz, Faehigkeiten, Bezeichnungen,
 -- Standortkoordinaten —, wird beim Anlegen kopiert. `base_id` und
 -- `vehicle_id` bleiben als Fremdschluessel erhalten, dienen aber nur noch dem
@@ -378,7 +375,7 @@ CREATE TABLE days (
   ended_at   DATETIME NULL,                -- UTC, echtes Dienstende
   vehicle_id INT UNSIGNED NULL,            -- Rettungsmittel (Stammdaten, nur Filter/Auswertung)
   base_id    INT UNSIGNED NULL,            -- Standort (Stammdaten, nur Filter/Auswertung)
-  -- Snapshot: NULL = neutral, noch nicht zugeordnet (E26). Ein neutraler
+  -- Snapshot: NULL = neutral, noch nicht zugeordnet. Ein neutraler
   -- Diensttag hat keine Art, keine Rollen und keine artabhaengigen Felder;
   -- Zeiten, Phasen, Track und Reanimation werden trotzdem voll erfasst.
   kind ENUM('air','ground') NULL,
@@ -387,15 +384,15 @@ CREATE TABLE days (
   base_lon     DECIMAL(9,6) NULL,
   vehicle_name VARCHAR(64) NULL,           -- eingefrorene Rettungsmittelbezeichnung
   -- Typ und Kurzname gehoeren in dieselbe Momentaufnahme wie Bezeichnung
-  -- und Betriebsart (E8, Web 16.0.0). NULL bei einem Tag ohne
+  -- und Betriebsart. NULL bei einem Tag ohne
   -- Rettungsmittel; die Anzeige faellt dann auf die Betriebsart zurueck.
   vehicle_typ  ENUM('standard','bergwacht','veranstaltung','sonstiges') NULL,
-  vehicle_kurz VARCHAR(16) NULL,           -- eingefrorener Kurzname (Nr. 69)
+  vehicle_kurz VARCHAR(16) NULL,           -- eingefrorener Kurzname
   notes    TEXT NULL,
   deleted_at DATETIME NULL,
   -- Der Augenblick, in dem der Server den Tag zum ersten Mal sah — der
   -- Anker, ob Geraete seinen Zeitraum noch fortschreiben (Ersetzfenster,
-  -- ingest_tag_offen(), Web 21.3.0, Nr. 158). Serverzeit, nie vom Absender.
+  -- ingest_tag_offen()). Serverzeit, nie vom Absender.
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   INDEX idx_user_day (user_id, day),
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
@@ -436,7 +433,7 @@ CREATE TABLE day_crew (
   FOREIGN KEY (day_id) REFERENCES days(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- Eingefrorener Faehigkeitssatz des Diensttags (E29). Anders als beim
+-- Eingefrorener Faehigkeitssatz des Diensttags. Anders als beim
 -- Rollensatz laesst er sich nicht in eine bestehende Tabelle falten, weil zu
 -- einer Faehigkeit kein Wert gehoert — nur ihr Vorhandensein.
 CREATE TABLE day_capabilities (
@@ -464,9 +461,9 @@ CREATE TABLE missions (
   distance_m INT UNSIGNED NULL,
   ascent_m   INT UNSIGNED NULL,
   final      TINYINT(1) NOT NULL DEFAULT 0,
-  -- Wann zuletzt ein Punkt EINTRAF (S2/AP3). Nicht die Zeit der Punkte --
+  -- Wann zuletzt ein Punkt EINTRAF. Nicht die Zeit der Punkte --
   -- das ist die Aufzeichnungszeit. Die Karenz vor der Verdichtung
-  -- (E-S2-06) braucht die Ankunftszeit: Die Uhr setzt final in JEDEM
+  -- braucht die Ankunftszeit: Die Uhr setzt final in JEDEM
   -- Teilstueck, ein spaet hochgeladener Puffer waere sonst im Moment
   -- des Eintreffens schon 14 Tage still. NULL = noch nie gemessen.
   letzter_punkt_am DATETIME NULL,
@@ -479,32 +476,31 @@ CREATE TABLE missions (
   -- MANUAL ist in MySQL 8.4.0 bis 8.4.10 ein RESERVIERTES WORT -- ungequotet
   -- brach an dieser Zeile die ganze Einrichtung mit Fehler 1064. Umbenannt
   -- statt gequotet, damit eine uebersehene Stelle auf JEDER Fassung sofort
-  -- scheitert und nicht nur auf diesen elf (Backlog Nr. 238).
+  -- scheitert und nicht nur auf diesen elf.
   uhr_gesperrt TINYINT(1) NOT NULL DEFAULT 0,
-  -- Herkunft: wird beim Anlegen gesetzt und nie wieder geaendert (R64).
-  -- VARCHAR und kein ENUM, seit Web 14.0.0: Ein ENUM braucht fuer jeden neuen
+  -- Herkunft: wird beim Anlegen gesetzt und nie wieder geaendert.
+  -- VARCHAR und kein ENUM: Ein ENUM braucht fuer jeden neuen
   -- Client eine Migration. Der Wertevorrat steht in geraete_lib.php
   -- (HERKUNFT_WERTE), die Ableitung aus dem client_ref-Praefix ebendort
   -- (herkunft_ableiten()) -- ein Wert je Client-App, nicht je Hersteller.
   origin     VARCHAR(16) NOT NULL DEFAULT 'watch',
   edited     TINYINT(1) NOT NULL DEFAULT 0,           -- wurde nach dem Anlegen veraendert
-  -- MOMENTAUFNAHME DES GERAETS beim Anlegen (R64, Weg b). Kopiert aus devices
+  -- MOMENTAUFNAHME DES GERAETS beim Anlegen (Weg b). Kopiert aus devices
   -- und danach NIE nachgezogen: Was hier steht, galt in dem Augenblick, in dem
   -- der Einsatz entstand. Die Begruendung zu Art, Modell und dazu, warum beide
   -- dauerhaft NULL-bar sind, steht EINMAL an devices -- hier nicht wiederholt.
   -- Warum kopiert und nicht ueber device_id gelesen: Der Verweis steht auf
-  -- ON DELETE SET NULL, und Trennen ist der Normalfall bei geteilter Uhr (R47).
+  -- ON DELETE SET NULL, und Trennen ist der Normalfall bei geteilter Uhr.
   geraet_art    VARCHAR(16)  NULL,
   geraet_modell VARCHAR(191) NULL,
   -- Zusatzfelder (mission_fields.php):
-  transport_mode ENUM('air','ground','ambulant') NULL, -- Luft | Boden | Ambulant (E17)
+  transport_mode ENUM('air','ground','ambulant') NULL, -- Luft | Boden | Ambulant
   na_escort  TINYINT(1) NOT NULL DEFAULT 0,        -- NA-Begleitung, nur bei Luft und Boden
   -- Transportziel, seine Koordinate und die Hoehe des Einsatzorts liegen
-  -- seit Web 22 im pat_blob (Feldkatalog, 'store' => 'pat'); die
-  -- Klartextspalten transport_dest, dest_lat, dest_lon und site_ele_m sind
-  -- mit Web 23 gefallen (S11-12).
+  -- im pat_blob (Feldkatalog, 'store' => 'pat'); Klartextspalten dafuer
+  -- gibt es nicht.
   schockraum TINYINT(1) NOT NULL DEFAULT 0,        -- Zielklinik: Schockraum
-  false_alarm TINYINT(1) NOT NULL DEFAULT 0,       -- Fehleinsatz / Storno / Abbruch (E17)
+  false_alarm TINYINT(1) NOT NULL DEFAULT 0,       -- Fehleinsatz / Storno / Abbruch
   -- Abfahrtortregel (Konzept 3.5.1). Gespeichert wird die REGEL, nicht die
   -- Koordinate — der Klartextwert verraet damit keinen Ort. Bei 'manual' liegt
   -- die Koordinate verschluesselt im pat_blob unter dem Schluessel `start`.
@@ -521,7 +517,7 @@ CREATE TABLE missions (
   other_resources VARCHAR(190) NULL,
   crew_override TINYINT(1) NOT NULL DEFAULT 0,     -- abweichende Besatzung (z. B. Rollenwechsel im Dienst)
   pat_blob   TEXT NULL,                              -- E2E-verschluesselt: Diagnose, Alter, Einsatzort (Server: nur Chiffretext)
-  -- Die Einsatzhuelle (S11-04a, E-S11-36): Phasenkoordinaten und Reanimation
+  -- Die Einsatzhuelle: Phasenkoordinaten und Reanimation
   -- als Geraetehuelle unter dem oeffentlichen Schluessel des Kontos (Format:
   -- tools/proben/huelle/referenz.py, Art `einsatz`, innen JSON). Der Server
   -- kann sie nicht oeffnen; er prueft nur die Form (pruef_huelle()).
@@ -533,10 +529,10 @@ CREATE TABLE missions (
   UNIQUE KEY uq_dev_ref (device_id, client_ref),
   INDEX idx_user_started (user_id, started_at),
   INDEX idx_day (day_id),
-  -- Beginn ueber alle Konten: die Statistik der BetreiberIn (P5c/AP7, Nr. 191).
+  -- Beginn ueber alle Konten: die Statistik der BetreiberIn.
   INDEX idx_missions_started (started_at),
-  -- Papierkorb je Konto. Bis Web 20.47.0 legte ihn nur die Migration
-  -- 2026_07_22_papierkorb an; eine frische Anlage hatte ihn nicht (F-P5c-39).
+  -- Papierkorb je Konto — auch auf einer frischen Anlage, nicht nur ueber
+  -- die Migration 2026_07_22_papierkorb.
   INDEX idx_missions_deleted (user_id, deleted_at),
   FOREIGN KEY (user_id)   REFERENCES users(id)   ON DELETE CASCADE,
   FOREIGN KEY (device_id) REFERENCES devices(id) ON DELETE SET NULL,
@@ -560,14 +556,14 @@ CREATE TABLE mission_phases (
   mission_id  INT UNSIGNED NOT NULL,
   phase       TINYINT UNSIGNED NOT NULL,             -- 2..9; eine Phase 10 gibt es nicht
   occurred_at DATETIME NOT NULL,                     -- UTC
-  -- Die Koordinate jeder Phase liegt seit Web 22 in missions.ort_huelle
-  -- (Geraetehuelle); lat/lon sind mit Web 23 gefallen (S11-12).
+  -- Die Koordinate jeder Phase liegt in missions.ort_huelle
+  -- (Geraetehuelle); lat/lon gibt es nicht.
   FOREIGN KEY (mission_id) REFERENCES missions(id) ON DELETE CASCADE,
   INDEX (mission_id, occurred_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- Der Reanimationsverlauf liegt seit Web 22 in missions.ort_huelle; die
--- Tabellen resus_sessions und resus_events sind mit Web 23 gefallen (S11-12).
+-- Der Reanimationsverlauf liegt in missions.ort_huelle; die
+-- Tabellen resus_sessions und resus_events gibt es nicht.
 
 -- Je Einsatz beteiligte Rettungsmittel; einzeln entfernbar, daher eigene Zeilen
 CREATE TABLE mission_resources (
@@ -587,19 +583,19 @@ CREATE TABLE rest_segments (
   started_at DATETIME NOT NULL,
   ended_at   DATETIME NULL,
   final      TINYINT(1) NOT NULL DEFAULT 0,
-  -- Momentaufnahme des Geraets, siehe missions (R64). Eine Herkunftsspalte
-  -- hat das Segment bewusst NICHT (E-R64-04): Gezaehlt werden Einsaetze, und
+  -- Momentaufnahme des Geraets, siehe missions. Eine Herkunftsspalte
+  -- hat das Segment bewusst NICHT: Gezaehlt werden Einsaetze, und
   -- woher ein Segment kommt, sagt sein client_ref-Praefix.
   geraet_art    VARCHAR(16)  NULL,
   geraet_modell VARCHAR(191) NULL,
-  letzter_punkt_am DATETIME NULL,          -- siehe missions (S2/AP3)
+  letzter_punkt_am DATETIME NULL,          -- siehe missions
   deleted_at       DATETIME NULL,
   deleted_with_day TINYINT(1) NOT NULL DEFAULT 0,
-  -- Serverseitiger Anker des Ersetzfensters (Nr. 134): der Augenblick, in
+  -- Serverseitiger Anker des Ersetzfensters: der Augenblick, in
   -- dem der Server das Segment zum ersten Mal sah -- created_at allein,
   -- started_at nur als Rueckfall bis zur Migration, siehe ingest.php.
-  -- missions traegt die Spalte seit jeher; hier seit Web 15.6.0
-  -- (Migration 2026_09_07, dreischrittig mit Kappung).
+  -- missions traegt die Spalte ebenso (fuer Bestandsanlagen: Migration
+  -- 2026_09_07, dreischrittig mit Kappung).
   created_at       TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   UNIQUE KEY uq_dev_ref (device_id, client_ref),
   INDEX idx_user_started (user_id, started_at),
@@ -609,31 +605,30 @@ CREATE TABLE rest_segments (
   FOREIGN KEY (day_id)    REFERENCES days(id)    ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- Kopplungssitzungen (Web 13.0.0, S5 / R49): Das GERAET holt sich mit `start`
+-- Kopplungssitzungen: Das GERAET holt sich mit `start`
 -- eine Sitzung und zeigt den Code; ein Mensch gibt ihn im Web in sein Konto
 -- ein (user_id wird gesetzt: "beansprucht"); das Geraet bestaetigt mit Ja, und
 -- erst dann entsteht die devices-Zeile. Bis dahin sind Kennung und Schluessel
--- SCHWEBEND -- ingest.php kennt sie nicht (E-R49-2). Bis Web 12.9.4 lief es
--- andersherum (Tabelle pair_codes: Code im Web erzeugt, an der Uhr getippt).
+-- SCHWEBEND -- ingest.php kennt sie nicht.
 --
 -- Laenge, Alphabet und Frist stehen in db.php (PAIR_LEN, PAIR_CHARS,
--- PAIR_TTL_MIN). EINE Frist ab erstellt_am fuer alles (E-S5-12). Die Datenbank
--- ist der Schiedsrichter (E-S5-13): Beanspruchen ist ein UPDATE mit
+-- PAIR_TTL_MIN). EINE Frist ab erstellt_am fuer alles. Die Datenbank
+-- ist der Schiedsrichter: Beanspruchen ist ein UPDATE mit
 -- `user_id IS NULL` in der Bedingung und gilt nur bei rowCount() = 1; zwei
 -- Browser mit demselben Code -- genau einer gewinnt.
 --
--- KEINE ENDZUSTAENDE (E-S5-11): Bestaetigt oder verworfen wird GELOESCHT;
+-- KEINE ENDZUSTAENDE: Bestaetigt oder verworfen wird GELOESCHT;
 -- verfallen bleibt liegen, bis der Job `aufraeumen` es entsorgt, und zaehlt
 -- nirgends mehr (die Obergrenze PAIR_SITZUNGEN_MAX zaehlt nur unverfallene
 -- Zeilen). Keine IP, kein Label, kein "beansprucht_am" -- die Spalte waere
--- geschrieben und nie gelesen worden (E-S5-44). Der Schluessel liegt als
--- SHA-256 (E-S5-41): 24 Zufallsbytes brauchen kein bcrypt.
+-- geschrieben und nie gelesen worden. Der Schluessel liegt als
+-- SHA-256: 24 Zufallsbytes brauchen kein bcrypt.
 CREATE TABLE pair_sessions (
   id            INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   code          VARCHAR(8) NOT NULL UNIQUE,          -- Anzeigecode, nur fuer den Menschen
   device_id     VARCHAR(64) NOT NULL UNIQUE,         -- kuenftige Geraetekennung (X-Device-Id)
   api_key_hash  VARCHAR(255) NOT NULL,               -- SHA-256 des kuenftigen Geraeteschluessels
-  geraet_art    VARCHAR(16) NULL,                    -- wie devices (R42), bei `start` gelesen
+  geraet_art    VARCHAR(16) NULL,                    -- wie devices, bei `start` gelesen
   geraet_modell VARCHAR(191) NULL,
   geraet_teil   VARCHAR(64) NULL,
   user_id       INT UNSIGNED NULL,                   -- NULL = offen; gesetzt = beansprucht
@@ -667,18 +662,15 @@ CREATE TABLE deleted_refs (
 CREATE TABLE rate_limits (
   id            INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   -- Die Toepfe stehen in RATE_GRENZEN (ratelimit_lib.php) und nirgends sonst.
-  -- Hier stand bis Web 20.10.0 eine Aufzaehlung von vieren; es waren laengst
-  -- mehr, und niemandem ist es aufgefallen. Eine Liste, die sich fuer
-  -- vollstaendig ausgibt und es nicht ist, ist schlechter als keine.
-  -- UND AUCH KEINE ZAHL: In Web 20.10.0 stand hier ersatzweise "es waren
-  -- laengst zehn"; mit den beiden Ingest-Toepfen aus 20.11.0 war auch das
-  -- falsch. Eine Zahl im Kommentar altert genauso still wie eine Liste.
+  -- Keine Aufzaehlung hier: Eine Liste, die sich fuer vollstaendig ausgibt
+  -- und es nicht ist, ist schlechter als keine. UND AUCH KEINE ZAHL: Eine
+  -- Zahl im Kommentar altert genauso still wie eine Liste.
   topf          VARCHAR(32)  NOT NULL,
   merkmal       VARCHAR(190) NOT NULL,          -- 'ip:<adresse>', 'id:<kennung>' oder 'alle'
   versuche      INT UNSIGNED NOT NULL DEFAULT 0,
   fenster_start DATETIME     NOT NULL,
   gesperrt_bis  DATETIME     NULL,
-  -- Die Sperrleiter (Web 20.10.0, P5a/AP6, E-P5a-43). 0 = nie gesperrt,
+  -- Die Sperrleiter. 0 = nie gesperrt,
   -- 1..4 = 15/20/30/60 min (die erste Sprosse ist 15 und nicht 10 -- die
   -- Begruendung steht in ratelimit_lib.php). `stufe_bis` ist der Verfall der
   -- STUFE (letzter Fehlversuch + 24 h), nicht der der Sperre — danach gilt
@@ -690,7 +682,7 @@ CREATE TABLE rate_limits (
   INDEX idx_gesperrt (gesperrt_bis)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- SPERREREIGNISSE: was war, nicht was IST (Web 20.10.0, P5a/AP6, E-P5a-46).
+-- SPERREREIGNISSE: was war, nicht was IST.
 --
 -- `rate_limits` haelt den Zustand; laeuft die Sperre ab und raeumt der Job die
 -- Zeile weg, ist nichts mehr da. Dieselbe Luecke, die `job_laeufe` fuer die
@@ -701,7 +693,7 @@ CREATE TABLE rate_limits (
 -- KLARTEXT — mit IP- und E-Mail-Adressen. Ohne sie waere die Liste wertlos;
 -- die Folge ist, dass diese Tabelle in jeder Komplettsicherung mitfaehrt
 -- (`komp_tabellen()` hat keine Ausnahmeliste). Der Aufraeumjob loescht nach
--- 30 Tagen, fest (E-P5a-09).
+-- 30 Tagen, fest.
 CREATE TABLE sicherheit_ereignisse (
   id        INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   art       VARCHAR(24)  NOT NULL,              -- sperre | verlangsamung | aufgehoben
@@ -716,13 +708,13 @@ CREATE TABLE sicherheit_ereignisse (
   INDEX idx_art_zeit (art, zeitpunkt)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- BETRIEBSPROTOKOLL: Betriebsereignisse, KEINE Datenzugriffe (P5b/AP1, V1).
+-- BETRIEBSPROTOKOLL: Betriebsereignisse, KEINE Datenzugriffe.
 --
 -- Die Nachbartabelle darueber (`sicherheit_ereignisse`) ist der siebte
 -- Reiter und bleibt ausdruecklich getrennt: Dort stehen IP-Adressen mit einer
 -- festen Frist von 30 Tagen, hier steht das Audit mit bis zu drei Jahren.
 -- Zwei Fristen in einer Tabelle sind eine Einladung, die kuerzere zu
--- vergessen. Begruendung in protokoll_lib.php und E-P5b-12.
+-- vergessen. Begruendung in protokoll_lib.php.
 --
 -- KEIN FREMDSCHLUESSEL AUF `users`: Der haeufigste Eintrag ist „Konto
 -- geloescht". Mit CASCADE loeschte die Kontoloeschung ihren eigenen
@@ -743,12 +735,12 @@ CREATE TABLE protokoll_ereignisse (
   KEY idx_urheber (urheber_user_id, zeit)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- SICHERUNGSZIELE: wohin die Sicherungen geschoben werden (S2/AP7, E-S2-22).
+-- SICHERUNGSZIELE: wohin die Sicherungen geschoben werden.
 --
 -- Der Name ist nicht `transport_dests` -- das sind die Zielkliniken. Hier geht
--- es um FTPS- und SFTP-Gegenstellen (FTP bis Web 20.47.0). Begruendung in update.php bei der
+-- es um FTPS- und SFTP-Gegenstellen. Begruendung in update.php bei der
 -- Migration 2026_09_01_sicherungsziele und in
--- docs/konzepte/erledigt/Konzept-S2-Mengen-Spuren-Sicherung.md unter F-S2-G.
+-- docs/konzepte/erledigt/Konzept-S2-Mengen-Spuren-Sicherung.md.
 --
 -- `geheim` und `schluessel` stehen VERSIEGELT drin (`edsk1:`,
 -- serverkrypto_lib.php). Der Schluessel dazu liegt in config.php, nicht in
@@ -769,7 +761,7 @@ CREATE TABLE backup_targets (
   letzter_lauf   DATETIME NULL,
   letzter_erfolg DATETIME NULL,
   letzter_fehler TEXT NULL,
-  -- Aufbewahrung DORT (P5a/AP10, E-P5a-03): NULL = Option aus. Nicht 0 --
+  -- Aufbewahrung DORT: NULL = Option aus. Nicht 0 --
   -- das hiesse "nichts behalten". Zwei Zahlen, weil Kontopakete und
   -- Komplett-Staende verschiedene Dinge sind.
   behalten_konto    SMALLINT UNSIGNED NULL,
@@ -779,7 +771,7 @@ CREATE TABLE backup_targets (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- Was diese Installation auf welches Ziel geschickt hat -- und was sie dort
--- wieder entfernt hat (P5a/AP10, E-P5a-03/-56). Zugleich Versandprotokoll
+-- wieder entfernt hat. Zugleich Versandprotokoll
 -- (die zweite der drei Sicherungen der Loeschregel) und Loeschprotokoll.
 -- `geloescht_am IS NULL` heisst "liegt dort", soweit wir wissen.
 CREATE TABLE sicherungsziel_dateien (
@@ -804,11 +796,11 @@ CREATE TABLE app_state (
   v VARCHAR(190) NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- GPS-Aufzeichnungen liegen seit Web 22 als Geraetehuellen in track_stuecke
+-- GPS-Aufzeichnungen liegen als Geraetehuellen in track_stuecke
 -- (SPUR2, weiter unten). Die Klartexttabellen track_points (Punkte als
--- Zeilen) und track_blobs (SPUR1) sind mit Web 23 gefallen (S11-12).
+-- Zeilen) und track_blobs (SPUR1) gibt es nicht.
 
--- Sperrvermerke des Schneidewerkzeugs (S4/A2, E-S4-53). Eine Zeile je Schnitt.
+-- Sperrvermerke des Schneidewerkzeugs. Eine Zeile je Schnitt.
 --
 -- Wer einen vergessenen Einsatz nachtraegt, schneidet ihn aus dem Ruhesegment
 -- heraus; die Punkte WANDERN dabei (spur_teilen()), sie werden nicht kopiert.
@@ -824,14 +816,14 @@ CREATE TABLE app_state (
 -- seine `ts` mit.
 --
 -- WIE `track_stuecke` OHNE FREMDSCHLUESSEL (polymorph). `mission_id` ist das
--- Ziel und traegt das Rueckgaengig (E-S4-17): Es holt die Punkte zurueck und
+-- Ziel und traegt das Rueckgaengig: Es holt die Punkte zurueck und
 -- loescht die Zeile, sonst bliebe ein Loch, das niemand mehr fuellen kann.
 CREATE TABLE track_cuts (
   id           INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   user_id      INT UNSIGNED NOT NULL,
   owner_type   ENUM('mission','rest') NOT NULL,   -- Quelle des Schnitts
   owner_id     INT UNSIGNED NOT NULL,
-  mission_id   INT UNSIGNED NULL,                 -- Ziel: der geschnittene Einsatz; NULL = geloescht (S11-05c)
+  mission_id   INT UNSIGNED NULL,                 -- Ziel: der geschnittene Einsatz; NULL = geloescht
   von_ts       BIGINT NOT NULL,
   bis_ts       BIGINT NOT NULL,
   n_punkte     INT UNSIGNED NOT NULL,             -- gewanderte Punkte, fuer die Rueckmeldung
@@ -841,18 +833,18 @@ CREATE TABLE track_cuts (
   KEY konto (user_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- Spurstuecke als Geraetehuellen (S11-04a, Konzept S11 3.3, Format SPUR2).
+-- Spurstuecke als Geraetehuellen (Format SPUR2).
 --
--- Seit S11 kommt keine Koordinate, keine Hoehe und keine Punktzeit mehr im
+-- Es kommt keine Koordinate, keine Hoehe und keine Punktzeit mehr im
 -- Klartext an. Ein Stueck ist das, was das Geraet in einer Anfrage schickt
--- (hoechstens 500 Punkte, E-S11-31), verschlossen mit dem oeffentlichen
+-- (hoechstens 500 Punkte), verschlossen mit dem oeffentlichen
 -- Schluessel des Kontos; oeffnen kann es nur der Browser. Klartext bleiben
 -- nur die Zahlen, mit denen der Server rechnet: wo das Stueck in der Spur
 -- steht (`seq_from`, `punkte`), welchen Zeitraum es abdeckt (`ts_von`,
 -- `ts_bis`) und in welcher Stufe es ist (1 Geraetestueck, 2 zusammengefuegt,
--- 3 ausgeduennt — den Wartungslauf baut S11-07).
+-- 3 ausgeduennt — durch den Wartungslauf).
 --
--- DIE BINDUNG DER HUELLE (E-S11-17): Art (`spur` beim Einsatz, `ruhe` beim
+-- DIE BINDUNG DER HUELLE: Art (`spur` beim Einsatz, `ruhe` beim
 -- Ruhesegment), `client_ref` des Eigentuemers, Platz `<seq_from>:<punkte>`.
 -- Eine Huelle, die jemand in eine andere Zeile kopiert, geht dort nicht auf.
 --
@@ -875,7 +867,7 @@ CREATE TABLE track_stuecke (
   KEY stufe_ende (stufe, ts_bis)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- Zustand der Hintergrundjobs (S2, jobs.php). Eine Zeile je Job.
+-- Zustand der Hintergrundjobs (jobs.php). Eine Zeile je Job.
 --
 -- Mehr als ein Zeitstempel: Sobald Arbeit in HAEPPCHEN anfaellt, braucht
 -- jeder Job eine Fortsetzungsmarke (`zustand`, JSON), einen Rueckstand fuer
@@ -888,7 +880,7 @@ CREATE TABLE jobs (
   rueckstand        INT UNSIGNED NULL,
   letzter_lauf      DATETIME NULL,
   letzter_erfolg    DATETIME NULL,
-  letzter_ausloeser VARCHAR(16) NULL,       -- cli | token | anfrage | seite (Knopf, seit Web 21.12.0)
+  letzter_ausloeser VARCHAR(16) NULL,       -- cli | token | anfrage | seite (Knopf)
   letzter_fehler    TEXT NULL,
   erledigt_zuletzt  INT UNSIGNED NOT NULL DEFAULT 0,
   laeuft_seit       DATETIME NULL
@@ -903,7 +895,7 @@ CREATE TABLE jobs (
 -- sonst laeuft sie bei jeder Neuinstallation unnoetig (und ggf. auf Daten,
 -- die es noch gar nicht gibt).
 -- ---------------------------------------------------------------------------
--- Impressum und Datenschutzerklaerung dieser Installation (R32, seit Web 9.11.0).
+-- Impressum und Datenschutzerklaerung dieser Installation.
 -- Kein Vorgabeinhalt: Was darin steht, ist Sache des Betreibers; die Anwendung
 -- liefert keinen Rechtstext mit. Solange nichts hinterlegt ist, zeigen
 -- impressum.php und datenschutz.php ihren Leerzustand.
@@ -912,14 +904,14 @@ CREATE TABLE jobs (
 CREATE TABLE rechtstexte (
   schluessel VARCHAR(32) NOT NULL PRIMARY KEY,  -- 'impressum' | 'datenschutz'
   inhalt     MEDIUMTEXT NULL,                   -- Markdown-Quelle; NULL/leer = nichts hinterlegt
-  -- DATETIME und nicht DATE (P5b/AP4, Fehlerfund F3): Zwei Aenderungen am
+  -- DATETIME und nicht DATE: Zwei Aenderungen am
   -- selben Tag waeren sonst EINE Fassung — und wer die erste angenommen hat,
   -- gaelte als Annehmer der zweiten. Der Editor bleibt ein Datumsfeld; die
   -- Uhrzeit setzt der Speicherweg, nicht die Betreiberin.
   stand_am   DATETIME NULL                      -- im Editor von Hand gesetzt; NULL = keine Standzeile
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- EINWILLIGUNGEN JE KONTO (P5b/AP4, E-P5b-05, -15).
+-- EINWILLIGUNGEN JE KONTO.
 --
 -- Eine Zeile je Konto UND Schluessel, nicht je Annahme: Eine neue Annahme
 -- ueberschreibt die alte. Der Verlauf „wer hat wann welche Fassung
@@ -937,12 +929,12 @@ CREATE TABLE konto_einwilligungen (
   CONSTRAINT fk_kew_user FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- Berichte der Content-Security-Policy (P5a/AP4, Web 20.7.0). Zusammengefasst
+-- Berichte der Content-Security-Policy. Zusammengefasst
 -- statt protokolliert: Der UNIQUE-Schluessel macht aus tausend gleichen
 -- Meldungen eine Zeile mit einem Zaehler. `seite` ist der PFAD, nicht die
 -- volle Adresse -- diese Anwendung fuehrt kein Protokoll darueber, wer wann
 -- welchen Einsatz geoeffnet hat. Der Aufraeumjob entsorgt Zeilen aelter als
--- 30 Tage (E-P5a-09).
+-- 30 Tage.
 CREATE TABLE csp_berichte (
   id         INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   richtlinie VARCHAR(64)  NOT NULL,          -- verletzte Direktive, z. B. 'script-src'
@@ -955,11 +947,11 @@ CREATE TABLE csp_berichte (
   INDEX idx_zuletzt (zuletzt)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- Verlauf der Hintergrundjobs (Web 20.8.0, P5a/AP5). `jobs` haelt je Job nur
+-- Verlauf der Hintergrundjobs. `jobs` haelt je Job nur
 -- den LETZTEN Lauf, und `letzter_fehler` wird beim naechsten Erfolg auf NULL
 -- gesetzt — ein Job, der jede zweite Nacht scheitert, ist morgens unsichtbar.
 -- Geschrieben wird nur, was etwas aussagt: ein Fehler oder ein Lauf, der etwas
--- erledigt hat. Frist 30 Tage (E-P5a-09), keine Einstellung.
+-- erledigt hat. Frist 30 Tage, keine Einstellung.
 CREATE TABLE job_laeufe (
   id        INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   job       VARCHAR(32)  NOT NULL,
@@ -971,12 +963,12 @@ CREATE TABLE job_laeufe (
   INDEX idx_zeitpunkt (zeitpunkt)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- Mail-Warteschlange (Web 20.8.0, P5a/AP5). Jede Nachricht wird erst
+-- Mail-Warteschlange. Jede Nachricht wird erst
 -- gespeichert, dann sofort versucht; scheitert der Versuch, wiederholt ihn der
 -- Job `mail`. Drei Spalten werden geleert, sobald eine Zeile ihren Endzustand
 -- erreicht: `text` IMMER (Einladung und Reset tragen einen gueltigen Token),
 -- `empfaenger` und `betreff` nur bei ZUGESTELLT. Bei UNZUSTELLBAR bleiben sie
--- — „die Einladung an X kam nie an" ist ohne X wertlos (E-P5a-39).
+-- — „die Einladung an X kam nie an" ist ohne X wertlos.
 CREATE TABLE mail_warteschlange (
   id                INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   schluessel        VARCHAR(32)  NOT NULL,
@@ -1029,7 +1021,7 @@ INSERT IGNORE INTO schema_migrations (id, status) VALUES
   ('2026_07_30_herkunft_bearbeitungsstatus', 'skipped'),
   ('2026_08_05_site_desc_entfernt', 'skipped'),
   ('2026_08_08_review_bausteine', 'skipped'),
-  -- Nachgetragen (Web 5.9.0): Beide Migrationen fehlten hier, obwohl der Kopf
+  -- Nachgetragen: Beide Migrationen fehlten hier, obwohl der Kopf
   -- von update.php es ausdruecklich verlangt. Auf einer Neuinstallation haben
   -- sie nichts zu tun -- die Zeitzonen-Umstellung findet keine Zeilen, die
   -- Geraeteumbenennung keine Geraete --, sie liefen aber trotzdem an.
@@ -1038,10 +1030,10 @@ INSERT IGNORE INTO schema_migrations (id, status) VALUES
   -- account_key steht oben schon in der Tabelle: Eine Neuinstallation legt
   -- die Kennung bei der Kontoanlage an, der Nachtrag ist nur fuer Bestand da.
   ('2026_08_16_kontokennung', 'skipped'),
-  -- Der Umbau auf Diensttage und bodengebundene Rettungsmittel (Web 6.0.0).
+  -- Der Umbau auf Diensttage und bodengebundene Rettungsmittel.
   -- Dieses Schema IST das Ergebnis der Migration.
   ('2026_08_17_notarzt_erweiterung', 'skipped'),
-  -- Nachgetragen (Web 9.10.1): Beide Spalten stehen oben schon in der Tabelle,
+  -- Nachgetragen: Beide Spalten stehen oben schon in der Tabelle,
   -- die Kennungen fehlten hier. Folge auf einer Neuinstallation: update.php
   -- haette beide Migrationen erneut angesetzt und waere an der bereits
   -- vorhandenen Spalte haengengeblieben -- oder, schlimmer, still
@@ -1050,105 +1042,101 @@ INSERT IGNORE INTO schema_migrations (id, status) VALUES
   -- eingerichtete Anwendung hatte die Spalte gar nicht.
   ('2026_08_27_logo_wahl', 'skipped'),
   ('2026_08_28_last_login', 'skipped'),
-  -- Die Tabelle rechtstexte steht oben schon im Schema (Web 9.11.0).
+  -- Die Tabelle rechtstexte steht oben schon im Schema.
   ('2026_08_30_rechtstexte', 'skipped'),
-  -- jobs steht oben schon im Schema (Web 10.1.0); track_blobs (Web 10.0.0) ist
-  -- mit Web 23.0.0 gefallen, die Kennung bleibt, damit nichts sie neu anlegt.
+  -- jobs steht oben schon im Schema; track_blobs ist
+  -- gestrichen, die Kennung bleibt, damit nichts sie neu anlegt.
   ('2026_08_31_spur_blobs', 'skipped'),
   ('2026_08_31_jobs', 'skipped'),
-  -- letzter_punkt_am steht oben schon an beiden Tabellen (Web 10.2.0).
+  -- letzter_punkt_am steht oben schon an beiden Tabellen.
   ('2026_09_01_letzter_punkt_am', 'skipped'),
-  -- backup_targets steht oben schon im Schema (Web 12.1.0).
+  -- backup_targets steht oben schon im Schema.
   ('2026_09_01_sicherungsziele', 'skipped'),
-  -- track_cuts steht oben schon im Schema (Web 12.5.0).
+  -- track_cuts steht oben schon im Schema.
   ('2026_09_02_schnitte', 'skipped'),
-  -- Die drei Geraetespalten stehen oben schon an devices (Web 12.9.0),
-  -- geraet_modell gleich in der breiten Fassung (Web 12.9.1).
+  -- Die drei Geraetespalten stehen oben schon an devices,
+  -- geraet_modell gleich in der breiten Fassung.
   ('2026_09_02_geraetekennung', 'skipped'),
   ('2026_09_02_geraetemodell_breiter', 'skipped'),
-  -- pair_sessions steht oben schon im Schema, pair_codes gibt es nicht mehr
-  -- (Web 13.0.0, S5).
+  -- pair_sessions steht oben schon im Schema, pair_codes gibt es nicht mehr.
   ('2026_09_03_kopplungssitzungen', 'skipped'),
   -- origin steht oben schon als VARCHAR, die vier Geraetespalten an missions
-  -- und rest_segments ebenfalls (Web 14.0.0, R64).
+  -- und rest_segments ebenfalls.
   ('2026_09_04_herkunft_geraet', 'skipped'),
-  -- Der Rollenwert 'betreiberin' steht oben schon im ENUM (Web 15.0.0, R75).
+  -- Der Rollenwert 'betreiberin' steht oben schon im ENUM.
   -- Das Nachziehen des Bestands (alle Admins werden BetreiberInnen) hat auf
   -- einer frischen Installation nichts zu tun: Sie hat keinen Bestand, und
   -- ihr erstes Konto legt install.php gleich als BetreiberIn an.
   ('2026_09_05_rolle_betreiberin', 'skipped'),
   ('2026_09_07_adresssuche_konto', 'skipped'),
   -- `typ`, `kurz` und das NULL-faehige `base_id` stehen oben schon an
-  -- vehicles, `vehicle_typ` und `vehicle_kurz` an days (Web 16.0.0,
-  -- S9/AP4). Das Nachfuellen des Bestands hat auf einer frischen
+  -- vehicles, `vehicle_typ` und `vehicle_kurz` an days. Das Nachfuellen des Bestands hat auf einer frischen
   -- Installation nichts zu tun: Sie hat keine Diensttage.
   ('2026_09_07_rettungsmittel_typ', 'skipped'),
-  -- rest_segments.created_at steht oben schon im Schema (Web 15.6.0).
+  -- rest_segments.created_at steht oben schon im Schema.
   ('2026_09_07_rest_segments_created_at', 'skipped'),
-  -- csp_berichte steht oben schon im Schema (Web 20.7.0, P5a/AP4).
+  -- csp_berichte steht oben schon im Schema.
   ('2026_09_15_csp_berichte', 'skipped'),
-  -- job_laeufe steht oben schon im Schema (Web 20.8.0, P5a/AP5).
+  -- job_laeufe steht oben schon im Schema.
   ('2026_09_16_job_laeufe', 'skipped'),
-  -- mail_warteschlange steht oben schon im Schema (Web 20.8.0, P5a/AP5).
+  -- mail_warteschlange steht oben schon im Schema.
   ('2026_09_16_mail_warteschlange', 'skipped'),
-  -- rate_limits.stufe/stufe_bis stehen oben schon im Schema (Web 20.10.0, P5a/AP6).
+  -- rate_limits.stufe/stufe_bis stehen oben schon im Schema.
   ('2026_09_16_ratenschutz_stufen', 'skipped'),
-  -- sicherheit_ereignisse steht oben schon im Schema (Web 20.10.0, P5a/AP6).
+  -- sicherheit_ereignisse steht oben schon im Schema.
   ('2026_09_16_sicherheit_ereignisse', 'skipped'),
-  -- devices.abgewiesen_* stehen oben schon im Schema (Web 20.11.0, P5a/AP7).
+  -- devices.abgewiesen_* stehen oben schon im Schema.
   ('2026_09_16_geraet_abgewiesen', 'skipped'),
   -- backup_targets.behalten_* und sicherungsziel_dateien stehen oben schon
-  -- im Schema (Web 20.14.0, P5a/AP10).
+  -- im Schema.
   ('2026_09_16_sicherungsziel_aufbewahrung', 'skipped'),
-  -- protokoll_ereignisse steht oben schon im Schema (Web 20.16.5, P5b/AP1).
+  -- protokoll_ereignisse steht oben schon im Schema.
   ('2026_09_16_protokoll_ereignisse', 'skipped'),
-  -- users.status und die Lebenszyklus-Spalten stehen oben schon im Schema
-  -- (Web 20.17.0, P5b/AP2).
+  -- users.status und die Lebenszyklus-Spalten stehen oben schon im Schema.
   ('2026_09_16_konto_lebenszyklus', 'skipped'),
   -- rechtstexte.stand_am ist oben schon DATETIME, konto_einwilligungen steht
-  -- oben schon im Schema (Web 20.19.0, P5b/AP4).
+  -- oben schon im Schema.
   ('2026_09_16_einwilligungen', 'skipped'),
-  -- users.email_neu* stehen oben schon im Schema (Web 20.20.0, P5b/AP5).
+  -- users.email_neu* stehen oben schon im Schema.
   ('2026_09_16_adresswechsel_bestaetigt', 'skipped'),
-  -- users.grenze_* und aufbewahrung_tage stehen oben schon im Schema
-  -- (Web 20.21.0, P5b/AP6).
+  -- users.grenze_* und aufbewahrung_tage stehen oben schon im Schema.
   ('2026_09_16_konto_grenzen', 'skipped'),
-  -- users.erststart_stand und rueckfrage_* stehen oben schon im Schema
-  -- (Web 20.24.0, P5b/AP9). Der Nachzieher fuer Bestandskonten entfaellt in
+  -- users.erststart_stand und rueckfrage_* stehen oben schon im Schema.
+  -- Der Nachzieher fuer Bestandskonten entfaellt in
   -- einer frischen Anlage: Dort gibt es keine.
   ('2026_09_17_erststart_rueckfragen', 'skipped'),
-  -- missions.uhr_gesperrt heisst oben schon so (Web 20.25.0, Nr. 238). Eine
+  -- missions.uhr_gesperrt heisst oben schon so. Eine
   -- frische Anlage hat nichts umzubenennen; die Migration ist ausschliesslich
   -- fuer Bestandsdatenbanken da, die die Spalte noch als `manual` fuehren.
   ('2026_09_20_uhr_gesperrt', 'skipped'),
   ('2026_09_24_rolle_support', 'skipped'),
   ('2026_09_24_zweitfaktor', 'skipped'),
-  -- users.rw_* stehen oben schon im Schema (Konzept RW, RW-01).
+  -- users.rw_* stehen oben schon im Schema.
   ('2026_09_24_rueckweg_schluesselpaar', 'skipped'),
   -- missions.idx_missions_started und idx_missions_deleted stehen oben schon
-  -- im Schema (P5c/AP7).
+  -- im Schema.
   ('2026_09_24_statistik_beginn', 'skipped'),
   -- Die Stammdaten tragen oben schon `user_id NOT NULL`, die Auswahltabelle
-  -- gibt es nicht, und `backup_targets.protokoll` kennt kein 'ftp' (P5c/AP8). Einen
+  -- gibt es nicht, und `backup_targets.protokoll` kennt kein 'ftp'. Einen
   -- Tag mit Tagesrettungsmittel hat eine frische Anlage nicht.
   ('2026_09_25_zentrale_stammdaten', 'skipped'),
   ('2026_09_25_ftp_entfernen', 'skipped'),
   ('2026_09_25_tagesrettungsmittel_rollen', 'skipped'),
-  -- days.created_at steht oben schon im Schema (Web 21.3.0, Nr. 158).
+  -- days.created_at steht oben schon im Schema.
   ('2026_09_27_days_created_at', 'skipped'),
-  -- vertraute_geraete steht oben schon im Schema (Web 21.8.0, SR-02). Der
+  -- vertraute_geraete steht oben schon im Schema. Der
   -- Wert `notzugang_geheim`, den dieselbe Migration im Bestand anlegt, entsteht
-  -- auf einer frischen Anlage beim ersten Aufruf des Notzugangs (E-SR-24).
+  -- auf einer frischen Anlage beim ersten Aufruf des Notzugangs.
   ('2026_09_28_vertraute_geraete', 'skipped'),
-  -- passkeys steht oben schon im Schema (Web 21.10.0, SR-09).
+  -- passkeys steht oben schon im Schema.
   ('2026_09_28_passkeys', 'skipped'),
-  -- users.kp_* stehen oben schon im Schema (S11-03).
+  -- users.kp_* stehen oben schon im Schema.
   ('2026_10_13_kontopaar', 'skipped'),
-  -- track_stuecke und missions.ort_huelle stehen oben schon im Schema (S11-04a).
+  -- track_stuecke und missions.ort_huelle stehen oben schon im Schema.
   ('2026_10_13_ortshuellen', 'skipped'),
-  -- track_cuts.mission_id ist oben schon NULL-faehig (S11-05c).
+  -- track_cuts.mission_id ist oben schon NULL-faehig.
   ('2026_10_15_loeschvermerk', 'skipped'),
   -- Die Klartext-Ortsdaten (track_points, track_blobs, resus_sessions,
   -- resus_events, mission_phases.lat/lon, missions.transport_dest, dest_lat,
-  -- dest_lon, site_ele_m) stehen oben schon nicht mehr (Web 23.0.0, S11-12).
+  -- dest_lon, site_ele_m) stehen oben schon nicht mehr.
   ('2026_10_19_klartext_weg', 'skipped');

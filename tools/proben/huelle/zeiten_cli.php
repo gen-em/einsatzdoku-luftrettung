@@ -1,14 +1,14 @@
 <?php
 /* Ortszeit → Zeitpunkt von der Kommandozeile — für Werkzeuge, die nicht in
- * PHP geschrieben sind (S11-06e).
+ * PHP geschrieben sind.
  *
  * Anlass: Nr. 43 — das Einspielwerkzeug des Referenzbestands
  * (`tools/referenzdatensatz/einspielen/einspielen.py`) verschließt seit
  * S11-06e Phasenorte und Reanimation selbst und schickt dem Formular die
- * Phasenzeiten mit, die der Server gegenhält (`ort_phasen`, S11-05b). Die
+ * Phasenzeiten mit, die der Server gegenhält (`ort_phasen`). Die
  * Zeiten müssen dafür genau so entstehen wie im Formular: über
  * `local_to_utc()` und die Zeitzone dieser Anlage. Statt die Regel in Python
- * ein zweites Mal zu schreiben, ruft es diese Datei (F-S11-43).
+ * ein zweites Mal zu schreiben, ruft es diese Datei.
  *
  * Eingabe (stdin):  [["JJJJ-MM-TT", "hh:mm", Tagesversatz], …]
  * Ausgabe (stdout): [Sekunden seit 1970 (UTC) oder null, …]

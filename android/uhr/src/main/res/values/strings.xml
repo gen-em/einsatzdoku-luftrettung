@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-    Sichtbare Texte der Uhr-App. Gerätefrei wie am Handy (E-S4-19).
+    Sichtbare Texte der Uhr-App. Gerätefrei wie am Handy.
 
     KURZ, UND ZWAR AUS EINEM GRUND. Ein rundes Display schneidet an beiden
     Seiten ab; was nicht hineinpasst, faellt weg, ohne dass es jemand merkt.
@@ -15,7 +15,7 @@
 
     <string name="fassung">Fassung %1$s</string>
 
-    <!-- ==== Bedienbild (E-S4-21) ======================================== -->
+    <!-- ==== Bedienbild ================================================== -->
     <string name="handy_verbunden">Handy verbunden</string>
     <!--
         Der dritte Fall: Es ist noch nichts hinausgegangen. Weder "verbunden"
@@ -25,13 +25,13 @@
     <string name="handy_unbekannt">noch nichts gesendet</string>
     <string name="handy_nicht_erreichbar">Handy nicht erreichbar</string>
     <!--
-        Der schwebende Dienststart (E-S4-10). Er sagt beides in einer Zeile:
+        Der schwebende Dienststart. Er sagt beides in einer Zeile:
         dass die Uhr gemeldet hat, und dass noch NICHTS aufgezeichnet wird.
         Nur das Erste zu sagen waere die gefaehrlichere Haelfte.
     -->
     <string name="dienst_schwebt">wartet aufs Handy · keine Aufzeichnung</string>
 
-    <!-- Was das Handy ueber seine Ortung meldet (E-S5Z-15). EIN Wortlaut fuer
+    <!-- Was das Handy ueber seine Ortung meldet. EIN Wortlaut fuer
          vier Ursachen: Die Uhr kann keine davon beheben, das tut das Handy.
          Was sie beitragen kann, ist die Nachricht ans Handgelenk, dass gerade
          keine Spur entsteht. -->

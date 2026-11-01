@@ -10,7 +10,7 @@
 Rückgabewert 0 = in Ordnung · 1 = der Bericht trägt nicht · 2 = die Probe
 selbst kam nicht zum Laufen (fehlende Datei, unbekannter Schalter, kein Git).
 
-MIT EINEM WERKZEUG UND NICHT MIT EINER SHELL-ZEILE (E-P5a-12): Eine Zeile,
+MIT EINEM WERKZEUG UND NICHT MIT EINER SHELL-ZEILE: Eine Zeile,
 die einen Wert aus Text zieht, ist die Stelle, an der ein Riegel still
 durchlässt. Hier ist jede der sechs roten Lagen eine Funktion mit einem
 Prüffall in `--selbstprobe`.
@@ -29,7 +29,7 @@ HIER = os.path.dirname(os.path.abspath(__file__))
 WURZEL = os.path.dirname(os.path.dirname(HIER))
 ABLAUF = os.path.join(HIER, 'pruefablauf.json')
 sys.path.insert(0, HIER)
-from auswahl import UNLESBAR, beruehrte, fassung, stufe_aus_fassungen, stufe_aus_version  # noqa: E402 — die EINE Lesestelle (F-PK-30)
+from auswahl import UNLESBAR, beruehrte, fassung, stufe_aus_fassungen, stufe_aus_version  # noqa: E402 — die EINE Lesestelle
 
 STUFEN = ['klein', 'neben', 'haupt']
 KOPF_RE = re.compile(
@@ -39,10 +39,10 @@ KOPF_RE = re.compile(
 PAAR_RE = re.compile(r'([a-zA-Z][\w-]*)=(\S+)')
 
 # Die Flächen: die ORDNER, deren Berührung sie verrät, und die PROBE, die sie
-# baut. EINE Stelle für Schreiben und Lesen. Bis PK-05 stand hier
+# baut. EINE Stelle für Schreiben und Lesen. Früher stand hier
 # `'uhr': 'uhr'` — ein Ordner, den es nicht gibt, und Lage 3 konnte für die
-# Uhr nie anschlagen (F-PK-31). Der Uhr-Prüfstand gehört dazu, wie in der
-# alten Bereichserkennung (F-PK-36).
+# Uhr nie anschlagen. Der Uhr-Prüfstand gehört dazu, wie in der
+# alten Bereichserkennung.
 FLAECHEN = {'handy': (('android',), 'android-bau'),
             'uhr': (('watch', 'tools/uhr-pruefstand'), 'uhr-stufe1')}
 
@@ -51,7 +51,7 @@ def flaeche_beruehrt(flaeche, dateien):
     ordner = FLAECHEN[flaeche][0]
     return any(d.startswith(o + '/') for o in ordner for d in dateien)
 
-# DER WEG NACH EINEM FREMDEN MERGE (E-PK-42). Das Tor ist streng: Der Baum im
+# DER WEG NACH EINEM FREMDEN MERGE. Das Tor ist streng: Der Baum im
 # Bericht muss der Baum des geprüften Commits sein. „Update branch" auf GitHub
 # schreibt einen Merge-Commit ohne Bericht — also rot, mit diesem Weg.
 WEG = ('Weg: `bash tools/pruefstand/pruefen.sh` auf genau diesem Stand fahren und den Bericht in die '
@@ -89,7 +89,7 @@ def baum_hash(commit='HEAD'):
     Index; damit er den Arbeitsbestand trifft, wird vorher `add -A` in einem
     EIGENEN Index gefahren, der den echten nicht anfasst.
 
-    DER ORT DES INDEX FRAGT GIT (BR-04, Nr. 314). Bis dahin stand hier
+    DER ORT DES INDEX FRAGT GIT. Bis dahin stand hier
     `WURZEL/.git/…`; in einem Worktree ist `.git` eine Datei, `add -A` brach
     ab, und der Prüfstand meldete trotzdem grün.
     """
@@ -109,7 +109,7 @@ def baum_hash(commit='HEAD'):
 
 
 def flaechen_aus_lauf(zahlen, dateien):
-    """„gebaut" NUR nach einem grünen Bau (F-PK-34). Bis PK-05 schrieb
+    """„gebaut" NUR nach einem grünen Bau. Früher schrieb
     `pruefen.sh` „gebaut", sobald der Ordner berührt war — auch nach einem
     roten Bau oder einem, der mangels SDK nie lief."""
     aus = {}
@@ -162,7 +162,7 @@ def zerlegen(text):
 
 def versionsstufe(basis, commit):
     """Welche Stufe verlangt der Unterschied — die Fassung in
-    server/version.php und die Stufenregeln (E-P5c-88: eine neue Migration
+    server/version.php und die Stufenregeln (eine neue Migration
     heißt haupt)? Gelesen in `auswahl.py` — eine Stelle für beide. UNLESBAR,
     wenn eine Seite keine Fassung trägt."""
     return stufe_aus_version(basis, commit)[0]
@@ -174,7 +174,7 @@ def beruehrt(basis, commit):
 
 
 MOTOREN = 'chromium+firefox+webkit'
-# Je Stufe (E-DM-08): `klein` in Chromium allein, ab `neben` alle drei.
+# Je Stufe: `klein` in Chromium allein, ab `neben` alle drei.
 MOTOREN_JE_STUFE = {'klein': 'chromium', 'neben': MOTOREN, 'haupt': MOTOREN}
 
 
@@ -206,7 +206,7 @@ def pruefen(bericht, basis=None, commit='HEAD', riegel=None, dateien=None, baum=
 
     # (3) Berührte Fläche ohne grünen Bau. Verlangt ist „gebaut" — nicht
     # „alles außer nicht berührt": Ein roter oder nie gelaufener Bau ist
-    # kein Bau (F-PK-34).
+    # kein Bau.
     liste = dateien if dateien is not None else (beruehrt(basis, commit) if basis else [])
     for flaeche, (ordner, _) in FLAECHEN.items():
         wert = bericht['werte'].get(flaeche)
@@ -224,10 +224,10 @@ def pruefen(bericht, basis=None, commit='HEAD', riegel=None, dateien=None, baum=
             schlecht.append(
                 f"Riegel „{name}\": Bericht {gemeldet}, im Tor gemessen {zahl}.")
 
-    # (5) Eine rote oder nicht gemessene Probe im Bericht (E-PK-44, -46). Der
+    # (5) Eine rote oder nicht gemessene Probe im Bericht. Der
     # Prüfstand druckt den Bericht auch nach einem roten Lauf; ohne diese Lage
     # käme ein Commit mit „kreislauf-edbak=1" durch, solange die billigen
-    # Riegel stimmen. Überspringen ist rot (E-KH-12). Riegel und Flächen haben
+    # Riegel stimmen. Überspringen ist rot. Riegel und Flächen haben
     # ihre eigene Lage.
     eigene = set(riegel_namen if riegel_namen is not None else lade_ablauf()['riegel']['proben'])
     eigene |= set(riegel or {}) | set(FLAECHEN) | {'motoren'}
@@ -239,11 +239,10 @@ def pruefen(bericht, basis=None, commit='HEAD', riegel=None, dateien=None, baum=
         else:
             schlecht.append(f"Probe „{name}\" meldet {wert} — ein roter Lauf ist kein Nachweis.")
 
-    # (6) Eine Browserprobe, aber nicht in den Engines ihrer Stufe (R87,
-    # Konzept DM). Welche Proben es sind, sagt `"motoren": true` in
+    # (6) Eine Browserprobe, aber nicht in den Engines ihrer Stufe. Welche Proben es sind, sagt `"motoren": true` in
     # pruefablauf.json; der Prüfstand schreibt dann `motoren=` mit den
     # Engines, die er gefahren hat. Verlangt sind in `klein` Chromium, ab
-    # `neben` alle drei (E-DM-08). Fehlt die Zeile oder nennt sie andere, ist
+    # `neben` alle drei. Fehlt die Zeile oder nennt sie andere, ist
     # der Bericht kein Nachweis.
     if motoren_namen is None:
         motoren_namen = {n for n, p in lade_ablauf()['proben'].items() if p.get('motoren') is True}

@@ -9,26 +9,26 @@ declare(strict_types=1);
  *     protokoll_archive()                                // was liegt da?
  *     protokoll_archiv_ausliefern($name)                 // Download, entsiegelt
  *
- * WOFUER (P5c/AP2, E-P5c-03, -39, -57). Die Datenbank hält die Einträge nur
+ * WOFUER. Die Datenbank hält die Einträge nur
  * so lange wie ihre Frist — 30 Tage, in der Verwaltung 365. Das Archiv hält
  * sie länger und außer Haus: Alle sieben Tage (einstellbar) schreibt der Job
  * die Einträge des Zeitraums als ZIP nach `sicherungen/protokoll/`, der
  * Versandjob schickt es auf das Sicherungsziel, und nach 365 Tagen
  * (einstellbar) löscht der Job es hier. Auf dem Ziel gibt es keine eigene
- * Löschregel (E-P5c-39) — rund 52 kleine Dateien im Jahr.
+ * Löschregel — rund 52 kleine Dateien im Jahr.
  *
- * WAS HINEINDARF (E-P5c-39). Das Archiv liegt ein Jahr und geht außer Haus,
+ * WAS HINEINDARF. Das Archiv liegt ein Jahr und geht außer Haus,
  * `sicherheit_ereignisse` dagegen führt IP- und E-Mail-Adressen und wird
- * bewusst nach 30 Tagen gelöscht (E-P5a-09). Deshalb:
+ * bewusst nach 30 Tagen gelöscht. Deshalb:
  *   - Sicherheit: nur Art, Topf, Stufe, Zeit — `merkmal` und `wer` NICHT;
  *     aus den CSP-Berichten Richtlinie, Quelle, Seite, Anzahl (keine
  *     Personenangaben).
  *   - E-Mail: nur Vorlage, Zustand, Zeit.
  *   - Alle übrigen Reiter: wie gespeichert — samt der Adressen im Text
- *     (E-P5c-75, Q-P5c-31: Das Audit soll nach einer Kontolöschung noch
- *     sagen, wer es war; die Datenbank hält dieselben Texte ohnehin 365 Tage).
+ *     (Das Audit soll nach einer Kontolöschung noch sagen, wer es war; die
+ *     Datenbank hält dieselben Texte ohnehin 365 Tage).
  *
- * WIE ES GEBAUT IST (E-P5c-57, F-P5c-19).
+ * WIE ES GEBAUT IST.
  *   - `sk_versiegeln()` liefert eine Zeichenkette, und AES-GCM verlangt den
  *     Klartext am Stück. Ein Guss über ein Jahr Sicherheitsereignisse
  *     sprengte die 64 MB. Deshalb Teile zu höchstens 1 MB Klartext, jeder
@@ -44,12 +44,12 @@ declare(strict_types=1);
  *     nur ein Angriff, der Zehntausende Sperren schreibt —, wird nicht
  *     archiviert, und das Manifest sagt es: `gekuerzt` je Reiter.
  *
- * DAS ERSTE ARCHIV BEGINNT BEIM ÄLTESTEN EINTRAG (E-P5c-76, Q-P5c-32), auf
+ * DAS ERSTE ARCHIV BEGINNT BEIM ÄLTESTEN EINTRAG, auf
  * den Tag abgerundet. Der Job holt dann Zeitraum für Zeitraum nach, bis er
  * die Gegenwart erreicht. Keine Lücke: Was die Datenbank später nach Frist
  * löscht, liegt dann im Archiv.
  *
- * DER ORT BLEIBT `sicherungen/protokoll/` (E-P5c-57): Schutzliste,
+ * DER ORT BLEIBT `sicherungen/protokoll/`: Schutzliste,
  * `.gitignore` und Integritätswache decken `sicherungen/` schon, und
  * `edbak_kennung_gueltig()` hält den Namen aus der Liste der verwaisten
  * Kontoordner heraus. Ein anderer Ort hieße drei Stellen und eine neue
@@ -232,7 +232,7 @@ function protokoll_archiv_manifest(string $name): ?array
     return is_array($m) ? $m : null;
 }
 
-/* ---- Was eine Zeile im Archiv ist (E-P5c-39) ------------------------------- */
+/* ---- Was eine Zeile im Archiv ist ------------------------------------------ */
 
 /**
  * Eine Rohzeile einer Quelle als Archivzeile. Hier — und nur hier — steht,
@@ -256,7 +256,7 @@ function protokoll_archiv_zeile(string $reiter, array $z): array
                         'anzahl' => $daten['anzahl'] ?? null];
             }
             /* `merkmal` (IP oder Adresse) und `wer` bleiben draußen — die
-             * 30-Tage-Zusage aus E-P5a-09 hält auch im Archiv. */
+             * 30-Tage-Zusage hält auch im Archiv. */
             return ['zeit' => (string)$z['zeit'], 'art' => $art,
                     'topf' => $daten['topf'] ?? null, 'stufe' => $daten['stufe'] ?? null];
         case 'email':
@@ -276,7 +276,7 @@ function protokoll_archiv_zeile(string $reiter, array $z): array
 
 /**
  * Der Beginn des nächsten Zeitraums: die Marke, oder — beim ersten Lauf —
- * der Tag des ältesten Eintrags (E-P5c-76). `null`: es gibt nichts.
+ * der Tag des ältesten Eintrags. `null`: es gibt nichts.
  */
 function protokoll_archiv_naechster_beginn(): ?string
 {
@@ -442,7 +442,7 @@ function protokoll_archiv_sammeln(array &$z, string $reiter, callable $zeitLinks
  * dazu, packen, an seinen Platz legen.
  *
  * DER KLARTEXT LIEGT NUR IM BAUORDNER, und der steht unter `sicherungen/`
- * (`.htaccess` mit `Require all denied`, E16). Er wird hier gelöscht, sobald
+ * (`.htaccess` mit `Require all denied`). Er wird hier gelöscht, sobald
  * das Archiv steht, und bei jedem neuen Zeitraum vorher geleert.
  */
 function protokoll_archiv_abschliessen(array $z): void
@@ -515,7 +515,7 @@ function protokoll_archiv_aufraeumen(): int
     return $n;
 }
 
-/* ---- Der Download (E-P5c-03) ------------------------------------------------ */
+/* ---- Der Download ---------------------------------------------------------- */
 
 /**
  * Ein Archiv in einen Arbeitsordner entsiegeln: je Reiter eine
@@ -563,7 +563,7 @@ function protokoll_archiv_entsiegeln(string $name, string $arbeit): array
  * beenden. Gibt einen Satz zurück, wenn es nicht geht (anderer Schlüssel,
  * beschädigt). Der Protokolleintrag steht beim Aufrufer — der weiß, wer.
  */
-function protokoll_archiv_ausliefern(string $name): ?string
+function protokoll_archiv_ausliefern(string $name): string
 {
     $arbeit = sys_get_temp_dir() . '/protokollarchiv-' . bin2hex(random_bytes(6));
     [$fehler, $ausgabe] = protokoll_archiv_entsiegeln($name, $arbeit);

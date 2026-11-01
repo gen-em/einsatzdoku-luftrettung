@@ -4,14 +4,14 @@
 // gehoert in die Module (handy/, uhr/). Die Wurzel tut genau zwei Dinge: Sie
 // meldet die Uebersetzer-Zusaetze an, und sie liest die EINE Versionsnummer
 // aus version.properties und rechnet daraus den Versionscode. Beide Module
-// nehmen sie von hier -- eine Nummer, eine Quelle (E-S4-02).
+// nehmen sie von hier -- eine Nummer, eine Quelle.
 
 import java.util.Properties
 
 plugins {
     alias(libs.plugins.android.application) apply false
     // Nur, um die Kotlin-Fassung festzulegen: Angewandt wird das Plugin
-    // nirgends mehr, AGP 9 uebersetzt Kotlin selbst (AR-02).
+    // nirgends, AGP 9 uebersetzt Kotlin selbst.
     alias(libs.plugins.kotlin.android) apply false
     alias(libs.plugins.kotlin.compose) apply false
 }
@@ -38,15 +38,15 @@ require(fassungTeile.size == 3 && fassungTeile.all { it.toIntOrNull() != null })
 val fassungCode: Int =
     fassungTeile[0].toInt() * 10_000 + fassungTeile[1].toInt() * 100 + fassungTeile[2].toInt()
 
-/* DER VERSATZ DES UHR-MODULS (Backlog Nr. 98, R65).
+/* DER VERSATZ DES UHR-MODULS.
  *
  * WOZU. Die Play Console verlangt unter EINEM Paketnamen je hochgeladenem APK
  * einen eindeutigen Versionscode. Handy und Uhr tragen dieselbe Anwendungs-ID
- * (E-S4-01) und bisher denselben gerechneten Code -- damit laesst sich das
+ * und haetten ohne Versatz denselben gerechneten Code -- damit liesse sich das
  * zweite der beiden nicht hochladen, und ohne das gibt es kein Wear-OS-Release.
  *
- * WARUM +1 000 000 UND KEINE FUEHRENDE FORMFAKTOR-ZIFFER. Backlog Nr. 98 nennt
- * beides als moeglich. Die fuehrende Ziffer haette BEIDE Module verschoben
+ * WARUM +1 000 000 UND KEINE FUEHRENDE FORMFAKTOR-ZIFFER. Beides waere
+ * moeglich. Die fuehrende Ziffer haette BEIDE Module verschoben
  * (Handy 1xxxxxx, Uhr 2xxxxxx) -- also einen Sprung auch dort, wo keiner
  * noetig ist. Der Versatz trifft nur das Modul, das ihn braucht: Das Handy
  * zaehlt unveraendert weiter, die Uhr springt einmalig.
@@ -57,7 +57,7 @@ val fassungCode: Int =
  * kuenftigen Handy-Fassung kollidieren, ein Versatz nach oben nie -- 1 000 000
  * entspraeche der Handy-Version 100.0.0.
  *
- * DIE ZAEHLUNG BLEIBT EINE (E-S4-02). Versionsname und version.properties sind
+ * DIE ZAEHLUNG BLEIBT EINE. Versionsname und version.properties sind
  * unberuehrt; beide Module tragen weiterhin dieselbe Fassung. Was sich
  * unterscheidet, ist eine Zahl, die nur Play liest und die kein Mensch je zu
  * Gesicht bekommt.

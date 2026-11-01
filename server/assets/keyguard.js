@@ -15,34 +15,30 @@
  *                           dem Passwort; ein neues Entsperren überschreibt ihn)
  *   zu alt               -> löschen, null
  *
- * WARUM EIN FREMDER EINTRAG NICHT GELÖSCHT WIRD (seit R17-25). Bis 23.3.x
- * gehörte der Eintrag einem Tab, und „passt nicht" hieß „dieser Tab hat das
- * Konto gewechselt". Jetzt teilen sich alle Tabs ihn: Ein Tab, der vor einem
+ * WARUM EIN FREMDER EINTRAG NICHT GELÖSCHT WIRD. Alle Tabs teilen sich den
+ * Eintrag: Ein Tab, der vor einem
  * Passwortwechsel geladen wurde, trägt die alte Hülle und hielte den
  * gültigen Eintrag für fremd — löschte er ihn, sperrte er alle anderen Tabs
  * gleich mit. Ein Konto, das wirklich wechselt, meldet sich vorher ab und
  * an, und beides räumt die Ablage.
  *
- * SEIT R17-25 (Web 23.4.0, Backlog Nr. 370) liegt der Eintrag nicht mehr im
- * `sessionStorage` des Tabs, sondern als nicht extrahierbarer `CryptoKey`
- * in IndexedDB (`EdCrypto.inhaltAblegen()`, Begründung und Preis dort).
- * Zwei Folgen für diese Datei:
+ * Der Eintrag liegt nicht im `sessionStorage` des Tabs, sondern als nicht
+ * extrahierbarer `CryptoKey` in IndexedDB (`EdCrypto.inhaltAblegen()`,
+ * Begründung und Preis dort). Zwei Folgen für diese Datei:
  *
- *   KEIN STILLES NEU-ENTPACKEN MEHR. Bis 23.3.x lag der Datenschlüssel
- *   (`edk`) neben dem Inhaltsschlüssel, und ein verworfener Eintrag wurde
- *   ohne Passwort aus der Hülle neu entpackt. Den Datenschlüssel gibt es nach
- *   dem Entsperren nicht mehr. Wer ihn braucht, fragt nach dem Passwort.
+ *   KEIN STILLES NEU-ENTPACKEN. Der Datenschlüssel (`edk`) liegt nicht
+ *   neben dem Inhaltsschlüssel; nach dem Entsperren gibt es ihn nicht mehr.
+ *   Ein verworfener Eintrag lässt sich deshalb nicht ohne Passwort aus der
+ *   Hülle neu entpacken. Wer ihn braucht, fragt nach dem Passwort.
  *
- *   EIN EINTRAG FÜR ALLE TABS (E-R17-76). Der Satz „Ein Tab, ein Schlüssel"
- *   aus dem Handbuch gilt nicht mehr: Ein neuer Tab und ein
- *   wiederhergestellter Browser finden den Schlüssel, solange die Frist
- *   läuft (Nr. 406).
+ *   EIN EINTRAG FÜR ALLE TABS. Ein neuer Tab und ein wiederhergestellter
+ *   Browser finden den Schlüssel, solange die Frist läuft.
  *
  * ZUR LEBENSDAUER
  * Die Anmeldung hängt am PHP-Sitzungscookie (30 Minuten Inaktivität). Der
  * Schlüssel hat dieselbe Frist und misst dasselbe: Jeder Gebrauch zählt sie
- * von vorn (R44, angeglichen in Web 12.9.0 — bis dahin lief sie absolut ab
- * dem Entsperren). Bewusst gleich und nicht kürzer: Ein Schlüssel, der VOR der
+ * von vorn, nicht absolut ab dem Entsperren. Bewusst gleich und nicht
+ * kürzer: Ein Schlüssel, der VOR der
  * Sitzung abläuft, erzeugt einen Entsperrdialog mitten in der Arbeit und
  * keinen Sicherheitsgewinn. Die Gegenrichtung — die Sitzung ebenfalls absolut
  * zu befristen — hätte aktive NutzerInnen mitten in der Arbeit abgemeldet.
@@ -82,7 +78,7 @@ const EdKeyGuard = (() => {
     const erwartet = await EdCrypto.wrapFingerprint(wrap);
     if (!frisch(eintrag)) { await EdCrypto.inhaltLoeschen(); return null; }
     if (eintrag.bindungen.indexOf(erwartet) < 0) { return null; }
-    // Benutzt heißt in Gebrauch: Die Frist zählt ab jetzt neu (R44).
+    // Benutzt heißt in Gebrauch: Die Frist zählt ab jetzt neu.
     if (Date.now() - eintrag.zeit > ANFASSEN_ALLE_MS) { await EdCrypto.inhaltAnfassen(eintrag); }
     return eintrag.schluessel;
   }

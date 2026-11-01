@@ -1,4 +1,4 @@
-/* CSV-Import der nachträglich erfassten Einsätze (Arbeitspaket B4).
+/* CSV-Import der nachträglich erfassten Einsätze.
  *
  * WARUM IM BROWSER. Die Importseite enthält bewusst KEINE Verarbeitungslogik
  * (`import.php`, Kopfkommentar): Die Datei wird nicht hochgeladen, sondern im
@@ -29,7 +29,7 @@
  *     pruefen.py haelt die Datei gegen die Parser der Anwendung.
  *   - Eine Zelle mit `=` am Anfang kommt leer an: SheetJS liest sie als
  *     Formel. Die Formel-Anfangszeichen des Bestands stehen deshalb auf dem
- *     Formularweg, nicht auf dem CSV-Weg (F-P1-G).
+ *     Formularweg, nicht auf dem CSV-Weg.
  */
 import { writeFileSync, mkdirSync } from 'node:fs';
 import { motorWahl, starten } from '../../motor.mjs';
@@ -37,7 +37,7 @@ import { motorWahl, starten } from '../../motor.mjs';
 const MODUL = process.env.PLAYWRIGHT_MODUL
   || '/opt/node22/lib/node_modules/playwright/index.mjs';
 const PW = (m => m.default ?? m)(await import(MODUL.startsWith('/') ? 'file://' + MODUL : MODUL));
-/* Die Engine wählt der Läufer (MOTOR=… oder --motor), R87. */
+/* Die Engine wählt der Läufer (MOTOR=… oder --motor). */
 const MOTOR = motorWahl(process.argv);
 
 const basis = process.argv[2] || 'https://127.0.0.1:8443';
