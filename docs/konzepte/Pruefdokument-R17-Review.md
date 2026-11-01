@@ -565,6 +565,24 @@ Prüfstand; `wiederherstellen.php` mit leerer Datenbank nur über `curl`.
 Je Punkt: Bedienweg, erwartetes Ergebnis, woran ein Scheitern zu erkennen
 ist. Abhaken, wenn geprüft.
 
+**Reihenfolge nach Risiko (Stand 01.11.2026, zum Abschluss von 12b).** Auf
+Produktiv läuft Web 23.1.0; alles ab R17-20 kommt erst mit dem nächsten
+Tag dorthin. Die Punkte unter A gehören deshalb auf **Staging nach dem
+Merge, vor dem Produktiv-Tag** — dort kann man sich aussperren oder Daten
+nicht mehr sehen. Was die Sandbox nicht kann (echte Geräte, Safari,
+Bitwarden, ein Postfach, der Apache des Hosters, GitHub-Einstellungen),
+steht in Abschnitt 1.
+
+- **A — vor dem Produktiv-Tag, auf Staging:** P-R17-20 (Anmelden nach dem
+  Pfeffer), -35 (Entsperren, neue Tabs, in Safari und am Rechner), -30
+  (Mail im Postfach), -40 (Seitenaufbau am Telefon).
+- **B — echte Geräte:** P-R17-25, -26, -27 (Garmin), -11 (Android-Handy),
+  -05 (Wear-APK ohne Berechtigung).
+- **C — Hoster und Produktiv:** P-R17-10, -36, -19, -37, -34, -21, -22,
+  -23, -28, -33.
+- **D — GitHub und Kette:** P-R17-04, -15, -16, -39, -18.
+- **E — durchsehen, ohne Eile:** P-R17-06, -07, -08, -09, -38, -03.
+
 | Nr. | Bedienweg | Erwartung | Scheitern erkennbar an | ☐ |
 |---|---|---|---|---|
 | P-R17-01 | `docs/Bedrohungsmodell.md` von vorn bis hinten lesen, mit dem eigenen Bild der Anlage daneben: Welche Lage fehlt? Welche Zusage steht dort anders, als Sie sie geben würden? | Keine Lage fehlt, keine Zusage ist zu weit; jede Grenze, die Sie kennen, steht benannt. | Eine Angreiferlage oder ein Klartextfeld, das Ihnen einfällt und im Modell nicht steht. | ☑ 11.10.2026 — freigegeben |

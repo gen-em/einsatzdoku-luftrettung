@@ -1165,7 +1165,7 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
 
 <!-- -->
 
-402. **Die Sync-Seite der Uhr überlappt ab vier Zeilen im unteren Block.** · gehört zu: 12b · Stand: offen · seit 26.10.2026
+402. **Die Sync-Seite der Uhr überlappt ab vier Zeilen im unteren Block.** · gehört zu: nächste Backlog-Runde · Stand: offen · seit 26.10.2026
      Gefunden in R17-21 (F-R17-69) beim Bau der Fristanzeige: Auf der
      Venu 3s schob eine dritte Meldungszeile („Daten verfallen am …") den
      Mittelblock „N Pakete offen" in die rote Zeile darunter — im Simulator
@@ -1182,7 +1182,7 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
 
 <!-- -->
 
-403. **Die Freigabeprobe in Chromium scheitert im Gesamtlauf des Prüfstands an der Anlage ihres Prüfkontos.** · gehört zu: 12b · Stand: offen · seit 27.10.2026
+403. **Die Freigabeprobe in Chromium scheitert im Gesamtlauf des Prüfstands an der Anlage ihres Prüfkontos.** · gehört zu: nächste Backlog-Runde · Stand: offen · seit 27.10.2026
      *Aufgenommen 27.10.2026 nach R17-23 (Betreiberin: ja, vor R17-30).*
      Dreimal in Folge — im ersten `neben`-Lauf von R17-21 und R17-22 und im
      Lauf von R17-23 — brach `freigabeprobe [chromium]` nach 3 s ab:
