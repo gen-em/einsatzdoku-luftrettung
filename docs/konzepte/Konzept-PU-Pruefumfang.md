@@ -10,7 +10,7 @@ daneben.
 **Herkunft:** Frage der Betreiberin am 01.11.2026, ob die Entwicklung „zu
 90 % aus Testläufen" bestehe. Die Zählung (Abschnitt 1.1) sagt: ein Drittel
 der Zeilen, aber der größere Teil der Wartezeit. Vorschläge, Rückfragen und
-Entscheidungen fielen im selben Gespräch (E-PU-01 bis -10); dieses Dokument
+Entscheidungen fielen im selben Gespräch (E-PU-01 bis -12); dieses Dokument
 hält sie fest. Die Umsetzung findet in einer anderen Sitzung statt.
 **Modell:** **Opus** für jedes Paket (`CLAUDE.md` 7, Standard).
 **Fächerung (`CLAUDE.md` 7):** keine. Die Pakete fassen dieselben Läufer an
@@ -33,8 +33,8 @@ jeder Vergabe).
 > | | |
 > |---|---|
 > | Stand | **01.11.2026 — Konzept geschrieben (PU-00). Umsetzung wartet auf den Merge von 12b.** |
-> | Entschieden | E-PU-01 bis E-PU-10 (Abschnitt 2) |
-> | Offen | Q-PU-01 (Breiten: vier oder fünf), Q-PU-02 (Changelog-Regel mit oder ohne Riegel) |
+> | Entschieden | E-PU-01 bis E-PU-12 (Abschnitt 2) |
+> | Offen | keine Frage (Q-PU-01, -02 beantwortet am 01.11.2026) |
 > | Umsetzung | PU-00 erledigt 01.11.2026 (dieses Dokument, Fahrplanzeile 20, R89, Verlaufszeile, Spanne). PU-01 bis PU-10 offen. |
 > | Halt | **Umsetzung blockiert bis 12b gemergt ist** (1.3). |
 > | Fable-Schritte | keine |
@@ -134,14 +134,16 @@ PR-Läufen entstanden.
 |---|---|---|
 | E-PU-01 | **Zehnerregel.** Der volle Lauf — drei Engines, alle Breiten, alle Seiten — fährt in `neben`, wenn die Spanne der Nebennummern zwischen `main` und dem Zweig eine durch 10 teilbare Zahl enthält oder überschreitet (23.9 → 23.11 ist voll), und in jeder Hauptstufe. Die Regel liest aus `server/version.php`, hält keinen Zustand, steht im Bericht (`umfang=voll:zehner`) und wird im Tor gegengelesen. Dazu `--voll` am Prüfstand, der den vollen Lauf jederzeit erzwingt und im Bericht steht. | Betreiberin, 01.11.2026 |
 | E-PU-02 | **Engines je Berührung.** Ab `neben` laufen Browserproben in Chromium allein; Firefox und WebKit kommen dazu, wenn `server/assets/style.css` oder `server/ui.php` berührt ist, beim vollen Lauf (E-PU-01) und in `haupt`. Stufe 2 bleibt dreifach. Grundsatz 8 wird entsprechend neu gefasst (R89 ersetzt R87). | Betreiberin, 01.11.2026 |
-| E-PU-03 | **Breiten je Berührung.** Der Bilderlauf nimmt zehn Breiten nur beim vollen Lauf, in `haupt` und bei Berührung von `style.css`/`ui.php`; sonst die Schwellenbreiten aus `Design.md` 7 (Q-PU-01: vier oder fünf). | Betreiberin, 01.11.2026 (Anzahl offen) |
+| E-PU-03 | **Breiten je Berührung.** Der Bilderlauf nimmt zehn Breiten nur beim vollen Lauf, in `haupt` und bei Berührung von `style.css`/`ui.php`; sonst die Schwellenbreiten aus `Design.md` 7 — fünf, E-PU-11. | Betreiberin, 01.11.2026 |
 | E-PU-04 | **Seiten je Berührung.** In `neben` nehmen Bilderlauf und Bedienprobe die berührten Seiten wie in `klein`; **alle** Seiten, wenn eine geteilte Datei berührt ist (`ui.php`, `style.css`, ein Skript unter `server/assets/`, das mehr als eine Seite lädt), beim vollen Lauf und in `haupt`. Eine feinere Zuordnung Baustein → Seite wird nicht gebaut; die Liste der geteilten Dateien steht in `pruefablauf.json`. | Betreiberin, 01.11.2026 |
 | E-PU-05 | **Ergebnisart `hinweis`.** Neben grün, rot und nicht-gemessen kennt der Bericht `hinweis`: gemessen, gemeldet, hält nicht auf. Das Tor liest `hinweis` als nicht rot. Grundsatz 7 bleibt gewahrt — nichts wird übersprungen, alles steht im Bericht. | Betreiberin, 01.11.2026 |
 | E-PU-06 | **Steuerungsriegel nur noch im Prüfstand.** `steuerung` (Decken, Kopfzeilen) verlässt die Riegelliste des Tors und läuft im Prüfstand als `hinweis`. Ein roter PR wegen einer 21. Backlog-Zeile kostet sonst einen Prüfstandlauf für eine Textkorrektur. | Betreiberin, 01.11.2026 |
 | E-PU-07 | **Bestandsriegel: erzeugen statt rot.** Der Prüfstand fährt vor dem Riegel `erzeugen.sh design` und `bericht.py erzeugen-doku` und meldet als `hinweis`, was sich geändert hat; die Änderung gehört in den Commit. Im Tor bleibt `bestand` rot, wenn jemand ohne Prüfstand committet. Die Zeilendecke von `form` wird `hinweis`. Keine Regel wird gestrichen (1.2). | Betreiberin, 01.11.2026 |
 | E-PU-08 | **Prüfdokument = Prüfliste.** Ein Prüfdokument hält nur noch: was nicht geprüft werden konnte (zuerst), die Grenzen der Mittel, und die Handprüfliste — höchstens 20 Punkte, je Bedienweg, Erwartung, Scheitern. Die maschinellen Zahlen stehen im Prüfprotokoll des Konzepts und im Prüfbericht des Commits. `CLAUDE.md` 7 wird entsprechend gefasst. | Betreiberin, 01.11.2026 |
 | E-PU-09 | **Eine Prüfliste statt zwölf Prüfdokumente.** Die offenen Punkte der zwölf Prüfdokumente in `docs/konzepte/` wandern, Doppelungen gestrichen, in **eine** Datei `docs/konzepte/Pruefliste.md`, nach Bereich gegliedert (Anmeldung, Sicherung, Zweitfaktor, Geräte, Kette, Oberfläche …); die Einzeldokumente werden gelöscht, die Zeilen in Rahmenplan 6.1 verweisen dorthin. Künftig geht ein Prüfdokument nach dem Merge ebenso auf: Offenes in die Prüfliste, Datei weg. | Betreiberin, 01.11.2026 |
-| E-PU-10 | **Changelog kürzer.** Ein Eintrag sagt in höchstens fünf Sätzen, was das Problem war und warum diese Lösung; Prüfzahlen, Werkzeugbefunde und Paketnummern gehören nicht hinein — die stehen im Konzept und in der Git-Historie. Ob ein Riegel die Länge misst, ist Q-PU-02. | Betreiberin, 01.11.2026 |
+| E-PU-10 | **Changelog kürzer.** Ein Eintrag sagt in höchstens fünf Sätzen, was das Problem war und warum diese Lösung; Prüfzahlen, Werkzeugbefunde und Paketnummern gehören nicht hinein — die stehen im Konzept und in der Git-Historie. Ohne Riegel, E-PU-12. | Betreiberin, 01.11.2026 |
+| E-PU-11 | **Q-PU-01 (Empfehlung):** fünf Breiten im schmalen Bilderlauf — 390 (Handy, unter der ersten Schwelle), 768, 1024, 1200, 1600 (je knapp über einer Schwelle aus `Design.md` 7). | Betreiberin, 01.11.2026 |
+| E-PU-12 | **Q-PU-02 (Empfehlung):** die Changelog-Regel steht in `CLAUDE.md` 2 ohne Riegel; der Preis — sie kann unbemerkt reißen — steht dabei. Schritt 13 fasst den Changelog ohnehin neu (R15). | Betreiberin, 01.11.2026 |
 
 **Abgelehnt:** Werkzeugarbeit ohne eigenes Konzept zu führen (Vorschlag B4
 vom 01.11.2026) — Werkzeugschritte bleiben, wo sie sinnvoll sind, eigene
@@ -161,7 +163,7 @@ und Push.
 | PU-04 | **Breiten und Seiten je Berührung** (E-PU-03, -04): `aufnehmen.mjs` mit Breitensatz je `umfang`; Liste der geteilten Dateien in `pruefablauf.json`; Bilderlauf und Bedienprobe in `neben` über `--nur` wie in `klein`, sonst alle. | `tools/screenshots/`, `tools/bedienprobe/`, `tools/pruefstand/` |
 | PU-05 | **Steuerung aus dem Tor** (E-PU-06): `steuerung` aus `riegel` in `pruefablauf.json` und aus `pruefung.yml`; im Prüfstand als `hinweis`; `tools/kettenaufrufe/` und `bestand` Regel `tor` folgen von selbst. | `tools/pruefstand/`, `.github/workflows/`, `tools/steuerung/LIESMICH.md` |
 | PU-06 | **Bestandsriegel** (E-PU-07): Erzeuger vor dem Riegel im Prüfstand, `hinweis` bei Änderung; `form`-Decke als `hinweis`; Selbstproben nachgezogen. | `tools/pruefstand/pruefen.sh`, `tools/quelltext/bestand.py`, `tools/erzeugen/` |
-| PU-07 | **Prüfdokument-Form und Changelog-Regel** (E-PU-08, -10): `CLAUDE.md` 2 und 7, `Pruefablauf.md`; Q-PU-02 entscheidet, ob ein Riegel dazukommt. | `CLAUDE.md`, `docs/Pruefablauf.md` |
+| PU-07 | **Prüfdokument-Form und Changelog-Regel** (E-PU-08, -10): `CLAUDE.md` 2 und 7, `Pruefablauf.md`; ohne Riegel (E-PU-12). | `CLAUDE.md`, `docs/Pruefablauf.md` |
 | PU-08 | **Prüfliste** (E-PU-09): `docs/konzepte/Pruefliste.md` aus den zwölf Prüfdokumenten (Stand 01.11.2026: rund 300 offene Punkte), Doppelungen gestrichen; Rahmenplan 6.1 nachgezogen; Einzeldokumente gelöscht. Reine Doku-Arbeit, kann nach PU-07 auch als eigener PR laufen. | `docs/konzepte/`, `docs/Rahmenplan.md` |
 | PU-09 | **Doku und Abschluss:** `Pruefablauf.md` 2 bis 5 und 6.11, `Sandbox-Setup.md`, `tools/pruefstand/LIESMICH.md`; Prüfdokument in der neuen Form; Prüfstand; PR. | `docs/`, `tools/pruefstand/LIESMICH.md` |
 
@@ -184,8 +186,8 @@ Gemessen wird das in PU-09 am ersten vollen und am ersten schmalen Lauf.
 
 | Nr. | Frage | Stand |
 |---|---|---|
-| Q-PU-01 | **Vier oder fünf Breiten im schmalen Bilderlauf?** `Design.md` 7 hat vier Schwellen (720, 1024, 1200, 1600). Vier Breiten knapp darüber (768, 1024, 1200, 1600) messen die Schwellen; eine Handybreite darunter (390) fehlt dann, und auf dem Handy liegt die meiste Bedienung. **Empfehlung: fünf** — 390, 768, 1024, 1200, 1600. | offen |
-| Q-PU-02 | **Changelog-Regel mit oder ohne Riegel?** Ein Riegel bräuchte ein neues Prüfmittel mit Anlass (Grundsatz 5) und misst Sätze, nicht Sinn. **Empfehlung: ohne** — die Regel steht in `CLAUDE.md` 2, der Preis (sie kann unbemerkt reißen) steht dabei; der Changelog wird in Schritt 13 ohnehin neu gefasst (R15). | offen |
+| Q-PU-01 | **Beantwortet 01.11.2026: fünf, E-PU-11.** **Vier oder fünf Breiten im schmalen Bilderlauf?** `Design.md` 7 hat vier Schwellen (720, 1024, 1200, 1600). Vier Breiten knapp darüber (768, 1024, 1200, 1600) messen die Schwellen; eine Handybreite darunter (390) fehlt dann, und auf dem Handy liegt die meiste Bedienung. **Empfehlung: fünf** — 390, 768, 1024, 1200, 1600. | beantwortet |
+| Q-PU-02 | **Beantwortet 01.11.2026: ohne, E-PU-12.** **Changelog-Regel mit oder ohne Riegel?** Ein Riegel bräuchte ein neues Prüfmittel mit Anlass (Grundsatz 5) und misst Sätze, nicht Sinn. **Empfehlung: ohne** — die Regel steht in `CLAUDE.md` 2, der Preis (sie kann unbemerkt reißen) steht dabei; der Changelog wird in Schritt 13 ohnehin neu gefasst (R15). | beantwortet |
 
 ## 5. Prüfprotokoll
 
