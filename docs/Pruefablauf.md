@@ -357,7 +357,21 @@ berühren, von Hand (`hochfahren.sh --php 8.3`) und nennt im Prüfdokument,
 was fehlt.
 
 **Eine Hauptstufe, die mit `--stufe klein` gefahren wurde, fällt im Tor
-auf** — das ist eine der sechs roten Lagen in 5.1.
+auf** — das ist eine der roten Lagen in 5.1.
+
+**Schmal oder voll** (seit PU-01, E-PU-01). Neben der Stufe bestimmt der
+Befehl den **Umfang** und sagt ihn: **voll** in jeder Hauptstufe, in
+`neben`, wenn die Nebennummer zwischen `main` und dem Zweig eine durch 10
+teilbare Zahl erreicht oder überschreitet (23.9 → 23.10 und 23.9 → 23.11
+sind voll, 23.10 → 23.11 nicht — die **Zehnerregel**), und mit `--voll`
+jederzeit; sonst **schmal**. Die Regel liest nur `server/version.php` und
+hält keinen Zustand. Der Bericht trägt `umfang=schmal`, `voll:haupt`,
+`voll:zehner` oder `voll:hand`, und das Tor liest es gegen (5.1, Lage 7).
+Was am Umfang hängt — Engines, Breiten, Seiten —, steht in der Tabelle
+oben und in Grundsatz 8.
+*Warum zehn:* Zwischen zwei Hauptstufen lagen zuletzt 5 bis 45
+Nebenfassungen (Web 20); ein voller Lauf nur in `haupt` wäre bei Web 20
+45-mal ausgeblieben.
 
 ---
 
@@ -469,7 +483,7 @@ Prüfstand: neben · Baum a1b2c3d… · Konfiguration web
   handy=nicht berührt  uhr=nicht berührt
 ```
 
-### 5.1 Sechs Lagen, in denen das Tor rot wird
+### 5.1 Die Lagen, in denen das Tor rot wird
 
 - Der **Baum-Hash** ist nicht der Baum des Commits. Das fängt den Fehler,
   der in O9c passiert ist: gemessen wurde vor der letzten Änderung, gemeldet
@@ -501,6 +515,10 @@ Prüfstand: neben · Baum a1b2c3d… · Konfiguration web
   `pruefablauf.json`), aber nicht die Engines seiner Stufe — ab `neben`
   `motoren=chromium+firefox+webkit`, in `klein` `motoren=chromium`
   (Grundsatz 8, seit Konzept DM, E-DM-08).
+- Der Bericht nennt **keinen Umfang**, einen unbekannten, oder `schmal`,
+  wo der Unterschied den vollen Lauf verlangt — in `haupt` und an einer
+  Zehnergrenze der Nebennummer (seit PU-01, E-PU-01; Abschnitt 3). Mehr
+  zu messen ist erlaubt: `voll:hand` passt immer.
 
 Dazu rot, ohne eigene Lage: **kein Bericht** in der Nachricht des PR-Kopfs.
 Die Meldung sagt dann, wie er hineinkommt.

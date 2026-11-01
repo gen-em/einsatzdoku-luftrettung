@@ -5,6 +5,7 @@
 #                                          [--basis origin/main]
 #                                          [--gegen staging]
 #                                          [--datei PFAD]   (mehrfach)
+#                                          [--voll]         (voller Lauf, E-PU-01)
 #                                          [--ohne-hochfahren] [--trocken]
 #
 # Er ermittelt die Stufe und SAGT sie, fährt die örtliche Anlage hoch, läuft
@@ -19,7 +20,7 @@ set -uo pipefail
 
 WURZEL=${WURZEL:-$(cd "$(dirname "$0")/../.." && pwd)}
 HIER="$WURZEL/tools/pruefstand"
-STUFE=; BASIS=${BASIS:-origin/main}; GEGEN=oertlich; HOCHFAHREN=1; TROCKEN=0
+STUFE=; BASIS=${BASIS:-origin/main}; GEGEN=oertlich; HOCHFAHREN=1; TROCKEN=0; VOLL=
 DATEIEN=()
 
 melde() { printf '\033[1m==\033[0m %s\n' "$*" >&2; }
@@ -31,6 +32,7 @@ while [ $# -gt 0 ]; do
         --basis) BASIS=${2:-}; shift 2 ;;
         --gegen) GEGEN=${2:-}; shift 2 ;;
         --datei) DATEIEN+=(--datei "${2:-}"); shift 2 ;;
+        --voll) VOLL=--voll; shift ;;
         --ohne-hochfahren) HOCHFAHREN=0; shift ;;
         --trocken) TROCKEN=1; HOCHFAHREN=0; shift ;;
         *) echo "Unbekannt: $1" >&2; exit 2 ;;
@@ -46,6 +48,15 @@ else
     STUFE=$(printf '%s' "$erm" | cut -f1)
     zeile "$STUFE  ($(printf '%s' "$erm" | cut -f2))"
 fi
+
+# ---- 1a. Umfang ermitteln und SAGEN (E-PU-01) ----------------------------
+# schmal oder voll — voll in haupt, an einer Zehnergrenze der Nebennummer und
+# mit --voll. Was davon abhängt (Engines, Breiten, Seiten), steht in den
+# Abschnitten darunter; der Bericht trägt `umfang=…`, das Tor liest es gegen.
+melde "Umfang"
+erm=$(python3 "$HIER/auswahl.py" --umfang-ermitteln --stufe "$STUFE" --basis "$BASIS" $VOLL) || exit 2
+UMFANG=$(printf '%s' "$erm" | cut -f1)
+zeile "$UMFANG  ($(printf '%s' "$erm" | cut -f2))"
 
 # ---- 2. Was ist berührt, was läuft daraus --------------------------------
 melde "Berührung"
@@ -252,6 +263,7 @@ melde "Bericht"
 args=(schreiben --stufe "$STUFE" --basis "$BASIS"
       --konfiguration "$([ "$STUFE" = haupt ] && echo alles || echo web)")
 for k in "${!ZAHL[@]}"; do args+=(--zahl "$k=${ZAHL[$k]}"); done
+args+=(--zahl "umfang=$UMFANG")
 # Welche Engines die dreifachen Proben gefahren haben — Stufe 1 liest es
 # gegen (bericht.py, Lage 6): Ein Bericht mit Browserproben ohne diese Zeile
 # ist rot.

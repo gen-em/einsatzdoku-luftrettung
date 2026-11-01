@@ -12,7 +12,7 @@ selbst kam nicht zum Laufen (fehlende Datei, unbekannter Schalter, kein Git).
 
 MIT EINEM WERKZEUG UND NICHT MIT EINER SHELL-ZEILE: Eine Zeile,
 die einen Wert aus Text zieht, ist die Stelle, an der ein Riegel still
-durchlässt. Hier ist jede der sechs roten Lagen eine Funktion mit einem
+durchlässt. Hier ist jede der roten Lagen eine Funktion mit einem
 Prüffall in `--selbstprobe`.
 
 Anlass: O9c — gemessen wurde vor der letzten Änderung, gemeldet wurde die
@@ -29,7 +29,8 @@ HIER = os.path.dirname(os.path.abspath(__file__))
 WURZEL = os.path.dirname(os.path.dirname(HIER))
 ABLAUF = os.path.join(HIER, 'pruefablauf.json')
 sys.path.insert(0, HIER)
-from auswahl import UNLESBAR, beruehrte, fassung, stufe_aus_fassungen, stufe_aus_version  # noqa: E402 — die EINE Lesestelle
+from auswahl import (SCHMAL, UMFAENGE, UNLESBAR, beruehrte, fassung,  # noqa: E402 — die EINE Lesestelle
+                     stufe_aus_fassungen, stufe_aus_version, zehner)
 
 STUFEN = ['klein', 'neben', 'haupt']
 KOPF_RE = re.compile(
@@ -189,9 +190,20 @@ MOTOREN = 'chromium+firefox+webkit'
 MOTOREN_JE_STUFE = {'klein': 'chromium', 'neben': MOTOREN, 'haupt': MOTOREN}
 
 
+def umfang_verlangt_aus(basis, commit, stufe_verlangt):
+    """Voll, wenn die Versionsstufe haupt verlangt oder die Nebennummer eine
+    Zehnergrenze erreicht (E-PU-01); sonst schmal. Dieselbe Regel wie im
+    Prüfstand — `zehner()` steht einmal, in auswahl.py."""
+    if stufe_verlangt == 'haupt':
+        return 'voll'
+    if basis and zehner(fassung(basis), fassung(commit)) is not None:
+        return 'voll'
+    return SCHMAL
+
+
 def pruefen(bericht, basis=None, commit='HEAD', riegel=None, dateien=None, baum=None,
-            stufe_verlangt=None, riegel_namen=None, motoren_namen=None):
-    """Die sechs roten Lagen. Gibt eine Liste von Beanstandungen zurück."""
+            stufe_verlangt=None, riegel_namen=None, motoren_namen=None, umfang_verlangt=None):
+    """Die roten Lagen (Pruefablauf.md 5.1). Gibt eine Liste von Beanstandungen zurück."""
     schlecht = []
     if bericht is None:
         return ['Kein Prüfbericht in der Nachricht — der Block fehlt ganz.']
@@ -241,7 +253,7 @@ def pruefen(bericht, basis=None, commit='HEAD', riegel=None, dateien=None, baum=
     # Riegel stimmen. Überspringen ist rot. Riegel und Flächen haben
     # ihre eigene Lage.
     eigene = set(riegel_namen if riegel_namen is not None else lade_ablauf()['riegel']['proben'])
-    eigene |= set(riegel or {}) | set(FLAECHEN) | {'motoren'}
+    eigene |= set(riegel or {}) | set(FLAECHEN) | {'motoren', 'umfang'}
     for name, wert in bericht['werte'].items():
         if name in eigene or gruen_oder_hinweis(wert):
             continue
@@ -264,6 +276,23 @@ def pruefen(bericht, basis=None, commit='HEAD', riegel=None, dateien=None, baum=
             f"Browserproben ({', '.join(browser)}) nicht in den Engines der Stufe "
             f"„{bericht['stufe']}\": „motoren={bericht['werte'].get('motoren', '(fehlt)')}\", "
             f"verlangt „{verlangt_m}\" (R87, E-DM-08).")
+
+    # (7) Der Umfang (E-PU-01). Der Bericht nennt ihn immer; voll ist er
+    # verlangt in haupt und an einer Zehnergrenze der Nebennummer. Mehr zu
+    # messen ist erlaubt (`voll:hand`), weniger nicht.
+    umfang = bericht['werte'].get('umfang')
+    if umfang_verlangt is None:
+        umfang_verlangt = umfang_verlangt_aus(basis, commit, verlangt) if basis else (
+            'voll' if verlangt == 'haupt' else SCHMAL)
+    if bericht['stufe'] == 'haupt':
+        umfang_verlangt = 'voll'
+    if umfang is None:
+        schlecht.append('Der Bericht nennt keinen Umfang — „umfang=" fehlt (E-PU-01).')
+    elif umfang not in UMFAENGE:
+        schlecht.append(f"Unbekannter Umfang „{umfang}\" — erlaubt sind {', '.join(UMFAENGE)}.")
+    elif umfang_verlangt == 'voll' and umfang == SCHMAL:
+        schlecht.append('Umfang zu schmal: Der Unterschied verlangt den vollen Lauf (Hauptstufe oder '
+                        'Zehnergrenze der Nebennummer, E-PU-01), der Bericht meldet „schmal".')
     return schlecht
 
 
@@ -315,7 +344,7 @@ def selbstprobe():
              '  syntax-php=php:486/0  wortliste=0  vollstaendigkeit=0\n'
              '  spurprobe=0  kreislauf-edbak=0  bilderlauf=0\n'
              '  handy=nicht-beruehrt  uhr=nicht-beruehrt\n'
-             '  motoren=chromium+firefox+webkit\n')
+             '  motoren=chromium+firefox+webkit  umfang=schmal\n')
     gebaut = guter.replace('handy=nicht-beruehrt', 'handy=gebaut') + '  android-bau=0\n'
     namen = ['syntax-php', 'wortliste', 'vollstaendigkeit']
     faelle = []
@@ -360,7 +389,7 @@ def selbstprobe():
                    zerlegen(guter), dict(baum='abc1234', dateien=[], riegel={},
                                          stufe_verlangt=UNLESBAR, riegel_namen=namen), 1))
     faelle.append(('rot (6) — Browserproben, aber keine Zeile motoren=',
-                   zerlegen(guter.replace('  motoren=chromium+firefox+webkit\n', '')),
+                   zerlegen(guter.replace('motoren=chromium+firefox+webkit  ', '')),
                    dict(baum='abc1234', dateien=[], riegel={}, riegel_namen=namen), 1))
     faelle.append(('rot (6b) — Browserproben nur in zwei Engines',
                    zerlegen(guter.replace('chromium+firefox+webkit', 'chromium+firefox')),
@@ -373,7 +402,7 @@ def selbstprobe():
                    dict(baum='abc1234', dateien=[], riegel={}, riegel_namen=namen), 1))
     faelle.append(('grün (6) — keine Browserprobe, keine Zeile motoren=',
                    zerlegen(guter.replace('  spurprobe=0  kreislauf-edbak=0  bilderlauf=0\n', '  spurprobe=0\n')
-                            .replace('  motoren=chromium+firefox+webkit\n', '')),
+                            .replace('motoren=chromium+firefox+webkit  ', '')),
                    dict(baum='abc1234', dateien=[], riegel={}, riegel_namen=namen), 0))
     faelle.append(('grün (5c) — eine Probe meldet hinweis',
                    zerlegen(guter.replace('spurprobe=0', 'spurprobe=hinweis')),
@@ -388,6 +417,24 @@ def selbstprobe():
     faelle.append(('rot (5d) — „hinweis" mit Zusatz ist kein Hinweis',
                    zerlegen(guter.replace('spurprobe=0', 'spurprobe=hinweis:x')),
                    dict(baum='abc1234', dateien=[], riegel={}, riegel_namen=namen), 1))
+    faelle.append(('rot (7) — der Bericht nennt keinen Umfang',
+                   zerlegen(guter.replace('  umfang=schmal', '')),
+                   dict(baum='abc1234', dateien=[], riegel={}, riegel_namen=namen), 1))
+    faelle.append(('rot (7b) — Zehnergrenze verlangt voll, Bericht schmal',
+                   zerlegen(guter), dict(baum='abc1234', dateien=[], riegel={}, riegel_namen=namen,
+                                         umfang_verlangt='voll'), 1))
+    faelle.append(('grün (7c) — Zehnergrenze verlangt voll, Bericht voll:hand',
+                   zerlegen(guter.replace('umfang=schmal', 'umfang=voll:hand')),
+                   dict(baum='abc1234', dateien=[], riegel={}, riegel_namen=namen, umfang_verlangt='voll'), 0))
+    faelle.append(('rot (7d) — Stufe haupt, Bericht schmal',
+                   zerlegen(guter.replace('neben', 'haupt')),
+                   dict(baum='abc1234', dateien=[], riegel={}, riegel_namen=namen), 1))
+    faelle.append(('rot (7e) — unbekannter Umfang',
+                   zerlegen(guter.replace('umfang=schmal', 'umfang=breit')),
+                   dict(baum='abc1234', dateien=[], riegel={}, riegel_namen=namen), 1))
+    faelle.append(('grün (7f) — mehr als verlangt: schmal verlangt, voll:zehner gemeldet',
+                   zerlegen(guter.replace('umfang=schmal', 'umfang=voll:zehner')),
+                   dict(baum='abc1234', dateien=[], riegel={}, riegel_namen=namen, umfang_verlangt='schmal'), 0))
     faelle.append(('rot (0) — gar kein Bericht in der Nachricht',
                    zerlegen('Ein Commit ganz ohne Block.\n'),
                    dict(baum='abc1234', dateien=[], riegel={}, riegel_namen=namen), 1))

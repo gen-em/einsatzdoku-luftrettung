@@ -5,6 +5,7 @@
     python3 tools/pruefstand/auswahl.py --stufe neben --datei server/spur_lib.php
     python3 tools/pruefstand/auswahl.py --abdeckung
     python3 tools/pruefstand/auswahl.py --stufe-ermitteln --basis origin/main
+    python3 tools/pruefstand/auswahl.py --umfang-ermitteln --stufe neben [--voll]
     python3 tools/pruefstand/auswahl.py --selbstprobe
 
 Rückgabewert 0 = in Ordnung · 1 = Befund (bei `--abdeckung`: Dateien ohne
@@ -137,6 +138,49 @@ def stufe_aus_fassungen(alt, neu):
     if neu[1] != alt[1]:
         return 'neben', f'Nebenstufe {txt}'
     return 'klein', f'Korrekturstufe {txt}'
+
+
+# ---- Der Umfang: schmal oder voll (E-PU-01) --------------------------------
+#
+# DIE ZEHNERREGEL. Der volle Lauf — drei Engines, alle Breiten, alle Seiten —
+# fährt in jeder Hauptstufe und in `neben`, wenn die Spanne der Nebennummern
+# zwischen `main` und dem Zweig eine durch 10 teilbare Zahl erreicht oder
+# überschreitet (23.9 -> 23.10 und 23.9 -> 23.11 sind voll, 23.10 -> 23.11
+# nicht). Sonst ist der Lauf schmal, und was er misst, folgt der Berührung
+# (E-PU-02 bis -04). Die Regel liest nur die Fassungen und hält keinen
+# Zustand; `--voll` am Prüfstand erzwingt den vollen Lauf jederzeit.
+# Der Bericht trägt `umfang=…`, das Tor liest es gegen (bericht.py, Lage 7).
+SCHMAL = 'schmal'
+UMFAENGE = (SCHMAL, 'voll:hand', 'voll:haupt', 'voll:zehner')
+
+
+def zehner(alt, neu):
+    """Die erste durch 10 teilbare Nebennummer in (alt, neu] — oder None.
+    Nur innerhalb derselben Hauptnummer; ein Hauptsprung ist ohnehin voll."""
+    if not alt or not neu or alt[0] != neu[0]:
+        return None
+    for n in range(alt[1] + 1, neu[1] + 1):
+        if n % 10 == 0:
+            return n
+    return None
+
+
+def umfang_aus(stufe, alt, neu, voll=False):
+    """(umfang, grund) — aus der wirksamen Stufe und den beiden Fassungen."""
+    if voll:
+        return 'voll:hand', 'mit --voll erzwungen'
+    if stufe == 'haupt':
+        return 'voll:haupt', 'Hauptstufe'
+    z = zehner(alt, neu) if stufe == 'neben' else None
+    if z is not None:
+        return 'voll:zehner', f'Nebennummer {alt[1]} -> {neu[1]} erreicht {z} (Zehnerregel, E-PU-01)'
+    return SCHMAL, 'keine Hauptstufe, keine Zehnergrenze, kein --voll'
+
+
+def umfang_aus_version(basis, stufe, commit=None, voll=False):
+    """Wie stufe_aus_version: commit=None heißt Arbeitsbestand."""
+    neu = fassung_arbeitsbestand() if commit is None else fassung(commit)
+    return umfang_aus(stufe, fassung(basis), neu, voll)
 
 
 def fassung_arbeitsbestand():
@@ -357,6 +401,24 @@ def selbstprobe(a):
             ('unlesbar bleibt unlesbar',
              stufe_mit_regeln(UNLESBAR, 'x', neu1, [regel])[0] == UNLESBAR),
         ]
+    # Die Zehnerregel (E-PU-01) — gegen die Grenzfälle, an denen sie kippt.
+    u = lambda s, a_, n_, v=False: umfang_aus(s, a_, n_, v)[0]
+    grenzen += [
+        ('zehner: 23.9 -> 23.11 ist voll (überschreitet)', u('neben', (23, 9, 0), (23, 11, 0)) == 'voll:zehner'),
+        ('zehner: 23.9 -> 23.10 ist voll (erreicht)',      u('neben', (23, 9, 3), (23, 10, 0)) == 'voll:zehner'),
+        ('zehner: 23.10 -> 23.11 ist schmal',               u('neben', (23, 10, 0), (23, 11, 0)) == SCHMAL),
+        ('zehner: 23.11 -> 23.19 ist schmal',               u('neben', (23, 11, 0), (23, 19, 0)) == SCHMAL),
+        ('zehner: 23.19 -> 23.20 ist voll',                 u('neben', (23, 19, 2), (23, 20, 0)) == 'voll:zehner'),
+        ('zehner: main jünger als der Zweig ist schmal',    u('neben', (23, 12, 0), (23, 11, 0)) == SCHMAL),
+        ('haupt ist immer voll',                            u('haupt', (23, 19, 0), (24, 0, 0)) == 'voll:haupt'),
+        ('haupt aus der Migrationsregel ist voll',          u('haupt', (23, 6, 0), (23, 6, 1)) == 'voll:haupt'),
+        ('klein ist schmal, auch an einer Zehnergrenze',    u('klein', (23, 10, 1), (23, 10, 2)) == SCHMAL),
+        ('--voll macht auch klein voll',                    u('klein', (23, 6, 0), (23, 6, 0), True) == 'voll:hand'),
+        ('unlesbare Fassung ist nicht zehner',              zehner(None, (23, 10, 0)) is None),
+        ('jeder Umfang steht in UMFAENGE',                  {u('neben', (1, 9, 0), (1, 10, 0)), u('haupt', (1, 0, 0), (2, 0, 0)),
+                                                             u('klein', (1, 1, 0), (1, 1, 1)), u('klein', (1, 1, 0), (1, 1, 1), True)}
+                                                            == set(UMFAENGE)),
+    ]
     for name, bed in grenzen:
         melde(f"  [{'ok  ' if bed else 'FEHL'}] {name}")
         fehl += 0 if bed else 1
@@ -373,6 +435,9 @@ def main():
     p.add_argument('--datei', action='append', default=[])
     p.add_argument('--abdeckung', action='store_true')
     p.add_argument('--stufe-ermitteln', action='store_true')
+    p.add_argument('--umfang-ermitteln', action='store_true',
+                   help='schmal oder voll:… mit Grund (E-PU-01); braucht --stufe')
+    p.add_argument('--voll', action='store_true', help='den vollen Lauf erzwingen')
     p.add_argument('--selbstprobe', action='store_true')
     p.add_argument('--nur-proben', action='store_true',
                    help='nur die Probennamen, einer je Zeile — für pruefen.sh')
@@ -388,6 +453,13 @@ def main():
         return selbstprobe(a)
     if args.abdeckung:
         return abdeckung(a)
+    if args.umfang_ermitteln:
+        if not args.stufe:
+            melde('--umfang-ermitteln braucht --stufe (die wirksame Stufe des Laufs).')
+            return 2
+        umfang, grund = umfang_aus_version(args.basis, args.stufe, voll=args.voll)
+        melde(f'{umfang}\t{grund}')
+        return 0
     if args.stufe_ermitteln:
         stufe, grund = stufe_aus_version(args.basis, a=a)
         melde(f'{stufe}\t{grund}')
