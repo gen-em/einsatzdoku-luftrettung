@@ -173,6 +173,17 @@ def beruehrt(basis, commit):
     return [d for d in dateien if d]
 
 
+# DIE ERGEBNISART „hinweis" (E-PU-05): gemessen, gemeldet, hält nicht auf.
+# Eine Probe mit diesem Wert ist nicht rot (Lage 5), und ein Riegel mit diesem
+# Wert passt zu einer 0 im Tor (Lage 4) — der Tor-Schritt endet grün und
+# druckt denselben Hinweis.
+HINWEIS = 'hinweis'
+
+
+def gruen_oder_hinweis(wert):
+    return wert in ('0', HINWEIS)
+
+
 MOTOREN = 'chromium+firefox+webkit'
 # Je Stufe: `klein` in Chromium allein, ab `neben` alle drei.
 MOTOREN_JE_STUFE = {'klein': 'chromium', 'neben': MOTOREN, 'haupt': MOTOREN}
@@ -220,7 +231,7 @@ def pruefen(bericht, basis=None, commit='HEAD', riegel=None, dateien=None, baum=
         gemeldet = bericht['werte'].get(name)
         if gemeldet is None:
             schlecht.append(f"Riegel „{name}\" fehlt im Bericht (im Tor gemessen: {zahl}).")
-        elif gemeldet != str(zahl):
+        elif gemeldet != str(zahl) and not (gemeldet == HINWEIS and str(zahl) == '0'):
             schlecht.append(
                 f"Riegel „{name}\": Bericht {gemeldet}, im Tor gemessen {zahl}.")
 
@@ -232,7 +243,7 @@ def pruefen(bericht, basis=None, commit='HEAD', riegel=None, dateien=None, baum=
     eigene = set(riegel_namen if riegel_namen is not None else lade_ablauf()['riegel']['proben'])
     eigene |= set(riegel or {}) | set(FLAECHEN) | {'motoren'}
     for name, wert in bericht['werte'].items():
-        if name in eigene or wert == '0':
+        if name in eigene or gruen_oder_hinweis(wert):
             continue
         if wert == 'nicht-gemessen':
             schlecht.append(f"Probe „{name}\" ist nicht gemessen — Überspringen ist rot (E-KH-12).")
@@ -283,6 +294,10 @@ def lesen(args):
         return 1
     melde(f"Prüfbericht in Ordnung: Stufe {bericht['stufe']}, Baum {bericht['baum']}, "
           f"Konfiguration {bericht['konfiguration']}, {len(bericht['werte'])} Zahlen.")
+    hinweise = sorted(n for n, w in bericht['werte'].items() if w == HINWEIS)
+    if hinweise:
+        melde(f"  Hinweise (halten nicht auf): {', '.join(hinweise)} — gemessen und gemeldet, "
+              f"Einzelheiten im Lauf des Prüfstands (E-PU-05).")
     return 0
 
 
@@ -360,6 +375,19 @@ def selbstprobe():
                    zerlegen(guter.replace('  spurprobe=0  kreislauf-edbak=0  bilderlauf=0\n', '  spurprobe=0\n')
                             .replace('  motoren=chromium+firefox+webkit\n', '')),
                    dict(baum='abc1234', dateien=[], riegel={}, riegel_namen=namen), 0))
+    faelle.append(('grün (5c) — eine Probe meldet hinweis',
+                   zerlegen(guter.replace('spurprobe=0', 'spurprobe=hinweis')),
+                   dict(baum='abc1234', dateien=[], riegel={}, riegel_namen=namen), 0))
+    faelle.append(('grün (4b) — Riegel meldet hinweis, das Tor misst 0',
+                   zerlegen(guter.replace('vollstaendigkeit=0', 'vollstaendigkeit=hinweis')),
+                   dict(baum='abc1234', dateien=[], riegel={'vollstaendigkeit': '0'}, riegel_namen=namen), 0))
+    faelle.append(('rot (4c) — Riegel meldet hinweis, im Tor nicht gelaufen',
+                   zerlegen(guter.replace('vollstaendigkeit=0', 'vollstaendigkeit=hinweis')),
+                   dict(baum='abc1234', dateien=[], riegel={'vollstaendigkeit': 'nicht-gelaufen'},
+                        riegel_namen=namen), 1))
+    faelle.append(('rot (5d) — „hinweis" mit Zusatz ist kein Hinweis',
+                   zerlegen(guter.replace('spurprobe=0', 'spurprobe=hinweis:x')),
+                   dict(baum='abc1234', dateien=[], riegel={}, riegel_namen=namen), 1))
     faelle.append(('rot (0) — gar kein Bericht in der Nachricht',
                    zerlegen('Ein Commit ganz ohne Block.\n'),
                    dict(baum='abc1234', dateien=[], riegel={}, riegel_namen=namen), 1))

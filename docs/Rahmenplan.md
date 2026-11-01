@@ -1,14 +1,14 @@
 # Rahmenplan — Programm „Gen-EM NAdoku" bis v1.0
 
-**Fassung 186 (01.11.2026)** · Steuerung: Reihenfolge, Status, programmweite
+**Fassung 187 (01.11.2026)** · Steuerung: Reihenfolge, Status, programmweite
 Entscheidungen. Verlauf: `Rahmenplan-Verlauf.md`. Fassungen 1–15:
 `Rahmenplan-Archiv.md`; Fassungen 16–124: `Rahmenplan-Archiv-2.md`.
 
-**Stand `origin/main`** (Commit `e3af304`, PR #124, gemessen 01.11.2026): Web 23.5.1 ·
-Uhr 4.1.0 · Android 0.18.1; Web 23.1.0 auf Produktiv seit dem 27.10.2026.
-**Läuft:** kein Schritt — 12b ist abgeschlossen (Abschnitt 8, Freigabe 01.11.2026); R17-28 bis -30 liegen in PR #125.
-**Als Nächstes:** 13 — P7 Gesicht v1.0; beginnt mit einer Konzeptsitzung. **Daneben:** 20 — PU Prüfumfang, Konzept steht (01.11.2026), Umsetzung nach dem Merge von 12b.
-**Offene PRs:** #125 (12b, Abschluss: Web 23.6.0, Uhr 4.1.1, Android 0.18.2).
+**Stand `origin/main`** (Commit `c32dd2c`, PR #125, gemessen 01.11.2026): Web 23.6.0 ·
+Uhr 4.1.1 · Android 0.18.2; Web 23.1.0 auf Produktiv seit dem 27.10.2026.
+**Läuft:** 20 — PU Prüfumfang, Umsetzung PU-01 bis PU-10 auf `claude/compassionate-ride-1a0uw1` (seit 01.11.2026).
+**Als Nächstes:** 13 — P7 Gesicht v1.0; beginnt mit einer Konzeptsitzung.
+**Offene PRs:** keine.
 **Fällig bei der Betreiberin:** 38 Posten (Abschnitt 6.1). **`update.php`:** auf Staging und Produktiv nichts offen (Betreiberin, 20.10.2026, nach Web 23).
 
 Kennungen sind Namen, keine Reihenfolge.
@@ -120,7 +120,7 @@ weil das Altbestand-Werkzeug ein einziges Konto voraussetzte.
 | 6 | **S4 — Rest, Teil C** | Play Console nach R65: interner Test-Track für Handy und Uhr unter einem Eintrag, Versionscode-Versatz, Signaturweg; Android 1.0.0 (E-R45-7). Die Vorbereitung ohne D-U-N-S und Schlüssel ist gebaut (Android 0.13.0), die Gerätetests sind erfolgt (24.09.2026) | D-U-N-S, Organisationskonto und Play App Signing — erledigt 26.09.2026 (SD-M1); offen in 6.2: Wear-OS-Uhr, Demo-Video, Datensicherheitsformular | `docs/konzepte/Konzept-S4-Handy-Uhr-Client.md` 13; `Vorbereitung-Play-Console.md` | offen — Teile A bis C gemergt 04.09.2026 (PR #33, Abschnitt 8); Android 1.0.0 und der interne Test-Track können beginnen |
 | 11 | **Planung v1.0** | Festlegungen vor dem Schnitt (R65 bis R73, entschieden 03.09.2026); Ergebnis sind die Konzepte der Phasen P6 bis P8 mit je eigenem Paketschnitt (P6 nach der Freigaberunde des Reviews) | keine | `docs/konzepte/Konzept-Planung-v1.0.md` | gemergt 03.09.2026 — Festlegungen entschieden (R65–R73); offen nur die Paketschnitte, je mit dem Konzept zu 12b, 13 und 14 |
 | 13 | **P7 — Gesicht v1.0** | Umbenennung überall (Langform in den System-E-Mails entscheiden), neues Demo-Passwort (R25); Vertrag v1 (R12, Nr. 23); Doku-Neufassung, Handbuch als HTML im Release (R16, R72); Web-App-Manifest (R70); Changelog neu (R15); Backlog-Übernahme; Altformat der Sicherung weg (Nr. 46); Kommentarregel (R69) | 12b | eigenes Konzept nach K1 | offen — nach 12b |
-| 20 | **PU — Prüfumfang** (R89) | Der Prüfstand misst je Berührung: Firefox/WebKit, zehn Breiten und alle Seiten nur bei Stylesheet-Berührung, Zehnerregel oder `haupt`; Ergebnisart `hinweis`; Steuerung raus aus dem Tor; Bestandsriegel erzeugt statt rot; ein Prüfdokument ist eine Prüfliste; eine Prüfliste statt zwölf | Konzept: keine; Umsetzung: 12b gemergt (Werkzeugschicht) | `docs/konzepte/Konzept-PU-Pruefumfang.md` (Kürzel PU, Opus), Prüfdokument daneben | Konzept — geschrieben 01.11.2026 auf `claude/zealous-albattani-2xk21u`; Umsetzung auf neuem Zweig nach 12b |
+| 20 | **PU — Prüfumfang** (R89) | Der Prüfstand misst je Berührung: Firefox/WebKit, zehn Breiten und alle Seiten nur bei Stylesheet-Berührung, Zehnerregel oder `haupt`; Ergebnisart `hinweis`; Steuerung raus aus dem Tor; Bestandsriegel erzeugt statt rot; ein Prüfdokument ist eine Prüfliste; eine Prüfliste statt zwölf | Konzept: keine; Umsetzung: 12b gemergt (Werkzeugschicht) | `docs/konzepte/Konzept-PU-Pruefumfang.md` (Kürzel PU, Opus), Prüfdokument daneben | Umsetzung — seit 01.11.2026 auf `claude/compassionate-ride-1a0uw1` (12b gemergt mit PR #125); Konzept gemergt mit PR #124, #126 |
 | 14 | **P8 — Schnitt** | Neuaufsetzen mit Übernahme per edbak (R40 (3), R60, Nr. 324); Migrationsregister neu (R66); Repo-Umzug und Inventur mit Begründung je Weglassung (R68); Kette im neuen Repositorium (R67, R40 (4)); Rechts- und Betreiberunterlagen (R41); Abnahme nach R11; Tags `web-v1.0.0`, `uhr-v…`, `android-v1.0.0` | 13 | eigenes Konzept nach K1 | offen — nach 13 |
 | — | **Betriebsübergang** | Öffnung in Wellen über die Betriebsarten (R41); Produktionsfreigabe in den Stores mit Welle 1 (R65; nach MDR-Abgrenzung und Rechtsunterlagen); mit Welle 1 entfällt die Seitenladung (`apk.php`, Handbuch 10.1); Garmin-Uhr über den Connect-IQ-Store; halbjährliche Probe-Wiederherstellung | v1.0 | — | offen — beginnt mit v1.0 (nach den Schritten 13 und 14); Wellen nach R41 |
 

@@ -143,6 +143,15 @@ gemessen, k grün" und endet mit rc 1. **Seit PK-05 steht sie auch im
 Bericht**, als `name=nicht-gemessen`, und das Tor liest sie als rot
 (E-PK-46). Eine übersprungene Probe, die grün meldet, gibt es nicht.
 
+**Die vierte Ergebnisart heißt `hinweis`** (seit PU-02, E-PU-05): gemessen,
+gemeldet, hält nicht auf. Dahin führen zwei Wege — eine Probe mit
+`"hinweis": true` in `pruefablauf.json` endet rot, oder eine Probe endet
+grün und schreibt Zeilen, die mit `HINWEIS: ` beginnen. Der Lauf zeigt
+beides als `HIN` mit den Zeilen darunter, zählt es am Ende eigens
+(„n rot, m nicht gemessen, h Hinweis, k grün") und schreibt
+`name=hinweis` in den Bericht. Grundsatz 7 bleibt gewahrt: Nichts wird
+übersprungen, und was gemeldet wurde, steht im Prüfprotokoll des Konzepts.
+
 Station B ist die geprüfte Partei. Ihr Bericht ist ein **Nachweis**, kein
 Riegel — was das heißt und wo die Grenze liegt, steht in 5.2.
 
@@ -448,8 +457,7 @@ Zwei Dinge hängen mit daran, und beide sind gemessen:
 ## 5. Der Prüfbericht
 
 *Erzeugung gebaut mit PK-03, Gegenlesung im Tor mit PK-05 (`bericht.py`,
-Selbstprobe 13 Lagen / 0; seit Konzept DM 18 Lagen / 0 mit der sechsten
-Lage).*
+mit Selbstprobe; die Zahl ihrer Lagen steht in `tools/pruefstand/LIESMICH.md`).*
 
 Der Prüfstand schreibt am Ende einen Block, der in die Commit-Nachricht
 gehört und maschinell lesbar ist:
@@ -479,12 +487,16 @@ Prüfstand: neben · Baum a1b2c3d… · Konfiguration web
   fehlt einer im Aufruf, ist das rot, damit ein neuer Riegel nicht still
   ungegengelesen bleibt. Jeder Wert hängt am Ausgang seines Schritts: Wer
   einen Riegelschritt streicht, bekommt „nicht-gelaufen" statt einer stehen
-  gebliebenen 0.
+  gebliebenen 0. Ein Riegel, der im Bericht `hinweis` meldet, passt zu einer
+  0 im Tor (seit PU-02): Der Tor-Schritt endet grün und druckt denselben
+  Hinweis.
 - Eine **Probe** meldet im Bericht etwas anderes als 0 — rot oder
   `nicht-gemessen` (E-PK-44, -46). Der Prüfstand druckt den Bericht auch
   nach einem roten Lauf; ein roter Lauf ist kein Nachweis, ein übersprungener
   auch nicht. Eine dreifache Probe meldet rot mit den Engines, die es waren
-  (`bedienprobe=rot:firefox,webkit`).
+  (`bedienprobe=rot:firefox,webkit`). **`hinweis` ist nicht rot** (seit
+  PU-02, E-PU-05); die Gegenlesung zählt die Hinweise auf, wenn sie grün
+  ist. Nur der Wert `hinweis` selbst zählt — `hinweis:…` ist rot.
 - Der Bericht trägt eine **Browserprobe** (`"motoren": true` in
   `pruefablauf.json`), aber nicht die Engines seiner Stufe — ab `neben`
   `motoren=chromium+firefox+webkit`, in `klein` `motoren=chromium`

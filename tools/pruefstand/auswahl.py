@@ -109,6 +109,13 @@ def demo_proben(a):
     return {n for n, d in a.get('proben', {}).items() if isinstance(d, dict) and d.get('demo') is True}
 
 
+def hinweis_proben(a):
+    """Die Proben mit `"hinweis": true` — rot gemessen heißt dort „Hinweis"
+    (E-PU-05): gemeldet, im Bericht, hält nicht auf. Nur `true` zählt, wie
+    bei `demo`."""
+    return {n for n, d in a.get('proben', {}).items() if isinstance(d, dict) and d.get('hinweis') is True}
+
+
 def fassung_aus_text(t):
     m = FASSUNG_RE.search(t or '')
     return tuple(int(x) for x in m.groups()) if m else None
@@ -305,6 +312,10 @@ def selbstprobe(a):
         ('demo: Bedienprobe und Bilderlauf tragen es', {'bedienprobe', 'bilderlauf'} <= dp),
         ('demo: jede Probe mit dem Feld braucht die Anlage',
          bool(dp) and all(a['proben'][n].get('braucht') == 'installation' for n in dp)),
+        ('hinweis: nur true zählt, nicht „ja"',
+         hinweis_proben({'proben': {'x': {'hinweis': True}, 'y': {'hinweis': 'ja'}, 'z': {}}}) == {'x'}),
+        ('hinweis: kein Riegel trägt es — ein Riegel hält auf, oder er ist keiner',
+         not (hinweis_proben(a) & set(a['riegel']['proben']))),
     ]
 
     # Die Fassung — gegen die ECHTE Schreibweise der Datei, nicht gegen eine

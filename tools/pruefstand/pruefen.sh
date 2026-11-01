@@ -85,7 +85,33 @@ fi
 
 # ---- 4. Proben ------------------------------------------------------------
 melde "Proben (${#PROBEN[@]})"
-declare -A ZAHL; fehl=0; nicht=0; DREIFACH=0; WIEDERHOLT=0
+declare -A ZAHL; fehl=0; nicht=0; hinw=0; DREIFACH=0; WIEDERHOLT=0; HINWEISE=()
+# DIE ERGEBNISART „hinweis" (E-PU-05): gemessen, gemeldet, hält nicht auf.
+# Zwei Wege führen dahin: Eine Probe mit "hinweis": true in pruefablauf.json
+# endet mit rc != 0 — dann ist das ein Hinweis statt rot —, oder eine Probe
+# endet grün und schreibt Zeilen, die mit „HINWEIS: " beginnen. Beides steht
+# als `name=hinweis` im Bericht, und das Tor liest es als nicht rot
+# (bericht.py, Lage 5). Nichts wird übersprungen (Grundsatz 7).
+hinweise_aus() { grep -E '^HINWEIS: ' "$1" 2>/dev/null | sed -E 's/^HINWEIS: //' || true; }
+# ergebnis NAME RC SEKUNDEN LOG — schreibt die Zeile des Laufs. rc 0 der
+# Funktion heißt „grün oder rot, wie gemessen", rc 1 heißt „Hinweis".
+# Liest $nurhinweis der laufenden Probe.
+ergebnis() {
+    local n=$1 rc=$2 s=$3 log=$4 h
+    h=$(hinweise_aus "$log")
+    if [ "$rc" = 0 ] && [ -z "$h" ]; then zeile "ok    $n  $s s"; return 0; fi
+    if [ "$rc" = 0 ]; then
+        zeile "HIN   $n  $s s  (Hinweis — hält nicht auf, siehe $log)"
+        printf '%s\n' "$h" | while IFS= read -r z; do zeile "      $n: $z"; done
+        return 1
+    fi
+    if [ -n "$nurhinweis" ]; then
+        zeile "HIN   $n  $s s  (rot gemessen, als Hinweis gemeldet: \"hinweis\": true in pruefablauf.json; siehe $log)"
+        tail -n 5 "$log" | while IFS= read -r z; do zeile "      $n: $z"; done
+        return 1
+    fi
+    zeile "ROT   $n  $s s  (siehe $log)"; return 0
+}
 # DIE ENGINES JE STUFE: `klein` fährt die Browserproben in
 # Chromium allein, `neben` und `haupt` in allen drei. Bis zum 20.10.2026
 # liefen alle Stufen dreifach; ein voller Lauf dauerte damit
@@ -97,9 +123,11 @@ import json,sys
 a=json.load(open('$HIER/pruefablauf.json'))
 p=a['proben'].get('$name')
 print(p['aufruf'] if p else '', p['braucht'] if p else '', 'demo' if p and p.get('demo') is True else '',
-      'drei' if p and p.get('motoren') is True else '', sep='\t')")
+      'drei' if p and p.get('motoren') is True else '', 'hinweis' if p and p.get('hinweis') is True else '',
+      sep='\t')")
     befehl=$(printf '%s' "$aufruf" | cut -f1); braucht=$(printf '%s' "$aufruf" | cut -f2)
     demo=$(printf '%s' "$aufruf" | cut -f3); drei=$(printf '%s' "$aufruf" | cut -f4)
+    nurhinweis=$(printf '%s' "$aufruf" | cut -f5)
     befehl=${befehl//\{stufe\}/$STUFE}   # der Bilderlauf misst je Stufe anders
     if [ -z "$befehl" ]; then
         zeile "?     $name — steht nicht unter \"proben\" in pruefablauf.json"; fehl=$((fehl+1)); continue
@@ -169,14 +197,17 @@ print(p['aufruf'] if p else '', p['braucht'] if p else '', 'demo' if p and p.get
     # übersprungen (Grundsatz 7). Bis zum 19.10.2026 lief jede Probe einmal,
     # in Chromium, auch die, die --motor kannten.
     if [ -n "$drei" ]; then
-        rot=()
+        rot=(); hin=0
         for mo in "${MOTOREN[@]}"; do
             marke_schieben "$mo"
             t1=$SECONDS
-            if (cd "$WURZEL" && export MOTOR=$mo && eval "$befehl" >"/tmp/pruefstand-$name-$mo.log" 2>&1); then
-                zeile "ok    $name [$mo]  $((SECONDS - t1)) s"
+            log="/tmp/pruefstand-$name-$mo.log"
+            if (cd "$WURZEL" && export MOTOR=$mo && eval "$befehl" >"$log" 2>&1); then
+                ergebnis "$name [$mo]" 0 "$((SECONDS - t1))" "$log" || hin=1
+            elif ergebnis "$name [$mo]" 1 "$((SECONDS - t1))" "$log"; then
+                rot+=("$mo")
             else
-                zeile "ROT   $name [$mo]  $((SECONDS - t1)) s  (siehe /tmp/pruefstand-$name-$mo.log)"; rot+=("$mo")
+                hin=1
             fi
             # Wiederholte Seitenwechsel in WebKit (motor.mjs) und neu
             # angemeldete Rollen, deren Seite nicht mehr antwortete (Bedienprobe):
@@ -191,17 +222,20 @@ print(p['aufruf'] if p else '', p['braucht'] if p else '', 'demo' if p and p.get
             grep -hE '^WebKit-(Screenshot|Seitenwechsel): ' "/tmp/pruefstand-$name-$mo.log" 2>/dev/null \
                 | sed -E 's/ \(motor\.mjs, Nr\. 393\)$//' | while IFS= read -r z; do zeile "      $name [$mo]: $z"; done
         done
-        if [ ${#rot[@]} -eq 0 ]; then ZAHL[$name]=0
-        else ZAHL[$name]="rot:$(IFS=,; echo "${rot[*]}")"; fehl=$((fehl+1)); fi
+        if [ ${#rot[@]} -gt 0 ]; then ZAHL[$name]="rot:$(IFS=,; echo "${rot[*]}")"; fehl=$((fehl+1))
+        elif [ "$hin" = 1 ]; then ZAHL[$name]=hinweis; hinw=$((hinw+1)); HINWEISE+=("$name")
+        else ZAHL[$name]=0; fi
         DREIFACH=$((DREIFACH+1))
         continue
     fi
     marke_schieben
     t0=$SECONDS
-    if (cd "$WURZEL" && eval "$befehl" >/tmp/pruefstand-$name.log 2>&1); then
-        zeile "ok    $name  $((SECONDS - t0)) s"; ZAHL[$name]=0
+    log="/tmp/pruefstand-$name.log"
+    rc=0; (cd "$WURZEL" && eval "$befehl" >"$log" 2>&1) || rc=1
+    if ergebnis "$name" "$rc" "$((SECONDS - t0))" "$log"; then
+        if [ "$rc" = 0 ]; then ZAHL[$name]=0; else ZAHL[$name]=1; fehl=$((fehl+1)); fi
     else
-        zeile "ROT   $name  $((SECONDS - t0)) s  (siehe /tmp/pruefstand-$name.log)"; ZAHL[$name]=1; fehl=$((fehl+1))
+        ZAHL[$name]=hinweis; hinw=$((hinw+1)); HINWEISE+=("$name")
     fi
 done
 
@@ -230,7 +264,8 @@ if [ "$rcb" -ne 0 ]; then
     exit 1
 fi
 
-melde "$fehl rot, $nicht nicht gemessen, $(( ${#PROBEN[@]} - fehl - nicht )) grün · $SECONDS s"
+melde "$fehl rot, $nicht nicht gemessen, $hinw Hinweis, $(( ${#PROBEN[@]} - fehl - nicht - hinw )) grün · $SECONDS s"
+[ "$hinw" -gt 0 ] && zeile "Hinweise (halten nicht auf, stehen im Bericht): ${HINWEISE[*]} — im Prüfprotokoll des Konzepts nennen."
 [ "$WIEDERHOLT" -gt 0 ] && zeile "$WIEDERHOLT Wiederholungen in WebKit (Seitenwechsel oder Neuanmeldung) — im Prüfdokument nennen (E-DM-10)"
 [ "$nicht" -gt 0 ] && zeile "Was nicht gemessen werden konnte, gehört in das Prüfdokument — an den Anfang."
 # Nicht gemessen ist nicht grün: Der Bericht trägt es, und

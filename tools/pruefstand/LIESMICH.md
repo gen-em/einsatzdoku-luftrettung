@@ -12,24 +12,24 @@ python3 tools/pruefstand/bericht.py lesen [--commit C] [--basis B] [--riegel n=w
 
 ## Was es misst
 
-`pruefen.sh` ermittelt die Stufe (Versionssprung; neue Migration heißt haupt), fährt
-die Anlage hoch, läuft Riegel und Proben der Berührung — vor `demo: true` schiebt er die
-Demo-Marke (Nr. 322; seit Nr. 393 vor jedem Engine-Lauf), `motoren: true` fährt er je Engine (ab neben drei, `MOTOR=…`, R87,
-`motoren.md`) — und **erzeugt** den Prüfbericht für die Commit-Nachricht. `auswahl.py` beantwortet
-„welche Probe zu welcher Datei" aus `pruefablauf.json`. `bericht.py lesen` ist
-die Gegenlesung in Stufe 1 (PK-05): sechs Lagen, Riegelzahlen als `--riegel`.
+`pruefen.sh` ermittelt die Stufe (Versionssprung; neue Migration heißt haupt), fährt die
+Anlage hoch, läuft Riegel und Proben der Berührung — vor `demo: true` schiebt er die Demo-Marke
+(Nr. 322, je Engine-Lauf), `motoren: true` fährt er je Engine (R87, `motoren.md`) — und
+**erzeugt** den Prüfbericht. Vier Ergebnisse: grün, rot, nicht gemessen, `hinweis`
+(gemeldet, hält nicht auf; `hinweis: true` oder Zeilen `HINWEIS: …`, E-PU-05).
+`auswahl.py` beantwortet „welche Probe zu welcher Datei" aus `pruefablauf.json`;
+`bericht.py lesen` ist die Gegenlesung in Stufe 1 (Lagen: `docs/Pruefablauf.md` 5.1).
 
 ## Was es braucht
 
-Die Ausbaustufe `web` (`tools/sandbox/`); für `android-bau` das Android-SDK,
-für `uhr-stufe1` `CIQ_GERAETE_URL`, für die Schemaprobe das Modul
-`plattform`. **Was fehlt, wird gezählt und benannt, nicht übersprungen.**
+Die Ausbaustufe `web` (`tools/sandbox/`); für `android-bau` das Android-SDK, für
+`uhr-stufe1` `CIQ_GERAETE_URL`, für die Schemaprobe das Modul `plattform`. **Was fehlt, wird gezählt und benannt, nicht übersprungen.**
 
 ## Erwartete Zahl
 
-`bericht.py lesen --selbstprobe` → **18 / 0**, `auswahl.py --selbstprobe` → **39 / 0**,
+`bericht.py lesen --selbstprobe` → **22 / 0**, `auswahl.py --selbstprobe` → **41 / 0**,
 `--abdeckung` → **0 ohne Muster**. `pruefen.sh` → 0 rot, 0 nicht gemessen, rc 0 (ohne
-Bericht rc 1); klein ohne `server/` die **20** Riegel, neben **44** (zuletzt 42 in 23 min, P5c/AP3).
+Bericht rc 1); klein ohne `server/` die **23** Riegel, neben **44** (zuletzt 42 in 23 min, P5c/AP3).
 
 ## Was es nicht kann
 

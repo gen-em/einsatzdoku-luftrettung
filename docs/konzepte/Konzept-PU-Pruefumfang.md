@@ -23,8 +23,9 @@ Prüfarbeit lässt sich nicht fächern.
 der neuen Form aus E-PU-08.
 **Zweig:** `claude/zealous-albattani-2xk21u` für das Konzept, aufgesetzt auf
 `origin/main` bei `9dd9790` (Web 23.5.1, Uhr 4.1.0, Android 0.18.1). Die
-Umsetzung setzt einen **neuen** Zweig auf `main` auf, sobald 12b gemergt ist
-(1.3).
+Umsetzung läuft auf **`claude/compassionate-ride-1a0uw1`**, aufgesetzt auf
+`origin/main` bei `c32dd2c` (PR #125, 12b gemergt; Web 23.6.0, Uhr 4.1.1,
+Android 0.18.2).
 **Backlog-Spanne:** **420 bis 429** — umgebucht von 410 bis 419 beim Merge mit 12b am 01.11.2026, weil 12b dieselbe Spanne reserviert und 410, 411 vergeben hatte (E-SD-21, eingetragen mit PU-00 vor
 jeder Vergabe).
 
@@ -32,11 +33,11 @@ jeder Vergabe).
 >
 > | | |
 > |---|---|
-> | Stand | **01.11.2026 — Konzept geschrieben (PU-00). Umsetzung wartet auf den Merge von 12b.** |
-> | Entschieden | E-PU-01 bis E-PU-13 (Abschnitt 2); E-PU-13 nachgetragen am 01.11.2026 |
-> | Offen | keine Frage (Q-PU-01, -02 beantwortet am 01.11.2026) |
-> | Umsetzung | PU-00 erledigt 01.11.2026 (dieses Dokument, Fahrplanzeile 20, R89, Verlaufszeile, Spanne). PU-01 bis PU-10 offen (PU-10 nachgetragen am 01.11.2026). |
-> | Halt | **Umsetzung blockiert bis 12b gemergt ist** (1.3). |
+> | Stand | **01.11.2026 — Umsetzung läuft. PU-02 erledigt; als Nächstes PU-01.** |
+> | Entschieden | E-PU-01 bis E-PU-15 (Abschnitt 2); E-PU-14 und -15 am 01.11.2026 zu Beginn der Umsetzung |
+> | Offen | keine Frage |
+> | Umsetzung | Reihenfolge PU-02, -01, -03, -04, -10, -05, -06, -07, -08, -09 (Abschnitt 3). Erledigt: PU-00, PU-02. |
+> | Halt | keiner — 12b ist gemergt (PR #125, 01.11.2026). |
 > | Fable-Schritte | keine |
 > | Fächerung | keine (Kopf) |
 > | Nummern | 420 bis 429 reserviert (bis 01.11.2026 410 bis 419, umgebucht beim Merge mit 12b); vergeben: keine. |
@@ -144,6 +145,8 @@ PR-Läufen entstanden.
 | E-PU-10 | **Changelog kürzer.** Ein Eintrag sagt in höchstens fünf Sätzen, was das Problem war und warum diese Lösung; Prüfzahlen, Werkzeugbefunde und Paketnummern gehören nicht hinein — die stehen im Konzept und in der Git-Historie. Ohne Riegel, E-PU-12. | Betreiberin, 01.11.2026 |
 | E-PU-11 | **Q-PU-01 (Empfehlung):** fünf Breiten im schmalen Bilderlauf — 390 (Handy, unter der ersten Schwelle), 768, 1024, 1200, 1600 (je knapp über einer Schwelle aus `Design.md` 7). | Betreiberin, 01.11.2026 |
 | E-PU-12 | **Q-PU-02 (Empfehlung):** die Changelog-Regel steht in `CLAUDE.md` 2 ohne Riegel; der Preis — sie kann unbemerkt reißen — steht dabei. Schritt 13 fasst den Changelog ohnehin neu (R15). | Betreiberin, 01.11.2026 |
+| E-PU-14 | **Alle dreizehn Prüfdokumente gehen in die Prüfliste** (F-PU-06): E-PU-09 und PU-08 sagten „zwölf", in `docs/konzepte/` liegen dreizehn, und F-PU-03 zählt selbst dreizehn Kürzel auf. | Betreiberin, 01.11.2026 |
+| E-PU-15 | **PU-08 läuft im selben PR wie der Rest**, nicht als eigener; die Arbeit läuft ohne Halt durch, gehalten wird nur bei einem Problem oder einer offenen Frage. Ausgegeben wird über den gepushten Zweig, keine ZIP-Datei. | Betreiberin, 01.11.2026 |
 | E-PU-13 | **Ererbter Bericht.** Der Prüfstand darf in `neben` das Ergebnis einer Probe vom **direkten Vorgänger auf demselben Zweig** übernehmen, wenn dessen Bericht im Commit steht, die Probe dort **grün** war und der Unterschied zwischen beiden Bäumen **kein Muster dieser Probe** trifft. Der Bericht schreibt dann `NAME=ererbt:<Baum des Vorgängers>` statt einer Zahl; das Tor liest den Vorgänger-Bericht nach und prüft beides (achte Lage in `Pruefablauf.md` 5.1). **Nie geerbt werden:** was rot oder nicht gemessen war; die billigen Riegel (25 s, das Tor misst sie selbst); der Kreislauf `edbak` (Nr. 267, F-S11-48); Proben, die eine berührte Datei nur über das Auffangmuster `server/**` erreicht; alles beim vollen Lauf (E-PU-01) und in `haupt`. **Nur über eine Stufe:** Ein Bericht, der selbst erbt, vererbt nicht weiter — spätestens jeder zweite Lauf im Zweig ist wieder voll. Grund: Der letzte Nebenlauf eines Zwischen-PRs dauerte 12 205 s, und der zweite Lauf nach einer Berichtigung misst heute alles noch einmal, auch das, was die Berichtigung nicht berührt. Preis: Die Zuordnung in `pruefablauf.json` ist von Hand gepflegt; ein unvollständiges Muster erbt fälschlich grün — in `klein` gilt das heute schon. | Betreiberin, 01.11.2026 (Nachtrag) |
 
 **Abgelehnt:** Werkzeugarbeit ohne eigenes Konzept zu führen (Vorschlag B4
@@ -152,14 +155,16 @@ Schritte mit Konzept.
 
 ## 3. Arbeitspakete
 
-Seriell, in dieser Reihenfolge; jedes Paket endet mit Prüfstand, Statusblock
-und Push.
+Seriell; jedes Paket endet mit Prüfstand, Statusblock und Push. **Gefahren
+wird PU-02, -01, -03, -04, -10, -05, -06, -07, -08, -09** — PU-02 zuerst,
+weil PU-03 bis -06 darauf aufbauen, PU-10 nach PU-04 (so stand es schon in
+den Zeilen; die Tabelle bleibt nach Nummern geordnet).
 
 | Paket | Inhalt | Dateien |
 |---|---|---|
 | PU-00 | Buchführung: dieses Dokument, Fahrplanzeile Schritt 20, R89, Verlaufszeile, Spanne 410–419. **Erledigt 01.11.2026.** | `docs/konzepte/`, `docs/Rahmenplan*.md`, `docs/Backlog.md` |
 | PU-01 | **Zehnerregel und `--voll`** (E-PU-01): `auswahl.py` liest die Spanne der Nebennummern, gibt `umfang` mit Grund aus; `pruefen.sh` nimmt `--voll`; `bericht.py` schreibt `umfang=…` und liest es im Tor gegen (siebte Lage in `Pruefablauf.md` 5.1); Selbstproben je Lage. | `tools/pruefstand/`, `docs/Pruefablauf.md` |
-| PU-02 | **Ergebnisart `hinweis`** (E-PU-05): im Lauf, im Bericht, im Tor; Selbstprobe von `bericht.py lesen`. Zuerst, weil PU-03 bis -06 darauf aufbauen. | `tools/pruefstand/`, `.github/workflows/pruefung.yml` |
+| PU-02 | **Ergebnisart `hinweis`** (E-PU-05): im Lauf, im Bericht, im Tor; Selbstprobe von `bericht.py lesen`. Zuerst, weil PU-03 bis -06 darauf aufbauen. **Erledigt 01.11.2026.** | `tools/pruefstand/`, `.github/workflows/pruefung.yml` |
 | PU-03 | **Engines je Berührung** (E-PU-02): `MOTOREN` in `pruefen.sh` aus Berührung, `umfang` und Stufe; `motoren=`-Zeile im Bericht und ihre Gegenlesung angepasst; Grundsatz 8 neu gefasst, `CLAUDE.md` 6, `motoren.md`. | `tools/pruefstand/`, `docs/Pruefablauf.md`, `CLAUDE.md` |
 | PU-04 | **Breiten und Seiten je Berührung** (E-PU-03, -04): `aufnehmen.mjs` mit Breitensatz je `umfang`; Liste der geteilten Dateien in `pruefablauf.json`; Bilderlauf und Bedienprobe in `neben` über `--nur` wie in `klein`, sonst alle. | `tools/screenshots/`, `tools/bedienprobe/`, `tools/pruefstand/` |
 | PU-05 | **Steuerung aus dem Tor** (E-PU-06): `steuerung` aus `riegel` in `pruefablauf.json` und aus `pruefung.yml`; im Prüfstand als `hinweis`; `tools/kettenaufrufe/` und `bestand` Regel `tor` folgen von selbst. | `tools/pruefstand/`, `.github/workflows/`, `tools/steuerung/LIESMICH.md` |
@@ -186,6 +191,7 @@ ersten erbenden Lauf.
 | F-PU-03 | niedrig | `docs/konzepte/` | **Zwölf Prüfdokumente mit rund 300 offenen Prüfpunkten liegen nebeneinander** (01.11.2026: AR 15, BV 8, DM 6, P5c 44, PK 42, R17 44, R4 23, RW 5, S11 44, SR 15; BR, Kette II und SD ohne nummerierte Punkte). Viele betreffen dieselben Wege (Anmeldung, Sicherung, Zweitfaktor). | E-PU-09 |
 | F-PU-04 | niedrig | `docs/CHANGELOG.md` | **144 000 geänderte Zeilen im Changelog seit September** — dort landen Prüfzahlen und Werkzeugbefunde, die ins Konzept gehören. | E-PU-10 |
 | F-PU-05 | mittel | `tools/pruefstand/auswahl.py`, Prüfdokumente | **Der Umfang wird gegen `main` bestimmt, nicht gegen den letzten grünen Bericht im Zweig.** Nach einer Berichtigung fährt ein Zweig mit Nebenfassung die ganze Nebenstufe noch einmal, auch für einen Satz Doku; die Prüfdokumente zeigen das Muster „erster Lauf n rot, behoben, zweiter Lauf" bei S11, R17 und P5c. Der Nebenlauf des letzten Zwischen-PRs dauerte 12 205 s. | E-PU-13 |
+| F-PU-06 | niedrig | `docs/konzepte/` | **Dreizehn Prüfdokumente, nicht zwölf.** E-PU-09 und PU-08 zählten zwölf; die Liste in F-PU-03 hat dreizehn Kürzel, und dreizehn Dateien liegen da. | E-PU-14 |
 
 ## 4a. Fragen an die Betreiberin
 
@@ -198,6 +204,8 @@ ersten erbenden Lauf.
 
 | Paket | Mittel | Zahl | Datum |
 |---|---|---|---|
+| PU-02 | `bericht.py lesen --selbstprobe`; `auswahl.py --selbstprobe`; `ergebnis()` aus `pruefen.sh` in einer Probeschale | 22 Lagen, 0 Fehlschläge (16 rot, 6 grün; neu: 5c, 4b, 4c, 5d) · 41 Lagen, 0 (neu: `hinweis` nur `true`, kein Riegel trägt es) · 4 Fälle: grün mit `HINWEIS:`-Zeile → Hinweis, grün ohne → ok, rot → ROT, rot mit `"hinweis": true` → Hinweis | 01.11.2026 |
+| PU-02 | `bestand.py` (Gegenprobe, ungewollt) | 1 Befund `form-zeilen`, 41 Zeilen in `tools/pruefstand/LIESMICH.md` — F-PU-01 noch einmal, am eigenen Paket; gekürzt, dann 0 | 01.11.2026 |
 | PU-00 | Prüfstand `klein` | 24 grün, 0 rot, 0 nicht gemessen, 69 s; Bericht am PR-Kopf (`0e7faf8`) | 01.11.2026 |
 | PU-00 | `decken.py`, `uebersicht.py --pruefen`, `nummern.py`, `bestand.py`, `pruefen.sh textprobe`, `dokumente`, `linkprobe` | 21 Decken, 0 gerissen (erst 1: R89-Kern 196 Zeichen über 160, gekürzt) · 68 Einträge, 0 ohne Grammatik, 0 ohne Ziel · 0 neue Nummern, 0 Überschneidungen gegen 18 Zweige · 0 Befunde · 0 Treffer, 143 Regeln gegriffen · 50 Dokumente, 3 688 Pfadverweise, 0 Befunde · 154 Verweise, 0 Abweichungen | 01.11.2026 |
 

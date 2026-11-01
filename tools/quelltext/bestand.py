@@ -206,7 +206,7 @@ SCHLUESSEL = {
     # `stufenregeln` lesen auswahl.py und bericht.py (Stufenregel `migration`).
     'oben': {'beschreibung', 'fassung', 'muster', 'proben', 'riegel', 'stufen', 'stufenregeln'},
     'riegel': {'beschreibung', 'proben'},
-    'probe': {'aufruf', 'bemerkung', 'braucht', 'demo', 'motoren', 'nach'},    # `demo` und `motoren` lesen auswahl.py und pruefen.sh
+    'probe': {'aufruf', 'bemerkung', 'braucht', 'demo', 'hinweis', 'motoren', 'nach'},    # `demo`, `hinweis` und `motoren` lesen auswahl.py und pruefen.sh
     'muster': set(MUSTER_FELDER),
 }
 QUELLTEXT_SPRACHEN = ('.py', '.php')          # was der Riegel lesen kann — alles andere ist ein Befund

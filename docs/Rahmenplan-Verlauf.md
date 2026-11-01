@@ -9,6 +9,7 @@ Verlauf bis zum Schnitt). Die Fassungszählung läuft fortlaufend weiter.
 
 | Fassung | Datum | Anlass | Was |
 |---|---|---|---|
+| 187 | 01.11.2026 | 20 | Umsetzung von PU beginnt auf `claude/compassionate-ride-1a0uw1`, nachdem 12b mit PR #125 gemergt ist; Kopf: Stand `main` `c32dd2c` (Web 23.6.0, Uhr 4.1.1, Android 0.18.2), keine offenen PRs, „Läuft: 20". |
 | 186 | 01.11.2026 | Merge, Berichtigung | `main` mit PR #124 (PU-00) aufgenommen; Kopf „Daneben: 20“, R89. Berichtigt: Fassung 182 war doppelt — sie bleibt bei PU-00, R17-28 bis -30 sind 183 bis 185 (damals 182 bis 184); Spanne 410–419 doppelt, PU jetzt 420–429. |
 | 185 | 01.11.2026 | 12b-Abschluss | Erledigt-Zeile 12b (Freigabe 01.11.2026, PR #125), Fahrplanzeile und Block 12b heraus, Reihenfolge ab 13; Konzept `Review-R17.md` gelöscht (`630756f0`), R69, R88 umgesetzt; 6.1 Prüfliste nach Risiko; Nr. 402, 403 in die nächste Backlog-Runde. |
 | 184 | 31.10.2026 | R17-29, Zuarbeit, Berichtigung | Zweig ab R17-29 `claude/new-session-p1duc7`; 6.1: Prüfliste R17 bis P-R17-40 (Seitenaufbau, Suche und Zeitraum). Berichtigt: Der Kopf nannte `main` bei `2e9bc9c` (PR #122) — seit PR #123 am 30.10.2026 `9dd9790` mit Web 23.5.1. |
