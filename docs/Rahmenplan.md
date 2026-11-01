@@ -1,14 +1,14 @@
 # Rahmenplan — Programm „Gen-EM NAdoku" bis v1.0
 
-**Fassung 184 (01.11.2026)** · Steuerung: Reihenfolge, Status, programmweite
+**Fassung 186 (01.11.2026)** · Steuerung: Reihenfolge, Status, programmweite
 Entscheidungen. Verlauf: `Rahmenplan-Verlauf.md`. Fassungen 1–15:
 `Rahmenplan-Archiv.md`; Fassungen 16–124: `Rahmenplan-Archiv-2.md`.
 
-**Stand `origin/main`** (Commit `9dd9790`, PR #123, gemessen 31.10.2026): Web 23.5.1 ·
+**Stand `origin/main`** (Commit `e3af304`, PR #124, gemessen 01.11.2026): Web 23.5.1 ·
 Uhr 4.1.0 · Android 0.18.1; Web 23.1.0 auf Produktiv seit dem 27.10.2026.
-**Läuft:** kein Schritt — 12b ist abgeschlossen (Abschnitt 8, Freigabe 01.11.2026); R17-28 bis -30 liegen in PR #124.
-**Als Nächstes:** 13 — P7 Gesicht v1.0; beginnt mit einer Konzeptsitzung.
-**Offene PRs:** #124 (12b, Abschluss: Web 23.6.0, Uhr 4.1.1, Android 0.18.2).
+**Läuft:** kein Schritt — 12b ist abgeschlossen (Abschnitt 8, Freigabe 01.11.2026); R17-28 bis -30 liegen in PR #125.
+**Als Nächstes:** 13 — P7 Gesicht v1.0; beginnt mit einer Konzeptsitzung. **Daneben:** 20 — PU Prüfumfang, Konzept steht (01.11.2026), Umsetzung nach dem Merge von 12b.
+**Offene PRs:** #125 (12b, Abschluss: Web 23.6.0, Uhr 4.1.1, Android 0.18.2).
 **Fällig bei der Betreiberin:** 38 Posten (Abschnitt 6.1). **`update.php`:** auf Staging und Produktiv nichts offen (Betreiberin, 20.10.2026, nach Web 23).
 
 Kennungen sind Namen, keine Reihenfolge.
@@ -120,6 +120,7 @@ weil das Altbestand-Werkzeug ein einziges Konto voraussetzte.
 | 6 | **S4 — Rest, Teil C** | Play Console nach R65: interner Test-Track für Handy und Uhr unter einem Eintrag, Versionscode-Versatz, Signaturweg; Android 1.0.0 (E-R45-7). Die Vorbereitung ohne D-U-N-S und Schlüssel ist gebaut (Android 0.13.0), die Gerätetests sind erfolgt (24.09.2026) | D-U-N-S, Organisationskonto und Play App Signing — erledigt 26.09.2026 (SD-M1); offen in 6.2: Wear-OS-Uhr, Demo-Video, Datensicherheitsformular | `docs/konzepte/Konzept-S4-Handy-Uhr-Client.md` 13; `Vorbereitung-Play-Console.md` | offen — Teile A bis C gemergt 04.09.2026 (PR #33, Abschnitt 8); Android 1.0.0 und der interne Test-Track können beginnen |
 | 11 | **Planung v1.0** | Festlegungen vor dem Schnitt (R65 bis R73, entschieden 03.09.2026); Ergebnis sind die Konzepte der Phasen P6 bis P8 mit je eigenem Paketschnitt (P6 nach der Freigaberunde des Reviews) | keine | `docs/konzepte/Konzept-Planung-v1.0.md` | gemergt 03.09.2026 — Festlegungen entschieden (R65–R73); offen nur die Paketschnitte, je mit dem Konzept zu 12b, 13 und 14 |
 | 13 | **P7 — Gesicht v1.0** | Umbenennung überall (Langform in den System-E-Mails entscheiden), neues Demo-Passwort (R25); Vertrag v1 (R12, Nr. 23); Doku-Neufassung, Handbuch als HTML im Release (R16, R72); Web-App-Manifest (R70); Changelog neu (R15); Backlog-Übernahme; Altformat der Sicherung weg (Nr. 46); Kommentarregel (R69) | 12b | eigenes Konzept nach K1 | offen — nach 12b |
+| 20 | **PU — Prüfumfang** (R89) | Der Prüfstand misst je Berührung: Firefox/WebKit, zehn Breiten und alle Seiten nur bei Stylesheet-Berührung, Zehnerregel oder `haupt`; Ergebnisart `hinweis`; Steuerung raus aus dem Tor; Bestandsriegel erzeugt statt rot; ein Prüfdokument ist eine Prüfliste; eine Prüfliste statt zwölf | Konzept: keine; Umsetzung: 12b gemergt (Werkzeugschicht) | `docs/konzepte/Konzept-PU-Pruefumfang.md` (Kürzel PU, Opus), Prüfdokument daneben | Konzept — geschrieben 01.11.2026 auf `claude/zealous-albattani-2xk21u`; Umsetzung auf neuem Zweig nach 12b |
 | 14 | **P8 — Schnitt** | Neuaufsetzen mit Übernahme per edbak (R40 (3), R60, Nr. 324); Migrationsregister neu (R66); Repo-Umzug und Inventur mit Begründung je Weglassung (R68); Kette im neuen Repositorium (R67, R40 (4)); Rechts- und Betreiberunterlagen (R41); Abnahme nach R11; Tags `web-v1.0.0`, `uhr-v…`, `android-v1.0.0` | 13 | eigenes Konzept nach K1 | offen — nach 13 |
 | — | **Betriebsübergang** | Öffnung in Wellen über die Betriebsarten (R41); Produktionsfreigabe in den Stores mit Welle 1 (R65; nach MDR-Abgrenzung und Rechtsunterlagen); mit Welle 1 entfällt die Seitenladung (`apk.php`, Handbuch 10.1); Garmin-Uhr über den Connect-IQ-Store; halbjährliche Probe-Wiederherstellung | v1.0 | — | offen — beginnt mit v1.0 (nach den Schritten 13 und 14); Wellen nach R41 |
 
@@ -355,6 +356,7 @@ werden hier kompakt angehängt; **der Statussatz wird ersetzt, nicht ergänzt**
 | R86 | P6 in zwei Hälften um S11: Bedrohungsmodell als 12 vor 12a, Code-Review als 12b danach — S11 wird gegengelesen, der Code einmal, in Endfassung | gilt; entschieden 27.09.2026 (Betreiberin, Konzeptsitzung SR) | Abschnitt 3 („Warum so", Blöcke 12 und 12b) |
 | R87 | Browserproben in Chromium, Firefox und WebKit ab Stufe neben und in Stufe 2, in klein Chromium; fehlt eine Engine, rot. Ausnahmen begründet; Safari von Hand | gilt; entschieden 19.10.2026 (Betreiberin), umgesetzt in Schritt 19 (abgeschlossen 20.10.2026) | Konzept DM (gelöscht, `3bedc25`), E-DM-01 bis -11 |
 | R88 | Die Pakete von 12b (R17-18 bis -30) laufen mit Opus, Kryptographie eingeschlossen — K8 (Krypto mit Fable, E-PV-5 (7)) gilt für 12b nicht; das Review war Fable | umgesetzt mit 12b (01.11.2026); entschieden 21.10.2026 (Betreiberin, Freigaberunde) | `Review-R17.md` 2.1 (gelöscht, `630756f0`), E-R17-28 |
+| R89 | Der Prüfumfang folgt der Berührung: drei Engines, zehn Breiten und alle Seiten nur bei Stylesheet-Berührung, Zehnerregel oder `haupt`; sonst schmal. Ersetzt R87 | gilt; entschieden 01.11.2026 (Betreiberin), Umsetzung in Schritt 20 | Konzept PU, E-PU-01 bis -10 |
 
 ## 8. Erledigt
 
@@ -408,7 +410,7 @@ die Aufräumfassung vom 24.09.2026 gelöscht hat (Archiv-2, Verlaufszeile 110).
 | 18 — Sicherheitsrunde II (Konzept SR) | Web 21.7.0–21.14.0 | 05.10.2026 · PR #95, #101 | gelöscht 05.10.2026 (`0cbc19d`) | `Pruefdokument-SR-Sicherheitsrunde-II.md` (P-SR-04 bis -20 außer -15 offen, 6.1) | 9 Pakete, 2 Fable-Lesungen: Sitzungsbindung, Gerät merken, frischer Code, Passkeys, Schlüsselwechsel, Notzugang, `ingest.php` ohne Deadlock, Rechenaufgabe; Ziel 18: 10 erledigt, 1 umgehängt |
 | 19 — DM: drei Engines (R87) | Web 23.0.1, sonst Werkzeug | 20.10.2026 · PR #112–#114 | gelöscht (`3bedc25`) | `Pruefdokument-DM-Drei-Motoren.md` (P-DM-02, -03, -06 offen, 6.1) | Firefox und WebKit im Setup, Start über `motor.mjs` mit Register und Riegel; ab `neben` und in Stufe 2 dreifach (Stufe 2 auf 24.04, Nr. 393); Nr. 390 erledigt |
 | 12a — S11: Ortsdaten verschlüsselt (Weg B, R78) | Web 22.0.0–23.0.0, Uhr 4.0.0, Android 0.18.0 | 20.10.2026 · PR #106, #111 | gelöscht (`0a6b926`) | `Pruefdokument-S11-Ortsdaten.md` (Gerätetests und Staging-Wege offen, 6.1) | Konto-Schlüsselpaar; Gerätehülle für Spur, Phasenorte, Reanimation; Zielklinik im `pat_blob`; Spurfunktionen im Browser; Klartext weg; Nr. 43, 53, 161 |
-| 12b — P6: Review und Bereinigung (R17-05 bis -30) | Web 23.0.2–23.6.0, Uhr 4.0.0–4.1.1, Android 0.18.0–0.18.2 | 01.11.2026 · PR #118, #122–#124 | gelöscht (`630756f0`) | `Pruefdokument-R17-Review.md` (offen, 6.1) | Review in elf Stücken, 59 Befunde, kein kritischer; Kette, Pfeffer, Uhr, Server, Sicherung, Android, `CryptoKey`, Herkunft, Doku, Kommentare, Seitenaufbau |
+| 12b — P6: Review und Bereinigung (R17-05 bis -30) | Web 23.0.2–23.6.0, Uhr 4.0.0–4.1.1, Android 0.18.0–0.18.2 | 01.11.2026 · PR #118, #122, #123, #125 | gelöscht (`630756f0`) | `Pruefdokument-R17-Review.md` (offen, 6.1) | Review in elf Stücken, 59 Befunde, kein kritischer; Kette, Pfeffer, Uhr, Server, Sicherung, Android, `CryptoKey`, Herkunft, Doku, Kommentare, Seitenaufbau |
 
 ## 9. Pflege dieses Dokuments
 

@@ -9,9 +9,11 @@ Verlauf bis zum Schnitt). Die Fassungszählung läuft fortlaufend weiter.
 
 | Fassung | Datum | Anlass | Was |
 |---|---|---|---|
-| 184 | 01.11.2026 | 12b-Abschluss | Erledigt-Zeile 12b (Freigabe 01.11.2026, PR #124), Fahrplanzeile und Block 12b heraus, Reihenfolge ab 13; Konzept `Review-R17.md` gelöscht (`630756f0`), R69, R88 umgesetzt; 6.1 Prüfliste nach Risiko; Nr. 402, 403 in die nächste Backlog-Runde. |
-| 183 | 31.10.2026 | R17-29, Zuarbeit, Berichtigung | Zweig ab R17-29 `claude/new-session-p1duc7`; 6.1: Prüfliste R17 bis P-R17-40 (Seitenaufbau, Suche und Zeitraum). Berichtigt: Der Kopf nannte `main` bei `2e9bc9c` (PR #122) — seit PR #123 am 30.10.2026 `9dd9790` mit Web 23.5.1. |
-| 182 | 30.10.2026 | Zuarbeit | 6.1: Prüfliste R17 bis P-R17-39 (Läuferadresse, Gerätesummen, Selbstproben in Stufe 1; R17-28). |
+| 186 | 01.11.2026 | Merge, Berichtigung | `main` mit PR #124 (PU-00) aufgenommen; Kopf „Daneben: 20“, R89. Berichtigt: Fassung 182 war doppelt — sie bleibt bei PU-00, R17-28 bis -30 sind 183 bis 185 (damals 182 bis 184); Spanne 410–419 doppelt, PU jetzt 420–429. |
+| 185 | 01.11.2026 | 12b-Abschluss | Erledigt-Zeile 12b (Freigabe 01.11.2026, PR #125), Fahrplanzeile und Block 12b heraus, Reihenfolge ab 13; Konzept `Review-R17.md` gelöscht (`630756f0`), R69, R88 umgesetzt; 6.1 Prüfliste nach Risiko; Nr. 402, 403 in die nächste Backlog-Runde. |
+| 184 | 31.10.2026 | R17-29, Zuarbeit, Berichtigung | Zweig ab R17-29 `claude/new-session-p1duc7`; 6.1: Prüfliste R17 bis P-R17-40 (Seitenaufbau, Suche und Zeitraum). Berichtigt: Der Kopf nannte `main` bei `2e9bc9c` (PR #122) — seit PR #123 am 30.10.2026 `9dd9790` mit Web 23.5.1. |
+| 183 | 30.10.2026 | Zuarbeit | 6.1: Prüfliste R17 bis P-R17-39 (Läuferadresse, Gerätesummen, Selbstproben in Stufe 1; R17-28). |
+| 182 | 01.11.2026 | PU-00 | Schritt 20 (PU — Prüfumfang) in den Fahrplan, R89 (der Prüfumfang folgt der Berührung, ersetzt R87), Kopf „Daneben"; Konzept `Konzept-PU-Pruefumfang.md`, Umsetzung nach dem Merge von 12b. |
 | 181 | 29.10.2026 | Zuarbeit | 6.1: P-R17-29 erledigt — SMTP-Benutzer und -Passwort in beiden `config.php` (Betreiberin, vor dem Zwischen-PR mit Web 23.5.1). |
 | 180 | 28.10.2026 | Zuarbeit | 6.1: Prüfliste R17 bis P-R17-38 (R17-26 fehlte seit Web 23.5.0, R17-27). Berichtigt: Die Zuarbeit zum Nachlösen nannte `tools/geraetemodelle/nachaufloesen.php`, seit PK-04 `tools/erzeugen/geraetemodelle-nachaufloesen.php` (Dokumentenprobe, R17-27). |
 | 179 | 28.10.2026 | Zuarbeit | 6.1: Prüfliste R17 um P-R17-34 und -35 (Bitwarden, Safari und neuer Tab nach Web 23.4.0, R17-25); die Hoster-Anfrage ist gestellt, offen ist die Antwort. |

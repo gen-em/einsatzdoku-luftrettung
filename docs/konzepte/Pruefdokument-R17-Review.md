@@ -61,7 +61,9 @@ Commit-Nachricht.
 | `uebersicht.py --ziel 12b` | Abnahme: keine offenen Einträge mehr | **0** (Nr. 402 und 403 in die nächste Backlog-Runde, E-R17-98) |
 | `decken.py` samt Selbstprobe | Rahmenplan ohne Block 12b | **21/0**; Selbstprobe zuerst **rot** (`fahrplan-block`): Sie baute ihren Riss in den ersten `###` nach Abschnitt 3, und ohne Schrittblock lag der in Abschnitt 6. Berichtigt — sie baut einen Block ein, wenn keiner da ist; danach **23 von 23**, Gegenprobe mit dem Rahmenplan vor R17-30 (mit Block) ebenfalls 23 von 23 |
 | `dokumente.py` nach dem Löschen von `Review-R17.md` | Zeigt ein Verweis ins Leere? | **0** Befunde; 416 Pfadverweise über 35 Ausnahmen (neu: `Review-R17.md` als „Früher", letzter Stand `630756f0`) |
-| Prüfstand `neben` | alles, was die Berührung des PR verlangt | erster Lauf abgebrochen nach roter Selbstprobe; Zahl des zweiten in der Commit-Nachricht von R17-30 |
+| Prüfstand `neben` | alles, was die Berührung des PR verlangt | erster Lauf abgebrochen nach roter Selbstprobe; zweiter vollständig über den Baum `96396f16`: **69 grün, 0 rot, 1 nicht gemessen** — `schemaprobe`, weil der Docker-Dienst im Lauf ausgefallen war (Bericht in `204b6073`) |
+| `plattform.sh schema` einzeln, Baum `96396f16` | die nicht gemessene Probe | MariaDB 10.11.14, MariaDB 10.6.28, MySQL 8.0.46, MySQL 8.4.0 je **50 Prüfungen, 0 Fehlschläge** |
+| **Ausnahme der Betreiberin (01.11.2026)** | kein weiterer voller Prüfstand, auch nicht nach dem Merge von `main` (PR #124, Konzept PU) — die Werkzeugregeln baut Schritt 20 ohnehin um | Stufe 1 ist für PR #125 **rot**, aus zwei Gründen: „nicht gemessen" (E-PK-46) und ein Bericht über einen anderen Baum als den Merge-Commit. Gefahren nach dem Merge: Quelltextprüfungen, Decken, Kopfzeilen, Nummern (Zahlen in der Commit-Nachricht des Merges) |
 
 ### R17-29 Seitenaufbau und Mengen — Web 23.6.0 (31.10.2026)
 
@@ -811,7 +813,7 @@ erledigt. **Offen daraus:** P-R17-40 (Telefon, Safari), F-R17-87 mit Nr.
 **R17-30 am 01.11.2026 — 12b abgeschlossen** (Freigabe der Betreiberin):
 Erledigt-Zeile in Rahmenplan 8, Konzept gelöscht (letzter Stand
 `630756f0`), Nr. 402 und 403 in die nächste Backlog-Runde (E-R17-98),
-Pull Request #124. **Dieses Dokument bleibt**, bis die Prüfliste in
+Pull Request #125 (#124 war der PR des Konzepts PU, gemergt am selben Tag). **Dieses Dokument bleibt**, bis die Prüfliste in
 Abschnitt 4 abgehakt ist — die Reihenfolge nach Risiko steht an ihrem Kopf.
 
 **Aus Schritt 12:**
