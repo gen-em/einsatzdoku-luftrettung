@@ -335,8 +335,18 @@ def selbstprobe(wurzel):
         c = z[i].strip().strip('|').split('|'); c[5] = ' erledigt' + c[5]
         z[i] = '|' + '|'.join(c) + '|'; return z
     def f_block(z):
-        i = _zeile(z, r'^### ', _zeile(z, r'^## 3\.'))
-        return z[:i + 1] + ['Text.'] * (DECKEN['fahrplan-block'][0] + 1) + z[i + 1:]
+        # Der Riss gehört in Abschnitt 3. Hat dort kein Schritt einen Block
+        # (nach dem Abschluss eines Schritts der Regelfall), baut die Probe
+        # einen ein — sonst fände sie den ersten `###` in Abschnitt 6 und
+        # mäße einen Riss, den die Regel dort gar nicht sucht.
+        a3 = _zeile(z, r'^## 3\.')
+        a4 = _zeile(z, r'^## ', a3 + 1)
+        bloecke = [k for k in range(a3, a4) if z[k].startswith('### ')]
+        fuell = ['Text.'] * (DECKEN['fahrplan-block'][0] + 1)
+        if bloecke:
+            i = bloecke[0]
+            return z[:i + 1] + fuell + z[i + 1:]
+        return z[:a4] + ['### Probe-Block', ''] + fuell + [''] + z[a4:]
     def f_zuarbeit(z):
         i = _ab3(z, r'^## 6\.'); z[i] = z[i] + 'x' * 301; return z
     def f_kern(z):

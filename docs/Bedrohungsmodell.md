@@ -13,9 +13,11 @@ Schlüssel im Browser (D, F, I-05, R8, 6.5) auf Web 23.4.0 am 28.10.2026**
 sondern die Liste, welcher Teil gegen welche Fassung gelesen ist. **Dieses Dokument ist
 die Referenz** dafür, was die Anwendung schützt, gegen wen, womit und wo
 die Grenzen liegen. Wo ein anderes Dokument eine Zusage weiter fasst als
-dieses, gilt dieses — und die Abweichung ist als Befund in
-`docs/konzepte/Review-R17.md` 2.3 vermerkt, bis die Freigaberunde den
-anderen Text nachzieht.
+dieses, gilt dieses — und die Abweichung steht als Befund im Konzept, das
+sie findet, bis eine Freigaberunde den anderen Text nachzieht.
+**`Review-R17.md`**, das Konzept dieses Modells und des Reviews, ist mit dem
+Abschluss von 12b gelöscht (R17-30); die Verweise darauf unten zeigen auf
+seinen letzten Stand in der Git-Historie, `630756f0`.
 
 **Für wen.** Die **BetreiberIn** liest, welches Risiko sie trägt und
 welches nicht (Abschnitte 2, 3, 5). Der **Review** (Stücke 2 bis 12) liest,

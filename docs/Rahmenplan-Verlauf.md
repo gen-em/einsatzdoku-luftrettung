@@ -9,6 +9,7 @@ Verlauf bis zum Schnitt). Die Fassungszählung läuft fortlaufend weiter.
 
 | Fassung | Datum | Anlass | Was |
 |---|---|---|---|
+| 184 | 01.11.2026 | 12b-Abschluss | Erledigt-Zeile 12b (Freigabe 01.11.2026, PR #124), Fahrplanzeile und Block 12b heraus, Reihenfolge ab 13; Konzept `Review-R17.md` gelöscht (`630756f0`), R69, R88 umgesetzt; 6.1 Prüfliste nach Risiko; Nr. 402, 403 in die nächste Backlog-Runde. |
 | 183 | 31.10.2026 | R17-29, Zuarbeit, Berichtigung | Zweig ab R17-29 `claude/new-session-p1duc7`; 6.1: Prüfliste R17 bis P-R17-40 (Seitenaufbau, Suche und Zeitraum). Berichtigt: Der Kopf nannte `main` bei `2e9bc9c` (PR #122) — seit PR #123 am 30.10.2026 `9dd9790` mit Web 23.5.1. |
 | 182 | 30.10.2026 | Zuarbeit | 6.1: Prüfliste R17 bis P-R17-39 (Läuferadresse, Gerätesummen, Selbstproben in Stufe 1; R17-28). |
 | 181 | 29.10.2026 | Zuarbeit | 6.1: P-R17-29 erledigt — SMTP-Benutzer und -Passwort in beiden `config.php` (Betreiberin, vor dem Zwischen-PR mit Web 23.5.1). |

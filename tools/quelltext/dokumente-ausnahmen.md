@@ -44,6 +44,7 @@ früherer Stand genannt, im Satz erkennbar. `Beispiel`: ein Platzhalter.
 | `assets/openlocationcode\.js` | Früher | bis Web 23.5.0 dort, seither unter `vendor/` (F-R17-51) |
 | `admin_stammdaten\.php\|info\.php` | Früher | entfernte Seiten, im Satz als frühere genannt |
 | `docs/Branding\.md\|Umstellung-Backup\.md\|docs/konzepte/konzept-(p5c\|rw)/` | Früher | gelöschte Dokumente, mit Commit des letzten Stands |
+| `(docs/konzepte/)?Review-R17\.md` | Früher | Konzept von 12 und 12b, gelöscht mit R17-30 (E-R17-02); letzter Stand `630756f0` |
 | `(\.github/workflows/)?deploy\.yml` | Früher | mit Web 20.4.0 gelöscht |
 | `tools/containeraufbau/(aufbau\.sh)?\|aufbau\.sh` | Früher | bis PK-02, seither `tools/sandbox/aufbauen.sh` (`Sandbox-Setup.md` 1.2) |
 | `referenz/altformat/` | Früher | mit S11-12 entfernt (Backlog Nr. 46) |

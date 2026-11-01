@@ -5905,7 +5905,7 @@ echtes APK.
 > ihrer Grenze in 3 (G1 bis G3). Dieser Abschnitt ist die Liste der
 > Blobfelder **und** der Klartextfelder; `CLAUDE.md` 4 verweist hierher, statt
 > sie zu wiederholen (F-R17-25). *(Bis R17-27 stand hier ein Verweis auf die
-> Klartextliste im Konzept `Review-R17.md`, I-07 — ein Arbeitsdokument, das
+> Klartextliste im Konzept `Review-R17.md` (gelöscht mit R17-30, letzter Stand `630756f0`), I-07 — ein Arbeitsdokument, das
 > mit dem Abschluss von 12b gelöscht wird.)*
 
 Der Server kann `missions.pat_blob` nicht lesen. Genau deshalb muss an einer

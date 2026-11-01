@@ -1,6 +1,6 @@
 # Prüfdokument R17 — Review (Schritt 12: Bedrohungsmodell; Schritt 12b: Stücke 2 bis 12)
 
-*Gehört zu `Review-R17.md`. Beantwortet „was muss **ich** noch tun?" — das
+*Gehörte zu `Review-R17.md` — das Konzept ist mit R17-30 am 01.11.2026 gelöscht, sein letzter Stand liegt in der Git-Historie bei `630756f0`; dieses Dokument bleibt, bis seine Prüfliste abgehakt ist. Beantwortet „was muss **ich** noch tun?" — das
 Protokoll „ist es belegt?" steht im Statusblock und in Abschnitt 5 des
 Konzepts. Angelegt am 11.10.2026 mit R17-00 (Fable); jedes Paket füllt es
 mit Mittel **und** Zahl. Stand: **Schritt 12b läuft seit dem 20.10.2026**
@@ -53,6 +53,15 @@ Je Paket die Mittel mit Zahl. Die Zahl eines Pakets steht hier mit dem
 nächsten Paket — eine Zeile hier ändert den Baum, den der Prüfstand gemessen
 hat (`Pruefablauf.md` 5.1); der Bericht eines Pakets steht in **seiner**
 Commit-Nachricht.
+
+### R17-30 Abschluss 12b — keine Fassung (01.11.2026)
+
+| Mittel | Was gemessen | Zahl |
+|---|---|---|
+| `uebersicht.py --ziel 12b` | Abnahme: keine offenen Einträge mehr | **0** (Nr. 402 und 403 in die nächste Backlog-Runde, E-R17-98) |
+| `decken.py` samt Selbstprobe | Rahmenplan ohne Block 12b | **21/0**; Selbstprobe zuerst **rot** (`fahrplan-block`): Sie baute ihren Riss in den ersten `###` nach Abschnitt 3, und ohne Schrittblock lag der in Abschnitt 6. Berichtigt — sie baut einen Block ein, wenn keiner da ist; danach **23 von 23**, Gegenprobe mit dem Rahmenplan vor R17-30 (mit Block) ebenfalls 23 von 23 |
+| `dokumente.py` nach dem Löschen von `Review-R17.md` | Zeigt ein Verweis ins Leere? | **0** Befunde; 416 Pfadverweise über 35 Ausnahmen (neu: `Review-R17.md` als „Früher", letzter Stand `630756f0`) |
+| Prüfstand `neben` | alles, was die Berührung des PR verlangt | erster Lauf abgebrochen nach roter Selbstprobe; Zahl des zweiten in der Commit-Nachricht von R17-30 |
 
 ### R17-29 Seitenaufbau und Mengen — Web 23.6.0 (31.10.2026)
 
@@ -798,6 +807,12 @@ Zeilen zuerst, die erste Antwort war nicht langsam; Nr. 51, 380, 381, 382
 erledigt. **Offen daraus:** P-R17-40 (Telefon, Safari), F-R17-87 mit Nr.
 410, F-R17-91 mit Nr. 411, F-R17-93 (beobachten). Als Nächstes R17-30
 (Abschluss, PR).
+
+**R17-30 am 01.11.2026 — 12b abgeschlossen** (Freigabe der Betreiberin):
+Erledigt-Zeile in Rahmenplan 8, Konzept gelöscht (letzter Stand
+`630756f0`), Nr. 402 und 403 in die nächste Backlog-Runde (E-R17-98),
+Pull Request #124. **Dieses Dokument bleibt**, bis die Prüfliste in
+Abschnitt 4 abgehakt ist — die Reihenfolge nach Risiko steht an ihrem Kopf.
 
 **Aus Schritt 12:**
 
