@@ -76,13 +76,15 @@ Abschnitt 2.4 nennt den Umfang von Station D mit Zahl.
    noch einmal, wenn ein grüner PR-Lauf denselben Baum gemessen hat — und
    nennt dafür Lauf, Commit und Zeitpunkt. Ein Verweis mit Beleg, kein
    stilles Grün.
-8. **Jede Browserprobe läuft in Chromium, Firefox und WebKit.** Fehlt eine
-   Engine, ist die Probe rot, nicht übersprungen. Das gilt ab der Stufe
-   `neben` und in Stufe 2; **in `klein` laufen die Browserproben in Chromium
-   allein** (R87, E-DM-08 — ein voller dreifacher Lauf dauert länger, als
-   eine Korrektur es rechtfertigt). Der Bericht nennt die Engines
-   (`motoren=chromium+firefox+webkit`, in `klein` `motoren=chromium`), und
-   das Tor liest es gegen (5.1);
+8. **Jede Browserprobe läuft in drei Engines, wo die Engines sich
+   unterscheiden können** (R89, E-PU-02, seit PU-03): Chromium immer;
+   **Firefox und WebKit dazu** beim vollen Lauf (Hauptstufe, Zehnergrenze,
+   `--voll`; Abschnitt 3) und ab `neben`, wenn `server/assets/style.css`
+   oder `server/ui.php` berührt ist (`umfang.stil` in `pruefablauf.json`).
+   **Stufe 2 misst immer dreifach.** Fehlt eine verlangte Engine, ist die
+   Probe rot, nicht übersprungen. Der Bericht nennt die Engines
+   (`motoren=chromium+firefox+webkit` oder `motoren=chromium`), und
+   das Tor rechnet mit derselben Regel nach (5.1);
    welches Werkzeug auf welchem Weg dahin kommt, hält das Register
    `tools/pruefstand/motoren.md`, und der Bestandsriegel zählt es nach.
    **Was nur Chromium kann** — die CPU-Drossel, der virtuelle
@@ -91,7 +93,9 @@ Abschnitt 2.4 nennt den Umfang von Station D mit Zahl.
    nicht Safari:** Ein echter Safari bleibt Handprüfung in den Prüflisten.
    *Bis zum 19.10.2026 lief jede Browserprobe in Chromium allein, obwohl
    Nr. 183 drei Engines beschlossen hatte — durchgesetzt hat es kein
-   Prüfmittel, und ganz S11 lief in einer (Nr. 390).*
+   Prüfmittel, und ganz S11 lief in einer (Nr. 390). Vom 20.10. bis PU-03
+   galt R87: dreifach in jeder Neben- und Hauptstufe, gleich was berührt
+   war — der Bilderlauf allein brauchte dann rund 70 Minuten.*
 
 ---
 
@@ -332,7 +336,7 @@ nichts gelesen wird, misst gegen nichts.
 | Stufe | Auslöser | Umfang |
 |---|---|---|
 | **klein** | Korrekturstufe `a.a.Y`, oder kein Versionssprung | billige Riegel; je berührter Datei die zugeordneten Proben (4); Bilderlauf der berührten Seiten in drei Breiten; Bedienprobe der berührten Seiten — jede Browserprobe in Chromium allein (Grundsatz 8, E-DM-08) |
-| **neben** | Nebenstufe `a.X.a` | alles ohne Anlage: alle Proben gegen die örtliche Installation, beide Kreisläufe, Bilderlauf aller Seiten in zehn Breiten (seit R4-08; vorher acht), Bedienprobe aller Seiten, jede Browserprobe in drei Engines; Handy- und Uhr-Bau, wenn berührt |
+| **neben** | Nebenstufe `a.X.a` | alles ohne Anlage: alle Proben gegen die örtliche Installation, beide Kreisläufe, Bilderlauf aller Seiten in zehn Breiten (seit R4-08; vorher acht), Bedienprobe aller Seiten; Browserproben in Chromium, in drei Engines nur beim vollen Lauf oder bei berührtem Stylesheet bzw. `ui.php` (Grundsatz 8, seit PU-03); Handy- und Uhr-Bau, wenn berührt |
 | **haupt** | Hauptstufe `X.a.a`, **eine neue Migration** (Stufenregel `migration`, 4; seit P5c/AP4) oder `--stufe haupt` | wie neben, dazu die **Plattformmatrix** (PHP 8.3.33 und 8.4; MariaDB 10.11 und 10.6, MySQL 8.0 und 8.4.0 — Schemaprobe und ein Kreislauf `edbak` je Paar), Messstand (Chromium allein, E-DM-06), Anteilprobe, Verbindungsprobe, Uhr-Prüfstand Stufe II |
 
 **Warum die Matrix in die Hauptstufe gehört und nicht in die Kette:** Der
@@ -351,7 +355,7 @@ sind:** PHP 8.3.33 als zweite Fassung, der Kreislauf `edbak` je Paar — auch
 der gegen MySQL 8.4.0 aus dem Absatz darüber; `kreislauf.py` kennt keine
 zweite Datenbank — und der Uhr-Prüfstand Stufe II. *Firefox und WebKit im
 Bilderlauf standen bis zum 19.10.2026 ebenfalls hier; seit Konzept DM läuft
-er ab `neben` dreifach.* Die Zeile „haupt" oben ist damit **das Ziel, nicht der Stand**
+er ab `neben` dreifach, seit PU-03 nach Grundsatz 8.* Die Zeile „haupt" oben ist damit **das Ziel, nicht der Stand**
 (Backlog Nr. 300). Bis dahin fährt ein Paket in `haupt` die Teile, die es
 berühren, von Hand (`hochfahren.sh --php 8.3`) und nennt im Prüfdokument,
 was fehlt.
@@ -512,9 +516,10 @@ Prüfstand: neben · Baum a1b2c3d… · Konfiguration web
   PU-02, E-PU-05); die Gegenlesung zählt die Hinweise auf, wenn sie grün
   ist. Nur der Wert `hinweis` selbst zählt — `hinweis:…` ist rot.
 - Der Bericht trägt eine **Browserprobe** (`"motoren": true` in
-  `pruefablauf.json`), aber nicht die Engines seiner Stufe — ab `neben`
-  `motoren=chromium+firefox+webkit`, in `klein` `motoren=chromium`
-  (Grundsatz 8, seit Konzept DM, E-DM-08).
+  `pruefablauf.json`), aber nicht die verlangten Engines — das Tor rechnet
+  sie aus Stufe, Umfang und Berührung mit derselben Funktion nach wie der
+  Prüfstand (`motoren_aus()` in `auswahl.py`; Grundsatz 8, seit PU-03,
+  R89). Alle drei passen immer; fehlt die Zeile, ist es rot.
 - Der Bericht nennt **keinen Umfang**, einen unbekannten, oder `schmal`,
   wo der Unterschied den vollen Lauf verlangt — in `haupt` und an einer
   Zehnergrenze der Nebennummer (seit PU-01, E-PU-01; Abschnitt 3). Mehr

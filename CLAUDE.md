@@ -493,9 +493,12 @@ Arbeitsumgebung, ihre Ausbaustufen, die Umgebungswerte und was sie
    mit einer Backlog-Nummer. Ohne sie ist Stufe 1 rot (seit Konzept BR).
 6. **Geschichte steht im Commit, nicht im Werkzeug.**
 7. **Kein stilles Überspringen, keine grüne Zahl ohne Gegenstand.**
-8. **Jede Browserprobe läuft in Chromium, Firefox und WebKit** — ab der
-   Stufe `neben` und in Stufe 2; in `klein` in Chromium allein. Fehlt eine
-   Engine, ist die Probe rot (R87, E-DM-08, seit dem 20.10.2026). Ein neues Browserwerkzeug startet über
+8. **Jede Browserprobe läuft in drei Engines, wo sie sich unterscheiden
+   können** — Chromium immer; Firefox und WebKit dazu beim vollen Lauf
+   (Hauptstufe, Zehnergrenze der Nebennummer, `--voll`), ab `neben` bei
+   berührtem `style.css` oder `ui.php`, und in Stufe 2 immer. Fehlt eine
+   verlangte Engine, ist die Probe rot (R89, E-PU-02, seit PU-03; bis dahin
+   R87: dreifach ab `neben`, gleich was berührt war). Ein neues Browserwerkzeug startet über
    `starten()` aus `tools/motor.mjs` und bekommt eine Zeile im Register
    `tools/pruefstand/motoren.md`; was nur Chromium kann, steht dort mit
    Grund. WebKit ist nicht Safari — ein echter Safari bleibt Handprüfung.

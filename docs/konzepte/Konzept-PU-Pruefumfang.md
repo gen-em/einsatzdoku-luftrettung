@@ -33,10 +33,10 @@ jeder Vergabe).
 >
 > | | |
 > |---|---|
-> | Stand | **01.11.2026 — Umsetzung läuft. PU-02, PU-01 erledigt; als Nächstes PU-03.** |
+> | Stand | **01.11.2026 — Umsetzung läuft. PU-02, -01, -03 erledigt; als Nächstes PU-04.** |
 > | Entschieden | E-PU-01 bis E-PU-15 (Abschnitt 2); E-PU-14 und -15 am 01.11.2026 zu Beginn der Umsetzung |
 > | Offen | keine Frage |
-> | Umsetzung | Reihenfolge PU-02, -01, -03, -04, -10, -05, -06, -07, -08, -09 (Abschnitt 3). Erledigt: PU-00, PU-02, PU-01. |
+> | Umsetzung | Reihenfolge PU-02, -01, -03, -04, -10, -05, -06, -07, -08, -09 (Abschnitt 3). Erledigt: PU-00, PU-02, PU-01, PU-03. |
 > | Halt | keiner — 12b ist gemergt (PR #125, 01.11.2026). |
 > | Fable-Schritte | keine |
 > | Fächerung | keine (Kopf) |
@@ -165,7 +165,7 @@ den Zeilen; die Tabelle bleibt nach Nummern geordnet).
 | PU-00 | Buchführung: dieses Dokument, Fahrplanzeile Schritt 20, R89, Verlaufszeile, Spanne 410–419. **Erledigt 01.11.2026.** | `docs/konzepte/`, `docs/Rahmenplan*.md`, `docs/Backlog.md` |
 | PU-01 | **Zehnerregel und `--voll`** (E-PU-01): `auswahl.py` liest die Spanne der Nebennummern, gibt `umfang` mit Grund aus; `pruefen.sh` nimmt `--voll`; `bericht.py` schreibt `umfang=…` und liest es im Tor gegen (siebte Lage in `Pruefablauf.md` 5.1); Selbstproben je Lage. **Erledigt 01.11.2026** — die Lage heißt „Lage 7", die Werte `schmal`, `voll:haupt`, `voll:zehner`, `voll:hand`. | `tools/pruefstand/`, `docs/Pruefablauf.md` |
 | PU-02 | **Ergebnisart `hinweis`** (E-PU-05): im Lauf, im Bericht, im Tor; Selbstprobe von `bericht.py lesen`. Zuerst, weil PU-03 bis -06 darauf aufbauen. **Erledigt 01.11.2026.** | `tools/pruefstand/`, `.github/workflows/pruefung.yml` |
-| PU-03 | **Engines je Berührung** (E-PU-02): `MOTOREN` in `pruefen.sh` aus Berührung, `umfang` und Stufe; `motoren=`-Zeile im Bericht und ihre Gegenlesung angepasst; Grundsatz 8 neu gefasst, `CLAUDE.md` 6, `motoren.md`. | `tools/pruefstand/`, `docs/Pruefablauf.md`, `CLAUDE.md` |
+| PU-03 | **Engines je Berührung** (E-PU-02): `MOTOREN` in `pruefen.sh` aus Berührung, `umfang` und Stufe; `motoren=`-Zeile im Bericht und ihre Gegenlesung angepasst; Grundsatz 8 neu gefasst, `CLAUDE.md` 6, `motoren.md`. **Erledigt 01.11.2026** — die Regel steht einmal, `motoren_aus()` in `auswahl.py`, die Liste in `pruefablauf.json` unter `umfang.stil`; Prüfstand fragt `auswahl.py --motoren`, das Tor rechnet mit derselben Funktion nach; alle drei passen immer. `klein` bleibt bei Chromium, auch mit berührtem Stylesheet — E-PU-02 sagt „ab `neben`" —, außer mit `--voll`. | `tools/pruefstand/`, `docs/Pruefablauf.md`, `CLAUDE.md` |
 | PU-04 | **Breiten und Seiten je Berührung** (E-PU-03, -04): `aufnehmen.mjs` mit Breitensatz je `umfang`; Liste der geteilten Dateien in `pruefablauf.json`; Bilderlauf und Bedienprobe in `neben` über `--nur` wie in `klein`, sonst alle. | `tools/screenshots/`, `tools/bedienprobe/`, `tools/pruefstand/` |
 | PU-05 | **Steuerung aus dem Tor** (E-PU-06): `steuerung` aus `riegel` in `pruefablauf.json` und aus `pruefung.yml`; im Prüfstand als `hinweis`; `tools/kettenaufrufe/` und `bestand` Regel `tor` folgen von selbst. | `tools/pruefstand/`, `.github/workflows/`, `tools/steuerung/LIESMICH.md` |
 | PU-06 | **Bestandsriegel** (E-PU-07): Erzeuger vor dem Riegel im Prüfstand, `hinweis` bei Änderung; `form`-Decke als `hinweis`; Selbstproben nachgezogen. | `tools/pruefstand/pruefen.sh`, `tools/quelltext/bestand.py`, `tools/erzeugen/` |
@@ -208,6 +208,8 @@ ersten erbenden Lauf.
 | PU-02 | `bestand.py` (Gegenprobe, ungewollt) | 1 Befund `form-zeilen`, 41 Zeilen in `tools/pruefstand/LIESMICH.md` — F-PU-01 noch einmal, am eigenen Paket; gekürzt, dann 0 | 01.11.2026 |
 | PU-02 | Prüfstand `klein` | 24 grün, 0 rot, 0 nicht gemessen, 0 Hinweis, 99 s; Bericht in `01c4e9b7`, örtlich gegengelesen (`bericht.py lesen`: in Ordnung, 26 Zahlen) | 01.11.2026 |
 | PU-01 | `auswahl.py --selbstprobe`; `bericht.py lesen --selbstprobe`; `kettenaufrufe`; `bestand` | 53 Lagen, 0 (neu 12: Zehnergrenze erreicht, überschritten, nicht erreicht, `main` jünger, haupt, Migrationsregel, klein an der Grenze, `--voll`) · 28 Lagen, 0 (neu 7, 7b bis 7f) · 0 Befunde · 0 Befunde | 01.11.2026 |
+| PU-01 | Prüfstand `klein` | 24 grün, 0 rot, 0 nicht gemessen, 0 Hinweis, 63 s, `umfang=schmal`; Bericht in `bccf0041`, örtlich gegengelesen (in Ordnung, 27 Zahlen) | 01.11.2026 |
+| PU-03 | `auswahl.py --selbstprobe`; `bericht.py lesen --selbstprobe`; `bestand.py` samt Selbstprobe; `kettenaufrufe` | 62 Lagen, 0 (neu 9: `stil` in der echten Datei, neben mit und ohne Stil, `ui.php`, voll, haupt, klein mit Stil, klein mit `--voll`, fremdes Stylesheet) · 33 Lagen, 0 (6d neu gefasst, neu 6e bis 6i) · 0 Befunde, Selbstprobe 177 Fälle / 0 · 0 Befunde | 01.11.2026 |
 | PU-00 | Prüfstand `klein` | 24 grün, 0 rot, 0 nicht gemessen, 69 s; Bericht am PR-Kopf (`0e7faf8`) | 01.11.2026 |
 | PU-00 | `decken.py`, `uebersicht.py --pruefen`, `nummern.py`, `bestand.py`, `pruefen.sh textprobe`, `dokumente`, `linkprobe` | 21 Decken, 0 gerissen (erst 1: R89-Kern 196 Zeichen über 160, gekürzt) · 68 Einträge, 0 ohne Grammatik, 0 ohne Ziel · 0 neue Nummern, 0 Überschneidungen gegen 18 Zweige · 0 Befunde · 0 Treffer, 143 Regeln gegriffen · 50 Dokumente, 3 688 Pfadverweise, 0 Befunde · 154 Verweise, 0 Abweichungen | 01.11.2026 |
 

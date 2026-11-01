@@ -29,8 +29,8 @@ HIER = os.path.dirname(os.path.abspath(__file__))
 WURZEL = os.path.dirname(os.path.dirname(HIER))
 ABLAUF = os.path.join(HIER, 'pruefablauf.json')
 sys.path.insert(0, HIER)
-from auswahl import (SCHMAL, UMFAENGE, UNLESBAR, beruehrte, fassung,  # noqa: E402 — die EINE Lesestelle
-                     stufe_aus_fassungen, stufe_aus_version, zehner)
+from auswahl import (MOTOREN_DREI, SCHMAL, UMFAENGE, UNLESBAR, beruehrte,  # noqa: E402 — die EINE Lesestelle
+                     fassung, motoren_aus, stil_aus, stufe_aus_fassungen, stufe_aus_version, zehner)
 
 STUFEN = ['klein', 'neben', 'haupt']
 KOPF_RE = re.compile(
@@ -185,9 +185,7 @@ def gruen_oder_hinweis(wert):
     return wert in ('0', HINWEIS)
 
 
-MOTOREN = 'chromium+firefox+webkit'
-# Je Stufe: `klein` in Chromium allein, ab `neben` alle drei.
-MOTOREN_JE_STUFE = {'klein': 'chromium', 'neben': MOTOREN, 'haupt': MOTOREN}
+MOTOREN = '+'.join(MOTOREN_DREI)
 
 
 def umfang_verlangt_aus(basis, commit, stufe_verlangt):
@@ -202,7 +200,7 @@ def umfang_verlangt_aus(basis, commit, stufe_verlangt):
 
 
 def pruefen(bericht, basis=None, commit='HEAD', riegel=None, dateien=None, baum=None,
-            stufe_verlangt=None, riegel_namen=None, motoren_namen=None, umfang_verlangt=None):
+            stufe_verlangt=None, riegel_namen=None, motoren_namen=None, umfang_verlangt=None, stil=None):
     """Die roten Lagen (Pruefablauf.md 5.1). Gibt eine Liste von Beanstandungen zurück."""
     schlecht = []
     if bericht is None:
@@ -262,20 +260,27 @@ def pruefen(bericht, basis=None, commit='HEAD', riegel=None, dateien=None, baum=
         else:
             schlecht.append(f"Probe „{name}\" meldet {wert} — ein roter Lauf ist kein Nachweis.")
 
-    # (6) Eine Browserprobe, aber nicht in den Engines ihrer Stufe. Welche Proben es sind, sagt `"motoren": true` in
+    # (6) Eine Browserprobe, aber nicht in den Engines, die Stufe, Umfang und
+    # Berührung verlangen. Welche Proben es sind, sagt `"motoren": true` in
     # pruefablauf.json; der Prüfstand schreibt dann `motoren=` mit den
-    # Engines, die er gefahren hat. Verlangt sind in `klein` Chromium, ab
-    # `neben` alle drei. Fehlt die Zeile oder nennt sie andere, ist
-    # der Bericht kein Nachweis.
+    # Engines, die er gefahren hat. Verlangt rechnet `motoren_aus()` aus
+    # auswahl.py — dieselbe Funktion, die der Prüfstand fragt (E-PU-02,
+    # R89): Chromium, alle drei beim vollen Lauf und ab `neben` bei
+    # berührtem Stylesheet oder ui.php. Alle drei passen immer. Fehlt die
+    # Zeile oder nennt sie weniger, ist der Bericht kein Nachweis.
     if motoren_namen is None:
         motoren_namen = {n for n, p in lade_ablauf()['proben'].items() if p.get('motoren') is True}
+    if stil is None:
+        stil = stil_aus(lade_ablauf())
     browser = sorted(n for n in bericht['werte'] if n in motoren_namen)
-    verlangt_m = MOTOREN_JE_STUFE.get(bericht['stufe'], MOTOREN)
-    if browser and bericht['werte'].get('motoren') != verlangt_m:
+    u = bericht['werte'].get('umfang', SCHMAL)
+    verlangt_m = '+'.join(motoren_aus(bericht['stufe'], u if u in UMFAENGE else SCHMAL, liste, stil)[0])
+    gemeldet_m = bericht['werte'].get('motoren')
+    if browser and gemeldet_m not in (verlangt_m, MOTOREN):
         schlecht.append(
-            f"Browserproben ({', '.join(browser)}) nicht in den Engines der Stufe "
-            f"„{bericht['stufe']}\": „motoren={bericht['werte'].get('motoren', '(fehlt)')}\", "
-            f"verlangt „{verlangt_m}\" (R87, E-DM-08).")
+            f"Browserproben ({', '.join(browser)}) nicht in den verlangten Engines: "
+            f"„motoren={gemeldet_m or '(fehlt)'}\", verlangt „{verlangt_m}\" "
+            f"(Stufe {bericht['stufe']}, Umfang {u}; R89, E-PU-02).")
 
     # (7) Der Umfang (E-PU-01). Der Bericht nennt ihn immer; voll ist er
     # verlangt in haupt und an einer Zehnergrenze der Nebennummer. Mehr zu
@@ -397,9 +402,26 @@ def selbstprobe():
     faelle.append(('grün (6c) — Stufe klein mit motoren=chromium',
                    zerlegen(guter.replace('neben', 'klein').replace('chromium+firefox+webkit', 'chromium')),
                    dict(baum='abc1234', dateien=[], riegel={}, riegel_namen=namen), 0))
-    faelle.append(('rot (6d) — Stufe neben mit motoren=chromium',
+    faelle.append(('rot (6d) — neben, Stylesheet berührt, motoren=chromium',
                    zerlegen(guter.replace('chromium+firefox+webkit', 'chromium')),
+                   dict(baum='abc1234', dateien=['server/assets/style.css'], riegel={}, riegel_namen=namen), 1))
+    faelle.append(('grün (6e) — neben schmal, nichts Stilistisches berührt, motoren=chromium',
+                   zerlegen(guter.replace('chromium+firefox+webkit', 'chromium')),
+                   dict(baum='abc1234', dateien=['server/index.php'], riegel={}, riegel_namen=namen), 0))
+    faelle.append(('rot (6f) — neben voll:zehner, motoren=chromium',
+                   zerlegen(guter.replace('chromium+firefox+webkit', 'chromium')
+                            .replace('umfang=schmal', 'umfang=voll:zehner')),
                    dict(baum='abc1234', dateien=[], riegel={}, riegel_namen=namen), 1))
+    faelle.append(('rot (6g) — klein mit --voll, motoren=chromium',
+                   zerlegen(guter.replace('neben', 'klein').replace('chromium+firefox+webkit', 'chromium')
+                            .replace('umfang=schmal', 'umfang=voll:hand')),
+                   dict(baum='abc1234', dateien=[], riegel={}, riegel_namen=namen), 1))
+    faelle.append(('grün (6h) — klein, Stylesheet berührt, motoren=chromium',
+                   zerlegen(guter.replace('neben', 'klein').replace('chromium+firefox+webkit', 'chromium')),
+                   dict(baum='abc1234', dateien=['server/assets/style.css'], riegel={}, riegel_namen=namen), 0))
+    faelle.append(('rot (6i) — neben, ui.php berührt, motoren=chromium+firefox',
+                   zerlegen(guter.replace('chromium+firefox+webkit', 'chromium+firefox')),
+                   dict(baum='abc1234', dateien=['server/ui.php'], riegel={}, riegel_namen=namen), 1))
     faelle.append(('grün (6) — keine Browserprobe, keine Zeile motoren=',
                    zerlegen(guter.replace('  spurprobe=0  kreislauf-edbak=0  bilderlauf=0\n', '  spurprobe=0\n')
                             .replace('motoren=chromium+firefox+webkit  ', '')),

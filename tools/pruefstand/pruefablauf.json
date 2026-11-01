@@ -231,7 +231,7 @@
       "aufruf": "node tools/screenshots/aufnehmen.mjs --stufe {stufe}",
       "braucht": "installation",
       "demo": true,
-      "bemerkung": "E-PK-14: klein = drei Breiten (360, 1024, 1920); neben = zehn Breiten (seit R4-08 mit 1200 und 1600, E-R4-23); haupt = zehn Breiten. Seit Konzept DM (R87, E-DM-08) ab neben alle drei Engines, in klein Chromium: pruefen.sh faehrt jede Probe mit \"motoren\": true je Engine der Stufe (MOTOR=chromium|firefox|webkit). Bis dahin stand hier \"haupt = alle drei Engines -- GEBAUT IST DAVON NUR CHROMIUM\" (Nr. 300). pruefen.sh setzt {stufe} auf die ermittelte Stufe (PK-05).",
+      "bemerkung": "E-PK-14: klein = drei Breiten (360, 1024, 1920); neben = zehn Breiten (seit R4-08 mit 1200 und 1600, E-R4-23); haupt = zehn Breiten. Seit Konzept DM (R87, E-DM-08) faehrt pruefen.sh jede Probe mit \"motoren\": true je Engine (MOTOR=chromium|firefox|webkit); welche Engines, sagt seit PU-03 auswahl.py --motoren (R89, E-PU-02): Chromium allein, alle drei beim vollen Lauf und ab neben bei Beruehrung von umfang.stil. Bis dahin stand hier \"haupt = alle drei Engines -- GEBAUT IST DAVON NUR CHROMIUM\" (Nr. 300). pruefen.sh setzt {stufe} auf die ermittelte Stufe (PK-05).",
       "motoren": true
     },
     "stilvergleich": {
@@ -361,6 +361,13 @@
       "anlass": "E-P5c-36, E-P5c-88: Ein Paket mit Migration faehrt die Plattformmatrix, und die laeuft nur in haupt -- dort sind Nr. 238 und Nr. 267 gefunden worden. Ausgeloest von einer NEUEN Kennung im Katalog, nicht von einer Aenderung an der Datei: Die aendert sich auch ohne Migration (P5c/AP2, AP3)."
     }
   ],
+  "umfang": {
+    "beschreibung": "Was am Umfang haengt (E-PU-01 bis -04). `stil`: die Dateien, deren Beruehrung ab neben Firefox und WebKit dazuholt (E-PU-02) -- sonst laufen die Browserproben im schmalen Lauf in Chromium allein. Voll (haupt, Zehnergrenze, --voll) heisst immer alle drei. auswahl.py liest die Liste, bericht.py haelt den Bericht dagegen (Lage 6).",
+    "stil": [
+      "server/assets/style.css",
+      "server/ui.php"
+    ]
+  },
   "riegel": {
     "beschreibung": "Die billigen Riegel. Sie laufen in JEDER Stufe und werden im Tor gegengelesen (docs/Pruefablauf.md 5.1). Kein Muster, keine Bedingung -- sie kosten zusammen rund 25 s.",
     "proben": [

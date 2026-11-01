@@ -123,11 +123,14 @@ ergebnis() {
     fi
     zeile "ROT   $n  $s s  (siehe $log)"; return 0
 }
-# DIE ENGINES JE STUFE: `klein` fährt die Browserproben in
-# Chromium allein, `neben` und `haupt` in allen drei. Bis zum 20.10.2026
-# liefen alle Stufen dreifach; ein voller Lauf dauerte damit
-# länger, als der Container ihn hält. bericht.py liest es gegen.
-if [ "$STUFE" = klein ]; then MOTOREN=(chromium); else MOTOREN=(chromium firefox webkit); fi
+# DIE ENGINES JE BERÜHRUNG (E-PU-02, R89): Chromium allein, alle drei beim
+# vollen Lauf und ab `neben`, wenn Stylesheet oder ui.php berührt sind. Die
+# Regel steht in auswahl.py (motoren_aus), bericht.py rechnet mit derselben
+# nach (Lage 6). Bis PU-03 hieß es: `klein` Chromium, `neben` und `haupt`
+# drei (R87) — der Bilderlauf allein brauchte dann rund 70 Minuten.
+erm=$(python3 "$HIER/auswahl.py" --motoren --stufe "$STUFE" --umfang "$UMFANG" --basis "$BASIS" "${DATEIEN[@]}") || exit 2
+read -r -a MOTOREN <<< "$(printf '%s' "$erm" | cut -f1)"
+zeile "Engines der Browserproben: ${MOTOREN[*]}  ($(printf '%s' "$erm" | cut -f2))"
 for name in "${PROBEN[@]}"; do
     aufruf=$(python3 -c "
 import json,sys

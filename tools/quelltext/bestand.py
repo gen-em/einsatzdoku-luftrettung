@@ -204,8 +204,10 @@ MUSTER_FELDER = ['id', 'ab', 'pfade', 'proben', 'anlass']   # auswahl.py und erz
 # Voraussetzung fehlte ohne Meldung.
 SCHLUESSEL = {
     # `stufenregeln` lesen auswahl.py und bericht.py (Stufenregel `migration`).
-    'oben': {'beschreibung', 'fassung', 'muster', 'proben', 'riegel', 'stufen', 'stufenregeln'},
+    'oben': {'beschreibung', 'fassung', 'muster', 'proben', 'riegel', 'stufen', 'stufenregeln', 'umfang'},
     'riegel': {'beschreibung', 'proben'},
+    # `umfang` lesen auswahl.py (Engines, Seiten) und bericht.py (Lage 6), seit PU-03.
+    'umfang': {'beschreibung', 'stil'},
     'probe': {'aufruf', 'bemerkung', 'braucht', 'demo', 'hinweis', 'motoren', 'nach'},    # `demo`, `hinweis` und `motoren` lesen auswahl.py und pruefen.sh
     'muster': set(MUSTER_FELDER),
 }
@@ -1170,6 +1172,8 @@ def ablauf_pruefen(wurzel, alle, zahlen, ruf):
                                                         f'tools/quelltext/bestand.py eintragen'))
     fremde_schluessel(a, 'oben', 'die Datei')
     fremde_schluessel(riegel_obj, 'riegel', 'riegel')
+    if isinstance(a.get('umfang'), dict):
+        fremde_schluessel(a['umfang'], 'umfang', 'umfang')
 
     auswahl = modul_aus(wurzel, AUSWAHL, 'bestand_auswahl')
     stufen = list(getattr(auswahl, 'STUFEN', []) or []) if auswahl else []

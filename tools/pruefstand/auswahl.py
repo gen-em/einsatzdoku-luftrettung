@@ -6,6 +6,7 @@
     python3 tools/pruefstand/auswahl.py --abdeckung
     python3 tools/pruefstand/auswahl.py --stufe-ermitteln --basis origin/main
     python3 tools/pruefstand/auswahl.py --umfang-ermitteln --stufe neben [--voll]
+    python3 tools/pruefstand/auswahl.py --motoren --stufe neben --umfang schmal
     python3 tools/pruefstand/auswahl.py --selbstprobe
 
 Rückgabewert 0 = in Ordnung · 1 = Befund (bei `--abdeckung`: Dateien ohne
@@ -175,6 +176,34 @@ def umfang_aus(stufe, alt, neu, voll=False):
     if z is not None:
         return 'voll:zehner', f'Nebennummer {alt[1]} -> {neu[1]} erreicht {z} (Zehnerregel, E-PU-01)'
     return SCHMAL, 'keine Hauptstufe, keine Zehnergrenze, kein --voll'
+
+
+# ---- Die Engines je Berührung (E-PU-02, R89) ------------------------------
+#
+# Browserproben laufen im schmalen Lauf in Chromium allein. Firefox und
+# WebKit kommen dazu beim vollen Lauf und ab `neben`, wenn eine Datei aus
+# `umfang.stil` in pruefablauf.json berührt ist (Stylesheet, ui.php) — dort
+# entstehen die Unterschiede zwischen den Engines. In `klein` bleibt es bei
+# Chromium (R87, E-DM-08), außer mit --voll. Stufe 2 misst unverändert
+# dreifach. EINE Stelle: pruefen.sh fragt hier, bericht.py rechnet mit
+# derselben Funktion nach (Lage 6).
+MOTOREN_DREI = ('chromium', 'firefox', 'webkit')
+
+
+def motoren_aus(stufe, umfang, dateien, stil):
+    """(engines, grund) — engines als Tupel in fester Reihenfolge."""
+    if umfang != SCHMAL:
+        return MOTOREN_DREI, f'voller Lauf ({umfang})'
+    if stufe != 'klein':
+        treffer_stil = sorted(d for d in dateien if passt(d, stil))
+        if treffer_stil:
+            return MOTOREN_DREI, f"berührt: {', '.join(treffer_stil)} (E-PU-02)"
+        return ('chromium',), 'schmaler Lauf, kein Stylesheet und kein ui.php berührt (E-PU-02)'
+    return ('chromium',), 'Stufe klein (R87, E-DM-08)'
+
+
+def stil_aus(a):
+    return a.get('umfang', {}).get('stil', [])
 
 
 def umfang_aus_version(basis, stufe, commit=None, voll=False):
@@ -419,6 +448,21 @@ def selbstprobe(a):
                                                              u('klein', (1, 1, 0), (1, 1, 1)), u('klein', (1, 1, 0), (1, 1, 1), True)}
                                                             == set(UMFAENGE)),
     ]
+    # Die Engines (E-PU-02) — gegen die ECHTE Liste `umfang.stil`.
+    st = stil_aus(a)
+    m = lambda s, u_, d: motoren_aus(s, u_, d, st)[0]
+    grenzen += [
+        ('stil: style.css und ui.php stehen in umfang.stil',
+         {'server/assets/style.css', 'server/ui.php'} <= set(st)),
+        ('motoren: neben schmal ohne Stil -> Chromium',     m('neben', SCHMAL, ['server/index.php']) == ('chromium',)),
+        ('motoren: neben schmal mit style.css -> drei',     m('neben', SCHMAL, ['server/assets/style.css']) == MOTOREN_DREI),
+        ('motoren: neben schmal mit ui.php -> drei',        m('neben', SCHMAL, ['server/ui.php']) == MOTOREN_DREI),
+        ('motoren: neben voll:zehner -> drei',              m('neben', 'voll:zehner', []) == MOTOREN_DREI),
+        ('motoren: haupt -> drei',                          m('haupt', 'voll:haupt', []) == MOTOREN_DREI),
+        ('motoren: klein mit style.css -> Chromium',        m('klein', SCHMAL, ['server/assets/style.css']) == ('chromium',)),
+        ('motoren: klein mit --voll -> drei',               m('klein', 'voll:hand', []) == MOTOREN_DREI),
+        ('motoren: ein anderes Stylesheet zieht nicht',     m('neben', SCHMAL, ['server/assets/druck.css']) == ('chromium',)),
+    ]
     for name, bed in grenzen:
         melde(f"  [{'ok  ' if bed else 'FEHL'}] {name}")
         fehl += 0 if bed else 1
@@ -438,6 +482,9 @@ def main():
     p.add_argument('--umfang-ermitteln', action='store_true',
                    help='schmal oder voll:… mit Grund (E-PU-01); braucht --stufe')
     p.add_argument('--voll', action='store_true', help='den vollen Lauf erzwingen')
+    p.add_argument('--motoren', action='store_true',
+                   help='die Engines der Browserproben mit Grund (E-PU-02); braucht --stufe und --umfang')
+    p.add_argument('--umfang', choices=UMFAENGE)
     p.add_argument('--selbstprobe', action='store_true')
     p.add_argument('--nur-proben', action='store_true',
                    help='nur die Probennamen, einer je Zeile — für pruefen.sh')
@@ -453,6 +500,13 @@ def main():
         return selbstprobe(a)
     if args.abdeckung:
         return abdeckung(a)
+    if args.motoren:
+        if not args.stufe or not args.umfang:
+            melde('--motoren braucht --stufe und --umfang.')
+            return 2
+        engines, grund = motoren_aus(args.stufe, args.umfang, args.datei or beruehrte(args.basis), stil_aus(a))
+        melde(f"{' '.join(engines)}\t{grund}")
+        return 0
     if args.umfang_ermitteln:
         if not args.stufe:
             melde('--umfang-ermitteln braucht --stufe (die wirksame Stufe des Laufs).')
