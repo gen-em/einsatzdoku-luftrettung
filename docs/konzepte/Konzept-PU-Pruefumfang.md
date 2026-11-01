@@ -10,7 +10,7 @@ daneben.
 **Herkunft:** Frage der Betreiberin am 01.11.2026, ob die Entwicklung „zu
 90 % aus Testläufen" bestehe. Die Zählung (Abschnitt 1.1) sagt: ein Drittel
 der Zeilen, aber der größere Teil der Wartezeit. Vorschläge, Rückfragen und
-Entscheidungen fielen im selben Gespräch (E-PU-01 bis -12); dieses Dokument
+Entscheidungen fielen im selben Gespräch (E-PU-01 bis -13); dieses Dokument
 hält sie fest. Die Umsetzung findet in einer anderen Sitzung statt.
 **Modell:** **Opus** für jedes Paket (`CLAUDE.md` 7, Standard).
 **Fächerung (`CLAUDE.md` 7):** keine. Die Pakete fassen dieselben Läufer an
@@ -33,9 +33,9 @@ jeder Vergabe).
 > | | |
 > |---|---|
 > | Stand | **01.11.2026 — Konzept geschrieben (PU-00). Umsetzung wartet auf den Merge von 12b.** |
-> | Entschieden | E-PU-01 bis E-PU-12 (Abschnitt 2) |
+> | Entschieden | E-PU-01 bis E-PU-13 (Abschnitt 2); E-PU-13 nachgetragen am 01.11.2026 |
 > | Offen | keine Frage (Q-PU-01, -02 beantwortet am 01.11.2026) |
-> | Umsetzung | PU-00 erledigt 01.11.2026 (dieses Dokument, Fahrplanzeile 20, R89, Verlaufszeile, Spanne). PU-01 bis PU-10 offen. |
+> | Umsetzung | PU-00 erledigt 01.11.2026 (dieses Dokument, Fahrplanzeile 20, R89, Verlaufszeile, Spanne). PU-01 bis PU-10 offen (PU-10 nachgetragen am 01.11.2026). |
 > | Halt | **Umsetzung blockiert bis 12b gemergt ist** (1.3). |
 > | Fable-Schritte | keine |
 > | Fächerung | keine (Kopf) |
@@ -144,6 +144,7 @@ PR-Läufen entstanden.
 | E-PU-10 | **Changelog kürzer.** Ein Eintrag sagt in höchstens fünf Sätzen, was das Problem war und warum diese Lösung; Prüfzahlen, Werkzeugbefunde und Paketnummern gehören nicht hinein — die stehen im Konzept und in der Git-Historie. Ohne Riegel, E-PU-12. | Betreiberin, 01.11.2026 |
 | E-PU-11 | **Q-PU-01 (Empfehlung):** fünf Breiten im schmalen Bilderlauf — 390 (Handy, unter der ersten Schwelle), 768, 1024, 1200, 1600 (je knapp über einer Schwelle aus `Design.md` 7). | Betreiberin, 01.11.2026 |
 | E-PU-12 | **Q-PU-02 (Empfehlung):** die Changelog-Regel steht in `CLAUDE.md` 2 ohne Riegel; der Preis — sie kann unbemerkt reißen — steht dabei. Schritt 13 fasst den Changelog ohnehin neu (R15). | Betreiberin, 01.11.2026 |
+| E-PU-13 | **Ererbter Bericht.** Der Prüfstand darf in `neben` das Ergebnis einer Probe vom **direkten Vorgänger auf demselben Zweig** übernehmen, wenn dessen Bericht im Commit steht, die Probe dort **grün** war und der Unterschied zwischen beiden Bäumen **kein Muster dieser Probe** trifft. Der Bericht schreibt dann `NAME=ererbt:<Baum des Vorgängers>` statt einer Zahl; das Tor liest den Vorgänger-Bericht nach und prüft beides (achte Lage in `Pruefablauf.md` 5.1). **Nie geerbt werden:** was rot oder nicht gemessen war; die billigen Riegel (25 s, das Tor misst sie selbst); der Kreislauf `edbak` (Nr. 267, F-S11-48); Proben, die eine berührte Datei nur über das Auffangmuster `server/**` erreicht; alles beim vollen Lauf (E-PU-01) und in `haupt`. **Nur über eine Stufe:** Ein Bericht, der selbst erbt, vererbt nicht weiter — spätestens jeder zweite Lauf im Zweig ist wieder voll. Grund: Der letzte Nebenlauf eines Zwischen-PRs dauerte 12 205 s, und der zweite Lauf nach einer Berichtigung misst heute alles noch einmal, auch das, was die Berichtigung nicht berührt. Preis: Die Zuordnung in `pruefablauf.json` ist von Hand gepflegt; ein unvollständiges Muster erbt fälschlich grün — in `klein` gilt das heute schon. | Betreiberin, 01.11.2026 (Nachtrag) |
 
 **Abgelehnt:** Werkzeugarbeit ohne eigenes Konzept zu führen (Vorschlag B4
 vom 01.11.2026) — Werkzeugschritte bleiben, wo sie sinnvoll sind, eigene
@@ -166,12 +167,15 @@ und Push.
 | PU-07 | **Prüfdokument-Form und Changelog-Regel** (E-PU-08, -10): `CLAUDE.md` 2 und 7, `Pruefablauf.md`; ohne Riegel (E-PU-12). | `CLAUDE.md`, `docs/Pruefablauf.md` |
 | PU-08 | **Prüfliste** (E-PU-09): `docs/konzepte/Pruefliste.md` aus den zwölf Prüfdokumenten (Stand 01.11.2026: rund 300 offene Punkte), Doppelungen gestrichen; Rahmenplan 6.1 nachgezogen; Einzeldokumente gelöscht. Reine Doku-Arbeit, kann nach PU-07 auch als eigener PR laufen. | `docs/konzepte/`, `docs/Rahmenplan.md` |
 | PU-09 | **Doku und Abschluss:** `Pruefablauf.md` 2 bis 5 und 6.11, `Sandbox-Setup.md`, `tools/pruefstand/LIESMICH.md`; Prüfdokument in der neuen Form; Prüfstand; PR. | `docs/`, `tools/pruefstand/LIESMICH.md` |
+| PU-10 | **Ererbter Bericht** (E-PU-13): `auswahl.py` findet den Vorgänger-Bericht im Zweig und rechnet den Unterschied gegen dessen Baum; `pruefen.sh` lässt erbfähige Proben aus und meldet je Probe „ererbt von <Baum>"; `bericht.py` schreibt `ererbt:` und liest es im Tor gegen (achte Lage, Selbstproben: Vorgänger fehlt, war rot, Muster berührt, Vorgänger erbt selbst, Kreislauf, Riegel); `Pruefablauf.md` 5 und 5.1. Läuft nach PU-04, weil es `umfang` und die Seitenwahl voraussetzt; PU-09 nimmt die Doku mit. | `tools/pruefstand/`, `docs/Pruefablauf.md` |
 
 **Ersparnis, wenn alles steht** (geschätzt aus den Zahlen in 1.1): je
 Nebenfassung ohne Stylesheet-Berührung rund 45 Minuten (Engines) plus mehr
 als die Hälfte des verbleibenden Bilder- und Bedienlaufs; je Phase 9 von 15
-roten Bestandsläufen weniger; je Prüfdokument die Hälfte des Textes.
-Gemessen wird das in PU-09 am ersten vollen und am ersten schmalen Lauf.
+roten Bestandsläufen weniger; je Prüfdokument die Hälfte des Textes; je Berichtigung nach einem
+Nebenlauf der zweite Volllauf (zuletzt 12 205 s) auf die berührten Proben.
+Gemessen wird das in PU-09 am ersten vollen, am ersten schmalen und am
+ersten erbenden Lauf.
 
 ## 4. Befunde
 
@@ -181,6 +185,7 @@ Gemessen wird das in PU-09 am ersten vollen und am ersten schmalen Lauf.
 | F-PU-02 | mittel | `Pruefablauf.md` 3, Tabelle „Stufe" | **Die Nebenstufe fährt den vollen Umfang bei jeder Nebenfassung**, obwohl die Zuordnung Datei → Probe (Abschnitt 4) für alles andere längst je Berührung wählt. Bilder- und Bedienlauf waren die Ausnahme. | E-PU-02 bis -04 |
 | F-PU-03 | niedrig | `docs/konzepte/` | **Zwölf Prüfdokumente mit rund 300 offenen Prüfpunkten liegen nebeneinander** (01.11.2026: AR 15, BV 8, DM 6, P5c 44, PK 42, R17 44, R4 23, RW 5, S11 44, SR 15; BR, Kette II und SD ohne nummerierte Punkte). Viele betreffen dieselben Wege (Anmeldung, Sicherung, Zweitfaktor). | E-PU-09 |
 | F-PU-04 | niedrig | `docs/CHANGELOG.md` | **144 000 geänderte Zeilen im Changelog seit September** — dort landen Prüfzahlen und Werkzeugbefunde, die ins Konzept gehören. | E-PU-10 |
+| F-PU-05 | mittel | `tools/pruefstand/auswahl.py`, Prüfdokumente | **Der Umfang wird gegen `main` bestimmt, nicht gegen den letzten grünen Bericht im Zweig.** Nach einer Berichtigung fährt ein Zweig mit Nebenfassung die ganze Nebenstufe noch einmal, auch für einen Satz Doku; die Prüfdokumente zeigen das Muster „erster Lauf n rot, behoben, zweiter Lauf" bei S11, R17 und P5c. Der Nebenlauf des letzten Zwischen-PRs dauerte 12 205 s. | E-PU-13 |
 
 ## 4a. Fragen an die Betreiberin
 
@@ -193,6 +198,7 @@ Gemessen wird das in PU-09 am ersten vollen und am ersten schmalen Lauf.
 
 | Paket | Mittel | Zahl | Datum |
 |---|---|---|---|
+| PU-00 | Prüfstand `klein` | 24 grün, 0 rot, 0 nicht gemessen, 69 s; Bericht am PR-Kopf (`0e7faf8`) | 01.11.2026 |
 | PU-00 | `decken.py`, `uebersicht.py --pruefen`, `nummern.py`, `bestand.py`, `pruefen.sh textprobe`, `dokumente`, `linkprobe` | 21 Decken, 0 gerissen (erst 1: R89-Kern 196 Zeichen über 160, gekürzt) · 68 Einträge, 0 ohne Grammatik, 0 ohne Ziel · 0 neue Nummern, 0 Überschneidungen gegen 18 Zweige · 0 Befunde · 0 Treffer, 143 Regeln gegriffen · 50 Dokumente, 3 688 Pfadverweise, 0 Befunde · 154 Verweise, 0 Abweichungen | 01.11.2026 |
 
 ## 6. Was dieser Schritt nicht tut
