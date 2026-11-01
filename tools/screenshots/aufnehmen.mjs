@@ -26,6 +26,7 @@
  *   sh tools/referenzdatensatz/einspielen/lokal_starten.sh    (einmal)
  *   node tools/screenshots/aufnehmen.mjs
  *   node tools/screenshots/aufnehmen.mjs --nur 10-,12-        (Teilmenge)
+ *   node tools/screenshots/aufnehmen.mjs --breiten fuenf       (Breitensatz)
  *   node tools/screenshots/aufnehmen.mjs --klein              (1x statt 2x)
  *   node tools/screenshots/aufnehmen.mjs --finger             (Fingergerät)
  *
@@ -149,11 +150,11 @@ const ETIKETT = wert('--etikett', '');
  * Liste, weil motorWahl() sie aus demselben argv liest. */
 const BEKANNT = new Set(['--basis', '--demo', '--demo-pw', '--admin', '--admin-pw',
                          '--rolle-admin', '--rolle-admin-pw', '--rolle-support', '--rolle-support-pw',
-                         '--klein', '--finger', '--nur', '--stufe', '--selbstprobe',
+                         '--klein', '--finger', '--nur', '--stufe', '--breiten', '--selbstprobe',
                          '--motor', '--jobs-token', '--etikett']);
 const MIT_WERT = new Set(['--basis', '--demo', '--demo-pw', '--admin', '--admin-pw',
                           '--rolle-admin', '--rolle-admin-pw', '--rolle-support', '--rolle-support-pw',
-                          '--nur', '--motor', '--jobs-token', '--stufe', '--etikett']);
+                          '--nur', '--motor', '--jobs-token', '--stufe', '--breiten', '--etikett']);
 for (let i = 0; i < argv.length; i++) {
   const a = argv[i];
   if (!a.startsWith('--')) continue;
@@ -183,30 +184,48 @@ const ALLE_BREITEN = [
   { b: 1920, h: 1080, art: 'Desktop' },
 ];
 
-/* ---- Die drei Stufen (--stufe) ------------------------------------------
+/* ---- Die Breitensätze (--breiten, --stufe) --------------------------------
  *
- * klein  berührte Seiten (`--nur`), DREI Breiten, Chromium
- * neben  alle Seiten, zehn Breiten, Chromium
- * haupt  alle Seiten, zehn Breiten, ALLE DREI Engines
+ * drei   360, 1024, 1920                    `klein` (E-PK-14)
+ * fuenf  390, 768, 1024, 1200, 1600         der schmale Lauf ab `neben`:
+ *                                           eine Handybreite unter der ersten
+ *                                           Schwelle, je eine knapp über den
+ *                                           Schwellen aus Design.md 7 (E-PU-11)
+ * zehn   alle                               der volle Lauf, und ab `neben` bei
+ *                                           berührtem Stylesheet oder ui.php
+ *                                           (E-PU-03)
+ *
+ * WELCHER SATZ, ENTSCHEIDET DER PRÜFSTAND (`auswahl.py --bilderlauf`) und
+ * übergibt ihn mit `--breiten`; Seiten wählt er mit `--nur`. Ohne
+ * `--breiten` gilt der alte Weg: `--stufe klein` heißt drei, sonst zehn —
+ * so ruft die Kette das Werkzeug.
  *
  * DIE RISIKOLISTE IST WEG, und das ist eine Entscheidung mit Preis. Sie
  * nannte zehn Seiten mit Container-Abfragen, `:has()`, `dvh` und `sticky`
  * und ließ Firefox und WebKit nur diese fahren — eine von Hand gepflegte
  * Liste, die in eine Richtung altert: Wer ein solches Merkmal neu einbaut,
  * muss daran denken. Der EINZIGE WebKit-Fund des Projekts lag auf
- * einer Seite, die NICHT darauf stand. Dreißig Minuten bei einer Hauptstufe
- * sind kein Preis, der eine Liste rechtfertigt, die das Gesuchte verfehlt.
- *
- * Ohne `--stufe` bleibt es bei allen zehn Breiten — so lief das Werkzeug
- * immer, und die Kette ruft es weiter so. */
+ * einer Seite, die NICHT darauf stand. */
 const STUFE = wert('--stufe', '');
 if (STUFE && !['klein', 'neben', 'haupt'].includes(STUFE)) {
   console.error(`Unbekannte Stufe: ${STUFE} (klein, neben, haupt)`);
   process.exit(2);
 }
-const BREITEN = STUFE === 'klein'
-  ? ALLE_BREITEN.filter(x => [360, 1024, 1920].includes(x.b))
-  : ALLE_BREITEN;
+const BREITEN_SAETZE = {
+  drei:  [360, 1024, 1920],
+  fuenf: [390, 768, 1024, 1200, 1600],
+  zehn:  ALLE_BREITEN.map(x => x.b),
+};
+const SATZ = wert('--breiten', '') || (STUFE === 'klein' ? 'drei' : 'zehn');
+if (!BREITEN_SAETZE[SATZ]) {
+  console.error(`Unbekannter Breitensatz: ${SATZ} (${Object.keys(BREITEN_SAETZE).join(', ')})`);
+  process.exit(2);
+}
+const BREITEN = ALLE_BREITEN.filter(x => BREITEN_SAETZE[SATZ].includes(x.b));
+if (BREITEN.length !== BREITEN_SAETZE[SATZ].length) {
+  console.error(`Breitensatz ${SATZ} nennt eine Breite, die ALLE_BREITEN nicht kennt.`);
+  process.exit(2);
+}
 
 const { seiten } = JSON.parse(readFileSync(join(HIER, 'seiten.json'), 'utf-8'));
 

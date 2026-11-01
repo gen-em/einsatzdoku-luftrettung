@@ -203,7 +203,108 @@ def motoren_aus(stufe, umfang, dateien, stil):
 
 
 def stil_aus(a):
+    """Die Dateien, die ab `neben` drei Engines UND zehn Breiten verlangen."""
     return a.get('umfang', {}).get('stil', [])
+
+
+def drei_aus(a):
+    """Die Dateien, die ab `neben` drei Engines verlangen: `stil` und die
+    Engine-Wahl selbst (`tools/motor.mjs`, E-PU-16) — wer den Start der
+    Engines ändert, misst ihn in allen dreien."""
+    u = a.get('umfang', {})
+    return u.get('stil', []) + u.get('engine_wahl', [])
+
+
+# ---- Breiten und Seiten des Bilderlaufs (E-PU-03, -04, Q-PU-03) -----------
+#
+# DIE SEITEN ÜBER IHRE EIGENE DATEI. Eine Seite aus tools/screenshots/
+# seiten.json gilt als berührt, wenn ihre Datei berührt ist (der Pfad ohne
+# Anfrage, ein Platzhalter über `umfang.platzhalter`). Jede ANDERE Datei, die
+# den Bilderlauf über ein Muster auslöst — eine Bibliothek, ein Skript,
+# ui.php, das Stylesheet, ein Werkzeug —, gilt als geteilt und bringt alle
+# Seiten. `umfang.neutral` löst nichts aus (die Fassungsnummer). Der volle
+# Lauf nimmt alle Seiten. Dieselbe Auslöseregel gilt für die Bedienprobe;
+# ihre Wege lassen sich keiner Seite zuordnen, sie fährt alle, wenn sie
+# läuft. Bis PU-04 übergab der Prüfstand nie `--nur`: `klein` maß alle
+# Seiten, obwohl die Doku „berührte Seiten" sagte (F-PU-07).
+SEITEN_JSON = os.path.join(WURZEL, 'tools', 'screenshots', 'seiten.json')
+SEITEN_PROBEN = ('bilderlauf', 'bedienprobe')
+ALLE = 'alle'
+
+
+def seiten_laden():
+    with open(SEITEN_JSON, encoding='utf-8') as f:
+        return json.load(f)['seiten']
+
+
+def seitendatei(seite, platzhalter):
+    """Die Datei unter server/ hinter einer Seite — None bei einem
+    unbekannten Platzhalter (die Selbstprobe hält das bei null)."""
+    pfad = seite['pfad'].split('?')[0]
+    if pfad.startswith('__'):
+        return platzhalter.get(pfad)
+    return 'server/' + pfad
+
+
+def seiten_je_datei(seiten, platzhalter):
+    aus = {}
+    for s in seiten:
+        d = seitendatei(s, platzhalter)
+        if d:
+            aus.setdefault(d, []).append(s['name'])
+    return aus
+
+
+def ausloeser(probe, dateien, stufe, a):
+    """Die berührten Dateien, die `probe` über ein Muster ihrer Stufe auslösen."""
+    grenze = STUFEN.index(stufe)
+    return sorted({d for m in a['muster'] if probe in m['proben'] and STUFEN.index(m['ab']) <= grenze
+                   for d in dateien if passt(d, m['pfade'])})
+
+
+def seitenwahl(probe, stufe, umfang, dateien, a, seiten):
+    """(seiten, grund): ALLE, eine Liste von Seitennamen, oder None — dann
+    löst nichts die Probe aus, und sie fällt aus der Auswahl."""
+    if umfang != SCHMAL:
+        return ALLE, f'voller Lauf ({umfang})'
+    u = a.get('umfang', {})
+    ausl = [d for d in ausloeser(probe, dateien, stufe, a) if not passt(d, u.get('neutral', []))]
+    if not ausl:
+        return None, 'keine auslösende Datei (außer umfang.neutral)'
+    je = seiten_je_datei(seiten, u.get('platzhalter', {}))
+    geteilt = [d for d in ausl if d not in je]
+    if probe != 'bilderlauf':
+        return ALLE, f"ausgelöst von {', '.join(ausl[:3])}{' …' if len(ausl) > 3 else ''}"
+    if geteilt:
+        return ALLE, f"geteilt: {', '.join(geteilt[:3])}{' …' if len(geteilt) > 3 else ''}"
+    namen = sorted({n for d in ausl for n in je[d]})
+    return namen, f"Seiten von {', '.join(ausl)}"
+
+
+def breiten_aus(stufe, umfang, dateien, stil):
+    """(satz, grund) — der Breitensatz des Bilderlaufs (aufnehmen.mjs --breiten)."""
+    if umfang != SCHMAL:
+        return 'zehn', f'voller Lauf ({umfang})'
+    if stufe == 'klein':
+        return 'drei', 'Stufe klein (E-PK-14)'
+    treffer_stil = sorted(d for d in dateien if passt(d, stil))
+    if treffer_stil:
+        return 'zehn', f"berührt: {', '.join(treffer_stil)} (E-PU-03)"
+    return 'fuenf', 'schmaler Lauf (E-PU-03, -11)'
+
+
+def proben_mit_umfang(proben, stufe, umfang, dateien, a, seiten):
+    """Der Umfang an der Probenliste: beim vollen Lauf laufen Bilderlauf und
+    Bedienprobe immer, im schmalen nur, wenn eine Datei außer `neutral` sie
+    auslöst."""
+    aus = list(proben)
+    for p in SEITEN_PROBEN:
+        wahl, _ = seitenwahl(p, stufe, umfang, dateien, a, seiten)
+        if wahl is None and p in aus:
+            aus.remove(p)
+        elif wahl is not None and p not in aus:
+            aus.append(p)
+    return aus
 
 
 def umfang_aus_version(basis, stufe, commit=None, voll=False):
@@ -463,6 +564,58 @@ def selbstprobe(a):
         ('motoren: klein mit --voll -> drei',               m('klein', 'voll:hand', []) == MOTOREN_DREI),
         ('motoren: ein anderes Stylesheet zieht nicht',     m('neben', SCHMAL, ['server/assets/druck.css']) == ('chromium',)),
     ]
+    # Seiten und Breiten (E-PU-03, -04, Q-PU-03) — gegen die ECHTE Seitenliste.
+    se = seiten_laden()
+    ph = a.get('umfang', {}).get('platzhalter', {})
+    ohne_datei = [s['name'] for s in se if seitendatei(s, ph) is None]
+    fehlt = sorted({seitendatei(s, ph) for s in se if seitendatei(s, ph)
+                    and not os.path.isfile(os.path.join(WURZEL, seitendatei(s, ph)))})
+    w = lambda p_, s, u_, d: seitenwahl(p_, s, u_, d, a, se)[0]
+    b = lambda s, u_, d: breiten_aus(s, u_, d, st)[0]
+    idx = w('bilderlauf', 'neben', SCHMAL, ['server/index.php', 'server/version.php'])
+    grenzen += [
+        ('seiten: jeder Platzhalter in seiten.json hat eine Datei', not ohne_datei),
+        ('seiten: jede Seitendatei liegt unter server/',           not fehlt),
+        ('seiten: index.php bringt die Tagesübersicht, nicht alle',
+         isinstance(idx, list) and '10-tagesuebersicht' in idx and '15-suche' not in idx),
+        ('seiten: ein Platzhalter zählt (einsatz_form.php -> 13-einsatzformular)',
+         w('bilderlauf', 'neben', SCHMAL, ['server/einsatz_form.php']) == ['13-einsatzformular']),
+        ('seiten: eine Bibliothek ist geteilt -> alle',
+         w('bilderlauf', 'neben', SCHMAL, ['server/spur_lib.php']) == ALLE),
+        ('seiten: ein Skript ist geteilt -> alle',
+         w('bilderlauf', 'klein', SCHMAL, ['server/assets/tag.js']) == ALLE),
+        ('seiten: nur version.php löst nichts aus',
+         w('bilderlauf', 'neben', SCHMAL, ['server/version.php']) is None
+         and w('bedienprobe', 'neben', SCHMAL, ['server/version.php']) is None),
+        ('seiten: ein Endpunkt unter api/ ist geteilt (server/*.php trifft ihn, wie in klein)',
+         w('bilderlauf', 'neben', SCHMAL, ['server/api/day.php']) == ALLE),
+        ('seiten: eine Doku-Datei löst nichts aus',
+         w('bilderlauf', 'neben', SCHMAL, ['docs/Handbuch.md']) is None),
+        ('seiten: voll heißt alle, auch ohne Auslöser',
+         w('bilderlauf', 'neben', 'voll:zehner', []) == ALLE and w('bedienprobe', 'klein', 'voll:hand', []) == ALLE),
+        ('seiten: das Werkzeug selbst ist geteilt',
+         w('bilderlauf', 'klein', SCHMAL, ['tools/screenshots/aufnehmen.mjs']) == ALLE),
+        ('seiten: nebenstufe trägt Bilderlauf und Bedienprobe nicht mehr',
+         not ({'bilderlauf', 'bedienprobe'} & set(next(m for m in a['muster'] if m['id'] == 'nebenstufe')['proben']))),
+        ('proben: neben schmal, nur version.php -> kein Bilderlauf',
+         'bilderlauf' not in proben_mit_umfang(treffer(['server/version.php'], 'neben', a)[1], 'neben', SCHMAL,
+                                                ['server/version.php'], a, se)),
+        ('proben: neben voll:zehner, nur version.php -> Bilderlauf und Bedienprobe',
+         {'bilderlauf', 'bedienprobe'} <= set(proben_mit_umfang(treffer(['server/version.php'], 'neben', a)[1],
+                                                                 'neben', 'voll:zehner', ['server/version.php'], a, se))),
+        ('breiten: klein drei, neben schmal fünf',
+         b('klein', SCHMAL, ['server/index.php']) == 'drei' and b('neben', SCHMAL, ['server/index.php']) == 'fuenf'),
+        ('breiten: neben mit style.css zehn, mit ui.php zehn',
+         b('neben', SCHMAL, ['server/assets/style.css']) == 'zehn' and b('neben', SCHMAL, ['server/ui.php']) == 'zehn'),
+        ('breiten: voll zehn, auch in klein',
+         b('klein', 'voll:hand', []) == 'zehn' and b('haupt', 'voll:haupt', []) == 'zehn'),
+        ('breiten: motor.mjs hebt die Engines, nicht die Breiten',
+         b('neben', SCHMAL, ['tools/motor.mjs']) == 'fuenf'
+         and motoren_aus('neben', SCHMAL, ['tools/motor.mjs'], drei_aus(a))[0] == MOTOREN_DREI),
+        ('breiten: aufnehmen.mjs kennt die drei Sätze',
+         all(f'{s}:' in open(os.path.join(WURZEL, 'tools', 'screenshots', 'aufnehmen.mjs'), encoding='utf-8').read()
+             for s in ('drei', 'fuenf', 'zehn'))),
+    ]
     for name, bed in grenzen:
         melde(f"  [{'ok  ' if bed else 'FEHL'}] {name}")
         fehl += 0 if bed else 1
@@ -485,6 +638,8 @@ def main():
     p.add_argument('--motoren', action='store_true',
                    help='die Engines der Browserproben mit Grund (E-PU-02); braucht --stufe und --umfang')
     p.add_argument('--umfang', choices=UMFAENGE)
+    p.add_argument('--bilderlauf', action='store_true',
+                   help='Breitensatz und Seiten des Bilderlaufs mit Grund (E-PU-03, -04); braucht --stufe und --umfang')
     p.add_argument('--selbstprobe', action='store_true')
     p.add_argument('--nur-proben', action='store_true',
                    help='nur die Probennamen, einer je Zeile — für pruefen.sh')
@@ -504,8 +659,18 @@ def main():
         if not args.stufe or not args.umfang:
             melde('--motoren braucht --stufe und --umfang.')
             return 2
-        engines, grund = motoren_aus(args.stufe, args.umfang, args.datei or beruehrte(args.basis), stil_aus(a))
+        engines, grund = motoren_aus(args.stufe, args.umfang, args.datei or beruehrte(args.basis), drei_aus(a))
         melde(f"{' '.join(engines)}\t{grund}")
+        return 0
+    if args.bilderlauf:
+        if not args.stufe or not args.umfang:
+            melde('--bilderlauf braucht --stufe und --umfang.')
+            return 2
+        dateien = args.datei or beruehrte(args.basis)
+        satz, g1 = breiten_aus(args.stufe, args.umfang, dateien, stil_aus(a))
+        wahl, g2 = seitenwahl('bilderlauf', args.stufe, args.umfang, dateien, a, seiten_laden())
+        liste = '-' if wahl is None else (ALLE if wahl == ALLE else ','.join(wahl))
+        melde(f'{satz}\t{liste}\t{g1}; {g2}')
         return 0
     if args.umfang_ermitteln:
         if not args.stufe:
@@ -527,6 +692,8 @@ def main():
             return 2
     dateien = args.datei or beruehrte(args.basis)
     muster, proben = treffer(dateien, stufe, a)
+    umfang = args.umfang or umfang_aus_version(args.basis, stufe, voll=args.voll)[0]
+    proben = proben_mit_umfang(proben, stufe, umfang, dateien, a, seiten_laden())
     riegel = a['riegel']['proben']
 
     if args.nur_proben:
@@ -534,12 +701,16 @@ def main():
             melde(n)
         return 0
 
-    melde(f'Stufe {stufe} · {len(dateien)} berührte Dateien · '
+    melde(f'Stufe {stufe} · Umfang {umfang} · {len(dateien)} berührte Dateien · '
           f'{len(muster)} Muster · {len(proben)} Proben (plus {len(riegel)} Riegel)')
     melde()
     melde('Muster: ' + (', '.join(muster) or '—'))
     melde('Riegel: ' + ', '.join(riegel))
     melde('Proben: ' + (', '.join(proben) or '—'))
+    for p_ in SEITEN_PROBEN:
+        wahl, grund = seitenwahl(p_, stufe, umfang, dateien, a, seiten_laden())
+        zahl = '—' if wahl is None else (ALLE if wahl == ALLE else f'{len(wahl)} Seiten')
+        melde(f'{p_}: {zahl} ({grund})')
     return 0
 
 

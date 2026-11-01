@@ -29,8 +29,9 @@ HIER = os.path.dirname(os.path.abspath(__file__))
 WURZEL = os.path.dirname(os.path.dirname(HIER))
 ABLAUF = os.path.join(HIER, 'pruefablauf.json')
 sys.path.insert(0, HIER)
-from auswahl import (MOTOREN_DREI, SCHMAL, UMFAENGE, UNLESBAR, beruehrte,  # noqa: E402 — die EINE Lesestelle
-                     fassung, motoren_aus, stil_aus, stufe_aus_fassungen, stufe_aus_version, zehner)
+from auswahl import (ALLE, MOTOREN_DREI, SCHMAL, UMFAENGE, UNLESBAR, beruehrte,  # noqa: E402 — die EINE Lesestelle
+                     breiten_aus, drei_aus, fassung, motoren_aus, seiten_laden, seitenwahl, stil_aus,
+                     stufe_aus_fassungen, stufe_aus_version, zehner)
 
 STUFEN = ['klein', 'neben', 'haupt']
 KOPF_RE = re.compile(
@@ -251,7 +252,7 @@ def pruefen(bericht, basis=None, commit='HEAD', riegel=None, dateien=None, baum=
     # Riegel stimmen. Überspringen ist rot. Riegel und Flächen haben
     # ihre eigene Lage.
     eigene = set(riegel_namen if riegel_namen is not None else lade_ablauf()['riegel']['proben'])
-    eigene |= set(riegel or {}) | set(FLAECHEN) | {'motoren', 'umfang'}
+    eigene |= set(riegel or {}) | set(FLAECHEN) | {'motoren', 'umfang', 'breiten', 'seiten'}
     for name, wert in bericht['werte'].items():
         if name in eigene or gruen_oder_hinweis(wert):
             continue
@@ -270,17 +271,34 @@ def pruefen(bericht, basis=None, commit='HEAD', riegel=None, dateien=None, baum=
     # Zeile oder nennt sie weniger, ist der Bericht kein Nachweis.
     if motoren_namen is None:
         motoren_namen = {n for n, p in lade_ablauf()['proben'].items() if p.get('motoren') is True}
-    if stil is None:
-        stil = stil_aus(lade_ablauf())
+    ablauf = lade_ablauf()
     browser = sorted(n for n in bericht['werte'] if n in motoren_namen)
     u = bericht['werte'].get('umfang', SCHMAL)
-    verlangt_m = '+'.join(motoren_aus(bericht['stufe'], u if u in UMFAENGE else SCHMAL, liste, stil)[0])
+    u = u if u in UMFAENGE else SCHMAL
+    verlangt_m = '+'.join(motoren_aus(bericht['stufe'], u, liste, stil if stil is not None else drei_aus(ablauf))[0])
     gemeldet_m = bericht['werte'].get('motoren')
     if browser and gemeldet_m not in (verlangt_m, MOTOREN):
         schlecht.append(
             f"Browserproben ({', '.join(browser)}) nicht in den verlangten Engines: "
             f"„motoren={gemeldet_m or '(fehlt)'}\", verlangt „{verlangt_m}\" "
             f"(Stufe {bericht['stufe']}, Umfang {u}; R89, E-PU-02).")
+
+    # (6, Fortsetzung) Breiten und Seiten des Bilderlaufs (E-PU-03, -04): mit
+    # denselben Funktionen nachgerechnet. Zehn Breiten und alle Seiten passen
+    # immer; weniger als verlangt ist rot. Löst nichts den Bilderlauf aus
+    # (etwa mit --datei gefahren), verlangt die Lage nichts.
+    if 'bilderlauf' in bericht['werte']:
+        wahl, _ = seitenwahl('bilderlauf', bericht['stufe'], u, liste, ablauf, seiten_laden())
+        if wahl is not None:
+            satz = breiten_aus(bericht['stufe'], u, liste, stil if stil is not None else stil_aus(ablauf))[0]
+            br, se = bericht['werte'].get('breiten'), bericht['werte'].get('seiten')
+            if br not in (satz, 'zehn'):
+                schlecht.append(f"Bilderlauf in „breiten={br or '(fehlt)'}\", verlangt „{satz}\" "
+                                f"(Stufe {bericht['stufe']}, Umfang {u}; E-PU-03).")
+            if se is None or (wahl == ALLE and se != ALLE) or (wahl != ALLE and se not in (ALLE, str(len(wahl)))):
+                soll = ALLE if wahl == ALLE else f'{len(wahl)} oder alle'
+                schlecht.append(f"Bilderlauf mit „seiten={se or '(fehlt)'}\", verlangt {soll} "
+                                f"(E-PU-04: eine geteilte Datei oder der volle Lauf heißt alle Seiten).")
 
     # (7) Der Umfang (E-PU-01). Der Bericht nennt ihn immer; voll ist er
     # verlangt in haupt und an einer Zehnergrenze der Nebennummer. Mehr zu
@@ -349,7 +367,7 @@ def selbstprobe():
              '  syntax-php=php:486/0  wortliste=0  vollstaendigkeit=0\n'
              '  spurprobe=0  kreislauf-edbak=0  bilderlauf=0\n'
              '  handy=nicht-beruehrt  uhr=nicht-beruehrt\n'
-             '  motoren=chromium+firefox+webkit  umfang=schmal\n')
+             '  motoren=chromium+firefox+webkit  umfang=schmal  breiten=fuenf  seiten=alle\n')
     gebaut = guter.replace('handy=nicht-beruehrt', 'handy=gebaut') + '  android-bau=0\n'
     namen = ['syntax-php', 'wortliste', 'vollstaendigkeit']
     faelle = []
@@ -416,8 +434,9 @@ def selbstprobe():
                    zerlegen(guter.replace('neben', 'klein').replace('chromium+firefox+webkit', 'chromium')
                             .replace('umfang=schmal', 'umfang=voll:hand')),
                    dict(baum='abc1234', dateien=[], riegel={}, riegel_namen=namen), 1))
-    faelle.append(('grün (6h) — klein, Stylesheet berührt, motoren=chromium',
-                   zerlegen(guter.replace('neben', 'klein').replace('chromium+firefox+webkit', 'chromium')),
+    faelle.append(('grün (6h) — klein, Stylesheet berührt, motoren=chromium, drei Breiten',
+                   zerlegen(guter.replace('neben', 'klein').replace('chromium+firefox+webkit', 'chromium')
+                            .replace('breiten=fuenf', 'breiten=drei')),
                    dict(baum='abc1234', dateien=['server/assets/style.css'], riegel={}, riegel_namen=namen), 0))
     faelle.append(('rot (6i) — neben, ui.php berührt, motoren=chromium+firefox',
                    zerlegen(guter.replace('chromium+firefox+webkit', 'chromium+firefox')),
@@ -439,6 +458,24 @@ def selbstprobe():
     faelle.append(('rot (5d) — „hinweis" mit Zusatz ist kein Hinweis',
                    zerlegen(guter.replace('spurprobe=0', 'spurprobe=hinweis:x')),
                    dict(baum='abc1234', dateien=[], riegel={}, riegel_namen=namen), 1))
+    faelle.append(('grün (6j) — neben schmal, index.php berührt, fünf Breiten, 11 Seiten',
+                   zerlegen(guter.replace('seiten=alle', 'seiten=11')),
+                   dict(baum='abc1234', dateien=['server/index.php'], riegel={}, riegel_namen=namen), 0))
+    faelle.append(('rot (6k) — Stylesheet berührt, aber fünf Breiten',
+                   zerlegen(guter), dict(baum='abc1234', dateien=['server/assets/style.css'], riegel={},
+                                         riegel_namen=namen), 1))
+    faelle.append(('rot (6l) — ui.php berührt (geteilt), aber nur 3 Seiten',
+                   zerlegen(guter.replace('breiten=fuenf', 'breiten=zehn').replace('seiten=alle', 'seiten=3')),
+                   dict(baum='abc1234', dateien=['server/ui.php'], riegel={}, riegel_namen=namen), 1))
+    faelle.append(('rot (6m) — Bilderlauf ohne Zeile breiten=',
+                   zerlegen(guter.replace('  breiten=fuenf', '')),
+                   dict(baum='abc1234', dateien=['server/index.php'], riegel={}, riegel_namen=namen), 1))
+    faelle.append(('grün (6n) — voll:zehner, zehn Breiten, alle Seiten, drei Engines',
+                   zerlegen(guter.replace('umfang=schmal', 'umfang=voll:zehner').replace('breiten=fuenf', 'breiten=zehn')),
+                   dict(baum='abc1234', dateien=['server/index.php'], riegel={}, riegel_namen=namen), 0))
+    faelle.append(('rot (6o) — voll:zehner, aber fünf Breiten',
+                   zerlegen(guter.replace('umfang=schmal', 'umfang=voll:zehner')),
+                   dict(baum='abc1234', dateien=['server/index.php'], riegel={}, riegel_namen=namen), 1))
     faelle.append(('rot (7) — der Bericht nennt keinen Umfang',
                    zerlegen(guter.replace('  umfang=schmal', '')),
                    dict(baum='abc1234', dateien=[], riegel={}, riegel_namen=namen), 1))
@@ -446,7 +483,7 @@ def selbstprobe():
                    zerlegen(guter), dict(baum='abc1234', dateien=[], riegel={}, riegel_namen=namen,
                                          umfang_verlangt='voll'), 1))
     faelle.append(('grün (7c) — Zehnergrenze verlangt voll, Bericht voll:hand',
-                   zerlegen(guter.replace('umfang=schmal', 'umfang=voll:hand')),
+                   zerlegen(guter.replace('umfang=schmal', 'umfang=voll:hand').replace('breiten=fuenf', 'breiten=zehn')),
                    dict(baum='abc1234', dateien=[], riegel={}, riegel_namen=namen, umfang_verlangt='voll'), 0))
     faelle.append(('rot (7d) — Stufe haupt, Bericht schmal',
                    zerlegen(guter.replace('neben', 'haupt')),
@@ -455,7 +492,7 @@ def selbstprobe():
                    zerlegen(guter.replace('umfang=schmal', 'umfang=breit')),
                    dict(baum='abc1234', dateien=[], riegel={}, riegel_namen=namen), 1))
     faelle.append(('grün (7f) — mehr als verlangt: schmal verlangt, voll:zehner gemeldet',
-                   zerlegen(guter.replace('umfang=schmal', 'umfang=voll:zehner')),
+                   zerlegen(guter.replace('umfang=schmal', 'umfang=voll:zehner').replace('breiten=fuenf', 'breiten=zehn')),
                    dict(baum='abc1234', dateien=[], riegel={}, riegel_namen=namen, umfang_verlangt='schmal'), 0))
     faelle.append(('rot (0) — gar kein Bericht in der Nachricht',
                    zerlegen('Ein Commit ganz ohne Block.\n'),

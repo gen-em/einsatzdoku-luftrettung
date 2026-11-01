@@ -335,8 +335,8 @@ nichts gelesen wird, misst gegen nichts.
 
 | Stufe | Auslöser | Umfang |
 |---|---|---|
-| **klein** | Korrekturstufe `a.a.Y`, oder kein Versionssprung | billige Riegel; je berührter Datei die zugeordneten Proben (4); Bilderlauf der berührten Seiten in drei Breiten; Bedienprobe der berührten Seiten — jede Browserprobe in Chromium allein (Grundsatz 8, E-DM-08) |
-| **neben** | Nebenstufe `a.X.a` | alles ohne Anlage: alle Proben gegen die örtliche Installation, beide Kreisläufe, Bilderlauf aller Seiten in zehn Breiten (seit R4-08; vorher acht), Bedienprobe aller Seiten; Browserproben in Chromium, in drei Engines nur beim vollen Lauf oder bei berührtem Stylesheet bzw. `ui.php` (Grundsatz 8, seit PU-03); Handy- und Uhr-Bau, wenn berührt |
+| **klein** | Korrekturstufe `a.a.Y`, oder kein Versionssprung | billige Riegel; je berührter Datei die zugeordneten Proben (4); Bilderlauf der berührten Seiten in drei Breiten (Seitenwahl unten); Bedienprobe, wenn ihr Muster greift — jede Browserprobe in Chromium allein (Grundsatz 8, E-DM-08) |
+| **neben** | Nebenstufe `a.X.a` | alles ohne Anlage: alle Proben gegen die örtliche Installation, beide Kreisläufe; Bilderlauf und Bedienprobe wie in `klein` über ihre Muster, der Bilderlauf in **fünf** Breiten (390, 768, 1024, 1200, 1600) und in **zehn** beim vollen Lauf oder bei berührtem Stylesheet bzw. `ui.php`, beim vollen Lauf beide immer und über alle Seiten (seit PU-04); Browserproben in Chromium, in drei Engines nur beim vollen Lauf oder bei berührtem Stylesheet bzw. `ui.php` (Grundsatz 8, seit PU-03); Handy- und Uhr-Bau, wenn berührt |
 | **haupt** | Hauptstufe `X.a.a`, **eine neue Migration** (Stufenregel `migration`, 4; seit P5c/AP4) oder `--stufe haupt` | wie neben, dazu die **Plattformmatrix** (PHP 8.3.33 und 8.4; MariaDB 10.11 und 10.6, MySQL 8.0 und 8.4.0 — Schemaprobe und ein Kreislauf `edbak` je Paar), Messstand (Chromium allein, E-DM-06), Anteilprobe, Verbindungsprobe, Uhr-Prüfstand Stufe II |
 
 **Warum die Matrix in die Hauptstufe gehört und nicht in die Kette:** Der
@@ -362,6 +362,21 @@ was fehlt.
 
 **Eine Hauptstufe, die mit `--stufe klein` gefahren wurde, fällt im Tor
 auf** — das ist eine der roten Lagen in 5.1.
+
+**Die Seitenwahl** (seit PU-04, E-PU-04, Q-PU-03). Eine Seite aus
+`tools/screenshots/seiten.json` gilt als berührt, wenn **ihre eigene Datei**
+berührt ist — der Pfad ohne Anfrage, ein Platzhalter über
+`umfang.platzhalter` in `pruefablauf.json`. Jede **andere** Datei, die den
+Bilderlauf über ein Muster auslöst — eine Bibliothek, ein Skript, ein
+Endpunkt, `ui.php`, das Stylesheet, das Werkzeug selbst —, gilt als
+**geteilt** und bringt alle Seiten. `server/version.php` löst nichts aus
+(`umfang.neutral`): Die Fassungsnummer ändert sich bei jeder Neben- und
+Hauptstufe, und sonst liefe jeder Bilderlauf über alle Seiten. Die
+Bedienprobe folgt derselben Auslöseregel, fährt aber alle Wege, wenn sie
+läuft — ihre Wege lassen sich keiner Seite zuordnen. Der Bericht trägt
+`breiten=` und `seiten=` (Zahl oder `alle`), das Tor rechnet nach (5.1,
+Lage 6). *Bis PU-04 stand in der Tabelle „berührte Seiten", und der
+Prüfstand übergab nie `--nur`: `klein` maß alle Seiten (F-PU-07).*
 
 **Schmal oder voll** (seit PU-01, E-PU-01). Neben der Stufe bestimmt der
 Befehl den **Umfang** und sagt ihn: **voll** in jeder Hauptstufe, in
@@ -452,6 +467,8 @@ Zwei Dinge hängen mit daran, und beide sind gemessen:
 | `docs/rechtstexte/*.md`, `server/nutzungsbedingungen.php`, `server/avv.php`, `server/datenschutz.php` | klein | `rechtstexte` | P3/O10 |
 | `server/assets/style.css`, `tools/stilvergleich/**` | klein | `stilvergleich`, `bilderlauf`, `kontraste` | P0/A3 |
 | `server/*.php`, `server/assets/*.js` | klein | `bilderlauf`, `bedienprobe` | Nr. 185, 225; PS-2 |
+| `tools/screenshots/aufnehmen.mjs`, `tools/screenshots/seiten.json` | klein | `bilderlauf` | F-PU-08 (PU-04): Wer den Bilderlauf oder seine Seitenliste aendert, faehrt ihn. Bis dahin fuehrte keine Zeile von tools/screenshots/ zum Bilderlauf -- nur der Stilvergleich und der Riegel kettenaufrufe sahen die Datei. |
+| `tools/bedienprobe/*.mjs`, `tools/bedienprobe/wege/**` | klein | `bedienprobe` | F-PU-08 (PU-04): Wer die Bedienprobe oder einen ihrer Wege aendert, faehrt sie. Bis dahin fuehrte nur wege/registrieren.mjs dorthin (Muster registrierung). Nicht tools/bedienprobe/**: ausgabe/bericht.* ist eingecheckt, und jeder Lauf haette den naechsten ausgeloest. |
 | `.github/workflows/*.yml`, `tools/**` | klein | `kettenaufrufe` | Nr. 217 |
 | `android/**` | klein | `android-bau`, `android-kontraste`, `android-farbabgleich`, `android-bildmarken`, `android-stroeme` | E-PK-02 |
 | `server/kontopaar_lib.php`, `server/api/kontopaar.php`, `server/assets/kontopaar.js`, `server/assets/unlock.js`, `tools/proben/kontopaar/**` | klein | `kontopaarprobe` | Nr. 43 |
@@ -459,12 +476,12 @@ Zwei Dinge hängen mit daran, und beide sind gemessen:
 | `server/api/wartungslauf.php`, `server/assets/wartungslauf.js`, `server/spur_lib.php`, `server/validate_lib.php`, `tools/proben/wartungslauf/**` | klein | `wartungslaufprobe` | Nr. 43 |
 | `tools/proben/huelle/**`, `tools/uhr-pruefstand/krypto-probe/**`, `server/assets/crypto.js`, `server/geraetehuelle_lib.php` | klein | `huellenprobe`, `uhr-krypto` | Nr. 43 |
 | `watch/**`, `tools/uhr-pruefstand/**` | klein | `uhr-stufe1`, `uhr-rundlauf` | E-PK-02 |
-| `server/**` | neben | `ingestprobe`, `spurprobe`, `jobprobe`, `komplettprobe`, `wiederherstellung`, `gpxprobe`, `geraeteprobe`, `kopplungsprobe`, `mailprobe`, `versandprobe`, `ratenprobe`, `wartungsprobe`, `freigabeprobe`, `fristprobe`, `abmelde-probe`, `containerprobe`, `browserprobe-csp`, `bedienprobe`, `bilderlauf`, `kreislauf-csv`, `kreislauf-edbak`, `spaltenregister-wegprobe`, `protokollprobe`, `rollenprobe`, `zweitfaktorprobe`, `rueckwegprobe`, `sitzungsprobe`, `passkeyprobe`, `schluesselwechselprobe` | Pruefablauf.md 3, Zeile neben: alle Proben gegen die oertliche Installation, beide Kreislaeufe, Bilderlauf aller Seiten in zehn Breiten (acht bis R4-08), Bedienprobe. Bis PK-05 gab es dieses Muster nicht -- eine Nebenstufe mass dasselbe wie eine Korrekturstufe (F-P5c-49, E-P5c-32). protokollprobe und rollenprobe kamen mit P5c/AP2 und fehlten hier bis AP3 (F-P5c-90). zweitfaktorprobe kam mit P5c/AP5 und steht hier im selben Paket, rueckwegprobe ebenso mit RW-01, sitzungsprobe mit SR-01, passkeyprobe mit SR-09, schluesselwechselprobe mit SR-03. |
+| `server/**` | neben | `ingestprobe`, `spurprobe`, `jobprobe`, `komplettprobe`, `wiederherstellung`, `gpxprobe`, `geraeteprobe`, `kopplungsprobe`, `mailprobe`, `versandprobe`, `ratenprobe`, `wartungsprobe`, `freigabeprobe`, `fristprobe`, `abmelde-probe`, `containerprobe`, `browserprobe-csp`, `kreislauf-csv`, `kreislauf-edbak`, `spaltenregister-wegprobe`, `protokollprobe`, `rollenprobe`, `zweitfaktorprobe`, `rueckwegprobe`, `sitzungsprobe`, `passkeyprobe`, `schluesselwechselprobe` | Pruefablauf.md 3, Zeile neben: alle Proben gegen die oertliche Installation, beide Kreislaeufe, Bilderlauf aller Seiten in zehn Breiten (acht bis R4-08), Bedienprobe. Bis PK-05 gab es dieses Muster nicht -- eine Nebenstufe mass dasselbe wie eine Korrekturstufe (F-P5c-49, E-P5c-32). protokollprobe und rollenprobe kamen mit P5c/AP2 und fehlten hier bis AP3 (F-P5c-90). zweitfaktorprobe kam mit P5c/AP5 und steht hier im selben Paket, rueckwegprobe ebenso mit RW-01, sitzungsprobe mit SR-01, passkeyprobe mit SR-09, schluesselwechselprobe mit SR-03. Bilderlauf und Bedienprobe stehen seit PU-04 nicht mehr hier: Sie laufen wie in klein nur ueber ihre eigenen Muster, beim vollen Lauf immer (E-PU-04, Q-PU-03). |
 | `server/betrieb_statistik.php`, `server/statistik_lib.php` | klein | `messstand`, `bilderlauf` | Nr. 295 (Messstand-Schritt statistik: drei Reiter unter 1 s bei 5000 Einsätzen, EXPLAIN). Stand bis R4-04 am ENDE der Muster, weil die Reihenfolge der Proben entschied, wen der Demo-Reset traf (F-P5c-127); seit R4-04 schiebt der Pruefstand die Demo-Marke vor jeder Probe mit demo: true (Nr. 322), und die Stelle ist gleichgueltig. |
 | `server/**` | haupt | `messstand`, `anteilprobe`, `verbindungsprobe`, `schemaprobe` | F-S2-E; Nr. 267 -- der Export scheiterte nur auf MySQL 8.4 -- dazu, was Pruefablauf.md 3 erst der Hauptstufe gibt: Messstand, Anteil- und Verbindungsprobe (PK-05). |
 | `docs/Rahmenplan*.md`, `docs/Backlog*.md`, `CLAUDE.md`, `tools/steuerung/**` | klein | `steuerung`, `nummern` | Nr. 177, 196, 199 (Konzept SD): die Decken der Steuerungsdokumente und die Kopfzeilen des Backlogs. Der Riegel laeuft ohnehin in jeder Stufe; das Muster benennt die Beruehrung. Nr. 339 (R4-03): eine neue Nummer, die ein anderer Zweig schon traegt -- nur oertlich, deshalb nur hier. |
 | `server/assets/style.css`, `server/assets/images/gen-em_logo_*.png` | klein | `android-farbabgleich`, `android-bildmarken` | Nr. 334 (R4-04): Die App uebernimmt Farbwerte und Bildmarken aus dem Web (E-S4-22a). Wer sie dort aendert, erfaehrt hier, dass die App nachzieht -- ohne den Android-Bau, der dafuer nichts misst. |
-| `tools/motor.mjs`, `tools/pruefstand/motoren.md`, `tools/zweitfaktor/totp.mjs` | klein | `gpxprobe`, `freigabeprobe`, `fristprobe`, `abmelde-probe`, `containerprobe`, `huellenprobe`, `kontopaarprobe`, `ortsdatenprobe`, `wartungslaufprobe`, `browserprobe-csp`, `bedienprobe`, `bilderlauf`, `stilvergleich`, `kreislauf-csv`, `kreislauf-edbak`, `rueckwegprobe` | Nr. 390 — die Engine-Wahl und das Register gelten fuer jede Browserprobe; wer sie aendert, faehrt alle in drei Engines (R87) |
+| `tools/motor.mjs`, `tools/pruefstand/motoren.md`, `tools/zweitfaktor/totp.mjs` | klein | `gpxprobe`, `freigabeprobe`, `fristprobe`, `abmelde-probe`, `containerprobe`, `huellenprobe`, `kontopaarprobe`, `ortsdatenprobe`, `wartungslaufprobe`, `browserprobe-csp`, `bedienprobe`, `bilderlauf`, `stilvergleich`, `kreislauf-csv`, `kreislauf-edbak`, `rueckwegprobe` | Nr. 390 — die Engine-Wahl und das Register gelten fuer jede Browserprobe; wer sie aendert, faehrt alle Browserproben. tools/motor.mjs hebt ab neben auf drei Engines (umfang.engine_wahl, E-PU-16); bis PU-03 hiess es hier pauschal drei (R87). |
 
 **Die billigen Riegel laufen in jeder Stufe, ohne Muster:** `syntax-php`, `wortliste`, `vollstaendigkeit`, `kontraste`, `linkprobe`, `anker`, `kennzeichnung`, `fremdsummen`, `dokumente`, `bestand`, `syntax-py`, `handbuch`, `installweiche`, `behandler`, `sitzungshaertung`, `cspprobe`, `jobregister`, `migrationsregister`, `rechtstexte`, `kettenaufrufe`, `zaehlung`, `spaltenregister`, `steuerung`.
 
@@ -519,7 +536,10 @@ Prüfstand: neben · Baum a1b2c3d… · Konfiguration web
   `pruefablauf.json`), aber nicht die verlangten Engines — das Tor rechnet
   sie aus Stufe, Umfang und Berührung mit derselben Funktion nach wie der
   Prüfstand (`motoren_aus()` in `auswahl.py`; Grundsatz 8, seit PU-03,
-  R89). Alle drei passen immer; fehlt die Zeile, ist es rot.
+  R89). Alle drei passen immer; fehlt die Zeile, ist es rot. Ebenso
+  **Breiten und Seiten des Bilderlaufs** (seit PU-04): `breiten=` und
+  `seiten=` gegen `breiten_aus()` und `seitenwahl()`; zehn Breiten und alle
+  Seiten passen immer.
 - Der Bericht nennt **keinen Umfang**, einen unbekannten, oder `schmal`,
   wo der Unterschied den vollen Lauf verlangt — in `haupt` und an einer
   Zehnergrenze der Nebennummer (seit PU-01, E-PU-01; Abschnitt 3). Mehr

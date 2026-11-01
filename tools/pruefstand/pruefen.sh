@@ -60,8 +60,12 @@ zeile "$UMFANG  ($(printf '%s' "$erm" | cut -f2))"
 
 # ---- 2. Was ist berührt, was läuft daraus --------------------------------
 melde "Berührung"
-python3 "$HIER/auswahl.py" --stufe "$STUFE" --basis "$BASIS" "${DATEIEN[@]}" >&2 || exit 2
-mapfile -t PROBEN < <(python3 "$HIER/auswahl.py" --stufe "$STUFE" --basis "$BASIS" "${DATEIEN[@]}" --nur-proben)
+python3 "$HIER/auswahl.py" --stufe "$STUFE" --umfang "$UMFANG" --basis "$BASIS" "${DATEIEN[@]}" >&2 || exit 2
+mapfile -t PROBEN < <(python3 "$HIER/auswahl.py" --stufe "$STUFE" --umfang "$UMFANG" --basis "$BASIS" "${DATEIEN[@]}" --nur-proben)
+# Breiten und Seiten des Bilderlaufs (E-PU-03, -04): ein Satz für --breiten,
+# die Seiten für --nur oder „alle". Steht im Bericht, das Tor rechnet nach.
+erm=$(python3 "$HIER/auswahl.py" --bilderlauf --stufe "$STUFE" --umfang "$UMFANG" --basis "$BASIS" "${DATEIEN[@]}") || exit 2
+BREITEN=$(printf '%s' "$erm" | cut -f1); SEITEN=$(printf '%s' "$erm" | cut -f2)
 
 if [ "$TROCKEN" = 1 ]; then
     melde "Trockenlauf — es wird nichts gefahren."
@@ -142,7 +146,11 @@ print(p['aufruf'] if p else '', p['braucht'] if p else '', 'demo' if p and p.get
     befehl=$(printf '%s' "$aufruf" | cut -f1); braucht=$(printf '%s' "$aufruf" | cut -f2)
     demo=$(printf '%s' "$aufruf" | cut -f3); drei=$(printf '%s' "$aufruf" | cut -f4)
     nurhinweis=$(printf '%s' "$aufruf" | cut -f5)
-    befehl=${befehl//\{stufe\}/$STUFE}   # der Bilderlauf misst je Stufe anders
+    befehl=${befehl//\{stufe\}/$STUFE}
+    # Der Bilderlauf: Breitensatz und Seiten (E-PU-03, -04).
+    befehl=${befehl//\{breiten\}/$BREITEN}
+    if [ "$SEITEN" = alle ] || [ "$SEITEN" = - ]; then befehl=${befehl//\{seiten\}/}
+    else befehl=${befehl//\{seiten\}/--nur $SEITEN}; fi
     if [ -z "$befehl" ]; then
         zeile "?     $name — steht nicht unter \"proben\" in pruefablauf.json"; fehl=$((fehl+1)); continue
     fi
@@ -267,6 +275,11 @@ args=(schreiben --stufe "$STUFE" --basis "$BASIS"
       --konfiguration "$([ "$STUFE" = haupt ] && echo alles || echo web)")
 for k in "${!ZAHL[@]}"; do args+=(--zahl "$k=${ZAHL[$k]}"); done
 args+=(--zahl "umfang=$UMFANG")
+# Breiten und Seiten des Bilderlaufs, wenn er lief — das Tor rechnet nach (Lage 6).
+if [ -n "${ZAHL[bilderlauf]:-}" ]; then
+    if [ "$SEITEN" = alle ]; then n=alle; else n=$(printf '%s' "$SEITEN" | tr ',' '\n' | grep -c .); fi
+    args+=(--zahl "breiten=$BREITEN" --zahl "seiten=$n")
+fi
 # Welche Engines die dreifachen Proben gefahren haben — Stufe 1 liest es
 # gegen (bericht.py, Lage 6): Ein Bericht mit Browserproben ohne diese Zeile
 # ist rot.

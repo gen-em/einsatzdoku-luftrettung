@@ -979,7 +979,7 @@ in Chromium allein: Seine Grundlinie ist gedrosseltes Chromium.
 | Mittel | im Prüfstand | warum dreifach |
 |---|---|---|
 | **Stilvergleich** | wenn `style.css` berührt ist (`gegen.sh`), je Engine; 14–18 s je Motor | Berechnete Stile sind genau die Frage, bei der Motoren auseinandergehen. Die Aussage ist die **Übereinstimmung** der drei Zahlen, nicht die Zahl: Der Vergleich misst alt gegen neu *innerhalb* eines Motors, also meldet ein Motor, der eine neue Regel nicht kann, **weniger** Abweichungen. |
-| **Bilderlauf** | nach Stufe (`--stufe klein`: drei Breiten, `neben`: zehn; E-PK-14), je Engine | Darstellung ist motorabhängig — der erste dreifache Lauf fand einen Überlauf, den nur WebKit hatte (Nr. 185). |
+| **Bilderlauf** | nach Umfang (`--breiten`: drei in `klein`, fünf im schmalen Lauf, zehn beim vollen und bei Stylesheet/`ui.php`; Seiten über ihre eigene Datei, `auswahl.py --bilderlauf`, seit PU-04), je verlangter Engine | Darstellung ist motorabhängig — der erste dreifache Lauf fand einen Überlauf, den nur WebKit hatte (Nr. 185). |
 | **Bedienprobe** (bis PK-04 „Klickprobe") | je Engine | Sie misst Wege, nicht Darstellung — aber Wege hängen an Zeitlagen, und die sind je Engine andere: Die Freigabeprobe fand so, dass das Schlüsselpaar in Firefox und WebKit nur entsteht, wer auf der ersten Seite bleibt (F-DM-02, Nr. 392). |
 
 **Zwei Dinge, die jeder Motorlauf wissen muss**, beide gemessen und beide in

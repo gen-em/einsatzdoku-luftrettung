@@ -207,7 +207,7 @@ SCHLUESSEL = {
     'oben': {'beschreibung', 'fassung', 'muster', 'proben', 'riegel', 'stufen', 'stufenregeln', 'umfang'},
     'riegel': {'beschreibung', 'proben'},
     # `umfang` lesen auswahl.py (Engines, Seiten) und bericht.py (Lage 6), seit PU-03.
-    'umfang': {'beschreibung', 'stil'},
+    'umfang': {'beschreibung', 'stil', 'engine_wahl', 'neutral', 'platzhalter'},
     'probe': {'aufruf', 'bemerkung', 'braucht', 'demo', 'hinweis', 'motoren', 'nach'},    # `demo`, `hinweis` und `motoren` lesen auswahl.py und pruefen.sh
     'muster': set(MUSTER_FELDER),
 }
