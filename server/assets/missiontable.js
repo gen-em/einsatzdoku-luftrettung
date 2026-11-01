@@ -357,13 +357,13 @@ const EdMissionTable = (() => {
     { key: 'dur',   kopf: 'Dauer',                 thClass: 'zahl-spalte',
       wert: m => m.duration_s == null ? -1 : m.duration_s,
       zelle: m => `<td class="zahl-spalte zeit-spalte">${zelleDauer(m.duration_s)}</td>` },
-    { key: 'site',  kopf: 'Einsatzort',            thClass: '',
+    { key: 'site',  kopf: 'Einsatzort',            thClass: '', geschuetzt: true,
       wert: m => (m._ort || '').toLowerCase(),
       zelle: (m, ctx) => zelleGeschuetzt(m, m._ort, ctx && ctx.hervor) },
-    { key: 'age',   kopf: 'Alter',                 thClass: 'zahl-spalte',
+    { key: 'age',   kopf: 'Alter',                 thClass: 'zahl-spalte', geschuetzt: true,
       wert: m => m._age == null ? -1 : m._age,
       zelle: m => zelleGeschuetzt(m, m._age, null, 'zahl-spalte') },
-    { key: 'dx',    kopf: 'Diagnose',              thClass: '',
+    { key: 'dx',    kopf: 'Diagnose',              thClass: '', geschuetzt: true,
       wert: m => (m._dx || '').toLowerCase(),
       zelle: (m, ctx) => zelleGeschuetzt(m, m._dx, ctx && ctx.hervor) },
     /* Winde und Bergwacht sind FAEHIGKEITEN einzelner Rettungsmittel
@@ -878,6 +878,16 @@ const EdMissionTable = (() => {
 
     return {
       setData, zeichne, setSort, setSpaltenBestand, setFaehigkeiten, zeigeEinsatz,
+      /* DIE ANGEZEIGTEN ZEILEN, in ihrer Reihenfolge — fuer eine Seite, die
+       * zuerst entschluesseln will, was zu sehen ist. */
+      gezeigt: () => (seite > 0 ? letzte.slice(0, sichtbar) : letzte.slice()),
+      /* Sortiert die Tabelle nach einer geschuetzten Spalte (Ort, Alter,
+       * Diagnose)? Dann steht vor dem Entschluesseln nicht fest, welche
+       * Zeilen oben stehen, und „die gezeigten zuerst" waere geraten. */
+      sortGeschuetzt: () => {
+        const sp = spaltenSatz().find(s => s.key === sortKey);
+        return !!(sp && sp.geschuetzt);
+      },
       /* Die sichtbaren Spalten mit ihrer schlichten Beschriftung — fuer ein
        * Sortierblatt, das nicht den Tabellenkopf abklauben muss. Spalten
        * ohne Kopftext (der Farbstreifen) bleiben draussen: Nach ihnen

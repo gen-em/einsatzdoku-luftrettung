@@ -55,8 +55,13 @@
    * @returns {string} Markup, identisch zu ui_symbol() in PHP
    */
   function edSymbol(name, klassen, titel) {
+    var n = sicher(name);
     var v = version();
-    var pfad = ORDNER + sicher(name) + '.svg' + (v ? '?v=' + encodeURIComponent(v) : '') + '#i';
+    /* Steht das Symbol im Vorrat der Seite (`ui_symbolvorrat()`), zeigt der
+     * Verweis dorthin — wie in ui_symbol(). Sonst auf die Datei. */
+    var pfad = document.getElementById('sym-' + n)
+      ? '#sym-' + n
+      : ORDNER + n + '.svg' + (v ? '?v=' + encodeURIComponent(v) : '') + '#i';
     var k = 'symbol' + (klassen ? ' ' + klassen : '');
     var a = '<svg class="' + maskieren(k) + '" viewBox="0 0 24 24" focusable="false"';
     a += (titel === undefined || titel === null)

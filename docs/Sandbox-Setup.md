@@ -538,7 +538,7 @@ etwas anderes, als er glaubt.
 | **Ein echtes Gerät** | Kein echter Data Layer, kein echter Schlüsselspeicher, kein gekoppeltes Gerät. Was der Emulator und der Uhr-Simulator dafür können und was nicht, steht in `android/LIESMICH.md` und `Geraete-Eingabe.md`. |
 | **Ein echtes Sicherungsziel** | Es wird keine Gegenstelle angefahren, die wirklich außer Haus schreibt. |
 | **Ein echter Safari** | Playwrights WebKit ist die Engine, nicht der Browser: ohne Apples Netzstapel, ohne iCloud-Schlüsselbund, ohne die Eigenheiten von iOS. Jede Browserprobe läuft in WebKit (R87); was nur Safari zeigt, bleibt Handprüfung in den Prüflisten (E-DM-04). |
-| **Docker ohne Maß** | Docker Hub drosselt anonyme Abrufe. Ein Lauf, der acht Abbilder holt, scheitert beim neunten mit 429 — und das sieht aus wie ein Netzfehler. |
+| **Docker ohne Maß** | Docker Hub drosselt anonyme Abrufe. Ein Lauf, der acht Abbilder holt, scheitert beim neunten mit 429 — und das sieht aus wie ein Netzfehler. Am 31.10.2026 kam `mariadb:10.6` über eine Stunde lang nur mit 429; geholt über den Spiegel `mirror.gcr.io/library/mariadb:10.6` und als `mariadb:10.6` markiert (`docker tag`); ob der Digest dem von Docker Hub gleicht, ließ sich nicht prüfen. |
 
 ### 6.1 Zwei Fallen, die Zeit kosten
 

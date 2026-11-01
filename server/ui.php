@@ -150,6 +150,9 @@ function ui_seite_start(array $o): void
 
     $klasse = (string)($o['klasse'] ?? '');
     $zeilen[] = '<body' . ($klasse !== '' ? ' class="' . ui_e($klasse) . '"' : '') . '>';
+    /* Der Symbolvorrat steht als ERSTES im <body>, damit jedes ui_symbol()
+     * danach auf ihn verweisen kann (`ui_symbolvorrat()`). */
+    $zeilen[] = ui_symbolvorrat();
 
     echo implode("\n", $zeilen), "\n";
 }
@@ -264,10 +267,17 @@ function ui_favicon(): string
  * Entwurf im selben Stil. Die Zuordnung Datei -> Tabler-Name -> Verwendung
  * steht in LIESMICH.md im selben Ordner.
  *
- * EINBINDUNG PER VERWEIS, nicht per Einbetten. Das <use> holt das <g id="i">
- * aus der Datei; der Browser laedt jede Datei genau einmal und benutzt sie
- * beliebig oft. Kein Sprite, kein Bauschritt — die Datei bleibt am PC einzeln
- * zu oeffnen und zu aendern, und genau das war die Anforderung.
+ * EINBINDUNG PER VERWEIS AUF DEN VORRAT DER SEITE. Steht der Symbolvorrat
+ * (`ui_symbolvorrat()`, das erste Element im <body> jeder Seite aus
+ * `ui_seite_start()`), zeigt das <use> auf `#sym-name` in derselben Seite.
+ * Sonst — Seiten mit eigener Huelle, Bruchstuecke — holt es wie zuvor das
+ * <g id="i"> aus der Datei. Die Dateien bleiben einzeln am PC zu oeffnen
+ * und zu aendern, und es gibt keinen Bauschritt: Der Vorrat entsteht bei
+ * jeder Anfrage aus ihnen. Warum nicht der Dateiverweis allein: Fuer
+ * JEDES <use> auf eine fremde Datei baut der Browser ein eigenes
+ * SVG-Dokument, und die Tagesleiste traegt rund 500 davon. Gemessen bei
+ * Drossel 6×: die Nachbearbeitung 1,78 s → 0,85 s bis
+ * `DOMContentLoaded`, Einsatz und Diensttag rund 20 % schneller.
  *
  * DIE STRICHATTRIBUTE STEHEN IM STYLESHEET (.symbol), nicht hier: Der Verweis
  * holt das <g>, nicht das <svg> darum, und die Attribute fill/stroke stehen in
@@ -290,8 +300,12 @@ function ui_favicon(): string
  */
 function ui_symbol(string $name, string $klassen = '', ?string $titel = null): string
 {
-    $v = defined('WEB_VERSION') ? WEB_VERSION : '';
-    $pfad = 'assets/images/symbole/' . $name . '.svg' . ($v !== '' ? '?v=' . $v : '') . '#i';
+    if (ui_symbolvorrat_steht() && isset(ui_symbolvorrat_inhalt()[$name])) {
+        $pfad = '#sym-' . $name;
+    } else {
+        $v = defined('WEB_VERSION') ? WEB_VERSION : '';
+        $pfad = 'assets/images/symbole/' . $name . '.svg' . ($v !== '' ? '?v=' . $v : '') . '#i';
+    }
     $k = 'symbol' . ($klassen !== '' ? ' ' . $klassen : '');
 
     $a = '<svg class="' . ui_e($k) . '" viewBox="0 0 24 24" focusable="false"';
@@ -299,6 +313,78 @@ function ui_symbol(string $name, string $klassen = '', ?string $titel = null): s
         ? ' aria-hidden="true">'
         : ' role="img"><title>' . ui_e($titel) . '</title>';
     return $a . '<use href="' . ui_e($pfad) . '"></use></svg>';
+}
+
+/**
+ * Die Symbole als Vorrat: Name => Inhalt des <g id="i"> der Datei.
+ *
+ * Gelesen einmal je Anfrage aus `assets/images/symbole/*.svg`. Eine Datei,
+ * die das <g id="i"> nicht traegt, fehlt im Vorrat; ihr Symbol nimmt dann
+ * den Dateiverweis (`ui_symbol()`), statt leer zu bleiben.
+ *
+ * @return array<string,string>
+ */
+function ui_symbolvorrat_inhalt(): array
+{
+    static $vorrat = null;
+    if ($vorrat !== null) { return $vorrat; }
+    $vorrat = [];
+    foreach (glob(__DIR__ . '/assets/images/symbole/*.svg') ?: [] as $datei) {
+        $name = basename($datei, '.svg');
+        if (!preg_match('/^[a-z0-9-]+$/', $name)) { continue; }
+        $text = (string)@file_get_contents($datei);
+        if (preg_match('~<g id="i">(.*?)</g>\s*</svg>~s', $text, $m)) {
+            $vorrat[$name] = trim($m[1]);
+        }
+    }
+    ksort($vorrat);
+    return $vorrat;
+}
+
+/**
+ * Steht der Vorrat in dieser Seite? Gesetzt von `ui_symbolvorrat()`.
+ */
+function ui_symbolvorrat_steht(bool $setzen = false): bool
+{
+    static $steht = false;
+    if ($setzen) { $steht = true; }
+    return $steht;
+}
+
+/**
+ * Der Symbolvorrat der Seite: ein unsichtbares <svg> mit je einem <symbol>
+ * je Datei, `id="sym-name"`.
+ *
+ * WARUM ALLE UND NICHT NUR DIE GEBRAUCHTEN: `edSymbol()` in
+ * `assets/symbol.js` baut Symbole auch nachtraeglich im Browser, und welche,
+ * weiss die Seite beim Ausgeben nicht. Alle 58 sind rund 17 kB, gepackt ein
+ * Bruchteil davon.
+ *
+ * DAS <symbol> TRAEGT KEINE STRICHATTRIBUTE, ebenso wenig wie das <g> in
+ * der Datei: Sie kommen aus `.symbol` im Stylesheet und fliessen ueber das
+ * <use> hinein. Stuenden sie hier, gewaennen sie gegen das Stylesheet.
+ *
+ * VERBORGEN UEBER DAS SVG-ATTRIBUT `display="none"`, nicht ueber eine Regel
+ * im Stylesheet: Ein <symbol> wird nur ueber das <use> gezeichnet, und das
+ * tun Chromium, Firefox und WebKit auch aus einem verborgenen Vorrat
+ * (gemessen: alle Symbole mit Flaeche, Bilder pixelgleich). Ein absolut
+ * gesetzter Vorrat statt dessen verschob in Chromium die Kantenglaettung
+ * einer Knopfecke um drei Pixel.
+ *
+ * Einmal je Seite; ein zweiter Aufruf gibt nichts aus.
+ */
+function ui_symbolvorrat(): string
+{
+    if (ui_symbolvorrat_steht()) { return ''; }
+    $vorrat = ui_symbolvorrat_inhalt();
+    if ($vorrat === []) { return ''; }
+    ui_symbolvorrat_steht(true);
+    $teile = [];
+    foreach ($vorrat as $name => $inhalt) {
+        $teile[] = '<symbol id="sym-' . $name . '" viewBox="0 0 24 24">' . $inhalt . '</symbol>';
+    }
+    return '<svg display="none" aria-hidden="true" focusable="false">'
+         . implode('', $teile) . '</svg>';
 }
 
 /* ===========================================================================
@@ -1658,7 +1744,7 @@ function ui_plakette(string $text, array $o = []): string
  * LADEPLATZ  (.ladeplatz)
  *
  * Ring und Satz an der Stelle eines Inhalts, den der Browser noch holt oder
- * oeffnet. Ausgegeben wird er VERBORGEN; `EdOrtsdaten.ladeplatz()` zeigt ihn
+ * oeffnet. Ausgegeben wird er VERBORGEN; `EdHtml.ladeplatz()` zeigt ihn
  * nach 300 ms, wechselt den Satz (lädt · wartet auf das Passwort · öffnet)
  * und nimmt ihn wieder weg. `role="status"` und `aria-live="polite"` sagen
  * den Satz an, der Ring ist Schmuck.

@@ -608,7 +608,11 @@ ui_seite_start(['titel' => 'Tagesübersicht', 'karte' => true,
 <script src="<?= asset('assets/ortsdaten.js') ?>"></script>
 <script src="<?= asset('assets/wartungslauf.js') ?>"></script>
 <script src="<?= asset('assets/gpx.js') ?>"></script>
+<?php /* Steht `vorladen.js` schon im Kopf (ein Tag ist gewaehlt), braucht
+         der Rumpf es nicht ein zweites Mal. */ ?>
+<?php if ($selDay === null): ?>
 <script src="<?= asset('assets/vorladen.js') ?>"></script>
+<?php endif; ?>
 <?php if ($blattZeigen): ?>
 <?php /* Die Betreiber-Rueckfrage rechnet NICHT — sie holt Positionen und
          schickt vier Gruppen. Deshalb kein `schluessel.js` daneben. */ ?>
@@ -1065,7 +1069,7 @@ window.addEventListener('load', () => {
   }
 });
 
-const LADE_SPUREN = EdOrtsdaten.ladeplatz(document.getElementById('spuren-lade'));
+const LADE_SPUREN = EdHtml.ladeplatz(document.getElementById('spuren-lade'));
 let tagLauf = 0;
 async function spurenOeffnen(d, bounds){
   const lauf = ++tagLauf;

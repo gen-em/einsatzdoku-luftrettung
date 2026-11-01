@@ -271,6 +271,8 @@ const SPUR = <?= json_js(['hat' => $hatSpur, 'stufe' => (int)$spurStand['stufe']
 // ueber ein Hilfselement — sie maskierte drei Zeichen statt fuenf (M6-03).
 const esc = EdHtml.escape;
 function zeigeLadeFehler(msg){
+  /* Kommt nichts mehr, dreht auch kein Ladeplatz weiter. */
+  LADE_KARTE.weg(); LADE_PHASEN.weg();
   document.getElementById('title').textContent = 'Einsatz nicht geladen';
   document.getElementById('loaderror').textContent =
     'Die Einsatzdaten konnten nicht geladen werden: ' + msg;
@@ -574,8 +576,17 @@ function minutenDiff(a, b){
 async function init(){
   LADE_KARTE.zeige('Ortsdaten werden geladen …');
   LADE_PHASEN.zeige('Phasen werden geladen …');
-  const res = await EdVorladen.holen('api/mission.php?id=' + MID);
-  const txt = await res.text();
+  /* Ein Abruf, der scheitert — Netz weg, oder die Seite wird verlassen,
+     waehrend er noch laeuft —, endet in der Ladefehler-Meldung wie auf dem
+     Diensttag, nicht als unbehandelter Fehler. */
+  let res, txt;
+  try {
+    res = await EdVorladen.holen('api/mission.php?id=' + MID);
+    txt = await res.text();
+  } catch (e) {
+    zeigeLadeFehler(e.message);
+    return;
+  }
   let m;
   try { m = JSON.parse(txt); }
   catch (e) {
@@ -879,8 +890,8 @@ async function init(){
  * `m.resus`). Der Ladeplatz sagt dabei, worauf gewartet wird: auf das
  * Passwort (Ring steht), auf das Öffnen. Geht eine Hülle nicht auf, steht an
  * seiner Stelle die Meldung; die übrigen Angaben des Einsatzes bleiben. */
-const LADE_KARTE  = EdOrtsdaten.ladeplatz(document.getElementById('ortsdaten-lade'));
-const LADE_PHASEN = EdOrtsdaten.ladeplatz(document.getElementById('phasen-lade'));
+const LADE_KARTE  = EdHtml.ladeplatz(document.getElementById('ortsdaten-lade'));
+const LADE_PHASEN = EdHtml.ladeplatz(document.getElementById('phasen-lade'));
 async function ortsdatenOeffnen(m){
   m.track = []; m.resus = null;
   (m.phases || []).forEach(p => { p.lat = null; p.lon = null; p.track_idx = null; });

@@ -545,6 +545,82 @@ Einmalwerkzeug steht nicht hier, sondern im Prüfdokument S11 (Mengenlauf:
 Rückfrage **oder** Ergebnis, was zuerst kommt, statt bis zu 8 s auf eine
 Rückfrage, die nicht kommt. Bis dahin stand jede Datei auf 8,1 s.
 
+## Seitenaufbau und Mengen 31.10.2026 — vorher und nachher (R17-29)
+
+**Wofür.** Die drei Messposten aus der Zerlegung vom 13.10.2026 (Backlog
+Nr. 380, 381, 382): erst nachmessen, dann bauen. Gemessen auf Web 23.5.2
+(vorher) und 23.6.0 (nachher), derselbe Bestand (5096 Einsätze), dieselbe
+Maschine (Xeon 2,80 GHz, 4 Kerne), Chromium 156 aus Playwright 1.64.1.
+Eichlauf vorher 861 ms bei 6× und 130 ms ungedrosselt, nachher 854 und
+132 ms — die Maschine war gleich schnell. Gemessen ist der erste Entwurf
+des Symbolvorrats (absolut gesetzt, 0 × 0 px); der Endstand verbirgt ihn
+über `display="none"` (F-R17-89). Beide zeichnen dieselben Verweise; der
+Endstand ist um ein leeres Element im Layout ärmer, nicht reicher.
+
+**Zuerst, was nicht stimmt:** Die Einzelansichten lagen schon VORHER zwei-
+bis dreimal über dem 18.10.2026 (Einsatz 4,15 statt 1,39 s, Diensttag 7,95
+statt 2,94 s bei 6×), bei gleichem Eichlauf. Der Eichlauf rechnet nur
+JavaScript; was dazwischen langsamer wurde, liegt in Parsen, Stil und
+Layout und ist offen (F-R17-87, Backlog Nr. 410). **Vergleichbar sind nur
+die Spalten dieser Tabelle untereinander**, nicht mit den Tabellen darüber.
+
+**Messstand** (`messen.py --schritte browser`, je ein Lauf; Einsatz,
+Diensttag und Monat Median aus fünf):
+
+| Messung | 6× vorher | 6× nachher | 1× vorher | 1× nachher |
+|---|---|---|---|---|
+| Anmelden | 5,49 s | 4,01 s | 2,38 s | 1,82 s |
+| Startseite, Tagesliste | 4,74 s (DOM 3,11) | 3,26 s (DOM 1,68) | 0,90 s | 0,67 s |
+| Tagesansicht | 4,87 s | 3,09 s | 0,90 s | 0,64 s |
+| Suche, erste Zeile sichtbar | 7,35 s | 4,37 s | 1,53 s | 0,80 s |
+| Suche, **geschützt lesbar** | 6,07 s ¹ | **3,68 s** | 1,03 s ¹ | **0,79 s** |
+| Zeitraum Jahr 2026, sichtbar · fertig | 4,57 · 9,41 s | 3,35 · 8,68 s | 0,85 · 1,69 s | 0,73 · 1,20 s |
+| Zeitraum Jahr, **geschützt lesbar** | 5,66 s ¹ | **3,84 s** | 0,87 s ¹ | **0,76 s** |
+| Zeitraum Monat 03/2026, sichtbar · fertig | 4,93 · 9,39 s | 2,49 · 5,63 s | 0,97 · 1,13 s | 0,64 · 0,88 s |
+| Zeitraum Monat, **geschützt lesbar** | 4,04 s ¹ | **2,92 s** | 0,71 s ¹ | 0,68 s |
+| Nachbearbeitung | 1,52 s | 1,27 s | 0,46 s | 0,28 s |
+| **Einsatz mit Spur** | 4,15 s (3,97–4,45) | **2,72 s** (2,44–3,72) | 0,76 s | 0,55 s |
+| **Diensttag mit Ruhe-Spuren** | 7,95 s | **5,31 s** | 1,32 s | 0,84 s |
+| Backup erstellen | 191,1 s | 172,0 s | 49,9 s | 45,0 s |
+| GPX Jahr, Passwort an · aus | 693,0 · 567,9 s | 506,1 · 430,4 s | 118,4 · 83,3 s | 100,5 · 75,0 s |
+
+¹ Vorher gab es die Marke im Messstand nicht; gemessen mit einer
+Einmalprobe nach derselben Regel (erster Neuaufbau der Tabelle nach dem
+ersten `decrypt`), Median aus drei Läufen. Dieselbe Einmalprobe nachher:
+Suche 3,76 und 2,78 s, Jahr 3,01 und 2,68 s, Monat 2,12 und 2,49 s (zwei
+Läufe zu je drei) — die Streuung zwischen Läufen ist so groß wie ein Teil
+des Gewinns.
+
+**Bis `DOMContentLoaded`** (Einmalprobe, je fünf Läufe, 6×): Nachbearbeitung
+1,55 → 0,64 s, Einsatz 2,51 → 1,41 s, Diensttag 4,59 → 1,69 s. Dieselbe
+Seite im Testbrowser nur mit dem Symbolvorrat, sonst unverändert: 1,78 →
+0,85, 1,83 → 1,42, 2,47 → 1,94 s.
+
+**Erste Antwort (Nr. 382)**, je fünf Läufe, Mediane: Anmelden samt
+Weiterleitung bis zur Antwort von `index.php` 129 ms bei 6× und 124 ms
+ungedrosselt, davon der Server allein 22 bis 25 ms; Startseite erste
+Antwort 51 bzw. 36 ms, Server allein 21 bzw. 22 ms. Vorher dieselben
+Werte (129/120 ms, Server 24/22 ms). Einzelläufe zeigen 230 bis 380 ms,
+wenn der Browser die Anfrage erst schickt, sobald die gedrosselte
+Vorseite frei wird — das war die Zahl vom 13.10.2026.
+
+**Was die Zahlen sagen.**
+
+- **Der Symbolvorrat wirkt auf jeder Seite mit Tagesleiste**, nicht nur
+  dort, wo gemessen werden sollte: Anmelden, Startseite und Tagesansicht
+  sind bei 6× ein Viertel bis ein Drittel schneller, Einsatz und Diensttag
+  ein Drittel. Vorher baute der Browser rund 500 SVG-Dokumente je Seite.
+- **„Geschützt lesbar" kommt in Suche und Zeitraum 1,4 bis 2,4 s früher.**
+  Daran haben der Vorrat und die zwei Stufen beide Anteil; getrennt
+  gemessen ist es nicht.
+- **„Fertig" ist in der Suche nicht schneller** (Einmalprobe 6,08 → 6,33
+  und 4,68 s): Sie zeichnet einmal mehr. Im Zeitraum ist es schneller,
+  weil der Vorrat dort mehr spart, als das Zwischenbild kostet.
+- **Backup und GPX sind nicht dem Paket zuzuschreiben.** Beide laufen
+  minutenlang auf einer Seite, deren Aufbau eine Sekunde ausmacht; 693 →
+  506 s ist Streuung des Wirts in dieser Größe (am 18.10.2026 waren es
+  337 s auf demselben Bestand).
+
 ---
 
 ## Wiederholen

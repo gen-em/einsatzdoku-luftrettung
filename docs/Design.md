@@ -902,7 +902,17 @@ Verwendungsort und die Quelle (Tabler-Name oder „eigener Entwurf") und ein
 in `LIESMICH.md` im selben Ordner.
 
 **Einbindung:** in PHP `ui_symbol('haus')`, in JS `edSymbol('haus')`; beide
-erzeugen dieselbe Zeichenkette. Kein Zeichen liegt als Inline-Pfad im Code,
+erzeugen dieselbe Zeichenkette. **Seit Web 23.6.0 verweisen sie auf den
+Vorrat der Seite:** `ui_seite_start()` stellt alle Zeichen als unsichtbares
+`<svg display="none">` mit je einem `<symbol id="sym-name">` an den
+Anfang des `<body>` (`ui_symbolvorrat()`; verborgen über das SVG-Attribut,
+ohne Regel im Stylesheet), und das `<use>` zeigt auf
+`#sym-name`. Seiten mit eigener Hülle tragen keinen Vorrat; dort zeigt der
+Verweis wie zuvor auf die Datei (`…/haus.svg#i`). **Warum:** Für jedes
+`<use>` auf eine fremde Datei baut der Browser ein eigenes SVG-Dokument, und
+die Tagesleiste trägt rund 500 Zeichen — gemessen (Messstand, Drossel 6×)
+war die Nachbearbeitung damit doppelt so lange im Aufbau. Die Dateien
+bleiben einzeln, einen Bauschritt gibt es nicht. Kein Zeichen liegt als Inline-Pfad im Code,
 kein Unicode-Zeichen (▸ ✓ ★ …) und kein Emoji dient als Symbol; die
 Vollständigkeitsprüfung meldet Verstöße und Verweise auf fehlende Dateien.
 Der Winkel liegt einmal vor (`winkel.svg`, zeigt nach unten) und wird per
@@ -1056,66 +1066,66 @@ für eine Rückfrage — nicht für ein neues Element.
 | **Suche, Filter und Seitenwahl** einer langen Liste | `ui_listenkopf()` und `ui_listenfuss()` (9.18a) | dasselbe Markup ein zweites Mal von Hand |
 | den **Zeitraum einer Auswertung** wählen — feste Fenster und Von/Bis | `ui_zeitraumwahl()` (9.18b) | Datumsfelder und Pillen von Hand, oder ein Auswahlfeld mit Monaten |
 | eine **Reihe über die Zeit** oder **Anteile** zeigen | `ui_diagramm_saeulen()`, `ui_diagramm_balken()` (9.40) — die Tabelle bleibt daneben | eine Diagrammbibliothek, ein Kreis, zwei Achsen |
-| sagen, dass der Browser **noch holt oder öffnet** | `ui_ladeplatz()` (9.41), gesteuert über `EdOrtsdaten.ladeplatz()` | eine leere Fläche, ein eigener Kreisel, ein Ladetext ohne Ring |
+| sagen, dass der Browser **noch holt oder öffnet** | `ui_ladeplatz()` (9.41), gesteuert über `EdHtml.ladeplatz()` | eine leere Fläche, ein eigener Kreisel, ein Ladetext ohne Ring |
 
 <!-- ERZEUGT von tools/erzeugen/design.py — nicht von Hand ändern. -->
 
 | Baustein | Klasse | Regel im Stylesheet | `ui.php` |
 |---|---|---|--:|
 | `ui_seite_start()` | — | Hüllenfunktion, kein eigenes Element | 53 |
-| `ui_seite_ende()` | — | Hüllenfunktion, kein eigenes Element | 171 |
-| `ui_favicon()` | — | Hüllenfunktion, kein eigenes Element | 238 |
-| `ui_symbol()` | `.symbol` | ja (+9 Unterklassen) | 291 |
-| `ui_logo_masse()` | `.logo-masse` | **keine** | 394 |
-| `ui_kopf()` | `.kopf` | ja (+25 Unterklassen) | 455 |
-| `ui_geruest_start()` | `.inhalt` | ja | 547 |
-| `ui_leiste_ende()` | `.leiste` | ja (+17 Unterklassen) | 613 |
-| `ui_geruest_ende()` | `.inhalt` | ja | 637 |
-| `ui_leiste_diensttage()` | `.leiste-liste` | ja | 687 |
-| `ui_zaehler()` | `.zaehler` | ja (+2 Unterklassen) | 927 |
-| `ui_leiste_einstellungen()` | `.leiste-liste` | ja | 1086 |
-| `ui_einstellungen_uebersicht()` | `.uebersicht-raster` | ja | 1157 |
-| `ui_fuss_seite()` | `.fuss-seite` | ja | 1236 |
-| `ui_hinweise()` | `.hinweise` | ja | 1284 |
-| `ui_umgebung_hinweis()` | `.hinweis-umgebung` | ja | 1312 |
-| `ui_ankuendigung()` | `.meldung-ankuendigung` | ja | 1347 |
-| `ui_demo_hinweis()` | `.demo-hinweis` | ja | 1400 |
-| `ui_datenschutz_hinweis()` | `.datenschutz-hinweis` | **keine** | 1453 |
-| `ui_meldung_markup()` | `.meldung` | ja (+19 Unterklassen) | 1518 |
-| `ui_knopf()` | `.knopf` | ja (+17 Unterklassen) | 1564 |
-| `ui_codeblock_lang()` | `.codeblock-lang` | ja | 1616 |
-| `ui_plakette()` | `.plakette` | ja (+5 Unterklassen) | 1642 |
-| `ui_ladeplatz()` | `.ladeplatz` | ja (+3 Unterklassen) | 1669 |
-| `ui_karte_start()` | `.karte` | ja (+37 Unterklassen) | 1709 |
-| `ui_karte_ende()` | `.karte` | ja (+37 Unterklassen) | 1793 |
-| `ui_nach_oben()` | `.nach-oben` | ja | 1828 |
-| `ui_sprungliste()` | `.sprungliste` | ja | 1870 |
-| `ui_kartenfilter()` | `.kartenfilter` | ja (+4 Unterklassen) | 1918 |
-| `ui_zeile()` | `.zeile` | ja (+35 Unterklassen) | 1980 |
-| `ui_zeile_mehr()` | `.zeile-mehr` | ja | 2035 |
-| `ui_reiter()` | `.reiter` | ja (+9 Unterklassen) | 2083 |
-| `ui_listenkopf()` | `.listenkopf` | ja | 2127 |
-| `ui_listenfuss()` | `.listenfuss` | ja | 2199 |
-| `ui_zeitraumwahl()` | `.zeitraumwahl` | ja (+5 Unterklassen) | 2254 |
-| `ui_diagramm_skala()` | `.diagramm-skala` | **keine** | 2300 |
-| `ui_diagramm_saeulen()` | `.diagramm-saeulen` | ja | 2334 |
-| `ui_diagramm_balken()` | `.diagramm-balken` | ja | 2406 |
-| `ui_titelzeile()` | `.titelzeile` | ja (+6 Unterklassen) | 2430 |
-| `ui_aktionen()` | `.aktionen` | ja (+2 Unterklassen) | 2472 |
-| `ui_feld()` | `.feld` | ja (+26 Unterklassen) | 2540 |
-| `ui_schalter()` | `.schalter` | ja (+27 Unterklassen) | 2605 |
-| `ui_segment_markup()` | `.segment` | ja (+23 Unterklassen) | 2649 |
-| `ui_wahlliste()` | `.wahlliste` | ja | 2702 |
-| `ui_zeilenaktionen()` | `.zeile-aktionen` | ja | 2746 |
-| `ui_speichern_leiste()` | `.speichern` | ja (+4 Unterklassen) | 2845 |
-| `ui_kennzahl()` | `.kennzahl` | ja (+20 Unterklassen) | 2907 |
-| `ui_abbruch()` | `.rahmen` | ja (+1 Unterklassen) | 2948 |
-| `ui_csrf_bootstrap()` | `.csrf-bootstrap` | **keine** | 3040 |
-| `ui_geocoder_bootstrap()` | `.geocoder-bootstrap` | **keine** | 3078 |
-| `ui_geocoder_hinweis()` | `.geocoder-hinweis` | **keine** | 3108 |
-| `ui_ortsfeld()` | `.ortsfeld-zeile` | ja | 3120 |
-| `ui_tabellen_bootstrap()` | `.tabellen-bootstrap` | **keine** | 3263 |
-| `ui_krypto_bootstrap()` | — | Hüllenfunktion, kein eigenes Element | 3342 |
+| `ui_seite_ende()` | — | Hüllenfunktion, kein eigenes Element | 174 |
+| `ui_favicon()` | — | Hüllenfunktion, kein eigenes Element | 241 |
+| `ui_symbol()` | `.symbol` | ja (+9 Unterklassen) | 301 |
+| `ui_logo_masse()` | `.logo-masse` | **keine** | 480 |
+| `ui_kopf()` | `.kopf` | ja (+25 Unterklassen) | 541 |
+| `ui_geruest_start()` | `.inhalt` | ja | 633 |
+| `ui_leiste_ende()` | `.leiste` | ja (+17 Unterklassen) | 699 |
+| `ui_geruest_ende()` | `.inhalt` | ja | 723 |
+| `ui_leiste_diensttage()` | `.leiste-liste` | ja | 773 |
+| `ui_zaehler()` | `.zaehler` | ja (+2 Unterklassen) | 1013 |
+| `ui_leiste_einstellungen()` | `.leiste-liste` | ja | 1172 |
+| `ui_einstellungen_uebersicht()` | `.uebersicht-raster` | ja | 1243 |
+| `ui_fuss_seite()` | `.fuss-seite` | ja | 1322 |
+| `ui_hinweise()` | `.hinweise` | ja | 1370 |
+| `ui_umgebung_hinweis()` | `.hinweis-umgebung` | ja | 1398 |
+| `ui_ankuendigung()` | `.meldung-ankuendigung` | ja | 1433 |
+| `ui_demo_hinweis()` | `.demo-hinweis` | ja | 1486 |
+| `ui_datenschutz_hinweis()` | `.datenschutz-hinweis` | **keine** | 1539 |
+| `ui_meldung_markup()` | `.meldung` | ja (+19 Unterklassen) | 1604 |
+| `ui_knopf()` | `.knopf` | ja (+17 Unterklassen) | 1650 |
+| `ui_codeblock_lang()` | `.codeblock-lang` | ja | 1702 |
+| `ui_plakette()` | `.plakette` | ja (+5 Unterklassen) | 1728 |
+| `ui_ladeplatz()` | `.ladeplatz` | ja (+3 Unterklassen) | 1755 |
+| `ui_karte_start()` | `.karte` | ja (+37 Unterklassen) | 1795 |
+| `ui_karte_ende()` | `.karte` | ja (+37 Unterklassen) | 1879 |
+| `ui_nach_oben()` | `.nach-oben` | ja | 1914 |
+| `ui_sprungliste()` | `.sprungliste` | ja | 1956 |
+| `ui_kartenfilter()` | `.kartenfilter` | ja (+4 Unterklassen) | 2004 |
+| `ui_zeile()` | `.zeile` | ja (+35 Unterklassen) | 2066 |
+| `ui_zeile_mehr()` | `.zeile-mehr` | ja | 2121 |
+| `ui_reiter()` | `.reiter` | ja (+9 Unterklassen) | 2169 |
+| `ui_listenkopf()` | `.listenkopf` | ja | 2213 |
+| `ui_listenfuss()` | `.listenfuss` | ja | 2285 |
+| `ui_zeitraumwahl()` | `.zeitraumwahl` | ja (+5 Unterklassen) | 2340 |
+| `ui_diagramm_skala()` | `.diagramm-skala` | **keine** | 2386 |
+| `ui_diagramm_saeulen()` | `.diagramm-saeulen` | ja | 2420 |
+| `ui_diagramm_balken()` | `.diagramm-balken` | ja | 2492 |
+| `ui_titelzeile()` | `.titelzeile` | ja (+6 Unterklassen) | 2516 |
+| `ui_aktionen()` | `.aktionen` | ja (+2 Unterklassen) | 2558 |
+| `ui_feld()` | `.feld` | ja (+26 Unterklassen) | 2626 |
+| `ui_schalter()` | `.schalter` | ja (+27 Unterklassen) | 2691 |
+| `ui_segment_markup()` | `.segment` | ja (+23 Unterklassen) | 2735 |
+| `ui_wahlliste()` | `.wahlliste` | ja | 2788 |
+| `ui_zeilenaktionen()` | `.zeile-aktionen` | ja | 2832 |
+| `ui_speichern_leiste()` | `.speichern` | ja (+4 Unterklassen) | 2931 |
+| `ui_kennzahl()` | `.kennzahl` | ja (+20 Unterklassen) | 2993 |
+| `ui_abbruch()` | `.rahmen` | ja (+1 Unterklassen) | 3034 |
+| `ui_csrf_bootstrap()` | `.csrf-bootstrap` | **keine** | 3126 |
+| `ui_geocoder_bootstrap()` | `.geocoder-bootstrap` | **keine** | 3164 |
+| `ui_geocoder_hinweis()` | `.geocoder-hinweis` | **keine** | 3194 |
+| `ui_ortsfeld()` | `.ortsfeld-zeile` | ja | 3206 |
+| `ui_tabellen_bootstrap()` | `.tabellen-bootstrap` | **keine** | 3349 |
+| `ui_krypto_bootstrap()` | — | Hüllenfunktion, kein eigenes Element | 3428 |
 
 54 Funktionen mit Markup in `server/ui.php`, davon 4 Hüllenfunktionen ohne eigenes Element.
 **Ohne Regel im Stylesheet:** `ui_logo_masse()`, `ui_datenschutz_hinweis()`, `ui_diagramm_skala()`, `ui_csrf_bootstrap()`, `ui_geocoder_bootstrap()`, `ui_geocoder_hinweis()`, `ui_tabellen_bootstrap()` — jede davon ist zu prüfen: entweder ein Behälter, der zu Recht keine Gestaltung braucht, oder eine Lücke.
@@ -3154,7 +3164,7 @@ Karte sah nach zwei Sekunden aus wie „keine GPS-Daten".
   (`.ladeplatz-still`, der Ring steht — es passiert nichts, bis jemand etwas
   tut) · öffnet · Fehler (dann die vorhandene Meldung, `.geo >
   [data-ortsdaten]`, mittig in der Karte).
-- **Erst nach 300 ms** (`EdOrtsdaten.ladeplatz()`), damit eine schnelle
+- **Erst nach 300 ms** (`EdHtml.ladeplatz()`), damit eine schnelle
   Ansicht nicht flackert. Ausgegeben wird er verborgen; das Skript zeigt ihn.
 - **Bewegung reduziert:** Die allgemeine Regel hält die Drehung an; der Satz
   trägt die Auskunft allein.
@@ -3168,7 +3178,9 @@ Grafik genügt 3 : 1 (WCAG 1.4.11).
 
 **Verwender (Web 22.0.3):** Einsatzansicht (Karte und Phasenkarte, die dabei
 sofort sichtbar ist), Diensttag (Karte), GPS-Daten des Diensttags
-(`tag_spuren.php`). **Der Balken mit Zahl** für lange Läufe (Export,
+(`tag_spuren.php`). **Seit Web 23.6.0 auch Suche und Zeitraumübersicht**, als
+Zeile oben in der Trefferkarte: „Weitere geschützte Angaben werden geöffnet
+…", solange nach den 200 gezeigten Zeilen der übrige Bestand geöffnet wird. **Der Balken mit Zahl** für lange Läufe (Export,
 GPX-Archiv, Wartungslauf) ist mit demselben Mockup freigegeben und steht seit
 Web 22.6.0 im Stylesheet (`.balken`, Füllung `.balken > i`): Höhe
 `--strich-balken` (6 px), Ecken die halbe Höhe, Fläche `--linie`, Füllung
@@ -3380,6 +3392,7 @@ genau das, wogegen sie schützt.
 
 | Fassung | Was |
 |---|---|
+| **Web 23.6.0 (R17-29)** | **8, Einbindung:** Die Zeichen stehen einmal je Seite als Vorrat (`ui_symbolvorrat()`, ein `<svg display="none">` ohne Regel im Stylesheet), die Verweise zeigen dorthin; ohne Vorrat wie zuvor auf die Datei. Kein neues Zeichen, kein sichtbarer Unterschied (fünf Seiten in drei Engines pixelweise verglichen). **9.41:** Ladeplatz auch in Suche und Zeitraum; gesteuert über `EdHtml.ladeplatz()` statt `EdOrtsdaten.ladeplatz()`. Kein neuer Baustein: `ui_symbolvorrat()` gibt ein unsichtbares Element ohne Gestaltung aus und steht im Erzeuger als Handwerkszeug. |
 | **28.09.2026 (R4-25, Werkzeug, keine Auslieferung)** | **4, 7, 8 und 9 neu erzeugt — alle vier Tabellen waren veraltet**: Nutzungszahlen der Token, die Schwellen, Symbolzählungen, die Zeilen der Bausteine. Seither hält `bestand` (Regel `design`) sie an den Erzeuger, und `design.py schreiben` ersetzt sie (Nr. 209). **3.4** um die Paare und die Ausnahme aus R4-24 ergänzt, **12** um die drei Fassungen darunter (F-R4-69). |
 | **Web 21.6.0 (R4-24)** | **9.40 neu — Diagramm**, freigegeben mit M-R4-24 (Q-R4-16): Säulen über die Zeit und Anteile als Balken, Inline-SVG aus PHP, ohne Bibliothek; Höchstwert in Orange tief (E-R4-60); kleine Vielfache ab der Schwelle 720 nebeneinander (F-R4-68). **7:** Die Ausnahme 479 px trägt zwei Regelblöcke mehr, keine neue Breite. **Kein neues Token, kein neuer Farbwert.** |
 | **Web 21.5.0 (R4-23)** | **9.18b neu — Zeitraumwahl**, freigegeben mit M-R4-23 (Q-R4-16): Pillen, zwei Datumsfelder und ein Knopf in einer Reihe — eine Anordnung, kein neuer Baustein. **Kein neues Token.** |

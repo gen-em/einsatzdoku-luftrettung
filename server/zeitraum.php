@@ -116,6 +116,10 @@ ui_seite_start(['titel' => $titel, 'karte' => true]);
         </div>
       </div>
       <div class="karte-inhalt">
+        <?php /* Solange nach den gezeigten Zeilen der übrige Zeitraum
+                 geöffnet wird: Pins der Karte und die Kennzahlen
+                 aus geschützten Angaben kommen erst danach. */ ?>
+        <?= ui_ladeplatz('Weitere geschützte Angaben werden geöffnet …', ['attr' => ' id="treffer-lade"']) ?>
         <p id="leer" class="feld-hinweis" hidden>In diesem Zeitraum sind keine Einsätze erfasst.</p>
         <?php /* Ab 720 px die Tabelle im eigenen Scrollbehälter, darunter die
                  dreizeilige Kachel mit Artzeichen und Datum — beide aus
@@ -694,17 +698,8 @@ function zeichneSegment(){
  * 0,7 s spaeter (7,0 statt 6,3 s) — die Bilder dazwischen kosten Zeit. Das
  * ist gewollt (E-R4-64): Wer die Seite oeffnet, will zuerst die Liste.
  *
- * `setTimeout(…, 100)` DANEBEN, weil ein Tab im Hintergrund kein Bild
- * zeichnet und `requestAnimationFrame` dort nie feuert — die Seite stuende
- * sonst still, bis jemand hinsieht. */
-function naechstesBild(){
-  return new Promise(weiter => {
-    let fertig = false;
-    const los = () => { if (!fertig) { fertig = true; setTimeout(weiter, 0); } };
-    requestAnimationFrame(los);
-    setTimeout(los, 100);
-  });
-}
+ * Das Abwarten eines Bildes steht in `EdHtml.naechstesBild()`,
+ * weil die Suche es ebenso braucht. */
 
 /* DIE KARTE EIN BILD SPAETER — und nur die letzte, die bestellt ist. Wechselt
  * der Tab in der Luecke, zeichnet zeichne() die Karte der neuen Ansicht
@@ -714,7 +709,7 @@ function naechstesBild(){
 let kartenLauf = 0;
 async function karteNachBild(liste){
   const lauf = ++kartenLauf;
-  await naechstesBild();
+  await EdHtml.naechstesBild();
   if (lauf !== kartenLauf) { return; }
   zeichneKarte(liste);
   if (fixierteMid != null) { wendeHervorhebungAn(fixierteMid); }
@@ -908,7 +903,7 @@ function zeigeFehler(msg){
   // Wechsel: Sonst zeigte ein sofort kopierter Link auf keine bestimmte.
 
   if (PAT_WRAP) {
-    await naechstesBild();   // die Tabelle erscheint, bevor alles entschluesselt wird
+    await EdHtml.naechstesBild();   // die Tabelle erscheint, bevor alles entschluesselt wird
     await entschluesselePat();
   }
 })();
@@ -921,36 +916,56 @@ async function entschluesselePat(){
   /* Schluessel, Banner, Entschluesseln und Zaehlen: EdPat.listeLaden()
      (Schritt 15 AP8f). Der Nachlauf bleibt hier — diese Seite vermerkt
      die Koordinate nur und ueberlaesst das Zeichnen dem Tab. */
+  /* DIE GEZEIGTEN ZEILEN ZUERST: erst die 200 der
+     Tabelle, die neu gezeichnet wird, dann der Rest; danach wie zuvor
+     Tabelle, Kennzahlen und Karte. Sortiert die Tabelle nach einer
+     geschuetzten Spalte, steht nicht fest, welche Zeilen oben stehen — dann
+     alles am Stueck. */
+  const lade = EdHtml.ladeplatz(document.getElementById('treffer-lade'));
+  const zuerst = tabelle.sortGeschuetzt() ? [] : tabelle.gezeigt();
   const { ck, zahl } = await EdPat.listeLaden(missions, {
     wrap: PAT_WRAP, salt: KDF_SALT, iter: KDF_ITER,
     banner: document.getElementById('lockbanner'),
+    zuerst: zuerst,
+    nachZuerst: async () => {
+      zuerst.forEach(patUebernehmen);
+      tabelle.zeichne();
+      lade.zeige('Weitere geschützte Angaben werden geöffnet …');
+      await EdHtml.naechstesBild();
+    },
   });
+  lade.weg();
   if (!ck) { return; }
-  for (const m of missions) {
-    if (m._patState !== 'ok') { continue; }
-    const o = m._pat;
-    if (o.dx != null) { m._dx = o.dx; }
-    const alter = EdPat.alterAnzeige(o, m.day);   // Alter zum jeweiligen Einsatztag
-    if (alter != null) { m._age = alter; }
-    if (o.loc && o.loc.addr) { m._ort = extractOrt(o.loc.addr); }
-    /* Die Koordinate wird am Einsatz VERMERKT, der Pin aber erst in
-       zeichneKarte() gesetzt: Welche Pins auf der Karte liegen, entscheidet
-       der Tab, und der kann nach dem Entschluesseln noch wechseln. */
-    if (o.loc && o.loc.lat != null) {
-      m._lat = o.loc.lat; m._lon = o.loc.lon; m._addr = o.loc.addr;
-    }
-    /* Die Hoehe des Einsatzorts (Kachel „Hoechster Einsatzort") liegt seit
-       S11-05b im Blob; gesperrt bleibt die Kachel leer. */
-    if (o.ortshoehe != null) { m.site_ele_m = Number(o.ortshoehe); }
-  }
+  missions.forEach(patUebernehmen);
   EdPat.zeigeUnlesbar(zahl);
   /* Immer neu zeichnen: Die Tabelle hat jetzt Ort, Alter und Diagnose, und
      die Karte ihre Pins. Ein „nur wenn sich etwas geaendert hat" waere hier
      eine zweite Buchfuehrung ueber dieselbe Schleife — die Ersparnis ist ein
      Neuaufbau der Tabelle, den niemand bemerkt. Zwischen Entschluesseln,
-     Tabelle und Karte zeichnet der Browser je ein Bild (naechstesBild()). */
-  await naechstesBild();
+     Tabelle und Karte zeichnet der Browser je ein Bild (EdHtml.naechstesBild()). */
+  await EdHtml.naechstesBild();
   zeichne({ karteDanach: true });
+}
+
+/* Was der Zeitraum aus einem geoeffneten Block liest. Einmal je Einsatz;
+   fuer die zuerst gezeigten laeuft es schon nach der ersten Stufe, und ein
+   zweiter Lauf schreibt dieselben Werte. */
+function patUebernehmen(m) {
+  if (m._patState !== 'ok') { return; }
+  const o = m._pat;
+  if (o.dx != null) { m._dx = o.dx; }
+  const alter = EdPat.alterAnzeige(o, m.day);   // Alter zum jeweiligen Einsatztag
+  if (alter != null) { m._age = alter; }
+  if (o.loc && o.loc.addr) { m._ort = extractOrt(o.loc.addr); }
+  /* Die Koordinate wird am Einsatz VERMERKT, der Pin aber erst in
+     zeichneKarte() gesetzt: Welche Pins auf der Karte liegen, entscheidet
+     der Tab, und der kann nach dem Entschluesseln noch wechseln. */
+  if (o.loc && o.loc.lat != null) {
+    m._lat = o.loc.lat; m._lon = o.loc.lon; m._addr = o.loc.addr;
+  }
+  /* Die Hoehe des Einsatzorts (Kachel „Hoechster Einsatzort") liegt seit
+     S11-05b im Blob; gesperrt bleibt die Kachel leer. */
+  if (o.ortshoehe != null) { m.site_ele_m = Number(o.ortshoehe); }
 }
 
 document.getElementById('unlockbtn').addEventListener('click', () => entschluesselePat());

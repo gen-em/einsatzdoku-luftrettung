@@ -27,6 +27,11 @@
       starten(u) {
         if (!Object.prototype.hasOwnProperty.call(offen, u)) {
           offen[u] = fetch(u, { credentials: 'same-origin' });
+          /* Scheitert der Abruf, bevor die Seite ihn abholt, gaelte der
+           * Fehler bis dahin als unbehandelt und stuende als Seitenfehler in
+           * der Konsole. Der stille Fang hier aendert nichts an dem, was
+           * `holen()` liefert: Wer darauf wartet, bekommt denselben Fehler. */
+          offen[u].catch(function () {});
         }
       },
       holen(u) {

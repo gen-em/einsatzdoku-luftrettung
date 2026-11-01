@@ -2104,6 +2104,12 @@ nicht erklärbar.
 Die gewählte Ansicht steht im Adressteil hinter dem `#` und bleibt beim Teilen
 eines Links erhalten.
 
+**Wie in der Suche** werden nach dem Entsperren zuerst die gezeigten Zeilen
+lesbar, dann der übrige Zeitraum; solange steht über der Tabelle **„Weitere
+geschützte Angaben werden geöffnet …"**, und die Punkte der Karte und die
+Kacheln aus verschlüsselten Angaben (zum Beispiel der höchste Einsatzort)
+kommen danach (seit Web 23.6.0).
+
 **Höchstens 200 Einsätze auf einmal** (seit Web 21.4.0), wie in der Suche.
 Hat der Zeitraum mehr, stehen unter der Tabelle **„Weitere 200 anzeigen"**
 und **„Alle N anzeigen"**, und hinter der Einsatzzahl über der Tabelle steht
@@ -2289,6 +2295,18 @@ vorkommen — aber nicht im selben Feld. „müller auwiesen" findet also auch e
 Einsatz, bei dem Müller die Besatzung und Auwiesen das Transportziel ist. Das
 Geburtsdatum findest du in beiden Schreibweisen, „12.03.1985" ebenso wie
 „1985-03-12".
+
+**Nach dem Öffnen der Seite** stehen die Treffer zuerst ohne die
+verschlüsselten Angaben da, dann werden die gezeigten Zeilen lesbar (seit
+Web 23.6.0). Solange danach der übrige Bestand entschlüsselt wird, steht
+oben in der Trefferkarte **„Weitere geschützte Angaben werden geöffnet …"**.
+Erst wenn das verschwindet, ist die Trefferliste vollständig: Treffer, die
+nur in Diagnose, Ort, Notizen oder einem anderen verschlüsselten Feld
+stehen, und der Altersfilter kommen erst dann dazu. Bei einigen hundert
+Einsätzen merkst du davon nichts; bei mehreren tausend auf einem langsamen
+Gerät ein bis zwei Sekunden. Sortierst du nach Einsatzort, Alter oder
+Diagnose, wird alles auf einmal entschlüsselt — welche Zeilen dann oben
+stehen, steht vorher nicht fest.
 
 **Und / Oder / Nicht.** Seit Web 7.0.0 lassen sich Begriffe verknüpfen. Wer das
 nicht braucht, merkt nichts davon — ohne Operator verhält sich die Suche exakt

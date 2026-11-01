@@ -348,7 +348,19 @@
    * @param {string} o.salt    KDF_SALT
    * @param {number} o.iter    KDF_ITER
    * @param {Element} [o.banner] Sperrbanner; fehlt es, wird keins gesetzt
+   * @param {Array}  [o.zuerst]  die Eintraege, die die Seite gerade zeigt —
+   *                             sie werden ZUERST geoeffnet
+   * @param {Function} [o.nachZuerst] wird gerufen (und abgewartet), sobald
+   *                             `zuerst` offen ist und bevor der Rest folgt;
+   *                             die Seite zeichnet darin, was sie hat
    * @returns {Promise<{ck: ?Object, zahl: ?Object}>}
+   *
+   * DIE GEZEIGTEN ZUERST. Suche und Zeitraum zeigen 200 Zeilen aus einem
+   * Bestand von tausenden; ohne die Option wird alles geoeffnet, bevor eine
+   * Zeile lesbar war. Mit `zuerst` und `nachZuerst` sind die gezeigten
+   * Zeilen nach einem Bruchteil davon lesbar, der Rest folgt. `zahl` gilt
+   * danach fuer die GANZE Liste, wie ohne die Option — jeder Eintrag wird
+   * genau einmal geoeffnet und gezaehlt.
    * ----------------------------------------------------------------- */
   async function listeLaden(liste, o) {
     const opt = o || {};
@@ -364,7 +376,16 @@
         : !(liste || []).some(m => m && m.pat_blob);
     }
     if (!ck) { return { ck: null, zahl: null }; }
-    return { ck: ck, zahl: await entschluessleListe(liste, ck) };
+    const zuerst = Array.isArray(opt.zuerst) ? opt.zuerst : [];
+    if (!zuerst.length || typeof opt.nachZuerst !== 'function') {
+      return { ck: ck, zahl: await entschluessleListe(liste, ck) };
+    }
+    const vorne = new Set(zuerst);
+    const z1 = await entschluessleListe(zuerst, ck);
+    await opt.nachZuerst();
+    const z2 = await entschluessleListe((liste || []).filter(m => !vorne.has(m)), ck);
+    return { ck: ck, zahl: { ok: z1.ok + z2.ok, leer: z1.leer + z2.leer,
+                             unlesbar: z1.unlesbar + z2.unlesbar, gesperrt: false } };
   }
 
   window.EdPat = { alterAm, alterAnzeige, alterText, name, datumDe,

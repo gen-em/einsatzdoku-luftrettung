@@ -287,12 +287,19 @@ def bausteine_lesen() -> list[dict]:
         'ui_seite_start': '', 'ui_seite_ende': '', 'ui_favicon': '',
         'ui_krypto_bootstrap': '', 'ui_logo': '',
     }
+    # HANDWERKSZEUG MIT `<` IM RUMPF: Es liest Markup, statt es auszugeben —
+    # `ui_symbolvorrat_inhalt()` sucht das `<g id="i">` in den Symboldateien.
+    # `ui_symbolvorrat_steht()` traegt keins; der Rumpf reicht hier bis zur
+    # naechsten Funktion, und deren Kopfkommentar nennt `<svg>`.
+    # `ui_symbolvorrat()` gibt Markup aus, aber unsichtbar und ohne Regel im
+    # Stylesheet — kein Baustein, den man gestaltet oder waehlt.
+    HANDWERK = {'ui_symbolvorrat_inhalt', 'ui_symbolvorrat_steht', 'ui_symbolvorrat'}
     treffer = list(re.finditer(r'^function (ui_\w+)\(', text, re.M))
     for i, m in enumerate(treffer):
         name = m.group(1)
         bis = treffer[i + 1].start() if i + 1 < len(treffer) else len(text)
         rumpf = text[m.end():bis]
-        if '<' not in rumpf:
+        if '<' not in rumpf or name in HANDWERK:
             continue                       # Handwerkszeug, kein Baustein
         zeile = text[:m.start()].count('\n') + 1
         stamm = name[3:]

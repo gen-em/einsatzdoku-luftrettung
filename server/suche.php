@@ -338,6 +338,10 @@ ui_seite_start(['titel' => 'Suche']);
         </div>
       </div>
       <div class="karte-inhalt">
+        <?php /* Solange nach den gezeigten Zeilen der übrige Bestand
+                 geöffnet wird: Treffer in geschützten Feldern und
+                 der Altersfilter kommen erst danach. */ ?>
+        <?= ui_ladeplatz('Weitere geschützte Angaben werden geöffnet …', ['attr' => ' id="treffer-lade"']) ?>
         <p id="leer" class="feld-hinweis" hidden>Keine Treffer.</p>
         <?php /* Ab 720 px die Tabelle im eigenen Scrollbehälter, darunter die
                  dreizeilige Kachel mit Artzeichen und Datum — beide aus
@@ -687,16 +691,34 @@ function baueAuswahllisten() {
 
 /* ---- Filterlogik ---------------------------------------------------- */
 
+/* DIE FILTERFELDER EINMAL JE DURCHLAUF LESEN. trifft() fragt rund dreissig
+   Felder fuer JEDEN Einsatz; aus der Seite gelesen waeren das bei 5096
+   Einsaetzen 150 000 Abfragen, gemessen rund 0,4 s je Durchlauf bei Drossel
+   6×. anwenden() legt fuer seinen Durchlauf einen Zwischenspeicher an und
+   raeumt ihn danach; ausserhalb davon lesen die Helfer unmittelbar. */
+let feldspeicher = null;
+function einmal(schluessel, lies) {
+  if (feldspeicher === null) { return lies(); }
+  if (!feldspeicher.has(schluessel)) { feldspeicher.set(schluessel, lies()); }
+  return feldspeicher.get(schluessel);
+}
+
+function feld(id) {
+  return einmal('w:' + id, () => $(id).value);
+}
+
 function zahl(id) {
-  const v = $(id).value.trim();
-  if (v === '') { return null; }
-  const n = Number(v);
-  return isNaN(n) ? null : n;
+  return einmal('z:' + id, () => {
+    const v = $(id).value.trim();
+    if (v === '') { return null; }
+    const n = Number(v);
+    return isNaN(n) ? null : n;
+  });
 }
 
 function hakenWerte(id) {
-  return [...$(id).querySelectorAll('input[type=checkbox]')]
-    .filter(c => c.checked).map(c => c.value);
+  return einmal('h:' + id, () => [...$(id).querySelectorAll('input[type=checkbox]')]
+    .filter(c => c.checked).map(c => c.value));
 }
 
 /** ISO-Wochentag 1 (Mo) … 7 (So) — über UTC gerechnet, damit die Zeitzone
@@ -715,15 +737,17 @@ function minuten(v) {
 
 /** Dreiwert-Segmentwahl gegen einen Ja/Nein-Wert prüfen. */
 function dreiwert(id, wert) {
-  const an = $(id).querySelector('input:checked');
-  const v = an ? an.value : '';
+  const v = einmal('d:' + id, () => {
+    const an = $(id).querySelector('input:checked');
+    return an ? an.value : '';
+  });
   if (v === '') { return true; }
   return v === 'j' ? !!wert : !wert;
 }
 
 /** Auswahlwert gegen ein Feld prüfen — ohne Rücksicht auf Groß-/Kleinschreibung. */
 function gleich(id, wert) {
-  const v = $(id).value;
+  const v = feld(id);
   if (v === '') { return true; }
   return String(wert || '').trim().toLowerCase() === v.toLowerCase();
 }
@@ -786,11 +810,11 @@ function trifft(m) {
      irgendwo vorkommen" — UND über die Wörter, ODER über die Felder. */
   if (freitext !== null && !freitext(m._hay)) { return false; }
 
-  const dv = $('f-dv').value, db = $('f-db').value;
+  const dv = feld('f-dv'), db = feld('f-db');
   if (dv !== '' && m.day < dv) { return false; }
   if (db !== '' && m.day > db) { return false; }
 
-  const zv = minuten($('f-zv').value), zb = minuten($('f-zb').value);
+  const zv = minuten(feld('f-zv')), zb = minuten(feld('f-zb'));
   if (zv != null || zb != null) {
     if (m.start_min == null) { return false; }
     if (zv != null && zb != null && zv > zb) {
@@ -827,7 +851,7 @@ function trifft(m) {
     if (!gleich('f-crew-' + r, m.crew[r])) { return false; }
   }
 
-  const rm = $('f-rm').value;
+  const rm = feld('f-rm');
   if (rm !== '' && !m.resources.some(r => r.trim().toLowerCase() === rm.toLowerCase())) { return false; }
 
   if (!gleich('f-tz', m.transport_dest)) { return false; }
@@ -1104,7 +1128,9 @@ function anwenden() {
   freitext = EdSuchtext.pruefer(q);
   trefferworte = EdSuchtext.woerter(q);
   $('qleeren').hidden = q.trim() === '';
-  tabelle.setData(missions.filter(trifft));
+  feldspeicher = new Map();
+  try { tabelle.setData(missions.filter(trifft)); }
+  finally { feldspeicher = null; }
   fragmentSchreiben();
 }
 
@@ -1116,10 +1142,28 @@ async function entschluesselePat() {
      Altersfilter sperren — sonst saehe er benutzbar aus und lieferte
      stumm nichts. Genau deshalb gibt EdPat.listeLaden() zurueck, statt zu
      entscheiden (Schritt 15 AP8f). */
+  /* DIE GEZEIGTEN ZEILEN ZUERST. Die Tabelle zeigt 200
+     aus dem ganzen Bestand; die werden zuerst geoeffnet und neu gezeichnet,
+     dann der Rest, und erst danach wird wie zuvor neu gefiltert. Bis dahin
+     gilt die Trefferliste von vor dem Entsperren — Treffer in geschuetzten
+     Feldern und der Altersfilter kommen mit dem Rest, und das sagt der
+     Ladeplatz. Sortiert die Tabelle nach einer geschuetzten Spalte, steht
+     nicht fest, welche Zeilen oben stehen; dann wird alles am Stueck
+     geoeffnet. */
+  const lade = EdHtml.ladeplatz($('treffer-lade'));
+  const zuerst = tabelle.sortGeschuetzt() ? [] : tabelle.gezeigt();
   const { ck, zahl } = await EdPat.listeLaden(missions, {
     wrap: PAT_WRAP, salt: KDF_SALT, iter: KDF_ITER,
     banner: $('lockbanner'),
+    zuerst: zuerst,
+    nachZuerst: async () => {
+      zuerst.forEach(patUebernehmen);
+      tabelle.zeichne();
+      lade.zeige('Weitere geschützte Angaben werden geöffnet …');
+      await EdHtml.naechstesBild();
+    },
   });
+  lade.weg();
   entsperrt = !!ck;
   $('f-av').disabled = $('f-ab').disabled = !entsperrt;
   $('lab-av').classList.toggle('feld-gesperrt', !entsperrt);
@@ -1131,25 +1175,32 @@ async function entschluesselePat() {
      * auch nicht aussehen wie einer ohne Angaben. Beides entscheidet EdPat,
      * nicht diese Seite (M6-06, Baustein B8). _pat setzt die Schleife dort
      * bereits; hier bleibt nur, was die Suche daraus macht. */
-    for (const m of missions) {
-      if (m._patState !== 'ok') { continue; }
-      const o = m._pat;
-      m._dx  = o.dx != null ? o.dx : null;
-      m._age = EdPat.alterAnzeige(o, m.day);
-      if (o.loc && o.loc.addr) { m._ort = EdMissionTable.extractOrt(o.loc.addr); }
-      /* DAS TRANSPORTZIEL AUS DEM BLOB (S11-05b). Bis dahin lieferte der
-         Suchindex es im Klartext; jetzt steht es erst nach dem Entsperren
-         unter demselben Namen da, und Filter und Auswahlliste lesen es wie
-         vorher. */
-      m.transport_dest = (o.transport_dest && o.transport_dest.addr) || null;
-    }
+    missions.forEach(patUebernehmen);
     const tzGewaehlt = $('f-tz').value;   // eine Wahl aus dem Adressfilter bleibt stehen
     fuelleSelect('f-tz', optionen(missions.map(m => m.transport_dest).concat(tzGewaehlt || [])));
     $('f-tz').value = tzGewaehlt;
     EdPat.zeigeUnlesbar(zahl);
   }
-  missions.forEach(baueHeuhaufen);
+  /* Neu gebaut wird der Heuhaufen nur, wo der Block etwas beitraegt — fuer
+     alle anderen ist er derselbe wie beim Laden. */
+  missions.forEach(m => { if (m._pat) { baueHeuhaufen(m); } });
   anwenden();
+}
+
+/* Was die Suche aus einem geoeffneten Block liest. Einmal je Einsatz; fuer
+   die zuerst gezeigten laeuft es schon nach der ersten Stufe, und ein
+   zweiter Lauf schreibt dieselben Werte. */
+function patUebernehmen(m) {
+  if (m._patState !== 'ok') { return; }
+  const o = m._pat;
+  m._dx  = o.dx != null ? o.dx : null;
+  m._age = EdPat.alterAnzeige(o, m.day);
+  if (o.loc && o.loc.addr) { m._ort = EdMissionTable.extractOrt(o.loc.addr); }
+  /* DAS TRANSPORTZIEL AUS DEM BLOB (S11-05b). Bis dahin lieferte der
+     Suchindex es im Klartext; jetzt steht es erst nach dem Entsperren
+     unter demselben Namen da, und Filter und Auswahlliste lesen es wie
+     vorher. */
+  m.transport_dest = (o.transport_dest && o.transport_dest.addr) || null;
 }
 
 /* ---- Start ---------------------------------------------------------- */

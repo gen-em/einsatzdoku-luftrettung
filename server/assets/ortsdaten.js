@@ -15,8 +15,6 @@
  *                                         Punkte {seq, lat, lon, ele, ts}
  *   EdOrtsdaten.einsatz(m, k)             die Einsatzhülle, geöffnet, oder null
  *   EdOrtsdaten.fuerAnsicht(m, ck)        füllt m.track, m.phases, m.resus
- *   EdOrtsdaten.ladeplatz(el)             der Ladeplatz (ui_ladeplatz) mit
- *                                         300 ms Schwelle
  *   EdOrtsdaten.melden(e, art, id)        eine Hülle, die nicht aufging, an
  *                                         den Reiter System; die
  *                                         Art aus dem Fehler geht vor
@@ -191,33 +189,6 @@
       .concat((s.ereignisse || []).map((e) => ({ label: art[e.art] || e.art, time: uhr(e.t) }))))
       : null;
     return m;
-  }
-
-  /**
-   * Der Ladeplatz einer Stelle (`ui_ladeplatz()`): `zeige(text, still)`
-   * merkt sich den Zustand und zeigt ihn erst nach 300 ms, `weg()` nimmt
-   * ihn — und einen noch nicht abgelaufenen Zeitgeber — wieder fort.
-   */
-  function ladeplatz(el) {
-    let uhr = null;
-    const setze = (text, still) => {
-      if (!el) { return; }
-      const t = el.querySelector('.ladeplatz-text');
-      if (t) { t.textContent = text; }
-      el.classList.toggle('ladeplatz-still', !!still);
-    };
-    return {
-      zeige(text, still) {
-        setze(text, still);
-        if (el && el.hidden && uhr === null) {
-          uhr = setTimeout(() => { uhr = null; el.hidden = false; }, 300);
-        }
-      },
-      weg() {
-        if (uhr !== null) { clearTimeout(uhr); uhr = null; }
-        if (el) { el.hidden = true; }
-      },
-    };
   }
 
   /**
@@ -504,7 +475,7 @@
   }
 
   window.EdOrtsdaten = { schluessel: schluessel, spur: spur, einsatz: einsatz,
-                         fuerAnsicht: fuerAnsicht, ladeplatz: ladeplatz, melden: melden,
+                         fuerAnsicht: fuerAnsicht, melden: melden,
                          einsatzZeiten: einsatzZeiten, einsatzInnen: einsatzInnen,
                          einsatzVerschliessen: einsatzVerschliessen, ortshoehe: ortshoehe,
                          stueckeBauen: stueckeBauen, gepacktBauen: gepacktBauen,

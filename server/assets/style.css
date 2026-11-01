@@ -561,12 +561,17 @@ img,svg,video{max-width:100%;height:auto}
 /* ---- Symbole -------------------------------------------------------------
  *
  * Jedes Zeichen der Oberfläche liegt als eigene Datei unter
- * assets/images/symbole/ und wird per Verweis eingebunden:
+ * assets/images/symbole/. Jede Seite trägt sie als Vorrat (`ui_symbolvorrat()`,
+ * ein `<svg display="none">` am Anfang des `<body>`), und eingebunden wird
+ * per Verweis darauf:
  *
- *     <svg class="symbol"><use href="assets/images/symbole/haus.svg#i"></use></svg>
+ *     <svg class="symbol"><use href="#sym-haus"></use></svg>
+ *
+ * Ohne Vorrat — Seiten mit eigener Hülle — zeigt der Verweis auf die Datei
+ * (`assets/images/symbole/haus.svg#i`).
  *
  * WARUM DIE STRICHATTRIBUTE HIER STEHEN und nicht in der Datei: Der Verweis
- * holt das <g id="i"> — nicht das <svg> darum. Die Attribute fill="none",
+ * holt das <g id="i"> bzw. dessen Inhalt im <symbol> — nicht das <svg> darum. Die Attribute fill="none",
  * stroke="currentColor" und stroke-width="2" stehen in der Datei aber am
  * <svg>, damit sie sich auch einzeln öffnen und ansehen lässt. Beim Verweis
  * sind sie deshalb nicht dabei, und ohne Ersatz malte der Browser schwarze

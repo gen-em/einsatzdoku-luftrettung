@@ -9895,3 +9895,75 @@ zutreffen.
      die in `pruefablauf.json` und `textprobe-ausnahmen.json` über die
      Konkordanz umgestellt, dazu `install.php` „(5b.4)" → 7.5. Abnahme: 0
      alte Nummern; die Dokumentenprobe misst es seither in Stufe 1 (Nr. 188).
+
+51. **Die Suchseite verarbeitet 5 000 Einträge, um 200 zu zeigen.** · gehört zu: nach v1.0 · Stand: erledigt · seit 01.09.2026
+     Befund (S2/AP9, 5002 Einsätze, Drossel 6×): 3,77 s bis die geschützten
+     Spalten lesbar sind, davon rund 0,1 s Entschlüsselung der 200 gezeigten
+     Zeilen. Entschlüsselt werden alle 5002, weil die Freitextsuche auch in
+     Diagnose, Alter und Einsatzort sucht; ohne Filter braucht es sie nicht.
+     Weg: Entschlüsselung auf das Gebrauchte verschieben (angezeigte Zeilen
+     zuerst, Rest im Hintergrund oder beim ersten Filter). Kein Umbau des
+     Suchindex (E-S2-16). Vorher messen, welcher Posten vor der Tabelle
+     wiegt — „es ist die Krypto" war in AP9 schon einmal falsch.
+     Werdegang bis 26.09.2026: `docs/Backlog.md@f5bddc2`, Nr. 51.
+     Erledigt 31.10.2026 mit Nr. 381 in R17-29 (Web 23.6.0): Die Suche
+     öffnet die 200 gezeigten Zeilen zuerst und liest ihre Filterfelder
+     einmal je Durchlauf. Gemessen, welcher Posten wiegt: das Entschlüsseln
+     1,25 s von 6,1 s bei Drossel 6× — wie hier vermutet, nicht der größte.
+
+380. **Seitenaufbau: die Skripte jeder Seite kosten bei Drossel 6× 0,7 bis 1,5 s, bevor Daten geholt werden.** · gehört zu: 12b · Stand: erledigt · seit 13.10.2026
+     *Aufgenommen 13.10.2026 mit S11-13 (Konzept S11, Vorschlag V2,
+     E-S11-33).* Gemessen am Messstand (`tools/messstand/ausgangsmessung.md`,
+     „Zerlegung des Seitenaufbaus"): Das HTML ist nach 0,04 bis 0,10 s da,
+     `DOMContentLoaded` erst nach 0,9 bis 1,5 s (Startseite 2,05 s) — 15 bis
+     22 einzelne Skriptdateien je Seite. Ziel nach E-S11-32: „sichtbar" so
+     schnell wie möglich, Richtung unter 3 s bei 6× und unter 1 s ungedrosselt.
+     *Weg:* zuerst eine Seite profilieren (Laden, Übersetzen oder Ausführen?),
+     dann Skripte zusammenfassen oder je Seite nur laden, was sie braucht.
+     Ein Bauschritt wäre neu. Geschätzt 20 bis 35 % je Seite.
+     *Abnahme:* Zerlegung vorher und nachher mit Eichlauf (F-S11-25);
+     Bilderlauf und Proben grün. Unmittelbar nach S11 (Betreiberin).
+     Erledigt 31.10.2026 mit R17-29 (Web 23.6.0): profiliert — nicht die
+     Skripte wiegen (alles JavaScript der Einsatzseite rund 0,5 s), sondern
+     rund 500 Symbole der Tagesleiste, je eines ein eigenes SVG-Dokument.
+     Jetzt einmal je Seite als Vorrat (`ui_symbolvorrat()`); kein
+     Bauschritt. Nachbearbeitung 1,78 → 0,85 s bis `DOMContentLoaded`,
+     Einsatz und Diensttag rund ein Fünftel. Zahlen und Eichlauf:
+     `tools/messstand/ausgangsmessung.md`, „R17-29".
+
+381. **Suche und Zeitraumübersicht verarbeiten alle Einsätze, bevor sie 200 anzeigen.** · gehört zu: 12b · Stand: erledigt · seit 13.10.2026
+     *Aufgenommen 13.10.2026 mit S11-13 (Konzept S11, Vorschlag V3,
+     E-S11-33).* Gemessen bei Drossel 6×: Suche 4,25 s sichtbar, 5,4 MB aus
+     `api/`, 4852 Entschlüsselungen, 2,96 s belegter Hauptfaden; Zeitraum
+     Jahr 5,56 s, 2,4 MB, 3876 Entschlüsselungen, 5,49 s Hauptfaden.
+     *Weg:* zuerst die angezeigten 200 entschlüsseln und zeigen, den Rest in
+     Portionen; Gesamtzahl, Kilometer, Kacheln und Freitext füllen sich mit
+     Ladeanzeige nach (E-S11-27). Weniger Daten vom Server nur ohne
+     Freitextfilter — verschlüsselte Felder kann er nicht durchsuchen. Nr. 51
+     gehört dazu. Geschätzt Suche 50 bis 65 %, Zeitraum Jahr 45 bis 55 %.
+     *Abnahme:* Zerlegung vorher und nachher mit Eichlauf; Trefferzahl und
+     Reihenfolge gleich. Unmittelbar nach S11 (Betreiberin).
+     Erledigt 31.10.2026 mit R17-29 (Web 23.6.0): die gezeigten 200 zuerst
+     (`EdPat.listeLaden()` mit `zuerst`), der Rest mit Ladeplatz, danach wie
+     zuvor gefiltert. Geschützt lesbar bei 6×: Suche 6,1 → 3,8 s, Jahr
+     5,7 → 3,0 s, Monat 4,0 → 2,1 s. Trefferzahl und Reihenfolge in 15
+     Fällen über 34 006 Zeilen gleich. Daten vom Server unverändert
+     (E-R17-90).
+
+382. **Startseite und Anmelden warten bei Drossel 6× lange auf die erste Antwort des Servers.** · gehört zu: 12b · Stand: erledigt · seit 13.10.2026
+     *Aufgenommen 13.10.2026 mit S11-13 (Konzept S11, Vorschlag V4,
+     E-S11-33).* Zerlegung bei 6×: erste Antwort nach 0,93 s (Startseite)
+     und 2,15 s (Anmelden), ungedrosselt 0,07 und 0,13 s. Ob die Seite so
+     lange braucht oder die Messung die Weiterleitung nach der Anmeldung
+     mitzählt, ist offen — es waren Einzelläufe.
+     *Weg:* zuerst nachmessen, mehrfach und getrennt nach Weiterleitung;
+     erst danach entscheiden, ob etwas zu bauen ist. Die Ableitung des
+     Passworts (PBKDF2) bleibt absichtlich langsam.
+     *Abnahme:* eine Zahl je Seite mit Eichlauf und ein Satz, woran es liegt.
+     Unmittelbar nach S11 (Betreiberin).
+     Erledigt 31.10.2026 mit R17-29 (Web 23.6.0), ohne Bau: Fünfmal
+     nachgemessen, getrennt nach Weiterleitung und Server. Der Server
+     rechnet 20 bis 30 ms, Anmelden samt Weiterleitung rund 90 ms, bei 6×
+     wie ungedrosselt. Die alten Zahlen waren Einzelläufe, in denen der
+     Browser auf die Vorseite wartete. Beim Anmelden gehen rund 0,8 s in
+     die Ableitung des Schlüssels (gewollt), dann der Seitenaufbau.

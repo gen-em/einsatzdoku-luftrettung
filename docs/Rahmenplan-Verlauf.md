@@ -9,6 +9,7 @@ Verlauf bis zum Schnitt). Die Fassungszählung läuft fortlaufend weiter.
 
 | Fassung | Datum | Anlass | Was |
 |---|---|---|---|
+| 183 | 31.10.2026 | R17-29, Zuarbeit, Berichtigung | Zweig ab R17-29 `claude/new-session-p1duc7`; 6.1: Prüfliste R17 bis P-R17-40 (Seitenaufbau, Suche und Zeitraum). Berichtigt: Der Kopf nannte `main` bei `2e9bc9c` (PR #122) — seit PR #123 am 30.10.2026 `9dd9790` mit Web 23.5.1. |
 | 182 | 30.10.2026 | Zuarbeit | 6.1: Prüfliste R17 bis P-R17-39 (Läuferadresse, Gerätesummen, Selbstproben in Stufe 1; R17-28). |
 | 181 | 29.10.2026 | Zuarbeit | 6.1: P-R17-29 erledigt — SMTP-Benutzer und -Passwort in beiden `config.php` (Betreiberin, vor dem Zwischen-PR mit Web 23.5.1). |
 | 180 | 28.10.2026 | Zuarbeit | 6.1: Prüfliste R17 bis P-R17-38 (R17-26 fehlte seit Web 23.5.0, R17-27). Berichtigt: Die Zuarbeit zum Nachlösen nannte `tools/geraetemodelle/nachaufloesen.php`, seit PK-04 `tools/erzeugen/geraetemodelle-nachaufloesen.php` (Dokumentenprobe, R17-27). |

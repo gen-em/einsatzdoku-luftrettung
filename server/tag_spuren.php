@@ -293,7 +293,7 @@ SPUREN.forEach(() => linien.push(null));
    dem privaten Schluessel des Kontos, gesperrte Zeitraeume fallen weg. Die
    Liste darunter steht derweil schon und reagiert, sobald eine Linie da ist. */
 async function linienZeichnen() {
-  const lade = EdOrtsdaten.ladeplatz(document.getElementById('spuren-lade'));
+  const lade = EdHtml.ladeplatz(document.getElementById('spuren-lade'));
   if (!SPUREN.some(s => s.spur_stuecke && s.spur_stuecke.length)) { lade.weg(); return; }
   lade.zeige('Wartet auf dein Passwort', true);
   const ck = await EdUnlock.ensureContentKey(PAT_WRAP, KDF_SALT, KDF_ITER);

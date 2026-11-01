@@ -106,6 +106,22 @@ await kontext.addInitScript(() => {
     }
   }).observe(document, { childList: true, subtree: true });
 
+  /* GESCHUETZT LESBAR (Anlass: Nr. 381). Suche und Zeitraum zeigen ihre
+   * Zeilen, BEVOR sie entschluesseln, und zeichnen die Tabelle danach neu.
+   * „Sichtbar" sagt deshalb nicht, wann Diagnose und Ort zu lesen sind.
+   * Das sagt der erste Neuaufbau der Tabelle nach dem ersten `decrypt`:
+   * `lesbar`, in ms ab Navigationsbeginn. */
+  z.decryptVon = null; z.lesbar = null;
+  new MutationObserver(function () {
+    const tb = document.querySelector('#suchtable tbody, #rangebody');
+    if (tb && !tb.__messstand) {
+      tb.__messstand = true;
+      new MutationObserver(function () {
+        if (z.lesbar === null && z.decryptVon !== null) { z.lesbar = performance.now(); }
+      }).observe(tb, { childList: true });
+    }
+  }).observe(document, { childList: true, subtree: true });
+
   /* DIE KRYPTO-ZEIT: jeder Aufruf von decrypt, encrypt, deriveBits,
    * deriveKey und importKey mit Beginn und Ende. Die Aufrufe laufen
    * nebeneinander; gemeldet wird deshalb die Spanne vom ersten Beginn bis
@@ -116,6 +132,7 @@ await kontext.addInitScript(() => {
     crypto.subtle[name] = function (...args) {
       const t = performance.now();
       z.krypto.n++;
+      if (name === 'decrypt' && z.decryptVon === null) { z.decryptVon = t; }
       if (z.krypto.von === null) { z.krypto.von = t; }
       const fertig = () => { z.krypto.bis = Math.max(z.krypto.bis || 0, performance.now()); };
       return echt(...args).then((r) => { fertig(); return r; }, (e) => { fertig(); throw e; });
@@ -261,6 +278,16 @@ async function messen(name, tun) {
     const lang = (z.lang || []);
     return {
       server_ms: r(nav.responseStart), html_ms: r(nav.responseEnd),
+      /* DIE ERSTE ANTWORT ZERLEGT (Anlass: Nr. 382): bis zum Ende einer
+       * Weiterleitung (beim Anmelden das POST samt 302), bis die Anfrage
+       * hinausgeht (dazwischen wartet der Browser auf die Vorseite), und
+       * was der Server allein braucht. „Server" allein vermischt die drei,
+       * und ein Einzellauf mit wartender Vorseite sieht dann aus wie ein
+       * langsamer Server. */
+      umleitung_ms: nav.redirectCount ? r(nav.redirectEnd) : 0,
+      anfrage_ms: r(nav.requestStart),
+      server_allein_ms: nav.requestStart ? r(nav.responseStart - nav.requestStart) : null,
+      lesbar_ms: r(z.lesbar),
       dom_ms: r(nav.domContentLoadedEventEnd),
       skripte: skripte.length, skripte_ende_ms: r(Math.max(0, ...skripte.map((e) => e.responseEnd))),
       api: api.length, api_ms: r(api.reduce((a, e) => a + e.duration, 0)),
@@ -276,7 +303,8 @@ async function messen(name, tun) {
     + (fehler ? ` · FEHLER ${fehler}` : ''));
   const zl = messung.zerlegung;
   if (zl) {
-    console.log(`    Zerlegung: Server ${zl.server_ms} · HTML ${zl.html_ms} · DOM ${zl.dom_ms} ms`
+    console.log(`    Zerlegung: Server ${zl.server_ms} (Weiterleitung ${zl.umleitung_ms}, Anfrage ab ${zl.anfrage_ms}, allein ${zl.server_allein_ms})`
+      + ` · HTML ${zl.html_ms} · DOM ${zl.dom_ms} ms` + (zl.lesbar_ms != null ? ` · lesbar ${zl.lesbar_ms}` : '')
       + ` · ${zl.skripte} Skripte bis ${zl.skripte_ende_ms} · ${zl.api} api/ (${zl.api_kb} kB) bis ${zl.api_ende_ms}`
       + ` · Krypto ${zl.krypto_n}× ${zl.krypto_von_ms}–${zl.krypto_bis_ms} · Hauptfaden ${zl.lang_n} Aufgaben ${zl.lang_ms} ms`);
   }
@@ -405,7 +433,7 @@ messungen.push(await messen('Tagesansicht (Spur gezeichnet)', async () => {
   return { adresse: seite.url().replace(basis, ''), spurlinien: spuren };
 }));
 
-messungen.push(await messen('Suche — erste Trefferanzeige', async () => {
+const suche = await messen('Suche — erste Trefferanzeige', async () => {
   await seite.goto(`${basis}/suche.php`, { waitUntil: 'domcontentloaded', timeout: 300000 });
   // Auf die erste gefüllte Trefferzeile warten. Nicht auf ein Netzereignis:
   // Die Zeit, um die es geht, ist die bis zur SICHTBAREN Anzeige, und die
@@ -416,7 +444,22 @@ messungen.push(await messen('Suche — erste Trefferanzeige', async () => {
   await trefferDa;
   const zahl = (await seite.locator('#trefferzahl').textContent().catch(() => '') || '').trim();
   return { trefferzahl: zahl };
-}));
+});
+/* „GESCHUETZT LESBAR" NACH DER MESSUNG ABWARTEN, nicht in ihr: Gewartet im
+ * gemessenen Abschnitt, stiege „sichtbar" um die Zeit bis dahin — und um die,
+ * die Playwright braucht, um auf dem belegten Hauptfaden nachzufragen. Die
+ * Marke selbst setzt die Seite; sie wird hier nur abgeholt. */
+try {
+  await seite.waitForFunction(() => window.__messstand && window.__messstand.lesbar !== null,
+                              null, { timeout: 300000, polling: 500 });
+  const lesbar = await seite.evaluate(() => window.__messstand.lesbar);
+  suche.lesbar_s = Math.round(lesbar / 10) / 100;
+  if (suche.zerlegung) { suche.zerlegung.lesbar_ms = Math.round(lesbar); }
+  console.log(`    geschützt lesbar ${suche.lesbar_s} s`);
+} catch (e) {
+  suche.fehler = suche.fehler || 'geschützt lesbar nicht erreicht: ' + String(e.message || e).slice(0, 200);
+}
+messungen.push(suche);
 
 /* ---- DIE BEIDEN LANGE OFFENEN MESSUNGEN ---------------------------------
  *
@@ -493,7 +536,8 @@ try {
     const pruefe = () => {
       if (z.lang.length === zuletzt || performance.now() > bis) {
         const ende = z.lang.reduce((m, l) => Math.max(m, l[1]), 0);
-        fertig({ ersteZeile: z.ersteZeile, ende: z.lang.length ? Math.max(ende, z.ersteZeile || 0) : null });
+        fertig({ ersteZeile: z.ersteZeile, lesbar: z.lesbar,
+                 ende: z.lang.length ? Math.max(ende, z.ersteZeile || 0) : null });
         return;
       }
       zuletzt = z.lang.length;
@@ -504,6 +548,7 @@ try {
   Object.assign(zeitraum, {
     tabellenzeilen: zeilen, einsatzzahl: zahl,
     erste_zeile_im_dom_s: stand.ersteZeile == null ? null : Math.round(stand.ersteZeile / 10) / 100,
+    lesbar_s: stand.lesbar == null ? null : Math.round(stand.lesbar / 10) / 100,
     fertig_s: stand.ende == null ? null : Math.round(stand.ende / 10) / 100,
   });
   if (zeilen > 200) {
@@ -513,6 +558,7 @@ try {
   zeitraum.fehler = zeitraum.fehler || String(e.message || e).slice(0, 300);
 }
 console.log(`    sichtbar ${zeitraum.dauer_s} s · erste Zeile im DOM ${zeitraum.erste_zeile_im_dom_s} s`
+  + ` · geschützt lesbar ${zeitraum.lesbar_s} s`
   + ` · fertig ${zeitraum.fertig_s} s · ${zeitraum.einsatzzahl || '—'}`
   + (zeitraum.fehler ? ` · FEHLER ${zeitraum.fehler}` : ''));
 return zeitraum;
@@ -720,7 +766,8 @@ if (!ziele || !ziele.einsatz || !ziele.tag) {
 
   /* DER MONAT IN DER ZEITRAUMUEBERSICHT: der Monat mit den meisten
    * Einsaetzen im Jahr des neuesten Diensttags, gewaehlt von `messen.py`.
-   * Wiederholt wie die Einzelansichten; Median von „sichtbar" und „fertig". */
+   * Wiederholt wie die Einzelansichten; Median von „sichtbar", „geschützt
+   * lesbar" und „fertig". */
   if (ziele.monat) {
     const laeufe = [];
     const q = `y=${ziele.monat.jahr}&m=${String(ziele.monat.monat).padStart(2, '0')}`;
@@ -730,13 +777,13 @@ if (!ziele || !ziele.einsatz || !ziele.tag) {
     const med = (k) => { const a = laeufe.map(l => l[k]).filter(x => x != null).sort((x, y) => x - y);
                          return a.length ? a[Math.floor(a.length / 2)] : null; };
     const monat = { schritt: 'Zeitraumübersicht (ein Monat)', dauer_s: med('dauer_s'),
-                    fertig_s: med('fertig_s'), laeufe: laeufe.length,
+                    fertig_s: med('fertig_s'), lesbar_s: med('lesbar_s'), laeufe: laeufe.length,
                     dauer_min_s: Math.min(...laeufe.map(l => l.dauer_s)),
                     dauer_max_s: Math.max(...laeufe.map(l => l.dauer_s)),
                     halde_spitze_mb: Math.max(...laeufe.map(l => l.halde_spitze_mb)),
                     einsatzzahl: laeufe[0].einsatzzahl, monat: ziele.monat,
                     fehler: laeufe.map(l => l.fehler).find(Boolean) || null, einzeln: laeufe };
-    console.log(`  ${monat.schritt}: Median sichtbar ${monat.dauer_s} s, fertig ${monat.fertig_s} s`);
+    console.log(`  ${monat.schritt}: Median sichtbar ${monat.dauer_s} s, geschützt lesbar ${monat.lesbar_s} s, fertig ${monat.fertig_s} s`);
     messungen.push(monat);
   } else {
     messungen.push({ schritt: 'Zeitraumübersicht (ein Monat)', fehler: 'MESSSTAND_ZIELE ohne Monat' });

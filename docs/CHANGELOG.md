@@ -14,6 +14,115 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 23.6.0] — unveröffentlicht
+
+Schritt 12b, Paket R17-29 — Seitenaufbau und Mengen (Backlog Nr. 380, 381,
+382, mit Nr. 51). Kein Schema, kein `update.php`. Zuerst gemessen, dann
+gebaut — und die Messung hat zwei der drei Annahmen widerlegt, mit denen die
+Punkte im Backlog standen. Alle Zahlen: Messstand mit 5096 Einsätzen, Drossel
+6×, Mediane; die Tabelle steht in `tools/messstand/ausgangsmessung.md`.
+
+### Geändert
+
+- **Web — die Symbole stehen einmal je Seite, nicht einmal je Verwendung.**
+  Die Annahme in Nr. 380 war, die 15 bis 28 Skripte je Seite kosteten die
+  Zeit bis zum Aufbau. Das Profil sagte etwas anderes: Alles JavaScript der
+  Einsatzseite zusammen kostet rund 0,5 s; der Rest geht in Parsen, Stil,
+  Layout — und in rund 500 SVG-Dokumente. Jedes Symbol verwies auf seine
+  eigene Datei (`<use href="assets/images/symbole/haus.svg#i">`), und dafür
+  baut der Browser je Verweis ein eigenes Dokument; die Tagesleiste trägt
+  500 Diensttage mit je einem Symbol, auf jeder Seite. Jetzt trägt jede
+  Seite die Symbole einmal als unsichtbaren Vorrat am Anfang des `<body>`
+  (`ui_symbolvorrat()`), und die Verweise zeigen dorthin (`#sym-haus`).
+  Die Nachbearbeitung — eine Seite, die fast nur aus der Leiste besteht —
+  ist bis `DOMContentLoaded` doppelt so schnell (1,78 → 0,85 s), Einsatz
+  und Diensttag rund ein Fünftel. **Was bleibt:** Die Symbole liegen
+  weiter als einzelne Dateien, und es gibt keinen Bauschritt — der Vorrat
+  entsteht bei jeder Anfrage aus ihnen. Seiten mit eigener Hülle
+  (Notfallblatt, Wartung) verweisen weiter auf die Datei; `edSymbol()` im
+  Browser nimmt den Vorrat, wo er steht, sonst ebenfalls die Datei. Der
+  Preis sind rund 17 kB mehr je Seite, gepackt ein Bruchteil. Der Vorrat
+  ist über das SVG-Attribut `display="none"` verborgen, ohne Regel im
+  Stylesheet. Die Bilder sind gleich geblieben: fünf Seiten in Chromium,
+  Firefox und WebKit pixelweise verglichen, 14 von 15 ohne jede
+  Abweichung, eines mit 26 Pixeln in einem Bereich, der auch alt gegen alt
+  von Lauf zu Lauf rauscht. Ein erster Entwurf setzte den Vorrat absolut
+  statt ihn zu verbergen; das verschob in Chromium drei Pixel einer
+  Knopfecke und im Stilvergleich das Katalogblatt.
+- **Web — Suche und Zeitraumübersicht öffnen die gezeigten Zeilen zuerst.**
+  Beide zeigen 200 Zeilen aus einem Bestand von tausenden und öffneten vor
+  der ersten lesbaren Diagnose alle (Nr. 381). Das Entschlüsseln selbst ist
+  dabei der kleinere Posten — 1,25 s von 6,1 bei der Suche, 0,7 von 5,7 im
+  Jahr —, die Schätzung „50 bis 65 %" im Backlog ging von der Krypto aus.
+  Jetzt öffnen beide die gezeigten 200, zeichnen sie lesbar und öffnen den
+  Rest danach; der vorhandene Ladeplatz sagt solange „Weitere geschützte
+  Angaben werden geöffnet …". Erst danach wird wie zuvor neu gefiltert:
+  Treffer, die nur in geschützten Feldern stehen, der Altersfilter, die
+  Pins der Karte und die Kennzahlen aus dem Block kommen mit dem Rest.
+  Sortiert die Tabelle nach Ort, Alter oder Diagnose, steht vorher nicht
+  fest, welche Zeilen oben stehen; dann wird wie bisher alles am Stück
+  geöffnet. Geschützt lesbar ist die Suche nach 3,8 statt 6,1 s, das Jahr
+  nach 3,0 statt 5,7 s, der Monat nach 2,1 statt 4,0 s — die Symbole oben
+  tragen dazu bei. **Was es kostet:** Die Suche ist insgesamt 0,25 s
+  später fertig, weil sie einmal mehr zeichnet — derselbe Tausch, den die
+  Zeitraumübersicht seit Web 21.6.1 macht: Wer die Seite öffnet, will
+  zuerst die Liste lesen. **Was gleich bleibt:** Trefferzahl, Reihenfolge,
+  Kennzahlen und Pins, verglichen in fünfzehn Fällen (Freitext, ODER,
+  Wochentag, Winde, Zeitraum, drei Sortierungen nach geschützten Spalten)
+  über 34 006 Zeilen, alter gegen neuen Stand.
+- **Web — die Suche liest ihre Filterfelder einmal je Durchlauf.** Rund
+  dreißig Felder wurden für jeden Einsatz neu aus der Seite gelesen, bei
+  5096 Einsätzen 150 000 Abfragen und rund 0,4 s je Durchlauf. Der Suchtext
+  wird nach dem Entsperren nur noch für Einsätze mit geschütztem Block neu
+  gebaut.
+- **Web — `vorladen.js` steht auf der Tagesübersicht nur noch einmal.** Mit
+  gewähltem Tag lud die Seite es im Kopf und noch einmal im Rumpf.
+- **Web — der Ladeplatz und „ein Bild abwarten" stehen in `EdHtml`.** Beide
+  lagen in `ortsdaten.js` bzw. in der Zeitraumübersicht; Suche und Zeitraum
+  brauchen sie jetzt ebenfalls, und `ortsdaten.js` lädt keine der beiden.
+
+### Behoben
+
+- **Web — die Einsatzansicht fing einen gescheiterten Abruf nicht ab.**
+  Scheiterte `api/mission.php` — Netz weg, oder die Seite wurde verlassen,
+  während der Abruf noch lief —, blieb ein unbehandelter Fehler in der
+  Konsole, und der Ladeplatz drehte weiter. Jetzt steht die vorhandene
+  Meldung „Einsatz nicht geladen" da, wie auf dem Diensttag, und der
+  Ladeplatz geht weg. Sichtbar wurde es, weil die Seite mit dem
+  Symbolvorrat schneller fertig ist: Die Ortsdatenprobe verließ sie in
+  Firefox öfter, solange der Abruf noch lief — vorher 4 von 4 grün, mit
+  dem Vorrat 2 von 4, mit dem Fang 4 von 4. Dazu fängt `vorladen.js` einen
+  vorgeladenen Abruf, der scheitert, bevor die Seite ihn abholt, still ab;
+  wer ihn abholt, bekommt den Fehler wie zuvor. Gemessen mit einem
+  abgewiesenen `api/mission.php` in drei Engines: Meldung, kein Ladeplatz,
+  0 Seitenfehler (vorher 1 bis 2).
+
+### Nicht geändert
+
+- **Web — Startseite und Anmelden: die erste Antwort war nicht langsam.**
+  Nr. 382 stand mit 0,93 und 2,15 s bis zur ersten Antwort bei 6×, aus
+  Einzelläufen. Fünfmal nachgemessen, getrennt nach Weiterleitung,
+  Abschicken und Server: Der Server rechnet 20 bis 30 ms, das Anmelden samt
+  Weiterleitung braucht rund 90 ms bis zur Antwort von `index.php`, bei 6×
+  wie ungedrosselt. Einzelne Läufe zeigen 230 bis 380 ms, weil der Browser
+  die Anfrage erst schickt, wenn die gedrosselte Vorseite frei wird — das
+  war die alte Zahl. Beim Anmelden gehen rund 0,8 s in die Ableitung des
+  Schlüssels (absichtlich) und danach der Aufbau der Startseite. Gebaut
+  wurde nichts.
+- **Weitere Skripte je Seite sind nicht gestrichen.** Was eine Seite nicht
+  braucht, wäre einzeln nachzuweisen, und der Gewinn läge nach dem Profil
+  bei Zehntelsekunden. Ein Bauschritt (Skripte zusammenfassen) ist mit
+  E-R17-24 ausgeschlossen.
+
+### Mit dabei
+
+- **Werkzeuge — der Messstand misst „geschützt lesbar" und zerlegt die
+  erste Antwort** (`tools/messstand/browserprobe.mjs`, Anlass Nr. 381 und
+  382). Suche und Zeitraum melden neben „sichtbar" den ersten Neuaufbau der
+  Tabelle nach dem ersten Entschlüsseln; jede Zerlegung trennt
+  Weiterleitung, Wartezeit vor der Anfrage und Serverzeit. „Sichtbar" allein
+  sagte bei beiden Seiten nur, wann die gesperrten Zeilen standen.
+
 ## [Web 23.5.2] — unveröffentlicht
 
 Schritt 12b, Paket R17-28 — Aufräumen. Kein Schema, kein `update.php`. Der
