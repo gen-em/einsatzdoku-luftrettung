@@ -128,7 +128,12 @@ mitzuprüfen, die dieselbe Regel benutzen — nicht nur die, an der die
 Änderung entstand.
 
 **Was nicht gemessen werden konnte, wird gesagt**, nicht als erledigt
-gemeldet. Ein Punkt, der nicht gemessen werden konnte, gehört im Prüfdokument
+gemeldet. **Das Prüfdokument einer Phase ist eine Prüfliste** (seit PU-07,
+E-PU-08; Form in `CLAUDE.md` 7): was nicht geprüft werden konnte, die
+Grenzen der Mittel, höchstens 20 Handprüfpunkte — die maschinellen Zahlen
+stehen im Prüfprotokoll des Konzepts und im Prüfbericht des Commits. Nach
+dem Merge geht es in `docs/konzepte/Pruefliste.md` auf (E-PU-09).
+Ein Punkt, der nicht gemessen werden konnte, gehört im Prüfdokument
 an den **Anfang**, unter „was nicht geprüft werden konnte und warum", nicht
 in eine Fußnote.
 

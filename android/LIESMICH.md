@@ -1000,7 +1000,7 @@ die App nicht (keine Widgets, keine Reflexion, keine native Bibliothek, kein
 Audio, keine Kontakte, keine SMS, keine Ausrichtung im Manifest, kein
 Bluetooth, …); drei betreffen den Netzweg — Encrypted Client Hello und
 Certificate Transparency als Vorgabe, dazu die Berechtigung für das lokale
-Netz — und sind am Gerät zu belegen (`docs/konzepte/Pruefdokument-AR-Android-Runde.md`).
+Netz — und sind am Gerät zu belegen (`docs/konzepte/Pruefliste.md`, Bereich 10).
 Google Play verlangt seit dem 31.08.2026 `targetSdk` 36; 37 ist also ein
 Schritt voraus, nicht nachgeholt.
 

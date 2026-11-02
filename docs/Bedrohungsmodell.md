@@ -29,8 +29,9 @@ Abschnitt 4 ab und ihre Grenzen aus Abschnitt 3.
 **Was es ist und was nicht.** Es beschreibt den Code, wie er ist — nicht,
 wie er sein soll. Jede Aussage über die Anwendung ist am Quelltext gelesen
 (Fundstellen als Funktionsnamen in `Review-R17.md` 3.2, Inventar I-01 bis
-I-55); was dort niemand sicher lesen konnte, steht im Prüfdokument
-(`Pruefdokument-R17-Review.md` 1), nicht hier als Behauptung. Es ist keine
+I-55); was dort niemand sicher lesen konnte, stand im Prüfdokument des
+Reviews (Abschnitt 1, letzter Stand `8a8144f`; was davon noch von Hand zu
+prüfen ist, steht in `docs/konzepte/Pruefliste.md`), nicht hier als Behauptung. Es ist keine
 Risikoanalyse mit Zahlen und kein Prüfbericht: Es sagt, *dass* eine Lage
 offen ist, nicht, wie wahrscheinlich sie eintritt.
 

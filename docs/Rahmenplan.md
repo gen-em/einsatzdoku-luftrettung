@@ -1,6 +1,6 @@
 # Rahmenplan — Programm „Gen-EM NAdoku" bis v1.0
 
-**Fassung 187 (01.11.2026)** · Steuerung: Reihenfolge, Status, programmweite
+**Fassung 188 (02.11.2026)** · Steuerung: Reihenfolge, Status, programmweite
 Entscheidungen. Verlauf: `Rahmenplan-Verlauf.md`. Fassungen 1–15:
 `Rahmenplan-Archiv.md`; Fassungen 16–124: `Rahmenplan-Archiv-2.md`.
 
@@ -153,8 +153,9 @@ genannten Lücken).
 
 ## 6. Offene Abnahmen und Zuarbeiten
 
-Eine Zeile je Posten, in drei Gruppen; Bedienweg und Erwartung stehen im
-genannten Prüfdokument oder Runbook (`docs/Technik.md` 13), der Werdegang in
+Eine Zeile je Posten, in drei Gruppen; Bedienweg und Erwartung stehen in
+`docs/konzepte/Pruefliste.md` (nach Bereich, seit PU-08, E-PU-09) oder im
+Runbook (`docs/Technik.md` 13), der Werdegang in
 `Rahmenplan-Archiv-2.md` 6. Erledigt heißt gelöscht, mit Verlaufszeile. **Durchgesehen von der
 Betreiberin am 26.09.2026** (SD-M1, E-SD-34): 27 Zeilen als erledigt
 gestrichen, 6a abgehakt; was steht, ist bestätigt offen.
@@ -163,8 +164,8 @@ gestrichen, 6a abgehakt; was steht, ist bestätigt offen.
 
 | Was | Wofür | seit | Bedienweg |
 |---|---|---|---|
-| **P-PK-37:** `STAGING_PASS` einmal falsch, einmal leer setzen — Stufe 2 rot mit Grund im ersten Messschritt; P-PK-18 (zwei Merges in einer Minute) bei Gelegenheit. P-PK-19, -21, -38 und PK-M2 sind seit Lauf 101 erledigt | PK | 29.09.2026 | `Pruefdokument-PK-Pruefkette.md` 1, 5s |
-| **Prüfliste PK ohne Merge:** P-PK-24, -25 (Rettungsmittel, Excel), -26 (GuteSeele-Import) im Browser; -27 mit Netzzugang (Nr. 280); Z12 — „Schema gegen MySQL 8.4.0" und „Schema gegen MariaDB 10.6" als Pflichtprüfung (P-PK-36) | PK | 23.09.2026 | `Pruefdokument-PK-Pruefkette.md` 1 |
+| **P-PK-37:** `STAGING_PASS` einmal falsch, einmal leer setzen — Stufe 2 rot mit Grund im ersten Messschritt; P-PK-18 (zwei Merges in einer Minute) bei Gelegenheit. P-PK-19, -21, -38 und PK-M2 sind seit Lauf 101 erledigt | PK | 29.09.2026 | `Pruefliste.md` 1, 5s |
+| **Prüfliste PK ohne Merge:** P-PK-24, -25 (Rettungsmittel, Excel), -26 (GuteSeele-Import) im Browser; -27 mit Netzzugang (Nr. 280); Z12 — „Schema gegen MySQL 8.4.0" und „Schema gegen MariaDB 10.6" als Pflichtprüfung (P-PK-36) | PK | 23.09.2026 | `Pruefliste.md` 1 |
 | **`app.umgebung` in die `config.php` von Staging** (`name` Staging, `farbe` rot) — nie auf Produktiv; danach Betrieb → Status, Zeile „Umgebung" | 10c AP1 (E-P5c-05) | 23.09.2026 | Runbook „Eine Testanlage kennzeichnen"; P-P5c-01 |
 | **`betrieb.health_token`** in die `config.php` beider Anlagen, das Monitoring auf `/api/health.php` richten, Token als Kopfzeile `X-Health-Token` (seit Web 23.1.0) — ohne Eintrag ist der Endpunkt aus | 10c AP6 | 20.09.2026 | Runbook „Health-Endpunkt einrichten"; P-P5c-29 bis -31 |
 | **Vorhandene Komplett-Backups auf Produktiv öffnen** (`gzip -t`) — ein Stand, der sich nicht öffnen lässt, ist kein Rückfallstand (Nr. 328). War vor dem Merge fällig; der Merge ist gelaufen, der Punkt steht aus | 10c AP11 | 25.09.2026 | P-P5c-45 |
@@ -176,19 +177,19 @@ gestrichen, 6a abgehakt; was steht, ist bestätigt offen.
 | **Prüfliste P5c/AP7:** nach `update.php` auf Staging `SHOW INDEX FROM missions` und ein `EXPLAIN`, die drei Reiter der Statistik an echten Zahlen, die Seite am Handy | 10c AP7 | 24.09.2026 | P-P5c-32 bis -34 |
 | **Prüfliste P5c/AP8:** `update.php` auf Staging mit der zerstörenden Migration, ein Diensttag mit „Anderem Rettungsmittel" in Luft und Boden, Sicherungsziele ohne FTP-Plakette; auf Produktiv nach dem Tag dasselbe | 10c AP8 | 25.09.2026 | P-P5c-35 bis -38 |
 | **Prüfliste P5c/AP9:** die eigene Datenschutzerklärung nachziehen (P-P5c-40, sofort), Rechtstexte mit Vorschau in Firefox und am Handy, beide Blätter auf Papier, Wartungsmodus nach einem echten Deploy, die Leiste bei 850 und über 950 px Höhe | 10c AP9 | 25.09.2026 | P-P5c-39 bis -44 |
-| **Prüfliste AR:** Gerätetests P-AR-03/-04 (Android 17), -06, -07, -10 (Handy), -11 bis -14 (Wear-OS-Uhr), -15 (Rundlauf gegen die örtliche Anlage), -01 (Bau ohne Spiegel) | AR | 26.09.2026 | `Pruefdokument-AR-Android-Runde.md` |
-| **Prüfliste BV:** P-BV-04 (Wertekasten Hintergrundjobs gegen `Technik.md` 4.7), P-BV-07 (die zwei Rechtstexte: Höhe, Notizen, Abfahrtort), P-BV-09 (Textbaustein 11.5a neu übernehmen, nach P-P5c-40) | BV | 26.09.2026 | `Pruefdokument-BV-Backlog-Vorgriff.md` |
-| **Prüfliste BR:** P-BR-05 und -06 (Anlass-Zeilen und Nr. 304–313 lesen), P-BR-08 (beim nächsten Tag: das Produktionstor findet den Stufe-1-Lauf über `baumsuche.py`); freiwillig -03, -10, -11, -12 | BR | 24.09.2026 | `Pruefdokument-BR-Bestandsriegel.md` |
-| **Zwei tote Zweige löschen:** `claude/nice-lovelace-snlo8m` und `claude/pk05-tor-umbauen` — nichts Ungemergtes (F-R4-04); auf GitHub unter Branches | 17 (Q-R4-01, E-R4-15) | 26.09.2026 | `Pruefdokument-R4-Backlog-Runde-4.md`, P-R4-06 |
-| **Prüfliste R4:** P-R4-07 bis -23, je nach dem Deploy ihrer Fassung — Formular und Leseansicht, Konten, Demo-Reset, Handy, Verwerfen in der App, Statistik, Backlog auf GitHub | 17 | 28.09.2026 | `Pruefdokument-R4-Backlog-Runde-4.md` 4 |
-| **Prüfliste SR:** auf Staging P-SR-05, -07, -08 (mit -20 zuerst), -10, -11, -13, -14, -16 bis -19 — Gerät merken, Schlüsselwechsel, Notzugang, Passkeys und Rechenaufgabe an echten Geräten, Cookie-Absatz; freiwillig -09, -12 | 18 | 05.10.2026 | `Pruefdokument-SR-Sicherheitsrunde-II.md` 4 |
-| **Zuarbeiten aus Kette II:** Aufbewahrung der Komplett-Stände auf Staging (Nr. 261, Vorschlag 5); `info.php` auf Staging löschen; Zweig `produktion` gegen Handpushes schützen; Hotfix-Weg beim ersten Hotfix | Kette II | 21.09.2026 | `Pruefdokument-Kette-Haertung.md`, 4a, 9, 27, 28 |
-| **Umgebung `staging` beschränken** (Deployment branches and tags): `main`, `hotfix/*` **und Tag `web-v*`** — ohne den Tag bleibt jede Produktivauslieferung am Job „Rückfallstand (Staging)" hängen | Kette II Z4 (E-PK-69) | 29.09.2026 | `Pruefdokument-Kette-Haertung.md`, Abgleich |
-| **Umgebung `produktion` beschränken** auf `main` und die Tags `web-v*`, `android-v*`, `uhr-v*` — ein Probelauf fordert sie heute von jedem Zweig an (F-R17-04); dabei Pflichtprüfer und Org-Zweitfaktor nachsehen | 12 (R17-01) | 11.10.2026 | `Pruefdokument-R17-Review.md`, P-R17-04 |
-| **Prüfliste S11:** Gerätetests Uhr 4.0.0 und Android 0.18.0 (P-S11-32 bis -35, -05, -39), Wege auf Staging (-14 bis -31), Safari (-43), Konto-Backup (-45), alte Sicherungen (-07, -08), Rechtstexte (-40) | 12a | 20.10.2026 | `Pruefdokument-S11-Ortsdaten.md` 4 |
-| **Prüfliste DM:** P-DM-02 (Registrierung in Firefox auf Staging: Knopf sofort frei), -03 (dasselbe in Safari), -06 (dasselbe auf Produktiv nach dem Tag `web-v23.0.1`, nur bei offener Registrierung) | 19 | 20.10.2026 | `Pruefdokument-DM-Drei-Motoren.md` 3 |
-| **Prüfliste R17:** P-R17-03, -04 (CSP scharf seit 28.10.2026; offen HSTS, GitHub), -05; aus 12b -06 bis -11 und -15 bis -40, je nach Deploy, nach Risiko geordnet (-12 bis -14 und -29 erledigt, -17 offen nur auf Staging) | 12, 12b | 11.10.2026 | `Pruefdokument-R17-Review.md` 4 |
-| **R17-19 abnehmen** — „Prüfung“ und App-Probelauf `android`, `uhr` von `main`; eine Instanz startet keinen Lauf (E-R17-38). Stufe 2 nach dem Merge ist gelesen (Lauf 40271258931, P-R17-14) | 12b (R17-19) | 25.10.2026 | `Pruefdokument-R17-Review.md`, P-R17-15 und -16 |
+| **Prüfliste AR:** Gerätetests P-AR-03/-04 (Android 17), -06, -07, -10 (Handy), -11 bis -14 (Wear-OS-Uhr), -15 (Rundlauf gegen die örtliche Anlage), -01 (Bau ohne Spiegel) | AR | 26.09.2026 | `Pruefliste.md` |
+| **Prüfliste BV:** P-BV-04 (Wertekasten Hintergrundjobs gegen `Technik.md` 4.7), P-BV-07 (die zwei Rechtstexte: Höhe, Notizen, Abfahrtort), P-BV-09 (Textbaustein 11.5a neu übernehmen, nach P-P5c-40) | BV | 26.09.2026 | `Pruefliste.md` |
+| **Prüfliste BR:** P-BR-05 und -06 (Anlass-Zeilen und Nr. 304–313 lesen), P-BR-08 (beim nächsten Tag: das Produktionstor findet den Stufe-1-Lauf über `baumsuche.py`); freiwillig -03, -10, -11, -12 | BR | 24.09.2026 | `Pruefliste.md` |
+| **Zwei tote Zweige löschen:** `claude/nice-lovelace-snlo8m` und `claude/pk05-tor-umbauen` — nichts Ungemergtes (F-R4-04); auf GitHub unter Branches | 17 (Q-R4-01, E-R4-15) | 26.09.2026 | `Pruefliste.md`, P-R4-06 |
+| **Prüfliste R4:** P-R4-07 bis -23, je nach dem Deploy ihrer Fassung — Formular und Leseansicht, Konten, Demo-Reset, Handy, Verwerfen in der App, Statistik, Backlog auf GitHub | 17 | 28.09.2026 | `Pruefliste.md` 4 |
+| **Prüfliste SR:** auf Staging P-SR-05, -07, -08 (mit -20 zuerst), -10, -11, -13, -14, -16 bis -19 — Gerät merken, Schlüsselwechsel, Notzugang, Passkeys und Rechenaufgabe an echten Geräten, Cookie-Absatz; freiwillig -09, -12 | 18 | 05.10.2026 | `Pruefliste.md` 4 |
+| **Zuarbeiten aus Kette II:** Aufbewahrung der Komplett-Stände auf Staging (Nr. 261, Vorschlag 5); `info.php` auf Staging löschen; Zweig `produktion` gegen Handpushes schützen; Hotfix-Weg beim ersten Hotfix | Kette II | 21.09.2026 | `Pruefliste.md`, 4a, 9, 27, 28 |
+| **Umgebung `staging` beschränken** (Deployment branches and tags): `main`, `hotfix/*` **und Tag `web-v*`** — ohne den Tag bleibt jede Produktivauslieferung am Job „Rückfallstand (Staging)" hängen | Kette II Z4 (E-PK-69) | 29.09.2026 | `Pruefliste.md`, Abgleich |
+| **Umgebung `produktion` beschränken** auf `main` und die Tags `web-v*`, `android-v*`, `uhr-v*` — ein Probelauf fordert sie heute von jedem Zweig an (F-R17-04); dabei Pflichtprüfer und Org-Zweitfaktor nachsehen | 12 (R17-01) | 11.10.2026 | `Pruefliste.md`, P-R17-04 |
+| **Prüfliste S11:** Gerätetests Uhr 4.0.0 und Android 0.18.0 (P-S11-32 bis -35, -05, -39), Wege auf Staging (-14 bis -31), Safari (-43), Konto-Backup (-45), alte Sicherungen (-07, -08), Rechtstexte (-40) | 12a | 20.10.2026 | `Pruefliste.md` 4 |
+| **Prüfliste DM:** P-DM-02 (Registrierung in Firefox auf Staging: Knopf sofort frei), -03 (dasselbe in Safari), -06 (dasselbe auf Produktiv nach dem Tag `web-v23.0.1`, nur bei offener Registrierung) | 19 | 20.10.2026 | `Pruefliste.md` 3 |
+| **Prüfliste R17:** P-R17-03, -04 (CSP scharf seit 28.10.2026; offen HSTS, GitHub), -05; aus 12b -06 bis -11 und -15 bis -40, je nach Deploy, nach Risiko geordnet (-12 bis -14 und -29 erledigt, -17 offen nur auf Staging) | 12, 12b | 11.10.2026 | `Pruefliste.md` 4 |
+| **R17-19 abnehmen** — „Prüfung“ und App-Probelauf `android`, `uhr` von `main`; eine Instanz startet keinen Lauf (E-R17-38). Stufe 2 nach dem Merge ist gelesen (Lauf 40271258931, P-R17-14) | 12b (R17-19) | 25.10.2026 | `Pruefliste.md`, P-R17-15 und -16 |
 | **Antwort des Hosters auswerten** (gestellt 28.10.2026): Haltedauer der Zugriffslogs (F-R17-22, -57; in die Betriebsakte) und ob er GitHub-Läufer zeitweise sperrt (F-R17-74) | 12b (R17-19, Übergabe) | 21.10.2026 | `Review-R17.md` 2.3 und 2.3a (gelöscht, `630756f0`) |
 | **Plattformvergleich Staging vervollständigen:** vier leere Zellen (`max_user_connections`, Kontingent, Platz, Cron) und die Herkunft des Zertifikats aus Betrieb → Status | Kette II | 21.09.2026 | `Technik.md` 12.5; Prüfpunkt 2c |
 | **Server-Anteil anlegen** — Betrieb → Servereinstellungen, Karte „Schlüssel des Servers"; ohne den Griff tut S10 nichts, die Statuszeile steht rot | S10 | 14.09.2026 | Archiv-2 6; Runbook |
@@ -206,10 +207,10 @@ gestrichen, 6a abgehakt; was steht, ist bestätigt offen.
 
 | Was | Wofür | seit | Bedienweg |
 |---|---|---|---|
-| **Garmin-Paket in den Connect-IQ-Store** (P-PK-42), sobald die App im Portal angelegt ist — das Artefakt aus Lauf 110 hält bis 29.12.2026, danach ein neuer Tag `uhr-v…` | Betriebsübergang | 30.09.2026 | `Pruefdokument-PK-Pruefkette.md` 1, 5u |
+| **Garmin-Paket in den Connect-IQ-Store** (P-PK-42), sobald die App im Portal angelegt ist — das Artefakt aus Lauf 110 hält bis 29.12.2026, danach ein neuer Tag `uhr-v…` | Betriebsübergang | 30.09.2026 | `Pruefliste.md` 1, 5u |
 | **Demo-Video des Vordergrunddienstes auf echtem Gerät** für die Standort-Deklaration — falls der interne Track sie verlangt (beim Einrichten prüfen) | 6 Teil C | 03.09.2026 | `Vorbereitung-Play-Console.md` |
 | **Datensicherheitsformular der Play Console** — setzt die Datenschutzerklärung voraus (6.3) | 6 Teil C | 03.09.2026 | `Vorbereitung-Play-Console.md` |
-| **Wear-OS-Uhr für den Gerätetest**, die Wear-OS-Prüfrunde und den Installationstest aus dem Track | 6 Teil C; Prüfliste AR | 31.08.2026 | `Pruefdokument-AR-Android-Runde.md` |
+| **Wear-OS-Uhr für den Gerätetest**, die Wear-OS-Prüfrunde und den Installationstest aus dem Track | 6 Teil C; Prüfliste AR | 31.08.2026 | `Pruefliste.md` |
 | **Impressums- und Datenschutztext der Installation** über den Editor eintragen (R32); für das Datensicherheitsformular der Play Console schon vor dem ersten Track-Release | vor 13 | 30.08.2026 | Handbuch 11.5 |
 | **GitHub: `gen-em/nadoku` anlegen** (öffentlich, AGPL-3.0), Umgebungen `staging` und `produktion` mit Pflichtfreigabe, Zweigschutz; danach dieses Repositorium archivieren | mit dem Umzug in 14 (R68) | 03.09.2026 | Fahrplan, Schritt 14 |
 

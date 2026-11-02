@@ -43,7 +43,12 @@ Diese fünf Punkte sind kein Nachklapp, sondern Teil der Änderung:
 2. **`docs/CHANGELOG.md` ergänzen.** Format nach *Keep a Changelog*, Präfix
    `Web` oder `Uhr`. Der bestehende Ton ist erklärende Prosa mit **Begründung**,
    nicht eine Liste von Stichpunkten: Was war das Problem, warum diese Lösung,
-   was bleibt bewusst stehen. Diesen Ton halten.
+   was bleibt bewusst stehen. Diesen Ton halten. **Höchstens fünf Sätze je
+   Eintrag** (seit PU-07, E-PU-10): Problem und Grund der Lösung. Prüfzahlen,
+   Werkzeugbefunde und Paketnummern gehören nicht hinein — sie stehen im
+   Konzept und in der Git-Historie. **Kein Riegel misst das** (E-PU-12), die
+   Regel kann also unbemerkt reißen; wer einen Eintrag schreibt, zählt selbst
+   nach.
 3. **Dokumentation nachziehen** — `docs/Handbuch.md` (Bedienung),
    `docs/Technik.md` (Architektur, Verzeichnisstruktur, Runbook), bei
    Schnittstellenänderungen `docs/JSON-Vertrag.md`, `docs/Export-Format.md`,
@@ -570,21 +575,30 @@ R62). Innerhalb von Claude Code gilt:
 - **Nach der Freigabe des Abschlusses:** Erledigt-Zeile in
   `docs/Rahmenplan.md` Abschnitt 8 — **eine Tabellenzeile** (Kennung,
   Versionen, Datum · PR, letzter Commit des Konzepts, Prüfdokument, Kern;
-  E-SD-10), die Prüfzahlen stehen im Prüfdokument —, Reste nach Abschnitt 6,
+  E-SD-10), die Prüfzahlen stehen im Prüfprotokoll des Konzepts —, Reste nach Abschnitt 6,
   der Backlog in die Kopfzeilen (`gehört zu`), eine Verlaufszeile in
   `docs/Rahmenplan-Verlauf.md` — und **das Konzept wird gelöscht**, die
-  Fahrplanzeile geht mit; die Git-Historie behält es. Das **Prüfdokument bleibt, bis
-  seine Prüfliste abgehakt ist**, und wird dann ebenso gelöscht. Wer ein
+  Fahrplanzeile geht mit; die Git-Historie behält es. **Das Prüfdokument geht
+  in der Prüfliste auf** (seit PU-08, E-PU-09): Seine offenen Punkte wandern,
+  Doppelungen gestrichen, nach Bereich in `docs/konzepte/Pruefliste.md`, die
+  Datei wird gelöscht, die Zeile in Rahmenplan 6.1 verweist auf die
+  Prüfliste. *(Bis PU-08 blieb jedes Prüfdokument stehen, bis seine Liste
+  abgehakt war — am 01.11.2026 lagen dreizehn nebeneinander, F-PU-03.)* Wer ein
   Konzept löscht, ohne die Erledigt-Zeile zu schreiben, hat die Phase nicht
   abgeschlossen.
 - **Am Ende der Phase ein Prüfdokument** — eine eigene Datei neben dem
   Konzept, nicht ein Abschnitt darin. Das Prüfprotokoll im Konzept beantwortet
   „ist es belegt?“; das Prüfdokument beantwortet „was muss **ich** noch tun?“.
-  Es enthält: was maschinell geprüft wurde (mit Mittel **und** Zahl), was im
-  Browser geprüft wurde, **was nicht geprüft werden konnte und warum**, und
-  als Kernstück eine abhakbare Prüfliste — je Punkt der konkrete Bedienweg,
-  das erwartete Ergebnis und **woran ein Scheitern zu erkennen ist**. Dazu die
-  Grenzen der benutzten Prüfmittel.
+  **Es ist eine Prüfliste und nichts sonst** (seit PU-07, E-PU-08), in
+  dieser Reihenfolge: (1) **was nicht geprüft werden konnte und warum** —
+  zuerst; (2) die **Grenzen der benutzten Prüfmittel**; (3) die
+  **Handprüfliste**, höchstens **20 Punkte**, je Punkt der konkrete
+  Bedienweg, das erwartete Ergebnis und **woran ein Scheitern zu erkennen
+  ist**. Was maschinell gemessen wurde, steht mit Mittel und Zahl im
+  **Prüfprotokoll des Konzepts** und im **Prüfbericht des Commits**, nicht
+  hier. *(Bis PU-07 trug das Prüfdokument auch die maschinellen Zahlen und
+  das, was im Browser geprüft wurde — die Hälfte des Textes stand dann
+  zweimal.)*
   Zwei Regeln dabei: **Eine Prüfung ohne Zahl ist keine Prüfung**
   („39 447 Elementmessungen, keine Abweichung“ statt „unverändert“), und
   **was nicht geprüft werden konnte, wird gesagt, nicht weggelassen** — an den
