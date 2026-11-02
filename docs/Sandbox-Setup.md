@@ -72,8 +72,8 @@ prüft je Paket und holt nur, was fehlt.)*
 | **cmark-gfm** | die Quelltextprüfungen `handbuch` — rendern Handbuch und „Was ist NAdoku"? (seit BR-03) — und `bestand`, die die Tabelle der Quelltextprüfungen so liest, wie GitHub sie zeigt (seit BR-05) |
 | **Python `jsonschema`** | `tools/referenzdatensatz/quelldaten/pruefen.py` |
 | **Python `pyftpdlib`, `paramiko`, `pyopenssl`** | die Gegenstellen der Versandprobe (`tools/proben/versand/gegenstellen.py`); ohne `pyopenssl` fehlt FTPS, und alle drei Nachbauten brechen ab (RP-01) |
-| **Playwright 1.64.1 und seine drei Engines** (`chromium-1248`, `firefox-1555`, `webkit-2370`) — das Abbild bringt 1.56.1 (seit dem Abbild vom 22.10.2026 1.63.0) und nur dessen Chromium; angehoben seit Nr. 393, Engines nachgeladen seit Konzept DM (1.3) | jede Browserprobe — sie läuft in drei Engines und ist rot, wenn eine fehlt (R87, `Pruefablauf.md` 1, Grundsatz 8) |
-| **Neun Systembibliotheken für WebKit** (`libenchant-2-2`, `libsecret-1-0`, `libwayland-server0`, `libmanette-0.2-0`, seit 19.10.2026 dazu `libgtk-4-1`, `libevent-2.1-7t64`, `libgstreamer-plugins-bad1.0-0`, `libavif16`, `libgles2`) — Firefox startet ohne sie, WebKit nicht (die ersten vier gemessen 26.09.2026: entfernt, Start versucht, wieder geholt; Backlog Nr. 301; die fünf weiteren nannte Playwright am 19.10.2026, F-DM-01) | jede Probe in WebKit (R87) |
+| **Playwright 1.64.1 und seine drei Engines** (`chromium-1248`, `firefox-1555`, `webkit-2370`) — das Abbild bringt 1.56.1 (seit dem Abbild vom 22.10.2026 1.63.0) und nur dessen Chromium; angehoben seit Nr. 393, Engines nachgeladen seit Konzept DM (1.3) | jede Browserprobe — sie läuft in drei Engines, wo Grundsatz 8 es verlangt (voller Lauf, Stylesheet oder `ui.php` ab `neben`, Stufe 2), und ist rot, wenn eine verlangte fehlt (R89, `Pruefablauf.md` 1, Grundsatz 8) |
+| **Neun Systembibliotheken für WebKit** (`libenchant-2-2`, `libsecret-1-0`, `libwayland-server0`, `libmanette-0.2-0`, seit 19.10.2026 dazu `libgtk-4-1`, `libevent-2.1-7t64`, `libgstreamer-plugins-bad1.0-0`, `libavif16`, `libgles2`) — Firefox startet ohne sie, WebKit nicht (die ersten vier gemessen 26.09.2026: entfernt, Start versucht, wieder geholt; Backlog Nr. 301; die fünf weiteren nannte Playwright am 19.10.2026, F-DM-01) | jede Probe in WebKit (R89) |
 | **Android-SDK** (Plattform 37.0, Build-Tools 36.0.0, `cmdline-tools` 23.0) | `./gradlew build` im Ordner `android/`; `cmdline-tools` unter 23.0 legt AVDs mit API 37 falsch an (F-AR-18) |
 | **Emulator, Abbilder API 37, `lz4`, `cpio`, `libpulse0`** | `android/werkzeuge/emulator.sh` — der Emulatorlauf nach `Pruefablauf.md` 6.9 |
 | **Uhr-SDK und Gerätedateien** | `tools/uhr-pruefstand/` |
@@ -142,8 +142,9 @@ altert nicht mit.
 **Seit dem Abbild vom 11.10.2026 liegt unter `/opt/pw-browsers` nur noch
 Chromium** (F-S11-20). Der Satz in `aufbauen.sh`, die Engines lägen im Abbild
 und würden nicht nachgeladen, galt damit nicht mehr, und ganz S11 lief in
-einer Engine. Seit R87 läuft jede Browserprobe in drei, und eine fehlende
-Engine ist rot — also holt das Standard-Setup sie (E-DM-03).
+einer Engine. Seit R87 läuft jede Browserprobe in drei — seit R89 dort, wo
+Grundsatz 8 es verlangt —, und eine fehlende Engine ist rot; also holt das
+Standard-Setup sie (E-DM-03).
 
 **Was `aufbauen.sh web` tut:** zuerst die neun Bibliotheken (sonst lädt
 Playwright herunter und bricht danach an der eigenen Prüfung ab), dann

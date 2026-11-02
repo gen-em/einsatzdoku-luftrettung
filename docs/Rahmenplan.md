@@ -1,14 +1,14 @@
 # Rahmenplan — Programm „Gen-EM NAdoku" bis v1.0
 
-**Fassung 188 (02.11.2026)** · Steuerung: Reihenfolge, Status, programmweite
+**Fassung 189 (02.11.2026)** · Steuerung: Reihenfolge, Status, programmweite
 Entscheidungen. Verlauf: `Rahmenplan-Verlauf.md`. Fassungen 1–15:
 `Rahmenplan-Archiv.md`; Fassungen 16–124: `Rahmenplan-Archiv-2.md`.
 
 **Stand `origin/main`** (Commit `c32dd2c`, PR #125, gemessen 01.11.2026): Web 23.6.0 ·
 Uhr 4.1.1 · Android 0.18.2; Web 23.1.0 auf Produktiv seit dem 27.10.2026.
-**Läuft:** 20 — PU Prüfumfang, Umsetzung PU-01 bis PU-10 auf `claude/compassionate-ride-1a0uw1` (seit 01.11.2026).
+**Läuft:** 20 — PU Prüfumfang, gebaut auf `claude/compassionate-ride-1a0uw1`, Pull Request offen, Abschluss wartet auf die Freigabe.
 **Als Nächstes:** 13 — P7 Gesicht v1.0; beginnt mit einer Konzeptsitzung.
-**Offene PRs:** keine.
+**Offene PRs:** PU (Schritt 20, ohne Fassung).
 **Fällig bei der Betreiberin:** 38 Posten (Abschnitt 6.1). **`update.php`:** auf Staging und Produktiv nichts offen (Betreiberin, 20.10.2026, nach Web 23).
 
 Kennungen sind Namen, keine Reihenfolge.
@@ -120,7 +120,7 @@ weil das Altbestand-Werkzeug ein einziges Konto voraussetzte.
 | 6 | **S4 — Rest, Teil C** | Play Console nach R65: interner Test-Track für Handy und Uhr unter einem Eintrag, Versionscode-Versatz, Signaturweg; Android 1.0.0 (E-R45-7). Die Vorbereitung ohne D-U-N-S und Schlüssel ist gebaut (Android 0.13.0), die Gerätetests sind erfolgt (24.09.2026) | D-U-N-S, Organisationskonto und Play App Signing — erledigt 26.09.2026 (SD-M1); offen in 6.2: Wear-OS-Uhr, Demo-Video, Datensicherheitsformular | `docs/konzepte/Konzept-S4-Handy-Uhr-Client.md` 13; `Vorbereitung-Play-Console.md` | offen — Teile A bis C gemergt 04.09.2026 (PR #33, Abschnitt 8); Android 1.0.0 und der interne Test-Track können beginnen |
 | 11 | **Planung v1.0** | Festlegungen vor dem Schnitt (R65 bis R73, entschieden 03.09.2026); Ergebnis sind die Konzepte der Phasen P6 bis P8 mit je eigenem Paketschnitt (P6 nach der Freigaberunde des Reviews) | keine | `docs/konzepte/Konzept-Planung-v1.0.md` | gemergt 03.09.2026 — Festlegungen entschieden (R65–R73); offen nur die Paketschnitte, je mit dem Konzept zu 12b, 13 und 14 |
 | 13 | **P7 — Gesicht v1.0** | Umbenennung überall (Langform in den System-E-Mails entscheiden), neues Demo-Passwort (R25); Vertrag v1 (R12, Nr. 23); Doku-Neufassung, Handbuch als HTML im Release (R16, R72); Web-App-Manifest (R70); Changelog neu (R15); Backlog-Übernahme; Altformat der Sicherung weg (Nr. 46); Kommentarregel (R69) | 12b | eigenes Konzept nach K1 | offen — nach 12b |
-| 20 | **PU — Prüfumfang** (R89) | Der Prüfstand misst je Berührung: Firefox/WebKit, zehn Breiten und alle Seiten nur bei Stylesheet-Berührung, Zehnerregel oder `haupt`; Ergebnisart `hinweis`; Steuerung raus aus dem Tor; Bestandsriegel erzeugt statt rot; ein Prüfdokument ist eine Prüfliste; eine Prüfliste statt zwölf | Konzept: keine; Umsetzung: 12b gemergt (Werkzeugschicht) | `docs/konzepte/Konzept-PU-Pruefumfang.md` (Kürzel PU, Opus), Prüfdokument daneben | Umsetzung — seit 01.11.2026 auf `claude/compassionate-ride-1a0uw1` (12b gemergt mit PR #125); Konzept gemergt mit PR #124, #126 |
+| 20 | **PU — Prüfumfang** (R89) | Der Prüfstand misst je Berührung: Firefox/WebKit, zehn Breiten und alle Seiten nur bei Stylesheet-Berührung, Zehnerregel oder `haupt`; Ergebnisart `hinweis`; Steuerung raus aus dem Tor; Bestandsriegel erzeugt statt rot; ein Prüfdokument ist eine Prüfliste; eine Prüfliste statt zwölf | Konzept: keine; Umsetzung: 12b gemergt (Werkzeugschicht) | `docs/konzepte/Konzept-PU-Pruefumfang.md` (Kürzel PU, Opus), Prüfdokument daneben | gebaut — PU-01 bis PU-10 auf `claude/compassionate-ride-1a0uw1` (02.11.2026), Pull Request offen; Konzept gemergt mit PR #124, #126 |
 | 14 | **P8 — Schnitt** | Neuaufsetzen mit Übernahme per edbak (R40 (3), R60, Nr. 324); Migrationsregister neu (R66); Repo-Umzug und Inventur mit Begründung je Weglassung (R68); Kette im neuen Repositorium (R67, R40 (4)); Rechts- und Betreiberunterlagen (R41); Abnahme nach R11; Tags `web-v1.0.0`, `uhr-v…`, `android-v1.0.0` | 13 | eigenes Konzept nach K1 | offen — nach 13 |
 | — | **Betriebsübergang** | Öffnung in Wellen über die Betriebsarten (R41); Produktionsfreigabe in den Stores mit Welle 1 (R65; nach MDR-Abgrenzung und Rechtsunterlagen); mit Welle 1 entfällt die Seitenladung (`apk.php`, Handbuch 10.1); Garmin-Uhr über den Connect-IQ-Store; halbjährliche Probe-Wiederherstellung | v1.0 | — | offen — beginnt mit v1.0 (nach den Schritten 13 und 14); Wellen nach R41 |
 
@@ -355,9 +355,9 @@ werden hier kompakt angehängt; **der Statussatz wird ersetzt, nicht ergänzt**
 | R84 | Kein Schritt der Auslieferungskette geht ungeprobt auf Produktiv; wer einen Schritt hinzufügt, sagt, wodurch er geprobt wird | gilt | Konzept Kette II (gelöscht, `8854b86`), E-KH-17 |
 | R85 | Die Kette des Tags N spricht mit dem Server der Fassung N−1; ein unbekanntes Feld ist `unbekannt`, nie eine erfundene Null | gilt | Konzept Kette II (gelöscht, `8854b86`), E-KH-19 |
 | R86 | P6 in zwei Hälften um S11: Bedrohungsmodell als 12 vor 12a, Code-Review als 12b danach — S11 wird gegengelesen, der Code einmal, in Endfassung | gilt; entschieden 27.09.2026 (Betreiberin, Konzeptsitzung SR) | Abschnitt 3 („Warum so", Blöcke 12 und 12b) |
-| R87 | Browserproben in Chromium, Firefox und WebKit ab Stufe neben und in Stufe 2, in klein Chromium; fehlt eine Engine, rot. Ausnahmen begründet; Safari von Hand | gilt; entschieden 19.10.2026 (Betreiberin), umgesetzt in Schritt 19 (abgeschlossen 20.10.2026) | Konzept DM (gelöscht, `3bedc25`), E-DM-01 bis -11 |
+| R87 | Browserproben in Chromium, Firefox und WebKit ab Stufe neben und in Stufe 2, in klein Chromium; fehlt eine Engine, rot. Ausnahmen begründet; Safari von Hand | abgelöst durch R89 (umgesetzt mit PU-03, 01.11.2026); entschieden 19.10.2026 (Betreiberin), umgesetzt in Schritt 19 (abgeschlossen 20.10.2026) | Konzept DM (gelöscht, `3bedc25`), E-DM-01 bis -11 |
 | R88 | Die Pakete von 12b (R17-18 bis -30) laufen mit Opus, Kryptographie eingeschlossen — K8 (Krypto mit Fable, E-PV-5 (7)) gilt für 12b nicht; das Review war Fable | umgesetzt mit 12b (01.11.2026); entschieden 21.10.2026 (Betreiberin, Freigaberunde) | `Review-R17.md` 2.1 (gelöscht, `630756f0`), E-R17-28 |
-| R89 | Der Prüfumfang folgt der Berührung: drei Engines, zehn Breiten und alle Seiten nur bei Stylesheet-Berührung, Zehnerregel oder `haupt`; sonst schmal. Ersetzt R87 | gilt; entschieden 01.11.2026 (Betreiberin), Umsetzung in Schritt 20 | Konzept PU, E-PU-01 bis -10 |
+| R89 | Der Prüfumfang folgt der Berührung: drei Engines, zehn Breiten und alle Seiten nur bei Stylesheet-Berührung, Zehnerregel oder `haupt`; sonst schmal. Ersetzt R87 | gilt; entschieden 01.11.2026 (Betreiberin), umgesetzt in Schritt 20 (PU-01 bis -10, Abschluss offen) | Konzept PU, E-PU-01 bis -19 |
 
 ## 8. Erledigt
 

@@ -33,7 +33,7 @@ jeder Vergabe).
 >
 > | | |
 > |---|---|
-> | Stand | **01.11.2026 — Umsetzung läuft. PU-02, -01, -03, -04, -10, -05, -06, -07, -08 erledigt; als Nächstes PU-09 (Abschluss).** |
+> | Stand | **01.11.2026 — Umsetzung läuft. PU-02 bis -08 und -10 erledigt; PU-09 (Abschluss) in Arbeit — Messläufe voll, schmal, erbend.** |
 > | Entschieden | E-PU-01 bis E-PU-19 (Abschnitt 2); E-PU-14 bis -19 während der Umsetzung (01.11.2026) |
 > | Offen | keine Frage (Q-PU-03 beantwortet 01.11.2026) |
 > | Umsetzung | Reihenfolge PU-02, -01, -03, -04, -10, -05, -06, -07, -08, -09 (Abschnitt 3). Erledigt: PU-00, PU-02, PU-01, PU-03, PU-04, PU-10, PU-05, PU-06, PU-07, PU-08 (07 und 08 in einem Commit, E-PU-19). |
@@ -200,6 +200,7 @@ ersten erbenden Lauf.
 | F-PU-09 | niedrig | `docs/Pruefablauf.md` 2.3 | **Der Zählbefehl für die Schritte von Stufe 1 zählte über feste Zeilennummern** (`NR>=75 && NR<231`) und brach seit einer Verlängerung des Jobs vor dem letzten Schritt ab: Er ergab 16, es waren 17. Gefunden beim Nachzählen nach PU-05. | Befehl zählt jetzt an den Jobgrenzen (`/^  pruefung:/` bis `/^  schema:/`); 16 nach PU-05 |
 | F-PU-10 | niedrig | F-PU-03 | **„Rund 300 offene Punkte" waren 179.** F-PU-03 zählte die nummerierten Punkte der Prüflisten samt den erledigten; offen laut Rahmenplan 6.1 waren 174 mit P-Nummer und 5 aus Kette II. | Zahl in PU-08 berichtigt |
 | F-PU-11 | niedrig | P-BR-03 | **Ein offener Prüfpunkt prüfte, was PU-06 abgeschafft hat:** „eine 41. Zeile macht Stufe 1 rot". | nicht in die Prüfliste übernommen, dort begründet |
+| F-PU-12 | niedrig | `rueckwegprobe`, Chromium | **Im vollen Messlauf (8 443 s) war die Rückwegprobe in Chromium einmal rot** — nicht an einer Prüfung, sondern an `page.goto … suche.php` mit Zeitüberschreitung (30 s auf Netzruhe), nach über zwei Stunden Dauerlast. Alle 50 fachlichen Fälle davor grün; Firefox und WebKit danach grün; die Einzelwiederholung in Chromium grün (23 ok, 0 fehlen, 166 s). | nicht reproduziert; kein Bericht aus diesem Lauf (er war nur Messung). Beobachten: tritt es wieder auf, gehört ein längeres Warten oder ein Wiederholen beim Seitenwechsel in die Probe |
 | F-PU-06 | niedrig | `docs/konzepte/` | **Dreizehn Prüfdokumente, nicht zwölf.** E-PU-09 und PU-08 zählten zwölf; die Liste in F-PU-03 hat dreizehn Kürzel, und dreizehn Dateien liegen da. | E-PU-14 |
 
 ## 4a. Fragen an die Betreiberin
@@ -232,6 +233,8 @@ ersten erbenden Lauf.
 | PU-06 | `bericht.py erzeugen` zweimal; `bestand.py --selbstprobe`; Gegenversuch mit einer 41. Zeile in `tools/steuerung/LIESMICH.md`; `auswahl.py`/`bericht.py --selbstprobe`; `kettenaufrufe`; `dokumente` | erster Lauf: 1 geändert (die neue Musterzeile in `Pruefablauf.md` 4 — der Erzeuger trug seine eigene Zeile ein), zweiter: 0 · 177 Fälle, 0, dazu 2 Gegenproben (Decke allein rc 0, neben einem anderen Befund rc 1) · rc 0, eine Zeile `HINWEIS: form · … 41 Zeilen` · 103 / 0, 48 / 0 · 0 · 0 | 02.11.2026 |
 | PU-06 | Prüfstand `klein` | 42 grün, 0 rot, 0 nicht gemessen, 0 Hinweis, 1 841 s; `erzeugen=0` (vor den Riegeln, 2 s), `bestand=0`; Bericht in `8a8144f5`, gegengelesen (in Ordnung, 48 Zahlen) | 02.11.2026 |
 | PU-07/08 | Auszug der offenen Punkte (Einmalwerkzeug, Scratchpad) gegen Rahmenplan 6.1; `decken.py`; `uebersicht.py --pruefen`; `dokumente`; `linkprobe`; `textprobe`; `bestand` | 175 Punkte erkannt, 0 nicht gefunden (nach zwei Berichtigungen des Lesers: R17 setzt seine Tabelle nach einer Leerzeile fort; dieselbe Kennung steht auch in Messprotokollen — es gewinnt die Zeile mit Bedienweg), davon 1 erledigt (P-S11-28) → 174 + 5 · 21 Decken, 0 gerissen · 63 Einträge, 0 · 0 Befunde (3 719 Verweise, 36 Ausnahmen) · 152 Verweise, 0 · erst 1 Treffer (`hausform`: „Betreiberin" in der neuen README-Zeile), dann 0 · 0 | 02.11.2026 |
+| PU-07/08 | Prüfstand `klein` | 47 grün, 0 rot, 0 nicht gemessen, 2 509 s, `handy=gebaut` (`android/LIESMICH.md` berührt → Android-Bau 612 s; die Ausbaustufe `android` dafür nachgerüstet, ein erster Lauf ohne SDK abgebrochen); Bericht in `91f705fe`, gegengelesen (in Ordnung, 53 Zahlen) | 02.11.2026 |
+| PU-09 | **Messlauf voll** (`pruefen.sh --voll`, nur Messung, kein Commit) | `umfang=voll:hand`, drei Engines, `breiten=zehn`, `seiten=alle`: 46 grün, 1 rot (F-PU-12), **8 443 s**. Bilderlauf je Engine 1 500 / 1 286 / 1 580 s (Chromium/Firefox/WebKit, 86 Seiten × 10 Breiten), Bedienprobe 441 / 417 / 417 s; die Browserproben zusammen je Engine rund 2 600 bis 3 000 s; WebKit: 860 CSP-Berichte örtlich beantwortet, 4 abgebrochene Abrufe nicht gezählt | 02.11.2026 |
 | PU-00 | Prüfstand `klein` | 24 grün, 0 rot, 0 nicht gemessen, 69 s; Bericht am PR-Kopf (`0e7faf8`) | 01.11.2026 |
 | PU-00 | `decken.py`, `uebersicht.py --pruefen`, `nummern.py`, `bestand.py`, `pruefen.sh textprobe`, `dokumente`, `linkprobe` | 21 Decken, 0 gerissen (erst 1: R89-Kern 196 Zeichen über 160, gekürzt) · 68 Einträge, 0 ohne Grammatik, 0 ohne Ziel · 0 neue Nummern, 0 Überschneidungen gegen 18 Zweige · 0 Befunde · 0 Treffer, 143 Regeln gegriffen · 50 Dokumente, 3 688 Pfadverweise, 0 Befunde · 154 Verweise, 0 Abweichungen | 01.11.2026 |
 

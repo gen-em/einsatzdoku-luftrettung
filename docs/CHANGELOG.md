@@ -14,6 +14,10 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Werkzeug: Der Prüfumfang folgt der Berührung (R89, Konzept PU)] — 2026-11-02
+
+Der Prüfstand maß in jeder Nebenstufe alles in drei Engines, zehn Breiten und über alle Seiten — der letzte Nebenlauf dauerte 12 205 s, und eine Berichtigung kostete denselben Lauf noch einmal. Jetzt misst er schmal, wenn nichts anderes verlangt ist: Chromium, fünf Breiten und die Seiten, deren eigene Datei berührt ist; voll nur in der Hauptstufe, an jeder zehnten Nebennummer und mit `--voll`, drei Engines und zehn Breiten auch bei berührtem Stylesheet oder `ui.php`. Nach einer Berichtigung erbt eine Probe ihr Grün vom Bericht des Vorgängers, wenn der Unterschied keines ihrer Muster trifft, und das Tor rechnet jedes Erbe nach. Was gemeldet wird, aber nicht aufhält, heißt jetzt `hinweis` — gerissene Decken der Steuerungsdokumente, eine zu lange Anleitung —, und die erzeugten Tabellen erzeugt der Prüfstand selbst, statt rot zu werden. Die offenen Handprüfungen stehen in einer Liste statt in dreizehn Prüfdokumenten; Stufe 2, das Backup-Tor und die Freigabe vor Produktiv bleiben, wie sie waren.
+
 ## [Web 23.6.0] — unveröffentlicht
 
 Schritt 12b, Paket R17-29 — Seitenaufbau und Mengen (Backlog Nr. 380, 381,

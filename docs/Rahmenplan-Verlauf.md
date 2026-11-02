@@ -9,6 +9,7 @@ Verlauf bis zum Schnitt). Die Fassungszählung läuft fortlaufend weiter.
 
 | Fassung | Datum | Anlass | Was |
 |---|---|---|---|
+| 189 | 02.11.2026 | 20, R89 | Schritt 20 gebaut (PU-01 bis -10), Pull Request offen; R87 abgelöst durch R89 (seit PU-03), R89 umgesetzt bis auf den Abschluss. Kopf: „Läuft" und „Offene PRs". |
 | 188 | 02.11.2026 | Zuarbeit (PU-08) | 6.1 und 6.2 verweisen auf `docs/konzepte/Pruefliste.md` statt auf dreizehn Prüfdokumente (E-PU-09, -14); die Dokumente sind gelöscht, ihr letzter Stand ist `8a8144f`. Keine Zeile gestrichen oder neu. |
 | 187 | 01.11.2026 | 20 | Umsetzung von PU beginnt auf `claude/compassionate-ride-1a0uw1`, nachdem 12b mit PR #125 gemergt ist; Kopf: Stand `main` `c32dd2c` (Web 23.6.0, Uhr 4.1.1, Android 0.18.2), keine offenen PRs, „Läuft: 20". |
 | 186 | 01.11.2026 | Merge, Berichtigung | `main` mit PR #124 (PU-00) aufgenommen; Kopf „Daneben: 20“, R89. Berichtigt: Fassung 182 war doppelt — sie bleibt bei PU-00, R17-28 bis -30 sind 183 bis 185 (damals 182 bis 184); Spanne 410–419 doppelt, PU jetzt 420–429. |

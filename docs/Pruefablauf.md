@@ -43,6 +43,9 @@ nicht gibt.
 | Seine Gegenlesung im Tor (5.1) | **gebaut mit PK-05** |
 | Station C in der beschriebenen Form (2) | **gebaut mit PK-05** — die Schemaprobe wird Pflichtprüfung, sobald das Ruleset es trägt (E-PK-47) |
 | Station D in der beschriebenen Form (2) | **gebaut mit PK-06** (Vorgriff PR #72 am 21.09.2026, Rest 29.09.2026) |
+| Umfang schmal oder voll, Engines, Breiten und Seiten je Berührung (1, 3) | **gebaut mit PU-01, -03, -04** (R89, 01.11.2026) |
+| Ergebnisart `hinweis`, Erzeuger vor dem Riegel, Steuerung aus dem Tor (2.2, 6.2) | **gebaut mit PU-02, -05, -06** |
+| Der ererbte Bericht (5.4, Lage 8) | **gebaut mit PU-10** (02.11.2026); im Tor auf GitHub zum ersten Mal mit dem PR von PU |
 
 Abschnitt 2.4 nennt den Umfang von Station D mit Zahl.
 
