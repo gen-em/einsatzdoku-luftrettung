@@ -376,10 +376,10 @@ in der Dokumentation steht, ist keiner mehr.
 | Name | Wofür | gemessen 21.09.2026, wo nicht anders genannt |
 |---|---|---|
 | `NADOKU_STAGING_URL` | Adresse der Prüfanlage | gesetzt, 33 Zeichen |
-| `NADOKU_STAGING_KONTO` | **eigenes** Konto der Arbeitsumgebung dort, Rolle Admin (seit 02.11.2026; bis dahin das Prüfkonto der Kette) | gesetzt, 24 Zeichen (02.11.2026) |
+| `NADOKU_STAGING_KONTO` | **eigenes** Konto der Arbeitsumgebung dort, Rolle **BetreiberIn** (seit 02.11.2026; bis dahin das Prüfkonto der Kette) | gesetzt, 24 Zeichen (02.11.2026) |
 | `NADOKU_STAGING_PASS` | dessen Passwort | gesetzt, 24 Zeichen (02.11.2026) |
 | `NADOKU_STAGING_TOTP` | Zweitfaktor-Geheimnis dieses Kontos (Base32), seit 02.11.2026 | gesetzt, 39 Zeichen (02.11.2026) |
-| `NADOKU_STAGING_WIEDERHERSTELLUNG` | Rückweg dieses Kontos, falls der Zweitfaktor nicht greift, seit 02.11.2026 | gesetzt, 24 Zeichen (02.11.2026) |
+| `NADOKU_STAGING_WIEDERHERSTELLUNG` | Wiederherstellungsschlüssel dieses Kontos (öffnet die verschlüsselten Daten ohne Passwort, `pat_wrap_rc`), seit 02.11.2026 | gesetzt, 24 Zeichen (02.11.2026) |
 | `NADOKU_STAGING_JOBS_TOKEN` | Aktionen von `jobs.php` — seit Web 23.1.0 das **Kettentoken** (Karte „Auslieferungskette") | gesetzt, 64 Zeichen |
 | `_MAIL_URL` | Webmail der Prüfanlage | gesetzt, 17 Zeichen |
 | `_MAIL_USER` | Postfach dort | gesetzt, 18 Zeichen |
@@ -398,8 +398,8 @@ in der Dokumentation steht, ist keiner mehr.
 > Absicht:** Der Server nimmt keinen Code zweimal, und eine Sitzung, die im
 > selben Fenster rechnet wie ein laufender Stufe-2-Lauf, machte ihn rot;
 > ebenso misst Stufe 2 einen anderen Bestand, wenn eine Sitzung am selben
-> Konto Daten ändert. Wer die Umgebung lesen kann, ist damit Admin auf
-> Staging — tragbar, weil dort nur Testdaten liegen (Bedrohungsmodell,
+> Konto Daten ändert. Wer die Umgebung lesen kann, ist damit BetreiberIn
+> auf Staging — tragbar, weil dort nur Testdaten liegen (Bedrohungsmodell,
 > „Staging getrennt"). **Die Python-Sitzung der Werkzeuge** (`sitzung.py`)
 > geht seit dem 02.11.2026 nur zur örtlichen Anlage am Proxy vorbei; nach
 > draußen nimmt sie Proxy und `REQUESTS_CA_BUNDLE` der Umgebung, sonst
