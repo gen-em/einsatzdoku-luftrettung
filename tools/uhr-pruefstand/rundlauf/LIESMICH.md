@@ -15,7 +15,7 @@ bash tools/uhr-pruefstand/rundlauf/rundlauf.sh [--nachholen|--schrumpfen|--reakt
 ```
 
 Im Prüfstand als `uhr-rundlauf`: `--nachholen fenix6pro`, dann `--schrumpfen fr945`,
-dann `--reaktivieren fenix6pro`.
+dann `--reaktivieren fenix6pro`, `--neukoppeln fenix6pro` und `--fremdkonto fr945`.
 
 ## Was es misst
 
@@ -30,7 +30,12 @@ verworfen während seiner letzten Anfrage (Haken in der Kopie von
 `--reaktivieren`: wie `--nachholen`, aber das Gerät wird vor dem Holen
 deaktiviert — 403, 0 Einsätze, Bild `3c-deaktiviert.png` mit der Sperrzeile;
 wieder aktiviert, 12 s ohne Anlass weiter 0; Sync-Seite verlassen und neu
-öffnen, dann gehen die Pakete.
+öffnen, dann gehen die Pakete. `--neukoppeln`: gekoppelt, deaktiviert,
+Schlüssel geholt (403), dann gelöscht; START halten, Rückfrage „Trennen? 2
+Pakete bleiben …“, neu koppeln an dasselbe Konto — die Pakete kommen an.
+`--fremdkonto`: ebenso, aber das Demo-Konto trägt für die neue Kopplung einen
+anderen, gültig versiegelten Schlüssel — 0 Einsätze, Bild `6-fremd.png` mit
+„2 Pakete altes Konto“, kurz START und Ja verwirft sie (`6b-verworfen.png`).
 
 ## Was es braucht
 
@@ -40,7 +45,8 @@ Demo-Konto mit Schlüsselpaar; Marke, Schlüssel und Gerät stellt es zurück, a
 ## Erwartete Zahl
 
 `12 Pruefungen, 0 Fehlschlaege` je Lauf, mit `--schrumpfen` dazu `3 Pruefungen, 0 Fehlschlaege`,
-mit `--reaktivieren` dazu `2 Pruefungen, 0 Fehlschlaege`;
+mit `--reaktivieren` dazu `2 Pruefungen, 0 Fehlschlaege`, mit `--neukoppeln` dazu
+`1 Pruefung`, `--fremdkonto` allein `3 Pruefungen, 0 Fehlschlaege`;
 Abbilder unter `$CIQ_BASIS/rundlauf/`.
 
 ## Was es nicht kann

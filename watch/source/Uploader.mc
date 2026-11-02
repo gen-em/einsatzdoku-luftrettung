@@ -188,6 +188,124 @@ module Uploader {
         abmeldungVergessen();
     }
 
+    /* DIE BINDUNG DES RUECKSTANDS.
+     *
+     * Ist die Uhr abgemeldet oder gesperrt, darf sie trotz Rueckstand neu
+     * koppeln (Pair.start) -- sonst ginge weder Senden noch Trennen. Der
+     * Rueckstand bleibt dann liegen, gebunden an den Kontoschluessel der
+     * bisherigen Kopplung: Bringt die neue Kopplung DENSELBEN Schluessel, ist
+     * es dasselbe Konto -- ein Konto hat genau ein Schluesselpaar, und es wird
+     * nie ersetzt --, und er geht hinaus. Bringt sie einen anderen, geht er
+     * NICHT hinaus.
+     *
+     * WARUM. Der Puffer liegt im Klartext und wird erst beim Senden
+     * verschlossen. An ein anderes Konto gesendet, waere er mit dessen
+     * Schluessel verschlossen und dort lesbar.
+     *
+     * Die Ablage haelt den alten Schluessel ("k", null = die alte Kopplung
+     * kannte keinen; dann gilt jeder neue als anders), die Referenzen der
+     * gebundenen Pakete ("refs") und das Ende der Frist ("bis"): Die Frist der
+     * Abmeldung laeuft fuer sie weiter, auch nach der neuen Kopplung. */
+    const ABLAGE_BINDUNG = "rueck_bind";
+
+    function gebunden() as Lang.Boolean {
+        return Storage.getValue(ABLAGE_BINDUNG) instanceof Lang.Dictionary;
+    }
+
+    /* Den jetzigen Rueckstand an den jetzigen Schluessel binden. Vor dem
+     * Loeschen des Schluessels zu rufen (Pair.lokalTrennen). */
+    function binden() as Void {
+        var refs = [] as Lang.Array<Lang.String>;
+        for (var i = 0; i < Model.pendingMissions.size(); i++) {
+            refs.add(Model.pendingMissions[i]["ref"] as Lang.String);
+        }
+        for (var j = 0; j < Model.pendingRest.size(); j++) {
+            refs.add(Model.pendingRest[j]["ref"] as Lang.String);
+        }
+        var bis = abmeldeFristBis();
+        if (bis == null) { bis = Util.epochNow() + Const.PARK_FRIST_S; }
+        var k = Storage.getValue(Huelle.ABLAGE_SCHLUESSEL);
+        Storage.setValue(ABLAGE_BINDUNG, {
+            "k" => (k instanceof Lang.String) ? k : null,
+            "refs" => refs, "bis" => bis
+        } as Lang.Dictionary<Storage.KeyType, Storage.ValueType>);
+    }
+
+    function _bindung() as Lang.Dictionary or Null {
+        var b = Storage.getValue(ABLAGE_BINDUNG);
+        return (b instanceof Lang.Dictionary) ? b : null;
+    }
+
+    /* Gehoert dieses Paket einem ANDEREN Konto als der jetzigen Kopplung? */
+    function istFremd(ref as Lang.String) as Lang.Boolean {
+        var b = _bindung();
+        if (b == null || !_bindungAnders(b)) { return false; }
+        var refs = b["refs"] as Lang.Array<Lang.String>;
+        for (var i = 0; i < refs.size(); i++) {
+            if (ref.equals(refs[i])) { return true; }
+        }
+        return false;
+    }
+
+    function _bindungAnders(b as Lang.Dictionary) as Lang.Boolean {
+        var alt = b["k"];
+        var jetzt = Storage.getValue(Huelle.ABLAGE_SCHLUESSEL);
+        return !(alt instanceof Lang.String) || !(jetzt instanceof Lang.String)
+            || !(alt as Lang.String).equals(jetzt as Lang.String);
+    }
+
+    /* Vor dem Senden: Bindung an dasselbe Konto loesen, abgelaufene
+     * verwerfen. Gibt nichts zurueck -- `istFremd` sagt danach je Paket,
+     * ob es liegen bleibt. */
+    function bindungPruefen() as Void {
+        var b = _bindung();
+        if (b == null) { return; }
+        var bis = b["bis"];
+        if (bis instanceof Lang.Number && Util.epochNow() > (bis as Lang.Number)) {
+            fremdeVerwerfen();
+            return;
+        }
+        if (Huelle.hatSchluessel() && !_bindungAnders(b)) {
+            Storage.deleteValue(ABLAGE_BINDUNG);
+        }
+    }
+
+    /* Wie viele Pakete gehoeren einem anderen Konto? Fuer die Sync-Seite. */
+    function fremdeZahl() as Lang.Number {
+        var b = _bindung();
+        if (b == null || !Huelle.hatSchluessel() || !_bindungAnders(b)) { return 0; }
+        var n = 0;
+        var refs = b["refs"] as Lang.Array<Lang.String>;
+        for (var i = 0; i < refs.size(); i++) {
+            if (_inListe(refs[i])) { n += 1; }
+        }
+        return n;
+    }
+
+    function _inListe(ref as Lang.String) as Lang.Boolean {
+        for (var i = 0; i < Model.pendingMissions.size(); i++) {
+            if (ref.equals(Model.pendingMissions[i]["ref"] as Lang.String)) { return true; }
+        }
+        for (var j = 0; j < Model.pendingRest.size(); j++) {
+            if (ref.equals(Model.pendingRest[j]["ref"] as Lang.String)) { return true; }
+        }
+        return false;
+    }
+
+    /* Die gebundenen Pakete verwerfen und die Bindung loesen -- nach der
+     * Rueckfrage auf der Sync-Seite oder nach Ablauf der Frist. */
+    function fremdeVerwerfen() as Lang.Number {
+        var b = _bindung();
+        if (b == null) { return 0; }
+        var refs = b["refs"] as Lang.Array<Lang.String>;
+        var n = 0;
+        for (var i = 0; i < refs.size(); i++) {
+            if (_inListe(refs[i])) { verwerfen(refs[i]); n += 1; }
+        }
+        Storage.deleteValue(ABLAGE_BINDUNG);
+        return n;
+    }
+
     /* WIE VIELE PAKETE STEHEN GEPARKT? Fuer die Anzeige (SyncView). */
     function geparkteZahl() as Lang.Number {
         var n = 0;
@@ -240,6 +358,7 @@ module Uploader {
         /* OHNE SCHLUESSEL ODER OHNE VERSCHLUESSELUNG: ebenso nicht.
          * Die Sync-Seite sagt, was fehlt. */
         if (!Huelle.hatSchluessel() || !Huelle.bereit()) { return; }
+        bindungPruefen();
         parkFristPruefen();
         _next();
     }
@@ -270,7 +389,7 @@ module Uploader {
         for (var i = 0; i < Model.pendingMissions.size(); i++) {
             var m = Model.pendingMissions[i];
             var mref = m["ref"] as Lang.String;
-            if (istGeparkt(mref)) { continue; }
+            if (istGeparkt(mref) || istFremd(mref)) { continue; }
             if (_openPoints(mref) > 0 || !_isAcked(mref)) {
                 return { "kind" => "mission", "data" => m };
             }
@@ -278,7 +397,7 @@ module Uploader {
         for (var i = 0; i < Model.pendingRest.size(); i++) {
             var r = Model.pendingRest[i];
             var rref = r["ref"] as Lang.String;
-            if (istGeparkt(rref)) { continue; }
+            if (istGeparkt(rref) || istFremd(rref)) { continue; }
             if (_openPoints(rref) > 0 || !_isAcked(rref)) {
                 return { "kind" => "rest_segment", "data" => r };
             }

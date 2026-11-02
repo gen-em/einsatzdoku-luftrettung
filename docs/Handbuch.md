@@ -119,10 +119,15 @@ Abschnitt 2.2 gibt es erst im laufenden Dienst.
 > Abmeldung. Danach verwirft sie alle ungesendeten Pakete: Eine Uhr, die
 > niemand mehr koppelt, soll Spur, Phasen und Reanimation nicht unbegrenzt
 > tragen. Das Datum in der Zeile ist der letzte Tag. Der Weg zurück ist eine
-> neue Kopplung (*lang START*) — aber nur, wenn nichts Ungesendetes mehr auf
-> ihr liegt: Die Pakete gehören dem bisherigen Konto, und die Uhr verweigert
-> das Koppeln mit „Erst 2 Pakete senden", damit sie nicht in einem fremden
-> Konto landen. Dann bleibt nur, die Frist abzuwarten.
+> neue Kopplung (*lang START*), **auch wenn noch Pakete offen sind** *(seit
+> Uhr 4.3.0; davor verweigerte die Uhr sie mit „Erst 2 Pakete senden", und
+> es blieb nur die Frist)*. Die Uhr fragt dann „Trennen? 2 Pakete bleiben und
+> gehen nur ans selbe Konto". Koppelst du sie wieder an **dein** Konto, gehen
+> die Pakete hinaus. Koppelst du sie an ein **anderes**, gehen sie dort nicht
+> hin — sie gehören dir und wären dort lesbar; die Sync-Seite zeigt dann „2
+> Pakete altes Konto" und **kurz START** verwirft sie nach einer Rückfrage.
+> Die Frist läuft für sie weiter. Während eines Dienstes geht das nicht
+> („Erst Dienst beenden").
 >
 > „**Gerät im Web deaktiviert**" mit „**Im Web klären, bis 27.10.**"
 > darunter *(seit Uhr 4.2.0; davor stand auch hier „Abgemeldet")* heißt:
@@ -6789,7 +6794,11 @@ Zwei Dinge, die dabei bewusst so sind:
 **Offene Pakete blockieren das Trennen.** Steht noch etwas zum Senden an, sagt
 die Uhr **„Erst N Pakete senden / Sonst ans neue Konto"** und trennt nicht.
 Die Pakete gehören der bisherigen Person; nach einer Neukopplung landeten sie
-im neuen Konto. Erst senden — die Sync-Seite zeigt den Rückstand.
+im neuen Konto. Erst senden — die Sync-Seite zeigt den Rückstand. **Eine
+Ausnahme** *(seit Uhr 4.3.0)*: Ist die Uhr im Web gelöscht oder gesperrt,
+kann sie ohnehin nicht mehr senden. Dann trennt sie nach Rückfrage trotzdem,
+und die Pakete bleiben gebunden an das bisherige Konto — sie gehen nur
+dorthin, nie an die neue Person (Abschnitt 1, „Steht dort etwas in Rot?").
 
 **Ohne Verbindung trennt die Uhr trotzdem** und merkt sich, dass der Server es
 nicht mitbekommen hat: Unter dem **„Gekoppelt"** der nächsten Kopplung steht

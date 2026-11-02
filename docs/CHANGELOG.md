@@ -14,6 +14,23 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Uhr 4.3.0] — unveröffentlicht
+
+Schritt 21 (GR), Paket GR-05 — die Sackgasse beim Koppeln ist offen
+(Backlog Nr. 431, Teil 2).
+
+### Behoben
+
+- **Uhr — eine gelöschte Uhr mit Rückstand lässt sich neu koppeln.** Bis
+  dahin verweigerte die Uhr das Trennen, solange Pakete offen waren, und
+  senden konnte sie nicht mehr; es blieb nur, die 30-Tage-Frist abzuwarten.
+  Jetzt trennt eine abgemeldete oder gesperrte Uhr nach Rückfrage und bindet
+  den Rückstand an den Schlüssel des bisherigen Kontos: Er geht nur an ein
+  Konto mit demselben Schlüssel, weil er erst beim Senden verschlossen wird
+  und in einem fremden Konto lesbar wäre. Gehört die neue Kopplung zu einem
+  anderen Konto, nennt die Sync-Seite die Pakete und verwirft sie nur nach
+  Rückfrage.
+
 ## [Uhr 4.2.0] — unveröffentlicht
 
 Schritt 21 (GR), Paket GR-04 — die Uhr liest die Absage des Servers genauer

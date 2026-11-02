@@ -18,11 +18,11 @@
 | GR-02 | Handy, Antwortauswertung: Nr. 154, 229 (Handy), 201 (Handy), 507 | **erledigt** 02.11.2026 (Android 0.19.0) |
 | GR-03 | Handy, Kopplung: Nr. 157, Neukoppeln mit Schlüsselbindung (E-BE-08) | **erledigt** 02.11.2026 (Android 0.20.0) |
 | GR-04 | Uhr, Antwortauswertung: Nr. 229, 201 (Uhr), 507, 431 Teil 1 | **erledigt** 02.11.2026 (Uhr 4.2.0) |
-| GR-05 | Uhr, Kopplung: Nr. 431 Teil 2, Neukoppeln mit Schlüsselbindung (E-BE-08) | offen |
+| GR-05 | Uhr, Kopplung: Nr. 431 Teil 2, Neukoppeln mit Schlüsselbindung (E-BE-08) | **erledigt** 02.11.2026 (Uhr 4.3.0) |
 | GR-06 | Uhr, Sync-Seite: Nr. 402 mit Bildprobe | offen |
 | GR-07 | Abschluss: Prüfstand, Prüfdokument, Backlog, Pull Request | offen |
 
-**In Arbeit:** GR-05. **Es hakt:** nirgends.
+**In Arbeit:** GR-06. **Es hakt:** nirgends.
 
 ---
 
@@ -404,10 +404,38 @@ durchreicht (sonst „Gerät oder Konto gesperrt"); die Wartezeiten nach
 429/503/507 nur durch Lesen — der Simulator-Rundlauf stellt keine
 Mengenbremse.
 
+**GR-05** (02.11.2026, Uhr 4.3.0): `pruefstand.sh alle` — dreimal
+`BUILD SUCCESSFUL`. Zwei neue Arten des Uhr-Rundlaufs (im Prüfstand als
+vierter und fünfter Teil von `uhr-rundlauf`): **`--neukoppeln fenix6pro`** —
+gekoppelt, deaktiviert, Schlüssel geholt (403, nichts gesendet), dann
+gelöscht; START halten, Rückfrage mit Ja, neue Sitzung, Kopplung an
+dasselbe Konto → beide Pakete kommen an, **12 + 1 Prüfungen, 0
+Fehlschläge**. **`--fremdkonto`** auf Fenix und FR 945 — ebenso, aber das
+Demo-Konto trägt für die neue Kopplung einen anderen, mit
+`sk_versiegeln()` gültig versiegelten Schlüssel → nach 15 s **0** Einsätze,
+Sync-Seite „2 Pakete altes Konto / START: verwerfen"; kurz START, Ja → weiter
+**0**, Seite „Sync vollständig"; **je 3 Prüfungen, 0 Fehlschläge**; danach
+geht der Demo-Schlüssel wieder auf (`kp_oeffentlich_lesen()` nicht null).
+
+**F-GR-09 — Der erste Testaufbau maß den falschen Fall.** Der erste Lauf
+`--neukoppeln` koppelte ohne Schlüssel und löschte dann; die Bindung war
+damit „unbekannt" und galt nach E-GR-01 richtig als anderes Konto — die
+Pakete blieben liegen, zwei Fehlschläge. Kein Fehler der Uhr; der Lauf
+deaktiviert seither zuerst, holt den Schlüssel und löscht dann.
+
+**F-GR-10 — „Altes Gerät im Web löschen" nach dem Trennen einer gelöschten
+Uhr.** `Pair.onTrennen()` deutete jeden Code außer 200 als „der Server hat
+nicht getrennt". Eine 401 heißt aber, dass es das Gerät nicht mehr gibt;
+im neuen Weg (abgemeldet → trennen) war der Hinweis immer falsch. Behoben im
+selben Paket: Bei 401 kein Hinweis (gesehen auf `6-fremd.png` der FR 945).
+Das Handy behält seine Deutung (der Rundlauf legt „nur lokal" bei 401 fest),
+dort ersetzt der Bindungshinweis den Hinweis (GR-03).
+
 ## 7. Verlauf
 
 | Datum | Was |
 |---|---|
+| 02.11.2026 | GR-05 erledigt (Uhr 4.3.0). |
 | 02.11.2026 | GR-04 erledigt (Uhr 4.2.0). |
 | 02.11.2026 | GR-03 erledigt (Android 0.20.0). |
 | 02.11.2026 | GR-02 erledigt (Android 0.19.0). |

@@ -209,6 +209,13 @@ class SyncView extends WatchUi.View {
              * sondern sagt, wo es hingehoert. */
             lines.add(["Verschlüsseln geht nicht", Ui.ROT]);
             lines.add(["Bitte melden", Graphics.COLOR_LT_GRAY]);
+        } else if (Uploader.fremdeZahl() > 0) {
+            /* PAKETE DES BISHERIGEN KONTOS: nach einer Abmeldung an ein
+             * anderes Konto gekoppelt. Sie gehen nicht hinaus; ohne diese
+             * Zeile stuende oben nur ein Rueckstand, der sich nie abbaut. */
+            var nf = Uploader.fremdeZahl();
+            lines.add([nf == 1 ? "1 Paket altes Konto" : nf.toString() + " Pakete altes Konto", Ui.ROT]);
+            lines.add([Input.lSelect() + ": verwerfen", Graphics.COLOR_LT_GRAY]);
         } else if (geparkt > 0) {
             lines.add([geparkt == 1 ? "1 abgewiesen"
                                     : geparkt.toString() + " abgewiesen", Ui.ROT]);
@@ -364,6 +371,18 @@ class SyncView extends WatchUi.View {
     }
 }
 
+/* Die Rueckfrage vor dem Verwerfen der Pakete des bisherigen Kontos. */
+class FremdeVerwerfenDelegate extends WatchUi.ConfirmationDelegate {
+    function initialize() { ConfirmationDelegate.initialize(); }
+    function onResponse(response) as Lang.Boolean {
+        if (response == WatchUi.CONFIRM_YES) {
+            Uploader.fremdeVerwerfen();
+            WatchUi.requestUpdate();
+        }
+        return true;
+    }
+}
+
 /* Die Rueckfrage vor dem Verwerfen. */
 class VerwerfenDelegate extends WatchUi.ConfirmationDelegate {
     function initialize() { ConfirmationDelegate.initialize(); }
@@ -397,6 +416,18 @@ class SyncDelegate extends ActionDelegate {
      * Geparktes an, tut die Taste nichts, statt eine Rueckfrage ohne
      * Gegenstand zu oeffnen. */
     function actSelectShort() as Lang.Boolean {
+        /* ZUERST DIE PAKETE DES BISHERIGEN KONTOS -- dieselbe Reihenfolge
+         * wie die Zeilen der Seite. Sie gehen nur an jenes Konto; wer es
+         * nicht mehr koppeln wird, verwirft sie hier. */
+        var nf = Uploader.fremdeZahl();
+        if (nf > 0) {
+            var ff = nf == 1
+                ? "1 Paket des alten Kontos verwerfen? Es geht nicht ans neue"
+                : nf.toString() + " Pakete des alten Kontos verwerfen? Sie gehen nicht ans neue";
+            WatchUi.pushView(new WatchUi.Confirmation(ff),
+                             new FremdeVerwerfenDelegate(), WatchUi.SLIDE_LEFT);
+            return true;
+        }
         var n = Uploader.geparkteZahl();
         if (n == 0) { return true; }
         var frage = n == 1
