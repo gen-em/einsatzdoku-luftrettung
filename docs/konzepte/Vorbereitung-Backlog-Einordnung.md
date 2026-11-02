@@ -89,6 +89,7 @@ die heutige Kopfzeile; **Vorschlag** die aus Abschnitt 4 (`=` unverändert).
 | 361 | W | Oberfläche/Geräte | offen | nächste Runde | **BR5** | APK-Karte unterscheidet Handy und Wear-OS-Uhr nicht (stirbt mit Welle 1) |
 | 432 | W | Oberfläche/Geräte | offen | nächste Runde (PR #129) | **BR5** | „App installieren" nennt beide APKs gleich — Doppelung von Nr. 361, wird dort erledigt |
 | 430 | W | Backup/Formular | offen | nächste Runde (PR #129) | **BR5** | Bitwarden bietet am Feld „Kontopasswort" den Eintrag nicht an |
+| 440 | W | Geräteverwaltung | offen | neu (E-BE-08) | **BR5** | Löschen eines Geräts warnt nicht vor ungesendeten Aufzeichnungen |
 | 383 | W T D | Sicherung/Plattform | offen | Pflegeaufgabe | **BR5** | Komplettsiegel rot unter PHP 8.3.6 (Ubuntu 24.04 LTS) — Ursache oder Mindestfassung |
 | 342 | W | Oberfläche/Tabellen (Mockup) | offen | nächste Runde | **13** | Einsatztabellen von Suche und Zeitraum rollen am Schreibtisch — Gestaltungsfrage |
 | 23 | D | Vertrag | offen | 13 | = | JSON-Vertrag 3.3 nennt `beginn`, kein Schreibweg nimmt es an |
@@ -249,7 +250,7 @@ größer.
 |---|---|---|
 | PR — Prüfmittel | — | 352, 385, 403 |
 | 21 — GR | — | 154, 157, 201, 229, 402, 431 |
-| 22 — BR5 | — | 345, 346, 354, 355, 356, 357, 358, 361, 383, 392, 430, 432 |
+| 22 — BR5 | — | 345, 346, 354, 355, 356, 357, 358, 361, 383, 392, 430, 432, 440 (neu, E-BE-08) |
 | 13 — P7 | 23, 62, 154, 157, 201, 229, 409 | 23, 62, 280, 342, 409 |
 | 14 — P8 | 46, 187, 252, 262, 276, 324, 400 | 46, 187, 213, 232, 234, 237, 240, 252, 265, 276, 290, 300, 324, 343, 347, 353, 384, 388, 391, 400, 410, 411 |
 | Zuarbeit | 80, 213, 261 | 80, 261 (+ Zeile 6.2: Logo-Vorlagen für 62) |
@@ -258,7 +259,7 @@ größer.
 | **verworfen** (Erledigt-Datei) | — | 52, 90, 96, 99, 100, 198, 200, 262, 263, 351 |
 | nächste Backlog-Runde | 30 | **leer** |
 
-Summe: 3 + 6 + 12 + 5 + 22 + 2 + 3 + 3 = **56** offene, 10 verworfene = 66.
+Summe: 3 + 6 + 13 + 5 + 22 + 2 + 3 + 3 = **57** offene (mit Nr. 440), 10 verworfene = 67.
 Gemessen mit `uebersicht.py --pruefen` (0 ohne Grammatik, 0 ohne Ziel) und
 `decken.py` (21 Decken, 0 gerissen).
 
@@ -283,8 +284,8 @@ Gemessen mit `uebersicht.py --pruefen` (0 ohne Grammatik, 0 ohne Ziel) und
 Alle sieben am 02.11.2026 beantwortet; die Entscheidungen stehen in
 Abschnitt 6 (Q-BE-01 → E-BE-01, Q-BE-02 → E-BE-02, Q-BE-03 → E-BE-03,
 Q-BE-04 → E-BE-07, Q-BE-05 → E-BE-01, Q-BE-06 → E-BE-04, Q-BE-07 → E-BE-06).
-Offen bleibt die Frage aus Nr. 431 (30-Tage-Frist bei gelöschtem Gerät);
-sie gehört ins Konzept zu 21.
+Die Frage aus Nr. 431 (30-Tage-Frist bei gelöschtem Gerät) ist am
+02.11.2026 beantwortet (E-BE-08).
 
 ## 6. Entscheidungen
 
@@ -333,9 +334,23 @@ darf `docs/JSON-Vertrag.md` anfassen, weil daneben nichts daran schreibt.
 Nr. 432 (PR #129) beschreibt denselben Fehler und denselben Weg wie 361;
 beide tragen 22, der Eintrag 432 sagt es, erledigt wird 432 mit 361.
 
+**E-BE-08 — Gelöschtes Gerät mit Rückstand: neu koppeln statt 30 Tage
+warten (02.11.2026, Betreiberin).** Die Sperre ist zu lang. Von fünf
+Optionen (Trennen mit Verwerfen; Neukoppeln mit Schlüsselvergleich; Frist
+kürzen; Gnadenfrist auf dem Server; Warnung im Web) gewählt: **Neukoppeln
+mit Schlüsselvergleich** — bei `abgemeldet` darf die Uhr koppeln, hält der
+Kontoschlüssel stand, geht der Rückstand hinaus, sonst Rückfrage und
+verwerfen (seit S11 ist er für ein anderes Konto unlesbar); dasselbe auf
+dem Handy (Nr. 157, 229) — und dazu die **Warnung im Web** beim Löschen
+(Nr. 440, in 22). Die 30-Tage-Frist bleibt (Lage H). Verworfen: Frist
+kürzen (stumpf, trifft das Funkloch) und Gnadenfrist (weicht „löschen" auf,
+kostet Vertrag und Datenmodell). Nr. 431 trägt den Entscheid; Spanne
+440–449 für diesen Zweig.
+
 ## 7. Protokoll
 
 | Datum | Was |
 |---|---|
 | 02.11.2026 | Runde 1: Backlog (63), Rahmenplan 190 und Archiv-2 gelesen; Matrix, Abweichungen F-BE-01 bis -10, Vorschlag 4.1 bis 4.4, Fragen Q-BE-01 bis -07. Nichts geschrieben außer dieser Datei. |
 | 02.11.2026 | Runde 2: PR #129 aufgenommen (Nr. 430 bis 432), Q-BE-01 bis -07 entschieden (E-BE-01 bis -07), Stand `verworfen` gebaut, zehn Punkte verschoben, 44 Kopfzeilen umgehängt, Rahmenplan Fassung 192 mit R90, Verlaufszeile. Prüfstand: siehe Commit. |
+| 02.11.2026 | Runde 3: E-BE-08 (Nr. 431 entschieden), Nr. 440 neu (Spanne 440–449), Fahrplanzeile 22 nachgezogen. |

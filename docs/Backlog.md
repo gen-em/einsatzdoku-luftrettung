@@ -53,7 +53,8 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
 | Spanne | Zweig | seit |
 |---|---|---|
 | 430 bis 439 | `claude/new-session-p1duc7` — Ergebnisse der Handprüfungen nach den Tags von 12b (Prüfliste, Backlog, Runbook); vergeben: 430 bis 432 | 02.11.2026 |
-| ab 440 | frei — höchste reservierte Nummer 439; frei blieben 420 bis 429 aus der Spanne von 20 (PR #127), 412 bis 419 aus der von 12b (PR #125), 394 bis 399 aus der Spanne von 19 (PR #112 bis #114), 389 aus der von 12a (PR #116), 372 bis 379 aus der von 12 (PR #103), 362 bis 369 aus der von PK, 359 aus der von 18 (PR #101), 348 und 349 aus der von 17, 338 aus der von AR | 02.11.2026 |
+| 440 bis 449 | `claude/sharp-faraday-q1cp0s` — Einordnung des Backlogs (Rahmenplan 192, E-BE); vergeben: 440 | 02.11.2026 |
+| ab 450 | frei — höchste reservierte Nummer 449; frei blieben 420 bis 429 aus der Spanne von 20 (PR #127), 412 bis 419 aus der von 12b (PR #125), 394 bis 399 aus der Spanne von 19 (PR #112 bis #114), 389 aus der von 12a (PR #116), 372 bis 379 aus der von 12 (PR #103), 362 bis 369 aus der von PK, 359 aus der von 18 (PR #101), 348 und 349 aus der von 17, 338 aus der von AR | 02.11.2026 |
 
 ---
 
@@ -1109,17 +1110,19 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      Einsatz. Zurück setzen es nur eine angenommene Anfrage oder das
      Koppeln; die erste kommt nie zustande, das zweite sperrt die Uhr,
      solange Pakete offen sind. Wer das Gerät im Web wieder aktiviert, muss
-     also wissen, dass er die App neu starten muss (die Marke liegt nur im
-     Speicher) — seit dem 02.11.2026 steht der Ausweg im Handbuch (Sync-Seite
-     der Uhr), das bis dahin „neu koppeln" sagte. Gemessen: aktiviert, nichts gesendet;
-     nach dem Neustart der App gingen alle Pakete hinaus. *Weg:* das
+     die App neu starten (die Marke liegt nur im Speicher); seit dem
+     02.11.2026 sagt es das Handbuch (Sync-Seite der Uhr, vorher „neu
+     koppeln"). Gemessen: aktiviert, nichts gesendet; nach Neustart alles. *Weg:* das
      Öffnen der Sync-Seite oder „Senden" versucht es trotz der Marke einmal,
-     dazu ein seltener Versuch beim Dienstende. *Frage an die Betreiberin:*
-     Ist ein Gerät im Web **gelöscht** statt deaktiviert, lässt sich die Uhr
-     mit offenen Paketen erst nach Ablauf der 30-Tage-Frist neu koppeln
-     (E-R17-22) — gewollt, oder zu lang für eine Übergabe an ein anderes
-     Konto? *Abnahme:* deaktivieren, aufzeichnen, aktivieren, Sync-Seite
-     öffnen — die Pakete gehen ohne Neustart hinaus.
+     dazu ein seltener Versuch beim Dienstende. *Entschieden 02.11.2026
+     (E-BE-08):* Dass eine im Web **gelöschte** Uhr mit Rückstand erst nach
+     der 30-Tage-Frist neu koppeln kann, ist zu lang. Bei `abgemeldet` darf
+     sie neu koppeln und vergleicht den Kontoschlüssel: gleich → der
+     Rückstand geht hinaus, anders → Rückfrage und verwerfen (für das
+     andere Konto wäre er unlesbar); dasselbe auf dem Handy (Nr. 157, 229).
+     Die Frist bleibt; Web-Warnung: Nr. 440. *Abnahme:* deaktivieren,
+     aufzeichnen, aktivieren, Sync-Seite öffnen → Pakete gehen ohne Neustart
+     hinaus; gelöscht → neu koppeln, dieselben Pakete kommen an.
 
 <!-- -->
 
@@ -1135,3 +1138,19 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      bzw. „NAdoku für Wear-OS-Uhr"; dieselbe Benennung in Betrieb → Updates,
      wo `apk_liste()` auch gelesen wird. *Abnahme:* beide Zeilen tragen ihr
      Gerät, die Prüfsummen bleiben an ihrer Zeile.
+
+<!-- -->
+
+440. **Beim Löschen eines Geräts warnt das Web nicht vor ungesendeten Aufzeichnungen.** · gehört zu: 22 · Stand: offen · seit 02.11.2026
+     *Aufgenommen 02.11.2026 mit E-BE-08 (aus der Frage in Nr. 431).* Wer
+     ein Gerät unter Einstellungen → Geräte oder in der Verwaltung löscht,
+     nimmt ihm den Schlüssel; was noch auf Uhr oder Handy wartet, kommt bei
+     diesem Konto nie mehr an. Das Web sagt davon nichts, obwohl es die Zeit
+     des letzten Kontakts kennt. Für eine verlorene Uhr ist Deaktivieren der
+     richtige Griff (Runbook „Gerät verloren"): wirkt sofort, Daten bleiben,
+     und die Uhr sendet nach dem Reaktivieren weiter. *Weg:* Die Rückfrage
+     vor dem Löschen nennt den letzten Kontakt und rät bei längerer Pause
+     zum Deaktivieren; derselbe Satz in Handbuch und Runbook. *Abnahme:*
+     Löschen eines Geräts mit Kontakt vor mehr als einem Tag → Rückfrage
+     mit Datum und Hinweis; ein Gerät mit Kontakt heute → Rückfrage ohne
+     Hinweis; `tools/zaehlung/` ohne neue Stelle (Meldung über `ui_`).
