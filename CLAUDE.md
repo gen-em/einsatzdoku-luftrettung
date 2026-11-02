@@ -471,7 +471,9 @@ Oberflächenänderung anfängt, liest zuerst dort. Kurz:
   **erzeugt**: `python3 tools/erzeugen/design.py schreiben` ersetzt sie dort.
   Wer eine davon von Hand ändert, ändert sie an der falschen Stelle — und wer
   `ui.php`, `style.css` oder ein Symbol ändert, erzeugt sie neu, sonst ist
-  Stufe 1 rot (`bestand`, Regel `design`, seit R4-25).
+  Stufe 1 rot (`bestand`, Regel `design`, seit R4-25). **Der Prüfstand
+  erzeugt sie seit PU-06 selbst** — samt der Tabelle in `Pruefablauf.md` 4 —
+  und meldet die Änderung als Hinweis; sie gehört in den Commit (E-PU-07).
 
 ## 6. Prüfen
 

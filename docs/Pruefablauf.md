@@ -439,6 +439,7 @@ Zwei Dinge hängen mit daran, und beide sind gemessen:
 | Berührung | ab Stufe | Proben | Anlass |
 |---|---|---|---|
 | `server/**` | klein | — (nur die Riegel) | Auffangmuster: Jede Datei unter server/ laeuft durch die billigen Riegel. Sie traegt KEINE eigene Probe -- wer hier landet und sonst nirgends, hat keine zugeordnete Probe, und der Pruefstand sagt das. |
+| `server/**`, `docs/Design.md`, `docs/Pruefablauf.md`, `tools/erzeugen/design.py`, `tools/pruefstand/**` | klein | `erzeugen` | F-PU-01 (PU-06): Was die vier Tabellen in Design.md (Stylesheet, ui.php, Symbole und ihre Verwendung unter server/) oder die Tabelle in Pruefablauf.md 4 (pruefablauf.json, bericht.py) speist, erzeugt sie vor dem Riegel neu. |
 | `server/spur_lib.php`, `server/tag_spuren.php`, `server/api/backup_spuren*.php` | klein | `spurprobe`, `containerprobe` | int gegen float (S2) |
 | `server/ingest.php`, `server/validate_lib.php` | klein | `ingestprobe` | stiller Datenverlust bei "ok" |
 | `server/jobs_lib.php`, `server/jobs.php` | klein | `jobprobe`, `jobregister` | Huckepack 18 s; Nr. 208 |
@@ -686,7 +687,11 @@ Kopfkommentar ihrer Einstiegsdatei. Dazu misst er, dass jeder Ordner
 gerufen wird — `tools/<ordner>/` steht in `pruefablauf.json`, in einem
 Workflow, in `tools/pruefstand/pruefen.sh` oder in `Sandbox-Setup.md` — und
 dass außer `motor.mjs` keine Datei lose unter `tools/` liegt. Er misst gegen
-null, **ohne Decke und ohne Ausnahmeliste** (E-BR-01). Die Anlass-Zeile
+null, **ohne Decke und ohne Ausnahmeliste** (E-BR-01). **Die 40 Zeilen
+sind seit PU-06 ein Hinweis, kein Rot** (E-PU-07): Drei von fünfzehn roten
+Läufen seit BR-02 waren eine Anleitung mit 41 bis 43 Zeilen (F-PU-01). Der
+Befund steht weiter im Lauf, als `HINWEIS: form · …`, der Prüfstand
+schreibt `bestand=hinweis`, und gekürzt wird trotzdem. Die Anlass-Zeile
 beginnt mit `Anlass:`; eine Zeile, in der das Wort mitten im Satz steht,
 findet man nur, wenn man sie sucht, und zählt deshalb nicht.
 
@@ -1054,7 +1059,7 @@ hier steht, ist nur, **was grün heißt**:
 | `tools/screenshots/` | 0 Überlauf, 0 Konsolenfehler, 0 Knöpfe falscher Höhe, 0 Karten außerhalb von `main.inhalt`; mit `--etikett NAME` zusätzlich 0 Abweichungen bei Titel und Kopfleiste (P5c/AP1). Rollende Behälter werden genannt und halten nicht auf (R4-08) |
 | `tools/screenshots/` `kontrast.py` | 0 Paare unter ihrem Sollwert, 0 Paare des Stylesheets ohne Eintrag in `PAARE` oder `AUSNAHMEN` (seit R4-08); Selbstprobe alle Fälle grün |
 | `tools/kettenaufrufe/` | 0 Befunde; jeder ungeprüfte Aufruf ist benannt; seit R17-19 dazu jede fremde `uses:`-Zeile an einer SHA mit Fassung und die Ausnahmeliste bei ihren sieben Pfaden (bis Web 23.3.0 acht), `.gitignore` vollständig, keine eingecheckte `server/config.php*` |
-| `tools/quelltext/` `bestand` | 0 Befunde in allen Regeln (`REGELN` in `bestand.py`, heute 15) — ohne Decke, ohne Ausnahmeliste (E-BR-01); seit R4-25 stehen die vier erzeugten Tabellen in `Design.md` wie ihr Erzeuger sie ausgibt (Regel `design`) |
+| `tools/quelltext/` `bestand` | 0 Befunde in allen Regeln (`REGELN` in `bestand.py`, heute 15) — ohne Decke, ohne Ausnahmeliste (E-BR-01); die Zeilendecke einer Anleitung ist seit PU-06 ein `HINWEIS`, kein Befund im Rückgabewert (E-PU-07); seit R4-25 stehen die vier erzeugten Tabellen in `Design.md` wie ihr Erzeuger sie ausgibt (Regel `design`) |
 | `tools/quelltext/` `anker` | 0 Verweise `hilfe.php#…` ohne Ziel im gerenderten Handbuch; Selbstprobe 6 von 6 (falscher Anker rot, Kommentar zählt nicht, `-2` bei gleichem Titel) |
 | `tools/quelltext/` `kennzeichnung` | alle Kennzeichen der Sollliste stehen (heute 26 von 26: 13 Felder, Formular und Leseansicht), jedes Klartext-Freitextfeld trägt die Kleinzeile, 0 Blobfelder ohne Zeile; Selbstprobe 8 von 8 (die beiden Fehler aus 19.1.0 rot, Kommentar zählt nicht) |
 | `tools/quelltext/` `fremdsummen` | jede Datei unter `server/assets/vendor/` (heute 6) mit Herkunftskopf, SHA-256 ohne den Kopf gleich der Kopfzeile und gleich der Tabelle in `Lizenzen.md` 3; 0 Befunde; Selbstprobe 7 von 7 (die Falle aus F-R17-50 und die Datei ohne Kopf aus F-R17-51 rot) |
@@ -1187,8 +1192,11 @@ F-BR-19) — vier davon blieben damals grün.
    Ein Ordner, der hier nicht steht, muss in einem Arbeitslauf, in
    `tools/pruefstand/pruefen.sh` oder in `docs/Sandbox-Setup.md` genannt
    sein (`bestand`, `inventur`).
-6. **Die Tabelle in 4 erzeugen:** `python3 tools/pruefstand/bericht.py
-   erzeugen-doku`. Die Ausgabe ersetzt in Abschnitt 4 den Block von der
+6. **Die Tabelle in 4 erzeugen** — seit PU-06 tut es der Prüfstand selbst
+   (Probe `erzeugen`, vor den Riegeln, E-PU-07) und meldet die Änderung als
+   Hinweis; sie gehört in den Commit. Von Hand: `python3
+   tools/pruefstand/bericht.py erzeugen` schreibt sie, `erzeugen-doku` gibt
+   sie nur aus. Die Ausgabe ersetzt in Abschnitt 4 den Block von der
    Zeile `<!-- ERZEUGT … -->` bis zur **letzten Zeile, die der Erzeuger
    schreibt** — heute die Stufenregel `migration` unter der Zeile „**Die
    billigen Riegel laufen in jeder Stufe …**". *Bis R4-03 stand hier „bis

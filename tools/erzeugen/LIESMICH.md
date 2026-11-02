@@ -32,8 +32,8 @@ Nichts — es erzeugt:
 
 Keine — ein Erzeuger meldet, was er geschrieben hat. Die Tabellen von `design` aber
 hält `bestand` (Regel `design`, seit R4-25, Nr. 209) an seine Ausgabe: Nach einer Änderung
-an `ui.php`, `style.css` oder einem Symbol `erzeugen.sh design schreiben`, sonst ist
-Stufe 1 rot. `wegwerfdomains` schreibt **erst auf Zuruf**.
+an `ui.php`, `style.css` oder einem Symbol erzeugt der Prüfstand sie selbst (seit PU-06, Hinweis);
+ohne ihn ist Stufe 1 rot. `wegwerfdomains` schreibt **erst auf Zuruf**.
 
 ## Was es nicht kann
 

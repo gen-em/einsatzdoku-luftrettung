@@ -6,6 +6,7 @@
     python3 tools/pruefstand/bericht.py lesen [--commit HEAD] [--datei -]
     python3 tools/pruefstand/bericht.py lesen --selbstprobe
     python3 tools/pruefstand/bericht.py erzeugen-doku
+    python3 tools/pruefstand/bericht.py erzeugen
 
 Rückgabewert 0 = in Ordnung · 1 = der Bericht trägt nicht · 2 = die Probe
 selbst kam nicht zum Laufen (fehlende Datei, unbekannter Schalter, kein Git).
@@ -570,6 +571,63 @@ def erzeugen_doku(args):
     ERZEUGT, NICHT GEPFLEGT: Wer sie von Hand ändert, ändert sie an der
     falschen Stelle (wie die Tabellen in Design.md).
     """
+    melde(doku_tabelle().rstrip('\n'))
+    return 0
+
+
+PRUEFABLAUF_MD = os.path.join(WURZEL, 'docs', 'Pruefablauf.md')
+DESIGN_MD = os.path.join(WURZEL, 'docs', 'Design.md')
+TABELLE_ANFANG = '<!-- ERZEUGT von tools/pruefstand/bericht.py erzeugen-doku'
+TABELLE_ENDE = '\n---\n\n## 5. '
+
+
+def tabelle_einsetzen(text, tabelle):
+    """Ersetzt in Pruefablauf.md den erzeugten Block — von der Marke bis vor
+    die Trennlinie zu Abschnitt 5. Fehlt eine Grenze, ValueError."""
+    a = text.index(TABELLE_ANFANG)
+    e = text.index(TABELLE_ENDE, a)
+    return text[:a] + tabelle.rstrip('\n') + '\n' + text[e:]
+
+
+def erzeugen(args):
+    """DIE ERZEUGTEN TABELLEN, VOR DEM RIEGEL ERZEUGT (E-PU-07). Neun von
+    fünfzehn roten Läufen des Bestandsriegels waren eine Tabelle, die niemand
+    neu erzeugt hatte (F-PU-01): erzeugen, committen, Prüfstand noch einmal.
+    Jetzt erzeugt der Prüfstand sie selbst — `design.py schreiben` für
+    Design.md, `doku_tabelle()` für Pruefablauf.md 4 — und meldet als
+    HINWEIS, was sich geändert hat; die Änderung gehört in den Commit. Im Tor
+    bleibt `bestand` rot, wenn jemand ohne Prüfstand committet.
+    Rückgabe 0 = erzeugt (geändert oder nicht), 1 = ein Erzeuger scheiterte."""
+    def lies(p):
+        with open(p, encoding='utf-8') as f:
+            return f.read()
+    vorher = {p: lies(p) for p in (DESIGN_MD, PRUEFABLAUF_MD)}
+    r = subprocess.run([sys.executable, os.path.join(WURZEL, 'tools', 'erzeugen', 'design.py'), 'schreiben'],
+                       capture_output=True, text=True)
+    if r.returncode != 0:
+        melde(f'design.py schreiben endete mit rc {r.returncode}: {(r.stderr or r.stdout).strip()[-300:]}')
+        return 1
+    try:
+        neu = tabelle_einsetzen(lies(PRUEFABLAUF_MD), doku_tabelle())
+    except ValueError:
+        melde(f'docs/Pruefablauf.md: die Grenzen des erzeugten Blocks fehlen ({TABELLE_ANFANG!r} … {TABELLE_ENDE!r}).')
+        return 1
+    if neu != vorher[PRUEFABLAUF_MD]:
+        with open(PRUEFABLAUF_MD, 'w', encoding='utf-8') as f:
+            f.write(neu)
+    geaendert = [os.path.relpath(p, WURZEL) for p in vorher if lies(p) != vorher[p]]
+    for p in geaendert:
+        melde(f'HINWEIS: {p} neu erzeugt — die Änderung gehört in den Commit (E-PU-07)')
+    melde(f'Erzeugt: Design.md (4 Tabellen), Pruefablauf.md 4 — {len(geaendert)} geändert.')
+    return 0
+
+
+def doku_tabelle():
+    """Der erzeugte Block für Pruefablauf.md 4, als Text."""
+    zeilen = []
+
+    def melde(z=''):                            # sammeln statt drucken
+        zeilen.append(z)
     a = lade_ablauf()
     melde('<!-- ERZEUGT von tools/pruefstand/bericht.py erzeugen-doku — nicht von Hand ändern. -->')
     melde()
@@ -586,7 +644,7 @@ def erzeugen_doku(args):
         melde()
         melde(f"**Stufenregel `{r['id']}`:** eine neue Kennung in `{r['datei']}` "
               f"heißt mindestens **{r['stufe']}** — {r['anlass']}")
-    return 0
+    return '\n'.join(zeilen) + '\n'
 
 
 # ------------------------------------------------------------------- Lauf
@@ -617,6 +675,9 @@ def main():
 
     d = u.add_parser('erzeugen-doku')
     d.set_defaults(fn=erzeugen_doku)
+
+    e = u.add_parser('erzeugen', help='Design.md und Pruefablauf.md 4 neu erzeugen, Änderung als HINWEIS (E-PU-07)')
+    e.set_defaults(fn=erzeugen)
 
     args = p.parse_args()
     try:

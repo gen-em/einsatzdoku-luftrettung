@@ -229,6 +229,7 @@ def drei_aus(a):
 # Seiten, obwohl die Doku „berührte Seiten" sagte (F-PU-07).
 SEITEN_JSON = os.path.join(WURZEL, 'tools', 'screenshots', 'seiten.json')
 SEITEN_PROBEN = ('bilderlauf', 'bedienprobe')
+VORAB = ('erzeugen',)          # läuft vor den Riegeln, wenn ausgewählt (E-PU-07)
 ALLE = 'alle'
 
 
@@ -895,7 +896,9 @@ def main():
     riegel = a['riegel']['proben']
 
     if args.nur_proben:
-        for n in riegel + [x for x in proben if x not in riegel]:
+        # `erzeugen` vor den Riegeln (E-PU-07): `bestand` misst den frischen Stand.
+        vorab = [x for x in VORAB if x in proben]
+        for n in vorab + riegel + [x for x in proben if x not in riegel and x not in vorab]:
             melde(n)
         return 0
 

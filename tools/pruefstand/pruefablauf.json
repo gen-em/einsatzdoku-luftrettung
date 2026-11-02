@@ -7,6 +7,11 @@
     "haupt"
   ],
   "proben": {
+    "erzeugen": {
+      "aufruf": "python3 tools/pruefstand/bericht.py erzeugen",
+      "braucht": "nichts",
+      "bemerkung": "PU-06 (E-PU-07), Anlass F-PU-01: neun von fuenfzehn roten Laeufen des Bestandsriegels waren eine erzeugte Tabelle, die niemand neu erzeugt hatte. Erzeugt Design.md (design.py schreiben) und Pruefablauf.md 4 (doku_tabelle) und meldet jede Aenderung als HINWEIS -- sie gehoert in den Commit. Laeuft VOR den Riegeln (auswahl.py stellt sie an den Anfang), damit bestand den frischen Stand misst. Kein Riegel: Im Tor bleibt bestand rot, wenn jemand ohne Pruefstand committet."
+    },
     "syntax-php": {
       "aufruf": "php -l",
       "braucht": "nichts"
@@ -429,6 +434,21 @@
       ],
       "proben": [],
       "anlass": "Auffangmuster: Jede Datei unter server/ laeuft durch die billigen Riegel. Sie traegt KEINE eigene Probe -- wer hier landet und sonst nirgends, hat keine zugeordnete Probe, und der Pruefstand sagt das."
+    },
+    {
+      "id": "erzeugte-tabellen",
+      "ab": "klein",
+      "pfade": [
+        "server/**",
+        "docs/Design.md",
+        "docs/Pruefablauf.md",
+        "tools/erzeugen/design.py",
+        "tools/pruefstand/**"
+      ],
+      "proben": [
+        "erzeugen"
+      ],
+      "anlass": "F-PU-01 (PU-06): Was die vier Tabellen in Design.md (Stylesheet, ui.php, Symbole und ihre Verwendung unter server/) oder die Tabelle in Pruefablauf.md 4 (pruefablauf.json, bericht.py) speist, erzeugt sie vor dem Riegel neu."
     },
     {
       "id": "spur",

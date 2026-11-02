@@ -155,6 +155,8 @@ Altbestand im selben Konzept bereinigt wird. Wer hier eine Ausnahmeliste
 einführt, führt die Streichliste wieder ein, die niemand liest.
 """
 import argparse
+import contextlib
+import io
 import html.parser
 import importlib.util
 import json
@@ -1767,7 +1769,18 @@ def motoren_pruefen(wurzel, alle, zahlen, ruf):
     return befunde
 
 
+# HINWEIS STATT ROT (E-PU-07): Die Zeilendecke einer Anleitung hält nicht auf.
+# Drei von fünfzehn roten Läufen seit BR-02 waren eine LIESMICH mit 41, 42
+# oder 43 Zeilen (F-PU-01). Der Befund bleibt ein Befund — gemessen, in der
+# Selbstprobe, im Lauf als `HINWEIS: …` —, nur der Rückgabewert übergeht ihn.
+# Der Prüfstand liest die Zeile und schreibt `bestand=hinweis` in den Bericht;
+# das Tor misst 0 und lässt beides zueinander passen (bericht.py, Lage 4).
+HINWEIS_KENNUNGEN = ('form-zeilen',)
+
+
 def bericht(befunde, zahlen):
+    hinweise = [b for b in befunde if b[1] in HINWEIS_KENNUNGEN]
+    befunde = [b for b in befunde if b[1] not in HINWEIS_KENNUNGEN]
     melde('Bestandsriegel — tools/ gegen docs/Pruefablauf.md 6 (Konzept BR)')
     melde()
     erz = zahlen['erzeuger']
@@ -1790,6 +1803,10 @@ def bericht(befunde, zahlen):
     melde()
     for r in REGELN:
         melde(f'  {r:<10} {sum(1 for b in befunde if b[0] == r):>3} Befunde')
+    if hinweise:
+        melde()
+        for r, k, t in hinweise:
+            melde(f'HINWEIS: {r} · {t}  [{k}] — hält nicht auf (E-PU-07)')
     if befunde:
         melde()
         melde('BEFUNDE:')
@@ -2627,6 +2644,19 @@ def selbstprobe():
     ok = not befunde
     fehl += not ok
     melde(f"  [{'ok  ' if ok else 'FEHL'}] GEGENPROBE: --wurzel als relativer Pfad")
+    # Die Zeilendecke ist ein Hinweis (E-PU-07): allein rc 0 mit HINWEIS-Zeile,
+    # neben einem anderen Befund rc 1.
+    z = {'erzeuger': [], 'ordner': 0, 'anleitungen': 0, 'proben': 0, 'lose': []}
+    for name, bef_, soll in (('form-zeilen allein: rc 0, HINWEIS gedruckt',
+                              [('form', 'form-zeilen', 'x: 41 Zeilen')], 0),
+                             ('form-zeilen neben anlass-fehlt: rc 1',
+                              [('form', 'form-zeilen', 'x'), ('anlass', 'anlass-fehlt', 'y')], 1)):
+        puffer = io.StringIO()
+        with contextlib.redirect_stdout(puffer):
+            rc = bericht(bef_, z)
+        ok = rc == soll and ('HINWEIS: form' in puffer.getvalue())
+        fehl += not ok
+        melde(f"  [{'ok  ' if ok else 'FEHL'}] GEGENPROBE: {name}")
     nie = sorted(set(KENNUNGEN) - gefallen)
     if nie:
         fehl += 1
