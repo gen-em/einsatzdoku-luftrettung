@@ -52,7 +52,7 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
 
 | Spanne | Zweig | seit |
 |---|---|---|
-| 460 bis 469 | `claude/kind-cray-lgaz7d` — Schritt PR (Prüfmittel), Lücke im Prüfstand F-PR-04; vergeben: — | 02.11.2026 |
+| 460 bis 469 | `claude/kind-cray-lgaz7d` — Schritt PR (Prüfmittel), Lücke im Prüfstand F-PR-04; vergeben: 460 | 02.11.2026 |
 | ab 470 | frei — höchste reservierte Nummer 469 (450 bis 459 auf `claude/new-session-p1duc7`); frei blieben 434 bis 439 aus der Spanne von PR #129, 441 bis 449 aus der von PR #130, 420 bis 429 aus der Spanne von 20 (PR #127), 412 bis 419 aus der von 12b (PR #125), 394 bis 399 aus der Spanne von 19 (PR #112 bis #114), 389 aus der von 12a (PR #116), 372 bis 379 aus der von 12 (PR #103), 362 bis 369 aus der von PK, 359 aus der von 18 (PR #101), 348 und 349 aus der von 17, 338 aus der von AR | 02.11.2026 |
 
 ---
@@ -969,27 +969,6 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      Zahl, `fitFont`) oder Zeilen des unteren Blocks zusammenlegen; dazu
      eine Bildprobe im Uhr-Prüfstand mit vier und fünf Zeilen auf Fenix,
      FR945 und Venu 3s. Den Kommentar berichtigen.
-
-<!-- -->
-
-403. **Die Freigabeprobe in Chromium scheitert im Gesamtlauf des Prüfstands an der Anlage ihres Prüfkontos.** · gehört zu: PR · Stand: offen · seit 27.10.2026
-     *Aufgenommen 27.10.2026 nach R17-23 (Betreiberin: ja, vor R17-30).*
-     Dreimal in Folge — im ersten `neben`-Lauf von R17-21 und R17-22 und im
-     Lauf von R17-23 — brach `freigabeprobe [chromium]` nach 3 s ab:
-     `pruefkonto.py anlegen` meldet „Kontoanlage ohne Einrichtungslink:
-     unbekannt". Die Anmeldung als Admin gelang (sonst meldete das Werkzeug
-     „Anmeldung gescheitert"); erst die Antwort auf `user_add` trug keinen
-     Link und keinen erkennbaren Meldungstext. Einzeln gefahren ist die Probe
-     jedes Mal grün (25/0), in Firefox und WebKit auch im Gesamtlauf.
-     *Stand 29.10.2026:* bis dahin 5 von 7 Läufen rot. Vor ihr laufen nicht
-     die Bedienprobe (so stand es hier bis zum 29.10.), sondern Raten-,
-     Wartungs-, Verbindungs- und Anteilprobe; diese Folge und die alte sind
-     je einmal nachgestellt, beide grün. Die Meldung trägt seit Web 23.5.1
-     die Seitenkennung der Antwort. Folge bleibt: Trifft es im Bericht des
-     Pull Requests, ist er rot. *Weg:* beim nächsten Treffer an der
-     Seitenkennung die Ursache ablesen und beheben, nicht die Probe
-     wiederholen lassen. *Abnahme:* zwei Gesamtläufe `neben` ohne diesen
-     Abbruch.
 
 <!-- -->
 

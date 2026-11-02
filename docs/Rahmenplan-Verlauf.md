@@ -9,6 +9,7 @@ Verlauf bis zum Schnitt). Die Fassungszählung läuft fortlaufend weiter.
 
 | Fassung | Datum | Anlass | Was |
 |---|---|---|---|
+| 195 | 02.11.2026 | PR | Schritt PR gebaut (PR-01 bis -03, Nr. 352, 385, 403, dazu 460 nach E-PR-03), Pull Request offen; Kopf „Läuft“ und „Offene PRs“. |
 | 194 | 02.11.2026 | PR | Schritt PR beginnt auf `claude/kind-cray-lgaz7d` mit schlankem Konzept (E-PR-01). Berichtigt: Der Kopf nannte PR #131 als offen und `main` bei `cb9b952` — #131 ist gemergt, `main` steht bei `043b2f5`. |
 | 193 | 02.11.2026 | R91 | Programmentscheidung R91: Die Arbeitsumgebung prüft nach jedem Merge die Prüflisten-Punkte „Claude“ und „beide“ auf Staging, mit eigenem BetreiberIn-Konto; die Prüfliste trägt dafür die Spalte „Wer“. Kopf: offener PR. |
 | 192 | 02.11.2026 | Reihenfolge, R90 | Backlog eingeordnet (E-BE-01 bis -07): zehn Punkte verworfen, Schritte PR, 21 (GR), 22 (BR5) vor 13, R90, Zuarbeit Logo-Vorlagen. Berichtigt: Die Fahrplanzeile 13 nannte Nr. 46 — das gehört seit R4-01 zu 14. |

@@ -18,10 +18,10 @@ ist es nicht verwandt.
 |---|---|---|
 | PR-01 | Nr. 385 — Zweitfaktorprobe räumt ihre Sperre ab | **erledigt** 02.11.2026 |
 | PR-02 | Nr. 352 — `nummern.py` kennt den offenen Merge | **erledigt** 02.11.2026 |
-| PR-03 | Nr. 403 — Freigabeprobe im Gesamtlauf | Ursache gefunden und behoben; Abnahme (zwei Gesamtläufe) läuft |
-| PR-04 | Abschluss — Prüfstand, Prüfdokument, Pull Request | offen |
+| PR-03 | Nr. 403 — Freigabeprobe im Gesamtlauf; dazu Nr. 460 (Lücke im Prüfstand) | **erledigt** 02.11.2026 |
+| PR-04 | Abschluss — Prüfstand, Prüfdokument, Pull Request | in Arbeit |
 
-**In Arbeit:** PR-03, Abnahmeläufe. **Es hakt:** Lücke im Prüfstand (F-PR-04) — Frage an die Betreiberin, Q-PR-01.
+**In Arbeit:** PR-04. **Es hakt:** nirgends. Nach dem Pull Request: Freigabe der Betreiberin, dann Abschluss nach CLAUDE.md 7.
 
 ---
 
@@ -42,7 +42,7 @@ Nicht Teil dieses Schritts: die übrigen Werkzeug-Punkte (232, 234, 237, 240,
 Muster in `pruefablauf.json` (`konfig_stellen.php` → die acht Proben,
 die es benutzen; `tools/proben/zweitfaktor/**` → `zweitfaktorprobe`),
 mit neuer Backlog-Nummer als Anlass; (b) als Backlog-Punkt nach 14 (die
-Inventur entscheidet über die Muster). *Offen.*
+Inventur entscheidet über die Muster). → **E-PR-03.**
 
 ## 2a. Entscheidungen
 
@@ -55,6 +55,15 @@ Prüfdokument daneben, beide gehen beim Abschluss nach CLAUDE.md 7.
 **E-PR-02 — Reihenfolge 385, 352, 403 (02.11.2026, Betreiberin).** Die
 zwei kleinen, sicheren zuerst; 403 braucht lange Gesamtläufe (je rund
 95 Minuten) und hat eine unbekannte Ursache.
+
+**E-PR-03 — Die Lücke F-PR-04 wird in diesem Schritt geschlossen
+(02.11.2026, Betreiberin, Q-PR-01 (a)).** Neue Nummer 460 aus der Spanne
+460 bis 469 (die Spanne 450 bis 459 trägt `claude/new-session-p1duc7`);
+Muster `konfig-stellen` mit den neun Proben, die `konfig_stellen.php`
+einbinden (acht Proben und die Bedienprobe über
+`einstellungen_profil_passkey.mjs`), und `tools/proben/zweitfaktor/**` im
+Muster `zweitfaktor`. Nicht darunter: die Freigabeprobe — sie benutzt den
+Rückweg nicht, sie hat nur unter ihm gelitten.
 
 **Modellwahl:** Opus für alle Pakete. **Fächerung:** keine — PR-01 und
 PR-03 sind Prüfarbeit an der einen örtlichen Anlage, PR-02 ist eine Datei
@@ -149,7 +158,27 @@ Historie der Berichte auf `main` seit dem 20.10.2026 (`git log`, Feld
 `freigabeprobe=`): rot nur in `16c3faf` (R17-23), `d0ee64e` (R17-25),
 `e5c3e57` (R17-26), alle mit `anteilprobe=0` im selben Bericht.
 
-Abnahmeläufe (zwei Gesamtläufe `neben`): *stehen aus.*
+Abnahmeläufe: `pruefen.sh --stufe neben --datei server/index.php --datei
+server/serverkrypto_lib.php --datei server/db.php` (die Berührung benannt,
+weil der Zweig selbst sie nicht auslöste, F-PR-04) — 32 Proben, darunter
+Verbindung, Anteil, Raten, Wartung, Freigabe [chromium]:
+
+| Lauf | Ergebnis | Dauer | Freigabeprobe |
+|---|---|---|---|
+| 1 | 53 grün, 0 rot, 0 nicht gemessen, 1 Hinweis (`bestand`: `tools/steuerung/LIESMICH.md` 41 von 40 Zeilen — eigene Zeile aus PR-02, gekürzt) | 2 266 s | ok, 31 s |
+| 2 | 54 grün, 0 rot, 0 nicht gemessen, 0 Hinweise | 2 162 s | ok, 31 s |
+
+Die Reihenfolge im Prüfstand folgt den Mustern: Die Anteilprobe lief früh,
+die Ratenprobe (auch über `konfig_stellen`) zwei Proben vor der
+Freigabeprobe. Die Folge „Anteil unmittelbar vor Freigabe" belegt die
+Nachstellung oben, nicht diese Läufe. Nach beiden Läufen in
+`sicherheit_ereignisse` 0 Zeilen mit Merkmal `%zweitfaktor%` (PR-01).
+
+**Nr. 460** (02.11.2026): Trockenlauf `pruefen.sh --trocken` über den
+Zweig — vorher 4 Proben (`erzeugen`, `kettenaufrufe`, `steuerung`,
+`nummern`), nachher 13, darunter `anteilprobe`, `ratenprobe` und
+`zweitfaktorprobe`. `auswahl.py --selbstprobe`: 103 Lagen, 0
+Fehlschläge.
 
 ## 5. Befunde
 

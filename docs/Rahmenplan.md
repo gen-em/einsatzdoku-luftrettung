@@ -1,14 +1,14 @@
 # Rahmenplan — Programm „Gen-EM NAdoku" bis v1.0
 
-**Fassung 194 (02.11.2026)** · Steuerung: Reihenfolge, Status, programmweite
+**Fassung 195 (02.11.2026)** · Steuerung: Reihenfolge, Status, programmweite
 Entscheidungen. Verlauf: `Rahmenplan-Verlauf.md`. Fassungen 1–15:
 `Rahmenplan-Archiv.md`; Fassungen 16–124: `Rahmenplan-Archiv-2.md`.
 
 **Stand `origin/main`** (Commit `043b2f5`, PR #131, gemessen 02.11.2026): Web 23.6.0 ·
 Uhr 4.1.1 · Android 0.18.2, alle drei ausgeliefert (Tags auf `c32dd2c`, 02.11.2026).
-**Läuft:** PR (Prüfmittel) auf `claude/kind-cray-lgaz7d`, Konzept `Konzept-PR-Pruefmittel.md`.
+**Läuft:** kein Schritt; PR (Prüfmittel) ist gebaut, Pull Request offen.
 **Als Nächstes:** 21 GR und 22 BR5 nebeneinander, dann 13 (Konzeptsitzung).
-**Offene PRs:** keine.
+**Offene PRs:** Schritt PR (`claude/kind-cray-lgaz7d`, Nr. 352, 385, 403, 460).
 **Fällig bei der Betreiberin:** 36 Posten (Abschnitt 6.1). **`update.php`:** auf Staging und Produktiv nichts offen (Betreiberin, 20.10.2026, nach Web 23).
 
 Kennungen sind Namen, keine Reihenfolge.
@@ -119,7 +119,7 @@ weil das Altbestand-Werkzeug ein einziges Konto voraussetzte.
 |---|---|---|---|---|---|
 | 6 | **S4 — Rest, Teil C** | Play Console nach R65: interner Test-Track für Handy und Uhr unter einem Eintrag, Versionscode-Versatz, Signaturweg; Android 1.0.0 (E-R45-7). Die Vorbereitung ohne D-U-N-S und Schlüssel ist gebaut (Android 0.13.0), die Gerätetests sind erfolgt (24.09.2026) | D-U-N-S, Organisationskonto und Play App Signing — erledigt 26.09.2026 (SD-M1); offen in 6.2: Wear-OS-Uhr, Demo-Video, Datensicherheitsformular | `docs/konzepte/Konzept-S4-Handy-Uhr-Client.md` 13; `Vorbereitung-Play-Console.md` | offen — Teile A bis C gemergt 04.09.2026 (PR #33, Abschnitt 8); Android 1.0.0 und der interne Test-Track können beginnen |
 | 11 | **Planung v1.0** | Festlegungen vor dem Schnitt (R65 bis R73, entschieden 03.09.2026); Ergebnis sind die Konzepte der Phasen P6 bis P8 mit je eigenem Paketschnitt (P6 nach der Freigaberunde des Reviews) | keine | `docs/konzepte/Konzept-Planung-v1.0.md` | gemergt 03.09.2026 — Festlegungen entschieden (R65–R73); offen nur die Paketschnitte, je mit dem Konzept zu 12b, 13 und 14 |
-| — | **PR — Prüfmittel** | Drei Werkzeugfehler, die heute Läufe rot färben: Nr. 403 (Freigabeprobe im Gesamtlauf), 352 (`nummern.py` im offenen Merge), 385 (Sperre der Zweitfaktorprobe); nur `tools/`, keine Fassung | keine | `docs/konzepte/Konzept-PR-Pruefmittel.md` (E-PR-01) | Umsetzung — seit 02.11.2026 auf `claude/kind-cray-lgaz7d`; vor 21 und 22 (E-BE-04) |
+| — | **PR — Prüfmittel** | Drei Werkzeugfehler, die heute Läufe rot färben: Nr. 403 (Freigabeprobe im Gesamtlauf), 352 (`nummern.py` im offenen Merge), 385 (Sperre der Zweitfaktorprobe), dazu 460 (Lücke im Prüfstand, E-PR-03); nur `tools/`, keine Fassung | keine | `docs/konzepte/Konzept-PR-Pruefmittel.md` (E-PR-01) | gebaut — PR-01 bis -03 auf `claude/kind-cray-lgaz7d`, Pull Request offen; vor 21 und 22 (E-BE-04) |
 | 21 | **GR — Geräterunde** | Uhr und Handy: Nr. 154, 157 (Sendebericht, Kopplungs-Sackgasse), 201, 229 (Antwortauswertung samt Fehlertabelle im Vertrag), 402 (Sync-Seite), 431 (Senden nach Reaktivieren); je ein Tag `uhr-v…` und `android-v…` | PR; Wear-OS-Uhr für den Gerätetest (6.2) | eigenes Konzept nach K1 | offen — neben 22 und neben der Konzeptsitzung 13 (Abschnitt 4, E-BE-03) |
 | 22 | **BR5 — Backlog-Runde 5, Web** | Dreizehn Web-Punkte: Schlüsselpaar nach der Anmeldung (Nr. 392), Deadlock in `protokoll()` (354), Notzugang und Wache (358), `post_text()` (355), Installationsseite (345), Jobfehler (357), Meldungen (346, 356), APK-Karte (361, 432), PHP 8.3.6 (383), Bitwarden (430), Gerät löschen (440) | PR | eigenes Konzept nach K1 | offen — neben 21; vor 13, damit P7 das Verhalten der 1.0 dokumentiert (E-BE-02) |
 | 13 | **P7 — Gesicht v1.0** | Umbenennung überall (E-Mail-Langform entscheiden), Demo-Passwort (R25); Vertrag v1 (R12, Nr. 23); Doku-Neufassung, Handbuch als HTML (R16, R72); Manifest (R70); Changelog neu (R15); Backlog-Übernahme; Kommentarregel (R69, Nr. 409); Lizenzen (Nr. 280), Tabellen mit Mockup (Nr. 342), Logos (Nr. 62) | 22 | eigenes Konzept nach K1 | offen — nach 22 |
