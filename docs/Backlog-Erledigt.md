@@ -10271,3 +10271,17 @@ zutreffen.
      Nachgestellt 3 von 3 rot, danach 3 von 3 grün; zwei Gesamtläufe neben
      mit 53 und 54 grünen Proben, 0 rot.
 >>>>>>> origin/main
+
+<!-- -->
+
+452. **Das Menü „…“ an einem Backup-Ziel öffnet nicht.** · gehört zu: Pflegeaufgabe · Stand: erledigt · seit 02.11.2026
+     *Aufgenommen 02.11.2026 im ersten Prüfdurchgang auf Staging (R91), von
+     der Betreiberin bemerkt:* Das Ziel „Lima-City“ ließ sich nicht löschen,
+     „…“ tat nichts, die Konsole schwieg. Ursache: Auf Betrieb → Backup-Ziele
+     hießen die versteckten Formulare für „Hostschlüssel vergessen“
+     `za-<Nummer des Ziels>`, und `ui_zeilenaktionen()` nummeriert seine
+     Menüs als `za-1`, `za-2` … Bei gleicher Nummer fand `blatt.js` über
+     `getElementById` das Formular zuerst und öffnete dieses. Das Ziel wurde
+     über das Löschformular seines Menüs entfernt.
+     Erledigt mit Web 23.6.1: Die Formulare heißen `zh-<Nummer>`.
+

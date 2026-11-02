@@ -8462,5 +8462,12 @@ declare(strict_types=1);
  *   Vorseite wartete. Nebenbei: Die Einsatzansicht faengt einen
  *   gescheiterten Abruf jetzt ab und zeigt die Ladefehler-Meldung; sichtbar
  *   wurde der fehlende Fang erst, weil die Seite schneller fertig ist.
- *   Neben; kein Schema. */
-const WEB_VERSION = '23.6.0';
+ *   Neben; kein Schema.
+ * 23.6.1 — DAS MENUE AN EINEM BACKUP-ZIEL GING NICHT AUF (Backlog Nr. 452,
+ *   gefunden im ersten Pruefdurchgang der Arbeitsumgebung auf Staging, R91).
+ *   Die versteckten Formulare fuer „Hostschluessel vergessen" hiessen
+ *   `za-<Nummer des Ziels>`, und `ui_zeilenaktionen()` nennt seine Menues
+ *   selbst `za-1`, `za-2` … Trafen sich die Nummern, oeffnete „…" das
+ *   Formular statt des Menues, und das Ziel liess sich weder bearbeiten noch
+ *   loeschen. Die Formulare heissen jetzt `zh-`. Korrektur; kein Schema. */
+const WEB_VERSION = '23.6.1';
