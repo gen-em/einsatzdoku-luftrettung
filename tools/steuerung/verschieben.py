@@ -2,6 +2,7 @@
 """Einen erledigten Backlog-Punkt nach `docs/Backlog-Erledigt.md` verschieben.
 
     python3 tools/steuerung/verschieben.py NR "Erledigt TT.MM.JJJJ mit …: Beleg."
+    python3 tools/steuerung/verschieben.py NR "Verworfen TT.MM.JJJJ (E-…): Grund." --stand verworfen
     python3 tools/steuerung/verschieben.py NR "…" --trocken    # nur zeigen
 
 Rückgabewert 0 = verschoben (oder gezeigt) · 1 = nicht verschoben (Nummer
@@ -12,6 +13,13 @@ ist: Die Kopfzeile bleibt, `Stand:` wird
 `erledigt`, und ein Schlusssatz mit Datum, Anlass und Beleg ist die letzte
 Folgezeile, eingerückt mit fünf Leerzeichen. Von Hand sind das drei Stellen
 in zwei Dateien je Punkt — und eine Runde verschiebt Dutzende.
+
+VERWORFEN (E-BE-01, 02.11.2026): Ein Punkt, der entschieden nicht gebaut
+wird, verlässt die offene Liste ebenso — mit `--stand verworfen` und einem
+Schlusssatz, der den Grund nennt. Die Nummer bleibt auflösbar, weil Code
+und Dokumente auf sie verweisen; was sich danach ändert, ist ein neuer
+Punkt. Bis dahin blieb ein solcher Punkt als `nicht umsetzen` in
+`Backlog.md` stehen und nahm dort Platz, ohne dass je etwas geschah.
 
 Der Schlusssatz wird umbrochen; keine Zeile beginnt dabei mit Zahl und Punkt
 (der Bestandsriegel läse dort eine Nummer, Kopf von `docs/Backlog.md`).
@@ -58,6 +66,8 @@ def main():
     ap.add_argument('nr', type=int)
     ap.add_argument('satz')
     ap.add_argument('--trocken', action='store_true')
+    ap.add_argument('--stand', choices=('erledigt', 'verworfen'), default='erledigt',
+                    help='Stand in der Erledigt-Datei (Vorgabe erledigt)')
     a = ap.parse_args()
 
     with open(BACKLOG, encoding='utf-8') as f:
@@ -81,7 +91,7 @@ def main():
     eintrag = zeilen[start:ende]
     while eintrag and not eintrag[-1].strip():
         eintrag.pop()
-    kopf = zeilen[start].replace(f' · Stand: {m.group(2)} · ', ' · Stand: erledigt · ', 1)
+    kopf = zeilen[start].replace(f' · Stand: {m.group(2)} · ', f' · Stand: {a.stand} · ', 1)
     neu = [kopf] + eintrag[1:] + umbrechen(a.satz)
 
     # Aus Backlog.md: der Eintrag, seine Trennzeile davor und die Leerzeilen
@@ -98,7 +108,7 @@ def main():
         f.write('\n'.join(rest))
     with open(ERLEDIGT, 'w', encoding='utf-8') as f:
         f.write(erledigt.rstrip('\n') + '\n\n' + '\n'.join(neu) + '\n')
-    print(f'Nr. {a.nr} verschoben: {len(eintrag)} Zeilen, Schlusssatz {len(neu) - len(eintrag)} Zeilen')
+    print(f'Nr. {a.nr} verschoben ({a.stand}): {len(eintrag)} Zeilen, Schlusssatz {len(neu) - len(eintrag)} Zeilen')
     return 0
 
 

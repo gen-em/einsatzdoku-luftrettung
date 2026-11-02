@@ -17,7 +17,7 @@ das alte Prüfdokument im Stand `8a8144f`: `git show
 8a8144f:docs/konzepte/Pruefdokument-<Kürzel>-….md`. Zusammenfassungen je Thema und die Reihenfolge nach Dringlichkeit
 stehen in `docs/Rahmenplan.md` 6.1.
 
-**Wer prüft (Spalte „Wer", seit 02.11.2026, R90).** **Claude** heißt: Die
+**Wer prüft (Spalte „Wer", seit 02.11.2026, R91).** **Claude** heißt: Die
 Arbeitsumgebung prüft den Punkt selbst — auf Staging mit ihrem eigenen
 BetreiberIn-Konto und dem Webmail der Prüfanlage, in Chromium, Firefox und
 WebKit, in den Protokollen der Läufe oder örtlich —, und zwar nach jedem

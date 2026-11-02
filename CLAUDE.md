@@ -551,7 +551,7 @@ es sie gibt und wo:
   `Pruefablauf.md` 6.9.
 
 **Nach jedem Merge auf `main` prüft die Arbeitsumgebung auf Staging nach**
-(R90, seit 02.11.2026): Ist der Auslieferungslauf grün, arbeitet sie die
+(R91, seit 02.11.2026): Ist der Auslieferungslauf grün, arbeitet sie die
 Punkte der Prüfliste ab, deren Spalte „Wer" **Claude** oder **beide**
 sagt — mit ihrem eigenen BetreiberIn-Konto (`NADOKU_STAGING_KONTO`,
 `_PASS`, `_TOTP`), nie mit dem Prüfkonto der Kette. Wie und mit welchen

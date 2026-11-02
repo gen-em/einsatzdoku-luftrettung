@@ -293,7 +293,7 @@ im Job `stufe2`, kein Schritt (8).
 > Datenbank von Produktiv unsichtbar und auf der von Staging tödlich, und
 > keine der beiden Anlagen hatte je gesagt, dass sie verschieden sind.
 
-**Danach die Handprüfungen der Arbeitsumgebung** (R90, seit 02.11.2026).
+**Danach die Handprüfungen der Arbeitsumgebung** (R91, seit 02.11.2026).
 Ist der Auslieferungslauf eines Merges auf Staging grün, arbeitet die
 Arbeitsumgebung die Punkte der Prüfliste ab, deren Spalte „Wer" **Claude**
 oder **beide** sagt (`docs/konzepte/Pruefliste.md`): mit ihrem eigenen
