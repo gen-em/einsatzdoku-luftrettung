@@ -121,7 +121,9 @@ def flaechen_aus_lauf(zahlen, dateien):
         elif probe not in zahlen or zahlen[probe] == 'nicht-gemessen':
             aus[flaeche] = 'nicht-gemessen'
         else:
-            aus[flaeche] = 'gebaut' if zahlen[probe] == '0' else 'rot'
+            # Ein geerbter Bau ist ein grüner Bau des Vorgängers, dessen Muster
+            # seither niemand berührt hat — Lage 8 rechnet es nach (F-PU-13).
+            aus[flaeche] = 'gebaut' if zahlen[probe] == '0' or zahlen[probe].startswith(ERBT) else 'rot'
     return aus
 
 
@@ -542,7 +544,20 @@ def selbstprobe():
                    zerlegen('Ein Commit ganz ohne Block.\n'),
                    dict(baum='abc1234', dateien=[], riegel={}, riegel_namen=namen), 1))
 
+    # Die Fläche aus einem geerbten Bau (F-PU-13): Der erste echte Erbe-Lauf
+    # schrieb `handy=rot`, weil hier nur „0" als grün galt.
+    flaeche_faelle = [
+        ('Fläche: Bau geerbt -> gebaut',
+         flaechen_aus_lauf({'android-bau': 'ererbt:abc123'}, ['android/LIESMICH.md'])['handy'] == 'gebaut'),
+        ('Fläche: Bau rot -> rot',
+         flaechen_aus_lauf({'android-bau': '1'}, ['android/LIESMICH.md'])['handy'] == 'rot'),
+        ('Fläche: Bau nicht gemessen -> nicht-gemessen',
+         flaechen_aus_lauf({'android-bau': 'nicht-gemessen'}, ['android/LIESMICH.md'])['handy'] == 'nicht-gemessen'),
+    ]
     fehl = 0
+    for name, ok in flaeche_faelle:
+        melde(f"  [{'ok  ' if ok else 'FEHL'}] {name}")
+        fehl += 0 if ok else 1
     for name, bericht, kw, erwartet in faelle:
         # JEDER FALL GEHT DURCH pruefen() — auch der mit der Stufe. Eine
         # Selbstprobe, die den Fall daneben nachbaut, prueft ihren Nachbau.
@@ -558,7 +573,7 @@ def selbstprobe():
 
     melde()
     gruen = sum(1 for f in faelle if f[3] == 0)
-    melde(f'{len(faelle)} Lagen, {fehl} Fehlschlaege.  '
+    melde(f'{len(faelle) + len(flaeche_faelle)} Lagen, {fehl} Fehlschlaege.  '
           f'({len(faelle) - gruen} rote, {gruen} gruene)')
     return 1 if fehl else 0
 

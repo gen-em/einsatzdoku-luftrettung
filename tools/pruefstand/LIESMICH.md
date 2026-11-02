@@ -29,7 +29,7 @@ Die Ausbaustufe `web` (`tools/sandbox/`); für `android-bau` das Android-SDK, f�
 
 ## Erwartete Zahl
 
-`bericht.py lesen --selbstprobe` → **48 / 0**, `auswahl.py --selbstprobe` → **103 / 0**, `--abdeckung` → **0 ohne
+`bericht.py lesen --selbstprobe` → **51 / 0**, `auswahl.py --selbstprobe` → **103 / 0**, `--abdeckung` → **0 ohne
 Muster**. `pruefen.sh` → 0 rot, 0 nicht gemessen, rc 0 (ohne Bericht rc 1); klein ohne `server/` die **23** Riegel.
 
 ## Was es nicht kann
