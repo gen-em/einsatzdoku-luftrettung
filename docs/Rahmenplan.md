@@ -1,6 +1,6 @@
 # Rahmenplan — Programm „Gen-EM NAdoku" bis v1.0
 
-**Fassung 194 (02.11.2026)** · Steuerung: Reihenfolge, Status, programmweite
+**Fassung 195 (02.11.2026)** · Steuerung: Reihenfolge, Status, programmweite
 Entscheidungen. Verlauf: `Rahmenplan-Verlauf.md`. Fassungen 1–15:
 `Rahmenplan-Archiv.md`; Fassungen 16–124: `Rahmenplan-Archiv-2.md`.
 
@@ -176,8 +176,8 @@ gestrichen, 6a abgehakt; was steht, ist bestätigt offen.
 | **Prüfliste P5c/AP1:** Staging rot nach dem Merge, Produktiv blau nach dem Tag, Rundmail in einem echten Postfach, Ankündigung am Handy | 10c AP1 | 23.09.2026 | P-P5c-01 bis -04 |
 | **Prüfliste P5c/AP2:** Archive unter Verwaltung → Protokoll → Archiv nach dem ersten Jobdurchlauf (beginnt beim ältesten Eintrag), Plakette „auf dem Ziel", einmal herunterladen — ob der Job ohne Cron in einer Woche drankommt, zeigt nur die Anlage | 10c AP2 | 24.09.2026 | P-P5c-05 bis -09 |
 | **Prüfliste P5c/AP3 und AP4:** Reiter System mit echtem Fehler, Fehlerseite, stilles Fehlerprotokoll des Webspace; ein Support-Konto anlegen, einrichten, seine Sicht, der Admin-Weg vor `update.php` | 10c AP3, AP4 | 25.09.2026 | P-P5c-10 bis -19 |
-| **Prüfliste P5c/AP5:** Einrichtung mit echter Authenticator-App, Codeblatt aus Chromium und Firefox gedruckt, Anmeldung mit Wiederherstellungscode, Zurücksetzen durch eine zweite BetreiberIn | 10c AP5 | 24.09.2026 | P-P5c-20 ff. |
-| **Prüfpunkte RW:** Statuszeile „Rückweg-Prüfung" auf Produktiv nach dem Tag, echter Rückweg auf Staging (einmal mit falschem Zettel), Mail im Postfach, Demo-Konto ohne Paar | 10c AP5b | 24.09.2026 | P-RW-01, -03 bis -05 |
+| **Prüfliste P5c/AP5:** Einrichtung mit echter Authenticator-App, Codeblatt aus Chromium und Firefox gedruckt | 10c AP5 | 24.09.2026 | P-P5c-20 ff. |
+| **Prüfpunkte RW:** Statuszeile „Rückweg-Prüfung" auf Produktiv nach dem Tag, Demo-Konto ohne Paar | 10c AP5b | 24.09.2026 | P-RW-01, -05 |
 | **Prüfliste P5c/AP7:** nach `update.php` auf Staging `SHOW INDEX FROM missions` und ein `EXPLAIN`, die drei Reiter der Statistik an echten Zahlen, die Seite am Handy | 10c AP7 | 24.09.2026 | P-P5c-32 bis -34 |
 | **Prüfliste P5c/AP8:** `update.php` auf Staging mit der zerstörenden Migration, ein Diensttag mit „Anderem Rettungsmittel" in Luft und Boden, Sicherungsziele ohne FTP-Plakette; auf Produktiv nach dem Tag dasselbe | 10c AP8 | 25.09.2026 | P-P5c-35 bis -38 |
 | **Prüfliste P5c/AP9:** die eigene Datenschutzerklärung nachziehen (P-P5c-40, sofort), Rechtstexte mit Vorschau in Firefox und am Handy, beide Blätter auf Papier, Wartungsmodus nach einem echten Deploy, die Leiste bei 850 und über 950 px Höhe | 10c AP9 | 25.09.2026 | P-P5c-39 bis -44 |
@@ -186,7 +186,7 @@ gestrichen, 6a abgehakt; was steht, ist bestätigt offen.
 | **Prüfliste BR:** P-BR-05 und -06 (Anlass-Zeilen und Nr. 304–313 lesen), P-BR-08 (beim nächsten Tag: das Produktionstor findet den Stufe-1-Lauf über `baumsuche.py`); freiwillig -03, -10, -11, -12 | BR | 24.09.2026 | `Pruefliste.md` |
 | **Zwei tote Zweige löschen:** `claude/nice-lovelace-snlo8m` und `claude/pk05-tor-umbauen` — nichts Ungemergtes (F-R4-04); auf GitHub unter Branches | 17 (Q-R4-01, E-R4-15) | 26.09.2026 | `Pruefliste.md`, P-R4-06 |
 | **Prüfliste R4:** P-R4-07 bis -23, je nach dem Deploy ihrer Fassung — Formular und Leseansicht, Konten, Demo-Reset, Handy, Verwerfen in der App, Statistik, Backlog auf GitHub | 17 | 28.09.2026 | `Pruefliste.md` 4 |
-| **Prüfliste SR:** auf Staging P-SR-05, -07, -08 (mit -20 zuerst), -10, -11, -13, -14, -16 bis -19 — Gerät merken, Schlüsselwechsel, Notzugang, Passkeys und Rechenaufgabe an echten Geräten, Cookie-Absatz; freiwillig -09, -12 | 18 | 05.10.2026 | `Pruefliste.md` 4 |
+| **Prüfliste SR:** auf Staging P-SR-05, -07, -08 (mit -20 zuerst), -10, -11, -13, -14, -16 bis -18 — Gerät merken, Schlüsselwechsel, Notzugang, Passkeys und Rechenaufgabe an echten Geräten, Cookie-Absatz; freiwillig -09, -12 | 18 | 05.10.2026 | `Pruefliste.md` 4 |
 | **Zuarbeiten aus Kette II:** Aufbewahrung der Komplett-Stände auf Staging (Nr. 261, Vorschlag 5); `info.php` auf Staging löschen; Zweig `produktion` gegen Handpushes schützen; Hotfix-Weg beim ersten Hotfix | Kette II | 21.09.2026 | `Pruefliste.md`, 4a, 9, 27, 28 |
 | **Prüfliste S11:** Gerätetests Uhr 4.0.0 und Android 0.18.0 (P-S11-32 bis -35, -05, -39), Wege auf Staging (-14 bis -31), Safari (-43), Konto-Backup (-45), alte Sicherungen (-07, -08), Rechtstexte (-40) | 12a | 20.10.2026 | `Pruefliste.md` 4 |
 | **Prüfliste PU:** P-PU-01 (Erbe im Tor, beim nächsten PR in `neben`), -04 bis -07 beim nächsten passenden Paket (schmale Nebenstufe, Zehnergrenze, zweiter Lauf mit Erbe, Stylesheet), -09 und -10 lesen | 20 | 02.11.2026 | `Pruefliste.md` 2, 12 |
