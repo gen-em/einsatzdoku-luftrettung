@@ -482,11 +482,24 @@ sagte — seit Android 0.19.0 liest das Handy die Kopfzeile. Einzeln
 nachgefahren: `textprobe` 0 Treffer, `dokumente` 0 Befunde, `bestand` 0
 Befunde ohne Hinweis. **Der Endlauf steht im Prüfbericht des Commits.**
 
+*Aufnahme von `main` vor dem Pull Request* (02.11.2026, nach
+`Pruefablauf.md` 5.3): PR #132 war inzwischen gemergt. Konflikte nur in
+der Buchführung — Backlog-Spannen (450 bis 459 gestrichen, gemergt),
+Erledigt-Datei, Verlauf (meine Fassungen 197/198 werden 199/200),
+Rahmenplan-Kopf. **F-GR-12 — `main` trug Konfliktmarken:** Der Merge-Commit
+`3322f7c7` von #132 hat in `docs/Backlog-Erledigt.md` drei Markenzeilen
+stehen lassen (`<<<<<<< HEAD` vor Nr. 451, `=======` vor Nr. 385,
+`>>>>>>> origin/main`); beide Seiten sind gültige Einträge. Im
+Merge-Commit dieses Zweigs behoben: Marken entfernt, beide Seiten behalten.
+Kein Riegel hat sie gefunden — weder `decken.py` noch `bestand` lesen
+Konfliktmarken in der Erledigt-Datei. Der Prüfbericht des Merge-Commits
+misst den Endstand.
+
 ## 7. Verlauf
 
 | Datum | Was |
 |---|---|
-| 02.11.2026 | GR-07: Backlog, Prüfdokument, Rahmenplan (Fassung 198), Prüfstand. |
+| 02.11.2026 | GR-07: Backlog, Prüfdokument, Rahmenplan (Fassung 200; als 198 geschrieben, parallel zu PR #132), Prüfstand. |
 | 02.11.2026 | GR-06 erledigt (Uhr 4.3.1). |
 | 02.11.2026 | GR-05 erledigt (Uhr 4.3.0). |
 | 02.11.2026 | GR-04 erledigt (Uhr 4.2.0). |

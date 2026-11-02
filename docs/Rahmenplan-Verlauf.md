@@ -9,8 +9,10 @@ Verlauf bis zum Schnitt). Die Fassungszählung läuft fortlaufend weiter.
 
 | Fassung | Datum | Anlass | Was |
 |---|---|---|---|
-| 198 | 02.11.2026 | 21 | Schritt 21 (GR) gebaut: GR-01 bis -07, Uhr 4.2.0–4.3.1, Android 0.19.0–0.20.0; Nr. 154, 157, 201, 229, 402, 431 erledigt, neu 470 und 471. Kopf „Läuft". |
-| 197 | 02.11.2026 | 21 | Schritt 21 (GR) beginnt auf `claude/trusting-wozniak-33j782` mit Konzept `Konzept-GR-Geraeterunde.md`; die Wear-OS-Uhr wird nicht abgewartet (E-GR-03), Voraussetzung in der Fahrplanzeile entsprechend. Kopf „Läuft". |
+| 200 | 02.11.2026 | 21 | Schritt 21 (GR) gebaut: GR-01 bis -07, Uhr 4.2.0–4.3.1, Android 0.19.0–0.20.0; Nr. 154, 157, 201, 229, 402, 431 erledigt, neu 470 und 471. Kopf „Läuft". |
+| 199 | 02.11.2026 | 21 | Schritt 21 (GR) beginnt auf `claude/trusting-wozniak-33j782` mit Konzept GR; die Wear-OS-Uhr wird nicht abgewartet (E-GR-03). Kopf „Läuft". Als 197 geschrieben; 197 und 198 trägt PR #132. |
+| 198 | 02.11.2026 | Zuarbeit (R91) | 6.1: Prüfdurchgang auf Staging, Block 3 — Anmeldung mit Wiederherstellungscode, Zurücksetzen durch die Verwaltung, Rückweg mit eigenem und fremdem Zettel, P-SR-19 erledigt. |
+| 197 | 02.11.2026 | Zuarbeit (R91), Berichtigung | 6.1: erster Prüfdurchgang auf Staging — Station D, Rückwegprobe, P-PU-02/-03 erledigt, Plattformzahlen von Staging eingetragen; neu: Backup-Ziel „Lima-City“. Berichtigt: als 194 geschrieben, parallel zu PR. |
 | 196 | 02.11.2026 | PR-Abschluss | Erledigt-Zeile PR (Freigabe 02.11.2026, PR #133), Fahrplanzeile heraus, 21 und 22 ohne Voraussetzung PR; Konzept und Prüfdokument gelöscht (`a1ce3b65`), P-PR-01 bis -03 in die Prüfliste und 6.1. Kopf: Stand `main` `9caea83`. |
 | 195 | 02.11.2026 | PR | Schritt PR gebaut (PR-01 bis -03, Nr. 352, 385, 403, dazu 460 nach E-PR-03), Pull Request offen; Kopf „Läuft“ und „Offene PRs“. |
 | 194 | 02.11.2026 | PR | Schritt PR beginnt auf `claude/kind-cray-lgaz7d` mit schlankem Konzept (E-PR-01). Berichtigt: Der Kopf nannte PR #131 als offen und `main` bei `cb9b952` — #131 ist gemergt, `main` steht bei `043b2f5`. |

@@ -12407,7 +12407,7 @@ erklärt.
 
 | Prüfpunkt (7.2) | Produktiv (Plesk) | Staging (lima-city) |
 |---|---|---|
-| PHP-Fassung | **8.3.33** | **8.3.33** — dieselbe |
+| PHP-Fassung | **8.3.33** | **8.4.27** (Statusseite, 02.11.2026; bis dahin 8.3.33 wie Produktiv) |
 | Server-API | ⬚ Z3 | **FPM/FastCGI**, Apache 2.4 davor |
 | PHP-Erweiterungen | alle fünf vorhanden | alle fünf vorhanden |
 | `memory_limit` | **512 MB** | **512 MB** — gleich |
@@ -12415,10 +12415,10 @@ erklärt.
 | `post_max_size` / `upload_max_filesize` | **256 MB / 256 MB** | **500 MB / 500 MB** |
 | OPcache | **aus** | **an** — aber nur **Dateicache** (`file_cache_only`), SHM und JIT aus. **Die Statusseite meldete ihn bis Web 21.1.6 als „aus", seither „nicht messbar"** — siehe Kasten |
 | Datenbank | **MariaDB 10.11.14** | **MySQL 8.4.10** (Statusseite, 21.09.2026) — **eine andere Datenbank als Produktiv**; genau daran ist der Export bis Web 20.26.3 gescheitert (Nr. 267) |
-| `max_user_connections` | **nicht gesetzt**; es gilt `max_connections` = **151** | ⬚ |
-| Kontingent der Datenbank | Angabe 10 GB, belegt 9,8 MB (0 %) | ⬚ |
-| Freier Platz | **861,7 GB gemeldet** — Datenträger des Hosts, nicht das Kontingent | ⬚ |
-| Cron | **nein** — alle elf Jobs laufen **huckepack** („anfrage") | ⬚ |
+| `max_user_connections` | **nicht gesetzt**; es gilt `max_connections` = **151** | **100** (Statusseite, Zeile „Verbindungsgrenze", 02.11.2026) |
+| Kontingent der Datenbank | Angabe 10 GB, belegt 9,8 MB (0 %) | Angabe 10 GB, belegt 7,2 MB (0 %, 02.11.2026) |
+| Freier Platz | **861,7 GB gemeldet** — Datenträger des Hosts, nicht das Kontingent | **389,4 GB gemeldet** — ebenso der Datenträger des Hosts (02.11.2026) |
+| Cron | **nein** — alle elf Jobs laufen **huckepack** („anfrage") | **Abruf über die Adresse** (`jobs.php?token=`), Auslöser „token" (Betrieb → Hintergrundjobs, 02.11.2026) |
 | FTPS | **ja**, belegt mit WinSCP | **ja**; Konto auf `/` eingesperrt |
 | HTTPS | **ja** | **ja** — Apache 2.4, Port 443 |
 | Herkunft des Zertifikats | **Let's Encrypt**, automatisch erneuert | ⬚ |
