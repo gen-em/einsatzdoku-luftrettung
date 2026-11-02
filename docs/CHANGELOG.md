@@ -14,6 +14,23 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Android 0.20.0] — unveröffentlicht
+
+Schritt 21 (GR), Paket GR-03 — die Sackgasse beim Trennen ist offen
+(Backlog Nr. 157).
+
+### Behoben
+
+- **Android — ein abgemeldetes Telefon mit Rückstand lässt sich trennen.**
+  Wurde das Gerät im Web gelöscht oder gesperrt, während noch Pakete
+  anstanden, konnte die App weder senden noch trennen, und neu koppeln setzt
+  Trennen voraus; es half nur das Löschen der App-Daten. Jetzt darf ein
+  Telefon, das der Server mit 401 oder 403 abgewiesen hat, trennen, und der
+  Rückstand bleibt an den Schlüssel des bisherigen Kontos gebunden: Er geht
+  nur hinaus, wenn die neue Kopplung dasselbe Konto trifft, weil er sonst mit
+  dem Schlüssel eines fremden Kontos verschlossen und dort lesbar wäre. Trifft
+  sie ein anderes, sagt die Dienstansicht es und bietet das Verwerfen an.
+
 ## [Android 0.19.0] — unveröffentlicht
 
 Schritt 21 (GR), Paket GR-02 — das Handy liest die Antwort des Servers

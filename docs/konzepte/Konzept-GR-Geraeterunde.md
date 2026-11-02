@@ -16,13 +16,13 @@
 |---|---|---|
 | GR-01 | Vertrag: Fehlertabelle `ingest.php` (403, 429, 503, 507), Abschnitt 0 berichtigt | **erledigt** 02.11.2026 |
 | GR-02 | Handy, Antwortauswertung: Nr. 154, 229 (Handy), 201 (Handy), 507 | **erledigt** 02.11.2026 (Android 0.19.0) |
-| GR-03 | Handy, Kopplung: Nr. 157, Neukoppeln mit Schlüsselbindung (E-BE-08) | offen |
+| GR-03 | Handy, Kopplung: Nr. 157, Neukoppeln mit Schlüsselbindung (E-BE-08) | **erledigt** 02.11.2026 (Android 0.20.0) |
 | GR-04 | Uhr, Antwortauswertung: Nr. 229, 201 (Uhr), 507, 431 Teil 1 | offen |
 | GR-05 | Uhr, Kopplung: Nr. 431 Teil 2, Neukoppeln mit Schlüsselbindung (E-BE-08) | offen |
 | GR-06 | Uhr, Sync-Seite: Nr. 402 mit Bildprobe | offen |
 | GR-07 | Abschluss: Prüfstand, Prüfdokument, Backlog, Pull Request | offen |
 
-**In Arbeit:** GR-03. **Es hakt:** nirgends. Der volle Android-Bau mit Lint läuft nach GR-03 (F-GR-08).
+**In Arbeit:** GR-04. **Es hakt:** nirgends.
 
 ---
 
@@ -358,10 +358,39 @@ Wartens). `PruefServer` kann dafür Antwortkopfzeilen und kennt 403, 503,
 507. Nicht gemessen: die Anzeige (Compose) — sie bekommt den Ausgang fertig
 entschieden; Bilderlauf und Lint mit GR-03.
 
+**GR-03** (02.11.2026, Android 0.20.0): `./gradlew :handy:testDebugUnitTest`
+vollständig — **299 Fälle in 32 Klassen, 0 Fehlschläge, 15 übersprungen**
+(die acht von `KopplungRundlaufTest` und sieben weitere Rundläufe, die eine
+örtliche Anlage brauchen; sie laufen im Prüfstand, GR-07). Neu: fünf in
+`KopplungTest` (Rückstand ohne Abmeldung sperrt; abgemeldet → getrennt,
+gebunden an Schlüssel und Grenze, Abmeldung vergessen; alte Kopplung ohne
+Schlüssel → jeder Schlüssel „anders"; zweite Grenze wird nicht gezogen;
+`pruefen()` löst nur bei „gleich") und drei in `SenderTest` (Bindung an
+dasselbe Konto → gesendet, Bindung fort; an ein anderes → nur das neuere
+Paket geht, `fremderRueckstand` 1, Verwerfen löscht das alte; 401 setzt den
+Abmeldevermerk, 200 nimmt ihn zurück). Voller Bau `./gradlew build`: **BUILD SUCCESSFUL in 7 min 53 s**; Lint 0
+Fehler (Handy 6 Warnungen, alle Fassungshinweise aus `libs.versions.toml`,
+nicht aus diesem Schritt; Uhr keine); Prüffälle je Bauart Handy 299 (15
+übersprungen), Uhr 74, 0 Fehlschläge; Handy-APK Release 9 223 090 B. Nicht gemessen: der Rundlauf aus der Abnahme (Gerät im Web
+löschen, neu koppeln, Pakete kommen an) — er braucht die örtliche Anlage und
+läuft mit dem Prüfstand in GR-07; die Oberfläche (Rückfrage, rote Zeile,
+Knopf) nur im Bilderlauf.
+
+**Bauweise GR-03, wo sie vom Konzept abweicht:** (1) Die Bindung trägt neben
+dem Schlüssel die höchste Paketnummer (`AUTOINCREMENT`); was danach entsteht,
+gehört der neuen Kopplung und geht hinaus, auch während die alten Pakete
+liegen. Ohne Grenze hätte der Altbestand jeden neuen Dienst mit blockiert.
+(2) Das Handy sperrte das Trennen im Dienst schon vorher
+(`EinstellungenAnsicht`); E-GR-08 brauchte dort nichts Neues. (3) Ein 401
+beim Trennen bleibt „nur lokal getrennt" (der Rundlauf legt das fest); bei
+gebundenem Rückstand ersetzt der Hinweis zur Bindung den Hinweis „nur
+lokal", der dort irreführend wäre.
+
 ## 7. Verlauf
 
 | Datum | Was |
 |---|---|
+| 02.11.2026 | GR-03 erledigt (Android 0.20.0). |
 | 02.11.2026 | GR-02 erledigt (Android 0.19.0). |
 | 02.11.2026 | Q-GR-05, -06 entschieden (E-GR-07, -08). |
 | 02.11.2026 | Konzept angelegt; Q-GR-01 bis -04 entschieden (E-GR-01 bis -04); Spanne 470 bis 479 reserviert. |

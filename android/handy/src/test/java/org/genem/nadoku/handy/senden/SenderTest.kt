@@ -303,6 +303,80 @@ class SenderTest {
         assertEquals(1, server.anfragen.size)
     }
 
+    // ---- Rückstandsbindung --------------------------------------------------
+
+    private fun bindung(): org.genem.nadoku.handy.kopplung.Rueckstandsbindung {
+        kontext.getSharedPreferences("rueckstand", Context.MODE_PRIVATE).edit().clear().commit()
+        return org.genem.nadoku.handy.kopplung.Rueckstandsbindung(kontext)
+    }
+
+    private fun senderMit(b: org.genem.nadoku.handy.kopplung.Rueckstandsbindung) = Sender(
+        puffer = puffer, netzweg = HttpNetzweg(), tresor = tresor,
+        basis = server.basis, jetzt = { uhrzeit }, bindung = b,
+    )
+
+    private fun abgeschlossenesSegment(ref: String): Long {
+        val id = puffer.paketAnlegen(ref, Paketzeile.ART_RUHESEGMENT, "2026-07-16", "ad-1", "2026-07-16T05:00:00Z")
+        val p = Stroeme.erzeuge(Stroeme.REISEFLUG).first()
+        puffer.punktAnhaengen(id, p)
+        puffer.paketSchliessen(id, "2026-07-16T06:00:00Z", null, null)
+        return id
+    }
+
+    /** Gebunden an DIESES Konto: Die Bindung fällt, der Rückstand geht hinaus. */
+    @Test fun bindungAnDasselbeKontoSendet() {
+        antworteVollstaendig()
+        val alt = abgeschlossenesSegment("ar-1-a")
+        val b = bindung()
+        b.binden(KONTOSCHLUESSEL, alt)
+
+        val bericht = senderMit(b).sendeAlles()
+
+        assertEquals(0, bericht.fremderRueckstand)
+        assertEquals(1, bericht.fertigePakete)
+        assertNull("Die Bindung ist gelöst", b.gebundenBis)
+    }
+
+    /**
+     * Gebunden an ein ANDERES Konto: Was bis zur Grenze liegt, geht nicht
+     * hinaus; was danach entstand, schon.
+     */
+    @Test fun bindungAnEinAnderesKontoHaeltDenAltbestand() {
+        antworteVollstaendig()
+        val alt = abgeschlossenesSegment("ar-1-a")
+        val b = bindung()
+        b.binden("ANDERER-SCHLUESSEL", alt)
+        val neu = abgeschlossenesSegment("ar-2-b")
+
+        val bericht = senderMit(b).sendeAlles()
+
+        assertEquals(1, bericht.fremderRueckstand)
+        assertFalse(bericht.sauber)
+        assertEquals("Nur das neue Paket ging hinaus", 1, server.anfragen.size)
+        assertEquals("ar-2-b", server.letzterKoerper().getString("client_ref"))
+        assertNotNull("Das alte liegt noch", puffer.paket(alt))
+        assertNull("Das neue ist fertig", puffer.paket(neu))
+        assertEquals(alt, b.gebundenBis)
+
+        val weg = puffer.rueckstandVerwerfen(alt)
+        assertEquals(1, weg.pakete)
+        assertNull(puffer.paket(alt))
+    }
+
+    /** 401 vermerkt die Abmeldung, eine angenommene Anfrage nimmt sie zurück. */
+    @Test fun abmeldevermerkFolgtDerAntwort() {
+        einSegmentMitPunkten(10)
+        val b = bindung()
+        server.status = 401
+        server.antwortkoerper = """{"error":"auth"}"""
+        senderMit(b).sendeAlles()
+        assertTrue(b.abgemeldet)
+
+        antworteVollstaendig()
+        senderMit(b).sendeAlles()
+        assertFalse(b.abgemeldet)
+    }
+
     /** **400**: als fehlerhaft markieren und **nicht wiederholen**. */
     @Test fun vierhundertMarkiertUndWiederholtNicht() {
         val id = einSegmentMitPunkten(10)

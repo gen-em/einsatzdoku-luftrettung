@@ -10667,6 +10667,27 @@ Kennungspräfixe unterscheiden die Quellen (`am-`/`ar-`/`ad-` für das Handy,
 `wm-` für die Wear-OS-Uhr); sie stehen seit Vertragsfassung 1.4 im
 JSON-Vertrag, Abschnitt 8 — der Nachtrag hing an R42 und ist mit S6 erledigt.
 
+**Abgemeldet mit Rückstand: trennen und binden** (seit Android 0.20.0,
+Konzept GR, E-GR-01). Ein Rückstand sperrt das Trennen (`Kopplungsdienst.trennen()`,
+`Trennergebnis.Rueckstand`), weil der Puffer Klartext ist und erst beim Senden
+mit dem Kontoschlüssel der jetzigen Kopplung verschlossen wird — an ein
+fremdes Konto gesendet, wäre er dort lesbar. Die Ausnahme ist ein Gerät, das
+der Server mit 401 oder 403 abgewiesen hat: Den Vermerk führt
+`kopplung/Rueckstandsbindung.kt` (Ablage `rueckstand`, außerhalb des
+Tresors, weil er das Trennen überleben muss und nur öffentliche Angaben
+trägt); `Sender` setzt ihn bei 401/403 und löscht ihn bei jeder angenommenen
+Anfrage. Ist er gesetzt, trennt `trennen()` trotz Rückstand und bindet den
+Rückstand an den bisherigen Kontoschlüssel und die höchste Paketnummer
+(`Puffer.hoechstePaketId()`, `AUTOINCREMENT` — eine Nummer kommt nie
+wieder). Vor dem ersten Stück prüft `Sender` die Bindung: derselbe Schlüssel
+→ Bindung fort, alles geht hinaus (ein Konto hat genau ein Schlüsselpaar,
+`kp_ablegen()` ersetzt keines); ein anderer, oder die alte Kopplung kannte
+keinen → Pakete bis zur Grenze bleiben liegen, `Sendebericht.fremderRueckstand`
+zählt sie, alles darüber geht an das neue Konto. Verworfen wird nur auf
+Rückfrage (`Puffer.rueckstandVerwerfen()`). Getrennt wird ohnehin nur
+außerhalb eines Dienstes (`EinstellungenAnsicht`), also deckt die Bindung den
+ganzen Puffer.
+
 **Die Kopplung ist seit Web 12.9.0 nicht mehr geräteneutral**, und das ist
 Absicht: `pair.php` liest den Block `geraet` aus — seit Web 13.0.0 in der
 Anfrage `start` — und hält fest, was gekoppelt hat (R42). Die Neutralität gilt

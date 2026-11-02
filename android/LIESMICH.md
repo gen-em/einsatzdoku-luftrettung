@@ -204,6 +204,18 @@ Die Fälle **räumen hinter sich auf**: *(Zeile 105–108 unverändert)*
 
 ### Was der Baulauf heute meldet
 
+**Stand Android 0.20.0 (Schritt 21, GR-02 und GR-03: Antwortauswertung,
+Rückstandsbindung), `./gradlew build` im Container, 02.11.2026 —
+`BUILD SUCCESSFUL in 7m 53s`:** Lint **0** Fehler (Handy 6 Warnungen, alle
+Fassungshinweise aus `libs.versions.toml`: 3 × `NewerVersionAvailable`,
+2 × `GradleDependency`, 1 × `AndroidGradlePluginVersion` — nicht aus diesem
+Paket; Uhr keine), Prüffälle je Bauart Handy **299**, davon 15 ohne
+Installation übersprungen, Uhr **74**, **0** Fehlschläge. Der Rundlauf gegen
+die örtliche Anlage steht aus (Prüfstand). APK unsigniert, Release: Handy
+**9 223 090 B**, Uhr **22 743 506 B**. **`ANDROID_HOME` setzt der Container
+nicht** — `ANDROID_HOME=/opt/android-sdk` voranstellen, sonst „SDK location
+not found".
+
 **Stand Android 0.18.0 (S11-09, das Handy verschließt), `./gradlew build`
 im Container, 17.10.2026 — `BUILD SUCCESSFUL in 2m 43s`:** Lint **0**
 Fehler (Handy 5 Warnungen: 3 × `NewerVersionAvailable`, 2 ×

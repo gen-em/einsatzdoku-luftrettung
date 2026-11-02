@@ -73,7 +73,13 @@ sealed interface Kopplungsschritt {
      * Servers steht der Eintrag dort noch und belegt einen Geräteplatz — das
      * ist im Browser ein Klick, aber nur, wenn jemand davon weiß.
      */
-    data class Getrennt(val nurLokal: Boolean) : Kopplungsschritt
+    /**
+     * @param gebunden wie viele Pakete nach dem Trennen an das bisherige
+     *   Konto gebunden liegen bleiben ([org.genem.nadoku.handy.kopplung.Rueckstandsbindung]).
+     *   Dann ist das Gerät abgemeldet, und der Hinweis „nur lokal" wäre
+     *   die falsche Auskunft: Den Servereintrag gibt es meist nicht mehr.
+     */
+    data class Getrennt(val nurLokal: Boolean, val gebunden: Int = 0) : Kopplungsschritt
 }
 
 /**
@@ -161,7 +167,15 @@ fun KopplungAnsicht(
                     else -> {
                         Hinweiskasten(stringResource(R.string.kopplung_hinweis_start))
 
-                        if (schritt is Kopplungsschritt.Getrennt) {
+                        if (schritt is Kopplungsschritt.Getrennt && schritt.gebunden > 0) {
+                            Meldungsblock(
+                                titel = stringResource(R.string.trennen_erfolg),
+                                hinweis = androidx.compose.ui.res.pluralStringResource(
+                                    R.plurals.trennen_gebunden_hinweis,
+                                    schritt.gebunden, schritt.gebunden,
+                                ),
+                            )
+                        } else if (schritt is Kopplungsschritt.Getrennt) {
                             Meldungsblock(
                                 titel = stringResource(
                                     if (schritt.nurLokal) R.string.trennen_nur_lokal

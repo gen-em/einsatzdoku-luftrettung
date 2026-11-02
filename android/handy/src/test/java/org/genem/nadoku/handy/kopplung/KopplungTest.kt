@@ -355,4 +355,86 @@ class KopplungTest {
         assertTrue("Es darf nichts hinausgegangen sein", server.anfragen.isEmpty())
         assertEquals("und nichts geräumt (Nr. 114)", 0, geraeumt)
     }
+
+    // ---- Abgemeldet mit Rückstand: trennen und binden ------------------------
+
+    private fun bindung(): Rueckstandsbindung {
+        val kontext = ApplicationProvider.getApplicationContext<Context>()
+        kontext.getSharedPreferences("rueckstand", Context.MODE_PRIVATE).edit().clear().commit()
+        return Rueckstandsbindung(kontext)
+    }
+
+    private fun dienstMit(b: Rueckstandsbindung, bis: Int = 0) = Kopplungsdienst(
+        HttpNetzweg(), tresor, server.basis,
+        rueckstand = { rueckstand },
+        raeumen = { geraeumt += 1 },
+        bindung = b,
+        hoechstePaketId = { 17L },
+        rueckstandBis = { bis },
+    )
+
+    /** Ohne Abmeldung bleibt die Sperre, wie sie war. */
+    @Test fun rueckstandOhneAbmeldungSperrtWeiter() {
+        tresor.speichern(Zugangsdaten("dev-1", "k1", "SCHLUESSEL-A"))
+        rueckstand = 2
+        val b = bindung()
+
+        assertTrue(dienstMit(b).trennen() is Trennergebnis.Rueckstand)
+        assertNull("Keine Bindung ohne Abmeldung", b.gebundenBis)
+        assertTrue(server.anfragen.isEmpty())
+    }
+
+    /** Abgemeldet: Trennen geht, der Rückstand bleibt gebunden an Schlüssel und Grenze. */
+    @Test fun abgemeldetTrenntUndBindet() {
+        tresor.speichern(Zugangsdaten("dev-1", "k1", "SCHLUESSEL-A"))
+        rueckstand = 2
+        val b = bindung()
+        b.abmeldungVermerken()
+        server.status = 401
+        server.antwortkoerper = """{"error":"auth"}"""
+
+        val e = dienstMit(b).trennen()
+        assertTrue("Getrennt, war $e", e is Trennergebnis.NurLokal || e is Trennergebnis.Getrennt)
+        assertNull("Die Kopplung ist fort", tresor.lesen())
+        assertEquals(17L, b.gebundenBis)
+        assertEquals(Bindungsstand.GLEICH, b.stand("SCHLUESSEL-A"))
+        assertEquals(Bindungsstand.ANDERS, b.stand("SCHLUESSEL-B"))
+        assertFalse("Die Abmeldung gehört zur alten Kopplung", b.abgemeldet)
+    }
+
+    /** Eine alte Kopplung ohne Schlüssel bindet „unbekannt" — jeder Schlüssel ist dann anders. */
+    @Test fun ohneAltenSchluesselIstJederAnders() {
+        tresor.speichern(Zugangsdaten("dev-1", "k1"))
+        rueckstand = 1
+        val b = bindung()
+        b.abmeldungVermerken()
+
+        dienstMit(b).trennen()
+        assertEquals(17L, b.gebundenBis)
+        assertEquals(Bindungsstand.ANDERS, b.stand("SCHLUESSEL-A"))
+    }
+
+    /** Liegt schon eine Bindung und dazu neuer Rückstand darüber, bleibt die Sperre. */
+    @Test fun zweiteGrenzeWirdNichtGezogen() {
+        tresor.speichern(Zugangsdaten("dev-1", "k1", "SCHLUESSEL-B"))
+        rueckstand = 3
+        val b = bindung()
+        b.binden("SCHLUESSEL-A", 5L)
+        b.abmeldungVermerken()
+
+        assertTrue(dienstMit(b, bis = 2).trennen() is Trennergebnis.Rueckstand)
+        assertEquals("Die alte Bindung bleibt", 5L, b.gebundenBis)
+        assertNotNull(tresor.lesen())
+    }
+
+    /** GLEICH löst die Bindung beim Prüfen; ANDERS lässt sie stehen. */
+    @Test fun pruefenLoestNurBeiGleich() {
+        val b = bindung()
+        b.binden("SCHLUESSEL-A", 9L)
+        assertEquals(Bindungsstand.ANDERS, b.pruefen("SCHLUESSEL-B"))
+        assertEquals(9L, b.gebundenBis)
+        assertEquals(Bindungsstand.GLEICH, b.pruefen("SCHLUESSEL-A"))
+        assertNull(b.gebundenBis)
+        assertEquals(Bindungsstand.KEINE, b.pruefen("SCHLUESSEL-A"))
+    }
 }

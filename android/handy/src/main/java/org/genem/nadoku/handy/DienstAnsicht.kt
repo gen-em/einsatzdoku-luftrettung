@@ -147,6 +147,8 @@ fun DienstAnsicht(
     sendelaufLaeuft: Boolean = false,
     aufJetztSenden: () -> Unit = {},
     aufVerwerfen: () -> Unit = {},
+    fremd: Int = 0,
+    aufFremdeVerwerfen: () -> Unit = {},
     aufModus: (Modus) -> Unit,
     aufBeginnen: () -> Unit,
     aufBeenden: () -> Unit,
@@ -176,6 +178,7 @@ fun DienstAnsicht(
                 Zustandsblock(
                     stand, rueckstand, abgewiesen, verwerfbar, verworfen,
                     sendeergebnis, sendelaufLaeuft, aufJetztSenden, aufVerwerfen,
+                    fremd, aufFremdeVerwerfen,
                 )
 
                 /* ZWEI SPERREN, IN DIESER REIHENFOLGE. Erst die
@@ -227,6 +230,8 @@ private fun Zustandsblock(
     sendelaufLaeuft: Boolean,
     aufJetztSenden: () -> Unit,
     aufVerwerfen: () -> Unit,
+    fremd: Int,
+    aufFremdeVerwerfen: () -> Unit,
 ) {
     if (stand.laeuft) {
         Row(
@@ -301,6 +306,19 @@ private fun Zustandsblock(
                 R.plurals.abgewiesene_hinweis, abgewiesen, Raeumung.FRIST_TAGE.toInt(),
             ),
         )
+    }
+
+    /* PAKETE DES BISHERIGEN KONTOS. Nach einer Abmeldung an ein anderes
+     * Konto gekoppelt: Sie gehen nicht hinaus, und ohne diese Zeile stünde
+     * nur ein Rückstand da, der sich nie abbaut. Dieselben drei Bausteine wie
+     * bei den Abgewiesenen — Zeile, Knopf, Hinweis. */
+    if (fremd > 0) {
+        Zustandszeile(
+            text = androidx.compose.ui.res.pluralStringResource(R.plurals.sync_fremd, fremd, fremd),
+            punktfarbe = Farbe.rot, schriftfarbe = Farbe.rotTief,
+        )
+        KnopfNeutral(stringResource(R.string.fremde_verwerfen)) { aufFremdeVerwerfen() }
+        Hinweiskasten(stringResource(R.string.fremde_hinweis))
     }
 
     /* Die Quittung nach „Verwerfen" — wie die Ergebniszeile darunter nur,

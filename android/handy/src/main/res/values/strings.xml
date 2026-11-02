@@ -132,6 +132,27 @@
         <item quantity="one">Erst %1$d Paket senden</item>
         <item quantity="other">Erst %1$d Pakete senden</item>
     </plurals>
+    <!-- Rueckstand und Abmeldung: Trennen ist erlaubt, der Rueckstand
+         bleibt gebunden an das bisherige Konto. Er geht nur dorthin. -->
+    <plurals name="trennen_frage_gebunden">
+        <item quantity="one">Das Telefon ist beim Server nicht mehr angemeldet. %1$d Paket bleibt auf dem Telefon und geht erst hinaus, wenn es wieder an dasselbe Konto gekoppelt ist – an ein anderes Konto geht es nicht.</item>
+        <item quantity="other">Das Telefon ist beim Server nicht mehr angemeldet. %1$d Pakete bleiben auf dem Telefon und gehen erst hinaus, wenn es wieder an dasselbe Konto gekoppelt ist – an ein anderes Konto gehen sie nicht.</item>
+    </plurals>
+    <plurals name="trennen_gebunden_hinweis">
+        <item quantity="one">%1$d Paket wartet auf dem Telefon. Es geht hinaus, sobald das Telefon wieder an dasselbe Konto gekoppelt ist.</item>
+        <item quantity="other">%1$d Pakete warten auf dem Telefon. Sie gehen hinaus, sobald das Telefon wieder an dasselbe Konto gekoppelt ist.</item>
+    </plurals>
+    <plurals name="sync_fremd">
+        <item quantity="one">%1$d Paket gehört dem bisherigen Konto</item>
+        <item quantity="other">%1$d Pakete gehören dem bisherigen Konto</item>
+    </plurals>
+    <string name="fremde_verwerfen">Pakete des bisherigen Kontos verwerfen …</string>
+    <string name="fremde_hinweis">Das Telefon ist jetzt an ein anderes Konto gekoppelt. Diese Pakete gehen nur an das Konto, für das sie aufgezeichnet wurden – dafür das Telefon wieder dorthin koppeln. Bis dahin liegen sie hier; an das neue Konto gehen sie nicht.</string>
+    <plurals name="fremde_frage">
+        <item quantity="one">%1$d Paket des bisherigen Kontos verwerfen?</item>
+        <item quantity="other">%1$d Pakete des bisherigen Kontos verwerfen?</item>
+    </plurals>
+    <string name="fremde_text">Die Aufzeichnungen sind danach weg. An das neue Konto gehen sie nicht.</string>
     <string name="trennen_rueckstand_hinweis">Sie gehören dem bisherigen Konto. Nach einer Neukopplung gingen sie an das neue.</string>
 
     <!--

@@ -4015,6 +4015,20 @@ App geschlossen wird. Ein Paket, das **während eines laufenden Dienstes**
 abgewiesen wurde, wird noch beschrieben; der Knopf erscheint dafür erst nach
 dem Dienstende, die rote Zeile schon vorher.
 
+**Gerät im Web gelöscht oder gesperrt, und es liegt noch etwas auf dem
+Telefon** *(seit Android 0.20.0)*. Solange Pakete zum Senden anstehen, sperrt
+die App das Trennen — sie gehören dem bisherigen Konto. Hat der Server das
+Telefon aber schon abgewiesen („Schlüssel abgewiesen" oder eine der
+Sperrzeilen oben), kann es sie ohnehin nicht mehr senden. Dann lässt sich das
+Gerät in den Einstellungen trotzdem trennen; die Rückfrage sagt, was mit den
+Paketen geschieht: Sie **bleiben auf dem Telefon** und gehen erst hinaus, wenn
+es wieder an **dasselbe** Konto gekoppelt ist. Koppelst du es an ein anderes
+Konto, gehen sie dort nicht hin — die Dienstansicht zeigt dann rot „2 Pakete
+gehören dem bisherigen Konto" und den Knopf **„Pakete des bisherigen Kontos
+verwerfen …"** (mit Rückfrage). Was nach der neuen Kopplung aufgezeichnet
+wird, geht ganz normal an das neue Konto. Während eines laufenden Dienstes
+lässt sich nicht trennen; erst den Dienst beenden.
+
 ---
 
 ## 11. Verwaltung (Admin)
