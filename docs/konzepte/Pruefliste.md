@@ -38,6 +38,8 @@ auf. **Nicht übernommen:**
 - **P-PK-24 bis -27** stehen in Bereich 9, **P-PK-36** und **-37** in 2: Die
   Zeile „Prüfliste PK ohne Merge" in Rahmenplan 6.1 fasste sie zusammen.
 
+**Nachgetragen:** P-PU-01 bis -07, -09 und -10 aus dem Prüfdokument PU beim Abschluss von Schritt 20 (02.11.2026, letzter Stand `47a8567c`); P-PU-08 war erledigt.
+
 **Doppelungen gestrichen:** Kette II Z4 (Umgebung `staging` beschränken) ist
 in P-R17-04 aufgegangen; P-P5c-29 verweist für das Token auf P-R17-19.
 Mehr Doppelungen gab es nicht — dieselben Wege (Demo-Reset, `update.php`,
@@ -85,6 +87,9 @@ selben Bereich nebeneinander.
 | P-BR-10 | **Der Prüfstand ohne Bericht ist rot.** — freiwillig; `git worktree add` eines beliebigen Stands **außerhalb** des Repositoriums, dort `bash tools/pruefstand/pruefen.sh --stufe klein --datei docs/Backlog.md`. | ein Block `Prüfstand: klein · Baum …` und rc 0. | `CalledProcessError` im Abschnitt „Bericht" und trotzdem rc 0 — dann ist F-BR-18 zurück. | — |
 | P-BR-11 | **Ein vergessener `SELBST`-Eintrag macht Stufe 1 rot** — auf einem Wegwerfzweig in `tools/quelltext/pruefen.sh` einen Namen aus `SELBST=(…)` streichen, Prüfstand fahren, PR öffnen. | Stufe 1 rot mit „`selbst` · tools/quelltext/<name> wertet --selbstprobe aus, aber <name> steht nicht in SELBST". | Stufe 1 grün — dann läuft die Regel im Tor nicht mit. | — |
 | P-BR-12 | **Ein Muster, das seine Fläche verliert, macht Stufe 1 rot** — auf einem Wegwerfzweig in `tools/pruefstand/pruefablauf.json` aus dem Muster `uhr` den Pfad `tools/uhr-pruefstand/**` streichen, die Tabelle in `Pruefablauf.md` 4 neu erzeugen, Prüfstand fahren, PR öffnen. | Stufe 1 rot mit „`ablauf` · … tools/uhr-pruefstand/… gehört zur Fläche uhr, aber kein Muster ab Stufe klein wählt dafür uhr-stufe1 aus". | Stufe 1 grün — dann wäre jede spätere Berührung von `tools/uhr-pruefstand/` eine Sackgasse (`uhr=nicht-gemessen`). | — |
+| P-PU-01 | Pull Request öffnen; Lauf „Prüfung" zum Kopf-Commit, Job `Stufe 1`, Schritt „Prüfbericht gegenlesen". | grün; „Prüfbericht in Ordnung: Stufe neben …" und darunter „Geerbt vom Vorgänger (Lage 8 nachgerechnet): …" mit den geerbten Proben. | rot mit „durfte nicht erben" oder „Der Vorgänger hat den Baum …" — dann liest das Tor den Vorgänger anders als der Prüfstand; Zeile an mich, nicht neu fahren. | nach dem Merge von PR #127 |
+| P-PU-02 | Im selben Lauf die Schritte von `Stufe 1` zählen. | 16 Schritte, keiner heißt „Steuerungsdokumente". | Der Schritt steht noch, oder die Gegenlesung meldet „Riegel steuerung fehlt im Bericht". | nach dem Merge von PR #127 |
+| P-PU-03 | Nach dem Merge: Lauf „Prüfung" auf `main`, Job „Schon gemessen?". | Er findet den grünen PR-Lauf mit demselben Baum und lässt `Stufe 1` aus. | „kein grüner PR-Lauf mit Baum …" bei grünem PR. | nach dem Merge von PR #127 |
 
 ## 3. Anmeldung, Zweitfaktor, Passkeys, Rückweg, Entsperren
 
@@ -275,10 +280,16 @@ selben Bereich nebeneinander.
 | P-R17-38 | **Die drei neuen Sätze in der Zusage lesen** (`CLAUDE.md` 4, R17-27): (a) „An Dritte aber schon …" — Adresssuche und Kartendienste bekommen Adresse, Koordinate und Kartenausschnitt im Klartext; (b) der Verweis der Klartextliste auf `Technik.md` 4.14; (c) „Der Data Layer steckt hinter einer Schnittstelle — das Senden", die Play-Dienste in drei Dateien. Dazu einmal in `docs/Technik.md` blättern (Kapitel 1 bis 15). | Die Sätze sagen, was die Anwendung tut, und keiner verspricht mehr als vorher. | Ein Satz verspricht etwas, das du so nicht zusagen willst, oder die Gliederung findet einen Abschnitt nicht, den du suchst. | — |
 | P-R17-03 | Nach dem Merge: `docs/Bedrohungsmodell.md` ist aus `README.md` und `docs/Technik.md` erreichbar; die Links führen hin. | Beide Verweise öffnen das Modell. | 404 oder ein Verweis auf eine andere Datei. | — |
 
-## 12. Werkzeuge und Steuerung — lesen
+## 12. Werkzeuge, Prüfstand und Steuerung
 
 | Nr. | Bedienweg | Erwartet | Scheitern erkennbar an | Wann, Stand |
 |---|---|---|---|---|
 | P-BR-05 | **Stichprobe: Passt die Anlass-Zeile zur Probe?** — drei Proben wählen (Vorschlag: `ingest`, `geraete`, `anteil`), die Zeile `Anlass: Nr. …` im Kopf lesen, den Backlog-Eintrag dazu öffnen. | Der Eintrag beschreibt den Fehler, den die Probe misst oder messen müsste (bei 311–313 das Risiko). | Ein Eintrag, der eine andere Stelle oder einen Fehler der Probe selbst beschreibt — dann Nummer berichtigen. | — |
 | P-BR-06 | **Die zehn nachgetragenen Einträge lesen.** — `docs/Backlog.md`, *Erledigt*, Nr. 304 bis 313. | Je Eintrag Fehler oder Risiko, Fundstelle, Fassung und Nachweis. | eine Fundstelle, die es nicht gibt, oder ein Eintrag, den die Betreiberin anders zugeordnet hätte. | — |
 | P-R4-22 | Nach dem Merge (oder vorher auf dem Zweig): `docs/Backlog.md` auf GitHub öffnen und zu den ersten offenen Einträgen rollen. | Neben jedem Eintrag steht die Nummer seiner Kopfzeile — heute 21, dann 23, dann 37 —, und zwischen den Einträgen ist nichts zu sehen. | Eine fortlaufende Zählung (21, 22, 23 …) oder ein sichtbares `<!-- -->` zwischen zwei Einträgen. | — |
+| P-PU-04 | Beim nächsten Paket mit Nebennummer (z. B. Web 23.7.0): den Kopf des Prüfstandlaufs und die Dauer lesen. | „Umfang schmal", „Engines der Browserproben: chromium", Bilderlauf mit „fuenf" Breiten und nur den berührten Seiten, wenn nur Seitendateien berührt sind; Dauer deutlich unter den 12 205 s des letzten Nebenlaufs. | „voll" ohne Zehnergrenze; drei Engines ohne Stylesheet; zehn Breiten — dann liest `auswahl.py` die Berührung anders. | beim nächsten passenden Paket |
+| P-PU-05 | Beim ersten Paket, dessen Nebennummer 23.10 erreicht (oder einer Hauptstufe): Kopf des Laufs. | „voll:zehner" (bzw. „voll:haupt"), drei Engines, zehn Breiten, alle Seiten; Stufe 1 grün. | „schmal" — dann rechnet die Zehnerregel falsch; das Tor ist dann rot mit „Umfang zu schmal". | beim nächsten passenden Paket |
+| P-PU-06 | Im selben Zweig nach einer kleinen Berichtigung den Prüfstand ein zweites Mal fahren. | Zeilen „erbt NAME — grün im Bericht von HEAD"; der Kreislauf `edbak` und die Riegel messen trotzdem; der Lauf ist um die geerbten Proben kürzer. | Kein Erbe, obwohl nur Doku berührt ist (dann den Grund aus „erbt 0 von N Proben — sonst etwa: …" lesen). | beim nächsten passenden Paket |
+| P-PU-07 | Ein Paket mit Änderung an `style.css` oder `ui.php` in `neben`. | drei Engines, zehn Breiten, alle Seiten. | Chromium allein oder fünf Breiten. | beim nächsten passenden Paket |
+| P-PU-09 | `docs/konzepte/Pruefliste.md` durchsehen: Stimmen die Bereiche? Fehlt ein Punkt, den Sie offen wissen? Stichprobe: drei Zeilen aus Rahmenplan 6.1 gegen die Liste halten. | jede genannte Nummer steht in der Liste, im passenden Bereich | eine Nummer aus 6.1 fehlt — dann hat der Auszug sie nicht gefunden. | — |
+| P-PU-10 | `CLAUDE.md` 2 (Changelog: fünf Sätze) und 7 (Prüfdokument: drei Teile, höchstens 20 Punkte; danach Prüfliste) lesen. | Die Regeln sagen, was gemeint war. | ein Satz, der anders gemeint war. | — |
