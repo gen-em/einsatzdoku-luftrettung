@@ -14,7 +14,7 @@
 
 | Paket | Inhalt | Stand |
 |---|---|---|
-| GR-01 | Vertrag: Fehlertabelle `ingest.php` (403, 429, 503, 507), Abschnitt 0 berichtigt | offen |
+| GR-01 | Vertrag: Fehlertabelle `ingest.php` (403, 429, 503, 507), Abschnitt 0 berichtigt | **erledigt** 02.11.2026 |
 | GR-02 | Handy, Antwortauswertung: Nr. 154, 229 (Handy), 201 (Handy), 507 | offen |
 | GR-03 | Handy, Kopplung: Nr. 157, Neukoppeln mit Schlüsselbindung (E-BE-08) | offen |
 | GR-04 | Uhr, Antwortauswertung: Nr. 229, 201 (Uhr), 507, 431 Teil 1 | offen |
@@ -22,7 +22,7 @@
 | GR-06 | Uhr, Sync-Seite: Nr. 402 mit Bildprobe | offen |
 | GR-07 | Abschluss: Prüfstand, Prüfdokument, Backlog, Pull Request | offen |
 
-**In Arbeit:** GR-01. **Es hakt:** Q-GR-05 und Q-GR-06 sind vor GR-02
+**In Arbeit:** GR-02. **Es hakt:** Q-GR-05 und Q-GR-06 sind vor GR-02
 beziehungsweise GR-03 zu entscheiden (K6).
 
 ---
@@ -323,7 +323,12 @@ der Freigabe.
 
 ## 6. Prüfprotokoll
 
-*(entsteht mit den Paketen)*
+**GR-01** (02.11.2026): Gegengelesen gegen jeden `json_out(…)` mit Code
+ungleich 200 in `server/ingest.php` — 13 Stellen (400 `payload` dreimal,
+400 `klartext`, 401 zweimal, 403 `device_disabled`, 403 `konto`, 405, 413,
+429, 500 `server`, 507 `kontingent`), dazu die 503 aus `wartung_lib.php`.
+Jede hat eine Zeile in der Fehlertabelle (Vertrag 5); vorher fehlten
+403 (zwei Formen) und 507. Keine Fassung, kein Changelog (nur `docs/`).
 
 ## 7. Verlauf
 
