@@ -9,6 +9,7 @@ Verlauf bis zum Schnitt). Die Fassungszählung läuft fortlaufend weiter.
 
 | Fassung | Datum | Anlass | Was |
 |---|---|---|---|
+| 192 | 02.11.2026 | R90 | Programmentscheidung R90: Die Arbeitsumgebung prüft nach jedem Merge die Prüflisten-Punkte „Claude“ und „beide“ auf Staging, mit eigenem BetreiberIn-Konto; die Prüfliste trägt dafür die Spalte „Wer“. Kopf: offener PR. |
 | 191 | 02.11.2026 | Zuarbeit | 6.1: Handprüfungen nach den Tags von 12b — 23 Punkte der Prüfliste R17 erledigt, beide Umgebungen beschränkt, R17-19 abgenommen, Produktiv überwacht; Reste Nr. 430 bis 432. Berichtigt: Der Kopf nannte Web 23.1.0 auf Produktiv und 38 Posten (es waren 39). |
 | 190 | 02.11.2026 | 20-Abschluss | Erledigt-Zeile 20 (Freigabe 02.11.2026, PR #127), Fahrplanzeile heraus, R89 umgesetzt; Konzept und Prüfdokument PU gelöscht (`47a8567c`), offene P-PU-Punkte in die Prüfliste und 6.1. Kopf: Stand `main` `d7b4661`. |
 | 189 | 02.11.2026 | 20, R89 | Schritt 20 gebaut (PU-01 bis -10), Pull Request offen; R87 abgelöst durch R89 (seit PU-03), R89 umgesetzt bis auf den Abschluss. Kopf: „Läuft" und „Offene PRs". |

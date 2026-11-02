@@ -1,6 +1,6 @@
 # Rahmenplan — Programm „Gen-EM NAdoku" bis v1.0
 
-**Fassung 191 (02.11.2026)** · Steuerung: Reihenfolge, Status, programmweite
+**Fassung 192 (02.11.2026)** · Steuerung: Reihenfolge, Status, programmweite
 Entscheidungen. Verlauf: `Rahmenplan-Verlauf.md`. Fassungen 1–15:
 `Rahmenplan-Archiv.md`; Fassungen 16–124: `Rahmenplan-Archiv-2.md`.
 
@@ -8,7 +8,7 @@ Entscheidungen. Verlauf: `Rahmenplan-Verlauf.md`. Fassungen 1–15:
 Uhr 4.1.1 · Android 0.18.2, alle drei ausgeliefert (Tags auf `c32dd2c`, 02.11.2026).
 **Läuft:** kein Schritt — 20 ist abgeschlossen (Abschnitt 8, Freigabe 02.11.2026).
 **Als Nächstes:** 13 — P7 Gesicht v1.0; beginnt mit einer Konzeptsitzung.
-**Offene PRs:** Handprüfungen nach den Tags von 12b (Prüfliste, Nr. 430 bis 432, Runbook).
+**Offene PRs:** Staging-Konto der Arbeitsumgebung, Prüfliste mit Spalte „Wer“ (R90).
 **Fällig bei der Betreiberin:** 36 Posten (Abschnitt 6.1). **`update.php`:** auf Staging und Produktiv nichts offen (Betreiberin, 20.10.2026, nach Web 23).
 
 Kennungen sind Namen, keine Reihenfolge.
@@ -355,6 +355,7 @@ werden hier kompakt angehängt; **der Statussatz wird ersetzt, nicht ergänzt**
 | R87 | Browserproben in Chromium, Firefox und WebKit ab Stufe neben und in Stufe 2, in klein Chromium; fehlt eine Engine, rot. Ausnahmen begründet; Safari von Hand | abgelöst durch R89 (umgesetzt mit PU-03, 01.11.2026); entschieden 19.10.2026 (Betreiberin), umgesetzt in Schritt 19 (abgeschlossen 20.10.2026) | Konzept DM (gelöscht, `3bedc25`), E-DM-01 bis -11 |
 | R88 | Die Pakete von 12b (R17-18 bis -30) laufen mit Opus, Kryptographie eingeschlossen — K8 (Krypto mit Fable, E-PV-5 (7)) gilt für 12b nicht; das Review war Fable | umgesetzt mit 12b (01.11.2026); entschieden 21.10.2026 (Betreiberin, Freigaberunde) | `Review-R17.md` 2.1 (gelöscht, `630756f0`), E-R17-28 |
 | R89 | Der Prüfumfang folgt der Berührung: drei Engines, zehn Breiten und alle Seiten nur bei Stylesheet-Berührung, Zehnerregel oder `haupt`; sonst schmal. Ersetzt R87 | umgesetzt in Schritt 20 (abgeschlossen 02.11.2026); entschieden 01.11.2026 (Betreiberin); E-PU-16 und -18 bestätigt 02.11.2026 | Konzept PU (gelöscht, `47a8567c`), E-PU-01 bis -19 |
+| R90 | Nach jedem Merge auf `main` prüft die Arbeitsumgebung auf Staging die Prüflisten-Punkte „Claude" und „beide", mit eigenem BetreiberIn-Konto | gilt; entschieden 02.11.2026 (Betreiberin) | `Pruefablauf.md` 2.4, `Pruefliste.md` (Spalte „Wer") |
 
 ## 8. Erledigt
 

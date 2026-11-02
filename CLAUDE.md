@@ -550,6 +550,13 @@ es sie gibt und wo:
   stattdessen belegt, und was gilt, wenn er nicht startet:
   `Pruefablauf.md` 6.9.
 
+**Nach jedem Merge auf `main` prüft die Arbeitsumgebung auf Staging nach**
+(R90, seit 02.11.2026): Ist der Auslieferungslauf grün, arbeitet sie die
+Punkte der Prüfliste ab, deren Spalte „Wer" **Claude** oder **beide**
+sagt — mit ihrem eigenen BetreiberIn-Konto (`NADOKU_STAGING_KONTO`,
+`_PASS`, `_TOTP`), nie mit dem Prüfkonto der Kette. Wie und mit welchen
+Grenzen: `docs/Pruefablauf.md` 2.4.
+
 **Keine Prüfzahl steht in dieser Datei.** Sie steht in der `LIESMICH.md` des
 Werkzeugs und in `docs/Pruefablauf.md` 6.11. Eine Zahl an zwei Stellen altert
 an einer davon unbemerkt: `docs/Technik.md` nannte bis Web 20.21.1 noch 366
