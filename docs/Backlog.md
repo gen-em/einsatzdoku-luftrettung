@@ -52,7 +52,7 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
 
 | Spanne | Zweig | seit |
 |---|---|---|
-| 430 bis 439 | `claude/new-session-p1duc7` — Ergebnisse der Handprüfungen nach den Tags von 12b (Prüfliste, Backlog, Runbook); vergeben: keine | 02.11.2026 |
+| 430 bis 439 | `claude/new-session-p1duc7` — Ergebnisse der Handprüfungen nach den Tags von 12b (Prüfliste, Backlog, Runbook); vergeben: 430 bis 432 | 02.11.2026 |
 | ab 440 | frei — höchste reservierte Nummer 439; frei blieben 420 bis 429 aus der Spanne von 20 (PR #127), 412 bis 419 aus der von 12b (PR #125), 394 bis 399 aus der Spanne von 19 (PR #112 bis #114), 389 aus der von 12a (PR #116), 372 bis 379 aus der von 12 (PR #103), 362 bis 369 aus der von PK, 359 aus der von 18 (PR #101), 348 und 349 aus der von 17, 338 aus der von AR | 02.11.2026 |
 
 ---
@@ -1255,3 +1255,56 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      Eigenschaften abbilden (`inset` aus `top`/`bottom`, ohne `size`).
      *Abnahme:* eine Probe-Änderung an `style.css`, `--schreiben`, danach
      drei Engines grün; eine zweite, ungeplante Änderung rot in allen dreien.
+
+<!-- -->
+
+430. **Bitwarden zeigt beim Backup mit Kontopasswort den Eintrag nicht im Menü am Feld.** · gehört zu: nächste Backlog-Runde · Stand: offen · seit 02.11.2026
+     *Aufgenommen 02.11.2026 aus P-R17-34 (Handprüfung auf Produktiv,
+     Firefox mit Bitwarden).* Seit Web 23.4.0 bietet Bitwarden im Feld
+     „Kontopasswort" (Einstellungen → Backup) kein neues Passwort mehr an —
+     die Hälfte von Nr. 405 ist behoben. Das Menü am Feld zeigt aber „No
+     items to show", obwohl der Eintrag für `nadoku.gen-em.org` (Erkennung
+     „Host") auf `login.php` angeboten wird. Über das Symbol in der Leiste
+     und mit Strg + Umschalt + L füllt Bitwarden das Feld richtig; das sind
+     die Auswege bis dahin. *Vermutung, nicht geprüft:* Im selben Formular
+     stehen die zwei Felder für ein eigenes Backup-Passwort
+     (`autocomplete="new-password"`), und Bitwarden stuft das Formular als
+     Registrierung oder Passwortwechsel ein. *Weg:* „Kontopasswort" in ein
+     eigenes Formular ohne `new-password`-Felder setzen. *Abnahme:* in einem
+     echten Browser mit Bitwarden bietet das Menü am Feld den Eintrag an;
+     die Sandbox hat kein Bitwarden.
+
+<!-- -->
+
+431. **Die Garmin-Uhr sendet nach dem Reaktivieren im Web erst nach einem Neustart der App.** · gehört zu: nächste Backlog-Runde · Stand: offen · seit 02.11.2026
+     *Aufgenommen 02.11.2026 aus P-R17-26 (Uhr 4.1.1 auf echter Garmin).*
+     Bekommt die Uhr 401 oder 403, setzt sie `Uploader.abgemeldet`, und
+     `syncAll()` bricht danach sofort ab — auch nach Dienstende und neuem
+     Einsatz. Zurück setzen es nur eine angenommene Anfrage oder das
+     Koppeln; die erste kommt nie zustande, das zweite sperrt die Uhr,
+     solange Pakete offen sind. Wer das Gerät im Web wieder aktiviert, muss
+     also wissen, dass er die App neu starten muss (die Marke liegt nur im
+     Speicher) — seit dem 02.11.2026 steht der Ausweg im Handbuch (Sync-Seite
+     der Uhr), das bis dahin „neu koppeln" sagte. Gemessen: aktiviert, nichts gesendet;
+     nach dem Neustart der App gingen alle Pakete hinaus. *Weg:* das
+     Öffnen der Sync-Seite oder „Senden" versucht es trotz der Marke einmal,
+     dazu ein seltener Versuch beim Dienstende. *Frage an die Betreiberin:*
+     Ist ein Gerät im Web **gelöscht** statt deaktiviert, lässt sich die Uhr
+     mit offenen Paketen erst nach Ablauf der 30-Tage-Frist neu koppeln
+     (E-R17-22) — gewollt, oder zu lang für eine Übergabe an ein anderes
+     Konto? *Abnahme:* deaktivieren, aufzeichnen, aktivieren, Sync-Seite
+     öffnen — die Pakete gehen ohne Neustart hinaus.
+
+<!-- -->
+
+432. **„App installieren" nennt beide APKs gleich.** · gehört zu: nächste Backlog-Runde · Stand: offen · seit 02.11.2026
+     *Aufgenommen 02.11.2026 bei P-R17-05.* Unter „Ohne Play Store: APK von
+     Hand" stehen zwei Zeilen „NAdoku 0.18.2"; welche die Wear-OS-Uhr ist,
+     zeigt erst der Dateiname nach dem Herunterladen
+     (`nadoku-uhr-0.18.2.apk`). Die Zeile in `einstellungen.php` setzt nur
+     „NAdoku" und die Fassung zusammen, `apk_liste()` liest das `-uhr-` gar
+     nicht aus. *Weg:* `apk_liste()` gibt das Gerät mit (Name enthält
+     `-uhr-` → Uhr, sonst Handy), die Zeile heißt „NAdoku für Android-Handy"
+     bzw. „NAdoku für Wear-OS-Uhr"; dieselbe Benennung in Betrieb → Updates,
+     wo `apk_liste()` auch gelesen wird. *Abnahme:* beide Zeilen tragen ihr
+     Gerät, die Prüfsummen bleiben an ihrer Zeile.

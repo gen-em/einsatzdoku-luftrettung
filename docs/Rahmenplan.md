@@ -1,15 +1,15 @@
 # Rahmenplan — Programm „Gen-EM NAdoku" bis v1.0
 
-**Fassung 190 (02.11.2026)** · Steuerung: Reihenfolge, Status, programmweite
+**Fassung 191 (02.11.2026)** · Steuerung: Reihenfolge, Status, programmweite
 Entscheidungen. Verlauf: `Rahmenplan-Verlauf.md`. Fassungen 1–15:
 `Rahmenplan-Archiv.md`; Fassungen 16–124: `Rahmenplan-Archiv-2.md`.
 
-**Stand `origin/main`** (Commit `d7b4661`, PR #127, gemessen 02.11.2026): Web 23.6.0 ·
-Uhr 4.1.1 · Android 0.18.2; Web 23.1.0 auf Produktiv seit dem 27.10.2026.
+**Stand `origin/main`** (Commit `2563fde`, PR #128, gemessen 02.11.2026): Web 23.6.0 ·
+Uhr 4.1.1 · Android 0.18.2, alle drei ausgeliefert (Tags auf `c32dd2c`, 02.11.2026).
 **Läuft:** kein Schritt — 20 ist abgeschlossen (Abschnitt 8, Freigabe 02.11.2026).
 **Als Nächstes:** 13 — P7 Gesicht v1.0; beginnt mit einer Konzeptsitzung.
-**Offene PRs:** Abschluss von 20 (Buchführung, ohne Fassung).
-**Fällig bei der Betreiberin:** 38 Posten (Abschnitt 6.1). **`update.php`:** auf Staging und Produktiv nichts offen (Betreiberin, 20.10.2026, nach Web 23).
+**Offene PRs:** Handprüfungen nach den Tags von 12b (Prüfliste, Nr. 430 bis 432, Runbook).
+**Fällig bei der Betreiberin:** 36 Posten (Abschnitt 6.1). **`update.php`:** auf Staging und Produktiv nichts offen (Betreiberin, 20.10.2026, nach Web 23).
 
 Kennungen sind Namen, keine Reihenfolge.
 
@@ -166,7 +166,7 @@ gestrichen, 6a abgehakt; was steht, ist bestätigt offen.
 | **P-PK-37:** `STAGING_PASS` einmal falsch, einmal leer setzen — Stufe 2 rot mit Grund im ersten Messschritt; P-PK-18 (zwei Merges in einer Minute) bei Gelegenheit. P-PK-19, -21, -38 und PK-M2 sind seit Lauf 101 erledigt | PK | 29.09.2026 | `Pruefliste.md` 1, 5s |
 | **Prüfliste PK ohne Merge:** P-PK-24, -25 (Rettungsmittel, Excel), -26 (GuteSeele-Import) im Browser; -27 mit Netzzugang (Nr. 280); Z12 — „Schema gegen MySQL 8.4.0" und „Schema gegen MariaDB 10.6" als Pflichtprüfung (P-PK-36) | PK | 23.09.2026 | `Pruefliste.md` 1 |
 | **`app.umgebung` in die `config.php` von Staging** (`name` Staging, `farbe` rot) — nie auf Produktiv; danach Betrieb → Status, Zeile „Umgebung" | 10c AP1 (E-P5c-05) | 23.09.2026 | Runbook „Eine Testanlage kennzeichnen"; P-P5c-01 |
-| **`betrieb.health_token`** in die `config.php` beider Anlagen, das Monitoring auf `/api/health.php` richten, Token als Kopfzeile `X-Health-Token` (seit Web 23.1.0) — ohne Eintrag ist der Endpunkt aus | 10c AP6 | 20.09.2026 | Runbook „Health-Endpunkt einrichten"; P-P5c-29 bis -31 |
+| **Health-Endpunkt auf Staging** — Token unter Betrieb → Hintergrundjobs, Karte „Monitoring“ (seit Web 23.5.0), als Kopfzeile; Produktiv überwacht Uptime Kuma seit dem 02.11.2026 | 10c AP6 | 20.09.2026 | Runbook „Health-Endpunkt einrichten"; P-P5c-29 bis -31 |
 | **Vorhandene Komplett-Backups auf Produktiv öffnen** (`gzip -t`) — ein Stand, der sich nicht öffnen lässt, ist kein Rückfallstand (Nr. 328). War vor dem Merge fällig; der Merge ist gelaufen, der Punkt steht aus | 10c AP11 | 25.09.2026 | P-P5c-45 |
 | **Prüfliste P5c/AP1:** Staging rot nach dem Merge, Produktiv blau nach dem Tag, Rundmail in einem echten Postfach, Ankündigung am Handy | 10c AP1 | 23.09.2026 | P-P5c-01 bis -04 |
 | **Prüfliste P5c/AP2:** Archive unter Verwaltung → Protokoll → Archiv nach dem ersten Jobdurchlauf (beginnt beim ältesten Eintrag), Plakette „auf dem Ziel", einmal herunterladen — ob der Job ohne Cron in einer Woche drankommt, zeigt nur die Anlage | 10c AP2 | 24.09.2026 | P-P5c-05 bis -09 |
@@ -183,13 +183,10 @@ gestrichen, 6a abgehakt; was steht, ist bestätigt offen.
 | **Prüfliste R4:** P-R4-07 bis -23, je nach dem Deploy ihrer Fassung — Formular und Leseansicht, Konten, Demo-Reset, Handy, Verwerfen in der App, Statistik, Backlog auf GitHub | 17 | 28.09.2026 | `Pruefliste.md` 4 |
 | **Prüfliste SR:** auf Staging P-SR-05, -07, -08 (mit -20 zuerst), -10, -11, -13, -14, -16 bis -19 — Gerät merken, Schlüsselwechsel, Notzugang, Passkeys und Rechenaufgabe an echten Geräten, Cookie-Absatz; freiwillig -09, -12 | 18 | 05.10.2026 | `Pruefliste.md` 4 |
 | **Zuarbeiten aus Kette II:** Aufbewahrung der Komplett-Stände auf Staging (Nr. 261, Vorschlag 5); `info.php` auf Staging löschen; Zweig `produktion` gegen Handpushes schützen; Hotfix-Weg beim ersten Hotfix | Kette II | 21.09.2026 | `Pruefliste.md`, 4a, 9, 27, 28 |
-| **Umgebung `staging` beschränken** (Deployment branches and tags): `main`, `hotfix/*` **und Tag `web-v*`** — ohne den Tag bleibt jede Produktivauslieferung am Job „Rückfallstand (Staging)" hängen | Kette II Z4 (E-PK-69) | 29.09.2026 | `Pruefliste.md`, Abgleich |
-| **Umgebung `produktion` beschränken** auf `main` und die Tags `web-v*`, `android-v*`, `uhr-v*` — ein Probelauf fordert sie heute von jedem Zweig an (F-R17-04); dabei Pflichtprüfer und Org-Zweitfaktor nachsehen | 12 (R17-01) | 11.10.2026 | `Pruefliste.md`, P-R17-04 |
 | **Prüfliste S11:** Gerätetests Uhr 4.0.0 und Android 0.18.0 (P-S11-32 bis -35, -05, -39), Wege auf Staging (-14 bis -31), Safari (-43), Konto-Backup (-45), alte Sicherungen (-07, -08), Rechtstexte (-40) | 12a | 20.10.2026 | `Pruefliste.md` 4 |
 | **Prüfliste PU:** P-PU-01 bis -03 (Stufe 1 und „Schon gemessen?" an PR #127 und seinem Merge), -04 bis -07 beim nächsten passenden Paket (schmale Nebenstufe, Zehnergrenze, zweiter Lauf mit Erbe, Stylesheet), -09 und -10 lesen | 20 | 02.11.2026 | `Pruefliste.md` 2, 12 |
 | **Prüfliste DM:** P-DM-02 (Registrierung in Firefox auf Staging: Knopf sofort frei), -03 (dasselbe in Safari), -06 (dasselbe auf Produktiv nach dem Tag `web-v23.0.1`, nur bei offener Registrierung) | 19 | 20.10.2026 | `Pruefliste.md` 3 |
-| **Prüfliste R17:** P-R17-03, -04 (CSP scharf seit 28.10.2026; offen HSTS, GitHub), -05; aus 12b -06 bis -11 und -15 bis -40, je nach Deploy, nach Risiko geordnet (-12 bis -14 und -29 erledigt, -17 offen nur auf Staging) | 12, 12b | 11.10.2026 | `Pruefliste.md` 4 |
-| **R17-19 abnehmen** — „Prüfung“ und App-Probelauf `android`, `uhr` von `main`; eine Instanz startet keinen Lauf (E-R17-38). Stufe 2 nach dem Merge ist gelesen (Lauf 40271258931, P-R17-14) | 12b (R17-19) | 25.10.2026 | `Pruefliste.md`, P-R17-15 und -16 |
+| **Prüfliste R17:** P-R17-03, -38 (lesen); -21, -22 (Adresswechsel, Freigabe); -11, -27 (Geräte); -34, -26 teilweise (Rest Nr. 430, 431); freiwillig -24, -31, -32. Der Rest ist erledigt (02.11.2026) | 12, 12b | 11.10.2026 | `Pruefliste.md` |
 | **Antwort des Hosters auswerten** (gestellt 28.10.2026): Haltedauer der Zugriffslogs (F-R17-22, -57; in die Betriebsakte) und ob er GitHub-Läufer zeitweise sperrt (F-R17-74) | 12b (R17-19, Übergabe) | 21.10.2026 | `Review-R17.md` 2.3 und 2.3a (gelöscht, `630756f0`) |
 | **Plattformvergleich Staging vervollständigen:** vier leere Zellen (`max_user_connections`, Kontingent, Platz, Cron) und die Herkunft des Zertifikats aus Betrieb → Status | Kette II | 21.09.2026 | `Technik.md` 12.5; Prüfpunkt 2c |
 | **Server-Anteil anlegen** — Betrieb → Servereinstellungen, Karte „Schlüssel des Servers"; ohne den Griff tut S10 nichts, die Statuszeile steht rot | S10 | 14.09.2026 | Archiv-2 6; Runbook |

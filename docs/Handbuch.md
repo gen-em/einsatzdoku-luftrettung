@@ -119,8 +119,17 @@ Abschnitt 2.2 gibt es erst im laufenden Dienst.
 > senden und **behält alles — 30 Tage lang**, gezählt ab der ersten
 > Abmeldung. Danach verwirft sie alle ungesendeten Pakete: Eine Uhr, die
 > niemand mehr koppelt, soll Spur, Phasen und Reanimation nicht unbegrenzt
-> tragen. Das Datum in der Zeile ist der letzte Tag. Der Weg zurück ist eine
-> neue Kopplung (*lang START*); wer in der Frist koppelt, verliert nichts.
+> tragen. Das Datum in der Zeile ist der letzte Tag.
+>
+> **Der Weg zurück hängt davon ab, was geschehen ist.** War die Uhr nur
+> abgeschaltet: in den Einstellungen wieder einschalten, dann die App auf
+> der Uhr einmal ganz verlassen (BACK bis zum Zifferblatt) und neu starten —
+> erst danach versucht sie wieder zu senden (bis Uhr 4.1.1, Backlog
+> Nr. 431). Wurde sie gelöscht, hilft eine neue Kopplung (*lang START*) —
+> aber nur, wenn nichts Ungesendetes mehr auf ihr liegt: Die Pakete gehören
+> dem bisherigen Konto, und die Uhr verweigert das Koppeln mit „Erst
+> 2 Pakete senden", damit sie nicht in einem fremden Konto landen. Dann
+> bleibt nur, die Frist abzuwarten.
 >
 > „**1 abgewiesen**" heißt: Der Server hat dieses eine Paket dauerhaft
 > zurückgewiesen, es kommt nie an. Alles andere wird weiter gesendet. Mit
