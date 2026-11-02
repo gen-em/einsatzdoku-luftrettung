@@ -159,7 +159,7 @@ def lauf(wurzel, nur_pruefen, nur_ziel):
 def selbstprobe(wurzel):
     # DIE KENNUNG FUER DIE GEGENPROBE „mit Paket" KOMMT AUS DEM FAHRPLAN, nicht
     # aus dem Kopf. Ein fester Wert wie `17 AP3` geht mit seiner
-    # Fahrplanzeile, und mit ihr die Gegenprobe — Stufe 1 wird rot.
+    # Fahrplanzeile, und mit ihr die Gegenprobe — die Selbstprobe wird rot.
     # Ein Schritt, der endet, nimmt seine Kennung mit; die erste, die noch
     # dasteht, gilt.
     kennung = fahrplan(wurzel)[0][0]

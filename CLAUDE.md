@@ -60,7 +60,9 @@ Diese fünf Punkte sind kein Nachklapp, sondern Teil der Änderung:
    hängen hinten an, 4, 5, 6 und 7 bleiben frei. **Wer Nummern vergeben
    könnte, reserviert zuerst eine Zehnerspanne in der Tabelle im Kopf von
    `Backlog.md` und pusht das** (E-SD-21). Kopfzeilen und Decken misst
-   `tools/steuerung/`, Doppelungen `bestand` — beides in Stufe 1. Ob eine
+   `tools/steuerung/` im Prüfstand und meldet einen Riss als Hinweis, der
+   nicht aufhält (seit PU-05, E-PU-06; bis dahin rot in Stufe 1);
+   Doppelungen misst `bestand` in Stufe 1. Ob eine
    neue Nummer schon auf einem anderen Zweig steht, misst
    `tools/steuerung/nummern.py` — nur örtlich im Prüfstand, weil Stufe 1
    die anderen Zweige nicht sieht (Nr. 339).

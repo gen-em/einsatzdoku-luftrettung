@@ -11,8 +11,9 @@ Rückgabewert 0 = jede Decke gehalten · 1 = eine gerissen · 2 = nicht gelaufen
 WOFÜR. Rahmenplan und Backlog sind bis zum Schnitt am 26.09.2026 auf 3 700
 und 11 300 Zeilen gewachsen, weil jede Fassung Erzähltext nachzog und nichts
 es maß. Seit dem Schnitt gilt je Stelle eine Decke — die
-Zahlen unten —, und dieses Werkzeug hält sie im
-Prüfstand und im Tor. Eine Decke ist ein Prüfwert, kein Ziel: Wer
+Zahlen unten —, und dieses Werkzeug misst sie im
+Prüfstand; seit PU-05 (E-PU-06) ist ein Riss dort ein Hinweis, der nicht
+aufhält, und Stufe 1 fährt es nicht mehr. Eine Decke ist ein Prüfwert, kein Ziel: Wer
 eine anheben will, begründet es in der Verlaufszeile und ändert sie HIER.
 
 GEMESSEN WIRD DIE FORM, NICHT DER SINN. Ob ein Statussatz stimmt, sieht nur

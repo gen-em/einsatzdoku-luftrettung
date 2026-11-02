@@ -217,11 +217,13 @@ Wer die versionierte Deny-Liste ändert, hebt Lage 2 ebenfalls auf; das fällt
 im Pull Request auf, weil `.claude/settings.json` dann in der Berührung
 steht.
 
-**Heutiger Umfang** (gezählt am 28.10.2026 am Quelltext, R17-27 —
-nachzählen: `awk 'NR>=75 && NR<231 && /^      - /' .github/workflows/pruefung.yml | wc -l`
+**Heutiger Umfang** (gezählt am 02.11.2026 am Quelltext, PU-05 —
+nachzählen: `awk '/^  pruefung:/{a=1} /^  schema:/{a=0} a && /^      - /' .github/workflows/pruefung.yml | wc -l`
 für `Stufe 1`): Der Arbeitslauf `pruefung.yml` heißt „Prüfung" und führt drei
 Jobs — **`Schon gemessen?`** mit **2** Schritten, `Stufe 1` mit **16** (bis
-R17-27 stand hier 15, F-R17-29) und
+PU-05 **17**: Der Schritt „Steuerungsdokumente" ist in den Prüfstand
+gewandert, E-PU-06 — und der frühere Zählbefehl über feste Zeilen brach
+vor dem letzten Schritt ab und zählte 16, F-PU-09) und
 `Schema gegen …` mit **4**; bis PK-05 waren es in `Stufe 1` **24**, bis BR-03
 **17** — drei Schritte sind in die Quelltextprüfungen gewandert (`bestand`,
 `pysyntax`, `handbuch`), einer kam dazu (`cmark-gfm` bereitstellen). Den
@@ -479,11 +481,11 @@ Zwei Dinge hängen mit daran, und beide sind gemessen:
 | `server/**` | neben | `ingestprobe`, `spurprobe`, `jobprobe`, `komplettprobe`, `wiederherstellung`, `gpxprobe`, `geraeteprobe`, `kopplungsprobe`, `mailprobe`, `versandprobe`, `ratenprobe`, `wartungsprobe`, `freigabeprobe`, `fristprobe`, `abmelde-probe`, `containerprobe`, `browserprobe-csp`, `kreislauf-csv`, `kreislauf-edbak`, `spaltenregister-wegprobe`, `protokollprobe`, `rollenprobe`, `zweitfaktorprobe`, `rueckwegprobe`, `sitzungsprobe`, `passkeyprobe`, `schluesselwechselprobe` | Pruefablauf.md 3, Zeile neben: alle Proben gegen die oertliche Installation, beide Kreislaeufe, Bilderlauf aller Seiten in zehn Breiten (acht bis R4-08), Bedienprobe. Bis PK-05 gab es dieses Muster nicht -- eine Nebenstufe mass dasselbe wie eine Korrekturstufe (F-P5c-49, E-P5c-32). protokollprobe und rollenprobe kamen mit P5c/AP2 und fehlten hier bis AP3 (F-P5c-90). zweitfaktorprobe kam mit P5c/AP5 und steht hier im selben Paket, rueckwegprobe ebenso mit RW-01, sitzungsprobe mit SR-01, passkeyprobe mit SR-09, schluesselwechselprobe mit SR-03. Bilderlauf und Bedienprobe stehen seit PU-04 nicht mehr hier: Sie laufen wie in klein nur ueber ihre eigenen Muster, beim vollen Lauf immer (E-PU-04, Q-PU-03). |
 | `server/betrieb_statistik.php`, `server/statistik_lib.php` | klein | `messstand`, `bilderlauf` | Nr. 295 (Messstand-Schritt statistik: drei Reiter unter 1 s bei 5000 Einsätzen, EXPLAIN). Stand bis R4-04 am ENDE der Muster, weil die Reihenfolge der Proben entschied, wen der Demo-Reset traf (F-P5c-127); seit R4-04 schiebt der Pruefstand die Demo-Marke vor jeder Probe mit demo: true (Nr. 322), und die Stelle ist gleichgueltig. |
 | `server/**` | haupt | `messstand`, `anteilprobe`, `verbindungsprobe`, `schemaprobe` | F-S2-E; Nr. 267 -- der Export scheiterte nur auf MySQL 8.4 -- dazu, was Pruefablauf.md 3 erst der Hauptstufe gibt: Messstand, Anteil- und Verbindungsprobe (PK-05). |
-| `docs/Rahmenplan*.md`, `docs/Backlog*.md`, `CLAUDE.md`, `tools/steuerung/**` | klein | `steuerung`, `nummern` | Nr. 177, 196, 199 (Konzept SD): die Decken der Steuerungsdokumente und die Kopfzeilen des Backlogs. Der Riegel laeuft ohnehin in jeder Stufe; das Muster benennt die Beruehrung. Nr. 339 (R4-03): eine neue Nummer, die ein anderer Zweig schon traegt -- nur oertlich, deshalb nur hier. |
+| `docs/Rahmenplan*.md`, `docs/Backlog*.md`, `CLAUDE.md`, `tools/steuerung/**` | klein | `steuerung`, `nummern` | Nr. 177, 196, 199 (Konzept SD): die Decken der Steuerungsdokumente und die Kopfzeilen des Backlogs. Der Riegel laeuft ohnehin in jeder Stufe; das Muster benennt die Beruehrung. Nr. 339 (R4-03): eine neue Nummer, die ein anderer Zweig schon traegt -- nur oertlich, deshalb nur hier. Seit PU-05 (E-PU-06) laeuft steuerung nur noch hier, als hinweis; Stufe 1 faehrt sie nicht mehr. |
 | `server/assets/style.css`, `server/assets/images/gen-em_logo_*.png` | klein | `android-farbabgleich`, `android-bildmarken` | Nr. 334 (R4-04): Die App uebernimmt Farbwerte und Bildmarken aus dem Web (E-S4-22a). Wer sie dort aendert, erfaehrt hier, dass die App nachzieht -- ohne den Android-Bau, der dafuer nichts misst. |
 | `tools/motor.mjs`, `tools/pruefstand/motoren.md`, `tools/zweitfaktor/totp.mjs` | klein | `gpxprobe`, `freigabeprobe`, `fristprobe`, `abmelde-probe`, `containerprobe`, `huellenprobe`, `kontopaarprobe`, `ortsdatenprobe`, `wartungslaufprobe`, `browserprobe-csp`, `bedienprobe`, `bilderlauf`, `stilvergleich`, `kreislauf-csv`, `kreislauf-edbak`, `rueckwegprobe` | Nr. 390 — die Engine-Wahl und das Register gelten fuer jede Browserprobe; wer sie aendert, faehrt alle Browserproben. tools/motor.mjs hebt ab neben auf drei Engines (umfang.engine_wahl, E-PU-16); bis PU-03 hiess es hier pauschal drei (R87). |
 
-**Die billigen Riegel laufen in jeder Stufe, ohne Muster:** `syntax-php`, `wortliste`, `vollstaendigkeit`, `kontraste`, `linkprobe`, `anker`, `kennzeichnung`, `fremdsummen`, `dokumente`, `bestand`, `syntax-py`, `handbuch`, `installweiche`, `behandler`, `sitzungshaertung`, `cspprobe`, `jobregister`, `migrationsregister`, `rechtstexte`, `kettenaufrufe`, `zaehlung`, `spaltenregister`, `steuerung`.
+**Die billigen Riegel laufen in jeder Stufe, ohne Muster:** `syntax-php`, `wortliste`, `vollstaendigkeit`, `kontraste`, `linkprobe`, `anker`, `kennzeichnung`, `fremdsummen`, `dokumente`, `bestand`, `syntax-py`, `handbuch`, `installweiche`, `behandler`, `sitzungshaertung`, `cspprobe`, `jobregister`, `migrationsregister`, `rechtstexte`, `kettenaufrufe`, `zaehlung`, `spaltenregister`.
 
 **Stufenregel `migration`:** eine neue Kennung in `server/migration_lib.php` heißt mindestens **haupt** — E-P5c-36, E-P5c-88: Ein Paket mit Migration faehrt die Plattformmatrix, und die laeuft nur in haupt -- dort sind Nr. 238 und Nr. 267 gefunden worden. Ausgeloest von einer NEUEN Kennung im Katalog, nicht von einer Aenderung an der Datei: Die aendert sich auch ohne Migration (P5c/AP2, AP3).
 
@@ -1060,7 +1062,7 @@ hier steht, ist nur, **was grün heißt**:
 | `tools/quelltext/` `pysyntax`, `handbuch` | 0 Syntaxfehler und 0 Warnungen (ungültige Escape-Folge, seit R4-07) bei mindestens einer Datei; beide Dokumente rendern, gültiges UTF-8, 0 Bilder aus fremder Quelle |
 | `./gradlew build` | 0 Lint-Fehler, 0 Fehlschläge |
 | `tools/stilvergleich/` | die gemessenen Abweichungen sind genau `geplant.txt` — ohne Datei: 0 (6.10) |
-| `tools/steuerung/` | 0 Decken gerissen (welche es sind, sagt `decken.py`), 0 Kopfzeilen ohne Grammatik, 0 ohne gültiges Ziel, 0 Nummern in beiden Backlog-Dateien, 0 Einträge als Codeblock, 0 offene Einträge ohne eigene Liste mit ihrer Nummer (seit R4-25); Selbstproben alle Fälle grün |
+| `tools/steuerung/` (im Prüfstand, als `hinweis`; seit PU-05 kein Riegel im Tor) | 0 Decken gerissen (welche es sind, sagt `decken.py`), 0 Kopfzeilen ohne Grammatik, 0 ohne gültiges Ziel, 0 Nummern in beiden Backlog-Dateien, 0 Einträge als Codeblock, 0 offene Einträge ohne eigene Liste mit ihrer Nummer (seit R4-25); Selbstproben alle Fälle grün |
 
 PK-04 hat zwei davon geändert: E-PK-16 hat der Vollständigkeit die
 Symbolzählung und ihre Schwelle genommen, E-PK-08 hat die Wortliste zur

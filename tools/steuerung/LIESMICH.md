@@ -24,8 +24,8 @@ Zweig auch neu anlegt (je gegen den Vorfahren mit `main` und mit `HEAD`, beide D
 
 ## Was es braucht
 
-`python3`, `cmark-gfm` (Ausbaustufe web), für `nummern.py` Git und Netz zu `origin`.
-Rückgabe 0 = gehalten, 1 = gerissen, 2 = nicht gelaufen — nie still grün.
+`python3`, `cmark-gfm` (Ausbaustufe web), für `nummern.py` Git und Netz zu `origin`. Rückgabe 0 = gehalten,
+1 = gerissen, 2 = nicht gelaufen. Seit PU-05 (E-PU-06) nur im Prüfstand, als `hinweis`; Stufe 1 fährt es nicht.
 
 ## Erwartete Zahl
 

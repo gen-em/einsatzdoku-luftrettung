@@ -423,7 +423,7 @@ die Aufräumfassung vom 24.09.2026 gelöscht hat (Archiv-2, Verlaufszeile 110).
   Ort und Stelle und schreibt in die Verlaufszeile, was falsch war. Kein Satz,
   der einen früheren Wortlaut zitiert, kein Blockquote, kein Werdegang.
 - **Der Kopf hält höchstens 15 Zeilen**; die übrigen Decken misst
-  `tools/steuerung/decken.py` in Stufe 1 (die Zahlen stehen dort). Jede Änderung ist eine
+  `tools/steuerung/decken.py` im Prüfstand, als Hinweis (die Zahlen stehen dort). Jede Änderung ist eine
   Verlaufszeile mit der nächsten Fassungsnummer; der Kopf trägt die Nummer.
 - **Der Stand von `main` wird GEMESSEN, nicht fortgeschrieben:** vor jeder
   Fassung `git fetch origin main`, die drei Versionsnummern **auf
