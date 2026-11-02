@@ -4,11 +4,11 @@
 Entscheidungen. Verlauf: `Rahmenplan-Verlauf.md`. Fassungen 1–15:
 `Rahmenplan-Archiv.md`; Fassungen 16–124: `Rahmenplan-Archiv-2.md`.
 
-**Stand `origin/main`** (Commit `2563fde`, PR #128, gemessen 02.11.2026): Web 23.6.0 ·
+**Stand `origin/main`** (Commit `cb9b952`, PR #129, gemessen 02.11.2026): Web 23.6.0 ·
 Uhr 4.1.1 · Android 0.18.2, alle drei ausgeliefert (Tags auf `c32dd2c`, 02.11.2026).
 **Läuft:** kein Schritt; der Backlog ist eingeordnet (Fassung 192, E-BE-01 bis -07).
 **Als Nächstes:** PR (drei Prüfmittel), dann 21 GR und 22 BR5 nebeneinander, dann 13 (Konzeptsitzung).
-**Offene PRs:** Handprüfungen nach den Tags von 12b (#129); Einordnung des Backlogs (Fassung 192, baut auf #129 auf).
+**Offene PRs:** Einordnung des Backlogs (#130, diese Fassung).
 **Fällig bei der Betreiberin:** 36 Posten (Abschnitt 6.1). **`update.php`:** auf Staging und Produktiv nichts offen (Betreiberin, 20.10.2026, nach Web 23).
 
 Kennungen sind Namen, keine Reihenfolge.
