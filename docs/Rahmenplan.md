@@ -1,6 +1,6 @@
 # Rahmenplan — Programm „Gen-EM NAdoku" bis v1.0
 
-**Fassung 198 (02.11.2026)** · Steuerung: Reihenfolge, Status, programmweite
+**Fassung 199 (02.11.2026)** · Steuerung: Reihenfolge, Status, programmweite
 Entscheidungen. Verlauf: `Rahmenplan-Verlauf.md`. Fassungen 1–15:
 `Rahmenplan-Archiv.md`; Fassungen 16–124: `Rahmenplan-Archiv-2.md`.
 
@@ -8,7 +8,7 @@ Entscheidungen. Verlauf: `Rahmenplan-Verlauf.md`. Fassungen 1–15:
 Uhr 4.1.1 · Android 0.18.2, alle drei ausgeliefert (Tags auf `c32dd2c`, 02.11.2026).
 **Läuft:** kein Schritt; PR (Prüfmittel) ist abgeschlossen (Abschnitt 8).
 **Als Nächstes:** 21 GR und 22 BR5 nebeneinander, dann 13 (Konzeptsitzung).
-**Offene PRs:** #132 (Prüfdurchgang der Arbeitsumgebung auf Staging, R91).
+**Offene PRs:** Prüfdurchgang der Arbeitsumgebung auf Staging, Fortsetzung (R91).
 **Fällig bei der Betreiberin:** 38 Posten (Abschnitt 6.1). **`update.php`:** auf Staging und Produktiv nichts offen (Betreiberin, 20.10.2026, nach Web 23).
 
 Kennungen sind Namen, keine Reihenfolge.
@@ -176,7 +176,7 @@ gestrichen, 6a abgehakt; was steht, ist bestätigt offen.
 | **Prüfliste P5c/AP2:** Archive unter Verwaltung → Protokoll → Archiv nach dem ersten Jobdurchlauf (beginnt beim ältesten Eintrag), Plakette „auf dem Ziel", einmal herunterladen — ob der Job ohne Cron in einer Woche drankommt, zeigt nur die Anlage | 10c AP2 | 24.09.2026 | P-P5c-05 bis -09 |
 | **Prüfliste P5c/AP3 und AP4:** Reiter System mit echtem Fehler, Fehlerseite, stilles Fehlerprotokoll des Webspace; ein Support-Konto anlegen, einrichten, seine Sicht, der Admin-Weg vor `update.php` | 10c AP3, AP4 | 25.09.2026 | P-P5c-10 bis -19 |
 | **Prüfliste P5c/AP5:** Einrichtung mit echter Authenticator-App, Codeblatt aus Chromium und Firefox gedruckt | 10c AP5 | 24.09.2026 | P-P5c-20 ff. |
-| **Prüfpunkte RW:** Statuszeile „Rückweg-Prüfung" auf Produktiv nach dem Tag, Demo-Konto ohne Paar | 10c AP5b | 24.09.2026 | P-RW-01, -05 |
+| **Prüfpunkte RW:** Statuszeile „Rückweg-Prüfung" auf Produktiv nach dem Tag | 10c AP5b | 24.09.2026 | P-RW-01 |
 | **Prüfliste P5c/AP7:** nach `update.php` auf Staging `SHOW INDEX FROM missions` und ein `EXPLAIN`, die drei Reiter der Statistik an echten Zahlen, die Seite am Handy | 10c AP7 | 24.09.2026 | P-P5c-32 bis -34 |
 | **Prüfliste P5c/AP8:** `update.php` auf Staging mit der zerstörenden Migration, ein Diensttag mit „Anderem Rettungsmittel" in Luft und Boden, Sicherungsziele ohne FTP-Plakette; auf Produktiv nach dem Tag dasselbe | 10c AP8 | 25.09.2026 | P-P5c-35 bis -38 |
 | **Prüfliste P5c/AP9:** die eigene Datenschutzerklärung nachziehen (P-P5c-40, sofort), Rechtstexte mit Vorschau in Firefox und am Handy, beide Blätter auf Papier, Wartungsmodus nach einem echten Deploy, die Leiste bei 850 und über 950 px Höhe | 10c AP9 | 25.09.2026 | P-P5c-39 bis -44 |
@@ -191,7 +191,7 @@ gestrichen, 6a abgehakt; was steht, ist bestätigt offen.
 | **Prüfliste PU:** P-PU-01 (Erbe im Tor, beim nächsten PR in `neben`), -04 bis -07 beim nächsten passenden Paket (schmale Nebenstufe, Zehnergrenze, zweiter Lauf mit Erbe, Stylesheet), -09 und -10 lesen | 20 | 02.11.2026 | `Pruefliste.md` 2, 12 |
 | **Prüfliste PR:** P-PR-01 (Freigabeprobe nach der Anteilprobe im nächsten passenden Lauf), -02 (Prüfstand im offenen Merge), -03 (keine Sperrzeile nach der Zweitfaktorprobe) | PR | 02.11.2026 | `Pruefliste.md` 12 |
 | **Prüfliste DM:** P-DM-02 (Registrierung in Firefox auf Staging: Knopf sofort frei), -03 (dasselbe in Safari), -06 (dasselbe auf Produktiv nach dem Tag `web-v23.0.1`, nur bei offener Registrierung) | 19 | 20.10.2026 | `Pruefliste.md` 3 |
-| **Prüfliste R17:** P-R17-03, -38 (lesen); -21, -22 (Adresswechsel, Freigabe); -11, -27 (Geräte); -34, -26 teilweise (Rest Nr. 430, 431); freiwillig -24, -31, -32. Der Rest ist erledigt (02.11.2026) | 12, 12b | 11.10.2026 | `Pruefliste.md` |
+| **Prüfliste R17:** P-R17-38 (lesen); -21 (Adresswechsel); -11, -27 (Geräte); -34, -26 teilweise (Rest Nr. 430, 431); freiwillig -24, -31, -32. Der Rest ist erledigt (02.11.2026) | 12, 12b | 11.10.2026 | `Pruefliste.md` |
 | **Antwort des Hosters auswerten** (gestellt 28.10.2026): Haltedauer der Zugriffslogs (F-R17-22, -57; in die Betriebsakte) und ob er GitHub-Läufer zeitweise sperrt (F-R17-74) | 12b (R17-19, Übergabe) | 21.10.2026 | `Review-R17.md` 2.3 und 2.3a (gelöscht, `630756f0`) |
 | **Plattformvergleich Staging vervollständigen:** die Herkunft des Zertifikats aus dem Panel des Hosters (die vier Zahlen trug die Arbeitsumgebung am 02.11.2026 ein) |
 | **Backup-Ziel „Lima-City“ auf Staging berichtigen oder löschen** — `ftp.lima-ftp.de:22` (FTPS) löst nicht auf, scheitert seit dem 22.09.2026; „Lima City“ daneben läuft | Betrieb Staging | 02.11.2026 | Betrieb → Backup-Ziele | Kette II | 21.09.2026 | `Technik.md` 12.5; Prüfpunkt 2c |
