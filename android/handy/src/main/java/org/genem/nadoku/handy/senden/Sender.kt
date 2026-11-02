@@ -1,6 +1,8 @@
 package org.genem.nadoku.handy.senden
 
+import org.genem.nadoku.handy.kopplung.Bindungsstand
 import org.genem.nadoku.handy.kopplung.Netzantwort
+import org.genem.nadoku.handy.kopplung.Rueckstandsbindung
 import org.genem.nadoku.handy.kopplung.Netzweg
 import org.genem.nadoku.handy.dienst.Zeit
 import org.genem.nadoku.handy.kopplung.Serveradresse
@@ -24,8 +26,21 @@ data class Sendebericht(
     val uebergangen: Map<String, Int> = emptyMap(),
     /** 400-Pakete dieses Laufs — sie werden nicht wiederholt. */
     val fehlerhaft: Int = 0,
-    /** 401: Der Schlüssel wurde abgewiesen; der Lauf ist gestoppt. */
+    /** 401 oder 403: Der Lauf ist gestoppt; Wiederholen hilft nicht. */
     val pausiert: Boolean = false,
+    /**
+     * 403: warum das Gerät nicht senden darf. `null` bei 401 — dann ist der
+     * Schlüssel abgewiesen, und der Weg heraus ist eine neue Kopplung, nicht
+     * das Web.
+     */
+    val gesperrt: Sperrgrund? = null,
+    /** 507: Das Konto ist voll. */
+    val kontoVoll: Boolean = false,
+    /**
+     * Vor diesem Zeitpunkt sendet der Sender nicht (429, 503, 507).
+     * `null` = keine Wartezeit.
+     */
+    val wartetBis: Instant? = null,
     /** Kein Netz oder 5xx — später unverändert erneut. */
     val spaeterErneut: Boolean = false,
     /** Vor dem Lauf geräumte abgewiesene Pakete. */
@@ -37,11 +52,17 @@ data class Sendebericht(
      * versucht — der Schlüssel entsteht beim nächsten Entsperren im Browser.
      */
     val ohneSchluessel: Boolean = false,
+    /**
+     * Pakete, die an ein **anderes** Konto gebunden sind und deshalb nicht
+     * hinausgehen ([Rueckstandsbindung]). Sie bleiben liegen, bis jemand an
+     * das alte Konto koppelt oder sie verwirft.
+     */
+    val fremderRueckstand: Int = 0,
 ) {
     /** Ein Lauf, an dem nichts zu beanstanden ist. */
     val sauber: Boolean
         get() = verworfen.isEmpty() && uebergangen.isEmpty() && fehlerhaft == 0 && !pausiert &&
-            !ohneSchluessel
+            !ohneSchluessel && !kontoVoll && fremderRueckstand == 0
 }
 
 /**
@@ -66,8 +87,11 @@ data class Sendebericht(
  * |---|---|
  * | 400 | Nachricht fehlerhaft — **nicht wiederholen**, lokal markieren |
  * | 401 | Schlüssel ungültig — **pausieren** und anzeigen |
+ * | 403 | Gerät oder Konto gesperrt — **pausieren**, den Grund nennen |
  * | 413 | Chunk zu groß — **halbieren** und wiederholen |
- * | 5xx | später **unverändert** erneut |
+ * | 429 | Mengenbremse — **warten** (`Retry-After`), dann unverändert erneut |
+ * | 507 | Konto voll — eine Stunde **warten**, dann unverändert erneut |
+ * | 5xx | später **unverändert** erneut; bei 503 erst nach `Retry-After` |
  *
  * Der Unterschied ist nicht theoretisch: Ein 400, den man wiederholt, läuft
  * ewig; ein 401, über den man hinweggeht, sendet den Rest des Dienstes ins
@@ -98,11 +122,36 @@ class Sender(
      * zählt damit, ob geholt wurde.
      */
     private val schluesselHolen: () -> String? = { null },
+    /**
+     * Abmeldevermerk und Bindung des Rückstands. `null` im Prüfstand, wo
+     * kein Fall sie braucht — dann gilt der ganze Puffer der jetzigen
+     * Kopplung, wie vor der Bindung.
+     */
+    private val bindung: Rueckstandsbindung? = null,
 ) {
 
     /** Aktuelle Chunk-Größe; sie halbiert sich bei 413 und bleibt es. */
     var chunkPunkte: Int = CHUNK_PUNKTE
         private set
+
+    /**
+     * Vor diesem Zeitpunkt geht keine Anfrage hinaus.
+     *
+     * WARUM ÜBERHAUPT. Ohne ihn klopfte jeder Anlass — Phasenwechsel,
+     * Wiederverbindung, der Nachsende-Job mit seinem Rückzug ab 30 s — an
+     * einen Server, der gerade gesagt hat, wann er wieder will. Bei der
+     * Mengenbremse ist das das Gegenteil des Gewollten.
+     *
+     * IM SPEICHER, NICHT IN DER ABLAGE — dieselbe Abwägung wie bei der Uhr:
+     * Nach einem Neustart der App darf es früher einen Versuch geben; er
+     * kostet eine Anfrage und erfährt die Lage neu. Eine stehen gebliebene
+     * Sperre in der Ablage wäre teurer.
+     */
+    var nichtVor: Instant? = null
+        private set
+
+    /** Warum [nichtVor] gesetzt ist — für die Anzeige während des Wartens. */
+    private var wartetWegenKontoVoll: Boolean = false
 
     /**
      * Die Warteschlange abarbeiten, bis nichts mehr offen ist oder ein
@@ -120,6 +169,17 @@ class Sender(
             Zeit.iso(jetzt().minus(Raeumung.FRIST_TAGE, ChronoUnit.DAYS)),
         ).pakete
 
+        /* DIE WARTEZEIT VOR ALLEM ANDEREN, was ans Netz geht. Der Lauf meldet
+         * „später erneut", damit der Nachsende-Job sich nachplant; er sendet
+         * dabei nichts. */
+        val warte = nichtVor
+        if (warte != null && jetzt().isBefore(warte)) {
+            return Sendebericht(
+                spaeterErneut = true, geraeumt = geraeumt,
+                wartetBis = warte, kontoVoll = wartetWegenKontoVoll,
+            )
+        }
+
         val adresse = Serveradresse.ingest(basis)
         val zugang = tresor.lesen()
             ?: return Sendebericht(spaeterErneut = true, geraeumt = geraeumt)
@@ -134,12 +194,28 @@ class Sender(
             ?: return Sendebericht(spaeterErneut = true, ohneSchluessel = true, geraeumt = geraeumt)
         val kontoschluessel = java.util.Base64.getDecoder().decode(ksText)
 
+        /* DIE BINDUNG VOR DEM ERSTEN PAKET. Derselbe Schlüssel heißt dasselbe
+         * Konto: Die Bindung fällt, und der Rückstand geht hinaus. Ein anderer
+         * heißt: Was bis zur Grenze liegt, gehört dem bisherigen Konto und
+         * bleibt liegen; was danach entstand, gehört diesem und geht. */
+        var grenze: Long? = null
+        var fremd = 0
+        val b = bindung
+        if (b != null && b.pruefen(ksText) == Bindungsstand.ANDERS) {
+            grenze = b.gebundenBis
+            fremd = grenze?.let { puffer.rueckstandBis(it) } ?: 0
+            if (fremd == 0) {
+                b.loesen()              // nichts mehr gebunden — die Bindung ist leer
+                grenze = null
+            }
+        }
+
         val kopfzeilen = mapOf(
             "X-Device-Id" to zugang.geraeteKennung,
             "X-Api-Key" to zugang.schluessel,
         )
 
-        var bericht = Sendebericht(geraeumt = geraeumt)
+        var bericht = Sendebericht(geraeumt = geraeumt, fremderRueckstand = fremd)
         /* Eine Obergrenze für die Anfragen eines Laufs. Sie ist kein Zaun
          * gegen den Normalfall — ein 12-h-Dienst braucht rund zwanzig —,
          * sondern gegen den Fall, in dem der Server dauerhaft `next_seq: 0`
@@ -147,7 +223,7 @@ class Sender(
         var verbleibendeAnfragen = HOECHSTENS_ANFRAGEN
 
         while (verbleibendeAnfragen-- > 0) {
-            val paket = naechstesPaket() ?: break
+            val paket = naechstesPaket(grenze) ?: break
             val ergebnis = sendeTeilstueck(paket, adresse, kopfzeilen, kontoschluessel)
             bericht = vereine(bericht, ergebnis)
             if (ergebnis.pausiert || ergebnis.spaeterErneut) break
@@ -155,8 +231,8 @@ class Sender(
         return bericht
     }
 
-    private fun naechstesPaket(): Paketzeile? =
-        puffer.warteschlange().firstOrNull { puffer.hatArbeit(it) }
+    private fun naechstesPaket(grenze: Long?): Paketzeile? =
+        puffer.warteschlange().firstOrNull { (grenze == null || it.id > grenze) && puffer.hatArbeit(it) }
 
     private fun sendeTeilstueck(
         paket: Paketzeile,
@@ -171,11 +247,14 @@ class Sender(
 
         val antwort = when (val a = netzweg.postJson(adresse, koerper, kopfzeilen)) {
             is Netzantwort.KeineVerbindung -> Sendeantwort.KeineVerbindung(a.ursache)
-            is Netzantwort.Server -> Sendeantwort.lese(a.code, a.koerper)
+            is Netzantwort.Server -> Sendeantwort.lese(a.code, a.koerper, a.retryAfterS)
         }
 
         return when (antwort) {
             is Sendeantwort.Angekommen -> {
+                nichtVor = null                 // eine angenommene Anfrage hebt jede Wartezeit auf
+                wartetWegenKontoVoll = false
+                bindung?.abmeldungVergessen()   // und widerlegt die Abmeldung
                 puffer.bestaetigungMerken(paket.id, antwort.naechsteSeq)
                 var fertig = 0
                 /* AUFRÄUMEN ERST NACH `final` UND VOLLSTÄNDIGER BESTÄTIGUNG.
@@ -199,8 +278,20 @@ class Sender(
                 Sendebericht(anfragen = 1, fehlerhaft = 1)
             }
 
-            is Sendeantwort.SchluesselAbgewiesen ->
+            is Sendeantwort.SchluesselAbgewiesen -> {
+                bindung?.abmeldungVermerken()
                 Sendebericht(anfragen = 1, pausiert = true)
+            }
+
+            is Sendeantwort.Gesperrt -> {
+                bindung?.abmeldungVermerken()
+                Sendebericht(anfragen = 1, pausiert = true, gesperrt = antwort.grund)
+            }
+
+            is Sendeantwort.KontoVoll -> {
+                val bis = warteBis(Sendeantwort.WARTEN_KONTO_VOLL_S, kontoVoll = true)
+                Sendebericht(anfragen = 1, spaeterErneut = true, kontoVoll = true, wartetBis = bis)
+            }
 
             is Sendeantwort.ZuGross -> {
                 chunkPunkte = maxOf(1, chunkPunkte / 2)
@@ -209,9 +300,22 @@ class Sender(
                 Sendebericht(anfragen = 1)
             }
 
-            is Sendeantwort.SpaeterErneut, is Sendeantwort.KeineVerbindung ->
+            is Sendeantwort.SpaeterErneut -> {
+                val w = antwort.wartenS
+                val bis = if (w != null) warteBis(w, kontoVoll = false) else null
+                Sendebericht(anfragen = 1, spaeterErneut = true, wartetBis = bis)
+            }
+
+            is Sendeantwort.KeineVerbindung ->
                 Sendebericht(anfragen = 1, spaeterErneut = true)
         }
+    }
+
+    private fun warteBis(sekunden: Long, kontoVoll: Boolean): Instant {
+        val bis = jetzt().plusSeconds(sekunden)
+        nichtVor = bis
+        wartetWegenKontoVoll = kontoVoll
+        return bis
     }
 
     private fun vereine(a: Sendebericht, b: Sendebericht) = Sendebericht(
@@ -222,9 +326,13 @@ class Sender(
         uebergangen = zaehleZusammen(a.uebergangen, b.uebergangen),
         fehlerhaft = a.fehlerhaft + b.fehlerhaft,
         pausiert = a.pausiert || b.pausiert,
+        gesperrt = b.gesperrt ?: a.gesperrt,
+        kontoVoll = a.kontoVoll || b.kontoVoll,
+        wartetBis = b.wartetBis ?: a.wartetBis,
         spaeterErneut = a.spaeterErneut || b.spaeterErneut,
         geraeumt = a.geraeumt + b.geraeumt,
         ohneSchluessel = a.ohneSchluessel || b.ohneSchluessel,
+        fremderRueckstand = maxOf(a.fremderRueckstand, b.fremderRueckstand),
     )
 
     private fun zaehleZusammen(a: Map<String, Int>, b: Map<String, Int>): Map<String, Int> =

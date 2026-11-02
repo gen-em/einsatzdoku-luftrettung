@@ -7,7 +7,7 @@ module Const {
      * getrennt ausgeliefert wird (CLAUDE.md 2); sie steht auf der Sync-Seite
      * und geht als "app" im geraet-Block an den Server.
      */
-    const APP_VERSION = "4.1.1";
+    const APP_VERSION = "4.3.1";
 
     /* Wie lange ein geparktes (dauerhaft abgewiesenes) Paket auf der Uhr
      * liegen bleibt, bevor ein Sendelauf es raeumt (wie auf dem Handy):
@@ -15,6 +15,16 @@ module Const {
      * abgemeldeten Uhr, ab der ersten Abmeldung
      * (Uploader.abmeldeFristPruefen). */
     const PARK_FRIST_S = 30 * 86400;
+
+    /* Wie lange die Uhr nach einer Antwort wartet, bevor ein selbsttaetiger
+     * Anlass wieder sendet. Die Uhr kann `Retry-After` nicht lesen -- der
+     * Rueckruf von Connect IQ bekommt keine Kopfzeilen --, deshalb feste
+     * Zeiten nach dem, was der Server nennt (JSON-Vertrag 5):
+     * 429 die erste Sprosse der Mengenbremse, 503 die Zeit der Wartung,
+     * 507 (Konto voll) eine Stunde, weil es sich nur im Web loest. */
+    const WARTEN_429_S = 900;
+    const WARTEN_503_S = 300;
+    const WARTEN_507_S = 3600;
 
     /* Wie oft die Kopplungsansicht nachfragt, ob jemand den Code eingetragen
      * hat (Vertrag 1a.2: "hoechstens alle fuenf Sekunden").

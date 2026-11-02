@@ -110,26 +110,42 @@ Zurück zum Startbildschirm geht es mit **kurz UP** oder mit **BACK**; beide
 tun dasselbe. Weiter nach unten führt von hier nichts: Die Oberflächen aus
 Abschnitt 2.2 gibt es erst im laufenden Dienst.
 
-> **Steht dort etwas in Rot?** Vier Meldungen sind möglich, und jede sagt dir,
-> was zu tun ist.
+> **Steht dort etwas in Rot?** Jede Meldung sagt dir, was zu tun ist.
 >
 > „**Abgemeldet, Daten bis 27.10.**" *(seit Uhr 4.1.0; davor „Gerät nicht
 > mehr angemeldet")* heißt: Der Server kennt diese Uhr nicht mehr — sie wurde
-> in den Einstellungen gelöscht oder abgeschaltet. Die Uhr hört dann auf zu
+> in den Einstellungen gelöscht. Die Uhr hört dann auf zu
 > senden und **behält alles — 30 Tage lang**, gezählt ab der ersten
 > Abmeldung. Danach verwirft sie alle ungesendeten Pakete: Eine Uhr, die
 > niemand mehr koppelt, soll Spur, Phasen und Reanimation nicht unbegrenzt
-> tragen. Das Datum in der Zeile ist der letzte Tag.
+> tragen. Das Datum in der Zeile ist der letzte Tag. Der Weg zurück ist eine
+> neue Kopplung (*lang START*), **auch wenn noch Pakete offen sind** *(seit
+> Uhr 4.3.0; davor verweigerte die Uhr sie mit „Erst 2 Pakete senden", und
+> es blieb nur die Frist)*. Die Uhr fragt dann „Trennen? 2 Pakete bleiben und
+> gehen nur ans selbe Konto". Koppelst du sie wieder an **dein** Konto, gehen
+> die Pakete hinaus. Koppelst du sie an ein **anderes**, gehen sie dort nicht
+> hin — sie gehören dir und wären dort lesbar; die Sync-Seite zeigt dann „2
+> Pakete altes Konto" und **kurz START** verwirft sie nach einer Rückfrage.
+> Die Frist läuft für sie weiter. Während eines Dienstes geht das nicht
+> („Erst Dienst beenden").
 >
-> **Der Weg zurück hängt davon ab, was geschehen ist.** War die Uhr nur
-> abgeschaltet: in den Einstellungen wieder einschalten, dann die App auf
-> der Uhr einmal ganz verlassen (BACK bis zum Zifferblatt) und neu starten —
-> erst danach versucht sie wieder zu senden (bis Uhr 4.1.1, Backlog
-> Nr. 431). Wurde sie gelöscht, hilft eine neue Kopplung (*lang START*) —
-> aber nur, wenn nichts Ungesendetes mehr auf ihr liegt: Die Pakete gehören
-> dem bisherigen Konto, und die Uhr verweigert das Koppeln mit „Erst
-> 2 Pakete senden", damit sie nicht in einem fremden Konto landen. Dann
-> bleibt nur, die Frist abzuwarten.
+> „**Gerät im Web deaktiviert**" mit „**Im Web klären, bis 27.10.**"
+> darunter *(seit Uhr 4.2.0; davor stand auch hier „Abgemeldet")* heißt:
+> Die Uhr ist in den Einstellungen abgeschaltet. Statt „Gerät im Web
+> deaktiviert" kann dort auch „Konto gesperrt", „Konto wartet auf Freigabe"
+> oder „Adresse nicht bestätigt" stehen — dann liegt es am Konto. Die Uhr
+> sendet nicht, **behält alles** mit derselben Frist wie oben. **Neu koppeln
+> hilft hier nicht:** Im Web das Gerät wieder einschalten (oder das Konto
+> freigeben lassen), dann auf der Uhr die Sync-Seite **einmal verlassen und
+> wieder öffnen** — beim Öffnen versucht sie es, und der Rückstand geht
+> hinaus. *(Bis Uhr 4.1.1 musste die App dafür ganz neu gestartet werden,
+> Backlog Nr. 431.)*
+>
+> „**Konto voll**" mit „**Im Web aufräumen**" *(seit Uhr 4.2.0)* heißt: Dein
+> Konto hat seine Mengengrenze erreicht. Die Uhr behält alles und versucht es
+> nach einer Stunde wieder; im Web Altes löschen oder die Grenze heben
+> lassen. Gedämpft, nicht rot, steht dagegen „**Server bremst bis 13:05**":
+> Der Server hat um eine Pause gebeten, und die Uhr wartet bis dahin.
 >
 > „**1 abgewiesen**" heißt: Der Server hat dieses eine Paket dauerhaft
 > zurückgewiesen, es kommt nie an. Alles andere wird weiter gesendet. Mit
@@ -3961,7 +3977,7 @@ Einsatz abgeschlossen ist.
 
 Nach „Dienst beenden" steht in der Benachrichtigungsleiste kurz **„Dienst
 beendet · sende …"**. Solange sie da ist, arbeitet die App noch — sie darf in
-dieser Zeit weggelegt, aber nicht abgewürgt werden. Danach gibt es drei
+dieser Zeit weggelegt, aber nicht abgewürgt werden. Danach gibt es vier
 Möglichkeiten:
 
 | Was zu sehen ist | Was es heißt |
@@ -3969,6 +3985,7 @@ Möglichkeiten:
 | **keine Meldung mehr** | Alles ist beim Server angekommen. Nichts zu tun. |
 | „Dienst beendet · 2 Pakete warten auf Netz" | Es fehlte Netz. Die App holt es nach, sobald wieder eines da ist — auch wenn das Telefon zwischendurch neu startet. Die Meldung verschwindet dann von selbst. |
 | „Dienst beendet · Schlüssel abgewiesen – Gerät neu koppeln" | Der Server hat das Gerät nicht mehr akzeptiert. **Hier hilft Warten nicht:** Das Gerät muss in den Einstellungen neu gekoppelt werden. |
+| „Dienst beendet · Senden angehalten – Gerät oder Konto im Web gesperrt" *(seit Android 0.19.0)* | Das Gerät ist in der Weboberfläche deaktiviert, oder das Konto ist gesperrt oder noch nicht freigegeben. **Neu koppeln hilft hier nicht:** Im Web das Gerät wieder aktivieren (Einstellungen → Geräte) oder das Konto freigeben lassen. Verloren ist nichts; danach geht der Rückstand beim nächsten Senden hinaus. |
 
 Die mittlere Meldung lässt sich wegwischen — der Nachsendevorgang läuft davon
 unberührt weiter.
@@ -3987,7 +4004,15 @@ unberührt weiter.
 
 Nach jedem Sendeversuch steht darunter kurz das Ergebnis: „Gesendet · 12:41",
 „Keine Verbindung · wird nachgeholt" oder „Schlüssel abgewiesen · Gerät neu
-koppeln".
+koppeln". Seit Android 0.19.0 kommen dazu:
+
+| Ergebniszeile | Was es heißt |
+|---|---|
+| „Gesendet · 12:41 · nicht alles übernommen" | Angekommen, aber der Server hat einzelne Werte verworfen oder ein spätes Paket nur zum Teil übernommen (etwa ein Abschluss lange nach Dienstende). Im Web nachsehen. |
+| „Gerät im Web deaktiviert · dort wieder aktivieren" | Einstellungen → Geräte in der Weboberfläche. |
+| „Konto gesperrt", „Konto wartet auf Freigabe", „E-Mail-Adresse nicht bestätigt" — je „· Senden angehalten" | Das Konto darf gerade nicht senden. Das Telefon behält alles. |
+| „Server bremst · nächster Versuch 13:05" | Der Server hat um eine Pause gebeten. Bis zur genannten Zeit versucht es das Telefon nicht erneut, auch nicht mit „Jetzt senden". |
+| „Konto voll · im Web aufräumen" | Die Mengengrenze des Kontos ist erreicht. In der Weboberfläche Altes löschen oder die Grenze heben lassen; das Telefon versucht es nach einer Stunde wieder. |
 
 **„Konto noch ohne Schlüssel · einmal im Web anmelden"** *(seit Android
 0.18.0)*: Das Telefon verschließt GPS-Daten und Phasenorte mit dem Schlüssel
@@ -4005,6 +4030,20 @@ Danach steht dort, wie viele verworfen sind („3 Pakete verworfen"), bis die
 App geschlossen wird. Ein Paket, das **während eines laufenden Dienstes**
 abgewiesen wurde, wird noch beschrieben; der Knopf erscheint dafür erst nach
 dem Dienstende, die rote Zeile schon vorher.
+
+**Gerät im Web gelöscht oder gesperrt, und es liegt noch etwas auf dem
+Telefon** *(seit Android 0.20.0)*. Solange Pakete zum Senden anstehen, sperrt
+die App das Trennen — sie gehören dem bisherigen Konto. Hat der Server das
+Telefon aber schon abgewiesen („Schlüssel abgewiesen" oder eine der
+Sperrzeilen oben), kann es sie ohnehin nicht mehr senden. Dann lässt sich das
+Gerät in den Einstellungen trotzdem trennen; die Rückfrage sagt, was mit den
+Paketen geschieht: Sie **bleiben auf dem Telefon** und gehen erst hinaus, wenn
+es wieder an **dasselbe** Konto gekoppelt ist. Koppelst du es an ein anderes
+Konto, gehen sie dort nicht hin — die Dienstansicht zeigt dann rot „2 Pakete
+gehören dem bisherigen Konto" und den Knopf **„Pakete des bisherigen Kontos
+verwerfen …"** (mit Rückfrage). Was nach der neuen Kopplung aufgezeichnet
+wird, geht ganz normal an das neue Konto. Während eines laufenden Dienstes
+lässt sich nicht trennen; erst den Dienst beenden.
 
 ---
 
@@ -4207,8 +4246,10 @@ einträgst, sieht sie nicht**; der steht im Protokoll.
 
 **Geräte verlieren nichts.** Uhr und Handy bekommen eine Absage, behalten ihre
 Warteschlange und senden nach dem Entsperren **alles nach**. Auf der Uhr steht
-in dieser Zeit „abgemeldet" — das ist ungenau, aber harmlos, und es ändert
-sich mit der nächsten Uhr-Fassung.
+in dieser Zeit „Konto gesperrt" *(seit Uhr 4.2.0; davor ungenau
+„abgemeldet")*, auf dem Handy „Konto gesperrt · Senden angehalten" *(seit
+Android 0.19.0)*. Nach dem Entsperren sendet die Uhr, sobald jemand ihre
+Sync-Seite öffnet oder einen Dienst beendet.
 
 **Der Bestand bleibt unberührt.** Eine Sperre löscht nichts. Wer ein Konto
 loswerden will, löscht es — das ist die Karte ganz unten und etwas anderes.
@@ -6753,7 +6794,11 @@ Zwei Dinge, die dabei bewusst so sind:
 **Offene Pakete blockieren das Trennen.** Steht noch etwas zum Senden an, sagt
 die Uhr **„Erst N Pakete senden / Sonst ans neue Konto"** und trennt nicht.
 Die Pakete gehören der bisherigen Person; nach einer Neukopplung landeten sie
-im neuen Konto. Erst senden — die Sync-Seite zeigt den Rückstand.
+im neuen Konto. Erst senden — die Sync-Seite zeigt den Rückstand. **Eine
+Ausnahme** *(seit Uhr 4.3.0)*: Ist die Uhr im Web gelöscht oder gesperrt,
+kann sie ohnehin nicht mehr senden. Dann trennt sie nach Rückfrage trotzdem,
+und die Pakete bleiben gebunden an das bisherige Konto — sie gehen nur
+dorthin, nie an die neue Person (Abschnitt 1, „Steht dort etwas in Rot?").
 
 **Ohne Verbindung trennt die Uhr trotzdem** und merkt sich, dass der Server es
 nicht mitbekommen hat: Unter dem **„Gekoppelt"** der nächsten Kopplung steht

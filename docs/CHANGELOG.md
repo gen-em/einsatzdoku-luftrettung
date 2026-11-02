@@ -14,6 +14,102 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Uhr 4.3.1] — unveröffentlicht
+
+Schritt 21 (GR), Paket GR-06 — die Sync-Seite überlappt nicht mehr
+(Backlog Nr. 402).
+
+### Behoben
+
+- **Uhr — der Mittelblock weicht dem unteren Block aus.** Ab vier
+  Meldungszeilen lag „N Pakete offen" auf der Venu 3s auf der obersten
+  Meldung, bei mehr Zeilen auf allen drei Geräten, weil der Mittelblock nur
+  zentriert und oben festgehalten wurde. Jetzt rechnet die Seite in Stufen,
+  ob er passt: erst kompaktere Schrift, dann ohne GPS-Zeile, dann die
+  Meldungen in der kleinsten Schrift, zuletzt Zahl und Text in einer Zeile.
+  Eine neue Bildprobe misst vier bis sieben Zeilen auf Fenix, FR 945 und
+  Venu 3s.
+
+## [Uhr 4.3.0] — unveröffentlicht
+
+Schritt 21 (GR), Paket GR-05 — die Sackgasse beim Koppeln ist offen
+(Backlog Nr. 431, Teil 2).
+
+### Behoben
+
+- **Uhr — eine gelöschte Uhr mit Rückstand lässt sich neu koppeln.** Bis
+  dahin verweigerte die Uhr das Trennen, solange Pakete offen waren, und
+  senden konnte sie nicht mehr; es blieb nur, die 30-Tage-Frist abzuwarten.
+  Jetzt trennt eine abgemeldete oder gesperrte Uhr nach Rückfrage und bindet
+  den Rückstand an den Schlüssel des bisherigen Kontos: Er geht nur an ein
+  Konto mit demselben Schlüssel, weil er erst beim Senden verschlossen wird
+  und in einem fremden Konto lesbar wäre. Gehört die neue Kopplung zu einem
+  anderen Konto, nennt die Sync-Seite die Pakete und verwirft sie nur nach
+  Rückfrage.
+
+## [Uhr 4.2.0] — unveröffentlicht
+
+Schritt 21 (GR), Paket GR-04 — die Uhr liest die Absage des Servers genauer
+(Backlog Nr. 229, 201, 431 zum Teil).
+
+### Geändert
+
+- **Uhr — „gesperrt" ist nicht mehr „abgemeldet".** Eine 403 (Gerät im Web
+  deaktiviert, Konto gesperrt, wartet oder unbestätigt) zeigte die Uhr als
+  „Abgemeldet" und riet zum Neukoppeln — ein Rat, der im Kreis führte, weil
+  der Rückstand das Koppeln sperrt. Jetzt nennt die Sync-Seite den Grund und
+  verweist auf das Web. Nach 429, 503 und 507 wartet die Uhr eine feste Zeit,
+  bevor ein Anlass wieder sendet, denn `Retry-After` kann sie nicht lesen; bis
+  dahin klopfte die offene Sync-Seite alle zwei Sekunden an.
+
+### Behoben
+
+- **Uhr — nach dem Reaktivieren im Web wird wieder gesendet.** Die Marke
+  „abgemeldet" lag im Speicher, und nur eine angenommene Anfrage widerlegte
+  sie — die aber kam nie zustande, so dass erst ein Neustart der App half.
+  Jetzt versuchen es das Öffnen der Sync-Seite und das Dienstende einmal
+  trotz der Marke.
+
+## [Android 0.20.0] — unveröffentlicht
+
+Schritt 21 (GR), Paket GR-03 — die Sackgasse beim Trennen ist offen
+(Backlog Nr. 157).
+
+### Behoben
+
+- **Android — ein abgemeldetes Telefon mit Rückstand lässt sich trennen.**
+  Wurde das Gerät im Web gelöscht oder gesperrt, während noch Pakete
+  anstanden, konnte die App weder senden noch trennen, und neu koppeln setzt
+  Trennen voraus; es half nur das Löschen der App-Daten. Jetzt darf ein
+  Telefon, das der Server mit 401 oder 403 abgewiesen hat, trennen, und der
+  Rückstand bleibt an den Schlüssel des bisherigen Kontos gebunden: Er geht
+  nur hinaus, wenn die neue Kopplung dasselbe Konto trifft, weil er sonst mit
+  dem Schlüssel eines fremden Kontos verschlossen und dort lesbar wäre. Trifft
+  sie ein anderes, sagt die Dienstansicht es und bietet das Verwerfen an.
+
+## [Android 0.19.0] — unveröffentlicht
+
+Schritt 21 (GR), Paket GR-02 — das Handy liest die Antwort des Servers
+vollständig (Backlog Nr. 154, 201, 229, dazu 507).
+
+### Geändert
+
+- **Android — Sperre, Bremse und volles Konto haben eigene Zeilen.** Eine
+  403 (Gerät im Web deaktiviert, Konto gesperrt, wartet auf Freigabe oder
+  unbestätigt) kannte das Handy nicht und versuchte es bei jedem Anlass
+  weiter; jetzt hält es an, nennt den Grund und rät nicht zum Neukoppeln,
+  denn der Weg heraus ist das Web. Nach 429 und 503 wartet es die Zeit aus
+  `Retry-After` ab, statt bei jedem Phasenwechsel anzuklopfen, nach einer 507
+  („Konto voll“) eine Stunde. Verworfen wird in keinem Fall etwas.
+
+### Behoben
+
+- **Android — `kept_points` und `kept_meta` gehen nicht mehr unter.** Hat der
+  Server Punkte oder Metadaten eines späten Pakets übergangen, sah das am
+  Handy wie ein Erfolg aus, weil nur zwei der vier `kept_*` gelesen wurden.
+  Die Ergebniszeile sagt jetzt „nicht alles übernommen“, wie bei einzeln
+  verworfenen Werten auch.
+
 ## [Werkzeug: Der Prüfumfang folgt der Berührung (R89, Konzept PU)] — 2026-11-02
 
 Der Prüfstand maß in jeder Nebenstufe alles in drei Engines, zehn Breiten und über alle Seiten — der letzte Nebenlauf dauerte 12 205 s, und eine Berichtigung kostete denselben Lauf noch einmal. Jetzt misst er schmal, wenn nichts anderes verlangt ist: Chromium, fünf Breiten und die Seiten, deren eigene Datei berührt ist; voll nur in der Hauptstufe, an jeder zehnten Nebennummer und mit `--voll`, drei Engines und zehn Breiten auch bei berührtem Stylesheet oder `ui.php`. Nach einer Berichtigung erbt eine Probe ihr Grün vom Bericht des Vorgängers, wenn der Unterschied keines ihrer Muster trifft, und das Tor rechnet jedes Erbe nach. Was gemeldet wird, aber nicht aufhält, heißt jetzt `hinweis` — gerissene Decken der Steuerungsdokumente, eine zu lange Anleitung —, und die erzeugten Tabellen erzeugt der Prüfstand selbst, statt rot zu werden. Die offenen Handprüfungen stehen in einer Liste statt in dreizehn Prüfdokumenten; Stufe 2, das Backup-Tor und die Freigabe vor Produktiv bleiben, wie sie waren.

@@ -158,6 +158,16 @@ class Kopplungsdienst(
      * nicht kennt — und der Prüfstand zählt damit, ob geräumt wurde.
      */
     private val raeumen: () -> Unit = {},
+    /**
+     * Abmeldevermerk und Bindung des Rückstands ([Rueckstandsbindung]).
+     * `null`: keine Bindung möglich, der Rückstand sperrt das Trennen
+     * ausnahmslos — so verhält sich der Prüfstand ohne sie.
+     */
+    private val bindung: Rueckstandsbindung? = null,
+    /** Die höchste Paketnummer — die Grenze einer neuen Bindung. */
+    private val hoechstePaketId: () -> Long = { 0L },
+    /** Wie viele Pakete bis zu einer Nummer im Rückstand liegen. */
+    private val rueckstandBis: (Long) -> Int = { 0 },
 ) {
 
     /**
@@ -363,8 +373,30 @@ class Kopplungsdienst(
     fun trennen(): Trennergebnis {
         val zugang = tresor.lesen() ?: return Trennergebnis.NichtGekoppelt
 
+        /* EIN RÜCKSTAND SPERRT DAS TRENNEN — außer, das Gerät ist abgemeldet.
+         * Dann kann der Rückstand ohnehin nicht mehr gehen, und die Sperre
+         * wäre eine Sackgasse. Er bleibt liegen, gebunden an den Schlüssel
+         * dieser Kopplung: Koppelt das Gerät wieder an dasselbe Konto, geht
+         * er hinaus, an ein anderes nicht.
+         *
+         * Besteht schon eine Bindung, darf nur getrennt werden, wenn der ganze
+         * Rückstand unter ihr liegt — eine zweite Grenze mit einem zweiten
+         * Schlüssel hielte die Bauform nicht. Getrennt wird ohnehin nur
+         * außerhalb eines Dienstes (die Oberfläche sperrt es), also ist
+         * alles, was liegt, abgeschlossen. */
         val offen = rueckstand()
-        if (offen > 0) return Trennergebnis.Rueckstand(offen)
+        if (offen > 0) {
+            val b = bindung
+            if (b == null || !b.abgemeldet) return Trennergebnis.Rueckstand(offen)
+            val alt = b.gebundenBis
+            if (alt == null) {
+                b.binden(zugang.kontoschluessel, hoechstePaketId())
+            } else if (rueckstandBis(alt) < offen) {
+                return Trennergebnis.Rueckstand(offen)
+            }
+        }
+        // Die Abmeldung gehört zur Kopplung, die hier endet.
+        bindung?.abmeldungVergessen()
 
         val antwort = netzweg.postJson(
             Serveradresse.pair(basis),

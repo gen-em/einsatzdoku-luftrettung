@@ -39,6 +39,8 @@ class NachsendeDienst : JobService() {
             val nochmal = Nachsenden.planen(bericht, rest, app.klammer.laeuft())
             if (rest == 0 && !bericht.pausiert) {
                 Sendehinweis.loeschen(this)
+            } else if (bericht.gesperrt != null) {
+                Sendehinweis.stellen(this, getString(R.string.hinweis_gesperrt))
             } else if (bericht.pausiert) {
                 Sendehinweis.stellen(this, getString(R.string.hinweis_schluessel_abgewiesen))
             }

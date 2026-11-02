@@ -9,6 +9,8 @@ Verlauf bis zum Schnitt). Die Fassungszählung läuft fortlaufend weiter.
 
 | Fassung | Datum | Anlass | Was |
 |---|---|---|---|
+| 203 | 02.11.2026 | 21 | Schritt 21 (GR) gebaut: GR-01 bis -07, Uhr 4.2.0–4.3.1, Android 0.19.0–0.20.0; Nr. 154, 157, 201, 229, 402, 431 erledigt, neu 470 und 471. Kopf „Läuft", Stand `main` `3741bc0` (Web 23.6.1). |
+| 202 | 02.11.2026 | 21 | Schritt 21 (GR) beginnt auf `claude/trusting-wozniak-33j782` mit Konzept GR; die Wear-OS-Uhr wird nicht abgewartet (E-GR-03). Kopf „Läuft". Als 197 geschrieben; 197 bis 201 tragen PR #132 und #135. |
 | 201 | 02.11.2026 | Zuarbeit (R91) | 6.1: Block 6 — Archiv und Versand, Rundmail, Gerät merken in zwei Engines, frischer Code, Bestätigung erneut, Support deaktiviert ein Gerät; neu Nr. 453 bis 455. |
 | 200 | 02.11.2026 | Zuarbeit (R91), Berichtigung | 6.1: Block 5 und zwei Zuarbeiten erledigt (app.umgebung, Backup-Ziel „Lima-City“). Berichtigt: Seit 197 hing der Rest der Zeile „Plattformvergleich“ an der Lima-Zeile. |
 | 199 | 02.11.2026 | Zuarbeit (R91) | 6.1: Prüfdurchgang auf Staging, Block 4 — Freigabe ohne Konto, Konto löschen, Komplett-Backup ohne IP, Demo ohne Paar erledigt; Kopf nach dem Merge von #132. Berichtigt: 6.1 nannte P-R17-03 noch offen. |

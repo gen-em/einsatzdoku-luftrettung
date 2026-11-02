@@ -28,6 +28,9 @@ class PruefServer : Closeable {
     var status: Int = 200
     var antwortkoerper: String = """{"ok":true}"""
 
+    /** Zusätzliche Kopfzeilen der Antwort — etwa `Retry-After`. */
+    var antwortkopf: Map<String, String> = emptyMap()
+
     /**
      * Antwort aus der Anfrage gerechnet — für alles, was vom Körper abhängt.
      *
@@ -92,6 +95,7 @@ class PruefServer : Closeable {
                             ("HTTP/1.1 $status ${text(status)}\r\n" +
                                 "Content-Type: application/json; charset=utf-8\r\n" +
                                 "Content-Length: ${b.size}\r\n" +
+                                antwortkopf.entries.joinToString("") { "${it.key}: ${it.value}\r\n" } +
                                 "Connection: close\r\n\r\n").toByteArray(Charsets.UTF_8)
                         )
                         v.getOutputStream().write(b)
@@ -108,8 +112,9 @@ class PruefServer : Closeable {
 
     private fun text(code: Int) = when (code) {
         200 -> "OK"; 400 -> "Bad Request"; 401 -> "Unauthorized"
-        404 -> "Not Found"; 409 -> "Conflict"; 429 -> "Too Many Requests"
-        500 -> "Internal Server Error"; else -> "Status"
+        403 -> "Forbidden"; 404 -> "Not Found"; 409 -> "Conflict"; 429 -> "Too Many Requests"
+        500 -> "Internal Server Error"; 503 -> "Service Unavailable"
+        507 -> "Insufficient Storage"; else -> "Status"
     }
 
     /** Der Körper der letzten Anfrage als JSON — der Prüffall sieht darin nach. */

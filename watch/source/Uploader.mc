@@ -44,6 +44,32 @@ module Uploader {
      * Anfrage wieder, woran sie ist, und ein falsch stehen gebliebenes
      * "abgemeldet" waere teurer als ein Versuch zuviel. */
     var abgemeldet as Lang.Boolean = false;
+
+    /* IST DAS GERAET GESPERRT? (403)
+     *
+     * Etwas anderes als abgemeldet: Das Geraet ist bekannt, aber im Web
+     * deaktiviert, oder das Konto darf gerade nicht (gesperrt, wartet auf
+     * Freigabe, Adresse unbestaetigt). Neu koppeln hilft dann nicht -- der
+     * Weg heraus ist das Web. Beides in einen Zweig zu legen hiesse, einen Rat
+     * zu geben, der im Kreis fuehrt. Der Wert ist der Grund:
+     * "geraet", "gesperrt", "wartet", "unbestaetigt" oder "unbekannt" (wenn
+     * der Koerper der Antwort nicht durchkommt). Im Speicher wie `abgemeldet`. */
+    var gesperrt as Lang.String or Null = null;
+
+    /* NICHT VOR DIESEM ZEITPUNKT (Epoche in Sekunden) -- nach 429, 503 und
+     * 507. Ohne ihn klopfte jeder Anlass an, und die Sync-Seite tut es im
+     * Zwei-Sekunden-Takt. Im Speicher: Nach einem Neustart darf es einen
+     * Versuch frueher geben. `_wartegrund` ist :bremse oder :voll. */
+    var _nichtVor as Lang.Number or Null = null;
+    var _wartegrund as Lang.Symbol or Null = null;
+
+    /* EIN VERSUCH TROTZ DER MARKE. Die Marke liegt nur im Speicher, und eine
+     * angenommene Anfrage ist das Einzige, was sie widerlegt -- ohne diesen
+     * Versuch kaeme sie nie zustande: Wer das Geraet im Web wieder
+     * aktiviert, muesste die App neu starten. Gesetzt vom Oeffnen der
+     * Sync-Seite und vom Dienstende, verbraucht vom naechsten Lauf. */
+    var _einmalTrotz as Lang.Boolean = false;
+
     var _cb as UploaderCb or Null = null;
     var _inflight as Lang.Dictionary or Null = null;  // Kontext der laufenden Anfrage
 
@@ -162,6 +188,124 @@ module Uploader {
         abmeldungVergessen();
     }
 
+    /* DIE BINDUNG DES RUECKSTANDS.
+     *
+     * Ist die Uhr abgemeldet oder gesperrt, darf sie trotz Rueckstand neu
+     * koppeln (Pair.start) -- sonst ginge weder Senden noch Trennen. Der
+     * Rueckstand bleibt dann liegen, gebunden an den Kontoschluessel der
+     * bisherigen Kopplung: Bringt die neue Kopplung DENSELBEN Schluessel, ist
+     * es dasselbe Konto -- ein Konto hat genau ein Schluesselpaar, und es wird
+     * nie ersetzt --, und er geht hinaus. Bringt sie einen anderen, geht er
+     * NICHT hinaus.
+     *
+     * WARUM. Der Puffer liegt im Klartext und wird erst beim Senden
+     * verschlossen. An ein anderes Konto gesendet, waere er mit dessen
+     * Schluessel verschlossen und dort lesbar.
+     *
+     * Die Ablage haelt den alten Schluessel ("k", null = die alte Kopplung
+     * kannte keinen; dann gilt jeder neue als anders), die Referenzen der
+     * gebundenen Pakete ("refs") und das Ende der Frist ("bis"): Die Frist der
+     * Abmeldung laeuft fuer sie weiter, auch nach der neuen Kopplung. */
+    const ABLAGE_BINDUNG = "rueck_bind";
+
+    function gebunden() as Lang.Boolean {
+        return Storage.getValue(ABLAGE_BINDUNG) instanceof Lang.Dictionary;
+    }
+
+    /* Den jetzigen Rueckstand an den jetzigen Schluessel binden. Vor dem
+     * Loeschen des Schluessels zu rufen (Pair.lokalTrennen). */
+    function binden() as Void {
+        var refs = [] as Lang.Array<Lang.String>;
+        for (var i = 0; i < Model.pendingMissions.size(); i++) {
+            refs.add(Model.pendingMissions[i]["ref"] as Lang.String);
+        }
+        for (var j = 0; j < Model.pendingRest.size(); j++) {
+            refs.add(Model.pendingRest[j]["ref"] as Lang.String);
+        }
+        var bis = abmeldeFristBis();
+        if (bis == null) { bis = Util.epochNow() + Const.PARK_FRIST_S; }
+        var k = Storage.getValue(Huelle.ABLAGE_SCHLUESSEL);
+        Storage.setValue(ABLAGE_BINDUNG, {
+            "k" => (k instanceof Lang.String) ? k : null,
+            "refs" => refs, "bis" => bis
+        } as Lang.Dictionary<Storage.KeyType, Storage.ValueType>);
+    }
+
+    function _bindung() as Lang.Dictionary or Null {
+        var b = Storage.getValue(ABLAGE_BINDUNG);
+        return (b instanceof Lang.Dictionary) ? b : null;
+    }
+
+    /* Gehoert dieses Paket einem ANDEREN Konto als der jetzigen Kopplung? */
+    function istFremd(ref as Lang.String) as Lang.Boolean {
+        var b = _bindung();
+        if (b == null || !_bindungAnders(b)) { return false; }
+        var refs = b["refs"] as Lang.Array<Lang.String>;
+        for (var i = 0; i < refs.size(); i++) {
+            if (ref.equals(refs[i])) { return true; }
+        }
+        return false;
+    }
+
+    function _bindungAnders(b as Lang.Dictionary) as Lang.Boolean {
+        var alt = b["k"];
+        var jetzt = Storage.getValue(Huelle.ABLAGE_SCHLUESSEL);
+        return !(alt instanceof Lang.String) || !(jetzt instanceof Lang.String)
+            || !(alt as Lang.String).equals(jetzt as Lang.String);
+    }
+
+    /* Vor dem Senden: Bindung an dasselbe Konto loesen, abgelaufene
+     * verwerfen. Gibt nichts zurueck -- `istFremd` sagt danach je Paket,
+     * ob es liegen bleibt. */
+    function bindungPruefen() as Void {
+        var b = _bindung();
+        if (b == null) { return; }
+        var bis = b["bis"];
+        if (bis instanceof Lang.Number && Util.epochNow() > (bis as Lang.Number)) {
+            fremdeVerwerfen();
+            return;
+        }
+        if (Huelle.hatSchluessel() && !_bindungAnders(b)) {
+            Storage.deleteValue(ABLAGE_BINDUNG);
+        }
+    }
+
+    /* Wie viele Pakete gehoeren einem anderen Konto? Fuer die Sync-Seite. */
+    function fremdeZahl() as Lang.Number {
+        var b = _bindung();
+        if (b == null || !Huelle.hatSchluessel() || !_bindungAnders(b)) { return 0; }
+        var n = 0;
+        var refs = b["refs"] as Lang.Array<Lang.String>;
+        for (var i = 0; i < refs.size(); i++) {
+            if (_inListe(refs[i])) { n += 1; }
+        }
+        return n;
+    }
+
+    function _inListe(ref as Lang.String) as Lang.Boolean {
+        for (var i = 0; i < Model.pendingMissions.size(); i++) {
+            if (ref.equals(Model.pendingMissions[i]["ref"] as Lang.String)) { return true; }
+        }
+        for (var j = 0; j < Model.pendingRest.size(); j++) {
+            if (ref.equals(Model.pendingRest[j]["ref"] as Lang.String)) { return true; }
+        }
+        return false;
+    }
+
+    /* Die gebundenen Pakete verwerfen und die Bindung loesen -- nach der
+     * Rueckfrage auf der Sync-Seite oder nach Ablauf der Frist. */
+    function fremdeVerwerfen() as Lang.Number {
+        var b = _bindung();
+        if (b == null) { return 0; }
+        var refs = b["refs"] as Lang.Array<Lang.String>;
+        var n = 0;
+        for (var i = 0; i < refs.size(); i++) {
+            if (_inListe(refs[i])) { verwerfen(refs[i]); n += 1; }
+        }
+        Storage.deleteValue(ABLAGE_BINDUNG);
+        return n;
+    }
+
     /* WIE VIELE PAKETE STEHEN GEPARKT? Fuer die Anzeige (SyncView). */
     function geparkteZahl() as Lang.Number {
         var n = 0;
@@ -174,18 +318,47 @@ module Uploader {
         return n;
     }
 
+    /* Haelt eine Antwort des Servers das Senden an? (401 oder 403) */
+    function angehalten() as Lang.Boolean {
+        return abgemeldet || gesperrt != null;
+    }
+
+    /* Bis wann wartet die Uhr? null = sie wartet nicht. Fuer die Sync-Seite. */
+    function wartetBis() as Lang.Number or Null {
+        var nv = _nichtVor;
+        if (nv == null || Util.epochNow() >= nv) { return null; }
+        return nv;
+    }
+
+    function wartetWegenKontoVoll() as Lang.Boolean {
+        return wartetBis() != null && _wartegrund == :voll;
+    }
+
+    /* Einmal senden, auch wenn die Marke steht (siehe `_einmalTrotz`). */
+    function syncAllEinmalTrotz() as Void {
+        if (angehalten()) { _einmalTrotz = true; }
+        syncAll();
+    }
+
     function syncAll() as Void {
         if (_busy) { return; }
         /* DIE FRIST VOR DEM RIEGEL: Auch eine Uhr, die gerade weiss, dass sie
          * abgemeldet ist, raeumt nach Ablauf. */
         abmeldeFristPruefen();
-        /* ABGEMELDET HEISST: gar nicht erst versuchen. Jede Anfrage kostet
-         * Funk und Akku und bekommt dieselbe Antwort, bis jemand neu
-         * koppelt. */
-        if (abgemeldet) { return; }
+        /* ABGEMELDET ODER GESPERRT HEISST: gar nicht erst versuchen -- ausser
+         * einmal auf ausdruecklichen Anlass. Jede Anfrage kostet Funk und
+         * Akku und bekommt dieselbe Antwort, bis sich im Web etwas aendert. */
+        if (angehalten()) {
+            if (!_einmalTrotz) { return; }
+            _einmalTrotz = false;
+        }
+        /* DIE WARTEZEIT gilt fuer jeden Anlass, auch den ausdruecklichen: Der
+         * Server hat gesagt, wann er wieder will. */
+        if (wartetBis() != null) { return; }
         /* OHNE SCHLUESSEL ODER OHNE VERSCHLUESSELUNG: ebenso nicht.
          * Die Sync-Seite sagt, was fehlt. */
         if (!Huelle.hatSchluessel() || !Huelle.bereit()) { return; }
+        bindungPruefen();
         parkFristPruefen();
         _next();
     }
@@ -216,7 +389,7 @@ module Uploader {
         for (var i = 0; i < Model.pendingMissions.size(); i++) {
             var m = Model.pendingMissions[i];
             var mref = m["ref"] as Lang.String;
-            if (istGeparkt(mref)) { continue; }
+            if (istGeparkt(mref) || istFremd(mref)) { continue; }
             if (_openPoints(mref) > 0 || !_isAcked(mref)) {
                 return { "kind" => "mission", "data" => m };
             }
@@ -224,7 +397,7 @@ module Uploader {
         for (var i = 0; i < Model.pendingRest.size(); i++) {
             var r = Model.pendingRest[i];
             var rref = r["ref"] as Lang.String;
-            if (istGeparkt(rref)) { continue; }
+            if (istGeparkt(rref) || istFremd(rref)) { continue; }
             if (_openPoints(rref) > 0 || !_isAcked(rref)) {
                 return { "kind" => "rest_segment", "data" => r };
             }
@@ -407,6 +580,8 @@ module Uploader {
         if (code == 200 && data instanceof Lang.Dictionary && data["ok"] == true) {
             lastError = null;
             abgemeldet = false;        // eine angenommene Anfrage widerlegt es
+            gesperrt = null;
+            _nichtVor = null;
             abmeldungVergessen();
             var nextSeq = data["next_seq"] as Lang.Number;
             _setAcked(ref, nextSeq, true);
@@ -444,20 +619,18 @@ module Uploader {
             }
             _next();   // weitere offene Chunks/Jobs
         } else if (code == 401 || code == 403) {
-            /* DAS GERAET IST ABGEMELDET, NICHT DAS PAKET ABGEWIESEN.
+            /* DAS GERAET IST ABGEMELDET ODER GESPERRT, NICHT DAS PAKET
+             * ABGEWIESEN.
              *
              * 401: im Web geloescht oder der Schluessel passt nicht mehr.
-             * 403: dort auf inaktiv gestellt. In beiden Faellen kommt kein
-             * Paket mehr durch -- deshalb wird auch keines geparkt: Mit den
-             * Paketen ist nichts verkehrt, und sie werden gebraucht, sobald
-             * jemand neu koppelt.
+             * 403: dort deaktiviert, oder das Konto darf nicht. In beiden
+             * Faellen kommt kein Paket mehr durch -- deshalb wird auch keines
+             * geparkt: Mit den Paketen ist nichts verkehrt, und sie werden
+             * gebraucht, sobald sich die Lage aendert.
              *
              * Fiele das in denselben Zweig wie eine Stoerung, wuerde es
-             * endlos wiederholt. Weil ein Rueckstand zugleich das Trennen
-             * sperrt (Pair.start), waere die Uhr danach nur noch durch
-             * Loeschen der App zu retten -- mit allem, was sie traegt. */
-            abgemeldet = true;
-            abmeldungVermerken();      // die Frist beginnt beim ersten Mal
+             * endlos wiederholt. */
+            abweisungMerken(code, data);
             lastError = null;
             _busy = false;
         } else if (code == 400 && _dauerhaftAbgewiesen(data)) {
@@ -475,10 +648,51 @@ module Uploader {
             lastError = null;
             _busy = false;
             _next();          // die Schlange laeuft weiter
+        } else if (code == 429 || code == 503 || code == 507) {
+            /* DER SERVER SAGT, WANN ER WIEDER WILL -- in einer Kopfzeile, die
+             * die Uhr nicht sieht. Sie wartet deshalb eine feste Zeit
+             * (Const), bevor ein Anlass wieder sendet. Nichts wird geparkt
+             * oder verworfen. */
+            var s = Const.WARTEN_503_S;
+            _wartegrund = :bremse;
+            if (code == 429) { s = Const.WARTEN_429_S; }
+            else if (code == 507) { s = Const.WARTEN_507_S; _wartegrund = :voll; }
+            _nichtVor = Util.epochNow() + s;
+            lastError = null;
+            _busy = false;
         } else {
             lastError = "Upload " + code.toString();
             _busy = false;   // spaeter erneut (naechster syncAll-Ausloeser)
         }
+    }
+
+    /* 401 oder 403 merken -- vom Upload und vom Nachholen des Schluessels
+     * (Pair.onSchluessel), damit beide dieselbe Lage zeigen. */
+    function abweisungMerken(code as Lang.Number, data as Lang.Object or Null) as Void {
+        if (code == 401) {
+            abgemeldet = true;
+            gesperrt = null;
+        } else {
+            gesperrt = _sperrgrund(data);
+            abgemeldet = false;
+        }
+        abmeldungVermerken();          // die Frist beginnt beim ersten Mal
+    }
+
+    /* Der Grund einer 403 aus dem Koerper (JSON-Vertrag 5). Ob Connect IQ
+     * den Koerper einer 403 durchreicht, ist geraeteabhaengig; ohne ihn
+     * heisst es "unbekannt". */
+    function _sperrgrund(data as Lang.Object or Null) as Lang.String {
+        if (!(data instanceof Lang.Dictionary)) { return "unbekannt"; }
+        var e = data["error"];
+        if ("device_disabled".equals(e)) { return "geraet"; }
+        if ("konto".equals(e)) {
+            var g = data["grund"];
+            if ("gesperrt".equals(g) || "wartet".equals(g) || "unbestaetigt".equals(g)) {
+                return g as Lang.String;
+            }
+        }
+        return "unbekannt";
     }
 
     /* Traegt die Antwort den Fehlerschluessel des Servers? (JSON-Vertrag 5.)

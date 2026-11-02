@@ -1,4 +1,5 @@
-// Rundlauf-Fuellung — NUR fuer die Prueffassung von rundlauf.sh, KEIN
+// Rundlauf-Fuellung — NUR fuer die Prueffassungen von rundlauf.sh (und
+// syncseite.sh, das damit zwei offene Pakete anlegt), KEIN
 // Bestandteil der App (S11-08). rundlauf.sh kopiert watch/ nach
 // $CIQ_BASIS/rundlauf-app, legt diese Datei dazu und ruft fuellen() aus
 // NAdokuApp.onStart auf. Die App selbst kennt sie nicht.

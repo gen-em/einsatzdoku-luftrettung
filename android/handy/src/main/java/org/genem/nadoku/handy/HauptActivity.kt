@@ -119,6 +119,9 @@ fun NAdokuOberflaeche(app: NAdokuApp) {
             /* BEIM TRENNEN GEHEN DIE ABGEWIESENEN PAKETE MIT: ohne Frist,
              * weil sie dem Konto gehören, das hier zurückgegeben wird. */
             raeumen = { app.puffer.abgewieseneRaeumen(null) },
+            bindung = app.bindung,
+            hoechstePaketId = { app.puffer.hoechstePaketId() },
+            rueckstandBis = { app.puffer.rueckstandBis(it) },
         )
     }
     /* `LocalResources` statt `kontext.resources`: Compose
@@ -236,7 +239,12 @@ fun NAdokuOberflaeche(app: NAdokuApp) {
                 val e = withContext(Dispatchers.IO) { dienst.trennen() }
                 trennmeldung = e
                 if (e !is Trennergebnis.Rueckstand) {
-                    schritt = Kopplungsschritt.Getrennt(nurLokal = e is Trennergebnis.NurLokal)
+                    val gebunden = withContext(Dispatchers.IO) {
+                        app.bindung.gebundenBis?.let { app.puffer.rueckstandBis(it) } ?: 0
+                    }
+                    schritt = Kopplungsschritt.Getrennt(
+                        nurLokal = e is Trennergebnis.NurLokal, gebunden = gebunden,
+                    )
                     gekoppelt = false
                 }
             }
@@ -325,6 +333,8 @@ private fun GekoppelteOberflaeche(
     val rueckstand = remember(pufferStand) { app.puffer.rueckstand() }
     val abgewiesen = remember(pufferStand) { app.puffer.abgewiesen() }
     val verwerfbar = remember(pufferStand) { app.puffer.verwerfbar() }
+    val fremd = remember(pufferStand, app.letzterSendebericht) { app.fremderRueckstand() }
+    var fremdFrageOffen by remember { mutableStateOf(false) }
     val sendelaeuft = remember(takt) { app.sendelaufLaeuft }
     val sendeergebnis = remember(takt) { sendeergebnis(app.letzterSendebericht) }
 
@@ -434,10 +444,38 @@ private fun GekoppelteOberflaeche(
             aufNein = { verwerfFrageOffen = false },
         )
     }
+    if (fremdFrageOffen) {
+        Rueckfrage(
+            titel = androidx.compose.ui.res.pluralStringResource(R.plurals.fremde_frage, fremd, fremd),
+            text = stringResource(R.string.fremde_text),
+            ja = stringResource(R.string.verwerfen_ja),
+            nein = stringResource(R.string.verwerfen_nein),
+            aufJa = {
+                fremdFrageOffen = false
+                val bis = app.bindung.gebundenBis
+                if (bis != null) {
+                    verworfen = app.puffer.rueckstandVerwerfen(bis).pakete
+                    app.bindung.loesen()
+                }
+                takt++
+            },
+            aufNein = { fremdFrageOffen = false },
+        )
+    }
     if (trennfrageOffen) {
+        /* ABGEMELDET MIT RÜCKSTAND: Das Trennen ist erlaubt, und die Frage
+         * sagt, was mit dem Rückstand geschieht. Sonst sperrt der Rückstand
+         * das Trennen, und die Frage bleibt die alte. */
+        val gebundenFrage = app.bindung.abgemeldet && rueckstand > 0
         Rueckfrage(
             titel = stringResource(R.string.trennen_frage),
-            text = stringResource(R.string.trennen_frage_text),
+            text = if (gebundenFrage) {
+                androidx.compose.ui.res.pluralStringResource(
+                    R.plurals.trennen_frage_gebunden, rueckstand, rueckstand,
+                )
+            } else {
+                stringResource(R.string.trennen_frage_text)
+            },
             ja = stringResource(R.string.trennen_ja),
             aufJa = aufTrennen,
             aufNein = { aufTrennfrage(false) },
@@ -485,6 +523,8 @@ private fun GekoppelteOberflaeche(
                 takt++
             },
             aufVerwerfen = { verwerfFrageOffen = true },
+            fremd = fremd,
+            aufFremdeVerwerfen = { fremdFrageOffen = true },
             aufModus = { gewaehlt ->
                 modus = gewaehlt
                 app.einstellungen.letzterModus = gewaehlt
@@ -558,11 +598,18 @@ private fun sendeergebnis(lauf: Sendelauf?): Sendeergebnis? {
     val l = lauf ?: return null
     val hhmm = Zeit.hhmm(l.am)
     return when {
+        l.bericht.gesperrt != null ->
+            Sendeergebnis(Sendeausgang.GESPERRT, hhmm, grund = l.bericht.gesperrt)
         l.bericht.pausiert -> Sendeergebnis(Sendeausgang.SCHLUESSEL_ABGEWIESEN, hhmm)
         l.bericht.fehlerhaft > 0 ->
             Sendeergebnis(Sendeausgang.PAKET_ABGEWIESEN, hhmm, l.bericht.fehlerhaft)
         l.bericht.ohneSchluessel -> Sendeergebnis(Sendeausgang.KEIN_SCHLUESSEL, hhmm)
+        l.bericht.kontoVoll -> Sendeergebnis(Sendeausgang.KONTO_VOLL, hhmm)
+        l.bericht.wartetBis != null ->
+            Sendeergebnis(Sendeausgang.SERVER_WARTET, Zeit.hhmm(l.bericht.wartetBis))
         l.bericht.spaeterErneut -> Sendeergebnis(Sendeausgang.KEIN_NETZ, hhmm)
+        l.bericht.verworfen.isNotEmpty() || l.bericht.uebergangen.isNotEmpty() ->
+            Sendeergebnis(Sendeausgang.TEILWEISE, hhmm)
         else -> Sendeergebnis(Sendeausgang.GESENDET, hhmm)
     }
 }
