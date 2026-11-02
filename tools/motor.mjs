@@ -320,12 +320,18 @@ const OERTLICH = /^https?:\/\/(127\.0\.0\.1|localhost|\[::1\])(:|\/|$)/i;
 /** Leitet die Anfragen eines Kontexts nach DRAUSSEN durch den Node-Stack.
  *  Ohne `ignoreHTTPSErrors` — siehe Kommentar oben. Örtliche Adressen laufen
  *  unverändert durch. Ein Fehlschlag bricht die Anfrage ab, statt sie
- *  stillschweigend durchzulassen. */
+ *  stillschweigend durchzulassen.
+ *  WEITERLEITUNGEN FOLGT DER BROWSER, NICHT NODE (`maxRedirects: 0`). Folgte
+ *  `route.fetch()` ihnen selbst, sähe der Browser nur die letzte Antwort —
+ *  unter der ersten Adresse und ohne die Cookies der 302 davor. Ein Ablauf,
+ *  der ein Cookie setzt und weiterleitet (der Setz-Link in `pw_handling.php`),
+ *  bekäme sein Formular dann noch einmal statt „Fertig", ohne Meldung.
+ *  Anlass: Nr. 451. */
 export async function proxyRoute(kontext) {
   await kontext.route('**/*', async (route) => {
     if (OERTLICH.test(route.request().url())) { await route.fallback(); return; }
     try {
-      await route.fulfill({ response: await route.fetch() });
+      await route.fulfill({ response: await route.fetch({ maxRedirects: 0 }) });
     } catch {
       await route.abort();
     }

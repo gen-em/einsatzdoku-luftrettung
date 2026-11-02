@@ -10171,6 +10171,25 @@ zutreffen.
      dieselbe Trennung wie `kontextMachen()` in `tools/motor.mjs`. Gemessen:
      Staging `login.php` 200 mit Prüfung, örtlich unverändert ohne Proxy.
 
+<<<<<<< HEAD
+<!-- -->
+
+451. **`proxyRoute()` folgt Weiterleitungen in Node und verliert dabei Cookies.** · gehört zu: Pflegeaufgabe · Stand: erledigt · seit 02.11.2026
+     *Aufgenommen 02.11.2026 im ersten Prüfdurchgang auf Staging (R91).* Nach
+     draußen holt `proxyRoute()` in `tools/motor.mjs` jede Anfrage über
+     `route.fetch()` — und das folgte Weiterleitungen selbst. Der Browser sah
+     nur die letzte Antwort unter der ersten Adresse, ohne die Cookies der
+     302 davor. Der Setz-Link (`pw_handling.php`: Token ins Cookie, 302 auf
+     `?w=1`) zeigte deshalb nach „Speichern" wieder das Formular, ohne
+     Meldung, und das Passwort war nicht gesetzt. In der Kette fiel es nicht
+     auf: Dort zeigt keine Adresse durch einen Proxy, und `passwort_setzen.mjs`
+     nimmt einen schlichten Kontext.
+     Erledigt 02.11.2026: `route.fetch({ maxRedirects: 0 })` — die
+     Weiterleitung geht an den Browser. Gemessen gegen Staging: Setz-Link
+     „Passwort gespeichert …" für drei Konten; ohne Sitzung landet
+     `betrieb_status.php` jetzt sichtbar auf `login.php`.
+
+=======
 385. **Die Zweitfaktorprobe hinterlässt bei jedem Lauf eine Sperre in `sicherheit_ereignisse`.** · gehört zu: PR · Stand: erledigt · seit 16.10.2026
      *Aufgenommen 16.10.2026 mit S11-05e (F-S11-59).* Jeder Lauf der
      Zweitfaktorprobe legt eine Sperre `totp` für
@@ -10251,3 +10270,4 @@ zutreffen.
      Freigabeprobe meldete sich unter dem Anteil der Anteilprobe an.
      Nachgestellt 3 von 3 rot, danach 3 von 3 grün; zwei Gesamtläufe neben
      mit 53 und 54 grünen Proben, 0 rot.
+>>>>>>> origin/main
