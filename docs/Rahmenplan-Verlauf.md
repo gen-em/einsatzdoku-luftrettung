@@ -9,6 +9,7 @@ Verlauf bis zum Schnitt). Die Fassungszählung läuft fortlaufend weiter.
 
 | Fassung | Datum | Anlass | Was |
 |---|---|---|---|
+| 197 | 02.11.2026 | 21 | Schritt 21 (GR) beginnt auf `claude/trusting-wozniak-33j782` mit Konzept `Konzept-GR-Geraeterunde.md`; die Wear-OS-Uhr wird nicht abgewartet (E-GR-03), Voraussetzung in der Fahrplanzeile entsprechend. Kopf „Läuft". |
 | 196 | 02.11.2026 | PR-Abschluss | Erledigt-Zeile PR (Freigabe 02.11.2026, PR #133), Fahrplanzeile heraus, 21 und 22 ohne Voraussetzung PR; Konzept und Prüfdokument gelöscht (`a1ce3b65`), P-PR-01 bis -03 in die Prüfliste und 6.1. Kopf: Stand `main` `9caea83`. |
 | 195 | 02.11.2026 | PR | Schritt PR gebaut (PR-01 bis -03, Nr. 352, 385, 403, dazu 460 nach E-PR-03), Pull Request offen; Kopf „Läuft“ und „Offene PRs“. |
 | 194 | 02.11.2026 | PR | Schritt PR beginnt auf `claude/kind-cray-lgaz7d` mit schlankem Konzept (E-PR-01). Berichtigt: Der Kopf nannte PR #131 als offen und `main` bei `cb9b952` — #131 ist gemergt, `main` steht bei `043b2f5`. |
