@@ -518,7 +518,10 @@ ui_seite_start(['titel' => 'Backup-Ziele']);
           <?= csrf_field() ?><input type="hidden" name="id" value="<?= (int)$z['id'] ?>">
           <input type="hidden" name="action" value="ziel_loeschen">
         </form>
-        <form method="post" id="za-<?= (int)$z['id'] ?>" hidden>
+        <?php /* `zh-` und nicht `za-`: `ui_zeilenaktionen()` nummeriert seine
+                 Menüs selbst als `za-1`, `za-2` … — zwei gleiche Kennungen,
+                 und „…" öffnete statt des Menüs dieses Formular. */ ?>
+        <form method="post" id="zh-<?= (int)$z['id'] ?>" hidden>
           <?= csrf_field() ?><input type="hidden" name="id" value="<?= (int)$z['id'] ?>">
           <input type="hidden" name="action" value="abdruck_vergessen">
         </form>
@@ -541,7 +544,7 @@ ui_seite_start(['titel' => 'Backup-Ziele']);
         ];
         if ((string)$z['protokoll'] === 'sftp' && ($z['fingerabdruck'] ?? null) !== null) {
             $eintraege[] = ['text' => 'Hostschlüssel vergessen', 'symbol' => 'schloss-offen',
-                            'art' => 'leise', 'form' => 'za-' . (int)$z['id'],
+                            'art' => 'leise', 'form' => 'zh-' . (int)$z['id'],
                             'attr' => ' data-confirm="Den gespeicherten Hostschlüssel '
                                     . 'vergessen? Die nächste Prüfung übernimmt den, den '
                                     . 'der Server dann zeigt — das ist der Weg nach einem '
