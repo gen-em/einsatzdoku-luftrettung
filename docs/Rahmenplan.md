@@ -1,14 +1,14 @@
 # Rahmenplan — Programm „Gen-EM NAdoku" bis v1.0
 
-**Fassung 191 (02.11.2026)** · Steuerung: Reihenfolge, Status, programmweite
+**Fassung 192 (02.11.2026)** · Steuerung: Reihenfolge, Status, programmweite
 Entscheidungen. Verlauf: `Rahmenplan-Verlauf.md`. Fassungen 1–15:
 `Rahmenplan-Archiv.md`; Fassungen 16–124: `Rahmenplan-Archiv-2.md`.
 
-**Stand `origin/main`** (Commit `2563fde`, PR #128, gemessen 02.11.2026): Web 23.6.0 ·
+**Stand `origin/main`** (Commit `cb9b952`, PR #129, gemessen 02.11.2026): Web 23.6.0 ·
 Uhr 4.1.1 · Android 0.18.2, alle drei ausgeliefert (Tags auf `c32dd2c`, 02.11.2026).
-**Läuft:** kein Schritt — 20 ist abgeschlossen (Abschnitt 8, Freigabe 02.11.2026).
-**Als Nächstes:** 13 — P7 Gesicht v1.0; beginnt mit einer Konzeptsitzung.
-**Offene PRs:** Handprüfungen nach den Tags von 12b (Prüfliste, Nr. 430 bis 432, Runbook).
+**Läuft:** kein Schritt; der Backlog ist eingeordnet (Fassung 192, E-BE-01 bis -07).
+**Als Nächstes:** PR (drei Prüfmittel), dann 21 GR und 22 BR5 nebeneinander, dann 13 (Konzeptsitzung).
+**Offene PRs:** Einordnung des Backlogs (#130, diese Fassung).
 **Fällig bei der Betreiberin:** 36 Posten (Abschnitt 6.1). **`update.php`:** auf Staging und Produktiv nichts offen (Betreiberin, 20.10.2026, nach Web 23).
 
 Kennungen sind Namen, keine Reihenfolge.
@@ -104,7 +104,7 @@ liest die 7.x-Sicherung genau einmal) · Rückwärtskompatibilität ab v1.0 (R60
 ## 3. Fahrplan — die nächsten Schritte
 
 Schrittnummern sind **Namen**, keine Reihenfolge; sie werden nie umvergeben.
-**Die Reihenfolge der offenen Schritte ist:** **13** → 14 (der Einschub Nr. 387, Web 23.0.2, ist am 20.10.2026 gemergt); der Betriebsübergang folgt auf v1.0. Daneben, ohne Platz in
+**Die Reihenfolge der offenen Schritte ist:** **PR** → **21** neben **22** → 13 → 14 (E-BE-02 bis -04, 02.11.2026); der Betriebsübergang folgt auf v1.0. Daneben, ohne Platz in
 der Reihe: die Paketschnitte von **11** und Teil C von **6** (seit SD-M1
 frei). **Warum so:** P6 liegt in zwei Hälften um S11 (R86): das
 **Bedrohungsmodell (12, abgeschlossen) vor S11 (12a, abgeschlossen)**, weil es dessen
@@ -119,12 +119,16 @@ weil das Altbestand-Werkzeug ein einziges Konto voraussetzte.
 |---|---|---|---|---|---|
 | 6 | **S4 — Rest, Teil C** | Play Console nach R65: interner Test-Track für Handy und Uhr unter einem Eintrag, Versionscode-Versatz, Signaturweg; Android 1.0.0 (E-R45-7). Die Vorbereitung ohne D-U-N-S und Schlüssel ist gebaut (Android 0.13.0), die Gerätetests sind erfolgt (24.09.2026) | D-U-N-S, Organisationskonto und Play App Signing — erledigt 26.09.2026 (SD-M1); offen in 6.2: Wear-OS-Uhr, Demo-Video, Datensicherheitsformular | `docs/konzepte/Konzept-S4-Handy-Uhr-Client.md` 13; `Vorbereitung-Play-Console.md` | offen — Teile A bis C gemergt 04.09.2026 (PR #33, Abschnitt 8); Android 1.0.0 und der interne Test-Track können beginnen |
 | 11 | **Planung v1.0** | Festlegungen vor dem Schnitt (R65 bis R73, entschieden 03.09.2026); Ergebnis sind die Konzepte der Phasen P6 bis P8 mit je eigenem Paketschnitt (P6 nach der Freigaberunde des Reviews) | keine | `docs/konzepte/Konzept-Planung-v1.0.md` | gemergt 03.09.2026 — Festlegungen entschieden (R65–R73); offen nur die Paketschnitte, je mit dem Konzept zu 12b, 13 und 14 |
-| 13 | **P7 — Gesicht v1.0** | Umbenennung überall (Langform in den System-E-Mails entscheiden), neues Demo-Passwort (R25); Vertrag v1 (R12, Nr. 23); Doku-Neufassung, Handbuch als HTML im Release (R16, R72); Web-App-Manifest (R70); Changelog neu (R15); Backlog-Übernahme; Altformat der Sicherung weg (Nr. 46); Kommentarregel (R69) | 12b | eigenes Konzept nach K1 | offen — nach 12b |
-| 14 | **P8 — Schnitt** | Neuaufsetzen mit Übernahme per edbak (R40 (3), R60, Nr. 324); Migrationsregister neu (R66); Repo-Umzug und Inventur mit Begründung je Weglassung (R68); Kette im neuen Repositorium (R67, R40 (4)); Rechts- und Betreiberunterlagen (R41); Abnahme nach R11; Tags `web-v1.0.0`, `uhr-v…`, `android-v1.0.0` | 13 | eigenes Konzept nach K1 | offen — nach 13 |
+| — | **PR — Prüfmittel** | Drei Werkzeugfehler, die heute Läufe rot färben: Nr. 403 (Freigabeprobe im Gesamtlauf), 352 (`nummern.py` im offenen Merge), 385 (Sperre der Zweitfaktorprobe); nur `tools/`, keine Fassung | keine | kein Konzept — drei Backlog-Punkte mit Weg und Abnahme | offen — vor 21 und 22 (E-BE-04) |
+| 21 | **GR — Geräterunde** | Uhr und Handy: Nr. 154, 157 (Sendebericht, Kopplungs-Sackgasse), 201, 229 (Antwortauswertung samt Fehlertabelle im Vertrag), 402 (Sync-Seite), 431 (Senden nach Reaktivieren); je ein Tag `uhr-v…` und `android-v…` | PR; Wear-OS-Uhr für den Gerätetest (6.2) | eigenes Konzept nach K1 | offen — neben 22 und neben der Konzeptsitzung 13 (Abschnitt 4, E-BE-03) |
+| 22 | **BR5 — Backlog-Runde 5, Web** | Dreizehn Web-Punkte: Schlüsselpaar nach der Anmeldung (Nr. 392), Deadlock in `protokoll()` (354), Notzugang und Wache (358), `post_text()` (355), Installationsseite (345), Jobfehler (357), Meldungen (346, 356), APK-Karte (361, 432), PHP 8.3.6 (383), Bitwarden (430), Gerät löschen (440) | PR | eigenes Konzept nach K1 | offen — neben 21; vor 13, damit P7 das Verhalten der 1.0 dokumentiert (E-BE-02) |
+| 13 | **P7 — Gesicht v1.0** | Umbenennung überall (E-Mail-Langform entscheiden), Demo-Passwort (R25); Vertrag v1 (R12, Nr. 23); Doku-Neufassung, Handbuch als HTML (R16, R72); Manifest (R70); Changelog neu (R15); Backlog-Übernahme; Kommentarregel (R69, Nr. 409); Lizenzen (Nr. 280), Tabellen mit Mockup (Nr. 342), Logos (Nr. 62) | 22 | eigenes Konzept nach K1 | offen — nach 22 |
+| 14 | **P8 — Schnitt** | Neuaufsetzen mit Übernahme per edbak (R40 (3), R60, Nr. 324); Migrationsregister neu (R66); Repo-Umzug und Inventur mit Begründung je Weglassung (R68); Kette im neuen Repositorium (R67, R40 (4)); Rechts- und Betreiberunterlagen (R41); Abnahme nach R11; Tags `web-v1.0.0`, `uhr-v…`, `android-v1.0.0` | 13 | eigenes Konzept nach K1 | offen — nach 13; die Inventur (R68) entscheidet die zwölf Werkzeug-Punkte mit `gehört zu: 14` (E-BE-04) |
 | — | **Betriebsübergang** | Öffnung in Wellen über die Betriebsarten (R41); Produktionsfreigabe in den Stores mit Welle 1 (R65; nach MDR-Abgrenzung und Rechtsunterlagen); mit Welle 1 entfällt die Seitenladung (`apk.php`, Handbuch 10.1); Garmin-Uhr über den Connect-IQ-Store; halbjährliche Probe-Wiederherstellung | v1.0 | — | offen — beginnt mit v1.0 (nach den Schritten 13 und 14); Wellen nach R41 |
 
-Die Schritte 13, 14 und der Betriebsübergang haben keinen Block: Ihre
-Zeilen nennen den Inhalt, den Volltext hält `Rahmenplan-Archiv-2.md` 3.
+Kein offener Schritt hat einen Block: Die Zeilen nennen den Inhalt; den
+Volltext von 13, 14 und Betriebsübergang hält `Rahmenplan-Archiv-2.md` 3,
+den von PR, 21 und 22 `docs/konzepte/Vorbereitung-Backlog-Einordnung.md` 4.
 
 ## 4. Parallelität und Sperren
 
@@ -136,7 +140,8 @@ Backlog-Nummern verlangen die Gegenproben aus 2.2.
 
 | jetzt parallel möglich | nicht parallel |
 |---|---|
-| Konzeptarbeit zu allem; ein Abschluss nach K9 zu allem — er schreibt nur Buchführung | 13 → 14 nacheinander, nichts parallel (R71, R86) |
+| Konzeptarbeit zu allem; ein Abschluss nach K9 zu allem — er schreibt nur Buchführung | 22 → 13 → 14 nacheinander (R71, R86, E-BE-02) |
+| 21 (nur `watch/`, `android/`) neben 22 (nur `server/`) und neben der Konzeptsitzung 13; PR neben allem, was den Prüfstand nicht fährt | 21 und 22 gleichzeitig am Vertrag oder an `docs/` — die Buchführung bleibt seriell |
 
 **Merge-Reihenfolge auf `main`:** ein Pull Request je Phase nach Freigabe
 (K7); nach jeder Migration `update.php`; nach einem fremden Merge nimmt jeder
@@ -208,6 +213,7 @@ gestrichen, 6a abgehakt; was steht, ist bestätigt offen.
 | **Demo-Video des Vordergrunddienstes auf echtem Gerät** für die Standort-Deklaration — falls der interne Track sie verlangt (beim Einrichten prüfen) | 6 Teil C | 03.09.2026 | `Vorbereitung-Play-Console.md` |
 | **Datensicherheitsformular der Play Console** — setzt die Datenschutzerklärung voraus (6.3) | 6 Teil C | 03.09.2026 | `Vorbereitung-Play-Console.md` |
 | **Wear-OS-Uhr für den Gerätetest**, die Wear-OS-Prüfrunde und den Installationstest aus dem Track | 6 Teil C; Prüfliste AR | 31.08.2026 | `Pruefliste.md` |
+| **Logo-Vorlagen in den Markenfarben** (`#4280E5`, `#D63338`, `#FF8F1F`, `#1A0500`) für `gen-em_logo_helicopter.svg`, die PNG und alle Ableitungen — entschieden 12.09.2026, seither nichts eingegangen (Nr. 62) | vor 13 (E-BE-06) | 12.09.2026 | `Design.md` 2.5; Backlog Nr. 62 |
 | **Impressums- und Datenschutztext der Installation** über den Editor eintragen (R32); für das Datensicherheitsformular der Play Console schon vor dem ersten Track-Release | vor 13 | 30.08.2026 | Handbuch 11.5 |
 | **GitHub: `gen-em/nadoku` anlegen** (öffentlich, AGPL-3.0), Umgebungen `staging` und `produktion` mit Pflichtfreigabe, Zweigschutz; danach dieses Repositorium archivieren | mit dem Umzug in 14 (R68) | 03.09.2026 | Fahrplan, Schritt 14 |
 
@@ -355,6 +361,7 @@ werden hier kompakt angehängt; **der Statussatz wird ersetzt, nicht ergänzt**
 | R87 | Browserproben in Chromium, Firefox und WebKit ab Stufe neben und in Stufe 2, in klein Chromium; fehlt eine Engine, rot. Ausnahmen begründet; Safari von Hand | abgelöst durch R89 (umgesetzt mit PU-03, 01.11.2026); entschieden 19.10.2026 (Betreiberin), umgesetzt in Schritt 19 (abgeschlossen 20.10.2026) | Konzept DM (gelöscht, `3bedc25`), E-DM-01 bis -11 |
 | R88 | Die Pakete von 12b (R17-18 bis -30) laufen mit Opus, Kryptographie eingeschlossen — K8 (Krypto mit Fable, E-PV-5 (7)) gilt für 12b nicht; das Review war Fable | umgesetzt mit 12b (01.11.2026); entschieden 21.10.2026 (Betreiberin, Freigaberunde) | `Review-R17.md` 2.1 (gelöscht, `630756f0`), E-R17-28 |
 | R89 | Der Prüfumfang folgt der Berührung: drei Engines, zehn Breiten und alle Seiten nur bei Stylesheet-Berührung, Zehnerregel oder `haupt`; sonst schmal. Ersetzt R87 | umgesetzt in Schritt 20 (abgeschlossen 02.11.2026); entschieden 01.11.2026 (Betreiberin); E-PU-16 und -18 bestätigt 02.11.2026 | Konzept PU (gelöscht, `47a8567c`), E-PU-01 bis -19 |
+| R90 | Vor v1.0 liegt, was v1.0 festschreibt oder Daten gefährdet; was nicht kommt, wird verworfen statt geparkt. Schritte PR, 21 (GR), 22 (BR5) vor 13 | gilt; entschieden 02.11.2026 (Betreiberin); Stand `verworfen` in `Backlog-Erledigt.md` ersetzt `nicht umsetzen`; Zuordnung in den Kopfzeilen | `Vorbereitung-Backlog-Einordnung.md`, E-BE-01 bis -07 |
 
 ## 8. Erledigt
 

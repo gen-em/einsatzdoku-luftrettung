@@ -32,7 +32,7 @@ RAHMENPLAN = 'docs/Rahmenplan.md'
 
 # Das Vokabular des Stands steht HIER, einmal; `verschieben.py` liest es von
 # dort, statt eine zweite Liste zu fuehren.
-STAENDE = ('offen', 'teilweise', 'zurückgestellt', 'nur auf Anlass', 'nicht umsetzen')
+STAENDE = ('offen', 'teilweise', 'zurückgestellt', 'nur auf Anlass')  # `verworfen` nur in Backlog-Erledigt.md (E-BE-01)
 KOPFZEILE = re.compile(r'^(\d+)\. \*\*(.+?)\*\* · gehört zu: (.+?) · Stand: '
                        r'(' + '|'.join(STAENDE) + r') · seit (\d{2}\.\d{2}\.\d{4})$')
 EINTRAG = re.compile(r'^(\d+)\. ')

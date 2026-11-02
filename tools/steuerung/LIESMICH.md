@@ -9,7 +9,7 @@ Halten Rahmenplan und Backlog ihre Decken, trägt jeder offene Punkt ein Ziel �
 python3 tools/steuerung/decken.py        # --stellen · --selbstprobe
 python3 tools/steuerung/uebersicht.py    # --ziel 17 · --pruefen · --selbstprobe
 python3 tools/steuerung/nummern.py       # --ohne-holen · --selbstprobe
-python3 tools/steuerung/verschieben.py NR "Erledigt TT.MM.JJJJ mit …: Beleg."  # --trocken
+python3 tools/steuerung/verschieben.py NR "Erledigt TT.MM.JJJJ mit …: Beleg."  # --trocken · --stand verworfen
 ```
 
 ## Was es misst
@@ -20,7 +20,7 @@ eine Liste je offenem Eintrag). `uebersicht.py` hält jede Kopfzeile an Grammati
 Fahrplan-Ziel und gibt die offenen Punkte nach Ziel aus. `nummern.py` holt die Remote-Zweige
 und ist rot, wenn der Arbeitsbaum eine Nummer neu anlegt, die `origin/main` oder ein anderer
 Zweig auch neu anlegt (je gegen den Vorfahren mit `main` und mit `HEAD`, beide Dateien).
-`verschieben.py` misst nichts: Es verschiebt einen erledigten Punkt samt Trennzeile (E-R4-06, -62).
+`verschieben.py` misst nichts: Es verschiebt einen erledigten oder verworfenen Punkt samt Trennzeile (E-R4-06, -62; `verworfen` seit E-BE-01).
 
 ## Was es braucht
 
