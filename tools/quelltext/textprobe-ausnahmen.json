@@ -121,7 +121,7 @@
       "id": "connect-iq-rueckruf",
       "zeile": "von Connect IQ bekommt",
       "klasse": "G",
-      "begruendung": "Die Signatur des Rueckrufs — `(code, data)` ohne Kopfzeilen — ist eine Eigenschaft der Garmin-Plattform und nicht der Uhr im Allgemeinen. Sie ist der GRUND, warum `ingest.php` seit Web 20.11.0 ein `Retry-After` schickt, das kein Geraet dieses Projekts liest (P5a/AP7, E-P5a-01). Ein geraetefreies „die Uhr bekommt keine Kopfzeilen\" waere hier keine Neutralitaet, sondern eine falsche Verallgemeinerung: Ein Wear-OS-Client koennte sie lesen. Dieselbe Ueberlegung wie `garmin-zusatz-kopplung` (E-P2-02): genannt wird die Plattform dort, wo sie die Sache IST. Zwei Stellen, docs/Technik.md 10.7 und docs/JSON-Vertrag.md 5."
+      "begruendung": "Die Signatur des Rueckrufs — `(code, data)` ohne Kopfzeilen — ist eine Eigenschaft der Garmin-Plattform und nicht der Uhr im Allgemeinen. Sie ist der GRUND, warum `ingest.php` seit Web 20.11.0 ein `Retry-After` schickt, das bis Android 0.19.0 kein Geraet dieses Projekts las und die Uhr bis heute nicht lesen kann (P5a/AP7, E-P5a-01; Konzept GR). Ein geraetefreies „die Uhr bekommt keine Kopfzeilen\" waere hier keine Neutralitaet, sondern eine falsche Verallgemeinerung: Ein Wear-OS-Client koennte sie lesen. Dieselbe Ueberlegung wie `garmin-zusatz-kopplung` (E-P2-02): genannt wird die Plattform dort, wo sie die Sache IST. Zwei Stellen, docs/Technik.md 10.7 und docs/JSON-Vertrag.md 5."
     },
     {
       "id": "connect-iq-projekt",

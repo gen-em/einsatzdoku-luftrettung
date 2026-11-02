@@ -10251,3 +10251,114 @@ zutreffen.
      Freigabeprobe meldete sich unter dem Anteil der Anteilprobe an.
      Nachgestellt 3 von 3 rot, danach 3 von 3 grün; zwei Gesamtläufe neben
      mit 53 und 54 grünen Proben, 0 rot.
+
+154. **Handy-App liest `kept_points` und `kept_meta` nicht.** · gehört zu: 21 · Stand: erledigt · seit 07.09.2026
+     *Aufgenommen 07.09.2026 aus der Gegenprüfung des Sofortpakets (Nr. 134).*
+     `Sendeantwort.kt` nimmt aus der Antwort von `ingest.php` nur
+     `kept_phases` und `kept_resus` in den Sendebericht; ein Paket, dessen
+     Punkte oder Metadaten der Server wegen des Ersetzfensters übergangen
+     hat (`kept_points`, `kept_meta` — JSON-Vertrag 5), sieht am Handy wie
+     ein Erfolg aus. Der Server sagt es; die App hört es nicht. Beide Felder
+     in `Sendeantwort` aufnehmen und in der Ergebniszeile nennen; Prüffall in
+     `SendeantwortTest`. Zuordnung: nächste Android-Stufe.
+     Erledigt 02.11.2026 mit GR-02 (Android 0.19.0): `kept_points` und
+     `kept_meta` stehen im Sendebericht, die Ergebniszeile sagt „nicht alles
+     übernommen“.
+
+157. **Handy-App: Sackgasse zwischen „Schlüssel abgewiesen" und „Gerät trennen".** · gehört zu: 21 · Stand: erledigt · seit 07.09.2026
+     *Aufgenommen 07.09.2026 aus dem Emulatorlauf zu Android 0.14.1.* Wird
+     das Gerät serverseitig gelöscht, während ein Paket noch aussteht (hier:
+     der Demo-Reset nahm das Gerät mit, das Dienstende-Paket bekam `401`),
+     zeigt die App „Rückstand 1 Paket" und „Schlüssel abgewiesen · Gerät neu
+     koppeln" — und **verweigert das Trennen**, weil `trennen()` bei
+     Rückstand abbricht (`Trennergebnis.Rueckstand`, Hinweis „Sie gehören dem
+     bisherigen Konto"). Das Paket kann aber nie mehr gehen: Der Schlüssel
+     ist weg. Senden geht nicht, Trennen geht nicht, Neukoppeln setzt Trennen
+     voraus; der einzige Ausweg ist das Löschen der App-Daten. Behebung:
+     Bei `Abweisung.SITZUNG_UNGUELTIG` (401 `auth`) das Trennen trotz
+     Rückstand zulassen — mit dem Hinweis, dass die ausstehenden Pakete mit
+     dem alten Schlüssel nicht mehr zustellbar sind und verworfen werden —
+     oder den Rückstand beim 401 als „abgewiesen" führen, damit der Räumteil
+     aus Nr. 114 ihn beim Trennen mitnimmt. Prüffall in `KopplungTest`.
+     Zuordnung: nächste Android-Stufe.
+     Erledigt 02.11.2026 mit GR-03 (Android 0.20.0): Ein abgemeldetes Handy
+     trennt trotz Rückstand; der Rückstand bleibt an den bisherigen
+     Kontoschlüssel gebunden (E-GR-01).
+
+201. **`Retry-After` in Uhr und Handy auswerten.** · gehört zu: 21 · Stand: erledigt · seit 15.09.2026
+     *Aufgenommen 15.09.2026 (Konzept P5a, Befund 1.7).* Beide Clients
+     behandeln jeden Antwortcode außer 200/400/401/403/413 als „später
+     erneut" und wiederholen zum nächsten eigenen Anlass — die Kopfzeile
+     `Retry-After`, die die Mengenbremse (E-P5a-02) mitschickt, liest keiner.
+     Für Sperren von 10 bis 60 Minuten genügt das; sauberer wäre, die
+     genannte Zeit abzuwarten statt bei jedem Auslöser anzuklopfen. Niedrig;
+     Uhr-Stufe und Android-Stufe je eine Zeile in der Antwortauswertung
+     (`Uploader.mc`, `Sendeantwort.kt`).
+     Erledigt 02.11.2026 mit GR-02 und GR-04: Das Handy wartet `Retry-After`
+     ab, die Uhr feste Zeiten nach 429, 503 und 507 (E-GR-02, -07).
+
+229. **Die Uhr sagt „abgemeldet", wo „gesperrt" steht — und der Ausweg, den sie nennt, ist versperrt.** · gehört zu: 21 · Stand: erledigt · seit 17.09.2026
+     Befund (Konzept P5b, E-P5b-12): `ingest.php` antwortet 403 bei
+     abgeschaltetem Gerät (`device_disabled`) und seit Web 20.17.0 bei
+     einem Konto, das nicht `aktiv` ist (`{"error":"konto","grund":…}`,
+     Grund `gesperrt`, `wartet`, `unbestaetigt`). `Uploader.mc` behandelt
+     401 und 403 in einem Zweig: `abgemeldet`, Senden hält an, `SyncView.mc`
+     rät „Neu koppeln". Der Rat führt im Kreis: `Pair.start()` verweigert das
+     Trennen bei Rückstand („Erst N Pakete senden"), senden geht nicht, und
+     die Zeile „verwerfen" wird bei `abgemeldet` gar nicht gezeichnet. Nr.
+     159 hat das nicht geschlossen (geparkt wird nur im 400-Zweig);
+     `JSON-Vertrag.md` behauptet zu 401/403 das Gegenteil und ist mit zu
+     berichtigen. Verloren geht nichts — der Rückstand kommt nach dem
+     Entsperren idempotent an; der Schaden ist die falsche Auskunft.
+     Weg: `grund` im selben Zweig lesen, drei Texte in `SyncView.mc` ohne
+     Hinweis auf Neukoppeln; mit Nr. 201 bei der nächsten Uhr-Stufe.
+     Nebenbefunde: Das Handy behandelt 403 gar nicht (`Sendeantwort.lese()`
+     kennt 200, 400, 401, 413; ein gesperrtes Konto versucht unbegrenzt
+     weiter) — Android-Zeile in dasselbe Paket. Die Fehlertabelle zu
+     `ingest.php` im Vertrag kennt weder 403 noch 507.
+     Werdegang bis 26.09.2026: `docs/Backlog.md@f5bddc2`, Nr. 229.
+     Erledigt 02.11.2026 mit GR-01, -02 und -04: 403 nach Grund auf Uhr und
+     Handy ohne Rat zum Neukoppeln, Fehlertabelle im Vertrag um 403 und 507
+     ergänzt.
+
+402. **Die Sync-Seite der Uhr überlappt ab vier Zeilen im unteren Block.** · gehört zu: 21 · Stand: erledigt · seit 26.10.2026
+     Gefunden in R17-21 (F-R17-69) beim Bau der Fristanzeige: Auf der
+     Venu 3s schob eine dritte Meldungszeile („Daten verfallen am …") den
+     Mittelblock „N Pakete offen" in die rote Zeile darunter — im Simulator
+     gesehen, zwei Texte übereinander. Der Kommentar in `SyncView.mc` sagt
+     das Gegenteil: „Gegengerechnet bis zu fuenf Zeilen im unteren Block …
+     es ueberlappt nichts." Die Untergrenze `y >= 34` hält die GPS-Zeile im
+     Kreis, aber nicht den Mittelblock über `untenY`. R17-21 hat die Zeile
+     deshalb in die erste gezogen (zwei Zeilen wie vorher); vier Zeilen gibt
+     es aber auch ohne sie, etwa Fehler, Kopplungsmeldung, Weg heraus und
+     Version. *Weg:* den Mittelblock bei Platzmangel verkleinern (kleinere
+     Zahl, `fitFont`) oder Zeilen des unteren Blocks zusammenlegen; dazu
+     eine Bildprobe im Uhr-Prüfstand mit vier und fünf Zeilen auf Fenix,
+     FR945 und Venu 3s. Den Kommentar berichtigen.
+     Erledigt 02.11.2026 mit GR-06 (Uhr 4.3.1): Der Mittelblock weicht in
+     fünf Stufen aus; Bildprobe `tools/uhr-pruefstand/syncseite/` misst 4
+     bis 7 Zeilen auf drei Geräten.
+
+431. **Die Garmin-Uhr sendet nach dem Reaktivieren im Web erst nach einem Neustart der App.** · gehört zu: 21 · Stand: erledigt · seit 02.11.2026
+     *Aufgenommen 02.11.2026 aus P-R17-26 (Uhr 4.1.1 auf echter Garmin).*
+     Bekommt die Uhr 401 oder 403, setzt sie `Uploader.abgemeldet`, und
+     `syncAll()` bricht danach sofort ab — auch nach Dienstende und neuem
+     Einsatz. Zurück setzen es nur eine angenommene Anfrage oder das
+     Koppeln; die erste kommt nie zustande, das zweite sperrt die Uhr,
+     solange Pakete offen sind. Wer das Gerät im Web wieder aktiviert, muss
+     die App neu starten (die Marke liegt nur im Speicher); seit dem
+     02.11.2026 sagt es das Handbuch (Sync-Seite der Uhr, vorher „neu
+     koppeln"). Gemessen: aktiviert, nichts gesendet; nach Neustart alles. *Weg:* das
+     Öffnen der Sync-Seite oder „Senden" versucht es trotz der Marke einmal,
+     dazu ein seltener Versuch beim Dienstende. *Entschieden 02.11.2026
+     (E-BE-08):* Dass eine im Web **gelöschte** Uhr mit Rückstand erst nach
+     der 30-Tage-Frist neu koppeln kann, ist zu lang. Bei `abgemeldet` darf
+     sie neu koppeln und vergleicht den Kontoschlüssel: gleich → der
+     Rückstand geht hinaus, anders → Rückfrage und verwerfen (für das
+     andere Konto wäre er unlesbar); dasselbe auf dem Handy (Nr. 157, 229).
+     Die Frist bleibt; Web-Warnung: Nr. 440. *Abnahme:* deaktivieren,
+     aufzeichnen, aktivieren, Sync-Seite öffnen → Pakete gehen ohne Neustart
+     hinaus; gelöscht → neu koppeln, dieselben Pakete kommen an.
+     Erledigt 02.11.2026 mit GR-04 und GR-05 (Uhr 4.2.0, 4.3.0): Öffnen der
+     Sync-Seite und Dienstende senden trotz Marke; eine gelöschte Uhr
+     koppelt trotz Rückstand neu (E-GR-01).

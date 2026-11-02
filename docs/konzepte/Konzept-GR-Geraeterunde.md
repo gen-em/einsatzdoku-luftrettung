@@ -20,9 +20,9 @@
 | GR-04 | Uhr, Antwortauswertung: Nr. 229, 201 (Uhr), 507, 431 Teil 1 | **erledigt** 02.11.2026 (Uhr 4.2.0) |
 | GR-05 | Uhr, Kopplung: Nr. 431 Teil 2, Neukoppeln mit Schlüsselbindung (E-BE-08) | **erledigt** 02.11.2026 (Uhr 4.3.0) |
 | GR-06 | Uhr, Sync-Seite: Nr. 402 mit Bildprobe | **erledigt** 02.11.2026 (Uhr 4.3.1) |
-| GR-07 | Abschluss: Prüfstand, Prüfdokument, Backlog, Pull Request | offen |
+| GR-07 | Abschluss: Prüfstand, Prüfdokument, Backlog, Pull Request | **gebaut** 02.11.2026 — Pull Request und Freigabe offen |
 
-**In Arbeit:** GR-07. **Es hakt:** nirgends.
+**In Arbeit:** nichts — alle Pakete gebaut. **Es hakt:** nirgends. Offen: Pull Request (nach Rückfrage an die Betreiberin), Freigabe, danach Abschluss nach CLAUDE.md 7 und die Tags `uhr-v4.3.1` und `android-v0.20.0`.
 
 ---
 
@@ -455,14 +455,38 @@ unterste Meldung „Action halten: Gerät koppeln" ist auf der Venu 3s bei 6
 und 7 Zeilen an beiden Enden angeschnitten (`venu3s-6.png`, `-7.png`):
 `fitFont` hat keine kleinere Schrift als `FONT_XTINY`, und die Sehne dort ist
 schmaler als die Zeile. Keine Überlappung, aber ein Text, der nicht ganz zu
-lesen ist. Nicht in diesem Paket behoben (K4); Vorschlag als Backlog-Punkt
-beim Abschluss. Die Probe misst es nicht (nur Höhen, LIESMICH „Was es nicht
+lesen ist. Nicht in diesem Paket behoben (K4); als Backlog-Punkt **Nr. 470**
+angelegt. Die Probe misst es nicht (nur Höhen, LIESMICH „Was es nicht
 kann").
+
+**GR-07** (02.11.2026): Backlog — Nr. 154, 157, 201, 229, 402, 431 mit
+`verschieben.py` nach `Backlog-Erledigt.md`; neu **Nr. 470** (F-GR-11) und
+**Nr. 471** (F-GR-07, Frist des abgemeldeten Handys), beide `nächste
+Backlog-Runde`. `decken.py` 21 Decken, 0 gerissen; `uebersicht.py
+--pruefen` 0 ohne Grammatik, 0 ohne Ziel; `nummern.py` gegen 21 Zweige,
+0 Überschneidungen. Prüfdokument `Pruefdokument-GR-Geraeterunde.md` (acht
+Handprüfpunkte, P-GR-08 erledigt).
+
+*Erster Prüfstand* (`pruefen.sh`, Stufe klein, Umfang schmal, 45 berührte
+Dateien, 22 Riegel und 13 Proben, 1750 s): **2 rot**, 2 Hinweise, 30 grün.
+Rot: `wortliste` — viermal „Garmin-Uhr" in den neuen Vertragszeilen (Regel
+`garmin`; im Vertrag heißt sie „die Uhr"), und `dokumente` — fünf
+Bilddateinamen in Backticks (`…png`), die es im Repositorium nicht gibt.
+Hinweise: `erzeugen` (Tabelle in `Pruefablauf.md` 4 neu erzeugt, gehört in
+den Commit) und `bestand` (Rundlauf-Anleitung 54 statt 40 Zeilen). Grün
+unter anderem `android-bau`, `uhr-stufe1` (464 s), `uhr-rundlauf` mit allen
+fünf Arten (551 s), `uhr-syncseite` (658 s). Berichtigt: Vertragszeilen,
+Dateinamen ohne Backticks, Anleitung auf 40 Zeilen; dazu die Begründung der
+Ausnahme `connect-iq-rueckruf`, die „liest kein Gerät dieses Projekts"
+sagte — seit Android 0.19.0 liest das Handy die Kopfzeile. Einzeln
+nachgefahren: `textprobe` 0 Treffer, `dokumente` 0 Befunde, `bestand` 0
+Befunde ohne Hinweis. **Der Endlauf steht im Prüfbericht des Commits.**
 
 ## 7. Verlauf
 
 | Datum | Was |
 |---|---|
+| 02.11.2026 | GR-07: Backlog, Prüfdokument, Rahmenplan (Fassung 198), Prüfstand. |
 | 02.11.2026 | GR-06 erledigt (Uhr 4.3.1). |
 | 02.11.2026 | GR-05 erledigt (Uhr 4.3.0). |
 | 02.11.2026 | GR-04 erledigt (Uhr 4.2.0). |

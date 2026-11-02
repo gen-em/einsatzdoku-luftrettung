@@ -1,54 +1,40 @@
 # Rundlauf der Uhr
 
 Eine **Prüffassung** der Garmin-App (Kopie unter `$CIQ_BASIS/rundlauf-app`,
-Adresse `127.0.0.1:8443`, dazu `Rundlauf.mc` mit Einsatz und Ruhesegment)
+Adresse `127.0.0.1:8443`, `Rundlauf.mc` legt Einsatz und Ruhesegment an)
 koppelt im Simulator an das Demo-Konto, sendet verschlossen, `pruefen.php` öffnet.
-**Anlass: Nr. 43** — ob die Hüllen der Uhr nach Kopplung, `ingest.php` und
-Datenbank aufgehen, zeigt nur ein Paket, das wirklich gesendet wurde.
-**Anlass: Nr. 431** für `--reaktivieren` — eine im Web wieder aktivierte Uhr
-sendete erst nach einem Neustart der App.
+**Anlass: Nr. 43** — ob die Hüllen nach Kopplung, `ingest.php` und Datenbank
+aufgehen, zeigt nur ein gesendetes Paket. **Anlass: Nr. 431** für die drei
+letzten Arten — eine abgemeldete Uhr kam nicht mehr ans Senden.
 
 ## Aufruf
 
 ```bash
-bash tools/uhr-pruefstand/rundlauf/rundlauf.sh [--nachholen|--schrumpfen|--reaktivieren] [geraet]   # Vorgabe fenix6pro
+bash tools/uhr-pruefstand/rundlauf/rundlauf.sh [ART] [geraet]   # Vorgabe fenix6pro
 ```
 
-Im Prüfstand als `uhr-rundlauf`: `--nachholen fenix6pro`, dann `--schrumpfen fr945`,
-dann `--reaktivieren fenix6pro`, `--neukoppeln fenix6pro` und `--fremdkonto fr945`.
+ART: `--nachholen`, `--schrumpfen`, `--reaktivieren`, `--neukoppeln`, `--fremdkonto`; im Prüfstand (`uhr-rundlauf`) alle fünf.
 
 ## Was es misst
 
-Koppeln (Sitzung per SQL dem Demo-Konto zugeordnet; den Klick misst die Kopplungsprobe), Senden, Öffnen mit dem Demo-Schlüssel: 600
-Punkte an den Rändern (negativ, 4500,5 m, ohne Höhe) in zwei Stücken, drei
-Phasen (eine ohne Ortung; `mission_phases` ohne Koordinatenspalte, F-R17-63),
-Reanimation, Ruhestück. `--nachholen`: Schlüssel des Kontos beim Koppeln
-geleert, „Kein Schlüssel“, 0 Einsätze; START halten (E-S11-79), dann gehen
-die Pakete. `--schrumpfen` (F-R17-52): zwei geparkte Pakete vor dem Einsatz,
-verworfen während seiner letzten Anfrage (Haken in der Kopie von
-`Uploader.mc`); danach `liste=0 spuren=0` in der Konsole, kein Absturz.
-`--reaktivieren`: wie `--nachholen`, aber das Gerät wird vor dem Holen
-deaktiviert — 403, 0 Einsätze, Bild `3c-deaktiviert.png` mit der Sperrzeile;
-wieder aktiviert, 12 s ohne Anlass weiter 0; Sync-Seite verlassen und neu
-öffnen, dann gehen die Pakete. `--neukoppeln`: gekoppelt, deaktiviert,
-Schlüssel geholt (403), dann gelöscht; START halten, Rückfrage „Trennen? 2
-Pakete bleiben …“, neu koppeln an dasselbe Konto — die Pakete kommen an.
-`--fremdkonto`: ebenso, aber das Demo-Konto trägt für die neue Kopplung einen
-anderen, gültig versiegelten Schlüssel — 0 Einsätze, Bild `6-fremd.png` mit
-„2 Pakete altes Konto“, kurz START und Ja verwirft sie (`6b-verworfen.png`).
+Ohne ART: 600 Punkte an den Rändern in zwei Stücken, drei Phasen, Reanimation,
+Ruhestück, Wert für Wert gegen die geöffneten Hüllen. `--nachholen`: ohne
+Kontoschlüssel gekoppelt, nichts gesendet, START halten holt ihn. `--schrumpfen`:
+zwei geparkte Pakete verworfen während der letzten Anfrage, kein Absturz.
+`--reaktivieren`: Gerät deaktiviert (403, nichts kommt an), aktiviert (ohne
+Anlass weiter nichts), Sync-Seite neu geöffnet (alles kommt an). `--neukoppeln`:
+deaktiviert, Schlüssel geholt, gelöscht, trotz Rückstand neu gekoppelt an
+dasselbe Konto — die Pakete kommen an. `--fremdkonto`: ebenso, das Konto trägt
+einen anderen gültig versiegelten Schlüssel — nichts kommt an, Verwerfen nach Rückfrage.
 
 ## Was es braucht
 
-Uhr-Prüfstand mit Simulator, örtliche Anlage mit eigener CA (`Technik.md` 5.6),
-Demo-Konto mit Schlüsselpaar; Marke, Schlüssel und Gerät stellt es zurück, auch nach Abbruch.
+Simulator, örtliche Anlage mit eigener CA (`Technik.md` 5.6), Demo-Konto mit Schlüsselpaar; stellt alles zurück, auch nach Abbruch.
 
 ## Erwartete Zahl
 
-`12 Pruefungen, 0 Fehlschlaege` je Lauf, mit `--schrumpfen` dazu `3 Pruefungen, 0 Fehlschlaege`,
-mit `--reaktivieren` dazu `2 Pruefungen, 0 Fehlschlaege`, mit `--neukoppeln` dazu
-`1 Pruefung`, `--fremdkonto` allein `3 Pruefungen, 0 Fehlschlaege`;
-Abbilder unter `$CIQ_BASIS/rundlauf/`.
+Je Lauf `12 Pruefungen, 0 Fehlschlaege`; dazu schrumpfen 3, reaktivieren 2, neukoppeln 1; fremdkonto allein 3 — je 0 Fehlschläge.
 
 ## Was es nicht kann
 
-Venu 3s (Wischweg nicht ausgemessen), echte GPS-Aufzeichnung, Zeit und Speicher einer echten Uhr.
+Venu 3s (Wischweg nicht ausgemessen), echtes GPS, Zeit und Speicher einer echten Uhr; Löschen und Sperren nur per SQL.
