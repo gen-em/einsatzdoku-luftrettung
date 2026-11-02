@@ -28,6 +28,13 @@ gegen denselben Vorfahren, für jeden anderen Remote-Zweig gegen
 und der eigene Remote-Zweig zählt nicht mit. Rot ist jede Nummer, die der
 Arbeitsbaum neu anlegt und ein anderer auch.
 
+UND NICHT, WAS EIN OFFENER MERGE MITBRINGT. `Pruefablauf.md` 5.3 misst den
+Arbeitsbaum zwischen `git merge --no-commit` und dem Merge-Commit. Bis dahin
+ist der Vorfahr noch der alte Abzweigpunkt, und jede Nummer, die `main`
+seither vergeben hat, stand im Baum und in `origin/main` als „neu" —
+Scheinüberschneidungen (Nr. 352). Liegt `MERGE_HEAD` vor, zählt deshalb
+auch dessen Stand als alt.
+
 UND NICHT, WAS DER ANDERE VOM EIGENEN ZWEIG GEERBT HAT.
 Zweigt ein Zweig vom eigenen ab statt von `main` — eine Konzeptinstanz tat
 das einmal —, trägt er dessen Nummern mit, und gegen `main`
@@ -101,6 +108,11 @@ def messen(wurzel, holen=True):
         raise NichtGelaufen(f'{HAUPT} fehlt — ohne ihn gibt es keinen gemeinsamen Vorfahren')
     basis = git(wurzel, 'merge-base', 'HEAD', HAUPT).stdout.strip()
     alt = nummern_ref(wurzel, basis)
+    # Ein offener Merge (`git merge --no-commit`, Pruefablauf.md 5.3): Was der
+    # aufgenommene Stand schon trägt, ist nicht neu — nach dem Commit wäre es
+    # der Vorfahr (Nr. 352).
+    if git(wurzel, 'rev-parse', '--verify', '--quiet', 'MERGE_HEAD', pruefen=False).returncode == 0:
+        alt |= nummern_ref(wurzel, 'MERGE_HEAD')
     meine = nummern_baum(wurzel) - alt
     eigen = git(wurzel, 'rev-parse', '--abbrev-ref', 'HEAD').stdout.strip()
     fremde = {HAUPT: nummern_ref(wurzel, HAUPT) - alt}
@@ -183,6 +195,20 @@ def _meins(a, *nummern, erledigt=False, gepusht=False):
         git(a, 'push', '-q', 'origin', 'meins')
 
 
+def _offener_merge(a, *lokal):
+    """Der eigene Zweig trägt 6 (in Backlog-Erledigt.md, damit der Merge
+    ohne Konflikt bleibt) und nimmt `origin/main` mit 7 und 8 auf — ohne
+    Commit, wie `Pruefablauf.md` 5.3 es verlangt. `lokal`: Nummern, die der
+    Arbeitsbaum während des offenen Merges zusätzlich anlegt."""
+    _meins(a, 6, erledigt=True, gepusht=True)
+    git(a, 'fetch', '-q', 'origin')       # der Klon kennt main sonst ohne 7 und 8
+    git(a, '-c', 'user.name=Probe', '-c', 'user.email=probe@example.invalid',
+        'merge', '-q', '--no-commit', '--no-ff', HAUPT)
+    if lokal:
+        with open(os.path.join(a, *DATEIEN[0].split('/')), 'a', encoding='utf-8') as f:
+            f.write(''.join(f'\n{n}. **Neu {n}.**\n' for n in lokal))
+
+
 def _nachfolger(a, *lokal):
     """Der eigene Zweig trägt 6 und ist gepusht; ein Zweig `nachfolger`
     zweigt von ihm ab und legt 9 an. `lokal`: Nummern, die der Arbeitsbaum
@@ -213,6 +239,10 @@ FAELLE = [
      set(), lambda a: _nachfolger(a)),
     ('GEGENPROBE: was er danach selbst anlegt, ist seins', {(9, 'origin/nachfolger')},
      lambda a: _nachfolger(a, 9)),
+    ('offener Merge: was main mitbringt, ist nicht neu (Nr. 352)', set(),
+     lambda a: _offener_merge(a)),
+    ('GEGENPROBE: was der Arbeitsbaum im offenen Merge selbst anlegt, bleibt sichtbar',
+     {(5, 'origin/fremd')}, lambda a: _offener_merge(a, 5)),
 ]
 
 

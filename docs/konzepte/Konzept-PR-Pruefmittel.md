@@ -17,11 +17,11 @@ ist es nicht verwandt.
 | Paket | Inhalt | Stand |
 |---|---|---|
 | PR-01 | Nr. 385 — Zweitfaktorprobe räumt ihre Sperre ab | **erledigt** 02.11.2026 |
-| PR-02 | Nr. 352 — `nummern.py` kennt den offenen Merge | offen — als Nächstes |
-| PR-03 | Nr. 403 — Freigabeprobe im Gesamtlauf | offen |
+| PR-02 | Nr. 352 — `nummern.py` kennt den offenen Merge | **erledigt** 02.11.2026 |
+| PR-03 | Nr. 403 — Freigabeprobe im Gesamtlauf | offen — als Nächstes |
 | PR-04 | Abschluss — Prüfstand, Prüfdokument, Pull Request | offen |
 
-**In Arbeit:** PR-02. **Es hakt:** nirgends.
+**In Arbeit:** PR-03. **Es hakt:** nirgends.
 
 ---
 
@@ -67,7 +67,7 @@ alle Töpfe.
 
 *Ergebnis:* siehe Prüfprotokoll 4, PR-01.
 
-### PR-02 `nummern.py` kennt den offenen Merge (Nr. 352)
+### PR-02 `nummern.py` kennt den offenen Merge (Nr. 352) — erledigt
 
 *Weg:* Liegt `MERGE_HEAD` vor, werden die Nummern des Arbeitsbaums
 zusätzlich um die von `MERGE_HEAD` bereinigt — was der aufgenommene Stand
@@ -78,6 +78,8 @@ Folge-Commit.
 
 *Abnahme:* ein offener Merge mit einer Nummer aus `main` → 0
 Überschneidungen.
+
+*Ergebnis:* siehe Prüfprotokoll 4, PR-02, und F-PR-01.
 
 ### PR-03 Freigabeprobe im Gesamtlauf (Nr. 403)
 
@@ -107,6 +109,19 @@ und Prüfdokument erst nach der Freigabe (CLAUDE.md 7).
 Der Fehler ist damit vor der Änderung nachgestellt und danach nicht mehr
 messbar; Laufzeit der Probe je rund 4 min.
 
+**PR-02** (02.11.2026):
+
+| Messung | alte Fassung | neue Fassung |
+|---|---|---|
+| `nummern.py --selbstprobe` | — (10 Fälle; die zwei neuen schlagen fehl: 7 und 8 als Überschneidung mit `origin/main`) | 12 Fälle, 0 Fehlschläge |
+| Echtes Repositorium: Arbeitsbaum auf `118bc6c~1` (vor Nr. 440), `git merge --no-commit origin/main`, `nummern.py --ohne-holen` | 2 Überschneidungen (Nr. 433, 440) | 0 Überschneidungen |
+| `nummern.py --ohne-holen` auf dem Arbeitszweig | 0 | 0 |
+
 ## 5. Befunde
 
-Noch keine.
+**F-PR-01 — Der erste Fall der Selbstprobe war grün, ohne zu messen.** Der
+Klon der Selbstprobe holt `origin` erst im gemessenen Lauf; ein Merge davor
+nahm deshalb ein `origin/main` ohne die Nummern 7 und 8 auf, und der Fall
+war grün, bevor das Werkzeug geändert war. Behoben in der Anlage des Falls
+(`fetch` vor dem Merge); erst danach schlug er fehl, wie er sollte, und
+die Behebung färbte ihn grün.

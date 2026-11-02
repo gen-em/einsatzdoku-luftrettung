@@ -703,27 +703,6 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
 
 <!-- -->
 
-352. **`nummern.py` meldet während eines offenen Merges die Nummern von `main` als Kollision.** · gehört zu: PR · Stand: offen · seit 28.09.2026
-     *Aufgenommen 28.09.2026 beim Aufnehmen von `main` in den Konzeptzweig
-     zu 18 (Konzept SR, F-SR-14).* `Pruefablauf.md` 5.3 sagt: erst
-     `git merge --no-commit`, dann der Prüfstand über den Arbeitsbaum, dann
-     der Merge-Commit mit dem Bericht. Das Werkzeug misst den Arbeitsbaum
-     aber gegen `merge-base(HEAD, origin/main)` — vor dem Commit ist das der
-     alte Abzweigpunkt, und jede Nummer, die `main` seither vergeben hat
-     (hier vier aus Schritt 17), steht im Baum als „neu" und in
-     `origin/main` als „neu": Scheinüberschneidungen, der Bericht des
-     Merge-Commits wäre rot. Nach dem Commit ist die Basis `origin/main`,
-     und es sind null.
-     *Weg:* Liegt `MERGE_HEAD` vor, die Nummern des Arbeitsbaums zusätzlich
-     um die von `MERGE_HEAD` bereinigen (was der aufgenommene Zweig schon
-     trägt, ist nicht neu); die Selbstprobe bekommt den Fall; 5.3 verliert
-     den Satz zur Umgehung. Bis dahin: Merge-Commit ohne Bericht, der Bericht
-     im Folge-Commit über denselben Baum samt Prüfdokument — so gegangen am
-     28.09.2026. *Abnahme:* ein offener Merge mit einer Nummer aus `main`
-     → 0 Überschneidungen.
-
-<!-- -->
-
 353. **Die Schemaprobe vergleicht eine migrierte Tabelle nicht mit der frisch angelegten.** · gehört zu: 14 · Stand: offen · seit 28.09.2026
      *Aufgenommen 28.09.2026 in SR-09 (Konzept SR, F-SR-28).* Die Kommentare
      der Migrationen `2026_09_28_vertraute_geraete` und `2026_09_28_passkeys`

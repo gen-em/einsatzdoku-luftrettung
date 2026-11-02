@@ -19,7 +19,8 @@ SD 5): Zeilen, Zeichen, Vokabular, Form, Nummern, Rendering (`cmark-gfm`, seit R
 eine Liste je offenem Eintrag). `uebersicht.py` hält jede Kopfzeile an Grammatik und
 Fahrplan-Ziel und gibt die offenen Punkte nach Ziel aus. `nummern.py` holt die Remote-Zweige
 und ist rot, wenn der Arbeitsbaum eine Nummer neu anlegt, die `origin/main` oder ein anderer
-Zweig auch neu anlegt (je gegen den Vorfahren mit `main` und mit `HEAD`, beide Dateien).
+Zweig auch neu anlegt (je gegen den Vorfahren mit `main` und mit `HEAD`, beide Dateien;
+im offenen Merge zählt auch der Stand von `MERGE_HEAD` als alt, seit Nr. 352).
 `verschieben.py` misst nichts: Es verschiebt einen erledigten oder verworfenen Punkt samt Trennzeile (E-R4-06, -62; `verworfen` seit E-BE-01).
 
 ## Was es braucht
@@ -31,7 +32,7 @@ Zweig auch neu anlegt (je gegen den Vorfahren mit `main` und mit `HEAD`, beide D
 
 `decken.py`: **21 Decken, 0 gerissen**, Selbstprobe **23 / 0**. `uebersicht.py
 --pruefen`: **0 ohne Grammatik, 0 ohne Ziel**, Selbstprobe **7 / 0**.
-`nummern.py`: **0 Überschneidungen**, Selbstprobe **10 / 0**. Reißt eine Decke:
+`nummern.py`: **0 Überschneidungen**, Selbstprobe **12 / 0**. Reißt eine Decke:
 kürzen — oder sie in `decken.py` ändern und begründen (E-SD-27).
 
 ## Was es nicht kann

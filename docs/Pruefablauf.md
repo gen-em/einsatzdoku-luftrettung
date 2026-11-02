@@ -618,12 +618,11 @@ Stand. Der Weg, der grün wird:
    pushen.
 
 So trägt der Merge-Commit selbst den Bericht, und es braucht keinen
-Leer-Commit dafür. **Bringt `main` neue Backlog-Nummern mit, geht das so
-noch nicht:** `nummern.py` misst vor dem Commit gegen den alten
-Abzweigpunkt und meldet sie als Überschneidung (Nr. 352, F-SR-14) — bis das
-Werkzeug `MERGE_HEAD` kennt, kommt der Bericht in einen Folge-Commit über
-denselben Baum (etwa mit den Zahlen im Prüfdokument), nicht in den
-Merge-Commit. Berührt ist dabei nur, was diese Arbeit gegen `main`
+Leer-Commit dafür. **Auch wenn `main` neue Backlog-Nummern mitbringt:**
+`nummern.py` zählt im offenen Merge den Stand von `MERGE_HEAD` als alt
+(seit PR-02, Nr. 352). Bis dahin maß es vor dem Commit gegen den alten
+Abzweigpunkt, meldete die Nummern aus `main` als Überschneidung, und der
+Bericht kam in einen Folge-Commit über denselben Baum (F-SR-14). Berührt ist dabei nur, was diese Arbeit gegen `main`
 ändert — nicht, was `main` mitbringt (F-PK-39). Zum ersten Mal gegangen
 beim Merge von PR #80 in PK-05 (`5671d24`). Wer doch „Update branch" gedrückt hat, holt den Commit
 herunter und fährt ab Schritt 2 mit einem eigenen Commit darüber.

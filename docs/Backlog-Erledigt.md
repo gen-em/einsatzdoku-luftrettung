@@ -10186,3 +10186,26 @@ zutreffen.
      Zweitfaktorprobe löscht die Ereignisse des Probenkontos in
      sicherheit_ereignisse; nach einem Lauf 0 Zeilen statt 1, die Probe
      weiter 139 ok.
+
+352. **`nummern.py` meldet während eines offenen Merges die Nummern von `main` als Kollision.** · gehört zu: PR · Stand: erledigt · seit 28.09.2026
+     *Aufgenommen 28.09.2026 beim Aufnehmen von `main` in den Konzeptzweig
+     zu 18 (Konzept SR, F-SR-14).* `Pruefablauf.md` 5.3 sagt: erst
+     `git merge --no-commit`, dann der Prüfstand über den Arbeitsbaum, dann
+     der Merge-Commit mit dem Bericht. Das Werkzeug misst den Arbeitsbaum
+     aber gegen `merge-base(HEAD, origin/main)` — vor dem Commit ist das der
+     alte Abzweigpunkt, und jede Nummer, die `main` seither vergeben hat
+     (hier vier aus Schritt 17), steht im Baum als „neu" und in
+     `origin/main` als „neu": Scheinüberschneidungen, der Bericht des
+     Merge-Commits wäre rot. Nach dem Commit ist die Basis `origin/main`,
+     und es sind null.
+     *Weg:* Liegt `MERGE_HEAD` vor, die Nummern des Arbeitsbaums zusätzlich
+     um die von `MERGE_HEAD` bereinigen (was der aufgenommene Zweig schon
+     trägt, ist nicht neu); die Selbstprobe bekommt den Fall; 5.3 verliert
+     den Satz zur Umgehung. Bis dahin: Merge-Commit ohne Bericht, der Bericht
+     im Folge-Commit über denselben Baum samt Prüfdokument — so gegangen am
+     28.09.2026. *Abnahme:* ein offener Merge mit einer Nummer aus `main`
+     → 0 Überschneidungen.
+     Erledigt 02.11.2026 mit PR-02 (Konzept PR): nummern.py zählt im offenen
+     Merge den Stand von MERGE_HEAD als alt; Selbstprobe 12 / 0 mit Fall und
+     Gegenprobe, am echten Repositorium im offenen Merge 0 statt 2
+     Scheinkollisionen; Pruefablauf.md 5.3 ohne Umgehung.
