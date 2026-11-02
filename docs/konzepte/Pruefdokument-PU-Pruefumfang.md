@@ -34,6 +34,8 @@ geht dieses Dokument in `Pruefliste.md` auf (E-PU-09).*
 
 ## 3. Handprüfliste
 
+*P-PU-08 (E-PU-16 und -18 entscheiden) ist erledigt: bestätigt von der Betreiberin am 02.11.2026.*
+
 | Nr. | Bedienweg | Erwartet | Scheitern erkennbar an |
 |---|---|---|---|
 | P-PU-01 | Pull Request öffnen; Lauf „Prüfung" zum Kopf-Commit, Job `Stufe 1`, Schritt „Prüfbericht gegenlesen". | grün; „Prüfbericht in Ordnung: Stufe neben …" und darunter „Geerbt vom Vorgänger (Lage 8 nachgerechnet): …" mit den geerbten Proben. | rot mit „durfte nicht erben" oder „Der Vorgänger hat den Baum …" — dann liest das Tor den Vorgänger anders als der Prüfstand; Zeile an mich, nicht neu fahren. |
@@ -43,6 +45,5 @@ geht dieses Dokument in `Pruefliste.md` auf (E-PU-09).*
 | P-PU-05 | Beim ersten Paket, dessen Nebennummer 23.10 erreicht (oder einer Hauptstufe): Kopf des Laufs. | „voll:zehner" (bzw. „voll:haupt"), drei Engines, zehn Breiten, alle Seiten; Stufe 1 grün. | „schmal" — dann rechnet die Zehnerregel falsch; das Tor ist dann rot mit „Umfang zu schmal". |
 | P-PU-06 | Im selben Zweig nach einer kleinen Berichtigung den Prüfstand ein zweites Mal fahren. | Zeilen „erbt NAME — grün im Bericht von HEAD"; der Kreislauf `edbak` und die Riegel messen trotzdem; der Lauf ist um die geerbten Proben kürzer. | Kein Erbe, obwohl nur Doku berührt ist (dann den Grund aus „erbt 0 von N Proben — sonst etwa: …" lesen). |
 | P-PU-07 | Ein Paket mit Änderung an `style.css` oder `ui.php` in `neben`. | drei Engines, zehn Breiten, alle Seiten. | Chromium allein oder fünf Breiten. |
-| P-PU-08 | **Entscheiden:** E-PU-16 (`tools/motor.mjs` hebt die Engines) und E-PU-18 (Prüfstand und Aufrufwerkzeug verhindern ein Erbe) — beide aus der Umsetzung, ohne Rückfrage. | annehmen oder anders entscheiden | — |
 | P-PU-09 | `docs/konzepte/Pruefliste.md` durchsehen: Stimmen die Bereiche? Fehlt ein Punkt, den Sie offen wissen? Stichprobe: drei Zeilen aus Rahmenplan 6.1 gegen die Liste halten. | jede genannte Nummer steht in der Liste, im passenden Bereich | eine Nummer aus 6.1 fehlt — dann hat der Auszug sie nicht gefunden. |
 | P-PU-10 | `CLAUDE.md` 2 (Changelog: fünf Sätze) und 7 (Prüfdokument: drei Teile, höchstens 20 Punkte; danach Prüfliste) lesen. | Die Regeln sagen, was gemeint war. | ein Satz, der anders gemeint war. |
