@@ -67,6 +67,7 @@ wird nur der Weg hinein.
 | [`docs/Export-Format.md`](docs/Export-Format.md) | CSV- und Excel-Export, Rückimport |
 | [`docs/Backlog.md`](docs/Backlog.md) | bewusst offene Punkte, je Eintrag mit Kopfzeile (Ziel, Stand, seit); Nummern sind dauerhaft |
 | [`docs/Backlog-Erledigt.md`](docs/Backlog-Erledigt.md) | erledigte Punkte, wörtlich, samt dem Werdegang der Nummernvergabe |
+| [`docs/konzepte/Pruefliste.md`](docs/konzepte/Pruefliste.md) | die offenen Handprüfungen der BetreiberIn, nach Bereich — eine Liste statt eines Prüfdokuments je Phase (seit PU-08) |
 | [`docs/Design.md`](docs/Design.md) | Gestaltungsrichtlinie: Farben, Token, Schwellen, Symbole, Bausteine, Seitentypen — verbindlich für jede Oberflächenänderung |
 | [`docs/Lizenzen.md`](docs/Lizenzen.md) | Bibliotheken, Schriften, Symbole und Dienste — Herkunft, Version, Lizenz |
 | [`docs/Geraete-Eingabe.md`](docs/Geraete-Eingabe.md) | gemessenes Eingabeverhalten je Uhrmodell |

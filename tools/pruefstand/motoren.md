@@ -1,6 +1,7 @@
 # Register der Browserwerkzeuge — welche Engine, auf welchem Weg
 
-**Jede Browserprobe läuft in Chromium, Firefox und WebKit** (R87,
+**Jede Browserprobe kann in Chromium, Firefox und WebKit laufen**, und sie
+tut es dort, wo die Engines sich unterscheiden können (R89, seit PU-03;
 `docs/Pruefablauf.md` 1, Grundsatz 8). Diese Datei sagt je Werkzeug unter
 `tools/`, das einen Browser startet, **wie** es dahin kommt. Gelesen wird sie
 vom Bestandsriegel, Regel `motoren` (`tools/quelltext/bestand.py`, Stufe 1):
@@ -9,7 +10,8 @@ Ein Browserwerkzeug ohne Zeile ist rot, eine Ausnahme ohne Grund auch.
 Die Wege:
 
 - **Probe: NAME** — der Prüfstand fährt die Probe `NAME` aus
-  `pruefablauf.json` dreimal (`"motoren": true`, `MOTOR=chromium|firefox|webkit`).
+  `pruefablauf.json` je verlangter Engine (`"motoren": true`,
+  `MOTOR=chromium|firefox|webkit`; welche, sagt `auswahl.py --motoren`).
 - **Helfer** — kein eigener Lauf; es läuft in der Engine dessen, der es ruft
   (`MOTOR` aus der Umgebung).
 - **von Hand** — kann alle drei (`--motor`), aber kein Prüfstand ruft es.

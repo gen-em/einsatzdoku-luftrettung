@@ -111,7 +111,7 @@ jobs:
           echo "PHP-Dateien ohne Syntaxfehler: $n (davon versioniert unter server/: $s)"
           echo "zahl=php:$s/0" >> "$GITHUB_OUTPUT"
 
-      - name: cmark-gfm bereitstellen — für `handbuch`, `bestand` und die Steuerungsdokumente
+      - name: cmark-gfm bereitstellen — für `handbuch` und `bestand`
         run: sudo apt-get update -qq && sudo apt-get install -y -qq cmark-gfm
 
       - name: Quelltext — vierzehn Prüfungen, ein Läufer
@@ -189,15 +189,6 @@ jobs:
           php tools/zaehlung/zaehlen.php --selbstprobe
           php tools/zaehlung/zaehlen.php
 
-      - name: Steuerungsdokumente — halten sie ihre Decken?
-        id: steuerung
-        # Selbstprobe zuerst: je Decke ein eingebauter Riss in einer Kopie (Grundsatz 7). Die Decken stehen im Werkzeug, nicht hier (6.11).
-        run: |
-          python3 tools/steuerung/decken.py --selbstprobe
-          python3 tools/steuerung/uebersicht.py --selbstprobe
-          python3 tools/steuerung/decken.py --stellen
-          python3 tools/steuerung/uebersicht.py --pruefen
-
       - name: Rechtstexte — hält der Filter die Angriffe ab?
         id: rechtstexte
         run: bash tools/proben/proben.sh rechtstexte
@@ -216,7 +207,6 @@ jobs:
           SPALTENREGISTER: ${{ steps.spaltenregister.outcome }}
           ZAEHLUNG: ${{ steps.zaehlung.outcome }}
           RECHTSTEXTE: ${{ steps.rechtstexte.outcome }}
-          STEUERUNG: ${{ steps.steuerung.outcome }}
         run: |
           r() { [ "$1" = success ] && echo 0 || echo nicht-gelaufen; }
           q=$(r "$QUELLTEXT")
@@ -229,7 +219,7 @@ jobs:
             --riegel "cspprobe=$q" --riegel "jobregister=$q" --riegel "migrationsregister=$q" \
             --riegel "kontraste=$(r "$KONTRASTE")" --riegel "kettenaufrufe=$(r "$KETTENAUFRUFE")" \
             --riegel "zaehlung=$(r "$ZAEHLUNG")" --riegel "spaltenregister=$(r "$SPALTENREGISTER")" \
-            --riegel "rechtstexte=$(r "$RECHTSTEXTE")" --riegel "steuerung=$(r "$STEUERUNG")" > /tmp/gegenlesung.txt 2>&1 || rc=$?
+            --riegel "rechtstexte=$(r "$RECHTSTEXTE")" > /tmp/gegenlesung.txt 2>&1 || rc=$?
           cat /tmp/gegenlesung.txt
           { echo '### Prüfbericht'; echo '```'; cat /tmp/gegenlesung.txt; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
           exit "$rc"

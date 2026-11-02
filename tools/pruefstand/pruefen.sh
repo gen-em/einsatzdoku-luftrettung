@@ -5,6 +5,7 @@
 #                                          [--basis origin/main]
 #                                          [--gegen staging]
 #                                          [--datei PFAD]   (mehrfach)
+#                                          [--voll]         (voller Lauf, E-PU-01)
 #                                          [--ohne-hochfahren] [--trocken]
 #
 # Er ermittelt die Stufe und SAGT sie, fährt die örtliche Anlage hoch, läuft
@@ -19,7 +20,7 @@ set -uo pipefail
 
 WURZEL=${WURZEL:-$(cd "$(dirname "$0")/../.." && pwd)}
 HIER="$WURZEL/tools/pruefstand"
-STUFE=; BASIS=${BASIS:-origin/main}; GEGEN=oertlich; HOCHFAHREN=1; TROCKEN=0
+STUFE=; BASIS=${BASIS:-origin/main}; GEGEN=oertlich; HOCHFAHREN=1; TROCKEN=0; VOLL=
 DATEIEN=()
 
 melde() { printf '\033[1m==\033[0m %s\n' "$*" >&2; }
@@ -31,6 +32,7 @@ while [ $# -gt 0 ]; do
         --basis) BASIS=${2:-}; shift 2 ;;
         --gegen) GEGEN=${2:-}; shift 2 ;;
         --datei) DATEIEN+=(--datei "${2:-}"); shift 2 ;;
+        --voll) VOLL=--voll; shift ;;
         --ohne-hochfahren) HOCHFAHREN=0; shift ;;
         --trocken) TROCKEN=1; HOCHFAHREN=0; shift ;;
         *) echo "Unbekannt: $1" >&2; exit 2 ;;
@@ -47,10 +49,30 @@ else
     zeile "$STUFE  ($(printf '%s' "$erm" | cut -f2))"
 fi
 
+# ---- 1a. Umfang ermitteln und SAGEN (E-PU-01) ----------------------------
+# schmal oder voll — voll in haupt, an einer Zehnergrenze der Nebennummer und
+# mit --voll. Was davon abhängt (Engines, Breiten, Seiten), steht in den
+# Abschnitten darunter; der Bericht trägt `umfang=…`, das Tor liest es gegen.
+melde "Umfang"
+erm=$(python3 "$HIER/auswahl.py" --umfang-ermitteln --stufe "$STUFE" --basis "$BASIS" $VOLL) || exit 2
+UMFANG=$(printf '%s' "$erm" | cut -f1)
+zeile "$UMFANG  ($(printf '%s' "$erm" | cut -f2))"
+
 # ---- 2. Was ist berührt, was läuft daraus --------------------------------
 melde "Berührung"
-python3 "$HIER/auswahl.py" --stufe "$STUFE" --basis "$BASIS" "${DATEIEN[@]}" >&2 || exit 2
-mapfile -t PROBEN < <(python3 "$HIER/auswahl.py" --stufe "$STUFE" --basis "$BASIS" "${DATEIEN[@]}" --nur-proben)
+python3 "$HIER/auswahl.py" --stufe "$STUFE" --umfang "$UMFANG" --basis "$BASIS" "${DATEIEN[@]}" >&2 || exit 2
+mapfile -t PROBEN < <(python3 "$HIER/auswahl.py" --stufe "$STUFE" --umfang "$UMFANG" --basis "$BASIS" "${DATEIEN[@]}" --nur-proben)
+# Breiten und Seiten des Bilderlaufs (E-PU-03, -04): ein Satz für --breiten,
+# die Seiten für --nur oder „alle". Steht im Bericht, das Tor rechnet nach.
+erm=$(python3 "$HIER/auswahl.py" --bilderlauf --stufe "$STUFE" --umfang "$UMFANG" --basis "$BASIS" "${DATEIEN[@]}") || exit 2
+BREITEN=$(printf '%s' "$erm" | cut -f1); SEITEN=$(printf '%s' "$erm" | cut -f2)
+# DER ERERBTE BERICHT (E-PU-13): In `neben`, im schmalen Lauf, übernimmt der
+# Prüfstand das Ergebnis einer Probe vom Bericht in HEAD, wenn sie dort grün
+# war und der Unterschied seither keines ihrer Muster trifft. Welche, sagt
+# auswahl.py --ererbt; das Tor rechnet nach (bericht.py, Lage 8).
+declare -A ERBE
+while IFS=$'\t' read -r n b; do [ -n "$n" ] && ERBE[$n]=$b; done \
+    < <(python3 "$HIER/auswahl.py" --ererbt --stufe "$STUFE" --umfang "$UMFANG" --basis "$BASIS" "${DATEIEN[@]}" 2> >(sed 's/^/   /' >&2))
 
 if [ "$TROCKEN" = 1 ]; then
     melde "Trockenlauf — es wird nichts gefahren."
@@ -85,24 +107,67 @@ fi
 
 # ---- 4. Proben ------------------------------------------------------------
 melde "Proben (${#PROBEN[@]})"
-declare -A ZAHL; fehl=0; nicht=0; DREIFACH=0; WIEDERHOLT=0
-# DIE ENGINES JE STUFE: `klein` fährt die Browserproben in
-# Chromium allein, `neben` und `haupt` in allen drei. Bis zum 20.10.2026
-# liefen alle Stufen dreifach; ein voller Lauf dauerte damit
-# länger, als der Container ihn hält. bericht.py liest es gegen.
-if [ "$STUFE" = klein ]; then MOTOREN=(chromium); else MOTOREN=(chromium firefox webkit); fi
+declare -A ZAHL; fehl=0; nicht=0; hinw=0; erbt=0; DREIFACH=0; WIEDERHOLT=0; HINWEISE=()
+# DIE ERGEBNISART „hinweis" (E-PU-05): gemessen, gemeldet, hält nicht auf.
+# Zwei Wege führen dahin: Eine Probe mit "hinweis": true in pruefablauf.json
+# endet mit rc != 0 — dann ist das ein Hinweis statt rot —, oder eine Probe
+# endet grün und schreibt Zeilen, die mit „HINWEIS: " beginnen. Beides steht
+# als `name=hinweis` im Bericht, und das Tor liest es als nicht rot
+# (bericht.py, Lage 5). Nichts wird übersprungen (Grundsatz 7).
+hinweise_aus() { grep -E '^HINWEIS: ' "$1" 2>/dev/null | sed -E 's/^HINWEIS: //' || true; }
+# ergebnis NAME RC SEKUNDEN LOG — schreibt die Zeile des Laufs. rc 0 der
+# Funktion heißt „grün oder rot, wie gemessen", rc 1 heißt „Hinweis".
+# Liest $nurhinweis der laufenden Probe.
+ergebnis() {
+    local n=$1 rc=$2 s=$3 log=$4 h
+    h=$(hinweise_aus "$log")
+    if [ "$rc" = 0 ] && [ -z "$h" ]; then zeile "ok    $n  $s s"; return 0; fi
+    if [ "$rc" = 0 ]; then
+        zeile "HIN   $n  $s s  (Hinweis — hält nicht auf, siehe $log)"
+        printf '%s\n' "$h" | while IFS= read -r z; do zeile "      $n: $z"; done
+        return 1
+    fi
+    if [ -n "$nurhinweis" ]; then
+        zeile "HIN   $n  $s s  (rot gemessen, als Hinweis gemeldet: \"hinweis\": true in pruefablauf.json; siehe $log)"
+        tail -n 5 "$log" | while IFS= read -r z; do zeile "      $n: $z"; done
+        return 1
+    fi
+    zeile "ROT   $n  $s s  (siehe $log)"; return 0
+}
+# DIE ENGINES JE BERÜHRUNG (E-PU-02, R89): Chromium allein, alle drei beim
+# vollen Lauf und ab `neben`, wenn Stylesheet oder ui.php berührt sind. Die
+# Regel steht in auswahl.py (motoren_aus), bericht.py rechnet mit derselben
+# nach (Lage 6). Bis PU-03 hieß es: `klein` Chromium, `neben` und `haupt`
+# drei (R87) — der Bilderlauf allein brauchte dann rund 70 Minuten.
+erm=$(python3 "$HIER/auswahl.py" --motoren --stufe "$STUFE" --umfang "$UMFANG" --basis "$BASIS" "${DATEIEN[@]}") || exit 2
+read -r -a MOTOREN <<< "$(printf '%s' "$erm" | cut -f1)"
+zeile "Engines der Browserproben: ${MOTOREN[*]}  ($(printf '%s' "$erm" | cut -f2))"
 for name in "${PROBEN[@]}"; do
     aufruf=$(python3 -c "
 import json,sys
 a=json.load(open('$HIER/pruefablauf.json'))
 p=a['proben'].get('$name')
 print(p['aufruf'] if p else '', p['braucht'] if p else '', 'demo' if p and p.get('demo') is True else '',
-      'drei' if p and p.get('motoren') is True else '', sep='\t')")
+      'drei' if p and p.get('motoren') is True else '', 'hinweis' if p and p.get('hinweis') is True else '',
+      sep='\t')")
     befehl=$(printf '%s' "$aufruf" | cut -f1); braucht=$(printf '%s' "$aufruf" | cut -f2)
     demo=$(printf '%s' "$aufruf" | cut -f3); drei=$(printf '%s' "$aufruf" | cut -f4)
-    befehl=${befehl//\{stufe\}/$STUFE}   # der Bilderlauf misst je Stufe anders
+    nurhinweis=$(printf '%s' "$aufruf" | cut -f5)
+    befehl=${befehl//\{stufe\}/$STUFE}
+    # Der Bilderlauf: Breitensatz und Seiten (E-PU-03, -04).
+    befehl=${befehl//\{breiten\}/$BREITEN}
+    if [ "$SEITEN" = alle ] || [ "$SEITEN" = - ]; then befehl=${befehl//\{seiten\}/}
+    else befehl=${befehl//\{seiten\}/--nur $SEITEN}; fi
     if [ -z "$befehl" ]; then
         zeile "?     $name — steht nicht unter \"proben\" in pruefablauf.json"; fehl=$((fehl+1)); continue
+    fi
+    # Geerbt ist nicht übersprungen: Der Bericht nennt den Baum, von dem das
+    # Ergebnis stammt, und das Tor liest dessen Bericht nach (Grundsatz 7).
+    if [ -n "${ERBE[$name]:-}" ]; then
+        zeile "erbt  $name  — grün im Bericht von HEAD, Baum ${ERBE[$name]} (E-PU-13)"
+        ZAHL[$name]="ererbt:${ERBE[$name]}"; erbt=$((erbt+1))
+        [ -n "$drei" ] && DREIFACH=$((DREIFACH+1))
+        continue
     fi
     # KEIN STILLES ÜBERSPRINGEN. Was nicht laufen kann, wird
     # GEZÄHLT und benannt — und steht als „nicht-gemessen" im
@@ -169,14 +234,17 @@ print(p['aufruf'] if p else '', p['braucht'] if p else '', 'demo' if p and p.get
     # übersprungen (Grundsatz 7). Bis zum 19.10.2026 lief jede Probe einmal,
     # in Chromium, auch die, die --motor kannten.
     if [ -n "$drei" ]; then
-        rot=()
+        rot=(); hin=0
         for mo in "${MOTOREN[@]}"; do
             marke_schieben "$mo"
             t1=$SECONDS
-            if (cd "$WURZEL" && export MOTOR=$mo && eval "$befehl" >"/tmp/pruefstand-$name-$mo.log" 2>&1); then
-                zeile "ok    $name [$mo]  $((SECONDS - t1)) s"
+            log="/tmp/pruefstand-$name-$mo.log"
+            if (cd "$WURZEL" && export MOTOR=$mo && eval "$befehl" >"$log" 2>&1); then
+                ergebnis "$name [$mo]" 0 "$((SECONDS - t1))" "$log" || hin=1
+            elif ergebnis "$name [$mo]" 1 "$((SECONDS - t1))" "$log"; then
+                rot+=("$mo")
             else
-                zeile "ROT   $name [$mo]  $((SECONDS - t1)) s  (siehe /tmp/pruefstand-$name-$mo.log)"; rot+=("$mo")
+                hin=1
             fi
             # Wiederholte Seitenwechsel in WebKit (motor.mjs) und neu
             # angemeldete Rollen, deren Seite nicht mehr antwortete (Bedienprobe):
@@ -191,17 +259,20 @@ print(p['aufruf'] if p else '', p['braucht'] if p else '', 'demo' if p and p.get
             grep -hE '^WebKit-(Screenshot|Seitenwechsel): ' "/tmp/pruefstand-$name-$mo.log" 2>/dev/null \
                 | sed -E 's/ \(motor\.mjs, Nr\. 393\)$//' | while IFS= read -r z; do zeile "      $name [$mo]: $z"; done
         done
-        if [ ${#rot[@]} -eq 0 ]; then ZAHL[$name]=0
-        else ZAHL[$name]="rot:$(IFS=,; echo "${rot[*]}")"; fehl=$((fehl+1)); fi
+        if [ ${#rot[@]} -gt 0 ]; then ZAHL[$name]="rot:$(IFS=,; echo "${rot[*]}")"; fehl=$((fehl+1))
+        elif [ "$hin" = 1 ]; then ZAHL[$name]=hinweis; hinw=$((hinw+1)); HINWEISE+=("$name")
+        else ZAHL[$name]=0; fi
         DREIFACH=$((DREIFACH+1))
         continue
     fi
     marke_schieben
     t0=$SECONDS
-    if (cd "$WURZEL" && eval "$befehl" >/tmp/pruefstand-$name.log 2>&1); then
-        zeile "ok    $name  $((SECONDS - t0)) s"; ZAHL[$name]=0
+    log="/tmp/pruefstand-$name.log"
+    rc=0; (cd "$WURZEL" && eval "$befehl" >"$log" 2>&1) || rc=1
+    if ergebnis "$name" "$rc" "$((SECONDS - t0))" "$log"; then
+        if [ "$rc" = 0 ]; then ZAHL[$name]=0; else ZAHL[$name]=1; fehl=$((fehl+1)); fi
     else
-        zeile "ROT   $name  $((SECONDS - t0)) s  (siehe /tmp/pruefstand-$name.log)"; ZAHL[$name]=1; fehl=$((fehl+1))
+        ZAHL[$name]=hinweis; hinw=$((hinw+1)); HINWEISE+=("$name")
     fi
 done
 
@@ -218,6 +289,12 @@ melde "Bericht"
 args=(schreiben --stufe "$STUFE" --basis "$BASIS"
       --konfiguration "$([ "$STUFE" = haupt ] && echo alles || echo web)")
 for k in "${!ZAHL[@]}"; do args+=(--zahl "$k=${ZAHL[$k]}"); done
+args+=(--zahl "umfang=$UMFANG")
+# Breiten und Seiten des Bilderlaufs, wenn er lief — das Tor rechnet nach (Lage 6).
+if [ -n "${ZAHL[bilderlauf]:-}" ]; then
+    if [ "$SEITEN" = alle ]; then n=alle; else n=$(printf '%s' "$SEITEN" | tr ',' '\n' | grep -c .); fi
+    args+=(--zahl "breiten=$BREITEN" --zahl "seiten=$n")
+fi
 # Welche Engines die dreifachen Proben gefahren haben — Stufe 1 liest es
 # gegen (bericht.py, Lage 6): Ein Bericht mit Browserproben ohne diese Zeile
 # ist rot.
@@ -230,7 +307,8 @@ if [ "$rcb" -ne 0 ]; then
     exit 1
 fi
 
-melde "$fehl rot, $nicht nicht gemessen, $(( ${#PROBEN[@]} - fehl - nicht )) grün · $SECONDS s"
+melde "$fehl rot, $nicht nicht gemessen, $hinw Hinweis, $erbt ererbt, $(( ${#PROBEN[@]} - fehl - nicht - hinw - erbt )) grün · $SECONDS s"
+[ "$hinw" -gt 0 ] && zeile "Hinweise (halten nicht auf, stehen im Bericht): ${HINWEISE[*]} — im Prüfprotokoll des Konzepts nennen."
 [ "$WIEDERHOLT" -gt 0 ] && zeile "$WIEDERHOLT Wiederholungen in WebKit (Seitenwechsel oder Neuanmeldung) — im Prüfdokument nennen (E-DM-10)"
 [ "$nicht" -gt 0 ] && zeile "Was nicht gemessen werden konnte, gehört in das Prüfdokument — an den Anfang."
 # Nicht gemessen ist nicht grün: Der Bericht trägt es, und

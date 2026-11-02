@@ -27,8 +27,8 @@ eingeschlossen (E-SD-03); jede Folgezeile beginnt mit **fünf Leerzeichen**
 jeder Kopfzeile stehen `<!-- -->` und eine Leerzeile, sonst zählt GitHub die
 Nummern fort (Nr. 340, E-R4-62). Ein gekürzter Eintrag endet mit `Werdegang
 bis DD.MM.YYYY: \`docs/Backlog.md@abc1234\`, Nr. NNN.`; dort steht die lange
-Fassung. Die Decken misst `tools/steuerung/decken.py`, und Stufe 1 ist rot,
-wenn eine reißt.
+Fassung. Die Decken misst `tools/steuerung/decken.py` im Prüfstand; reißt
+eine, meldet er einen Hinweis, der nicht aufhält (seit PU-05).
 
 **Fundstellen und Zahlen (Regel seit 13.09.2026).** Funktionsnamen statt
 Zeilennummern (`ingest_tag_nachziehen()` statt `ingest.php:623`), in

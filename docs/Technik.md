@@ -941,10 +941,13 @@ eine Risikoliste im Bilderlauf und die Klickprobe.)*
 
 **Jedes Browserwerkzeug wählt den Motor über `tools/motor.mjs`**
 (`MOTOR=` oder `--motor chromium|firefox|webkit`, Vorgabe Chromium).
-**Seit R87 (Konzept DM, 19.10.2026) fährt der Prüfstand jede Browserprobe
-in allen drei** — ab der Stufe `neben`, je Engine ein Lauf mit `MOTOR=…`,
-grün nur, wenn alle drei grün sind; **in `klein` in Chromium allein**
-(`docs/Pruefablauf.md` 1, Grundsatz 8, E-DM-08). Ein Seitenwechsel, der in
+**Seit R87 (Konzept DM, 19.10.2026) fährt der Prüfstand eine Browserprobe
+in allen drei**, je Engine ein Lauf mit `MOTOR=…`, grün nur, wenn alle
+drei grün sind — **seit R89 (PU-03) dort, wo die Engines sich
+unterscheiden können:** beim vollen Lauf (Hauptstufe, Zehnergrenze,
+`--voll`) und ab `neben` bei berührtem Stylesheet oder `ui.php`; sonst in
+Chromium allein (`docs/Pruefablauf.md` 1, Grundsatz 8, E-PU-02). Stufe 2
+misst immer dreifach. Ein Seitenwechsel, der in
 WebKit mit „internal error" scheitert, wird einmal wiederholt und gezählt
 (E-DM-10, `motor.mjs`). **Die Bedienprobe fängt in WebKit zusätzlich eine
 Seite, die stumm wird** (Nr. 393, seit dem 25.10.2026): Sie fragt vor jedem
@@ -976,7 +979,7 @@ in Chromium allein: Seine Grundlinie ist gedrosseltes Chromium.
 | Mittel | im Prüfstand | warum dreifach |
 |---|---|---|
 | **Stilvergleich** | wenn `style.css` berührt ist (`gegen.sh`), je Engine; 14–18 s je Motor | Berechnete Stile sind genau die Frage, bei der Motoren auseinandergehen. Die Aussage ist die **Übereinstimmung** der drei Zahlen, nicht die Zahl: Der Vergleich misst alt gegen neu *innerhalb* eines Motors, also meldet ein Motor, der eine neue Regel nicht kann, **weniger** Abweichungen. |
-| **Bilderlauf** | nach Stufe (`--stufe klein`: drei Breiten, `neben`: zehn; E-PK-14), je Engine | Darstellung ist motorabhängig — der erste dreifache Lauf fand einen Überlauf, den nur WebKit hatte (Nr. 185). |
+| **Bilderlauf** | nach Umfang (`--breiten`: drei in `klein`, fünf im schmalen Lauf, zehn beim vollen und bei Stylesheet/`ui.php`; Seiten über ihre eigene Datei, `auswahl.py --bilderlauf`, seit PU-04), je verlangter Engine | Darstellung ist motorabhängig — der erste dreifache Lauf fand einen Überlauf, den nur WebKit hatte (Nr. 185). |
 | **Bedienprobe** (bis PK-04 „Klickprobe") | je Engine | Sie misst Wege, nicht Darstellung — aber Wege hängen an Zeitlagen, und die sind je Engine andere: Die Freigabeprobe fand so, dass das Schlüsselpaar in Firefox und WebKit nur entsteht, wer auf der ersten Seite bleibt (F-DM-02, Nr. 392). |
 
 **Zwei Dinge, die jeder Motorlauf wissen muss**, beide gemessen und beide in

@@ -7,6 +7,11 @@
     "haupt"
   ],
   "proben": {
+    "erzeugen": {
+      "aufruf": "python3 tools/pruefstand/bericht.py erzeugen",
+      "braucht": "nichts",
+      "bemerkung": "PU-06 (E-PU-07), Anlass F-PU-01: neun von fuenfzehn roten Laeufen des Bestandsriegels waren eine erzeugte Tabelle, die niemand neu erzeugt hatte. Erzeugt Design.md (design.py schreiben) und Pruefablauf.md 4 (doku_tabelle) und meldet jede Aenderung als HINWEIS -- sie gehoert in den Commit. Laeuft VOR den Riegeln (auswahl.py stellt sie an den Anfang), damit bestand den frischen Stand misst. Kein Riegel: Im Tor bleibt bestand rot, wenn jemand ohne Pruefstand committet."
+    },
     "syntax-php": {
       "aufruf": "php -l",
       "braucht": "nichts"
@@ -228,10 +233,10 @@
       "motoren": true
     },
     "bilderlauf": {
-      "aufruf": "node tools/screenshots/aufnehmen.mjs --stufe {stufe}",
+      "aufruf": "node tools/screenshots/aufnehmen.mjs --breiten {breiten} {seiten}",
       "braucht": "installation",
       "demo": true,
-      "bemerkung": "E-PK-14: klein = drei Breiten (360, 1024, 1920); neben = zehn Breiten (seit R4-08 mit 1200 und 1600, E-R4-23); haupt = zehn Breiten. Seit Konzept DM (R87, E-DM-08) ab neben alle drei Engines, in klein Chromium: pruefen.sh faehrt jede Probe mit \"motoren\": true je Engine der Stufe (MOTOR=chromium|firefox|webkit). Bis dahin stand hier \"haupt = alle drei Engines -- GEBAUT IST DAVON NUR CHROMIUM\" (Nr. 300). pruefen.sh setzt {stufe} auf die ermittelte Stufe (PK-05).",
+      "bemerkung": "Breiten und Seiten waehlt seit PU-04 auswahl.py --bilderlauf (E-PU-03, -04, -11, Q-PU-03): drei Breiten (360, 1024, 1920) in klein, fuenf (390, 768, 1024, 1200, 1600) im schmalen Lauf ab neben, zehn beim vollen Lauf und ab neben bei beruehrtem Stylesheet oder ui.php; die Seiten ueber ihre eigene Datei (--nur), alle bei einer geteilten Datei und beim vollen Lauf. pruefen.sh setzt {breiten} auf den Satz und {seiten} auf --nur LISTE oder nichts; der Bericht traegt breiten= und seiten=, das Tor rechnet nach (Lage 6). Engines wie jede Probe mit \"motoren\": true (R89, E-PU-02). Bis PU-04 hiess der Aufruf --stufe {stufe}, und klein mass trotz anderslautender Doku alle Seiten (F-PU-07).",
       "motoren": true
     },
     "stilvergleich": {
@@ -304,7 +309,8 @@
     "steuerung": {
       "aufruf": "python3 tools/steuerung/decken.py --selbstprobe && python3 tools/steuerung/uebersicht.py --selbstprobe && python3 tools/steuerung/decken.py && python3 tools/steuerung/uebersicht.py --pruefen",
       "braucht": "nichts",
-      "bemerkung": "Konzept SD (SD-03). Halten Rahmenplan, Verlauf und Backlog ihre Decken (Zeilen, Zeichen je Zelle, Einrueckung, Rendering mit cmark-gfm), und traegt jede Kopfzeile im Backlog Grammatik und ein Ziel aus der Fahrplan-Tabelle? Die Decken stehen in tools/steuerung/decken.py und LIESMICH.md, nicht hier. Riegel UND Muster: Riegel, damit er in jeder Stufe laeuft und im Tor gegengelesen wird; Muster, damit die Tabelle in Pruefablauf.md 4 die Beruehrung nennt."
+      "hinweis": true,
+      "bemerkung": "Konzept SD (SD-03). Halten Rahmenplan, Verlauf und Backlog ihre Decken (Zeilen, Zeichen je Zelle, Einrueckung, Rendering mit cmark-gfm), und traegt jede Kopfzeile im Backlog Grammatik und ein Ziel aus der Fahrplan-Tabelle? Die Decken stehen in tools/steuerung/decken.py und LIESMICH.md, nicht hier. Riegel UND Muster: Riegel, damit er in jeder Stufe laeuft und im Tor gegengelesen wird; Muster, damit die Tabelle in Pruefablauf.md 4 die Beruehrung nennt. SEIT PU-05 (E-PU-06) KEIN RIEGEL MEHR: Die Probe laeuft im Pruefstand, wenn das Muster steuerung greift, und eine gerissene Decke ist ein Hinweis, kein Rot -- ein roter PR wegen einer 21. Backlog-Zeile kostete sonst einen Pruefstandlauf fuer eine Textkorrektur. Stufe 1 faehrt sie nicht mehr."
     },
     "nummern": {
       "aufruf": "python3 tools/steuerung/nummern.py --selbstprobe && python3 tools/steuerung/nummern.py",
@@ -361,6 +367,37 @@
       "anlass": "E-P5c-36, E-P5c-88: Ein Paket mit Migration faehrt die Plattformmatrix, und die laeuft nur in haupt -- dort sind Nr. 238 und Nr. 267 gefunden worden. Ausgeloest von einer NEUEN Kennung im Katalog, nicht von einer Aenderung an der Datei: Die aendert sich auch ohne Migration (P5c/AP2, AP3)."
     }
   ],
+  "umfang": {
+    "beschreibung": "Was am Umfang haengt (E-PU-01 bis -04, R89). `stil`: Dateien, deren Beruehrung ab neben Firefox und WebKit dazuholt (E-PU-02) und den Bilderlauf auf zehn Breiten hebt (E-PU-03). `engine_wahl`: Dateien, die nur die Engines heben, nicht die Breiten (E-PU-16). `neutral`: Dateien, die den Bilderlauf und die Bedienprobe NICHT ausloesen, obwohl ein Muster sie trifft -- die Fassungsnummer aendert sich bei jeder Neben- und Hauptstufe. `platzhalter`: die Seitendatei hinter jedem Platzhalter in tools/screenshots/seiten.json. Eine Seite gilt als beruehrt, wenn ihre eigene Datei beruehrt ist; jede andere ausloesende Datei gilt als geteilt und bringt alle Seiten (Q-PU-03). Voll (haupt, Zehnergrenze, --voll) heisst immer drei Engines, zehn Breiten, alle Seiten. auswahl.py liest das, bericht.py haelt den Bericht dagegen (Lage 6).",
+    "stil": [
+      "server/assets/style.css",
+      "server/ui.php"
+    ],
+    "engine_wahl": [
+      "tools/motor.mjs"
+    ],
+    "neutral": [
+      "server/version.php"
+    ],
+    "platzhalter": {
+      "__EINSATZ__": "server/einsatz.php",
+      "__EINSATZ_WINDE__": "server/einsatz.php",
+      "__FORMULAR__": "server/einsatz_form.php",
+      "__VERSCHIEBEN__": "server/einsatz_verschieben.php",
+      "__LOESCHEN__": "server/einsatz_loeschen.php",
+      "__TAG_DATUM__": "server/diensttag_datum.php",
+      "__TAG_LOESCHEN__": "server/diensttag_loeschen.php",
+      "__TAG_ZUSAMMEN__": "server/diensttag_zusammenfuehren.php",
+      "__TAG_SPUREN__": "server/tag_spuren.php",
+      "__TAG_OHNE_STANDORT__": "server/index.php",
+      "__TAG_LUFTLINIE__": "server/index.php",
+      "__TAG_SCHNITT__": "server/index.php",
+      "__TAG_NACHT__": "server/index.php",
+      "__STANDORT__": "server/einstellungen.php",
+      "__KONTO__": "server/admin_user.php",
+      "__KONTO_NUTZERIN__": "server/admin_user.php"
+    }
+  },
   "riegel": {
     "beschreibung": "Die billigen Riegel. Sie laufen in JEDER Stufe und werden im Tor gegengelesen (docs/Pruefablauf.md 5.1). Kein Muster, keine Bedingung -- sie kosten zusammen rund 25 s.",
     "proben": [
@@ -385,8 +422,7 @@
       "rechtstexte",
       "kettenaufrufe",
       "zaehlung",
-      "spaltenregister",
-      "steuerung"
+      "spaltenregister"
     ]
   },
   "muster": [
@@ -398,6 +434,21 @@
       ],
       "proben": [],
       "anlass": "Auffangmuster: Jede Datei unter server/ laeuft durch die billigen Riegel. Sie traegt KEINE eigene Probe -- wer hier landet und sonst nirgends, hat keine zugeordnete Probe, und der Pruefstand sagt das."
+    },
+    {
+      "id": "erzeugte-tabellen",
+      "ab": "klein",
+      "pfade": [
+        "server/**",
+        "docs/Design.md",
+        "docs/Pruefablauf.md",
+        "tools/erzeugen/design.py",
+        "tools/pruefstand/**"
+      ],
+      "proben": [
+        "erzeugen"
+      ],
+      "anlass": "F-PU-01 (PU-06): Was die vier Tabellen in Design.md (Stylesheet, ui.php, Symbole und ihre Verwendung unter server/) oder die Tabelle in Pruefablauf.md 4 (pruefablauf.json, bericht.py) speist, erzeugt sie vor dem Riegel neu."
     },
     {
       "id": "spur",
@@ -859,6 +910,30 @@
       "anlass": "Nr. 185, 225; PS-2"
     },
     {
+      "id": "bilderlauf-werkzeug",
+      "ab": "klein",
+      "pfade": [
+        "tools/screenshots/aufnehmen.mjs",
+        "tools/screenshots/seiten.json"
+      ],
+      "proben": [
+        "bilderlauf"
+      ],
+      "anlass": "F-PU-08 (PU-04): Wer den Bilderlauf oder seine Seitenliste aendert, faehrt ihn. Bis dahin fuehrte keine Zeile von tools/screenshots/ zum Bilderlauf -- nur der Stilvergleich und der Riegel kettenaufrufe sahen die Datei."
+    },
+    {
+      "id": "bedienprobe-werkzeug",
+      "ab": "klein",
+      "pfade": [
+        "tools/bedienprobe/*.mjs",
+        "tools/bedienprobe/wege/**"
+      ],
+      "proben": [
+        "bedienprobe"
+      ],
+      "anlass": "F-PU-08 (PU-04): Wer die Bedienprobe oder einen ihrer Wege aendert, faehrt sie. Bis dahin fuehrte nur wege/registrieren.mjs dorthin (Muster registrierung). Nicht tools/bedienprobe/**: ausgabe/bericht.* ist eingecheckt, und jeder Lauf haette den naechsten ausgeloest."
+    },
+    {
       "id": "kette",
       "ab": "klein",
       "pfade": [
@@ -989,8 +1064,6 @@
         "abmelde-probe",
         "containerprobe",
         "browserprobe-csp",
-        "bedienprobe",
-        "bilderlauf",
         "kreislauf-csv",
         "kreislauf-edbak",
         "spaltenregister-wegprobe",
@@ -1002,7 +1075,7 @@
         "passkeyprobe",
         "schluesselwechselprobe"
       ],
-      "anlass": "Pruefablauf.md 3, Zeile neben: alle Proben gegen die oertliche Installation, beide Kreislaeufe, Bilderlauf aller Seiten in zehn Breiten (acht bis R4-08), Bedienprobe. Bis PK-05 gab es dieses Muster nicht -- eine Nebenstufe mass dasselbe wie eine Korrekturstufe (F-P5c-49, E-P5c-32). protokollprobe und rollenprobe kamen mit P5c/AP2 und fehlten hier bis AP3 (F-P5c-90). zweitfaktorprobe kam mit P5c/AP5 und steht hier im selben Paket, rueckwegprobe ebenso mit RW-01, sitzungsprobe mit SR-01, passkeyprobe mit SR-09, schluesselwechselprobe mit SR-03."
+      "anlass": "Pruefablauf.md 3, Zeile neben: alle Proben gegen die oertliche Installation, beide Kreislaeufe, Bilderlauf aller Seiten in zehn Breiten (acht bis R4-08), Bedienprobe. Bis PK-05 gab es dieses Muster nicht -- eine Nebenstufe mass dasselbe wie eine Korrekturstufe (F-P5c-49, E-P5c-32). protokollprobe und rollenprobe kamen mit P5c/AP2 und fehlten hier bis AP3 (F-P5c-90). zweitfaktorprobe kam mit P5c/AP5 und steht hier im selben Paket, rueckwegprobe ebenso mit RW-01, sitzungsprobe mit SR-01, passkeyprobe mit SR-09, schluesselwechselprobe mit SR-03. Bilderlauf und Bedienprobe stehen seit PU-04 nicht mehr hier: Sie laufen wie in klein nur ueber ihre eigenen Muster, beim vollen Lauf immer (E-PU-04, Q-PU-03)."
     },
     {
       "id": "statistik",
@@ -1044,7 +1117,7 @@
         "steuerung",
         "nummern"
       ],
-      "anlass": "Nr. 177, 196, 199 (Konzept SD): die Decken der Steuerungsdokumente und die Kopfzeilen des Backlogs. Der Riegel laeuft ohnehin in jeder Stufe; das Muster benennt die Beruehrung. Nr. 339 (R4-03): eine neue Nummer, die ein anderer Zweig schon traegt -- nur oertlich, deshalb nur hier."
+      "anlass": "Nr. 177, 196, 199 (Konzept SD): die Decken der Steuerungsdokumente und die Kopfzeilen des Backlogs. Der Riegel laeuft ohnehin in jeder Stufe; das Muster benennt die Beruehrung. Nr. 339 (R4-03): eine neue Nummer, die ein anderer Zweig schon traegt -- nur oertlich, deshalb nur hier. Seit PU-05 (E-PU-06) laeuft steuerung nur noch hier, als hinweis; Stufe 1 faehrt sie nicht mehr."
     },
     {
       "id": "android-quellen",
@@ -1085,7 +1158,7 @@
         "kreislauf-edbak",
         "rueckwegprobe"
       ],
-      "anlass": "Nr. 390 — die Engine-Wahl und das Register gelten fuer jede Browserprobe; wer sie aendert, faehrt alle in drei Engines (R87)"
+      "anlass": "Nr. 390 — die Engine-Wahl und das Register gelten fuer jede Browserprobe; wer sie aendert, faehrt alle Browserproben. tools/motor.mjs hebt ab neben auf drei Engines (umfang.engine_wahl, E-PU-16); bis PU-03 hiess es hier pauschal drei (R87)."
     }
   ]
 }

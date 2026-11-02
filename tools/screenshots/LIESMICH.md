@@ -6,7 +6,7 @@ Nimmt jede Seite in mehreren Breiten auf und misst, was ein Bild nicht zeigt.
 ## Aufruf
 
 ```bash
-node tools/screenshots/aufnehmen.mjs --stufe klein|neben|haupt  # --nur · --finger · --etikett · --jobs-token · --rolle-admin · --rolle-support · --selbstprobe
+node tools/screenshots/aufnehmen.mjs --breiten drei|fuenf|zehn  # --stufe · --nur · --finger · --etikett · --jobs-token · --rolle-admin · --rolle-support · --selbstprobe
 python3 tools/screenshots/kontrast.py                 # Kontrast der Token gegen die Fläche · --selbstprobe
 python3 tools/screenshots/vergleichen.py <vorher>     # --nur-text · --erwartet <seite> · --selbstprobe
 ```
@@ -15,8 +15,8 @@ python3 tools/screenshots/vergleichen.py <vorher>     # --nur-text · --erwartet
 
 Überlauf, **Konsolenfehler**, Knopfhöhen gegen 44 und 36 px (`CLAUDE.md` 5), Karten außerhalb von `main.inhalt`,
 das **Umgebungsetikett** (P5c/AP1: `--etikett Staging` misst Titelvorsatz und rote Kopfleiste, ohne den Schalter die Gegenrichtung)
-und die **Bildgleichheit** über die Breiten; **rollende Behälter** nennt der Bericht, sie halten nicht auf. Fünf Rollen: aus, demo, betreiberin, admin, support (Prüfkonten: `pruefkonten.sh`). Drei Stufen (E-PK-14): klein = berührte Seiten, drei Breiten · neben = alle
-Seiten, zehn Breiten · haupt = dazu die Matrix; ab neben in drei Engines, klein in Chromium (R87, `MOTOR=`). `kontrast.py` leitet die Farbpaare aus dem Stylesheet ab; ein Paar ohne Listeneintrag ist rot. `vergleichen.py` hält zwei Läufe gegeneinander — Bild, Zeile und **Form**;
+und die **Bildgleichheit** über die Breiten; **rollende Behälter** nennt der Bericht, sie halten nicht auf. Fünf Rollen: aus, demo, betreiberin, admin, support (Prüfkonten: `pruefkonten.sh`). Breiten und Seiten wählt der Prüfstand (`auswahl.py --bilderlauf`, E-PU-03, -04): drei Breiten in klein, fünf im schmalen
+Lauf ab neben, zehn beim vollen Lauf und bei Stylesheet/`ui.php`; Seiten über ihre eigene Datei (`--nur`), alle bei einer geteilten. Engines: Grundsatz 8 (R89, `MOTOR=`). `kontrast.py` leitet die Farbpaare aus dem Stylesheet ab; ein Paar ohne Listeneintrag ist rot. `vergleichen.py` hält zwei Läufe gegeneinander — Bild, Zeile und **Form**;
 nur die Form ist ein Befund. Seiten und Bedienschritte: `seiten.json`.
 
 ## Was es braucht

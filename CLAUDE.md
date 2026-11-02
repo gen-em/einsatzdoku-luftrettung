@@ -43,7 +43,12 @@ Diese fünf Punkte sind kein Nachklapp, sondern Teil der Änderung:
 2. **`docs/CHANGELOG.md` ergänzen.** Format nach *Keep a Changelog*, Präfix
    `Web` oder `Uhr`. Der bestehende Ton ist erklärende Prosa mit **Begründung**,
    nicht eine Liste von Stichpunkten: Was war das Problem, warum diese Lösung,
-   was bleibt bewusst stehen. Diesen Ton halten.
+   was bleibt bewusst stehen. Diesen Ton halten. **Höchstens fünf Sätze je
+   Eintrag** (seit PU-07, E-PU-10): Problem und Grund der Lösung. Prüfzahlen,
+   Werkzeugbefunde und Paketnummern gehören nicht hinein — sie stehen im
+   Konzept und in der Git-Historie. **Kein Riegel misst das** (E-PU-12), die
+   Regel kann also unbemerkt reißen; wer einen Eintrag schreibt, zählt selbst
+   nach.
 3. **Dokumentation nachziehen** — `docs/Handbuch.md` (Bedienung),
    `docs/Technik.md` (Architektur, Verzeichnisstruktur, Runbook), bei
    Schnittstellenänderungen `docs/JSON-Vertrag.md`, `docs/Export-Format.md`,
@@ -60,7 +65,9 @@ Diese fünf Punkte sind kein Nachklapp, sondern Teil der Änderung:
    hängen hinten an, 4, 5, 6 und 7 bleiben frei. **Wer Nummern vergeben
    könnte, reserviert zuerst eine Zehnerspanne in der Tabelle im Kopf von
    `Backlog.md` und pusht das** (E-SD-21). Kopfzeilen und Decken misst
-   `tools/steuerung/`, Doppelungen `bestand` — beides in Stufe 1. Ob eine
+   `tools/steuerung/` im Prüfstand und meldet einen Riss als Hinweis, der
+   nicht aufhält (seit PU-05, E-PU-06; bis dahin rot in Stufe 1);
+   Doppelungen misst `bestand` in Stufe 1. Ob eine
    neue Nummer schon auf einem anderen Zweig steht, misst
    `tools/steuerung/nummern.py` — nur örtlich im Prüfstand, weil Stufe 1
    die anderen Zweige nicht sieht (Nr. 339).
@@ -469,7 +476,9 @@ Oberflächenänderung anfängt, liest zuerst dort. Kurz:
   **erzeugt**: `python3 tools/erzeugen/design.py schreiben` ersetzt sie dort.
   Wer eine davon von Hand ändert, ändert sie an der falschen Stelle — und wer
   `ui.php`, `style.css` oder ein Symbol ändert, erzeugt sie neu, sonst ist
-  Stufe 1 rot (`bestand`, Regel `design`, seit R4-25).
+  Stufe 1 rot (`bestand`, Regel `design`, seit R4-25). **Der Prüfstand
+  erzeugt sie seit PU-06 selbst** — samt der Tabelle in `Pruefablauf.md` 4 —
+  und meldet die Änderung als Hinweis; sie gehört in den Commit (E-PU-07).
 
 ## 6. Prüfen
 
@@ -493,9 +502,12 @@ Arbeitsumgebung, ihre Ausbaustufen, die Umgebungswerte und was sie
    mit einer Backlog-Nummer. Ohne sie ist Stufe 1 rot (seit Konzept BR).
 6. **Geschichte steht im Commit, nicht im Werkzeug.**
 7. **Kein stilles Überspringen, keine grüne Zahl ohne Gegenstand.**
-8. **Jede Browserprobe läuft in Chromium, Firefox und WebKit** — ab der
-   Stufe `neben` und in Stufe 2; in `klein` in Chromium allein. Fehlt eine
-   Engine, ist die Probe rot (R87, E-DM-08, seit dem 20.10.2026). Ein neues Browserwerkzeug startet über
+8. **Jede Browserprobe läuft in drei Engines, wo sie sich unterscheiden
+   können** — Chromium immer; Firefox und WebKit dazu beim vollen Lauf
+   (Hauptstufe, Zehnergrenze der Nebennummer, `--voll`), ab `neben` bei
+   berührtem `style.css` oder `ui.php`, und in Stufe 2 immer. Fehlt eine
+   verlangte Engine, ist die Probe rot (R89, E-PU-02, seit PU-03; bis dahin
+   R87: dreifach ab `neben`, gleich was berührt war). Ein neues Browserwerkzeug startet über
    `starten()` aus `tools/motor.mjs` und bekommt eine Zeile im Register
    `tools/pruefstand/motoren.md`; was nur Chromium kann, steht dort mit
    Grund. WebKit ist nicht Safari — ein echter Safari bleibt Handprüfung.
@@ -563,21 +575,30 @@ R62). Innerhalb von Claude Code gilt:
 - **Nach der Freigabe des Abschlusses:** Erledigt-Zeile in
   `docs/Rahmenplan.md` Abschnitt 8 — **eine Tabellenzeile** (Kennung,
   Versionen, Datum · PR, letzter Commit des Konzepts, Prüfdokument, Kern;
-  E-SD-10), die Prüfzahlen stehen im Prüfdokument —, Reste nach Abschnitt 6,
+  E-SD-10), die Prüfzahlen stehen im Prüfprotokoll des Konzepts —, Reste nach Abschnitt 6,
   der Backlog in die Kopfzeilen (`gehört zu`), eine Verlaufszeile in
   `docs/Rahmenplan-Verlauf.md` — und **das Konzept wird gelöscht**, die
-  Fahrplanzeile geht mit; die Git-Historie behält es. Das **Prüfdokument bleibt, bis
-  seine Prüfliste abgehakt ist**, und wird dann ebenso gelöscht. Wer ein
+  Fahrplanzeile geht mit; die Git-Historie behält es. **Das Prüfdokument geht
+  in der Prüfliste auf** (seit PU-08, E-PU-09): Seine offenen Punkte wandern,
+  Doppelungen gestrichen, nach Bereich in `docs/konzepte/Pruefliste.md`, die
+  Datei wird gelöscht, die Zeile in Rahmenplan 6.1 verweist auf die
+  Prüfliste. *(Bis PU-08 blieb jedes Prüfdokument stehen, bis seine Liste
+  abgehakt war — am 01.11.2026 lagen dreizehn nebeneinander, F-PU-03.)* Wer ein
   Konzept löscht, ohne die Erledigt-Zeile zu schreiben, hat die Phase nicht
   abgeschlossen.
 - **Am Ende der Phase ein Prüfdokument** — eine eigene Datei neben dem
   Konzept, nicht ein Abschnitt darin. Das Prüfprotokoll im Konzept beantwortet
   „ist es belegt?“; das Prüfdokument beantwortet „was muss **ich** noch tun?“.
-  Es enthält: was maschinell geprüft wurde (mit Mittel **und** Zahl), was im
-  Browser geprüft wurde, **was nicht geprüft werden konnte und warum**, und
-  als Kernstück eine abhakbare Prüfliste — je Punkt der konkrete Bedienweg,
-  das erwartete Ergebnis und **woran ein Scheitern zu erkennen ist**. Dazu die
-  Grenzen der benutzten Prüfmittel.
+  **Es ist eine Prüfliste und nichts sonst** (seit PU-07, E-PU-08), in
+  dieser Reihenfolge: (1) **was nicht geprüft werden konnte und warum** —
+  zuerst; (2) die **Grenzen der benutzten Prüfmittel**; (3) die
+  **Handprüfliste**, höchstens **20 Punkte**, je Punkt der konkrete
+  Bedienweg, das erwartete Ergebnis und **woran ein Scheitern zu erkennen
+  ist**. Was maschinell gemessen wurde, steht mit Mittel und Zahl im
+  **Prüfprotokoll des Konzepts** und im **Prüfbericht des Commits**, nicht
+  hier. *(Bis PU-07 trug das Prüfdokument auch die maschinellen Zahlen und
+  das, was im Browser geprüft wurde — die Hälfte des Textes stand dann
+  zweimal.)*
   Zwei Regeln dabei: **Eine Prüfung ohne Zahl ist keine Prüfung**
   („39 447 Elementmessungen, keine Abweichung“ statt „unverändert“), und
   **was nicht geprüft werden konnte, wird gesagt, nicht weggelassen** — an den

@@ -6,13 +6,14 @@
     python3 tools/pruefstand/bericht.py lesen [--commit HEAD] [--datei -]
     python3 tools/pruefstand/bericht.py lesen --selbstprobe
     python3 tools/pruefstand/bericht.py erzeugen-doku
+    python3 tools/pruefstand/bericht.py erzeugen
 
 Rückgabewert 0 = in Ordnung · 1 = der Bericht trägt nicht · 2 = die Probe
 selbst kam nicht zum Laufen (fehlende Datei, unbekannter Schalter, kein Git).
 
 MIT EINEM WERKZEUG UND NICHT MIT EINER SHELL-ZEILE: Eine Zeile,
 die einen Wert aus Text zieht, ist die Stelle, an der ein Riegel still
-durchlässt. Hier ist jede der sechs roten Lagen eine Funktion mit einem
+durchlässt. Hier ist jede der roten Lagen eine Funktion mit einem
 Prüffall in `--selbstprobe`.
 
 Anlass: O9c — gemessen wurde vor der letzten Änderung, gemeldet wurde die
@@ -29,14 +30,15 @@ HIER = os.path.dirname(os.path.abspath(__file__))
 WURZEL = os.path.dirname(os.path.dirname(HIER))
 ABLAUF = os.path.join(HIER, 'pruefablauf.json')
 sys.path.insert(0, HIER)
-from auswahl import UNLESBAR, beruehrte, fassung, stufe_aus_fassungen, stufe_aus_version  # noqa: E402 — die EINE Lesestelle
+from auswahl import (ALLE, ERBT, KOPF_RE, MOTOREN_DREI, PAAR_RE, SCHMAL, UMFAENGE,  # noqa: E402, F401 — die EINE Lesestelle
+                     UNLESBAR, beruehrte, breiten_aus, drei_aus, erbfehler, fassung, mit_voraussetzungen,
+                     motoren_aus, seiten_laden, seitenwahl, stil_aus, stufe_aus_fassungen, stufe_aus_version,
+                     vorgaenger, zehner, zerlegen)
 
 STUFEN = ['klein', 'neben', 'haupt']
-KOPF_RE = re.compile(
-    r'^Prüfstand:\s*(?P<stufe>klein|neben|haupt)\s*·\s*'
-    r'Baum\s+(?P<baum>[0-9a-f]{7,40})\s*·\s*'
-    r'Konfiguration\s+(?P<konf>[a-z]+)\s*$')
-PAAR_RE = re.compile(r'([a-zA-Z][\w-]*)=(\S+)')
+# KOPF_RE, PAAR_RE und zerlegen() stehen seit PU-10 in auswahl.py: Der
+# Prüfstand liest dort den Bericht des Vorgängers (E-PU-13), und zwei Leser
+# desselben Blocks wären zwei Grammatiken.
 
 # Die Flächen: die ORDNER, deren Berührung sie verrät, und die PROBE, die sie
 # baut. EINE Stelle für Schreiben und Lesen. Früher stand hier
@@ -119,7 +121,9 @@ def flaechen_aus_lauf(zahlen, dateien):
         elif probe not in zahlen or zahlen[probe] == 'nicht-gemessen':
             aus[flaeche] = 'nicht-gemessen'
         else:
-            aus[flaeche] = 'gebaut' if zahlen[probe] == '0' else 'rot'
+            # Ein geerbter Bau ist ein grüner Bau des Vorgängers, dessen Muster
+            # seither niemand berührt hat — Lage 8 rechnet es nach (F-PU-13).
+            aus[flaeche] = 'gebaut' if zahlen[probe] == '0' or zahlen[probe].startswith(ERBT) else 'rot'
     return aus
 
 
@@ -142,24 +146,6 @@ def schreiben(args):
 
 # ------------------------------------------------------------------- lesen
 
-def zerlegen(text):
-    """Aus einem Text (Commit-Nachricht) den Berichtsblock herausziehen."""
-    zeilen = text.splitlines()
-    for i, z in enumerate(zeilen):
-        m = KOPF_RE.match(z.strip())
-        if not m:
-            continue
-        b = {'stufe': m['stufe'], 'baum': m['baum'], 'konfiguration': m['konf'],
-             'werte': {}}
-        for w in zeilen[i + 1:]:
-            if not w.startswith('  ') or not w.strip():
-                break
-            for k, v in PAAR_RE.findall(w):
-                b['werte'][k] = v
-        return b
-    return None
-
-
 def versionsstufe(basis, commit):
     """Welche Stufe verlangt der Unterschied — die Fassung in
     server/version.php und die Stufenregeln (eine neue Migration
@@ -173,14 +159,35 @@ def beruehrt(basis, commit):
     return [d for d in dateien if d]
 
 
-MOTOREN = 'chromium+firefox+webkit'
-# Je Stufe: `klein` in Chromium allein, ab `neben` alle drei.
-MOTOREN_JE_STUFE = {'klein': 'chromium', 'neben': MOTOREN, 'haupt': MOTOREN}
+# DIE ERGEBNISART „hinweis" (E-PU-05): gemessen, gemeldet, hält nicht auf.
+# Eine Probe mit diesem Wert ist nicht rot (Lage 5), und ein Riegel mit diesem
+# Wert passt zu einer 0 im Tor (Lage 4) — der Tor-Schritt endet grün und
+# druckt denselben Hinweis.
+HINWEIS = 'hinweis'
+
+
+def gruen_oder_hinweis(wert):
+    return wert in ('0', HINWEIS)
+
+
+MOTOREN = '+'.join(MOTOREN_DREI)
+
+
+def umfang_verlangt_aus(basis, commit, stufe_verlangt):
+    """Voll, wenn die Versionsstufe haupt verlangt oder die Nebennummer eine
+    Zehnergrenze erreicht (E-PU-01); sonst schmal. Dieselbe Regel wie im
+    Prüfstand — `zehner()` steht einmal, in auswahl.py."""
+    if stufe_verlangt == 'haupt':
+        return 'voll'
+    if basis and zehner(fassung(basis), fassung(commit)) is not None:
+        return 'voll'
+    return SCHMAL
 
 
 def pruefen(bericht, basis=None, commit='HEAD', riegel=None, dateien=None, baum=None,
-            stufe_verlangt=None, riegel_namen=None, motoren_namen=None):
-    """Die sechs roten Lagen. Gibt eine Liste von Beanstandungen zurück."""
+            stufe_verlangt=None, riegel_namen=None, motoren_namen=None, umfang_verlangt=None, stil=None,
+            vorg=None, diff_vorg=None):
+    """Die roten Lagen (Pruefablauf.md 5.1). Gibt eine Liste von Beanstandungen zurück."""
     schlecht = []
     if bericht is None:
         return ['Kein Prüfbericht in der Nachricht — der Block fehlt ganz.']
@@ -220,7 +227,7 @@ def pruefen(bericht, basis=None, commit='HEAD', riegel=None, dateien=None, baum=
         gemeldet = bericht['werte'].get(name)
         if gemeldet is None:
             schlecht.append(f"Riegel „{name}\" fehlt im Bericht (im Tor gemessen: {zahl}).")
-        elif gemeldet != str(zahl):
+        elif gemeldet != str(zahl) and not (gemeldet == HINWEIS and str(zahl) == '0'):
             schlecht.append(
                 f"Riegel „{name}\": Bericht {gemeldet}, im Tor gemessen {zahl}.")
 
@@ -230,29 +237,99 @@ def pruefen(bericht, basis=None, commit='HEAD', riegel=None, dateien=None, baum=
     # Riegel stimmen. Überspringen ist rot. Riegel und Flächen haben
     # ihre eigene Lage.
     eigene = set(riegel_namen if riegel_namen is not None else lade_ablauf()['riegel']['proben'])
-    eigene |= set(riegel or {}) | set(FLAECHEN) | {'motoren'}
+    eigene |= set(riegel or {}) | set(FLAECHEN) | {'motoren', 'umfang', 'breiten', 'seiten'}
     for name, wert in bericht['werte'].items():
-        if name in eigene or wert == '0':
-            continue
+        if name in eigene or gruen_oder_hinweis(wert) or wert.startswith(ERBT):
+            continue                            # ererbt: Lage 8
         if wert == 'nicht-gemessen':
             schlecht.append(f"Probe „{name}\" ist nicht gemessen — Überspringen ist rot (E-KH-12).")
         else:
             schlecht.append(f"Probe „{name}\" meldet {wert} — ein roter Lauf ist kein Nachweis.")
 
-    # (6) Eine Browserprobe, aber nicht in den Engines ihrer Stufe. Welche Proben es sind, sagt `"motoren": true` in
+    # (6) Eine Browserprobe, aber nicht in den Engines, die Stufe, Umfang und
+    # Berührung verlangen. Welche Proben es sind, sagt `"motoren": true` in
     # pruefablauf.json; der Prüfstand schreibt dann `motoren=` mit den
-    # Engines, die er gefahren hat. Verlangt sind in `klein` Chromium, ab
-    # `neben` alle drei. Fehlt die Zeile oder nennt sie andere, ist
-    # der Bericht kein Nachweis.
+    # Engines, die er gefahren hat. Verlangt rechnet `motoren_aus()` aus
+    # auswahl.py — dieselbe Funktion, die der Prüfstand fragt (E-PU-02,
+    # R89): Chromium, alle drei beim vollen Lauf und ab `neben` bei
+    # berührtem Stylesheet oder ui.php. Alle drei passen immer. Fehlt die
+    # Zeile oder nennt sie weniger, ist der Bericht kein Nachweis.
     if motoren_namen is None:
         motoren_namen = {n for n, p in lade_ablauf()['proben'].items() if p.get('motoren') is True}
+    ablauf = lade_ablauf()
     browser = sorted(n for n in bericht['werte'] if n in motoren_namen)
-    verlangt_m = MOTOREN_JE_STUFE.get(bericht['stufe'], MOTOREN)
-    if browser and bericht['werte'].get('motoren') != verlangt_m:
+    u = bericht['werte'].get('umfang', SCHMAL)
+    u = u if u in UMFAENGE else SCHMAL
+    verlangt_m = '+'.join(motoren_aus(bericht['stufe'], u, liste, stil if stil is not None else drei_aus(ablauf))[0])
+    gemeldet_m = bericht['werte'].get('motoren')
+    if browser and gemeldet_m not in (verlangt_m, MOTOREN):
         schlecht.append(
-            f"Browserproben ({', '.join(browser)}) nicht in den Engines der Stufe "
-            f"„{bericht['stufe']}\": „motoren={bericht['werte'].get('motoren', '(fehlt)')}\", "
-            f"verlangt „{verlangt_m}\" (R87, E-DM-08).")
+            f"Browserproben ({', '.join(browser)}) nicht in den verlangten Engines: "
+            f"„motoren={gemeldet_m or '(fehlt)'}\", verlangt „{verlangt_m}\" "
+            f"(Stufe {bericht['stufe']}, Umfang {u}; R89, E-PU-02).")
+
+    # (6, Fortsetzung) Breiten und Seiten des Bilderlaufs (E-PU-03, -04): mit
+    # denselben Funktionen nachgerechnet. Zehn Breiten und alle Seiten passen
+    # immer; weniger als verlangt ist rot. Löst nichts den Bilderlauf aus
+    # (etwa mit --datei gefahren), verlangt die Lage nichts.
+    if 'bilderlauf' in bericht['werte']:
+        wahl, _ = seitenwahl('bilderlauf', bericht['stufe'], u, liste, ablauf, seiten_laden())
+        if wahl is not None:
+            satz = breiten_aus(bericht['stufe'], u, liste, stil if stil is not None else stil_aus(ablauf))[0]
+            br, se = bericht['werte'].get('breiten'), bericht['werte'].get('seiten')
+            if br not in (satz, 'zehn'):
+                schlecht.append(f"Bilderlauf in „breiten={br or '(fehlt)'}\", verlangt „{satz}\" "
+                                f"(Stufe {bericht['stufe']}, Umfang {u}; E-PU-03).")
+            if se is None or (wahl == ALLE and se != ALLE) or (wahl != ALLE and se not in (ALLE, str(len(wahl)))):
+                soll = ALLE if wahl == ALLE else f'{len(wahl)} oder alle'
+                schlecht.append(f"Bilderlauf mit „seiten={se or '(fehlt)'}\", verlangt {soll} "
+                                f"(E-PU-04: eine geteilte Datei oder der volle Lauf heißt alle Seiten).")
+
+    # (7) Der Umfang (E-PU-01). Der Bericht nennt ihn immer; voll ist er
+    # verlangt in haupt und an einer Zehnergrenze der Nebennummer. Mehr zu
+    # messen ist erlaubt (`voll:hand`), weniger nicht.
+    umfang = bericht['werte'].get('umfang')
+    if umfang_verlangt is None:
+        umfang_verlangt = umfang_verlangt_aus(basis, commit, verlangt) if basis else (
+            'voll' if verlangt == 'haupt' else SCHMAL)
+    if bericht['stufe'] == 'haupt':
+        umfang_verlangt = 'voll'
+    if umfang is None:
+        schlecht.append('Der Bericht nennt keinen Umfang — „umfang=" fehlt (E-PU-01).')
+    elif umfang not in UMFAENGE:
+        schlecht.append(f"Unbekannter Umfang „{umfang}\" — erlaubt sind {', '.join(UMFAENGE)}.")
+    elif umfang_verlangt == 'voll' and umfang == SCHMAL:
+        schlecht.append('Umfang zu schmal: Der Unterschied verlangt den vollen Lauf (Hauptstufe oder '
+                        'Zehnergrenze der Nebennummer, E-PU-01), der Bericht meldet „schmal".')
+
+    # (8) Ererbte Ergebnisse (E-PU-13). Das Tor liest den Bericht des
+    # Vorgängers — des ersten Elters des Kopfs — nach und rechnet mit
+    # derselben Funktion wie der Prüfstand (`erbfehler()` in auswahl.py), ob
+    # die Probe erben durfte. Dazu: Der genannte Baum muss der des Vorgängers
+    # sein, und wer misst, darf keine Voraussetzung (`nach`) erben.
+    erbe = {n: w[len(ERBT):] for n, w in bericht['werte'].items() if w.startswith(ERBT)}
+    if erbe:
+        if vorg is None:
+            vorg = vorgaenger(f'{commit}^1', basis)
+        vb, vbaum = vorg
+        if diff_vorg is None:
+            diff_vorg = [d for d in git('diff', '--name-only', f'{commit}^1', commit).splitlines() if d]
+        a_ = lade_ablauf()
+        u8 = bericht['werte'].get('umfang', SCHMAL)
+        for n, h in sorted(erbe.items()):
+            if not h or not vbaum.startswith(h):
+                schlecht.append(f"„{n}=ererbt:{h}\": Der Vorgänger hat den Baum {vbaum[:12] or '(keinen)'} "
+                                f"— geerbt wird nur vom direkten Vorgänger (E-PU-13).")
+                continue
+            f = erbfehler(n, bericht['stufe'], u8, vb, vbaum, diff_vorg, a_,
+                          bericht['werte'].get('motoren'), bericht['werte'].get('breiten'),
+                          bericht['werte'].get('seiten'))
+            if f:
+                schlecht.append(f"„{n}\" durfte nicht erben: {f} (E-PU-13).")
+        messend = [n for n, w in bericht['werte'].items() if n in a_['proben'] and not w.startswith(ERBT)]
+        for n in mit_voraussetzungen(messend, a_):
+            if n in erbe:
+                schlecht.append(f"„{n}\" ist geerbt, aber Voraussetzung einer Probe, die gemessen hat (nach).")
     return schlecht
 
 
@@ -283,6 +360,13 @@ def lesen(args):
         return 1
     melde(f"Prüfbericht in Ordnung: Stufe {bericht['stufe']}, Baum {bericht['baum']}, "
           f"Konfiguration {bericht['konfiguration']}, {len(bericht['werte'])} Zahlen.")
+    erbe = sorted(n for n, w in bericht['werte'].items() if w.startswith(ERBT))
+    if erbe:
+        melde(f"  Geerbt vom Vorgänger (Lage 8 nachgerechnet): {', '.join(erbe)} (E-PU-13).")
+    hinweise = sorted(n for n, w in bericht['werte'].items() if w == HINWEIS)
+    if hinweise:
+        melde(f"  Hinweise (halten nicht auf): {', '.join(hinweise)} — gemessen und gemeldet, "
+              f"Einzelheiten im Lauf des Prüfstands (E-PU-05).")
     return 0
 
 
@@ -300,7 +384,7 @@ def selbstprobe():
              '  syntax-php=php:486/0  wortliste=0  vollstaendigkeit=0\n'
              '  spurprobe=0  kreislauf-edbak=0  bilderlauf=0\n'
              '  handy=nicht-beruehrt  uhr=nicht-beruehrt\n'
-             '  motoren=chromium+firefox+webkit\n')
+             '  motoren=chromium+firefox+webkit  umfang=schmal  breiten=fuenf  seiten=alle\n')
     gebaut = guter.replace('handy=nicht-beruehrt', 'handy=gebaut') + '  android-bau=0\n'
     namen = ['syntax-php', 'wortliste', 'vollstaendigkeit']
     faelle = []
@@ -345,7 +429,7 @@ def selbstprobe():
                    zerlegen(guter), dict(baum='abc1234', dateien=[], riegel={},
                                          stufe_verlangt=UNLESBAR, riegel_namen=namen), 1))
     faelle.append(('rot (6) — Browserproben, aber keine Zeile motoren=',
-                   zerlegen(guter.replace('  motoren=chromium+firefox+webkit\n', '')),
+                   zerlegen(guter.replace('motoren=chromium+firefox+webkit  ', '')),
                    dict(baum='abc1234', dateien=[], riegel={}, riegel_namen=namen), 1))
     faelle.append(('rot (6b) — Browserproben nur in zwei Engines',
                    zerlegen(guter.replace('chromium+firefox+webkit', 'chromium+firefox')),
@@ -353,18 +437,127 @@ def selbstprobe():
     faelle.append(('grün (6c) — Stufe klein mit motoren=chromium',
                    zerlegen(guter.replace('neben', 'klein').replace('chromium+firefox+webkit', 'chromium')),
                    dict(baum='abc1234', dateien=[], riegel={}, riegel_namen=namen), 0))
-    faelle.append(('rot (6d) — Stufe neben mit motoren=chromium',
+    faelle.append(('rot (6d) — neben, Stylesheet berührt, motoren=chromium',
                    zerlegen(guter.replace('chromium+firefox+webkit', 'chromium')),
+                   dict(baum='abc1234', dateien=['server/assets/style.css'], riegel={}, riegel_namen=namen), 1))
+    faelle.append(('grün (6e) — neben schmal, nichts Stilistisches berührt, motoren=chromium',
+                   zerlegen(guter.replace('chromium+firefox+webkit', 'chromium')),
+                   dict(baum='abc1234', dateien=['server/index.php'], riegel={}, riegel_namen=namen), 0))
+    faelle.append(('rot (6f) — neben voll:zehner, motoren=chromium',
+                   zerlegen(guter.replace('chromium+firefox+webkit', 'chromium')
+                            .replace('umfang=schmal', 'umfang=voll:zehner')),
                    dict(baum='abc1234', dateien=[], riegel={}, riegel_namen=namen), 1))
+    faelle.append(('rot (6g) — klein mit --voll, motoren=chromium',
+                   zerlegen(guter.replace('neben', 'klein').replace('chromium+firefox+webkit', 'chromium')
+                            .replace('umfang=schmal', 'umfang=voll:hand')),
+                   dict(baum='abc1234', dateien=[], riegel={}, riegel_namen=namen), 1))
+    faelle.append(('grün (6h) — klein, Stylesheet berührt, motoren=chromium, drei Breiten',
+                   zerlegen(guter.replace('neben', 'klein').replace('chromium+firefox+webkit', 'chromium')
+                            .replace('breiten=fuenf', 'breiten=drei')),
+                   dict(baum='abc1234', dateien=['server/assets/style.css'], riegel={}, riegel_namen=namen), 0))
+    faelle.append(('rot (6i) — neben, ui.php berührt, motoren=chromium+firefox',
+                   zerlegen(guter.replace('chromium+firefox+webkit', 'chromium+firefox')),
+                   dict(baum='abc1234', dateien=['server/ui.php'], riegel={}, riegel_namen=namen), 1))
     faelle.append(('grün (6) — keine Browserprobe, keine Zeile motoren=',
                    zerlegen(guter.replace('  spurprobe=0  kreislauf-edbak=0  bilderlauf=0\n', '  spurprobe=0\n')
-                            .replace('  motoren=chromium+firefox+webkit\n', '')),
+                            .replace('motoren=chromium+firefox+webkit  ', '')),
                    dict(baum='abc1234', dateien=[], riegel={}, riegel_namen=namen), 0))
+    faelle.append(('grün (5c) — eine Probe meldet hinweis',
+                   zerlegen(guter.replace('spurprobe=0', 'spurprobe=hinweis')),
+                   dict(baum='abc1234', dateien=[], riegel={}, riegel_namen=namen), 0))
+    faelle.append(('grün (4b) — Riegel meldet hinweis, das Tor misst 0',
+                   zerlegen(guter.replace('vollstaendigkeit=0', 'vollstaendigkeit=hinweis')),
+                   dict(baum='abc1234', dateien=[], riegel={'vollstaendigkeit': '0'}, riegel_namen=namen), 0))
+    faelle.append(('rot (4c) — Riegel meldet hinweis, im Tor nicht gelaufen',
+                   zerlegen(guter.replace('vollstaendigkeit=0', 'vollstaendigkeit=hinweis')),
+                   dict(baum='abc1234', dateien=[], riegel={'vollstaendigkeit': 'nicht-gelaufen'},
+                        riegel_namen=namen), 1))
+    faelle.append(('rot (5d) — „hinweis" mit Zusatz ist kein Hinweis',
+                   zerlegen(guter.replace('spurprobe=0', 'spurprobe=hinweis:x')),
+                   dict(baum='abc1234', dateien=[], riegel={}, riegel_namen=namen), 1))
+    faelle.append(('grün (6j) — neben schmal, index.php berührt, fünf Breiten, 11 Seiten',
+                   zerlegen(guter.replace('seiten=alle', 'seiten=11')),
+                   dict(baum='abc1234', dateien=['server/index.php'], riegel={}, riegel_namen=namen), 0))
+    faelle.append(('rot (6k) — Stylesheet berührt, aber fünf Breiten',
+                   zerlegen(guter), dict(baum='abc1234', dateien=['server/assets/style.css'], riegel={},
+                                         riegel_namen=namen), 1))
+    faelle.append(('rot (6l) — ui.php berührt (geteilt), aber nur 3 Seiten',
+                   zerlegen(guter.replace('breiten=fuenf', 'breiten=zehn').replace('seiten=alle', 'seiten=3')),
+                   dict(baum='abc1234', dateien=['server/ui.php'], riegel={}, riegel_namen=namen), 1))
+    faelle.append(('rot (6m) — Bilderlauf ohne Zeile breiten=',
+                   zerlegen(guter.replace('  breiten=fuenf', '')),
+                   dict(baum='abc1234', dateien=['server/index.php'], riegel={}, riegel_namen=namen), 1))
+    faelle.append(('grün (6n) — voll:zehner, zehn Breiten, alle Seiten, drei Engines',
+                   zerlegen(guter.replace('umfang=schmal', 'umfang=voll:zehner').replace('breiten=fuenf', 'breiten=zehn')),
+                   dict(baum='abc1234', dateien=['server/index.php'], riegel={}, riegel_namen=namen), 0))
+    faelle.append(('rot (6o) — voll:zehner, aber fünf Breiten',
+                   zerlegen(guter.replace('umfang=schmal', 'umfang=voll:zehner')),
+                   dict(baum='abc1234', dateien=['server/index.php'], riegel={}, riegel_namen=namen), 1))
+    faelle.append(('rot (7) — der Bericht nennt keinen Umfang',
+                   zerlegen(guter.replace('  umfang=schmal', '')),
+                   dict(baum='abc1234', dateien=[], riegel={}, riegel_namen=namen), 1))
+    faelle.append(('rot (7b) — Zehnergrenze verlangt voll, Bericht schmal',
+                   zerlegen(guter), dict(baum='abc1234', dateien=[], riegel={}, riegel_namen=namen,
+                                         umfang_verlangt='voll'), 1))
+    faelle.append(('grün (7c) — Zehnergrenze verlangt voll, Bericht voll:hand',
+                   zerlegen(guter.replace('umfang=schmal', 'umfang=voll:hand').replace('breiten=fuenf', 'breiten=zehn')),
+                   dict(baum='abc1234', dateien=[], riegel={}, riegel_namen=namen, umfang_verlangt='voll'), 0))
+    faelle.append(('rot (7d) — Stufe haupt, Bericht schmal',
+                   zerlegen(guter.replace('neben', 'haupt')),
+                   dict(baum='abc1234', dateien=[], riegel={}, riegel_namen=namen), 1))
+    faelle.append(('rot (7e) — unbekannter Umfang',
+                   zerlegen(guter.replace('umfang=schmal', 'umfang=breit')),
+                   dict(baum='abc1234', dateien=[], riegel={}, riegel_namen=namen), 1))
+    faelle.append(('grün (7f) — mehr als verlangt: schmal verlangt, voll:zehner gemeldet',
+                   zerlegen(guter.replace('umfang=schmal', 'umfang=voll:zehner').replace('breiten=fuenf', 'breiten=zehn')),
+                   dict(baum='abc1234', dateien=[], riegel={}, riegel_namen=namen, umfang_verlangt='schmal'), 0))
+    # Lage 8 — der Vorgänger als Text, ohne Git.
+    vtext = ('Prüfstand: neben · Baum aaaa1111bbbb2222 · Konfiguration web\n'
+             '  syntax-php=php:486/0  spurprobe=0  jobprobe=0  ingestprobe=1\n'
+             '  motoren=chromium+firefox+webkit  umfang=schmal  breiten=fuenf  seiten=alle\n')
+    vbaum = 'aaaa1111bbbb2222cccc3333'
+    erbend = guter.replace('spurprobe=0', 'spurprobe=ererbt:aaaa1111bbbb')
+    v = dict(baum='abc1234', dateien=[], riegel={}, riegel_namen=namen, vorg=(zerlegen(vtext), vbaum))
+    faelle.append(('grün (8) — spurprobe vom Vorgänger geerbt, nichts berührt',
+                   zerlegen(erbend), dict(v, diff_vorg=['docs/Handbuch.md']), 0))
+    faelle.append(('rot (8b) — geerbt, aber ihr Muster ist berührt',
+                   zerlegen(erbend), dict(v, diff_vorg=['server/spur_lib.php']), 1))
+    faelle.append(('rot (8c) — geerbt von einem anderen Baum als dem des Vorgängers',
+                   zerlegen(guter.replace('spurprobe=0', 'spurprobe=ererbt:ffff0000')), dict(v, diff_vorg=[]), 1))
+    faelle.append(('rot (8d) — geerbt, beim Vorgänger rot',
+                   zerlegen(guter.replace('spurprobe=0', 'ingestprobe=ererbt:aaaa1111bbbb')), dict(v, diff_vorg=[]), 1))
+    faelle.append(('rot (8e) — der Vorgänger erbt selbst',
+                   zerlegen(erbend), dict(v, vorg=(zerlegen(vtext.replace('jobprobe=0', 'jobprobe=ererbt:9')), vbaum),
+                                          diff_vorg=[]), 1))
+    faelle.append(('rot (8f) — kein Vorgänger-Bericht',
+                   zerlegen(erbend), dict(v, vorg=(None, vbaum), diff_vorg=[]), 1))
+    faelle.append(('rot (8g) — Kreislauf edbak geerbt',
+                   zerlegen(guter.replace('kreislauf-edbak=0', 'kreislauf-edbak=ererbt:aaaa1111bbbb')),
+                   dict(v, vorg=(zerlegen(vtext.replace('jobprobe=0', 'kreislauf-edbak=0')), vbaum), diff_vorg=[]), 1))
+    faelle.append(('rot (8h) — ein Riegel geerbt',
+                   zerlegen(guter.replace('wortliste=0', 'wortliste=ererbt:aaaa1111bbbb')),
+                   dict(v, vorg=(zerlegen(vtext.replace('jobprobe=0', 'wortliste=0')), vbaum), diff_vorg=[]), 1))
+    faelle.append(('rot (8i) — geerbt im vollen Lauf',
+                   zerlegen(erbend.replace('umfang=schmal', 'umfang=voll:hand').replace('breiten=fuenf', 'breiten=zehn')),
+                   dict(v, diff_vorg=[]), 1))
     faelle.append(('rot (0) — gar kein Bericht in der Nachricht',
                    zerlegen('Ein Commit ganz ohne Block.\n'),
                    dict(baum='abc1234', dateien=[], riegel={}, riegel_namen=namen), 1))
 
+    # Die Fläche aus einem geerbten Bau (F-PU-13): Der erste echte Erbe-Lauf
+    # schrieb `handy=rot`, weil hier nur „0" als grün galt.
+    flaeche_faelle = [
+        ('Fläche: Bau geerbt -> gebaut',
+         flaechen_aus_lauf({'android-bau': 'ererbt:abc123'}, ['android/LIESMICH.md'])['handy'] == 'gebaut'),
+        ('Fläche: Bau rot -> rot',
+         flaechen_aus_lauf({'android-bau': '1'}, ['android/LIESMICH.md'])['handy'] == 'rot'),
+        ('Fläche: Bau nicht gemessen -> nicht-gemessen',
+         flaechen_aus_lauf({'android-bau': 'nicht-gemessen'}, ['android/LIESMICH.md'])['handy'] == 'nicht-gemessen'),
+    ]
     fehl = 0
+    for name, ok in flaeche_faelle:
+        melde(f"  [{'ok  ' if ok else 'FEHL'}] {name}")
+        fehl += 0 if ok else 1
     for name, bericht, kw, erwartet in faelle:
         # JEDER FALL GEHT DURCH pruefen() — auch der mit der Stufe. Eine
         # Selbstprobe, die den Fall daneben nachbaut, prueft ihren Nachbau.
@@ -380,7 +573,7 @@ def selbstprobe():
 
     melde()
     gruen = sum(1 for f in faelle if f[3] == 0)
-    melde(f'{len(faelle)} Lagen, {fehl} Fehlschlaege.  '
+    melde(f'{len(faelle) + len(flaeche_faelle)} Lagen, {fehl} Fehlschlaege.  '
           f'({len(faelle) - gruen} rote, {gruen} gruene)')
     return 1 if fehl else 0
 
@@ -393,6 +586,63 @@ def erzeugen_doku(args):
     ERZEUGT, NICHT GEPFLEGT: Wer sie von Hand ändert, ändert sie an der
     falschen Stelle (wie die Tabellen in Design.md).
     """
+    melde(doku_tabelle().rstrip('\n'))
+    return 0
+
+
+PRUEFABLAUF_MD = os.path.join(WURZEL, 'docs', 'Pruefablauf.md')
+DESIGN_MD = os.path.join(WURZEL, 'docs', 'Design.md')
+TABELLE_ANFANG = '<!-- ERZEUGT von tools/pruefstand/bericht.py erzeugen-doku'
+TABELLE_ENDE = '\n---\n\n## 5. '
+
+
+def tabelle_einsetzen(text, tabelle):
+    """Ersetzt in Pruefablauf.md den erzeugten Block — von der Marke bis vor
+    die Trennlinie zu Abschnitt 5. Fehlt eine Grenze, ValueError."""
+    a = text.index(TABELLE_ANFANG)
+    e = text.index(TABELLE_ENDE, a)
+    return text[:a] + tabelle.rstrip('\n') + '\n' + text[e:]
+
+
+def erzeugen(args):
+    """DIE ERZEUGTEN TABELLEN, VOR DEM RIEGEL ERZEUGT (E-PU-07). Neun von
+    fünfzehn roten Läufen des Bestandsriegels waren eine Tabelle, die niemand
+    neu erzeugt hatte (F-PU-01): erzeugen, committen, Prüfstand noch einmal.
+    Jetzt erzeugt der Prüfstand sie selbst — `design.py schreiben` für
+    Design.md, `doku_tabelle()` für Pruefablauf.md 4 — und meldet als
+    HINWEIS, was sich geändert hat; die Änderung gehört in den Commit. Im Tor
+    bleibt `bestand` rot, wenn jemand ohne Prüfstand committet.
+    Rückgabe 0 = erzeugt (geändert oder nicht), 1 = ein Erzeuger scheiterte."""
+    def lies(p):
+        with open(p, encoding='utf-8') as f:
+            return f.read()
+    vorher = {p: lies(p) for p in (DESIGN_MD, PRUEFABLAUF_MD)}
+    r = subprocess.run([sys.executable, os.path.join(WURZEL, 'tools', 'erzeugen', 'design.py'), 'schreiben'],
+                       capture_output=True, text=True)
+    if r.returncode != 0:
+        melde(f'design.py schreiben endete mit rc {r.returncode}: {(r.stderr or r.stdout).strip()[-300:]}')
+        return 1
+    try:
+        neu = tabelle_einsetzen(lies(PRUEFABLAUF_MD), doku_tabelle())
+    except ValueError:
+        melde(f'docs/Pruefablauf.md: die Grenzen des erzeugten Blocks fehlen ({TABELLE_ANFANG!r} … {TABELLE_ENDE!r}).')
+        return 1
+    if neu != vorher[PRUEFABLAUF_MD]:
+        with open(PRUEFABLAUF_MD, 'w', encoding='utf-8') as f:
+            f.write(neu)
+    geaendert = [os.path.relpath(p, WURZEL) for p in vorher if lies(p) != vorher[p]]
+    for p in geaendert:
+        melde(f'HINWEIS: {p} neu erzeugt — die Änderung gehört in den Commit (E-PU-07)')
+    melde(f'Erzeugt: Design.md (4 Tabellen), Pruefablauf.md 4 — {len(geaendert)} geändert.')
+    return 0
+
+
+def doku_tabelle():
+    """Der erzeugte Block für Pruefablauf.md 4, als Text."""
+    zeilen = []
+
+    def melde(z=''):                            # sammeln statt drucken
+        zeilen.append(z)
     a = lade_ablauf()
     melde('<!-- ERZEUGT von tools/pruefstand/bericht.py erzeugen-doku — nicht von Hand ändern. -->')
     melde()
@@ -409,7 +659,7 @@ def erzeugen_doku(args):
         melde()
         melde(f"**Stufenregel `{r['id']}`:** eine neue Kennung in `{r['datei']}` "
               f"heißt mindestens **{r['stufe']}** — {r['anlass']}")
-    return 0
+    return '\n'.join(zeilen) + '\n'
 
 
 # ------------------------------------------------------------------- Lauf
@@ -440,6 +690,9 @@ def main():
 
     d = u.add_parser('erzeugen-doku')
     d.set_defaults(fn=erzeugen_doku)
+
+    e = u.add_parser('erzeugen', help='Design.md und Pruefablauf.md 4 neu erzeugen, Änderung als HINWEIS (E-PU-07)')
+    e.set_defaults(fn=erzeugen)
 
     args = p.parse_args()
     try:

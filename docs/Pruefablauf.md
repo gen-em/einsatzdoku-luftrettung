@@ -43,6 +43,9 @@ nicht gibt.
 | Seine Gegenlesung im Tor (5.1) | **gebaut mit PK-05** |
 | Station C in der beschriebenen Form (2) | **gebaut mit PK-05** — die Schemaprobe wird Pflichtprüfung, sobald das Ruleset es trägt (E-PK-47) |
 | Station D in der beschriebenen Form (2) | **gebaut mit PK-06** (Vorgriff PR #72 am 21.09.2026, Rest 29.09.2026) |
+| Umfang schmal oder voll, Engines, Breiten und Seiten je Berührung (1, 3) | **gebaut mit PU-01, -03, -04** (R89, 01.11.2026) |
+| Ergebnisart `hinweis`, Erzeuger vor dem Riegel, Steuerung aus dem Tor (2.2, 6.2) | **gebaut mit PU-02, -05, -06** |
+| Der ererbte Bericht (5.4, Lage 8) | **gebaut mit PU-10** (02.11.2026); im Tor auf GitHub zum ersten Mal mit dem PR von PU |
 
 Abschnitt 2.4 nennt den Umfang von Station D mit Zahl.
 
@@ -76,13 +79,15 @@ Abschnitt 2.4 nennt den Umfang von Station D mit Zahl.
    noch einmal, wenn ein grüner PR-Lauf denselben Baum gemessen hat — und
    nennt dafür Lauf, Commit und Zeitpunkt. Ein Verweis mit Beleg, kein
    stilles Grün.
-8. **Jede Browserprobe läuft in Chromium, Firefox und WebKit.** Fehlt eine
-   Engine, ist die Probe rot, nicht übersprungen. Das gilt ab der Stufe
-   `neben` und in Stufe 2; **in `klein` laufen die Browserproben in Chromium
-   allein** (R87, E-DM-08 — ein voller dreifacher Lauf dauert länger, als
-   eine Korrektur es rechtfertigt). Der Bericht nennt die Engines
-   (`motoren=chromium+firefox+webkit`, in `klein` `motoren=chromium`), und
-   das Tor liest es gegen (5.1);
+8. **Jede Browserprobe läuft in drei Engines, wo die Engines sich
+   unterscheiden können** (R89, E-PU-02, seit PU-03): Chromium immer;
+   **Firefox und WebKit dazu** beim vollen Lauf (Hauptstufe, Zehnergrenze,
+   `--voll`; Abschnitt 3) und ab `neben`, wenn `server/assets/style.css`
+   oder `server/ui.php` berührt ist (`umfang.stil` in `pruefablauf.json`).
+   **Stufe 2 misst immer dreifach.** Fehlt eine verlangte Engine, ist die
+   Probe rot, nicht übersprungen. Der Bericht nennt die Engines
+   (`motoren=chromium+firefox+webkit` oder `motoren=chromium`), und
+   das Tor rechnet mit derselben Regel nach (5.1);
    welches Werkzeug auf welchem Weg dahin kommt, hält das Register
    `tools/pruefstand/motoren.md`, und der Bestandsriegel zählt es nach.
    **Was nur Chromium kann** — die CPU-Drossel, der virtuelle
@@ -91,7 +96,9 @@ Abschnitt 2.4 nennt den Umfang von Station D mit Zahl.
    nicht Safari:** Ein echter Safari bleibt Handprüfung in den Prüflisten.
    *Bis zum 19.10.2026 lief jede Browserprobe in Chromium allein, obwohl
    Nr. 183 drei Engines beschlossen hatte — durchgesetzt hat es kein
-   Prüfmittel, und ganz S11 lief in einer (Nr. 390).*
+   Prüfmittel, und ganz S11 lief in einer (Nr. 390). Vom 20.10. bis PU-03
+   galt R87: dreifach in jeder Neben- und Hauptstufe, gleich was berührt
+   war — der Bilderlauf allein brauchte dann rund 70 Minuten.*
 
 ---
 
@@ -104,7 +111,7 @@ nur sie beantworten kann.
 | Station | Wann | Wer | Was dort geprüft wird | Dauer (Ziel) |
 |---|---|---|---|---|
 | **A Arbeit** | während der Entwicklung | die Instanz in der Arbeitsumgebung | Browser, Emulator, Uhr-Simulator, die Proben, die zur Änderung gehören | nach Bedarf |
-| **B Prüfstand** | vor dem Pull Request, **ein Befehl** | dieselbe Instanz | örtliche Installation hochfahren, Referenzbestand, die Proben der Stufe, Bau der Apps (unsigniert), die billigen Riegel; auf Anforderung die Plattformprobe gegen Staging. Ergebnis ist der **Prüfbericht** (5) | klein 5 min, neben **rund 21 min** (E-RP-05), haupt 45 min |
+| **B Prüfstand** | vor dem Pull Request, **ein Befehl** | dieselbe Instanz | örtliche Installation hochfahren, Referenzbestand, die Proben der Stufe, Bau der Apps (unsigniert), die billigen Riegel; auf Anforderung die Plattformprobe gegen Staging. Ergebnis ist der **Prüfbericht** (5) | klein 5 min; neben **schmal** je nach Berührung, **voll** rund 2½ h in drei Engines (gemessen 02.11.2026 an PU ohne `server/`: 2 138 s gegen 8 443 s); nach einer Berichtigung erbt der zweite Lauf (5.4). *Bis PU stand hier „neben rund 21 min" (E-RP-05) — gemessen vor R87* |
 | **C Tor** | beim Pull Request und auf `main` | GitHub | die billigen Riegel als Gegenlesung des Berichts, Schemaprobe gegen MySQL 8.4.0 und MariaDB 10.6, Bericht passt zum Baum und zur Berührung. **Rot in `Stufe 1` heißt kein Merge** — und in der Schemaprobe ebenso, sobald das Ruleset sie trägt (E-PK-47); der Merge ist Sache der BetreiberIn | 1 bis 2 min |
 | **D Staging** | nach dem Merge | GitHub | Auslieferung (unverändert), dann drei Schritte: Antwortprobe, Punktdateien, **ein** Kreislauf `edbak` als Gegenlesung auf PHP 8.3 beim Hoster | unter 10 min |
 | **E Produktiv** | beim Tag, nach Freigabe | GitHub | dieselbe Auslieferung, Backup-Tor, Fassungsprüfung, Integritätswache; App-Tags bauen und signieren einmal | wie heute |
@@ -124,7 +131,12 @@ mitzuprüfen, die dieselbe Regel benutzen — nicht nur die, an der die
 Änderung entstand.
 
 **Was nicht gemessen werden konnte, wird gesagt**, nicht als erledigt
-gemeldet. Ein Punkt, der nicht gemessen werden konnte, gehört im Prüfdokument
+gemeldet. **Das Prüfdokument einer Phase ist eine Prüfliste** (seit PU-07,
+E-PU-08; Form in `CLAUDE.md` 7): was nicht geprüft werden konnte, die
+Grenzen der Mittel, höchstens 20 Handprüfpunkte — die maschinellen Zahlen
+stehen im Prüfprotokoll des Konzepts und im Prüfbericht des Commits. Nach
+dem Merge geht es in `docs/konzepte/Pruefliste.md` auf (E-PU-09).
+Ein Punkt, der nicht gemessen werden konnte, gehört im Prüfdokument
 an den **Anfang**, unter „was nicht geprüft werden konnte und warum", nicht
 in eine Fußnote.
 
@@ -142,6 +154,15 @@ die Probe als *nicht gemessen* — mit Grund —, sagt am Ende „n rot, m nicht
 gemessen, k grün" und endet mit rc 1. **Seit PK-05 steht sie auch im
 Bericht**, als `name=nicht-gemessen`, und das Tor liest sie als rot
 (E-PK-46). Eine übersprungene Probe, die grün meldet, gibt es nicht.
+
+**Die vierte Ergebnisart heißt `hinweis`** (seit PU-02, E-PU-05): gemessen,
+gemeldet, hält nicht auf. Dahin führen zwei Wege — eine Probe mit
+`"hinweis": true` in `pruefablauf.json` endet rot, oder eine Probe endet
+grün und schreibt Zeilen, die mit `HINWEIS: ` beginnen. Der Lauf zeigt
+beides als `HIN` mit den Zeilen darunter, zählt es am Ende eigens
+(„n rot, m nicht gemessen, h Hinweis, k grün") und schreibt
+`name=hinweis` in den Bericht. Grundsatz 7 bleibt gewahrt: Nichts wird
+übersprungen, und was gemeldet wurde, steht im Prüfprotokoll des Konzepts.
 
 Station B ist die geprüfte Partei. Ihr Bericht ist ein **Nachweis**, kein
 Riegel — was das heißt und wo die Grenze liegt, steht in 5.2.
@@ -204,11 +225,13 @@ Wer die versionierte Deny-Liste ändert, hebt Lage 2 ebenfalls auf; das fällt
 im Pull Request auf, weil `.claude/settings.json` dann in der Berührung
 steht.
 
-**Heutiger Umfang** (gezählt am 28.10.2026 am Quelltext, R17-27 —
-nachzählen: `awk 'NR>=75 && NR<231 && /^      - /' .github/workflows/pruefung.yml | wc -l`
+**Heutiger Umfang** (gezählt am 02.11.2026 am Quelltext, PU-05 —
+nachzählen: `awk '/^  pruefung:/{a=1} /^  schema:/{a=0} a && /^      - /' .github/workflows/pruefung.yml | wc -l`
 für `Stufe 1`): Der Arbeitslauf `pruefung.yml` heißt „Prüfung" und führt drei
 Jobs — **`Schon gemessen?`** mit **2** Schritten, `Stufe 1` mit **16** (bis
-R17-27 stand hier 15, F-R17-29) und
+PU-05 **17**: Der Schritt „Steuerungsdokumente" ist in den Prüfstand
+gewandert, E-PU-06 — und der frühere Zählbefehl über feste Zeilen brach
+vor dem letzten Schritt ab und zählte 16, F-PU-09) und
 `Schema gegen …` mit **4**; bis PK-05 waren es in `Stufe 1` **24**, bis BR-03
 **17** — drei Schritte sind in die Quelltextprüfungen gewandert (`bestand`,
 `pysyntax`, `handbuch`), einer kam dazu (`cmark-gfm` bereitstellen). Den
@@ -322,8 +345,8 @@ nichts gelesen wird, misst gegen nichts.
 
 | Stufe | Auslöser | Umfang |
 |---|---|---|
-| **klein** | Korrekturstufe `a.a.Y`, oder kein Versionssprung | billige Riegel; je berührter Datei die zugeordneten Proben (4); Bilderlauf der berührten Seiten in drei Breiten; Bedienprobe der berührten Seiten — jede Browserprobe in Chromium allein (Grundsatz 8, E-DM-08) |
-| **neben** | Nebenstufe `a.X.a` | alles ohne Anlage: alle Proben gegen die örtliche Installation, beide Kreisläufe, Bilderlauf aller Seiten in zehn Breiten (seit R4-08; vorher acht), Bedienprobe aller Seiten, jede Browserprobe in drei Engines; Handy- und Uhr-Bau, wenn berührt |
+| **klein** | Korrekturstufe `a.a.Y`, oder kein Versionssprung | billige Riegel; je berührter Datei die zugeordneten Proben (4); Bilderlauf der berührten Seiten in drei Breiten (Seitenwahl unten); Bedienprobe, wenn ihr Muster greift — jede Browserprobe in Chromium allein (Grundsatz 8, E-DM-08) |
+| **neben** | Nebenstufe `a.X.a` | alles ohne Anlage: alle Proben gegen die örtliche Installation, beide Kreisläufe; Bilderlauf und Bedienprobe wie in `klein` über ihre Muster, der Bilderlauf in **fünf** Breiten (390, 768, 1024, 1200, 1600) und in **zehn** beim vollen Lauf oder bei berührtem Stylesheet bzw. `ui.php`, beim vollen Lauf beide immer und über alle Seiten (seit PU-04); Browserproben in Chromium, in drei Engines nur beim vollen Lauf oder bei berührtem Stylesheet bzw. `ui.php` (Grundsatz 8, seit PU-03); Handy- und Uhr-Bau, wenn berührt |
 | **haupt** | Hauptstufe `X.a.a`, **eine neue Migration** (Stufenregel `migration`, 4; seit P5c/AP4) oder `--stufe haupt` | wie neben, dazu die **Plattformmatrix** (PHP 8.3.33 und 8.4; MariaDB 10.11 und 10.6, MySQL 8.0 und 8.4.0 — Schemaprobe und ein Kreislauf `edbak` je Paar), Messstand (Chromium allein, E-DM-06), Anteilprobe, Verbindungsprobe, Uhr-Prüfstand Stufe II |
 
 **Warum die Matrix in die Hauptstufe gehört und nicht in die Kette:** Der
@@ -342,13 +365,42 @@ sind:** PHP 8.3.33 als zweite Fassung, der Kreislauf `edbak` je Paar — auch
 der gegen MySQL 8.4.0 aus dem Absatz darüber; `kreislauf.py` kennt keine
 zweite Datenbank — und der Uhr-Prüfstand Stufe II. *Firefox und WebKit im
 Bilderlauf standen bis zum 19.10.2026 ebenfalls hier; seit Konzept DM läuft
-er ab `neben` dreifach.* Die Zeile „haupt" oben ist damit **das Ziel, nicht der Stand**
+er ab `neben` dreifach, seit PU-03 nach Grundsatz 8.* Die Zeile „haupt" oben ist damit **das Ziel, nicht der Stand**
 (Backlog Nr. 300). Bis dahin fährt ein Paket in `haupt` die Teile, die es
 berühren, von Hand (`hochfahren.sh --php 8.3`) und nennt im Prüfdokument,
 was fehlt.
 
 **Eine Hauptstufe, die mit `--stufe klein` gefahren wurde, fällt im Tor
-auf** — das ist eine der sechs roten Lagen in 5.1.
+auf** — das ist eine der roten Lagen in 5.1.
+
+**Die Seitenwahl** (seit PU-04, E-PU-04, Q-PU-03). Eine Seite aus
+`tools/screenshots/seiten.json` gilt als berührt, wenn **ihre eigene Datei**
+berührt ist — der Pfad ohne Anfrage, ein Platzhalter über
+`umfang.platzhalter` in `pruefablauf.json`. Jede **andere** Datei, die den
+Bilderlauf über ein Muster auslöst — eine Bibliothek, ein Skript, ein
+Endpunkt, `ui.php`, das Stylesheet, das Werkzeug selbst —, gilt als
+**geteilt** und bringt alle Seiten. `server/version.php` löst nichts aus
+(`umfang.neutral`): Die Fassungsnummer ändert sich bei jeder Neben- und
+Hauptstufe, und sonst liefe jeder Bilderlauf über alle Seiten. Die
+Bedienprobe folgt derselben Auslöseregel, fährt aber alle Wege, wenn sie
+läuft — ihre Wege lassen sich keiner Seite zuordnen. Der Bericht trägt
+`breiten=` und `seiten=` (Zahl oder `alle`), das Tor rechnet nach (5.1,
+Lage 6). *Bis PU-04 stand in der Tabelle „berührte Seiten", und der
+Prüfstand übergab nie `--nur`: `klein` maß alle Seiten (F-PU-07).*
+
+**Schmal oder voll** (seit PU-01, E-PU-01). Neben der Stufe bestimmt der
+Befehl den **Umfang** und sagt ihn: **voll** in jeder Hauptstufe, in
+`neben`, wenn die Nebennummer zwischen `main` und dem Zweig eine durch 10
+teilbare Zahl erreicht oder überschreitet (23.9 → 23.10 und 23.9 → 23.11
+sind voll, 23.10 → 23.11 nicht — die **Zehnerregel**), und mit `--voll`
+jederzeit; sonst **schmal**. Die Regel liest nur `server/version.php` und
+hält keinen Zustand. Der Bericht trägt `umfang=schmal`, `voll:haupt`,
+`voll:zehner` oder `voll:hand`, und das Tor liest es gegen (5.1, Lage 7).
+Was am Umfang hängt — Engines, Breiten, Seiten —, steht in der Tabelle
+oben und in Grundsatz 8.
+*Warum zehn:* Zwischen zwei Hauptstufen lagen zuletzt 5 bis 45
+Nebenfassungen (Web 20); ein voller Lauf nur in `haupt` wäre bei Web 20
+45-mal ausgeblieben.
 
 ---
 
@@ -395,6 +447,7 @@ Zwei Dinge hängen mit daran, und beide sind gemessen:
 | Berührung | ab Stufe | Proben | Anlass |
 |---|---|---|---|
 | `server/**` | klein | — (nur die Riegel) | Auffangmuster: Jede Datei unter server/ laeuft durch die billigen Riegel. Sie traegt KEINE eigene Probe -- wer hier landet und sonst nirgends, hat keine zugeordnete Probe, und der Pruefstand sagt das. |
+| `server/**`, `docs/Design.md`, `docs/Pruefablauf.md`, `tools/erzeugen/design.py`, `tools/pruefstand/**` | klein | `erzeugen` | F-PU-01 (PU-06): Was die vier Tabellen in Design.md (Stylesheet, ui.php, Symbole und ihre Verwendung unter server/) oder die Tabelle in Pruefablauf.md 4 (pruefablauf.json, bericht.py) speist, erzeugt sie vor dem Riegel neu. |
 | `server/spur_lib.php`, `server/tag_spuren.php`, `server/api/backup_spuren*.php` | klein | `spurprobe`, `containerprobe` | int gegen float (S2) |
 | `server/ingest.php`, `server/validate_lib.php` | klein | `ingestprobe` | stiller Datenverlust bei "ok" |
 | `server/jobs_lib.php`, `server/jobs.php` | klein | `jobprobe`, `jobregister` | Huckepack 18 s; Nr. 208 |
@@ -425,6 +478,8 @@ Zwei Dinge hängen mit daran, und beide sind gemessen:
 | `docs/rechtstexte/*.md`, `server/nutzungsbedingungen.php`, `server/avv.php`, `server/datenschutz.php` | klein | `rechtstexte` | P3/O10 |
 | `server/assets/style.css`, `tools/stilvergleich/**` | klein | `stilvergleich`, `bilderlauf`, `kontraste` | P0/A3 |
 | `server/*.php`, `server/assets/*.js` | klein | `bilderlauf`, `bedienprobe` | Nr. 185, 225; PS-2 |
+| `tools/screenshots/aufnehmen.mjs`, `tools/screenshots/seiten.json` | klein | `bilderlauf` | F-PU-08 (PU-04): Wer den Bilderlauf oder seine Seitenliste aendert, faehrt ihn. Bis dahin fuehrte keine Zeile von tools/screenshots/ zum Bilderlauf -- nur der Stilvergleich und der Riegel kettenaufrufe sahen die Datei. |
+| `tools/bedienprobe/*.mjs`, `tools/bedienprobe/wege/**` | klein | `bedienprobe` | F-PU-08 (PU-04): Wer die Bedienprobe oder einen ihrer Wege aendert, faehrt sie. Bis dahin fuehrte nur wege/registrieren.mjs dorthin (Muster registrierung). Nicht tools/bedienprobe/**: ausgabe/bericht.* ist eingecheckt, und jeder Lauf haette den naechsten ausgeloest. |
 | `.github/workflows/*.yml`, `tools/**` | klein | `kettenaufrufe` | Nr. 217 |
 | `android/**` | klein | `android-bau`, `android-kontraste`, `android-farbabgleich`, `android-bildmarken`, `android-stroeme` | E-PK-02 |
 | `server/kontopaar_lib.php`, `server/api/kontopaar.php`, `server/assets/kontopaar.js`, `server/assets/unlock.js`, `tools/proben/kontopaar/**` | klein | `kontopaarprobe` | Nr. 43 |
@@ -432,14 +487,14 @@ Zwei Dinge hängen mit daran, und beide sind gemessen:
 | `server/api/wartungslauf.php`, `server/assets/wartungslauf.js`, `server/spur_lib.php`, `server/validate_lib.php`, `tools/proben/wartungslauf/**` | klein | `wartungslaufprobe` | Nr. 43 |
 | `tools/proben/huelle/**`, `tools/uhr-pruefstand/krypto-probe/**`, `server/assets/crypto.js`, `server/geraetehuelle_lib.php` | klein | `huellenprobe`, `uhr-krypto` | Nr. 43 |
 | `watch/**`, `tools/uhr-pruefstand/**` | klein | `uhr-stufe1`, `uhr-rundlauf` | E-PK-02 |
-| `server/**` | neben | `ingestprobe`, `spurprobe`, `jobprobe`, `komplettprobe`, `wiederherstellung`, `gpxprobe`, `geraeteprobe`, `kopplungsprobe`, `mailprobe`, `versandprobe`, `ratenprobe`, `wartungsprobe`, `freigabeprobe`, `fristprobe`, `abmelde-probe`, `containerprobe`, `browserprobe-csp`, `bedienprobe`, `bilderlauf`, `kreislauf-csv`, `kreislauf-edbak`, `spaltenregister-wegprobe`, `protokollprobe`, `rollenprobe`, `zweitfaktorprobe`, `rueckwegprobe`, `sitzungsprobe`, `passkeyprobe`, `schluesselwechselprobe` | Pruefablauf.md 3, Zeile neben: alle Proben gegen die oertliche Installation, beide Kreislaeufe, Bilderlauf aller Seiten in zehn Breiten (acht bis R4-08), Bedienprobe. Bis PK-05 gab es dieses Muster nicht -- eine Nebenstufe mass dasselbe wie eine Korrekturstufe (F-P5c-49, E-P5c-32). protokollprobe und rollenprobe kamen mit P5c/AP2 und fehlten hier bis AP3 (F-P5c-90). zweitfaktorprobe kam mit P5c/AP5 und steht hier im selben Paket, rueckwegprobe ebenso mit RW-01, sitzungsprobe mit SR-01, passkeyprobe mit SR-09, schluesselwechselprobe mit SR-03. |
+| `server/**` | neben | `ingestprobe`, `spurprobe`, `jobprobe`, `komplettprobe`, `wiederherstellung`, `gpxprobe`, `geraeteprobe`, `kopplungsprobe`, `mailprobe`, `versandprobe`, `ratenprobe`, `wartungsprobe`, `freigabeprobe`, `fristprobe`, `abmelde-probe`, `containerprobe`, `browserprobe-csp`, `kreislauf-csv`, `kreislauf-edbak`, `spaltenregister-wegprobe`, `protokollprobe`, `rollenprobe`, `zweitfaktorprobe`, `rueckwegprobe`, `sitzungsprobe`, `passkeyprobe`, `schluesselwechselprobe` | Pruefablauf.md 3, Zeile neben: alle Proben gegen die oertliche Installation, beide Kreislaeufe, Bilderlauf aller Seiten in zehn Breiten (acht bis R4-08), Bedienprobe. Bis PK-05 gab es dieses Muster nicht -- eine Nebenstufe mass dasselbe wie eine Korrekturstufe (F-P5c-49, E-P5c-32). protokollprobe und rollenprobe kamen mit P5c/AP2 und fehlten hier bis AP3 (F-P5c-90). zweitfaktorprobe kam mit P5c/AP5 und steht hier im selben Paket, rueckwegprobe ebenso mit RW-01, sitzungsprobe mit SR-01, passkeyprobe mit SR-09, schluesselwechselprobe mit SR-03. Bilderlauf und Bedienprobe stehen seit PU-04 nicht mehr hier: Sie laufen wie in klein nur ueber ihre eigenen Muster, beim vollen Lauf immer (E-PU-04, Q-PU-03). |
 | `server/betrieb_statistik.php`, `server/statistik_lib.php` | klein | `messstand`, `bilderlauf` | Nr. 295 (Messstand-Schritt statistik: drei Reiter unter 1 s bei 5000 Einsätzen, EXPLAIN). Stand bis R4-04 am ENDE der Muster, weil die Reihenfolge der Proben entschied, wen der Demo-Reset traf (F-P5c-127); seit R4-04 schiebt der Pruefstand die Demo-Marke vor jeder Probe mit demo: true (Nr. 322), und die Stelle ist gleichgueltig. |
 | `server/**` | haupt | `messstand`, `anteilprobe`, `verbindungsprobe`, `schemaprobe` | F-S2-E; Nr. 267 -- der Export scheiterte nur auf MySQL 8.4 -- dazu, was Pruefablauf.md 3 erst der Hauptstufe gibt: Messstand, Anteil- und Verbindungsprobe (PK-05). |
-| `docs/Rahmenplan*.md`, `docs/Backlog*.md`, `CLAUDE.md`, `tools/steuerung/**` | klein | `steuerung`, `nummern` | Nr. 177, 196, 199 (Konzept SD): die Decken der Steuerungsdokumente und die Kopfzeilen des Backlogs. Der Riegel laeuft ohnehin in jeder Stufe; das Muster benennt die Beruehrung. Nr. 339 (R4-03): eine neue Nummer, die ein anderer Zweig schon traegt -- nur oertlich, deshalb nur hier. |
+| `docs/Rahmenplan*.md`, `docs/Backlog*.md`, `CLAUDE.md`, `tools/steuerung/**` | klein | `steuerung`, `nummern` | Nr. 177, 196, 199 (Konzept SD): die Decken der Steuerungsdokumente und die Kopfzeilen des Backlogs. Der Riegel laeuft ohnehin in jeder Stufe; das Muster benennt die Beruehrung. Nr. 339 (R4-03): eine neue Nummer, die ein anderer Zweig schon traegt -- nur oertlich, deshalb nur hier. Seit PU-05 (E-PU-06) laeuft steuerung nur noch hier, als hinweis; Stufe 1 faehrt sie nicht mehr. |
 | `server/assets/style.css`, `server/assets/images/gen-em_logo_*.png` | klein | `android-farbabgleich`, `android-bildmarken` | Nr. 334 (R4-04): Die App uebernimmt Farbwerte und Bildmarken aus dem Web (E-S4-22a). Wer sie dort aendert, erfaehrt hier, dass die App nachzieht -- ohne den Android-Bau, der dafuer nichts misst. |
-| `tools/motor.mjs`, `tools/pruefstand/motoren.md`, `tools/zweitfaktor/totp.mjs` | klein | `gpxprobe`, `freigabeprobe`, `fristprobe`, `abmelde-probe`, `containerprobe`, `huellenprobe`, `kontopaarprobe`, `ortsdatenprobe`, `wartungslaufprobe`, `browserprobe-csp`, `bedienprobe`, `bilderlauf`, `stilvergleich`, `kreislauf-csv`, `kreislauf-edbak`, `rueckwegprobe` | Nr. 390 — die Engine-Wahl und das Register gelten fuer jede Browserprobe; wer sie aendert, faehrt alle in drei Engines (R87) |
+| `tools/motor.mjs`, `tools/pruefstand/motoren.md`, `tools/zweitfaktor/totp.mjs` | klein | `gpxprobe`, `freigabeprobe`, `fristprobe`, `abmelde-probe`, `containerprobe`, `huellenprobe`, `kontopaarprobe`, `ortsdatenprobe`, `wartungslaufprobe`, `browserprobe-csp`, `bedienprobe`, `bilderlauf`, `stilvergleich`, `kreislauf-csv`, `kreislauf-edbak`, `rueckwegprobe` | Nr. 390 — die Engine-Wahl und das Register gelten fuer jede Browserprobe; wer sie aendert, faehrt alle Browserproben. tools/motor.mjs hebt ab neben auf drei Engines (umfang.engine_wahl, E-PU-16); bis PU-03 hiess es hier pauschal drei (R87). |
 
-**Die billigen Riegel laufen in jeder Stufe, ohne Muster:** `syntax-php`, `wortliste`, `vollstaendigkeit`, `kontraste`, `linkprobe`, `anker`, `kennzeichnung`, `fremdsummen`, `dokumente`, `bestand`, `syntax-py`, `handbuch`, `installweiche`, `behandler`, `sitzungshaertung`, `cspprobe`, `jobregister`, `migrationsregister`, `rechtstexte`, `kettenaufrufe`, `zaehlung`, `spaltenregister`, `steuerung`.
+**Die billigen Riegel laufen in jeder Stufe, ohne Muster:** `syntax-php`, `wortliste`, `vollstaendigkeit`, `kontraste`, `linkprobe`, `anker`, `kennzeichnung`, `fremdsummen`, `dokumente`, `bestand`, `syntax-py`, `handbuch`, `installweiche`, `behandler`, `sitzungshaertung`, `cspprobe`, `jobregister`, `migrationsregister`, `rechtstexte`, `kettenaufrufe`, `zaehlung`, `spaltenregister`.
 
 **Stufenregel `migration`:** eine neue Kennung in `server/migration_lib.php` heißt mindestens **haupt** — E-P5c-36, E-P5c-88: Ein Paket mit Migration faehrt die Plattformmatrix, und die laeuft nur in haupt -- dort sind Nr. 238 und Nr. 267 gefunden worden. Ausgeloest von einer NEUEN Kennung im Katalog, nicht von einer Aenderung an der Datei: Die aendert sich auch ohne Migration (P5c/AP2, AP3).
 
@@ -448,8 +503,7 @@ Zwei Dinge hängen mit daran, und beide sind gemessen:
 ## 5. Der Prüfbericht
 
 *Erzeugung gebaut mit PK-03, Gegenlesung im Tor mit PK-05 (`bericht.py`,
-Selbstprobe 13 Lagen / 0; seit Konzept DM 18 Lagen / 0 mit der sechsten
-Lage).*
+mit Selbstprobe; die Zahl ihrer Lagen steht in `tools/pruefstand/LIESMICH.md`).*
 
 Der Prüfstand schreibt am Ende einen Block, der in die Commit-Nachricht
 gehört und maschinell lesbar ist:
@@ -461,7 +515,7 @@ Prüfstand: neben · Baum a1b2c3d… · Konfiguration web
   handy=nicht berührt  uhr=nicht berührt
 ```
 
-### 5.1 Sechs Lagen, in denen das Tor rot wird
+### 5.1 Die Lagen, in denen das Tor rot wird
 
 - Der **Baum-Hash** ist nicht der Baum des Commits. Das fängt den Fehler,
   der in O9c passiert ist: gemessen wurde vor der letzten Änderung, gemeldet
@@ -479,16 +533,35 @@ Prüfstand: neben · Baum a1b2c3d… · Konfiguration web
   fehlt einer im Aufruf, ist das rot, damit ein neuer Riegel nicht still
   ungegengelesen bleibt. Jeder Wert hängt am Ausgang seines Schritts: Wer
   einen Riegelschritt streicht, bekommt „nicht-gelaufen" statt einer stehen
-  gebliebenen 0.
+  gebliebenen 0. Ein Riegel, der im Bericht `hinweis` meldet, passt zu einer
+  0 im Tor (seit PU-02): Der Tor-Schritt endet grün und druckt denselben
+  Hinweis.
 - Eine **Probe** meldet im Bericht etwas anderes als 0 — rot oder
   `nicht-gemessen` (E-PK-44, -46). Der Prüfstand druckt den Bericht auch
   nach einem roten Lauf; ein roter Lauf ist kein Nachweis, ein übersprungener
   auch nicht. Eine dreifache Probe meldet rot mit den Engines, die es waren
-  (`bedienprobe=rot:firefox,webkit`).
+  (`bedienprobe=rot:firefox,webkit`). **`hinweis` ist nicht rot** (seit
+  PU-02, E-PU-05); die Gegenlesung zählt die Hinweise auf, wenn sie grün
+  ist. Nur der Wert `hinweis` selbst zählt — `hinweis:…` ist rot.
 - Der Bericht trägt eine **Browserprobe** (`"motoren": true` in
-  `pruefablauf.json`), aber nicht die Engines seiner Stufe — ab `neben`
-  `motoren=chromium+firefox+webkit`, in `klein` `motoren=chromium`
-  (Grundsatz 8, seit Konzept DM, E-DM-08).
+  `pruefablauf.json`), aber nicht die verlangten Engines — das Tor rechnet
+  sie aus Stufe, Umfang und Berührung mit derselben Funktion nach wie der
+  Prüfstand (`motoren_aus()` in `auswahl.py`; Grundsatz 8, seit PU-03,
+  R89). Alle drei passen immer; fehlt die Zeile, ist es rot. Ebenso
+  **Breiten und Seiten des Bilderlaufs** (seit PU-04): `breiten=` und
+  `seiten=` gegen `breiten_aus()` und `seitenwahl()`; zehn Breiten und alle
+  Seiten passen immer.
+- Der Bericht nennt **keinen Umfang**, einen unbekannten, oder `schmal`,
+  wo der Unterschied den vollen Lauf verlangt — in `haupt` und an einer
+  Zehnergrenze der Nebennummer (seit PU-01, E-PU-01; Abschnitt 3). Mehr
+  zu messen ist erlaubt: `voll:hand` passt immer.
+- Ein **geerbtes Ergebnis** (`name=ererbt:<Baum>`, 5.4) durfte nicht erben:
+  Der Baum ist nicht der des ersten Elters, dessen Bericht fehlt, lief
+  nicht als `neben`/schmal, erbt selbst, nennt die Probe nicht grün, oder
+  der Unterschied seither trifft ein Muster der Probe, den Prüfstand oder
+  ihr Werkzeug; dazu rot, wenn eine gemessene Probe eine geerbte
+  voraussetzt (`nach`). Das Tor rechnet mit derselben Funktion wie der
+  Prüfstand (`erbfehler()` in `auswahl.py`; seit PU-10, E-PU-13).
 
 Dazu rot, ohne eigene Lage: **kein Bericht** in der Nachricht des PR-Kopfs.
 Die Meldung sagt dann, wie er hineinkommt.
@@ -538,6 +611,33 @@ Merge-Commit. Berührt ist dabei nur, was diese Arbeit gegen `main`
 ändert — nicht, was `main` mitbringt (F-PK-39). Zum ersten Mal gegangen
 beim Merge von PR #80 in PK-05 (`5671d24`). Wer doch „Update branch" gedrückt hat, holt den Commit
 herunter und fährt ab Schritt 2 mit einem eigenen Commit darüber.
+
+### 5.4 Der ererbte Bericht
+
+*Seit PU-10 (E-PU-13, -18).* Nach einer Berichtigung maß ein Zweig in
+`neben` bis dahin alles noch einmal, auch für einen Satz Doku — der
+Nebenlauf eines Zwischen-PRs dauerte zuletzt 12 205 s (F-PU-05). Jetzt
+übernimmt der Prüfstand in `neben`, im schmalen Lauf, das Ergebnis einer
+Probe vom **direkten Vorgänger** — dem Commit in HEAD, der auf dem Zweig
+liegt und dessen Nachricht einen Bericht über seinen eigenen Baum trägt —,
+wenn die Probe dort **grün** war und der Unterschied zwischen beiden Bäumen
+**keines ihrer Muster** trifft. Der Lauf zeigt das als `erbt`, der Bericht
+schreibt `name=ererbt:<Baum des Vorgängers>`, und das Tor liest den Bericht
+des ersten Elters nach (5.1, Lage 8).
+
+**Nie geerbt werden:** die Riegel (das Tor misst sie selbst); der Kreislauf
+`edbak` (Nr. 267, F-S11-48); alles in `klein`, in `haupt` und beim vollen
+Lauf; jede Probe, wenn der Vorgänger selbst erbt — so ist spätestens jeder
+zweite Lauf wieder voll gemessen; eine Probe, deren Voraussetzung (`nach`)
+misst. **Dazu (E-PU-18):** Ist `tools/pruefstand/` berührt oder eine Datei,
+die der Aufruf der Probe nennt (bei `proben.sh NAME` auch der
+gleichnamige Ordner daneben), erbt sie nicht. Über `server/**` (Muster
+`nebenstufe`) misst jede Probe der Nebenstufe neu, sobald irgendetwas unter
+`server/` berührt ist.
+
+**Der Preis:** Die Zuordnung in `pruefablauf.json` ist von Hand gepflegt;
+ein Muster, das eine Datei nicht nennt, erbt fälschlich grün. In `klein`
+gilt das für die Auswahl seit jeher.
 
 ---
 
@@ -595,7 +695,11 @@ Kopfkommentar ihrer Einstiegsdatei. Dazu misst er, dass jeder Ordner
 gerufen wird — `tools/<ordner>/` steht in `pruefablauf.json`, in einem
 Workflow, in `tools/pruefstand/pruefen.sh` oder in `Sandbox-Setup.md` — und
 dass außer `motor.mjs` keine Datei lose unter `tools/` liegt. Er misst gegen
-null, **ohne Decke und ohne Ausnahmeliste** (E-BR-01). Die Anlass-Zeile
+null, **ohne Decke und ohne Ausnahmeliste** (E-BR-01). **Die 40 Zeilen
+sind seit PU-06 ein Hinweis, kein Rot** (E-PU-07): Drei von fünfzehn roten
+Läufen seit BR-02 waren eine Anleitung mit 41 bis 43 Zeilen (F-PU-01). Der
+Befund steht weiter im Lauf, als `HINWEIS: form · …`, der Prüfstand
+schreibt `bestand=hinweis`, und gekürzt wird trotzdem. Die Anlass-Zeile
 beginnt mit `Anlass:`; eine Zeile, in der das Wort mitten im Satz steht,
 findet man nur, wenn man sie sucht, und zählt deshalb nicht.
 
@@ -963,7 +1067,7 @@ hier steht, ist nur, **was grün heißt**:
 | `tools/screenshots/` | 0 Überlauf, 0 Konsolenfehler, 0 Knöpfe falscher Höhe, 0 Karten außerhalb von `main.inhalt`; mit `--etikett NAME` zusätzlich 0 Abweichungen bei Titel und Kopfleiste (P5c/AP1). Rollende Behälter werden genannt und halten nicht auf (R4-08) |
 | `tools/screenshots/` `kontrast.py` | 0 Paare unter ihrem Sollwert, 0 Paare des Stylesheets ohne Eintrag in `PAARE` oder `AUSNAHMEN` (seit R4-08); Selbstprobe alle Fälle grün |
 | `tools/kettenaufrufe/` | 0 Befunde; jeder ungeprüfte Aufruf ist benannt; seit R17-19 dazu jede fremde `uses:`-Zeile an einer SHA mit Fassung und die Ausnahmeliste bei ihren sieben Pfaden (bis Web 23.3.0 acht), `.gitignore` vollständig, keine eingecheckte `server/config.php*` |
-| `tools/quelltext/` `bestand` | 0 Befunde in allen Regeln (`REGELN` in `bestand.py`, heute 15) — ohne Decke, ohne Ausnahmeliste (E-BR-01); seit R4-25 stehen die vier erzeugten Tabellen in `Design.md` wie ihr Erzeuger sie ausgibt (Regel `design`) |
+| `tools/quelltext/` `bestand` | 0 Befunde in allen Regeln (`REGELN` in `bestand.py`, heute 15) — ohne Decke, ohne Ausnahmeliste (E-BR-01); die Zeilendecke einer Anleitung ist seit PU-06 ein `HINWEIS`, kein Befund im Rückgabewert (E-PU-07); seit R4-25 stehen die vier erzeugten Tabellen in `Design.md` wie ihr Erzeuger sie ausgibt (Regel `design`) |
 | `tools/quelltext/` `anker` | 0 Verweise `hilfe.php#…` ohne Ziel im gerenderten Handbuch; Selbstprobe 6 von 6 (falscher Anker rot, Kommentar zählt nicht, `-2` bei gleichem Titel) |
 | `tools/quelltext/` `kennzeichnung` | alle Kennzeichen der Sollliste stehen (heute 26 von 26: 13 Felder, Formular und Leseansicht), jedes Klartext-Freitextfeld trägt die Kleinzeile, 0 Blobfelder ohne Zeile; Selbstprobe 8 von 8 (die beiden Fehler aus 19.1.0 rot, Kommentar zählt nicht) |
 | `tools/quelltext/` `fremdsummen` | jede Datei unter `server/assets/vendor/` (heute 6) mit Herkunftskopf, SHA-256 ohne den Kopf gleich der Kopfzeile und gleich der Tabelle in `Lizenzen.md` 3; 0 Befunde; Selbstprobe 7 von 7 (die Falle aus F-R17-50 und die Datei ohne Kopf aus F-R17-51 rot) |
@@ -971,7 +1075,7 @@ hier steht, ist nur, **was grün heißt**:
 | `tools/quelltext/` `pysyntax`, `handbuch` | 0 Syntaxfehler und 0 Warnungen (ungültige Escape-Folge, seit R4-07) bei mindestens einer Datei; beide Dokumente rendern, gültiges UTF-8, 0 Bilder aus fremder Quelle |
 | `./gradlew build` | 0 Lint-Fehler, 0 Fehlschläge |
 | `tools/stilvergleich/` | die gemessenen Abweichungen sind genau `geplant.txt` — ohne Datei: 0 (6.10) |
-| `tools/steuerung/` | 0 Decken gerissen (welche es sind, sagt `decken.py`), 0 Kopfzeilen ohne Grammatik, 0 ohne gültiges Ziel, 0 Nummern in beiden Backlog-Dateien, 0 Einträge als Codeblock, 0 offene Einträge ohne eigene Liste mit ihrer Nummer (seit R4-25); Selbstproben alle Fälle grün |
+| `tools/steuerung/` (im Prüfstand, als `hinweis`; seit PU-05 kein Riegel im Tor) | 0 Decken gerissen (welche es sind, sagt `decken.py`), 0 Kopfzeilen ohne Grammatik, 0 ohne gültiges Ziel, 0 Nummern in beiden Backlog-Dateien, 0 Einträge als Codeblock, 0 offene Einträge ohne eigene Liste mit ihrer Nummer (seit R4-25); Selbstproben alle Fälle grün |
 
 PK-04 hat zwei davon geändert: E-PK-16 hat der Vollständigkeit die
 Symbolzählung und ihre Schwelle genommen, E-PK-08 hat die Wortliste zur
@@ -1096,8 +1200,11 @@ F-BR-19) — vier davon blieben damals grün.
    Ein Ordner, der hier nicht steht, muss in einem Arbeitslauf, in
    `tools/pruefstand/pruefen.sh` oder in `docs/Sandbox-Setup.md` genannt
    sein (`bestand`, `inventur`).
-6. **Die Tabelle in 4 erzeugen:** `python3 tools/pruefstand/bericht.py
-   erzeugen-doku`. Die Ausgabe ersetzt in Abschnitt 4 den Block von der
+6. **Die Tabelle in 4 erzeugen** — seit PU-06 tut es der Prüfstand selbst
+   (Probe `erzeugen`, vor den Riegeln, E-PU-07) und meldet die Änderung als
+   Hinweis; sie gehört in den Commit. Von Hand: `python3
+   tools/pruefstand/bericht.py erzeugen` schreibt sie, `erzeugen-doku` gibt
+   sie nur aus. Die Ausgabe ersetzt in Abschnitt 4 den Block von der
    Zeile `<!-- ERZEUGT … -->` bis zur **letzten Zeile, die der Erzeuger
    schreibt** — heute die Stufenregel `migration` unter der Zeile „**Die
    billigen Riegel laufen in jeder Stufe …**". *Bis R4-03 stand hier „bis
