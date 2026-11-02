@@ -52,7 +52,7 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
 
 | Spanne | Zweig | seit |
 |---|---|---|
-| 450 bis 459 | `claude/new-session-p1duc7` — erster Prüfdurchgang der Arbeitsumgebung auf Staging (R91); vergeben: keine | 02.11.2026 |
+| 450 bis 459 | `claude/new-session-p1duc7` — erster Prüfdurchgang der Arbeitsumgebung auf Staging (R91); vergeben: 450 | 02.11.2026 |
 | ab 460 | frei — höchste reservierte Nummer 459; frei blieben 434 bis 439 aus der Spanne von 430 (PR #129, #131), 441 bis 449 aus der von 440 (PR #130), 420 bis 429 aus der Spanne von 20 (PR #127), 412 bis 419 aus der von 12b (PR #125), 394 bis 399 aus der Spanne von 19 (PR #112 bis #114), 389 aus der von 12a (PR #116), 372 bis 379 aus der von 12 (PR #103), 362 bis 369 aus der von PK, 359 aus der von 18 (PR #101), 348 und 349 aus der von 17, 338 aus der von AR | 02.11.2026 |
 
 ---
@@ -1153,3 +1153,21 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      Löschen eines Geräts mit Kontakt vor mehr als einem Tag → Rückfrage
      mit Datum und Hinweis; ein Gerät mit Kontakt heute → Rückfrage ohne
      Hinweis; `tools/zaehlung/` ohne neue Stelle (Meldung über `ui_`).
+
+<!-- -->
+
+450. **Die Wegwerfkonten der Kette füllen auf Staging den Reiter System mit Mailfehlern.** · gehört zu: nächste Backlog-Runde · Stand: offen · seit 02.11.2026
+     *Aufgenommen 02.11.2026 im ersten Prüfdurchgang der Arbeitsumgebung
+     (R91, P-P5c-12).* Stufe 2 legt je Lauf und Engine Konten unter
+     `…@example.invalid` an, meldet sie an und löscht sie wieder. Jede Mail an
+     sie scheitert beim Mailserver von Staging mit „Server antwortete 450";
+     an einem Tag standen so über 100 gleiche Einträge im Reiter System, die
+     Statusseite zeigt dauerhaft „Letzter Versand fehlgeschlagen", und eine
+     Einladung wartet 24 Stunden auf Wiederholung. Echte Fehler gehen darin
+     unter. Mails an echte Adressen kommen an (Einladung, erster Versuch).
+     *Weg:* Adressen unter `.invalid` gar nicht erst einreihen — die Endung
+     ist nach RFC 2606 nie zustellbar —, mit einem Satz im Protokoll statt
+     einer Störung; oder die Kette nimmt eine zustellbare Prüfadresse.
+     *Abnahme:* nach einem Stufe-2-Lauf keine neue Zeile „smtp … 450" im
+     Reiter System, Status „Letzter Versand" unverändert.
+

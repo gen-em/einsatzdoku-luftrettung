@@ -9,6 +9,7 @@ Verlauf bis zum Schnitt). Die Fassungszählung läuft fortlaufend weiter.
 
 | Fassung | Datum | Anlass | Was |
 |---|---|---|---|
+| 194 | 02.11.2026 | Zuarbeit (R91) | 6.1: erster Prüfdurchgang auf Staging — Station D, Rückwegprobe, P-PU-02/-03 erledigt, Plattformzahlen von Staging eingetragen; neu: Backup-Ziel „Lima-City“ auf Staging berichtigen. |
 | 193 | 02.11.2026 | R91 | Programmentscheidung R91: Die Arbeitsumgebung prüft nach jedem Merge die Prüflisten-Punkte „Claude“ und „beide“ auf Staging, mit eigenem BetreiberIn-Konto; die Prüfliste trägt dafür die Spalte „Wer“. Kopf: offener PR. |
 | 192 | 02.11.2026 | Reihenfolge, R90 | Backlog eingeordnet (E-BE-01 bis -07): zehn Punkte verworfen, Schritte PR, 21 (GR), 22 (BR5) vor 13, R90, Zuarbeit Logo-Vorlagen. Berichtigt: Die Fahrplanzeile 13 nannte Nr. 46 — das gehört seit R4-01 zu 14. |
 | 191 | 02.11.2026 | Zuarbeit | 6.1: Handprüfungen nach den Tags von 12b — 23 Punkte der Prüfliste R17 erledigt, beide Umgebungen beschränkt, R17-19 abgenommen, Produktiv überwacht; Reste Nr. 430 bis 432. Berichtigt: Der Kopf nannte Web 23.1.0 auf Produktiv und 38 Posten (es waren 39). |
