@@ -10381,3 +10381,17 @@ zutreffen.
      Erledigt 02.11.2026 mit GR-04 und GR-05 (Uhr 4.2.0, 4.3.0): Öffnen der
      Sync-Seite und Dienstende senden trotz Marke; eine gelöschte Uhr
      koppelt trotz Rückstand neu (E-GR-01).
+
+<!-- -->
+
+452. **Das Menü „…“ an einem Backup-Ziel öffnet nicht.** · gehört zu: Pflegeaufgabe · Stand: erledigt · seit 02.11.2026
+     *Aufgenommen 02.11.2026 im ersten Prüfdurchgang auf Staging (R91), von
+     der Betreiberin bemerkt:* Das Ziel „Lima-City“ ließ sich nicht löschen,
+     „…“ tat nichts, die Konsole schwieg. Ursache: Auf Betrieb → Backup-Ziele
+     hießen die versteckten Formulare für „Hostschlüssel vergessen“
+     `za-<Nummer des Ziels>`, und `ui_zeilenaktionen()` nummeriert seine
+     Menüs als `za-1`, `za-2` … Bei gleicher Nummer fand `blatt.js` über
+     `getElementById` das Formular zuerst und öffnete dieses. Das Ziel wurde
+     über das Löschformular seines Menüs entfernt.
+     Erledigt mit Web 23.6.1: Die Formulare heißen `zh-<Nummer>`.
+

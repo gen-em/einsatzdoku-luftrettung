@@ -493,13 +493,16 @@ stehen lassen (`<<<<<<< HEAD` vor Nr. 451, `=======` vor Nr. 385,
 Merge-Commit dieses Zweigs behoben: Marken entfernt, beide Seiten behalten.
 Kein Riegel hat sie gefunden — weder `decken.py` noch `bestand` lesen
 Konfliktmarken in der Erledigt-Datei. Der Prüfbericht des Merge-Commits
-misst den Endstand.
+misst den Endstand. **Zweite Aufnahme** nach PR #135 (Web 23.6.1):
+dieselben vier Dateien, meine Fassungen werden 202/203, Spanne 450 bis 459
+gestrichen; auf `main` stand noch eine Marke (`>>>>>>> origin/main`) aus
+F-GR-12 — sie fällt mit diesem Merge.
 
 ## 7. Verlauf
 
 | Datum | Was |
 |---|---|
-| 02.11.2026 | GR-07: Backlog, Prüfdokument, Rahmenplan (Fassung 200; als 198 geschrieben, parallel zu PR #132), Prüfstand. |
+| 02.11.2026 | GR-07: Backlog, Prüfdokument, Rahmenplan (Fassung 203; als 198 geschrieben, parallel zu PR #132 und #135), Prüfstand. |
 | 02.11.2026 | GR-06 erledigt (Uhr 4.3.1). |
 | 02.11.2026 | GR-05 erledigt (Uhr 4.3.0). |
 | 02.11.2026 | GR-04 erledigt (Uhr 4.2.0). |

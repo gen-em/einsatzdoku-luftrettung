@@ -53,7 +53,7 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
 | Spanne | Zweig | seit |
 |---|---|---|
 | 470 bis 479 | `claude/trusting-wozniak-33j782` (Schritt 21, GR) | 02.11.2026 |
-| ab 480 | frei — höchste reservierte Nummer 479; frei blieben 452 bis 459 aus der Spanne von PR #132, 461 bis 469 aus der Spanne von PR (PR #133), 434 bis 439 aus der Spanne von PR #129, 441 bis 449 aus der von PR #130, 420 bis 429 aus der Spanne von 20 (PR #127), 412 bis 419 aus der von 12b (PR #125), 394 bis 399 aus der Spanne von 19 (PR #112 bis #114), 389 aus der von 12a (PR #116), 372 bis 379 aus der von 12 (PR #103), 362 bis 369 aus der von PK, 359 aus der von 18 (PR #101), 348 und 349 aus der von 17, 338 aus der von AR | 02.11.2026 |
+| ab 480 | frei — höchste reservierte Nummer 479; frei blieben 456 bis 459 aus der Spanne von PR #132 und #135, 461 bis 469 aus der Spanne von PR (PR #133), 434 bis 439 aus der Spanne von PR #129, 441 bis 449 aus der von PR #130, 420 bis 429 aus der Spanne von 20 (PR #127), 412 bis 419 aus der von 12b (PR #125), 394 bis 399 aus der Spanne von 19 (PR #112 bis #114), 389 aus der von 12a (PR #116), 372 bis 379 aus der von 12 (PR #103), 362 bis 369 aus der von PK, 359 aus der von 18 (PR #101), 348 und 349 aus der von 17, 338 aus der von AR | 02.11.2026 |
 
 ---
 
@@ -1008,6 +1008,61 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      einer Störung; oder die Kette nimmt eine zustellbare Prüfadresse.
      *Abnahme:* nach einem Stufe-2-Lauf keine neue Zeile „smtp … 450" im
      Reiter System, Status „Letzter Versand" unverändert.
+
+<!-- -->
+
+453. **Über den Abruf per Adresse versendet der Versandjob nie.** · gehört zu: nächste Backlog-Runde · Stand: offen · seit 02.11.2026
+     *Aufgenommen 02.11.2026 im ersten Prüfdurchgang der Arbeitsumgebung
+     (R91, P-P5c-07).* `job_versand()` fängt nur an, wenn noch
+     `SZ_VERSAND_RESERVE_S` = 25 s übrig sind; der Auslöser `token` hat
+     `JOB_BUDGET_TOKEN` = 20 s. Auf einer Anlage ohne Kommandozeilen-Cron
+     — Staging bei lima-city — geht damit automatisch nichts hinaus: Auf
+     Staging stand der letzte Versand auf dem 22.09.2026, 23 Sicherungen
+     im Rückstand, alle Archive „nur lokal". Kein Fehler, nirgends; die
+     Jobseite zeigt nur „Rückstand 23". `Technik.md` sagt, der Job fange
+     am Huckepack-Weg (3 s) nicht an, vom Token-Weg sagt sie nichts.
+     „Jetzt versenden" brauchte 3,7 s für alles (5,1 MB, FTPS).
+     *Weg:* zu entscheiden — die Reserve am Token-Weg unter dessen Budget
+     legen (die Zeit wird je Konto geprüft, eine Datei darf nicht halb
+     liegen bleiben), oder der Job meldet „wartet auf Kommandozeile" als
+     Fehler, sobald der Rückstand wächst. Dazu `Technik.md` 4.7.
+     *Abnahme:* auf Staging mit nur dem Adress-Abruf eine neue Sicherung
+     binnen einer Stunde „auf dem Ziel"; oder eine sichtbare Warnung.
+
+<!-- -->
+
+454. **Der Mailjob versucht eine dauerhafte Absage 24 Stunden lang weiter.** · gehört zu: nächste Backlog-Runde · Stand: offen · seit 02.11.2026
+     *Aufgenommen 02.11.2026 im ersten Prüfdurchgang der Arbeitsumgebung
+     (R91, P-P5c-03).* Die Rundmail an 8 Staging-Konten: 5 zugestellt,
+     zwei mit „Server antwortete 550" (das Postfach gibt es nicht), eine
+     mit 450 (Nr. 450). Alle drei stehen danach auf „wartet" und laufen die
+     ganze `MAIL_LEITER` (5 min bis 24 h) durch. Ein 5xx ist nach RFC 5321
+     endgültig; jeder weitere Versuch ist eine Störung im Reiter System und
+     verlängert „Letzter Versand fehlgeschlagen" auf der Statusseite.
+     *Weg:* `mail_zeile_versuchen()` setzt bei einer 5xx-Antwort sofort
+     `unzustellbar`, mit der Absage als Grund; 4xx und
+     Verbindungsfehler bleiben auf der Leiter.
+     *Abnahme:* eine Mail an eine Adresse ohne Postfach steht nach dem
+     ersten Versuch unter „unzustellbar", ohne zweite Störung.
+
+<!-- -->
+
+455. **Seit Nr. 451 scheitert Firefox gegen Staging an jeder Weiterleitung.** · gehört zu: nächste Backlog-Runde · Stand: offen · seit 02.11.2026
+     *Aufgenommen 02.11.2026 im ersten Prüfdurchgang der Arbeitsumgebung
+     (R91, P-SR-07).* `proxyRoute()` in `tools/motor.mjs` gibt eine 3xx
+     seit Nr. 451 an den Browser weiter, damit er ihr selbst folgt.
+     Chromium schickt die Folgeanfrage wieder durch die Route, Firefox
+     nicht: Sie geht unmittelbar ins Netz und scheitert am Zertifikat des
+     Proxys dieser Arbeitsumgebung (`SEC_ERROR_UNKNOWN_ISSUER`). Gemessen:
+     `login.php` lädt, `einstellungen.php` ohne Sitzung (302 dorthin)
+     nicht; damit auch keine Anmeldung. In der Kette gibt es diesen Proxy
+     nicht, Stufe 2 ist nicht betroffen; WebKit ungemessen.
+     *Weg:* in der Route eine 3xx auf eine Seitenanfrage als kleine Seite
+     mit `meta refresh` ausliefern, die Kopfzeilen samt `Set-Cookie`
+     erhalten — so geht die Folgeanfrage wieder durch die Route. Für den
+     Prüfdurchgang so im Skript gemacht, P-SR-07 lief damit grün.
+     *Abnahme:* Anmeldung über `anmelden()` in Firefox gegen Staging aus
+     der Arbeitsumgebung; der Setz-Link aus Nr. 451 weiter in Chromium.
 
 <!-- -->
 
