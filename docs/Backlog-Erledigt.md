@@ -10155,3 +10155,18 @@ zutreffen.
      Verworfen 02.11.2026 (E-BE-01, Betreiberin): Niemand hat nach einem
      Passkey ohne App gefragt, Support, Admin und BetreiberIn haben die App;
      fragt jemand, ist es ein neuer Punkt.
+
+<!-- -->
+
+433. **Die Python-Sitzung der Werkzeuge kommt aus der Arbeitsumgebung nicht bis Staging.** · gehört zu: Pflegeaufgabe · Stand: erledigt · seit 02.11.2026
+     *Aufgenommen 02.11.2026 beim Einrichten eines eigenen Staging-Kontos für
+     die Arbeitsumgebung.* `Sitzung` in `sitzung.py` setzte `trust_env =
+     False` für jede Gegenstelle — gedacht für die örtliche Anlage. Gegen
+     Staging scheiterte sie damit an der Zertifikatskette des Proxys der
+     Arbeitsumgebung (`CERTIFICATE_VERIFY_FAILED`); in der Kette fiel es nicht
+     auf, weil dort kein Proxy dazwischen sitzt.
+     Erledigt 02.11.2026: Proxy-Einstellungen nur für `127.0.0.1`, `localhost`
+     und `[::1]` abgeschaltet, nach draußen gelten Proxy und
+     `REQUESTS_CA_BUNDLE` der Umgebung, die Zertifikatsprüfung bleibt an —
+     dieselbe Trennung wie `kontextMachen()` in `tools/motor.mjs`. Gemessen:
+     Staging `login.php` 200 mit Prüfung, örtlich unverändert ohne Proxy.

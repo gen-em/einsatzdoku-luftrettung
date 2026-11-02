@@ -293,6 +293,22 @@ im Job `stufe2`, kein Schritt (8).
 > Datenbank von Produktiv unsichtbar und auf der von Staging tödlich, und
 > keine der beiden Anlagen hatte je gesagt, dass sie verschieden sind.
 
+**Danach die Handprüfungen der Arbeitsumgebung** (R91, seit 02.11.2026).
+Ist der Auslieferungslauf eines Merges auf Staging grün, arbeitet die
+Arbeitsumgebung die Punkte der Prüfliste ab, deren Spalte „Wer" **Claude**
+oder **beide** sagt (`docs/konzepte/Pruefliste.md`): mit ihrem eigenen
+BetreiberIn-Konto auf Staging, nicht mit dem Prüfkonto der Kette — beide
+im selben Zeitfenster gäben einen Code zweimal aus, und der Server nimmt
+keinen zweimal (`Sandbox-Setup.md` 4). Sie beginnt erst, wenn der Lauf
+durch ist, damit sie Stufe 2 nicht stört. Bestandene Punkte löscht sie,
+gescheiterte werden Backlog-Punkte; beides in **einem** Pull Request je
+Durchgang, und die BetreiberIn bekommt die Liste dessen, was nur sie prüfen
+kann. **Geweckt wird die Arbeitsumgebung nur vom Merge ihres eigenen Pull
+Requests** — einen fremden Merge sieht sie nicht von selbst. Auf Staging
+ändert sie Testdaten und eigene Testkonten; Serverschlüssel, Wartung und
+Servereinstellungen nur, wo ein Punkt genau das verlangt, und danach stellt
+sie den Ausgangszustand her.
+
 ### 2.5 Station E — Produktiv
 
 Beim Tag `web-vX.Y.Z`, nach der Pflichtfreigabe durch die BetreiberIn und

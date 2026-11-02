@@ -52,7 +52,7 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
 
 | Spanne | Zweig | seit |
 |---|---|---|
-| 430 bis 439 | `claude/new-session-p1duc7` — Ergebnisse der Handprüfungen nach den Tags von 12b (Prüfliste, Backlog, Runbook); vergeben: 430 bis 432 | 02.11.2026 |
+| 430 bis 439 | `claude/new-session-p1duc7` — Ergebnisse der Handprüfungen nach den Tags von 12b (PR #129), Staging-Konto der Arbeitsumgebung; vergeben: 430 bis 433 | 02.11.2026 |
 | 440 bis 449 | `claude/sharp-faraday-q1cp0s` — Einordnung des Backlogs (Rahmenplan 192, E-BE); vergeben: 440 | 02.11.2026 |
 | ab 450 | frei — höchste reservierte Nummer 449; frei blieben 420 bis 429 aus der Spanne von 20 (PR #127), 412 bis 419 aus der von 12b (PR #125), 394 bis 399 aus der Spanne von 19 (PR #112 bis #114), 389 aus der von 12a (PR #116), 372 bis 379 aus der von 12 (PR #103), 362 bis 369 aus der von PK, 359 aus der von 18 (PR #101), 348 und 349 aus der von 17, 338 aus der von AR | 02.11.2026 |
 

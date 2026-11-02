@@ -151,11 +151,17 @@ class Sitzung:
     def __init__(self, basis: str) -> None:
         self.basis = basis.rstrip("/")
         self.s = requests.Session()
-        self.s.trust_env = False          # kein Proxy fuer localhost
+        oertlich = bool(re.match(r"https?://(127\.0\.0\.1|localhost|\[::1\])(:|/|$)",
+                                 self.basis, re.I))
+        # NUR DIE OERTLICHE ANLAGE OHNE PROXY. Nach draussen gelten Proxy und
+        # Zertifizierungsstelle der Umgebung (`REQUESTS_CA_BUNDLE`) -- sitzt
+        # dort ein Proxy mit eigener Kette, kommt die Sitzung sonst nicht
+        # durch. Dieselbe Trennung wie `kontextMachen()` in tools/motor.mjs.
+        self.s.trust_env = not oertlich
         # Selbstsigniertes Zertifikat der lokalen Installation. Vertretbar,
-        # weil die Gegenstelle 127.0.0.1 ist; gegen die Produktivinstallation
-        # bleibt die Pruefung an (dort ist das Zertifikat echt).
-        self.s.verify = not basis.startswith("https://127.0.0.1")
+        # weil die Gegenstelle 127.0.0.1 ist; nach draussen bleibt die
+        # Pruefung an.
+        self.s.verify = not oertlich
         if not self.s.verify:
             import urllib3
             urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)

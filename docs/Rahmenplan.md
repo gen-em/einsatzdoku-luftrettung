@@ -1,6 +1,6 @@
 # Rahmenplan — Programm „Gen-EM NAdoku" bis v1.0
 
-**Fassung 192 (02.11.2026)** · Steuerung: Reihenfolge, Status, programmweite
+**Fassung 193 (02.11.2026)** · Steuerung: Reihenfolge, Status, programmweite
 Entscheidungen. Verlauf: `Rahmenplan-Verlauf.md`. Fassungen 1–15:
 `Rahmenplan-Archiv.md`; Fassungen 16–124: `Rahmenplan-Archiv-2.md`.
 
@@ -8,7 +8,7 @@ Entscheidungen. Verlauf: `Rahmenplan-Verlauf.md`. Fassungen 1–15:
 Uhr 4.1.1 · Android 0.18.2, alle drei ausgeliefert (Tags auf `c32dd2c`, 02.11.2026).
 **Läuft:** kein Schritt; der Backlog ist eingeordnet (Fassung 192, E-BE-01 bis -07).
 **Als Nächstes:** PR (drei Prüfmittel), dann 21 GR und 22 BR5 nebeneinander, dann 13 (Konzeptsitzung).
-**Offene PRs:** Einordnung des Backlogs (#130, diese Fassung).
+**Offene PRs:** #131 (Staging-Konto der Arbeitsumgebung, R91, Spalte „Wer“ in der Prüfliste).
 **Fällig bei der Betreiberin:** 36 Posten (Abschnitt 6.1). **`update.php`:** auf Staging und Produktiv nichts offen (Betreiberin, 20.10.2026, nach Web 23).
 
 Kennungen sind Namen, keine Reihenfolge.
@@ -362,6 +362,7 @@ werden hier kompakt angehängt; **der Statussatz wird ersetzt, nicht ergänzt**
 | R88 | Die Pakete von 12b (R17-18 bis -30) laufen mit Opus, Kryptographie eingeschlossen — K8 (Krypto mit Fable, E-PV-5 (7)) gilt für 12b nicht; das Review war Fable | umgesetzt mit 12b (01.11.2026); entschieden 21.10.2026 (Betreiberin, Freigaberunde) | `Review-R17.md` 2.1 (gelöscht, `630756f0`), E-R17-28 |
 | R89 | Der Prüfumfang folgt der Berührung: drei Engines, zehn Breiten und alle Seiten nur bei Stylesheet-Berührung, Zehnerregel oder `haupt`; sonst schmal. Ersetzt R87 | umgesetzt in Schritt 20 (abgeschlossen 02.11.2026); entschieden 01.11.2026 (Betreiberin); E-PU-16 und -18 bestätigt 02.11.2026 | Konzept PU (gelöscht, `47a8567c`), E-PU-01 bis -19 |
 | R90 | Vor v1.0 liegt, was v1.0 festschreibt oder Daten gefährdet; was nicht kommt, wird verworfen statt geparkt. Schritte PR, 21 (GR), 22 (BR5) vor 13 | gilt; entschieden 02.11.2026 (Betreiberin); Stand `verworfen` in `Backlog-Erledigt.md` ersetzt `nicht umsetzen`; Zuordnung in den Kopfzeilen | `Vorbereitung-Backlog-Einordnung.md`, E-BE-01 bis -07 |
+| R91 | Nach jedem Merge auf `main` prüft die Arbeitsumgebung auf Staging die Prüflisten-Punkte „Claude" und „beide", mit eigenem BetreiberIn-Konto | gilt; entschieden 02.11.2026 (Betreiberin) | `Pruefablauf.md` 2.4, `Pruefliste.md` (Spalte „Wer") |
 
 ## 8. Erledigt
 
