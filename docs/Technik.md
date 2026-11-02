@@ -9917,7 +9917,7 @@ Adminpaket-Fassungen (JSON, unversiegeltes ZIP) liest die Verwaltung weiter
 | `Model.mc` | Dienst-Klammer, Phasenlogik, Einsatz-/Segment-Lebenszyklus, Rea-Sitzungen, Persistenz (`state`) |
 | `Track.mc` | GPS (15 m/10 s/1 s-Ausdünnung), Distanz/Anstieg, Anzeige-Polylinie (Cap 1000, Dichte-Halbierung), **Flash-Chunks à 200 Punkte**; `restore()` lädt Teil-Chunks zurück in den Puffer (verlustfrei) |
 | `Cpr.mc` | Rea-Timer app-weit (1-s-Tick), 2:00-Zyklus, Ereignisse, **persistenter Zustand** (übersteht Neustart); drei Zustände: aus / laufend / pausiert |
-| `Uploader.mc` | Job-Queue (fertige Einsätze → Segmente → aktive), Chunking ≤ 500, `next_seq`-Bestätigung, Purge inkl. Marken; `hasServer()`/`hasCredentials()`. **Seit Uhr 3.1.0** trennt `onResponse()` drei Fälle: eine Störung (später erneut), ein dauerhaft abgewiesenes Paket (Marke `bad_<ref>`, wird übersprungen) und ein abgemeldetes Gerät (`401`/`403` → `abgemeldet`, das Senden hält an). Siehe 5.4. **Seit Uhr 4.0.0** sendet er nur verschlossen (`track` mit `huelle`, `ort_huelle`, Phasen ohne Koordinate, keine `resus_sessions`) und ohne Kontoschlüssel oder bei gescheitertem Selbsttest gar nicht; die Marke `bad_<ref>` trägt den Zeitpunkt, `parkFristPruefen()` räumt nach `PARK_FRIST_S` = 30 Tagen (E-S11-11). **Seit Uhr 4.1.0** (R17-21): die Frist auch für „abgemeldet" (`Storage 'abgem_seit'`, Zeitpunkt der ersten 401/403; `abmeldeFristPruefen()` vor jedem Sendelauf verwirft danach alle wartenden Pakete, E-R17-22); das bestätigte Paket geht über seine Referenz aus der Liste, nicht über einen Listenplatz (F-R17-52); `http://` wird zu `https://` (F-R17-11); Zugangsdaten nur aus `Storage 'cred'` — der Alt-Weg über die App-Einstellungen ist fort (E-R17-21) |
+| `Uploader.mc` | Job-Queue (fertige Einsätze → Segmente → aktive), Chunking ≤ 500, `next_seq`-Bestätigung, Purge inkl. Marken; `hasServer()`/`hasCredentials()`. **Seit Uhr 3.1.0** trennt `onResponse()` drei Fälle: eine Störung (später erneut), ein dauerhaft abgewiesenes Paket (Marke `bad_<ref>`, wird übersprungen) und ein abgemeldetes Gerät (`401`/`403` → `abgemeldet`, das Senden hält an). Siehe 5.4. **Seit Uhr 4.0.0** sendet er nur verschlossen (`track` mit `huelle`, `ort_huelle`, Phasen ohne Koordinate, keine `resus_sessions`) und ohne Kontoschlüssel oder bei gescheitertem Selbsttest gar nicht; die Marke `bad_<ref>` trägt den Zeitpunkt, `parkFristPruefen()` räumt nach `PARK_FRIST_S` = 30 Tagen (E-S11-11). **Seit Uhr 4.1.0** (R17-21): die Frist auch für „abgemeldet" (`Storage 'abgem_seit'`, Zeitpunkt der ersten 401/403; `abmeldeFristPruefen()` vor jedem Sendelauf verwirft danach alle wartenden Pakete, E-R17-22); das bestätigte Paket geht über seine Referenz aus der Liste, nicht über einen Listenplatz (F-R17-52); `http://` wird zu `https://` (F-R17-11); Zugangsdaten nur aus `Storage 'cred'` — der Alt-Weg über die App-Einstellungen ist fort (E-R17-21). **Seit Uhr 4.2.0** (Konzept GR): 401 → `abgemeldet`, 403 → `gesperrt` mit Grund aus dem Körper (`abweisungMerken()`, auch aus `Pair.onSchluessel`), beide halten an (`angehalten()`); `syncAllEinmalTrotz()` versucht es einmal trotz der Marke — beim Erscheinen der Sync-Seite und beim Dienstende, nicht im Zwei-Sekunden-Takt; 429/503/507 setzen `_nichtVor` (feste Zeiten `Const.WARTEN_*`, weil Connect IQ keine Kopfzeilen liefert), und vor ihm sendet kein Anlass. **Seit Uhr 4.3.0**: `bindungPruefen()` vor jedem Sendelauf löst eine Bindung an denselben Schlüssel und verwirft nach Ablauf der Frist; `_findJob()` überspringt gebundene Pakete eines anderen Kontos (`istFremd()`), `fremdeZahl()` und `fremdeVerwerfen()` dienen der Sync-Seite |
 | `Huelle.mc` | **Seit Uhr 4.0.0** (S11-08): die Gerätehülle (Format: Kopf von `tools/proben/huelle/referenz.py`) — Bausteine aus der Krypto-Probe, `spurstueck()` (14 Byte je Punkt), `einsatz()` (JSON, Zeiten seit Beginn), Kontoschlüssel in `Storage 'kschl'`, Selbsttest `bereit()` gegen `HuelleVektor.mc` (erzeugt, Fall „kurz"): misst die Byteordnung des ECDH-Geheimnisses und das ganze Prüfwort, Ergebnis je Fassung und Firmware in `Storage 'kpruef'` (E-S11-30, -78) — **seit Uhr 4.1.0 nur `be` oder `le`**: „kaputt" gilt bis zum nächsten Start und wird dann neu gemessen, `pruefungVergessen()` beim Trennen (F-R17-53) |
 | `Input.mc` | Eingabemodell: `ActionDelegate` übersetzt Tasten, Wischgesten und Langdrücke einmal zentral in Aktionen (s. Abschnitt 5.1); `TastenDelegate` ist die Basis der selbst gezeichneten Menüs und Warteseiten; `beruehrungVerwerfen()` setzt den Schalter `touchEnabled` um (seit Uhr 4.1.0, F-R17-68) |
 | `DeviceProfile.mc` | je Profil eine eigene Fassung in `source-tasten5/` bzw. `source-tasten3/`; liefert `HAS_UP_DOWN` und die Bedienhinweise |
@@ -9925,8 +9925,8 @@ Adminpaket-Fassungen (JSON, unversiegeltes ZIP) liest die Verwaltung weiter
 | `Nav.mc` | Pager: Uhr → Tempo → Statistik → Sync → Rea |
 | `StartView.mc` | Startbildschirm „Dienst beginnen"; Hinweise zu Server-Adresse und Kopplung |
 | `ClockView/SpeedView/StatsView/SyncView/CprView.mc` | Oberflächen + Delegates; erben von `ActionDelegate` und beschreiben nur noch die Aktionen |
-| `SyncView.mc` | Sync-Status (Backlog = nur abgeschlossene Pakete, **ohne geparkte**), App-Version, Kopplung per START-Halten, **Verwerfen abgewiesener Pakete per kurzem START**; seit Uhr 4.0.0 „Kein Schlüssel · Holen: START halten" und „Verschlüsseln geht nicht" (E-S11-76) |
-| `Pair.mc` | Kopplung (seit Uhr 3.0.0 umgekehrt): holt mit `start` eine Sitzung, fragt im Takt `status`, bestätigt mit `bestaetigen` — erst danach `Storage 'cred'`. Bis dahin liegen Code, Kennung und Schlüssel **nur im Arbeitsspeicher**. **Seit Uhr 4.0.0** legt `_fertig()` den `kontoschluessel` aus der Antwort ab, und `schluesselHolen()` holt ihn bei bestehender Kopplung über `status` nach (E-S11-79) — kein Trennen, weil ein Rückstand das Trennen sperrt (F-S11-80) |
+| `SyncView.mc` | Sync-Status (Backlog = nur abgeschlossene Pakete, **ohne geparkte**), App-Version, Kopplung per START-Halten, **Verwerfen abgewiesener Pakete per kurzem START**; seit Uhr 4.0.0 „Kein Schlüssel · Holen: START halten" und „Verschlüsseln geht nicht" (E-S11-76). **Seit Uhr 4.2.0 bis 4.3.1** (Konzept GR): Zeilen für „gesperrt“ (Grund, „Im Web klären“), „Konto voll“, „Server bremst bis HH:MM“, „N Pakete altes Konto“ mit kurzem START zum Verwerfen; `onShow()` ruft `syncAllEinmalTrotz()`. Der Mittelblock weicht in fünf Stufen aus, wenn der untere Block wächst (kompakte Schrift, ohne GPS-Zeile, Meldungen in `FONT_XTINY`, eine Zeile) — gemessen von `tools/uhr-pruefstand/syncseite/` |
+| `Pair.mc` | **Seit Uhr 4.3.0** (Konzept GR, E-GR-01): `start()` lässt das Trennen trotz Rückstand zu, wenn die Uhr abgemeldet oder gesperrt ist (`Uploader.angehalten()`), kein Dienst läuft und noch keine Bindung besteht; `lokalTrennen()` bindet den Rückstand dann an den bisherigen Kontoschlüssel (`Uploader.binden()`, `Storage 'rueck_bind'`: Schlüssel, Referenzen, Fristende), bevor der Schlüssel geht; `onTrennen()` nennt bei 401 keinen belegten Geräteplatz mehr. Kopplung (seit Uhr 3.0.0 umgekehrt): holt mit `start` eine Sitzung, fragt im Takt `status`, bestätigt mit `bestaetigen` — erst danach `Storage 'cred'`. Bis dahin liegen Code, Kennung und Schlüssel **nur im Arbeitsspeicher**. **Seit Uhr 4.0.0** legt `_fertig()` den `kontoschluessel` aus der Antwort ab, und `schluesselHolen()` holt ihn bei bestehender Kopplung über `status` nach (E-S11-79) — kein Trennen, weil ein Rückstand das Trennen sperrt (F-S11-80) |
 | `PairView.mc` | Die Kopplungsansicht: zeigt den Code groß, dazu Restzeit und Verbindungshinweis; BACK bricht ab. Eigene Ansicht, weil der Code Buchstaben trägt (keine Ziffernschrift), eine Restzeit läuft und BACK hier anders wirkt als auf der Sync-Seite |
 | `Const.mc` / `Util.mc` | `APP_VERSION`, Labels, Tuning-Werte; ISO-UTC, lokale Anzeige, Vibration |
 
@@ -10342,7 +10342,9 @@ und nimmt die Kopfzeilen mit — darunter `X-Api-Key`. `HttpNetzweg` setzt
 deshalb `instanceFollowRedirects = false`; eine Umleitung gilt seither als
 **Serverfehler**, weil die App mit genau zwei Endpunkten einer fest
 eingebauten Adresse spricht (R63). Der Sendeweg war nie betroffen: Er
-behandelt alles außer 200/400/401/413 als „später erneut".
+behandelt jeden Code, den der Vertrag nicht nennt, als „später erneut" —
+seit Android 0.19.0 sind das alle außer 200, 400, 401, 403, 413, 429, 503 und
+507 (Vertrag 5).
 
 **Klartext ist im Release seit Android 0.14.0 doppelt verboten** (Backlog
 Nr. 142, Krypto-Review AN-1). `Serveradresse` bildet im ausgelieferten Stand
@@ -10664,6 +10666,27 @@ API-Schlüssel und weiß nicht, ob dahinter Monkey C oder Kotlin steckt. Die
 Kennungspräfixe unterscheiden die Quellen (`am-`/`ar-`/`ad-` für das Handy,
 `wm-` für die Wear-OS-Uhr); sie stehen seit Vertragsfassung 1.4 im
 JSON-Vertrag, Abschnitt 8 — der Nachtrag hing an R42 und ist mit S6 erledigt.
+
+**Abgemeldet mit Rückstand: trennen und binden** (seit Android 0.20.0,
+Konzept GR, E-GR-01). Ein Rückstand sperrt das Trennen (`Kopplungsdienst.trennen()`,
+`Trennergebnis.Rueckstand`), weil der Puffer Klartext ist und erst beim Senden
+mit dem Kontoschlüssel der jetzigen Kopplung verschlossen wird — an ein
+fremdes Konto gesendet, wäre er dort lesbar. Die Ausnahme ist ein Gerät, das
+der Server mit 401 oder 403 abgewiesen hat: Den Vermerk führt
+`kopplung/Rueckstandsbindung.kt` (Ablage `rueckstand`, außerhalb des
+Tresors, weil er das Trennen überleben muss und nur öffentliche Angaben
+trägt); `Sender` setzt ihn bei 401/403 und löscht ihn bei jeder angenommenen
+Anfrage. Ist er gesetzt, trennt `trennen()` trotz Rückstand und bindet den
+Rückstand an den bisherigen Kontoschlüssel und die höchste Paketnummer
+(`Puffer.hoechstePaketId()`, `AUTOINCREMENT` — eine Nummer kommt nie
+wieder). Vor dem ersten Stück prüft `Sender` die Bindung: derselbe Schlüssel
+→ Bindung fort, alles geht hinaus (ein Konto hat genau ein Schlüsselpaar,
+`kp_ablegen()` ersetzt keines); ein anderer, oder die alte Kopplung kannte
+keinen → Pakete bis zur Grenze bleiben liegen, `Sendebericht.fremderRueckstand`
+zählt sie, alles darüber geht an das neue Konto. Verworfen wird nur auf
+Rückfrage (`Puffer.rueckstandVerwerfen()`). Getrennt wird ohnehin nur
+außerhalb eines Dienstes (`EinstellungenAnsicht`), also deckt die Bindung den
+ganzen Puffer.
 
 **Die Kopplung ist seit Web 12.9.0 nicht mehr geräteneutral**, und das ist
 Absicht: `pair.php` liest den Block `geraet` aus — seit Web 13.0.0 in der
@@ -11649,12 +11672,16 @@ sie; die Statusseite fängt. Der Schutz selbst hängt nicht daran — er zählt 
 #### Was die Clients tun müssen: nichts
 
 Ein Client, der `401` richtig behandelt, behandelt `429` ebenfalls richtig.
-Beide tun es bereits: Die Uhr fällt in ihren Zweig „später erneut"
-(`Uploader.mc`), die Android-App in `Sendeantwort.SpaeterErneut`
-(`code != 200`), und beide brechen den Sendelauf ab, ohne etwas zu verwerfen.
-`Retry-After` liest keiner von beiden — die Uhr **kann** es nicht, der Rückruf
-von Connect IQ bekommt `(code, data)` und keine Kopfzeilen. Die Zeile steht
-für einen fremden Client an derselben Schnittstelle.
+Beide tun es: Die Uhr fällt in ihren Zweig „später erneut"
+(`Uploader.mc`), die Android-App in `Sendeantwort.SpaeterErneut`, und beide
+brechen den Sendelauf ab, ohne etwas zu verwerfen. **Seit Android 0.19.0**
+(Konzept GR) liest das Handy `Retry-After` (`Netzantwort.Server.retryAfterS`)
+und sendet vor Ablauf nicht (`Sender.nichtVor`, im Speicher; ohne Kopfzeile
+15 Minuten, bei 503 fünf, bei 507 eine Stunde, höchstens sechs Stunden). Die
+Uhr **kann** die Kopfzeile nicht lesen — der Rückruf von Connect IQ bekommt
+`(code, data)` und keine Kopfzeilen; sie wartet seit Uhr 4.2.0 feste Zeiten
+(`Const.WARTEN_429_S`, `_503_S`, `_507_S`). *(Bis zum 02.11.2026 stand hier, die
+Zeile stehe nur für einen fremden Client.)*
 
 **Nachweis:** `php tools/proben/ingest/probe.php` — 83 Erwartungen, 0 nicht
 erfüllt, davon 21 in Teil 10. Laufzeit über den erzeugten Sendeplan (612

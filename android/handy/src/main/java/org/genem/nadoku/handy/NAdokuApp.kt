@@ -79,6 +79,22 @@ class NAdokuApp : Application() {
      * die halbierte Chunk-Größe (nach einem 413) einen Sendelauf überdauern
      * soll — sonst liefe die App bei jedem Lauf wieder in denselben 413.
      */
+    /** Abmeldevermerk und Bindung des Rückstands — eine Ablage für Sender und Kopplung. */
+    val bindung: org.genem.nadoku.handy.kopplung.Rueckstandsbindung by lazy {
+        org.genem.nadoku.handy.kopplung.Rueckstandsbindung(this)
+    }
+
+    /**
+     * Wie viele Pakete einem **anderen** Konto gehören als dem der jetzigen
+     * Kopplung — für die rote Zeile der Dienstansicht. Ändert nichts.
+     */
+    fun fremderRueckstand(): Int {
+        val bis = bindung.gebundenBis ?: return 0
+        val aktuell = tresor.lesen()?.kontoschluessel
+        if (bindung.stand(aktuell) != org.genem.nadoku.handy.kopplung.Bindungsstand.ANDERS) return 0
+        return puffer.rueckstandBis(bis)
+    }
+
     val sender: Sender by lazy {
         Sender(
             puffer = puffer,
@@ -90,6 +106,7 @@ class NAdokuApp : Application() {
             schluesselHolen = {
                 org.genem.nadoku.handy.kopplung.Kopplungsdienst(HttpNetzweg(), tresor).schluesselHolen()
             },
+            bindung = bindung,
         )
     }
 

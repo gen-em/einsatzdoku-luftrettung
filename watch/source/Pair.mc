@@ -271,10 +271,28 @@ module Pair {
          * dem Schluessel ihres Kontos; mit den eigenen Zugangsdaten gefragt,
          * ist es DASSELBE Konto, und der Rueckstand geht dorthin, wo er
          * hingehoert. Abgemeldet geht es nicht — dann hilft nur Neukoppeln. */
-        if (!Uploader.abgemeldet && !Huelle.hatSchluessel()) { schluesselHolen(); return; }
+        if (!Uploader.angehalten() && !Huelle.hatSchluessel()) { schluesselHolen(); return; }
 
+        /* AUSNAHME: ABGEMELDET ODER GESPERRT. Dann kann der Rueckstand
+         * ohnehin nicht mehr gehen, und die Sperre waere eine Sackgasse.
+         * Getrennt wird dann trotzdem -- der Rueckstand bleibt, gebunden an
+         * den Schluessel dieser Kopplung (Uploader.binden), und geht nur an
+         * dasselbe Konto. Nur ausserhalb des Dienstes: Im Dienst liegen auch
+         * die laufenden Pakete ungesendet da, und die Bindung deckte sie
+         * nicht. Und nur ohne schon bestehende Bindung -- eine zweite Grenze
+         * mit einem zweiten Schluessel haelt die Bauform nicht. */
         var offen = Model.backlogCount();
-        if (offen > 0) {
+        var gebundenTrennen = false;
+        if (offen > 0 && Uploader.angehalten() && !Uploader.gebunden()) {
+            if (Model.serviceActive) {
+                status = "Erst Dienst beenden";
+                statusHint = null;
+                statusKind = :error;
+                WatchUi.requestUpdate();
+                return;
+            }
+            gebundenTrennen = true;
+        } else if (offen > 0) {
             status = "Erst " + offen.toString()
                    + (offen == 1 ? " Paket senden" : " Pakete senden");
             statusHint = "Sonst ans neue Konto";
@@ -296,7 +314,11 @@ module Pair {
          * bisherigen Konto. Die Rueckfrage sagt es, statt es zu tun und zu
          * schweigen. */
         var geparkt = Uploader.geparkteZahl();
-        var frage = geparkt > 0
+        var frage = gebundenTrennen
+            ? (offen == 1
+                ? "Trennen? 1 Paket bleibt und geht nur ans selbe Konto"
+                : "Trennen? " + offen.toString() + " Pakete bleiben und gehen nur ans selbe Konto")
+            : geparkt > 0
             ? (geparkt == 1
                 ? "Trennen? 1 abgewiesenes Paket geht dabei verloren"
                 : "Trennen? " + geparkt.toString() + " abgewiesene Pakete gehen dabei verloren")
@@ -358,9 +380,9 @@ module Pair {
             statusHint = null;
             statusKind = :error;
         } else if (code == 401 || code == 403) {
-            /* Das Geraet gibt es nicht mehr oder es ist inaktiv — derselbe
+            /* Das Geraet gibt es nicht mehr oder es ist gesperrt — derselbe
              * Zustand wie beim Upload, derselbe Weg. */
-            Uploader.abgemeldet = true;
+            Uploader.abweisungMerken(code, data);
             status = null;
             statusHint = null;
         } else if (code < 0) {
@@ -416,7 +438,12 @@ module Pair {
          * Speicher zu halten, ohne dass irgendetwas sie je abholt. Die
          * Rueckfrage vor dem Trennen sagt, wie viele es sind. */
         Uploader.alleGeparktenVerwerfen();
+        /* EIN RUECKSTAND HIER heisst: Pair.start hat das Trennen trotzdem
+         * zugelassen, weil die Uhr abgemeldet oder gesperrt ist. Er wird an
+         * den Schluessel gebunden, bevor der Schluessel unten geht. */
+        if (Model.backlogCount() > 0 && !Uploader.gebunden()) { Uploader.binden(); }
         Uploader.abgemeldet = false;
+        Uploader.gesperrt = null;
         Uploader.abmeldungVergessen();     // die Frist gehoert zur alten Kopplung
         Storage.deleteValue("cred");
         // Der Kontoschluessel gehoert zur Kopplung und geht mit.
@@ -445,7 +472,10 @@ module Pair {
          * Rueckruf auf "Hole Code…", die Zeile waere nie zu sehen. Sie wird
          * deshalb vorgemerkt und am Ende des Weges ausgeliefert — dann steht
          * unter "Gekoppelt" der Hinweis auf den belegten Geraeteplatz. */
-        if (code != 200) { _warnung = "Altes Gerät im Web löschen"; }
+        /* 401 HEISST: DAS GERAET GIBT ES NICHT MEHR -- es belegt keinen
+         * Platz, und der Rat, es im Web zu loeschen, waere falsch. Das ist
+         * der gewoehnliche Fall nach einer Abmeldung mit Rueckstand. */
+        if (code != 200 && code != 401) { _warnung = "Altes Gerät im Web löschen"; }
         sitzungStarten();
     }
 
@@ -976,6 +1006,7 @@ module Pair {
                          as Lang.Dictionary<Storage.KeyType, Storage.ValueType>);
         Uploader.lastError = null;
         Uploader.abgemeldet = false;
+        Uploader.gesperrt = null;
         Uploader.abmeldungVergessen();     // neue Kopplung, keine Frist
         var ks = (dict != null) ? dict["kontoschluessel"] : null;
         if (!Huelle.schluesselSetzen(ks)) {

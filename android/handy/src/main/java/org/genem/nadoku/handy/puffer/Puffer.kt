@@ -640,6 +640,61 @@ class Puffer(kontext: Context, name: String = DATEINAME) :
         Raeumung(pakete = ids.size, dienste = dienste)
     } }
 
+    /**
+     * Die höchste Paketnummer, die je vergeben wurde — die Grenze einer
+     * Rückstandsbindung ([org.genem.nadoku.handy.kopplung.Rueckstandsbindung]).
+     *
+     * `AUTOINCREMENT` trägt das: Eine Nummer wird nie wiederverwendet, auch
+     * nicht nach dem Löschen des höchsten Pakets. Was nach der Bindung
+     * entsteht, liegt also sicher darüber.
+     */
+    fun hoechstePaketId(): Long =
+        readableDatabase.rawQuery("SELECT COALESCE(MAX(id), 0) FROM paket", null)
+            .use { if (it.moveToFirst()) it.getLong(0) else 0L }
+
+    /** Wie [rueckstand], aber nur Pakete bis zu dieser Nummer. */
+    fun rueckstandBis(bisId: Long): Int =
+        readableDatabase.rawQuery(
+            "SELECT COUNT(*) FROM paket p WHERE p.id <= ? AND p.final = 1 AND p.fehlerhaft = 0 AND (" +
+                "p.metadaten_bestaetigt = 0 OR " +
+                "p.bestaetigt_seq < (SELECT COUNT(*) FROM punkt WHERE paket_id = p.id))",
+            arrayOf(bisId.toString()),
+        ).use { if (it.moveToFirst()) it.getInt(0) else 0 }
+
+    /**
+     * Den gebundenen Rückstand **verwerfen** — alle abgeschlossenen Pakete
+     * bis zu dieser Nummer, samt Punkten, Phasen und leeren Dienstzeilen.
+     *
+     * DER EINE FALL: Das Gerät wurde nach einer Abmeldung an ein **anderes**
+     * Konto gekoppelt. Die Pakete gehören dem bisherigen; senden darf das
+     * Gerät sie nicht (der Klartext ginge, mit dem Schlüssel des neuen Kontos
+     * verschlossen, an das falsche), und zurück an das alte kommen sie nur
+     * über eine Kopplung an das alte. Wer das nicht will, verwirft sie hier —
+     * nach einer Rückfrage in der Oberfläche.
+     *
+     * NUR ABGESCHLOSSENE (`final = 1`): Ein laufendes Paket hat eine Nummer
+     * über der Grenze, weil eine Bindung nur außerhalb eines Dienstes entsteht.
+     */
+    fun rueckstandVerwerfen(bisId: Long): Raeumung = schreibe { it.transaction {
+        val ids = rawQuery(
+            "SELECT id FROM paket WHERE id <= ? AND final = 1",
+            arrayOf(bisId.toString()),
+        ).use { c -> buildList { while (c.moveToNext()) add(c.getLong(0)) } }
+        for (id in ids) {
+            val a = arrayOf(id.toString())
+            delete("punkt", "paket_id = ?", a)
+            delete("phase", "paket_id = ?", a)
+            delete("paket", "id = ?", a)
+        }
+        val dienste = delete(
+            "dienst",
+            "beendet_at IS NOT NULL" +
+                " AND dienst_ref NOT IN (SELECT dienst_ref FROM paket WHERE dienst_ref IS NOT NULL)",
+            null,
+        )
+        Raeumung(pakete = ids.size, dienste = dienste)
+    } }
+
     /** Hat dieses Paket noch etwas zu senden? */
     fun hatArbeit(p: Paketzeile): Boolean =
         !p.metadatenBestaetigt || p.bestaetigtSeq < punktzahl(p.id)

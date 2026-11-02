@@ -120,6 +120,12 @@ module Util {
              + "." + (g.month as Lang.Number).format("%02d") + ".";
     }
 
+    // Uhrzeit "HH:MM" eines Zeitpunkts (naechster Sendeversuch)
+    function hhmmAus(epoch as Lang.Number) as Lang.String {
+        var g = Gregorian.info(new Time.Moment(epoch), Time.FORMAT_SHORT);
+        return (g.hour as Lang.Number).format("%02d") + ":" + (g.min as Lang.Number).format("%02d");
+    }
+
     function epochNow() as Lang.Number {
         return Time.now().value();
     }

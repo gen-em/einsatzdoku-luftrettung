@@ -15,7 +15,13 @@ import javax.net.ssl.SSLException
  * in Kotlin ist ein eigener Typ die ehrlichere Form derselben Auskunft.
  */
 sealed interface Netzantwort {
-    data class Server(val code: Int, val koerper: String?) : Netzantwort
+    /**
+     * @param retryAfterS die Kopfzeile `Retry-After` in Sekunden, falls der
+     *   Server sie mitschickt (429, 503; Vertrag 5). Nur die Sekundenform —
+     *   die Datumsform schickt `ingest.php` nicht, und eine unlesbare Angabe
+     *   ist `null`, nicht null Sekunden.
+     */
+    data class Server(val code: Int, val koerper: String?, val retryAfterS: Long? = null) : Netzantwort
     data class KeineVerbindung(val ursache: String) : Netzantwort
 }
 
@@ -89,8 +95,8 @@ class HttpNetzweg(
                  * ausdruecklich als SERVERFEHLER ein; ohne jene Zeile hiesse
                  * er "unbekannt", und das sagt der Nutzerin nichts. Der Sendeweg
                  * ist davon unberuehrt: `Sendeantwort.lese()` behandelt
-                 * alles ausser 200/400/401/413 als "spaeter erneut" — es
-                 * geht also kein Paket verloren. */
+                 * jeden Code, den der Vertrag nicht nennt, als "spaeter
+                 * erneut" — es geht also kein Paket verloren. */
                 instanceFollowRedirects = false
                 setRequestProperty("Content-Type", "application/json; charset=utf-8")
                 setRequestProperty("Accept", "application/json")
@@ -104,7 +110,8 @@ class HttpNetzweg(
             // ("device_limit": erst ein Gerät im Web löschen).
             val strom = if (code in 200..399) v.inputStream else v.errorStream
             val text = strom?.bufferedReader(Charsets.UTF_8)?.use { it.readText() }
-            Netzantwort.Server(code, text)
+            val warten = v.getHeaderField("Retry-After")?.trim()?.toLongOrNull()?.takeIf { it > 0 }
+            Netzantwort.Server(code, text, warten)
         } catch (e: SSLException) {
             // Eigener Zweig, weil die Ursache eine andere ist: nicht "kein
             // Netz", sondern "die Gegenstelle ist nicht die, für die sie sich

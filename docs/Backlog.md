@@ -53,7 +53,8 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
 | Spanne | Zweig | seit |
 |---|---|---|
 | 450 bis 459 | `claude/new-session-p1duc7` — erster Prüfdurchgang der Arbeitsumgebung auf Staging (R91); vergeben: 450 bis 455 | 02.11.2026 |
-| ab 470 | frei — höchste reservierte Nummer 469; frei blieben 461 bis 469 aus der Spanne von PR (PR #133), 434 bis 439 aus der Spanne von PR #129, 441 bis 449 aus der von PR #130, 420 bis 429 aus der Spanne von 20 (PR #127), 412 bis 419 aus der von 12b (PR #125), 394 bis 399 aus der Spanne von 19 (PR #112 bis #114), 389 aus der von 12a (PR #116), 372 bis 379 aus der von 12 (PR #103), 362 bis 369 aus der von PK, 359 aus der von 18 (PR #101), 348 und 349 aus der von 17, 338 aus der von AR | 02.11.2026 |
+| 470 bis 479 | `claude/trusting-wozniak-33j782` (Schritt 21, GR) | 02.11.2026 |
+| ab 480 | frei — höchste reservierte Nummer 479; frei blieben 461 bis 469 aus der Spanne von PR (PR #133), 434 bis 439 aus der Spanne von PR #129, 441 bis 449 aus der von PR #130, 420 bis 429 aus der Spanne von 20 (PR #127), 412 bis 419 aus der von 12b (PR #125), 394 bis 399 aus der Spanne von 19 (PR #112 bis #114), 389 aus der von 12a (PR #116), 372 bis 379 aus der von 12 (PR #103), 362 bis 369 aus der von PK, 359 aus der von 18 (PR #101), 348 und 349 aus der von 17, 338 aus der von AR | 02.11.2026 |
 
 ---
 
@@ -188,37 +189,6 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
 
 <!-- -->
 
-154. **Handy-App liest `kept_points` und `kept_meta` nicht.** · gehört zu: 21 · Stand: offen · seit 07.09.2026
-     *Aufgenommen 07.09.2026 aus der Gegenprüfung des Sofortpakets (Nr. 134).*
-     `Sendeantwort.kt` nimmt aus der Antwort von `ingest.php` nur
-     `kept_phases` und `kept_resus` in den Sendebericht; ein Paket, dessen
-     Punkte oder Metadaten der Server wegen des Ersetzfensters übergangen
-     hat (`kept_points`, `kept_meta` — JSON-Vertrag 5), sieht am Handy wie
-     ein Erfolg aus. Der Server sagt es; die App hört es nicht. Beide Felder
-     in `Sendeantwort` aufnehmen und in der Ergebniszeile nennen; Prüffall in
-     `SendeantwortTest`. Zuordnung: nächste Android-Stufe.
-
-<!-- -->
-
-157. **Handy-App: Sackgasse zwischen „Schlüssel abgewiesen" und „Gerät trennen".** · gehört zu: 21 · Stand: offen · seit 07.09.2026
-     *Aufgenommen 07.09.2026 aus dem Emulatorlauf zu Android 0.14.1.* Wird
-     das Gerät serverseitig gelöscht, während ein Paket noch aussteht (hier:
-     der Demo-Reset nahm das Gerät mit, das Dienstende-Paket bekam `401`),
-     zeigt die App „Rückstand 1 Paket" und „Schlüssel abgewiesen · Gerät neu
-     koppeln" — und **verweigert das Trennen**, weil `trennen()` bei
-     Rückstand abbricht (`Trennergebnis.Rueckstand`, Hinweis „Sie gehören dem
-     bisherigen Konto"). Das Paket kann aber nie mehr gehen: Der Schlüssel
-     ist weg. Senden geht nicht, Trennen geht nicht, Neukoppeln setzt Trennen
-     voraus; der einzige Ausweg ist das Löschen der App-Daten. Behebung:
-     Bei `Abweisung.SITZUNG_UNGUELTIG` (401 `auth`) das Trennen trotz
-     Rückstand zulassen — mit dem Hinweis, dass die ausstehenden Pakete mit
-     dem alten Schlüssel nicht mehr zustellbar sind und verworfen werden —
-     oder den Rückstand beim 401 als „abgewiesen" führen, damit der Räumteil
-     aus Nr. 114 ihn beim Trennen mitnimmt. Prüffall in `KopplungTest`.
-     Zuordnung: nächste Android-Stufe.
-
-<!-- -->
-
 187. **Alle „Anhebungs"-Wege werden mit NaDoku 1.0 abgeschafft.** · gehört zu: 14 · Stand: offen · seit 14.09.2026
      Entschieden 14.09.2026 (S10/AP3): Ab 1.0 gibt es nur neue Konten, also
      keinen Altbestand, der still gehoben werden müsste. Anhebung heißt: ein
@@ -239,18 +209,6 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      frisches Konto liest seine Daten, Wortliste und Vollständigkeit melden
      keine ungenutzten Ausnahmen.
      Werdegang bis 26.09.2026: `docs/Backlog.md@f5bddc2`, Nr. 187.
-
-<!-- -->
-
-201. **`Retry-After` in Uhr und Handy auswerten.** · gehört zu: 21 · Stand: offen · seit 15.09.2026
-     *Aufgenommen 15.09.2026 (Konzept P5a, Befund 1.7).* Beide Clients
-     behandeln jeden Antwortcode außer 200/400/401/403/413 als „später
-     erneut" und wiederholen zum nächsten eigenen Anlass — die Kopfzeile
-     `Retry-After`, die die Mengenbremse (E-P5a-02) mitschickt, liest keiner.
-     Für Sperren von 10 bis 60 Minuten genügt das; sauberer wäre, die
-     genannte Zeit abzuwarten statt bei jedem Auslöser anzuklopfen. Niedrig;
-     Uhr-Stufe und Android-Stufe je eine Zeile in der Antwortauswertung
-     (`Uploader.mc`, `Sendeantwort.kt`).
 
 <!-- -->
 
@@ -297,29 +255,6 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      seit Kette II/AP6, E-KH-07); (3) die `.htaccess` gilt nur auf Apache
      (wie Nr. 129).
      Werdegang bis 26.09.2026: `docs/Backlog.md@f5bddc2`, Nr. 213.
-
-<!-- -->
-
-229. **Die Uhr sagt „abgemeldet", wo „gesperrt" steht — und der Ausweg, den sie nennt, ist versperrt.** · gehört zu: 21 · Stand: offen · seit 17.09.2026
-     Befund (Konzept P5b, E-P5b-12): `ingest.php` antwortet 403 bei
-     abgeschaltetem Gerät (`device_disabled`) und seit Web 20.17.0 bei
-     einem Konto, das nicht `aktiv` ist (`{"error":"konto","grund":…}`,
-     Grund `gesperrt`, `wartet`, `unbestaetigt`). `Uploader.mc` behandelt
-     401 und 403 in einem Zweig: `abgemeldet`, Senden hält an, `SyncView.mc`
-     rät „Neu koppeln". Der Rat führt im Kreis: `Pair.start()` verweigert das
-     Trennen bei Rückstand („Erst N Pakete senden"), senden geht nicht, und
-     die Zeile „verwerfen" wird bei `abgemeldet` gar nicht gezeichnet. Nr.
-     159 hat das nicht geschlossen (geparkt wird nur im 400-Zweig);
-     `JSON-Vertrag.md` behauptet zu 401/403 das Gegenteil und ist mit zu
-     berichtigen. Verloren geht nichts — der Rückstand kommt nach dem
-     Entsperren idempotent an; der Schaden ist die falsche Auskunft.
-     Weg: `grund` im selben Zweig lesen, drei Texte in `SyncView.mc` ohne
-     Hinweis auf Neukoppeln; mit Nr. 201 bei der nächsten Uhr-Stufe.
-     Nebenbefunde: Das Handy behandelt 403 gar nicht (`Sendeantwort.lese()`
-     kennt 200, 400, 401, 413; ein gesperrtes Konto versucht unbegrenzt
-     weiter) — Android-Zeile in dasselbe Paket. Die Fehlertabelle zu
-     `ingest.php` im Vertrag kennt weder 403 noch 507.
-     Werdegang bis 26.09.2026: `docs/Backlog.md@f5bddc2`, Nr. 229.
 
 <!-- -->
 
@@ -955,23 +890,6 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
 
 <!-- -->
 
-402. **Die Sync-Seite der Uhr überlappt ab vier Zeilen im unteren Block.** · gehört zu: 21 · Stand: offen · seit 26.10.2026
-     Gefunden in R17-21 (F-R17-69) beim Bau der Fristanzeige: Auf der
-     Venu 3s schob eine dritte Meldungszeile („Daten verfallen am …") den
-     Mittelblock „N Pakete offen" in die rote Zeile darunter — im Simulator
-     gesehen, zwei Texte übereinander. Der Kommentar in `SyncView.mc` sagt
-     das Gegenteil: „Gegengerechnet bis zu fuenf Zeilen im unteren Block …
-     es ueberlappt nichts." Die Untergrenze `y >= 34` hält die GPS-Zeile im
-     Kreis, aber nicht den Mittelblock über `untenY`. R17-21 hat die Zeile
-     deshalb in die erste gezogen (zwei Zeilen wie vorher); vier Zeilen gibt
-     es aber auch ohne sie, etwa Fehler, Kopplungsmeldung, Weg heraus und
-     Version. *Weg:* den Mittelblock bei Platzmangel verkleinern (kleinere
-     Zahl, `fitFont`) oder Zeilen des unteren Blocks zusammenlegen; dazu
-     eine Bildprobe im Uhr-Prüfstand mit vier und fünf Zeilen auf Fenix,
-     FR945 und Venu 3s. Den Kommentar berichtigen.
-
-<!-- -->
-
 409. **Code-Kommentare erzählen noch Geschichte, ohne Kennung.** · gehört zu: 13 · Stand: offen · seit 30.10.2026
      *Aufgenommen 30.10.2026 mit R17-28.* Der Kommentardurchgang hat
      Kennungen, Backlog-Nummern und eigene Fassungsangaben aus den
@@ -1043,29 +961,6 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      eigenes Formular ohne `new-password`-Felder setzen. *Abnahme:* in einem
      echten Browser mit Bitwarden bietet das Menü am Feld den Eintrag an;
      die Sandbox hat kein Bitwarden.
-
-<!-- -->
-
-431. **Die Garmin-Uhr sendet nach dem Reaktivieren im Web erst nach einem Neustart der App.** · gehört zu: 21 · Stand: offen · seit 02.11.2026
-     *Aufgenommen 02.11.2026 aus P-R17-26 (Uhr 4.1.1 auf echter Garmin).*
-     Bekommt die Uhr 401 oder 403, setzt sie `Uploader.abgemeldet`, und
-     `syncAll()` bricht danach sofort ab — auch nach Dienstende und neuem
-     Einsatz. Zurück setzen es nur eine angenommene Anfrage oder das
-     Koppeln; die erste kommt nie zustande, das zweite sperrt die Uhr,
-     solange Pakete offen sind. Wer das Gerät im Web wieder aktiviert, muss
-     die App neu starten (die Marke liegt nur im Speicher); seit dem
-     02.11.2026 sagt es das Handbuch (Sync-Seite der Uhr, vorher „neu
-     koppeln"). Gemessen: aktiviert, nichts gesendet; nach Neustart alles. *Weg:* das
-     Öffnen der Sync-Seite oder „Senden" versucht es trotz der Marke einmal,
-     dazu ein seltener Versuch beim Dienstende. *Entschieden 02.11.2026
-     (E-BE-08):* Dass eine im Web **gelöschte** Uhr mit Rückstand erst nach
-     der 30-Tage-Frist neu koppeln kann, ist zu lang. Bei `abgemeldet` darf
-     sie neu koppeln und vergleicht den Kontoschlüssel: gleich → der
-     Rückstand geht hinaus, anders → Rückfrage und verwerfen (für das
-     andere Konto wäre er unlesbar); dasselbe auf dem Handy (Nr. 157, 229).
-     Die Frist bleibt; Web-Warnung: Nr. 440. *Abnahme:* deaktivieren,
-     aufzeichnen, aktivieren, Sync-Seite öffnen → Pakete gehen ohne Neustart
-     hinaus; gelöscht → neu koppeln, dieselben Pakete kommen an.
 
 <!-- -->
 
@@ -1169,3 +1064,32 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      Prüfdurchgang so im Skript gemacht, P-SR-07 lief damit grün.
      *Abnahme:* Anmeldung über `anmelden()` in Firefox gegen Staging aus
      der Arbeitsumgebung; der Setz-Link aus Nr. 451 weiter in Chromium.
+
+<!-- -->
+
+470. **Auf der Venu 3s schneidet der Kreis die unterste Meldung der Sync-Seite ab.** · gehört zu: nächste Backlog-Runde · Stand: offen · seit 02.11.2026
+     *Aufgenommen 02.11.2026 aus GR-06 (Konzept GR, F-GR-11).* Seit Uhr
+     4.3.1 überlappen sich Mittelblock und Meldungen nicht mehr; bei sechs
+     und sieben Meldungszeilen steht die unterste („Action halten: Gerät
+     koppeln") aber so tief, dass die Sehne schmaler ist als die Zeile, und
+     `Ui.fitFont()` hat keine kleinere Schrift als `FONT_XTINY` — beide Enden
+     fehlen. Zu sehen auf den Bildern venu3s-6 und venu3s-7 der Bildprobe
+     `tools/uhr-pruefstand/syncseite/`; die Probe misst nur Höhen, keine
+     Breiten. *Weg:* die Zeile kürzen, wenn sie nicht passt („Koppeln:
+     Action halten"), oder die Breite in die Probe aufnehmen. *Abnahme:*
+     Bildprobe Venu 3s mit 6 und 7 Zeilen, jede Zeile ganz lesbar.
+
+<!-- -->
+
+471. **Ein abgemeldetes Handy hält seinen Klartextpuffer ohne Frist.** · gehört zu: nächste Backlog-Runde · Stand: offen · seit 02.11.2026
+     *Aufgenommen 02.11.2026 aus GR-03 (Konzept GR, F-GR-07).* Die
+     Garmin-Uhr verwirft ihren Puffer 30 Tage nach der ersten 401/403
+     (Lage H im Bedrohungsmodell); das Handy hat dafür keine Frist. Es führt
+     seit Android 0.20.0 einen dauerhaften Abmeldevermerk
+     (`Rueckstandsbindung`), aber keinen Zeitpunkt. Ein im Web gelöschtes,
+     verlorenes Handy hält Spur und Phasen damit unbegrenzt, auch einen
+     gebundenen Rückstand. *Weg:* den Zeitpunkt der ersten Abmeldung im
+     Vermerk ablegen und nach `Raeumung.FRIST_TAGE` alle Pakete der
+     Kopplung räumen, wie die Uhr; Bedrohungsmodell Lage H nachziehen.
+     *Abnahme:* Prüffall im `SenderTest` mit gestellter Uhr — 30 Tage nach
+     der ersten 401 ist der Puffer leer.
