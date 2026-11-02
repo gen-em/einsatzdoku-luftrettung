@@ -596,12 +596,13 @@
         "server/betrieb_server.php",
         "server/zweitfaktor_notweg.php",
         "server/nachweis_lib.php",
-        "tools/zweitfaktor/**"
+        "tools/zweitfaktor/**",
+        "tools/proben/zweitfaktor/**"
       ],
       "proben": [
         "zweitfaktorprobe"
       ],
-      "anlass": "F-P5c-31 (Code vor der Sitzung), F-P5c-37 (kein Code gilt zweimal), E-P5c-54 (Demo-Reset); seit SR-02 auch das Vergessen gemerkter Geraete beim Passwortwechsel (einstellungen.php) und -reset (pw_handling.php), E-SR-07; seit SR-07 der frische Code am Schluesselblatt und an den Schluesselgriffen (Teil 5c, E-SR-20); seit SR-09 Passkeys an Anmeldung und Bestaetigung (Teil 5d, E-SR-32); seit SR-04 der Notzugang der einzigen BetreiberIn mit seiner Nachweisdatei (Teil 8, Nr. 249)"
+      "anlass": "F-P5c-31 (Code vor der Sitzung), F-P5c-37 (kein Code gilt zweimal), E-P5c-54 (Demo-Reset); seit SR-02 auch das Vergessen gemerkter Geraete beim Passwortwechsel (einstellungen.php) und -reset (pw_handling.php), E-SR-07; seit SR-07 der frische Code am Schluesselblatt und an den Schluesselgriffen (Teil 5c, E-SR-20); seit SR-09 Passkeys an Anmeldung und Bestaetigung (Teil 5d, E-SR-32); seit SR-04 der Notzugang der einzigen BetreiberIn mit seiner Nachweisdatei (Teil 8, Nr. 249); seit Nr. 460 auch die eigene Probe (tools/proben/zweitfaktor/**)"
     },
     {
       "id": "rueckweg",
@@ -829,6 +830,25 @@
         "bedienprobe"
       ],
       "anlass": "Nr. 247 (Schritt 18, SR-03): Es gab keinen Wechsel des Serverschluessels -- wer server_key von Hand aenderte, machte alles Versiegelte stumm. Die Pfade sind die sechs Versiegler (F-SR-01), der Job, die Blatt-Marke (Nr. 233, E-SR-11: dafuer die Anteilprobe mit Teil E) und die Seite von Nr. 344. Die Bedienprobe faehrt den Wechsel im Browser (betrieb-server-schluesselwechsel) und misst das Blatt auf einer A4-Seite (E-SR-60)."
+    },
+    {
+      "id": "konfig-stellen",
+      "ab": "klein",
+      "pfade": [
+        "tools/sandbox/konfig_stellen.php"
+      ],
+      "proben": [
+        "anteilprobe",
+        "ratenprobe",
+        "schluesselwechselprobe",
+        "passkeyprobe",
+        "komplettprobe",
+        "wiederherstellung",
+        "zweitfaktorprobe",
+        "versandprobe",
+        "bedienprobe"
+      ],
+      "anlass": "Nr. 460 (Schritt PR): Der gemeinsame Rueckweg der Proben, die config.php umstellen -- wer ihn aendert, faehrt die Proben, die ihn gehen. Nr. 403 lag hier: Er wartete nicht auf den Webserver."
     },
     {
       "id": "kopfzeilen",

@@ -52,9 +52,8 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
 
 | Spanne | Zweig | seit |
 |---|---|---|
-| 430 bis 439 | `claude/new-session-p1duc7` — Ergebnisse der Handprüfungen nach den Tags von 12b (PR #129), Staging-Konto der Arbeitsumgebung; vergeben: 430 bis 433 | 02.11.2026 |
-| 440 bis 449 | `claude/sharp-faraday-q1cp0s` — Einordnung des Backlogs (Rahmenplan 192, E-BE); vergeben: 440 | 02.11.2026 |
-| ab 450 | frei — höchste reservierte Nummer 449; frei blieben 420 bis 429 aus der Spanne von 20 (PR #127), 412 bis 419 aus der von 12b (PR #125), 394 bis 399 aus der Spanne von 19 (PR #112 bis #114), 389 aus der von 12a (PR #116), 372 bis 379 aus der von 12 (PR #103), 362 bis 369 aus der von PK, 359 aus der von 18 (PR #101), 348 und 349 aus der von 17, 338 aus der von AR | 02.11.2026 |
+| 460 bis 469 | `claude/kind-cray-lgaz7d` — Schritt PR (Prüfmittel), Lücke im Prüfstand F-PR-04; vergeben: 460 | 02.11.2026 |
+| ab 470 | frei — höchste reservierte Nummer 469 (450 bis 459 auf `claude/new-session-p1duc7`); frei blieben 434 bis 439 aus der Spanne von PR #129, 441 bis 449 aus der von PR #130, 420 bis 429 aus der Spanne von 20 (PR #127), 412 bis 419 aus der von 12b (PR #125), 394 bis 399 aus der Spanne von 19 (PR #112 bis #114), 389 aus der von 12a (PR #116), 372 bis 379 aus der von 12 (PR #103), 362 bis 369 aus der von PK, 359 aus der von 18 (PR #101), 348 und 349 aus der von 17, 338 aus der von AR | 02.11.2026 |
 
 ---
 
@@ -703,27 +702,6 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
 
 <!-- -->
 
-352. **`nummern.py` meldet während eines offenen Merges die Nummern von `main` als Kollision.** · gehört zu: PR · Stand: offen · seit 28.09.2026
-     *Aufgenommen 28.09.2026 beim Aufnehmen von `main` in den Konzeptzweig
-     zu 18 (Konzept SR, F-SR-14).* `Pruefablauf.md` 5.3 sagt: erst
-     `git merge --no-commit`, dann der Prüfstand über den Arbeitsbaum, dann
-     der Merge-Commit mit dem Bericht. Das Werkzeug misst den Arbeitsbaum
-     aber gegen `merge-base(HEAD, origin/main)` — vor dem Commit ist das der
-     alte Abzweigpunkt, und jede Nummer, die `main` seither vergeben hat
-     (hier vier aus Schritt 17), steht im Baum als „neu" und in
-     `origin/main` als „neu": Scheinüberschneidungen, der Bericht des
-     Merge-Commits wäre rot. Nach dem Commit ist die Basis `origin/main`,
-     und es sind null.
-     *Weg:* Liegt `MERGE_HEAD` vor, die Nummern des Arbeitsbaums zusätzlich
-     um die von `MERGE_HEAD` bereinigen (was der aufgenommene Zweig schon
-     trägt, ist nicht neu); die Selbstprobe bekommt den Fall; 5.3 verliert
-     den Satz zur Umgehung. Bis dahin: Merge-Commit ohne Bericht, der Bericht
-     im Folge-Commit über denselben Baum samt Prüfdokument — so gegangen am
-     28.09.2026. *Abnahme:* ein offener Merge mit einer Nummer aus `main`
-     → 0 Überschneidungen.
-
-<!-- -->
-
 353. **Die Schemaprobe vergleicht eine migrierte Tabelle nicht mit der frisch angelegten.** · gehört zu: 14 · Stand: offen · seit 28.09.2026
      *Aufgenommen 28.09.2026 in SR-09 (Konzept SR, F-SR-28).* Die Kommentare
      der Migrationen `2026_09_28_vertraute_geraete` und `2026_09_28_passkeys`
@@ -896,20 +874,6 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
 
 <!-- -->
 
-385. **Die Zweitfaktorprobe hinterlässt bei jedem Lauf eine Sperre in `sicherheit_ereignisse`.** · gehört zu: PR · Stand: offen · seit 16.10.2026
-     *Aufgenommen 16.10.2026 mit S11-05e (F-S11-59).* Jeder Lauf der
-     Zweitfaktorprobe legt eine Sperre `totp` für
-     `zweitfaktor-probe@probe.invalid` an und räumt sie nicht ab (gezählt
-     16.10.2026: 13 Zeilen seit dem 13.10.). Die Protokollprobe nahm das
-     letzte Archiv mit Sicherheitszeilen und war deshalb drei Tage nach
-     jedem Tag mit Prüfstand rot — behoben in der Protokollprobe (sie wählt
-     jetzt das Archiv mit ihrer eigenen Mail), die Ursache steht noch.
-     *Weg:* die Sperre im Aufräumteil der Zweitfaktorprobe löschen, wie die
-     Protokollprobe ihre eigenen Zeilen löscht. *Abnahme:* nach einem Lauf
-     keine Zeile mehr für das Probenkonto.
-
-<!-- -->
-
 388. **Die Demo-Fixture lässt sich seit S11 nicht mehr aus dem Referenzkonto erzeugen.** · gehört zu: 14 · Stand: offen · seit 19.10.2026
      *Aufgenommen 19.10.2026 in S11-12 (F-S11-95).*
      `tools/referenzdatensatz/fixture/erzeugen.php` las das Referenzkonto
@@ -1005,27 +969,6 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      Zahl, `fitFont`) oder Zeilen des unteren Blocks zusammenlegen; dazu
      eine Bildprobe im Uhr-Prüfstand mit vier und fünf Zeilen auf Fenix,
      FR945 und Venu 3s. Den Kommentar berichtigen.
-
-<!-- -->
-
-403. **Die Freigabeprobe in Chromium scheitert im Gesamtlauf des Prüfstands an der Anlage ihres Prüfkontos.** · gehört zu: PR · Stand: offen · seit 27.10.2026
-     *Aufgenommen 27.10.2026 nach R17-23 (Betreiberin: ja, vor R17-30).*
-     Dreimal in Folge — im ersten `neben`-Lauf von R17-21 und R17-22 und im
-     Lauf von R17-23 — brach `freigabeprobe [chromium]` nach 3 s ab:
-     `pruefkonto.py anlegen` meldet „Kontoanlage ohne Einrichtungslink:
-     unbekannt". Die Anmeldung als Admin gelang (sonst meldete das Werkzeug
-     „Anmeldung gescheitert"); erst die Antwort auf `user_add` trug keinen
-     Link und keinen erkennbaren Meldungstext. Einzeln gefahren ist die Probe
-     jedes Mal grün (25/0), in Firefox und WebKit auch im Gesamtlauf.
-     *Stand 29.10.2026:* bis dahin 5 von 7 Läufen rot. Vor ihr laufen nicht
-     die Bedienprobe (so stand es hier bis zum 29.10.), sondern Raten-,
-     Wartungs-, Verbindungs- und Anteilprobe; diese Folge und die alte sind
-     je einmal nachgestellt, beide grün. Die Meldung trägt seit Web 23.5.1
-     die Seitenkennung der Antwort. Folge bleibt: Trifft es im Bericht des
-     Pull Requests, ist er rot. *Weg:* beim nächsten Treffer an der
-     Seitenkennung die Ursache ablesen und beheben, nicht die Probe
-     wiederholen lassen. *Abnahme:* zwei Gesamtläufe `neben` ohne diesen
-     Abbruch.
 
 <!-- -->
 
