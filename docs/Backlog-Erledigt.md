@@ -10171,6 +10171,7 @@ zutreffen.
      dieselbe Trennung wie `kontextMachen()` in `tools/motor.mjs`. Gemessen:
      Staging `login.php` 200 mit Prüfung, örtlich unverändert ohne Proxy.
 
+<<<<<<< HEAD
 <!-- -->
 
 451. **`proxyRoute()` folgt Weiterleitungen in Node und verliert dabei Cookies.** · gehört zu: Pflegeaufgabe · Stand: erledigt · seit 02.11.2026
@@ -10188,3 +10189,85 @@ zutreffen.
      „Passwort gespeichert …" für drei Konten; ohne Sitzung landet
      `betrieb_status.php` jetzt sichtbar auf `login.php`.
 
+=======
+385. **Die Zweitfaktorprobe hinterlässt bei jedem Lauf eine Sperre in `sicherheit_ereignisse`.** · gehört zu: PR · Stand: erledigt · seit 16.10.2026
+     *Aufgenommen 16.10.2026 mit S11-05e (F-S11-59).* Jeder Lauf der
+     Zweitfaktorprobe legt eine Sperre `totp` für
+     `zweitfaktor-probe@probe.invalid` an und räumt sie nicht ab (gezählt
+     16.10.2026: 13 Zeilen seit dem 13.10.). Die Protokollprobe nahm das
+     letzte Archiv mit Sicherheitszeilen und war deshalb drei Tage nach
+     jedem Tag mit Prüfstand rot — behoben in der Protokollprobe (sie wählt
+     jetzt das Archiv mit ihrer eigenen Mail), die Ursache steht noch.
+     *Weg:* die Sperre im Aufräumteil der Zweitfaktorprobe löschen, wie die
+     Protokollprobe ihre eigenen Zeilen löscht. *Abnahme:* nach einem Lauf
+     keine Zeile mehr für das Probenkonto.
+     Erledigt 02.11.2026 mit PR-01 (Konzept PR): Der Aufräumteil der
+     Zweitfaktorprobe löscht die Ereignisse des Probenkontos in
+     sicherheit_ereignisse; nach einem Lauf 0 Zeilen statt 1, die Probe
+     weiter 139 ok.
+
+352. **`nummern.py` meldet während eines offenen Merges die Nummern von `main` als Kollision.** · gehört zu: PR · Stand: erledigt · seit 28.09.2026
+     *Aufgenommen 28.09.2026 beim Aufnehmen von `main` in den Konzeptzweig
+     zu 18 (Konzept SR, F-SR-14).* `Pruefablauf.md` 5.3 sagt: erst
+     `git merge --no-commit`, dann der Prüfstand über den Arbeitsbaum, dann
+     der Merge-Commit mit dem Bericht. Das Werkzeug misst den Arbeitsbaum
+     aber gegen `merge-base(HEAD, origin/main)` — vor dem Commit ist das der
+     alte Abzweigpunkt, und jede Nummer, die `main` seither vergeben hat
+     (hier vier aus Schritt 17), steht im Baum als „neu" und in
+     `origin/main` als „neu": Scheinüberschneidungen, der Bericht des
+     Merge-Commits wäre rot. Nach dem Commit ist die Basis `origin/main`,
+     und es sind null.
+     *Weg:* Liegt `MERGE_HEAD` vor, die Nummern des Arbeitsbaums zusätzlich
+     um die von `MERGE_HEAD` bereinigen (was der aufgenommene Zweig schon
+     trägt, ist nicht neu); die Selbstprobe bekommt den Fall; 5.3 verliert
+     den Satz zur Umgehung. Bis dahin: Merge-Commit ohne Bericht, der Bericht
+     im Folge-Commit über denselben Baum samt Prüfdokument — so gegangen am
+     28.09.2026. *Abnahme:* ein offener Merge mit einer Nummer aus `main`
+     → 0 Überschneidungen.
+     Erledigt 02.11.2026 mit PR-02 (Konzept PR): nummern.py zählt im offenen
+     Merge den Stand von MERGE_HEAD als alt; Selbstprobe 12 / 0 mit Fall und
+     Gegenprobe, am echten Repositorium im offenen Merge 0 statt 2
+     Scheinkollisionen; Pruefablauf.md 5.3 ohne Umgehung.
+
+460. **Zwei Werkzeugdateien lösen im Prüfstand ihre Proben nicht aus.** · gehört zu: PR · Stand: erledigt · seit 02.11.2026
+     *Aufgenommen 02.11.2026 mit PR-03 (Konzept PR, F-PR-04, Q-PR-01).*
+     Kein Muster in `tools/pruefstand/pruefablauf.json` deckt
+     `tools/sandbox/konfig_stellen.php`, über das acht Proben und ein Weg
+     der Bedienprobe ihre Lage in `config.php` stellen, und keines
+     `tools/proben/zweitfaktor/**`. Wer dort etwas ändert, bekommt einen
+     Prüfbericht, der die Änderung nicht misst — so geschehen mit Nr. 385
+     und 403 auf diesem Zweig: Der Trockenlauf nannte 4 Proben, keine davon
+     eine der betroffenen. *Weg:* ein Muster `konfig-stellen` mit den
+     Proben, die die Datei einbinden; `tools/proben/zweitfaktor/**` in das
+     Muster `zweitfaktor`. *Abnahme:* der Trockenlauf über den Zweig nennt
+     `anteilprobe` und `zweitfaktorprobe`.
+     Erledigt 02.11.2026 mit PR-03 (Konzept PR, Q-PR-01): Muster
+     konfig-stellen mit neun Proben, tools/proben/zweitfaktor/** im Muster
+     zweitfaktor; der Trockenlauf über den Zweig nennt 13 Proben statt 4,
+     darunter anteilprobe und zweitfaktorprobe.
+
+403. **Die Freigabeprobe in Chromium scheitert im Gesamtlauf des Prüfstands an der Anlage ihres Prüfkontos.** · gehört zu: PR · Stand: erledigt · seit 27.10.2026
+     *Aufgenommen 27.10.2026 nach R17-23 (Betreiberin: ja, vor R17-30).*
+     Dreimal in Folge — im ersten `neben`-Lauf von R17-21 und R17-22 und im
+     Lauf von R17-23 — brach `freigabeprobe [chromium]` nach 3 s ab:
+     `pruefkonto.py anlegen` meldet „Kontoanlage ohne Einrichtungslink:
+     unbekannt". Die Anmeldung als Admin gelang (sonst meldete das Werkzeug
+     „Anmeldung gescheitert"); erst die Antwort auf `user_add` trug keinen
+     Link und keinen erkennbaren Meldungstext. Einzeln gefahren ist die Probe
+     jedes Mal grün (25/0), in Firefox und WebKit auch im Gesamtlauf.
+     *Stand 29.10.2026:* bis dahin 5 von 7 Läufen rot. Vor ihr laufen nicht
+     die Bedienprobe (so stand es hier bis zum 29.10.), sondern Raten-,
+     Wartungs-, Verbindungs- und Anteilprobe; diese Folge und die alte sind
+     je einmal nachgestellt, beide grün. Die Meldung trägt seit Web 23.5.1
+     die Seitenkennung der Antwort. Folge bleibt: Trifft es im Bericht des
+     Pull Requests, ist er rot. *Weg:* beim nächsten Treffer an der
+     Seitenkennung die Ursache ablesen und beheben, nicht die Probe
+     wiederholen lassen. *Abnahme:* zwei Gesamtläufe `neben` ohne diesen
+     Abbruch.
+     Erledigt 02.11.2026 mit PR-03 (Konzept PR, F-PR-02): Ursache war der
+     Rückweg von konfig_stellen, der nach dem Zurücklegen von config.php
+     nicht auf das OPcache-Intervall des Webservers wartete; die
+     Freigabeprobe meldete sich unter dem Anteil der Anteilprobe an.
+     Nachgestellt 3 von 3 rot, danach 3 von 3 grün; zwei Gesamtläufe neben
+     mit 53 und 54 grünen Proben, 0 rot.
+>>>>>>> origin/main
