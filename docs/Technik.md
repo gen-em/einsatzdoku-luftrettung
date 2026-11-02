@@ -13400,6 +13400,14 @@ und Adresse je in einem Wertekasten mit Knopf „kopieren":
    tägliche Aufräumarbeit läuft trotzdem nur einmal am Tag; das entscheidet der
    Job, nicht der Zeitplan. Einzelne Jobs: `php jobs.php waisen`, Hilfe:
    `php jobs.php --hilfe`.
+   **Plesk:** Eine geplante Aufgabe vom Typ „Befehl ausführen" findet `php`
+   nicht („php: command not found" — gesehen auf Produktiv am 02.11.2026).
+   Entweder den Typ **„PHP-Skript ausführen"** wählen, als Skript `jobs.php`
+   im Pfad der Installation, dieselbe PHP-Fassung wie die Website, Zeitplan
+   `* * * * *`; oder bei „Befehl ausführen" den vollen Pfad
+   `/opt/plesk/php/<Fassung>/bin/php` voranstellen. Ob es läuft, zeigt
+   Betrieb → Hintergrundjobs (letzter Lauf frisch, nicht „huckepack") und
+   das Feld `jobs_alter_s` des Health-Endpunkts.
 2. **Abruf über die Adresse**, wo es keinen CLI-Cron gibt:
    `https://…/jobs.php?token=…`. **Die Adresse enthält ein Geheimnis** — nicht
    in eine Mail, nicht in ein Ticket. Ein neues Token macht das alte ungültig;
@@ -13711,6 +13719,21 @@ seit Web 23.5.0 im Panel, R17-26):**
 3. Probe: `curl -s -H 'X-Health-Token: <Wert>' https://<anlage>/api/health.php`
    → `"ok":true`. Ohne Token oder mit falschem → 403 `token`; stehen
    Kopfzeile und Adresse beide da, gilt die Kopfzeile.
+
+**Je Feld ein Monitor (Beispiel Uptime Kuma 2.x).** Ein Monitor auf den
+Code allein meldet „nicht in Ordnung", aber nicht, was. Wer es genauer will,
+legt je Feld einen Monitor vom Typ *HTTP(s) – Json Query* an, mit derselben
+Adresse und Kopfzeile, Ausdruck und erwartetem Wert so:
+`db` → `true`; `migration_ausstehend` → `false`; `jobs_alter_s < 900` →
+`true` (nur mit echtem Zeitgeber, sonst nachts rot); `system_24h < 5` →
+`true`; `protokoll_fehler` → `0`; `speicher_pct = null or speicher_pct < 85`
+→ `true`. Diese Monitore nehmen **auch 503** als Antwort an, sonst wird bei
+fehlender Datenbank jeder rot statt nur der zuständige; den Code und das
+Zertifikat überwacht ein eigener Monitor *HTTP(s) – Keyword* auf `"ok":true`.
+In der Wartung fehlen die Felder, und alle sind rot — bei einer längeren
+Wartung die Monitore pausieren. Sieben Abrufe je Minute bleiben unter der
+Grenze von 60. So eingerichtet für Produktiv am 02.11.2026; die Anleitung
+dazu steht im Repositorium `gen-em/server-infrastruktur` (Monitoring, E-150).
 
 Ausschalten: in derselben Karte *Abfrage abschalten* — der Eintrag wird
 leer, nicht gelöscht. Der Endpunkt antwortet dann jedem mit 403, wie einem
