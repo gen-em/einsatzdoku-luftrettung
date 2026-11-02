@@ -14,6 +14,22 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Uhr 4.3.1] — unveröffentlicht
+
+Schritt 21 (GR), Paket GR-06 — die Sync-Seite überlappt nicht mehr
+(Backlog Nr. 402).
+
+### Behoben
+
+- **Uhr — der Mittelblock weicht dem unteren Block aus.** Ab vier
+  Meldungszeilen lag „N Pakete offen" auf der Venu 3s auf der obersten
+  Meldung, bei mehr Zeilen auf allen drei Geräten, weil der Mittelblock nur
+  zentriert und oben festgehalten wurde. Jetzt rechnet die Seite in Stufen,
+  ob er passt: erst kompaktere Schrift, dann ohne GPS-Zeile, dann die
+  Meldungen in der kleinsten Schrift, zuletzt Zahl und Text in einer Zeile.
+  Eine neue Bildprobe misst vier bis sieben Zeilen auf Fenix, FR 945 und
+  Venu 3s.
+
 ## [Uhr 4.3.0] — unveröffentlicht
 
 Schritt 21 (GR), Paket GR-05 — die Sackgasse beim Koppeln ist offen

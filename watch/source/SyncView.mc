@@ -60,6 +60,15 @@ class SyncView extends WatchUi.View {
         return "Gerät oder Konto gesperrt";
     }
 
+    /* Hoehe des Mittelblocks in einer Stufe (onUpdate). `art`: 0 Einrichten,
+     * 1 "Sync vollstaendig", 2 Zahl mit Text darunter. */
+    function _blockH(art as Lang.Number, gps as Lang.Number, hEinr as Lang.Number,
+                     hFertig as Lang.Number, hZahlText as Lang.Number) as Lang.Number {
+        if (art == 0) { return gps + hEinr; }
+        if (art == 1) { return gps + hFertig; }
+        return gps + hZahlText;
+    }
+
     function onUpdate(dc as Graphics.Dc) as Void {
         dc.setColor(Graphics.COLOR_BLACK, Graphics.COLOR_BLACK);
         dc.clear();
@@ -239,7 +248,9 @@ class SyncView extends WatchUi.View {
         }
         lines.add(["Version " + Const.APP_VERSION, Graphics.COLOR_DK_GRAY]);
 
-        var untenY = h - Ui.s(dc, 22) - lines.size() * hKlein;
+        var hZeile = hKlein;                   // Zeilenhoehe des unteren Blocks
+        var fZeile = fKlein;
+        var untenY = h - Ui.s(dc, 22) - lines.size() * hZeile;
 
         // --- Mittelblock ----------------------------------------------------
         // Zentriert wird im Raum OBERHALB des unteren Blocks.
@@ -247,15 +258,57 @@ class SyncView extends WatchUi.View {
         var hHaken = Ui.s(dc, 26);
         var hZust  = dc.getFontHeight(Graphics.FONT_MEDIUM);
         var gZust  = Ui.s(dc, 6);              // Zustand -> Weg heraus (eng)
-        var blockH;
-        if (einrichten) {
-            blockH = hKlein + gGps + hZust + gZust + hKlein;
-        } else if (open == 0 && geparkt == 0) {
-            blockH = hKlein + gGps + hGross + hHaken;
-        } else {
-            blockH = hKlein + gGps + hZahl + hMitte;
-        }
+        var oben   = Ui.s(dc, 34);             // Untergrenze, Begruendung unten
         var zone = untenY - Ui.s(dc, 8);
+
+        /* PASST DER MITTELBLOCK UEBER DEN UNTEREN? Drei Stufen.
+         *
+         * Der untere Block waechst mit den Meldungen nach oben -- Fehler,
+         * Kopplung, Weg heraus, Wartezeit, Einrichtung, Version; sieben Zeilen
+         * sind moeglich. Der Mittelblock darunter wurde bisher nur zentriert
+         * und an der Untergrenze oben festgehalten; reichte der Platz nicht,
+         * lag er auf der obersten Meldung (auf der Venu 3s schon bei VIER
+         * Zeilen im Simulator gesehen: "Pakete offen" auf der roten Zeile).
+         *
+         * Stufe 1, voll: wie bisher. Stufe 2, kompakt: Zahl und Zustand in
+         * der mittleren Textschrift, der Text darunter in der Hinweisschrift,
+         * enger Abstand zur GPS-Zeile. Stufe 3: ohne GPS-Zeile -- sie ist auf
+         * dieser Seite die entbehrlichste Angabe, die Aufzeichnung zeigt sie
+         * auch. Stufe 4: die Meldungen unten in der kleinsten Schrift. Stufe
+         * 5: der Mittelblock in EINER Zeile ("2 Pakete offen"). Die beiden
+         * letzten braucht nur die Venu 3s, deren Hinweisschrift gross ist,
+         * bei sechs und mehr Zeilen. Die Hoehen rechnet jede Stufe aus
+         * denselben Schriften, mit denen sie zeichnet. */
+        var fZahl  = Graphics.FONT_NUMBER_MILD;
+        var fText  = Graphics.FONT_SMALL;
+        var fGross = Graphics.FONT_LARGE;
+        var mitGps = true;
+        var art = einrichten ? 0 : ((open == 0 && geparkt == 0) ? 1 : 2);
+        var hEinr = hZust + gZust + hKlein;
+        var blockH = _blockH(art, hKlein + gGps, hEinr, hGross + hHaken, hZahl + hMitte);
+        if (blockH > zone - oben) {
+            fZahl  = Graphics.FONT_MEDIUM;
+            fText  = fKlein;
+            fGross = Graphics.FONT_MEDIUM;
+            hZahl  = dc.getFontHeight(fZahl);
+            hMitte = hKlein;
+            hGross = dc.getFontHeight(fGross);
+            hHaken = Ui.s(dc, 18);
+            gGps   = Ui.s(dc, 4);
+            blockH = _blockH(art, hKlein + gGps, hEinr, hGross + hHaken, hZahl + hMitte);
+            if (blockH > zone - oben) {
+                mitGps = false;
+                blockH = _blockH(art, 0, hEinr, hGross + hHaken, hZahl + hMitte);
+            }
+            if (blockH > zone - oben) {
+                fZeile = Graphics.FONT_XTINY;
+                hZeile = dc.getFontHeight(fZeile);
+                untenY = h - Ui.s(dc, 22) - lines.size() * hZeile;
+                zone = untenY - Ui.s(dc, 8);
+            }
+        }
+        var einzeilig = (art != 0 && blockH > zone - oben);
+        if (einzeilig) { blockH = hKlein; }
         var y = (zone - blockH) / 2;
         /* UNTERGRENZE 34, NICHT 20 — sonst laeuft die oberste Zeile in die
          * Stelle, an der der Kreis zulaeuft.
@@ -275,11 +328,9 @@ class SyncView extends WatchUi.View {
          * mehr als der Text braucht. Die Grenze greift ohnehin nur im engen
          * Fall; wo Platz ist, zentriert die Zeile darueber ganz normal.
          *
-         * WAS DIE GRENZE NICHT HAELT: den Mittelblock oberhalb von untenY.
-         * Im Simulator gemessen: Auf der Venu 3s liegt "N Pakete offen" schon
-         * bei VIER Zeilen im unteren Block auf dessen oberster Meldung. Das
-         * ist offen. */
-        if (y < Ui.s(dc, 34)) { y = Ui.s(dc, 34); }
+         * WAS DIE GRENZE NICHT HAELT: den Mittelblock oberhalb von untenY --
+         * das tun die drei Stufen oben. */
+        if (y < oben) { y = oben; }
 
         /* AUCH DIESE ZEILE DURCH fitFont (Uhr-Layout_Regeln 4.2). Traegt der
          * untere Block nur die Versionszeile, sitzt der Mittelblock tief
@@ -297,11 +348,13 @@ class SyncView extends WatchUi.View {
          * fontHint liefert auf der Venu die GROESSERE Schrift (ab 320 px), die
          * Zeile ist dort also breiter als auf den kleinen Geraeten — deshalb
          * trifft es ausgerechnet das groesste Display. */
-        dc.setColor(gpsCol, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(cx, y,
-            Ui.fitFont(dc, gpsTxt, y, hKlein, [fKlein, Graphics.FONT_XTINY]),
-            gpsTxt, Graphics.TEXT_JUSTIFY_CENTER);
-        y += hKlein + gGps;
+        if (mitGps) {
+            dc.setColor(gpsCol, Graphics.COLOR_TRANSPARENT);
+            dc.drawText(cx, y,
+                Ui.fitFont(dc, gpsTxt, y, hKlein, [fKlein, Graphics.FONT_XTINY]),
+                gpsTxt, Graphics.TEXT_JUSTIFY_CENTER);
+            y += hKlein + gGps;
+        }
 
         if (einrichten) {
             /* Zwei Zeilen: WAS ist los, und WAS hilft — dasselbe Muster wie
@@ -324,12 +377,26 @@ class SyncView extends WatchUi.View {
             dc.drawText(cx, sy,
                 Ui.fitFont(dc, tS, sy, hKlein, [fKlein, Graphics.FONT_XTINY]),
                 tS, Graphics.TEXT_JUSTIFY_CENTER);
+        } else if (einzeilig) {
+            /* STUFE 5: eine Zeile, in der Farbe der vollen Fassung. */
+            var t1 = "Sync vollständig";
+            var c1 = Graphics.COLOR_GREEN;
+            if (open > 0) {
+                t1 = open.toString() + (open == 1 ? " Paket offen" : " Pakete offen");
+                c1 = Ui.ORANGE;
+            } else if (geparkt > 0) {
+                t1 = geparkt.toString() + (geparkt == 1 ? " Paket abgewiesen" : " Pakete abgewiesen");
+                c1 = Ui.ROT;
+            }
+            dc.setColor(c1, Graphics.COLOR_TRANSPARENT);
+            dc.drawText(cx, y, Ui.fitFont(dc, t1, y, hKlein, [fKlein, Graphics.FONT_XTINY]),
+                t1, Graphics.TEXT_JUSTIFY_CENTER);
         } else if (open == 0 && geparkt == 0) {
             dc.setColor(Graphics.COLOR_GREEN, Graphics.COLOR_TRANSPARENT);
-            dc.drawText(cx, y, Graphics.FONT_LARGE, "Sync vollständig",
+            dc.drawText(cx, y, fGross, "Sync vollständig",
                 Graphics.TEXT_JUSTIFY_CENTER);
             // Haken selbst zeichnen (die Geraeteschrift kennt das Glyph nicht)
-            var hy = y + hGross + Ui.s(dc, 8);
+            var hy = y + hGross + (hHaken * 8) / 26;
             dc.setPenWidth(Ui.s(dc, 5));
             dc.drawLine(cx - Ui.s(dc, 14), hy, cx - Ui.s(dc, 4), hy + Ui.s(dc, 10));
             dc.drawLine(cx - Ui.s(dc, 4), hy + Ui.s(dc, 10), cx + Ui.s(dc, 15), hy - Ui.s(dc, 11));
@@ -339,10 +406,10 @@ class SyncView extends WatchUi.View {
              * geht. Ein Haken waere hier eine Unwahrheit -- beim Server fehlt
              * ein Einsatz. */
             dc.setColor(Ui.ROT, Graphics.COLOR_TRANSPARENT);
-            dc.drawText(cx, y, Graphics.FONT_NUMBER_MILD, geparkt.toString(),
+            dc.drawText(cx, y, fZahl, geparkt.toString(),
                 Graphics.TEXT_JUSTIFY_CENTER);
             dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
-            dc.drawText(cx, y + hZahl, Graphics.FONT_SMALL,
+            dc.drawText(cx, y + hZahl, fText,
                 geparkt == 1 ? "Paket abgewiesen" : "Pakete abgewiesen",
                 Graphics.TEXT_JUSTIFY_CENTER);
         } else {
@@ -351,10 +418,10 @@ class SyncView extends WatchUi.View {
              * steht unten und verschwindet nicht, sobald der Rest
              * durchgelaufen ist. */
             dc.setColor(Ui.ORANGE, Graphics.COLOR_TRANSPARENT);
-            dc.drawText(cx, y, Graphics.FONT_NUMBER_MILD, open.toString(),
+            dc.drawText(cx, y, fZahl, open.toString(),
                 Graphics.TEXT_JUSTIFY_CENTER);
             dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
-            dc.drawText(cx, y + hZahl, Graphics.FONT_SMALL,
+            dc.drawText(cx, y + hZahl, fText,
                 open == 1 ? "Paket offen" : "Pakete offen",
                 Graphics.TEXT_JUSTIFY_CENTER);
         }
@@ -364,9 +431,9 @@ class SyncView extends WatchUi.View {
             dc.setColor(lines[i][1] as Lang.Number, Graphics.COLOR_TRANSPARENT);
             var txt = lines[i][0] as Lang.String;
             dc.drawText(cx, untenY,
-                Ui.fitFont(dc, txt, untenY, hKlein, [fKlein, Graphics.FONT_XTINY]),
+                Ui.fitFont(dc, txt, untenY, hZeile, [fZeile, Graphics.FONT_XTINY]),
                 txt, Graphics.TEXT_JUSTIFY_CENTER);
-            untenY += hKlein;
+            untenY += hZeile;
         }
     }
 }

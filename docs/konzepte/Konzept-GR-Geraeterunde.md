@@ -19,10 +19,10 @@
 | GR-03 | Handy, Kopplung: Nr. 157, Neukoppeln mit Schlüsselbindung (E-BE-08) | **erledigt** 02.11.2026 (Android 0.20.0) |
 | GR-04 | Uhr, Antwortauswertung: Nr. 229, 201 (Uhr), 507, 431 Teil 1 | **erledigt** 02.11.2026 (Uhr 4.2.0) |
 | GR-05 | Uhr, Kopplung: Nr. 431 Teil 2, Neukoppeln mit Schlüsselbindung (E-BE-08) | **erledigt** 02.11.2026 (Uhr 4.3.0) |
-| GR-06 | Uhr, Sync-Seite: Nr. 402 mit Bildprobe | offen |
+| GR-06 | Uhr, Sync-Seite: Nr. 402 mit Bildprobe | **erledigt** 02.11.2026 (Uhr 4.3.1) |
 | GR-07 | Abschluss: Prüfstand, Prüfdokument, Backlog, Pull Request | offen |
 
-**In Arbeit:** GR-06. **Es hakt:** nirgends.
+**In Arbeit:** GR-07. **Es hakt:** nirgends.
 
 ---
 
@@ -431,10 +431,39 @@ selben Paket: Bei 401 kein Hinweis (gesehen auf `6-fremd.png` der FR 945).
 Das Handy behält seine Deutung (der Rundlauf legt „nur lokal" bei 401 fest),
 dort ersetzt der Bindungshinweis den Hinweis (GR-03).
 
+**GR-06** (02.11.2026, Uhr 4.3.1): Neue Bildprobe
+`tools/uhr-pruefstand/syncseite/` (Anlass Nr. 402, im Prüfstand als
+`uhr-syncseite` bei Berührung `watch/**`): eine Prüffassung startet direkt
+auf der Sync-Seite mit zwei offenen Paketen und 4 bis 7 Meldungszeilen; die
+Kopie von `SyncView.mc` schreibt Ende des Mittelblocks und Beginn des
+unteren Blocks in die Konsole. **Gegenprobe gegen die Sync-Seite von Uhr
+4.3.0: 12 Messungen, 10 Fehlschläge** (Venu 3s schon bei 4 Zeilen: Ende 219,
+Beginn 197; der Fehler aus Nr. 402 ist damit nachgestellt). **Mit der neuen
+Seite: 12 Messungen, 0 Fehlschläge** (engster Fall FR 945 bei 6 Zeilen,
+Ende 84, Beginn 106; Venu 3s bei 7 Zeilen Ende 91, Beginn 133). Bilder unter
+`$CIQ_BASIS/syncseite/` angesehen: keine zwei Texte übereinander.
+
+*Bauweise:* Fünf Stufen statt einer — die erste Fassung (kompakt, dann ohne
+GPS) ließ auf der Venu 3s bei 6 und 7 Zeilen zwei Fehlschläge; dort ist
+schon der untere Block allein höher als der Platz. Dazu kamen die Meldungen
+in `FONT_XTINY` und der Mittelblock in einer Zeile. `_blockH()` nimmt fünf
+Argumente: Monkey C erlaubt höchstens neun, die erste Fassung hatte zwölf
+und übersetzte nicht.
+
+**F-GR-11 — Am Kreisrand abgeschnitten (Venu 3s, 6 und mehr Zeilen).** Die
+unterste Meldung „Action halten: Gerät koppeln" ist auf der Venu 3s bei 6
+und 7 Zeilen an beiden Enden angeschnitten (`venu3s-6.png`, `-7.png`):
+`fitFont` hat keine kleinere Schrift als `FONT_XTINY`, und die Sehne dort ist
+schmaler als die Zeile. Keine Überlappung, aber ein Text, der nicht ganz zu
+lesen ist. Nicht in diesem Paket behoben (K4); Vorschlag als Backlog-Punkt
+beim Abschluss. Die Probe misst es nicht (nur Höhen, LIESMICH „Was es nicht
+kann").
+
 ## 7. Verlauf
 
 | Datum | Was |
 |---|---|
+| 02.11.2026 | GR-06 erledigt (Uhr 4.3.1). |
 | 02.11.2026 | GR-05 erledigt (Uhr 4.3.0). |
 | 02.11.2026 | GR-04 erledigt (Uhr 4.2.0). |
 | 02.11.2026 | GR-03 erledigt (Android 0.20.0). |

@@ -296,6 +296,11 @@
       "braucht": "uhr",
       "bemerkung": "S11-08: eine Prueffassung der App koppelt im Simulator an das Demo-Konto der oertlichen Anlage und sendet einen Einsatz (600 Punkte, Raender) und ein Ruhesegment verschlossen; pruefen.php oeffnet die Huellen mit dem Demo-Schluessel und haelt sie Wert fuer Wert gegen. Auf der Fenix zusaetzlich der Weg ohne Schluessel und das Nachholen (E-S11-79), auf der FR945 seit R17-21 das Schrumpfen der Liste waehrend der letzten Anfrage (F-R17-52: zwei geparkte verworfen, danach Liste leer, kein Spurstueck, kein Absturz). Seit GR-04 (Nr. 431) auf der Fenix dazu das Reaktivieren: Geraet deaktiviert -> 403, nichts kommt an; wieder aktiviert -> ohne Anlass weiter nichts; Sync-Seite neu geoeffnet -> alles kommt an. Seit GR-05 das Neukoppeln trotz Rueckstand: an dasselbe Konto (Fenix) -> die Pakete kommen an; an ein Konto mit anderem Schluessel (FR945) -> nichts kommt an, Verwerfen nach Rueckfrage. Rund 17 min."
     },
+    "uhr-syncseite": {
+      "aufruf": "bash tools/uhr-pruefstand/syncseite/syncseite.sh",
+      "braucht": "uhr",
+      "bemerkung": "Konzept GR (GR-06, Nr. 402). Eine Prueffassung startet direkt auf der Sync-Seite mit zwei offenen Paketen und 4 bis 7 Meldungszeilen; die Kopie von SyncView.mc meldet in der Konsole, wo der Mittelblock endet und der untere Block beginnt. Je Geraet (Fenix 6 Pro, FR 945, Venu 3s) und Zeilenzahl eine Messung und ein Bild, 12 zusammen. Rund 9 min."
+    },
     "uhr-stufe1": {
       "aufruf": "python3 tools/uhr-pruefstand/geraeteklassen.py \"$HOME/.Garmin/ConnectIQ/Devices\" --alle-liste /tmp/uhr-auswahl.txt && bash tools/uhr-pruefstand/pruefstand.sh reihe /tmp/uhr-auswahl.txt",
       "braucht": "uhr",
@@ -1056,7 +1061,8 @@
       ],
       "proben": [
         "uhr-stufe1",
-        "uhr-rundlauf"
+        "uhr-rundlauf",
+        "uhr-syncseite"
       ],
       "anlass": "E-PK-02"
     },
