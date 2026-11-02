@@ -44,6 +44,32 @@ module Uploader {
      * Anfrage wieder, woran sie ist, und ein falsch stehen gebliebenes
      * "abgemeldet" waere teurer als ein Versuch zuviel. */
     var abgemeldet as Lang.Boolean = false;
+
+    /* IST DAS GERAET GESPERRT? (403)
+     *
+     * Etwas anderes als abgemeldet: Das Geraet ist bekannt, aber im Web
+     * deaktiviert, oder das Konto darf gerade nicht (gesperrt, wartet auf
+     * Freigabe, Adresse unbestaetigt). Neu koppeln hilft dann nicht -- der
+     * Weg heraus ist das Web. Beides in einen Zweig zu legen hiesse, einen Rat
+     * zu geben, der im Kreis fuehrt. Der Wert ist der Grund:
+     * "geraet", "gesperrt", "wartet", "unbestaetigt" oder "unbekannt" (wenn
+     * der Koerper der Antwort nicht durchkommt). Im Speicher wie `abgemeldet`. */
+    var gesperrt as Lang.String or Null = null;
+
+    /* NICHT VOR DIESEM ZEITPUNKT (Epoche in Sekunden) -- nach 429, 503 und
+     * 507. Ohne ihn klopfte jeder Anlass an, und die Sync-Seite tut es im
+     * Zwei-Sekunden-Takt. Im Speicher: Nach einem Neustart darf es einen
+     * Versuch frueher geben. `_wartegrund` ist :bremse oder :voll. */
+    var _nichtVor as Lang.Number or Null = null;
+    var _wartegrund as Lang.Symbol or Null = null;
+
+    /* EIN VERSUCH TROTZ DER MARKE. Die Marke liegt nur im Speicher, und eine
+     * angenommene Anfrage ist das Einzige, was sie widerlegt -- ohne diesen
+     * Versuch kaeme sie nie zustande: Wer das Geraet im Web wieder
+     * aktiviert, muesste die App neu starten. Gesetzt vom Oeffnen der
+     * Sync-Seite und vom Dienstende, verbraucht vom naechsten Lauf. */
+    var _einmalTrotz as Lang.Boolean = false;
+
     var _cb as UploaderCb or Null = null;
     var _inflight as Lang.Dictionary or Null = null;  // Kontext der laufenden Anfrage
 
@@ -174,15 +200,43 @@ module Uploader {
         return n;
     }
 
+    /* Haelt eine Antwort des Servers das Senden an? (401 oder 403) */
+    function angehalten() as Lang.Boolean {
+        return abgemeldet || gesperrt != null;
+    }
+
+    /* Bis wann wartet die Uhr? null = sie wartet nicht. Fuer die Sync-Seite. */
+    function wartetBis() as Lang.Number or Null {
+        var nv = _nichtVor;
+        if (nv == null || Util.epochNow() >= nv) { return null; }
+        return nv;
+    }
+
+    function wartetWegenKontoVoll() as Lang.Boolean {
+        return wartetBis() != null && _wartegrund == :voll;
+    }
+
+    /* Einmal senden, auch wenn die Marke steht (siehe `_einmalTrotz`). */
+    function syncAllEinmalTrotz() as Void {
+        if (angehalten()) { _einmalTrotz = true; }
+        syncAll();
+    }
+
     function syncAll() as Void {
         if (_busy) { return; }
         /* DIE FRIST VOR DEM RIEGEL: Auch eine Uhr, die gerade weiss, dass sie
          * abgemeldet ist, raeumt nach Ablauf. */
         abmeldeFristPruefen();
-        /* ABGEMELDET HEISST: gar nicht erst versuchen. Jede Anfrage kostet
-         * Funk und Akku und bekommt dieselbe Antwort, bis jemand neu
-         * koppelt. */
-        if (abgemeldet) { return; }
+        /* ABGEMELDET ODER GESPERRT HEISST: gar nicht erst versuchen -- ausser
+         * einmal auf ausdruecklichen Anlass. Jede Anfrage kostet Funk und
+         * Akku und bekommt dieselbe Antwort, bis sich im Web etwas aendert. */
+        if (angehalten()) {
+            if (!_einmalTrotz) { return; }
+            _einmalTrotz = false;
+        }
+        /* DIE WARTEZEIT gilt fuer jeden Anlass, auch den ausdruecklichen: Der
+         * Server hat gesagt, wann er wieder will. */
+        if (wartetBis() != null) { return; }
         /* OHNE SCHLUESSEL ODER OHNE VERSCHLUESSELUNG: ebenso nicht.
          * Die Sync-Seite sagt, was fehlt. */
         if (!Huelle.hatSchluessel() || !Huelle.bereit()) { return; }
@@ -407,6 +461,8 @@ module Uploader {
         if (code == 200 && data instanceof Lang.Dictionary && data["ok"] == true) {
             lastError = null;
             abgemeldet = false;        // eine angenommene Anfrage widerlegt es
+            gesperrt = null;
+            _nichtVor = null;
             abmeldungVergessen();
             var nextSeq = data["next_seq"] as Lang.Number;
             _setAcked(ref, nextSeq, true);
@@ -444,20 +500,18 @@ module Uploader {
             }
             _next();   // weitere offene Chunks/Jobs
         } else if (code == 401 || code == 403) {
-            /* DAS GERAET IST ABGEMELDET, NICHT DAS PAKET ABGEWIESEN.
+            /* DAS GERAET IST ABGEMELDET ODER GESPERRT, NICHT DAS PAKET
+             * ABGEWIESEN.
              *
              * 401: im Web geloescht oder der Schluessel passt nicht mehr.
-             * 403: dort auf inaktiv gestellt. In beiden Faellen kommt kein
-             * Paket mehr durch -- deshalb wird auch keines geparkt: Mit den
-             * Paketen ist nichts verkehrt, und sie werden gebraucht, sobald
-             * jemand neu koppelt.
+             * 403: dort deaktiviert, oder das Konto darf nicht. In beiden
+             * Faellen kommt kein Paket mehr durch -- deshalb wird auch keines
+             * geparkt: Mit den Paketen ist nichts verkehrt, und sie werden
+             * gebraucht, sobald sich die Lage aendert.
              *
              * Fiele das in denselben Zweig wie eine Stoerung, wuerde es
-             * endlos wiederholt. Weil ein Rueckstand zugleich das Trennen
-             * sperrt (Pair.start), waere die Uhr danach nur noch durch
-             * Loeschen der App zu retten -- mit allem, was sie traegt. */
-            abgemeldet = true;
-            abmeldungVermerken();      // die Frist beginnt beim ersten Mal
+             * endlos wiederholt. */
+            abweisungMerken(code, data);
             lastError = null;
             _busy = false;
         } else if (code == 400 && _dauerhaftAbgewiesen(data)) {
@@ -475,10 +529,51 @@ module Uploader {
             lastError = null;
             _busy = false;
             _next();          // die Schlange laeuft weiter
+        } else if (code == 429 || code == 503 || code == 507) {
+            /* DER SERVER SAGT, WANN ER WIEDER WILL -- in einer Kopfzeile, die
+             * die Uhr nicht sieht. Sie wartet deshalb eine feste Zeit
+             * (Const), bevor ein Anlass wieder sendet. Nichts wird geparkt
+             * oder verworfen. */
+            var s = Const.WARTEN_503_S;
+            _wartegrund = :bremse;
+            if (code == 429) { s = Const.WARTEN_429_S; }
+            else if (code == 507) { s = Const.WARTEN_507_S; _wartegrund = :voll; }
+            _nichtVor = Util.epochNow() + s;
+            lastError = null;
+            _busy = false;
         } else {
             lastError = "Upload " + code.toString();
             _busy = false;   // spaeter erneut (naechster syncAll-Ausloeser)
         }
+    }
+
+    /* 401 oder 403 merken -- vom Upload und vom Nachholen des Schluessels
+     * (Pair.onSchluessel), damit beide dieselbe Lage zeigen. */
+    function abweisungMerken(code as Lang.Number, data as Lang.Object or Null) as Void {
+        if (code == 401) {
+            abgemeldet = true;
+            gesperrt = null;
+        } else {
+            gesperrt = _sperrgrund(data);
+            abgemeldet = false;
+        }
+        abmeldungVermerken();          // die Frist beginnt beim ersten Mal
+    }
+
+    /* Der Grund einer 403 aus dem Koerper (JSON-Vertrag 5). Ob Connect IQ
+     * den Koerper einer 403 durchreicht, ist geraeteabhaengig; ohne ihn
+     * heisst es "unbekannt". */
+    function _sperrgrund(data as Lang.Object or Null) as Lang.String {
+        if (!(data instanceof Lang.Dictionary)) { return "unbekannt"; }
+        var e = data["error"];
+        if ("device_disabled".equals(e)) { return "geraet"; }
+        if ("konto".equals(e)) {
+            var g = data["grund"];
+            if ("gesperrt".equals(g) || "wartet".equals(g) || "unbestaetigt".equals(g)) {
+                return g as Lang.String;
+            }
+        }
+        return "unbekannt";
     }
 
     /* Traegt die Antwort den Fehlerschluessel des Servers? (JSON-Vertrag 5.)

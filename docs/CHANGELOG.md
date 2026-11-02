@@ -14,6 +14,29 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Uhr 4.2.0] — unveröffentlicht
+
+Schritt 21 (GR), Paket GR-04 — die Uhr liest die Absage des Servers genauer
+(Backlog Nr. 229, 201, 431 zum Teil).
+
+### Geändert
+
+- **Uhr — „gesperrt" ist nicht mehr „abgemeldet".** Eine 403 (Gerät im Web
+  deaktiviert, Konto gesperrt, wartet oder unbestätigt) zeigte die Uhr als
+  „Abgemeldet" und riet zum Neukoppeln — ein Rat, der im Kreis führte, weil
+  der Rückstand das Koppeln sperrt. Jetzt nennt die Sync-Seite den Grund und
+  verweist auf das Web. Nach 429, 503 und 507 wartet die Uhr eine feste Zeit,
+  bevor ein Anlass wieder sendet, denn `Retry-After` kann sie nicht lesen; bis
+  dahin klopfte die offene Sync-Seite alle zwei Sekunden an.
+
+### Behoben
+
+- **Uhr — nach dem Reaktivieren im Web wird wieder gesendet.** Die Marke
+  „abgemeldet" lag im Speicher, und nur eine angenommene Anfrage widerlegte
+  sie — die aber kam nie zustande, so dass erst ein Neustart der App half.
+  Jetzt versuchen es das Öffnen der Sync-Seite und das Dienstende einmal
+  trotz der Marke.
+
 ## [Android 0.20.0] — unveröffentlicht
 
 Schritt 21 (GR), Paket GR-03 — die Sackgasse beim Trennen ist offen

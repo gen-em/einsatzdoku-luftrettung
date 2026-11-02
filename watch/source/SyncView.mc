@@ -34,7 +34,11 @@ class SyncView extends WatchUi.View {
         Pair.seiteSichtbar(true);
         if (_timer == null) { _timer = new Timer.Timer(); }
         _timer.start(method(:refresh), 2000, true);
-        if (!Uploader.allSynced()) { Uploader.syncAll(); }
+        /* BEIM ERSCHEINEN EINMAL AUCH TROTZ ABMELDUNG -- nicht im Takt
+         * darunter: Wer das Geraet im Web wieder aktiviert hat, oeffnet diese
+         * Seite und sieht den Rueckstand hinausgehen, ohne die App neu zu
+         * starten. Kommt wieder 401 oder 403, bleibt alles, wie es war. */
+        if (!Uploader.allSynced()) { Uploader.syncAllEinmalTrotz(); }
     }
 
     function onHide() as Void {
@@ -45,6 +49,15 @@ class SyncView extends WatchUi.View {
     function refresh() as Void {
         if (!Uploader.allSynced()) { Uploader.syncAll(); }
         WatchUi.requestUpdate();
+    }
+
+    /* Die Zeile zu einer 403, nach dem Grund aus Uploader.gesperrt. */
+    function _sperrtext(grund as Lang.String) as Lang.String {
+        if ("geraet".equals(grund))       { return "Gerät im Web deaktiviert"; }
+        if ("gesperrt".equals(grund))     { return "Konto gesperrt"; }
+        if ("wartet".equals(grund))       { return "Konto wartet auf Freigabe"; }
+        if ("unbestaetigt".equals(grund)) { return "Adresse nicht bestätigt"; }
+        return "Gerät oder Konto gesperrt";
     }
 
     function onUpdate(dc as Graphics.Dc) as Void {
@@ -167,6 +180,18 @@ class SyncView extends WatchUi.View {
             lines.add([bis != null ? "Abgemeldet, Daten bis " + Util.datumAus(bis)
                                    : "Gerät nicht mehr angemeldet", Ui.ROT]);
             lines.add(["Neu koppeln: " + Input.lSelectHold(), Graphics.COLOR_LT_GRAY]);
+        } else if (Uploader.gesperrt != null) {
+            /* GESPERRT (403): der Grund, und als Weg heraus das Web -- kein
+             * Neukoppeln, denn das Geraet ist bekannt und darf nur gerade
+             * nicht. Die Frist laeuft wie beim Abmelden; sie steht in der
+             * zweiten Zeile, damit es zwei bleiben. */
+            lines.add([_sperrtext(Uploader.gesperrt as Lang.String), Ui.ROT]);
+            var gbis = Uploader.abmeldeFristBis();
+            lines.add([gbis != null ? "Im Web klären, bis " + Util.datumAus(gbis)
+                                    : "Im Web klären", Graphics.COLOR_LT_GRAY]);
+        } else if (Uploader.wartetWegenKontoVoll()) {
+            lines.add(["Konto voll", Ui.ROT]);
+            lines.add(["Im Web aufräumen", Graphics.COLOR_LT_GRAY]);
         } else if (Uploader.hasCredentials() && !Huelle.hatSchluessel()) {
             /* GEKOPPELT, ABER OHNE KONTOSCHLUESSEL. Der Fall einer alten
              * Kopplung, die noch keinen Schluessel kannte, und einer
@@ -188,6 +213,13 @@ class SyncView extends WatchUi.View {
             lines.add([geparkt == 1 ? "1 abgewiesen"
                                     : geparkt.toString() + " abgewiesen", Ui.ROT]);
             lines.add([Input.lSelect() + ": verwerfen", Graphics.COLOR_LT_GRAY]);
+        }
+        /* DIE WARTEZEIT nach 429 oder 503: eine Zeile, gedaempft -- es ist
+         * nichts zu tun, die Uhr versucht es zur genannten Zeit wieder. Beim
+         * vollen Konto steht der Grund schon oben. */
+        var wbis = Uploader.wartetBis();
+        if (wbis != null && !Uploader.wartetWegenKontoVoll()) {
+            lines.add(["Server bremst bis " + Util.hhmmAus(wbis), Graphics.COLOR_LT_GRAY]);
         }
         if (Cpr.active) {
             lines.add([Cpr.paused ? "REA pausiert" : "REA läuft",

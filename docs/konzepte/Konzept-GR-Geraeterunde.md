@@ -17,12 +17,12 @@
 | GR-01 | Vertrag: Fehlertabelle `ingest.php` (403, 429, 503, 507), Abschnitt 0 berichtigt | **erledigt** 02.11.2026 |
 | GR-02 | Handy, Antwortauswertung: Nr. 154, 229 (Handy), 201 (Handy), 507 | **erledigt** 02.11.2026 (Android 0.19.0) |
 | GR-03 | Handy, Kopplung: Nr. 157, Neukoppeln mit Schlüsselbindung (E-BE-08) | **erledigt** 02.11.2026 (Android 0.20.0) |
-| GR-04 | Uhr, Antwortauswertung: Nr. 229, 201 (Uhr), 507, 431 Teil 1 | offen |
+| GR-04 | Uhr, Antwortauswertung: Nr. 229, 201 (Uhr), 507, 431 Teil 1 | **erledigt** 02.11.2026 (Uhr 4.2.0) |
 | GR-05 | Uhr, Kopplung: Nr. 431 Teil 2, Neukoppeln mit Schlüsselbindung (E-BE-08) | offen |
 | GR-06 | Uhr, Sync-Seite: Nr. 402 mit Bildprobe | offen |
 | GR-07 | Abschluss: Prüfstand, Prüfdokument, Backlog, Pull Request | offen |
 
-**In Arbeit:** GR-04. **Es hakt:** nirgends.
+**In Arbeit:** GR-05. **Es hakt:** nirgends.
 
 ---
 
@@ -386,10 +386,29 @@ beim Trennen bleibt „nur lokal getrennt" (der Rundlauf legt das fest); bei
 gebundenem Rückstand ersetzt der Hinweis zur Bindung den Hinweis „nur
 lokal", der dort irreführend wäre.
 
+**GR-04** (02.11.2026, Uhr 4.2.0): Übersetzt mit `pruefstand.sh alle` für
+Fenix 6 Pro, FR 945 und Venu 3s — dreimal `BUILD SUCCESSFUL`, 0 Warnungen
+(gezählt mit `grep -ciE "warning|error"` über die Ausgabe, Fenix).
+Örtliche Anlage frisch (`hochfahren.sh --neu`, 0 Migrationen offen).
+Uhr-Rundlauf ohne Schalter auf der Fenix: **12 Prüfungen, 0 Fehlschläge**
+(der bisherige Weg ist unverändert). Neu `rundlauf.sh --reaktivieren`
+(Anlass Nr. 431, im Prüfstand als dritter Teil von `uhr-rundlauf`): koppeln
+ohne Kontoschlüssel, Gerät per SQL deaktivieren, Schlüssel zurück, START
+halten → 403 `device_disabled`, nach 10 s **0** Einsätze, Bild
+`3c-deaktiviert.png` zeigt „Gerät im Web deaktiviert / Im Web klären, bis
+02.12." (der Körper der 403 kommt im Simulator durch); aktivieren, 12 s ohne
+Anlass → weiter **0** (die Marke hält, der Takt klopft nicht); Sync-Seite
+verlassen und öffnen → beide Pakete kommen an, **12 + 2 Prüfungen, 0
+Fehlschläge**. Nicht gemessen: ob echte Hardware den Körper einer 403
+durchreicht (sonst „Gerät oder Konto gesperrt"); die Wartezeiten nach
+429/503/507 nur durch Lesen — der Simulator-Rundlauf stellt keine
+Mengenbremse.
+
 ## 7. Verlauf
 
 | Datum | Was |
 |---|---|
+| 02.11.2026 | GR-04 erledigt (Uhr 4.2.0). |
 | 02.11.2026 | GR-03 erledigt (Android 0.20.0). |
 | 02.11.2026 | GR-02 erledigt (Android 0.19.0). |
 | 02.11.2026 | Q-GR-05, -06 entschieden (E-GR-07, -08). |

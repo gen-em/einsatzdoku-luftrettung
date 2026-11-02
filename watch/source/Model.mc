@@ -183,7 +183,9 @@ module Model {
         dayRef        = null;
         save();
         Track.stopPositioning();
-        Uploader.syncAll();
+        /* Einmal auch trotz Abmeldung: Wurde das Geraet im Web wieder
+         * aktiviert, geht der Dienst sonst erst nach einem Neustart hinaus. */
+        Uploader.syncAllEinmalTrotz();
     }
 
     // ---- Phasen (Anforderungen 1.2) ----------------------------------------

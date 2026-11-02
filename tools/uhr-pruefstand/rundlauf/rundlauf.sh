@@ -30,7 +30,17 @@
 # entfernte die Antwort den Eintrag ueber einen veralteten Listenplatz und
 # brach ab.
 #
-# AUFRUF   bash tools/uhr-pruefstand/rundlauf/rundlauf.sh [--nachholen|--schrumpfen] [geraet]
+# VIERTE ART: --reaktivieren (Anlass: Nr. 431). Wie --nachholen
+# gekoppelt, ohne Schluessel, also ohne Senden. Dann wird das Geraet in der
+# Datenbank deaktiviert und der Schluessel zurueckgegeben; START halten holt
+# ihn, der erste Upload bekommt 403 `device_disabled`, die Sync-Seite sagt
+# "Gerät im Web deaktiviert" und es kommt nichts an. Das Geraet wird wieder
+# aktiviert — und es kommt WEITER nichts an, weil die Marke im Speicher liegt.
+# Erst das erneute Oeffnen der Sync-Seite versucht es einmal trotz der Marke,
+# und dann gehen die Pakete. Bis Uhr 4.1.1 halfen nur ein Neustart der App
+# oder ein neues Koppeln (und das sperrte der Rueckstand).
+#
+# AUFRUF   bash tools/uhr-pruefstand/rundlauf/rundlauf.sh [--nachholen|--schrumpfen|--reaktivieren] [geraet]
 #          (Vorgabe fenix6pro; braucht `pruefstand.sh aufbau` und die oertliche
 #          Anlage mit eigener CA, docs/Technik.md 5.6)
 #
@@ -45,6 +55,8 @@ NACHHOLEN=0
 SCHRUMPFEN=0
 [ "${1:-}" = "--nachholen" ] && { NACHHOLEN=1; shift; }
 [ "${1:-}" = "--schrumpfen" ] && { SCHRUMPFEN=1; shift; }
+REAKTIVIEREN=0
+[ "${1:-}" = "--reaktivieren" ] && { REAKTIVIEREN=1; NACHHOLEN=1; shift; }
 GERAET="${1:-fenix6pro}"
 BASIS="${CIQ_BASIS:-$HOME/.ciq-pruefstand}"
 APP="$BASIS/rundlauf-app"
@@ -150,12 +162,36 @@ if [ "$NACHHOLEN" = 1 ]; then
     bash "$P" abbild "$ABBILD/3a-kein-schluessel.png" >/dev/null
     VOR=$(sql "SELECT COUNT(*) FROM missions WHERE user_id=$DEMO AND client_ref='$EINSATZ'")
     [ "$VOR" = 0 ] || fehler "Ohne Schluessel ist trotzdem ein Einsatz angekommen"
+    if [ "$REAKTIVIEREN" = 1 ]; then
+        GID=$(sql "SELECT MAX(id) FROM devices WHERE user_id = $DEMO AND id > $GERAET_VOR")
+        [ -n "$GID" ] && [ "$GID" != "NULL" ] || fehler "Kein neues Geraet nach dem Koppeln"
+        sql "UPDATE devices SET active = 0 WHERE id = $GID"
+        melde "Geraet $GID deaktiviert"
+    fi
     melde "Ohne Schluessel nichts gesendet (0 Einsaetze) — Schluessel zurueck, START halten"
     sql "UPDATE users SET kp_oeffentlich = $KP_ALT WHERE id = $DEMO"; KP_ALT=
     # Die Bestaetigung hat die Sync-Seite verlassen? Erst ansehen, dann halten.
     halten Return
     sleep 4
     bash "$P" abbild "$ABBILD/3b-geholt.png" >/dev/null
+fi
+if [ "$REAKTIVIEREN" = 1 ]; then
+    r_fehl=0
+    sleep 10
+    bash "$P" abbild "$ABBILD/3c-deaktiviert.png" >/dev/null
+    N=$(sql "SELECT COUNT(*) FROM missions WHERE user_id=$DEMO AND client_ref='$EINSATZ'")
+    if [ "$N" = 0 ]; then echo "  ok    deaktiviert: nichts angekommen"
+    else echo "  FEHL  deaktiviert, und trotzdem $N Einsatz angekommen"; r_fehl=$((r_fehl+1)); fi
+    sql "UPDATE devices SET active = 1 WHERE id = $GID"
+    melde "Geraet $GID wieder aktiviert — 12 s warten, ohne die Seite zu verlassen"
+    sleep 12
+    N=$(sql "SELECT COUNT(*) FROM missions WHERE user_id=$DEMO AND client_ref='$EINSATZ'")
+    if [ "$N" = 0 ]; then echo "  ok    ohne Anlass kein Versuch (die Marke haelt, der Zwei-Sekunden-Takt klopft nicht)"
+    else echo "  FEHL  ohne Anlass gesendet — die Marke hielt nicht"; r_fehl=$((r_fehl+1)); fi
+    melde "Sync-Seite verlassen und wieder oeffnen"
+    bash "$P" taste Escape; sleep 3
+    bash "$P" taste Down; sleep 3
+    bash "$P" abbild "$ABBILD/3d-wieder-offen.png" >/dev/null
 fi
 melde "Bestaetigt — warte auf die Pakete"
 for _ in $(seq 1 60); do
@@ -183,4 +219,8 @@ if [ "$SCHRUMPFEN" = 1 ]; then
     else echo "  ok    kein Absturz in der Konsole"; fi
     echo "Schrumpfen: 3 Pruefungen, $s_fehl Fehlschlaege"
     [ "$s_fehl" = 0 ] || exit 1
+fi
+if [ "$REAKTIVIEREN" = 1 ]; then
+    echo "Reaktivieren: 2 Pruefungen, $r_fehl Fehlschlaege (die Ankunft danach misst pruefen.php)"
+    [ "$r_fehl" = 0 ] || exit 1
 fi
