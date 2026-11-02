@@ -163,9 +163,42 @@ function konfig_stellen_marken_lesen(): ?array
  */
 function konfig_stellen_zuruecklegen(string $pfad, ?string $text, ?array $marken): void
 {
+    $vorher = is_file($pfad) ? (string)file_get_contents($pfad) : null;
     konfig_stellen_marken_legen($marken);
     konfig_stellen_bytes($pfad, $text);
     konfig_stellen_marken_legen($marken);
+    if ($vorher !== $text && $pfad === konfig_stellen_pfad()) {
+        konfig_stellen_webserver_abwarten();
+    }
+}
+
+/**
+ * Warten, bis der Webserver die zurueckgelegte Datei sieht.
+ *
+ * `opcache_invalidate()` in `konfig_stellen_bytes()` leert nur den Speicher
+ * DIESES Prozesses, der Kommandozeile. Der Webserver der Anlage (`php -S`)
+ * hat seinen eigenen und prueft den Zeitstempel einer Datei hoechstens alle
+ * `opcache.revalidate_freq` Sekunden (Sandbox: 2). Bis dahin rechnet er mit
+ * der GESTELLTEN Lage weiter.
+ *
+ * Die Anteilprobe wartete deshalb nach jedem eigenen Umstellen drei
+ * Sekunden — nur nach dem Zuruecklegen nicht, denn danach misst sie nichts
+ * mehr. Wer danach misst, ist die naechste Probe: Die Freigabeprobe meldete
+ * sich im Gesamtlauf unmittelbar nach ihr an, unter dem fremden Anteil, und
+ * landete beim Anlegen ihres Kontos auf `login.php` (Nr. 403; nachgestellt
+ * am 02.11.2026: 3 von 3 rot ohne Pause, 3 von 3 gruen mit zehn Sekunden).
+ *
+ * Nur fuer die Datei der Anlage — eine Kopie (`komplettprobe`) bedient kein
+ * Webserver — und nur, wenn sich die Bytes wirklich geaendert haben; der
+ * zweite Aufruf ueber die Abbruchsicherung wartet deshalb nicht noch einmal.
+ */
+function konfig_stellen_webserver_abwarten(): void
+{
+    /* Mindestens 2: Der Webserver kann unter einer anderen PHP-Fassung laufen
+     * (`hochfahren.sh --php 8.3`), deren Einstellung diese Kommandozeile nicht
+     * sieht; 2 ist die Vorgabe von PHP. */
+    $frist = max(2, (int)ini_get('opcache.revalidate_freq')) + 1;
+    sleep($frist);
 }
 
 /** Die Marken auf einen frueheren Stand legen; fehlte eine, kommt sie weg. */

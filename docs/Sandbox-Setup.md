@@ -363,7 +363,11 @@ für einen harten Abbruch liegt seit R17-19 im Temp-Verzeichnis**
 Pfad steht beim Start auf stderr), nicht mehr als `config.php.vor-probe`
 neben der Datei: Dort lag sie im Webverzeichnis, unter einem Namen, den der
 Webserver als Text ausliefert (F-R17-55). Wer nach einem `kill -9` eine
-verstellte `config.php` findet, legt diese Datei zurück.
+verstellte `config.php` findet, legt diese Datei zurück. **Nach dem
+Zurücklegen wartet der Rückweg drei Sekunden** (seit Nr. 403), wenn sich die
+Datei der Anlage geändert hat: Der Webserver sieht sie erst nach seinem
+OPcache-Intervall (6.1), und bis dahin meldete sich die nächste Probe unter
+der gestellten Lage an.
 
 ---
 
@@ -564,10 +568,16 @@ ganze Satz aus `tools/sandbox/anforderungen.txt`, mit festen Fassungen und
 
 **Der eingebaute PHP-Server liefert nach einer Dateiänderung für einige
 Sekunden den alten Stand.** Gemessen am 13.09.2026: dieselbe Anfrage 0 s
-nach der Änderung mit dem alten Verhalten, 4 s danach mit dem neuen. Es ist
-**nicht** OPcache (`opcache.enable_cli` steht auf Off). Wer eine
-Serveränderung prüft, startet den Server vorher neu — sonst misst er den
-Stand davor und hält ihn für den danach.
+nach der Änderung mit dem alten Verhalten, 4 s danach mit dem neuen. **Es
+ist OPcache — das des Webservers:** `php -S` richtet sich nach
+`opcache.enable` (1), nicht nach `opcache.enable_cli` (Off, gilt nur für
+die Kommandozeile), und prüft den Zeitstempel einer Datei höchstens alle
+`opcache.revalidate_freq` Sekunden (2). *(Bis zum 02.11.2026 stand hier „Es
+ist nicht OPcache" mit dem Verweis auf `enable_cli` — das war die falsche
+Einstellung, Konzept PR, F-PR-03.)* Wer eine Serveränderung prüft, startet
+den Server vorher neu — sonst misst er den Stand davor und hält ihn für den
+danach. Eine Probe, die `config.php` umstellt, wartet aus demselben Grund
+nach dem Zurücklegen (`konfig_stellen.php`, Abschnitt 3).
 
 ### 6.1a Der Container wird abgeräumt, während die Sitzung wartet
 
