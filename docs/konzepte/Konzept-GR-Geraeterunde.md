@@ -22,8 +22,7 @@
 | GR-06 | Uhr, Sync-Seite: Nr. 402 mit Bildprobe | offen |
 | GR-07 | Abschluss: Prüfstand, Prüfdokument, Backlog, Pull Request | offen |
 
-**In Arbeit:** GR-02. **Es hakt:** Q-GR-05 und Q-GR-06 sind vor GR-02
-beziehungsweise GR-03 zu entscheiden (K6).
+**In Arbeit:** GR-02. **Es hakt:** nirgends.
 
 ---
 
@@ -87,7 +86,7 @@ Nr. 157, 229 und 431.
 Konto `507 {"error":"kontingent","grund":"…"}`. Die Uhr zeigt „Upload 507"
 und versucht es bei jedem Anlass erneut, das Handy führt es als „später
 erneut". Der Vertrag kennt 507 nicht. Behebbar ist es nur im Web
-(aufräumen oder Grenze heben); → Q-GR-05.
+(aufräumen oder Grenze heben); → Q-GR-05, E-GR-07.
 
 **F-GR-07 — Das Handy kennt keinen Abmeldezustand.** Die Uhr merkt sich
 die erste 401/403 (`Storage 'abgem_seit'`, Frist 30 Tage, E-R17-22); das
@@ -115,7 +114,7 @@ und zeigen „Konto voll — im Web aufräumen" (Uhr: Sync-Seite; Handy:
 Ergebniszeile). Nichts wird verworfen, nichts geparkt. Begründung: Der
 Zustand löst sich nur durch eine Handlung im Web; jeder Versuch davor kostet
 Funk und Akku und bekommt dieselbe Antwort. Alternative: wie heute,
-„später erneut" ohne eigenen Text. *Offen, vor GR-02.*
+„später erneut" ohne eigenen Text. → **E-GR-07.**
 
 **Q-GR-06 — Neukoppeln mit Rückstand nur außerhalb eines Dienstes?**
 Vorschlag: ja. Während eines Dienstes liegen auch die laufenden Pakete
@@ -124,7 +123,7 @@ stehen nicht in der Warteschlange abgeschlossener Pakete, die die
 Schlüsselbindung verwirft oder freigibt. Außerhalb des Dienstes ist alles
 abgeschlossen, und die Bindung deckt den ganzen Puffer. Die Sync-Seite
 beziehungsweise die Einstellungen sagen dann „Erst Dienst beenden".
-*Offen, vor GR-03.*
+→ **E-GR-08.**
 
 ## 4. Entscheidungen
 
@@ -191,6 +190,17 @@ Speichermarke, die das Senden sperrt; sein Nachsende-Job plant sich nach
 einem 401 nicht neu, aber jeder Sendeanlass (Dienst, App-Start, Knopf)
 versucht es.
 
+**E-GR-07 — 507: 60 Minuten warten, eigener Text (02.11.2026,
+Betreiberin, Q-GR-05).** Uhr und Handy warten nach einer 507 sechzig
+Minuten bis zum nächsten selbsttätigen Versuch und zeigen „Konto voll —
+im Web aufräumen" (Uhr: Sync-Seite; Handy: Ergebniszeile). Nichts wird
+verworfen oder geparkt.
+
+**E-GR-08 — Neukoppeln mit Rückstand nur außerhalb des Dienstes
+(02.11.2026, Betreiberin, Q-GR-06).** Im Dienst bleibt das Trennen mit
+Rückstand gesperrt, die Meldung heißt „Erst Dienst beenden". Damit deckt
+die Bindung aus E-GR-01 den ganzen Puffer.
+
 **Modellwahl:** Opus für alle Pakete (K2); kein Fable-Schritt.
 **Fächerung:** keine. Uhr- und Handy-Pakete berühren getrennte Quelldateien,
 aber gemeinsam Vertrag, Changelog, Konzept und `docs/Technik.md`
@@ -223,7 +233,7 @@ Körper und Bedeutung; gegengelesen gegen `json_out(…)` in `ingest.php`.
 2. `Sendeantwort.lese()`: `kept_points` und `kept_meta` in
    `uebergangen` (Nr. 154); 403 als neuer Fall `Gesperrt(grund)` (Nr. 229);
    `SpaeterErneut` trägt die Wartezeit (Kopfzeile, sonst fest nach E-GR-02);
-   507 je nach Q-GR-05.
+   507 nach E-GR-07.
 3. `Sender`: hält einen Zeitpunkt „nicht vor" im Speicher; ein Lauf davor
    sendet nicht und meldet „später erneut". 403 hält den Lauf an wie 401.
 4. Anzeige: Ergebniszeile und Hinweis für „gesperrt" (mit Grund) und für die
@@ -244,7 +254,7 @@ Verhalten des Handys.
 1. Ein dauerhafter **Abmeldevermerk** am Handy: gesetzt bei 401/403 im
    Sendelauf, gelöscht bei 200, beim Koppeln und beim Trennen.
 2. `Kopplungsdienst.trennen()`: Rückstand sperrt nicht mehr, wenn der
-   Vermerk steht (und nach Q-GR-06 kein Dienst läuft); dann wird der
+   Vermerk steht (und nach E-GR-08 kein Dienst läuft); dann wird der
    bisherige Kontoschlüssel als Bindung abgelegt, der Rückstand bleibt.
    Ohne Vermerk bleibt `Trennergebnis.Rueckstand` wie heute.
 3. `Sender.sendeAlles()`: Prüfung der Bindung vor dem ersten Paket (E-GR-01);
@@ -268,12 +278,12 @@ Pakete kommen an.
 *Weg:*
 1. `Uploader.onResponse()`: 401 → `abgemeldet`; 403 → `gesperrt` mit Grund
    aus dem Körper (E-GR-05); 429/503/507 → Wartezeit „nicht vor" im
-   Speicher (E-GR-02, Q-GR-05).
+   Speicher (E-GR-02, E-GR-07).
 2. `Uploader.syncAll()` prüft Wartezeit und Marke; neuer Einstieg
    `syncAllEinmalTrotz()` (Name in der Umsetzung) für die beiden Anlässe aus
    E-GR-06: `SyncView.onShow()` und das Dienstende.
 3. `SyncView`: drei Texte für gesperrt ohne Rat zum Neukoppeln; Zeile zur
-   Wartezeit („Server bremst · ab HH:MM"); „Konto voll" nach Q-GR-05.
+   Wartezeit („Server bremst · ab HH:MM"); „Konto voll" nach E-GR-07.
 
 *Ort:* `Uploader.mc`, `SyncView.mc`, `Model.mc` (Dienstende), `Pair.mc`
 (`onSchluessel` behandelt 403 wie der Upload).
@@ -287,7 +297,7 @@ Prüfdokument vorn.
 
 ### GR-05 Uhr, Kopplung (Nr. 431 Teil 2, E-GR-01)
 
-*Weg:* `Pair.start()`: Bei `abgemeldet` oder `gesperrt` (und nach Q-GR-06
+*Weg:* `Pair.start()`: Bei `abgemeldet` oder `gesperrt` (und nach E-GR-08
 außerhalb des Dienstes) sperrt der Rückstand das Trennen nicht; die
 Rückfrage nennt die Zahl und sagt, dass die Pakete nur an dasselbe Konto
 gehen. `Pair.lokalTrennen()` legt dann den bisherigen Schlüssel als Bindung
@@ -334,4 +344,5 @@ Jede hat eine Zeile in der Fehlertabelle (Vertrag 5); vorher fehlten
 
 | Datum | Was |
 |---|---|
+| 02.11.2026 | Q-GR-05, -06 entschieden (E-GR-07, -08). |
 | 02.11.2026 | Konzept angelegt; Q-GR-01 bis -04 entschieden (E-GR-01 bis -04); Spanne 470 bis 479 reserviert. |
