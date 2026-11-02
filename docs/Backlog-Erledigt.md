@@ -9967,3 +9967,18 @@ zutreffen.
      wie ungedrosselt. Die alten Zahlen waren Einzelläufe, in denen der
      Browser auf die Vorseite wartete. Beim Anmelden gehen rund 0,8 s in
      die Ableitung des Schlüssels (gewollt), dann der Seitenaufbau.
+
+<!-- -->
+
+433. **Die Python-Sitzung der Werkzeuge kommt aus der Arbeitsumgebung nicht bis Staging.** · gehört zu: Pflegeaufgabe · Stand: erledigt · seit 02.11.2026
+     *Aufgenommen 02.11.2026 beim Einrichten eines eigenen Staging-Kontos für
+     die Arbeitsumgebung.* `Sitzung` in `sitzung.py` setzte `trust_env =
+     False` für jede Gegenstelle — gedacht für die örtliche Anlage. Gegen
+     Staging scheiterte sie damit an der Zertifikatskette des Proxys der
+     Arbeitsumgebung (`CERTIFICATE_VERIFY_FAILED`); in der Kette fiel es nicht
+     auf, weil dort kein Proxy dazwischen sitzt.
+     Erledigt 02.11.2026: Proxy-Einstellungen nur für `127.0.0.1`, `localhost`
+     und `[::1]` abgeschaltet, nach draußen gelten Proxy und
+     `REQUESTS_CA_BUNDLE` der Umgebung, die Zertifikatsprüfung bleibt an —
+     dieselbe Trennung wie `kontextMachen()` in `tools/motor.mjs`. Gemessen:
+     Staging `login.php` 200 mit Prüfung, örtlich unverändert ohne Proxy.

@@ -23,7 +23,7 @@ steht seither ein Verweis hierher.
 | Stück | Stand |
 |---|---|
 | Was das Abbild mitbringt (1) | **gemessen 21.09.2026** |
-| Die acht Umgebungswerte (4) | **8 von 8 gemessen** |
+| Die zehn Umgebungswerte (4) | **10 von 10 gemessen** (02.11.2026) |
 | Netzregeln und Grenzen (5, 6) | **gemessen 21.09.2026** |
 | `tools/sandbox/aufbauen.sh`, `hochfahren.sh`, `plattform.sh` | **gebaut und gemessen mit PK-02** |
 | Die Ausbaustufen `web` und `plattform` (2) | **gebaut und gemessen** |
@@ -217,7 +217,7 @@ steht**.
 
 | Stufe | Enthält | Wofür |
 |---|---|---|
-| `web` | MariaDB 10.11, PHP 8.4, **drei** Engines (nachgemessen, nicht angenommen), Python-Pakete, die acht Umgebungswerte geprüft | jede Änderung unter `server/`, `docs/`, `tools/` |
+| `web` | MariaDB 10.11, PHP 8.4, **drei** Engines (nachgemessen, nicht angenommen), Python-Pakete, die zehn Umgebungswerte geprüft | jede Änderung unter `server/`, `docs/`, `tools/` |
 | `android` | `web` plus Android-SDK (Plattform 37.0 — der Prüfstand erkennt die Stufe an der Plattform aus `compileSdk`, seit R4-02; bis dahin kam 36 dazu, nur für die Erkennung, Nr. 335), JDK 21 geprüft, Gradle über Googles Spiegel mit mehr Wiederholungen (5.1). **Kein Emulator-Abbild** — das holt `android/werkzeuge/emulator.sh aufbauen`, mehrere GB, nur für den Emulatorlauf. *Bis zum 24.09.2026 stand hier „Emulator-Abbild"; das Skript hat es nie geholt (Konzept AR, F-AR-02).* | Änderungen unter `android/` |
 | `emulator` | `android` plus Emulator, die Abbilder mit API 37 (Handy `google_apis`, Uhr `android-wear-signed`), die AVDs `handy37` und `uhr37` mit berichtigtem `target` und die Debug-Ramdisk der Uhr; `lz4`, `cpio`, `libpulse0`. Rund 9 GB, und der Start einer AVD verlangt **weitere 7,4 GB frei** für die Datenpartition — der Emulator bricht sonst sofort ab. Nicht in `alles` | den Emulatorlauf (`android/LIESMICH.md`, „Wear OS 7 ohne Root“) |
 | `uhr` | `web` plus Uhr-SDK, Gerätedateien, Simulator-Bibliotheken | Änderungen unter `watch/` |
@@ -230,7 +230,7 @@ Der Hook ruft `web`. Wer mehr braucht, ruft nach.
 
 Jeder Lauf endet mit einer Tabelle, die **je Stück die Fassung nennt** — die
 drei Engines **einzeln**, davor die Fassung von Playwright gegen
-`PW_FASSUNG` (seit Nr. 393), die acht Umgebungswerte mit ihrer Länge, nie mit
+`PW_FASSUNG` (seit Nr. 393), die zehn Umgebungswerte mit ihrer Länge, nie mit
 ihrem Wert. Der Grund steht in `Pruefablauf.md` 6.5: „3 Browser da" sagt
 nicht, welcher fehlt, und es fehlt immer nur einer. Der Prüfbericht führt
 diese Tabelle mit (`Pruefablauf.md` 5).
@@ -367,33 +367,43 @@ verstellte `config.php` findet, legt diese Datei zurück.
 
 ---
 
-## 4. Die acht Umgebungswerte
+## 4. Die zehn Umgebungswerte
 
 Sie stehen **nicht** im Repositorium, sondern in den Umgebungsvariablen der
 Arbeitsumgebung. Hier stehen nur die Namen, und das bleibt so: Ein Wert, der
 in der Dokumentation steht, ist keiner mehr.
 
-| Name | Wofür | gemessen 21.09.2026 |
+| Name | Wofür | gemessen 21.09.2026, wo nicht anders genannt |
 |---|---|---|
 | `NADOKU_STAGING_URL` | Adresse der Prüfanlage | gesetzt, 33 Zeichen |
-| `NADOKU_STAGING_KONTO` | Prüfkonto dort | gesetzt, 18 Zeichen |
-| `NADOKU_STAGING_PASS` | dessen Passwort | gesetzt, 25 Zeichen |
+| `NADOKU_STAGING_KONTO` | **eigenes** Konto der Arbeitsumgebung dort, Rolle Admin (seit 02.11.2026; bis dahin das Prüfkonto der Kette) | gesetzt, 24 Zeichen (02.11.2026) |
+| `NADOKU_STAGING_PASS` | dessen Passwort | gesetzt, 24 Zeichen (02.11.2026) |
+| `NADOKU_STAGING_TOTP` | Zweitfaktor-Geheimnis dieses Kontos (Base32), seit 02.11.2026 | gesetzt, 39 Zeichen (02.11.2026) |
+| `NADOKU_STAGING_WIEDERHERSTELLUNG` | Rückweg dieses Kontos, falls der Zweitfaktor nicht greift, seit 02.11.2026 | gesetzt, 24 Zeichen (02.11.2026) |
 | `NADOKU_STAGING_JOBS_TOKEN` | Aktionen von `jobs.php` — seit Web 23.1.0 das **Kettentoken** (Karte „Auslieferungskette") | gesetzt, 64 Zeichen |
 | `_MAIL_URL` | Webmail der Prüfanlage | gesetzt, 17 Zeichen |
 | `_MAIL_USER` | Postfach dort | gesetzt, 18 Zeichen |
 | `_MAIL_PASS` | dessen Passwort | gesetzt, 20 Zeichen |
 | `CIQ_GERAETE_URL` | Gerätedateien des Uhr-SDK | gesetzt, 33 Zeichen |
 
-> **Der Zweitfaktor des Prüfkontos (seit Web 20.42.0) ist kein Wert dieser
-> Tabelle.** In der Sandbox rechnen die Werkzeuge mit dem Geheimnis der
+> **Zwei Zweitfaktoren, zwei Orte.** In der Sandbox rechnen die Werkzeuge mit dem Geheimnis der
 > Sandbox, das `tools/zweitfaktor/pruefkonto.php` beim Einrichten einträgt
 > (`lokal_einrichten.sh`, Schritt 6b). **`NADOKU_TOTP` muss hier leer
 > bleiben** — ist es gesetzt, rechnen die Rechner mit diesem Geheimnis, und
 > die Anmeldung an der Sandbox scheitert am Code-Schritt; die Meldung nennt
-> die Quelle. Gegen Staging reicht die Kette das Secret `STAGING_TOTP`
-> durch (`tools/zweitfaktor/LIESMICH.md`); aus der Arbeitsumgebung heraus
-> gibt es dafür keinen Wert, und die Staging-Werkzeuge nehmen es als
-> Schalter (`--admin-totp`).
+> die Quelle. Gegen Staging nehmen die Werkzeuge das Geheimnis als
+> Schalter (`--admin-totp`): Die Kette reicht `STAGING_TOTP` ihres
+> Prüfkontos durch (`tools/zweitfaktor/LIESMICH.md`), die Arbeitsumgebung
+> `"$NADOKU_STAGING_TOTP"` ihres eigenen Kontos. **Getrennte Konten sind
+> Absicht:** Der Server nimmt keinen Code zweimal, und eine Sitzung, die im
+> selben Fenster rechnet wie ein laufender Stufe-2-Lauf, machte ihn rot;
+> ebenso misst Stufe 2 einen anderen Bestand, wenn eine Sitzung am selben
+> Konto Daten ändert. Wer die Umgebung lesen kann, ist damit Admin auf
+> Staging — tragbar, weil dort nur Testdaten liegen (Bedrohungsmodell,
+> „Staging getrennt"). **Die Python-Sitzung der Werkzeuge** (`sitzung.py`)
+> geht seit dem 02.11.2026 nur zur örtlichen Anlage am Proxy vorbei; nach
+> draußen nimmt sie Proxy und `REQUESTS_CA_BUNDLE` der Umgebung, sonst
+> scheiterte sie hier an der Zertifikatskette.
 
 > **Die drei Mailwerte tragen einen führenden Unterstrich und kein Präfix.**
 > Sie heißen `_MAIL_URL`, `_MAIL_USER`, `_MAIL_PASS` — nicht
@@ -415,7 +425,7 @@ wenn sie fehlt.
 
 ### 4.1 Zwei weitere, die der Container NICHT mitbringt
 
-`WEGWERFKONTO` und `WEGWERFPASSWORT` gehören nicht zu den acht. Sie stehen
+`WEGWERFKONTO` und `WEGWERFPASSWORT` gehören nicht zu den zehn. Sie stehen
 in keiner Ausbaustufe, `aufbauen.sh` misst sie nicht, und eine Arbeitsumgebung
 ohne sie ist vollständig. Gebraucht werden sie von **genau einer** Probe:
 `spaltenregister-wegprobe` (Schritt 15/AP6).

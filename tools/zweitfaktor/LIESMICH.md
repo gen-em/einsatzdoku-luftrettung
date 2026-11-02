@@ -21,6 +21,7 @@ Der Server nimmt **keinen Code zweimal** (E-P5c-54). Die Rechner teilen deshalb 
 
 `NADOKU_TOTP` (Base32) aus der Umgebung, sonst das Geheimnis der Sandbox (`PRUEFSTANDZWEITFAKTORNADOKU23456`).
 Gegen Staging reicht die Kette das Secret **`STAGING_TOTP`** durch (`auslieferung.yml`, Job `stufe2`); die BetreiberIn liest es beim Einrichten des Prüfkontos auf Staging aus dem Einrichtungstor.
+Aus der Arbeitsumgebung gegen Staging: `--admin-totp "$NADOKU_STAGING_TOTP"` — ein **eigenes** Konto, nicht das der Kette (`docs/Sandbox-Setup.md` 4).
 `pruefkonto.php` läuft nur, wenn die Anlage auf `127.0.0.1` oder `localhost` zeigt.
 
 ## Erwartete Zahl
