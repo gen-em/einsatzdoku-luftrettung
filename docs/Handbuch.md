@@ -3961,7 +3961,7 @@ Einsatz abgeschlossen ist.
 
 Nach „Dienst beenden" steht in der Benachrichtigungsleiste kurz **„Dienst
 beendet · sende …"**. Solange sie da ist, arbeitet die App noch — sie darf in
-dieser Zeit weggelegt, aber nicht abgewürgt werden. Danach gibt es drei
+dieser Zeit weggelegt, aber nicht abgewürgt werden. Danach gibt es vier
 Möglichkeiten:
 
 | Was zu sehen ist | Was es heißt |
@@ -3969,6 +3969,7 @@ Möglichkeiten:
 | **keine Meldung mehr** | Alles ist beim Server angekommen. Nichts zu tun. |
 | „Dienst beendet · 2 Pakete warten auf Netz" | Es fehlte Netz. Die App holt es nach, sobald wieder eines da ist — auch wenn das Telefon zwischendurch neu startet. Die Meldung verschwindet dann von selbst. |
 | „Dienst beendet · Schlüssel abgewiesen – Gerät neu koppeln" | Der Server hat das Gerät nicht mehr akzeptiert. **Hier hilft Warten nicht:** Das Gerät muss in den Einstellungen neu gekoppelt werden. |
+| „Dienst beendet · Senden angehalten – Gerät oder Konto im Web gesperrt" *(seit Android 0.19.0)* | Das Gerät ist in der Weboberfläche deaktiviert, oder das Konto ist gesperrt oder noch nicht freigegeben. **Neu koppeln hilft hier nicht:** Im Web das Gerät wieder aktivieren (Einstellungen → Geräte) oder das Konto freigeben lassen. Verloren ist nichts; danach geht der Rückstand beim nächsten Senden hinaus. |
 
 Die mittlere Meldung lässt sich wegwischen — der Nachsendevorgang läuft davon
 unberührt weiter.
@@ -3987,7 +3988,15 @@ unberührt weiter.
 
 Nach jedem Sendeversuch steht darunter kurz das Ergebnis: „Gesendet · 12:41",
 „Keine Verbindung · wird nachgeholt" oder „Schlüssel abgewiesen · Gerät neu
-koppeln".
+koppeln". Seit Android 0.19.0 kommen dazu:
+
+| Ergebniszeile | Was es heißt |
+|---|---|
+| „Gesendet · 12:41 · nicht alles übernommen" | Angekommen, aber der Server hat einzelne Werte verworfen oder ein spätes Paket nur zum Teil übernommen (etwa ein Abschluss lange nach Dienstende). Im Web nachsehen. |
+| „Gerät im Web deaktiviert · dort wieder aktivieren" | Einstellungen → Geräte in der Weboberfläche. |
+| „Konto gesperrt", „Konto wartet auf Freigabe", „E-Mail-Adresse nicht bestätigt" — je „· Senden angehalten" | Das Konto darf gerade nicht senden. Das Telefon behält alles. |
+| „Server bremst · nächster Versuch 13:05" | Der Server hat um eine Pause gebeten. Bis zur genannten Zeit versucht es das Telefon nicht erneut, auch nicht mit „Jetzt senden". |
+| „Konto voll · im Web aufräumen" | Die Mengengrenze des Kontos ist erreicht. In der Weboberfläche Altes löschen oder die Grenze heben lassen; das Telefon versucht es nach einer Stunde wieder. |
 
 **„Konto noch ohne Schlüssel · einmal im Web anmelden"** *(seit Android
 0.18.0)*: Das Telefon verschließt GPS-Daten und Phasenorte mit dem Schlüssel

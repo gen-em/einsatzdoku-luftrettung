@@ -14,6 +14,29 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Android 0.19.0] — unveröffentlicht
+
+Schritt 21 (GR), Paket GR-02 — das Handy liest die Antwort des Servers
+vollständig (Backlog Nr. 154, 201, 229, dazu 507).
+
+### Geändert
+
+- **Android — Sperre, Bremse und volles Konto haben eigene Zeilen.** Eine
+  403 (Gerät im Web deaktiviert, Konto gesperrt, wartet auf Freigabe oder
+  unbestätigt) kannte das Handy nicht und versuchte es bei jedem Anlass
+  weiter; jetzt hält es an, nennt den Grund und rät nicht zum Neukoppeln,
+  denn der Weg heraus ist das Web. Nach 429 und 503 wartet es die Zeit aus
+  `Retry-After` ab, statt bei jedem Phasenwechsel anzuklopfen, nach einer 507
+  („Konto voll“) eine Stunde. Verworfen wird in keinem Fall etwas.
+
+### Behoben
+
+- **Android — `kept_points` und `kept_meta` gehen nicht mehr unter.** Hat der
+  Server Punkte oder Metadaten eines späten Pakets übergangen, sah das am
+  Handy wie ein Erfolg aus, weil nur zwei der vier `kept_*` gelesen wurden.
+  Die Ergebniszeile sagt jetzt „nicht alles übernommen“, wie bei einzeln
+  verworfenen Werten auch.
+
 ## [Werkzeug: Der Prüfumfang folgt der Berührung (R89, Konzept PU)] — 2026-11-02
 
 Der Prüfstand maß in jeder Nebenstufe alles in drei Engines, zehn Breiten und über alle Seiten — der letzte Nebenlauf dauerte 12 205 s, und eine Berichtigung kostete denselben Lauf noch einmal. Jetzt misst er schmal, wenn nichts anderes verlangt ist: Chromium, fünf Breiten und die Seiten, deren eigene Datei berührt ist; voll nur in der Hauptstufe, an jeder zehnten Nebennummer und mit `--voll`, drei Engines und zehn Breiten auch bei berührtem Stylesheet oder `ui.php`. Nach einer Berichtigung erbt eine Probe ihr Grün vom Bericht des Vorgängers, wenn der Unterschied keines ihrer Muster trifft, und das Tor rechnet jedes Erbe nach. Was gemeldet wird, aber nicht aufhält, heißt jetzt `hinweis` — gerissene Decken der Steuerungsdokumente, eine zu lange Anleitung —, und die erzeugten Tabellen erzeugt der Prüfstand selbst, statt rot zu werden. Die offenen Handprüfungen stehen in einer Liste statt in dreizehn Prüfdokumenten; Stufe 2, das Backup-Tor und die Freigabe vor Produktiv bleiben, wie sie waren.

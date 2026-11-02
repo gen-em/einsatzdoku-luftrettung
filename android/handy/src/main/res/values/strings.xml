@@ -257,6 +257,7 @@
         <item quantity="other">Dienst beendet · %1$d Pakete warten auf Netz</item>
     </plurals>
     <string name="hinweis_schluessel_abgewiesen">Dienst beendet · Schlüssel abgewiesen – Gerät neu koppeln</string>
+    <string name="hinweis_gesperrt">Dienst beendet · Senden angehalten – Gerät oder Konto im Web gesperrt</string>
 
     <!-- Was die Ansicht ueber das Senden sagt. "Abgewiesen" darf nicht
          verschwiegen werden: Fiele ein Paket mit 400 aus Warteschlange UND
@@ -272,6 +273,20 @@
     <string name="sync_ergebnis_kein_netz">Keine Verbindung · wird nachgeholt</string>
     <string name="sync_ergebnis_schluessel">Schlüssel abgewiesen · Gerät neu koppeln</string>
     <string name="sync_ergebnis_kein_schluessel">Konto noch ohne Schlüssel · einmal im Web anmelden</string>
+    <!-- 403: Gerät oder Konto gesperrt. Kein Rat zum
+         Neukoppeln - der Weg heraus ist das Web. Nichts ist verloren; nach
+         dem Entsperren geht der Rueckstand hinaus. -->
+    <string name="sync_ergebnis_geraet_deaktiviert">Gerät im Web deaktiviert · dort wieder aktivieren</string>
+    <string name="sync_ergebnis_konto_gesperrt">Konto gesperrt · Senden angehalten</string>
+    <string name="sync_ergebnis_konto_wartet">Konto wartet auf Freigabe · Senden angehalten</string>
+    <string name="sync_ergebnis_konto_unbestaetigt">E-Mail-Adresse nicht bestätigt · Senden angehalten</string>
+    <string name="sync_ergebnis_gesperrt">Gerät oder Konto gesperrt · im Web klären</string>
+    <!-- 507 und Wartezeit nach 429/503. -->
+    <string name="sync_ergebnis_konto_voll">Konto voll · im Web aufräumen</string>
+    <string name="sync_ergebnis_wartet">Server bremst · nächster Versuch %1$s</string>
+    <!-- 200 mit rejected oder kept_*: angekommen, aber nicht
+         alles uebernommen. -->
+    <string name="sync_ergebnis_teilweise">Gesendet · %1$s · nicht alles übernommen</string>
     <plurals name="sync_ergebnis_abgewiesen">
         <item quantity="one">Server hat %1$d Paket abgewiesen</item>
         <item quantity="other">Server hat %1$d Pakete abgewiesen</item>

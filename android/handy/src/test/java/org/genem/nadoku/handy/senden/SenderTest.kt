@@ -240,6 +240,69 @@ class SenderTest {
         assertFalse("401 ist kein Datenfehler", puffer.paket(id)!!.fehlerhaft)
     }
 
+    /** **403**: pausiert wie 401, nennt aber den Grund. */
+    @Test fun vierhundertdreiPausiertMitGrund() {
+        val id = einSegmentMitPunkten(10)
+        server.status = 403
+        server.antwortkoerper = """{"error":"konto","grund":"wartet"}"""
+
+        val bericht = sender().sendeAlles()
+
+        assertTrue(bericht.pausiert)
+        assertEquals(Sperrgrund.KONTO_WARTET, bericht.gesperrt)
+        assertEquals("Genau eine Anfrage, dann Schluss", 1, bericht.anfragen)
+        assertEquals(0L, puffer.paket(id)!!.bestaetigtSeq)
+        assertFalse("403 ist kein Datenfehler", puffer.paket(id)!!.fehlerhaft)
+    }
+
+    /**
+     * **429 mit `Retry-After`**: Der nächste Lauf vor Ablauf sendet
+     * nichts, der danach wieder.
+     */
+    @Test fun wartezeitHaeltDieNaechstenLaeufeAuf() {
+        einSegmentMitPunkten(10)
+        server.status = 429
+        server.antwortkoerper = """{"error":"zu_viele_versuche"}"""
+        server.antwortkopf = mapOf("Retry-After" to "600")
+        val s = sender()
+
+        val erster = s.sendeAlles()
+        assertEquals(1, erster.anfragen)
+        assertEquals(uhrzeit.plusSeconds(600), erster.wartetBis)
+
+        uhrzeit = uhrzeit.plusSeconds(599)
+        val zweiter = s.sendeAlles()
+        assertEquals("Vor Ablauf keine Anfrage", 1, server.anfragen.size)
+        assertTrue(zweiter.spaeterErneut)
+        assertEquals(0, zweiter.anfragen)
+
+        antworteVollstaendig()
+        server.antwortkopf = emptyMap()
+        uhrzeit = uhrzeit.plusSeconds(1)
+        val dritter = s.sendeAlles()
+        assertTrue("Nach Ablauf wird gesendet", dritter.anfragen > 0)
+        assertNull("Ein Erfolg hebt die Wartezeit auf", s.nichtVor)
+    }
+
+    /** **507**: eine Stunde warten, „Konto voll" im Bericht, nichts markiert. */
+    @Test fun kontoVollWartetEineStunde() {
+        val id = einSegmentMitPunkten(10)
+        server.status = 507
+        server.antwortkoerper = """{"error":"kontingent","grund":"Das Konto ist voll"}"""
+        val s = sender()
+
+        val bericht = s.sendeAlles()
+        assertTrue(bericht.kontoVoll)
+        assertTrue(bericht.spaeterErneut)
+        assertEquals(uhrzeit.plusSeconds(3600), bericht.wartetBis)
+        assertFalse(puffer.paket(id)!!.fehlerhaft)
+
+        uhrzeit = uhrzeit.plusSeconds(1800)
+        val waehrend = s.sendeAlles()
+        assertTrue("Auch das Warten sagt, warum", waehrend.kontoVoll)
+        assertEquals(1, server.anfragen.size)
+    }
+
     /** **400**: als fehlerhaft markieren und **nicht wiederholen**. */
     @Test fun vierhundertMarkiertUndWiederholtNicht() {
         val id = einSegmentMitPunkten(10)

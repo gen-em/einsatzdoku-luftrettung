@@ -866,15 +866,15 @@ Fehler:
 | 400 | `{"error":"payload"}` | Nachricht fehlerhaft — nicht wiederholen, lokal als fehlerhaft markieren |
 | 400 | `{"error":"klartext","grund":"…"}` | **Ortsdaten im Klartext** (seit Web 22.0.1): `track.points`, eine Phase mit `lat`/`lon` oder eine Reanimation. Das Gerät ist in einer alten Fassung — **parken, nicht verwerfen**, und „Neu koppeln" anzeigen; nach dem Aktualisieren sendet es dasselbe verschlossen |
 | 401 | `{"error":"auth"}` | Schlüssel ungültig — Upload pausieren, Hinweis anzeigen |
-| 403 | `{"error":"device_disabled"}` | Das Gerät ist im Web **deaktiviert** (`devices.active = 0`). Es sagt nichts über das Paket: Upload anhalten, nichts verwerfen, nichts parken; der Weg heraus ist das Web (Gerät aktivieren), nicht eine neue Kopplung |
-| 403 | `{"error":"konto","grund":…}` mit `gesperrt`, `wartet` oder `unbestaetigt` | Das **Konto** ist nicht aktiv (seit Web 20.17.0): gesperrt, wartet auf Freigabe, oder die Adresse ist unbestätigt. Kommt erst nach der Anmeldung des Geräts — ein unbekanntes Gerät bekommt 401, nicht 403. Behandlung wie `device_disabled`: anhalten, nichts verwerfen, den Grund nennen. Nach dem Entsperren kommt der Rückstand idempotent an |
+| 403 | `{"error":"device_disabled"}` | Das Gerät ist im Web **deaktiviert** (`devices.active = 0`). Es sagt nichts über das Paket: Upload anhalten, nichts verwerfen, nichts parken; der Weg heraus ist das Web (Gerät aktivieren), nicht eine neue Kopplung. **Das Handy** hält seit Android 0.19.0 an und nennt den Grund; davor kannte es 403 nicht und versuchte es weiter |
+| 403 | `{"error":"konto","grund":…}` mit `gesperrt`, `wartet` oder `unbestaetigt` | Das **Konto** ist nicht aktiv (seit Web 20.17.0): gesperrt, wartet auf Freigabe, oder die Adresse ist unbestätigt. Kommt erst nach der Anmeldung des Geräts — ein unbekanntes Gerät bekommt 401, nicht 403. Behandlung wie `device_disabled`: anhalten, nichts verwerfen, den Grund nennen. Nach dem Entsperren kommt der Rückstand idempotent an. **Das Handy** nennt den Grund seit Android 0.19.0 |
 | 405 | `{"error":"method"}` | Falsche HTTP-Methode |
 | 413 | `{"error":"too_large"}` | Chunk zu groß — Uhr halbiert die Chunk-Größe und wiederholt |
-| 429 | `{"error":"zu_viele_versuche"}` | **Mengenbremse** (seit Web 20.11.0) — zu viele *fehlgeschlagene* Anmeldungen. Behandlung wie 401: Upload pausieren, Puffer behalten, später erneut. Die Antwort trägt `Retry-After` in Sekunden; **die Geräte müssen ihn nicht auswerten** und tun es heute nicht |
+| 429 | `{"error":"zu_viele_versuche"}` | **Mengenbremse** (seit Web 20.11.0) — zu viele *fehlgeschlagene* Anmeldungen. Behandlung wie 401: Upload pausieren, Puffer behalten, später erneut. Die Antwort trägt `Retry-After` in Sekunden. **Das Handy** wartet sie seit Android 0.19.0 ab (ohne Kopfzeile 15 Minuten, höchstens sechs Stunden); die Garmin-Uhr kann Kopfzeilen nicht lesen |
 | 5xx | — | Später unverändert erneut versuchen (Backoff) |
-| 507 | `{"error":"kontingent","grund":"Das Konto ist voll — …"}` | **Mengengrenze je Konto** (Einsätze oder Bytes der GPS-Daten, `konto_fuellstand()`). Der Zustand löst sich nicht von selbst: im Web aufräumen oder die Grenze heben lassen. Bis dahin Puffer behalten, nichts verwerfen, später erneut; Bearbeiten und Löschen im Web bleiben frei. Ohne `Retry-After` |
-| 503 | `{"error":"ausgelastet","meldung":"…"}` | **Verbindungsgrenze oder Gedrängel** (seit Web 20.13.0) — ebenfalls ein Sonderfall von 5xx und **kein neues Verhalten**: Die Datenbank nimmt gerade keine Verbindung mehr an (MySQL 1040/1203/1226) oder eine Transaktion ist einem Deadlock zum Opfer gefallen (1213/1205). **Seit Web 21.11.1 wiederholt `ingest.php` einen Deadlock selbst**, bis zu drei Mal (Schritt 18, SR-05, Nr. 210) — die 503 kommt dann erst, wenn auch das nicht reicht; die Regel „später unverändert erneut" bleibt die des Clients. Behandlung genau wie 5xx. `Retry-After` steht auf **5** Sekunden — bei den Stundengrenzen eines Datenbankkontos (`MAX_QUERIES_PER_HOUR` und Geschwister) auf 300; **die Geräte müssen ihn nicht auswerten** und tun es heute nicht |
-| 503 | `{"error":"maintenance","meldung":"…"}` | **Wartungsmodus** — ein Sonderfall von 5xx, **kein neues Verhalten**: Der Server wird gerade aktualisiert und schließt sich für die Dauer. Behandlung genau wie 5xx, also Backoff und unverändert erneut. Die Antwort trägt zusätzlich `Retry-After` in Sekunden (heute 300) als Hinweis für Browser und Werkzeuge; **die Geräte müssen ihn nicht auswerten** und tun es heute nicht |
+| 507 | `{"error":"kontingent","grund":"Das Konto ist voll — …"}` | **Mengengrenze je Konto** (Einsätze oder Bytes der GPS-Daten, `konto_fuellstand()`). Der Zustand löst sich nicht von selbst: im Web aufräumen oder die Grenze heben lassen. Bis dahin Puffer behalten, nichts verwerfen, später erneut; Bearbeiten und Löschen im Web bleiben frei. Ohne `Retry-After`. **Das Handy** wartet seit Android 0.19.0 eine Stunde und sagt „Konto voll“ |
+| 503 | `{"error":"ausgelastet","meldung":"…"}` | **Verbindungsgrenze oder Gedrängel** (seit Web 20.13.0) — ebenfalls ein Sonderfall von 5xx und **kein neues Verhalten**: Die Datenbank nimmt gerade keine Verbindung mehr an (MySQL 1040/1203/1226) oder eine Transaktion ist einem Deadlock zum Opfer gefallen (1213/1205). **Seit Web 21.11.1 wiederholt `ingest.php` einen Deadlock selbst**, bis zu drei Mal (Schritt 18, SR-05, Nr. 210) — die 503 kommt dann erst, wenn auch das nicht reicht; die Regel „später unverändert erneut" bleibt die des Clients. Behandlung genau wie 5xx. `Retry-After` steht auf **5** Sekunden — bei den Stundengrenzen eines Datenbankkontos (`MAX_QUERIES_PER_HOUR` und Geschwister) auf 300; **das Handy** wartet ihn seit Android 0.19.0 ab (ohne Kopfzeile fünf Minuten), die Garmin-Uhr kann ihn nicht lesen |
+| 503 | `{"error":"maintenance","meldung":"…"}` | **Wartungsmodus** — ein Sonderfall von 5xx, **kein neues Verhalten**: Der Server wird gerade aktualisiert und schließt sich für die Dauer. Behandlung genau wie 5xx, also Backoff und unverändert erneut. Die Antwort trägt zusätzlich `Retry-After` in Sekunden (heute 300) als Hinweis für Browser und Werkzeuge; **das Handy** wartet ihn seit Android 0.19.0 ab (ohne Kopfzeile fünf Minuten), die Garmin-Uhr kann ihn nicht lesen |
 
 **Die 429 ist die einzige Vertragsänderung seit langem — und sie verlangt vom
 Client nichts Neues.** Bis Web 20.10.0 war `ingest.php` der einzige Endpunkt
@@ -889,10 +889,11 @@ ausschließlich Fehlversuche** — ein gelungener Upload geht nie auf das
 Kontingent, und eine Uhr, die einen ganzen Dienst nachliefert, sendet
 beliebig viele Stücke.
 
-`Retry-After` steht dabei nicht, weil ein Gerät ihn liest — die Uhr **kann**
-es nicht, der Rückruf von Connect IQ bekommt `(code, data)` und keine
-Kopfzeilen. Die Zeile steht für den Fall, den der Vertrag ausdrücklich
-zulässt: einen fremden Client an derselben Schnittstelle.
+`Retry-After` liest **das Handy** seit Android 0.19.0 und sendet vor Ablauf
+nicht (Konzept GR, E-GR-02). Die Garmin-Uhr **kann** es nicht: Der Rückruf
+von Connect IQ bekommt `(code, data)` und keine Kopfzeilen. *(Bis zum
+02.11.2026 stand hier, die Zeile stehe nur für einen fremden Client — gelesen
+hat sie bis dahin keines der eigenen Geräte.)*
 
 **Warum das eigens dasteht, obwohl sich nichts ändert.** Der Wartungsmodus
 (Web 13.2.0) ist die einzige Lage, in der der Server ein 5xx **absichtlich**

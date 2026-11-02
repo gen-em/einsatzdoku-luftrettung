@@ -3,6 +3,7 @@ package org.genem.nadoku.handy
 import androidx.annotation.StringRes
 import org.genem.nadoku.R
 import org.genem.nadoku.handy.kopplung.Abweisung
+import org.genem.nadoku.handy.senden.Sperrgrund
 
 /**
  * Von der Ursache zum Text — zweizeilig: **was** ist los, **was** hilft.
@@ -33,6 +34,20 @@ object Meldungen {
         Abweisung.KEINE_VERBINDUNG -> R.string.fehler_keine_verbindung
         Abweisung.SERVERFEHLER -> R.string.fehler_serverfehler
         Abweisung.UNBEKANNT -> R.string.fehler_unbekannt
+    }
+
+    /**
+     * Die Ergebniszeile nach einer 403. Eine Zeile, nicht
+     * zwei: Was hilft, steht hinter dem Punkt — und nie „neu koppeln", denn
+     * das Gerät ist bekannt, es darf nur gerade nicht.
+     */
+    @StringRes
+    fun sperrtext(grund: Sperrgrund?): Int = when (grund) {
+        Sperrgrund.GERAET_DEAKTIVIERT -> R.string.sync_ergebnis_geraet_deaktiviert
+        Sperrgrund.KONTO_GESPERRT -> R.string.sync_ergebnis_konto_gesperrt
+        Sperrgrund.KONTO_WARTET -> R.string.sync_ergebnis_konto_wartet
+        Sperrgrund.KONTO_UNBESTAETIGT -> R.string.sync_ergebnis_konto_unbestaetigt
+        Sperrgrund.UNBEKANNT, null -> R.string.sync_ergebnis_gesperrt
     }
 
     @StringRes

@@ -24,8 +24,21 @@ data class Sendebericht(
     val uebergangen: Map<String, Int> = emptyMap(),
     /** 400-Pakete dieses Laufs — sie werden nicht wiederholt. */
     val fehlerhaft: Int = 0,
-    /** 401: Der Schlüssel wurde abgewiesen; der Lauf ist gestoppt. */
+    /** 401 oder 403: Der Lauf ist gestoppt; Wiederholen hilft nicht. */
     val pausiert: Boolean = false,
+    /**
+     * 403: warum das Gerät nicht senden darf. `null` bei 401 — dann ist der
+     * Schlüssel abgewiesen, und der Weg heraus ist eine neue Kopplung, nicht
+     * das Web.
+     */
+    val gesperrt: Sperrgrund? = null,
+    /** 507: Das Konto ist voll. */
+    val kontoVoll: Boolean = false,
+    /**
+     * Vor diesem Zeitpunkt sendet der Sender nicht (429, 503, 507).
+     * `null` = keine Wartezeit.
+     */
+    val wartetBis: Instant? = null,
     /** Kein Netz oder 5xx — später unverändert erneut. */
     val spaeterErneut: Boolean = false,
     /** Vor dem Lauf geräumte abgewiesene Pakete. */
@@ -41,7 +54,7 @@ data class Sendebericht(
     /** Ein Lauf, an dem nichts zu beanstanden ist. */
     val sauber: Boolean
         get() = verworfen.isEmpty() && uebergangen.isEmpty() && fehlerhaft == 0 && !pausiert &&
-            !ohneSchluessel
+            !ohneSchluessel && !kontoVoll
 }
 
 /**
@@ -66,8 +79,11 @@ data class Sendebericht(
  * |---|---|
  * | 400 | Nachricht fehlerhaft — **nicht wiederholen**, lokal markieren |
  * | 401 | Schlüssel ungültig — **pausieren** und anzeigen |
+ * | 403 | Gerät oder Konto gesperrt — **pausieren**, den Grund nennen |
  * | 413 | Chunk zu groß — **halbieren** und wiederholen |
- * | 5xx | später **unverändert** erneut |
+ * | 429 | Mengenbremse — **warten** (`Retry-After`), dann unverändert erneut |
+ * | 507 | Konto voll — eine Stunde **warten**, dann unverändert erneut |
+ * | 5xx | später **unverändert** erneut; bei 503 erst nach `Retry-After` |
  *
  * Der Unterschied ist nicht theoretisch: Ein 400, den man wiederholt, läuft
  * ewig; ein 401, über den man hinweggeht, sendet den Rest des Dienstes ins
@@ -105,6 +121,25 @@ class Sender(
         private set
 
     /**
+     * Vor diesem Zeitpunkt geht keine Anfrage hinaus.
+     *
+     * WARUM ÜBERHAUPT. Ohne ihn klopfte jeder Anlass — Phasenwechsel,
+     * Wiederverbindung, der Nachsende-Job mit seinem Rückzug ab 30 s — an
+     * einen Server, der gerade gesagt hat, wann er wieder will. Bei der
+     * Mengenbremse ist das das Gegenteil des Gewollten.
+     *
+     * IM SPEICHER, NICHT IN DER ABLAGE — dieselbe Abwägung wie bei der Uhr:
+     * Nach einem Neustart der App darf es früher einen Versuch geben; er
+     * kostet eine Anfrage und erfährt die Lage neu. Eine stehen gebliebene
+     * Sperre in der Ablage wäre teurer.
+     */
+    var nichtVor: Instant? = null
+        private set
+
+    /** Warum [nichtVor] gesetzt ist — für die Anzeige während des Wartens. */
+    private var wartetWegenKontoVoll: Boolean = false
+
+    /**
      * Die Warteschlange abarbeiten, bis nichts mehr offen ist oder ein
      * Fehlerpfad den Lauf beendet.
      */
@@ -119,6 +154,17 @@ class Sender(
         val geraeumt = puffer.abgewieseneRaeumen(
             Zeit.iso(jetzt().minus(Raeumung.FRIST_TAGE, ChronoUnit.DAYS)),
         ).pakete
+
+        /* DIE WARTEZEIT VOR ALLEM ANDEREN, was ans Netz geht. Der Lauf meldet
+         * „später erneut", damit der Nachsende-Job sich nachplant; er sendet
+         * dabei nichts. */
+        val warte = nichtVor
+        if (warte != null && jetzt().isBefore(warte)) {
+            return Sendebericht(
+                spaeterErneut = true, geraeumt = geraeumt,
+                wartetBis = warte, kontoVoll = wartetWegenKontoVoll,
+            )
+        }
 
         val adresse = Serveradresse.ingest(basis)
         val zugang = tresor.lesen()
@@ -171,11 +217,13 @@ class Sender(
 
         val antwort = when (val a = netzweg.postJson(adresse, koerper, kopfzeilen)) {
             is Netzantwort.KeineVerbindung -> Sendeantwort.KeineVerbindung(a.ursache)
-            is Netzantwort.Server -> Sendeantwort.lese(a.code, a.koerper)
+            is Netzantwort.Server -> Sendeantwort.lese(a.code, a.koerper, a.retryAfterS)
         }
 
         return when (antwort) {
             is Sendeantwort.Angekommen -> {
+                nichtVor = null                 // eine angenommene Anfrage hebt jede Wartezeit auf
+                wartetWegenKontoVoll = false
                 puffer.bestaetigungMerken(paket.id, antwort.naechsteSeq)
                 var fertig = 0
                 /* AUFRÄUMEN ERST NACH `final` UND VOLLSTÄNDIGER BESTÄTIGUNG.
@@ -202,6 +250,14 @@ class Sender(
             is Sendeantwort.SchluesselAbgewiesen ->
                 Sendebericht(anfragen = 1, pausiert = true)
 
+            is Sendeantwort.Gesperrt ->
+                Sendebericht(anfragen = 1, pausiert = true, gesperrt = antwort.grund)
+
+            is Sendeantwort.KontoVoll -> {
+                val bis = warteBis(Sendeantwort.WARTEN_KONTO_VOLL_S, kontoVoll = true)
+                Sendebericht(anfragen = 1, spaeterErneut = true, kontoVoll = true, wartetBis = bis)
+            }
+
             is Sendeantwort.ZuGross -> {
                 chunkPunkte = maxOf(1, chunkPunkte / 2)
                 // Kein Abbruch: Der nächste Durchgang nimmt dasselbe Paket
@@ -209,9 +265,22 @@ class Sender(
                 Sendebericht(anfragen = 1)
             }
 
-            is Sendeantwort.SpaeterErneut, is Sendeantwort.KeineVerbindung ->
+            is Sendeantwort.SpaeterErneut -> {
+                val w = antwort.wartenS
+                val bis = if (w != null) warteBis(w, kontoVoll = false) else null
+                Sendebericht(anfragen = 1, spaeterErneut = true, wartetBis = bis)
+            }
+
+            is Sendeantwort.KeineVerbindung ->
                 Sendebericht(anfragen = 1, spaeterErneut = true)
         }
+    }
+
+    private fun warteBis(sekunden: Long, kontoVoll: Boolean): Instant {
+        val bis = jetzt().plusSeconds(sekunden)
+        nichtVor = bis
+        wartetWegenKontoVoll = kontoVoll
+        return bis
     }
 
     private fun vereine(a: Sendebericht, b: Sendebericht) = Sendebericht(
@@ -222,6 +291,9 @@ class Sender(
         uebergangen = zaehleZusammen(a.uebergangen, b.uebergangen),
         fehlerhaft = a.fehlerhaft + b.fehlerhaft,
         pausiert = a.pausiert || b.pausiert,
+        gesperrt = b.gesperrt ?: a.gesperrt,
+        kontoVoll = a.kontoVoll || b.kontoVoll,
+        wartetBis = b.wartetBis ?: a.wartetBis,
         spaeterErneut = a.spaeterErneut || b.spaeterErneut,
         geraeumt = a.geraeumt + b.geraeumt,
         ohneSchluessel = a.ohneSchluessel || b.ohneSchluessel,

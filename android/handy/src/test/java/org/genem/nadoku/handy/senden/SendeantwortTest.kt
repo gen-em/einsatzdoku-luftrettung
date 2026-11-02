@@ -41,11 +41,50 @@ class SendeantwortTest {
         assertEquals(8, a.uebergangen["kept_phases"])
     }
 
+    /**
+     * **`kept_points` und `kept_meta`**: Ohne sie sähe ein spätes
+     * Abschlusspaket wie ein Erfolg aus.
+     */
+    @Test fun keptPointsUndKeptMetaSindKeinReinerErfolg() {
+        val a = Sendeantwort.lese(200, """{"ok":true,"next_seq":40,"kept_points":12,"kept_meta":1}""")
+            as Sendeantwort.Angekommen
+        assertFalse(a.vollstaendig)
+        assertEquals(12, a.uebergangen["kept_points"])
+        assertEquals(1, a.uebergangen["kept_meta"])
+    }
+
+    /** **403** nach Grund — und ohne Körper ein ehrliches „unbekannt". */
+    @Test fun vierhundertdreiNennenDenGrund() {
+        assertEquals(Sendeantwort.Gesperrt(Sperrgrund.GERAET_DEAKTIVIERT),
+            Sendeantwort.lese(403, """{"error":"device_disabled"}"""))
+        assertEquals(Sendeantwort.Gesperrt(Sperrgrund.KONTO_GESPERRT),
+            Sendeantwort.lese(403, """{"error":"konto","grund":"gesperrt"}"""))
+        assertEquals(Sendeantwort.Gesperrt(Sperrgrund.KONTO_WARTET),
+            Sendeantwort.lese(403, """{"error":"konto","grund":"wartet"}"""))
+        assertEquals(Sendeantwort.Gesperrt(Sperrgrund.KONTO_UNBESTAETIGT),
+            Sendeantwort.lese(403, """{"error":"konto","grund":"unbestaetigt"}"""))
+        assertEquals(Sendeantwort.Gesperrt(Sperrgrund.UNBEKANNT), Sendeantwort.lese(403, null))
+        assertEquals(Sendeantwort.Gesperrt(Sperrgrund.UNBEKANNT), Sendeantwort.lese(403, "<html>"))
+    }
+
+    /** **Wartezeiten**: Kopfzeile vor Vorgabe, gedeckelt. */
+    @Test fun wartezeitenAusKopfzeileOderVorgabe() {
+        assertEquals(Sendeantwort.SpaeterErneut(429, 120), Sendeantwort.lese(429, null, 120))
+        assertEquals(Sendeantwort.SpaeterErneut(429, Sendeantwort.WARTEN_429_S), Sendeantwort.lese(429, null))
+        assertEquals(Sendeantwort.SpaeterErneut(503, 5), Sendeantwort.lese(503, null, 5))
+        assertEquals(Sendeantwort.SpaeterErneut(503, Sendeantwort.WARTEN_503_S), Sendeantwort.lese(503, null))
+        assertEquals(Sendeantwort.SpaeterErneut(429, Sendeantwort.WARTEN_HOECHSTENS_S),
+            Sendeantwort.lese(429, null, 999_999))
+        assertEquals("Andere 5xx ohne Wartezeit", Sendeantwort.SpaeterErneut(500), Sendeantwort.lese(500, null, 60))
+        assertEquals(Sendeantwort.KontoVoll,
+            Sendeantwort.lese(507, """{"error":"kontingent","grund":"Das Konto ist voll"}"""))
+    }
+
     @Test fun dieVierFehlerpfadeDesVertrags() {
         assertEquals(Sendeantwort.Fehlerhaft, Sendeantwort.lese(400, """{"error":"payload"}"""))
         assertEquals(Sendeantwort.SchluesselAbgewiesen, Sendeantwort.lese(401, """{"error":"auth"}"""))
         assertEquals(Sendeantwort.ZuGross, Sendeantwort.lese(413, """{"error":"too_large"}"""))
-        assertEquals(Sendeantwort.SpaeterErneut(503), Sendeantwort.lese(503, null))
+        assertEquals(Sendeantwort.SpaeterErneut(503, Sendeantwort.WARTEN_503_S), Sendeantwort.lese(503, null))
         assertEquals(Sendeantwort.SpaeterErneut(500), Sendeantwort.lese(500, "kaputt"))
     }
 

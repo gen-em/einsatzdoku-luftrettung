@@ -15,14 +15,14 @@
 | Paket | Inhalt | Stand |
 |---|---|---|
 | GR-01 | Vertrag: Fehlertabelle `ingest.php` (403, 429, 503, 507), Abschnitt 0 berichtigt | **erledigt** 02.11.2026 |
-| GR-02 | Handy, Antwortauswertung: Nr. 154, 229 (Handy), 201 (Handy), 507 | offen |
+| GR-02 | Handy, Antwortauswertung: Nr. 154, 229 (Handy), 201 (Handy), 507 | **erledigt** 02.11.2026 (Android 0.19.0) |
 | GR-03 | Handy, Kopplung: Nr. 157, Neukoppeln mit Schlüsselbindung (E-BE-08) | offen |
 | GR-04 | Uhr, Antwortauswertung: Nr. 229, 201 (Uhr), 507, 431 Teil 1 | offen |
 | GR-05 | Uhr, Kopplung: Nr. 431 Teil 2, Neukoppeln mit Schlüsselbindung (E-BE-08) | offen |
 | GR-06 | Uhr, Sync-Seite: Nr. 402 mit Bildprobe | offen |
 | GR-07 | Abschluss: Prüfstand, Prüfdokument, Backlog, Pull Request | offen |
 
-**In Arbeit:** GR-02. **Es hakt:** nirgends.
+**In Arbeit:** GR-03. **Es hakt:** nirgends. Der volle Android-Bau mit Lint läuft nach GR-03 (F-GR-08).
 
 ---
 
@@ -87,6 +87,11 @@ Konto `507 {"error":"kontingent","grund":"…"}`. Die Uhr zeigt „Upload 507"
 und versucht es bei jedem Anlass erneut, das Handy führt es als „später
 erneut". Der Vertrag kennt 507 nicht. Behebbar ist es nur im Web
 (aufräumen oder Grenze heben); → Q-GR-05, E-GR-07.
+
+**F-GR-08 — `ANDROID_HOME` ist im Container nicht gesetzt.** Nach
+`aufbauen.sh android` bricht `./gradlew` mit „SDK location not found" ab;
+das SDK liegt unter `/opt/android-sdk`. Mit `ANDROID_HOME=/opt/android-sdk`
+läuft es. Ob der Prüfstand den Wert selbst setzt, zeigt GR-07.
 
 **F-GR-07 — Das Handy kennt keinen Abmeldezustand.** Die Uhr merkt sich
 die erste 401/403 (`Storage 'abgem_seit'`, Frist 30 Tage, E-R17-22); das
@@ -340,9 +345,23 @@ ungleich 200 in `server/ingest.php` — 13 Stellen (400 `payload` dreimal,
 Jede hat eine Zeile in der Fehlertabelle (Vertrag 5); vorher fehlten
 403 (zwei Formen) und 507. Keine Fassung, kein Changelog (nur `docs/`).
 
+**GR-02** (02.11.2026, Android 0.19.0): `./gradlew :handy:testDebugUnitTest`
+mit `--tests '*Sendeantwort*' '*SenderTest*' '*Nachsenden*'` —
+**39 Fälle, 0 Fehlschläge, 0 übersprungen** (`SenderTest` 22,
+`NachsendenTest` 9, `SendeantwortTest` 8). Neu sind sechs: `kept_points`
+und `kept_meta`; 403 mit allen drei Kontogründen, `device_disabled`, ohne
+Körper und mit HTML-Körper; Wartezeiten aus Kopfzeile, Vorgabe und Deckel;
+403 im Sendelauf (pausiert, Grund, eine Anfrage, nichts markiert); 429 mit
+`Retry-After: 600` (nach 599 s keine Anfrage, nach 600 s gesendet, Erfolg
+hebt die Wartezeit auf); 507 (eine Stunde, „Konto voll" auch während des
+Wartens). `PruefServer` kann dafür Antwortkopfzeilen und kennt 403, 503,
+507. Nicht gemessen: die Anzeige (Compose) — sie bekommt den Ausgang fertig
+entschieden; Bilderlauf und Lint mit GR-03.
+
 ## 7. Verlauf
 
 | Datum | Was |
 |---|---|
+| 02.11.2026 | GR-02 erledigt (Android 0.19.0). |
 | 02.11.2026 | Q-GR-05, -06 entschieden (E-GR-07, -08). |
 | 02.11.2026 | Konzept angelegt; Q-GR-01 bis -04 entschieden (E-GR-01 bis -04); Spanne 470 bis 479 reserviert. |

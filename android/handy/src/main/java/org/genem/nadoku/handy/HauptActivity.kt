@@ -558,11 +558,18 @@ private fun sendeergebnis(lauf: Sendelauf?): Sendeergebnis? {
     val l = lauf ?: return null
     val hhmm = Zeit.hhmm(l.am)
     return when {
+        l.bericht.gesperrt != null ->
+            Sendeergebnis(Sendeausgang.GESPERRT, hhmm, grund = l.bericht.gesperrt)
         l.bericht.pausiert -> Sendeergebnis(Sendeausgang.SCHLUESSEL_ABGEWIESEN, hhmm)
         l.bericht.fehlerhaft > 0 ->
             Sendeergebnis(Sendeausgang.PAKET_ABGEWIESEN, hhmm, l.bericht.fehlerhaft)
         l.bericht.ohneSchluessel -> Sendeergebnis(Sendeausgang.KEIN_SCHLUESSEL, hhmm)
+        l.bericht.kontoVoll -> Sendeergebnis(Sendeausgang.KONTO_VOLL, hhmm)
+        l.bericht.wartetBis != null ->
+            Sendeergebnis(Sendeausgang.SERVER_WARTET, Zeit.hhmm(l.bericht.wartetBis))
         l.bericht.spaeterErneut -> Sendeergebnis(Sendeausgang.KEIN_NETZ, hhmm)
+        l.bericht.verworfen.isNotEmpty() || l.bericht.uebergangen.isNotEmpty() ->
+            Sendeergebnis(Sendeausgang.TEILWEISE, hhmm)
         else -> Sendeergebnis(Sendeausgang.GESENDET, hhmm)
     }
 }

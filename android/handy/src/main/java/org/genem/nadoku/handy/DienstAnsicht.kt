@@ -29,6 +29,7 @@ import org.genem.nadoku.gemeinsam.Motiv
 import org.genem.nadoku.gemeinsam.Modus
 import org.genem.nadoku.handy.aufzeichnung.Ortungsstand
 import org.genem.nadoku.handy.puffer.Raeumung
+import org.genem.nadoku.handy.senden.Sperrgrund
 
 /**
  * Wie der letzte Sendelauf ausgegangen ist.
@@ -42,11 +43,27 @@ enum class Sendeausgang {
     /** Alles durch. */
     GESENDET,
 
+    /**
+     * Angekommen, aber nicht vollständig übernommen: `rejected` oder ein
+     * `kept_*`. Kein Fehler, den die App beheben kann —
+     * aber einer, den sie nicht verschweigen darf.
+     */
+    TEILWEISE,
+
     /** Kein Netz oder 5xx — der Nachsende-Job holt es nach. */
     KEIN_NETZ,
 
     /** 401. Wiederholen hilft nicht; es hilft eine neue Kopplung. */
     SCHLUESSEL_ABGEWIESEN,
+
+    /** 403. Wiederholen hilft nicht, Neukoppeln auch nicht; es hilft das Web. */
+    GESPERRT,
+
+    /** 507. Das Konto ist voll; die App wartet eine Stunde. */
+    KONTO_VOLL,
+
+    /** 429 oder 503 mit Wartezeit: Der nächste Versuch kommt um [Sendeergebnis.hhmm]. */
+    SERVER_WARTET,
 
     /** 400. Der Server hat den Inhalt abgelehnt — er wird nicht wiederholt. */
     PAKET_ABGEWIESEN,
@@ -60,10 +77,17 @@ enum class Sendeausgang {
 }
 
 /**
- * @param hhmm wann der Lauf war
+ * @param hhmm wann der Lauf war — bei [Sendeausgang.SERVER_WARTET] wann der
+ *   nächste Versuch kommt
  * @param anzahl nur bei [Sendeausgang.PAKET_ABGEWIESEN]: wie viele
+ * @param grund nur bei [Sendeausgang.GESPERRT]
  */
-data class Sendeergebnis(val ausgang: Sendeausgang, val hhmm: String, val anzahl: Int = 0)
+data class Sendeergebnis(
+    val ausgang: Sendeausgang,
+    val hhmm: String,
+    val anzahl: Int = 0,
+    val grund: Sperrgrund? = null,
+)
 
 /** Was die Dienstansicht anzeigen soll — alles, was sie braucht, in einem Stück. */
 data class Dienststand(
@@ -306,6 +330,12 @@ private fun Zustandsblock(
             text = when (ergebnis.ausgang) {
                 Sendeausgang.GESENDET ->
                     stringResource(R.string.sync_ergebnis_gesendet, ergebnis.hhmm)
+                Sendeausgang.TEILWEISE ->
+                    stringResource(R.string.sync_ergebnis_teilweise, ergebnis.hhmm)
+                Sendeausgang.GESPERRT -> stringResource(Meldungen.sperrtext(ergebnis.grund))
+                Sendeausgang.KONTO_VOLL -> stringResource(R.string.sync_ergebnis_konto_voll)
+                Sendeausgang.SERVER_WARTET ->
+                    stringResource(R.string.sync_ergebnis_wartet, ergebnis.hhmm)
                 Sendeausgang.KEIN_NETZ -> stringResource(R.string.sync_ergebnis_kein_netz)
                 Sendeausgang.SCHLUESSEL_ABGEWIESEN ->
                     stringResource(R.string.sync_ergebnis_schluessel)

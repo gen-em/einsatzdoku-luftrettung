@@ -68,7 +68,8 @@ object Nachsenden {
         if (dienstLaeuft) return false
         if (rueckstand <= 0) return false
         /* 401: Der Schlüssel ist abgewiesen. Wiederholen hilft nicht — es
-         * hilft nur eine neue Kopplung, und die kann nur ein Mensch. Ein Job,
+         * hilft nur eine neue Kopplung, und die kann nur ein Mensch. 403
+         * ebenso: Entsperren kann nur das Web. Ein Job,
          * der es trotzdem alle 30 Sekunden versucht, verbrennt Akku und
          * erzeugt Serverlast für ein sicheres Nein. */
         if (bericht?.pausiert == true) return false

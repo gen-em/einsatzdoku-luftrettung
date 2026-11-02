@@ -10342,7 +10342,9 @@ und nimmt die Kopfzeilen mit — darunter `X-Api-Key`. `HttpNetzweg` setzt
 deshalb `instanceFollowRedirects = false`; eine Umleitung gilt seither als
 **Serverfehler**, weil die App mit genau zwei Endpunkten einer fest
 eingebauten Adresse spricht (R63). Der Sendeweg war nie betroffen: Er
-behandelt alles außer 200/400/401/413 als „später erneut".
+behandelt jeden Code, den der Vertrag nicht nennt, als „später erneut" —
+seit Android 0.19.0 sind das alle außer 200, 400, 401, 403, 413, 429, 503 und
+507 (Vertrag 5).
 
 **Klartext ist im Release seit Android 0.14.0 doppelt verboten** (Backlog
 Nr. 142, Krypto-Review AN-1). `Serveradresse` bildet im ausgelieferten Stand
@@ -11649,12 +11651,15 @@ sie; die Statusseite fängt. Der Schutz selbst hängt nicht daran — er zählt 
 #### Was die Clients tun müssen: nichts
 
 Ein Client, der `401` richtig behandelt, behandelt `429` ebenfalls richtig.
-Beide tun es bereits: Die Uhr fällt in ihren Zweig „später erneut"
-(`Uploader.mc`), die Android-App in `Sendeantwort.SpaeterErneut`
-(`code != 200`), und beide brechen den Sendelauf ab, ohne etwas zu verwerfen.
-`Retry-After` liest keiner von beiden — die Uhr **kann** es nicht, der Rückruf
-von Connect IQ bekommt `(code, data)` und keine Kopfzeilen. Die Zeile steht
-für einen fremden Client an derselben Schnittstelle.
+Beide tun es: Die Uhr fällt in ihren Zweig „später erneut"
+(`Uploader.mc`), die Android-App in `Sendeantwort.SpaeterErneut`, und beide
+brechen den Sendelauf ab, ohne etwas zu verwerfen. **Seit Android 0.19.0**
+(Konzept GR) liest das Handy `Retry-After` (`Netzantwort.Server.retryAfterS`)
+und sendet vor Ablauf nicht (`Sender.nichtVor`, im Speicher; ohne Kopfzeile
+15 Minuten, bei 503 fünf, bei 507 eine Stunde, höchstens sechs Stunden). Die
+Uhr **kann** die Kopfzeile nicht lesen — der Rückruf von Connect IQ bekommt
+`(code, data)` und keine Kopfzeilen. *(Bis zum 02.11.2026 stand hier, die
+Zeile stehe nur für einen fremden Client.)*
 
 **Nachweis:** `php tools/proben/ingest/probe.php` — 83 Erwartungen, 0 nicht
 erfüllt, davon 21 in Teil 10. Laufzeit über den erzeugten Sendeplan (612

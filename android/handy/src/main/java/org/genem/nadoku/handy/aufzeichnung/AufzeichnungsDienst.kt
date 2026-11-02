@@ -783,8 +783,9 @@ class AufzeichnungsDienst : LifecycleService() {
      * | alles gesendet | **keine** Meldung. Es gibt nichts zu tun. |
      * | Rückstand, kein Netz | Nachsende-Job **und** ein stiller Hinweis |
      * | 401 | Hinweis „Gerät neu koppeln" — **kein** Job |
+     * | 403 | Hinweis „im Web gesperrt" — **kein** Job |
      *
-     * Der 401-Fall bekommt bewusst keinen Job: Wiederholen hilft nicht, es
+     * Der 401- und der 403-Fall bekommen bewusst keinen Job: Wiederholen hilft nicht, es
      * hilft nur eine neue Kopplung, und die kann nur ein Mensch. Ein Job, der
      * es trotzdem alle 30 Sekunden versucht, verbrennt Akku für ein sicheres
      * Nein.
@@ -792,6 +793,9 @@ class AufzeichnungsDienst : LifecycleService() {
     private fun nachDemDienstende(bericht: Sendebericht) {
         val rest = app.puffer.rueckstand()
         when {
+            bericht.gesperrt != null ->
+                Sendehinweis.stellen(this, getString(R.string.hinweis_gesperrt))
+
             bericht.pausiert ->
                 Sendehinweis.stellen(this, getString(R.string.hinweis_schluessel_abgewiesen))
 
