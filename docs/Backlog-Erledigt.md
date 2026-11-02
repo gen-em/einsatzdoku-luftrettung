@@ -7,7 +7,11 @@ vollen Text hierher und behält seine Nummer; ein Verweis „Backlog Nr. 10"
 löst in genau einer der beiden Dateien auf (Stufe 1 misst doppelte Nummern
 über beide Dateien und ihre Schnittmenge). Ein Eintrag wird hier nicht mehr
 fortgeschrieben — was sich nach der Erledigung noch ändert, ist ein neuer
-Punkt in `Backlog.md`. Der Abschnitt *Erledigt* unten ist der aus
+Punkt in `Backlog.md`. **Seit dem 02.11.2026 steht hier auch, was
+entschieden nicht gebaut wird** (`Stand: verworfen`, E-BE-01): Der Eintrag
+kommt wörtlich, der Schlusssatz nennt den Grund; die Nummer bleibt
+auflösbar, weil Code und Dokumente auf sie verweisen. Bis dahin blieben
+solche Punkte als `nicht umsetzen` in `Backlog.md` stehen. Der Abschnitt *Erledigt* unten ist der aus
 `docs/Backlog.md@f5bddc2`, Zeile für Zeile; seine Einrückung mit vier
 Leerzeichen bleibt, samt ihrer Folge auf GitHub (Nr. 196) — wer hier liest,
 liest die Quelle. Die Trennzeile, die in `Backlog.md` vor jedem Eintrag
@@ -9967,3 +9971,187 @@ zutreffen.
      wie ungedrosselt. Die alten Zahlen waren Einzelläufe, in denen der
      Browser auf die Vorseite wartete. Beim Anmelden gehen rund 0,8 s in
      die Ableitung des Schlüssels (gewollt), dann der Seitenaufbau.
+
+52. **WebDAV als viertes Backup-Ziel.** · gehört zu: nach v1.0 · Stand: verworfen · seit 01.09.2026
+     Aus E-S2-22, dort ausdrücklich in den Backlog verwiesen. Die Schnittstelle
+     `Zielweg` (`sicherungsziel_lib.php`) ist genau dafür gebaut: verbinden,
+     Ordner anlegen, senden, holen, auflisten, löschen — ein vierter Adapter
+     berührt weder den Versandjob noch das Komplettbackup.
+
+     **Warum es trotzdem nicht nebenbei geht:** WebDAV ist HTTP, und die
+     Anwendung hat für ausgehendes HTTP bisher keinen Weg. Nötig wären
+     `ext/curl` (auf Webspace meist da, aber nicht sicher) und eine Entscheidung
+     über die Zertifikatsprüfung — bei FTPS prüft `ext/ftp` nichts, bei WebDAV
+     über curl **kann** man prüfen, und dann sollte man auch. Das ist eine
+     Festlegung und kein Handgriff.
+     Verworfen 02.11.2026 (E-BE-01, Betreiberin): Kein Bedarf angemeldet,
+     SFTP und FTPS genügen; ein viertes Ziel käme als neuer Punkt.
+
+90. **Der Simulator kann keinen Verbindungsabriss herstellen.** · gehört zu: nach v1.0 · Stand: verworfen · seit 03.09.2026
+     *Aufgenommen 03.09.2026 aus S5 Paket C.*
+     Der Rundlauf der Uhr-Kopplung sollte sechs Fälle belegen; der sechste —
+     „Telefon aus der Reichweite" — ist im Simulator **nicht** herstellbar. Wird
+     der Server getötet, sieht die App **HTTP 404**, keinen negativen Code
+     (dieselbe Eigenschaft, die `tools/uhr-pruefstand/netzprobe/` für den CA-Fehler gemessen
+     hat: eine fehlgeschlagene TLS-Verbindung erscheint als 404). Der Zweig
+     „`Keine Verbindung (n)`, Code bleibt stehen, Abfrage läuft weiter"
+     (E-S5-25) bleibt damit ungeprüft, und er ist kein Randfall — er ist der
+     häufigste Fehler im Betrieb.
+     **Woran es hängt:** `makeWebRequest` liefert negative Codes nur bei
+     Bluetooth-Fehlern, und der Simulator hat kein Bluetooth. Der einzige
+     gemessene Weg zu einem negativen Code ist blankes `http://` (−1001,
+     `SECURE_CONNECTION_REQUIRED`) — aber der trifft schon `start` und kommt
+     nie bis zur Kopplungsansicht.
+     **Mögliche Wege:** ein Proxy vor dem Simulator, der die Verbindung
+     mittendrin abbricht, und die Frage, was `makeWebRequest` daraus macht;
+     oder eine Prüf-Einstellung in der App, die einen negativen Code
+     einspeist (dann aber als Fremdkörper im ausgelieferten Code).
+     Verworfen 02.11.2026 (E-BE-01, Betreiberin): Der Verbindungsabriss
+     bleibt Handprüfung am Gerät; ein Proxy vor dem Simulator oder eine
+     Prüf-Einstellung im ausgelieferten Code lohnt den Preis nicht.
+
+96. **Uhr und Handy sagen nicht, dass gewartet wird.** · gehört zu: nach v1.0 · Stand: verworfen · seit 03.09.2026
+     *Aufgenommen 03.09.2026 aus S5, Paket W (E-S5W-08).*
+     Der Wartungsmodus antwortet mit **503** und einem `Retry-After`. Die
+     Clients behandeln das als gewöhnliches 5xx — sie puffern und liefern
+     nach, und genau das ist die Zusage des Vertrags. Was sie **nicht** tun:
+     es sagen. Auf der Uhr steht dann derselbe Rückstand wie bei einem
+     Funkloch, und `Retry-After` wertet niemand aus.
+     **Bewusst nicht in S5 gebaut:** Es hätte eine Uhr- und eine
+     Android-Auslieferung gekostet, für eine Lage, die wenige Minuten dauert.
+     **Nach v1.0** neu abwägen — dann gibt es mehr als eine Uhr.
+     Verworfen 02.11.2026 (E-BE-01, Betreiberin): Eine Lage von Minuten
+     rechtfertigt keine Uhr- und keine Android-Auslieferung; die Clients
+     puffern und liefern nach, das ist die Zusage des Vertrags.
+
+99. **Fassungsprüfung auf Klick.** · gehört zu: nach v1.0 · Stand: verworfen · seit 03.09.2026
+     *Aufgenommen 03.09.2026 aus der Planung v1.0 (Rahmenplan R66, Option A2).*
+     Ein Knopf „Auf neue Fassung prüfen" auf der Wartungsseite, der einmalig
+     die GitHub-Releases-Schnittstelle fragt — kein Hintergrundlauf, kein
+     Banner. Nur, wenn Selbsthoster es verlangen; die eigene Installation
+     braucht es nicht, weil Betreiberin und Entwicklung dieselben sind.
+     **Nach v1.0.**
+     Verworfen 02.11.2026 (E-BE-01, Betreiberin): Betreiberin und
+     Entwicklung sind dieselben, Selbsthoster lesen die Releases auf GitHub;
+     R66 bleibt — kein Hintergrundlauf, kein Selbst-Update.
+
+100. **Play-API-Upload aus der Auslieferungskette.** · gehört zu: nach v1.0 · Stand: verworfen · seit 03.09.2026
+     *Aufgenommen 03.09.2026 aus der Planung v1.0 (Rahmenplan R67).*
+     Upload-Schlüssel als GitHub-Secret plus Dienstkonto der Play-API; jeder
+     grüne Tag landet von selbst auf dem internen Test-Track, die
+     Produktionsfreigabe bleibt ein Klick in der Play Console. Vertretbar,
+     weil nach Play App Signing der Upload-Schlüssel der zurücksetzbare ist;
+     E-S4-16 dann um den Unterschied App-Signaturschlüssel / Upload-Schlüssel
+     ergänzen. **Nach v1.0**, wenn die Releases häufiger werden.
+     Verworfen 02.11.2026 (E-BE-01, Betreiberin): Die Releases sind selten,
+     der Upload bleibt ein Klick in der Play Console; die Seitenladung
+     signiert die Kette (E-PK-53).
+
+198. **Die Zeitraumübersicht zählt Windendienste nur luftgebunden.** · gehört zu: nach v1.0 · Stand: verworfen · seit 14.09.2026
+     Befund (Demo-Ausbau AP0): Seit Web 20.3.0 darf ein Rettungsmittel des
+     Typs Bergwacht Winde und Bergwacht auch bodengebunden führen; das
+     Einsatzformular zeigt die Windenfelder (`cap_gate` fragt ohne
+     Artfilter), die Zeitraumübersicht übergeht ihn — `api/range.php`
+     beantwortet `faehigkeiten` nur über `d.kind = 'air'`, die Windenkacheln
+     stehen nur in `KACHELN_LUFT`.
+     Entschieden 20.09.2026 (E-P5c-27, Mockup-Runde M-P5c-01): wird nicht
+     umgesetzt; geschlossen, aber nicht nach Erledigt, weil nichts erledigt
+     wurde. Bestätigt 22.09.2026 (Schritt 15 AP9a, E-ZE-31): Die Auswertung
+     — Kacheln und Tabellenspalten in Tages- und Zeitraumübersicht — folgt
+     Betriebsart und Fähigkeit, die Bearbeitung der Fähigkeit allein; die
+     Tagesübersicht wertet `cap_gate` seit Web 20.35.0 nach derselben Regel
+     aus, die Suche folgt der Fähigkeit über Luft und Boden.
+     Folge: Winden-Cycles bodengebundener Bergwacht-Diensttage erscheinen in
+     keiner Tages- oder Zeitraumansicht (vier solche Tage im Bestand, zwei
+     mit Windeneinsatz); erfasst und in der Einsatzbearbeitung sichtbar
+     bleiben sie. Wer das ändert, findet die beiden Stellen oben.
+     Ziel `nach v1.0` seit 26.09.2026 (R4-01, Q-R4-12): kein „nie" im Vokabular.
+     Werdegang bis 26.09.2026: `docs/Backlog.md@f5bddc2`, Nr. 198.
+     Verworfen 02.11.2026 (E-BE-01): entschieden 20.09.2026 (E-P5c-27) und
+     bestätigt 22.09.2026 (E-ZE-31), wird nicht gebaut; mit dem neuen Stand
+     verlässt der Punkt die offene Liste.
+
+200. **Bounce-Postfach: Unzustellbares erkennen, nicht nur zählen.** · gehört zu: nach v1.0 · Stand: verworfen · seit 15.09.2026
+     Befund (Konzept P5a, E-P5a-14; Plattformprofil PP-7): Die
+     Mail-Warteschlange zählt Zustellversuche und führt eine
+     Unzustellbar-Liste auf der Statusseite — was der SMTP-Server annimmt
+     und die Gegenstelle später zurückschickt, sieht sie nicht. Fehlen würde
+     ein Postfach, das die Anwendung per IMAP liest, mit Vermerk am Konto
+     und Rückfrage beim nächsten Anmelden.
+     Entschieden 23.09.2026 (E-P5c-51): wird nicht umgesetzt; 10c AP10
+     entfällt. Die Anwendung versendet nur, „zugestellt" heißt „vom
+     SMTP-Server des Hosters angenommen"; IMAP ist seit PHP 8.4 nicht mehr
+     im Kern, ein eigener Client wäre ein Paket für sich. Der Nutzen ist
+     klein: Jede Adresse ist über einen Link bestätigt, und bei wenigen
+     Konten sieht die Betreiberin Rückläufer im Postfach der Absenderadresse
+     (Handbuch 12.8). Wie Nr. 198: geschlossen, aber nicht nach Erledigt,
+     weil nichts erledigt wurde.
+     Ziel `nach v1.0` seit 26.09.2026 (R4-01, Q-R4-12): kein „nie" im Vokabular.
+     Werdegang bis 26.09.2026: `docs/Backlog.md@f5bddc2`, Nr. 200.
+     Verworfen 02.11.2026 (E-BE-01): entschieden 23.09.2026 (E-P5c-51), wird
+     nicht gebaut; Rückläufer liest die Betreiberin im Postfach der
+     Absenderadresse (Handbuch 12.8).
+
+262. **Atomare Auslieferung — umschalten statt überschreiben.** · gehört zu: 14 · Stand: verworfen · seit 21.09.2026
+     *Aufgenommen 21.09.2026 (Kette II, Einschub Abschnitt 8).* Auslöser:
+     **P8 oder ein Hosterwechsel.** Priorität: niedrig.
+
+     Die Kette überträgt heute **in das laufende Verzeichnis**. Zwischen der
+     ersten und der letzten Datei liegt ein Zeitfenster, in dem die Anwendung
+     halb alt und halb neu ist — der Wartungsmodus verdeckt es, beseitigt es
+     aber nicht. Der Schlussschritt sagt bei einem Abbruch deshalb
+     „Dateistand: **unbekannt**", und das ist keine Schwäche der Meldung,
+     sondern eine ehrliche Auskunft über die Bauform.
+
+     **Abhilfe wäre ein Release-Verzeichnis:** hochladen nach
+     `releases/<tag>/`, prüfen, dann einen Symlink umlegen. Der Umschaltpunkt
+     ist dann **eine** Operation statt 688.
+
+     **Warum nicht jetzt:** Der heutige Hoster gibt über FTPS keine Symlinks
+     her, und ohne sie wäre das Umschalten ein Verzeichnis-Umbenennen —
+     schneller als 688 Dateien, aber nicht atomar. Der Gewinn hinge am Hoster,
+     und genau deshalb hängt der Punkt an P8 oder einem Wechsel.
+     Verworfen 02.11.2026 (E-BE-01, Betreiberin): Die Abhilfe hängt an einer
+     Fähigkeit des Hosters (Symlinks über FTPS), die P8 nicht ändert; bei
+     einem Hosterwechsel ein neuer Punkt.
+
+263. **Die Integritätswache sieht nur, was öffentlich abrufbar ist.** · gehört zu: nach v1.0 · Stand: verworfen · seit 21.09.2026
+     *Aufgenommen 21.09.2026 (Kette II, Einschub Abschnitt 8).* Priorität:
+     niedrig. **Abhilfe offen — hier wird die Grenze benannt, nicht
+     geschlossen.**
+
+     `tools/integritaetswache/wache.py` vergleicht den Produktivserver gegen
+     den Zeiger `produktion`. Sie holt sich die Dateien **über HTTPS**, sieht
+     also `assets/`, die Anmeldeseite und was sonst ausgeliefert wird —
+     **keinen PHP-Quelltext**. Eine untergeschobene Zeile in `db.php` oder
+     `login.php` bemerkt sie nicht.
+
+     **Was sie trotzdem leistet, und es ist nicht wenig:** Der häufigste
+     Angriff auf eine solche Anlage ist ein untergeschobenes **Skript** im
+     Frontend — und genau das ist öffentlich abrufbar und wird verglichen.
+
+     **Warum die Abhilfe offen bleibt:** Sie hieße, dem Server eine Schnittstelle
+     zum Hashen der eigenen Quelldateien zu geben — ein neuer Angriffsweg für
+     ein Problem, das der Vergleich nur teilweise löst.
+     Entschieden 21.10.2026 (12b, E-R17-26): **nicht umsetzen** — die Grenze
+     steht im Modell (G5, 6.6); Anleitung, Alarmweg und lesende Probe gegen Produktiv baut R17-19.
+     Verworfen 02.11.2026 (E-BE-01): entschieden 21.10.2026 (E-R17-26), die
+     Grenze steht im Bedrohungsmodell (G5, R12); Anleitung, Alarmweg und
+     lesende Probe hat R17-19 gebaut.
+
+351. **Passkey als einziger Zweitfaktor, ohne Authenticator-App.** · gehört zu: nach v1.0 · Stand: verworfen · seit 27.09.2026
+     *Aufgenommen 27.09.2026 mit Q-SR-12 (E-SR-35).* Schritt 18 baut den
+     Passkey als weiteres Verfahren neben dem eingeschalteten TOTP (Nr. 350);
+     wer keine App will, hat damit keinen Zweitfaktor. Allein tragen dürfte
+     der Passkey den Faktor erst, wenn drei Dinge umgebaut sind: die
+     Wiederherstellungscodes entstehen ohne TOTP-Geheimnis (`totp_codes_*`
+     hängen am Einrichten der App), das Einrichtungstor nimmt einen Passkey
+     als Erfüllung der Pflicht an (`totp_an()` wird ein Faktor-Begriff), und
+     der Reset-Weg (Verwaltung, Notzugang) kennt Konten ohne App.
+     **Anlass:** eine NutzerIn, die nach einem Passkey ohne App fragt — bis
+     dahin zurückgestellt, weil Support, Admin und BetreiberIn die App
+     ohnehin haben. *Abnahme:* Zweitfaktor mit Passkey allein einschaltbar,
+     Codes entstehen dabei, Rückweg und Notzugang gelten unverändert.
+     Verworfen 02.11.2026 (E-BE-01, Betreiberin): Niemand hat nach einem
+     Passkey ohne App gefragt, Support, Admin und BetreiberIn haben die App;
+     fragt jemand, ist es ein neuer Punkt.

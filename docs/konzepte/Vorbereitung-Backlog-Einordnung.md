@@ -6,12 +6,14 @@ Vorschlag und gefallenen Entscheidungen, aus der die Rahmenplan-Fassung und
 die Kopfzeilen des Backlogs entstehen. Kein Konzept nach K1, deshalb keine
 Fahrplanzeile (E-SD-09); kein Code.
 **Grundlage:** `docs/Rahmenplan.md` Fassung 190 (02.11.2026, Stand `main`
-`2563fde`, PR #128), `docs/Backlog.md` (63 offene Einträge, höchste Nummer
-429 reserviert, nächste freie 430), `Rahmenplan-Archiv-2.md` 3 (Volltext der
+`2563fde`, PR #128), `docs/Backlog.md` (63 offene Einträge; mit PR #129
+66, Nr. 430 bis 432), `Rahmenplan-Archiv-2.md` 3 (Volltext der
 Schritte 6, 13, 14 und des Betriebsübergangs), `python3
 tools/steuerung/uebersicht.py` (gemessen 02.11.2026).
-**Status:** Entwurf, Runde 1 — Befund und Vorschlag; die Fragen in
-Abschnitt 5 sind offen. Nichts ist in Rahmenplan oder Backlog geschrieben.
+**Status:** Runde 2, 02.11.2026 — alle Fragen entschieden (Abschnitt 6),
+Rahmenplan Fassung 192 und die Kopfzeilen des Backlogs geschrieben; baut auf
+PR #129 auf (Nr. 430 bis 432, Fassung 191). Bleibt nach R62 als Herkunft
+liegen; die Schritte PR, 21 und 22 verweisen hierher.
 **Modell:** Fable (Konzept, R14).
 
 **Bezeichner:** Befunde heißen **F-BE-nn**, Fragen an die Betreiberin
@@ -85,6 +87,8 @@ die heutige Kopfzeile; **Vorschlag** die aus Abschnitt 4 (`=` unverändert).
 | 346 | W | Oberfläche/Meldungen (R83) | offen | nächste Runde | **BR5** | `patwarn` und Papierkorb-Hinweis noch von Hand |
 | 356 | W | Oberfläche/Betrieb | offen | nächste Runde | **BR5** | Zwei Abschnitte der Karte „Schlüssel des Servers" ohne Abstand |
 | 361 | W | Oberfläche/Geräte | offen | nächste Runde | **BR5** | APK-Karte unterscheidet Handy und Wear-OS-Uhr nicht (stirbt mit Welle 1) |
+| 432 | W | Oberfläche/Geräte | offen | nächste Runde (PR #129) | **BR5** | „App installieren" nennt beide APKs gleich — Doppelung von Nr. 361, wird dort erledigt |
+| 430 | W | Backup/Formular | offen | nächste Runde (PR #129) | **BR5** | Bitwarden bietet am Feld „Kontopasswort" den Eintrag nicht an |
 | 383 | W T D | Sicherung/Plattform | offen | Pflegeaufgabe | **BR5** | Komplettsiegel rot unter PHP 8.3.6 (Ubuntu 24.04 LTS) — Ursache oder Mindestfassung |
 | 342 | W | Oberfläche/Tabellen (Mockup) | offen | nächste Runde | **13** | Einsatztabellen von Suche und Zeitraum rollen am Schreibtisch — Gestaltungsfrage |
 | 23 | D | Vertrag | offen | 13 | = | JSON-Vertrag 3.3 nennt `beginn`, kein Schreibweg nimmt es an |
@@ -119,6 +123,7 @@ die heutige Kopfzeile; **Vorschlag** die aus Abschnitt 4 (`=` unverändert).
 | 201 | U A | Antwortauswertung | offen | 13 | **GR** | `Retry-After` auswerten (`Uploader.mc`, `Sendeantwort.kt`) |
 | 229 | U A D | Antwortauswertung/Vertrag | zurückgestellt | 13 | **GR** (Clients) + **13** (Vertrag) | 403 `gesperrt` als „abgemeldet"; Handy kennt 403 nicht; Fehlertabelle im Vertrag ohne 403/507 |
 | 402 | U | Sync-Seite | offen | nächste Runde | **GR** | Unterer Block überlappt ab vier Zeilen (Venu 3s) |
+| 431 | U | Antwortauswertung | offen | nächste Runde (PR #129) | **GR** | Nach dem Reaktivieren im Web sendet die Uhr erst nach Neustart der App; dazu Q zur 30-Tage-Frist |
 | 96 | U A | Wartungsmodus | offen | nach v1.0 | = | Clients sagen nicht, dass gewartet wird |
 | 90 | T | Uhr-Prüfstand | offen | nach v1.0 | = | Simulator kann keinen Verbindungsabriss herstellen |
 | 100 | K | Play-API | offen | nach v1.0 | = | Upload aus der Kette auf den Test-Track |
@@ -211,7 +216,7 @@ Abschnitt 6.2 des Rahmenplans führt die Vorlagen nicht. → Zeile in 6.2
 
 ## 4. Vorschlag
 
-### 4.1 Grundsatz (Q-BE-01)
+### 4.1 Grundsatz (Q-BE-01 → E-BE-01, R90)
 
 **Vor v1.0 liegt, was v1.0 festschreibt oder was Daten gefährdet:** der
 Vertrag v1 (23, 229-Vertrag), die Zusagen (280), Rechtstexte (400),
@@ -238,25 +243,26 @@ Fehler oder P7 und BR5 fassen dieselben Seiten an. Alternativ (Q-BE-02):
 BR5 **in** 13 als erstes Arbeitspaket — spart einen Schritt, macht 13
 größer.
 
-### 4.3 Neue Zuordnung je Schritt
+### 4.3 Neue Zuordnung je Schritt — geschrieben am 02.11.2026
 
-| Ziel | heute | Vorschlag |
+| Ziel | vorher (Fassung 191) | nachher (Fassung 192) |
 |---|---|---|
-| 13 — P7 | 23, 62, 154, 157, 201, 229, 409 | 23, 62, 229 (Vertrag), 280, 342, 409 |
-| 14 — P8 | 46, 187, 252, 262, 276, 324, 400 | 46, 187, 213, 234, 252, 265, 276, 290, 324, 353, 388, 391, 400 |
-| 21 — GR | — | 154, 157, 201, 229 (Clients), 402 |
-| 22 — BR5 | — | 345, 346, 354, 355, 356, 357, 358, 361, 383, 392 |
-| PR | — | 232, 237, 240, 300, 343, 347, 352, 384, 385, 403, 410, 411 |
-| Zuarbeit | 80, 213, 261 | 80, 261 (+ neue Zeile 6.2: Logo-Vorlagen für 62) |
+| PR — Prüfmittel | — | 352, 385, 403 |
+| 21 — GR | — | 154, 157, 201, 229, 402, 431 |
+| 22 — BR5 | — | 345, 346, 354, 355, 356, 357, 358, 361, 383, 392, 430, 432 |
+| 13 — P7 | 23, 62, 154, 157, 201, 229, 409 | 23, 62, 280, 342, 409 |
+| 14 — P8 | 46, 187, 252, 262, 276, 324, 400 | 46, 187, 213, 232, 234, 237, 240, 252, 265, 276, 290, 300, 324, 343, 347, 353, 384, 388, 391, 400, 410, 411 |
+| Zuarbeit | 80, 213, 261 | 80, 261 (+ Zeile 6.2: Logo-Vorlagen für 62) |
 | Pflegeaufgabe | 202, 230, 264, 280, 383, 384, 385 | 202, 230, 264 |
-| nach v1.0 | 37, 50, 52, 55, 90, 96, 99, 100, 198, 200, 263, 351 | dieselben + 262 |
-| nächste Backlog-Runde | 27 Einträge | **leer** |
+| nach v1.0 | 37, 50, 52, 55, 90, 96, 99, 100, 198, 200, 263, 351 | 37, 50, 55 |
+| **verworfen** (Erledigt-Datei) | — | 52, 90, 96, 99, 100, 198, 200, 262, 263, 351 |
+| nächste Backlog-Runde | 30 | **leer** |
 
-Summe: 6 + 13 + 5 + 10 + 12 + 2 + 3 + 13 = **64** — eine mehr als 63, weil
-229 in zwei Hälften steht (eine Nummer, zwei Ziele: Kopfzeile trägt GR, der
-Vertragsteil wird als Satz in Nr. 23 aufgenommen; Q-BE-04).
+Summe: 3 + 6 + 12 + 5 + 22 + 2 + 3 + 3 = **56** offene, 10 verworfene = 66.
+Gemessen mit `uebersicht.py --pruefen` (0 ohne Grammatik, 0 ohne Ziel) und
+`decken.py` (21 Decken, 0 gerissen).
 
-### 4.4 Was im Rahmenplan zu schreiben wäre (Fassung 191)
+### 4.4 Was im Rahmenplan geschrieben ist (Fassung 192)
 
 1. Fahrplanzeilen 21 (GR) und 22 (BR5) nach K5; PR als Zeile ohne Zählung
    (wie RP und BR in Abschnitt 8).
@@ -267,27 +273,69 @@ Vertragsteil wird als Satz in Nr. 23 aufgenommen; Q-BE-04).
 5. Eine Programmentscheidung **R90**: der Grundsatz aus 4.1 — was vor v1.0
    liegt und was nicht (Q-BE-01).
 6. Verlaufszeile 191 mit den Berichtigungen F-BE-03, F-BE-07.
-7. Backlog-Kopfzeilen nach 4.3; Spanne für neue Nummern erst, wenn ein
-   Zweig welche vergibt (keine in dieser Runde).
+7. Backlog-Kopfzeilen nach 4.3; keine neue Nummer, also keine Spanne.
+8. Dazu, aus E-BE-01: der Stand `verworfen` (`verschieben.py --stand
+   verworfen`, Kopf beider Backlog-Dateien, `uebersicht.py` ohne `nicht
+   umsetzen`); zehn Punkte verschoben.
 
 ## 5. Fragen an die Betreiberin
 
-| Nr. | Frage | Vorschlag |
-|---|---|---|
-| Q-BE-01 | Gilt der Grundsatz aus 4.1 als Regel (R90)? Oder soll der Backlog vor v1.0 bis auf `nach v1.0` wirklich leer sein — dann kommen auch die Pflegeaufgaben und PR vor 13 | Grundsatz 4.1 |
-| Q-BE-02 | BR5 als eigener Schritt 22 vor 13 — oder als erstes Arbeitspaket in 13? | eigener Schritt; 13 bleibt eine Doku- und Gesichtsphase |
-| Q-BE-03 | GR als eigener Schritt 21 parallel zur Konzeptsitzung 13 — oder in 13 bleiben? | eigener Schritt; braucht die Wear-OS-Uhr aus 6.2 |
-| Q-BE-04 | Nr. 229 in zwei Hälften: Kopfzeile GR, Vertragsteil als Satz in Nr. 23? | ja |
-| Q-BE-05 | Nr. 262 nach `nach v1.0`, `nur auf Anlass` (Hosterwechsel)? | ja |
-| Q-BE-06 | PR vor allem anderen (wegen 403, 352, 385) — oder nur diese drei vorziehen und den Rest nach v1.0? | nur die drei vorziehen; der Rest parallel, ohne Platz in der Reihe |
-| Q-BE-07 | Nr. 342 (Tabellen rollen, Mockup) nach 13 — P7 ist die Gestaltungsphase? | ja |
+Alle sieben am 02.11.2026 beantwortet; die Entscheidungen stehen in
+Abschnitt 6 (Q-BE-01 → E-BE-01, Q-BE-02 → E-BE-02, Q-BE-03 → E-BE-03,
+Q-BE-04 → E-BE-07, Q-BE-05 → E-BE-01, Q-BE-06 → E-BE-04, Q-BE-07 → E-BE-06).
+Offen bleibt die Frage aus Nr. 431 (30-Tage-Frist bei gelöschtem Gerät);
+sie gehört ins Konzept zu 21.
 
 ## 6. Entscheidungen
 
-Noch keine.
+**E-BE-01 — Was nicht kommt, wird verworfen, nicht geparkt (02.11.2026,
+Betreiberin).** Der Backlog soll vor v1.0 keine Punkte tragen, die nie
+gebaut werden. Neuer Stand `verworfen` in `Backlog-Erledigt.md`
+(`verschieben.py --stand verworfen`, Schlusssatz mit Grund); der Stand
+`nicht umsetzen` entfällt aus dem Vokabular, weil er dasselbe sagte und den
+Punkt in der offenen Liste hielt. Verworfen: 52, 90, 96, 99, 100 (nicht
+bestellte Funktionen), 198, 200, 263 (bereits entschieden), 262 (hängt am
+Hoster, Q-BE-05), 351 (niemand fragt). Nummern bleiben auflösbar, weil
+Code und Dokumente sie nennen. **Bleiben als `nach v1.0`:** 37, 50, 55 —
+Mengen, die kein Konto hat; sie sind der Backlog der Öffnung (R36). Der
+Grundsatz aus 4.1 ist R90.
+
+**E-BE-02 — BR5 ist ein eigener Schritt 22 vor 13 (02.11.2026,
+Betreiberin).** Zwölf Web-Punkte; 13 bleibt eine Doku- und Gesichtsphase
+und dokumentiert das Verhalten, das v1.0 hat.
+
+**E-BE-03 — GR ist ein eigener Schritt 21, vor 13 und neben 22
+(02.11.2026, Betreiberin).** Sechs Client-Punkte (mit Nr. 431 aus PR #129);
+nur `watch/` und `android/`, dazu der Vertrag für Nr. 229; braucht die
+Wear-OS-Uhr aus 6.2 für den Gerätetest.
+
+**E-BE-04 — Prüfmittel: drei jetzt, der Rest in die Inventur von 14
+(02.11.2026, Betreiberin).** PR fasst 403, 352, 385 als Werkzeug-Schritt
+ohne Fassung vor 21 und 22. Die übrigen Werkzeug-Punkte (232, 234, 237,
+240, 290, 300, 343, 347, 353, 384, 388, 391, 410, 411) tragen `gehört zu:
+14`: Die Inventur nach R68 entscheidet je Werkzeug, ob es ausgebaut oder
+gestrichen wird; vorher poliert niemand ein Werkzeug, das die Inventur
+streicht. Nr. 265, 213 ebenso nach 14 (Kette im neuen Repositorium,
+Neuaufsetzen).
+
+**E-BE-05 — Nr. 202 bleibt Pflegeaufgabe, der Satz ist ersetzt.** „Jeder
+Anlass träfe Dateien von 18" galt bis zum 05.10.2026.
+
+**E-BE-06 — Nr. 342 und 280 nach 13; Logo-Vorlagen als Zuarbeit in 6.2
+(02.11.2026, Betreiberin).** 342 ist eine Gestaltungsfrage mit Mockup, vor
+den Handbuch-Screenshots; 280 ist ein Lizenzeintrag, den die Doku-Neufassung
+schreibt; 62 wartet auf Vorlagen, die nirgends als Zuarbeit standen (F-BE-10).
+
+**E-BE-07 — Nr. 229 ungeteilt nach 21 (02.11.2026, Betreiberin); Nr. 432
+ist eine Doppelung von 361.** Die Fehlertabelle des Vertrags (403, 507)
+beschreibt, was der Server tut — eine Korrektur, keine Entscheidung; GR
+darf `docs/JSON-Vertrag.md` anfassen, weil daneben nichts daran schreibt.
+Nr. 432 (PR #129) beschreibt denselben Fehler und denselben Weg wie 361;
+beide tragen 22, der Eintrag 432 sagt es, erledigt wird 432 mit 361.
 
 ## 7. Protokoll
 
 | Datum | Was |
 |---|---|
 | 02.11.2026 | Runde 1: Backlog (63), Rahmenplan 190 und Archiv-2 gelesen; Matrix, Abweichungen F-BE-01 bis -10, Vorschlag 4.1 bis 4.4, Fragen Q-BE-01 bis -07. Nichts geschrieben außer dieser Datei. |
+| 02.11.2026 | Runde 2: PR #129 aufgenommen (Nr. 430 bis 432), Q-BE-01 bis -07 entschieden (E-BE-01 bis -07), Stand `verworfen` gebaut, zehn Punkte verschoben, 44 Kopfzeilen umgehängt, Rahmenplan Fassung 192 mit R90, Verlaufszeile. Prüfstand: siehe Commit. |
