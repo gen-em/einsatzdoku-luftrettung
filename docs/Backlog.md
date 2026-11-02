@@ -896,20 +896,6 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
 
 <!-- -->
 
-385. **Die Zweitfaktorprobe hinterlässt bei jedem Lauf eine Sperre in `sicherheit_ereignisse`.** · gehört zu: PR · Stand: offen · seit 16.10.2026
-     *Aufgenommen 16.10.2026 mit S11-05e (F-S11-59).* Jeder Lauf der
-     Zweitfaktorprobe legt eine Sperre `totp` für
-     `zweitfaktor-probe@probe.invalid` an und räumt sie nicht ab (gezählt
-     16.10.2026: 13 Zeilen seit dem 13.10.). Die Protokollprobe nahm das
-     letzte Archiv mit Sicherheitszeilen und war deshalb drei Tage nach
-     jedem Tag mit Prüfstand rot — behoben in der Protokollprobe (sie wählt
-     jetzt das Archiv mit ihrer eigenen Mail), die Ursache steht noch.
-     *Weg:* die Sperre im Aufräumteil der Zweitfaktorprobe löschen, wie die
-     Protokollprobe ihre eigenen Zeilen löscht. *Abnahme:* nach einem Lauf
-     keine Zeile mehr für das Probenkonto.
-
-<!-- -->
-
 388. **Die Demo-Fixture lässt sich seit S11 nicht mehr aus dem Referenzkonto erzeugen.** · gehört zu: 14 · Stand: offen · seit 19.10.2026
      *Aufgenommen 19.10.2026 in S11-12 (F-S11-95).*
      `tools/referenzdatensatz/fixture/erzeugen.php` las das Referenzkonto

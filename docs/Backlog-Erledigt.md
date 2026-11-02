@@ -10170,3 +10170,19 @@ zutreffen.
      `REQUESTS_CA_BUNDLE` der Umgebung, die Zertifikatsprüfung bleibt an —
      dieselbe Trennung wie `kontextMachen()` in `tools/motor.mjs`. Gemessen:
      Staging `login.php` 200 mit Prüfung, örtlich unverändert ohne Proxy.
+
+385. **Die Zweitfaktorprobe hinterlässt bei jedem Lauf eine Sperre in `sicherheit_ereignisse`.** · gehört zu: PR · Stand: erledigt · seit 16.10.2026
+     *Aufgenommen 16.10.2026 mit S11-05e (F-S11-59).* Jeder Lauf der
+     Zweitfaktorprobe legt eine Sperre `totp` für
+     `zweitfaktor-probe@probe.invalid` an und räumt sie nicht ab (gezählt
+     16.10.2026: 13 Zeilen seit dem 13.10.). Die Protokollprobe nahm das
+     letzte Archiv mit Sicherheitszeilen und war deshalb drei Tage nach
+     jedem Tag mit Prüfstand rot — behoben in der Protokollprobe (sie wählt
+     jetzt das Archiv mit ihrer eigenen Mail), die Ursache steht noch.
+     *Weg:* die Sperre im Aufräumteil der Zweitfaktorprobe löschen, wie die
+     Protokollprobe ihre eigenen Zeilen löscht. *Abnahme:* nach einem Lauf
+     keine Zeile mehr für das Probenkonto.
+     Erledigt 02.11.2026 mit PR-01 (Konzept PR): Der Aufräumteil der
+     Zweitfaktorprobe löscht die Ereignisse des Probenkontos in
+     sicherheit_ereignisse; nach einem Lauf 0 Zeilen statt 1, die Probe
+     weiter 139 ok.

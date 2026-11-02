@@ -178,6 +178,11 @@ $merkmal = rate_merkmal_kennung($mail);
 register_shutdown_function(static function () use ($pdo, $uid, $merkmal): void {
     $pdo->prepare('DELETE FROM protokoll_ereignisse WHERE betroffen_user_id = ?')->execute([$uid]);
     $pdo->prepare("DELETE FROM rate_limits WHERE merkmal = ?")->execute([$merkmal]);
+    /* Die Sperre, die die Fehlversuche auslösen, steht nicht nur im Zähler,
+     * sondern als Ereignis in `sicherheit_ereignisse` — und blieb dort nach
+     * jedem Lauf liegen (Nr. 385: 13 Zeilen in drei Tagen; die
+     * Protokollprobe griff danach ins falsche Archiv). */
+    $pdo->prepare('DELETE FROM sicherheit_ereignisse WHERE merkmal = ?')->execute([$merkmal]);
     $pdo->prepare('DELETE FROM users WHERE id = ?')->execute([$uid]);
     $pdo->exec("DELETE FROM users WHERE email LIKE 'zweitfaktor-bf-%@probe.invalid'");
 });
