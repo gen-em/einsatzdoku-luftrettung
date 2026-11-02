@@ -544,6 +544,13 @@ Prüfstand: neben · Baum a1b2c3d… · Konfiguration web
   wo der Unterschied den vollen Lauf verlangt — in `haupt` und an einer
   Zehnergrenze der Nebennummer (seit PU-01, E-PU-01; Abschnitt 3). Mehr
   zu messen ist erlaubt: `voll:hand` passt immer.
+- Ein **geerbtes Ergebnis** (`name=ererbt:<Baum>`, 5.4) durfte nicht erben:
+  Der Baum ist nicht der des ersten Elters, dessen Bericht fehlt, lief
+  nicht als `neben`/schmal, erbt selbst, nennt die Probe nicht grün, oder
+  der Unterschied seither trifft ein Muster der Probe, den Prüfstand oder
+  ihr Werkzeug; dazu rot, wenn eine gemessene Probe eine geerbte
+  voraussetzt (`nach`). Das Tor rechnet mit derselben Funktion wie der
+  Prüfstand (`erbfehler()` in `auswahl.py`; seit PU-10, E-PU-13).
 
 Dazu rot, ohne eigene Lage: **kein Bericht** in der Nachricht des PR-Kopfs.
 Die Meldung sagt dann, wie er hineinkommt.
@@ -593,6 +600,33 @@ Merge-Commit. Berührt ist dabei nur, was diese Arbeit gegen `main`
 ändert — nicht, was `main` mitbringt (F-PK-39). Zum ersten Mal gegangen
 beim Merge von PR #80 in PK-05 (`5671d24`). Wer doch „Update branch" gedrückt hat, holt den Commit
 herunter und fährt ab Schritt 2 mit einem eigenen Commit darüber.
+
+### 5.4 Der ererbte Bericht
+
+*Seit PU-10 (E-PU-13, -18).* Nach einer Berichtigung maß ein Zweig in
+`neben` bis dahin alles noch einmal, auch für einen Satz Doku — der
+Nebenlauf eines Zwischen-PRs dauerte zuletzt 12 205 s (F-PU-05). Jetzt
+übernimmt der Prüfstand in `neben`, im schmalen Lauf, das Ergebnis einer
+Probe vom **direkten Vorgänger** — dem Commit in HEAD, der auf dem Zweig
+liegt und dessen Nachricht einen Bericht über seinen eigenen Baum trägt —,
+wenn die Probe dort **grün** war und der Unterschied zwischen beiden Bäumen
+**keines ihrer Muster** trifft. Der Lauf zeigt das als `erbt`, der Bericht
+schreibt `name=ererbt:<Baum des Vorgängers>`, und das Tor liest den Bericht
+des ersten Elters nach (5.1, Lage 8).
+
+**Nie geerbt werden:** die Riegel (das Tor misst sie selbst); der Kreislauf
+`edbak` (Nr. 267, F-S11-48); alles in `klein`, in `haupt` und beim vollen
+Lauf; jede Probe, wenn der Vorgänger selbst erbt — so ist spätestens jeder
+zweite Lauf wieder voll gemessen; eine Probe, deren Voraussetzung (`nach`)
+misst. **Dazu (E-PU-18):** Ist `tools/pruefstand/` berührt oder eine Datei,
+die der Aufruf der Probe nennt (bei `proben.sh NAME` auch der
+gleichnamige Ordner daneben), erbt sie nicht. Über `server/**` (Muster
+`nebenstufe`) misst jede Probe der Nebenstufe neu, sobald irgendetwas unter
+`server/` berührt ist.
+
+**Der Preis:** Die Zuordnung in `pruefablauf.json` ist von Hand gepflegt;
+ein Muster, das eine Datei nicht nennt, erbt fälschlich grün. In `klein`
+gilt das für die Auswahl seit jeher.
 
 ---
 

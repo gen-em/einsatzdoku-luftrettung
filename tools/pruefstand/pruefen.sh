@@ -66,6 +66,13 @@ mapfile -t PROBEN < <(python3 "$HIER/auswahl.py" --stufe "$STUFE" --umfang "$UMF
 # die Seiten für --nur oder „alle". Steht im Bericht, das Tor rechnet nach.
 erm=$(python3 "$HIER/auswahl.py" --bilderlauf --stufe "$STUFE" --umfang "$UMFANG" --basis "$BASIS" "${DATEIEN[@]}") || exit 2
 BREITEN=$(printf '%s' "$erm" | cut -f1); SEITEN=$(printf '%s' "$erm" | cut -f2)
+# DER ERERBTE BERICHT (E-PU-13): In `neben`, im schmalen Lauf, übernimmt der
+# Prüfstand das Ergebnis einer Probe vom Bericht in HEAD, wenn sie dort grün
+# war und der Unterschied seither keines ihrer Muster trifft. Welche, sagt
+# auswahl.py --ererbt; das Tor rechnet nach (bericht.py, Lage 8).
+declare -A ERBE
+while IFS=$'\t' read -r n b; do [ -n "$n" ] && ERBE[$n]=$b; done \
+    < <(python3 "$HIER/auswahl.py" --ererbt --stufe "$STUFE" --umfang "$UMFANG" --basis "$BASIS" "${DATEIEN[@]}" 2> >(sed 's/^/   /' >&2))
 
 if [ "$TROCKEN" = 1 ]; then
     melde "Trockenlauf — es wird nichts gefahren."
@@ -100,7 +107,7 @@ fi
 
 # ---- 4. Proben ------------------------------------------------------------
 melde "Proben (${#PROBEN[@]})"
-declare -A ZAHL; fehl=0; nicht=0; hinw=0; DREIFACH=0; WIEDERHOLT=0; HINWEISE=()
+declare -A ZAHL; fehl=0; nicht=0; hinw=0; erbt=0; DREIFACH=0; WIEDERHOLT=0; HINWEISE=()
 # DIE ERGEBNISART „hinweis" (E-PU-05): gemessen, gemeldet, hält nicht auf.
 # Zwei Wege führen dahin: Eine Probe mit "hinweis": true in pruefablauf.json
 # endet mit rc != 0 — dann ist das ein Hinweis statt rot —, oder eine Probe
@@ -153,6 +160,14 @@ print(p['aufruf'] if p else '', p['braucht'] if p else '', 'demo' if p and p.get
     else befehl=${befehl//\{seiten\}/--nur $SEITEN}; fi
     if [ -z "$befehl" ]; then
         zeile "?     $name — steht nicht unter \"proben\" in pruefablauf.json"; fehl=$((fehl+1)); continue
+    fi
+    # Geerbt ist nicht übersprungen: Der Bericht nennt den Baum, von dem das
+    # Ergebnis stammt, und das Tor liest dessen Bericht nach (Grundsatz 7).
+    if [ -n "${ERBE[$name]:-}" ]; then
+        zeile "erbt  $name  — grün im Bericht von HEAD, Baum ${ERBE[$name]} (E-PU-13)"
+        ZAHL[$name]="ererbt:${ERBE[$name]}"; erbt=$((erbt+1))
+        [ -n "$drei" ] && DREIFACH=$((DREIFACH+1))
+        continue
     fi
     # KEIN STILLES ÜBERSPRINGEN. Was nicht laufen kann, wird
     # GEZÄHLT und benannt — und steht als „nicht-gemessen" im
@@ -292,7 +307,7 @@ if [ "$rcb" -ne 0 ]; then
     exit 1
 fi
 
-melde "$fehl rot, $nicht nicht gemessen, $hinw Hinweis, $(( ${#PROBEN[@]} - fehl - nicht - hinw )) grün · $SECONDS s"
+melde "$fehl rot, $nicht nicht gemessen, $hinw Hinweis, $erbt ererbt, $(( ${#PROBEN[@]} - fehl - nicht - hinw - erbt )) grün · $SECONDS s"
 [ "$hinw" -gt 0 ] && zeile "Hinweise (halten nicht auf, stehen im Bericht): ${HINWEISE[*]} — im Prüfprotokoll des Konzepts nennen."
 [ "$WIEDERHOLT" -gt 0 ] && zeile "$WIEDERHOLT Wiederholungen in WebKit (Seitenwechsel oder Neuanmeldung) — im Prüfdokument nennen (E-DM-10)"
 [ "$nicht" -gt 0 ] && zeile "Was nicht gemessen werden konnte, gehört in das Prüfdokument — an den Anfang."

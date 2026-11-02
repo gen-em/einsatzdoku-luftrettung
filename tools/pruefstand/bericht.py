@@ -29,16 +29,15 @@ HIER = os.path.dirname(os.path.abspath(__file__))
 WURZEL = os.path.dirname(os.path.dirname(HIER))
 ABLAUF = os.path.join(HIER, 'pruefablauf.json')
 sys.path.insert(0, HIER)
-from auswahl import (ALLE, MOTOREN_DREI, SCHMAL, UMFAENGE, UNLESBAR, beruehrte,  # noqa: E402 — die EINE Lesestelle
-                     breiten_aus, drei_aus, fassung, motoren_aus, seiten_laden, seitenwahl, stil_aus,
-                     stufe_aus_fassungen, stufe_aus_version, zehner)
+from auswahl import (ALLE, ERBT, KOPF_RE, MOTOREN_DREI, PAAR_RE, SCHMAL, UMFAENGE,  # noqa: E402, F401 — die EINE Lesestelle
+                     UNLESBAR, beruehrte, breiten_aus, drei_aus, erbfehler, fassung, mit_voraussetzungen,
+                     motoren_aus, seiten_laden, seitenwahl, stil_aus, stufe_aus_fassungen, stufe_aus_version,
+                     vorgaenger, zehner, zerlegen)
 
 STUFEN = ['klein', 'neben', 'haupt']
-KOPF_RE = re.compile(
-    r'^Prüfstand:\s*(?P<stufe>klein|neben|haupt)\s*·\s*'
-    r'Baum\s+(?P<baum>[0-9a-f]{7,40})\s*·\s*'
-    r'Konfiguration\s+(?P<konf>[a-z]+)\s*$')
-PAAR_RE = re.compile(r'([a-zA-Z][\w-]*)=(\S+)')
+# KOPF_RE, PAAR_RE und zerlegen() stehen seit PU-10 in auswahl.py: Der
+# Prüfstand liest dort den Bericht des Vorgängers (E-PU-13), und zwei Leser
+# desselben Blocks wären zwei Grammatiken.
 
 # Die Flächen: die ORDNER, deren Berührung sie verrät, und die PROBE, die sie
 # baut. EINE Stelle für Schreiben und Lesen. Früher stand hier
@@ -144,24 +143,6 @@ def schreiben(args):
 
 # ------------------------------------------------------------------- lesen
 
-def zerlegen(text):
-    """Aus einem Text (Commit-Nachricht) den Berichtsblock herausziehen."""
-    zeilen = text.splitlines()
-    for i, z in enumerate(zeilen):
-        m = KOPF_RE.match(z.strip())
-        if not m:
-            continue
-        b = {'stufe': m['stufe'], 'baum': m['baum'], 'konfiguration': m['konf'],
-             'werte': {}}
-        for w in zeilen[i + 1:]:
-            if not w.startswith('  ') or not w.strip():
-                break
-            for k, v in PAAR_RE.findall(w):
-                b['werte'][k] = v
-        return b
-    return None
-
-
 def versionsstufe(basis, commit):
     """Welche Stufe verlangt der Unterschied — die Fassung in
     server/version.php und die Stufenregeln (eine neue Migration
@@ -201,7 +182,8 @@ def umfang_verlangt_aus(basis, commit, stufe_verlangt):
 
 
 def pruefen(bericht, basis=None, commit='HEAD', riegel=None, dateien=None, baum=None,
-            stufe_verlangt=None, riegel_namen=None, motoren_namen=None, umfang_verlangt=None, stil=None):
+            stufe_verlangt=None, riegel_namen=None, motoren_namen=None, umfang_verlangt=None, stil=None,
+            vorg=None, diff_vorg=None):
     """Die roten Lagen (Pruefablauf.md 5.1). Gibt eine Liste von Beanstandungen zurück."""
     schlecht = []
     if bericht is None:
@@ -254,8 +236,8 @@ def pruefen(bericht, basis=None, commit='HEAD', riegel=None, dateien=None, baum=
     eigene = set(riegel_namen if riegel_namen is not None else lade_ablauf()['riegel']['proben'])
     eigene |= set(riegel or {}) | set(FLAECHEN) | {'motoren', 'umfang', 'breiten', 'seiten'}
     for name, wert in bericht['werte'].items():
-        if name in eigene or gruen_oder_hinweis(wert):
-            continue
+        if name in eigene or gruen_oder_hinweis(wert) or wert.startswith(ERBT):
+            continue                            # ererbt: Lage 8
         if wert == 'nicht-gemessen':
             schlecht.append(f"Probe „{name}\" ist nicht gemessen — Überspringen ist rot (E-KH-12).")
         else:
@@ -316,6 +298,35 @@ def pruefen(bericht, basis=None, commit='HEAD', riegel=None, dateien=None, baum=
     elif umfang_verlangt == 'voll' and umfang == SCHMAL:
         schlecht.append('Umfang zu schmal: Der Unterschied verlangt den vollen Lauf (Hauptstufe oder '
                         'Zehnergrenze der Nebennummer, E-PU-01), der Bericht meldet „schmal".')
+
+    # (8) Ererbte Ergebnisse (E-PU-13). Das Tor liest den Bericht des
+    # Vorgängers — des ersten Elters des Kopfs — nach und rechnet mit
+    # derselben Funktion wie der Prüfstand (`erbfehler()` in auswahl.py), ob
+    # die Probe erben durfte. Dazu: Der genannte Baum muss der des Vorgängers
+    # sein, und wer misst, darf keine Voraussetzung (`nach`) erben.
+    erbe = {n: w[len(ERBT):] for n, w in bericht['werte'].items() if w.startswith(ERBT)}
+    if erbe:
+        if vorg is None:
+            vorg = vorgaenger(f'{commit}^1', basis)
+        vb, vbaum = vorg
+        if diff_vorg is None:
+            diff_vorg = [d for d in git('diff', '--name-only', f'{commit}^1', commit).splitlines() if d]
+        a_ = lade_ablauf()
+        u8 = bericht['werte'].get('umfang', SCHMAL)
+        for n, h in sorted(erbe.items()):
+            if not h or not vbaum.startswith(h):
+                schlecht.append(f"„{n}=ererbt:{h}\": Der Vorgänger hat den Baum {vbaum[:12] or '(keinen)'} "
+                                f"— geerbt wird nur vom direkten Vorgänger (E-PU-13).")
+                continue
+            f = erbfehler(n, bericht['stufe'], u8, vb, vbaum, diff_vorg, a_,
+                          bericht['werte'].get('motoren'), bericht['werte'].get('breiten'),
+                          bericht['werte'].get('seiten'))
+            if f:
+                schlecht.append(f"„{n}\" durfte nicht erben: {f} (E-PU-13).")
+        messend = [n for n, w in bericht['werte'].items() if n in a_['proben'] and not w.startswith(ERBT)]
+        for n in mit_voraussetzungen(messend, a_):
+            if n in erbe:
+                schlecht.append(f"„{n}\" ist geerbt, aber Voraussetzung einer Probe, die gemessen hat (nach).")
     return schlecht
 
 
@@ -346,6 +357,9 @@ def lesen(args):
         return 1
     melde(f"Prüfbericht in Ordnung: Stufe {bericht['stufe']}, Baum {bericht['baum']}, "
           f"Konfiguration {bericht['konfiguration']}, {len(bericht['werte'])} Zahlen.")
+    erbe = sorted(n for n, w in bericht['werte'].items() if w.startswith(ERBT))
+    if erbe:
+        melde(f"  Geerbt vom Vorgänger (Lage 8 nachgerechnet): {', '.join(erbe)} (E-PU-13).")
     hinweise = sorted(n for n, w in bericht['werte'].items() if w == HINWEIS)
     if hinweise:
         melde(f"  Hinweise (halten nicht auf): {', '.join(hinweise)} — gemessen und gemeldet, "
@@ -494,6 +508,35 @@ def selbstprobe():
     faelle.append(('grün (7f) — mehr als verlangt: schmal verlangt, voll:zehner gemeldet',
                    zerlegen(guter.replace('umfang=schmal', 'umfang=voll:zehner').replace('breiten=fuenf', 'breiten=zehn')),
                    dict(baum='abc1234', dateien=[], riegel={}, riegel_namen=namen, umfang_verlangt='schmal'), 0))
+    # Lage 8 — der Vorgänger als Text, ohne Git.
+    vtext = ('Prüfstand: neben · Baum aaaa1111bbbb2222 · Konfiguration web\n'
+             '  syntax-php=php:486/0  spurprobe=0  jobprobe=0  ingestprobe=1\n'
+             '  motoren=chromium+firefox+webkit  umfang=schmal  breiten=fuenf  seiten=alle\n')
+    vbaum = 'aaaa1111bbbb2222cccc3333'
+    erbend = guter.replace('spurprobe=0', 'spurprobe=ererbt:aaaa1111bbbb')
+    v = dict(baum='abc1234', dateien=[], riegel={}, riegel_namen=namen, vorg=(zerlegen(vtext), vbaum))
+    faelle.append(('grün (8) — spurprobe vom Vorgänger geerbt, nichts berührt',
+                   zerlegen(erbend), dict(v, diff_vorg=['docs/Handbuch.md']), 0))
+    faelle.append(('rot (8b) — geerbt, aber ihr Muster ist berührt',
+                   zerlegen(erbend), dict(v, diff_vorg=['server/spur_lib.php']), 1))
+    faelle.append(('rot (8c) — geerbt von einem anderen Baum als dem des Vorgängers',
+                   zerlegen(guter.replace('spurprobe=0', 'spurprobe=ererbt:ffff0000')), dict(v, diff_vorg=[]), 1))
+    faelle.append(('rot (8d) — geerbt, beim Vorgänger rot',
+                   zerlegen(guter.replace('spurprobe=0', 'ingestprobe=ererbt:aaaa1111bbbb')), dict(v, diff_vorg=[]), 1))
+    faelle.append(('rot (8e) — der Vorgänger erbt selbst',
+                   zerlegen(erbend), dict(v, vorg=(zerlegen(vtext.replace('jobprobe=0', 'jobprobe=ererbt:9')), vbaum),
+                                          diff_vorg=[]), 1))
+    faelle.append(('rot (8f) — kein Vorgänger-Bericht',
+                   zerlegen(erbend), dict(v, vorg=(None, vbaum), diff_vorg=[]), 1))
+    faelle.append(('rot (8g) — Kreislauf edbak geerbt',
+                   zerlegen(guter.replace('kreislauf-edbak=0', 'kreislauf-edbak=ererbt:aaaa1111bbbb')),
+                   dict(v, vorg=(zerlegen(vtext.replace('jobprobe=0', 'kreislauf-edbak=0')), vbaum), diff_vorg=[]), 1))
+    faelle.append(('rot (8h) — ein Riegel geerbt',
+                   zerlegen(guter.replace('wortliste=0', 'wortliste=ererbt:aaaa1111bbbb')),
+                   dict(v, vorg=(zerlegen(vtext.replace('jobprobe=0', 'wortliste=0')), vbaum), diff_vorg=[]), 1))
+    faelle.append(('rot (8i) — geerbt im vollen Lauf',
+                   zerlegen(erbend.replace('umfang=schmal', 'umfang=voll:hand').replace('breiten=fuenf', 'breiten=zehn')),
+                   dict(v, diff_vorg=[]), 1))
     faelle.append(('rot (0) — gar kein Bericht in der Nachricht',
                    zerlegen('Ein Commit ganz ohne Block.\n'),
                    dict(baum='abc1234', dateien=[], riegel={}, riegel_namen=namen), 1))

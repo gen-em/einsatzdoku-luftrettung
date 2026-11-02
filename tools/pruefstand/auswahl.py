@@ -293,6 +293,137 @@ def breiten_aus(stufe, umfang, dateien, stil):
     return 'fuenf', 'schmaler Lauf (E-PU-03, -11)'
 
 
+# ---- Der ererbte Bericht (E-PU-13) ------------------------------------------
+#
+# In `neben` darf der Prüfstand das Ergebnis einer Probe vom DIREKTEN
+# VORGÄNGER auf demselben Zweig übernehmen, wenn dessen Bericht in seiner
+# Nachricht steht, über seinen eigenen Baum, die Probe dort grün war und der
+# Unterschied zwischen beiden Bäumen kein Muster dieser Probe trifft. Der
+# Bericht schreibt `NAME=ererbt:<Baum des Vorgängers>`, das Tor rechnet mit
+# derselben Funktion nach (bericht.py, Lage 8). Nie geerbt: die Riegel, der
+# Kreislauf `edbak`, alles beim vollen Lauf und außerhalb von `neben`, und
+# nichts von einem Bericht, der selbst erbt — spätestens jeder zweite Lauf
+# misst wieder alles, was er auswählt. Dazu (E-PU-18): Ist der Prüfstand
+# selbst berührt (`tools/pruefstand/`) oder eine Datei, die der Aufruf der
+# Probe nennt, erbt nichts davon.
+#
+# Im Prüfstand ist der Vorgänger HEAD — gemessen wird der Arbeitsbestand,
+# der Commit kommt danach; im Tor ist es der erste Elter des Kopfs.
+KOPF_RE = re.compile(
+    r'^Prüfstand:\s*(?P<stufe>klein|neben|haupt)\s*·\s*'
+    r'Baum\s+(?P<baum>[0-9a-f]{7,40})\s*·\s*'
+    r'Konfiguration\s+(?P<konf>[a-z]+)\s*$')
+PAAR_RE = re.compile(r'([a-zA-Z][\w-]*)=(\S+)')
+ERBT = 'ererbt:'
+NIE_ERBEN = ('kreislauf-edbak',)
+
+
+def zerlegen(text):
+    """Aus einem Text (Commit-Nachricht) den Berichtsblock herausziehen."""
+    zeilen = (text or '').splitlines()
+    for i, z in enumerate(zeilen):
+        m = KOPF_RE.match(z.strip())
+        if not m:
+            continue
+        b = {'stufe': m['stufe'], 'baum': m['baum'], 'konfiguration': m['konf'],
+             'werte': {}}
+        for w in zeilen[i + 1:]:
+            if not w.startswith('  ') or not w.strip():
+                break
+            for k, v in PAAR_RE.findall(w):
+                b['werte'][k] = v
+        return b
+    return None
+
+
+def vorgaenger(commit, basis):
+    """(bericht, baum) des Vorgängers — (None, '') wenn es ihn nicht gibt
+    oder er schon auf `basis` liegt (dann ist er kein Stand dieses Zweigs)."""
+    baum = git('rev-parse', '--verify', '-q', f'{commit}^{{tree}}').strip()
+    if not baum:
+        return None, ''
+    if basis and subprocess.run(['git', '-C', WURZEL, 'merge-base', '--is-ancestor', commit, basis],
+                                capture_output=True).returncode == 0:
+        return None, baum
+    return zerlegen(git('log', '-1', '--format=%B', commit)), baum
+
+
+def unterschied_zum_arbeitsbestand(commit):
+    """Was der Arbeitsbestand gegen `commit` ändert, samt neuer Dateien."""
+    d = set(git('diff', '--name-only', commit).splitlines())
+    d |= set(git('ls-files', '-o', '--exclude-standard').splitlines())
+    return sorted(x for x in d if x)
+
+
+def aufruf_pfade(aufruf):
+    """Die Dateien, die ein Aufruf nennt; bei `proben.sh NAME` auch der Ordner
+    tools/proben/NAME/."""
+    pf = re.findall(r'(?:tools|android)/[\w./-]*\w', aufruf or '')
+    m = re.search(r'tools/proben/proben\.sh\s+([\w-]+)', aufruf or '')
+    if m:
+        pf.append(f'tools/proben/{m.group(1)}/**')
+    return pf
+
+
+def erbfehler(name, stufe, umfang, vb, vbaum, diff, a, motoren=None, breiten=None, seiten=None):
+    """Warum `name` NICHT erben darf — None heißt: es darf. `vb` ist der
+    zerlegte Bericht des Vorgängers, `vbaum` dessen Baum, `diff` die Dateien
+    zwischen beiden Bäumen; `motoren`, `breiten`, `seiten` die des Laufs."""
+    if stufe != 'neben':
+        return f'Stufe {stufe} — erben gibt es nur in neben'
+    if umfang != SCHMAL:
+        return f'voller Lauf ({umfang})'
+    if name in a['riegel']['proben']:
+        return 'ein Riegel — das Tor misst ihn selbst'
+    if name in NIE_ERBEN:
+        return 'wird nie geerbt (Nr. 267, F-S11-48)'
+    if vb is None:
+        return 'der Vorgänger trägt keinen Bericht (oder liegt schon auf main)'
+    if not vbaum or not (vbaum.startswith(vb['baum']) or vb['baum'].startswith(vbaum)):
+        return 'der Bericht des Vorgängers gilt nicht seinem Baum'
+    if vb['stufe'] != 'neben' or vb['werte'].get('umfang') != SCHMAL:
+        return f"der Vorgänger lief als {vb['stufe']}/{vb['werte'].get('umfang', '?')}, nicht neben/schmal"
+    if any(w.startswith(ERBT) for w in vb['werte'].values()):
+        return 'der Vorgänger erbt selbst — nur über eine Stufe'
+    if vb['werte'].get(name) != '0':
+        return f"beim Vorgänger nicht grün ({vb['werte'].get(name, 'fehlt')})"
+    t = [d for d in diff if passt(d, ['tools/pruefstand/**'])]
+    if t:
+        return f'der Prüfstand selbst ist berührt ({t[0]}, E-PU-18)'
+    grenze = STUFEN.index(stufe)
+    for m in a['muster']:
+        if name in m['proben'] and STUFEN.index(m['ab']) <= grenze:
+            t = [d for d in diff if passt(d, m['pfade'])]
+            if t:
+                return f"Muster {m['id']} berührt ({t[0]})"
+    p = a['proben'].get(name, {})
+    t = [d for d in diff if passt(d, aufruf_pfade(p.get('aufruf', '')))]
+    if t:
+        return f'das Werkzeug der Probe ist berührt ({t[0]}, E-PU-18)'
+    if p.get('motoren') is True and vb['werte'].get('motoren') not in (motoren, '+'.join(MOTOREN_DREI)):
+        return f"der Vorgänger lief in {vb['werte'].get('motoren', '(keiner Angabe)')}, verlangt {motoren}"
+    if name == 'bilderlauf' and (vb['werte'].get('breiten'), vb['werte'].get('seiten')) != (breiten, seiten):
+        return 'der Vorgänger maß andere Breiten oder Seiten'
+    return None
+
+
+def erbschaft(proben, stufe, umfang, vb, vbaum, diff, a, motoren=None, breiten=None, seiten=None):
+    """({name: Baum des Vorgängers}, {name: Grund}) — wer erbt, und warum der
+    Rest misst. Wer misst, bekommt seine Voraussetzungen (`nach`) messend."""
+    erben, gruende = {}, {}
+    for n in proben:
+        f = erbfehler(n, stufe, umfang, vb, vbaum, diff, a, motoren, breiten, seiten)
+        if f is None:
+            erben[n] = vbaum[:12]
+        else:
+            gruende[n] = f
+    for n in mit_voraussetzungen([x for x in proben if x not in erben], a):
+        if n in erben:
+            del erben[n]
+            gruende[n] = 'Voraussetzung einer Probe, die misst (nach)'
+    return erben, gruende
+
+
 def proben_mit_umfang(proben, stufe, umfang, dateien, a, seiten):
     """Der Umfang an der Probenliste: beim vollen Lauf laufen Bilderlauf und
     Bedienprobe immer, im schmalen nur, wenn eine Datei außer `neutral` sie
@@ -616,6 +747,50 @@ def selbstprobe(a):
          all(f'{s}:' in open(os.path.join(WURZEL, 'tools', 'screenshots', 'aufnehmen.mjs'), encoding='utf-8').read()
              for s in ('drei', 'fuenf', 'zehn'))),
     ]
+    # Der ererbte Bericht (E-PU-13) — jede Lage, in der nicht geerbt wird,
+    # einzeln, gegen die ECHTE Zuordnung.
+    vt = ('Prüfstand: neben · Baum aaaa1111bbbb2222 · Konfiguration web\n'
+          '  syntax-php=php:1/0  spurprobe=0  jobprobe=0  ingestprobe=1\n'
+          '  kreislauf-edbak=0  gpxprobe=0  motoren=chromium  umfang=schmal\n'
+          '  bilderlauf=0  breiten=fuenf  seiten=11  spaltenregister-wegprobe=0\n')
+    vb = zerlegen(vt)
+    vbaum = 'aaaa1111bbbb2222cccc'
+    e = lambda n, d=(), vb_=vb, s='neben', u_=SCHMAL, mo='chromium', br='fuenf', se_='11': \
+        erbfehler(n, s, u_, vb_, vbaum, list(d), a, mo, br, se_)
+    grenzen += [
+        ('erbe: grün, nichts berührt -> erbt',                     e('jobprobe') is None),
+        ('erbe: nur ein Doku-Satz berührt -> erbt',                e('spurprobe', ['docs/Handbuch.md']) is None),
+        ('erbe: Vorgänger fehlt -> misst',                         e('jobprobe', vb_=None) is not None),
+        ('erbe: beim Vorgänger rot -> misst',                      e('ingestprobe') is not None),
+        ('erbe: beim Vorgänger nicht aufgeführt -> misst',         e('rollenprobe') is not None),
+        ('erbe: eigenes Muster berührt -> misst',                  e('spurprobe', ['server/spur_lib.php']) is not None),
+        ('erbe: server/** über nebenstufe berührt -> misst',       e('jobprobe', ['server/index.php']) is not None),
+        ('erbe: der Vorgänger erbt selbst -> misst',
+         e('jobprobe', vb_=zerlegen(vt.replace('spurprobe=0', 'spurprobe=ererbt:abc'))) is not None),
+        ('erbe: der Kreislauf edbak nie',                          e('kreislauf-edbak') is not None),
+        ('erbe: ein Riegel nie',                                   e('syntax-php') is not None),
+        ('erbe: nicht in klein',                                   e('jobprobe', s='klein') is not None),
+        ('erbe: nicht beim vollen Lauf',                           e('jobprobe', u_='voll:zehner') is not None),
+        ('erbe: Vorgänger war voll -> misst',
+         e('jobprobe', vb_=zerlegen(vt.replace('umfang=schmal', 'umfang=voll:hand'))) is not None),
+        ('erbe: Bericht über einen anderen Baum -> misst',
+         e('jobprobe', vb_=zerlegen(vt.replace('aaaa1111bbbb2222', 'ffff0000'))) is not None),
+        ('erbe: Prüfstand berührt -> misst (E-PU-18)',             e('jobprobe', ['tools/pruefstand/pruefen.sh']) is not None),
+        ('erbe: Werkzeug aus dem Aufruf berührt -> misst (E-PU-18)',
+         e('jobprobe', ['tools/proben/jobs/probe.php']) is not None),
+        ('erbe: Browserprobe, verlangt drei, Vorgänger Chromium -> misst',
+         e('gpxprobe', mo='chromium+firefox+webkit') is not None),
+        ('erbe: Bilderlauf mit anderen Seiten -> misst',           e('bilderlauf', se_='alle') is not None),
+        ('erbe: Bilderlauf mit gleichen Breiten und Seiten -> erbt', e('bilderlauf') is None),
+        ('erbe: wer misst, bekommt seine Voraussetzung messend',
+         erbschaft(['jobprobe', 'spurprobe'], 'neben', SCHMAL, vb, vbaum, ['tools/proben/spur/probe.php'],
+                   dict(a, proben=dict(a['proben'], spurprobe=dict(a['proben']['spurprobe'], nach=['jobprobe']))))[0]
+         == {}),
+        ('erbe: ohne nach erbt die andere',
+         erbschaft(['jobprobe', 'spurprobe'], 'neben', SCHMAL, vb, vbaum, ['tools/proben/spur/probe.php'], a)[0]
+         == {'jobprobe': vbaum[:12]}),
+        ('erbe: zerlegen liest den eigenen Bericht',               vb['werte'].get('seiten') == '11'),
+    ]
     for name, bed in grenzen:
         melde(f"  [{'ok  ' if bed else 'FEHL'}] {name}")
         fehl += 0 if bed else 1
@@ -638,6 +813,8 @@ def main():
     p.add_argument('--motoren', action='store_true',
                    help='die Engines der Browserproben mit Grund (E-PU-02); braucht --stufe und --umfang')
     p.add_argument('--umfang', choices=UMFAENGE)
+    p.add_argument('--ererbt', action='store_true',
+                   help='welche Proben vom Vorgänger erben (E-PU-13), je Zeile Name und Baum; braucht --stufe und --umfang')
     p.add_argument('--bilderlauf', action='store_true',
                    help='Breitensatz und Seiten des Bilderlaufs mit Grund (E-PU-03, -04); braucht --stufe und --umfang')
     p.add_argument('--selbstprobe', action='store_true')
@@ -661,6 +838,27 @@ def main():
             return 2
         engines, grund = motoren_aus(args.stufe, args.umfang, args.datei or beruehrte(args.basis), drei_aus(a))
         melde(f"{' '.join(engines)}\t{grund}")
+        return 0
+    if args.ererbt:
+        if not args.stufe or not args.umfang:
+            melde('--ererbt braucht --stufe und --umfang.')
+            return 2
+        dateien = args.datei or beruehrte(args.basis)
+        _, pr = treffer(dateien, args.stufe, a)
+        se = seiten_laden()
+        pr = proben_mit_umfang(pr, args.stufe, args.umfang, dateien, a, se)
+        motoren = '+'.join(motoren_aus(args.stufe, args.umfang, dateien, drei_aus(a))[0])
+        breiten = breiten_aus(args.stufe, args.umfang, dateien, stil_aus(a))[0]
+        wahl = seitenwahl('bilderlauf', args.stufe, args.umfang, dateien, a, se)[0]
+        seiten = ALLE if wahl == ALLE else (str(len(wahl)) if wahl else None)
+        vb, vbaum = vorgaenger('HEAD', args.basis)
+        erben, gruende = erbschaft(pr, args.stufe, args.umfang, vb, vbaum,
+                                   unterschied_zum_arbeitsbestand('HEAD'), a, motoren, breiten, seiten)
+        for n in pr:
+            if n in erben:
+                melde(f'{n}\t{erben[n]}')
+        print(f'erbt {len(erben)} von {len(pr)} Proben'
+              + (f' — sonst etwa: {next(iter(gruende.values()))}' if gruende else ''), file=sys.stderr)
         return 0
     if args.bilderlauf:
         if not args.stufe or not args.umfang:
