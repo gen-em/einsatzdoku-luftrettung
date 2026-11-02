@@ -9,6 +9,7 @@ Verlauf bis zum Schnitt). Die Fassungszählung läuft fortlaufend weiter.
 
 | Fassung | Datum | Anlass | Was |
 |---|---|---|---|
+| 190 | 02.11.2026 | 20-Abschluss | Erledigt-Zeile 20 (Freigabe 02.11.2026, PR #127), Fahrplanzeile heraus, R89 umgesetzt; Konzept und Prüfdokument PU gelöscht (`47a8567c`), offene P-PU-Punkte in die Prüfliste und 6.1. Kopf: Stand `main` `d7b4661`. |
 | 189 | 02.11.2026 | 20, R89 | Schritt 20 gebaut (PU-01 bis -10), Pull Request offen; R87 abgelöst durch R89 (seit PU-03), R89 umgesetzt bis auf den Abschluss. Kopf: „Läuft" und „Offene PRs". |
 | 188 | 02.11.2026 | Zuarbeit (PU-08) | 6.1 und 6.2 verweisen auf `docs/konzepte/Pruefliste.md` statt auf dreizehn Prüfdokumente (E-PU-09, -14); die Dokumente sind gelöscht, ihr letzter Stand ist `8a8144f`. Keine Zeile gestrichen oder neu. |
 | 187 | 01.11.2026 | 20 | Umsetzung von PU beginnt auf `claude/compassionate-ride-1a0uw1`, nachdem 12b mit PR #125 gemergt ist; Kopf: Stand `main` `c32dd2c` (Web 23.6.0, Uhr 4.1.1, Android 0.18.2), keine offenen PRs, „Läuft: 20". |

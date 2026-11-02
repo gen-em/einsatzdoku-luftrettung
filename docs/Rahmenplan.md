@@ -1,14 +1,14 @@
 # Rahmenplan — Programm „Gen-EM NAdoku" bis v1.0
 
-**Fassung 189 (02.11.2026)** · Steuerung: Reihenfolge, Status, programmweite
+**Fassung 190 (02.11.2026)** · Steuerung: Reihenfolge, Status, programmweite
 Entscheidungen. Verlauf: `Rahmenplan-Verlauf.md`. Fassungen 1–15:
 `Rahmenplan-Archiv.md`; Fassungen 16–124: `Rahmenplan-Archiv-2.md`.
 
-**Stand `origin/main`** (Commit `c32dd2c`, PR #125, gemessen 01.11.2026): Web 23.6.0 ·
+**Stand `origin/main`** (Commit `d7b4661`, PR #127, gemessen 02.11.2026): Web 23.6.0 ·
 Uhr 4.1.1 · Android 0.18.2; Web 23.1.0 auf Produktiv seit dem 27.10.2026.
-**Läuft:** 20 — PU Prüfumfang, gebaut auf `claude/compassionate-ride-1a0uw1`, Pull Request offen, Abschluss wartet auf die Freigabe.
+**Läuft:** kein Schritt — 20 ist abgeschlossen (Abschnitt 8, Freigabe 02.11.2026).
 **Als Nächstes:** 13 — P7 Gesicht v1.0; beginnt mit einer Konzeptsitzung.
-**Offene PRs:** PU (Schritt 20, ohne Fassung).
+**Offene PRs:** Abschluss von 20 (Buchführung, ohne Fassung).
 **Fällig bei der Betreiberin:** 38 Posten (Abschnitt 6.1). **`update.php`:** auf Staging und Produktiv nichts offen (Betreiberin, 20.10.2026, nach Web 23).
 
 Kennungen sind Namen, keine Reihenfolge.
@@ -120,7 +120,6 @@ weil das Altbestand-Werkzeug ein einziges Konto voraussetzte.
 | 6 | **S4 — Rest, Teil C** | Play Console nach R65: interner Test-Track für Handy und Uhr unter einem Eintrag, Versionscode-Versatz, Signaturweg; Android 1.0.0 (E-R45-7). Die Vorbereitung ohne D-U-N-S und Schlüssel ist gebaut (Android 0.13.0), die Gerätetests sind erfolgt (24.09.2026) | D-U-N-S, Organisationskonto und Play App Signing — erledigt 26.09.2026 (SD-M1); offen in 6.2: Wear-OS-Uhr, Demo-Video, Datensicherheitsformular | `docs/konzepte/Konzept-S4-Handy-Uhr-Client.md` 13; `Vorbereitung-Play-Console.md` | offen — Teile A bis C gemergt 04.09.2026 (PR #33, Abschnitt 8); Android 1.0.0 und der interne Test-Track können beginnen |
 | 11 | **Planung v1.0** | Festlegungen vor dem Schnitt (R65 bis R73, entschieden 03.09.2026); Ergebnis sind die Konzepte der Phasen P6 bis P8 mit je eigenem Paketschnitt (P6 nach der Freigaberunde des Reviews) | keine | `docs/konzepte/Konzept-Planung-v1.0.md` | gemergt 03.09.2026 — Festlegungen entschieden (R65–R73); offen nur die Paketschnitte, je mit dem Konzept zu 12b, 13 und 14 |
 | 13 | **P7 — Gesicht v1.0** | Umbenennung überall (Langform in den System-E-Mails entscheiden), neues Demo-Passwort (R25); Vertrag v1 (R12, Nr. 23); Doku-Neufassung, Handbuch als HTML im Release (R16, R72); Web-App-Manifest (R70); Changelog neu (R15); Backlog-Übernahme; Altformat der Sicherung weg (Nr. 46); Kommentarregel (R69) | 12b | eigenes Konzept nach K1 | offen — nach 12b |
-| 20 | **PU — Prüfumfang** (R89) | Der Prüfstand misst je Berührung: Firefox/WebKit, zehn Breiten und alle Seiten nur bei Stylesheet-Berührung, Zehnerregel oder `haupt`; Ergebnisart `hinweis`; Steuerung raus aus dem Tor; Bestandsriegel erzeugt statt rot; ein Prüfdokument ist eine Prüfliste; eine Prüfliste statt zwölf | Konzept: keine; Umsetzung: 12b gemergt (Werkzeugschicht) | `docs/konzepte/Konzept-PU-Pruefumfang.md` (Kürzel PU, Opus), Prüfdokument daneben | gebaut — PU-01 bis PU-10 auf `claude/compassionate-ride-1a0uw1` (02.11.2026), Pull Request offen; Konzept gemergt mit PR #124, #126 |
 | 14 | **P8 — Schnitt** | Neuaufsetzen mit Übernahme per edbak (R40 (3), R60, Nr. 324); Migrationsregister neu (R66); Repo-Umzug und Inventur mit Begründung je Weglassung (R68); Kette im neuen Repositorium (R67, R40 (4)); Rechts- und Betreiberunterlagen (R41); Abnahme nach R11; Tags `web-v1.0.0`, `uhr-v…`, `android-v1.0.0` | 13 | eigenes Konzept nach K1 | offen — nach 13 |
 | — | **Betriebsübergang** | Öffnung in Wellen über die Betriebsarten (R41); Produktionsfreigabe in den Stores mit Welle 1 (R65; nach MDR-Abgrenzung und Rechtsunterlagen); mit Welle 1 entfällt die Seitenladung (`apk.php`, Handbuch 10.1); Garmin-Uhr über den Connect-IQ-Store; halbjährliche Probe-Wiederherstellung | v1.0 | — | offen — beginnt mit v1.0 (nach den Schritten 13 und 14); Wellen nach R41 |
 
@@ -187,6 +186,7 @@ gestrichen, 6a abgehakt; was steht, ist bestätigt offen.
 | **Umgebung `staging` beschränken** (Deployment branches and tags): `main`, `hotfix/*` **und Tag `web-v*`** — ohne den Tag bleibt jede Produktivauslieferung am Job „Rückfallstand (Staging)" hängen | Kette II Z4 (E-PK-69) | 29.09.2026 | `Pruefliste.md`, Abgleich |
 | **Umgebung `produktion` beschränken** auf `main` und die Tags `web-v*`, `android-v*`, `uhr-v*` — ein Probelauf fordert sie heute von jedem Zweig an (F-R17-04); dabei Pflichtprüfer und Org-Zweitfaktor nachsehen | 12 (R17-01) | 11.10.2026 | `Pruefliste.md`, P-R17-04 |
 | **Prüfliste S11:** Gerätetests Uhr 4.0.0 und Android 0.18.0 (P-S11-32 bis -35, -05, -39), Wege auf Staging (-14 bis -31), Safari (-43), Konto-Backup (-45), alte Sicherungen (-07, -08), Rechtstexte (-40) | 12a | 20.10.2026 | `Pruefliste.md` 4 |
+| **Prüfliste PU:** P-PU-01 bis -03 (Stufe 1 und „Schon gemessen?" an PR #127 und seinem Merge), -04 bis -07 beim nächsten passenden Paket (schmale Nebenstufe, Zehnergrenze, zweiter Lauf mit Erbe, Stylesheet), -09 und -10 lesen | 20 | 02.11.2026 | `Pruefliste.md` 2, 12 |
 | **Prüfliste DM:** P-DM-02 (Registrierung in Firefox auf Staging: Knopf sofort frei), -03 (dasselbe in Safari), -06 (dasselbe auf Produktiv nach dem Tag `web-v23.0.1`, nur bei offener Registrierung) | 19 | 20.10.2026 | `Pruefliste.md` 3 |
 | **Prüfliste R17:** P-R17-03, -04 (CSP scharf seit 28.10.2026; offen HSTS, GitHub), -05; aus 12b -06 bis -11 und -15 bis -40, je nach Deploy, nach Risiko geordnet (-12 bis -14 und -29 erledigt, -17 offen nur auf Staging) | 12, 12b | 11.10.2026 | `Pruefliste.md` 4 |
 | **R17-19 abnehmen** — „Prüfung“ und App-Probelauf `android`, `uhr` von `main`; eine Instanz startet keinen Lauf (E-R17-38). Stufe 2 nach dem Merge ist gelesen (Lauf 40271258931, P-R17-14) | 12b (R17-19) | 25.10.2026 | `Pruefliste.md`, P-R17-15 und -16 |
@@ -357,7 +357,7 @@ werden hier kompakt angehängt; **der Statussatz wird ersetzt, nicht ergänzt**
 | R86 | P6 in zwei Hälften um S11: Bedrohungsmodell als 12 vor 12a, Code-Review als 12b danach — S11 wird gegengelesen, der Code einmal, in Endfassung | gilt; entschieden 27.09.2026 (Betreiberin, Konzeptsitzung SR) | Abschnitt 3 („Warum so", Blöcke 12 und 12b) |
 | R87 | Browserproben in Chromium, Firefox und WebKit ab Stufe neben und in Stufe 2, in klein Chromium; fehlt eine Engine, rot. Ausnahmen begründet; Safari von Hand | abgelöst durch R89 (umgesetzt mit PU-03, 01.11.2026); entschieden 19.10.2026 (Betreiberin), umgesetzt in Schritt 19 (abgeschlossen 20.10.2026) | Konzept DM (gelöscht, `3bedc25`), E-DM-01 bis -11 |
 | R88 | Die Pakete von 12b (R17-18 bis -30) laufen mit Opus, Kryptographie eingeschlossen — K8 (Krypto mit Fable, E-PV-5 (7)) gilt für 12b nicht; das Review war Fable | umgesetzt mit 12b (01.11.2026); entschieden 21.10.2026 (Betreiberin, Freigaberunde) | `Review-R17.md` 2.1 (gelöscht, `630756f0`), E-R17-28 |
-| R89 | Der Prüfumfang folgt der Berührung: drei Engines, zehn Breiten und alle Seiten nur bei Stylesheet-Berührung, Zehnerregel oder `haupt`; sonst schmal. Ersetzt R87 | gilt; entschieden 01.11.2026 (Betreiberin), umgesetzt in Schritt 20 (PU-01 bis -10, Abschluss offen) | Konzept PU, E-PU-01 bis -19 |
+| R89 | Der Prüfumfang folgt der Berührung: drei Engines, zehn Breiten und alle Seiten nur bei Stylesheet-Berührung, Zehnerregel oder `haupt`; sonst schmal. Ersetzt R87 | umgesetzt in Schritt 20 (abgeschlossen 02.11.2026); entschieden 01.11.2026 (Betreiberin); E-PU-16 und -18 bestätigt 02.11.2026 | Konzept PU (gelöscht, `47a8567c`), E-PU-01 bis -19 |
 
 ## 8. Erledigt
 
@@ -412,6 +412,7 @@ die Aufräumfassung vom 24.09.2026 gelöscht hat (Archiv-2, Verlaufszeile 110).
 | 19 — DM: drei Engines (R87) | Web 23.0.1, sonst Werkzeug | 20.10.2026 · PR #112–#114 | gelöscht (`3bedc25`) | `Pruefdokument-DM-Drei-Motoren.md` (P-DM-02, -03, -06 offen, 6.1) | Firefox und WebKit im Setup, Start über `motor.mjs` mit Register und Riegel; ab `neben` und in Stufe 2 dreifach (Stufe 2 auf 24.04, Nr. 393); Nr. 390 erledigt |
 | 12a — S11: Ortsdaten verschlüsselt (Weg B, R78) | Web 22.0.0–23.0.0, Uhr 4.0.0, Android 0.18.0 | 20.10.2026 · PR #106, #111 | gelöscht (`0a6b926`) | `Pruefdokument-S11-Ortsdaten.md` (Gerätetests und Staging-Wege offen, 6.1) | Konto-Schlüsselpaar; Gerätehülle für Spur, Phasenorte, Reanimation; Zielklinik im `pat_blob`; Spurfunktionen im Browser; Klartext weg; Nr. 43, 53, 161 |
 | 12b — P6: Review und Bereinigung (R17-05 bis -30) | Web 23.0.2–23.6.0, Uhr 4.0.0–4.1.1, Android 0.18.0–0.18.2 | 01.11.2026 · PR #118, #122, #123, #125 | gelöscht (`630756f0`) | `Pruefdokument-R17-Review.md` (offen, 6.1) | Review in elf Stücken, 59 Befunde, kein kritischer; Kette, Pfeffer, Uhr, Server, Sicherung, Android, `CryptoKey`, Herkunft, Doku, Kommentare, Seitenaufbau |
+| 20 — PU: Prüfumfang (R89) | nur Werkzeug | 02.11.2026 · PR #124, #126, #127 | gelöscht (`47a8567c`) | `Pruefliste.md` 2, 12 (P-PU-01 bis -10) | Umfang schmal oder voll (Zehnerregel, `--voll`), Engines, Breiten, Seiten je Berührung; `hinweis`; ererbter Bericht; Steuerung aus dem Tor; Erzeuger vor dem Riegel; eine Prüfliste statt dreizehn Prüfdokumente |
 
 ## 9. Pflege dieses Dokuments
 

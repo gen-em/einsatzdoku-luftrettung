@@ -52,9 +52,7 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
 
 | Spanne | Zweig | seit |
 |---|---|---|
-| 400 bis 419 | Schritt 12b, Pakete R17-20 bis -30 (`Review-R17.md`, gelöscht): 400 bis 409 auf `claude/new-session-lvb0x0`, 410 bis 419 auf `claude/new-session-p1duc7` (R17-29, -30); R17-18 und -19 auf `claude/modest-edison-byg7ay` und `claude/tender-feynman-3oyo13` (PR #122), bis R17-17 `claude/lucid-cannon-nvv86i` (PR #118); vergeben: 400 bis 411 | 26.10.2026 |
-| 420 bis 429 | `claude/zealous-albattani-2xk21u` — Schritt 20, Konzept PU (`Konzept-PU-Pruefumfang.md`); vergeben: keine. Umgebucht von 410 bis 419 beim Merge mit 12b am 01.11.2026: Beide Zweige hatten die Spanne reserviert, 12b hatte 410 und 411 schon vergeben | 01.11.2026 |
-| ab 430 | frei — höchste reservierte Nummer 429; frei blieben 394 bis 399 aus der Spanne von 19 (PR #112 bis #114), 389 aus der von 12a (PR #116), 372 bis 379 aus der von 12 (PR #103), 362 bis 369 aus der von PK, 359 aus der von 18 (PR #101), 348 und 349 aus der von 17, 338 aus der von AR | 20.10.2026 |
+| ab 430 | frei — höchste reservierte Nummer 429; frei blieben 420 bis 429 aus der Spanne von 20 (PR #127), 412 bis 419 aus der von 12b (PR #125), 394 bis 399 aus der Spanne von 19 (PR #112 bis #114), 389 aus der von 12a (PR #116), 372 bis 379 aus der von 12 (PR #103), 362 bis 369 aus der von PK, 359 aus der von 18 (PR #101), 348 und 349 aus der von 17, 338 aus der von AR | 02.11.2026 |
 
 ---
 
