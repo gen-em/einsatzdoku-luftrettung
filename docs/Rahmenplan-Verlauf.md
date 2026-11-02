@@ -9,6 +9,7 @@ Verlauf bis zum Schnitt). Die Fassungszählung läuft fortlaufend weiter.
 
 | Fassung | Datum | Anlass | Was |
 |---|---|---|---|
+| 200 | 02.11.2026 | Zuarbeit (R91), Berichtigung | 6.1: Block 5 und zwei Zuarbeiten erledigt (app.umgebung, Backup-Ziel „Lima-City“). Berichtigt: Seit 197 hing der Rest der Zeile „Plattformvergleich“ an der Lima-Zeile. |
 | 199 | 02.11.2026 | Zuarbeit (R91) | 6.1: Prüfdurchgang auf Staging, Block 4 — Freigabe ohne Konto, Konto löschen, Komplett-Backup ohne IP, Demo ohne Paar erledigt; Kopf nach dem Merge von #132. Berichtigt: 6.1 nannte P-R17-03 noch offen. |
 | 198 | 02.11.2026 | Zuarbeit (R91) | 6.1: Prüfdurchgang auf Staging, Block 3 — Anmeldung mit Wiederherstellungscode, Zurücksetzen durch die Verwaltung, Rückweg mit eigenem und fremdem Zettel, P-SR-19 erledigt. |
 | 197 | 02.11.2026 | Zuarbeit (R91), Berichtigung | 6.1: erster Prüfdurchgang auf Staging — Station D, Rückwegprobe, P-PU-02/-03 erledigt, Plattformzahlen von Staging eingetragen; neu: Backup-Ziel „Lima-City“. Berichtigt: als 194 geschrieben, parallel zu PR. |
