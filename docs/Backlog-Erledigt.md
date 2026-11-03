@@ -10597,8 +10597,8 @@ zutreffen.
      Erledigt 03.11.2026 mit BR5-03 (Web 23.6.5): `post_text()` und
      `get_text()` in `eingabe_lib.php` an 149 Stellen (125 POST, 24 GET),
      dazu 15 Aufrufe ohne Cast (`email_normalisieren()`, `email_pruefen()`,
-     `rolle_normieren()`, `trim()`, `session_ende_text()`) und
-     `passkey_antwort` in Anmeldung und Zweitfaktor; die Hüllen `$feld`
+     `rolle_normieren()`, `trim()`, `session_ende_text()`);
+     `passkey_antwort` bleibt bewusst ohne (F-BR5-20). Die Hüllen `$feld`
      (zweimal) und `konten_param()` sind darin aufgegangen. Registerzeilen
      Z47, Z48 mit Decke 0. Abnahme: zwölf Felder der Anmeldeseiten als Liste
      — 0 mit 500 oder Zeile im Reiter System; mit dem alten Code 4 (zwei
