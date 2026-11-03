@@ -14,6 +14,17 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 23.7.2] — unveröffentlicht
+
+### Behoben
+
+- **Web — Bitwarden bot beim Backup mit Kontopasswort nichts an** (Backlog
+  Nr. 430). Das Feld „Kontopasswort“ stand ohne eigenes Formular neben den zwei
+  Feldern für ein neues Backup-Passwort, und der Passwortverwalter hielt das
+  Ganze für einen Passwortwechsel. Jetzt steht das Kontopasswort für sich;
+  Enter darin erstellt das Backup. Ob Bitwarden den Eintrag jetzt anbietet,
+  zeigt erst ein Browser mit Bitwarden.
+
 ## [Web 23.7.1] — unveröffentlicht
 
 ### Behoben

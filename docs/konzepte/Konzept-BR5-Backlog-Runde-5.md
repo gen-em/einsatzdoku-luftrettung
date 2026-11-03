@@ -21,12 +21,12 @@ BR5-10).
 | BR5-04 | Zweite Passwortseite: Nr. 358 | **erledigt** 03.11.2026 (Web 23.6.6) |
 | BR5-05 | Schlüsselpaar und Rückweg nach der Anmeldung: Nr. 392 | **erledigt** 03.11.2026 (Web 23.7.0) |
 | BR5-06 | Meldungen und Karten: Nr. 346, 356, 456 | **erledigt** 03.11.2026 (Web 23.7.1) |
-| BR5-07 | Backup-Formular: Nr. 430 | offen |
+| BR5-07 | Backup-Formular: Nr. 430 | **gebaut** 03.11.2026 (Web 23.7.2) — Abnahme mit Bitwarden bei der Betreiberin (P-BR5-13) |
 | BR5-08 | Geräte: Nr. 361 (mit 432), 440 | offen |
 | BR5-09 | PHP 8.3.6: Nr. 383 | offen |
 | BR5-10 | Abschluss | offen |
 
-**In Arbeit:** BR5-07 als Nächstes. **Es hakt:** nirgends.
+**In Arbeit:** BR5-08 als Nächstes. **Es hakt:** nirgends. Nr. 430 bleibt „teilweise“, bis die Handprüfung mit Bitwarden durch ist.
 
 ---
 
@@ -258,6 +258,12 @@ der Knopf des ersten Formulars ohne Abstand über der Beschriftung des
 zweiten. E-BR5-17 setzte die Linie je Abschnitt, nicht den Abstand darin;
 dafür bräuchte es eine Stylesheet-Regel. Backlog Nr. 480 (aus der Spanne
 dieses Schritts).
+
+**F-BR5-26 — Enter im Kontopasswort tat nie etwas (BR5-07).** Ein Formular
+ohne Absendeknopf mit mehr als einem Feld schickt bei Enter nach HTML nicht ab,
+und der verborgene Anmeldename zählt als Feld. Vorher, ohne Formular, war es
+ebenso. Damit Enter „Backup erstellen“ heißt, fängt das Formular die Taste ab;
+sein `submit` geht nie an den Server.
 
 **F-BR5-14 — Nr. 450 hat die Ursache in der Kette, die Abhilfe am Server.**
 Stufe 2 legt Konten unter `…@example.invalid` an (`umlauf_konto()` in
@@ -935,10 +941,24 @@ PHP 8.3.6):
 - *Design:* keine neue Regel, kein neuer Baustein; Bilderlauf im Prüfstand
   vor dem PR (BR5-10).
 
+**BR5-07** (03.11.2026, Web 23.7.2; örtliche Anlage, Demo-Konto — ein frisches
+Konto hat nichts zu sichern):
+
+- *Backup, drei Engines:* Schalter „Mein Kontopasswort verwenden“, Passwort,
+  **Enter** im Feld → `.edbak` heruntergeladen, die Seite bleibt
+  (`#bpwk` steht im Formular `bpwkfeld`); Schalter aus, eigenes Passwort
+  zweimal, Knopf → `.edbak`. Chromium, Firefox, WebKit je ok, 0 Seitenfehler.
+  Der erste Lauf: Enter löste nichts aus (F-BR5-26).
+- *Bildvergleich* der Karte vor und nach dem Umbau (Chromium, Schalter aus
+  und an): 0 abweichende Pixel bei 988 × 495 und 988 × 436.
+- *Nicht geprüft:* ob Bitwarden den Eintrag jetzt am Feld anbietet — die
+  Sandbox hat kein Bitwarden (P-BR5-13).
+
 ## 7. Verlauf
 
 | Datum | Was |
 |---|---|
+| 03.11.2026 | BR5-07 gebaut (Web 23.7.2), Nr. 430 „teilweise“; F-BR5-26. |
 | 03.11.2026 | BR5-06 erledigt (Web 23.7.1); F-BR5-25, Backlog Nr. 480. |
 | 03.11.2026 | BR5-05 erledigt (Web 23.7.0); F-BR5-23, -24. |
 | 03.11.2026 | BR5-04 erledigt (Web 23.6.6); F-BR5-22. |

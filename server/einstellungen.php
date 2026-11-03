@@ -3275,13 +3275,22 @@ ui_seite_start(['titel' => 'Einstellungen',
                Laden im Markup, jedes mit seiner einen Bedeutung, und der
                Schalter blendet nur um. Daneben der Anmeldename, verborgen und
                als `username` gekennzeichnet: Ohne ihn weiß ein Verwalter
-               nicht, welcher seiner Einträge zu diesem Passwort gehört. */ ?>
-      <div id="bpwkfeld" hidden>
+               nicht, welcher seiner Einträge zu diesem Passwort gehört.
+
+               EIN EIGENES FORMULAR (Backlog Nr. 430, BR5-07). Bis Web 23.7.1
+               standen alle drei Felder ohne `<form>`; Bitwarden fasste sie zu
+               einem Pseudo-Formular zusammen, sah `current-password` neben
+               zwei `new-password` und hielt es für einen Passwortwechsel — das
+               Menü am Feld zeigte „No items to show". Jetzt stehen Anmeldename
+               und Kontopasswort allein in einem Formular, die beiden Felder
+               für ein eigenes Passwort außerhalb. Abgeschickt wird es nie:
+               Enter löst „Backup erstellen" aus (Skript unten). */ ?>
+      <form id="bpwkfeld" hidden>
         <input type="text" name="username" autocomplete="username" hidden readonly
                value="<?= e($userEmail) ?>">
         <?php ui_feld(['label' => 'Kontopasswort', 'id' => 'bpwk', 'name' => 'password',
                        'art' => 'password', 'attr' => ' autocomplete="current-password"']); ?>
-      </div>
+      </form>
       <div id="bpw1feld">
       <?php ui_feld(['label' => 'Passwort für das Backup', 'id' => 'bpw1',
                      'name' => 'backup_passwort',
@@ -3721,6 +3730,17 @@ ui_seite_start(['titel' => 'Einstellungen',
       bpw1.value = '';
       bpw2.value = '';
       expState.textContent = '';
+    });
+    /* Das Formular des Kontopassworts (Nr. 430) geht nie an den Server:
+       Enter darin heißt „Backup erstellen". Über die Taste und nicht nur
+       über `submit`: Ein Formular ohne Absendeknopf mit zwei Feldern (der
+       verborgene Anmeldename zählt mit) schickt bei Enter gar nicht ab. */
+    const bpwkForm = document.getElementById('bpwkfeld');
+    bpwkForm.addEventListener('submit', (ev) => { ev.preventDefault(); });
+    bpwkForm.addEventListener('keydown', (ev) => {
+      if (ev.key !== 'Enter') { return; }
+      ev.preventDefault();
+      document.getElementById('expbtn').click();
     });
 
     /** Prüft das eingegebene Passwort und liefert es zurück — oder null. */

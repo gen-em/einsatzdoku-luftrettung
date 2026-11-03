@@ -8534,5 +8534,13 @@ declare(strict_types=1);
  *   ohne Abstand am Knopffuss; jetzt je eine Linie. Und die Reanimationskarte
  *   sagte im gesperrten Formular „keine", auch an einem Einsatz mit
  *   Reanimation; jetzt „gesperrt" oder „nicht lesbar". Korrektur; kein
- *   Schema. */
-const WEB_VERSION = '23.7.1';
+ *   Schema.
+ * 23.7.2 — BITWARDEN HIELT DAS BACKUP FUER EINEN PASSWORTWECHSEL (Backlog
+ *   Nr. 430; Schritt 22, BR5-07). Kontopasswort und die zwei Felder fuer ein
+ *   eigenes Backup-Passwort standen ohne Formular nebeneinander; der
+ *   Verwalter sah `current-password` neben zwei `new-password` und bot am
+ *   Feld nichts an. Jetzt steht das Kontopasswort samt Anmeldename in einem
+ *   eigenen Formular, das nie abgeschickt wird; Enter erstellt das Backup.
+ *   Ob Bitwarden es jetzt anbietet, zeigt nur ein echter Browser mit
+ *   Bitwarden. Korrektur; kein Schema. */
+const WEB_VERSION = '23.7.2';

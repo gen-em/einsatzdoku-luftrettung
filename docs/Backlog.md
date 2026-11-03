@@ -801,7 +801,7 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
 
 <!-- -->
 
-430. **Bitwarden zeigt beim Backup mit Kontopasswort den Eintrag nicht im Menü am Feld.** · gehört zu: 22 · Stand: offen · seit 02.11.2026
+430. **Bitwarden zeigt beim Backup mit Kontopasswort den Eintrag nicht im Menü am Feld.** · gehört zu: 22 · Stand: teilweise · seit 02.11.2026
      *Aufgenommen 02.11.2026 aus P-R17-34 (Handprüfung auf Produktiv,
      Firefox mit Bitwarden).* Seit Web 23.4.0 bietet Bitwarden im Feld
      „Kontopasswort" (Einstellungen → Backup) kein neues Passwort mehr an —
@@ -816,7 +816,10 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      eigenes Formular ohne `new-password`-Felder setzen. *Abnahme:* in einem
      echten Browser mit Bitwarden bietet das Menü am Feld den Eintrag an;
      die Sandbox hat kein Bitwarden.
-
+     *Gebaut 03.11.2026 mit BR5-07 (Web 23.7.2):* Kontopasswort samt
+     Anmeldename in einem eigenen Formular, Enter erstellt das Backup; Karte
+     pixelgleich, Backup in drei Engines. Offen bis zur Handprüfung mit
+     Bitwarden (P-BR5-13).
 <!-- -->
 
 432. **„App installieren" nennt beide APKs gleich.** · gehört zu: 22 · Stand: offen · seit 02.11.2026
