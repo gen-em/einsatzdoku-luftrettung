@@ -686,11 +686,37 @@ PHP 8.3.6):
   Kein Bilderlauf und kein Prüfstand: Das Paket ändert keine Oberfläche
   außer einem Meldungstext; der Prüfstand läuft in BR5-10 über den
   Endstand.
+- *Prüfstand vor dem Zwischen-PR* (Merge-Commit `10e88e3`, PR #141): Stufe
+  klein, schmal, 34 grün, 0 rot, 0 Hinweise, 1380 s. Ein erster Lauf davor
+  meldete `steuerung=hinweis` — die Statuszelle der Fahrplanzeile 22 war
+  über 240 Zeichen lang und begann nicht mit einem Wort des Vokabulars;
+  gekürzt, neu gemessen.
+- *Staging, nach dem Merge von PR #141* (Auslieferungslauf 166 grün,
+  Staging meldet v23.6.3; Chromium, eigenes Konto der Arbeitsumgebung, R91):
+  **P-BR5-01** Logo-Standard auf „Fahrzeug“ — Meldung „Standard der
+  Installation: Fahrzeug (NEF) …“, nach dem Neuladen gewählt, zurück auf
+  „Hubschrauber“. **P-BR5-02** Name und Kurzname mit Zusatz gespeichert
+  („Name der Installation gespeichert.“), nach dem Neuladen beide geändert,
+  zurückgestellt; Kontakt- und Betreiberadresse ebenso, danach wieder leer.
+  **P-BR5-03** im Demo-Konto 08:15–08:20 aus einem Ruhesegment gelöscht
+  (Rückfrage „Die 57 Punkte …“, 131 → 74 Punkte, 0 Seitenfehler); unter
+  Verwaltung → Protokoll steht die Art im Filter, die Zeile trägt
+  „GPS-Daten gelöscht“, die Rohform kommt auf der Seite nicht mehr vor —
+  auch der ältere Eintrag aus P-S11-22 ist jetzt beschriftet.
+  **P-BR5-04** Wegwerfkonto (Plus-Adresse) angelegt, Passwort über
+  `passwort_setzen.mjs`, Zweitfaktor über die Oberfläche eingeschaltet,
+  mit Code und „Gerät merken“ angemeldet; „Zurücksetzen“ in der
+  Verwaltung → „Zweitfaktor aus“, Protokoll „Gemerkte Geräte vergessen (1)
+  — mit dem Zweitfaktor“ und „Zweitfaktor durch die Verwaltung
+  zurückgesetzt“. Ohne Passkey (headless keiner anlegbar). Konto danach
+  gelöscht. Der Fehlerzweig des Logo-Standards bleibt ungeprüft (Prüfdokument
+  1).
 
 ## 7. Verlauf
 
 | Datum | Was |
 |---|---|
+| 03.11.2026 | PR #141 gemergt; P-BR5-01 bis -04 auf Staging bestanden und aus der Handprüfliste gestrichen. |
 | 03.11.2026 | `main` mit PR #139 aufgenommen (Rahmenplan-Fassung 206 wird 207); Zwischen-PR mit BR5-01, damit die Arbeitsumgebung die Punkte auf Staging prüft (Betreiberin). |
 | 03.11.2026 | BR5-01 erledigt (Web 23.6.3); F-BR5-15, -16; E-BR5-19 (diese Sitzung setzt um). |
 | 03.11.2026 | `main` mit PR #137 und #138 aufgenommen; Fahrplanzeile 22, Rahmenplan Fassung 206, Kopfzeilen 450, 454, 456, 457 auf `22`; gemergte Spanne 470 bis 479 (GR) gestrichen, weil die Kopfdecke von `Backlog.md` sonst riss (61 > 60). |

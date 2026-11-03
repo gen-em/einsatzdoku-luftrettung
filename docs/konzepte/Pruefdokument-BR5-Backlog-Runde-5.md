@@ -7,14 +7,16 @@ BR5-01.
 
 ## 1. Was nicht geprüft werden konnte, und warum
 
-- **Logo-Standard bei scheiterndem Schreiben (Nr. 345, BR5-01)** — der Zweig
-  in `admin_installation.php` ist gelesen und die Funktion darunter
-  gemessen, die Seite aber nicht im Browser bedient: Ein gescheitertes
-  `app_state_setzen()` lässt sich über die Oberfläche nicht herbeiführen,
-  ohne die Tabelle zu sperren, und der Weg ist drei Zeilen lang. → P-BR5-01.
-- **Der Deadlock auf Produktiv-MySQL (Nr. 354)** — gemessen ist MariaDB
-  10.11 örtlich. Die Fehlercodes 1213, 2006, 2013 sind bei MySQL dieselben;
+- **Logo-Standard bei scheiterndem Schreiben (Nr. 345, BR5-01)** — der
+  Fehlerzweig ist gelesen und die Funktion darunter örtlich gemessen; über die
+  Oberfläche lässt sich ein gescheitertes `app_state_setzen()` nicht
+  herbeiführen. Der Erfolgsweg ist auf Staging bedient (Konzept 6).
+- **Der Deadlock auf Produktiv (Nr. 354)** — gemessen ist MariaDB 10.11
+  örtlich. Die Fehlercodes 1213, 2006, 2013 sind bei MySQL dieselben;
   einen Deadlock gegen den Hoster stellt niemand her.
+- **Passkeys beim Zurücksetzen des Zweitfaktors** — auf Staging hatte das
+  Wegwerfkonto keinen; ein Browser ohne Bildschirm legt keinen an. Örtlich
+  belegt (Deadlock-Probe, Passkey bleibt bzw. geht mit).
 
 ## 2. Grenzen der benutzten Prüfmittel
 
@@ -24,12 +26,11 @@ BR5-01.
   Stelle (`protokoll()` → `db_transaktion_verloren()`).
 - **Z46 sieht nur feste Arten.** Eine Art aus einer Variablen
   (`protokoll_geraet()`, `wartung_an`/`_aus`) misst sie nicht.
+- **Staging-Prüfungen nur in Chromium**, mit dem eigenen Konto der
+  Arbeitsumgebung (R91).
 
 ## 3. Handprüfliste
 
-| Nr. | Bedienweg | Erwartung | Scheitern erkennbar an |
-|---|---|---|---|
-| P-BR5-01 | Staging, nach dem Merge: Verwaltung → Installation, Logo-Standard wechseln, speichern | Meldung „Standard der Installation: …“, das Logo ist gewechselt | Meldung ohne Wechsel, oder eine Fehlerseite |
-| P-BR5-02 | Staging: Verwaltung → Installation, Name und Kurzname ändern, speichern; dann Kontakt- und Betreiberadresse | „gespeichert“, beide Werte stehen nach dem Neuladen | nur einer der beiden Werte geändert |
-| P-BR5-03 | Staging: einen Zeitraum aus einer GPS-Spur löschen (Einsatz → Spur → Zeitraum löschen), dann Verwaltung → Protokoll, Reiter Verwaltung | Eintrag mit Plakette „GPS-Daten gelöscht“; die Art steht im Filter „Art des Ereignisses“ | Plakette „spur stueck geloescht“ oder Art fehlt im Filter |
-| P-BR5-04 | Staging: Zweitfaktor eines Prüfkontos ausschalten (Profil → Anmeldung) | Faktor aus, Passkeys und gemerkte Geräte weg, drei Protokolleinträge | Fehlerseite ohne Deadlock, oder Passkeys bleiben |
+*Für dich offen: nichts aus BR5-01.* P-BR5-01 bis -04 hat die
+Arbeitsumgebung am 03.11.2026 auf Staging bestanden (Konzept 6) und hier
+gestrichen.
