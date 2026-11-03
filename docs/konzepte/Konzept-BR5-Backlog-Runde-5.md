@@ -15,18 +15,18 @@ BR5-10).
 
 | Paket | Inhalt | Stand |
 |---|---|---|
-| BR5-01 | Transaktion und Protokoll: Nr. 354, 345, 457 | offen — wartet auf Q-BR5-01, -02, -12 |
-| BR5-02 | Jobs und Mail: Nr. 357, 454, 450 | offen — wartet auf #137 (E-BR5-03) und Q-BR5-08, -09, -13 |
-| BR5-03 | Formularfelder: Nr. 355 (`post_text()`) | offen — wartet auf Q-BR5-03 |
-| BR5-04 | Zweite Passwortseite: Nr. 358 | offen — wartet auf Q-BR5-04 |
-| BR5-05 | Schlüsselpaar und Rückweg nach der Anmeldung: Nr. 392 | offen — wartet auf Q-BR5-05 |
-| BR5-06 | Meldungen und Karten: Nr. 346, 356, 456 | offen — wartet auf Q-BR5-07, -14 |
-| BR5-07 | Backup-Formular: Nr. 430 | offen — wartet auf Q-BR5-10 |
-| BR5-08 | Geräte: Nr. 361 (mit 432), 440 | offen — wartet auf Q-BR5-06, -11 |
-| BR5-09 | PHP 8.3.6: Nr. 383 | offen — wartet auf Q-BR5-15 |
+| BR5-01 | Transaktion und Protokoll: Nr. 354, 345, 457 | offen |
+| BR5-02 | Jobs und Mail: Nr. 357, 454, 450 | offen — wartet auf #137 (E-BR5-03) |
+| BR5-03 | Formularfelder: Nr. 355 (`post_text()`) | offen |
+| BR5-04 | Zweite Passwortseite: Nr. 358 | offen |
+| BR5-05 | Schlüsselpaar und Rückweg nach der Anmeldung: Nr. 392 | offen |
+| BR5-06 | Meldungen und Karten: Nr. 346, 356, 456 | offen |
+| BR5-07 | Backup-Formular: Nr. 430 | offen |
+| BR5-08 | Geräte: Nr. 361 (mit 432), 440 | offen |
+| BR5-09 | PHP 8.3.6: Nr. 383 | offen |
 | BR5-10 | Abschluss | offen |
 
-**In Arbeit:** Konzept (Fragen an die Betreiberin). **Es hakt:** Die
+**In Arbeit:** nichts — Konzept fertig, alle Fragen entschieden (E-BR5-04 bis -18). **Es hakt:** Die
 Umsetzung beginnt erst nach dem Merge von PR #137 (E-BR5-03). Bis dahin
 schreibt dieser Zweig weder die Fahrplanzeile 22 noch Backlog-Kopfzeilen, die
 PR #137 ebenfalls ändert (450, 454, 456, 457; F-BR5-13).
@@ -179,8 +179,8 @@ ein 4xx.
 
 ## 3. Fragen an die Betreiberin
 
-Jede Frage trägt einen Vorschlag. Entschieden wird vor dem Paket, das sie
-betrifft (K6).
+Alle fünfzehn am 03.11.2026 entschieden, jede wie vorgeschlagen
+(„alle Vorschläge ok“); die Entscheidungen stehen in Abschnitt 4.
 
 **Q-BR5-01 — `protokoll()` in einer Transaktion (Nr. 354).** Vorschlag:
 **werfen, wenn die Transaktion durch den Fehler verloren ging** — Zustand vor
@@ -194,11 +194,11 @@ strenger, macht aber ein fehlgeschlagenes Protokoll zum Abbruch des
 Vorgangs; (c) Einträge hinter den Commit wie `system_melden()` — dann gibt es
 keinen Eintrag für Zurückgerolltes, aber der Grundsatz „Protokolleinträge
 stehen mit in der Transaktion“ kehrt sich um, und rohe Transaktionen spülen
-nicht.
+nicht. → **E-BR5-04.**
 
 **Q-BR5-02 — `app_state_setzen()` gleich mit (Nr. 354, 345)?** Vorschlag:
 **ja, dieselbe Regel.** Es schluckt wie `protokoll()` und steht in zwei
-Transaktionen; BR5-01 nutzt es für 345 selbst in einer.
+Transaktionen; BR5-01 nutzt es für 345 selbst in einer. → **E-BR5-05.**
 
 **Q-BR5-03 — Umfang von `post_text()` (Nr. 355).** Vorschlag: **alle 125
 `$_POST`-Stellen in einem Zug**, dazu die zwei `$feld`-Hüllen; die
@@ -208,13 +208,13 @@ Aufrufer macht daraus seinen Formularfehler; keine Zeile im Reiter System.
 Die 500 an `email[]` in `login.php` (F-BR5-04) gehört dazu. Alternative: nur
 die Anmeldeschritte (`login.php`, `zweitfaktor.php`, `zweitfaktor_notweg.php`,
 `registrieren.php`) und eine Ratsche für den Rest — weniger Berührung jetzt,
-aber eine zweite Runde später, und P7 dokumentiert einen halben Stand.
+aber eine zweite Runde später, und P7 dokumentiert einen halben Stand. → **E-BR5-06.**
 
 **Q-BR5-04 — Gemeinsame Kontozeile auch (Nr. 358)?** Vorschlag: **ja** —
 `notweg_konto()` ist eine gekürzte Kopie von `login_zeile()`; beide gehen in
 eine Funktion neben der Token-Prüfung auf. Voraussetzung: `login.php` ist
 nicht mehr gesperrt (E-SR-14 galt für Schritt 18, der seit Langem
-abgeschlossen ist).
+abgeschlossen ist). → **E-BR5-07.**
 
 **Q-BR5-05 — Wie überlebt der Passwortnachweis den Seitenwechsel
 (Nr. 392)?** Das ist die eine Sicherheitsfrage dieses Schritts.
@@ -242,7 +242,7 @@ abgeschlossen ist).
   Passwortdialog (`EdSchluessel.oeffnen()` liefert Inhaltsschlüssel und
   Token), dort, wo heute „kein Schlüsselpaar“ abweist. Sicherheitlich
   neutral. Er ist ein vorhandener Baustein (Knopf in einer Karte), keine neue
-  Darstellung.
+  Darstellung. → **E-BR5-08.**
 
 **Q-BR5-06 — Benennung der APKs (Nr. 361, 432).** Die zwei Einträge
 schlagen Verschiedenes vor. Vorschlag: **„NAdoku für Android-Handy“ und
@@ -252,34 +252,34 @@ Projekt meist die Garmin-Uhr (Tags `uhr-v…`); das Handbuch und die
 Play-Store-Zeile darüber sagen schon „Android-Handy“ und „Wear-OS-Uhr“.
 Betrieb → Updates bekommt **zwei Zeilen**, „Android-App (Handy)“ und
 „Wear-OS-App“, und nimmt je die Datei ihres Geräts statt `[0]` (F-BR5-05).
-Eine Datei ohne Muster (Altbestand) bleibt „NAdoku x.y.z“.
+Eine Datei ohne Muster (Altbestand) bleibt „NAdoku x.y.z“. → **E-BR5-09.**
 
 **Q-BR5-07 — Wortlaut der Reanimationskarte (Nr. 456).** Vorschlag:
 **„gesperrt“**, solange der Inhaltsschlüssel fehlt, und **„nicht lesbar“**,
 wenn die Hülle nicht aufgeht; „keine“ nur, wenn der Einsatz keine Hülle hat
 (das weiß der Server). Kurz genug für den Kartenkopf. Alternative: „wartet
 auf dein Passwort“ wie die Ansicht — länger, und im Formular gibt es den
-Hinweis der Leiste schon.
+Hinweis der Leiste schon. → **E-BR5-10.**
 
 **Q-BR5-08 — Welche 5xx machen eine Mail unzustellbar (Nr. 454)?**
 Vorschlag: **5xx bei `RCPT TO` und nach `DATA`**; 552 (Postfach voll) bleibt
 auf der Leiter, weil es sich meist von selbst löst. 5xx bei `AUTH`,
 `MAIL FROM`, `HELO` und der Verbindung bleiben Störungen auf der Leiter
-(F-BR5-10). Genau eine Zeile im Reiter System je Absage.
+(F-BR5-10). Genau eine Zeile im Reiter System je Absage. → **E-BR5-11.**
 
 **Q-BR5-09 — Welche Domains reiht der Mailweg nicht ein (Nr. 450)?**
 Vorschlag: **die vier reservierten Namen aus RFC 2606/6761 — `.invalid`,
 `.test`, `.example`, `.localhost`.** Statt einer Störung im Reiter System ein
 Eintrag im Protokoll (Reiter E-Mail), und die Einladungsseite sagt „nicht
 verschickt — Adresse unter einer reservierten Domain“. Alternative: nur
-`.invalid` (das, was die Kette benutzt).
+`.invalid` (das, was die Kette benutzt). → **E-BR5-12.**
 
 **Q-BR5-10 — Wer prüft Nr. 430?** Die Abnahme geht nur in einem echten
 Browser mit Bitwarden; die Sandbox hat keins. Vorschlag: **Handprüfliste der
 Betreiberin** (Firefox mit Bitwarden, auf Staging nach dem Merge). Der Umbau
 ist Markup: Das Feld „Kontopasswort“ samt verstecktem Benutzernamen in ein
 eigenes `<form>`, die zwei Felder für ein eigenes Backup-Passwort außerhalb;
-Enter schickt nicht ab. Keine neue Darstellung.
+Enter schickt nicht ab. Keine neue Darstellung. → **E-BR5-13.**
 
 **Q-BR5-11 — Warnung beim Entkoppeln (Nr. 440).** Vorschlag: Liegt der
 letzte Kontakt länger als **einen Tag** zurück (oder gab es keinen), ergänzt
@@ -288,33 +288,33 @@ aufgezeichnet wurde, liegt noch auf dem Gerät und kommt erst nach einer neuen
 Kopplung an dieses Konto an. Ist das Gerät verloren, besser
 **Deaktivieren**.“ Bei Kontakt heute bleibt der bisherige Satz. **Dieselbe
 Rückfrage in der Verwaltung**; derselbe Satz in Handbuch und Runbook. Das ist
-Text im vorhandenen Dialog (`data-confirm`), kein neuer Baustein.
+Text im vorhandenen Dialog (`data-confirm`), kein neuer Baustein. → **E-BR5-14.**
 
 **Q-BR5-12 — Bezeichnung für `spur_stueck_geloescht` und ein Riegel
 (Nr. 457)?** Vorschlag: **„GPS-Daten gelöscht“**, neutraler Ton wie die
 übrigen Löscharten der Verwaltung; **dazu eine Zählzeile**, die jede literale
 Art eines `protokoll()`-Aufrufs gegen `PROTOKOLL_ARTEN` hält, und jede Art
-aus der Reiterliste ebenso. Anlass: Nr. 457 (Grundsatz 5).
+aus der Reiterliste ebenso. Anlass: Nr. 457 (Grundsatz 5). → **E-BR5-15.**
 
 **Q-BR5-13 — Was zeigt die Karte von einem gescheiterten Job (Nr. 357)?**
 Vorschlag: **die Meldung, durch `system_bereinigen()`** (ohne Pfade,
 Adressen, Werte in Anführungszeichen); die Ausnahme selbst geht an
 `system_melden()`, damit Klasse, Datei und Zeile im Reiter System stehen
 (F-BR5-03). Dieselbe Kürzung für „Ließen sich nicht umhüllen“. Alte Zeilen in
-`job_laeufe` bleiben, wie sie sind.
+`job_laeufe` bleiben, wie sie sind. → **E-BR5-16.**
 
 **Q-BR5-14 — Linien auf der Karte „Schlüssel des Servers“ (Nr. 356).**
 Vorschlag: **eine Linie je Abschnitt**, nicht je Formular — „Nachtragen vom
 Blatt“ trägt bei „beide abweichend“ zwei Formulare, die zusammengehören.
 „Neuanfang“ bekommt denselben Aufbau wie „Serverschlüssel wechseln“
-(Formular außen, Fuß innen).
+(Formular außen, Fuß innen). → **E-BR5-17.**
 
 **Q-BR5-15 — Wie wird Nr. 383 geschlossen?** Vorschlag: **beide Proben
 unter dem PHP 8.3.6 der Sandbox fahren**; sind sie grün, ist 383 mit Verweis
 auf Nr. 393 erledigt, ohne Codeänderung und ohne Fassung. Als Gegenprobe
 einmal `fstat()` versuchsweise zurück auf `filesize()`: dann rot. 8.3.33 und
 8.4 nicht eigens — Produktiv läuft 8.3.33 und war dort nie rot. Eine
-Mindestfassung nur, falls 8.3.6 trotz allem rot bleibt; dann Rückfrage.
+Mindestfassung nur, falls 8.3.6 trotz allem rot bleibt; dann Rückfrage. → **E-BR5-18.**
 
 ## 4. Entscheidungen
 
@@ -335,6 +335,68 @@ Code mehr, nur Prüfliste, Backlog und Rahmenplan. Die Umsetzung von BR5
 beginnt erst nach dessen Merge und nimmt `main` dann nach
 `docs/Pruefablauf.md` 5.3 auf. Bis dahin berührt dieser Zweig nur das
 Konzept und die eigene Spannenzeile in `Backlog.md`.
+
+**E-BR5-04 — `protokoll()` wirft, wenn die Transaktion verloren ging
+(03.11.2026, Betreiberin, Q-BR5-01).** Zustand vor dem INSERT merken; ein Fehler, der nur die
+Anweisung zurückrollt, wird weiter geschluckt. Kein Weg hinter den Commit.
+
+**E-BR5-05 — `app_state_setzen()` nach derselben Regel (03.11.2026, Betreiberin,
+Q-BR5-02).**
+
+**E-BR5-06 — `post_text()` für alle Stellen, `get_text()` dazu, Decke 0
+(03.11.2026, Betreiberin, Q-BR5-03).** Eine Liste ergibt `null` und beim Aufrufer einen
+Formularfehler, keine Zeile im Reiter System; die 500 an `email[]` gehört
+dazu; die zwei `$feld`-Hüllen gehen darin auf.
+
+**E-BR5-07 — Token-Prüfung und Kontozeile von Anmeldung und Notzugang an je
+einer Stelle (03.11.2026, Betreiberin, Q-BR5-04).**
+
+**E-BR5-08 — Anlegemarke der Sitzung statt Token im Browser, dazu der Weg
+von Hand (03.11.2026, Betreiberin, Q-BR5-05).** `login.php` setzt nach dem geprüften Passwort
+eine einmalige Marke mit zehn Minuten Frist, gültig nur für das erste
+Anlegen von Kontopaar und Rückweg. Das passwortgleiche Token bleibt, wie
+heute, höchstens einen Seitenwechsel im Sitzungsspeicher. Der bewusste Preis:
+Wer die Sitzung in diesen zehn Minuten stiehlt, kann ein Paar setzen — aus
+„nur mit Passwortnachweis“ wird für das erste Anlegen „nur kurz nach einem
+Passwortnachweis“; Bedrohungsmodell und die Kopfkommentare beider Endpunkte
+sagen es. Dazu der Knopf „Schlüsselpaar einrichten“ mit Passwortdialog.
+
+**E-BR5-09 — „NAdoku für Android-Handy“ und „NAdoku für Wear-OS-Uhr“ (03.11.2026, Betreiberin,
+Q-BR5-06).** Die Fassung steht in der Kleinzeile; Betrieb → Updates bekommt
+zwei Zeilen, je mit der Datei ihres Geräts.
+
+**E-BR5-10 — Reanimationskarte: „gesperrt“ und „nicht lesbar“ (03.11.2026, Betreiberin,
+Q-BR5-07).** „keine“ nur ohne Hülle.
+
+**E-BR5-11 — Sofort unzustellbar nur bei einer Absage beim Empfänger (03.11.2026, Betreiberin,
+Q-BR5-08).** 5xx bei `RCPT TO` und nach `DATA`, außer 552; alles andere
+bleibt auf der Leiter. Genau eine Zeile im Reiter System je Absage.
+
+**E-BR5-12 — Keine Mail an reservierte Domains (03.11.2026, Betreiberin, Q-BR5-09).**
+`.invalid`, `.test`, `.example`, `.localhost` werden nicht eingereiht; ein
+Protokolleintrag (Reiter E-Mail) statt einer Störung, die Einladungsseite
+sagt „nicht verschickt — Adresse unter einer reservierten Domain“.
+
+**E-BR5-13 — Nr. 430 prüft die Betreiberin von Hand (03.11.2026, Betreiberin, Q-BR5-10).**
+Firefox mit Bitwarden, auf Staging nach dem Merge; Punkt der Handprüfliste.
+
+**E-BR5-14 — Warnung beim Entkoppeln ab einem Tag ohne Kontakt (03.11.2026, Betreiberin,
+Q-BR5-11).** Wortlaut wie in Q-BR5-11, mit Datum und Uhrzeit, in den
+Einstellungen und in der Verwaltung, derselbe Satz in Handbuch und Runbook.
+
+**E-BR5-15 — „GPS-Daten gelöscht“ und eine Zählzeile für Protokollarten
+(03.11.2026, Betreiberin, Q-BR5-12).** Anlass: Nr. 457.
+
+**E-BR5-16 — Jobfehler: bereinigte Meldung in der Karte, Ausnahme an den
+Reiter System (03.11.2026, Betreiberin, Q-BR5-13).** Über `system_bereinigen()`; dieselbe
+Kürzung für „Ließen sich nicht umhüllen“; alte Zeilen bleiben.
+
+**E-BR5-17 — Eine Linie je Abschnitt auf der Karte „Schlüssel des Servers“
+(03.11.2026, Betreiberin, Q-BR5-14).** „Neuanfang“ im Aufbau von „Serverschlüssel wechseln“.
+
+**E-BR5-18 — Nr. 383 wird gemessen, nicht umgebaut (03.11.2026, Betreiberin, Q-BR5-15).**
+Beide Proben unter 8.3.6 mit Gegenprobe; grün → erledigt mit Verweis auf
+Nr. 393. Eine Mindestfassung nur nach erneuter Rückfrage.
 
 **Modellwahl:** Opus für alle Pakete (K2); kein Fable-Schritt.
 **Fächerung:** keine. Alle Pakete schreiben `server/version.php`,
@@ -569,4 +631,5 @@ Konzept und Prüfdokument erst nach der Freigabe.
 
 | Datum | Was |
 |---|---|
+| 03.11.2026 | Q-BR5-01 bis -15 entschieden wie vorgeschlagen (E-BR5-04 bis -18). |
 | 03.11.2026 | Konzept angelegt; Befund F-BR5-01 bis -14, Fragen Q-BR5-01 bis -15; E-BR5-01 bis -03 entschieden; Spanne 480 bis 489 reserviert (`0c39a8cb`). |
