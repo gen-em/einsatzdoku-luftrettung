@@ -45,6 +45,14 @@ declare(strict_types=1);
  *   3. Der Hinweis auf der Statusseite — er faellt jemandem auf, der nicht
  *      sucht.
  *
+ * EINE AUSNAHME, UND SIE IST KEIN WIDERSPRUCH: Nimmt der Fehler die
+ * Transaktion des Aufrufers mit (ein Deadlock; InnoDB rollt sie ganz zurueck),
+ * wirft `protokoll()`. Die Handlung ist dann ohnehin gescheitert — `commit()`
+ * wuerfe am Ende —, nur liefe bis dahin der Rest des Rumpfs ohne Transaktion
+ * und bliebe stehen (Backlog Nr. 354, `db_transaktion_verloren()` in
+ * `transaktion_lib.php`). Gescheitert wird hier also nur, was schon
+ * gescheitert ist.
+ *
  * ---------------------------------------------------------------------------
  * DIE SECHS REITER
  * ---------------------------------------------------------------------------
@@ -175,8 +183,11 @@ function protokoll(string $reiter, string $art, string $text,
     $urheberArt = $urheber > 0 ? 'mensch'
                 : (PHP_SAPI === 'cli' ? 'cli' : 'job');
 
+    $inTx = false;
     try {
-        $st = db()->prepare(
+        $pdo = db();
+        $inTx = $pdo->inTransaction();   // vorher fragen (`db_transaktion_verloren()`)
+        $st = $pdo->prepare(
             'INSERT INTO protokoll_ereignisse
                  (reiter, art, urheber_user_id, urheber_art, betroffen_user_id, text, daten)
              VALUES (?, ?, ?, ?, ?, ?, ?)');
@@ -190,6 +201,10 @@ function protokoll(string $reiter, string $art, string $text,
         ]);
         return true;
     } catch (Throwable $ex) {
+        /* Hat der Fehler die Transaktion des Aufrufers mitgenommen (Deadlock),
+         * wirft das weiter — still weiterzulaufen hiesse, den Rest des Rumpfs
+         * ohne Transaktion zu schreiben (Nr. 354). Kopf, dritter Abschnitt. */
+        db_transaktion_verloren($inTx, $ex);
         protokoll_fehler_vermerken($ex->getMessage());
         return false;
     }
@@ -350,6 +365,9 @@ const PROTOKOLL_ARTEN = [
     'wartung_an'                => ['Wartung an', 'orange'],
     'wartung_aus'               => ['Wartung aus', 'blau'],
     'demo_zurueckgesetzt'       => ['Demo zurückgesetzt', 'neutral'],
+    /* Ein Zeitraum aus einer GPS-Spur geloescht (`api/schneiden.php`).
+     * Fehlte bis Nr. 457 und stand als „spur stueck geloescht" da. */
+    'spur_stueck_geloescht'     => ['GPS-Daten gelöscht', 'neutral'],
     'migration_ausgefuehrt'     => ['Migration', 'blau'],
     'archiv_heruntergeladen'    => ['Archiv heruntergeladen', 'orange'],
     'frist_geaendert'           => ['Fristen', 'neutral'],
@@ -575,7 +593,8 @@ function protokoll_arten_des_reiters(string $reiter): array
                          'rechtstext_geaendert', 'schluessel_erneuert',
                          'schluesselblatt_bestaetigt', 'geraet_umgeschaltet',
                          'geraet_geloescht', 'wartung_an', 'wartung_aus',
-                         'demo_zurueckgesetzt', 'migration_ausgefuehrt',
+                         'demo_zurueckgesetzt', 'spur_stueck_geloescht',
+                         'migration_ausgefuehrt',
                          'einstellungen_konten', 'einstellungen_anmeldung',
                          'frist_geaendert', 'rundmail',
                          'archiv_heruntergeladen'],

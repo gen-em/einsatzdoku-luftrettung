@@ -94,8 +94,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $wahl = (string)($_POST['logo'] ?? '');
         if (!isset(INSTALLATION_LOGOS[$wahl])) {
             $logoMeldung = ['fehler', 'Unbekannte Logo-Wahl — es wurde nichts geändert.'];
+        } elseif (!app_state_setzen('logo_standard', $wahl)) {
+            /* Nr. 345: Bis Web 23.6.2 stand hier „Standard der Installation:
+             * …" auch dann, wenn das Schreiben scheiterte. */
+            $logoMeldung = ['fehler', 'Der Logo-Standard ließ sich nicht speichern; '
+                . 'es wurde nichts geändert. Die Einzelheiten stehen im Protokoll unter System.'];
         } else {
-            app_state_setzen('logo_standard', $wahl);
             flash_setzen('ok', 'Standard der Installation: ' . INSTALLATION_LOGOS[$wahl]
                 . ($wahl === 'wechselnd'
                    ? '. Je Anmeldung wird neu gewürfelt — innerhalb einer Sitzung '

@@ -5328,7 +5328,7 @@ heraus.
 > Segment mit Klartextpunkten, `409 altbestand`): das Löschen aller Punkte
 > (`409 alles`, dafür der Papierkorb), Stücke der Stufe 2 oder 3 (`409 stufe`,
 > bis S11-07). Eine Zeile im Protokoll (`spur_stueck_geloescht`, Reiter
-> Verwaltung). **Grenze:** Die Sicherung nimmt Vermerke über ihren Einsatz mit
+> Verwaltung, Plakette „GPS-Daten gelöscht“ seit Web 23.6.3, Nr. 457). **Grenze:** Die Sicherung nimmt Vermerke über ihren Einsatz mit
 > und einen Löschvermerk deshalb nicht (F-S11-52, S11-06).
 >
 > Was unten steht, beschreibt den Weg bis Web 22.1.0.
@@ -7802,6 +7802,18 @@ Der Mittelweg hat **drei Stufen, und alle drei müssen da sein**:
 `protokoll()` gibt `false` zurück. **Der Rückgabewert ist ein Hinweis und kein
 Grund abzubrechen** — nur `system_melden()` prüft ihn, um in den Rückfall zu
 gehen (seit P5c/AP3; hier stand bis Web 21.1.0 „kein Aufrufer prüft ihn").
+
+**Eine Ausnahme: ein Fehler, der die Transaktion beendet** (seit Web 23.6.3,
+Backlog Nr. 354). Steht `protokoll()` — oder `app_state_setzen()`,
+`app_state_setzen_mehrere()`, `app_state_loeschen()` — im Rumpf einer
+`db_transaktion()` und bricht sein Schreiben mit einem Deadlock (1213) oder
+einem Verbindungsabbruch (2006, 2013) ab, wirft es weiter
+(`db_transaktion_verloren()` in `transaktion_lib.php`). InnoDB hat die
+Transaktion dann schon ganz zurückgerollt; bis dahin lief der Rest des Rumpfs
+im Autocommit und blieb stehen, und erst `commit()` warf. Der Fehlercode
+entscheidet, nicht `inTransaction()`: PDO meldet nach einem Deadlock weiter
+„ja" (gemessen am 03.11.2026, MariaDB 10.11). Jeder andere Fehler, auch eine
+abgelaufene Sperrzeit (1205), wird weiter geschluckt.
 
 #### Der Reiter System — das Fehlerprotokoll (ab Web 20.40.0, P5c/AP3)
 
