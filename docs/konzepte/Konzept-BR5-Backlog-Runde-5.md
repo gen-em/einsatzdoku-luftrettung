@@ -691,6 +691,7 @@ PHP 8.3.6):
 
 | Datum | Was |
 |---|---|
+| 03.11.2026 | `main` mit PR #139 aufgenommen (Rahmenplan-Fassung 206 wird 207); Zwischen-PR mit BR5-01, damit die Arbeitsumgebung die Punkte auf Staging prüft (Betreiberin). |
 | 03.11.2026 | BR5-01 erledigt (Web 23.6.3); F-BR5-15, -16; E-BR5-19 (diese Sitzung setzt um). |
 | 03.11.2026 | `main` mit PR #137 und #138 aufgenommen; Fahrplanzeile 22, Rahmenplan Fassung 206, Kopfzeilen 450, 454, 456, 457 auf `22`; gemergte Spanne 470 bis 479 (GR) gestrichen, weil die Kopfdecke von `Backlog.md` sonst riss (61 > 60). |
 | 03.11.2026 | Q-BR5-01 bis -15 entschieden wie vorgeschlagen (E-BR5-04 bis -18). |
