@@ -308,6 +308,15 @@ und ein offener Rückweg der Schlüsselwechselprobe (Bedienweg
 und `schluesselwechsel/probe.php --zurueck`. Danach waren die drei Proben
 einzeln grün. Lehre: einen Prüfstand auslaufen lassen, statt ihn abzubrechen.
 
+**F-BR5-32 — Kreislauf `edbak` in WebKit einmal mit Zeitüberschreitung bei
+der Anmeldung (BR5-10).** Im vierten Lauf wartete `kreislauf_edbak.mjs` 30 s
+auf die Seite nach dem Anmeldeknopf und brach ab; die Wegprobe des
+Spaltenregisters, die auf sein Konto baut, folgte. Der Anmeldeweg ist
+derselbe wie in Chromium und Firefox (grün) und wie im dritten Lauf (WebKit
+grün). Einzeln danach dreimal grün. Kein Backlog-Punkt nach einem Mal; tritt
+es wieder auf, ist die Frist von 30 s der erste Verdacht (WebKit rechnet
+PBKDF2 nach dem Bilderlauf spürbar langsamer).
+
 **F-BR5-14 — Nr. 450 hat die Ursache in der Kette, die Abhilfe am Server.**
 Stufe 2 legt Konten unter `…@example.invalid` an (`umlauf_konto()` in
 `tools/referenzdatensatz/vergleich/kreislauf.py`); die Adresse ist in rund
@@ -1046,7 +1055,12 @@ OpenSSL 3.0.13 und zlib 1.3 — genau die Fassungen aus Nr. 383):
   Containerneustart). Nachgeholt mit `aufbauen.sh uhr` (rc 0, 173
   Gerätedateien); danach `uhr-krypto` einzeln 3 von 3 Geräten ohne Fehler,
   Kontopaarprobe in Chromium viermal 15/0.
-- *Vierter Lauf* über den Endstand: der Bericht im Commit.
+- *Vierter Lauf* (9298 s, Commit `42e91d74`): 59 grün, 2 rot —
+  `kreislauf-edbak` in WebKit (F-BR5-32) und die Wegprobe dahinter. Einzeln
+  danach dreimal grün bzw. 31/0.
+- *Fünfter Lauf* auf dem Folge-Commit: erbt das Grüne aus dem vierten
+  (Pruefablauf 5.4), misst den Kreislauf neu (der erbt nie) — der Bericht
+  im Commit.
 - *Bedienweg einzeln* nach der Anpassung: `einstellungen-profil-rueckweg`
   1 von 1. Wartungsprobe einzeln 84/0, Gegenprobe der neuen Prüfung 18 (ohne
   `role` in der Spaltenliste: falsch). Jobprobe 40/0,

@@ -6,9 +6,9 @@ Entscheidungen. Verlauf: `Rahmenplan-Verlauf.md`. Fassungen 1–15:
 
 **Stand `origin/main`** (Commit `b96f90a`, PR #146, gemessen 03.11.2026): Web 23.6.3 ·
 Uhr 4.3.1 · Android 0.20.0; ausgeliefert Web 23.6.0, Uhr 4.1.1 und Android 0.18.2 (Tags auf `c32dd2c`, 02.11.2026).
-**Läuft:** 22 BR5 auf `claude/tender-bell-225ta2` — BR5-01 gemergt (PR #141, Web 23.6.3), BR5-02 bis -09 gebaut (Web 23.6.4 bis 23.7.3); BR5-10 (Abschluss, PR) läuft. 21 GR gemergt (PR #136), Abschluss offen.
-**Als Nächstes:** Umsetzung von 22 (BR5-01 bis -10), dann 13 (Konzeptsitzung).
-**Offene PRs:** keine.
+**Läuft:** 22 BR5 auf `claude/tender-bell-225ta2` — BR5-01 gemergt (PR #141, Web 23.6.3), BR5-02 bis -10 gebaut (Web 23.6.4 bis 23.7.3), Gesamt-PR offen. 21 GR gemergt (PR #136), Abschluss offen.
+**Als Nächstes:** Merge von 22, Prüfung auf Staging (R91), Freigabe; dann 13 (Konzeptsitzung).
+**Offene PRs:** BR5-02 bis -10 von `claude/tender-bell-225ta2` (Gesamt-PR).
 **Fällig bei der Betreiberin:** 36 Posten (Abschnitt 6.1). **`update.php`:** auf Staging und Produktiv nichts offen (Betreiberin, 20.10.2026, nach Web 23).
 
 Kennungen sind Namen, keine Reihenfolge.
