@@ -91,3 +91,52 @@ function db_transaktion(PDO $pdo, callable $fn): mixed {
         throw $ex;
     }
 }
+
+/* ---- EIN GESCHLUCKTER FEHLER, DER DIE TRANSAKTION MITNAHM -----------------
+ *
+ * Mehrere Schreibhelfer fangen ihre Fehler mit Absicht: `protokoll()` (ein
+ * Protokoll haelt den Betrieb nicht an), `app_state_setzen()` und seine zwei
+ * Geschwister (eine fehlende Tabelle ist der Zustand jeder Anlage zwischen
+ * Deploy und `update.php`). Das ist richtig, solange der Fehler nur die eine
+ * Anweisung trifft.
+ *
+ * EIN DEADLOCK TRIFFT MEHR. InnoDB rollt dann die GANZE Transaktion zurueck
+ * und beendet sie. Schluckt der Helfer das, laeuft der Rest des Rumpfs von
+ * `db_transaktion()` im Autocommit weiter, und jede weitere Anweisung BLEIBT;
+ * erst `commit()` wirft. Nachgestellt in `totp_abschalten()` (MariaDB 10.11,
+ * Backlog Nr. 354): Faktor an, Codes und Geraete zurueck, die Passkeys
+ * geloescht.
+ *
+ * DESHALB fragt der Helfer VOR dem Schreiben, ob eine Transaktion laeuft, und
+ * reicht den Fehler im `catch` hierher. Ist es einer, der die Transaktion
+ * beendet hat, wirft diese Funktion ihn weiter; der Rahmen gibt ihn an den
+ * Aufrufer, und der Rest des Rumpfs laeuft nicht mehr.
+ *
+ * DER FEHLERCODE ENTSCHEIDET, NICHT `inTransaction()`. Gemessen am
+ * 03.11.2026 (Konzept BR5, F-BR5-15): Nach dem Deadlock meldet PDO weiter
+ * `inTransaction() === true`, der Server `@@in_transaction = 0` — PDO fuehrt
+ * einen eigenen Merker und erfaehrt vom Zuruecksetzen durch InnoDB nichts.
+ * `@@in_transaction` wiederum kennt nur MariaDB. Was die Transaktion beendet,
+ * sagen die Dokumentationen von MySQL und MariaDB an den Codes:
+ *   1213  Deadlock — die ganze Transaktion ist zurueckgerollt;
+ *   2006, 2013  Verbindung weg — die Transaktion mit ihr.
+ * Eine abgelaufene Sperrzeit (1205) rollt ohne `innodb_rollback_on_timeout`
+ * nur die Anweisung zurueck; sie und jeder andere Fehler (fehlende Tabelle)
+ * werden weiter geschluckt wie zuvor (E-BR5-04).
+ */
+
+/** Fehlercodes, nach denen keine Transaktion mehr steht. */
+const DB_TRANSAKTION_ENDET = [1213, 2006, 2013];
+
+/**
+ * Den Fehler eines Schreibhelfers weiterwerfen, wenn er die Transaktion
+ * beendet hat.
+ *
+ * @param bool $vorher lief vor dem Schreiben eine Transaktion?
+ * @throws Throwable `$ex`, wenn ja und der Fehler sie beendet hat
+ */
+function db_transaktion_verloren(bool $vorher, Throwable $ex): void {
+    if (!$vorher || !$ex instanceof PDOException) { return; }
+    $code = (int)($ex->errorInfo[1] ?? 0);
+    if (in_array($code, DB_TRANSAKTION_ENDET, true)) { throw $ex; }
+}

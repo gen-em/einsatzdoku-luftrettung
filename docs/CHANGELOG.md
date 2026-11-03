@@ -14,6 +14,32 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 23.6.3] — unveröffentlicht
+
+### Behoben
+
+- **Web — ein Deadlock beim Protokollieren ließ den Rest einer Handlung ohne
+  Transaktion weiterlaufen** (Backlog Nr. 354). `protokoll()` und die
+  schreibenden `app_state`-Helfer fangen ihre Fehler mit Absicht, damit ein
+  Protokoll den Betrieb nicht anhält; den Deadlock, nach dem die Datenbank die
+  ganze Transaktion zurückgerollt hat, fingen sie aber mit, und was danach kam,
+  blieb stehen — beim Abschalten des Zweitfaktors waren die Passkeys gelöscht
+  und alles andere zurück. Jetzt reichen sie einen Fehler, der die
+  Transaktion beendet hat, weiter, und die Handlung scheitert als Ganzes.
+
+- **Web — die Installationsseite meldete „gespeichert“, ohne es zu wissen**
+  (Backlog Nr. 345). Der Logo-Standard prüfte das Schreiben nicht, und Name
+  und Kurzname, Kontakt- und Betreiberadresse standen als zwei Schreibvorgänge
+  hintereinander, sodass ein Fehler beim zweiten den ersten stehen ließ. Beide
+  Paare werden jetzt zusammen oder gar nicht geschrieben, und jedes Scheitern
+  sagt, dass nichts geändert ist.
+
+- **Web — das Löschen eines Zeitraums stand im Protokoll ohne Bezeichnung**
+  (Backlog Nr. 457). Die Art fehlte in der Liste, die Plakette zeigte
+  „spur stueck geloescht“, und der Filter kannte sie nicht; jetzt heißt sie
+  „GPS-Daten gelöscht“. Eine neue Zählzeile hält jede geschriebene Art gegen
+  die Liste, damit es nicht wieder still geschieht.
+
 ## [Web 23.6.2] — unveröffentlicht
 
 ### Behoben

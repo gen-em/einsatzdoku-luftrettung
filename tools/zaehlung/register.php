@@ -611,4 +611,19 @@ return [
  'regel' => ['art' => 'eigen', 'name' => 'meldung_markup'],
  'start' => 2, 'decke_jetzt' => 0, 'decke_ziel' => 0],
 
+
+/* ---- jede Protokollart mit Beschriftung --------------------------------- */
+
+['kennung' => 'Z46', 'paket' => 'BR5-01',
+ 'beschreibung' => 'geschriebene Protokollart ohne Eintrag in PROTOKOLL_ARTEN',
+ 'grund' => 'Nr. 457 (E-BR5-15): spur_stueck_geloescht stand in keiner Liste, '
+          . 'die Plakette zeigte die Rohform, der Filter kannte die Art nicht. '
+          . 'Gezaehlt wird jede feste Art eines protokoll()-Aufrufs und jede Art '
+          . 'der Reiterliste, die PROTOKOLL_ARTEN nicht beschriftet. Arten aus '
+          . 'Variablen sieht die Regel nicht. Start 2 = die Art an ihrem Aufruf '
+          . 'und in der Reiterliste, wo sie fehlte.',
+ 'sicht' => 'php_mit_zeichenketten', 'bereich' => 'php', 'ausser' => [],
+ 'regel' => ['art' => 'eigen', 'name' => 'protokoll_arten'],
+ 'start' => 2, 'decke_jetzt' => 0, 'decke_ziel' => 0],
+
 ];

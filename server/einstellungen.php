@@ -619,7 +619,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                  * Fehler hier, dass das Passwort gewechselt ist, die Seite das
                  * Gegenteil meldet und der Browser den neuen Schluessel nicht
                  * uebernimmt. `db_transaktion()` haengt sich an die laufende
-                 * an, und `protokoll()` faengt seine eigenen Fehler. */
+                 * an, und `protokoll()` faengt seine eigenen Fehler — ausser
+                 * einem, der die Transaktion mitnimmt (Deadlock): den wirft es
+                 * weiter, und nichts ist gewechselt (Nr. 354). */
                 $geraeteWeg = zweitfaktor_geraete_vergessen($userId, 'passwort');
 
                 /* Die EIGENE Sitzung zieht den neuen Stand mit und bleibt

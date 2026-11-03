@@ -161,13 +161,43 @@ function instanz_namen_setzen(string $name, string $kurz): array
     if (!function_exists('app_state_setzen')) {
         return [false, 'Ohne Datenbank laesst sich der Name nicht speichern.'];
     }
-    $a = app_state_setzen('instanz_name', trim($name));
-    $b = app_state_setzen('instanz_kurz', trim($kurz));
-    if (!$a || !$b) {
-        return [false, 'Der Name ließ sich nicht speichern. Die Einzelheiten '
-                     . 'stehen im Protokoll unter System.'];
+    if (!instanz_beide_setzen(['instanz_name' => trim($name),
+                               'instanz_kurz' => trim($kurz)])) {
+        return [false, 'Der Name ließ sich nicht speichern; es wurde nichts '
+                     . 'geändert. Die Einzelheiten stehen im Protokoll unter System.'];
     }
     return [true, 'Name der Installation gespeichert.'];
+}
+
+/**
+ * Zwei Werte zusammen schreiben — beide oder keiner.
+ *
+ * WOGEGEN (Backlog Nr. 345). Name und Kurzname, Kontakt- und
+ * Betreiberadresse standen als zwei `app_state_setzen()` nacheinander da.
+ * Scheiterte der zweite, war der erste geschrieben, und die Seite meldete
+ * „ließ sich nicht speichern" — fuer einen Stand, der halb gespeichert war.
+ * In einer Transaktion meint die Meldung jetzt, was sie sagt.
+ *
+ * `app_state_setzen_mehrere()` schluckt seine Fehler (Kopf in `db.php`) und
+ * meldet sie im Reiter System; deshalb wirft der Rumpf selbst, damit der
+ * Rahmen zurueckrollt. Aufgerufen nur, wenn `db.php` geladen ist — beide
+ * Aufrufer pruefen `function_exists('app_state_setzen')` vorher, und `db.php`
+ * bringt `db_transaktion()` mit.
+ *
+ * @param array<string,string> $kv
+ */
+function instanz_beide_setzen(array $kv): bool
+{
+    try {
+        db_transaktion(db(), static function () use ($kv): void {
+            if (!app_state_setzen_mehrere($kv)) {
+                throw new RuntimeException('app_state nicht geschrieben');
+            }
+        });
+        return true;
+    } catch (Throwable $ex) {
+        return false;
+    }
 }
 
 /**
@@ -296,11 +326,10 @@ function instanz_adressen_setzen(string $kontakt, string $betrieb): array
             return [false, 'Die ' . $was . ' ist keine gueltige E-Mail-Adresse.'];
         }
     }
-    $a = app_state_setzen('instanz_kontakt', trim($kontakt));
-    $b = app_state_setzen('betrieb_mail', trim($betrieb));
-    if (!$a || !$b) {
-        return [false, 'Die Adressen ließen sich nicht speichern. Die Einzelheiten '
-                     . 'stehen im Protokoll unter System.'];
+    if (!instanz_beide_setzen(['instanz_kontakt' => trim($kontakt),
+                               'betrieb_mail'    => trim($betrieb)])) {
+        return [false, 'Die Adressen ließen sich nicht speichern; es wurde nichts '
+                     . 'geändert. Die Einzelheiten stehen im Protokoll unter System.'];
     }
     return [true, 'Adressen dieser Installation gespeichert.'];
 }

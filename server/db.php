@@ -1753,14 +1753,34 @@ function app_state_zu_lang(string $k, string $v): bool {
     return true;
 }
 
+/**
+ * Laeuft gerade eine Transaktion? Fuer die drei schreibenden Helfer unten,
+ * VOR dem Schreiben gefragt.
+ *
+ * WARUM: Sie schlucken Fehler mit Absicht (Kopf dieses Abschnitts). Beendet
+ * ein Fehler aber die Transaktion des Aufrufers (Deadlock), wirft
+ * `db_transaktion_verloren()` weiter, statt den Rest des Rumpfs ohne
+ * Transaktion laufen zu lassen (Backlog Nr. 354, E-BR5-05). Gibt es keine
+ * Verbindung, gibt es auch keine Transaktion.
+ */
+function app_state_in_transaktion(): bool {
+    try {
+        return db()->inTransaction();
+    } catch (Throwable $ex) {
+        return false;
+    }
+}
+
 /** Eine Zeile schreiben. `false` = zu lang oder nicht schreibbar, mit Log. */
 function app_state_setzen(string $k, string $v): bool {
     if (app_state_zu_lang($k, $v)) { return false; }
+    $inTx = app_state_in_transaktion();
     try {
         db()->prepare('INSERT INTO app_state (k, v) VALUES (?, ?)
                        ON DUPLICATE KEY UPDATE v = VALUES(v)')->execute([$k, $v]);
         return true;
     } catch (Throwable $ex) {
+        db_transaktion_verloren($inTx, $ex);
         system_melden('app_state', '„' . $k . '" ließ sich nicht schreiben', $ex);
         return false;
     }
@@ -1825,12 +1845,14 @@ function app_state_setzen_mehrere(array $kv): bool {
     foreach ($kv as $k => $v) {
         if (app_state_zu_lang((string)$k, $v)) { return false; }
     }
+    $inTx = app_state_in_transaktion();
     try {
         $st = db()->prepare('INSERT INTO app_state (k, v) VALUES (?, ?)
                              ON DUPLICATE KEY UPDATE v = VALUES(v)');
         foreach ($kv as $k => $v) { $st->execute([(string)$k, $v]); }
         return true;
     } catch (Throwable $ex) {
+        db_transaktion_verloren($inTx, $ex);
         system_melden('app_state', 'Mehrfachschreiben fehlgeschlagen', $ex);
         return false;
     }
@@ -1846,10 +1868,12 @@ function app_state_setzen_mehrere(array $kv): bool {
  */
 function app_state_loeschen(string ...$k): void {
     if ($k === []) { return; }
+    $inTx = app_state_in_transaktion();
     try {
         $platz = implode(',', array_fill(0, count($k), '?'));
         db()->prepare("DELETE FROM app_state WHERE k IN ($platz)")->execute($k);
     } catch (Throwable $ex) {
+        db_transaktion_verloren($inTx, $ex);
         system_melden('app_state', 'Löschen von „' . implode('", „', $k)
                     . '" fehlgeschlagen', $ex);
     }

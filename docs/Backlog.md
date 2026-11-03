@@ -53,8 +53,8 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
 | Spanne | Zweig | seit |
 |---|---|---|
 | 450 bis 459 | `claude/new-session-p1duc7` — Prüfdurchgang der Arbeitsumgebung auf Staging (R91); vergeben: 450 bis 459 | 03.11.2026 |
-| 470 bis 479 | `claude/trusting-wozniak-33j782` (Schritt 21, GR) | 02.11.2026 |
-| ab 480 | frei — höchste reservierte Nummer 479; frei blieben 461 bis 469 aus der Spanne von PR (PR #133), 434 bis 439 aus der Spanne von PR #129, 441 bis 449 aus der von PR #130, 420 bis 429 aus der Spanne von 20 (PR #127), 412 bis 419 aus der von 12b (PR #125), 394 bis 399 aus der Spanne von 19 (PR #112 bis #114), 389 aus der von 12a (PR #116), 372 bis 379 aus der von 12 (PR #103), 362 bis 369 aus der von PK, 359 aus der von 18 (PR #101), 348 und 349 aus der von 17, 338 aus der von AR | 02.11.2026 |
+| 480 bis 489 | `claude/tender-bell-225ta2` (Schritt 22, BR5) | 03.11.2026 |
+| ab 490 | frei — höchste reservierte Nummer 489; frei blieben 472 bis 479 aus der Spanne von 21 (PR #136), 461 bis 469 aus der Spanne von PR (PR #133), 434 bis 439 aus der Spanne von PR #129, 441 bis 449 aus der von PR #130, 420 bis 429 aus der Spanne von 20 (PR #127), 412 bis 419 aus der von 12b (PR #125), 394 bis 399 aus der Spanne von 19 (PR #112 bis #114), 389 aus der von 12a (PR #116), 372 bis 379 aus der von 12 (PR #103), 362 bis 369 aus der von PK, 359 aus der von 18 (PR #101), 348 und 349 aus der von 17, 338 aus der von AR | 02.11.2026 |
 
 ---
 
@@ -585,22 +585,6 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
 
 <!-- -->
 
-345. **Die Installationsseite meldet Erfolg, ohne zu wissen, ob gespeichert wurde.** · gehört zu: 22 · Stand: offen · seit 27.09.2026
-     *Aufgenommen 27.09.2026 mit R4-11 (F-R4-34).* Zwei kleine Lücken auf
-     `admin_installation.php`, beide älter als die Umleitung nach POST:
-     „Logo-Standard" verwirft den Rückgabewert von `app_state_setzen()` und
-     meldet „Standard der Installation: …" auch, wenn das Schreiben
-     scheiterte. Und `instanz_namen_setzen()` / `instanz_adressen_setzen()`
-     schreiben zwei Werte nacheinander und liefern nur `[bool, Text]`:
-     Scheitert der zweite, ist der erste geschrieben, und die Seite hält das
-     für einen Fehlschlag ohne Änderung (sie bleibt ohne Umleitung stehen,
-     E-R4-35). *Weg:* den Rückgabewert prüfen; die zwei Setzfunktionen
-     schreiben beide Werte in einer Transaktion oder sagen, was geschrieben
-     ist. *Abnahme:* ein gescheitertes `app_state_setzen()` (Probe mit
-     gesperrter Tabelle) ergibt eine Fehlermeldung statt „gespeichert".
-
-<!-- -->
-
 346. **Zwei Meldungen im Browser noch von Hand: der Hinweis `patwarn` und der Papierkorb-Hinweis des Diensttags.** · gehört zu: 22 · Stand: offen · seit 27.09.2026
      *Aufgenommen 27.09.2026 mit R4-13 (F-R4-42).* Die Zählzeile Z37 sieht
      seit R4-13 auch die Zuweisung `className = '…meldung'` und fand damit
@@ -655,26 +639,6 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      `SHOW CREATE TABLE` jeder Tabelle mit der frisch angelegten; eine
      Abweichung ist rot. *Abnahme:* eine absichtlich abweichende Spalte in
      einer Migration → rot.
-
-<!-- -->
-
-354. **`protokoll()` schluckt in einer Transaktion einen Deadlock — der Rest des Rumpfs läuft ohne Transaktion weiter.** · gehört zu: 22 · Stand: offen · seit 29.09.2026
-     *Aufgenommen 29.09.2026 in H-SR-08 (Konzept SR, F-SR-50, Nachprüfung
-     D-3); am selben Tag nachgestellt und berichtigt (F-SR-63).* `protokoll()`
-     fängt jede Ausnahme. Steht es im Rumpf von `db_transaktion()`, und
-     bricht sein INSERT mit einem Deadlock ab, rollt InnoDB die GANZE
-     Transaktion zurück und beendet sie; **jede weitere Anweisung läuft im
-     Autocommit und bleibt**, erst `commit()` wirft. Nachgestellt in
-     `totp_abschalten()` (MariaDB 10.11): Faktor an, Codes und Geräte
-     zurück, **die Passkeys gelöscht** samt Eintrag „mit dem Zweitfaktor",
-     Fehlerseite, keine Mail. Beim Passwort (E-SR-40) ist der Eintrag die
-     letzte Anweisung — dort bleibt nichts (gelesen). Bis zur Berichtigung
-     stand hier „der Aufrufer meldet Erfolg"; das tritt nicht ein. *Weg:*
-     `protokoll()` wirft in einer offenen Transaktion, oder die Einträge
-     wandern hinter den Commit. *Abnahme:* ein ECHTER Deadlock — eine zweite
-     Verbindung (die schwerere) sperrt die Lücke hinter der letzten Zeile von
-     `protokoll_ereignisse`, dann die Kontozeile — → nichts bleibt stehen.
-     Ein Auslöser mit `SIGNAL` stellt den Fall nicht her.
 
 <!-- -->
 
@@ -995,7 +959,7 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
 
 <!-- -->
 
-450. **Die Wegwerfkonten der Kette füllen auf Staging den Reiter System mit Mailfehlern.** · gehört zu: nächste Backlog-Runde · Stand: offen · seit 02.11.2026
+450. **Die Wegwerfkonten der Kette füllen auf Staging den Reiter System mit Mailfehlern.** · gehört zu: 22 · Stand: offen · seit 02.11.2026
      *Aufgenommen 02.11.2026 im ersten Prüfdurchgang der Arbeitsumgebung
      (R91, P-P5c-12).* Stufe 2 legt je Lauf und Engine Konten unter
      `…@example.invalid` an, meldet sie an und löscht sie wieder. Jede Mail an
@@ -1012,7 +976,7 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
 
 <!-- -->
 
-454. **Der Mailjob versucht eine dauerhafte Absage 24 Stunden lang weiter.** · gehört zu: nächste Backlog-Runde · Stand: offen · seit 02.11.2026
+454. **Der Mailjob versucht eine dauerhafte Absage 24 Stunden lang weiter.** · gehört zu: 22 · Stand: offen · seit 02.11.2026
      *Aufgenommen 02.11.2026 im ersten Prüfdurchgang der Arbeitsumgebung
      (R91, P-P5c-03).* Die Rundmail an 8 Staging-Konten: 5 zugestellt,
      zwei mit „Server antwortete 550" (das Postfach gibt es nicht), eine
@@ -1057,7 +1021,7 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
 
 <!-- -->
 
-456. **Die Reanimationskarte sagt im gesperrten Formular „keine".** · gehört zu: nächste Backlog-Runde · Stand: offen · seit 03.11.2026
+456. **Die Reanimationskarte sagt im gesperrten Formular „keine".** · gehört zu: 22 · Stand: offen · seit 03.11.2026
      *Aufgenommen 03.11.2026 im Prüfdurchgang der Arbeitsumgebung (R91,
      P-S11-18).* Ist der Inhaltsschlüssel gesperrt, öffnet
      `einsatz_form.php` die Einsatzhülle nicht, `#rearows` bleibt leer, und
@@ -1069,20 +1033,6 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      wie die Karte „Wartet auf dein Passwort" in der Ansicht.
      *Abnahme:* gesperrtes Formular eines Einsatzes mit Reanimation — der
      Kartenkopf sagt nicht „keine".
-
-<!-- -->
-
-457. **Das Löschen eines Zeitraums steht im Protokoll ohne Bezeichnung der Art.** · gehört zu: nächste Backlog-Runde · Stand: offen · seit 03.11.2026
-     *Aufgenommen 03.11.2026 im Prüfdurchgang der Arbeitsumgebung (R91,
-     P-S11-22).* `api/schneiden.php` schreibt `spur_stueck_geloescht`,
-     und die Liste der Arten in `protokoll_lib.php` kennt den Schlüssel
-     nicht: Unter Verwaltung → Protokoll steht als Plakette
-     „spur stueck geloescht", und im Filter „Art des Ereignisses" fehlt die
-     Art. Der Text des Eintrags selbst stimmt („GPS-Daten eines
-     Ruhesegments gelöscht: 20:30–20:40 (61 Punkte)"). Kein Riegel hält
-     geschriebene Arten gegen die Liste. *Weg:* die Art eintragen; dazu
-     prüfen, ob es weitere `protokoll()`-Arten ohne Eintrag gibt.
-     *Abnahme:* Plakette „GPS-Daten gelöscht" (o. ä.) und die Art im Filter.
 
 <!-- -->
 

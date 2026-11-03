@@ -808,6 +808,84 @@ function zh_regel_frischer_code(string $rel, array $sichten, string $quelle): ar
 }
 
 /**
+ * Z46 — jede geschriebene Protokollart hat eine Beschriftung.
+ *
+ * Anlass: Nr. 457. `api/schneiden.php` schrieb `spur_stueck_geloescht`, und
+ * `PROTOKOLL_ARTEN` kannte die Art nicht: Verwaltung -> Protokoll zeigte als
+ * Plakette „spur stueck geloescht", und im Filter fehlte die Art. Nichts
+ * hielt eine geschriebene Art gegen die Liste.
+ *
+ * GEZAEHLT WIRD ZWEIERLEI:
+ *   1. In jeder Datei ein `protokoll(…)`-Aufruf, dessen zweites Argument eine
+ *      feste Zeichenkette ist, die in `PROTOKOLL_ARTEN` fehlt. Fest heisst:
+ *      das Argument selbst oder ein Zweig einer Bedingung (`? 'a' : 'b'`) —
+ *      eine Zeichenkette hinter `===` ist ein Vergleich, keine Art.
+ *   2. In `protokoll_lib.php` jede Art der Reiterliste
+ *      (`protokoll_arten_des_reiters()`), die in `PROTOKOLL_ARTEN` fehlt —
+ *      sie stuende im Filter mit ihrer Rohform.
+ * Eine Art aus einer Variablen sieht die Regel nicht (`protokoll_geraet()`,
+ * `wartung_an`/`_aus` in `jobs.php`); die stehen von Hand in der Liste.
+ *
+ * @return list<int>  Zeilen mit Befund
+ */
+function zh_regel_protokoll_arten(string $rel, array $sichten, string $quelle): array
+{
+    static $arten = null;
+    $lib = (string)@file_get_contents(ZH_SERVER . '/protokoll_lib.php');
+    if ($arten === null) {
+        $arten = [];
+        if (preg_match('~const PROTOKOLL_ARTEN = \[(.*?)\n\];~s', $lib, $m)
+            && preg_match_all("~^\s*'([a-z0-9_]+)'\s*=>~m", $m[1], $k)) {
+            $arten = array_fill_keys($k[1], true);
+        }
+    }
+    $nummern = [];
+    if ($arten === []) { return $rel === 'server/protokoll_lib.php' ? [1] : []; }
+
+    $t = @token_get_all($quelle);
+    $n = count($t);
+    $zeile = 1;
+    for ($i = 0; $i < $n; $i++) {
+        if (!is_array($t[$i]) || $t[$i][0] !== T_STRING || strtolower($t[$i][1]) !== 'protokoll') { continue; }
+        $v = $i - 1;
+        while ($v >= 0 && is_array($t[$v]) && $t[$v][0] === T_WHITESPACE) { $v--; }
+        if ($v >= 0 && is_array($t[$v])
+            && in_array($t[$v][0], [T_FUNCTION, T_OBJECT_OPERATOR, T_DOUBLE_COLON], true)) { continue; }
+        $j = $i + 1;
+        while ($j < $n && is_array($t[$j]) && $t[$j][0] === T_WHITESPACE) { $j++; }
+        if ($j >= $n || $t[$j] !== '(') { continue; }
+        $tiefe = 0; $arg = 0; $davor = null;
+        for ($k = $j; $k < $n; $k++) {
+            $tok = $t[$k];
+            if ($tok === '(' || $tok === '[') { $tiefe++; $davor = $tok; continue; }
+            if ($tok === ')' || $tok === ']') { if (--$tiefe === 0) { break; } $davor = $tok; continue; }
+            if ($tok === ',' && $tiefe === 1) { $arg++; $davor = ','; if ($arg > 1) { break; } continue; }
+            if (is_array($tok) && in_array($tok[0], [T_WHITESPACE, T_COMMENT, T_DOC_COMMENT], true)) { continue; }
+            if ($arg === 1 && $tiefe === 1 && is_array($tok) && $tok[0] === T_CONSTANT_ENCAPSED_STRING
+                && in_array($davor, [',', '?', ':'], true)) {
+                $art = substr($tok[1], 1, -1);
+                if (!isset($arten[$art])) { $nummern[] = $tok[2]; }
+            }
+            $davor = is_array($tok) ? $tok[1] : $tok;
+        }
+    }
+
+    if ($rel === 'server/protokoll_lib.php'
+        && preg_match('~function protokoll_arten_des_reiters\(.*?\$je = \[(.*?)\n    \];~s', $quelle, $m, PREG_OFFSET_CAPTURE)) {
+        $block = $m[1][0];
+        $basis = substr_count(substr($quelle, 0, $m[1][1]), "\n") + 1;
+        if (preg_match_all("~'([a-z0-9_]+)'~", $block, $tr, PREG_OFFSET_CAPTURE)) {
+            foreach ($tr[1] as [$art, $off]) {
+                /* Die Schluessel des Feldes (Reiternamen) stehen vor `=>`. */
+                if (preg_match('~^\s*=>~', substr($block, $off + strlen($art) + 1, 24))) { continue; }
+                if (!isset($arten[$art])) { $nummern[] = $basis + substr_count(substr($block, 0, $off), "\n"); }
+            }
+        }
+    }
+    return $nummern;
+}
+
+/**
  * Z45 — kein Markup im Text einer Meldung.
  *
  * `ui_meldung_markup()` maskiert seinen Text (Argument 2), `ui_meldung()`
