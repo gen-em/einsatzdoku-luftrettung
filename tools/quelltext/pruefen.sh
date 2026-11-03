@@ -30,7 +30,7 @@ NAMEN=(installweiche sitzungshaertung csp jobregister migrationsregister
 # lief lange nirgends — `bestand` (Regel `selbst`) hält die Liste deshalb
 # gegen den Code.
 SELBST=(installweiche sitzungshaertung csp jobregister migrationsregister behandler
-        textprobe bestand pysyntax handbuch anker kennzeichnung fremdsummen dokumente)
+        textprobe bestand pysyntax handbuch kennzeichnung fremdsummen dokumente)
 
 starter() {   # starter <name> — womit die Datei gefahren wird
     case "$1" in
