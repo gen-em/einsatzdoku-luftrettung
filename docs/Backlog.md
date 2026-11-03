@@ -53,7 +53,7 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
 | Spanne | Zweig | seit |
 |---|---|---|
 | 480 bis 489 | `claude/tender-bell-225ta2` (Schritt 22, BR5) | 03.11.2026 |
-| 490 bis 499 | `claude/new-session-p1duc7` — Prüfdurchgang der Arbeitsumgebung (R91), Fortsetzung | 03.11.2026 |
+| 490 bis 499 | `claude/new-session-p1duc7` — Prüfdurchgang der Arbeitsumgebung (R91), Fortsetzung; vergeben: 490, 491 | 03.11.2026 |
 | ab 500 | frei — höchste reservierte Nummer 499; frei blieben 472 bis 479 aus der Spanne von 21 (PR #136), 461 bis 469 aus der Spanne von PR (PR #133), 434 bis 439 aus der Spanne von PR #129, 441 bis 449 aus der von PR #130, 420 bis 429 aus der Spanne von 20 (PR #127), 412 bis 419 aus der von 12b (PR #125), 394 bis 399 aus der Spanne von 19 (PR #112 bis #114), 389 aus der von 12a (PR #116), 372 bis 379 aus der von 12 (PR #103), 362 bis 369 aus der von PK, 359 aus der von 18 (PR #101), 348 und 349 aus der von 17, 338 aus der von AR | 02.11.2026 |
 
 ---
@@ -1071,3 +1071,35 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      von der Marke ausnehmen; andere Hintergrund-POSTs mit prüfen.
      *Abnahme:* frischer Reset, Anmelden, drei Seiten ansehen —
      Verwaltung → Demo-Konto „Geändert: nein".
+
+<!-- -->
+
+490. **Ein Prüfstand in einem Arbeitsbaum lässt die örtliche Anlage auf ihn zeigen.** · gehört zu: nächste Backlog-Runde · Stand: offen · seit 03.11.2026
+     *Aufgenommen 03.11.2026 im Prüfdurchgang der Arbeitsumgebung (R91,
+     P-BR-10).* `pruefen.sh` aus einem `git worktree` außerhalb des
+     Repositoriums startet `php -S 127.0.0.1:8080 -t <arbeitsbaum>/server`
+     und lässt ihn nach dem Lauf stehen. Wird der Arbeitsbaum danach
+     gelöscht, antwortet die örtliche Anlage mit 404, und jede Probe
+     scheitert (Zweitfaktorprobe 45 ok, 94 fehlen). `hochfahren.sh` ohne
+     `--neu` startet den Server nicht neu und meldet nur „Anmeldeseite
+     antwortet nicht mit 200". *Weg:* nach dem Lauf den eigenen Server
+     beenden oder den des Hauptbaums wiederherstellen; `hochfahren.sh`
+     prüft, ob der laufende Server die eigene Wurzel bedient.
+     *Abnahme:* P-BR-10 fahren, Arbeitsbaum löschen — die Zweitfaktorprobe
+     läuft danach ohne Eingriff grün.
+
+<!-- -->
+
+491. **Die Sende-Rundläufe der Android-App laufen nur mit Schlüsselpaar an Konto 1.** · gehört zu: nächste Backlog-Runde · Stand: offen · seit 03.11.2026
+     *Aufgenommen 03.11.2026 im Prüfdurchgang der Arbeitsumgebung (R91,
+     P-AR-15).* `./gradlew :handy:testDebugUnitTest -Pnadoku.rundlauf=…`
+     gegen eine frisch aufgesetzte örtliche Anlage: 299 Fälle, 6
+     Fehlschläge, alle in `MissionRundlaufTest` und `SendeRundlaufTest`
+     („0 Anfragen"); `KopplungRundlaufTest` grün. Konto 1
+     (`admin@example.invalid`) hat kein Schlüsselpaar (`kp_oeffentlich`
+     leer), und seit S11 sendet das Handy ohne Kontoschlüssel nichts. Die
+     App verhält sich richtig; der Prüfaufbau legt das Paar nicht an.
+     *Weg:* `Kopplungshilfe` oder `hochfahren.sh` legt für Konto 1 ein
+     Paar an (wie `Sitzung.kontoschluessel()`), oder der Rundlauf nimmt
+     ein Konto mit Paar. *Abnahme:* P-AR-15 auf frischer Anlage 0
+     Fehlschläge.
