@@ -54,7 +54,8 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
 |---|---|---|
 | 450 bis 459 | `claude/new-session-p1duc7` — Prüfdurchgang der Arbeitsumgebung auf Staging (R91); vergeben: 450 bis 459 | 03.11.2026 |
 | 480 bis 489 | `claude/tender-bell-225ta2` (Schritt 22, BR5) | 03.11.2026 |
-| ab 490 | frei — höchste reservierte Nummer 489; frei blieben 472 bis 479 aus der Spanne von 21 (PR #136), 461 bis 469 aus der Spanne von PR (PR #133), 434 bis 439 aus der Spanne von PR #129, 441 bis 449 aus der von PR #130, 420 bis 429 aus der Spanne von 20 (PR #127), 412 bis 419 aus der von 12b (PR #125), 394 bis 399 aus der Spanne von 19 (PR #112 bis #114), 389 aus der von 12a (PR #116), 372 bis 379 aus der von 12 (PR #103), 362 bis 369 aus der von PK, 359 aus der von 18 (PR #101), 348 und 349 aus der von 17, 338 aus der von AR | 02.11.2026 |
+| 490 bis 499 | `claude/new-session-p1duc7` — Prüfdurchgang der Arbeitsumgebung (R91), Fortsetzung | 03.11.2026 |
+| ab 500 | frei — höchste reservierte Nummer 499; frei blieben 472 bis 479 aus der Spanne von 21 (PR #136), 461 bis 469 aus der Spanne von PR (PR #133), 434 bis 439 aus der Spanne von PR #129, 441 bis 449 aus der von PR #130, 420 bis 429 aus der Spanne von 20 (PR #127), 412 bis 419 aus der von 12b (PR #125), 394 bis 399 aus der Spanne von 19 (PR #112 bis #114), 389 aus der von 12a (PR #116), 372 bis 379 aus der von 12 (PR #103), 362 bis 369 aus der von PK, 359 aus der von 18 (PR #101), 348 und 349 aus der von 17, 338 aus der von AR | 02.11.2026 |
 
 ---
 
