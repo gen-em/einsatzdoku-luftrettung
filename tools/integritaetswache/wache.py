@@ -203,7 +203,11 @@ NICHT_PRUEFEN = {'.md'}
 
 # Seiten, deren Inline-Skriptbloecke verglichen werden. Nur unangemeldet
 # erreichbare -- die Wache hat keine Zugangsdaten und soll keine bekommen.
-SEITEN = ['login.php']
+# Seit BR5-04 (Nr. 358) auch der Notzugang: Dort wird ebenfalls ein Passwort
+# getippt, und sein Skript leitet das Token ab. Eingetragen erst, nachdem die
+# Seite auf Produktiv lag (Web 21.13.0) — vorher waere die Wache rot gewesen,
+# weil die Anlage sie nicht hatte.
+SEITEN = ['login.php', 'zweitfaktor_notweg.php']
 
 # FORMULARE, DIE NUR MIT EINER SITZUNG IN DER SEITE STEHEN. Der Code-Schritt des Zweitfaktors steht in `login.php`, aber nur
 # nach einem richtigen Passwort -- mit dem halben Stand `totp_halb` in der

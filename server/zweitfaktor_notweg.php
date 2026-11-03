@@ -166,11 +166,10 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
 function notweg_konto(string $email): ?array
 {
     if ($email === '') { return null; }
+    /* Die Zeile liest `anmelde_konto()` (`db.php`), dieselbe wie die Anmeldung
+     * (Nr. 358). Hier bleibt nur die eigene Antwort auf einen Fehler. */
     try {
-        $st = db()->prepare('SELECT id, email, password_hash, kdf_iter, role, status
-                               FROM users WHERE email = ?');
-        $st->execute([$email]);
-        $u = $st->fetch(PDO::FETCH_ASSOC);
+        $u = anmelde_konto('email', $email);
         return $u === false ? null : $u;
     } catch (Throwable $ex) {
         system_melden('notweg', 'das Konto ließ sich nicht lesen', $ex);
@@ -187,32 +186,10 @@ function notweg_konto(string $email): ?array
  */
 function notweg_passwort_passt(?array $u, string $tokensRoh): bool
 {
-    $tokenNach = [];
-    $roh = json_decode($tokensRoh, true);
-    if (is_array($roh)) {
-        foreach ($roh as $runde => $tk) {
-            $r = (int)$runde;
-            if ($r > 0 && is_string($tk) && preg_match('/^[0-9a-f]{64}$/', $tk)) {
-                $tokenNach[$r] = $tk;
-            }
-        }
-    }
-    if ($u !== null && $u['password_hash'] !== null) {
-        $token = $tokenNach[(int)($u['kdf_iter'] ?? 0) ?: 310000] ?? '';
-        /* Ueber den Pfeffer. `anteil_fehlt` ist hier ein Nein: Der
-         * Notweg ersetzt den Code, nicht die Anmeldung, und die sagt den
-         * Grund selbst. */
-        return anmeldehash_pruefen((int)$u['id'], $token, (string)$u['password_hash']) === 'ok';
-    }
-    /* Derselbe Blindvergleich wie in `login.php`: passt die
-     * Konstante zur Vorgabe, genuegt die Pruefung; sonst kostet ein Hash mit
-     * der Vorgabe genauso viel. Nicht beides. */
-    if (password_needs_rehash(AUTH_VERGLEICHSWERT, PASSWORD_DEFAULT)) {
-        password_hash(reset($tokenNach) ?: '', PASSWORD_DEFAULT);
-    } else {
-        password_verify(reset($tokenNach) ?: '', AUTH_VERGLEICHSWERT);
-    }
-    return false;
+    /* `anteil_fehlt` ist hier ein Nein: Der Notweg ersetzt den Code, nicht die
+     * Anmeldung, und die sagt den Grund selbst. Lesen, Pruefen und der
+     * Blindvergleich ohne Konto stehen an einer Stelle (`db.php`, Nr. 358). */
+    return anmelde_token_pruefen($u, anmelde_tokens_lesen($tokensRoh))[0] === 'ok';
 }
 
 /**
@@ -335,7 +312,8 @@ ui_kopf(['menue' => false]);
          verlaesst den Browser nicht: Salz holen, je Rundenzahl das Token
          ableiten, nur die Token schicken. Anders als die Anmeldung legt diese
          Seite KEINE Ableitung ins Vormerkfach — sie meldet niemanden an.
-         `login.php` hat eine zweite Kopie dieser Zeilen. */ ?>
+         Salz und Ableitung stehen seit Web 23.6.6 in
+         `EdCrypto.anmeldeTokens()`, fuer beide Seiten (Nr. 358). */ ?>
 <script<?= kopf_nonce_attr() ?>>
 document.getElementById('notwegform').addEventListener('submit', async ev => {
   const f = ev.target;
@@ -346,24 +324,22 @@ document.getElementById('notwegform').addEventListener('submit', async ev => {
     state.textContent = 'Schlüssel wird abgeleitet …';
     const email = f.elements['email'].value.trim().toLowerCase();
     const pw = f.elements['password'].value;
-    const r = await fetch('auth_salt.php', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email })
-    });
-    if (r.status === 429) {
-      const d429 = await r.json().catch(() => ({}));
-      state.textContent = d429.meldung || 'Zu viele Versuche. Bitte später erneut.';
-      return;
-    }
-    if (!r.ok) {
-      state.textContent = 'Der Notzugang ist gerade nicht erreichbar. Bitte später erneut.';
-      return;
-    }
-    const d = await r.json();
-    const runden = Array.isArray(d.iter) && d.iter.length ? d.iter : [310000];
-    const tokens = {};
-    for (const it of runden) {
-      tokens[it] = (await EdCrypto.deriveKeys(pw, d.salt, it)).authToken;
+    /* Salz und Ableitung: `EdCrypto.anmeldeTokens()`, dieselbe Stelle wie die
+     * Anmeldung (Nr. 358). Nur die Token gehen hinaus; die Haelften
+     * bleiben ungenutzt — diese Seite meldet niemanden an. */
+    let tokens;
+    try {
+      ({ tokens } = await EdCrypto.anmeldeTokens(email, pw));
+    } catch (fehler) {
+      if (fehler.status === 429) {
+        state.textContent = fehler.meldung || 'Zu viele Versuche. Bitte später erneut.';
+        return;
+      }
+      if (fehler.status) {
+        state.textContent = 'Der Notzugang ist gerade nicht erreichbar. Bitte später erneut.';
+        return;
+      }
+      throw fehler;
     }
     document.getElementById('notwegtoks').value = JSON.stringify(tokens);
     f.elements['password'].value = '';

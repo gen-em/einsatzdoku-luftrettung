@@ -18,7 +18,7 @@ BR5-10).
 | BR5-01 | Transaktion und Protokoll: Nr. 354, 345, 457 | **erledigt** 03.11.2026 (Web 23.6.3) |
 | BR5-02 | Jobs und Mail: Nr. 357, 454, 450 | **erledigt** 03.11.2026 (Web 23.6.4) |
 | BR5-03 | Formularfelder: Nr. 355 (`post_text()`) | **erledigt** 03.11.2026 (Web 23.6.5) |
-| BR5-04 | Zweite Passwortseite: Nr. 358 | offen |
+| BR5-04 | Zweite Passwortseite: Nr. 358 | **erledigt** 03.11.2026 (Web 23.6.6) |
 | BR5-05 | Schlüsselpaar und Rückweg nach der Anmeldung: Nr. 392 | offen |
 | BR5-06 | Meldungen und Karten: Nr. 346, 356, 456 | offen |
 | BR5-07 | Backup-Formular: Nr. 430 | offen |
@@ -26,7 +26,7 @@ BR5-10).
 | BR5-09 | PHP 8.3.6: Nr. 383 | offen |
 | BR5-10 | Abschluss | offen |
 
-**In Arbeit:** BR5-04 als Nächstes. **Es hakt:** nirgends. BR5-03 ist erledigt; `post_text()` liefert Text oder die Vorgabe, nicht `null` (F-BR5-19).
+**In Arbeit:** BR5-05 als Nächstes. **Es hakt:** nirgends.
 
 ---
 
@@ -224,6 +224,16 @@ dem Umbau 33 Abweichungen; sie liest jetzt auch `get_text('…')`.
 
 **F-BR5-21 — Ein zweiter Containerneustart in BR5-03.** Wie F-BR5-18; danach
 wurde der Zwischenstand sofort als Commit gesichert (`080df56`).
+
+**F-BR5-22 — Das alte Feld `token` schickt im Repositorium niemand mehr
+(gemessen 03.11.2026, BR5-04).** Weder Proben noch Werkzeuge noch Apps senden
+es an `login.php`; nur ein Reiter mit der alten Anmeldeseite könnte es noch.
+Es bleibt, wie BR5-04 es vorsah; ein Kommentar an der Stelle nennt die
+Messung. **Die Wache lässt sich örtlich nicht fahren**: Gegen
+`https://127.0.0.1:8443` scheitert jeder Abruf an der Zertifikatskette des
+Containers (149 von 159, „CA cert does not include key usage extension“);
+gemessen ist ihre Selbstprobe, der echte Vergleich läuft nach dem Merge in
+`integritaet.yml`.
 
 **F-BR5-14 — Nr. 450 hat die Ursache in der Kette, die Abhilfe am Server.**
 Stufe 2 legt Konten unter `…@example.invalid` an (`umlauf_konto()` in
@@ -836,10 +846,28 @@ PHP 8.3.6):
   allein 139/0. Zwei Proben gleichzeitig messen einander (CLAUDE.md 7); die
   137/2 sind kein Befund über den Code.
 
+**BR5-04** (03.11.2026, Web 23.6.6; örtliche Anlage):
+
+- *Quelltext:* genau ein `fetch('auth_salt.php'` (in `crypto.js`, vorher
+  zwei in `login.php` und im Notzugang); die Inline-Skripte beider Seiten mit
+  `node --check` ohne Befund; `php -l` über die berührten Dateien.
+- *Proben* (nacheinander): Zweitfaktor 139/0 (Notzugang samt gleicher
+  Antwortdauer über alle Lagen), Anteil 74/0 (Token unter einer anderen
+  Rundenzahl), Raten 102/0, Sitzung 25/0, Rollen 612/0, Passkey 128/0,
+  Wiederherstellung 142/0, Rückweg 23/0.
+- *Browser, drei Engines* (Einmaltest): Anmeldung mit dem Demo-Konto über die
+  Oberfläche → Startseite; Notzugang mit Adresse, Passwort, Wert → die eine
+  Antwort „steht für dieses Konto nicht bereit“ (ein kaputtes Skript zeigte
+  „Dieser Browser unterstützt …“). Chromium, Firefox, WebKit je ok, 0
+  Seitenfehler.
+- *Wache:* `wache.py --selbstprobe` 55/0; `SEITEN` nennt zwei Seiten.
+  Bedrohungsmodell C1, G5 und Bausteintabelle nachgezogen (CLAUDE.md 4).
+
 ## 7. Verlauf
 
 | Datum | Was |
 |---|---|
+| 03.11.2026 | BR5-04 erledigt (Web 23.6.6); F-BR5-22. |
 | 03.11.2026 | BR5-03 erledigt (Web 23.6.5); F-BR5-19 bis -21. |
 | 03.11.2026 | BR5-02 erledigt (Web 23.6.4); F-BR5-17, -18; E-BR5-20 (Proben umgestellt). |
 | 03.11.2026 | PR #141 gemergt; P-BR5-01 bis -04 auf Staging bestanden und aus der Handprüfliste gestrichen. |

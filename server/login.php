@@ -112,53 +112,9 @@ if ($halb !== null && (isset($_GET['abbrechen']) || (int)($halb['bis'] ?? 0) < t
  * worden sein. Zwei Abschriften derselben Pruefung laufen auseinander; eine
  * Funktion nicht. */
 
-/**
- * Die Kontozeile fuer die Anmeldung, nach Adresse (`email`) oder Kennung
- * (`id`, im Code-Schritt).
- */
-function login_zeile(string $spalte, string|int $wert): array|false
-{
-    /* `role`: Im Wartungsmodus entscheidet die Rolle,
-     * ob die Anmeldung Bestand hat. Sie wandert NICHT in die
-     * Sitzung; sie wird hier einmal gelesen und danach vergessen. auth_guard.php liest sie
-     * weiterhin bei jeder Anfrage neu. */
-    /* WARUM DAS SELECT ZWEIMAL DASTEHT.
-     *
-     * `status` und `gesperrt_grund` kommen aus der Migration
-     * `2026_09_16_konto_lebenszyklus`. Zwischen dem Deploy und dem Aufruf von
-     * `update.php` gibt es die beiden Spalten NICHT — und ein einzelnes SELECT
-     * wuerfe dann, ungefangen, mitten im Anmeldeweg.
-     *
-     * DAS WAERE EIN RIEGEL, KEIN SCHOENHEITSFEHLER: Ohne Anmeldung kein
-     * `betrieb_updates.php`, ohne das keine Migration, ohne die keine Anmeldung.
-     * Die Anlage stuende mit HTTP 500 auf der Anmeldeseite und liesse sich aus
-     * dem Browser nicht mehr aufschliessen (auf Staging gemessen).
-     *
-     * DER RUECKFALL UND NICHT EINE VORABFRAGE: `information_schema` bei JEDEM
-     * Seitenaufbau zu fragen kostet einen Roundtrip fuer einen Zustand, der nach
-     * dem ersten `update.php` nie wieder eintritt. Der zweite Versuch kostet nur
-     * dort etwas, wo es die Spalten wirklich nicht gibt.
-     *
-     * WAS DANACH GILT: Ohne die Spalten ist jedes Konto `aktiv` und ohne
-     * Sperrgrund — die Vorgabewerte, die die Migration selbst setzt. Die
-     * Anwendung laeuft also wie ohne Kontostatus weiter, bis die Migration
-     * durch ist. */
-    $wo = $spalte === 'id' ? 'id = ?' : 'email = ?';
-    $LOGIN_SPALTEN = 'id, password_hash, session_epoch, kdf_iter, logo_wahl, role';
-    try {
-        $st = db()->prepare('SELECT ' . $LOGIN_SPALTEN . ', status, gesperrt_grund
-                             FROM users WHERE ' . $wo);
-        $st->execute([$wert]);
-    } catch (Throwable $ex) {
-        /* RUECKFALL — wie in `auth_guard.php`. */
-        system_rueckfall('login', 'Lebenszyklus-Spalten fehlen — Migration '
-                       . '2026_09_16_konto_lebenszyklus steht aus. Anmeldung läuft '
-                       . 'ohne sie weiter.', $ex);
-        $st = db()->prepare('SELECT ' . $LOGIN_SPALTEN . ' FROM users WHERE ' . $wo);
-        $st->execute([$wert]);
-    }
-    return $st->fetch();
-}
+/* Die Kontozeile: `anmelde_konto()` in `db.php` — seit Web 23.6.6 fuer
+ * Anmeldung und Notzugang gemeinsam (Nr. 358; bis dahin `login_zeile()` hier
+ * und `notweg_konto()` als gekuerzte Kopie). */
 
 /**
  * Darf dieses Konto jetzt hinein? Bricht mit einer eigenen Seite ab, wenn
@@ -443,7 +399,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !csrf_ok()) {
             }
             if ($pr['ok']) {
                 rate_erfolg('totp', null, $merkmale);
-                $u = login_zeile('id', $kontoId);
+                $u = anmelde_konto('id', $kontoId);
                 if ($u) {
                     login_zugang($u, $t0, true);
                     unset($_SESSION['totp_halb']);
@@ -561,15 +517,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !csrf_ok()) {
         $r = rw_rueckweg_pruefen($_SESSION['totp_halb'], post_text('signatur'));
         if ($r['ok']) {
             rate_erfolg('totp', null, $merkmale);
-            $u = login_zeile('id', $kontoId);
+            $u = anmelde_konto('id', $kontoId);
             if ($u) {
                 login_zugang($u, $t0, true);
                 unset($_SESSION['totp_halb']);
                 anmeldung_vollenden($u, !empty($halb['demo']));
                 totp_abschalten($kontoId, 'schluessel');
                 require_once __DIR__ . '/mail_lib.php';
-                /* Die Adresse aus dem halben Stand: `login_zeile()` liest sie
-                 * nicht mit, und es ist dieselbe, mit der angemeldet wurde. */
+                /* Die Adresse aus dem halben Stand — es ist dieselbe, mit der
+                 * angemeldet wurde. (`anmelde_konto()` liest sie seit Web
+                 * 23.6.6 mit; bis dahin tat `login_zeile()` das nicht.) */
                 $rwZustellung = mail_einreihen('totp_zurueckgesetzt', (string)$halb['email'],
                                                ['link' => app_url('/login.php'), 'weg' => 'schluessel']);
                 if (rolle_braucht_zweitfaktor($u['role'] ?? null)) {
@@ -673,7 +630,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !csrf_ok()) {
     } else {
         // Der Browser sendet nie das Passwort, sondern das daraus
         // abgeleitete Token (siehe assets/crypto.js).
-        $u = login_zeile('email', $email);
+        $u = anmelde_konto('email', $email);
 
         /* ---- DEMO-ANMELDUNG ABGESCHALTET --------------
          *
@@ -718,60 +675,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !csrf_ok()) {
          * angenommen — ein Browser mit zwischengespeichertem alten Skript
          * schickt es noch, und die Anmeldung soll daran nicht scheitern.
          */
-        $tokenNach = [];
-        $roh = json_decode(post_text('tokens'), true);
-        if (is_array($roh)) {
-            foreach ($roh as $runde => $tk) {
-                $r = (int)$runde;
-                /* Keine Pruefung gegen eine Liste erlaubter Werte: Der Server
-                 * greift gleich unten NUR den Eintrag heraus, der zur
-                 * gespeicherten Rundenzahl des Kontos gehoert. Ein Token unter
-                 * einem beliebigen anderen Schluessel wird nie angesehen. */
-                if ($r > 0 && is_string($tk) && preg_match('/^[0-9a-f]{64}$/', $tk)) {
-                    $tokenNach[$r] = $tk;
-                }
-            }
-        }
+        $tokenNach = anmelde_tokens_lesen(post_text('tokens'));
         if (isset($_POST['token']) && preg_match('/^[0-9a-f]{64}$/', post_text('token'))) {
-            // Altes Feld: es galt immer die frueher fest verdrahtete Zahl.
+            /* Altes Feld: es galt immer die frueher fest verdrahtete Zahl.
+             * Gemessen am 03.11.2026 (BR5-04): Kein Werkzeug im
+             * Repositorium schickt es mehr; es bleibt fuer einen Reiter, der
+             * die alte Seite noch offen hat. */
             $tokenNach[310000] = $tokenNach[310000] ?? post_text('token');
         }
 
         /* DREI AUSGAENGE STATT ZWEI. `anteil_fehlt` heisst:
          * Der Hash ist gepfeffert, und `config.php` traegt den Anteil nicht
          * mehr, zu dem er gehoert. Das Passwort kann richtig sein — die Seite
-         * darf deshalb nicht „Passwort pruefen" sagen. */
-        $anteilFehlt = false;
-        if ($u && $u['password_hash'] !== null) {
-            $konto = (int)($u['kdf_iter'] ?? 0) ?: 310000;
-            $token = $tokenNach[$konto] ?? '';
-            $pruef = anmeldehash_pruefen((int)$u['id'], $token, (string)$u['password_hash']);
-            $ok = ($pruef === 'ok');
-            $anteilFehlt = ($pruef === 'anteil_fehlt');
-        } else {
-            /* Unbekannte Adresse oder Konto ohne gesetztes Passwort: trotzdem
-             * eine bcrypt-Rechnung, damit dieser Zweig nicht schneller ist.
-             *
-             * DER VERGLEICHSWERT WIRD GEPRUEFT, NICHT GEGLAUBT. Er traegt eine
-             * feste Rundenzahl (db.php), und die Vorgabe von PASSWORD_DEFAULT
-             * waechst mit den PHP-Fassungen — stuende er auf 10, waehrend PHP
-             * 12 anlegt, waere der blinde Zweig viermal schneller als der
-             * bekannte. password_needs_rehash() kostet nichts
-             * (0,0000 ms ueber 2000 Laeufe) und faengt genau das ab: Passt
-             * die Konstante, bleibt es beim billigen Vergleich; passt sie
-             * nicht, kostet ein password_hash() mit der Vorgabe genau so
-             * viel wie die Pruefung im Gegenzweig.
-             *
-             * NICHT BEIDES. Hashen UND danach pruefen macht diesen Zweig um
-             * 234 ms LANGSAMER als den anderen und sprengt die Mindestdauer
-             * — das Leck waere dann umgedreht. */
-            if (password_needs_rehash(AUTH_VERGLEICHSWERT, PASSWORD_DEFAULT)) {
-                password_hash(reset($tokenNach) ?: '', PASSWORD_DEFAULT);
-            } else {
-                password_verify(reset($tokenNach) ?: '', AUTH_VERGLEICHSWERT);
-            }
-            $ok = false;
-        }
+         * darf deshalb nicht „Passwort pruefen" sagen. Die Pruefung selbst
+         * — samt Blindvergleich ohne Konto, eine bcrypt-Rechnung auf jedem
+         * Weg — steht seit Web 23.6.6 in `anmelde_token_pruefen()` (`db.php`),
+         * fuer Anmeldung und Notzugang gemeinsam (Nr. 358). */
+        [$pruef, $token] = anmelde_token_pruefen($u ?: null, $tokenNach);
+        $ok          = ($pruef === 'ok');
+        $anteilFehlt = ($pruef === 'anteil_fehlt');
 
         if ($ok) {
             /* ---- Zaehler leeren, BEVOR ueber den Zugang entschieden wird ----
@@ -1238,46 +1160,32 @@ document.getElementById('loginform').addEventListener('submit', async ev => {
     await EdCrypto.clearSession();
     const email = f.elements['email'].value.trim().toLowerCase();
     const pw = f.elements['password'].value;
-    const r = await fetch('auth_salt.php', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email })
-    });
-    // Der Salz-Endpunkt hat seit Web 4.4.0 einen Ratenschutz. Ohne diese
-    // Abfrage lief eine Sperre in den catch-Zweig und meldete "Dieser Browser
-    // unterstuetzt die noetige Verschluesselung nicht" — eine Auskunft, die
-    // nicht nur unbrauchbar, sondern falsch ist.
-    if (r.status === 429) {
-      const d429 = await r.json().catch(() => ({}));
-      state.textContent = d429.meldung || 'Zu viele Versuche. Bitte später erneut.';
-      return;
-    }
-    if (!r.ok) {
-      state.textContent = 'Anmeldung derzeit nicht möglich. Bitte später erneut.';
-      return;
-    }
-    const d = await r.json();
-
-    /* ---- Für jede genannte Rundenzahl ableiten (M2-01, Schritt 3) --------
+    /* SALZ UND ABLEITUNG STEHEN IN `EdCrypto.anmeldeTokens()` (Nr. 358) —
+     * dieselben Zeilen brauchte der Notzugang als zweite Kopie. Die Texte
+     * bleiben hier. Der Salz-Endpunkt hat seit Web 4.4.0 einen Ratenschutz;
+     * ohne die 429-Abfrage lief eine Sperre in den catch-Zweig und meldete
+     * „Dieser Browser unterstuetzt die noetige Verschluesselung nicht" — eine
+     * Auskunft, die nicht nur unbrauchbar, sondern falsch ist.
      *
-     * Der Salz-Endpunkt nennt jeder Adresse dieselbe Liste — er darf nicht
-     * verraten, welche Zahl für dieses Konto gilt, sonst wäre die Antwort für
-     * echte und erfundene Adressen wieder unterscheidbar. Der Browser rechnet
-     * deshalb für alle und schickt alle Token; der Server nimmt das passende.
-     *
-     * WAS DAS KOSTET: Solange die Liste zwei Einträge hat, dauert die
-     * Anmeldung doppelt so lange. Das ist der Übergangszustand während einer
-     * Anhebung, nicht der Dauerzustand — steht nur ein Wert in der Liste, ist
-     * alles wie vorher.
-     *
-     * Deshalb die Zwischenmeldung: Ohne sie wirkt die Seite in dieser Zeit
-     * eingefroren, und zwar doppelt so lange wie gewohnt. */
-    const runden = Array.isArray(d.iter) && d.iter.length ? d.iter : [310000];
+     * WAS MEHRERE RUNDENZAHLEN KOSTEN (M2-01): Der Endpunkt nennt jeder
+     * Adresse dieselbe Liste, der Browser rechnet fuer alle. Solange sie zwei
+     * Eintraege hat, dauert die Anmeldung doppelt so lange — der
+     * Uebergangszustand waehrend einer Anhebung. Deshalb die Zwischenmeldung:
+     * Ohne sie wirkt die Seite in dieser Zeit eingefroren. */
     state.textContent = 'Schlüssel werden abgeleitet …';
-    const tokens = {}, haelften = {};
-    for (const it of runden) {
-      const k = await EdCrypto.deriveKeys(pw, d.salt, it);
-      tokens[it] = k.authToken;
-      haelften[it] = k.haelfteHex;
+    let tokens, haelften;
+    try {
+      ({ tokens, haelften } = await EdCrypto.anmeldeTokens(email, pw));
+    } catch (fehler) {
+      if (fehler.status === 429) {
+        state.textContent = fehler.meldung || 'Zu viele Versuche. Bitte später erneut.';
+        return;
+      }
+      if (fehler.status) {
+        state.textContent = 'Anmeldung derzeit nicht möglich. Bitte später erneut.';
+        return;
+      }
+      throw fehler;
     }
     document.getElementById('toks').value = JSON.stringify(tokens);
 

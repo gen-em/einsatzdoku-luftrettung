@@ -8508,5 +8508,13 @@ declare(strict_types=1);
  *   Reiter System. Jetzt liest jede Seite ihre Felder ueber `post_text()`
  *   und `get_text()` (`eingabe_lib.php`): Text, sonst die Vorgabe. Drei
  *   lokale Huellen fuer dasselbe sind darin aufgegangen; zwei Registerzeilen
- *   halten die alte Form auf null. Korrektur; kein Schema. */
-const WEB_VERSION = '23.6.5';
+ *   halten die alte Form auf null. Korrektur; kein Schema.
+ * 23.6.6 — DIE ZWEITE PASSWORTSEITE HATTE IHRE EIGENE KOPIE (Backlog
+ *   Nr. 358; Schritt 22, BR5-04). Der Notzugang leitete das Anmelde-Token
+ *   ab wie die Anmeldung und pruefte es wie sie — je mit einer zweiten
+ *   Abschrift, auch des Blindvergleichs, der die Antwortdauer gleich haelt.
+ *   Jetzt eine Stelle je Seite des Wegs: `EdCrypto.anmeldeTokens()` im
+ *   Browser, `anmelde_tokens_lesen()`, `anmelde_token_pruefen()` und
+ *   `anmelde_konto()` in `db.php`. Die Integritaetswache vergleicht den
+ *   Notzugang jetzt mit. Korrektur; kein Schema. */
+const WEB_VERSION = '23.6.6';

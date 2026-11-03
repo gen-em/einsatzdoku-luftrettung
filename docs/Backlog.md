@@ -657,25 +657,6 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
 
 <!-- -->
 
-358. **Die zweite Passwortseite: Token-Ableitung an einer Stelle, und die Wache vergleicht sie mit.** · gehört zu: 22 · Stand: offen · seit 04.10.2026
-     *Aufgenommen 04.10.2026 mit SR-04 (Konzept SR, F-SR-90, E-SR-84).*
-     Der Notzugang `zweitfaktor_notweg.php` leitet das Passwort-Token ab wie
-     `login.php` (Salz über `auth_salt.php`, je Rundenzahl
-     `EdCrypto.deriveKeys()`) — mit einer zweiten Kopie der rund zwanzig
-     Zeilen, weil `login.php` für Schritt 18 zu ist (E-SR-14) und dort auch
-     die Prüfung (`login_zeile()`, Token je `kdf_iter`, Blindvergleich) als
-     lokaler Code steht. Dazu: Die Integritätswache vergleicht die
-     Inline-Skripte der Seiten, auf denen ein Passwort getippt wird
-     (`tools/integritaetswache/wache.py`, `SEITEN`) — dort steht nur
-     `login.php`. Die neue Seite vorher einzutragen, machte die Wache rot,
-     solange die Anlage sie nicht hat. *Weg:* eine Funktion in `crypto.js`
-     (Salz holen, Token je Rundenzahl) für beide Seiten, die Prüfung als
-     Funktion neben `AUTH_VERGLEICHSWERT`; nach der Auslieferung von
-     Web 21.13.0 `zweitfaktor_notweg.php` in `SEITEN`. *Abnahme:* ein
-     `fetch('auth_salt.php'` im Quelltext; die Wache misst zwei Seiten.
-
-<!-- -->
-
 361. **Die APK-Karte unterscheidet Handy und Wear-OS-Uhr nicht.** · gehört zu: 22 · Stand: offen · seit 30.09.2026
      *Aufgenommen 30.09.2026 nach dem ersten Tag `android-v0.17.0`
      (F-PK-58, Prüfdokument PK 5u).* Seit PK-08 legt die Kette zwei

@@ -14,8 +14,9 @@ python3 tools/integritaetswache/wache.py --selbstprobe
 ## Was es misst
 
 Über HTTPS, ohne Zugangsdaten, gegen den Zeiger `produktion`: (1) jede Datei
-unter `server/assets/` per SHA-256, (2) auf `login.php` alles, was den Weg
-des Passworts bestimmt, (3) seit R17-19 die Punktpfade — sechs mit **403**,
+unter `server/assets/` per SHA-256, (2) auf `login.php` und — seit BR5-04,
+Nr. 358 — auf `zweitfaktor_notweg.php` alles, was den Weg des Passworts
+bestimmt, (3) seit R17-19 die Punktpfade — sechs mit **403**,
 `.well-known/` nicht 403, keine Kopie der `config.php` mit 200 (F-R17-18).
 Vorweg die Adresse des Läufers; kommt kein Abruf durch, eine Zeile „Anlage
 nicht erreichbar" statt aller Dateien, rot (F-R17-74). Täglich und nach jeder

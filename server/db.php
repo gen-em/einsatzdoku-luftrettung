@@ -1339,6 +1339,122 @@ function ist_letzte_betreiberin(PDO $pdo, int $userId, ?string $rolle): bool
  */
 const AUTH_VERGLEICHSWERT = '$2y$12$Q6vjbOl.EIszd6TOEs39Kexy6uGWwrczpmFVKXpNXU7HXBNWNndSW';
 
+/**
+ * Die Kontozeile fuer die Anmeldung und den Notzugang, nach Adresse (`email`)
+ * oder Kennung (`id`, im Code-Schritt). Seit Web 23.6.6 hier (Nr. 358); bis
+ * dahin `login_zeile()` in `login.php` und eine gekuerzte Kopie im Notzugang.
+ */
+function anmelde_konto(string $spalte, string|int $wert): array|false
+{
+    /* `role`: Im Wartungsmodus entscheidet die Rolle,
+     * ob die Anmeldung Bestand hat. Sie wandert NICHT in die
+     * Sitzung; sie wird hier einmal gelesen und danach vergessen. auth_guard.php liest sie
+     * weiterhin bei jeder Anfrage neu. */
+    /* WARUM DAS SELECT ZWEIMAL DASTEHT.
+     *
+     * `status` und `gesperrt_grund` kommen aus der Migration
+     * `2026_09_16_konto_lebenszyklus`. Zwischen dem Deploy und dem Aufruf von
+     * `update.php` gibt es die beiden Spalten NICHT — und ein einzelnes SELECT
+     * wuerfe dann, ungefangen, mitten im Anmeldeweg.
+     *
+     * DAS WAERE EIN RIEGEL, KEIN SCHOENHEITSFEHLER: Ohne Anmeldung kein
+     * `betrieb_updates.php`, ohne das keine Migration, ohne die keine Anmeldung.
+     * Die Anlage stuende mit HTTP 500 auf der Anmeldeseite und liesse sich aus
+     * dem Browser nicht mehr aufschliessen (auf Staging gemessen).
+     *
+     * DER RUECKFALL UND NICHT EINE VORABFRAGE: `information_schema` bei JEDEM
+     * Seitenaufbau zu fragen kostet einen Roundtrip fuer einen Zustand, der nach
+     * dem ersten `update.php` nie wieder eintritt. Der zweite Versuch kostet nur
+     * dort etwas, wo es die Spalten wirklich nicht gibt.
+     *
+     * WAS DANACH GILT: Ohne die Spalten ist jedes Konto `aktiv` und ohne
+     * Sperrgrund — die Vorgabewerte, die die Migration selbst setzt. Die
+     * Anwendung laeuft also wie ohne Kontostatus weiter, bis die Migration
+     * durch ist. */
+    $wo = $spalte === 'id' ? 'id = ?' : 'email = ?';
+    $LOGIN_SPALTEN = 'id, email, password_hash, session_epoch, kdf_iter, logo_wahl, role';
+    try {
+        $st = db()->prepare('SELECT ' . $LOGIN_SPALTEN . ', status, gesperrt_grund
+                             FROM users WHERE ' . $wo);
+        $st->execute([$wert]);
+    } catch (Throwable $ex) {
+        /* RUECKFALL — wie in `auth_guard.php`. */
+        system_rueckfall('login', 'Lebenszyklus-Spalten fehlen — Migration '
+                       . '2026_09_16_konto_lebenszyklus steht aus. Anmeldung läuft '
+                       . 'ohne sie weiter.', $ex);
+        $st = db()->prepare('SELECT ' . $LOGIN_SPALTEN . ' FROM users WHERE ' . $wo);
+        $st->execute([$wert]);
+    }
+    return $st->fetch();
+}
+
+/* ---- Die Anmelde-Token: lesen und pruefen, an EINER Stelle ----------------
+ *
+ * Backlog Nr. 358, BR5-04. Die Anmeldung (`login.php`) und der Notzugang
+ * (`zweitfaktor_notweg.php`) trugen dieselbe Pruefung zweimal: Token je
+ * Rundenzahl streng lesen, das zur `kdf_iter` des Kontos passende nehmen,
+ * gegen den gepfefferten Hash halten — und ohne Konto den Blindvergleich gegen
+ * AUTH_VERGLEICHSWERT (Kopf darueber). Zwei Abschriften einer Pruefung, die die
+ * Dauer der Antwort gleich halten muss, laufen beim naechsten Umbau
+ * auseinander. Die Funktionen stehen hier und nicht in `auth_guard.php`:
+ * beide Seiten laufen ohne Anmeldung.
+ */
+
+/**
+ * `{"<runden>": "<64 Hexzeichen>", …}` streng lesen.
+ *
+ * Keine Pruefung gegen eine Liste erlaubter Rundenzahlen: Gleich danach wird
+ * NUR der Eintrag angesehen, der zur gespeicherten Zahl des Kontos gehoert.
+ *
+ * @return array<int, string> Rundenzahl => Token
+ */
+function anmelde_tokens_lesen(string $roh): array
+{
+    $aus = [];
+    $j = json_decode($roh, true);
+    if (!is_array($j)) { return $aus; }
+    foreach ($j as $runde => $tk) {
+        $r = (int)$runde;
+        if ($r > 0 && is_string($tk) && preg_match('/^[0-9a-f]{64}$/', $tk)) {
+            $aus[$r] = $tk;
+        }
+    }
+    return $aus;
+}
+
+/**
+ * Passt eines der Token zum Konto?
+ *
+ * GENAU EINE bcrypt-Rechnung, auf jedem Weg: Mit Konto und Passwort die
+ * Pruefung gegen den Hash (ueber den Pfeffer, `anmeldehash_pruefen()`); ohne
+ * Konto oder ohne Passwort der Blindvergleich — sonst waere dieser Zweig
+ * schneller, und die Dauer verriete, ob es die Adresse gibt. Der
+ * Vergleichswert wird GEPRUEFT, nicht geglaubt: Passt er zur Vorgabe von
+ * PHP, genuegt `password_verify()`; sonst kostet ein `password_hash()` mit
+ * der Vorgabe genauso viel. NICHT BEIDES — das machte den blinden Zweig um
+ * 234 ms langsamer, und das Leck waere umgedreht.
+ *
+ * @param array|null           $u         die Kontozeile (`password_hash`, `kdf_iter`, `id`)
+ * @param array<int, string>   $tokenNach aus `anmelde_tokens_lesen()`
+ * @return array{0: string, 1: string} `['ok'|'falsch'|'anteil_fehlt', das gepruefte Token]`
+ *         — das Token braucht die Anmeldung fuer die stille Umstellung des Hashes.
+ */
+function anmelde_token_pruefen(?array $u, array $tokenNach): array
+{
+    if ($u !== null && ($u['password_hash'] ?? null) !== null) {
+        require_once __DIR__ . '/serverkrypto_lib.php';
+        $token = $tokenNach[(int)($u['kdf_iter'] ?? 0) ?: 310000] ?? '';
+        $pruef = anmeldehash_pruefen((int)$u['id'], $token, (string)$u['password_hash']);
+        return [$pruef === 'ok' || $pruef === 'anteil_fehlt' ? $pruef : 'falsch', $token];
+    }
+    if (password_needs_rehash(AUTH_VERGLEICHSWERT, PASSWORD_DEFAULT)) {
+        password_hash(reset($tokenNach) ?: '', PASSWORD_DEFAULT);
+    } else {
+        password_verify(reset($tokenNach) ?: '', AUTH_VERGLEICHSWERT);
+    }
+    return ['falsch', ''];
+}
+
 /* ---- Geraeteschluessel: SHA-256 statt bcrypt ----
  *
  * WELCHES VERFAHREN ZU WELCHEM GEHEIMNIS GEHOERT:

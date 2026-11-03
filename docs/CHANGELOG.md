@@ -14,6 +14,17 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 23.6.6] — unveröffentlicht
+
+### Geändert
+
+- **Web — Anmeldung und Notzugang prüfen das Passwort an einer Stelle**
+  (Backlog Nr. 358). Der Notzugang trug eine Abschrift des Anmeldewegs, im
+  Browser wie auf dem Server, und damit auch des Vergleichs, der die Antwort
+  für unbekannte Adressen gleich lang macht; zwei Abschriften einer solchen
+  Prüfung laufen beim nächsten Umbau auseinander. Sichtbar ändert sich nichts.
+  Die tägliche Integritätswache vergleicht jetzt auch die Notzugangsseite.
+
 ## [Web 23.6.5] — unveröffentlicht
 
 ### Behoben

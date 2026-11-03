@@ -10603,3 +10603,28 @@ zutreffen.
      Z47, Z48 mit Decke 0. Abnahme: zwölf Felder der Anmeldeseiten als Liste
      — 0 mit 500 oder Zeile im Reiter System; mit dem alten Code 4 (zwei
      500er).
+
+358. **Die zweite Passwortseite: Token-Ableitung an einer Stelle, und die Wache vergleicht sie mit.** · gehört zu: 22 · Stand: erledigt · seit 04.10.2026
+     *Aufgenommen 04.10.2026 mit SR-04 (Konzept SR, F-SR-90, E-SR-84).*
+     Der Notzugang `zweitfaktor_notweg.php` leitet das Passwort-Token ab wie
+     `login.php` (Salz über `auth_salt.php`, je Rundenzahl
+     `EdCrypto.deriveKeys()`) — mit einer zweiten Kopie der rund zwanzig
+     Zeilen, weil `login.php` für Schritt 18 zu ist (E-SR-14) und dort auch
+     die Prüfung (`login_zeile()`, Token je `kdf_iter`, Blindvergleich) als
+     lokaler Code steht. Dazu: Die Integritätswache vergleicht die
+     Inline-Skripte der Seiten, auf denen ein Passwort getippt wird
+     (`tools/integritaetswache/wache.py`, `SEITEN`) — dort steht nur
+     `login.php`. Die neue Seite vorher einzutragen, machte die Wache rot,
+     solange die Anlage sie nicht hat. *Weg:* eine Funktion in `crypto.js`
+     (Salz holen, Token je Rundenzahl) für beide Seiten, die Prüfung als
+     Funktion neben `AUTH_VERGLEICHSWERT`; nach der Auslieferung von
+     Web 21.13.0 `zweitfaktor_notweg.php` in `SEITEN`. *Abnahme:* ein
+     `fetch('auth_salt.php'` im Quelltext; die Wache misst zwei Seiten.
+     Erledigt 03.11.2026 mit BR5-04 (Web 23.6.6): `EdCrypto.anmeldeTokens()`
+     (Salz holen, je Rundenzahl ableiten) für beide Seiten — genau ein
+     `fetch('auth_salt.php'` im Quelltext; `anmelde_tokens_lesen()`,
+     `anmelde_token_pruefen()` (samt Blindvergleich) und `anmelde_konto()`
+     (vorher `login_zeile()` und `notweg_konto()`) in `db.php`.
+     `zweitfaktor_notweg.php` steht in `SEITEN` der Wache (Selbstprobe
+     55/0). Abnahme: Anmeldung und Notzugang in Chromium, Firefox, WebKit;
+     Zweitfaktorprobe 139/0 mit gleicher Antwortdauer.

@@ -9147,7 +9147,7 @@ Fassung antwortet `auth_guard.php` einem API-Aufruf ohne `user_id` mit
 **401 JSON** (`error: session_ende`, `grund: nicht_angemeldet`) statt einer
 Weiterleitung, der `fetch()` gefolgt wäre.
 
-**Nach dem Code wird das Konto noch einmal gelesen** (`login_zeile()`,
+**Nach dem Code wird das Konto noch einmal gelesen** (`anmelde_konto()` in `db.php`, bis Web 23.6.5 `login_zeile()`,
 `login_zugang()`): In den fünf Minuten kann es gesperrt oder die Wartung
 eingeschaltet worden sein. **Die Selbstlöschung nimmt erst die ganze
 Anmeldung zurück**, nicht schon das Passwort (`$vollstaendig`): Wer nur das
@@ -9497,12 +9497,16 @@ unangemeldet, steht in `WARTUNG_AUSNAHMEN` und verlangt **drei** Dinge:
    er in Vierergruppen werden (`schluessel_eingabe_normalisieren()`),
    verglichen wird mit `hash_equals()`. Er liegt in jedem Komplett-Stand mit
    — wer einen geöffneten Stand hat, hat ohnehin die Datenbank.
-3. **Das Passwort**, als Token wie bei der Anmeldung (E-SR-84): Salz über
-   `auth_salt.php`, je Rundenzahl `EdCrypto.deriveKeys()`, der Server nimmt
-   das Token zur `kdf_iter` des Kontos und prüft mit `password_verify()` —
-   bei unbekannter Adresse gegen `AUTH_VERGLEICHSWERT`. Die
-   Browser-Ableitung steht damit ein zweites Mal da, weil `login.php` für
-   Schritt 18 zu ist (E-SR-14); Backlog Nr. 358.
+3. **Das Passwort**, als Token wie bei der Anmeldung (E-SR-84) — **und seit
+   Web 23.6.6 über dieselben Funktionen** (Nr. 358): im Browser
+   `EdCrypto.anmeldeTokens()` (Salz über `auth_salt.php`, je Rundenzahl
+   `deriveKeys()`), auf dem Server `anmelde_tokens_lesen()` und
+   `anmelde_token_pruefen()` in `db.php` (das Token zur `kdf_iter` des
+   Kontos über den Pfeffer, bei unbekannter Adresse der Blindvergleich gegen
+   `AUTH_VERGLEICHSWERT`), die Kontozeile über `anmelde_konto()`. Bis dahin
+   stand beides als zweite Abschrift im Notzugang, weil `login.php` für
+   Schritt 18 zu war (E-SR-14). Die Integritätswache vergleicht die Seite
+   seither mit (`SEITEN` in `wache.py`).
 
 **Die Tür ist eng** (E-SR-13, -85): Rolle BetreiberIn, `status = 'aktiv'`,
 Zweitfaktor an — und `betreiberinnen_zahl() === 1`, die **jedes** Konto der
