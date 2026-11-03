@@ -52,7 +52,7 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
 
 | Spanne | Zweig | seit |
 |---|---|---|
-| 450 bis 459 | `claude/new-session-p1duc7` — Prüfdurchgang der Arbeitsumgebung auf Staging (R91); vergeben: 450 bis 457, weiter reserviert: 458 und 459 | 03.11.2026 |
+| 450 bis 459 | `claude/new-session-p1duc7` — Prüfdurchgang der Arbeitsumgebung auf Staging (R91); vergeben: 450 bis 458, weiter reserviert: 459 | 03.11.2026 |
 | 470 bis 479 | `claude/trusting-wozniak-33j782` (Schritt 21, GR) | 02.11.2026 |
 | ab 480 | frei — höchste reservierte Nummer 479; frei blieben 461 bis 469 aus der Spanne von PR (PR #133), 434 bis 439 aus der Spanne von PR #129, 441 bis 449 aus der von PR #130, 420 bis 429 aus der Spanne von 20 (PR #127), 412 bis 419 aus der von 12b (PR #125), 394 bis 399 aus der Spanne von 19 (PR #112 bis #114), 389 aus der von 12a (PR #116), 372 bis 379 aus der von 12 (PR #103), 362 bis 369 aus der von PK, 359 aus der von 18 (PR #101), 348 und 349 aus der von 17, 338 aus der von AR | 02.11.2026 |
 
@@ -1083,3 +1083,23 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      geschriebene Arten gegen die Liste. *Weg:* die Art eintragen; dazu
      prüfen, ob es weitere `protokoll()`-Arten ohne Eintrag gibt.
      *Abnahme:* Plakette „GPS-Daten gelöscht" (o. ä.) und die Art im Filter.
+
+<!-- -->
+
+458. **Auf MySQL 8 bricht der Wartungslauf der Spuren bei jedem Aufruf ab.** · gehört zu: nächste Backlog-Runde · Stand: offen · seit 03.11.2026
+     *Aufgenommen 03.11.2026 im Prüfdurchgang der Arbeitsumgebung (R91,
+     P-S11-14, -30).* `spur2_faellig_kandidaten()` in `spur_lib.php`
+     gruppiert nach `o.id`, die Unterabfrage `geschnitten` (10. Ausdruck)
+     bezieht sich aber auf `s.owner_type` und `s.owner_id`. MySQL 8.4 mit
+     der Vorgabe `ONLY_FULL_GROUP_BY` lehnt das ab (SQLSTATE 42000/1055);
+     `api/wartungslauf.php` antwortet 500, auf Staging bei jedem Seitenaufruf
+     mit Spuren, seit dem 19.10.2026 55 Einträge im Reiter System. Folge:
+     Auf Staging wird nichts verdichtet oder ausgedünnt („Fällig
+     unbekannt"), P-S11-30 ist dort nicht prüfbar. Produktiv (MariaDB
+     10.11) ist nicht betroffen. Die Plattformprüfungen gegen MySQL 8.0
+     und 8.4 waren grün (50/0) — sie erfassen diese Abfrage nicht.
+     *Weg:* `s.owner_type`/`s.owner_id` in der Unterabfrage durch den
+     Parameter und `o.id` ersetzen (der Typ ist je Durchgang fest), und
+     die Abfrage in eine Probe gegen MySQL 8 nehmen.
+     *Abnahme:* auf Staging keine neue Zeile „wartungslauf … 1055",
+     `server/api/wartungslauf.php` antwortet 200, „GPS-Daten verdichten" nennt eine Zahl.

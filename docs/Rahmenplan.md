@@ -1,6 +1,6 @@
 # Rahmenplan — Programm „Gen-EM NAdoku" bis v1.0
 
-**Fassung 205 (03.11.2026)** · Steuerung: Reihenfolge, Status, programmweite
+**Fassung 206 (03.11.2026)** · Steuerung: Reihenfolge, Status, programmweite
 Entscheidungen. Verlauf: `Rahmenplan-Verlauf.md`. Fassungen 1–15:
 `Rahmenplan-Archiv.md`; Fassungen 16–124: `Rahmenplan-Archiv-2.md`.
 
@@ -183,10 +183,10 @@ gestrichen, 6a abgehakt; was steht, ist bestätigt offen.
 | **Prüfliste BV:** P-BV-04 (Wertekasten Hintergrundjobs gegen `Technik.md` 4.7), P-BV-07 (die zwei Rechtstexte: Höhe, Notizen, Abfahrtort), P-BV-09 (Textbaustein 11.5a neu übernehmen, nach P-P5c-40) | BV | 26.09.2026 | `Pruefliste.md` |
 | **Prüfliste BR:** P-BR-05 und -06 (Anlass-Zeilen und Nr. 304–313 lesen), P-BR-08 (beim nächsten Tag: das Produktionstor findet den Stufe-1-Lauf über `baumsuche.py`); freiwillig -03, -10, -11, -12 | BR | 24.09.2026 | `Pruefliste.md` |
 | **Zwei tote Zweige löschen:** `claude/nice-lovelace-snlo8m` und `claude/pk05-tor-umbauen` — nichts Ungemergtes (F-R4-04); auf GitHub unter Branches | 17 (Q-R4-01, E-R4-15) | 26.09.2026 | `Pruefliste.md`, P-R4-06 |
-| **Prüfliste R4:** P-R4-07 bis -23, je nach dem Deploy ihrer Fassung — Formular und Leseansicht, Konten, Demo-Reset, Handy, Verwerfen in der App, Statistik, Backlog auf GitHub | 17 | 28.09.2026 | `Pruefliste.md` 4 |
+| **Prüfliste R4:** P-R4-13, -15 bis -17, -19, -21 bis -23, je nach dem Deploy ihrer Fassung — Formular und Leseansicht, Konten, Demo-Reset, Handy, Verwerfen in der App, Statistik, Backlog auf GitHub | 17 | 28.09.2026 | `Pruefliste.md` 4 |
 | **Prüfliste SR:** auf Staging P-SR-05, -08 (mit -20 zuerst), -10, -11, -14, -16, -17 — Schlüsselwechsel, Notzugang, Passkeys und Rechenaufgabe an echten Geräten, Cookie-Absatz; freiwillig -09, -12 | 18 | 05.10.2026 | `Pruefliste.md` 4 |
 | **Zuarbeiten aus Kette II:** Aufbewahrung der Komplett-Stände auf Staging (Nr. 261, Vorschlag 5); `info.php` auf Staging löschen; Zweig `produktion` gegen Handpushes schützen; Hotfix-Weg beim ersten Hotfix | Kette II | 21.09.2026 | `Pruefliste.md`, 4a, 9, 27, 28 |
-| **Prüfliste S11:** Gerätetests Uhr 4.0.0 und Android 0.18.0 (P-S11-32 bis -35, -05, -39), Wege auf Staging (-14, -23 mit echter Uhr-Datei, -25, -26 (a), -30, -31 mit Vergleichsbild), Safari (-43), alte Sicherungen (-07, -08), Rechtstexte (-40) | 12a | 20.10.2026 | `Pruefliste.md` 4 |
+| **Prüfliste S11:** Gerätetests Uhr 4.0.0 und Android 0.18.0 (P-S11-32 bis -35, -05, -39), Staging (-23 echte Uhr-Datei, -25 (b) alte Sicherung, -30 nach Nr. 458, -31 Bildvergleich), Safari (-43), alte Sicherungen (-07, -08), Rechtstexte (-40) | 12a | 20.10.2026 | `Pruefliste.md` 4 |
 | **Prüfliste PU:** P-PU-01 (Erbe im Tor, beim nächsten PR in `neben`), -04 bis -07 beim nächsten passenden Paket (schmale Nebenstufe, Zehnergrenze, zweiter Lauf mit Erbe, Stylesheet), -09 und -10 lesen | 20 | 02.11.2026 | `Pruefliste.md` 2, 12 |
 | **Prüfliste PR:** P-PR-01 (Freigabeprobe nach der Anteilprobe im nächsten passenden Lauf), -02 (Prüfstand im offenen Merge), -03 (keine Sperrzeile nach der Zweitfaktorprobe) | PR | 02.11.2026 | `Pruefliste.md` 12 |
 | **Prüfliste DM:** P-DM-03 (Registrierung in Safari: Knopf sofort frei), -06 (dasselbe auf Produktiv nach dem Tag `web-v23.0.1`, nur bei offener Registrierung) | 19 | 20.10.2026 | `Pruefliste.md` 3 |
