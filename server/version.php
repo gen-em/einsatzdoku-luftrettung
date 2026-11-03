@@ -8525,5 +8525,14 @@ declare(strict_types=1);
  *   Sitzung zehn Minuten eine Anlegemarke, die der Server fuer das ERSTE
  *   Anlegen statt des Tokens annimmt (E-BR5-08; der Preis steht im
  *   Bedrohungsmodell), und Einstellungen -> Geraete hat einen Weg von Hand.
- *   Neben, weil es den Weg von Hand neu gibt; kein Schema. */
-const WEB_VERSION = '23.7.0';
+ *   Neben, weil es den Weg von Hand neu gibt; kein Schema.
+ * 23.7.1 — DREI DINGE, DIE ANDERS AUSSAHEN ALS DER REST (Backlog Nr. 346,
+ *   356, 456; Schritt 22, BR5-06). Der Hinweis auf unlesbare Eintraege und
+ *   der Papierkorb-Hinweis des Diensttags waren Nachbauten der Meldung ohne
+ *   Symbol; jetzt der Baustein (`EdHtml.meldung()`). Auf der Karte
+ *   „Schluessel des Servers" klebten „Nachtragen vom Blatt" und „Neuanfang"
+ *   ohne Abstand am Knopffuss; jetzt je eine Linie. Und die Reanimationskarte
+ *   sagte im gesperrten Formular „keine", auch an einem Einsatz mit
+ *   Reanimation; jetzt „gesperrt" oder „nicht lesbar". Korrektur; kein
+ *   Schema. */
+const WEB_VERSION = '23.7.1';

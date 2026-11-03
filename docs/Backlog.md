@@ -52,7 +52,7 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
 
 | Spanne | Zweig | seit |
 |---|---|---|
-| 480 bis 489 | `claude/tender-bell-225ta2` (Schritt 22, BR5) | 03.11.2026 |
+| 480 bis 489 | `claude/tender-bell-225ta2` (Schritt 22, BR5); vergeben: 480 | 03.11.2026 |
 | 490 bis 499 | `claude/new-session-p1duc7` — Prüfdurchgang der Arbeitsumgebung (R91), Fortsetzung; vergeben: 490, 491 | 03.11.2026 |
 | ab 500 | frei — höchste reservierte Nummer 499; frei blieben 472 bis 479 aus der Spanne von 21 (PR #136), 461 bis 469 aus der Spanne von PR (PR #133), 434 bis 439 aus der Spanne von PR #129, 441 bis 449 aus der von PR #130, 420 bis 429 aus der Spanne von 20 (PR #127), 412 bis 419 aus der von 12b (PR #125), 394 bis 399 aus der Spanne von 19 (PR #112 bis #114), 389 aus der von 12a (PR #116), 372 bis 379 aus der von 12 (PR #103), 362 bis 369 aus der von PK, 359 aus der von 18 (PR #101), 348 und 349 aus der von 17, 338 aus der von AR | 02.11.2026 |
 
@@ -585,23 +585,6 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
 
 <!-- -->
 
-346. **Zwei Meldungen im Browser noch von Hand: der Hinweis `patwarn` und der Papierkorb-Hinweis des Diensttags.** · gehört zu: 22 · Stand: offen · seit 27.09.2026
-     *Aufgenommen 27.09.2026 mit R4-13 (F-R4-42).* Die Zählzeile Z37 sieht
-     seit R4-13 auch die Zuweisung `className = '…meldung'` und fand damit
-     zwei Nachbauten, die das alte Muster nicht sah: in `assets/patient.js`
-     den Hinweis `patwarn` (ohne Symbol — der Kommentar dort sagt, weil
-     `symbol.js` beim Aufbau noch fehlen kann) und in `index.php` den
-     Hinweis „Dieser Diensttag liegt im Papierkorb" als `<p>` mit
-     `meldung meldung-warn`. Beide sehen anders aus als jede andere Meldung.
-     **Nicht in R4-13 umgestellt:** Sie liegen außerhalb von Nr. 271–273,
-     beide wären eine sichtbare Änderung, und bei `patwarn` hängt es an der
-     Ladereihenfolge von `edSymbol()`. *Weg:* über `EdHtml.meldung()`, für
-     `patwarn` erst nachsehen, ob `symbol.js` zur Aufrufzeit steht (die
-     Immer-Liste kommt am Seitenende). *Abnahme:* Z37 **2** (nur `html.js`),
-     Bilderlauf ohne Konsolenfehler.
-
-<!-- -->
-
 347. **Zweimal an einem Tag standen zwei fremde Waisen in der örtlichen Anlage — woher, ist nicht geklärt.** · gehört zu: 14 · Stand: offen · seit 28.09.2026
      *Aufgenommen 28.09.2026 mit R4-27 (F-R4-72).* Die Jobprobe prüft,
      dass „sechs Zeilen und ein Blob" als 7 gemeldet werden, und war zweimal
@@ -639,21 +622,6 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      `SHOW CREATE TABLE` jeder Tabelle mit der frisch angelegten; eine
      Abweichung ist rot. *Abnahme:* eine absichtlich abweichende Spalte in
      einer Migration → rot.
-
-<!-- -->
-
-356. **Zwei Abschnitte der Karte „Schlüssel des Servers" kleben ohne Abstand am Knopffuß.** · gehört zu: 22 · Stand: offen · seit 29.09.2026
-     *Aufgenommen 29.09.2026 mit SR-03 (Konzept SR, F-SR-73; gefunden an den
-     Bildern zu P-SR-05).* „Nachtragen vom Blatt" und „Neuanfang" stehen als
-     `h3.listen-form-titel` unmittelbar hinter `.listen-form-fuss` — die
-     Überschrift hat oben keinen Abstand, und die Knöpfe darüber gehören
-     optisch zu ihr. Für den neuen Abschnitt „Serverschlüssel wechseln" ist
-     es in SR-03 behoben: Er steht in `.listen-form` (Linie und Abstand
-     darüber). Die zwei alten erscheinen nur in der Lage *abweichend* und
-     sind nicht angefasst, weil kein Bild sie in dieser Lage zeigt. *Weg:*
-     beide Formulare ebenso in `.listen-form`. *Abnahme:* Bild der Karte in
-     der Lage *abweichend* (Bilderlauf oder Bedienweg mit verstellter
-     Marke), 390 und 1280 px.
 
 <!-- -->
 
@@ -911,21 +879,6 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
 
 <!-- -->
 
-456. **Die Reanimationskarte sagt im gesperrten Formular „keine".** · gehört zu: 22 · Stand: offen · seit 03.11.2026
-     *Aufgenommen 03.11.2026 im Prüfdurchgang der Arbeitsumgebung (R91,
-     P-S11-18).* Ist der Inhaltsschlüssel gesperrt, öffnet
-     `einsatz_form.php` die Einsatzhülle nicht, `#rearows` bleibt leer, und
-     `reaVorschau()` schreibt „keine" in den Kopf der Karte — auch an einem
-     Einsatz mit Reanimation. Gespeichert werden kann nichts (die Leiste
-     verlangt zuerst das Entsperren, gemessen), und „Reanimation
-     hinzufügen" tut nichts; die Angabe ist aber falsch, wo sie
-     „unbekannt" heißen müsste. *Weg:* gesperrt „gesperrt" statt der Zahl,
-     wie die Karte „Wartet auf dein Passwort" in der Ansicht.
-     *Abnahme:* gesperrtes Formular eines Einsatzes mit Reanimation — der
-     Kartenkopf sagt nicht „keine".
-
-<!-- -->
-
 458. **Auf MySQL 8 bricht der Wartungslauf der Spuren bei jedem Aufruf ab.** · gehört zu: nächste Backlog-Runde · Stand: offen · seit 03.11.2026
      *Aufgenommen 03.11.2026 im Prüfdurchgang der Arbeitsumgebung (R91,
      P-S11-14, -30).* `spur2_faellig_kandidaten()` in `spur_lib.php`
@@ -993,3 +946,17 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      Paar an (wie `Sitzung.kontoschluessel()`), oder der Rundlauf nimmt
      ein Konto mit Paar. *Abnahme:* P-AR-15 auf frischer Anlage 0
      Fehlschläge.
+
+<!-- -->
+
+480. **Nachtragen vom Blatt: zwei Formulare ohne Abstand.** · gehört zu: nächste Backlog-Runde · Stand: offen · seit 03.11.2026
+     *Aufgenommen 03.11.2026 in BR5-06 (Konzept BR5, Bild der Karte in
+     der Lage abweichend).* Sind Serverschlüssel UND Server-Anteil
+     abweichend, stehen unter „Nachtragen vom Blatt“ zwei Formulare
+     untereinander; der Knopf „Server-Anteil nachtragen“ klebt ohne Abstand
+     an der Beschriftung „Serverschlüssel vom Blatt“. Nr. 356 hat die
+     Linie je Abschnitt gesetzt (E-BR5-17), nicht den Abstand zwischen zwei
+     Formularen in einem. *Weg:* ein Abstand zwischen aufeinanderfolgenden
+     Formularen in `.listen-form` (Stylesheet, Design.md) oder ein Fuß, der
+     beide Felder trägt. *Abnahme:* Bild der Karte in der Lage abweichend
+     mit beiden Werten, 390 und 1280 px — Abstand wie zwischen Abschnitten.

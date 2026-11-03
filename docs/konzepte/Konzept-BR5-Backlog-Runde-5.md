@@ -20,13 +20,13 @@ BR5-10).
 | BR5-03 | Formularfelder: Nr. 355 (`post_text()`) | **erledigt** 03.11.2026 (Web 23.6.5) |
 | BR5-04 | Zweite Passwortseite: Nr. 358 | **erledigt** 03.11.2026 (Web 23.6.6) |
 | BR5-05 | Schlüsselpaar und Rückweg nach der Anmeldung: Nr. 392 | **erledigt** 03.11.2026 (Web 23.7.0) |
-| BR5-06 | Meldungen und Karten: Nr. 346, 356, 456 | offen |
+| BR5-06 | Meldungen und Karten: Nr. 346, 356, 456 | **erledigt** 03.11.2026 (Web 23.7.1) |
 | BR5-07 | Backup-Formular: Nr. 430 | offen |
 | BR5-08 | Geräte: Nr. 361 (mit 432), 440 | offen |
 | BR5-09 | PHP 8.3.6: Nr. 383 | offen |
 | BR5-10 | Abschluss | offen |
 
-**In Arbeit:** BR5-06 als Nächstes. **Es hakt:** nirgends.
+**In Arbeit:** BR5-07 als Nächstes. **Es hakt:** nirgends.
 
 ---
 
@@ -251,6 +251,13 @@ wenn die Marke getragen hatte. Legte die erste Seite mit dem Token an, galt
 die Marke für `kontopaar` noch zehn Minuten; ein zweites Anlegen ohne Token
 kam am Nachweis vorbei und scheiterte erst an `kp_ablegen()`. Ersetzen ging
 dabei nie. Jetzt fällt der Zweck nach jedem gelungenen Anlegen.
+
+**F-BR5-25 — Zwei Formulare in einem Abschnitt kleben aneinander (BR5-06,
+am Bild).** In der Lage „beide abweichend“ steht unter „Nachtragen vom Blatt“
+der Knopf des ersten Formulars ohne Abstand über der Beschriftung des
+zweiten. E-BR5-17 setzte die Linie je Abschnitt, nicht den Abstand darin;
+dafür bräuchte es eine Stylesheet-Regel. Backlog Nr. 480 (aus der Spanne
+dieses Schritts).
 
 **F-BR5-14 — Nr. 450 hat die Ursache in der Kette, die Abhilfe am Server.**
 Stufe 2 legt Konten unter `…@example.invalid` an (`umlauf_konto()` in
@@ -909,10 +916,30 @@ PHP 8.3.6):
   („Protokoll … einmal“ grün). Die Probe wartet jetzt auf die 200 und
   verlangt von der zweiten Seite nur, dass sie den Schlüssel danach hat.
 
+**BR5-06** (03.11.2026, Web 23.7.1; örtliche Anlage, Chromium):
+
+- *Nr. 346:* `EdPat.zeigeUnlesbar({ok: 3, unlesbar: 2})` auf der Startseite
+  → `#patwarn > .meldung.meldung-warn` mit großem Symbol; ein Demo-Tag kurz
+  in den Papierkorb, `loadDay()` → `#daytrash > .meldung.meldung-warn` mit
+  Symbol, danach zurück. Z37 Ist 2, Decke 2.
+- *Nr. 356:* Lage „abweichend“ über verstellte Marken in `app_state`
+  (`server_key_kennung`, `kdf_anteil_kennung`; `config.php` unberührt — mit
+  einem fremden Anteil dort meldet sich niemand an, der erste Versuch dieses
+  Tests scheiterte genau daran). „Nachtragen“ und „Neuanfang“ in
+  `.listen-form`, je 12 px Abstand zum Element davor wie jeder andere
+  Abschnitt der Seite, bei 390 und 1280 px; Bilder angesehen; Marken
+  zurückgelegt.
+- *Nr. 456:* ein Demo-Einsatz mit Hülle: entsperrt „keine“ (er hat keine
+  Reanimation), nach `EdCrypto.inhaltLoeschen()` gesperrt „gesperrt“.
+  0 Seitenfehler.
+- *Design:* keine neue Regel, kein neuer Baustein; Bilderlauf im Prüfstand
+  vor dem PR (BR5-10).
+
 ## 7. Verlauf
 
 | Datum | Was |
 |---|---|
+| 03.11.2026 | BR5-06 erledigt (Web 23.7.1); F-BR5-25, Backlog Nr. 480. |
 | 03.11.2026 | BR5-05 erledigt (Web 23.7.0); F-BR5-23, -24. |
 | 03.11.2026 | BR5-04 erledigt (Web 23.6.6); F-BR5-22. |
 | 03.11.2026 | BR5-03 erledigt (Web 23.6.5); F-BR5-19 bis -21. |

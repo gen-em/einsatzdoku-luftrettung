@@ -14,6 +14,24 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 23.7.1] — unveröffentlicht
+
+### Behoben
+
+- **Web — die Reanimationskarte sagte im gesperrten Formular „keine“**
+  (Backlog Nr. 456), auch an einem Einsatz mit Reanimation: Ohne Schlüssel
+  lässt sich die Hülle nicht öffnen, und die Karte zählte die leere Liste.
+  Jetzt steht dort „gesperrt“, „nicht lesbar“, wenn die Hülle nicht aufgeht,
+  und „keine“ nur, wo es wirklich keine gibt.
+
+- **Web — zwei Hinweise sahen anders aus als jede andere Meldung**
+  (Backlog Nr. 346, 356). Der Hinweis auf unlesbare Einträge und der auf einen
+  Diensttag im Papierkorb waren von Hand gebaut, ohne das Symbol der übrigen
+  Meldungen; jetzt laufen sie über den gemeinsamen Baustein. Auf der Karte
+  „Schlüssel des Servers“ klebten zwei Abschnitte ohne Abstand an den Knöpfen
+  darüber; sie sind jetzt wie der Abschnitt daneben durch eine Linie
+  abgesetzt.
+
 ## [Web 23.7.0] — unveröffentlicht
 
 ### Behoben

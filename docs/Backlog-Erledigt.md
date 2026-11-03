@@ -10654,3 +10654,61 @@ zutreffen.
      dabei. Abnahme in Chromium, Firefox, WebKit mit gesperrten Endpunkten
      auf der ersten Seite: Paar und Rückweg entstehen auf der zweiten (6 von
      6 mit dem Weg von Hand); mit dem alten Code bleibt das Konto ohne Paar.
+
+346. **Zwei Meldungen im Browser noch von Hand: der Hinweis `patwarn` und der Papierkorb-Hinweis des Diensttags.** · gehört zu: 22 · Stand: erledigt · seit 27.09.2026
+     *Aufgenommen 27.09.2026 mit R4-13 (F-R4-42).* Die Zählzeile Z37 sieht
+     seit R4-13 auch die Zuweisung `className = '…meldung'` und fand damit
+     zwei Nachbauten, die das alte Muster nicht sah: in `assets/patient.js`
+     den Hinweis `patwarn` (ohne Symbol — der Kommentar dort sagt, weil
+     `symbol.js` beim Aufbau noch fehlen kann) und in `index.php` den
+     Hinweis „Dieser Diensttag liegt im Papierkorb" als `<p>` mit
+     `meldung meldung-warn`. Beide sehen anders aus als jede andere Meldung.
+     **Nicht in R4-13 umgestellt:** Sie liegen außerhalb von Nr. 271–273,
+     beide wären eine sichtbare Änderung, und bei `patwarn` hängt es an der
+     Ladereihenfolge von `edSymbol()`. *Weg:* über `EdHtml.meldung()`, für
+     `patwarn` erst nachsehen, ob `symbol.js` zur Aufrufzeit steht (die
+     Immer-Liste kommt am Seitenende). *Abnahme:* Z37 **2** (nur `html.js`),
+     Bilderlauf ohne Konsolenfehler.
+     Erledigt 03.11.2026 mit BR5-06 (Web 23.7.1): `patwarn` und der
+     Papierkorb-Hinweis füllen leere Behälter über `EdHtml.meldung()`
+     (`patwarn` mit `roh`, weil der Satz die Marke trägt); Z37 auf 2, die
+     Begründung „symbol.js fehlt beim Aufbau“ war veraltet (F-BR5-08).
+     Abnahme: beide als Meldungsbaustein mit großem Symbol (Chromium,
+     Bilder), 0 Seitenfehler.
+
+356. **Zwei Abschnitte der Karte „Schlüssel des Servers" kleben ohne Abstand am Knopffuß.** · gehört zu: 22 · Stand: erledigt · seit 29.09.2026
+     *Aufgenommen 29.09.2026 mit SR-03 (Konzept SR, F-SR-73; gefunden an den
+     Bildern zu P-SR-05).* „Nachtragen vom Blatt" und „Neuanfang" stehen als
+     `h3.listen-form-titel` unmittelbar hinter `.listen-form-fuss` — die
+     Überschrift hat oben keinen Abstand, und die Knöpfe darüber gehören
+     optisch zu ihr. Für den neuen Abschnitt „Serverschlüssel wechseln" ist
+     es in SR-03 behoben: Er steht in `.listen-form` (Linie und Abstand
+     darüber). Die zwei alten erscheinen nur in der Lage *abweichend* und
+     sind nicht angefasst, weil kein Bild sie in dieser Lage zeigt. *Weg:*
+     beide Formulare ebenso in `.listen-form`. *Abnahme:* Bild der Karte in
+     der Lage *abweichend* (Bilderlauf oder Bedienweg mit verstellter
+     Marke), 390 und 1280 px.
+     Erledigt 03.11.2026 mit BR5-06 (Web 23.7.1): „Nachtragen vom Blatt“ in
+     einem `div.listen-form` (eine Linie für den Abschnitt, E-BR5-17),
+     „Neuanfang“ im Aufbau von „Serverschlüssel wechseln“. Abnahme in der
+     Lage abweichend (verstellte Marken): beide Abschnitte mit 12 px Abstand
+     wie die übrigen, 390 und 1280 px. Den Abstand zwischen zwei Formularen
+     im Abschnitt trägt Nr. 480.
+
+456. **Die Reanimationskarte sagt im gesperrten Formular „keine".** · gehört zu: 22 · Stand: erledigt · seit 03.11.2026
+     *Aufgenommen 03.11.2026 im Prüfdurchgang der Arbeitsumgebung (R91,
+     P-S11-18).* Ist der Inhaltsschlüssel gesperrt, öffnet
+     `einsatz_form.php` die Einsatzhülle nicht, `#rearows` bleibt leer, und
+     `reaVorschau()` schreibt „keine" in den Kopf der Karte — auch an einem
+     Einsatz mit Reanimation. Gespeichert werden kann nichts (die Leiste
+     verlangt zuerst das Entsperren, gemessen), und „Reanimation
+     hinzufügen" tut nichts; die Angabe ist aber falsch, wo sie
+     „unbekannt" heißen müsste. *Weg:* gesperrt „gesperrt" statt der Zahl,
+     wie die Karte „Wartet auf dein Passwort" in der Ansicht.
+     *Abnahme:* gesperrtes Formular eines Einsatzes mit Reanimation — der
+     Kartenkopf sagt nicht „keine".
+     Erledigt 03.11.2026 mit BR5-06 (Web 23.7.1): Der Server setzt „keine“
+     nur ohne Hülle; der Browser schreibt „gesperrt“ im Sperrzweig von
+     `patLaden()` und „nicht lesbar“, wenn die Hülle nicht aufgeht
+     (F-BR5-07). Abnahme: derselbe Einsatz entsperrt „keine“ (er hat keine
+     Reanimation), gesperrt „gesperrt“.

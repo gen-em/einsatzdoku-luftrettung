@@ -3,7 +3,7 @@
 Was **du** noch prüfen musst. Was maschinell gemessen ist, steht mit Mittel
 und Zahl im Prüfprotokoll des Konzepts (`Konzept-BR5-Backlog-Runde-5.md` 6),
 nicht hier (CLAUDE.md 7, E-PU-08). Fortgeschrieben je Paket; Stand nach
-BR5-05.
+BR5-06.
 
 ## 1. Was nicht geprüft werden konnte, und warum
 
@@ -52,3 +52,4 @@ bestanden (Konzept 6).
 | P-BR5-09 | Staging (Arbeitsumgebung): Anmeldung und „Passwort vergessen“ mit `email[]=x` statt `email=x` abschicken (Formular mit gültigem Token) | die Seite meldet „E-Mail fehlt“ o. ä.; keine Fehlerseite, keine neue Zeile im Reiter System | eine 500, oder „Array to string conversion“ im Reiter System |
 | P-BR5-10 | Staging (Arbeitsumgebung): frisches Konto anlegen, anmelden und sofort auf eine zweite Seite wechseln (ohne Warten), in Chromium und Firefox | danach unter Einstellungen → Geräte keine Karte „Schlüsselpaar des Kontos“; im Protokoll „Schlüsselpaar des Kontos eingerichtet“ | die Karte steht da, oder kein Protokolleintrag |
 | P-BR5-11 | Du, mit einem echten Safari (iPhone oder Mac) auf Staging: dasselbe wie P-BR5-10 | wie P-BR5-10 | wie P-BR5-10 — WebKit ist nicht Safari (CLAUDE.md 6) |
+| P-BR5-12 | Staging (Arbeitsumgebung): ein Einsatz mit Reanimation im Formular, einmal entsperrt, einmal nach „Sperren“ | entsperrt „N erfasst“, gesperrt „gesperrt“ | „keine“ an einem Einsatz mit Reanimation |

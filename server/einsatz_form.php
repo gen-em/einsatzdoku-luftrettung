@@ -1456,7 +1456,13 @@ ui_seite_start(['titel' => $editing ? 'Einsatz bearbeiten' : 'Einsatz nachtragen
              Formularfeld an den Server, sondern in die Huelle. Was in der
              Huelle steht, zaehlt der Browser nach dem Entsperren nach. */ ?>
     <?php ui_karte_start(['titel' => 'Reanimation',
-                          'vorschau' => 'keine',
+                          /* „keine" NUR OHNE HUELLE (Nr. 456, E-BR5-10): Das
+                             weiss der Server. Mit Huelle steht hier zunaechst
+                             nichts; der Browser setzt die Zahl, „gesperrt“
+                             oder „nicht lesbar“. Bis Web 23.7.0 stand „keine“
+                             auch im gesperrten Formular eines Einsatzes mit
+                             Reanimation. */
+                          'vorschau' => $ortHuelleB64 !== null ? '' : 'keine',
                           'offen' => false,
                           'geschuetzt' => true,
                           'klasse' => 'form-block-rea']); ?>
@@ -1742,10 +1748,10 @@ function reaSperren(zu) {
   document.querySelectorAll('#rearows input, #rearows select, #rearows button')
     .forEach(el => { el.disabled = zu; });
 }
-function reaVorschau() {
+function reaVorschau(text) {
   const el = document.querySelector('.form-block-rea .karte-vorschau');
   const n = document.querySelectorAll('#rearows .rea-sitzung').length;
-  if (el) { el.textContent = n ? n + ' erfasst' : 'keine'; }
+  if (el) { el.textContent = text || (n ? n + ' erfasst' : 'keine'); }
 }
 async function ortOeffnen(ck) {
   if (!ORT.huelle || ORT_ORTE !== ORT_LEER) { return; }   // nichts da, oder schon offen
@@ -1760,6 +1766,7 @@ async function ortOeffnen(ck) {
     reaVorschau();
   } catch (e) {
     EdOrtsdaten.melden(e, 'einsatz', ORT.einsatz);
+    reaVorschau('nicht lesbar');   // Nr. 456: nicht „keine" — es weiss niemand
     ORT_GESPERRT = e && e.grund === 'kein_paar'
       ? 'Für dieses Konto ist noch kein Schlüssel für Uhr und Handy eingerichtet — '
         + 'Phasenorte und Reanimation lassen sich nicht verschlüsseln. Einrichten: Einstellungen → Geräte.'
@@ -2087,6 +2094,7 @@ async function patLaden(){
     document.querySelectorAll(PAT_INPUTS).forEach(i => i.disabled = true);
     ortsfeldPatSperren(true);
     reaSperren(true);
+    if (ORT.huelle) { reaVorschau('gesperrt'); }   // Nr. 456
     PAT_FORM.dataset.patGeladen = 'gesperrt';
     return;
   }

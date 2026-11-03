@@ -1275,6 +1275,11 @@ ui_seite_start(['titel' => 'Servereinstellungen']);
 
     <?php /* ---- Nachtragen vom Blatt -------------------------- */ ?>
     <?php if ($skZustand['stand'] === 'abweichend' || $anZustand['stand'] === 'abweichend'): ?>
+      <?php /* EINE LINIE FÜR DEN GANZEN ABSCHNITT (Nr. 356, E-BR5-17): Bei
+               „beide abweichend" stehen zwei Formulare darin, und die gehören
+               zusammen. Bis Web 23.7.0 klebte die Überschrift ohne Abstand am
+               Knopffuß darüber. */ ?>
+      <div class="listen-form">
       <h3 class="listen-form-titel">Nachtragen vom Blatt</h3>
       <?php foreach ([
             ['anteil', 'Server-Anteil', $anZustand, 'schluessel_anteil_nachtragen'],
@@ -1308,20 +1313,23 @@ ui_seite_start(['titel' => 'Servereinstellungen']);
           </div>
         </form>
       <?php endforeach; ?>
+      </div>
     <?php endif; ?>
 
     <?php /* ---- Neuanfang (Zustand „Neuanfang") ---------------- */ ?>
     <?php if ($anZustand['stand'] === 'abweichend'): ?>
-      <h3 class="listen-form-titel">Neuanfang <span class="feld-klein-inline">nur, wenn der Wert unwiederbringlich weg ist</span></h3>
-      <div class="listen-form-fuss">
-        <form method="post" action="betrieb_server.php"
-              data-confirm="Einen NEUEN Server-Anteil erzeugen? Jede NutzerIn mit umgestellter Hülle muss danach ihr Passwort über den Wiederherstellungsschlüssel neu setzen. Die Daten selbst bleiben unversehrt. Dieser Schritt lässt sich nicht zurücknehmen — der bisherige Wert ist danach gegenstandslos."
-              data-confirm-ok="Neu erzeugen" data-confirm-tone="gefahr">
-          <?= csrf_field() ?><input type="hidden" name="action" value="schluessel_anteil_neuanfang">
+      <?php /* DERSELBE AUFBAU WIE „Serverschlüssel wechseln" (Nr. 356): das
+               Formular außen mit `.listen-form`, Überschrift und Fuß darin. */ ?>
+      <form method="post" action="betrieb_server.php" class="listen-form"
+            data-confirm="Einen NEUEN Server-Anteil erzeugen? Jede NutzerIn mit umgestellter Hülle muss danach ihr Passwort über den Wiederherstellungsschlüssel neu setzen. Die Daten selbst bleiben unversehrt. Dieser Schritt lässt sich nicht zurücknehmen — der bisherige Wert ist danach gegenstandslos."
+            data-confirm-ok="Neu erzeugen" data-confirm-tone="gefahr">
+        <h3 class="listen-form-titel">Neuanfang <span class="feld-klein-inline">nur, wenn der Wert unwiederbringlich weg ist</span></h3>
+        <?= csrf_field() ?><input type="hidden" name="action" value="schluessel_anteil_neuanfang">
+        <div class="listen-form-fuss">
           <?= ui_knopf(['text' => 'Server-Anteil neu erzeugen', 'symbol' => 'warnung',
                         'art' => 'gefahr']) ?>
-        </form>
-      </div>
+        </div>
+      </form>
     <?php endif; ?>
 
     <?php if (isset($anZaehlung['fehler'])): ?>

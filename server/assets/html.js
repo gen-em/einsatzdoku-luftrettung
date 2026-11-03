@@ -103,10 +103,11 @@ const EdHtml = (() => {
       throw new Error('Unbekannter Meldungston \u201e' + ton + '\u201c. Erlaubt: '
         + Object.keys(MELDUNG_SYMBOLE).join(', ') + '.');
     }
-    /* `o.roh` IST EIN LOCH IN DER MASKIERUNG, und es hat genau einen
+    /* `o.roh` IST EIN LOCH IN DER MASKIERUNG, und es hat zwei
      * Verbraucher: die Erfolgsmeldung des Imports, deren Satz einen
      * Zeilenumbruch, eine Kleinzeile und einen Link auf den ersten Tag
-     * enthaelt. Der baut sein Markup selbst und maskiert die eingesetzten
+     * enthaelt, und seit Web 23.7.1 der Hinweis auf unlesbare Datensaetze
+     * (`patient.js`, Nr. 346), dessen Satz ein Symbol traegt. Der baut sein Markup selbst und maskiert die eingesetzten
      * Werte einzeln, BEVOR es hierherkommt. Wer einen zweiten Verbraucher
      * anlegt, maskiert dort ebenso -- sonst steht ein Datenwert als
      * Markup in der Seite. Ohne diesen Weg waere die Stelle nicht
