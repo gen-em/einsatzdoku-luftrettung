@@ -8,7 +8,7 @@ Entscheidungen. Verlauf: `Rahmenplan-Verlauf.md`. Fassungen 1–15:
 Uhr 4.1.1 · Android 0.18.2; ausgeliefert Web 23.6.0, Uhr und Android (Tags auf `c32dd2c`, 02.11.2026).
 **Läuft:** 21 GR gebaut auf `claude/trusting-wozniak-33j782` (Uhr 4.2.0–4.3.1, Android 0.19.0–0.20.0), wartet auf Pull Request und Freigabe; PR (Prüfmittel) ist abgeschlossen (Abschnitt 8).
 **Als Nächstes:** 22 BR5 neben 21, dann 13 (Konzeptsitzung).
-**Offene PRs:** 21 GR (`claude/trusting-wozniak-33j782`); Prüfdurchgang der Arbeitsumgebung auf Staging, Fortsetzung (R91).
+**Offene PRs:** #136 (21 GR, `claude/trusting-wozniak-33j782`); Prüfdurchgang der Arbeitsumgebung auf Staging, Fortsetzung (R91).
 **Fällig bei der Betreiberin:** 36 Posten (Abschnitt 6.1). **`update.php`:** auf Staging und Produktiv nichts offen (Betreiberin, 20.10.2026, nach Web 23).
 
 Kennungen sind Namen, keine Reihenfolge.
