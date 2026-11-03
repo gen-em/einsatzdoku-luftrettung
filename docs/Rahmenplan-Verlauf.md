@@ -9,6 +9,7 @@ Verlauf bis zum Schnitt). Die Fassungszählung läuft fortlaufend weiter.
 
 | Fassung | Datum | Anlass | Was |
 |---|---|---|---|
+| 210 | 03.11.2026 | Zuarbeit (R91) | 6.1: P-BR-11 und -12 mit Freigabe der Betreiberin über Wegwerf-PRs #143 und #144 geprüft, beide Stufe 1 rot mit dem erwarteten Befund; dazu -10 aus der Zeile genommen (Block 11). |
 | 209 | 03.11.2026 | Zuarbeit (R91) | 6.1: Block 11 — Serverschlüssel von Staging gewechselt (P-SR-20, -08, Freigabe der Betreiberin), P-SR-12, P-PR-03, P-BR-10 erledigt, P-P5c-36 und -39 am Schreibtisch; neu Nr. 490, 491. |
 | 208 | 03.11.2026 | Zuarbeit (R91) | 6.1: Block 10 — P-R4-15 erledigt, -16, -21 und -23 auf Staging am Schreibtisch; neu Nr. 459 (Ansehen setzt das Demo-Konto auf geändert). |
 | 207 | 03.11.2026 | 22 | Schritt 22 (BR5) beginnt auf `claude/tender-bell-225ta2` mit Konzept BR5; Umfang siebzehn Punkte, dazu 450, 454, 456, 457 (E-BR5-01); alle Fragen entschieden. Kopf: Stand `main` `fd9ddee`, „Läuft" 22. Als 206 geschrieben; 206 trägt PR #139. |
