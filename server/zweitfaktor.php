@@ -67,7 +67,7 @@ if (isset($_GET['bestaetigen'])) {
          * `passkey_antwort`, Herausforderung in `passkey_best` (einmal). */
         /* Ein Feld, das kein Text ist, ist eine leere Antwort (sonst eine
          * PHP-Warnung im Reiter System). */
-        $pkFeld = post_text('passkey_antwort');
+        $pkFeld = $_POST['passkey_antwort'] ?? '';
         $mitPk = !$mitRc && $pkFeld !== '';
         if ($mitPk) {
             $pkAblage = is_array($_SESSION['passkey_best'] ?? null) ? $_SESSION['passkey_best'] : [];

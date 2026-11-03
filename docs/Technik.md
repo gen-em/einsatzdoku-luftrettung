@@ -49,6 +49,10 @@ Daten erst nach Server-Bestätigung.
 │   │                       Verlangt config.php hart — die globale $CFG gibt
 │   │                       es seit Web 20.27.0 nicht mehr. Bindet
 │   │                       transaktion_lib.php ein
+│   ├── eingabe_lib.php    post_text(), get_text(): ein Formularfeld als
+│   │                       Text, sonst die Vorgabe — auch bei einer Liste
+│   │                       (Nr. 355, seit Web 23.6.5). LAEDT NICHTS; db.php
+│   │                       und install.php binden sie ein
 │   ├── transaktion_lib.php Der EINE Transaktionsrahmen db_transaktion()
 │   │                       (Schritt 15 AP5, E-ZE-20). Bis Web 20.37.2 in
 │   │                       db.php; eigene Datei seit 20.37.3, weil der
@@ -3273,7 +3277,7 @@ Adresse), Rückgabe `MAIL_ABGELEHNT`; die Einladungsseiten nennen den Grund
 Eine Anlage ohne Mailserver schreibt keinen Eintrag für eine Mail, die ohnehin
 nie ginge. **Die örtlichen Proben legen ihre Konten, an die Post gehen soll,
 seither unter `probe.pruefung` an** (Mail-, Raten-, Passkey-, Rollen-,
-Zweitfaktor-, Schlüsselwechsel- und Rückwegprobe, zwei Bedienwege); der
+Zweitfaktor-, Schlüsselwechsel-, Kopplungs- und Rückwegprobe, zwei Bedienwege); der
 Mailserver der Sandbox ist 127.0.0.1, es geht nichts hinaus. Die Kettenkonten
 unter `example.invalid` und die Prüfkonten des Bilderlaufs bleiben — sie
 bekommen keine Post, und auf Staging wirkt der Riegel genau für sie.
@@ -6416,6 +6420,7 @@ zusammengeführt und, wichtiger, ein **Maß** dafür angelegt.
 | Flash-Meldung | `flash_setzen()` / `flash_holen()` | 22 direkte `$_SESSION['flash…']` |
 | Schema fragen | `db_hat_tabelle/spalte/index()` | 9 eigene `information_schema` |
 | Transaktion | `db_transaktion()` | 33 eigene `beginTransaction()` |
+| Formularfeld als Text lesen — seit Web 23.6.5 | `post_text()`, `get_text()` (`eingabe_lib.php`) | 149 `(string)($_POST[…])`/`($_GET[…])`, 3 eigene Hüllen (`$feld` zweimal, `konten_param()`); eine Liste (`feld[]=x`) gab eine Warnung im Reiter System oder, ohne Cast an eine `string`-Funktion, eine 500 (Nr. 355, Z47, Z48) |
 | Kindtabellen eines Einsatzes | `einsatz_lib.php` | 30 eigene `INSERT`/`DELETE` |
 | Spalten von `missions` | `mf_spalten($zweck)` | 12 Handlisten |
 | Zahl, Größe, Zeit (PHP) | `format_lib.php` | 4 Byte-Formatierer, 2 Zeitformen, 27 `number_format` |

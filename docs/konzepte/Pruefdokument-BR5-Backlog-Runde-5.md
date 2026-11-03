@@ -3,7 +3,7 @@
 Was **du** noch prüfen musst. Was maschinell gemessen ist, steht mit Mittel
 und Zahl im Prüfprotokoll des Konzepts (`Konzept-BR5-Backlog-Runde-5.md` 6),
 nicht hier (CLAUDE.md 7, E-PU-08). Fortgeschrieben je Paket; Stand nach
-BR5-02.
+BR5-03.
 
 ## 1. Was nicht geprüft werden konnte, und warum
 
@@ -49,3 +49,4 @@ bestanden (Konzept 6).
 | P-BR5-06 | Staging: Konto anlegen für eine Adresse der eigenen Domain, die es nicht gibt; danach Betrieb → Status, Zeile „Warteschlange“ | entweder sofort „unzustellbar“ (der Hoster lehnt beim Empfänger ab) oder „zugestellt“ (er nimmt an und schickt später zurück) — beides richtig, aber nicht „wartet“ mit 550 | „wartet“ mit einer 5xx-Absage im Grund |
 | P-BR5-07 | Staging: Konto für `…@beispiel.invalid` anlegen | Meldung „… konnte NICHT verschickt werden. Die Adresse liegt unter der reservierten Domain .invalid …“ und der Link darunter | Meldung ohne den Satz, oder kein Link |
 | P-BR5-08 | Staging, BetreiberIn: Betrieb → Jobs, nach einem gescheiterten Job (falls einer scheitert) | „zuletzt: „…““ ohne Klassennamen wie „RuntimeException:“ | ein Klassenname vor der Meldung |
+| P-BR5-09 | Staging (Arbeitsumgebung): Anmeldung und „Passwort vergessen“ mit `email[]=x` statt `email=x` abschicken (Formular mit gültigem Token) | die Seite meldet „E-Mail fehlt“ o. ä.; keine Fehlerseite, keine neue Zeile im Reiter System | eine 500, oder „Array to string conversion“ im Reiter System |

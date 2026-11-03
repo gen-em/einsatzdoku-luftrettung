@@ -10576,3 +10576,30 @@ zutreffen.
      örtlichen Proben, die Post erwarten, legen ihre Konten seither unter
      `probe.pruefung` an (E-BR5-20). Gegenprobe auf Staging nach dem Merge:
      Stufe 2 ohne Mailfehler.
+
+355. **Ein Formularfeld als Liste gibt eine PHP-Warnung — `(string)$_POST[…]` an 114 Stellen.** · gehört zu: 22 · Stand: erledigt · seit 29.09.2026
+     *Aufgenommen 29.09.2026 mit der dritten Lesung von H-SR-08 (Konzept SR,
+     F-SR-65).* Aus `code[]=x` statt `code=x` macht
+     `(string)($_POST['code'] ?? '')` den Text „Array" mit der Warnung
+     „Array to string conversion", und der Behandler schreibt sie in den
+     Reiter System — höchstens eine Zeile je Stelle und Anfrage. Für
+     `passkey_antwort` ist das seit Web 21.11.0 behoben (F-SR-47); das
+     Nachbarfeld `code` in `login.php` und `zweitfaktor.php`, `signatur` und
+     `tokens` in `login.php` haben es noch — `tokens` im ersten Schritt, ohne
+     Passwort, hinter dem Anmelde-Topf. `grep -rn '(string)($_POST['` über
+     `server/` zählt 114 Stellen. *Weg:* ein Helfer `post_text()` als die
+     eine Stelle (R83) und eine Registerzeile gegen das Muster. *Abnahme:*
+     jedes Feld der Anmeldeschritte als Liste → Formularfehler, keine Zeile
+     im Reiter System. *Seit Web 21.14.0 (SR-08, F-SR-96)* nimmt
+     `registrieren.php` seine Felder über eine lokale Hülle `$feld` — dort
+     war `email[]` sogar eine 500; jetzt 109 Stellen, und `$feld` steht mit
+     `zweitfaktor_notweg.php` zweimal: beide gehen in `post_text()` auf.
+     Erledigt 03.11.2026 mit BR5-03 (Web 23.6.5): `post_text()` und
+     `get_text()` in `eingabe_lib.php` an 149 Stellen (125 POST, 24 GET),
+     dazu 15 Aufrufe ohne Cast (`email_normalisieren()`, `email_pruefen()`,
+     `rolle_normieren()`, `trim()`, `session_ende_text()`) und
+     `passkey_antwort` in Anmeldung und Zweitfaktor; die Hüllen `$feld`
+     (zweimal) und `konten_param()` sind darin aufgegangen. Registerzeilen
+     Z47, Z48 mit Decke 0. Abnahme: zwölf Felder der Anmeldeseiten als Liste
+     — 0 mit 500 oder Zeile im Reiter System; mit dem alten Code 4 (zwei
+     500er).

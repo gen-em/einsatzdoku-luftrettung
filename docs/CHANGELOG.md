@@ -14,6 +14,18 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 23.6.5] — unveröffentlicht
+
+### Behoben
+
+- **Web — ein Formularfeld als Liste brachte die Anmeldung zum Absturz**
+  (Backlog Nr. 355). Wer `email[]=x` statt `email=x` schickte, bekam auf der
+  Anmeldung und bei „Passwort vergessen“ eine Fehlerseite, und an vielen
+  anderen Stellen wurde aus der Liste der Text „Array“ mit einer Warnung im
+  Reiter System. Jede Seite liest ihre Felder jetzt an einer Stelle: als Text,
+  oder, wenn es keiner ist, als leer — so meldet die Seite ihren gewohnten
+  Formularfehler. Zwei Zählzeilen halten die alte Form fern.
+
 ## [Web 23.6.4] — unveröffentlicht
 
 ### Behoben

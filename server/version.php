@@ -8500,5 +8500,13 @@ declare(strict_types=1);
  *   Kette fuellten auf Staging den Reiter System. Und ein Job, der wirft,
  *   zeigt auf seiner Karte die bereinigte Meldung statt „RuntimeException:
  *   …"; die Klasse steht im Reiter System, wo sie bis dahin fehlte.
- *   Korrektur; kein Schema. */
-const WEB_VERSION = '23.6.4';
+ *   Korrektur; kein Schema.
+ * 23.6.5 — EIN FORMULARFELD ALS LISTE GAB EINE 500 (Backlog Nr. 355;
+ *   Schritt 22, BR5-03). Aus `email[]=x` statt `email=x` machte die
+ *   Anmeldung und „Passwort vergessen" einen TypeError, und an 149 Stellen
+ *   wurde aus einer Liste per `(string)` der Text „Array" samt Warnung im
+ *   Reiter System. Jetzt liest jede Seite ihre Felder ueber `post_text()`
+ *   und `get_text()` (`eingabe_lib.php`): Text, sonst die Vorgabe. Drei
+ *   lokale Huellen fuer dasselbe sind darin aufgegangen; zwei Registerzeilen
+ *   halten die alte Form auf null. Korrektur; kein Schema. */
+const WEB_VERSION = '23.6.5';

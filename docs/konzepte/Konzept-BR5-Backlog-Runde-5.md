@@ -17,7 +17,7 @@ BR5-10).
 |---|---|---|
 | BR5-01 | Transaktion und Protokoll: Nr. 354, 345, 457 | **erledigt** 03.11.2026 (Web 23.6.3) |
 | BR5-02 | Jobs und Mail: Nr. 357, 454, 450 | **erledigt** 03.11.2026 (Web 23.6.4) |
-| BR5-03 | Formularfelder: Nr. 355 (`post_text()`) | offen |
+| BR5-03 | Formularfelder: Nr. 355 (`post_text()`) | **erledigt** 03.11.2026 (Web 23.6.5) |
 | BR5-04 | Zweite Passwortseite: Nr. 358 | offen |
 | BR5-05 | Schlüsselpaar und Rückweg nach der Anmeldung: Nr. 392 | offen |
 | BR5-06 | Meldungen und Karten: Nr. 346, 356, 456 | offen |
@@ -26,7 +26,7 @@ BR5-10).
 | BR5-09 | PHP 8.3.6: Nr. 383 | offen |
 | BR5-10 | Abschluss | offen |
 
-**In Arbeit:** BR5-03 als Nächstes. **Es hakt:** nirgends. BR5-02 ist erledigt; der Riegel aus Nr. 450 traf die örtlichen Proben, die Post an `…@probe.invalid` erwarteten — sie stehen seither auf `probe.pruefung` (F-BR5-17, E-BR5-20).
+**In Arbeit:** BR5-04 als Nächstes. **Es hakt:** nirgends. BR5-03 ist erledigt; `post_text()` liefert Text oder die Vorgabe, nicht `null` (F-BR5-19).
 
 ---
 
@@ -185,7 +185,8 @@ alle drei gleich — eine Regel für drei Schreibhelfer, nicht für einen.
 **F-BR5-17 — Die Prüfmittel hingen an `.invalid` (BR5-02, gemessen
 03.11.2026).** Mit dem Riegel aus E-BR5-12 wurden sieben örtliche Proben rot,
 die zuvor grün waren: Mail (17 Fälle, dazu die Rundmail), Schlüsselwechsel
-(3), Raten (3), Passkey (3), Zweitfaktor (4), Rollen (1), Rückweg (2). Ihre
+(3), Raten (3), Passkey (3), Zweitfaktor (4), Rollen (1), Rückweg (2);
+in BR5-03 dazu die Kopplungsprobe (Teil 27 erwartet den Versandweg). Ihre
 Konten liegen unter `…@probe.invalid`, und sie zählen die Mails an diese
 Konten. Die Kettenkonten in Stufe 2 (`umlauf-…@example.invalid`) messen die
 Mail nur örtlich (`lokal` in `rueckweg/probe.mjs`); auf Staging ändert sich
@@ -197,6 +198,32 @@ Anlage nicht. Die Startfolge aus `Sandbox-Setup.md` 6.1a brachte die Anlage
 zurück (v23.6.4, 0 Migrationen offen); die drei Fremd-Datenbanken der
 Schemaprobe (MariaDB 10.6, MySQL 8.0, 8.4.0) ließen sich nicht starten
 („Docker Hub gedrosselt?“, `plattform.sh alles`, 7 Stück fehlen).
+
+**F-BR5-19 — `post_text()` liefert `string`, nicht `?string` (BR5-03).**
+E-BR5-06 sah `null` für eine Liste vor, damit der Aufrufer seinen
+Formularfehler baut. Gebaut ist: Text, sonst die Vorgabe. Der Grund: Alle 149
+Stellen setzen das Ergebnis unmittelbar als Text ein, und ein `?string`
+hätte an jeder einen eigenen Umgang mit `null` verlangt; eine Liste als leeres
+Feld ergibt bei jeder Seite schon heute den gewohnten Formularfehler
+(gemessen an zwölf Feldern, Prüfprotokoll). Die Vorgabe ist ein zweites
+Argument (`post_text('role', 'user')`), weil acht Stellen eine andere als `''`
+hatten.
+
+**F-BR5-20 — Mehr Stellen als gezählt.** Neben den 149 Casts gingen 15
+Felder ohne Cast an eine Funktion mit `string`-Parameter
+(`email_normalisieren()`, `email_pruefen()`, `rolle_normieren()`,
+`session_ende_text()`, `trim()`) — jedes eine 500 bei einer Liste. Bei
+`passkey_antwort` sagt der Kommentar „eine Liste ist eine leere Antwort“, der
+Code wertet sie als Passkey-Versuch; die Zweitfaktorprobe hält genau das fest
+(B-4: „Der Passkey wurde nicht angenommen“, ein Fehlversuch). Die Umstellung
+auf `post_text()` machte daraus einen Code-Versuch und die Probe rot — sie ist
+zurückgenommen; dort bleibt `?? ''`, das ohne Cast keine Warnung erzeugt. Eine dritte Hülle (`konten_param()` in
+`admin_users.php`) sah Z48 nicht, weil sie über eine Zwischenvariable prüft.
+Die Linkprobe erkannte gelesene Parameter nur an `$_GET[…]` und meldete nach
+dem Umbau 33 Abweichungen; sie liest jetzt auch `get_text('…')`.
+
+**F-BR5-21 — Ein zweiter Containerneustart in BR5-03.** Wie F-BR5-18; danach
+wurde der Zwischenstand sofort als Commit gesichert (`080df56`).
 
 **F-BR5-14 — Nr. 450 hat die Ursache in der Kette, die Abhilfe am Server.**
 Stufe 2 legt Konten unter `…@example.invalid` an (`umlauf_konto()` in
@@ -775,10 +802,45 @@ PHP 8.3.6):
   fand; die Zeile steht wieder auf `probe.invalid`. *Steuerung:* 49 offene
   Einträge, 0 Fehler; 21 Decken, 0 gerissen.
 
+**BR5-03** (03.11.2026, Web 23.6.5; örtliche Anlage):
+
+- *Umbau:* ein Skript mit Klammerzählung (nicht eingecheckt) stellte 150
+  Fundstellen um; eine davon war ein Kommentar in `admin_users.php`, der die
+  alte Form als Falle zitierte — er ist mit `konten_param()` entfallen. Echte
+  Stellen: 149. Ladeweg: für jede Datei, die `post_text()`/`get_text()`
+  ruft, die Kette der `require` aufgelöst — 0 ohne `db.php` oder
+  `eingabe_lib.php`. `php -l` über alle berührten Dateien ohne Befund.
+- *Abnahme Nr. 355:* zwölf Felder als Liste (`login.php`: `email`,
+  `tokens`, `password`, `token`; `registrieren.php`: `email`, `name`,
+  `website`, `zeit`; `zweitfaktor_notweg.php`: `email`, `tokens`, `wert`;
+  `reset_request.php`: `email`) über HTTPS mit gültigem Formular-Token — **0
+  mit 500 oder Zeile im Reiter System**, jeder Fall nachweislich angenommen.
+  **Gegenprobe** mit dem Server-Stand vor BR5-03: 4 rot — zwei 500er
+  (`email[]` in Anmeldung und „Passwort vergessen“), zwei Warnungen „Array to
+  string conversion“. *Ein eigener Fehler unterwegs:* Der erste Lauf ging
+  über `http://`, das `Secure`-Cookie kam nicht zurück, jede Seite wies das
+  Formular als abgelaufen ab — und meldete trotzdem „0 Fehler“. Der Test
+  prüft seither, dass das Formular angenommen wurde.
+- *Register:* Z47 (Cast vor `$_POST`/`$_GET`) Start 149, Ist 0; Z48 (eigene
+  `is_string`-Hülle) Start 2, Ist 0; Gegenprobe mit dem alten Code 149 und 2
+  über der Decke. *Linkprobe:* 152 Verweise, 0 Abweichungen.
+- *Proben* (alle PHP-Proben, nacheinander): Passkey 128/0, Rollen 612/0,
+  Raten 102/0, Rückweg 23/0, Wiederherstellung 142/0, Sitzung 25/0, Geräte
+  grün, Protokoll 36/0, Jobs 40/0, Wartung 84/0, Mail 76/0, Versand 142/0,
+  Anteil 74/0, Rechtstexte 0 fehlgeschlagen, Verbindung grün, Ingest 97/0,
+  Spur 20/0, Schlüsselwechsel 66/0, Komplett 74/0; Kopplung nach der
+  Umstellung auf `probe.pruefung` 85/0; Zweitfaktor nach der Rücknahme bei
+  `passkey_antwort` 139/0. *Ein eigener Fehler unterwegs:* Eine
+  Wiederholung der Zweitfaktorprobe lief, während der Hintergrundlauf noch
+  Proben fuhr — 137/2 (Passwort über den Link, `totp_abschalten()`), danach
+  allein 139/0. Zwei Proben gleichzeitig messen einander (CLAUDE.md 7); die
+  137/2 sind kein Befund über den Code.
+
 ## 7. Verlauf
 
 | Datum | Was |
 |---|---|
+| 03.11.2026 | BR5-03 erledigt (Web 23.6.5); F-BR5-19 bis -21. |
 | 03.11.2026 | BR5-02 erledigt (Web 23.6.4); F-BR5-17, -18; E-BR5-20 (Proben umgestellt). |
 | 03.11.2026 | PR #141 gemergt; P-BR5-01 bis -04 auf Staging bestanden und aus der Handprüfliste gestrichen. |
 | 03.11.2026 | `main` mit PR #139 aufgenommen (Rahmenplan-Fassung 206 wird 207); Zwischen-PR mit BR5-01, damit die Arbeitsumgebung die Punkte auf Staging prüft (Betreiberin). |

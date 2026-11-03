@@ -138,8 +138,8 @@ function altern(PDO $pdo, string $devId): void {
 
 /* ---- Konten ------------------------------------------------------------ */
 
-$email  = 'kopplungsprobe@example.invalid';
-$email2 = 'kopplungsprobe-zwei@example.invalid';
+$email  = 'kopplungsprobe@probe.pruefung';   // nicht .invalid: Teil 27 braucht den Versand (Nr. 450)
+$email2 = 'kopplungsprobe-zwei@probe.pruefung';
 $pdo->prepare('DELETE FROM users WHERE email IN (?, ?)')->execute([$email, $email2]);
 $pdo->prepare("INSERT INTO users (email, name, role, password_hash, kdf_salt, kdf_iter)
                VALUES (?, 'Kopplungsprobe', 'user', '', '', 320000)")->execute([$email]);
@@ -256,7 +256,7 @@ pruefe(pair_sitzung_beanspruchen($pdo, $code, $uid) === true,
        '8   Beanspruchen (Bibliothek, Muster des Web-Klicks) -> rowCount 1');
 $st = anfrage(['aktion' => 'status'], $dev, $key);
 pruefe($st['code'] === 200 && ($st['daten']['zustand'] ?? '') === 'beansprucht'
-       && ($st['daten']['konto'] ?? '') === 'ko***@example.invalid' && ($st['daten']['rest_s'] ?? 0) > 0,
+       && ($st['daten']['konto'] ?? '') === 'ko***@probe.pruefung' && ($st['daten']['rest_s'] ?? 0) > 0,
        '8   status beansprucht, konto maskiert (E-S5-21)', $st['roh']);
 pruefe(pair_sitzung_beanspruchen($pdo, $code, $uid2) === false,
        '9   zweite Beanspruchung desselben Codes -> rowCount 0');

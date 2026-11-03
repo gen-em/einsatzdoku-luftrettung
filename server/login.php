@@ -419,7 +419,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !csrf_ok()) {
         /* Ein Feld, das kein Text ist (`passkey_antwort[]=x`), ist eine leere
          * Antwort — kein `(string)` mit PHP-Warnung im Reiter System.
          * */
-        $pkFeld   = post_text('passkey_antwort');
+        $pkFeld   = $_POST['passkey_antwort'] ?? '';
         $mitPk    = !$mitRc && $pkFeld !== '';
         $pr = ['ok' => false];
         if (rate_erlaubt('totp', null, $merkmale)) {

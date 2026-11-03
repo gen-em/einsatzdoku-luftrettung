@@ -421,6 +421,7 @@ davon aufweicht, wird nicht nebenbei gemacht, sondern angesprochen:
   | Sitzung starten | `sitzung_starten()` | `session_start()` |
   | Schema fragen (auch in neuen Migrationen) | `db_hat_tabelle()`, `db_hat_spalte()`, `db_hat_index()`, `db_spalte_typ()`, `db_spalte_nullbar()` | `information_schema` von Hand |
   | Transaktion | `db_transaktion()` | `beginTransaction()` |
+  | Formularfeld als Text lesen | `post_text()`, `get_text()` | `(string)($_POST[…])`, eigene `is_string()`-Hülle |
   | Aus Zahl oder Zeitpunkt Text machen | `format_lib.php` (PHP), `EdFormat` (Browser) | eigene Rechnung |
   | Anfrage an den Server (Browser) | `EdApi.postJson()` / `.postForm()` | `fetch` mit eigenem `X-CSRF` |
   | Meldung im Browser | `EdHtml.meldung()` | Markup von Hand |
