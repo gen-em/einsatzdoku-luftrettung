@@ -16,7 +16,7 @@ BR5-10).
 | Paket | Inhalt | Stand |
 |---|---|---|
 | BR5-01 | Transaktion und Protokoll: Nr. 354, 345, 457 | offen |
-| BR5-02 | Jobs und Mail: Nr. 357, 454, 450 | offen — wartet auf #137 (E-BR5-03) |
+| BR5-02 | Jobs und Mail: Nr. 357, 454, 450 | offen |
 | BR5-03 | Formularfelder: Nr. 355 (`post_text()`) | offen |
 | BR5-04 | Zweite Passwortseite: Nr. 358 | offen |
 | BR5-05 | Schlüsselpaar und Rückweg nach der Anmeldung: Nr. 392 | offen |
@@ -26,10 +26,7 @@ BR5-10).
 | BR5-09 | PHP 8.3.6: Nr. 383 | offen |
 | BR5-10 | Abschluss | offen |
 
-**In Arbeit:** nichts — Konzept fertig, alle Fragen entschieden (E-BR5-04 bis -18). **Es hakt:** Die
-Umsetzung beginnt erst nach dem Merge von PR #137 (E-BR5-03). Bis dahin
-schreibt dieser Zweig weder die Fahrplanzeile 22 noch Backlog-Kopfzeilen, die
-PR #137 ebenfalls ändert (450, 454, 456, 457; F-BR5-13).
+**In Arbeit:** nichts — Konzept fertig, alle Fragen entschieden (E-BR5-04 bis -18). **Es hakt:** nirgends. PR #137 ist gemergt (`b3a848c`), `main` ist aufgenommen; die Umsetzung kann mit BR5-01 beginnen. Fahrplanzeile 22 und die Kopfzeilen von 450, 454, 456, 457 sind geschrieben (F-BR5-13).
 
 ---
 
@@ -631,5 +628,6 @@ Konzept und Prüfdokument erst nach der Freigabe.
 
 | Datum | Was |
 |---|---|
+| 03.11.2026 | `main` mit PR #137 und #138 aufgenommen; Fahrplanzeile 22, Rahmenplan Fassung 206, Kopfzeilen 450, 454, 456, 457 auf `22`; gemergte Spanne 470 bis 479 (GR) gestrichen, weil die Kopfdecke von `Backlog.md` sonst riss (61 > 60). |
 | 03.11.2026 | Q-BR5-01 bis -15 entschieden wie vorgeschlagen (E-BR5-04 bis -18). |
 | 03.11.2026 | Konzept angelegt; Befund F-BR5-01 bis -14, Fragen Q-BR5-01 bis -15; E-BR5-01 bis -03 entschieden; Spanne 480 bis 489 reserviert (`0c39a8cb`). |

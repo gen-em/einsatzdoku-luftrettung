@@ -53,9 +53,8 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
 | Spanne | Zweig | seit |
 |---|---|---|
 | 450 bis 459 | `claude/new-session-p1duc7` — Prüfdurchgang der Arbeitsumgebung auf Staging (R91); vergeben: 450 bis 457, weiter reserviert: 458 und 459 | 03.11.2026 |
-| 470 bis 479 | `claude/trusting-wozniak-33j782` (Schritt 21, GR) | 02.11.2026 |
 | 480 bis 489 | `claude/tender-bell-225ta2` (Schritt 22, BR5) | 03.11.2026 |
-| ab 490 | frei — höchste reservierte Nummer 489; frei blieben 461 bis 469 aus der Spanne von PR (PR #133), 434 bis 439 aus der Spanne von PR #129, 441 bis 449 aus der von PR #130, 420 bis 429 aus der Spanne von 20 (PR #127), 412 bis 419 aus der von 12b (PR #125), 394 bis 399 aus der Spanne von 19 (PR #112 bis #114), 389 aus der von 12a (PR #116), 372 bis 379 aus der von 12 (PR #103), 362 bis 369 aus der von PK, 359 aus der von 18 (PR #101), 348 und 349 aus der von 17, 338 aus der von AR | 02.11.2026 |
+| ab 490 | frei — höchste reservierte Nummer 489; frei blieben 472 bis 479 aus der Spanne von 21 (PR #136), 461 bis 469 aus der Spanne von PR (PR #133), 434 bis 439 aus der Spanne von PR #129, 441 bis 449 aus der von PR #130, 420 bis 429 aus der Spanne von 20 (PR #127), 412 bis 419 aus der von 12b (PR #125), 394 bis 399 aus der Spanne von 19 (PR #112 bis #114), 389 aus der von 12a (PR #116), 372 bis 379 aus der von 12 (PR #103), 362 bis 369 aus der von PK, 359 aus der von 18 (PR #101), 348 und 349 aus der von 17, 338 aus der von AR | 02.11.2026 |
 
 ---
 
@@ -996,7 +995,7 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
 
 <!-- -->
 
-450. **Die Wegwerfkonten der Kette füllen auf Staging den Reiter System mit Mailfehlern.** · gehört zu: nächste Backlog-Runde · Stand: offen · seit 02.11.2026
+450. **Die Wegwerfkonten der Kette füllen auf Staging den Reiter System mit Mailfehlern.** · gehört zu: 22 · Stand: offen · seit 02.11.2026
      *Aufgenommen 02.11.2026 im ersten Prüfdurchgang der Arbeitsumgebung
      (R91, P-P5c-12).* Stufe 2 legt je Lauf und Engine Konten unter
      `…@example.invalid` an, meldet sie an und löscht sie wieder. Jede Mail an
@@ -1013,7 +1012,7 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
 
 <!-- -->
 
-454. **Der Mailjob versucht eine dauerhafte Absage 24 Stunden lang weiter.** · gehört zu: nächste Backlog-Runde · Stand: offen · seit 02.11.2026
+454. **Der Mailjob versucht eine dauerhafte Absage 24 Stunden lang weiter.** · gehört zu: 22 · Stand: offen · seit 02.11.2026
      *Aufgenommen 02.11.2026 im ersten Prüfdurchgang der Arbeitsumgebung
      (R91, P-P5c-03).* Die Rundmail an 8 Staging-Konten: 5 zugestellt,
      zwei mit „Server antwortete 550" (das Postfach gibt es nicht), eine
@@ -1058,7 +1057,7 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
 
 <!-- -->
 
-456. **Die Reanimationskarte sagt im gesperrten Formular „keine".** · gehört zu: nächste Backlog-Runde · Stand: offen · seit 03.11.2026
+456. **Die Reanimationskarte sagt im gesperrten Formular „keine".** · gehört zu: 22 · Stand: offen · seit 03.11.2026
      *Aufgenommen 03.11.2026 im Prüfdurchgang der Arbeitsumgebung (R91,
      P-S11-18).* Ist der Inhaltsschlüssel gesperrt, öffnet
      `einsatz_form.php` die Einsatzhülle nicht, `#rearows` bleibt leer, und
@@ -1073,7 +1072,7 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
 
 <!-- -->
 
-457. **Das Löschen eines Zeitraums steht im Protokoll ohne Bezeichnung der Art.** · gehört zu: nächste Backlog-Runde · Stand: offen · seit 03.11.2026
+457. **Das Löschen eines Zeitraums steht im Protokoll ohne Bezeichnung der Art.** · gehört zu: 22 · Stand: offen · seit 03.11.2026
      *Aufgenommen 03.11.2026 im Prüfdurchgang der Arbeitsumgebung (R91,
      P-S11-22).* `api/schneiden.php` schreibt `spur_stueck_geloescht`,
      und die Liste der Arten in `protokoll_lib.php` kennt den Schlüssel

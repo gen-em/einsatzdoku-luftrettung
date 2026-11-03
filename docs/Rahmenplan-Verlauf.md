@@ -9,6 +9,7 @@ Verlauf bis zum Schnitt). Die Fassungszählung läuft fortlaufend weiter.
 
 | Fassung | Datum | Anlass | Was |
 |---|---|---|---|
+| 206 | 03.11.2026 | 22 | Schritt 22 (BR5) beginnt auf `claude/tender-bell-225ta2` mit Konzept BR5; Umfang siebzehn Punkte, dazu 450, 454, 456, 457 (E-BR5-01); alle Fragen entschieden. Kopf: Stand `main` `fd9ddee`, „Läuft" 22. |
 | 205 | 03.11.2026 | Zuarbeit (R91) | 6.1: Block 8 — Nr. 453 auf Staging abgenommen (Versand über den Adress-Abruf); P-S11-27 und -45 erledigt, -26 (b) und -31 bis auf den Bildvergleich. |
 | 204 | 03.11.2026 | Zuarbeit (R91) | 6.1: Block 7 — Einsatzwege aus S11 auf Staging mit über das Prüfgerät gesendeten Einsätzen: -16, -18 bis -22, -24 erledigt, -23 bis auf die echte Uhr-Datei; neu Nr. 456, 457. |
 | 203 | 02.11.2026 | 21 | Schritt 21 (GR) gebaut: GR-01 bis -07, Uhr 4.2.0–4.3.1, Android 0.19.0–0.20.0; Nr. 154, 157, 201, 229, 402, 431 erledigt, neu 470 und 471. Kopf „Läuft", Stand `main` `3741bc0` (Web 23.6.1). |
