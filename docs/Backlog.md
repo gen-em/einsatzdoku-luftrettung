@@ -52,7 +52,7 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
 
 | Spanne | Zweig | seit |
 |---|---|---|
-| 450 bis 459 | `claude/new-session-p1duc7` — Prüfdurchgang der Arbeitsumgebung auf Staging (R91); vergeben: 450 bis 458, weiter reserviert: 459 | 03.11.2026 |
+| 450 bis 459 | `claude/new-session-p1duc7` — Prüfdurchgang der Arbeitsumgebung auf Staging (R91); vergeben: 450 bis 459 | 03.11.2026 |
 | 470 bis 479 | `claude/trusting-wozniak-33j782` (Schritt 21, GR) | 02.11.2026 |
 | ab 480 | frei — höchste reservierte Nummer 479; frei blieben 461 bis 469 aus der Spanne von PR (PR #133), 434 bis 439 aus der Spanne von PR #129, 441 bis 449 aus der von PR #130, 420 bis 429 aus der Spanne von 20 (PR #127), 412 bis 419 aus der von 12b (PR #125), 394 bis 399 aus der Spanne von 19 (PR #112 bis #114), 389 aus der von 12a (PR #116), 372 bis 379 aus der von 12 (PR #103), 362 bis 369 aus der von PK, 359 aus der von 18 (PR #101), 348 und 349 aus der von 17, 338 aus der von AR | 02.11.2026 |
 
@@ -1103,3 +1103,21 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      die Abfrage in eine Probe gegen MySQL 8 nehmen.
      *Abnahme:* auf Staging keine neue Zeile „wartungslauf … 1055",
      `server/api/wartungslauf.php` antwortet 200, „GPS-Daten verdichten" nennt eine Zahl.
+
+<!-- -->
+
+459. **Schon das Ansehen setzt das Demo-Konto auf „geändert".** · gehört zu: nächste Backlog-Runde · Stand: offen · seit 03.11.2026
+     *Aufgenommen 03.11.2026 im Prüfdurchgang der Arbeitsumgebung (R91,
+     P-R4-15).* Die Änderungsmarke des Demo-Kontos setzt `auth_guard.php`
+     bei jedem POST (`demo_lib.php`, „Die Änderungsmarke"). Die Startseite
+     schickt beim Laden zweimal `POST api/wartungslauf.php`. Gemessen auf
+     Staging nach einem frischen Reset: nach der Anmeldung „Geändert:
+     nein", nach dem Öffnen der Startseite „Geändert seit 09:57 · Nächster
+     Reset in 30 Minuten", der Hinweis sagt „in etwa 30 Minuten" — ohne
+     jede Änderung. Wer nur nachsehen will, trägt damit nach 30 Minuten
+     den Reset und fliegt aus der Sitzung; genau das sollte die Marke
+     vermeiden. Der Wartungslauf schickt seine POSTs auch auf Produktiv.
+     *Weg:* den Wartungslauf für das Demo-Konto auslassen oder seine POSTs
+     von der Marke ausnehmen; andere Hintergrund-POSTs mit prüfen.
+     *Abnahme:* frischer Reset, Anmelden, drei Seiten ansehen —
+     Verwaltung → Demo-Konto „Geändert: nein".

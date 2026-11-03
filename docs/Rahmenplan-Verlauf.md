@@ -9,6 +9,7 @@ Verlauf bis zum Schnitt). Die Fassungszählung läuft fortlaufend weiter.
 
 | Fassung | Datum | Anlass | Was |
 |---|---|---|---|
+| 207 | 03.11.2026 | Zuarbeit (R91) | 6.1: Block 10 — P-R4-15 erledigt, -16, -21 und -23 auf Staging am Schreibtisch; neu Nr. 459 (Ansehen setzt das Demo-Konto auf geändert). |
 | 206 | 03.11.2026 | Zuarbeit (R91) | 6.1: Block 9 — P-S11-14, -25 (a), -26 (a) und P-R4-07, -08, -09, -14, -18 erledigt; neu Nr. 458 (Wartungslauf auf MySQL 8), P-S11-30 bis dahin nicht prüfbar. |
 | 205 | 03.11.2026 | Zuarbeit (R91) | 6.1: Block 8 — Nr. 453 auf Staging abgenommen (Versand über den Adress-Abruf); P-S11-27 und -45 erledigt, -26 (b) und -31 bis auf den Bildvergleich. |
 | 204 | 03.11.2026 | Zuarbeit (R91) | 6.1: Block 7 — Einsatzwege aus S11 auf Staging mit über das Prüfgerät gesendeten Einsätzen: -16, -18 bis -22, -24 erledigt, -23 bis auf die echte Uhr-Datei; neu Nr. 456, 457. |
