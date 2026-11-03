@@ -247,6 +247,11 @@ function anmeldung_vollenden(array $u, bool $istDemoAdresse): void
      * gemerktes Geraet oder den Rueckweg erbt keine Frist aus einer frueheren
      * Anmeldung in derselben Sitzungsdatei. */
     unset($_SESSION['zf_frisch_bis']);
+    /* DIE ANLEGEMARKE (Nr. 392): Jeder Weg hierher beginnt mit dem
+     * geprueften Passwort. Sie laesst die Seiten der naechsten zehn Minuten
+     * ein fehlendes Kontopaar und einen fehlenden Rueckweg anlegen, auch
+     * wenn das Token aus dem Vormerkfach schon fort ist (`sitzung_lib.php`). */
+    anlege_marke_setzen((int)$u['id']);
     /* DIE ANKUENDIGUNG KOMMT MIT JEDER ANMELDUNG WIEDER. Wer sie auf DIESER
      * Seite geschlossen hat, schloss sie
      * fuer die Sitzung vor dem Anmelden — und `session_regenerate_id()`

@@ -104,7 +104,13 @@ try {
     if (/"aktion":"anlegen"/.test(r.request().postData() || '')) { await tor; }
     await r.continue();
   });
-  const anlage = s.waitForResponse(r => r.url().includes('/api/kontopaar.php'), { timeout: 120000 })
+  /* AUF DIE 200 WARTEN, nicht auf die erste Antwort: Seit Nr. 392 versucht
+     auch die zweite Seite anzulegen (Anlegemarke), beide Anfragen warten am
+     Tor, eine bekommt 200, die andere 409 — ein zweites Paar gibt es nicht
+     (`kp_ablegen()`; „Protokoll … einmal" unten). */
+  const anlage = s.waitForResponse(r => r.url().includes('/api/kontopaar.php')
+                                        && /"aktion":"anlegen"/.test(r.request().postData() || '')
+                                        && r.status() === 200, { timeout: 120000 })
                   .catch(() => null);
   await s.goto(`${BASIS}/login.php`, { waitUntil: 'domcontentloaded' });
   await s.fill('#loginform input[name="email"]', ADRESSE);
@@ -126,8 +132,11 @@ try {
     const h = await EdOrtsdaten.einsatzVerschliessen({ fassung: 1, phasen: [], rea: [] }, 'imp-' + '0'.repeat(24));
     return { vorher: vorher !== null, nachher: EdKontopaar.oeffentlich() !== null, huelle: h.length };
   }).catch(e => ({ fehler: String(e && e.message || e) }));
-  pruefe(vorB === 'fehlt' && r2b.vorher === false && r2b.nachher === true && r2b.huelle > 100,
-         '2b Seite von vor dem Anlegen holt den Schlüssel nach und verschließt',
+  /* SEIT NR. 392 darf die zweite Seite das Paar selbst anlegen (Anlegemarke)
+     — dann kennt sie es schon vor `bereit()` (`vorher` true). Verlangt wird,
+     was zählt: Sie hielt „fehlt" beim Aufbau und verschließt danach. */
+  pruefe(vorB === 'fehlt' && r2b.nachher === true && r2b.huelle > 100,
+         '2b Seite von vor dem Anlegen hat den Schlüssel danach (nachgeholt oder selbst angelegt) und verschließt',
          `${vorB} · ${JSON.stringify(r2b)}`);
   await b.close();
   await kontext.unroute('**/api/kontopaar.php');

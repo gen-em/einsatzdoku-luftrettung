@@ -723,3 +723,56 @@ function sitzung_bindung_ok(): bool
     return hash_equals($soll, hash('sha256', $wert));
 }
 
+
+/* ===========================================================================
+ * DIE ANLEGEMARKE — Backlog Nr. 392, E-BR5-08
+ * ===========================================================================
+ *
+ * Kontopaar und Rueckweg legt der Browser still an, sobald der
+ * Inhaltsschluessel da ist. Der Server verlangt dafuer einen Nachweis des
+ * Passworts, und bis Web 23.6.6 war das allein das Anmelde-Token — das es nur
+ * auf der ERSTEN Seite nach der Anmeldung gibt. Wer schneller weiterklickte,
+ * hatte bis zur naechsten Anmeldung kein Paar (in Firefox und WebKit in jedem
+ * gemessenen Lauf): Geraete konnten nicht senden, eine Freigabe wies ab.
+ *
+ * DIE MARKE ERSETZT DAS TOKEN FUER DAS ERSTE ANLEGEN. `anmeldung_vollenden()`
+ * setzt sie — jeder Weg dorthin beginnt mit dem geprueften Passwort. Sie
+ * haengt an dieser Sitzung und diesem Konto, gilt `ANLEGE_MARKE_S` Sekunden
+ * und je Zweck einmal; ein Rueckweg, der schon steht, laesst sich mit ihr
+ * nicht ersetzen. Das passwortgleiche Token bleibt, wie bisher, hoechstens
+ * einen Seitenwechsel im Sitzungsspeicher des Browsers.
+ *
+ * DER PREIS, ausdruecklich entschieden: Wer die Sitzung in diesen zehn
+ * Minuten stiehlt, kann ein Paar setzen, solange keines da ist. Aus „nur mit
+ * Passwortnachweis" wird fuer das erste Anlegen „nur kurz nach einem
+ * Passwortnachweis" (Bedrohungsmodell, Lage D).
+ */
+
+/** Wie lange die Marke nach der Anmeldung gilt. */
+const ANLEGE_MARKE_S = 600;
+
+/** Wofuer sie gilt — je Zweck einmal. */
+const ANLEGE_ZWECKE = ['kontopaar', 'rueckweg'];
+
+/** Nach dem geprueften Passwort: die Marke fuer dieses Konto setzen. */
+function anlege_marke_setzen(int $userId): void
+{
+    $_SESSION['anlege_marke'] = ['konto' => $userId, 'bis' => time() + ANLEGE_MARKE_S,
+                                 'offen' => array_fill_keys(ANLEGE_ZWECKE, true)];
+}
+
+/** Gilt die Marke dieser Sitzung fuer dieses Konto und diesen Zweck? */
+function anlege_marke_gilt(int $userId, string $zweck): bool
+{
+    $m = $_SESSION['anlege_marke'] ?? null;
+    return is_array($m) && (int)($m['konto'] ?? 0) === $userId && $userId > 0
+        && (int)($m['bis'] ?? 0) > time() && !empty($m['offen'][$zweck]);
+}
+
+/** Nach dem gelungenen Anlegen: den Zweck austragen. Leer, faellt sie ganz. */
+function anlege_marke_verbrauchen(string $zweck): void
+{
+    if (!is_array($_SESSION['anlege_marke'] ?? null)) { return; }
+    unset($_SESSION['anlege_marke']['offen'][$zweck]);
+    if (empty($_SESSION['anlege_marke']['offen'])) { unset($_SESSION['anlege_marke']); }
+}

@@ -574,6 +574,23 @@ function passwort_nachweis_json(int $userId, string $token, string $fehler = 'pa
     json_out(['error' => $fehler, $feld => 'Das Passwort ist nicht korrekt.'], 403);
 }
 
+/**
+ * Der Nachweis fuer das ANLEGEN von Kontopaar und Rueckweg: das Anmelde-Token
+ * — oder, ohne Token, die Anlegemarke dieser Sitzung (Nr. 392, E-BR5-08,
+ * `sitzung_lib.php`). Antwortet selbst und beendet, wenn keines von beiden
+ * traegt. Ein fehlender Nachweis zaehlt nicht im Topf `login`: Es wurde kein
+ * Passwort geraten.
+ *
+ * @return bool `true`, wenn die Marke trug — der Aufrufer traegt den Zweck
+ *              nach dem gelungenen Schreiben aus (`anlege_marke_verbrauchen()`)
+ */
+function anlege_nachweis_json(int $userId, string $token, string $zweck): bool
+{
+    if ($token !== '') { passwort_nachweis_json($userId, $token); return false; }
+    if (anlege_marke_gilt($userId, $zweck)) { return true; }
+    json_out(['error' => 'passwort', 'meldung' => 'Bitte das Passwort eingeben.'], 403);
+}
+
 /* ===========================================================================
  * DER FRISCHE CODE
  * ===========================================================================

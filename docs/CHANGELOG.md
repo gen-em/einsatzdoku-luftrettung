@@ -14,6 +14,26 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 23.7.0] — unveröffentlicht
+
+### Behoben
+
+- **Web — der Schlüssel für Uhr und Handy entstand nur, wer nach der
+  Anmeldung kurz wartete** (Backlog Nr. 392). Der Browser legte ihn nur mit
+  einem Nachweis an, den es allein auf der ersten Seite nach der Anmeldung
+  gibt; wer gleich weiterklickte, hatte bis zur nächsten Anmeldung keinen,
+  und Geräte konnten nicht senden. Jetzt nimmt der Server für das erste
+  Anlegen zehn Minuten lang eine Marke der Sitzung an — ein bewusster
+  Tausch: Ein Dieb der Sitzung in diesen Minuten könnte einen Schlüssel
+  setzen, solange keiner da ist, dafür bleibt das passwortgleiche Token nicht
+  länger im Browser liegen.
+
+### Hinzugefügt
+
+- **Web — „Schlüsselpaar einrichten“ unter Einstellungen → Geräte.** Fehlt
+  der Schlüssel trotzdem, lässt er sich dort mit dem Passwort anlegen; die
+  Meldungen „noch kein Schlüssel für Uhr und Handy“ verweisen dorthin.
+
 ## [Web 23.6.6] — unveröffentlicht
 
 ### Geändert

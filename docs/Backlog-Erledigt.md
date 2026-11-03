@@ -10628,3 +10628,29 @@ zutreffen.
      `zweitfaktor_notweg.php` steht in `SEITEN` der Wache (Selbstprobe
      55/0). Abnahme: Anmeldung und Notzugang in Chromium, Firefox, WebKit;
      Zweitfaktorprobe 139/0 mit gleicher Antwortdauer.
+
+392. **Das Schlüsselpaar entsteht nur, wer auf der ersten Seite nach der Anmeldung bleibt.** · gehört zu: 22 · Stand: erledigt · seit 19.10.2026
+     *Aufgenommen 19.10.2026 in DM-02 (F-DM-02).* `unlock.js` legt das Paar
+     des Kontos (und den Rückweg) still an, sobald der Inhaltsschlüssel da
+     ist — und nur mit dem Anmelde-Token, das es allein auf der ersten
+     Seite nach der Anmeldung gibt. Die Freigabeprobe ging sofort auf
+     `einstellungen.php` weiter: In Chromium kam das Paar trotzdem an, in
+     Firefox und WebKit in keinem Lauf (2 von 2). Wartet sie auf der ersten
+     Seite, steht es nach 1152 ms (Firefox), 596 ms (WebKit), 599 ms
+     (Chromium). Wer die Seite schneller verlässt, hat bis zur nächsten
+     Anmeldung kein Paar: Geräte können nicht senden, eine Freigabe weist
+     mit „kein Schlüsselpaar" ab. Nicht gemessen: ob es ein Mensch je
+     schafft, und ob der Rückweg dasselbe Los hat.
+     *Weg:* das Token bis zum gelungenen Anlegen im Sitzungsspeicher
+     halten, oder das Anlegen auf der zweiten Seite nachholen.
+     *Abnahme:* die Freigabeprobe ohne Warten auf der ersten Seite grün,
+     in drei Engines.
+     Erledigt 03.11.2026 mit BR5-05 (Web 23.7.0): Anlegemarke der Sitzung
+     (`sitzung_lib.php`, 600 s, je Zweck einmal, nach jedem gelungenen
+     Anlegen ausgetragen, nie zum Ersetzen), angenommen über
+     `anlege_nachweis_json()`; `unlock.js` legt auf einer späteren Seite
+     still an, solange `ANLEGE_MARKE` es sagt; Weg von Hand unter
+     Einstellungen → Geräte. Der Rückweg hatte dasselbe Los und ist mit
+     dabei. Abnahme in Chromium, Firefox, WebKit mit gesperrten Endpunkten
+     auf der ersten Seite: Paar und Rückweg entstehen auf der zweiten (6 von
+     6 mit dem Weg von Hand); mit dem alten Code bleibt das Konto ohne Paar.

@@ -19,14 +19,14 @@ BR5-10).
 | BR5-02 | Jobs und Mail: Nr. 357, 454, 450 | **erledigt** 03.11.2026 (Web 23.6.4) |
 | BR5-03 | Formularfelder: Nr. 355 (`post_text()`) | **erledigt** 03.11.2026 (Web 23.6.5) |
 | BR5-04 | Zweite Passwortseite: Nr. 358 | **erledigt** 03.11.2026 (Web 23.6.6) |
-| BR5-05 | Schlüsselpaar und Rückweg nach der Anmeldung: Nr. 392 | offen |
+| BR5-05 | Schlüsselpaar und Rückweg nach der Anmeldung: Nr. 392 | **erledigt** 03.11.2026 (Web 23.7.0) |
 | BR5-06 | Meldungen und Karten: Nr. 346, 356, 456 | offen |
 | BR5-07 | Backup-Formular: Nr. 430 | offen |
 | BR5-08 | Geräte: Nr. 361 (mit 432), 440 | offen |
 | BR5-09 | PHP 8.3.6: Nr. 383 | offen |
 | BR5-10 | Abschluss | offen |
 
-**In Arbeit:** BR5-05 als Nächstes. **Es hakt:** nirgends.
+**In Arbeit:** BR5-06 als Nächstes. **Es hakt:** nirgends.
 
 ---
 
@@ -234,6 +234,23 @@ Messung. **Die Wache lässt sich örtlich nicht fahren**: Gegen
 Containers (149 von 159, „CA cert does not include key usage extension“);
 gemessen ist ihre Selbstprobe, der echte Vergleich läuft nach dem Merge in
 `integritaet.yml`.
+
+**F-BR5-23 — Der Weg von Hand steht unter Einstellungen → Geräte, nicht an
+den fünf Stellen, die „kein Schlüsselpaar“ melden (BR5-05).** E-BR5-08 sah
+den Knopf „dort, wo heute ‚kein Schlüsselpaar‘ abweist“. Das sind fünf Stellen
+(Startseite, Einsatzformular zweimal, Einsatzansicht, Freigabe), und ein Knopf
+mit Passwortdialog an jeder wäre ein neues Bedienmuster. Gebaut ist eine
+Karte auf der Geräteseite — dort, wo man Uhr und Handy einrichtet, nur
+sichtbar, solange das Paar fehlt —, und die Meldungen nennen den Weg.
+Die Rückweg-Zeile im Profil kam nicht in Frage: Sie hängt am Zweitfaktor, das
+Paar an jedem Konto mit Geräten.
+
+**F-BR5-24 — Eine Marke, die nach dem Anlegen mit Token noch galt (BR5-05,
+gefunden in der eigenen Abnahme).** Der erste Entwurf trug den Zweck nur aus,
+wenn die Marke getragen hatte. Legte die erste Seite mit dem Token an, galt
+die Marke für `kontopaar` noch zehn Minuten; ein zweites Anlegen ohne Token
+kam am Nachweis vorbei und scheiterte erst an `kp_ablegen()`. Ersetzen ging
+dabei nie. Jetzt fällt der Zweck nach jedem gelungenen Anlegen.
 
 **F-BR5-14 — Nr. 450 hat die Ursache in der Kette, die Abhilfe am Server.**
 Stufe 2 legt Konten unter `…@example.invalid` an (`umlauf_konto()` in
@@ -863,10 +880,40 @@ PHP 8.3.6):
 - *Wache:* `wache.py --selbstprobe` 55/0; `SEITEN` nennt zwei Seiten.
   Bedrohungsmodell C1, G5 und Bausteintabelle nachgezogen (CLAUDE.md 4).
 
+**BR5-05** (03.11.2026, Web 23.7.0; örtliche Anlage):
+
+- *Abnahme Nr. 392, drei Engines* (Einmaltest, je ein frisches Konto über
+  `passwort_setzen.mjs`): Anmeldung, auf der ersten Seite sind
+  `api/kontopaar.php` (anlegen) und `api/rueckweg_anlegen.php` gesperrt (je
+  2 Versuche ins Leere), dann die Suche als zweite Seite → Paar und Rückweg
+  stehen („11“), Protokoll `kontopaar_angelegt` mit `nachweis: marke`; 0
+  Seitenfehler. Weg von Hand: alles automatische Anlegen gesperrt,
+  Einstellungen → Geräte zeigt die Karte, Dialog mit Passwort → Paar steht,
+  `nachweis: passwort`, Karte fort. Chromium, Firefox, WebKit: **6 von 6**.
+  **Gegenprobe** mit dem Server-Stand vor BR5-05: das Konto bleibt nach der
+  zweiten Seite ohne Paar („00“). Die Freigabeprobe selbst wartet weiter auf
+  der ersten Seite (`paarAbwarten()` in `motor.mjs`); den Fall ohne Warten
+  misst dieser Test.
+- *Regeln der Marke* (PHP gegen `sitzung_lib.php`): ohne Marke, anderes
+  Konto, unbekannter Zweck, verbraucht, abgelaufen → gilt nicht; Frist
+  600 s — **8 von 8**.
+- *Endpunkte in einer echten Sitzung:* Rückweg ersetzen ohne Token bei
+  gültiger Marke → 403 `passwort`; Kontopaar ein zweites Mal ohne Token →
+  403 (nach F-BR5-24; vorher 400 erst an der Form).
+- *Design:* `tools/erzeugen/design.py schreiben` — vier Tabellen unverändert.
+- *Proben* (nacheinander): Freigabe 25/0, Rückweg 23/0, Zweitfaktor 139/0,
+  Sitzung 25/0, Raten 102/0, Ortsdaten 58/0, Passkey 128/0, Kontopaar 15/0
+  — die Kontopaarprobe zuerst 13/2: Ihr Teil 2b hielt fest, dass nur die
+  erste Seite anlegt; seit der Marke legt auch die zweite an, beide warten am
+  Tor der Probe, eine bekommt 200, die andere 409. Kein zweites Paar
+  („Protokoll … einmal“ grün). Die Probe wartet jetzt auf die 200 und
+  verlangt von der zweiten Seite nur, dass sie den Schlüssel danach hat.
+
 ## 7. Verlauf
 
 | Datum | Was |
 |---|---|
+| 03.11.2026 | BR5-05 erledigt (Web 23.7.0); F-BR5-23, -24. |
 | 03.11.2026 | BR5-04 erledigt (Web 23.6.6); F-BR5-22. |
 | 03.11.2026 | BR5-03 erledigt (Web 23.6.5); F-BR5-19 bis -21. |
 | 03.11.2026 | BR5-02 erledigt (Web 23.6.4); F-BR5-17, -18; E-BR5-20 (Proben umgestellt). |

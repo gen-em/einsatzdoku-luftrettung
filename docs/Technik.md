@@ -1508,7 +1508,7 @@ beide lesen und mitnehmen, und weil der Inhaltsschlüssel nie wechselt
 |---|---|---|
 | Inhaltsschlüssel | IndexedDB `nadoku-schluessel`, Fach `fach`, Eintrag `inhalt`: `{schluessel: CryptoKey (AES-GCM, extractable: false), bindungen: [Kennungen der Hüllen], zeit}` | bis Abmelden, Anmelden, Ablauf der Sitzung (`session_lib.php`) oder die erste Seite mit `keyguard.js` nach Ablauf der Frist |
 | Datenschlüssel | nirgends — nur in der Funktion, die die Hülle öffnet | bis zum Ende dieser Funktion |
-| Hälften und Anmelde-Token (`edkvor`) | `sessionStorage` | einen Seitenwechsel nach der Anmeldung (unverändert) |
+| Hälften und Anmelde-Token (`edkvor`) | `sessionStorage` | einen Seitenwechsel nach der Anmeldung (unverändert; für das Anlegen danach trägt die Anlegemarke der Sitzung, seit Web 23.7.0) |
 
 **Für alle Tabs** (E-R17-76): Die Ablage gilt für den Ursprung. Ein neuer Tab
 und ein wiederhergestellter Browser finden den Schlüssel, solange die Frist
@@ -9683,7 +9683,7 @@ jedes Konto ein **ECDH-Paar auf P-256**.
 | privater Teil | `users.kp_privat` | PKCS8 unter dem Inhaltsschlüssel, `edk1:` (`KP_PRIVAT_RE`) |
 | Zeitpunkt | `users.kp_seit` | wann es entstand |
 | Bibliothek | `kontopaar_lib.php` | Siegel, Prüfung (P-256 über denselben Lader wie der Rückweg), Zustand, Ablegen, SEC1 für Geräte |
-| Endpunkt | `api/kontopaar.php` | `anlegen` (mit Passwortnachweis), `abweichung` und — seit Web 22.0.4 — `oeffnen_fehler` |
+| Endpunkt | `api/kontopaar.php` | `anlegen` (mit Passwortnachweis oder, für das erste Anlegen, der Anlegemarke der Sitzung), `abweichung` und — seit Web 22.0.4 — `oeffnen_fehler` |
 | Browser | `assets/kontopaar.js`, `assets/crypto.js` | Paar erzeugen, Abgleich, privater Teil als nicht extrahierbarer `CryptoKey`; `geraetehuelleVerschliessen`/`-Oeffnen` |
 
 **Es entsteht still, beim ersten Entsperren nach einer Anmeldung**
@@ -9692,6 +9692,28 @@ Nachweis des Passworts — dieselbe Stelle und derselbe Grund wie beim Rückweg
 (4.38): Wer das Paar ablegt, bestimmt, für wen die Geräte verschließen.
 `api/kontopaar.php` legt nur ab, wenn noch keins da ist (409 sonst); ersetzt
 wird nicht, weil ein neues Paar jede Hülle unter dem alten unlesbar machte.
+
+**Seit Web 23.7.0 auch auf einer späteren Seite — die Anlegemarke** (Backlog
+Nr. 392, E-BR5-08). Das Token gibt es nur auf der ersten Seite nach der
+Anmeldung; wer schneller weiterklickte, hatte bis zur nächsten Anmeldung
+weder Paar noch Rückweg (in Firefox und WebKit in jedem gemessenen Lauf).
+`anmeldung_vollenden()` setzt deshalb eine Marke in die Sitzung
+(`anlege_marke_setzen()` in `sitzung_lib.php`): an dieses Konto gebunden,
+`ANLEGE_MARKE_S` = 600 s, je Zweck (`kontopaar`, `rueckweg`) einmal, nach
+jedem gelungenen Anlegen ausgetragen — auch nach einem mit Token. Die
+Endpunkte nehmen sie über `anlege_nachweis_json()` (`auth_guard.php`) statt
+des Tokens an; einen Rückweg **ersetzen** kann sie nicht. Die Seite erfährt
+über `ANLEGE_MARKE` (`ui_krypto_bootstrap()`), ob sie gilt; dann liest
+`unlock.js` den Inhaltsschlüssel still aus der Ablage und legt an. Ein
+fehlender Nachweis zählt nicht im Topf `login`. Der Preis steht im
+Bedrohungsmodell (Baustein „Schlüsselpaar des Kontos“): Wer die Sitzung in
+diesen zehn Minuten stiehlt, kann ein Paar setzen, solange keines da ist.
+
+**Der Weg von Hand** steht unter Einstellungen → Geräte: Fehlt das Paar, zeigt
+die Seite die Karte „Schlüsselpaar des Kontos“ mit „Schlüsselpaar einrichten“
+— Passwort, Inhaltsschlüssel mit der Wache (`EdSchluessel.oeffnen()`), Paar im
+Browser, derselbe Endpunkt mit Token. Die Meldungen „noch kein Schlüssel für
+Uhr und Handy“ verweisen dorthin.
 
 **Der öffentliche Teil geht nur mit gültigem Siegel hinaus** — an die Seite
 (`KP_OEFFENTLICH`, `ui_krypto_bootstrap()`) und bei der Kopplung an das

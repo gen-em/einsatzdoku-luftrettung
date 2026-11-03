@@ -8516,5 +8516,14 @@ declare(strict_types=1);
  *   Jetzt eine Stelle je Seite des Wegs: `EdCrypto.anmeldeTokens()` im
  *   Browser, `anmelde_tokens_lesen()`, `anmelde_token_pruefen()` und
  *   `anmelde_konto()` in `db.php`. Die Integritaetswache vergleicht den
- *   Notzugang jetzt mit. Korrektur; kein Schema. */
-const WEB_VERSION = '23.6.6';
+ *   Notzugang jetzt mit. Korrektur; kein Schema.
+ * 23.7.0 — DAS SCHLUESSELPAAR ENTSTAND NUR AUF DER ERSTEN SEITE (Backlog
+ *   Nr. 392; Schritt 22, BR5-05). Kontopaar und Rueckweg legte der Browser
+ *   nur mit dem Anmelde-Token an, und das gibt es nur auf der ersten Seite
+ *   nach der Anmeldung; wer schneller weiterklickte — in Firefox und WebKit
+ *   jedes Mal —, hatte bis zur naechsten Anmeldung keines. Jetzt traegt die
+ *   Sitzung zehn Minuten eine Anlegemarke, die der Server fuer das ERSTE
+ *   Anlegen statt des Tokens annimmt (E-BR5-08; der Preis steht im
+ *   Bedrohungsmodell), und Einstellungen -> Geraete hat einen Weg von Hand.
+ *   Neben, weil es den Weg von Hand neu gibt; kein Schema. */
+const WEB_VERSION = '23.7.0';

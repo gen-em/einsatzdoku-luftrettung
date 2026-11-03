@@ -5054,6 +5054,89 @@ ui_seite_start(['titel' => 'Einstellungen',
           . 'hier; danach kann es nichts mehr hochladen.', null, 'warn', '      '); ?>
     <?php endif; ?>
 
+    <?php /* ---- DAS SCHLÜSSELPAAR DES KONTOS, VON HAND (Nr. 392, E-BR5-08) ----
+             Es entsteht still nach der Anmeldung (`unlock.js`). Fehlt es
+             trotzdem — die Anmeldung lag vor Web 23.7.0 und die erste Seite
+             wurde zu schnell verlassen, oder der Inhaltsschlüssel war in den
+             zehn Minuten der Anlegemarke nicht entsperrt —, steht hier der
+             Weg dazu: Passwort, Inhaltsschlüssel mit der Wache gegen
+             `pat_key_check` (`EdSchluessel.oeffnen()`), Paar im Browser,
+             derselbe Endpunkt. Nur, solange keines da ist; ersetzen lässt
+             sich ein Paar nicht (`kp_ablegen()`). Vorhandene Bausteine: eine
+             Karte mit Zeile und Knopf, der Dialog wie „Rückweg erneuern". */ ?>
+    <?php require_once __DIR__ . '/kontopaar_lib.php';
+          $kpGer = kp_zustand((int)$userId)['stand']; ?>
+    <?php if ($kpGer === 'fehlt'): ?>
+      <?php ui_karte_start(['titel' => 'Schlüsselpaar des Kontos', 'id' => 'kontopaar']); ?>
+        <?php ui_zeile(['text' => 'Schlüssel für Uhr und Handy',
+                        'klein' => 'Damit verschließen Uhr und Handy GPS-Daten und Ortsangaben. '
+                                 . 'Ohne ihn senden sie nicht.',
+                        'plaketten' => ui_plakette('fehlt', ['ton' => 'orange'])]); ?>
+        <div class="listen-form-fuss">
+          <?= ui_knopf(['text' => 'Schlüsselpaar einrichten', 'art' => 'primaer', 'typ' => 'button',
+                        'attr' => ' data-kp-auf']) ?>
+        </div>
+      <?php ui_karte_ende(); ?>
+      <dialog class="dialog" id="dlg-kontopaar">
+        <div class="dialog-kopf">
+          <h2>Schlüsselpaar einrichten</h2>
+          <p class="feld-hinweis">Konto-Sicherheit</p>
+        </div>
+        <div class="dialog-inhalt">
+          <p>Das Schlüsselpaar entsteht in deinem Browser. Dafür brauchen wir
+             einmal dein Passwort.</p>
+          <?php ui_feld(['id' => 'kp-pw', 'label' => 'Passwort', 'art' => 'password',
+                         'attr' => ' autocomplete="current-password"',
+                         'klein' => 'Der Server erhält den öffentlichen Teil und den mit '
+                                  . 'deinem Schlüssel verpackten privaten.']); ?>
+          <p class="meldung meldung-fehler" data-kp-fehler role="alert" hidden></p>
+        </div>
+        <div class="dialog-fuss">
+          <?= ui_knopf(['text' => 'Abbrechen', 'art' => 'leise', 'typ' => 'button',
+                        'attr' => ' data-kp-zurueck']) ?>
+          <?= ui_knopf(['text' => 'Einrichten', 'art' => 'primaer', 'typ' => 'button',
+                        'attr' => ' data-kp-einrichten']) ?>
+        </div>
+      </dialog>
+      <?php ui_krypto_bootstrap(['skripte' => ['assets/crypto.js'], 'keycheck' => true,
+                                 'einzug' => '      ']); ?>
+      <script src="<?= asset('assets/schluessel.js') ?>"></script>
+      <script src="<?= asset('assets/kontopaar.js') ?>"></script>
+      <script<?= kopf_nonce_attr() ?>>
+      (() => {
+        const dlg = document.getElementById('dlg-kontopaar');
+        const knopf = document.querySelector('[data-kp-auf]');
+        if (!dlg || !knopf) { return; }
+        const feldPw = dlg.querySelector('#kp-pw');
+        const fehler = dlg.querySelector('[data-kp-fehler]');
+        const los = dlg.querySelector('[data-kp-einrichten]');
+        const melde = (text) => { fehler.textContent = text; fehler.hidden = text === ''; };
+        knopf.addEventListener('click', () => { melde(''); feldPw.value = ''; dlg.showModal(); feldPw.focus(); });
+        dlg.querySelector('[data-kp-zurueck]').addEventListener('click', () => dlg.close());
+        los.addEventListener('click', async () => {
+          if (feldPw.value === '') { melde('Bitte das Passwort eingeben.'); return; }
+          melde('');
+          los.disabled = true;
+          try {
+            const { ck, token } = await EdSchluessel.oeffnen({
+              pw: feldPw.value, salt: KDF_SALT, iter: KDF_ITER, wrapPw: PAT_WRAP,
+              keyCheck: typeof PAT_KEY_CHECK !== 'undefined' ? PAT_KEY_CHECK : null,
+              anteile: typeof KONTO_ANTEILE !== 'undefined' ? KONTO_ANTEILE : null,
+            });
+            feldPw.value = '';
+            if (!(await EdKontopaar.anlegen(ck, token))) {
+              throw new Error('Das Schlüsselpaar ließ sich nicht einrichten. Bitte später erneut.');
+            }
+            location.href = 'einstellungen.php?t=geraete';
+          } catch (e) {
+            melde(e && e.message ? e.message : 'Das Schlüsselpaar ließ sich nicht einrichten.');
+            los.disabled = false;
+          }
+        });
+      })();
+      </script>
+    <?php endif; ?>
+
     <?php /* ---- Die Karte „Gerät koppeln" in drei Zuständen ----
              „Gerät koppeln", nicht „Uhr koppeln": Die Handy-App koppelt
              über denselben Weg — und die Liste darunter sagt „Handy". Eine

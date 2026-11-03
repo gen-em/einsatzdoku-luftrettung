@@ -3705,6 +3705,13 @@ Uhr, seit Web 12.8.0 auch das Handy mit der Android-App.
    lädt von selbst nach, sobald es soweit ist — du musst nichts neu laden.
    Bis dahin läuft die Restzeit mit, und du kannst den Vorgang hier abbrechen.
 
+**Fehlt der Schlüssel für Uhr und Handy, steht ganz oben eine Karte dazu**
+*(seit Web 23.7.0)*. Uhr und Handy verschließen GPS-Daten und Ortsangaben mit
+dem Schlüsselpaar deines Kontos. Es entsteht still nach der Anmeldung; klappt
+das einmal nicht, tippst du auf **„Schlüsselpaar einrichten“**, gibst dein
+Passwort ein, und dein Browser legt es an. Danach verschwindet die Karte. Steht
+sie nicht da, ist alles in Ordnung.
+
 **Die Seite steht in der Reihenfolge, in der man sie braucht** *(seit Web
 15.4.1)*: koppeln, die Geräte ansehen, die App holen. **Ein Gerät entsteht nur
 über die Kopplung** *(seit Web 23.3.0)*: Die zugeklappte Ausnahme „Gerät ohne

@@ -87,8 +87,12 @@ if (!$u) { json_out(['error' => 'konto'], 404); }
 $email = (string)$u['email'];
 
 $b = api_rumpf();
-/* Topf und Vergleich in einer Funktion. */
-passwort_nachweis_json($userId, (string)($b['token'] ?? ''));
+/* Das Token — oder, fuer das ERSTE Anlegen, die Anlegemarke der Sitzung
+ * (Nr. 392, E-BR5-08). Ersetzen verlangt immer das Passwort. */
+$perMarke = anlege_nachweis_json($userId, (string)($b['token'] ?? ''), 'rueckweg');
+if ($perMarke && !empty($b['ersetzen'])) {
+    json_out(['error' => 'passwort', 'meldung' => 'Bitte das Passwort eingeben.'], 403);
+}
 
 $oeffentlich = (string)($b['oeffentlich'] ?? '');
 $privat      = (string)($b['privat'] ?? '');
@@ -125,6 +129,7 @@ if ($vorher) {
     flash_setzen('notice', 'Rückweg erneuert. Dein Notfallblatt bleibt gültig; '
                          . 'eine Nachricht ist an deine Adresse unterwegs.');
 } else {
+    anlege_marke_verbrauchen('rueckweg');   // auch nach dem Token: das erste Anlegen ist geschehen
     protokoll('verwaltung', 'rueckweg_angelegt',
               'Rückweg mit dem Wiederherstellungsschlüssel eingerichtet', [], $userId);
 }

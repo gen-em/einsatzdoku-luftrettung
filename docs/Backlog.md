@@ -756,25 +756,6 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
 
 <!-- -->
 
-392. **Das Schlüsselpaar entsteht nur, wer auf der ersten Seite nach der Anmeldung bleibt.** · gehört zu: 22 · Stand: offen · seit 19.10.2026
-     *Aufgenommen 19.10.2026 in DM-02 (F-DM-02).* `unlock.js` legt das Paar
-     des Kontos (und den Rückweg) still an, sobald der Inhaltsschlüssel da
-     ist — und nur mit dem Anmelde-Token, das es allein auf der ersten
-     Seite nach der Anmeldung gibt. Die Freigabeprobe ging sofort auf
-     `einstellungen.php` weiter: In Chromium kam das Paar trotzdem an, in
-     Firefox und WebKit in keinem Lauf (2 von 2). Wartet sie auf der ersten
-     Seite, steht es nach 1152 ms (Firefox), 596 ms (WebKit), 599 ms
-     (Chromium). Wer die Seite schneller verlässt, hat bis zur nächsten
-     Anmeldung kein Paar: Geräte können nicht senden, eine Freigabe weist
-     mit „kein Schlüsselpaar" ab. Nicht gemessen: ob es ein Mensch je
-     schafft, und ob der Rückweg dasselbe Los hat.
-     *Weg:* das Token bis zum gelungenen Anlegen im Sitzungsspeicher
-     halten, oder das Anlegen auf der zweiten Seite nachholen.
-     *Abnahme:* die Freigabeprobe ohne Warten auf der ersten Seite grün,
-     in drei Engines.
-
-<!-- -->
-
 400. **Die Rechtstexte auf den Stand nach S11 bringen.** · gehört zu: 14 · Stand: offen · seit 25.10.2026
      *Aufgenommen 25.10.2026 mit R17-18 (F-R17-58, -60; E-R17-29).* AVV
      und Nutzungsbedingungen sagen noch, GPS-Aufzeichnung,

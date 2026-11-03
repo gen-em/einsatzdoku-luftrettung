@@ -1762,7 +1762,7 @@ async function ortOeffnen(ck) {
     EdOrtsdaten.melden(e, 'einsatz', ORT.einsatz);
     ORT_GESPERRT = e && e.grund === 'kein_paar'
       ? 'Für dieses Konto ist noch kein Schlüssel für Uhr und Handy eingerichtet — '
-        + 'Phasenorte und Reanimation lassen sich nicht verschlüsseln.'
+        + 'Phasenorte und Reanimation lassen sich nicht verschlüsseln. Einrichten: Einstellungen → Geräte.'
       : 'Phasenorte und Reanimation dieses Einsatzes lassen sich nicht öffnen. Speichern '
         + 'würde sie überschreiben und ist deshalb gesperrt; die Störung ist gemeldet.';
     ortFehler(ORT_GESPERRT);
@@ -2277,7 +2277,7 @@ document.getElementById('missionform').addEventListener('submit', async ev => {
       await EdOrtsdaten.einsatzVerschliessen(EdOrtsdaten.einsatzInnen(zeiten, ORT_ORTE), ORT.ref);
   } catch (e) {
     ortFehler(e && e.grund === 'kein_paar'
-      ? 'Für dieses Konto ist noch kein Schlüssel für Uhr und Handy eingerichtet — bitte die Seite neu laden.'
+      ? 'Für dieses Konto ist noch kein Schlüssel für Uhr und Handy eingerichtet — einrichten unter Einstellungen → Geräte, dann die Seite neu laden.'
       : 'Phasenorte und Reanimation ließen sich nicht verschlüsseln. Es wurde nichts gespeichert.');
     return;
   }

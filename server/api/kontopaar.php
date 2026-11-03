@@ -13,7 +13,8 @@ require_once __DIR__ . '/../ratelimit_lib.php';
  *   {aktion:'anlegen', token, oeffentlich, privat}
  *        oeffentlich  SPKI in Base64 (ECDH, P-256) — darf jeder kennen
  *        privat       PKCS8 unter dem INHALTSSCHLÜSSEL (`edk1:`)
- *        token        das Anmelde-Token: der Nachweis des Passworts
+ *        token        das Anmelde-Token: der Nachweis des Passworts — leer,
+ *                     wenn die Sitzung eine Anlegemarke traegt (Nr. 392)
  *     -> 200 {ok:true} · 400 paar · 403 passwort · 409 vorhanden|migration
  *        · 429 gesperrt
  *
@@ -116,8 +117,10 @@ $st = $pdo->prepare('SELECT id FROM users WHERE id = ?');
 $st->execute([$userId]);
 $u = $st->fetch(PDO::FETCH_ASSOC);
 if (!$u) { json_out(['error' => 'konto'], 404); }
-/* Topf und Vergleich in einer Funktion. */
-passwort_nachweis_json($userId, (string)($b['token'] ?? ''));
+/* Das Token — oder, fuer das ERSTE Anlegen, die Anlegemarke der Sitzung
+ * (Nr. 392, E-BR5-08). Ein vorhandenes Paar ersetzt ohnehin keiner der beiden
+ * (`kp_ablegen()`, unten). */
+$perMarke = anlege_nachweis_json($userId, (string)($b['token'] ?? ''), 'kontopaar');
 
 $oeffentlich = (string)($b['oeffentlich'] ?? '');
 $privat      = (string)($b['privat'] ?? '');
@@ -132,5 +135,10 @@ if (!kp_ablegen($pdo, $userId, $oeffentlich, $privat)) {
               'meldung' => 'Für dieses Konto ist schon ein Schlüsselpaar eingerichtet.'], 409);
 }
 require_once __DIR__ . '/../protokoll_lib.php';
-protokoll('verwaltung', 'kontopaar_angelegt', 'Schlüsselpaar des Kontos eingerichtet', [], $userId);
+/* Nach JEDEM gelungenen Anlegen ist die Marke fuer diesen Zweck fort —
+ * auch wenn das Token trug: Sie gilt fuer das erste Anlegen, und das ist
+ * jetzt geschehen. */
+anlege_marke_verbrauchen('kontopaar');
+protokoll('verwaltung', 'kontopaar_angelegt', 'Schlüsselpaar des Kontos eingerichtet',
+          ['nachweis' => $perMarke ? 'marke' : 'passwort'], $userId);
 json_out(['ok' => true]);
