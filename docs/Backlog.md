@@ -52,7 +52,7 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
 
 | Spanne | Zweig | seit |
 |---|---|---|
-| 450 bis 459 | `claude/new-session-p1duc7` — Prüfdurchgang der Arbeitsumgebung auf Staging (R91); vergeben: 450 bis 455, weiter reserviert: 456 bis 459 | 03.11.2026 |
+| 450 bis 459 | `claude/new-session-p1duc7` — Prüfdurchgang der Arbeitsumgebung auf Staging (R91); vergeben: 450 bis 457, weiter reserviert: 458 und 459 | 03.11.2026 |
 | 470 bis 479 | `claude/trusting-wozniak-33j782` (Schritt 21, GR) | 02.11.2026 |
 | ab 480 | frei — höchste reservierte Nummer 479; frei blieben 461 bis 469 aus der Spanne von PR (PR #133), 434 bis 439 aus der Spanne von PR #129, 441 bis 449 aus der von PR #130, 420 bis 429 aus der Spanne von 20 (PR #127), 412 bis 419 aus der von 12b (PR #125), 394 bis 399 aus der Spanne von 19 (PR #112 bis #114), 389 aus der von 12a (PR #116), 372 bis 379 aus der von 12 (PR #103), 362 bis 369 aus der von PK, 359 aus der von 18 (PR #101), 348 und 349 aus der von 17, 338 aus der von AR | 02.11.2026 |
 
@@ -1054,3 +1054,32 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      Kopplung räumen, wie die Uhr; Bedrohungsmodell Lage H nachziehen.
      *Abnahme:* Prüffall im `SenderTest` mit gestellter Uhr — 30 Tage nach
      der ersten 401 ist der Puffer leer.
+
+<!-- -->
+
+456. **Die Reanimationskarte sagt im gesperrten Formular „keine".** · gehört zu: nächste Backlog-Runde · Stand: offen · seit 03.11.2026
+     *Aufgenommen 03.11.2026 im Prüfdurchgang der Arbeitsumgebung (R91,
+     P-S11-18).* Ist der Inhaltsschlüssel gesperrt, öffnet
+     `einsatz_form.php` die Einsatzhülle nicht, `#rearows` bleibt leer, und
+     `reaVorschau()` schreibt „keine" in den Kopf der Karte — auch an einem
+     Einsatz mit Reanimation. Gespeichert werden kann nichts (die Leiste
+     verlangt zuerst das Entsperren, gemessen), und „Reanimation
+     hinzufügen" tut nichts; die Angabe ist aber falsch, wo sie
+     „unbekannt" heißen müsste. *Weg:* gesperrt „gesperrt" statt der Zahl,
+     wie die Karte „Wartet auf dein Passwort" in der Ansicht.
+     *Abnahme:* gesperrtes Formular eines Einsatzes mit Reanimation — der
+     Kartenkopf sagt nicht „keine".
+
+<!-- -->
+
+457. **Das Löschen eines Zeitraums steht im Protokoll ohne Bezeichnung der Art.** · gehört zu: nächste Backlog-Runde · Stand: offen · seit 03.11.2026
+     *Aufgenommen 03.11.2026 im Prüfdurchgang der Arbeitsumgebung (R91,
+     P-S11-22).* `api/schneiden.php` schreibt `spur_stueck_geloescht`,
+     und die Liste der Arten in `protokoll_lib.php` kennt den Schlüssel
+     nicht: Unter Verwaltung → Protokoll steht als Plakette
+     „spur stueck geloescht", und im Filter „Art des Ereignisses" fehlt die
+     Art. Der Text des Eintrags selbst stimmt („GPS-Daten eines
+     Ruhesegments gelöscht: 20:30–20:40 (61 Punkte)"). Kein Riegel hält
+     geschriebene Arten gegen die Liste. *Weg:* die Art eintragen; dazu
+     prüfen, ob es weitere `protokoll()`-Arten ohne Eintrag gibt.
+     *Abnahme:* Plakette „GPS-Daten gelöscht" (o. ä.) und die Art im Filter.
