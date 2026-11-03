@@ -1,6 +1,6 @@
 # Rahmenplan — Programm „Gen-EM NAdoku" bis v1.0
 
-**Fassung 207 (03.11.2026)** · Steuerung: Reihenfolge, Status, programmweite
+**Fassung 208 (03.11.2026)** · Steuerung: Reihenfolge, Status, programmweite
 Entscheidungen. Verlauf: `Rahmenplan-Verlauf.md`. Fassungen 1–15:
 `Rahmenplan-Archiv.md`; Fassungen 16–124: `Rahmenplan-Archiv-2.md`.
 
@@ -183,7 +183,7 @@ gestrichen, 6a abgehakt; was steht, ist bestätigt offen.
 | **Prüfliste BV:** P-BV-04 (Wertekasten Hintergrundjobs gegen `Technik.md` 4.7), P-BV-07 (die zwei Rechtstexte: Höhe, Notizen, Abfahrtort), P-BV-09 (Textbaustein 11.5a neu übernehmen, nach P-P5c-40) | BV | 26.09.2026 | `Pruefliste.md` |
 | **Prüfliste BR:** P-BR-05 und -06 (Anlass-Zeilen und Nr. 304–313 lesen), P-BR-08 (beim nächsten Tag: das Produktionstor findet den Stufe-1-Lauf über `baumsuche.py`); freiwillig -03, -10, -11, -12 | BR | 24.09.2026 | `Pruefliste.md` |
 | **Zwei tote Zweige löschen:** `claude/nice-lovelace-snlo8m` und `claude/pk05-tor-umbauen` — nichts Ungemergtes (F-R4-04); auf GitHub unter Branches | 17 (Q-R4-01, E-R4-15) | 26.09.2026 | `Pruefliste.md`, P-R4-06 |
-| **Prüfliste R4:** P-R4-13, -15 bis -17, -19, -21 bis -23, je nach dem Deploy ihrer Fassung — Formular und Leseansicht, Konten, Demo-Reset, Handy, Verwerfen in der App, Statistik, Backlog auf GitHub | 17 | 28.09.2026 | `Pruefliste.md` 4 |
+| **Prüfliste R4:** P-R4-13, -16 (Produktiv), -17, -19, -21 und -23 (Handy), -22, je nach dem Deploy ihrer Fassung — Formular und Leseansicht, Konten, Demo-Reset, Handy, Verwerfen in der App, Statistik, Backlog auf GitHub | 17 | 28.09.2026 | `Pruefliste.md` 4 |
 | **Prüfliste SR:** auf Staging P-SR-05, -08 (mit -20 zuerst), -10, -11, -14, -16, -17 — Schlüsselwechsel, Notzugang, Passkeys und Rechenaufgabe an echten Geräten, Cookie-Absatz; freiwillig -09, -12 | 18 | 05.10.2026 | `Pruefliste.md` 4 |
 | **Zuarbeiten aus Kette II:** Aufbewahrung der Komplett-Stände auf Staging (Nr. 261, Vorschlag 5); `info.php` auf Staging löschen; Zweig `produktion` gegen Handpushes schützen; Hotfix-Weg beim ersten Hotfix | Kette II | 21.09.2026 | `Pruefliste.md`, 4a, 9, 27, 28 |
 | **Prüfliste S11:** Gerätetests Uhr 4.0.0 und Android 0.18.0 (P-S11-32 bis -35, -05, -39), Staging (-23 echte Uhr-Datei, -25 (b) alte Sicherung, -30 nach Nr. 458, -31 Bildvergleich), Safari (-43), alte Sicherungen (-07, -08), Rechtstexte (-40) | 12a | 20.10.2026 | `Pruefliste.md` 4 |
