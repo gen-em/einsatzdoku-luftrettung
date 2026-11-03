@@ -87,7 +87,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'kette
  * EIN Block fuer beide Handlungen, weil die Frische-Liste je Handlung genau
  * einen Aufruf zaehlt (Z43). */
 $healthMeldung = null;
-$healthAktion  = (string)($_POST['action'] ?? '');
+$healthAktion  = post_text('action');
 if ($_SERVER['REQUEST_METHOD'] === 'POST'
     && ($healthAktion === 'health_token_neu' || $healthAktion === 'health_token_aus')) {
     zweitfaktor_frisch_verlangen('health_token');

@@ -50,7 +50,7 @@ require_once __DIR__ . '/konten_einstellungen_lib.php';
  */
 
 /* Eine geschlossene Liste: Alles andere ist die allgemeine Fassung. */
-$stand = (string)($_GET['s'] ?? '');
+$stand = get_text('s');
 if ($stand !== 'wartet' && $stand !== 'aktiv') { $stand = ''; }
 
 require_once __DIR__ . '/ui.php';   // Seitenhuelle; laedt selbst nichts nach

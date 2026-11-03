@@ -69,6 +69,7 @@ if (version_compare(PHP_VERSION, PLATTFORM_PHP_MIN, '<')) {
 // config.php, die es hier noch nicht gibt. Deshalb die abhaengigkeitsfreie
 // email_lib.php, dieselbe Fassung wie im Rest der Anwendung.
 require_once __DIR__ . '/email_lib.php';
+require_once __DIR__ . '/eingabe_lib.php';   // post_text() — laedt nichts (Nr. 355)
 
 /* DER NAME DIESER INSTALLATION. `instanz_lib.php` laedt
  * selbst nichts und laeuft deshalb auch hier, vor der Ersteinrichtung — es
@@ -234,18 +235,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $errors[] = 'Ungültiges Formular-Token. Bitte Seite neu laden.';
     }
 
-    $in = fn(string $k): string => trim((string)($_POST[$k] ?? ''));
+    $in = fn(string $k): string => trim(post_text($k));
 
     $dbHost = $in('db_host'); $dbName = $in('db_name');
-    $dbUser = $in('db_user'); $dbPass = (string)($_POST['db_pass'] ?? '');
-    $adminEmail = email_normalisieren($_POST['admin_email'] ?? '');
+    $dbUser = $in('db_user'); $dbPass = post_text('db_pass');
+    $adminEmail = email_normalisieren(post_text('admin_email'));
     $baseUrl = rtrim($in('base_url'), '/');
     $timezone = $in('timezone') ?: 'Europe/Berlin';
     $logoPath = $in('logo_path') ?: 'assets/images/gen-em_logo_helicopter.svg';
 
     $smtp = [
         'host' => $in('smtp_host'), 'port' => (int)($in('smtp_port') ?: 465),
-        'user' => $in('smtp_user'), 'pass' => (string)($_POST['smtp_pass'] ?? ''),
+        'user' => $in('smtp_user'), 'pass' => post_text('smtp_pass'),
         'from' => $in('smtp_from'), 'from_name' => $in('smtp_from_name') ?: INSTANZ_KURZ_VORGABE,
     ];
 

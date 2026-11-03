@@ -103,8 +103,8 @@ require_once __DIR__ . '/mail_lib.php';
 $meldung = null;
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'aufheben') {
     csrf_check();
-    $topf    = (string)($_POST['topf'] ?? '');
-    $merkmal = (string)($_POST['merkmal'] ?? '');
+    $topf    = post_text('topf');
+    $merkmal = post_text('merkmal');
     if ($topf === '' || $merkmal === '') {
         $meldung = ['fehler', 'Es war nicht zu erkennen, welche Sperre gemeint war.'];
     } elseif (rate_sperre_aufheben($topf, $merkmal, (string)$userEmail)) {

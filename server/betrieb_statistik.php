@@ -88,7 +88,7 @@ const STAT_REITER = ['nutzer' => 'NutzerInnen', 'einsaetze' => 'Einsätze', 'ger
 const STAT_SPALTEN = ['modell' => 'Gerät', 'hersteller' => 'Hersteller', 'art' => 'Art',
                       'geraete' => 'Geräte', 'nutzer' => 'NutzerInnen'];
 
-$reiter = isset(STAT_REITER[(string)($_GET['r'] ?? '')]) ? (string)$_GET['r'] : 'nutzer';
+$reiter = isset(STAT_REITER[get_text('r')]) ? get_text('r') : 'nutzer';
 
 /* DER ZEITRAUM. Ein festes Fenster (`t`)
  * bestimmt die Kennzahl „Einsätze in …" und die Herkunft; die Tabellen
@@ -412,7 +412,7 @@ if ($reiter === 'geraete') {
      * NutzerInnen-Liste. Vorgabe: Anteil (also Geraetezahl) absteigend. Der
      * Reiter `r` reist in jedem Verweis mit: Ohne ihn fuehrte ein
      * Klick auf einen Spaltenkopf zurueck auf den Reiter NutzerInnen. */
-    $sort     = isset(STAT_SPALTEN[(string)($_GET['sort'] ?? '')]) ? (string)$_GET['sort'] : 'geraete';
+    $sort     = isset(STAT_SPALTEN[get_text('sort')]) ? get_text('sort') : 'geraete';
     $richtung = ($_GET['richtung'] ?? '') === 'auf' ? 'auf' : 'ab';
     usort($modelle, static function (array $a, array $b) use ($sort, $richtung): int {
         $r = match ($sort) {

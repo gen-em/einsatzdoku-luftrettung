@@ -31,7 +31,7 @@ require_once __DIR__ . '/protokoll_lib.php';
  * baut dann keine.
  */
 
-$k = (string)($_POST['schluessel'] ?? $_GET['t'] ?? 'impressum');
+$k = post_text('schluessel', get_text('t', 'impressum'));
 if (!isset(RT_TEXTE[$k])) { $k = 'impressum'; }
 $name = RT_TEXTE[$k];
 
@@ -48,8 +48,8 @@ $eingabe = null;
  * mit der Eingabe im Feld (oben). */
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     csrf_check();
-    $text  = (string)($_POST['text'] ?? '');
-    $stand = trim((string)($_POST['stand'] ?? ''));
+    $text  = post_text('text');
+    $stand = trim(post_text('stand'));
     $mangel = rt_pruefen($text, $stand);
     if ($mangel !== null) {
         $error = $name . ': ' . $mangel;

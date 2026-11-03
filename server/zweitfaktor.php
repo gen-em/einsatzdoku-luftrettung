@@ -50,11 +50,11 @@ require_once __DIR__ . '/zweitfaktor_teile.php';
 if (isset($_GET['bestaetigen'])) {
     require_once __DIR__ . '/ratelimit_lib.php';
     require_once __DIR__ . '/format_lib.php';   // fmt_local() fuer die Sperrzeit
-    $zurueck  = zweitfaktor_zurueck((string)($_GET['zurueck'] ?? ''));
+    $zurueck  = zweitfaktor_zurueck(get_text('zurueck'));
     $nochmal  = isset($_GET['nochmal']);
     /* „Abbrechen" fuehrt auf `zurueck` — ausser die Handlung ist eine Seite
      * (das Blatt): Dort hiesse zurueck wieder hierher. */
-    $abbruch  = isset($_GET['abbruch']) ? zweitfaktor_zurueck((string)$_GET['abbruch']) : $zurueck;
+    $abbruch  = isset($_GET['abbruch']) ? zweitfaktor_zurueck(get_text('abbruch')) : $zurueck;
     $mitRc    = ($_GET['art'] ?? '') === 'rc';
     if (zweitfaktor_frisch()) { header('Location: ' . $zurueck, true, 303); exit; }
     $merkmale = [rate_merkmal_kennung((string)($row['email'] ?? ''))];
@@ -67,7 +67,7 @@ if (isset($_GET['bestaetigen'])) {
          * `passkey_antwort`, Herausforderung in `passkey_best` (einmal). */
         /* Ein Feld, das kein Text ist, ist eine leere Antwort (sonst eine
          * PHP-Warnung im Reiter System). */
-        $pkFeld = $_POST['passkey_antwort'] ?? '';
+        $pkFeld = post_text('passkey_antwort');
         $mitPk = !$mitRc && $pkFeld !== '';
         if ($mitPk) {
             $pkAblage = is_array($_SESSION['passkey_best'] ?? null) ? $_SESSION['passkey_best'] : [];
@@ -80,7 +80,7 @@ if (isset($_GET['bestaetigen'])) {
             $pkR = pk_anmeldung_pruefen($userId, $pkAblage, is_array($pkAntwort) ? $pkAntwort : []);
             $pr = $pkR['ok'] ? ['ok' => true, 'art' => 'passkey'] : ['ok' => false, 'art' => null, 'passkey' => $pkR['art']];
         } else {
-            $pr = totp_anmeldung_pruefen($userId, (string)($_POST[$mitRc ? 'rc' : 'code'] ?? ''),
+            $pr = totp_anmeldung_pruefen($userId, post_text($mitRc ? 'rc' : 'code'),
                                          $mitRc ? 'code' : 'app');
         }
         if ($pr['ok']) {
@@ -235,7 +235,7 @@ $fehlerAuftakt = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     csrf_check();
-    $r = totp_einrichtung_abschliessen($userId, (string)($_POST['code'] ?? ''));
+    $r = totp_einrichtung_abschliessen($userId, post_text('code'));
     if ($r['ok']) {
         $codes = $r['codes'];
     } elseif (($r['grund'] ?? '') === 'code') {

@@ -77,7 +77,7 @@ require_once __DIR__ . '/totp_lib.php';      // zweitfaktor_geraete_vergessen()
 header('Referrer-Policy: no-referrer');
 header('Cache-Control: no-store, no-cache, must-revalidate');
 
-$tokenAusAdresse = (string)($_GET['token'] ?? '');
+$tokenAusAdresse = get_text('token');
 $getauscht       = isset($_GET['w']);        // "weitergeleitet", zweiter Aufruf
 
 if ($tokenAusAdresse !== '') {
@@ -128,11 +128,11 @@ $pwUserIdPruef = $row !== null ? (int)$row['user_id'] : 0;
 
 $error = null; $done = false;
 if ($row && $_SERVER['REQUEST_METHOD'] === 'POST') {
-    $neuTok  = (string)($_POST['new_token'] ?? '');
-    $neuSalt = (string)($_POST['new_salt'] ?? '');
-    $wrapPw  = (string)($_POST['wrap_pw'] ?? '');
-    $wrapRc  = (string)($_POST['wrap_rc'] ?? '');
-    $keyChk  = (string)($_POST['key_check'] ?? '');
+    $neuTok  = post_text('new_token');
+    $neuSalt = post_text('new_salt');
+    $wrapPw  = post_text('wrap_pw');
+    $wrapRc  = post_text('wrap_rc');
+    $keyChk  = post_text('key_check');
     $neuIter = (int)($_POST['new_iter'] ?? 0);
     $chkSoll = $row['pat_key_check'] ?? null;
 

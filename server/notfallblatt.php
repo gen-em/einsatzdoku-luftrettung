@@ -87,7 +87,7 @@ function nb_code(string $roh): ?string
         ? $c : null;
 }
 
-$code = nb_code((string)($_POST['code'] ?? ''));
+$code = nb_code(post_text('code'));
 
 /* DIE KONTOADRESSE: aus der SITZUNG, wenn es eine gibt, sonst aus dem POST.
  *
@@ -109,7 +109,7 @@ if ($angemeldet) {
     } catch (Throwable) { /* ohne Datenbank eben ohne Adresse */ }
 }
 if ($konto === '') {
-    $roh = trim((string)($_POST['konto'] ?? ''));
+    $roh = trim(post_text('konto'));
     $konto = filter_var($roh, FILTER_VALIDATE_EMAIL) ? $roh : '';
 }
 

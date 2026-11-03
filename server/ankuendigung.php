@@ -45,7 +45,7 @@ ankuendigung_wegklicken();
 
 if ($alsJson) { json_out(['ok' => true]); }
 
-$ziel = (string)($_POST['zurueck'] ?? '');
+$ziel = post_text('zurueck');
 if (!preg_match('~^[a-z0-9_]+\.php(\?[^\s#]*)?$~', $ziel)) { $ziel = 'index.php'; }
 header('Location: ' . $ziel, true, 303);
 exit;

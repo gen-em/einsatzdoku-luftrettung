@@ -78,11 +78,11 @@ if (!$u) {
 
 $email = (string)$u['email'];
 /* Topf und Vergleich in einer Funktion. */
-passwort_nachweis_json($userId, (string)($_POST['token'] ?? ''), 'passwort', 'text');
+passwort_nachweis_json($userId, post_text('token'), 'passwort', 'text');
 
 /* ---- Die neue Huelle ---------------------------------------------------- */
 
-$wrapRc = (string)($_POST['wrap_rc'] ?? '');
+$wrapRc = post_text('wrap_rc');
 
 /* `huelle_rc_pruefen()` UND NICHT NUR EIN FORMATTEST. Sie weist eine
  * `edka1:`-Huelle ab — also eine, die am Server-Anteil haengt. Genau die

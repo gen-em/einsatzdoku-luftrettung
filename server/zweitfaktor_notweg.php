@@ -99,9 +99,9 @@ $fehler = null;
 if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
     /* NUR ZEICHENKETTEN. `email[]=…` liefe sonst in einen Typfehler, `wert[]=…`
      * in eine Warnung im Reiter System — beides auf einer Seite, die jeder
-     * aufrufen kann. Ein Feld, das keine Zeichenkette ist, ist leer. */
-    $feld = static fn(string $k): string => is_string($_POST[$k] ?? null) ? $_POST[$k] : '';
-    $email = email_normalisieren($feld('email'));
+     * aufrufen kann. Ein Feld, das keine Zeichenkette ist, ist leer —
+     * `post_text()` (Nr. 355; bis Web 23.6.4 eine lokale Huelle `$feld`). */
+    $email = email_normalisieren(post_text('email'));
     $merkmale = [rate_merkmal_kennung($email)];
     $merkmaleIp = [rate_merkmal_ip()];    // dazu der Anschluss
 
@@ -127,8 +127,8 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
         rate_gleiche_dauer($t0);
     } else {
         $u = notweg_konto($email);
-        $passwortPasst = notweg_passwort_passt($u, $feld('tokens'));
-        $wertPasst     = notweg_wert_passt($feld('wert'));
+        $passwortPasst = notweg_passwort_passt($u, post_text('tokens'));
+        $wertPasst     = notweg_wert_passt(post_text('wert'));
         $dateiLiegt    = nachweis_steht(NOTWEG_MUSTER, $kennung);
         $tuerOffen     = notweg_tuer_offen($u);
 

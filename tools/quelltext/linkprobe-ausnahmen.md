@@ -5,8 +5,8 @@ Zielseite liest.** Zwei Tabellen halten fest, was davon abweicht — und beide
 sind absichtlich kurz.
 
 Der Regelfall braucht **keinen** Eintrag: Eine Zielseite, die ihre Parameter
-über eine Variable liest (`$_GET[$name]`, wie `konten_param()` in
-`admin_users.php`), erkennt die Probe selbst und zählt sie getrennt.
+über eine Variable liest (`$_GET[$name]`, wie `get_text()` in
+`eingabe_lib.php`), erkennt die Probe selbst und zählt sie getrennt.
 
 Die erste Spalte ist jeweils der **Verweis** in der Form `seite.php?name=`,
 nicht die Zeilennummer: So überlebt die Liste jede Umsortierung des

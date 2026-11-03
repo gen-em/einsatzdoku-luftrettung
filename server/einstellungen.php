@@ -37,7 +37,7 @@ if (!isset($_GET['t'])) {
     exit;
 }
 
-$tab = (string)$_GET['t'];
+$tab = get_text('t');
 /* „stammdaten" ist ein alter Reitername. Der Reiter ist in zwei
  * zerlegt (siehe ui_leiste_einstellungen) — der alte Name bleibt als WEICHE
  * stehen: Er steht in Lesezeichen, in verschickten Links und in älteren
@@ -196,13 +196,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     /* ---- Profil: Name & E-Mail ---------------------------------------- */
     if ($action === 'profile') {
-        $name  = mb_substr(trim($_POST['name'] ?? ''), 0, 120);
-        $email = email_pruefen($_POST['email'] ?? '');
+        $name  = mb_substr(trim(post_text('name')), 0, 120);
+        $email = email_pruefen(post_text('email'));
         /* Ein unbekannter Wert wird zum Leerstring, nicht zum Fehler: Er
            bedeutet „Standard der Installation", und das ist der harmlose
            Ausgang. Die Liste steht in session_lib.php, damit Prüfung und
            Auflösung dieselbe Quelle haben. */
-        $logo = (string)($_POST['logo_wahl'] ?? '');
+        $logo = post_text('logo_wahl');
         if (!in_array($logo, LOGO_WAHLEN, true)) { $logo = ''; }
         /* ---- Adresswechsel nur mit Passwortnachweis
          *
@@ -230,7 +230,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         /* MIT RATENTOPF: `passwort_nachweis()` traegt
          * Topf und Vergleich zusammen; sonst raete man hier ohne Sperre. */
         $nachweis = $adressWechsel
-            ? passwort_nachweis($userId, (string)($_POST['old_token'] ?? ''))
+            ? passwort_nachweis($userId, post_text('old_token'))
             : 'ok';
 
         if ($email === null) {
@@ -334,7 +334,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stp = db()->prepare('SELECT email FROM users WHERE id = ?');
             $stp->execute([$userId]);
             $z = $stp->fetch(PDO::FETCH_ASSOC) ?: [];
-            $nachweis = passwort_nachweis($userId, (string)($_POST['loesch_token'] ?? ''));
+            $nachweis = passwort_nachweis($userId, post_text('loesch_token'));
             if ($nachweis === 'gesperrt') {
                 $error = 'Zu viele falsche Passwörter. Bitte später erneut — es wurde nichts geändert.';
             } elseif ($nachweis !== 'ok') {
@@ -396,7 +396,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                     . 'eine AdministratorIn muss update.php aufrufen.',
             }];
         } elseif ($action === 'zf_einschalten') {
-            $r = totp_einrichtung_abschliessen($userId, (string)($_POST['code'] ?? ''));
+            $r = totp_einrichtung_abschliessen($userId, post_text('code'));
             if ($r['ok']) {
                 $zfCodes = $r['codes'];
                 $zfMeldung = ['Eingeschaltet.', 'Ab der nächsten Anmeldung fragt die '
@@ -483,12 +483,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $st->execute([$userId]);
         $u = $st->fetch();
         /* Mit Ratentopf und Pfeffer. */
-        $nachweis = passwort_nachweis($userId, (string)($_POST['old_token'] ?? ''));
+        $nachweis = passwort_nachweis($userId, post_text('old_token'));
         $oldOk = ($nachweis === 'ok');
-        $newTok = (string)($_POST['new_token'] ?? '');
-        $newSalt = (string)($_POST['new_salt'] ?? '');
-        $wrapPw = (string)($_POST['wrap_pw'] ?? '');
-        $keyChk = (string)($_POST['key_check'] ?? '');
+        $newTok = post_text('new_token');
+        $newSalt = post_text('new_salt');
+        $wrapPw = post_text('wrap_pw');
+        $keyChk = post_text('key_check');
         $newIter = (int)($_POST['new_iter'] ?? 0);
         // Gespeicherte Pruefsumme des Inhaltsschluessels (NULL bei Altbestand)
         $chkSoll = $u['pat_key_check'] ?? null;
@@ -729,7 +729,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                       ? ' Bis ' . fmt_local($bis, 'H:i') . ' Uhr nimmt der Server keine Eingabe von dir an.'
                       : ' Bitte später erneut versuchen.');
         } else {
-            $koppelCode = pair_code_normalisieren((string)($_POST['code'] ?? ''));
+            $koppelCode = pair_code_normalisieren(post_text('code'));
             if (!preg_match(PAIR_RE, $koppelCode)) {
                 $error = 'Ein Code hat ' . PAIR_LEN . ' Zeichen; 0, O, 1 und I kommen darin '
                        . 'nicht vor. Bitte vergleiche mit der Anzeige auf dem Gerät.';
@@ -791,7 +791,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         /* Nachsehen statt `rowCount()`: Ein UPDATE auf denselben Namen trifft
          * die Zeile und zaehlt trotzdem 0. */
         $gid = (int)($_POST['id'] ?? 0);
-        $lbl = mb_substr(trim($_POST['label'] ?? ''), 0, 120);
+        $lbl = mb_substr(trim(post_text('label')), 0, 120);
         if (!$geraetDa($gid)) {
             $error = $geraetFehlt;
         } else {
@@ -877,7 +877,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     };
     if ($action === 'base_save') {
-        $n = mb_substr(trim($_POST['name'] ?? ''), 0, 120);
+        $n = mb_substr(trim(post_text('name')), 0, 120);
         $bid = (int)($_POST['id'] ?? 0);
         /* Optionale Koordinate. Die Regeln — nur zusammen, ausserhalb
          * des Bereichs leer, Komma zulaessig — stehen an EINER

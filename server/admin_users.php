@@ -107,20 +107,8 @@ const KONTEN_SPALTEN = [
 $notice = null; $error = null; $setzLink = null;
 $auswahlVerbraucht = false; $auswahlRest = '';
 
-/**
- * Ein Wert aus der Adresse als Zeichenkette — oder die Vorgabe.
- *
- * `(string)($_GET['q'] ?? '')` sieht harmlos aus und ist es nicht: Bei
- * `?q[]=x` liefert PHP ein ARRAY, und die Umwandlung erzeugt die Warnung
- * „Array to string conversion" und den Wert „Array". Auf einer Installation
- * mit sichtbaren Warnungen stünde die Meldung mitten in der Seite. Was kein
- * String ist, ist keine Eingabe.
- */
-function konten_param(string $name, string $vorgabe = ''): string
-{
-    $v = $_GET[$name] ?? null;
-    return is_string($v) ? $v : $vorgabe;
-}
+/* EIN WERT AUS DER ADRESSE: `get_text()` (`eingabe_lib.php`, Nr. 355). Bis
+ * Web 23.6.4 stand hier dieselbe Huelle als `get_text()`. */
 
 /* UMLEITEN NACH DEM POST. Was ein Konto anlegt
  * oder sichert, endet mit `flash_setzen()` und einer Umleitung auf dieselbe
@@ -129,7 +117,7 @@ function konten_param(string $name, string $vorgabe = ''): string
  * ebenso die Anlage mit Setz-Link: Der Link ist ein Geheimnis und gehoert
  * nicht in die Sitzungsdatei. */
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $action = (string)($_POST['action'] ?? '');
+    $action = post_text('action');
     handlung_erlaubt($action);   // der Support hat hier keine (Rolle vor Token)
     csrf_check();
 
@@ -159,7 +147,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
      * keine Frage, die man nicht ohnehin stellen darf.
      */
     if ($action === 'user_add') {
-        $email = email_pruefen($_POST['email'] ?? '');
+        $email = email_pruefen(post_text('email'));
         /* ROLLE AUS DEM FORMULAR — UND ZWEIMAL GEPRUEFT.
          *
          * rolle_normieren() faengt alles ab, was nicht im Katalog steht; die
@@ -169,9 +157,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
          * ausgeblendetes Feld ist keine Pruefung — ein POST von Hand kennt
          * das Feld trotzdem. Wer nicht selbst BetreiberIn ist, kann keine
          * anlegen; das Konto entsteht dann als Admin. */
-        $role  = rolle_normieren($_POST['role'] ?? 'user');
+        $role  = rolle_normieren(post_text('role', 'user'));
         if (rolle_ist_betreiberin($role) && !ist_betreiberin()) { $role = 'admin'; }
-        $name  = trim((string)($_POST['name'] ?? ''));
+        $name  = trim(post_text('name'));
 
         if ($email === null) {
             $error = 'Ungültige E-Mail-Adresse (höchstens 190 Zeichen).';
@@ -264,7 +252,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
      */
     if ($action === 'sichern_auswahl') {
         $ids = array_values(array_unique(array_filter(array_map(
-            'intval', explode(',', (string)($_POST['auswahl'] ?? ''))),
+            'intval', explode(',', post_text('auswahl'))),
             static fn(int $i) => $i > 0)));
         if (!$ids) {
             $error = 'Es war kein Konto ausgewählt.';
@@ -392,7 +380,7 @@ foreach ($alle as $k) {
 }
 
 /* ---- Suche --------------------------------------------------------------- */
-$q = trim(konten_param('q'));
+$q = trim(get_text('q'));
 $gesucht = $alle;
 if ($q !== '') {
     /* mb_stripos, nicht stripos: Namen tragen Umlaute, und `stripos` kennt
@@ -443,7 +431,7 @@ foreach (array_keys(KONTEN_FILTER) as $f) {
     $zahlen[$f] = count(array_filter($gesucht, static fn($k) => konten_trifft($k, $f)));
 }
 
-$filter = konten_param('f', 'alle');
+$filter = get_text('f', 'alle');
 if (!isset(KONTEN_FILTER[$filter])) { $filter = 'alle'; }
 $gefiltert = array_values(array_filter($gesucht,
     static fn($k) => konten_trifft($k, $filter)));
@@ -455,9 +443,9 @@ $gefiltert = array_values(array_filter($gesucht,
  * innerhalb der ersten fuenfzig um und liesse die uebrigen 250 unberuehrt.
  * Das sieht aus wie eine Sortierung und ist keine.
  */
-$sort = konten_param('sort', 'konto');
+$sort = get_text('sort', 'konto');
 if (!isset(KONTEN_SPALTEN[$sort])) { $sort = 'konto'; }
-$ab = konten_param('dir', 'auf') === 'ab';
+$ab = get_text('dir', 'auf') === 'ab';
 
 /**
  * Ein Name wird zu einem Sortierschluessel.
@@ -536,7 +524,7 @@ usort($gefiltert, static function (array $a, array $b) use ($sort, $ab): int {
 /* ---- Seite --------------------------------------------------------------- */
 $treffer = count($gefiltert);
 $seiten  = max(1, (int)ceil($treffer / KONTEN_JE_SEITE));
-$seite   = max(1, min($seiten, (int)konten_param('s', '1')));
+$seite   = max(1, min($seiten, (int)get_text('s', '1')));
 $zeilen  = array_slice($gefiltert, ($seite - 1) * KONTEN_JE_SEITE, KONTEN_JE_SEITE);
 $von     = $treffer === 0 ? 0 : ($seite - 1) * KONTEN_JE_SEITE + 1;
 $bis     = min($treffer, $seite * KONTEN_JE_SEITE);
@@ -545,11 +533,11 @@ $bis     = min($treffer, $seite * KONTEN_JE_SEITE);
 function konten_weg(array $neu = []): string
 {
     $p = array_merge([
-        'q'    => konten_param('q'),
-        'f'    => konten_param('f'),
-        'sort' => konten_param('sort'),
-        'dir'  => konten_param('dir'),
-        's'    => konten_param('s'),
+        'q'    => get_text('q'),
+        'f'    => get_text('f'),
+        'sort' => get_text('sort'),
+        'dir'  => get_text('dir'),
+        's'    => get_text('s'),
     ], $neu);
     $p = array_filter($p, static fn($v) => (string)$v !== '');
     return 'admin_users.php' . ($p ? '?' . http_build_query($p) : '');

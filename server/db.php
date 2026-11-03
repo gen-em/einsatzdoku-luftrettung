@@ -18,6 +18,7 @@ require_once __DIR__ . '/email_lib.php';
  * Vorgabe, statt dass die Datei mit einem Fatal abbricht. */
 require_once __DIR__ . '/konfig_lib.php';
 require_once __DIR__ . '/format_lib.php';   // fmt_local() u. a.
+require_once __DIR__ . '/eingabe_lib.php';  // post_text(), get_text() (Nr. 355)
 /* Der Transaktionsrahmen `db_transaktion()`. Eigene
  * Datei, weil der Einrichter ihn ohne
  * `config.php` braucht und diese Datei ohne sie abbricht. */

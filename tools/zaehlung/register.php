@@ -626,4 +626,27 @@ return [
  'regel' => ['art' => 'eigen', 'name' => 'protokoll_arten'],
  'start' => 2, 'decke_jetzt' => 0, 'decke_ziel' => 0],
 
+
+/* ---- Formularfelder lesen ----------------------------------------------- */
+
+['kennung' => 'Z47', 'paket' => 'BR5-03',
+ 'beschreibung' => 'Formularfeld per (string) gelesen statt post_text()/get_text()',
+ 'grund' => 'Nr. 355 (E-BR5-06): aus feld[]=x machte (string) den Text Array, mit '
+          . 'einer Warnung im Reiter System je Stelle und Anfrage; ohne Cast an '
+          . 'eine string-Funktion war es eine 500. Start 149 = 125 $_POST und 24 '
+          . '$_GET, gezaehlt am 03.11.2026 mit dieser Regel.',
+ 'sicht' => 'php_ohne_zeichenketten', 'bereich' => 'php',
+ 'ausser' => ['server/eingabe_lib.php'],
+ 'regel' => ['art' => 'muster', 'muster' => '~\(string\)\s*\(?\s*\$_(?:POST|GET)\s*\[~'],
+ 'start' => 149, 'decke_jetzt' => 0, 'decke_ziel' => 0],
+
+['kennung' => 'Z48', 'paket' => 'BR5-03',
+ 'beschreibung' => 'eigene Huelle is_string($_POST[…]) ausserhalb eingabe_lib.php',
+ 'grund' => 'Nr. 355: registrieren.php und zweitfaktor_notweg.php trugen je eine '
+          . 'lokale Huelle $feld, die das Gleiche tat wie post_text(). Start 2.',
+ 'sicht' => 'php_ohne_zeichenketten', 'bereich' => 'php',
+ 'ausser' => ['server/eingabe_lib.php'],
+ 'regel' => ['art' => 'muster', 'muster' => '~is_string\(\s*\$_(?:POST|GET)\s*\[~'],
+ 'start' => 2, 'decke_jetzt' => 0, 'decke_ziel' => 0],
+
 ];

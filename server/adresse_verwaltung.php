@@ -28,13 +28,13 @@ require_once __DIR__ . '/konto_lib.php';
  */
 
 $konto = (int)($_GET['konto'] ?? $_POST['konto'] ?? 0);
-$token = (string)($_GET['token'] ?? $_POST['token'] ?? '');
+$token = get_text('token', post_text('token'));
 $gueltig = $konto > 0 && preg_match('/^[0-9a-f]{64}$/', $token) === 1;
 $ergebnis = null;
 $antwort  = '';
 
 if ($gueltig && ($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
-    $antwort = (string)($_POST['antwort'] ?? '');
+    $antwort = post_text('antwort');
     if (in_array($antwort, ['zustimmen', 'widersprechen'], true)) {
         $ergebnis = adresse_verwaltung_antwort($konto, $token, $antwort);
     }

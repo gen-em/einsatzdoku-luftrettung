@@ -33,7 +33,7 @@ if (!empty($_SESSION['user_id'])) { header('Location: index.php'); exit; }
  * Seite wertete den Parameter nicht aus. Aus Sicht der NutzerIn verschwand die
  * Anwendung einfach. Der alte Parametername wird weiter erkannt, damit ein
  * offener Tab mit alter Adresse nicht ins Leere laeuft. */
-$hinweis = session_ende_text($_GET['ende'] ?? null);
+$hinweis = session_ende_text(get_text('ende'));
 if ($hinweis === '' && isset($_GET['timeout'])) { $hinweis = session_ende_text('abgelaufen'); }
 
 /* DIE VERLANGSAMUNG SAGT SICH AN.
@@ -419,7 +419,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !csrf_ok()) {
         /* Ein Feld, das kein Text ist (`passkey_antwort[]=x`), ist eine leere
          * Antwort — kein `(string)` mit PHP-Warnung im Reiter System.
          * */
-        $pkFeld   = $_POST['passkey_antwort'] ?? '';
+        $pkFeld   = post_text('passkey_antwort');
         $mitPk    = !$mitRc && $pkFeld !== '';
         $pr = ['ok' => false];
         if (rate_erlaubt('totp', null, $merkmale)) {
@@ -439,7 +439,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !csrf_ok()) {
                                  : ['ok' => false, 'art' => null, 'passkey' => $pkR['art']];
             } else {
                 $pr = totp_anmeldung_pruefen($kontoId,
-                        (string)($_POST[$mitRc ? 'rc' : 'code'] ?? ''), $mitRc ? 'code' : 'app');
+                        post_text($mitRc ? 'rc' : 'code'), $mitRc ? 'code' : 'app');
             }
             if ($pr['ok']) {
                 rate_erfolg('totp', null, $merkmale);
@@ -558,7 +558,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !csrf_ok()) {
     } else {
         $kontoId  = (int)$halb['konto'];
         $merkmale = [rate_merkmal_kennung((string)$halb['email'])];
-        $r = rw_rueckweg_pruefen($_SESSION['totp_halb'], (string)($_POST['signatur'] ?? ''));
+        $r = rw_rueckweg_pruefen($_SESSION['totp_halb'], post_text('signatur'));
         if ($r['ok']) {
             rate_erfolg('totp', null, $merkmale);
             $u = login_zeile('id', $kontoId);
@@ -618,7 +618,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !csrf_ok()) {
      * ...) unten meldete den Erfolg mit der Adresse WIE GETIPPT, waehrend
      * auth_salt.php unter der kleingeschriebenen zaehlt — wer "Max@..." tippte,
      * leerte seinen Salz-Zaehler nie. */
-    $email = email_normalisieren($_POST['email'] ?? '');
+    $email = email_normalisieren(post_text('email'));
 
     /* Mengenbremse des Demo-Kontos.
      *
@@ -719,7 +719,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !csrf_ok()) {
          * schickt es noch, und die Anmeldung soll daran nicht scheitern.
          */
         $tokenNach = [];
-        $roh = json_decode((string)($_POST['tokens'] ?? ''), true);
+        $roh = json_decode(post_text('tokens'), true);
         if (is_array($roh)) {
             foreach ($roh as $runde => $tk) {
                 $r = (int)$runde;
@@ -732,9 +732,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !csrf_ok()) {
                 }
             }
         }
-        if (isset($_POST['token']) && preg_match('/^[0-9a-f]{64}$/', (string)$_POST['token'])) {
+        if (isset($_POST['token']) && preg_match('/^[0-9a-f]{64}$/', post_text('token'))) {
             // Altes Feld: es galt immer die frueher fest verdrahtete Zahl.
-            $tokenNach[310000] = $tokenNach[310000] ?? (string)$_POST['token'];
+            $tokenNach[310000] = $tokenNach[310000] ?? post_text('token');
         }
 
         /* DREI AUSGAENGE STATT ZWEI. `anteil_fehlt` heisst:

@@ -287,7 +287,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $error = 'Phasenorte und Reanimation konnten nicht verschlüsselt werden. Bitte '
                    . 'entsperren und erneut speichern — es wurde NICHTS geändert.';
         } else {
-            $browserZeiten = json_decode((string)($_POST['ort_phasen'] ?? ''), true);
+            $browserZeiten = json_decode(post_text('ort_phasen'), true);
             $serverZeiten = array_map(static fn($r) => [(int)$r[0], (int)strtotime($r[1] . ' UTC')], $rows);
             if ($browserZeiten !== $serverZeiten) {
                 $error = 'Die Zeiten der Phasen ließen sich im Browser nicht gleich rechnen wie '
@@ -302,7 +302,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         /* Die Kennung eines NEUEN Einsatzes vergibt der Server schon beim
          * Aufbau der Seite (`$neuRef` unten): Die Huelle ist an sie gebunden,
          *und der Browser verschliesst, bevor es die Zeile gibt. */
-        $neuRefPost = (string)($_POST['client_ref'] ?? '');
+        $neuRefPost = post_text('client_ref');
         if (!$editing && !$error && !preg_match('/^man-[0-9a-f]{16}$/', $neuRefPost)) {
             $error = 'Die Kennung des neuen Einsatzes fehlt. Bitte die Seite neu laden.';
         }
@@ -331,7 +331,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
                 return;
             }
-            $raw = trim((string)($_POST['f_' . $col] ?? ''));
+            $raw = trim(post_text('f_' . $col));
             if (!$parentOn) { $raw = ''; }
             if ($type === 'number') {
                 $v = ($raw === '') ? null : (string)(float)str_replace(',', '.', $raw);
@@ -417,7 +417,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
          *
          * Kein Katalogfeld, weil die Beschriftungen nicht die gespeicherten
          * Werte sind (siehe mission_fields.php). */
-        $startSrc = trim((string)($_POST['start_src'] ?? ''));
+        $startSrc = trim(post_text('start_src'));
         if (!in_array($startSrc, ['base', 'prev_site', 'prev_dest', 'manual'], true)) {
             $startSrc = null;
         }
@@ -428,7 +428,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // Leerer Wert = Blob nicht anfassen (z. B. Sitzung nicht entsperrt).
         if ($patReady) {
             $blobGesetzt = false;
-            $pb = (string)($_POST['pat_blob'] ?? '');
+            $pb = post_text('pat_blob');
             if ($pb === '__CLEAR__') {
                 $fieldCols[] = 'pat_blob'; $fieldVals[] = null;
                 $blobGesetzt = true;
@@ -604,12 +604,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
    Absenden die eben verschlossene — sie traegt, was eingegeben war —, sonst
    die gespeicherte. Dazu der Beginn, auf den ihre Zeiten sich beziehen
    (Sekunden seit `started_at`). */
-$ortHuellePost = ($_SERVER['REQUEST_METHOD'] === 'POST') ? (string)($_POST['ort_huelle'] ?? '') : '';
+$ortHuellePost = ($_SERVER['REQUEST_METHOD'] === 'POST') ? post_text('ort_huelle') : '';
 $ortHuelleB64 = $ortHuellePost !== '' ? $ortHuellePost
     : (($mission['ort_huelle'] ?? null) !== null ? base64_encode((string)$mission['ort_huelle']) : null);
 $ortBeginn = null;
 if ($ortHuellePost !== '') {
-    $bz = json_decode((string)($_POST['ort_phasen'] ?? ''), true);
+    $bz = json_decode(post_text('ort_phasen'), true);
     $ortBeginn = (is_array($bz) && isset($bz[0][1])) ? (int)$bz[0][1] : null;
 } elseif ($mission !== null) {
     $ortBeginn = (int)strtotime((string)$mission['started_at'] . ' UTC');
@@ -618,8 +618,8 @@ if ($ortHuellePost !== '') {
    gewuerfelt, nach einem Fehler die schon benutzte — die Huelle ist an sie
    gebunden. */
 $neuRef = $editing ? (string)$mission['client_ref']
-    : (preg_match('/^man-[0-9a-f]{16}$/', (string)($_POST['client_ref'] ?? ''))
-        ? (string)$_POST['client_ref'] : 'man-' . bin2hex(random_bytes(8)));
+    : (preg_match('/^man-[0-9a-f]{16}$/', post_text('client_ref'))
+        ? post_text('client_ref') : 'man-' . bin2hex(random_bytes(8)));
 
 /* Auswahl der Ereignisarten: RESUS_LABELS ohne 'beginn'. Der Beginn ist kein
    Ereignis, sondern die Sitzung selbst (JSON-Vertrag 3.3) — stuende er in der
@@ -637,7 +637,7 @@ unset($REA_ARTEN['beginn']);
 function fieldValue(string $col) {
     global $mission, $missionCrew, $CREW_FELDER;
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-        return isset($_POST['f_' . $col]) ? (string)$_POST['f_' . $col] : '';
+        return isset($_POST['f_' . $col]) ? post_text('f_' . $col) : '';
     }
     if (isset($CREW_FELDER[$col])) {
         return (string)($missionCrew[$CREW_FELDER[$col]] ?? '');
@@ -655,7 +655,7 @@ function fieldValue(string $col) {
 function ortWert(string $col, string $achse, string $spalte): string {
     global $mission;
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-        return (string)($_POST['f_' . $col . '_' . $achse] ?? '');
+        return post_text('f_' . $col . '_' . $achse);
     }
     return ($mission !== null && ($mission[$spalte] ?? null) !== null)
         ? (string)$mission[$spalte] : '';
@@ -1184,7 +1184,7 @@ ui_seite_start(['titel' => $editing ? 'Einsatz bearbeiten' : 'Einsatz nachtragen
        * wird aber auch dann gebraucht, wenn kein Feld erscheint (Vorbelegung
        * des versteckten Zustands). */
       $startWert = $_SERVER['REQUEST_METHOD'] === 'POST'
-          ? (string)($_POST['start_src'] ?? '')
+          ? post_text('start_src')
           : (string)($mission['start_src'] ?? '');
     ?>
 

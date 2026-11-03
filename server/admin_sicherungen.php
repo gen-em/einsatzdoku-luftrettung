@@ -58,17 +58,17 @@ $notice = null; $error = null; $bericht = null;
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     /* EIN FRISCHER CODE VOR DER FREIGABE, vor dem Token
      * wie ein Rollentor — dieselbe Handlung wie auf der Kontoseite. */
-    if ((string)($_POST['action'] ?? '') === 'freigeben') {
+    if (post_text('action') === 'freigeben') {
         zweitfaktor_frisch_verlangen('freigeben_ablage');
     }
     csrf_check();
-    $action  = (string)($_POST['action'] ?? '');
+    $action  = post_text('action');
     /* Aus der Oberfläche kommt der Handgriff, nicht die Kennung (Kriterium 49).
      * Lässt er sich nicht auflösen, gibt es den Ordner nicht — dann laufen die
      * Aktionen unten ins Leere und melden das, statt auf einem geratenen Pfad
      * zu arbeiten. */
-    $kennung = edbak_kennung_aus_handgriff((string)($_POST['handgriff'] ?? '')) ?? '';
-    $datei   = (string)($_POST['datei'] ?? '');
+    $kennung = edbak_kennung_aus_handgriff(post_text('handgriff')) ?? '';
+    $datei   = post_text('datei');
 
     /* ---- Die Regeln: ein Formular, ein Speichern --------------- */
     if ($action === 'regeln') {
@@ -194,7 +194,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $error = 'Zielkonto nicht gefunden.';
         } elseif (!$paket) {
             $error = 'Das Paket liess sich nicht lesen.';
-        } elseif (!edbak_bestaetigung_passt((string)($_POST['confirm_email'] ?? ''), (string)$ziel['email'])) {
+        } elseif (!edbak_bestaetigung_passt(post_text('confirm_email'), (string)$ziel['email'])) {
             $error = 'Die eingegebene E-Mail-Adresse stimmt nicht mit der des '
                    . 'Zielkontos überein — es wurde nichts eingespielt.';
         } else {
@@ -235,7 +235,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($action === 'freigeben') {
         /* Regel, Protokoll und Mail an EINER Stelle. */
         [$okF, $meldungF] = edbak_freigabe_erteilen($kennung, $datei,
-            (int)($_POST['ziel_user'] ?? 0), (string)($_POST['confirm_email'] ?? ''));
+            (int)($_POST['ziel_user'] ?? 0), post_text('confirm_email'));
         if ($okF) {
             flash_setzen('notice', $meldungF);
             header('Location: admin_sicherungen.php');
@@ -261,8 +261,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
      * ihre Stelle tritt eine ausdrückliche Bestätigung (Kriterium 64).
      */
     if ($action === 'paket_loeschen' || $action === 'ordner_loeschen') {
-        $sollAdresse = (string)($_POST['soll_email'] ?? '');
-        $eingabe = (string)($_POST['confirm_email'] ?? '');
+        $sollAdresse = post_text('soll_email');
+        $eingabe = post_text('confirm_email');
         $unlesbar = ($_POST['unlesbar'] ?? '') === '1';
 
         $bestaetigt = $unlesbar

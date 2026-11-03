@@ -44,7 +44,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!$betreiberin) { ui_abbruch(403, 'Das Archiv des Protokolls ist der BetreiberIn vorbehalten.'); }
     csrf_check();
     if (($_POST['action'] ?? '') === 'archiv_laden') {
-        $datei = (string)($_POST['datei'] ?? '');
+        $datei = post_text('datei');
         /* ERST DER EINTRAG, DANN DIE DATEI. Nach `protokoll_archiv_ausliefern()`
          * ist die Anfrage zu Ende; ein Eintrag danach stünde nie da. Scheitert
          * das Ausliefern, sagt der Eintrag es mit. */
@@ -60,7 +60,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 /* ---- Welcher Reiter, welche Filter ---------------------------------------- */
-$reiter = (string)($_GET['r'] ?? ($sichtbar[0] ?? 'verwaltung'));
+$reiter = get_text('r', ($sichtbar[0] ?? 'verwaltung'));
 $istArchiv = $reiter === 'archiv';
 if ($istArchiv ? !$betreiberin : !in_array($reiter, $sichtbar, true)) {
     /* Jobs und Sicherung sieht auch der Admin — dem Support stuende dort
@@ -73,9 +73,9 @@ if ($istArchiv ? !$betreiberin : !in_array($reiter, $sichtbar, true)) {
             : 'Diesen Reiter gibt es nicht.');
 }
 
-$q     = trim((string)($_GET['q'] ?? ''));
+$q     = trim(get_text('q'));
 $tage  = (int)($_GET['z'] ?? 0);
-$art   = (string)($_GET['art'] ?? '');
+$art   = get_text('art');
 $konto = (int)($_GET['konto'] ?? 0);
 $seite = max(1, (int)($_GET['s'] ?? 1));
 $zeitraeume = [1 => '24 h', 7 => '7 Tage', 30 => '30 Tage'];

@@ -257,8 +257,8 @@ $t0 = microtime(true);
  * `zeit[]` in je einer PHP-Warnung im Reiter System — beides ohne Auskunft,
  * aber eine Einladung, den Reiter mit Zeilen zu fuellen. Eine Liste ist hier
  * nie gemeint; sie gilt als leer. Die Haekchen `ew[…]` SIND eine Liste und
- * bleiben, wie sie sind. */
-$feld = static fn (string $k): string => is_string($_POST[$k] ?? null) ? $_POST[$k] : '';
+ * bleiben, wie sie sind. Seit Web 23.6.5 ueber `post_text()` (`eingabe_lib.php`,
+ * Nr. 355) — bis dahin stand hier eine lokale Huelle `$feld`. */
 
 $done = false;
 $error = null;
@@ -266,8 +266,8 @@ $mailAuftrag = null;      // erst NACH dem Abschluss der Antwort ausgefuehrt
 $sammelPruefen = false;   // die Verwaltung benachrichtigen? (erst bei `wartet`)
 
 if ($offen && $_SERVER['REQUEST_METHOD'] === 'POST') {
-    $email = email_normalisieren($feld('email'));
-    $name  = trim($feld('name'));
+    $email = email_normalisieren(post_text('email'));
+    $name  = trim(post_text('name'));
     $done  = true;        // die Antwort ist in jedem Fall dieselbe
 
     /* DIE HAEKCHEN SIND DAS EINZIGE, WAS EINE MELDUNG BEKOMMT.
@@ -306,10 +306,10 @@ if ($offen && $_SERVER['REQUEST_METHOD'] === 'POST') {
          * oben steht sie NICHT: Die sind ein Vertipper und keine Bremse,
          * und das Formular wird danach ohnehin mit einer neuen
          * Aufgabe gezeichnet. */
-        $gerechnet = pow_ok($feld('pow_aufgabe'), $feld('pow_loesung'));
+        $gerechnet = pow_ok(post_text('pow_aufgabe'), post_text('pow_loesung'));
 
-        $honig    = trim($feld('website'));
-        $stempel  = $feld('zeit');
+        $honig    = trim(post_text('website'));
+        $stempel  = post_text('zeit');
         $menschlich = $gerechnet && $honig === '' && reg_stempel_ok($stempel);
 
         if ($menschlich
@@ -444,11 +444,11 @@ $unterzeile = match ($art) {
     <form method="post" data-pow data-pow-bits="<?= POW_BITS ?>"
           data-pow-worker="<?= e(asset('assets/pow-worker.js')) ?>">
       <?php ui_feld(['name' => 'email', 'label' => 'E-Mail', 'art' => 'email',
-                     'pflicht' => true, 'wert' => $feld('email'),
+                     'pflicht' => true, 'wert' => post_text('email'),
                      'platzhalter' => 'name@klinik.example',
                      'attr' => ' autofocus autocomplete="email"']); ?>
       <?php ui_feld(['name' => 'name', 'label' => 'Name',
-                     'wert' => $feld('name'),
+                     'wert' => post_text('name'),
                      'platzhalter' => 'Wie KollegInnen dich kennen',
                      'klein' => 'Steht in der Kopfleiste und auf deinen Einsätzen. '
                               . 'Lässt sich später ändern.',

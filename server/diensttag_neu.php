@@ -24,8 +24,8 @@ require_once __DIR__ . '/format_lib.php';
  */
 
 $fehler = null;
-$tag    = (string)($_POST['day'] ?? heute_lokal());
-$zeit   = (string)($_POST['zeit'] ?? '');
+$tag    = post_text('day', heute_lokal());
+$zeit   = post_text('zeit');
 $baseId = (int)($_POST['base_id'] ?? 0);
 $vehId  = (int)($_POST['vehicle_id'] ?? 0);
 

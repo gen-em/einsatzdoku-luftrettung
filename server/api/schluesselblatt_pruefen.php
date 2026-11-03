@@ -109,7 +109,7 @@ if (!$werte) {
                        . 'Unter Betrieb → Servereinstellungen anlegen.'], 409);
 }
 
-$aktion = (string)($_POST['aktion'] ?? '');
+$aktion = post_text('aktion');
 $email  = (string)($_SESSION['blatt_email'] ?? '');
 if ($email === '') {
     $st = db()->prepare('SELECT email FROM users WHERE id = ?');
