@@ -986,7 +986,7 @@ AGPL-3.0; siehe `docs/Lizenzen.md`.
 | `stern.svg` | Tabler Icons „star" (MIT) | 7 |
 | `stift.svg` | Tabler Icons „pencil" (MIT) | 8 |
 | `tausch.svg` | Tabler Icons „arrows-exchange" (MIT) | 14 |
-| `uhr.svg` | Tabler Icons „device-watch" (MIT) | 277 |
+| `uhr.svg` | Tabler Icons „device-watch" (MIT) | 282 |
 | `uhrzeit.svg` | Tabler Icons „clock" (MIT) | 3 |
 | `veranstaltung.svg` | Tabler Icons „ticket" (MIT) | 11 |
 | `vollbild.svg` | Tabler Icons „maximize" (MIT) | 1 |
