@@ -36,7 +36,7 @@ import { execFileSync } from 'node:child_process';
 import { php, probekontoRaeumen, eigenerKontext, passwortSchicken, passwortSetzen, WURZEL }
   from '../probekonto.mjs';
 
-const ADRESSE  = 'bedienprobe-rueckweg@probe.invalid';
+const ADRESSE  = 'bedienprobe-rueckweg@probe.pruefung';
 /* Das Passwort des Demo-Kontos ist öffentlich; der Läufer nimmt es aus
    `--demo-pw` mit derselben Vorgabe. Gebraucht wird es, damit die Sperre
    des Demo-Kontos mit einem GÜLTIGEN Token gemessen wird — mit einem

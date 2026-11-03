@@ -677,25 +677,6 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
 
 <!-- -->
 
-357. **Der Fehlertext eines Jobs trägt den Klassennamen der Ausnahme.** · gehört zu: 22 · Stand: offen · seit 04.10.2026
-     *Aufgenommen 04.10.2026 mit H-SR-06 (Konzept SR, F-SR-82; Nebenbefund
-     der Gegenlesung zu O-7).* `jobs_einen_lauf()` schreibt
-     `get_class($ex) . ': ' . $ex->getMessage()` nach `letzter_fehler` und in
-     den Bericht; „Jetzt weiterarbeiten" (Karte „Schlüssel des Servers") und
-     die Karte „Jobs" zeigen ihn so der BetreiberIn —
-     „RuntimeException: …" ist Technik, keine Auskunft. Betrifft alle Jobs,
-     nicht nur den Schlüsselwechsel; deshalb nicht in H-SR-06 geändert. Im
-     Reiter System steht die Klasse ohnehin in den Daten (`klasse`). *Weg:*
-     im Bericht und in `letzter_fehler` nur die Meldung, die Klasse bleibt
-     im Reiter System. *Abnahme:* ein Job, der wirft (Probe mit
-     verfälschtem Häppchen) — die Karte zeigt die Meldung ohne Klasse, der
-     Reiter System die Klasse. *Dazu (Nachprüfung H-SR-06, F-SR-87):* der
-     Grund in der Zeile „Ließen sich nicht umhüllen" ist ebenfalls der rohe
-     Ausnahmetext; eine PDOException trüge den Datenbanknamen, ein
-     TypeError Pfade. Dieselbe Kürzung an derselben Stelle.
-
-<!-- -->
-
 358. **Die zweite Passwortseite: Token-Ableitung an einer Stelle, und die Wache vergleicht sie mit.** · gehört zu: 22 · Stand: offen · seit 04.10.2026
      *Aufgenommen 04.10.2026 mit SR-04 (Konzept SR, F-SR-90, E-SR-84).*
      Der Notzugang `zweitfaktor_notweg.php` leitet das Passwort-Token ab wie
@@ -956,39 +937,6 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      Löschen eines Geräts mit Kontakt vor mehr als einem Tag → Rückfrage
      mit Datum und Hinweis; ein Gerät mit Kontakt heute → Rückfrage ohne
      Hinweis; `tools/zaehlung/` ohne neue Stelle (Meldung über `ui_`).
-
-<!-- -->
-
-450. **Die Wegwerfkonten der Kette füllen auf Staging den Reiter System mit Mailfehlern.** · gehört zu: 22 · Stand: offen · seit 02.11.2026
-     *Aufgenommen 02.11.2026 im ersten Prüfdurchgang der Arbeitsumgebung
-     (R91, P-P5c-12).* Stufe 2 legt je Lauf und Engine Konten unter
-     `…@example.invalid` an, meldet sie an und löscht sie wieder. Jede Mail an
-     sie scheitert beim Mailserver von Staging mit „Server antwortete 450";
-     an einem Tag standen so über 100 gleiche Einträge im Reiter System, die
-     Statusseite zeigt dauerhaft „Letzter Versand fehlgeschlagen", und eine
-     Einladung wartet 24 Stunden auf Wiederholung. Echte Fehler gehen darin
-     unter. Mails an echte Adressen kommen an (Einladung, erster Versuch).
-     *Weg:* Adressen unter `.invalid` gar nicht erst einreihen — die Endung
-     ist nach RFC 2606 nie zustellbar —, mit einem Satz im Protokoll statt
-     einer Störung; oder die Kette nimmt eine zustellbare Prüfadresse.
-     *Abnahme:* nach einem Stufe-2-Lauf keine neue Zeile „smtp … 450" im
-     Reiter System, Status „Letzter Versand" unverändert.
-
-<!-- -->
-
-454. **Der Mailjob versucht eine dauerhafte Absage 24 Stunden lang weiter.** · gehört zu: 22 · Stand: offen · seit 02.11.2026
-     *Aufgenommen 02.11.2026 im ersten Prüfdurchgang der Arbeitsumgebung
-     (R91, P-P5c-03).* Die Rundmail an 8 Staging-Konten: 5 zugestellt,
-     zwei mit „Server antwortete 550" (das Postfach gibt es nicht), eine
-     mit 450 (Nr. 450). Alle drei stehen danach auf „wartet" und laufen die
-     ganze `MAIL_LEITER` (5 min bis 24 h) durch. Ein 5xx ist nach RFC 5321
-     endgültig; jeder weitere Versuch ist eine Störung im Reiter System und
-     verlängert „Letzter Versand fehlgeschlagen" auf der Statusseite.
-     *Weg:* `mail_zeile_versuchen()` setzt bei einer 5xx-Antwort sofort
-     `unzustellbar`, mit der Absage als Grund; 4xx und
-     Verbindungsfehler bleiben auf der Leiter.
-     *Abnahme:* eine Mail an eine Adresse ohne Postfach steht nach dem
-     ersten Versuch unter „unzustellbar", ohne zweite Störung.
 
 <!-- -->
 

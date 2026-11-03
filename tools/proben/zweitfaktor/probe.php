@@ -163,7 +163,7 @@ pruefe(totp_spalten_da($pdo) === true, '... und mit der echten Verbindung: Spalt
 
 /* ---- HTTP mit einem eigenen Konto ------------------------------------------- */
 
-$mail = 'zweitfaktor-probe@probe.invalid';
+$mail = 'zweitfaktor-probe@probe.pruefung';
 $pw = 'Probe-Zweitfaktor-' . bin2hex(random_bytes(6));
 $salz = bin2hex(random_bytes(16));
 $iter = KDF_ITER_ZIEL;
@@ -184,7 +184,7 @@ register_shutdown_function(static function () use ($pdo, $uid, $merkmal): void {
      * Protokollprobe griff danach ins falsche Archiv). */
     $pdo->prepare('DELETE FROM sicherheit_ereignisse WHERE merkmal = ?')->execute([$merkmal]);
     $pdo->prepare('DELETE FROM users WHERE id = ?')->execute([$uid]);
-    $pdo->exec("DELETE FROM users WHERE email LIKE 'zweitfaktor-bf-%@probe.invalid'");
+    $pdo->exec("DELETE FROM users WHERE email LIKE 'zweitfaktor-bf-%@probe.pruefung'");
 });
 
 /** Eine Anfrage mit eigener Cookieführung: Das Sitzungscookie trägt `secure`,
@@ -416,7 +416,7 @@ if (!zweitfaktor_geraete_da($pdo)) {
            'derselbe Browser nach dem Abmelden: Passwort → 302 auf index.php, kein Code', $a['code'] . ' ' . $a['ort']);
 
     // 3. Ein fremdes Cookie an einem anderen Konto zählt nicht
-    $mail2 = 'zweitfaktor-bf-geraet@probe.invalid';
+    $mail2 = 'zweitfaktor-bf-geraet@probe.pruefung';
     $pdo->prepare('DELETE FROM users WHERE email = ?')->execute([$mail2]);
     $pdo->prepare("INSERT INTO users (email, name, role, password_hash, kdf_salt, kdf_iter)
                    VALUES (?, 'Zweitfaktorprobe B', 'admin', ?, ?, ?)")
@@ -1046,7 +1046,7 @@ echo "== 7. Bus-Faktor\n";
 $vorher = status_verwaltungskonten($pdo);
 $pdo->prepare("INSERT INTO users (email, name, role, password_hash, kdf_salt, kdf_iter)
                VALUES (?, 'BF', 'betreiberin', '', '', 310000)")
-    ->execute(['zweitfaktor-bf-' . bin2hex(random_bytes(3)) . '@probe.invalid']);
+    ->execute(['zweitfaktor-bf-' . bin2hex(random_bytes(3)) . '@probe.pruefung']);
 $ohne = status_verwaltungskonten($pdo);
 pruefe($ohne['betreiberinnen'] === $vorher['betreiberinnen']
        && $ohne['betreiberinnen_aktiv'] === $vorher['betreiberinnen_aktiv'] + 1,
@@ -1102,10 +1102,10 @@ foreach ($faelle as [[$v, $b, $a], [$plakette, $ton, $fall]]) {
  * würfelt ihn neu, und die örtliche Anlage soll den Wert behalten, den sie
  * vor der Probe hatte. */
 echo "== 8. Notzugang der einzigen BetreiberIn (SR-04)\n";
-$pdo->exec("DELETE FROM users WHERE email LIKE 'zweitfaktor-bf-%@probe.invalid'");
-$nwMail = 'zweitfaktor-notweg@probe.invalid';
-$nwZwei = 'zweitfaktor-notweg-zwei@probe.invalid';
-$nwNiemand = 'zweitfaktor-notweg-niemand@probe.invalid';
+$pdo->exec("DELETE FROM users WHERE email LIKE 'zweitfaktor-bf-%@probe.pruefung'");
+$nwMail = 'zweitfaktor-notweg@probe.pruefung';
+$nwZwei = 'zweitfaktor-notweg-zwei@probe.pruefung';
+$nwNiemand = 'zweitfaktor-notweg-niemand@probe.pruefung';
 $nwPw = 'Probe-Notweg-' . bin2hex(random_bytes(6));
 $nwSalz = bin2hex(random_bytes(16));
 $nwToken = bin2hex(substr(hash_pbkdf2('sha256', $nwPw, hex2bin($nwSalz), $iter, 64, true), 32, 32));

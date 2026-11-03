@@ -468,7 +468,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         . 'so lange nützt auch der Link unten.';
                 $setzLink = $link;
             } else {
-                $notice = 'Der Setz-Link konnte NICHT verschickt werden.';
+                $notice = 'Der Setz-Link konnte NICHT verschickt werden.'
+                        . mail_reserviert_satz((string)$u['email']);
                 $setzLink = $link;
             }
         }

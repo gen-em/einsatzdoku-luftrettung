@@ -5064,7 +5064,7 @@ bestimmten Einsatz geöffnet hat: Du kannst es nicht, und zwar mit Absicht.
 |---|---|:-:|:-:|:-:|
 | **Verwaltung** | das Audit: wer wann was an Konten und Anlage getan hat | ja | ja | ja |
 | **Sicherheit** | Sperren, Verlangsamungen, aufgehobene Sperren, blockierte Inhalte (CSP) — mit IP-Adressen | — | — | ja |
-| **E-Mail** | jede Nachricht mit Vorlage und Zustand (wartet, zugestellt, unzustellbar, verfallen, ersetzt) — **nie** Empfänger, Betreff oder Inhalt | ja | ja | ja |
+| **E-Mail** | jede Nachricht mit Vorlage und Zustand (wartet, zugestellt, unzustellbar, verfallen, ersetzt); seit Web 23.6.4 auch „nicht eingereiht“ für eine Adresse unter `.invalid`, `.test`, `.example` oder `.localhost`, die nie Post annimmt — **nie** Empfänger, Betreff oder Inhalt | ja | ja | ja |
 | **Jobs** | jeder Lauf eines Hintergrundjobs, Fehler rot | — | ja | ja |
 | **Sicherung** | Komplett-Backup erzeugt, geladen, eingespielt, gelöscht; Konto-Backup eingespielt; seit Web 21.12.0 der Wechsel des Serverschlüssels — gewechselt (orange), umgehüllt (blau, mit Zahlen), bisherigen entfernt | — | ja | ja |
 | **Ziele** | was auf ein Backup-Ziel ging und was dort gelöscht wurde | — | — | ja |
@@ -5360,7 +5360,7 @@ Versuch — eine Einladung, die vorgestern scheiterte, war danach unsichtbar.
 |---|---|---|
 | blau **leer** | Nichts liegt an. | nichts |
 | orange **N wartet** | Der Mailserver war kurz gestört. Die Anwendung versucht es über 24 Stunden bis zu fünfmal. | abwarten |
-| rot **N unzustellbar** | Fünf Versuche, alle gescheitert. Die Zeile **nennt die Adressen** und den letzten Grund. | Grund lesen, Adresse prüfen, Vorgang von Hand wiederholen |
+| rot **N unzustellbar** | Fünf Versuche, alle gescheitert — oder, seit Web 23.6.4, der Mailserver hat den Empfänger gleich beim ersten Versuch endgültig abgelehnt (etwa „Postfach gibt es nicht“). Die Zeile **nennt die Adressen** und den letzten Grund. | Grund lesen, Adresse prüfen, Vorgang von Hand wiederholen |
 
 Die Zeilen verfallen nach **30 Tagen**. Bei einer zugestellten Nachricht
 bleibt nur „eine Nachricht dieser Art ging zu dieser Zeit hinaus" — Adresse,

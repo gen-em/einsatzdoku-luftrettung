@@ -14,6 +14,31 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 23.6.4] — unveröffentlicht
+
+### Behoben
+
+- **Web — eine endgültige Absage des Mailservers lief 24 Stunden lang
+  weiter** (Backlog Nr. 454). Lehnte der Server den Empfänger ab, weil es das
+  Postfach nicht gibt, versuchte die Warteschlange es trotzdem fünfmal und
+  meldete jedes Mal eine Störung. Jetzt ist eine solche Nachricht nach dem
+  ersten Versuch unzustellbar — aber nur bei einer Absage des Empfängers:
+  Eine Absage beim Anmelden ist ein falsches Passwort in den Einstellungen und
+  darf die ganze Warteschlange nicht verfallen lassen.
+
+- **Web — Mails an Adressen, die nie Post annehmen, werden nicht mehr
+  eingereiht** (Backlog Nr. 450). Unter `.invalid`, `.test`, `.example` und
+  `.localhost` gibt es keinen Mailserver, die Adressen gelten aber als
+  gültig; die Wegwerfkonten der Prüfkette füllten so auf Staging den Reiter
+  System mit Fehlern. Statt einer Störung steht ein Eintrag „nicht
+  eingereiht“ im Reiter E-Mail, und die Einladungsseite nennt den Grund.
+
+- **Web — ein gescheiterter Hintergrundjob zeigte den Klassennamen der
+  Ausnahme** (Backlog Nr. 357). „RuntimeException: …“ ist Technik, keine
+  Auskunft, und eine Datenbankmeldung trug den Datenbanknamen auf die Karte.
+  Die Karte zeigt jetzt die bereinigte Meldung; die Klasse steht im Reiter
+  System, wo sie bis dahin fehlte.
+
 ## [Web 23.6.3] — unveröffentlicht
 
 ### Behoben

@@ -209,7 +209,7 @@ pruefe(rw_verfuegbar() === false, 'ein gemerkter Fehlschlag schaltet den Weg ab'
 
 /* ---- 7. Der Stand des Paars ------------------------------------------------- */
 echo "== A7. rw_zustand() in vier Lagen (RW-02)\n";
-$adresse = 'rueckwegprobe@probe.invalid';
+$adresse = 'rueckwegprobe@probe.pruefung';
 $pdo = db();
 $pdo->prepare('DELETE FROM users WHERE email = ?')->execute([$adresse]);
 $pdo->prepare("INSERT INTO users (email, name, role, password_hash, kdf_salt, kdf_iter)
@@ -298,7 +298,7 @@ function edk_oeffnen(string $schluessel, string $blob): ?string
     return $k === false ? null : $k;
 }
 
-$adresseB = 'rueckwegprobe-b@probe.invalid';
+$adresseB = 'rueckwegprobe-b@probe.pruefung';
 $merkmaleB = [rate_merkmal_kennung($adresseB)];
 $pdo->prepare('DELETE FROM users WHERE email = ?')->execute([$adresseB]);
 $mailVorher = (int)$pdo->query('SELECT COALESCE(MAX(id), 0) FROM mail_warteschlange')->fetchColumn();

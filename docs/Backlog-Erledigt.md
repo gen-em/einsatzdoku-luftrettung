@@ -10509,3 +10509,70 @@ zutreffen.
      Verwaltung. Kein weiterer Fehlbestand; die Registerzeile Z46 hält jede
      feste Art eines `protokoll()`-Aufrufs und der Reiterliste gegen
      `PROTOKOLL_ARTEN` (Gegenprobe: ohne den Eintrag 2 Stellen).
+
+357. **Der Fehlertext eines Jobs trägt den Klassennamen der Ausnahme.** · gehört zu: 22 · Stand: erledigt · seit 04.10.2026
+     *Aufgenommen 04.10.2026 mit H-SR-06 (Konzept SR, F-SR-82; Nebenbefund
+     der Gegenlesung zu O-7).* `jobs_einen_lauf()` schreibt
+     `get_class($ex) . ': ' . $ex->getMessage()` nach `letzter_fehler` und in
+     den Bericht; „Jetzt weiterarbeiten" (Karte „Schlüssel des Servers") und
+     die Karte „Jobs" zeigen ihn so der BetreiberIn —
+     „RuntimeException: …" ist Technik, keine Auskunft. Betrifft alle Jobs,
+     nicht nur den Schlüsselwechsel; deshalb nicht in H-SR-06 geändert. Im
+     Reiter System steht die Klasse ohnehin in den Daten (`klasse`). *Weg:*
+     im Bericht und in `letzter_fehler` nur die Meldung, die Klasse bleibt
+     im Reiter System. *Abnahme:* ein Job, der wirft (Probe mit
+     verfälschtem Häppchen) — die Karte zeigt die Meldung ohne Klasse, der
+     Reiter System die Klasse. *Dazu (Nachprüfung H-SR-06, F-SR-87):* der
+     Grund in der Zeile „Ließen sich nicht umhüllen" ist ebenfalls der rohe
+     Ausnahmetext; eine PDOException trüge den Datenbanknamen, ein
+     TypeError Pfade. Dieselbe Kürzung an derselben Stelle.
+     Erledigt 03.11.2026 mit BR5-02 (Web 23.6.4): `jobs_einen_lauf()`
+     schreibt nach `letzter_fehler`, in den Verlauf und in den Bericht die
+     Meldung durch `system_bereinigen()`, und `system_melden()` bekommt die
+     Ausnahme — damit steht die Klasse im Reiter System, wo sie bis dahin
+     fehlte (F-BR5-03). Dieselbe Kürzung für den Grund in „Ließen sich nicht
+     umhüllen“. Jobprobe Teil 11: Meldung ohne Klasse, Wert bereinigt,
+     Klasse im Reiter System; mit dem alten Code 3 von 4 rot.
+
+454. **Der Mailjob versucht eine dauerhafte Absage 24 Stunden lang weiter.** · gehört zu: 22 · Stand: erledigt · seit 02.11.2026
+     *Aufgenommen 02.11.2026 im ersten Prüfdurchgang der Arbeitsumgebung
+     (R91, P-P5c-03).* Die Rundmail an 8 Staging-Konten: 5 zugestellt,
+     zwei mit „Server antwortete 550" (das Postfach gibt es nicht), eine
+     mit 450 (Nr. 450). Alle drei stehen danach auf „wartet" und laufen die
+     ganze `MAIL_LEITER` (5 min bis 24 h) durch. Ein 5xx ist nach RFC 5321
+     endgültig; jeder weitere Versuch ist eine Störung im Reiter System und
+     verlängert „Letzter Versand fehlgeschlagen" auf der Statusseite.
+     *Weg:* `mail_zeile_versuchen()` setzt bei einer 5xx-Antwort sofort
+     `unzustellbar`, mit der Absage als Grund; 4xx und
+     Verbindungsfehler bleiben auf der Leiter.
+     *Abnahme:* eine Mail an eine Adresse ohne Postfach steht nach dem
+     ersten Versuch unter „unzustellbar", ohne zweite Störung.
+     Erledigt 03.11.2026 mit BR5-02 (Web 23.6.4): `smtp_letzter_fehler()`
+     liefert Code und Schritt; `mail_absage_endgueltig()` macht eine 5xx
+     beim Empfänger oder nach den Daten sofort unzustellbar, außer 552; eine
+     Absage bei Anmeldung oder Absender bleibt auf der Leiter (F-BR5-10,
+     E-BR5-11). Mailprobe Abschnitt 4a: 550 und 554 nach einem Versuch
+     unzustellbar, 552 und 535 offen, je genau eine Störung; mit dem alten
+     Code rot.
+
+450. **Die Wegwerfkonten der Kette füllen auf Staging den Reiter System mit Mailfehlern.** · gehört zu: 22 · Stand: erledigt · seit 02.11.2026
+     *Aufgenommen 02.11.2026 im ersten Prüfdurchgang der Arbeitsumgebung
+     (R91, P-P5c-12).* Stufe 2 legt je Lauf und Engine Konten unter
+     `…@example.invalid` an, meldet sie an und löscht sie wieder. Jede Mail an
+     sie scheitert beim Mailserver von Staging mit „Server antwortete 450";
+     an einem Tag standen so über 100 gleiche Einträge im Reiter System, die
+     Statusseite zeigt dauerhaft „Letzter Versand fehlgeschlagen", und eine
+     Einladung wartet 24 Stunden auf Wiederholung. Echte Fehler gehen darin
+     unter. Mails an echte Adressen kommen an (Einladung, erster Versuch).
+     *Weg:* Adressen unter `.invalid` gar nicht erst einreihen — die Endung
+     ist nach RFC 2606 nie zustellbar —, mit einem Satz im Protokoll statt
+     einer Störung; oder die Kette nimmt eine zustellbare Prüfadresse.
+     *Abnahme:* nach einem Stufe-2-Lauf keine neue Zeile „smtp … 450" im
+     Reiter System, Status „Letzter Versand" unverändert.
+     Erledigt 03.11.2026 mit BR5-02 (Web 23.6.4): `mail_einreihen()` reiht
+     Adressen unter `.invalid`, `.test`, `.example`, `.localhost` nicht ein
+     (`mail_domain_reserviert()`), schreibt `mail_reserviert` in den Reiter
+     E-Mail, ohne Adresse; die Einladungsseiten nennen den Grund. Die
+     örtlichen Proben, die Post erwarten, legen ihre Konten seither unter
+     `probe.pruefung` an (E-BR5-20). Gegenprobe auf Staging nach dem Merge:
+     Stufe 2 ohne Mailfehler.

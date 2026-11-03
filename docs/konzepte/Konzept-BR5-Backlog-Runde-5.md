@@ -16,7 +16,7 @@ BR5-10).
 | Paket | Inhalt | Stand |
 |---|---|---|
 | BR5-01 | Transaktion und Protokoll: Nr. 354, 345, 457 | **erledigt** 03.11.2026 (Web 23.6.3) |
-| BR5-02 | Jobs und Mail: Nr. 357, 454, 450 | offen |
+| BR5-02 | Jobs und Mail: Nr. 357, 454, 450 | **erledigt** 03.11.2026 (Web 23.6.4) |
 | BR5-03 | Formularfelder: Nr. 355 (`post_text()`) | offen |
 | BR5-04 | Zweite Passwortseite: Nr. 358 | offen |
 | BR5-05 | Schlüsselpaar und Rückweg nach der Anmeldung: Nr. 392 | offen |
@@ -26,7 +26,7 @@ BR5-10).
 | BR5-09 | PHP 8.3.6: Nr. 383 | offen |
 | BR5-10 | Abschluss | offen |
 
-**In Arbeit:** BR5-02 als Nächstes. **Es hakt:** nirgends. BR5-01 ist erledigt; dabei hat die Messung F-BR5-12 widerlegt (F-BR5-15) — der Weg steht jetzt auf dem Fehlercode statt auf `inTransaction()`.
+**In Arbeit:** BR5-03 als Nächstes. **Es hakt:** nirgends. BR5-02 ist erledigt; der Riegel aus Nr. 450 traf die örtlichen Proben, die Post an `…@probe.invalid` erwarteten — sie stehen seither auf `probe.pruefung` (F-BR5-17, E-BR5-20).
 
 ---
 
@@ -181,6 +181,22 @@ bleibt — sie sagt, ob überhaupt eine Transaktion lief.
 schlucken wie `app_state_setzen()`.** E-BR5-05 nannte nur die eine Funktion;
 die zwei Geschwister stehen daneben, mit demselben Fang. BR5-01 behandelt
 alle drei gleich — eine Regel für drei Schreibhelfer, nicht für einen.
+
+**F-BR5-17 — Die Prüfmittel hingen an `.invalid` (BR5-02, gemessen
+03.11.2026).** Mit dem Riegel aus E-BR5-12 wurden sieben örtliche Proben rot,
+die zuvor grün waren: Mail (17 Fälle, dazu die Rundmail), Schlüsselwechsel
+(3), Raten (3), Passkey (3), Zweitfaktor (4), Rollen (1), Rückweg (2). Ihre
+Konten liegen unter `…@probe.invalid`, und sie zählen die Mails an diese
+Konten. Die Kettenkonten in Stufe 2 (`umlauf-…@example.invalid`) messen die
+Mail nur örtlich (`lokal` in `rueckweg/probe.mjs`); auf Staging ändert sich
+für die Kette nichts außer dem gewollten: keine Mailfehler mehr.
+
+**F-BR5-18 — Ein Containerneustart mitten in BR5-02.** Der Arbeitsprozess
+wurde neu gestartet (Laufzeit 0 min); die Dateien waren da, MariaDB und
+Anlage nicht. Die Startfolge aus `Sandbox-Setup.md` 6.1a brachte die Anlage
+zurück (v23.6.4, 0 Migrationen offen); die drei Fremd-Datenbanken der
+Schemaprobe (MariaDB 10.6, MySQL 8.0, 8.4.0) ließen sich nicht starten
+(„Docker Hub gedrosselt?“, `plattform.sh alles`, 7 Stück fehlen).
 
 **F-BR5-14 — Nr. 450 hat die Ursache in der Kette, die Abhilfe am Server.**
 Stufe 2 legt Konten unter `…@example.invalid` an (`umlauf_konto()` in
@@ -418,6 +434,15 @@ Betreiberin).** Ersetzt E-BR5-02: „Setze Schritt 22 um, beginnend mit
 BR5-01“ — in dieser Sitzung, auf demselben Zweig. Je Paket ein Commit, ein
 Push, ein ZIP der geänderten Dateien mit Konzept und Prüfstand-Dokument
 (Vorgabe der Betreiberin für Codearbeit).
+
+**E-BR5-20 — Die Proben werden umgestellt, nicht der Riegel (03.11.2026,
+Betreiberin, aus F-BR5-17).** Gewählt aus drei Wegen: die Proben auf eine
+nicht reservierte Scheindomain (`probe.pruefung`; der Mailserver der Sandbox
+ist 127.0.0.1), den Riegel per Schalter nur auf Staging und Produktiv, oder
+Nr. 450 zurückstellen. Der Schalter hätte die Prüfumgebung anders laufen
+lassen als die Anlage, die sie prüft. Wo eine Probe gegen Staging misst
+(Rückwegprobe), zählt bei einer reservierten Adresse der Eintrag
+`mail_reserviert` statt der Mailzeile.
 
 **Modellwahl:** Opus für alle Pakete (K2); kein Fable-Schritt.
 **Fächerung:** keine. Alle Pakete schreiben `server/version.php`,
@@ -712,10 +737,49 @@ PHP 8.3.6):
   gelöscht. Der Fehlerzweig des Logo-Standards bleibt ungeprüft (Prüfdokument
   1).
 
+**BR5-02** (03.11.2026, Web 23.6.4; örtliche Anlage, MariaDB 10.11.14,
+PHP 8.3.6):
+
+- *Nr. 454, Mailprobe Abschnitt 4a* (neu; Gegenstelle mit vier neuen Arten
+  `aufschub` 450, `voll` 552, `anmeldung` 535, `nach_daten` 554): 550 beim
+  Empfänger und 554 nach den Daten nach einem Versuch `unzustellbar`,
+  Adresse bleibt, Rumpf weg; 552 und 535 nach einem Versuch `offen`; je genau
+  eine Störung im Reiter System. Abschnitte 4, 5, 6, 9 prüfen die Leiter jetzt
+  mit 450.
+- *Nr. 450, Mailprobe Abschnitt 10a* (neu): fünf reservierte Adressen
+  (auch in Großschreibung) → `MAIL_ABGELEHNT`, 0 Zeilen, fünf Einträge
+  `mail_reserviert` im Reiter E-Mail ohne Adresse, 0 im Reiter System;
+  `f@invalid.de` wird zugestellt. Mailprobe gesamt **76 Prüfungen, 0
+  Befunde**. **Gegenprobe** mit dem alten Server-Code: 4a und 10a rot (550
+  und 554 `offen`, reservierte Adresse eingereiht).
+- *Nr. 357, Jobprobe Teil 11* (neu): ein Job, der mit „Table '…' doesn't
+  exist“ wirft — Bericht und `letzter_fehler` ohne Klassennamen, der Wert in
+  Anführungszeichen bereinigt, der Reiter System trägt `RuntimeException`.
+  **40 Erwartungen, 0 offen**; mit dem alten Code 3 rot.
+- *Proben nach der Umstellung (E-BR5-20):* Raten 102/0, Passkey 128/0,
+  Rollen 612/0, Zweitfaktor 139/0, Rückweg 23/0 (davon „Mail +1“ über
+  `mail_reserviert`), Schlüsselwechsel 66/0 (Mail an jede BetreiberIn „1 von
+  1“), Versand 142/0, Protokoll 36/0, Wartung 84/0. Zählung 46/0/0.
+- *Ein eigener Fehler unterwegs:* Die Gegenprobe der Mailprobe brach mit dem
+  alten Code an der neuen Funktion ab und ließ `betrieb_mail =
+  betrieb@musterkreis.invalid` in der Anlage stehen; die Ratenprobe fand
+  danach keine Sammelmail. Wert gelöscht; die Probe selbst legt ihn bei
+  normalem Ende zurück. Die Ratenprobe legt für Abschnitt 8 jetzt ein
+  eigenes Verwaltungskonto unter `ratenprobe.pruefung` an, weil die Konten
+  der Anlage unter `example.invalid` liegen.
+- *Bedienwege* `registrieren` und `einstellungen-profil-rueckweg` (Chromium,
+  auf `probe.pruefung` umgestellt): 2 von 2 erfüllt (der zweite im zweiten
+  Anlauf — im ersten lief der Demo-Reset mitten hinein, das Werkzeug meldet
+  das selbst). *Quelltext:* 16 von 16 grün, nachdem die Textprobe eine
+  Adresse unter `probe.pruefung` in einer Beispielzeile von `Technik.md`
+  fand; die Zeile steht wieder auf `probe.invalid`. *Steuerung:* 49 offene
+  Einträge, 0 Fehler; 21 Decken, 0 gerissen.
+
 ## 7. Verlauf
 
 | Datum | Was |
 |---|---|
+| 03.11.2026 | BR5-02 erledigt (Web 23.6.4); F-BR5-17, -18; E-BR5-20 (Proben umgestellt). |
 | 03.11.2026 | PR #141 gemergt; P-BR5-01 bis -04 auf Staging bestanden und aus der Handprüfliste gestrichen. |
 | 03.11.2026 | `main` mit PR #139 aufgenommen (Rahmenplan-Fassung 206 wird 207); Zwischen-PR mit BR5-01, damit die Arbeitsumgebung die Punkte auf Staging prüft (Betreiberin). |
 | 03.11.2026 | BR5-01 erledigt (Web 23.6.3); F-BR5-15, -16; E-BR5-19 (diese Sitzung setzt um). |

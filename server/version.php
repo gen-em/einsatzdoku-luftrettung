@@ -8489,5 +8489,16 @@ declare(strict_types=1);
  *   nicht, PDO meldet nach dem Deadlock weiter „ja". Dazu: Name und Adressen
  *   der Installation werden zusammen oder gar nicht geschrieben, der
  *   Logo-Standard meldet ein Scheitern, und das Loeschen eines Zeitraums
- *   heisst im Protokoll „GPS-Daten geloescht". Korrektur; kein Schema. */
-const WEB_VERSION = '23.6.3';
+ *   heisst im Protokoll „GPS-Daten geloescht". Korrektur; kein Schema.
+ * 23.6.4 — EINE ENDGUELTIGE ABSAGE LIEF 24 STUNDEN LANG WEITER (Backlog
+ *   Nr. 454, 450, 357; Schritt 22, BR5-02). Eine 550 beim Empfaenger ging
+ *   die ganze Leiter durch, mit einer Stoerung je Versuch; jetzt ist sie
+ *   nach dem ersten unzustellbar — aber nur beim Empfaenger, denn eine 535
+ *   beim Anmelden ist ein falsches Passwort und darf die Warteschlange nicht
+ *   verfallen lassen. Adressen unter `.invalid`, `.test`, `.example` und
+ *   `.localhost` reiht der Mailweg gar nicht erst ein; die Wegwerfkonten der
+ *   Kette fuellten auf Staging den Reiter System. Und ein Job, der wirft,
+ *   zeigt auf seiner Karte die bereinigte Meldung statt „RuntimeException:
+ *   …"; die Klasse steht im Reiter System, wo sie bis dahin fehlte.
+ *   Korrektur; kein Schema. */
+const WEB_VERSION = '23.6.4';

@@ -945,7 +945,13 @@ function sw_haeppchen(PDO $pdo, array &$z, callable $zeitLinks): array
                 if (!array_key_exists($fKey, $fehler)) {
                     system_melden('schluesselwechsel', $name . ' ließ sich nicht umhüllen', $ex);
                 }
-                $fehler[$fKey] = ['name' => $name, 'grund' => mb_substr($ex->getMessage(), 0, 200)];
+                /* Der Grund geht auf die Karte „Schlüssel des Servers" —
+                 * bereinigt wie der Jobfehler (Nr. 357, F-SR-87): eine
+                 * PDOException truege sonst den Datenbanknamen, ein
+                 * TypeError Pfade. Die Ausnahme selbst steht darueber im
+                 * Reiter System. */
+                $fehler[$fKey] = ['name' => $name,
+                                  'grund' => mb_substr(system_bereinigen($ex->getMessage()), 0, 200)];
             } else {
                 /* ÜBER DER DECKE: Das Stück
                  * steht nicht in der Liste, zählt aber — sonst griff die

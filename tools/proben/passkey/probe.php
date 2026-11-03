@@ -127,9 +127,9 @@ $konto = static function (string $mail, string $name, bool $zf) use ($pdo): int 
         ->execute([$mail, $name]);
     return (int)$pdo->lastInsertId();
 };
-$uid  = $konto('passkeyprobe@probe.invalid', 'Passkeyprobe', true);
-$uid2 = $konto('passkeyprobe-2@probe.invalid', 'Passkeyprobe 2', true);
-$uid3 = $konto('passkeyprobe-3@probe.invalid', 'Passkeyprobe 3', false);
+$uid  = $konto('passkeyprobe@probe.pruefung', 'Passkeyprobe', true);
+$uid2 = $konto('passkeyprobe-2@probe.pruefung', 'Passkeyprobe 2', true);
+$uid3 = $konto('passkeyprobe-3@probe.pruefung', 'Passkeyprobe 3', false);
 try {
     $mailVorher = (int)$pdo->query('SELECT COALESCE(MAX(id), 0) FROM mail_warteschlange')->fetchColumn();
 } catch (Throwable) { $mailVorher = null; }

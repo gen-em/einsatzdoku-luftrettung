@@ -3251,6 +3251,33 @@ einer davon fehlte das „Gen-EM" im Betreff.
 **Die Leiter**: `MAIL_LEITER = [300, 1800, 7200, 28800, 86400]` — der Abstand
 **zum vorigen Versuch**, nicht zum Einreihen. Fünf Versuche über 24 Stunden.
 
+**Eine endgültige Absage geht nicht auf die Leiter** (seit Web 23.6.4,
+Backlog Nr. 454). Lehnt der Mailserver den **Empfänger** ab — eine 5xx beim
+`RCPT TO` oder nach dem Ende der Daten —, wird die Zeile nach dem ersten
+Versuch `unzustellbar` (`mail_absage_endgueltig()`). `smtp_letzter_fehler()`
+liefert dafür `code` und `schritt` mit. Auf der Leiter bleiben 552 (Postfach
+voll, löst sich meist von selbst), jede 4xx, ein Verbindungsfehler und eine
+Absage bei Anmeldung oder Absender: Eine 535 ist ein falsches Passwort in den
+Einstellungen, und wer sie wie eine Absage behandelte, ließe die ganze
+Warteschlange verfallen. Bis dahin lief auch eine 550 die ganzen 24 Stunden
+durch, mit einer Störung im Reiter System je Versuch.
+
+**Reservierte Domains reiht `mail_einreihen()` gar nicht erst ein** (seit
+Web 23.6.4, Nr. 450): `.invalid`, `.test`, `.example`, `.localhost` (RFC 2606,
+6761; `MAIL_RESERVIERTE_DOMAINS`). Dort nimmt nirgends ein Server Post an;
+`filter_var()` hält die Adressen trotzdem für gültig, und die Konten, die
+Stufe 2 unter `…@example.invalid` anlegt, füllten auf Staging den Reiter
+System. Statt einer Zeile ein Eintrag `mail_reserviert` im Reiter E-Mail (ohne
+Adresse), Rückgabe `MAIL_ABGELEHNT`; die Einladungsseiten nennen den Grund
+(`mail_reserviert_satz()`). Die Frage steht **hinter** „SMTP eingerichtet?":
+Eine Anlage ohne Mailserver schreibt keinen Eintrag für eine Mail, die ohnehin
+nie ginge. **Die örtlichen Proben legen ihre Konten, an die Post gehen soll,
+seither unter `probe.pruefung` an** (Mail-, Raten-, Passkey-, Rollen-,
+Zweitfaktor-, Schlüsselwechsel- und Rückwegprobe, zwei Bedienwege); der
+Mailserver der Sandbox ist 127.0.0.1, es geht nichts hinaus. Die Kettenkonten
+unter `example.invalid` und die Prüfkonten des Bilderlaufs bleiben — sie
+bekommen keine Post, und auf Staging wirkt der Riegel genau für sie.
+
 **Die Frist geht vor der Leiter.** Hat ein Eintrag eine `frist` (ein
 Reset-Link gilt 3600 s), wird ein Versuch, der erst **nach** Ablauf fällig
 wäre, gar nicht erst unternommen — die Zeile wird `zu_spaet`. Für
@@ -3261,7 +3288,7 @@ Sprosse läge bei 9300 s. Besser gar nichts als ein toter Link.
 |---|---|---|
 | `offen` | wartet auf den nächsten Versuch | — |
 | `zugestellt` | der Mailserver hat sie angenommen | Adresse, Betreff, Rumpf |
-| `unzustellbar` | fünf Versuche, alle gescheitert | **nur** Rumpf — die Adresse bleibt |
+| `unzustellbar` | fünf Versuche, alle gescheitert — oder eine endgültige Absage des Empfängers (seit Web 23.6.4) | **nur** Rumpf — die Adresse bleibt |
 | `zu_spaet` | die Frist lief vor der Leiter ab | Adresse, Betreff, Rumpf |
 | `ueberholt` | eine neuere Nachricht derselben Art entwertet sie | Adresse, Betreff, Rumpf |
 
@@ -4260,7 +4287,14 @@ Zwei Fehler steckten hier beim ersten Anlauf, beide beim Messen aufgefallen:
 #### Sichtbarkeit
 
 `betrieb_jobs.php` zeigt je Job letzten Lauf, Auslöser, Rückstand und letzten
-Fehler. `letzter_fehler` steht in der Tabelle und nicht nur im
+Fehler. **Der Fehler ist die Meldung der Ausnahme, bereinigt** (seit Web
+23.6.4, Nr. 357; `system_bereinigen()`: ohne Pfade, Adressen und Werte in
+Anführungszeichen) — in `letzter_fehler`, im Verlauf `job_laeufe` und im
+Bericht, den „Jetzt weiterarbeiten" zeigt. Die Klasse samt Datei und Zeile
+steht im Reiter System, weil `system_melden()` die Ausnahme bekommt. Bis dahin
+stand dort „RuntimeException: …", und im Reiter System stand die Klasse gar
+nicht. Dieselbe Kürzung gilt für den Grund in „Ließen sich nicht umhüllen"
+beim Schlüsselwechsel. `letzter_fehler` steht in der Tabelle und nicht nur im
 Protokoll: An das Fehlerprotokoll des Webspace kam auf geteiltem Hosting
 nicht jede BetreiberIn heran (seit Web 20.40.0 steht der Fehler auch im
 Reiter System), und ein dauerhaft scheiternder Job soll auffallen, ohne dass

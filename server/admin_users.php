@@ -247,7 +247,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         // Das Konto steht, nur die Mail kam nicht weg. Den Link
                         // hier zeigen ist der einzige Weg, der die Person noch
                         // erreicht; sonst bliebe ein unbrauchbares Konto stehen.
-                        $notice = 'Konto angelegt — die E-Mail konnte NICHT verschickt werden.';
+                        $notice = 'Konto angelegt — die E-Mail konnte NICHT verschickt werden.'
+                                . mail_reserviert_satz($email);
                         $setzLink = $link;
                     }
                 }
