@@ -625,26 +625,6 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
 
 <!-- -->
 
-361. **Die APK-Karte unterscheidet Handy und Wear-OS-Uhr nicht.** · gehört zu: 22 · Stand: offen · seit 30.09.2026
-     *Aufgenommen 30.09.2026 nach dem ersten Tag `android-v0.17.0`
-     (F-PK-58, Prüfdokument PK 5u).* Seit PK-08 legt die Kette zwei
-     APKs nach `server/apk/` (E-PK-58). Einstellungen → Geräte, „Ohne Play
-     Store", zeigt beide als „NAdoku 0.17.0"; nur die Größe verrät, welche
-     die Uhr-App ist, und die steht oben, weil `apk_liste()` nach
-     Ablagezeit sortiert. Wer auf den ersten Knopf tippt, lädt aufs Handy
-     die Wear-OS-App. Q-PK-11 hatte das vorhergesagt und bewusst nicht in
-     PK-08 gelöst: Es ist eine Oberflächenänderung.
-     *Weg:* `apk_liste()` liest das Gerät aus dem Namen (`nadoku-uhr-…` →
-     Wear-OS-Uhr, sonst Handy) und sortiert Handy vor Uhr; die Karte
-     nennt es („NAdoku 0.17.0 · Handy"). Dieselbe Liste liest
-     `betrieb_updates.php` und `apk.php` — beide mitprüfen. Eine
-     Web-Nebenstufe.
-     *Abnahme:* zwei Dateien im Ordner → die Karte zeigt Handy zuerst,
-     jede mit ihrem Gerät; eine Datei ohne Muster (Altbestand) steht
-     unverändert da.
-
-<!-- -->
-
 383. **Komplett- und Schlüsselwechselprobe rot unter dem PHP 8.3.6 aus Ubuntu.** · gehört zu: 22 · Stand: offen · seit 13.10.2026
      *Aufgenommen 13.10.2026 mit S11-03 (F-S11-26, -28, -33).* Unter dem
      PHP **8.3.6** aus Ubuntu 24.04 (OpenSSL 3.0.13, zlib 1.3) scheitern
@@ -820,37 +800,6 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      Anmeldename in einem eigenen Formular, Enter erstellt das Backup; Karte
      pixelgleich, Backup in drei Engines. Offen bis zur Handprüfung mit
      Bitwarden (P-BR5-13).
-<!-- -->
-
-432. **„App installieren" nennt beide APKs gleich.** · gehört zu: 22 · Stand: offen · seit 02.11.2026
-     *Aufgenommen 02.11.2026 bei P-R17-05; Doppelung von Nr. 361, wird dort
-     erledigt (E-BE-07).* Unter „Ohne Play Store: APK von
-     Hand" stehen zwei Zeilen „NAdoku 0.18.2"; welche die Wear-OS-Uhr ist,
-     zeigt erst der Dateiname nach dem Herunterladen
-     (`nadoku-uhr-0.18.2.apk`). Die Zeile in `einstellungen.php` setzt nur
-     „NAdoku" und die Fassung zusammen, `apk_liste()` liest das `-uhr-` gar
-     nicht aus. *Weg:* `apk_liste()` gibt das Gerät mit (Name enthält
-     `-uhr-` → Uhr, sonst Handy), die Zeile heißt „NAdoku für Android-Handy"
-     bzw. „NAdoku für Wear-OS-Uhr"; dieselbe Benennung in Betrieb → Updates,
-     wo `apk_liste()` auch gelesen wird. *Abnahme:* beide Zeilen tragen ihr
-     Gerät, die Prüfsummen bleiben an ihrer Zeile.
-
-<!-- -->
-
-440. **Beim Löschen eines Geräts warnt das Web nicht vor ungesendeten Aufzeichnungen.** · gehört zu: 22 · Stand: offen · seit 02.11.2026
-     *Aufgenommen 02.11.2026 mit E-BE-08 (aus der Frage in Nr. 431).* Wer
-     ein Gerät unter Einstellungen → Geräte oder in der Verwaltung löscht,
-     nimmt ihm den Schlüssel; was noch auf Uhr oder Handy wartet, kommt bei
-     diesem Konto nie mehr an. Das Web sagt davon nichts, obwohl es die Zeit
-     des letzten Kontakts kennt. Für eine verlorene Uhr ist Deaktivieren der
-     richtige Griff (Runbook „Gerät verloren"): wirkt sofort, Daten bleiben,
-     und die Uhr sendet nach dem Reaktivieren weiter. *Weg:* Die Rückfrage
-     vor dem Löschen nennt den letzten Kontakt und rät bei längerer Pause
-     zum Deaktivieren; derselbe Satz in Handbuch und Runbook. *Abnahme:*
-     Löschen eines Geräts mit Kontakt vor mehr als einem Tag → Rückfrage
-     mit Datum und Hinweis; ein Gerät mit Kontakt heute → Rückfrage ohne
-     Hinweis; `tools/zaehlung/` ohne neue Stelle (Meldung über `ui_`).
-
 <!-- -->
 
 470. **Auf der Venu 3s schneidet der Kreis die unterste Meldung der Sync-Seite ab.** · gehört zu: nächste Backlog-Runde · Stand: offen · seit 02.11.2026

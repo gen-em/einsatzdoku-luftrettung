@@ -1381,6 +1381,7 @@ if ($tab === 'geraete') {
            FROM devices
           WHERE user_id = ? AND ' . GERAETE_ECHT_SQL . ' ORDER BY created_at';
     $devFelder = 'id, device_id, label, active, last_seen, created_at,
+                  TIMESTAMPDIFF(HOUR, last_seen, NOW()) AS seit_h,
                   geraet_art, geraet_modell, geraet_teil,
                   (created_at > DATE_SUB(NOW(), INTERVAL ? DAY)) AS ist_neu';
     try {
@@ -5337,7 +5338,7 @@ ui_seite_start(['titel' => 'Einstellungen',
         </form>
         <form method="post" id="f-devdel-<?= $did ?>" class="nur-vorlesen"
               action="einstellungen.php?t=geraete"
-              data-confirm="Gerät „<?= e($d['label'] ?? $d['device_id']) ?>“ wirklich entkoppeln? Es kann danach nichts mehr hochladen; bereits hochgeladene Daten bleiben erhalten."
+              data-confirm="<?= e(geraet_entkoppeln_frage($d, 'Gerät „' . ($d['label'] ?? $d['device_id']) . '“ wirklich entkoppeln? Es kann danach nichts mehr hochladen; bereits hochgeladene Daten bleiben erhalten.')) ?>"
               data-confirm-ok="Entkoppeln">
           <?= csrf_field() ?><input type="hidden" name="action" value="delete">
           <input type="hidden" name="id" value="<?= $did ?>">
@@ -5474,9 +5475,15 @@ ui_seite_start(['titel' => 'Einstellungen',
             <span class="akkordeon-text">Ohne Play Store: APK von Hand</span>
           </summary>
           <?php foreach ($apks as $apk): ?>
+            <?php /* WELCHES GERÄT, IM TITEL (Nr. 361, 432, E-BR5-09). Bis
+                     Web 23.7.2 hießen beide Zeilen „NAdoku 0.18.2“; welche die
+                     Wear-OS-Uhr war, zeigte erst der Dateiname nach dem
+                     Herunterladen. Die Fassung steht jetzt in der Kleinzeile. */ ?>
             <?php ui_zeile([
-                'text'  => 'NAdoku' . ($apk['version'] !== null ? ' ' . $apk['version'] : ''),
-                'klein' => 'APK · ' . groesse_text($apk['groesse'])
+                'text'  => apk_titel($apk),
+                'klein' => ($apk['geraet'] !== null && $apk['version'] !== null
+                              ? 'Fassung ' . $apk['version'] . ' · ' : '')
+                         . 'APK · ' . groesse_text($apk['groesse'])
                          . ' · Stand ' . datum_text(gmdate('Y-m-d H:i:s', $apk['stand'])),
                 'aktionen' => ui_knopf(['text' => 'Herunterladen', 'art' => 'leise',
                     'href' => 'apk.php?d=' . rawurlencode($apk['datei'])]),

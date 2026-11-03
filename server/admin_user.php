@@ -729,6 +729,7 @@ $u = $st->fetch();
 if (!$u) { ui_abbruch(404, 'NutzerIn nicht gefunden.', ['zurueck' => 'admin_users.php', 'zurueck_text' => 'Zu den NutzerInnen']); }
 
 $dv = db()->prepare('SELECT id, device_id, label, active, created_at, last_seen,
+                            TIMESTAMPDIFF(HOUR, last_seen, NOW()) AS seit_h,
                             geraet_art, geraet_modell, geraet_teil
                      FROM devices
                      WHERE user_id = ? AND ' . GERAETE_ECHT_SQL . ' ORDER BY created_at');
@@ -861,7 +862,7 @@ ui_seite_start(['titel' => ($u['name'] ?: $u['email']) . ' — Konto']);
       <input type="hidden" name="dev" value="<?= (int)$d['id'] ?>">
     </form>
     <form method="post" id="f-dev-d-<?= (int)$d['id'] ?>" hidden
-          data-confirm="Gerät entkoppeln? Hochgeladene Daten bleiben erhalten."
+          data-confirm="<?= e(geraet_entkoppeln_frage($d, 'Gerät entkoppeln? Hochgeladene Daten bleiben erhalten.')) ?>"
           data-confirm-ok="Entkoppeln">
       <?= csrf_field() ?><input type="hidden" name="action" value="device_delete">
       <input type="hidden" name="id" value="<?= $uid ?>">

@@ -3,7 +3,7 @@
 Was **du** noch prüfen musst. Was maschinell gemessen ist, steht mit Mittel
 und Zahl im Prüfprotokoll des Konzepts (`Konzept-BR5-Backlog-Runde-5.md` 6),
 nicht hier (CLAUDE.md 7, E-PU-08). Fortgeschrieben je Paket; Stand nach
-BR5-07.
+BR5-08.
 
 ## 1. Was nicht geprüft werden konnte, und warum
 
@@ -58,3 +58,4 @@ bestanden (Konzept 6).
 | P-BR5-11 | Du, mit einem echten Safari (iPhone oder Mac) auf Staging: dasselbe wie P-BR5-10 | wie P-BR5-10 | wie P-BR5-10 — WebKit ist nicht Safari (CLAUDE.md 6) |
 | P-BR5-12 | Staging (Arbeitsumgebung): ein Einsatz mit Reanimation im Formular, einmal entsperrt, einmal nach „Sperren“ | entsperrt „N erfasst“, gesperrt „gesperrt“ | „keine“ an einem Einsatz mit Reanimation |
 | P-BR5-13 | **Du**, Firefox mit Bitwarden, Staging nach dem Merge: Einstellungen → Backup, „Mein Kontopasswort verwenden“, ins Feld „Kontopasswort“ klicken | das Bitwarden-Menü am Feld bietet den Eintrag der Anlage an; Einfügen und Enter erstellen das Backup | „No items to show“ am Feld — dann bleibt Nr. 430 offen |
+| P-BR5-14 | **Du**, auf Produktiv nach dem nächsten Tag `android-v…`: Einstellungen → Geräte, „Ohne Play Store“ | zwei Zeilen „NAdoku für Android-Handy“ (oben) und „NAdoku für Wear-OS-Uhr“, je mit Fassung | zwei Zeilen „NAdoku“ oder die Uhr oben |

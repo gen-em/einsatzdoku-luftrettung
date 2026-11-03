@@ -22,11 +22,11 @@ BR5-10).
 | BR5-05 | Schlüsselpaar und Rückweg nach der Anmeldung: Nr. 392 | **erledigt** 03.11.2026 (Web 23.7.0) |
 | BR5-06 | Meldungen und Karten: Nr. 346, 356, 456 | **erledigt** 03.11.2026 (Web 23.7.1) |
 | BR5-07 | Backup-Formular: Nr. 430 | **gebaut** 03.11.2026 (Web 23.7.2) — Abnahme mit Bitwarden bei der Betreiberin (P-BR5-13) |
-| BR5-08 | Geräte: Nr. 361 (mit 432), 440 | offen |
+| BR5-08 | Geräte: Nr. 361 (mit 432), 440 | **erledigt** 03.11.2026 (Web 23.7.3) |
 | BR5-09 | PHP 8.3.6: Nr. 383 | offen |
 | BR5-10 | Abschluss | offen |
 
-**In Arbeit:** BR5-08 als Nächstes. **Es hakt:** nirgends. Nr. 430 bleibt „teilweise“, bis die Handprüfung mit Bitwarden durch ist.
+**In Arbeit:** BR5-09 als Nächstes. **Es hakt:** nirgends. Nr. 430 bleibt „teilweise“, bis die Handprüfung mit Bitwarden durch ist.
 
 ---
 
@@ -264,6 +264,16 @@ ohne Absendeknopf mit mehr als einem Feld schickt bei Enter nach HTML nicht ab,
 und der verborgene Anmeldename zählt als Feld. Vorher, ohne Formular, war es
 ebenso. Damit Enter „Backup erstellen“ heißt, fängt das Formular die Taste ab;
 sein `submit` geht nie an den Server.
+
+**F-BR5-27 — Ein Teilskript scheiterte, der Rest lief an ihm vorbei
+(BR5-08, eigener Fehler).** Das Umbauskript für Nr. 440 brach an einer
+Ersetzung in `einstellungen.php` ab, bevor es `geraete_lib.php` schrieb; der
+zweite Anlauf ersetzte nur die Aufrufe. Die Seite Einstellungen → Geräte warf
+danach `Call to undefined function geraet_entkoppeln_frage()` — der
+Abnahmetest fand es (leere Seite ab der Gerätekarte, drei Einträge im Reiter
+System), nicht `php -l`, das undefinierte Funktionen nicht sieht. Seitdem
+prüft der Ladeweg-Test (BR5-03) nicht nur `require`, sondern die Abnahme
+fährt jede berührte Seite im Browser.
 
 **F-BR5-14 — Nr. 450 hat die Ursache in der Kette, die Abhilfe am Server.**
 Stufe 2 legt Konten unter `…@example.invalid` an (`umlauf_konto()` in
@@ -954,10 +964,25 @@ Konto hat nichts zu sichern):
 - *Nicht geprüft:* ob Bitwarden den Eintrag jetzt am Feld anbietet — die
   Sandbox hat kein Bitwarden (P-BR5-13).
 
+**BR5-08** (03.11.2026, Web 23.7.3; örtliche Anlage, Chromium):
+
+- *Nr. 361, 432:* drei Probe-Dateien in `server/apk/` (Handy vor 300 s, Uhr
+  vor 10 s abgelegt, `alt-1.0.apk` ohne Muster): Einstellungen → Geräte,
+  „Ohne Play Store“ → „NAdoku für Android-Handy“, „NAdoku für Wear-OS-Uhr“,
+  „NAdoku“; Kleinzeile „Fassung 0.20.0 · APK …“; drei Prüfsummen. Betrieb →
+  Updates: „Android-App (Handy)“ und „Wear-OS-App“ je mit 0.20.0. Dateien
+  danach entfernt (`server/apk/` steht in `.gitignore`).
+- *Nr. 440:* Demo-Gerät 61 mit Kontakt vor drei Tagen, 62 mit Kontakt eben:
+  Rückfrage in Einstellungen und Verwaltung bei 61 mit „Zuletzt gemeldet am
+  … um … Uhr“ und „Deaktivieren“, bei 62 der bisherige Satz. Danach
+  `last_seen` zurück auf NULL.
+- *Gefunden unterwegs:* F-BR5-27 (fehlende Funktion), vom Abnahmetest.
+
 ## 7. Verlauf
 
 | Datum | Was |
 |---|---|
+| 03.11.2026 | BR5-08 erledigt (Web 23.7.3); F-BR5-27. |
 | 03.11.2026 | BR5-07 gebaut (Web 23.7.2), Nr. 430 „teilweise“; F-BR5-26. |
 | 03.11.2026 | BR5-06 erledigt (Web 23.7.1); F-BR5-25, Backlog Nr. 480. |
 | 03.11.2026 | BR5-05 erledigt (Web 23.7.0); F-BR5-23, -24. |

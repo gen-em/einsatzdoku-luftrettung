@@ -13575,7 +13575,12 @@ hinterher" — dann Punkt 1 oder 2 oben einrichten.
 → **Deaktivieren**. Wirkt sofort (Ingest antwortet `403`); Daten bleiben. Neue
 Uhr = neu koppeln (seit Web 23.3.0 der einzige Weg, ein Gerät anzulegen).
 Eine Uhr ab Uhr 4.1.0, die die Abmeldung erfährt, verwirft ihre
-ungesendeten Pakete 30 Tage danach (E-R17-22).
+ungesendeten Pakete 30 Tage danach (E-R17-22). **Nicht entkoppeln, wenn noch etwas
+wartet:** Seit Web 23.7.3 nennt die Rückfrage vor dem Entkoppeln den letzten
+Kontakt, wenn er älter als ein Tag ist, und rät zum Deaktivieren
+(`geraet_entkoppeln_frage()` in `geraete_lib.php`, Nr. 440); was nach dem
+Entkoppeln noch auf dem Gerät liegt, kommt erst nach einer neuen Kopplung an
+dasselbe Konto an (E-BE-08).
 
 **Die Kopplung klappt nicht (seit Web 13.0.0 anders zu suchen als davor):**
 Der Ablauf hat drei Schritte — das Gerät holt sich einen Code, ein Mensch

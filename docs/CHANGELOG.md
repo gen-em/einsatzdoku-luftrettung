@@ -14,6 +14,25 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 23.7.3] — unveröffentlicht
+
+### Behoben
+
+- **Web — die zwei App-Dateien hießen gleich** (Backlog Nr. 361, 432). Unter
+  „Ohne Play Store“ standen zwei Zeilen „NAdoku“ mit derselben Fassung, und
+  welche die Wear-OS-Uhr war, zeigte erst der Dateiname nach dem
+  Herunterladen; Betrieb → Updates zeigte als „Android-App“ oft die
+  Uhr-Datei. Jetzt heißen sie „NAdoku für Android-Handy“ und „NAdoku für
+  Wear-OS-Uhr“, das Handy steht oben, und Updates hat eine Zeile je Gerät.
+
+### Geändert
+
+- **Web — die Rückfrage vor dem Entkoppeln nennt den letzten Kontakt**
+  (Backlog Nr. 440), wenn er länger als einen Tag zurückliegt. Was ein Gerät
+  danach aufgezeichnet hat, kommt erst nach einer neuen Kopplung an; für ein
+  verlorenes Gerät ist Deaktivieren der bessere Griff, und die Rückfrage sagt
+  es jetzt.
+
 ## [Web 23.7.2] — unveröffentlicht
 
 ### Behoben

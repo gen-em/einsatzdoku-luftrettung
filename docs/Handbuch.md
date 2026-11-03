@@ -3724,7 +3724,11 @@ drei Punkten am rechten Rand der Zeile, in jeder Bildschirmbreite. Darin:
 **Bezeichnung ändern**, **Deaktivieren** beziehungsweise **Aktivieren** und
 **Entkoppeln**. Deaktivieren sperrt den Upload sofort (etwa bei Verlust); alle
 bereits hochgeladenen Daten bleiben erhalten, und Aktivieren schaltet dasselbe
-Gerät wieder frei.
+Gerät wieder frei. **Hat sich das Gerät seit mehr als einem Tag nicht
+gemeldet, sagt die Rückfrage vor dem Entkoppeln, wann zuletzt** *(seit Web
+23.7.3)*: Was es danach aufgezeichnet hat, liegt noch auf dem Gerät und kommt
+erst nach einer neuen Kopplung an. Ist es verloren, ist Deaktivieren der
+bessere Griff.
 
 **Eine orange Plakette „abgewiesen"** *(seit Web 20.11.0)* sagt, dass dieses
 Gerät am Hochladen gescheitert ist — fast immer, weil sein Schlüssel veraltet
@@ -3850,8 +3854,9 @@ Knopf, der ins Leere führte, wäre schlechter als keiner.
 
 **Ohne Play Store: das APK von Hand.** Darunter klappt ein Fach auf, in dem
 die App-Dateien liegen, sofern die BetreiberIn eine Fassung ausgeliefert hat —
-`nadoku-X.Y.Z.apk` fürs Handy, `nadoku-uhr-X.Y.Z.apk` für die Wear-OS-Uhr, je
-nur die neueste: Fassung, Größe, Stand und die **SHA-256-Prüfsumme** mit einem
+**„NAdoku für Android-Handy“** zuerst, darunter **„NAdoku für Wear-OS-Uhr“**
+*(seit Web 23.7.3; bis dahin hießen beide „NAdoku“ mit der Fassung, und die
+Uhr-App stand oft oben)*, je nur die neueste: Fassung, Größe, Stand und die **SHA-256-Prüfsumme** mit einem
 Knopf „Kopieren" — wer
 der Seite nicht traut, rechnet sie an der heruntergeladenen Datei nach. Beim
 ersten Öffnen fragt Android nach, ob Installationen aus dieser Quelle erlaubt

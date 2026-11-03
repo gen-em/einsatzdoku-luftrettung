@@ -355,6 +355,35 @@ function geraet_bezeichnung(?string $art, ?string $modell, ?string $teil): strin
 }
 
 /**
+ * Die Rueckfrage vor dem Entkoppeln — mit dem letzten Kontakt, wenn er
+ * laenger als einen Tag zurueckliegt (Backlog Nr. 440, E-BR5-14).
+ *
+ * WARUM: Wer ein Geraet entkoppelt, nimmt ihm den Schluessel. Was noch auf
+ * Uhr oder Handy wartet, kommt erst nach einer neuen Kopplung an dieses Konto
+ * an (seit Uhr 4.3.0 und Android 0.20.0 dann aber wirklich, E-BE-08). Fuer
+ * ein verlorenes Geraet ist Deaktivieren der richtige Griff: wirkt sofort,
+ * Daten bleiben, und es sendet nach dem Reaktivieren weiter (Runbook „Geraet
+ * verloren", `Technik.md` 13). Eine Pause von einem Tag ist die Grenze, ab
+ * der „wartet noch etwas?" eine echte Frage ist.
+ *
+ * @param array  $d     die Geraetezeile mit `last_seen` und `seit_h` (Stunden
+ *                      seit dem letzten Kontakt, von der Datenbank gerechnet —
+ *                      `last_seen` schreibt `NOW()` der Datenbank)
+ * @param string $frage der Satz der Seite
+ */
+function geraet_entkoppeln_frage(array $d, string $frage): string
+{
+    $seitH = $d['seit_h'] ?? null;
+    if (!empty($d['last_seen']) && $seitH !== null && (int)$seitH < 24) { return $frage; }
+    $kontakt = empty($d['last_seen'])
+        ? 'Es hat sich noch nie gemeldet.'
+        : 'Zuletzt gemeldet am ' . datum_zeit_text((string)$d['last_seen'], ' um ') . ' Uhr.';
+    return $frage . ' ' . $kontakt . ' Was danach aufgezeichnet wurde, liegt noch auf dem '
+         . 'Gerät und kommt erst nach einer neuen Kopplung an dieses Konto an. Ist das '
+         . 'Gerät verloren, besser „Deaktivieren“.';
+}
+
+/**
  * Die oeffentliche Geraetekennung, gekuerzt fuer eine Listenzeile.
  *
  * WARUM GEKUERZT. Die Kennung ist 36 Zeichen lang

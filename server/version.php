@@ -8542,5 +8542,13 @@ declare(strict_types=1);
  *   Feld nichts an. Jetzt steht das Kontopasswort samt Anmeldename in einem
  *   eigenen Formular, das nie abgeschickt wird; Enter erstellt das Backup.
  *   Ob Bitwarden es jetzt anbietet, zeigt nur ein echter Browser mit
- *   Bitwarden. Korrektur; kein Schema. */
-const WEB_VERSION = '23.7.2';
+ *   Bitwarden. Korrektur; kein Schema.
+ * 23.7.3 — ZWEI APKS MIT DEMSELBEN NAMEN, UND KEIN WORT VOR DEM ENTKOPPELN
+ *   (Backlog Nr. 361, 432, 440; Schritt 22, BR5-08). Unter „Ohne Play
+ *   Store" hiessen Handy- und Wear-OS-App gleich, und die Uhr-App stand oft
+ *   oben; Betrieb -> Updates zeigte als „Android-App" die zuletzt abgelegte
+ *   Datei. Jetzt traegt jede ihr Geraet (`apk_geraet()`), Handy zuerst, und
+ *   Updates hat zwei Zeilen. Und wer ein Geraet entkoppelt, das sich seit
+ *   mehr als einem Tag nicht gemeldet hat, liest jetzt, wann zuletzt, und
+ *   dass Deaktivieren der bessere Griff ist. Korrektur; kein Schema. */
+const WEB_VERSION = '23.7.3';
