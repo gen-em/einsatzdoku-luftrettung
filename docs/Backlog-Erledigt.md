@@ -10776,3 +10776,29 @@ zutreffen.
      Satz berücksichtigt, dass nach dem Neukoppeln der Rückstand doch
      ankommt (F-BR5-06). Abnahme: Kontakt vor drei Tagen → mit Datum und
      Rat, Kontakt eben → ohne, auf beiden Seiten.
+
+383. **Komplett- und Schlüsselwechselprobe rot unter dem PHP 8.3.6 aus Ubuntu.** · gehört zu: 22 · Stand: erledigt · seit 13.10.2026
+     *Aufgenommen 13.10.2026 mit S11-03 (F-S11-26, -28, -33).* Unter dem
+     PHP **8.3.6** aus Ubuntu 24.04 (OpenSSL 3.0.13, zlib 1.3) scheitern
+     drei Fälle, die alle ein Komplett-Siegel über mehrere Häppchen
+     schreiben: Komplettprobe Teil 4 „über drei Häppchen versiegelt …
+     öffnet" und „Zieldatei verschwindet" (73 von 75, „verändert oder
+     unvollständig (Block 1)"), Schlüsselwechselprobe Teil 4 „Komplett-Stand
+     über den Wechsel" (65 ok, 1 fehlt). Auf dem Stand vor S11-03 ebenso.
+     **Grün** unter PHP 8.3.33 (`nadoku-php83`) und 8.4.19 (75/0, 66/0) —
+     gegen dieselbe Datenbank. S11 ist es nicht; ein Fehler der Probe wohl
+     auch nicht, sonst wäre er überall rot.
+     **Warum es zählt:** 8.3.6 ist die Vorgabe von Ubuntu 24.04 LTS. Steht
+     eine Anlage darauf, geht ihre Komplettsicherung vielleicht nicht auf.
+     *Weg:* den Siegelschub (`komp_siegel_schub()`) unter 8.3.6 Block für
+     Block mit 8.4 vergleichen; Ursache benennen (PHP-Fehler, der bis
+     8.3.33 behoben ist, oder Bibliothek); dann entweder umgehen oder eine
+     Mindestfassung in `Technik.md` und im Installer festschreiben.
+     *Abnahme:* die Ursache benannt, und unter 8.3.6 grün oder abgewiesen.
+     Erledigt 03.11.2026 mit BR5-09 (E-BR5-18): Die Ursache war der
+     Stat-Cache von PHP, den Nr. 393 mit fstat() in komp_oeffnen() umgangen
+     hat. Unter dem PHP 8.3.6 der Sandbox sind die Komplettprobe (74/0) und
+     die Schlüsselwechselprobe (66/0) grün; mit filesize() an beiden
+     Stellen zurück wieder rot (2 bzw. 1 Fall, „Block 1“) — also kein
+     Fehler von 8.3.6, sondern einer der Bibliothek, und keine
+     Mindestfassung.

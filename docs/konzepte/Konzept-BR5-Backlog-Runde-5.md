@@ -23,10 +23,10 @@ BR5-10).
 | BR5-06 | Meldungen und Karten: Nr. 346, 356, 456 | **erledigt** 03.11.2026 (Web 23.7.1) |
 | BR5-07 | Backup-Formular: Nr. 430 | **gebaut** 03.11.2026 (Web 23.7.2) — Abnahme mit Bitwarden bei der Betreiberin (P-BR5-13) |
 | BR5-08 | Geräte: Nr. 361 (mit 432), 440 | **erledigt** 03.11.2026 (Web 23.7.3) |
-| BR5-09 | PHP 8.3.6: Nr. 383 | offen |
+| BR5-09 | PHP 8.3.6: Nr. 383 | **erledigt** 03.11.2026 (keine Fassung, E-BR5-18) |
 | BR5-10 | Abschluss | offen |
 
-**In Arbeit:** BR5-09 als Nächstes. **Es hakt:** nirgends. Nr. 430 bleibt „teilweise“, bis die Handprüfung mit Bitwarden durch ist.
+**In Arbeit:** BR5-10 (Abschluss). **Es hakt:** nirgends. Nr. 430 bleibt „teilweise“, bis die Handprüfung mit Bitwarden durch ist.
 
 ---
 
@@ -75,7 +75,8 @@ also nicht. Nr. 393 hat 383 nie genannt. Was fehlt, ist die Messung unter
 
 **F-BR5-02 — `docs/Sandbox-Setup.md` sagt „Produktiv läuft 8.4“,
 `docs/Technik.md` sagt Produktiv 8.3.33, Staging 8.4.27** (Statusseite,
-02.11.2026). Eine der beiden Stellen ist falsch; BR5-09 zieht sie nach.
+02.11.2026). Eine der beiden Stellen ist falsch; BR5-09 zieht sie nach. *Gelöst mit
+BR5-09:* Falsch war `Sandbox-Setup.md`; sie verweist jetzt auf `Technik.md` 12.5.
 
 **F-BR5-03 — Nr. 357 nimmt an, die Klasse stehe im Reiter System; das tut
 sie nicht.** `jobs_einen_lauf()` ruft
@@ -978,10 +979,32 @@ Konto hat nichts zu sichern):
   `last_seen` zurück auf NULL.
 - *Gefunden unterwegs:* F-BR5-27 (fehlende Funktion), vom Abnahmetest.
 
+**BR5-09** (03.11.2026, keine Fassung; örtliche Anlage, PHP 8.3.6 mit
+OpenSSL 3.0.13 und zlib 1.3 — genau die Fassungen aus Nr. 383):
+
+- *Komplettprobe:* 74 Erwartungen, 0 nicht erfüllt (`proben.sh komplett`),
+  darunter „über drei Häppchen versiegelt … öffnet“ und „Zieldatei
+  verschwindet“ — die beiden roten Fälle aus Nr. 383. Zwei Teile melden
+  „--“ (Häppchenteilung, Wiederanlauf: der Bestand ist zu klein, messbar im
+  Messstand); das war auch vor Nr. 393 so.
+- *Schlüsselwechselprobe:* 66 ok, 0 fehlen, darunter „Komplett-Stand über
+  den Wechsel“.
+- *Gegenprobe:* `komp_oeffnen()` und `komp_erster_block_oeffnet()` zurück auf
+  `filesize($pfad)` → Komplettprobe 2 nicht erfüllt („verändert oder
+  unvollständig (Block 1)“, dieselben zwei Fälle), Schlüsselwechselprobe
+  65/1 (dieselbe Zeile) — das Bild aus Nr. 383, Zahl für Zahl. Datei danach
+  zurückgesetzt, nicht committet.
+- *Folgerung:* Ursache ist der Stat-Cache von PHP innerhalb eines Prozesses,
+  behoben mit Nr. 393; keine Mindestfassung. 8.3.33 und 8.4 nicht eigens
+  (E-BR5-18).
+- *F-BR5-02:* `Technik.md` 12.5 stimmt (Statusseite), `Sandbox-Setup.md`
+  verweist jetzt dorthin.
+
 ## 7. Verlauf
 
 | Datum | Was |
 |---|---|
+| 03.11.2026 | BR5-09 erledigt (Nr. 383 gemessen, keine Fassung); F-BR5-02 berichtigt. |
 | 03.11.2026 | BR5-08 erledigt (Web 23.7.3); F-BR5-27. |
 | 03.11.2026 | BR5-07 gebaut (Web 23.7.2), Nr. 430 „teilweise“; F-BR5-26. |
 | 03.11.2026 | BR5-06 erledigt (Web 23.7.1); F-BR5-25, Backlog Nr. 480. |

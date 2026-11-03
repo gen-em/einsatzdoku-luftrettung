@@ -3,7 +3,7 @@
 Was **du** noch prüfen musst. Was maschinell gemessen ist, steht mit Mittel
 und Zahl im Prüfprotokoll des Konzepts (`Konzept-BR5-Backlog-Runde-5.md` 6),
 nicht hier (CLAUDE.md 7, E-PU-08). Fortgeschrieben je Paket; Stand nach
-BR5-08.
+BR5-09.
 
 ## 1. Was nicht geprüft werden konnte, und warum
 
@@ -35,6 +35,9 @@ BR5-08.
   Stelle (`protokoll()` → `db_transaktion_verloren()`).
 - **Z46 sieht nur feste Arten.** Eine Art aus einer Variablen
   (`protokoll_geraet()`, `wartung_an`/`_aus`) misst sie nicht.
+- **PHP 8.3.6 nur örtlich (Nr. 383, BR5-09)** — gemessen mit den
+  Proben unter dem PHP der Sandbox. Eine Anlage auf 8.3.6 gibt es bei keiner
+  der beiden Umgebungen (Produktiv 8.3.33, Staging 8.4.27).
 - **Staging-Prüfungen nur in Chromium**, mit dem eigenen Konto der
   Arbeitsumgebung (R91).
 
