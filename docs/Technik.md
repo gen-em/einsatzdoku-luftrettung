@@ -4824,9 +4824,14 @@ Server gilt (Backlog Nr. 49).
 
 Die Zeit wird **je Konto** geprüft, nicht je Ziel: Ein Schub, der mitten in
 einer Übertragung von der Zeit eingeholt wird, hinterlässt am Ziel eine halbe
-Datei. Die Reserve ist mit 25 s gross, weil ein SFTP-Verbindungsaufbau in
-reinem PHP über eine Sekunde kostet; am Huckepack-Weg (3 s) fängt der Job
-deshalb gar nicht erst an.
+Datei. Die Reserve folgt dem Auslöser (`sz_versand_reserve()`): höchstens
+25 s, nie mehr als die Hälfte der Zeit, die der Lauf beim Anfang hat, nie
+unter 5 s. Auf der Kommandozeile sind es also 25 s, am Abruf über die Adresse
+(20 s) rund 10 s, und am Huckepack-Weg (3 s) fängt der Job gar nicht erst
+an — ein SFTP-Verbindungsaufbau kostet in reinem PHP über eine Sekunde. Eine
+Übertragung, die dabei abbricht, schickt der nächste Lauf neu, weil der
+Versand nach Name und Größe vergleicht. *(Bis Web 23.6.1 waren es fest
+25 s, und am Adress-Abruf fing der Job nie an — Backlog Nr. 453.)*
 
 Der Schalter sagt **ob**, nicht **wann**. Wann etwas läuft, entscheidet der
 eingerichtete Auslöser (Abschnitt 4.7). Eine zweite Uhr in der Datenbank

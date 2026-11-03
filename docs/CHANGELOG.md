@@ -14,6 +14,18 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 23.6.2] — unveröffentlicht
+
+### Behoben
+
+- **Web — der automatische Backup-Versand fing über den Abruf per Adresse nie
+  an** (Backlog Nr. 453). Der Job verlangte fest 25 s Reserve, der Abruf über
+  die Adresse gibt einem Lauf aber nur 20 s; auf einer Anlage ohne
+  Kommandozeilen-Cron ging deshalb nichts hinaus, und keine Seite meldete
+  einen Fehler. Jetzt folgt die Reserve der verfügbaren Zeit: höchstens 25 s,
+  nie mehr als die Hälfte, nie unter 5 s — huckepack an einer Seitenanfrage
+  fängt der Versand weiter nicht an.
+
 ## [Uhr 4.3.1] — unveröffentlicht
 
 Schritt 21 (GR), Paket GR-06 — die Sync-Seite überlappt nicht mehr
