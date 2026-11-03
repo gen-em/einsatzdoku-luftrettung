@@ -10417,8 +10417,10 @@ zutreffen.
      Erledigt mit Web 23.6.2: Die Reserve folgt der Zeit, die der Lauf
      beim Anfang hat (`sz_versand_reserve()`: höchstens 25 s, die Hälfte,
      mindestens 5 s) — am Adress-Abruf rund 10 s, huckepack startet der
-     Job weiter nicht. Gerechnet für 3, 20 und 300 s; die Abnahme auf
-     Staging folgt nach dem Merge im Prüfdurchgang (R91).
+     Job weiter nicht. Gerechnet für 3, 20 und 300 s. Abgenommen auf
+     Staging am 03.11.2026: eine Minute nach der Auslieferung „zuletzt in
+     Ordnung" über den Adress-Abruf; ein neues Konto-Backup von 03:52 Uhr
+     ging ohne Klick hinaus (Ziel 03:55 Uhr, Rückstand 0).
 
 <!-- -->
 
