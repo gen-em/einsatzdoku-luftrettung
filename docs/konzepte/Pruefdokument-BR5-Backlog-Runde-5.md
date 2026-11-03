@@ -3,7 +3,7 @@
 Was **du** noch prüfen musst. Was maschinell gemessen ist, steht mit Mittel
 und Zahl im Prüfprotokoll des Konzepts (`Konzept-BR5-Backlog-Runde-5.md` 6),
 nicht hier (CLAUDE.md 7, E-PU-08). Fortgeschrieben je Paket; Stand nach
-BR5-09.
+BR5-10, vor dem Pull Request.
 
 ## 1. Was nicht geprüft werden konnte, und warum
 

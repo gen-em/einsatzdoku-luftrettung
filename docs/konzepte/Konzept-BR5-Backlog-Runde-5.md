@@ -24,9 +24,9 @@ BR5-10).
 | BR5-07 | Backup-Formular: Nr. 430 | **gebaut** 03.11.2026 (Web 23.7.2) — Abnahme mit Bitwarden bei der Betreiberin (P-BR5-13) |
 | BR5-08 | Geräte: Nr. 361 (mit 432), 440 | **erledigt** 03.11.2026 (Web 23.7.3) |
 | BR5-09 | PHP 8.3.6: Nr. 383 | **erledigt** 03.11.2026 (keine Fassung, E-BR5-18) |
-| BR5-10 | Abschluss | offen |
+| BR5-10 | Abschluss | **gebaut** 03.11.2026 — Prüfstand im Bericht des Commits, Pull Request offen |
 
-**In Arbeit:** BR5-10 (Abschluss). **Es hakt:** nirgends. Nr. 430 bleibt „teilweise“, bis die Handprüfung mit Bitwarden durch ist.
+**In Arbeit:** BR5-10 — Pull Request, danach Prüfung auf Staging (R91). **Es hakt:** nirgends. Nr. 430 bleibt „teilweise“, bis die Handprüfung mit Bitwarden durch ist.
 
 ---
 
@@ -275,6 +275,38 @@ Abnahmetest fand es (leere Seite ab der Gerätekarte, drei Einträge im Reiter
 System), nicht `php -l`, das undefinierte Funktionen nicht sieht. Seitdem
 prüft der Ladeweg-Test (BR5-03) nicht nur `require`, sondern die Abnahme
 fährt jede berührte Seite im Browser.
+
+**F-BR5-28 — Ein Bedienweg erwartete noch die Lage vor der Anlegemarke
+(BR5-05, gefunden im Prüfstand von BR5-10).** `einstellungen-profil-rueckweg`
+schickte nach der zweiten Anmeldung ein Anlegen ohne Token und erwartete 403.
+Seit Web 23.7.0 gilt dort die Marke (E-BR5-08), und die Antwort ist 409
+(„schon eingerichtet“) — richtig, denn die Marke erlaubt nur das erste
+Anlegen. Der Weg schickt jetzt ein **Ersetzen** ohne Token, das die Marke nie
+erlaubt (403). Bei BR5-05 war die Kontopaarprobe angepasst worden, dieser Weg
+nicht: Die Bedienprobe lief dort nicht mit.
+
+**F-BR5-29 — Die Wartungsprobe las die Nutzerabfrage noch in `login.php`
+(BR5-04, gefunden im Prüfstand von BR5-10).** Prüfung 18 suchte die
+Spaltenliste mit `role` im Text von `login.php`; seit Web 23.6.6 steht sie in
+`anmelde_konto()` (`db.php`), gemeinsam mit dem Notzugang. Die Anwendung war
+richtig, die Probe rot (83 von 84). Sie liest jetzt den Rumpf der Funktion und
+prüft, dass `login.php` sie ruft. Bei BR5-04 lief die Wartungsprobe nicht mit.
+
+**F-BR5-30 — Die Kontopaarprobe wartete an der falschen Seite (BR5-05,
+gefunden im Prüfstand von BR5-10).** Seit der Anlegemarke versuchen beide
+Seiten der Probe anzulegen; eine bekommt 200, die andere 409. Die Probe
+wartete nur an der ersten auf die 200 — gewann in Chromium die zweite, meldete
+sie „keine Anfrage“ (14 von 15), obwohl das Paar richtig und einmal entstand.
+Sie wartet jetzt am Kontext; danach viermal 15/0 in Chromium. Das Rennen ist
+nicht erzwingbar, eine Gegenprobe gibt es deshalb nicht.
+
+**F-BR5-31 — Ein abgebrochener Prüfstand hinterlässt Zustand (BR5-10,
+eigener Fehler).** Der erste Lauf wurde wegen F-BR5-28 abgebrochen, mitten in
+der Bedienprobe. Liegen blieben eine Job-Pause bis 16:04 UTC (Jobprobe rot)
+und ein offener Rückweg der Schlüsselwechselprobe (Bedienweg
+`betrieb-server-schluesselwechsel` rot). Aufgeräumt wurde mit `jobs_pause(0)`
+und `schluesselwechsel/probe.php --zurueck`. Danach waren die drei Proben
+einzeln grün. Lehre: einen Prüfstand auslaufen lassen, statt ihn abzubrechen.
 
 **F-BR5-14 — Nr. 450 hat die Ursache in der Kette, die Abhilfe am Server.**
 Stufe 2 legt Konten unter `…@example.invalid` an (`umlauf_konto()` in
@@ -1000,10 +1032,31 @@ OpenSSL 3.0.13 und zlib 1.3 — genau die Fassungen aus Nr. 383):
 - *F-BR5-02:* `Technik.md` 12.5 stimmt (Statusseite), `Sandbox-Setup.md`
   verweist jetzt dorthin.
 
+**BR5-10** (03.11.2026; Stufe `neben`, Umfang schmal, drei Engines, weil
+`ui.php` berührt ist — das deckt die Anmeldeseiten aus BR5-03 bis -05):
+
+- *Erster Lauf* abgebrochen nach der Bedienprobe in Chromium (76 von 77,
+  F-BR5-28); der Abbruch hinterließ Zustand (F-BR5-31).
+- *Zweiter Lauf* als Wegwerflauf zu Ende gefahren bis zum Bilderlauf in
+  Chromium: rot die Wartungsprobe (83 von 84, F-BR5-29) und die beiden Reste
+  aus F-BR5-31.
+- *Dritter Lauf* (9236 s): 59 grün, 2 rot — Kontopaarprobe in Chromium
+  14 von 15 (F-BR5-30) und `uhr-krypto` („…/ConnectIQ/Devices ist kein
+  Verzeichnis“: der Uhr-Teil der Arbeitsumgebung fehlte nach dem
+  Containerneustart). Nachgeholt mit `aufbauen.sh uhr` (rc 0, 173
+  Gerätedateien); danach `uhr-krypto` einzeln 3 von 3 Geräten ohne Fehler,
+  Kontopaarprobe in Chromium viermal 15/0.
+- *Vierter Lauf* über den Endstand: der Bericht im Commit.
+- *Bedienweg einzeln* nach der Anpassung: `einstellungen-profil-rueckweg`
+  1 von 1. Wartungsprobe einzeln 84/0, Gegenprobe der neuen Prüfung 18 (ohne
+  `role` in der Spaltenliste: falsch). Jobprobe 40/0,
+  Schlüsselwechselprobe 66/0.
+
 ## 7. Verlauf
 
 | Datum | Was |
 |---|---|
+| 03.11.2026 | BR5-10: Prüfstand; F-BR5-28 bis -31 (drei Proben auf den Stand von BR5-04/-05 gebracht). |
 | 03.11.2026 | BR5-09 erledigt (Nr. 383 gemessen, keine Fassung); F-BR5-02 berichtigt. |
 | 03.11.2026 | BR5-08 erledigt (Web 23.7.3); F-BR5-27. |
 | 03.11.2026 | BR5-07 gebaut (Web 23.7.2), Nr. 430 „teilweise“; F-BR5-26. |

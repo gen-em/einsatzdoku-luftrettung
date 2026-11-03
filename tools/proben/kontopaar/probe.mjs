@@ -107,10 +107,15 @@ try {
   /* AUF DIE 200 WARTEN, nicht auf die erste Antwort: Seit Nr. 392 versucht
      auch die zweite Seite anzulegen (Anlegemarke), beide Anfragen warten am
      Tor, eine bekommt 200, die andere 409 — ein zweites Paar gibt es nicht
-     (`kp_ablegen()`; „Protokoll … einmal" unten). */
-  const anlage = s.waitForResponse(r => r.url().includes('/api/kontopaar.php')
-                                        && /"aktion":"anlegen"/.test(r.request().postData() || '')
-                                        && r.status() === 200, { timeout: 120000 })
+     (`kp_ablegen()`; „Protokoll … einmal" unten). AM KONTEXT, nicht an der
+     Seite: Welche der beiden die 200 bekommt, entscheidet das Rennen am Tor —
+     in Chromium gewann sie einmal die zweite, und die Probe wartete an der
+     ersten vergeblich (F-BR5-30). */
+  const anlage = kontext.waitForEvent('response', {
+                   predicate: r => r.url().includes('/api/kontopaar.php')
+                                   && /"aktion":"anlegen"/.test(r.request().postData() || '')
+                                   && r.status() === 200,
+                   timeout: 120000 })
                   .catch(() => null);
   await s.goto(`${BASIS}/login.php`, { waitUntil: 'domcontentloaded' });
   await s.fill('#loginform input[name="email"]', ADRESSE);
