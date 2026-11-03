@@ -10448,3 +10448,64 @@ zutreffen.
      Gemessen gegen Staging: `einstellungen.php` ohne Sitzung landet auf
      `login.php`, `anmelden()` samt Code und danach das Profil, in allen
      drei Engines.
+
+354. **`protokoll()` schluckt in einer Transaktion einen Deadlock — der Rest des Rumpfs läuft ohne Transaktion weiter.** · gehört zu: 22 · Stand: erledigt · seit 29.09.2026
+     *Aufgenommen 29.09.2026 in H-SR-08 (Konzept SR, F-SR-50, Nachprüfung
+     D-3); am selben Tag nachgestellt und berichtigt (F-SR-63).* `protokoll()`
+     fängt jede Ausnahme. Steht es im Rumpf von `db_transaktion()`, und
+     bricht sein INSERT mit einem Deadlock ab, rollt InnoDB die GANZE
+     Transaktion zurück und beendet sie; **jede weitere Anweisung läuft im
+     Autocommit und bleibt**, erst `commit()` wirft. Nachgestellt in
+     `totp_abschalten()` (MariaDB 10.11): Faktor an, Codes und Geräte
+     zurück, **die Passkeys gelöscht** samt Eintrag „mit dem Zweitfaktor",
+     Fehlerseite, keine Mail. Beim Passwort (E-SR-40) ist der Eintrag die
+     letzte Anweisung — dort bleibt nichts (gelesen). Bis zur Berichtigung
+     stand hier „der Aufrufer meldet Erfolg"; das tritt nicht ein. *Weg:*
+     `protokoll()` wirft in einer offenen Transaktion, oder die Einträge
+     wandern hinter den Commit. *Abnahme:* ein ECHTER Deadlock — eine zweite
+     Verbindung (die schwerere) sperrt die Lücke hinter der letzten Zeile von
+     `protokoll_ereignisse`, dann die Kontozeile — → nichts bleibt stehen.
+     Ein Auslöser mit `SIGNAL` stellt den Fall nicht her.
+     Erledigt 03.11.2026 mit BR5-01 (Web 23.6.3): `protokoll()` und die
+     schreibenden `app_state`-Helfer werfen weiter, wenn der Fehlercode die
+     Transaktion beendet hat (`db_transaktion_verloren()`, 1213, 2006,
+     2013); nachgestellt mit einem echten Deadlock in `totp_abschalten()`,
+     vorher Passkeys weg, danach in drei Läufen nichts stehen geblieben. Der
+     Zustand vor dem Schreiben kommt aus `inTransaction()`, das Ende aus dem
+     Code — PDO meldet nach dem Deadlock weiter „ja“ (F-BR5-15).
+
+345. **Die Installationsseite meldet Erfolg, ohne zu wissen, ob gespeichert wurde.** · gehört zu: 22 · Stand: erledigt · seit 27.09.2026
+     *Aufgenommen 27.09.2026 mit R4-11 (F-R4-34).* Zwei kleine Lücken auf
+     `admin_installation.php`, beide älter als die Umleitung nach POST:
+     „Logo-Standard" verwirft den Rückgabewert von `app_state_setzen()` und
+     meldet „Standard der Installation: …" auch, wenn das Schreiben
+     scheiterte. Und `instanz_namen_setzen()` / `instanz_adressen_setzen()`
+     schreiben zwei Werte nacheinander und liefern nur `[bool, Text]`:
+     Scheitert der zweite, ist der erste geschrieben, und die Seite hält das
+     für einen Fehlschlag ohne Änderung (sie bleibt ohne Umleitung stehen,
+     E-R4-35). *Weg:* den Rückgabewert prüfen; die zwei Setzfunktionen
+     schreiben beide Werte in einer Transaktion oder sagen, was geschrieben
+     ist. *Abnahme:* ein gescheitertes `app_state_setzen()` (Probe mit
+     gesperrter Tabelle) ergibt eine Fehlermeldung statt „gespeichert".
+     Erledigt 03.11.2026 mit BR5-01 (Web 23.6.3): Der Logo-Standard prüft
+     das Schreiben; Name und Adressen gehen über `instanz_beide_setzen()` in
+     einer Transaktion, beide oder keiner. Nachgestellt mit einem Auslöser,
+     der den zweiten Wert verweigert: der erste blieb ungeschrieben, die
+     Seite sagt „es wurde nichts geändert“.
+
+457. **Das Löschen eines Zeitraums steht im Protokoll ohne Bezeichnung der Art.** · gehört zu: 22 · Stand: erledigt · seit 03.11.2026
+     *Aufgenommen 03.11.2026 im Prüfdurchgang der Arbeitsumgebung (R91,
+     P-S11-22).* `api/schneiden.php` schreibt `spur_stueck_geloescht`,
+     und die Liste der Arten in `protokoll_lib.php` kennt den Schlüssel
+     nicht: Unter Verwaltung → Protokoll steht als Plakette
+     „spur stueck geloescht", und im Filter „Art des Ereignisses" fehlt die
+     Art. Der Text des Eintrags selbst stimmt („GPS-Daten eines
+     Ruhesegments gelöscht: 20:30–20:40 (61 Punkte)"). Kein Riegel hält
+     geschriebene Arten gegen die Liste. *Weg:* die Art eintragen; dazu
+     prüfen, ob es weitere `protokoll()`-Arten ohne Eintrag gibt.
+     *Abnahme:* Plakette „GPS-Daten gelöscht" (o. ä.) und die Art im Filter.
+     Erledigt 03.11.2026 mit BR5-01 (Web 23.6.3): `spur_stueck_geloescht`
+     heißt „GPS-Daten gelöscht“ (neutral) und steht im Filter des Reiters
+     Verwaltung. Kein weiterer Fehlbestand; die Registerzeile Z46 hält jede
+     feste Art eines `protokoll()`-Aufrufs und der Reiterliste gegen
+     `PROTOKOLL_ARTEN` (Gegenprobe: ohne den Eintrag 2 Stellen).

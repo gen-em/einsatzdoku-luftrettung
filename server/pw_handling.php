@@ -232,7 +232,9 @@ if ($row && $_SERVER['REQUEST_METHOD'] === 'POST') {
              * der Transaktion hiesse ein Fehler hier: Passwort neu, Meldung
              * falsch, und der gemerkte Browser des Fremden gilt weiter.
              * `db_transaktion()` haengt sich an die laufende an, und
-             * `protokoll()` faengt seine eigenen Fehler. */
+             * `protokoll()` faengt seine eigenen Fehler — ausser einem, der
+             * die Transaktion mitnimmt (Deadlock): den wirft es weiter, und
+             * das Passwort bleibt ungesetzt (Nr. 354). */
             zweitfaktor_geraete_vergessen((int)$row['user_id'], 'passwort_reset');
             });
             $done = true;

@@ -8477,5 +8477,17 @@ declare(strict_types=1);
  *   nichts hinaus, und nur der Rueckstand wuchs. Die Reserve folgt jetzt der
  *   verfuegbaren Zeit (`sz_versand_reserve()`: hoechstens 25 s, die Haelfte,
  *   mindestens 5 s); huckepack faengt der Versand weiter nicht an.
- *   Korrektur; kein Schema. */
-const WEB_VERSION = '23.6.2';
+ *   Korrektur; kein Schema.
+ * 23.6.3 — EIN DEADLOCK IM PROTOKOLL LIESS DEN REST OHNE TRANSAKTION LAUFEN
+ *   (Backlog Nr. 354, 345, 457; Schritt 22, BR5-01). `protokoll()` und die
+ *   schreibenden `app_state`-Helfer schlucken ihre Fehler mit Absicht —
+ *   auch den Deadlock, nach dem InnoDB die ganze Transaktion zurueckgerollt
+ *   hat. Der Rest des Rumpfs lief dann im Autocommit und blieb: Beim
+ *   Abschalten des Zweitfaktors waren die Passkeys weg, alles andere zurueck.
+ *   Jetzt wirft der Helfer weiter, wenn der Fehlercode die Transaktion
+ *   beendet hat (`db_transaktion_verloren()`); `inTransaction()` taugt dafuer
+ *   nicht, PDO meldet nach dem Deadlock weiter „ja". Dazu: Name und Adressen
+ *   der Installation werden zusammen oder gar nicht geschrieben, der
+ *   Logo-Standard meldet ein Scheitern, und das Loeschen eines Zeitraums
+ *   heisst im Protokoll „GPS-Daten geloescht". Korrektur; kein Schema. */
+const WEB_VERSION = '23.6.3';

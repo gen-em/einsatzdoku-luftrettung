@@ -15,7 +15,7 @@ BR5-10).
 
 | Paket | Inhalt | Stand |
 |---|---|---|
-| BR5-01 | Transaktion und Protokoll: Nr. 354, 345, 457 | offen |
+| BR5-01 | Transaktion und Protokoll: Nr. 354, 345, 457 | **erledigt** 03.11.2026 (Web 23.6.3) |
 | BR5-02 | Jobs und Mail: Nr. 357, 454, 450 | offen |
 | BR5-03 | Formularfelder: Nr. 355 (`post_text()`) | offen |
 | BR5-04 | Zweite Passwortseite: Nr. 358 | offen |
@@ -26,7 +26,7 @@ BR5-10).
 | BR5-09 | PHP 8.3.6: Nr. 383 | offen |
 | BR5-10 | Abschluss | offen |
 
-**In Arbeit:** nichts — Konzept fertig, alle Fragen entschieden (E-BR5-04 bis -18). **Es hakt:** nirgends. PR #137 ist gemergt (`b3a848c`), `main` ist aufgenommen; die Umsetzung kann mit BR5-01 beginnen. Fahrplanzeile 22 und die Kopfzeilen von 450, 454, 456, 457 sind geschrieben (F-BR5-13).
+**In Arbeit:** BR5-02 als Nächstes. **Es hakt:** nirgends. BR5-01 ist erledigt; dabei hat die Messung F-BR5-12 widerlegt (F-BR5-15) — der Weg steht jetzt auf dem Fehlercode statt auf `inTransaction()`.
 
 ---
 
@@ -146,7 +146,7 @@ sieht es (Nr. 457).** In `PROTOKOLL_ARTEN` (Plakette, Textsuche) und in
 der dynamischen Arten (03.11.2026) fand keine weitere Lücke.
 
 **F-BR5-12 — Nach einem Deadlock meldet `inTransaction()` falsch (Nr. 354).**
-pdo_mysql liest den Zustand vom Server; nach dem Rollback durch InnoDB ist er
+*Berichtigt durch F-BR5-15 — die Richtung stimmte nicht:* pdo_mysql liest den Zustand vom Server; nach dem Rollback durch InnoDB ist er
 `false`. Wer in `protokoll()` erst im `catch` fragt, ob eine Transaktion
 lief, bekommt „nein“. Der Zustand muss **vor** dem INSERT gemerkt werden.
 Betroffen sind vier Wege, alle über Hilfsfunktionen (`totp_abschalten()`,
@@ -163,6 +163,24 @@ Warteschlange und trägt am Ende der Anfrage nach.
 die Kopfzeilen jetzt auf `22` stellt, erzeugt einen Konflikt in derselben
 Datei; das geschieht deshalb erst nach dem Merge von #137, als erster
 Commit von BR5-01.
+
+**F-BR5-15 — PDO meldet nach dem Deadlock weiter `inTransaction() === true`
+(gemessen 03.11.2026, BR5-01, berichtigt F-BR5-12).** Im `catch` von
+`protokoll()` nach dem 1213: `inTransaction()` liefert `true`, der Server
+`@@in_transaction = 0`. PDO führt einen eigenen Merker und erfährt vom
+Zurückrollen durch InnoDB nichts; erst `commit()` merkt es („There is no
+active transaction“). Der erste Entwurf von BR5-01 fragte danach und hielt
+den Fall deshalb **nicht** auf (drei Läufe, Passkeys jedes Mal weg).
+`@@in_transaction` kennt nur MariaDB. Verlässlich ist der Fehlercode: 1213
+(Deadlock) beendet nach den Dokumentationen von MySQL und MariaDB die ganze
+Transaktion, 2006 und 2013 (Verbindung weg) ebenso; 1205 (Sperrzeit) ohne
+`innodb_rollback_on_timeout` nur die Anweisung. Die Frage vor dem Schreiben
+bleibt — sie sagt, ob überhaupt eine Transaktion lief.
+
+**F-BR5-16 — `app_state_setzen_mehrere()` und `app_state_loeschen()`
+schlucken wie `app_state_setzen()`.** E-BR5-05 nannte nur die eine Funktion;
+die zwei Geschwister stehen daneben, mit demselben Fang. BR5-01 behandelt
+alle drei gleich — eine Regel für drei Schreibhelfer, nicht für einen.
 
 **F-BR5-14 — Nr. 450 hat die Ursache in der Kette, die Abhilfe am Server.**
 Stufe 2 legt Konten unter `…@example.invalid` an (`umlauf_konto()` in
@@ -395,6 +413,12 @@ Kürzung für „Ließen sich nicht umhüllen“; alte Zeilen bleiben.
 Beide Proben unter 8.3.6 mit Gegenprobe; grün → erledigt mit Verweis auf
 Nr. 393. Eine Mindestfassung nur nach erneuter Rückfrage.
 
+**E-BR5-19 — Diese Sitzung setzt doch selbst um (03.11.2026,
+Betreiberin).** Ersetzt E-BR5-02: „Setze Schritt 22 um, beginnend mit
+BR5-01“ — in dieser Sitzung, auf demselben Zweig. Je Paket ein Commit, ein
+Push, ein ZIP der geänderten Dateien mit Konzept und Prüfstand-Dokument
+(Vorgabe der Betreiberin für Codearbeit).
+
 **Modellwahl:** Opus für alle Pakete (K2); kein Fable-Schritt.
 **Fächerung:** keine. Alle Pakete schreiben `server/version.php`,
 `docs/CHANGELOG.md` und das Konzept (erzählender Text, CLAUDE.md 7);
@@ -417,7 +441,8 @@ welche Stufe, entscheidet die Umsetzung (K3).
 
 *Weg:*
 1. `protokoll()` merkt vor dem INSERT `db()->inTransaction()` und wirft nach der
-   Entscheidung zu Q-BR5-01. Dasselbe in `app_state_setzen()` (Q-BR5-02).
+   Entscheidung zu Q-BR5-01 — *gebaut auf dem Fehlercode, nicht auf
+   `inTransaction()` danach (F-BR5-15)*. Dasselbe in `app_state_setzen()` (Q-BR5-02).
    `protokoll_fehler_vermerken()` läuft nur, wenn nicht geworfen wird.
 2. Kommentare „`protokoll()` fängt seine eigenen Fehler“ in
    `pw_handling.php` und `einstellungen.php` nachziehen.
@@ -622,12 +647,51 @@ Konzept und Prüfdokument erst nach der Freigabe.
 
 ## 6. Prüfprotokoll
 
-*(noch leer — die Umsetzung schreibt je Paket Mittel und Zahl hierher)*
+**BR5-01** (03.11.2026, Web 23.6.3; örtliche Anlage, MariaDB 10.11.14,
+PHP 8.3.6):
+
+- *Nr. 354, echter Deadlock.* Zwei Verbindungen gegeneinander
+  (`totp_abschalten()` gegen eine zweite, schwerere Verbindung: 400
+  geschriebene Zeilen, Lücke hinter der letzten Zeile von
+  `protokoll_ereignisse` gesperrt, dann die Kontozeile verlangt), Konto mit
+  Zweitfaktor, einem Code, einem gemerkten Gerät, einem Passkey. **Alter
+  Stand:** 1 von 1 Lauf mit dem Fehler — Faktor an, Code und Gerät zurück,
+  **Passkey gelöscht** samt Eintrag `passkey_entfernt`, Aufrufer sieht
+  „There is no active transaction“. **Erster Entwurf** (Frage nach
+  `inTransaction()` im `catch`): 3 von 3 Läufen wie der alte Stand
+  (F-BR5-15). **Endstand:** 3 von 3 Läufen ohne Rest — Passkey 1, Gerät 1,
+  Code 1, Faktor an, 0 Protokolleinträge; der Aufrufer bekommt 1213. Ohne
+  Gegenverbindung: Faktor aus, Passkey 0, Gerät 0, drei Einträge
+  (`zweitfaktor_geraete_vergessen`, `passkey_entfernt`,
+  `totp_zurueckgesetzt`). Das Werkzeug war ein Einmalskript, nicht
+  eingecheckt; das Wegwerfkonto ist gelöscht.
+- *Nr. 345.* `instanz_beide_setzen()` mit einem Auslöser, der
+  `instanz_kurz` verweigert: Rückgabe `false`, `instanz_name` blieb
+  „Alt-Name“, `instanz_namen_setzen()` meldet „es wurde nichts geändert“;
+  ohne Auslöser beide geschrieben; zweiter Wert zu lang → keiner. Der
+  Logo-Zweig ist gelesen, **nicht im Browser bedient** (P-BR5-01).
+- *Nr. 457.* `protokoll_arten_des_reiters('verwaltung')` liefert die Art mit
+  „GPS-Daten gelöscht“, Ton neutral. Registerzeile Z46: Ist 0, Decke 0;
+  Gegenprobe ohne den Eintrag in `PROTOKOLL_ARTEN` → 2 Stellen
+  (`api/schneiden.php`, Reiterliste). Der erste Entwurf der Regel hielt den
+  Reiternamen `jobs` für eine Art (Prüffenster zu kurz) — behoben vor dem
+  Commit.
+- *Zählung:* `php tools/zaehlung/zaehlen.php` — 46 Zeilen, 0 über, 0 unter
+  der Decke. *Steuerung:* `uebersicht.py --pruefen` 51 offene Einträge, 0
+  Fehler; `decken.py` 21 Decken, 0 gerissen.
+- *Quelltext:* `bash tools/quelltext/pruefen.sh alle` — 16 von 16 Prüfungen
+  grün. *Proben* (`tools/proben/proben.sh`, die Wege über `protokoll()` und
+  `app_state`): `protokoll` 36 Erwartungen, 0 nicht erfüllt; `zweitfaktor`
+  139 ok, 0 fehlen; `passkey` 128 ok, 0 fehlen; `jobs` 36/0; `wartung` 84/0.
+  Kein Bilderlauf und kein Prüfstand: Das Paket ändert keine Oberfläche
+  außer einem Meldungstext; der Prüfstand läuft in BR5-10 über den
+  Endstand.
 
 ## 7. Verlauf
 
 | Datum | Was |
 |---|---|
+| 03.11.2026 | BR5-01 erledigt (Web 23.6.3); F-BR5-15, -16; E-BR5-19 (diese Sitzung setzt um). |
 | 03.11.2026 | `main` mit PR #137 und #138 aufgenommen; Fahrplanzeile 22, Rahmenplan Fassung 206, Kopfzeilen 450, 454, 456, 457 auf `22`; gemergte Spanne 470 bis 479 (GR) gestrichen, weil die Kopfdecke von `Backlog.md` sonst riss (61 > 60). |
 | 03.11.2026 | Q-BR5-01 bis -15 entschieden wie vorgeschlagen (E-BR5-04 bis -18). |
 | 03.11.2026 | Konzept angelegt; Befund F-BR5-01 bis -14, Fragen Q-BR5-01 bis -15; E-BR5-01 bis -03 entschieden; Spanne 480 bis 489 reserviert (`0c39a8cb`). |
