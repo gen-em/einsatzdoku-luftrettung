@@ -1418,10 +1418,13 @@ function job_adminbackup_rueckstand(PDO $pdo, array $zustand): ?int
  * auf der Zielseite geht denselben Weg und fragt den Schalter NICHT — dort
  * hat gerade jemand geklickt, und das ist die Zustimmung.
  *
- * DIE RESERVE IST GROSS (25 s): Ein SFTP-Verbindungsaufbau kostet in reinem
- * PHP je nach Schlüssellänge ueber eine Sekunde, und danach soll wenigstens
- * eine Datei hinausgehen. Am Huckepack-Weg (JOB_BUDGET_ANFRAGE = 3 s) fängt
- * dieser Job deshalb gar nicht erst an.
+ * DIE RESERVE FOLGT DEM AUSLÖSER (`sz_versand_reserve()`): 25 s auf der
+ * Kommandozeile, rund 10 s am Abruf über die Adresse (20 s), und am
+ * Huckepack-Weg (JOB_BUDGET_ANFRAGE = 3 s) mehr als da ist — dort fängt der
+ * Job gar nicht erst an. Ein SFTP-Verbindungsaufbau kostet in reinem PHP je
+ * nach Schlüssellänge über eine Sekunde, und danach soll wenigstens eine
+ * Datei hinausgehen. Bis Web 23.6.1 waren es fest 25 s, und am Adress-Abruf
+ * fing der Job nie an (Backlog Nr. 453).
  */
 function job_versand(PDO $pdo, array $zustand, callable $zeitLinks): array
 {
@@ -1429,7 +1432,7 @@ function job_versand(PDO $pdo, array $zustand, callable $zeitLinks): array
     if (!sz_auto_an()) {
         return ['zustand' => [], 'erledigt' => 0, 'fertig' => true];
     }
-    $e = sz_versand_schub($zeitLinks, SZ_VERSAND_RESERVE_S);
+    $e = sz_versand_schub($zeitLinks, sz_versand_reserve($zeitLinks()));
     /* Die Fehler stehen am ZIEL (backup_targets.letzter_fehler) und damit auf
      * der Zielseite. Hier kommen sie zusätzlich in `jobs.letzter_fehler`,
      * damit die Wartungsseite nicht „grün" meldet, während seit drei

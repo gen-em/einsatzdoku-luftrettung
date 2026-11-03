@@ -328,14 +328,75 @@ const OERTLICH = /^https?:\/\/(127\.0\.0\.1|localhost|\[::1\])(:|\/|$)/i;
  *  bekäme sein Formular dann noch einmal statt „Fertig", ohne Meldung.
  *  Anlass: Nr. 451. */
 export async function proxyRoute(kontext) {
+  const umweg = weiterleitungUmweg(kontext);
   await kontext.route('**/*', async (route) => {
     if (OERTLICH.test(route.request().url())) { await route.fallback(); return; }
     try {
-      await route.fulfill({ response: await route.fetch({ maxRedirects: 0 }) });
+      const antwort = await route.fetch({ maxRedirects: 0 });
+      if (umweg && istSeitenWeiterleitung(route, antwort)) {
+        await route.fulfill(weiterleitungAlsSeite(route, antwort));
+        return;
+      }
+      await route.fulfill({ response: antwort });
     } catch {
-      await route.abort();
+      /* Schon erledigt (die Seite ist weiter, die Antwort kam zu spät) —
+       * ein zweites Handeln wirft, und das brach WebKit ab. */
+      await route.abort().catch(() => {});
     }
   });
+}
+
+/* FIREFOX UND WEBKIT FOLGEN EINER WEITERLEITUNG NICHT DURCH DIE ROUTE.
+ * Chromium schickt die Folgeanfrage einer erfüllten 3xx wieder durch
+ * `route`. Firefox nicht: Sie geht unmittelbar ins Netz und scheitert hinter
+ * dem Proxy der Arbeitsumgebung an dessen Zertifikat
+ * (`SEC_ERROR_UNKNOWN_ISSUER`). WebKit bleibt an ihr hängen, bis die Frist
+ * abläuft — gemessen am 02.11.2026 gegen Staging, Anlass: Nr. 455. Dort wird die 3xx
+ * einer Seitenanfrage deshalb als kleine Seite mit `meta refresh`
+ * ausgeliefert, mit allen Kopfzeilen der Antwort samt `Set-Cookie`; die
+ * Folgeanfrage ist dann eine neue Navigation und geht durch die Route.
+ * NUR MIT PROXY: Ohne ihn (die Kette) folgen beide der Weiterleitung selbst
+ * und kommen an, und Stufe 2 bleibt, wie sie gemessen ist. */
+function weiterleitungUmweg(kontext) {
+  const mitProxy = !!(process.env.HTTPS_PROXY || process.env.https_proxy);
+  let motor = '';
+  try { motor = kontext.browser()?.browserType().name() ?? ''; } catch {}
+  return mitProxy && (motor === 'firefox' || motor === 'webkit');
+}
+
+function istSeitenWeiterleitung(route, antwort) {
+  const st = antwort.status();
+  return st >= 300 && st < 400 && !!antwort.headers()['location']
+    && route.request().isNavigationRequest();
+}
+
+function weiterleitungAlsSeite(route, antwort) {
+  const ziel = new URL(antwort.headers()['location'], route.request().url()).href;
+  const kopf = {};
+  for (const { name, value } of antwort.headersArray()) {
+    const n = name.toLowerCase();
+    if (['location', 'content-length', 'content-type', 'content-encoding'].includes(n)) continue;
+    /* Mehrere `Set-Cookie` gehen zeilenweise in einen Wert — so nimmt
+     * `route.fulfill()` sie an. */
+    kopf[n] = n in kopf && n === 'set-cookie' ? kopf[n] + '\n' + value : value;
+  }
+  kopf['content-type'] = 'text/html; charset=utf-8';
+  const html = ziel.replace(/&/g, '&amp;').replace(/"/g, '&quot;');
+  return { status: 200, headers: kopf,
+           body: `<meta name="${UMWEG_MARKE}" content="1"><meta http-equiv="refresh" content="0;url=${html}">` };
+}
+
+/* Die Marke der Zwischenseite. Wer nach einer Navigation den Zustand der
+ * Seite liest, wartet erst, bis sie fort ist — sonst hält er die leere
+ * Zwischenseite für „angemeldet" (kein Passwortfeld, kein Code-Formular). */
+const UMWEG_MARKE = 'nadoku-umweg';
+
+/** Wartet, bis keine Zwischenseite der Weiterleitung mehr steht. Kostet
+ *  nichts, wo es keine gibt. */
+export async function umwegAbwarten(seite, { frist = 30000 } = {}) {
+  await seite.waitForFunction((marke) => document.readyState !== 'loading'
+    && !document.querySelector(`meta[name="${marke}"]`), UMWEG_MARKE, { timeout: frist })
+    .catch(() => {});
 }
 
 /** Sagt, ob eine Basisadresse auf diesen Rechner zeigt. */
@@ -570,6 +631,7 @@ export async function codeSchritt(seite, { frist = 30000 } = {}) {
           seite.waitForNavigation({ waitUntil: 'domcontentloaded', timeout: frist }),
           seite.click('#codeform button[type="submit"]'),
         ]);
+        await umwegAbwarten(seite);
         if (await seite.locator('#codeform').count() === 0) { break; }
       }
       if (await seite.locator('#codeform').count() > 0) {
@@ -638,10 +700,11 @@ export async function paarAbwarten(seite, { frist = 20000 } = {}) {
 
 export async function nachDemPasswort(seite, { frist = 90000 } = {}) {
   try {
-    await seite.waitForFunction(() => document.readyState !== 'loading'
+    await seite.waitForFunction((marke) => document.readyState !== 'loading'
+      && !document.querySelector(`meta[name="${marke}"]`)
       && (!!document.querySelector('#codeform')
           || !document.querySelector('input[name="password"]')),
-      null, { timeout: frist });
+      UMWEG_MARKE, { timeout: frist });
   } catch {
     return { angemeldet: false, code: false, meldung: (await seitenMeldung(seite))
       || '(kein Zustandstext — die Seite rechnet noch oder das Feld blieb stehen)' };

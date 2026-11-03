@@ -8469,5 +8469,13 @@ declare(strict_types=1);
  *   `za-<Nummer des Ziels>`, und `ui_zeilenaktionen()` nennt seine Menues
  *   selbst `za-1`, `za-2` … Trafen sich die Nummern, oeffnete „…" das
  *   Formular statt des Menues, und das Ziel liess sich weder bearbeiten noch
- *   loeschen. Die Formulare heissen jetzt `zh-`. Korrektur; kein Schema. */
-const WEB_VERSION = '23.6.1';
+ *   loeschen. Die Formulare heissen jetzt `zh-`. Korrektur; kein Schema.
+ * 23.6.2 — DER AUTOMATISCHE VERSAND FING AM ADRESS-ABRUF NIE AN (Backlog
+ *   Nr. 453, gefunden im Pruefdurchgang auf Staging, R91). Der Versandjob
+ *   verlangte fest 25 s Reserve, der Abruf ueber die Adresse gibt einem Lauf
+ *   20 s. Auf Staging, das keinen Kommandozeilen-Cron hat, ging seit Wochen
+ *   nichts hinaus, und nur der Rueckstand wuchs. Die Reserve folgt jetzt der
+ *   verfuegbaren Zeit (`sz_versand_reserve()`: hoechstens 25 s, die Haelfte,
+ *   mindestens 5 s); huckepack faengt der Versand weiter nicht an.
+ *   Korrektur; kein Schema. */
+const WEB_VERSION = '23.6.2';
