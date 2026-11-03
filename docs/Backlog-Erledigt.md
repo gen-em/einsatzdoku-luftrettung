@@ -10395,3 +10395,54 @@ zutreffen.
      über das Löschformular seines Menüs entfernt.
      Erledigt mit Web 23.6.1: Die Formulare heißen `zh-<Nummer>`.
 
+<!-- -->
+
+453. **Über den Abruf per Adresse versendet der Versandjob nie.** · gehört zu: nächste Backlog-Runde · Stand: erledigt · seit 02.11.2026
+     *Aufgenommen 02.11.2026 im ersten Prüfdurchgang der Arbeitsumgebung
+     (R91, P-P5c-07).* `job_versand()` fängt nur an, wenn noch
+     `SZ_VERSAND_RESERVE_S` = 25 s übrig sind; der Auslöser `token` hat
+     `JOB_BUDGET_TOKEN` = 20 s. Auf einer Anlage ohne Kommandozeilen-Cron
+     — Staging bei lima-city — geht damit automatisch nichts hinaus: Auf
+     Staging stand der letzte Versand auf dem 22.09.2026, 23 Sicherungen
+     im Rückstand, alle Archive „nur lokal". Kein Fehler, nirgends; die
+     Jobseite zeigt nur „Rückstand 23". `Technik.md` sagt, der Job fange
+     am Huckepack-Weg (3 s) nicht an, vom Token-Weg sagt sie nichts.
+     „Jetzt versenden" brauchte 3,7 s für alles (5,1 MB, FTPS).
+     *Weg:* zu entscheiden — die Reserve am Token-Weg unter dessen Budget
+     legen (die Zeit wird je Konto geprüft, eine Datei darf nicht halb
+     liegen bleiben), oder der Job meldet „wartet auf Kommandozeile" als
+     Fehler, sobald der Rückstand wächst. Dazu `Technik.md` 4.7.
+     *Abnahme:* auf Staging mit nur dem Adress-Abruf eine neue Sicherung
+     binnen einer Stunde „auf dem Ziel"; oder eine sichtbare Warnung.
+     Erledigt mit Web 23.6.2: Die Reserve folgt der Zeit, die der Lauf
+     beim Anfang hat (`sz_versand_reserve()`: höchstens 25 s, die Hälfte,
+     mindestens 5 s) — am Adress-Abruf rund 10 s, huckepack startet der
+     Job weiter nicht. Gerechnet für 3, 20 und 300 s; die Abnahme auf
+     Staging folgt nach dem Merge im Prüfdurchgang (R91).
+
+<!-- -->
+
+455. **Seit Nr. 451 scheitert Firefox gegen Staging an jeder Weiterleitung.** · gehört zu: nächste Backlog-Runde · Stand: erledigt · seit 02.11.2026
+     *Aufgenommen 02.11.2026 im ersten Prüfdurchgang der Arbeitsumgebung
+     (R91, P-SR-07).* `proxyRoute()` in `tools/motor.mjs` gibt eine 3xx
+     seit Nr. 451 an den Browser weiter, damit er ihr selbst folgt.
+     Chromium schickt die Folgeanfrage wieder durch die Route, Firefox
+     nicht: Sie geht unmittelbar ins Netz und scheitert am Zertifikat des
+     Proxys dieser Arbeitsumgebung (`SEC_ERROR_UNKNOWN_ISSUER`). Gemessen:
+     `login.php` lädt, `einstellungen.php` ohne Sitzung (302 dorthin)
+     nicht; damit auch keine Anmeldung. In der Kette gibt es diesen Proxy
+     nicht, Stufe 2 ist nicht betroffen; WebKit ungemessen.
+     *Weg:* in der Route eine 3xx auf eine Seitenanfrage als kleine Seite
+     mit `meta refresh` ausliefern, die Kopfzeilen samt `Set-Cookie`
+     erhalten — so geht die Folgeanfrage wieder durch die Route. Für den
+     Prüfdurchgang so im Skript gemacht, P-SR-07 lief damit grün.
+     *Abnahme:* Anmeldung über `anmelden()` in Firefox gegen Staging aus
+     der Arbeitsumgebung; der Setz-Link aus Nr. 451 weiter in Chromium.
+     Erledigt 02.11.2026 (nur Werkzeug, keine Fassung): `proxyRoute()`
+     liefert in Firefox und WebKit — WebKit hing an derselben Stelle bis
+     zur Frist — mit gesetztem Proxy eine Seitenweiterleitung als
+     Zwischenseite mit Marke aus; `nachDemPasswort()` und der Code-Schritt
+     warten, bis sie fort ist. Ohne Proxy, also in der Kette, unverändert.
+     Gemessen gegen Staging: `einstellungen.php` ohne Sitzung landet auf
+     `login.php`, `anmelden()` samt Code und danach das Profil, in allen
+     drei Engines.

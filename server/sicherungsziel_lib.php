@@ -1001,8 +1001,31 @@ function sz_verbindung_pruefen(array $ziel): array
  */
 const SZ_AUTO_SCHLUESSEL = 'versand_auto';
 
-/** Reserve für einen Versandschub, in Sekunden. */
+/** Reserve für einen Versandschub, in Sekunden — die Obergrenze. */
 const SZ_VERSAND_RESERVE_S = 25.0;
+
+/** Die Untergrenze: dieselbe wie beim Knopf „Jetzt versenden". */
+const SZ_VERSAND_RESERVE_MIN_S = 5.0;
+
+/**
+ * Die Reserve des Versandjobs, aus der Zeit, die sein Lauf beim Anfang hat.
+ *
+ * HÖCHSTENS 25 s, ABER NIE MEHR ALS DIE HÄLFTE DER ZEIT. Eine feste Reserve
+ * von 25 s ist auf der Kommandozeile (300 s) richtig und am Abruf über die
+ * Adresse (20 s) ein Verbot: Der Job fing dort nie an, und auf einer Anlage
+ * ohne Kommandozeilen-Cron ging nichts hinaus — ohne Fehler, nur mit
+ * wachsendem Rückstand (Backlog Nr. 453). Die Hälfte lässt am Adress-Abruf
+ * rund zehn Sekunden zum Senden; eine Übertragung, die darüber
+ * abbricht, schickt der nächste Lauf neu, weil der Versand nach Name und
+ * Größe vergleicht.
+ *
+ * NIE UNTER 5 s. Am Huckepack-Weg (3 s) fängt der Job damit weiter nicht an:
+ * Ein Verbindungsaufbau nach draußen gehört nicht in eine Seitenanfrage.
+ */
+function sz_versand_reserve(float $verfuegbar): float
+{
+    return max(SZ_VERSAND_RESERVE_MIN_S, min(SZ_VERSAND_RESERVE_S, $verfuegbar / 2));
+}
 
 /** Läuft der Versand von selbst mit dem Wartungsjob? */
 function sz_auto_an(): bool
