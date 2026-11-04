@@ -52,7 +52,7 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
 
 | Spanne | Zweig | seit |
 |---|---|---|
-| 480 bis 489 | `claude/tender-bell-225ta2` (Schritt 22, BR5); vergeben: 480 | 03.11.2026 |
+| 480 bis 489 | `claude/tender-bell-225ta2` (Schritt 22, BR5); vergeben: 480, 481 | 03.11.2026 |
 | 490 bis 499 | `claude/new-session-p1duc7` — Prüfdurchgang der Arbeitsumgebung (R91), Fortsetzung; vergeben: 490, 491 | 03.11.2026 |
 | ab 500 | frei — höchste reservierte Nummer 499; frei blieben 472 bis 479 aus der Spanne von 21 (PR #136), 461 bis 469 aus der Spanne von PR (PR #133), 434 bis 439 aus der Spanne von PR #129, 441 bis 449 aus der von PR #130, 420 bis 429 aus der Spanne von 20 (PR #127), 412 bis 419 aus der von 12b (PR #125), 394 bis 399 aus der Spanne von 19 (PR #112 bis #114), 389 aus der von 12a (PR #116), 372 bis 379 aus der von 12 (PR #103), 362 bis 369 aus der von PK, 359 aus der von 18 (PR #101), 348 und 349 aus der von 17, 338 aus der von AR | 02.11.2026 |
 
@@ -739,7 +739,7 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
 
 <!-- -->
 
-430. **Bitwarden zeigt beim Backup mit Kontopasswort den Eintrag nicht im Menü am Feld.** · gehört zu: 22 · Stand: teilweise · seit 02.11.2026
+430. **Bitwarden zeigt beim Backup mit Kontopasswort den Eintrag nicht im Menü am Feld.** · gehört zu: Zuarbeit · Stand: teilweise · seit 02.11.2026
      *Aufgenommen 02.11.2026 aus P-R17-34 (Handprüfung auf Produktiv,
      Firefox mit Bitwarden).* Seit Web 23.4.0 bietet Bitwarden im Feld
      „Kontopasswort" (Einstellungen → Backup) kein neues Passwort mehr an —
@@ -757,7 +757,7 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      *Gebaut 03.11.2026 mit BR5-07 (Web 23.7.2):* Kontopasswort samt
      Anmeldename in einem eigenen Formular, Enter erstellt das Backup; Karte
      pixelgleich, Backup in drei Engines. Offen bis zur Handprüfung mit
-     Bitwarden (P-BR5-13).
+     Bitwarden (P-R17-34, `Pruefliste.md` 3).
 <!-- -->
 
 470. **Auf der Venu 3s schneidet der Kreis die unterste Meldung der Sync-Seite ab.** · gehört zu: nächste Backlog-Runde · Stand: offen · seit 02.11.2026
@@ -870,3 +870,20 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      Formularen in `.listen-form` (Stylesheet, Design.md) oder ein Fuß, der
      beide Felder trägt. *Abnahme:* Bild der Karte in der Lage abweichend
      mit beiden Werten, 390 und 1280 px — Abstand wie zwischen Abschnitten.
+
+<!-- -->
+
+481. **Endgültige Mail-Absage beim ersten Versuch heißt „steht in der Warteschlange“.** · gehört zu: nächste Backlog-Runde · Stand: offen · seit 04.11.2026
+     *Aufgenommen 04.11.2026 mit P-BR5-06 auf Staging (Konzept BR5,
+     F-BR5-33).* Ein Konto für eine Adresse, die der Mailserver schon beim
+     Empfänger mit 550 abweist: Die Zeile wird richtig sofort
+     „unzustellbar“ (Nr. 454), die Meldung beim Anlegen sagt aber „beim
+     ersten Versuch NICHT hinausgegangen und steht in der Warteschlange.
+     Sie wird erneut versucht“. `mail_einreihen()` gibt nach einem
+     gescheiterten ersten Versuch immer `MAIL_WARTET` zurück und fragt den
+     Stand der Zeile nicht ab. *Weg:* nach dem Versuch den Stand lesen; bei
+     „unzustellbar“ `MAIL_ABGELEHNT` (Aufrufer: `admin_users.php`,
+     `admin_user.php`, `email_lib.php`, `konto_lib.php`, `login.php`).
+     *Abnahme:* auf Staging Konto für eine nicht vorhandene Adresse der
+     eigenen Domain → „konnte NICHT verschickt werden“, Mailprobe mit der
+     Art `nach_daten` bzw. 550 beim Empfänger.
