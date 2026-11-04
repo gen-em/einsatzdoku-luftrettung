@@ -8558,5 +8558,12 @@ declare(strict_types=1);
  *   Anweisungen ab (1055), MariaDB nicht. Auf Staging wurde deshalb seit
  *   dem 19.10.2026 nichts verdichtet. Jetzt nennt die Unterabfrage den
  *   Einsatz und den Typ selbst; die Schemaprobe misst die Abfrage je
- *   Fassung (Fall 8). Korrektur; kein Schema. */
-const WEB_VERSION = '23.7.4';
+ *   Fassung (Fall 8). Korrektur; kein Schema.
+ * 23.7.5 — SCHON DAS ANSEHEN SETZTE DAS DEMO-KONTO AUF „GEAENDERT"
+ *   (Backlog Nr. 459; Schritt 23, BR6-03). Die Fixture traegt faellige
+ *   Spuren, und der Wartungslauf der Startseite verdichtete sie beim ersten
+ *   Besuch — eine echte Aenderung, die die Marke setzte und 30 Minuten
+ *   spaeter den Reset ausloeste. Jetzt antwortet der Wartungslauf dem
+ *   Demo-Konto leer, und seine POSTs stehen in `DEMO_POST_OHNE_MARKE`;
+ *   jede andere POST setzt die Marke wie bisher. Korrektur; kein Schema. */
+const WEB_VERSION = '23.7.5';

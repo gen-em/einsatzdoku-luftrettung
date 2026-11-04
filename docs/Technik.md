@@ -6798,7 +6798,7 @@ Zeitpunkt der **ersten** Änderung seit dem letzten Reset;
 
 | Setzstelle | wann |
 |---|---|
-| `auth_guard.php` | jede POST des Demo-Kontos mit gültigem Formular-Token (`csrf_ok()`), **nach** dem Reset-Aufruf |
+| `auth_guard.php` | jede POST des Demo-Kontos mit gültigem Formular-Token (`csrf_ok()`), **nach** dem Reset-Aufruf — außer an die Skripte in `DEMO_POST_OHNE_MARKE` (`demo_lib.php`, seit Web 23.7.5) |
 | `ingest.php` | jeder angenommene Upload eines Demo-Geräts, **nach** dem `commit()` |
 
 Die Rechnung steht in `demo_reset_faellig_ab($letzter, $geaendert)`, rein
@@ -6821,7 +6821,13 @@ und letztem Reset, **ohne Marke** einen Tag nach dem letzten Reset
 
 Eine POST, die nichts ändert, setzt die Marke auch: Das kostet einen Reset,
 keinen Schaden; umgekehrt stünde eine Änderung ohne Marke bis zum
-Pflichtreset da. Nach dem Reset löscht `demo_aenderung_vergessen()` die
+Pflichtreset da. **Ausgenommen sind nur gemessene Fälle** (Nr. 459, seit
+Web 23.7.5): Bis dahin setzte schon das Ansehen der Startseite die Marke,
+weil der Wartungslauf (`api/wartungslauf.php`) die fälligen Spuren der
+Fixture tatsächlich verdichtete. Er antwortet dem Demo-Konto jetzt mit einer
+leeren Liste und tauscht nichts (`409 demo`), und sein Skript steht in
+`DEMO_POST_OHNE_MARKE`. Wer dort einen Eintrag ergänzt, stellt zuerst sicher,
+dass der Endpunkt für das Demo-Konto wirklich nichts schreibt. Nach dem Reset löscht `demo_aenderung_vergessen()` die
 Marke — nur, wenn sie nicht jünger ist als sein Beginn. Gemessen von der
 Zweitfaktorprobe, Teil 6b (Rechnung als Tabelle, die Marke an `app_state`,
 die zwei Setzstellen am Quelltext).

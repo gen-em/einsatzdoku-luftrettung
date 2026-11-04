@@ -810,24 +810,6 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
 
 <!-- -->
 
-459. **Schon das Ansehen setzt das Demo-Konto auf „geändert".** · gehört zu: 23 · Stand: offen · seit 03.11.2026
-     *Aufgenommen 03.11.2026 im Prüfdurchgang der Arbeitsumgebung (R91,
-     P-R4-15).* Die Änderungsmarke des Demo-Kontos setzt `auth_guard.php`
-     bei jedem POST (`demo_lib.php`, „Die Änderungsmarke"). Die Startseite
-     schickt beim Laden zweimal `POST api/wartungslauf.php`. Gemessen auf
-     Staging nach einem frischen Reset: nach der Anmeldung „Geändert:
-     nein", nach dem Öffnen der Startseite „Geändert seit 09:57 · Nächster
-     Reset in 30 Minuten", der Hinweis sagt „in etwa 30 Minuten" — ohne
-     jede Änderung. Wer nur nachsehen will, trägt damit nach 30 Minuten
-     den Reset und fliegt aus der Sitzung; genau das sollte die Marke
-     vermeiden. Der Wartungslauf schickt seine POSTs auch auf Produktiv.
-     *Weg:* den Wartungslauf für das Demo-Konto auslassen oder seine POSTs
-     von der Marke ausnehmen; andere Hintergrund-POSTs mit prüfen.
-     *Abnahme:* frischer Reset, Anmelden, drei Seiten ansehen —
-     Verwaltung → Demo-Konto „Geändert: nein".
-
-<!-- -->
-
 480. **Nachtragen vom Blatt: zwei Formulare ohne Abstand.** · gehört zu: 23 · Stand: offen · seit 03.11.2026
      *Aufgenommen 03.11.2026 in BR5-06 (Konzept BR5, Bild der Karte in
      der Lage abweichend).* Sind Serverschlüssel UND Server-Anteil

@@ -5034,7 +5034,8 @@ Ausgelöst wird der Reset von der nächsten Anfrage des Demo-Kontos, sobald er
 fällig ist — 30 Minuten nach der ersten Änderung, ohne Änderung einen Tag
 nach dem letzten —, nicht von einem Zeitdienst. Als Änderung zählt jedes
 Absenden im Demo-Konto und jeder angenommene Upload eines seiner Geräte;
-Änderungen aus der Verwaltung zählen nicht. **Nach einem Deploy mit neuer
+Änderungen aus der Verwaltung zählen nicht, und bloßes Ansehen auch nicht
+mehr — das Verdichten der Spuren im Hintergrund lässt das Demo-Konto aus. **Nach einem Deploy mit neuer
 Fixture** zeigt das Demo-Konto deshalb bis zu einem Tag lang den alten
 Bestand — „Zurücksetzen" holt den neuen sofort.
 

@@ -20,16 +20,15 @@ endet mit Prüfarbeit an der einen örtlichen Anlage.
 |---|---|---|
 | BR6-01 | Prüfaufbau: Nr. 490, 491 | **erledigt** 04.11.2026 (nur Werkzeug, keine Fassung, E-BR6-14) |
 | BR6-02 | Wartungslauf auf MySQL 8: Nr. 458 | **gebaut** 04.11.2026 (Web 23.7.4) — Abnahme auf Staging nach dem Merge |
-| BR6-03 | Änderungsmarke des Demo-Kontos: Nr. 459 | offen |
+| BR6-03 | Änderungsmarke des Demo-Kontos: Nr. 459 | **erledigt** 04.11.2026 (Web 23.7.5) |
 | BR6-04 | Endgültige Mail-Absage: Nr. 481 | offen |
 | BR6-05 | Abstand zwischen zwei Formularen: Nr. 480 | offen |
 | BR6-06 | Uhr, Sync-Seite auf der Venu 3s: Nr. 470 | offen |
 | BR6-07 | Handy, Frist für den Klartextpuffer nach der Abmeldung: Nr. 471 | offen |
 | BR6-08 | Abschluss | offen |
 
-**In Arbeit:** BR6-03 als Nächstes. **Es hakt:** nirgends. Q-BR6-01 bis
--09 sind nach den Vorschlägen entschieden (E-BR6-04 bis -12); vor BR6-05
-fragt die Umsetzung noch einmal, ob der Abstand ohne Mockup gehen darf
+**In Arbeit:** BR6-04 als Nächstes. **Es hakt:** nirgends. Q-BR6-01 bis
+-09 sind entschieden (E-BR6-04 bis -12); BR6-05 ist ohne Mockup freigegeben
 (E-BR6-09).
 
 ---
@@ -193,11 +192,12 @@ nachmessen (P-AR-15, 6 Fehlschläge erwartet).
 | E-BR6-06 | Q-BR6-03: (c) — Wartungslauf lässt das Demo-Konto aus, lesende POSTs stehen auf einer Ausnahmeliste in `demo_lib.php`. | wie E-BR6-04 |
 | E-BR6-07 | Q-BR6-04: neuer Rückgabewert `MAIL_UNZUSTELLBAR`, auch für „zu spät“. | wie E-BR6-04 |
 | E-BR6-08 | Q-BR6-05: eigener Text der Testmail für die endgültige Absage, mit Grund. | wie E-BR6-04 |
-| E-BR6-09 | Q-BR6-06: allgemeine Regel `.listen-form > form + form` mit vorhandenem Token, in `Design.md`. **Ob das ohne Mockup geht, fragt die Umsetzung vor BR6-05 ausdrücklich** (CLAUDE.md 5); bis dahin ist nur der Ort entschieden. | wie E-BR6-04 |
+| E-BR6-09 | Q-BR6-06: allgemeine Regel `.listen-form > form + form` mit vorhandenem Token, in `Design.md`. Ohne Mockup freigegeben (CLAUDE.md 5): kein neuer Baustein, kein neuer Token. | wie E-BR6-04; Mockup-Freigabe: Betreiberin, 04.11.2026 („Freigabe“) |
 | E-BR6-10 | Q-BR6-07: beides — Breitenmessung in der Bildprobe und Kürzen, wo die lange Form nicht passt. | wie E-BR6-04 |
 | E-BR6-11 | Q-BR6-08: Räumung wie die Uhr — abgeschlossene Pakete der Kopplung und gebundener Rückstand, nicht der laufende Dienst; „Daten bis TT.MM.“ in der App; neue Frist nach einer Annahme. | wie E-BR6-04 |
 | E-BR6-12 | Q-BR6-09: Der Rundlauf legt das Paar selbst an, über `api/kontopaar.php`. | wie E-BR6-04 |
 | E-BR6-13 | F-BR6-06: Ein Baum ohne `config.php` übernimmt `config.php` und `install.lock` vom Baum, dessen Server läuft, statt neu einzurichten. Eingerichtet wird nur noch, wenn kein Server läuft oder `--neu` es verlangt. Grund: Mehrere Bäume teilen eine Datenbank; eine zweite Einrichtung zerstört die erste. | Umsetzung, 04.11.2026 (im Rahmen von Nr. 490) |
+| E-BR6-15 | Die Ausnahmeliste `DEMO_POST_OHNE_MARKE` trägt nur, was gemessen ist: `api/wartungslauf.php`. Die in F-BR6-02 vermuteten lesenden POSTs (`kontopaar.php` `zustand`, `export_data.php`) kamen beim Ansehen nicht vor und stehen nicht darin. Grund: Jeder Eintrag verlangt, dass der Endpunkt für das Demo-Konto nichts schreibt — eine vermutete Zeile wäre eine ungeprüfte Zusage. | Umsetzung, 04.11.2026 |
 | E-BR6-14 | BR6-01 stuft keine Zählung hoch: Berührt sind `tools/`, Prüfquellen unter `android/handy/src/test/` und `android/werkzeuge/` — nichts davon wird ausgeliefert (CLAUDE.md 2). Kein Changelog-Eintrag. | Umsetzung, 04.11.2026 |
 
 ## 5. Arbeitspakete
@@ -285,6 +285,14 @@ Zeile der Liste nennt, warum der Aufruf nichts schreibt.
 *Ort:* `server/auth_guard.php`, `server/demo_lib.php`,
 `server/api/wartungslauf.php`; `docs/Technik.md` (Abschnitt zum
 Demo-Konto), `docs/Handbuch.md`, falls es die Marke beschreibt.
+
+*Gebaut (04.11.2026, Web 23.7.5):* `DEMO_POST_OHNE_MARKE`,
+`demo_post_aendert()` und `demo_skript_hier()` in `demo_lib.php`;
+`auth_guard.php` fragt sie in **derselben Zeile** wie bisher (die
+Zweitfaktorprobe, Teil 6b, liest die Setzstelle zeilenweise — eine auf drei
+Zeilen verteilte Bedingung hätte sie rot gemacht). `api/wartungslauf.php`
+antwortet dem Demo-Konto `liste` → leer, `zahl` → 0, alles andere
+`409 demo`.
 
 *Abnahme:* frischer Reset, anmelden, Startseite, Einstellungen und eine
 Einsatzseite ansehen — Verwaltung → Demo-Konto „Geändert: nein“. Eine echte
@@ -434,11 +442,37 @@ mariadb106`: MySQL 8.4.0, 8.0.46, MariaDB 10.6.28, dazu die örtliche
   MariaDB): **34 Erwartungen, 0 nicht erfüllt**.
 - *Nicht geprüft:* Staging (MySQL 8.4.10) — erst nach dem Merge (R91);
   P-S11-30 hängt daran.
+- *Prüfstand* (Commit `6905547b`): 37 grün, 0 rot, **1 Hinweis** —
+  `erzeugen` hat die Tabelle in `docs/Pruefablauf.md` 4 neu geschrieben
+  (das neue Muster `plattformabfragen`); sie steht im Commit. Hier
+  nachgetragen, weil ein Eintrag vor dem Commit den gemessenen Baum geändert
+  hätte.
+
+**BR6-03** (04.11.2026, Web 23.7.5; örtliche Anlage nach Neustart des
+Containers, Startfolge `Sandbox-Setup.md` 6.1a):
+
+- *Alter Stand:* Demo-Reset, dann ein Wegwerfskript mit Playwright
+  (Chromium; Anmeldung als Demo, Startseite, Einstellungen, ein Einsatz, je
+  4 s): POSTs **1 × `liste`, 20 × `tauschen`** an `api/wartungslauf.php`,
+  sonst nur Anmeldung; Marke danach **gesetzt**. Die Fixture trägt fällige
+  Spuren — F-BR6-02 bestätigt, und schärfer: Es wurde wirklich verdichtet.
+- *Neuer Stand*, zweimal (vor und nach dem Umbau der Zeile in
+  `auth_guard.php`): **1 × `liste`**, kein `tauschen`; Marke **0**; die
+  Spurstücke des Demo-Kontos vorher und nachher **98, alle Stufe 1**.
+- *Gegenprobe:* dieselbe Sitzung, eine POST `api/kontopaar.php`
+  (`zustand`) — Marke **gesetzt**. Die Ausnahme ist also eng.
+- *Zweitfaktorprobe* (`proben.sh zweitfaktor`): **139 ok, 0 fehlen**,
+  darunter „auth_guard.php: eine Setzstelle, nur bei POST mit Token“.
+- *Wer den Wartungslauf sonst ruft:* die Wartungslaufprobe nimmt ein
+  eigenes Wegwerfkonto; Bedienprobe, Messstand, Komplettprobe,
+  `demo_pruefen.mjs` und `sichtpruefung.mjs` leiten den Endpunkt um
+  (`route`) — keiner hängt am Demo-Konto.
 
 ## 7. Verlauf
 
 | Datum | Was |
 |---|---|
+| 04.11.2026 | BR6-03 erledigt (Web 23.7.5); E-BR6-15. BR6-05 ohne Mockup freigegeben (E-BR6-09). |
 | 04.11.2026 | BR6-02 gebaut (Web 23.7.4); F-BR6-07. |
 | 04.11.2026 | BR6-01 erledigt (nur Werkzeug); F-BR6-06, E-BR6-13, -14. |
 | 04.11.2026 | Q-BR6-01 bis -09 nach den Vorschlägen entschieden (E-BR6-04 bis -12); E-BR6-03 geändert: Umsetzung in dieser Sitzung. |

@@ -14,6 +14,18 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 23.7.5] — unveröffentlicht
+
+### Behoben
+
+- **Web — schon das Ansehen setzte das Demo-Konto auf „geändert“** (Backlog
+  Nr. 459). Die Beispieldaten tragen Spuren, die zum Verdichten fällig sind,
+  und der Wartungslauf der Startseite tat das beim ersten Besuch; damit galt
+  das Konto als geändert, und nach 30 Minuten flog die Besucherin beim Reset
+  aus der Sitzung, ohne etwas getan zu haben. Für das Demo-Konto verdichtet
+  der Wartungslauf jetzt nichts mehr, denn der Reset spielt die Spuren
+  ohnehin neu ein. Jede andere Handlung setzt die Marke wie bisher.
+
 ## [Web 23.7.4] — unveröffentlicht
 
 ### Behoben

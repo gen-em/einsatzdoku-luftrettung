@@ -30,7 +30,7 @@ require_once __DIR__ . '/../spur_lib.php';
  *        Das eine neue Stück (Stufe 2 oder 3) statt der gelesenen. `pat` nur,
  *        wenn der Browser eine fehlende Ortshöhe nachgetragen hat.
  *     -> 200 {ok:true, weg, neu, pat?} · 400 eingabe · 409 stand | stufe |
- *        marke | form | frist | offen · 404 fehlt
+ *        marke | form | frist | offen | demo · 404 fehlt
  *
  * DER INHALT IST SACHE DES BROWSERS. Er öffnet, packt, dünnt aus, öffnet das
  * Ergebnis noch einmal und vergleicht (Rundlauf), bevor er schickt. Der
@@ -48,6 +48,19 @@ csrf_check();
 $b = api_rumpf(['max_bytes' => 4 * GH_GEPACKT_MAX_BYTE]);
 $aktion = (string)($b['aktion'] ?? '');
 $pdo = db();
+
+/* DAS DEMO-KONTO BLEIBT, WIE ES EINGESPIELT IST (Backlog Nr. 459). Seine
+ * Fixture traegt faellige Spuren, und schon das erste Ansehen verdichtete
+ * sie — eine echte Aenderung, die die Aenderungsmarke setzte und nach 30
+ * Minuten den Reset ausloeste, ohne dass jemand etwas getan hatte. Der
+ * Reset spielt die Spuren ohnehin neu ein; zu verdichten gibt es dort
+ * nichts. Diese POSTs stehen deshalb in `DEMO_POST_OHNE_MARKE`. */
+require_once __DIR__ . '/../demo_lib.php';
+if (demo_ist_demo($userId)) {
+    if ($aktion === 'liste') { json_out(['ok' => true, 'spuren' => []]); }
+    if ($aktion === 'zahl')  { json_out(['ok' => true, 'aufzeichnungen' => 0, 'diensttage' => 0]); }
+    json_out(['error' => 'demo'], 409);
+}
 
 if ($aktion === 'liste') {
     try {

@@ -324,6 +324,38 @@ function demo_aenderung_vermerken(): void
 }
 
 /**
+ * POSTs des Demo-Kontos, die die Marke NICHT setzen (Backlog Nr. 459).
+ *
+ * Schluessel ist der Pfad des Skripts unter `server/`, Wert der Grund, warum
+ * es fuer das Demo-Konto nichts aendert. Jeder Eintrag ist gemessen, keiner
+ * vermutet: Beim blossen Ansehen von Startseite, Einstellungen und einem
+ * Einsatz schickte der Browser am 04.11.2026 ausser der Anmeldung NUR
+ * Anfragen an den Wartungslauf — eine `liste` und zwanzig `tauschen`, denn die
+ * Fixture traegt faellige Spuren, und der Lauf verdichtete sie wirklich.
+ * Ein Eintrag hier verlangt deshalb, dass der Endpunkt fuer das Demo-Konto
+ * auch wirklich nichts schreibt; sonst bliebe eine Aenderung bis zum
+ * Pflichtreset stehen.
+ */
+const DEMO_POST_OHNE_MARKE = [
+    'api/wartungslauf.php' => 'antwortet dem Demo-Konto mit einer leeren Liste und tauscht nichts',
+];
+
+/** Setzt diese POST die Marke? `$skript` ist der Pfad unter `server/`. */
+function demo_post_aendert(string $skript): bool
+{
+    return !array_key_exists($skript, DEMO_POST_OHNE_MARKE);
+}
+
+/** Pfad des aufgerufenen Skripts unter `server/`, z. B. `api/wartungslauf.php`. */
+function demo_skript_hier(): string
+{
+    $datei = realpath((string)($_SERVER['SCRIPT_FILENAME'] ?? '')) ?: '';
+    $wurzel = realpath(__DIR__) . DIRECTORY_SEPARATOR;
+    return str_starts_with($datei, $wurzel)
+        ? str_replace(DIRECTORY_SEPARATOR, '/', substr($datei, strlen($wurzel))) : '';
+}
+
+/**
  * Die Marke nach einem Reset vergessen — aber nur, wenn sie nicht juenger
  * ist als sein Beginn. Eine Aenderung, die WAEHREND des Resets einging,
  * gehoert zum neuen Fenster; ihre Marke bleibt stehen.
