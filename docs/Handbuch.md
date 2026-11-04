@@ -3748,7 +3748,10 @@ Mehr dazu in Abschnitt 11.4a.
 > sieht diese Einsätze. *Seit Uhr 4.1.0* erfährt die Uhr beim nächsten
 > Sendeversuch, dass sie getrennt ist, und verwirft ihre ungesendeten Pakete
 > 30 Tage danach. Erreicht sie nie wieder ein Telefon, erfährt sie es nicht,
-> und die Daten bleiben liegen.
+> und die Daten bleiben liegen. *Seit Android 0.21.0* tut das Handy dasselbe:
+> 30 Tage nach der ersten Abweisung durch den Server sind seine ungesendeten
+> Pakete fort, und die Startseite der App sagt vorher „Ungesendete Pakete
+> bleiben bis TT.MM. auf dem Telefon“. Ein laufender Dienst bleibt.
 >
 > Bis dahin gilt seit Web 15.6.0 eine Grenze: Ein Gerät darf einen
 > **bestehenden** Einsatz oder eine bestehende Ruhezeit nur noch **72 Stunden**

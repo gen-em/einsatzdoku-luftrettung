@@ -284,6 +284,20 @@ Schritt 21 (GR), Paket GR-04 — die Uhr liest die Absage des Servers genauer
   Jetzt versuchen es das Öffnen der Sync-Seite und das Dienstende einmal
   trotz der Marke.
 
+## [Android 0.21.0] — unveröffentlicht
+
+Schritt 23 (BR6), Paket BR6-07 (Backlog Nr. 471).
+
+### Hinzugefügt
+
+- **Android — ein abgemeldetes Telefon behält seine Pakete höchstens 30
+  Tage.** Wurde ein Telefon im Web gelöscht oder gesperrt, lagen Spur und
+  Phasen bis dahin unbegrenzt im Klartext auf ihm, auch wenn es verloren
+  war; die Garmin-Uhr räumt in diesem Fall seit Uhr 4.1.0 nach 30 Tagen.
+  Jetzt tut das Telefon dasselbe, gerechnet ab der ersten Abweisung, und die
+  Dienstansicht nennt das Datum. Pakete, die nach dem Trennen an das alte
+  Konto gebunden liegen bleiben, behalten diese Frist.
+
 ## [Android 0.20.0] — unveröffentlicht
 
 Schritt 21 (GR), Paket GR-03 — die Sackgasse beim Trennen ist offen

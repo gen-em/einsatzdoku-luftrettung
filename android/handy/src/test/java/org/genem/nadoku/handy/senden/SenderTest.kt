@@ -26,6 +26,7 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import java.io.File
 import java.time.Instant
+import java.time.temporal.ChronoUnit
 import kotlin.random.Random
 
 /**
@@ -375,6 +376,109 @@ class SenderTest {
         antworteVollstaendig()
         senderMit(b).sendeAlles()
         assertFalse(b.abgemeldet)
+    }
+
+    // ---- Die Frist nach einer Abmeldung (Nr. 471) ---------------------------
+
+    private fun offenesSegment(ref: String): Long =
+        puffer.paketAnlegen(ref, Paketzeile.ART_RUHESEGMENT, "2026-07-16", "ad-2", "2026-07-16T07:00:00Z")
+
+    /**
+     * 30 Tage nach der **ersten** 401 sind alle abgeschlossenen Pakete fort,
+     * 29 Tage danach noch nicht; ein offenes Paket (laufender Dienst) bleibt.
+     * Eine zweite 401 schiebt die Frist nicht hinaus.
+     */
+    @Test fun dreissigTageNachDerErstenAbmeldungIstDerPufferLeer() {
+        val t0 = Instant.parse("2026-07-16T08:00:00Z")
+        uhrzeit = t0
+        val alt = abgeschlossenesSegment("af-1-a")
+        val b = bindung()
+        server.status = 401
+        server.antwortkoerper = """{"error":"auth"}"""
+        senderMit(b).sendeAlles()
+        assertEquals(t0, b.abgemeldetSeit)
+
+        uhrzeit = t0.plus(29, ChronoUnit.DAYS)
+        senderMit(b).sendeAlles()
+        assertEquals("Eine zweite 401 schiebt nichts hinaus", t0, b.abgemeldetSeit)
+        assertNotNull("29 Tage: bleibt", puffer.paket(alt))
+
+        val offen = offenesSegment("af-2-o")
+        uhrzeit = t0.plus(30, ChronoUnit.DAYS)
+        val bericht = senderMit(b).sendeAlles()
+        assertNull("30 Tage: fort", puffer.paket(alt))
+        assertEquals(1, bericht.geraeumt)
+        assertNotNull("Der laufende Dienst bleibt", puffer.paket(offen))
+        /* Die Räumung vergisst die Abmeldung; das offene Paket bekommt danach
+         * wieder 401, und eine NEUE Frist beginnt — über das, was jetzt liegt. */
+        assertEquals("Neue Frist ab der 401 nach der Räumung", uhrzeit, b.abgemeldetSeit)
+    }
+
+    /** Eine Annahme hebt die Abmeldung auf; die nächste 401 beginnt eine neue Frist. */
+    @Test fun eineAnnahmeHebtDieFristAuf() {
+        val t0 = Instant.parse("2026-07-16T08:00:00Z")
+        uhrzeit = t0
+        abgeschlossenesSegment("af-3-a")
+        val b = bindung()
+        server.status = 401
+        server.antwortkoerper = """{"error":"auth"}"""
+        senderMit(b).sendeAlles()
+
+        uhrzeit = t0.plus(20, ChronoUnit.DAYS)
+        antworteVollstaendig()
+        senderMit(b).sendeAlles()
+        assertNull(b.abgemeldetSeit)
+
+        val neu = abgeschlossenesSegment("af-4-b")
+        uhrzeit = t0.plus(31, ChronoUnit.DAYS)
+        server.status = 401
+        server.antwortAus = null
+        server.antwortkoerper = """{"error":"auth"}"""
+        senderMit(b).sendeAlles()
+        assertEquals(uhrzeit, b.abgemeldetSeit)
+        assertNotNull("Die neue Frist hat eben erst begonnen", puffer.paket(neu))
+    }
+
+    /**
+     * Der **gebundene** Rückstand behält die Frist der Abmeldung, auch wenn das
+     * Trennen die Abmeldung vergisst und das Handy an ein anderes Konto geht.
+     */
+    @Test fun derGebundeneRueckstandBehaeltDieFrist() {
+        val t0 = Instant.parse("2026-07-16T08:00:00Z")
+        val alt = abgeschlossenesSegment("af-5-a")
+        val b = bindung()
+        b.abmeldungVermerken(t0)
+        b.binden("ANDERER-SCHLUESSEL", alt, t0.plus(5, ChronoUnit.DAYS))
+        b.abmeldungVergessen()                     // wie Kopplungsdienst.trennen()
+        assertEquals(t0.plus(30, ChronoUnit.DAYS), b.gebundenFristBis)
+
+        antworteVollstaendig()
+        uhrzeit = t0.plus(29, ChronoUnit.DAYS)
+        senderMit(b).sendeAlles()
+        assertNotNull("29 Tage: liegt noch, geht aber nicht hinaus", puffer.paket(alt))
+
+        val neu = abgeschlossenesSegment("af-6-b")
+        uhrzeit = t0.plus(30, ChronoUnit.DAYS)
+        val bericht = senderMit(b).sendeAlles()
+        assertNull("30 Tage: fort", puffer.paket(alt))
+        assertNull("Die Bindung ist gelöst", b.gebundenBis)
+        assertNull("Das neue Paket ging an das neue Konto", puffer.paket(neu))
+        assertEquals(1, bericht.geraeumt)
+    }
+
+    /** Ein Vermerk aus Android 0.20.0 ohne Zeitpunkt: Die Frist beginnt jetzt, nicht rückwirkend. */
+    @Test fun einAlterVermerkOhneZeitpunktBeginntJetzt() {
+        val alt = abgeschlossenesSegment("af-7-a")
+        val b = bindung()
+        kontext.getSharedPreferences("rueckstand", Context.MODE_PRIVATE).edit()
+            .putBoolean("abgemeldet", true).commit()
+        val t = Instant.parse("2026-11-04T12:00:00Z")
+
+        val weg = org.genem.nadoku.handy.kopplung.Abmeldefrist.raeumen(b, puffer, t)
+
+        assertEquals(0, weg.pakete)
+        assertEquals(t, b.abgemeldetSeit)
+        assertNotNull(puffer.paket(alt))
     }
 
     /** **400**: als fehlerhaft markieren und **nicht wiederholen**. */

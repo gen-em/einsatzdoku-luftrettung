@@ -759,21 +759,6 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      Bitwarden (P-R17-34, `Pruefliste.md` 3).
 <!-- -->
 
-471. **Ein abgemeldetes Handy hält seinen Klartextpuffer ohne Frist.** · gehört zu: 23 · Stand: offen · seit 02.11.2026
-     *Aufgenommen 02.11.2026 aus GR-03 (Konzept GR, F-GR-07).* Die
-     Garmin-Uhr verwirft ihren Puffer 30 Tage nach der ersten 401/403
-     (Lage H im Bedrohungsmodell); das Handy hat dafür keine Frist. Es führt
-     seit Android 0.20.0 einen dauerhaften Abmeldevermerk
-     (`Rueckstandsbindung`), aber keinen Zeitpunkt. Ein im Web gelöschtes,
-     verlorenes Handy hält Spur und Phasen damit unbegrenzt, auch einen
-     gebundenen Rückstand. *Weg:* den Zeitpunkt der ersten Abmeldung im
-     Vermerk ablegen und nach `Raeumung.FRIST_TAGE` alle Pakete der
-     Kopplung räumen, wie die Uhr; Bedrohungsmodell Lage H nachziehen.
-     *Abnahme:* Prüffall im `SenderTest` mit gestellter Uhr — 30 Tage nach
-     der ersten 401 ist der Puffer leer.
-
-<!-- -->
-
 458. **Auf MySQL 8 bricht der Wartungslauf der Spuren bei jedem Aufruf ab.** · gehört zu: 23 · Stand: teilweise · seit 03.11.2026
      *Aufgenommen 03.11.2026 im Prüfdurchgang der Arbeitsumgebung (R91,
      P-S11-14, -30).* `spur2_faellig_kandidaten()` in `spur_lib.php`

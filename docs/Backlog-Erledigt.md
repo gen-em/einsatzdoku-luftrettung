@@ -10930,3 +10930,24 @@ zutreffen.
      auf der Venu 3s schon ab vier Zeilen zu breit, und auch Fenix und FR
      945 brauchen sie (F-BR6-08). Bildprobe 24/0, davon zwei Venu-Messungen
      als begründete Ausnahme 6 px im Sicherheitsrand (E-BR6-17).
+
+471. **Ein abgemeldetes Handy hält seinen Klartextpuffer ohne Frist.** · gehört zu: 23 · Stand: erledigt · seit 02.11.2026
+     *Aufgenommen 02.11.2026 aus GR-03 (Konzept GR, F-GR-07).* Die
+     Garmin-Uhr verwirft ihren Puffer 30 Tage nach der ersten 401/403
+     (Lage H im Bedrohungsmodell); das Handy hat dafür keine Frist. Es führt
+     seit Android 0.20.0 einen dauerhaften Abmeldevermerk
+     (`Rueckstandsbindung`), aber keinen Zeitpunkt. Ein im Web gelöschtes,
+     verlorenes Handy hält Spur und Phasen damit unbegrenzt, auch einen
+     gebundenen Rückstand. *Weg:* den Zeitpunkt der ersten Abmeldung im
+     Vermerk ablegen und nach `Raeumung.FRIST_TAGE` alle Pakete der
+     Kopplung räumen, wie die Uhr; Bedrohungsmodell Lage H nachziehen.
+     *Abnahme:* Prüffall im `SenderTest` mit gestellter Uhr — 30 Tage nach
+     der ersten 401 ist der Puffer leer.
+     Erledigt 04.11.2026 mit BR6-07 (Android 0.21.0): Der Abmeldevermerk
+     trägt den Zeitpunkt der ersten 401/403, die Bindung eine eigene Frist;
+     kopplung/Abmeldefrist.kt räumt nach 30 Tagen alle abgeschlossenen
+     Pakete bzw. den gebundenen Rückstand, beim Sendelauf und beim Start der
+     App; die Dienstansicht nennt das Datum. SenderTest: vier neue Fälle
+     (Frist, Annahme, Bindung über das Trennen, Altvermerk), 29/0;
+     Gegenprobe ohne Räumung im Sendelauf zwei rot. Bedrohungsmodell Lage H
+     nachgezogen.

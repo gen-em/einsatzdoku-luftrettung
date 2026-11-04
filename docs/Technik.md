@@ -10786,6 +10786,21 @@ Rückfrage (`Puffer.rueckstandVerwerfen()`). Getrennt wird ohnehin nur
 außerhalb eines Dienstes (`EinstellungenAnsicht`), also deckt die Bindung den
 ganzen Puffer.
 
+**Die Frist nach der Abmeldung** (seit Android 0.21.0, Nr. 471; dieselbe
+Regel wie Uhr 4.1.0, `Uploader.abmeldeFristPruefen`). Der Vermerk trägt den Zeitpunkt der **ersten**
+401/403 (`abgemeldet_seit`); eine weitere schiebt ihn nicht. 30 Tage danach
+(`Raeumung.FRIST_TAGE`) löscht `kopplung/Abmeldefrist.raeumen()` alle
+abgeschlossenen Pakete samt Punkten, Phasen und leeren Dienstzeilen und
+vergisst die Abmeldung; das offene Paket eines laufenden Dienstes bleibt.
+Die Bindung trägt ihre eigene Frist (`gebunden_frist`, beim Binden aus der
+Abmeldung übernommen), weil das Trennen die Abmeldung vergisst. Gerufen wird
+die Räumung am Anfang jedes Sendelaufs (`Sender.sendeAlles()`, sie zählt in
+`Sendebericht.geraeumt`) und in `NAdokuApp.onCreate()` — ein abgemeldetes
+Handy sendet womöglich nie wieder. Ein Vermerk aus 0.20.0 ohne Zeitpunkt
+bekommt beim ersten Lesen „jetzt“ (`fristenNachholen()`), nicht rückwirkend.
+Die Dienstansicht nennt das Datum („Ungesendete Pakete bleiben bis TT.MM. auf
+dem Telefon“), solange etwas liegt.
+
 **Die Kopplung ist seit Web 12.9.0 nicht mehr geräteneutral**, und das ist
 Absicht: `pair.php` liest den Block `geraet` aus — seit Web 13.0.0 in der
 Anfrage `start` — und hält fest, was gekoppelt hat (R42). Die Neutralität gilt

@@ -24,10 +24,10 @@ endet mit Prüfarbeit an der einen örtlichen Anlage.
 | BR6-04 | Endgültige Mail-Absage: Nr. 481 | **gebaut** 04.11.2026 (Web 23.7.6) — Abnahme auf Staging nach dem Merge |
 | BR6-05 | Abstand zwischen zwei Formularen: Nr. 480 | **erledigt** 04.11.2026 (Web 23.7.7) |
 | BR6-06 | Uhr, Sync-Seite auf der Venu 3s: Nr. 470 | **erledigt** 04.11.2026 (Uhr 4.3.2) |
-| BR6-07 | Handy, Frist für den Klartextpuffer nach der Abmeldung: Nr. 471 | offen |
+| BR6-07 | Handy, Frist für den Klartextpuffer nach der Abmeldung: Nr. 471 | **erledigt** 04.11.2026 (Android 0.21.0) |
 | BR6-08 | Abschluss | offen |
 
-**In Arbeit:** BR6-07 als Nächstes. **Es hakt:** nirgends. Q-BR6-01 bis
+**In Arbeit:** BR6-08 (Abschluss) als Nächstes. **Es hakt:** nirgends. Q-BR6-01 bis
 -09 sind entschieden (E-BR6-04 bis -12); BR6-05 ist ohne Mockup freigegeben
 (E-BR6-09).
 
@@ -142,6 +142,13 @@ Anlage startet in `lokal_starten.sh`; `hochfahren.sh` beendet ihn nur mit
 Arbeitsbaum, Arbeitsbaum löschen, 404) ist in BR6-01 vor der Änderung
 einmal nachzustellen.
 
+**F-BR6-09 — Das Trennen vergisst die Abmeldung** (gefunden in BR6-07).
+`Kopplungsdienst.trennen()` ruft `abmeldungVergessen()`, nachdem es den
+Rückstand gebunden hat. Eine Frist, die nur am Abmeldevermerk hinge, ginge
+damit genau dann verloren, wenn der Klartext an ein fremdes Konto gebunden
+liegen bleibt. Die Garmin-Uhr hat dafür eine eigene Frist an der Bindung
+(`rueck_bind` → `bis`); das Handy bekommt dieselbe → E-BR6-18.
+
 **F-BR6-08 — Nr. 470 ist breiter als im Backlog** (gefunden in BR6-06,
 Bildprobe mit Breitenmessung). Ohne Kurzform ragt „Action halten: Gerät
 koppeln“ auf der Venu 3s schon bei **4 und 5 Zeilen** 61 px über die Sehne
@@ -209,6 +216,7 @@ nachmessen (P-AR-15, 6 Fehlschläge erwartet).
 | E-BR6-11 | Q-BR6-08: Räumung wie die Uhr — abgeschlossene Pakete der Kopplung und gebundener Rückstand, nicht der laufende Dienst; „Daten bis TT.MM.“ in der App; neue Frist nach einer Annahme. | wie E-BR6-04 |
 | E-BR6-12 | Q-BR6-09: Der Rundlauf legt das Paar selbst an, über `api/kontopaar.php`. | wie E-BR6-04 |
 | E-BR6-13 | F-BR6-06: Ein Baum ohne `config.php` übernimmt `config.php` und `install.lock` vom Baum, dessen Server läuft, statt neu einzurichten. Eingerichtet wird nur noch, wenn kein Server läuft oder `--neu` es verlangt. Grund: Mehrere Bäume teilen eine Datenbank; eine zweite Einrichtung zerstört die erste. | Umsetzung, 04.11.2026 (im Rahmen von Nr. 490) |
+| E-BR6-18 | Nr. 471: Die Frist hängt an zwei Stellen — `abgemeldet_seit` am Vermerk und `gebunden_frist` an der Bindung (aus der Abmeldung übernommen), wie auf der Uhr (F-BR6-09). Geräumt wird in `kopplung/Abmeldefrist.kt`, gerufen am Anfang jedes Sendelaufs und in `NAdokuApp.onCreate()`, weil ein abgemeldetes Handy womöglich nie wieder sendet. Nach der Räumung ist die Abmeldung vergessen; die nächste 401 beginnt eine neue Frist. | Umsetzung, 04.11.2026 (im Rahmen von E-BR6-11) |
 | E-BR6-17 | Q-BR6-10: (c) — die Kurzform bleibt „Koppeln: Action halten“, die Probe bleibt streng (Sehne mit Sicherheitsrand); die zwei Venu-3s-Messungen bei 6 und 7 Zeilen stehen als Ausnahme mit Text, höchstens 6 px und Grund in `syncseite.sh` (`AUSNAHMEN`). Grün, aber in jedem Lauf genannt; mehr Überstand oder ein anderer Text ist rot. | Betreiberin, 04.11.2026 („c, mach weiter“) |
 | E-BR6-16 | Nr. 480: Der Abstand ist `--abstand-4` (16 px), Zeile 4 der Abstandstabelle in `Design.md` („Gruppe → nächste Gruppe innerhalb einer Karte“), nicht „wie zwischen Abschnitten“ (Backlog-Abnahme, Konzept BR6-05). Grund: Die beiden Formulare gehören zusammen — dafür hat BR5 ihnen eine gemeinsame Linie gegeben (E-BR5-17); ein Abschnittsabstand hätte sie getrennt. | Umsetzung, 04.11.2026 (innerhalb der Freigabe E-BR6-09: vorhandener Token, Ort `.listen-form > form + form`) |
 | E-BR6-15 | Die Ausnahmeliste `DEMO_POST_OHNE_MARKE` trägt nur, was gemessen ist: `api/wartungslauf.php`. Die in F-BR6-02 vermuteten lesenden POSTs (`kontopaar.php` `zustand`, `export_data.php`) kamen beim Ansehen nicht vor und stehen nicht darin. Grund: Jeder Eintrag verlangt, dass der Endpunkt für das Demo-Konto nichts schreibt — eine vermutete Zeile wäre eine ungeprüfte Zusage. | Umsetzung, 04.11.2026 |
@@ -423,6 +431,14 @@ danach nicht; nach einer 200 dazwischen beginnt die Frist neu; ein laufender
 Dienst bleibt. Bilderlauf des Handys mit der Fristzeile. Am echten Gerät
 bleibt es ein Punkt im Prüfdokument.
 
+*Gebaut (04.11.2026, Android 0.21.0):* `Rueckstandsbindung` mit
+`abgemeldetSeit`, `abmeldeFristBis`, `gebundenFristBis`,
+`fristenNachholen()`; `kopplung/Abmeldefrist.kt` (`raeumen()`,
+`naechsteFrist()`); Aufruf in `Sender.sendeAlles()` und
+`NAdokuApp.onCreate()`; Zeile `sync_frist` in der Dienstansicht
+(`Zeit.tagMonat()`). Im Bilderlauf (`HandyBildTest`) neu der Bildschirm
+`sende-frist`.
+
 ### BR6-08 Abschluss
 
 Prüfstand über den Endstand (Umfang nach `docs/Pruefablauf.md`; die
@@ -494,6 +510,37 @@ mariadb106`: MySQL 8.4.0, 8.0.46, MariaDB 10.6.28, dazu die örtliche
   (das neue Muster `plattformabfragen`); sie steht im Commit. Hier
   nachgetragen, weil ein Eintrag vor dem Commit den gemessenen Baum geändert
   hätte.
+
+**BR6-07** (04.11.2026, Android 0.21.0; Robolectric im Container):
+
+- *SenderTest* (`./gradlew :handy:testDebugUnitTest --tests '*SenderTest*'`):
+  **29 Fälle, 0 Fehlschläge**, darunter vier neue — 29 Tage nach der ersten
+  401 liegt das Paket, 30 Tage danach ist es fort und das offene Paket
+  bleibt; eine zweite 401 schiebt die Frist nicht; eine Annahme hebt sie
+  auf, die nächste 401 beginnt neu; der gebundene Rückstand behält die
+  Frist über `abmeldungVergessen()` hinaus und das neue Paket geht ans neue
+  Konto; ein Vermerk ohne Zeitpunkt beginnt jetzt.
+- *Gegenprobe:* die Räumung in `Sender.sendeAlles()` kurz durch `+ 0`
+  ersetzt — **2 rot** (die beiden Fristfälle), dann zurückgestellt.
+- *Voller Bau* (`./gradlew build`): Lint 0 Fehler (Handy 5 Fassungshinweise,
+  Uhr 0), Handy **303** Fälle je Bauart (15 ohne Anlage übersprungen), Uhr
+  74, **0** Fehlschläge; Release-APK Handy 9 223 526 B, Uhr 22 743 510 B.
+- *Ein Prüffall in einem ersten Entwurf war falsch:* Er erwartete nach der
+  Räumung „nicht abgemeldet“; das offene Paket bekommt aber gleich wieder 401,
+  und eine neue Frist beginnt. Erwartung berichtigt, nicht der Code.
+- *Bilderlauf* (`HandyBildTest`): neu `sende-frist` (Rückstand 2,
+  „Schlüssel abgewiesen“, Frist „04.12.“) — **81 Bilder** statt 78; bei
+  360 dp angesehen, die Zeile bricht in zwei Zeilen um und steht unter der
+  Ergebniszeile. *Zuerst stand hier, der Bilderlauf könne keinen
+  Abmeldezustand herstellen — falsch: Er zeichnet die Ansicht mit
+  Parametern, nicht aus dem Puffer.*
+- *Prüfstand, erster Lauf:* 52 grün, **1 rot** — die Wortliste fand
+  „Garmin-Uhr“ in meinem neuen Absatz in `Technik.md` 6 (Klasse „Luft“,
+  Plattformname außerhalb der Ausnahmen). Umformuliert auf „Uhr 4.1.0“, die
+  Zählweise des Projekts für die Garmin-Fassung, statt eine Ausnahme
+  anzulegen; Wortliste danach 0 Treffer. Zweiter Lauf über den Endstand im
+  Commit.
+- *Nicht geprüft:* ein echtes Telefon — ins Prüfdokument.
 
 **BR6-06** (04.11.2026, Uhr 4.3.2; Simulator nach `aufbauen.sh uhr` und
 `pruefstand.sh aufbau`, Fenix 6 Pro, FR 945, Venu 3s):
@@ -570,6 +617,7 @@ Containers, Startfolge `Sandbox-Setup.md` 6.1a):
 
 | Datum | Was |
 |---|---|
+| 04.11.2026 | BR6-07 erledigt (Android 0.21.0); F-BR6-09, E-BR6-18. |
 | 04.11.2026 | BR6-06 erledigt (Uhr 4.3.2); F-BR6-08, Q-BR6-10 → E-BR6-17. |
 | 04.11.2026 | BR6-05 erledigt (Web 23.7.7); E-BR6-16. |
 | 04.11.2026 | BR6-04 gebaut (Web 23.7.6). |

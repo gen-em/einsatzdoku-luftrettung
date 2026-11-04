@@ -210,6 +210,11 @@ class NAdokuApp : Application() {
     override fun onCreate() {
         super.onCreate()
         try {
+            /* DIE FRIST NACH EINER ABMELDUNG AUCH OHNE SENDELAUF (Nr. 471):
+             * Ein abgemeldetes Handy sendet womöglich nie wieder, geöffnet
+             * wird es trotzdem. */
+            org.genem.nadoku.handy.kopplung.Abmeldefrist.raeumen(bindung, puffer, Instant.now())
+
             if (Nachsenden.planen(null, puffer.rueckstand(), klammer.laeuft())) {
                 Nachsenden.einplanen(this)
             }

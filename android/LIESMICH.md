@@ -216,6 +216,19 @@ Die Fälle **räumen hinter sich auf**: *(Zeile 105–108 unverändert)*
 
 ### Was der Baulauf heute meldet
 
+**Stand Android 0.21.0 (Schritt 23, BR6-07: Frist für den Klartextpuffer
+nach der Abmeldung, Nr. 471), `./gradlew build` im Container, 04.11.2026 —
+`BUILD SUCCESSFUL in 3m 50s`:** Lint **0** Fehler (Handy 5 Warnungen, alle
+Fassungshinweise aus `libs.versions.toml`: 2 × `NewerVersionAvailable`,
+2 × `GradleDependency`, 1 × `AndroidGradlePluginVersion`; Uhr keine),
+Prüffälle je Bauart Handy **303** (vier neue in `SenderTest`), davon 15
+ohne Installation übersprungen, Uhr **74**, **0** Fehlschläge. Der
+Bilderlauf des Handys hat **81** Bilder (27 Bildschirme; neu `sende-frist`
+mit der Zeile „Ungesendete Pakete bleiben bis …“). APK
+unsigniert, Release: Handy **9 223 526 B**, Uhr **22 743 510 B**. Der
+Rundlauf gegen die örtliche Anlage legt seit BR6-01 das Schlüsselpaar von
+Konto 1 selbst an (oben, „Der Server-Rundlauf“).
+
 **Stand Android 0.20.0 (Schritt 21, GR-02 und GR-03: Antwortauswertung,
 Rückstandsbindung), `./gradlew build` im Container, 02.11.2026 —
 `BUILD SUCCESSFUL in 7m 53s`:** Lint **0** Fehler (Handy 6 Warnungen, alle

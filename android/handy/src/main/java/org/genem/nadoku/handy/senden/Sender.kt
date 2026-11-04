@@ -1,5 +1,6 @@
 package org.genem.nadoku.handy.senden
 
+import org.genem.nadoku.handy.kopplung.Abmeldefrist
 import org.genem.nadoku.handy.kopplung.Bindungsstand
 import org.genem.nadoku.handy.kopplung.Netzantwort
 import org.genem.nadoku.handy.kopplung.Rueckstandsbindung
@@ -165,9 +166,12 @@ class Sender(
          * mindestens einer je Dienst stattfindet (der Takt). Vor der Prüfung
          * der Zugangsdaten, damit auch ein ungekoppeltes Handy nichts
          * Altes behält. */
+        /* UND DIE FRIST NACH EINER ABMELDUNG (Nr. 471): 30 Tage nach der
+         * ersten 401/403 verlassen alle abgeschlossenen Pakete den Puffer,
+         * wie auf der Garmin-Uhr ([Abmeldefrist]). */
         val geraeumt = puffer.abgewieseneRaeumen(
             Zeit.iso(jetzt().minus(Raeumung.FRIST_TAGE, ChronoUnit.DAYS)),
-        ).pakete
+        ).pakete + (bindung?.let { Abmeldefrist.raeumen(it, puffer, jetzt()).pakete } ?: 0)
 
         /* DIE WARTEZEIT VOR ALLEM ANDEREN, was ans Netz geht. Der Lauf meldet
          * „später erneut", damit der Nachsende-Job sich nachplant; er sendet
@@ -279,12 +283,12 @@ class Sender(
             }
 
             is Sendeantwort.SchluesselAbgewiesen -> {
-                bindung?.abmeldungVermerken()
+                bindung?.abmeldungVermerken(jetzt())
                 Sendebericht(anfragen = 1, pausiert = true)
             }
 
             is Sendeantwort.Gesperrt -> {
-                bindung?.abmeldungVermerken()
+                bindung?.abmeldungVermerken(jetzt())
                 Sendebericht(anfragen = 1, pausiert = true, gesperrt = antwort.grund)
             }
 
