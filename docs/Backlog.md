@@ -759,20 +759,6 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      Bitwarden (P-R17-34, `Pruefliste.md` 3).
 <!-- -->
 
-470. **Auf der Venu 3s schneidet der Kreis die unterste Meldung der Sync-Seite ab.** · gehört zu: 23 · Stand: offen · seit 02.11.2026
-     *Aufgenommen 02.11.2026 aus GR-06 (Konzept GR, F-GR-11).* Seit Uhr
-     4.3.1 überlappen sich Mittelblock und Meldungen nicht mehr; bei sechs
-     und sieben Meldungszeilen steht die unterste („Action halten: Gerät
-     koppeln") aber so tief, dass die Sehne schmaler ist als die Zeile, und
-     `Ui.fitFont()` hat keine kleinere Schrift als `FONT_XTINY` — beide Enden
-     fehlen. Zu sehen auf den Bildern venu3s-6 und venu3s-7 der Bildprobe
-     `tools/uhr-pruefstand/syncseite/`; die Probe misst nur Höhen, keine
-     Breiten. *Weg:* die Zeile kürzen, wenn sie nicht passt („Koppeln:
-     Action halten"), oder die Breite in die Probe aufnehmen. *Abnahme:*
-     Bildprobe Venu 3s mit 6 und 7 Zeilen, jede Zeile ganz lesbar.
-
-<!-- -->
-
 471. **Ein abgemeldetes Handy hält seinen Klartextpuffer ohne Frist.** · gehört zu: 23 · Stand: offen · seit 02.11.2026
      *Aufgenommen 02.11.2026 aus GR-03 (Konzept GR, F-GR-07).* Die
      Garmin-Uhr verwirft ihren Puffer 30 Tage nach der ersten 401/403

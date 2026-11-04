@@ -30,7 +30,7 @@ Anlage — die Prüffassung koppelt nicht und sendet nicht.
 
 ## Erwartete Zahl
 
-`24 Pruefungen, 0 Fehlschlaege` (12 Höhen, 12 Breiten; seit BR6-06); rund 9 min.
+`24 Pruefungen, 0 Fehlschlaege; 2 gruen als Ausnahme` (12 Höhen, 12 Breiten; Venu 3s bei 6 und 7 Zeilen 6 px im Sicherheitsrand, Liste `AUSNAHMEN` im Skript, E-BR6-17); rund 9 min.
 Gegenprobe `SYNCSEITE_OHNE_KURZFORM=1` (Kurzform aus): Venu 3s bei 6 und 7 Zeilen rot.
 
 ## Was es nicht kann

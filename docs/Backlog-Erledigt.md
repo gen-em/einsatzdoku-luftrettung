@@ -10912,3 +10912,21 @@ zutreffen.
      verstellt und zurückgelegt): vorher 0 px, nachher 16 px in Chromium,
      Firefox und WebKit bei 390 und 1280 px. Die Regel trifft nur diese
      Karte; die übrigen fünf div.listen-form tragen je ein Formular.
+
+470. **Auf der Venu 3s schneidet der Kreis die unterste Meldung der Sync-Seite ab.** · gehört zu: 23 · Stand: erledigt · seit 02.11.2026
+     *Aufgenommen 02.11.2026 aus GR-06 (Konzept GR, F-GR-11).* Seit Uhr
+     4.3.1 überlappen sich Mittelblock und Meldungen nicht mehr; bei sechs
+     und sieben Meldungszeilen steht die unterste („Action halten: Gerät
+     koppeln") aber so tief, dass die Sehne schmaler ist als die Zeile, und
+     `Ui.fitFont()` hat keine kleinere Schrift als `FONT_XTINY` — beide Enden
+     fehlen. Zu sehen auf den Bildern venu3s-6 und venu3s-7 der Bildprobe
+     `tools/uhr-pruefstand/syncseite/`; die Probe misst nur Höhen, keine
+     Breiten. *Weg:* die Zeile kürzen, wenn sie nicht passt („Koppeln:
+     Action halten"), oder die Breite in die Probe aufnehmen. *Abnahme:*
+     Bildprobe Venu 3s mit 6 und 7 Zeilen, jede Zeile ganz lesbar.
+     Erledigt 04.11.2026 mit BR6-06 (Uhr 4.3.2): Kurzform „Koppeln:
+     <Haltetaste>“, genommen nur, wo die lange Form nicht passt (Ui.passt);
+     die Bildprobe misst seither auch Breiten. Ohne Kurzform war die Zeile
+     auf der Venu 3s schon ab vier Zeilen zu breit, und auch Fenix und FR
+     945 brauchen sie (F-BR6-08). Bildprobe 24/0, davon zwei Venu-Messungen
+     als begründete Ausnahme 6 px im Sicherheitsrand (E-BR6-17).

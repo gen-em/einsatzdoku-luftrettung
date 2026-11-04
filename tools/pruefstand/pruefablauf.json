@@ -299,7 +299,7 @@
     "uhr-syncseite": {
       "aufruf": "bash tools/uhr-pruefstand/syncseite/syncseite.sh",
       "braucht": "uhr",
-      "bemerkung": "Konzept GR (GR-06, Nr. 402). Eine Prueffassung startet direkt auf der Sync-Seite mit zwei offenen Paketen und 4 bis 7 Meldungszeilen; die Kopie von SyncView.mc meldet in der Konsole, wo der Mittelblock endet und der untere Block beginnt. Je Geraet (Fenix 6 Pro, FR 945, Venu 3s) und Zeilenzahl eine Messung und ein Bild, 12 zusammen. Rund 9 min."
+      "bemerkung": "Konzept GR (GR-06, Nr. 402). Eine Prueffassung startet direkt auf der Sync-Seite mit zwei offenen Paketen und 4 bis 7 Meldungszeilen; die Kopie von SyncView.mc meldet in der Konsole, wo der Mittelblock endet und der untere Block beginnt. Je Geraet (Fenix 6 Pro, FR 945, Venu 3s) und Zeilenzahl eine Messung und ein Bild, 12 zusammen. Seit BR6-06 (Nr. 470) dazu je Bild die Breite der breitesten Zeile des unteren Blocks gegen die Sehne der App, 24 Messungen zusammen; zwei Venu-3s-Messungen sind begruendete Ausnahmen in syncseite.sh (E-BR6-17) und werden in jedem Lauf genannt. Rund 9 min."
     },
     "uhr-stufe1": {
       "aufruf": "python3 tools/uhr-pruefstand/geraeteklassen.py \"$HOME/.Garmin/ConnectIQ/Devices\" --alle-liste /tmp/uhr-auswahl.txt && bash tools/uhr-pruefstand/pruefstand.sh reihe /tmp/uhr-auswahl.txt",

@@ -24,6 +24,13 @@
 # SYNCSEITE_OHNE_KURZFORM=1 schaltet in der Kopie die Kurzform ab — die
 # Gegenprobe, dass die Messung den Fehler findet.
 #
+# DIE AUSNAHMEN (E-BR6-17, Q-BR6-10). Die Messung bleibt streng: Sehne MIT
+# dem Sicherheitsrand der App (16 Bezugspixel, auf der Venu 3s rund 28 px).
+# Wo eine Zeile bewusst ein Stueck in diesen Rand ragt, steht sie unten mit
+# Geraet, Zeilenzahl, Text, hoechstem erlaubtem Ueberstand und Grund. Sie
+# ist dann gruen, wird aber in JEDEM Lauf als Ausnahme genannt; ragt sie
+# weiter, oder steht dort ein anderer Text, ist sie rot.
+#
 # AUFRUF   bash tools/uhr-pruefstand/syncseite/syncseite.sh [geraet ...]
 #          (Vorgabe fenix6pro fr945 venu3s; braucht `pruefstand.sh aufbau`)
 set -euo pipefail
@@ -40,8 +47,22 @@ export DISPLAY="${CIQ_DISPLAY:-:99}"
 melde()  { printf '\033[1m==\033[0m %s\n' "$*"; }
 fehler() { printf '\033[31mFEHLER:\033[0m %s\n' "$*" >&2; exit 1; }
 
+# geraet|zeilen|text|hoechstens px|grund
+AUSNAHMEN=(
+  "venu3s|6|Koppeln: Action halten|6|im Bild ganz lesbar; „… halten“ wie ueberall auf der Uhr (E-BR6-17)"
+  "venu3s|7|Koppeln: Action halten|6|im Bild ganz lesbar; „… halten“ wie ueberall auf der Uhr (E-BR6-17)"
+)
+ausnahme() {   # ausnahme <geraet> <zeilen> <text> -> erlaubter Ueberstand und Grund, sonst nichts
+    local e g z t m r
+    for e in "${AUSNAHMEN[@]}"; do
+        IFS='|' read -r g z t m r <<<"$e"
+        [ "$g" = "$1" ] && [ "$z" = "$2" ] && [ "$t" = "$3" ] && { printf '%s|%s' "$m" "$r"; return 0; }
+    done
+    return 0   # kein Treffer ist kein Fehler — unter `set -e` beendete er das Skript
+}
+
 mkdir -p "$ABBILD"
-pruef=0; fehl=0
+pruef=0; fehl=0; ausn=0
 for zeilen in 4 5 6 7; do
     rm -rf "$APP"; cp -r "$WURZEL/watch" "$APP"
     cp "$WURZEL/tools/uhr-pruefstand/rundlauf/Rundlauf.mc" "$APP/source/Rundlauf.mc"
@@ -89,13 +110,17 @@ for zeilen in 4 5 6 7; do
             echo "  FEHL  $g, $zeilen Zeilen: keine Breite in der Konsole"; fehl=$((fehl+1)); continue
         fi
         read -r _ ueber text <<<"$breite"
+        a=$(ausnahme "$g" "$zeilen" "$text")
         if [ "$ueber" -le 0 ]; then
             echo "  ok    $g, $zeilen Zeilen: breiteste Zeile $((-ueber)) px innerhalb der Sehne (\"$text\")"
+        elif [ -n "$a" ] && [ "$ueber" -le "${a%%|*}" ]; then
+            echo "  ok    $g, $zeilen Zeilen: AUSNAHME — \"$text\" ragt $ueber px in den Sicherheitsrand (erlaubt ${a%%|*}: ${a#*|})"
+            ausn=$((ausn+1))
         else
             echo "  FEHL  $g, $zeilen Zeilen: \"$text\" ragt $ueber px ueber die Sehne"; fehl=$((fehl+1))
         fi
     done
 done
 bash "$P" beenden >/dev/null 2>&1 || true
-echo "Sync-Seite: $pruef Pruefungen, $fehl Fehlschlaege (Bilder unter $ABBILD)"
+echo "Sync-Seite: $pruef Pruefungen, $fehl Fehlschlaege; $ausn gruen als Ausnahme (Bilder unter $ABBILD)"
 [ "$fehl" = 0 ]

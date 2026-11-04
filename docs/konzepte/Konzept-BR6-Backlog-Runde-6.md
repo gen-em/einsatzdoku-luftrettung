@@ -23,12 +23,11 @@ endet mit Prüfarbeit an der einen örtlichen Anlage.
 | BR6-03 | Änderungsmarke des Demo-Kontos: Nr. 459 | **erledigt** 04.11.2026 (Web 23.7.5) |
 | BR6-04 | Endgültige Mail-Absage: Nr. 481 | **gebaut** 04.11.2026 (Web 23.7.6) — Abnahme auf Staging nach dem Merge |
 | BR6-05 | Abstand zwischen zwei Formularen: Nr. 480 | **erledigt** 04.11.2026 (Web 23.7.7) |
-| BR6-06 | Uhr, Sync-Seite auf der Venu 3s: Nr. 470 | **in Arbeit** — Kurzform und Breitenmessung gebaut (Uhr 4.3.2, nicht abgeschlossen); wartet auf Q-BR6-10 |
+| BR6-06 | Uhr, Sync-Seite auf der Venu 3s: Nr. 470 | **erledigt** 04.11.2026 (Uhr 4.3.2) |
 | BR6-07 | Handy, Frist für den Klartextpuffer nach der Abmeldung: Nr. 471 | offen |
 | BR6-08 | Abschluss | offen |
 
-**In Arbeit:** BR6-06. **Es hakt:** Q-BR6-10 — die Kurzform ragt auf der
-Venu 3s bei 6 und 7 Zeilen noch 6 px in den Sicherheitsrand (F-BR6-08). Q-BR6-01 bis
+**In Arbeit:** BR6-07 als Nächstes. **Es hakt:** nirgends. Q-BR6-01 bis
 -09 sind entschieden (E-BR6-04 bis -12); BR6-05 ist ohne Mockup freigegeben
 (E-BR6-09).
 
@@ -190,7 +189,7 @@ nachmessen (P-AR-15, 6 Fehlschläge erwartet).
 | Q-BR6-06 | **Nr. 480, Ort der Regel.** Allgemeine Regel `.listen-form > form + form` (Abstand wie zwischen Abschnitten, vorhandenes Token) oder eine Klasse nur für diese Karte? | **Allgemeine Regel**, eingetragen in `Design.md`. Sie gilt überall, wo zwei Formulare in einem Abschnitt stehen. Kein neuer Baustein und kein neuer Token, deshalb ohne Mockup — **bitte bestätigen**, dass das keine „neue Darstellung“ im Sinn von CLAUDE.md 5 ist. | BR6-05 |
 | Q-BR6-07 | **Nr. 470, Weg.** Zeile kürzen („Koppeln: Action halten“), die Bildprobe um Breiten erweitern, oder beides? | **Beides.** Die Breitenmessung (Text gegen Sehne an seiner Höhe, dieselbe Rechnung wie `Ui.chordW()`) findet den nächsten Fall, das Kürzen behebt diesen. Gekürzt wird nur, wo die lange Form nicht passt. | BR6-06 |
 | Q-BR6-08 | **Nr. 471, Umfang der Räumung.** Was fällt nach 30 Tagen ab der ersten 401/403? | **Wie die Uhr:** alle abgeschlossenen Pakete der Kopplung **und** ein gebundener Rückstand aus einer früheren Kopplung; ein laufender Dienst nicht (er gehört zu keiner Abmeldung). Die App zeigt dazu „Daten bis TT.MM.“ wie die Sync-Seite der Uhr. Die Frist beginnt neu, wenn der Server wieder annimmt. | BR6-07 |
-| Q-BR6-10 | **Nr. 470, die Kurzform auf der Venu 3s.** „Koppeln: Action halten“ ist im Bild ganz lesbar, liegt aber bei 6 und 7 Zeilen 6 px im Sicherheitsrand (F-BR6-08). (a) Kürzer: „Koppeln: Action lang“ — bricht die Gerätewortwahl („… halten“ überall sonst); (b) Kurzform lassen, und die Probe misst gegen die Sehne **ohne** Sicherheitsrand (der Rand ist eine Vorsicht der App, kein Abschneiden) — Gefahr: Ein Messwert wird weicher, um grün zu werden; (c) Kurzform lassen, Probe streng, die zwei Messungen als bekannte Ausnahme mit Grund. | **offen** — Vorschlag (a) nur, wenn die Wortwahl zweitrangig ist; sonst (c). (b) nicht. | BR6-06 |
+| Q-BR6-10 | **Nr. 470, die Kurzform auf der Venu 3s.** „Koppeln: Action halten“ ist im Bild ganz lesbar, liegt aber bei 6 und 7 Zeilen 6 px im Sicherheitsrand (F-BR6-08). (a) Kürzer: „Koppeln: Action lang“ — bricht die Gerätewortwahl („… halten“ überall sonst); (b) Kurzform lassen, und die Probe misst gegen die Sehne **ohne** Sicherheitsrand (der Rand ist eine Vorsicht der App, kein Abschneiden) — Gefahr: Ein Messwert wird weicher, um grün zu werden; (c) Kurzform lassen, Probe streng, die zwei Messungen als bekannte Ausnahme mit Grund. | **entschieden: (c)** (E-BR6-17) | BR6-06 |
 | Q-BR6-09 | **Nr. 491, Weg.** Die örtliche Anlage legt für Konto 1 ein Schlüsselpaar an (`hochfahren.sh`), oder der Rundlauf legt es selbst an (`Kopplungshilfe`)? | **Der Rundlauf** über `api/kontopaar.php`, wie es das Einspielwerkzeug tut (`Sitzung.kontoschluessel()` in `tools/referenzdatensatz/einspielen/sitzung.py`). So bleibt die örtliche Anlage, wie eine frische aussieht, und der Prüffall hängt nicht an einem Zustand, den ein anderes Werkzeug herstellt. | BR6-01 |
 
 ## 4. Entscheidungen
@@ -210,6 +209,7 @@ nachmessen (P-AR-15, 6 Fehlschläge erwartet).
 | E-BR6-11 | Q-BR6-08: Räumung wie die Uhr — abgeschlossene Pakete der Kopplung und gebundener Rückstand, nicht der laufende Dienst; „Daten bis TT.MM.“ in der App; neue Frist nach einer Annahme. | wie E-BR6-04 |
 | E-BR6-12 | Q-BR6-09: Der Rundlauf legt das Paar selbst an, über `api/kontopaar.php`. | wie E-BR6-04 |
 | E-BR6-13 | F-BR6-06: Ein Baum ohne `config.php` übernimmt `config.php` und `install.lock` vom Baum, dessen Server läuft, statt neu einzurichten. Eingerichtet wird nur noch, wenn kein Server läuft oder `--neu` es verlangt. Grund: Mehrere Bäume teilen eine Datenbank; eine zweite Einrichtung zerstört die erste. | Umsetzung, 04.11.2026 (im Rahmen von Nr. 490) |
+| E-BR6-17 | Q-BR6-10: (c) — die Kurzform bleibt „Koppeln: Action halten“, die Probe bleibt streng (Sehne mit Sicherheitsrand); die zwei Venu-3s-Messungen bei 6 und 7 Zeilen stehen als Ausnahme mit Text, höchstens 6 px und Grund in `syncseite.sh` (`AUSNAHMEN`). Grün, aber in jedem Lauf genannt; mehr Überstand oder ein anderer Text ist rot. | Betreiberin, 04.11.2026 („c, mach weiter“) |
 | E-BR6-16 | Nr. 480: Der Abstand ist `--abstand-4` (16 px), Zeile 4 der Abstandstabelle in `Design.md` („Gruppe → nächste Gruppe innerhalb einer Karte“), nicht „wie zwischen Abschnitten“ (Backlog-Abnahme, Konzept BR6-05). Grund: Die beiden Formulare gehören zusammen — dafür hat BR5 ihnen eine gemeinsame Linie gegeben (E-BR5-17); ein Abschnittsabstand hätte sie getrennt. | Umsetzung, 04.11.2026 (innerhalb der Freigabe E-BR6-09: vorhandener Token, Ort `.listen-form > form + form`) |
 | E-BR6-15 | Die Ausnahmeliste `DEMO_POST_OHNE_MARKE` trägt nur, was gemessen ist: `api/wartungslauf.php`. Die in F-BR6-02 vermuteten lesenden POSTs (`kontopaar.php` `zustand`, `export_data.php`) kamen beim Ansehen nicht vor und stehen nicht darin. Grund: Jeder Eintrag verlangt, dass der Endpunkt für das Demo-Konto nichts schreibt — eine vermutete Zeile wäre eine ungeprüfte Zusage. | Umsetzung, 04.11.2026 |
 | E-BR6-14 | BR6-01 stuft keine Zählung hoch: Berührt sind `tools/`, Prüfquellen unter `android/handy/src/test/` und `android/werkzeuge/` — nichts davon wird ausgeliefert (CLAUDE.md 2). Kein Changelog-Eintrag. | Umsetzung, 04.11.2026 |
@@ -381,6 +381,16 @@ die App; das Kürzen in `SyncView.mc` an der Stelle, die die Zeile baut.
 *Ort:* `watch/source/SyncView.mc` (ggf. `Ui.mc`),
 `tools/uhr-pruefstand/syncseite/` samt `LIESMICH.md`.
 
+*Gebaut (04.11.2026, Uhr 4.3.2):* `Ui.kanteW()` (aus `fitFont()`
+herausgezogen) und `Ui.passt()`; eine Meldungszeile ist `[Text, Farbe]` oder
+`[Text, Farbe, Kurzform]`, die Sync-Seite nimmt die Kurzform nur, wo
+`passt()` die lange Form in der kleinsten Schrift ablehnt. Kurzform des
+Einrichtungsschritts: „Koppeln: “ + Haltetaste. Die Bildprobe hängt in die
+Kopie eine Breitenmessung (`SYNCBREITE`), kennt den Schalter
+`SYNCSEITE_OHNE_KURZFORM` für die Gegenprobe und eine Ausnahmeliste
+(E-BR6-17). `docs/Uhr-Layout_Regeln.md` 4.3 und die Funktionstabelle
+nachgezogen.
+
 *Abnahme:* Bildprobe auf Fenix 6 Pro, FR 945 und Venu 3s mit 6 und 7
 Zeilen: jede Zeile ganz lesbar, die Breitenmessung 0 Überschreitungen; gegen
 den alten Stand meldet sie die Venu-3s-Zeile. Die Bilder werden angesehen
@@ -485,6 +495,25 @@ mariadb106`: MySQL 8.4.0, 8.0.46, MariaDB 10.6.28, dazu die örtliche
   nachgetragen, weil ein Eintrag vor dem Commit den gemessenen Baum geändert
   hätte.
 
+**BR6-06** (04.11.2026, Uhr 4.3.2; Simulator nach `aufbauen.sh uhr` und
+`pruefstand.sh aufbau`, Fenix 6 Pro, FR 945, Venu 3s):
+
+- *Gegenprobe* (`SYNCSEITE_OHNE_KURZFORM=1 syncseite.sh venu3s`): Höhen 4/4
+  grün, **Breiten 4/4 rot** — „Action halten: Gerät koppeln“ 61 px (4 und 5
+  Zeilen) und 75 px (6 und 7 Zeilen) über der Sehne; im Bild fehlt bei 4
+  Zeilen das letzte „n“, bei 7 beide Enden (F-BR6-08).
+- *Mit Kurzform, erster Lauf:* 24 Prüfungen, **2 rot** — Venu 3s bei 6 und 7
+  Zeilen 6 px über der Sehne; Bild: vollständig lesbar → Q-BR6-10.
+- *Endstand* (mit Ausnahmeliste, nach Neustart des Containers): **24
+  Prüfungen, 0 Fehlschläge; 2 grün als Ausnahme**. Fenix 23 px, FR 945 28 px
+  innerhalb (beide mit Kurzform), Venu 3s bei 4 und 5 Zeilen 8 px innerhalb.
+  Bilder angesehen: Venu 3s 7 Zeilen, Fenix und FR 945 je 7 Zeilen.
+- *Probe selbst:* Der erste Lauf mit Ausnahmeliste brach nach einer Zeile ab
+  — `ausnahme()` endete ohne Treffer mit 1, und `set -e` beendete das
+  Skript; behoben mit `return 0`.
+- *Nicht geprüft:* echte Garmin-Hardware (bleibt P-GR-01 bis -03 und ein
+  neuer Punkt im Prüfdokument).
+
 **BR6-05** (04.11.2026, Web 23.7.7; örtliche Anlage):
 
 - *Lage herstellen:* Marken `server_key_kennung` und `kdf_anteil_kennung`
@@ -541,6 +570,7 @@ Containers, Startfolge `Sandbox-Setup.md` 6.1a):
 
 | Datum | Was |
 |---|---|
+| 04.11.2026 | BR6-06 erledigt (Uhr 4.3.2); F-BR6-08, Q-BR6-10 → E-BR6-17. |
 | 04.11.2026 | BR6-05 erledigt (Web 23.7.7); E-BR6-16. |
 | 04.11.2026 | BR6-04 gebaut (Web 23.7.6). |
 | 04.11.2026 | BR6-03 erledigt (Web 23.7.5); E-BR6-15. BR6-05 ohne Mockup freigegeben (E-BR6-09). |
