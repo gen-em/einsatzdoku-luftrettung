@@ -125,6 +125,18 @@ Installation. Abgeräumt werden nur die Daten der Geräte, nicht das ganze
 Konto 1 — auf einer anderen örtlichen Installation ist es womöglich ein
 echtes.
 
+**Seit BR6-01 gibt sie dem Konto ein Schlüsselpaar, wenn es keines hat**
+(Nr. 491). Seit S11 sendet das Handy ohne Kontoschlüssel nichts, und Konto 1
+einer frisch eingerichteten Anlage hat keinen — den legt erst ein Browser
+nach der Anmeldung an. `SendeRundlaufTest` und `MissionRundlaufTest` meldeten
+deshalb sechs Fehlschläge („0 Anfragen"), und die App handelte dabei richtig.
+`Kopplungshilfe.koppeln()` ruft vor der ersten Kopplung eines Laufs einmal
+`werkzeuge/rundlauf_kontopaar.py`. Das Skript meldet sich als
+`admin@example.invalid` an und legt das Paar über `api/kontopaar.php` an,
+wie der Browser, mit `Sitzung.kontoschluessel()` aus dem Einspielwerkzeug.
+Es braucht `python3` mit den Paketen aus `tools/sandbox/anforderungen.txt`
+und HTTPS auf Port 8443.
+
 #### So bekommt ein Prüfling heute eine Kopplung
 
 Die Codes stehen in keiner Tabelle mehr, in die man sie legen könnte: Sie
@@ -203,6 +215,19 @@ Die drei Zählungen (Web, Uhr, Android) bleiben getrennt.
 Die Fälle **räumen hinter sich auf**: *(Zeile 105–108 unverändert)*
 
 ### Was der Baulauf heute meldet
+
+**Stand Android 0.21.0 (Schritt 23, BR6-07: Frist für den Klartextpuffer
+nach der Abmeldung, Nr. 471), `./gradlew build` im Container, 04.11.2026 —
+`BUILD SUCCESSFUL in 3m 50s`:** Lint **0** Fehler (Handy 5 Warnungen, alle
+Fassungshinweise aus `libs.versions.toml`: 2 × `NewerVersionAvailable`,
+2 × `GradleDependency`, 1 × `AndroidGradlePluginVersion`; Uhr keine),
+Prüffälle je Bauart Handy **303** (vier neue in `SenderTest`), davon 15
+ohne Installation übersprungen, Uhr **74**, **0** Fehlschläge. Der
+Bilderlauf des Handys hat **81** Bilder (27 Bildschirme; neu `sende-frist`
+mit der Zeile „Ungesendete Pakete bleiben bis …“). APK
+unsigniert, Release: Handy **9 223 526 B**, Uhr **22 743 510 B**. Der
+Rundlauf gegen die örtliche Anlage legt seit BR6-01 das Schlüsselpaar von
+Konto 1 selbst an (oben, „Der Server-Rundlauf“).
 
 **Stand Android 0.20.0 (Schritt 21, GR-02 und GR-03: Antwortauswertung,
 Rückstandsbindung), `./gradlew build` im Container, 02.11.2026 —

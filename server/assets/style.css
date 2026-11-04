@@ -3704,6 +3704,12 @@ h1 + .seiten-erklaerung{margin-top:0}
 }
 .listen-form-felder{display:grid;gap:var(--abstand-3)}
 .listen-form-fuss{display:flex;flex-wrap:wrap;gap:var(--abstand-2);margin-top:var(--abstand-4)}
+/* Zwei Formulare in einem Abschnitt (Nr. 480): „Nachtragen vom Blatt" traegt
+ * bei „beide abweichend" zwei, und der Knopf des ersten klebte an der
+ * Beschriftung des zweiten. Gruppe -> naechste Gruppe innerhalb einer Karte,
+ * also Stufe 4 der Abstandstabelle (Design.md) — keine Linie: Die beiden
+ * gehoeren zusammen, die Linie hat der Abschnitt (E-BR5-17). */
+.listen-form > form + form{margin-top:var(--abstand-4)}
 
 /* Ab 720 px stehen Name und Lage nebeneinander — sie gehören
  * zusammen und passen in eine Zeile. */

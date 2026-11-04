@@ -3209,8 +3209,18 @@ mail_einreihen($schluessel, $empfaenger, $daten, $sofort = true)
    → überholte Zeilen derselben Art an dieselbe Adresse schließen
    → Zeile in mail_warteschlange
    → EINEN Versuch sofort — außer bei $sofort = false
-   → 'zugestellt' | 'wartet' | 'abgelehnt'
+   → 'zugestellt' | 'wartet' | 'unzustellbar' | 'abgelehnt'
 ```
+
+**`unzustellbar`** (`MAIL_UNZUSTELLBAR`, seit Web 23.7.6, Nr. 481) heißt:
+eingereiht, aber der erste Versuch hat die Zeile schon geschlossen — der
+Mailserver hat den Empfänger endgültig abgelehnt, oder der nächste Versuch
+läge nach der Frist (`zu_spaet`). Nur `wartet` wird erneut versucht. Bis
+dahin hieß jeder gescheiterte erste Versuch `wartet`, und die Seite sagte
+„wird erneut versucht“ über eine Zeile, die schon `unzustellbar` stand. Ob
+eine Nachricht hinaus oder unterwegs ist, beantwortet `mail_unterwegs()`;
+die Warnmails der Speicherschwellen zählen eine abgelehnte nicht mehr als
+gemeldet. Gemessen in der Mailprobe, Abschnitt 4a.
 
 **Auf der Leitung** (`smtp_send()`, seit Web 23.3.1, R17-22): Der Rumpf geht
 **quoted-printable** hinaus, mit `Content-Transfer-Encoding: quoted-printable`
@@ -6798,7 +6808,7 @@ Zeitpunkt der **ersten** Änderung seit dem letzten Reset;
 
 | Setzstelle | wann |
 |---|---|
-| `auth_guard.php` | jede POST des Demo-Kontos mit gültigem Formular-Token (`csrf_ok()`), **nach** dem Reset-Aufruf |
+| `auth_guard.php` | jede POST des Demo-Kontos mit gültigem Formular-Token (`csrf_ok()`), **nach** dem Reset-Aufruf — außer an die Skripte in `DEMO_POST_OHNE_MARKE` (`demo_lib.php`, seit Web 23.7.5) |
 | `ingest.php` | jeder angenommene Upload eines Demo-Geräts, **nach** dem `commit()` |
 
 Die Rechnung steht in `demo_reset_faellig_ab($letzter, $geaendert)`, rein
@@ -6821,7 +6831,13 @@ und letztem Reset, **ohne Marke** einen Tag nach dem letzten Reset
 
 Eine POST, die nichts ändert, setzt die Marke auch: Das kostet einen Reset,
 keinen Schaden; umgekehrt stünde eine Änderung ohne Marke bis zum
-Pflichtreset da. Nach dem Reset löscht `demo_aenderung_vergessen()` die
+Pflichtreset da. **Ausgenommen sind nur gemessene Fälle** (Nr. 459, seit
+Web 23.7.5): Bis dahin setzte schon das Ansehen der Startseite die Marke,
+weil der Wartungslauf (`api/wartungslauf.php`) die fälligen Spuren der
+Fixture tatsächlich verdichtete. Er antwortet dem Demo-Konto jetzt mit einer
+leeren Liste und tauscht nichts (`409 demo`), und sein Skript steht in
+`DEMO_POST_OHNE_MARKE`. Wer dort einen Eintrag ergänzt, stellt zuerst sicher,
+dass der Endpunkt für das Demo-Konto wirklich nichts schreibt. Nach dem Reset löscht `demo_aenderung_vergessen()` die
 Marke — nur, wenn sie nicht jünger ist als sein Beginn. Gemessen von der
 Zweitfaktorprobe, Teil 6b (Rechnung als Tabelle, die Marke an `app_state`,
 die zwei Setzstellen am Quelltext).
@@ -9904,7 +9920,7 @@ dem Lesen nicht geändert hat**.
 
 | Teil | Wo | Was |
 |---|---|---|
-| Liste | `spur2_faellig()`, `api/wartungslauf.php` `liste` | höchstens 20 je Aufruf (E-S11-68): abgeschlossen (`final`), nicht im Papierkorb (bis Web 22.7.0 auch: ohne Altbestand, E-S11-70); fällig, wenn ein Stück der Stufe 1 liegt (Zusammenfügen ohne Karenz, E-S11-69), 31 Tage nach dem Ende (Ausdünnen, E-S11-25) oder ein Schnitt jünger ist als das jüngste Stück (die gesperrten Punkte fallen jetzt, E-S11-47). Mit Stücken, Sperrzeiten, Phasenzeiten und `pat_blob` samt Prüfsumme. `auslassen`: was der Browser in dieser Sitzung nicht öffnen konnte — sonst blockierte eine kaputte Hülle die ersten Plätze. Eine Anfrage **ohne Antwort** (`status: 0`, meist ein Seitenwechsel) lässt seit Web 23.0.3 nichts aus und beendet den Durchgang; bis dahin schob sie die gerade bearbeitete Spur für den ganzen Tab aus dem Lauf (Nr. 393) |
+| Liste | `spur2_faellig()`, `api/wartungslauf.php` `liste` | höchstens 20 je Aufruf (E-S11-68): abgeschlossen (`final`), nicht im Papierkorb (bis Web 22.7.0 auch: ohne Altbestand, E-S11-70); fällig, wenn ein Stück der Stufe 1 liegt (Zusammenfügen ohne Karenz, E-S11-69), 31 Tage nach dem Ende (Ausdünnen, E-S11-25) oder ein Schnitt jünger ist als das jüngste Stück (die gesperrten Punkte fallen jetzt, E-S11-47). Mit Stücken, Sperrzeiten, Phasenzeiten und `pat_blob` samt Prüfsumme. `auslassen`: was der Browser in dieser Sitzung nicht öffnen konnte — sonst blockierte eine kaputte Hülle die ersten Plätze. Eine Anfrage **ohne Antwort** (`status: 0`, meist ein Seitenwechsel) lässt seit Web 23.0.3 nichts aus und beendet den Durchgang; bis dahin schob sie die gerade bearbeitete Spur für den ganzen Tab aus dem Lauf (Nr. 393). Die Unterabfrage nach dem jüngsten Schnitt nennt Einsatz und Typ selbst, nicht Spalten des Stücks: Gruppiert wird nach dem Einsatz, und MySQL lehnte die Abfrage bis Web 23.7.3 mit 1055 ab (Nr. 458; Schemaprobe, Fall 8) |
 | Zahl | `spur2_faellig_zahl()`, `zahl` | wie viele Aufzeichnungen aus wie vielen Diensttagen, für die Karte |
 | Arbeit | `assets/wartungslauf.js` | öffnen (`EdOrtsdaten.spur()`), nach der Frist ausdünnen (`ausduennen()`, `ausduennungPruefen()` — wörtlich `spur_ausduennen()` und `spur_ausduennung_pruefen()`; gegen PHP an 221 Referenzspuren nachgemessen: 221 gleiche Behaltelisten), **ein** gepacktes Stück bauen (`EdOrtsdaten.gepacktBauen()`), es wieder öffnen und Punkt für Punkt vergleichen (Rundlauf) — erst dann schicken |
 | Ortshöhe | ebenda | fehlt sie im `pat_blob`, wird sie aus den offenen Punkten nachgetragen (E-S11-72); der Server schreibt den Blob nur bei unveränderter Prüfsumme |
@@ -10769,6 +10785,21 @@ zählt sie, alles darüber geht an das neue Konto. Verworfen wird nur auf
 Rückfrage (`Puffer.rueckstandVerwerfen()`). Getrennt wird ohnehin nur
 außerhalb eines Dienstes (`EinstellungenAnsicht`), also deckt die Bindung den
 ganzen Puffer.
+
+**Die Frist nach der Abmeldung** (seit Android 0.21.0, Nr. 471; dieselbe
+Regel wie Uhr 4.1.0, `Uploader.abmeldeFristPruefen`). Der Vermerk trägt den Zeitpunkt der **ersten**
+401/403 (`abgemeldet_seit`); eine weitere schiebt ihn nicht. 30 Tage danach
+(`Raeumung.FRIST_TAGE`) löscht `kopplung/Abmeldefrist.raeumen()` alle
+abgeschlossenen Pakete samt Punkten, Phasen und leeren Dienstzeilen und
+vergisst die Abmeldung; das offene Paket eines laufenden Dienstes bleibt.
+Die Bindung trägt ihre eigene Frist (`gebunden_frist`, beim Binden aus der
+Abmeldung übernommen), weil das Trennen die Abmeldung vergisst. Gerufen wird
+die Räumung am Anfang jedes Sendelaufs (`Sender.sendeAlles()`, sie zählt in
+`Sendebericht.geraeumt`) und in `NAdokuApp.onCreate()` — ein abgemeldetes
+Handy sendet womöglich nie wieder. Ein Vermerk aus 0.20.0 ohne Zeitpunkt
+bekommt beim ersten Lesen „jetzt“ (`fristenNachholen()`), nicht rückwirkend.
+Die Dienstansicht nennt das Datum („Ungesendete Pakete bleiben bis TT.MM. auf
+dem Telefon“), solange etwas liegt.
 
 **Die Kopplung ist seit Web 12.9.0 nicht mehr geräteneutral**, und das ist
 Absicht: `pair.php` liest den Block `geraet` aus — seit Web 13.0.0 in der

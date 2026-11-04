@@ -34,6 +34,8 @@ declare(strict_types=1);
  *   FALL 7  Sperrt die Aufraeummigration der Ortsdaten, solange Klartext-Ortsdaten
  *           stehen, nennt sie Konto und Einsatz, und laeuft sie mit Freigabe
  *           und auf einer sauberen Anlage?
+ *   FALL 8  Laeuft die Liste der faelligen Spuren (`spur2_faellig_kandidaten()`)
+ *           auf dieser Fassung, und nennt sie genau die faelligen?
  *
  * Fall 2 ist der wichtigste: Er legt Bestand an, migriert und vergleicht
  * Zeile fuer Zeile. Eine Migration, die Werte verliert, faellt hier auf.
@@ -763,6 +765,73 @@ $zweiter7 = true;
 try { $lauf = migrationen_lauf($pdo, true); } catch (Throwable $e) { $zweiter7 = false; }
 pruefe('C: mit leerem Register folgenlos — nur verbucht',
        $zweiter7 && str_contains((string)($zeile7($lauf)[3] ?? ''), 'Nicht nötig'));
+sag();
+
+/* ---- Fall 8: die Liste der faelligen Spuren -------------------------------- */
+
+/* ANLASS: Nr. 458. Die Abfrage gruppierte nach `o.id`, und ihre Unterabfrage
+ * `geschnitten` griff auf `s.owner_type` und `s.owner_id` zu — weder
+ * gruppiert noch aggregiert. MariaDB laesst das durch, MySQL mit
+ * `ONLY_FULL_GROUP_BY` (Vorgabe ab 5.7) lehnt es mit 1055 ab; auf Staging
+ * antwortete der Wartungslauf deshalb seit dem 19.10.2026 bei jedem Aufruf
+ * mit 500. Dieselbe Art Fehler stand schon einmal in `admin_users.php`. Eine
+ * Abfrage, die je Fassung anders gilt, gehoert hierher und nicht in eine
+ * Probe gegen die eine oertliche Datenbank.
+ *
+ * DIE ZEILEN SCHREIBT DIE PROBE UNMITTELBAR, an `spur_lib.php` vorbei: Sie
+ * misst die Abfrage, nicht das Schreiben, und die Datenbank wird am Ende
+ * geworfen. Die Huellen sind leer — die Liste liest sie nicht. */
+sag('FALL 8 — Liste der faelligen Spuren (Nr. 458)');
+$pdo = frisch();
+schema_oder_raus('Fall 8');
+require_once $WURZEL . '/spur_lib.php';
+$jetzt8 = time();
+$t8 = static fn(int $tage): string => gmdate('Y-m-d H:i:s', $jetzt8 - $tage * 86400);
+$pdo->exec("INSERT INTO users (id, email, password_hash, role)
+            VALUES (1, 'probe@example.invalid', 'x', 'admin')");
+/* Einsatz => [final, Ende vor Tagen, Stufe, Schnitt nach der letzten Aenderung] */
+$faelle8 = [1 => [1, 1, 1, false],    // Stufe 1: packen
+            2 => [1, 40, 2, false],   // nach der Frist: duennen
+            3 => [1, 1, 2, true],     // neuer Schnitt: neu packen
+            4 => [1, 40, 3, false],   // schon duenn: nicht faellig
+            5 => [0, 1, 1, false]];   // offen: nicht faellig
+$stueck8 = $pdo->prepare("INSERT INTO track_stuecke
+        (owner_type, owner_id, seq_from, punkte, n_original, ts_von, ts_bis, stufe, huelle,
+         erstellt_am, geaendert_am) VALUES (?, ?, 0, 1, 1, 0, 0, ?, '', ?, ?)");
+foreach ($faelle8 as $id => [$final, $tage, $stufe, $schnitt]) {
+    $pdo->prepare('INSERT INTO missions (id, user_id, client_ref, started_at, ended_at, final)
+                   VALUES (?, 1, ?, ?, ?, ?)')
+        ->execute([$id, "probe-$id", $t8($tage + 1), $t8($tage), $final]);
+    $stueck8->execute(['mission', $id, $stufe, $t8($tage), $t8($tage)]);
+    if ($schnitt) {
+        $pdo->prepare("INSERT INTO track_cuts (user_id, owner_type, owner_id, mission_id,
+                         von_ts, bis_ts, n_punkte, erstellt_am)
+                       VALUES (1, 'mission', ?, ?, 0, 0, 1, ?)")
+            ->execute([$id, $id, $t8(0)]);
+    }
+}
+$pdo->prepare('INSERT INTO rest_segments (id, user_id, client_ref, started_at, ended_at, final)
+               VALUES (1, 1, ?, ?, ?, 1)')->execute(['probe-r1', $t8(2), $t8(1)]);
+$stueck8->execute(['rest', 1, 1, $t8(1), $t8(1)]);
+/* UEBER `db()`, NICHT UEBER `$pdo` — der Kern des Falls (F-BR6-07). Die
+ * Anwendung bereitet Anweisungen ECHT vor (`ATTR_EMULATE_PREPARES => false`
+ * in `db.php`); dann ist `s.owner_type = ?` fuer MySQL ein Parameter und
+ * keine Konstante, und es erkennt die Abhaengigkeit nicht. Mit der
+ * Vorgabe von PDO (nachgeahmt) steht dort `'mission'`, und dieselbe Abfrage
+ * laeuft auf MySQL 8.4.0 durch — gemessen beim ersten Versuch dieses Falls.
+ * `db()` liest die config.php, die diese Probe oben auf `$DB` gestellt hat. */
+try {
+    $k8 = spur2_faellig_kandidaten(db(), 1, $jetzt8, [], null);
+    $liste8 = implode(' ', array_map(static fn($k) => $k['art'][0] . $k['id'] . '>' . $k['ziel_stufe'], $k8));
+    pruefe('die Abfrage laeuft', true);
+} catch (Throwable $e) {
+    $liste8 = '';
+    pruefe('die Abfrage laeuft', false, mb_substr($e->getMessage(), 0, 120));
+}
+/* Sortiert nach Bezug, dann Art, dann Nummer: Einsatz 2 (vor 40 Tagen)
+ * zuerst, dann die von gestern — Einsaetze vor dem Ruhesegment. */
+pruefe('faellig sind genau Einsatz 1, 2, 3 und das Ruhesegment, mit Zielstufe',
+       $liste8 === 'm2>3 m1>2 m3>2 r1>2', $liste8 === '' ? '—' : $liste8);
 sag();
 
 /* ---- Schluss -------------------------------------------------------------- */

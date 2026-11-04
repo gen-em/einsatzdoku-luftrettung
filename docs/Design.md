@@ -478,7 +478,7 @@ auseinanderlaufen kann.
 | `--abstand-1` | `4px` | 84 |  |
 | `--abstand-2` | `8px` | 121 |  |
 | `--abstand-3` | `12px` | 164 |  |
-| `--abstand-4` | `16px` | 66 |  |
+| `--abstand-4` | `16px` | 67 |  |
 | `--abstand-5` | `24px` | 35 |  |
 
 **Radien**
@@ -771,7 +771,7 @@ gehört — genau das war der Befund.
 | Beschriftung → ihr Feld | `--abstand-1` (4 px) | klebt am Feld; alles Größere ließe die Beschriftung zwischen zwei Feldern schweben |
 | Überschrift → ihr Inhalt | `--abstand-2` (8 px) | bindet; die Überschrift gehört zum Inhalt darunter, nicht in die Mitte zwischen zwei Blöcke |
 | Element → Element derselben Gruppe (Feld → Feld, Zeile → Zeile) | `--abstand-3` (12 px) | der Arbeitsabstand; zugleich die häufigste Wahl im Bestand |
-| Gruppe → nächste Gruppe innerhalb einer Karte; Formular → Formularfuß | `--abstand-4` (16 px) | setzt ab, ohne zu trennen; deckungsgleich mit dem bestehenden `.listen-form-fuss` |
+| Gruppe → nächste Gruppe innerhalb einer Karte; Formular → Formularfuß; Formular → nächstes Formular im selben Abschnitt | `--abstand-4` (16 px) | setzt ab, ohne zu trennen; deckungsgleich mit dem bestehenden `.listen-form-fuss`. Zwei Formulare in einem `.listen-form` bekommen ihn über `.listen-form > form + form`, ohne Linie — die Linie hat der Abschnitt (Nr. 480, seit Web 23.7.7) |
 | Karte → Karte; Inhalt → nächste Abschnittsüberschrift | `--abstand-5` (24 px) | trennt; der Wechsel zwischen Sinneinheiten muss größer sein als jeder Abstand innerhalb |
 
 **Zwei Präzisierungen, beide aus echten Fällen** (S3/AP1, F-S3-02 und

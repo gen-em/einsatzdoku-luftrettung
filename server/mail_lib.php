@@ -62,11 +62,16 @@ require_once __DIR__ . '/konfig_lib.php';
  *     naechste taegliche Lauf reiht dieselbe Warnung erneut ein. Eine
  *     dreitaegige Mailstoerung ergaebe drei Zeilen fuer dieselbe Schwelle.
  *
- * Deshalb `MAIL_ZUGESTELLT` | `MAIL_WARTET` | `MAIL_ABGELEHNT`. Die
- * Markenstellen zaehlen `WARTET` als erledigt; `ABGELEHNT` heisst „gar nicht
- * erst eingereiht" (unbekannter Schluessel, fehlender Pflichtwert, kein SMTP
- * eingerichtet) und ist der einzige Fall, in dem ein Aufrufer einen Ersatzweg
- * anbieten muss.
+ * Deshalb `MAIL_ZUGESTELLT` | `MAIL_WARTET` | `MAIL_UNZUSTELLBAR` |
+ * `MAIL_ABGELEHNT`. Die Markenstellen zaehlen `WARTET` als erledigt;
+ * `ABGELEHNT` heisst „gar nicht erst eingereiht" (unbekannter Schluessel,
+ * fehlender Pflichtwert, kein SMTP eingerichtet). `UNZUSTELLBAR` heisst
+ * „eingereiht, beim ersten Versuch endgueltig gescheitert" — der Mailserver
+ * hat den Empfaenger abgelehnt, oder der naechste Versuch laege nach der
+ * Frist der Nachricht (Backlog Nr. 481; bis Web 23.7.5 hiess auch das
+ * `WARTET`, und die Seite sagte „wird erneut versucht"). In beiden letzten
+ * Faellen muss ein Aufrufer einen Ersatzweg anbieten; ob eine Mail
+ * unterwegs ist, beantwortet `mail_unterwegs()`.
  *
  * ---------------------------------------------------------------------------
  * WAS BEIM ENDZUSTAND GELEERT WIRD — und warum nicht alles
@@ -119,6 +124,20 @@ require_once __DIR__ . '/instanz_lib.php';
 const MAIL_ZUGESTELLT = 'zugestellt';
 const MAIL_WARTET     = 'wartet';
 const MAIL_ABGELEHNT  = 'abgelehnt';
+const MAIL_UNZUSTELLBAR = 'unzustellbar';
+
+/**
+ * Ist die Nachricht hinaus oder auf dem Weg dorthin?
+ *
+ * EINE STELLE FUER DIE FRAGE. Bis Web 23.7.5 fragten vier Aufrufer
+ * `!== MAIL_ABGELEHNT` — mit dem vierten Ergebnis `UNZUSTELLBAR` haetten sie
+ * eine endgueltig abgelehnte Warnmail als gemeldet gezaehlt und nie wieder
+ * versucht.
+ */
+function mail_unterwegs(string $zustellung): bool
+{
+    return $zustellung === MAIL_ZUGESTELLT || $zustellung === MAIL_WARTET;
+}
 
 /**
  * Die Wiederholungsleiter in Sekunden — fuenf Versuche ueber 24 h.
@@ -863,7 +882,7 @@ function mail_reserviert_satz(string $adresse): string
  * @param string $empfaenger Eine Adresse
  * @param array  $daten      Die Pflichtwerte des Eintrags
  * @param bool   $sofort     `false` = nur einreihen; der Job traegt sie hinaus
- * @return string MAIL_ZUGESTELLT | MAIL_WARTET | MAIL_ABGELEHNT
+ * @return string MAIL_ZUGESTELLT | MAIL_WARTET | MAIL_UNZUSTELLBAR | MAIL_ABGELEHNT
  *
  * NUR EINREIHEN gibt es fuer die Rundmail: Der sofortige
  * Versuch kostet bis zu MAIL_BUDGET_S je Nachricht, und vierzig Empfaenger
@@ -971,7 +990,20 @@ function mail_einreihen(string $schluessel, string $empfaenger, array $daten = [
     }
 
     if (!$sofort) { return MAIL_WARTET; }
-    return mail_zeile_versuchen($id) ? MAIL_ZUGESTELLT : MAIL_WARTET;
+    if (mail_zeile_versuchen($id)) { return MAIL_ZUGESTELLT; }
+    /* WAS DER ERSTE VERSUCH HINTERLASSEN HAT, nicht „wartet" auf Verdacht
+     * (Backlog Nr. 481). `mail_zeile_versuchen()` schliesst die Zeile bei
+     * einer endgueltigen Absage (`unzustellbar`) und wenn der naechste
+     * Versuch nach der Frist laege (`zu_spaet`); nur `offen` wird wirklich
+     * erneut versucht. */
+    try {
+        $st = $pdo->prepare('SELECT zustand FROM mail_warteschlange WHERE id = ?');
+        $st->execute([$id]);
+        $zustand = (string)$st->fetchColumn();
+    } catch (Throwable $ex) {
+        $zustand = 'offen';
+    }
+    return $zustand === 'offen' ? MAIL_WARTET : MAIL_UNZUSTELLBAR;
 }
 
 /**

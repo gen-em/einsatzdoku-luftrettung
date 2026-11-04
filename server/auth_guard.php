@@ -783,6 +783,8 @@ if (demo_ist_demo($userId)) {
      * Demo-Kontos mit gueltigem Formular-Token zaehlt als Aenderung — NACH
      * dem Reset, damit sie zum neuen Fenster gehoert. `csrf_ok()` liest nur;
      * abweisen tut jede Seite selbst mit `csrf_check()`, und die kommt erst
-     * nach dieser Datei. Ohne Marke kein Reset (`demo_lib.php`). */
-    if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST' && csrf_ok()) { demo_aenderung_vermerken(); }
+     * nach dieser Datei. Ohne Marke kein Reset (`demo_lib.php`).
+     * Ausgenommen sind die POSTs in `DEMO_POST_OHNE_MARKE` — gemessen
+     * lesende, sonst setzte schon das Ansehen die Marke (Nr. 459). */
+    if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST' && csrf_ok() && demo_post_aendert(demo_skript_hier())) { demo_aenderung_vermerken(); }
 }

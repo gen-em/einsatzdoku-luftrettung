@@ -251,7 +251,7 @@ bash tools/sandbox/plattform.sh [php83|mariadb106|mysql80|mysql84|alles|schema|-
 | MySQL 8.0 | `mysql:8.0`, Port 3307 | bereit nach **8 s**, 8.0.46 |
 | MySQL 8.4.0 | `mysql:8.4.0`, Port 3308 | bereit nach **10 s**, 8.4.0 |
 | MariaDB 10.11 | die örtliche, Port 3306 | 10.11.14 |
-| Schemaprobe je Fassung | `tools/schemaprobe/` | **4 × „50 Prüfungen, 0 Fehlschläge"** (seit S11-12, Fall 7; seit R4-15 bis dahin 40, P5c/AP8 30, davor 19) |
+| Schemaprobe je Fassung | `tools/schemaprobe/` | **4 × „52 Prüfungen, 0 Fehlschläge"** (seit BR6-02, Fall 8; seit S11-12 bis dahin 50, R4-15 40, P5c/AP8 30, davor 19) |
 
 *Am 25.10.2026 baute das PHP-Abbild nicht:* Im Bau-Behälter ließ sich
 `deb.debian.org` nicht auflösen („Could not resolve"), apt fand die
@@ -296,13 +296,25 @@ auffällt, bevor es ausgeliefert ist.
 ## 3. Hochfahren
 
 ```
-bash tools/sandbox/hochfahren.sh [--neu] [--php 8.3]
+bash tools/sandbox/hochfahren.sh [--neu] [--php 8.3] [--welche-wurzel]
 ```
 
 Er fasst zusammen, was vorher drei Aufrufe waren: MariaDB starten, die
 Anwendung einrichten oder starten, TLS davor. **Ein Rückgabewert**, und am
 Ende eine Zeile, die den Gegenstand nennt — Adresse, HTTP-Code, gemeldete
 Fassung, nicht bloß „läuft".
+
+**Ein Server, ein Baum — und mehrere Bäume teilen eine Datenbank** (seit
+BR6-01, Nr. 490). `hochfahren.sh` fragt die Befehlszeile des laufenden
+Servers, welches `server/` er bedient (`--welche-wurzel` sagt es nur), und
+startet ihn um, wenn es ein anderes ist. Ein Arbeitsbaum (`git worktree`)
+ohne `config.php` übernimmt `config.php` und `install.lock` des laufenden
+Baums, statt neu einzurichten: Das Einrichten löschte die gemeinsame
+Datenbank und schrieb einen neuen Server-Anteil, und der Hauptbaum konnte
+sich danach nicht mehr anmelden. `pruefen.sh` gibt den Server am Ende
+dem Baum zurück, den er vorgefunden hat, auch nach einem Abbruch. Bis dahin
+zeigte die Anlage nach dem Löschen des Arbeitsbaums ins Leere (404), und
+jede Probe im Hauptbaum scheiterte.
 
 **Der PHP-Server läuft mit vier Arbeitern** (`PHP_CLI_SERVER_WORKERS`, seit
 dem Abschluss von P5c; `PHP_ARBEITER` stellt die Zahl, in

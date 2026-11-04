@@ -52,9 +52,8 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
 
 | Spanne | Zweig | seit |
 |---|---|---|
-| 480 bis 489 | `claude/tender-bell-225ta2` (Schritt 22, BR5); vergeben: 480, 481 | 03.11.2026 |
-| 490 bis 499 | `claude/new-session-p1duc7` — Prüfdurchgang der Arbeitsumgebung (R91), Fortsetzung; vergeben: 490, 491 | 03.11.2026 |
-| ab 500 | frei — höchste reservierte Nummer 499; frei blieben 472 bis 479 aus der Spanne von 21 (PR #136), 461 bis 469 aus der Spanne von PR (PR #133), 434 bis 439 aus der Spanne von PR #129, 441 bis 449 aus der von PR #130, 420 bis 429 aus der Spanne von 20 (PR #127), 412 bis 419 aus der von 12b (PR #125), 394 bis 399 aus der Spanne von 19 (PR #112 bis #114), 389 aus der von 12a (PR #116), 372 bis 379 aus der von 12 (PR #103), 362 bis 369 aus der von PK, 359 aus der von 18 (PR #101), 348 und 349 aus der von 17, 338 aus der von AR | 02.11.2026 |
+| 500 bis 509 | `claude/stoic-turing-mpxuch` (Schritt 23, BR6: Konzept, Abschluss von 21) | 04.11.2026 |
+| ab 510 | frei — höchste reservierte Nummer 509; frei blieben 482 bis 489 aus der Spanne von 22 (PR #148, #149), 492 bis 499 aus der des Prüfdurchgangs (PR #147), 472 bis 479 aus der Spanne von 21 (PR #136), 461 bis 469 aus der Spanne von PR (PR #133), 434 bis 439 aus der Spanne von PR #129, 441 bis 449 aus der von PR #130, 420 bis 429 aus der Spanne von 20 (PR #127), 412 bis 419 aus der von 12b (PR #125), 394 bis 399 aus der Spanne von 19 (PR #112 bis #114), 389 aus der von 12a (PR #116), 372 bis 379 aus der von 12 (PR #103), 362 bis 369 aus der von PK, 359 aus der von 18 (PR #101), 348 und 349 aus der von 17, 338 aus der von AR | 04.11.2026 |
 
 ---
 
@@ -760,36 +759,7 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      Bitwarden (P-R17-34, `Pruefliste.md` 3).
 <!-- -->
 
-470. **Auf der Venu 3s schneidet der Kreis die unterste Meldung der Sync-Seite ab.** · gehört zu: nächste Backlog-Runde · Stand: offen · seit 02.11.2026
-     *Aufgenommen 02.11.2026 aus GR-06 (Konzept GR, F-GR-11).* Seit Uhr
-     4.3.1 überlappen sich Mittelblock und Meldungen nicht mehr; bei sechs
-     und sieben Meldungszeilen steht die unterste („Action halten: Gerät
-     koppeln") aber so tief, dass die Sehne schmaler ist als die Zeile, und
-     `Ui.fitFont()` hat keine kleinere Schrift als `FONT_XTINY` — beide Enden
-     fehlen. Zu sehen auf den Bildern venu3s-6 und venu3s-7 der Bildprobe
-     `tools/uhr-pruefstand/syncseite/`; die Probe misst nur Höhen, keine
-     Breiten. *Weg:* die Zeile kürzen, wenn sie nicht passt („Koppeln:
-     Action halten"), oder die Breite in die Probe aufnehmen. *Abnahme:*
-     Bildprobe Venu 3s mit 6 und 7 Zeilen, jede Zeile ganz lesbar.
-
-<!-- -->
-
-471. **Ein abgemeldetes Handy hält seinen Klartextpuffer ohne Frist.** · gehört zu: nächste Backlog-Runde · Stand: offen · seit 02.11.2026
-     *Aufgenommen 02.11.2026 aus GR-03 (Konzept GR, F-GR-07).* Die
-     Garmin-Uhr verwirft ihren Puffer 30 Tage nach der ersten 401/403
-     (Lage H im Bedrohungsmodell); das Handy hat dafür keine Frist. Es führt
-     seit Android 0.20.0 einen dauerhaften Abmeldevermerk
-     (`Rueckstandsbindung`), aber keinen Zeitpunkt. Ein im Web gelöschtes,
-     verlorenes Handy hält Spur und Phasen damit unbegrenzt, auch einen
-     gebundenen Rückstand. *Weg:* den Zeitpunkt der ersten Abmeldung im
-     Vermerk ablegen und nach `Raeumung.FRIST_TAGE` alle Pakete der
-     Kopplung räumen, wie die Uhr; Bedrohungsmodell Lage H nachziehen.
-     *Abnahme:* Prüffall im `SenderTest` mit gestellter Uhr — 30 Tage nach
-     der ersten 401 ist der Puffer leer.
-
-<!-- -->
-
-458. **Auf MySQL 8 bricht der Wartungslauf der Spuren bei jedem Aufruf ab.** · gehört zu: nächste Backlog-Runde · Stand: offen · seit 03.11.2026
+458. **Auf MySQL 8 bricht der Wartungslauf der Spuren bei jedem Aufruf ab.** · gehört zu: 23 · Stand: teilweise · seit 03.11.2026
      *Aufgenommen 03.11.2026 im Prüfdurchgang der Arbeitsumgebung (R91,
      P-S11-14, -30).* `spur2_faellig_kandidaten()` in `spur_lib.php`
      gruppiert nach `o.id`, die Unterabfrage `geschnitten` (10. Ausdruck)
@@ -806,74 +776,12 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      die Abfrage in eine Probe gegen MySQL 8 nehmen.
      *Abnahme:* auf Staging keine neue Zeile „wartungslauf … 1055",
      `server/api/wartungslauf.php` antwortet 200, „GPS-Daten verdichten" nennt eine Zahl.
+     *Gebaut 04.11.2026 mit BR6-02 (Web 23.7.4);* Schemaprobe Fall 8 auf vier
+     Fassungen grün (vorher MySQL 8.0 und 8.4 rot, 1055). Offen: Staging.
 
 <!-- -->
 
-459. **Schon das Ansehen setzt das Demo-Konto auf „geändert".** · gehört zu: nächste Backlog-Runde · Stand: offen · seit 03.11.2026
-     *Aufgenommen 03.11.2026 im Prüfdurchgang der Arbeitsumgebung (R91,
-     P-R4-15).* Die Änderungsmarke des Demo-Kontos setzt `auth_guard.php`
-     bei jedem POST (`demo_lib.php`, „Die Änderungsmarke"). Die Startseite
-     schickt beim Laden zweimal `POST api/wartungslauf.php`. Gemessen auf
-     Staging nach einem frischen Reset: nach der Anmeldung „Geändert:
-     nein", nach dem Öffnen der Startseite „Geändert seit 09:57 · Nächster
-     Reset in 30 Minuten", der Hinweis sagt „in etwa 30 Minuten" — ohne
-     jede Änderung. Wer nur nachsehen will, trägt damit nach 30 Minuten
-     den Reset und fliegt aus der Sitzung; genau das sollte die Marke
-     vermeiden. Der Wartungslauf schickt seine POSTs auch auf Produktiv.
-     *Weg:* den Wartungslauf für das Demo-Konto auslassen oder seine POSTs
-     von der Marke ausnehmen; andere Hintergrund-POSTs mit prüfen.
-     *Abnahme:* frischer Reset, Anmelden, drei Seiten ansehen —
-     Verwaltung → Demo-Konto „Geändert: nein".
-
-<!-- -->
-
-490. **Ein Prüfstand in einem Arbeitsbaum lässt die örtliche Anlage auf ihn zeigen.** · gehört zu: nächste Backlog-Runde · Stand: offen · seit 03.11.2026
-     *Aufgenommen 03.11.2026 im Prüfdurchgang der Arbeitsumgebung (R91,
-     P-BR-10).* `pruefen.sh` aus einem `git worktree` außerhalb des
-     Repositoriums startet `php -S 127.0.0.1:8080 -t <arbeitsbaum>/server`
-     und lässt ihn nach dem Lauf stehen. Wird der Arbeitsbaum danach
-     gelöscht, antwortet die örtliche Anlage mit 404, und jede Probe
-     scheitert (Zweitfaktorprobe 45 ok, 94 fehlen). `hochfahren.sh` ohne
-     `--neu` startet den Server nicht neu und meldet nur „Anmeldeseite
-     antwortet nicht mit 200". *Weg:* nach dem Lauf den eigenen Server
-     beenden oder den des Hauptbaums wiederherstellen; `hochfahren.sh`
-     prüft, ob der laufende Server die eigene Wurzel bedient.
-     *Abnahme:* P-BR-10 fahren, Arbeitsbaum löschen — die Zweitfaktorprobe
-     läuft danach ohne Eingriff grün.
-
-<!-- -->
-
-491. **Die Sende-Rundläufe der Android-App laufen nur mit Schlüsselpaar an Konto 1.** · gehört zu: nächste Backlog-Runde · Stand: offen · seit 03.11.2026
-     *Aufgenommen 03.11.2026 im Prüfdurchgang der Arbeitsumgebung (R91,
-     P-AR-15).* `./gradlew :handy:testDebugUnitTest -Pnadoku.rundlauf=…`
-     gegen eine frisch aufgesetzte örtliche Anlage: 299 Fälle, 6
-     Fehlschläge, alle in `MissionRundlaufTest` und `SendeRundlaufTest`
-     („0 Anfragen"); `KopplungRundlaufTest` grün. Konto 1
-     (`admin@example.invalid`) hat kein Schlüsselpaar (`kp_oeffentlich`
-     leer), und seit S11 sendet das Handy ohne Kontoschlüssel nichts. Die
-     App verhält sich richtig; der Prüfaufbau legt das Paar nicht an.
-     *Weg:* `Kopplungshilfe` oder `hochfahren.sh` legt für Konto 1 ein
-     Paar an (wie `Sitzung.kontoschluessel()`), oder der Rundlauf nimmt
-     ein Konto mit Paar. *Abnahme:* P-AR-15 auf frischer Anlage 0
-     Fehlschläge.
-
-<!-- -->
-
-480. **Nachtragen vom Blatt: zwei Formulare ohne Abstand.** · gehört zu: nächste Backlog-Runde · Stand: offen · seit 03.11.2026
-     *Aufgenommen 03.11.2026 in BR5-06 (Konzept BR5, Bild der Karte in
-     der Lage abweichend).* Sind Serverschlüssel UND Server-Anteil
-     abweichend, stehen unter „Nachtragen vom Blatt“ zwei Formulare
-     untereinander; der Knopf „Server-Anteil nachtragen“ klebt ohne Abstand
-     an der Beschriftung „Serverschlüssel vom Blatt“. Nr. 356 hat die
-     Linie je Abschnitt gesetzt (E-BR5-17), nicht den Abstand zwischen zwei
-     Formularen in einem. *Weg:* ein Abstand zwischen aufeinanderfolgenden
-     Formularen in `.listen-form` (Stylesheet, Design.md) oder ein Fuß, der
-     beide Felder trägt. *Abnahme:* Bild der Karte in der Lage abweichend
-     mit beiden Werten, 390 und 1280 px — Abstand wie zwischen Abschnitten.
-
-<!-- -->
-
-481. **Endgültige Mail-Absage beim ersten Versuch heißt „steht in der Warteschlange“.** · gehört zu: nächste Backlog-Runde · Stand: offen · seit 04.11.2026
+481. **Endgültige Mail-Absage beim ersten Versuch heißt „steht in der Warteschlange“.** · gehört zu: 23 · Stand: teilweise · seit 04.11.2026
      *Aufgenommen 04.11.2026 mit P-BR5-06 auf Staging (Konzept BR5,
      F-BR5-33).* Ein Konto für eine Adresse, die der Mailserver schon beim
      Empfänger mit 550 abweist: Die Zeile wird richtig sofort
@@ -887,3 +795,5 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      *Abnahme:* auf Staging Konto für eine nicht vorhandene Adresse der
      eigenen Domain → „konnte NICHT verschickt werden“, Mailprobe mit der
      Art `nach_daten` bzw. 550 beim Empfänger.
+     *Gebaut 04.11.2026 mit BR6-04 (Web 23.7.6):* `MAIL_UNZUSTELLBAR`,
+     Mailprobe 4a 80/0. Offen: Staging (Konto, Testmail).

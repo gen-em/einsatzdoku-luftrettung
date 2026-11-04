@@ -43,6 +43,7 @@ object Kopplungshilfe {
      *   Fehlschlag ist oder ein erwarteter Fall.
      */
     fun koppeln(dienst: Kopplungsdienst, geraet: Geraeteangabe): String? {
+        kontopaar?.let { return it }
         val start = dienst.starten(geraet)
         if (start !is Sitzungsergebnis.Offen) {
             return "start ergab $start"
@@ -55,6 +56,25 @@ object Kopplungshilfe {
             is Bestaetigungsergebnis.Gekoppelt -> null
             else -> "bestaetigen ergab $ja"
         }
+    }
+
+    /**
+     * Dem Prüfkonto ein Schlüsselpaar geben, falls es keines hat — einmal je
+     * Lauf, vor der ersten Kopplung.
+     *
+     * DER ZWEITE SCHRITT, DEN SONST EIN MENSCH IM BROWSER TUT (Nr. 491). Seit
+     * S11 verschließt das Handy mit dem öffentlichen Schlüssel des Kontos und
+     * sendet ohne ihn nichts; den Schlüssel bringt die Kopplung mit. Konto 1
+     * einer frischen örtlichen Anlage hat keinen, weil ihn erst ein Browser
+     * nach der Anmeldung anlegt — die Sende-Rundläufe meldeten dann „0
+     * Anfragen", obwohl die App richtig handelte.
+     *
+     * Angelegt wird über `api/kontopaar.php`, wie im Browser; das Skript
+     * nimmt dafür das Einspielwerkzeug (`rundlauf_kontopaar.py`). `null`
+     * heißt: Das Paar steht.
+     */
+    val kontopaar: String? by lazy {
+        befehl(listOf("python3", werkzeug("rundlauf_kontopaar.py").path))
     }
 
     /**
@@ -119,23 +139,23 @@ object Kopplungshilfe {
      * fremden örtlichen Installation womöglich jemandes echtes Konto.
      */
     fun datenAbraeumen(kontoId: Int = KONTO_ID): String? = befehl(
-        listOf("php", skript().path, kontoId.toString()),
+        listOf("php", werkzeug("rundlauf_aufraeumen.php").path, kontoId.toString()),
     )
 
-    /** Das Skript liegt neben den übrigen Werkzeugen der App. Gradle startet
+    /** Die Skripte liegen neben den übrigen Werkzeugen der App. Gradle startet
      *  die Prüffälle im Modulverzeichnis (`android/handy`); gesucht wird
      *  trotzdem nach oben, damit ein anderer Startort nicht still ins Leere
      *  läuft. */
-    private fun skript(): java.io.File {
+    private fun werkzeug(name: String): java.io.File {
         var ort: java.io.File? = java.io.File(System.getProperty("user.dir")).absoluteFile
         while (ort != null) {
-            val kandidat = java.io.File(ort, "werkzeuge/rundlauf_aufraeumen.php")
+            val kandidat = java.io.File(ort, "werkzeuge/$name")
             if (kandidat.isFile) return kandidat
-            val vonOben = java.io.File(ort, "android/werkzeuge/rundlauf_aufraeumen.php")
+            val vonOben = java.io.File(ort, "android/werkzeuge/$name")
             if (vonOben.isFile) return vonOben
             ort = ort.parentFile
         }
-        return java.io.File("android/werkzeuge/rundlauf_aufraeumen.php")
+        return java.io.File("android/werkzeuge/$name")
     }
 
     /**

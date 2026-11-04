@@ -10830,3 +10830,124 @@ zutreffen.
      BetreiberIn bestätigt, dass NAdoku nicht-kommerziell ist. Die Zeile
      „Wandern" in `docs/Lizenzen.md` nennt Bedingungen und wie sie
      gehalten werden.
+
+490. **Ein Prüfstand in einem Arbeitsbaum lässt die örtliche Anlage auf ihn zeigen.** · gehört zu: 23 · Stand: erledigt · seit 03.11.2026
+     *Aufgenommen 03.11.2026 im Prüfdurchgang der Arbeitsumgebung (R91,
+     P-BR-10).* `pruefen.sh` aus einem `git worktree` außerhalb des
+     Repositoriums startet `php -S 127.0.0.1:8080 -t <arbeitsbaum>/server`
+     und lässt ihn nach dem Lauf stehen. Wird der Arbeitsbaum danach
+     gelöscht, antwortet die örtliche Anlage mit 404, und jede Probe
+     scheitert (Zweitfaktorprobe 45 ok, 94 fehlen). `hochfahren.sh` ohne
+     `--neu` startet den Server nicht neu und meldet nur „Anmeldeseite
+     antwortet nicht mit 200". *Weg:* nach dem Lauf den eigenen Server
+     beenden oder den des Hauptbaums wiederherstellen; `hochfahren.sh`
+     prüft, ob der laufende Server die eigene Wurzel bedient.
+     *Abnahme:* P-BR-10 fahren, Arbeitsbaum löschen — die Zweitfaktorprobe
+     läuft danach ohne Eingriff grün.
+     Erledigt 04.11.2026 mit BR6-01 (nur Werkzeug): hochfahren.sh startet
+     einen Server auf fremder Wurzel um, ein Arbeitsbaum ohne config.php
+     übernimmt die des laufenden Baums statt die gemeinsame Datenbank neu
+     einzurichten (F-BR6-06), pruefen.sh gibt den Server am Ende zurück.
+     Gemessen: Prüfstand im Arbeitsbaum 25 grün, danach Arbeitsbaum
+     gelöscht, Zweitfaktorprobe im Hauptbaum 139 ok, 0 fehlen.
+
+491. **Die Sende-Rundläufe der Android-App laufen nur mit Schlüsselpaar an Konto 1.** · gehört zu: 23 · Stand: erledigt · seit 03.11.2026
+     *Aufgenommen 03.11.2026 im Prüfdurchgang der Arbeitsumgebung (R91,
+     P-AR-15).* `./gradlew :handy:testDebugUnitTest -Pnadoku.rundlauf=…`
+     gegen eine frisch aufgesetzte örtliche Anlage: 299 Fälle, 6
+     Fehlschläge, alle in `MissionRundlaufTest` und `SendeRundlaufTest`
+     („0 Anfragen"); `KopplungRundlaufTest` grün. Konto 1
+     (`admin@example.invalid`) hat kein Schlüsselpaar (`kp_oeffentlich`
+     leer), und seit S11 sendet das Handy ohne Kontoschlüssel nichts. Die
+     App verhält sich richtig; der Prüfaufbau legt das Paar nicht an.
+     *Weg:* `Kopplungshilfe` oder `hochfahren.sh` legt für Konto 1 ein
+     Paar an (wie `Sitzung.kontoschluessel()`), oder der Rundlauf nimmt
+     ein Konto mit Paar. *Abnahme:* P-AR-15 auf frischer Anlage 0
+     Fehlschläge.
+     Erledigt 04.11.2026 mit BR6-01 (nur Werkzeug): Kopplungshilfe.koppeln()
+     legt vor der ersten Kopplung das Schlüsselpaar von Konto 1 über
+     api/kontopaar.php an (android/werkzeuge/rundlauf_kontopaar.py,
+     Sitzung.kontoschluessel()). P-AR-15: vorher 299 Fälle, 6 Fehlschläge;
+     nachher 299, 0 Fehlschläge, 1 übersprungen (ServeradresseTest, nur im
+     Release).
+
+459. **Schon das Ansehen setzt das Demo-Konto auf „geändert".** · gehört zu: 23 · Stand: erledigt · seit 03.11.2026
+     *Aufgenommen 03.11.2026 im Prüfdurchgang der Arbeitsumgebung (R91,
+     P-R4-15).* Die Änderungsmarke des Demo-Kontos setzt `auth_guard.php`
+     bei jedem POST (`demo_lib.php`, „Die Änderungsmarke"). Die Startseite
+     schickt beim Laden zweimal `POST api/wartungslauf.php`. Gemessen auf
+     Staging nach einem frischen Reset: nach der Anmeldung „Geändert:
+     nein", nach dem Öffnen der Startseite „Geändert seit 09:57 · Nächster
+     Reset in 30 Minuten", der Hinweis sagt „in etwa 30 Minuten" — ohne
+     jede Änderung. Wer nur nachsehen will, trägt damit nach 30 Minuten
+     den Reset und fliegt aus der Sitzung; genau das sollte die Marke
+     vermeiden. Der Wartungslauf schickt seine POSTs auch auf Produktiv.
+     *Weg:* den Wartungslauf für das Demo-Konto auslassen oder seine POSTs
+     von der Marke ausnehmen; andere Hintergrund-POSTs mit prüfen.
+     *Abnahme:* frischer Reset, Anmelden, drei Seiten ansehen —
+     Verwaltung → Demo-Konto „Geändert: nein".
+     Erledigt 04.11.2026 mit BR6-03 (Web 23.7.5): Der Wartungslauf antwortet
+     dem Demo-Konto leer und tauscht nichts, seine POSTs stehen in
+     DEMO_POST_OHNE_MARKE (demo_lib.php). Gemessen örtlich: Vor der Änderung
+     verdichtete schon das erste Ansehen 20 Spuren der Fixture und setzte
+     die Marke; danach nach Reset, Anmeldung, Startseite, Einstellungen und
+     einem Einsatz „Geändert: nein“, 98 Stücke unverändert; eine andere POST
+     setzt die Marke weiter.
+
+480. **Nachtragen vom Blatt: zwei Formulare ohne Abstand.** · gehört zu: 23 · Stand: erledigt · seit 03.11.2026
+     *Aufgenommen 03.11.2026 in BR5-06 (Konzept BR5, Bild der Karte in
+     der Lage abweichend).* Sind Serverschlüssel UND Server-Anteil
+     abweichend, stehen unter „Nachtragen vom Blatt“ zwei Formulare
+     untereinander; der Knopf „Server-Anteil nachtragen“ klebt ohne Abstand
+     an der Beschriftung „Serverschlüssel vom Blatt“. Nr. 356 hat die
+     Linie je Abschnitt gesetzt (E-BR5-17), nicht den Abstand zwischen zwei
+     Formularen in einem. *Weg:* ein Abstand zwischen aufeinanderfolgenden
+     Formularen in `.listen-form` (Stylesheet, Design.md) oder ein Fuß, der
+     beide Felder trägt. *Abnahme:* Bild der Karte in der Lage abweichend
+     mit beiden Werten, 390 und 1280 px — Abstand wie zwischen Abschnitten.
+     Erledigt 04.11.2026 mit BR6-05 (Web 23.7.7): .listen-form > form + form
+     bekommt --abstand-4 (16 px), Zeile 4 der Abstandstabelle (Design.md)
+     statt „wie zwischen Abschnitten“ — die zwei Formulare gehören zusammen
+     (E-BR6-16). Gemessen in der Lage beide abweichend (Marken in app_state
+     verstellt und zurückgelegt): vorher 0 px, nachher 16 px in Chromium,
+     Firefox und WebKit bei 390 und 1280 px. Die Regel trifft nur diese
+     Karte; die übrigen fünf div.listen-form tragen je ein Formular.
+
+470. **Auf der Venu 3s schneidet der Kreis die unterste Meldung der Sync-Seite ab.** · gehört zu: 23 · Stand: erledigt · seit 02.11.2026
+     *Aufgenommen 02.11.2026 aus GR-06 (Konzept GR, F-GR-11).* Seit Uhr
+     4.3.1 überlappen sich Mittelblock und Meldungen nicht mehr; bei sechs
+     und sieben Meldungszeilen steht die unterste („Action halten: Gerät
+     koppeln") aber so tief, dass die Sehne schmaler ist als die Zeile, und
+     `Ui.fitFont()` hat keine kleinere Schrift als `FONT_XTINY` — beide Enden
+     fehlen. Zu sehen auf den Bildern venu3s-6 und venu3s-7 der Bildprobe
+     `tools/uhr-pruefstand/syncseite/`; die Probe misst nur Höhen, keine
+     Breiten. *Weg:* die Zeile kürzen, wenn sie nicht passt („Koppeln:
+     Action halten"), oder die Breite in die Probe aufnehmen. *Abnahme:*
+     Bildprobe Venu 3s mit 6 und 7 Zeilen, jede Zeile ganz lesbar.
+     Erledigt 04.11.2026 mit BR6-06 (Uhr 4.3.2): Kurzform „Koppeln:
+     <Haltetaste>“, genommen nur, wo die lange Form nicht passt (Ui.passt);
+     die Bildprobe misst seither auch Breiten. Ohne Kurzform war die Zeile
+     auf der Venu 3s schon ab vier Zeilen zu breit, und auch Fenix und FR
+     945 brauchen sie (F-BR6-08). Bildprobe 24/0, davon zwei Venu-Messungen
+     als begründete Ausnahme 6 px im Sicherheitsrand (E-BR6-17).
+
+471. **Ein abgemeldetes Handy hält seinen Klartextpuffer ohne Frist.** · gehört zu: 23 · Stand: erledigt · seit 02.11.2026
+     *Aufgenommen 02.11.2026 aus GR-03 (Konzept GR, F-GR-07).* Die
+     Garmin-Uhr verwirft ihren Puffer 30 Tage nach der ersten 401/403
+     (Lage H im Bedrohungsmodell); das Handy hat dafür keine Frist. Es führt
+     seit Android 0.20.0 einen dauerhaften Abmeldevermerk
+     (`Rueckstandsbindung`), aber keinen Zeitpunkt. Ein im Web gelöschtes,
+     verlorenes Handy hält Spur und Phasen damit unbegrenzt, auch einen
+     gebundenen Rückstand. *Weg:* den Zeitpunkt der ersten Abmeldung im
+     Vermerk ablegen und nach `Raeumung.FRIST_TAGE` alle Pakete der
+     Kopplung räumen, wie die Uhr; Bedrohungsmodell Lage H nachziehen.
+     *Abnahme:* Prüffall im `SenderTest` mit gestellter Uhr — 30 Tage nach
+     der ersten 401 ist der Puffer leer.
+     Erledigt 04.11.2026 mit BR6-07 (Android 0.21.0): Der Abmeldevermerk
+     trägt den Zeitpunkt der ersten 401/403, die Bindung eine eigene Frist;
+     kopplung/Abmeldefrist.kt räumt nach 30 Tagen alle abgeschlossenen
+     Pakete bzw. den gebundenen Rückstand, beim Sendelauf und beim Start der
+     App; die Dienstansicht nennt das Datum. SenderTest: vier neue Fälle
+     (Frist, Annahme, Bindung über das Trennen, Altvermerk), 29/0;
+     Gegenprobe ohne Räumung im Sendelauf zwei rot. Bedrohungsmodell Lage H
+     nachgezogen.

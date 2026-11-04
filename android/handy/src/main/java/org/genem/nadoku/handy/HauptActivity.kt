@@ -334,6 +334,11 @@ private fun GekoppelteOberflaeche(
     val abgewiesen = remember(pufferStand) { app.puffer.abgewiesen() }
     val verwerfbar = remember(pufferStand) { app.puffer.verwerfbar() }
     val fremd = remember(pufferStand, app.letzterSendebericht) { app.fremderRueckstand() }
+    val fristBis = remember(pufferStand, app.letzterSendebericht) {
+        org.genem.nadoku.handy.kopplung.Abmeldefrist.naechsteFrist(app.bindung)
+            ?.takeIf { rueckstand > 0 || fremd > 0 }
+            ?.let { org.genem.nadoku.handy.dienst.Zeit.tagMonat(it) }
+    }
     var fremdFrageOffen by remember { mutableStateOf(false) }
     val sendelaeuft = remember(takt) { app.sendelaufLaeuft }
     val sendeergebnis = remember(takt) { sendeergebnis(app.letzterSendebericht) }
@@ -525,6 +530,7 @@ private fun GekoppelteOberflaeche(
             aufVerwerfen = { verwerfFrageOffen = true },
             fremd = fremd,
             aufFremdeVerwerfen = { fremdFrageOffen = true },
+            fristBis = fristBis,
             aufModus = { gewaehlt ->
                 modus = gewaehlt
                 app.einstellungen.letzterModus = gewaehlt

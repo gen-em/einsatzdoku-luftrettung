@@ -3748,7 +3748,10 @@ Mehr dazu in Abschnitt 11.4a.
 > sieht diese Einsätze. *Seit Uhr 4.1.0* erfährt die Uhr beim nächsten
 > Sendeversuch, dass sie getrennt ist, und verwirft ihre ungesendeten Pakete
 > 30 Tage danach. Erreicht sie nie wieder ein Telefon, erfährt sie es nicht,
-> und die Daten bleiben liegen.
+> und die Daten bleiben liegen. *Seit Android 0.21.0* tut das Handy dasselbe:
+> 30 Tage nach der ersten Abweisung durch den Server sind seine ungesendeten
+> Pakete fort, und die Startseite der App sagt vorher „Ungesendete Pakete
+> bleiben bis TT.MM. auf dem Telefon“. Ein laufender Dienst bleibt.
 >
 > Bis dahin gilt seit Web 15.6.0 eine Grenze: Ein Gerät darf einen
 > **bestehenden** Einsatz oder eine bestehende Ruhezeit nur noch **72 Stunden**
@@ -5034,7 +5037,8 @@ Ausgelöst wird der Reset von der nächsten Anfrage des Demo-Kontos, sobald er
 fällig ist — 30 Minuten nach der ersten Änderung, ohne Änderung einen Tag
 nach dem letzten —, nicht von einem Zeitdienst. Als Änderung zählt jedes
 Absenden im Demo-Konto und jeder angenommene Upload eines seiner Geräte;
-Änderungen aus der Verwaltung zählen nicht. **Nach einem Deploy mit neuer
+Änderungen aus der Verwaltung zählen nicht, und bloßes Ansehen auch nicht
+mehr — das Verdichten der Spuren im Hintergrund lässt das Demo-Konto aus. **Nach einem Deploy mit neuer
 Fixture** zeigt das Demo-Konto deshalb bis zu einem Tag lang den alten
 Bestand — „Zurücksetzen" holt den neuen sofort.
 
@@ -5350,12 +5354,13 @@ SMTP-Zugang fiel bis dahin erst auf, wenn jemand einen Einladungslink
 vermisste.
 
 Nach dem Klick sagt die Meldung in der Karte **E-Mail**, was passiert ist —
-seit Web 20.9.0 **drei** Antworten statt zwei:
+seit Web 23.7.6 **vier** Antworten (seit Web 20.9.0 waren es drei):
 
 | Meldung | heißt |
 |---|---|
 | *hinausgegangen* | Der Mailserver hat sie angenommen. |
 | *Der erste Versuch ist gescheitert* | Sie steht in der **Warteschlange** und wird innerhalb der nächsten Stunde erneut versucht. Nicht verloren. |
+| *endgültig abgelehnt* | Der Mailserver hat die Adresse abgewiesen; es wird **nicht** erneut versucht. Der Grund steht in der Warteschlange. |
 | *nicht eingereiht* | Es wurde nichts versucht — die eigene Adresse ist unbrauchbar oder die Warteschlange war nicht erreichbar. |
 
 **Ob sie ankommt, sagt erst das Postfach** — angenommen ist nicht zugestellt.

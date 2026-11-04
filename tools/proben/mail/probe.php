@@ -393,10 +393,15 @@ foreach ($faelle as [$art, $soll, $was]) {
     mp_gegenstelle($art);
     $pdo->exec('DELETE FROM mail_warteschlange');
     $sysVor = (int)$pdo->query('SELECT COALESCE(MAX(id), 0) FROM protokoll_ereignisse')->fetchColumn();
-    mail_einreihen('adresswechsel', $adr, ['alt' => $beispiel['alt'],
-                                           'neu' => $beispiel['neu'],
-                                           'durch' => $beispiel['durch']]);
+    $e = mail_einreihen('adresswechsel', $adr, ['alt' => $beispiel['alt'],
+                                                'neu' => $beispiel['neu'],
+                                                'durch' => $beispiel['durch']]);
     $z = mp_letzte();
+    /* DIE RUECKGABE PASST ZUR ZEILE (Nr. 481): Bis Web 23.7.5 hiess jeder
+     * gescheiterte erste Versuch `wartet`, und die Seite sagte „wird erneut
+     * versucht" — auch bei einer Zeile, die schon `unzustellbar` stand. */
+    $eSoll = $soll === 'unzustellbar' ? MAIL_UNZUSTELLBAR : MAIL_WARTET;
+    pruef($was . ': mail_einreihen() meldet ' . $eSoll, $e === $eSoll, $e);
     $st = $pdo->prepare("SELECT COUNT(*) FROM protokoll_ereignisse
                           WHERE reiter = 'system' AND id > ? AND text LIKE 'smtp:%'");
     $st->execute([$sysVor]);

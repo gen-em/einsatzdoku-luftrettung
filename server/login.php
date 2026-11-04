@@ -890,7 +890,7 @@ ui_seite_start(['titel' => 'Anmelden', 'klasse' => 'anmeldung-body']);
        unmittelbar ins Einrichtungstor. */ ?>
   <h2 class="anmeldung-schritt">Zweitfaktor zurückgesetzt</h2>
   <?php ui_meldung('Der Zweitfaktor ist ausgeschaltet; '
-        . (in_array($rwZustellung, [MAIL_ZUGESTELLT, MAIL_WARTET], true)
+        . (mail_unterwegs((string)$rwZustellung)
             ? 'eine Nachricht ist an deine Adresse unterwegs.'
             : 'die Nachricht an deine Adresse ließ sich nicht verschicken.'), null, 'ok', '  ',
         ['auftakt' => 'Du bist angemeldet.']); ?>

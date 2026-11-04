@@ -80,8 +80,35 @@ if [ "$TROCKEN" = 1 ]; then
 fi
 
 # ---- 3. Anlage ------------------------------------------------------------
+# DEN SERVER ZURÜCKGEBEN, DEN MAN VORGEFUNDEN HAT (Nr. 490). Läuft dieser
+# Prüfstand aus einem anderen Baum als der Server — typisch: aus einem
+# `git worktree` —, startet `hochfahren.sh` den Server auf diesen Baum um.
+# Am Ende, auch nach einem Abbruch, bekommt der vorige Baum ihn zurück,
+# solange es ihn noch gibt. Sonst zeigt die Anlage nach dem Löschen des
+# Arbeitsbaums ins Leere, und jede Probe im Hauptbaum scheitert mit 404.
+WURZEL_VORHER=; DEMO_ALT=
+wurzel_zurueck() {
+    [ -n "$WURZEL_VORHER" ] || return 0
+    [ "$WURZEL_VORHER" != "$(readlink -f "$WURZEL/server")" ] || return 0
+    [ -d "$WURZEL_VORHER" ] || return 0
+    local start="$WURZEL_VORHER/../tools/referenzdatensatz/einspielen/lokal_starten.sh"
+    [ -f "$start" ] || return 0
+    pkill -f "php -S 127.0.0.1:8080" 2>/dev/null || true
+    sleep 1
+    WURZEL="$WURZEL_VORHER" sh "$start" >/dev/null 2>&1 \
+        && zeile "Server wieder auf $WURZEL_VORHER (Nr. 490)" \
+        || zeile "Server NICHT auf $WURZEL_VORHER zurückgestellt — dort hochfahren.sh fahren"
+    WURZEL_VORHER=
+}
+zum_schluss() {
+    [ -n "$DEMO_ALT" ] && demo_marke setzen "$DEMO_ALT" >/dev/null
+    wurzel_zurueck
+}
+trap zum_schluss EXIT
+
 if [ "$HOCHFAHREN" = 1 ] && [ "$GEGEN" = oertlich ]; then
     melde "Örtliche Anlage"
+    WURZEL_VORHER=$(bash "$WURZEL/tools/sandbox/hochfahren.sh" --welche-wurzel)
     bash "$WURZEL/tools/sandbox/hochfahren.sh" >&2 || { zeile "Anlage kam nicht hoch."; exit 1; }
 fi
 [ "$GEGEN" = staging ] && melde "Gegen die Prüfanlage — NUR LESEND (E-PK-29)"
@@ -99,10 +126,8 @@ demo_marke() {   # demo_marke lesen | demo_marke setzen <unix-sekunden>
         if (($argv[1] ?? "") === "setzen") { demo_reset_marke_setzen((int)$argv[2]); }
         echo demo_letzter_reset();' -- "$@" 2>/dev/null)
 }
-DEMO_ALT=
 if [ "$GEGEN" = oertlich ]; then
     DEMO_ALT=$(demo_marke lesen) || DEMO_ALT=
-    [ -n "$DEMO_ALT" ] && trap 'demo_marke setzen "$DEMO_ALT" >/dev/null' EXIT
 fi
 
 # ---- 4. Proben ------------------------------------------------------------
@@ -278,9 +303,9 @@ done
 
 # ---- 5. Bericht -----------------------------------------------------------
 if [ -n "$DEMO_ALT" ]; then
-    trap - EXIT
-    [ "$(demo_marke setzen "$DEMO_ALT")" = "$DEMO_ALT" ] \
-        && zeile "Demo-Marke zurückgestellt ($(date -u -d "@$DEMO_ALT" '+%d.%m. %H:%M:%S') UTC)" \
+    d=$DEMO_ALT; DEMO_ALT=      # der Abschluss braucht es nicht noch einmal
+    [ "$(demo_marke setzen "$d")" = "$d" ] \
+        && zeile "Demo-Marke zurückgestellt ($(date -u -d "@$d" '+%d.%m. %H:%M:%S') UTC)" \
         || zeile "Demo-Marke NICHT zurückgestellt — sie steht auf dem Stand der letzten Probe"
 fi
 melde "Bericht"

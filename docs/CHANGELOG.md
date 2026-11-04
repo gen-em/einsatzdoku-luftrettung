@@ -14,6 +14,53 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 23.7.7] — unveröffentlicht
+
+### Behoben
+
+- **Web — zwei Formulare ohne Abstand unter „Nachtragen vom Blatt“** (Backlog
+  Nr. 480). Fehlten Serverschlüssel und Server-Anteil zugleich, klebte der
+  Knopf „Server-Anteil nachtragen“ an der Beschriftung des zweiten
+  Formulars. Zwei Formulare im selben Abschnitt stehen jetzt so weit
+  auseinander wie zwei Gruppen in einer Karte, ohne Trennlinie, weil sie
+  zusammengehören.
+
+## [Web 23.7.6] — unveröffentlicht
+
+### Behoben
+
+- **Web — eine endgültig abgelehnte Mail hieß „steht in der Warteschlange“**
+  (Backlog Nr. 481). Wies der Mailserver eine Adresse schon beim ersten
+  Versuch ab, sagte die Seite trotzdem, die Mail werde erneut versucht, und
+  die Warnmails zur Speichergrenze galten als verschickt. Jetzt wird nach
+  dem ersten Versuch nachgesehen, was mit der Nachricht geschehen ist, und
+  die Seite sagt „konnte NICHT verschickt werden“ und zeigt den Link.
+
+## [Web 23.7.5] — unveröffentlicht
+
+### Behoben
+
+- **Web — schon das Ansehen setzte das Demo-Konto auf „geändert“** (Backlog
+  Nr. 459). Die Beispieldaten tragen Spuren, die zum Verdichten fällig sind,
+  und der Wartungslauf der Startseite tat das beim ersten Besuch; damit galt
+  das Konto als geändert, und nach 30 Minuten flog die Besucherin beim Reset
+  aus der Sitzung, ohne etwas getan zu haben. Für das Demo-Konto verdichtet
+  der Wartungslauf jetzt nichts mehr, denn der Reset spielt die Spuren
+  ohnehin neu ein. Jede andere Handlung setzt die Marke wie bisher.
+
+## [Web 23.7.4] — unveröffentlicht
+
+### Behoben
+
+- **Web — der Wartungslauf der Spuren brach auf MySQL bei jedem Aufruf ab**
+  (Backlog Nr. 458). Die Liste der fälligen Spuren fragte in einer
+  Unterabfrage nach Spalten, nach denen sie nicht gruppierte; MySQL lehnt
+  das ab, MariaDB nicht, und so wurde auf Staging seit dem 19.10.2026 keine
+  Spur verdichtet. Die Abfrage nennt jetzt nur noch, wonach sie gruppiert.
+  Die Plattformprüfung hatte nichts gefunden, weil sie die Abfrage nicht
+  stellte und ohne echt vorbereitete Anweisungen lief; die Schemaprobe tut
+  jetzt beides, auf jeder Datenbankfassung.
+
 ## [Web 23.7.3] — unveröffentlicht
 
 ### Behoben
@@ -168,6 +215,19 @@ frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
   nie mehr als die Hälfte, nie unter 5 s — huckepack an einer Seitenanfrage
   fängt der Versand weiter nicht an.
 
+## [Uhr 4.3.2] — unveröffentlicht
+
+Schritt 23 (BR6), Paket BR6-06 (Backlog Nr. 470).
+
+### Behoben
+
+- **Uhr — „Action halten: Gerät koppeln“ ragte auf der Venu 3s über den
+  Rand.** Bei sechs und sieben Meldungen auf der Sync-Seite stand die Zeile
+  so tief, dass der Kreis dort schmaler ist als der Text, auch in der
+  kleinsten Schrift; beide Enden fehlten. Passt eine Zeile so nicht, nimmt
+  die Seite jetzt ihre Kurzform („Koppeln: Action halten“). Die Bildprobe
+  misst seither auch die Breite jeder Zeile, nicht nur die Höhen.
+
 ## [Uhr 4.3.1] — unveröffentlicht
 
 Schritt 21 (GR), Paket GR-06 — die Sync-Seite überlappt nicht mehr
@@ -223,6 +283,20 @@ Schritt 21 (GR), Paket GR-04 — die Uhr liest die Absage des Servers genauer
   sie — die aber kam nie zustande, so dass erst ein Neustart der App half.
   Jetzt versuchen es das Öffnen der Sync-Seite und das Dienstende einmal
   trotz der Marke.
+
+## [Android 0.21.0] — unveröffentlicht
+
+Schritt 23 (BR6), Paket BR6-07 (Backlog Nr. 471).
+
+### Hinzugefügt
+
+- **Android — ein abgemeldetes Telefon behält seine Pakete höchstens 30
+  Tage.** Wurde ein Telefon im Web gelöscht oder gesperrt, lagen Spur und
+  Phasen bis dahin unbegrenzt im Klartext auf ihm, auch wenn es verloren
+  war; die Garmin-Uhr räumt in diesem Fall seit Uhr 4.1.0 nach 30 Tagen.
+  Jetzt tut das Telefon dasselbe, gerechnet ab der ersten Abweisung, und die
+  Dienstansicht nennt das Datum. Pakete, die nach dem Trennen an das alte
+  Konto gebunden liegen bleiben, behalten diese Frist.
 
 ## [Android 0.20.0] — unveröffentlicht
 

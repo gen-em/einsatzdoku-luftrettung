@@ -149,6 +149,7 @@ fun DienstAnsicht(
     aufVerwerfen: () -> Unit = {},
     fremd: Int = 0,
     aufFremdeVerwerfen: () -> Unit = {},
+    fristBis: String? = null,
     aufModus: (Modus) -> Unit,
     aufBeginnen: () -> Unit,
     aufBeenden: () -> Unit,
@@ -178,7 +179,7 @@ fun DienstAnsicht(
                 Zustandsblock(
                     stand, rueckstand, abgewiesen, verwerfbar, verworfen,
                     sendeergebnis, sendelaufLaeuft, aufJetztSenden, aufVerwerfen,
-                    fremd, aufFremdeVerwerfen,
+                    fremd, aufFremdeVerwerfen, fristBis,
                 )
 
                 /* ZWEI SPERREN, IN DIESER REIHENFOLGE. Erst die
@@ -232,6 +233,7 @@ private fun Zustandsblock(
     aufVerwerfen: () -> Unit,
     fremd: Int,
     aufFremdeVerwerfen: () -> Unit,
+    fristBis: String?,
 ) {
     if (stand.laeuft) {
         Row(
@@ -369,6 +371,17 @@ private fun Zustandsblock(
                 else -> Farbe.rotTief
             },
             fontSize = 13.sp,
+        )
+    }
+
+    /* DIE FRIST NACH EINER ABMELDUNG (Nr. 471), wie „Daten bis …" auf der
+     * Garmin-Uhr. Sie steht, solange sie läuft und etwas auf dem Telefon
+     * liegt — anders als die Ergebniszeile darüber ist sie ein Zustand und
+     * übersteht einen Neustart der App. */
+    if (fristBis != null) {
+        Text(
+            text = stringResource(R.string.sync_frist, fristBis),
+            color = Farbe.rotTief, fontSize = 13.sp,
         )
     }
 

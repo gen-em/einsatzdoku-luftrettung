@@ -174,6 +174,7 @@ class HandyBildTest {
         einsatzLaeuft: Boolean = false,
         laufendePhase: Int = Phasen.FREI,
         gesetztePhasen: List<Phasenzeile> = emptyList(),
+        fristBis: String? = null,
     ): @Composable () -> Unit = {
         DienstAnsicht(
             stand = Dienststand(
@@ -207,6 +208,7 @@ class HandyBildTest {
             verworfen = verworfen,
             sendeergebnis = sendeergebnis,
             sendelaufLaeuft = sendelaufLaeuft,
+            fristBis = fristBis,
             aufJetztSenden = {},
             aufModus = {}, aufBeginnen = {}, aufBeenden = {},
             aufOrtungFreigeben = {}, aufStandortEinschalten = {}, aufEinstellungen = {},
@@ -277,6 +279,13 @@ class HandyBildTest {
         "sende-schluessel-weg" to dienst(
             rueckstand = 2,
             sendeergebnis = Sendeergebnis(Sendeausgang.SCHLUESSEL_ABGEWIESEN, "12:41"),
+        ),
+        /* DIE FRIST NACH EINER ABMELDUNG (Nr. 471): Ergebniszeile und
+         * darunter das Datum, bis zu dem die Pakete bleiben. */
+        "sende-frist" to dienst(
+            rueckstand = 2,
+            sendeergebnis = Sendeergebnis(Sendeausgang.SCHLUESSEL_ABGEWIESEN, "12:41"),
+            fristBis = "04.12.",
         ),
         "sende-gesendet" to dienst(
             sendeergebnis = Sendeergebnis(Sendeausgang.GESENDET, "12:41"),

@@ -50,6 +50,10 @@ object Zeit {
     fun tag(augenblick: Instant, zone: ZoneId = ZoneId.systemDefault()): String =
         TAG.format(augenblick.atZone(zone).toLocalDate())
 
+    /** Lokales Datum „TT.MM." für die Anzeige — wie „Daten bis …" auf der Garmin-Uhr. */
+    fun tagMonat(augenblick: Instant, zone: ZoneId = ZoneId.systemDefault()): String =
+        DateTimeFormatter.ofPattern("dd.MM.").withZone(zone).format(augenblick)
+
     /** Lokale Uhrzeit „HH:MM" für die Anzeige — nie für den Vertrag. */
     fun hhmm(augenblick: Instant, zone: ZoneId = ZoneId.systemDefault()): String =
         DateTimeFormatter.ofPattern("HH:mm").withZone(zone).format(augenblick)

@@ -1,10 +1,12 @@
 #!/bin/bash
 # Die örtliche Installation hochfahren — ein Befehl, ein Rückgabewert.
 #
-# Aufruf:  bash tools/sandbox/hochfahren.sh [--neu] [--php 8.3]
+# Aufruf:  bash tools/sandbox/hochfahren.sh [--neu] [--php 8.3] [--welche-wurzel]
 #            --neu      richtet neu ein — LÖSCHT die Datenbank und config.php
 #            --php 8.3  fährt die Anwendung im Abbild nadoku-php83 statt
 #                       unter dem PHP des Containers (8.4)
+#            --welche-wurzel  sagt nur, welches `server/` der laufende
+#                       Server bedient (leer: keiner), und ändert nichts
 #
 # Anlass: Nr. 267 — der Export scheiterte auf der Datenbank von Staging und
 # lief auf der von Produktiv. Wer eine Plattformfrage untersucht, will die
@@ -19,7 +21,7 @@ WURZEL=${WURZEL:-$(cd "$(dirname "$0")/../.." && pwd)}
 EIN="$WURZEL/tools/referenzdatensatz/einspielen"
 ADRESSE=${ADRESSE:-127.0.0.1:8080}
 TLS_PORT=${TLS_PORT:-8443}
-NEU=0; PHPFASSUNG=
+NEU=0; PHPFASSUNG=; NUR_WURZEL=0
 
 melde() { printf '\033[1m==\033[0m %s\n' "$*" >&2; }
 zeile() { printf '   %s\n' "$*" >&2; }
@@ -28,9 +30,30 @@ while [ $# -gt 0 ]; do
     case "$1" in
         --neu) NEU=1; shift ;;
         --php) PHPFASSUNG=${2:-}; shift 2 ;;
-        *) echo "Unbekannt: $1 (--neu, --php 8.3)" >&2; exit 2 ;;
+        --welche-wurzel) NUR_WURZEL=1; shift ;;
+        *) echo "Unbekannt: $1 (--neu, --php 8.3, --welche-wurzel)" >&2; exit 2 ;;
     esac
 done
+
+# ---- 0. Welche Wurzel bedient der laufende Server? ------------------------
+# Anlass: Nr. 490. Ein Prüfstand aus einem `git worktree` richtet dort eine
+# eigene Anlage ein und startet den Server auf DESSEN `server/`. Danach
+# antwortete die Adresse weiter, `lokal_starten.sh` sah keinen Grund zum
+# Neustart, und nach dem Löschen des Arbeitsbaums kam auf jede Seite 404.
+# Gefragt wird die Befehlszeile des Prozesses, nicht die Antwort: Eine
+# Anmeldeseite mit 200 sagt nicht, aus welchem Baum sie kommt. Im Behälter
+# von `--php 8.3` heißt die Wurzel `/app`; dann gilt, was eingehängt ist.
+laufende_wurzel() {
+    local w
+    w=$(ps -eo args 2>/dev/null | sed -n "s#^php -S $ADRESSE -t \(.*\)\$#\1#p" | head -1)
+    if [ "$w" = /app ]; then
+        w=$(docker inspect -f '{{range .Mounts}}{{if eq .Destination "/app"}}{{.Source}}{{end}}{{end}}' \
+              nadoku-php83-lauf 2>/dev/null)
+    fi
+    [ -n "$w" ] && { readlink -f "$w" 2>/dev/null || printf '%s\n' "$w"; }
+    return 0
+}
+if [ "$NUR_WURZEL" = 1 ]; then laufende_wurzel; exit 0; fi
 
 # ---- 1. Datenbank ---------------------------------------------------------
 melde "MariaDB"
@@ -44,12 +67,36 @@ fi
 zeile "$(mariadb -N -e 'SELECT VERSION();' 2>/dev/null)"
 
 # ---- 2. Anwendung ---------------------------------------------------------
+# EIN ARBEITSBAUM OHNE config.php ÜBERNIMMT DIE DES LAUFENDEN BAUMS (Nr. 490).
+# Sonst richtete er neu ein, und `lokal_einrichten.sh` löscht die EINE
+# Datenbank, die alle Bäume teilen, und schreibt eine neue config.php mit
+# neuem Server-Anteil. Der Hauptbaum hätte danach eine Konfiguration, die zu
+# keinem Konto mehr passt — an seinem Anmelde-Hash hängt der Pfeffer aus dem
+# Anteil. Übernommen werden nur die zwei Dateien, die eine Installation
+# ausmachen; beide stehen in .gitignore.
+if [ "$NEU" = 0 ] && [ ! -f "$WURZEL/server/config.php" ]; then
+    quelle=$(laufende_wurzel)
+    if [ -n "$quelle" ] && [ "$quelle" != "$(readlink -f "$WURZEL/server")" ] \
+       && [ -f "$quelle/config.php" ]; then
+        melde "Installation aus $quelle übernehmen (config.php, install.lock)"
+        cp "$quelle/config.php" "$WURZEL/server/config.php"
+        [ -f "$quelle/install.lock" ] && cp "$quelle/install.lock" "$WURZEL/server/install.lock"
+    fi
+fi
 if [ "$NEU" = 1 ] || [ ! -f "$WURZEL/server/config.php" ]; then
     [ "$NEU" = 1 ] && melde "Neu einrichten (löscht Datenbank und config.php)" \
                    || melde "Keine Installation gefunden — einrichten"
     sh "$EIN/lokal_einrichten.sh" >&2 || { zeile "Einrichten gescheitert."; exit 1; }
 else
     melde "Installation steht — starten"
+    eigen=$(readlink -f "$WURZEL/server")
+    fremd=$(laufende_wurzel)
+    if [ -n "$fremd" ] && [ "$fremd" != "$eigen" ]; then
+        zeile "Der Server bediente $fremd — neu gestartet für $eigen (Nr. 490)."
+        pkill -f "php -S $ADRESSE" 2>/dev/null || true
+        docker rm -f nadoku-php83-lauf >/dev/null 2>&1 || true
+        sleep 1
+    fi
     sh "$EIN/lokal_starten.sh" >&2 || { zeile "Starten gescheitert."; exit 1; }
 fi
 

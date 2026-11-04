@@ -302,6 +302,9 @@
     <string name="sync_ergebnis_konto_wartet">Konto wartet auf Freigabe · Senden angehalten</string>
     <string name="sync_ergebnis_konto_unbestaetigt">E-Mail-Adresse nicht bestätigt · Senden angehalten</string>
     <string name="sync_ergebnis_gesperrt">Gerät oder Konto gesperrt · im Web klären</string>
+    <!-- Nr. 471: 30 Tage nach der ersten 401/403 raeumt das Telefon seinen
+         Puffer, wie die Garmin-Uhr ("Daten bis TT.MM."). -->
+    <string name="sync_frist">Ungesendete Pakete bleiben bis %1$s auf dem Telefon</string>
     <!-- 507 und Wartezeit nach 429/503. -->
     <string name="sync_ergebnis_konto_voll">Konto voll · im Web aufräumen</string>
     <string name="sync_ergebnis_wartet">Server bremst · nächster Versuch %1$s</string>
