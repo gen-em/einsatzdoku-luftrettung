@@ -9,6 +9,7 @@ Verlauf bis zum Schnitt). Die Fassungszählung läuft fortlaufend weiter.
 
 | Fassung | Datum | Anlass | Was |
 |---|---|---|---|
+| 214 | 04.11.2026 | 21 | Schritt 21 (GR) abgeschlossen (PR #136): Erledigt-Zeile, Konzept gelöscht (`129604f2`), P-GR-01 bis -07 in der Prüfliste, 6.1 „Prüfliste GR“; P-R17-26 in P-GR-02. Die Fahrplanzeile sagte bis hier noch „Pull Request offen“. Kopf: `main` `a1521a6`. |
 | 213 | 04.11.2026 | 22 | Schritt 22 (BR5) abgeschlossen (PR #141, #148): Erledigt-Zeile, Konzept gelöscht (`778b7953`), Prüfdokument in der Prüfliste, 6.1 „Prüfliste BR5“; Nr. 430 → `Zuarbeit`, neu 481. Kopf: `main` `40d542c`. |
 | 212 | 03.11.2026 | Zuarbeit (R91) | 6.1: P-PK-27 erledigt — Bedingungen von OpenHikingMap (openmaps.fr) gelesen und in `Lizenzen.md` eingetragen, Nr. 280 erledigt; Zeile 13 ohne Nr. 280. |
 | 211 | 03.11.2026 | Zuarbeit (R91) | 6.1: Block 13 — P-PK-24 (Hausform auf sechs Seiten), -25 (Rollenbeschriftungen) und -26 (GuteSeele-Import bis Schritt 2) auf Staging erledigt. |
