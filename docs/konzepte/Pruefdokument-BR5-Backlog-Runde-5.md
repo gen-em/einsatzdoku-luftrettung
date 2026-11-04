@@ -3,7 +3,7 @@
 Was **du** noch prüfen musst. Was maschinell gemessen ist, steht mit Mittel
 und Zahl im Prüfprotokoll des Konzepts (`Konzept-BR5-Backlog-Runde-5.md` 6),
 nicht hier (CLAUDE.md 7, E-PU-08). Fortgeschrieben je Paket; Stand nach
-BR5-10, vor dem Pull Request.
+der Prüfung auf Staging am 04.11.2026 (PR #148).
 
 ## 1. Was nicht geprüft werden konnte, und warum
 
@@ -27,6 +27,9 @@ BR5-10, vor dem Pull Request.
   Bitwarden; gemessen sind Backup in drei Engines und ein pixelgleiches Bild
   (Konzept 6). → P-BR5-13.
 
+- **Jobfehler ohne Klassennamen auf Staging (Nr. 357, P-BR5-08)** — am
+  04.11.2026 gab es keinen gescheiterten Job; örtlich belegt (Jobprobe).
+
 ## 2. Grenzen der benutzten Prüfmittel
 
 - **Die Deadlock-Probe war ein Einmalskript** (Prüfprotokoll BR5-01), kein
@@ -49,16 +52,13 @@ BR5-10, vor dem Pull Request.
 
 *Aus BR5-01: nichts offen* — P-BR5-01 bis -04 am 03.11.2026 auf Staging
 bestanden (Konzept 6).
+P-BR5-05, -07, -09, -10 und -12 am 04.11.2026 auf Staging bestanden;
+P-BR5-06 halb — die Warteschlange richtig, die Meldung beim Anlegen nicht
+(Nr. 481, nicht mehr Teil von BR5, E-BR5-21). Konzept 6.
 
 | Nr. | Bedienweg | Erwartung | Scheitern erkennbar an |
 |---|---|---|---|
-| P-BR5-05 | Staging, nach dem Merge und einem grünen Lauf von Stufe 2: Verwaltung → Protokoll, Reiter System, letzte Stunde | keine neue Störung „smtp: Versand fehlgeschlagen“; im Reiter E-Mail Einträge „nicht eingereiht“ für die Kettenkonten | weiter Mailfehler je Lauf, oder keine Einträge „nicht eingereiht“ |
-| P-BR5-06 | Staging: Konto anlegen für eine Adresse der eigenen Domain, die es nicht gibt; danach Betrieb → Status, Zeile „Warteschlange“ | entweder sofort „unzustellbar“ (der Hoster lehnt beim Empfänger ab) oder „zugestellt“ (er nimmt an und schickt später zurück) — beides richtig, aber nicht „wartet“ mit 550 | „wartet“ mit einer 5xx-Absage im Grund |
-| P-BR5-07 | Staging: Konto für `…@beispiel.invalid` anlegen | Meldung „… konnte NICHT verschickt werden. Die Adresse liegt unter der reservierten Domain .invalid …“ und der Link darunter | Meldung ohne den Satz, oder kein Link |
 | P-BR5-08 | Staging, BetreiberIn: Betrieb → Jobs, nach einem gescheiterten Job (falls einer scheitert) | „zuletzt: „…““ ohne Klassennamen wie „RuntimeException:“ | ein Klassenname vor der Meldung |
-| P-BR5-09 | Staging (Arbeitsumgebung): Anmeldung und „Passwort vergessen“ mit `email[]=x` statt `email=x` abschicken (Formular mit gültigem Token) | die Seite meldet „E-Mail fehlt“ o. ä.; keine Fehlerseite, keine neue Zeile im Reiter System | eine 500, oder „Array to string conversion“ im Reiter System |
-| P-BR5-10 | Staging (Arbeitsumgebung): frisches Konto anlegen, anmelden und sofort auf eine zweite Seite wechseln (ohne Warten), in Chromium und Firefox | danach unter Einstellungen → Geräte keine Karte „Schlüsselpaar des Kontos“; im Protokoll „Schlüsselpaar des Kontos eingerichtet“ | die Karte steht da, oder kein Protokolleintrag |
-| P-BR5-11 | Du, mit einem echten Safari (iPhone oder Mac) auf Staging: dasselbe wie P-BR5-10 | wie P-BR5-10 | wie P-BR5-10 — WebKit ist nicht Safari (CLAUDE.md 6) |
-| P-BR5-12 | Staging (Arbeitsumgebung): ein Einsatz mit Reanimation im Formular, einmal entsperrt, einmal nach „Sperren“ | entsperrt „N erfasst“, gesperrt „gesperrt“ | „keine“ an einem Einsatz mit Reanimation |
+| P-BR5-11 | Du, mit einem echten Safari (iPhone oder Mac) auf Staging: frisches Konto anlegen, anmelden und sofort auf eine zweite Seite wechseln (ohne Warten) | danach unter Einstellungen → Geräte keine Karte „Schlüsselpaar des Kontos“; im Protokoll (Verwaltung, Konto) „Kontoschlüssel angelegt“ | die Karte steht da, oder kein Protokolleintrag — WebKit ist nicht Safari (CLAUDE.md 6) |
 | P-BR5-13 | **Du**, Firefox mit Bitwarden, Staging nach dem Merge: Einstellungen → Backup, „Mein Kontopasswort verwenden“, ins Feld „Kontopasswort“ klicken | das Bitwarden-Menü am Feld bietet den Eintrag der Anlage an; Einfügen und Enter erstellen das Backup | „No items to show“ am Feld — dann bleibt Nr. 430 offen |
 | P-BR5-14 | **Du**, auf Produktiv nach dem nächsten Tag `android-v…`: Einstellungen → Geräte, „Ohne Play Store“ | zwei Zeilen „NAdoku für Android-Handy“ (oben) und „NAdoku für Wear-OS-Uhr“, je mit Fassung | zwei Zeilen „NAdoku“ oder die Uhr oben |

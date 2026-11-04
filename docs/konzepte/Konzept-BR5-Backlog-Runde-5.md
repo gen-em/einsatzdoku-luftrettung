@@ -24,9 +24,9 @@ BR5-10).
 | BR5-07 | Backup-Formular: Nr. 430 | **gebaut** 03.11.2026 (Web 23.7.2) — Abnahme mit Bitwarden bei der Betreiberin (P-BR5-13) |
 | BR5-08 | Geräte: Nr. 361 (mit 432), 440 | **erledigt** 03.11.2026 (Web 23.7.3) |
 | BR5-09 | PHP 8.3.6: Nr. 383 | **erledigt** 03.11.2026 (keine Fassung, E-BR5-18) |
-| BR5-10 | Abschluss | **gebaut** 03.11.2026 — Prüfstand im Bericht des Commits, Pull Request offen |
+| BR5-10 | Abschluss | **gemergt** 04.11.2026 (PR #148); Staging geprüft (R91), Abschluss nach Freigabe offen |
 
-**In Arbeit:** BR5-10 — Pull Request, danach Prüfung auf Staging (R91). **Es hakt:** nirgends. Nr. 430 bleibt „teilweise“, bis die Handprüfung mit Bitwarden durch ist.
+**In Arbeit:** nichts — wartet auf die Freigabe des Abschlusses. **Es hakt:** P-BR5-06 halb bestanden (F-BR5-33, Nr. 481, E-BR5-21). Nr. 430 bleibt „teilweise“, bis die Handprüfung mit Bitwarden durch ist.
 
 ---
 
@@ -327,6 +327,15 @@ zustellbar, auf keiner Anlage — ein Riegel dort trifft also nichts, was
 ankommen könnte. Nr. 454 löst 450 nicht: Die Absage dort ist eine 450, also
 ein 4xx.
 
+**F-BR5-33 — Endgültige Absage beim ersten Versuch heißt „wartet“ (BR5-02,
+gefunden auf Staging mit P-BR5-06).** Der Mailserver des Hosters weist eine
+nicht vorhandene Adresse der eigenen Domain schon beim Empfänger mit 550 ab;
+die Zeile wird richtig sofort „unzustellbar“ (Nr. 454). Die Meldung beim
+Anlegen sagt trotzdem „steht in der Warteschlange. Sie wird erneut
+versucht“: `mail_einreihen()` gibt nach einem gescheiterten ersten Versuch
+immer `MAIL_WARTET` zurück. Die Proben fingen es nicht, weil sie den Stand der
+Zeile messen, nicht die Meldung der Seite. → Nr. 481, E-BR5-21.
+
 ## 3. Fragen an die Betreiberin
 
 Alle fünfzehn am 03.11.2026 entschieden, jede wie vorgeschlagen
@@ -568,6 +577,16 @@ lassen als die Anlage, die sie prüft. Wo eine Probe gegen Staging misst
 `docs/CHANGELOG.md` und das Konzept (erzählender Text, CLAUDE.md 7);
 BR5-03 bis -05 fassen dieselben Anmeldeseiten an; die Prüfarbeit läuft an
 einem Prüfstand.
+
+**E-BR5-21 — F-BR5-33 in den Backlog, nicht in BR5 (04.11.2026,
+Betreiberin).** Nr. 481, `gehört zu: nächste Backlog-Runde`. BR5 schließt
+ohne weitere Fassung ab.
+
+**E-BR5-22 — Die 550 bleibt eine Störung im Reiter System (04.11.2026,
+Betreiberin).** Eine endgültige Absage beim Empfänger steht weiter als
+„smtp: Versand fehlgeschlagen“ im Reiter System, zusätzlich zu
+„unzustellbar“ im Reiter E-Mail: So sieht die BetreiberIn, dass eine Mail
+nicht ankam.
 
 ## 5. Arbeitspakete
 
@@ -1066,10 +1085,37 @@ OpenSSL 3.0.13 und zlib 1.3 — genau die Fassungen aus Nr. 383):
   `role` in der Spaltenliste: falsch). Jobprobe 40/0,
   Schlüsselwechselprobe 66/0.
 
+**Staging nach PR #148** (04.11.2026, Web 23.7.3, Auslieferungslauf 172 samt
+Stufe 2 grün; eigenes BetreiberIn-Konto, Chromium, P-BR5-10 auch Firefox;
+vier Wegwerfkonten, danach gelöscht):
+
+- *P-BR5-05:* während Stufe 2 keine neue Störung „smtp: Versand
+  fehlgeschlagen“; im Reiter E-Mail Einträge „Nicht eingereiht: Adresse
+  unter der reservierten Domain .invalid“ für die Kettenkonten. **Bestanden.**
+- *P-BR5-06:* Adresse `br5-gibtsnicht-…@` der eigenen Domain → 550 beim
+  Empfänger; Warteschlange „Endgültig nicht zugestellt … Server antwortete
+  550“, Reiter E-Mail „unzustellbar nach 1 Versuch“. Die Meldung beim
+  Anlegen sagt „steht in der Warteschlange“ (F-BR5-33). **Halb.**
+- *P-BR5-07:* `…@beispiel.invalid` → „konnte NICHT verschickt werden. Die
+  Adresse liegt unter der reservierten Domain .invalid …“, Link da.
+  **Bestanden.**
+- *P-BR5-08:* Betrieb → Jobs: keine Zeile „zuletzt:“, kein Klassenname —
+  es gab keinen gescheiterten Job. **Nicht auslösbar**, bleibt offen.
+- *P-BR5-09:* Anmeldung (Felder `csrf,tokens,email[],password`) und
+  „Passwort vergessen“ (`email[]`) je HTTP 200 mit Meldung; im Reiter System
+  keine Zeile „Array to string“. **Bestanden.**
+- *P-BR5-10:* frisches Konto, anmelden, sofort Suche und Statistik: Chromium
+  und Firefox je Karte „Schlüsselpaar des Kontos“ 0, Protokoll
+  „Kontoschlüssel angelegt“ 1, Seitenfehler 0. **Bestanden.**
+- *P-BR5-12:* Demo-Konto, 29 Einsätze durchgesehen, Einsatz 15578 →
+  entsperrt „1 erfasst“; Inhaltsschlüssel gelöscht, Entsperren abgebrochen →
+  „gesperrt“. 0 Seitenfehler. **Bestanden.**
+
 ## 7. Verlauf
 
 | Datum | Was |
 |---|---|
+| 04.11.2026 | PR #148 gemergt; Staging geprüft: P-BR5-05, -07, -09, -10, -12 bestanden, -06 halb (F-BR5-33 → Nr. 481, E-BR5-21, -22), -08 nicht auslösbar. |
 | 03.11.2026 | BR5-10: Prüfstand; F-BR5-28 bis -31 (drei Proben auf den Stand von BR5-04/-05 gebracht). |
 | 03.11.2026 | BR5-09 erledigt (Nr. 383 gemessen, keine Fassung); F-BR5-02 berichtigt. |
 | 03.11.2026 | BR5-08 erledigt (Web 23.7.3); F-BR5-27. |
