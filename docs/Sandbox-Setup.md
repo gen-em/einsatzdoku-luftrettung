@@ -251,7 +251,7 @@ bash tools/sandbox/plattform.sh [php83|mariadb106|mysql80|mysql84|alles|schema|-
 | MySQL 8.0 | `mysql:8.0`, Port 3307 | bereit nach **8 s**, 8.0.46 |
 | MySQL 8.4.0 | `mysql:8.4.0`, Port 3308 | bereit nach **10 s**, 8.4.0 |
 | MariaDB 10.11 | die örtliche, Port 3306 | 10.11.14 |
-| Schemaprobe je Fassung | `tools/schemaprobe/` | **4 × „50 Prüfungen, 0 Fehlschläge"** (seit S11-12, Fall 7; seit R4-15 bis dahin 40, P5c/AP8 30, davor 19) |
+| Schemaprobe je Fassung | `tools/schemaprobe/` | **4 × „52 Prüfungen, 0 Fehlschläge"** (seit BR6-02, Fall 8; seit S11-12 bis dahin 50, R4-15 40, P5c/AP8 30, davor 19) |
 
 *Am 25.10.2026 baute das PHP-Abbild nicht:* Im Bau-Behälter ließ sich
 `deb.debian.org` nicht auflösen („Could not resolve"), apt fand die

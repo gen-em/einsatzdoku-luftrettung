@@ -19,7 +19,7 @@ endet mit Prüfarbeit an der einen örtlichen Anlage.
 | Paket | Inhalt | Stand |
 |---|---|---|
 | BR6-01 | Prüfaufbau: Nr. 490, 491 | **erledigt** 04.11.2026 (nur Werkzeug, keine Fassung, E-BR6-14) |
-| BR6-02 | Wartungslauf auf MySQL 8: Nr. 458 | offen |
+| BR6-02 | Wartungslauf auf MySQL 8: Nr. 458 | **gebaut** 04.11.2026 (Web 23.7.4) — Abnahme auf Staging nach dem Merge |
 | BR6-03 | Änderungsmarke des Demo-Kontos: Nr. 459 | offen |
 | BR6-04 | Endgültige Mail-Absage: Nr. 481 | offen |
 | BR6-05 | Abstand zwischen zwei Formularen: Nr. 480 | offen |
@@ -27,7 +27,7 @@ endet mit Prüfarbeit an der einen örtlichen Anlage.
 | BR6-07 | Handy, Frist für den Klartextpuffer nach der Abmeldung: Nr. 471 | offen |
 | BR6-08 | Abschluss | offen |
 
-**In Arbeit:** BR6-02 als Nächstes. **Es hakt:** nirgends. Q-BR6-01 bis
+**In Arbeit:** BR6-03 als Nächstes. **Es hakt:** nirgends. Q-BR6-01 bis
 -09 sind nach den Vorschlägen entschieden (E-BR6-04 bis -12); vor BR6-05
 fragt die Umsetzung noch einmal, ob der Abstand ohne Mockup gehen darf
 (E-BR6-09).
@@ -143,6 +143,16 @@ Anlage startet in `lokal_starten.sh`; `hochfahren.sh` beendet ihn nur mit
 Arbeitsbaum, Arbeitsbaum löschen, 404) ist in BR6-01 vor der Änderung
 einmal nachzustellen.
 
+**F-BR6-07 — Die Plattformprüfung konnte Nr. 458 nicht finden, aus zwei
+Gründen** (gefunden in BR6-02). Sie stellte die Abfrage nicht, und ihre
+Verbindung bereitet Anweisungen **nachgeahmt** vor (Vorgabe von PDO). Die
+Anwendung bereitet sie **echt** vor (`ATTR_EMULATE_PREPARES => false` in
+`db.php`). Nachgeahmt steht `'mission'` als Konstante in der Abfrage, und
+MySQL erkennt, dass `s.owner_type` daran hängt; echt ist es ein Parameter,
+und MySQL lehnt ab. Gemessen: Fall 8 über die eigene Verbindung der Probe
+lief auf MySQL 8.4.0 mit dem alten Code **grün**, über `db()` **rot** mit
+genau der 1055 von Staging („Expression #10“).
+
 **F-BR6-06 — Den Server zurückzustellen reicht für Nr. 490 nicht** (gefunden
 in BR6-01). Ein Arbeitsbaum hat keine `config.php`; `hochfahren.sh` richtet
 dort deshalb neu ein, und `lokal_einrichten.sh` **löscht die gemeinsame
@@ -248,6 +258,15 @@ frischer Anlage: 0 Fehlschläge, 0 übersprungen.
 
 *Ort:* `server/spur_lib.php` (`spur2_faellig_kandidaten()`), die gewählte
 Probe.
+
+*Gebaut (04.11.2026, Web 23.7.4):* Die Unterabfrage nennt `c.owner_type = ?`
+und `c.owner_id = o.id`, der Typ steht zweimal in der Parameterliste. Die
+Probe ist die **Schemaprobe, Fall 8** (`tools/schemaprobe/probe.php`): Sie
+baut je Fassung eine leere Anlage aus `schema.sql`, legt fünf Einsätze und
+ein Ruhesegment mit Stücken und einem Schnitt an und fragt die Liste **über
+`db()`** ab (F-BR6-07). Ausgelöst wird sie über ein neues Muster
+`plattformabfragen` (`server/spur_lib.php`, `tools/schemaprobe/**`) in
+`pruefablauf.json`; bis dahin lief sie nur bei Schema und Migrationen.
 
 *Abnahme:* Probe gegen MySQL 8.4 grün, gegen den alten Stand rot (1055);
 gegen MariaDB 10.11 unverändert dieselben Kandidaten. Auf Staging nach dem
@@ -391,10 +410,36 @@ nach `aufbauen.sh android`, `ANDROID_HOME=/opt/android-sdk`):
   `dockerd` lief nicht; die Auflösung über `docker inspect` ist gelesen,
   nicht gefahren.
 
+**BR6-02** (04.11.2026, Web 23.7.4; `plattform.sh mysql84 mysql80
+mariadb106`: MySQL 8.4.0, 8.0.46, MariaDB 10.6.28, dazu die örtliche
+10.11.14):
+
+- *Fall 8, alter Code, eigene Verbindung der Probe:* auf allen vier Fassungen
+  grün — die Probe sah den Fehler nicht (F-BR6-07).
+- *Fall 8, alter Code, über `db()`:* MySQL 8.4.0 und 8.0.46 **rot**, „1055
+  Expression #10 of SELECT list is not in GROUP BY clause“; MariaDB 10.6 und
+  10.11 grün.
+- *Fall 8, neuer Code, über `db()`:* **4 × „52 Prüfungen, 0
+  Fehlschläge“**, auf allen vier dieselbe Liste `m2>3 m1>2 m3>2 r1>2`
+  (Einsatz 2 nach der Frist auf Stufe 3; Einsatz 1 mit Stück der Stufe 1,
+  Einsatz 3 mit neuem Schnitt und das Ruhesegment auf Stufe 2; Einsatz 4,
+  schon dünn, und Einsatz 5, offen, fehlen).
+- *Gegenprobe E-BR6-05:* 17 Fundstellen von `GROUP BY` in `server/`, eine
+  davon ein Kommentar (`admin_users.php`), also **16 Abfragen**. Jede von
+  Hand abgeschrieben und auf MySQL 8.4.0 mit `ATTR_EMULATE_PREPARES =>
+  false` vorbereitet (Wegwerfskript im Notizordner, nicht eingecheckt):
+  **16 von 16 ok**, dazu die alte Fassung der Liste zur Kontrolle: rot,
+  1055. Kein zweiter Fund — kein dauerhaftes Mittel (E-BR6-05).
+- *Wartungslaufprobe* (`php tools/proben/wartungslauf/probe.php`, örtliche
+  MariaDB): **34 Erwartungen, 0 nicht erfüllt**.
+- *Nicht geprüft:* Staging (MySQL 8.4.10) — erst nach dem Merge (R91);
+  P-S11-30 hängt daran.
+
 ## 7. Verlauf
 
 | Datum | Was |
 |---|---|
+| 04.11.2026 | BR6-02 gebaut (Web 23.7.4); F-BR6-07. |
 | 04.11.2026 | BR6-01 erledigt (nur Werkzeug); F-BR6-06, E-BR6-13, -14. |
 | 04.11.2026 | Q-BR6-01 bis -09 nach den Vorschlägen entschieden (E-BR6-04 bis -12); E-BR6-03 geändert: Umsetzung in dieser Sitzung. |
 | 04.11.2026 | Konzept angelegt (E-BR6-01 bis -03); Befunde F-BR6-01 bis -05 am Code nachgesehen; Q-BR6-01 bis -09 offen; Spanne 500 bis 509 reserviert. |

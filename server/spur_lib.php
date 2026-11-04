@@ -1227,7 +1227,7 @@ function spur2_faellig_kandidaten(PDO $pdo, int $userId, int $jetzt, array $ausl
                                    MIN(s.stufe) AS stufe_min, MAX(s.stufe) AS stufe_max,
                                    MAX(s.geaendert_am) AS geaendert,
                                    (SELECT MAX(c.erstellt_am) FROM track_cuts c
-                                     WHERE c.owner_type = s.owner_type AND c.owner_id = s.owner_id
+                                     WHERE c.owner_type = ? AND c.owner_id = o.id
                                        AND c.mission_id IS NOT NULL) AS geschnitten
                               FROM track_stuecke s JOIN `$tabelle` o ON o.id = s.owner_id
                              WHERE s.owner_type = ? AND o.user_id = ? AND o.final = 1
@@ -1237,7 +1237,13 @@ function spur2_faellig_kandidaten(PDO $pdo, int $userId, int $jetzt, array $ausl
                                 OR (stufe_max < 3 AND bezug <= ?)
                                 OR (geschnitten IS NOT NULL AND geschnitten > geaendert)
                              ORDER BY bezug, o.id" . ($max !== null ? ' LIMIT ' . (int)$max : ''));
-        $q->execute([$typ, $userId, $grenze]);
+        /* DIE UNTERABFRAGE NENNT `o.id` UND DEN TYP ALS PARAMETER, nicht
+         * `s.owner_id` und `s.owner_type` (Nr. 458). Gruppiert wird nach
+         * `o.id`; eine Spalte von `s` darin ist fuer MySQL mit
+         * ONLY_FULL_GROUP_BY weder gruppiert noch aggregiert, und es lehnt die
+         * ganze Abfrage ab (1055) — MariaDB laesst sie durch. Gemessen in der
+         * Schemaprobe, Fall 8. Der Typ steht deshalb zweimal in der Liste. */
+        $q->execute([$typ, $typ, $userId, $grenze]);
         foreach ($q->fetchAll(PDO::FETCH_ASSOC) as $r) {
             $faellig = $r['bezug'] !== null && $r['bezug'] <= $grenze;
             $kandidaten[] = [

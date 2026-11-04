@@ -882,6 +882,18 @@
       "anlass": "Nr. 238; Hausregel dreimal vergessen"
     },
     {
+      "id": "plattformabfragen",
+      "ab": "klein",
+      "pfade": [
+        "server/spur_lib.php",
+        "tools/schemaprobe/**"
+      ],
+      "proben": [
+        "schemaprobe"
+      ],
+      "anlass": "Nr. 458 -- eine Abfrage, die nur MySQL mit ONLY_FULL_GROUP_BY und echt vorbereiteten Anweisungen ablehnt (Schemaprobe, Fall 8)"
+    },
+    {
       "id": "install",
       "ab": "klein",
       "pfade": [

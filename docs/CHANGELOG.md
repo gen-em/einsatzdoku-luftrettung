@@ -14,6 +14,19 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 23.7.4] — unveröffentlicht
+
+### Behoben
+
+- **Web — der Wartungslauf der Spuren brach auf MySQL bei jedem Aufruf ab**
+  (Backlog Nr. 458). Die Liste der fälligen Spuren fragte in einer
+  Unterabfrage nach Spalten, nach denen sie nicht gruppierte; MySQL lehnt
+  das ab, MariaDB nicht, und so wurde auf Staging seit dem 19.10.2026 keine
+  Spur verdichtet. Die Abfrage nennt jetzt nur noch, wonach sie gruppiert.
+  Die Plattformprüfung hatte nichts gefunden, weil sie die Abfrage nicht
+  stellte und ohne echt vorbereitete Anweisungen lief; die Schemaprobe tut
+  jetzt beides, auf jeder Datenbankfassung.
+
 ## [Web 23.7.3] — unveröffentlicht
 
 ### Behoben

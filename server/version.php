@@ -8550,5 +8550,13 @@ declare(strict_types=1);
  *   Datei. Jetzt traegt jede ihr Geraet (`apk_geraet()`), Handy zuerst, und
  *   Updates hat zwei Zeilen. Und wer ein Geraet entkoppelt, das sich seit
  *   mehr als einem Tag nicht gemeldet hat, liest jetzt, wann zuletzt, und
- *   dass Deaktivieren der bessere Griff ist. Korrektur; kein Schema. */
-const WEB_VERSION = '23.7.3';
+ *   dass Deaktivieren der bessere Griff ist. Korrektur; kein Schema.
+ * 23.7.4 — DER WARTUNGSLAUF BRACH AUF MYSQL BEI JEDEM AUFRUF AB (Backlog
+ *   Nr. 458; Schritt 23, BR6-02). Die Liste der faelligen Spuren gruppierte
+ *   nach dem Einsatz und fragte in einer Unterabfrage nach Spalten des
+ *   Stuecks; MySQL mit ONLY_FULL_GROUP_BY lehnt das bei echt vorbereiteten
+ *   Anweisungen ab (1055), MariaDB nicht. Auf Staging wurde deshalb seit
+ *   dem 19.10.2026 nichts verdichtet. Jetzt nennt die Unterabfrage den
+ *   Einsatz und den Typ selbst; die Schemaprobe misst die Abfrage je
+ *   Fassung (Fall 8). Korrektur; kein Schema. */
+const WEB_VERSION = '23.7.4';

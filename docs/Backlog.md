@@ -788,7 +788,7 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
 
 <!-- -->
 
-458. **Auf MySQL 8 bricht der Wartungslauf der Spuren bei jedem Aufruf ab.** · gehört zu: 23 · Stand: offen · seit 03.11.2026
+458. **Auf MySQL 8 bricht der Wartungslauf der Spuren bei jedem Aufruf ab.** · gehört zu: 23 · Stand: teilweise · seit 03.11.2026
      *Aufgenommen 03.11.2026 im Prüfdurchgang der Arbeitsumgebung (R91,
      P-S11-14, -30).* `spur2_faellig_kandidaten()` in `spur_lib.php`
      gruppiert nach `o.id`, die Unterabfrage `geschnitten` (10. Ausdruck)
@@ -805,6 +805,8 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      die Abfrage in eine Probe gegen MySQL 8 nehmen.
      *Abnahme:* auf Staging keine neue Zeile „wartungslauf … 1055",
      `server/api/wartungslauf.php` antwortet 200, „GPS-Daten verdichten" nennt eine Zahl.
+     *Gebaut 04.11.2026 mit BR6-02 (Web 23.7.4);* Schemaprobe Fall 8 auf vier
+     Fassungen grün (vorher MySQL 8.0 und 8.4 rot, 1055). Offen: Staging.
 
 <!-- -->
 

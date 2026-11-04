@@ -1,7 +1,7 @@
 # Schemaprobe
 
 Läuft `schema.sql` auf der Datenbank, gegen die es laufen soll?
-**Anlass: Nr. 238** — eine Migration, die nur auf MariaDB durchging; Nr. 158 — eine TIMESTAMP-Spalte, die je Fassung anders entsteht (Fall 6); Nr. 43 — die Aufräummigration nach S11, die ganze Tabellen wirft und nur mit Freigabe über einen Rest geht (Fall 7).
+**Anlass: Nr. 238** — eine Migration, die nur auf MariaDB durchging; Nr. 158 — eine TIMESTAMP-Spalte, die je Fassung anders entsteht (Fall 6); Nr. 43 — die Aufräummigration nach S11, die ganze Tabellen wirft und nur mit Freigabe über einen Rest geht (Fall 7); Nr. 458 — eine Abfrage, die nur MySQL ablehnt (Fall 8).
 
 ## Aufruf
 
@@ -19,7 +19,7 @@ eine Datenbank mit offenen Migrationen, und der Torwächter schließt sie.
 Es legt das Schema in einer **Wegwerf-Datenbank** an, fährt die Migrationen
 darüber und vergleicht das Ergebnis mit dem, was `schema.sql` verspricht:
 Tabellen, Spalten, Typen, Schlüssel, Vorgabewerte. Dazu die Plattformweiche
-— MariaDB und MySQL vertragen nicht dasselbe.
+— MariaDB und MySQL vertragen nicht dasselbe. Fall 8 fragt über `db()`, mit echt vorbereiteten Anweisungen wie die Anwendung — nur so lehnt MySQL ab.
 
 ## Was es braucht
 
@@ -30,8 +30,8 @@ legt den Urstand bytegleich zurück, auch bei Abbruch.
 
 ## Erwartete Zahl
 
-**50 Prüfungen, 0 Fehlschläge** je Fassung, die Matrix **4 × 50/0**
-(19.10.2026, mit Fall 7 seit S11-12; davor 40 seit R4-15, 30 seit P5c/AP8, 19).
+**52 Prüfungen, 0 Fehlschläge** je Fassung, die Matrix **4 × 52/0**
+(04.11.2026, mit Fall 8 seit BR6-02; davor 50 seit S11-12, 40 seit R4-15, 30 seit P5c/AP8, 19).
 
 ## Was es nicht kann
 

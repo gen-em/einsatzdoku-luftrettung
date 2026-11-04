@@ -491,6 +491,7 @@ Zwei Dinge hängen mit daran, und beide sind gemessen:
 | `tools/sandbox/konfig_stellen.php` | klein | `anteilprobe`, `ratenprobe`, `schluesselwechselprobe`, `passkeyprobe`, `komplettprobe`, `wiederherstellung`, `zweitfaktorprobe`, `versandprobe`, `bedienprobe` | Nr. 460 (Schritt PR): Der gemeinsame Rueckweg der Proben, die config.php umstellen -- wer ihn aendert, faehrt die Proben, die ihn gehen. Nr. 403 lag hier: Er wartete nicht auf den Webserver. |
 | `server/kopfzeilen_lib.php` | klein | `cspprobe`, `browserprobe-csp` | 15.09.: Meldeweg tot |
 | `server/schema.sql`, `server/migration_lib.php`, `server/update.php` | klein | `migrationsregister`, `schemaprobe` | Nr. 238; Hausregel dreimal vergessen |
+| `server/spur_lib.php`, `tools/schemaprobe/**` | klein | `schemaprobe` | Nr. 458 -- eine Abfrage, die nur MySQL mit ONLY_FULL_GROUP_BY und echt vorbereiteten Anweisungen ablehnt (Schemaprobe, Fall 8) |
 | `server/install.php`, `server/plattform_lib.php` | klein | `installweiche` | PP-1 |
 | `docs/rechtstexte/*.md`, `server/nutzungsbedingungen.php`, `server/avv.php`, `server/datenschutz.php` | klein | `rechtstexte` | P3/O10 |
 | `server/assets/style.css`, `tools/stilvergleich/**` | klein | `stilvergleich`, `bilderlauf`, `kontraste` | P0/A3 |
