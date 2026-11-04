@@ -124,14 +124,29 @@ module Ui {
     // Stelle abgeschnitten.
     function fitFont(dc as Graphics.Dc, text as Lang.String, top as Lang.Number,
                      lineH as Lang.Number, fonts as Lang.Array) as Graphics.FontType {
-        var mid = dc.getHeight() / 2;
-        var edge = (top + lineH / 2 >= mid) ? (top + lineH) : top;
-        var avail = chordW(dc, edge);
+        var avail = kanteW(dc, top, lineH);
         for (var i = 0; i < fonts.size(); i++) {
             var f = fonts[i] as Graphics.FontDefinition;
             if (dc.getTextWidthInPixels(text, f) <= avail) { return f; }
         }
         return fonts[fonts.size() - 1] as Graphics.FontDefinition;
+    }
+
+    // Nutzbare Breite einer Zeile an ihrer engsten Kante — dieselbe Kante,
+    // die fitFont misst (siehe dort). Eigene Funktion, weil die Sync-Seite
+    // und ihre Bildprobe dieselbe Zahl brauchen (Backlog Nr. 470).
+    function kanteW(dc as Graphics.Dc, top as Lang.Number, lineH as Lang.Number) as Lang.Number {
+        var edge = (top + lineH / 2 >= dc.getHeight() / 2) ? (top + lineH) : top;
+        return chordW(dc, edge);
+    }
+
+    // Passt der Text in dieser Schrift ganz in die Zeile? fitFont gibt die
+    // kleinste Schrift der Liste auch dann zurueck, wenn sie NICHT passt —
+    // kleiner als FONT_XTINY gibt es nichts. Wer dann eine kuerzere Form hat,
+    // fragt hier (Backlog Nr. 470).
+    function passt(dc as Graphics.Dc, text as Lang.String, font as Graphics.FontType,
+                   top as Lang.Number, lineH as Lang.Number) as Lang.Boolean {
+        return dc.getTextWidthInPixels(text, font) <= kanteW(dc, top, lineH);
     }
 
     // Schrift fuer Hinweiszeilen. Auf grossen Displays eine Stufe groesser:

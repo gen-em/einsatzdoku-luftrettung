@@ -44,7 +44,9 @@ für ein eckiges Display sind sie neu zu prüfen, nicht zu übertragen.
 | `Ui.pct(dc, p)` | Anteil der Displayhöhe in Prozent |
 | `Ui.numH(dc, font)` | **sichtbare** Höhe einer Schrift (ohne leere Unterlänge) |
 | `Ui.chordW(dc, y)` | nutzbare Breite des runden Displays in Höhe `y` |
-| `Ui.fitFont(dc, txt, top, lineH, fonts)` | größte Schrift, die in dieser Zeile passt |
+| `Ui.fitFont(dc, txt, top, lineH, fonts)` | größte Schrift, die in dieser Zeile passt — oder die kleinste, wenn keine passt |
+| `Ui.kanteW(dc, top, lineH)` | nutzbare Breite an der engsten Kante der Zeile (die Zahl, gegen die `fitFont` misst) |
+| `Ui.passt(dc, txt, font, top, lineH)` | passt der Text in dieser Schrift ganz hinein? |
 | `Ui.fontHint(dc)` | Schrift für Hinweiszeilen, auf großen Displays eine Stufe größer |
 | `Ui.drawResusMarker(dc)` | Rea-Hinweis am unteren Rand |
 
@@ -162,6 +164,15 @@ Konsequenz für den Entwurf: **Text nicht in der unteren Zone zentrieren**,
 sondern an den darüberliegenden Block hängen. Und Warnzeilen dort kurz halten;
 zwei Zeilen passen unterhalb eines Hauptblocks auf keinem der drei Geräte
 zuverlässig.
+
+**Wo eine Zeile tief rutschen kann, bekommt sie eine Kurzform** (seit Uhr
+4.3.2, Backlog Nr. 470). Die Meldungszeilen der Sync-Seite sind `[Text,
+Farbe]` oder `[Text, Farbe, Kurzform]`; die Kurzform steht nur da, wo
+`Ui.passt()` die lange Form auch in der kleinsten Schrift ablehnt. Auf der
+Venu 3s fehlten bei sechs und sieben Meldungen beide Enden von „Action
+halten: Gerät koppeln“; jetzt steht dort „Koppeln: Action halten“. Die
+Bildprobe der Sync-Seite misst die Breite jeder Zeile gegen dieselbe Sehne
+(`tools/uhr-pruefstand/syncseite/`).
 
 ---
 

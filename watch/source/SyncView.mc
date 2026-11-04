@@ -130,6 +130,12 @@ class SyncView extends WatchUi.View {
         } else if (!Uploader.hasCredentials()) {
             schritt = Input.lSelectHold() + ": Gerät koppeln";
         }
+        /* DIE KURZFORM fuer den unteren Block (Backlog Nr. 470): Auf der
+         * Venu 3s steht die Zeile bei sechs und sieben Meldungen so tief, dass
+         * sie selbst in FONT_XTINY breiter ist als die Sehne — beide Enden
+         * fehlten. Genommen wird sie nur, wo die lange Form nicht passt. */
+        var schrittKurz = (schritt != null && Uploader.hasServer())
+            ? "Koppeln: " + Input.lSelectHold() : schritt;
         // Rueckstand = nur abgeschlossene, unbestaetigte Pakete — das immer
         // offene laufende Ruhesegment zaehlt nicht als Rueckstand.
         var open = Model.backlogCount();
@@ -244,7 +250,7 @@ class SyncView extends WatchUi.View {
             // Steht der Schritt schon in der Mitte, wird er hier NICHT
             // wiederholt — zweimal dieselbe Zeile auf einem Uhrendisplay ist
             // verschenkter Platz.
-            lines.add([schritt as Lang.String, Ui.ROT]);
+            lines.add([schritt as Lang.String, Ui.ROT, schrittKurz as Lang.String]);
         }
         lines.add(["Version " + Const.APP_VERSION, Graphics.COLOR_DK_GRAY]);
 
@@ -427,12 +433,18 @@ class SyncView extends WatchUi.View {
         }
 
         // --- Unterer Block zeichnen -----------------------------------------
+        // Eine Zeile ist [Text, Farbe] oder [Text, Farbe, Kurzform]. Die
+        // Kurzform steht nur da, wo die lange Form selbst in der kleinsten
+        // Schrift nicht in die Sehne passt (Backlog Nr. 470).
         for (var i = 0; i < lines.size(); i++) {
             dc.setColor(lines[i][1] as Lang.Number, Graphics.COLOR_TRANSPARENT);
             var txt = lines[i][0] as Lang.String;
-            dc.drawText(cx, untenY,
-                Ui.fitFont(dc, txt, untenY, hZeile, [fZeile, Graphics.FONT_XTINY]),
-                txt, Graphics.TEXT_JUSTIFY_CENTER);
+            var f = Ui.fitFont(dc, txt, untenY, hZeile, [fZeile, Graphics.FONT_XTINY]);
+            if (lines[i].size() > 2 && !Ui.passt(dc, txt, f, untenY, hZeile)) {
+                txt = lines[i][2] as Lang.String;
+                f = Ui.fitFont(dc, txt, untenY, hZeile, [fZeile, Graphics.FONT_XTINY]);
+            }
+            dc.drawText(cx, untenY, f, txt, Graphics.TEXT_JUSTIFY_CENTER);
             untenY += hZeile;
         }
     }

@@ -15,6 +15,15 @@
 # Geraet und Zahl unter $CIQ_BASIS/syncseite/ — die Rechnung sagt, ob die
 # Bloecke sich beruehren, das Bild, ob es so aussieht.
 #
+# DIE BREITE (Nr. 470). Seit BR6-06 schreibt die Kopie je Bild auch die
+# groesste Ueberschreitung einer Zeile des unteren Blocks in die Konsole
+# ("SYNCBREITE <Textbreite minus Sehne> <Zeile>"), mit derselben Sehne, die
+# die App misst (Ui.kanteW). Gruen ist sie bei hoechstens 0. Bis dahin sah
+# nur das Bild, dass auf der Venu 3s bei sechs und sieben Zeilen beide Enden
+# von "Action halten: Geraet koppeln" fehlten.
+# SYNCSEITE_OHNE_KURZFORM=1 schaltet in der Kopie die Kurzform ab — die
+# Gegenprobe, dass die Messung den Fehler findet.
+#
 # AUFRUF   bash tools/uhr-pruefstand/syncseite/syncseite.sh [geraet ...]
 #          (Vorgabe fenix6pro fr945 venu3s; braucht `pruefstand.sh aufbau`)
 set -euo pipefail
@@ -45,7 +54,13 @@ for zeilen in 4 5 6 7; do
     # Die Fassung vor Uhr 4.3.1 hatte die Grenze noch ausgeschrieben — so laesst
     # sich die Probe auch gegen den alten Stand fahren (Gegenprobe).
     sed -i 's|        if (y < Ui.s(dc, 34)) { y = Ui.s(dc, 34); }|        if (y < Ui.s(dc, 34)) { y = Ui.s(dc, 34); }\n        System.println("SYNCPROBE " + (y + blockH).toString() + " " + untenY.toString());|' "$APP/source/SyncView.mc"
-    for muster in 'SyncProbe.fuellen' 'new SyncView(true)' 'using Toybox.System' 'SYNCPROBE'; do
+    sed -i 's|^        for (var i = 0; i < lines.size(); i++) {$|        var probeUeber = -9999; var probeZeile = "";\n        for (var i = 0; i < lines.size(); i++) {|' "$APP/source/SyncView.mc"
+    sed -i 's|            dc.drawText(cx, untenY, f, txt, Graphics.TEXT_JUSTIFY_CENTER);|            dc.drawText(cx, untenY, f, txt, Graphics.TEXT_JUSTIFY_CENTER);\n            var probeW = dc.getTextWidthInPixels(txt, f) - Ui.kanteW(dc, untenY, hZeile);\n            if (probeW > probeUeber) { probeUeber = probeW; probeZeile = txt; }\n            if (i == lines.size() - 1) { System.println("SYNCBREITE " + probeUeber.toString() + " " + probeZeile); }|' "$APP/source/SyncView.mc"
+    if [ "${SYNCSEITE_OHNE_KURZFORM:-0}" = 1 ]; then
+        sed -i 's|if (lines\[i\].size() > 2 \&\& !Ui.passt|if (false \&\& !Ui.passt|' "$APP/source/SyncView.mc"
+        grep -q 'if (false && !Ui.passt' "$APP/source/SyncView.mc" || fehler "Kurzform nicht abgeschaltet"
+    fi
+    for muster in 'SyncProbe.fuellen' 'new SyncView(true)' 'using Toybox.System' 'SYNCPROBE' 'SYNCBREITE' 'var probeUeber'; do
         grep -rq "$muster" "$APP/source" || fehler "Einhaengen gescheitert: $muster"
     done
     for g in "${GERAETE[@]}"; do
@@ -67,6 +82,17 @@ for zeilen in 4 5 6 7; do
             echo "  ok    $g, $zeilen Zeilen: Mittelblock endet bei $ende, unterer Block beginnt bei $unten"
         else
             echo "  FEHL  $g, $zeilen Zeilen: Mittelblock endet bei $ende, unterer Block beginnt bei $unten"; fehl=$((fehl+1))
+        fi
+        breite=$(bash "$P" konsole | grep '^SYNCBREITE' | tail -1 || true)
+        pruef=$((pruef+1))
+        if [ -z "$breite" ]; then
+            echo "  FEHL  $g, $zeilen Zeilen: keine Breite in der Konsole"; fehl=$((fehl+1)); continue
+        fi
+        read -r _ ueber text <<<"$breite"
+        if [ "$ueber" -le 0 ]; then
+            echo "  ok    $g, $zeilen Zeilen: breiteste Zeile $((-ueber)) px innerhalb der Sehne (\"$text\")"
+        else
+            echo "  FEHL  $g, $zeilen Zeilen: \"$text\" ragt $ueber px ueber die Sehne"; fehl=$((fehl+1))
         fi
     done
 done

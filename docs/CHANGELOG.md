@@ -215,6 +215,19 @@ frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
   nie mehr als die Hälfte, nie unter 5 s — huckepack an einer Seitenanfrage
   fängt der Versand weiter nicht an.
 
+## [Uhr 4.3.2] — unveröffentlicht
+
+Schritt 23 (BR6), Paket BR6-06 (Backlog Nr. 470).
+
+### Behoben
+
+- **Uhr — „Action halten: Gerät koppeln“ ragte auf der Venu 3s über den
+  Rand.** Bei sechs und sieben Meldungen auf der Sync-Seite stand die Zeile
+  so tief, dass der Kreis dort schmaler ist als der Text, auch in der
+  kleinsten Schrift; beide Enden fehlten. Passt eine Zeile so nicht, nimmt
+  die Seite jetzt ihre Kurzform („Koppeln: Action halten“). Die Bildprobe
+  misst seither auch die Breite jeder Zeile, nicht nur die Höhen.
+
 ## [Uhr 4.3.1] — unveröffentlicht
 
 Schritt 21 (GR), Paket GR-06 — die Sync-Seite überlappt nicht mehr

@@ -23,11 +23,12 @@ endet mit Prüfarbeit an der einen örtlichen Anlage.
 | BR6-03 | Änderungsmarke des Demo-Kontos: Nr. 459 | **erledigt** 04.11.2026 (Web 23.7.5) |
 | BR6-04 | Endgültige Mail-Absage: Nr. 481 | **gebaut** 04.11.2026 (Web 23.7.6) — Abnahme auf Staging nach dem Merge |
 | BR6-05 | Abstand zwischen zwei Formularen: Nr. 480 | **erledigt** 04.11.2026 (Web 23.7.7) |
-| BR6-06 | Uhr, Sync-Seite auf der Venu 3s: Nr. 470 | offen |
+| BR6-06 | Uhr, Sync-Seite auf der Venu 3s: Nr. 470 | **in Arbeit** — Kurzform und Breitenmessung gebaut (Uhr 4.3.2, nicht abgeschlossen); wartet auf Q-BR6-10 |
 | BR6-07 | Handy, Frist für den Klartextpuffer nach der Abmeldung: Nr. 471 | offen |
 | BR6-08 | Abschluss | offen |
 
-**In Arbeit:** BR6-06 als Nächstes. **Es hakt:** nirgends. Q-BR6-01 bis
+**In Arbeit:** BR6-06. **Es hakt:** Q-BR6-10 — die Kurzform ragt auf der
+Venu 3s bei 6 und 7 Zeilen noch 6 px in den Sicherheitsrand (F-BR6-08). Q-BR6-01 bis
 -09 sind entschieden (E-BR6-04 bis -12); BR6-05 ist ohne Mockup freigegeben
 (E-BR6-09).
 
@@ -142,6 +143,17 @@ Anlage startet in `lokal_starten.sh`; `hochfahren.sh` beendet ihn nur mit
 Arbeitsbaum, Arbeitsbaum löschen, 404) ist in BR6-01 vor der Änderung
 einmal nachzustellen.
 
+**F-BR6-08 — Nr. 470 ist breiter als im Backlog** (gefunden in BR6-06,
+Bildprobe mit Breitenmessung). Ohne Kurzform ragt „Action halten: Gerät
+koppeln“ auf der Venu 3s schon bei **4 und 5 Zeilen** 61 px über die Sehne
+(im Bild fehlt das letzte „n“), bei 6 und 7 Zeilen 75 px (beide Enden fort).
+Auf **Fenix 6 Pro und FR 945** wählt die Seite bei 4 bis 7 Zeilen ebenfalls
+die Kurzform, die lange Form passte dort also auch nicht in die Sehne samt
+Sicherheitsrand. Mit Kurzform: Fenix 23 px, FR 945 28 px innerhalb; Venu 3s
+bei 4 und 5 Zeilen 8 px innerhalb, bei **6 und 7 Zeilen 6 px darüber** — im
+Bild vollständig lesbar, weil die Sehne der App 16 Bezugspixel (auf der
+Venu 3s rund 28 px) Sicherheitsrand abzieht → Q-BR6-10.
+
 **F-BR6-07 — Die Plattformprüfung konnte Nr. 458 nicht finden, aus zwei
 Gründen** (gefunden in BR6-02). Sie stellte die Abfrage nicht, und ihre
 Verbindung bereitet Anweisungen **nachgeahmt** vor (Vorgabe von PDO). Die
@@ -178,6 +190,7 @@ nachmessen (P-AR-15, 6 Fehlschläge erwartet).
 | Q-BR6-06 | **Nr. 480, Ort der Regel.** Allgemeine Regel `.listen-form > form + form` (Abstand wie zwischen Abschnitten, vorhandenes Token) oder eine Klasse nur für diese Karte? | **Allgemeine Regel**, eingetragen in `Design.md`. Sie gilt überall, wo zwei Formulare in einem Abschnitt stehen. Kein neuer Baustein und kein neuer Token, deshalb ohne Mockup — **bitte bestätigen**, dass das keine „neue Darstellung“ im Sinn von CLAUDE.md 5 ist. | BR6-05 |
 | Q-BR6-07 | **Nr. 470, Weg.** Zeile kürzen („Koppeln: Action halten“), die Bildprobe um Breiten erweitern, oder beides? | **Beides.** Die Breitenmessung (Text gegen Sehne an seiner Höhe, dieselbe Rechnung wie `Ui.chordW()`) findet den nächsten Fall, das Kürzen behebt diesen. Gekürzt wird nur, wo die lange Form nicht passt. | BR6-06 |
 | Q-BR6-08 | **Nr. 471, Umfang der Räumung.** Was fällt nach 30 Tagen ab der ersten 401/403? | **Wie die Uhr:** alle abgeschlossenen Pakete der Kopplung **und** ein gebundener Rückstand aus einer früheren Kopplung; ein laufender Dienst nicht (er gehört zu keiner Abmeldung). Die App zeigt dazu „Daten bis TT.MM.“ wie die Sync-Seite der Uhr. Die Frist beginnt neu, wenn der Server wieder annimmt. | BR6-07 |
+| Q-BR6-10 | **Nr. 470, die Kurzform auf der Venu 3s.** „Koppeln: Action halten“ ist im Bild ganz lesbar, liegt aber bei 6 und 7 Zeilen 6 px im Sicherheitsrand (F-BR6-08). (a) Kürzer: „Koppeln: Action lang“ — bricht die Gerätewortwahl („… halten“ überall sonst); (b) Kurzform lassen, und die Probe misst gegen die Sehne **ohne** Sicherheitsrand (der Rand ist eine Vorsicht der App, kein Abschneiden) — Gefahr: Ein Messwert wird weicher, um grün zu werden; (c) Kurzform lassen, Probe streng, die zwei Messungen als bekannte Ausnahme mit Grund. | **offen** — Vorschlag (a) nur, wenn die Wortwahl zweitrangig ist; sonst (c). (b) nicht. | BR6-06 |
 | Q-BR6-09 | **Nr. 491, Weg.** Die örtliche Anlage legt für Konto 1 ein Schlüsselpaar an (`hochfahren.sh`), oder der Rundlauf legt es selbst an (`Kopplungshilfe`)? | **Der Rundlauf** über `api/kontopaar.php`, wie es das Einspielwerkzeug tut (`Sitzung.kontoschluessel()` in `tools/referenzdatensatz/einspielen/sitzung.py`). So bleibt die örtliche Anlage, wie eine frische aussieht, und der Prüffall hängt nicht an einem Zustand, den ein anderes Werkzeug herstellt. | BR6-01 |
 
 ## 4. Entscheidungen
