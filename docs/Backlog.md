@@ -739,7 +739,7 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
 
 <!-- -->
 
-430. **Bitwarden zeigt beim Backup mit Kontopasswort den Eintrag nicht im Menü am Feld.** · gehört zu: 22 · Stand: teilweise · seit 02.11.2026
+430. **Bitwarden zeigt beim Backup mit Kontopasswort den Eintrag nicht im Menü am Feld.** · gehört zu: Zuarbeit · Stand: teilweise · seit 02.11.2026
      *Aufgenommen 02.11.2026 aus P-R17-34 (Handprüfung auf Produktiv,
      Firefox mit Bitwarden).* Seit Web 23.4.0 bietet Bitwarden im Feld
      „Kontopasswort" (Einstellungen → Backup) kein neues Passwort mehr an —
@@ -757,7 +757,7 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      *Gebaut 03.11.2026 mit BR5-07 (Web 23.7.2):* Kontopasswort samt
      Anmeldename in einem eigenen Formular, Enter erstellt das Backup; Karte
      pixelgleich, Backup in drei Engines. Offen bis zur Handprüfung mit
-     Bitwarden (P-BR5-13).
+     Bitwarden (P-R17-34, `Pruefliste.md` 3).
 <!-- -->
 
 470. **Auf der Venu 3s schneidet der Kreis die unterste Meldung der Sync-Seite ab.** · gehört zu: nächste Backlog-Runde · Stand: offen · seit 02.11.2026
