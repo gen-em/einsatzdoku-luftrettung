@@ -759,7 +759,7 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      Bitwarden (P-R17-34, `Pruefliste.md` 3).
 <!-- -->
 
-470. **Auf der Venu 3s schneidet der Kreis die unterste Meldung der Sync-Seite ab.** · gehört zu: nächste Backlog-Runde · Stand: offen · seit 02.11.2026
+470. **Auf der Venu 3s schneidet der Kreis die unterste Meldung der Sync-Seite ab.** · gehört zu: 23 · Stand: offen · seit 02.11.2026
      *Aufgenommen 02.11.2026 aus GR-06 (Konzept GR, F-GR-11).* Seit Uhr
      4.3.1 überlappen sich Mittelblock und Meldungen nicht mehr; bei sechs
      und sieben Meldungszeilen steht die unterste („Action halten: Gerät
@@ -773,7 +773,7 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
 
 <!-- -->
 
-471. **Ein abgemeldetes Handy hält seinen Klartextpuffer ohne Frist.** · gehört zu: nächste Backlog-Runde · Stand: offen · seit 02.11.2026
+471. **Ein abgemeldetes Handy hält seinen Klartextpuffer ohne Frist.** · gehört zu: 23 · Stand: offen · seit 02.11.2026
      *Aufgenommen 02.11.2026 aus GR-03 (Konzept GR, F-GR-07).* Die
      Garmin-Uhr verwirft ihren Puffer 30 Tage nach der ersten 401/403
      (Lage H im Bedrohungsmodell); das Handy hat dafür keine Frist. Es führt
@@ -788,7 +788,7 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
 
 <!-- -->
 
-458. **Auf MySQL 8 bricht der Wartungslauf der Spuren bei jedem Aufruf ab.** · gehört zu: nächste Backlog-Runde · Stand: offen · seit 03.11.2026
+458. **Auf MySQL 8 bricht der Wartungslauf der Spuren bei jedem Aufruf ab.** · gehört zu: 23 · Stand: offen · seit 03.11.2026
      *Aufgenommen 03.11.2026 im Prüfdurchgang der Arbeitsumgebung (R91,
      P-S11-14, -30).* `spur2_faellig_kandidaten()` in `spur_lib.php`
      gruppiert nach `o.id`, die Unterabfrage `geschnitten` (10. Ausdruck)
@@ -808,7 +808,7 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
 
 <!-- -->
 
-459. **Schon das Ansehen setzt das Demo-Konto auf „geändert".** · gehört zu: nächste Backlog-Runde · Stand: offen · seit 03.11.2026
+459. **Schon das Ansehen setzt das Demo-Konto auf „geändert".** · gehört zu: 23 · Stand: offen · seit 03.11.2026
      *Aufgenommen 03.11.2026 im Prüfdurchgang der Arbeitsumgebung (R91,
      P-R4-15).* Die Änderungsmarke des Demo-Kontos setzt `auth_guard.php`
      bei jedem POST (`demo_lib.php`, „Die Änderungsmarke"). Die Startseite
@@ -826,7 +826,7 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
 
 <!-- -->
 
-490. **Ein Prüfstand in einem Arbeitsbaum lässt die örtliche Anlage auf ihn zeigen.** · gehört zu: nächste Backlog-Runde · Stand: offen · seit 03.11.2026
+490. **Ein Prüfstand in einem Arbeitsbaum lässt die örtliche Anlage auf ihn zeigen.** · gehört zu: 23 · Stand: offen · seit 03.11.2026
      *Aufgenommen 03.11.2026 im Prüfdurchgang der Arbeitsumgebung (R91,
      P-BR-10).* `pruefen.sh` aus einem `git worktree` außerhalb des
      Repositoriums startet `php -S 127.0.0.1:8080 -t <arbeitsbaum>/server`
@@ -842,7 +842,7 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
 
 <!-- -->
 
-491. **Die Sende-Rundläufe der Android-App laufen nur mit Schlüsselpaar an Konto 1.** · gehört zu: nächste Backlog-Runde · Stand: offen · seit 03.11.2026
+491. **Die Sende-Rundläufe der Android-App laufen nur mit Schlüsselpaar an Konto 1.** · gehört zu: 23 · Stand: offen · seit 03.11.2026
      *Aufgenommen 03.11.2026 im Prüfdurchgang der Arbeitsumgebung (R91,
      P-AR-15).* `./gradlew :handy:testDebugUnitTest -Pnadoku.rundlauf=…`
      gegen eine frisch aufgesetzte örtliche Anlage: 299 Fälle, 6
@@ -858,7 +858,7 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
 
 <!-- -->
 
-480. **Nachtragen vom Blatt: zwei Formulare ohne Abstand.** · gehört zu: nächste Backlog-Runde · Stand: offen · seit 03.11.2026
+480. **Nachtragen vom Blatt: zwei Formulare ohne Abstand.** · gehört zu: 23 · Stand: offen · seit 03.11.2026
      *Aufgenommen 03.11.2026 in BR5-06 (Konzept BR5, Bild der Karte in
      der Lage abweichend).* Sind Serverschlüssel UND Server-Anteil
      abweichend, stehen unter „Nachtragen vom Blatt“ zwei Formulare
@@ -872,7 +872,7 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
 
 <!-- -->
 
-481. **Endgültige Mail-Absage beim ersten Versuch heißt „steht in der Warteschlange“.** · gehört zu: nächste Backlog-Runde · Stand: offen · seit 04.11.2026
+481. **Endgültige Mail-Absage beim ersten Versuch heißt „steht in der Warteschlange“.** · gehört zu: 23 · Stand: offen · seit 04.11.2026
      *Aufgenommen 04.11.2026 mit P-BR5-06 auf Staging (Konzept BR5,
      F-BR5-33).* Ein Konto für eine Adresse, die der Mailserver schon beim
      Empfänger mit 550 abweist: Die Zeile wird richtig sofort

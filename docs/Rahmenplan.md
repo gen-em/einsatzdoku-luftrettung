@@ -1,13 +1,13 @@
 # Rahmenplan — Programm „Gen-EM NAdoku" bis v1.0
 
-**Fassung 214 (04.11.2026)** · Steuerung: Reihenfolge, Status, programmweite
+**Fassung 215 (04.11.2026)** · Steuerung: Reihenfolge, Status, programmweite
 Entscheidungen. Verlauf: `Rahmenplan-Verlauf.md`. Fassungen 1–15:
 `Rahmenplan-Archiv.md`; Fassungen 16–124: `Rahmenplan-Archiv-2.md`.
 
 **Stand `origin/main`** (Commit `a1521a6`, PR #149, gemessen 04.11.2026): Web 23.7.3 ·
 Uhr 4.3.1 · Android 0.20.0; ausgeliefert Web 23.6.0, Uhr 4.1.1 und Android 0.18.2 (Tags auf `c32dd2c`, 02.11.2026).
-**Läuft:** nichts; 21 GR und 22 BR5 abgeschlossen 04.11.2026.
-**Als Nächstes:** 13 (Konzeptsitzung).
+**Läuft:** 23 BR6 — Konzept angelegt, Fragen Q-BR6-01 bis -09 offen; 21 GR und 22 BR5 abgeschlossen 04.11.2026.
+**Als Nächstes:** Fragen zu 23 entscheiden, dann Umsetzung 23; daneben die Konzeptsitzung 13.
 **Offene PRs:** keine.
 **Fällig bei der Betreiberin:** 38 Posten (Abschnitt 6.1). **`update.php`:** auf Staging und Produktiv nichts offen (Betreiberin, 20.10.2026, nach Web 23).
 
@@ -104,7 +104,7 @@ liest die 7.x-Sicherung genau einmal) · Rückwärtskompatibilität ab v1.0 (R60
 ## 3. Fahrplan — die nächsten Schritte
 
 Schrittnummern sind **Namen**, keine Reihenfolge; sie werden nie umvergeben.
-**Die Reihenfolge der offenen Schritte ist:** 13 → 14 (E-BE-02 bis -04, 02.11.2026; PR, 21 und 22 davor sind erledigt); der Betriebsübergang folgt auf v1.0. Daneben, ohne Platz in
+**Die Reihenfolge der offenen Schritte ist:** 23 → 13 → 14 (E-BE-02 bis -04, 02.11.2026; 23 nach E-BR6-01, 04.11.2026; PR, 21 und 22 davor sind erledigt); der Betriebsübergang folgt auf v1.0. Daneben, ohne Platz in
 der Reihe: die Paketschnitte von **11** und Teil C von **6** (seit SD-M1
 frei). **Warum so:** P6 liegt in zwei Hälften um S11 (R86): das
 **Bedrohungsmodell (12, abgeschlossen) vor S11 (12a, abgeschlossen)**, weil es dessen
@@ -119,7 +119,8 @@ weil das Altbestand-Werkzeug ein einziges Konto voraussetzte.
 |---|---|---|---|---|---|
 | 6 | **S4 — Rest, Teil C** | Play Console nach R65: interner Test-Track für Handy und Uhr unter einem Eintrag, Versionscode-Versatz, Signaturweg; Android 1.0.0 (E-R45-7). Die Vorbereitung ohne D-U-N-S und Schlüssel ist gebaut (Android 0.13.0), die Gerätetests sind erfolgt (24.09.2026) | D-U-N-S, Organisationskonto und Play App Signing — erledigt 26.09.2026 (SD-M1); offen in 6.2: Wear-OS-Uhr, Demo-Video, Datensicherheitsformular | `docs/konzepte/Konzept-S4-Handy-Uhr-Client.md` 13; `Vorbereitung-Play-Console.md` | offen — Teile A bis C gemergt 04.09.2026 (PR #33, Abschnitt 8); Android 1.0.0 und der interne Test-Track können beginnen |
 | 11 | **Planung v1.0** | Festlegungen vor dem Schnitt (R65 bis R73, entschieden 03.09.2026); Ergebnis sind die Konzepte der Phasen P6 bis P8 mit je eigenem Paketschnitt (P6 nach der Freigaberunde des Reviews) | keine | `docs/konzepte/Konzept-Planung-v1.0.md` | gemergt 03.09.2026 — Festlegungen entschieden (R65–R73); offen nur die Paketschnitte, je mit dem Konzept zu 12b, 13 und 14 |
-| 13 | **P7 — Gesicht v1.0** | Umbenennung überall (E-Mail-Langform entscheiden), Demo-Passwort (R25); Vertrag v1 (R12, Nr. 23); Doku-Neufassung, Handbuch als HTML (R16, R72); Manifest (R70); Changelog neu (R15); Backlog-Übernahme; Kommentarregel (R69, Nr. 409); Lizenzen, Tabellen mit Mockup (Nr. 342), Logos (Nr. 62) | 22 | eigenes Konzept nach K1 | offen — als Nächstes (22 abgeschlossen 04.11.2026) |
+| 23 | **BR6 — Backlog-Runde 6** | Die acht Punkte der nächsten Backlog-Runde: Wartungslauf auf MySQL 8 (Nr. 458), Demo-Marke (459), Mail-Absage (481), Formularabstand (480), Sync-Seite Venu 3s (470), Frist für den Klartextpuffer des Handys (471), Prüfaufbau (490, 491) | keine | `docs/konzepte/Konzept-BR6-Backlog-Runde-6.md` | Konzept angelegt 04.11.2026 auf `claude/stoic-turing-mpxuch`; Q-BR6-01 bis -09 offen; vor 13 (E-BR6-01) |
+| 13 | **P7 — Gesicht v1.0** | Umbenennung überall (E-Mail-Langform entscheiden), Demo-Passwort (R25); Vertrag v1 (R12, Nr. 23); Doku-Neufassung, Handbuch als HTML (R16, R72); Manifest (R70); Changelog neu (R15); Backlog-Übernahme; Kommentarregel (R69, Nr. 409); Lizenzen, Tabellen mit Mockup (Nr. 342), Logos (Nr. 62) | 23 | eigenes Konzept nach K1 | offen — Konzeptsitzung kann neben 23 laufen, Umsetzung nach 23 |
 | 14 | **P8 — Schnitt** | Neuaufsetzen mit Übernahme per edbak (R40 (3), R60, Nr. 324); Migrationsregister neu (R66); Repo-Umzug und Inventur mit Begründung je Weglassung (R68); Kette im neuen Repositorium (R67, R40 (4)); Rechts- und Betreiberunterlagen (R41); Abnahme nach R11; Tags `web-v1.0.0`, `uhr-v…`, `android-v1.0.0` | 13 | eigenes Konzept nach K1 | offen — nach 13; die Inventur (R68) entscheidet die zwölf Werkzeug-Punkte mit `gehört zu: 14` (E-BE-04) |
 | — | **Betriebsübergang** | Öffnung in Wellen über die Betriebsarten (R41); Produktionsfreigabe in den Stores mit Welle 1 (R65; nach MDR-Abgrenzung und Rechtsunterlagen); mit Welle 1 entfällt die Seitenladung (`apk.php`, Handbuch 10.1); Garmin-Uhr über den Connect-IQ-Store; halbjährliche Probe-Wiederherstellung | v1.0 | — | offen — beginnt mit v1.0 (nach den Schritten 13 und 14); Wellen nach R41 |
 
@@ -137,7 +138,8 @@ Backlog-Nummern verlangen die Gegenproben aus 2.2.
 
 | jetzt parallel möglich | nicht parallel |
 |---|---|
-| Konzeptarbeit zu allem; ein Abschluss nach K9 zu allem — er schreibt nur Buchführung | 13 → 14 nacheinander (R71, R86, E-BE-02) |
+| Konzeptarbeit zu allem; ein Abschluss nach K9 zu allem — er schreibt nur Buchführung | 23 → 13 → 14 nacheinander in der Umsetzung (R71, R86, E-BE-02, E-BR6-01) |
+| die Konzeptsitzung 13 neben der Umsetzung von 23 | 23 und 13 gleichzeitig an `docs/` — die Buchführung bleibt seriell |
 
 **Merge-Reihenfolge auf `main`:** ein Pull Request je Phase nach Freigabe
 (K7); nach jeder Migration `update.php`; nach einem fremden Merge nimmt jeder
