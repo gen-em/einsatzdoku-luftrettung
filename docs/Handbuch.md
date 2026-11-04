@@ -5351,12 +5351,13 @@ SMTP-Zugang fiel bis dahin erst auf, wenn jemand einen Einladungslink
 vermisste.
 
 Nach dem Klick sagt die Meldung in der Karte **E-Mail**, was passiert ist —
-seit Web 20.9.0 **drei** Antworten statt zwei:
+seit Web 23.7.6 **vier** Antworten (seit Web 20.9.0 waren es drei):
 
 | Meldung | heißt |
 |---|---|
 | *hinausgegangen* | Der Mailserver hat sie angenommen. |
 | *Der erste Versuch ist gescheitert* | Sie steht in der **Warteschlange** und wird innerhalb der nächsten Stunde erneut versucht. Nicht verloren. |
+| *endgültig abgelehnt* | Der Mailserver hat die Adresse abgewiesen; es wird **nicht** erneut versucht. Der Grund steht in der Warteschlange. |
 | *nicht eingereiht* | Es wurde nichts versucht — die eigene Adresse ist unbrauchbar oder die Warteschlange war nicht erreichbar. |
 
 **Ob sie ankommt, sagt erst das Postfach** — angenommen ist nicht zugestellt.

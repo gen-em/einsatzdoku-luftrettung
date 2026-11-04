@@ -14,6 +14,17 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 23.7.6] — unveröffentlicht
+
+### Behoben
+
+- **Web — eine endgültig abgelehnte Mail hieß „steht in der Warteschlange“**
+  (Backlog Nr. 481). Wies der Mailserver eine Adresse schon beim ersten
+  Versuch ab, sagte die Seite trotzdem, die Mail werde erneut versucht, und
+  die Warnmails zur Speichergrenze galten als verschickt. Jetzt wird nach
+  dem ersten Versuch nachgesehen, was mit der Nachricht geschehen ist, und
+  die Seite sagt „konnte NICHT verschickt werden“ und zeigt den Link.
+
 ## [Web 23.7.5] — unveröffentlicht
 
 ### Behoben

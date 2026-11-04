@@ -148,7 +148,7 @@ function profil_adresswechsel_melden(string $alt, string $neu,
 
     $zustellung = mail_einreihen('adresswechsel', $alt,
         ['alt' => $alt, 'neu' => $neu, 'durch' => $durch]);
-    $ok = $zustellung !== MAIL_ABGELEHNT;
+    $ok = mail_unterwegs($zustellung);
     if (!$ok) {
         require_once __DIR__ . '/systemmeldung_lib.php';
         system_melden('adresswechsel', 'Hinweismail an die alte Adresse ging nicht weg');

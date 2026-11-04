@@ -21,13 +21,13 @@ endet mit Prüfarbeit an der einen örtlichen Anlage.
 | BR6-01 | Prüfaufbau: Nr. 490, 491 | **erledigt** 04.11.2026 (nur Werkzeug, keine Fassung, E-BR6-14) |
 | BR6-02 | Wartungslauf auf MySQL 8: Nr. 458 | **gebaut** 04.11.2026 (Web 23.7.4) — Abnahme auf Staging nach dem Merge |
 | BR6-03 | Änderungsmarke des Demo-Kontos: Nr. 459 | **erledigt** 04.11.2026 (Web 23.7.5) |
-| BR6-04 | Endgültige Mail-Absage: Nr. 481 | offen |
+| BR6-04 | Endgültige Mail-Absage: Nr. 481 | **gebaut** 04.11.2026 (Web 23.7.6) — Abnahme auf Staging nach dem Merge |
 | BR6-05 | Abstand zwischen zwei Formularen: Nr. 480 | offen |
 | BR6-06 | Uhr, Sync-Seite auf der Venu 3s: Nr. 470 | offen |
 | BR6-07 | Handy, Frist für den Klartextpuffer nach der Abmeldung: Nr. 471 | offen |
 | BR6-08 | Abschluss | offen |
 
-**In Arbeit:** BR6-04 als Nächstes. **Es hakt:** nirgends. Q-BR6-01 bis
+**In Arbeit:** BR6-05 als Nächstes. **Es hakt:** nirgends. Q-BR6-01 bis
 -09 sind entschieden (E-BR6-04 bis -12); BR6-05 ist ohne Mockup freigegeben
 (E-BR6-09).
 
@@ -315,6 +315,23 @@ Einsatzseite ansehen — Verwaltung → Demo-Konto „Geändert: nein“. Eine e
 *Ort:* `server/mail_lib.php`, die Aufrufer nach F-BR6-05,
 `server/betrieb_status.php`; `docs/Technik.md` (Mailversand).
 
+*Gebaut (04.11.2026, Web 23.7.6):* `mail_zeile_versuchen()` bleibt, wie es
+ist (der Job ruft es ebenfalls); `mail_einreihen()` liest nach einem
+gescheiterten ersten Versuch den Zustand der Zeile — `offen` → `wartet`,
+`unzustellbar` und `zu_spaet` → `MAIL_UNZUSTELLBAR`. Neu `mail_unterwegs()`
+für die Frage „hinaus oder auf dem Weg?“. Die Aufrufer einzeln:
+
+| Stelle | Vorher | Mit `UNZUSTELLBAR` |
+|---|---|---|
+| `admin_users.php` Einladung | `else`-Zweig | „konnte NICHT verschickt werden“ + Link — **ohne Änderung richtig** |
+| `admin_user.php` Setz-Link, Zweitfaktor, Protokoll | `else`-Zweige | „NICHT verschickt“ — ohne Änderung richtig |
+| `login.php` Rückweg | `in_array([ZUGESTELLT, WARTET])` | auf `mail_unterwegs()` umgestellt, gleiches Verhalten |
+| `ankuendigung_lib.php` Rundmail | nur einreihen | kommt nie vor |
+| `konto_lib.php` Bestätigung erneut | `!== ABGELEHNT` → hätte „steht in der Warteschlange“ gesagt | `mail_unterwegs()` → „konnte NICHT verschickt werden“ |
+| `email_lib.php` Adresswechsel | `!== ABGELEHNT` → hätte als verschickt gegolten | `mail_unterwegs()`, Störung im Reiter System |
+| `speicher_lib.php`, `adminbackup_lib.php` Warnmails | `!== ABGELEHNT` → Schwelle als gemeldet, nie wieder versucht | `mail_unterwegs()` → bleibt ungemeldet, nächster Lauf versucht neu |
+| `betrieb_status.php` Testmail | `default` → „nicht eingereiht“ | eigener Text (E-BR6-08) |
+
 *Abnahme:* örtlich mit der Mailprobe (Art `nach_daten` bzw. 550 beim
 Empfänger): Konto anlegen → „konnte NICHT verschickt werden“; Testmail →
 der Text aus Q-BR6-05. Ein vorübergehender Fehler (4xx) meldet weiter
@@ -448,6 +465,22 @@ mariadb106`: MySQL 8.4.0, 8.0.46, MariaDB 10.6.28, dazu die örtliche
   nachgetragen, weil ein Eintrag vor dem Commit den gemessenen Baum geändert
   hätte.
 
+**BR6-04** (04.11.2026, Web 23.7.6; Mailprobe mit ihrer Gegenstelle
+`gegenstelle.py`, örtlich):
+
+- *Mailprobe* (`php tools/proben/mail/probe.php`), Abschnitt 4a um die
+  Rückgabe erweitert: **80 Prüfungen, 0 Befunde**; je Fall
+  `mail_einreihen()` gegen den Zustand der Zeile — 550 beim Empfänger und
+  554 nach den Daten → `unzustellbar`, 552 und 535 → `wartet`. Gegen den
+  alten Code fiele die Probe schon beim Laden (`MAIL_UNZUSTELLBAR`
+  unbekannt), und die Rückgabe dort war `wartet` — am Code belegt, nicht
+  gefahren.
+- *Nicht gemessen:* der Fall `zu_spaet` beim **ersten** Versuch — kein
+  Katalogeintrag hat eine Frist unter der ersten Sprosse (300 s); gelesen.
+  Die Seitentexte (Einladung, Bestätigung, Testmail) im Browser — das prüft
+  Claude nach dem Merge auf Staging (R91), mit einer nicht vorhandenen
+  Adresse der eigenen Domain, wie im Backlog.
+
 **BR6-03** (04.11.2026, Web 23.7.5; örtliche Anlage nach Neustart des
 Containers, Startfolge `Sandbox-Setup.md` 6.1a):
 
@@ -472,6 +505,7 @@ Containers, Startfolge `Sandbox-Setup.md` 6.1a):
 
 | Datum | Was |
 |---|---|
+| 04.11.2026 | BR6-04 gebaut (Web 23.7.6). |
 | 04.11.2026 | BR6-03 erledigt (Web 23.7.5); E-BR6-15. BR6-05 ohne Mockup freigegeben (E-BR6-09). |
 | 04.11.2026 | BR6-02 gebaut (Web 23.7.4); F-BR6-07. |
 | 04.11.2026 | BR6-01 erledigt (nur Werkzeug); F-BR6-06, E-BR6-13, -14. |

@@ -3209,8 +3209,18 @@ mail_einreihen($schluessel, $empfaenger, $daten, $sofort = true)
    → überholte Zeilen derselben Art an dieselbe Adresse schließen
    → Zeile in mail_warteschlange
    → EINEN Versuch sofort — außer bei $sofort = false
-   → 'zugestellt' | 'wartet' | 'abgelehnt'
+   → 'zugestellt' | 'wartet' | 'unzustellbar' | 'abgelehnt'
 ```
+
+**`unzustellbar`** (`MAIL_UNZUSTELLBAR`, seit Web 23.7.6, Nr. 481) heißt:
+eingereiht, aber der erste Versuch hat die Zeile schon geschlossen — der
+Mailserver hat den Empfänger endgültig abgelehnt, oder der nächste Versuch
+läge nach der Frist (`zu_spaet`). Nur `wartet` wird erneut versucht. Bis
+dahin hieß jeder gescheiterte erste Versuch `wartet`, und die Seite sagte
+„wird erneut versucht“ über eine Zeile, die schon `unzustellbar` stand. Ob
+eine Nachricht hinaus oder unterwegs ist, beantwortet `mail_unterwegs()`;
+die Warnmails der Speicherschwellen zählen eine abgelehnte nicht mehr als
+gemeldet. Gemessen in der Mailprobe, Abschnitt 4a.
 
 **Auf der Leitung** (`smtp_send()`, seit Web 23.3.1, R17-22): Der Rumpf geht
 **quoted-printable** hinaus, mit `Content-Transfer-Encoding: quoted-printable`

@@ -824,7 +824,7 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
 
 <!-- -->
 
-481. **Endgültige Mail-Absage beim ersten Versuch heißt „steht in der Warteschlange“.** · gehört zu: 23 · Stand: offen · seit 04.11.2026
+481. **Endgültige Mail-Absage beim ersten Versuch heißt „steht in der Warteschlange“.** · gehört zu: 23 · Stand: teilweise · seit 04.11.2026
      *Aufgenommen 04.11.2026 mit P-BR5-06 auf Staging (Konzept BR5,
      F-BR5-33).* Ein Konto für eine Adresse, die der Mailserver schon beim
      Empfänger mit 550 abweist: Die Zeile wird richtig sofort
@@ -838,3 +838,5 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      *Abnahme:* auf Staging Konto für eine nicht vorhandene Adresse der
      eigenen Domain → „konnte NICHT verschickt werden“, Mailprobe mit der
      Art `nach_daten` bzw. 550 beim Empfänger.
+     *Gebaut 04.11.2026 mit BR6-04 (Web 23.7.6):* `MAIL_UNZUSTELLBAR`,
+     Mailprobe 4a 80/0. Offen: Staging (Konto, Testmail).

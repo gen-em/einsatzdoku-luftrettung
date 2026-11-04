@@ -302,8 +302,8 @@ function konto_verifikation_erneut(int $userId): array
     protokoll('verwaltung', 'verifikation_gesendet',
               'Bestätigungsmail erneut gesendet',
               ['zustellung' => $zustellung], $userId);
-    return ['ok' => $zustellung !== MAIL_ABGELEHNT,
-            'grund' => $zustellung === MAIL_ABGELEHNT ? 'mail' : null,
+    return ['ok' => mail_unterwegs($zustellung),
+            'grund' => mail_unterwegs($zustellung) ? null : 'mail',
             'zustellung' => $zustellung];
 }
 

@@ -2068,13 +2068,13 @@ function edbak_schwellen_melden(): array
          * kaeme dieselbe Warnung nach einer Mailstoerung mehrfach. */
         $ok = false;
         foreach ($ziele as $m) {
-            if (mail_einreihen('backup_grenze', $m, [
+            if (mail_unterwegs(mail_einreihen('backup_grenze', $m, [
                     'prozent' => $s,
                     'belegt'  => groesse_text($st['bytes']),
                     'grenze'  => groesse_text($st['grenze']),
                     'pakete'  => (string)$st['pakete'],
                     'ordner'  => (string)$st['ordner'],
-                ]) !== MAIL_ABGELEHNT) {
+                ]))) {
                 $ok = true;
             }
         }

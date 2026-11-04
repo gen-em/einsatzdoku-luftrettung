@@ -140,6 +140,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'testm
                    . 'Nachricht steht in der Warteschlange und wird innerhalb der '
                    . 'nächsten Stunde erneut versucht; die Zeile „Letzter Versand" '
                    . 'steht bis dahin rot. Der Grund steht in der Warteschlange.'],
+            MAIL_UNZUSTELLBAR => ['fehler', 'Der Mailserver hat die Testmail beim '
+                   . 'ersten Versuch endgültig abgelehnt; sie wird nicht erneut '
+                   . 'versucht. Der Grund steht in der Warteschlange.'],
             default         => ['fehler', 'Die Testmail wurde nicht eingereiht. Das '
                    . 'passiert, wenn die eigene Adresse unbrauchbar ist oder die '
                    . 'Warteschlange nicht erreichbar war; die Ursache steht im '

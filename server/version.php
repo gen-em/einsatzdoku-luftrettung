@@ -8565,5 +8565,13 @@ declare(strict_types=1);
  *   Besuch — eine echte Aenderung, die die Marke setzte und 30 Minuten
  *   spaeter den Reset ausloeste. Jetzt antwortet der Wartungslauf dem
  *   Demo-Konto leer, und seine POSTs stehen in `DEMO_POST_OHNE_MARKE`;
- *   jede andere POST setzt die Marke wie bisher. Korrektur; kein Schema. */
-const WEB_VERSION = '23.7.5';
+ *   jede andere POST setzt die Marke wie bisher. Korrektur; kein Schema.
+ * 23.7.6 — „STEHT IN DER WARTESCHLANGE" UEBER EINE ABGELEHNTE MAIL (Backlog
+ *   Nr. 481; Schritt 23, BR6-04). `mail_einreihen()` gab nach jedem
+ *   gescheiterten ersten Versuch `MAIL_WARTET` zurueck, auch wenn der
+ *   Mailserver den Empfaenger endgueltig abgelehnt hatte. Jetzt liest es den
+ *   Zustand der Zeile und sagt `MAIL_UNZUSTELLBAR`; `mail_unterwegs()`
+ *   beantwortet an einer Stelle, ob eine Mail hinaus oder auf dem Weg ist,
+ *   und die Warnmails zaehlen eine abgelehnte nicht mehr als gemeldet.
+ *   Korrektur; kein Schema. */
+const WEB_VERSION = '23.7.6';

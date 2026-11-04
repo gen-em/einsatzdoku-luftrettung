@@ -381,13 +381,13 @@ function speicher_kontingente_melden(): array
              * — gar nicht erst eingereiht — laesst die Schwelle offen. */
             $ok = false;
             foreach ($ziele as $m) {
-                if (mail_einreihen('speicher_kontingent', $m, [
+                if (mail_unterwegs(mail_einreihen('speicher_kontingent', $m, [
                         'titel'      => $c['titel'],
                         'prozent'    => $s,
                         'belegt'     => groesse_text($c['ist']),
                         'kontingent' => groesse_text((int)$c['bezug']),
                         'rat'        => $c['rat'],
-                    ]) !== MAIL_ABGELEHNT) {
+                    ]))) {
                     $ok = true;
                 }
             }
