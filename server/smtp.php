@@ -333,7 +333,15 @@ function smtp_send(string $toEmail, string $subject, string $textBody,
         return false;
     }
 
-    $expect = function (string $code) use ($fp, $rest, $kennung): bool {
+    /* WELCHER SCHRITT ABGESAGT HAT (Backlog Nr. 454). `mail_zeile_versuchen()`
+     * macht eine Nachricht nur dann sofort unzustellbar, wenn der EMPFAENGER
+     * abgelehnt wurde — eine 5xx beim `RCPT TO` oder nach dem Ende der
+     * Daten. Eine 535 beim `AUTH` ist ein falsches Passwort in den
+     * Einstellungen; wer sie wie eine Absage behandelte, liesse die ganze
+     * Warteschlange verfallen (F-BR5-10). Deshalb gehen Code und Schritt mit,
+     * nicht nur der Code. */
+    $GLOBALS['__smtp_absage'] = null;
+    $expect = function (string $code, string $schritt = '') use ($fp, $rest, $kennung): bool {
         do {
             $r = $rest();
             if ($r <= 0) {
@@ -360,6 +368,7 @@ function smtp_send(string $toEmail, string $subject, string $textBody,
          * erkennen. */
         $GLOBALS['__smtp_fehler'] = 'Server antwortete ' . substr(trim($line), 0, 3)
                                   . ', erwartet war ' . $code;
+        $GLOBALS['__smtp_absage'] = ['code' => substr(trim($line), 0, 3), 'schritt' => $schritt];
         return false;
     };
     $send = function (string $cmd) use ($fp): void { fwrite($fp, $cmd . "\r\n"); };
@@ -378,7 +387,7 @@ function smtp_send(string $toEmail, string $subject, string $textBody,
     $send(base64_encode((string)$cfg['user'])); $ok = $ok && $expect('334');
     $send(base64_encode((string)$cfg['pass'])); $ok = $ok && $expect('235');
     $send('MAIL FROM:<' . $cfg['from'] . '>');  $ok = $ok && $expect('250');
-    $send('RCPT TO:<' . $toEmail . '>');        $ok = $ok && $expect('250');
+    $send('RCPT TO:<' . $toEmail . '>');        $ok = $ok && $expect('250', 'empfaenger');
     $send('DATA');                              $ok = $ok && $expect('354');
 
     $headers = 'From: ' . mb_encode_mimeheader($cfg['from_name']) . ' <' . $cfg['from'] . ">\r\n"
@@ -398,12 +407,15 @@ function smtp_send(string $toEmail, string $subject, string $textBody,
     $body = quoted_printable_encode(str_replace(["\r\n", "\n"], ["\n", "\r\n"], $textBody));
     $body = preg_replace('/^\./m', '..', $body); // Dot-Stuffing
     $send($headers . "\r\n" . $body . "\r\n.");
-    $ok = $ok && $expect('250');
+    $ok = $ok && $expect('250', 'daten');
     $send('QUIT');
     fclose($fp);
     if (!$ok) {
         $grund = (string)($GLOBALS['__smtp_fehler'] ?? 'Grund unbekannt');
-        $GLOBALS['__smtp_fehler'] = ['kennung' => $kennung, 'grund' => $grund];
+        $absage = $GLOBALS['__smtp_absage'] ?? null;
+        $GLOBALS['__smtp_fehler'] = ['kennung' => $kennung, 'grund' => $grund,
+                                     'code'    => $absage['code'] ?? null,
+                                     'schritt' => $absage['schritt'] ?? null];
         system_melden('smtp', 'Versand fehlgeschlagen', $grund, [], 'stoerung', $kennung);
     }
     smtp_versand_vermerken($ok);
@@ -420,6 +432,13 @@ function smtp_send(string $toEmail, string $subject, string $textBody,
  * dieselbe Kennung in ihre Fehlerspalte, und die Unzustellbar-Liste zeigt
  * sie. Wer einem Fehlschlag nachgeht, hat dort den Empfaenger und im
  * Protokoll des Webspace den technischen Grund.
+ *
+ * SEIT WEB 23.6.4 AUCH `code` UND `schritt` (Nr. 454): der dreistellige
+ * Antwortcode der Absage und der Schritt, an dem sie kam (`empfaenger`,
+ * `daten` oder leer) — beide `null`, wenn es keine Absage war (Verbindung,
+ * Zeitbudget).
+ *
+ * @return array{kennung: string, grund: string, code?: ?string, schritt?: ?string}|null
  */
 function smtp_letzter_fehler(): ?array
 {

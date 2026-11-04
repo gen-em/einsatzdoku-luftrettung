@@ -37,7 +37,7 @@ if (!isset($_GET['t'])) {
     exit;
 }
 
-$tab = (string)$_GET['t'];
+$tab = get_text('t');
 /* „stammdaten" ist ein alter Reitername. Der Reiter ist in zwei
  * zerlegt (siehe ui_leiste_einstellungen) — der alte Name bleibt als WEICHE
  * stehen: Er steht in Lesezeichen, in verschickten Links und in älteren
@@ -196,13 +196,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     /* ---- Profil: Name & E-Mail ---------------------------------------- */
     if ($action === 'profile') {
-        $name  = mb_substr(trim($_POST['name'] ?? ''), 0, 120);
-        $email = email_pruefen($_POST['email'] ?? '');
+        $name  = mb_substr(trim(post_text('name')), 0, 120);
+        $email = email_pruefen(post_text('email'));
         /* Ein unbekannter Wert wird zum Leerstring, nicht zum Fehler: Er
            bedeutet „Standard der Installation", und das ist der harmlose
            Ausgang. Die Liste steht in session_lib.php, damit Prüfung und
            Auflösung dieselbe Quelle haben. */
-        $logo = (string)($_POST['logo_wahl'] ?? '');
+        $logo = post_text('logo_wahl');
         if (!in_array($logo, LOGO_WAHLEN, true)) { $logo = ''; }
         /* ---- Adresswechsel nur mit Passwortnachweis
          *
@@ -230,7 +230,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         /* MIT RATENTOPF: `passwort_nachweis()` traegt
          * Topf und Vergleich zusammen; sonst raete man hier ohne Sperre. */
         $nachweis = $adressWechsel
-            ? passwort_nachweis($userId, (string)($_POST['old_token'] ?? ''))
+            ? passwort_nachweis($userId, post_text('old_token'))
             : 'ok';
 
         if ($email === null) {
@@ -334,7 +334,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stp = db()->prepare('SELECT email FROM users WHERE id = ?');
             $stp->execute([$userId]);
             $z = $stp->fetch(PDO::FETCH_ASSOC) ?: [];
-            $nachweis = passwort_nachweis($userId, (string)($_POST['loesch_token'] ?? ''));
+            $nachweis = passwort_nachweis($userId, post_text('loesch_token'));
             if ($nachweis === 'gesperrt') {
                 $error = 'Zu viele falsche Passwörter. Bitte später erneut — es wurde nichts geändert.';
             } elseif ($nachweis !== 'ok') {
@@ -396,7 +396,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                     . 'eine AdministratorIn muss update.php aufrufen.',
             }];
         } elseif ($action === 'zf_einschalten') {
-            $r = totp_einrichtung_abschliessen($userId, (string)($_POST['code'] ?? ''));
+            $r = totp_einrichtung_abschliessen($userId, post_text('code'));
             if ($r['ok']) {
                 $zfCodes = $r['codes'];
                 $zfMeldung = ['Eingeschaltet.', 'Ab der nächsten Anmeldung fragt die '
@@ -483,12 +483,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $st->execute([$userId]);
         $u = $st->fetch();
         /* Mit Ratentopf und Pfeffer. */
-        $nachweis = passwort_nachweis($userId, (string)($_POST['old_token'] ?? ''));
+        $nachweis = passwort_nachweis($userId, post_text('old_token'));
         $oldOk = ($nachweis === 'ok');
-        $newTok = (string)($_POST['new_token'] ?? '');
-        $newSalt = (string)($_POST['new_salt'] ?? '');
-        $wrapPw = (string)($_POST['wrap_pw'] ?? '');
-        $keyChk = (string)($_POST['key_check'] ?? '');
+        $newTok = post_text('new_token');
+        $newSalt = post_text('new_salt');
+        $wrapPw = post_text('wrap_pw');
+        $keyChk = post_text('key_check');
         $newIter = (int)($_POST['new_iter'] ?? 0);
         // Gespeicherte Pruefsumme des Inhaltsschluessels (NULL bei Altbestand)
         $chkSoll = $u['pat_key_check'] ?? null;
@@ -729,7 +729,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                       ? ' Bis ' . fmt_local($bis, 'H:i') . ' Uhr nimmt der Server keine Eingabe von dir an.'
                       : ' Bitte später erneut versuchen.');
         } else {
-            $koppelCode = pair_code_normalisieren((string)($_POST['code'] ?? ''));
+            $koppelCode = pair_code_normalisieren(post_text('code'));
             if (!preg_match(PAIR_RE, $koppelCode)) {
                 $error = 'Ein Code hat ' . PAIR_LEN . ' Zeichen; 0, O, 1 und I kommen darin '
                        . 'nicht vor. Bitte vergleiche mit der Anzeige auf dem Gerät.';
@@ -791,7 +791,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         /* Nachsehen statt `rowCount()`: Ein UPDATE auf denselben Namen trifft
          * die Zeile und zaehlt trotzdem 0. */
         $gid = (int)($_POST['id'] ?? 0);
-        $lbl = mb_substr(trim($_POST['label'] ?? ''), 0, 120);
+        $lbl = mb_substr(trim(post_text('label')), 0, 120);
         if (!$geraetDa($gid)) {
             $error = $geraetFehlt;
         } else {
@@ -877,7 +877,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     };
     if ($action === 'base_save') {
-        $n = mb_substr(trim($_POST['name'] ?? ''), 0, 120);
+        $n = mb_substr(trim(post_text('name')), 0, 120);
         $bid = (int)($_POST['id'] ?? 0);
         /* Optionale Koordinate. Die Regeln — nur zusammen, ausserhalb
          * des Bereichs leer, Komma zulaessig — stehen an EINER
@@ -1381,6 +1381,7 @@ if ($tab === 'geraete') {
            FROM devices
           WHERE user_id = ? AND ' . GERAETE_ECHT_SQL . ' ORDER BY created_at';
     $devFelder = 'id, device_id, label, active, last_seen, created_at,
+                  TIMESTAMPDIFF(HOUR, last_seen, NOW()) AS seit_h,
                   geraet_art, geraet_modell, geraet_teil,
                   (created_at > DATE_SUB(NOW(), INTERVAL ? DAY)) AS ist_neu';
     try {
@@ -3275,13 +3276,22 @@ ui_seite_start(['titel' => 'Einstellungen',
                Laden im Markup, jedes mit seiner einen Bedeutung, und der
                Schalter blendet nur um. Daneben der Anmeldename, verborgen und
                als `username` gekennzeichnet: Ohne ihn weiß ein Verwalter
-               nicht, welcher seiner Einträge zu diesem Passwort gehört. */ ?>
-      <div id="bpwkfeld" hidden>
+               nicht, welcher seiner Einträge zu diesem Passwort gehört.
+
+               EIN EIGENES FORMULAR (Backlog Nr. 430, BR5-07). Bis Web 23.7.1
+               standen alle drei Felder ohne `<form>`; Bitwarden fasste sie zu
+               einem Pseudo-Formular zusammen, sah `current-password` neben
+               zwei `new-password` und hielt es für einen Passwortwechsel — das
+               Menü am Feld zeigte „No items to show". Jetzt stehen Anmeldename
+               und Kontopasswort allein in einem Formular, die beiden Felder
+               für ein eigenes Passwort außerhalb. Abgeschickt wird es nie:
+               Enter löst „Backup erstellen" aus (Skript unten). */ ?>
+      <form id="bpwkfeld" hidden>
         <input type="text" name="username" autocomplete="username" hidden readonly
                value="<?= e($userEmail) ?>">
         <?php ui_feld(['label' => 'Kontopasswort', 'id' => 'bpwk', 'name' => 'password',
                        'art' => 'password', 'attr' => ' autocomplete="current-password"']); ?>
-      </div>
+      </form>
       <div id="bpw1feld">
       <?php ui_feld(['label' => 'Passwort für das Backup', 'id' => 'bpw1',
                      'name' => 'backup_passwort',
@@ -3721,6 +3731,17 @@ ui_seite_start(['titel' => 'Einstellungen',
       bpw1.value = '';
       bpw2.value = '';
       expState.textContent = '';
+    });
+    /* Das Formular des Kontopassworts (Nr. 430) geht nie an den Server:
+       Enter darin heißt „Backup erstellen". Über die Taste und nicht nur
+       über `submit`: Ein Formular ohne Absendeknopf mit zwei Feldern (der
+       verborgene Anmeldename zählt mit) schickt bei Enter gar nicht ab. */
+    const bpwkForm = document.getElementById('bpwkfeld');
+    bpwkForm.addEventListener('submit', (ev) => { ev.preventDefault(); });
+    bpwkForm.addEventListener('keydown', (ev) => {
+      if (ev.key !== 'Enter') { return; }
+      ev.preventDefault();
+      document.getElementById('expbtn').click();
     });
 
     /** Prüft das eingegebene Passwort und liefert es zurück — oder null. */
@@ -5054,6 +5075,89 @@ ui_seite_start(['titel' => 'Einstellungen',
           . 'hier; danach kann es nichts mehr hochladen.', null, 'warn', '      '); ?>
     <?php endif; ?>
 
+    <?php /* ---- DAS SCHLÜSSELPAAR DES KONTOS, VON HAND (Nr. 392, E-BR5-08) ----
+             Es entsteht still nach der Anmeldung (`unlock.js`). Fehlt es
+             trotzdem — die Anmeldung lag vor Web 23.7.0 und die erste Seite
+             wurde zu schnell verlassen, oder der Inhaltsschlüssel war in den
+             zehn Minuten der Anlegemarke nicht entsperrt —, steht hier der
+             Weg dazu: Passwort, Inhaltsschlüssel mit der Wache gegen
+             `pat_key_check` (`EdSchluessel.oeffnen()`), Paar im Browser,
+             derselbe Endpunkt. Nur, solange keines da ist; ersetzen lässt
+             sich ein Paar nicht (`kp_ablegen()`). Vorhandene Bausteine: eine
+             Karte mit Zeile und Knopf, der Dialog wie „Rückweg erneuern". */ ?>
+    <?php require_once __DIR__ . '/kontopaar_lib.php';
+          $kpGer = kp_zustand((int)$userId)['stand']; ?>
+    <?php if ($kpGer === 'fehlt'): ?>
+      <?php ui_karte_start(['titel' => 'Schlüsselpaar des Kontos', 'id' => 'kontopaar']); ?>
+        <?php ui_zeile(['text' => 'Schlüssel für Uhr und Handy',
+                        'klein' => 'Damit verschließen Uhr und Handy GPS-Daten und Ortsangaben. '
+                                 . 'Ohne ihn senden sie nicht.',
+                        'plaketten' => ui_plakette('fehlt', ['ton' => 'orange'])]); ?>
+        <div class="listen-form-fuss">
+          <?= ui_knopf(['text' => 'Schlüsselpaar einrichten', 'art' => 'primaer', 'typ' => 'button',
+                        'attr' => ' data-kp-auf']) ?>
+        </div>
+      <?php ui_karte_ende(); ?>
+      <dialog class="dialog" id="dlg-kontopaar">
+        <div class="dialog-kopf">
+          <h2>Schlüsselpaar einrichten</h2>
+          <p class="feld-hinweis">Konto-Sicherheit</p>
+        </div>
+        <div class="dialog-inhalt">
+          <p>Das Schlüsselpaar entsteht in deinem Browser. Dafür brauchen wir
+             einmal dein Passwort.</p>
+          <?php ui_feld(['id' => 'kp-pw', 'label' => 'Passwort', 'art' => 'password',
+                         'attr' => ' autocomplete="current-password"',
+                         'klein' => 'Der Server erhält den öffentlichen Teil und den mit '
+                                  . 'deinem Schlüssel verpackten privaten.']); ?>
+          <p class="meldung meldung-fehler" data-kp-fehler role="alert" hidden></p>
+        </div>
+        <div class="dialog-fuss">
+          <?= ui_knopf(['text' => 'Abbrechen', 'art' => 'leise', 'typ' => 'button',
+                        'attr' => ' data-kp-zurueck']) ?>
+          <?= ui_knopf(['text' => 'Einrichten', 'art' => 'primaer', 'typ' => 'button',
+                        'attr' => ' data-kp-einrichten']) ?>
+        </div>
+      </dialog>
+      <?php ui_krypto_bootstrap(['skripte' => ['assets/crypto.js'], 'keycheck' => true,
+                                 'einzug' => '      ']); ?>
+      <script src="<?= asset('assets/schluessel.js') ?>"></script>
+      <script src="<?= asset('assets/kontopaar.js') ?>"></script>
+      <script<?= kopf_nonce_attr() ?>>
+      (() => {
+        const dlg = document.getElementById('dlg-kontopaar');
+        const knopf = document.querySelector('[data-kp-auf]');
+        if (!dlg || !knopf) { return; }
+        const feldPw = dlg.querySelector('#kp-pw');
+        const fehler = dlg.querySelector('[data-kp-fehler]');
+        const los = dlg.querySelector('[data-kp-einrichten]');
+        const melde = (text) => { fehler.textContent = text; fehler.hidden = text === ''; };
+        knopf.addEventListener('click', () => { melde(''); feldPw.value = ''; dlg.showModal(); feldPw.focus(); });
+        dlg.querySelector('[data-kp-zurueck]').addEventListener('click', () => dlg.close());
+        los.addEventListener('click', async () => {
+          if (feldPw.value === '') { melde('Bitte das Passwort eingeben.'); return; }
+          melde('');
+          los.disabled = true;
+          try {
+            const { ck, token } = await EdSchluessel.oeffnen({
+              pw: feldPw.value, salt: KDF_SALT, iter: KDF_ITER, wrapPw: PAT_WRAP,
+              keyCheck: typeof PAT_KEY_CHECK !== 'undefined' ? PAT_KEY_CHECK : null,
+              anteile: typeof KONTO_ANTEILE !== 'undefined' ? KONTO_ANTEILE : null,
+            });
+            feldPw.value = '';
+            if (!(await EdKontopaar.anlegen(ck, token))) {
+              throw new Error('Das Schlüsselpaar ließ sich nicht einrichten. Bitte später erneut.');
+            }
+            location.href = 'einstellungen.php?t=geraete';
+          } catch (e) {
+            melde(e && e.message ? e.message : 'Das Schlüsselpaar ließ sich nicht einrichten.');
+            los.disabled = false;
+          }
+        });
+      })();
+      </script>
+    <?php endif; ?>
+
     <?php /* ---- Die Karte „Gerät koppeln" in drei Zuständen ----
              „Gerät koppeln", nicht „Uhr koppeln": Die Handy-App koppelt
              über denselben Weg — und die Liste darunter sagt „Handy". Eine
@@ -5234,7 +5338,7 @@ ui_seite_start(['titel' => 'Einstellungen',
         </form>
         <form method="post" id="f-devdel-<?= $did ?>" class="nur-vorlesen"
               action="einstellungen.php?t=geraete"
-              data-confirm="Gerät „<?= e($d['label'] ?? $d['device_id']) ?>“ wirklich entkoppeln? Es kann danach nichts mehr hochladen; bereits hochgeladene Daten bleiben erhalten."
+              data-confirm="<?= e(geraet_entkoppeln_frage($d, 'Gerät „' . ($d['label'] ?? $d['device_id']) . '“ wirklich entkoppeln? Es kann danach nichts mehr hochladen; bereits hochgeladene Daten bleiben erhalten.')) ?>"
               data-confirm-ok="Entkoppeln">
           <?= csrf_field() ?><input type="hidden" name="action" value="delete">
           <input type="hidden" name="id" value="<?= $did ?>">
@@ -5371,9 +5475,15 @@ ui_seite_start(['titel' => 'Einstellungen',
             <span class="akkordeon-text">Ohne Play Store: APK von Hand</span>
           </summary>
           <?php foreach ($apks as $apk): ?>
+            <?php /* WELCHES GERÄT, IM TITEL (Nr. 361, 432, E-BR5-09). Bis
+                     Web 23.7.2 hießen beide Zeilen „NAdoku 0.18.2“; welche die
+                     Wear-OS-Uhr war, zeigte erst der Dateiname nach dem
+                     Herunterladen. Die Fassung steht jetzt in der Kleinzeile. */ ?>
             <?php ui_zeile([
-                'text'  => 'NAdoku' . ($apk['version'] !== null ? ' ' . $apk['version'] : ''),
-                'klein' => 'APK · ' . groesse_text($apk['groesse'])
+                'text'  => apk_titel($apk),
+                'klein' => ($apk['geraet'] !== null && $apk['version'] !== null
+                              ? 'Fassung ' . $apk['version'] . ' · ' : '')
+                         . 'APK · ' . groesse_text($apk['groesse'])
                          . ' · Stand ' . datum_text(gmdate('Y-m-d H:i:s', $apk['stand'])),
                 'aktionen' => ui_knopf(['text' => 'Herunterladen', 'art' => 'leise',
                     'href' => 'apk.php?d=' . rawurlencode($apk['datei'])]),

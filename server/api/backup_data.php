@@ -53,7 +53,7 @@ const BACKUP_EINTRAEGE_MAX = 1000;
 api_methode('GET');
 
 try {
-    $teil = (string)($_GET['teil'] ?? '');
+    $teil = get_text('teil');
     if ($teil === 'kopf') {
         $out = edbak_build($userId, true, ['kopf' => true]);
     } elseif ($teil === 'eintraege') {

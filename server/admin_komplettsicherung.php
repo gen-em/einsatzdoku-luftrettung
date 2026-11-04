@@ -37,7 +37,7 @@ $notice = null; $error = null;
 
 /* ---- Download: läuft VOR jeder Ausgabe und endet mit exit ---------------- */
 if ($_SERVER['REQUEST_METHOD'] === 'POST'
-    && (string)($_POST['action'] ?? '') === 'herunterladen') {
+    && post_text('action') === 'herunterladen') {
     /* EIN FRISCHER CODE VOR JEDEM DOWNLOAD — vor dem Token wie ein
      * Rollentor. Beide Arten: Die Passphrase waehlt, wer herunterlaedt, und
      * eine uebernommene Sitzung bekaeme mit ihr denselben Abzug aller Konten
@@ -45,9 +45,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST'
      * und der Abzug enthaelt mehr. */
     zweitfaktor_frisch_verlangen('komplett_herunterladen');
     csrf_check();
-    $datei = (string)($_POST['datei'] ?? '');
-    $art   = (string)($_POST['art'] ?? 'klar');
-    $pw    = (string)($_POST['passphrase'] ?? '');
+    $datei = post_text('datei');
+    $art   = post_text('art', 'klar');
+    $pw    = post_text('passphrase');
     $pfad  = komp_wurzel() . '/' . $datei;
     $kopfDl = komp_name_gueltig($datei) && is_file($pfad) ? komp_kopf_lesen($pfad) : null;
     if (!komp_name_gueltig($datei) || !is_file($pfad)) {
@@ -120,7 +120,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST'
  * bleibt, wie er ist. */
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && $error === null) {
     csrf_check();
-    $aktion = (string)($_POST['action'] ?? '');
+    $aktion = post_text('action');
 
     if ($aktion === 'jetzt_sichern' || $aktion === 'fortsetzen') {
         if ($aktion === 'jetzt_sichern') {
@@ -181,7 +181,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $error === null) {
         header('Location: admin_komplettsicherung.php');
         exit;
     } elseif ($aktion === 'regeln') {
-        $plan = (string)($_POST['plan'] ?? 'aus');
+        $plan = post_text('plan', 'aus');
         $auf  = (int)($_POST['aufbewahrung'] ?? 0);
         $ok = komp_plan_setzen($plan);
         $ok = komp_aufbewahrung_setzen($auf) && $ok;
@@ -194,7 +194,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $error === null) {
         header('Location: admin_komplettsicherung.php');
         exit;
     } elseif ($aktion === 'stand_loeschen') {
-        $datei = (string)($_POST['datei'] ?? '');
+        $datei = post_text('datei');
         $geloescht = komp_loeschen($datei);
         if ($geloescht) {
             require_once __DIR__ . '/protokoll_lib.php';

@@ -10,7 +10,8 @@
  *                  Ein frisches Konto (Passwort im Browser gesetzt, mit
  *                  Schlüsselhülle) meldet sich an: Das Paar entsteht still,
  *                  ein Protokolleintrag, keine Mail. Die zweite Anmeldung
- *                  lässt es stehen. Der Endpunkt weist ohne Token, mit
+ *                  lässt es stehen. Der Endpunkt weist ein Ersetzen ohne
+ *                  Token (die Anlege-Marke erlaubt es nie), eines mit
  *                  falschem Token, ohne `ersetzen` bei vorhandenem Paar und
  *                  mit einer fremden Kurve ab; ein Fehlversuch zählt im Topf
  *                  `login`, eine Sperre dort hält ihn auf. Mit
@@ -36,7 +37,7 @@ import { execFileSync } from 'node:child_process';
 import { php, probekontoRaeumen, eigenerKontext, passwortSchicken, passwortSetzen, WURZEL }
   from '../probekonto.mjs';
 
-const ADRESSE  = 'bedienprobe-rueckweg@probe.invalid';
+const ADRESSE  = 'bedienprobe-rueckweg@probe.pruefung';
 /* Das Passwort des Demo-Kontos ist öffentlich; der Läufer nimmt es aus
    `--demo-pw` mit derselben Vorgabe. Gebraucht wird es, damit die Sperre
    des Demo-Kontos mit einem GÜLTIGEN Token gemessen wird — mit einem
@@ -93,7 +94,11 @@ function anfrage(s, art, passwort) {
     } else if (art === 'falsch') {
       k.token = '0'.repeat(64);
     }
-    if (art === 'falsch' || art === 'fremdeKurve' || art === 'ersetzen') { k.ersetzen = 1; }
+    /* `ohne` ERSETZT: Seit Web 23.7.0 gilt nach der Anmeldung zehn Minuten
+     * die Anlege-Marke (E-BR5-08), und ein Anlegen ohne Token kommt damit
+     * durch — bei vorhandenem Paar mit 409. Abgewiesen wird ohne Token das,
+     * was die Marke nie erlaubt: das Ersetzen (403). */
+    if (art === 'ohne' || art === 'falsch' || art === 'fremdeKurve' || art === 'ersetzen') { k.ersetzen = 1; }
     const a = await EdApi.postJson('api/rueckweg_anlegen.php', k);
     return a.status;
   }, { art, passwort });
@@ -104,7 +109,7 @@ export const wege = [
     name: 'einstellungen-profil-rueckweg',
     paket: 'RW-02', punkt: 'E-RW-02', rolle: 'demo',
     soll: 'Paar 0 → 1 (angelegt +1, Mails +0), zweite Anmeldung unverändert; '
-        + 'ohne Token 403, falsches Token 403, vorhanden 409, fremde Kurve 400, '
+        + 'ersetzen ohne Token 403, falsches Token 403, vorhanden 409, fremde Kurve 400, '
         + 'Fehlversuch zählt, Sperre 429; Karte „eingerichtet", Erneuern mit '
         + 'Passwort (erneuert +1, Mails +1); Demo 403/403, kein Paar',
     async fahren(k) {
@@ -153,7 +158,7 @@ export const wege = [
         const st3 = stand(id);
         merke(ohne === 403 && falsch === 403 && da === 409 && kurve === 400
               && st3.rw_oeffentlich === st1.rw_oeffentlich,
-          `ohne Token ${ohne}, falsches Token ${falsch}, vorhanden ${da}, fremde Kurve ${kurve}, `
+          `ersetzen ohne Token ${ohne}, falsches Token ${falsch}, vorhanden ${da}, fremde Kurve ${kurve}, `
           + `Paar ${st3.rw_oeffentlich === st1.rw_oeffentlich ? 'unverändert' : 'VERÄNDERT'}`);
 
         /* 5. Der Topf `login`: Der Fehlversuch aus 4 zählt unter dem Konto,

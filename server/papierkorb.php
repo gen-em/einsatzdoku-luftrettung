@@ -21,7 +21,7 @@ require_once __DIR__ . '/format_lib.php';   // datum_text(), datum_zeit_text()
  * eine eigene Adresse, die man zurueckgehen kann.
  */
 
-$action = (string)($_POST['action'] ?? $_GET['action'] ?? '');
+$action = post_text('action', get_text('action'));
 $dayId  = (int)($_POST['d'] ?? $_GET['d'] ?? 0);
 $id     = (int)($_POST['id'] ?? $_GET['id'] ?? 0);
 $isPost = $_SERVER['REQUEST_METHOD'] === 'POST';

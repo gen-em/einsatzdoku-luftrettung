@@ -90,6 +90,47 @@ const EdCrypto = (() => {
     };
   }
 
+  /* ---- Die Anmelde-Token: Salz holen, je Rundenzahl ableiten ------------
+   *
+   * EINE STELLE FUER BEIDE PASSWORTSEITEN (Backlog Nr. 358, BR5-04). Die
+   * Anmeldung (`login.php`) und der Notzugang (`zweitfaktor_notweg.php`)
+   * trugen dieselben zwanzig Zeilen je als eigene Kopie: Salz holen, 429 und
+   * Fehler abfangen, fuer jede genannte Rundenzahl `deriveKeys()`.
+   *
+   * WAS ZURUECKKOMMT: `{ tokens, haelften }` — je Rundenzahl das Token (geht
+   * zum Server) und die PBKDF2-Haelfte (bleibt hier; nur die Anmeldung legt
+   * sie ins Vormerkfach). WAS GEWORFEN WIRD: ein Fehler mit `status` (429
+   * oder der HTTP-Code) und, bei 429, der `meldung` des Servers. Die Texte
+   * fuer den Menschen schreibt die Seite selbst — sie unterscheiden sich
+   * („Anmeldung derzeit nicht möglich" gegen „Der Notzugang ist gerade nicht
+   * erreichbar").
+   *
+   * Der Salz-Endpunkt nennt jeder Adresse dieselbe Liste von Rundenzahlen —
+   * er darf nicht verraten, welche fuer dieses Konto gilt. Der Browser rechnet
+   * deshalb fuer alle; der Server nimmt das passende Token. */
+  async function anmeldeTokens(email, passwort) {
+    const r = await fetch('auth_salt.php', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email })
+    });
+    if (!r.ok) {
+      const d = r.status === 429 ? await r.json().catch(() => ({})) : {};
+      const f = new Error('auth_salt ' + r.status);
+      f.status = r.status;
+      f.meldung = d.meldung || '';
+      throw f;
+    }
+    const d = await r.json();
+    const runden = Array.isArray(d.iter) && d.iter.length ? d.iter : [310000];
+    const tokens = {}, haelften = {};
+    for (const it of runden) {
+      const k = await deriveKeys(passwort, d.salt, it);
+      tokens[it] = k.authToken;
+      haelften[it] = k.haelfteHex;
+    }
+    return { tokens, haelften };
+  }
+
   /* ---- Der Server-Anteil ------------------------------------------------
    *
    * ZWEI ZUTATEN. Zwischen der ersten Haelfte der PBKDF2-Ableitung und dem
@@ -1106,7 +1147,7 @@ const EdCrypto = (() => {
     } catch (e) { return null; }
   }
 
-  return { deriveKeys, encrypt, decrypt, randomHex,
+  return { deriveKeys, anmeldeTokens, encrypt, decrypt, randomHex,
            /* Server-Anteil und Hüllen */
            datenschluessel, datenschluesselZu,
            huelleOeffnen, huelleBauen, huelleKennung,

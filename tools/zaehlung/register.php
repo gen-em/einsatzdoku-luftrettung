@@ -492,20 +492,21 @@ return [
  'grund' => 'EdHtml.meldung(ton, text) in assets/html.js. Gemessen in der Sicht '
           . 'js_und_inline — eine breite Suche ueber den Quelltext zaehlt das '
           . 'PHP-Markup mit (35 Erwaehnungen in 15 Dateien) und misst etwas anderes. '
-          . 'VIER BLEIBEN. Zwei sind die Zentrale selbst (html.js, zwei '
+          . 'ZWEI BLEIBEN, und das ist die Zentrale selbst (html.js, zwei '
           . 'Treffer in einer Funktion: Tonklasse und Aktionszeile). Seit R4-13 '
           . 'zaehlt das Muster auch die ZUWEISUNG className = ...meldung: '
           . 'schneiden.js (melde()) und unlock.js bauten ihre Meldung so, ohne '
           . 'Symbol, und das Muster sah sie nicht (F-R4-42); beide fuellen '
           . 'jetzt leere Behaelter ueber EdHtml.meldung() (Nr. 271, 272). Die '
-          . 'erweiterte Zeile fand zwei weitere, und die bleiben bis Nr. 346: '
-          . 'patient.js (patwarn — ohne Symbol, weil symbol.js dort beim '
-          . 'Aufbau noch fehlen kann) und index.php (der Papierkorb-Hinweis '
-          . 'des Diensttags als p). Mit dem Muster von vor R4-13 gemessen: 2.',
+          . 'erweiterte Zeile fand zwei weitere: patient.js (patwarn) und '
+          . 'index.php (der Papierkorb-Hinweis des Diensttags als p); beide '
+          . 'fuellen seit Web 23.7.1 ebenfalls leere Behaelter (Nr. 346, BR5-06). '
+          . 'Die Begruendung „symbol.js fehlt beim Aufbau“ war veraltet '
+          . '(F-BR5-08).',
  'sicht' => 'js_und_inline', 'bereich' => 'js_und_inline', 'ausser' => [],
  'regel' => ['art' => 'muster',
              'muster' => '~class\s*=\s*[\'"\\\\]{0,3}meldung|className\s*=[^;\n]*[\'"]meldung\b~'],
- 'start' => 8, 'decke_jetzt' => 4, 'decke_ziel' => 0],
+ 'start' => 8, 'decke_jetzt' => 2, 'decke_ziel' => 2],
 
 /* ---- Uebergabe an 10c --------------------------------------------------- */
 
@@ -624,6 +625,29 @@ return [
           . 'und in der Reiterliste, wo sie fehlte.',
  'sicht' => 'php_mit_zeichenketten', 'bereich' => 'php', 'ausser' => [],
  'regel' => ['art' => 'eigen', 'name' => 'protokoll_arten'],
+ 'start' => 2, 'decke_jetzt' => 0, 'decke_ziel' => 0],
+
+
+/* ---- Formularfelder lesen ----------------------------------------------- */
+
+['kennung' => 'Z47', 'paket' => 'BR5-03',
+ 'beschreibung' => 'Formularfeld per (string) gelesen statt post_text()/get_text()',
+ 'grund' => 'Nr. 355 (E-BR5-06): aus feld[]=x machte (string) den Text Array, mit '
+          . 'einer Warnung im Reiter System je Stelle und Anfrage; ohne Cast an '
+          . 'eine string-Funktion war es eine 500. Start 149 = 125 $_POST und 24 '
+          . '$_GET, gezaehlt am 03.11.2026 mit dieser Regel.',
+ 'sicht' => 'php_ohne_zeichenketten', 'bereich' => 'php',
+ 'ausser' => ['server/eingabe_lib.php'],
+ 'regel' => ['art' => 'muster', 'muster' => '~\(string\)\s*\(?\s*\$_(?:POST|GET)\s*\[~'],
+ 'start' => 149, 'decke_jetzt' => 0, 'decke_ziel' => 0],
+
+['kennung' => 'Z48', 'paket' => 'BR5-03',
+ 'beschreibung' => 'eigene Huelle is_string($_POST[…]) ausserhalb eingabe_lib.php',
+ 'grund' => 'Nr. 355: registrieren.php und zweitfaktor_notweg.php trugen je eine '
+          . 'lokale Huelle $feld, die das Gleiche tat wie post_text(). Start 2.',
+ 'sicht' => 'php_ohne_zeichenketten', 'bereich' => 'php',
+ 'ausser' => ['server/eingabe_lib.php'],
+ 'regel' => ['art' => 'muster', 'muster' => '~is_string\(\s*\$_(?:POST|GET)\s*\[~'],
  'start' => 2, 'decke_jetzt' => 0, 'decke_ziel' => 0],
 
 ];

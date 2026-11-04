@@ -148,8 +148,11 @@ async function weg(browser, rolle) {
   const s = await kontext.newPage();
   const fehler = [];
   s.on('pageerror', e => fehler.push(e.message));
-  let mailVorher = 0;
-  if (lokal) { mailVorher = Number(php('echo (int)db()->query("SELECT COALESCE(MAX(id), 0) FROM mail_warteschlange")->fetchColumn();')); }
+  let mailVorher = 0, peVorher = 0;
+  if (lokal) {
+    mailVorher = Number(php('echo (int)db()->query("SELECT COALESCE(MAX(id), 0) FROM mail_warteschlange")->fetchColumn();'));
+    peVorher = Number(php('echo (int)db()->query("SELECT COALESCE(MAX(id), 0) FROM protokoll_ereignisse")->fetchColumn();'));
+  }
   /* Die Anlage des Paars kommt auf der ersten Seite mit Rüstzeug nach dem
    * Anmelden (NutzerIn) bzw. nach dem Tor (BetreiberIn) — erwartet ab jetzt. */
   const anlage = s.waitForResponse(r => r.url().includes('/api/rueckweg_anlegen.php'),
@@ -252,7 +255,13 @@ async function weg(browser, rolle) {
         (SELECT COUNT(*) FROM totp_codes WHERE user_id = ${id}) AS codes,
         (SELECT COUNT(*) FROM protokoll_ereignisse WHERE art = 'totp_zurueckgesetzt' AND betroffen_user_id = ${id}
            AND JSON_UNQUOTE(JSON_EXTRACT(daten, '$.weg')) = 'schluessel') AS protokoll,
-        (SELECT COUNT(*) FROM mail_warteschlange WHERE id > ${mailVorher} AND schluessel = 'totp_zurueckgesetzt') AS mails
+        (SELECT COUNT(*) FROM mail_warteschlange WHERE id > ${mailVorher} AND schluessel = 'totp_zurueckgesetzt')
+        /* Die Adresse liegt unter example.invalid: Seit Nr. 450 wird die
+           Mail nicht eingereiht, sondern als „nicht eingereiht“ protokolliert
+           (mail_reserviert, Vorlage totp_zurueckgesetzt) — derselbe Beleg,
+           dass der Mailweg genommen wurde, ohne dass etwas hinausgeht. */
+        + (SELECT COUNT(*) FROM protokoll_ereignisse WHERE id > ${peVorher} AND art = 'mail_reserviert'
+             AND JSON_UNQUOTE(JSON_EXTRACT(daten, '$.vorlage')) = 'totp_zurueckgesetzt') AS mails
         FROM users WHERE id = ${id}")->fetch(PDO::FETCH_ASSOC));`));
       /* `totp_geheimnis` nur bei der NutzerIn: Das Einrichtungstor legt für
          die BetreiberIn sofort ein neues an — eine angefangene Einrichtung,

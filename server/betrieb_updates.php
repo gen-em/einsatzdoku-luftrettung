@@ -417,15 +417,25 @@ ui_seite_start(['titel' => 'Updates']);
                          . 'Fassung ein Gerät fährt, steht auf der Sync-Seite '
                          . 'der Uhr.',
                 'plaketten' => ui_plakette('ohne Mindeststand', ['ton' => 'neutral'])]);
+      /* ZWEI ZEILEN, JE MIT DER DATEI IHRES GERÄTS (Nr. 361, E-BR5-09,
+       * F-BR5-05). Bis Web 23.7.2 nahm „Android-App“ die zuletzt abgelegte
+       * Datei — und das war oft die der Wear-OS-Uhr, deren Fassung und Stand
+       * dann hier standen. Eine Datei ohne Gerät (Altbestand) zählt zum Handy. */
       require_once __DIR__ . '/apk_lib.php';
-      $apk  = apk_liste();
-      $apkV = $apk ? ($apk[0]['version'] ?? null) : null;
-      ui_zeile(['text' => 'Android-App',
-                'klein' => $apk
-                    ? 'APK auf dem Server, Stand '
-                      . datum_text(gmdate('Y-m-d H:i:s', (int)$apk[0]['stand']))
-                    : 'kein APK auf dem Server — die App kommt über den Store',
-                'plaketten' => ui_plakette($apkV ?? '—', ['ton' => 'neutral'])]);
+      $apks = apk_liste();
+      foreach (['handy' => 'Android-App (Handy)', 'uhr' => 'Wear-OS-App'] as $geraet => $titel) {
+          $apk = null;
+          foreach ($apks as $a) {
+              if (($a['geraet'] ?? null) === $geraet
+                  || ($geraet === 'handy' && ($a['geraet'] ?? null) === null)) { $apk = $a; break; }
+          }
+          ui_zeile(['text' => $titel,
+                    'klein' => $apk !== null
+                        ? 'APK auf dem Server, Stand '
+                          . datum_text(gmdate('Y-m-d H:i:s', (int)$apk['stand']))
+                        : 'kein APK auf dem Server — die App kommt über den Store',
+                    'plaketten' => ui_plakette($apk['version'] ?? '—', ['ton' => 'neutral'])]);
+      }
     ?>
     <p class="feld-hinweis"><a href="hilfe.php#12-3-updates">Handbuch: Updates</a></p>
   <?php ui_karte_ende(); ?>

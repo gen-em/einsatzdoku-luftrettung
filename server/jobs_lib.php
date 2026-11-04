@@ -517,10 +517,20 @@ function jobs_einen_lauf(string $name, array $job, string $ausloeser,
          * Job und verschwindet auf dem Weg zur Ausgabe. */
         $geloeschtDateien = (int)($e['geloescht_dateien'] ?? 0);
     } catch (Throwable $ex) {
-        $fehler = get_class($ex) . ': ' . $ex->getMessage();
+        /* NUR DIE MELDUNG, BEREINIGT (Backlog Nr. 357, E-BR5-16). Bis
+         * Web 23.6.3 stand hier `get_class($ex) . ': ' . …` — und das ging
+         * nach `letzter_fehler`, in den Verlauf und in den Bericht, also auf
+         * die Karten „Jobs" und „Schlüssel des Servers": „RuntimeException:
+         * …" ist Technik, keine Auskunft, und eine PDOException traegt den
+         * Datenbanknamen. Die Klasse samt Datei und Zeile steht jetzt im
+         * Reiter System — dorthin geht die AUSNAHME, nicht mehr ihr Text;
+         * bis dahin stand sie nirgends, weil `system_melden()` aus einem Text
+         * keine Klasse lesen kann (F-BR5-03). */
+        $fehler = system_bereinigen($ex->getMessage());
+        if ($fehler === '') { $fehler = 'ohne Meldung abgebrochen'; }
         // Still gegenueber der Anfrage — die Wartung darf keine Seite
         // kaputtmachen —, aber nachlesbar, und ab jetzt auch sichtbar.
-        system_melden('jobs', '„' . $name . '" fehlgeschlagen', (string)$fehler);
+        system_melden('jobs', '„' . $name . '" fehlgeschlagen', $ex);
     }
 
     /* Rueckstand fuer die Anzeige — MIT DEM FRISCHEN ZUSTAND.

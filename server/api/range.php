@@ -20,8 +20,8 @@ require_once __DIR__ . '/../mission_fields_lib.php';   // mf_spalten_sql()
  * niemand aussprechen wollte. */
 api_methode('GET');
 
-$jahr  = (string)($_GET['y'] ?? '');
-$monat = (string)($_GET['m'] ?? '');
+$jahr  = get_text('y');
+$monat = get_text('m');
 if (!preg_match('/^\d{4}$/', $jahr)) { json_out(['error' => 'Ungültiges Jahr'], 400); }
 /* Der Wertebereich zaehlt, nicht nur die Ziffernzahl.
  *

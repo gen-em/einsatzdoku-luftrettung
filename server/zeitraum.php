@@ -15,8 +15,8 @@ require_once __DIR__ . '/diensttag_lib.php';   // dt_art_symbole() fuer die Tabe
  * Inhaltsschluessel gesperrt ist.
  */
 
-$jahr  = (string)($_GET['y'] ?? '');
-$monat = (string)($_GET['m'] ?? '');
+$jahr  = get_text('y');
+$monat = get_text('m');
 if (!preg_match('/^\d{4}$/', $jahr)) { header('Location: index.php'); exit; }
 /* NUR 01 BIS 12 — dieselbe Pruefung wie `api/range.php`.
  * Ein ungueltiger Monat (`m=13`, 00 oder 99) gilt als keiner — die Seite

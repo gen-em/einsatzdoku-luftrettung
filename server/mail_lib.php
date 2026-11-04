@@ -829,6 +829,33 @@ function mail_praefix(): string
     return $p;
 }
 
+/** Die reservierten Namen aus RFC 2606 und 6761, die nie Post annehmen. */
+const MAIL_RESERVIERTE_DOMAINS = ['invalid', 'test', 'example', 'localhost'];
+
+/**
+ * Liegt die Adresse unter einer reservierten Domain? Dann die Endung
+ * (`.invalid` …), sonst `null`. Backlog Nr. 450.
+ */
+function mail_domain_reserviert(string $adresse): ?string
+{
+    $domain = strtolower(rtrim((string)substr(strrchr($adresse, '@') ?: '', 1), '.'));
+    $endung = (string)substr(strrchr('.' . $domain, '.') ?: '', 1);
+    return in_array($endung, MAIL_RESERVIERTE_DOMAINS, true) ? '.' . $endung : null;
+}
+
+/**
+ * Der Nachsatz fuer eine Seite, die „nicht verschickt" meldet — leer, wenn
+ * die Adresse nicht unter einer reservierten Domain liegt (Nr. 450,
+ * E-BR5-12). Ohne ihn saehe eine Einladung an `…@example.invalid` aus wie ein
+ * kaputter Mailserver.
+ */
+function mail_reserviert_satz(string $adresse): string
+{
+    $d = mail_domain_reserviert($adresse);
+    return $d === null ? '' : ' Die Adresse liegt unter der reservierten Domain ' . $d
+        . ', die nie Post annimmt.';
+}
+
 /**
  * Eine Nachricht einreihen UND sofort versuchen — oder nur einreihen.
  *
@@ -887,6 +914,27 @@ function mail_einreihen(string $schluessel, string $empfaenger, array $daten = [
         return MAIL_ABGELEHNT;
     }
 
+    /* RESERVIERTE DOMAINS GAR NICHT ERST (Backlog Nr. 450, E-BR5-12) — hinter
+     * der SMTP-Frage, damit eine Anlage ohne Mailserver keinen Eintrag fuer
+     * eine Mail schreibt, die ohnehin nie ginge. Unter
+     * `.invalid`, `.test`, `.example` und `.localhost` (RFC 2606, 6761)
+     * nimmt nirgends ein Mailserver Post an; `filter_var()` haelt sie
+     * trotzdem fuer gueltig. Stufe 2 legt je Lauf Konten unter
+     * `…@example.invalid` an, und jede Einladung lief auf Staging die
+     * ganze Leiter durch und fuellte den Reiter System mit Mailfehlern.
+     * Statt einer Stoerung ein Eintrag im Reiter E-Mail — OHNE die
+     * Adresse, wie jede Zeile dort (`protokoll_quellen()`). Die Rueckgabe
+     * bleibt `MAIL_ABGELEHNT`: Fuer jeden Aufrufer heisst das schon
+     * „nicht verschickt", und die Einladungsseite zeigt dann den Link. */
+    $reserviert = mail_domain_reserviert($empfaenger);
+    if ($reserviert !== null) {
+        require_once __DIR__ . '/protokoll_lib.php';
+        protokoll('email', 'mail_reserviert',
+                  'Nicht eingereiht: Adresse unter der reservierten Domain ' . $reserviert,
+                  ['vorlage' => $schluessel, 'domain' => $reserviert]);
+        return MAIL_ABGELEHNT;
+    }
+
     $betreff = mail_praefix() . ($e['betreff'])($daten);
     $text    = ($e['text'])($daten);
     $frist   = $e['frist'] === null ? null : gmdate('Y-m-d H:i:s', time() + (int)$e['frist']);
@@ -924,6 +972,19 @@ function mail_einreihen(string $schluessel, string $empfaenger, array $daten = [
 
     if (!$sofort) { return MAIL_WARTET; }
     return mail_zeile_versuchen($id) ? MAIL_ZUGESTELLT : MAIL_WARTET;
+}
+
+/**
+ * Hat der Mailserver den Empfaenger endgueltig abgelehnt? (Nr. 454)
+ *
+ * @param array|null $f `smtp_letzter_fehler()`
+ */
+function mail_absage_endgueltig(?array $f): bool
+{
+    $code = (string)($f['code'] ?? '');
+    return in_array($f['schritt'] ?? null, ['empfaenger', 'daten'], true)
+        && preg_match('/^5\d\d$/', $code) === 1
+        && $code !== '552';
 }
 
 /**
@@ -971,8 +1032,16 @@ function mail_zeile_versuchen(int $id, ?float $budget = null): bool
 
     /* KEINE STUFE MEHR? Dann endgueltig unzustellbar — und DIE ADRESSE
      * BLEIBT STEHEN: „Die Einladung an X kam nie an" ist ohne X
-     * wertlos. Der Rumpf faellt trotzdem, wegen des Tokens. */
-    if ($versuche >= count(MAIL_LEITER)) {
+     * wertlos. Der Rumpf faellt trotzdem, wegen des Tokens.
+     *
+     * ODER EINE ENDGUELTIGE ABSAGE (Backlog Nr. 454, E-BR5-11): Ein 5xx ist
+     * nach RFC 5321 endgueltig, und jeder weitere Versuch waere bis zu 24 h
+     * lang eine neue Stoerung im Reiter System. Endgueltig heisst hier: der
+     * Mailserver hat den EMPFAENGER abgelehnt (`RCPT TO`) oder die
+     * Nachricht nach dem Ende der Daten. 552 (Postfach voll) loest sich meist
+     * von selbst und bleibt auf der Leiter; eine Absage bei Anmeldung oder
+     * Absender ist ein Fehler der Einstellungen und ebenfalls (F-BR5-10). */
+    if ($versuche >= count(MAIL_LEITER) || mail_absage_endgueltig($f)) {
         $pdo->prepare('UPDATE mail_warteschlange
                           SET zustand = \'unzustellbar\', versuche = ?, beendet = UTC_TIMESTAMP(),
                               naechster_versuch = NULL, fehler = ?, text = NULL

@@ -14,6 +14,122 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 23.7.3] — unveröffentlicht
+
+### Behoben
+
+- **Web — die zwei App-Dateien hießen gleich** (Backlog Nr. 361, 432). Unter
+  „Ohne Play Store“ standen zwei Zeilen „NAdoku“ mit derselben Fassung, und
+  welche die Wear-OS-Uhr war, zeigte erst der Dateiname nach dem
+  Herunterladen; Betrieb → Updates zeigte als „Android-App“ oft die
+  Uhr-Datei. Jetzt heißen sie „NAdoku für Android-Handy“ und „NAdoku für
+  Wear-OS-Uhr“, das Handy steht oben, und Updates hat eine Zeile je Gerät.
+
+### Geändert
+
+- **Web — die Rückfrage vor dem Entkoppeln nennt den letzten Kontakt**
+  (Backlog Nr. 440), wenn er länger als einen Tag zurückliegt. Was ein Gerät
+  danach aufgezeichnet hat, kommt erst nach einer neuen Kopplung an; für ein
+  verlorenes Gerät ist Deaktivieren der bessere Griff, und die Rückfrage sagt
+  es jetzt.
+
+## [Web 23.7.2] — unveröffentlicht
+
+### Behoben
+
+- **Web — Bitwarden bot beim Backup mit Kontopasswort nichts an** (Backlog
+  Nr. 430). Das Feld „Kontopasswort“ stand ohne eigenes Formular neben den zwei
+  Feldern für ein neues Backup-Passwort, und der Passwortverwalter hielt das
+  Ganze für einen Passwortwechsel. Jetzt steht das Kontopasswort für sich;
+  Enter darin erstellt das Backup. Ob Bitwarden den Eintrag jetzt anbietet,
+  zeigt erst ein Browser mit Bitwarden.
+
+## [Web 23.7.1] — unveröffentlicht
+
+### Behoben
+
+- **Web — die Reanimationskarte sagte im gesperrten Formular „keine“**
+  (Backlog Nr. 456), auch an einem Einsatz mit Reanimation: Ohne Schlüssel
+  lässt sich die Hülle nicht öffnen, und die Karte zählte die leere Liste.
+  Jetzt steht dort „gesperrt“, „nicht lesbar“, wenn die Hülle nicht aufgeht,
+  und „keine“ nur, wo es wirklich keine gibt.
+
+- **Web — zwei Hinweise sahen anders aus als jede andere Meldung**
+  (Backlog Nr. 346, 356). Der Hinweis auf unlesbare Einträge und der auf einen
+  Diensttag im Papierkorb waren von Hand gebaut, ohne das Symbol der übrigen
+  Meldungen; jetzt laufen sie über den gemeinsamen Baustein. Auf der Karte
+  „Schlüssel des Servers“ klebten zwei Abschnitte ohne Abstand an den Knöpfen
+  darüber; sie sind jetzt wie der Abschnitt daneben durch eine Linie
+  abgesetzt.
+
+## [Web 23.7.0] — unveröffentlicht
+
+### Behoben
+
+- **Web — der Schlüssel für Uhr und Handy entstand nur, wer nach der
+  Anmeldung kurz wartete** (Backlog Nr. 392). Der Browser legte ihn nur mit
+  einem Nachweis an, den es allein auf der ersten Seite nach der Anmeldung
+  gibt; wer gleich weiterklickte, hatte bis zur nächsten Anmeldung keinen,
+  und Geräte konnten nicht senden. Jetzt nimmt der Server für das erste
+  Anlegen zehn Minuten lang eine Marke der Sitzung an — ein bewusster
+  Tausch: Ein Dieb der Sitzung in diesen Minuten könnte einen Schlüssel
+  setzen, solange keiner da ist, dafür bleibt das passwortgleiche Token nicht
+  länger im Browser liegen.
+
+### Hinzugefügt
+
+- **Web — „Schlüsselpaar einrichten“ unter Einstellungen → Geräte.** Fehlt
+  der Schlüssel trotzdem, lässt er sich dort mit dem Passwort anlegen; die
+  Meldungen „noch kein Schlüssel für Uhr und Handy“ verweisen dorthin.
+
+## [Web 23.6.6] — unveröffentlicht
+
+### Geändert
+
+- **Web — Anmeldung und Notzugang prüfen das Passwort an einer Stelle**
+  (Backlog Nr. 358). Der Notzugang trug eine Abschrift des Anmeldewegs, im
+  Browser wie auf dem Server, und damit auch des Vergleichs, der die Antwort
+  für unbekannte Adressen gleich lang macht; zwei Abschriften einer solchen
+  Prüfung laufen beim nächsten Umbau auseinander. Sichtbar ändert sich nichts.
+  Die tägliche Integritätswache vergleicht jetzt auch die Notzugangsseite.
+
+## [Web 23.6.5] — unveröffentlicht
+
+### Behoben
+
+- **Web — ein Formularfeld als Liste brachte die Anmeldung zum Absturz**
+  (Backlog Nr. 355). Wer `email[]=x` statt `email=x` schickte, bekam auf der
+  Anmeldung und bei „Passwort vergessen“ eine Fehlerseite, und an vielen
+  anderen Stellen wurde aus der Liste der Text „Array“ mit einer Warnung im
+  Reiter System. Jede Seite liest ihre Felder jetzt an einer Stelle: als Text,
+  oder, wenn es keiner ist, als leer — so meldet die Seite ihren gewohnten
+  Formularfehler. Zwei Zählzeilen halten die alte Form fern.
+
+## [Web 23.6.4] — unveröffentlicht
+
+### Behoben
+
+- **Web — eine endgültige Absage des Mailservers lief 24 Stunden lang
+  weiter** (Backlog Nr. 454). Lehnte der Server den Empfänger ab, weil es das
+  Postfach nicht gibt, versuchte die Warteschlange es trotzdem fünfmal und
+  meldete jedes Mal eine Störung. Jetzt ist eine solche Nachricht nach dem
+  ersten Versuch unzustellbar — aber nur bei einer Absage des Empfängers:
+  Eine Absage beim Anmelden ist ein falsches Passwort in den Einstellungen und
+  darf die ganze Warteschlange nicht verfallen lassen.
+
+- **Web — Mails an Adressen, die nie Post annehmen, werden nicht mehr
+  eingereiht** (Backlog Nr. 450). Unter `.invalid`, `.test`, `.example` und
+  `.localhost` gibt es keinen Mailserver, die Adressen gelten aber als
+  gültig; die Wegwerfkonten der Prüfkette füllten so auf Staging den Reiter
+  System mit Fehlern. Statt einer Störung steht ein Eintrag „nicht
+  eingereiht“ im Reiter E-Mail, und die Einladungsseite nennt den Grund.
+
+- **Web — ein gescheiterter Hintergrundjob zeigte den Klassennamen der
+  Ausnahme** (Backlog Nr. 357). „RuntimeException: …“ ist Technik, keine
+  Auskunft, und eine Datenbankmeldung trug den Datenbanknamen auf die Karte.
+  Die Karte zeigt jetzt die bereinigte Meldung; die Klasse steht im Reiter
+  System, wo sie bis dahin fehlte.
+
 ## [Web 23.6.3] — unveröffentlicht
 
 ### Behoben

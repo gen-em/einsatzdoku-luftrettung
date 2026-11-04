@@ -862,16 +862,17 @@ async function loadDay(dayId){
     let hinweis = document.getElementById('daytrash');
     if (d.day_deleted_at) {
       if (!hinweis) {
-        hinweis = document.createElement('p');
+        /* Ein leerer Behaelter, gefuellt vom Meldungs-Baustein (Nr. 346) —
+         * bis Web 23.7.0 ein `<p class="meldung …">` ohne Symbol. */
+        hinweis = document.createElement('div');
         hinweis.id = 'daytrash';
-        hinweis.className = 'meldung meldung-warn';
         const main = document.querySelector('main.inhalt');
         main.insertBefore(hinweis, main.firstChild);
       }
-      hinweis.textContent = 'Dieser Diensttag liegt im Papierkorb. Angaben zu '
+      hinweis.innerHTML = EdHtml.meldung('warn', 'Dieser Diensttag liegt im Papierkorb. Angaben zu '
         + 'Rettungsmittel, Standort und Besatzung werden nicht angezeigt und können '
         + 'nicht gespeichert werden, solange er dort liegt. Wiederherstellen unter '
-        + 'Einstellungen → Papierkorb.';
+        + 'Einstellungen → Papierkorb.');
     } else if (hinweis) {
       hinweis.remove();
     }
@@ -1101,7 +1102,7 @@ async function spurenOeffnen(d, bounds){
     const box = document.createElement('div');
     box.dataset.ortsdaten = 'fehler';
     box.innerHTML = EdHtml.meldung('fehler', e && e.grund === 'kein_paar'
-      ? 'Für dieses Konto ist noch kein Schlüssel für Uhr und Handy eingerichtet — die GPS-Daten lassen sich nicht öffnen.'
+      ? 'Für dieses Konto ist noch kein Schlüssel für Uhr und Handy eingerichtet — die GPS-Daten lassen sich nicht öffnen. Einrichten: Einstellungen → Geräte.'
       : 'Die GPS-Daten dieses Tages lassen sich nicht öffnen. Die übrigen Angaben stimmen.');
     document.getElementById('map').appendChild(box);
     return;

@@ -54,7 +54,7 @@ require_once __DIR__ . '/../einstieg_lib.php';
 api_methode();
 csrf_check();
 
-$antwort = (string)($_POST['antwort'] ?? '');
+$antwort = post_text('antwort');
 
 /* DAS SITZUNGSMERKMAL FUER JEDE ANTWORT — auch fuer `weggeklickt`. Es haelt
  * den Dialog bis zur naechsten Anmeldung zurueck. `index.php` liest es und

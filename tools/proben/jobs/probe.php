@@ -5,6 +5,7 @@ declare(strict_types=1);
  * Jobprobe — tut der Job-Rahmen, was er zusagt?
  *
  * Anlass: Nr. 37 — Wartung lag auf der Anfrage (4,07 s); der erste Rueckfall trug bis 18 s
+ * (Teil 11: Nr. 357 — der Klassenname einer Ausnahme stand auf der Karte.)
  *
  * WOFUER. Der Rahmen aus `jobs_lib.php` hat drei Zusagen, und alle drei sind
  * unsichtbar, solange nichts schiefgeht:
@@ -455,6 +456,34 @@ $pdoM->exec("DELETE FROM mail_warteschlange WHERE empfaenger LIKE 'jobprobe%@bei
 $nachher = (int)$pdoM->query('SELECT COUNT(*) FROM mail_warteschlange')->fetchColumn();
 pruefe($nachher === $vorher, 'Die Probe hinterlaesst keine Zeile',
        $vorher . ' -> ' . $nachher);
+
+/* ---------------------------------------------------------------------- */
+echo "\n  Teil 11 — Ein Job, der wirft: Meldung ohne Klasse, Klasse im Reiter System\n";
+/* Anlass: Nr. 357 — `letzter_fehler`, Verlauf und Bericht trugen
+ * „RuntimeException: …", die Karte zeigte es der BetreiberIn, und im Reiter
+ * System stand die Klasse gar nicht (F-BR5-03). Ein Job unter eigenem Namen,
+ * der mit einer PDO-artigen Meldung wirft — sie traegt einen Wert in
+ * Anfuehrungszeichen wie eine echte. */
+$probeJob = 'br5_probe_wirft';
+$peVor = (int)$pdo->query('SELECT COALESCE(MAX(id), 0) FROM protokoll_ereignisse')->fetchColumn();
+$b11 = jobs_einen_lauf($probeJob, ['lauf' => static function (): array {
+    throw new RuntimeException("Table 'nadoku_probe.geheim' doesn't exist");
+}], 'cli', static fn(): float => 10.0);
+$lf = (string)$pdo->query("SELECT letzter_fehler FROM jobs WHERE job = '$probeJob'")->fetchColumn();
+pruefe(($b11['fehler'] ?? '') !== '' && !str_contains((string)$b11['fehler'], 'RuntimeException'),
+       'Bericht nennt die Meldung ohne Klassennamen', (string)($b11['fehler'] ?? '—'));
+pruefe($lf === (string)$b11['fehler'], '`letzter_fehler` ist derselbe Satz', $lf);
+pruefe(!str_contains($lf, 'nadoku_probe'), 'Der Wert in Anfuehrungszeichen ist bereinigt', $lf);
+$st = $pdo->prepare("SELECT daten FROM protokoll_ereignisse
+                      WHERE reiter = 'system' AND id > ? AND text LIKE ? ORDER BY id DESC LIMIT 1");
+$st->execute([$peVor, '%' . $probeJob . '%']);
+$d11 = json_decode((string)$st->fetchColumn(), true) ?: [];
+pruefe(($d11['klasse'] ?? '') === 'RuntimeException', 'Der Reiter System traegt die Klasse',
+       (string)($d11['klasse'] ?? '—'));
+$pdo->prepare('DELETE FROM job_laeufe WHERE job = ?')->execute([$probeJob]);
+$pdo->prepare('DELETE FROM jobs WHERE job = ?')->execute([$probeJob]);
+$pdo->prepare("DELETE FROM protokoll_ereignisse WHERE reiter = 'system' AND id > ? AND text LIKE ?")
+    ->execute([$peVor, '%' . $probeJob . '%']);
 
 } finally {
     aufraeumen($pdo, $basisM, $basisR);

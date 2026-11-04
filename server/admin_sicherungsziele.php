@@ -56,7 +56,7 @@ $bestand = null;
  * nichts und bleibt, wie es ist. */
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     csrf_check();
-    $aktion = (string)($_POST['action'] ?? '');
+    $aktion = post_text('action');
     $id = (int)($_POST['id'] ?? 0);
     $zurueck = 'admin_sicherungsziele.php'
              . (isset($_GET['neu']) ? '?neu=1'
@@ -65,8 +65,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($aktion === 'ziel_speichern') {
         /* Ein LEERES Passwortfeld heisst „nicht anfassen", nicht „löschen".
          * Deshalb `null` statt `''` — die Bibliothek unterscheidet beides. */
-        $geheim = ($_POST['geheim'] ?? '') === '' ? null : (string)$_POST['geheim'];
-        $schluessel = trim((string)($_POST['schluessel'] ?? ''));
+        $geheim = ($_POST['geheim'] ?? '') === '' ? null : post_text('geheim');
+        $schluessel = trim(post_text('schluessel'));
         $schluesselNeu = $schluessel === '' ? null : $schluessel;
         if (($_POST['schluessel_weg'] ?? '') === '1') { $schluesselNeu = ''; }
         /* DER ALTE STAND VOR DEM SPEICHERN.

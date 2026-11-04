@@ -916,7 +916,7 @@ async function ortsdatenOeffnen(m){
     box.dataset.ortsdaten = 'fehler';
     box.innerHTML = EdHtml.meldung('fehler',
       e && e.grund === 'kein_paar'
-        ? 'Für dieses Konto ist noch kein Schlüssel für Uhr und Handy eingerichtet — die Ortsdaten lassen sich nicht öffnen.'
+        ? 'Für dieses Konto ist noch kein Schlüssel für Uhr und Handy eingerichtet — die Ortsdaten lassen sich nicht öffnen. Einrichten: Einstellungen → Geräte.'
         : 'Die Ortsdaten dieses Einsatzes lassen sich nicht öffnen. Die übrigen Angaben stimmen.');
     document.getElementById('map').appendChild(box);
   }

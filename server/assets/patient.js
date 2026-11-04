@@ -204,22 +204,20 @@
     let el = document.getElementById('patwarn');
     if (!zahl || !zahl.unlesbar) { if (el) { el.remove(); } return; }
     if (!el) {
-      /* DER MELDUNGS-BAUSTEIN, keine `.alert`-Klasse: Eine Warnung ohne
-         Regel saehe aus wie Fliesstext und waere keine.
-         Das Markup ist dasselbe, das ui_meldung_markup() in PHP erzeugt —
-         `role="status"`, weil die Meldung beim Aufbau der Seite entsteht und
-         nicht auf eine Handlung antwortet. */
+      /* EIN LEERER BEHAELTER, gefuellt vom Meldungs-Baustein (`EdHtml.meldung()`,
+         Backlog Nr. 346): dasselbe Markup wie `ui_meldung_markup()` in PHP,
+         samt grossem Symbol — bis Web 23.7.0 ein Nachbau ohne Symbol.
+         `edSymbol()` steht hier sicher: `symbol.js` laedt als erstes Skript
+         der Immer-Liste, und `zeigeUnlesbar()` laeuft erst nach dem
+         Entschluesseln (nachgemessen 14.09.2026, siehe oben). */
       el = document.createElement('div');
       el.id = 'patwarn';
-      el.className = 'meldung meldung-warn';
-      el.setAttribute('role', 'status');
-      el.appendChild(document.createElement('p'));
       main.insertBefore(el, main.firstChild);
     }
-    /* innerHTML STATT textContent, weil der Satz ein Symbol traegt.
-       Was hineingeht, ist ausschliesslich eigener Text, eine eigene Zahl und
-       das Markup aus edSymbol() — nichts davon stammt aus Daten. */
-    el.querySelector('p').innerHTML = hinweisUnlesbar(zahl);
+    /* `roh`, WEIL DER SATZ EIN SYMBOL TRAEGT (`markeUnlesbar()`). Was
+       hineingeht, ist ausschliesslich eigener Text, eine eigene Zahl und das
+       Markup aus `edSymbol()` — nichts davon stammt aus Daten. */
+    el.innerHTML = EdHtml.meldung('warn', hinweisUnlesbar(zahl), { roh: true });
   }
 
   /**

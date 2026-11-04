@@ -29,7 +29,7 @@ $notice = null; $error = null;
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     csrf_check();
-    $action = (string)($_POST['action'] ?? '');
+    $action = post_text('action');
 
     /* ---- Diensttag zuordnen -------------------------------------------- */
     if ($action === 'tag_zuordnen') {
@@ -59,7 +59,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     /* ---- Stammdatensatz einem Standort zuweisen ------------------------ */
     if ($action === 'sd_zuordnen') {
-        $tabelle = (string)($_POST['tabelle'] ?? '');
+        $tabelle = post_text('tabelle');
         $id      = (int)($_POST['id'] ?? 0);
         $baseId  = (int)($_POST['base_id'] ?? 0);
 

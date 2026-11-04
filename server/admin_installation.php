@@ -71,8 +71,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         /* DER NAME DIESER INSTALLATION. Eigenes
          * „Speichern", wie bei Logo und Adresssuche: Ein Tippfehler im Namen
          * soll die Rechtstexte nicht mit abweisen und umgekehrt. */
-        [$ok, $meldung] = instanz_namen_setzen((string)($_POST['instanz_name'] ?? ''),
-                                               (string)($_POST['instanz_kurz'] ?? ''));
+        [$ok, $meldung] = instanz_namen_setzen(post_text('instanz_name'),
+                                               post_text('instanz_kurz'));
         if ($ok) {
             flash_setzen('ok', $meldung, 'k-name');
             header('Location: admin_installation.php#k-name');
@@ -82,8 +82,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } elseif (($_POST['action'] ?? '') === 'instanz_adressen') {
         /* DIE ADRESSEN DIESER INSTALLATION. Eigenes
          * „Speichern" wie beim Namen, und aus demselben Grund. */
-        [$ok, $meldung] = instanz_adressen_setzen((string)($_POST['instanz_kontakt'] ?? ''),
-                                                  (string)($_POST['betrieb_mail'] ?? ''));
+        [$ok, $meldung] = instanz_adressen_setzen(post_text('instanz_kontakt'),
+                                                  post_text('betrieb_mail'));
         if ($ok) {
             flash_setzen('ok', $meldung, 'k-adressen');
             header('Location: admin_installation.php#k-adressen');
@@ -91,7 +91,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         $adrMeldung = ['fehler', $meldung];
     } elseif (($_POST['action'] ?? '') === 'logo_standard') {
-        $wahl = (string)($_POST['logo'] ?? '');
+        $wahl = post_text('logo');
         if (!isset(INSTALLATION_LOGOS[$wahl])) {
             $logoMeldung = ['fehler', 'Unbekannte Logo-Wahl — es wurde nichts geändert.'];
         } elseif (!app_state_setzen('logo_standard', $wahl)) {

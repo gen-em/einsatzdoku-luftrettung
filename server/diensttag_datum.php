@@ -31,7 +31,7 @@ if ($tag['deleted_at'] !== null) {
 
 $umfang = tz_tag_umfang($userId, $dayId);
 $fehler = null;
-$ziel   = (string)($_POST['ziel'] ?? '');
+$ziel   = post_text('ziel');
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['confirm'] ?? '') === 'ja') {
     csrf_check();

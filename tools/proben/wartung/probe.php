@@ -830,8 +830,17 @@ pruefe($istAusnahmen === $sollAusnahmen,
  * erreichbar (das Token entsteht im Browser per PBKDF2), also wird die
  * Stelle gelesen — mit Nennung dessen, was gelesen wurde. */
 $loginQuelle = (string)file_get_contents($wurzel . '/login.php');
-pruefe(str_contains($loginQuelle, 'kdf_iter, logo_wahl, role'),
-       '18  login.php liest `role` in seiner Nutzerabfrage (E-S5W-09 c)');
+/* DIE NUTZERABFRAGE STEHT SEIT WEB 23.6.6 IN `anmelde_konto()` (db.php),
+ * gemeinsam fuer Anmeldung und Notzugang (Nr. 358, E-BR5-07). Gelesen wird
+ * deshalb der Rumpf dieser Funktion, und dazu, dass login.php sie ruft —
+ * bis dahin stand die Spaltenliste in login.php selbst (F-BR5-29). */
+$dbQuelle = (string)file_get_contents($wurzel . '/db.php');
+$kontoRumpf = preg_match('/\nfunction anmelde_konto\(.*?\n}\n/s', $dbQuelle, $t) ? $t[0] : '';
+pruefe(str_contains($kontoRumpf, 'kdf_iter, logo_wahl, role')
+       && preg_match_all('/\banmelde_konto\(/', $loginQuelle) >= 1,
+       '18  login.php liest `role` in seiner Nutzerabfrage (E-S5W-09 c)',
+       'anmelde_konto(): ' . ($kontoRumpf === '' ? 'nicht gefunden' : strlen($kontoRumpf) . ' Zeichen')
+       . ', Aufrufe in login.php: ' . preg_match_all('/\banmelde_konto\(/', $loginQuelle));
 /* DAS TOR STEHT IN EINER FUNKTION, und die Reihenfolge im Text
  * sagt nichts mehr. `login_zugang()` steht am Kopf der Datei, also VOR jedem
  * `rate_erfolg()`: Die alte Pruefung „Tor nach rate_erfolg im Text" war rot,

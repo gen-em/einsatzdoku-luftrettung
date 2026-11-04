@@ -55,7 +55,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
      * diese Stelle aendert sich nichts ausser dem Namen der Variablen. Was
      * hier hinausgeht, ist unveraendert dasselbe wie vorher: `pat_blob`
      * bleibt Chiffretext, den nur die NutzerIn oeffnet. */
-    $teil = (string)($_GET['teil'] ?? '');
+    $teil = get_text('teil');
     if ($teil !== '') {
         $klar = edbak_paket_teil_lesen($f['account_key'], $f['datei'], $teil);
         if ($klar === null) {

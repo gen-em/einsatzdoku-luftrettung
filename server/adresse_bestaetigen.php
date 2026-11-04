@@ -21,7 +21,7 @@ require_once __DIR__ . '/konto_lib.php';
  * abruft.
  */
 
-$token = (string)($_GET['token'] ?? '');
+$token = get_text('token');
 $ergebnis = null;
 
 if ($token !== '' && preg_match('/^[0-9a-f]{64}$/', $token)) {

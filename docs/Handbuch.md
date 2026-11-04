@@ -3705,6 +3705,13 @@ Uhr, seit Web 12.8.0 auch das Handy mit der Android-App.
    lädt von selbst nach, sobald es soweit ist — du musst nichts neu laden.
    Bis dahin läuft die Restzeit mit, und du kannst den Vorgang hier abbrechen.
 
+**Fehlt der Schlüssel für Uhr und Handy, steht ganz oben eine Karte dazu**
+*(seit Web 23.7.0)*. Uhr und Handy verschließen GPS-Daten und Ortsangaben mit
+dem Schlüsselpaar deines Kontos. Es entsteht still nach der Anmeldung; klappt
+das einmal nicht, tippst du auf **„Schlüsselpaar einrichten“**, gibst dein
+Passwort ein, und dein Browser legt es an. Danach verschwindet die Karte. Steht
+sie nicht da, ist alles in Ordnung.
+
 **Die Seite steht in der Reihenfolge, in der man sie braucht** *(seit Web
 15.4.1)*: koppeln, die Geräte ansehen, die App holen. **Ein Gerät entsteht nur
 über die Kopplung** *(seit Web 23.3.0)*: Die zugeklappte Ausnahme „Gerät ohne
@@ -3717,7 +3724,11 @@ drei Punkten am rechten Rand der Zeile, in jeder Bildschirmbreite. Darin:
 **Bezeichnung ändern**, **Deaktivieren** beziehungsweise **Aktivieren** und
 **Entkoppeln**. Deaktivieren sperrt den Upload sofort (etwa bei Verlust); alle
 bereits hochgeladenen Daten bleiben erhalten, und Aktivieren schaltet dasselbe
-Gerät wieder frei.
+Gerät wieder frei. **Hat sich das Gerät seit mehr als einem Tag nicht
+gemeldet, sagt die Rückfrage vor dem Entkoppeln, wann zuletzt** *(seit Web
+23.7.3)*: Was es danach aufgezeichnet hat, liegt noch auf dem Gerät und kommt
+erst nach einer neuen Kopplung an. Ist es verloren, ist Deaktivieren der
+bessere Griff.
 
 **Eine orange Plakette „abgewiesen"** *(seit Web 20.11.0)* sagt, dass dieses
 Gerät am Hochladen gescheitert ist — fast immer, weil sein Schlüssel veraltet
@@ -3843,8 +3854,9 @@ Knopf, der ins Leere führte, wäre schlechter als keiner.
 
 **Ohne Play Store: das APK von Hand.** Darunter klappt ein Fach auf, in dem
 die App-Dateien liegen, sofern die BetreiberIn eine Fassung ausgeliefert hat —
-`nadoku-X.Y.Z.apk` fürs Handy, `nadoku-uhr-X.Y.Z.apk` für die Wear-OS-Uhr, je
-nur die neueste: Fassung, Größe, Stand und die **SHA-256-Prüfsumme** mit einem
+**„NAdoku für Android-Handy“** zuerst, darunter **„NAdoku für Wear-OS-Uhr“**
+*(seit Web 23.7.3; bis dahin hießen beide „NAdoku“ mit der Fassung, und die
+Uhr-App stand oft oben)*, je nur die neueste: Fassung, Größe, Stand und die **SHA-256-Prüfsumme** mit einem
 Knopf „Kopieren" — wer
 der Seite nicht traut, rechnet sie an der heruntergeladenen Datei nach. Beim
 ersten Öffnen fragt Android nach, ob Installationen aus dieser Quelle erlaubt
@@ -5064,7 +5076,7 @@ bestimmten Einsatz geöffnet hat: Du kannst es nicht, und zwar mit Absicht.
 |---|---|:-:|:-:|:-:|
 | **Verwaltung** | das Audit: wer wann was an Konten und Anlage getan hat | ja | ja | ja |
 | **Sicherheit** | Sperren, Verlangsamungen, aufgehobene Sperren, blockierte Inhalte (CSP) — mit IP-Adressen | — | — | ja |
-| **E-Mail** | jede Nachricht mit Vorlage und Zustand (wartet, zugestellt, unzustellbar, verfallen, ersetzt) — **nie** Empfänger, Betreff oder Inhalt | ja | ja | ja |
+| **E-Mail** | jede Nachricht mit Vorlage und Zustand (wartet, zugestellt, unzustellbar, verfallen, ersetzt); seit Web 23.6.4 auch „nicht eingereiht“ für eine Adresse unter `.invalid`, `.test`, `.example` oder `.localhost`, die nie Post annimmt — **nie** Empfänger, Betreff oder Inhalt | ja | ja | ja |
 | **Jobs** | jeder Lauf eines Hintergrundjobs, Fehler rot | — | ja | ja |
 | **Sicherung** | Komplett-Backup erzeugt, geladen, eingespielt, gelöscht; Konto-Backup eingespielt; seit Web 21.12.0 der Wechsel des Serverschlüssels — gewechselt (orange), umgehüllt (blau, mit Zahlen), bisherigen entfernt | — | ja | ja |
 | **Ziele** | was auf ein Backup-Ziel ging und was dort gelöscht wurde | — | — | ja |
@@ -5360,7 +5372,7 @@ Versuch — eine Einladung, die vorgestern scheiterte, war danach unsichtbar.
 |---|---|---|
 | blau **leer** | Nichts liegt an. | nichts |
 | orange **N wartet** | Der Mailserver war kurz gestört. Die Anwendung versucht es über 24 Stunden bis zu fünfmal. | abwarten |
-| rot **N unzustellbar** | Fünf Versuche, alle gescheitert. Die Zeile **nennt die Adressen** und den letzten Grund. | Grund lesen, Adresse prüfen, Vorgang von Hand wiederholen |
+| rot **N unzustellbar** | Fünf Versuche, alle gescheitert — oder, seit Web 23.6.4, der Mailserver hat den Empfänger gleich beim ersten Versuch endgültig abgelehnt (etwa „Postfach gibt es nicht“). Die Zeile **nennt die Adressen** und den letzten Grund. | Grund lesen, Adresse prüfen, Vorgang von Hand wiederholen |
 
 Die Zeilen verfallen nach **30 Tagen**. Bei einer zugestellten Nachricht
 bleibt nur „eine Nachricht dieser Art ging zu dieser Zeit hinaus" — Adresse,

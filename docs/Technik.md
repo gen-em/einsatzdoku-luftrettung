@@ -49,6 +49,10 @@ Daten erst nach Server-Bestätigung.
 │   │                       Verlangt config.php hart — die globale $CFG gibt
 │   │                       es seit Web 20.27.0 nicht mehr. Bindet
 │   │                       transaktion_lib.php ein
+│   ├── eingabe_lib.php    post_text(), get_text(): ein Formularfeld als
+│   │                       Text, sonst die Vorgabe — auch bei einer Liste
+│   │                       (Nr. 355, seit Web 23.6.5). LAEDT NICHTS; db.php
+│   │                       und install.php binden sie ein
 │   ├── transaktion_lib.php Der EINE Transaktionsrahmen db_transaktion()
 │   │                       (Schritt 15 AP5, E-ZE-20). Bis Web 20.37.2 in
 │   │                       db.php; eigene Datei seit 20.37.3, weil der
@@ -1504,7 +1508,7 @@ beide lesen und mitnehmen, und weil der Inhaltsschlüssel nie wechselt
 |---|---|---|
 | Inhaltsschlüssel | IndexedDB `nadoku-schluessel`, Fach `fach`, Eintrag `inhalt`: `{schluessel: CryptoKey (AES-GCM, extractable: false), bindungen: [Kennungen der Hüllen], zeit}` | bis Abmelden, Anmelden, Ablauf der Sitzung (`session_lib.php`) oder die erste Seite mit `keyguard.js` nach Ablauf der Frist |
 | Datenschlüssel | nirgends — nur in der Funktion, die die Hülle öffnet | bis zum Ende dieser Funktion |
-| Hälften und Anmelde-Token (`edkvor`) | `sessionStorage` | einen Seitenwechsel nach der Anmeldung (unverändert) |
+| Hälften und Anmelde-Token (`edkvor`) | `sessionStorage` | einen Seitenwechsel nach der Anmeldung (unverändert; für das Anlegen danach trägt die Anlegemarke der Sitzung, seit Web 23.7.0) |
 
 **Für alle Tabs** (E-R17-76): Die Ablage gilt für den Ursprung. Ein neuer Tab
 und ein wiederhergestellter Browser finden den Schlüssel, solange die Frist
@@ -3251,6 +3255,33 @@ einer davon fehlte das „Gen-EM" im Betreff.
 **Die Leiter**: `MAIL_LEITER = [300, 1800, 7200, 28800, 86400]` — der Abstand
 **zum vorigen Versuch**, nicht zum Einreihen. Fünf Versuche über 24 Stunden.
 
+**Eine endgültige Absage geht nicht auf die Leiter** (seit Web 23.6.4,
+Backlog Nr. 454). Lehnt der Mailserver den **Empfänger** ab — eine 5xx beim
+`RCPT TO` oder nach dem Ende der Daten —, wird die Zeile nach dem ersten
+Versuch `unzustellbar` (`mail_absage_endgueltig()`). `smtp_letzter_fehler()`
+liefert dafür `code` und `schritt` mit. Auf der Leiter bleiben 552 (Postfach
+voll, löst sich meist von selbst), jede 4xx, ein Verbindungsfehler und eine
+Absage bei Anmeldung oder Absender: Eine 535 ist ein falsches Passwort in den
+Einstellungen, und wer sie wie eine Absage behandelte, ließe die ganze
+Warteschlange verfallen. Bis dahin lief auch eine 550 die ganzen 24 Stunden
+durch, mit einer Störung im Reiter System je Versuch.
+
+**Reservierte Domains reiht `mail_einreihen()` gar nicht erst ein** (seit
+Web 23.6.4, Nr. 450): `.invalid`, `.test`, `.example`, `.localhost` (RFC 2606,
+6761; `MAIL_RESERVIERTE_DOMAINS`). Dort nimmt nirgends ein Server Post an;
+`filter_var()` hält die Adressen trotzdem für gültig, und die Konten, die
+Stufe 2 unter `…@example.invalid` anlegt, füllten auf Staging den Reiter
+System. Statt einer Zeile ein Eintrag `mail_reserviert` im Reiter E-Mail (ohne
+Adresse), Rückgabe `MAIL_ABGELEHNT`; die Einladungsseiten nennen den Grund
+(`mail_reserviert_satz()`). Die Frage steht **hinter** „SMTP eingerichtet?":
+Eine Anlage ohne Mailserver schreibt keinen Eintrag für eine Mail, die ohnehin
+nie ginge. **Die örtlichen Proben legen ihre Konten, an die Post gehen soll,
+seither unter `probe.pruefung` an** (Mail-, Raten-, Passkey-, Rollen-,
+Zweitfaktor-, Schlüsselwechsel-, Kopplungs- und Rückwegprobe, zwei Bedienwege); der
+Mailserver der Sandbox ist 127.0.0.1, es geht nichts hinaus. Die Kettenkonten
+unter `example.invalid` und die Prüfkonten des Bilderlaufs bleiben — sie
+bekommen keine Post, und auf Staging wirkt der Riegel genau für sie.
+
 **Die Frist geht vor der Leiter.** Hat ein Eintrag eine `frist` (ein
 Reset-Link gilt 3600 s), wird ein Versuch, der erst **nach** Ablauf fällig
 wäre, gar nicht erst unternommen — die Zeile wird `zu_spaet`. Für
@@ -3261,7 +3292,7 @@ Sprosse läge bei 9300 s. Besser gar nichts als ein toter Link.
 |---|---|---|
 | `offen` | wartet auf den nächsten Versuch | — |
 | `zugestellt` | der Mailserver hat sie angenommen | Adresse, Betreff, Rumpf |
-| `unzustellbar` | fünf Versuche, alle gescheitert | **nur** Rumpf — die Adresse bleibt |
+| `unzustellbar` | fünf Versuche, alle gescheitert — oder eine endgültige Absage des Empfängers (seit Web 23.6.4) | **nur** Rumpf — die Adresse bleibt |
 | `zu_spaet` | die Frist lief vor der Leiter ab | Adresse, Betreff, Rumpf |
 | `ueberholt` | eine neuere Nachricht derselben Art entwertet sie | Adresse, Betreff, Rumpf |
 
@@ -4260,7 +4291,14 @@ Zwei Fehler steckten hier beim ersten Anlauf, beide beim Messen aufgefallen:
 #### Sichtbarkeit
 
 `betrieb_jobs.php` zeigt je Job letzten Lauf, Auslöser, Rückstand und letzten
-Fehler. `letzter_fehler` steht in der Tabelle und nicht nur im
+Fehler. **Der Fehler ist die Meldung der Ausnahme, bereinigt** (seit Web
+23.6.4, Nr. 357; `system_bereinigen()`: ohne Pfade, Adressen und Werte in
+Anführungszeichen) — in `letzter_fehler`, im Verlauf `job_laeufe` und im
+Bericht, den „Jetzt weiterarbeiten" zeigt. Die Klasse samt Datei und Zeile
+steht im Reiter System, weil `system_melden()` die Ausnahme bekommt. Bis dahin
+stand dort „RuntimeException: …", und im Reiter System stand die Klasse gar
+nicht. Dieselbe Kürzung gilt für den Grund in „Ließen sich nicht umhüllen"
+beim Schlüsselwechsel. `letzter_fehler` steht in der Tabelle und nicht nur im
 Protokoll: An das Fehlerprotokoll des Webspace kam auf geteiltem Hosting
 nicht jede BetreiberIn heran (seit Web 20.40.0 steht der Fehler auch im
 Reiter System), und ein dauerhaft scheiternder Job soll auffallen, ohne dass
@@ -6382,6 +6420,7 @@ zusammengeführt und, wichtiger, ein **Maß** dafür angelegt.
 | Flash-Meldung | `flash_setzen()` / `flash_holen()` | 22 direkte `$_SESSION['flash…']` |
 | Schema fragen | `db_hat_tabelle/spalte/index()` | 9 eigene `information_schema` |
 | Transaktion | `db_transaktion()` | 33 eigene `beginTransaction()` |
+| Formularfeld als Text lesen — seit Web 23.6.5 | `post_text()`, `get_text()` (`eingabe_lib.php`) | 149 `(string)($_POST[…])`/`($_GET[…])`, 3 eigene Hüllen (`$feld` zweimal, `konten_param()`); eine Liste (`feld[]=x`) gab eine Warnung im Reiter System oder, ohne Cast an eine `string`-Funktion, eine 500 (Nr. 355, Z47, Z48) |
 | Kindtabellen eines Einsatzes | `einsatz_lib.php` | 30 eigene `INSERT`/`DELETE` |
 | Spalten von `missions` | `mf_spalten($zweck)` | 12 Handlisten |
 | Zahl, Größe, Zeit (PHP) | `format_lib.php` | 4 Byte-Formatierer, 2 Zeitformen, 27 `number_format` |
@@ -6514,7 +6553,7 @@ Die Bausteine im Einzelnen:
 | Feste Werte in einer erzeugten Anweisung | (Aufrufseite) | Wo Werte fest im Satz stehen, hängt die Wertform an der **Spalte**, nicht an ihrer Stelle: `['uhr_gesperrt' => '1', 'origin' => "'import'"]`, `COALESCE(?, spalte)` für die vier Felder unter der Export-Schranke (A9/P10), `NULL AS spalte` im Export ohne personenbezogene Angaben. Wer ein Feld unter die Schranke nimmt, trägt es an **einer** Stelle ein. |
 | Schema fragen | `db.php` | `db_hat_tabelle()`, `db_hat_spalte()`, `db_hat_index()`, seit Web 20.41.0 `db_spalte_typ()` (der volle Spaltentyp, etwa die Werte eines ENUM — P5c/AP4), seit Web 21.0.0 `db_spalte_nullbar()` (ob die Spalte NULL zulässt — P5c/AP8) — sie nehmen ein `PDO`, **zwingend**: `tools/schemaprobe/` lässt Migrationen gegen ein frisch angelegtes Schema laufen, also gegen eine andere Verbindung als `db()`. Die privaten `_hat_*` in `migration_lib.php` reichen seit Web 20.29.0 nur noch durch (E-ZE-04: gelaufene Migrationen werden nicht umgebaut). |
 | Anfrage an den Server | `assets/api.js` (`EdApi`) | `EdApi.postJson(url, daten, o)` und `EdApi.postForm(url, felder, o)`, seit Web 20.34.0. Beide liefern `{ ok, status, daten, meldung }` und **werfen nie** — ein Netzfehler kommt als `status: 0`. Sie hängen das CSRF-Token selbst an (Kopfzeile bzw. Feld) und bauen den **einen** Satzbau `<Vorgang> ist fehlgeschlagen: <Grund>`. Vorrangkette des Grundes: `meldung` → `text` → `hinweis` → Ersatzsatz mit Kennung. **`error` steht nicht in der Kette** — es trägt Maschinenwörter, keine Sätze, und erscheint nur als Kennung in der Klammer. **`ok` ist ein Transport-Urteil**: Es prüft `daten.ok !== false`, nicht `=== true`, weil die lesenden Endpunkte gar kein `ok` schicken — wer ein fachliches `ok` braucht, prüft `a.daten.ok` mit. **Die Array-Regel von `postForm` ist sicherheitsrelevant**: Ein Feldwert, der ein Array ist, geht als `name[]` hinaus; ohne die Klammern liest PHP eine Zeichenkette, `is_array()` schlägt fehl, und die Schlüsselblatt-Rückfrage zählt einen Fehlversuch. **Die Datei steht im `<head>`** — nicht in der Immer-Liste, weil `ui_geruest_ende()` auf `einstellungen.php` und `import.php` **nach** den Seitenskripten steht und `unlock.js` dort zur Ladezeit sendet. |
-| Meldung im Browser | `assets/html.js` (`EdHtml.meldung`) | `EdHtml.meldung(ton, text, o)`, seit Web 20.34.0 — zeichengleich mit `ui_meldung_markup()` in `ui.php`; 200 von 200 Prüffällen ergaben denselben DOM-Baum. **Fünf Töne, geschlossene Liste, Wurf beim sechsten**, genau wie PHP. `o.auftakt` (fetter Vorspann, maskiert), `o.knopf` (fertiges Markup, unmaskiert), `o.roh` (Text **nicht** maskieren — ein benanntes Loch mit genau einem Verbraucher, der Erfolgsmeldung des Imports mit Link und Umbruch). Vorher: sieben eigenständige Nachbauten, keine zwei gleich, drei verschiedene Ton-zu-Symbol-Tabellen. **Seit Web 21.1.11** (R4-13) auch der Satz im Schneide-Bereich (`fehler` für einen Grund, `info` für den Erklärtext), die Rückmeldung über der Segmentliste und die Meldung im Entsperrdialog; `html.js` steht dafür im Kopf jeder Seite. Zwei Nachbauten bleiben bis Backlog Nr. 346 (`patient.js`, der Papierkorb-Hinweis in `index.php`); die Registerzeile Z37 zählt seither auch `className = '…meldung'`. **Die Tonklasse wird zusammengesetzt** — `tools/quelltext/` (`vollstaendigkeit`) sieht sie deshalb nicht und meldet `.meldung-ok` und `.meldung-schutz` als Regel ohne Markup. Das ist kein Befund, sondern die Eigenschaft des Bausteins. **Kein Tag im Text** — weder hier noch in `ui_meldung()`/`ui_meldung_markup()` (PHP): Beide maskieren, ein `<strong>` erscheint als Text. Seit Web 23.3.1 hält der Riegel **Z45** in `tools/zaehlung/` die PHP-Seite: kein `<` in einer festen Zeichenkette eines Textarguments (R17-22, F-R17-49; zwei Stellen bis dahin). Hervorhebung trägt der Auftakt. |
+| Meldung im Browser | `assets/html.js` (`EdHtml.meldung`) | `EdHtml.meldung(ton, text, o)`, seit Web 20.34.0 — zeichengleich mit `ui_meldung_markup()` in `ui.php`; 200 von 200 Prüffällen ergaben denselben DOM-Baum. **Fünf Töne, geschlossene Liste, Wurf beim sechsten**, genau wie PHP. `o.auftakt` (fetter Vorspann, maskiert), `o.knopf` (fertiges Markup, unmaskiert), `o.roh` (Text **nicht** maskieren — ein benanntes Loch mit zwei Verbrauchern: der Erfolgsmeldung des Imports mit Link und Umbruch und, seit Web 23.7.1, dem Hinweis auf unlesbare Einträge, dessen Satz ein Symbol trägt). Vorher: sieben eigenständige Nachbauten, keine zwei gleich, drei verschiedene Ton-zu-Symbol-Tabellen. **Seit Web 21.1.11** (R4-13) auch der Satz im Schneide-Bereich (`fehler` für einen Grund, `info` für den Erklärtext), die Rückmeldung über der Segmentliste und die Meldung im Entsperrdialog; `html.js` steht dafür im Kopf jeder Seite. Die letzten zwei Nachbauten (`patient.js`, der Papierkorb-Hinweis in `index.php`) füllen seit Web 23.7.1 ebenfalls leere Behälter (Nr. 346); die Registerzeile Z37 zählt auch `className = '…meldung'` und steht auf 2 — die Zentrale selbst. **Die Tonklasse wird zusammengesetzt** — `tools/quelltext/` (`vollstaendigkeit`) sieht sie deshalb nicht und meldet `.meldung-ok` und `.meldung-schutz` als Regel ohne Markup. Das ist kein Befund, sondern die Eigenschaft des Bausteins. **Kein Tag im Text** — weder hier noch in `ui_meldung()`/`ui_meldung_markup()` (PHP): Beide maskieren, ein `<strong>` erscheint als Text. Seit Web 23.3.1 hält der Riegel **Z45** in `tools/zaehlung/` die PHP-Seite: kein `<` in einer festen Zeichenkette eines Textarguments (R17-22, F-R17-49; zwei Stellen bis dahin). Hervorhebung trägt der Auftakt. |
 | Auftakt der Patientenanzeige | `assets/patient.js` (`EdPat.listeLaden`) | `EdPat.listeLaden(liste, o)`, seit Web 20.34.0: Schlüssel holen, Sperrbanner nach der Regel setzen (sichtbar genau dann, wenn kein Schlüssel da ist **und** die Liste überhaupt einen `pat_blob` enthält), entschlüsseln, zählen. Seit Web 23.6.0 mit `zuerst`/`nachZuerst`: die gezeigten Einträge zuerst, dann der Rest (Suche und Zeitraum, Abschnitt Suche). Gibt `{ ck, zahl }` zurück und **entscheidet nicht**: Tagesansicht und Zeitraum kehren bei fehlendem Schlüssel zurück, die **Suche nicht** — sie muss ihre Trefferliste auch gesperrt zeigen und dabei den Altersfilter sperren. `zeigeUnlesbar()` ruft der Aufrufer **nach** seiner Schleife. **`einstellungen.php` bleibt draußen** (Z36 endet bei 1): Es teilt nur den Aufruf, arbeitet mit Fenstern zu 250 aus einem Bestand von tausenden, und `hinweisUnlesbar()` wertet die **ganze** Liste aus — über ein Fenster gesagt wäre der Satz falsch. |
 | Maskierung | `assets/html.js` (`EdHtml.escape`) | Eine Fassung, auch in Attributpositionen sicher (fünf Zeichen statt drei). Seit Web 4.6.0 in einer eigenen Datei statt in `missiontable.js` — die wird nur von zwei Seiten geladen, gebraucht wird die Maskierung auf fünf. `EdMissionTable.escape`/`.esc` bleiben als Weiterleitung. **Nicht dasselbe** wie `xmlEscape()` in `export.js`: GPX ist XML mit eigenen Regeln. |
 | Patientenanzeige | `assets/patient.js` | Eine Entschlüsselungsschleife statt fünf; unterscheidet sichtbar „keine Angaben" von „nicht lesbar". `entschluessleListe()` wird seit Web 4.6.0 von allen Aufrufern benutzt (Tages-, Zeitraum- und Suchansicht, Export, Import-Abgleich, Backup-Lauf) und schreibt je Einsatz `_pat` und `_patState`. |
@@ -9108,7 +9147,7 @@ Fassung antwortet `auth_guard.php` einem API-Aufruf ohne `user_id` mit
 **401 JSON** (`error: session_ende`, `grund: nicht_angemeldet`) statt einer
 Weiterleitung, der `fetch()` gefolgt wäre.
 
-**Nach dem Code wird das Konto noch einmal gelesen** (`login_zeile()`,
+**Nach dem Code wird das Konto noch einmal gelesen** (`anmelde_konto()` in `db.php`, bis Web 23.6.5 `login_zeile()`,
 `login_zugang()`): In den fünf Minuten kann es gesperrt oder die Wartung
 eingeschaltet worden sein. **Die Selbstlöschung nimmt erst die ganze
 Anmeldung zurück**, nicht schon das Passwort (`$vollstaendig`): Wer nur das
@@ -9458,12 +9497,16 @@ unangemeldet, steht in `WARTUNG_AUSNAHMEN` und verlangt **drei** Dinge:
    er in Vierergruppen werden (`schluessel_eingabe_normalisieren()`),
    verglichen wird mit `hash_equals()`. Er liegt in jedem Komplett-Stand mit
    — wer einen geöffneten Stand hat, hat ohnehin die Datenbank.
-3. **Das Passwort**, als Token wie bei der Anmeldung (E-SR-84): Salz über
-   `auth_salt.php`, je Rundenzahl `EdCrypto.deriveKeys()`, der Server nimmt
-   das Token zur `kdf_iter` des Kontos und prüft mit `password_verify()` —
-   bei unbekannter Adresse gegen `AUTH_VERGLEICHSWERT`. Die
-   Browser-Ableitung steht damit ein zweites Mal da, weil `login.php` für
-   Schritt 18 zu ist (E-SR-14); Backlog Nr. 358.
+3. **Das Passwort**, als Token wie bei der Anmeldung (E-SR-84) — **und seit
+   Web 23.6.6 über dieselben Funktionen** (Nr. 358): im Browser
+   `EdCrypto.anmeldeTokens()` (Salz über `auth_salt.php`, je Rundenzahl
+   `deriveKeys()`), auf dem Server `anmelde_tokens_lesen()` und
+   `anmelde_token_pruefen()` in `db.php` (das Token zur `kdf_iter` des
+   Kontos über den Pfeffer, bei unbekannter Adresse der Blindvergleich gegen
+   `AUTH_VERGLEICHSWERT`), die Kontozeile über `anmelde_konto()`. Bis dahin
+   stand beides als zweite Abschrift im Notzugang, weil `login.php` für
+   Schritt 18 zu war (E-SR-14). Die Integritätswache vergleicht die Seite
+   seither mit (`SEITEN` in `wache.py`).
 
 **Die Tür ist eng** (E-SR-13, -85): Rolle BetreiberIn, `status = 'aktiv'`,
 Zweitfaktor an — und `betreiberinnen_zahl() === 1`, die **jedes** Konto der
@@ -9640,7 +9683,7 @@ jedes Konto ein **ECDH-Paar auf P-256**.
 | privater Teil | `users.kp_privat` | PKCS8 unter dem Inhaltsschlüssel, `edk1:` (`KP_PRIVAT_RE`) |
 | Zeitpunkt | `users.kp_seit` | wann es entstand |
 | Bibliothek | `kontopaar_lib.php` | Siegel, Prüfung (P-256 über denselben Lader wie der Rückweg), Zustand, Ablegen, SEC1 für Geräte |
-| Endpunkt | `api/kontopaar.php` | `anlegen` (mit Passwortnachweis), `abweichung` und — seit Web 22.0.4 — `oeffnen_fehler` |
+| Endpunkt | `api/kontopaar.php` | `anlegen` (mit Passwortnachweis oder, für das erste Anlegen, der Anlegemarke der Sitzung), `abweichung` und — seit Web 22.0.4 — `oeffnen_fehler` |
 | Browser | `assets/kontopaar.js`, `assets/crypto.js` | Paar erzeugen, Abgleich, privater Teil als nicht extrahierbarer `CryptoKey`; `geraetehuelleVerschliessen`/`-Oeffnen` |
 
 **Es entsteht still, beim ersten Entsperren nach einer Anmeldung**
@@ -9649,6 +9692,28 @@ Nachweis des Passworts — dieselbe Stelle und derselbe Grund wie beim Rückweg
 (4.38): Wer das Paar ablegt, bestimmt, für wen die Geräte verschließen.
 `api/kontopaar.php` legt nur ab, wenn noch keins da ist (409 sonst); ersetzt
 wird nicht, weil ein neues Paar jede Hülle unter dem alten unlesbar machte.
+
+**Seit Web 23.7.0 auch auf einer späteren Seite — die Anlegemarke** (Backlog
+Nr. 392, E-BR5-08). Das Token gibt es nur auf der ersten Seite nach der
+Anmeldung; wer schneller weiterklickte, hatte bis zur nächsten Anmeldung
+weder Paar noch Rückweg (in Firefox und WebKit in jedem gemessenen Lauf).
+`anmeldung_vollenden()` setzt deshalb eine Marke in die Sitzung
+(`anlege_marke_setzen()` in `sitzung_lib.php`): an dieses Konto gebunden,
+`ANLEGE_MARKE_S` = 600 s, je Zweck (`kontopaar`, `rueckweg`) einmal, nach
+jedem gelungenen Anlegen ausgetragen — auch nach einem mit Token. Die
+Endpunkte nehmen sie über `anlege_nachweis_json()` (`auth_guard.php`) statt
+des Tokens an; einen Rückweg **ersetzen** kann sie nicht. Die Seite erfährt
+über `ANLEGE_MARKE` (`ui_krypto_bootstrap()`), ob sie gilt; dann liest
+`unlock.js` den Inhaltsschlüssel still aus der Ablage und legt an. Ein
+fehlender Nachweis zählt nicht im Topf `login`. Der Preis steht im
+Bedrohungsmodell (Baustein „Schlüsselpaar des Kontos“): Wer die Sitzung in
+diesen zehn Minuten stiehlt, kann ein Paar setzen, solange keines da ist.
+
+**Der Weg von Hand** steht unter Einstellungen → Geräte: Fehlt das Paar, zeigt
+die Seite die Karte „Schlüsselpaar des Kontos“ mit „Schlüsselpaar einrichten“
+— Passwort, Inhaltsschlüssel mit der Wache (`EdSchluessel.oeffnen()`), Paar im
+Browser, derselbe Endpunkt mit Token. Die Meldungen „noch kein Schlüssel für
+Uhr und Handy“ verweisen dorthin.
 
 **Der öffentliche Teil geht nur mit gültigem Siegel hinaus** — an die Seite
 (`KP_OEFFENTLICH`, `ui_krypto_bootstrap()`) und bei der Kopplung an das
@@ -13510,7 +13575,12 @@ hinterher" — dann Punkt 1 oder 2 oben einrichten.
 → **Deaktivieren**. Wirkt sofort (Ingest antwortet `403`); Daten bleiben. Neue
 Uhr = neu koppeln (seit Web 23.3.0 der einzige Weg, ein Gerät anzulegen).
 Eine Uhr ab Uhr 4.1.0, die die Abmeldung erfährt, verwirft ihre
-ungesendeten Pakete 30 Tage danach (E-R17-22).
+ungesendeten Pakete 30 Tage danach (E-R17-22). **Nicht entkoppeln, wenn noch etwas
+wartet:** Seit Web 23.7.3 nennt die Rückfrage vor dem Entkoppeln den letzten
+Kontakt, wenn er älter als ein Tag ist, und rät zum Deaktivieren
+(`geraet_entkoppeln_frage()` in `geraete_lib.php`, Nr. 440); was nach dem
+Entkoppeln noch auf dem Gerät liegt, kommt erst nach einer neuen Kopplung an
+dasselbe Konto an (E-BE-08).
 
 **Die Kopplung klappt nicht (seit Web 13.0.0 anders zu suchen als davor):**
 Der Ablauf hat drei Schritte — das Gerät holt sich einen Code, ein Mensch

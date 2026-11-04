@@ -397,6 +397,9 @@ const PROTOKOLL_ARTEN = [
     'mail_unzustellbar'         => ['unzustellbar', 'rot'],
     'mail_zu_spaet'             => ['verfallen', 'orange'],
     'mail_ueberholt'            => ['ersetzt', 'neutral'],
+    /* Nicht eingereiht, weil die Adresse unter .invalid, .test, .example
+     * oder .localhost liegt (Nr. 450) — ein Eintrag in `protokoll_ereignisse`. */
+    'mail_reserviert'           => ['nicht eingereiht', 'neutral'],
     /* Jobs — Sicht auf `job_laeufe` */
     'job_lauf'                  => ['Lauf', 'neutral'],
     'job_fehler'                => ['Fehler', 'rot'],
@@ -600,7 +603,7 @@ function protokoll_arten_des_reiters(string $reiter): array
                          'archiv_heruntergeladen'],
         'sicherheit' => ['sperre', 'verlangsamung', 'aufgehoben', 'csp_bericht'],
         'email'      => ['mail_offen', 'mail_zugestellt', 'mail_unzustellbar',
-                         'mail_zu_spaet', 'mail_ueberholt'],
+                         'mail_zu_spaet', 'mail_ueberholt', 'mail_reserviert'],
         'jobs'       => ['job_lauf', 'job_fehler'],
         'sicherung'  => ['komplett_erzeugt', 'komplett_heruntergeladen',
                          'komplett_eingespielt', 'komplett_geloescht',

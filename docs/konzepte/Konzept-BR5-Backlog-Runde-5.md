@@ -16,17 +16,17 @@ BR5-10).
 | Paket | Inhalt | Stand |
 |---|---|---|
 | BR5-01 | Transaktion und Protokoll: Nr. 354, 345, 457 | **erledigt** 03.11.2026 (Web 23.6.3) |
-| BR5-02 | Jobs und Mail: Nr. 357, 454, 450 | offen |
-| BR5-03 | Formularfelder: Nr. 355 (`post_text()`) | offen |
-| BR5-04 | Zweite Passwortseite: Nr. 358 | offen |
-| BR5-05 | Schlüsselpaar und Rückweg nach der Anmeldung: Nr. 392 | offen |
-| BR5-06 | Meldungen und Karten: Nr. 346, 356, 456 | offen |
-| BR5-07 | Backup-Formular: Nr. 430 | offen |
-| BR5-08 | Geräte: Nr. 361 (mit 432), 440 | offen |
-| BR5-09 | PHP 8.3.6: Nr. 383 | offen |
-| BR5-10 | Abschluss | offen |
+| BR5-02 | Jobs und Mail: Nr. 357, 454, 450 | **erledigt** 03.11.2026 (Web 23.6.4) |
+| BR5-03 | Formularfelder: Nr. 355 (`post_text()`) | **erledigt** 03.11.2026 (Web 23.6.5) |
+| BR5-04 | Zweite Passwortseite: Nr. 358 | **erledigt** 03.11.2026 (Web 23.6.6) |
+| BR5-05 | Schlüsselpaar und Rückweg nach der Anmeldung: Nr. 392 | **erledigt** 03.11.2026 (Web 23.7.0) |
+| BR5-06 | Meldungen und Karten: Nr. 346, 356, 456 | **erledigt** 03.11.2026 (Web 23.7.1) |
+| BR5-07 | Backup-Formular: Nr. 430 | **gebaut** 03.11.2026 (Web 23.7.2) — Abnahme mit Bitwarden bei der Betreiberin (P-BR5-13) |
+| BR5-08 | Geräte: Nr. 361 (mit 432), 440 | **erledigt** 03.11.2026 (Web 23.7.3) |
+| BR5-09 | PHP 8.3.6: Nr. 383 | **erledigt** 03.11.2026 (keine Fassung, E-BR5-18) |
+| BR5-10 | Abschluss | **gebaut** 03.11.2026 — Prüfstand im Bericht des Commits, Pull Request offen |
 
-**In Arbeit:** BR5-02 als Nächstes. **Es hakt:** nirgends. BR5-01 ist erledigt; dabei hat die Messung F-BR5-12 widerlegt (F-BR5-15) — der Weg steht jetzt auf dem Fehlercode statt auf `inTransaction()`.
+**In Arbeit:** BR5-10 — Pull Request, danach Prüfung auf Staging (R91). **Es hakt:** nirgends. Nr. 430 bleibt „teilweise“, bis die Handprüfung mit Bitwarden durch ist.
 
 ---
 
@@ -75,7 +75,8 @@ also nicht. Nr. 393 hat 383 nie genannt. Was fehlt, ist die Messung unter
 
 **F-BR5-02 — `docs/Sandbox-Setup.md` sagt „Produktiv läuft 8.4“,
 `docs/Technik.md` sagt Produktiv 8.3.33, Staging 8.4.27** (Statusseite,
-02.11.2026). Eine der beiden Stellen ist falsch; BR5-09 zieht sie nach.
+02.11.2026). Eine der beiden Stellen ist falsch; BR5-09 zieht sie nach. *Gelöst mit
+BR5-09:* Falsch war `Sandbox-Setup.md`; sie verweist jetzt auf `Technik.md` 12.5.
 
 **F-BR5-03 — Nr. 357 nimmt an, die Klasse stehe im Reiter System; das tut
 sie nicht.** `jobs_einen_lauf()` ruft
@@ -181,6 +182,140 @@ bleibt — sie sagt, ob überhaupt eine Transaktion lief.
 schlucken wie `app_state_setzen()`.** E-BR5-05 nannte nur die eine Funktion;
 die zwei Geschwister stehen daneben, mit demselben Fang. BR5-01 behandelt
 alle drei gleich — eine Regel für drei Schreibhelfer, nicht für einen.
+
+**F-BR5-17 — Die Prüfmittel hingen an `.invalid` (BR5-02, gemessen
+03.11.2026).** Mit dem Riegel aus E-BR5-12 wurden sieben örtliche Proben rot,
+die zuvor grün waren: Mail (17 Fälle, dazu die Rundmail), Schlüsselwechsel
+(3), Raten (3), Passkey (3), Zweitfaktor (4), Rollen (1), Rückweg (2);
+in BR5-03 dazu die Kopplungsprobe (Teil 27 erwartet den Versandweg). Ihre
+Konten liegen unter `…@probe.invalid`, und sie zählen die Mails an diese
+Konten. Die Kettenkonten in Stufe 2 (`umlauf-…@example.invalid`) messen die
+Mail nur örtlich (`lokal` in `rueckweg/probe.mjs`); auf Staging ändert sich
+für die Kette nichts außer dem gewollten: keine Mailfehler mehr.
+
+**F-BR5-18 — Ein Containerneustart mitten in BR5-02.** Der Arbeitsprozess
+wurde neu gestartet (Laufzeit 0 min); die Dateien waren da, MariaDB und
+Anlage nicht. Die Startfolge aus `Sandbox-Setup.md` 6.1a brachte die Anlage
+zurück (v23.6.4, 0 Migrationen offen); die drei Fremd-Datenbanken der
+Schemaprobe (MariaDB 10.6, MySQL 8.0, 8.4.0) ließen sich nicht starten
+(„Docker Hub gedrosselt?“, `plattform.sh alles`, 7 Stück fehlen).
+
+**F-BR5-19 — `post_text()` liefert `string`, nicht `?string` (BR5-03).**
+E-BR5-06 sah `null` für eine Liste vor, damit der Aufrufer seinen
+Formularfehler baut. Gebaut ist: Text, sonst die Vorgabe. Der Grund: Alle 149
+Stellen setzen das Ergebnis unmittelbar als Text ein, und ein `?string`
+hätte an jeder einen eigenen Umgang mit `null` verlangt; eine Liste als leeres
+Feld ergibt bei jeder Seite schon heute den gewohnten Formularfehler
+(gemessen an zwölf Feldern, Prüfprotokoll). Die Vorgabe ist ein zweites
+Argument (`post_text('role', 'user')`), weil acht Stellen eine andere als `''`
+hatten.
+
+**F-BR5-20 — Mehr Stellen als gezählt.** Neben den 149 Casts gingen 15
+Felder ohne Cast an eine Funktion mit `string`-Parameter
+(`email_normalisieren()`, `email_pruefen()`, `rolle_normieren()`,
+`session_ende_text()`, `trim()`) — jedes eine 500 bei einer Liste. Bei
+`passkey_antwort` sagt der Kommentar „eine Liste ist eine leere Antwort“, der
+Code wertet sie als Passkey-Versuch; die Zweitfaktorprobe hält genau das fest
+(B-4: „Der Passkey wurde nicht angenommen“, ein Fehlversuch). Die Umstellung
+auf `post_text()` machte daraus einen Code-Versuch und die Probe rot — sie ist
+zurückgenommen; dort bleibt `?? ''`, das ohne Cast keine Warnung erzeugt. Eine dritte Hülle (`konten_param()` in
+`admin_users.php`) sah Z48 nicht, weil sie über eine Zwischenvariable prüft.
+Die Linkprobe erkannte gelesene Parameter nur an `$_GET[…]` und meldete nach
+dem Umbau 33 Abweichungen; sie liest jetzt auch `get_text('…')`.
+
+**F-BR5-21 — Ein zweiter Containerneustart in BR5-03.** Wie F-BR5-18; danach
+wurde der Zwischenstand sofort als Commit gesichert (`080df56`).
+
+**F-BR5-22 — Das alte Feld `token` schickt im Repositorium niemand mehr
+(gemessen 03.11.2026, BR5-04).** Weder Proben noch Werkzeuge noch Apps senden
+es an `login.php`; nur ein Reiter mit der alten Anmeldeseite könnte es noch.
+Es bleibt, wie BR5-04 es vorsah; ein Kommentar an der Stelle nennt die
+Messung. **Die Wache lässt sich örtlich nicht fahren**: Gegen
+`https://127.0.0.1:8443` scheitert jeder Abruf an der Zertifikatskette des
+Containers (149 von 159, „CA cert does not include key usage extension“);
+gemessen ist ihre Selbstprobe, der echte Vergleich läuft nach dem Merge in
+`integritaet.yml`.
+
+**F-BR5-23 — Der Weg von Hand steht unter Einstellungen → Geräte, nicht an
+den fünf Stellen, die „kein Schlüsselpaar“ melden (BR5-05).** E-BR5-08 sah
+den Knopf „dort, wo heute ‚kein Schlüsselpaar‘ abweist“. Das sind fünf Stellen
+(Startseite, Einsatzformular zweimal, Einsatzansicht, Freigabe), und ein Knopf
+mit Passwortdialog an jeder wäre ein neues Bedienmuster. Gebaut ist eine
+Karte auf der Geräteseite — dort, wo man Uhr und Handy einrichtet, nur
+sichtbar, solange das Paar fehlt —, und die Meldungen nennen den Weg.
+Die Rückweg-Zeile im Profil kam nicht in Frage: Sie hängt am Zweitfaktor, das
+Paar an jedem Konto mit Geräten.
+
+**F-BR5-24 — Eine Marke, die nach dem Anlegen mit Token noch galt (BR5-05,
+gefunden in der eigenen Abnahme).** Der erste Entwurf trug den Zweck nur aus,
+wenn die Marke getragen hatte. Legte die erste Seite mit dem Token an, galt
+die Marke für `kontopaar` noch zehn Minuten; ein zweites Anlegen ohne Token
+kam am Nachweis vorbei und scheiterte erst an `kp_ablegen()`. Ersetzen ging
+dabei nie. Jetzt fällt der Zweck nach jedem gelungenen Anlegen.
+
+**F-BR5-25 — Zwei Formulare in einem Abschnitt kleben aneinander (BR5-06,
+am Bild).** In der Lage „beide abweichend“ steht unter „Nachtragen vom Blatt“
+der Knopf des ersten Formulars ohne Abstand über der Beschriftung des
+zweiten. E-BR5-17 setzte die Linie je Abschnitt, nicht den Abstand darin;
+dafür bräuchte es eine Stylesheet-Regel. Backlog Nr. 480 (aus der Spanne
+dieses Schritts).
+
+**F-BR5-26 — Enter im Kontopasswort tat nie etwas (BR5-07).** Ein Formular
+ohne Absendeknopf mit mehr als einem Feld schickt bei Enter nach HTML nicht ab,
+und der verborgene Anmeldename zählt als Feld. Vorher, ohne Formular, war es
+ebenso. Damit Enter „Backup erstellen“ heißt, fängt das Formular die Taste ab;
+sein `submit` geht nie an den Server.
+
+**F-BR5-27 — Ein Teilskript scheiterte, der Rest lief an ihm vorbei
+(BR5-08, eigener Fehler).** Das Umbauskript für Nr. 440 brach an einer
+Ersetzung in `einstellungen.php` ab, bevor es `geraete_lib.php` schrieb; der
+zweite Anlauf ersetzte nur die Aufrufe. Die Seite Einstellungen → Geräte warf
+danach `Call to undefined function geraet_entkoppeln_frage()` — der
+Abnahmetest fand es (leere Seite ab der Gerätekarte, drei Einträge im Reiter
+System), nicht `php -l`, das undefinierte Funktionen nicht sieht. Seitdem
+prüft der Ladeweg-Test (BR5-03) nicht nur `require`, sondern die Abnahme
+fährt jede berührte Seite im Browser.
+
+**F-BR5-28 — Ein Bedienweg erwartete noch die Lage vor der Anlegemarke
+(BR5-05, gefunden im Prüfstand von BR5-10).** `einstellungen-profil-rueckweg`
+schickte nach der zweiten Anmeldung ein Anlegen ohne Token und erwartete 403.
+Seit Web 23.7.0 gilt dort die Marke (E-BR5-08), und die Antwort ist 409
+(„schon eingerichtet“) — richtig, denn die Marke erlaubt nur das erste
+Anlegen. Der Weg schickt jetzt ein **Ersetzen** ohne Token, das die Marke nie
+erlaubt (403). Bei BR5-05 war die Kontopaarprobe angepasst worden, dieser Weg
+nicht: Die Bedienprobe lief dort nicht mit.
+
+**F-BR5-29 — Die Wartungsprobe las die Nutzerabfrage noch in `login.php`
+(BR5-04, gefunden im Prüfstand von BR5-10).** Prüfung 18 suchte die
+Spaltenliste mit `role` im Text von `login.php`; seit Web 23.6.6 steht sie in
+`anmelde_konto()` (`db.php`), gemeinsam mit dem Notzugang. Die Anwendung war
+richtig, die Probe rot (83 von 84). Sie liest jetzt den Rumpf der Funktion und
+prüft, dass `login.php` sie ruft. Bei BR5-04 lief die Wartungsprobe nicht mit.
+
+**F-BR5-30 — Die Kontopaarprobe wartete an der falschen Seite (BR5-05,
+gefunden im Prüfstand von BR5-10).** Seit der Anlegemarke versuchen beide
+Seiten der Probe anzulegen; eine bekommt 200, die andere 409. Die Probe
+wartete nur an der ersten auf die 200 — gewann in Chromium die zweite, meldete
+sie „keine Anfrage“ (14 von 15), obwohl das Paar richtig und einmal entstand.
+Sie wartet jetzt am Kontext; danach viermal 15/0 in Chromium. Das Rennen ist
+nicht erzwingbar, eine Gegenprobe gibt es deshalb nicht.
+
+**F-BR5-31 — Ein abgebrochener Prüfstand hinterlässt Zustand (BR5-10,
+eigener Fehler).** Der erste Lauf wurde wegen F-BR5-28 abgebrochen, mitten in
+der Bedienprobe. Liegen blieben eine Job-Pause bis 16:04 UTC (Jobprobe rot)
+und ein offener Rückweg der Schlüsselwechselprobe (Bedienweg
+`betrieb-server-schluesselwechsel` rot). Aufgeräumt wurde mit `jobs_pause(0)`
+und `schluesselwechsel/probe.php --zurueck`. Danach waren die drei Proben
+einzeln grün. Lehre: einen Prüfstand auslaufen lassen, statt ihn abzubrechen.
+
+**F-BR5-32 — Kreislauf `edbak` in WebKit einmal mit Zeitüberschreitung bei
+der Anmeldung (BR5-10).** Im vierten Lauf wartete `kreislauf_edbak.mjs` 30 s
+auf die Seite nach dem Anmeldeknopf und brach ab; die Wegprobe des
+Spaltenregisters, die auf sein Konto baut, folgte. Der Anmeldeweg ist
+derselbe wie in Chromium und Firefox (grün) und wie im dritten Lauf (WebKit
+grün). Einzeln danach dreimal grün. Kein Backlog-Punkt nach einem Mal; tritt
+es wieder auf, ist die Frist von 30 s der erste Verdacht (WebKit rechnet
+PBKDF2 nach dem Bilderlauf spürbar langsamer).
 
 **F-BR5-14 — Nr. 450 hat die Ursache in der Kette, die Abhilfe am Server.**
 Stufe 2 legt Konten unter `…@example.invalid` an (`umlauf_konto()` in
@@ -418,6 +553,15 @@ Betreiberin).** Ersetzt E-BR5-02: „Setze Schritt 22 um, beginnend mit
 BR5-01“ — in dieser Sitzung, auf demselben Zweig. Je Paket ein Commit, ein
 Push, ein ZIP der geänderten Dateien mit Konzept und Prüfstand-Dokument
 (Vorgabe der Betreiberin für Codearbeit).
+
+**E-BR5-20 — Die Proben werden umgestellt, nicht der Riegel (03.11.2026,
+Betreiberin, aus F-BR5-17).** Gewählt aus drei Wegen: die Proben auf eine
+nicht reservierte Scheindomain (`probe.pruefung`; der Mailserver der Sandbox
+ist 127.0.0.1), den Riegel per Schalter nur auf Staging und Produktiv, oder
+Nr. 450 zurückstellen. Der Schalter hätte die Prüfumgebung anders laufen
+lassen als die Anlage, die sie prüft. Wo eine Probe gegen Staging misst
+(Rückwegprobe), zählt bei einer reservierten Adresse der Eintrag
+`mail_reserviert` statt der Mailzeile.
 
 **Modellwahl:** Opus für alle Pakete (K2); kein Fable-Schritt.
 **Fächerung:** keine. Alle Pakete schreiben `server/version.php`,
@@ -686,11 +830,256 @@ PHP 8.3.6):
   Kein Bilderlauf und kein Prüfstand: Das Paket ändert keine Oberfläche
   außer einem Meldungstext; der Prüfstand läuft in BR5-10 über den
   Endstand.
+- *Prüfstand vor dem Zwischen-PR* (Merge-Commit `10e88e3`, PR #141): Stufe
+  klein, schmal, 34 grün, 0 rot, 0 Hinweise, 1380 s. Ein erster Lauf davor
+  meldete `steuerung=hinweis` — die Statuszelle der Fahrplanzeile 22 war
+  über 240 Zeichen lang und begann nicht mit einem Wort des Vokabulars;
+  gekürzt, neu gemessen.
+- *Staging, nach dem Merge von PR #141* (Auslieferungslauf 166 grün,
+  Staging meldet v23.6.3; Chromium, eigenes Konto der Arbeitsumgebung, R91):
+  **P-BR5-01** Logo-Standard auf „Fahrzeug“ — Meldung „Standard der
+  Installation: Fahrzeug (NEF) …“, nach dem Neuladen gewählt, zurück auf
+  „Hubschrauber“. **P-BR5-02** Name und Kurzname mit Zusatz gespeichert
+  („Name der Installation gespeichert.“), nach dem Neuladen beide geändert,
+  zurückgestellt; Kontakt- und Betreiberadresse ebenso, danach wieder leer.
+  **P-BR5-03** im Demo-Konto 08:15–08:20 aus einem Ruhesegment gelöscht
+  (Rückfrage „Die 57 Punkte …“, 131 → 74 Punkte, 0 Seitenfehler); unter
+  Verwaltung → Protokoll steht die Art im Filter, die Zeile trägt
+  „GPS-Daten gelöscht“, die Rohform kommt auf der Seite nicht mehr vor —
+  auch der ältere Eintrag aus P-S11-22 ist jetzt beschriftet.
+  **P-BR5-04** Wegwerfkonto (Plus-Adresse) angelegt, Passwort über
+  `passwort_setzen.mjs`, Zweitfaktor über die Oberfläche eingeschaltet,
+  mit Code und „Gerät merken“ angemeldet; „Zurücksetzen“ in der
+  Verwaltung → „Zweitfaktor aus“, Protokoll „Gemerkte Geräte vergessen (1)
+  — mit dem Zweitfaktor“ und „Zweitfaktor durch die Verwaltung
+  zurückgesetzt“. Ohne Passkey (headless keiner anlegbar). Konto danach
+  gelöscht. Der Fehlerzweig des Logo-Standards bleibt ungeprüft (Prüfdokument
+  1).
+
+**BR5-02** (03.11.2026, Web 23.6.4; örtliche Anlage, MariaDB 10.11.14,
+PHP 8.3.6):
+
+- *Nr. 454, Mailprobe Abschnitt 4a* (neu; Gegenstelle mit vier neuen Arten
+  `aufschub` 450, `voll` 552, `anmeldung` 535, `nach_daten` 554): 550 beim
+  Empfänger und 554 nach den Daten nach einem Versuch `unzustellbar`,
+  Adresse bleibt, Rumpf weg; 552 und 535 nach einem Versuch `offen`; je genau
+  eine Störung im Reiter System. Abschnitte 4, 5, 6, 9 prüfen die Leiter jetzt
+  mit 450.
+- *Nr. 450, Mailprobe Abschnitt 10a* (neu): fünf reservierte Adressen
+  (auch in Großschreibung) → `MAIL_ABGELEHNT`, 0 Zeilen, fünf Einträge
+  `mail_reserviert` im Reiter E-Mail ohne Adresse, 0 im Reiter System;
+  `f@invalid.de` wird zugestellt. Mailprobe gesamt **76 Prüfungen, 0
+  Befunde**. **Gegenprobe** mit dem alten Server-Code: 4a und 10a rot (550
+  und 554 `offen`, reservierte Adresse eingereiht).
+- *Nr. 357, Jobprobe Teil 11* (neu): ein Job, der mit „Table '…' doesn't
+  exist“ wirft — Bericht und `letzter_fehler` ohne Klassennamen, der Wert in
+  Anführungszeichen bereinigt, der Reiter System trägt `RuntimeException`.
+  **40 Erwartungen, 0 offen**; mit dem alten Code 3 rot.
+- *Proben nach der Umstellung (E-BR5-20):* Raten 102/0, Passkey 128/0,
+  Rollen 612/0, Zweitfaktor 139/0, Rückweg 23/0 (davon „Mail +1“ über
+  `mail_reserviert`), Schlüsselwechsel 66/0 (Mail an jede BetreiberIn „1 von
+  1“), Versand 142/0, Protokoll 36/0, Wartung 84/0. Zählung 46/0/0.
+- *Ein eigener Fehler unterwegs:* Die Gegenprobe der Mailprobe brach mit dem
+  alten Code an der neuen Funktion ab und ließ `betrieb_mail =
+  betrieb@musterkreis.invalid` in der Anlage stehen; die Ratenprobe fand
+  danach keine Sammelmail. Wert gelöscht; die Probe selbst legt ihn bei
+  normalem Ende zurück. Die Ratenprobe legt für Abschnitt 8 jetzt ein
+  eigenes Verwaltungskonto unter `ratenprobe.pruefung` an, weil die Konten
+  der Anlage unter `example.invalid` liegen.
+- *Bedienwege* `registrieren` und `einstellungen-profil-rueckweg` (Chromium,
+  auf `probe.pruefung` umgestellt): 2 von 2 erfüllt (der zweite im zweiten
+  Anlauf — im ersten lief der Demo-Reset mitten hinein, das Werkzeug meldet
+  das selbst). *Quelltext:* 16 von 16 grün, nachdem die Textprobe eine
+  Adresse unter `probe.pruefung` in einer Beispielzeile von `Technik.md`
+  fand; die Zeile steht wieder auf `probe.invalid`. *Steuerung:* 49 offene
+  Einträge, 0 Fehler; 21 Decken, 0 gerissen.
+
+**BR5-03** (03.11.2026, Web 23.6.5; örtliche Anlage):
+
+- *Umbau:* ein Skript mit Klammerzählung (nicht eingecheckt) stellte 150
+  Fundstellen um; eine davon war ein Kommentar in `admin_users.php`, der die
+  alte Form als Falle zitierte — er ist mit `konten_param()` entfallen. Echte
+  Stellen: 149. Ladeweg: für jede Datei, die `post_text()`/`get_text()`
+  ruft, die Kette der `require` aufgelöst — 0 ohne `db.php` oder
+  `eingabe_lib.php`. `php -l` über alle berührten Dateien ohne Befund.
+- *Abnahme Nr. 355:* zwölf Felder als Liste (`login.php`: `email`,
+  `tokens`, `password`, `token`; `registrieren.php`: `email`, `name`,
+  `website`, `zeit`; `zweitfaktor_notweg.php`: `email`, `tokens`, `wert`;
+  `reset_request.php`: `email`) über HTTPS mit gültigem Formular-Token — **0
+  mit 500 oder Zeile im Reiter System**, jeder Fall nachweislich angenommen.
+  **Gegenprobe** mit dem Server-Stand vor BR5-03: 4 rot — zwei 500er
+  (`email[]` in Anmeldung und „Passwort vergessen“), zwei Warnungen „Array to
+  string conversion“. *Ein eigener Fehler unterwegs:* Der erste Lauf ging
+  über `http://`, das `Secure`-Cookie kam nicht zurück, jede Seite wies das
+  Formular als abgelaufen ab — und meldete trotzdem „0 Fehler“. Der Test
+  prüft seither, dass das Formular angenommen wurde.
+- *Register:* Z47 (Cast vor `$_POST`/`$_GET`) Start 149, Ist 0; Z48 (eigene
+  `is_string`-Hülle) Start 2, Ist 0; Gegenprobe mit dem alten Code 149 und 2
+  über der Decke. *Linkprobe:* 152 Verweise, 0 Abweichungen.
+- *Proben* (alle PHP-Proben, nacheinander): Passkey 128/0, Rollen 612/0,
+  Raten 102/0, Rückweg 23/0, Wiederherstellung 142/0, Sitzung 25/0, Geräte
+  grün, Protokoll 36/0, Jobs 40/0, Wartung 84/0, Mail 76/0, Versand 142/0,
+  Anteil 74/0, Rechtstexte 0 fehlgeschlagen, Verbindung grün, Ingest 97/0,
+  Spur 20/0, Schlüsselwechsel 66/0, Komplett 74/0; Kopplung nach der
+  Umstellung auf `probe.pruefung` 85/0; Zweitfaktor nach der Rücknahme bei
+  `passkey_antwort` 139/0. *Ein eigener Fehler unterwegs:* Eine
+  Wiederholung der Zweitfaktorprobe lief, während der Hintergrundlauf noch
+  Proben fuhr — 137/2 (Passwort über den Link, `totp_abschalten()`), danach
+  allein 139/0. Zwei Proben gleichzeitig messen einander (CLAUDE.md 7); die
+  137/2 sind kein Befund über den Code.
+
+**BR5-04** (03.11.2026, Web 23.6.6; örtliche Anlage):
+
+- *Quelltext:* genau ein `fetch('auth_salt.php'` (in `crypto.js`, vorher
+  zwei in `login.php` und im Notzugang); die Inline-Skripte beider Seiten mit
+  `node --check` ohne Befund; `php -l` über die berührten Dateien.
+- *Proben* (nacheinander): Zweitfaktor 139/0 (Notzugang samt gleicher
+  Antwortdauer über alle Lagen), Anteil 74/0 (Token unter einer anderen
+  Rundenzahl), Raten 102/0, Sitzung 25/0, Rollen 612/0, Passkey 128/0,
+  Wiederherstellung 142/0, Rückweg 23/0.
+- *Browser, drei Engines* (Einmaltest): Anmeldung mit dem Demo-Konto über die
+  Oberfläche → Startseite; Notzugang mit Adresse, Passwort, Wert → die eine
+  Antwort „steht für dieses Konto nicht bereit“ (ein kaputtes Skript zeigte
+  „Dieser Browser unterstützt …“). Chromium, Firefox, WebKit je ok, 0
+  Seitenfehler.
+- *Wache:* `wache.py --selbstprobe` 55/0; `SEITEN` nennt zwei Seiten.
+  Bedrohungsmodell C1, G5 und Bausteintabelle nachgezogen (CLAUDE.md 4).
+
+**BR5-05** (03.11.2026, Web 23.7.0; örtliche Anlage):
+
+- *Abnahme Nr. 392, drei Engines* (Einmaltest, je ein frisches Konto über
+  `passwort_setzen.mjs`): Anmeldung, auf der ersten Seite sind
+  `api/kontopaar.php` (anlegen) und `api/rueckweg_anlegen.php` gesperrt (je
+  2 Versuche ins Leere), dann die Suche als zweite Seite → Paar und Rückweg
+  stehen („11“), Protokoll `kontopaar_angelegt` mit `nachweis: marke`; 0
+  Seitenfehler. Weg von Hand: alles automatische Anlegen gesperrt,
+  Einstellungen → Geräte zeigt die Karte, Dialog mit Passwort → Paar steht,
+  `nachweis: passwort`, Karte fort. Chromium, Firefox, WebKit: **6 von 6**.
+  **Gegenprobe** mit dem Server-Stand vor BR5-05: das Konto bleibt nach der
+  zweiten Seite ohne Paar („00“). Die Freigabeprobe selbst wartet weiter auf
+  der ersten Seite (`paarAbwarten()` in `motor.mjs`); den Fall ohne Warten
+  misst dieser Test.
+- *Regeln der Marke* (PHP gegen `sitzung_lib.php`): ohne Marke, anderes
+  Konto, unbekannter Zweck, verbraucht, abgelaufen → gilt nicht; Frist
+  600 s — **8 von 8**.
+- *Endpunkte in einer echten Sitzung:* Rückweg ersetzen ohne Token bei
+  gültiger Marke → 403 `passwort`; Kontopaar ein zweites Mal ohne Token →
+  403 (nach F-BR5-24; vorher 400 erst an der Form).
+- *Design:* `tools/erzeugen/design.py schreiben` — vier Tabellen unverändert.
+- *Proben* (nacheinander): Freigabe 25/0, Rückweg 23/0, Zweitfaktor 139/0,
+  Sitzung 25/0, Raten 102/0, Ortsdaten 58/0, Passkey 128/0, Kontopaar 15/0
+  — die Kontopaarprobe zuerst 13/2: Ihr Teil 2b hielt fest, dass nur die
+  erste Seite anlegt; seit der Marke legt auch die zweite an, beide warten am
+  Tor der Probe, eine bekommt 200, die andere 409. Kein zweites Paar
+  („Protokoll … einmal“ grün). Die Probe wartet jetzt auf die 200 und
+  verlangt von der zweiten Seite nur, dass sie den Schlüssel danach hat.
+
+**BR5-06** (03.11.2026, Web 23.7.1; örtliche Anlage, Chromium):
+
+- *Nr. 346:* `EdPat.zeigeUnlesbar({ok: 3, unlesbar: 2})` auf der Startseite
+  → `#patwarn > .meldung.meldung-warn` mit großem Symbol; ein Demo-Tag kurz
+  in den Papierkorb, `loadDay()` → `#daytrash > .meldung.meldung-warn` mit
+  Symbol, danach zurück. Z37 Ist 2, Decke 2.
+- *Nr. 356:* Lage „abweichend“ über verstellte Marken in `app_state`
+  (`server_key_kennung`, `kdf_anteil_kennung`; `config.php` unberührt — mit
+  einem fremden Anteil dort meldet sich niemand an, der erste Versuch dieses
+  Tests scheiterte genau daran). „Nachtragen“ und „Neuanfang“ in
+  `.listen-form`, je 12 px Abstand zum Element davor wie jeder andere
+  Abschnitt der Seite, bei 390 und 1280 px; Bilder angesehen; Marken
+  zurückgelegt.
+- *Nr. 456:* ein Demo-Einsatz mit Hülle: entsperrt „keine“ (er hat keine
+  Reanimation), nach `EdCrypto.inhaltLoeschen()` gesperrt „gesperrt“.
+  0 Seitenfehler.
+- *Design:* keine neue Regel, kein neuer Baustein; Bilderlauf im Prüfstand
+  vor dem PR (BR5-10).
+
+**BR5-07** (03.11.2026, Web 23.7.2; örtliche Anlage, Demo-Konto — ein frisches
+Konto hat nichts zu sichern):
+
+- *Backup, drei Engines:* Schalter „Mein Kontopasswort verwenden“, Passwort,
+  **Enter** im Feld → `.edbak` heruntergeladen, die Seite bleibt
+  (`#bpwk` steht im Formular `bpwkfeld`); Schalter aus, eigenes Passwort
+  zweimal, Knopf → `.edbak`. Chromium, Firefox, WebKit je ok, 0 Seitenfehler.
+  Der erste Lauf: Enter löste nichts aus (F-BR5-26).
+- *Bildvergleich* der Karte vor und nach dem Umbau (Chromium, Schalter aus
+  und an): 0 abweichende Pixel bei 988 × 495 und 988 × 436.
+- *Nicht geprüft:* ob Bitwarden den Eintrag jetzt am Feld anbietet — die
+  Sandbox hat kein Bitwarden (P-BR5-13).
+
+**BR5-08** (03.11.2026, Web 23.7.3; örtliche Anlage, Chromium):
+
+- *Nr. 361, 432:* drei Probe-Dateien in `server/apk/` (Handy vor 300 s, Uhr
+  vor 10 s abgelegt, `alt-1.0.apk` ohne Muster): Einstellungen → Geräte,
+  „Ohne Play Store“ → „NAdoku für Android-Handy“, „NAdoku für Wear-OS-Uhr“,
+  „NAdoku“; Kleinzeile „Fassung 0.20.0 · APK …“; drei Prüfsummen. Betrieb →
+  Updates: „Android-App (Handy)“ und „Wear-OS-App“ je mit 0.20.0. Dateien
+  danach entfernt (`server/apk/` steht in `.gitignore`).
+- *Nr. 440:* Demo-Gerät 61 mit Kontakt vor drei Tagen, 62 mit Kontakt eben:
+  Rückfrage in Einstellungen und Verwaltung bei 61 mit „Zuletzt gemeldet am
+  … um … Uhr“ und „Deaktivieren“, bei 62 der bisherige Satz. Danach
+  `last_seen` zurück auf NULL.
+- *Gefunden unterwegs:* F-BR5-27 (fehlende Funktion), vom Abnahmetest.
+
+**BR5-09** (03.11.2026, keine Fassung; örtliche Anlage, PHP 8.3.6 mit
+OpenSSL 3.0.13 und zlib 1.3 — genau die Fassungen aus Nr. 383):
+
+- *Komplettprobe:* 74 Erwartungen, 0 nicht erfüllt (`proben.sh komplett`),
+  darunter „über drei Häppchen versiegelt … öffnet“ und „Zieldatei
+  verschwindet“ — die beiden roten Fälle aus Nr. 383. Zwei Teile melden
+  „--“ (Häppchenteilung, Wiederanlauf: der Bestand ist zu klein, messbar im
+  Messstand); das war auch vor Nr. 393 so.
+- *Schlüsselwechselprobe:* 66 ok, 0 fehlen, darunter „Komplett-Stand über
+  den Wechsel“.
+- *Gegenprobe:* `komp_oeffnen()` und `komp_erster_block_oeffnet()` zurück auf
+  `filesize($pfad)` → Komplettprobe 2 nicht erfüllt („verändert oder
+  unvollständig (Block 1)“, dieselben zwei Fälle), Schlüsselwechselprobe
+  65/1 (dieselbe Zeile) — das Bild aus Nr. 383, Zahl für Zahl. Datei danach
+  zurückgesetzt, nicht committet.
+- *Folgerung:* Ursache ist der Stat-Cache von PHP innerhalb eines Prozesses,
+  behoben mit Nr. 393; keine Mindestfassung. 8.3.33 und 8.4 nicht eigens
+  (E-BR5-18).
+- *F-BR5-02:* `Technik.md` 12.5 stimmt (Statusseite), `Sandbox-Setup.md`
+  verweist jetzt dorthin.
+
+**BR5-10** (03.11.2026; Stufe `neben`, Umfang schmal, drei Engines, weil
+`ui.php` berührt ist — das deckt die Anmeldeseiten aus BR5-03 bis -05):
+
+- *Erster Lauf* abgebrochen nach der Bedienprobe in Chromium (76 von 77,
+  F-BR5-28); der Abbruch hinterließ Zustand (F-BR5-31).
+- *Zweiter Lauf* als Wegwerflauf zu Ende gefahren bis zum Bilderlauf in
+  Chromium: rot die Wartungsprobe (83 von 84, F-BR5-29) und die beiden Reste
+  aus F-BR5-31.
+- *Dritter Lauf* (9236 s): 59 grün, 2 rot — Kontopaarprobe in Chromium
+  14 von 15 (F-BR5-30) und `uhr-krypto` („…/ConnectIQ/Devices ist kein
+  Verzeichnis“: der Uhr-Teil der Arbeitsumgebung fehlte nach dem
+  Containerneustart). Nachgeholt mit `aufbauen.sh uhr` (rc 0, 173
+  Gerätedateien); danach `uhr-krypto` einzeln 3 von 3 Geräten ohne Fehler,
+  Kontopaarprobe in Chromium viermal 15/0.
+- *Vierter Lauf* (9298 s, Commit `42e91d74`): 59 grün, 2 rot —
+  `kreislauf-edbak` in WebKit (F-BR5-32) und die Wegprobe dahinter. Einzeln
+  danach dreimal grün bzw. 31/0.
+- *Fünfter Lauf* auf dem Folge-Commit: erbt das Grüne aus dem vierten
+  (Pruefablauf 5.4), misst den Kreislauf neu (der erbt nie) — der Bericht
+  im Commit.
+- *Bedienweg einzeln* nach der Anpassung: `einstellungen-profil-rueckweg`
+  1 von 1. Wartungsprobe einzeln 84/0, Gegenprobe der neuen Prüfung 18 (ohne
+  `role` in der Spaltenliste: falsch). Jobprobe 40/0,
+  Schlüsselwechselprobe 66/0.
 
 ## 7. Verlauf
 
 | Datum | Was |
 |---|---|
+| 03.11.2026 | BR5-10: Prüfstand; F-BR5-28 bis -31 (drei Proben auf den Stand von BR5-04/-05 gebracht). |
+| 03.11.2026 | BR5-09 erledigt (Nr. 383 gemessen, keine Fassung); F-BR5-02 berichtigt. |
+| 03.11.2026 | BR5-08 erledigt (Web 23.7.3); F-BR5-27. |
+| 03.11.2026 | BR5-07 gebaut (Web 23.7.2), Nr. 430 „teilweise“; F-BR5-26. |
+| 03.11.2026 | BR5-06 erledigt (Web 23.7.1); F-BR5-25, Backlog Nr. 480. |
+| 03.11.2026 | BR5-05 erledigt (Web 23.7.0); F-BR5-23, -24. |
+| 03.11.2026 | BR5-04 erledigt (Web 23.6.6); F-BR5-22. |
+| 03.11.2026 | BR5-03 erledigt (Web 23.6.5); F-BR5-19 bis -21. |
+| 03.11.2026 | BR5-02 erledigt (Web 23.6.4); F-BR5-17, -18; E-BR5-20 (Proben umgestellt). |
+| 03.11.2026 | PR #141 gemergt; P-BR5-01 bis -04 auf Staging bestanden und aus der Handprüfliste gestrichen. |
 | 03.11.2026 | `main` mit PR #139 aufgenommen (Rahmenplan-Fassung 206 wird 207); Zwischen-PR mit BR5-01, damit die Arbeitsumgebung die Punkte auf Staging prüft (Betreiberin). |
 | 03.11.2026 | BR5-01 erledigt (Web 23.6.3); F-BR5-15, -16; E-BR5-19 (diese Sitzung setzt um). |
 | 03.11.2026 | `main` mit PR #137 und #138 aufgenommen; Fahrplanzeile 22, Rahmenplan Fassung 206, Kopfzeilen 450, 454, 456, 457 auf `22`; gemergte Spanne 470 bis 479 (GR) gestrichen, weil die Kopfdecke von `Backlog.md` sonst riss (61 > 60). |

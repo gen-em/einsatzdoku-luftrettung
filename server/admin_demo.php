@@ -36,7 +36,7 @@ $notice = null; $error = null; $bericht = null;
  * kann schon etwas fort sein (Absatz im `catch`). */
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     csrf_check();
-    $aktion = (string)($_POST['action'] ?? '');
+    $aktion = post_text('action');
     try {
         if ($aktion === 'demo_anlegen') {
             $bericht = demo_anlegen();

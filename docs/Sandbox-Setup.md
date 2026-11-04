@@ -46,7 +46,8 @@ werden (Komplettprobe, Nr. 393).
 
 **Im Abbild vorhanden:** PHP **8.3.6**, und nur diese Fassung
 (`/usr/bin/php8.3`; die Anwendung verlangt mindestens 8.2,
-`PLATTFORM_PHP_MIN`, Produktiv läuft 8.4) — mit `pdo_mysql`, `mysqli`,
+`PLATTFORM_PHP_MIN`; Produktiv läuft 8.3.33, Staging 8.4.27, `docs/Technik.md`
+12.5) — mit `pdo_mysql`, `mysqli`,
 `openssl`, `gd`, `zip`, `mbstring`; Node **22.22** samt einem Playwright des
 Abbilds und dessen Chromium unter `/opt/pw-browsers/`. **Das Playwright des
 Abbilds benutzt seit Nr. 393 kein Prüfmittel mehr:** `aufbauen.sh` hebt auf

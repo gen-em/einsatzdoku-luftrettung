@@ -7,6 +7,11 @@ declare(strict_types=1);
  *
  * Anlass: Nr. 204 — smtp_letzter_fehler() nannte den Grund des vorigen Versuchs
  *
+ * DIE EMPFAENGER LIEGEN UNTER `mailprobe.pruefung`, nicht mehr unter
+ * `.invalid`: Seit Nr. 450 reiht `mail_einreihen()` die reservierten
+ * Domains gar nicht erst ein. Nach draussen geht trotzdem nichts — die
+ * Probe stellt den Mailserver auf die Gegenstelle auf 127.0.0.1.
+ *
  * Aufruf:  php tools/proben/mail/probe.php
  *
  * WAS SIE MISST UND WARUM SIE NOETIG IST. Riefe jede der zehn
@@ -128,7 +133,7 @@ function mp_gegenstelle(string $art, float $verzug = 0.0): void
 $cfg = require $sicher;
 $cfg['smtp'] = ['host' => '127.0.0.1', 'port' => $PORT,
                 'user' => 'probe', 'pass' => 'probe',
-                'from' => 'noreply@mailprobe.invalid', 'from_name' => 'Mailprobe'];
+                'from' => 'noreply@mailprobe.pruefung', 'from_name' => 'Mailprobe'];
 file_put_contents($cfgPfad, "<?php return " . var_export($cfg, true) . ";\n");
 
 require_once $wurzel . '/server/mail_lib.php';
@@ -155,7 +160,7 @@ function abschnitt(string $t): void { echo "\n" . $t . "\n" . str_repeat('-', st
 
 $pdo = db();
 $pdo->exec('DELETE FROM mail_warteschlange');
-$adr = 'probe@mailprobe.invalid';
+$adr = 'probe@mailprobe.pruefung';
 
 function mp_letzte(): ?array
 {
@@ -349,25 +354,62 @@ try {
 pruef('mit Benutzer und Passwort wieder eingerichtet', smtp_eingerichtet() === true, '');
 
 /* ======================================================================== */
-abschnitt('4  Ablehnung — Leiter, Grund, Kennung');
+abschnitt('4  Vorlaeufige Absage — Leiter, Grund, Kennung');
 
-mp_gegenstelle('ablehnen');
+/* 450 STATT 550 seit Nr. 454: Eine 5xx beim Empfaenger ist endgueltig und
+ * geht nicht mehr auf die Leiter (Abschnitt 4a). */
+mp_gegenstelle('aufschub');
 $pdo->exec('DELETE FROM mail_warteschlange');
 $e = mail_einreihen('passwort_reset', $adr, ['link' => $beispiel['link']]);
 pruef('mail_einreihen() meldet wartet', $e === MAIL_WARTET, $e);
 $z = mp_letzte();
 pruef('Zeile bleibt offen', ($z['zustand'] ?? '') === 'offen', (string)($z['zustand'] ?? '-'));
 pruef('Ein Versuch gezaehlt', (int)($z['versuche'] ?? 0) === 1, (string)($z['versuche'] ?? '-'));
-pruef('Grund nennt den Antwortcode', str_contains((string)($z['fehler'] ?? ''), '550'),
+pruef('Grund nennt den Antwortcode', str_contains((string)($z['fehler'] ?? ''), '450'),
       (string)($z['fehler'] ?? '-'));
 pruef('Grund nennt eine Kennung',
       (bool)preg_match('/Kennung [0-9A-F]{8}/', (string)($z['fehler'] ?? '')), '');
 pruef('Grund nennt KEINE Empfaengeradresse',
       !str_contains((string)($z['fehler'] ?? ''), '@'),
-      'Die Gegenstelle haengt bewusst eine an ihre 550-Zeile.');
+      'Die Gegenstelle haengt bewusst eine an ihre 450-Zeile.');
 $abstand = strtotime((string)$z['naechster_versuch'] . ' UTC') - strtotime((string)$z['erstellt'] . ' UTC');
 pruef('Naechster Versuch nach 300 s (erste Sprosse)', abs($abstand - 300) <= 2,
       $abstand . ' s');
+
+/* ======================================================================== */
+abschnitt('4a  Endgueltige Absage — sofort unzustellbar, nur beim Empfaenger (Nr. 454)');
+
+/* Anlass: Nr. 454 — eine 550 lief 24 Stunden lang die ganze Leiter durch.
+ * Endgueltig ist nur, was den EMPFAENGER ablehnt: 5xx beim RCPT TO und nach
+ * dem Ende der Daten, ausser 552. Eine 535 beim Anmelden ist ein Fehler der
+ * Einstellungen und darf die Warteschlange nicht verfallen lassen. */
+$faelle = [
+    ['ablehnen',   'unzustellbar', '550 beim Empfaenger'],
+    ['nach_daten', 'unzustellbar', '554 nach den Daten'],
+    ['voll',       'offen',        '552 Postfach voll'],
+    ['anmeldung',  'offen',        '535 beim Anmelden'],
+];
+foreach ($faelle as [$art, $soll, $was]) {
+    mp_gegenstelle($art);
+    $pdo->exec('DELETE FROM mail_warteschlange');
+    $sysVor = (int)$pdo->query('SELECT COALESCE(MAX(id), 0) FROM protokoll_ereignisse')->fetchColumn();
+    mail_einreihen('adresswechsel', $adr, ['alt' => $beispiel['alt'],
+                                           'neu' => $beispiel['neu'],
+                                           'durch' => $beispiel['durch']]);
+    $z = mp_letzte();
+    $st = $pdo->prepare("SELECT COUNT(*) FROM protokoll_ereignisse
+                          WHERE reiter = 'system' AND id > ? AND text LIKE 'smtp:%'");
+    $st->execute([$sysVor]);
+    $sys = (int)$st->fetchColumn();
+    pruef($was . ': nach dem ersten Versuch ' . $soll,
+          ($z['zustand'] ?? '') === $soll && (int)($z['versuche'] ?? 0) === 1,
+          (string)($z['zustand'] ?? '-') . ', versuche=' . (int)($z['versuche'] ?? 0));
+    pruef($was . ': genau eine Stoerung im Reiter System', $sys === 1, (string)$sys);
+    if ($soll === 'unzustellbar') {
+        pruef($was . ': Adresse bleibt, Rumpf ist weg',
+              ($z['empfaenger'] ?? null) === $adr && ($z['text'] ?? null) === null, '');
+    }
+}
 
 /* ======================================================================== */
 abschnitt('5  Fuenf Sprossen, dann unzustellbar — Adresse bleibt stehen');
@@ -378,6 +420,7 @@ abschnitt('5  Fuenf Sprossen, dann unzustellbar — Adresse bleibt stehen');
  * die dritte Sprosse liegt bei 300+1800+7200 s. Der Reset-Link stirbt also an
  * seiner Frist, nicht an der Leiter. Beides wird gemessen, jedes an dem
  * Eintrag, fuer den es gilt. */
+mp_gegenstelle('aufschub');      // vorlaeufig: die Leiter (Nr. 454)
 $pdo->exec('DELETE FROM mail_warteschlange');
 mail_einreihen('adresswechsel', $adr, ['alt' => $beispiel['alt'],
                                        'neu' => $beispiel['neu'],
@@ -416,7 +459,7 @@ pruef('Ein Reset-Link stirbt an seiner Frist, nicht an der Leiter',
 /* ======================================================================== */
 abschnitt('6  Ueberholte Zeilen — der zweite Link entwertet den ersten');
 
-mp_gegenstelle('ablehnen');
+mp_gegenstelle('aufschub');
 $pdo->exec('DELETE FROM mail_warteschlange');
 mail_einreihen('passwort_reset', $adr, ['link' => $beispiel['link']]);
 $erste = (int)mp_letzte()['id'];
@@ -454,7 +497,7 @@ pruef('Vielzeilige Antwort sprengt die Frist nicht',
 /* ======================================================================== */
 abschnitt('9  Gueltigkeitsfrist — kein Versuch nach Ablauf');
 
-mp_gegenstelle('ablehnen');
+mp_gegenstelle('aufschub');
 $pdo->exec('DELETE FROM mail_warteschlange');
 mail_einreihen('passwort_reset', $adr, ['link' => $beispiel['link']]);
 $id = (int)mp_letzte()['id'];
@@ -484,6 +527,40 @@ pruef('Keine dieser drei hat eine Zeile hinterlassen', $nachher === $vorher,
       $vorher . ' -> ' . $nachher);
 
 /* ======================================================================== */
+abschnitt('10a  Reservierte Domains — nicht eingereiht, ein Protokolleintrag (Nr. 450)');
+
+/* Anlass: Nr. 450 — Stufe 2 legt Konten unter `…@example.invalid` an, und
+ * jede Einladung lief auf Staging die Leiter durch. */
+mp_gegenstelle('ok');
+$pdo->exec('DELETE FROM mail_warteschlange');
+$peVor = (int)$pdo->query('SELECT COALESCE(MAX(id), 0) FROM protokoll_ereignisse')->fetchColumn();
+$reserviert = ['a@x.example.invalid', 'b@pruef.test', 'c@beispiel.example',
+               'd@host.localhost', 'e@GROSS.INVALID'];
+$alleAbgelehnt = true;
+foreach ($reserviert as $r) {
+    $alleAbgelehnt = $alleAbgelehnt && mail_einreihen('einladung', $r, ['link' => 'x']) === MAIL_ABGELEHNT;
+}
+$zeilen = (int)$pdo->query('SELECT COUNT(*) FROM mail_warteschlange')->fetchColumn();
+$st = $pdo->prepare("SELECT art, text, daten FROM protokoll_ereignisse WHERE id > ? AND reiter = 'email'");
+$st->execute([$peVor]);
+$pe = $st->fetchAll(PDO::FETCH_ASSOC);
+$st = $pdo->prepare("SELECT COUNT(*) FROM protokoll_ereignisse WHERE id > ? AND reiter = 'system'");
+$st->execute([$peVor]);
+$sys = (int)$st->fetchColumn();
+pruef('Fuenf reservierte Adressen abgelehnt (.invalid, .test, .example, .localhost, gross)',
+      $alleAbgelehnt, '');
+pruef('Keine Zeile in der Warteschlange', $zeilen === 0, (string)$zeilen);
+pruef('Fuenf Eintraege mail_reserviert im Reiter E-Mail',
+      count($pe) === 5 && count(array_filter($pe, static fn($z) => $z['art'] === 'mail_reserviert')) === 5,
+      (string)count($pe));
+pruef('Keine Adresse darin', !str_contains(implode(' ', array_map(
+          static fn($z) => $z['text'] . ' ' . $z['daten'], $pe)), '@'), '');
+pruef('Kein Eintrag im Reiter System', $sys === 0, (string)$sys);
+$e = mail_einreihen('testmail', 'f@invalid.de');
+pruef('Eine Domain, die nur „invalid" heisst, geht hinaus', $e === MAIL_ZUGESTELLT, $e);
+$pdo->prepare("DELETE FROM protokoll_ereignisse WHERE id > ? AND art = 'mail_reserviert'")->execute([$peVor]);
+
+/* ======================================================================== */
 abschnitt('11  Der Job — Budget und Menge');
 
 mp_gegenstelle('ok');
@@ -493,7 +570,7 @@ for ($i = 0; $i < 4; $i++) {
                      (schluessel, art, empfaenger, betreff, text, zustand, versuche,
                       erstellt, naechster_versuch)
                    VALUES (?,?,?,?,?,\'offen\',0, UTC_TIMESTAMP(), UTC_TIMESTAMP())')
-        ->execute(['testmail', 'betrieb', 'j' . $i . '@mailprobe.invalid',
+        ->execute(['testmail', 'betrieb', 'j' . $i . '@mailprobe.pruefung',
                    'Betreff ' . $i, 'Rumpf']);
 }
 $t0 = microtime(true);
@@ -512,7 +589,7 @@ for ($i = 0; $i < 6; $i++) {
                      (schluessel, art, empfaenger, betreff, text, zustand, versuche,
                       erstellt, naechster_versuch)
                    VALUES (?,?,?,?,?,\'offen\',0, UTC_TIMESTAMP(), UTC_TIMESTAMP())')
-        ->execute(['testmail', 'betrieb', 's' . $i . '@mailprobe.invalid', 'B', 'R']);
+        ->execute(['testmail', 'betrieb', 's' . $i . '@mailprobe.pruefung', 'B', 'R']);
 }
 $t0 = microtime(true);
 $erg = mail_job($pdo, [], static fn(): float => 3.0 - (microtime(true) - $t0));
@@ -552,7 +629,7 @@ abschnitt('13  Das Fehlerprotokoll nennt keinen Empfaenger');
 $sysVorher = (int)$pdo->query('SELECT COALESCE(MAX(id), 0) FROM protokoll_ereignisse')->fetchColumn();
 mp_gegenstelle('ablehnen');
 $pdo->exec('DELETE FROM mail_warteschlange');
-mail_einreihen('einladung', 'geheimer.empfaenger@mailprobe.invalid',
+mail_einreihen('einladung', 'geheimer.empfaenger@mailprobe.pruefung',
                ['link' => $beispiel['link']]);
 $st = $pdo->prepare("SELECT id, text, daten FROM protokoll_ereignisse
                       WHERE reiter = 'system' AND id > ? AND text LIKE 'smtp:%' ORDER BY id");
@@ -594,19 +671,22 @@ $neuesKonto = static function (string $mail, string $status, bool $passwort) use
 };
 try {
     foreach (['rund-1', 'rund-2', 'rund-3'] as $n) {
-        $neuesKonto($n . '@mailprobe.invalid', 'aktiv', true);
+        $neuesKonto($n . '@mailprobe.pruefung', 'aktiv', true);
     }
-    $neuesKonto('rund-ohne-passwort@mailprobe.invalid', 'aktiv', false);
-    $neuesKonto('rund-unbestaetigt@mailprobe.invalid', 'unbestaetigt', true);
-    $gesperrt = $neuesKonto('rund-gesperrt@mailprobe.invalid', 'aktiv', true);
+    $neuesKonto('rund-ohne-passwort@mailprobe.pruefung', 'aktiv', false);
+    $neuesKonto('rund-unbestaetigt@mailprobe.pruefung', 'unbestaetigt', true);
+    $gesperrt = $neuesKonto('rund-gesperrt@mailprobe.pruefung', 'aktiv', true);
     $pdo->prepare("UPDATE users SET status = 'gesperrt' WHERE id = ?")->execute([$gesperrt]);
 
     $ziele = rundmail_empfaenger();
-    $N = count($ziele);
+    /* Konten der Anlage unter reservierten Domains (`…@example.invalid`,
+     * die Pruefkonten) reiht `mail_einreihen()` seit Nr. 450 nicht mehr
+     * ein — sie zaehlen nicht zu den Erreichbaren der Rundmail. */
+    $N = count(array_filter($ziele, static fn($m) => mail_domain_reserviert($m) === null));
     $drin = array_values(array_filter($ziele, static fn($m) => str_starts_with($m, 'rund-')));
     sort($drin);
     pruef('Erreichbar: die drei aktiven mit Passwort, sonst keins der Probe',
-          $drin === ['rund-1@mailprobe.invalid', 'rund-2@mailprobe.invalid', 'rund-3@mailprobe.invalid'],
+          $drin === ['rund-1@mailprobe.pruefung', 'rund-2@mailprobe.pruefung', 'rund-3@mailprobe.pruefung'],
           implode(', ', $drin));
     $demoId = demo_id();
     $demoMail = null;

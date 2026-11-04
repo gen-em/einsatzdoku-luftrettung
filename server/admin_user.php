@@ -90,7 +90,7 @@ const DEMO_GESPERRT = ['konto', 'sichern', 'einspielen', 'freigeben',
                        'konto_status', 'konto_grenzen', 'totp_zuruecksetzen'];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $action  = (string)($_POST['action'] ?? '');
+    $action  = post_text('action');
     /* ERST DIE ROLLE, DANN DAS TOKEN. Umgekehrt beantwortete die
      * Seite einem Support mit falschem Token jede Handlung gleich — und die
      * Rollenprobe koennte nicht sehen, welche er ueberhaupt erreicht. */
@@ -118,9 +118,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
      * Rolle wechseln, Zweitfaktor zuruecksetzen, Konto loeschen — nach dem
      * Rollentor, vor dem Token. Der Rollenwechsel ist Teil des Formulars
      * „Konto" und zaehlt nur, wenn sich die Rolle aendert; die Bedingung
-     * rechnet wie der Zweig unten (`rolle_normieren($_POST['role'] ?? '')`). */
+     * rechnet wie der Zweig unten (`rolle_normieren(post_text('role'))`). */
     if ($action === 'konto'
-        && rolle_normieren($_POST['role'] ?? '') !== rolle_normieren($u['role'] ?? null)) {
+        && rolle_normieren(post_text('role')) !== rolle_normieren($u['role'] ?? null)) {
         zweitfaktor_frisch_verlangen('rollenwechsel');
     }
     if ($action === 'totp_zuruecksetzen') { zweitfaktor_frisch_verlangen('totp_zuruecksetzen'); }
@@ -133,7 +133,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
      * Konto an sich zog. Der Adresswechsel zaehlt nur, wenn sich die Adresse
      * aendert; dieselbe Rechnung wie der Zweig unten (`email_pruefen()`). */
     if ($action === 'konto') {
-        $emailNeuTor = email_pruefen($_POST['email'] ?? '');
+        $emailNeuTor = email_pruefen(post_text('email'));
         if ($emailNeuTor !== null && $emailNeuTor !== (string)$u['email']) {
             zweitfaktor_frisch_verlangen('adresswechsel_verwaltung');
         }
@@ -149,7 +149,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $action = '';
     }
     $kennung = (string)($u['account_key'] ?? '');
-    $datei   = (string)($_POST['datei'] ?? '');
+    $datei   = post_text('datei');
 
     /* ---- Kontodaten: EIN Formular, EIN Speichern --------------
      *
@@ -172,7 +172,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $letzt = array_pop($t);
             return implode(', ', $t) . ' und ' . $letzt;
         };
-        $name = trim((string)($_POST['name'] ?? ''));
+        $name = trim(post_text('name'));
         /* DREI ROLLEN, DREI SCHRANKEN.
          *
          * Zur Schranke „nicht sich selbst die Admin-Rolle entziehen" kommen
@@ -193,7 +193,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
          *      eigenen Betriebsbereich aussperren; der Rueckweg fuehrte ueber
          *      die Datenbank, und den hat auf geteiltem Hosting niemand.
          */
-        $role  = rolle_normieren($_POST['role'] ?? '');
+        $role  = rolle_normieren(post_text('role'));
         $rolleAlt = rolle_normieren($u['role'] ?? null);
         $teile = [];
 
@@ -228,7 +228,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $teile[] = 'Name';
         }
 
-        $email = email_pruefen($_POST['email'] ?? '');
+        $email = email_pruefen(post_text('email'));
         if ($email === null) {
             $error = 'Bitte eine gültige E-Mail-Adresse angeben (höchstens 190 Zeichen).'
                    . ($teile ? ' ' . $aufzaehlung($teile) . ' wurde gespeichert.' : '');
@@ -324,7 +324,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         foreach ([['grenze_einsaetze', 'Einsätze', 1, 1000000],
                   ['grenze_mb',        'Speicher (MB)', 1, 1000000],
                   ['backup_pakete',    'Konto-Backups aufheben', 1, 99]] as [$f, $name, $min, $max]) {
-            $roh = trim((string)($_POST[$f] ?? ''));
+            $roh = trim(post_text($f));
             if ($roh === '') { $werte[$f] = null; continue; }
             if (!ctype_digit($roh) || (int)$roh < $min || (int)$roh > $max) {
                 $error = $name . ': leer lassen für die Vorgabe der Installation, '
@@ -359,8 +359,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if ($action === 'konto_status') {
         require_once __DIR__ . '/konto_lib.php';
-        $ziel  = (string)($_POST['status'] ?? '');
-        $grund = trim((string)($_POST['grund'] ?? ''));
+        $ziel  = post_text('status');
+        $grund = trim(post_text('grund'));
         /* VOR dem Wechsel merken: Danach steht in der Tabelle der neue Wert,
          * und ob dies eine Freischaltung war (`wartet` -> `aktiv`) oder ein
          * Entsperren (`gesperrt` -> `aktiv`), liesse sich nicht mehr
@@ -468,7 +468,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         . 'so lange nützt auch der Link unten.';
                 $setzLink = $link;
             } else {
-                $notice = 'Der Setz-Link konnte NICHT verschickt werden.';
+                $notice = 'Der Setz-Link konnte NICHT verschickt werden.'
+                        . mail_reserviert_satz((string)$u['email']);
                 $setzLink = $link;
             }
         }
@@ -561,7 +562,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $error = 'Zielkonto nicht gefunden.';
         } elseif (!$paket) {
             $error = 'Das Paket liess sich nicht lesen.';
-        } elseif (!edbak_bestaetigung_passt((string)($_POST['confirm_email'] ?? ''), (string)$ziel['email'])) {
+        } elseif (!edbak_bestaetigung_passt(post_text('confirm_email'), (string)$ziel['email'])) {
             $error = 'Die eingegebene E-Mail-Adresse stimmt nicht mit der des '
                    . 'Kontos überein — es wurde nichts eingespielt.';
         } else {
@@ -603,7 +604,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($action === 'freigeben') {
         /* Regel, Protokoll und Mail an EINER Stelle. */
         [$okF, $meldungF] = edbak_freigabe_erteilen($kennung, $datei,
-            (int)($_POST['ziel_user'] ?? 0), (string)($_POST['confirm_email'] ?? ''));
+            (int)($_POST['ziel_user'] ?? 0), post_text('confirm_email'));
         if ($okF) { $notice = $meldungF; } else { $error = $meldungF; }
     }
     if ($action === 'widerrufen') {
@@ -621,7 +622,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($action === 'paket_loeschen') {
         $hart = ($_POST['hart'] ?? '') === '1';
         $bestaetigt = !$hart
-            || edbak_bestaetigung_passt((string)($_POST['confirm_email'] ?? ''), (string)$u['email']);
+            || edbak_bestaetigung_passt(post_text('confirm_email'), (string)$u['email']);
         if (!$bestaetigt) {
             $error = 'Die eingegebene E-Mail-Adresse stimmt nicht überein — es wurde '
                    . 'nichts gelöscht.';
@@ -635,7 +636,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($action === 'user_delete') {
         // Zweite Stufe: die E-Mail-Adresse muss abgetippt werden. Bewusst
         // SERVERSEITIG geprueft — ein Browser-Dialog liesse sich umgehen.
-        $eingabe = trim((string)($_POST['confirm_email'] ?? ''));
+        $eingabe = trim(post_text('confirm_email'));
         if ($uid === $userId) {
             $error = 'Das eigene Konto kann hier nicht gelöscht werden.';
         } elseif (ist_letzte_betreiberin(db(), $uid, $u['role'] ?? null)) {
@@ -728,6 +729,7 @@ $u = $st->fetch();
 if (!$u) { ui_abbruch(404, 'NutzerIn nicht gefunden.', ['zurueck' => 'admin_users.php', 'zurueck_text' => 'Zu den NutzerInnen']); }
 
 $dv = db()->prepare('SELECT id, device_id, label, active, created_at, last_seen,
+                            TIMESTAMPDIFF(HOUR, last_seen, NOW()) AS seit_h,
                             geraet_art, geraet_modell, geraet_teil
                      FROM devices
                      WHERE user_id = ? AND ' . GERAETE_ECHT_SQL . ' ORDER BY created_at');
@@ -860,7 +862,7 @@ ui_seite_start(['titel' => ($u['name'] ?: $u['email']) . ' — Konto']);
       <input type="hidden" name="dev" value="<?= (int)$d['id'] ?>">
     </form>
     <form method="post" id="f-dev-d-<?= (int)$d['id'] ?>" hidden
-          data-confirm="Gerät entkoppeln? Hochgeladene Daten bleiben erhalten."
+          data-confirm="<?= e(geraet_entkoppeln_frage($d, 'Gerät entkoppeln? Hochgeladene Daten bleiben erhalten.')) ?>"
           data-confirm-ok="Entkoppeln">
       <?= csrf_field() ?><input type="hidden" name="action" value="device_delete">
       <input type="hidden" name="id" value="<?= $uid ?>">

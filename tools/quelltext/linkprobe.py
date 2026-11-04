@@ -18,13 +18,13 @@ vierzig Zeilen entfernt, benutzten `?d=` richtig.
 WAS SIE MISST. Alle Zeichenketten der Form `<seite>.php?…` in `server/`
 (PHP und JavaScript, auch in zusammengesetzten Adressen), gehalten gegen die
 Parameter, die die Zielseite tatsaechlich liest: `$_GET[…]`, `$_REQUEST[…]`,
-`filter_input(INPUT_GET, …)`. JEDER Parameter der Adresse, nicht nur der
+`filter_input(INPUT_GET, …)`, `get_text('…')`. JEDER Parameter der Adresse, nicht nur der
 erste, und `&amp;` gilt als Trenner wie `&`. Drei Ergebnisse je Fund:
 
   FEHLT      die Zielseite liest diesen Namen nicht — ein Befund
   ZIEL WEG   die Zieldatei gibt es nicht — ein Befund
   DYNAMISCH  die Zielseite liest ihre Parameter ueber eine Variable
-             (`$_GET[$name]`, wie `konten_param()` in `admin_users.php`) —
+             (`$_GET[$name]`, wie `get_text()` in `eingabe_lib.php`) —
              statisch nicht entscheidbar, wird gezaehlt und nicht gemeldet
 
 WAS SIE NICHT KANN, und warum das kein Mangel ist:
@@ -97,12 +97,16 @@ VERWEIS = re.compile(r"""['"]([A-Za-z0-9_./-]+\.php)\?([^'"]*)""")
 # zweite Parameter einer solchen Adresse still durch.
 PARAMETER = re.compile(r"""(?:^|&amp;|&)([A-Za-z0-9_]+)=""")
 
-# Was eine Seite liest. Vier Formen, damit keine still durchrutscht.
+# Was eine Seite liest. Fuenf Formen, damit keine still durchrutscht.
 LIEST = (
     re.compile(r"""\$_GET\s*\[\s*'([^']+)'\s*\]"""),
     re.compile(r'''\$_GET\s*\[\s*"([^"]+)"\s*\]'''),
     re.compile(r"""\$_REQUEST\s*\[\s*'([^']+)'\s*\]"""),
     re.compile(r"""INPUT_GET\s*,\s*'([^']+)'"""),
+    # Seit Nr. 355 liest jede Seite ueber `get_text('name')` (`eingabe_lib.php`)
+    # und nicht mehr ueber `(string)($_GET['name'] ?? '')`. Ohne diese Form
+    # galten 33 Verweise als „FEHLT".
+    re.compile(r"""\bget_text\(\s*'([^']+)'"""),
 )
 
 # `$_GET[$irgendwas]` — die Seite entscheidet zur Laufzeit, welchen Namen sie

@@ -8489,5 +8489,66 @@ declare(strict_types=1);
  *   nicht, PDO meldet nach dem Deadlock weiter „ja". Dazu: Name und Adressen
  *   der Installation werden zusammen oder gar nicht geschrieben, der
  *   Logo-Standard meldet ein Scheitern, und das Loeschen eines Zeitraums
- *   heisst im Protokoll „GPS-Daten geloescht". Korrektur; kein Schema. */
-const WEB_VERSION = '23.6.3';
+ *   heisst im Protokoll „GPS-Daten geloescht". Korrektur; kein Schema.
+ * 23.6.4 — EINE ENDGUELTIGE ABSAGE LIEF 24 STUNDEN LANG WEITER (Backlog
+ *   Nr. 454, 450, 357; Schritt 22, BR5-02). Eine 550 beim Empfaenger ging
+ *   die ganze Leiter durch, mit einer Stoerung je Versuch; jetzt ist sie
+ *   nach dem ersten unzustellbar — aber nur beim Empfaenger, denn eine 535
+ *   beim Anmelden ist ein falsches Passwort und darf die Warteschlange nicht
+ *   verfallen lassen. Adressen unter `.invalid`, `.test`, `.example` und
+ *   `.localhost` reiht der Mailweg gar nicht erst ein; die Wegwerfkonten der
+ *   Kette fuellten auf Staging den Reiter System. Und ein Job, der wirft,
+ *   zeigt auf seiner Karte die bereinigte Meldung statt „RuntimeException:
+ *   …"; die Klasse steht im Reiter System, wo sie bis dahin fehlte.
+ *   Korrektur; kein Schema.
+ * 23.6.5 — EIN FORMULARFELD ALS LISTE GAB EINE 500 (Backlog Nr. 355;
+ *   Schritt 22, BR5-03). Aus `email[]=x` statt `email=x` machte die
+ *   Anmeldung und „Passwort vergessen" einen TypeError, und an 149 Stellen
+ *   wurde aus einer Liste per `(string)` der Text „Array" samt Warnung im
+ *   Reiter System. Jetzt liest jede Seite ihre Felder ueber `post_text()`
+ *   und `get_text()` (`eingabe_lib.php`): Text, sonst die Vorgabe. Drei
+ *   lokale Huellen fuer dasselbe sind darin aufgegangen; zwei Registerzeilen
+ *   halten die alte Form auf null. Korrektur; kein Schema.
+ * 23.6.6 — DIE ZWEITE PASSWORTSEITE HATTE IHRE EIGENE KOPIE (Backlog
+ *   Nr. 358; Schritt 22, BR5-04). Der Notzugang leitete das Anmelde-Token
+ *   ab wie die Anmeldung und pruefte es wie sie — je mit einer zweiten
+ *   Abschrift, auch des Blindvergleichs, der die Antwortdauer gleich haelt.
+ *   Jetzt eine Stelle je Seite des Wegs: `EdCrypto.anmeldeTokens()` im
+ *   Browser, `anmelde_tokens_lesen()`, `anmelde_token_pruefen()` und
+ *   `anmelde_konto()` in `db.php`. Die Integritaetswache vergleicht den
+ *   Notzugang jetzt mit. Korrektur; kein Schema.
+ * 23.7.0 — DAS SCHLUESSELPAAR ENTSTAND NUR AUF DER ERSTEN SEITE (Backlog
+ *   Nr. 392; Schritt 22, BR5-05). Kontopaar und Rueckweg legte der Browser
+ *   nur mit dem Anmelde-Token an, und das gibt es nur auf der ersten Seite
+ *   nach der Anmeldung; wer schneller weiterklickte — in Firefox und WebKit
+ *   jedes Mal —, hatte bis zur naechsten Anmeldung keines. Jetzt traegt die
+ *   Sitzung zehn Minuten eine Anlegemarke, die der Server fuer das ERSTE
+ *   Anlegen statt des Tokens annimmt (E-BR5-08; der Preis steht im
+ *   Bedrohungsmodell), und Einstellungen -> Geraete hat einen Weg von Hand.
+ *   Neben, weil es den Weg von Hand neu gibt; kein Schema.
+ * 23.7.1 — DREI DINGE, DIE ANDERS AUSSAHEN ALS DER REST (Backlog Nr. 346,
+ *   356, 456; Schritt 22, BR5-06). Der Hinweis auf unlesbare Eintraege und
+ *   der Papierkorb-Hinweis des Diensttags waren Nachbauten der Meldung ohne
+ *   Symbol; jetzt der Baustein (`EdHtml.meldung()`). Auf der Karte
+ *   „Schluessel des Servers" klebten „Nachtragen vom Blatt" und „Neuanfang"
+ *   ohne Abstand am Knopffuss; jetzt je eine Linie. Und die Reanimationskarte
+ *   sagte im gesperrten Formular „keine", auch an einem Einsatz mit
+ *   Reanimation; jetzt „gesperrt" oder „nicht lesbar". Korrektur; kein
+ *   Schema.
+ * 23.7.2 — BITWARDEN HIELT DAS BACKUP FUER EINEN PASSWORTWECHSEL (Backlog
+ *   Nr. 430; Schritt 22, BR5-07). Kontopasswort und die zwei Felder fuer ein
+ *   eigenes Backup-Passwort standen ohne Formular nebeneinander; der
+ *   Verwalter sah `current-password` neben zwei `new-password` und bot am
+ *   Feld nichts an. Jetzt steht das Kontopasswort samt Anmeldename in einem
+ *   eigenen Formular, das nie abgeschickt wird; Enter erstellt das Backup.
+ *   Ob Bitwarden es jetzt anbietet, zeigt nur ein echter Browser mit
+ *   Bitwarden. Korrektur; kein Schema.
+ * 23.7.3 — ZWEI APKS MIT DEMSELBEN NAMEN, UND KEIN WORT VOR DEM ENTKOPPELN
+ *   (Backlog Nr. 361, 432, 440; Schritt 22, BR5-08). Unter „Ohne Play
+ *   Store" hiessen Handy- und Wear-OS-App gleich, und die Uhr-App stand oft
+ *   oben; Betrieb -> Updates zeigte als „Android-App" die zuletzt abgelegte
+ *   Datei. Jetzt traegt jede ihr Geraet (`apk_geraet()`), Handy zuerst, und
+ *   Updates hat zwei Zeilen. Und wer ein Geraet entkoppelt, das sich seit
+ *   mehr als einem Tag nicht gemeldet hat, liest jetzt, wann zuletzt, und
+ *   dass Deaktivieren der bessere Griff ist. Korrektur; kein Schema. */
+const WEB_VERSION = '23.7.3';

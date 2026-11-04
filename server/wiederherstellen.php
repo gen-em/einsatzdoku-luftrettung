@@ -248,14 +248,14 @@ $darfArbeiten = ($leer || $imLauf) && $dbFehler === null && $ablageFehler === nu
 
 /* ---- Die Handgriffe ------------------------------------------------------ */
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && $darfArbeiten) {
-    if (!hash_equals((string)($_SESSION['wh_csrf'] ?? ''), (string)($_POST['csrf'] ?? ''))) {
+    if (!hash_equals((string)($_SESSION['wh_csrf'] ?? ''), post_text('csrf'))) {
         $error = 'Ungültiges Formular-Token. Bitte die Seite neu laden.';
     } else {
-        if (!nachweis_eingabe_passt($nachweisMuster, $nachweis, (string)($_POST['nachweis'] ?? ''))) {
+        if (!nachweis_eingabe_passt($nachweisMuster, $nachweis, post_text('nachweis'))) {
             $error = 'Der Nachweis stimmt nicht. Bitte die Zeichenfolge aus dem '
                    . 'Dateinamen im Anwendungsverzeichnis eintragen (siehe unten).';
         } else {
-            $aktion = (string)($_POST['action'] ?? '');
+            $aktion = post_text('action');
             $anfang = microtime(true);
             $zeitLinks = static fn(): float => WH_BUDGET - (microtime(true) - $anfang);
 
@@ -265,8 +265,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $darfArbeiten) {
                 $error = 'In der Datenbank stehen bereits Konten. Ein neuer '
                        . 'Durchgang beginnt nur auf einer leeren Datenbank.';
             } elseif ($aktion === 'auspacken') {
-                $datei = (string)($_POST['datei'] ?? '');
-                $pw    = (string)($_POST['passphrase'] ?? '');
+                $datei = post_text('datei');
+                $pw    = post_text('passphrase');
                 try {
                     $stand = wh_auspacken($datei, $pw, $stand);
                     wh_stand_schreiben($stand);

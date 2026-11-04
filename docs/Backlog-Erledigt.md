@@ -10510,6 +10510,299 @@ zutreffen.
      feste Art eines `protokoll()`-Aufrufs und der Reiterliste gegen
      `PROTOKOLL_ARTEN` (Gegenprobe: ohne den Eintrag 2 Stellen).
 
+357. **Der Fehlertext eines Jobs trägt den Klassennamen der Ausnahme.** · gehört zu: 22 · Stand: erledigt · seit 04.10.2026
+     *Aufgenommen 04.10.2026 mit H-SR-06 (Konzept SR, F-SR-82; Nebenbefund
+     der Gegenlesung zu O-7).* `jobs_einen_lauf()` schreibt
+     `get_class($ex) . ': ' . $ex->getMessage()` nach `letzter_fehler` und in
+     den Bericht; „Jetzt weiterarbeiten" (Karte „Schlüssel des Servers") und
+     die Karte „Jobs" zeigen ihn so der BetreiberIn —
+     „RuntimeException: …" ist Technik, keine Auskunft. Betrifft alle Jobs,
+     nicht nur den Schlüsselwechsel; deshalb nicht in H-SR-06 geändert. Im
+     Reiter System steht die Klasse ohnehin in den Daten (`klasse`). *Weg:*
+     im Bericht und in `letzter_fehler` nur die Meldung, die Klasse bleibt
+     im Reiter System. *Abnahme:* ein Job, der wirft (Probe mit
+     verfälschtem Häppchen) — die Karte zeigt die Meldung ohne Klasse, der
+     Reiter System die Klasse. *Dazu (Nachprüfung H-SR-06, F-SR-87):* der
+     Grund in der Zeile „Ließen sich nicht umhüllen" ist ebenfalls der rohe
+     Ausnahmetext; eine PDOException trüge den Datenbanknamen, ein
+     TypeError Pfade. Dieselbe Kürzung an derselben Stelle.
+     Erledigt 03.11.2026 mit BR5-02 (Web 23.6.4): `jobs_einen_lauf()`
+     schreibt nach `letzter_fehler`, in den Verlauf und in den Bericht die
+     Meldung durch `system_bereinigen()`, und `system_melden()` bekommt die
+     Ausnahme — damit steht die Klasse im Reiter System, wo sie bis dahin
+     fehlte (F-BR5-03). Dieselbe Kürzung für den Grund in „Ließen sich nicht
+     umhüllen“. Jobprobe Teil 11: Meldung ohne Klasse, Wert bereinigt,
+     Klasse im Reiter System; mit dem alten Code 3 von 4 rot.
+
+454. **Der Mailjob versucht eine dauerhafte Absage 24 Stunden lang weiter.** · gehört zu: 22 · Stand: erledigt · seit 02.11.2026
+     *Aufgenommen 02.11.2026 im ersten Prüfdurchgang der Arbeitsumgebung
+     (R91, P-P5c-03).* Die Rundmail an 8 Staging-Konten: 5 zugestellt,
+     zwei mit „Server antwortete 550" (das Postfach gibt es nicht), eine
+     mit 450 (Nr. 450). Alle drei stehen danach auf „wartet" und laufen die
+     ganze `MAIL_LEITER` (5 min bis 24 h) durch. Ein 5xx ist nach RFC 5321
+     endgültig; jeder weitere Versuch ist eine Störung im Reiter System und
+     verlängert „Letzter Versand fehlgeschlagen" auf der Statusseite.
+     *Weg:* `mail_zeile_versuchen()` setzt bei einer 5xx-Antwort sofort
+     `unzustellbar`, mit der Absage als Grund; 4xx und
+     Verbindungsfehler bleiben auf der Leiter.
+     *Abnahme:* eine Mail an eine Adresse ohne Postfach steht nach dem
+     ersten Versuch unter „unzustellbar", ohne zweite Störung.
+     Erledigt 03.11.2026 mit BR5-02 (Web 23.6.4): `smtp_letzter_fehler()`
+     liefert Code und Schritt; `mail_absage_endgueltig()` macht eine 5xx
+     beim Empfänger oder nach den Daten sofort unzustellbar, außer 552; eine
+     Absage bei Anmeldung oder Absender bleibt auf der Leiter (F-BR5-10,
+     E-BR5-11). Mailprobe Abschnitt 4a: 550 und 554 nach einem Versuch
+     unzustellbar, 552 und 535 offen, je genau eine Störung; mit dem alten
+     Code rot.
+
+450. **Die Wegwerfkonten der Kette füllen auf Staging den Reiter System mit Mailfehlern.** · gehört zu: 22 · Stand: erledigt · seit 02.11.2026
+     *Aufgenommen 02.11.2026 im ersten Prüfdurchgang der Arbeitsumgebung
+     (R91, P-P5c-12).* Stufe 2 legt je Lauf und Engine Konten unter
+     `…@example.invalid` an, meldet sie an und löscht sie wieder. Jede Mail an
+     sie scheitert beim Mailserver von Staging mit „Server antwortete 450";
+     an einem Tag standen so über 100 gleiche Einträge im Reiter System, die
+     Statusseite zeigt dauerhaft „Letzter Versand fehlgeschlagen", und eine
+     Einladung wartet 24 Stunden auf Wiederholung. Echte Fehler gehen darin
+     unter. Mails an echte Adressen kommen an (Einladung, erster Versuch).
+     *Weg:* Adressen unter `.invalid` gar nicht erst einreihen — die Endung
+     ist nach RFC 2606 nie zustellbar —, mit einem Satz im Protokoll statt
+     einer Störung; oder die Kette nimmt eine zustellbare Prüfadresse.
+     *Abnahme:* nach einem Stufe-2-Lauf keine neue Zeile „smtp … 450" im
+     Reiter System, Status „Letzter Versand" unverändert.
+     Erledigt 03.11.2026 mit BR5-02 (Web 23.6.4): `mail_einreihen()` reiht
+     Adressen unter `.invalid`, `.test`, `.example`, `.localhost` nicht ein
+     (`mail_domain_reserviert()`), schreibt `mail_reserviert` in den Reiter
+     E-Mail, ohne Adresse; die Einladungsseiten nennen den Grund. Die
+     örtlichen Proben, die Post erwarten, legen ihre Konten seither unter
+     `probe.pruefung` an (E-BR5-20). Gegenprobe auf Staging nach dem Merge:
+     Stufe 2 ohne Mailfehler.
+
+355. **Ein Formularfeld als Liste gibt eine PHP-Warnung — `(string)$_POST[…]` an 114 Stellen.** · gehört zu: 22 · Stand: erledigt · seit 29.09.2026
+     *Aufgenommen 29.09.2026 mit der dritten Lesung von H-SR-08 (Konzept SR,
+     F-SR-65).* Aus `code[]=x` statt `code=x` macht
+     `(string)($_POST['code'] ?? '')` den Text „Array" mit der Warnung
+     „Array to string conversion", und der Behandler schreibt sie in den
+     Reiter System — höchstens eine Zeile je Stelle und Anfrage. Für
+     `passkey_antwort` ist das seit Web 21.11.0 behoben (F-SR-47); das
+     Nachbarfeld `code` in `login.php` und `zweitfaktor.php`, `signatur` und
+     `tokens` in `login.php` haben es noch — `tokens` im ersten Schritt, ohne
+     Passwort, hinter dem Anmelde-Topf. `grep -rn '(string)($_POST['` über
+     `server/` zählt 114 Stellen. *Weg:* ein Helfer `post_text()` als die
+     eine Stelle (R83) und eine Registerzeile gegen das Muster. *Abnahme:*
+     jedes Feld der Anmeldeschritte als Liste → Formularfehler, keine Zeile
+     im Reiter System. *Seit Web 21.14.0 (SR-08, F-SR-96)* nimmt
+     `registrieren.php` seine Felder über eine lokale Hülle `$feld` — dort
+     war `email[]` sogar eine 500; jetzt 109 Stellen, und `$feld` steht mit
+     `zweitfaktor_notweg.php` zweimal: beide gehen in `post_text()` auf.
+     Erledigt 03.11.2026 mit BR5-03 (Web 23.6.5): `post_text()` und
+     `get_text()` in `eingabe_lib.php` an 149 Stellen (125 POST, 24 GET),
+     dazu 15 Aufrufe ohne Cast (`email_normalisieren()`, `email_pruefen()`,
+     `rolle_normieren()`, `trim()`, `session_ende_text()`);
+     `passkey_antwort` bleibt bewusst ohne (F-BR5-20). Die Hüllen `$feld`
+     (zweimal) und `konten_param()` sind darin aufgegangen. Registerzeilen
+     Z47, Z48 mit Decke 0. Abnahme: zwölf Felder der Anmeldeseiten als Liste
+     — 0 mit 500 oder Zeile im Reiter System; mit dem alten Code 4 (zwei
+     500er).
+
+358. **Die zweite Passwortseite: Token-Ableitung an einer Stelle, und die Wache vergleicht sie mit.** · gehört zu: 22 · Stand: erledigt · seit 04.10.2026
+     *Aufgenommen 04.10.2026 mit SR-04 (Konzept SR, F-SR-90, E-SR-84).*
+     Der Notzugang `zweitfaktor_notweg.php` leitet das Passwort-Token ab wie
+     `login.php` (Salz über `auth_salt.php`, je Rundenzahl
+     `EdCrypto.deriveKeys()`) — mit einer zweiten Kopie der rund zwanzig
+     Zeilen, weil `login.php` für Schritt 18 zu ist (E-SR-14) und dort auch
+     die Prüfung (`login_zeile()`, Token je `kdf_iter`, Blindvergleich) als
+     lokaler Code steht. Dazu: Die Integritätswache vergleicht die
+     Inline-Skripte der Seiten, auf denen ein Passwort getippt wird
+     (`tools/integritaetswache/wache.py`, `SEITEN`) — dort steht nur
+     `login.php`. Die neue Seite vorher einzutragen, machte die Wache rot,
+     solange die Anlage sie nicht hat. *Weg:* eine Funktion in `crypto.js`
+     (Salz holen, Token je Rundenzahl) für beide Seiten, die Prüfung als
+     Funktion neben `AUTH_VERGLEICHSWERT`; nach der Auslieferung von
+     Web 21.13.0 `zweitfaktor_notweg.php` in `SEITEN`. *Abnahme:* ein
+     `fetch('auth_salt.php'` im Quelltext; die Wache misst zwei Seiten.
+     Erledigt 03.11.2026 mit BR5-04 (Web 23.6.6): `EdCrypto.anmeldeTokens()`
+     (Salz holen, je Rundenzahl ableiten) für beide Seiten — genau ein
+     `fetch('auth_salt.php'` im Quelltext; `anmelde_tokens_lesen()`,
+     `anmelde_token_pruefen()` (samt Blindvergleich) und `anmelde_konto()`
+     (vorher `login_zeile()` und `notweg_konto()`) in `db.php`.
+     `zweitfaktor_notweg.php` steht in `SEITEN` der Wache (Selbstprobe
+     55/0). Abnahme: Anmeldung und Notzugang in Chromium, Firefox, WebKit;
+     Zweitfaktorprobe 139/0 mit gleicher Antwortdauer.
+
+392. **Das Schlüsselpaar entsteht nur, wer auf der ersten Seite nach der Anmeldung bleibt.** · gehört zu: 22 · Stand: erledigt · seit 19.10.2026
+     *Aufgenommen 19.10.2026 in DM-02 (F-DM-02).* `unlock.js` legt das Paar
+     des Kontos (und den Rückweg) still an, sobald der Inhaltsschlüssel da
+     ist — und nur mit dem Anmelde-Token, das es allein auf der ersten
+     Seite nach der Anmeldung gibt. Die Freigabeprobe ging sofort auf
+     `einstellungen.php` weiter: In Chromium kam das Paar trotzdem an, in
+     Firefox und WebKit in keinem Lauf (2 von 2). Wartet sie auf der ersten
+     Seite, steht es nach 1152 ms (Firefox), 596 ms (WebKit), 599 ms
+     (Chromium). Wer die Seite schneller verlässt, hat bis zur nächsten
+     Anmeldung kein Paar: Geräte können nicht senden, eine Freigabe weist
+     mit „kein Schlüsselpaar" ab. Nicht gemessen: ob es ein Mensch je
+     schafft, und ob der Rückweg dasselbe Los hat.
+     *Weg:* das Token bis zum gelungenen Anlegen im Sitzungsspeicher
+     halten, oder das Anlegen auf der zweiten Seite nachholen.
+     *Abnahme:* die Freigabeprobe ohne Warten auf der ersten Seite grün,
+     in drei Engines.
+     Erledigt 03.11.2026 mit BR5-05 (Web 23.7.0): Anlegemarke der Sitzung
+     (`sitzung_lib.php`, 600 s, je Zweck einmal, nach jedem gelungenen
+     Anlegen ausgetragen, nie zum Ersetzen), angenommen über
+     `anlege_nachweis_json()`; `unlock.js` legt auf einer späteren Seite
+     still an, solange `ANLEGE_MARKE` es sagt; Weg von Hand unter
+     Einstellungen → Geräte. Der Rückweg hatte dasselbe Los und ist mit
+     dabei. Abnahme in Chromium, Firefox, WebKit mit gesperrten Endpunkten
+     auf der ersten Seite: Paar und Rückweg entstehen auf der zweiten (6 von
+     6 mit dem Weg von Hand); mit dem alten Code bleibt das Konto ohne Paar.
+
+346. **Zwei Meldungen im Browser noch von Hand: der Hinweis `patwarn` und der Papierkorb-Hinweis des Diensttags.** · gehört zu: 22 · Stand: erledigt · seit 27.09.2026
+     *Aufgenommen 27.09.2026 mit R4-13 (F-R4-42).* Die Zählzeile Z37 sieht
+     seit R4-13 auch die Zuweisung `className = '…meldung'` und fand damit
+     zwei Nachbauten, die das alte Muster nicht sah: in `assets/patient.js`
+     den Hinweis `patwarn` (ohne Symbol — der Kommentar dort sagt, weil
+     `symbol.js` beim Aufbau noch fehlen kann) und in `index.php` den
+     Hinweis „Dieser Diensttag liegt im Papierkorb" als `<p>` mit
+     `meldung meldung-warn`. Beide sehen anders aus als jede andere Meldung.
+     **Nicht in R4-13 umgestellt:** Sie liegen außerhalb von Nr. 271–273,
+     beide wären eine sichtbare Änderung, und bei `patwarn` hängt es an der
+     Ladereihenfolge von `edSymbol()`. *Weg:* über `EdHtml.meldung()`, für
+     `patwarn` erst nachsehen, ob `symbol.js` zur Aufrufzeit steht (die
+     Immer-Liste kommt am Seitenende). *Abnahme:* Z37 **2** (nur `html.js`),
+     Bilderlauf ohne Konsolenfehler.
+     Erledigt 03.11.2026 mit BR5-06 (Web 23.7.1): `patwarn` und der
+     Papierkorb-Hinweis füllen leere Behälter über `EdHtml.meldung()`
+     (`patwarn` mit `roh`, weil der Satz die Marke trägt); Z37 auf 2, die
+     Begründung „symbol.js fehlt beim Aufbau“ war veraltet (F-BR5-08).
+     Abnahme: beide als Meldungsbaustein mit großem Symbol (Chromium,
+     Bilder), 0 Seitenfehler.
+
+356. **Zwei Abschnitte der Karte „Schlüssel des Servers" kleben ohne Abstand am Knopffuß.** · gehört zu: 22 · Stand: erledigt · seit 29.09.2026
+     *Aufgenommen 29.09.2026 mit SR-03 (Konzept SR, F-SR-73; gefunden an den
+     Bildern zu P-SR-05).* „Nachtragen vom Blatt" und „Neuanfang" stehen als
+     `h3.listen-form-titel` unmittelbar hinter `.listen-form-fuss` — die
+     Überschrift hat oben keinen Abstand, und die Knöpfe darüber gehören
+     optisch zu ihr. Für den neuen Abschnitt „Serverschlüssel wechseln" ist
+     es in SR-03 behoben: Er steht in `.listen-form` (Linie und Abstand
+     darüber). Die zwei alten erscheinen nur in der Lage *abweichend* und
+     sind nicht angefasst, weil kein Bild sie in dieser Lage zeigt. *Weg:*
+     beide Formulare ebenso in `.listen-form`. *Abnahme:* Bild der Karte in
+     der Lage *abweichend* (Bilderlauf oder Bedienweg mit verstellter
+     Marke), 390 und 1280 px.
+     Erledigt 03.11.2026 mit BR5-06 (Web 23.7.1): „Nachtragen vom Blatt“ in
+     einem `div.listen-form` (eine Linie für den Abschnitt, E-BR5-17),
+     „Neuanfang“ im Aufbau von „Serverschlüssel wechseln“. Abnahme in der
+     Lage abweichend (verstellte Marken): beide Abschnitte mit 12 px Abstand
+     wie die übrigen, 390 und 1280 px. Den Abstand zwischen zwei Formularen
+     im Abschnitt trägt Nr. 480.
+
+456. **Die Reanimationskarte sagt im gesperrten Formular „keine".** · gehört zu: 22 · Stand: erledigt · seit 03.11.2026
+     *Aufgenommen 03.11.2026 im Prüfdurchgang der Arbeitsumgebung (R91,
+     P-S11-18).* Ist der Inhaltsschlüssel gesperrt, öffnet
+     `einsatz_form.php` die Einsatzhülle nicht, `#rearows` bleibt leer, und
+     `reaVorschau()` schreibt „keine" in den Kopf der Karte — auch an einem
+     Einsatz mit Reanimation. Gespeichert werden kann nichts (die Leiste
+     verlangt zuerst das Entsperren, gemessen), und „Reanimation
+     hinzufügen" tut nichts; die Angabe ist aber falsch, wo sie
+     „unbekannt" heißen müsste. *Weg:* gesperrt „gesperrt" statt der Zahl,
+     wie die Karte „Wartet auf dein Passwort" in der Ansicht.
+     *Abnahme:* gesperrtes Formular eines Einsatzes mit Reanimation — der
+     Kartenkopf sagt nicht „keine".
+     Erledigt 03.11.2026 mit BR5-06 (Web 23.7.1): Der Server setzt „keine“
+     nur ohne Hülle; der Browser schreibt „gesperrt“ im Sperrzweig von
+     `patLaden()` und „nicht lesbar“, wenn die Hülle nicht aufgeht
+     (F-BR5-07). Abnahme: derselbe Einsatz entsperrt „keine“ (er hat keine
+     Reanimation), gesperrt „gesperrt“.
+
+361. **Die APK-Karte unterscheidet Handy und Wear-OS-Uhr nicht.** · gehört zu: 22 · Stand: erledigt · seit 30.09.2026
+     *Aufgenommen 30.09.2026 nach dem ersten Tag `android-v0.17.0`
+     (F-PK-58, Prüfdokument PK 5u).* Seit PK-08 legt die Kette zwei
+     APKs nach `server/apk/` (E-PK-58). Einstellungen → Geräte, „Ohne Play
+     Store", zeigt beide als „NAdoku 0.17.0"; nur die Größe verrät, welche
+     die Uhr-App ist, und die steht oben, weil `apk_liste()` nach
+     Ablagezeit sortiert. Wer auf den ersten Knopf tippt, lädt aufs Handy
+     die Wear-OS-App. Q-PK-11 hatte das vorhergesagt und bewusst nicht in
+     PK-08 gelöst: Es ist eine Oberflächenänderung.
+     *Weg:* `apk_liste()` liest das Gerät aus dem Namen (`nadoku-uhr-…` →
+     Wear-OS-Uhr, sonst Handy) und sortiert Handy vor Uhr; die Karte
+     nennt es („NAdoku 0.17.0 · Handy"). Dieselbe Liste liest
+     `betrieb_updates.php` und `apk.php` — beide mitprüfen. Eine
+     Web-Nebenstufe.
+     *Abnahme:* zwei Dateien im Ordner → die Karte zeigt Handy zuerst,
+     jede mit ihrem Gerät; eine Datei ohne Muster (Altbestand) steht
+     unverändert da.
+     Erledigt 03.11.2026 mit BR5-08 (Web 23.7.3): `apk_liste()` trägt das
+     Gerät (`apk_geraet()`), sortiert Handy vor Uhr vor Rest; die Zeile
+     heißt „NAdoku für Android-Handy“ bzw. „NAdoku für Wear-OS-Uhr“
+     (`apk_titel()`, E-BR5-09), die Fassung steht in der Kleinzeile; Betrieb
+     → Updates zeigt je Gerät eine Zeile (F-BR5-05). Abnahme mit drei
+     Dateien (Uhr zuletzt abgelegt, eine ohne Muster): Reihenfolge Handy,
+     Uhr, Altbestand; Prüfsummen an ihren Zeilen; Updates mit beiden
+     Fassungen.
+
+432. **„App installieren" nennt beide APKs gleich.** · gehört zu: 22 · Stand: erledigt · seit 02.11.2026
+     *Aufgenommen 02.11.2026 bei P-R17-05; Doppelung von Nr. 361, wird dort
+     erledigt (E-BE-07).* Unter „Ohne Play Store: APK von
+     Hand" stehen zwei Zeilen „NAdoku 0.18.2"; welche die Wear-OS-Uhr ist,
+     zeigt erst der Dateiname nach dem Herunterladen
+     (`nadoku-uhr-0.18.2.apk`). Die Zeile in `einstellungen.php` setzt nur
+     „NAdoku" und die Fassung zusammen, `apk_liste()` liest das `-uhr-` gar
+     nicht aus. *Weg:* `apk_liste()` gibt das Gerät mit (Name enthält
+     `-uhr-` → Uhr, sonst Handy), die Zeile heißt „NAdoku für Android-Handy"
+     bzw. „NAdoku für Wear-OS-Uhr"; dieselbe Benennung in Betrieb → Updates,
+     wo `apk_liste()` auch gelesen wird. *Abnahme:* beide Zeilen tragen ihr
+     Gerät, die Prüfsummen bleiben an ihrer Zeile.
+     Erledigt 03.11.2026 mit Nr. 361 (BR5-08, Web 23.7.3), deren Doppelung
+     er ist (E-BE-07): Die Zeilen heißen „NAdoku für Android-Handy“ und
+     „NAdoku für Wear-OS-Uhr“, wie hier vorgeschlagen (E-BR5-09).
+
+440. **Beim Löschen eines Geräts warnt das Web nicht vor ungesendeten Aufzeichnungen.** · gehört zu: 22 · Stand: erledigt · seit 02.11.2026
+     *Aufgenommen 02.11.2026 mit E-BE-08 (aus der Frage in Nr. 431).* Wer
+     ein Gerät unter Einstellungen → Geräte oder in der Verwaltung löscht,
+     nimmt ihm den Schlüssel; was noch auf Uhr oder Handy wartet, kommt bei
+     diesem Konto nie mehr an. Das Web sagt davon nichts, obwohl es die Zeit
+     des letzten Kontakts kennt. Für eine verlorene Uhr ist Deaktivieren der
+     richtige Griff (Runbook „Gerät verloren"): wirkt sofort, Daten bleiben,
+     und die Uhr sendet nach dem Reaktivieren weiter. *Weg:* Die Rückfrage
+     vor dem Löschen nennt den letzten Kontakt und rät bei längerer Pause
+     zum Deaktivieren; derselbe Satz in Handbuch und Runbook. *Abnahme:*
+     Löschen eines Geräts mit Kontakt vor mehr als einem Tag → Rückfrage
+     mit Datum und Hinweis; ein Gerät mit Kontakt heute → Rückfrage ohne
+     Hinweis; `tools/zaehlung/` ohne neue Stelle (Meldung über `ui_`).
+     Erledigt 03.11.2026 mit BR5-08 (Web 23.7.3):
+     `geraet_entkoppeln_frage()` (`geraete_lib.php`) ergänzt die Rückfrage
+     in Einstellungen → Geräte und in der Verwaltung um den letzten Kontakt
+     und den Rat zum Deaktivieren, wenn der Kontakt länger als 24 Stunden
+     zurückliegt oder nie war (Stunden von der Datenbank gerechnet). Der
+     Satz berücksichtigt, dass nach dem Neukoppeln der Rückstand doch
+     ankommt (F-BR5-06). Abnahme: Kontakt vor drei Tagen → mit Datum und
+     Rat, Kontakt eben → ohne, auf beiden Seiten.
+
+383. **Komplett- und Schlüsselwechselprobe rot unter dem PHP 8.3.6 aus Ubuntu.** · gehört zu: 22 · Stand: erledigt · seit 13.10.2026
+     *Aufgenommen 13.10.2026 mit S11-03 (F-S11-26, -28, -33).* Unter dem
+     PHP **8.3.6** aus Ubuntu 24.04 (OpenSSL 3.0.13, zlib 1.3) scheitern
+     drei Fälle, die alle ein Komplett-Siegel über mehrere Häppchen
+     schreiben: Komplettprobe Teil 4 „über drei Häppchen versiegelt …
+     öffnet" und „Zieldatei verschwindet" (73 von 75, „verändert oder
+     unvollständig (Block 1)"), Schlüsselwechselprobe Teil 4 „Komplett-Stand
+     über den Wechsel" (65 ok, 1 fehlt). Auf dem Stand vor S11-03 ebenso.
+     **Grün** unter PHP 8.3.33 (`nadoku-php83`) und 8.4.19 (75/0, 66/0) —
+     gegen dieselbe Datenbank. S11 ist es nicht; ein Fehler der Probe wohl
+     auch nicht, sonst wäre er überall rot.
+     **Warum es zählt:** 8.3.6 ist die Vorgabe von Ubuntu 24.04 LTS. Steht
+     eine Anlage darauf, geht ihre Komplettsicherung vielleicht nicht auf.
+     *Weg:* den Siegelschub (`komp_siegel_schub()`) unter 8.3.6 Block für
+     Block mit 8.4 vergleichen; Ursache benennen (PHP-Fehler, der bis
+     8.3.33 behoben ist, oder Bibliothek); dann entweder umgehen oder eine
+     Mindestfassung in `Technik.md` und im Installer festschreiben.
+     *Abnahme:* die Ursache benannt, und unter 8.3.6 grün oder abgewiesen.
+     Erledigt 03.11.2026 mit BR5-09 (E-BR5-18): Die Ursache war der
+     Stat-Cache von PHP, den Nr. 393 mit fstat() in komp_oeffnen() umgangen
+     hat. Unter dem PHP 8.3.6 der Sandbox sind die Komplettprobe (74/0) und
+     die Schlüsselwechselprobe (66/0) grün; mit filesize() an beiden
+     Stellen zurück wieder rot (2 bzw. 1 Fall, „Block 1“) — also kein
+     Fehler von 8.3.6, sondern einer der Bibliothek, und keine
+     Mindestfassung.
+
 <!-- -->
 
 280. **Die Kartenquelle OpenHikingMap steht in keiner Lizenzliste.** · gehört zu: 13 · Stand: erledigt · seit 22.09.2026

@@ -30,7 +30,7 @@ require_once __DIR__ . '/apk_lib.php';
  * entfernen" ist, dass hier nichts vergessen werden kann.
  */
 
-$gesucht = (string)($_GET['d'] ?? '');
+$gesucht = get_text('d');
 $treffer = null;
 foreach (apk_liste() as $e) {
     if ($e['datei'] === $gesucht) { $treffer = $e; break; }

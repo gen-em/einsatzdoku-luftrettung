@@ -192,7 +192,7 @@ try {
              ? dt_base_erlaubt(db(), $userId, (int)$_GET['base'])
              : null;
 
-        $art = (string)($_GET['art'] ?? '');
+        $art = get_text('art');
         $rollen = $vid !== null ? dt_vehicle_rollen(db(), $vid)
                 : ($adhoc && in_array($art, ['air', 'ground'], true)
                     ? dt_tagesrettungsmittel_rollen($art) : []);

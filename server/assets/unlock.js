@@ -460,15 +460,25 @@ const EdUnlock = (() => {
    *
    * NIEMAND WARTET DARAUF, wie bei den Notizen: kein `await`, kein Fehler
    * nach außen. Das Token wird nach dem ersten Versuch vergessen, auch nach
-   * einem gescheiterten — der nächste kommt mit der nächsten Anmeldung.
+   * einem gescheiterten.
+   *
+   * OHNE TOKEN DIE ANLEGEMARKE (Nr. 392, E-BR5-08). Das Token gibt es nur
+   * auf der ersten Seite nach der Anmeldung; wer schneller weiterklickte,
+   * hatte bis zur nächsten Anmeldung weder Paar noch Rückweg. Die Sitzung
+   * trägt seither zehn Minuten lang eine Marke, die der Server für das erste
+   * Anlegen annimmt; `ANLEGE_MARKE` sagt der Seite, ob sie gilt.
    */
+  function markeGilt(zweck) {
+    return typeof ANLEGE_MARKE !== 'undefined' && !!ANLEGE_MARKE && !!ANLEGE_MARKE[zweck];
+  }
+
   function rueckwegAnlegen(ck) {
     const token = rwToken;
     rwToken = null;
     kontopaarPflegen(ck, token);
-    if (!token || !ck || typeof RW_STAND === 'undefined' || RW_STAND !== 'fehlt'
+    if (!ck || typeof RW_STAND === 'undefined' || RW_STAND !== 'fehlt'
         || !window.EdRueckweg) { return; }
-    window.EdRueckweg.anlegen(ck, token);
+    if (token || markeGilt('rueckweg')) { window.EdRueckweg.anlegen(ck, token || null); }
   }
 
   /* ---- Das Schlüsselpaar des Kontos --------------------------------------
@@ -478,7 +488,7 @@ const EdUnlock = (() => {
    * Passworts. Das Token teilen sich beide; `rueckwegAnlegen()` reicht es
    * weiter, bevor es vergessen wird.
    *
-   *   KP_STAND 'fehlt'  mit Token: still anlegen (`EdKontopaar.anlegen`)
+   *   KP_STAND 'fehlt'  mit Token oder Marke: still anlegen (`EdKontopaar.anlegen`)
    *   KP_STAND 'da'     abgleichen (`EdKontopaar.abgleichen`) — einmal je
    *                     Seite; eine Abweichung sagt die Seite und meldet der
    *                     Server (zweiter Riegel)
@@ -487,7 +497,9 @@ const EdUnlock = (() => {
    * außen. */
   function kontopaarPflegen(ck, token) {
     if (!ck || typeof KP_STAND === 'undefined' || !window.EdKontopaar) { return; }
-    if (KP_STAND === 'fehlt' && token) { window.EdKontopaar.anlegen(ck, token); }
+    if (KP_STAND === 'fehlt' && (token || markeGilt('kontopaar'))) {
+      window.EdKontopaar.anlegen(ck, token || null);
+    }
     if (KP_STAND === 'da') { window.EdKontopaar.abgleichen(ck); }
   }
 
@@ -551,7 +563,19 @@ const EdUnlock = (() => {
     const kpFehlt = typeof KP_STAND !== 'undefined' && KP_STAND === 'fehlt';
     if ((typeof RW_STAND === 'undefined' || RW_STAND !== 'fehlt') && !kpFehlt) { return; }
     if (typeof PAT_WRAP === 'undefined' || !PAT_WRAP || typeof KDF_ITER === 'undefined') { return; }
-    if (vormerkLauf || !EdCrypto.holeAbleitungen()) { return; }
+    if (vormerkLauf) { return; }
+    /* KEIN VORMERKFACH MEHR, ABER EINE MARKE (Nr. 392): die zweite Seite nach
+     * einer Anmeldung, auf der die erste das Fach schon geräumt hat. Der
+     * Inhaltsschlüssel liegt dann in der Ablage; `contentKey()` liest ihn
+     * still, ohne Dialog. Fehlt er, geschieht nichts. */
+    if (!EdCrypto.holeAbleitungen()) {
+      if (!markeGilt('kontopaar') && !markeGilt('rueckweg')) { return; }
+      try {
+        const ck = await EdKeyGuard.contentKey(PAT_WRAP);
+        if (ck) { rueckwegAnlegen(ck); }
+      } catch (e) { /* still */ }
+      return;
+    }
     try {
       if (!vormerkLauf) { vormerkLauf = loeseVormerkung(PAT_WRAP, KDF_ITER); }
       const ck = (await vormerkLauf) || await EdKeyGuard.contentKey(PAT_WRAP);

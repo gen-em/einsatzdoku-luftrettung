@@ -55,10 +55,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST'
         ankuendigung_entfernen();
         $notice = 'Ankündigung entfernt — der Streifen erscheint auf keiner Seite mehr.';
     } else {
-        $ankForm = ['text' => (string)($_POST['ank_text'] ?? ''),
-                    'ton'  => (string)($_POST['ank_ton'] ?? 'info'),
-                    'tag'  => trim((string)($_POST['ank_bis'] ?? '')),
-                    'zeit' => trim((string)($_POST['ank_bis_zeit'] ?? ''))];
+        $ankForm = ['text' => post_text('ank_text'),
+                    'ton'  => post_text('ank_ton', 'info'),
+                    'tag'  => trim(post_text('ank_bis')),
+                    'zeit' => trim(post_text('ank_bis_zeit'))];
         require_once __DIR__ . '/validate_lib.php';
         $bisUtc = pruef_ortszeit_zu_utc($ankForm['tag'], $ankForm['zeit'], 0, 'Sichtbar bis');
         if ($bisUtc === null) {
@@ -87,7 +87,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'speic
     $teile = [];
 
     /* ---- Speichergrenze ---------------------------------------- */
-    $gb = str_replace(',', '.', trim((string)($_POST['grenze'] ?? '')));
+    $gb = str_replace(',', '.', trim(post_text('grenze')));
     if (!is_numeric($gb) || (float)$gb <= 0 || (float)$gb > 10000) {
         $error = 'Bitte eine Speichergrenze zwischen 0,1 und 10000 GB angeben.';
     } elseif (abs((float)$gb * 1024 * 1024 * 1024 - edbak_grenze_bytes()) > 1) {
@@ -104,7 +104,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'speic
 
     /* ---- Warnschwellen ------------------------------------------------- */
     if ($error === null) {
-        $roh = trim((string)($_POST['schwellen'] ?? ''));
+        $roh = trim(post_text('schwellen'));
         $neu = [];
         foreach (explode(',', $roh) as $t) {
             $t = trim($t);
@@ -130,7 +130,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'speic
 
     /* ---- Webspace laut Hosting (neu) --------------------------- */
     if ($error === null) {
-        $roh = str_replace(',', '.', trim((string)($_POST['webspace'] ?? '')));
+        $roh = str_replace(',', '.', trim(post_text('webspace')));
         if ($roh === '') {
             if (speicher_webspace_bytes() > 0) {
                 speicher_webspace_setzen(0);
@@ -154,7 +154,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'speic
      * dem Webspace, wird von denselben Schwellen gewarnt und hat dieselbe
      * Frage im Ruecken. */
     if ($error === null) {
-        $roh = str_replace(',', '.', trim((string)($_POST['db_gb'] ?? '')));
+        $roh = str_replace(',', '.', trim(post_text('db_gb')));
         /* BLEIBT BYTE-DIVISION (Z22): keine Anzeige, sondern ein
          * Vergleichswert — er geht unten in `abs((float)$roh - $istGb)`
          * und wird nie ausgegeben. */
@@ -256,17 +256,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'raten
         return $zahlen;
     };
 
-    $roh = trim((string)($_POST['leiter'] ?? ''));
+    $roh = trim(post_text('leiter'));
     $neuLeiter = $pruefListe($roh, 4, 1, 1440, 'Sperrleiter');
 
     if ($error === null) {
-        $roh = trim((string)($_POST['bremse'] ?? ''));
+        $roh = trim(post_text('bremse'));
         $neuBremse = $pruefListe($roh, 4, 10, 1000000, 'Schwellen der Verlangsamung');
     }
     foreach ([['login', 'Fehlversuche je Konto', &$neuLogin],
               ['login_ip', 'Fehlversuche je Anschluss', &$neuLoginIp]] as [$feld, $name, &$ziel]) {
         if ($error !== null) { break; }
-        $roh = trim((string)($_POST[$feld] ?? ''));
+        $roh = trim(post_text($feld));
         if (!ctype_digit($roh) || (int)$roh < 3 || (int)$roh > 10000) {
             $error = $name . ': eine ganze Zahl zwischen 3 und 10000.';
         } else {
@@ -314,7 +314,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'proto
     ];
     $neu = []; $geaendert = [];
     foreach ($felder as $feld => [$name, $schluessel, $min, $max, $alt]) {
-        $roh = trim((string)($_POST[$feld] ?? ''));
+        $roh = trim(post_text($feld));
         if (!ctype_digit($roh) || (int)$roh < $min || (int)$roh > $max) {
             $error = $name . ': eine ganze Zahl zwischen ' . $min . ' und ' . $max . ' Tagen.';
             break;
@@ -341,7 +341,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'proto
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'geocoder') {
     csrf_check();
-    $adresse = geocoder_adresse_pruefen((string)($_POST['dienst'] ?? ''));
+    $adresse = geocoder_adresse_pruefen(post_text('dienst'));
     if ($adresse === null) {
         $error = 'Die Dienstadresse muss mit „https://" beginnen und einen '
                . 'Rechnernamen nennen — ohne Abfrageteil, höchstens 180 Zeichen '
@@ -394,7 +394,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'konte
     $neu = [];   // Schluessel => Wert, erst am Ende geschrieben
 
     /* ---- Betriebsart ---------------------------------------------------- */
-    $art = (string)($_POST['reg_art'] ?? '');
+    $art = post_text('reg_art');
     if (!isset(KONTEN_REG_ARTEN[$art])) {
         $error = 'Betriebsart: bitte eine der drei Möglichkeiten wählen.';
     } else {
@@ -403,7 +403,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'konte
 
     /* ---- Freischaltfrist in Tagen --------------------------------------- */
     if ($error === null) {
-        $roh = trim((string)($_POST['reg_frist'] ?? ''));
+        $roh = trim(post_text('reg_frist'));
         if (!ctype_digit($roh) || (int)$roh < KONTEN_REG_FRIST_MIN
                                || (int)$roh > KONTEN_REG_FRIST_MAX) {
             $error = 'Verfall wartender Registrierungen: eine ganze Zahl zwischen '
@@ -421,7 +421,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'konte
          * `app_state` — dort passen 190 Zeichen, und mehr als eine Handvoll
          * eigener Domains ist kein Anwendungsfall (die mitgelieferte Liste
          * hat 8870). Wer mehr braucht, ergaenzt die Datei. */
-        $roh = trim((string)($_POST['wegwerf_eigene'] ?? ''));
+        $roh = trim(post_text('wegwerf_eigene'));
         $domains = [];
         foreach (preg_split('/[\s,;]+/', $roh) ?: [] as $d) {
             $d = mb_strtolower(trim($d, " \t\n\r.@"));
@@ -452,7 +452,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'konte
               ['grenze_mb', 'Mengengrenze Speicher (MB)', KONTEN_K_GRENZE_MB,
                1, 1000000]] as [$feld, $name, $schluessel, $min, $max]) {
         if ($error !== null) { break; }
-        $roh = trim((string)($_POST[$feld] ?? ''));
+        $roh = trim(post_text($feld));
         if (!ctype_digit($roh) || (int)$roh < $min || (int)$roh > $max) {
             $error = $name . ': eine ganze Zahl zwischen ' . $min . ' und ' . $max . '.';
         } else {
@@ -535,7 +535,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'konte
  * und die Marke nachziehen —, und diese Seite soll keine Krypto-Logik tragen.
  */
 if ($_SERVER['REQUEST_METHOD'] === 'POST'
-    && str_starts_with((string)($_POST['action'] ?? ''), 'schluessel_')) {
+    && str_starts_with(post_text('action'), 'schluessel_')) {
     /* EIN FRISCHER CODE VOR JEDEM GRIFF — ein
      * Aufruf fuer alle zehn (seit SR-03 mit den drei des Serverschluessels),
      * vor dem Token wie ein Rollentor. Ein
@@ -543,7 +543,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST'
      * nicht reichen. */
     zweitfaktor_frisch_verlangen('schluessel');
     csrf_check();
-    $aktion   = (string)$_POST['action'];
+    $aktion   = post_text('action');
     $ersetzen = !empty($_POST['ersetzen']);
 
     if ($aktion === 'schluessel_sk_anlegen') {
@@ -564,7 +564,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST'
 
     } elseif ($aktion === 'schluessel_sk_nachtragen') {
         [$ok, $was] = serverschluessel_nachtragen(
-            (string)($_POST['wert'] ?? ''), $ersetzen);
+            post_text('wert'), $ersetzen);
         $notice = $ok ? 'Der Serverschlüssel ist nachgetragen (Kennung ' . $was
                       . ') — er stimmt mit dem überein, mit dem versiegelt '
                       . 'wurde.' : null;
@@ -572,7 +572,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST'
         serverschluessel_zustand(true);
 
     } elseif ($aktion === 'schluessel_anteil_nachtragen') {
-        [$ok, $was] = anteil_nachtragen((string)($_POST['wert'] ?? ''), $ersetzen);
+        [$ok, $was] = anteil_nachtragen(post_text('wert'), $ersetzen);
         $notice = $ok ? 'Der Server-Anteil ist nachgetragen (Kennung ' . $was
                       . ') — er stimmt mit dem überein, mit dem die Hüllen '
                       . 'gebaut wurden. Die Anmeldung geht wieder.' : null;
@@ -676,7 +676,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'anmel
     require_once __DIR__ . '/protokoll_lib.php';
     $neuTage = [];
     foreach (['user' => ZF_GERAET_K_USER, 'verwaltung' => ZF_GERAET_K_VERWALTUNG] as $gruppe => $k) {
-        $v = (string)($_POST[$k] ?? '');
+        $v = post_text($k);
         if (!ctype_digit($v) || !in_array((int)$v, ZF_GERAET_TAGE_WAHL, true)) {
             $error = 'Gerät merken: bitte eine der vorgegebenen Dauern wählen.';
             break;
@@ -718,7 +718,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'anmel
  * DIE RUECKFRAGE ZUR DEMO-ANMELDUNG reist in den Daten der Meldung mit
  * (`demo_frage`), statt die Umleitung aufzuhalten. */
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $bsAktion = (string)($_POST['action'] ?? '');
+    $bsAktion = post_text('action');
     $bsOrt = str_starts_with($bsAktion, 'schluessel_') ? 'k-schluessel' : ([
         'ankuendigung' => 'k-ankuendigung', 'rundmail' => 'k-ankuendigung',
         'ankuendigung_weg' => 'k-ankuendigung', 'speicher' => 'k-speicher',
@@ -1275,6 +1275,11 @@ ui_seite_start(['titel' => 'Servereinstellungen']);
 
     <?php /* ---- Nachtragen vom Blatt -------------------------- */ ?>
     <?php if ($skZustand['stand'] === 'abweichend' || $anZustand['stand'] === 'abweichend'): ?>
+      <?php /* EINE LINIE FÜR DEN GANZEN ABSCHNITT (Nr. 356, E-BR5-17): Bei
+               „beide abweichend" stehen zwei Formulare darin, und die gehören
+               zusammen. Bis Web 23.7.0 klebte die Überschrift ohne Abstand am
+               Knopffuß darüber. */ ?>
+      <div class="listen-form">
       <h3 class="listen-form-titel">Nachtragen vom Blatt</h3>
       <?php foreach ([
             ['anteil', 'Server-Anteil', $anZustand, 'schluessel_anteil_nachtragen'],
@@ -1308,20 +1313,23 @@ ui_seite_start(['titel' => 'Servereinstellungen']);
           </div>
         </form>
       <?php endforeach; ?>
+      </div>
     <?php endif; ?>
 
     <?php /* ---- Neuanfang (Zustand „Neuanfang") ---------------- */ ?>
     <?php if ($anZustand['stand'] === 'abweichend'): ?>
-      <h3 class="listen-form-titel">Neuanfang <span class="feld-klein-inline">nur, wenn der Wert unwiederbringlich weg ist</span></h3>
-      <div class="listen-form-fuss">
-        <form method="post" action="betrieb_server.php"
-              data-confirm="Einen NEUEN Server-Anteil erzeugen? Jede NutzerIn mit umgestellter Hülle muss danach ihr Passwort über den Wiederherstellungsschlüssel neu setzen. Die Daten selbst bleiben unversehrt. Dieser Schritt lässt sich nicht zurücknehmen — der bisherige Wert ist danach gegenstandslos."
-              data-confirm-ok="Neu erzeugen" data-confirm-tone="gefahr">
-          <?= csrf_field() ?><input type="hidden" name="action" value="schluessel_anteil_neuanfang">
+      <?php /* DERSELBE AUFBAU WIE „Serverschlüssel wechseln" (Nr. 356): das
+               Formular außen mit `.listen-form`, Überschrift und Fuß darin. */ ?>
+      <form method="post" action="betrieb_server.php" class="listen-form"
+            data-confirm="Einen NEUEN Server-Anteil erzeugen? Jede NutzerIn mit umgestellter Hülle muss danach ihr Passwort über den Wiederherstellungsschlüssel neu setzen. Die Daten selbst bleiben unversehrt. Dieser Schritt lässt sich nicht zurücknehmen — der bisherige Wert ist danach gegenstandslos."
+            data-confirm-ok="Neu erzeugen" data-confirm-tone="gefahr">
+        <h3 class="listen-form-titel">Neuanfang <span class="feld-klein-inline">nur, wenn der Wert unwiederbringlich weg ist</span></h3>
+        <?= csrf_field() ?><input type="hidden" name="action" value="schluessel_anteil_neuanfang">
+        <div class="listen-form-fuss">
           <?= ui_knopf(['text' => 'Server-Anteil neu erzeugen', 'symbol' => 'warnung',
                         'art' => 'gefahr']) ?>
-        </form>
-      </div>
+        </div>
+      </form>
     <?php endif; ?>
 
     <?php if (isset($anZaehlung['fehler'])): ?>

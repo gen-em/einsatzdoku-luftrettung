@@ -3504,6 +3504,15 @@ function ui_krypto_bootstrap(array $o = []): void
     $zeilen[] = 'const ANTEIL_STAND   = ' . json_js($anteilStand ?? 'fehlt') . ';';
     $zeilen[] = 'const RW_STAND       = ' . json_js($rwStand) . ';';
     $zeilen[] = 'const KP_STAND       = ' . json_js($kp['stand']) . ';';
+    /* DIE ANLEGEMARKE (Nr. 392): ob diese Sitzung ein fehlendes Paar oder
+       einen fehlenden Rueckweg ohne Token anlegen darf. Ohne sie klopfte jede
+       spaetere Seite vergeblich an; mit ihr versucht es `unlock.js` nur,
+       solange der Server es annimmt (`sitzung_lib.php`). */
+    $uidM = isset($userId) ? (int)$userId : 0;
+    $zeilen[] = 'const ANLEGE_MARKE   = ' . json_js([
+        'kontopaar' => $kp['stand'] === 'fehlt' && anlege_marke_gilt($uidM, 'kontopaar'),
+        'rueckweg'  => $rwStand === 'fehlt' && anlege_marke_gilt($uidM, 'rueckweg'),
+    ]) . ';';
     $zeilen[] = 'const KP_OEFFENTLICH = ' . json_js($kp['oeffentlich']) . ';';
     $zeilen[] = 'const KP_PRIVAT      = ' . json_js($kp['privat']) . ';';
     /* CSRF IMMER, NICHT AUF ANFRAGE.

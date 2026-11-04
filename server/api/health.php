@@ -79,7 +79,7 @@ if (!rate_erlaubt('health')) {
 rate_zaehlen('health');
 
 $kopf     = (string)($_SERVER['HTTP_X_HEALTH_TOKEN'] ?? '');
-$token    = $kopf !== '' ? $kopf : (string)($_GET['token'] ?? '');
+$token    = $kopf !== '' ? $kopf : get_text('token');
 $erwartet = health_token();
 if ($erwartet === '' || $token === '' || !hash_equals($erwartet, $token)) {
     rate_gleiche_dauer($t0);

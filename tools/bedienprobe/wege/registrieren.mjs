@@ -32,7 +32,7 @@
 import { eigenerKontext, php, probekontoRaeumen } from '../probekonto.mjs';
 import { abgebrochenerSchriftabruf } from '../../motor.mjs';
 
-const ADRESSEN = ['bedienprobe-reg-1@probe.invalid', 'bedienprobe-reg-2@probe.invalid'];
+const ADRESSEN = ['bedienprobe-reg-1@probe.pruefung', 'bedienprobe-reg-2@probe.pruefung'];
 const LAEUFE = 9;
 const warten = (ms) => new Promise(r => setTimeout(r, ms));
 

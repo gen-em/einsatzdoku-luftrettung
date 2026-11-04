@@ -67,7 +67,7 @@ declare(strict_types=1);
  * Zeilen `totp_zuruecksetzen` der Matrix versteht die Probe ohne Sonderfall:
  * Das Tor der Handlung steht in `admin_user.php` vor `csrf_check()`, ein
  * Admin am Konto eines Admins bekommt also 403, am Konto einer NutzerIn die
- * Token-Ablehnung. Ein Konto `rollenprobe-*@probe.invalid` je Rolle, dazu
+ * Token-Ablehnung. Ein Konto `rollenprobe-*@probe.pruefung` je Rolle, dazu
  * drei Zielkonten (`ziel`, `zieladmin`, `neu` im Status „unbestätigt") und
  * ein Gerät — nicht die Sandbox, und nicht vorhandene Konten: Eine Probe, die
  * von einem vorher angelegten Konto abhängt, ist nach `hochfahren.sh --neu`
@@ -239,7 +239,7 @@ $mitZweitfaktor = db_hat_spalte($pdo, 'users', 'totp_seit');
 
 $konten = [];
 foreach ($rollen as $rolle) {
-    $mail = 'rollenprobe-' . $rolle . '@probe.invalid';
+    $mail = 'rollenprobe-' . $rolle . '@probe.pruefung';
     $pdo->prepare('DELETE FROM users WHERE email = ?')->execute([$mail]);
     $pdo->prepare("INSERT INTO users (email, name, role, password_hash, kdf_salt, kdf_iter)
                    VALUES (?, ?, ?, '', '', 320000)")->execute([$mail, 'Rollenprobe ' . $rolle, $rolle]);
@@ -263,14 +263,14 @@ foreach ($rollen as $rolle) {
 function zielkonto(string $name, string $rolle, string $status = 'aktiv'): int
 {
     global $pdo;
-    $mail = 'rollenprobe-' . $name . '@probe.invalid';
+    $mail = 'rollenprobe-' . $name . '@probe.pruefung';
     $pdo->prepare('DELETE FROM users WHERE email = ?')->execute([$mail]);
     $pdo->prepare("INSERT INTO users (email, name, role, status, password_hash, kdf_salt, kdf_iter)
                    VALUES (?, ?, ?, ?, '', '', 320000)")
         ->execute([$mail, 'Rollenprobe ' . $name, $rolle, $status]);
     return (int)$pdo->lastInsertId();
 }
-$zielMail = 'rollenprobe-ziel@probe.invalid';
+$zielMail = 'rollenprobe-ziel@probe.pruefung';
 $zielId   = zielkonto('ziel', 'user');
 $adminZiel = zielkonto('zieladmin', 'admin');
 $supportZiel = zielkonto('zielsupport', 'support');
@@ -620,7 +620,7 @@ if ($a === null) {
     pruef(false, 'Die Matrix hat keine Spalte „admin"');
 } else {
     require_once $srv . '/spur_lib.php';
-    $loeschMail = 'rollenprobe-loeschen@probe.invalid';
+    $loeschMail = 'rollenprobe-loeschen@probe.pruefung';
     $loeschId = zielkonto('loeschen', 'user');
     /* Scheitert die Loeschung, darf das Konto nicht liegen bleiben. */
     register_shutdown_function(static function () use ($pdo, $loeschId): void {
@@ -770,7 +770,7 @@ if ($b === null) {
      * Sitzungsdatei); mit zugestellter Mail leitet sie um, und der Link steht
      * nirgends. Beides ist richtig; falsch wäre der Link nach einer
      * Umleitung oder eine 200 ohne Link. */
-    $anlageMail = 'rollenprobe-anlage@probe.invalid';
+    $anlageMail = 'rollenprobe-anlage@probe.pruefung';
     $pdo->prepare('DELETE FROM users WHERE email = ?')->execute([$anlageMail]);
     $r = hole('admin_users.php', $b['sid'], ['csrf' => $b['csrf'], 'action' => 'user_add',
               'email' => $anlageMail, 'role' => 'user', 'name' => '']);
@@ -992,7 +992,7 @@ if (isset($konten['admin'])) {
     $vorherB = $pdo->query('SELECT status, email FROM users WHERE id = ' . $betreiberinZiel)
                    ->fetch(PDO::FETCH_ASSOC);
     foreach ([['konto_status', ['status' => 'gesperrt', 'grund' => 'Rollenprobe']],
-              ['konto', ['email' => 'rollenprobe-umgeleitet@probe.invalid', 'name' => 'x',
+              ['konto', ['email' => 'rollenprobe-umgeleitet@probe.pruefung', 'name' => 'x',
                          'role' => 'betreiberin']]] as [$handlung, $felder]) {
         $r = hole('admin_user.php?id=' . $betreiberinZiel, $a['sid'],
                   ['csrf' => $a['csrf'], 'action' => $handlung, 'id' => (string)$betreiberinZiel] + $felder);
@@ -1015,7 +1015,7 @@ echo "\nAdresswechsel durch die Verwaltung (E-R17-45)\n";
 if (isset($konten['admin'])) {
     require_once $srv . '/konto_lib.php';
     $a = $konten['admin'];
-    $neuAdr = 'rollenprobe-umgezogen@probe.invalid';
+    $neuAdr = 'rollenprobe-umgezogen@probe.pruefung';
     $r = hole('admin_user.php?id=' . $zielId, $a['sid'],
               ['csrf' => $a['csrf'], 'action' => 'konto', 'id' => (string)$zielId,
                'name' => 'Rollenprobe ziel', 'role' => 'user', 'email' => $neuAdr]);

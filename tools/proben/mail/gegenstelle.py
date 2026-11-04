@@ -14,7 +14,11 @@ Zertifikat, dem der Client traut — `probe.php` legt beides an und setzt
 
 Betriebsarten (`--art`):
   ok        nimmt alles an, antwortet sofort           -> Zustellung
-  ablehnen  550 auf RCPT TO                            -> Fehlschlag mit Grund
+  ablehnen  550 auf RCPT TO                            -> endgueltig (Nr. 454)
+  aufschub  450 auf RCPT TO                            -> Leiter, Grund, Kennung
+  voll      552 auf RCPT TO (Postfach voll)            -> bleibt auf der Leiter
+  anmeldung 535 auf das Passwort                       -> Einstellung, nicht Empfaenger
+  nach_daten  554 nach dem Ende der Daten              -> endgueltig (Nr. 454)
   langsam   jede Antwort nach `--verzug` Sekunden      -> Fristprobe
   vielzeilig  EHLO-Antwort in 12 Fortsetzungszeilen,
               je `--verzug` Sekunden                   -> die Rechnung aus
@@ -58,7 +62,10 @@ def gespraech(v, art, verzug, mitschnitt=None):
                     with open(mitschnitt, "wb") as f:
                         f.write(b"".join(nachricht))
                 nachricht = []
-                zeile(v, "250 2.0.0 angenommen", verzug)
+                if art == "nach_daten":
+                    zeile(v, "554 5.7.1 Nachricht abgelehnt", verzug)
+                else:
+                    zeile(v, "250 2.0.0 angenommen", verzug)
             else:
                 nachricht.append(roh)
             continue
@@ -79,6 +86,10 @@ def gespraech(v, art, verzug, mitschnitt=None):
         elif oben.startswith("RCPT TO"):
             if art == "ablehnen":
                 zeile(v, "550 5.1.1 <geheim@example.invalid>: user unknown", verzug)
+            elif art == "aufschub":
+                zeile(v, "450 4.2.1 <geheim@example.invalid>: try again later", verzug)
+            elif art == "voll":
+                zeile(v, "552 5.2.2 <geheim@example.invalid>: mailbox full", verzug)
             else:
                 zeile(v, "250 2.1.5 Empfaenger ok", verzug)
         elif oben.startswith("DATA"):
@@ -92,7 +103,10 @@ def gespraech(v, art, verzug, mitschnitt=None):
             zeile(v, "334 UGFzc3dvcmQ6", verzug)      # der Name kam, jetzt das Passwort
         elif auth_schritt == 2:
             auth_schritt = 3
-            zeile(v, "235 2.7.0 angemeldet", verzug)  # das Passwort kam
+            if art == "anmeldung":
+                zeile(v, "535 5.7.8 Anmeldung abgelehnt", verzug)
+            else:
+                zeile(v, "235 2.7.0 angemeldet", verzug)  # das Passwort kam
         else:
             zeile(v, "500 5.5.1 unbekannter Befehl", verzug)
 
@@ -100,7 +114,8 @@ def main():
     p = argparse.ArgumentParser()
     p.add_argument("--port", type=int, default=2465)
     p.add_argument("--art", default="ok",
-                   choices=["ok", "ablehnen", "langsam", "vielzeilig", "stumm"])
+                   choices=["ok", "ablehnen", "aufschub", "voll", "anmeldung",
+                            "nach_daten", "langsam", "vielzeilig", "stumm"])
     p.add_argument("--verzug", type=float, default=0.0)
     p.add_argument("--zert", required=True)
     p.add_argument("--schluessel", required=True)

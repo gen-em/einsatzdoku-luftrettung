@@ -204,15 +204,15 @@ if ($aktionInAdresse !== null && $aktionInAdresse !== '') {
                               . 'In der Adresse stuenden sie im Zugriffsprotokoll.'], 405);
 }
 
-$aktion = (string)($_POST['aktion'] ?? '');
+$aktion = post_text('aktion');
 
 /* WELCHES TOKEN, HAENGT AN DER AKTION. Mit Aktion zaehlt nur das Kettentoken
  * aus dem Rumpf — ein Token in der Adresse neben einer Aktion im Rumpf
  * waere genau das Protokollleck, gegen das die Trennung steht. Ohne Aktion
  * das Job-Token, per GET oder POST wie bisher. */
 $token = $aktion !== ''
-    ? (string)($_POST['token'] ?? '')
-    : (string)($_GET['token'] ?? $_POST['token'] ?? '');
+    ? post_text('token')
+    : get_text('token', post_text('token'));
 
 $erwartet = '';
 try {

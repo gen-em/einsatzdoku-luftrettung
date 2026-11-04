@@ -90,7 +90,7 @@ try {
 }
 
 /* ---- Merkmale der Probe ------------------------------------------------- */
-$KONTO   = 'id:probe-leiter@ratenprobe.invalid';
+$KONTO   = 'id:probe-leiter@ratenprobe.pruefung';
 $ADRESSE = 'ip:probe-203.0.113.7';
 $vorher  = (int)$pdo->query('SELECT COUNT(*) FROM rate_limits')->fetchColumn();
 $vorherE = (int)$pdo->query('SELECT COUNT(*) FROM sicherheit_ereignisse')->fetchColumn();
@@ -334,6 +334,14 @@ pruef('Differenz unter 50 ms ueber 100 Messungen', abs($ma - $mb) < 0.05,
 /* ======================================================================== */
 abschnitt('8  Die Sammelmail — hoechstens eine je Stunde');
 
+/* EINE ERREICHBARE BETREIBERADRESSE fuer diesen Abschnitt: Die Konten der
+ * oertlichen Anlage liegen unter `example.invalid`, und die reiht
+ * `mail_einreihen()` seit Nr. 450 nicht mehr ein. Ein Verwaltungskonto
+ * nur fuer diesen Abschnitt (`betrieb_mail()` merkt sich seinen Wert je
+ * Anfrage und taugt dafuer nicht). Der Mailserver der Anlage ist 127.0.0.1 —
+ * nach draussen geht nichts. Am Ende geloescht. */
+$pdo->exec("DELETE FROM users WHERE email = 'betrieb@ratenprobe.pruefung'");
+$pdo->exec("INSERT INTO users (email, role) VALUES ('betrieb@ratenprobe.pruefung', 'admin')");
 $pdo->exec("DELETE FROM mail_warteschlange WHERE schluessel = 'sicherheit_sammel'");
 rate_ereignis('sperre', 'login', $KONTO, 4, 10, gmdate('Y-m-d H:i:s', time() + 3600));
 rate_ereignis('sperre', 'login_ip', $ADRESSE, 4, 50, gmdate('Y-m-d H:i:s', time() + 3600));
@@ -362,6 +370,7 @@ $n4 = (int)$pdo->query("SELECT COUNT(*) FROM mail_warteschlange
                          WHERE schluessel = 'sicherheit_sammel'")->fetchColumn();
 pruef('Abgeschaltet meldet sie gar nicht', $n4 === $n3, $n3 . ' -> ' . $n4);
 app_state_setzen(RATE_K_MAIL, '');
+$pdo->exec("DELETE FROM users WHERE email = 'betrieb@ratenprobe.pruefung'");
 
 /* ======================================================================== */
 abschnitt('9  Sperre aufheben — und der Weg zurueck nach einem Passwort-Reset');
@@ -375,15 +384,15 @@ $e = (int)$pdo->query("SELECT COUNT(*) FROM sicherheit_ereignisse
                         WHERE art = 'aufgehoben' AND wer = 'Ratenprobe'")->fetchColumn();
 pruef('Das Aufheben steht im Protokoll', $e >= 1, $e . ' Zeile(n)');
 
-klopfen('login', 'id:probe-reset@ratenprobe.invalid', 20);
-klopfen('salt', 'id:probe-reset@ratenprobe.invalid', 40);
+klopfen('login', 'id:probe-reset@ratenprobe.pruefung', 20);
+klopfen('salt', 'id:probe-reset@ratenprobe.pruefung', 40);
 pruef('Vorbereitet: Konto an Anmeldung und Salz gesperrt',
-      !rate_erlaubt('login', null, ['id:probe-reset@ratenprobe.invalid'])
-   && !rate_erlaubt('salt',  null, ['id:probe-reset@ratenprobe.invalid']), '');
-rate_konto_freigeben('Probe-Reset@Ratenprobe.INVALID');
+      !rate_erlaubt('login', null, ['id:probe-reset@ratenprobe.pruefung'])
+   && !rate_erlaubt('salt',  null, ['id:probe-reset@ratenprobe.pruefung']), '');
+rate_konto_freigeben('Probe-Reset@Ratenprobe.PRUEFUNG');
 pruef('Ein gesetztes Passwort raeumt beide Toepfe (auch bei anderer Schreibweise)',
-      rate_erlaubt('login', null, ['id:probe-reset@ratenprobe.invalid'])
-   && rate_erlaubt('salt',  null, ['id:probe-reset@ratenprobe.invalid']),
+      rate_erlaubt('login', null, ['id:probe-reset@ratenprobe.pruefung'])
+   && rate_erlaubt('salt',  null, ['id:probe-reset@ratenprobe.pruefung']),
       'Merkmale werden kleingeschrieben');
 
 /* ======================================================================== */
@@ -650,13 +659,13 @@ abschnitt('12  Registrierung ueber HTTP — die Rechenaufgabe (SR-08)');
  * stillen Faelle — ohne Loesung, falsche Loesung, abgelaufen, belegte,
  * Wegwerf- und freie Adresse. Soll: Spanne unter 50 ms.
  */
-$REG_MUSTER = 'pow-%@probe.invalid';
+$REG_MUSTER = 'pow-%@probe.pruefung';
 $regVorArt = _tor_lesen($pdo, 'konten_reg_art');
 $regSids = [];
 $regMailStart = (int)$pdo->query('SELECT COALESCE(MAX(id), 0) FROM mail_warteschlange')->fetchColumn();
 $regRaeumen = static function () use (&$regSids, $regVorArt, $regMailStart): void {
     $pdo = db();
-    $st = $pdo->query("SELECT id FROM users WHERE email LIKE 'pow-%@probe.invalid'
+    $st = $pdo->query("SELECT id FROM users WHERE email LIKE 'pow-%@probe.pruefung'
                           OR email LIKE 'pow-%@mailinator.com'");
     foreach ($st->fetchAll(PDO::FETCH_COLUMN) as $id) {
         $pdo->prepare('DELETE FROM protokoll_ereignisse WHERE betroffen_user_id = ?')->execute([$id]);
@@ -666,7 +675,7 @@ $regRaeumen = static function () use (&$regSids, $regVorArt, $regMailStart): voi
      * juengere an dieselbe Adresse ueberholt, verliert ihren Empfaenger
      * (`ueberholt`, Empfaenger leer) — nach der Adresse fiele sie durch. */
     $pdo->prepare("DELETE FROM mail_warteschlange
-                    WHERE empfaenger LIKE 'pow-%@probe.invalid' OR empfaenger LIKE 'pow-%@mailinator.com'
+                    WHERE empfaenger LIKE 'pow-%@probe.pruefung' OR empfaenger LIKE 'pow-%@mailinator.com'
                        OR (id > ? AND schluessel IN ('registrierung', 'registrierung_bekannt'))")
         ->execute([$regMailStart]);
     $pdo->exec("DELETE FROM rate_limits WHERE topf IN ('reg', 'regg', 'regz')");
@@ -818,8 +827,8 @@ try {
     $richtig = static fn (array $s): array =>
         ['pow_aufgabe' => $s['aufgabe'], 'pow_loesung' => $regLoesen($s['aufgabe'], $s['bits'])];
 
-    $A = $einFall('richtige Loesung', 'pow-frei-0@probe.invalid', $richtig);
-    $A['mails'] = $regMails('pow-frei-0@probe.invalid', true);
+    $A = $einFall('richtige Loesung', 'pow-frei-0@probe.pruefung', $richtig);
+    $A['mails'] = $regMails('pow-frei-0@probe.pruefung', true);
     pruef('richtige Loesung, freie Adresse → Danke, Konto unbestaetigt, Mail `registrierung`',
           $A['danke'] && $A['konto'] === 'unbestaetigt' && $A['mails'] === ['registrierung'],
           'Konto ' . var_export($A['konto'], true) . ' · Mails ' . json_encode($A['mails']));
@@ -854,7 +863,7 @@ try {
     $i = 0;
     foreach ($schlecht as $name => $pow) {
         $i++;
-        $email = 'pow-schlecht-' . $i . '@probe.invalid';
+        $email = 'pow-schlecht-' . $i . '@probe.pruefung';
         $k = [];
         $s = $regHolen($k);
         $r = $regSchicken($k, $email, $pow($s, $k), $s['ew']);
@@ -868,22 +877,22 @@ try {
     $k = [];
     $s = $regHolen($k);
     $pow = $richtig($s);
-    $r1 = $regSchicken($k, 'pow-zweimal-1@probe.invalid', $pow, $s['ew']);
-    $r2 = $regSchicken($k, 'pow-zweimal-2@probe.invalid', $pow, $s['ew']);
+    $r1 = $regSchicken($k, 'pow-zweimal-1@probe.pruefung', $pow, $s['ew']);
+    $r2 = $regSchicken($k, 'pow-zweimal-2@probe.pruefung', $pow, $s['ew']);
     pruef('zweimal dieselbe Aufgabe → die erste durch, die zweite Danke ohne Konto',
-          $r1['danke'] && $regKonto('pow-zweimal-1@probe.invalid') === 'unbestaetigt'
-          && $r2['danke'] && $regKonto('pow-zweimal-2@probe.invalid') === null,
-          var_export($regKonto('pow-zweimal-1@probe.invalid'), true) . ' / '
-          . var_export($regKonto('pow-zweimal-2@probe.invalid'), true));
+          $r1['danke'] && $regKonto('pow-zweimal-1@probe.pruefung') === 'unbestaetigt'
+          && $r2['danke'] && $regKonto('pow-zweimal-2@probe.pruefung') === null,
+          var_export($regKonto('pow-zweimal-1@probe.pruefung'), true) . ' / '
+          . var_export($regKonto('pow-zweimal-2@probe.pruefung'), true));
 
     /* Eine aeltere Aufgabe derselben Sitzung (zweiter Reiter) geht noch. */
     $k = [];
     $s1 = $regHolen($k);
     $regHolen($k);
-    $r = $regSchicken($k, 'pow-reiter@probe.invalid', $richtig($s1), $s1['ew']);
+    $r = $regSchicken($k, 'pow-reiter@probe.pruefung', $richtig($s1), $s1['ew']);
     pruef('die Aufgabe eines aelteren Reiters derselben Sitzung gilt noch (E-SR-89)',
-          $r['danke'] && $regKonto('pow-reiter@probe.invalid') === 'unbestaetigt',
-          var_export($regKonto('pow-reiter@probe.invalid'), true));
+          $r['danke'] && $regKonto('pow-reiter@probe.pruefung') === 'unbestaetigt',
+          var_export($regKonto('pow-reiter@probe.pruefung'), true));
 
     /* Felder als Liste — auch die alten: keine 500, keine Warnung. */
     $k = [];
@@ -891,9 +900,9 @@ try {
     $pdo->exec("DELETE FROM rate_limits WHERE topf IN ('reg', 'regg', 'regz')");
     $vorW = (int)$pdo->query("SELECT COALESCE(MAX(id), 0) FROM protokoll_ereignisse")->fetchColumn();
     $codes = [];
-    foreach ([['email' => ['x']], ['email' => 'pow-liste@probe.invalid', 'name' => ['x']],
-              ['email' => 'pow-liste@probe.invalid', 'website' => ['x']],
-              ['email' => 'pow-liste@probe.invalid', 'zeit' => ['x']]] as $felder) {
+    foreach ([['email' => ['x']], ['email' => 'pow-liste@probe.pruefung', 'name' => ['x']],
+              ['email' => 'pow-liste@probe.pruefung', 'website' => ['x']],
+              ['email' => 'pow-liste@probe.pruefung', 'zeit' => ['x']]] as $felder) {
         $codes[] = $regHttp('POST', $k, $felder + ['ew' => $s['ew']])['code'];
     }
     $st = $pdo->prepare("SELECT COUNT(*) FROM protokoll_ereignisse
@@ -906,15 +915,15 @@ try {
 
     /* c. Die Dauer. Fuenf Absendungen je Lage, verglichen werden Mediane. */
     $lagen = [
-        'ohne Loesung'    => [static fn (int $n): string => 'pow-d-ohne-' . $n . '@probe.invalid',
+        'ohne Loesung'    => [static fn (int $n): string => 'pow-d-ohne-' . $n . '@probe.pruefung',
                               static fn (array $s): array => ['pow_aufgabe' => $s['aufgabe'], 'pow_loesung' => '']],
-        'falsche Loesung' => [static fn (int $n): string => 'pow-d-falsch-' . $n . '@probe.invalid',
+        'falsche Loesung' => [static fn (int $n): string => 'pow-d-falsch-' . $n . '@probe.pruefung',
                               $schlecht['falsche Loesung']],
-        'abgelaufen'      => [static fn (int $n): string => 'pow-d-ab-' . $n . '@probe.invalid',
+        'abgelaufen'      => [static fn (int $n): string => 'pow-d-ab-' . $n . '@probe.pruefung',
                               $schlecht['abgelaufene Aufgabe']],
-        'belegte Adresse' => [static fn (int $n): string => 'pow-frei-0@probe.invalid', $richtig],
+        'belegte Adresse' => [static fn (int $n): string => 'pow-frei-0@probe.pruefung', $richtig],
         'Wegwerfadresse'  => [static fn (int $n): string => 'pow-d-' . $n . '@mailinator.com', $richtig],
-        'freie Adresse'   => [static fn (int $n): string => 'pow-d-frei-' . $n . '@probe.invalid', $richtig],
+        'freie Adresse'   => [static fn (int $n): string => 'pow-d-frei-' . $n . '@probe.pruefung', $richtig],
     ];
     $mediane = [];
     $alleDanke = true;
@@ -937,11 +946,11 @@ try {
               => $n . ' ' . number_format($m * 1000, 1, ',', '') . ' ms', array_keys($mediane), $mediane))
           . ' · Spanne ' . number_format($spanne * 1000, 1, ',', '') . ' ms');
     pruef('… und nur die freien Adressen haben ein Konto, nur gelungene Faelle eine Mail',
-          $regKonto('pow-d-frei-0@probe.invalid') === 'unbestaetigt'
-          && $regKonto('pow-d-ohne-0@probe.invalid') === null && $regKonto('pow-d-ab-0@probe.invalid') === null
-          && $regMails('pow-d-falsch-0@probe.invalid') === []
-          && in_array('registrierung_bekannt', $regMails('pow-frei-0@probe.invalid', true), true),
-          'belegt: ' . json_encode($regMails('pow-frei-0@probe.invalid')));
+          $regKonto('pow-d-frei-0@probe.pruefung') === 'unbestaetigt'
+          && $regKonto('pow-d-ohne-0@probe.pruefung') === null && $regKonto('pow-d-ab-0@probe.pruefung') === null
+          && $regMails('pow-d-falsch-0@probe.pruefung') === []
+          && in_array('registrierung_bekannt', $regMails('pow-frei-0@probe.pruefung', true), true),
+          'belegt: ' . json_encode($regMails('pow-frei-0@probe.pruefung')));
 } finally {
     usleep(1500000);   // die letzte Mail ist nach der Antwort unterwegs
     $regRaeumen();
@@ -971,7 +980,7 @@ abschnitt('12a  Passwortnachweis an sieben Stellen — ein Topf (R17-20, F-R17-3
  * keiner Stelle etwas aus: Es kommt erst, wenn der Topf zu ist. */
 require_once $wurzel . '/server/sitzung_lib.php';
 require_once $wurzel . '/server/serverkrypto_lib.php';
-$NW_MAIL = 'probe-nachweis@ratenprobe.invalid';
+$NW_MAIL = 'probe-nachweis@ratenprobe.pruefung';
 $pdo->prepare('DELETE FROM users WHERE email = ?')->execute([$NW_MAIL]);
 $pdo->prepare("INSERT INTO users (email, name, role, password_hash, kdf_salt, kdf_iter)
                VALUES (?, 'Ratenprobe Nachweis', 'user', '', '', 310000)")->execute([$NW_MAIL]);
@@ -1026,7 +1035,7 @@ $nwStellen = [
         ['alt_token' => '@', 'neu_token' => str_repeat('1', 64), 'neu_iter' => KDF_ITER_ZIEL], true,
         static fn (array $r): bool => $r['code'] === 429],
     'Adresswechsel (vorher ohne Topf)' => ['einstellungen.php?t=profil',
-        ['action' => 'profile', 'name' => 'Ratenprobe Nachweis', 'email' => 'probe-nachweis-neu@ratenprobe.invalid',
+        ['action' => 'profile', 'name' => 'Ratenprobe Nachweis', 'email' => 'probe-nachweis-neu@ratenprobe.pruefung',
          'old_token' => '@'], false,
         static fn (array $r): bool => str_contains($r['rumpf'], 'Zu viele falsche Passwörter')],
     'Kontoloeschung (vorher ohne Topf, F-R17-67)' => ['einstellungen.php?t=profil',
@@ -1130,12 +1139,12 @@ try {
     $max = (int)(rate_grenze('login')['max'] ?? 10);
     $anmelden = $naSeite('login.php');
     for ($i = 1; $i <= $max; $i++) {
-        $anmelden(['email' => 'probe-nat-' . $i . '@ratenprobe.invalid', 'tokens' => $naFalsch]);
+        $anmelden(['email' => 'probe-nat-' . $i . '@ratenprobe.pruefung', 'tokens' => $naFalsch]);
     }
     $adr = stand('login', $naIp);
     pruef($max . ' Fehlversuche an ' . $max . ' Konten: der Topf `login` zaehlt den Anschluss NICHT',
           $adr === null, $adr === null ? 'keine Zeile' : 'Zeile mit ' . $adr['versuche'] . ' Versuchen');
-    $r = $anmelden(['email' => 'probe-nat-elf@ratenprobe.invalid', 'tokens' => $naFalsch]);
+    $r = $anmelden(['email' => 'probe-nat-elf@ratenprobe.pruefung', 'tokens' => $naFalsch]);
     pruef('… und der elfte Versuch an einem weiteren Konto ist NICHT gesperrt',
           !str_contains($r, 'Zu viele Anmeldeversuche'),
           str_contains($r, 'Zu viele Anmeldeversuche von diesem Anschluss') ? 'Anschluss gesperrt'
@@ -1145,9 +1154,9 @@ try {
           $ip !== null && (int)$ip['versuche'] === $max + 1, 'Versuche ' . ($ip['versuche'] ?? '—'));
     /* Gegenrichtung: Das KONTO wird weiter nach zehn gesperrt. */
     for ($i = 1; $i <= $max; $i++) {
-        $anmelden(['email' => 'probe-nat-eins@ratenprobe.invalid', 'tokens' => $naFalsch]);
+        $anmelden(['email' => 'probe-nat-eins@ratenprobe.pruefung', 'tokens' => $naFalsch]);
     }
-    $r = $anmelden(['email' => 'probe-nat-eins@ratenprobe.invalid', 'tokens' => $naFalsch]);
+    $r = $anmelden(['email' => 'probe-nat-eins@ratenprobe.pruefung', 'tokens' => $naFalsch]);
     pruef('… und ein Konto ist nach ' . $max . ' Fehlversuchen gesperrt, mit der Konto-Meldung',
           str_contains($r, 'Zu viele Anmeldeversuche für diesen Namen'),
           str_contains($r, 'Zu viele Anmeldeversuche von diesem Anschluss') ? 'Anschluss-Meldung'
@@ -1159,16 +1168,16 @@ try {
     pruef('Der Topf `notweg_ip` steht auf 20 je Stunde', $nmax === 20, (string)$nmax);
     $notweg = $naSeite('zweitfaktor_notweg.php');
     for ($i = 1; $i <= $nmax; $i++) {
-        $notweg(['email' => 'probe-nat-n' . $i . '@ratenprobe.invalid', 'tokens' => $naFalsch,
+        $notweg(['email' => 'probe-nat-n' . $i . '@ratenprobe.pruefung', 'tokens' => $naFalsch,
                  'wert' => str_repeat('0', 64)]);
     }
-    $r = $notweg(['email' => 'probe-nat-n-letzt@ratenprobe.invalid', 'tokens' => $naFalsch,
+    $r = $notweg(['email' => 'probe-nat-n-letzt@ratenprobe.pruefung', 'tokens' => $naFalsch,
                   'wert' => str_repeat('0', 64)]);
     pruef('Notzugang: nach ' . $nmax . ' Adressen von einem Anschluss ist der Anschluss gesperrt',
           str_contains($r, 'Zu viele Versuche von diesem Anschluss'),
           str_contains($r, 'Zu viele Versuche von diesem Anschluss') ? 'Anschluss-Meldung'
           : (str_contains($r, 'Zu viele Versuche für diese Adresse') ? 'Adress-Meldung' : 'nicht gesperrt'));
-    $ein = stand('notweg', rate_merkmal_kennung('probe-nat-n1@ratenprobe.invalid'));
+    $ein = stand('notweg', rate_merkmal_kennung('probe-nat-n1@ratenprobe.pruefung'));
     pruef('… und jede einzelne Adresse hat nur einen Versuch', $ein !== null && (int)$ein['versuche'] === 1,
           'Versuche ' . ($ein['versuche'] ?? '—'));
 } finally {

@@ -52,7 +52,7 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
 
 | Spanne | Zweig | seit |
 |---|---|---|
-| 480 bis 489 | `claude/tender-bell-225ta2` (Schritt 22, BR5) | 03.11.2026 |
+| 480 bis 489 | `claude/tender-bell-225ta2` (Schritt 22, BR5); vergeben: 480 | 03.11.2026 |
 | 490 bis 499 | `claude/new-session-p1duc7` — Prüfdurchgang der Arbeitsumgebung (R91), Fortsetzung; vergeben: 490, 491 | 03.11.2026 |
 | ab 500 | frei — höchste reservierte Nummer 499; frei blieben 472 bis 479 aus der Spanne von 21 (PR #136), 461 bis 469 aus der Spanne von PR (PR #133), 434 bis 439 aus der Spanne von PR #129, 441 bis 449 aus der von PR #130, 420 bis 429 aus der Spanne von 20 (PR #127), 412 bis 419 aus der von 12b (PR #125), 394 bis 399 aus der Spanne von 19 (PR #112 bis #114), 389 aus der von 12a (PR #116), 372 bis 379 aus der von 12 (PR #103), 362 bis 369 aus der von PK, 359 aus der von 18 (PR #101), 348 und 349 aus der von 17, 338 aus der von AR | 02.11.2026 |
 
@@ -564,23 +564,6 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
 
 <!-- -->
 
-346. **Zwei Meldungen im Browser noch von Hand: der Hinweis `patwarn` und der Papierkorb-Hinweis des Diensttags.** · gehört zu: 22 · Stand: offen · seit 27.09.2026
-     *Aufgenommen 27.09.2026 mit R4-13 (F-R4-42).* Die Zählzeile Z37 sieht
-     seit R4-13 auch die Zuweisung `className = '…meldung'` und fand damit
-     zwei Nachbauten, die das alte Muster nicht sah: in `assets/patient.js`
-     den Hinweis `patwarn` (ohne Symbol — der Kommentar dort sagt, weil
-     `symbol.js` beim Aufbau noch fehlen kann) und in `index.php` den
-     Hinweis „Dieser Diensttag liegt im Papierkorb" als `<p>` mit
-     `meldung meldung-warn`. Beide sehen anders aus als jede andere Meldung.
-     **Nicht in R4-13 umgestellt:** Sie liegen außerhalb von Nr. 271–273,
-     beide wären eine sichtbare Änderung, und bei `patwarn` hängt es an der
-     Ladereihenfolge von `edSymbol()`. *Weg:* über `EdHtml.meldung()`, für
-     `patwarn` erst nachsehen, ob `symbol.js` zur Aufrufzeit steht (die
-     Immer-Liste kommt am Seitenende). *Abnahme:* Z37 **2** (nur `html.js`),
-     Bilderlauf ohne Konsolenfehler.
-
-<!-- -->
-
 347. **Zweimal an einem Tag standen zwei fremde Waisen in der örtlichen Anlage — woher, ist nicht geklärt.** · gehört zu: 14 · Stand: offen · seit 28.09.2026
      *Aufgenommen 28.09.2026 mit R4-27 (F-R4-72).* Die Jobprobe prüft,
      dass „sechs Zeilen und ein Blob" als 7 gemeldet werden, und war zweimal
@@ -618,120 +601,6 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      `SHOW CREATE TABLE` jeder Tabelle mit der frisch angelegten; eine
      Abweichung ist rot. *Abnahme:* eine absichtlich abweichende Spalte in
      einer Migration → rot.
-
-<!-- -->
-
-355. **Ein Formularfeld als Liste gibt eine PHP-Warnung — `(string)$_POST[…]` an 114 Stellen.** · gehört zu: 22 · Stand: offen · seit 29.09.2026
-     *Aufgenommen 29.09.2026 mit der dritten Lesung von H-SR-08 (Konzept SR,
-     F-SR-65).* Aus `code[]=x` statt `code=x` macht
-     `(string)($_POST['code'] ?? '')` den Text „Array" mit der Warnung
-     „Array to string conversion", und der Behandler schreibt sie in den
-     Reiter System — höchstens eine Zeile je Stelle und Anfrage. Für
-     `passkey_antwort` ist das seit Web 21.11.0 behoben (F-SR-47); das
-     Nachbarfeld `code` in `login.php` und `zweitfaktor.php`, `signatur` und
-     `tokens` in `login.php` haben es noch — `tokens` im ersten Schritt, ohne
-     Passwort, hinter dem Anmelde-Topf. `grep -rn '(string)($_POST['` über
-     `server/` zählt 114 Stellen. *Weg:* ein Helfer `post_text()` als die
-     eine Stelle (R83) und eine Registerzeile gegen das Muster. *Abnahme:*
-     jedes Feld der Anmeldeschritte als Liste → Formularfehler, keine Zeile
-     im Reiter System. *Seit Web 21.14.0 (SR-08, F-SR-96)* nimmt
-     `registrieren.php` seine Felder über eine lokale Hülle `$feld` — dort
-     war `email[]` sogar eine 500; jetzt 109 Stellen, und `$feld` steht mit
-     `zweitfaktor_notweg.php` zweimal: beide gehen in `post_text()` auf.
-
-<!-- -->
-
-356. **Zwei Abschnitte der Karte „Schlüssel des Servers" kleben ohne Abstand am Knopffuß.** · gehört zu: 22 · Stand: offen · seit 29.09.2026
-     *Aufgenommen 29.09.2026 mit SR-03 (Konzept SR, F-SR-73; gefunden an den
-     Bildern zu P-SR-05).* „Nachtragen vom Blatt" und „Neuanfang" stehen als
-     `h3.listen-form-titel` unmittelbar hinter `.listen-form-fuss` — die
-     Überschrift hat oben keinen Abstand, und die Knöpfe darüber gehören
-     optisch zu ihr. Für den neuen Abschnitt „Serverschlüssel wechseln" ist
-     es in SR-03 behoben: Er steht in `.listen-form` (Linie und Abstand
-     darüber). Die zwei alten erscheinen nur in der Lage *abweichend* und
-     sind nicht angefasst, weil kein Bild sie in dieser Lage zeigt. *Weg:*
-     beide Formulare ebenso in `.listen-form`. *Abnahme:* Bild der Karte in
-     der Lage *abweichend* (Bilderlauf oder Bedienweg mit verstellter
-     Marke), 390 und 1280 px.
-
-<!-- -->
-
-357. **Der Fehlertext eines Jobs trägt den Klassennamen der Ausnahme.** · gehört zu: 22 · Stand: offen · seit 04.10.2026
-     *Aufgenommen 04.10.2026 mit H-SR-06 (Konzept SR, F-SR-82; Nebenbefund
-     der Gegenlesung zu O-7).* `jobs_einen_lauf()` schreibt
-     `get_class($ex) . ': ' . $ex->getMessage()` nach `letzter_fehler` und in
-     den Bericht; „Jetzt weiterarbeiten" (Karte „Schlüssel des Servers") und
-     die Karte „Jobs" zeigen ihn so der BetreiberIn —
-     „RuntimeException: …" ist Technik, keine Auskunft. Betrifft alle Jobs,
-     nicht nur den Schlüsselwechsel; deshalb nicht in H-SR-06 geändert. Im
-     Reiter System steht die Klasse ohnehin in den Daten (`klasse`). *Weg:*
-     im Bericht und in `letzter_fehler` nur die Meldung, die Klasse bleibt
-     im Reiter System. *Abnahme:* ein Job, der wirft (Probe mit
-     verfälschtem Häppchen) — die Karte zeigt die Meldung ohne Klasse, der
-     Reiter System die Klasse. *Dazu (Nachprüfung H-SR-06, F-SR-87):* der
-     Grund in der Zeile „Ließen sich nicht umhüllen" ist ebenfalls der rohe
-     Ausnahmetext; eine PDOException trüge den Datenbanknamen, ein
-     TypeError Pfade. Dieselbe Kürzung an derselben Stelle.
-
-<!-- -->
-
-358. **Die zweite Passwortseite: Token-Ableitung an einer Stelle, und die Wache vergleicht sie mit.** · gehört zu: 22 · Stand: offen · seit 04.10.2026
-     *Aufgenommen 04.10.2026 mit SR-04 (Konzept SR, F-SR-90, E-SR-84).*
-     Der Notzugang `zweitfaktor_notweg.php` leitet das Passwort-Token ab wie
-     `login.php` (Salz über `auth_salt.php`, je Rundenzahl
-     `EdCrypto.deriveKeys()`) — mit einer zweiten Kopie der rund zwanzig
-     Zeilen, weil `login.php` für Schritt 18 zu ist (E-SR-14) und dort auch
-     die Prüfung (`login_zeile()`, Token je `kdf_iter`, Blindvergleich) als
-     lokaler Code steht. Dazu: Die Integritätswache vergleicht die
-     Inline-Skripte der Seiten, auf denen ein Passwort getippt wird
-     (`tools/integritaetswache/wache.py`, `SEITEN`) — dort steht nur
-     `login.php`. Die neue Seite vorher einzutragen, machte die Wache rot,
-     solange die Anlage sie nicht hat. *Weg:* eine Funktion in `crypto.js`
-     (Salz holen, Token je Rundenzahl) für beide Seiten, die Prüfung als
-     Funktion neben `AUTH_VERGLEICHSWERT`; nach der Auslieferung von
-     Web 21.13.0 `zweitfaktor_notweg.php` in `SEITEN`. *Abnahme:* ein
-     `fetch('auth_salt.php'` im Quelltext; die Wache misst zwei Seiten.
-
-<!-- -->
-
-361. **Die APK-Karte unterscheidet Handy und Wear-OS-Uhr nicht.** · gehört zu: 22 · Stand: offen · seit 30.09.2026
-     *Aufgenommen 30.09.2026 nach dem ersten Tag `android-v0.17.0`
-     (F-PK-58, Prüfdokument PK 5u).* Seit PK-08 legt die Kette zwei
-     APKs nach `server/apk/` (E-PK-58). Einstellungen → Geräte, „Ohne Play
-     Store", zeigt beide als „NAdoku 0.17.0"; nur die Größe verrät, welche
-     die Uhr-App ist, und die steht oben, weil `apk_liste()` nach
-     Ablagezeit sortiert. Wer auf den ersten Knopf tippt, lädt aufs Handy
-     die Wear-OS-App. Q-PK-11 hatte das vorhergesagt und bewusst nicht in
-     PK-08 gelöst: Es ist eine Oberflächenänderung.
-     *Weg:* `apk_liste()` liest das Gerät aus dem Namen (`nadoku-uhr-…` →
-     Wear-OS-Uhr, sonst Handy) und sortiert Handy vor Uhr; die Karte
-     nennt es („NAdoku 0.17.0 · Handy"). Dieselbe Liste liest
-     `betrieb_updates.php` und `apk.php` — beide mitprüfen. Eine
-     Web-Nebenstufe.
-     *Abnahme:* zwei Dateien im Ordner → die Karte zeigt Handy zuerst,
-     jede mit ihrem Gerät; eine Datei ohne Muster (Altbestand) steht
-     unverändert da.
-
-<!-- -->
-
-383. **Komplett- und Schlüsselwechselprobe rot unter dem PHP 8.3.6 aus Ubuntu.** · gehört zu: 22 · Stand: offen · seit 13.10.2026
-     *Aufgenommen 13.10.2026 mit S11-03 (F-S11-26, -28, -33).* Unter dem
-     PHP **8.3.6** aus Ubuntu 24.04 (OpenSSL 3.0.13, zlib 1.3) scheitern
-     drei Fälle, die alle ein Komplett-Siegel über mehrere Häppchen
-     schreiben: Komplettprobe Teil 4 „über drei Häppchen versiegelt …
-     öffnet" und „Zieldatei verschwindet" (73 von 75, „verändert oder
-     unvollständig (Block 1)"), Schlüsselwechselprobe Teil 4 „Komplett-Stand
-     über den Wechsel" (65 ok, 1 fehlt). Auf dem Stand vor S11-03 ebenso.
-     **Grün** unter PHP 8.3.33 (`nadoku-php83`) und 8.4.19 (75/0, 66/0) —
-     gegen dieselbe Datenbank. S11 ist es nicht; ein Fehler der Probe wohl
-     auch nicht, sonst wäre er überall rot.
-     **Warum es zählt:** 8.3.6 ist die Vorgabe von Ubuntu 24.04 LTS. Steht
-     eine Anlage darauf, geht ihre Komplettsicherung vielleicht nicht auf.
-     *Weg:* den Siegelschub (`komp_siegel_schub()`) unter 8.3.6 Block für
-     Block mit 8.4 vergleichen; Ursache benennen (PHP-Fehler, der bis
-     8.3.33 behoben ist, oder Bibliothek); dann entweder umgehen oder eine
-     Mindestfassung in `Technik.md` und im Installer festschreiben.
-     *Abnahme:* die Ursache benannt, und unter 8.3.6 grün oder abgewiesen.
 
 <!-- -->
 
@@ -790,25 +659,6 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      über „🔒" — das Schloss ist seit S10 ein SVG, sie meldet falsch rot.
      Dazu `fixture/riegelprobe.php`: erwartet Rückgabe 0 von `erzeugen.php`,
      das seit Web 23 mit 2 abbricht (Nr. 388); Teil 1 und 2 dauerhaft rot.
-
-<!-- -->
-
-392. **Das Schlüsselpaar entsteht nur, wer auf der ersten Seite nach der Anmeldung bleibt.** · gehört zu: 22 · Stand: offen · seit 19.10.2026
-     *Aufgenommen 19.10.2026 in DM-02 (F-DM-02).* `unlock.js` legt das Paar
-     des Kontos (und den Rückweg) still an, sobald der Inhaltsschlüssel da
-     ist — und nur mit dem Anmelde-Token, das es allein auf der ersten
-     Seite nach der Anmeldung gibt. Die Freigabeprobe ging sofort auf
-     `einstellungen.php` weiter: In Chromium kam das Paar trotzdem an, in
-     Firefox und WebKit in keinem Lauf (2 von 2). Wartet sie auf der ersten
-     Seite, steht es nach 1152 ms (Firefox), 596 ms (WebKit), 599 ms
-     (Chromium). Wer die Seite schneller verlässt, hat bis zur nächsten
-     Anmeldung kein Paar: Geräte können nicht senden, eine Freigabe weist
-     mit „kein Schlüsselpaar" ab. Nicht gemessen: ob es ein Mensch je
-     schafft, und ob der Rückweg dasselbe Los hat.
-     *Weg:* das Token bis zum gelungenen Anlegen im Sitzungsspeicher
-     halten, oder das Anlegen auf der zweiten Seite nachholen.
-     *Abnahme:* die Freigabeprobe ohne Warten auf der ersten Seite grün,
-     in drei Engines.
 
 <!-- -->
 
@@ -889,7 +739,7 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
 
 <!-- -->
 
-430. **Bitwarden zeigt beim Backup mit Kontopasswort den Eintrag nicht im Menü am Feld.** · gehört zu: 22 · Stand: offen · seit 02.11.2026
+430. **Bitwarden zeigt beim Backup mit Kontopasswort den Eintrag nicht im Menü am Feld.** · gehört zu: 22 · Stand: teilweise · seit 02.11.2026
      *Aufgenommen 02.11.2026 aus P-R17-34 (Handprüfung auf Produktiv,
      Firefox mit Bitwarden).* Seit Web 23.4.0 bietet Bitwarden im Feld
      „Kontopasswort" (Einstellungen → Backup) kein neues Passwort mehr an —
@@ -904,71 +754,10 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      eigenes Formular ohne `new-password`-Felder setzen. *Abnahme:* in einem
      echten Browser mit Bitwarden bietet das Menü am Feld den Eintrag an;
      die Sandbox hat kein Bitwarden.
-
-<!-- -->
-
-432. **„App installieren" nennt beide APKs gleich.** · gehört zu: 22 · Stand: offen · seit 02.11.2026
-     *Aufgenommen 02.11.2026 bei P-R17-05; Doppelung von Nr. 361, wird dort
-     erledigt (E-BE-07).* Unter „Ohne Play Store: APK von
-     Hand" stehen zwei Zeilen „NAdoku 0.18.2"; welche die Wear-OS-Uhr ist,
-     zeigt erst der Dateiname nach dem Herunterladen
-     (`nadoku-uhr-0.18.2.apk`). Die Zeile in `einstellungen.php` setzt nur
-     „NAdoku" und die Fassung zusammen, `apk_liste()` liest das `-uhr-` gar
-     nicht aus. *Weg:* `apk_liste()` gibt das Gerät mit (Name enthält
-     `-uhr-` → Uhr, sonst Handy), die Zeile heißt „NAdoku für Android-Handy"
-     bzw. „NAdoku für Wear-OS-Uhr"; dieselbe Benennung in Betrieb → Updates,
-     wo `apk_liste()` auch gelesen wird. *Abnahme:* beide Zeilen tragen ihr
-     Gerät, die Prüfsummen bleiben an ihrer Zeile.
-
-<!-- -->
-
-440. **Beim Löschen eines Geräts warnt das Web nicht vor ungesendeten Aufzeichnungen.** · gehört zu: 22 · Stand: offen · seit 02.11.2026
-     *Aufgenommen 02.11.2026 mit E-BE-08 (aus der Frage in Nr. 431).* Wer
-     ein Gerät unter Einstellungen → Geräte oder in der Verwaltung löscht,
-     nimmt ihm den Schlüssel; was noch auf Uhr oder Handy wartet, kommt bei
-     diesem Konto nie mehr an. Das Web sagt davon nichts, obwohl es die Zeit
-     des letzten Kontakts kennt. Für eine verlorene Uhr ist Deaktivieren der
-     richtige Griff (Runbook „Gerät verloren"): wirkt sofort, Daten bleiben,
-     und die Uhr sendet nach dem Reaktivieren weiter. *Weg:* Die Rückfrage
-     vor dem Löschen nennt den letzten Kontakt und rät bei längerer Pause
-     zum Deaktivieren; derselbe Satz in Handbuch und Runbook. *Abnahme:*
-     Löschen eines Geräts mit Kontakt vor mehr als einem Tag → Rückfrage
-     mit Datum und Hinweis; ein Gerät mit Kontakt heute → Rückfrage ohne
-     Hinweis; `tools/zaehlung/` ohne neue Stelle (Meldung über `ui_`).
-
-<!-- -->
-
-450. **Die Wegwerfkonten der Kette füllen auf Staging den Reiter System mit Mailfehlern.** · gehört zu: 22 · Stand: offen · seit 02.11.2026
-     *Aufgenommen 02.11.2026 im ersten Prüfdurchgang der Arbeitsumgebung
-     (R91, P-P5c-12).* Stufe 2 legt je Lauf und Engine Konten unter
-     `…@example.invalid` an, meldet sie an und löscht sie wieder. Jede Mail an
-     sie scheitert beim Mailserver von Staging mit „Server antwortete 450";
-     an einem Tag standen so über 100 gleiche Einträge im Reiter System, die
-     Statusseite zeigt dauerhaft „Letzter Versand fehlgeschlagen", und eine
-     Einladung wartet 24 Stunden auf Wiederholung. Echte Fehler gehen darin
-     unter. Mails an echte Adressen kommen an (Einladung, erster Versuch).
-     *Weg:* Adressen unter `.invalid` gar nicht erst einreihen — die Endung
-     ist nach RFC 2606 nie zustellbar —, mit einem Satz im Protokoll statt
-     einer Störung; oder die Kette nimmt eine zustellbare Prüfadresse.
-     *Abnahme:* nach einem Stufe-2-Lauf keine neue Zeile „smtp … 450" im
-     Reiter System, Status „Letzter Versand" unverändert.
-
-<!-- -->
-
-454. **Der Mailjob versucht eine dauerhafte Absage 24 Stunden lang weiter.** · gehört zu: 22 · Stand: offen · seit 02.11.2026
-     *Aufgenommen 02.11.2026 im ersten Prüfdurchgang der Arbeitsumgebung
-     (R91, P-P5c-03).* Die Rundmail an 8 Staging-Konten: 5 zugestellt,
-     zwei mit „Server antwortete 550" (das Postfach gibt es nicht), eine
-     mit 450 (Nr. 450). Alle drei stehen danach auf „wartet" und laufen die
-     ganze `MAIL_LEITER` (5 min bis 24 h) durch. Ein 5xx ist nach RFC 5321
-     endgültig; jeder weitere Versuch ist eine Störung im Reiter System und
-     verlängert „Letzter Versand fehlgeschlagen" auf der Statusseite.
-     *Weg:* `mail_zeile_versuchen()` setzt bei einer 5xx-Antwort sofort
-     `unzustellbar`, mit der Absage als Grund; 4xx und
-     Verbindungsfehler bleiben auf der Leiter.
-     *Abnahme:* eine Mail an eine Adresse ohne Postfach steht nach dem
-     ersten Versuch unter „unzustellbar", ohne zweite Störung.
-
+     *Gebaut 03.11.2026 mit BR5-07 (Web 23.7.2):* Kontopasswort samt
+     Anmeldename in einem eigenen Formular, Enter erstellt das Backup; Karte
+     pixelgleich, Backup in drei Engines. Offen bis zur Handprüfung mit
+     Bitwarden (P-BR5-13).
 <!-- -->
 
 470. **Auf der Venu 3s schneidet der Kreis die unterste Meldung der Sync-Seite ab.** · gehört zu: nächste Backlog-Runde · Stand: offen · seit 02.11.2026
@@ -997,21 +786,6 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      Kopplung räumen, wie die Uhr; Bedrohungsmodell Lage H nachziehen.
      *Abnahme:* Prüffall im `SenderTest` mit gestellter Uhr — 30 Tage nach
      der ersten 401 ist der Puffer leer.
-
-<!-- -->
-
-456. **Die Reanimationskarte sagt im gesperrten Formular „keine".** · gehört zu: 22 · Stand: offen · seit 03.11.2026
-     *Aufgenommen 03.11.2026 im Prüfdurchgang der Arbeitsumgebung (R91,
-     P-S11-18).* Ist der Inhaltsschlüssel gesperrt, öffnet
-     `einsatz_form.php` die Einsatzhülle nicht, `#rearows` bleibt leer, und
-     `reaVorschau()` schreibt „keine" in den Kopf der Karte — auch an einem
-     Einsatz mit Reanimation. Gespeichert werden kann nichts (die Leiste
-     verlangt zuerst das Entsperren, gemessen), und „Reanimation
-     hinzufügen" tut nichts; die Angabe ist aber falsch, wo sie
-     „unbekannt" heißen müsste. *Weg:* gesperrt „gesperrt" statt der Zahl,
-     wie die Karte „Wartet auf dein Passwort" in der Ansicht.
-     *Abnahme:* gesperrtes Formular eines Einsatzes mit Reanimation — der
-     Kartenkopf sagt nicht „keine".
 
 <!-- -->
 
@@ -1082,3 +856,17 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      Paar an (wie `Sitzung.kontoschluessel()`), oder der Rundlauf nimmt
      ein Konto mit Paar. *Abnahme:* P-AR-15 auf frischer Anlage 0
      Fehlschläge.
+
+<!-- -->
+
+480. **Nachtragen vom Blatt: zwei Formulare ohne Abstand.** · gehört zu: nächste Backlog-Runde · Stand: offen · seit 03.11.2026
+     *Aufgenommen 03.11.2026 in BR5-06 (Konzept BR5, Bild der Karte in
+     der Lage abweichend).* Sind Serverschlüssel UND Server-Anteil
+     abweichend, stehen unter „Nachtragen vom Blatt“ zwei Formulare
+     untereinander; der Knopf „Server-Anteil nachtragen“ klebt ohne Abstand
+     an der Beschriftung „Serverschlüssel vom Blatt“. Nr. 356 hat die
+     Linie je Abschnitt gesetzt (E-BR5-17), nicht den Abstand zwischen zwei
+     Formularen in einem. *Weg:* ein Abstand zwischen aufeinanderfolgenden
+     Formularen in `.listen-form` (Stylesheet, Design.md) oder ein Fuß, der
+     beide Felder trägt. *Abnahme:* Bild der Karte in der Lage abweichend
+     mit beiden Werten, 390 und 1280 px — Abstand wie zwischen Abschnitten.

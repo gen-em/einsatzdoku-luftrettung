@@ -60,10 +60,42 @@ function apk_liste(): array
              * eine neue Abhaengigkeit fuer eine Anzeige waere der falsche
              * Preis (CLAUDE.md 4). Steht keine drin, steht keine da. */
             'version' => preg_match('/-(\d+\.\d+\.\d+)\.apk$/', $name, $t) ? $t[1] : null,
+            'geraet'  => apk_geraet($name),
         ];
     }
-    usort($aus, static fn($a, $b) => $b['stand'] <=> $a['stand']);
+    /* HANDY VOR UHR VOR REST, innerhalb nach Ablagezeit (Nr. 361). Bis
+     * Web 23.7.2 nur nach Ablagezeit — und weil die Kette die Uhr-APK
+     * zuletzt ablegt, stand sie oben: Wer auf den ersten Knopf tippte, lud
+     * aufs Handy die Wear-OS-App. */
+    $rang = ['handy' => 0, 'uhr' => 1];
+    usort($aus, static fn($a, $b) => [$rang[$a['geraet']] ?? 2, $b['stand']]
+                                     <=> [$rang[$b['geraet']] ?? 2, $a['stand']]);
     return $aus;
+}
+
+/**
+ * Fuer welches Geraet ist diese APK? Aus dem Namen, den die Kette vergibt
+ * (`tools/kette/apkablage.py`): `nadoku-uhr-X.Y.Z.apk` ist die Wear-OS-App,
+ * `nadoku-X.Y.Z.apk` die des Handys. Alles andere (Altbestand, von Hand
+ * abgelegt) hat kein Geraet — dann steht die Datei unveraendert da.
+ *
+ * @return 'handy'|'uhr'|null
+ */
+function apk_geraet(string $datei): ?string
+{
+    if (preg_match('/^nadoku-uhr-\d+\.\d+\.\d+\.apk$/', $datei)) { return 'uhr'; }
+    if (preg_match('/^nadoku-\d+\.\d+\.\d+\.apk$/', $datei)) { return 'handy'; }
+    return null;
+}
+
+/** Die Beschriftung einer APK-Zeile (Nr. 361, 432, E-BR5-09). */
+function apk_titel(array $apk): string
+{
+    return match ($apk['geraet'] ?? null) {
+        'handy' => 'NAdoku für Android-Handy',
+        'uhr'   => 'NAdoku für Wear-OS-Uhr',
+        default => trim('NAdoku ' . ($apk['version'] ?? '')),
+    };
 }
 
 /**

@@ -118,6 +118,15 @@ require_once $srv . '/rueckweg_lib.php';    // ein P-256-SPKI als Kontoschlüsse
 require_once $srv . '/einstieg_lib.php';
 require_once $srv . '/mail_lib.php';
 require_once $wurzel . '/tools/sandbox/konfig_stellen.php';
+/* Die BetreiberInnen, die Post bekommen KOENNEN — Konten der Anlage unter
+ * `.invalid` & Co. (`admin@example.invalid`) reiht `mail_einreihen()` seit
+ * Nr. 450 nicht mehr ein. */
+function swp_erreichbar(): int
+{
+    require_once __DIR__ . '/../../../server/mail_lib.php';
+    return count(array_filter(mail_betreiberinnen(),
+        static fn($m) => mail_domain_reserviert($m) === null));
+}
 
 $basis = 'http://127.0.0.1:8080';
 $modus = '';
@@ -365,7 +374,7 @@ function rueckweg(array $s): array
                                && blatt_neu_weil() === 'serverschluessel',
                     'mails' => (int)db()->query("SELECT COUNT(*) FROM mail_warteschlange
                         WHERE id > $maxMail AND schluessel = 'serverschluessel_gewechselt'")->fetchColumn(),
-                    'betreiberinnen' => count(mail_betreiberinnen()),
+                    'betreiberinnen' => swp_erreichbar(),
                     'weg' => (string)(sw_zustand()['weg'] ?? ''),
                     /* Nach dem Beginn endet das Häppchen, und die
                      * Mails trägt der Mailjob hinaus, nicht die Anfrage. */
@@ -730,7 +739,11 @@ try {
         'Block ' . (int)$kz['siegel_i']);
     /* Das Konto für die Seitenabrufe — VOR dem Zählen der Empfängerinnen,
      * denn es ist selbst eine BetreiberIn mit Passwort. */
-    $bid = $konto('schluesselwechselprobe-betrieb@probe.invalid', 'betreiberin');
+    /* NICHT UNTER `.invalid` (seit Nr. 450): Die Mails an jede BetreiberIn
+     * sollen gezaehlt werden, und `mail_einreihen()` reiht reservierte
+     * Domains nicht mehr ein. Nach draussen geht trotzdem nichts — der
+     * Mailserver der oertlichen Anlage ist 127.0.0.1. */
+    $bid = $konto('schluesselwechselprobe-betrieb@probe.pruefung', 'betreiberin');
 
     pruefe($totpKlar !== '' && totp_geheimnis($uid) === $totpKlar
         && sz_geheim(['id' => $zid, 'geheim' => $pdo->query("SELECT geheim FROM backup_targets WHERE id = $zid")->fetchColumn()], 'geheim') === $zielKlar
@@ -837,7 +850,7 @@ try {
 
     /* ---- 4. Der Wechsel A → B ------------------------------------------------ */
     teil('4. Der Wechsel A → B — zweimal gleichzeitig');
-    $betreiberinnen = count(mail_betreiberinnen());
+    $betreiberinnen = swp_erreichbar();
     /* ZWEI PROZESSE, EIN STARTSCHUSS. Lief
      * der Wechsel ohne Sperre, überschriebe je nach Verschränkung der zweite
      * den frisch gewürfelten Schlüssel des ersten. Jetzt hält jeder die
