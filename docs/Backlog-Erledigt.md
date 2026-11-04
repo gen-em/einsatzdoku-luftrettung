@@ -10893,3 +10893,22 @@ zutreffen.
      die Marke; danach nach Reset, Anmeldung, Startseite, Einstellungen und
      einem Einsatz „Geändert: nein“, 98 Stücke unverändert; eine andere POST
      setzt die Marke weiter.
+
+480. **Nachtragen vom Blatt: zwei Formulare ohne Abstand.** · gehört zu: 23 · Stand: erledigt · seit 03.11.2026
+     *Aufgenommen 03.11.2026 in BR5-06 (Konzept BR5, Bild der Karte in
+     der Lage abweichend).* Sind Serverschlüssel UND Server-Anteil
+     abweichend, stehen unter „Nachtragen vom Blatt“ zwei Formulare
+     untereinander; der Knopf „Server-Anteil nachtragen“ klebt ohne Abstand
+     an der Beschriftung „Serverschlüssel vom Blatt“. Nr. 356 hat die
+     Linie je Abschnitt gesetzt (E-BR5-17), nicht den Abstand zwischen zwei
+     Formularen in einem. *Weg:* ein Abstand zwischen aufeinanderfolgenden
+     Formularen in `.listen-form` (Stylesheet, Design.md) oder ein Fuß, der
+     beide Felder trägt. *Abnahme:* Bild der Karte in der Lage abweichend
+     mit beiden Werten, 390 und 1280 px — Abstand wie zwischen Abschnitten.
+     Erledigt 04.11.2026 mit BR6-05 (Web 23.7.7): .listen-form > form + form
+     bekommt --abstand-4 (16 px), Zeile 4 der Abstandstabelle (Design.md)
+     statt „wie zwischen Abschnitten“ — die zwei Formulare gehören zusammen
+     (E-BR6-16). Gemessen in der Lage beide abweichend (Marken in app_state
+     verstellt und zurückgelegt): vorher 0 px, nachher 16 px in Chromium,
+     Firefox und WebKit bei 390 und 1280 px. Die Regel trifft nur diese
+     Karte; die übrigen fünf div.listen-form tragen je ein Formular.

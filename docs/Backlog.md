@@ -810,20 +810,6 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
 
 <!-- -->
 
-480. **Nachtragen vom Blatt: zwei Formulare ohne Abstand.** · gehört zu: 23 · Stand: offen · seit 03.11.2026
-     *Aufgenommen 03.11.2026 in BR5-06 (Konzept BR5, Bild der Karte in
-     der Lage abweichend).* Sind Serverschlüssel UND Server-Anteil
-     abweichend, stehen unter „Nachtragen vom Blatt“ zwei Formulare
-     untereinander; der Knopf „Server-Anteil nachtragen“ klebt ohne Abstand
-     an der Beschriftung „Serverschlüssel vom Blatt“. Nr. 356 hat die
-     Linie je Abschnitt gesetzt (E-BR5-17), nicht den Abstand zwischen zwei
-     Formularen in einem. *Weg:* ein Abstand zwischen aufeinanderfolgenden
-     Formularen in `.listen-form` (Stylesheet, Design.md) oder ein Fuß, der
-     beide Felder trägt. *Abnahme:* Bild der Karte in der Lage abweichend
-     mit beiden Werten, 390 und 1280 px — Abstand wie zwischen Abschnitten.
-
-<!-- -->
-
 481. **Endgültige Mail-Absage beim ersten Versuch heißt „steht in der Warteschlange“.** · gehört zu: 23 · Stand: teilweise · seit 04.11.2026
      *Aufgenommen 04.11.2026 mit P-BR5-06 auf Staging (Konzept BR5,
      F-BR5-33).* Ein Konto für eine Adresse, die der Mailserver schon beim

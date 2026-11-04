@@ -14,6 +14,17 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 23.7.7] — unveröffentlicht
+
+### Behoben
+
+- **Web — zwei Formulare ohne Abstand unter „Nachtragen vom Blatt“** (Backlog
+  Nr. 480). Fehlten Serverschlüssel und Server-Anteil zugleich, klebte der
+  Knopf „Server-Anteil nachtragen“ an der Beschriftung des zweiten
+  Formulars. Zwei Formulare im selben Abschnitt stehen jetzt so weit
+  auseinander wie zwei Gruppen in einer Karte, ohne Trennlinie, weil sie
+  zusammengehören.
+
 ## [Web 23.7.6] — unveröffentlicht
 
 ### Behoben

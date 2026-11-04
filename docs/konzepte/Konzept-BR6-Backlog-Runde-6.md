@@ -22,12 +22,12 @@ endet mit Prüfarbeit an der einen örtlichen Anlage.
 | BR6-02 | Wartungslauf auf MySQL 8: Nr. 458 | **gebaut** 04.11.2026 (Web 23.7.4) — Abnahme auf Staging nach dem Merge |
 | BR6-03 | Änderungsmarke des Demo-Kontos: Nr. 459 | **erledigt** 04.11.2026 (Web 23.7.5) |
 | BR6-04 | Endgültige Mail-Absage: Nr. 481 | **gebaut** 04.11.2026 (Web 23.7.6) — Abnahme auf Staging nach dem Merge |
-| BR6-05 | Abstand zwischen zwei Formularen: Nr. 480 | offen |
+| BR6-05 | Abstand zwischen zwei Formularen: Nr. 480 | **erledigt** 04.11.2026 (Web 23.7.7) |
 | BR6-06 | Uhr, Sync-Seite auf der Venu 3s: Nr. 470 | offen |
 | BR6-07 | Handy, Frist für den Klartextpuffer nach der Abmeldung: Nr. 471 | offen |
 | BR6-08 | Abschluss | offen |
 
-**In Arbeit:** BR6-05 als Nächstes. **Es hakt:** nirgends. Q-BR6-01 bis
+**In Arbeit:** BR6-06 als Nächstes. **Es hakt:** nirgends. Q-BR6-01 bis
 -09 sind entschieden (E-BR6-04 bis -12); BR6-05 ist ohne Mockup freigegeben
 (E-BR6-09).
 
@@ -197,6 +197,7 @@ nachmessen (P-AR-15, 6 Fehlschläge erwartet).
 | E-BR6-11 | Q-BR6-08: Räumung wie die Uhr — abgeschlossene Pakete der Kopplung und gebundener Rückstand, nicht der laufende Dienst; „Daten bis TT.MM.“ in der App; neue Frist nach einer Annahme. | wie E-BR6-04 |
 | E-BR6-12 | Q-BR6-09: Der Rundlauf legt das Paar selbst an, über `api/kontopaar.php`. | wie E-BR6-04 |
 | E-BR6-13 | F-BR6-06: Ein Baum ohne `config.php` übernimmt `config.php` und `install.lock` vom Baum, dessen Server läuft, statt neu einzurichten. Eingerichtet wird nur noch, wenn kein Server läuft oder `--neu` es verlangt. Grund: Mehrere Bäume teilen eine Datenbank; eine zweite Einrichtung zerstört die erste. | Umsetzung, 04.11.2026 (im Rahmen von Nr. 490) |
+| E-BR6-16 | Nr. 480: Der Abstand ist `--abstand-4` (16 px), Zeile 4 der Abstandstabelle in `Design.md` („Gruppe → nächste Gruppe innerhalb einer Karte“), nicht „wie zwischen Abschnitten“ (Backlog-Abnahme, Konzept BR6-05). Grund: Die beiden Formulare gehören zusammen — dafür hat BR5 ihnen eine gemeinsame Linie gegeben (E-BR5-17); ein Abschnittsabstand hätte sie getrennt. | Umsetzung, 04.11.2026 (innerhalb der Freigabe E-BR6-09: vorhandener Token, Ort `.listen-form > form + form`) |
 | E-BR6-15 | Die Ausnahmeliste `DEMO_POST_OHNE_MARKE` trägt nur, was gemessen ist: `api/wartungslauf.php`. Die in F-BR6-02 vermuteten lesenden POSTs (`kontopaar.php` `zustand`, `export_data.php`) kamen beim Ansehen nicht vor und stehen nicht darin. Grund: Jeder Eintrag verlangt, dass der Endpunkt für das Demo-Konto nichts schreibt — eine vermutete Zeile wäre eine ungeprüfte Zusage. | Umsetzung, 04.11.2026 |
 | E-BR6-14 | BR6-01 stuft keine Zählung hoch: Berührt sind `tools/`, Prüfquellen unter `android/handy/src/test/` und `android/werkzeuge/` — nichts davon wird ausgeliefert (CLAUDE.md 2). Kein Changelog-Eintrag. | Umsetzung, 04.11.2026 |
 
@@ -347,6 +348,12 @@ schreiben`).
 
 *Ort:* `server/assets/style.css`, `docs/Design.md`.
 
+*Gebaut (04.11.2026, Web 23.7.7):* `.listen-form > form + form
+{margin-top:var(--abstand-4)}` direkt hinter `.listen-form-fuss`; in
+`Design.md` steht die Beziehung in Zeile 4 der Abstandstabelle (E-BR6-16).
+Die erzeugten Tabellen berührt das nicht (kein Token, keine Schwelle, kein
+Baustein).
+
 *Abnahme:* Bild der Karte „Servereinstellungen“ in der Lage „beide
 abweichend“, 390 und 1280 px — Abstand wie zwischen Abschnitten. Der
 Stilvergleich nennt keine weitere Seite mit Änderung (sonst steht dort ein
@@ -465,6 +472,22 @@ mariadb106`: MySQL 8.4.0, 8.0.46, MariaDB 10.6.28, dazu die örtliche
   nachgetragen, weil ein Eintrag vor dem Commit den gemessenen Baum geändert
   hätte.
 
+**BR6-05** (04.11.2026, Web 23.7.7; örtliche Anlage):
+
+- *Lage herstellen:* Marken `server_key_kennung` und `kdf_anteil_kennung`
+  in `app_state` auf `00000000`, `config.php` unberührt (der Weg aus BR5-06);
+  danach auf die alten Werte zurück, nachgelesen.
+- *Messung* (Wegwerfskript mit `starten()`, `anmelden()` aus
+  `tools/motor.mjs`, BetreiberIn-Konto; Abstand vom Fuß des ersten
+  Formulars bis zum Anfang des zweiten): **vorher 0 px** (Chromium, 390 und
+  1280); **nachher 16 px** in **Chromium, Firefox und WebKit**, je bei
+  **390 und 1280 px**. Bilder angesehen (vorher Chromium 1280, nachher
+  Chromium 390).
+- *Wo die Regel noch greift:* sechs `div.listen-form` in `server/`; außer
+  dieser Karte trägt jede **ein** Formular (`diensttag_zusammenfuehren.php`,
+  zweimal `nachbearbeitung.php`, zweimal `einstellungen.php`). Bilderlauf
+  im Prüfstand als unabhängige Gegenprobe.
+
 **BR6-04** (04.11.2026, Web 23.7.6; Mailprobe mit ihrer Gegenstelle
 `gegenstelle.py`, örtlich):
 
@@ -505,6 +528,7 @@ Containers, Startfolge `Sandbox-Setup.md` 6.1a):
 
 | Datum | Was |
 |---|---|
+| 04.11.2026 | BR6-05 erledigt (Web 23.7.7); E-BR6-16. |
 | 04.11.2026 | BR6-04 gebaut (Web 23.7.6). |
 | 04.11.2026 | BR6-03 erledigt (Web 23.7.5); E-BR6-15. BR6-05 ohne Mockup freigegeben (E-BR6-09). |
 | 04.11.2026 | BR6-02 gebaut (Web 23.7.4); F-BR6-07. |

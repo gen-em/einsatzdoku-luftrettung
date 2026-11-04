@@ -8573,5 +8573,11 @@ declare(strict_types=1);
  *   Zustand der Zeile und sagt `MAIL_UNZUSTELLBAR`; `mail_unterwegs()`
  *   beantwortet an einer Stelle, ob eine Mail hinaus oder auf dem Weg ist,
  *   und die Warnmails zaehlen eine abgelehnte nicht mehr als gemeldet.
- *   Korrektur; kein Schema. */
-const WEB_VERSION = '23.7.6';
+ *   Korrektur; kein Schema.
+ * 23.7.7 — ZWEI FORMULARE OHNE ABSTAND (Backlog Nr. 480; Schritt 23,
+ *   BR6-05). Unter „Nachtragen vom Blatt" klebte bei „beide abweichend" der
+ *   Knopf des ersten Formulars an der Beschriftung des zweiten. Jetzt
+ *   bekommt ein Formular, das auf ein anderes im selben `.listen-form`
+ *   folgt, Stufe 4 der Abstandstabelle (16 px), ohne Linie. Kein neuer
+ *   Token, kein neuer Baustein. Korrektur; kein Schema. */
+const WEB_VERSION = '23.7.7';
