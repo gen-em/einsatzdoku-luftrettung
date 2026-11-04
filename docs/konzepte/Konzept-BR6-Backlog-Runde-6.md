@@ -25,9 +25,9 @@ endet mit Prüfarbeit an der einen örtlichen Anlage.
 | BR6-05 | Abstand zwischen zwei Formularen: Nr. 480 | **erledigt** 04.11.2026 (Web 23.7.7) |
 | BR6-06 | Uhr, Sync-Seite auf der Venu 3s: Nr. 470 | **erledigt** 04.11.2026 (Uhr 4.3.2) |
 | BR6-07 | Handy, Frist für den Klartextpuffer nach der Abmeldung: Nr. 471 | **erledigt** 04.11.2026 (Android 0.21.0) |
-| BR6-08 | Abschluss | offen |
+| BR6-08 | Abschluss | **gebaut** 04.11.2026 — Pull Request und Freigabe offen |
 
-**In Arbeit:** BR6-08 (Abschluss) als Nächstes. **Es hakt:** nirgends. Q-BR6-01 bis
+**In Arbeit:** nichts — alle Pakete gebaut. **Es hakt:** nirgends. Offen: Pull Request (nach Rückfrage an die Betreiberin), danach Staging (P-BR6-01 bis -03, Claude, R91), Freigabe, Abschluss nach CLAUDE.md 7 und die Tags `web-v…`, `uhr-v4.3.2`, `android-v0.21.0` (E-BR6-04). Nr. 458 und 481 bleiben bis zur Prüfung auf Staging „teilweise“. Q-BR6-01 bis
 -09 sind entschieden (E-BR6-04 bis -12); BR6-05 ist ohne Mockup freigegeben
 (E-BR6-09).
 
@@ -511,6 +511,16 @@ mariadb106`: MySQL 8.4.0, 8.0.46, MariaDB 10.6.28, dazu die örtliche
   nachgetragen, weil ein Eintrag vor dem Commit den gemessenen Baum geändert
   hätte.
 
+**BR6-08** (04.11.2026, Abschluss):
+
+- *Regressionspflicht (R24):* `kreislauf.py --art csv --frisch` —
+  **11 236 Einzelvergleiche, 0 unerklärte**, 1 309 erwartete Abweichungen;
+  `--art edbak` im Prüfstand — **347 566, 0 unerklärte**, 22 erwartete.
+- *Prüfdokument:* `Pruefdokument-BR6-Backlog-Runde-6.md`, sieben Punkte
+  (drei für Claude auf Staging, drei Gerätepunkte, ein freiwilliger
+  Safari-Punkt).
+- *Prüfstand über den Endstand:* im Bericht des Abschluss-Commits.
+
 **BR6-07** (04.11.2026, Android 0.21.0; Robolectric im Container):
 
 - *SenderTest* (`./gradlew :handy:testDebugUnitTest --tests '*SenderTest*'`):
@@ -617,6 +627,7 @@ Containers, Startfolge `Sandbox-Setup.md` 6.1a):
 
 | Datum | Was |
 |---|---|
+| 04.11.2026 | BR6-08 gebaut: Kreisläufe, Prüfdokument, Rahmenplan; Pull Request offen. |
 | 04.11.2026 | BR6-07 erledigt (Android 0.21.0); F-BR6-09, E-BR6-18. |
 | 04.11.2026 | BR6-06 erledigt (Uhr 4.3.2); F-BR6-08, Q-BR6-10 → E-BR6-17. |
 | 04.11.2026 | BR6-05 erledigt (Web 23.7.7); E-BR6-16. |
