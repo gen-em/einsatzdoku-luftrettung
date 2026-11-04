@@ -10830,3 +10830,43 @@ zutreffen.
      BetreiberIn bestätigt, dass NAdoku nicht-kommerziell ist. Die Zeile
      „Wandern" in `docs/Lizenzen.md` nennt Bedingungen und wie sie
      gehalten werden.
+
+490. **Ein Prüfstand in einem Arbeitsbaum lässt die örtliche Anlage auf ihn zeigen.** · gehört zu: 23 · Stand: erledigt · seit 03.11.2026
+     *Aufgenommen 03.11.2026 im Prüfdurchgang der Arbeitsumgebung (R91,
+     P-BR-10).* `pruefen.sh` aus einem `git worktree` außerhalb des
+     Repositoriums startet `php -S 127.0.0.1:8080 -t <arbeitsbaum>/server`
+     und lässt ihn nach dem Lauf stehen. Wird der Arbeitsbaum danach
+     gelöscht, antwortet die örtliche Anlage mit 404, und jede Probe
+     scheitert (Zweitfaktorprobe 45 ok, 94 fehlen). `hochfahren.sh` ohne
+     `--neu` startet den Server nicht neu und meldet nur „Anmeldeseite
+     antwortet nicht mit 200". *Weg:* nach dem Lauf den eigenen Server
+     beenden oder den des Hauptbaums wiederherstellen; `hochfahren.sh`
+     prüft, ob der laufende Server die eigene Wurzel bedient.
+     *Abnahme:* P-BR-10 fahren, Arbeitsbaum löschen — die Zweitfaktorprobe
+     läuft danach ohne Eingriff grün.
+     Erledigt 04.11.2026 mit BR6-01 (nur Werkzeug): hochfahren.sh startet
+     einen Server auf fremder Wurzel um, ein Arbeitsbaum ohne config.php
+     übernimmt die des laufenden Baums statt die gemeinsame Datenbank neu
+     einzurichten (F-BR6-06), pruefen.sh gibt den Server am Ende zurück.
+     Gemessen: Prüfstand im Arbeitsbaum 25 grün, danach Arbeitsbaum
+     gelöscht, Zweitfaktorprobe im Hauptbaum 139 ok, 0 fehlen.
+
+491. **Die Sende-Rundläufe der Android-App laufen nur mit Schlüsselpaar an Konto 1.** · gehört zu: 23 · Stand: erledigt · seit 03.11.2026
+     *Aufgenommen 03.11.2026 im Prüfdurchgang der Arbeitsumgebung (R91,
+     P-AR-15).* `./gradlew :handy:testDebugUnitTest -Pnadoku.rundlauf=…`
+     gegen eine frisch aufgesetzte örtliche Anlage: 299 Fälle, 6
+     Fehlschläge, alle in `MissionRundlaufTest` und `SendeRundlaufTest`
+     („0 Anfragen"); `KopplungRundlaufTest` grün. Konto 1
+     (`admin@example.invalid`) hat kein Schlüsselpaar (`kp_oeffentlich`
+     leer), und seit S11 sendet das Handy ohne Kontoschlüssel nichts. Die
+     App verhält sich richtig; der Prüfaufbau legt das Paar nicht an.
+     *Weg:* `Kopplungshilfe` oder `hochfahren.sh` legt für Konto 1 ein
+     Paar an (wie `Sitzung.kontoschluessel()`), oder der Rundlauf nimmt
+     ein Konto mit Paar. *Abnahme:* P-AR-15 auf frischer Anlage 0
+     Fehlschläge.
+     Erledigt 04.11.2026 mit BR6-01 (nur Werkzeug): Kopplungshilfe.koppeln()
+     legt vor der ersten Kopplung das Schlüsselpaar von Konto 1 über
+     api/kontopaar.php an (android/werkzeuge/rundlauf_kontopaar.py,
+     Sitzung.kontoschluessel()). P-AR-15: vorher 299 Fälle, 6 Fehlschläge;
+     nachher 299, 0 Fehlschläge, 1 übersprungen (ServeradresseTest, nur im
+     Release).

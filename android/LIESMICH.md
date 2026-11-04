@@ -125,6 +125,18 @@ Installation. Abgeräumt werden nur die Daten der Geräte, nicht das ganze
 Konto 1 — auf einer anderen örtlichen Installation ist es womöglich ein
 echtes.
 
+**Seit BR6-01 gibt sie dem Konto ein Schlüsselpaar, wenn es keines hat**
+(Nr. 491). Seit S11 sendet das Handy ohne Kontoschlüssel nichts, und Konto 1
+einer frisch eingerichteten Anlage hat keinen — den legt erst ein Browser
+nach der Anmeldung an. `SendeRundlaufTest` und `MissionRundlaufTest` meldeten
+deshalb sechs Fehlschläge („0 Anfragen"), und die App handelte dabei richtig.
+`Kopplungshilfe.koppeln()` ruft vor der ersten Kopplung eines Laufs einmal
+`werkzeuge/rundlauf_kontopaar.py`. Das Skript meldet sich als
+`admin@example.invalid` an und legt das Paar über `api/kontopaar.php` an,
+wie der Browser, mit `Sitzung.kontoschluessel()` aus dem Einspielwerkzeug.
+Es braucht `python3` mit den Paketen aus `tools/sandbox/anforderungen.txt`
+und HTTPS auf Port 8443.
+
 #### So bekommt ein Prüfling heute eine Kopplung
 
 Die Codes stehen in keiner Tabelle mehr, in die man sie legen könnte: Sie

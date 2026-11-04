@@ -3,9 +3,7 @@
 **Kürzel:** BR6. Pakete `BR6-NN`, Entscheidungen `E-BR6-NN`, Befunde
 `F-BR6-NN`, Fragen `Q-BR6-NN`, Prüfpunkte `P-BR6-NN` (`docs/Pruefablauf.md` 7).
 
-**Zweig:** `claude/stoic-turing-mpxuch` (Konzept; die Umsetzung läuft in
-einer eigenen Sitzung, auf demselben oder einem eigenen Zweig — sie trägt ihn
-hier ein) · **Herkunft:** Auftrag der Betreiberin vom 04.11.2026 (E-BR6-01
+**Zweig:** `claude/stoic-turing-mpxuch` (Konzept und Umsetzung, E-BR6-03) · **Herkunft:** Auftrag der Betreiberin vom 04.11.2026 (E-BR6-01
 bis -03) · **Backlog-Spanne:** 500 bis 509 · **Prüfdokument:**
 `Pruefdokument-BR6-Backlog-Runde-6.md` (entsteht mit BR6-08).
 
@@ -20,7 +18,7 @@ endet mit Prüfarbeit an der einen örtlichen Anlage.
 
 | Paket | Inhalt | Stand |
 |---|---|---|
-| BR6-01 | Prüfaufbau: Nr. 490, 491 | offen |
+| BR6-01 | Prüfaufbau: Nr. 490, 491 | **erledigt** 04.11.2026 (nur Werkzeug, keine Fassung, E-BR6-14) |
 | BR6-02 | Wartungslauf auf MySQL 8: Nr. 458 | offen |
 | BR6-03 | Änderungsmarke des Demo-Kontos: Nr. 459 | offen |
 | BR6-04 | Endgültige Mail-Absage: Nr. 481 | offen |
@@ -29,9 +27,10 @@ endet mit Prüfarbeit an der einen örtlichen Anlage.
 | BR6-07 | Handy, Frist für den Klartextpuffer nach der Abmeldung: Nr. 471 | offen |
 | BR6-08 | Abschluss | offen |
 
-**In Arbeit:** nichts — Konzept angelegt 04.11.2026. **Es hakt:** Die Fragen
-Q-BR6-01 bis -09 sind offen; jede ist vor dem Beginn ihres Pakets zu
-entscheiden (K6).
+**In Arbeit:** BR6-02 als Nächstes. **Es hakt:** nirgends. Q-BR6-01 bis
+-09 sind nach den Vorschlägen entschieden (E-BR6-04 bis -12); vor BR6-05
+fragt die Umsetzung noch einmal, ob der Abstand ohne Mockup gehen darf
+(E-BR6-09).
 
 ---
 
@@ -144,6 +143,14 @@ Anlage startet in `lokal_starten.sh`; `hochfahren.sh` beendet ihn nur mit
 Arbeitsbaum, Arbeitsbaum löschen, 404) ist in BR6-01 vor der Änderung
 einmal nachzustellen.
 
+**F-BR6-06 — Den Server zurückzustellen reicht für Nr. 490 nicht** (gefunden
+in BR6-01). Ein Arbeitsbaum hat keine `config.php`; `hochfahren.sh` richtet
+dort deshalb neu ein, und `lokal_einrichten.sh` **löscht die gemeinsame
+Datenbank** und schreibt eine neue `config.php` mit neuem Server-Anteil.
+Danach passt die `config.php` des Hauptbaums zu keinem Konto mehr — der
+Anmelde-Hash trägt den Pfeffer aus dem Anteil (`pf1:`). Auch mit dem Server
+auf dem richtigen Baum scheitern dann alle Anmeldungen → E-BR6-13.
+
 **Nr. 491 — übernommen, nicht nachgemessen.** `KopplungRundlaufTest`,
 `MissionRundlaufTest` und `SendeRundlaufTest` nutzen `Kopplungshilfe`
 (Testquelle). Konto 1 der örtlichen Anlage hat kein Schlüsselpaar; das
@@ -170,7 +177,18 @@ nachmessen (P-AR-15, 6 Fehlschläge erwartet).
 |---|---|---|
 | E-BR6-01 | Alle acht Punkte unter `nächste Backlog-Runde` werden vor Schritt 13 abgearbeitet; der Schritt heißt 23 (BR6). Reihenfolge 23 → 13 → 14; die Konzeptsitzung zu 13 darf daneben laufen (Rahmenplan 4). | Betreiberin, 04.11.2026 |
 | E-BR6-02 | Nr. 490 und 491 gehören in diese Runde, obwohl E-BE-04 Werkzeugpunkte an die Inventur von 14 bindet. Grund: Sie stören die Prüfarbeit heute, nicht erst in 14. | Betreiberin, 04.11.2026 |
-| E-BR6-03 | Das Konzept entsteht in der Sitzung, die auch Schritt 21 abschließt; die Umsetzung in einer eigenen Sitzung. | Betreiberin, 04.11.2026 |
+| E-BR6-03 | Konzept und Umsetzung laufen in dieser Sitzung und auf diesem Zweig. *(Bis zum Beginn von BR6-01 stand hier: Umsetzung in einer eigenen Sitzung.)* | Betreiberin, 04.11.2026 („Hier weitermachen“) |
+| E-BR6-04 | Q-BR6-01: Die Tags `uhr-v…` und `android-v…` aus Schritt 21 werden mit den Fassungen aus BR6 gesetzt, nicht vorher. | Betreiberin, 04.11.2026 — Vorschlag übernommen („Mach hier weiter“) |
+| E-BR6-05 | Q-BR6-02: Abfrage richten und in eine MySQL-8.4-Probe nehmen; dazu einmalig alle `GROUP BY` in `server/` gegen MySQL 8.4 als Messung, ein dauerhaftes Mittel nur bei einem zweiten Fund. | wie E-BR6-04 |
+| E-BR6-06 | Q-BR6-03: (c) — Wartungslauf lässt das Demo-Konto aus, lesende POSTs stehen auf einer Ausnahmeliste in `demo_lib.php`. | wie E-BR6-04 |
+| E-BR6-07 | Q-BR6-04: neuer Rückgabewert `MAIL_UNZUSTELLBAR`, auch für „zu spät“. | wie E-BR6-04 |
+| E-BR6-08 | Q-BR6-05: eigener Text der Testmail für die endgültige Absage, mit Grund. | wie E-BR6-04 |
+| E-BR6-09 | Q-BR6-06: allgemeine Regel `.listen-form > form + form` mit vorhandenem Token, in `Design.md`. **Ob das ohne Mockup geht, fragt die Umsetzung vor BR6-05 ausdrücklich** (CLAUDE.md 5); bis dahin ist nur der Ort entschieden. | wie E-BR6-04 |
+| E-BR6-10 | Q-BR6-07: beides — Breitenmessung in der Bildprobe und Kürzen, wo die lange Form nicht passt. | wie E-BR6-04 |
+| E-BR6-11 | Q-BR6-08: Räumung wie die Uhr — abgeschlossene Pakete der Kopplung und gebundener Rückstand, nicht der laufende Dienst; „Daten bis TT.MM.“ in der App; neue Frist nach einer Annahme. | wie E-BR6-04 |
+| E-BR6-12 | Q-BR6-09: Der Rundlauf legt das Paar selbst an, über `api/kontopaar.php`. | wie E-BR6-04 |
+| E-BR6-13 | F-BR6-06: Ein Baum ohne `config.php` übernimmt `config.php` und `install.lock` vom Baum, dessen Server läuft, statt neu einzurichten. Eingerichtet wird nur noch, wenn kein Server läuft oder `--neu` es verlangt. Grund: Mehrere Bäume teilen eine Datenbank; eine zweite Einrichtung zerstört die erste. | Umsetzung, 04.11.2026 (im Rahmen von Nr. 490) |
+| E-BR6-14 | BR6-01 stuft keine Zählung hoch: Berührt sind `tools/`, Prüfquellen unter `android/handy/src/test/` und `android/werkzeuge/` — nichts davon wird ausgeliefert (CLAUDE.md 2). Kein Changelog-Eintrag. | Umsetzung, 04.11.2026 |
 
 ## 5. Arbeitspakete
 
@@ -199,6 +217,18 @@ Changelog-Eintrag (CLAUDE.md 2); welche Stufe, entscheidet die Umsetzung
 
 *Ort:* `tools/pruefstand/pruefen.sh`, `tools/sandbox/hochfahren.sh` (ggf.
 `lokal_starten.sh`), `android/handy/src/test/…/kopplung/Kopplungshilfe.kt`.
+
+*Gebaut (04.11.2026):* `hochfahren.sh` liest die Wurzel des laufenden
+Servers aus dessen Befehlszeile (`laufende_wurzel()`, im Behälter von
+`--php 8.3` aus der Einhängung), sagt sie mit `--welche-wurzel`, startet
+einen Server auf fremder Wurzel um und übernimmt in einem Baum ohne
+`config.php` die des laufenden Baums (E-BR6-13). `pruefen.sh` merkt sich die
+Wurzel vor dem Hochfahren und gibt sie am Ende zurück (`wurzel_zurueck()`,
+im selben `trap` wie die Demo-Marke, auch nach einem Abbruch). Nr. 491:
+`Kopplungshilfe.kontopaar` ruft einmal je Lauf
+`android/werkzeuge/rundlauf_kontopaar.py`, das sich als
+`admin@example.invalid` anmeldet und `Sitzung.kontoschluessel()` aus dem
+Einspielwerkzeug nimmt; `koppeln()` fragt es vor dem ersten `start`.
 
 *Abnahme:* den Prüfstand aus einem `git worktree` außerhalb des
 Repositoriums fahren (der Weg des erledigten P-BR-10), den Arbeitsbaum
@@ -330,11 +360,41 @@ Konzept und Prüfdokument erst nach der Freigabe. Die Tags nach Q-BR6-01.
 
 ## 6. Prüfprotokoll
 
-*Noch leer. Je Paket: was mit welchem Mittel gemessen wurde, mit Zahl
-(CLAUDE.md 6).*
+**BR6-01** (04.11.2026; örtliche Anlage, MariaDB, PHP 8.4; Android-SDK
+nach `aufbauen.sh android`, `ANDROID_HOME=/opt/android-sdk`):
+
+- *Nr. 491, alter Stand:* `./gradlew :handy:testDebugUnitTest --rerun-tasks
+  -Pnadoku.rundlauf=http://127.0.0.1:8080/` gegen die Anlage, Konto 1 ohne
+  Paar (`kp_oeffentlich IS NULL` = 1): **299 Fälle, 6 Fehlschläge, 1
+  übersprungen** — die sechs sind die drei Fälle in `SendeRundlaufTest` und
+  die drei in `MissionRundlaufTest`, wie im Backlog.
+- *Nr. 491, neuer Stand:* derselbe Aufruf: **299 Fälle, 0 Fehlschläge, 1
+  übersprungen**; Konto 1 hat danach ein Paar. Der übersprungene Fall ist
+  `ServeradresseTest.imReleaseGiltHttpsAuchFuerOertlicheAdressen` („nur im
+  Release“) und gehört nicht zum Rundlauf; P-AR-15 verlangte „0
+  übersprungen“ und meinte die Rundlauffälle. P-AR-15 ist damit erledigt und
+  aus der Prüfliste genommen.
+- *Nr. 490:* Arbeitsbaum außerhalb des Repositoriums
+  (`git worktree add <Notizordner>/wt HEAD`, die zwei geänderten Skripte
+  hineinkopiert), dort `pruefen.sh`: „Installation aus …/server übernehmen“,
+  „Der Server bediente …/server — neu gestartet für …/wt/server“, Lauf
+  **25 grün, 0 rot**, danach „Server wieder auf …/server“. Datenbank vorher
+  und nachher 4 Konten, 109 Einsätze; `config.php` des Hauptbaums
+  unverändert. Dann Arbeitsbaum gelöscht und im Hauptbaum
+  `proben.sh zweitfaktor`: **139 ok, 0 fehlen** (im Backlog: 45 ok, 94
+  fehlen). Den alten Stand habe ich nicht noch einmal nachgestellt: Er
+  hätte die gemeinsame Datenbank gelöscht (F-BR6-06), und der Fehlerweg
+  ist am Code belegt (`lokal_einrichten.sh`, Schritt 1).
+- *Gegenprobe Syntax:* `bash -n` für beide Skripte; `hochfahren.sh
+  --welche-wurzel` gibt `…/einsatzdoku-luftrettung/server` aus.
+- *Nicht geprüft:* der Weg über `--php 8.3` (Behälter, Wurzel `/app`) —
+  `dockerd` lief nicht; die Auflösung über `docker inspect` ist gelesen,
+  nicht gefahren.
 
 ## 7. Verlauf
 
 | Datum | Was |
 |---|---|
+| 04.11.2026 | BR6-01 erledigt (nur Werkzeug); F-BR6-06, E-BR6-13, -14. |
+| 04.11.2026 | Q-BR6-01 bis -09 nach den Vorschlägen entschieden (E-BR6-04 bis -12); E-BR6-03 geändert: Umsetzung in dieser Sitzung. |
 | 04.11.2026 | Konzept angelegt (E-BR6-01 bis -03); Befunde F-BR6-01 bis -05 am Code nachgesehen; Q-BR6-01 bis -09 offen; Spanne 500 bis 509 reserviert. |

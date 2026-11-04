@@ -4,7 +4,7 @@
 
 ```
 bash tools/sandbox/aufbauen.sh   [web|android|uhr|plattform|alles]   # Vorgabe: web
-bash tools/sandbox/hochfahren.sh [--neu] [--php 8.3]
+bash tools/sandbox/hochfahren.sh [--neu] [--php 8.3] [--welche-wurzel]
 bash tools/sandbox/plattform.sh  [php83|mariadb106|mysql80|mysql84|alles|--aus]
 ```
 
@@ -12,9 +12,8 @@ bash tools/sandbox/plattform.sh  [php83|mariadb106|mysql80|mysql84|alles|--aus]
 
 `aufbauen.sh` beschafft, was der Container nicht mitbringt (Python-Pakete
 seit R17-19 aus `anforderungen.txt`, mit Hashes), und misst nach: elf Stücke, die drei Engines **einzeln**, acht Umgebungswerte mit ihrer
-Länge. `hochfahren.sh` richtet die örtliche Anlage ein oder startet sie.
-`plattform.sh` stellt PHP 8.3.33 und drei Datenbankfassungen bereit und
-fährt je eine Schemaprobe.
+Länge. `hochfahren.sh` richtet die örtliche Anlage ein oder startet sie — einen Server auf fremder Wurzel um, und ein Arbeitsbaum ohne `config.php` übernimmt die des laufenden Baums (Nr. 490).
+`plattform.sh` stellt PHP 8.3.33 und drei Datenbankfassungen bereit und fährt je eine Schemaprobe.
 
 ## Was es braucht
 
@@ -37,4 +36,4 @@ kein echtes Gerät, kein echtes Sicherungsziel. Es stellt **Fassungen** nach,
 keine Anlagen — eine grüne Plattformmatrix sagt nichts darüber, wie sich
 Staging oder Produktiv verhalten. `--aus` räumt die Behälter weg.
 
-*Anlass: Nr. 183 (WebKit fehlte still), Nr. 267 (nur MySQL 8.4 scheiterte), Nr. 332 (altes Schema), Nr. 297 (Prüfkonten des Bilderlaufs).*
+*Anlass: Nr. 183 (WebKit fehlte still), Nr. 267 (nur MySQL 8.4 scheiterte), Nr. 332 (altes Schema), Nr. 297 (Prüfkonten des Bilderlaufs), Nr. 490 (Server auf gelöschtem Arbeitsbaum).*

@@ -1,13 +1,13 @@
 # Rahmenplan — Programm „Gen-EM NAdoku" bis v1.0
 
-**Fassung 215 (04.11.2026)** · Steuerung: Reihenfolge, Status, programmweite
+**Fassung 216 (04.11.2026)** · Steuerung: Reihenfolge, Status, programmweite
 Entscheidungen. Verlauf: `Rahmenplan-Verlauf.md`. Fassungen 1–15:
 `Rahmenplan-Archiv.md`; Fassungen 16–124: `Rahmenplan-Archiv-2.md`.
 
 **Stand `origin/main`** (Commit `a1521a6`, PR #149, gemessen 04.11.2026): Web 23.7.3 ·
 Uhr 4.3.1 · Android 0.20.0; ausgeliefert Web 23.6.0, Uhr 4.1.1 und Android 0.18.2 (Tags auf `c32dd2c`, 02.11.2026).
-**Läuft:** 23 BR6 — Konzept angelegt, Fragen Q-BR6-01 bis -09 offen; 21 GR und 22 BR5 abgeschlossen 04.11.2026.
-**Als Nächstes:** Fragen zu 23 entscheiden, dann Umsetzung 23; daneben die Konzeptsitzung 13.
+**Läuft:** 23 BR6 in Umsetzung (Stand im Statusblock des Konzepts); 21 GR und 22 BR5 abgeschlossen 04.11.2026.
+**Als Nächstes:** 23 zu Ende; daneben die Konzeptsitzung 13.
 **Offene PRs:** keine.
 **Fällig bei der Betreiberin:** 38 Posten (Abschnitt 6.1). **`update.php`:** auf Staging und Produktiv nichts offen (Betreiberin, 20.10.2026, nach Web 23).
 
@@ -119,7 +119,7 @@ weil das Altbestand-Werkzeug ein einziges Konto voraussetzte.
 |---|---|---|---|---|---|
 | 6 | **S4 — Rest, Teil C** | Play Console nach R65: interner Test-Track für Handy und Uhr unter einem Eintrag, Versionscode-Versatz, Signaturweg; Android 1.0.0 (E-R45-7). Die Vorbereitung ohne D-U-N-S und Schlüssel ist gebaut (Android 0.13.0), die Gerätetests sind erfolgt (24.09.2026) | D-U-N-S, Organisationskonto und Play App Signing — erledigt 26.09.2026 (SD-M1); offen in 6.2: Wear-OS-Uhr, Demo-Video, Datensicherheitsformular | `docs/konzepte/Konzept-S4-Handy-Uhr-Client.md` 13; `Vorbereitung-Play-Console.md` | offen — Teile A bis C gemergt 04.09.2026 (PR #33, Abschnitt 8); Android 1.0.0 und der interne Test-Track können beginnen |
 | 11 | **Planung v1.0** | Festlegungen vor dem Schnitt (R65 bis R73, entschieden 03.09.2026); Ergebnis sind die Konzepte der Phasen P6 bis P8 mit je eigenem Paketschnitt (P6 nach der Freigaberunde des Reviews) | keine | `docs/konzepte/Konzept-Planung-v1.0.md` | gemergt 03.09.2026 — Festlegungen entschieden (R65–R73); offen nur die Paketschnitte, je mit dem Konzept zu 12b, 13 und 14 |
-| 23 | **BR6 — Backlog-Runde 6** | Die acht Punkte der nächsten Backlog-Runde: Wartungslauf auf MySQL 8 (Nr. 458), Demo-Marke (459), Mail-Absage (481), Formularabstand (480), Sync-Seite Venu 3s (470), Frist für den Klartextpuffer des Handys (471), Prüfaufbau (490, 491) | keine | `docs/konzepte/Konzept-BR6-Backlog-Runde-6.md` | Konzept angelegt 04.11.2026 auf `claude/stoic-turing-mpxuch`; Q-BR6-01 bis -09 offen; vor 13 (E-BR6-01) |
+| 23 | **BR6 — Backlog-Runde 6** | Die acht Punkte der nächsten Backlog-Runde: Wartungslauf auf MySQL 8 (Nr. 458), Demo-Marke (459), Mail-Absage (481), Formularabstand (480), Sync-Seite Venu 3s (470), Frist für den Klartextpuffer des Handys (471), Prüfaufbau (490, 491) | keine | `docs/konzepte/Konzept-BR6-Backlog-Runde-6.md` | Umsetzung seit 04.11.2026 auf `claude/stoic-turing-mpxuch`, Fragen entschieden (E-BR6-04 bis -12); vor 13 (E-BR6-01) |
 | 13 | **P7 — Gesicht v1.0** | Umbenennung überall (E-Mail-Langform entscheiden), Demo-Passwort (R25); Vertrag v1 (R12, Nr. 23); Doku-Neufassung, Handbuch als HTML (R16, R72); Manifest (R70); Changelog neu (R15); Backlog-Übernahme; Kommentarregel (R69, Nr. 409); Lizenzen, Tabellen mit Mockup (Nr. 342), Logos (Nr. 62) | 23 | eigenes Konzept nach K1 | offen — Konzeptsitzung kann neben 23 laufen, Umsetzung nach 23 |
 | 14 | **P8 — Schnitt** | Neuaufsetzen mit Übernahme per edbak (R40 (3), R60, Nr. 324); Migrationsregister neu (R66); Repo-Umzug und Inventur mit Begründung je Weglassung (R68); Kette im neuen Repositorium (R67, R40 (4)); Rechts- und Betreiberunterlagen (R41); Abnahme nach R11; Tags `web-v1.0.0`, `uhr-v…`, `android-v1.0.0` | 13 | eigenes Konzept nach K1 | offen — nach 13; die Inventur (R68) entscheidet die zwölf Werkzeug-Punkte mit `gehört zu: 14` (E-BE-04) |
 | — | **Betriebsübergang** | Öffnung in Wellen über die Betriebsarten (R41); Produktionsfreigabe in den Stores mit Welle 1 (R65; nach MDR-Abgrenzung und Rechtsunterlagen); mit Welle 1 entfällt die Seitenladung (`apk.php`, Handbuch 10.1); Garmin-Uhr über den Connect-IQ-Store; halbjährliche Probe-Wiederherstellung | v1.0 | — | offen — beginnt mit v1.0 (nach den Schritten 13 und 14); Wellen nach R41 |
@@ -178,7 +178,7 @@ gestrichen, 6a abgehakt; was steht, ist bestätigt offen.
 | **Prüfliste P5c/AP7:** nach `update.php` auf Staging `SHOW INDEX FROM missions` und ein `EXPLAIN`, die drei Reiter der Statistik an echten Zahlen, die Seite am Handy | 10c AP7 | 24.09.2026 | P-P5c-32 bis -34 |
 | **Prüfliste P5c/AP8:** `update.php` auf Staging mit der zerstörenden Migration, ein Diensttag mit „Anderem Rettungsmittel" in Luft und Boden, Sicherungsziele ohne FTP-Plakette; auf Produktiv nach dem Tag dasselbe | 10c AP8 | 25.09.2026 | P-P5c-35 bis -38 |
 | **Prüfliste P5c/AP9:** die eigene Datenschutzerklärung nachziehen (P-P5c-40, sofort), Rechtstexte mit Vorschau in Firefox und am Handy, beide Blätter auf Papier, Wartungsmodus nach einem echten Deploy | 10c AP9 | 25.09.2026 | P-P5c-39 bis -44 |
-| **Prüfliste AR:** Gerätetests P-AR-03/-04 (Android 17), -06, -07, -10 (Handy), -11 bis -14 (Wear-OS-Uhr), -15 (Rundlauf gegen die örtliche Anlage), -01 (Bau ohne Spiegel) | AR | 26.09.2026 | `Pruefliste.md` |
+| **Prüfliste AR:** Gerätetests P-AR-03/-04 (Android 17), -06, -07, -10 (Handy), -11 bis -14 (Wear-OS-Uhr), -01 (Bau ohne Spiegel); -15 erledigt mit BR6-01 (04.11.2026) | AR | 26.09.2026 | `Pruefliste.md` |
 | **Prüfliste BV:** P-BV-04 (Wertekasten Hintergrundjobs gegen `Technik.md` 4.7), P-BV-07 (die zwei Rechtstexte: Höhe, Notizen, Abfahrtort), P-BV-09 (Textbaustein 11.5a neu übernehmen, nach P-P5c-40) | BV | 26.09.2026 | `Pruefliste.md` |
 | **Prüfliste BR:** P-BR-05 und -06 (Anlass-Zeilen und Nr. 304–313 lesen), P-BR-08 (beim nächsten Tag: das Produktionstor findet den Stufe-1-Lauf über `baumsuche.py`); freiwillig -03 | BR | 24.09.2026 | `Pruefliste.md` |
 | **Zwei tote Zweige löschen:** `claude/nice-lovelace-snlo8m` und `claude/pk05-tor-umbauen` — nichts Ungemergtes (F-R4-04); auf GitHub unter Branches | 17 (Q-R4-01, E-R4-15) | 26.09.2026 | `Pruefliste.md`, P-R4-06 |
