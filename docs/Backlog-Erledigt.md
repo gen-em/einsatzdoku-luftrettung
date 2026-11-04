@@ -10802,3 +10802,31 @@ zutreffen.
      Stellen zurück wieder rot (2 bzw. 1 Fall, „Block 1“) — also kein
      Fehler von 8.3.6, sondern einer der Bibliothek, und keine
      Mindestfassung.
+
+<!-- -->
+
+280. **Die Kartenquelle OpenHikingMap steht in keiner Lizenzliste.** · gehört zu: 13 · Stand: erledigt · seit 22.09.2026
+     *Gefunden 22.09.2026 von der neuen Regelklasse `netz` (PK-04/1c);
+     nicht behoben.*
+     `server/assets/map_layers.js` lädt Kacheln von `tile.openmaps.fr`, und
+     `server/kopfzeilen_lib.php` erlaubt den Host in der
+     Content-Security-Policy. **In `docs/Lizenzen.md` steht er nicht** — die
+     Kartentabelle dort nennt `tile.openstreetmap.org`,
+     `tile.opentopomap.org` und `server.arcgisonline.com`, aber nicht diesen.
+
+     Das ist genau die Lücke, gegen die die Zusage „keine fremde Quelle zur
+     Laufzeit" geschrieben ist: Eine Quelle, die läuft und die niemand
+     aufgeschrieben hat.
+
+     **Nicht nebenbei eingetragen:** Welche Lizenz für die Kacheln gilt, sagt
+     das Attributionsband im Code („© OpenHikingMap · © OpenStreetMap"), aber
+     ein Eintrag in `Lizenzen.md` behauptet mehr als das — er nennt
+     Rechteinhaber und Bedingungen. Das gehört nachgesehen, nicht
+     abgeschrieben.
+     Erledigt 03.11.2026 im Prüfdurchgang der Arbeitsumgebung (R91,
+     P-PK-27): Die Tile usage policy von openmaps.fr erlaubt die Nutzung
+     für nicht-kommerzielle, kostenlose Projekte bis 500.000 Kacheln im
+     Monat, mit sichtbarer Namensnennung samt Spendenlink und Referer; die
+     BetreiberIn bestätigt, dass NAdoku nicht-kommerziell ist. Die Zeile
+     „Wandern" in `docs/Lizenzen.md` nennt Bedingungen und wie sie
+     gehalten werden.

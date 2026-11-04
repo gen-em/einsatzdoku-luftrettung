@@ -262,7 +262,7 @@ Ebenen stehen zur Wahl (`server/assets/map_layers.js`):
 |---|---|---|
 | Standard | `tile.openstreetmap.org` | **ODbL** — © OpenStreetMap-Mitwirkende |
 | Topografisch | `tile.opentopomap.org` | **CC-BY-SA**, Daten © OpenStreetMap-Mitwirkende |
-| Wandern | `tile.openmaps.fr` (OpenHikingMap) | **ungeprüft** — siehe den Absatz darunter |
+| Wandern | `tile.openmaps.fr` (OpenHikingMap) | Daten **ODbL** — © OpenStreetMap-Mitwirkende; Kacheln nach der Tile usage policy von openmaps.fr (Absatz darunter) |
 | Luftbild | `server.arcgisonline.com` (Esri World Imagery) | Esri-Nutzungsbedingungen |
 
 **Die Namensnennung verweist auf** `wiki.openstreetmap.org`,
@@ -270,32 +270,35 @@ Ebenen stehen zur Wahl (`server/assets/map_layers.js`):
 Das sind Links im Attributionsband, keine Kachelquellen — abgerufen wird von
 ihnen nichts.
 
-> **Die Zeile „Wandern" ist unvollständig, und das steht hier statt einer
-> Vermutung.** Die Ebene wurde mit `map_layers.js` eingebaut und in der
-> Content-Security-Policy freigeschaltet (`kopfzeilen_lib.php` 183), **ohne
-> je in dieser Liste zu stehen** — gefunden am 22.09.2026 von der neuen
-> Regelklasse `netz` (PK-04/1c, Backlog Nr. 280).
+> **Die Zeile „Wandern" ist seit dem 03.11.2026 geprüft** (Backlog Nr. 280,
+> P-PK-27). Bis dahin stand hier, dass die Bedingungen unbekannt sind: Die
+> Ebene kam mit `map_layers.js` und der Content-Security-Policy
+> (`kopfzeilen_lib.php`), ohne in dieser Liste zu stehen, und die
+> Arbeitsumgebung erreichte die Seiten von openmaps.fr nicht.
 >
-> **Was belegt ist**, weil es im Quelltext steht: Die Kacheln kommen von
-> `https://tile.openmaps.fr/openhikingmap/{z}/{x}/{y}.png`, und das
-> Attributionsband nennt „© OpenHikingMap · © OpenStreetMap" samt einem
-> Spendenlink.
+> **Was die Tile usage policy von openmaps.fr verlangt** (gelesen am
+> 03.11.2026 auf den Seiten „Tile usage policy“ und „About“ von
+> openmaps.fr), und wie NAdoku es hält:
 >
-> **Was NICHT belegt ist:** unter welchen Bedingungen die BetreiberIn die
-> Kacheln bereitstellt. Ein Eintrag in dieser Liste behauptet mehr als das
-> Attributionsband — er nennt Rechteinhaber und Bedingungen. **Der Versuch,
-> es nachzusehen, ist am 23.09.2026 gescheitert:** Die Arbeitsumgebung lässt
-> beide Abrufe nicht durch, `wiki.openstreetmap.org` und `openmaps.fr` je
-> mit **HTTP 403 am CONNECT-Tunnel** des Ausgangsproxys. Pflicht ist der
-> Versuch, nicht der Erfolg (`CLAUDE.md` 6) — die Zahl steht hier, die
-> Vermutung nicht.
+> - **Nur nicht-kommerzielle, kostenlose Projekte**, bis **500.000 Kacheln
+>   im Monat** (und 5.000 je Stunde und Adresse). NAdoku ist nach Auskunft
+>   der BetreiberIn nicht-kommerziell und für die Nutzenden kostenlos; die
+>   Ebene ist eine von vier zur Wahl.
+> - **Die Adresse** `https://tile.openmaps.fr/openhikingmap/{z}/{x}/{y}.png`
+>   — so steht sie in `map_layers.js`.
+> - **Sichtbare Namensnennung** mit Verweis auf die Stilseite, einem
+>   Spendenlink und © OpenStreetMap — das Attributionsband nennt
+>   „© OpenHikingMap · Spenden · © OpenStreetMap" mit diesen drei Links.
+> - **Ein Referer aus Webseiten** — die Seiten senden
+>   `Referrer-Policy: strict-origin-when-cross-origin`, also den Ursprung.
+> - **Kein Massenabruf, kein Vorabladen** — die Karte lädt nur, was sie
+>   zeigt; Uhr und Android-Apps benutzen die Ebene nicht.
+> - **Keine Zusage zur Verfügbarkeit**; openmaps.fr darf drosseln oder
+>   sperren. Fällt die Ebene aus, bleiben die drei anderen.
 >
-> **Zu tun bleibt zweierlei** (Nr. 280): die Bedingungen von einem Rechner
-> mit Netzzugang nachsehen und hier eintragen — oder, wenn sie eine Nutzung
-> wie diese nicht decken, die Ebene ausbauen. Bis dahin ist die Zusage
-> „keine fremde Quelle zur Laufzeit" an dieser Stelle **eingehalten, aber
-> nicht belegt**: Die Quelle ist bekannt und aufgeschrieben, ihre Erlaubnis
-> nicht.
+> Ändert sich die Nutzung (kommerziell, deutlich mehr Abrufe), gilt das
+> nicht mehr; dann eine Vereinbarung mit openmaps.fr oder die Ebene
+> ausbauen.
 
 Die **Namensnennung steht in der Karte selbst** — Leaflet zeigt sie unten
 rechts, und `map_layers.js` setzt sie je Ebene. Das ist keine Höflichkeit,

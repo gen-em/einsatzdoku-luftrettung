@@ -464,27 +464,6 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
 
 <!-- -->
 
-280. **Die Kartenquelle OpenHikingMap steht in keiner Lizenzliste.** · gehört zu: 13 · Stand: offen · seit 22.09.2026
-     *Gefunden 22.09.2026 von der neuen Regelklasse `netz` (PK-04/1c);
-     nicht behoben.*
-     `server/assets/map_layers.js` lädt Kacheln von `tile.openmaps.fr`, und
-     `server/kopfzeilen_lib.php` erlaubt den Host in der
-     Content-Security-Policy. **In `docs/Lizenzen.md` steht er nicht** — die
-     Kartentabelle dort nennt `tile.openstreetmap.org`,
-     `tile.opentopomap.org` und `server.arcgisonline.com`, aber nicht diesen.
-
-     Das ist genau die Lücke, gegen die die Zusage „keine fremde Quelle zur
-     Laufzeit" geschrieben ist: Eine Quelle, die läuft und die niemand
-     aufgeschrieben hat.
-
-     **Nicht nebenbei eingetragen:** Welche Lizenz für die Kacheln gilt, sagt
-     das Attributionsband im Code („© OpenHikingMap · © OpenStreetMap"), aber
-     ein Eintrag in `Lizenzen.md` behauptet mehr als das — er nennt
-     Rechteinhaber und Bedingungen. Das gehört nachgesehen, nicht
-     abgeschrieben.
-
-<!-- -->
-
 290. **Keine Stufe der Kette richtet eine Anlage ein.** · gehört zu: 14 · Stand: offen · seit 23.09.2026
      *Aufgenommen 23.09.2026 mit Web 20.37.3 (Anlass: Nr. 288).* Nr. 288 hat
      elf Fassungen lang (20.30.0 bis 20.37.2) jede Neueinrichtung gebrochen,

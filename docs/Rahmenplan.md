@@ -1,10 +1,10 @@
 # Rahmenplan — Programm „Gen-EM NAdoku" bis v1.0
 
-**Fassung 211 (03.11.2026)** · Steuerung: Reihenfolge, Status, programmweite
+**Fassung 212 (03.11.2026)** · Steuerung: Reihenfolge, Status, programmweite
 Entscheidungen. Verlauf: `Rahmenplan-Verlauf.md`. Fassungen 1–15:
 `Rahmenplan-Archiv.md`; Fassungen 16–124: `Rahmenplan-Archiv-2.md`.
 
-**Stand `origin/main`** (Commit `b96f90a`, PR #146, gemessen 03.11.2026): Web 23.6.3 ·
+**Stand `origin/main`** (Commit `b3d2f92`, PR #147, gemessen 03.11.2026): Web 23.6.3 ·
 Uhr 4.3.1 · Android 0.20.0; ausgeliefert Web 23.6.0, Uhr 4.1.1 und Android 0.18.2 (Tags auf `c32dd2c`, 02.11.2026).
 **Läuft:** 22 BR5 auf `claude/tender-bell-225ta2` — BR5-01 gemergt (PR #141, Web 23.6.3), BR5-02 bis -10 gebaut (Web 23.6.4 bis 23.7.3), Gesamt-PR offen. 21 GR gemergt (PR #136), Abschluss offen.
 **Als Nächstes:** Merge von 22, Prüfung auf Staging (R91), Freigabe; dann 13 (Konzeptsitzung).
@@ -121,7 +121,7 @@ weil das Altbestand-Werkzeug ein einziges Konto voraussetzte.
 | 11 | **Planung v1.0** | Festlegungen vor dem Schnitt (R65 bis R73, entschieden 03.09.2026); Ergebnis sind die Konzepte der Phasen P6 bis P8 mit je eigenem Paketschnitt (P6 nach der Freigaberunde des Reviews) | keine | `docs/konzepte/Konzept-Planung-v1.0.md` | gemergt 03.09.2026 — Festlegungen entschieden (R65–R73); offen nur die Paketschnitte, je mit dem Konzept zu 12b, 13 und 14 |
 | 21 | **GR — Geräterunde** | Uhr und Handy: Nr. 154, 157 (Sendebericht, Kopplungs-Sackgasse), 201, 229 (Antwortauswertung samt Fehlertabelle im Vertrag), 402 (Sync-Seite), 431 (Senden nach Reaktivieren); je ein Tag `uhr-v…` und `android-v…` | keine — die Wear-OS-Uhr aus 6.2 wird nicht abgewartet (E-GR-03) | `docs/konzepte/Konzept-GR-Geraeterunde.md` | gebaut 02.11.2026 auf `claude/trusting-wozniak-33j782` (GR-01 bis -07, Uhr 4.2.0–4.3.1, Android 0.19.0–0.20.0); Pull Request und Freigabe offen — neben 22 und neben der Konzeptsitzung 13 (Abschnitt 4, E-BE-03) |
 | 22 | **BR5 — Backlog-Runde 5, Web** | Dreizehn Web-Punkte: Schlüsselpaar nach der Anmeldung (Nr. 392), Deadlock in `protokoll()` (354), Notzugang und Wache (358), `post_text()` (355), Installationsseite (345), Jobfehler (357), Meldungen (346, 356), APK-Karte (361, 432), PHP 8.3.6 (383), Bitwarden (430), Gerät löschen (440) | keine | `docs/konzepte/Konzept-BR5-Backlog-Runde-5.md` | Umsetzung seit 03.11.2026: BR5-01 gemergt (PR #141), -02 bis -09 gebaut, -10 läuft; mit 450, 454, 456, 457 (E-BR5-01); vor 13 (E-BE-02) |
-| 13 | **P7 — Gesicht v1.0** | Umbenennung überall (E-Mail-Langform entscheiden), Demo-Passwort (R25); Vertrag v1 (R12, Nr. 23); Doku-Neufassung, Handbuch als HTML (R16, R72); Manifest (R70); Changelog neu (R15); Backlog-Übernahme; Kommentarregel (R69, Nr. 409); Lizenzen (Nr. 280), Tabellen mit Mockup (Nr. 342), Logos (Nr. 62) | 22 | eigenes Konzept nach K1 | offen — nach 22 |
+| 13 | **P7 — Gesicht v1.0** | Umbenennung überall (E-Mail-Langform entscheiden), Demo-Passwort (R25); Vertrag v1 (R12, Nr. 23); Doku-Neufassung, Handbuch als HTML (R16, R72); Manifest (R70); Changelog neu (R15); Backlog-Übernahme; Kommentarregel (R69, Nr. 409); Lizenzen, Tabellen mit Mockup (Nr. 342), Logos (Nr. 62) | 22 | eigenes Konzept nach K1 | offen — nach 22 |
 | 14 | **P8 — Schnitt** | Neuaufsetzen mit Übernahme per edbak (R40 (3), R60, Nr. 324); Migrationsregister neu (R66); Repo-Umzug und Inventur mit Begründung je Weglassung (R68); Kette im neuen Repositorium (R67, R40 (4)); Rechts- und Betreiberunterlagen (R41); Abnahme nach R11; Tags `web-v1.0.0`, `uhr-v…`, `android-v1.0.0` | 13 | eigenes Konzept nach K1 | offen — nach 13; die Inventur (R68) entscheidet die zwölf Werkzeug-Punkte mit `gehört zu: 14` (E-BE-04) |
 | — | **Betriebsübergang** | Öffnung in Wellen über die Betriebsarten (R41); Produktionsfreigabe in den Stores mit Welle 1 (R65; nach MDR-Abgrenzung und Rechtsunterlagen); mit Welle 1 entfällt die Seitenladung (`apk.php`, Handbuch 10.1); Garmin-Uhr über den Connect-IQ-Store; halbjährliche Probe-Wiederherstellung | v1.0 | — | offen — beginnt mit v1.0 (nach den Schritten 13 und 14); Wellen nach R41 |
 
@@ -168,7 +168,7 @@ gestrichen, 6a abgehakt; was steht, ist bestätigt offen.
 | Was | Wofür | seit | Bedienweg |
 |---|---|---|---|
 | **P-PK-37:** `STAGING_PASS` einmal falsch, einmal leer setzen — Stufe 2 rot mit Grund im ersten Messschritt; P-PK-18 (zwei Merges in einer Minute) bei Gelegenheit. P-PK-19, -21, -38 und PK-M2 sind seit Lauf 101 erledigt | PK | 29.09.2026 | `Pruefliste.md` 1, 5s |
-| **Prüfliste PK ohne Merge:** P-PK-27 mit Netzzugang (Nr. 280); Z12 — „Schema gegen MySQL 8.4.0" und „Schema gegen MariaDB 10.6" als Pflichtprüfung (P-PK-36) | PK | 23.09.2026 | `Pruefliste.md` 1 |
+| **Prüfliste PK ohne Merge:** Z12 — „Schema gegen MySQL 8.4.0" und „Schema gegen MariaDB 10.6" als Pflichtprüfung (P-PK-36) | PK | 23.09.2026 | `Pruefliste.md` 1 |
 | **Health-Endpunkt auf Staging** — Token unter Betrieb → Hintergrundjobs, Karte „Monitoring“ (seit Web 23.5.0), als Kopfzeile; Produktiv überwacht Uptime Kuma seit dem 02.11.2026 | 10c AP6 | 20.09.2026 | Runbook „Health-Endpunkt einrichten"; P-P5c-29 bis -31 |
 | **Vorhandene Komplett-Backups auf Produktiv öffnen** (`gzip -t`) — ein Stand, der sich nicht öffnen lässt, ist kein Rückfallstand (Nr. 328). War vor dem Merge fällig; der Merge ist gelaufen, der Punkt steht aus | 10c AP11 | 25.09.2026 | P-P5c-45 |
 | **Prüfliste P5c/AP1:** Produktiv blau nach dem Tag, Ankündigung am Handy | 10c AP1 | 23.09.2026 | P-P5c-01 bis -04 |
