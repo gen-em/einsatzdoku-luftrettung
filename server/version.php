@@ -8600,5 +8600,14 @@ declare(strict_types=1);
  *   legt das Schluesselpaar des Demo-Kontos neu an, wenn sein privater Teil
  *   mit dem Inhaltsschluessel der Fixture nicht aufgeht — sonst waere das
  *   Demo-Konto nach der naechsten Fixture ohne lesbare Ortsdaten (F-RD-25).
- *   Neben; kein Schema. */
-const WEB_VERSION = '23.8.0';
+ *   Neben; kein Schema.
+ *
+ * 23.8.1 — DIE DEMO-FIXTURE TRAEGT DEN ERNEUERTEN REFERENZBESTAND (Schritt 24,
+ *   RD-05; Backlog Nr. 388, 500). Erzeugt mit `fixture/erzeugen.php` aus dem
+ *   von Null aufgebauten Referenzkonto: 111 Einsaetze, 223 Spuren, je 10 auf
+ *   Stufe 2 und 3, fuenf Schnitte, zwei Loeschvermerke, drei Uebungssegmente
+ *   (Format 3). Die alte Fixture vom 27.09.2026 war aelter als die Referenz
+ *   (F-RD-01); ein Stufe-1-Riegel (`fixture/abgleich.py`) haelt beide jetzt
+ *   gegeneinander. Korrektur, weil nur eine Datei unter `server/` neu ist;
+ *   kein Schema. */
+const WEB_VERSION = '23.8.1';

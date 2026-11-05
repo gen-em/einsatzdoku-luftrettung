@@ -1081,9 +1081,21 @@ zeigt sie deshalb als gestrichelte Luftlinien.
 *Seit Web 14.2.1* auch die Herkunft: Unter **Einstellungen → Geräte** stehen
 zwei Geräte mit Modell — eine Uhr für die Luftdienste, ein Handy für die
 Bodendienste —, und jeder Einsatz trägt die Plakette des Geräts, das ihn
-aufgezeichnet hat. Drei Einsätze sind aus einer Ruhezeit **geschnitten**
+aufgezeichnet hat. Fünf Einsätze sind aus einer Ruhezeit **geschnitten**
 (Abschnitt 4.1b): Sie tragen die Plakette „Schnitt", und am Ruhesegment steht
-der gesperrte Bereich.
+der gesperrte Bereich — einer davon nach Mitternacht im Nachtdienst, einer
+über ein ganzes Segment. Zwei Zeiträume sind **gelöscht**, und ein Teil der
+Aufzeichnungen ist **verdichtet** — zusammengefasst oder, wenn sie älter
+als 31 Tage sind, ausgedünnt —, wie es der Wartungslauf mit deinen eigenen
+Daten tut.
+
+**Zum Üben des Schneidens** liegen an drei Diensttagen Ruhesegmente mit
+einem Weg zu einem Einsatzort und zurück, aus dem niemand
+einen Einsatz gemacht hat (am 14.02., 05.07. und 16.08.); eines davon ist
+schon verdichtet. Schneide dort einen Einsatz heraus und nimm ihn wieder
+zurück — beides geht beliebig oft. Den Schnitt am 14.06. kannst du ebenfalls
+zurücknehmen; den am 18.04. nicht mehr, weil seine Aufzeichnung danach
+verdichtet wurde.
 
 **Ausprobieren ist ausdrücklich erwünscht.** Ändere Einsätze, lege neue an,
 lösche welche, pflege Stammdaten, koppele eine Uhr. Es geht nichts verloren,

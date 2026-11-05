@@ -14,6 +14,18 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 23.8.1] — unveröffentlicht
+
+### Geändert
+
+- **Web — das Demo-Konto trägt einen erneuerten Bestand** (Backlog Nr. 388,
+  500). Die Demo-Daten stammten vom 27.09.2026 und ließen sich seit Web 23
+  nicht mehr neu erzeugen; sie kannten weder verdichtete Aufzeichnungen noch
+  gelöschte Zeiträume. Der neue Bestand hat fünf geschnittene Einsätze, je
+  zehn verdichtete Aufzeichnungen und drei Ruhesegmente zum Üben des
+  Schneidens; eine Prüfung hält Demo-Daten und Referenzbestand jetzt
+  gegeneinander, damit sie nicht wieder still auseinanderlaufen.
+
 ## [Web 23.8.0] — unveröffentlicht
 
 ### Hinzugefügt

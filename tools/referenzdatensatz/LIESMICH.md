@@ -25,8 +25,8 @@ der Kreislauf gegen Staging zusätzlich `STAGING_*` und `JOBS_TOKEN`.
 
 ## Erwartete Zahl
 
-**0 Befunde, keine offene Matrixzeile.** Der Kreislauf: **0 Abweichungen**
-bei 22 Diensttagen und 109 Einsätzen. Gegen Staging mit MySQL 8.4.10
+**0 Befunde, keine offene Matrixzeile.** Der Kreislauf: **0 unerklärte
+Abweichungen** bei 22 Diensttagen und 111 Einsätzen (05.11.2026). Gegen Staging mit MySQL 8.4.10
 zuletzt **104 s grün** (21.09.2026, Nr. 267).
 
 ## Was es nicht kann

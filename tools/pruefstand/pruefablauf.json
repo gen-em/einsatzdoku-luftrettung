@@ -322,6 +322,11 @@
       "braucht": "nichts",
       "bemerkung": "Konzept R4 (R4-03, Nr. 339). Legt der Arbeitsbaum eine Backlog-Nummer neu an, die origin/main oder ein anderer Remote-Zweig auch neu anlegt? Holt die Zweige (git fetch --prune) und braucht deshalb Netz. NUR MUSTER, KEIN RIEGEL: Stufe 1 sieht die anderen Zweige nicht, im Tor gaebe es nichts gegenzulesen. Die Selbstprobe laeuft hier mit, weil kein Workflow sie faehrt (Pruefablauf.md 6.3: im Tor haelt dieses Mittel nichts auf)."
     },
+    "fixtureabgleich": {
+      "aufruf": "python3 tools/referenzdatensatz/fixture/abgleich.py --selbstprobe && python3 tools/referenzdatensatz/fixture/abgleich.py --tief",
+      "braucht": "nichts",
+      "bemerkung": "Schritt 24, RD-05 (Q-RD-08, E-RD-16), Anlass Nr. 388: Demo-Fixture gegen den Umriss der Referenz-.edbak (referenz/umriss.json, mit SHA-256). Im Tor ohne --tief, weil Stufe 1 nur die Standardbibliothek hat; hier rechnet --tief den Umriss aus der .edbak nach (braucht cryptography, Ausbaustufe web)."
+    },
     "spaltenregister": {
       "aufruf": "php tools/spaltenregister/pruefen.php",
       "braucht": "nichts",
@@ -427,7 +432,8 @@
       "rechtstexte",
       "kettenaufrufe",
       "zaehlung",
-      "spaltenregister"
+      "spaltenregister",
+      "fixtureabgleich"
     ]
   },
   "muster": [

@@ -6701,17 +6701,24 @@ er schreibt nichts in die Datenbank. *(Von Web 23 bis RD-01 brach er
 stattdessen immer ab: Er setzte `edbak_build()` am Stück mit Punktlisten
 voraus, und das gibt es seit S11 nicht mehr.)*
 
-Gepackt abgelegt: roh rund 3,1 MB, im Wesentlichen 67 292 Spurpunkte als
+Gepackt abgelegt (Stand Schritt 24, RD-05, 05.11.2026): roh 2,9 MB, im
+Wesentlichen 67 016 Spurpunkte in 223 Spuren (je 10 auf Stufe 2 und 3), gepackt
+882 KB. *Bis dahin (Stand R4-16):* roh rund 3,1 MB, im Wesentlichen 67 292 Spurpunkte als
 JSON-Zahlen (Stand R4-16, mit dem Nachtdienst D22). Gepackt sind es rund
 930 KB, und die Datei geht bei jedem Deploy über FTPS mit.
 
 **Was ein Reset kostet — gemessen, nicht geschätzt** (15.09.2026, Prüfstand
 mit MariaDB und PHP auf demselben Rechner, je drei Läufe): **6,6 s** mit dem
 damaligen Bestand (106 Einsätze, 63 752 Punkte), **5,9 s** mit dem Stand davor
-(88 Einsätze, 55 861 Punkte). Mit dem heutigen Bestand (109 Einsätze,
-67 292 Punkte) sind es **7,3 s** (27.09.2026, Median aus drei Läufen,
-7,26–7,61 s) — gemessen in einer anderen Arbeitsumgebung, der Abstand zu den
-6,6 s ist deshalb nicht allein der Bestand. Die Zeit trägt **die Besucherin**, deren Anfrage
+(88 Einsätze, 55 861 Punkte). Mit dem Bestand vom 27.09.2026 (109 Einsätze,
+67 292 Punkte) waren es **7,3 s** (Median aus drei Läufen, 7,26–7,61 s) —
+gemessen in einer anderen Arbeitsumgebung, der Abstand zu den 6,6 s ist
+deshalb nicht allein der Bestand. **Mit dem Bestand aus Schritt 24** (111
+Einsätze, 67 016 Punkte, je 10 Spuren gepackt und ausgedünnt) sind es
+**3,07 s** (05.11.2026, Median aus drei Läufen, 2,91–3,17 s); dieselbe
+Umgebung brauchte für den Bestand vom 27.09.2026 3,13 s — das Packen im
+Reset kostet also nichts Messbares, und die 7,3 s von damals sind eine Frage
+der Umgebung. Die Zeit trägt **die Besucherin**, deren Anfrage
 den fälligen Reset auslöst (`demo_reset_wenn_faellig()` aus
 `auth_guard.php`) — sie sieht ihre Seite so lange nicht. Bis Web 21.1.x traf
 das jede, die nach einer Pause nur nachsehen wollte; seit Web 21.2.0 nur noch
@@ -11797,8 +11804,9 @@ läuft. Ein gelungener Upload leert den Kennungstopf.
 #### Warum 30 und nicht 10
 
 Gemessen am Sendeplan des Referenzdatensatzes
-(`tools/referenzdatensatz/einspielen/messprotokoll.json`): 612 Anfragen, Spitze
-**3** an einem einzelnen Auslöser, 199 Abstände von 0 s — ein Dienst kommt in
+(`tools/referenzdatensatz/einspielen/messprotokoll.json`): 638 Anfragen, Spitze
+**3** an einem einzelnen Auslöser, 207 Abstände von 0 s (05.11.2026; bis Schritt
+24 612 und 199, ohne den Nachtdienst D22) — ein Dienst kommt in
 **Stößen**. Der Stoß, der die Grenze bestimmt, ist aber ein anderer: ein
 **Schlüsselwechsel**. Danach liegen die Pakete eines ganzen Dienstes in der
 Warteschlange des Geräts und laufen der Reihe nach in die Abweisung;
@@ -13531,9 +13539,10 @@ unbemerkt — das ist der eine Weg, auf dem die Wache still wird.
 `php tools/referenzdatensatz/fixture/erzeugen.php` auf der Maschine, auf der
 der Referenzbestand liegt — dann `server/demo/fixture.json.gz` mit ausrollen
 und im Adminbereich unter **Demo-Konto → anlegen**. Die Seite zeigt danach
-die Bestandszahlen; sie müssen 21 Diensttage, 104 Einsätze, 118 Ruhesegmente
+die Bestandszahlen; sie müssen 21 Diensttage, 106 Einsätze, 118 Ruhesegmente
 und 2 Geräte nennen, darunter im Papierkorb 5 Einsätze, 1 Diensttag und
-5 Ruhesegmente (gemessen nach einem Reset, R4-16). Mechanik: Abschnitt 4.21.
+5 Ruhesegmente (gemessen nach einem Reset, Schritt 24, RD-05; bis dahin 104
+Einsätze). Mechanik: Abschnitt 4.21.
 
 **Demo-Konto sieht falsch aus / hängt:** Adminbereich → **Demo-Konto → Auf
 Standard zurücksetzen**. Der Vorgang ist transaktional und dauert wenige

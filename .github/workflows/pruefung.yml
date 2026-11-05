@@ -183,6 +183,13 @@ jobs:
           php tools/spaltenregister/pruefen.php --selbstprobe
           php tools/spaltenregister/pruefen.php
 
+      - name: Demo-Fixture und Referenz — tragen beide denselben Bestand?
+        # Anlass: Nr. 388. Nur Standardbibliothek: gegen referenz/umriss.json und dessen SHA-256 der .edbak; das Nachrechnen aus der .edbak (--tief) fährt der Prüfstand.
+        id: fixtureabgleich
+        run: |
+          python3 tools/referenzdatensatz/fixture/abgleich.py --selbstprobe
+          python3 tools/referenzdatensatz/fixture/abgleich.py
+
       - name: Zentralisierung — hält jede Sache ihre eine Stelle?
         id: zaehlung
         run: |
@@ -205,6 +212,7 @@ jobs:
           KONTRASTE: ${{ steps.kontraste.outcome }}
           KETTENAUFRUFE: ${{ steps.kettenaufrufe.outcome }}
           SPALTENREGISTER: ${{ steps.spaltenregister.outcome }}
+          FIXTUREABGLEICH: ${{ steps.fixtureabgleich.outcome }}
           ZAEHLUNG: ${{ steps.zaehlung.outcome }}
           RECHTSTEXTE: ${{ steps.rechtstexte.outcome }}
         run: |
@@ -219,6 +227,7 @@ jobs:
             --riegel "cspprobe=$q" --riegel "jobregister=$q" --riegel "migrationsregister=$q" \
             --riegel "kontraste=$(r "$KONTRASTE")" --riegel "kettenaufrufe=$(r "$KETTENAUFRUFE")" \
             --riegel "zaehlung=$(r "$ZAEHLUNG")" --riegel "spaltenregister=$(r "$SPALTENREGISTER")" \
+            --riegel "fixtureabgleich=$(r "$FIXTUREABGLEICH")" \
             --riegel "rechtstexte=$(r "$RECHTSTEXTE")" > /tmp/gegenlesung.txt 2>&1 || rc=$?
           cat /tmp/gegenlesung.txt
           { echo '### Prüfbericht'; echo '```'; cat /tmp/gegenlesung.txt; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
