@@ -34,6 +34,8 @@ hochgeht, entscheidet die Umsetzung (K3, CLAUDE.md 2).
 **In Arbeit:** nichts — das Konzept steht, die Umsetzung hat nicht
 begonnen. **Es hakt:** an den Fragen Q-RD-01 bis -09 (Abschnitt 3); ohne
 Q-RD-01 und -02 beginnt kein Paket, ohne Q-RD-04 bis -06 nicht RD-02.
+Q-RD-04 hat seit der Rückfrage vom 05.11.2026 einen Vorschlag (d), der
+die Übungstage der Betreiberin einschließt.
 
 ---
 
@@ -127,12 +129,15 @@ Aufweichung der Zusage ist (`docs/Technik.md` 4.21, vier Bedingungen).
 **F-RD-04 — Gepackt wird nur im Browser, und das steht so im Code.**
 `geraetehuelle_lib.php` endet mit „`gh_gepackt_bauen()` gibt es hier nicht:
 Gepackt wird nur im Browser". Die Innenform der Stufe 2 und 3 („B fest",
-`docs/Technik.md` 4.6) gibt es in drei Fassungen: `EdOrtsdaten.gepacktBauen()`
-(Browser), `ortsdaten.gepackt_bauen()` (Einspielwerkzeug, Python) und
-`innen_gepackt()` in `tools/proben/huelle/referenz.py` (Referenz der
-Hüllenprobe). Für einen Demo-Reset, der Stufe 2 und 3 anlegt, braucht der
-Server eine vierte — oder die Fixture trägt die Stücke fertig verschlossen
-→ Q-RD-02.
+`docs/Technik.md` 4.6) gibt es in **zwei** Fassungen: der Referenz
+`innen_gepackt()` in `tools/proben/huelle/referenz.py` (Python; das
+Einspielwerkzeug importiert sie, `ortsdaten.py` Zeile „DAS FORMAT steht
+in referenz.py und nur dort") und `EdOrtsdaten.gepacktBauen()` im Browser.
+Für Stufe 1 gibt es dieselben zwei **und** eine dritte in PHP
+(`gh_spur_innen()`, `gh_stuecke_bauen()` — für den Demo-Reset), gemessen
+von der Hüllenprobe gegen die Referenz. Für einen Demo-Reset, der Stufe 2
+und 3 anlegt, fehlt PHP genau diese dritte Fassung — oder die Fixture
+trägt die Stücke fertig verschlossen → Q-RD-02.
 
 **F-RD-05 — Ausdünnen im Reset wäre zu teuer, Packen nicht.** Die
 PHP-Referenz der Ausdünnung (`spur_ausduennen()`) kostet quadratisch;
@@ -184,13 +189,17 @@ Versatz 0 (`ortsdaten.zeiten()` mit `0`). Ein Schnitt **nach** Mitternacht
 in einem Segment, das über Mitternacht läuft, ist der Fall, der den
 Versatz 1 durch das Werkzeug und durch den Bestand bringt → Q-RD-05.
 
-**F-RD-11 — Die Ruhesegmente entstehen bei jedem Aufbau neu.**
-`aufbauen.py` baut sie als Zwischenräume zwischen den Einsätzen
-(`segment()`), mit festem Samen. Ein Spurfall, der an einem Ruhesegment
-hängt (Stufe, Lücke, Löschvermerk), kann deshalb nicht am Segment selbst
-notiert sein, sondern muss am **Dienst** stehen und vom Aufbau auf das
-Segment übertragen werden, das ihn trifft — sonst ist er nach dem nächsten
-Aufbau fort → RD-02.
+**F-RD-11 — Die Ruhesegmente entstehen bei jedem Aufbau neu, ihre
+Kennung nicht.** `aufbauen.py` baut sie als Zwischenräume zwischen den
+Einsätzen (`segment()`); die `client_ref` kommt aus
+`random.Random(f"{SAMEN}-{kennung}")` und ist bei gleichem Bestand
+dieselbe. Genau darauf baut die Liste `schnitte` am Dienst
+(`segment: <client_ref>`), und sie überlebt den Aufbau. Ein Spurfall an
+einem Ruhesegment darf also nicht **im** Segment stehen (das wird
+überschrieben), wohl aber am Dienst mit derselben Adressierung — ein
+zweiter Weg (etwa über eine Zeit) wäre Wildwuchs → E-RD-04. *(Bis zur
+Rückfrage der Betreiberin am 05.11.2026 schlug das Konzept hier einen
+Block mit Zeitangabe vor.)*
 
 **F-RD-12 — Zwei Werkzeuge nennen die alten Zahlen.** `demo_pruefen.mjs`
 und `sichtpruefung.mjs` greifen auf Kacheln und erste Einsatzzeile des
@@ -209,8 +218,8 @@ neue Funktion wäre → Q-RD-04.
 |---|---|---|---|
 | Q-RD-01 | **Weg der Fixture (Nr. 388).** (a) `erzeugen.php` neu: liest Konto, Geräte und `edbak_build()` (Kopf und Fenster, `pat_blob` als Chiffretext) auf der Referenzmaschine, öffnet Stücke und Einsatzhüllen mit dem Schlüsselmaterial des Demo-Kontos (F-RD-03) und schreibt die Punkte im Klartext in die Fixture. (b) Browserweg wie `referenz_export.mjs`, Schlüsselmaterial aus einem zweiten, lesenden Skript (F-RD-02). (c) Fixture aus den Quelldaten des Generators, ohne Konto. | **(a).** Ein Werkzeug, nur lesend, auf derselben Maschine wie heute; die Fixture stammt weiter aus dem Konto, das über die regulären Wege entstanden ist (Strecke, Anstieg, Schnitte, Papierkorb, Gerätekennungen). (b) braucht zwei Skripte und einen Browser für dasselbe Ergebnis. (c) umginge die Anwendung — Werte, die sie rechnet, stünden dann nicht in der Fixture, und `einspielen.py` hätte nichts mehr zu belegen. | RD-01 |
 | Q-RD-02 | **Stufe 2 und 3 im Demo-Reset (Nr. 500).** (a) `geraetehuelle_lib.php` bekommt `gh_gepackt_bauen()` (vierte Fassung der Innenform „B fest", F-RD-04), die Hüllenprobe misst sie gegen `referenz.py`; die Fixture trägt je Spur `stufe`, `n_original` und die Punkte, wie sie nach der Ausdünnung liegen (F-RD-05). (b) Die Fixture trägt die Stücke fertig verschlossen; dann braucht jedes Demo-Konto auf jeder Anlage dasselbe Schlüsselpaar aus der Fixture, und `demo_paar_sicherstellen()` würde es setzen statt erzeugen. | **(a).** Der Server packt für dieses eine Konto, so wie er dafür heute schon Stufe 1 verschließt; die Zusage „der Server packt nicht" gilt für jedes andere Konto unverändert und steht so in `Technik.md` 4.21. (b) legt den privaten Teil eines Kontopaars ins Repositorium — für das Demo-Konto vertretbar, aber ein zweiter Mechanismus neben `demo_paar_sicherstellen()`, und ein Schlüsselwechsel der Hülle (Fassung 2) machte jede Fixture ungültig. | RD-04 |
-| Q-RD-03 | **Verteilung der Stufen.** Wie viele Spuren auf Stufe 2, wie viele auf 3, der Rest Stufe 1? | **Je Art etwa fünf auf 2 und fünf auf 3** (Einsatzspuren und Ruhesegmente getrennt, so dass auf beiden Diensttypen Luft und Boden je eine liegt); darunter das Segment für P-S11-30 (verdichtet, **ohne** Schnitt) und ein Einsatz mit Reanimation (die Reanimation ist kein Schutzpunkt der Ausdünnung, Technik 4.6). Alles Übrige bleibt Stufe 1, damit die Fixture klein bleibt und der Reset weiter Stufe 1 misst. | RD-02 |
-| Q-RD-04 | **Was heißt „ein Einsatz mit eigener Spur" in Nr. 500?** 98 von 109 Einsätzen tragen eine. (a) Ein Einsatz mit eigener Spur, dessen Zeitraum innerhalb eines Ruhesegments liegt, das verdichtet wird (die Spur des Einsatzes bleibt davon unberührt — das ist zu belegen). (b) Ein geschnittener Einsatz, an dessen Diensttag der Einsatz davor eine eigene Spur hat (Sortierung, GPX-Auswahl beider). (c) Schneiden oder Löschen **aus** einer Einsatzspur — das gibt es nicht (F-RD-13) und wäre eine neue Funktion. | **(a) und (b)** sind heute belegbar und kommen beide in die Matrix; **(c)** wird ein eigener Backlog-Punkt in der Spanne, wenn die Betreiberin ihn will. Bitte sagen, welche Lesart gemeint war. | RD-02 |
+| Q-RD-03 | **Verteilung der Stufen.** Wie viele Spuren auf Stufe 2, wie viele auf 3, der Rest Stufe 1? | **Je Art etwa fünf auf 2 und fünf auf 3** (Einsatzspuren und Ruhesegmente getrennt, so dass auf beiden Diensttypen Luft und Boden je eine liegt); darunter das Übungssegment der Stufe 2 aus Q-RD-04 (es ist zugleich das Segment für P-S11-30) und ein Einsatz mit Reanimation (die Reanimation ist kein Schutzpunkt der Ausdünnung, Technik 4.6). Alles Übrige bleibt Stufe 1, damit die Fixture klein bleibt und der Reset weiter Stufe 1 misst. | RD-02 |
+| Q-RD-04 | **Was heißt „ein Einsatz mit eigener Spur" in Nr. 500?** 98 von 109 Einsätzen tragen eine. (a) Ein Einsatz mit eigener Spur innerhalb eines verdichteten Ruhesegments. (b) Ein geschnittener Einsatz neben einem Einsatz mit eigener Spur. (c) Schneiden **aus** einer Einsatzspur — gibt es nicht (F-RD-13), wäre eine neue Funktion. **(d) Ein Einsatz, der nur als Spur existiert:** Niemand hat den Knopf gedrückt, die Bewegung zum Einsatzort und zurück liegt **ungeschnitten im Ruhesegment** — das Übungsmaterial für das Schneidewerkzeug (`api/schneiden.php`, Kopf: „Wer während eines Einsatzes keinen Knopf gedrückt hat, hat den Einsatz nicht — aber seine Spur hat er"). | **(d), und nur (d)** — nach der Rückfrage der Betreiberin vom 05.11.2026 („2–3 Einsatztage mit ungeschnittener Spur, an der man das Schneiden üben kann"). **Drei Diensttage** bekommen je ein Übungssegment mit einsatzförmiger Bewegung (Flug oder Fahrt, wie die drei Quellsegmente der Schnitte sie hatten — der Generator kann das schon, `ruhespur()`), ohne Einsatz, ohne Schnitt: **zwei auf Stufe 1, eines auf Stufe 2**. Das Segment der Stufe 2 ist das Segment für P-S11-30 („Schneiden nach dem Verdichten"), ein eigener Fall dafür entfällt. (a) und (b) belegen nichts, was Stufe 2 und Schnitt nicht schon belegen, und kommen nicht in die Matrix; (c) nur als Backlog-Punkt, wenn die Betreiberin ihn will. Der Demo-Reset holt die Übungssegmente 30 Minuten nach der ersten Änderung zurück — üben geht beliebig oft. **Bitte bestätigen.** | RD-02 |
 | Q-RD-05 | **„Segment über Mitternacht".** Ein abgeschlossenes Ruhesegment über Mitternacht gibt es (Zeitumstellungsnacht D06). Soll der neue Fall (a) ein Segment über Mitternacht **ohne** Zeitumstellung sein (D22, Nachtdienst Luft), verdichtet auf Stufe 2, **mit einem Schnitt nach Mitternacht** (Versatz 1, F-RD-10), oder (b) nur das Segment, ohne Schnitt? | **(a).** Es ist der einzige Weg, `beginn_tag = 1` durch Werkzeug, Bestand und Demo zu bringen; das Segment der Zeitumstellungsnacht bleibt daneben auf Stufe 1. | RD-02 |
 | Q-RD-06 | **„Segment mit Lücke".** (a) Eine **Sequenzlücke** (das Gerät hat Punkte verloren; `gh_stuecke_bauen()` beendet dort ein Stück, Stufe 2 deckt `seq_from … seq_from + n_original - 1`, `n_original > punkte`) oder (b) eine **Zeitlücke** (das Gerät hat pausiert, Nummern fortlaufend) oder (c) beides in einem Segment? | **(c), aber in zwei Segmenten:** je ein Fall, weil sie verschiedene Stellen messen — die Sequenzlücke die Marke und `n_original`, die Zeitlücke die Luftlinie und die Phasenzuordnung. Der Generator (`spur.py`) bekommt dafür zwei Marken an der Route, keinen Zufall. | RD-02 |
 | Q-RD-07 | **Schnitt neben Löschvermerk — Reihenfolge.** Im selben Segment erst schneiden, dann einen zweiten Zeitraum löschen (der Löschvermerk ist jünger als der Schnitt), oder umgekehrt? | **Erst schneiden, dann löschen, dann verdichten** — so trifft der Fall „neu packen: ein Sperrvermerk ist jünger als das jüngste Stück" (`spur2_faellig_kandidaten()`), und das Segment durchläuft alle drei Zustände, die der Wartungslauf unterscheidet. Ein zweites Segment bekommt nur einen Löschvermerk ohne Schnitt. | RD-02, RD-03 |
@@ -224,10 +233,11 @@ neue Funktion wäre → Q-RD-04.
 | E-RD-01 | Schritt 24 läuft vor 13 (P7), weil P7 das Handbuch an diesem Bestand neu schreibt; Nr. 388 wandert von 14 nach 24. | Betreiberin, 05.11.2026 (Rahmenplan Fassung 218) |
 | E-RD-02 | Der Reset dünnt nicht aus; er packt, was die Fixture ausgedünnt trägt (F-RD-05). Die Ausdünnung geschieht genau einmal, im Referenzkonto, durch den regulären Wartungslauf — angestoßen vom Einspielwerkzeug (RD-03), nicht von einem Browser nebenbei. | Konzept, 05.11.2026 — *bitte mit Q-RD-02 bestätigen* |
 | E-RD-03 | Die Fixture bleibt beim inneren Backup der Nutzlast 7 (Punktlisten im Eintrag) und wird **Fixture-Format 3**: an jedem spurtragenden Eintrag zusätzlich `stufe` und `n_original` (die Namen der Nutzlast 13), an Ruhesegmenten `loeschungen`, an Einsätzen `schnitte` wie bisher; `rea` und Phasenorte im Klartext wie bisher. `demo_fixture_laden()` nimmt Format 2 weiter an (Stufe 1 überall). Kein Wechsel der Nutzlast, weil `edbak_restore()` die neuen Felder schon liest (F-RD-06). | Konzept, 05.11.2026 |
-| E-RD-04 | Jeder Spurfall steht in den **Quelldaten** mit einer Matrixzeile, nie nur im Einspielwerkzeug: Was `pruefen.py` nicht zählt, kann still verschwinden (F-RD-11, Vorbild: die Schnitte, E-DA-11). Fälle an Ruhesegmenten stehen am Dienst (`"spurfaelle": [...]`) und werden von `aufbauen.py` auf das Segment übertragen, das die genannte Zeit trifft. | Konzept, 05.11.2026 |
+| E-RD-04 | Jeder Spurfall steht in den **Quelldaten** mit einer Matrixzeile, nie nur im Einspielwerkzeug: Was `pruefen.py` nicht zählt, kann still verschwinden (Vorbild: die Schnitte, E-DA-11). **Eine Adressierung für alles:** Jede Handlung an einer Spur steht am Dienst als Liste mit `segment: <client_ref>` (bei Einsätzen `einsatz: <client_ref>`), genau wie `schnitte` heute — `loeschungen` (gleiche Felder wie ein Schnitt ohne Phasen), `verdichten` (`stufe`), `luecken` (`art`, `ab`, `dauer`). Kein neuer Block, keine Zeitsuche, nichts im Segment selbst (F-RD-11). *(Geändert nach der Rückfrage vom 05.11.2026; vorher „`spurfaelle` mit Zeitangabe".)* | Konzept, 05.11.2026 |
 | E-RD-05 | Das Einspielwerkzeug geht nur **reguläre Wege** (R4): Verdichten über `api/wartungslauf.php` (`liste`, `tauschen`), Löschen über `api/schneiden.php` (`loeschen`), beides mit `ortsdaten.py` wie ein Browser. Kein SQL, kein eigener Weg in `spur_lib.php`. | Konzept, 05.11.2026 |
 | E-RD-06 | Die Reihenfolge der Pakete ist zwingend: RD-01 (Erzeuger) und RD-04 (Reset) sind Code, RD-02 und RD-03 sind Bestand, RD-05 erzeugt daraus Fixture und Sollstände. Die Fixture kann erst entstehen, wenn das Referenzkonto alle Fälle trägt (RD-02, RD-03) **und** der Erzeuger sie lesen kann (RD-01); eingespielt werden kann sie erst, wenn der Reset Format 3 versteht (RD-04). | Konzept, 05.11.2026 |
 | E-RD-07 | Jeder neue Fall bekommt eine Zeile in `Pruefliste.md` nur, wenn er von Hand zu prüfen ist (P-S11-30 neu gefasst, P-S11-31 neu gefasst, ein Punkt je Spurfall in der Demo); was `pruefen.py`, der Kreislauf und der Abgleich messen, steht im Prüfprotokoll, nicht in der Prüfliste (CLAUDE.md 7). | Konzept, 05.11.2026 |
+| E-RD-08 | **Kein neuer Weg, wo ein alter trägt** (Rückfrage der Betreiberin, 05.11.2026): Jedes Paket nennt in Abschnitt 6, was es neu anlegt, was es wiederverwendet und was es ablöst. Neu entsteht nur, was keine vorhandene Stelle leisten kann: ein PHP-Packer (dritte Fassung desselben Formats, gegen die eine Referenz gemessen, wie Stufe 1 heute), zwei Einspielstufen am vorhandenen Werkzeug, ein Abgleich (Q-RD-08). Abgelöst wird der tote Erzeuger. | Konzept, 05.11.2026 |
 
 ## 5. Arbeitspakete
 
@@ -284,25 +294,26 @@ die Datenbank (vorher/nachher `SHOW TABLE STATUS` oder Zeilenzahlen gleich).
 
 *Weg:*
 1. Matrixzeilen in `quelldaten/pruefen.py` (Bereich „Spuren"), je Fall
-   eine Marke: `spur-stufe-2`, `spur-stufe-3`, `segment-stufe-2`,
-   `segment-stufe-3`, `schnitt-neben-loeschvermerk`, `loeschvermerk-allein`,
-   `segment-mitternacht-schnitt-danach`, `segment-sequenzluecke`,
-   `segment-zeitluecke`, `schnitt-nimmt-alles`, `einsatz-eigene-spur-im-segment`,
-   `schnitt-nach-einsatz-mit-spur` (nach Q-RD-04), `segment-verdichtet-ohne-schnitt`
-   (für P-S11-30), `einsatz-rea-stufe-3`.
-2. `FORMAT.md`: neuer Block `spurfaelle` am Dienst (E-RD-04) mit
-   `art` (`verdichten` | `loeschen` | `luecke`), `wann` (lokale Zeit, trifft
-   das Segment oder den Einsatz), `stufe` bzw. `von`/`bis` bzw.
-   `luecke` (`sequenz` | `zeit`, Dauer); `schnitte` bekommt `beginn_tag`
-   und `ende_tag` (Vorgabe 0). Die Regel „nicht über Mitternacht" bleibt;
-   neu: ein Schnitt mit `beginn_tag = 1` muss nach dem Diensttag liegen.
-3. `aufbauen.py` überträgt `spurfaelle` auf die Segmente (F-RD-11),
-   `pruefen.py` prüft: jede Marke genau einmal belegt, Stufe 3 nur an
-   Spuren, deren Ende mehr als 31 Tage vor dem Erzeugungsdatum der
-   Referenz liegt (sonst verweigert `spur2_wartung_tauschen()` mit
-   `frist`), ein Löschvermerk liegt in der Spur und neben keinem Schnitt
-   außer im Fall `schnitt-neben-loeschvermerk`, `schnitt-nimmt-alles` deckt
-   das ganze Segment.
+   eine Marke — **zehn**: `stufe-2-einsatz`, `stufe-2-segment`,
+   `stufe-3-einsatz`, `stufe-3-segment`, `stufe-3-rea`,
+   `uebung-ungeschnitten` (dreimal, Q-RD-04), `schnitt-neben-loeschvermerk`,
+   `loeschvermerk-allein`, `schnitt-nach-mitternacht`, `schnitt-nimmt-alles`,
+   `luecke-sequenz`, `luecke-zeit`.
+2. `FORMAT.md`: neben `schnitte` drei Listen derselben Bauart (E-RD-04):
+   `loeschungen` (`segment`, `beginn`, `ende`), `verdichten` (`segment`
+   oder `einsatz`, `stufe`), `luecken` (`segment`, `art`, `ab`, `dauer`);
+   `schnitte` bekommt `beginn_tag` und `ende_tag` (Vorgabe 0). Die Regel
+   „nicht über Mitternacht" bleibt; neu: ein Schnitt mit `beginn_tag = 1`
+   liegt nach dem Diensttag. Die Übungssegmente brauchen **kein** Feld:
+   Ihre Bewegung beschreibt `wegpunkte.py` wie bei den drei Quellsegmenten
+   der Schnitte.
+3. `pruefen.py` prüft: jede Marke genau so oft belegt, wie die Matrix
+   sagt; Stufe 3 nur an Spuren, deren Ende mehr als 31 Tage vor dem
+   Erzeugungsdatum der Referenz liegt (sonst verweigert
+   `spur2_wartung_tauschen()` mit `frist`); ein Löschvermerk liegt in der
+   Spur und neben keinem Schnitt außer im Fall `schnitt-neben-loeschvermerk`;
+   `schnitt-nimmt-alles` deckt das ganze Segment; `aufbauen.py` prüft wie
+   bei `schnitte`, dass jede genannte `client_ref` im Dienst steht.
 4. Generator: `spur.py` bekommt Marken für die zwei Lücken (Q-RD-06), ohne
    Zufall; die alten Dienste behalten byteweise dieselben Spuren
    (`diff -r` gegen die Ausgabe vor der Änderung — der Nachweis der
@@ -450,7 +461,25 @@ sehen ist — die Vorlage der Handprüfliste in RD-06).
 *Abnahme:* Stufe 1 grün auf dem Baum des Pull Requests; die drei
 Prüfdokument-Fragen beantwortet (was fehlt, warum, wie nachzuholen).
 
-## 6. Prüfprotokoll
+## 6. Wildwuchs-Prüfung (E-RD-08)
+
+Je Paket: was neu entsteht, was es wiederverwendet, was es ablöst.
+
+| Paket | Neu | Wiederverwendet | Abgelöst |
+|---|---|---|---|
+| RD-01 | nichts — `erzeugen.php` wird umgebaut, nicht ersetzt; `fixture/LIESMICH.md` (fehlte) | `edbak_build()` (Kopf, Fenster), `spur2_lesen_viele()`, `demo_inhaltsschluessel()`, `demo_edk1_oeffnen()`, das Öffnen aus `tools/proben/huelle/geraet.php`, `riegelprobe.php` | der tote Weg über Punktlisten |
+| RD-02 | drei Listen am Dienst nach dem Muster von `schnitte`; zehn Matrixmarken; zwei Lückenmarken in `spur.py` | Adressierung `segment: client_ref`, `ruhespur()` für die Übungsbewegung, `pruefen.py --matrix`, der Determinismus des Aufbaus | nichts |
+| RD-03 | zwei Stufen in `einspielen.py` | `ortsdaten.py` (öffnen, bauen, packen — Format aus `referenz.py`), `api/wartungslauf.php`, `api/schneiden.php`, die Segmentsuche aus `stufe_schneiden()`, die PHP-Ausdünnung als Referenz (keine Python-Fassung) | nichts |
+| RD-04 | `gh_gepackt_bauen()` in PHP (dritte Fassung eines Formats mit einer Referenz, wie Stufe 1); zwei Vektoren der Hüllenprobe; eine Registerzeile | `spur2_stueck_schreiben()` mit `stufe`/`n_original` (nimmt es schon), `edbak_restore()` Zweig `'server'`, Feldnamen der Nutzlast 13 | der Satz „Gepackt wird nur im Browser" |
+| RD-05 | `fixture/abgleich.py` (Q-RD-08; sonst nichts — Referenzexporte und Sollstände werden erneuert, nicht neu gebaut) | `referenz_export.mjs`, `kreislauf.py`, `ausnahmen/*.json`, `pruefablauf.json` | die Fixture vom 27.09.2026 |
+| RD-06 | Prüfdokument (Pflicht, CLAUDE.md 7) | Prüfliste, Prüfstand | — |
+
+**Was bewusst nicht entsteht:** keine Python-Ausdünnung, kein eigener
+Spurweg in `spur_lib.php`, kein Fassungswechsel der Nutzlast, kein
+zweites Demo-Schlüsselpaar, keine neue Adressierung in den Quelldaten,
+kein neues Verzeichnis unter `tools/`.
+
+## 7. Prüfprotokoll
 
 Je Paket Mittel und Zahl, nachgetragen von der Umsetzung. Was hier steht,
 ist gemessen; was fehlt, steht im Prüfdokument an erster Stelle.
@@ -469,8 +498,9 @@ Demo-Konto (P-S11-30 neu) geht erst nach dem Merge (R91). Ein echter
 Safari bleibt Handprüfung. F-RD-08 (Fälligkeit nach „Schnitt nimmt
 alles") misst erst RD-03.
 
-## 7. Verlauf
+## 8. Verlauf
 
 | Datum | Was |
 |---|---|
 | 05.11.2026 | Konzept angelegt: Befund F-RD-01 bis -13, Fragen Q-RD-01 bis -09, Entscheidungen E-RD-01 bis -07, Pakete RD-01 bis -06. Fahrplanzeile 24 auf „Konzept", Backlog-Spanne 510–519 reserviert. |
+| 05.11.2026 | Nach Rückfrage der Betreiberin (Wildwuchs, Q-RD-04, Übungstage): F-RD-04 und F-RD-11 berichtigt (Python hat das Format einmal; die Segmentkennung überlebt den Aufbau), E-RD-04 auf die vorhandene Adressierung `segment: client_ref` umgestellt, Q-RD-04 mit Lesart (d) „Übungssegmente, zwei auf Stufe 1, eines auf Stufe 2" als Vorschlag, E-RD-08 und Abschnitt 6 (Wildwuchs-Prüfung) neu; Matrixmarken von 14 auf 12 (10 Fälle). |
