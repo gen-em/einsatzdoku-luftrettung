@@ -8609,5 +8609,11 @@ declare(strict_types=1);
  *   (Format 3). Die alte Fixture vom 27.09.2026 war aelter als die Referenz
  *   (F-RD-01); ein Stufe-1-Riegel (`fixture/abgleich.py`) haelt beide jetzt
  *   gegeneinander. Korrektur, weil nur eine Datei unter `server/` neu ist;
- *   kein Schema. */
-const WEB_VERSION = '23.8.1';
+ *   kein Schema.
+ *
+ * 23.8.2 — DER DEMO-RESET WARNT NICHT MEHR VOR SEINEN EIGENEN GERAETEN
+ *   (R91-Nachpruefung zu Schritt 24 auf Staging). Die Geraete der Fixture
+ *   entstehen beim Reset neu, und die Startseite meldete sie als „neue
+ *   Geraete … warst du das nicht?". Der Reset bestaetigt den Hinweis und den
+ *   Erststart-Schritt „Geraet koppeln"; kein Schema. */
+const WEB_VERSION = '23.8.2';

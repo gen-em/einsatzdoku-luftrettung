@@ -805,6 +805,21 @@ function demo_bestand_einspielen(PDO $pdo, int $id, array $fx): array
                           $g['geraet_art'] ?? null, $g['geraet_modell'] ?? null]);
         $geraete++;
     }
+    /* DIE GERAETE DER FIXTURE SIND KEINE NEUEN. Der Reset legt sie mit
+     * `created_at` = jetzt an, und die Startseite warnte deshalb nach jedem
+     * Reset „2 neue Geräte wurden mit deinem Konto verbunden … Warst du das
+     * nicht, entferne die Geräte" — eine Warnung vor einem Fremdzugriff, den
+     * es nicht gibt (R91-Nachprüfung zu Schritt 24, Staging 05.11.2026).
+     * Bestaetigt wird nach dem Anlegen, also mit einem Zeitpunkt, der keinen
+     * Fixture-Eintrag mehr als neu gelten laesst; ein Geraet, das die
+     * BesucherIn danach koppelt, warnt wie in jedem Konto. Aus demselben
+     * Grund ist der Schritt „Uhr oder Handy koppeln" der Willkommenskarte
+     * erledigt — das Konto hat Geraete. */
+    if ($geraete > 0) {
+        require_once __DIR__ . '/einstieg_lib.php';
+        geraete_hinweis_bestaetigen($pdo, $id);
+        erststart_erledigt($id, ERSTSTART_GERAET);
+    }
 
     $blobZiel = static function (?string $blob, array $zusatz) use ($ck): string {
         $pat = [];
