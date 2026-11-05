@@ -10996,3 +10996,50 @@ zutreffen.
      vorhandene Adresse der eigenen Domain → „Konto angelegt — die E-Mail
      konnte NICHT verschickt werden“ samt Link; im Reiter System die 550 um
      23:07. Prüfkonto gelöscht.
+
+388. **Die Demo-Fixture lässt sich seit S11 nicht mehr aus dem Referenzkonto erzeugen.** · gehört zu: 24 · Stand: erledigt · seit 19.10.2026
+     *Aufgenommen 19.10.2026 in S11-12 (F-S11-95).*
+     `tools/referenzdatensatz/fixture/erzeugen.php` las das Referenzkonto
+     über `edbak_build()` am Stück, mit Punktlisten aus `track_points`.
+     Seit Web 22 sieht der Server keine Punkte, Phasenorte und Reanimation
+     mehr; das Skript hätte eine Fixture ohne Spur geschrieben, still. Seit
+     Web 23 gibt es den Bau am Stück nicht mehr; das Skript bricht mit
+     Rückgabe 2 ab, und der Positivfall von `fixture/riegelprobe.php` ist
+     damit ebenfalls rot. Die eingecheckte Fixture (Nutzlast 7, Klartext
+     aus dem Repositorium, E-S11-20) trägt den Demo-Reset weiter; sie
+     altert nur, wenn sich der Referenzbestand ändert.
+     *Weg:* die Fixture im Browser erzeugen (wie `referenz_export.mjs`:
+     Sicherung des Kontos öffnen, Klartext ablegen) oder aus den
+     Quelldaten des Generators bauen, ohne Umweg über ein Konto.
+     *Abnahme:* eine neu erzeugte Fixture setzt das Demo-Konto zurück, und
+     die Riegelprobe ist in beiden Richtungen grün.
+     *Seit 05.11.2026 Teil von Schritt 24 (Nr. 500), auf Wunsch der
+     Betreiberin; bis dahin `gehört zu: 14`.*
+     Erledigt 05.11.2026 mit Schritt 24 (RD-01, RD-05, PR #152):
+     erzeugen.php liest das Konto über edbak_build() und öffnet die Hüllen
+     mit dem Schlüssel des Demo-Kontos, Format 3; Riegelprobe 11 von 11,
+     neue Fixture setzt das Demo-Konto zurück (Staging 05.11.2026: 21 · 106
+     · 118 · 2), Stufe-1-Riegel fixtureabgleich hält sie gegen die Referenz.
+
+500. **Referenzdatensatz und Demo-Konto tragen nicht alle Spurfälle.** · gehört zu: 24 · Stand: erledigt · seit 05.11.2026
+     *Aufgenommen 05.11.2026 auf Wunsch der Betreiberin, nach P-BR6-01:*
+     Auf Staging ließ sich P-S11-30 (Schneiden nach dem Verdichten) nicht
+     prüfen, weil kein Konto verdichtete Ruhesegmente hat. Der
+     Referenzdatensatz (Quelle der Demo-Fixture und Sollstand der
+     Kreisläufe) kennt drei Schnitte, aber nur Stücke der Stufe 1.
+     *Fehlende Fälle:* Stufe 2 und 3, ein bestehender Schnitt neben einem
+     Löschvermerk, ein Segment über Mitternacht, eines mit Lücke, ein Schnitt,
+     der alles nimmt, ein Einsatz mit eigener Spur.
+     *Weg:* zuerst Nr. 388 (die Fixture wieder erzeugbar), dann die
+     Quelldaten erweitern; das Einspielen fährt den Wartungslauf; der
+     Demo-Reset legt verdichtete Stücke selbst an, weil der Wartungslauf das
+     Demo-Konto seit Web 23.7.5 auslässt (Nr. 459). Neue Sollstände beider
+     Kreisläufe, jede neue Abweichung einzeln begründet (Löschvermerk:
+     F-S11-52). Dabei P-S11-31 neu fassen.
+     *Abnahme:* jeder Fall im Demo-Konto und im Referenzkonto bedienbar;
+     Kreisläufe 0 unerklärt; P-S11-30 auf Staging mit dem Demo-Konto.
+     Erledigt 05.11.2026 mit Schritt 24 (RD-02 bis RD-05, PR #152,
+     Web 23.8.0 und 23.8.1): alle Fälle in Quelldaten, Referenzkonto
+     und Demo; der Reset packt Stufe 2 und 3; Kreisläufe 0
+     unerklärt; P-S11-30 und -31 auf Staging mit dem Demo-Konto
+     bestanden (R91, 05.11.2026).

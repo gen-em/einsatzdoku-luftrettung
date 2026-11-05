@@ -6777,6 +6777,14 @@ Eine Erweiterung war dafür nötig, in `backup_lib.php`:
   Transaktionen, könnte ein Fehler in der Mitte ein Konto mit halbem Bestand
   hinterlassen — und der Reset läuft unbeaufsichtigt.
 
+**Die Geräte der Fixture gelten als gesehen** (seit Web 23.8.2). Der Reset
+legt sie mit `created_at` = jetzt an; danach bestätigt er den Gerätehinweis
+(`geraete_hinweis_bestaetigen()`) und vermerkt den Erststart-Schritt
+„Gerät koppeln" (`erststart_erledigt(…, ERSTSTART_GERAET)`). Bis dahin
+warnte die Startseite nach jedem Reset „2 neue Geräte wurden mit deinem
+Konto verbunden" — eine Warnung vor einem Fremdzugriff, den es nicht gab.
+Ein Gerät, das die BesucherIn danach koppelt, warnt wie in jedem Konto.
+
 #### Der Demobestand verschlossen (seit Web 22.5.0, S11-06d)
 
 Der Reset spielt die Fixture über `edbak_restore(…, 'server', $blobZiel)` ein:

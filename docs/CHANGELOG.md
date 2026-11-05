@@ -14,6 +14,18 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 23.8.2] — unveröffentlicht
+
+### Behoben
+
+- **Web — das Demo-Konto warnt nach dem Zurücksetzen nicht mehr vor seinen
+  eigenen Geräten.** Der Reset legt die zwei Geräte des Demo-Bestands jedes
+  Mal neu an, und die Startseite meldete sie deshalb als „neue Geräte … warst
+  du das nicht?" — eine Warnung vor einem Fremdzugriff, den es nicht gab, und
+  in der Willkommenskarte stand „Uhr oder Handy koppeln" als offen. Der Reset
+  vermerkt beides jetzt als gesehen; ein Gerät, das jemand danach koppelt,
+  wird wie in jedem Konto gemeldet.
+
 ## [Web 23.8.1] — unveröffentlicht
 
 ### Geändert
