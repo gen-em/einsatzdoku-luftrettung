@@ -1081,9 +1081,21 @@ zeigt sie deshalb als gestrichelte Luftlinien.
 *Seit Web 14.2.1* auch die Herkunft: Unter **Einstellungen → Geräte** stehen
 zwei Geräte mit Modell — eine Uhr für die Luftdienste, ein Handy für die
 Bodendienste —, und jeder Einsatz trägt die Plakette des Geräts, das ihn
-aufgezeichnet hat. Drei Einsätze sind aus einer Ruhezeit **geschnitten**
+aufgezeichnet hat. Fünf Einsätze sind aus einer Ruhezeit **geschnitten**
 (Abschnitt 4.1b): Sie tragen die Plakette „Schnitt", und am Ruhesegment steht
-der gesperrte Bereich.
+der gesperrte Bereich — einer davon nach Mitternacht im Nachtdienst, einer
+über ein ganzes Segment. Zwei Zeiträume sind **gelöscht**, und ein Teil der
+Aufzeichnungen ist **verdichtet** — zusammengefasst oder, wenn sie älter
+als 31 Tage sind, ausgedünnt —, wie es der Wartungslauf mit deinen eigenen
+Daten tut.
+
+**Zum Üben des Schneidens** liegen an drei Diensttagen Ruhesegmente mit
+einem Weg zu einem Einsatzort und zurück, aus dem niemand
+einen Einsatz gemacht hat (am 14.02., 05.07. und 16.08.); eines davon ist
+schon verdichtet. Schneide dort einen Einsatz heraus und nimm ihn wieder
+zurück — beides geht beliebig oft. Den Schnitt am 14.06. kannst du ebenfalls
+zurücknehmen; den am 18.04. nicht mehr, weil seine Aufzeichnung danach
+verdichtet wurde.
 
 **Ausprobieren ist ausdrücklich erwünscht.** Ändere Einsätze, lege neue an,
 lösche welche, pflege Stammdaten, koppele eine Uhr. Es geht nichts verloren,
@@ -1370,7 +1382,9 @@ Aufzeichnung zwischen den Einsätzen mit Zeitraum, Dauer und Punktzahl.
 **So geht es:**
 
 1. **„Schneiden"** an der Zeile des Segments, in dem der Einsatz steckt. Der
-   Bereich klappt darunter auf.
+   Bereich klappt darunter auf. Auf dem Handy stehen „Schneiden" und
+   „Schnitt zurücknehmen" hinter dem **„⋯"** am Ende der Zeile, wie bei
+   jeder Liste.
 2. **Beginn und Ende** eintragen. Vorbelegt ist das ganze Segment — das ist
    Absicht: Ein geratener Ausschnitt wäre eine Behauptung über etwas, das nur
    du weißt. Die **Zeitleiste** darüber zeigt orange, was du gewählt hast.
@@ -1408,6 +1422,12 @@ wieder zum Ruhesegment.
 > eingetragen, sagt die Anwendung das und tut nichts — Rückgängig würde das
 > mitlöschen. Soll der Einsatz dann trotzdem weg, lösch ihn über den
 > Papierkorb (Abschnitt 8); dort läuft die Frist von 30 Tagen.
+>
+> **Und es geht nicht mehr, wenn die Aufzeichnung inzwischen verdichtet
+> wurde.** Beim Verdichten fallen die geschnittenen Punkte aus dem
+> Ruhesegment; sie liegen dann nur noch im Einsatz, und Rückgängig würde sie
+> mitlöschen. Die Anwendung sagt es und tut nichts — auch hier ist der
+> Papierkorb der Weg.
 
 > **Ein Zeitraum, in dem kein Punkt liegt, lässt sich nicht schneiden.** Die
 > Anwendung sagt es und legt nichts an. Das passiert, wenn du denselben

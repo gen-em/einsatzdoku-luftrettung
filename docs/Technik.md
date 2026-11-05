@@ -793,11 +793,13 @@ Daten erst nach Server-Bestätigung.
 │   │                      Läufer (`pruefen.sh <name>|alle|--selbstprobe`),
 │   │                      ein LIESMICH. Vorher acht Ordner.
 │   ├── referenzdatensatz/ erfundener Beispielbestand (22 Diensttage,
-│   │   │                  109 Einsätze) — Demo-Konto UND Regressionsreferenz
+│   │   │                  106 Einsätze, mit den fünf Schnitten 111) —
+│   │   │                  Demo-Konto UND Regressionsreferenz
 │   │   ├── quelldaten/    die Wahrheit: je Diensttag ein JSON, dazu die zwei
-│   │   │                  Geräteblöcke (geraete.json), die drei Schnitte,
-│   │   │                  Schema und Prüfung (Abdeckungsmatrix, Sperrwörter
-│   │   │                  in den Gerätenamen, keine realen Namen)
+│   │   │                  Geräteblöcke (geraete.json), die Schnitte und
+│   │   │                  Spurfälle (verdichten, löschen, Lücken, Übungen —
+│   │   │                  seit RD-02), Schema und Prüfung (Abdeckungsmatrix,
+│   │   │                  Sperrwörter in den Gerätenamen, keine realen Namen)
 │   │   ├── generator/     erzeugt Ingest-Payloads, Formulardaten, CSV, GPX;
 │   │   │                  fester Zufallssamen, zwei Läufe gleiches Ergebnis
 │   │   ├── einspielen/    spielt alles über die REGULÄREN Wege ein, kein SQL;
@@ -817,7 +819,8 @@ Daten erst nach Server-Bestätigung.
 │   │   │                  Abnahme der Demo-Funktion
 │   │   ├── referenz/      die eingecheckten Referenz-Exporte
 │   │   ├── vergleich/     Vergleichswerkzeug und Kreislauftests
-│   │   └── fixture/       erzeugt server/demo/fixture.json.gz; riegelprobe.php
+│   │   └── fixture/       erzeugt server/demo/fixture.json.gz (öffnet dazu die
+│   │                      Hüllen des Demo-Kontos, RD-01); riegelprobe.php
 │   │                      misst die zwei Riegel darin (Zielrundenzahl,
 │   │                      Hülle bleibt edk1: — sonst wäre das Demo-Konto auf
 │   │                      der Produktivinstallation ausgesperrt, S10)
@@ -5365,6 +5368,14 @@ heraus.
 > dass das Segment sie trägt. Erkannt wird ein solcher Schnitt daran, dass
 > sein Vermerk älter ist als die Migration `2026_10_15_loeschvermerk`.
 >
+> **Nach dem Verdichten lässt sich ein Schnitt nicht mehr zurücknehmen**
+> (`409 verdichtet`, seit Web 23.8.0, Konzept RD, F-RD-22). Der Wartungslauf
+> öffnet das Segment ohne die gesperrten Punkte und packt nur den Rest; danach
+> liegen sie allein im Einsatz, und die Rücknahme löschte sie mit. Erkannt an
+> einem Stück der Stufe 2 oder 3, das zur Zeit des Schnitts oder später
+> geschrieben wurde (`spur2_seit_gepackt()`); ein Schnitt **aus** einer schon
+> gepackten Spur ist jünger und bleibt rücknehmbar.
+>
 > **Ein Stück löschen (Backlog Nr. 161, Aktion `loeschen`).** Endgültig: Der
 > Browser verschließt die Punkte **außerhalb** des Zeitraums neu (Art `ruhe`,
 > Kennung des Segments, ihre Sequenznummern bleiben; ein Stück endet an jeder
@@ -5488,7 +5499,7 @@ Schneide-Bereich auf: Zeitleiste, Beginn und Ende (Pflicht), drei Phasenzeiten
 | Aktion | Nutzlast | tut |
 |---|---|---|
 | `schneiden` | `rest_id`, `beginn`, `ende` (`hh:mm`), `beginn_tag`/`ende_tag`, `phasen`; seit 22.2.0 `client_ref`, `stuecke` | legt den Einsatz an, legt seine Stücke ab, vermerkt den Schnitt |
-| `rueckgaengig` | `mission_id` | löscht Vermerk, Stücke und Einsatz; einen Schnitt von vor Web 22.2.0 weist er seit Web 23 ab (`409 altschnitt`, F-S11-94) — bis dahin gingen dessen Klartextpunkte zurück |
+| `rueckgaengig` | `mission_id` | löscht Vermerk, Stücke und Einsatz; einen Schnitt von vor Web 22.2.0 weist er seit Web 23 ab (`409 altschnitt`, F-S11-94) — bis dahin gingen dessen Klartextpunkte zurück; einen, dessen Segment danach verdichtet wurde, seit Web 23.8.0 (`409 verdichtet`, F-RD-22) |
 | `loeschen` (seit 22.2.0) | `rest_id`, Zeitraum wie oben, `stand`, `stuecke`, `geloescht` | ersetzt die Stücke des Segments ohne den Zeitraum, Löschvermerk, Protokollzeile |
 
 Der Einsatz entsteht auf dem **Bestandsweg** — virtuelles Gerät
@@ -6656,30 +6667,58 @@ nicht bloß zugesichert:
 bleibt tolerant, eine Fixture der Version 1 lässt sich also weiterhin
 einspielen — ihr `nachlauf`-Block wird schlicht nicht mehr gelesen.
 
-**Warum sie nicht aus einer `.edbak` kommen kann.** Die Backup-Datei trägt
-die geschützten Angaben im **Klartext** — der Browser entschlüsselt vor dem
-Versiegeln, damit sich ein Backup in jedes Konto einspielen lässt. Für die
-Fixture wäre das genau falsch: Sie soll den Chiffretext unverändert mitführen
-und daneben das Schlüsselmaterial, mit dem er lesbar ist. Erst dadurch kann
-der Server das Konto **ohne jede Entschlüsselung** zurücksetzen — und erst
-dadurch ist der Reset schnell genug, um bei jeder Anfrage zu laufen.
+**Format 3 schreibt der Erzeuger seit Schritt 24 (RD-01, Nr. 388)**: wie 2,
+dazu an jedem spurtragenden Eintrag `stufe` und `n_original` (die Namen der
+Nutzlast 13) und an jedem Ruhesegment `loeschungen`; das innere Backup bleibt
+Nutzlast 7 mit Punktlisten (E-RD-03). Bei Stufe 2 und 3 tragen die Punkte
+keine eigene Nummer; der Erzeuger zählt sie ab `seq_from` durch. **Seit Web
+23.8.0 liest der Reset die neuen Felder** (unten, „Der Demobestand
+verschlossen"); eine Fixture im Format 1 oder 2 läuft weiter, jede Spur dann
+auf Stufe 1, und `demo_fixture_laden()` weist ein höheres Format als 3 ab.
 
-Die Quelle ist deshalb `edbak_build()`: dieselbe Funktion, die auch das
-Backup aufbaut, aber serverseitig — dort steht `pat_blob` noch als
-Chiffretext. Genau die Form, die `edbak_restore()` als Spalte wieder annimmt.
-Der Erzeuger bricht ab, wenn er Klartext findet.
+**Warum sie nicht aus einer `.edbak` kommen kann.** Der Grund gilt weiter,
+der Weg ist seit Web 23 ein anderer. Der Reset läuft ohne Browser: Er nimmt
+`pat_blob` als **Chiffretext** unverändert — dafür reist der
+Inhaltsschlüssel in `konto` mit —, Orte, Reanimation und Spur dagegen offen,
+wie die Fixture sie trägt; verschlossen werden sie erst auf der Zielanlage,
+mit dem öffentlichen Schlüssel ihres Demo-Kontos (`edbak_restore()`, Zweig
+`'server'`). Eine `.edbak` passt dazu
+nicht: Ihr fehlt das Schlüsselmaterial des Kontos, und versiegelt ist sie
+mit einem Schlüssel, den nur kennt, wer sie herunterlädt.
 
-Gepackt abgelegt: roh rund 3,1 MB, im Wesentlichen 67 292 Spurpunkte als
+Die Quelle ist deshalb `edbak_build()` auf der Referenzmaschine, Kopf und
+Fenster wie für den Browser — dort steht `pat_blob` als Chiffretext, die Spur
+nur als Umriss. **Stücke und Einsatzhüllen öffnet das Werkzeug**: mit dem
+privaten Teil des Kontopaars, den es über den Inhaltsschlüssel aus
+`DEMO_PASSWORT` erreicht (`demo_inhaltsschluessel()`), und mit dem Öffnen aus
+`tools/proben/huelle/geraet.php` — nicht aus `server/`; der Server hat diese
+Funktion weiter nicht. Für das Demo-Konto ist das keine Aufweichung der
+Zusage: Sein Schlüsselmaterial liegt ohnehin in der Fixture (die vier
+Bedingungen oben). `ort_huelle` fällt dabei weg, denn sie hängt am Paar der
+Referenzanlage. Der Erzeuger bricht ab, wenn der Kern Klartext-Ortsdaten
+trägt, eine Hülle nicht aufgeht oder eine Punktzahl nicht zum Umriss passt;
+er schreibt nichts in die Datenbank. *(Von Web 23 bis RD-01 brach er
+stattdessen immer ab: Er setzte `edbak_build()` am Stück mit Punktlisten
+voraus, und das gibt es seit S11 nicht mehr.)*
+
+Gepackt abgelegt (Stand Schritt 24, RD-05, 05.11.2026): roh 2,9 MB, im
+Wesentlichen 67 016 Spurpunkte in 223 Spuren (je 10 auf Stufe 2 und 3), gepackt
+882 KB. *Bis dahin (Stand R4-16):* roh rund 3,1 MB, im Wesentlichen 67 292 Spurpunkte als
 JSON-Zahlen (Stand R4-16, mit dem Nachtdienst D22). Gepackt sind es rund
 930 KB, und die Datei geht bei jedem Deploy über FTPS mit.
 
 **Was ein Reset kostet — gemessen, nicht geschätzt** (15.09.2026, Prüfstand
 mit MariaDB und PHP auf demselben Rechner, je drei Läufe): **6,6 s** mit dem
 damaligen Bestand (106 Einsätze, 63 752 Punkte), **5,9 s** mit dem Stand davor
-(88 Einsätze, 55 861 Punkte). Mit dem heutigen Bestand (109 Einsätze,
-67 292 Punkte) sind es **7,3 s** (27.09.2026, Median aus drei Läufen,
-7,26–7,61 s) — gemessen in einer anderen Arbeitsumgebung, der Abstand zu den
-6,6 s ist deshalb nicht allein der Bestand. Die Zeit trägt **die Besucherin**, deren Anfrage
+(88 Einsätze, 55 861 Punkte). Mit dem Bestand vom 27.09.2026 (109 Einsätze,
+67 292 Punkte) waren es **7,3 s** (Median aus drei Läufen, 7,26–7,61 s) —
+gemessen in einer anderen Arbeitsumgebung, der Abstand zu den 6,6 s ist
+deshalb nicht allein der Bestand. **Mit dem Bestand aus Schritt 24** (111
+Einsätze, 67 016 Punkte, je 10 Spuren gepackt und ausgedünnt) sind es
+**3,07 s** (05.11.2026, Median aus drei Läufen, 2,91–3,17 s); dieselbe
+Umgebung brauchte für den Bestand vom 27.09.2026 3,13 s — das Packen im
+Reset kostet also nichts Messbares, und die 7,3 s von damals sind eine Frage
+der Umgebung. Die Zeit trägt **die Besucherin**, deren Anfrage
 den fälligen Reset auslöst (`demo_reset_wenn_faellig()` aus
 `auth_guard.php`) — sie sieht ihre Seite so lange nicht. Bis Web 21.1.x traf
 das jede, die nach einer Pause nur nachsehen wollte; seit Web 21.2.0 nur noch
@@ -6717,9 +6756,11 @@ aufhören, sich zurückzusetzen — es geht nichts verloren und niemand wird
 ausgesperrt. `demo_anlegen()` lässt die Ausnahme durch: Wer das Konto von Hand
 anlegt, soll den Grund lesen.
 
-Gemessen von `tools/referenzdatensatz/fixture/riegelprobe.php`: **10 von 10**,
-beide Riegel in beide Richtungen, der abgefangene Reset (Demo-Konto 88 → 88
-Einsätze) und die SHA-256 der echten Fixture vorher/nachher.
+Gemessen von `tools/referenzdatensatz/fixture/riegelprobe.php`: **11 von 11**
+(seit RD-01; bis dahin 10, und von Web 23 an drei davon rot), beide Riegel in
+beide Richtungen, eine erzeugte Fixture im Format 3 mit Spurpunkten, der
+abgefangene Reset (Demo-Konto 109 → 109 Einsätze) und die SHA-256 der echten
+Fixture vorher/nachher.
 
 #### Kein zweiter Einspielweg
 
@@ -6745,13 +6786,40 @@ Ortshöhe legt er in den `pat_blob`** — dafür braucht er den Inhaltsschlüsse
 und den rechnet er aus dem Passwort des Demo-Kontos (`DEMO_PASSWORT`,
 `demo_inhaltsschluessel()`), das im Handbuch steht. **Hat das Demo-Konto noch
 kein Schlüsselpaar, legt er eines an** (`demo_paar_sicherstellen()`,
-E-S11-58), wie `EdKontopaar.anlegen()` es täte. Beides gilt nur für das
+E-S11-58), wie `EdKontopaar.anlegen()` es täte — **und seit Web 23.8.0 auch,
+wenn der private Teil des vorhandenen mit dem Inhaltsschlüssel der Fixture
+nicht aufgeht** (F-RD-25): Jede neue Fixture stammt aus einem anderen
+Referenzkonto, und das alte Paar läge sonst unter einem Schlüssel, den das
+Konto nicht mehr hat. Beides gilt nur für das
 Demo-Konto; jede der Funktionen prüft `demo_ist_demo()`. Ohne diesen Weg
 blieben im Demobestand Klartext-Ortsdaten, und die Aufräummigration (S11-12)
 verweigerte auf jeder Anlage mit Demo-Konto. Gemessen am 16.10.2026: 109
 Einsätze, 14 Hüllen, 221 Spuren mit 67 292 Punkten in Stücken, 0
 Klartextzeilen, Transportziel in 84 und Ortshöhe in 93 Blobs — so viele, wie
 die Fixture trägt; 1,5 s.
+
+**Seit Web 23.8.0 packt er dabei auch** (Schritt 24, RD-04, E-RD-10): Trägt ein
+Eintrag `stufe` 2 oder 3, entsteht **ein** Stück über `gh_gepackt_bauen()` —
+die dritte Fassung der Innenform „B fest" nach `referenz.py` und
+`ortsdaten.js`, von der Hüllenprobe byte-gleich gegen die Referenz gehalten —
+mit `n_original` aus dem Eintrag; die Punkte kommen schon ausgedünnt aus der
+Fixture, denn **der Reset dünnt nicht aus** (quadratisch, F-RD-05). Ein
+Eintrag mit `n_original` unter der Punktzahl wird gemeldet und als Stufe 1
+geschrieben. **Der Server packt damit für dieses eine Konto**; für jedes andere
+packt weiter nur der Browser im Wartungslauf, und das Register zählt die
+Aufrufer (`tools/zaehlung/register.php`, Z49, Decke 1). **Schnitte und
+Löschvermerke des Demo-Kontos stempelt der Reset danach auf eine Sekunde vor
+seinem Beginn** (`schnitte_stempeln()`, E-RD-18, F-RD-14) — wie `deleted_at`
+beim Papierkorb; `edbak_restore()` selbst lässt `erstellt_am` reisen
+(E-R64-12). Bis dahin lag der Wert aus der Fixture vor dem Vermerk der
+Migration `2026_10_15_loeschvermerk` jeder Anlage, und die Rücknahme eines
+Demo-Schnitts antwortete überall `409 altschnitt`. *Vor* dem Reset und nicht
+die Einspielzeit: Die Stücke entstehen über mehrere Sekunden, und ein Vermerk,
+der jünger wäre als das gepackte Stück seines Segments, ließe die Rücknahme
+dort zu (gemessen: Vermerke 14:30:45, Stücke 14:30:47).
+Gemessen mit der Vorab-Fixture aus RD-03 (05.11.2026): 111 Einsätze, 223
+Spuren auf Stufe 1/2/3 = 203/10/10, 67 016 Punkte, 5 Schnitte, 2
+Löschvermerke — gleich dem Referenzkonto; drei Resets 2,91 / 3,17 / 3,07 s.
 
 Eine zweite gab es bis Web 7.3.1: `edbak_build($userId, $mitPapierkorb)`. Sie
 ist entfallen, weil der Papierkorb seit Web 8.0.0 ohnehin in jedem Backup
@@ -9920,7 +9988,7 @@ dem Lesen nicht geändert hat**.
 
 | Teil | Wo | Was |
 |---|---|---|
-| Liste | `spur2_faellig()`, `api/wartungslauf.php` `liste` | höchstens 20 je Aufruf (E-S11-68): abgeschlossen (`final`), nicht im Papierkorb (bis Web 22.7.0 auch: ohne Altbestand, E-S11-70); fällig, wenn ein Stück der Stufe 1 liegt (Zusammenfügen ohne Karenz, E-S11-69), 31 Tage nach dem Ende (Ausdünnen, E-S11-25) oder ein Schnitt jünger ist als das jüngste Stück (die gesperrten Punkte fallen jetzt, E-S11-47). Mit Stücken, Sperrzeiten, Phasenzeiten und `pat_blob` samt Prüfsumme. `auslassen`: was der Browser in dieser Sitzung nicht öffnen konnte — sonst blockierte eine kaputte Hülle die ersten Plätze. Eine Anfrage **ohne Antwort** (`status: 0`, meist ein Seitenwechsel) lässt seit Web 23.0.3 nichts aus und beendet den Durchgang; bis dahin schob sie die gerade bearbeitete Spur für den ganzen Tab aus dem Lauf (Nr. 393). Die Unterabfrage nach dem jüngsten Schnitt nennt Einsatz und Typ selbst, nicht Spalten des Stücks: Gruppiert wird nach dem Einsatz, und MySQL lehnte die Abfrage bis Web 23.7.3 mit 1055 ab (Nr. 458; Schemaprobe, Fall 8) |
+| Liste | `spur2_faellig()`, `api/wartungslauf.php` `liste` | höchstens 20 je Aufruf (E-S11-68): abgeschlossen (`final`), nicht im Papierkorb (bis Web 22.7.0 auch: ohne Altbestand, E-S11-70); fällig, wenn ein Stück der Stufe 1 liegt (Zusammenfügen ohne Karenz, E-S11-69), 31 Tage nach dem Ende (Ausdünnen, E-S11-25) oder ein Schnitt jünger ist als das jüngste Stück (die gesperrten Punkte fallen jetzt, E-S11-47). Mit Stücken, Sperrzeiten, Phasenzeiten und `pat_blob` samt Prüfsumme. `auslassen`: was der Browser in dieser Sitzung nicht öffnen konnte — sonst blockierte eine kaputte Hülle die ersten Plätze. Eine Anfrage **ohne Antwort** (`status: 0`, meist ein Seitenwechsel) lässt seit Web 23.0.3 nichts aus und beendet den Durchgang; bis dahin schob sie die gerade bearbeitete Spur für den ganzen Tab aus dem Lauf (Nr. 393). Die Unterabfrage nach dem jüngsten Schnitt nennt Einsatz und Typ selbst, nicht Spalten des Stücks: Gruppiert wird nach dem Einsatz, und MySQL lehnte die Abfrage bis Web 23.7.3 mit 1055 ab (Nr. 458; Schemaprobe, Fall 8). **Nicht fällig ist seit Web 23.8.0 eine Spur, deren Stücke jedes unter einem Vermerk liegen** (F-RD-08): Der Browser fand dort keinen Punkt, tauschte nichts, und die Spur belegte für immer einen der 20 Plätze |
 | Zahl | `spur2_faellig_zahl()`, `zahl` | wie viele Aufzeichnungen aus wie vielen Diensttagen, für die Karte |
 | Arbeit | `assets/wartungslauf.js` | öffnen (`EdOrtsdaten.spur()`), nach der Frist ausdünnen (`ausduennen()`, `ausduennungPruefen()` — wörtlich `spur_ausduennen()` und `spur_ausduennung_pruefen()`; gegen PHP an 221 Referenzspuren nachgemessen: 221 gleiche Behaltelisten), **ein** gepacktes Stück bauen (`EdOrtsdaten.gepacktBauen()`), es wieder öffnen und Punkt für Punkt vergleichen (Rundlauf) — erst dann schicken |
 | Ortshöhe | ebenda | fehlt sie im `pat_blob`, wird sie aus den offenen Punkten nachgetragen (E-S11-72); der Server schreibt den Blob nur bei unveränderter Prüfsumme |
@@ -9938,9 +10006,10 @@ bindet Stufe und Marke: `seq_from:punkte:stufe:n_original`. Gemessen am
 Referenzbestand (F-S11-76): 4,40 Byte je Punkt gegen 14,40 ungepackt und 3,69
 in SPUR1; am Demo-Bestand nach dem ersten Lauf 4,56 (Einsätze, mit Hülle).
 Eine Umsetzung je Ort: `referenz.py` (`innen_gepackt()`) und `ortsdaten.js`
-(`gepacktBauen()`, Öffnen in `spur()`); bis Web 22.7.0 dazu
-`gh_gepackt_bauen()` in `geraetehuelle_lib.php` für den direkten Rückweg einer
-Kontosicherung mit ausgedünnter SPUR1-Spur.
+(`gepacktBauen()`, Öffnen in `spur()`), dazu seit Web 23.8.0
+`gh_gepackt_bauen()` in `geraetehuelle_lib.php` **nur für den Demo-Reset**
+(4.21; bis Web 22.7.0 gab es sie schon einmal, für den direkten Rückweg einer
+Kontosicherung mit ausgedünnter SPUR1-Spur).
 
 **Wo er läuft** (Mockup M-S11-02, Variante 1): **auf der Startseite still**,
 ein Durchgang je Aufruf, 1,5 s nach dem Laden, nur mit Schlüssel — er fragt nie
@@ -11735,8 +11804,9 @@ läuft. Ein gelungener Upload leert den Kennungstopf.
 #### Warum 30 und nicht 10
 
 Gemessen am Sendeplan des Referenzdatensatzes
-(`tools/referenzdatensatz/einspielen/messprotokoll.json`): 612 Anfragen, Spitze
-**3** an einem einzelnen Auslöser, 199 Abstände von 0 s — ein Dienst kommt in
+(`tools/referenzdatensatz/einspielen/messprotokoll.json`): 638 Anfragen, Spitze
+**3** an einem einzelnen Auslöser, 207 Abstände von 0 s (05.11.2026; bis Schritt
+24 612 und 199, ohne den Nachtdienst D22) — ein Dienst kommt in
 **Stößen**. Der Stoß, der die Grenze bestimmt, ist aber ein anderer: ein
 **Schlüsselwechsel**. Danach liegen die Pakete eines ganzen Dienstes in der
 Warteschlange des Geräts und laufen der Reihe nach in die Abweisung;
@@ -13469,9 +13539,10 @@ unbemerkt — das ist der eine Weg, auf dem die Wache still wird.
 `php tools/referenzdatensatz/fixture/erzeugen.php` auf der Maschine, auf der
 der Referenzbestand liegt — dann `server/demo/fixture.json.gz` mit ausrollen
 und im Adminbereich unter **Demo-Konto → anlegen**. Die Seite zeigt danach
-die Bestandszahlen; sie müssen 21 Diensttage, 104 Einsätze, 118 Ruhesegmente
+die Bestandszahlen; sie müssen 21 Diensttage, 106 Einsätze, 118 Ruhesegmente
 und 2 Geräte nennen, darunter im Papierkorb 5 Einsätze, 1 Diensttag und
-5 Ruhesegmente (gemessen nach einem Reset, R4-16). Mechanik: Abschnitt 4.21.
+5 Ruhesegmente (gemessen nach einem Reset, Schritt 24, RD-05; bis dahin 104
+Einsätze). Mechanik: Abschnitt 4.21.
 
 **Demo-Konto sieht falsch aus / hängt:** Adminbereich → **Demo-Konto → Auf
 Standard zurücksetzen**. Der Vorgang ist transaktional und dauert wenige

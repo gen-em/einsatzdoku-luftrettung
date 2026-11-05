@@ -196,5 +196,68 @@ function gh_stuecke_bauen(string $sec1, string $art, string $ref, array $punkte)
     return $aus;
 }
 
-/* `gh_gepackt_bauen()` gibt es hier nicht: Gepackt wird nur im Browser
- * (`EdOrtsdaten.gepacktBauen()`). */
+/**
+ * Die Innenform der Stufen 2 und 3 („B fest", `docs/Technik.md` 4.6): vier
+ * Spalten zu je n Werten int32 big-endian — Breite, Länge (1e-7 Grad), Höhe
+ * (ganze Meter, `GH_HOEHE_UNBEKANNT` = keine), Zeit (Sekunden seit `ts_von`) —,
+ * jeder Wert als Abstand zum vorigen derselben Spalte, dann mit zlib gepackt
+ * (`gzcompress()`, wie `innen_gepackt()` in `tools/proben/huelle/referenz.py`
+ * und `CompressionStream('deflate')` im Browser).
+ *
+ * @param list<array{0:int,1:float,2:float,3:?float,4:int}> $punkte [seq, lat, lon, ele, ts]
+ */
+function gh_gepackt_innen(array $punkte, int $tsVon): string
+{
+    $spalten = [[], [], [], []];
+    foreach ($punkte as $p) {
+        $spalten[0][] = (int)round((float)$p[1] * 1e7);
+        $spalten[1][] = (int)round((float)$p[2] * 1e7);
+        $spalten[2][] = $p[3] === null ? GH_HOEHE_UNBEKANNT
+                                       : max(-32767, min(32767, (int)round((float)$p[3])));
+        $spalten[3][] = (int)$p[4] - $tsVon;
+    }
+    $roh = '';
+    foreach ($spalten as $sp) {
+        $alt = 0;
+        foreach ($sp as $v) { $roh .= pack('N', ($v - $alt) & 0xFFFFFFFF); $alt = $v; }
+    }
+    $gepackt = gzcompress($roh, 6);
+    if ($gepackt === false) { throw new RuntimeException('zlib gescheitert'); }
+    return $gepackt;
+}
+
+/**
+ * EIN Stück der Stufe 2 oder 3 aus Punkten — die dritte Fassung des Formats,
+ * nach der Referenz (`referenz.py`) und dem Browser
+ * (`EdOrtsdaten.gepacktBauen()`), gemessen von der Hüllenprobe gegen die
+ * Referenz (`probe_server.php`, Vektoren „gepackt").
+ *
+ * DER SERVER PACKT NUR FÜR DAS DEMO-KONTO, beim Reset (`edbak_restore()`,
+ * Zweig `'server'`; Konzept RD, E-RD-10): Die Fixture trägt dessen Punkte im
+ * Klartext, ausgedünnt, mit `stufe` und `n_original`, und der Reset legt die
+ * Spur so an, wie sie im Referenzkonto lag. Für jedes andere Konto gilt
+ * weiter: Der Server sieht keine Punkte und packt nicht — gepackt wird im
+ * Browser, im Wartungslauf. Jeder weitere Aufrufer ist ein Fehler; das
+ * Register `tools/zaehlung/register.php` zählt die Aufrufer.
+ *
+ * Die Bindung trägt Stufe und Marke mit (`seq_from:punkte:stufe:n_original`),
+ * damit der Server ein Stück nicht umetikettieren kann. `$fest` nur für
+ * Prüfvektoren: ['d' => 32 Byte, 'iv' => 16 Byte].
+ *
+ * @param list<array{0:int,1:float,2:float,3:?float,4:int}> $punkte [seq, lat, lon, ele, ts]
+ * @return array{seq_from:int, punkte:int, n_original:int, stufe:int, ts_von:int, ts_bis:int, huelle:string}
+ */
+function gh_gepackt_bauen(string $sec1, string $art, string $ref, array $punkte, int $stufe,
+                          int $seqFrom, int $nOriginal, ?array $fest = null): array
+{
+    if (!$punkte || !in_array($stufe, [2, 3], true) || $nOriginal < count($punkte)) {
+        throw new InvalidArgumentException('gepacktes Stück mit unmöglichen Zahlen');
+    }
+    $ts = array_map(static fn($p) => (int)$p[4], $punkte);
+    $von = min($ts);
+    $n = count($punkte);
+    return ['seq_from' => $seqFrom, 'punkte' => $n, 'n_original' => $nOriginal, 'stufe' => $stufe,
+            'ts_von' => $von, 'ts_bis' => max($ts),
+            'huelle' => gh_verschliessen(gh_gepackt_innen($punkte, $von), $sec1, $art, $ref,
+                                         $seqFrom . ':' . $n . ':' . $stufe . ':' . $nOriginal, $fest)];
+}

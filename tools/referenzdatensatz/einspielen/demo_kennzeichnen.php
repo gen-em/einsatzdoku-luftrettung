@@ -44,6 +44,7 @@ declare(strict_types=1);
  *
  *     php tools/referenzdatensatz/einspielen/demo_kennzeichnen.php
  *     php tools/referenzdatensatz/einspielen/demo_kennzeichnen.php --frist 172800
+ *     php tools/referenzdatensatz/einspielen/demo_kennzeichnen.php --aufheben   (nur fuer `verdichten`)
  *
  * NUR AUF EINER PRUEFINSTALLATION. Auf dem Produktivserver entsteht das
  * Demo-Konto ueber `demo_anlegen()` aus der Fixture, und die Kennzeichnung
@@ -56,9 +57,26 @@ require_once $wurzel . '/server/demo_lib.php';
 
 $adresse = 'demo@gen-em.org';
 $frist   = 86400;
+$aufheben = in_array('--aufheben', $argv, true);
 foreach ($argv as $i => $a) {
     if ($a === '--konto' && isset($argv[$i + 1])) { $adresse = (string)$argv[$i + 1]; }
     if ($a === '--frist' && isset($argv[$i + 1])) { $frist   = (int)$argv[$i + 1]; }
+}
+
+/* --aufheben: DIE KENNZEICHNUNG FUER DIE STUFE `verdichten` ZURUECKNEHMEN
+ * (Konzept RD, RD-03). Der Wartungslauf antwortet dem Demo-Konto mit leeren
+ * Listen und `409 demo` (Nr. 459) — richtig fuer die oeffentliche Demo,
+ * aber das Referenzkonto soll ueber genau diesen regulaeren Weg verdichtet
+ * werden. `einspielen.py` hebt die Kennzeichnung deshalb fuer die Dauer der
+ * Stufe auf und setzt sie danach mit diesem Skript wieder. Dazwischen meldet
+ * sich niemand im Browser an: Die stille Umstellung der Huelle auf `edka1:`
+ * liefe nur dort, und `fixture/erzeugen.php` braeche dann ab.
+ * Nur die Zeile `demo_user_id` faellt; die Resetmarke bleibt, wo sie ist. */
+if ($aufheben) {
+    $vorher = demo_id();
+    db()->prepare('DELETE FROM app_state WHERE k = ?')->execute([DEMO_K_USER]);
+    printf("Demo-Kennzeichnung aufgehoben (war Konto #%s).\n", $vorher === null ? '–' : (string)$vorher);
+    exit(0);
 }
 
 $pdo = db();

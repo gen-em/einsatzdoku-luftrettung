@@ -16,11 +16,12 @@ python3 pruefen.py      # Vertrag, Folge, Krypto, Spuren
 `erzeugen.py` schreibt Ingest-Anfragen samt Sendeplan (Ortsdaten im
 **Klartext** — das Einspielskript verschließt sie vor dem Senden),
 Formulardaten, eine Importdatei, GPX und die Fußwege; was wohin, steht in
-seinem Kopf. Spuren: fliegen, fahren aus `routen/`, gehen ab dem `zustieg`.
+seinem Kopf. Spuren: fliegen, fahren aus `routen/`, gehen ab dem `zustieg`;
+in Ruhesegmenten dazu Übungsfahrten und Lücken, jede Lücke mit Eintrag in der Ausgabe.
 `pruefen.py` hält **jede** Anfrage gegen jede Grenze des JSON-Vertrags, die
-für das Klartext-Format gilt, dazu
-lückenlose Teilstücke, den Krypto-Rundlauf, Tempo und Höhe je Spur und die
-Gehgeschwindigkeit je Fußweg (1,5–6,0 km/h).
+für das Klartext-Format gilt, dazu lückenlose Teilstücke außer an den
+erklärten Lücken (die es verlangt), den Krypto-Rundlauf, Tempo und Höhe je
+Spur und die Gehgeschwindigkeit je Fußweg (1,5–6,0 km/h).
 
 ## Was es braucht
 
@@ -29,9 +30,8 @@ Frage „wird hier gegangen?" stehen **einmal**, in `quelldaten/wegpunkte.py`.
 
 ## Erwartete Zahl
 
-`pruefen.py` ohne Befund; die Zahl der geprüften Anfragen steht im
-Prüfdokument des Pakets und wächst mit dem Bestand. Die alten Diensttage
-behalten bei einer Erweiterung byteweise dieselben Spuren (`diff -r`).
+`pruefen.py` ohne Befund; die Zahl der Prüfungen wächst mit dem Bestand. Die
+alten Diensttage behalten bei einer Erweiterung byteweise dieselben Spuren (`diff -r`).
 
 ## Was es nicht kann
 

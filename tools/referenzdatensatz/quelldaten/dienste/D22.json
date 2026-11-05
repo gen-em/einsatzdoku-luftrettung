@@ -31,11 +31,18 @@
     "ein Fehler, der nur an der Umstellung sichtbar wird, war damit belegt,",
     "der gewöhnliche nicht.",
     "",
-    "E1 beginnt am 19.06. um 23:50 und endet am 20.06.; E2 beginnt am 20.06.",
-    "um 01:40. Sortiert eine Liste „Beginn\" über die Zeichenkette hh:mm,",
-    "steht E2 vor E1 (AP9b in Schritt 15: 01:10 vor 23:50). Die Matrixzeile",
+    "E1 beginnt am 19.06. um 22:20, E2 am 20.06. um 01:40. Sortiert eine",
+    "Liste „Beginn\" über die Zeichenkette hh:mm, steht E2 vor E1 (AP9b in",
+    "Schritt 15: 01:10 vor 23:50). Die Matrixzeile",
     "„Luftdienst mit Einsätzen vor und nach Mitternacht\" rechnet pruefen.py",
     "aus den Zeiten, nicht aus einer getippten Marke.",
+    "",
+    "SEIT SCHRITT 24 (RD-02) BEGANN E1 FRÜHER — um 22:20 statt 23:50, Strecke,",
+    "Dauer und Phasenabstände unverändert. Bis dahin überdeckte E1 die",
+    "Mitternacht, und kein Ruhesegment des Bestands lief über 00:00. Jetzt",
+    "läuft das Segment zwischen E1 und E2 von 23:49 bis 01:40, und darin liegt",
+    "der Schnitt nach Mitternacht (Tagesversatz 1, E-RD-13) auf Stufe 2. Einen",
+    "Einsatz über Mitternacht tragen weiter D06 und D14.",
     "",
     "Beide Einsätze sind aus geprüften Vorlagen verschoben (D01 m-11-3067419528,",
     "D02 m-11-1287405639): Strecke, Dauer und Phasenabstände bleiben, damit",
@@ -136,41 +143,41 @@
       "kanal": "ingest",
       "nachtrag": true,
       "papierkorb": null,
-      "beginn": "2026-06-19 23:50",
-      "ende": "2026-06-20 01:19",
+      "beginn": "2026-06-19 22:20",
+      "ende": "2026-06-19 23:49",
       "final": true,
       "phasen": [
         [
           2,
-          "2026-06-19 23:50"
+          "2026-06-19 22:20"
         ],
         [
           3,
-          "2026-06-19 23:55"
+          "2026-06-19 22:25"
         ],
         [
           4,
-          "2026-06-20 00:09"
+          "2026-06-19 22:39"
         ],
         [
           5,
-          "2026-06-20 00:14"
+          "2026-06-19 22:44"
         ],
         [
           6,
-          "2026-06-20 00:40"
+          "2026-06-19 23:10"
         ],
         [
           7,
-          "2026-06-20 00:54"
+          "2026-06-19 23:24"
         ],
         [
           8,
-          "2026-06-20 01:05"
+          "2026-06-19 23:35"
         ],
         [
           9,
-          "2026-06-20 01:19"
+          "2026-06-19 23:49"
         ]
       ],
       "route": [
@@ -311,12 +318,12 @@
     {
       "client_ref": "r-11-9239582992",
       "beginn": "2026-06-19 20:40",
-      "ende": "2026-06-19 23:50",
+      "ende": "2026-06-19 22:20",
       "final": true
     },
     {
       "client_ref": "r-11-8948069843",
-      "beginn": "2026-06-20 01:19",
+      "beginn": "2026-06-19 23:49",
       "ende": "2026-06-20 01:40",
       "final": true
     },
@@ -327,5 +334,26 @@
       "final": true
     }
   ],
-  "ziel_einsaetze": 3
+  "ziel_einsaetze": 3,
+  "verdichten": [
+    {
+      "segment": "r-11-8948069843",
+      "stufe": 2
+    }
+  ],
+  "schnitte": [
+    {
+      "abdeckung": [
+        "herkunft-schnitt"
+      ],
+      "segment": "r-11-8948069843",
+      "beginn": "2026-06-20 00:20",
+      "ende": "2026-06-20 01:05",
+      "phasen": {
+        "3": "2026-06-20 00:22",
+        "4": "2026-06-20 00:36",
+        "7": "2026-06-20 00:58"
+      }
+    }
+  ]
 }

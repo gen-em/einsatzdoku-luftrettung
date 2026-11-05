@@ -1654,7 +1654,8 @@ function edbak_restore(int $userId, array $data, ?array $dayMap = null,
          * Die Datei behielte einen Fehler, den niemand zu sehen bekommt.
          * $gesehen wird je Eigentuemer neu angelegt — der Schluessel gilt nur
          * innerhalb einer Spur. */
-        $spurSchreiben = function (string $typ, int $ownerId, $liste, string $ref)
+        $spurSchreiben = function (string $typ, int $ownerId, $liste, string $ref,
+                                   array $eintrag = [])
                               use ($pdo, $pruef, $sec1Holen): void {
             $gesehen = [];
             $gueltig = [];
@@ -1693,6 +1694,28 @@ function edbak_restore(int $userId, array $data, ?array $dayMap = null,
              * noch der Demo-Reset ('server'); der Browserweg schickt Stuecke,
              * und eine Punktliste haette ihn oben abgewiesen. */
             usort($gueltig, static fn($a, $b) => $a[0] <=> $b[0]);
+            /* STUFE 2 UND 3 AUS DER FIXTURE (Fixture-Format 3, Konzept RD,
+             * E-RD-10). Traegt der Eintrag `stufe` >= 2, legt der Reset die
+             * Spur so an, wie sie im Referenzkonto lag: EIN gepacktes Stueck
+             * ueber `seq_from` bis `seq_from + n_original - 1`, die Punkte so,
+             * wie die Fixture sie traegt — schon ausgeduennt; der Reset duennt
+             * nicht aus (E-RD-02, F-RD-05: quadratisch). Ein Eintrag, dessen
+             * `n_original` unter der Punktzahl liegt, widerspricht sich; er wird
+             * gemeldet und als Stufe 1 geschrieben, damit keine Spur fehlt. */
+            $stufe = (int)($eintrag['stufe'] ?? 1);
+            if ($stufe >= SPUR2_STUFE_GEPACKT) {
+                $nOrig = (int)($eintrag['n_original'] ?? 0);
+                if ($stufe <= SPUR2_STUFE_DUENN && $nOrig >= count($gueltig)) {
+                    $st = gh_gepackt_bauen($sec1Holen(), $typ === 'rest' ? 'ruhe' : 'spur', $ref,
+                                           $gueltig, $stufe, $gueltig[0][0], $nOrig);
+                    spur2_stueck_schreiben($pdo, $typ, $ownerId, $st['seq_from'], $st['punkte'],
+                                           $st['ts_von'], $st['ts_bis'], $st['huelle'],
+                                           $st['stufe'], $st['n_original']);
+                    return;
+                }
+                $pruef->melde($typ . '.stufe', 'Stufe ' . $stufe . ' mit n_original ' . $nOrig
+                              . ' bei ' . count($gueltig) . ' Punkten — als Stufe 1 geschrieben');
+            }
             foreach (gh_stuecke_bauen($sec1Holen(), $typ === 'rest' ? 'ruhe' : 'spur', $ref,
                                       $gueltig) as $st) {
                 spur2_stueck_schreiben($pdo, $typ, $ownerId, $st['seq_from'], $st['punkte'],
@@ -2133,7 +2156,7 @@ function edbak_restore(int $userId, array $data, ?array $dayMap = null,
                 }
                 $spurWiderspruch('mission', $m);
             } else {
-                $spurSchreiben('mission', $mid, $m['track'] ?? [], $werte['client_ref']);
+                $spurSchreiben('mission', $mid, $m['track'] ?? [], $werte['client_ref'], $m);
             }
 
 
@@ -2243,7 +2266,7 @@ function edbak_restore(int $userId, array $data, ?array $dayMap = null,
                 }
                 $spurWiderspruch('rest', $r);
             } else {
-                $spurSchreiben('rest', $rid, $r['track'] ?? [], $rRef);
+                $spurSchreiben('rest', $rid, $r['track'] ?? [], $rRef, $r);
             }
             $stats['rests']++;
             if ($rGeloescht) { $stats['papierkorb']['ruhezeiten']++; }

@@ -30,8 +30,8 @@ gescheitert: unbekannt" heißt dann: die Adresse prüfen, nicht das Passwort.
 ## Erwartete Zahl
 
 **0 unerklärte Abweichungen**; die erwarteten stehen mit Zahl und Grund im
-Bericht. Mit `--frisch`: csv 9 120 / 1 021 (14.09.2026), edbak 347 566 / 22
-(19.10.2026, Referenz Nutzlast 13). `--testabweichung`: CSV 10, Backup 12.
+Bericht. Mit `--frisch`: csv 11 424 / 1 324, edbak 345 356 / 22 (05.11.2026,
+Referenz mit allen Spurfällen, Nr. 500). `--testabweichung`: CSV 10, Backup 12.
 
 ## Was es nicht kann
 

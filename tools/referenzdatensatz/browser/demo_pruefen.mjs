@@ -8,9 +8,21 @@
  *   3. Absichtlich verändern: Einsatz löschen, Stammdatum ändern
  *   4. ZURÜCKSETZEN (Adminbereich) und nachsehen, ob alles wieder da ist
  *   5. Konto-Identität: E-Mail und Passwort müssen abgewiesen werden
+ *   S. Die Spurfälle (Nr. 500, Konzept RD): Tage und Einsätze mit Spuren
+ *      der Stufe 2 und 3 zeichnen eine Linie; Schneiden und Zurücknehmen am
+ *      Übungssegment der Stufe 2 (P-S11-30); Zurücknehmen eines Schnitts auf
+ *      Stufe 1 geht, eines auf Stufe 2 nicht (F-RD-22); der Wartungslauf gibt
+ *      dem Demo-Konto nichts (Nr. 459); ein Zeitraum lässt sich löschen —
+ *      vor dem Reset, der alles zurückholt
  *
  * Aufruf: node demo_pruefen.mjs [basis] [schritte]
- *   schritte: Kommaliste aus anlegen,lesen,veraendern,reset,sperren
+ *   schritte: Kommaliste aus anlegen,lesen,veraendern,spurfaelle,reset,sperren
+ *
+ * DIE SOLLZAHLEN KOMMEN AUS DER FIXTURE (`server/demo/fixture.json.gz`,
+ * oder DEMO_FIXTURE): Diensttage, Einsätze und Ruhesegmente ohne Papierkorb,
+ * dazu die im Papierkorb. Bis RD-07 standen hier 83 / 15 / 95 — der Bestand
+ * vor dem Demo-Ausbau —, und die Probe war gegen jede spätere Fixture rot,
+ * während ihre Anleitung „0 Befunde" sagte (Konzept RD, F-RD-26).
  *
  * „NICHT GEMESSEN" IST EIN REGULAERER AUSGANG, und die Schlusszeile nennt ihn
  * mit Grund: Es gibt schon ein Demo-Konto (dann fehlt der Knopf „anlegen"),
@@ -22,7 +34,8 @@
  * gemessenen Abschnitten; wer die Schlusszeile ueberliest, haelt einen halben
  * Lauf fuer einen ganzen.
  */
-import { writeFileSync, mkdirSync } from 'node:fs';
+import { writeFileSync, mkdirSync, readFileSync } from 'node:fs';
+import { gunzipSync } from 'node:zlib';
 /* Der Code-Schritt des Zweitfaktors steht EINMAL, in motor.mjs. */
 import { codeSchritt, motorWahl, starten } from '../../motor.mjs';
 
@@ -33,13 +46,25 @@ const PW = (m => m.default ?? m)(await import(MODUL.startsWith('/') ? 'file://' 
 const MOTOR = motorWahl(process.argv);
 
 const basis   = process.argv[2] || 'https://127.0.0.1:8443';
-const schritte = (process.argv[3] || 'anlegen,lesen,veraendern,reset,sperren').split(',');
+const schritte = (process.argv[3] || 'anlegen,lesen,veraendern,spurfaelle,reset,sperren').split(',');
 const ordner  = process.env.AUSGABE || '/tmp/b6-demo';
 const admin   = process.env.ADMIN_EMAIL || 'admin@example.invalid';
 const adminPw = process.env.ADMIN_PASSWORT || 'pruefstandzugang2026';
 const demo    = process.env.DEMO_EMAIL || 'demo@gen-em.org';
 const demoPw  = process.env.DEMO_PASSWORT || 'nadokudemo0815';
 mkdirSync(ordner, { recursive: true });
+
+/* DER SOLLSTAND AUS DER FIXTURE — dieselbe Datei, die der Reset einspielt. */
+const FIXTURE = process.env.DEMO_FIXTURE
+  || new URL('../../../server/demo/fixture.json.gz', import.meta.url).pathname;
+const fx = JSON.parse(gunzipSync(readFileSync(FIXTURE)).toString('utf8'));
+const aktiv = (l) => String((l || []).filter((x) => x.deleted_at == null).length);
+const geloescht = (l) => String((l || []).filter((x) => x.deleted_at != null).length);
+const SOLL = {
+  'diensttage': aktiv(fx.daten.days), 'einsätze': aktiv(fx.daten.missions),
+  'ruhesegmente': aktiv(fx.daten.rest_segments),
+  'einsätze im papierkorb': geloescht(fx.daten.missions),
+};
 
 /* KARTENKACHELN SIND KEIN KONSOLENFEHLER DIESER ANWENDUNG.
  *
@@ -330,11 +355,9 @@ if (schritte.includes('anlegen')) {
   melde(`angelegt: ${JSON.stringify(z)}`);
   ergebnis.nach_anlegen = z;
   pruefe(!z.__leer, `Anlegen ohne Wirkung: ${z.__leer}`);
-  pruefe((z['einsätze'] || '') === '83', `Einsätze nach Anlegen: ${z['einsätze']}`);
-  pruefe((z['diensttage'] || '') === '15', `Diensttage: ${z['diensttage']}`);
-  pruefe((z['ruhesegmente'] || '') === '95', `Ruhesegmente: ${z['ruhesegmente']}`);
-  pruefe((z['einsätze im papierkorb'] || '') === '5',
-         `Papierkorb: ${z['einsätze im papierkorb']}`);
+  for (const [k, v] of Object.entries(SOLL)) {
+    pruefe((z[k] || '') === v, `${k} nach Anlegen: ${z[k]}, Soll aus der Fixture ${v}`);
+  }
   /* ZWEI, nicht drei. Die Fixture fuehrt drei Eintraege,
      einer davon ist das virtuelle Geraet "Manuelle Einträge"; es wird nicht
      mehr eingespielt (demo_lib.php), und die Adminansicht zaehlt es auch
@@ -425,6 +448,149 @@ if (schritte.includes('veraendern')) {
   }
 }
 
+// ---- S. Die Spurfälle (Nr. 500, Konzept RD) ------------------------------
+/* GESUCHT WIRD UEBER DEN INHALT (`api/day.php`), nicht ueber Kennungen —
+ * wie im Bilderlauf. Was der Bestand nicht traegt, ist ein Befund: Die
+ * Fixture soll jeden Fall haben (Nr. 500). */
+if (schritte.includes('spurfaelle')) {
+  if (await anmeldenOderBremse(demo, demoPw, 0, 'Abschnitt S (Spurfälle)')) {
+  await seite.goto(`${basis}/index.php`, { waitUntil: 'domcontentloaded' });
+  await seite.waitForTimeout(1500);
+  const api = (pfad) => seite.evaluate(async ([b, p]) => {
+    const r = await fetch(b + '/' + p, { credentials: 'same-origin' });
+    return r.ok ? r.json() : null;
+  }, [basis, pfad]);
+  const tage = ((await api('api/day.php')) || {}).days || [];
+  const stufe = (st) => Math.max(1, ...(st || []).map((x) => x.stufe || 1));
+  const inhalt = {};
+  for (const t of tage) { inhalt[t.id] = await api('api/day.php?d=' + t.id); }
+  const segmente = [], einsaetze = [];
+  for (const t of tage) {
+    for (const r of (inhalt[t.id] || {}).rest_segments || []) { segmente.push({ tag: t.id, r }); }
+    for (const m of (inhalt[t.id] || {}).missions || []) { einsaetze.push({ tag: t.id, m }); }
+  }
+  const segStufe = (x) => stufe(x.r.spur_stuecke), misStufe = (x) => stufe(x.m.spur_stuecke);
+  const zahl = (f) => [segmente.filter((x) => segStufe(x) === f).length,
+                       einsaetze.filter((x) => misStufe(x) === f).length];
+  melde(`Spuren je Stufe (Segmente/Einsätze): 2 → ${zahl(2)}, 3 → ${zahl(3)}`);
+  pruefe(zahl(2)[0] > 0 && zahl(2)[1] > 0 && zahl(3)[0] > 0 && zahl(3)[1] > 0,
+         `Die Demo trägt nicht jede Stufe an Segment und Einsatz: 2 → ${zahl(2)}, 3 → ${zahl(3)}`);
+
+  /* Jede Stufe zeichnet: der Tag eines Stufe-3-Segments, die Einsatzseite
+     eines Stufe-3-Einsatzes mit Reanimation, wenn es ihn gibt. */
+  const linien = async (pfad) => {
+    await seite.goto(`${basis}/${pfad}`, { waitUntil: 'domcontentloaded' });
+    await seite.waitForTimeout(3500);
+    return seite.locator('.leaflet-overlay-pane path').count();
+  };
+  const s3 = segmente.find((x) => segStufe(x) === 3);
+  if (s3) { const k = await linien(`index.php?d=${s3.tag}`); pruefe(k > 0, `Tag mit Stufe-3-Segment ohne Linie (${k})`); melde(`Tag mit Stufe-3-Segment: ${k} Linien`); }
+  const e3 = einsaetze.find((x) => misStufe(x) === 3 && x.m.rea_n > 0) || einsaetze.find((x) => misStufe(x) === 3);
+  if (e3) { const k = await linien(`einsatz.php?id=${e3.m.id}`); pruefe(k > 0, `Einsatz ${e3.m.id} (Stufe 3) ohne Linie (${k})`); melde(`Einsatz ${e3.m.id} auf Stufe 3: ${k} Linien`); }
+
+  /* Schneiden und Zuruecknehmen am Uebungssegment der Stufe 2 (P-S11-30):
+     ein Segment der Stufe 2 ohne Schnitt, mindestens 60 Minuten lang. */
+  const ueb = segmente.find((x) => segStufe(x) === 2 && !(x.r.schnitte || []).length
+                                && x.r.bis_ts - x.r.von_ts >= 3600);
+  pruefe(!!ueb, 'Kein Übungssegment der Stufe 2 ohne Schnitt im Bestand');
+  if (ueb) {
+    await seite.goto(`${basis}/index.php?d=${ueb.tag}`, { waitUntil: 'domcontentloaded' });
+    const zeile = seite.locator(`[data-ruhezeile="${ueb.r.id}"]`);
+    await zeile.waitFor({ state: 'visible', timeout: 15000 });
+    await zeile.locator('.zeile-knoepfe [data-schnitt-auf]').click();
+    const bereich = seite.locator(`[data-schnitt-fuer="${ueb.r.id}"]`);
+    await bereich.waitFor({ state: 'visible', timeout: 5000 });
+    const [h, mi] = (await bereich.locator('input[id^="s-beg-"]').inputValue()).split(':').map(Number);
+    const plus = (d) => { const x = (h * 60 + mi + d) % 1440; return String(Math.floor(x / 60)).padStart(2, '0') + ':' + String(x % 60).padStart(2, '0'); };
+    await bereich.locator('input[id^="s-beg-"]').fill(plus(20));
+    await bereich.locator('input[id^="s-end-"]').fill(plus(50));
+    await bereich.locator('input[id^="s-end-"]').dispatchEvent('input');
+    await seite.waitForTimeout(400);
+    await bereich.locator('[data-schneiden]').click();
+    await seite.waitForTimeout(800);
+    await rueckfragen(1);
+    await seite.locator('[data-schnittmeldung]').waitFor({ timeout: 20000 }).catch(() => {});
+    const m1 = await seite.locator('[data-schnittmeldung]').innerText().catch(() => '');
+    pruefe(/Der Einsatz ist entstanden/.test(m1), `Schneiden am Übungssegment (Stufe 2): „${m1.slice(0, 120)}"`);
+    melde(`Schnitt am Übungssegment: ${m1.slice(0, 80)}`);
+    const zurueck = seite.locator(`[data-ruhezeile="${ueb.r.id}"] .zeile-knoepfe [data-rueck]`);
+    if (await zurueck.count()) {
+      await zurueck.first().click();
+      await rueckfragen(1);
+      await seite.waitForTimeout(2500);
+      const m2 = await seite.locator('[data-schnittmeldung]').innerText().catch(() => '');
+      pruefe(/zurückgenommen/.test(m2), `Zurücknehmen am Übungssegment: „${m2.slice(0, 120)}"`);
+      melde(`Zurücknehmen am Übungssegment: ${m2.slice(0, 60)}`);
+    } else { pruefe(false, 'Nach dem Schnitt kein „Schnitt zurücknehmen" an der Zeile'); }
+  }
+
+  /* Zuruecknehmen: Schnitt auf Stufe 1 geht (F-RD-14), auf Stufe 2 nicht
+     (F-RD-22, 409 verdichtet). */
+  for (const [st, soll] of [[2, /zusammengefasst/], [1, /zurückgenommen/]]) {
+    const x = segmente.find((y) => segStufe(y) === st && (y.r.schnitte || []).some((c) => c.mission_id != null)
+                                 && y.r.bis_ts != null && y.r.bis_ts - y.r.von_ts > 3600);
+    pruefe(!!x, `Kein Schnitt in einem Segment der Stufe ${st} im Bestand`);
+    if (!x) { continue; }
+    await seite.goto(`${basis}/index.php?d=${x.tag}`, { waitUntil: 'domcontentloaded' });
+    const z = seite.locator(`[data-ruhezeile="${x.r.id}"] .zeile-knoepfe [data-rueck]`);
+    await z.first().waitFor({ state: 'visible', timeout: 15000 });
+    const vorher = konsole.length;
+    await z.first().click();
+    await rueckfragen(1);
+    await seite.waitForTimeout(2500);
+    /* DIE ABGELEHNTE RUECKNAHME ANTWORTET 409, und der Browser schreibt jede
+       4xx-Antwort als „Failed to load resource" in die Konsole. Genau diese
+       eine, angekuendigte Antwort zaehlt nicht als Fehler — jede andere neue
+       Meldung bleibt stehen. */
+    if (st === 2) {
+      const neu = konsole.splice(vorher);
+      konsole.push(...neu.filter((k) => !/status of 409/.test(k)));
+    }
+    const t = await seite.locator('[data-schnittmeldung]').innerText().catch(() => '');
+    pruefe(soll.test(t), `Zurücknehmen eines Schnitts auf Stufe ${st}: „${t.slice(0, 120)}"`);
+    melde(`Zurücknehmen auf Stufe ${st}: ${t.slice(0, 70)}`);
+  }
+
+  /* Zeitraum loeschen (endgueltig, mit Rueckfrage) an einem Segment der
+     Stufe 1 ohne Schnitt, mindestens 30 Minuten lang: zehn Minuten nach dem
+     Beginn, zehn Minuten lang. Der Reset danach holt die Punkte zurueck. */
+  const loe = segmente.find((x) => segStufe(x) === 1 && !(x.r.schnitte || []).length
+                                && x.r.n > 20 && x.r.bis_ts - x.r.von_ts >= 1800);
+  pruefe(!!loe, 'Kein Segment der Stufe 1 zum Löschen eines Zeitraums');
+  if (loe) {
+    await seite.goto(`${basis}/index.php?d=${loe.tag}`, { waitUntil: 'domcontentloaded' });
+    const zeile = seite.locator(`[data-ruhezeile="${loe.r.id}"]`);
+    await zeile.waitFor({ state: 'visible', timeout: 15000 });
+    await zeile.locator('.zeile-knoepfe [data-schnitt-auf]').click();
+    const bereich = seite.locator(`[data-schnitt-fuer="${loe.r.id}"]`);
+    await bereich.waitFor({ state: 'visible', timeout: 5000 });
+    const [h, mi] = (await bereich.locator('input[id^="s-beg-"]').inputValue()).split(':').map(Number);
+    const plus = (d) => { const x = (h * 60 + mi + d) % 1440; return String(Math.floor(x / 60)).padStart(2, '0') + ':' + String(x % 60).padStart(2, '0'); };
+    await bereich.locator('input[id^="s-beg-"]').fill(plus(10));
+    await bereich.locator('input[id^="s-end-"]').fill(plus(20));
+    await bereich.locator('input[id^="s-end-"]').dispatchEvent('input');
+    await seite.waitForTimeout(400);
+    await bereich.locator('[data-zeitraum-loeschen]').click();
+    await rueckfragen(1);
+    await seite.waitForTimeout(2500);
+    const t = await seite.locator('[data-schnittmeldung]').innerText().catch(() => '');
+    pruefe(/Gelöscht/.test(t), `Zeitraum löschen: „${t.slice(0, 120)}"`);
+    melde(`Zeitraum löschen: ${t.slice(0, 70)}`);
+  }
+
+  /* Der Wartungslauf gibt dem Demo-Konto nichts (Nr. 459) — gefragt am
+     ECHTEN Endpunkt; `?roh` umgeht den Platzhalter dieses Skripts. */
+  const w = await seite.evaluate(async () => {
+    const r = await EdApi.postJson('api/wartungslauf.php?roh=1', { aktion: 'liste' });
+    return { ok: r.ok, n: ((r.daten || {}).spuren || []).length };
+  }).catch((e) => ({ ok: false, n: -1, e: String(e) }));
+  pruefe(w.ok && w.n === 0, `Wartungslauf nennt dem Demo-Konto ${w.n} Spuren`);
+  melde(`Wartungslauf für das Demo-Konto: ${w.n} Spuren`);
+  ergebnis.spurfaelle = { stufe2: zahl(2), stufe3: zahl(3), wartungslauf: w.n };
+  await seite.screenshot({ path: `${ordner}/04-spurfaelle.png` });
+  }
+}
+
 // ---- 4. Zurücksetzen ----------------------------------------------------
 if (schritte.includes('reset')) {
   pruefe(await anmelden(admin, adminPw), 'Anmeldung als Administration gescheitert');
@@ -471,7 +637,9 @@ if (schritte.includes('reset')) {
   const nachher = await zustand();
   melde(`nach dem Reset: ${JSON.stringify(nachher)}`);
   ergebnis.nach_reset = nachher;
-  pruefe((nachher['einsätze'] || '') === '83', `Einsätze nach Reset: ${nachher['einsätze']}`);
+  for (const [k, v] of Object.entries(SOLL)) {
+    pruefe((nachher[k] || '') === v, `${k} nach Reset: ${nachher[k]}, Soll aus der Fixture ${v}`);
+  }
   pruefe((nachher['einsätze im papierkorb'] || '') === '5',
          `Papierkorb nach Reset: ${nachher['einsätze im papierkorb']}`);
   pruefe((nachher['geräte'] || '') === '2', `Geräte nach Reset: ${nachher['geräte']}`);

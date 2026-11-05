@@ -38,8 +38,9 @@ export const wege = [
   {
     name: 'nachtdienst-sortierung-beginn',
     paket: 'R4-16', punkt: 'Nr. 275', rolle: 'demo',
-    soll: 'Am Nachtdienst sortiert „Beginn" chronologisch: aufsteigend 23:50 vor '
-        + '01:40, absteigend umgekehrt — nicht nach der Uhrzeit als Zeichenkette',
+    soll: 'Am Nachtdienst sortiert „Beginn" chronologisch: aufsteigend in der Folge '
+        + 'von start_sort (die Abendeinsätze vor denen nach Mitternacht), absteigend '
+        + 'umgekehrt — nicht nach der Uhrzeit als Zeichenkette',
     async fahren(k) {
       await k.gehZu(`${k.basis}/index.php`);
       const tagId = await k.seite.evaluate(async (b) => {
@@ -101,8 +102,14 @@ export const wege = [
       const aufst = ergebnisse.find((e) => e.auf);
       const abst = ergebnisse.find((e) => !e.auf);
       const steigt = (w) => w.every((x, i) => i === 0 || x > w[i - 1]);
+      /* DIE SOLLFOLGE KOMMT AUS `start_sort`, nicht aus einer festen Uhrzeit.
+       * Bis Schritt 24 stand hier `23:50` vor `01:40`; seit RD-02 beginnt
+       * der Abendeinsatz um 22:20, und ein Schnitt liegt um 00:20. Nach der
+       * Uhrzeit als Zeichenkette sortiert waere 00:20 · 01:40 · 19:09 · 22:20
+       * ebenfalls „steigend" — `steigt()` allein bemerkte das nicht. */
+      const soll = Object.values(quellen.day).map(String).sort().map((x) => x.slice(11, 16));
       const okAuf = !!aufst && aufst.zeiten.length >= 3 && steigt(chronologisch(aufst.zeiten))
-                    && aufst.zeiten.indexOf('23:50') < aufst.zeiten.indexOf('01:40');
+                    && aufst.zeiten.join() === soll.join();
       const okAb = !!abst && abst.zeiten.length >= 3
                    && abst.zeiten.join() === [...aufst.zeiten].reverse().join();
       await k.bild('nachtdienst-sortierung-beginn');

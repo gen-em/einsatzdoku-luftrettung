@@ -8,7 +8,7 @@ Einsatzfelder nicht tragen.
 
 | Datei / Ordner | Rolle |
 |---|---|
-| `dienste/D01.json` … `D21.json` | **die Quelle**: je Dienst ein Dokument mit Diensttag, Ruhesegmenten und Einsätzen |
+| `dienste/D01.json` … `D22.json` | **die Quelle**: je Dienst ein Dokument mit Diensttag, Ruhesegmenten und Einsätzen |
 | `stammdaten.json` | Standorte, Rettungsmittel, Vorbelegungen (E-P1-05) |
 | `geraete.json` | die **zwei Geräte** mit dem Block, den sie beim Koppeln an `pair.php` schicken (JSON-Vertrag 1a.4) — und den Präfixen, die daraus folgen |
 | `pruefschritte/` | Abläufe, die **kein** Dauerzustand sind (Sperrlisten-Fall E-P1-16) |
@@ -30,9 +30,10 @@ Zusammenhang über das Dateisystem verstreut, ohne etwas zu gewinnen.
 ## Handgeschrieben und erzeugt
 
 Der Datensatz umfasst **22 Dienste (9 Luft, 13 Boden) mit 106 Einsätzen**. Im
-Bestand sind es danach **109**: Die drei geschnittenen Einsätze stehen nicht
+Bestand sind es danach **111**: Die fünf geschnittenen Einsätze stehen nicht
 in den Quelldaten, sondern entstehen auf dem Server aus der Liste `schnitte`
-(unten). Deshalb zählt `pruefen.py` weiter 106.
+(unten). Deshalb zählt `pruefen.py` weiter 106. *(Bis Schritt 24 waren es drei
+Schnitte und 109 Einsätze im Bestand.)*
 Er besteht aus zweierlei:
 
 - **Prüffälle**, von Hand geschrieben. Jeder belegt mindestens eine Zeile
@@ -70,7 +71,7 @@ ausgeschrieben, weil Dienste über Mitternacht laufen.
 
 | Feld | Bedeutung |
 |---|---|
-| `kennung` | `D01`…`D21`, stabil; Verweisziel des Matrix-Abgleichs |
+| `kennung` | `D01`…`D22`, stabil; Verweisziel des Matrix-Abgleichs |
 | `abdeckung` | Marken der Abdeckungsmatrix, die dieser Dienst belegt |
 | `dienst.day` | Kalenderdatum des **Dienstbeginns** (Sortierung/Anzeige) |
 | `dienst.art` | `air` \| `ground` — wird beim Zuordnen eingefroren |
@@ -80,6 +81,7 @@ ausgeschrieben, weil Dienste über Mitternacht laufen.
 | `dienst.besatzung` | je Rolle des Rettungsmittels ein Eintrag, `null` erlaubt; **leer** an einem Tag ohne Standort und an einem Typ ohne Rollen-Vorlagen |
 | `papierkorb` | `null` oder `"diensttag"` — Dauerzustand nach E-P1-21 |
 | `schnitte` | **optional**, an beliebig vielen Diensten und je Dienst beliebig viele: die Schnitt-Aufträge der Stufe `schneiden` (unten) |
+| `loeschungen`, `verdichten`, `luecken`, `uebungen` | **optional**: die Spurfälle (unten, „Die Spurfälle") — dieselbe Adressierung wie `schnitte` |
 | `ziel_einsaetze` | Zielzahl; `aufbauen.py` füllt bis dahin auf |
 
 ## Die zwei Geräte und ihre Präfixe
@@ -128,6 +130,13 @@ Sperrvermerk, den Backlog Nr. 63 im Bestand haben will.
 | `beginn`, `ende` | lokale Zeiten, **innerhalb** der Spur des Segments |
 | `phasen` | genau `3`, `4`, `7` — mehr nimmt der Endpunkt nicht |
 
+**Ein Schnitt nach Mitternacht ist erlaubt, einer über Mitternacht nicht.**
+Liegt `beginn` am Tag nach `dienst.day` — in einem Segment, das am Vortag
+beginnt —, schickt das Einspielwerkzeug den Tagesversatz 1 (`beginn_tag`,
+`ende_tag` von `api/schneiden.php`). Der Versatz steht **nicht** als eigenes
+Feld in der Quelle: Er folgt aus dem Datum in `beginn`, und zwei Angaben
+derselben Sache liefen auseinander.
+
 **Der geschnittene Einsatz steht NICHT in den Quelldaten.** Er entsteht
 serverseitig und bekommt dort eine Kennung mit Präfix `cut-`; deshalb zählt
 `pruefen.py` weiter 106 Einsätze, der Bestand aber 109.
@@ -142,6 +151,50 @@ Einspielstufen suchen Einsätze über `start_hhmm`), und es liegt nicht am
 `sichtpruefung.mjs` wie vier Seiten des Bilderlaufs greifen auf dessen erste
 Einsatzzeile — die ein geschnittener Einsatz nicht bedienen kann, weil er
 keine geschützten Angaben hat).
+
+## Die Spurfälle
+
+Vier Listen am Dienst, gebaut wie `schnitte`: Jeder Eintrag nennt sein Ziel
+über `segment` (die `client_ref` eines Ruhesegments **desselben Dienstes**)
+oder `einsatz` (die eines Einsatzes). Nichts davon steht im Segment selbst —
+`aufbauen.py` baut die Segmente bei jedem Lauf neu, und ihre Kennungen
+bleiben bei gleichem Bestand dieselben; danach prüft es, dass jeder
+Verweis noch steht (Konzept RD, F-RD-11, E-RD-04).
+
+| Liste | Felder | Wer sie liest |
+|---|---|---|
+| `verdichten` | `segment` **oder** `einsatz`, `stufe` (2 gepackt, 3 ausgedünnt) | Einspielstufe `verdichten` über `api/wartungslauf.php` |
+| `loeschungen` | `segment`, `beginn`, `ende` | Einspielstufe `loeschen` über `api/schneiden.php` (`action: loeschen`) |
+| `luecken` | `segment`, `art` (`sequenz` \| `zeit`), `ab`, `dauer` (Minuten) | der Generator (`spur.luecke`) |
+| `uebungen` | `segment`, `beginn`, `ende`, `vorbild` (ein Einsatz desselben Dienstes) | der Generator (`uebungsspur()`) |
+
+**Verdichten:** Stufe 3 nur an einer Spur, die vor `STUFE3_STICHTAG` endet —
+der Wartungslauf nimmt sie erst 31 Tage nach dem Ende. Nur Einsätze vom
+Gerät mit Spur, nicht im Papierkorb; nie am neuesten Diensttag; ein Schnitt
+über das ganze Segment wird nicht verdichtet (F-RD-08).
+
+**Löschen:** ein Zeitraum innerhalb der Spur, nie das ganze Segment (der
+Endpunkt antwortet `409 alles`), nicht über Mitternacht, und kein
+Überlappen mit einem Schnitt desselben Segments. Steht im Segment ein
+Schnitt, ist es der Fall „Schnitt neben Löschvermerk".
+
+**Lücken:** `zeit` — das Gerät hat pausiert, die Nummern laufen durch;
+`sequenz` — die Punkte des Zeitraums sind aufgezeichnet und verloren, ihre
+Nummern fehlen in den Anfragen. Der Generator schreibt jede Lücke nach
+`ausgabe/luecken.json`, und `generator/pruefen.py` lässt den Sprung der
+Nummern nur dort zu und verlangt ihn dort.
+
+**Übungen:** Im Zeitraum fährt oder fliegt das Fahrzeug die Strecke seines
+Vorbilds — Basis → Einsatzort und zurück —, ohne dass jemand einen Einsatz
+angelegt hat: Material zum Üben des Schneidens. Am Boden nimmt es dessen
+Straßengeometrie aus `generator/routen/`, in der Luft fliegt es zu dessen
+Wegpunkt `ort`; neue Koordinaten gibt es nicht. Kein Schnitt, kein
+Löschvermerk im selben Segment; der Zeitraum beginnt nach dem Rückweg, mit
+dem das Segment anfängt.
+
+Die Marken der Spurfälle rechnet `pruefen.py` aus diesen Listen; getippt
+wird keine. Wie oft jede belegt sein muss und wie sich Schnittzustand und
+Stufe verteilen, steht im Kopf von `pruefen.py` (`SPURFALL_ANZAHL`).
 
 ## Felder eines Einsatzes
 

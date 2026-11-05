@@ -650,4 +650,18 @@ return [
  'regel' => ['art' => 'muster', 'muster' => '~is_string\(\s*\$_(?:POST|GET)\s*\[~'],
  'start' => 2, 'decke_jetzt' => 0, 'decke_ziel' => 0],
 
+/* ---- Spuren --------------------------------------------------------------- */
+
+['kennung' => 'Z49', 'paket' => 'RD-04',
+ 'beschreibung' => 'gh_gepackt_bauen( — der Server packt nur fuer den Demo-Reset',
+ 'grund' => 'Konzept RD, E-RD-10: Der Server sieht keine Punkte und packt nicht; '
+          . 'gepackt wird im Browser. Die eine Ausnahme ist der Demo-Reset '
+          . '(edbak_restore(), Zweig server, in backup_lib.php), der die Fixture '
+          . 'mit Stufe 2 und 3 so anlegt, wie sie im Referenzkonto lag. Ein zweiter '
+          . 'Aufrufer waere ein Server, der fuer ein Konto packt.',
+ 'sicht' => 'php_ohne_zeichenketten', 'bereich' => 'php',
+ 'ausser' => ['server/geraetehuelle_lib.php'],
+ 'regel' => ['art' => 'aufruf', 'namen' => ['gh_gepackt_bauen']],
+ 'start' => 0, 'decke_jetzt' => 1, 'decke_ziel' => 1],
+
 ];

@@ -5,21 +5,21 @@ Spielt den erzeugten Datensatz über die **regulären Wege** ein — kein SQL (R
 ## Aufruf
 
 ```bash
-sh lokal_einrichten.sh     # von Null: Datenbank, install.php, Admin, Demo-Konto
+sh lokal_einrichten.sh     # von Null: Datenbank, install.php, Admin, Demo-Konto aus der Fixture (vor `--stufen konto` entfernen)
 sh lokal_starten.sh        # nur hochfahren: MariaDB, PHP-Server, TLS davor
 sh pruefkonten.sh          # Prüfkonten admin und support für den Bilderlauf (R4-08, wiederholbar)
 python3 einspielen.py --stufen konto
 php  demo_kennzeichnen.php                     # zwingend vor der ersten Anmeldung
 node passwort_setzen.mjs '<Einrichtungslink>' 'nadokudemo0815' rc.json
 python3 ../generator/erzeugen.py               # schreibt generator/ausgabe/ — die Stufe ingest liest sendeplan.json daraus
-python3 einspielen.py --stufen stammdaten,geraet,ingest,zuordnen,nachtragen,manuell,papierkorb,sperrliste,schneiden
-python3 messprotokoll.py && node sichtpruefung.mjs
+python3 einspielen.py --stufen stammdaten,geraet,ingest,zuordnen,nachtragen,manuell,papierkorb,sperrliste,schneiden,loeschen,verdichten
+node ../browser/csv_import.mjs && python3 messprotokoll.py && node sichtpruefung.mjs   # CSV-Import nur im Browser
 ```
 
 ## Was es misst
 
-Sechs Wege: `pair.php`, `ingest.php`, `api/day.php`, `einsatz_form.php`,
-`api/schneiden.php` und die Oberfläche — seit S11-06e wie ein Browser ab Web 22:
+Sieben Wege: `pair.php`, `ingest.php`, `api/day.php`, `einsatz_form.php`,
+`api/schneiden.php`, `api/wartungslauf.php` und die Oberfläche — seit S11-06e wie ein Browser ab Web 22:
 Hülle, Blob und Schnitt verschließt es selbst (`ortsdaten.py`, F-S11-43, -53). Stand der Stufen in `lauf.json`;
 warum die Reihenfolge so ist, steht an der Stufe in `einspielen.py`; `messprotokoll.py` misst das Sendeverhalten einer Uhr (E-P1-14).
 
@@ -32,7 +32,7 @@ trägt `secure`. Vorgaben: `admin@example.invalid` / `pruefstandzugang2026`,
 
 ## Erwartete Zahl
 
-Alle Stufen ohne Abbruch, so viele Schnitte wie in den Quelldaten (E-DA-11), **0** Klartext-Ortsdaten im Zielkonto, `sitzungsprobe.py` **2 von 2** (beide Hüllenfassungen) — in rund vier Minuten.
+Alle Stufen ohne Abbruch, so viele Schnitte, Löschungen und Verdichtungen wie in den Quelldaten (05.11.2026: 5, 2, 20; `verdichten` hebt die Demo-Kennzeichnung dafür kurz auf, Nr. 459), **0** Klartext-Ortsdaten im Zielkonto, `sitzungsprobe.py` **2 von 2** — in rund fünf Minuten.
 
 ## Was es nicht kann
 

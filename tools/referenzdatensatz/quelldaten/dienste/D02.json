@@ -557,5 +557,19 @@
     }
   ],
   "$warum_besatzung": "EINZIGER Diensttag mit allen fünf Luftrollen belegt (p1, p2, hems, fr, other). Die Matrixzeile Besatzung verlangt das; p2 und other sind im Alltag selten besetzt und wären sonst im ganzen Datensatz leer geblieben.",
-  "ziel_einsaetze": 6
+  "ziel_einsaetze": 6,
+  "verdichten": [
+    {
+      "einsatz": "m-11-3845141782",
+      "stufe": 3
+    }
+  ],
+  "luecken": [
+    {
+      "segment": "r-11-8559806448",
+      "art": "zeit",
+      "ab": "2026-02-08 16:20",
+      "dauer": 15
+    }
+  ]
 }

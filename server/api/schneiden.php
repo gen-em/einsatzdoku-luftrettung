@@ -388,6 +388,23 @@ function schnitt_rueckgaengig(array $b, int $userId): never
         }
     }
 
+    /* NACH DEM VERDICHTEN SIND DIE PUNKTE FORT (Konzept RD, F-RD-22). Der
+     * Wartungslauf oeffnet das Segment ohne die geschnittenen Punkte und packt
+     * nur den Rest; ein Rueckgaengig danach loeschte Einsatz und Spur, und
+     * die Punkte waeren nirgends mehr. Erkannt am Segment: ein Stueck der
+     * Stufe 2 oder 3, das zur Zeit des Schnitts oder spaeter entstanden ist.
+     * Wer AUS einem schon gepackten Segment schneidet, schneidet danach — der
+     * Vermerk ist juenger, und das Rueckgaengig bleibt moeglich. */
+    foreach ($schnitte as $sn) {
+        if (spur2_seit_gepackt($pdo, $sn['owner_type'], $sn['owner_id'], $sn['erstellt_am'])) {
+            json_out(['error' => 'verdichtet',
+                      'meldung' => 'Die Aufzeichnung, aus der dieser Einsatz geschnitten wurde, ist '
+                                 . 'seitdem zusammengefasst worden; die geschnittenen Punkte liegen nur '
+                                 . 'noch im Einsatz. Rückgängig würde sie mitlöschen. Wenn der Einsatz '
+                                 . 'weg soll: über den Papierkorb löschen.'], 409);
+        }
+    }
+
     try {
         $zurueck = db_transaktion($pdo, function (PDO $pdo) use ($schnitte, $misId, $userId): int {
         /* Die Punkte waren im Segment nie fort; zurueck

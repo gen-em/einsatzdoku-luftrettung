@@ -10,7 +10,7 @@ node csv_import.mjs [basis] [email] [passwort] [csv] [ausgabe]   # Aufbau: vier 
 node referenz_export.mjs            # die eingecheckten Referenzdateien ziehen
 node angriffswerte.mjs              # P-07: Angriffswerte stehen inert
 node papierkorb_misch.mjs           # E-S1-04, Nr. 33: gemischter Papierkorb im Umlauf
-node demo_pruefen.mjs [basis] [schritte]   # Abnahme der Demo-Funktion (E-P1-08)
+node demo_pruefen.mjs [basis] [schritte]   # Abnahme der Demo-Funktion (E-P1-08), mit den Spurfällen (Nr. 500)
 node demo_bremse.mjs · node download_lib.mjs --selbstprobe
 ```
 
@@ -31,8 +31,8 @@ das Konto nicht das Demo- bzw. ein `umlauf-`-Konto ist.
 
 ## Erwartete Zahl
 
-`demo_pruefen.mjs` **24 Prüfungen, 0 Befunde** („nicht gemessen" mit Grund
-ist regulär); `download_lib.mjs --selbstprobe` **10 / 0** (in Stufe 1);
+`demo_pruefen.mjs` **41 Prüfungen, 0 Befunde** (05.11.2026, Sollzahlen aus
+der Fixture; „nicht gemessen" mit Grund ist regulär); `download_lib.mjs --selbstprobe` **10 / 0** (in Stufe 1);
 `angriffswerte.mjs` 0 Befunde; `csv_import.mjs` 4 angelegt, danach 4 Dubletten.
 
 ## Was es nicht kann

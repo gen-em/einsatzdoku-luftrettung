@@ -308,5 +308,20 @@
       "$warum": "SONDERZEICHEN in der Ortsbeschreibung: ein Semikolon und ein Paar Anfuehrungszeichen. Beides steht im verschluesselten pat_blob und muss den Umlauf durch Sicherung und CSV-Export ueberstehen."
     }
   ],
-  "ziel_einsaetze": 3
+  "ziel_einsaetze": 3,
+  "schnitte": [
+    {
+      "abdeckung": [
+        "herkunft-schnitt"
+      ],
+      "segment": "ar-12-2837881200",
+      "beginn": "2026-06-14 21:20",
+      "ende": "2026-06-14 22:05",
+      "phasen": {
+        "3": "2026-06-14 21:22",
+        "4": "2026-06-14 21:35",
+        "7": "2026-06-14 21:58"
+      }
+    }
+  ]
 }

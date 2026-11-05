@@ -254,6 +254,16 @@ FAELLE = [
     ("ruhe-json-3", "ruhe", "r-20261011-0007", "0:3", innen_json(beispielpunkte(3))),
     ("umlaut-ref", "einsatz", "Prüf-ß-€", "", b'{"ph":{"4":[47.7,10.3]}}'),
 ]
+# Gepackte Stücke (Stufe 2, 3): Name, Art, client_ref, Stufe, seq_from,
+# n_original, Punkte (Breite, Länge, Höhe, Zeit) — eine Höhe fehlt, eine ist
+# negativ, die Länge fällt (negativer Abstand).
+GEPACKT = [
+    ("gepackt-stufe-2", "ruhe", "r-20261105-0024", 2, 40, 5,
+     [(47.7261, 10.3159, 674.0, 1000), (47.7264, 10.3155, None, 1060), (47.7268, 10.315, 681.0, 1120),
+      (47.7271, 10.3143, -12.0, 1180), (47.7275, 10.3139, 690.0, 1240)]),
+    ("gepackt-stufe-3", "spur", "m-20261105-0024", 3, 0, 120,
+     [(47.5591, 10.217, 812.0, 2000), (47.5644, 10.2311, 1405.0, 2093), (47.6123, 10.2899, 930.0, 2290)]),
+]
 # Was beim Öffnen scheitern MUSS — je mit dem erwarteten Grund.
 STOERUNGEN = [
     ("tag-gekippt", "pruefwert"), ("ct-gekippt", "pruefwert"), ("iv-gekippt", "pruefwert"),
@@ -289,6 +299,26 @@ def vektoren_bauen() -> dict:
             "k_enc_hex": zw["k_enc"].hex(), "k_mac_hex": zw["k_mac"].hex(),
             "bindung_hex": bindung(art, ref, platz).hex(),
             "ct_hex": zw["ct"].hex(), "tag_hex": zw["tag"].hex(), "huelle_b64": b64(h),
+        })
+    # GEPACKT (Stufe 2 und 3, Konzept RD, Nr. 500): dieselbe Hülle um die
+    # Innenform „B fest". Ein eigener Block und keine Zeile in FAELLE — die
+    # Uhr und die App lesen FAELLE, und packen tun sie nicht. `probe_server.php`
+    # hält `gh_gepackt_bauen()` byte-gleich dagegen. Die Punkte liegen auf
+    # ganzen 1e-7 Grad, damit keine Rundung an einer halben Stelle entscheidet
+    # (Python rundet dort zur geraden Zahl, PHP von der Null weg).
+    aus["gepackt"] = []
+    for name, art, ref, stufe, seq, n_orig, punkte in GEPACKT:
+        fl = schluessel_aus_name(f"nadoku-huelle-vektor-fluechtig-{name}")
+        iv = hashlib.sha256(f"nadoku-huelle-vektor-iv-{name}".encode()).digest()[:16]
+        ts_von = min(t for _, _, _, t in punkte)
+        platz = platz_gepackt(seq, len(punkte), stufe, n_orig)
+        h = verschliessen(innen_gepackt(punkte, ts_von), empf_pub, art, ref, platz, fluechtig=fl, iv=iv)
+        aus["gepackt"].append({
+            "name": name, "art": art, "client_ref": ref, "stufe": stufe, "seq_from": seq,
+            "n_original": n_orig, "punkte": [[seq + i, la, lo, hh, t] for i, (la, lo, hh, t) in enumerate(punkte)],
+            "roh_hex": gepackt_roh(punkte, ts_von).hex(), "platz": platz,
+            "fluechtig_privat_hex": fl.private_numbers().private_value.to_bytes(32, "big").hex(),
+            "iv_hex": iv.hex(), "huelle_b64": b64(h),
         })
     basis = aus["faelle"][3]
     h = base64.b64decode(basis["huelle_b64"])

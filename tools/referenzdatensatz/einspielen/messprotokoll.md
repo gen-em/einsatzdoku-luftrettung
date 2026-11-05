@@ -24,15 +24,15 @@ ankommt.
 
 | Größe | Wert |
 |---|---|
-| Anfragen gesamt | 612 |
-| Dienste | 21 |
-| Pakete (Einsätze und Ruhe-Segmente) | 212 |
+| Anfragen gesamt | 638 |
+| Dienste | 22 |
+| Pakete (Einsätze und Ruhe-Segmente) | 219 |
 | Anfragen je Dienst | 4 … 45 (Median 32) |
 | Teilstücke je Paket | 1 … 14 (Median 3) |
-| Pakete in mehreren Teilstücken | 191 |
-| Trackpunkte gesamt | 64478 |
-| Body-Größe | 255 … 22785 Bytes (Median 2294) |
-| Übertragen gesamt | 2.9 MB |
+| Pakete in mehreren Teilstücken | 197 |
+| Trackpunkte gesamt | 69306 |
+| Body-Größe | 453 … 10983 Bytes (Median 1564) |
+| Übertragen gesamt | 1.7 MB |
 | **Fehlversuche** | **0** |
 | Anfragen mit verworfenen Einzelwerten (`rejected`) | 0 |
 | Anfragen mit übergangener Liste (`kept_*`) | 0 |
@@ -46,8 +46,8 @@ ankommt.
 | kleinster Abstand | 0 |
 | Median | 1020 |
 | größter Abstand | 9000 |
-| Abstände unter 60 s | 199 |
-| Abstände von 0 s (gleicher Auslöser) | 199 |
+| Abstände unter 60 s | 207 |
+| Abstände von 0 s (gleicher Auslöser) | 207 |
 
 **Ein Abstand von 0 s ist der Regelfall, nicht die Ausnahme.** Er entsteht,
 wann immer ein Auslöser mehrere offene Teilstücke vorfindet — die Uhr sendet

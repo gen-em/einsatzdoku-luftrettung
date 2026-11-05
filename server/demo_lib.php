@@ -123,6 +123,17 @@ function demo_fixture_laden(): array
     if (!is_array($fx) || ($fx['format'] ?? '') !== 'einsatzdoku-demo-fixture') {
         throw new RuntimeException('server/demo/fixture.json hat nicht das erwartete Format.');
     }
+    /* FORMAT 1 BIS 3. Format 3 (Konzept RD) traegt an spurtragenden
+     * Eintraegen `stufe` und `n_original` und an Segmenten `loeschungen`; der
+     * Reset legt daraus Stufe 2 und 3 an (`edbak_restore()`, Zweig 'server').
+     * Format 2 und 1 tragen das nicht und laufen weiter — jede Spur dann auf
+     * Stufe 1. Eine hoehere Nummer stammt aus einem Erzeuger, den diese
+     * Fassung nicht kennt: abgewiesen, statt halb gelesen. */
+    $fxVersion = (int)($fx['version'] ?? 1);
+    if ($fxVersion < 1 || $fxVersion > 3) {
+        throw new RuntimeException('Die Fixture hat Format ' . $fxVersion
+            . '; diese Fassung liest Format 1 bis 3.');
+    }
     foreach (['konto', 'daten'] as $pflicht) {
         if (!is_array($fx[$pflicht] ?? null)) {
             throw new RuntimeException("Fixture unvollstaendig: '$pflicht' fehlt.");
@@ -707,7 +718,23 @@ function demo_paar_sicherstellen(PDO $pdo, int $id, string $ck): void
     if (!demo_ist_demo($id)) {
         throw new RuntimeException('demo_paar_sicherstellen() arbeitet nur auf dem Demo-Konto.');
     }
-    if (kp_zustand($id, $pdo)['stand'] === 'da') { return; }
+    /* DA IST NICHT GENUG: Der private Teil muss mit DIESEM Inhaltsschluessel
+     * aufgehen (Konzept RD, F-RD-25). Der Reset schreibt Schluesselhuelle und
+     * damit den Inhaltsschluessel aus der Fixture ins Konto — stammt die
+     * Fixture aus einem anderen Referenzkonto als die vorige (jede neue
+     * Fixture tut das), liegt `kp_privat` unter dem ALTEN Schluessel. Der
+     * Browser konnte dann keine Spur, keinen Ort und keine Reanimation mehr
+     * oeffnen, versuchte das Paar zu ersetzen und lief in die Mengenbremse
+     * (gemessen: `kontopaar` nach 5 Versuchen gesperrt, 87 Konsolenfehler im
+     * Bilderlauf). Ein Paar, das nicht aufgeht, wird verworfen und neu
+     * angelegt; der Reset verschliesst danach alles mit dem neuen. */
+    $z = kp_zustand($id, $pdo);
+    if ($z['stand'] === 'da' && $z['privat'] !== null
+        && demo_edk1_oeffnen($ck, (string)$z['privat']) !== null) { return; }
+    if ($z['stand'] === 'da') {
+        $pdo->prepare('UPDATE users SET kp_oeffentlich = NULL, kp_privat = NULL, kp_seit = NULL
+                        WHERE id = ?')->execute([$id]);
+    }
     $k = openssl_pkey_new(['private_key_type' => OPENSSL_KEYTYPE_EC, 'curve_name' => 'prime256v1']);
     if ($k === false || !openssl_pkey_export($k, $pem)) {
         throw new RuntimeException('Das Schlüsselpaar des Demo-Kontos ließ sich nicht erzeugen.');
@@ -792,7 +819,17 @@ function demo_bestand_einspielen(PDO $pdo, int $id, array $fx): array
         $pat += $zusatz;        // was der Blob schon trägt, bleibt
         return demo_edk1_bauen($ck, (string)json_encode($pat, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
     };
+    /* DIE VERMERKE BEKOMMEN EINEN ZEITPUNKT VOR DIESEM RESET (Konzept RD,
+     * E-RD-18, F-RD-14): Mit dem Wert aus der Fixture hielte jede spaeter
+     * installierte Anlage die Demo-Schnitte fuer alt (`409 altschnitt`), und die
+     * Ruecknahme liesse sich nirgends vorfuehren. EINE SEKUNDE VOR dem Beginn,
+     * nicht die Einspielzeit selbst: Der Reset schreibt die Stuecke ueber
+     * mehrere Sekunden, und ein Vermerk, der juenger waere als das gepackte
+     * Stueck seines Segments, liesse die Ruecknahme dort zu — die Punkte
+     * sind aber schon gefallen (F-RD-22, `spur2_seit_gepackt()`). */
+    $vorher = gmdate('Y-m-d H:i:s', time() - 1);
     $stats = edbak_restore($id, $fx['daten'], null, 'server', $blobZiel);
+    schnitte_stempeln($pdo, $id, $vorher);
     $stats['geraete'] = $geraete;
     return $stats;
 }

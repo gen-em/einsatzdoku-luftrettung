@@ -17,9 +17,9 @@ Grundlage ist die Abdeckungsmatrix aus Abschnitt 5 des Konzepts
 |---|---|
 | Dienste | 22 |
 | Einsätze | 106 |
-| Matrixzeilen | 98 |
-| Zeitstempel auf Existenz und Eindeutigkeit geprüft | 1372 |
-| Einzelprüfungen im Lauf | 7262 |
+| Matrixzeilen | 114 |
+| Zeitstempel auf Existenz und Eindeutigkeit geprüft | 1394 |
+| Einzelprüfungen im Lauf | 7506 |
 
 ## Zuordnung
 
@@ -38,7 +38,7 @@ Reanimationsarten vorkommen.
 |  | wear | `D06/wm-12-7092451863`, `D11/wm-12-9053871426`, `D11/wm-12-1687240539`, `D19/wm-12-4517809362` |
 |  | manual | `D11/MAN-01`, `D16/MAN-02`, `D17/MAN-03`, `D21/MAN-04` … (+3) |
 |  | import | `D13/IMP-03`, `D15/IMP-01`, `D15/IMP-02`, `D15/IMP-04` |
-|  | schnitt | `D08/schnitt ar-12-1288367401`, `D18/schnitt ar-12-7539973209`, `D19/schnitt ar-12-1109381048` |
+|  | schnitt | `D08/schnitt ar-12-1288367401`, `D18/schnitt ar-12-7539973209`, `D19/schnitt ar-12-1109381048`, `D20/schnitt ar-12-2837881200` … (+1) |
 |  | Schnitte an mehr als einem Diensttag | *strukturell geprüft* |
 | Geräte | beide Geräte mit Block (Momentaufnahme möglich) | *strukturell geprüft* |
 |  | eine Uhr und ein Handy | *strukturell geprüft* |
@@ -102,6 +102,22 @@ Reanimationsarten vorkommen.
 |  | Formel-Anfangszeichen @ | `D15/m-11-6127408395` |
 |  | Umlaute und ß | `D01/m-11-1653279357`, `D01/m-11-3067419528`, `D01/m-11-7734018625`, `D01/m-11-2418095733` … (+90) |
 | Spur | Fußweg (Wegpunkt `zustieg`) | `D17/am-12-3071845926`, `D19/am-12-4826137905` |
+| Spurfälle | Einsatzspur auf Stufe 2 (gepackt) | `D01/verdichten m-11-1653279357`, `D04/verdichten am-12-1466537302`, `D07/verdichten m-11-8181463644`, `D10/verdichten am-12-3242714083` … (+1) |
+|  | Segment auf Stufe 2 (gepackt) | `D04/verdichten ar-12-1378533568`, `D07/verdichten r-11-7189195995`, `D11/verdichten ar-12-6817440805`, `D18/verdichten ar-12-7539973209` … (+1) |
+|  | Einsatzspur auf Stufe 3 (ausgedünnt) | `D02/verdichten m-11-3845141782`, `D05/verdichten m-11-6416611188`, `D08/verdichten am-12-8418286294`, `D09/verdichten m-11-7761204385` … (+1) |
+|  | Segment auf Stufe 3 (ausgedünnt) | `D01/verdichten r-11-6849670723`, `D05/verdichten r-11-9809421713`, `D10/verdichten ar-12-8748168307`, `D13/verdichten ar-12-3377519023` … (+1) |
+|  | Einsatz mit Reanimation auf Stufe 3 | `D09/verdichten m-11-7761204385` |
+|  | Übungssegment: einsatzförmige Spur, ungeschnitten | `D09/uebung r-11-4780326802`, `D11/uebung ar-12-6817440805`, `D17/uebung ar-12-2287439328` |
+|  | Übungssegment auf Stufe 2 (P-S11-30) | `D11/uebung ar-12-6817440805` |
+|  | Schnitt im Segment auf Stufe 1 | `D08/schnitt ar-12-1288367401`, `D20/schnitt ar-12-2837881200` |
+|  | Schnitt im Segment auf Stufe 2 | `D18/schnitt ar-12-7539973209`, `D22/schnitt r-11-8948069843` |
+|  | Schnitt im Segment auf Stufe 3 | `D19/schnitt ar-12-1109381048` |
+|  | Schnitt und Löschvermerk im selben Segment | `D18/loeschen ar-12-7539973209 17:40` |
+|  | Löschvermerk ohne Schnitt | `D13/loeschen ar-12-9269136239 15:00` |
+|  | Schnitt nach Mitternacht in einem Segment über Mitternacht | `D22/schnitt r-11-8948069843` |
+|  | Schnitt über das ganze Segment | `D20/schnitt ar-12-2837881200` |
+|  | Sequenzlücke (Punkte verloren) | `D04/luecke ar-12-1378533568 sequenz` |
+|  | Zeitlücke (Gerät pausiert) | `D02/luecke r-11-8559806448 zeit` |
 | Ruhezeiten | Segmente mit Track | `D01`, `D02`, `D03`, `D04` … (+18) |
 |  | mehrere Segmente je Dienst | `D01`, `D02`, `D03`, `D04` … (+17) |
 |  | nicht abgeschlossenes Segment | `D16` |

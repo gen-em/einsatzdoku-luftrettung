@@ -19,7 +19,7 @@ byte-gleich dagegen, samt Rundlauf und Innenform ohne Höhe (-32768).
 Störungen, Rundlauf, Zeiten ohne Abnahme. Die Uhr: `pruefstand.sh kryptoprobe`.
 `geraet.php` (für Python `geraet_cli.php`) ist die **Gerätehilfe der Proben**:
 Paket im alten Format → wie ein Gerät ab Web 22; öffnet Hüllen, nie im Server.
-`zeiten_cli.php`: Ortszeit → Zeitpunkt über `local_to_utc()`, für `einspielen.py`.
+`zeiten_cli.php` (Ortszeit → Zeitpunkt) und `ausduennen_cli.php` (die PHP-Ausdünnung samt Prüfung) für `einspielen.py`.
 
 ## Was es braucht
 
@@ -29,8 +29,8 @@ Python mit `cryptography`, Node mit Playwright und einen Browser aus
 ## Erwartete Zahl
 
 Selbstprobe **5 Fälle, 0 Fehlschläge** · `pruefen` **6 Fälle geöffnet,
-8 Störungen abgewiesen, 0 Abweichungen** · Server **14 Prüfungen,
-0 Abweichungen** (13.10.2026) · Browser **39 Prüfungen, 0 Abweichungen**
+8 Störungen abgewiesen, 0 Abweichungen** · Server **18 Prüfungen,
+0 Abweichungen** (05.11.2026, mit den zwei gepackten Vektoren) · Browser **39 Prüfungen, 0 Abweichungen**
 (Chromium, 11.10.2026).
 
 ## Was es nicht kann

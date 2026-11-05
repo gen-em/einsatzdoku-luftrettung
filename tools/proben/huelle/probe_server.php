@@ -81,5 +81,23 @@ proc_close($proc);
 $melde(bin2hex(gh_spur_innen($punkte, 1000)) === $soll && $soll !== '',
        'Innenform binär gleich der Referenz, auch ohne Höhe (-32768)');
 
+/* Gepackt (Stufe 2, 3): `gh_gepackt_bauen()` byte-gleich der Referenz —
+ * Innenform vor dem Packen gleich `gepackt_roh()`, Hülle mit festem
+ * Schlüssel und IV gleich `verschliessen(innen_gepackt(…))` (Nr. 500). */
+foreach ($v['gepackt'] ?? [] as $g) {
+    $pk = array_map(static fn($p) => [(int)$p[0], (float)$p[1], (float)$p[2],
+                                      $p[3] === null ? null : (float)$p[3], (int)$p[4]], $g['punkte']);
+    $ts = min(array_map(static fn($p) => $p[4], $pk));
+    $roh = gzuncompress(gh_gepackt_innen($pk, $ts));
+    $melde($roh !== false && bin2hex($roh) === $g['roh_hex'],
+           $g['name'] . ': Innenform „B fest“ gleich der Referenz (' . strlen((string)$roh) . ' Byte)');
+    $st = gh_gepackt_bauen($empf, $g['art'], $g['client_ref'], $pk, (int)$g['stufe'], (int)$g['seq_from'],
+                           (int)$g['n_original'], ['d' => hex2bin($g['fluechtig_privat_hex']),
+                                                   'iv' => hex2bin($g['iv_hex'])]);
+    $melde(base64_encode($st['huelle']) === $g['huelle_b64'],
+           "{$g['name']}: Hülle byte-gleich (" . strlen($st['huelle']) . ' Byte, Bindung ' . $g['platz'] . ')');
+}
+if (empty($v['gepackt'])) { $melde(false, 'vektoren.json trägt keine gepackten Fälle — neu erzeugen'); }
+
 echo "$zeilen Prüfungen, $schlecht Abweichungen\n";
 exit($schlecht ? 1 : 0);
