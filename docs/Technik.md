@@ -5368,6 +5368,14 @@ heraus.
 > dass das Segment sie trägt. Erkannt wird ein solcher Schnitt daran, dass
 > sein Vermerk älter ist als die Migration `2026_10_15_loeschvermerk`.
 >
+> **Nach dem Verdichten lässt sich ein Schnitt nicht mehr zurücknehmen**
+> (`409 verdichtet`, seit Web 23.8.0, Konzept RD, F-RD-22). Der Wartungslauf
+> öffnet das Segment ohne die gesperrten Punkte und packt nur den Rest; danach
+> liegen sie allein im Einsatz, und die Rücknahme löschte sie mit. Erkannt an
+> einem Stück der Stufe 2 oder 3, das zur Zeit des Schnitts oder später
+> geschrieben wurde (`spur2_seit_gepackt()`); ein Schnitt **aus** einer schon
+> gepackten Spur ist jünger und bleibt rücknehmbar.
+>
 > **Ein Stück löschen (Backlog Nr. 161, Aktion `loeschen`).** Endgültig: Der
 > Browser verschließt die Punkte **außerhalb** des Zeitraums neu (Art `ruhe`,
 > Kennung des Segments, ihre Sequenznummern bleiben; ein Stück endet an jeder
@@ -5491,7 +5499,7 @@ Schneide-Bereich auf: Zeitleiste, Beginn und Ende (Pflicht), drei Phasenzeiten
 | Aktion | Nutzlast | tut |
 |---|---|---|
 | `schneiden` | `rest_id`, `beginn`, `ende` (`hh:mm`), `beginn_tag`/`ende_tag`, `phasen`; seit 22.2.0 `client_ref`, `stuecke` | legt den Einsatz an, legt seine Stücke ab, vermerkt den Schnitt |
-| `rueckgaengig` | `mission_id` | löscht Vermerk, Stücke und Einsatz; einen Schnitt von vor Web 22.2.0 weist er seit Web 23 ab (`409 altschnitt`, F-S11-94) — bis dahin gingen dessen Klartextpunkte zurück |
+| `rueckgaengig` | `mission_id` | löscht Vermerk, Stücke und Einsatz; einen Schnitt von vor Web 22.2.0 weist er seit Web 23 ab (`409 altschnitt`, F-S11-94) — bis dahin gingen dessen Klartextpunkte zurück; einen, dessen Segment danach verdichtet wurde, seit Web 23.8.0 (`409 verdichtet`, F-RD-22) |
 | `loeschen` (seit 22.2.0) | `rest_id`, Zeitraum wie oben, `stand`, `stuecke`, `geloescht` | ersetzt die Stücke des Segments ohne den Zeitraum, Löschvermerk, Protokollzeile |
 
 Der Einsatz entsteht auf dem **Bestandsweg** — virtuelles Gerät
@@ -6663,10 +6671,10 @@ einspielen — ihr `nachlauf`-Block wird schlicht nicht mehr gelesen.
 dazu an jedem spurtragenden Eintrag `stufe` und `n_original` (die Namen der
 Nutzlast 13) und an jedem Ruhesegment `loeschungen`; das innere Backup bleibt
 Nutzlast 7 mit Punktlisten (E-RD-03). Bei Stufe 2 und 3 tragen die Punkte
-keine eigene Nummer; der Erzeuger zählt sie ab `seq_from` durch. Die
-eingecheckte Fixture ist bis zu ihrer Erneuerung (RD-05) noch Format 2, und
-der Reset liest die neuen Felder erst mit RD-04 — bis dahin legt er jede
-Spur als Stufe 1 an, wie bisher.
+keine eigene Nummer; der Erzeuger zählt sie ab `seq_from` durch. **Seit Web
+23.8.0 liest der Reset die neuen Felder** (unten, „Der Demobestand
+verschlossen"); eine Fixture im Format 1 oder 2 läuft weiter, jede Spur dann
+auf Stufe 1, und `demo_fixture_laden()` weist ein höheres Format als 3 ab.
 
 **Warum sie nicht aus einer `.edbak` kommen kann.** Der Grund gilt weiter,
 der Weg ist seit Web 23 ein anderer. Der Reset läuft ohne Browser: Er nimmt
@@ -6771,13 +6779,40 @@ Ortshöhe legt er in den `pat_blob`** — dafür braucht er den Inhaltsschlüsse
 und den rechnet er aus dem Passwort des Demo-Kontos (`DEMO_PASSWORT`,
 `demo_inhaltsschluessel()`), das im Handbuch steht. **Hat das Demo-Konto noch
 kein Schlüsselpaar, legt er eines an** (`demo_paar_sicherstellen()`,
-E-S11-58), wie `EdKontopaar.anlegen()` es täte. Beides gilt nur für das
+E-S11-58), wie `EdKontopaar.anlegen()` es täte — **und seit Web 23.8.0 auch,
+wenn der private Teil des vorhandenen mit dem Inhaltsschlüssel der Fixture
+nicht aufgeht** (F-RD-25): Jede neue Fixture stammt aus einem anderen
+Referenzkonto, und das alte Paar läge sonst unter einem Schlüssel, den das
+Konto nicht mehr hat. Beides gilt nur für das
 Demo-Konto; jede der Funktionen prüft `demo_ist_demo()`. Ohne diesen Weg
 blieben im Demobestand Klartext-Ortsdaten, und die Aufräummigration (S11-12)
 verweigerte auf jeder Anlage mit Demo-Konto. Gemessen am 16.10.2026: 109
 Einsätze, 14 Hüllen, 221 Spuren mit 67 292 Punkten in Stücken, 0
 Klartextzeilen, Transportziel in 84 und Ortshöhe in 93 Blobs — so viele, wie
 die Fixture trägt; 1,5 s.
+
+**Seit Web 23.8.0 packt er dabei auch** (Schritt 24, RD-04, E-RD-10): Trägt ein
+Eintrag `stufe` 2 oder 3, entsteht **ein** Stück über `gh_gepackt_bauen()` —
+die dritte Fassung der Innenform „B fest" nach `referenz.py` und
+`ortsdaten.js`, von der Hüllenprobe byte-gleich gegen die Referenz gehalten —
+mit `n_original` aus dem Eintrag; die Punkte kommen schon ausgedünnt aus der
+Fixture, denn **der Reset dünnt nicht aus** (quadratisch, F-RD-05). Ein
+Eintrag mit `n_original` unter der Punktzahl wird gemeldet und als Stufe 1
+geschrieben. **Der Server packt damit für dieses eine Konto**; für jedes andere
+packt weiter nur der Browser im Wartungslauf, und das Register zählt die
+Aufrufer (`tools/zaehlung/register.php`, Z49, Decke 1). **Schnitte und
+Löschvermerke des Demo-Kontos stempelt der Reset danach auf eine Sekunde vor
+seinem Beginn** (`schnitte_stempeln()`, E-RD-18, F-RD-14) — wie `deleted_at`
+beim Papierkorb; `edbak_restore()` selbst lässt `erstellt_am` reisen
+(E-R64-12). Bis dahin lag der Wert aus der Fixture vor dem Vermerk der
+Migration `2026_10_15_loeschvermerk` jeder Anlage, und die Rücknahme eines
+Demo-Schnitts antwortete überall `409 altschnitt`. *Vor* dem Reset und nicht
+die Einspielzeit: Die Stücke entstehen über mehrere Sekunden, und ein Vermerk,
+der jünger wäre als das gepackte Stück seines Segments, ließe die Rücknahme
+dort zu (gemessen: Vermerke 14:30:45, Stücke 14:30:47).
+Gemessen mit der Vorab-Fixture aus RD-03 (05.11.2026): 111 Einsätze, 223
+Spuren auf Stufe 1/2/3 = 203/10/10, 67 016 Punkte, 5 Schnitte, 2
+Löschvermerke — gleich dem Referenzkonto; drei Resets 2,91 / 3,17 / 3,07 s.
 
 Eine zweite gab es bis Web 7.3.1: `edbak_build($userId, $mitPapierkorb)`. Sie
 ist entfallen, weil der Papierkorb seit Web 8.0.0 ohnehin in jedem Backup
@@ -9946,7 +9981,7 @@ dem Lesen nicht geändert hat**.
 
 | Teil | Wo | Was |
 |---|---|---|
-| Liste | `spur2_faellig()`, `api/wartungslauf.php` `liste` | höchstens 20 je Aufruf (E-S11-68): abgeschlossen (`final`), nicht im Papierkorb (bis Web 22.7.0 auch: ohne Altbestand, E-S11-70); fällig, wenn ein Stück der Stufe 1 liegt (Zusammenfügen ohne Karenz, E-S11-69), 31 Tage nach dem Ende (Ausdünnen, E-S11-25) oder ein Schnitt jünger ist als das jüngste Stück (die gesperrten Punkte fallen jetzt, E-S11-47). Mit Stücken, Sperrzeiten, Phasenzeiten und `pat_blob` samt Prüfsumme. `auslassen`: was der Browser in dieser Sitzung nicht öffnen konnte — sonst blockierte eine kaputte Hülle die ersten Plätze. Eine Anfrage **ohne Antwort** (`status: 0`, meist ein Seitenwechsel) lässt seit Web 23.0.3 nichts aus und beendet den Durchgang; bis dahin schob sie die gerade bearbeitete Spur für den ganzen Tab aus dem Lauf (Nr. 393). Die Unterabfrage nach dem jüngsten Schnitt nennt Einsatz und Typ selbst, nicht Spalten des Stücks: Gruppiert wird nach dem Einsatz, und MySQL lehnte die Abfrage bis Web 23.7.3 mit 1055 ab (Nr. 458; Schemaprobe, Fall 8) |
+| Liste | `spur2_faellig()`, `api/wartungslauf.php` `liste` | höchstens 20 je Aufruf (E-S11-68): abgeschlossen (`final`), nicht im Papierkorb (bis Web 22.7.0 auch: ohne Altbestand, E-S11-70); fällig, wenn ein Stück der Stufe 1 liegt (Zusammenfügen ohne Karenz, E-S11-69), 31 Tage nach dem Ende (Ausdünnen, E-S11-25) oder ein Schnitt jünger ist als das jüngste Stück (die gesperrten Punkte fallen jetzt, E-S11-47). Mit Stücken, Sperrzeiten, Phasenzeiten und `pat_blob` samt Prüfsumme. `auslassen`: was der Browser in dieser Sitzung nicht öffnen konnte — sonst blockierte eine kaputte Hülle die ersten Plätze. Eine Anfrage **ohne Antwort** (`status: 0`, meist ein Seitenwechsel) lässt seit Web 23.0.3 nichts aus und beendet den Durchgang; bis dahin schob sie die gerade bearbeitete Spur für den ganzen Tab aus dem Lauf (Nr. 393). Die Unterabfrage nach dem jüngsten Schnitt nennt Einsatz und Typ selbst, nicht Spalten des Stücks: Gruppiert wird nach dem Einsatz, und MySQL lehnte die Abfrage bis Web 23.7.3 mit 1055 ab (Nr. 458; Schemaprobe, Fall 8). **Nicht fällig ist seit Web 23.8.0 eine Spur, deren Stücke jedes unter einem Vermerk liegen** (F-RD-08): Der Browser fand dort keinen Punkt, tauschte nichts, und die Spur belegte für immer einen der 20 Plätze |
 | Zahl | `spur2_faellig_zahl()`, `zahl` | wie viele Aufzeichnungen aus wie vielen Diensttagen, für die Karte |
 | Arbeit | `assets/wartungslauf.js` | öffnen (`EdOrtsdaten.spur()`), nach der Frist ausdünnen (`ausduennen()`, `ausduennungPruefen()` — wörtlich `spur_ausduennen()` und `spur_ausduennung_pruefen()`; gegen PHP an 221 Referenzspuren nachgemessen: 221 gleiche Behaltelisten), **ein** gepacktes Stück bauen (`EdOrtsdaten.gepacktBauen()`), es wieder öffnen und Punkt für Punkt vergleichen (Rundlauf) — erst dann schicken |
 | Ortshöhe | ebenda | fehlt sie im `pat_blob`, wird sie aus den offenen Punkten nachgetragen (E-S11-72); der Server schreibt den Blob nur bei unveränderter Prüfsumme |
@@ -9964,9 +9999,10 @@ bindet Stufe und Marke: `seq_from:punkte:stufe:n_original`. Gemessen am
 Referenzbestand (F-S11-76): 4,40 Byte je Punkt gegen 14,40 ungepackt und 3,69
 in SPUR1; am Demo-Bestand nach dem ersten Lauf 4,56 (Einsätze, mit Hülle).
 Eine Umsetzung je Ort: `referenz.py` (`innen_gepackt()`) und `ortsdaten.js`
-(`gepacktBauen()`, Öffnen in `spur()`); bis Web 22.7.0 dazu
-`gh_gepackt_bauen()` in `geraetehuelle_lib.php` für den direkten Rückweg einer
-Kontosicherung mit ausgedünnter SPUR1-Spur.
+(`gepacktBauen()`, Öffnen in `spur()`), dazu seit Web 23.8.0
+`gh_gepackt_bauen()` in `geraetehuelle_lib.php` **nur für den Demo-Reset**
+(4.21; bis Web 22.7.0 gab es sie schon einmal, für den direkten Rückweg einer
+Kontosicherung mit ausgedünnter SPUR1-Spur).
 
 **Wo er läuft** (Mockup M-S11-02, Variante 1): **auf der Startseite still**,
 ein Durchgang je Aufruf, 1,5 s nach dem Laden, nur mit Schlüssel — er fragt nie

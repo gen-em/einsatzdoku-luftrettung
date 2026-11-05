@@ -1232,6 +1232,12 @@ function spur2_faellig_kandidaten(PDO $pdo, int $userId, int $jetzt, array $ausl
                               FROM track_stuecke s JOIN `$tabelle` o ON o.id = s.owner_id
                              WHERE s.owner_type = ? AND o.user_id = ? AND o.final = 1
                                AND o.deleted_at IS NULL {$ohneSql}
+                               AND EXISTS (SELECT 1 FROM track_stuecke s3
+                                            WHERE s3.owner_type = ? AND s3.owner_id = o.id
+                                              AND NOT EXISTS (SELECT 1 FROM track_cuts c3
+                                                   WHERE c3.owner_type = ? AND c3.owner_id = o.id
+                                                     AND c3.von_ts <= s3.ts_von
+                                                     AND c3.bis_ts >= s3.ts_bis))
                              GROUP BY o.id
                             HAVING stufe_min = 1
                                 OR (stufe_max < 3 AND bezug <= ?)
@@ -1243,7 +1249,16 @@ function spur2_faellig_kandidaten(PDO $pdo, int $userId, int $jetzt, array $ausl
          * ONLY_FULL_GROUP_BY weder gruppiert noch aggregiert, und es lehnt die
          * ganze Abfrage ab (1055) — MariaDB laesst sie durch. Gemessen in der
          * Schemaprobe, Fall 8. Der Typ steht deshalb zweimal in der Liste. */
-        $q->execute([$typ, $typ, $userId, $grenze]);
+        /* NICHTS ZU PACKEN, WENN JEDES STUECK UNTER EINEM SCHNITT LIEGT
+         * (Konzept RD, F-RD-08). Der Browser fand nach dem Ausblenden keinen
+         * Punkt, antwortete `liegt` und tauschte nichts — die Spur blieb auf
+         * Stufe 1, stand beim naechsten Lauf wieder in der Liste und belegte
+         * einen der 20 Plaetze, fuer immer. Gemessen am Referenzkonto: das
+         * Segment des Schnitts ueber das ganze Segment (D20) auf Platz 102
+         * von 200. Die Bedingung prueft je Stueck EINEN Vermerk, der es ganz
+         * deckt; deckt erst die Vereinigung zweier, bleibt die Spur
+         * gelistet — dann eben wie bisher. */
+        $q->execute([$typ, $typ, $userId, $typ, $typ, $grenze]);
         foreach ($q->fetchAll(PDO::FETCH_ASSOC) as $r) {
             $faellig = $r['bezug'] !== null && $r['bezug'] <= $grenze;
             $kandidaten[] = [
@@ -1429,6 +1444,38 @@ function spur2_lesen_viele(PDO $pdo, string $ownerType, array $ids): array
             'stufe' => (int)$r['stufe'], 'huelle' => base64_encode((string)$r['huelle'])];
     }
     return $aus;
+}
+
+/**
+ * Alle Vermerke (Schnitte und Loeschvermerke) eines Kontos auf einen Zeitpunkt
+ * stempeln — NUR FUER DEN DEMO-RESET (`demo_bestand_einspielen()`, Konzept RD,
+ * E-RD-18, F-RD-14). Die Fixture traegt `erstellt_am` aus dem Referenzkonto;
+ * der laege vor dem Vermerk der Migration `2026_10_15_loeschvermerk` jeder
+ * spaeter installierten Anlage, und `api/schneiden.php` hielte jeden
+ * Demo-Schnitt fuer einen alten (`409 altschnitt`). Jedes andere Konto behaelt
+ * den Wert, mit dem der Vermerk reist (E-R64-12).
+ *
+ * @return int Zahl der gestempelten Vermerke
+ */
+function schnitte_stempeln(PDO $pdo, int $userId, string $wann): int
+{
+    $q = $pdo->prepare('UPDATE track_cuts SET erstellt_am = ? WHERE user_id = ?');
+    $q->execute([$wann, $userId]);
+    return $q->rowCount();
+}
+
+/**
+ * Ist die Spur seit `$seit` (UTC, SQL-Form) gepackt worden — liegt ein Stueck
+ * der Stufe 2 oder 3, das zu dieser Zeit oder spaeter geschrieben wurde?
+ * Fuer das Rueckgaengig eines Schnitts (`api/schneiden.php`, F-RD-22): Danach
+ * sind die geschnittenen Punkte aus dem Segment fort.
+ */
+function spur2_seit_gepackt(PDO $pdo, string $ownerType, int $ownerId, string $seit): bool
+{
+    $q = $pdo->prepare('SELECT COUNT(*) FROM track_stuecke
+                         WHERE owner_type = ? AND owner_id = ? AND stufe >= ? AND geaendert_am >= ?');
+    $q->execute([$ownerType, $ownerId, SPUR2_STUFE_GEPACKT, $seit]);
+    return (int)$q->fetchColumn() > 0;
 }
 
 /** Die Stuecke EINER Spur — siehe spur2_lesen_viele(). */

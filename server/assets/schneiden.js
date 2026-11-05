@@ -505,10 +505,15 @@ const EdSchnitt = (() => {
                  + '</span> ';
     });
 
-    let knoepfe = '';
+    /* DIE HANDLUNGEN EINMAL, IN ZWEI FORMEN (Design 9.3, wie
+     * `ui_zeilenaktionen()`): ab 720 px als Knopfreihe, darunter ein „⋯" mit
+     * Blatt. Bis Web 23.8.0 stand die Knopfreihe in jeder Breite; mit
+     * „Schneiden" UND „Schnitt zurücknehmen" lief die Zeile bei 390 px um
+     * 122 px über (Bilderlauf, Nachtdienst; Konzept RD, F-RD-24). */
+    const eintraege = [];
     if (seg.n > 0) {
-      knoepfe += '<button class="knopf knopf-neutral" type="button" data-schnitt-auf="'
-               + seg.id + '" aria-expanded="false"><span>Schneiden</span></button>';
+      eintraege.push({ art: 'neutral', text: 'Schneiden',
+                       attr: ' data-schnitt-auf="' + seg.id + '" aria-expanded="false"' });
     }
     /* RUECKGAENGIG STEHT HIER — AM SEGMENT, NICHT AM EINSATZ.
      *
@@ -523,11 +528,29 @@ const EdSchnitt = (() => {
      * fehlt, dorthin kommen die Punkte zurueck, und dort steht bereits die
      * Plakette, die den Schnitt nennt. */
     schnitte.forEach(sn => {
-      knoepfe += '<button class="knopf knopf-leise" type="button" data-rueck="'
-               + sn.mission_id + '"><span>Schnitt zurücknehmen</span></button>';
+      eintraege.push({ art: 'leise', text: 'Schnitt zurücknehmen',
+                       attr: ' data-rueck="' + sn.mission_id + '"' });
     });
-    const aktionen = knoepfe
-      ? '<div class="zeile-aktionen"><div class="zeile-knoepfe">' + knoepfe + '</div></div>'
+    const knopf = (e, blatt) => '<button type="button" class="'
+      + (blatt ? 'blatt-zeile' : 'knopf knopf-' + e.art) + '"' + e.attr + '><span>'
+      + esc(e.text) + '</span></button>';
+    const blattId = 'rz-' + seg.id;
+    const aktionen = eintraege.length
+      ? '<div class="zeile-aktionen">'
+        + '<div class="zeile-knoepfe nur-ab-720">' + eintraege.map(e => knopf(e, false)).join('') + '</div>'
+        + '<div class="aktionen nur-unter-720">'
+        +   '<button type="button" class="knopf knopf-symbol" data-blatt="' + blattId + '"'
+        +   ' aria-expanded="false" aria-controls="' + blattId + '" title="Weitere Handlungen">'
+        +   window.edSymbol('punkte', '', 'Weitere Handlungen') + '</button>'
+        +   '<div class="blatt" id="' + blattId + '" hidden>'
+        +     '<div class="blatt-griff" aria-hidden="true"></div>'
+        +     '<h2 class="blatt-titel">' + esc('Ruhesegment ' + zeit) + '</h2>'
+        +     '<div class="blatt-liste">' + eintraege.map(e => knopf(e, true)).join('') + '</div>'
+        +     '<button type="button" class="knopf knopf-leise blatt-abbrechen" data-blatt-zu>'
+        +       '<span>Abbrechen</span></button>'
+        +   '</div>'
+        + '</div>'
+        + '</div>'
       : '';
 
     return '<div class="zeile" data-ruhezeile="' + seg.id + '">'
@@ -550,15 +573,21 @@ const EdSchnitt = (() => {
 
     ziel.querySelectorAll('[data-rueck]').forEach(b => {
       b.addEventListener('click', () => {
+        if (window.edBlatt) { window.edBlatt.zu(); }
         b.disabled = true;
         rueckgaengig(Number(b.getAttribute('data-rueck')));
       });
     });
 
     segmente.forEach(seg => {
-      const knopf = ziel.querySelector('[data-schnitt-auf="' + seg.id + '"]');
-      if (!knopf) { return; }
-      knopf.addEventListener('click', () => {
+      /* ZWEI KNOEPFE, EIN WEG: der der Knopfreihe und der im Blatt. Geoeffnet
+       * wird der Bereich in beiden Faellen unter der Zeile; `knopf` ist der
+       * sichtbare, an ihm haengen Fokus und aria-expanded. */
+      const knoepfe = ziel.querySelectorAll('[data-schnitt-auf="' + seg.id + '"]');
+      if (!knoepfe.length) { return; }
+      const knopf = knoepfe[0];
+      knoepfe.forEach(k => k.addEventListener('click', () => {
+        if (window.edBlatt) { window.edBlatt.zu(); }
         const offen = ziel.querySelector('[data-schnitt-fuer="' + seg.id + '"]');
         if (offen) { offen.remove(); knopf.setAttribute('aria-expanded', 'false'); return; }
         /* IMMER NUR EINER OFFEN. Zwei Schneide-Bereiche nebeneinander waeren
@@ -584,7 +613,7 @@ const EdSchnitt = (() => {
           () => zeitraumLoeschen(el, seg));
         bereichAuffrischen(el, seg);
         el.querySelector('#s-beg-' + seg.id).focus();
-      });
+      }));
     });
   }
 

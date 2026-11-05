@@ -26,7 +26,7 @@ Nichts außer `php`. Rückgabe 0 = jede Zeile genau auf ihrer Decke,
 
 ## Erwartete Zahl
 
-**0 über, 0 unter der Decke** (44 Zeilen, 25.10.2026); `--selbstprobe` →
+**0 über, 0 unter der Decke** (49 Zeilen, 05.11.2026); `--selbstprobe` →
 **37 von 37**. Darüber: Die zweite Stelle gehört an die eine aus `grund`, oder
 mit Grund in `ausser`; eine Decke steigt nur mit Begründung im Konzept
 (E-ZE-24). Darunter: die Decke im selben Commit herunterschreiben.

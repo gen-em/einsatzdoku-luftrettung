@@ -794,7 +794,8 @@ $faelle8 = [1 => [1, 1, 1, false],    // Stufe 1: packen
             2 => [1, 40, 2, false],   // nach der Frist: duennen
             3 => [1, 1, 2, true],     // neuer Schnitt: neu packen
             4 => [1, 40, 3, false],   // schon duenn: nicht faellig
-            5 => [0, 1, 1, false]];   // offen: nicht faellig
+            5 => [0, 1, 1, false],    // offen: nicht faellig
+            6 => [1, 1, 1, 'ganz']];  // Schnitt deckt jedes Stueck: nicht faellig (F-RD-08)
 $stueck8 = $pdo->prepare("INSERT INTO track_stuecke
         (owner_type, owner_id, seq_from, punkte, n_original, ts_von, ts_bis, stufe, huelle,
          erstellt_am, geaendert_am) VALUES (?, ?, 0, 1, 1, 0, 0, ?, '', ?, ?)");
@@ -803,11 +804,15 @@ foreach ($faelle8 as $id => [$final, $tage, $stufe, $schnitt]) {
                    VALUES (?, 1, ?, ?, ?, ?)')
         ->execute([$id, "probe-$id", $t8($tage + 1), $t8($tage), $final]);
     $stueck8->execute(['mission', $id, $stufe, $t8($tage), $t8($tage)]);
+    /* DAS STUECK LIEGT BEI ts 0. Ein Schnitt von 5 bis 5 deckt es nicht (Fall
+     * 3: neu packen); einer von 0 bis 9 deckt es ganz (Fall 6: nach dem
+     * Ausblenden bliebe kein Punkt, die Spur ist nicht faellig — Konzept RD,
+     * F-RD-08). Bis RD-04 stand hier 0 bis 0, und das deckte Fall 3 ganz. */
     if ($schnitt) {
         $pdo->prepare("INSERT INTO track_cuts (user_id, owner_type, owner_id, mission_id,
                          von_ts, bis_ts, n_punkte, erstellt_am)
-                       VALUES (1, 'mission', ?, ?, 0, 0, 1, ?)")
-            ->execute([$id, $id, $t8(0)]);
+                       VALUES (1, 'mission', ?, ?, ?, ?, 1, ?)")
+            ->execute([$id, $id, $schnitt === 'ganz' ? 0 : 5, $schnitt === 'ganz' ? 9 : 5, $t8(0)]);
     }
 }
 $pdo->prepare('INSERT INTO rest_segments (id, user_id, client_ref, started_at, ended_at, final)
@@ -830,7 +835,7 @@ try {
 }
 /* Sortiert nach Bezug, dann Art, dann Nummer: Einsatz 2 (vor 40 Tagen)
  * zuerst, dann die von gestern — Einsaetze vor dem Ruhesegment. */
-pruefe('faellig sind genau Einsatz 1, 2, 3 und das Ruhesegment, mit Zielstufe',
+pruefe('faellig sind genau Einsatz 1, 2, 3 und das Ruhesegment, mit Zielstufe (6 ganz geschnitten: nicht)',
        $liste8 === 'm2>3 m1>2 m3>2 r1>2', $liste8 === '' ? '—' : $liste8);
 sag();
 

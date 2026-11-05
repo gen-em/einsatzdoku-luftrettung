@@ -174,5 +174,93 @@
       "platz": "120:3",
       "huelle_b64": "AQQF601g4Hlsts9JIK7HVRaj9iGjEiQrqjopMGSjeVOAtDuKbIgje1VY+jer2Sh7eBZ7KjMQzvemazMDi81ljKzdH4Z05j9Eqe2YV3IdyFl4JKQ1MHx/1efP+YJxGga4qZGGwRjG1DI/NRyWPtC17neRedM9v/a2Ri7Sol+nYM79NdqSbckGhEQzVyrXpcYCltyqs1D97ThasV4oCiDxWGk="
     }
+  ],
+  "gepackt": [
+    {
+      "name": "gepackt-stufe-2",
+      "art": "ruhe",
+      "client_ref": "r-20261105-0024",
+      "stufe": 2,
+      "seq_from": 40,
+      "n_original": 5,
+      "punkte": [
+        [
+          40,
+          47.7261,
+          10.3159,
+          674.0,
+          1000
+        ],
+        [
+          41,
+          47.7264,
+          10.3155,
+          null,
+          1060
+        ],
+        [
+          42,
+          47.7268,
+          10.315,
+          681.0,
+          1120
+        ],
+        [
+          43,
+          47.7271,
+          10.3143,
+          -12.0,
+          1180
+        ],
+        [
+          44,
+          47.7275,
+          10.3139,
+          690.0,
+          1240
+        ]
+      ],
+      "roh_hex": "1c726cc800000bb800000fa000000bb800000fa0062614d8fffff060ffffec78ffffe4a8fffff060000002a2ffff7d5e000082a9fffffd4b000002be000000000000003c0000003c0000003c0000003c",
+      "platz": "40:5:2:5",
+      "fluechtig_privat_hex": "710636c10b7bdfd655d9f38bca223434e6faf238c8a1e6ff71e17e35f732fc17",
+      "iv_hex": "788483956be806976f67fa34b416a621",
+      "huelle_b64": "AQT0e/QZioi0ipyf8lvWB7YP4qB3m7fDtatkYl16jhMnqk75oxOr1BFt2Cwhe4lzqVWcsaIUJ6UL6hRYo1WWo5wDeISDlWvoBpdvZ/o0tBamIdtM3nSC7bANW6xL0ki4KTD2U5chuW+vDlaneoL5ra5Ib/If7YdD0SsEj1BGrCZg7Pg1DvpNHCubyTaJerg0KJ2bXhO/LAb94PxisTy0Rg74aVbfi+4wSURiMtt5GW3M/PUohyjGijsru14wFyB/TVw="
+    },
+    {
+      "name": "gepackt-stufe-3",
+      "art": "spur",
+      "client_ref": "m-20261105-0024",
+      "stufe": 3,
+      "seq_from": 0,
+      "n_original": 120,
+      "punkte": [
+        [
+          0,
+          47.5591,
+          10.217,
+          812.0,
+          2000
+        ],
+        [
+          1,
+          47.5644,
+          10.2311,
+          1405.0,
+          2093
+        ],
+        [
+          2,
+          47.6123,
+          10.2899,
+          930.0,
+          2290
+        ]
+      ],
+      "roh_hex": "1c58f1580000cf0800074f180616fd90000226c80008f8e00000032c00000251fffffe25000000000000005d000000c5",
+      "platz": "0:3:3:120",
+      "fluechtig_privat_hex": "329d6e494d6cb81c1d17f1d71dc3652e23a539ec0c83dde517f482f012528a9c",
+      "iv_hex": "b8f7cc8923e384dddf87f8256003a9b4",
+      "huelle_b64": "AQQhHlX7VwuHb8JR0foEVlA5BRzitu8utYL07dF4H+CpEUq1HIH0LnF79dd+glUb0IaE9O8ECYHCzhRWw6PdVli5uPfMiSPjhN3fh/glYAOptAhucLNKKlxOVitZLDj3U3bgs6iqhH98cCqCDIZBoT0jf8R6hVJUw7AJPfEYg+6eUSnJw9d3eLLMjN6zUG0ugWRp+SZKQ4zC4durx5PMcf5kUtGVOi2yVq3fogjY20j28A=="
+    }
   ]
 }

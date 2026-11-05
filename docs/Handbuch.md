@@ -1370,7 +1370,9 @@ Aufzeichnung zwischen den Einsätzen mit Zeitraum, Dauer und Punktzahl.
 **So geht es:**
 
 1. **„Schneiden"** an der Zeile des Segments, in dem der Einsatz steckt. Der
-   Bereich klappt darunter auf.
+   Bereich klappt darunter auf. Auf dem Handy stehen „Schneiden" und
+   „Schnitt zurücknehmen" hinter dem **„⋯"** am Ende der Zeile, wie bei
+   jeder Liste.
 2. **Beginn und Ende** eintragen. Vorbelegt ist das ganze Segment — das ist
    Absicht: Ein geratener Ausschnitt wäre eine Behauptung über etwas, das nur
    du weißt. Die **Zeitleiste** darüber zeigt orange, was du gewählt hast.
@@ -1408,6 +1410,12 @@ wieder zum Ruhesegment.
 > eingetragen, sagt die Anwendung das und tut nichts — Rückgängig würde das
 > mitlöschen. Soll der Einsatz dann trotzdem weg, lösch ihn über den
 > Papierkorb (Abschnitt 8); dort läuft die Frist von 30 Tagen.
+>
+> **Und es geht nicht mehr, wenn die Aufzeichnung inzwischen verdichtet
+> wurde.** Beim Verdichten fallen die geschnittenen Punkte aus dem
+> Ruhesegment; sie liegen dann nur noch im Einsatz, und Rückgängig würde sie
+> mitlöschen. Die Anwendung sagt es und tut nichts — auch hier ist der
+> Papierkorb der Weg.
 
 > **Ein Zeitraum, in dem kein Punkt liegt, lässt sich nicht schneiden.** Die
 > Anwendung sagt es und legt nichts an. Das passiert, wenn du denselben

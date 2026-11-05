@@ -53,7 +53,7 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
 | Spanne | Zweig | seit |
 |---|---|---|
 | 500 bis 509 | `claude/stoic-turing-mpxuch` (Schritt 23, BR6: Konzept, Abschluss von 21 und 23; Schritt 24 angelegt); vergeben: 500 | 05.11.2026 |
-| 510 bis 519 | `claude/admiring-sagan-mql8t4` (Schritt 24, RD: Konzept); vergeben: keine | 05.11.2026 |
+| 510 bis 519 | `claude/admiring-sagan-mql8t4` (Schritt 24, RD: Konzept); vergeben: 510 | 05.11.2026 |
 | ab 520 | frei — höchste reservierte Nummer 519; frei blieben 482 bis 489 aus der Spanne von 22 (PR #148, #149), 492 bis 499 aus der des Prüfdurchgangs (PR #147), 472 bis 479 aus der Spanne von 21 (PR #136), 461 bis 469 aus der Spanne von PR (PR #133), 434 bis 439 aus der Spanne von PR #129, 441 bis 449 aus der von PR #130, 420 bis 429 aus der Spanne von 20 (PR #127), 412 bis 419 aus der von 12b (PR #125), 394 bis 399 aus der Spanne von 19 (PR #112 bis #114), 389 aus der von 12a (PR #116), 372 bis 379 aus der von 12 (PR #103), 362 bis 369 aus der von PK, 359 aus der von 18 (PR #101), 348 und 349 aus der von 17, 338 aus der von AR | 04.11.2026 |
 
 ---
@@ -780,3 +780,20 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      F-S11-52). Dabei P-S11-31 neu fassen.
      *Abnahme:* jeder Fall im Demo-Konto und im Referenzkonto bedienbar;
      Kreisläufe 0 unerklärt; P-S11-30 auf Staging mit dem Demo-Konto.
+
+<!-- -->
+
+510. **Die Schemaprobe setzt die Anlage womöglich in den Wartungsmodus.** · gehört zu: nächste Backlog-Runde · Stand: offen · seit 05.11.2026
+     *Aufgenommen 05.11.2026 in RD-04 (F-RD-23).* `tools/schemaprobe/
+     probe.php` ersetzt für ihre Laufzeit `server/config.php` durch eine
+     Wegwerfdatei mit einer frischen Probe-Datenbank, in der Migrationen
+     offen sind. Trifft in diesem Fenster eine angemeldete Anfrage die
+     Anlage, schaltet der Torwächter die Wartung ein, und `wartung.lock`
+     bleibt liegen, wenn `config.php` zurück ist. Gemessen im Prüfstand:
+     Schalter „torwaechter" am Ende der Schemaprobe, danach 503 für vier
+     Proben; die zeitgleiche Anfrage ließ sich nicht zuordnen.
+     `Sandbox-Setup.md` 6.1a nennt dieselbe Erscheinung (16.10.2026).
+     *Weg:* der Probe eine eigene `config.php` geben, ohne die der Anlage
+     anzufassen (eigene Wurzel oder Umgebungswert für `db.php`), oder sie
+     nach dem Zurücklegen nachsehen lassen, ob der Torwächter geschaltet hat.
+     *Abnahme:* Ein Prüfstand mit Schemaprobe hinterlässt nie `wartung.lock`.

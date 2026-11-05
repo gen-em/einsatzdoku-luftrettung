@@ -14,6 +14,36 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 23.8.0] — unveröffentlicht
+
+### Hinzugefügt
+
+- **Web — das Demo-Konto zeigt gepackte und ausgedünnte GPS-Daten** (Backlog
+  Nr. 500). Der Reset legte bisher jede Spur ungepackt an, und wie das
+  Verdichten und Schneiden an einer schon verdichteten Aufzeichnung aussieht,
+  ließ sich in der Demo nicht zeigen. Die Fixture trägt jetzt je Spur ihre
+  Stufe, und der Reset packt sie für dieses eine Konto so, wie sie im
+  Referenzkonto lag; für jedes andere Konto packt weiter nur der Browser.
+  Schnitte im Demo-Konto lassen sich nun auch zurücknehmen.
+
+### Behoben
+
+- **Web — „Rückgängig" nach dem Verdichten löschte die geschnittenen Punkte.**
+  Der Wartungslauf lässt geschnittene Punkte beim Zusammenfassen fallen; danach
+  lagen sie nur noch im Einsatz, und die Rücknahme löschte ihn samt Spur. Sie
+  wird in diesem Fall jetzt abgelehnt, mit dem Weg über den Papierkorb.
+  Außerdem bleibt eine Aufzeichnung, aus der ein Schnitt alles genommen hat,
+  nicht mehr für immer in der Liste des Wartungslaufs stehen.
+- **Web — nach einer neuen Demo-Fixture ließen sich die GPS-Daten des
+  Demo-Kontos nicht mehr öffnen.** Der Reset übernahm Passwort und
+  Inhaltsschlüssel aus der neuen Datei, behielt aber das Schlüsselpaar, das
+  unter dem alten Schlüssel lag. Er legt das Paar jetzt neu an, wenn es mit dem
+  Schlüssel der Fixture nicht aufgeht.
+- **Web — ein Ruhesegment mit Schnitt lief auf dem Handy über.** Mit
+  „Schneiden" und „Schnitt zurücknehmen" standen zwei Knöpfe nebeneinander,
+  und die Zeile wurde 122 Pixel breiter als der Bildschirm. Unter 720 Pixeln
+  liegen die Handlungen jetzt wie in jeder anderen Liste hinter dem „⋯".
+
 ## [Web 23.7.7] — unveröffentlicht
 
 ### Behoben

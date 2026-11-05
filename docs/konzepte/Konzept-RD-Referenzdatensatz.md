@@ -27,12 +27,12 @@ hochgeht, entscheidet die Umsetzung (K3, CLAUDE.md 2).
 | RD-01 | Fixture wieder erzeugbar (Nr. 388) | **erledigt** (05.11.2026) |
 | RD-02 | Quelldaten: die fehlenden Spurfälle, Matrix, Generator | **erledigt** (05.11.2026) |
 | RD-03 | Einspielen: Stufen `verdichten` und `loeschen` | **erledigt** (05.11.2026) |
-| RD-04 | Demo-Reset legt Stufe 2 und 3 selbst an (Fixture-Format 3) | offen — als Nächstes; dazu F-RD-08 (bestätigt) |
+| RD-04 | Demo-Reset legt Stufe 2 und 3 selbst an (Fixture-Format 3) | **erledigt** (05.11.2026, Web 23.8.0) |
 | RD-05 | Fixture, Referenzexporte und Sollstände neu; Dokumente | offen |
-| RD-07 | Demo-Konto: Durchgang über jeden Bedienweg, jeder Fehler sofort behoben (E-RD-19) — **vor RD-05** | offen |
+| RD-07 | Demo-Konto: Durchgang über jeden Bedienweg, jeder Fehler sofort behoben (E-RD-19) — **vor RD-05** | offen — als Nächstes |
 | RD-06 | Abschluss: Prüfdokument, Prüfliste (P-S11-30, -31), Pull Request | offen |
 
-**In Arbeit:** nichts — RD-01 bis RD-03 sind erledigt, als Nächstes RD-04. Die
+**In Arbeit:** nichts — RD-01 bis RD-04 sind erledigt, als Nächstes RD-07 (dann RD-05, RD-06). Die
 Umsetzung läuft auf dem Konzeptzweig `claude/admiring-sagan-mql8t4`
 (Entscheid der Betreiberin zu Beginn der Umsetzungssitzung). **Es hakt:**
 nirgends. *(Bis RD-01 stand bei RD-02 und RD-04 „wartet auf Q-RD-…" —
@@ -305,6 +305,52 @@ fällig. Ein Client, der „bis die Liste leer ist" fragt, läuft im Kreis
 getauscht). Im Browser unschädlich — er hört nach 20 auf und merkt sich
 die Ausgelassenen je Sitzung; das Werkzeug hört auf, sobald alle Aufträge
 erledigt sind. Kein Serverfehler, keine Behebung.
+
+**F-RD-22 — „Rückgängig" nach dem Verdichten löschte die geschnittenen
+Punkte, in jedem Konto** (gefunden in RD-04). `schnitt_rueckgaengig()` geht
+davon aus, dass die Punkte eines Schnitts im Segment liegen („waren im
+Segment nie fort"). Der Wartungslauf öffnet das Segment aber ohne die
+gesperrten Punkte und packt nur den Rest — danach liegen sie allein im
+Einsatz, und die Rücknahme löscht Einsatz und Spur. Im Demo-Bestand ist das
+D18 (Schnitt auf Stufe 2). Behoben in RD-04 (E-RD-19): `409 verdichtet`,
+wenn ein Stück der Stufe 2 oder 3 zur Zeit des Schnitts oder später
+geschrieben wurde; ein Schnitt aus einer schon gepackten Spur (P-S11-30)
+bleibt rücknehmbar.
+
+**F-RD-23 — Die Schemaprobe kann die Anlage in den Wartungsmodus setzen**
+(gefunden in RD-04, Prüfstand). `tools/schemaprobe/probe.php` ersetzt für
+ihre Laufzeit `server/config.php` durch eine Wegwerfdatei mit einer frischen
+Probe-Datenbank, in der Migrationen offen sind. Trifft in diesem Fenster eine
+angemeldete Anfrage die Anlage, schaltet der Torwächter die Wartung ein
+(`auth_guard.php`, `wartung_einschalten('torwaechter')`), und die Datei
+bleibt liegen, wenn `config.php` zurück ist. Gemessen: `wartung.lock`
+14:37:25 „torwaechter", am Ende der Schemaprobe; danach 503 für Bilderlauf,
+Bedienprobe, Ortsdaten- und Wartungslaufprobe. Dieselbe Erscheinung steht
+in `Sandbox-Setup.md` 6.1a als ungeklärt (16.10.2026). Die zeitgleiche
+Anfrage ließ sich nicht zuordnen; der Wiederholungslauf blieb sauber. Kein
+Fehler der Anwendung, keine Behebung in diesem Schritt — Backlog Nr. 510.
+
+**F-RD-24 — Ein Ruhesegment mit Schnitt lief bei 390 px über** (gefunden in
+RD-04 vom Bilderlauf am neuen Demobestand — RD-07-Art, sofort behoben,
+E-RD-19). `schneiden.js` baute die Knopfreihe der Segmentzeile in jeder
+Breite; mit „Schneiden" und „Schnitt zurücknehmen" wurde `div.zeile-aktionen`
+512 px breit (Überlauf +122 bei 390, Seiten „Nachtdienst" und „ohne
+Standort"). Das freigegebene Muster ist Design 9.3: Knopfreihe ab 720 px,
+darunter „⋯" mit Blatt — jetzt im selben Markup wie `ui_zeilenaktionen()`.
+Bisher sah es niemand, weil der Bilderlauf keinen Tag mit Schnitt in der
+Tagesübersicht aufnahm.
+
+**F-RD-25 — Nach einer neuen Fixture blieb das alte Schlüsselpaar des
+Demo-Kontos stehen** (gefunden in RD-04, Prüfstand). Der Reset schreibt
+Schlüsselhülle und Inhaltsschlüssel aus der Fixture, `demo_paar_sicherstellen()`
+fragte aber nur „ist ein Paar da?". Stammt die Fixture aus einem anderen
+Referenzkonto — jede neue tut das —, liegt `kp_privat` unter dem alten
+Schlüssel: Der Browser öffnet keine Spur, keinen Ort, keine Reanimation und
+läuft beim Versuch, das Paar zu ersetzen, in die Mengenbremse. Gemessen:
+`kontopaar` nach 5 Versuchen gesperrt, 87 Konsolenfehler (429) im
+Bilderlauf, fünf Wege der Bedienprobe „kein Einsatz mit Aufzeichnung".
+**Hätte Produktiv mit der Fixture aus RD-05 getroffen.** Behoben: Paar neu,
+wenn der private Teil mit dem Inhaltsschlüssel der Fixture nicht aufgeht.
 
 ## 3. Fragen an die Betreiberin
 
@@ -620,6 +666,50 @@ und 3 an, und der Browser öffnet sie (Bedienweg: Einsatz und Tagesansicht
 des Demo-Kontos, Linie sichtbar). Resetdauer gemessen, Median aus drei
 Läufen, gegen die heutigen 7,3 s.
 
+*Gebaut (05.11.2026, Web 23.8.0):* `gh_gepackt_innen()` und
+`gh_gepackt_bauen()` in `server/geraetehuelle_lib.php` (Schlusskommentar
+ersetzt); `edbak_restore()` Zweig `'server'`: `$spurSchreiben` nimmt den
+Eintrag mit und baut bei `stufe` ≥ 2 **ein** Stück mit `n_original`
+(Widerspruch → `pruef->melde`, Stufe 1). Schnitte und Löschvermerke des
+Demo-Kontos stempelt `demo_bestand_einspielen()` danach auf **eine Sekunde
+vor dem Reset** (`schnitte_stempeln()` in `spur_lib.php`, E-RD-18);
+`edbak_restore()` lässt `erstellt_am` weiter reisen (E-R64-12). `demo_fixture_laden()`: Format 1 bis 3, höher
+abgewiesen. Hüllenprobe: Block `gepackt` in `referenz.py` (eigener Block,
+nicht in `FAELLE` — Uhr- und App-Vektoren bleiben byte-gleich, gemessen),
+`probe_server.php` hält Innenform und Hülle byte-gleich dagegen.
+Registerzeile Z49 (Decke 1, Aufrufer `backup_lib.php`). Dazu zwei Fehler
+für alle Konten (E-RD-19): `schnitt_rueckgaengig()` mit
+`spur2_seit_gepackt()` (F-RD-22) und `spur2_faellig_kandidaten()` ohne
+Spuren, deren Stücke jedes unter einem Vermerk liegen (F-RD-08) — im
+Server, nicht im Browser: Der Browser kann nichts tauschen, wo kein Punkt
+ist; die Liste soll die Spur gar nicht nennen. Dokumente: `version.php`
+(23.8.0, Neben), `CHANGELOG.md`, `Technik.md` 4.21 (Format 3, „Der
+Demobestand verschlossen": packt), Schneiden (Rücknahme, Tabelle),
+Wartungslauf (Fälligkeit, Innenform), `Handbuch.md` (Rückgängig nach dem
+Verdichten), LIESMICH der Hüllenprobe und der Zählung.
+
+*Probleme und Lösung:* (1) F-RD-22 aus dem Code gelesen, als die Frage
+„welches `erstellt_am` darf der Reset setzen" kam — die Einspielzeit allein
+hätte den D18-Schnitt rücknehmbar gemacht und dabei Punkte gelöscht; die
+neue Bedingung (`geaendert_am >= erstellt_am`) deckt den gleichzeitigen
+Stempel des Resets. (2) Ein deutsches Anführungszeichen in einer
+PHP-Zeichenkette mit doppelten Anführungszeichen brach `probe_server.php`.
+(3) Die Schemaprobe trug einen Prüffall, den die neue Fälligkeitsregel anders las (Nullzeiten) — berichtigt, nicht die Regel aufgeweicht. (4) Der erste Wurf stempelte im Zweig `'server'` von `edbak_restore()` die
+Einspielzeit — die Wiederherstellungsprobe (Teil 11, 14) fährt diesen Zweig
+und verlangt, dass `erstellt_am` reist: 2 rot. Dabei fiel auf, dass die
+Einspielzeit selbst falsch wäre: Die Vermerke entstehen nach den Stücken,
+ein Reset dauert rund 3 s, und ein Vermerk, jünger als das gepackte Stück,
+ließe die Rücknahme von D18 zu und verlöre Punkte. Jetzt: Stempel nach dem
+Einspielen, eine Sekunde vor dem Reset, nur im Demo-Konto. (5) Der
+Prüfstand lief zweimal in Störungen: einmal Wartungsmodus mitten im Lauf
+(F-RD-23), einmal ein echter Fund im Bilderlauf (F-RD-24, behoben in
+`schneiden.js`, Design 9.3), und beim dritten Lauf F-RD-25 — ausgelöst,
+weil ich zwischen den Läufen die Fixture gewechselt hatte; ohne diesen
+Wechsel wäre der Fehler erst auf Produktiv aufgefallen. Die Mengenbremse der
+Sandbox danach geleert (`rate_limits`, Töpfe `kontopaar`, `demo`, `demog`).
+*Nicht getan:* F-RD-08 im Browser (`wartungslauf.js`) — mit dem Server-
+Filter unnötig; `Backup-Format.md` — kein Feldname weicht ab.
+
 ### RD-05 Fixture, Referenzexporte und Sollstände neu (Nr. 388, 500; Q-RD-08)
 
 *Weg:*
@@ -767,7 +857,18 @@ ist gemessen; was fehlt, steht im Prüfdokument an erster Stelle.
 | RD-03 | Hülle und Kennzeichnung nach `verdichten` | Präfix, `demo_user_id` | `edk1:`, Kennzeichnung zurück |
 | RD-03 | `sitzungsprobe.py` | Erwartungen | **2 von 2** |
 | RD-03 | `fixture/erzeugen.php` auf dem neuen Referenzkonto (Vorab-Fixture für RD-07) | Zahlen, DB | Rückgabe 0; 111 Einsätze, 223 Spuren, Stufe 1/2/3 = 61 523/4 249/1 244 Punkte — gleich dem SQL; 5 Schnitte, 2 Löschvermerke; DB unverändert (41 Tabellen) |
-| RD-04 | Hüllenprobe, Wartungslaufprobe, Ortsdatenprobe, Reset mit Handbestand | — | — |
+| RD-04 | `probe_server.php` (Hüllenprobe Server) | Prüfungen | **18, 0 Abweichungen** (vorher 14): Innenform „B fest" und Hülle für Stufe 2 (80/194 Byte) und Stufe 3 (48/178 Byte) byte-gleich der Referenz |
+| RD-04 | `referenz.py erzeugen` | geänderte Dateien | nur `vektoren.json`; `Vektoren.mc` und `watch/source/HuelleVektor.mc` byte-gleich |
+| RD-04 | Reset mit der Vorab-Fixture (Format 3), dreimal | Bestand, Dauer | 111/123/22, 7 Vermerke übernommen, **0 verworfen**, `rejected` leer; Stufe 1/2/3 = **203/10/10 Spuren, 61 523/4 249/1 244 Punkte**, `n_original` je Fall gleich dem Referenzkonto; **2,91 / 3,17 / 3,07 s** (RD-01 hier mit Stufe-1-Fixture: 3,13 s) |
+| RD-04 | Rundlauf Fixture → Reset → `erzeugen.php` → Feldvergleich | 234 Einträge | **0 Abweichungen** (Spur, Stufe, `n_original`, Orte, Rea, Schnitte und Löschvermerke ohne `erstellt_am`, `pat_blob`) |
+| RD-04 | nach der Berichtigung (Stempel vor dem Reset): Reset, Zeitstempel, Rücknahme | Antwort | Vermerke 14:30:45, Stücke 14:30:47; D18 und D22 (Stufe 2) **409 verdichtet**, D08 **200, 65 Punkte**; Reset 2,95 s |
+| RD-04 | Rücknahme über `api/schneiden.php` nach dem Reset (erster Wurf) | Antwort | D08 (Stufe 1): **200, 65 Punkte zurück** (vorher `409 altschnitt`); D18 (Stufe 2): **409 verdichtet**; Schnitt aus dem Übungssegment D11 (Stufe 2) und Rücknahme: **200 / 200, 109 Punkte** (P-S11-30) |
+| RD-04 | F-RD-08: `spur2_faellig_kandidaten()` | Fälligkeit | fällig 199 statt 200, D20 nicht mehr darunter |
+| RD-04 | F-RD-24: Segmentzeile D22 (Schnitt) bei 390 und 1200 px, Chromium, Firefox, WebKit | Überlauf, Bedienung | vorher **+122 px** (Bilderlauf); nachher in allen drei Engines **0 px**, „⋯" öffnet das Blatt mit 2 Einträgen, „Schneiden" darin öffnet den Bereich und schließt das Blatt; 0 Seitenfehler |
+| RD-04 | F-RD-25: Reset im Wechsel alte Fixture → Vorab-Fixture → alte, danach `erzeugen.php` (öffnet jede Hülle) | Paar, Punkte | je Wechsel **Paar neu**, alle Hüllen offen: 67 292 / 67 016 / 67 292 Punkte; gleiche Fixture zweimal: **Paar bleibt** |
+| RD-04 | Prüfstand neben/schmal, vier volle Läufe (je ~48 min) | rot | (1) 4 rot — Wartung durch die Schemaprobe (F-RD-23); (2) 2 rot — Bilderlauf F-RD-24 und Bedienprobe nach einem Demo-Reset mitten im Lauf (meine Handversuche hatten eine Änderungsmarke gesetzt); (3) 2 rot — F-RD-25 (429 an `kontopaar`, 87 Konsolenfehler); (4) **1 rot, 58 grün**: Bilderlauf 1 Aufnahme 503 (`12-einsatzansicht` @ 390, während die Bildaufnahme für 46a die Wartung schaltete, 16:16:53); Bilderlauf allein danach **0 Überlauf, 0 Konsolenfehler** — nicht wiederholbar |
+| RD-04 | `tools/zaehlung/zaehlen.php` | Register | 49 Zeilen, 0 über, 0 unter; Z49 = 1 |
+| RD-04 | Schemaprobe auf MariaDB 10.11, 10.6, MySQL 8.0, 8.4.0 (`plattform.sh`) | Prüfungen | erst **1 Fehlschlag je Fassung**: Fall 8/3 hatte Schnitt und Stück beide bei ts 0, die neue Fälligkeitsregel nahm ihn zu Recht heraus — Prüffall berichtigt (Schnitt 5–5), Fall 8/6 neu (ganz geschnitten, nicht fällig); danach **52 / 0** auf allen vier |
 | RD-05 | Kreisläufe csv/edbak, `abgleich.py`, Reset, Bedienweg Demo | — | — |
 | RD-07 | Bedienwege des Demo-Kontos, `demo_pruefen.mjs`, drei Engines bei Oberflächenfunden | — | — |
 | RD-06 | Prüfstand (Bericht im Commit) | — | — |
@@ -785,6 +886,7 @@ alles") misst erst RD-03.
 | 05.11.2026 | Nach Rückfrage der Betreiberin (Wildwuchs, Q-RD-04, Übungstage): F-RD-04 und F-RD-11 berichtigt (Python hat das Format einmal; die Segmentkennung überlebt den Aufbau), E-RD-04 auf die vorhandene Adressierung `segment: client_ref` umgestellt, Q-RD-04 mit Lesart (d) „Übungssegmente, zwei auf Stufe 1, eines auf Stufe 2" als Vorschlag, E-RD-08 und Abschnitt 6 (Wildwuchs-Prüfung) neu; Matrixmarken von 14 auf 12 (10 Fälle). |
 | 05.11.2026 | Zweite Rückfrage („geschnittene Tage?"): F-RD-14 (Demo-Schnitte gelten auf jeder Anlage als alt, Rücknahme antwortet 409 `altschnitt`), Q-RD-10 mit Vorschlag (a), die drei bestehenden Schnitte auf Stufe 1/2/3 verteilt (Q-RD-03), Matrix „Schnittzustand × Stufe" in `pruefen.py`, Marken auf 14. |
 | 05.11.2026 | **Freigabe:** Q-RD-01 bis -10 wie vorgeschlagen (E-RD-09 bis -18). Dazu E-RD-19: Jeder Fehler am Demo-Konto wird in diesem Schritt behoben — neues Paket RD-07 (Demo-Durchgang) vor RD-05, der Browserweg ist nicht mehr ausgenommen, F-RD-08 wird bei Bestätigung behoben. Fahrplanzeile auf „freigegeben". |
+| 05.11.2026 | **RD-04 erledigt (Web 23.8.0):** Reset packt Stufe 2/3 aus Format 3, Einspielzeit für Demo-Vermerke, `gh_gepackt_bauen()` mit Vektoren; dazu F-RD-22 (Rücknahme nach Verdichten) und F-RD-08 (Fälligkeit) für alle Konten behoben. |
 | 05.11.2026 | **RD-03 erledigt:** Stufen `loeschen` und `verdichten`, Tagesversatz aus dem Datum, PHP-Ausdünnung über `ausduennen_cli.php`; Referenzkonto von Null mit allen Fällen; F-RD-08 bestätigt; Befunde F-RD-20, -21. |
 | 05.11.2026 | **RD-02 erledigt:** vier Spurfall-Listen, 16 Matrixzeilen, Lücken und Übungen im Generator; Befunde F-RD-18, -19, Entscheidungen der Umsetzung E-RD-20 bis -22 (Übungsliste mit Vorbild, Tagesversatz aus dem Datum, D22-E1 vorgezogen). |
 | 05.11.2026 | **RD-01 erledigt:** `erzeugen.php` erzeugt wieder (Format 3, 67 478 Punkte), Riegelprobe 11 von 11, `fixture/LIESMICH.md` neu. Befunde F-RD-15 bis -17. Statusblock: „wartet auf Q-RD-…" bei RD-02 und RD-04 gestrichen (seit der Freigabe überholt). |

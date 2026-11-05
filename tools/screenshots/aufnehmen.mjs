@@ -1163,14 +1163,26 @@ async function vorher(seite, schritte, fehlerSammler) {
          DER SCHRITT SCHREIBT NICHTS: „Einsatz erzeugen" drueckt niemand. Die
          Seite zeichnet die Segmentliste nach dem Laden; gewartet wird auf den
          Knopf, nicht auf eine Zeit. */
-      const auf = seite.locator('[data-schnitt-auf]').first();
-      try { await auf.waitFor({ state: 'visible', timeout: 10000 }); } catch {
+      /* ZWEI FORMEN SEIT WEB 23.8.0 (Design 9.3, Konzept RD, F-RD-24): ab
+         720 px der Knopf in der Zeile, darunter das „⋯" mit Blatt, in dem
+         „Schneiden" steht. Gewartet wird auf die ZEILE, dann je nach Breite. */
+      const zeile = seite.locator('[data-ruhezeile]')
+        .filter({ has: seite.locator('[data-schnitt-auf]') }).first();
+      try { await zeile.waitFor({ state: 'visible', timeout: 10000 }); } catch {
         fehlerSammler.push('Kein „Schneiden" auf der Seite — hat der Tag aus '
                          + '__TAG_SCHNITT__ kein Ruhesegment mit Punkten mehr?');
         continue;
       }
-      if ((await auf.getAttribute('aria-expanded')) !== 'true') {
-        await auf.click();
+      if (!(await seite.locator('[data-schnitt-fuer]').count())) {
+        const knopf = zeile.locator('.zeile-knoepfe [data-schnitt-auf]');
+        if (await knopf.isVisible()) {
+          await knopf.click();
+        } else {
+          await zeile.locator('[data-blatt]').click();
+          const imBlatt = zeile.locator('.blatt [data-schnitt-auf]');
+          await imBlatt.waitFor({ state: 'visible', timeout: 5000 });
+          await imBlatt.click();
+        }
       }
       const bereich = seite.locator('[data-schnitt-fuer]').first();
       await bereich.waitFor({ state: 'visible', timeout: 5000 });

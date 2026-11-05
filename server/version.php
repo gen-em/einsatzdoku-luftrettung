@@ -8579,5 +8579,26 @@ declare(strict_types=1);
  *   Knopf des ersten Formulars an der Beschriftung des zweiten. Jetzt
  *   bekommt ein Formular, das auf ein anderes im selben `.listen-form`
  *   folgt, Stufe 4 der Abstandstabelle (16 px), ohne Linie. Kein neuer
- *   Token, kein neuer Baustein. Korrektur; kein Schema. */
-const WEB_VERSION = '23.7.7';
+ *   Token, kein neuer Baustein. Korrektur; kein Schema.
+ *
+ * 23.8.0 — DER DEMO-RESET LEGT GEPACKTE UND AUSGEDUENNTE SPUREN AN (Schritt
+ *   24, RD-04; Backlog Nr. 500). Die Fixture traegt seit Format 3 je Spur
+ *   `stufe` und `n_original`; `edbak_restore()` baut im Zweig 'server' daraus
+ *   EIN gepacktes Stueck (`gh_gepackt_bauen()`, die dritte Fassung der
+ *   Innenform „B fest", byte-gleich der Referenz) — der Server packt damit fuer
+ *   das Demo-Konto, fuer kein anderes (Registerzeile Z49). Schnitte und
+ *   Loeschvermerke des Demo-Kontos stempelt der Reset auf eine Sekunde vor
+ *   seinem Beginn (`schnitte_stempeln()`), sonst galten sie auf jeder Anlage
+ *   als alt und liessen sich nicht zuruecknehmen (F-RD-14). Dazu zwei
+ *   Fehler fuer alle Konten: Das Rueckgaengig eines Schnitts weist ab, wenn
+ *   das Segment danach verdichtet wurde (`409 verdichtet`, F-RD-22 — es
+ *   loeschte sonst die einzigen Punkte), und eine Spur, deren Stuecke alle
+ *   unter einem Schnitt liegen, ist nicht mehr dauerhaft faellig (F-RD-08).
+ *   Und die Zeile eines Ruhesegments folgt Design 9.3 (Knopfreihe ab 720 px,
+ *   darunter „⋯"): Mit zwei Handlungen lief sie bei 390 px 122 px ueber
+ *   (F-RD-24, gefunden vom Bilderlauf am neuen Demobestand). Und der Reset
+ *   legt das Schluesselpaar des Demo-Kontos neu an, wenn sein privater Teil
+ *   mit dem Inhaltsschluessel der Fixture nicht aufgeht — sonst waere das
+ *   Demo-Konto nach der naechsten Fixture ohne lesbare Ortsdaten (F-RD-25).
+ *   Neben; kein Schema. */
+const WEB_VERSION = '23.8.0';
