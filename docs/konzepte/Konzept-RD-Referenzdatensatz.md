@@ -25,14 +25,14 @@ hochgeht, entscheidet die Umsetzung (K3, CLAUDE.md 2).
 | Paket | Inhalt | Stand |
 |---|---|---|
 | RD-01 | Fixture wieder erzeugbar (Nr. 388) | **erledigt** (05.11.2026) |
-| RD-02 | Quelldaten: die fehlenden Spurfälle, Matrix, Generator | offen — als Nächstes |
-| RD-03 | Einspielen: Stufen `verdichten` und `loeschen` | offen |
+| RD-02 | Quelldaten: die fehlenden Spurfälle, Matrix, Generator | **erledigt** (05.11.2026) |
+| RD-03 | Einspielen: Stufen `verdichten` und `loeschen` | offen — als Nächstes |
 | RD-04 | Demo-Reset legt Stufe 2 und 3 selbst an (Fixture-Format 3) | offen |
 | RD-05 | Fixture, Referenzexporte und Sollstände neu; Dokumente | offen |
 | RD-07 | Demo-Konto: Durchgang über jeden Bedienweg, jeder Fehler sofort behoben (E-RD-19) — **vor RD-05** | offen |
 | RD-06 | Abschluss: Prüfdokument, Prüfliste (P-S11-30, -31), Pull Request | offen |
 
-**In Arbeit:** nichts — RD-01 ist erledigt, als Nächstes RD-02. Die
+**In Arbeit:** nichts — RD-01 und RD-02 sind erledigt, als Nächstes RD-03. Die
 Umsetzung läuft auf dem Konzeptzweig `claude/admiring-sagan-mql8t4`
 (Entscheid der Betreiberin zu Beginn der Umsetzungssitzung). **Es hakt:**
 nirgends. *(Bis RD-01 stand bei RD-02 und RD-04 „wartet auf Q-RD-…" —
@@ -270,6 +270,22 @@ darf. Dazu ein Werkzeugfund für RD-03: `einspielen.py`, Stufe
 `schneiden`, druckt „None geblieben" — `api/schneiden.php` antwortet seit
 Web 22.2.0 ohne `geblieben` (die Punkte bleiben gesperrt im Segment).
 
+**F-RD-18 — Die Schnittfenster der drei bestehenden Schnitte liegen auf
+Stillstand** (gefunden in RD-02). Gemessen an der Generator-Ausgabe: In
+`ar-12-1288367401` (D08) bewegt sich das Fahrzeug 9,3 km in der ersten Stunde
+(der Rückweg, mit dem das Segment beginnt) und danach 0,3 km je Stunde —
+GPS-Zittern am Standort; in D18 21,5 km Rückweg, dann 0,3 km/h; in D19 nur
+Zittern. Die Annahme von Q-RD-04 und RD-02 Schritt 2 („die Bewegung
+beschreibt `wegpunkte.py` wie bei den drei Quellsegmenten der Schnitte; der
+Generator kann das schon, `ruhespur()`") trifft nicht zu: Eine
+einsatzförmige Bewegung in einem Ruhesegment gab es nicht → E-RD-20.
+
+**F-RD-19 — Kein Ruhesegment des Bestands läuft über Mitternacht** (gefunden
+in RD-02). In D06, D14 und D22 überdeckt jeweils ein Einsatz 00:00 (D22:
+`m-11-4172630859`, 23:50 bis 01:19); das Segment `ar-12-9295332214` aus dem
+Befund zu Nr. 500 gibt es nicht mehr. Für E-RD-13 („Segment über Mitternacht
+in D22") fehlte damit das Segment → E-RD-22.
+
 ## 3. Fragen an die Betreiberin
 
 | Nr. | Frage | Vorschlag | Paket |
@@ -307,6 +323,9 @@ Web 22.2.0 ohne `geblieben` (die Punkte bleiben gesperrt im Segment).
 | E-RD-17 | Q-RD-09: Umsetzung in eigener Sitzung auf diesem Zweig; Pull Request am Ende von RD-06; Tags danach durch die Betreiberin. | wie E-RD-09 |
 | E-RD-18 | Q-RD-10: (a) — der Demo-Zweig von `edbak_restore()` stempelt `erstellt_am` der Schnitte und Löschvermerke auf die Einspielzeit (F-RD-14). | wie E-RD-09 |
 | E-RD-19 | **Jeder Fehler am Demo-Konto, der in diesem Schritt auffällt, wird in diesem Schritt behoben** — auch im Browserweg, auch wenn er nicht in Nr. 388 oder 500 steht. Dafür ein eigenes Paket RD-07 (Durchgang über jeden Bedienweg des Demo-Kontos) vor der Fixture; Funde als `F-RD-NN` mit Behebung und Messung im Paket. Grenze: siehe Auftrag. | Betreiberin, 05.11.2026 („Repariere alles, was mit dem Demo-Konto nicht perfekt funktioniert, direkt mit") |
+| E-RD-20 | **Übungssegmente über eine Liste `uebungen` am Dienst** (`segment`, `beginn`, `ende`, `vorbild`), adressiert wie `schnitte` (F-RD-18). Die Bewegung fährt oder fliegt die Strecke eines Einsatzes desselben Dienstes (`vorbild`) von der Basis zum Einsatzort und zurück — am Boden auf dessen gespeicherter Straßengeometrie (`generator/routen/`), in der Luft zu dessen Wegpunkt `ort`. Keine neue Koordinate, kein Netzabruf. Abweichung von RD-02 Schritt 2 („die Übungssegmente brauchen kein Feld"). | Umsetzung RD-02, 05.11.2026 |
+| E-RD-21 | **`beginn_tag`/`ende_tag` stehen nicht als Feld in der Quelle**: Der Tagesversatz folgt aus dem Datum in `beginn`, das jeder Zeitstempel ausgeschrieben trägt; zwei Angaben derselben Sache liefen auseinander (vgl. E-DA-09). `einspielen.py` rechnet ihn in RD-03 aus Datum und `dienst.day`. Abweichung von RD-02 Schritt 2. | Umsetzung RD-02, 05.11.2026 |
+| E-RD-22 | **D22: E1 (`m-11-4172630859`) beginnt 90 Minuten früher** (22:20 bis 23:49 statt 23:50 bis 01:19), Strecke, Dauer und Phasenabstände unverändert (F-RD-19). Damit läuft das Segment `r-11-8948069843` von 23:49 bis 01:40, und der Schnitt nach Mitternacht liegt darin; „Einsätze vor und nach Mitternacht" bleibt erfüllt (E2 um 01:40), „Einsatz über Mitternacht" tragen weiter D06 und D14. | Umsetzung RD-02, 05.11.2026 |
 | E-RD-08 | **Kein neuer Weg, wo ein alter trägt** (Rückfrage der Betreiberin, 05.11.2026): Jedes Paket nennt in Abschnitt 6, was es neu anlegt, was es wiederverwendet und was es ablöst. Neu entsteht nur, was keine vorhandene Stelle leisten kann: ein PHP-Packer (dritte Fassung desselben Formats, gegen die eine Referenz gemessen, wie Stufe 1 heute), zwei Einspielstufen am vorhandenen Werkzeug, ein Abgleich (Q-RD-08). Abgelöst wird der tote Erzeuger. | Konzept, 05.11.2026 |
 
 ## 5. Arbeitspakete
@@ -435,6 +454,46 @@ Stufe 1) — belegt mit Prüfvektoren aus `referenz.py` (Prüfprotokoll).
 (Zahl der Zeilen vorher/nachher); `generator/pruefen.py` ohne Befund;
 `diff -r` der alten Dienste leer; die Zahl der Dienste und Einsätze in
 `FORMAT.md` stimmt (heute 22 / 106, Bestand 109).
+
+*Gebaut (05.11.2026):* Vier Listen am Dienst, adressiert über `segment`
+bzw. `einsatz` wie `schnitte` (E-RD-04): `verdichten` (20 Aufträge: je 5
+Einsatzspuren und 5 Segmente auf Stufe 2 und auf 3, jede Gruppe mit Luft
+und Boden; Stufe 3 mit Reanimation an `m-11-7761204385`, D09),
+`loeschungen` (D18 neben dem Schnitt, D13 allein), `luecken` (Sequenz in
+D04 `ar-12-1378533568`, 20 Nummern; Zeit in D02 `r-11-8559806448`,
+15 Minuten), `uebungen` (D09 Luft und D17 Boden auf Stufe 1, D11 Boden auf
+Stufe 2 = P-S11-30; E-RD-20). Zwei neue Schnitte: D20 über das ganze
+Segment `ar-12-2837881200` und D22 nach Mitternacht in `r-11-8948069843`
+(E-RD-22); die drei bestehenden auf Stufe 1 (D08), 2 (D18) und 3 (D19).
+Bestand damit **111 Einsätze** (106 + 5 Schnitte), Quelldaten weiter 106.
+`pruefen.py`: 16 Matrixzeilen „Spurfälle", jede Marke **gerechnet** (keine
+getippt), Soll-Belegung `SPURFALL_ANZAHL` und die Matrix „Schnittzustand ×
+Stufe" im Kopf, Stichtag für Stufe 3 (`STUFE3_STICHTAG` 28.09.2026),
+Sachprüfungen je Liste (Ziel im Dienst, Fenster im Segment, nicht am
+neuesten Tag, kein Überlappen, nie das ganze Segment löschen, ganzes-Segment-
+Schnitt nicht verdichten, Luft und Boden je Stufe). `aufbauen.py` meldet
+verwaiste Verweise nach dem Neubau. Generator: `spur.luecke()`,
+`uebungsspur()` in `erzeugen.py`, Sendeplan springt über verlorene Nummern,
+`ausgabe/luecken.json`; `generator/pruefen.py` lässt den Nummernsprung nur
+an einer erklärten Sequenzlücke zu und verlangt beide Lücken. Schema um die
+vier Listen erweitert; `FORMAT.md` (Abschnitt „Die Spurfälle", Schnitt nach
+Mitternacht, 111, `D01…D22`), `generator/LIESMICH.md`, Kopf von
+`erzeugen.py`, `Technik.md`-Verzeichnisbaum. Keine Fassung hochgestuft.
+
+*Probleme und Lösung:* (1) Keine einsatzförmige Bewegung in den
+Quellsegmenten (F-RD-18) → Liste `uebungen` mit Vorbild (E-RD-20). (2) Kein
+Segment über Mitternacht (F-RD-19) → E1 in D22 vorgezogen (E-RD-22). (3)
+`beginn_tag` als Feld wäre eine zweite Wahrheit neben dem Datum → abgeleitet
+(E-RD-21). (4) Die Zahl der Marken weicht vom Konzept ab: sechzehn
+Matrixzeilen statt „vierzehn" Marken — dazu kamen „Übungssegment auf
+Stufe 2" und die Trennung Schnitt-Stufe 1/2/3 als eigene Zeilen;
+`schnitt-stufe-1` und `-2` sind je zweimal belegt (D20, D22 kommen dazu).
+*Für RD-03 und RD-05 vorgemerkt:* `einspielen.py` braucht den Tagesversatz
+aus dem Datum (sonst schneidet es D22 am falschen Tag) und die Stufen
+`loeschen`/`verdichten` mit `einsatz`-Zielen; „109" steht noch in
+Rahmenplan R4 (Registerzeile, Anlass RD-06), `Technik.md` 4.21,
+`tools/referenzdatensatz/LIESMICH.md` (Kreislauf) — nachzuziehen, wenn der
+Bestand eingespielt und gemessen ist.
 
 ### RD-03 Einspielen: Stufen `verdichten` und `loeschen` (Nr. 500; Q-RD-07)
 
@@ -616,7 +675,7 @@ Je Paket: was neu entsteht, was es wiederverwendet, was es ablöst.
 | Paket | Neu | Wiederverwendet | Abgelöst |
 |---|---|---|---|
 | RD-01 | nichts — `erzeugen.php` wird umgebaut, nicht ersetzt; `fixture/LIESMICH.md` (fehlte) | `edbak_build()` (Kopf, Fenster), `spur2_lesen_viele()`, `demo_inhaltsschluessel()`, `demo_edk1_oeffnen()`, das Öffnen aus `tools/proben/huelle/geraet.php`, `riegelprobe.php` | der tote Weg über Punktlisten |
-| RD-02 | drei Listen am Dienst nach dem Muster von `schnitte`; zehn Matrixmarken; zwei Lückenmarken in `spur.py` | Adressierung `segment: client_ref`, `ruhespur()` für die Übungsbewegung, `pruefen.py --matrix`, der Determinismus des Aufbaus | nichts |
+| RD-02 | **vier** Listen am Dienst nach dem Muster von `schnitte` (`uebungen` dazu, E-RD-20); sechzehn Matrixzeilen; `spur.luecke()`, `uebungsspur()`, `ausgabe/luecken.json`; Verweisprüfung in `aufbauen.py` | Adressierung `segment: client_ref`, `ruhespur()`, `spur.flug/fahrt/halt`, die Straßen aus `routen/`, `pruefen.py --matrix`, der Determinismus des Aufbaus | nichts |
 | RD-03 | zwei Stufen in `einspielen.py` | `ortsdaten.py` (öffnen, bauen, packen — Format aus `referenz.py`), `api/wartungslauf.php`, `api/schneiden.php`, die Segmentsuche aus `stufe_schneiden()`, die PHP-Ausdünnung als Referenz (keine Python-Fassung) | nichts |
 | RD-04 | `gh_gepackt_bauen()` in PHP (dritte Fassung eines Formats mit einer Referenz, wie Stufe 1); zwei Vektoren der Hüllenprobe; eine Registerzeile; eine Zeile für `erstellt_am` im Demo-Zweig (Q-RD-10) | `spur2_stueck_schreiben()` mit `stufe`/`n_original` (nimmt es schon), `edbak_restore()` Zweig `'server'`, Feldnamen der Nutzlast 13 | der Satz „Gepackt wird nur im Browser" |
 | RD-05 | `fixture/abgleich.py` (Q-RD-08; sonst nichts — Referenzexporte und Sollstände werden erneuert, nicht neu gebaut) | `referenz_export.mjs`, `kreislauf.py`, `ausnahmen/*.json`, `pruefablauf.json` | die Fixture vom 27.09.2026 |
@@ -646,7 +705,15 @@ ist gemessen; was fehlt, steht im Prüfdokument an erster Stelle.
 | RD-01 | Rundlauf Fixture → Reset → Fixture, Feldvergleich je Eintrag | 232 Einträge | Spur, Stufe, `n_original`, Phasenorte, Reanimation, Schnitte (ohne `erstellt_am`), `pat_blob`, Zeiten **gleich**; abweichend nur `deleted_at` (5, frisch gestempelt), `day_id` (neu vergeben), `konto.name` (der Reset setzt „Demo NutzerIn") und vor der Vereinheitlichung `lat`/`lon` an 5 Einsätzen |
 | RD-01 | Prüfvektoren aus `referenz.py` gegen `spur_oeffnen()` | 3 Stücke + 1 Störung | **4 von 4**: Stufe 1, 2 und 3 je 50 Punkte gleich der Referenz (Höhe null und negativ), umetikettiertes `n_original` abgewiesen (`pruefwert`) |
 | RD-01 | `riegelprobe.php` nach der Änderung | Erwartungen | **11 von 11**, Rückgabe 0; Fall 2b mit der Meldung des Riegels (`edka1:`) |
-| RD-02 | `quelldaten/pruefen.py`, `generator/pruefen.py`, `diff -r` | — | — |
+| RD-02 vorab | `quelldaten/pruefen.py`, `generator/pruefen.py` vor der Änderung | Matrix, Einzelprüfungen | 98 Matrixzeilen, 0 offen, 7 266 Einzelprüfungen; Generator 339 472 Einzelprüfungen, 0 Befunde |
+| RD-02 | Bewegung in den Schnittfenstern, Generator-Ausgabe | km je Stunde | D08 9,3 km (Rückweg), dann 0,3 km/h; D18 21,5 km, dann 0,3; D19 nur Zittern (F-RD-18) |
+| RD-02 | `quelldaten/aufbauen.py` | Verweise | 123 Segmente, Kennungen außer D22 unverändert; „Alle Verweise der Listen am Dienst stehen"; Gegenprobe mit verbogenem Verweis gemeldet |
+| RD-02 | `quelldaten/pruefen.py` | Matrix, Befunde | **114 Matrixzeilen, 0 offen**, 126 Marken, **7 506 Einzelprüfungen, 0 Befunde**; 1 394 Zeitstempel |
+| RD-02 | Gegenprobe `pruefen.py`: Stufe 3 im November, Löschvermerk über dem Schnitt, Vorbild aus fremdem Dienst | Befunde | alle drei gemeldet (dazu die zwei Zählabweichungen), zurückgelegt wieder 0 |
+| RD-02 | `generator/erzeugen.py`, `generator/pruefen.py` | Befunde | 69 306 Punkte (Ruhe 17 382 → 18 670), 638 Anfragen; **343 593 Einzelprüfungen, 0 Befunde**; Übungen im Tempo der Grenzen (300/140 km/h) |
+| RD-02 | Gegenprobe Lückenprüfung (`luecken.json` verbogen) | Befunde | 3 gemeldet (Sprung nicht erklärt, Sequenzlücke fehlt, Zeitlücke fehlt), zurückgelegt 0 |
+| RD-02 | `diff -r` Generator-Ausgabe vor/nach | geänderte Dienste | nur D02, D04, D09, D11, D17, D22 (Lücke, Übung, E1); **16 Dienste byteweise gleich**; zwei Läufe nach der Änderung byteweise gleich |
+| RD-02 | Anfragen der Lücken | `seq_from`, Zeit | Sequenz: Anfrage endet bei 158, nächste beginnt bei 179 (20 Nummern); Zeit: Nummern lückenlos, Pause 16 min |
 | RD-03 | `einspielen.py`, `sitzungsprobe.py`, Umrisszahlen | — | — |
 | RD-04 | Hüllenprobe, Wartungslaufprobe, Ortsdatenprobe, Reset mit Handbestand | — | — |
 | RD-05 | Kreisläufe csv/edbak, `abgleich.py`, Reset, Bedienweg Demo | — | — |
@@ -666,4 +733,5 @@ alles") misst erst RD-03.
 | 05.11.2026 | Nach Rückfrage der Betreiberin (Wildwuchs, Q-RD-04, Übungstage): F-RD-04 und F-RD-11 berichtigt (Python hat das Format einmal; die Segmentkennung überlebt den Aufbau), E-RD-04 auf die vorhandene Adressierung `segment: client_ref` umgestellt, Q-RD-04 mit Lesart (d) „Übungssegmente, zwei auf Stufe 1, eines auf Stufe 2" als Vorschlag, E-RD-08 und Abschnitt 6 (Wildwuchs-Prüfung) neu; Matrixmarken von 14 auf 12 (10 Fälle). |
 | 05.11.2026 | Zweite Rückfrage („geschnittene Tage?"): F-RD-14 (Demo-Schnitte gelten auf jeder Anlage als alt, Rücknahme antwortet 409 `altschnitt`), Q-RD-10 mit Vorschlag (a), die drei bestehenden Schnitte auf Stufe 1/2/3 verteilt (Q-RD-03), Matrix „Schnittzustand × Stufe" in `pruefen.py`, Marken auf 14. |
 | 05.11.2026 | **Freigabe:** Q-RD-01 bis -10 wie vorgeschlagen (E-RD-09 bis -18). Dazu E-RD-19: Jeder Fehler am Demo-Konto wird in diesem Schritt behoben — neues Paket RD-07 (Demo-Durchgang) vor RD-05, der Browserweg ist nicht mehr ausgenommen, F-RD-08 wird bei Bestätigung behoben. Fahrplanzeile auf „freigegeben". |
+| 05.11.2026 | **RD-02 erledigt:** vier Spurfall-Listen, 16 Matrixzeilen, Lücken und Übungen im Generator; Befunde F-RD-18, -19, Entscheidungen der Umsetzung E-RD-20 bis -22 (Übungsliste mit Vorbild, Tagesversatz aus dem Datum, D22-E1 vorgezogen). |
 | 05.11.2026 | **RD-01 erledigt:** `erzeugen.php` erzeugt wieder (Format 3, 67 478 Punkte), Riegelprobe 11 von 11, `fixture/LIESMICH.md` neu. Befunde F-RD-15 bis -17. Statusblock: „wartet auf Q-RD-…" bei RD-02 und RD-04 gestrichen (seit der Freigabe überholt). |

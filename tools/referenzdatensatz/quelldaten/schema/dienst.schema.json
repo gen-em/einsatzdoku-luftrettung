@@ -133,6 +133,144 @@
           }
         }
       }
+    },
+    "loeschungen": {
+      "$kommentar": "Loeschauftraege der Einspielstufe `loeschen` (RD-03): ein Zeitraum im Segment, ueber api/schneiden.php action 'loeschen'. Es entsteht ein Loeschvermerk (track_cuts ohne Einsatz). Nie das ganze Segment -- das lehnt der Endpunkt mit 409 `alles` ab (F-RD-09). Konzept RD, E-RD-04.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "segment",
+          "beginn",
+          "ende"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "segment": {
+            "$kommentar": "client_ref eines Ruhesegments DIESES Dienstes; pruefen.py prueft das.",
+            "type": "string",
+            "pattern": "^a?r-[0-9]+-[0-9]+$",
+            "maxLength": 64
+          },
+          "beginn": {
+            "$ref": "#/$defs/zeitpunkt"
+          },
+          "ende": {
+            "$ref": "#/$defs/zeitpunkt"
+          }
+        }
+      }
+    },
+    "verdichten": {
+      "$kommentar": "Verdichtungsauftraege der Einspielstufe `verdichten` (RD-03): eine Spur wird ueber api/wartungslauf.php auf Stufe 2 (gepackt) oder 3 (ausgeduennt) gebracht. Genau eines von `segment` und `einsatz`. Konzept RD, E-RD-04, E-RD-11.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "stufe"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "segment": {
+            "$kommentar": "client_ref eines Ruhesegments DIESES Dienstes; pruefen.py prueft das.",
+            "type": "string",
+            "pattern": "^a?r-[0-9]+-[0-9]+$",
+            "maxLength": 64
+          },
+          "einsatz": {
+            "type": "string",
+            "pattern": "^(m|am|wm)-[0-9]+-[0-9]+$",
+            "maxLength": 64
+          },
+          "stufe": {
+            "enum": [
+              2,
+              3
+            ]
+          }
+        },
+        "oneOf": [
+          {
+            "required": [
+              "segment"
+            ]
+          },
+          {
+            "required": [
+              "einsatz"
+            ]
+          }
+        ]
+      }
+    },
+    "luecken": {
+      "$kommentar": "Luecken in der Spur eines Segments, vom Generator gezeichnet (spur.luecke): `sequenz` -- das Geraet hat die Punkte des Zeitraums verloren, ihre Nummern fehlen; `zeit` -- das Geraet hat pausiert, die Nummern laufen durch. `dauer` in Minuten. Konzept RD, E-RD-14.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "segment",
+          "art",
+          "ab",
+          "dauer"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "segment": {
+            "$kommentar": "client_ref eines Ruhesegments DIESES Dienstes; pruefen.py prueft das.",
+            "type": "string",
+            "pattern": "^a?r-[0-9]+-[0-9]+$",
+            "maxLength": 64
+          },
+          "art": {
+            "enum": [
+              "sequenz",
+              "zeit"
+            ]
+          },
+          "ab": {
+            "$ref": "#/$defs/zeitpunkt"
+          },
+          "dauer": {
+            "type": "integer",
+            "minimum": 3,
+            "maximum": 120
+          }
+        }
+      }
+    },
+    "uebungen": {
+      "$kommentar": "Uebungssegmente (E-RD-12): Im Zeitraum faehrt oder fliegt das Fahrzeug die Strecke des Einsatzes `vorbild` (desselben Dienstes) von der Basis zum Einsatzort und zurueck -- eine einsatzfoermige Bewegung, die niemand als Einsatz angelegt hat. Kein Schnitt, kein Einsatz; Material zum Ueben des Schneidens.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "segment",
+          "beginn",
+          "ende",
+          "vorbild"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "segment": {
+            "$kommentar": "client_ref eines Ruhesegments DIESES Dienstes; pruefen.py prueft das.",
+            "type": "string",
+            "pattern": "^a?r-[0-9]+-[0-9]+$",
+            "maxLength": 64
+          },
+          "beginn": {
+            "$ref": "#/$defs/zeitpunkt"
+          },
+          "ende": {
+            "$ref": "#/$defs/zeitpunkt"
+          },
+          "vorbild": {
+            "type": "string",
+            "pattern": "^(m|am|wm)-[0-9]+-[0-9]+$",
+            "maxLength": 64
+          }
+        }
+      }
     }
   },
   "$defs": {

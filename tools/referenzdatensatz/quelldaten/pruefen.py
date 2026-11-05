@@ -184,6 +184,28 @@ MATRIX = [
     ("Sonderzeichen", "Formel-Anfangszeichen @", ["sonderzeichen-formel-at"]),
     ("Sonderzeichen", "Umlaute und ß", ["sonderzeichen-umlaute"]),
     ("Spur", "Fußweg (Wegpunkt `zustieg`)", ["fussweg-zustieg"]),
+    # DIE SPURFAELLE (Konzept RD, Nr. 500). Jede Marke wird aus den Listen
+    # `verdichten`, `loeschungen`, `luecken`, `uebungen` und `schnitte` am
+    # Dienst GERECHNET, keine ist getippt. Wie oft eine belegt sein muss, steht
+    # in SPURFALL_ANZAHL; die Verteilung als Matrix „Schnittzustand × Stufe"
+    # steht dort darueber.
+    ("Spurfälle", "Einsatzspur auf Stufe 2 (gepackt)", ["stufe-2-einsatz"]),
+    ("Spurfälle", "Segment auf Stufe 2 (gepackt)", ["stufe-2-segment"]),
+    ("Spurfälle", "Einsatzspur auf Stufe 3 (ausgedünnt)", ["stufe-3-einsatz"]),
+    ("Spurfälle", "Segment auf Stufe 3 (ausgedünnt)", ["stufe-3-segment"]),
+    ("Spurfälle", "Einsatz mit Reanimation auf Stufe 3", ["stufe-3-rea"]),
+    ("Spurfälle", "Übungssegment: einsatzförmige Spur, ungeschnitten", ["uebung-ungeschnitten"]),
+    ("Spurfälle", "Übungssegment auf Stufe 2 (P-S11-30)", ["uebung-stufe-2"]),
+    ("Spurfälle", "Schnitt im Segment auf Stufe 1", ["schnitt-stufe-1"]),
+    ("Spurfälle", "Schnitt im Segment auf Stufe 2", ["schnitt-stufe-2"]),
+    ("Spurfälle", "Schnitt im Segment auf Stufe 3", ["schnitt-stufe-3"]),
+    ("Spurfälle", "Schnitt und Löschvermerk im selben Segment", ["schnitt-neben-loeschvermerk"]),
+    ("Spurfälle", "Löschvermerk ohne Schnitt", ["loeschvermerk-allein"]),
+    ("Spurfälle", "Schnitt nach Mitternacht in einem Segment über Mitternacht",
+     ["schnitt-nach-mitternacht"]),
+    ("Spurfälle", "Schnitt über das ganze Segment", ["schnitt-nimmt-alles"]),
+    ("Spurfälle", "Sequenzlücke (Punkte verloren)", ["luecke-sequenz"]),
+    ("Spurfälle", "Zeitlücke (Gerät pausiert)", ["luecke-zeit"]),
     ("Ruhezeiten", "Segmente mit Track", ["ruhe-track"]),
     ("Ruhezeiten", "mehrere Segmente je Dienst", ["ruhe-mehrere"]),
     ("Ruhezeiten", "nicht abgeschlossenes Segment", ["ruhe-nicht-abgeschlossen"]),
@@ -211,6 +233,40 @@ MATRIX = [
     ("Weitere Felder", "bearbeiteter Uhr-Einsatz (edited=1)", ["uhr-bearbeitet"]),
     ("Weitere Felder", "unbearbeiteter Uhr-Einsatz (edited=0)", ["uhr-unbearbeitet"]),
 ]
+
+
+# --- Spurfaelle: Schnittzustand × Stufe (Konzept RD, E-RD-11 bis -15) ------
+#
+# Wer einen Fall ergaenzt, traegt ihn hier ein und sieht die leere Zelle.
+# Die Zahlen sind die Soll-Belegung; `pruefen.py` zaehlt sie nach.
+#
+#                        Stufe 1            Stufe 2              Stufe 3
+#   ungeschnitten        der Rest           5 Einsätze, 5 Segm.  5 Einsätze, 5 Segm.
+#                                                                (einer mit Reanimation)
+#   Übungssegment        2 (D09 Luft, D17)  1 (D11, P-S11-30)    —
+#   Schnitt              D08; D20 ganzes    D18 (mit Löschv.),   D19
+#                        Segment            D22 nach Mitternacht
+#   Löschvermerk allein  D13                —                    —
+#   Lücke Sequenz / Zeit Zeit: D02          Sequenz: D04         —
+#
+# Leer und warum: Schnitt über das ganze Segment wird nicht verdichtet —
+# der Browser findet nach dem Ausblenden keinen Punkt und tauscht nichts
+# (F-RD-08, gemessen in RD-03). Ein Löschvermerk auf Stufe 3 belegte nichts,
+# was D18 auf Stufe 2 nicht schon belegt.
+SPURFALL_ANZAHL = {
+    "stufe-2-einsatz": 5, "stufe-3-einsatz": 5, "stufe-2-segment": 5, "stufe-3-segment": 5,
+    "uebung-ungeschnitten": 3, "uebung-stufe-2": 1,
+    "schnitt-stufe-2": 2, "schnitt-stufe-3": 1, "schnitt-nach-mitternacht": 1,
+    "schnitt-nimmt-alles": 1, "schnitt-neben-loeschvermerk": 1, "loeschvermerk-allein": 1,
+    "luecke-sequenz": 1, "luecke-zeit": 1,
+}
+# STUFE 3 NUR AN ALTEN SPUREN. `spur2_wartung_tauschen()` nimmt Stufe 3 erst,
+# wenn die Spur SPUR2_AUSDUENN_FRIST_TAGE (31) nach ihrem Ende liegt, gerechnet
+# gegen die Uhr der Anlage im Augenblick des Einspielens. Der Stichtag liegt
+# 31 Tage vor dem Beginn der Umsetzung von Schritt 24 (05.11.2026) und eine
+# Woche Puffer davor; wer spaeter einspielt, ist damit immer auf der sicheren
+# Seite, wer frueher einspielt, bekommt `409 frist`.
+STUFE3_STICHTAG = "2026-09-28 00:00"
 
 
 class Lauf:
@@ -930,6 +986,179 @@ def main() -> int:
                 f"erwartet wird mindestens ein Schnitt, und so viele wie Auftraege "
                 f"in den Quelldaten stehen (E-DA-11): {auftraege} Auftraege, "
                 f"{schnittzahl} gezaehlt")
+
+    # ---- Spurfaelle (Konzept RD) -------------------------------------------
+    #
+    # EINE ADRESSIERUNG FUER ALLES (E-RD-04): Jede Liste nennt ihr Ziel ueber
+    # `segment` (client_ref eines Ruhesegments DIESES Dienstes) oder `einsatz`
+    # (client_ref eines Einsatzes). Die Segmentkennungen entstehen bei jedem
+    # `aufbauen.py` neu, aber deterministisch (F-RD-11) — `aufbauen.py` prueft
+    # nach dem Bau, dass jede genannte Kennung noch steht.
+    def fenster_von(x: dict) -> tuple[datetime, datetime]:
+        if "ab" in x:
+            a = lokal(x["ab"])
+            return a, a + timedelta(minutes=x["dauer"])
+        return lokal(x["beginn"]), lokal(x["ende"])
+
+    def ueberlappt(a: tuple, b: tuple) -> bool:
+        return a[0] < b[1] and b[0] < a[1]
+
+    stichtag = lokal(STUFE3_STICHTAG)
+    spurfall_ziele: set[str] = set()
+    for d in dienste:
+        n, dn = d["kennung"], d["dienst"]
+        segmente = {r["client_ref"]: r for r in d["ruhesegmente"]}
+        einsaetze = {e["client_ref"]: e for e in d["einsaetze"] if e["client_ref"]}
+        stufe_von: dict[str, int] = {}
+        # Was im Segment schon liegt — je Segment die Fenster aller Handlungen.
+        belegt: dict[str, list[tuple[str, tuple]]] = {}
+        for sc in d.get("schnitte", []):
+            belegt.setdefault(sc["segment"], []).append(("schnitt", fenster_von(sc)))
+
+        def segment_holen(x: dict, wo: str) -> dict | None:
+            seg = segmente.get(x["segment"])
+            lauf.pruefe(seg is not None, f"{wo}: das Segment steht nicht in diesem Dienst")
+            return seg
+
+        def im_segment(x: dict, seg: dict, wo: str) -> None:
+            a, b = fenster_von(x)
+            lauf.pruefe(a < b, f"{wo}: Ende liegt nicht nach dem Beginn")
+            lauf.pruefe(lokal(seg["beginn"]) <= a and seg["ende"] is not None
+                        and b <= lokal(seg["ende"]),
+                        f"{wo}: das Fenster liegt nicht im Segment "
+                        f"({seg['beginn']} bis {seg['ende']})")
+            # NICHT AM NEUESTEN DIENSTTAG — dieselbe Begruendung wie beim
+            # Schnitt: Die Sichtpruefung und der Bilderlauf greifen dorthin.
+            lauf.pruefe(dn["day"] != neuester_tag, f"{wo}: liegt am neuesten Diensttag")
+
+        # -- verdichten --
+        for v in d.get("verdichten", []):
+            art = "segment" if "segment" in v else "einsatz"
+            ziel = v[art]
+            wo = f"{n}/verdichten {ziel}"
+            lauf.pruefe(ziel not in spurfall_ziele, f"{wo}: Ziel steht zweimal in `verdichten`")
+            spurfall_ziele.add(ziel)
+            stufe_von[ziel] = v["stufe"]
+            if art == "segment":
+                seg = segment_holen(v, wo)
+                if seg is None:
+                    continue
+                ende = seg["ende"]
+                merke([f"stufe-{v['stufe']}-segment"], wo)
+            else:
+                e = einsaetze.get(ziel)
+                lauf.pruefe(e is not None, f"{wo}: der Einsatz steht nicht in diesem Dienst")
+                if e is None:
+                    continue
+                # NUR EIN EINSATZ MIT SPUR, VOM GERAET, NICHT IM PAPIERKORB.
+                # Ohne Stuecke hat der Wartungslauf nichts zu tauschen, und
+                # ein Einsatz im Papierkorb steht in keiner Liste.
+                lauf.pruefe(bool(e.get("route")) and e["kanal"] == "ingest",
+                            f"{wo}: kein Geraete-Einsatz mit Spur")
+                lauf.pruefe(not e.get("papierkorb") and not d.get("papierkorb"),
+                            f"{wo}: der Einsatz liegt im Papierkorb")
+                ende = e["ende"]
+                merke([f"stufe-{v['stufe']}-einsatz"], wo)
+                if v["stufe"] == 3 and e["rea"]:
+                    merke(["stufe-3-rea"], wo)
+            lauf.pruefe(dn["day"] != neuester_tag, f"{wo}: liegt am neuesten Diensttag")
+            if v["stufe"] == 3:
+                lauf.pruefe(ende is not None and lokal(ende) < stichtag,
+                            f"{wo}: Stufe 3 verlangt ein Spurende vor {STUFE3_STICHTAG} "
+                            f"(31-Tage-Frist des Wartungslaufs), hier {ende}")
+
+        # -- loeschungen --
+        for x in d.get("loeschungen", []):
+            wo = f"{n}/loeschen {x['segment']} {x['beginn'][11:]}"
+            seg = segment_holen(x, wo)
+            if seg is None:
+                continue
+            im_segment(x, seg, wo)
+            # NIE DAS GANZE SEGMENT: api/schneiden.php antwortet 409 `alles`
+            # — dafuer ist der Papierkorb da (F-RD-09).
+            lauf.pruefe(not (fenster_von(x)[0] <= lokal(seg["beginn"])
+                             and fenster_von(x)[1] >= lokal(seg["ende"])),
+                        f"{wo}: nimmt das ganze Segment (409 alles)")
+            lauf.pruefe(x["beginn"][:10] == x["ende"][:10], f"{wo}: laeuft ueber Mitternacht")
+            for was, f in belegt.get(x["segment"], []):
+                lauf.pruefe(not ueberlappt(fenster_von(x), f),
+                            f"{wo}: ueberlappt einen {was} im selben Segment")
+            belegt.setdefault(x["segment"], []).append(("Loeschvermerk", fenster_von(x)))
+            hat_schnitt = any(sc["segment"] == x["segment"] for sc in d.get("schnitte", []))
+            merke(["schnitt-neben-loeschvermerk" if hat_schnitt else "loeschvermerk-allein"], wo)
+
+        # -- luecken --
+        for x in d.get("luecken", []):
+            wo = f"{n}/luecke {x['segment']} {x['art']}"
+            seg = segment_holen(x, wo)
+            if seg is None:
+                continue
+            im_segment(x, seg, wo)
+            for was, f in belegt.get(x["segment"], []):
+                lauf.pruefe(not ueberlappt(fenster_von(x), f),
+                            f"{wo}: ueberlappt einen {was} im selben Segment")
+            belegt.setdefault(x["segment"], []).append(("Luecke", fenster_von(x)))
+            merke([f"luecke-{x['art']}"], wo)
+
+        # -- uebungen --
+        for x in d.get("uebungen", []):
+            wo = f"{n}/uebung {x['segment']}"
+            seg = segment_holen(x, wo)
+            if seg is None:
+                continue
+            im_segment(x, seg, wo)
+            # UNGESCHNITTEN: kein Schnitt und kein Loeschvermerk im Segment —
+            # das Segment ist das Material, an dem geuebt wird.
+            lauf.pruefe(not belegt.get(x["segment"]),
+                        f"{wo}: im Uebungssegment steht schon {belegt.get(x['segment'])}")
+            belegt.setdefault(x["segment"], []).append(("Uebung", fenster_von(x)))
+            vb = einsaetze.get(x["vorbild"])
+            # DAS VORBILD gibt den Weg: Basis -> Einsatzort, und zurueck.
+            lauf.pruefe(vb is not None and bool(vb.get("route"))
+                        and vb["route"][:2] == ["basis", "ort"],
+                        f"{wo}: Vorbild {x['vorbild']} ist kein Einsatz dieses Dienstes, "
+                        f"dessen Route mit basis -> ort beginnt")
+            lauf.pruefe((fenster_von(x)[1] - fenster_von(x)[0]) >= timedelta(minutes=40),
+                        f"{wo}: unter 40 Minuten — Hin- und Rueckweg passen nicht hinein")
+            merke(["uebung-ungeschnitten"], wo)
+            if stufe_von.get(x["segment"]) == 2:
+                merke(["uebung-stufe-2"], wo)
+            lauf.pruefe(stufe_von.get(x["segment"], 1) in (1, 2),
+                        f"{wo}: Uebungssegmente liegen auf Stufe 1 oder 2 (E-RD-12)")
+
+        # -- Schnitte: Stufe, ganzes Segment, nach Mitternacht --
+        for sc in d.get("schnitte", []):
+            seg = segmente.get(sc["segment"])
+            if seg is None:
+                continue
+            wo = f"{n}/schnitt {sc['segment']}"
+            st = stufe_von.get(sc["segment"], 1)
+            merke([f"schnitt-stufe-{st}"], wo)
+            ganz = (lokal(sc["beginn"]) <= lokal(seg["beginn"])
+                    and seg["ende"] is not None and lokal(sc["ende"]) >= lokal(seg["ende"]))
+            if ganz:
+                merke(["schnitt-nimmt-alles"], wo)
+                # NICHT VERDICHTEN: Nach dem Ausblenden bleibt kein Punkt, der
+                # Browser antwortet `liegt` (F-RD-08) — der Auftrag liefe ins Leere.
+                lauf.pruefe(st == 1, f"{wo}: ein Schnitt ueber das ganze Segment wird nicht verdichtet")
+            # NACH MITTERNACHT: Das Segment beginnt am Vortag, der Schnitt am
+            # Folgetag — der Tagesversatz 1 (`beginn_tag`) leitet sich aus dem
+            # Datum ab, eine zweite Angabe dafuer gibt es nicht.
+            if sc["beginn"][:10] > seg["beginn"][:10]:
+                merke(["schnitt-nach-mitternacht"], wo)
+
+    # WIE OFT JEDE MARKE — die Soll-Belegung aus dem Kopf.
+    for m, soll in SPURFALL_ANZAHL.items():
+        ist = len(marken.get(m, []))
+        lauf.pruefe(ist == soll, f"Spurfall {m}: {ist} belegt, Soll {soll} ({marken.get(m, [])})")
+    # LUFT UND BODEN JE STUFE: Das Packen und Ausduennen laeuft fuer beide
+    # Geraetearten gleich, die Spuren sehen aber verschieden aus.
+    for st in (2, 3):
+        for art in ("einsatz", "segment"):
+            arten = {next(d["dienst"]["art"] for d in dienste if d["kennung"] == wo.split("/")[0])
+                     for wo in marken.get(f"stufe-{st}-{art}", [])}
+            lauf.pruefe(arten == {"air", "ground"},
+                        f"Spurfall stufe-{st}-{art}: Diensttypen {sorted(arten)}, verlangt Luft und Boden")
 
     # ---- Reale Namen ------------------------------------------------------
     # NUR IN DEN DATEN, nicht in den Erlaeuterungen: Die $warum-Bloecke nennen

@@ -593,5 +593,22 @@
   ],
   "$warum_datum": "EINZIGER Dienst an diesem Kalendertag — Voraussetzung für den CSV-Nachtrag von IMP-03 (B-04).",
   "ziel_einsaetze": 6,
-  "$warum_spur_ausgangspunkt": "ENTFALLEN mit dem Demo-Ausbau (E-DA-09). Er trug 47.559 / 10.217 -- genau die Koordinate, die der Standort 'Notarztstandort Talwang' seither selbst fuehrt. `basis_von()` liest damit denselben Wert, und die Spur dieses Tages ist byteweise dieselbe geblieben (gemessen mit `diff -r` ueber den ganzen Ausgabeordner). Ein Ausgangspunkt NEBEN einem Standort mit Koordinaten waere eine zweite Wahrheit; pruefen.py laesst ihn dort nicht mehr zu."
+  "$warum_spur_ausgangspunkt": "ENTFALLEN mit dem Demo-Ausbau (E-DA-09). Er trug 47.559 / 10.217 -- genau die Koordinate, die der Standort 'Notarztstandort Talwang' seither selbst fuehrt. `basis_von()` liest damit denselben Wert, und die Spur dieses Tages ist byteweise dieselbe geblieben (gemessen mit `diff -r` ueber den ganzen Ausgabeordner). Ein Ausgangspunkt NEBEN einem Standort mit Koordinaten waere eine zweite Wahrheit; pruefen.py laesst ihn dort nicht mehr zu.",
+  "verdichten": [
+    {
+      "einsatz": "am-12-8992737340",
+      "stufe": 3
+    },
+    {
+      "segment": "ar-12-3377519023",
+      "stufe": 3
+    }
+  ],
+  "loeschungen": [
+    {
+      "segment": "ar-12-9269136239",
+      "beginn": "2026-09-27 15:00",
+      "ende": "2026-09-27 15:08"
+    }
+  ]
 }

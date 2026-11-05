@@ -705,5 +705,15 @@
       ]
     }
   ],
-  "ziel_einsaetze": 7
+  "ziel_einsaetze": 7,
+  "verdichten": [
+    {
+      "einsatz": "m-11-8181463644",
+      "stufe": 2
+    },
+    {
+      "segment": "r-11-7189195995",
+      "stufe": 2
+    }
+  ]
 }

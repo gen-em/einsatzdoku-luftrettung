@@ -632,5 +632,15 @@
     }
   ],
   "ziel_einsaetze": 6,
-  "$warum_spur_ausgangspunkt": "ENTFALLEN mit dem Demo-Ausbau (E-DA-09). Er trug 47.559 / 10.217 -- genau die Koordinate, die der Standort 'Notarztstandort Talwang' seither selbst fuehrt. `basis_von()` liest damit denselben Wert, und die Spur dieses Tages ist byteweise dieselbe geblieben (gemessen mit `diff -r` ueber den ganzen Ausgabeordner). Ein Ausgangspunkt NEBEN einem Standort mit Koordinaten waere eine zweite Wahrheit; pruefen.py laesst ihn dort nicht mehr zu."
+  "$warum_spur_ausgangspunkt": "ENTFALLEN mit dem Demo-Ausbau (E-DA-09). Er trug 47.559 / 10.217 -- genau die Koordinate, die der Standort 'Notarztstandort Talwang' seither selbst fuehrt. `basis_von()` liest damit denselben Wert, und die Spur dieses Tages ist byteweise dieselbe geblieben (gemessen mit `diff -r` ueber den ganzen Ausgabeordner). Ein Ausgangspunkt NEBEN einem Standort mit Koordinaten waere eine zweite Wahrheit; pruefen.py laesst ihn dort nicht mehr zu.",
+  "verdichten": [
+    {
+      "einsatz": "am-12-3242714083",
+      "stufe": 2
+    },
+    {
+      "segment": "ar-12-8748168307",
+      "stufe": 3
+    }
+  ]
 }

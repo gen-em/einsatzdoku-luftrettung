@@ -19,6 +19,8 @@ braucht:
   gpx/          Sichtpruefformat, abgeleitet
   fusswege.json je Fussweg Strecke, Dauer und Gehgeschwindigkeit -- pruefen.py
                 misst gegen diese Datei, nicht gegen die Spur
+  luecken.json  je Luecke einer Segmentspur Art, Zeitraum und verlorene Nummern
+                (Konzept RD) -- pruefen.py laesst den Sprung nur dort zu
   kennzahlen.json  Umfang in Zahlen
 
 `ausgabe/` steht in .gitignore: rund 25 MB, vollstaendig ableitbar, ein Lauf
@@ -258,13 +260,54 @@ def spur_bauen(dienst: dict, einsatz: dict, koords: list, routen: dict,
     return spur.ausduennen(punkte_roh), fusswege
 
 
-def ruhespur(dienst: dict, stueck: dict, routen: dict) -> list[tuple]:
+def uebungsspur(dienst: dict, uebung: dict, vorbild: dict, routen: dict,
+                pos: tuple) -> list[tuple]:
+    """Die Bewegung eines Uebungssegments (Konzept RD, E-RD-12): roh.
+
+    Das Fahrzeug faehrt oder fliegt die Strecke seines Vorbilds — eines
+    Einsatzes desselben Dienstes — von der Basis zum Einsatzort, steht dort
+    und kehrt um; drei Zehntel hin, vier am Ort, drei zurueck. Niemand hat
+    dabei einen Knopf gedrueckt, es gibt keinen Einsatz: Das ist das Material,
+    an dem das Schneiden geuebt wird (`api/schneiden.php`, Kopf).
+
+    KEINE NEUE KOORDINATE UND KEINE NEUE STRECKE. Am Boden nimmt die Fahrt die
+    Strassengeometrie des Vorbilds (Abschnitt 0, Basis -> Ort) aus `routen/`
+    und faehrt sie rueckwaerts zurueck; in der Luft fliegt sie zu dessen
+    Wegpunkt `ort`. Fehlt am Boden die Strasse, bricht der Lauf ab — eine
+    Luftlinie mit Flughoehe waere dort ein Fehler, der nach Erfolg aussieht.
+    """
+    t0, t1 = epoche(uebung["beginn"]), epoche(uebung["ende"])
+    hin_bis = t0 + (t1 - t0) * 3 // 10
+    zurueck_ab = t1 - (t1 - t0) * 3 // 10
+    saat = f"uebung-{vorbild['ref']}"
+    if dienst["art"] == "ground":
+        geo = _routen_nachschlagen(routen, vorbild["ref"], 0)
+        if geo is None:
+            raise RuntimeError(f"Uebung {uebung['segment']}: Vorbild {vorbild['ref']} "
+                               f"hat keine Strasse in routen/ (Abschnitt 0)")
+        g = geo["geometry"]["coordinates"]
+        hin, zurueck = spur.fahrt(g, t0, hin_bis), spur.fahrt(g[::-1], zurueck_ab, t1)
+    else:
+        ort = vorbild["wegpunkte"][1]
+        hin = spur.flug(pos, ort, t0, hin_bis, saat)
+        zurueck = spur.flug(ort, pos, zurueck_ab, t1, saat + "-zurueck")
+    am_ort = (hin[-1][0], hin[-1][1])
+    return hin + spur.halt(am_ort, hin_bis + spur.TAKT_HALT, zurueck_ab - 1,
+                           spur.TAKT_HALT, saat) + zurueck
+
+
+def ruhespur(dienst: dict, stueck: dict, routen: dict,
+             uebung: tuple[dict, dict] | None = None) -> list[tuple]:
     """Ruhe-Segment: erst der Rueckweg, dann Stillstand.
 
     Bis zum Umbau stand das Fahrzeug hier einfach an seinem Standort. Das war
     falsch: Nach einem Transport beginnt das Ruhe-Segment AN DER KLINIK, und
     der Weg zurueck wird darin aufgezeichnet (Model.mc, `_endMission` ->
     `_startRestSegment`). Wer ihn weglaesst, hat eine Spur, die springt.
+
+    `uebung` = (Auftrag, Vorbild-Stueck): Im Zeitraum des Auftrags ersetzt die
+    Uebungsbewegung den Stillstand (`uebungsspur()`). Ohne Auftrag entsteht
+    Byte fuer Byte dieselbe Spur wie vorher.
     """
     von, nach = stueck["von"], stueck["nach"]
     t0 = epoche(stueck["beginn"])
@@ -272,7 +315,8 @@ def ruhespur(dienst: dict, stueck: dict, routen: dict) -> list[tuple]:
     if not von or not nach:
         return []
     if von == nach:
-        return spur.ausduennen(spur.halt(nach, t0, t1, spur.TAKT_RUHE, stueck["ref"]))
+        punkte = spur.halt(nach, t0, t1, spur.TAKT_RUHE, stueck["ref"])
+        return spur.ausduennen(_uebung_einsetzen(punkte, dienst, uebung, routen, nach))
 
     geo = _routen_nachschlagen(routen, stueck["ref"], 0)
     # 0,95 und nicht 0,8: Ist das Ruhe-Segment kurz, wurde der Rueckweg
@@ -290,7 +334,24 @@ def ruhespur(dienst: dict, stueck: dict, routen: dict) -> list[tuple]:
         # (OSRM rastet auf die Strasse) -- sonst springt die Spur.
         letzte = (punkte[-1][0], punkte[-1][1]) if punkte else nach
         punkte += spur.halt(letzte, tw, t1, spur.TAKT_RUHE, stueck["ref"])
+    if uebung:
+        # Die Uebung beginnt erst, wenn der Rueckweg hinter dem Fahrzeug liegt.
+        if epoche(uebung[0]["beginn"]) < tw:
+            raise RuntimeError(f"Uebung {uebung[0]['segment']} beginnt im Rueckweg "
+                               f"(bis {datetime.fromtimestamp(tw, TZ):%H:%M})")
+        punkte = _uebung_einsetzen(punkte, dienst, uebung, routen, nach)
     return spur.ausduennen(sorted(punkte, key=lambda p: p[3]))
+
+
+def _uebung_einsetzen(punkte: list[tuple], dienst: dict, uebung, routen: dict,
+                      pos: tuple) -> list[tuple]:
+    """Den Stillstand im Zeitraum der Uebung durch ihre Bewegung ersetzen."""
+    if not uebung:
+        return punkte
+    auftrag, vorbild = uebung
+    a, b = epoche(auftrag["beginn"]), epoche(auftrag["ende"])
+    bewegung = uebungsspur(dienst, auftrag, vorbild, routen, pos)
+    return sorted([p for p in punkte if not a <= p[3] <= b] + bewegung, key=lambda p: p[3])
 
 
 # ------------------------------------------------------- Phasen mit Koordinate
@@ -366,11 +427,20 @@ def sendeplan(dienst: dict, pakete: list[dict]) -> list[dict]:
                 if p["start"] > zeit:
                     continue
                 seq_from = bestaetigt.get(p["ref"], 0)
+                # VERLORENE NUMMERN (Sequenzluecke, `spur.luecke`) sendet das
+                # Geraet nie: Der Plan springt ueber sie hinweg, und kein Teilstueck
+                # reicht ueber sie hinaus — die naechste Anfrage beginnt dahinter.
+                verloren = p.get("verloren") or ()
+                while seq_from in verloren:
+                    seq_from += 1
                 verfuegbar = [i for i, pt in enumerate(p["punkte"]) if pt[3] <= zeit]
                 bis = (verfuegbar[-1] + 1) if verfuegbar else 0
                 if seq_from >= bis and p["ref"] in meta_bestaetigt:
                     continue
                 n = min(CHUNK, bis - seq_from)
+                grenze = min((i for i in verloren if i >= seq_from), default=None)
+                if grenze is not None:
+                    n = min(n, grenze - seq_from)
                 plan.append({
                     "zeit": zeit, "kind": p["kind"], "ref": p["ref"],
                     "seq_from": seq_from, "punkte": max(n, 0),
@@ -597,6 +667,7 @@ def main() -> int:
             "formular_nachtrag": 0, "formular_neu": 0, "import_zeilen": 0,
             "groesster_body_bytes": 0, "gpx_dateien": 0, "fusswege": 0}
     fusswege_gesamt: list[dict] = []
+    luecken_gesamt: list[dict] = []
 
     dateien = sorted((QUELLE / "dienste").glob("D*.json"))
     sperr = json.loads((QUELLE / "pruefschritte" / "sperrliste.json").read_text("utf-8"))
@@ -660,15 +731,34 @@ def main() -> int:
                     "phasen": e["phasen"], "rea": e["rea"],
                 }, ensure_ascii=False, indent=2) + "\n", "utf-8")
 
+        # SPURFAELLE AM SEGMENT (Konzept RD): Uebung und Luecken, adressiert
+        # ueber `segment` wie die Schnitte (E-RD-04).
+        uebung_je = {u["segment"]: u for u in d.get("uebungen", [])}
+        luecken_je: dict[str, list[dict]] = {}
+        for lk in d.get("luecken", []):
+            luecken_je.setdefault(lk["segment"], []).append(lk)
         for r in d["ruhesegmente"]:
             zahl["ruhesegmente"] += 1
-            punkte = ruhespur(dn, stueck_je_ref[r["client_ref"]], routen)
-            zahl["spurpunkte"] += len(punkte)
-            zahl["spurpunkte_ruhe"] += len(punkte)
+            u = uebung_je.get(r["client_ref"])
+            punkte = ruhespur(dn, stueck_je_ref[r["client_ref"]], routen,
+                              (u, stueck_je_ref[u["vorbild"]]) if u else None)
+            verloren: list[int] = []
+            for lk in luecken_je.get(r["client_ref"], []):
+                ab = epoche(lk["ab"])
+                vorher = len(punkte)
+                punkte, weg = spur.luecke(punkte, lk["art"], ab, ab + lk["dauer"] * 60)
+                verloren += weg
+                luecken_gesamt.append({"dienst": kennung, "ref": r["client_ref"], "art": lk["art"],
+                                       "ts_ab": ab, "ts_bis": ab + lk["dauer"] * 60,
+                                       "seq_ab": weg[0] if weg else None,
+                                       "punkte": len(weg) if weg else vorher - len(punkte)})
+            zahl["spurpunkte"] += len(punkte) - len(verloren)
+            zahl["spurpunkte_ruhe"] += len(punkte) - len(verloren)
             pakete.append({"kind": "rest_segment", "ref": r["client_ref"],
                            "start": epoche(r["beginn"]),
                            "ende": epoche(r["ende"]) if r["ende"] else None,
-                           "punkte": punkte, "phasen": [], "rea": []})
+                           "punkte": punkte, "phasen": [], "rea": [],
+                           "verloren": set(verloren)})
 
         plan = sendeplan(dn, pakete)
         nach_ref = {p["ref"]: p for p in pakete}
@@ -698,6 +788,10 @@ def main() -> int:
     # misst die Gehgeschwindigkeit deshalb hier und nicht an den Punkten.
     (AUS / "fusswege.json").write_text(
         json.dumps(fusswege_gesamt, ensure_ascii=False, indent=1) + "\n", "utf-8")
+    # DIE LUECKEN EINZELN, ZUM NACHMESSEN (Konzept RD): `generator/pruefen.py`
+    # laesst einen Sprung der Sequenznummer nur dort zu und verlangt ihn dort.
+    (AUS / "luecken.json").write_text(
+        json.dumps(luecken_gesamt, ensure_ascii=False, indent=1) + "\n", "utf-8")
 
     print(f"Dienste                  {zahl['dienste']}")
     print(f"Einsätze                 {zahl['einsaetze']}")

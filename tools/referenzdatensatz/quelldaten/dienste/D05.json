@@ -626,5 +626,15 @@
     }
   ],
   "$warum_datum": "ERSTER von ZWEI Diensten am 28.03.2026 (der zweite ist D05, ein NEF-Nachtdienst). Das ist der von E9 vorgesehene Regelfall und der Grund, warum der Diensttag seit Web 6.0.0 eine eigene Kennung trägt: Aus dem Datum allein wäre nicht mehr zu entscheiden, welcher Dienst gemeint ist. FOLGE FÜR DEN IMPORT: An diesem Datum darf KEIN Einsatz per CSV nachgetragen werden — der Import löst den Diensttag nur über das Datum auf und träfe immer diesen hier (B-04).",
-  "ziel_einsaetze": 6
+  "ziel_einsaetze": 6,
+  "verdichten": [
+    {
+      "einsatz": "m-11-6416611188",
+      "stufe": 3
+    },
+    {
+      "segment": "r-11-9809421713",
+      "stufe": 3
+    }
+  ]
 }

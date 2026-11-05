@@ -335,5 +335,13 @@
       ]
     }
   ],
-  "ziel_einsaetze": 3
+  "ziel_einsaetze": 3,
+  "uebungen": [
+    {
+      "segment": "ar-12-2287439328",
+      "beginn": "2026-02-14 08:10",
+      "ende": "2026-02-14 09:00",
+      "vorbild": "am-12-8462039517"
+    }
+  ]
 }

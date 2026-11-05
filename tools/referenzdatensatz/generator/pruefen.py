@@ -79,6 +79,12 @@ def main() -> int:
     # ---- 1./2. Vertrag und Folge der Teilstuecke -------------------------
     dateien = sorted(AUS.glob("payloads/*/*.json"))
     folge: dict[str, int] = {}
+    # ERKLAERTE LUECKEN (Konzept RD, `erzeugen.py` schreibt sie nach
+    # luecken.json): Eine Sequenzluecke ist der EINE erlaubte Sprung der
+    # Nummern, und er muss genau dort und genau so gross auftreten.
+    luecken = json.loads((AUS / "luecken.json").read_text("utf-8"))
+    erklaert = {(lk["ref"], lk["seq_ab"]): lk["punkte"] for lk in luecken if lk["art"] == "sequenz"}
+    gesehen: set[tuple] = set()
     punkte_gesamt = 0
     for pfad in dateien:
         roh = pfad.read_bytes()
@@ -112,6 +118,9 @@ def main() -> int:
         punkte_gesamt += len(t["points"])
 
         erwartet = folge.get(ref, 0)
+        if (ref, erwartet) in erklaert and t["seq_from"] == erwartet + erklaert[(ref, erwartet)]:
+            gesehen.add((ref, erwartet))
+            erwartet = t["seq_from"]
         lauf.pruefe(t["seq_from"] == erwartet,
                     f"{wo}: seq_from {t['seq_from']}, erwartet {erwartet} — Lücke oder Überlappung")
         folge[ref] = t["seq_from"] + len(t["points"])
@@ -325,6 +334,25 @@ def main() -> int:
                     f"{ref} ({art}): {hoechste:.0f} m über der Grenze "
                     f"{GRENZE_HOEHE[art]:.0f} m")
         geprueft += 1
+
+    # ---- 5b. Die erklaerten Luecken sind da -------------------------------
+    #
+    # Eine Luecke, die nur in der Quelle steht, belegt nichts: Die Sequenz-
+    # luecke muss als Sprung der Nummern in den Anfragen auftauchen (oben
+    # gezaehlt), die Zeitluecke als Pause zwischen zwei aufeinanderfolgenden
+    # Punkten, die das ganze Fenster ueberspannt.
+    for (ref, ab), n in erklaert.items():
+        lauf.pruefe((ref, ab) in gesehen,
+                    f"{ref}: Sequenzluecke ab {ab} ({n} Nummern) steht in keiner Anfrage")
+    for lk in luecken:
+        if lk["art"] != "zeit":
+            continue
+        pts = sorted(spuren_je_ref.get(lk["ref"], []), key=lambda p: p[3])
+        lauf.pruefe(any(a[3] < lk["ts_ab"] and b2[3] >= lk["ts_bis"] for a, b2 in zip(pts, pts[1:])),
+                    f"{lk['ref']}: Zeitluecke {lk['ts_ab']}..{lk['ts_bis']} steht nicht in der Spur")
+    lauf.pruefe(sum(1 for lk in luecken if lk["art"] == "sequenz") >= 1
+                and sum(1 for lk in luecken if lk["art"] == "zeit") >= 1,
+                f"luecken.json traegt nicht beide Arten: {[lk['art'] for lk in luecken]}")
 
     # ---- 5a. Gehgeschwindigkeit der Fusswege -------------------------------
     #

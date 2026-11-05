@@ -793,11 +793,13 @@ Daten erst nach Server-Bestätigung.
 │   │                      Läufer (`pruefen.sh <name>|alle|--selbstprobe`),
 │   │                      ein LIESMICH. Vorher acht Ordner.
 │   ├── referenzdatensatz/ erfundener Beispielbestand (22 Diensttage,
-│   │   │                  109 Einsätze) — Demo-Konto UND Regressionsreferenz
+│   │   │                  106 Einsätze, mit den fünf Schnitten 111) —
+│   │   │                  Demo-Konto UND Regressionsreferenz
 │   │   ├── quelldaten/    die Wahrheit: je Diensttag ein JSON, dazu die zwei
-│   │   │                  Geräteblöcke (geraete.json), die drei Schnitte,
-│   │   │                  Schema und Prüfung (Abdeckungsmatrix, Sperrwörter
-│   │   │                  in den Gerätenamen, keine realen Namen)
+│   │   │                  Geräteblöcke (geraete.json), die Schnitte und
+│   │   │                  Spurfälle (verdichten, löschen, Lücken, Übungen —
+│   │   │                  seit RD-02), Schema und Prüfung (Abdeckungsmatrix,
+│   │   │                  Sperrwörter in den Gerätenamen, keine realen Namen)
 │   │   ├── generator/     erzeugt Ingest-Payloads, Formulardaten, CSV, GPX;
 │   │   │                  fester Zufallssamen, zwei Läufe gleiches Ergebnis
 │   │   ├── einspielen/    spielt alles über die REGULÄREN Wege ein, kein SQL;

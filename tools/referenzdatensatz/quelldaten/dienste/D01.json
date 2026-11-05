@@ -696,5 +696,15 @@
       "abdeckung": []
     }
   ],
-  "ziel_einsaetze": 6
+  "ziel_einsaetze": 6,
+  "verdichten": [
+    {
+      "einsatz": "m-11-1653279357",
+      "stufe": 2
+    },
+    {
+      "segment": "r-11-6849670723",
+      "stufe": 3
+    }
+  ]
 }

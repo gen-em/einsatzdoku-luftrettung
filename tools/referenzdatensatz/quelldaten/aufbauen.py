@@ -336,6 +336,7 @@ def main() -> int:
     fahrzeuge = {r["name"]: r for r in stammdaten["rettungsmittel"]}
     refs: set[str] = set()
     erzeugt_gesamt = ruhe_gesamt = 0
+    verwaist: list[str] = []
 
     for pfad in sorted((HIER / "dienste").glob("D*.json")):
         d = json.loads(pfad.read_text("utf-8"))
@@ -438,6 +439,22 @@ def main() -> int:
         d["ruhesegmente"] = segmente
         ruhe_gesamt += len(segmente)
 
+        # DIE LISTEN AM DIENST ZEIGEN AUF KENNUNGEN, die hier eben neu gebaut
+        # wurden (Konzept RD, F-RD-11). Sie sind deterministisch und bleiben bei
+        # gleichem Bestand dieselben — aendert sich ein Einsatz, kann ein Segment
+        # wegfallen oder eine andere Kennung bekommen. Dann zeigte ein Schnitt,
+        # eine Verdichtung oder eine Uebung ins Leere, und erst das Einspielen
+        # braeche ab. Gemeldet wird hier, wo die Ursache liegt.
+        seg_refs = {r["client_ref"] for r in segmente}
+        ein_refs = {e["client_ref"] for e in d["einsaetze"] if e["client_ref"]}
+        for liste in ("schnitte", "loeschungen", "luecken", "uebungen", "verdichten"):
+            for x in d.get(liste, []):
+                if "segment" in x and x["segment"] not in seg_refs:
+                    verwaist.append(f"{d['kennung']}/{liste}: Segment {x['segment']}")
+                for feld in ("einsatz", "vorbild"):
+                    if feld in x and x[feld] not in ein_refs:
+                        verwaist.append(f"{d['kennung']}/{liste}: Einsatz {x[feld]}")
+
         pfad.write_text(json.dumps(d, ensure_ascii=False, indent=2) + "\n", "utf-8")
         print(f"  {d['kennung']}  {dn['day']}  {dn['art']:6s}  "
               f"{len(fest)} fest + {len(neue)} erzeugt = {len(d['einsaetze'])}  "
@@ -468,6 +485,12 @@ def main() -> int:
 
     print(f"\n{erzeugt_gesamt} Einsätze erzeugt, {ruhe_gesamt} Ruhesegmente gebaut, "
           f"{len(zuordnung)} Einsatznummern chronologisch vergeben.")
+    if verwaist:
+        print(f"\nVERWAISTE VERWEISE ({len(verwaist)}) — die Listen am Dienst nachziehen:")
+        for v in verwaist:
+            print(f"  {v}")
+        return 1
+    print("Alle Verweise der Listen am Dienst stehen.")
     return 0
 
 

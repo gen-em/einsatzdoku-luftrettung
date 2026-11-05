@@ -241,6 +241,32 @@ def halt(punkt, t0: int, t1: int, takt: int, saat: str) -> list[tuple]:
     return punkte
 
 
+def luecke(punkte: list[tuple], art: str, t_ab: int, t_bis: int) -> tuple[list[tuple], list[int]]:
+    """Eine Luecke in eine fertige (ausgeduennte) Spur legen — ohne Zufall.
+
+    Zwei Arten, und sie messen verschiedene Stellen (Konzept RD, E-RD-14):
+
+      `zeit`     Das Geraet hat pausiert: Im Zeitraum entsteht kein Punkt, die
+                 Nummern laufen danach lueckenlos weiter. Die Punkte fallen
+                 aus der Liste.
+      `sequenz`  Das Geraet hat die Punkte des Zeitraums aufgezeichnet und
+                 verloren, bevor sie gesendet waren: Ihre Nummern sind
+                 vergeben, aber nie angekommen. Die Punkte bleiben in der
+                 Liste (ihr Index IST ihre Nummer), der zweite Rueckgabewert
+                 nennt die Nummern, die der Sendeplan auslaesst.
+
+    Rueckgabe: (Punkte, verlorene Nummern).
+    """
+    drin = [i for i, p in enumerate(punkte) if t_ab <= p[3] < t_bis]
+    if not drin:
+        raise ValueError(f"Luecke {art} {t_ab}..{t_bis}: kein Punkt im Zeitraum")
+    if art == "zeit":
+        return [p for i, p in enumerate(punkte) if i not in set(drin)], []
+    if art == "sequenz":
+        return punkte, drin
+    raise ValueError(f"unbekannte Luecke {art!r}")
+
+
 def ausduennen(roh: list[tuple]) -> list[tuple]:
     """Regel der Uhr: >= 15 m ODER >= 10 s, nie oefter als 1/s."""
     behalten: list[tuple] = []
