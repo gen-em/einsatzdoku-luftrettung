@@ -10951,3 +10951,48 @@ zutreffen.
      (Frist, Annahme, Bindung über das Trennen, Altvermerk), 29/0;
      Gegenprobe ohne Räumung im Sendelauf zwei rot. Bedrohungsmodell Lage H
      nachgezogen.
+
+458. **Auf MySQL 8 bricht der Wartungslauf der Spuren bei jedem Aufruf ab.** · gehört zu: 23 · Stand: erledigt · seit 03.11.2026
+     *Aufgenommen 03.11.2026 im Prüfdurchgang der Arbeitsumgebung (R91,
+     P-S11-14, -30).* `spur2_faellig_kandidaten()` in `spur_lib.php`
+     gruppiert nach `o.id`, die Unterabfrage `geschnitten` (10. Ausdruck)
+     bezieht sich aber auf `s.owner_type` und `s.owner_id`. MySQL 8.4 mit
+     der Vorgabe `ONLY_FULL_GROUP_BY` lehnt das ab (SQLSTATE 42000/1055);
+     `api/wartungslauf.php` antwortet 500, auf Staging bei jedem Seitenaufruf
+     mit Spuren, seit dem 19.10.2026 55 Einträge im Reiter System. Folge:
+     Auf Staging wird nichts verdichtet oder ausgedünnt („Fällig
+     unbekannt"), P-S11-30 ist dort nicht prüfbar. Produktiv (MariaDB
+     10.11) ist nicht betroffen. Die Plattformprüfungen gegen MySQL 8.0
+     und 8.4 waren grün (50/0) — sie erfassen diese Abfrage nicht.
+     *Weg:* `s.owner_type`/`s.owner_id` in der Unterabfrage durch den
+     Parameter und `o.id` ersetzen (der Typ ist je Durchgang fest), und
+     die Abfrage in eine Probe gegen MySQL 8 nehmen.
+     *Abnahme:* auf Staging keine neue Zeile „wartungslauf … 1055",
+     `server/api/wartungslauf.php` antwortet 200, „GPS-Daten verdichten" nennt eine Zahl.
+     *Gebaut 04.11.2026 mit BR6-02 (Web 23.7.4);* Schemaprobe Fall 8 auf vier
+     Fassungen grün (vorher MySQL 8.0 und 8.4 rot, 1055). Offen: Staging.
+     Abgenommen 04.11.2026 auf Staging (P-BR6-01, R91): api/wartungslauf.php
+     antwortet auf liste und zahl mit 200, im Reiter System keine 1055-Zeile
+     in den letzten 24 Stunden, die Karte „GPS-Daten verdichten“ zeigt
+     „nichts“ statt „Fällig unbekannt“.
+
+481. **Endgültige Mail-Absage beim ersten Versuch heißt „steht in der Warteschlange“.** · gehört zu: 23 · Stand: erledigt · seit 04.11.2026
+     *Aufgenommen 04.11.2026 mit P-BR5-06 auf Staging (Konzept BR5,
+     F-BR5-33).* Ein Konto für eine Adresse, die der Mailserver schon beim
+     Empfänger mit 550 abweist: Die Zeile wird richtig sofort
+     „unzustellbar“ (Nr. 454), die Meldung beim Anlegen sagt aber „beim
+     ersten Versuch NICHT hinausgegangen und steht in der Warteschlange.
+     Sie wird erneut versucht“. `mail_einreihen()` gibt nach einem
+     gescheiterten ersten Versuch immer `MAIL_WARTET` zurück und fragt den
+     Stand der Zeile nicht ab. *Weg:* nach dem Versuch den Stand lesen; bei
+     „unzustellbar“ `MAIL_ABGELEHNT` (Aufrufer: `admin_users.php`,
+     `admin_user.php`, `email_lib.php`, `konto_lib.php`, `login.php`).
+     *Abnahme:* auf Staging Konto für eine nicht vorhandene Adresse der
+     eigenen Domain → „konnte NICHT verschickt werden“, Mailprobe mit der
+     Art `nach_daten` bzw. 550 beim Empfänger.
+     *Gebaut 04.11.2026 mit BR6-04 (Web 23.7.6):* `MAIL_UNZUSTELLBAR`,
+     Mailprobe 4a 80/0. Offen: Staging (Konto, Testmail).
+     Abgenommen 04.11.2026 auf Staging (P-BR6-03, R91): Konto für eine nicht
+     vorhandene Adresse der eigenen Domain → „Konto angelegt — die E-Mail
+     konnte NICHT verschickt werden“ samt Link; im Reiter System die 550 um
+     23:07. Prüfkonto gelöscht.

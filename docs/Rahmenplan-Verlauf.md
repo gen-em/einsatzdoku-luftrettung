@@ -9,6 +9,7 @@ Verlauf bis zum Schnitt). Die Fassungszählung läuft fortlaufend weiter.
 
 | Fassung | Datum | Anlass | Was |
 |---|---|---|---|
+| 218 | 05.11.2026 | 23, 24 | Schritt 23 (BR6) abgeschlossen (PR #150): Erledigt-Zeile, Konzept gelöscht (`e62c7632`), 6.1 „Prüfliste BR6“. Schritt 24 (RD) angelegt, vor 13; Nr. 388 von 14 nach 24, neu Nr. 500. Kopf: `main` `8907c4d`. |
 | 217 | 04.11.2026 | 23 | Schritt 23 (BR6) gebaut: alle acht Punkte (Web 23.7.4–23.7.7, Uhr 4.3.2, Android 0.21.0), Prüfdokument angelegt; Pull Request und Freigabe offen. |
 | 216 | 04.11.2026 | 23 | Umsetzung von 23 begonnen, in derselben Sitzung (E-BR6-03 geändert); Q-BR6-01 bis -09 entschieden. 6.1: P-AR-15 erledigt mit BR6-01. |
 | 215 | 04.11.2026 | 23 | Schritt 23 (BR6) begonnen: Fahrplanzeile, Konzept angelegt; Reihenfolge 23 → 13 → 14 (E-BR6-01), 13 hängt an 23; die Konzeptsitzung 13 darf daneben laufen. Nr. 458, 459, 470, 471, 480, 481, 490, 491 → `gehört zu: 23`. |
