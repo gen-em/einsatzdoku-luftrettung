@@ -30,9 +30,9 @@ hochgeht, entscheidet die Umsetzung (K3, CLAUDE.md 2).
 | RD-04 | Demo-Reset legt Stufe 2 und 3 selbst an (Fixture-Format 3) | **erledigt** (05.11.2026, Web 23.8.0) |
 | RD-05 | Fixture, Referenzexporte und Sollstände neu; Dokumente | **erledigt** (05.11.2026, Web 23.8.1) |
 | RD-07 | Demo-Konto: Durchgang über jeden Bedienweg, jeder Fehler sofort behoben (E-RD-19) — **vor RD-05** | **erledigt** (05.11.2026) |
-| RD-06 | Abschluss: Prüfdokument, Prüfliste (P-S11-30, -31), Pull Request | offen |
+| RD-06 | Abschluss: Prüfdokument, Prüfliste (P-S11-30, -31), Pull Request | **Pull Request offen** (05.11.2026) — wartet auf Merge und Freigabe |
 
-**In Arbeit:** RD-06 — RD-01 bis RD-05 und RD-07 sind erledigt. Die
+**In Arbeit:** nichts — alle Pakete umgesetzt, der Pull Request wartet auf die Betreiberin. Nach dem Merge: R91-Prüfung auf Staging (Prüfdokument, Spalte „Wer": Claude), dann nach Freigabe Erledigt-Zeile, Prüfliste, Backlog (Nr. 388, 500), Konzept löschen. Die
 Umsetzung läuft auf dem Konzeptzweig `claude/admiring-sagan-mql8t4`
 (Entscheid der Betreiberin zu Beginn der Umsetzungssitzung). **Es hakt:**
 nirgends. *(Bis RD-01 stand bei RD-02 und RD-04 „wartet auf Q-RD-…" —
@@ -956,12 +956,12 @@ ist gemessen; was fehlt, steht im Prüfdokument an erster Stelle.
 | RD-07 vorab | `demo_pruefen.mjs` wie es war, gegen die Vorab-Fixture | Prüfungen | 24, **4 Befunde** (Sollzahlen 83/15/95 aus der Zeit vor dem Demo-Ausbau, F-RD-26), 0 Konsolenfehler |
 | RD-07 | `demo_pruefen.mjs lesen,spurfaelle,reset` (erweitert) | Prüfungen | 26, 0 Befunde, **1 Konsolenfehler** = die erwartete 409 der verweigerten Rücknahme → in der Probe ausgenommen |
 | RD-07 | `demo_pruefen.mjs` vollständig nach `demo_entfernen()` (anlegen … sperren) | Prüfungen | **41, 0 Befunde, 0 Konsolenfehler, 0 nicht gemessen**; Stufe 2/3 je 5 Segmente und 5 Einsätze; Tag mit Stufe-3-Segment 17 Linien, Stufe-3-Einsatz 1 Linie; Übung: 169 Punkte geschnitten, zurückgenommen; Stufe 1 zurück, Stufe 2 „zusammengefasst"; Zeitraum löschen 10 Punkte; Wartungslauf 0 Spuren; Admin-Zahlen vor/nach Reset gleich der Fixture (21/106/118/2, Papierkorb 5) |
-| RD-06 | Prüfstand (Bericht im Commit) | — | — |
+| RD-06 | Prüfstand (Bericht im Commit) | Proben | nur Dokumente unter `docs/konzepte/` berührt; Bericht im Commit |
 
 **Grenzen, die jetzt schon feststehen:** Die Staging-Prüfung mit dem
 Demo-Konto (P-S11-30 neu) geht erst nach dem Merge (R91). Ein echter
-Safari bleibt Handprüfung. F-RD-08 (Fälligkeit nach „Schnitt nimmt
-alles") misst erst RD-03.
+Safari bleibt Handprüfung. *(Bis RD-06 stand hier auch „F-RD-08 misst erst
+RD-03" — gemessen in RD-03, behoben in RD-04.)*
 
 ## 8. Verlauf
 
@@ -971,6 +971,7 @@ alles") misst erst RD-03.
 | 05.11.2026 | Nach Rückfrage der Betreiberin (Wildwuchs, Q-RD-04, Übungstage): F-RD-04 und F-RD-11 berichtigt (Python hat das Format einmal; die Segmentkennung überlebt den Aufbau), E-RD-04 auf die vorhandene Adressierung `segment: client_ref` umgestellt, Q-RD-04 mit Lesart (d) „Übungssegmente, zwei auf Stufe 1, eines auf Stufe 2" als Vorschlag, E-RD-08 und Abschnitt 6 (Wildwuchs-Prüfung) neu; Matrixmarken von 14 auf 12 (10 Fälle). |
 | 05.11.2026 | Zweite Rückfrage („geschnittene Tage?"): F-RD-14 (Demo-Schnitte gelten auf jeder Anlage als alt, Rücknahme antwortet 409 `altschnitt`), Q-RD-10 mit Vorschlag (a), die drei bestehenden Schnitte auf Stufe 1/2/3 verteilt (Q-RD-03), Matrix „Schnittzustand × Stufe" in `pruefen.py`, Marken auf 14. |
 | 05.11.2026 | **Freigabe:** Q-RD-01 bis -10 wie vorgeschlagen (E-RD-09 bis -18). Dazu E-RD-19: Jeder Fehler am Demo-Konto wird in diesem Schritt behoben — neues Paket RD-07 (Demo-Durchgang) vor RD-05, der Browserweg ist nicht mehr ausgenommen, F-RD-08 wird bei Bestätigung behoben. Fahrplanzeile auf „freigegeben". |
+| 05.11.2026 | **RD-06:** Prüfdokument (14 Handpunkte P-RD-01 bis -14, P-S11-30 und -31 neu gefasst), Pull Request geöffnet. Abschluss (Rahmenplan, Prüfliste, Backlog, Konzept löschen) nach Merge und Freigabe. |
 | 05.11.2026 | **RD-05 erledigt (Web 23.8.1):** neue Fixture, Referenz-`.edbak` und CSV vom 05.11.2026, Kreisläufe neu begründet, Stufe-1-Riegel `fixtureabgleich`; F-RD-27. |
 | 05.11.2026 | **RD-07 erledigt:** Durchgang über die Bedienwege des Demo-Kontos mit der Vorab-Fixture; fünf Funde behoben (vier davon in RD-04), `demo_pruefen.mjs` mit Sollzahlen aus der Fixture und Abschnitt `spurfaelle` (41 Prüfungen). F-RD-26. |
 | 05.11.2026 | **RD-04 erledigt (Web 23.8.0):** Reset packt Stufe 2/3 aus Format 3, Einspielzeit für Demo-Vermerke, `gh_gepackt_bauen()` mit Vektoren; dazu F-RD-22 (Rücknahme nach Verdichten) und F-RD-08 (Fälligkeit) für alle Konten behoben. |
