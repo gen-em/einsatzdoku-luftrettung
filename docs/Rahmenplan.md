@@ -1,13 +1,13 @@
 # Rahmenplan — Programm „Gen-EM NAdoku" bis v1.0
 
-**Fassung 221 (05.11.2026)** · Steuerung: Reihenfolge, Status, programmweite
+**Fassung 222 (05.11.2026)** · Steuerung: Reihenfolge, Status, programmweite
 Entscheidungen. Verlauf: `Rahmenplan-Verlauf.md`. Fassungen 1–15:
 `Rahmenplan-Archiv.md`; Fassungen 16–124: `Rahmenplan-Archiv-2.md`.
 
-**Stand `origin/main`** (Commit `db5b98b`, PR #152, gemessen 05.11.2026): Web 23.8.1 ·
-Uhr 4.3.2 · Android 0.21.0; ausgeliefert Web 23.6.0, Uhr 4.1.1 und Android 0.18.2 (Tags auf `c32dd2c`, 02.11.2026).
-**Läuft:** nichts; 24 RD abgeschlossen 05.11.2026 (Web 23.8.2 auf dem Abschluss-PR, Tags offen, P-RD-09 und -10 in 6.1).
-**Als Nächstes:** 13 (P7).
+**Stand `origin/main`** (Commit `bfaca8b`, PR #153, gemessen 05.11.2026): Web 23.8.2 ·
+Uhr 4.3.2 · Android 0.21.0; alle drei ausgeliefert (Tags auf `bfaca8b`, 05.11.2026).
+**Läuft:** 25 BR7 — Konzept 05.11.2026 (`claude/admiring-sagan-mql8t4`), Q-BR7-01 bis -07 offen.
+**Als Nächstes:** Freigabe BR7; dann 13 (P7).
 **Offene PRs:** keine.
 **Fällig bei der Betreiberin:** 40 Posten (Abschnitt 6.1). **`update.php`:** auf Staging und Produktiv nichts offen (Betreiberin, 20.10.2026, nach Web 23).
 
@@ -104,7 +104,7 @@ liest die 7.x-Sicherung genau einmal) · Rückwärtskompatibilität ab v1.0 (R60
 ## 3. Fahrplan — die nächsten Schritte
 
 Schrittnummern sind **Namen**, keine Reihenfolge; sie werden nie umvergeben.
-**Die Reihenfolge der offenen Schritte ist:** 13 → 14 (E-BE-02 bis -04, 02.11.2026; PR, 21, 22, 23 und 24 davor sind erledigt); der Betriebsübergang folgt auf v1.0. Daneben, ohne Platz in
+**Die Reihenfolge der offenen Schritte ist:** 25 → 13 → 14 (E-BE-02 bis -04, 02.11.2026; 25 vor 13 nach Auftrag der Betreiberin, 05.11.2026; PR, 21 bis 24 davor sind erledigt); der Betriebsübergang folgt auf v1.0. Daneben, ohne Platz in
 der Reihe: die Paketschnitte von **11** und Teil C von **6** (seit SD-M1
 frei). **Warum so:** P6 liegt in zwei Hälften um S11 (R86): das
 **Bedrohungsmodell (12, abgeschlossen) vor S11 (12a, abgeschlossen)**, weil es dessen
@@ -119,6 +119,7 @@ weil das Altbestand-Werkzeug ein einziges Konto voraussetzte.
 |---|---|---|---|---|---|
 | 6 | **S4 — Rest, Teil C** | Play Console nach R65: interner Test-Track für Handy und Uhr unter einem Eintrag, Versionscode-Versatz, Signaturweg; Android 1.0.0 (E-R45-7). Die Vorbereitung ohne D-U-N-S und Schlüssel ist gebaut (Android 0.13.0), die Gerätetests sind erfolgt (24.09.2026) | D-U-N-S, Organisationskonto und Play App Signing — erledigt 26.09.2026 (SD-M1); offen in 6.2: Wear-OS-Uhr, Demo-Video, Datensicherheitsformular | `docs/konzepte/Konzept-S4-Handy-Uhr-Client.md` 13; `Vorbereitung-Play-Console.md` | offen — Teile A bis C gemergt 04.09.2026 (PR #33, Abschnitt 8); Android 1.0.0 und der interne Test-Track können beginnen |
 | 11 | **Planung v1.0** | Festlegungen vor dem Schnitt (R65 bis R73, entschieden 03.09.2026); Ergebnis sind die Konzepte der Phasen P6 bis P8 mit je eigenem Paketschnitt (P6 nach der Freigaberunde des Reviews) | keine | `docs/konzepte/Konzept-Planung-v1.0.md` | gemergt 03.09.2026 — Festlegungen entschieden (R65–R73); offen nur die Paketschnitte, je mit dem Konzept zu 12b, 13 und 14 |
+| 25 | **BR7 — Backlog-Runde 7** | Nr. 510 (Schemaprobe ohne Griff an die Anlage), Runbook zum Tag-Zeitpunkt (F-BR7-02), je nach Antwort ein Prüfbestand über 200 Einsätze auf Staging (P-R4-17); vorab die Prüfrunde auf Staging | keine | `docs/konzepte/Konzept-BR7-Backlog-Runde-7.md` | Konzept 05.11.2026, Q-BR7-01 bis -07 offen; ob eigener Schritt, entscheidet Q-BR7-07 |
 | 13 | **P7 — Gesicht v1.0** | Umbenennung überall (E-Mail-Langform entscheiden), Demo-Passwort (R25); Vertrag v1 (R12, Nr. 23); Doku-Neufassung, Handbuch als HTML (R16, R72); Manifest (R70); Changelog neu (R15); Backlog-Übernahme; Kommentarregel (R69, Nr. 409); Lizenzen, Tabellen mit Mockup (Nr. 342), Logos (Nr. 62) | 24 | eigenes Konzept nach K1 | offen — Konzeptsitzung kann neben 24 laufen, Umsetzung nach 24 |
 | 14 | **P8 — Schnitt** | Neuaufsetzen mit Übernahme per edbak (R40 (3), R60, Nr. 324); Migrationsregister neu (R66); Repo-Umzug und Inventur mit Begründung je Weglassung (R68); Kette im neuen Repositorium (R67, R40 (4)); Rechts- und Betreiberunterlagen (R41); Abnahme nach R11; Tags `web-v1.0.0`, `uhr-v…`, `android-v1.0.0` | 13 | eigenes Konzept nach K1 | offen — nach 13; die Inventur (R68) entscheidet die zwölf Werkzeug-Punkte mit `gehört zu: 14` (E-BE-04) |
 | — | **Betriebsübergang** | Öffnung in Wellen über die Betriebsarten (R41); Produktionsfreigabe in den Stores mit Welle 1 (R65; nach MDR-Abgrenzung und Rechtsunterlagen); mit Welle 1 entfällt die Seitenladung (`apk.php`, Handbuch 10.1); Garmin-Uhr über den Connect-IQ-Store; halbjährliche Probe-Wiederherstellung | v1.0 | — | offen — beginnt mit v1.0 (nach den Schritten 13 und 14); Wellen nach R41 |
@@ -137,7 +138,7 @@ Backlog-Nummern verlangen die Gegenproben aus 2.2.
 
 | jetzt parallel möglich | nicht parallel |
 |---|---|
-| Konzeptarbeit zu allem; ein Abschluss nach K9 zu allem — er schreibt nur Buchführung | 13 → 14 nacheinander in der Umsetzung (R71, R86, E-BE-02) |
+| Konzeptarbeit zu allem; ein Abschluss nach K9 zu allem — er schreibt nur Buchführung | 25 → 13 → 14 nacheinander in der Umsetzung (R71, R86, E-BE-02) |
 
 **Merge-Reihenfolge auf `main`:** ein Pull Request je Phase nach Freigabe
 (K7); nach jeder Migration `update.php`; nach einem fremden Merge nimmt jeder
@@ -178,13 +179,13 @@ gestrichen, 6a abgehakt; was steht, ist bestätigt offen.
 | **Prüfliste P5c/AP9:** die eigene Datenschutzerklärung nachziehen (P-P5c-40, sofort), Rechtstexte mit Vorschau in Firefox und am Handy, beide Blätter auf Papier, Wartungsmodus nach einem echten Deploy | 10c AP9 | 25.09.2026 | P-P5c-39 bis -44 |
 | **Prüfliste AR:** Gerätetests P-AR-03/-04 (Android 17), -06, -07, -10 (Handy), -11 bis -14 (Wear-OS-Uhr), -01 (Bau ohne Spiegel); -15 erledigt mit BR6-01 (04.11.2026) | AR | 26.09.2026 | `Pruefliste.md` |
 | **Prüfliste BV:** P-BV-04 (Wertekasten Hintergrundjobs gegen `Technik.md` 4.7), P-BV-07 (die zwei Rechtstexte: Höhe, Notizen, Abfahrtort), P-BV-09 (Textbaustein 11.5a neu übernehmen, nach P-P5c-40) | BV | 26.09.2026 | `Pruefliste.md` |
-| **Prüfliste BR:** P-BR-05 und -06 (Anlass-Zeilen und Nr. 304–313 lesen), P-BR-08 (beim nächsten Tag: das Produktionstor findet den Stufe-1-Lauf über `baumsuche.py`); freiwillig -03 | BR | 24.09.2026 | `Pruefliste.md` |
+| **Prüfliste BR:** P-BR-05 und -06 (Anlass-Zeilen und Nr. 304–313 lesen); freiwillig -03. P-BR-08 bestanden mit `web-v23.8.2` (05.11.2026) | BR | 24.09.2026 | `Pruefliste.md` |
 | **Zwei tote Zweige löschen:** `claude/nice-lovelace-snlo8m` und `claude/pk05-tor-umbauen` — nichts Ungemergtes (F-R4-04); auf GitHub unter Branches | 17 (Q-R4-01, E-R4-15) | 26.09.2026 | `Pruefliste.md`, P-R4-06 |
 | **Prüfliste R4:** P-R4-13, -16 (Produktiv), -17, -19, -21 und -23 (Handy), -22, je nach dem Deploy ihrer Fassung — Formular und Leseansicht, Konten, Demo-Reset, Handy, Verwerfen in der App, Statistik, Backlog auf GitHub | 17 | 28.09.2026 | `Pruefliste.md` 4 |
 | **Prüfliste SR:** auf Staging P-SR-05, -10, -11, -14, -16, -17 — Notzugang, Passkeys und Rechenaufgabe an echten Geräten, Cookie-Absatz; freiwillig -09 | 18 | 05.10.2026 | `Pruefliste.md` 4 |
 | **Zuarbeiten aus Kette II:** Aufbewahrung der Komplett-Stände auf Staging (Nr. 261, Vorschlag 5); `info.php` auf Staging löschen; Zweig `produktion` gegen Handpushes schützen; Hotfix-Weg beim ersten Hotfix | Kette II | 21.09.2026 | `Pruefliste.md`, 4a, 9, 27, 28 |
 | **Prüfliste S11:** Gerätetests Uhr 4.0.0 und Android 0.18.0 (P-S11-32 bis -35, -05, -39), Staging (-23 echte Uhr-Datei, -25 (b) alte Sicherung; -30 und -31 bestanden mit Schritt 24, 05.11.2026), Safari (-43), alte Sicherungen (-07, -08), Rechtstexte (-40) | 12a | 20.10.2026 | `Pruefliste.md` 4 |
-| **Prüfliste PU:** P-PU-01 (Erbe im Tor, beim nächsten PR in `neben`), -04 bis -07 beim nächsten passenden Paket (schmale Nebenstufe, Zehnergrenze, zweiter Lauf mit Erbe, Stylesheet), -09 und -10 lesen | 20 | 02.11.2026 | `Pruefliste.md` 2, 12 |
+| **Prüfliste PU:** P-PU-05 und -07 beim nächsten passenden Paket (Zehnergrenze, Stylesheet), -09 und -10 lesen; -01, -04, -06 bestanden mit Schritt 24 (05.11.2026) | 20 | 02.11.2026 | `Pruefliste.md` 2, 12 |
 | **Prüfliste PR:** P-PR-01 (Freigabeprobe nach der Anteilprobe im nächsten passenden Lauf), -02 (Prüfstand im offenen Merge), -03 (keine Sperrzeile nach der Zweitfaktorprobe) | PR | 02.11.2026 | `Pruefliste.md` 12 |
 | **Prüfliste DM:** P-DM-03 (Registrierung in Safari: Knopf sofort frei), -06 (dasselbe auf Produktiv nach dem Tag `web-v23.0.1`, nur bei offener Registrierung) | 19 | 20.10.2026 | `Pruefliste.md` 3 |
 | **Prüfliste R17:** P-R17-38 (lesen); -11, -27 (Geräte); -34 (Rest Nr. 430); -26 ging in P-GR-02 auf; freiwillig -24, -31, -32. Der Rest ist erledigt (02.11.2026) | 12, 12b | 11.10.2026 | `Pruefliste.md` |
@@ -201,8 +202,8 @@ gestrichen, 6a abgehakt; was steht, ist bestätigt offen.
 | **Das geplante Komplett-Backup einmal im Betrieb sehen** — Plan „täglich", ein Tag warten; erster Betriebsnachweis für Nr. 89 | S7 | 03.09.2026 | Archiv-2 6 |
 | **SPF/DKIM/DMARC der Versanddomain; `smtp.from` als echtes Postfach**, das die Betreiberin liest — Rückläufer liest die Anwendung nicht (E-P5c-51) | P5 | 15.09.2026 | Archiv-2 6 |
 | **Prüfliste BR5:** P-BR5-11 (echter Safari), P-R17-34 (Bitwarden, Nr. 430, seit Web 23.7.2 erneut), P-BR5-14 (APK-Zeilen nach dem nächsten Android-Tag); P-BR5-08 prüft Claude, sobald ein Job scheitert | 22 | 04.11.2026 | `Pruefliste.md` 3, 8, 10 |
-| **Prüfliste GR:** P-GR-01 bis -03 (Garmin), -04 bis -07 (Handy) auf echten Geräten gegen Staging — Abmelden, Aktivieren, Rückstand, fremdes Konto; vor den Tags `uhr-v…` und `android-v…` | 21 | 04.11.2026 | `Pruefliste.md` 10 |
-| **Prüfliste BR6:** P-BR6-04 (Venu 3s), -05, -06 (Telefon, Frist) vor den Tags `uhr-v4.3.2` und `android-v0.21.0`; -07 freiwillig (Safari) | 23 | 05.11.2026 | `Pruefliste.md` 9, 10 |
+| **Prüfliste GR:** P-GR-01 bis -03 (Garmin), -04 bis -07 (Handy) auf echten Geräten gegen Staging — Abmelden, Aktivieren, Rückstand, fremdes Konto; die Tags `uhr-v4.3.2` und `android-v0.21.0` sind ohne sie gesetzt (05.11.2026) | 21 | 04.11.2026 | `Pruefliste.md` 10 |
+| **Prüfliste BR6:** P-BR6-04 (Venu 3s), -05, -06 (Telefon, Frist), nach den Tags (05.11.2026); -07 freiwillig (Safari) | 23 | 05.11.2026 | `Pruefliste.md` 9, 10 |
 | **Prüfliste RD:** P-RD-09 (Safari: Segment mit Schnitt über Mitternacht), P-RD-10 (Produktiv nach dem Tag `web-v23.8.2`: Demo zurücksetzen, Karte öffnet, keine Gerätemeldung) | 24 | 05.11.2026 | `Pruefliste.md` 9 |
 
 ### 6.2 Vor einem bestimmten Schritt

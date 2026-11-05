@@ -9,6 +9,7 @@ Verlauf bis zum Schnitt). Die Fassungszählung läuft fortlaufend weiter.
 
 | Fassung | Datum | Anlass | Was |
 |---|---|---|---|
+| 222 | 05.11.2026 | 25 | Schritt 25 (BR7) begonnen: Prüfrunde auf Staging, Konzept `Konzept-BR7-Backlog-Runde-7.md` (Q-BR7-01 bis -07 offen), Reihenfolge 25 → 13 → 14. Kopf: alle drei Fassungen ausgeliefert; 6.1: P-BR-08, P-PU-01, -04, -06 bestanden. |
 | 221 | 05.11.2026 | 24 | Schritt 24 (RD) abgeschlossen (PR #152): Erledigt-Zeile, Konzept gelöscht (`99d82b32`), P-RD-09/-10 in der Prüfliste, 6.1 „Prüfliste RD“; P-S11-30, -31 bestanden. R4-Register: 111 statt 109 Einsätze im Bestand. |
 | 220 | 05.11.2026 | 24 | Konzept RD freigegeben (Q-RD-01 bis -10 wie vorgeschlagen, E-RD-09 bis -18); E-RD-19: jeder Fehler am Demo-Konto wird in 24 behoben, neues Paket RD-07. Fahrplanzeile auf „freigegeben“, Umsetzung in eigener Sitzung. |
 | 219 | 05.11.2026 | 24 | Schritt 24 (RD) begonnen: Konzept `Konzept-RD-Referenzdatensatz.md` auf `claude/admiring-sagan-mql8t4` (RD-01 bis -06, Q-RD-01 bis -09 offen), Fahrplanzeile auf „Konzept“, Kopf „Läuft: 24“; Backlog-Spanne 510–519 reserviert. |
