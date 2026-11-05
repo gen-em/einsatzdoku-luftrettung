@@ -52,7 +52,7 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
 
 | Spanne | Zweig | seit |
 |---|---|---|
-| 500 bis 509 | `claude/stoic-turing-mpxuch` (Schritt 23, BR6: Konzept, Abschluss von 21) | 04.11.2026 |
+| 500 bis 509 | `claude/stoic-turing-mpxuch` (Schritt 23, BR6: Konzept, Abschluss von 21 und 23; Schritt 24 angelegt); vergeben: 500 | 05.11.2026 |
 | ab 510 | frei — höchste reservierte Nummer 509; frei blieben 482 bis 489 aus der Spanne von 22 (PR #148, #149), 492 bis 499 aus der des Prüfdurchgangs (PR #147), 472 bis 479 aus der Spanne von 21 (PR #136), 461 bis 469 aus der Spanne von PR (PR #133), 434 bis 439 aus der Spanne von PR #129, 441 bis 449 aus der von PR #130, 420 bis 429 aus der Spanne von 20 (PR #127), 412 bis 419 aus der von 12b (PR #125), 394 bis 399 aus der Spanne von 19 (PR #112 bis #114), 389 aus der von 12a (PR #116), 372 bis 379 aus der von 12 (PR #103), 362 bis 369 aus der von PK, 359 aus der von 18 (PR #101), 348 und 349 aus der von 17, 338 aus der von AR | 04.11.2026 |
 
 ---
@@ -620,7 +620,7 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
 
 <!-- -->
 
-388. **Die Demo-Fixture lässt sich seit S11 nicht mehr aus dem Referenzkonto erzeugen.** · gehört zu: 14 · Stand: offen · seit 19.10.2026
+388. **Die Demo-Fixture lässt sich seit S11 nicht mehr aus dem Referenzkonto erzeugen.** · gehört zu: 24 · Stand: offen · seit 19.10.2026
      *Aufgenommen 19.10.2026 in S11-12 (F-S11-95).*
      `tools/referenzdatensatz/fixture/erzeugen.php` las das Referenzkonto
      über `edbak_build()` am Stück, mit Punktlisten aus `track_points`.
@@ -636,6 +636,8 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      Quelldaten des Generators bauen, ohne Umweg über ein Konto.
      *Abnahme:* eine neu erzeugte Fixture setzt das Demo-Konto zurück, und
      die Riegelprobe ist in beiden Richtungen grün.
+     *Seit 05.11.2026 Teil von Schritt 24 (Nr. 500), auf Wunsch der
+     Betreiberin; bis dahin `gehört zu: 14`.*
 
 
 <!-- -->
@@ -757,43 +759,23 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      Anmeldename in einem eigenen Formular, Enter erstellt das Backup; Karte
      pixelgleich, Backup in drei Engines. Offen bis zur Handprüfung mit
      Bitwarden (P-R17-34, `Pruefliste.md` 3).
-<!-- -->
-
-458. **Auf MySQL 8 bricht der Wartungslauf der Spuren bei jedem Aufruf ab.** · gehört zu: 23 · Stand: teilweise · seit 03.11.2026
-     *Aufgenommen 03.11.2026 im Prüfdurchgang der Arbeitsumgebung (R91,
-     P-S11-14, -30).* `spur2_faellig_kandidaten()` in `spur_lib.php`
-     gruppiert nach `o.id`, die Unterabfrage `geschnitten` (10. Ausdruck)
-     bezieht sich aber auf `s.owner_type` und `s.owner_id`. MySQL 8.4 mit
-     der Vorgabe `ONLY_FULL_GROUP_BY` lehnt das ab (SQLSTATE 42000/1055);
-     `api/wartungslauf.php` antwortet 500, auf Staging bei jedem Seitenaufruf
-     mit Spuren, seit dem 19.10.2026 55 Einträge im Reiter System. Folge:
-     Auf Staging wird nichts verdichtet oder ausgedünnt („Fällig
-     unbekannt"), P-S11-30 ist dort nicht prüfbar. Produktiv (MariaDB
-     10.11) ist nicht betroffen. Die Plattformprüfungen gegen MySQL 8.0
-     und 8.4 waren grün (50/0) — sie erfassen diese Abfrage nicht.
-     *Weg:* `s.owner_type`/`s.owner_id` in der Unterabfrage durch den
-     Parameter und `o.id` ersetzen (der Typ ist je Durchgang fest), und
-     die Abfrage in eine Probe gegen MySQL 8 nehmen.
-     *Abnahme:* auf Staging keine neue Zeile „wartungslauf … 1055",
-     `server/api/wartungslauf.php` antwortet 200, „GPS-Daten verdichten" nennt eine Zahl.
-     *Gebaut 04.11.2026 mit BR6-02 (Web 23.7.4);* Schemaprobe Fall 8 auf vier
-     Fassungen grün (vorher MySQL 8.0 und 8.4 rot, 1055). Offen: Staging.
 
 <!-- -->
 
-481. **Endgültige Mail-Absage beim ersten Versuch heißt „steht in der Warteschlange“.** · gehört zu: 23 · Stand: teilweise · seit 04.11.2026
-     *Aufgenommen 04.11.2026 mit P-BR5-06 auf Staging (Konzept BR5,
-     F-BR5-33).* Ein Konto für eine Adresse, die der Mailserver schon beim
-     Empfänger mit 550 abweist: Die Zeile wird richtig sofort
-     „unzustellbar“ (Nr. 454), die Meldung beim Anlegen sagt aber „beim
-     ersten Versuch NICHT hinausgegangen und steht in der Warteschlange.
-     Sie wird erneut versucht“. `mail_einreihen()` gibt nach einem
-     gescheiterten ersten Versuch immer `MAIL_WARTET` zurück und fragt den
-     Stand der Zeile nicht ab. *Weg:* nach dem Versuch den Stand lesen; bei
-     „unzustellbar“ `MAIL_ABGELEHNT` (Aufrufer: `admin_users.php`,
-     `admin_user.php`, `email_lib.php`, `konto_lib.php`, `login.php`).
-     *Abnahme:* auf Staging Konto für eine nicht vorhandene Adresse der
-     eigenen Domain → „konnte NICHT verschickt werden“, Mailprobe mit der
-     Art `nach_daten` bzw. 550 beim Empfänger.
-     *Gebaut 04.11.2026 mit BR6-04 (Web 23.7.6):* `MAIL_UNZUSTELLBAR`,
-     Mailprobe 4a 80/0. Offen: Staging (Konto, Testmail).
+500. **Referenzdatensatz und Demo-Konto tragen nicht alle Spurfälle.** · gehört zu: 24 · Stand: offen · seit 05.11.2026
+     *Aufgenommen 05.11.2026 auf Wunsch der Betreiberin, nach P-BR6-01:*
+     Auf Staging ließ sich P-S11-30 (Schneiden nach dem Verdichten) nicht
+     prüfen, weil kein Konto verdichtete Ruhesegmente hat. Der
+     Referenzdatensatz (Quelle der Demo-Fixture und Sollstand der
+     Kreisläufe) kennt drei Schnitte, aber nur Stücke der Stufe 1.
+     *Fehlende Fälle:* Stufe 2 und 3, ein bestehender Schnitt neben einem
+     Löschvermerk, ein Segment über Mitternacht, eines mit Lücke, ein Schnitt,
+     der alles nimmt, ein Einsatz mit eigener Spur.
+     *Weg:* zuerst Nr. 388 (die Fixture wieder erzeugbar), dann die
+     Quelldaten erweitern; das Einspielen fährt den Wartungslauf; der
+     Demo-Reset legt verdichtete Stücke selbst an, weil der Wartungslauf das
+     Demo-Konto seit Web 23.7.5 auslässt (Nr. 459). Neue Sollstände beider
+     Kreisläufe, jede neue Abweichung einzeln begründet (Löschvermerk:
+     F-S11-52). Dabei P-S11-31 neu fassen.
+     *Abnahme:* jeder Fall im Demo-Konto und im Referenzkonto bedienbar;
+     Kreisläufe 0 unerklärt; P-S11-30 auf Staging mit dem Demo-Konto.
