@@ -26,13 +26,13 @@ hochgeht, entscheidet die Umsetzung (K3, CLAUDE.md 2).
 |---|---|---|
 | RD-01 | Fixture wieder erzeugbar (Nr. 388) | **erledigt** (05.11.2026) |
 | RD-02 | Quelldaten: die fehlenden Spurfälle, Matrix, Generator | **erledigt** (05.11.2026) |
-| RD-03 | Einspielen: Stufen `verdichten` und `loeschen` | offen — als Nächstes |
-| RD-04 | Demo-Reset legt Stufe 2 und 3 selbst an (Fixture-Format 3) | offen |
+| RD-03 | Einspielen: Stufen `verdichten` und `loeschen` | **erledigt** (05.11.2026) |
+| RD-04 | Demo-Reset legt Stufe 2 und 3 selbst an (Fixture-Format 3) | offen — als Nächstes; dazu F-RD-08 (bestätigt) |
 | RD-05 | Fixture, Referenzexporte und Sollstände neu; Dokumente | offen |
 | RD-07 | Demo-Konto: Durchgang über jeden Bedienweg, jeder Fehler sofort behoben (E-RD-19) — **vor RD-05** | offen |
 | RD-06 | Abschluss: Prüfdokument, Prüfliste (P-S11-30, -31), Pull Request | offen |
 
-**In Arbeit:** nichts — RD-01 und RD-02 sind erledigt, als Nächstes RD-03. Die
+**In Arbeit:** nichts — RD-01 bis RD-03 sind erledigt, als Nächstes RD-04. Die
 Umsetzung läuft auf dem Konzeptzweig `claude/admiring-sagan-mql8t4`
 (Entscheid der Betreiberin zu Beginn der Umsetzungssitzung). **Es hakt:**
 nirgends. *(Bis RD-01 stand bei RD-02 und RD-04 „wartet auf Q-RD-…" —
@@ -286,6 +286,26 @@ in RD-02). In D06, D14 und D22 überdeckt jeweils ein Einsatz 00:00 (D22:
 Befund zu Nr. 500 gibt es nicht mehr. Für E-RD-13 („Segment über Mitternacht
 in D22") fehlte damit das Segment → E-RD-22.
 
+**F-RD-20 — Der Wartungslauf verweigert sich dem Referenzkonto** (gefunden
+in RD-03). Auf der Prüfanlage ist das Referenzkonto zugleich das Demo-Konto
+(`demo_kennzeichnen.php`, sonst entstünde keine `edk1:`-Hülle), und
+`api/wartungslauf.php` antwortet dem Demo-Konto mit leeren Listen und
+`409 demo` (Nr. 459). Der Weg aus RD-03 („über `api/wartungslauf.php`")
+lief so ins Leere. Gelöst im Werkzeug, nicht im Server: Die Stufe
+`verdichten` hebt die Kennzeichnung auf (`demo_kennzeichnen.php
+--aufheben`) und setzt sie im `finally` wieder; dazwischen arbeitet nur das
+Python-Werkzeug, eine stille Umstellung der Hülle (nur im Browser) kann
+nicht laufen. Gemessen danach: Hülle `edk1:`, Kennzeichnung zurück.
+
+**F-RD-21 — Die Auslassliste des Wartungslaufs reicht 200 weit**
+(gefunden in RD-03). `spur2_faellig_kandidaten()` liest `array_slice(
+$auslassen, 0, 200)`; der Bestand hat 223 Spuren, jede auf Stufe 1 ist
+fällig. Ein Client, der „bis die Liste leer ist" fragt, läuft im Kreis
+(erster Lauf: nach 60 Listen kein Ende, alle 20 Aufträge waren da längst
+getauscht). Im Browser unschädlich — er hört nach 20 auf und merkt sich
+die Ausgelassenen je Sitzung; das Werkzeug hört auf, sobald alle Aufträge
+erledigt sind. Kein Serverfehler, keine Behebung.
+
 ## 3. Fragen an die Betreiberin
 
 | Nr. | Frage | Vorschlag | Paket |
@@ -529,6 +549,33 @@ Schnitte, der Löschvermerke); das Segment „Schnitt nimmt alles" nach dem
 Lauf: Stufe 1 und in der Liste des Wartungslaufs noch genannt oder nicht
 (F-RD-08 — die Zahl steht im Prüfprotokoll); `sitzungsprobe.py` 2 von 2.
 
+*Gebaut (05.11.2026):* `einspielen.py`: Stufen `loeschen` (nach
+`schneiden`) und `verdichten` (zuletzt), `segment_finden()` als gemeinsame
+Segmentsuche für Schneiden und Löschen, `tagesversatz()` aus dem Datum
+(E-RD-21) für `beginn_tag`/`ende_tag` in beiden; die Ausgabe der Stufe
+`schneiden` ohne das tote „geblieben" (F-RD-17). `loeschen` öffnet wie
+`schneiden.js` ohne Sperren, verschließt den Rest als Gerätestücke oder
+gepackt in derselben Stufe und fährt vorher einmal die Probe „ganze
+Aufzeichnung" (409 `alles`, F-RD-09). `verdichten` holt die Liste des
+Wartungslaufs, lässt aus, was nicht in `verdichten` steht, öffnet, dünnt
+für Stufe 3 mit der PHP-Referenz aus (`tools/proben/huelle/
+ausduennen_cli.php` → `spur_ausduennen()` und
+`spur_ausduennung_pruefen()`, über `ortsdaten.ausduennen()`), packt, fährt
+den Rundlauf und tauscht; die Demo-Kennzeichnung ruht dabei (F-RD-20).
+Die Ortshöhe trägt die Stufe nicht nach (der Nachtrag hat sie gesetzt).
+`demo_kennzeichnen.php --aufheben`. Dokumente: `einspielen/LIESMICH.md`,
+`proben/huelle/LIESMICH.md`.
+
+*Probleme und Lösung:* (1) Wartungslauf verweigert das Demo-Konto
+(F-RD-20) → Kennzeichnung ruht. (2) Auslassliste begrenzt (F-RD-21) →
+Abbruch nach erledigten Aufträgen. (3) Der Container wurde während des
+ersten Aufbaus neu gestartet (Dienste weg, Dateien da); Startfolge 6.1a
+gefahren, das Demo-Konto stand danach wieder mit dem Bestand aus RD-01 —
+ein Lauf von `--stufen konto` hätte ihn aufgefüllt („besteht bereits");
+angehalten nach `kennzeichnen`, Konto entfernt, neu aufgebaut. Lehre für
+`einspielen/LIESMICH.md` (steht dort seit RD-01): das Demo-Konto vor
+`--stufen konto` entfernen und nachsehen.
+
 ### RD-04 Demo-Reset legt Stufe 2 und 3 selbst an (Nr. 500; Q-RD-02)
 
 *Weg (bei Q-RD-02 (a)):*
@@ -714,7 +761,12 @@ ist gemessen; was fehlt, steht im Prüfdokument an erster Stelle.
 | RD-02 | Gegenprobe Lückenprüfung (`luecken.json` verbogen) | Befunde | 3 gemeldet (Sprung nicht erklärt, Sequenzlücke fehlt, Zeitlücke fehlt), zurückgelegt 0 |
 | RD-02 | `diff -r` Generator-Ausgabe vor/nach | geänderte Dienste | nur D02, D04, D09, D11, D17, D22 (Lücke, Übung, E1); **16 Dienste byteweise gleich**; zwei Läufe nach der Änderung byteweise gleich |
 | RD-02 | Anfragen der Lücken | `seq_from`, Zeit | Sequenz: Anfrage endet bei 158, nächste beginnt bei 179 (20 Nummern); Zeit: Nummern lückenlos, Pause 16 min |
-| RD-03 | `einspielen.py`, `sitzungsprobe.py`, Umrisszahlen | — | — |
+| RD-03 | Aufbau von Null (`einspielen.py` alle 12 Stufen + `csv_import.mjs`) | Stufen | alle ohne Abbruch, 718 Anfragen; Probe „ganze Aufzeichnung löschen" **409 alles**; 5 Schnitte (D22 am Folgetag), 2 Löschungen (8 und 30 Punkte), **20 Verdichtungen** |
+| RD-03 | SQL auf `track_stuecke`/`track_cuts` (Referenzkonto) | Lage je Fall | 111 Einsätze, 123 Segmente, 223 Spuren: **Stufe 1/2/3 = 203/10/10 Spuren, 61 523/4 249/1 244 Punkte** (67 016); `track_cuts` 5 Schnitte, 2 Löschvermerke; D18 Stufe 2 n 392 / n_original 487 (65 geschnitten, 30 gelöscht); D19 Stufe 3 60/131; D22 Stufe 2 183/228; Sequenzlücke Stufe 2 229/249; Zeitlücke Stufe 1 65; D20 „nimmt alles" Stufe 1; Übungen D11 Stufe 2, D09/D17 Stufe 1; Rea-Einsatz Stufe 3 172/711 |
+| RD-03 | F-RD-08: `spur2_faellig_kandidaten()` direkt | Fälligkeit | **D20 „Schnitt nimmt alles" fällig**, Platz 102 von 200 — bestätigt, Behebung RD-04 |
+| RD-03 | Hülle und Kennzeichnung nach `verdichten` | Präfix, `demo_user_id` | `edk1:`, Kennzeichnung zurück |
+| RD-03 | `sitzungsprobe.py` | Erwartungen | **2 von 2** |
+| RD-03 | `fixture/erzeugen.php` auf dem neuen Referenzkonto (Vorab-Fixture für RD-07) | Zahlen, DB | Rückgabe 0; 111 Einsätze, 223 Spuren, Stufe 1/2/3 = 61 523/4 249/1 244 Punkte — gleich dem SQL; 5 Schnitte, 2 Löschvermerke; DB unverändert (41 Tabellen) |
 | RD-04 | Hüllenprobe, Wartungslaufprobe, Ortsdatenprobe, Reset mit Handbestand | — | — |
 | RD-05 | Kreisläufe csv/edbak, `abgleich.py`, Reset, Bedienweg Demo | — | — |
 | RD-07 | Bedienwege des Demo-Kontos, `demo_pruefen.mjs`, drei Engines bei Oberflächenfunden | — | — |
@@ -733,5 +785,6 @@ alles") misst erst RD-03.
 | 05.11.2026 | Nach Rückfrage der Betreiberin (Wildwuchs, Q-RD-04, Übungstage): F-RD-04 und F-RD-11 berichtigt (Python hat das Format einmal; die Segmentkennung überlebt den Aufbau), E-RD-04 auf die vorhandene Adressierung `segment: client_ref` umgestellt, Q-RD-04 mit Lesart (d) „Übungssegmente, zwei auf Stufe 1, eines auf Stufe 2" als Vorschlag, E-RD-08 und Abschnitt 6 (Wildwuchs-Prüfung) neu; Matrixmarken von 14 auf 12 (10 Fälle). |
 | 05.11.2026 | Zweite Rückfrage („geschnittene Tage?"): F-RD-14 (Demo-Schnitte gelten auf jeder Anlage als alt, Rücknahme antwortet 409 `altschnitt`), Q-RD-10 mit Vorschlag (a), die drei bestehenden Schnitte auf Stufe 1/2/3 verteilt (Q-RD-03), Matrix „Schnittzustand × Stufe" in `pruefen.py`, Marken auf 14. |
 | 05.11.2026 | **Freigabe:** Q-RD-01 bis -10 wie vorgeschlagen (E-RD-09 bis -18). Dazu E-RD-19: Jeder Fehler am Demo-Konto wird in diesem Schritt behoben — neues Paket RD-07 (Demo-Durchgang) vor RD-05, der Browserweg ist nicht mehr ausgenommen, F-RD-08 wird bei Bestätigung behoben. Fahrplanzeile auf „freigegeben". |
+| 05.11.2026 | **RD-03 erledigt:** Stufen `loeschen` und `verdichten`, Tagesversatz aus dem Datum, PHP-Ausdünnung über `ausduennen_cli.php`; Referenzkonto von Null mit allen Fällen; F-RD-08 bestätigt; Befunde F-RD-20, -21. |
 | 05.11.2026 | **RD-02 erledigt:** vier Spurfall-Listen, 16 Matrixzeilen, Lücken und Übungen im Generator; Befunde F-RD-18, -19, Entscheidungen der Umsetzung E-RD-20 bis -22 (Übungsliste mit Vorbild, Tagesversatz aus dem Datum, D22-E1 vorgezogen). |
 | 05.11.2026 | **RD-01 erledigt:** `erzeugen.php` erzeugt wieder (Format 3, 67 478 Punkte), Riegelprobe 11 von 11, `fixture/LIESMICH.md` neu. Befunde F-RD-15 bis -17. Statusblock: „wartet auf Q-RD-…" bei RD-02 und RD-04 gestrichen (seit der Freigabe überholt). |

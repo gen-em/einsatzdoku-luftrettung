@@ -159,6 +159,20 @@ def ortshoehe(punkte: list[dict], phasen: list[tuple[int, int]]) -> int | None:
     return _runde(hoehe)
 
 
+def ausduennen(punkte: list[dict], zeiten: list[int]) -> list[int]:
+    """Behalteliste (Indizes) nach `spur_ausduennen()` — die PHP-Referenz über
+    `ausduennen_cli.php`, samt `spur_ausduennung_pruefen()`. Eine Python-
+    Fassung der Regel gibt es nicht (Konzept RD, RD-03): Der Browser hat seine,
+    PHP die Referenz, und eine dritte liefe auseinander."""
+    r = subprocess.run(["php", str(HUELLE / "ausduennen_cli.php")],
+                       input=json.dumps({"punkte": [[p["seq"], p["lat"], p["lon"], p["ele"], p["ts"]]
+                                                    for p in punkte], "zeiten": zeiten}),
+                       capture_output=True, text=True, check=False)
+    if r.returncode != 0:
+        raise RuntimeError(f"ausduennen_cli.php: {r.stderr.strip() or r.returncode}")
+    return json.loads(r.stdout)["behalten"]
+
+
 def zeiten(anfragen: list[tuple[str, str, int]]) -> list[int | None]:
     r = subprocess.run(["php", str(HUELLE / "zeiten_cli.php")],
                        input=json.dumps(anfragen), capture_output=True, text=True, check=False)

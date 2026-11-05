@@ -57,7 +57,14 @@ DEMO_EMAIL = "demo@gen-em.org"
 DEMO_PASSWORT = "nadokudemo0815"
 
 ALLE_STUFEN = ["konto", "stammdaten", "geraet", "ingest", "zuordnen",
-               "nachtragen", "manuell", "papierkorb", "sperrliste", "schneiden"]
+               "nachtragen", "manuell", "papierkorb", "sperrliste", "schneiden",
+               "loeschen", "verdichten"]
+# `loeschen` UND `verdichten` KOMMEN NACH `schneiden`, in dieser Folge
+# (Konzept RD, E-RD-15): erst schneiden, dann einen zweiten Zeitraum desselben
+# Segments loeschen, dann verdichten. So ist der Loeschvermerk juenger als der
+# Schnitt, und der Wartungslauf sieht ein Segment, das alle drei Zustaende
+# durchlaufen hat. Verdichtet wird zuletzt, weil ein Schnitt in einer
+# gepackten Spur andere Punkte faende als in den Geraetestuecken.
 # `schneiden` STEHT AM ENDE und nicht, wie das Konzept es zuerst vorsah,
 # zwischen `zuordnen` und `nachtragen`. Der Grund sind die drei
 # Stufen dazwischen: `nachtragen`, `papierkorb` und `sperrliste` suchen ihre
@@ -91,6 +98,49 @@ class Lauf:
 
 def melde(text: str) -> None:
     print(text, flush=True)
+
+
+def tagesversatz(tag: str, zeitstempel: str) -> int:
+    """0 oder 1: Liegt `zeitstempel` (lokal, „JJJJ-MM-TT hh:mm") am Diensttag
+    oder am Tag danach? Der Versatz steht nicht als Feld in den Quelldaten —
+    er folgt aus dem Datum (Konzept RD, E-RD-21), und `api/schneiden.php`
+    nimmt ihn als `beginn_tag`/`ende_tag` (F-RD-10)."""
+    from datetime import date
+    d = (date.fromisoformat(zeitstempel[:10]) - date.fromisoformat(tag)).days
+    if d not in (0, 1):
+        raise RuntimeError(f"{zeitstempel} liegt {d} Tage nach dem Diensttag {tag}")
+    return d
+
+
+def segment_finden(lauf: "Lauf", s, kennung: str, d: dict, ref: str) -> tuple[dict, dict]:
+    """Das Ruhesegment `ref` des Dienstes `kennung` im Bestand: (Tagesliste, Segment).
+
+    WIE DAS SEGMENT GEFUNDEN WIRD. `api/schneiden.php` will die INTERNE
+    Kennung (`rest_id`); die Quelldaten kennen nur die `client_ref`, und
+    `api/day.php` liefert die client_ref nicht mit. Die Bruecke ist die
+    Beginnzeit: Sie ist innerhalb eines Diensttags eindeutig, und
+    `api/day.php` gibt sie als `start_hhmm` fertig in Ortszeit heraus. Ueber
+    UTC zu rechnen waere der naheliegende und falsche Weg -- daran ist der
+    Schnitt schon einmal zwei Stunden danebengegriffen (api/day.php,
+    Kommentar zu den Zeiten)."""
+    tag_id = lauf.zustand.get("diensttage", {}).get(kennung)
+    if not tag_id:
+        raise RuntimeError(f"{kennung}: kein Diensttag im Zustand (Stufe `zuordnen`)")
+    quelle = next((r for r in d["ruhesegmente"] if r["client_ref"] == ref), None)
+    if quelle is None:
+        raise RuntimeError(f"{kennung}: Segment {ref} steht nicht im Dienst")
+    # LESEN IST EIN GET. Der POST auf api/day.php ist ein reines UPDATE des
+    # Diensttags (Kopfkommentar dort); die Segmente kommen ueber `?d=<day_id>`.
+    a = s.get(f"api/day.php?d={tag_id}")
+    if a.status_code != 200:
+        raise RuntimeError(f"{kennung}: api/day.php?d={tag_id} antwortete {a.status_code}")
+    liste = a.json()
+    treffer = [r for r in liste.get("rest_segments", [])
+               if r.get("start_hhmm") == quelle["beginn"][11:16]]
+    if len(treffer) != 1:
+        raise RuntimeError(f"{kennung}: {len(treffer)} Ruhesegmente beginnen um "
+                           f"{quelle['beginn'][11:16]} — erwartet war genau eines")
+    return liste, treffer[0]
 
 
 # ---------------------------------------------------------------- 1. Konto
@@ -860,14 +910,7 @@ def stufe_schneiden(lauf: Lauf) -> None:
     Quellsegment. Er fuellt KEINE Einsatzfelder -- Einsatzort, Alter und
     Diagnose sind Ende-zu-Ende-verschluesselt und entstehen im Browser.
 
-    WIE DAS SEGMENT GEFUNDEN WIRD. `api/schneiden.php` will die INTERNE
-    Kennung (`rest_id`); die Quelldaten kennen nur die `client_ref`, und
-    `api/day.php` liefert die client_ref nicht mit. Die Bruecke ist die
-    Beginnzeit: Sie ist innerhalb eines Diensttags eindeutig (gemessen ueber
-    alle 16 Dienste: keine Dublette), und `api/day.php` gibt sie als
-    `start_hhmm` fertig in Ortszeit heraus. Ueber UTC zu rechnen waere der
-    naheliegende und falsche Weg -- daran ist der Schnitt schon einmal zwei
-    Stunden danebengegriffen (api/day.php, Kommentar zu den Zeiten).
+    Das Segment findet `segment_finden()` (ueber `start_hhmm`).
     """
     s = lauf.demo_sitzung()
     if lauf.zustand.get("schnitte"):
@@ -881,41 +924,24 @@ def stufe_schneiden(lauf: Lauf) -> None:
         d = json.loads(pfad.read_text("utf-8"))
         for sc in d.get("schnitte", []):
             kennung = d["kennung"]
-            tag_id = lauf.zustand["diensttage"].get(kennung)
-            if not tag_id:
-                raise RuntimeError(f"{kennung}: kein Diensttag im Zustand")
-            quelle = next((r for r in d["ruhesegmente"]
-                           if r["client_ref"] == sc["segment"]), None)
-            if quelle is None:
-                raise RuntimeError(f"{kennung}: Quellsegment {sc['segment']} steht nicht im Dienst")
-
-            # LESEN IST EIN GET. Der POST auf api/day.php ist ein reines
-            # UPDATE des Diensttags (Kopfkommentar dort); die Segmente kommen
-            # ueber `?d=<day_id>`.
-            a = s.get(f"api/day.php?d={tag_id}")
-            if a.status_code != 200:
-                raise RuntimeError(f"{kennung}: api/day.php?d={tag_id} antwortete "
-                                   f"{a.status_code}")
-            liste = a.json()
-            treffer = [r for r in liste.get("rest_segments", [])
-                       if r.get("start_hhmm") == quelle["beginn"][11:16]]
-            if len(treffer) != 1:
-                raise RuntimeError(
-                    f"{kennung}: {len(treffer)} Ruhesegmente beginnen um "
-                    f"{quelle['beginn'][11:16]} — erwartet war genau eines")
-            rest_id = treffer[0]["id"]
+            liste, seg = segment_finden(lauf, s, kennung, d, sc["segment"])
+            rest_id = seg["id"]
+            # DER TAGESVERSATZ (F-RD-10): Ein Schnitt nach Mitternacht in einem
+            # Segment ueber Mitternacht (D22) liegt am Folgetag. Bis RD-03
+            # stand hier immer 0, und der Bestand hatte keinen solchen Fall.
+            bt = tagesversatz(liste["day"], sc["beginn"])
+            et = tagesversatz(liste["day"], sc["ende"])
 
             # DER BROWSER SCHNEIDET -- und darum hier das Werkzeug:
             # Segment oeffnen, die Punkte im Zeitraum nehmen und als
             # Spur des neuen Einsatzes verschliessen, gebunden an dessen Kennung.
             # Der Zeitraum wird wie auf dem Server gerechnet (`local_to_utc()`).
-            seg = treffer[0]
             sec1, priv = s.kontopaar()
             sperren = [{"von": x["von_ts"], "bis": x["bis_ts"]} for x in seg.get("schnitte", [])]
             punkte = ortsdaten.spur_oeffnen(seg.get("spur_stuecke") or [], "ruhe",
                                             seg["client_ref"], sperren, priv)
-            von, bis = ortsdaten.zeiten([(liste["day"], sc["beginn"][11:16], 0),
-                                         (liste["day"], sc["ende"][11:16], 0)])
+            von, bis = ortsdaten.zeiten([(liste["day"], sc["beginn"][11:16], bt),
+                                         (liste["day"], sc["ende"][11:16], et)])
             drin = [p for p in punkte if von <= p["ts"] <= bis]
             if not drin:
                 raise RuntimeError(f"{kennung}: im Zeitraum {sc['beginn'][11:16]}–"
@@ -924,7 +950,7 @@ def stufe_schneiden(lauf: Lauf) -> None:
             antwort = s.json_post("api/schneiden.php", {
                 "action": "schneiden", "rest_id": rest_id,
                 "beginn": sc["beginn"][11:16], "ende": sc["ende"][11:16],
-                "beginn_tag": 0, "ende_tag": 0,
+                "beginn_tag": bt, "ende_tag": et,
                 "phasen": {nr: wann[11:16] for nr, wann in sc["phasen"].items()},
                 "client_ref": ref,
                 "stuecke": ortsdaten.stuecke_bauen(drin, "spur", ref, sec1, neu=True),
@@ -942,11 +968,13 @@ def stufe_schneiden(lauf: Lauf) -> None:
                                    f"{o['rejected']}")
             getan.append({"dienst": kennung, "segment": sc["segment"], "rest_id": rest_id,
                           "mission_id": o.get("mission_id"), "genommen": o.get("genommen"),
-                          "geblieben": o.get("geblieben"),
-                          "phasen": len(sc["phasen"])})
+                          "tag": bt, "phasen": len(sc["phasen"])})
+            # „geblieben" gibt es seit Web 22.2.0 nicht mehr: Die Punkte
+            # bleiben gesperrt im Segment (F-RD-17; hier stand „None geblieben").
             melde(f"  {kennung}: aus {sc['segment']} geschnitten — Einsatz "
-                  f"{o.get('mission_id')}, {o.get('genommen')} Punkte gewandert, "
-                  f"{o.get('geblieben')} geblieben, {len(sc['phasen'])} Phasen")
+                  f"{o.get('mission_id')}, {o.get('genommen')} Punkte genommen "
+                  f"(im Segment gesperrt), {len(sc['phasen'])} Phasen"
+                  + (", am Folgetag" if bt else ""))
 
     # SO VIELE, WIE IN DEN QUELLDATEN STEHEN. Die Zeile hiess bis
     # zum Demo-Ausbau `!= 1`. Sie ist nicht gestrichen, sondern an die Quelle
@@ -958,6 +986,197 @@ def stufe_schneiden(lauf: Lauf) -> None:
         raise RuntimeError(f"erwartet werden {soll} Schnitte (so viele stehen in den "
                            f"Quelldaten), ausgefuehrt: {len(getan)}")
     lauf.zustand["schnitte"] = getan
+
+
+# ------------------------------------------------------------- 11. Loeschen
+def stufe_loeschen(lauf: Lauf) -> None:
+    """Zeitraeume eines Ruhesegments loeschen — wie der Knopf „Zeitraum
+    löschen" (`assets/schneiden.js`, `zeitraumLoeschen()`), Konzept RD.
+
+    Der Browser oeffnet das Segment OHNE die Sperren der Schnitte (deren
+    Punkte bleiben im Segment, gesperrt), nimmt die Punkte ausserhalb des
+    Zeitraums, verschliesst sie neu — als Geraetestuecke, oder gepackt in
+    derselben Stufe, wenn das Segment schon verdichtet ist — und schickt sie
+    mit dem gelesenen Stand. Der Server tauscht nur, wenn sich nichts
+    geaendert hat, und vermerkt den Zeitraum (`track_cuts` ohne Einsatz).
+
+    VORHER EINE PROBE AUFS EXEMPEL (F-RD-09): ein Versuch ueber die ganze
+    Aufzeichnung, ohne ein einziges Stueck. Der Endpunkt muss `409 alles`
+    antworten — dafuer ist der Papierkorb da. Die Antwort steht im Zustand.
+    """
+    s = lauf.demo_sitzung()
+    if lauf.zustand.get("loeschungen") is not None:
+        melde("  Loeschungen bestehen bereits.")
+        return
+    sec1, priv = s.kontopaar()
+    getan, probe = [], None
+    for pfad in sorted((QUELLE / "dienste").glob("D*.json")):
+        d = json.loads(pfad.read_text("utf-8"))
+        for x in d.get("loeschungen", []):
+            kennung = d["kennung"]
+            liste, seg = segment_finden(lauf, s, kennung, d, x["segment"])
+            stand = [[st["seq_from"], st["punkte"]] for st in seg.get("spur_stuecke") or []]
+            punkte = ortsdaten.spur_oeffnen(seg.get("spur_stuecke") or [], "ruhe",
+                                            seg["client_ref"], [], priv)
+            if probe is None:
+                quelle = next(r for r in d["ruhesegmente"] if r["client_ref"] == x["segment"])
+                a = s.json_post("api/schneiden.php", {
+                    "action": "loeschen", "rest_id": seg["id"],
+                    "beginn": quelle["beginn"][11:16], "ende": quelle["ende"][11:16],
+                    "beginn_tag": tagesversatz(liste["day"], quelle["beginn"]),
+                    "ende_tag": tagesversatz(liste["day"], quelle["ende"]),
+                    "stand": stand, "stuecke": [], "geloescht": len(punkte)})
+                probe = {"status": a.status_code, "error": (a.json() if a.headers.get(
+                    "content-type", "").startswith("application/json") else {}).get("error")}
+                if (probe["status"], probe["error"]) != (409, "alles"):
+                    raise RuntimeError(f"{kennung}: Loeschen der ganzen Aufzeichnung antwortete "
+                                       f"{probe} — erwartet war 409 alles (F-RD-09)")
+                melde(f"  Probe: die ganze Aufzeichnung loeschen → {probe['status']} {probe['error']}")
+            bt, et = tagesversatz(liste["day"], x["beginn"]), tagesversatz(liste["day"], x["ende"])
+            von, bis = ortsdaten.zeiten([(liste["day"], x["beginn"][11:16], bt),
+                                         (liste["day"], x["ende"][11:16], et)])
+            drin = [p for p in punkte if von <= p["ts"] <= bis]
+            rest = [p for p in punkte if p["ts"] < von or p["ts"] > bis]
+            if not drin or not rest:
+                raise RuntimeError(f"{kennung}: {len(drin)} Punkte im Zeitraum, {len(rest)} daneben")
+            alle = seg.get("spur_stuecke") or []
+            stufe = max([1] + [int(st.get("stufe") or 1) for st in alle])
+            if stufe >= 2:
+                vonseq = min(st["seq_from"] for st in alle)
+                marke = max([st["seq_from"] + (st["n_original"] if int(st.get("stufe") or 1) >= 2
+                                               else st["punkte"]) for st in alle] + [rest[-1]["seq"] + 1])
+                stuecke = [ortsdaten.gepackt_bauen(rest, "ruhe", seg["client_ref"], sec1, stufe,
+                                                   vonseq, marke - vonseq)]
+            else:
+                stuecke = ortsdaten.stuecke_bauen(rest, "ruhe", seg["client_ref"], sec1)
+            a = s.json_post("api/schneiden.php", {
+                "action": "loeschen", "rest_id": seg["id"],
+                "beginn": x["beginn"][11:16], "ende": x["ende"][11:16],
+                "beginn_tag": bt, "ende_tag": et,
+                "stand": stand, "stuecke": stuecke, "geloescht": len(drin)})
+            if a.status_code != 200:
+                raise RuntimeError(f"{kennung}: Loeschen antwortete {a.status_code}: {a.text[:300]}")
+            getan.append({"dienst": kennung, "segment": x["segment"], "rest_id": seg["id"],
+                          "geloescht": len(drin), "uebrig": len(rest)})
+            melde(f"  {kennung}: in {x['segment']} {x['beginn'][11:16]}–{x['ende'][11:16]} "
+                  f"geloescht — {len(drin)} Punkte, {len(rest)} bleiben")
+    soll = sum(len(json.loads(pfad.read_text("utf-8")).get("loeschungen", []))
+               for pfad in sorted((QUELLE / "dienste").glob("D*.json")))
+    if len(getan) != soll:
+        raise RuntimeError(f"erwartet {soll} Loeschungen, ausgefuehrt {len(getan)}")
+    lauf.zustand["loeschungen"] = getan
+    lauf.zustand["probe_alles"] = probe
+
+
+# ----------------------------------------------------------- 12. Verdichten
+def demo_kennzeichnung(aufheben: bool) -> None:
+    """Die Demo-Kennzeichnung des Referenzkontos aufheben oder wieder setzen
+    (`demo_kennzeichnen.php`). Siehe `stufe_verdichten()`."""
+    befehl = ["php", str(HIER / "demo_kennzeichnen.php")] + (["--aufheben"] if aufheben else [])
+    r = subprocess.run(befehl, capture_output=True, text=True, check=False)
+    if r.returncode != 0:
+        raise RuntimeError(f"demo_kennzeichnen.php: {r.stderr.strip() or r.stdout.strip()}")
+    melde("  " + r.stdout.strip().splitlines()[0])
+
+
+def stufe_verdichten(lauf: Lauf) -> None:
+    """Spuren auf Stufe 2 oder 3 bringen — ueber den regulaeren Wartungslauf
+    (`api/wartungslauf.php`), wie `assets/wartungslauf.js` es tut (Konzept RD,
+    E-RD-05): Liste holen, je Spur die Stuecke oeffnen (geschnittene Punkte
+    fallen dabei weg), fuer Stufe 3 ausduennen und die Ausduennung pruefen —
+    beides mit der PHP-Referenz (`ortsdaten.ausduennen()`) —, EIN gepacktes
+    Stueck bauen, zur Probe wieder oeffnen und vergleichen, dann tauschen.
+
+    WELCHE STUFE, SAGT DIE QUELLE. Der Wartungslauf nennt fuer jede Spur des
+    Bestands Stufe 3 (sie sind alle aelter als 31 Tage); er nimmt aber jede
+    Stufe an, die nicht unter dem Bestand liegt (F-RD-07). Was nicht in einer
+    Liste `verdichten` steht, kommt auf die Auslassliste und bleibt Stufe 1.
+
+    DIE DEMO-KENNZEICHNUNG RUHT WAEHRENDDESSEN. Das Referenzkonto ist auf
+    dieser Anlage das Demo-Konto, und dem antwortet der Wartungslauf mit
+    leeren Listen und `409 demo` (Nr. 459, F-RD-20). Die Stufe hebt die
+    Kennzeichnung auf und setzt sie im `finally` wieder — mit neuer
+    Resetmarke wie beim ersten Kennzeichnen. Dazwischen arbeitet nur dieses
+    Werkzeug; im Browser meldet sich niemand an (die stille Umstellung der
+    Huelle auf `edka1:` liefe nur dort).
+    """
+    if lauf.zustand.get("verdichtet") is not None:
+        melde("  Verdichtung besteht bereits.")
+        return
+    ziele: dict[str, int] = {}
+    for pfad in sorted((QUELLE / "dienste").glob("D*.json")):
+        for v in json.loads(pfad.read_text("utf-8")).get("verdichten", []):
+            ziele[v.get("segment") or v["einsatz"]] = v["stufe"]
+    s = lauf.demo_sitzung()
+    sec1, priv = s.kontopaar()
+    getan: dict[str, dict] = {}
+    demo_kennzeichnung(aufheben=True)
+    try:
+        # DIE AUSLASSLISTE TRAEGT HOECHSTENS 200 EINTRAEGE: Der Server liest
+        # nur so viele (`spur2_faellig_kandidaten()`, `array_slice(…, 0, 200)`).
+        # Der Bestand hat ueber 200 Spuren, und jede auf Stufe 1 ist faellig
+        # — die Liste wird also nie leer. Die Stufe hoert auf, sobald jeder
+        # Auftrag getauscht ist; wer sie erst ans Ende der Liste schickt, laeuft
+        # im Kreis (gemessen beim ersten Lauf: nach 60 Listen kein Ende).
+        auslassen: list = []
+        while set(ziele) - set(getan):
+            if len(auslassen) > 200:
+                raise RuntimeError(f"nach {len(auslassen)} ausgelassenen Spuren fehlen noch "
+                                   f"{sorted(set(ziele) - set(getan))} — die Auslassliste des "
+                                   f"Servers reicht nur 200 weit")
+            a = s.json_post("api/wartungslauf.php", {"aktion": "liste", "auslassen": auslassen})
+            if a.status_code != 200:
+                raise RuntimeError(f"Wartungslauf liste: {a.status_code} {a.text[:300]}")
+            spuren = a.json().get("spuren", [])
+            if not spuren:
+                break
+            for e in spuren:
+                auslassen.append([e["art"], e["id"]])
+                if e["ref"] not in ziele or e["ref"] in getan:
+                    continue
+                getan[e["ref"]] = verdichten_eine(s, e, ziele[e["ref"]], sec1, priv)
+                g = getan[e["ref"]]
+                melde(f"  {e['art']:7s} {e['ref']}: Stufe {g['stufe']}, {g['vorher']} → "
+                      f"{g['nachher']} Punkte (n_original {g['n_original']})")
+    finally:
+        demo_kennzeichnung(aufheben=False)
+    fehlt = sorted(set(ziele) - set(getan))
+    if fehlt:
+        raise RuntimeError(f"nicht verdichtet (der Wartungslauf nannte sie nicht): {fehlt}")
+    lauf.zustand["verdichtet"] = getan
+
+
+def verdichten_eine(s, e: dict, stufe: int, sec1: bytes, priv) -> dict:
+    """Eine Spur — `eine()` aus `assets/wartungslauf.js`, ohne die Ortshoehe."""
+    art_h = "ruhe" if e["art"] == "rest" else "spur"
+    punkte = ortsdaten.spur_oeffnen(e["stuecke"], art_h, e["ref"], e["sperren"], priv)
+    if not punkte:
+        raise RuntimeError(f"{e['ref']}: nach dem Ausblenden kein Punkt (F-RD-08)")
+    behalten = punkte
+    if stufe == 3:
+        zeiten = [int(datetime.strptime(p["occurred_at"], "%Y-%m-%d %H:%M:%S")
+                      .replace(tzinfo=timezone.utc).timestamp()) for p in e.get("phases") or []]
+        behalten = [punkte[i] for i in ortsdaten.ausduennen(punkte, zeiten)]
+    von = min(st["seq_from"] for st in e["stuecke"])
+    marke = max(st["seq_from"] + (st["n_original"] if int(st.get("stufe") or 1) >= 2 else st["punkte"])
+                for st in e["stuecke"])
+    stueck = ortsdaten.gepackt_bauen(behalten, art_h, e["ref"], sec1, stufe, von, marke - von)
+    # DER RUNDLAUF: das neue Stueck oeffnen und Punkt fuer Punkt vergleichen.
+    wieder = ortsdaten.spur_oeffnen([stueck], art_h, e["ref"], [], priv)
+    runde = ortsdaten._runde
+    if len(wieder) != len(behalten) or any(
+            runde(a["lat"] * 1e7) != runde(b["lat"] * 1e7) or runde(a["lon"] * 1e7) != runde(b["lon"] * 1e7)
+            or a["ts"] != b["ts"] or (a["ele"] is None) != (b["ele"] is None)
+            for a, b in zip(wieder, behalten)):
+        raise RuntimeError(f"{e['ref']}: Der Rundlauf weicht ab — nichts geschickt")
+    a = s.json_post("api/wartungslauf.php", {
+        "aktion": "tauschen", "art": e["art"], "id": e["id"],
+        "stand": [[st["seq_from"], st["punkte"]] for st in e["stuecke"]], "stueck": stueck})
+    if a.status_code != 200:
+        raise RuntimeError(f"{e['ref']}: tauschen antwortete {a.status_code}: {a.text[:300]}")
+    return {"art": e["art"], "id": e["id"], "stufe": stufe, "vorher": len(punkte),
+            "nachher": len(behalten), "n_original": marke - von,
+            "gesperrt": len(e["sperren"])}
 
 
 # ------------------------------------------------------------------ Ablauf
@@ -1004,6 +1223,8 @@ def main() -> int:
         "papierkorb": lambda: stufe_papierkorb(lauf),
         "sperrliste": lambda: stufe_sperrliste(lauf),
         "schneiden": lambda: stufe_schneiden(lauf),
+        "loeschen": lambda: stufe_loeschen(lauf),
+        "verdichten": lambda: stufe_verdichten(lauf),
     }
 
     for name in stufen:
