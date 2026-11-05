@@ -9,6 +9,7 @@ Verlauf bis zum Schnitt). Die Fassungszählung läuft fortlaufend weiter.
 
 | Fassung | Datum | Anlass | Was |
 |---|---|---|---|
+| 220 | 05.11.2026 | 24 | Konzept RD freigegeben (Q-RD-01 bis -10 wie vorgeschlagen, E-RD-09 bis -18); E-RD-19: jeder Fehler am Demo-Konto wird in 24 behoben, neues Paket RD-07. Fahrplanzeile auf „freigegeben“, Umsetzung in eigener Sitzung. |
 | 219 | 05.11.2026 | 24 | Schritt 24 (RD) begonnen: Konzept `Konzept-RD-Referenzdatensatz.md` auf `claude/admiring-sagan-mql8t4` (RD-01 bis -06, Q-RD-01 bis -09 offen), Fahrplanzeile auf „Konzept“, Kopf „Läuft: 24“; Backlog-Spanne 510–519 reserviert. |
 | 218 | 05.11.2026 | 23, 24 | Schritt 23 (BR6) abgeschlossen (PR #150): Erledigt-Zeile, Konzept gelöscht (`e62c7632`), 6.1 „Prüfliste BR6“. Schritt 24 (RD) angelegt, vor 13; Nr. 388 von 14 nach 24, neu Nr. 500. Kopf: `main` `8907c4d`. |
 | 217 | 04.11.2026 | 23 | Schritt 23 (BR6) gebaut: alle acht Punkte (Web 23.7.4–23.7.7, Uhr 4.3.2, Android 0.21.0), Prüfdokument angelegt; Pull Request und Freigabe offen. |

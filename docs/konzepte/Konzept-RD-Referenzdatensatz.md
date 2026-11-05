@@ -29,14 +29,13 @@ hochgeht, entscheidet die Umsetzung (K3, CLAUDE.md 2).
 | RD-03 | Einspielen: Stufen `verdichten` und `loeschen` | offen |
 | RD-04 | Demo-Reset legt Stufe 2 und 3 selbst an (Fixture-Format 3) | offen — wartet auf Q-RD-02 |
 | RD-05 | Fixture, Referenzexporte und Sollstände neu; Dokumente | offen |
+| RD-07 | Demo-Konto: Durchgang über jeden Bedienweg, jeder Fehler sofort behoben (E-RD-19) — **vor RD-05** | offen |
 | RD-06 | Abschluss: Prüfdokument, Prüfliste (P-S11-30, -31), Pull Request | offen |
 
-**In Arbeit:** nichts — das Konzept steht, die Umsetzung hat nicht
-begonnen. **Es hakt:** an den Fragen Q-RD-01 bis -09 (Abschnitt 3); ohne
-Q-RD-01 und -02 beginnt kein Paket, ohne Q-RD-04 bis -06 nicht RD-02.
-Q-RD-04 hat seit der Rückfrage vom 05.11.2026 einen Vorschlag (d), der
-die Übungstage der Betreiberin einschließt; Q-RD-10 (Rücknahme im
-Demo-Konto, F-RD-14) kam mit der zweiten Rückfrage hinzu.
+**In Arbeit:** nichts — das Konzept ist **freigegeben** (05.11.2026,
+E-RD-09 bis -19), die Umsetzung hat nicht begonnen. **Es hakt:** nirgends.
+Reihenfolge der Umsetzung: RD-01 → RD-02 → RD-03 → RD-04 → RD-07 → RD-05 →
+RD-06 (E-RD-06).
 
 ---
 
@@ -71,14 +70,24 @@ belegt wird), `docs/Handbuch.md` 3.2 und 11.6 (Zahlen des Demo-Bestands),
 `docs/Pruefablauf.md` (neue Prüfzahlen in 6.11), die `LIESMICH.md` der
 berührten Werkzeuge, `docs/konzepte/Pruefliste.md` (P-S11-30, -31, P-R4-16).
 
+**Dazu, seit der Freigabe (E-RD-19):** Alles, was am Demo-Konto nicht
+einwandfrei geht und in diesem Schritt auffällt, wird **in diesem Schritt**
+behoben — gleich, ob es die Fixture, den Reset, einen Bedienweg oder (wie
+F-RD-08) den Browserweg betrifft. Ein Fund wird ein `F-RD-NN`, die
+Behebung steht im Paket, das ihn gefunden hat, oder in RD-07; nichts davon
+wandert ins Backlog. Die Grenze: Ein Fehler, der **nicht nur** das
+Demo-Konto trifft und eine Schemaänderung oder einen Umbau außerhalb der
+berührten Dateien verlangt, ist eine Rückfrage, kein stiller Umbau.
+
 **Nicht Teil:** Schema und Migrationen — `track_stuecke` und `track_cuts`
 tragen heute alles, was die neuen Fälle brauchen; kein `update.php` nach
-dem Deploy. Nicht Teil: `watch/`, `android/`, `.github/`, der Browserweg
-des Wartungslaufs (`assets/wartungslauf.js`, `assets/ortsdaten.js`), der
-JSON-Vertrag. Nicht Teil: neue Funktionen des Schneidewerkzeugs (etwa
-Schneiden aus einer Einsatzspur, Q-RD-04 (c)) — fällt die Antwort so aus,
-ist das ein eigener Backlog-Punkt, nicht dieser Schritt. Die Auslieferung
-(`web-v…`) ist nicht Teil (CLAUDE.md 3).
+dem Deploy. Nicht Teil: `watch/`, `android/`, `.github/`, der
+JSON-Vertrag. Nicht Teil: neue Funktionen (etwa Schneiden aus einer
+Einsatzspur, Q-RD-04 (c)) — ein Wunsch ist kein Fehler und wird ein
+Backlog-Punkt. Die Auslieferung (`web-v…`) ist nicht Teil (CLAUDE.md 3).
+*(Bis zur Freigabe stand hier auch der Browserweg des Wartungslaufs als
+„nicht Teil"; seit E-RD-19 gilt das nicht mehr, wenn er im Demo-Konto
+einen Fehler zeigt.)*
 
 ## 2. Befund
 
@@ -172,8 +181,8 @@ nichts. Das Segment bleibt Stufe 1, `spur2_faellig_kandidaten()` nennt es
 beim nächsten Lauf wieder (`stufe_min = 1`), und es belegt einen der 20
 Plätze — nicht gemessen, aus dem Code gelesen. Genau dieser Fall soll in
 den Bestand (Nr. 500); er misst dann diesen Befund mit → RD-02, RD-03
-Abnahme; bestätigt er sich, ist es ein Backlog-Punkt aus der Spanne, kein
-Teil dieses Schritts (Nicht-Ziel: der Browserweg).
+Abnahme; bestätigt er sich, wird er in RD-04 behoben (E-RD-19; bis zur
+Freigabe stand hier „Backlog-Punkt, nicht Teil dieses Schritts").
 
 **F-RD-09 — „Zeitraum löschen" lehnt das ganze Segment ab, „Schneiden"
 nicht.** `api/schneiden.php` antwortet auf ein Löschen ohne verbleibendes
@@ -252,8 +261,19 @@ neue Funktion wäre → Q-RD-04.
 | E-RD-03 | Die Fixture bleibt beim inneren Backup der Nutzlast 7 (Punktlisten im Eintrag) und wird **Fixture-Format 3**: an jedem spurtragenden Eintrag zusätzlich `stufe` und `n_original` (die Namen der Nutzlast 13), an Ruhesegmenten `loeschungen`, an Einsätzen `schnitte` wie bisher; `rea` und Phasenorte im Klartext wie bisher. `demo_fixture_laden()` nimmt Format 2 weiter an (Stufe 1 überall). Kein Wechsel der Nutzlast, weil `edbak_restore()` die neuen Felder schon liest (F-RD-06). | Konzept, 05.11.2026 |
 | E-RD-04 | Jeder Spurfall steht in den **Quelldaten** mit einer Matrixzeile, nie nur im Einspielwerkzeug: Was `pruefen.py` nicht zählt, kann still verschwinden (Vorbild: die Schnitte, E-DA-11). **Eine Adressierung für alles:** Jede Handlung an einer Spur steht am Dienst als Liste mit `segment: <client_ref>` (bei Einsätzen `einsatz: <client_ref>`), genau wie `schnitte` heute — `loeschungen` (gleiche Felder wie ein Schnitt ohne Phasen), `verdichten` (`stufe`), `luecken` (`art`, `ab`, `dauer`). Kein neuer Block, keine Zeitsuche, nichts im Segment selbst (F-RD-11). *(Geändert nach der Rückfrage vom 05.11.2026; vorher „`spurfaelle` mit Zeitangabe".)* | Konzept, 05.11.2026 |
 | E-RD-05 | Das Einspielwerkzeug geht nur **reguläre Wege** (R4): Verdichten über `api/wartungslauf.php` (`liste`, `tauschen`), Löschen über `api/schneiden.php` (`loeschen`), beides mit `ortsdaten.py` wie ein Browser. Kein SQL, kein eigener Weg in `spur_lib.php`. | Konzept, 05.11.2026 |
-| E-RD-06 | Die Reihenfolge der Pakete ist zwingend: RD-01 (Erzeuger) und RD-04 (Reset) sind Code, RD-02 und RD-03 sind Bestand, RD-05 erzeugt daraus Fixture und Sollstände. Die Fixture kann erst entstehen, wenn das Referenzkonto alle Fälle trägt (RD-02, RD-03) **und** der Erzeuger sie lesen kann (RD-01); eingespielt werden kann sie erst, wenn der Reset Format 3 versteht (RD-04). | Konzept, 05.11.2026 |
+| E-RD-06 | Die Reihenfolge der Pakete ist zwingend: RD-01 (Erzeuger) und RD-04 (Reset) sind Code, RD-02 und RD-03 sind Bestand, RD-07 (Demo-Durchgang, seit E-RD-19) läuft mit einer Vorab-Fixture aus RD-01 vor RD-05, RD-05 erzeugt daraus Fixture und Sollstände. Die Fixture kann erst entstehen, wenn das Referenzkonto alle Fälle trägt (RD-02, RD-03) **und** der Erzeuger sie lesen kann (RD-01); eingespielt werden kann sie erst, wenn der Reset Format 3 versteht (RD-04). | Konzept, 05.11.2026 |
 | E-RD-07 | Jeder neue Fall bekommt eine Zeile in `Pruefliste.md` nur, wenn er von Hand zu prüfen ist (P-S11-30 neu gefasst, P-S11-31 neu gefasst, ein Punkt je Spurfall in der Demo); was `pruefen.py`, der Kreislauf und der Abgleich messen, steht im Prüfprotokoll, nicht in der Prüfliste (CLAUDE.md 7). | Konzept, 05.11.2026 |
+| E-RD-09 | Q-RD-01: (a) — `erzeugen.php` liest auf der Referenzmaschine und öffnet die Hüllen mit dem Schlüsselmaterial des Demo-Kontos. | Betreiberin, 05.11.2026 („Alle wie vorgeschlagen") |
+| E-RD-10 | Q-RD-02: (a) — `gh_gepackt_bauen()` in PHP, gemessen von der Hüllenprobe; die Fixture trägt die Punkte ausgedünnt mit `stufe` und `n_original`. Damit gilt E-RD-02. | wie E-RD-09 |
+| E-RD-11 | Q-RD-03: je Art etwa fünf Spuren auf Stufe 2 und fünf auf 3; die drei bestehenden Schnitte auf Stufe 1, 2 und 3; der Rest Stufe 1. | wie E-RD-09 |
+| E-RD-12 | Q-RD-04: (d) — drei Übungssegmente mit ungeschnittener einsatzförmiger Spur, zwei auf Stufe 1, eines auf Stufe 2 (= Segment für P-S11-30); (a), (b) entfallen, (c) nicht Teil. | wie E-RD-09 |
+| E-RD-13 | Q-RD-05: (a) — Segment über Mitternacht im Nachtdienst D22, Stufe 2, mit Schnitt nach Mitternacht (`beginn_tag = 1`). | wie E-RD-09 |
+| E-RD-14 | Q-RD-06: (c) in zwei Segmenten — eine Sequenzlücke, eine Zeitlücke, beide als feste Marken im Generator. | wie E-RD-09 |
+| E-RD-15 | Q-RD-07: erst schneiden, dann löschen, dann verdichten; ein zweites Segment nur mit Löschvermerk. | wie E-RD-09 |
+| E-RD-16 | Q-RD-08: `fixture/abgleich.py` als Stufe-1-Riegel ohne Installation (Anlass Nr. 388). | wie E-RD-09 |
+| E-RD-17 | Q-RD-09: Umsetzung in eigener Sitzung auf diesem Zweig; Pull Request am Ende von RD-06; Tags danach durch die Betreiberin. | wie E-RD-09 |
+| E-RD-18 | Q-RD-10: (a) — der Demo-Zweig von `edbak_restore()` stempelt `erstellt_am` der Schnitte und Löschvermerke auf die Einspielzeit (F-RD-14). | wie E-RD-09 |
+| E-RD-19 | **Jeder Fehler am Demo-Konto, der in diesem Schritt auffällt, wird in diesem Schritt behoben** — auch im Browserweg, auch wenn er nicht in Nr. 388 oder 500 steht. Dafür ein eigenes Paket RD-07 (Durchgang über jeden Bedienweg des Demo-Kontos) vor der Fixture; Funde als `F-RD-NN` mit Behebung und Messung im Paket. Grenze: siehe Auftrag. | Betreiberin, 05.11.2026 („Repariere alles, was mit dem Demo-Konto nicht perfekt funktioniert, direkt mit") |
 | E-RD-08 | **Kein neuer Weg, wo ein alter trägt** (Rückfrage der Betreiberin, 05.11.2026): Jedes Paket nennt in Abschnitt 6, was es neu anlegt, was es wiederverwendet und was es ablöst. Neu entsteht nur, was keine vorhandene Stelle leisten kann: ein PHP-Packer (dritte Fassung desselben Formats, gegen die eine Referenz gemessen, wie Stufe 1 heute), zwei Einspielstufen am vorhandenen Werkzeug, ein Abgleich (Q-RD-08). Abgelöst wird der tote Erzeuger. | Konzept, 05.11.2026 |
 
 ## 5. Arbeitspakete
@@ -467,6 +487,41 @@ mit der neuen Fixture, Kacheln mit den neuen Zahlen; im Demo-Konto jeder
 Fall aus Abschnitt 2 bedienbar (Tabelle mit Diensttag, Segment, was zu
 sehen ist — die Vorlage der Handprüfliste in RD-06).
 
+### RD-07 Demo-Konto: Durchgang und Reparaturen (E-RD-19)
+
+*Wofür:* Die Betreiberin will ein Demo-Konto, an dem **alles** geht.
+Dieses Paket fährt jeden Bedienweg einmal mit einer Vorab-Fixture (aus dem
+Referenzkonto nach RD-03, erzeugt mit RD-01, eingespielt mit RD-04) und
+behebt, was es findet — sofort, im selben Paket, mit Fassung und
+Changelog je Behebung.
+
+*Weg:*
+1. Liste der Bedienwege aus `docs/Handbuch.md` 3.2 und 11.6, `Technik.md`
+   4.21 und `demo_pruefen.mjs`: Anlegen in der Verwaltung, Anmelden,
+   Entsperren, Startseite, Tagesansicht, jeder neue Spurfall (Abschnitt 2
+   und die Matrix aus RD-02), Schneiden an den drei Übungssegmenten,
+   Rückgängig (E-RD-18), Zeitraum löschen, GPX-Abruf, Backup erstellen
+   und wieder einspielen (in ein Prüfkonto), CSV-Export, Papierkorb,
+   Einstellungen, Änderungsmarke und Reset nach 30 Minuten (im Prüfstand
+   mit verschobener Marke, R4-04), Mengenbremse, Banner, Entfernen und
+   erneutes Anlegen; dazu das, was der Wartungslauf im Demo-Konto **nicht**
+   tun darf (Nr. 459) — und F-RD-08 am Segment „Schnitt nimmt alles".
+2. Je Weg: erwartetes Ergebnis, gemessen in Chromium, bei berührtem
+   `style.css`/`ui.php` in drei Engines (R89); Fund → `F-RD-NN`,
+   Behebung, Messung danach.
+3. Was `demo_pruefen.mjs` nicht fährt, aber hier geprüft wurde, kommt
+   dort hinein, wenn es sich maschinell messen lässt (Grundsatz 5:
+   Anlass-Zeile mit der Fundnummer); sonst in die Handprüfliste (RD-06).
+
+*Ort:* nach Fund — `server/demo_lib.php`, `admin_demo.php`,
+`auth_guard.php`, `api/wartungslauf.php`, `assets/wartungslauf.js`,
+`api/schneiden.php`, die betroffenen Seiten; `tools/referenzdatensatz/browser/demo_pruefen.mjs`.
+
+*Abnahme:* eine Tabelle im Prüfprotokoll — jeder Bedienweg mit Ergebnis
+(Zahl), jeder Fund mit Nummer, Behebung und Nachmessung; `demo_pruefen.mjs`
+grün mit der Zahl seiner Schritte; kein offener Demo-Fund beim Übergang
+zu RD-05.
+
 ### RD-06 Abschluss
 
 *Weg:*
@@ -499,6 +554,7 @@ Je Paket: was neu entsteht, was es wiederverwendet, was es ablöst.
 | RD-03 | zwei Stufen in `einspielen.py` | `ortsdaten.py` (öffnen, bauen, packen — Format aus `referenz.py`), `api/wartungslauf.php`, `api/schneiden.php`, die Segmentsuche aus `stufe_schneiden()`, die PHP-Ausdünnung als Referenz (keine Python-Fassung) | nichts |
 | RD-04 | `gh_gepackt_bauen()` in PHP (dritte Fassung eines Formats mit einer Referenz, wie Stufe 1); zwei Vektoren der Hüllenprobe; eine Registerzeile; eine Zeile für `erstellt_am` im Demo-Zweig (Q-RD-10) | `spur2_stueck_schreiben()` mit `stufe`/`n_original` (nimmt es schon), `edbak_restore()` Zweig `'server'`, Feldnamen der Nutzlast 13 | der Satz „Gepackt wird nur im Browser" |
 | RD-05 | `fixture/abgleich.py` (Q-RD-08; sonst nichts — Referenzexporte und Sollstände werden erneuert, nicht neu gebaut) | `referenz_export.mjs`, `kreislauf.py`, `ausnahmen/*.json`, `pruefablauf.json` | die Fixture vom 27.09.2026 |
+| RD-07 | nichts Geplantes — nur Behebungen an vorhandenen Stellen; neue Schritte in `demo_pruefen.mjs` statt eines neuen Werkzeugs | `demo_pruefen.mjs`, die Demo-Marke des Prüfstands (R4-04) | die Fehler, die es findet |
 | RD-06 | Prüfdokument (Pflicht, CLAUDE.md 7) | Prüfliste, Prüfstand | — |
 
 **Was bewusst nicht entsteht:** keine Python-Ausdünnung, kein eigener
@@ -518,6 +574,7 @@ ist gemessen; was fehlt, steht im Prüfdokument an erster Stelle.
 | RD-03 | `einspielen.py`, `sitzungsprobe.py`, Umrisszahlen | — | — |
 | RD-04 | Hüllenprobe, Wartungslaufprobe, Ortsdatenprobe, Reset mit Handbestand | — | — |
 | RD-05 | Kreisläufe csv/edbak, `abgleich.py`, Reset, Bedienweg Demo | — | — |
+| RD-07 | Bedienwege des Demo-Kontos, `demo_pruefen.mjs`, drei Engines bei Oberflächenfunden | — | — |
 | RD-06 | Prüfstand (Bericht im Commit) | — | — |
 
 **Grenzen, die jetzt schon feststehen:** Die Staging-Prüfung mit dem
@@ -532,3 +589,4 @@ alles") misst erst RD-03.
 | 05.11.2026 | Konzept angelegt: Befund F-RD-01 bis -13, Fragen Q-RD-01 bis -09, Entscheidungen E-RD-01 bis -07, Pakete RD-01 bis -06. Fahrplanzeile 24 auf „Konzept", Backlog-Spanne 510–519 reserviert. |
 | 05.11.2026 | Nach Rückfrage der Betreiberin (Wildwuchs, Q-RD-04, Übungstage): F-RD-04 und F-RD-11 berichtigt (Python hat das Format einmal; die Segmentkennung überlebt den Aufbau), E-RD-04 auf die vorhandene Adressierung `segment: client_ref` umgestellt, Q-RD-04 mit Lesart (d) „Übungssegmente, zwei auf Stufe 1, eines auf Stufe 2" als Vorschlag, E-RD-08 und Abschnitt 6 (Wildwuchs-Prüfung) neu; Matrixmarken von 14 auf 12 (10 Fälle). |
 | 05.11.2026 | Zweite Rückfrage („geschnittene Tage?"): F-RD-14 (Demo-Schnitte gelten auf jeder Anlage als alt, Rücknahme antwortet 409 `altschnitt`), Q-RD-10 mit Vorschlag (a), die drei bestehenden Schnitte auf Stufe 1/2/3 verteilt (Q-RD-03), Matrix „Schnittzustand × Stufe" in `pruefen.py`, Marken auf 14. |
+| 05.11.2026 | **Freigabe:** Q-RD-01 bis -10 wie vorgeschlagen (E-RD-09 bis -18). Dazu E-RD-19: Jeder Fehler am Demo-Konto wird in diesem Schritt behoben — neues Paket RD-07 (Demo-Durchgang) vor RD-05, der Browserweg ist nicht mehr ausgenommen, F-RD-08 wird bei Bestätigung behoben. Fahrplanzeile auf „freigegeben". |
