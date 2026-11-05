@@ -5,7 +5,7 @@ Spielt den erzeugten Datensatz über die **regulären Wege** ein — kein SQL (R
 ## Aufruf
 
 ```bash
-sh lokal_einrichten.sh     # von Null: Datenbank, install.php, Admin, Demo-Konto
+sh lokal_einrichten.sh     # von Null: Datenbank, install.php, Admin, Demo-Konto aus der Fixture (vor `--stufen konto` entfernen)
 sh lokal_starten.sh        # nur hochfahren: MariaDB, PHP-Server, TLS davor
 sh pruefkonten.sh          # Prüfkonten admin und support für den Bilderlauf (R4-08, wiederholbar)
 python3 einspielen.py --stufen konto
@@ -13,7 +13,7 @@ php  demo_kennzeichnen.php                     # zwingend vor der ersten Anmeldu
 node passwort_setzen.mjs '<Einrichtungslink>' 'nadokudemo0815' rc.json
 python3 ../generator/erzeugen.py               # schreibt generator/ausgabe/ — die Stufe ingest liest sendeplan.json daraus
 python3 einspielen.py --stufen stammdaten,geraet,ingest,zuordnen,nachtragen,manuell,papierkorb,sperrliste,schneiden
-python3 messprotokoll.py && node sichtpruefung.mjs
+node ../browser/csv_import.mjs && python3 messprotokoll.py && node sichtpruefung.mjs   # CSV-Import nur im Browser
 ```
 
 ## Was es misst

@@ -24,16 +24,19 @@ hochgeht, entscheidet die Umsetzung (K3, CLAUDE.md 2).
 
 | Paket | Inhalt | Stand |
 |---|---|---|
-| RD-01 | Fixture wieder erzeugbar (Nr. 388) | offen |
-| RD-02 | Quelldaten: die fehlenden Spurfälle, Matrix, Generator | offen — wartet auf Q-RD-03 bis -06 |
+| RD-01 | Fixture wieder erzeugbar (Nr. 388) | **erledigt** (05.11.2026) |
+| RD-02 | Quelldaten: die fehlenden Spurfälle, Matrix, Generator | offen — als Nächstes |
 | RD-03 | Einspielen: Stufen `verdichten` und `loeschen` | offen |
-| RD-04 | Demo-Reset legt Stufe 2 und 3 selbst an (Fixture-Format 3) | offen — wartet auf Q-RD-02 |
+| RD-04 | Demo-Reset legt Stufe 2 und 3 selbst an (Fixture-Format 3) | offen |
 | RD-05 | Fixture, Referenzexporte und Sollstände neu; Dokumente | offen |
 | RD-07 | Demo-Konto: Durchgang über jeden Bedienweg, jeder Fehler sofort behoben (E-RD-19) — **vor RD-05** | offen |
 | RD-06 | Abschluss: Prüfdokument, Prüfliste (P-S11-30, -31), Pull Request | offen |
 
-**In Arbeit:** nichts — das Konzept ist **freigegeben** (05.11.2026,
-E-RD-09 bis -19), die Umsetzung hat nicht begonnen. **Es hakt:** nirgends.
+**In Arbeit:** nichts — RD-01 ist erledigt, als Nächstes RD-02. Die
+Umsetzung läuft auf dem Konzeptzweig `claude/admiring-sagan-mql8t4`
+(Entscheid der Betreiberin zu Beginn der Umsetzungssitzung). **Es hakt:**
+nirgends. *(Bis RD-01 stand bei RD-02 und RD-04 „wartet auf Q-RD-…" —
+seit der Freigabe überholt.)*
 Reihenfolge der Umsetzung: RD-01 → RD-02 → RD-03 → RD-04 → RD-07 → RD-05 →
 RD-06 (E-RD-06).
 
@@ -237,6 +240,36 @@ aber nur aus `rest_segments` (`rest_id`). „Ein Einsatz mit eigener Spur"
 kann also nicht „Schneiden aus der Einsatzspur" meinen, ohne dass das eine
 neue Funktion wäre → Q-RD-04.
 
+**F-RD-15 — Die Aufrufliste des Einspiellaufs baute das Referenzkonto
+nicht vollständig nach** (gefunden in RD-01). `einspielen/LIESMICH.md`
+nannte den CSV-Import nicht (`browser/csv_import.mjs`, vier Einsätze mit
+`origin import`), und `lokal_einrichten.sh` legt das Demo-Konto aus der
+Fixture an — `--stufen konto` meldet dann „besteht bereits" und füllt den
+Fixture-Bestand auf, statt ein Referenzkonto zu bauen. Gemessen: ohne den
+Import 105 statt 109 Einsätze. Behoben in RD-01: beide Schritte stehen in
+der Aufrufliste.
+
+**F-RD-16 — Die Riegelprobe war auf einer frischen Anlage nicht fahrbar
+und an einer Stelle grün ohne Gegenstand** (gefunden in RD-01, Vorab).
+Das Negativkonto `umlauf-csv@example.invalid` entsteht nur in einem
+Kreislauf; ohne es endet die Probe mit Rückgabe 2. Mit einem anderen
+Konto: 3 von 10 rot, und Fall 2a („Rückgabe 2") war grün, weil
+`erzeugen.php` vor jedem Riegel abbrach. Behoben in RD-01: Die Probe nennt
+den Befehl, der das Konto anlegt, prüft Rolle und Rundenzahl des
+Negativkontos vorab, und ein Fall misst das Ergebnis (Format 3 mit Punkten).
+
+**F-RD-17 — Der Reset baut eine Einsatzhülle nur, wo Orte oder
+Reanimation stehen** (gefunden in RD-01, keine Behebung). Das Gerät legt
+zu jedem Einsatz mit Phasen eine Hülle an, auch ohne Koordinate; der Reset
+(`edbak_restore()`, Zweig `'server'`) nur bei Inhalt. Gemessen: 106 Hüllen
+im Referenzkonto, 101 nach dem Reset; die fünf übrigen tragen keine Orte und
+keine Reanimation, und der Rundlauf Fixture → Reset → Fixture ist an Orten,
+Reanimation, Spur, Schnitten und `pat_blob` deckungsgleich. Kein Fehler,
+aber ein Zählunterschied, den der Abgleich in RD-05 nicht für einen halten
+darf. Dazu ein Werkzeugfund für RD-03: `einspielen.py`, Stufe
+`schneiden`, druckt „None geblieben" — `api/schneiden.php` antwortet seit
+Web 22.2.0 ohne `geblieben` (die Punkte bleiben gesperrt im Segment).
+
 ## 3. Fragen an die Betreiberin
 
 | Nr. | Frage | Vorschlag | Paket |
@@ -326,6 +359,39 @@ Fixture; Punktzahl gleich der Summe der Umrisse (Zahl nennen); die Fixture
 setzt das Demo-Konto zurück, und die Kacheln zeigen die heutigen Zahlen;
 Riegelprobe in beiden Richtungen grün (Zahl der Fälle). Kein Schreiben in
 die Datenbank (vorher/nachher `SHOW TABLE STATUS` oder Zeilenzahlen gleich).
+
+*Gebaut (05.11.2026):* `erzeugen.php` neu nach dem Weg oben. Den Bestand
+holt es aus `edbak_build()` (Kopf, dann Fenster zu `EDBAK_FENSTER`, die
+Spurzuordnung aus `_spur_index`), die Stücke über `spur2_lesen_viele()`.
+Den privaten Teil des Kontopaars liefert `kp_zustand()` unter dem
+Inhaltsschlüssel aus `demo_inhaltsschluessel()`. Geöffnet wird mit
+`gh_probe_oeffnen()`: Stufe 1 binär, Stufe 2 und 3 entpackt („B fest",
+Bindung `seq:punkte:stufe:n_original`). Gepackte Punkte bekommen
+`seq_from + i`, weil sie keine eigene Nummer tragen. Phasenorte gehen über
+Nummer **und** Zeit an die Phasen des Kerns, nicht über die Position;
+`ort_huelle` fällt weg (sie hängt am Paar der Referenzanlage), jede Phase
+trägt `lat`/`lon`. Abbruch (Rückgabe 2, keine Datei) bei: Riegel auf
+Rolle, Rundenzahl, `edk1:` (unverändert, vor jedem Öffnen); Hülle oder
+Stück geht nicht auf; Punktzahl ≠ `n` des Umrisses; Phasenort ohne Phase;
+Spur mit Stücken verschiedener Stufen; Klartext im Kern
+(`edbak_klartext_fund()`). `quelle` nennt den Commit und ob Quelldaten
+oder Generator davon abweichen. `riegelprobe.php` mit einem Fall mehr
+(11 statt 10, F-RD-16); `fixture/LIESMICH.md` neu (40 Zeilen, Anlass
+Nr. 388); `einspielen/LIESMICH.md` mit CSV-Import und dem Hinweis auf das
+Demo-Konto aus `lokal_einrichten.sh` (F-RD-15); `Technik.md` 4.21 („Format
+3", „Warum sie nicht aus einer `.edbak` kommen kann" neu gefasst,
+Riegelprobe 11 von 11) und der Verzeichnisbaum. Keine Fassung
+hochgestuft: nur `tools/` und `docs/`.
+
+*Probleme und Lösung:* (1) Die erste Fixture hatte 105 Einsätze statt 109
+— der CSV-Import fehlte im Referenzkonto (F-RD-15), nachgeholt. (2) Der
+Rundlauf zeigte Phasen ohne `lat`/`lon`-Schlüssel an den fünf Einsätzen
+ohne Hülle — vereinheitlicht. (3) Der Reset überschreibt das Referenzkonto
+(es ist das Demo-Konto der Anlage); gemessen wurde deshalb auf einer
+gesicherten Datenbank (`mariadb-dump`), danach zurückgelegt und die
+eingecheckte Fixture per `git checkout` wiederhergestellt. (4) Der Zweig
+für Stufe 2 und 3 lässt sich am heutigen Bestand nicht belegen (alles
+Stufe 1) — belegt mit Prüfvektoren aus `referenz.py` (Prüfprotokoll).
 
 ### RD-02 Quelldaten: die fehlenden Spurfälle (Nr. 500; Q-RD-03 bis -07)
 
@@ -569,7 +635,17 @@ ist gemessen; was fehlt, steht im Prüfdokument an erster Stelle.
 
 | Paket | Mittel | Gemessen | Ergebnis |
 |---|---|---|---|
-| RD-01 | `riegelprobe.php`, Reset mit erzeugter Fixture | — | — |
+| RD-01 vorab | `erzeugen.php` vor der Änderung | Rückgabe, Datei | **Rückgabe 2**, Meldung „erzeugen.php ist seit Web 23 ausser Betrieb …", keine Datei |
+| RD-01 vorab | `riegelprobe.php` vor der Änderung | Erwartungen | Vorgabekonto fehlt auf frischer Anlage → **Rückgabe 2**; mit `admin@example.invalid`: **10 Erwartungen, 3 nicht erfüllt** (1a, 1b, 2b), 2a grün ohne Gegenstand (F-RD-16) |
+| RD-01 | `erzeugen.php` auf dem Referenzkonto (frisch aufgebaut: `einspielen.py` alle Stufen + `csv_import.mjs`) | Zahlen der Fixture | Rückgabe 0; 22 Diensttage, **109 Einsätze**, 123 Ruhesegmente, 2 Geräte, **221 Spuren, 67 478 Punkte** (alle Stufe 1), 737 Phasenorte, 9 Reanimationen, 3 Schnitte, 0 Löschvermerke, Papierkorb 5/1/5; 886 KB gepackt, 2,9 s |
+| RD-01 | Gegenprobe Punktzahl, SQL auf `track_stuecke` | Summe der Stücke | 98 + 123 = **221 Spuren**, 50 096 + 17 382 = **67 478 Punkte**, Stufe nur 1 — gleich der Fixture und gleich der Referenz-`.edbak` vom 19.10.2026 (F-RD-01) |
+| RD-01 | Zeilenzahl und `CHECKSUM TABLE` vor/nach `erzeugen.php` | 41 Tabellen | **keine Abweichung** (dreimal gefahren) |
+| RD-01 | `demo_zuruecksetzen()` mit der erzeugten Fixture (DB gesichert und danach zurückgelegt) | Reset-Bericht, Dauer | 109 Einsätze, 123 Segmente, 22 Tage, 3 Schnitte übernommen, **0 verworfen, 0 übersprungen**; 3,13 s (ein Lauf, diese Umgebung) |
+| RD-01 | Kacheln vor/nach Reset: `zeitraum.php?y=2026` im Browser (Chromium), `admin_demo.php` | Kachelwerte | gleich: **104 Einsätze, 21 Diensttage, Ø 5,0, 4 Sekundärtransporte, 2 590 km**; Admin **21 · 104 · 118 · 2**; 0 Seitenfehler |
+| RD-01 | Spuren nach dem Reset, SQL | Stücke, Punkte | 221 Spuren, 67 478 Punkte; 101 Einsatzhüllen statt 106 (F-RD-17) |
+| RD-01 | Rundlauf Fixture → Reset → Fixture, Feldvergleich je Eintrag | 232 Einträge | Spur, Stufe, `n_original`, Phasenorte, Reanimation, Schnitte (ohne `erstellt_am`), `pat_blob`, Zeiten **gleich**; abweichend nur `deleted_at` (5, frisch gestempelt), `day_id` (neu vergeben), `konto.name` (der Reset setzt „Demo NutzerIn") und vor der Vereinheitlichung `lat`/`lon` an 5 Einsätzen |
+| RD-01 | Prüfvektoren aus `referenz.py` gegen `spur_oeffnen()` | 3 Stücke + 1 Störung | **4 von 4**: Stufe 1, 2 und 3 je 50 Punkte gleich der Referenz (Höhe null und negativ), umetikettiertes `n_original` abgewiesen (`pruefwert`) |
+| RD-01 | `riegelprobe.php` nach der Änderung | Erwartungen | **11 von 11**, Rückgabe 0; Fall 2b mit der Meldung des Riegels (`edka1:`) |
 | RD-02 | `quelldaten/pruefen.py`, `generator/pruefen.py`, `diff -r` | — | — |
 | RD-03 | `einspielen.py`, `sitzungsprobe.py`, Umrisszahlen | — | — |
 | RD-04 | Hüllenprobe, Wartungslaufprobe, Ortsdatenprobe, Reset mit Handbestand | — | — |
@@ -590,3 +666,4 @@ alles") misst erst RD-03.
 | 05.11.2026 | Nach Rückfrage der Betreiberin (Wildwuchs, Q-RD-04, Übungstage): F-RD-04 und F-RD-11 berichtigt (Python hat das Format einmal; die Segmentkennung überlebt den Aufbau), E-RD-04 auf die vorhandene Adressierung `segment: client_ref` umgestellt, Q-RD-04 mit Lesart (d) „Übungssegmente, zwei auf Stufe 1, eines auf Stufe 2" als Vorschlag, E-RD-08 und Abschnitt 6 (Wildwuchs-Prüfung) neu; Matrixmarken von 14 auf 12 (10 Fälle). |
 | 05.11.2026 | Zweite Rückfrage („geschnittene Tage?"): F-RD-14 (Demo-Schnitte gelten auf jeder Anlage als alt, Rücknahme antwortet 409 `altschnitt`), Q-RD-10 mit Vorschlag (a), die drei bestehenden Schnitte auf Stufe 1/2/3 verteilt (Q-RD-03), Matrix „Schnittzustand × Stufe" in `pruefen.py`, Marken auf 14. |
 | 05.11.2026 | **Freigabe:** Q-RD-01 bis -10 wie vorgeschlagen (E-RD-09 bis -18). Dazu E-RD-19: Jeder Fehler am Demo-Konto wird in diesem Schritt behoben — neues Paket RD-07 (Demo-Durchgang) vor RD-05, der Browserweg ist nicht mehr ausgenommen, F-RD-08 wird bei Bestätigung behoben. Fahrplanzeile auf „freigegeben". |
+| 05.11.2026 | **RD-01 erledigt:** `erzeugen.php` erzeugt wieder (Format 3, 67 478 Punkte), Riegelprobe 11 von 11, `fixture/LIESMICH.md` neu. Befunde F-RD-15 bis -17. Statusblock: „wartet auf Q-RD-…" bei RD-02 und RD-04 gestrichen (seit der Freigabe überholt). |

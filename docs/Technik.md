@@ -817,7 +817,8 @@ Daten erst nach Server-Bestätigung.
 │   │   │                  Abnahme der Demo-Funktion
 │   │   ├── referenz/      die eingecheckten Referenz-Exporte
 │   │   ├── vergleich/     Vergleichswerkzeug und Kreislauftests
-│   │   └── fixture/       erzeugt server/demo/fixture.json.gz; riegelprobe.php
+│   │   └── fixture/       erzeugt server/demo/fixture.json.gz (öffnet dazu die
+│   │                      Hüllen des Demo-Kontos, RD-01); riegelprobe.php
 │   │                      misst die zwei Riegel darin (Zielrundenzahl,
 │   │                      Hülle bleibt edk1: — sonst wäre das Demo-Konto auf
 │   │                      der Produktivinstallation ausgesperrt, S10)
@@ -6656,18 +6657,39 @@ nicht bloß zugesichert:
 bleibt tolerant, eine Fixture der Version 1 lässt sich also weiterhin
 einspielen — ihr `nachlauf`-Block wird schlicht nicht mehr gelesen.
 
-**Warum sie nicht aus einer `.edbak` kommen kann.** Die Backup-Datei trägt
-die geschützten Angaben im **Klartext** — der Browser entschlüsselt vor dem
-Versiegeln, damit sich ein Backup in jedes Konto einspielen lässt. Für die
-Fixture wäre das genau falsch: Sie soll den Chiffretext unverändert mitführen
-und daneben das Schlüsselmaterial, mit dem er lesbar ist. Erst dadurch kann
-der Server das Konto **ohne jede Entschlüsselung** zurücksetzen — und erst
-dadurch ist der Reset schnell genug, um bei jeder Anfrage zu laufen.
+**Format 3 schreibt der Erzeuger seit Schritt 24 (RD-01, Nr. 388)**: wie 2,
+dazu an jedem spurtragenden Eintrag `stufe` und `n_original` (die Namen der
+Nutzlast 13) und an jedem Ruhesegment `loeschungen`; das innere Backup bleibt
+Nutzlast 7 mit Punktlisten (E-RD-03). Bei Stufe 2 und 3 tragen die Punkte
+keine eigene Nummer; der Erzeuger zählt sie ab `seq_from` durch. Die
+eingecheckte Fixture ist bis zu ihrer Erneuerung (RD-05) noch Format 2, und
+der Reset liest die neuen Felder erst mit RD-04 — bis dahin legt er jede
+Spur als Stufe 1 an, wie bisher.
 
-Die Quelle ist deshalb `edbak_build()`: dieselbe Funktion, die auch das
-Backup aufbaut, aber serverseitig — dort steht `pat_blob` noch als
-Chiffretext. Genau die Form, die `edbak_restore()` als Spalte wieder annimmt.
-Der Erzeuger bricht ab, wenn er Klartext findet.
+**Warum sie nicht aus einer `.edbak` kommen kann.** Der Grund gilt weiter,
+der Weg ist seit Web 23 ein anderer. Der Reset läuft ohne Browser: Er nimmt
+`pat_blob` als **Chiffretext** unverändert — dafür reist der
+Inhaltsschlüssel in `konto` mit —, Orte, Reanimation und Spur dagegen offen,
+wie die Fixture sie trägt; verschlossen werden sie erst auf der Zielanlage,
+mit dem öffentlichen Schlüssel ihres Demo-Kontos (`edbak_restore()`, Zweig
+`'server'`). Eine `.edbak` passt dazu
+nicht: Ihr fehlt das Schlüsselmaterial des Kontos, und versiegelt ist sie
+mit einem Schlüssel, den nur kennt, wer sie herunterlädt.
+
+Die Quelle ist deshalb `edbak_build()` auf der Referenzmaschine, Kopf und
+Fenster wie für den Browser — dort steht `pat_blob` als Chiffretext, die Spur
+nur als Umriss. **Stücke und Einsatzhüllen öffnet das Werkzeug**: mit dem
+privaten Teil des Kontopaars, den es über den Inhaltsschlüssel aus
+`DEMO_PASSWORT` erreicht (`demo_inhaltsschluessel()`), und mit dem Öffnen aus
+`tools/proben/huelle/geraet.php` — nicht aus `server/`; der Server hat diese
+Funktion weiter nicht. Für das Demo-Konto ist das keine Aufweichung der
+Zusage: Sein Schlüsselmaterial liegt ohnehin in der Fixture (die vier
+Bedingungen oben). `ort_huelle` fällt dabei weg, denn sie hängt am Paar der
+Referenzanlage. Der Erzeuger bricht ab, wenn der Kern Klartext-Ortsdaten
+trägt, eine Hülle nicht aufgeht oder eine Punktzahl nicht zum Umriss passt;
+er schreibt nichts in die Datenbank. *(Von Web 23 bis RD-01 brach er
+stattdessen immer ab: Er setzte `edbak_build()` am Stück mit Punktlisten
+voraus, und das gibt es seit S11 nicht mehr.)*
 
 Gepackt abgelegt: roh rund 3,1 MB, im Wesentlichen 67 292 Spurpunkte als
 JSON-Zahlen (Stand R4-16, mit dem Nachtdienst D22). Gepackt sind es rund
@@ -6717,9 +6739,11 @@ aufhören, sich zurückzusetzen — es geht nichts verloren und niemand wird
 ausgesperrt. `demo_anlegen()` lässt die Ausnahme durch: Wer das Konto von Hand
 anlegt, soll den Grund lesen.
 
-Gemessen von `tools/referenzdatensatz/fixture/riegelprobe.php`: **10 von 10**,
-beide Riegel in beide Richtungen, der abgefangene Reset (Demo-Konto 88 → 88
-Einsätze) und die SHA-256 der echten Fixture vorher/nachher.
+Gemessen von `tools/referenzdatensatz/fixture/riegelprobe.php`: **11 von 11**
+(seit RD-01; bis dahin 10, und von Web 23 an drei davon rot), beide Riegel in
+beide Richtungen, eine erzeugte Fixture im Format 3 mit Spurpunkten, der
+abgefangene Reset (Demo-Konto 109 → 109 Einsätze) und die SHA-256 der echten
+Fixture vorher/nachher.
 
 #### Kein zweiter Einspielweg
 

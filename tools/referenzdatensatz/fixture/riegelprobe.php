@@ -42,7 +42,14 @@ declare(strict_types=1);
  * stehen — sonst schlaegt ein anderer Riegel vorher zu, und die Probe sagt
  * das, statt gruen zu melden.
  *
- * Erwartet: **10 von 10**, Rueckgabe 0.
+ * Erwartet: **11 von 11**, Rueckgabe 0.
+ *
+ * SEIT RD-01 (Nr. 388) LAEUFT DER POSITIVFALL WIEDER. Von Web 23 bis dahin
+ * brach `erzeugen.php` vor jedem Riegel ab (Rueckgabe 2), und die Probe sah
+ * 3 von 10 rot — und einen Fall gruen aus dem falschen Grund: Der
+ * Negativfall erwartet Rueckgabe 2, und die kam vom allgemeinen Abbruch,
+ * nicht vom Riegel. Fall 2b haelt das fest (die Meldung muss `edka1:`
+ * nennen), und Fall 1c misst, dass die Fixture Format 3 mit Spurpunkten ist.
  *
  * DIE POSITIVE HAELFTE SCHREIBT EINE DATEI — in den Systemtempordner, nicht
  * nach `server/demo/`. Die echte Fixture wird von dieser Probe nie angefasst.
@@ -77,7 +84,7 @@ function lauf(string $erzeuge, string $konto, string $ziel): array
 }
 
 /* ---- Voraussetzungen, und zwar gemessen ---------------------------------- */
-echo "Riegelprobe — der Huellen-Riegel in fixture/erzeugen.php (S10/AP5)\n\n";
+echo "Riegelprobe — der Huellen-Riegel in fixture/erzeugen.php (S10/AP5, RD-01)\n\n";
 
 $st = db()->prepare('SELECT email, role, kdf_iter, LEFT(pat_wrap_pw, 7) AS praefix
                      FROM users WHERE email = ?');
@@ -87,7 +94,19 @@ $st->execute([$negativKonto]);
 $neg = $st->fetch(PDO::FETCH_ASSOC);
 
 if (!$demo || !$neg) {
-    fwrite(STDERR, "Ein Konto fehlt: demo@gen-em.org oder $negativKonto.\n");
+    fwrite(STDERR, "Ein Konto fehlt: demo@gen-em.org oder $negativKonto.\n"
+                 . "Das Negativkonto legt an: python3 tools/referenzdatensatz/vergleich/pruefkonto.py "
+                 . "anlegen $negativKonto\n");
+    exit(2);
+}
+/* ROLLE UND RUNDENZAHL DES NEGATIVKONTOS. `erzeugen.php` prueft beides VOR
+ * der Huelle; ein Konto mit anderer Rolle oder Rundenzahl wuerde an einem
+ * anderen Riegel abgewiesen, und Fall 2b waere rot aus einem Grund, der mit
+ * der Huelle nichts zu tun hat. */
+if ($neg['role'] !== 'user' || (int)$neg['kdf_iter'] !== KDF_ITER_ZIEL) {
+    fwrite(STDERR, sprintf("Das Negativkonto %s hat Rolle '%s' und %d Runden; gebraucht werden "
+                         . "'user' und %d.\n", $negativKonto, $neg['role'], (int)$neg['kdf_iter'],
+                           KDF_ITER_ZIEL));
     exit(2);
 }
 if (!str_starts_with((string)$neg['praefix'], 'edka1:')) {
@@ -109,6 +128,18 @@ pruef('1  Demo-Konto mit `edk1:` laeuft durch', $a['rc'] === 0,
       'Rueckgabe ' . $a['rc'] . ($a['rc'] !== 0 ? ' — ' . trim($a['err']) : ''));
 pruef('1  ... und legt eine Fixture an', $a['datei'] > 0,
       $a['datei'] > 0 ? round($a['datei'] / 1024) . ' KB' : 'keine Datei');
+/* Die Datei muss Format 3 sein und Spurpunkte tragen. Eine Fixture ohne
+ * Punkte war genau der stille Schaden, gegen den der Erzeuger seit Web 23
+ * abbrach (Nr. 388). */
+$fx = $a['datei'] > 0 ? json_decode((string)gzdecode((string)file_get_contents($ziel)), true) : null;
+$punkte = 0;
+foreach (['missions', 'rest_segments'] as $liste) {
+    foreach ((array)($fx['daten'][$liste] ?? []) as $e) { $punkte += count($e['track'] ?? []); }
+}
+pruef('1  ... im Format 3, Nutzlast 7, mit Spurpunkten',
+      ($fx['version'] ?? null) === 3 && ($fx['daten']['version'] ?? null) === 7 && $punkte > 0,
+      'Format ' . var_export($fx['version'] ?? null, true) . ', Nutzlast '
+      . var_export($fx['daten']['version'] ?? null, true) . ", $punkte Punkte");
 @unlink($ziel);
 
 /* ---- 2. Negativ: ein Konto mit Anteil wird abgewiesen --------------------- */
