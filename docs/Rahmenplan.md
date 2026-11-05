@@ -1,13 +1,13 @@
 # Rahmenplan — Programm „Gen-EM NAdoku" bis v1.0
 
-**Fassung 218 (05.11.2026)** · Steuerung: Reihenfolge, Status, programmweite
+**Fassung 219 (05.11.2026)** · Steuerung: Reihenfolge, Status, programmweite
 Entscheidungen. Verlauf: `Rahmenplan-Verlauf.md`. Fassungen 1–15:
 `Rahmenplan-Archiv.md`; Fassungen 16–124: `Rahmenplan-Archiv-2.md`.
 
 **Stand `origin/main`** (Commit `8907c4d`, PR #150, gemessen 05.11.2026): Web 23.7.7 ·
 Uhr 4.3.2 · Android 0.21.0; ausgeliefert Web 23.6.0, Uhr 4.1.1 und Android 0.18.2 (Tags auf `c32dd2c`, 02.11.2026).
-**Läuft:** nichts; 23 BR6 abgeschlossen 05.11.2026 (Tags offen, Gerätepunkte in 6.1).
-**Als Nächstes:** 24 RD (Konzept); dann 13 — die Konzeptsitzung 13 darf daneben laufen.
+**Läuft:** 24 RD — Konzept auf `claude/admiring-sagan-mql8t4` (05.11.2026), Fragen Q-RD-01 bis -09 offen; 23 BR6 abgeschlossen 05.11.2026 (Tags offen, Gerätepunkte in 6.1).
+**Als Nächstes:** Umsetzung 24 nach den Antworten; dann 13 — die Konzeptsitzung 13 darf daneben laufen.
 **Offene PRs:** keine.
 **Fällig bei der Betreiberin:** 39 Posten (Abschnitt 6.1). **`update.php`:** auf Staging und Produktiv nichts offen (Betreiberin, 20.10.2026, nach Web 23).
 
@@ -119,7 +119,7 @@ weil das Altbestand-Werkzeug ein einziges Konto voraussetzte.
 |---|---|---|---|---|---|
 | 6 | **S4 — Rest, Teil C** | Play Console nach R65: interner Test-Track für Handy und Uhr unter einem Eintrag, Versionscode-Versatz, Signaturweg; Android 1.0.0 (E-R45-7). Die Vorbereitung ohne D-U-N-S und Schlüssel ist gebaut (Android 0.13.0), die Gerätetests sind erfolgt (24.09.2026) | D-U-N-S, Organisationskonto und Play App Signing — erledigt 26.09.2026 (SD-M1); offen in 6.2: Wear-OS-Uhr, Demo-Video, Datensicherheitsformular | `docs/konzepte/Konzept-S4-Handy-Uhr-Client.md` 13; `Vorbereitung-Play-Console.md` | offen — Teile A bis C gemergt 04.09.2026 (PR #33, Abschnitt 8); Android 1.0.0 und der interne Test-Track können beginnen |
 | 11 | **Planung v1.0** | Festlegungen vor dem Schnitt (R65 bis R73, entschieden 03.09.2026); Ergebnis sind die Konzepte der Phasen P6 bis P8 mit je eigenem Paketschnitt (P6 nach der Freigaberunde des Reviews) | keine | `docs/konzepte/Konzept-Planung-v1.0.md` | gemergt 03.09.2026 — Festlegungen entschieden (R65–R73); offen nur die Paketschnitte, je mit dem Konzept zu 12b, 13 und 14 |
-| 24 | **RD — Referenzdatensatz und Demo: alle Spurfälle** | Die Demo-Fixture wieder erzeugbar (Nr. 388), dann Quelldaten mit Stufe 2 und 3, Schnitt neben Löschvermerk, Mitternacht, Lücke, Schnitt nimmt alles, Einsatz mit eigener Spur; Demo-Reset legt verdichtete Stücke an; neue Sollstände der Kreisläufe (Nr. 500) | keine | eigenes Konzept nach K1 | offen — Konzept als Nächstes; vor 13 (Betreiberin, 05.11.2026), weil P7 das Handbuch an diesem Bestand neu schreibt |
+| 24 | **RD — Referenzdatensatz und Demo: alle Spurfälle** | Die Demo-Fixture wieder erzeugbar (Nr. 388), dann Quelldaten mit Stufe 2 und 3, Schnitt neben Löschvermerk, Mitternacht, Lücke, Schnitt nimmt alles, Einsatz mit eigener Spur; Demo-Reset legt verdichtete Stücke an; neue Sollstände der Kreisläufe (Nr. 500) | keine | `docs/konzepte/Konzept-RD-Referenzdatensatz.md` | Konzept — angelegt 05.11.2026 auf `claude/admiring-sagan-mql8t4` (RD-01 bis -06, Q-RD-01 bis -09 offen); vor 13 (Betreiberin, 05.11.2026), weil P7 das Handbuch an diesem Bestand neu schreibt |
 | 13 | **P7 — Gesicht v1.0** | Umbenennung überall (E-Mail-Langform entscheiden), Demo-Passwort (R25); Vertrag v1 (R12, Nr. 23); Doku-Neufassung, Handbuch als HTML (R16, R72); Manifest (R70); Changelog neu (R15); Backlog-Übernahme; Kommentarregel (R69, Nr. 409); Lizenzen, Tabellen mit Mockup (Nr. 342), Logos (Nr. 62) | 24 | eigenes Konzept nach K1 | offen — Konzeptsitzung kann neben 24 laufen, Umsetzung nach 24 |
 | 14 | **P8 — Schnitt** | Neuaufsetzen mit Übernahme per edbak (R40 (3), R60, Nr. 324); Migrationsregister neu (R66); Repo-Umzug und Inventur mit Begründung je Weglassung (R68); Kette im neuen Repositorium (R67, R40 (4)); Rechts- und Betreiberunterlagen (R41); Abnahme nach R11; Tags `web-v1.0.0`, `uhr-v…`, `android-v1.0.0` | 13 | eigenes Konzept nach K1 | offen — nach 13; die Inventur (R68) entscheidet die zwölf Werkzeug-Punkte mit `gehört zu: 14` (E-BE-04) |
 | — | **Betriebsübergang** | Öffnung in Wellen über die Betriebsarten (R41); Produktionsfreigabe in den Stores mit Welle 1 (R65; nach MDR-Abgrenzung und Rechtsunterlagen); mit Welle 1 entfällt die Seitenladung (`apk.php`, Handbuch 10.1); Garmin-Uhr über den Connect-IQ-Store; halbjährliche Probe-Wiederherstellung | v1.0 | — | offen — beginnt mit v1.0 (nach den Schritten 13 und 14); Wellen nach R41 |

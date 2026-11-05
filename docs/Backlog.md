@@ -53,7 +53,8 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
 | Spanne | Zweig | seit |
 |---|---|---|
 | 500 bis 509 | `claude/stoic-turing-mpxuch` (Schritt 23, BR6: Konzept, Abschluss von 21 und 23; Schritt 24 angelegt); vergeben: 500 | 05.11.2026 |
-| ab 510 | frei — höchste reservierte Nummer 509; frei blieben 482 bis 489 aus der Spanne von 22 (PR #148, #149), 492 bis 499 aus der des Prüfdurchgangs (PR #147), 472 bis 479 aus der Spanne von 21 (PR #136), 461 bis 469 aus der Spanne von PR (PR #133), 434 bis 439 aus der Spanne von PR #129, 441 bis 449 aus der von PR #130, 420 bis 429 aus der Spanne von 20 (PR #127), 412 bis 419 aus der von 12b (PR #125), 394 bis 399 aus der Spanne von 19 (PR #112 bis #114), 389 aus der von 12a (PR #116), 372 bis 379 aus der von 12 (PR #103), 362 bis 369 aus der von PK, 359 aus der von 18 (PR #101), 348 und 349 aus der von 17, 338 aus der von AR | 04.11.2026 |
+| 510 bis 519 | `claude/admiring-sagan-mql8t4` (Schritt 24, RD: Konzept); vergeben: keine | 05.11.2026 |
+| ab 520 | frei — höchste reservierte Nummer 519; frei blieben 482 bis 489 aus der Spanne von 22 (PR #148, #149), 492 bis 499 aus der des Prüfdurchgangs (PR #147), 472 bis 479 aus der Spanne von 21 (PR #136), 461 bis 469 aus der Spanne von PR (PR #133), 434 bis 439 aus der Spanne von PR #129, 441 bis 449 aus der von PR #130, 420 bis 429 aus der Spanne von 20 (PR #127), 412 bis 419 aus der von 12b (PR #125), 394 bis 399 aus der Spanne von 19 (PR #112 bis #114), 389 aus der von 12a (PR #116), 372 bis 379 aus der von 12 (PR #103), 362 bis 369 aus der von PK, 359 aus der von 18 (PR #101), 348 und 349 aus der von 17, 338 aus der von AR | 04.11.2026 |
 
 ---
 
