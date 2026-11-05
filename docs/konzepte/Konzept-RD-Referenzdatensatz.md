@@ -28,11 +28,11 @@ hochgeht, entscheidet die Umsetzung (K3, CLAUDE.md 2).
 | RD-02 | Quelldaten: die fehlenden Spurfälle, Matrix, Generator | **erledigt** (05.11.2026) |
 | RD-03 | Einspielen: Stufen `verdichten` und `loeschen` | **erledigt** (05.11.2026) |
 | RD-04 | Demo-Reset legt Stufe 2 und 3 selbst an (Fixture-Format 3) | **erledigt** (05.11.2026, Web 23.8.0) |
-| RD-05 | Fixture, Referenzexporte und Sollstände neu; Dokumente | offen |
-| RD-07 | Demo-Konto: Durchgang über jeden Bedienweg, jeder Fehler sofort behoben (E-RD-19) — **vor RD-05** | offen — als Nächstes |
+| RD-05 | Fixture, Referenzexporte und Sollstände neu; Dokumente | offen — als Nächstes |
+| RD-07 | Demo-Konto: Durchgang über jeden Bedienweg, jeder Fehler sofort behoben (E-RD-19) — **vor RD-05** | **erledigt** (05.11.2026) |
 | RD-06 | Abschluss: Prüfdokument, Prüfliste (P-S11-30, -31), Pull Request | offen |
 
-**In Arbeit:** nichts — RD-01 bis RD-04 sind erledigt, als Nächstes RD-07 (dann RD-05, RD-06). Die
+**In Arbeit:** nichts — RD-01 bis RD-04 und RD-07 sind erledigt, als Nächstes RD-05 (dann RD-06). Die
 Umsetzung läuft auf dem Konzeptzweig `claude/admiring-sagan-mql8t4`
 (Entscheid der Betreiberin zu Beginn der Umsetzungssitzung). **Es hakt:**
 nirgends. *(Bis RD-01 stand bei RD-02 und RD-04 „wartet auf Q-RD-…" —
@@ -351,6 +351,15 @@ läuft beim Versuch, das Paar zu ersetzen, in die Mengenbremse. Gemessen:
 Bilderlauf, fünf Wege der Bedienprobe „kein Einsatz mit Aufzeichnung".
 **Hätte Produktiv mit der Fixture aus RD-05 getroffen.** Behoben: Paar neu,
 wenn der private Teil mit dem Inhaltsschlüssel der Fixture nicht aufgeht.
+
+**F-RD-26 — `demo_pruefen.mjs` prüfte gegen den Bestand vor dem
+Demo-Ausbau** (gefunden in RD-07). Die Sollzahlen standen fest im Skript —
+83 Einsätze, 15 Diensttage, 95 Segmente —, die eingecheckte Fixture trägt
+seit dem Demo-Ausbau 104 / 21 / 118. Das Skript war damit gegen jede
+Fixture seither rot, und seine Anleitung meldete „24 Prüfungen, 0
+Befunde"; niemand fuhr es (Nr. 391: „von Hand"). Behoben: Die Sollzahlen
+kommen aus der installierten Fixture (`server/demo/fixture.json.gz` oder
+`DEMO_FIXTURE`) — damit ist F-RD-12 für dieses Werkzeug erledigt.
 
 ## 3. Fragen an die Betreiberin
 
@@ -784,6 +793,33 @@ Changelog je Behebung.
 grün mit der Zahl seiner Schritte; kein offener Demo-Fund beim Übergang
 zu RD-05.
 
+*Gebaut (05.11.2026):* Der Durchgang lief mit der Vorab-Fixture aus RD-03
+(Format 3, 111 Einsätze, Stufe 1/2/3) auf der örtlichen Anlage, zuerst mit
+`demo_pruefen.mjs` wie es war, dann erweitert. Gefunden und behoben wurden
+**fünf Fehler am Demo-Konto**, vier davon schon im großen Prüfstand von
+RD-04 und dort behoben (F-RD-22 Rücknahme nach dem Verdichten, F-RD-24
+Überlauf der Segmentzeile, F-RD-25 Schlüsselpaar nach neuer Fixture, dazu
+F-RD-08 Fälligkeit), einer hier (F-RD-26, die Probe selbst).
+`demo_pruefen.mjs`: Sollzahlen aus der Fixture, neuer Abschnitt `spurfaelle`
+(vor `reset`): jede Stufe an Segment und Einsatz vorhanden und gezeichnet;
+Schneiden und Zurücknehmen am Übungssegment der Stufe 2 (P-S11-30 im
+Browser); Zurücknehmen auf Stufe 1 geht, auf Stufe 2 nicht (die erwartete
+409 zählt nicht als Konsolenfehler, jede andere schon); Zeitraum löschen;
+der Wartungslauf nennt dem Demo-Konto 0 Spuren (Nr. 459, am echten
+Endpunkt). Keine Änderung unter `server/` in diesem Paket — die Behebungen
+stehen in Web 23.8.0 (RD-04).
+
+*Bedienwege und wo sie gemessen sind:* Anlegen, Anmelden, Banner,
+Entsperren und Lesen, Startseite, Tagesansicht, Einsatzseite, Löschen eines
+Einsatzes, Stammdatum ändern, Spurfälle, Schneiden, Zurücknehmen, Zeitraum
+löschen, Reset, Sperre der Konto-Identität, `kdf_upgrade`, Entfernen und
+erneutes Anlegen — `demo_pruefen.mjs`. Mobile Segmentzeile — Bilderlauf
+(RD-04) und `zeile.mjs`-Messung in drei Engines. Backup und CSV-Export des
+Demo-Bestands samt Rücklauf in ein Prüfkonto — RD-05
+(`referenz_export.mjs`, Kreisläufe). **Nicht maschinell:** GPX-Abruf einer
+gepackten Spur, die 30-Minuten-Frist am echten Uhrwerk, die Mengenbremse
+über 20 Anmeldungen — Handprüfliste (RD-06).
+
 ### RD-06 Abschluss
 
 *Weg:*
@@ -870,7 +906,9 @@ ist gemessen; was fehlt, steht im Prüfdokument an erster Stelle.
 | RD-04 | `tools/zaehlung/zaehlen.php` | Register | 49 Zeilen, 0 über, 0 unter; Z49 = 1 |
 | RD-04 | Schemaprobe auf MariaDB 10.11, 10.6, MySQL 8.0, 8.4.0 (`plattform.sh`) | Prüfungen | erst **1 Fehlschlag je Fassung**: Fall 8/3 hatte Schnitt und Stück beide bei ts 0, die neue Fälligkeitsregel nahm ihn zu Recht heraus — Prüffall berichtigt (Schnitt 5–5), Fall 8/6 neu (ganz geschnitten, nicht fällig); danach **52 / 0** auf allen vier |
 | RD-05 | Kreisläufe csv/edbak, `abgleich.py`, Reset, Bedienweg Demo | — | — |
-| RD-07 | Bedienwege des Demo-Kontos, `demo_pruefen.mjs`, drei Engines bei Oberflächenfunden | — | — |
+| RD-07 vorab | `demo_pruefen.mjs` wie es war, gegen die Vorab-Fixture | Prüfungen | 24, **4 Befunde** (Sollzahlen 83/15/95 aus der Zeit vor dem Demo-Ausbau, F-RD-26), 0 Konsolenfehler |
+| RD-07 | `demo_pruefen.mjs lesen,spurfaelle,reset` (erweitert) | Prüfungen | 26, 0 Befunde, **1 Konsolenfehler** = die erwartete 409 der verweigerten Rücknahme → in der Probe ausgenommen |
+| RD-07 | `demo_pruefen.mjs` vollständig nach `demo_entfernen()` (anlegen … sperren) | Prüfungen | **41, 0 Befunde, 0 Konsolenfehler, 0 nicht gemessen**; Stufe 2/3 je 5 Segmente und 5 Einsätze; Tag mit Stufe-3-Segment 17 Linien, Stufe-3-Einsatz 1 Linie; Übung: 169 Punkte geschnitten, zurückgenommen; Stufe 1 zurück, Stufe 2 „zusammengefasst"; Zeitraum löschen 10 Punkte; Wartungslauf 0 Spuren; Admin-Zahlen vor/nach Reset gleich der Fixture (21/106/118/2, Papierkorb 5) |
 | RD-06 | Prüfstand (Bericht im Commit) | — | — |
 
 **Grenzen, die jetzt schon feststehen:** Die Staging-Prüfung mit dem
@@ -886,6 +924,7 @@ alles") misst erst RD-03.
 | 05.11.2026 | Nach Rückfrage der Betreiberin (Wildwuchs, Q-RD-04, Übungstage): F-RD-04 und F-RD-11 berichtigt (Python hat das Format einmal; die Segmentkennung überlebt den Aufbau), E-RD-04 auf die vorhandene Adressierung `segment: client_ref` umgestellt, Q-RD-04 mit Lesart (d) „Übungssegmente, zwei auf Stufe 1, eines auf Stufe 2" als Vorschlag, E-RD-08 und Abschnitt 6 (Wildwuchs-Prüfung) neu; Matrixmarken von 14 auf 12 (10 Fälle). |
 | 05.11.2026 | Zweite Rückfrage („geschnittene Tage?"): F-RD-14 (Demo-Schnitte gelten auf jeder Anlage als alt, Rücknahme antwortet 409 `altschnitt`), Q-RD-10 mit Vorschlag (a), die drei bestehenden Schnitte auf Stufe 1/2/3 verteilt (Q-RD-03), Matrix „Schnittzustand × Stufe" in `pruefen.py`, Marken auf 14. |
 | 05.11.2026 | **Freigabe:** Q-RD-01 bis -10 wie vorgeschlagen (E-RD-09 bis -18). Dazu E-RD-19: Jeder Fehler am Demo-Konto wird in diesem Schritt behoben — neues Paket RD-07 (Demo-Durchgang) vor RD-05, der Browserweg ist nicht mehr ausgenommen, F-RD-08 wird bei Bestätigung behoben. Fahrplanzeile auf „freigegeben". |
+| 05.11.2026 | **RD-07 erledigt:** Durchgang über die Bedienwege des Demo-Kontos mit der Vorab-Fixture; fünf Funde behoben (vier davon in RD-04), `demo_pruefen.mjs` mit Sollzahlen aus der Fixture und Abschnitt `spurfaelle` (41 Prüfungen). F-RD-26. |
 | 05.11.2026 | **RD-04 erledigt (Web 23.8.0):** Reset packt Stufe 2/3 aus Format 3, Einspielzeit für Demo-Vermerke, `gh_gepackt_bauen()` mit Vektoren; dazu F-RD-22 (Rücknahme nach Verdichten) und F-RD-08 (Fälligkeit) für alle Konten behoben. |
 | 05.11.2026 | **RD-03 erledigt:** Stufen `loeschen` und `verdichten`, Tagesversatz aus dem Datum, PHP-Ausdünnung über `ausduennen_cli.php`; Referenzkonto von Null mit allen Fällen; F-RD-08 bestätigt; Befunde F-RD-20, -21. |
 | 05.11.2026 | **RD-02 erledigt:** vier Spurfall-Listen, 16 Matrixzeilen, Lücken und Übungen im Generator; Befunde F-RD-18, -19, Entscheidungen der Umsetzung E-RD-20 bis -22 (Übungsliste mit Vorbild, Tagesversatz aus dem Datum, D22-E1 vorgezogen). |
