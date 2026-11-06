@@ -9,6 +9,7 @@ Verlauf bis zum Schnitt). Die Fassungszählung läuft fortlaufend weiter.
 
 | Fassung | Datum | Anlass | Was |
 |---|---|---|---|
+| 224 | 06.11.2026 | BR7 | BR7 abgeschlossen (PR #154): Erledigt-Zeile, Konzept gelöscht (`063eb827`), kein Prüfdokument (kein Handpunkt). Backlog: Spannen 500–509 und 510–519 freigegeben. |
 | 223 | 06.11.2026 | BR7 | BR7 ohne Fahrplanzeile (E-BR7-07), Reihenfolge wieder 13 → 14; Nr. 510 und 390-px-Messung gebaut. 6.1: P-R4-17 durch die Bedienprobe ersetzt, P-R4-13 verworfen, „Kette II 9“ nur als Löschsperre erledigt. |
 | 222 | 05.11.2026 | 25 | Schritt 25 (BR7) begonnen: Prüfrunde auf Staging, Konzept `Konzept-BR7-Backlog-Runde-7.md` (Q-BR7-01 bis -07 offen), Reihenfolge 25 → 13 → 14. Kopf: alle drei Fassungen ausgeliefert; 6.1: P-BR-08, P-PU-01, -04, -06 bestanden. |
 | 221 | 05.11.2026 | 24 | Schritt 24 (RD) abgeschlossen (PR #152): Erledigt-Zeile, Konzept gelöscht (`99d82b32`), P-RD-09/-10 in der Prüfliste, 6.1 „Prüfliste RD“; P-S11-30, -31 bestanden. R4-Register: 111 statt 109 Einsätze im Bestand. |

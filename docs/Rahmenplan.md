@@ -1,12 +1,12 @@
 # Rahmenplan — Programm „Gen-EM NAdoku" bis v1.0
 
-**Fassung 223 (06.11.2026)** · Steuerung: Reihenfolge, Status, programmweite
+**Fassung 224 (06.11.2026)** · Steuerung: Reihenfolge, Status, programmweite
 Entscheidungen. Verlauf: `Rahmenplan-Verlauf.md`. Fassungen 1–15:
 `Rahmenplan-Archiv.md`; Fassungen 16–124: `Rahmenplan-Archiv-2.md`.
 
 **Stand `origin/main`** (Commit `bfaca8b`, PR #153, gemessen 05.11.2026): Web 23.8.2 ·
 Uhr 4.3.2 · Android 0.21.0; alle drei ausgeliefert (Tags auf `bfaca8b`, 05.11.2026).
-**Läuft:** BR7 — Werkzeugschritt ohne Fahrplanzeile (E-BR7-07), gebaut 06.11.2026 auf `claude/admiring-sagan-mql8t4`, PR offen.
+**Läuft:** nichts; BR7 abgeschlossen 06.11.2026 (PR #154).
 **Als Nächstes:** 13 (P7).
 **Offene PRs:** keine.
 **Fällig bei der Betreiberin:** 40 Posten (Abschnitt 6.1). **`update.php`:** auf Staging und Produktiv nichts offen (Betreiberin, 20.10.2026, nach Web 23).
@@ -104,7 +104,7 @@ liest die 7.x-Sicherung genau einmal) · Rückwärtskompatibilität ab v1.0 (R60
 ## 3. Fahrplan — die nächsten Schritte
 
 Schrittnummern sind **Namen**, keine Reihenfolge; sie werden nie umvergeben.
-**Die Reihenfolge der offenen Schritte ist:** 13 → 14 (E-BE-02 bis -04, 02.11.2026; PR, 21 bis 24 davor sind erledigt; BR7 läuft als Werkzeugschritt ohne Fahrplanzeile, E-BR7-07); der Betriebsübergang folgt auf v1.0. Daneben, ohne Platz in
+**Die Reihenfolge der offenen Schritte ist:** 13 → 14 (E-BE-02 bis -04, 02.11.2026; PR, 21 bis 24 und BR7 davor sind erledigt); der Betriebsübergang folgt auf v1.0. Daneben, ohne Platz in
 der Reihe: die Paketschnitte von **11** und Teil C von **6** (seit SD-M1
 frei). **Warum so:** P6 liegt in zwei Hälften um S11 (R86): das
 **Bedrohungsmodell (12, abgeschlossen) vor S11 (12a, abgeschlossen)**, weil es dessen
@@ -422,6 +422,7 @@ die Aufräumfassung vom 24.09.2026 gelöscht hat (Archiv-2, Verlaufszeile 110).
 | 22 — BR5: Backlog-Runde 5, Web | Web 23.6.3–23.7.3 | 04.11.2026 · PR #141, #148 | gelöscht (`778b7953`) | `Pruefliste.md` 3, 8, 10 | Anlegemarke für Kontopaar und Rückweg, eine Passwortprüfung, `post_text()`, Mail-Absagen, Deadlock in `protokoll()`, APK nach Gerät; neu 480, 481 |
 | 23 — BR6: Backlog-Runde 6 | Web 23.7.4–23.7.7, Uhr 4.3.2, Android 0.21.0 | 04.11.2026 · PR #150 | gelöscht (`e62c7632`) | `Pruefliste.md` 9, 10 | Wartungslauf auf MySQL, Demo-Marke, Mail-Absage, Formularabstand, Sync-Zeile Venu 3s, Frist des Handypuffers, Prüfstand im Arbeitsbaum, Rundlauf mit Schlüsselpaar; Schemaprobe Fall 8; neu 500 |
 | 24 — RD: Referenzdatensatz und Demo, alle Spurfälle | Web 23.8.0–23.8.2 | 05.11.2026 · PR #152 | gelöscht (`99d82b32`) | `Pruefliste.md` 9 | Fixture wieder erzeugbar, alle Spurfälle in Referenz und Demo; Reset packt Stufe 2/3; Rücknahme und Fälligkeit berichtigt; Riegel `fixtureabgleich`; keine Gerätewarnung nach Reset; neu 510 |
+| BR7 — Backlog-Runde 7 | nur Werkzeug | 06.11.2026 · PR #154 | gelöscht (`063eb827`) | — (kein Handpunkt) | Schemaprobe auf einer Kopie von `server/` (Nr. 510); Bedienprobe misst den Nachladeknopf auf 390 px statt P-R4-17; Prüfrunde auf Staging, Zeiger `produktion` 26 h fehlend, jetzt mit Löschsperre |
 | 21 — GR: Geräterunde | Uhr 4.2.0–4.3.1, Android 0.19.0–0.20.0 | 02.11.2026 · PR #136 | gelöscht (`129604f2`) | `Pruefliste.md` 10 | Antwortauswertung nach der Fehlertabelle im Vertrag (403, 429, 503, 507), Neukoppeln mit Schlüsselbindung gegen fremde Konten, Senden nach Reaktivieren, Sync-Seite ohne Überlappung; ausgeliefert noch nicht (Tags offen); neu 470, 471 |
 
 ## 9. Pflege dieses Dokuments
