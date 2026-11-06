@@ -29,7 +29,8 @@ export const wege = [
     paket: 'R4-17', punkt: 'Nr. 37', rolle: 'demo',
     soll: 'Jahr mit mehr als 200 Einsätzen: 200 Zeilen, Nachladezeile, Kopf „N · … km · 200 '
         + 'angezeigt"; alle Pins auf der Karte; eine Extremwert-Kachel holt ihre Zeile '
-        + 'jenseits der 200 in die Tabelle und hebt sie hervor',
+        + 'jenseits der 200 in die Tabelle und hebt sie hervor; auf 390 px ist der '
+        + 'Nachladeknopf zu sehen und lädt nach',
     async fahren(k) {
       const aufheben = await einsaetzeVervielfachen(k.seite, '**/api/range.php*', FAKTOR);
       try {
@@ -114,13 +115,44 @@ export const wege = [
         const okSprung = nachher.da && nachher.hervor && nachher.stelle > 200
           && (nachher.zeilen % 200 === 0 || nachher.zeilen === gesamt);
         await k.bild('zeitraum-seitengrenze');
+
+        /* AUF SCHMALER BREITE MUSS DER NACHLADEKNOPF ZU SEHEN SEIN (F-R4-59).
+         * Bis Web 21.4.0 hing die Nachladezeile im Scrollbehaelter der
+         * Tabelle und war unter 720 px mit ihm ausgeblendet — auf dem Handy
+         * kam man nie ueber die ersten 200 hinaus, still. Die Zeile erzeugt
+         * `missiontable.js` fuer jede Tabelle mit Seitengrenze; was hier fuer
+         * die Zeitraumuebersicht gilt, gilt fuer die Suche mit (Konzept BR7,
+         * ersetzt die Handpruefung P-R4-17). */
+        const breit = k.seite.viewportSize();
+        let schmal = { sichtbar: false, vor: nachher.zeilen, nach: nachher.zeilen };
+        try {
+          await k.seite.setViewportSize({ width: 390, height: 844 });
+          await k.seite.waitForTimeout(300);
+          const knopf = k.seite.locator('.mehrzeile:not([hidden]) button:not([hidden])').first();
+          if (await knopf.count()) {
+            await knopf.scrollIntoViewIfNeeded().catch(() => {});
+            schmal.sichtbar = await knopf.isVisible();
+            if (schmal.sichtbar) {
+              await knopf.click();
+              await k.seite.waitForTimeout(400);
+              schmal.nach = await k.seite.locator('#rangebody tr').count();
+            }
+          }
+        } finally {
+          if (breit) { await k.seite.setViewportSize(breit); }
+        }
+        const okSchmal = schmal.sichtbar
+          && schmal.nach === Math.min(schmal.vor + 200, gesamt);
         return {
           ist: `Kopf „${vorher.kopf}", ${vorher.zeilen} Zeilen, Knöpfe ${vorher.mehr.join(' / ')}; `
              + `Pins ${vorher.pins} von ${vorher.mitOrt}; Kachel → Zeile ${nachher.stelle} `
-             + `${nachher.hervor ? 'hervorgehoben' : 'NICHT hervorgehoben'}, jetzt ${nachher.zeilen} Zeilen`,
-          ok: okPins && okSprung,
+             + `${nachher.hervor ? 'hervorgehoben' : 'NICHT hervorgehoben'}, jetzt ${nachher.zeilen} Zeilen; `
+             + `390 px: Knopf ${schmal.sichtbar ? 'sichtbar' : 'NICHT sichtbar'}, `
+             + `${schmal.vor} → ${schmal.nach} Zeilen`,
+          ok: okPins && okSprung && okSchmal,
           bemerkung: !okPins ? 'Die Karte zeichnet nicht alle Pins des Zeitraums'
-                   : !okSprung ? 'Der Sprung aus der Kachel holt die Zeile nicht in die Tabelle' : '',
+                   : !okSprung ? 'Der Sprung aus der Kachel holt die Zeile nicht in die Tabelle'
+                   : !okSchmal ? 'Auf 390 px ist der Nachladeknopf nicht zu sehen oder lädt nicht nach (F-R4-59)' : '',
         };
       } finally {
         await aufheben();

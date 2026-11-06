@@ -11043,3 +11043,22 @@ zutreffen.
      und Demo; der Reset packt Stufe 2 und 3; Kreisläufe 0
      unerklärt; P-S11-30 und -31 auf Staging mit dem Demo-Konto
      bestanden (R91, 05.11.2026).
+
+510. **Die Schemaprobe setzt die Anlage womöglich in den Wartungsmodus.** · gehört zu: nächste Backlog-Runde · Stand: erledigt · seit 05.11.2026
+     *Aufgenommen 05.11.2026 in RD-04 (F-RD-23).* `tools/schemaprobe/
+     probe.php` ersetzt für ihre Laufzeit `server/config.php` durch eine
+     Wegwerfdatei mit einer frischen Probe-Datenbank, in der Migrationen
+     offen sind. Trifft in diesem Fenster eine angemeldete Anfrage die
+     Anlage, schaltet der Torwächter die Wartung ein, und `wartung.lock`
+     bleibt liegen, wenn `config.php` zurück ist. Gemessen im Prüfstand:
+     Schalter „torwaechter" am Ende der Schemaprobe, danach 503 für vier
+     Proben; die zeitgleiche Anfrage ließ sich nicht zuordnen.
+     `Sandbox-Setup.md` 6.1a nennt dieselbe Erscheinung (16.10.2026).
+     *Weg:* der Probe eine eigene `config.php` geben, ohne die der Anlage
+     anzufassen (eigene Wurzel oder Umgebungswert für `db.php`), oder sie
+     nach dem Zurücklegen nachsehen lassen, ob der Torwächter geschaltet hat.
+     *Abnahme:* Ein Prüfstand mit Schemaprobe hinterlässt nie `wartung.lock`.
+     Erledigt 06.11.2026 mit BR7-01: Die Schemaprobe arbeitet auf einer
+     Kopie von server/ mit eigener config.php; die der Anlage bleibt
+     unberührt (Prüfsumme alle 0,2 s: 0 Abweichungen, alte Fassung 76),
+     Matrix 4 × 52/0.
