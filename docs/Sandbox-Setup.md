@@ -615,8 +615,8 @@ ganze Folge wieder hoch, nicht nur einen Teil:
 1. `dockerd` starten, `bash tools/sandbox/hochfahren.sh`;
 2. `php server/update.php` — bei offenen Migrationen schließt der
    Torwächter die Anlage, und jede Probe sieht 503 (am 16.10.2026 einmal
-   mitten in einem Lauf gesehen, nach einem abgebrochenen davor; die genaue
-   Ursache ist nicht gefunden);
+   mitten in einem Lauf gesehen; die Ursache war die Schemaprobe, die bis
+   Nr. 510 die `config.php` der Anlage für ihre Laufzeit austauschte);
 3. `bash tools/sandbox/plattform.sh alles` — ohne das sind die drei
    Datenbankfassungen der Schemaprobe nicht erreichbar;
 4. nachsehen, ob `server/.zustand/wartung.lock` (bis Web 23.3.0

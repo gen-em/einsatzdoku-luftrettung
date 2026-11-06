@@ -265,17 +265,48 @@ function spaltendefinition(PDO $pdo, string $tabelle, string $spalte): array
     return array_change_key_case($st->fetch(PDO::FETCH_ASSOC) ?: [], CASE_LOWER);
 }
 
-/* ---- Wegwerf-config.php --------------------------------------------------
+/* ---- Wegwerf-Wurzel mit eigener config.php ------------------------------
  *
- * `migration_lib.php` laedt `db.php`, und das laedt `config.php`. Statt den
- * Katalog nachzubauen, legt die Probe eine hin und raeumt sie wieder weg —
- * auch wenn sie unterwegs abbricht. Eine vorhandene config.php wird zur
- * Seite gelegt und zurueckgeholt; ein Entwicklungsrechner soll seine
- * Einstellungen behalten. */
-$cfgPfad  = $WURZEL . '/config.php';
-$beiseite = $cfgPfad . '.schemaprobe';
-$hatteCfg = is_file($cfgPfad);
-if ($hatteCfg) { copy($cfgPfad, $beiseite); }
+ * `migration_lib.php` laedt `db.php`, und das laedt `config.php` aus SEINEM
+ * Verzeichnis. Statt den Katalog nachzubauen, arbeitet die Probe auf einer
+ * Kopie von `server/` in einem Wegwerfverzeichnis und legt die config.php
+ * dorthin. Die Anlage wird nie angefasst.
+ *
+ * BIS NR. 510 lag die Wegwerf-config.php an der Stelle der echten, und die
+ * echte wartete daneben auf ihre Rueckkehr. In diesem Fenster sah jede
+ * Anfrage an die oertliche Anlage die Probe-Datenbank mit offenen
+ * Migrationen, der Torwaechter schaltete die Wartung ein, und
+ * `wartung.lock` blieb liegen, als die echte config.php zurueck war — im
+ * Pruefstand vier Proben mit 503 danach (Konzept RD, F-RD-23).
+ *
+ * Kopiert wird, was PHP laedt; Doku, Bilder, Demo-Bestand, Sicherungen und
+ * die Zustandsverzeichnisse nicht. Das Verzeichnis geht am Ende, auch wenn
+ * die Probe unterwegs abbricht. */
+$OHNE_KOPIE = ['doku', 'assets', 'demo', 'apk', 'sicherungen', '.sitzungen', '.zustand'];
+$wegwerf = sys_get_temp_dir() . '/schemaprobe-' . getmypid() . '-' . bin2hex(random_bytes(4));
+$kopieren = static function (string $von, string $nach) use (&$kopieren, $OHNE_KOPIE, $WURZEL): void {
+    mkdir($nach, 0700, true);
+    foreach (scandir($von) as $name) {
+        if ($name === '.' || $name === '..') { continue; }
+        if ($von === $WURZEL && (in_array($name, $OHNE_KOPIE, true)
+                                 || str_starts_with($name, 'config.php'))) { continue; }
+        $q = $von . '/' . $name;
+        if (is_link($q)) { continue; }
+        is_dir($q) ? $kopieren($q, $nach . '/' . $name) : copy($q, $nach . '/' . $name);
+    }
+};
+$kopieren($WURZEL, $wegwerf . '/server');
+register_shutdown_function(static function () use ($wegwerf): void {
+    $weg = static function (string $p) use (&$weg): void {
+        if (is_dir($p) && !is_link($p)) {
+            foreach (scandir($p) as $n) { if ($n !== '.' && $n !== '..') { $weg($p . '/' . $n); } }
+            @rmdir($p);
+        } else { @unlink($p); }
+    };
+    $weg($wegwerf);
+});
+$WURZEL  = $wegwerf . '/server';
+$cfgPfad = $WURZEL . '/config.php';
 
 file_put_contents($cfgPfad, "<?php\n// Wegwerfdatei der Schemaprobe. Wird am Ende entfernt.\nreturn "
     . var_export([
@@ -289,10 +320,6 @@ file_put_contents($cfgPfad, "<?php\n// Wegwerfdatei der Schemaprobe. Wird am End
         'server_key' => str_repeat('ab', 32),
         'kdf_anteil' => str_repeat('cd', 32),
     ], true) . ";\n");
-
-register_shutdown_function(function () use ($cfgPfad, $beiseite, $hatteCfg) {
-    if ($hatteCfg) { rename($beiseite, $cfgPfad); } else { @unlink($cfgPfad); }
-});
 
 require_once $WURZEL . '/migration_lib.php';
 

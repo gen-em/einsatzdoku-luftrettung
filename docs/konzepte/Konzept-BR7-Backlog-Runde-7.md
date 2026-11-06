@@ -1,4 +1,4 @@
-# Konzept BR7 — Backlog-Runde 7, vor Schritt 13 (Fahrplanschritt 25)
+# Konzept BR7 — Backlog-Runde 7, vor Schritt 13 (Werkzeugschritt ohne Fahrplanzeile)
 
 **Kürzel:** BR7. Pakete `BR7-NN`, Entscheidungen `E-BR7-NN`, Befunde
 `F-BR7-NN`, Fragen `Q-BR7-NN`, Prüfpunkte `P-BR7-NN` (`docs/Pruefablauf.md` 7).
@@ -8,7 +8,7 @@ von `main`, Entscheid der Betreiberin 05.11.2026) · **Herkunft:** Auftrag der
 Betreiberin vom 05.11.2026 („Backlog-Runde vor Schritt 13 vorbereiten",
 Umfang „Nr. 510 und eine Prüfrunde auf Staging", E-BR7-01) · **Backlog-Spanne:**
 511 bis 519 (aus der Spanne von 24, derselbe Zweig) · **Prüfdokument:**
-`Pruefdokument-BR7-Backlog-Runde-7.md` (entsteht mit dem Abschluss).
+keines — es bleibt kein Handpunkt (BR7-03).
 
 **Modell:** Opus für alle Pakete (K2); kein Fable-Schritt.
 **Fächerung:** keine, in keinem Paket (CLAUDE.md 7). Die Runde ist klein, und
@@ -23,14 +23,14 @@ entscheidet die Umsetzung (CLAUDE.md 2).
 
 | Paket | Inhalt | Stand |
 |---|---|---|
-| BR7-01 | Schemaprobe ohne Griff an die `config.php` der Anlage: Nr. 510 | offen — wartet auf Q-BR7-03 |
-| BR7-02 | Runbook: Tag erst nach grünem Staging-Lauf (F-BR7-02) | offen — wartet auf Q-BR7-06 |
-| BR7-03 | Prüfbestand mit mehr als 200 Einsätzen auf Staging (P-R4-17) | offen — nur bei Q-BR7-04 (a) |
-| BR7-04 | Abschluss | offen |
+| BR7-01 | Schemaprobe ohne Griff an die `config.php` der Anlage: Nr. 510 | **erledigt** 06.11.2026 (nur Werkzeug, keine Fassung) |
+| BR7-02 | Bedienprobe: Nachladeknopf auf 390 px (ersetzt P-R4-17) | **erledigt** 06.11.2026 (nur Werkzeug) |
+| BR7-03 | Abschluss | **in Arbeit** — Pull Request |
 
-**In Arbeit:** nichts — das Konzept wartet auf die Antworten zu Q-BR7-01 bis
--07. **Es hakt:** am Umfang. Die Prüfrunde hat keinen Fehler der Anwendung
-gefunden; ob BR7 ein eigener Schritt bleibt, entscheidet Q-BR7-07.
+**In Arbeit:** BR7-03. **Es hakt:** nirgends. Alle Fragen sind entschieden
+(E-BR7-03 bis -07); BR7 läuft als Werkzeugschritt ohne Fahrplanzeile
+(E-BR7-07). *(Bis zum 06.11.2026 stand hier ein Schritt 25 mit vier Paketen;
+Runbook-Satz und Testkonto sind entfallen.)*
 
 ---
 
@@ -122,15 +122,15 @@ ein Prüfbestand.
 
 ## 3. Fragen an die Betreiberin
 
-| Nr. | Frage | Vorschlag | Paket |
-|---|---|---|---|
-| Q-BR7-01 | **Woher kam das Fehlen von `produktion` (F-BR7-01)?** Hast du am 04.11.2026 zwischen 12:08 und 21:59 auf GitHub Zweige gelöscht (etwa die zwei toten aus P-R4-06) oder eine Regel geändert? | Wenn ja, ist die Ursache erklärt. Dann „Kette II 9" jetzt erledigen: Regel für `produktion` mit „Löschen sperren" und Push nur für GitHub Actions. | — |
-| Q-BR7-02 | **Alarmweg der Wache.** (a) Nur die Einstellung: GitHub-Benachrichtigung für fehlgeschlagene Läufe an dein Konto und Mail prüfen. (b) Dazu ein Backlog-Punkt „die Wache meldet Rot über einen zweiten Weg" (z. B. ein Issue oder eine Statuszeile in Betrieb → Status), `gehört zu: 14` (Kette im neuen Repositorium). (c) Den zweiten Weg in BR7 bauen. | **(b)** — E-BE-04 schiebt Kettenarbeit nach 14; (a) ist sofort nötig. | — |
-| Q-BR7-03 | **Weg für Nr. 510.** (a) Die Probe arbeitet auf einer Kopie von `server/` in einem Wegwerfverzeichnis und fasst die Anlage nie an. (b) `db.php` liest den Pfad der `config.php` aus einem Umgebungswert (Änderung unter `server/`, Web-Fassung, Registerzeile `konfig`). (c) Nach dem Zurücklegen nachsehen und ein von der Probe verursachtes `wartung.lock` entfernen. | **(a)** — nur Werkzeug, keine Fassung; (b) öffnet einen zweiten Weg zur Konfiguration, (c) räumt auf statt zu verhindern. | BR7-01 |
-| Q-BR7-04 | **P-R4-17 (F-BR7-04).** (a) Ein Testkonto auf Staging mit rund 220 erzeugten Einsätzen über den CSV-Import anlegen; es bleibt als Prüfbestand für Mengenpunkte. (b) Der Punkt geht ganz an dich, sobald ein echtes Konto über 200 Einsätze hat. (c) Verwerfen. | **(a)** — ein dauerhafter Mengenbestand auf Staging hilft auch Nr. 37 später; Aufwand ein Paket. | BR7-03 |
-| Q-BR7-05 | **P-R4-13 (F-BR7-03).** (a) Verwerfen — es gibt kein SFTP-Ziel und keines ist geplant. (b) Örtlich mit einem SFTP-Container in der Sandbox prüfen. (c) Offen lassen, bis ein SFTP-Ziel existiert. | **(a)**; wird je ein SFTP-Ziel eingerichtet, ist das ein neuer Prüfpunkt. | — |
-| Q-BR7-06 | **Runbook-Satz zu F-BR7-02:** In `Technik.md` 12 und der Ansage des Laufs festhalten: „Tag erst setzen, wenn der Staging-Lauf desselben Commits grün ist; sonst nach dem grünen Lauf ‚Re-run failed jobs'"? Und soll die Ansage bei einem Abbruch vor dem Abgleich „nichts geschehen" statt „Dateistand unbekannt" sagen? | **Ja** zum Satz; die Ansage nur, wenn der Lauf den Abbruchschritt sicher kennt — sonst bleibt sie vorsichtig. | BR7-02 |
-| Q-BR7-07 | **Eigener Schritt oder nicht?** Ohne Q-BR7-04 (a) besteht BR7 aus einem Werkzeugpunkt und einem Doku-Satz. (a) Eigener Schritt 25 wie vorgeschlagen. (b) Nr. 510 und der Doku-Satz gehen als Werkzeugschritt ohne Fahrplanzeile (wie „PR — Prüfmittel"), 13 beginnt sofort. | **(a), wenn Q-BR7-04 (a); sonst (b).** | — |
+| Nr. | Frage | Vorschlag | Paket | Antwort |
+|---|---|---|---|---|
+| Q-BR7-01 | **Woher kam das Fehlen von `produktion` (F-BR7-01)?** Hast du am 04.11.2026 zwischen 12:08 und 21:59 auf GitHub Zweige gelöscht (etwa die zwei toten aus P-R4-06) oder eine Regel geändert? | Wenn ja, ist die Ursache erklärt. Dann „Kette II 9" jetzt erledigen: Regel für `produktion` mit „Löschen sperren" und Push nur für GitHub Actions. | — | **Ja** — die Betreiberin hat am 04.11. zwei tote Zweige gelöscht, `produktion` ging mit. Ruleset „Zeiger produktion" mit „Restrict deletions" angelegt (06.11.2026), nur Löschsperre (E-BR7-03). |
+| Q-BR7-02 | **Alarmweg der Wache.** (a) Nur die Einstellung: GitHub-Benachrichtigung für fehlgeschlagene Läufe an dein Konto und Mail prüfen. (b) Dazu ein Backlog-Punkt „die Wache meldet Rot über einen zweiten Weg" (z. B. ein Issue oder eine Statuszeile in Betrieb → Status), `gehört zu: 14` (Kette im neuen Repositorium). (c) Den zweiten Weg in BR7 bauen. | **(b)** — E-BE-04 schiebt Kettenarbeit nach 14; (a) ist sofort nötig. | — | **(a)** — die Betreiberin prüft ihre Benachrichtigungen; kein Backlog-Punkt (E-BR7-04). |
+| Q-BR7-03 | **Weg für Nr. 510.** (a) Die Probe arbeitet auf einer Kopie von `server/` in einem Wegwerfverzeichnis und fasst die Anlage nie an. (b) `db.php` liest den Pfad der `config.php` aus einem Umgebungswert (Änderung unter `server/`, Web-Fassung, Registerzeile `konfig`). (c) Nach dem Zurücklegen nachsehen und ein von der Probe verursachtes `wartung.lock` entfernen. | **(a)** — nur Werkzeug, keine Fassung; (b) öffnet einen zweiten Weg zur Konfiguration, (c) räumt auf statt zu verhindern. | BR7-01 | **(a)** (E-BR7-05). |
+| Q-BR7-04 | **P-R4-17 (F-BR7-04).** (a) Ein Testkonto auf Staging mit rund 220 erzeugten Einsätzen über den CSV-Import anlegen; es bleibt als Prüfbestand für Mengenpunkte. (b) Der Punkt geht ganz an dich, sobald ein echtes Konto über 200 Einsätze hat. (c) Verwerfen. | **(a)** — ein dauerhafter Mengenbestand auf Staging hilft auch Nr. 37 später; Aufwand ein Paket. | BR7-03 | **Weder noch** — die Zeitraumübersicht misst die Bedienprobe schon (`zeitraum-seitengrenze`, vervielfachte Antwort), dieselbe Tabelle wie die Suche (`missiontable.js`); dazu nur die Messung auf 390 px. P-R4-17 gelöscht (E-BR7-06). |
+| Q-BR7-05 | **P-R4-13 (F-BR7-03).** (a) Verwerfen — es gibt kein SFTP-Ziel und keines ist geplant. (b) Örtlich mit einem SFTP-Container in der Sandbox prüfen. (c) Offen lassen, bis ein SFTP-Ziel existiert. | **(a)**; wird je ein SFTP-Ziel eingerichtet, ist das ein neuer Prüfpunkt. | — | **(a) verworfen.** |
+| Q-BR7-06 | **Runbook-Satz zu F-BR7-02:** In `Technik.md` 12 und der Ansage des Laufs festhalten: „Tag erst setzen, wenn der Staging-Lauf desselben Commits grün ist; sonst nach dem grünen Lauf ‚Re-run failed jobs'"? Und soll die Ansage bei einem Abbruch vor dem Abgleich „nichts geschehen" statt „Dateistand unbekannt" sagen? | **Ja** zum Satz; die Ansage nur, wenn der Lauf den Abbruchschritt sicher kennt — sonst bleibt sie vorsichtig. | BR7-02 | **Nein** — die Betreiberin merkt es sich; BR7-02 alt entfällt. |
+| Q-BR7-07 | **Eigener Schritt oder nicht?** Ohne Q-BR7-04 (a) besteht BR7 aus einem Werkzeugpunkt und einem Doku-Satz. (a) Eigener Schritt 25 wie vorgeschlagen. (b) Nr. 510 und der Doku-Satz gehen als Werkzeugschritt ohne Fahrplanzeile (wie „PR — Prüfmittel"), 13 beginnt sofort. | **(a), wenn Q-BR7-04 (a); sonst (b).** | — | **Kein eigener Schritt** (E-BR7-07). |
 
 ## 4. Entscheidungen
 
@@ -138,51 +138,40 @@ ein Prüfbestand.
 |---|---|---|
 | E-BR7-01 | Umfang: Nr. 510 und eine Prüfrunde auf Staging über die offenen Prüflistenpunkte (Claude, beide); Funde werden Backlog-Punkte der Runde. Erst prüfen, dann Konzept. | Betreiberin, 05.11.2026 |
 | E-BR7-02 | Gearbeitet wird auf `claude/admiring-sagan-mql8t4`, nach dem Merge von PR #153 frisch von `main`. | Betreiberin, 05.11.2026 |
+| E-BR7-03 | `produktion` bekommt nur eine Löschsperre (Ruleset „Zeiger produktion", „Restrict deletions"). Keine Sperre für Updates oder Force-Push: Der Job `zeiger` schiebt mit `git push --force` und dem Token des Laufs. | Betreiberin, 06.11.2026 |
+| E-BR7-04 | Alarmweg der Wache bleibt die GitHub-Benachrichtigung; die Betreiberin prüft deren Einstellung. | Betreiberin, 06.11.2026 |
+| E-BR7-05 | Nr. 510: Die Schemaprobe arbeitet auf einer Kopie von `server/` in einem Wegwerfverzeichnis. | Betreiberin, 06.11.2026 |
+| E-BR7-06 | Kein Prüfbestand über 200 Einsätze. Der vorhandene Weg `zeitraum-seitengrenze` misst zusätzlich auf 390 px; P-R4-17 wird gelöscht, P-R4-13 verworfen. Keine neue Prüfung, kein neuer Weg. | Betreiberin, 06.11.2026 |
+| E-BR7-07 | Kein Fahrplanschritt; BR7 ist ein Werkzeugschritt mit Pull Request, danach 13. | Betreiberin, 06.11.2026 |
 
 ## 5. Arbeitspakete
 
-### BR7-01 Schemaprobe ohne Griff an die Anlage (Nr. 510; Q-BR7-03)
+### BR7-01 Schemaprobe ohne Griff an die Anlage (Nr. 510)
 
-*Weg (bei (a)):* `probe.php` kopiert `server/` in ein Wegwerfverzeichnis,
-setzt `$WURZEL` dorthin und schreibt die Wegwerf-`config.php` nur dort; das
-Verzeichnis geht im `register_shutdown_function`. `plattform.sh` und die
-Stufe-1-Jobs „Schema gegen …" rufen unverändert.
-*Ort:* `tools/schemaprobe/probe.php`, `tools/schemaprobe/LIESMICH.md`,
-`Sandbox-Setup.md` 6.1a (die Erscheinung dort austragen).
-*Abnahme:* Prüfstand mit Schemaprobe, während eine angemeldete Anfrage die
-Anlage alle Sekunde trifft: kein `wartung.lock`, keine 503; `server/config.php`
-vor und nach byte-gleich (SHA-256); Schemaprobe auf MariaDB 10.11, 10.6,
-MySQL 8.0, 8.4.0 grün wie vorher (52 / 0).
-*Fassung:* keine (nur Werkzeug).
+*Gebaut (06.11.2026):* `tools/schemaprobe/probe.php` kopiert `server/` ohne
+`doku`, `assets`, `demo`, `apk`, `sicherungen`, `.sitzungen`, `.zustand` und
+`config.php*` in ein Wegwerfverzeichnis unter `sys_get_temp_dir()`, setzt
+`$WURZEL` dorthin und schreibt die Wegwerf-`config.php` nur dort; das
+Verzeichnis geht im `register_shutdown_function`. Nachgezogen:
+`tools/schemaprobe/LIESMICH.md` (Anlass Nr. 510, „Was es braucht"),
+`Sandbox-Setup.md` 6.1a (die Ursache der 503 vom 16.10.2026 ist gefunden).
+*Probleme:* Der Container wurde mitten in der Messung neu gestartet;
+Startfolge 6.1a gefahren, Messung wiederholt.
 
-### BR7-02 Runbook: Tag-Zeitpunkt (F-BR7-02; Q-BR7-06)
+### BR7-02 Nachladeknopf auf 390 px (E-BR7-06)
 
-*Weg:* Satz in `Technik.md` 12 (Auslieferung) und in die Ansage des
-Tor-Schritts in `ausliefern-lauf.yml`: Tag nach grünem Staging-Lauf; sonst
-„Re-run failed jobs". Die Ansage im Fehlerfall unterscheidet „vor dem
-Abgleich abgebrochen" von „im Abgleich", wenn die Schrittfolge es sicher
-hergibt.
-*Ort:* `docs/Technik.md` 12, `.github/workflows/ausliefern-lauf.yml`
-(nur Text der Ansage), `CLAUDE.md` 3 ein Halbsatz.
-*Abnahme:* `kettenaufrufe` grün, die neunzehn SHA-Zeilen unverändert.
-*Fassung:* keine.
+*Gebaut (06.11.2026):* `tools/bedienprobe/wege/zeitraum.mjs`, Weg
+`zeitraum-seitengrenze`: nach dem Kachelsprung Fenster auf 390 × 844,
+„Weitere 200 anzeigen" muss sichtbar sein und nachladen, danach die alte
+Breite. Ersetzt die Handprüfung P-R4-17 (F-R4-59). Die Zahl der Wege bleibt.
+*Probleme:* Ein Aufruf `probe.mjs --help` fuhr die ganze Bedienprobe an;
+abgebrochen, Bericht zurückgesetzt, Demo-Konto zurückgesetzt.
 
-### BR7-03 Prüfbestand über 200 Einsätze (P-R4-17; nur bei Q-BR7-04 (a))
+### BR7-03 Abschluss
 
-*Weg:* Generator erzeugt eine CSV mit rund 220 Einsätzen im Profil
-`export_csv_v1` (ohne Dubletten zum Referenzbestand); ein Testkonto auf
-Staging (Rolle `user`, eigene Adresse der Prüfanlage) importiert sie über
-`csv_import.mjs`. Danach P-R4-17, Schreibtischteil.
-*Ort:* `tools/referenzdatensatz/generator/` (neue Ausgabe), Zugang des
-Testkontos in den Umgebungswerten (`Sandbox-Setup.md` 4), Prüfliste.
-*Abnahme:* Suche ohne Filter: „200 angezeigt", „Weitere 200 anzeigen" lädt
-nach; die Kachel springt zur Zeile. Handyteil bleibt bei der Betreiberin.
-*Fassung:* keine.
-
-### BR7-04 Abschluss
-
-Prüfdokument, Prüfstand im Zug, Pull Request; nach Merge R91-Prüfung,
-Erledigt-Zeile, Konzept löschen, Prüfdokument in die Prüfliste.
+Prüfstand im Zug, Pull Request. Nach dem Merge: Erledigt-Zeile in Rahmenplan
+8 (Werkzeug), Konzept löschen. Ein Prüfdokument entfällt: Es bleibt kein
+Handpunkt (Abschnitt 6).
 
 ## 6. Prüfprotokoll
 
@@ -190,9 +179,18 @@ Erledigt-Zeile, Konzept löschen, Prüfdokument in die Prüfliste.
 |---|---|---|---|
 | Vorbereitung | GitHub-Läufe 42098312578, 178, Prüfstandlogs RD-04 und RD-06 | P-PU-01, -04, -06, P-BR-08 | bestanden (Abschnitt 2.1) |
 | Vorbereitung | Läufe der Integritätswache 213 bis 272 | Ergebnis je Lauf | grün bis 263, rot 264 bis 271 (Zeiger fehlt), grün ab 272 |
+| BR7-01 | `plattform.sh schema`, daneben Prüfsumme der `config.php` alle 0,2 s und Blick auf `wartung.lock` | Prüfungen, Abweichungen | neu: **4 × 52/0, 0 Abweichungen**, kein Wegwerfverzeichnis übrig; alte Fassung (Gegenprobe): 4 × 52/0, **76 Abweichungen** |
+| BR7-01 | — | `wartung.lock` | in beiden Fassungen 0 — während der Messung traf keine angemeldete Anfrage die Anlage; belegt ist das Fehlen der Ursache, nicht der Fehlerfall |
+| BR7-02 | `probe.mjs --nur zeitraum-seitengrenze` | Weg | **1 von 1**: „390 px: Knopf sichtbar, 400 → 492 Zeilen" |
+| BR7-02 | Gegenprobe: `.mehrzeile` unter 720 px ausgeblendet (wie vor Web 21.4.0) | Weg | **0 von 1**, „Knopf NICHT sichtbar, 400 → 400 Zeilen"; Stylesheet zurückgelegt |
+
+**Was nicht geprüft ist:** der Weg in Firefox und WebKit (läuft im nächsten
+Prüfstand, der die Bedienprobe dreifach fährt); ein echtes Handy (bewusst
+nicht, E-BR7-06).
 
 ## 7. Verlauf
 
 | Datum | Was |
 |---|---|
+| 06.11.2026 | Fragen beantwortet (E-BR7-03 bis -07), kein Fahrplanschritt; BR7-01 (Nr. 510) und BR7-02 (390 px) gebaut, P-R4-13 verworfen, P-R4-17 und „Kette II 9“ aus der Prüfliste. |
 | 05.11.2026 | Konzept angelegt nach der Prüfrunde: vier Prüfpunkte bestanden und gelöscht, Befunde F-BR7-01 bis -05, Fragen Q-BR7-01 bis -07, Pakete BR7-01 bis -04. Fahrplanzeile 25 auf „Konzept". |

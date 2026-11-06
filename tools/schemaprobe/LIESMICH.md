@@ -1,7 +1,7 @@
 # Schemaprobe
 
 Läuft `schema.sql` auf der Datenbank, gegen die es laufen soll?
-**Anlass: Nr. 238** — eine Migration, die nur auf MariaDB durchging; Nr. 158 — eine TIMESTAMP-Spalte, die je Fassung anders entsteht (Fall 6); Nr. 43 — die Aufräummigration nach S11, die ganze Tabellen wirft und nur mit Freigabe über einen Rest geht (Fall 7); Nr. 458 — eine Abfrage, die nur MySQL ablehnt (Fall 8).
+**Anlass: Nr. 238** — eine Migration, die nur auf MariaDB durchging; Nr. 158 — eine TIMESTAMP-Spalte, die je Fassung anders entsteht (Fall 6); Nr. 43 — die Aufräummigration nach S11, die ganze Tabellen wirft und nur mit Freigabe über einen Rest geht (Fall 7); Nr. 458 — eine Abfrage, die nur MySQL ablehnt (Fall 8); Nr. 510 — die Probe setzte die Anlage in Wartung (Wegwerf-Wurzel).
 
 ## Aufruf
 
@@ -11,8 +11,7 @@ bash tools/sandbox/plattform.sh schema                     # alle vier Fassungen
 ```
 
 Der Prüfstand ruft die zweite Zeile; sie kennt die Zugangsdaten je Fassung.
-**Nie neben anderen Proben fahren:** Während sie läuft, sieht die Anlage
-eine Datenbank mit offenen Migrationen, und der Torwächter schließt sie.
+Sie fasst die Anlage nicht an (seit Nr. 510; bis dahin schloss der Torwächter sie währenddessen).
 
 ## Was es misst
 
@@ -25,8 +24,8 @@ Tabellen, Spalten, Typen, Schlüssel, Vorgabewerte. Dazu die Plattformweiche
 
 Eine erreichbare Datenbank und eine Kennung, die `CREATE DATABASE` darf.
 Die vier Fassungen der Matrix stellt `bash tools/sandbox/plattform.sh` her.
-**Es fasst `config.php` an** — es schreibt die Probe-Datenbank hinein und
-legt den Urstand bytegleich zurück, auch bei Abbruch.
+Sie arbeitet auf einer **Kopie von `server/`** mit eigener `config.php`, die am
+Ende geht; die der Anlage bleibt unberührt (06.11.2026: 0 statt 76 Abweichungen).
 
 ## Erwartete Zahl
 
