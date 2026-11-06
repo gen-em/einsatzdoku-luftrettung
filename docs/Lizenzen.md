@@ -207,11 +207,15 @@ Beide unter `server/assets/fonts/`, eingebunden über `@font-face` in
 
 | Schrift | Schnitte | Lizenz | Herkunft |
 |---|---|---|---|
-| **Bricolage Grotesque** | 500, 600 | SIL Open Font License 1.1 | npm `@fontsource/bricolage-grotesque` 5.3.0 |
-| **Open Sans** | 400, 600, 700 | SIL Open Font License 1.1 | npm `@fontsource/open-sans` 5.3.0 |
+| **Bricolage Grotesque** | 500 | SIL Open Font License 1.1 | npm `@fontsource/bricolage-grotesque` 5.3.0 |
+| **Open Sans** | 400, 700 | SIL Open Font License 1.1 | npm `@fontsource/open-sans` 5.3.0 |
 
-Übernommen wurden **ausschließlich die tatsächlich benutzten Schnitte**, je in
-den Subsets `latin` und `latin-ext` — zehn `.woff2`-Dateien. Wer einen
+Übernommen wurden **ausschließlich die Schnitte, die die Marke vorsieht**
+(Branding-Repo `gen-em/gen-em-branding`, `5 Regeln/Typografie.md`), je in
+den Subsets `latin` und `latin-ext` — sechs `.woff2`-Dateien. Bis Schritt 26
+waren es zehn; die 600er beider Familien sind entfallen (E-MA-15). Das Repo
+liefert dieselben Familien auch als variable Dateien; die Anwendung bleibt
+bei den kleineren Subsets. Wer einen
 weiteren Schnitt braucht, legt die Datei dazu *und* trägt sie im Stylesheet
 ein; ohne `@font-face` nutzt eine Datei im Ordner nichts.
 

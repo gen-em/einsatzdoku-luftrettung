@@ -399,7 +399,7 @@ auseinanderlaufen kann.
 
 <!-- ERZEUGT von tools/erzeugen/design.py — nicht von Hand ändern. -->
 
-140 Token in 20 Gruppen, alle aus `:root` in `server/assets/style.css`. Die Spalte **benutzt** zählt die `var()`-Verweise im übrigen Stylesheet.
+139 Token in 20 Gruppen, alle aus `:root` in `server/assets/style.css`. Die Spalte **benutzt** zählt die `var()`-Verweise im übrigen Stylesheet.
 
 **Leitwerte**
 
@@ -524,8 +524,7 @@ auseinanderlaufen kann.
 
 | Token | Wert | benutzt | |
 |---|---|--:|---|
-| `--groesse-1` | `12px` | 12 |  |
-| `--groesse-2` | `13px` | 57 |  |
+| `--groesse-2` | `13px` | 69 |  |
 | `--groesse-3` | `15px` | 16 |  |
 | `--groesse-4` | `16px` | 15 |  |
 | `--groesse-5` | `19px` | 13 |  |

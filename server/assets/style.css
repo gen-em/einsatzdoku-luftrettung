@@ -52,9 +52,11 @@
  *
  * Herkunft: npm-Pakete @fontsource/bricolage-grotesque 5.3.0 und
  * @fontsource/open-sans 5.3.0 (beide OFL-1.1), Unterverzeichnis files/.
- * Übernommen wurden ausschließlich die tatsächlich benutzten Schnitte:
- * Bricolage 500/600, Open Sans 400/600/700 — je in den Subsets latin und
- * latin-ext. Wer einen weiteren Schnitt braucht, legt die Datei dazu UND
+ * Übernommen wurden ausschließlich die Schnitte, die die Marke vorsieht
+ * (Branding-Repo, `5 Regeln/Typografie.md`): Bricolage 500, Open Sans 400
+ * und 700 — je in den Subsets latin und latin-ext. Die 600er beider
+ * Familien sind seit Schritt 26 entfallen (E-MA-15); jedes `font-weight:600`
+ * wurde 500 (Bricolage) oder 700 (Open Sans). Wer einen weiteren Schnitt braucht, legt die Datei dazu UND
  * trägt sie hier ein; ohne @font-face nutzt die Datei nichts.
  *
  * unicode-range trennt die beiden Subsets: latin-ext wird nur geladen, wenn
@@ -71,16 +73,6 @@
   unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,
     U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,
     U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}
-@font-face{font-family:'Bricolage Grotesque';font-style:normal;font-weight:600;
-  font-display:swap;src:url(fonts/bricolage-grotesque-latin-600-normal.woff2) format('woff2');
-  unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,
-    U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,
-    U+FEFF,U+FFFD}
-@font-face{font-family:'Bricolage Grotesque';font-style:normal;font-weight:600;
-  font-display:swap;src:url(fonts/bricolage-grotesque-latin-ext-600-normal.woff2) format('woff2');
-  unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,
-    U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,
-    U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}
 @font-face{font-family:'Open Sans';font-style:normal;font-weight:400;
   font-display:swap;src:url(fonts/open-sans-latin-400-normal.woff2) format('woff2');
   unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,
@@ -88,16 +80,6 @@
     U+FEFF,U+FFFD}
 @font-face{font-family:'Open Sans';font-style:normal;font-weight:400;
   font-display:swap;src:url(fonts/open-sans-latin-ext-400-normal.woff2) format('woff2');
-  unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,
-    U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,
-    U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}
-@font-face{font-family:'Open Sans';font-style:normal;font-weight:600;
-  font-display:swap;src:url(fonts/open-sans-latin-600-normal.woff2) format('woff2');
-  unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,
-    U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,
-    U+FEFF,U+FFFD}
-@font-face{font-family:'Open Sans';font-style:normal;font-weight:600;
-  font-display:swap;src:url(fonts/open-sans-latin-ext-600-normal.woff2) format('woff2');
   unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,
     U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,
     U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}
@@ -435,10 +417,14 @@
 
   /* ---- Schriftskala ----------------------------------------------------
    * Major Third (1,25) um die Grundgröße 15/16 px — eine Skala, keine
-   * Sammlung.
+   * Sammlung. Das Branding-Repo rechnet dieselbe Reihe ab 16 px; die 15 px
+   * der Oberfläche sind dort als Ausnahme für dichte Fachanwendungen
+   * festgehalten (`5 Regeln/Typografie.md`, E-MA-07).
    *
-   *   1  12  Kleinzeile, Plakette, Tabellenfuß
-   *   2  13  Kleinzeile groß, Beschriftung, Meta
+   *   2  13  Kleinzeile, Plakette, Beschriftung, Meta, Tabellenfuß —
+   *          die kleinste Stufe. Bis Schritt 26 gab es darunter noch 12 px
+   *          (`--groesse-1`); das Branding-Repo setzt 13 als Minimum
+   *          (E-MA-07), und die Stufe 1 bleibt frei.
    *   3  15  Grundgröße der Oberfläche
    *   4  16  Fließtext (Lesespalte, Rechtstexte) — 15 × 1,067
    *   5  19  Kartentitel, Abschnittskopf        — 15 × 1,25
@@ -447,7 +433,6 @@
    *
    * Der Seitentitel hat einen eigenen Namen statt --groesse-7, weil er als
    * einziger von der Fensterbreite abhängt. */
-  --groesse-1:12px;
   --groesse-2:13px;
   --groesse-3:15px;
   --groesse-4:16px;
@@ -702,7 +687,7 @@ body{
 
 /* ---- Überschriften -------------------------------------------------------
  *
- * Bricolage 600 für alles, was Titel ist. GESPERRTE VERSALIEN gibt es nur
+ * Bricolage 500 für alles, was Titel ist. GESPERRTE VERSALIEN gibt es nur
  * für Abschnittsköpfe in den Leisten („Diensttage", „Filter",
  * „Administration") — nicht für jeden Tabellenkopf, jede Legende und jeden
  * Feldnamen. Auf 360 px wäre das die teuerste Zeile der Anwendung.
@@ -712,7 +697,7 @@ body{
  * Nebel bis 9 Uhr" erschiene sonst als gesperrte Versalzeile. */
 h1,h2,h3,h4{
   font-family:var(--schrift-kopf);
-  font-weight:600;
+  font-weight:500;
   line-height:var(--zeile-eng);
   color:var(--text-titel);
   text-wrap:balance;
@@ -914,7 +899,7 @@ img,svg,video{max-width:100%;height:auto}
  * 34 px lassen in der 56 px hohen Leiste oben und unten je 11 px Luft. */
 .kopf-marke img{height:34px;width:auto;flex:0 0 auto}
 .kopf-name{
-  font-family:var(--schrift-kopf);font-weight:600;
+  font-family:var(--schrift-kopf);font-weight:500;
   font-size:var(--groesse-5);line-height:1;
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
 }
@@ -930,7 +915,7 @@ img,svg,video{max-width:100%;height:auto}
   height:var(--knopf);padding:0 var(--abstand-3);
   color:var(--auf-dunkel);text-decoration:none;
   border-bottom:var(--strich-stark) solid transparent;
-  font-family:var(--schrift-kopf);font-weight:600;
+  font-family:var(--schrift-kopf);font-weight:500;
 }
 .kopf-punkt:hover{text-decoration:none;border-bottom-color:var(--auf-dunkel-strich)}
 .kopf-punkt.aktiv{border-bottom-color:var(--kopf-aktiv)}
@@ -1019,7 +1004,7 @@ img,svg,video{max-width:100%;height:auto}
  * Groesse und Kontrast, nicht von Ausrichtung — linksbuendig bleibt sie.
  *
  * KEINE VERSALIEN UND KEINE SPERRUNG, und das ist am Bild entschieden: Bei
- * 15 px in Bricolage 600 liest sich
+ * 15 px in Bricolage 500 (bis Schritt 26 600) liest sich
  * „DIENSTTAGE" gesperrt als ETIKETT und steht dem Jahreseintrag „2026"
  * darunter an Lautstaerke kaum nach — zwei Ueberschriften statt einer
  * Ordnung. Gemischt gesetzt bleibt es eine Ueberschrift: praesent, aber
@@ -1028,7 +1013,7 @@ img,svg,video{max-width:100%;height:auto}
  * Ersatz fuer die Groesse, die da ist. */
 .leiste-kopfzeile{
   font-family:var(--schrift-kopf);font-size:var(--groesse-3);
-  font-weight:600;
+  font-weight:500;
   color:var(--text);
   padding:var(--abstand-3) var(--abstand-3) var(--abstand-2);
 }
@@ -1041,8 +1026,8 @@ img,svg,video{max-width:100%;height:auto}
  * unterscheidet.
  *
  * „LINIE". Eine Gewichtsstufe allein unterscheidet die Überschrift nicht
- * von einem Eintrag — Bricolage ist nur in 500 und 600 eingebunden, 400
- * fällt auf 500. Deshalb: Winkel rechts (die linke Spalte gehört allein den
+ * von einem Eintrag — Bricolage ist nur in 500 eingebunden (seit Schritt 26;
+ * bis dahin auch 600), 400 fällt auf 500. Deshalb: Winkel rechts (die linke Spalte gehört allein den
  * Symbolen), eine Schriftstufe größer in Dunkelblau, Trennlinie und Luft vor
  * jedem weiteren Bereich. Für DIESES Menü gilt damit nicht, dass zwei
  * Leisten mit demselben Mechanismus denselben Griff haben: Die
@@ -1098,7 +1083,7 @@ img,svg,video{max-width:100%;height:auto}
   overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
 }
 .eintrag-unter:hover{background:var(--flaeche-abgesetzt);color:var(--text);text-decoration:none}
-.eintrag-unter.hier{color:var(--text-titel);font-weight:600}
+.eintrag-unter.hier{color:var(--text-titel);font-weight:700}
 
 /* SPRUNGMARKEN ERST AB 950 PX FENSTERHÖHE — in der festen Leiste. Bei
  * 1280 × 720 schoben sie auf acht von vierzehn Seiten Einträge unter den
@@ -1136,7 +1121,7 @@ img,svg,video{max-width:100%;height:auto}
 }
 .fuss-zeile{margin:0;display:flex;flex-wrap:wrap;gap:var(--abstand-2);justify-content:center}
 .fuss-rechts{margin-top:var(--abstand-1)}
-.fuss-seite a{color:var(--text-link);font-weight:600}
+.fuss-seite a{color:var(--text-link);font-weight:700}
 /* --gedaempft, nicht --sand. Auf --rauch ergaebe Sand 1,53:1 — die
  * Versionsnummer ist die Auskunft, mit der ein Fehlerbericht anfaengt, und
  * damit ein zu LESENDER Text. `kontrast.py` fuehrt „Sand auf Schnee" als
@@ -1182,7 +1167,7 @@ img,svg,video{max-width:100%;height:auto}
   padding:0 var(--abstand-1) 0 var(--abstand-2);
   border-radius:var(--radius-klein);
   cursor:pointer;list-style:none;
-  font-family:var(--schrift-kopf);font-weight:600;font-size:var(--groesse-4);
+  font-family:var(--schrift-kopf);font-weight:500;font-size:var(--groesse-4);
   color:var(--text-titel);
 }
 .akkordeon-zeile::-webkit-details-marker{display:none}
@@ -1234,8 +1219,10 @@ details[open] > .akkordeon-zeile > .akkordeon-winkel{transform:none}
  * nichts hervor -- es macht nur
  * den Block schwer, und der aktive Punkt muss seine Erkennbarkeit allein aus
  * Flaeche und Randstrich holen. Die Auszeichnung wandert von „alle" zu
- * „einer": Grundschnitt 400, der aktive Punkt 600. Dieselbe Ueberlegung wie
- * bei den Blattzeilen. */
+ * „einer": Grundschnitt 400, der aktive Punkt 600 — so bis Schritt 26. Seit
+ * die Marke Bricolage nur in 500 fuehrt, faellt beides auf 500, und der
+ * aktive Punkt traegt sich allein ueber Auswahlflaeche, Strich und Farbe.
+ * Dieselbe Ueberlegung wie bei den Blattzeilen. */
 .eintrag-text{
   flex:1 0 auto;min-width:0;
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
@@ -1253,7 +1240,7 @@ details[open] > .akkordeon-zeile > .akkordeon-winkel{transform:none}
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
 }
 .eintrag.aktiv{background:var(--auswahl-flaeche);border-left-color:var(--auswahl-linie)}
-.eintrag.aktiv .eintrag-text{color:var(--auswahl-text);font-weight:600}
+.eintrag.aktiv .eintrag-text{color:var(--auswahl-text);font-weight:500}
 
 /* Der Fuß der Leiste: „Zuordnung offen" (Fehlerfläche mit rotem Zähler, nur
  * solange etwas offen ist), „Diensttag anlegen" (Linkfarbe), Papierkorb
@@ -1273,7 +1260,7 @@ details[open] > .akkordeon-zeile > .akkordeon-winkel{transform:none}
   display:inline-flex;align-items:center;justify-content:center;
   border-radius:var(--radius-rund);
   background:var(--gefahr);color:var(--auf-gefahr);
-  font-size:var(--groesse-1);font-weight:700;
+  font-size:var(--groesse-2);font-weight:700;
 }
 /* DREI TÖNE, DIESELBEN WIE DIE AMPEL (Design.md 9.23). Rot ist die
  * Grundform (rot 700 mit Schnee) — die offene Zuordnung ist rot. Orange heißt „braucht Aufmerksamkeit, arbeitet aber",
@@ -1321,7 +1308,7 @@ details[open] > .akkordeon-zeile > .akkordeon-winkel{transform:none}
   margin-left:auto;flex:0 0 auto;
   display:inline-flex;align-items:center;gap:var(--abstand-2);
   min-height:var(--knopf);padding:0 var(--abstand-2);
-  font-family:var(--schrift-kopf);font-weight:600;
+  font-family:var(--schrift-kopf);font-weight:500;
 }
 .karte-aktion-blau{color:var(--text-link)}
 .karte-aktion-orange{color:var(--text-link)}
@@ -1361,7 +1348,7 @@ a.zeile:hover .zeile-weiter{color:var(--text-link)}
 .zeile:last-child{border-bottom:0;padding-bottom:0}
 .zeile:first-child{padding-top:0}
 .zeile-text{flex:1 1 auto;min-width:0}
-.zeile-haupt{font-weight:600;color:var(--text)}
+.zeile-haupt{font-weight:700;color:var(--text)}
 .zeile-text a{color:inherit}
 .zeile-klein{display:block;color:var(--gedaempft);font-size:var(--groesse-2)}
 .zeile-plaketten{display:flex;flex-wrap:wrap;gap:var(--abstand-1);flex:0 1 auto}
@@ -1433,7 +1420,7 @@ a.zeile:hover .zeile-weiter{color:var(--text-link)}
 .rueckweg{
   display:inline-flex;align-items:center;gap:var(--abstand-1);
   min-height:var(--knopf);
-  color:var(--text-link);font-weight:600;
+  color:var(--text-link);font-weight:700;
 }
 .titelzeile-haupt{display:flex;align-items:flex-start;gap:var(--abstand-3);flex-wrap:wrap}
 /* flex-basis auto statt fester 14rem: Ein kurzer Titel („Einsatz 1") liess
@@ -1461,7 +1448,7 @@ a.zeile:hover .zeile-weiter{color:var(--text-link)}
   padding:0 var(--abstand-4);
   border-radius:var(--radius);
   border:var(--strich-stark) solid transparent;
-  font-family:var(--schrift-kopf);font-weight:600;
+  font-family:var(--schrift-kopf);font-weight:500;
   font-size:var(--groesse-3);
   text-decoration:none;cursor:pointer;
   white-space:nowrap;
@@ -1503,7 +1490,7 @@ a.zeile:hover .zeile-weiter{color:var(--text-link)}
   display:inline-flex;align-items:center;gap:var(--abstand-1);
   padding:var(--abstand-1) var(--abstand-2);
   border-radius:var(--radius-klein);
-  font-size:var(--groesse-1);font-weight:600;
+  font-size:var(--groesse-2);font-weight:700;
   white-space:nowrap;
 }
 .plakette .symbol{width:calc(var(--symbol-klein) - 2px);height:calc(var(--symbol-klein) - 2px)}
@@ -1645,7 +1632,7 @@ a.zeile:hover .zeile-weiter{color:var(--text-link)}
  * Unterschieden wird hier ohnehin durch Symbol und Farbe (Linkfarbe fürs
  * Anlegen, rot fürs Löschen), nicht durch das Gewicht.
  *
- * WARUM NICHT 500 als Mittelweg: Open Sans liegt in 400, 600 und 700 vor —
+ * WARUM NICHT 500 als Mittelweg: Open Sans liegt in 400 und 700 vor —
  * einen 500er-Schnitt gibt es nicht. Die Angabe fiele still auf 400 zurück,
  * und im Stylesheet stünde eine Zahl, die nichts bedeutet. Ein vierter
  * Schriftschnitt wäre eine weitere Datei für einen Menüeintrag. */
@@ -1687,7 +1674,7 @@ a.zeile:hover .zeile-weiter{color:var(--text-link)}
 .feldsatz-gesperrt{border:0;padding:0;margin:0;min-width:0}
 .feldsatz-gesperrt[disabled]{opacity:.55}
 .feld{margin-bottom:var(--abstand-3)}
-.feld-label{display:block;font-weight:600;margin-bottom:var(--abstand-1)}
+.feld-label{display:block;font-weight:700;margin-bottom:var(--abstand-1)}
 .feld-pflicht{color:var(--fehler-text)}
 .feld-eingabe{
   display:block;width:100%;
@@ -1809,7 +1796,7 @@ input[type=checkbox].schalter-box{position:absolute;opacity:0;width:0;height:0;m
  * `flex:0 1 auto` lässt den Text nur so breit werden, wie er ist. Die
  * TREFFERFLÄCHE bleibt die ganze Zeile: Das `<label>` behält seine Breite,
  * nur sein Inhalt rückt zusammen. */
-.schalter-text{flex:0 1 auto;font-weight:600}
+.schalter-text{flex:0 1 auto;font-weight:700}
 .schalter-klein{display:block;font-weight:400;color:var(--gedaempft);font-size:var(--groesse-2)}
 .schalter-griff{
   flex:0 0 auto;position:relative;
@@ -1884,7 +1871,7 @@ input[type=checkbox].segment-box{position:absolute;opacity:0;width:0;height:0;mi
   display:flex;align-items:center;justify-content:center;
   min-height:var(--knopf);padding:0 var(--abstand-3);
   background:var(--flaeche-feld);color:var(--text-titel);
-  font-family:var(--schrift-kopf);font-weight:600;
+  font-family:var(--schrift-kopf);font-weight:500;
   cursor:pointer;text-align:center;
   border-right:var(--strich) solid var(--linie);
 }
@@ -1953,7 +1940,7 @@ input[type=checkbox].segment-box{position:absolute;opacity:0;width:0;height:0;mi
 }
 .kennzahl.aktiv{background:var(--auswahl-flaeche);border-color:var(--auswahl-linie)}
 .kennzahl-wert{
-  font-family:var(--schrift-kopf);font-weight:600;
+  font-family:var(--schrift-kopf);font-weight:500;
   font-size:var(--groesse-6);line-height:var(--zeile-eng);
   color:var(--text-titel);
 }
@@ -1964,7 +1951,7 @@ input[type=checkbox].segment-box{position:absolute;opacity:0;width:0;height:0;mi
  * der Kachel und nicht als zweite Zeile darunter. Bei schmalen Kacheln
  * bricht die Zeile um — das ist richtiger, als eine feste zweite Zeile zu
  * erzwingen, die bei den übrigen Kacheln leer bliebe. */
-.kennzahl-tag{color:var(--warnung-text);font-weight:600;white-space:nowrap}
+.kennzahl-tag{color:var(--warnung-text);font-weight:700;white-space:nowrap}
 .kennzahl-extrem::after{
   content:"";position:absolute;top:var(--abstand-2);right:var(--abstand-2);
   width:var(--abstand-2);height:var(--abstand-2);
@@ -2030,7 +2017,7 @@ input[type=checkbox].segment-box{position:absolute;opacity:0;width:0;height:0;mi
   width:var(--symbol-gross);height:var(--symbol-gross);flex:0 0 var(--symbol-gross);
   border-radius:var(--radius-rund);
   background:var(--dunkelblau);color:var(--auf-dunkel);
-  font-size:var(--groesse-2);font-weight:600;line-height:1;
+  font-size:var(--groesse-2);font-weight:700;line-height:1;
 }
 /* OPTIONAL: Sand statt Dunkelblau. Der Schritt bleibt sichtbar und tritt
  * zurueck — dieselbe Aussage wie der neutrale Knopf daneben. */
@@ -2157,7 +2144,7 @@ input[type=checkbox].segment-box{position:absolute;opacity:0;width:0;height:0;mi
 .doku-e a:hover{background:var(--flaeche-abgesetzt)}
 .doku-e3 a{padding-left:var(--abstand-4);color:var(--gedaempft)}
 /* AKTIV: Dunkelblau auf der Auswahlfläche (blau 100), 11,26:1. */
-.doku-e.aktiv a{background:var(--auswahl-flaeche);color:var(--auswahl-text);font-weight:600}
+.doku-e.aktiv a{background:var(--auswahl-flaeche);color:var(--auswahl-text);font-weight:700}
 .doku-leer{color:var(--gedaempft);font-size:var(--groesse-2);
            padding:var(--abstand-2);margin:0}
 
@@ -2195,7 +2182,7 @@ input[type=checkbox].segment-box{position:absolute;opacity:0;width:0;height:0;mi
 .doku-text th,.doku-text td{border:var(--strich) solid var(--linie);
                             padding:var(--abstand-1) var(--abstand-2);
                             text-align:left;vertical-align:top}
-.doku-text th{background:var(--flaeche-abgesetzt);font-weight:600}
+.doku-text th{background:var(--flaeche-abgesetzt);font-weight:700}
 
 /* Codeblock: Rauch mit Linie. `pre` scrollt waagerecht, statt die Seite zu
  * sprengen — eine lange Zeile im Handbuch ist sonst ein Ueberlauf auf
@@ -2203,7 +2190,7 @@ input[type=checkbox].segment-box{position:absolute;opacity:0;width:0;height:0;mi
 .doku-text pre{background:var(--flaeche-abgesetzt);border:var(--strich) solid var(--linie);
                border-radius:var(--radius-klein);padding:var(--abstand-2);
                margin-bottom:var(--abstand-3);overflow-x:auto}
-.doku-text pre code{font-family:var(--schrift-fest);font-size:var(--groesse-1);
+.doku-text pre code{font-family:var(--schrift-fest);font-size:var(--groesse-2);
                     line-height:var(--zeile-eng);white-space:pre}
 /* INLINE-CODE MUSS UMBRECHEN DUERFEN. Ohne `overflow-wrap` schiebt ein
  * langer Pfad oder eine Adresse in Schraegstrichen die ganze Seite nach
@@ -2356,7 +2343,7 @@ input[type=checkbox].segment-box{position:absolute;opacity:0;width:0;height:0;mi
  * das, was er ist. Die ZELLEN behalten ihre Ausrichtung: Zahlen fluchten
  * weiter rechts, Text steht weiter links. */
 .tabelle th{
-  text-align:center;font-weight:600;
+  text-align:center;font-weight:700;
   color:var(--text-titel);
   padding:var(--abstand-2) var(--abstand-2);
   border-bottom:var(--strich-stark) solid var(--linie);
@@ -2697,7 +2684,7 @@ pre{overflow-x:auto;background:var(--flaeche-abgesetzt);padding:var(--abstand-3)
 .uebersicht-zeile .symbol{color:var(--text-titel)}
 .uebersicht-text{
   flex:1 1 auto;min-width:0;
-  font-family:var(--schrift-kopf);font-weight:600;font-size:var(--groesse-4);
+  font-family:var(--schrift-kopf);font-weight:500;font-size:var(--groesse-4);
 }
 .uebersicht-winkel{color:var(--mechanik)}
 /* DIE BEREICHSKARTE (Design.md 9.1).
@@ -2777,7 +2764,7 @@ pre{overflow-x:auto;background:var(--flaeche-abgesetzt);padding:var(--abstand-3)
 }
 .kachel-zeit{
   flex:0 0 auto;
-  font-family:var(--schrift-kopf);font-weight:600;
+  font-family:var(--schrift-kopf);font-weight:500;
   color:var(--text-titel);
   min-width:3.2em;
 }
@@ -2785,7 +2772,7 @@ pre{overflow-x:auto;background:var(--flaeche-abgesetzt);padding:var(--abstand-3)
 .kachel-kopf{display:flex;align-items:baseline;gap:var(--abstand-2)}
 .kachel-ort{
   flex:1 1 auto;min-width:0;
-  font-weight:600;font-size:var(--groesse-4);
+  font-weight:700;font-size:var(--groesse-4);
   overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
 }
 .kachel-km{flex:0 0 auto;color:var(--gedaempft);font-size:var(--groesse-2)}
@@ -2806,7 +2793,7 @@ pre{overflow-x:auto;background:var(--flaeche-abgesetzt);padding:var(--abstand-3)
 .kachel-art{flex:0 0 auto;color:var(--text-titel);align-self:center}
 .kachel-datum{
   flex:0 0 auto;
-  font-family:var(--schrift-kopf);font-weight:600;color:var(--text-titel);
+  font-family:var(--schrift-kopf);font-weight:500;color:var(--text-titel);
 }
 /* Warnzeichen „vorhanden, aber nicht lesbar" in der Kachel. */
 .kachel .patfehler{color:var(--fehler-text)}
@@ -2838,7 +2825,7 @@ pre{overflow-x:auto;background:var(--flaeche-abgesetzt);padding:var(--abstand-3)
  * falsch für die erste Spalte einer Kennzahlentabelle, in der links die
  * Beschriftung und rechts die Zahlen stehen. Die Regel greift NUR bei
  * `scope="row"`. */
-.tabelle th[scope="row"]{text-align:left;font-weight:600}
+.tabelle th[scope="row"]{text-align:left;font-weight:700}
 .tabelle td.zahl-spalte{text-align:right}
 .tabelle td.haken-spalte{text-align:center}
 /* Eine Dauer wie „1h 06min" ist EINE Angabe und wird nicht getrennt. */
@@ -3087,7 +3074,7 @@ pre{overflow-x:auto;background:var(--flaeche-abgesetzt);padding:var(--abstand-3)
 }
 .phasen > .phasen-zeile:first-child{border-top:0}
 .phasen-nr{color:var(--gedaempft)}
-.phasen-zeit{text-align:right;font-weight:600;color:var(--text-titel)}
+.phasen-zeit{text-align:right;font-weight:700;color:var(--text-titel)}
 .phasen-abstand{
   display:block;font-weight:400;
   color:var(--gedaempft);font-size:var(--groesse-2);
@@ -3108,14 +3095,14 @@ pre{overflow-x:auto;background:var(--flaeche-abgesetzt);padding:var(--abstand-3)
   background:var(--schnee);color:var(--dunkelblau);
   border:var(--strich) solid var(--dunkelblau);
   border-radius:var(--radius-klein);
-  font:600 var(--groesse-1)/1 var(--schrift-text);
+  font:700 var(--groesse-2)/1 var(--schrift-text);
   box-shadow:var(--schatten);
 }
 .pm-chip.hl{background:var(--genem-blau-100);border-color:var(--genem-dunkelblau)}
 .geo .map-ctrl-phase a{
   width:auto;height:auto;
   padding:var(--abstand-1) var(--abstand-2);
-  font:600 var(--groesse-1)/var(--zeile) var(--schrift-text);
+  font:700 var(--groesse-2)/var(--zeile) var(--schrift-text);
   color:var(--dunkelblau);
 }
 /* Der Vollbildknopf teilt den aktiven Zustand mit dem Phasenumschalter — ein
@@ -3285,7 +3272,7 @@ label + .feld-klein{margin-bottom:var(--abstand-3)}
   display:inline-flex;align-items:center;
   background:var(--auswahl-flaeche);color:var(--auswahl-text);
   border-radius:var(--radius-rund);
-  font-size:var(--groesse-2);font-weight:600;
+  font-size:var(--groesse-2);font-weight:700;
   /* GLEICH VIEL ABSTAND ZUM TEXT WIE ZUM RAND: 6 px beidseits des Symbols. 6 px ist keine Stufe des
    * Vierer-Rasters — es ist anderthalb `--abstand-1`, und genau so steht es
    * da, damit die Zahl ihre Herkunft behaelt. Links bleibt `--abstand-2`:
@@ -3383,7 +3370,7 @@ label + .feld-klein{margin-bottom:var(--abstand-3)}
  * Zeile zum Anfassen und traegt deshalb keine Bedienhoehe. */
 .vorschlaege-gruppe{
   padding:var(--abstand-1) var(--abstand-3);
-  font-family:var(--schrift-kopf);font-weight:600;font-size:var(--groesse-1);
+  font-family:var(--schrift-kopf);font-weight:500;font-size:var(--groesse-2);
   letter-spacing:.06em;text-transform:uppercase;color:var(--gedaempft);
   background:var(--flaeche-abgesetzt);border-top:var(--strich) solid var(--linie);
 }
@@ -3410,7 +3397,7 @@ label + .feld-klein{margin-bottom:var(--abstand-3)}
 .vorschlag:hover,.vorschlag.aktiv{background:var(--flaeche-abgesetzt);border-left-color:var(--auswahl-linie)}
 /* Die freie Eingabe ist eine HANDLUNG, kein Datensatz. */
 .vorschlag-neu .vorschlag-haupt{
-  color:var(--text-link);font-family:var(--schrift-kopf);font-weight:600;
+  color:var(--text-link);font-family:var(--schrift-kopf);font-weight:500;
 }
 .vorschlag-neu .symbol{color:var(--text-link)}
 /* Behaelter eines Textfeldes mit Vorschlagsliste (Besatzungsfelder). Das
@@ -3523,7 +3510,7 @@ label + .feld-klein{margin-bottom:var(--abstand-3)}
 .anlegen-link{
   display:inline-flex;align-items:center;gap:var(--abstand-2);
   min-height:var(--knopf);
-  color:var(--text-link);font-family:var(--schrift-kopf);font-weight:600;
+  color:var(--text-link);font-family:var(--schrift-kopf);font-weight:500;
 }
 .karte-fussweg{margin:0}
 
@@ -3667,7 +3654,7 @@ button.blatt-zeile{
 /* Ein Link mitten im Fließtext, der aufklappt statt zu navigieren. */
 .leiser-link{
   border:0;background:none;padding:0;cursor:pointer;
-  color:var(--text-link);font:inherit;font-weight:600;
+  color:var(--text-link);font:inherit;font-weight:700;
 }
 .suchsyntax{
   background:var(--flaeche-karte);
@@ -3823,7 +3810,7 @@ input[type=radio].wahl-box{position:absolute;opacity:0;width:0;height:0;min-heig
   border-radius:var(--radius-rund);
   background:var(--flaeche-feld);
 }
-.wahl-text{flex:1 1 auto;font-weight:600;color:var(--text-titel)}
+.wahl-text{flex:1 1 auto;font-weight:700;color:var(--text-titel)}
 .wahl-zusatz{flex:0 0 auto;color:var(--gedaempft);font-size:var(--groesse-2)}
 
 /* Gewählt: Auswahlfläche mit dunkelblauem Rahmen und gefülltem Punkt — dieselbe
@@ -3867,7 +3854,7 @@ input[type=radio].wahl-box{position:absolute;opacity:0;width:0;height:0;min-heig
   border-radius:var(--radius-klein);
   background:var(--linie);
 }
-.pwstaerke-text{font-weight:600;color:var(--text-titel)}
+.pwstaerke-text{font-weight:700;color:var(--text-titel)}
 /* Der Hinweissatz steht in eigener Zeile — er ist zwei Zeilen lang und
  * schöbe die Stufe sonst aus dem Bild. */
 .pwstaerke-hinweis{flex:1 0 100%}
@@ -3906,7 +3893,7 @@ h1 + .seiten-erklaerung{margin-top:0}
   margin-top:var(--abstand-3);
 }
 .listen-form-titel{
-  font-family:var(--schrift-kopf);font-weight:600;
+  font-family:var(--schrift-kopf);font-weight:500;
   font-size:var(--groesse-3);color:var(--text-titel);
   margin:0 0 var(--abstand-2);
 }
@@ -3974,7 +3961,7 @@ h1 + .seiten-erklaerung{margin-top:0}
 /* Die Rolle innerhalb der Besatzungsliste — eine Ebene tiefer als der
  * Listentitel, deshalb kleiner und ohne eigene Linie. */
 .sd-rolle{
-  font-family:var(--schrift-kopf);font-weight:600;
+  font-family:var(--schrift-kopf);font-weight:500;
   font-size:var(--groesse-3);color:var(--text-titel);
   margin:var(--abstand-4) 0 var(--abstand-2);
 }
@@ -4004,7 +3991,7 @@ h1 + .seiten-erklaerung{margin-top:0}
 .codeblock-titel:not(:first-child){margin-top:var(--abstand-3)}
 .codeblock-wert{
   font-family:var(--schrift-fest);
-  font-size:var(--groesse-5);font-weight:600;
+  font-size:var(--groesse-5);font-weight:700;
   color:var(--text-titel);
   letter-spacing:.06em;
   word-break:break-all;
@@ -4219,7 +4206,7 @@ a.kennzahl:hover{border-color:var(--aktion);text-decoration:none}
   border:var(--strich) solid var(--linie-stark);
   border-radius:var(--radius);
   background:var(--flaeche-karte);color:var(--text-titel);
-  font-family:var(--schrift-kopf);font-weight:600;
+  font-family:var(--schrift-kopf);font-weight:500;
   text-decoration:none;white-space:nowrap;
 }
 .listenfilter:hover{background:var(--flaeche-abgesetzt);text-decoration:none}
@@ -4239,7 +4226,7 @@ a.kennzahl:hover{border-color:var(--aktion);text-decoration:none}
   padding:0 var(--abstand-1);
   border-radius:var(--radius-klein);
   background:var(--flaeche-abgesetzt);color:var(--gedaempft);
-  font-size:var(--groesse-1);
+  font-size:var(--groesse-2);
 }
 .listenfilter.aktiv .listenfilter-zahl{background:var(--aktion);color:var(--auf-aktion)}
 
@@ -4275,7 +4262,7 @@ a.kennzahl:hover{border-color:var(--aktion);text-decoration:none}
 .diagramm-saeulen{display:block;overflow:visible}
 .diagramm-saeulen .gitter{stroke:var(--linie);stroke-width:1}
 .diagramm-saeulen .nulllinie{stroke:var(--gedaempft);stroke-width:1}
-.diagramm-saeulen .achse{fill:var(--gedaempft);font-size:var(--groesse-1)}
+.diagramm-saeulen .achse{fill:var(--gedaempft);font-size:var(--groesse-2)}
 .diagramm-saeulen .achse-x{text-anchor:middle}
 .diagramm-saeulen .saeule-wert{fill:var(--diagramm-wert)}
 .diagramm-saeulen .hoechst .saeule-wert{fill:var(--diagramm-hoechst)}
@@ -4283,8 +4270,8 @@ a.kennzahl:hover{border-color:var(--aktion);text-decoration:none}
 /* DIE ZAHL EINER SÄULE STEHT NUR BEIM ÜBERFAHREN — die des Höchstwerts
  * immer. Ohne Skript: `:hover` an der Gruppe, deren unsichtbare Fläche die
  * ganze Spalte deckt, damit auch eine niedrige Säule zu treffen ist. */
-.diagramm-saeulen .saeule-zahl{fill:var(--text);font-size:var(--groesse-1);
-  font-weight:600;text-anchor:middle;visibility:hidden}
+.diagramm-saeulen .saeule-zahl{fill:var(--text);font-size:var(--groesse-2);
+  font-weight:700;text-anchor:middle;visibility:hidden}
 .diagramm-saeulen .saeule:hover .saeule-zahl,
 .diagramm-saeulen .hoechst .saeule-zahl{visibility:visible}
 .diagramm-saeulen .saeule:hover .saeule-wert{fill:var(--diagramm-wert-hover)}
@@ -4303,9 +4290,9 @@ a.kennzahl:hover{border-color:var(--aktion);text-decoration:none}
 .kleinvielfach-titel{font-family:var(--schrift-kopf);font-size:var(--groesse-3);
   margin:0 0 var(--abstand-1);color:var(--text-titel)}
 .kleinvielfach-wert{margin:0 0 var(--abstand-2);color:var(--text);
-  font-family:var(--schrift-kopf);font-size:var(--groesse-5);font-weight:600}
+  font-family:var(--schrift-kopf);font-size:var(--groesse-5);font-weight:500}
 .kleinvielfach-wert span{margin-left:var(--abstand-1);color:var(--gedaempft);
-  font-family:var(--schrift-text);font-size:var(--groesse-1);font-weight:400}
+  font-family:var(--schrift-text);font-size:var(--groesse-2);font-weight:400}
 
 /* Balken: Beschriftung, Spur, Zahl in einer Zeile; die Spur in Linie, die
  * Füllung in Blau. */
@@ -4324,7 +4311,7 @@ a.kennzahl:hover{border-color:var(--aktion);text-decoration:none}
 /* Name und Adresse stehen untereinander in EINER Zelle: Zwei
  * Spalten dafür kosteten Breite und träfen doch nie beide zugleich zu — ein
  * Konto ohne Namen hat nur die Adresse. */
-.konto-name{display:block;font-weight:600;color:var(--text-titel)}
+.konto-name{display:block;font-weight:700;color:var(--text-titel)}
 .konto-mail{display:block;color:var(--gedaempft);font-size:var(--groesse-2)}
 .tabelle-konten .wahl-spalte{width:var(--knopf);text-align:center}
 .tabelle-konten .oeffnen-spalte{width:1%;text-align:right;white-space:nowrap}
@@ -4336,7 +4323,7 @@ a.kennzahl:hover{border-color:var(--aktion);text-decoration:none}
 .oeffnen{
   display:inline-flex;align-items:center;gap:var(--abstand-1);
   min-height:var(--knopf);color:var(--text-link);
-  font-family:var(--schrift-kopf);font-weight:600;
+  font-family:var(--schrift-kopf);font-weight:500;
 }
 
 /* Das Kästchen vor dem Text einer Zeile (mobile Fassung derselben Liste). */
@@ -4360,7 +4347,7 @@ a.kennzahl:hover{border-color:var(--aktion);text-decoration:none}
   border:var(--strich) solid var(--linie-stark);
   border-radius:var(--radius);
   background:var(--flaeche-karte);color:var(--text-titel);
-  font-family:var(--schrift-kopf);font-weight:600;
+  font-family:var(--schrift-kopf);font-weight:500;
   text-decoration:none;
 }
 .seitenknopf:hover{background:var(--flaeche-abgesetzt);text-decoration:none}
@@ -4377,7 +4364,7 @@ a.kennzahl:hover{border-color:var(--aktion);text-decoration:none}
 
 /* Die Zahl der Sammelleiste ist IMMER sichtbar (der Hinweis eines schmutzigen
  * Formulars erscheint erst ab 720 px). Sie ist die ganze Aussage der Leiste. */
-.speichern-zahl{display:block;color:var(--text);font-weight:600}
+.speichern-zahl{display:block;color:var(--text);font-weight:700}
 
 
 /* ===========================================================================
@@ -4468,7 +4455,7 @@ a.kennzahl:hover{border-color:var(--aktion);text-decoration:none}
   border:var(--strich) solid var(--linie-stark);
   border-radius:var(--radius-rund);
   background:var(--flaeche-karte);color:var(--text-titel);
-  font-family:var(--schrift-kopf);font-weight:600;font-size:var(--groesse-2);
+  font-family:var(--schrift-kopf);font-weight:500;font-size:var(--groesse-2);
   text-decoration:none;white-space:nowrap;
 }
 /* Ohne Artzeichen steht der Text sonst zu weit links an der Rundung. */
@@ -4589,7 +4576,7 @@ a.kennzahl:hover{border-color:var(--aktion);text-decoration:none}
  * Datenzeile ist in dieser Anwendung die Schriftfamilie, nicht das Gewicht —
  * `<strong>` allein hat genau deshalb nicht gereicht. */
 .imp-tag{
-  font-family:var(--schrift-kopf);font-weight:600;
+  font-family:var(--schrift-kopf);font-weight:500;
   font-size:var(--groesse-3);color:var(--text-titel);
 }
 .imp-rest{color:var(--gedaempft);font-size:var(--groesse-2)}
@@ -4705,7 +4692,7 @@ a.kennzahl:hover{border-color:var(--aktion);text-decoration:none}
 .reiter-punkt{
   flex:0 0 auto;display:inline-flex;align-items:center;
   min-height:var(--knopf);padding:0 var(--abstand-3);
-  font-family:var(--schrift-kopf);font-weight:600;color:var(--gedaempft);
+  font-family:var(--schrift-kopf);font-weight:500;color:var(--gedaempft);
   text-decoration:none;white-space:nowrap;
   border-bottom:var(--strich-stark) solid transparent;
 }
@@ -4782,7 +4769,7 @@ a.kennzahl:hover{border-color:var(--aktion);text-decoration:none}
 .codeblock-liste{
   list-style:none;margin:var(--abstand-2) 0 var(--abstand-3);padding:0;counter-reset:code;
   display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--abstand-1) var(--abstand-4);
-  font-family:var(--schrift-fest);font-size:var(--groesse-4);font-weight:600;color:var(--text-titel);letter-spacing:.06em;
+  font-family:var(--schrift-fest);font-size:var(--groesse-4);font-weight:700;color:var(--text-titel);letter-spacing:.06em;
 }
 .codeblock-liste li{counter-increment:code;white-space:nowrap}
 .codeblock-liste li::before{content:counter(code) ".";display:inline-block;min-width:2.2em;color:var(--gedaempft);font-weight:400;letter-spacing:0}
@@ -4804,7 +4791,7 @@ a.kennzahl:hover{border-color:var(--aktion);text-decoration:none}
 /* Millimeter, weil es ein Druckblatt ist: Die Skala der Bildschirmgrößen
  * gilt dort nicht, und 11 mm sind die Höhe der Kopfzeile auf Papier. */
 .blatt-kopf img{height:11mm;width:auto;flex:0 0 auto}
-.blatt-marke{font-family:var(--schrift-kopf);font-weight:600;font-size:var(--groesse-6);color:var(--papier-titel);line-height:var(--zeile-eng);min-width:0;overflow-wrap:anywhere}
+.blatt-marke{font-family:var(--schrift-kopf);font-weight:500;font-size:var(--groesse-6);color:var(--papier-titel);line-height:var(--zeile-eng);min-width:0;overflow-wrap:anywhere}
 .blatt-kopf-rechts{margin-left:auto;flex:0 1 45%;min-width:0;overflow-wrap:anywhere;text-align:right;font-size:var(--groesse-2);color:var(--papier-leise);line-height:1.4}
 /* `break-word` AN DER ÜBERSCHRIFT: „Wiederherstellungscodes" ist bei 360 px
  * breiter als die Spalte (345 gegen 328 px, Bilderlauf) und hat keine
@@ -4825,7 +4812,7 @@ a.kennzahl:hover{border-color:var(--aktion);text-decoration:none}
   background:var(--papier-abgesetzt);padding:var(--abstand-2) var(--abstand-4);margin:0 0 var(--abstand-2);
   break-inside:avoid;page-break-inside:avoid}
 .blatt-kachel-kopf{display:flex;align-items:baseline;justify-content:space-between;gap:var(--abstand-3);flex-wrap:wrap}
-.blatt-kachel-name{font-family:var(--schrift-kopf);font-weight:600;font-size:var(--groesse-5);color:var(--papier-titel)}
+.blatt-kachel-name{font-family:var(--schrift-kopf);font-weight:500;font-size:var(--groesse-5);color:var(--papier-titel)}
 .blatt-kachel-neben{font-size:var(--groesse-2);color:var(--papier-leise)}
 .blatt-kachel > p{font-size:var(--groesse-2);margin:0}
 .blatt-kachel-neben code{font-size:inherit}
@@ -4840,12 +4827,12 @@ a.kennzahl:hover{border-color:var(--aktion);text-decoration:none}
 .blatt-druck-gruppen{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:var(--abstand-1) 0;margin:var(--abstand-1) 0 var(--abstand-2)}
 .blatt-druck-gruppen-5{grid-template-columns:repeat(5,minmax(0,1fr));max-width:30rem}
 .blatt-druck-gruppe{display:flex;flex-direction:column;align-items:center;
-  font-family:var(--schrift-fest);font-size:var(--groesse-5);font-weight:600;letter-spacing:.08em;line-height:1.25}
+  font-family:var(--schrift-fest);font-size:var(--groesse-5);font-weight:700;letter-spacing:.08em;line-height:1.25}
 .blatt-druck-gruppen-5 .blatt-druck-gruppe{font-size:var(--groesse-6)}
 .blatt-druck-gruppe::before{content:attr(data-nr);font-family:var(--schrift-text);font-weight:400;
-  font-size:var(--groesse-1);letter-spacing:0;color:var(--papier-leise)}
+  font-size:var(--groesse-2);letter-spacing:0;color:var(--papier-leise)}
 .blatt-fuss{margin-top:var(--abstand-3);padding-top:var(--abstand-2);border-top:var(--strich) solid var(--linie);
-  font-size:var(--groesse-1);color:var(--papier-leise);display:flex;justify-content:space-between;gap:var(--abstand-3)}
+  font-size:var(--groesse-2);color:var(--papier-leise);display:flex;justify-content:space-between;gap:var(--abstand-3)}
 /* AM BILDSCHIRM sieht das Blatt aus wie das Blatt: A4 mit den Rändern aus @page.
  * `max-width:100%`, weil A4 794 px breit ist und die Regel ab 720 px greift:
  * Bei 768 px stünde das Blatt 26 px über (Bilderlauf in Firefox und
@@ -4871,7 +4858,7 @@ a.kennzahl:hover{border-color:var(--aktion);text-decoration:none}
 .blatt-codes{list-style:none;margin:var(--abstand-2) 0;padding:0;counter-reset:code;
   display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--abstand-2) var(--abstand-5)}
 .blatt-codes li{counter-increment:code;display:flex;align-items:center;gap:var(--abstand-3);margin:0;
-  font-family:var(--schrift-fest);font-size:var(--groesse-5);font-weight:600;letter-spacing:.08em;line-height:1.25}
+  font-family:var(--schrift-fest);font-size:var(--groesse-5);font-weight:700;letter-spacing:.08em;line-height:1.25}
 .blatt-codes li::before{content:counter(code);min-width:1.5em;text-align:right;
   font-family:var(--schrift-text);font-weight:400;font-size:var(--groesse-2);letter-spacing:0;color:var(--papier-leise)}
 .blatt-codes li::after{content:"";order:-1;width:1em;height:1em;flex:0 0 auto;

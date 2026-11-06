@@ -8627,5 +8627,11 @@ declare(strict_types=1);
  *   Rund achtzig Plaketten, die Blau fuer einen guten Zustand trugen, tragen
  *   jetzt Gruen; Blau bleibt fuer Eigenschaften. Das Umgebungsetikett ist
  *   orange 800 statt rot, und `'farbe' => 'rot'` in der `config.php` gilt
- *   weiter. Neben; kein Schema. */
-const WEB_VERSION = '23.9.0';
+ *   weiter. Neben; kein Schema.
+ *
+ * 23.9.1 — DIE SCHRIFTSCHNITTE DER MARKE (Schritt 26, MA-02). Bricolage nur
+ *   noch in 500, Open Sans in 400 und 700; die vier 600er-Dateien sind
+ *   entfernt, jedes `font-weight:600` ist 500 oder 700. Die kleinste
+ *   Schriftstufe ist 13 px, `--groesse-1` (12 px) entfaellt. Korrektur;
+ *   kein Schema. */
+const WEB_VERSION = '23.9.1';

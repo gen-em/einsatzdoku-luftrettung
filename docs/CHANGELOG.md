@@ -14,6 +14,17 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 23.9.1] — unveröffentlicht
+
+### Geändert
+
+- **Web — Schriften in den Schnitten der Marke, nichts mehr unter 13 px**
+  (Schritt 26). Titel und Knöpfe standen in Bricolage 600 und Beschriftungen
+  in Open Sans 600, zwei Schnitte, die die Marke nicht vorsieht; jetzt gilt
+  Bricolage 500 und Open Sans 400 und 700, und vier Schriftdateien fallen weg.
+  Plaketten, Zähler und Diagrammachsen standen in 12 px, unter dem Minimum
+  des Branding-Repos, und stehen jetzt in 13 px.
+
 ## [Web 23.9.0] — unveröffentlicht
 
 ### Geändert

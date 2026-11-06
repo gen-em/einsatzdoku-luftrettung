@@ -28,7 +28,7 @@ Prüfarbeit an der einen örtlichen Anlage (CLAUDE.md 7).
 |---|---|---|
 | MA-00 | Konzept, Fahrplanzeile, Backlog-Spanne | **erledigt** 06.11.2026 |
 | MA-01 | Token in `:root` auf das Repo umstellen, Flächen tauschen | **erledigt** 07.11.2026 (Web 23.9.0, zusammen mit 03 bis 05) |
-| MA-02 | Schriften: 600er raus, 12 px raus | offen |
+| MA-02 | Schriften: 600er raus, 12 px raus | **erledigt** 07.11.2026 (Web 23.9.1) |
 | MA-03 | Meldungen, Plaketten, Ampel, Kennzahl: Grün für „in Ordnung" | **erledigt** 07.11.2026 (Code; `Design.md`-Text in MA-08) |
 | MA-04 | Knöpfe und Aktivzustände: Aktion Dunkelblau | **erledigt** 07.11.2026 |
 | MA-05 | Spurfarben auf die Tonstufen des Repos (neu gefasst, E-MA-11) | **erledigt** 07.11.2026 (Ring im Dark Mode in MA-07) |
@@ -36,7 +36,7 @@ Prüfarbeit an der einen örtlichen Anlage (CLAUDE.md 7).
 | MA-07 | Dark Mode mit Schalter je Konto | offen |
 | MA-08 | Dokumentation, Prüfmittel, Prüfstand, Abschluss | offen |
 
-**In Arbeit:** MA-02. **Es hakt:** nirgends; alle Fragen sind entschieden
+**In Arbeit:** MA-06. **Es hakt:** nirgends; alle Fragen sind entschieden
 (E-MA-08 bis -20). MA-01, -03, -04 und -05 sind ein Commit geworden: Sie
 stellen dieselben rund 540 Farbstellen im Stylesheet um, und ein Zwischenstand
 hätte Token gezeigt, die es nicht mehr gibt.
@@ -299,7 +299,8 @@ Papier). Die Farbverwendungen im Stylesheet wurden mit einem Skript nach
 Selektor und Eigenschaft umgestellt (271 Zeilen), danach 16 Stellen von Hand
 berichtigt (Warnmeldung, offener Blattöffner, Auswahlschrift, Codeblock auf
 dem Schirm statt Papier, Kartenzeichen) und rund 40 Erklärkommentare
-nachgezogen. Plakettentöne: 84 Übergaben von `blau` auf `gruen` (Zustand),
+nachgezogen. Plakettentöne: 75 Übergaben von `blau` auf `gruen` (Zustand), eine weitere
+bedingt (`vollständig` grün, `N offen` blau),
 die übrigen bleiben `blau` (Eigenschaft, Zahl, Wert). Spurfarben 5 bis 8 auf
 Stufe 600 bzw. neutral 500, Ruhespur neutral 600.
 
@@ -329,3 +330,27 @@ Stufe 600 bzw. neutral 500, Ruhespur neutral 600.
 - Sichtprüfung `index.php` als Demo-Konto bei 1440 px in Chromium:
   Primärknopf dunkelblau, „erledigt" grün, aktiver Diensttag blau 100 mit
   dunkelblauem Strich.
+
+### MA-02 (Web 23.9.1, 07.11.2026)
+
+**Was gebaut ist.** 53 Stellen `font-weight:600` nach Regel umgestellt: Regel
+mit `--schrift-kopf` (oder Kind einer solchen, `.eintrag.aktiv
+.eintrag-text`) → 500, sonst → 700; dazu zwei `font:600 …`-Kurzformen an den
+Kartenzeichen, die das Muster nicht fand. Vier `@font-face` und vier
+`.woff2` entfernt (bleiben sechs). `--groesse-1` gestrichen, zehn
+Verwendungen auf `--groesse-2`. `docs/Lizenzen.md` 4 nachgezogen.
+
+**Befunde dabei.**
+- **F-MA-08 — Der aktive Leisteneintrag verliert seine Gewichtsstufe.** Er
+  stand in Bricolage 600 gegen 500 (eigentlich 400, das auf 500 fällt); mit
+  nur einem Schnitt ist beides 500. Er trägt sich jetzt über Auswahlfläche,
+  Strich und Farbe — so zeigt es auch Mockup MA-02. Kein Eingriff.
+- **F-MA-09 — Alte Mockups binden die entfernten 600er-Dateien ein**
+  (`konzept-s9/mockups/*.html`, acht Dateien). Sie fallen auf die
+  Systemschrift zurück; sie sind Protokoll freigegebener Entwürfe und werden
+  nicht nachgezogen.
+
+**Gemessen.** `vollstaendigkeit.py` keine Befunde (0 Schriftgrößen außerhalb
+der Skala); `kontrast.py` 58 Paare, 0 verfehlt, 0 ohne Eintrag;
+`design.py schreiben`: Token-Tabelle neu. Sichtprüfung `index.php` 1440 und
+390 px in Chromium.
