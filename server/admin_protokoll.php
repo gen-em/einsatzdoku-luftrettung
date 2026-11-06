@@ -196,7 +196,7 @@ ui_seite_start(['titel' => 'Protokoll']);
                   ? ui_plakette('bisheriger Schlüssel', ['ton' => 'blau'])
                   : ui_plakette('anderer Schlüssel', ['ton' => 'orange']))
               : (isset($aufZiel[$a['datei']])
-                  ? ui_plakette('auf dem Ziel', ['ton' => 'blau'])
+                  ? ui_plakette('auf dem Ziel', ['ton' => 'gruen'])
                   : ui_plakette('nur lokal', ['ton' => 'orange']));
           ?>
           <form method="post" id="<?= e($formId) ?>" hidden>

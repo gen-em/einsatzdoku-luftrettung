@@ -14,6 +14,21 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 23.9.0] — unveröffentlicht
+
+### Geändert
+
+- **Web — die Farben kommen aus dem Branding-Repo, Handeln ist Dunkelblau
+  statt Orange** (Schritt 26). Die Oberfläche rechnete ihre Tief- und
+  Hellwerte selbst, weil es keine Quelle gab; seit dem 06.11.2026 legt das
+  Repo `gen-em/gen-em-branding` sie fest, und das Stylesheet übernimmt seinen
+  Token-Block wörtlich. Die Gründerfarben sind dort Markenflächen und
+  Status, keine Aktionsfarbe — deshalb sind Primärknopf, Auswahl und
+  Schalter jetzt dunkelblau, und Grün kommt als einzige neue Farbe für „in
+  Ordnung" dazu, wo bisher ein Blau mit Haken stand. Die Seite ist Schnee,
+  die Karte ein Ton dunkler, die Kopfleiste einer Testanlage orange statt
+  rot, weil Rot Fehler heißt.
+
 ## [Web 23.8.2] — unveröffentlicht
 
 ### Behoben

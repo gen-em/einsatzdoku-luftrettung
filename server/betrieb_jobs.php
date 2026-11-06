@@ -229,7 +229,7 @@ ui_seite_start(['titel' => 'Hintergrundjobs']);
                               ['ton' => 'rot'])
                 : ($jobNie === count($jobs)
                    ? ui_plakette('noch nie gelaufen', ['ton' => 'neutral'])
-                   : ui_plakette('läuft', ['ton' => 'blau']))))]); ?>
+                   : ui_plakette('läuft', ['ton' => 'gruen']))))]); ?>
     <?php if ($pauseMeldung): ?>
       <?= ui_meldung_markup($pauseMeldung[0], $pauseMeldung[1]) ?>
     <?php endif; ?>

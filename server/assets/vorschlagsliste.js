@@ -88,7 +88,7 @@
      * hinterlegte Treffer der Suche traegt dort eine Aussage — „hier
      * steht dein Wort in einem langen Text". In einer Vorschlagsliste steht das
      * Wort immer am Anfang, und die Flaeche kaeme unter die Zeilenmarkierung
-     * (Rauch mit orangem Strich) zu liegen.
+     * (Rauch mit dunkelblauem Strich) zu liegen.
      */
     function hervor(text, teil) {
         var m = maskiere(text);

@@ -399,62 +399,126 @@ auseinanderlaufen kann.
 
 <!-- ERZEUGT von tools/erzeugen/design.py — nicht von Hand ändern. -->
 
-101 Token in 15 Gruppen, alle aus `:root` in `server/assets/style.css`. Die Spalte **benutzt** zählt die `var()`-Verweise im übrigen Stylesheet.
+140 Token in 20 Gruppen, alle aus `:root` in `server/assets/style.css`. Die Spalte **benutzt** zählt die `var()`-Verweise im übrigen Stylesheet.
+
+**Leitwerte**
+
+| Token | Wert | benutzt | |
+|---|---|--:|---|
+| `--schnee` | `var(--genem-schnee)` | 15 |  |
+| `--rauch` | `var(--genem-rauch)` | 1 |  |
+| `--sand` | `var(--genem-sand)` | 1 |  |
+| `--asphalt` | `var(--genem-asphalt)` | 1 |  |
+| `--dunkelblau` | `var(--genem-dunkelblau)` | 13 |  |
+| `--orange` | `var(--genem-philipp-orange)` | 0 |  |
+| `--blau` | `var(--genem-max-blau)` | 4 |  |
+| `--rot` | `var(--genem-newroz-rot)` | 4 |  |
 
 **Flächen**
 
 | Token | Wert | benutzt | |
 |---|---|--:|---|
-| `--schnee` | `#FFFCFA` | 38 |  |
-| `--rauch` | `#F7F5ED` | 39 |  |
-| `--sand` | `#D4C7AD` | 15 |  |
+| `--flaeche-seite` | `var(--genem-flaeche-standard)` | 1 |  |
+| `--flaeche-karte` | `var(--genem-flaeche-karte)` | 18 |  |
+| `--flaeche-abgesetzt` | `var(--genem-flaeche-abgesetzt)` | 35 |  |
+| `--flaeche-feld` | `var(--genem-flaeche-standard)` | 5 |  |
+| `--flaeche-marke` | `var(--genem-dunkelblau)` | 1 |  |
 
 **Schrift**
 
 | Token | Wert | benutzt | |
 |---|---|--:|---|
-| `--asphalt` | `#1A0500` | 26 |  |
-| `--dunkelblau` | `#1A2E4D` | 64 |  |
-| `--gedaempft` | `#6E6459` | 75 |  |
-| `--auf-dunkel` | `#FFFFFF` | 10 | Schrift auf Dunkelblau, 13,62:1 |
+| `--text` | `var(--genem-text-standard)` | 21 |  |
+| `--text-titel` | `var(--genem-text-alternativ)` | 36 |  |
+| `--gedaempft` | `var(--genem-text-sekundaer)` | 70 |  |
+| `--text-link` | `var(--genem-text-blau)` | 23 |  |
+| `--auf-dunkel` | `var(--genem-schnee)` | 9 | Schrift auf Dunkelblau, 13,33:1 |
 
 **Linien**
 
 | Token | Wert | benutzt | |
 |---|---|--:|---|
-| `--linie` | `#E3DAC6` | 46 |  |
-| `--linie-stark` | `var(--gedaempft)` | 12 |  |
+| `--linie` | `var(--genem-linie)` | 46 |  |
+| `--linie-stark` | `var(--genem-linie-stark)` | 16 |  |
+| `--mechanik` | `var(--genem-sand)` | 11 |  |
 
-**Orange — Handeln**
-
-| Token | Wert | benutzt | |
-|---|---|--:|---|
-| `--orange` | `#FF8F1F` | 29 |  |
-| `--orange-tief` | `#C25A00` | 24 |  |
-| `--orange-hell` | `#FFEBD6` | 23 |  |
-
-**Blau — Auswählen und Erklären**
+**Aktion — Dunkelblau**
 
 | Token | Wert | benutzt | |
 |---|---|--:|---|
-| `--blau` | `#4280E5` | 16 |  |
-| `--blau-tief` | `#1F4E9C` | 19 |  |
-| `--blau-hell` | `#D9ECFD` | 6 |  |
+| `--aktion` | `var(--genem-aktion)` | 14 |  |
+| `--aktion-hover` | `var(--genem-aktion-hover)` | 2 |  |
+| `--auf-aktion` | `var(--genem-text-auf-dunkelblau)` | 4 |  |
 
-**Rot — Aufmerksamkeit**
-
-| Token | Wert | benutzt | |
-|---|---|--:|---|
-| `--rot` | `#D63338` | 14 |  |
-| `--rot-tief` | `#9E2226` | 19 |  |
-| `--rosa` | `#FCE2D6` | 7 |  |
-
-**Primärknopf**
+**Auswahl — „hier bin ich"**
 
 | Token | Wert | benutzt | |
 |---|---|--:|---|
-| `--knopf-primaer-flaeche` | `var(--orange)` | 2 |  |
-| `--knopf-primaer-schrift` | `var(--dunkelblau)` | 3 |  |
+| `--auswahl-flaeche` | `var(--genem-blau-100)` | 16 |  |
+| `--auswahl-text` | `var(--genem-dunkelblau)` | 8 |  |
+| `--auswahl-linie` | `var(--genem-aktion)` | 11 |  |
+| `--kopf-aktiv` | `var(--genem-blau-300)` | 1 |  |
+
+**Status**
+
+| Token | Wert | benutzt | |
+|---|---|--:|---|
+| `--info-flaeche` | `var(--genem-status-info-flaeche)` | 4 |  |
+| `--info-text` | `var(--genem-status-info-text)` | 4 |  |
+| `--info-linie` | `var(--genem-status-info-linie)` | 1 |  |
+| `--erfolg-flaeche` | `var(--genem-status-erfolg-flaeche)` | 2 |  |
+| `--erfolg-text` | `var(--genem-status-erfolg-text)` | 3 |  |
+| `--erfolg-linie` | `var(--genem-status-erfolg-linie)` | 2 |  |
+| `--warnung-flaeche` | `var(--genem-status-warnung-flaeche)` | 8 |  |
+| `--warnung-text` | `var(--genem-status-warnung-text)` | 9 |  |
+| `--warnung-linie` | `var(--genem-status-warnung-linie)` | 3 |  |
+| `--fehler-flaeche` | `var(--genem-status-fehler-flaeche)` | 5 |  |
+| `--fehler-text` | `var(--genem-status-fehler-text)` | 18 |  |
+| `--fehler-linie` | `var(--genem-status-fehler-linie)` | 3 |  |
+
+**Gefahr**
+
+| Token | Wert | benutzt | |
+|---|---|--:|---|
+| `--gefahr` | `var(--genem-rot-700)` | 3 |  |
+| `--gefahr-hover` | `var(--genem-rot-800)` | 1 |  |
+| `--auf-gefahr` | `var(--genem-schnee)` | 2 |  |
+
+**Fokus**
+
+| Token | Wert | benutzt | |
+|---|---|--:|---|
+| `--fokus` | `var(--genem-max-blau)` | 5 |  |
+
+**Umgebungsetikett (Staging, Demo)**
+
+| Token | Wert | benutzt | |
+|---|---|--:|---|
+| `--umgebung-flaeche` | `var(--genem-orange-800)` | 1 |  |
+| `--umgebung-text` | `var(--genem-orange-200)` | 2 |  |
+
+**Diagramme**
+
+| Token | Wert | benutzt | |
+|---|---|--:|---|
+| `--diagramm-wert` | `var(--genem-max-blau)` | 2 |  |
+| `--diagramm-wert-hover` | `var(--genem-blau-600)` | 1 |  |
+| `--diagramm-hoechst` | `var(--genem-orange-600)` | 2 |  |
+| `--diagramm-1` | `var(--genem-max-blau)` | 1 |  |
+| `--diagramm-2` | `var(--genem-dunkelblau)` | 1 |  |
+| `--diagramm-3` | `var(--genem-philipp-orange)` | 1 |  |
+| `--diagramm-4` | `var(--genem-sand)` | 1 |  |
+
+**Papier**
+
+| Token | Wert | benutzt | |
+|---|---|--:|---|
+| `--papier` | `var(--genem-schnee)` | 1 |  |
+| `--papier-abgesetzt` | `var(--genem-rauch)` | 1 |  |
+| `--papier-text` | `var(--genem-asphalt)` | 1 |  |
+| `--papier-titel` | `var(--genem-dunkelblau)` | 4 |  |
+| `--papier-leise` | `var(--genem-neutral-600)` | 5 |  |
+| `--papier-warnung` | `var(--genem-rot-700)` | 2 |  |
 
 **Schriftskala**
 
@@ -546,15 +610,15 @@ auseinanderlaufen kann.
 
 | Token | Wert | benutzt | |
 |---|---|--:|---|
-| `--spur-1` | `var(--orange)` | 1 |  |
-| `--spur-2` | `var(--blau)` | 0 |  |
-| `--spur-3` | `var(--rot)` | 0 |  |
-| `--spur-4` | `var(--dunkelblau)` | 0 |  |
-| `--spur-5` | `var(--orange-tief)` | 0 |  |
-| `--spur-6` | `var(--blau-tief)` | 0 |  |
-| `--spur-7` | `var(--rot-tief)` | 0 |  |
-| `--spur-8` | `#867146` | 0 |  |
-| `--spur-ruhe` | `var(--gedaempft)` | 0 |  |
+| `--spur-1` | `var(--genem-philipp-orange)` | 1 |  |
+| `--spur-2` | `var(--genem-max-blau)` | 0 |  |
+| `--spur-3` | `var(--genem-newroz-rot)` | 0 |  |
+| `--spur-4` | `var(--genem-dunkelblau)` | 0 |  |
+| `--spur-5` | `var(--genem-orange-600)` | 0 |  |
+| `--spur-6` | `var(--genem-blau-600)` | 0 |  |
+| `--spur-7` | `var(--genem-rot-600)` | 0 |  |
+| `--spur-8` | `var(--genem-neutral-500)` | 0 |  |
+| `--spur-ruhe` | `var(--genem-neutral-600)` | 0 |  |
 
 **Schwellen**
 
@@ -577,7 +641,7 @@ auseinanderlaufen kann.
 | `--auf-dunkel-flaeche` | `rgba(255,255,255,.14)` | 3 |  |
 | `--auf-dunkel-strich` | `rgba(255,255,255,.35)` | 1 |  |
 
-**Ungenutzt:** `--spur-2`, `--spur-3`, `--spur-4`, `--spur-5`, `--spur-6`, `--spur-7`, `--spur-8`, `--spur-ruhe`, `--s-handy`, `--s-leiste`, `--s-zwei`, `--s-karte-neben`.
+**Ungenutzt:** `--orange`, `--spur-2`, `--spur-3`, `--spur-4`, `--spur-5`, `--spur-6`, `--spur-7`, `--spur-8`, `--spur-ruhe`, `--s-handy`, `--s-leiste`, `--s-zwei`, `--s-karte-neben`.
 
 ## 5. Schriftskala
 
@@ -1094,38 +1158,38 @@ für eine Rückfrage — nicht für ein neues Element.
 | `ui_meldung_markup()` | `.meldung` | ja (+19 Unterklassen) | 1604 |
 | `ui_knopf()` | `.knopf` | ja (+17 Unterklassen) | 1650 |
 | `ui_codeblock_lang()` | `.codeblock-lang` | ja | 1702 |
-| `ui_plakette()` | `.plakette` | ja (+5 Unterklassen) | 1728 |
-| `ui_ladeplatz()` | `.ladeplatz` | ja (+3 Unterklassen) | 1755 |
-| `ui_karte_start()` | `.karte` | ja (+37 Unterklassen) | 1795 |
-| `ui_karte_ende()` | `.karte` | ja (+37 Unterklassen) | 1879 |
-| `ui_nach_oben()` | `.nach-oben` | ja | 1914 |
-| `ui_sprungliste()` | `.sprungliste` | ja | 1956 |
-| `ui_kartenfilter()` | `.kartenfilter` | ja (+4 Unterklassen) | 2004 |
-| `ui_zeile()` | `.zeile` | ja (+35 Unterklassen) | 2066 |
-| `ui_zeile_mehr()` | `.zeile-mehr` | ja | 2121 |
-| `ui_reiter()` | `.reiter` | ja (+9 Unterklassen) | 2169 |
-| `ui_listenkopf()` | `.listenkopf` | ja | 2213 |
-| `ui_listenfuss()` | `.listenfuss` | ja | 2285 |
-| `ui_zeitraumwahl()` | `.zeitraumwahl` | ja (+5 Unterklassen) | 2340 |
-| `ui_diagramm_skala()` | `.diagramm-skala` | **keine** | 2386 |
-| `ui_diagramm_saeulen()` | `.diagramm-saeulen` | ja | 2420 |
-| `ui_diagramm_balken()` | `.diagramm-balken` | ja | 2492 |
-| `ui_titelzeile()` | `.titelzeile` | ja (+6 Unterklassen) | 2516 |
-| `ui_aktionen()` | `.aktionen` | ja (+2 Unterklassen) | 2558 |
-| `ui_feld()` | `.feld` | ja (+26 Unterklassen) | 2626 |
-| `ui_schalter()` | `.schalter` | ja (+27 Unterklassen) | 2691 |
-| `ui_segment_markup()` | `.segment` | ja (+23 Unterklassen) | 2735 |
-| `ui_wahlliste()` | `.wahlliste` | ja | 2788 |
-| `ui_zeilenaktionen()` | `.zeile-aktionen` | ja | 2832 |
-| `ui_speichern_leiste()` | `.speichern` | ja (+4 Unterklassen) | 2931 |
-| `ui_kennzahl()` | `.kennzahl` | ja (+20 Unterklassen) | 2993 |
-| `ui_abbruch()` | `.rahmen` | ja (+1 Unterklassen) | 3034 |
-| `ui_csrf_bootstrap()` | `.csrf-bootstrap` | **keine** | 3126 |
-| `ui_geocoder_bootstrap()` | `.geocoder-bootstrap` | **keine** | 3164 |
-| `ui_geocoder_hinweis()` | `.geocoder-hinweis` | **keine** | 3194 |
-| `ui_ortsfeld()` | `.ortsfeld-zeile` | ja | 3206 |
-| `ui_tabellen_bootstrap()` | `.tabellen-bootstrap` | **keine** | 3349 |
-| `ui_krypto_bootstrap()` | — | Hüllenfunktion, kein eigenes Element | 3428 |
+| `ui_plakette()` | `.plakette` | ja (+6 Unterklassen) | 1730 |
+| `ui_ladeplatz()` | `.ladeplatz` | ja (+3 Unterklassen) | 1757 |
+| `ui_karte_start()` | `.karte` | ja (+37 Unterklassen) | 1797 |
+| `ui_karte_ende()` | `.karte` | ja (+37 Unterklassen) | 1881 |
+| `ui_nach_oben()` | `.nach-oben` | ja | 1916 |
+| `ui_sprungliste()` | `.sprungliste` | ja | 1958 |
+| `ui_kartenfilter()` | `.kartenfilter` | ja (+4 Unterklassen) | 2006 |
+| `ui_zeile()` | `.zeile` | ja (+35 Unterklassen) | 2068 |
+| `ui_zeile_mehr()` | `.zeile-mehr` | ja | 2123 |
+| `ui_reiter()` | `.reiter` | ja (+9 Unterklassen) | 2171 |
+| `ui_listenkopf()` | `.listenkopf` | ja | 2215 |
+| `ui_listenfuss()` | `.listenfuss` | ja | 2287 |
+| `ui_zeitraumwahl()` | `.zeitraumwahl` | ja (+5 Unterklassen) | 2342 |
+| `ui_diagramm_skala()` | `.diagramm-skala` | **keine** | 2388 |
+| `ui_diagramm_saeulen()` | `.diagramm-saeulen` | ja | 2422 |
+| `ui_diagramm_balken()` | `.diagramm-balken` | ja | 2494 |
+| `ui_titelzeile()` | `.titelzeile` | ja (+6 Unterklassen) | 2518 |
+| `ui_aktionen()` | `.aktionen` | ja (+2 Unterklassen) | 2560 |
+| `ui_feld()` | `.feld` | ja (+26 Unterklassen) | 2628 |
+| `ui_schalter()` | `.schalter` | ja (+27 Unterklassen) | 2693 |
+| `ui_segment_markup()` | `.segment` | ja (+23 Unterklassen) | 2737 |
+| `ui_wahlliste()` | `.wahlliste` | ja | 2790 |
+| `ui_zeilenaktionen()` | `.zeile-aktionen` | ja | 2834 |
+| `ui_speichern_leiste()` | `.speichern` | ja (+4 Unterklassen) | 2933 |
+| `ui_kennzahl()` | `.kennzahl` | ja (+20 Unterklassen) | 2994 |
+| `ui_abbruch()` | `.rahmen` | ja (+1 Unterklassen) | 3035 |
+| `ui_csrf_bootstrap()` | `.csrf-bootstrap` | **keine** | 3127 |
+| `ui_geocoder_bootstrap()` | `.geocoder-bootstrap` | **keine** | 3165 |
+| `ui_geocoder_hinweis()` | `.geocoder-hinweis` | **keine** | 3195 |
+| `ui_ortsfeld()` | `.ortsfeld-zeile` | ja | 3207 |
+| `ui_tabellen_bootstrap()` | `.tabellen-bootstrap` | **keine** | 3350 |
+| `ui_krypto_bootstrap()` | — | Hüllenfunktion, kein eigenes Element | 3429 |
 
 54 Funktionen mit Markup in `server/ui.php`, davon 4 Hüllenfunktionen ohne eigenes Element.
 **Ohne Regel im Stylesheet:** `ui_logo_masse()`, `ui_datenschutz_hinweis()`, `ui_diagramm_skala()`, `ui_csrf_bootstrap()`, `ui_geocoder_bootstrap()`, `ui_geocoder_hinweis()`, `ui_tabellen_bootstrap()` — jede davon ist zu prüfen: entweder ein Behälter, der zu Recht keine Gestaltung braucht, oder eine Lücke.

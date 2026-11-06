@@ -30,13 +30,13 @@ require_once __DIR__ . '/format_lib.php';   // groesse_text(), zeit_relativ(), d
  *
  * DIE AMPEL IST EINE TABELLE, KEINE MEINUNG (Ampeltabelle):
  *
- *   blau     es ist in Ordnung
+ *   gruen    es ist in Ordnung (bis Schritt 26 blau)
  *   orange   es braucht Aufmerksamkeit, arbeitet aber
  *   rot      es arbeitet NICHT (oder etwas geht dabei verloren)
  *   neutral  nicht eingerichtet, oder eine reine Zahl ohne Wertung
  *
  * NUR ORANGE UND ROT WERDEN GEZAEHLT. Neutral heisst „hier ist nichts
- * eingerichtet" und ist keine Aufforderung; blau ist die Ruhe selbst.
+ * eingerichtet" und ist keine Aufforderung; gruen ist die Ruhe selbst.
  *
  * WAS DIE ERHEBUNG KOSTET. Jede Zeile hoechstens eine Abfrage oder einen
  * Dateizugriff; die teuerste Auskunft — die Groesse von Datenbank und
@@ -97,7 +97,7 @@ function status_verwaltungszeile(array $n): array
     if ($bfBetr >= 2) {
         return status_z('Verwaltungskonten',
             $bfVerw . ' handlungsfähig, davon ' . $bfBetr . ' BetreiberInnen',
-            'blau', 'vertreten', 'admin_users.php');
+            'gruen', 'vertreten', 'admin_users.php');
     }
     if ($bfBetr === 0) {
         return status_z('Verwaltungskonten',
@@ -150,7 +150,7 @@ function status_rueckwegzeile(array $t): array
     return status_z('Rückweg-Prüfung',
         'Signaturen des Rückwegs beim Zweitfaktor: ' . $weg . ', '
         . zahl_text(max(1, (int)round($t['ms']))) . ' ms je Prüfung',
-        'blau', 'prüft');
+        'gruen', 'prüft');
 }
 
 /**
@@ -263,7 +263,7 @@ function status_erhebung(): array
               . ($wartung['von'] !== null ? ' von ' . $wartung['von'] : '')
               . ' — alle anderen Anfragen bekommen 503'
             : 'Offen für alle Konten',
-        $wAktiv ? 'orange' : 'blau',
+        $wAktiv ? 'orange' : 'gruen',
         $wAktiv ? 'Wartung' : 'offen',
         'betrieb_updates.php');
 
@@ -304,7 +304,7 @@ function status_erhebung(): array
             'blau', $umgebung['name']);
     } else {
         $server[] = status_z('Umgebung',
-            'Produktivumgebung für den Echtbetrieb. Kopfleiste blau, ' . $mailSatz,
+            'Produktivumgebung für den Echtbetrieb. Kopfleiste dunkelblau, ' . $mailSatz,
             'blau', 'Produktiv');
     }
 
@@ -347,7 +347,7 @@ function status_erhebung(): array
         } else {
             $server[] = status_z('Adresse der Anlage',
                 'app.base_url passt zur aufgerufenen Adresse (' . $basisHost . ')',
-                'blau', 'passt');
+                'gruen', 'passt');
         }
     }
 
@@ -386,7 +386,7 @@ function status_erhebung(): array
             ? $offen . ($offen === 1 ? ' Migration steht aus' : ' Migrationen stehen aus')
             : 'Alles aktuell · ' . $stand['zahl'] . ' ausgeführt'
               . ($stand['letzte'] !== null ? ' · zuletzt ' . $stand['letzte'] : ''),
-        $offen > 0 ? 'orange' : 'blau',
+        $offen > 0 ? 'orange' : 'gruen',
         $offen > 0 ? 'steht aus' : 'aktuell',
         'betrieb_updates.php');
 
@@ -395,7 +395,7 @@ function status_erhebung(): array
        MIT KENNUNG — und mit einer dritten Lage: „abweichend" heisst,
        dass in `config.php` ein ANDERER Schlüssel steht als der, mit dem
        versiegelt wurde. Das saehe sonst aus wie ein beschädigtes Backup. */
-    /* MIT DER LAGE `rotation`: blau und mit der Zahl
+    /* MIT DER LAGE `rotation`: gruen und mit der Zahl
      * der Stücke, die noch umzuhüllen sind — ein Zustand mit Ende, wie beim
      * Anteil. Die Zahl kommt aus dem Job (`jobs.rueckstand`), nicht aus einer
      * zweiten Zählung. */
@@ -442,7 +442,7 @@ function status_erhebung(): array
                   . ', versiegelt wurde mit ' . $skZustand['erwartet']
                   . '. Versiegeltes lässt sich nicht öffnen, bis der richtige '
                   . 'Wert nachgetragen ist (Blatt)')),
-        in_array($skZustand['stand'], ['bereit', 'rotation'], true) ? 'blau' : 'rot',
+        in_array($skZustand['stand'], ['bereit', 'rotation'], true) ? 'gruen' : 'rot',
         $skZustand['stand'] === 'rotation'
             ? ($skPhase === '' ? 'nicht begonnen'
                : ($skWartet !== null ? 'Nachweis ab ' . fmt_local(gmdate('Y-m-d H:i:s', $skWartet))
@@ -517,7 +517,7 @@ function status_erhebung(): array
          * mehr herein" — beides wäre für einen Zustand mit Ende falsch, und
          * eine Farbe, die auch für Normalzustände warnt, wird beim vierten
          * Mal nicht mehr gelesen. */
-        $anTon  = 'blau';
+        $anTon  = 'gruen';
         $anPlak = $anOffen > 0
             ? 'Übergang läuft'
             : ($anZustand['stand'] === 'rotation' ? 'alten entfernen' : 'in Ordnung');
@@ -549,7 +549,7 @@ function status_erhebung(): array
                   . 'der Liste, bis der Referenzbestand neu gebaut ist (Backlog Nr. 155)';
     }
     $server[] = status_z('Schlüsselableitung', $kdfText,
-        $kdfVerwaist === [] ? 'blau' : 'rot',
+        $kdfVerwaist === [] ? 'gruen' : 'rot',
         $kdfVerwaist !== [] ? 'Anmeldung blockiert'
             : ($kdfAlt > 0 ? 'Übergang läuft' : 'in Ordnung'));
 
@@ -562,7 +562,7 @@ function status_erhebung(): array
               . ' · Dateien ' . groesse_text($sp['gesamt']['dateien'])
               . ' · gemessen ' . zeit_relativ($sp['stand'])
             : 'Noch nicht gemessen — die Messung läuft im täglichen Aufräumjob',
-        $sp['stand'] !== null ? 'blau' : 'neutral',
+        $sp['stand'] !== null ? 'gruen' : 'neutral',
         $sp['stand'] !== null ? 'erreichbar' : 'ungemessen',
         'betrieb_server.php');
 
@@ -587,7 +587,7 @@ function status_erhebung(): array
      * die Spitze diese Schwelle erreicht hat und der letzte Vorfall keine 24
      * Stunden her ist. Damit geht eine Nacht, in der es dreissigmal eng war,
      * nicht unter, nur weil gerade Ruhe ist; und nach einem ruhigen Tag ist
-     * die Zeile von selbst wieder blau. */
+     * die Zeile von selbst wieder gruen. */
     $ul = ueberlast_stand();
     if (!$ul['schreibbar']) {
         /* DIE NULL, DIE NICHTS BEDEUTET (CLAUDE.md 6). Ohne diesen Zweig
@@ -600,7 +600,7 @@ function status_erhebung(): array
     } elseif ($ul['gesamt'] === 0) {
         $ulText = 'Keine abgewiesene Verbindung seit Beginn der Zählung · '
                 . 'persistente Verbindungen sind aus';
-        $ulTon  = 'blau';
+        $ulTon  = 'gruen';
         $ulPlak = 'in Ordnung';
     } else {
         $ulAkut  = $ul['stunde'] === gmdate('Y-m-d H') ? $ul['n'] : 0;
@@ -631,7 +631,7 @@ function status_erhebung(): array
                 . ' · insgesamt ' . $ul['gesamt']
                 . ' · zuletzt ' . zeit_relativ($ul['letzt'])
                 . ($ulEng ? ' — max_user_connections beim Hoster anheben lassen' : '');
-        $ulTon  = $ulEng ? 'orange' : 'blau';
+        $ulTon  = $ulEng ? 'orange' : 'gruen';
         $ulPlak = $ulEng ? 'zu eng' : $ul['gesamt'] . ' gezählt';
     }
     $server[] = status_z('Verbindungen', $ulText, $ulTon, $ulPlak);
@@ -669,7 +669,7 @@ function status_erhebung(): array
                 . $gmStand['nachgeloest'] . ' nachgezogen, '
                 . $gmStand['unbekannt'] . ' unbekannt (Handys und fremde Modelle, '
                 . 'sie bleiben unberührt)';
-        $gmTon  = 'blau';
+        $gmTon  = 'gruen';
         $gmPlak = 'aktuell';
     }
     $server[] = status_z('Gerätemodelle', $gmText, $gmTon, $gmPlak,
@@ -723,7 +723,7 @@ function status_erhebung(): array
         $server[] = status_z('Gesperrt',
             implode(' und ', $teile) . ' — höchste Stufe ' . $hoechste
             . '. Eine Sperre ist ein Ereignis, kein Fehler: Sie läuft von selbst ab',
-            $hoechste >= rate_stufe_hoechste() ? 'orange' : 'blau',
+            $hoechste >= rate_stufe_hoechste() ? 'orange' : 'gruen',
             count($rsSperren) . ($hoechste >= rate_stufe_hoechste() ? ' · Stufe ' . $hoechste : ''),
             'betrieb_sicherheit.php#k-sperren');
     }
@@ -772,7 +772,7 @@ function status_erhebung(): array
             ? 'Eingerichtet in der config.php'
             : 'Nicht eingerichtet. Ohne SMTP gibt es keine Einladungslinks, keine '
               . 'Setz-Links und keine Erinnerung an überfällige Konto-Backups',
-        $smtpDa ? 'blau' : 'neutral',
+        $smtpDa ? 'gruen' : 'neutral',
         $smtpDa ? 'eingerichtet' : 'nicht eingerichtet');
 
     /* DER VERSAND WIRD VERMERKT. Sonst koennte niemand
@@ -794,7 +794,7 @@ function status_erhebung(): array
             . ' Uhr'
             . ($gut ? '' : '. Die Ursache steht im Protokoll unter System — '
                           . 'geprüft wird der Host, nicht die Zugangsdaten'),
-            $gut ? 'blau' : 'rot',
+            $gut ? 'gruen' : 'rot',
             $gut ? 'zugestellt' : 'fehlgeschlagen');
     }
 
@@ -833,7 +833,7 @@ function status_erhebung(): array
                    ? '. ' . $lage['zuspaet'] . ' Nachricht(en) sind abgelaufen, bevor sie '
                      . 'zugestellt werden konnten — ein Reset-Link gilt eine Stunde'
                    : ''),
-                'blau', 'leer');
+                'gruen', 'leer');
         }
     }
 
@@ -847,7 +847,7 @@ function status_erhebung(): array
               . 'litespeed_finish_request. Im ungünstigen Fall verrät die '
               . 'Dauer von „Passwort vergessen", ob es zu einer Adresse ein '
               . 'Konto gibt',
-        $entkoppelt ? 'blau' : 'orange',
+        $entkoppelt ? 'gruen' : 'orange',
         $entkoppelt ? 'entkoppelt' : 'nicht sicher');
 
     /* ---- Hintergrundjobs ------------------------------------------------- */
@@ -887,7 +887,7 @@ function status_erhebung(): array
                 'rot', 'nie gelaufen', 'betrieb_jobs.php');
         } else {
             $tonA = $alterS > 86400 ? 'rot'
-                  : (($ausloeser === 'anfrage') ? 'orange' : 'blau');
+                  : (($ausloeser === 'anfrage') ? 'orange' : 'gruen');
             $jobZeilen[] = status_z('Auslöser',
                 ($wege[$ausloeser] ?? (string)$ausloeser) . ' · zuletzt '
                 . zeit_relativ($letzterLauf)
@@ -917,7 +917,7 @@ function status_erhebung(): array
                 $ton = 'neutral'; $pl = 'noch nie';
                 $klein = (string)$j['beschreibung'];
             } else {
-                $ton = 'blau'; $pl = 'in Ordnung';
+                $ton = 'gruen'; $pl = 'in Ordnung';
                 $klein = 'Zuletzt gelaufen ' . zeit_relativ($j['letzter_lauf']);
             }
             $jobZeilen[] = status_z((string)$j['titel'], $klein, $ton, $pl, 'betrieb_jobs.php');
@@ -949,7 +949,7 @@ function status_erhebung(): array
             . ' · Plan: ' . (KOMP_PLAENE[$kompPlan] ?? $kompPlan)
             . ' · ' . count($kompStaende)
             . (count($kompStaende) === 1 ? ' Stand aufbewahrt' : ' Stände aufbewahrt'),
-            $faellig ? 'orange' : 'blau',
+            $faellig ? 'orange' : 'gruen',
             $faellig ? 'überfällig' : 'aktuell',
             'admin_komplettsicherung.php');
     }
@@ -960,7 +960,7 @@ function status_erhebung(): array
             ? $zahlen['konten'] . ' Konten, keines überfällig'
             : (int)$zahlen['ueberfaellig'] . ' überfällig, ' . (int)$zahlen['nie']
               . ' nie gesichert — von ' . $zahlen['konten'] . ' Konten',
-        $krank === 0 ? 'blau' : 'orange',
+        $krank === 0 ? 'gruen' : 'orange',
         $krank === 0 ? 'aktuell' : $krank . ' offen',
         'admin_sicherungen.php');
 
@@ -985,7 +985,7 @@ function status_erhebung(): array
             $klein = count($nieVersandt) . ' aktives Ziel ohne jeden Versand — '
                    . 'eingerichtet sieht es trotzdem aus';
         } else {
-            $ton = $aktiv === [] ? 'neutral' : 'blau';
+            $ton = $aktiv === [] ? 'neutral' : 'gruen';
             $pl  = $aktiv === [] ? 'keines aktiv' : count($aktiv) . ' aktiv';
             $klein = count($ziele) . ' eingetragen · Versand '
                    . (sz_auto_an() ? 'automatisch' : 'nur von Hand');
@@ -1040,7 +1040,7 @@ function status_erhebung(): array
         . groesse_text($sp['backups']['summe']) . ' von '
         . groesse_text($sp['backups']['bezug'])
         . ' · Warnschwellen ' . implode(', ', $sp['schwellen']) . ' %',
-        $tonS === 'neutral' ? 'blau' : $tonS,
+        $tonS === 'neutral' ? 'gruen' : $tonS,
         $proz . ' %',
         'betrieb_server.php');
 
@@ -1049,7 +1049,7 @@ function status_erhebung(): array
             ? (string)$sp['ablage']['pfad'] . ' · ' . $sp['pakete'] . ' Pakete in '
               . $sp['ordner'] . ' Ordnern'
             : (string)($ablageGrund ?? 'Nicht beschreibbar — es entsteht kein Backup'),
-        $ablageBereit ? 'blau' : 'rot',
+        $ablageBereit ? 'gruen' : 'rot',
         $ablageBereit ? 'beschreibbar' : 'nicht beschreibbar',
         'betrieb_server.php');
 
@@ -1097,7 +1097,7 @@ function status_erhebung(): array
          * des größten Komplett-Backups, orange unter dem Zweifachen. Ein
          * Befund ohne das Feld verhält sich wie vorher — `?? false`. */
         $knapp = (bool)($f['knapp'] ?? false);
-        $ton = $f['ok'] === true ? ($knapp ? 'orange' : 'blau')
+        $ton = $f['ok'] === true ? ($knapp ? 'orange' : 'gruen')
              : ($f['ok'] === null ? 'neutral' : 'rot');
         $plakette = $f['ok'] === true ? ($knapp ? 'knapp' : $f['gemessen'])
                   : ($f['ok'] === null ? 'nicht messbar' : 'fehlt');

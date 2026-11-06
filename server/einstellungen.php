@@ -1637,7 +1637,7 @@ ui_seite_start(['titel' => 'Einstellungen',
           };
           if (!$zf['fehlt']):
             $zfRoh = $zf['angefangen'] && $zfCodes === null ? totp_geheimnis($userId) : null;
-            $zfPlakette = $zf['an'] ? ui_plakette('an', ['ton' => 'blau'])
+            $zfPlakette = $zf['an'] ? ui_plakette('an', ['ton' => 'gruen'])
                         : ($zfRoh !== null ? ui_plakette('wird eingerichtet', ['ton' => 'orange'])
                                            : ui_plakette('aus'));
             ui_karte_start(['titel' => 'Zweitfaktor', 'id' => 'k-zweitfaktor',
@@ -1695,7 +1695,7 @@ ui_seite_start(['titel' => 'Einstellungen',
             ui_zeile(['text' => 'Rückweg mit dem Wiederherstellungsschlüssel',
                       'klein' => 'seit ' . datum_text($rwZ['seit']) . ' — der Schlüssel vom '
                                . 'Notfallblatt genügt, wenn Handy und Codes fehlen',
-                      'plaketten' => ui_plakette('eingerichtet', ['ton' => 'blau'])]);
+                      'plaketten' => ui_plakette('eingerichtet', ['ton' => 'gruen'])]);
         } elseif ($rwZ['stand'] === 'fehlt') {
             ui_zeile(['text' => 'Rückweg mit dem Wiederherstellungsschlüssel',
                       'klein' => 'wird beim nächsten Anmelden eingerichtet — bis dahin setzt '
@@ -2116,7 +2116,7 @@ ui_seite_start(['titel' => 'Einstellungen',
           $prozent = (int)round($fuell['anteil'] * 100); ?>
     <?php ui_karte_start(['titel' => 'Was dein Konto hält', 'id' => 'k-mengen',
         'plakette' => ui_plakette($prozent . ' %', ['ton' => $fuell['voll'] ? 'rot'
-                                : ($fuell['warnung'] ? 'orange' : 'blau')])]); ?>
+                                : ($fuell['warnung'] ? 'orange' : 'gruen')])]); ?>
       <?php ui_zeile(['text' => 'Einsätze',
           'klein' => 'ohne die im Papierkorb — was dort liegt, zählt nicht gegen '
                    . 'die Grenze',

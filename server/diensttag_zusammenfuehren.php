@@ -323,7 +323,7 @@ ui_seite_start(['titel' => 'Diensttag aufnehmen']);
         <p class="feld-hinweis">Die beiden Diensttage widersprechen sich an diesen
            Stellen. Was soll gelten? Vorbelegt ist jeweils der Tag, der bleibt.</p>
         <?php /* Aus `fieldset`/`legend` mit blanken Radios wird die Wahlliste:
-                 44 px hohe Zeilen, die gewählte hell orange, der
+                 44 px hohe Zeilen, die gewählte auf der Auswahlfläche, der
                  Fokusring an der Zeile statt am unsichtbaren Radio. */ ?>
         <?php /* BEIM RETTUNGSMITTEL STEHT DER TYP MIT IM ZUSATZ, davor der
                  Kurzname, wenn es einen gibt. Er entscheidet mit,

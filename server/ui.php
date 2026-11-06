@@ -525,7 +525,7 @@ function ui_artzeichen(?string $kind, string $klassen = '', ?string $typ = null)
  *
  * Mobil: Menüknopf links, Logo und Name in der Mitte, Zahnrad rechts.
  * Ab 1024: Logo, Name und Nutzername links; rechts „Startseite" und „Suche"
- * mit Symbol (aktiv mit orangem Strich) und das Zahnrad.
+ * mit Symbol (aktiv mit Strich in blau 300) und das Zahnrad.
  *
  * Der Menüpunkt heißt STARTSEITE, nicht „Übersicht" — im Suchmenü
  * daneben war „Übersicht" missverständlich. Der Seitentitel bleibt
@@ -1557,10 +1557,10 @@ function ui_datenschutz_hinweis(): void
  *
  * VIER TÖNE, jeder mit Symbol und optionalem fettem Auftakt:
  *
- *   fehler   rosa/rot   Dreieck    „Nicht gespeichert."
- *   info     hellblau   Kreis-i    Erklärung, Zustand
- *   ok       hellblau   Haken      Vollzug: „Backup erstellt."
- *   warn     hellorange Dreieck    Warnung, die kein Fehler ist
+ *   fehler   rot 100    Dreieck    „Nicht gespeichert."
+ *   info     blau 100   Kreis-i    Erklärung, Zustand
+ *   ok       grün 100   Haken      Vollzug: „Backup erstellt." (bis Schritt 26 blau)
+ *   warn     orange 100 Dreieck    Warnung, die kein Fehler ist
  *
  * KEIN GRÜN — eine Farbe, die es in der Marke nicht gibt. Die
  * Vollzugsmeldung ist blau wie der Hinweis und unterscheidet sich durch das
@@ -1639,9 +1639,9 @@ function ui_meldung_markup(string $ton, string $text, string $auftakt = '',
  * zehn Stellen zurückgenommen.
  *
  * VIER ARTEN, nach Bedeutung und nicht nach Aussehen:
- *   primaer   Orange, dunkelblaue Schrift — die eine Haupthandlung
+ *   primaer   Dunkelblau, Schrift Schnee — die eine Haupthandlung
  *   neutral   Rahmen — alles Übrige, auch „Bearbeiten"
- *   gefahr    roter Rahmen, rote Schrift — Löschen
+ *   gefahr    rot 700, Schrift Schnee — Löschen (bis Schritt 26 roter Rahmen)
  *   leise     nur Schrift — Abbrechen, Nebenwege
  *   symbol    44 x 44, nur ein Zeichen (braucht 'titel')
  *
@@ -1721,9 +1721,11 @@ function ui_codeblock_lang(string $wert, string $titel = ''): string
  * sind KEINE Bedienelemente — wer eine anklickbar braucht, nimmt einen Knopf.
  * 
  *
- * Töne: neutral · orange (Winde, Bergwacht) · blau (Sekundär,
- * Rettungsmittel, aktuell, freigegeben) · rot (Fehleinsatz, kein Ende, nie
- * gesichert, leer).
+ * Töne (seit Schritt 26 fünf, E-MA-08): neutral (Zahl ohne Wertung) ·
+ * gruen (Zustand in Ordnung: Vollzug, freigegeben, gesichert, an) · blau
+ * (Eigenschaft: Sekundär, Rettungsmittel, aktuell, verschlüsselt) · orange
+ * (Aufmerksamkeit: Winde, Bergwacht, überfällig) · rot (arbeitet nicht:
+ * Fehleinsatz, kein Ende, nie gesichert, leer).
  * ------------------------------------------------------------------------ */
 function ui_plakette(string $text, array $o = []): string
 {
@@ -1767,7 +1769,7 @@ function ui_ladeplatz(string $text, array $o = []): string
  *
  * Jeder Inhaltsblock ist eine Karte mit Titel in Bricolage, optionaler Zahl
  * (gedämpft) und GENAU EINER Kopfaktion rechts als Link mit Symbol:
- * „Bearbeiten" (blau) oder ein Anlegen-Weg („+ Nachtragen", orange tief).
+ * „Bearbeiten" oder ein Anlegen-Weg („+ Nachtragen"), beide in der Linkfarbe.
  * Eine zweite Kopfaktion gibt es nicht — was mehr braucht, bekommt ein
  * Aktionsmenü.
  *
@@ -2145,7 +2147,7 @@ function ui_zeile_mehr(array $o, array $daten): void
  * REITER  (.reiter-rahmen, .reiter, .reiter-punkt, .reiter-abgesetzt)
  *
  * Wechsel zwischen gleichrangigen Sichten EINER Seite — serverseitig, jeder
- * Reiter ist ein Verweis. Orange unterstrichen wie der aktive Punkt der
+ * Reiter ist ein Verweis. Dunkelblau unterstrichen wie der aktive Punkt der
  * Kopfleiste: „hier stehst du". Drei Verwender sind geplant: Protokoll (hier
  * entstanden), Statistik, Rechtstexte.
  *
@@ -2400,7 +2402,7 @@ function ui_diagramm_skala(int $hoechst): array
  * PHP, ohne Bibliothek und ohne Skript.
  *
  * EINE FARBE, DER HÖCHSTWERT HERVORGEHOBEN UND BESCHRIFTET: Blau erklärt,
- * Orange tief hebt hervor — und die Zahl darüber sagt es noch
+ * Orange 600 hebt hervor — und die Zahl darüber sagt es noch
  * einmal, weil Farbe nie der einzige Träger ist. Jede andere Säule zeigt ihre
  * Zahl beim Überfahren (`:hover`) und trägt sie als `<title>`.
  *
@@ -2679,8 +2681,8 @@ function ui_feld(array $o): void
  * SCHALTER  (.schalter)
  *
  * Ja/Nein-Felder werden Schalter in 44-px-Zeilen: Beschriftung links, an in
- * Orange. Abhängige Felder klappen darunter auf, eingerückt mit orangem
- * Randstrich.
+ * Dunkelblau. Abhängige Felder klappen darunter auf, eingerückt mit einem
+ * Randstrich in `--linie-stark`.
  *
  * Gebaut aus einer echten Checkbox — die Tastaturbedienung, der
  * Vorlesezustand und das Absenden im Formular kommen damit vom Browser und
@@ -2710,7 +2712,7 @@ function ui_schalter(array $o): void
 /* ---------------------------------------------------------------------------
  * SEGMENTWAHL  (.segment)
  *
- * Tastenreihe mit orangem Aktivzustand — für Gemischt/Luft/Boden,
+ * Tastenreihe mit dunkelblauem Aktivzustand — für Gemischt/Luft/Boden,
  * egal/ja/nein und die Wochentage. Mobil vollbreit.
  *
  * Als Radiogruppe gebaut, nicht als Knopfreihe mit Skript: Pfeiltasten,
@@ -2770,8 +2772,8 @@ function ui_segment_markup(array $o): string
  * WAHLLISTE  (.wahlliste)
  *
  * Eine Reihe großer Auswahlzeilen mit Radio links, Beschriftung und einem
- * gedämpften Zusatz rechts; die gewählte Zeile wird hell orange mit orangem
- * Rahmen. Freigegeben mit Mockup.
+ * gedämpften Zusatz rechts; die gewählte Zeile trägt die Auswahlfläche mit
+ * dunkelblauem Rahmen. Freigegeben mit Mockup.
  *
  * WARUM NICHT DIE SEGMENTWAHL: Ein Segment trägt kurze Wörter nebeneinander
  * („Gemischt / Luft / Boden"). Hier stehen vier Zeilen mit Erklärung
@@ -2982,11 +2984,10 @@ function ui_speichern_leiste(array $o = []): void
  *
  * Wert in Bricolage mit Einheit, darunter die Beschriftung. Extremwerte
  * tragen einen Punkt oben rechts und den Tag in der Beschriftung; die aktive
- * Kachel wird hell orange mit orangem Rahmen.
+ * Kachel trägt die Auswahlfläche mit dunkelblauem Rahmen.
  *
  * Die Hervorhebung war rot und ist jetzt orange: Rot heißt in dieser
- * Oberfläche „Aufmerksamkeit" (Fehler, Löschen), und ein Höchstwert ist kein
- * Fehler.
+ * Oberfläche „Fehler" (und Löschen), und ein Höchstwert ist kein Fehler.
  *
  * $o: wert, einheit, label, extrem (Text des Tages), aktiv, attr
  * ------------------------------------------------------------------------ */

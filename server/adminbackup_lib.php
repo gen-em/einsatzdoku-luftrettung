@@ -2286,7 +2286,7 @@ function edbak_erinnerung_text(array $faellig): string
 /** Plakettentext und -ton zu einem Stand aus edbak_konto_stand(). */
 function edbak_stand_plakette(array $stand): array
 {
-    /* Die Toene der PLAKETTE heissen neutral/orange/blau/rot (Stylesheet,
+    /* Die Toene der PLAKETTE heissen neutral/gruen/blau/orange/rot (Stylesheet,
      * Abschnitt 8) — nicht info/warn/ok/gefahr; das sind die Toene der
      * MELDUNG. Zwei Vorraete, zwei Bausteine. */
     return match ((string)$stand['stand']) {

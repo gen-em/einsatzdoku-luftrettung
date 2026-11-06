@@ -372,7 +372,7 @@ ui_seite_start(['titel' => 'Tagesübersicht', 'karte' => true,
         <?php /* EINE EBENE TIEFER ALS DIE AUSWAHL: derselbe
                  Baustein, mit dem abhängige Felder unter einem Schalter
                  aufklappen (`.schalter-abhaengig`) — eingerückt
-                 hinter einem orangen Randstrich. Die Felder gehören zur
+                 hinter einem Randstrich in `--linie-stark`. Die Felder gehören zur
                  Auswahl darüber und stehen deshalb nicht auf gleicher Höhe
                  mit ihr. */ ?>
         <div class="schalter-abhaengig" id="adhocfelder" hidden>
@@ -1175,7 +1175,8 @@ async function entschluesselePat(){
       m._ort = extractOrt(o.loc.addr);
       changed = true;
       if (o.loc.lat != null) {
-        /* Einsatzort: oranger Kreis mit Pin (E-P3-40) — einheitlich fuer
+        /* Einsatzort: dunkelblauer Kreis mit Pin (E-P3-40, seit Schritt 26
+           dunkelblau statt orange) — einheitlich fuer
            alle Einsaetze; welcher zu welchem gehoert, sagen Spurfarbe und
            Popup. */
         layerGroup.addLayer(EdGeo.markerEinsatzort([o.loc.lat, o.loc.lon],

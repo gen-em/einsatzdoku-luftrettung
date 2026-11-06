@@ -8615,5 +8615,17 @@ declare(strict_types=1);
  *   (R91-Nachpruefung zu Schritt 24 auf Staging). Die Geraete der Fixture
  *   entstehen beim Reset neu, und die Startseite meldete sie als „neue
  *   Geraete … warst du das nicht?". Der Reset bestaetigt den Hinweis und den
- *   Erststart-Schritt „Geraet koppeln"; kein Schema. */
-const WEB_VERSION = '23.8.2';
+ *   Erststart-Schritt „Geraet koppeln"; kein Schema.
+ *
+ * 23.9.0 — DIE FARBEN KOMMEN AUS DEM BRANDING-REPO (Schritt 26, Konzept MA,
+ *   MA-01 bis MA-05). `style.css` traegt den Token-Block von
+ *   `gen-em/gen-em-branding` woertlich und darueber eine Schicht von Rollen
+ *   (`--text`, `--flaeche-karte`, `--aktion`, `--auswahl-*`, `--erfolg-*` …);
+ *   die eigenen Tief- und Hellwerte entfallen. Aktion ist Dunkelblau statt
+ *   Orange, Gruen kommt als Statusfarbe fuer „in Ordnung" dazu (Plakette
+ *   `gruen`, Meldung `ok`), Schnee ist die Seite und neutral 75 die Karte.
+ *   Rund achtzig Plaketten, die Blau fuer einen guten Zustand trugen, tragen
+ *   jetzt Gruen; Blau bleibt fuer Eigenschaften. Das Umgebungsetikett ist
+ *   orange 800 statt rot, und `'farbe' => 'rot'` in der `config.php` gilt
+ *   weiter. Neben; kein Schema. */
+const WEB_VERSION = '23.9.0';

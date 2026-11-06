@@ -21,12 +21,12 @@ return [
         // NUR AUF EINER ANLAGE, DIE NICHT DIE PRODUKTIVANLAGE IST. Leer oder
         // fehlend heisst: keine Kennzeichnung — die Anlage verhaelt sich wie
         // die Produktivanlage, und die Statusseite sagt „Produktiv". Gesetzt,
-        // traegt jede Seite den Titelvorsatz „[Staging]", eine rote
+        // traegt jede Seite den Titelvorsatz „[Staging]", eine orangefarbene
         // Kopfleiste und die Zeile „Staging — Testdaten, kein Echtbetrieb".
         // Nie abgeleitet: Weder Domain noch Zweig setzen es, nur diese Zeile.
-        // `farbe` ist eine geschlossene Liste, heute nur 'rot'.
+        // `farbe` ist eine geschlossene Liste, heute nur 'orange' (bis Web 23.8 'rot', das weiter gilt).
         //
-        //   'umgebung' => ['name' => 'Staging', 'farbe' => 'rot'],
+        //   'umgebung' => ['name' => 'Staging', 'farbe' => 'orange'],
     ],
     // ---- Betreff-Vorsatz der Mails ----------------------------------------
     // Auf Staging '[Staging]': Jede Mail dieser Anlage traegt ihn vorn im

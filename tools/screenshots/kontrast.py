@@ -46,18 +46,22 @@ HIER = os.path.dirname(os.path.abspath(__file__))
 CSS = os.path.join(HIER, '..', '..', 'server', 'assets', 'style.css')
 
 
-def token_lesen():
-    """Alle --name:#RRGGBB aus dem :root-Block. var()-Verweise werden
-    aufgeloest, damit --linie-stark:var(--gedaempft) einen Wert bekommt."""
-    t = io.open(CSS, encoding='utf-8').read()
-    t = re.sub(r'/\*.*?\*/', ' ', t, flags=re.S)
-    m = re.search(r':root\s*\{(.*?)\n\}', t, re.S)
-    roh = {}
-    for name, wert in re.findall(r'--([\w-]+)\s*:\s*([^;]+);', m.group(1) if m else ''):
-        roh[name] = wert.strip()
+def _bloecke(t, kopf):
+    """Inhalte aller Bloecke, deren Selektor auf `kopf` passt (Regex)."""
+    aus = []
+    for m in re.finditer(kopf, t):
+        tiefe, i = 1, m.end()
+        while tiefe and i < len(t):
+            tiefe += {'{': 1, '}': -1}.get(t[i], 0)
+            i += 1
+        aus.append(t[m.end():i - 1])
+    return aus
+
+
+def _aufloesen(roh):
     aufgeloest = {}
     for name, wert in roh.items():
-        for _ in range(4):
+        for _ in range(6):
             v = re.match(r'var\(--([\w-]+)\)', wert)
             if not v:
                 break
@@ -65,6 +69,28 @@ def token_lesen():
         if re.fullmatch(r'#[0-9A-Fa-f]{6}', wert):
             aufgeloest[name] = wert.upper()
     return aufgeloest
+
+
+def token_lesen(modus='hell'):
+    """Alle --name:#RRGGBB aus den :root-Bloecken, var()-Ketten aufgeloest.
+
+    SEIT SCHRITT 26 ZWEI BLOECKE UND ZWEI MODI. Die Farben stehen im Block
+    des Branding-Repos (`:root {`, `--genem-*`), die Rollen der Anwendung im
+    zweiten (`:root{`) und zeigen darauf. `modus='dunkel'` legt die
+    Zuweisungen aus `:root[data-theme="dark"]` darueber — dieselben, die
+    `prefers-color-scheme: dark` setzt; das Stylesheet fuehrt sie doppelt,
+    weil CSS keinen Selektor fuer „System oder Schalter" kennt."""
+    t = io.open(CSS, encoding='utf-8').read()
+    t = re.sub(r'/\*.*?\*/', ' ', t, flags=re.S)
+    roh = {}
+    for inhalt in _bloecke(t, r':root\s*\{'):
+        for name, wert in re.findall(r'--([\w-]+)\s*:\s*([^;]+);', inhalt):
+            roh[name] = wert.strip()
+    if modus == 'dunkel':
+        for inhalt in _bloecke(t, r':root\[data-theme="dark"\]\s*\{'):
+            for name, wert in re.findall(r'--([\w-]+)\s*:\s*([^;]+);', inhalt):
+                roh[name] = wert.strip()
+    return _aufloesen(roh)
 
 
 def luminanz(hexwert):
@@ -83,112 +109,127 @@ def kontrast(a, b):
 
 
 # Die Paare, die in der Oberflaeche tatsaechlich vorkommen — mit ihrer Rolle,
-# denn die Rolle bestimmt die Schwelle.
+# denn die Rolle bestimmt die Schwelle. SEIT SCHRITT 26 (Konzept MA) stehen
+# hier Rollen statt Leitwerte (`text` statt `asphalt`), und jedes Paar wird
+# zweimal gerechnet: hell und dunkel. Bis dahin hiessen die Paare nach den
+# Farben („Asphalt auf Schnee"); die Rollen schalten im Dark Mode um, die
+# Namen der Farben taeten es nicht.
 PAARE = [
-    ('Asphalt auf Schnee',                'asphalt',    'schnee',      4.5, 'Fliesstext'),
-    ('Asphalt auf Rauch',                 'asphalt',    'rauch',       4.5, 'Fliesstext'),
-    ('Dunkelblau auf Schnee',             'dunkelblau', 'schnee',      4.5, 'Titel, Symbole'),
-    ('Dunkelblau auf Rauch',              'dunkelblau', 'rauch',       4.5, 'Titel, Symbole'),
-    ('Gedaempft auf Schnee',              'gedaempft',  'schnee',      4.5, 'Kleinzeile'),
-    ('Gedaempft auf Rauch',               'gedaempft',  'rauch',       4.5, 'Kleinzeile'),
-    ('Blau tief auf Schnee',              'blau-tief',  'schnee',      4.5, 'Textlink'),
-    ('Blau tief auf Blau hell',           'blau-tief',  'blau-hell',   4.5, 'Hinweis, Vollzug'),
-    ('Rot tief auf Schnee',               'rot-tief',   'schnee',      4.5, 'Fehlertext'),
-    ('Rot tief auf Rosa',                 'rot-tief',   'rosa',        4.5, 'Fehlermeldung'),
-    ('Asphalt auf Orange hell',           'asphalt',    'orange-hell', 4.5, 'Warnung, Plakette'),
-    ('Dunkelblau auf Blau hell',          'dunkelblau', 'blau-hell',   4.5, 'Plakette'),
-    ('Dunkelblau auf Orange (Primaerknopf)', 'knopf-primaer-schrift', 'knopf-primaer-flaeche', 4.5, 'Primaerknopf'),
-    ('Weiss auf Dunkelblau (Kopfleiste)', 'auf-dunkel', 'dunkelblau',  4.5, 'Kopfleiste'),
-    ('Orange tief auf Schnee',            'orange-tief', 'schnee',     3.0, 'nur gross oder fett'),
-    ('Orange tief auf Rauch',             'orange-tief', 'rauch',      3.0, 'nur gross oder fett; Strich des aktiven Reiters'),
-    ('Orange tief auf Orange hell',       'orange-tief', 'orange-hell', 3.0, 'Warnung, Auftakt fett'),
-    # Der Zielzustand: aktive Kennzahl, aktiver Listenfilter, aktives
-    # Sprungziel. Die Kombination steht in der Anwendung
-    # (.kennzahl.aktiv, .listenfilter.aktiv) und wurde nie gerechnet —
-    # eingetragen, als das Sprungziel als dritte Stelle dazukam.
-    ('Dunkelblau auf Orange hell',        'dunkelblau', 'orange-hell', 4.5, 'aktives Sprungziel, aktive Kennzahl'),
-    ('Rot auf Schnee (Gefahrknopf)',      'rot',        'schnee',      3.0, 'Rand und Schrift ab 18 px'),
-    ('Blau als Fokusring',                'blau',       'schnee',      3.0, 'Rand'),
-    ('Linie stark auf Schnee',            'linie-stark', 'schnee',     3.0, 'Rand von Bedienelementen'),
-    ('Linie stark auf Rauch',             'linie-stark', 'rauch',      3.0, 'Rand von Bedienelementen'),
-    # Die Kopfleiste einer Anlage mit Etikett und der Umgebungsstreifen. Der
-    # Grund: Das Orange des aktiven Punkts haette auf Rot 2,10 : 1 und fiele
-    # unter 3 : 1.
-    ('Weiss auf Rot (Kopfleiste Staging)', 'auf-dunkel', 'rot',        4.5, 'Kopfleiste mit Etikett'),
-    ('Schnee auf Rot (Name im Kopf)',     'schnee',     'rot',         4.5, 'Name in der Kopfleiste mit Etikett'),
-    ('Orange hell auf Rot (aktiver Punkt)', 'orange-hell', 'rot',      3.0, 'Strich des aktiven Kopfpunkts'),
-    # AUS DEN REGELN ABGELEITET: Diese acht standen in
-    # style.css, aber in keiner Liste. Alle erreichen ihren Sollwert.
-    ('Asphalt auf Sand',                  'asphalt',    'sand',        4.5, 'Nummer eines offenen Schritts (Erststart)'),
-    ('Blau auf Blau hell (Zitatstrich)',  'blau',       'blau-hell',   3.0, 'Strich am Zitat im Handbuch'),
-    ('Blau tief auf Rauch',               'blau-tief',  'rauch',       4.5, 'Uebersichtszeile der Einstellungen unter dem Zeiger'),
-    ('Dunkelblau auf Orange (Zaehler)',   'dunkelblau', 'orange',      4.5, 'oranger Zaehler, Zeichen im Einsatzort-Kreis'),
-    ('Dunkelblau auf Sand (Zaehler)',     'dunkelblau', 'sand',        4.5, 'neutraler Zaehler'),
-    ('Primaerschrift auf Orange (Auswahl)', 'knopf-primaer-schrift', 'orange', 4.5, 'Zahl des aktiven Filters, gewaehlte Segmenttaste'),
-    ('Rauch auf Dunkelblau (dunkler Fuss)', 'rauch',    'dunkelblau',  4.5, 'Fusszeile auf dunklem Grund'),
-    ('Rot auf Rosa (rote Kennzahl)',      'rot',        'rosa',        3.0, 'Rahmen der roten Kennzahl'),
-    # Die Diagramme der Statistik. Eine Saeule
-    # ist eine Grafik (WCAG 1.4.11, 3 : 1). Der Hoechstwert steht in Orange
-    # TIEF: Orange auf Schnee haette 2,23 : 1.
-    ('Blau als Saeule auf Schnee',        'blau',       'schnee',      3.0, 'Saeule und Balken der Diagramme'),
-    ('Orange tief als Hoechstwert auf Schnee', 'orange-tief', 'schnee', 3.0, 'hervorgehobene Saeule'),
-    ('Blau tief als Saeule unter dem Zeiger', 'blau-tief', 'schnee',   3.0, 'Saeule unter dem Zeiger'),
+    ('Text auf Karte',                    'text',          'flaeche-karte',     4.5, 'Fliesstext'),
+    ('Text auf Seite',                    'text',          'flaeche-seite',     4.5, 'Fliesstext ausserhalb von Karten'),
+    ('Text auf abgesetzt',                'text',          'flaeche-abgesetzt', 4.5, 'Fliesstext unter dem Zeiger, Tabellenkopf'),
+    ('Text im Feld',                      'text',          'flaeche-feld',      4.5, 'Eingabefeld'),
+    ('Titel auf Karte',                   'text-titel',    'flaeche-karte',     4.5, 'Titel, Symbole'),
+    ('Titel auf Seite',                   'text-titel',    'flaeche-seite',     4.5, 'Seitentitel'),
+    ('Titel auf abgesetzt',               'text-titel',    'flaeche-abgesetzt', 4.5, 'Titel, Symbole auf Rauch'),
+    ('Titel im Feld',                     'text-titel',    'flaeche-feld',      4.5, 'Segmenttaste'),
+    ('Gedaempft auf Karte',               'gedaempft',     'flaeche-karte',     4.5, 'Kleinzeile'),
+    ('Gedaempft auf abgesetzt',           'gedaempft',     'flaeche-abgesetzt', 4.5, 'Kleinzeile, gesperrtes Feld'),
+    ('Link auf Karte',                    'text-link',     'flaeche-karte',     4.5, 'Textlink, Anlegen-Weg'),
+    ('Link auf abgesetzt',                'text-link',     'flaeche-abgesetzt', 4.5, 'Link unter dem Zeiger'),
+    ('Link auf Seite',                    'text-link',     'flaeche-seite',     4.5, 'Link in der Fusszeile'),
+    ('Fehlertext auf Karte',              'fehler-text',   'flaeche-karte',     4.5, 'Pflichtzeichen, Fehler am Feld'),
+    ('Linie stark auf Karte',             'linie-stark',   'flaeche-karte',     3.0, 'Rand von Bedienelementen'),
+    ('Linie stark im Feld',               'linie-stark',   'flaeche-feld',      3.0, 'Rand des Eingabefelds'),
+    ('Linie stark auf abgesetzt',         'linie-stark',   'flaeche-abgesetzt', 3.0, 'Rand des gesperrten Felds'),
+    ('Fokus auf Seite',                   'fokus',         'flaeche-seite',     3.0, 'Fokusring'),
+    ('Fokus auf Karte',                   'fokus',         'flaeche-karte',     3.0, 'Fokusring'),
+    # Aktion und Auswahl
+    ('Auf Aktion (Primaerknopf)',         'auf-aktion',    'aktion',            4.5, 'Primaerknopf, gewaehlte Segmenttaste, Zahl des aktiven Filters'),
+    ('Auf Aktion unter dem Zeiger',       'auf-aktion',    'aktion-hover',      4.5, 'Primaerknopf unter dem Zeiger'),
+    ('Aktion auf Karte',                  'aktion',        'flaeche-karte',     3.0, 'Schalter an, Radiopunkt, Fortschritt, Stern'),
+    ('Auswahltext auf Auswahl',           'auswahl-text',  'auswahl-flaeche',   4.5, 'aktiver Menuepunkt, aktive Kennzahl, Chip'),
+    ('Auswahllinie auf Auswahl',          'auswahl-linie', 'auswahl-flaeche',   3.0, 'Strich am aktiven Eintrag'),
+    ('Auswahllinie auf Karte',            'auswahl-linie', 'flaeche-karte',     3.0, 'Strich des aktiven Reiters'),
+    ('Auswahllinie auf abgesetzt',        'auswahl-linie', 'flaeche-abgesetzt', 3.0, 'Strich am Vorschlag unter dem Zeiger'),
+    ('Text auf Auswahl',                  'text',          'auswahl-flaeche',   4.5, 'Textauswahl'),
+    # Status: je Fläche 100, Schrift 700
+    ('Info auf Info',                     'info-text',     'info-flaeche',      4.5, 'Hinweis, Plakette blau'),
+    ('Erfolg auf Erfolg',                 'erfolg-text',   'erfolg-flaeche',    4.5, 'Vollzug, Plakette gruen'),
+    ('Warnung auf Warnung',               'warnung-text',  'warnung-flaeche',   4.5, 'Warnung, Plakette orange'),
+    ('Fehler auf Fehler',                 'fehler-text',   'fehler-flaeche',    4.5, 'Fehler, Schutz, Plakette rot'),
+    ('Infolinie auf Info',                'info-linie',    'info-flaeche',      3.0, 'Strich am Zitat im Handbuch'),
+    ('Warnlinie auf Warnung',             'warnung-linie', 'warnung-flaeche',   3.0, 'Rahmen der orangen Kennzahl'),
+    ('Fehlerlinie auf Fehler',            'fehler-linie',  'fehler-flaeche',    3.0, 'Rahmen der roten Kennzahl'),
+    ('Fehlerlinie auf Karte',             'fehler-linie',  'flaeche-karte',     3.0, 'Rahmen der Gefahrkarte'),
+    ('Warntext auf Karte',                'warnung-text',  'flaeche-karte',     4.5, 'Tag des Extremwerts'),
+    ('Erfolgslinie auf Karte',            'erfolg-linie',  'flaeche-karte',     3.0, 'erledigter Schritt, Passwortbalken'),
+    ('Auf Gefahr (Loeschknopf)',          'auf-gefahr',    'gefahr',            4.5, 'Gefahrknopf, roter Zaehler'),
+    ('Auf Gefahr unter dem Zeiger',       'auf-gefahr',    'gefahr-hover',      4.5, 'Gefahrknopf unter dem Zeiger'),
+    ('Titel auf abgesetzt (Zaehler)',     'text-titel',    'flaeche-abgesetzt', 4.5, 'neutraler Zaehler'),
+    # Kopfleiste und Markenflaechen: Leitwerte, schalten nicht um
+    ('Schnee auf Dunkelblau (Kopfleiste)', 'auf-dunkel',   'dunkelblau',        4.5, 'Kopfleiste, dunkler Fuss, Bereichszeichen'),
+    ('Kopfaktiv auf Dunkelblau',          'kopf-aktiv',    'dunkelblau',        3.0, 'Strich des aktiven Kopfpunkts'),
+    ('Sand auf Dunkelblau (Name im Kopf)', 'sand',         'dunkelblau',        4.5, 'Nutzername in der Kopfleiste'),
+    ('Schnee auf Umgebung (Kopfleiste Staging)', 'auf-dunkel', 'umgebung-flaeche', 4.5, 'Kopfleiste mit Etikett'),
+    ('Umgebungstext auf Umgebung',        'umgebung-text', 'umgebung-flaeche',  4.5, 'Name und aktiver Punkt in der Kopfleiste mit Etikett'),
+    ('Schnee auf Dunkelblau (Einsatzort)', 'schnee',       'dunkelblau',        3.0, 'Pin im Einsatzort-Kreis der Karte'),
+    # Diagramme: Grafik nach WCAG 1.4.11
+    ('Saeule auf Karte',                  'diagramm-wert', 'flaeche-karte',     3.0, 'Saeule und Balken der Diagramme'),
+    ('Hoechstwert auf Karte',             'diagramm-hoechst', 'flaeche-karte',  3.0, 'hervorgehobene Saeule'),
+    ('Saeule unter dem Zeiger',           'diagramm-wert-hover', 'flaeche-karte', 3.0, 'Saeule unter dem Zeiger'),
+    # Papier: die Druckblaetter, immer hell
+    ('Papiertext auf Papier',             'papier-text',   'papier',            4.5, 'Druckblatt'),
+    ('Papiertitel auf abgesetzt',         'papier-titel',  'papier-abgesetzt',  4.5, 'Kachel im Druckblatt'),
+    ('Papier leise auf Papier',           'papier-leise',  'papier',            4.5, 'Kleinzeile im Druckblatt'),
+    ('Papierwarnung auf Papier',          'papier-warnung', 'papier',           4.5, 'Umgebungszeile im Druckblatt'),
+    ('QR-Modul auf Schnee',               'asphalt',       'schnee',            4.5, 'QR-Code — immer dunkel auf hell, sonst liest ihn keine Kamera'),
+    ('Schnee auf Markenflaeche',          'auf-dunkel',    'flaeche-marke',     4.5, 'Fuss unter der Anmeldekarte'),
+    # Die Karte (Leaflet) bleibt im Dark Mode hell (E-MA-14): Leitwerte.
+    ('Dunkelblau auf Schnee (Kartenschild)', 'dunkelblau', 'schnee',            4.5, 'Schild, Phasenpunkt, Pfeil, Kartenknopf'),
+    ('Blau auf Schnee (Startring)',       'blau',          'schnee',            3.0, 'Ring am Ort, an dem die Spur beginnt'),
+    ('Rot auf Schnee (Endring)',          'rot',           'schnee',            3.0, 'Ring am Ort, an dem die Spur endet'),
 ]
 
 # Diese Paare sind ausdruecklich AUSGENOMMEN, und zwar mit Grund. Ohne die
 # Liste wuerde jeder Lauf sie melden, jemand wuerde sie wegdruecken, und beim
 # naechsten Mal draengte sich ein echter Befund dazwischen.
 AUSNAHMEN = [
-    ('Orange als Flaeche auf Schnee', 'orange', 'schnee',
-     'Orange traegt nirgends allein: Der Primaerknopf hat dunkelblaue Schrift '
-     'darauf (Zeile oben), der aktive Menuepunkt zusaetzlich Flaeche und Fettung, '
-     'die Zeilenhervorhebung zusaetzlich Text. Wo ein oranger Strich doch allein '
-     'stuende, tritt --orange-tief an seine Stelle. Anlage G nennt 2,2:1 und '
-     'meint dieselbe Sache.'),
-    ('Linie auf Schnee', 'linie', 'schnee',
+    ('Linie auf Karte', 'linie', 'flaeche-karte',
      'Trennlinie zwischen Zeilen und Rand einer Karte — Zierrat, kein '
      'Bedienelement. WCAG 1.4.11 nimmt rein dekorative Begrenzungen aus. Wo eine '
      'Linie ein Bedienelement begrenzt, steht --linie-stark.'),
-    ('Sand auf Schnee', 'sand', 'schnee',
+    ('Linie auf abgesetzt', 'linie', 'flaeche-abgesetzt',
+     'Rahmen von Codeblock, <pre> im Handbuch, Vorschlagsgruppe und neutraler '
+     'Plakette — Zierrat, kein Bedienelement; dieselbe Lage wie „Linie auf Karte".'),
+    ('Mechanik auf Karte', 'mechanik', 'flaeche-karte',
      'Der Winkel des Akkordeons ist Mechanik, keine Botschaft: Er sagt nichts, '
      'was die aufklappbare Zeile daneben nicht auch sagt, und die ist in '
      'Dunkelblau beschriftet. Dasselbe gilt fuer den Winkel der '
      'Einstellungs-Uebersicht und fuer den abgeschalteten Blaetterknopf '
      '(.seitenknopf.aus) — ein deaktiviertes Bedienelement nimmt WCAG 1.4.3 '
-     'ausdruecklich aus. Sand als FLAECHE (Blattgriff, ausgeschalteter '
-     'Schalter) faellt ohnehin nicht darunter, und Sand auf DUNKELBLAU '
-     '(.kopf-nutzer) steht mit 8,15:1 weit ueber der Schwelle. '
-     'SEIT O10 IST DAS DIE GANZE LISTE: Die Versionsnummer der Fusszeile trug '
-     'Sand ebenfalls, und dort stimmte die Begruendung nicht — sie ist die '
-     'Auskunft, mit der ein Fehlerbericht anfaengt, also ein zu LESENDER Text. '
-     'Sie steht jetzt in --gedaempft (5,30:1). Wer diese Ausnahme kuenftig '
-     'weiterreicht, pruefe zuerst, ob der Text gelesen werden soll.'),
-    # Die Paare, die die Ableitung fand und die ihren
-    # Sollwert nicht erreichen, jedes mit Grund.
-    ('Weiss auf Orange tief (Primaerknopf unter dem Zeiger)', 'auf-dunkel', 'orange-tief',
-     'E-R4-30: 4,42:1 bei 15 px, Gewicht 600 — knapp unter 4,5. Die Betreiberin '
-     'hat am 26.09.2026 entschieden, dass der Ton von --orange-tief passt '
-     '(4,32:1 auf Schnee), und keine Farbe geaendert. Der Zustand ist '
-     'voruebergehend; in Ruhe traegt der Knopf Dunkelblau auf Orange (5,97:1).'),
-    ('Linie auf Rauch', 'linie', 'rauch',
-     'Rahmen von Codeblock, <pre> im Handbuch und Tagesgruppe des Imports — '
-     'Zierrat, kein Bedienelement; dieselbe Lage wie „Linie auf Schnee".'),
-    ('Orange als Strich auf Orange hell', 'orange', 'orange-hell',
-     'Aktiver Leisteneintrag, aktive Kennzahl, Kennzahl im Ton orange '
-     '(1,97:1): Der Strich begleitet die orange-helle Flaeche, er traegt den '
-     'Zustand nicht allein — dieselbe Sprache wie „Orange als Flaeche auf '
-     'Schnee" (Design.md 3.1). Wo ein oranger Strich allein stuende, tritt '
-     '--orange-tief an seine Stelle, wie seit Web 21.1.6 am Vorschlag.'),
-    ('Orange tief auf Orange (hervorgehobener Phasenpunkt)', 'orange-tief', 'orange',
-     'Rand des hervorgehobenen Phasenpunkts auf der Karte (.pm-chip.hl): Die '
-     'orange Flaeche ist das Zeichen, der Rand fasst sie nur ein.'),
-    ('Spurfarbe als Farbschluessel', 'spur-1', 'schnee',
+     'ausdruecklich aus. Als FLAECHE (Blattgriff, ausgeschalteter Schalter, '
+     'Bahn der Zeitleiste) faellt Mechanik ohnehin nicht darunter.'),
+    ('Spurfarbe als Farbschluessel', 'spur-1', 'flaeche-karte',
      'Die Linie der Legende (.legende-linie) zeigt die Farbe der Spur auf der '
      'Karte; was sie bedeutet, sagt die Beschriftung daneben.'),
-    ('Blau als Balken auf Linie', 'blau', 'linie',
+    ('Saeule als Balken auf Linie', 'diagramm-wert', 'linie',
      'Die Fuellung eines Anteilsbalkens auf seiner Spur (.balken-fuellung, '
      'R4-24): Zahl und Anteil stehen in derselben Zeile, der Balken traegt '
      'nichts allein. Die Spur in Linie ist die freigegebene Form (M-R4-24).'),
+    ('Radiopunkt gewaehlt', 'auswahl-linie', 'aktion',
+     'Rand und Fuellung des gewaehlten Radiopunkts (.wahl-punkt) sind dieselbe '
+     'Farbe; der Ring in --flaeche-feld dazwischen macht den Punkt.'),
+    ('Linie im Feld', 'linie', 'flaeche-feld',
+     'Trenner zwischen zwei Tasten einer Segmentwahl — der Rand der ganzen '
+     'Wahl steht in --linie-stark.'),
+    ('Linie auf Schnee (Karte laedt)', 'linie', 'schnee',
+     'Ring der Ladeanzeige ueber der Karte (.geo .ladeplatz) — Zierrat, '
+     'die Bewegung traegt die Aussage.'),
+    ('Rauch unter der Karte', 'rauch', 'schnee',
+     'Flaeche des Kartenrahmens, bevor die Kacheln da sind (.geo); darauf '
+     'steht nichts.'),
+    ('Speicherbalken', 'diagramm-4', 'flaeche-karte',
+     'Die vier Teile des Speicherbalkens (.sb-*, --diagramm-1 bis -4) sind '
+     'Kategorien mit Legende und Zahl daneben; der Balken traegt nichts allein. '
+     'Sand (Dateien) erreicht als Flaeche 1,5:1 und war so freigegeben.'),
+    ('Speicherbalken 1', 'diagramm-1', 'flaeche-karte', 'wie „Speicherbalken".'),
+    ('Speicherbalken 2', 'diagramm-2', 'flaeche-karte', 'wie „Speicherbalken".'),
+    ('Speicherbalken 3', 'diagramm-3', 'flaeche-karte', 'wie „Speicherbalken".'),
+    ('Kartenzeichen auf heller Karte', 'genem-dunkelblau', 'genem-blau-100',
+     'Rand des hervorgehobenen Phasenpunkts und Flaeche des aktiven '
+     'Kartenknopfs (.pm-chip.hl, .map-ctrl-*): Sie liegen auf der Karte, und '
+     'die bleibt im Dark Mode hell (E-MA-14). Dunkelblau auf blau 100 11,26:1.'),
 ]
 
 
@@ -279,7 +320,7 @@ def selbstprobe():
         ('ein oranger Punkt auf Rauch, den keine Liste kennt (wie B-S5Z-13)',
          '\n.rueckstand-punkt{background:var(--rauch);color:var(--orange)}\n', ('orange', 'rauch')),
         ('Rot als Schrift auf einer neuen Flaeche (wie B-S5Z-15)',
-         '\n.wartet{color:var(--rot);background:var(--blau-hell)}\n', ('rot', 'blau-hell')),
+         '\n.wartet{color:var(--rot);background:var(--info-flaeche)}\n', ('rot', 'info-flaeche')),
         ('eine Flaeche in einer Farbe, die in keiner Liste steht',
          '\n.neu-kasten{background:var(--spur-3)}\n', 'spur-3'),
     ]

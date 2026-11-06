@@ -27,17 +27,19 @@ Prüfarbeit an der einen örtlichen Anlage (CLAUDE.md 7).
 | Paket | Inhalt | Stand |
 |---|---|---|
 | MA-00 | Konzept, Fahrplanzeile, Backlog-Spanne | **erledigt** 06.11.2026 |
-| MA-01 | Token in `:root` auf das Repo umstellen, Flächen tauschen | offen |
+| MA-01 | Token in `:root` auf das Repo umstellen, Flächen tauschen | **erledigt** 07.11.2026 (Web 23.9.0, zusammen mit 03 bis 05) |
 | MA-02 | Schriften: 600er raus, 12 px raus | offen |
-| MA-03 | Meldungen, Plaketten, Ampel, Kennzahl: Grün für „in Ordnung" | offen |
-| MA-04 | Knöpfe und Aktivzustände: Aktion Dunkelblau | offen |
-| MA-05 | Spurfarben auf die Tonstufen des Repos (neu gefasst, E-MA-11) | offen |
+| MA-03 | Meldungen, Plaketten, Ampel, Kennzahl: Grün für „in Ordnung" | **erledigt** 07.11.2026 (Code; `Design.md`-Text in MA-08) |
+| MA-04 | Knöpfe und Aktivzustände: Aktion Dunkelblau | **erledigt** 07.11.2026 |
+| MA-05 | Spurfarben auf die Tonstufen des Repos (neu gefasst, E-MA-11) | **erledigt** 07.11.2026 (Ring im Dark Mode in MA-07) |
 | MA-06 | Produktmarke NAdoku: Logos, Favicons, Kopfleiste | offen |
 | MA-07 | Dark Mode mit Schalter je Konto | offen |
 | MA-08 | Dokumentation, Prüfmittel, Prüfstand, Abschluss | offen |
 
-**In Arbeit:** MA-01. **Es hakt:** nirgends; alle Fragen sind entschieden
-(E-MA-08 bis -20).
+**In Arbeit:** MA-02. **Es hakt:** nirgends; alle Fragen sind entschieden
+(E-MA-08 bis -20). MA-01, -03, -04 und -05 sind ein Commit geworden: Sie
+stellen dieselben rund 540 Farbstellen im Stylesheet um, und ein Zwischenstand
+hätte Token gezeigt, die es nicht mehr gibt.
 
 ---
 
@@ -287,4 +289,43 @@ Q-MA-03 → E-MA-14, Q-MA-04 → E-MA-15.
 
 ## 9. Prüfprotokoll
 
-*(wird je Paket fortgeschrieben)*
+### MA-01, -03, -04, -05 (Web 23.9.0, 07.11.2026)
+
+**Was gebaut ist.** Der Block `farben.css` (Repo @ `95897f3`, Zeilen 1 bis
+119, SHA-256 der Datei `3afe1c86…d2b5cf`) steht wörtlich am Kopf von
+Abschnitt 2; darunter die Rollen der Anwendung (Flächen, Schrift, Linien,
+Mechanik, Aktion, Auswahl, Status, Gefahr, Fokus, Umgebung, Diagramme,
+Papier). Die Farbverwendungen im Stylesheet wurden mit einem Skript nach
+Selektor und Eigenschaft umgestellt (271 Zeilen), danach 16 Stellen von Hand
+berichtigt (Warnmeldung, offener Blattöffner, Auswahlschrift, Codeblock auf
+dem Schirm statt Papier, Kartenzeichen) und rund 40 Erklärkommentare
+nachgezogen. Plakettentöne: 84 Übergaben von `blau` auf `gruen` (Zustand),
+die übrigen bleiben `blau` (Eigenschaft, Zahl, Wert). Spurfarben 5 bis 8 auf
+Stufe 600 bzw. neutral 500, Ruhespur neutral 600.
+
+**Befunde dabei.**
+- **F-MA-05 — Das Umgebungsetikett hieß in der `config.php` `'rot'`.** Die
+  Kopfleiste einer Testanlage ist jetzt orange 800; der Wert `rot` würde
+  sonst auf der Statusseite als „Farbe unbekannt" gemeldet. Gelöst mit
+  `UMGEBUNG_FARBEN_FRUEHER` (`'rot' => 'orange'`): Staging braucht keine
+  Änderung an der Datei.
+- **F-MA-06 — `kennzahl-*` kennt nur `orange` und `rot`.** Kein Aufruf übergibt
+  einen guten Ton an eine Kennzahl; `.kennzahl-gruen` ist deshalb nicht
+  gebaut (keine Regel ohne Verwender).
+- **F-MA-07 — Der Klassenname `.knopf-leise-orange` stimmt nicht mehr.** Er
+  trägt jetzt die Linkfarbe. Umbenannt ist er nicht — das berührt
+  `ui_knopf()`, die Streichliste und die Tonprüfung für einen Namen; der
+  Kommentar sagt es. Kandidat für Schritt 13.
+
+**Gemessen.**
+- `python3 tools/quelltext/vollstaendigkeit.py`: **Keine Befunde** —
+  0 Hexwerte, 0 rgb()-Literale, 0 Schriftgrößen außerhalb `:root`;
+  413 Tonübergaben geprüft, 0 ohne Regel.
+- `python3 tools/screenshots/kontrast.py` (umgebaut auf Rollen, liest beide
+  `:root`-Blöcke): **58 Paare, 0 verfehlt; 36 aus den Regeln abgeleitet,
+  0 ohne Listeneintrag**; Selbstprobe 4 von 4.
+- `python3 tools/erzeugen/design.py schreiben`: Token- und Bausteintabelle
+  neu erzeugt.
+- Sichtprüfung `index.php` als Demo-Konto bei 1440 px in Chromium:
+  Primärknopf dunkelblau, „erledigt" grün, aktiver Diensttag blau 100 mit
+  dunkelblauem Strich.

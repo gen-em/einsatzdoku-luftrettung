@@ -318,7 +318,7 @@ function protokoll_reiter_sichtbar(): array
  */
 const PROTOKOLL_ARTEN = [
     /* Verwaltung */
-    'konto_angelegt'            => ['Konto angelegt', 'blau'],
+    'konto_angelegt'            => ['Konto angelegt', 'gruen'],
     'konto_status'              => ['Kontostatus', 'neutral'],
     'konto_geloescht'           => ['Konto gelöscht', 'neutral'],
     'loeschung_beantragt'       => ['Löschung beantragt', 'orange'],
@@ -327,14 +327,14 @@ const PROTOKOLL_ARTEN = [
     'einwilligung'              => ['Einwilligung', 'neutral'],
     'rechtstext_geaendert'      => ['Rechtstext geändert', 'neutral'],
     'schluessel_erneuert'       => ['Schlüssel erneuert', 'neutral'],
-    'schluesselblatt_bestaetigt'=> ['Schlüsselblatt', 'blau'],
+    'schluesselblatt_bestaetigt'=> ['Schlüsselblatt', 'gruen'],
     'einstellungen_konten'      => ['Einstellungen', 'neutral'],
     'rundmail'                  => ['Rundmail', 'neutral'],
     /* Verwaltung — Rollen, Setz-Links, Zweitfaktor */
     'rolle_geaendert'           => ['Rolle geändert', 'orange'],
     'setzlink_gesendet'         => ['Setz-Link', 'neutral'],
     'verifikation_gesendet'     => ['Bestätigung erneut', 'neutral'],
-    'totp_eingerichtet'         => ['Zweitfaktor eingeschaltet', 'blau'],
+    'totp_eingerichtet'         => ['Zweitfaktor eingeschaltet', 'gruen'],
     'totp_codes_erneuert'       => ['Codes erneuert', 'neutral'],
     'totp_ausgeschaltet'        => ['Zweitfaktor ausgeschaltet', 'orange'],
     'totp_zurueckgesetzt'       => ['Zweitfaktor zurückgesetzt', 'orange'],
@@ -343,7 +343,7 @@ const PROTOKOLL_ARTEN = [
     'rueckweg_angelegt'         => ['Rückweg eingerichtet', 'neutral'],
     'rueckweg_erneuert'         => ['Rückweg erneuert', 'neutral'],
     /* Verwaltung — Adresswechsel */
-    'adresse_bestaetigt'        => ['Adresswechsel bestätigt', 'blau'],
+    'adresse_bestaetigt'        => ['Adresswechsel bestätigt', 'gruen'],
     'adresse_widersprochen'     => ['Adresswechsel widersprochen', 'orange'],
     /* Verwaltung — Kontoschlüssel */
     'kontopaar_angelegt'        => ['Kontoschlüssel angelegt', 'neutral'],
@@ -363,16 +363,16 @@ const PROTOKOLL_ARTEN = [
     'geraet_umgeschaltet'       => ['Gerät umgeschaltet', 'neutral'],
     'geraet_geloescht'          => ['Gerät gelöscht', 'neutral'],
     'wartung_an'                => ['Wartung an', 'orange'],
-    'wartung_aus'               => ['Wartung aus', 'blau'],
+    'wartung_aus'               => ['Wartung aus', 'gruen'],
     'demo_zurueckgesetzt'       => ['Demo zurückgesetzt', 'neutral'],
     /* Ein Zeitraum aus einer GPS-Spur geloescht (`api/schneiden.php`).
      * Fehlte bis Nr. 457 und stand als „spur stueck geloescht" da. */
     'spur_stueck_geloescht'     => ['GPS-Daten gelöscht', 'neutral'],
-    'migration_ausgefuehrt'     => ['Migration', 'blau'],
+    'migration_ausgefuehrt'     => ['Migration', 'gruen'],
     'archiv_heruntergeladen'    => ['Archiv heruntergeladen', 'orange'],
     'frist_geaendert'           => ['Fristen', 'neutral'],
     /* Sicherung — Komplett-Backup */
-    'komplett_erzeugt'          => ['Komplett-Backup erzeugt', 'blau'],
+    'komplett_erzeugt'          => ['Komplett-Backup erzeugt', 'gruen'],
     'komplett_heruntergeladen'  => ['Komplett-Backup geladen', 'orange'],
     'komplett_eingespielt'      => ['Komplett-Backup eingespielt', 'orange'],
     'komplett_geloescht'        => ['Komplett-Backup gelöscht', 'neutral'],
@@ -381,7 +381,7 @@ const PROTOKOLL_ARTEN = [
      * Sicherungen, den jede BetreiberIn sehen soll; blau das Umhuellen mit
      * Nachweis (erledigt, gut); neutral das Entfernen des bisherigen. */
     'serverschluessel_gewechselt'   => ['Serverschlüssel gewechselt', 'orange'],
-    'serverschluessel_umgehuellt'   => ['Serverschlüssel umgehüllt', 'blau'],
+    'serverschluessel_umgehuellt'   => ['Serverschlüssel umgehüllt', 'gruen'],
     'serverschluessel_alt_entfernt' => ['Bisheriger Serverschlüssel entfernt', 'neutral'],
     'kontobackup_eingespielt'   => ['Konto-Backup eingespielt', 'orange'],
     /* auch eine Freigabe hinterlaesst eine Spur */
@@ -389,11 +389,11 @@ const PROTOKOLL_ARTEN = [
     /* Sicherheit — Sicht auf `sicherheit_ereignisse` und `csp_berichte` */
     'sperre'                    => ['Sperre', 'orange'],
     'verlangsamung'             => ['Verlangsamung', 'orange'],
-    'aufgehoben'                => ['Aufgehoben', 'blau'],
+    'aufgehoben'                => ['Aufgehoben', 'gruen'],
     'csp_bericht'               => ['CSP-Bericht', 'orange'],
     /* E-Mail — Sicht auf `mail_warteschlange` */
     'mail_offen'                => ['wartet', 'neutral'],
-    'mail_zugestellt'           => ['zugestellt', 'blau'],
+    'mail_zugestellt'           => ['zugestellt', 'gruen'],
     'mail_unzustellbar'         => ['unzustellbar', 'rot'],
     'mail_zu_spaet'             => ['verfallen', 'orange'],
     'mail_ueberholt'            => ['ersetzt', 'neutral'],
@@ -404,7 +404,7 @@ const PROTOKOLL_ARTEN = [
     'job_lauf'                  => ['Lauf', 'neutral'],
     'job_fehler'                => ['Fehler', 'rot'],
     /* Ziele — Sicht auf `sicherungsziel_dateien` */
-    'ziel_gesendet'             => ['gesendet', 'blau'],
+    'ziel_gesendet'             => ['gesendet', 'gruen'],
     'ziel_geloescht'            => ['dort gelöscht', 'neutral'],
     /* System — `system_melden()` und die Behandler (SYSTEM_ARTEN) */
     'stoerung'                  => ['Störung', 'orange'],
@@ -426,7 +426,7 @@ function protokoll_art_ton(string $art, array $daten = []): string
     if ($art === 'konto_status') {
         $nach = (string)($daten['nach'] ?? '');
         return match ($nach) {
-            'aktiv'    => 'blau',
+            'aktiv'    => 'gruen',
             'gesperrt' => 'orange',
             default    => 'neutral',
         };
