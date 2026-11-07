@@ -77,7 +77,7 @@ NV-Gerüst.
 | OF-P-17 | Seite „Import / Export" unintuitiv, zu viel Text, zu breite Elemente | Einstellungen | Gestaltung | 3 Mockups |
 | OF-P-18 | Kontenliste: Spalte „Öffnen" verlangt waagerechtes Scrollen | Verwaltung | Umbau | Vorschlag Q-OF-05 |
 | OF-P-19 | Seitenbreite uneinheitlich (Installation schmal, NutzerInnen breit) | alle | Regel | zentrale Regel + Prüfmittel, Mockup |
-| OF-P-20 | Reiter kaum als Bedienelement erkennbar | Baustein | Gestaltung | 3 Mockups, gilt für alle Reiter |
+| OF-P-20 | Reiter kaum als Bedienelement erkennbar | Baustein | Gestaltung | entschieden (E-OF-17): gleiche Form wie die Bereichszeile |
 | OF-P-21 | Demo-Konto als Karte unter Installation (an/aus, letzter Reset) | Verwaltung | Umbau | entschieden (E-OF-08); Kontrollzahlen zur Statusseite |
 | OF-P-22 | Listenkopf (Suche, Zeitfilter, Art) unübersichtlich, aktiver Zeitraum nicht erkennbar | Baustein | Gestaltung | 3 Mockups, mit P-20 |
 | OF-P-23 | Statusseite zu voll | Betrieb | Gestaltung | Relevanz je Zeile prüfen, 3 Mockups |
@@ -124,6 +124,7 @@ Seite Hintergrundjobs (bei P-24).
 | E-OF-14 | Q-NV-04: Die rote Zahl steht am Reiter jedes Bereichs, summiert über seine Punkte (Verwaltung z. B. überfällige Konto-Backups, Betrieb die Statusbefunde) | Betreiberin, 07.11.2026 |
 | E-OF-15 | Q-OF-09: Ob Seitenreiter wie die Bereichszeile aussehen, wird an den Mockups zu P-20 entschieden | Betreiberin, 07.11.2026 |
 | E-OF-16 | P-04: Variante **A — ohne Markierung**: Der aktive Eintrag trägt nur die Auswahlfläche, kein Strich links; gilt für jede Leiste (Einstellungen, Diensttage, Vorschläge). Bild `konzept-of/mockups/OF-P04-A-ohne-markierung.png` | Betreiberin, 07.11.2026 (Kommentar im Mockup A) |
+| E-OF-17 | P-20 und Q-OF-09: Variante **A — gleiche Form**: Seitenreiter (Rechtstexte, Protokoll, Statistik u. a.) sehen aus wie die Bereichszeile aus NV; ein Reiter-Baustein für beide Ebenen. Bild `konzept-of/mockups/OF-P20-A-gleiche-form.png` | Betreiberin, 07.11.2026 (Kommentar im Mockup A) |
 
 Aus Schritt 26 übernommen: E-MA-36 (Beenden-Knöpfe der App bleiben
 vollflächig rot) ist bestätigt.
@@ -140,7 +141,7 @@ vollflächig rot) ist bestätigt.
 | Q-OF-06 | P-27: Backup-Ziele nach Komplett-Backup (Vorschlag) oder nach Servereinstellungen? | P-27 |
 | Q-OF-07 | P-37: Symbol für „Wiederherstellen": `restore` (Vorschlag), `arrow-back-up` oder `trash-off` | P-37 |
 | Q-OF-08 | Übersichtsseite „Einstellungen" doppelt zur Seitenleiste, „Abmelden" doppelt — eigener Punkt? | mit Q-NV-03 |
-| Q-OF-09 | Sollen Seitenreiter (Rechtstexte, Protokoll, Statistik) dieselbe Form bekommen wie die Bereichszeile aus NV? | P-20, NV-01 |
+| Q-OF-09 | ~~Seitenreiter wie die Bereichszeile?~~ entschieden (E-OF-17) | P-20, NV-01 |
 | Q-OF-10 | Reihenfolge: NV jetzt bauen (echter Stand auf Staging, Fable plant gegen Code) oder NV in OF aufgehen lassen (einmal bauen, beide Pakete berühren `ui.php`/`style.css`)? Die Mockups sind schon im NV-Gerüst | NV, OF |
 | Q-NV-01 (Stand) | Gemeinsamer Kasten auch für Startseite und Suche: Tendenz **ja**, Mockups (Gruppe E) zur Entscheidung | NV |
 | Q-NV-01 bis -04 | Offene Fragen aus Konzept NV (Rahmenkarte auch für Startseite und Suche; Ziel des Reiters „Betrieb"; Übersicht bleibt; Zähler in allen Bereichen) | NV |
