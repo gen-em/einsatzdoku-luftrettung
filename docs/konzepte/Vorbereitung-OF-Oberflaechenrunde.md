@@ -68,7 +68,7 @@ NV-Gerüst.
 | OF-P-08 | Zweitfaktor, Zeile „Gemerkte Geräte": Plakette und Knopf senkrecht verschoben | Profil | Korrektur | Zeilenbaustein prüfen |
 | OF-P-09 | Karte „Zweitfaktor" zu kompliziert | Profil | Gestaltung | entschieden (E-OF-19): ein Satz plus „Verwalten" |
 | OF-P-10 | Zu viel Erklärtext (Konto hält, Konto löschen u. a.) | alle | Regel | Regel „ein Satz je Karte" durchsetzen, Prüfmittel; bei „Konto löschen" das Wesentliche sichtbar lassen |
-| OF-P-11 | Seite „Geräte" unintuitiv (Reihenfolge, Text, Warnung, Platzzahl, Menühinweis, APK) | Einstellungen | Gestaltung | 3 Mockups |
+| OF-P-11 | Seite „Geräte" unintuitiv (Reihenfolge, Text, Warnung, Platzzahl, Menühinweis, APK) | Einstellungen | Gestaltung | entschieden (E-OF-25): nach Typ, Koppeln im Dialog |
 | OF-P-12 | Hinweis zur Adresssuche unter jedem Ortsfeld zu lang | Baustein | Umbau | entschieden (E-OF-07) |
 | OF-P-13 | ~~Adresssuche über den Server leiten~~ | — | — | gestrichen (E-OF-04) |
 | OF-P-14 | Kachel „GPS-Daten verdichten" für NutzerInnen kaum relevant | Backup | Umbau | Q-OF-04 |
@@ -132,6 +132,7 @@ Seite Hintergrundjobs (bei P-24).
 | E-OF-22 | P-25: **Vorschlag** übernommen: Jede Karte der Servereinstellungen wird Klappkarte; zugeklappt zeigt sie den eingestellten Stand in einer Zeile und die Plakette, aufgeklappt das Formular. Der Klappbaustein ist derselbe wie bei P-24. Ob die Backup-Ziele dorthin wandern, ist P-27 und noch offen. Bild `konzept-of/mockups/OF-P25-vorschlag.png` | Betreiberin, 07.11.2026 (Kommentar im Mockup C) |
 | E-OF-23 | P-26: **Vorschlag** übernommen: Oben der Stand (offen), darunter Regeln, Stände und Backup-Ziele als Klappkarten in derselben Form wie die Servereinstellungen; „Jetzt sichern“ ist die eine orange Hauptaktion. Ob die Backup-Ziele zusätzlich dort und in den Servereinstellungen stehen, ist P-27 und noch offen. Bild `konzept-of/mockups/OF-P26-vorschlag.png` | Betreiberin, 07.11.2026 (Kommentar im Mockup C) |
 | E-OF-24 | P-27 und Q-OF-06: Die Seite „Backup-Ziele“ entfällt. Die Ziele stehen **an beiden Orten** als dieselbe Klappkarte (ein Baustein): als letzte Karte in den Servereinstellungen und unter den Ständen im Komplett-Backup. „Ziel anlegen“ öffnet den heutigen Dialog. Bilder `konzept-of/mockups/OF-P27-servereinstellungen.png`, `…/OF-P27-komplett-backup.png` | Betreiberin, 07.11.2026 (Kommentar im Mockup C) |
+| E-OF-25 | P-11: Variante **B2 — nach Gerätetyp, Koppeln im Dialog**: Je eine Karte für Garmin und für Android/Wear OS mit den gekoppelten Geräten; darunter nur ein Knopf „Weitere Uhr koppeln“ bzw. „Weiteres Gerät koppeln“. Er öffnet einen Dialog mit den drei Schritten aus Variante A (App installieren, Kopplung am Gerät starten, Code eingeben), angepasst an den Gerätetyp. Platzzahl als Kleinzeile unter den Karten. Bild `konzept-of/mockups/OF-P11-B2-dialog.png` | Betreiberin, 07.11.2026 (Kommentar im Mockup B: „B, unter ‚weitere Uhr koppeln‘ dann ein Popup“, danach „so wie Mockup“) |
 
 Aus Schritt 26 übernommen: E-MA-36 (Beenden-Knöpfe der App bleiben
 vollflächig rot) ist bestätigt.
