@@ -404,7 +404,7 @@ $unterzeile = match ($art) {
 <main class="anmeldung">
  <?php ui_hinweise(); ?>
  <div class="anmeldung-karte">
-  <img src="<?= e(logo_src()) ?>" alt="" class="anmeldung-logo">
+  <?= logo_bild_anmeldung() ?>
   <h1 class="anmeldung-titel">Konto anlegen</h1>
   <p class="anmeldung-unter"><?= e($unterzeile) ?></p>
 

@@ -83,7 +83,10 @@ def token_lesen(modus='hell'):
     t = io.open(CSS, encoding='utf-8').read()
     t = re.sub(r'/\*.*?\*/', ' ', t, flags=re.S)
     roh = {}
-    for inhalt in _bloecke(t, r':root\s*\{'):
+    # `(?<![\w\])])`: nur ein :root, vor dem nichts steht — nicht das letzte
+    # Glied von `:root:root:root {` (Druck, Abschnitt 2a), das die hellen
+    # Werte zurueckstellt und sonst den hellen Modus ueberschriebe.
+    for inhalt in _bloecke(t, r'(?<![\w\])]):root\s*\{'):
         for name, wert in re.findall(r'--([\w-]+)\s*:\s*([^;]+);', inhalt):
             roh[name] = wert.strip()
     if modus == 'dunkel':
@@ -126,7 +129,7 @@ PAARE = [
     ('Gedaempft auf Karte',               'gedaempft',     'flaeche-karte',     4.5, 'Kleinzeile'),
     ('Gedaempft auf abgesetzt',           'gedaempft',     'flaeche-abgesetzt', 4.5, 'Kleinzeile, gesperrtes Feld'),
     ('Link auf Karte',                    'text-link',     'flaeche-karte',     4.5, 'Textlink, Anlegen-Weg'),
-    ('Link auf abgesetzt',                'text-link',     'flaeche-abgesetzt', 4.5, 'Link unter dem Zeiger'),
+    ('Link unter dem Zeiger',             'text-link-hover', 'flaeche-abgesetzt', 4.5, 'Link, dessen Zeile unter dem Zeiger auf Rauch wechselt'),
     ('Link auf Seite',                    'text-link',     'flaeche-seite',     4.5, 'Link in der Fusszeile'),
     ('Fehlertext auf Karte',              'fehler-text',   'flaeche-karte',     4.5, 'Pflichtzeichen, Fehler am Feld'),
     ('Linie stark auf Karte',             'linie-stark',   'flaeche-karte',     3.0, 'Rand von Bedienelementen'),
@@ -226,6 +229,10 @@ AUSNAHMEN = [
     ('Speicherbalken 1', 'diagramm-1', 'flaeche-karte', 'wie „Speicherbalken".'),
     ('Speicherbalken 2', 'diagramm-2', 'flaeche-karte', 'wie „Speicherbalken".'),
     ('Speicherbalken 3', 'diagramm-3', 'flaeche-karte', 'wie „Speicherbalken".'),
+    ('Kante der Kopfleiste im Dunkeln', 'genem-blau-700', 'dunkelblau',
+     'Linie unter der Kopfleiste im Dark Mode (Board MA-03): Sie trennt '
+     'Dunkelblau von blau 900 und ist Zierrat; die Kopfleiste traegt keine '
+     'Aussage ueber ihre Kante.'),
     ('Kartenzeichen auf heller Karte', 'genem-dunkelblau', 'genem-blau-100',
      'Rand des hervorgehobenen Phasenpunkts und Flaeche des aktiven '
      'Kartenknopfs (.pm-chip.hl, .map-ctrl-*): Sie liegen auf der Karte, und '
@@ -335,11 +342,8 @@ def selbstprobe():
     return 1 if fehl else 0
 
 
-def main():
-    if '--selbstprobe' in sys.argv:
-        return selbstprobe()
-    tok = token_lesen()
-    abgeleitet, befunde = ohne_eintrag(io.open(CSS, encoding='utf-8').read(), tok)
+def rechnen(tok):
+    """[(zeile)], Zahl der verfehlten — die Paare in einem Modus."""
     zeilen, schlecht = [], 0
     for name, a, b, soll, rolle in PAARE:
         if a not in tok or b not in tok:
@@ -352,9 +356,23 @@ def main():
             schlecht += 1
         zeilen.append({'paar': name, 'vorn': tok[a], 'hinten': tok[b],
                        'wert': round(v, 2), 'soll': soll, 'rolle': rolle, 'ok': ok})
+    return zeilen, schlecht
+
+
+def main():
+    if '--selbstprobe' in sys.argv:
+        return selbstprobe()
+    tok = token_lesen()
+    abgeleitet, befunde = ohne_eintrag(io.open(CSS, encoding='utf-8').read(), tok)
+    # SEIT SCHRITT 26 ZWEI MODI: Jedes Paar wird hell UND dunkel gerechnet
+    # (Konzept MA, P-MA-01). Ein Paar, das nur in einem Modus vorkommt, gibt
+    # es nicht — die Rollen sind dieselben, nur ihre Werte wechseln.
+    modi = {m: rechnen(token_lesen(m)) for m in ('hell', 'dunkel')}
+    schlecht = sum(n for _, n in modi.values())
 
     if '--json' in sys.argv:
-        print(json.dumps({'token': tok, 'paare': zeilen,
+        print(json.dumps({'token': tok,
+                          'paare': modi['hell'][0], 'paare_dunkel': modi['dunkel'][0],
                           'ausnahmen': [{'paar': n, 'wert': round(kontrast(tok[a], tok[b]), 2),
                                          'grund': g} for n, a, b, g in AUSNAHMEN
                                         if a in tok and b in tok],
@@ -363,21 +381,25 @@ def main():
         return 1 if schlecht or befunde else 0
 
     print('Kontraste der Token (WCAG 2.1, gerechnet aus server/assets/style.css)\n')
-    print('%-40s %9s %6s  %s' % ('Paar', 'Ist', 'Soll', 'Rolle'))
-    print('-' * 92)
-    for z in zeilen:
-        if 'fehler' in z:
-            print('%-40s  %s' % (z['paar'], z['fehler']))
-            continue
-        print('%-40s %7.2f:1 %5.1f  %s%s' % (z['paar'], z['wert'], z['soll'], z['rolle'],
-                                             '' if z['ok'] else '   << VERFEHLT'))
-    print('\nAusgenommen, mit Grund:')
+    for modus, (zeilen, _) in modi.items():
+        print('== %s' % modus)
+        print('%-40s %9s %6s  %s' % ('Paar', 'Ist', 'Soll', 'Rolle'))
+        print('-' * 92)
+        for z in zeilen:
+            if 'fehler' in z:
+                print('%-40s  %s' % (z['paar'], z['fehler']))
+                continue
+            print('%-40s %7.2f:1 %5.1f  %s%s' % (z['paar'], z['wert'], z['soll'], z['rolle'],
+                                                 '' if z['ok'] else '   << VERFEHLT'))
+        print()
+    print('Ausgenommen, mit Grund (hell):')
     for n, a, b, g in AUSNAHMEN:
         if a in tok and b in tok:
             print('  %-38s %7.2f:1' % (n, kontrast(tok[a], tok[b])))
             for zeile in [g[i:i + 74] for i in range(0, len(g), 74)]:
                 print('      %s' % zeile)
-    print('\n%d Paare gerechnet, %d verfehlt.' % (len(PAARE), schlecht))
+    print('\n%d Paare je Modus gerechnet (hell und dunkel), %d verfehlt (hell %d, dunkel %d).'
+          % (len(PAARE), schlecht, modi['hell'][1], modi['dunkel'][1]))
     print('%d Paare aus den Regeln des Stylesheets abgeleitet, %d ohne Listeneintrag.'
           % (abgeleitet, len(befunde)))
     for _, b in befunde:

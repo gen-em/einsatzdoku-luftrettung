@@ -579,7 +579,7 @@ genommen, gilt das ab dem nächsten Klick; ein Ab- und Anmelden ist nicht nötig
 
 ---
 
-### 3.1a Profil: Name, Adresse und Logo
+### 3.1a Profil: Name, Adresse, Logo und Darstellung
 
 Unter dem Zahnrad → **Profil** stehen dein Anzeigename (er erscheint in der
 Kopfleiste neben der Marke), deine Anmelde-Adresse und seit Web 9.7.0 die
@@ -645,6 +645,17 @@ Den **Standard der Installation** setzt die Verwaltung unter
 **Verwaltung → Installation** (11.5). Er wirkt sofort, auch für bereits
 angemeldete Konten — aber nur bei denen, die hier „Standard der Installation"
 stehen haben. Eine getroffene eigene Wahl bleibt unberührt.
+
+**Karte „Darstellung": hell oder dunkel.** Seit Web 23.10.0 wählst du im
+Profil, wie die Oberfläche aussieht: **Wie das Gerät** (die Vorgabe — sie
+folgt der Einstellung von Handy oder Rechner), **Hell** oder **Dunkel**. Die
+Wahl gilt für dein Konto auf jedem Gerät und wirkt sofort nach dem
+Speichern. Dunkel heißt: dunkelblaue Flächen, helle Schrift, dieselben
+Farben für Hinweise und Warnungen in dunklen Tönen. **Die Karte bleibt hell**
+— eine dunkle Karte bräuchte einen weiteren Kartendienst, der deinen
+Ausschnitt sähe —, ebenso alles, was du druckst. Die Anmeldeseite kennt
+dein Konto noch nicht und folgt immer dem Gerät. Im Demo-Konto lässt sich
+das Profil nicht speichern; dort gilt die Einstellung des Geräts.
 
 **Karte „Datenschutz": die Adresssuche.** Seit Web 15.8.0 steht im Profil
 darunter der Schalter **„Adressvorschläge aus dem Internet"**. Er entscheidet

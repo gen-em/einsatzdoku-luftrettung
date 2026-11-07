@@ -397,7 +397,7 @@ auseinanderlaufen kann.
 
 <!-- ERZEUGT von tools/erzeugen/design.py — nicht von Hand ändern. -->
 
-139 Token in 20 Gruppen, alle aus `:root` in `server/assets/style.css`. Die Spalte **benutzt** zählt die `var()`-Verweise im übrigen Stylesheet.
+140 Token in 20 Gruppen, alle aus `:root` in `server/assets/style.css`. Die Spalte **benutzt** zählt die `var()`-Verweise im übrigen Stylesheet.
 
 **Leitwerte**
 
@@ -407,7 +407,7 @@ auseinanderlaufen kann.
 | `--rauch` | `var(--genem-rauch)` | 1 |  |
 | `--sand` | `var(--genem-sand)` | 1 |  |
 | `--asphalt` | `var(--genem-asphalt)` | 1 |  |
-| `--dunkelblau` | `var(--genem-dunkelblau)` | 13 |  |
+| `--dunkelblau` | `var(--genem-dunkelblau)` | 11 |  |
 | `--orange` | `var(--genem-philipp-orange)` | 0 |  |
 | `--blau` | `var(--genem-max-blau)` | 4 |  |
 | `--rot` | `var(--genem-newroz-rot)` | 4 |  |
@@ -429,24 +429,25 @@ auseinanderlaufen kann.
 | `--text` | `var(--genem-text-standard)` | 21 |  |
 | `--text-titel` | `var(--genem-text-alternativ)` | 36 |  |
 | `--gedaempft` | `var(--genem-text-sekundaer)` | 70 |  |
-| `--text-link` | `var(--genem-text-blau)` | 23 |  |
-| `--auf-dunkel` | `var(--genem-schnee)` | 9 | Schrift auf Dunkelblau, 13,33:1 |
+| `--text-link` | `var(--genem-text-blau)` | 19 |  |
+| `--text-link-hover` | `var(--genem-text-blau)` | 4 |  |
+| `--auf-dunkel` | `var(--genem-schnee)` | 7 | Schrift auf Dunkelblau, 13,33:1 |
 
 **Linien**
 
 | Token | Wert | benutzt | |
 |---|---|--:|---|
 | `--linie` | `var(--genem-linie)` | 46 |  |
-| `--linie-stark` | `var(--genem-linie-stark)` | 16 |  |
+| `--linie-stark` | `var(--genem-linie-stark)` | 20 |  |
 | `--mechanik` | `var(--genem-sand)` | 11 |  |
 
 **Aktion — Dunkelblau**
 
 | Token | Wert | benutzt | |
 |---|---|--:|---|
-| `--aktion` | `var(--genem-aktion)` | 14 |  |
+| `--aktion` | `var(--genem-aktion)` | 16 |  |
 | `--aktion-hover` | `var(--genem-aktion-hover)` | 2 |  |
-| `--auf-aktion` | `var(--genem-text-auf-dunkelblau)` | 4 |  |
+| `--auf-aktion` | `var(--genem-text-auf-dunkelblau)` | 6 |  |
 
 **Auswahl — „hier bin ich"**
 
@@ -574,7 +575,7 @@ auseinanderlaufen kann.
 | `--symbol-text` | `1em` | 2 | Symbol im Fliesstext |
 | `--symbol` | `20px` | 13 | Symbolgröße in der Zeile |
 | `--symbol-gross` | `24px` | 14 | Symbolgröße im Knopf und Kartenkopf |
-| `--strich` | `1px` | 58 | Haarlinie |
+| `--strich` | `1px` | 64 | Haarlinie |
 | `--strich-stark` | `2px` | 37 | Aktivstrich, Randstrich, Fokus |
 | `--radius-rund` | `999px` | 20 | Zähler, Griff, Punkt — voll rund |
 | `--schalter-breit` | `46px` | 2 | der Schalter, 46 breit … |
@@ -1134,59 +1135,59 @@ für eine Rückfrage — nicht für ein neues Element.
 | Baustein | Klasse | Regel im Stylesheet | `ui.php` |
 |---|---|---|--:|
 | `ui_seite_start()` | — | Hüllenfunktion, kein eigenes Element | 53 |
-| `ui_seite_ende()` | — | Hüllenfunktion, kein eigenes Element | 174 |
-| `ui_favicon()` | — | Hüllenfunktion, kein eigenes Element | 241 |
-| `ui_symbol()` | `.symbol` | ja (+9 Unterklassen) | 301 |
-| `ui_logo_masse()` | `.logo-masse` | **keine** | 480 |
-| `ui_kopf()` | `.kopf` | ja (+25 Unterklassen) | 541 |
-| `ui_geruest_start()` | `.inhalt` | ja | 633 |
-| `ui_leiste_ende()` | `.leiste` | ja (+17 Unterklassen) | 699 |
-| `ui_geruest_ende()` | `.inhalt` | ja | 723 |
-| `ui_leiste_diensttage()` | `.leiste-liste` | ja | 773 |
-| `ui_zaehler()` | `.zaehler` | ja (+2 Unterklassen) | 1013 |
-| `ui_leiste_einstellungen()` | `.leiste-liste` | ja | 1172 |
-| `ui_einstellungen_uebersicht()` | `.uebersicht-raster` | ja | 1243 |
-| `ui_fuss_seite()` | `.fuss-seite` | ja | 1322 |
-| `ui_hinweise()` | `.hinweise` | ja | 1370 |
-| `ui_umgebung_hinweis()` | `.hinweis-umgebung` | ja | 1398 |
-| `ui_ankuendigung()` | `.meldung-ankuendigung` | ja | 1433 |
-| `ui_demo_hinweis()` | `.demo-hinweis` | ja | 1486 |
-| `ui_datenschutz_hinweis()` | `.datenschutz-hinweis` | **keine** | 1539 |
-| `ui_meldung_markup()` | `.meldung` | ja (+19 Unterklassen) | 1604 |
-| `ui_knopf()` | `.knopf` | ja (+17 Unterklassen) | 1650 |
-| `ui_codeblock_lang()` | `.codeblock-lang` | ja | 1702 |
-| `ui_plakette()` | `.plakette` | ja (+6 Unterklassen) | 1730 |
-| `ui_ladeplatz()` | `.ladeplatz` | ja (+3 Unterklassen) | 1757 |
-| `ui_karte_start()` | `.karte` | ja (+37 Unterklassen) | 1797 |
-| `ui_karte_ende()` | `.karte` | ja (+37 Unterklassen) | 1881 |
-| `ui_nach_oben()` | `.nach-oben` | ja | 1916 |
-| `ui_sprungliste()` | `.sprungliste` | ja | 1958 |
-| `ui_kartenfilter()` | `.kartenfilter` | ja (+4 Unterklassen) | 2006 |
-| `ui_zeile()` | `.zeile` | ja (+35 Unterklassen) | 2068 |
-| `ui_zeile_mehr()` | `.zeile-mehr` | ja | 2123 |
-| `ui_reiter()` | `.reiter` | ja (+9 Unterklassen) | 2171 |
-| `ui_listenkopf()` | `.listenkopf` | ja | 2215 |
-| `ui_listenfuss()` | `.listenfuss` | ja | 2287 |
-| `ui_zeitraumwahl()` | `.zeitraumwahl` | ja (+5 Unterklassen) | 2342 |
-| `ui_diagramm_skala()` | `.diagramm-skala` | **keine** | 2388 |
-| `ui_diagramm_saeulen()` | `.diagramm-saeulen` | ja | 2422 |
-| `ui_diagramm_balken()` | `.diagramm-balken` | ja | 2494 |
-| `ui_titelzeile()` | `.titelzeile` | ja (+6 Unterklassen) | 2518 |
-| `ui_aktionen()` | `.aktionen` | ja (+2 Unterklassen) | 2560 |
-| `ui_feld()` | `.feld` | ja (+26 Unterklassen) | 2628 |
-| `ui_schalter()` | `.schalter` | ja (+27 Unterklassen) | 2693 |
-| `ui_segment_markup()` | `.segment` | ja (+23 Unterklassen) | 2737 |
-| `ui_wahlliste()` | `.wahlliste` | ja | 2790 |
-| `ui_zeilenaktionen()` | `.zeile-aktionen` | ja | 2834 |
-| `ui_speichern_leiste()` | `.speichern` | ja (+4 Unterklassen) | 2933 |
-| `ui_kennzahl()` | `.kennzahl` | ja (+20 Unterklassen) | 2994 |
-| `ui_abbruch()` | `.rahmen` | ja (+1 Unterklassen) | 3035 |
-| `ui_csrf_bootstrap()` | `.csrf-bootstrap` | **keine** | 3127 |
-| `ui_geocoder_bootstrap()` | `.geocoder-bootstrap` | **keine** | 3165 |
-| `ui_geocoder_hinweis()` | `.geocoder-hinweis` | **keine** | 3195 |
-| `ui_ortsfeld()` | `.ortsfeld-zeile` | ja | 3207 |
-| `ui_tabellen_bootstrap()` | `.tabellen-bootstrap` | **keine** | 3350 |
-| `ui_krypto_bootstrap()` | — | Hüllenfunktion, kein eigenes Element | 3429 |
+| `ui_seite_ende()` | — | Hüllenfunktion, kein eigenes Element | 181 |
+| `ui_favicon()` | — | Hüllenfunktion, kein eigenes Element | 260 |
+| `ui_symbol()` | `.symbol` | ja (+9 Unterklassen) | 321 |
+| `ui_logo_masse()` | `.logo-masse` | **keine** | 504 |
+| `ui_kopf()` | `.kopf` | ja (+25 Unterklassen) | 565 |
+| `ui_geruest_start()` | `.inhalt` | ja | 657 |
+| `ui_leiste_ende()` | `.leiste` | ja (+17 Unterklassen) | 723 |
+| `ui_geruest_ende()` | `.inhalt` | ja | 747 |
+| `ui_leiste_diensttage()` | `.leiste-liste` | ja | 797 |
+| `ui_zaehler()` | `.zaehler` | ja (+2 Unterklassen) | 1037 |
+| `ui_leiste_einstellungen()` | `.leiste-liste` | ja | 1196 |
+| `ui_einstellungen_uebersicht()` | `.uebersicht-raster` | ja | 1267 |
+| `ui_fuss_seite()` | `.fuss-seite` | ja | 1346 |
+| `ui_hinweise()` | `.hinweise` | ja | 1394 |
+| `ui_umgebung_hinweis()` | `.hinweis-umgebung` | ja | 1422 |
+| `ui_ankuendigung()` | `.meldung-ankuendigung` | ja | 1457 |
+| `ui_demo_hinweis()` | `.demo-hinweis` | ja | 1510 |
+| `ui_datenschutz_hinweis()` | `.datenschutz-hinweis` | **keine** | 1563 |
+| `ui_meldung_markup()` | `.meldung` | ja (+19 Unterklassen) | 1628 |
+| `ui_knopf()` | `.knopf` | ja (+17 Unterklassen) | 1674 |
+| `ui_codeblock_lang()` | `.codeblock-lang` | ja | 1726 |
+| `ui_plakette()` | `.plakette` | ja (+6 Unterklassen) | 1754 |
+| `ui_ladeplatz()` | `.ladeplatz` | ja (+3 Unterklassen) | 1781 |
+| `ui_karte_start()` | `.karte` | ja (+37 Unterklassen) | 1821 |
+| `ui_karte_ende()` | `.karte` | ja (+37 Unterklassen) | 1905 |
+| `ui_nach_oben()` | `.nach-oben` | ja | 1940 |
+| `ui_sprungliste()` | `.sprungliste` | ja | 1982 |
+| `ui_kartenfilter()` | `.kartenfilter` | ja (+4 Unterklassen) | 2030 |
+| `ui_zeile()` | `.zeile` | ja (+35 Unterklassen) | 2092 |
+| `ui_zeile_mehr()` | `.zeile-mehr` | ja | 2147 |
+| `ui_reiter()` | `.reiter` | ja (+9 Unterklassen) | 2195 |
+| `ui_listenkopf()` | `.listenkopf` | ja | 2239 |
+| `ui_listenfuss()` | `.listenfuss` | ja | 2311 |
+| `ui_zeitraumwahl()` | `.zeitraumwahl` | ja (+5 Unterklassen) | 2366 |
+| `ui_diagramm_skala()` | `.diagramm-skala` | **keine** | 2412 |
+| `ui_diagramm_saeulen()` | `.diagramm-saeulen` | ja | 2446 |
+| `ui_diagramm_balken()` | `.diagramm-balken` | ja | 2518 |
+| `ui_titelzeile()` | `.titelzeile` | ja (+6 Unterklassen) | 2542 |
+| `ui_aktionen()` | `.aktionen` | ja (+2 Unterklassen) | 2584 |
+| `ui_feld()` | `.feld` | ja (+26 Unterklassen) | 2652 |
+| `ui_schalter()` | `.schalter` | ja (+27 Unterklassen) | 2717 |
+| `ui_segment_markup()` | `.segment` | ja (+23 Unterklassen) | 2761 |
+| `ui_wahlliste()` | `.wahlliste` | ja | 2814 |
+| `ui_zeilenaktionen()` | `.zeile-aktionen` | ja | 2858 |
+| `ui_speichern_leiste()` | `.speichern` | ja (+4 Unterklassen) | 2957 |
+| `ui_kennzahl()` | `.kennzahl` | ja (+20 Unterklassen) | 3018 |
+| `ui_abbruch()` | `.rahmen` | ja (+1 Unterklassen) | 3059 |
+| `ui_csrf_bootstrap()` | `.csrf-bootstrap` | **keine** | 3151 |
+| `ui_geocoder_bootstrap()` | `.geocoder-bootstrap` | **keine** | 3189 |
+| `ui_geocoder_hinweis()` | `.geocoder-hinweis` | **keine** | 3219 |
+| `ui_ortsfeld()` | `.ortsfeld-zeile` | ja | 3231 |
+| `ui_tabellen_bootstrap()` | `.tabellen-bootstrap` | **keine** | 3374 |
+| `ui_krypto_bootstrap()` | — | Hüllenfunktion, kein eigenes Element | 3453 |
 
 54 Funktionen mit Markup in `server/ui.php`, davon 4 Hüllenfunktionen ohne eigenes Element.
 **Ohne Regel im Stylesheet:** `ui_logo_masse()`, `ui_datenschutz_hinweis()`, `ui_diagramm_skala()`, `ui_csrf_bootstrap()`, `ui_geocoder_bootstrap()`, `ui_geocoder_hinweis()`, `ui_tabellen_bootstrap()` — jede davon ist zu prüfen: entweder ein Behälter, der zu Recht keine Gestaltung braucht, oder eine Lücke.

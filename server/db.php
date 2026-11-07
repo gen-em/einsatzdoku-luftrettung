@@ -401,6 +401,33 @@ function logo_src(): string {
     return asset('assets/images/' . $stamm . '-farbig.svg');
 }
 
+/**
+ * Das Logo der Anmeldeseiten als fertiges Markup — hell und dunkel.
+ *
+ * WARUM NICHT EINFACH `<img src="logo_src()">`: Die Karte der Anmeldung ist
+ * im Dark Mode Dunkelblau, und die farbige Fassung (Grundform Dunkelblau)
+ * verschwaende darauf. `<picture>` waehlt mit `prefers-color-scheme` die
+ * Fassung farbig-negativ — auf den Anmeldeseiten ist noch kein Konto da,
+ * also folgt die Darstellung dem Geraet und sonst nichts (MA-07).
+ *
+ * Ein EIGENES Logo (`app.logo_path`, fremde Datei) gibt es nur einmal; es
+ * steht dann in beiden Lagen.
+ */
+function logo_bild_anmeldung(string $alt = ''): string
+{
+    $hell = logo_src();
+    $dunkel = str_contains($hell, '-farbig.svg')
+        ? str_replace('-farbig.svg', '-farbig-negativ.svg', $hell) : '';
+    if ($dunkel !== '') {
+        $datei = __DIR__ . '/' . strtok($dunkel, '?');
+        $dunkel = is_file($datei) ? asset(strtok($dunkel, '?')) : '';
+    }
+    $img = '<img src="' . e($hell) . '" alt="' . e($alt) . '" class="anmeldung-logo">';
+    if ($dunkel === '') { return $img; }
+    return '<picture><source media="(prefers-color-scheme: dark)" srcset="'
+         . e($dunkel) . '">' . $img . '</picture>';
+}
+
 /** UTC-DATETIME (aus DB) -> Anzeige in App-Zeitzone */
 /**
  * Einen langen Hexwert in Vierergruppen — die Form zum Ablesen und Abtippen.

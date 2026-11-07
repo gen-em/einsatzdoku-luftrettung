@@ -80,7 +80,14 @@ function ui_seite_start(array $o): void
          * bleibt das Attribut leer und die Verweise laufen ohne
          * Erkennungswert — richtig, denn der Einrichter laeuft genau einmal. */
         '<html lang="de" data-webversion="'
-            . (defined('WEB_VERSION') ? ui_e(WEB_VERSION) : '') . '">',
+            . (defined('WEB_VERSION') ? ui_e(WEB_VERSION) : '') . '"'
+            /* DIE DARSTELLUNG DES KONTOS (MA-07): `data-theme="light"` oder
+             * `"dark"`, wenn das Konto im Profil eine Wahl getroffen hat —
+             * serverseitig, damit nichts hell aufblitzt. Ohne Wahl und ohne
+             * Sitzung kein Attribut; dann folgt das Stylesheet dem Geraet. */
+            . (function_exists('darstellung_attribut') && darstellung_attribut() !== ''
+                ? ' data-theme="' . darstellung_attribut() . '"' : '')
+            . '>',
         '<head>',
         '<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">',
         /* DER VORSATZ „[Staging] ": Der Reiter im Browser

@@ -28,6 +28,7 @@ CREATE TABLE users (
   session_epoch INT UNSIGNED NOT NULL DEFAULT 0,     -- wird beim Passwortwechsel erhoeht; beendet offene Sitzungen
   account_key   CHAR(16) NULL UNIQUE,                -- Ordnername der Admin-Sicherung; einmalig vergeben, danach unveraenderlich
   logo_wahl     VARCHAR(20) NOT NULL DEFAULT '',     -- '' = Standard der Installation, sonst 'hubschrauber' | 'fahrzeug' | 'wechselnd'
+  darstellung   VARCHAR(10) NOT NULL DEFAULT '',     -- '' = wie das Geraet, sonst 'hell' | 'dunkel' (data-theme, seit Web 23.10.0)
   adresssuche   TINYINT(1) NOT NULL DEFAULT 1,       -- Adressvorschlaege aus dem Internet; die Installation ist die Obergrenze (app_state.adresssuche)
   last_login    DATETIME NULL,                       -- UTC, letzte erfolgreiche Anmeldung; NULL = noch nie (Kontoseite, NutzerInnen-Liste)
   -- LEBENSZYKLUS. Der Bestand wird bei der Migration
@@ -1139,4 +1140,6 @@ INSERT IGNORE INTO schema_migrations (id, status) VALUES
   -- Die Klartext-Ortsdaten (track_points, track_blobs, resus_sessions,
   -- resus_events, mission_phases.lat/lon, missions.transport_dest, dest_lat,
   -- dest_lon, site_ele_m) stehen oben schon nicht mehr.
-  ('2026_10_19_klartext_weg', 'skipped');
+  ('2026_10_19_klartext_weg', 'skipped'),
+  -- users.darstellung steht oben schon im Schema.
+  ('2026_11_07_darstellung', 'skipped');

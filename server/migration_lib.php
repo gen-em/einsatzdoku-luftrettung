@@ -3714,6 +3714,28 @@ function migrationen_katalog(): array
             "DROP TABLE IF EXISTS track_blobs",
         ],
     ],
+    [
+        'id'    => '2026_11_07_darstellung',
+        'web'   => '23.10',
+        'label' => 'Darstellung je Konto: System, hell oder dunkel (Schritt 26, MA-07)',
+        /* DIE WAHL GEHOERT ZUM KONTO wie `logo_wahl`: Sie wird bei der
+         * Anmeldung gelesen, gilt auf jedem Geraet und geht mit dem Konto.
+         * Ein Schluessel in `app_state` je Konto haette keine dieser drei
+         * Eigenschaften (dieselbe Abwaegung wie bei `adresssuche`).
+         *
+         * VORGABE '' = SYSTEM. Wer nichts waehlt, sieht, was sein Geraet
+         * verlangt; nach der Migration aendert sich fuer niemanden etwas.
+         * Bis sie gelaufen ist, liefert `darstellung_lesen()` dasselbe.
+         *
+         * NICHT ZERSTOEREND: Es kommt eine Spalte dazu. */
+        'skip'  => function (PDO $pdo): bool {
+            return db_hat_spalte($pdo, 'users', 'darstellung');
+        },
+        'sql'   => [
+            "ALTER TABLE users
+               ADD COLUMN darstellung VARCHAR(10) NOT NULL DEFAULT '' AFTER logo_wahl",
+        ],
+    ],
     // Naechste Migration hier anhaengen.
     ];
 }

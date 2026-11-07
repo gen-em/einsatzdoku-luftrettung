@@ -204,6 +204,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
            Auflösung dieselbe Quelle haben. */
         $logo = post_text('logo_wahl');
         if (!in_array($logo, LOGO_WAHLEN, true)) { $logo = ''; }
+        /* Dieselbe Haltung fuer die Darstellung: unbekannt heisst System. */
+        $darstellung = post_text('darstellung');
+        if (!in_array($darstellung, DARSTELLUNGEN, true)) { $darstellung = ''; }
         /* ---- Adresswechsel nur mit Passwortnachweis
          *
          * Schriebe dieses Formular die Anmeldeadresse allein mit dem CSRF-Token
@@ -259,6 +262,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     ->execute([$name !== '' ? $name : null, $logo, $userId]);
                 $userName = $name !== '' ? $name : null;
                 $logoWahl  = $logo;
+                /* DIE DARSTELLUNG IN EINER EIGENEN ANWEISUNG. Vor der
+                 * Migration gibt es die Spalte nicht; Name, Logo und Adresse
+                 * sollen dann trotzdem gespeichert werden, und die Seite
+                 * folgt weiter dem Geraet. */
+                try {
+                    db()->prepare('UPDATE users SET darstellung = ? WHERE id = ?')
+                        ->execute([$darstellung, $userId]);
+                    $darstellungWahl = $darstellung;
+                } catch (Throwable) {
+                    /* Keine Systemmeldung: Ohne die Spalte steht eine
+                     * Migration aus, und die meldet Betrieb → Updates schon. */
+                    $darstellung = '';
+                }
 
                 if ($adressWechsel) {
                     require_once __DIR__ . '/konto_lib.php';
@@ -281,6 +297,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                    „wechselnd" fällt hier ein neuer Würfel — das ist richtig,
                    denn eine Wahl IST eine Gelegenheit zu würfeln. */
                 logo_sitzung_setzen($logo);
+                darstellung_sitzung_setzen($darstellung);
                 /* DIE MELDUNG SAGT, DASS DIE ADRESSE NOCH NICHT GILT.
                  * Ein blosses „Profil gespeichert." waere hier
                  * die gefaehrlichste aller Auskuenfte: Die NutzerIn
@@ -1431,6 +1448,7 @@ ui_seite_start(['titel' => 'Einstellungen',
         $logoWahl = (string)$lw->fetchColumn();
     }
     $standardName = logo_standard() === 'fahrzeug' ? 'Fahrzeug (NEF)' : 'Hubschrauber (RTH)';
+    if (!isset($darstellungWahl)) { $darstellungWahl = darstellung_lesen($userId); }
     ?>
     <?php ui_titelzeile(['titel' => 'Profil']); ?>
 
@@ -1484,6 +1502,26 @@ ui_seite_start(['titel' => 'Einstellungen',
                 'hubschrauber' => ['text' => 'Hubschrauber (RTH)'],
                 'fahrzeug'     => ['text' => 'Fahrzeug (NEF)'],
                 'wechselnd'    => ['text' => 'Wechselnd', 'zusatz' => 'neu je Anmeldung'],
+            ],
+        ]); ?>
+      <?php ui_karte_ende(); ?>
+
+      <?php /* DARSTELLUNG (Schritt 26, MA-07, E-MA-13). Dieselbe
+               Wahlliste wie das Logo, im selben Formular und mit demselben
+               Knopf — sie ist eine Eigenschaft der Ansicht wie das Logo und
+               braucht kein Passwort. Erreichbar ueber das Zahnrad der
+               Kopfleiste → Profil; ein eigener Schalter in der Leiste waere
+               ein neuer Baustein (CLAUDE.md 5). */ ?>
+      <?php ui_karte_start(['titel' => 'Darstellung', 'id' => 'k-darstellung']); ?>
+        <p class="feld-hinweis">Hell oder dunkel — gilt für dieses Konto auf jedem
+          Gerät. „Wie das Gerät" folgt der Einstellung von Handy oder Rechner.
+          Karten und Druckblätter bleiben hell.</p>
+        <?php ui_wahlliste([
+            'name' => 'darstellung', 'wert' => $darstellungWahl, 'label' => 'Darstellung',
+            'optionen' => [
+                ''       => ['text' => 'Wie das Gerät', 'zusatz' => 'Vorgabe'],
+                'hell'   => ['text' => 'Hell'],
+                'dunkel' => ['text' => 'Dunkel'],
             ],
         ]); ?>
       <?php ui_karte_ende(); ?>

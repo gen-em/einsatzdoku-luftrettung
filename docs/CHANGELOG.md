@@ -14,6 +14,20 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 23.10.0] — unveröffentlicht
+
+### Hinzugefügt
+
+- **Web — Dark Mode, mit Schalter je Konto** (Schritt 26). Wer abends oder im
+  Fahrzeug dokumentiert, hatte nur eine helle Oberfläche; jetzt folgt sie der
+  Einstellung des Geräts, und im Profil lässt sich „Hell" oder „Dunkel" fest
+  wählen. Die dunklen Werte kommen aus dem Branding-Repo, als zweite
+  Zuordnung derselben Farbrollen auf die Blau-Reihe — kein zweites
+  Farbsystem, das auseinanderlaufen könnte. Die Karte bleibt hell, weil eine
+  dunkle Karte einen weiteren Kartendienst bräuchte, der den Ausschnitt
+  sähe; Gedrucktes bleibt ebenfalls hell. **Nach dem Deploy `update.php`
+  aufrufen** (neue Spalte `users.darstellung`).
+
 ## [Web 23.9.2] — unveröffentlicht
 
 ### Geändert

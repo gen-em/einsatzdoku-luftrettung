@@ -263,6 +263,11 @@ function anmeldung_vollenden(array $u, bool $istDemoAdresse): void
        hier der Wuerfel — je Anmeldung, nicht je Seitenaufruf; sonst
        spraenge das Logo beim Blaettern. */
     logo_sitzung_setzen($u['logo_wahl'] ?? '');
+    /* DARSTELLUNG EBENSO EINMAL. Eine eigene, abgesicherte Abfrage und
+       nicht eine Spalte mehr in der Anmeldeabfrage: Vor der Migration gibt
+       es `users.darstellung` nicht, und daran darf keine Anmeldung
+       scheitern (`darstellung_lesen()` liefert dann System). */
+    darstellung_sitzung_setzen(darstellung_lesen((int)$u['id']));
     /* ZULETZT ANGEMELDET. Die einzige Stelle, an der der
        Wert geschrieben wird — nicht bei jedem Seitenaufruf. Ein
        Fehlschlag darf die Anmeldung nicht aufhalten: Der Wert ist
@@ -875,7 +880,7 @@ ui_seite_start(['titel' => 'Anmelden', 'klasse' => 'anmeldung-body']);
 <main class="anmeldung">
  <?php ui_hinweise(); ?>
  <div class="anmeldung-karte">
-  <img src="<?= e(logo_src()) ?>" alt="" class="anmeldung-logo">
+  <?= logo_bild_anmeldung() ?>
   <h1 class="anmeldung-titel"><?= e(instanz_kurz()) ?></h1>
   <p class="anmeldung-unter">Einsatzdokumentation Notarzt</p>
   <?php /* Der Wartungsbalken. Er steht UEBER der

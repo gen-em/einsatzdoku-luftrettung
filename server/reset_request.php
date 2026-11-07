@@ -118,7 +118,7 @@ ui_seite_start(['titel' => 'Passwort zurücksetzen', 'klasse' => 'anmeldung-body
            Nachbarin der Anmeldung — dieselbe dunkelblaue Fläche, dieselbe
            Karte —, und ohne Marke waere sie die einzige der drei. logo_src()
            braucht dafür session_lib.php; die Datei lädt sie ohnehin. */ ?>
-  <img src="<?= e(logo_src()) ?>" alt="" class="anmeldung-logo">
+  <?= logo_bild_anmeldung() ?>
   <h1 class="anmeldung-titel">Passwort setzen</h1>
   <?php if ($done): ?>
     <?= ui_meldung_markup('ok',

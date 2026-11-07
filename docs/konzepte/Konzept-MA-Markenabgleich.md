@@ -33,11 +33,11 @@ Prüfarbeit an der einen örtlichen Anlage (CLAUDE.md 7).
 | MA-04 | Knöpfe und Aktivzustände: Aktion Dunkelblau | **erledigt** 07.11.2026 |
 | MA-05 | Spurfarben auf die Tonstufen des Repos (neu gefasst, E-MA-11) | **erledigt** 07.11.2026 (Ring im Dark Mode in MA-07) |
 | MA-06 | Produktmarke NAdoku: Logos, Favicons, Kopfleiste | **erledigt** 07.11.2026 (Web 23.9.2) |
-| MA-07 | Dark Mode mit Schalter je Konto | offen |
+| MA-07 | Dark Mode mit Schalter je Konto | **erledigt** 07.11.2026 (Web 23.10.0, Migration) |
 | MA-09 | Android-Nachzug: Farbwerte und Bildmarken der App (neu, F-MA-12) | **erledigt** 07.11.2026 (Android 0.21.1; Bau im Prüfstand) |
 | MA-08 | Dokumentation, Prüfmittel, Prüfstand, Abschluss | offen |
 
-**In Arbeit:** MA-07. **Es hakt:** nirgends; alle Fragen sind entschieden
+**In Arbeit:** MA-08. **Es hakt:** nirgends; alle Fragen sind entschieden
 (E-MA-08 bis -20). MA-01, -03, -04 und -05 sind ein Commit geworden: Sie
 stellen dieselben rund 540 Farbstellen im Stylesheet um, und ein Zwischenstand
 hätte Token gezeigt, die es nicht mehr gibt.
@@ -433,3 +433,44 @@ Werte**. `bildmarken.sh pruefen`: **0 Abweichungen** (vier Dateien).
 `kontraste.py`: **29 Paare, 0 Befunde** (u. a. Rückstandspunkt orange 700
 6,44:1, Ortung fehlt rot 700 9,83:1, Beenden-Knopf Schnee auf Rot 4,68:1).
 Der Android-Bau läuft im Prüfstand (Abschluss).
+
+### MA-07 (Web 23.10.0, 07.11.2026)
+
+**Was gebaut ist.** Abschnitt 2a in `style.css`: der Dark-Mode-Block des Repos
+wörtlich (`farben.css` ab Zeile 120), danach die Rollen der Anwendung in
+denselben zwei Auslösern (Schrift auf der Aktion Dunkelblau, Auswahl blau 700
+mit Schnee, Mechanik blau 400, Gefahrknopf rot 300 mit rot 900, Fokus
+blau 100, Markenfläche blau 900, Diagramme Stufe 300/400), `color-scheme`,
+Kante unter der Kopfleiste, Rahmen um die Karte, Rand um die Spurstreifen
+der Tabelle und der Legende (MA-05), Druck immer hell (`:root:root:root`).
+`.bereich-zeichen` und `.erststart-nr` von Leitwert auf `--aktion`. Neue
+Rolle `--text-link-hover` (F-MA-13). Migration `2026_11_07_darstellung`,
+`schema.sql`, `darstellung_lesen()` / `_sitzung_setzen()` / `_attribut()`
+in `session_lib.php`, `login.php` liest bei der Anmeldung,
+`ui_seite_start()` setzt `data-theme`, Profilkarte „Darstellung" mit
+`ui_wahlliste()` (vorhandener Baustein), Speichern in eigener Anweisung.
+`logo_bild_anmeldung()` für die sieben Anmeldelogos. `kontrast.py` rechnet
+jedes Paar hell und dunkel und liest den Druckblock nicht mehr als Wert
+(F-MA-14). Handbuch 3.1a, Technik 3 und 4.41.
+
+**Befunde dabei.**
+- **F-MA-13 — Link unter dem Zeiger im Dunkeln 4,45:1.** blau 300 auf
+  blau 700 verfehlt 4,5 knapp. Neue Rolle `--text-link-hover` (hell = Link,
+  dunkel = blau 200) an den vier Hover-Regeln, deren Zeile auf Rauch wechselt.
+- **F-MA-14 — `kontrast.py` las den Druckblock als Wert.** Das letzte Glied von
+  `:root:root:root {` passte auf `:root\s*\{`; die hellen Werte kamen dann
+  aus dem Druck (Karte Schnee statt neutral 75). Gefunden, weil im Dunkeln
+  zwölf Paare scheinbar verfehlten. Behoben mit einem Rückblick im Muster.
+- **F-MA-15 — Der Bilderlauf nimmt nur hell auf.** Ein Lauf dunkel verdoppelte
+  seine Zeit (über 20 Minuten bei zehn Breiten); er ist nicht gebaut. Dunkel
+  ist mit eigenen Aufnahmen geprüft (unten) und steht in der Prüfliste.
+
+**Gemessen.** `kontrast.py`: **58 Paare je Modus, 0 verfehlt (hell 0,
+dunkel 0), 36 abgeleitet, 0 ohne Eintrag**, Selbstprobe 4 von 4.
+`vollstaendigkeit.py`: keine Befunde. `update.php` örtlich: Migration
+„Erfolgreich angewendet". Repo-Blöcke hell und dunkel byte-gleich im
+Stylesheet (Teilzeichenkettenvergleich). In Chromium: `index.php` und
+`einstellungen.php?t=profil` dunkel bei 1440 und 390 px angesehen; Konto auf
+„dunkel" gesetzt, Browser hell → `data-theme="dark"`, Seitenfläche
+`rgb(16, 27, 44)` (blau 900); als Druck → `rgb(255, 252, 250)` (Schnee);
+Anmeldeseite ohne Konto → kein Attribut, Logo dunkel `…-farbig-negativ.svg`.

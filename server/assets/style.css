@@ -309,6 +309,10 @@
   --text-titel:var(--genem-text-alternativ);
   --gedaempft:var(--genem-text-sekundaer);
   --text-link:var(--genem-text-blau);
+  /* Der Link unter dem Zeiger, wo die Zeile dabei auf Rauch wechselt. Hell
+   * dieselbe Farbe; dunkel eine Stufe heller (blau 200), weil blau 300 auf
+   * blau 700 nur 4,45:1 erreicht. */
+  --text-link-hover:var(--genem-text-blau);
   --auf-dunkel:var(--genem-schnee);     /* Schrift auf Dunkelblau, 13,33:1 */
 
   /* ---- Linien ----------------------------------------------------------
@@ -399,6 +403,9 @@
   --papier-titel:var(--genem-dunkelblau);
   --papier-leise:var(--genem-neutral-600);
   --papier-warnung:var(--genem-rot-700);
+  /* Formularelemente, Rollbalken und Datumsauswahl des Browsers folgen
+   * dieser Angabe; der Dark Mode stellt sie auf  (Abschnitt 2a). */
+  color-scheme:light;
 
   /* ---- Schriftfamilien -------------------------------------------------
    * Die Ersatzlisten sind NORMAL BREIT. Stünde eine schmale Schrift wie
@@ -607,6 +614,165 @@
   --auf-dunkel-flaeche:rgba(255,255,255,.14);
   --auf-dunkel-strich:rgba(255,255,255,.35);
 }
+
+/* == 2a. DARK MODE ========================================================
+ *
+ * EINE ZWEITE ZUORDNUNG DERSELBEN ROLLEN, KEIN ZWEITES FARBSYSTEM (Konzept
+ * MA, E-MA-03, Board MA-04). Die Seite wird blau 900, die Karte Dunkelblau,
+ * das Abgesetzte blau 700; Schrift Schnee, Ueberschriften blau 100,
+ * Kleinschrift blau 200, Links blau 300, Status Flaeche 800 und Schrift 200.
+ * Die Blau-Reihe und nicht ein warmes Schwarz, weil Dunkelblau die dunkle
+ * Markenfarbe ist.
+ *
+ * ZWEI AUSLOESER, DIESELBEN WERTE. `prefers-color-scheme: dark` ohne Wahl
+ * des Kontos, und `data-theme="dark"`, das `ui_seite_start()` setzt, wenn
+ * das Konto im Profil „Dunkel" gewaehlt hat; `data-theme="light"` haelt
+ * die Seite auf einem dunklen Geraet hell. CSS kennt keinen Selektor fuer
+ * „System oder Schalter", deshalb steht jeder Block zweimal.
+ *
+ * WAS NICHT UMSCHALTET, mit Absicht: die Leitwerte (`--schnee`,
+ * `--dunkelblau` …) — die Kopfleiste bleibt Dunkelblau, und die Karte
+ * (Leaflet) bleibt hell, samt Kartenzeichen und Spurfarben (E-MA-14: ein
+ * dunkler Kacheldienst waere ein weiterer Dritter, Bedrohungsmodell Lage G);
+ * und `--papier-*`, die Druckblaetter.
+ *
+ * Erst der Block des Branding-Repos, woertlich (Herkunft wie in Abschnitt
+ * 2, „9 Technik/Tokens/farben.css" ab Zeile 120), dann die Rollen der
+ * Anwendung, die das Repo nicht kennt: Schrift auf der Aktion (Dunkelblau
+ * auf blau 300), Auswahl (blau 700 mit Schnee), Mechanik, Gefahrknopf
+ * (rot 300 mit rot 900, Board MA-08), Fokus (blau 100), Markenflaeche und
+ * Diagramme (Stufen 300/400 auf dunklem Grund).
+ * ===== Anfang des übernommenen Blocks ===== */
+
+/* Dark Mode (Ergänzung): nur die semantischen Tokens werden neu zugewiesen.
+   Automatisch nach Systemeinstellung, abschaltbar mit data-theme="light"; erzwingbar mit data-theme="dark". */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --genem-flaeche-standard: var(--genem-blau-900);
+    --genem-flaeche-karte: var(--genem-dunkelblau);
+    --genem-flaeche-abgesetzt: var(--genem-blau-700);
+    --genem-linie: var(--genem-blau-700);
+    --genem-linie-stark: var(--genem-blau-300);
+    --genem-text-standard: var(--genem-schnee);
+    --genem-text-alternativ: var(--genem-blau-100);
+    --genem-text-sekundaer: var(--genem-blau-200);
+    --genem-text-rot: var(--genem-rot-300);
+    --genem-text-blau: var(--genem-blau-300);
+    --genem-text-orange: var(--genem-orange-400);
+    --genem-text-auf-dunkelblau: var(--genem-schnee);
+    --genem-aktion: var(--genem-blau-300);
+    --genem-aktion-hover: var(--genem-blau-200);
+    --genem-status-info-flaeche: var(--genem-blau-700);
+    --genem-status-info-text: var(--genem-blau-100);
+    --genem-status-info-linie: var(--genem-blau-400);
+    --genem-status-erfolg-flaeche: var(--genem-gruen-800);
+    --genem-status-erfolg-text: var(--genem-gruen-200);
+    --genem-status-erfolg-linie: var(--genem-gruen-400);
+    --genem-status-warnung-flaeche: var(--genem-orange-800);
+    --genem-status-warnung-text: var(--genem-orange-200);
+    --genem-status-warnung-linie: var(--genem-orange-400);
+    --genem-status-fehler-flaeche: var(--genem-rot-800);
+    --genem-status-fehler-text: var(--genem-rot-200);
+    --genem-status-fehler-linie: var(--genem-rot-400);
+  }
+}
+:root[data-theme="dark"] {
+  --genem-flaeche-standard: var(--genem-blau-900);
+  --genem-flaeche-karte: var(--genem-dunkelblau);
+  --genem-flaeche-abgesetzt: var(--genem-blau-700);
+  --genem-linie: var(--genem-blau-700);
+  --genem-linie-stark: var(--genem-blau-300);
+  --genem-text-standard: var(--genem-schnee);
+  --genem-text-alternativ: var(--genem-blau-100);
+  --genem-text-sekundaer: var(--genem-blau-200);
+  --genem-text-rot: var(--genem-rot-300);
+  --genem-text-blau: var(--genem-blau-300);
+  --genem-text-orange: var(--genem-orange-400);
+  --genem-text-auf-dunkelblau: var(--genem-schnee);
+  --genem-aktion: var(--genem-blau-300);
+  --genem-aktion-hover: var(--genem-blau-200);
+  --genem-status-info-flaeche: var(--genem-blau-700);
+  --genem-status-info-text: var(--genem-blau-100);
+  --genem-status-info-linie: var(--genem-blau-400);
+  --genem-status-erfolg-flaeche: var(--genem-gruen-800);
+  --genem-status-erfolg-text: var(--genem-gruen-200);
+  --genem-status-erfolg-linie: var(--genem-gruen-400);
+  --genem-status-warnung-flaeche: var(--genem-orange-800);
+  --genem-status-warnung-text: var(--genem-orange-200);
+  --genem-status-warnung-linie: var(--genem-orange-400);
+  --genem-status-fehler-flaeche: var(--genem-rot-800);
+  --genem-status-fehler-text: var(--genem-rot-200);
+  --genem-status-fehler-linie: var(--genem-rot-400);
+}
+/* ===== Ende des übernommenen Blocks ===== */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme:dark;
+    --auf-aktion:var(--genem-dunkelblau);
+    --auswahl-flaeche:var(--genem-blau-700);
+    --auswahl-text:var(--genem-schnee);
+    --mechanik:var(--genem-blau-400);
+    --gefahr:var(--genem-rot-300);
+    --gefahr-hover:var(--genem-rot-200);
+    --auf-gefahr:var(--genem-rot-900);
+    --fokus:var(--genem-blau-100);
+    --text-link-hover:var(--genem-blau-200);
+    --flaeche-marke:var(--genem-blau-900);
+    --diagramm-wert:var(--genem-blau-400);
+    --diagramm-wert-hover:var(--genem-blau-300);
+    --diagramm-hoechst:var(--genem-orange-400);
+    --diagramm-1:var(--genem-blau-400);
+    --diagramm-2:var(--genem-blau-100);
+    --diagramm-3:var(--genem-orange-400);
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme:dark;
+  --auf-aktion:var(--genem-dunkelblau);
+  --auswahl-flaeche:var(--genem-blau-700);
+  --auswahl-text:var(--genem-schnee);
+  --mechanik:var(--genem-blau-400);
+  --gefahr:var(--genem-rot-300);
+  --gefahr-hover:var(--genem-rot-200);
+  --auf-gefahr:var(--genem-rot-900);
+  --fokus:var(--genem-blau-100);
+  --text-link-hover:var(--genem-blau-200);
+  --flaeche-marke:var(--genem-blau-900);
+  --diagramm-wert:var(--genem-blau-400);
+  --diagramm-wert-hover:var(--genem-blau-300);
+  --diagramm-hoechst:var(--genem-orange-400);
+  --diagramm-1:var(--genem-blau-400);
+  --diagramm-2:var(--genem-blau-100);
+  --diagramm-3:var(--genem-orange-400);
+}
+
+/* DRUCKEN IST IMMER HELL. Ein Drucker auf dunklem Geraet bekaeme sonst
+ * blau-900-Flaechen aufs Papier. Die Spezifitaet (0,3,0) liegt ueber beiden
+ * Ausloesern (0,2,0); zurueckgestellt werden die Rollen, die der Druck
+ * zeigt — Flaechen, Schrift, Linien. */
+@media print {
+  :root:root:root {
+    color-scheme:light;
+    --flaeche-seite:var(--genem-schnee);
+    --flaeche-karte:var(--genem-schnee);
+    --flaeche-abgesetzt:var(--genem-rauch);
+    --flaeche-feld:var(--genem-schnee);
+    --text:var(--genem-asphalt);
+    --text-titel:var(--genem-dunkelblau);
+    --gedaempft:var(--genem-neutral-600);
+    --text-link:var(--genem-blau-600);
+    --text-link-hover:var(--genem-blau-600);
+    --linie:var(--genem-neutral-200);
+    --linie-stark:var(--genem-neutral-600);
+  }
+}
+
+/* Die Kopfleiste traegt im Dunkeln eine Linie nach unten: Dunkelblau auf
+ * blau 900 waere als Kante kaum zu sehen (Board MA-03). */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .kopf { border-bottom:var(--strich) solid var(--genem-blau-700); }
+}
+:root[data-theme="dark"] .kopf { border-bottom:var(--strich) solid var(--genem-blau-700); }
 
 @media (min-width:720px){
   :root{ --groesse-titel:30px; }
@@ -1192,7 +1358,7 @@ details[open] > .akkordeon-zeile > .akkordeon-winkel{transform:none}
   display:flex;align-items:center;justify-content:center;
   color:var(--mechanik);border-radius:var(--radius-klein);
 }
-.akkordeon-uebersicht:hover{color:var(--text-link);background:var(--flaeche-abgesetzt)}
+.akkordeon-uebersicht:hover{color:var(--text-link-hover);background:var(--flaeche-abgesetzt)}
 .akkordeon-inhalt{padding-left:var(--abstand-3)}
 .akkordeon-monat > .akkordeon-zeile{font-size:var(--groesse-3)}
 
@@ -1341,10 +1507,10 @@ details[open] > .akkordeon-zeile > .akkordeon-winkel{transform:none}
 .nach-oben{margin:var(--abstand-4) 0 0;text-align:right}
 a.zeile{text-decoration:none;color:inherit}
 a.zeile:hover{background:var(--flaeche-abgesetzt);text-decoration:none}
-a.zeile:hover .zeile-haupt{color:var(--text-link)}
+a.zeile:hover .zeile-haupt{color:var(--text-link-hover)}
 a.zeile:focus-visible{outline:var(--strich-stark) solid var(--fokus);outline-offset:var(--strich-stark);border-radius:var(--radius-klein)}
 .zeile-weiter{color:var(--mechanik);flex:0 0 auto}
-a.zeile:hover .zeile-weiter{color:var(--text-link)}
+a.zeile:hover .zeile-weiter{color:var(--text-link-hover)}
 .zeile:last-child{border-bottom:0;padding-bottom:0}
 .zeile:first-child{padding-top:0}
 .zeile-text{flex:1 1 auto;min-width:0}
@@ -2016,7 +2182,7 @@ input[type=checkbox].segment-box{position:absolute;opacity:0;width:0;height:0;mi
    * aufzumachen waere der Anfang vom Ende der geschlossenen Skala. */
   width:var(--symbol-gross);height:var(--symbol-gross);flex:0 0 var(--symbol-gross);
   border-radius:var(--radius-rund);
-  background:var(--dunkelblau);color:var(--auf-dunkel);
+  background:var(--aktion);color:var(--auf-aktion);
   font-size:var(--groesse-2);font-weight:700;line-height:1;
 }
 /* OPTIONAL: Sand statt Dunkelblau. Der Schritt bleibt sichtbar und tritt
@@ -2702,7 +2868,7 @@ pre{overflow-x:auto;background:var(--flaeche-abgesetzt);padding:var(--abstand-3)
 .bereich-zeichen{
   flex:0 0 auto;display:inline-flex;align-items:center;justify-content:center;
   width:var(--knopf);height:var(--knopf);border-radius:var(--radius-rund);
-  background:var(--dunkelblau);color:var(--auf-dunkel);
+  background:var(--aktion);color:var(--auf-aktion);
 }
 
 /* AM SCHREIBTISCH DREI SPALTEN. `auto-fit` füllt nach Rolle: eine Spalte für
@@ -2806,7 +2972,7 @@ pre{overflow-x:auto;background:var(--flaeche-abgesetzt);padding:var(--abstand-3)
 .tabelle{display:table}
 .tabelle-scroll{overflow-x:auto}
 .tabelle th.sortable{cursor:pointer;white-space:nowrap}
-.tabelle th.sortable:hover{color:var(--text-link)}
+.tabelle th.sortable:hover{color:var(--text-link-hover)}
 .tabelle .arrow{color:var(--text-link);vertical-align:middle}
 .tabelle .arrow .symbol{width:var(--groesse-2);height:var(--groesse-2)}
 .tabelle .tabelle-haken{color:var(--text-titel)}
@@ -2815,6 +2981,23 @@ pre{overflow-x:auto;background:var(--flaeche-abgesetzt);padding:var(--abstand-3)
   border-radius:var(--radius-rund);vertical-align:middle;
 }
 .tabelle .streifen-spalte{width:var(--abstand-3)}
+/* IM DUNKELN EIN RAND (MA-05, E-MA-11). Der Streifen traegt die Spurfarbe
+ * der Karte, und die bleibt hell; `--spur-4` ist Dunkelblau und laege auf
+ * der dunkelblauen Karte unsichtbar. Ein Rand in `--linie-stark` (blau 300)
+ * fasst jeden Streifen ein, ohne seine Farbe zu aendern. */
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]) .tabelle .streifen,
+  :root:not([data-theme="light"]) .legende-linie{box-shadow:0 0 0 var(--strich) var(--linie-stark)}
+}
+:root[data-theme="dark"] .tabelle .streifen,
+:root[data-theme="dark"] .legende-linie{box-shadow:0 0 0 var(--strich) var(--linie-stark)}
+/* Die Karte (Leaflet) bleibt im Dunkeln hell (E-MA-14) und bekommt dafuer
+ * einen Rahmen in `--linie-stark`, damit die helle Flaeche nicht ohne Kante
+ * auf der dunklen Seite steht (Board MA-03). */
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]) .geo{box-shadow:0 0 0 var(--strich) var(--linie-stark)}
+}
+:root[data-theme="dark"] .geo{box-shadow:0 0 0 var(--strich) var(--linie-stark)}
 .tabelle tr.clickable{cursor:pointer}
 .tabelle tr.clickable:hover td{background:var(--flaeche-abgesetzt)}
 .tabelle tr.clickable:focus-visible{outline-offset:calc(var(--strich-stark) * -1)}

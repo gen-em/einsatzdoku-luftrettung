@@ -8647,4 +8647,21 @@ declare(strict_types=1);
  *   Hubschrauber statt einer Muenze; `logo_platzhalter_liegt()` entfaellt.
  *   Ein `logo_path` mit altem Namen gilt weiter als mitgeliefert.
  *   Korrektur; kein Schema. */
-const WEB_VERSION = '23.9.2';
+/* 23.10.0 — DER DARK MODE, MIT SCHALTER JE KONTO (Schritt 26, MA-07).
+ *   Eine zweite Zuordnung derselben Rollen auf die Blau-Reihe des
+ *   Branding-Repos (Abschnitt 2a von `style.css`, der Block des Repos
+ *   woertlich, dazu die Rollen der Anwendung). Ausloeser sind
+ *   `prefers-color-scheme` und `data-theme` am <html>, das
+ *   `ui_seite_start()` aus der Sitzung setzt. Die Wahl steht in
+ *   `users.darstellung` ('' wie das Geraet, 'hell', 'dunkel') und im Profil
+ *   als Karte „Darstellung". Karte (Leaflet), Kopfleiste und Druckblaetter
+ *   bleiben hell bzw. dunkelblau; Drucken ist immer hell. Die Anmeldeseiten
+ *   waehlen ihr Logo mit <picture>. `kontrast.py` rechnet jedes Paar in
+ *   beiden Modi.
+ *
+ *   NEBENNUMMER MIT MIGRATION: `2026_11_07_darstellung` legt
+ *   `users.darstellung` an. Nach dem Deploy muss eine Administratorin
+ *   `update.php` aufrufen; bis dahin gilt fuer jedes Konto „wie das Geraet",
+ *   und Anmeldung und Profil laufen weiter — beide Leser vertragen die
+ *   fehlende Spalte. */
+const WEB_VERSION = '23.10.0';

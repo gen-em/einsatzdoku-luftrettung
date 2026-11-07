@@ -340,6 +340,61 @@ function logo_stamm(): string
     return $auf === 'fahrzeug' ? 'nadoku-nef' : 'nadoku-hubschrauber';
 }
 
+/* ---------------------------------------------------------------------------
+ * DARSTELLUNG JE KONTO: System, hell oder dunkel (Schritt 26, MA-07)
+ *
+ * Drei Werte stehen in `users.darstellung`:
+ *
+ *   ''        System — folgt `prefers-color-scheme` des Geraets. Vorgabe.
+ *   'hell'    immer hell, auch auf einem Geraet im Dunkelmodus
+ *   'dunkel'  immer dunkel
+ *
+ * WIE BEI DER LOGO-WAHL: gelesen bei der Anmeldung, abgelegt in der Sitzung,
+ * nach dem Speichern im Profil sofort neu gesetzt. Jede Seite liest nur die
+ * Sitzung — keine Abfrage je Seitenaufruf.
+ *
+ * AUSGEGEBEN ALS `data-theme` AM <html>, serverseitig in `ui_seite_start()`.
+ * Ein Skript, das das Attribut erst nach dem Laden setzte, liesse die Seite
+ * einmal hell aufblitzen. Ohne Wahl steht KEIN Attribut da, und das
+ * Stylesheet folgt dem Geraet.
+ *
+ * VOR DER MIGRATION gibt es die Spalte nicht. `darstellung_lesen()` faengt
+ * das ab und liefert '' (System) — die Anmeldung haengt nicht daran.
+ * ------------------------------------------------------------------------ */
+
+/** Die waehlbaren Werte — auch die Pruefliste beim Speichern. */
+const DARSTELLUNGEN = ['', 'hell', 'dunkel'];
+
+/** Die gespeicherte Wahl eines Kontos; '' ohne Spalte oder ohne Konto. */
+function darstellung_lesen(int $userId): string
+{
+    try {
+        $q = db()->prepare('SELECT darstellung FROM users WHERE id = ?');
+        $q->execute([$userId]);
+        $w = (string)$q->fetchColumn();
+    } catch (Throwable) {
+        return '';                 // Spalte fehlt (Migration offen): System
+    }
+    return in_array($w, DARSTELLUNGEN, true) ? $w : '';
+}
+
+/** Die Wahl in der Sitzung ablegen (Anmeldung, Profil-Speichern). */
+function darstellung_sitzung_setzen(?string $wahl): void
+{
+    $w = (string)$wahl;
+    $_SESSION['darstellung'] = in_array($w, DARSTELLUNGEN, true) ? $w : '';
+}
+
+/** Der Wert fuer `data-theme`: 'light', 'dark' oder '' (kein Attribut). */
+function darstellung_attribut(): string
+{
+    return match ((string)($_SESSION['darstellung'] ?? '')) {
+        'hell'   => 'light',
+        'dunkel' => 'dark',
+        default  => '',
+    };
+}
+
 /* ---- Formular-Token (CSRF) ------------------------------------------------
  *
  * WARUM DAS HIER STEHT UND NICHT IN `auth_guard.php`. Dort laegen Erzeugung
