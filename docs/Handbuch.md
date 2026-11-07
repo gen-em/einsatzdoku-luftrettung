@@ -332,7 +332,8 @@ den vollständigen Empfang bestätigt hat. Den aktuellen Stand zeigt die
 
 ## 3. Die Web-Oberfläche — Überblick
 
-Die Kopfleiste zeigt links das Logo und den Namen **Gen-EM NAdoku**; am breiten
+Die Kopfleiste zeigt links das Zeichen und den Namen **NAdoku** — die
+Produktmarke der Software; am breiten
 Bildschirm steht der eigene Name daneben (im Profil setzbar, sonst die
 E-Mail-Adresse). Rechts stehen **Startseite**, **Suche** (Abschnitt 4.6) und
 das Zahnrad für die **Einstellungen**. Sie bleibt beim Scrollen oben stehen.
@@ -615,8 +616,9 @@ oder BetreiberIn — als reine Anzeige. Sie erklärt, warum zwei Konten unter de
 Zahnrad verschieden viel sehen; geändert wird sie in der Verwaltung
 (11.3), nicht hier.
 
-Die Anwendung bringt zwei Logos mit — einen Hubschrauber und ein Fahrzeug.
-Welches du siehst, entscheidest du selbst:
+Die Anwendung bringt zwei Zeichen mit — einen Hubschrauber und ein Fahrzeug
+(NEF), beide in Dunkelblau mit den drei Gen-EM-Farben. Welches du siehst,
+entscheidest du selbst:
 
 | Wahl | Bedeutung |
 |---|---|
@@ -634,7 +636,9 @@ bleibt das Logo, wie es ist. Ein Logo, das beim Blättern springt, wäre keine
 Abwechslung, sondern Unruhe.
 
 Die **Anmeldeseite** zeigt immer den Standard der Installation. Dort ist noch
-niemand angemeldet, und die Wahl hängt am Konto. (Bis Web 9.9.0 zeigte sie
+niemand angemeldet, und die Wahl hängt am Konto. Die **Wartungsseite** zeigt
+immer den Hubschrauber; sie kommt ohne Datenbank aus und kennt den Standard
+deshalb nicht. (Bis Web 9.9.0 zeigte sie
 stattdessen immer den Hubschrauber, gleich wie der Standard eingestellt war.)
 
 Den **Standard der Installation** setzt die Verwaltung unter
@@ -4775,7 +4779,9 @@ Browsertab, Kopfleiste, Anmeldeseite, Wartungsseite, Schlüsselblatt — und
 - **Name** — der lange. Er steht im Betreff jeder Mail und unter der
   Grußformel. Vorgabe: *Gen-EM Einsatzdokumentation Notarzt*.
 - **Kurzname** — der kurze. Er steht dort, wo wenig Platz ist: im Browsertab
-  und oben in der Kopfleiste. Vorgabe: *Gen-EM NAdoku*.
+  und auf der Anmeldeseite. Vorgabe: *Gen-EM NAdoku*. Oben in der
+  Kopfleiste steht dagegen immer die Produktmarke „NAdoku" mit dem
+  gewählten Zeichen — sie ist der Name der Software, nicht der Anlage.
 
 **Wer nichts einträgt, ändert nichts** — dann gelten die Vorgaben, und alles
 sieht aus wie bisher. Leer lassen setzt auch wieder darauf zurück.

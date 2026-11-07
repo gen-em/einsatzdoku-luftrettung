@@ -583,12 +583,11 @@ Daten erst nach Server-Bestätigung.
 │   │                       des QR-Codes; das SVG baut assets/qr.js) ·
 │   │                      leaflet/ — Leaflet 1.9.4, BSD-2-Clause (Karten; CSS, JS, images/);
 │   │                      alle lokal vendoriert (kein CDN), Herkunft und SHA-256 im Dateikopf
-│   │   └── fonts/         Bricolage Grotesque 500/600 und Open Sans 400/600/700 als woff2,
+│   │   └── fonts/         Bricolage Grotesque 500 und Open Sans 400/700 als woff2,
 │   │                      je Subset latin und latin-ext (@fontsource, OFL-1.1)
-│   │   └── images/        Logos als SVG (farbig + weiss) je Hubschrauber und Fahrzeug,
-│   │       │                favicon.png + favicon-fahrzeug.png (erzeugt aus den
-│   │       │                Logodateien, s. tools/erzeugen/ (logos)); das Fahrzeug-Logo ist bis
-│   │       │                zur Zulieferung ein PLATZHALTER (gestrichelter Rahmen)
+│   │   └── images/        Produktmarke NAdoku als SVG (farbig, farbig-negativ, weiss) je
+│   │       │                Hubschrauber und NEF, aus dem Branding-Repo (seit Schritt 26);
+│   │       │                Favicons und 500-px-PNG daraus erzeugt (tools/erzeugen/ (logos))
 │   │       └── symbole/    je Zeichen eine SVG-Datei (Tabler Icons, MIT;
 │   │                       ein eigener Entwurf), 24 x 24, currentColor, Anker
 │   │                       <g id="i">; dazu LICENSE-tabler-icons.txt und
@@ -7253,7 +7252,7 @@ geändert** (E-S5W-08).
 | Sichtbarkeit | Es gibt kein automatisches Ausschalten (E-S5W-05). Ein oranger Balken auf `betrieb_updates.php` und `login.php` nennt Zeitpunkt und Konto — das sind die beiden einzigen Seiten, auf denen ein stehengebliebener Wartungsmodus überhaupt auffallen kann |
 | Jobs | laufen weiter (E-S5W-11). `jobs.php` mit Token ist Ausnahme, damit das Komplett-Backup **während** der Wartung läuft — genau dann ist es konsistent. Der Huckepack-Weg aus `auth_guard.php` läuft auf `betrieb_updates.php` mit, und zwar **vor** `require_betreiberin()` und damit vor jeder Migration desselben Aufrufs. Wer Ruhe braucht: `jobs.php --pause` |
 | Anmeldung | Der Passwortvergleich ist unverändert. **Nach** einem Erfolg entscheidet die Rolle: Admin und BetreiberIn weiter, alles andere sofort wieder abgemeldet und auf die Wartungsseite (E-S5W-09). Die Ratenschutz-Zähler werden trotzdem geleert — das Passwort war richtig |
-| Logo | Die Wartungsseite kann `logo_stamm()` nicht rufen (Datenbank) und **wirft eine Münze** zwischen den beiden Standardlogos, wie `logo_aufloesen('wechselnd')`. Eine Installation mit eigenem Logo sieht während der Wartung eines der beiden Standardlogos |
+| Logo | Die Wartungsseite kann `logo_stamm()` nicht rufen (Datenbank) und zeigt **fest den Hubschrauber**, die Vorbelegung der Installation. Bis Schritt 26 warf sie eine Münze; die Produktmarke darf nicht je Seitenaufruf wechseln (Design.md 2.3). Eine Installation mit eigenem Logo oder dem NEF sieht während der Wartung den Hubschrauber |
 
 **Die Datei ist der Schalter, nicht ihr Inhalt.** Liegt sie da, ist aber
 unlesbar oder kein gültiges JSON, gilt die Wartung trotzdem; der Balken sagt
@@ -14921,11 +14920,11 @@ getroffen haben.
 `konfig('app.logo_path')` gewinnt nur noch, wenn dort eine **fremde** Datei
 steht (F-P3-AN). `pw_handling.php` lädt dafür `session_lib.php`.
 
-**Der Platzhalterhinweis** an der Logo-Karte fragt die Datei, nicht eine
-Zahl im Code: `logo_platzhalter_liegt()` liest die ersten 400 Byte von
-`gen-em_logo_nef.svg` und `…_weiss.svg` und sucht das Wort „PLATZHALTER"
-im Kopfkommentar. Er verschwindet damit von selbst, sobald die echten Dateien
-liegen — sie ersetzen den Platzhalter 1:1 (gleicher Name, gleicher `viewBox`).
+**Der Platzhalterhinweis** an der Logo-Karte (`logo_platzhalter_liegt()`)
+ist mit Schritt 26 entfallen: Er fragte die alten Dateien `gen-em_logo_nef*`
+nach dem Wort „PLATZHALTER", und die echten lagen längst. Die Dateien heißen
+seither `nadoku-*` (Design.md 2.3); ein `logo_path` mit einem alten Namen
+gilt weiter als mitgeliefert.
 
 
 ### 14.8 Installation und Rechtstexte (R32, seit Web 9.11.0; Installation seit Web

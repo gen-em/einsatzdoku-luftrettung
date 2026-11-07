@@ -8633,5 +8633,18 @@ declare(strict_types=1);
  *   noch in 500, Open Sans in 400 und 700; die vier 600er-Dateien sind
  *   entfernt, jedes `font-weight:600` ist 500 oder 700. Die kleinste
  *   Schriftstufe ist 13 px, `--groesse-1` (12 px) entfaellt. Korrektur;
- *   kein Schema. */
-const WEB_VERSION = '23.9.1';
+ *   kein Schema.
+ *
+ * 23.9.2 — DIE PRODUKTMARKE NADOKU (Schritt 26, MA-06; Backlog Nr. 62).
+ *   Zeichen aus dem Branding-Repo (`nadoku-hubschrauber`, `nadoku-nef`, je
+ *   farbig, farbig-negativ, weiss; Grundform Dunkelblau, Markenfarben
+ *   exakt) statt der `gen-em_logo_*` mit Naeherungswerten. Die Kopfleiste
+ *   zeigt Zeichen (farbig-negativ) und den festen Namen „NAdoku"
+ *   (`UI_PRODUKTNAME`); der Kurzname der Installation steht seither nur
+ *   noch im Tab, auf der Anmeldeseite, in Mails und Druckblaettern.
+ *   Favicons als SVG, 32-px-PNG, Apple-Symbol und ICO (16/32/48), erzeugt
+ *   von `tools/erzeugen/logos.mjs`. Die Wartungsseite zeigt fest den
+ *   Hubschrauber statt einer Muenze; `logo_platzhalter_liegt()` entfaellt.
+ *   Ein `logo_path` mit altem Namen gilt weiter als mitgeliefert.
+ *   Korrektur; kein Schema. */
+const WEB_VERSION = '23.9.2';

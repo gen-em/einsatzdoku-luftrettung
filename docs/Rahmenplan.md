@@ -1,6 +1,6 @@
 # Rahmenplan — Programm „Gen-EM NAdoku" bis v1.0
 
-**Fassung 225 (06.11.2026)** · Steuerung: Reihenfolge, Status, programmweite
+**Fassung 226 (07.11.2026)** · Steuerung: Reihenfolge, Status, programmweite
 Entscheidungen. Verlauf: `Rahmenplan-Verlauf.md`. Fassungen 1–15:
 `Rahmenplan-Archiv.md`; Fassungen 16–124: `Rahmenplan-Archiv-2.md`.
 
@@ -214,7 +214,6 @@ gestrichen, 6a abgehakt; was steht, ist bestätigt offen.
 | **Demo-Video des Vordergrunddienstes auf echtem Gerät** für die Standort-Deklaration — falls der interne Track sie verlangt (beim Einrichten prüfen) | 6 Teil C | 03.09.2026 | `Vorbereitung-Play-Console.md` |
 | **Datensicherheitsformular der Play Console** — setzt die Datenschutzerklärung voraus (6.3) | 6 Teil C | 03.09.2026 | `Vorbereitung-Play-Console.md` |
 | **Wear-OS-Uhr für den Gerätetest**, die Wear-OS-Prüfrunde und den Installationstest aus dem Track | 6 Teil C; Prüfliste AR | 31.08.2026 | `Pruefliste.md` |
-| **Logo-Vorlagen in den Markenfarben** (`#4280E5`, `#D63338`, `#FF8F1F`, `#1A0500`) für `gen-em_logo_helicopter.svg`, die PNG und alle Ableitungen — entschieden 12.09.2026, seither nichts eingegangen (Nr. 62) | vor 13 (E-BE-06) | 12.09.2026 | `Design.md` 2.5; Backlog Nr. 62 |
 | **Impressums- und Datenschutztext der Installation** über den Editor eintragen (R32); für das Datensicherheitsformular der Play Console schon vor dem ersten Track-Release | vor 13 | 30.08.2026 | Handbuch 11.5 |
 | **GitHub: `gen-em/nadoku` anlegen** (öffentlich, AGPL-3.0), Umgebungen `staging` und `produktion` mit Pflichtfreigabe, Zweigschutz; danach dieses Repositorium archivieren | mit dem Umzug in 14 (R68) | 03.09.2026 | Fahrplan, Schritt 14 |
 

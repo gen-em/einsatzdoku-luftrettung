@@ -457,13 +457,14 @@ function wartung_antwort_json(): never
  * das, was umgebaut wird. Das Stylesheet darf verlinkt werden — es ist eine
  * statische Datei und laeuft nicht durch PHP.
  *
- * DAS LOGO WIRFT EINE MUENZE. `logo_stamm()` faellt aus (Datenbank), und ein
- * fest eingebautes Logo waere eine Aussage: Diese Anwendung dokumentiert
- * Luft- UND bodengebundene Notarzteinsaetze, und die Wahl „wechselnd" ist
- * genau deshalb der Installationsstandard. Der Wurf hier ist derselbe wie in
- * `logo_aufloesen()` — nur ohne Sitzung und ohne Datenbank. Wer ein eigenes
- * Logo eingestellt hat, sieht waehrend der Wartung eines der beiden
- * Standardlogos; das ist der Preis dafuer, dass diese Seite ohne Datenbank
+ * DAS LOGO IST DER HUBSCHRAUBER, die Vorbelegung der Installation
+ * (`LOGO_STANDARD_VORGABE`). `logo_stamm()` faellt aus (Datenbank). Bis
+ * Schritt 26 warf die Seite hier eine Muenze zwischen Hubschrauber und NEF;
+ * die Regeln der Produktmarke (Branding-Repo, `Produktmarken.md`, Regel 9)
+ * erlauben je Gegenstand ein Zeichen, aber „nie einen Wechsel bei jedem
+ * Seitenaufruf" — und ein Neuladen der Wartungsseite ist einer. Wer ein
+ * eigenes Logo oder das NEF eingestellt hat, sieht waehrend der Wartung den
+ * Hubschrauber; das ist der Preis dafuer, dass diese Seite ohne Datenbank
  * auskommt.
  *
  * KEIN SKRIPT auf dieser Seite. Sie soll auch dann stehen, wenn die
@@ -502,9 +503,8 @@ function wartung_antwort_seite(bool $rueckweg = true): never
  */
 function stoerung_seite_html(string $titel, string $innen): string
 {
-    /* DAS LOGO WIRFT EINE MUENZE — siehe wartung_seite_html(). */
-    $stamm = random_int(0, 1) === 1 ? 'gen-em_logo_nef' : 'gen-em_logo_helicopter';
-    $logo  = 'assets/images/' . $stamm . '.svg';
+    /* DAS LOGO IST DER HUBSCHRAUBER — siehe wartung_antwort_seite(). */
+    $logo  = 'assets/images/nadoku-hubschrauber-farbig.svg';
     /* Erkennungswert wie asset() ihn setzt, aber ohne db.php: die
      * Aenderungszeit der Datei. Faellt sie aus, bleibt der Verweis nackt —
      * schlimmstenfalls zeigt ein Browser ein altes Stylesheet, und die Seite

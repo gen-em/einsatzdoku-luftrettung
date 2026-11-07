@@ -217,6 +217,18 @@ function ui_instanz_kurz(): string
 }
 
 /**
+ * Der Produktname neben der Produktmarke in der Kopfleiste (E-MA-06).
+ *
+ * FEST, NICHT EINSTELLBAR — anders als der Kurzname der Installation. Zeichen
+ * und Name sind zusammen die Produktmarke (Branding-Repo,
+ * `5 Regeln/Produktmarken.md`, Regel 5: Bricolage Medium, rechts neben dem
+ * Zeichen). Bis Schritt 26 stand an dieser Stelle `instanz_kurz()`; der
+ * Kurzname steht seither im Browsertab, auf der Anmeldeseite, in Mails und
+ * Druckblaettern, aber nicht mehr in der Kopfleiste.
+ */
+const UI_PRODUKTNAME = 'NAdoku';
+
+/**
  * Das Etikett dieser Anlage — `umgebung()`, oder `null`.
  *
  * `umgebung_lib.php` laedt nur `konfig_lib.php`, und die laedt nichts; beide
@@ -243,9 +255,10 @@ function ui_favicon(): string
     if (function_exists('favicon_tags')) { return favicon_tags(); }
     // Rueckfall ohne config.php: seitenrelativ. Der Einrichter liegt im selben
     // Verzeichnis wie die Anwendung, damit zeigen die Pfade richtig.
-    return '<link rel="icon" type="image/png" href="assets/images/favicon_helicopter.png">' . "\n"
+    return '<link rel="icon" type="image/svg+xml" href="assets/images/favicon-nadoku-hubschrauber.svg">' . "\n"
+         . '<link rel="icon" type="image/png" sizes="32x32" href="assets/images/favicon-nadoku-hubschrauber-32.png">' . "\n"
          . '<link rel="icon" href="favicon.ico">'
-         . '<link rel="apple-touch-icon" href="assets/images/favicon_helicopter.png">';
+         . '<link rel="apple-touch-icon" href="assets/images/apple-touch-nadoku-hubschrauber.png">';
 }
 
 /**
@@ -445,21 +458,25 @@ function ui_user_label(): string {
 }
 
 /**
- * Pfad zum Logo für die Kopfleiste (weiße Fassung) bzw. für helle Flächen.
+ * Pfad zur Produktmarke: auf dunkler Fläche (Kopfleiste) die Fassung
+ * „farbig-negativ" (Grundform Schnee, Federfarben bleiben), auf heller die
+ * farbige (Grundform Dunkelblau). Bis Schritt 26 hieß die dunkle Fassung
+ * „weiß" und war es ganz; die weiße gibt es weiter, für Flächen in
+ * Gründerfarben, und die Anwendung braucht sie nicht.
  *
  * Die Wahl je Profil (Standard / Hubschrauber / Fahrzeug /
  * wechselnd) steht in `users.logo_wahl` und wird bei der
  * Anmeldung EINMAL aufgelöst (session_lib.php). Diese Funktion liest nur
  * das Ergebnis — eine Zuweisung und keine Suche über 25 Seiten.
  */
-function ui_logo(bool $weiss = false): string
+function ui_logo(bool $aufDunkel = false): string
 {
     /* Es entscheidet logo_stamm() (session_lib.php) — dieselbe
      * Stelle, die auch favicon_tags() fragt. So können Kopfleiste und
      * Browser-Symbol nicht auseinanderlaufen. Ohne Sitzung
      * (Anmeldung, Einrichter) liefert sie den Standard. */
-    $stamm = function_exists('logo_stamm') ? logo_stamm() : 'gen-em_logo_helicopter';
-    return ui_asset('assets/images/' . $stamm . ($weiss ? '_weiss' : '') . '.svg');
+    $stamm = function_exists('logo_stamm') ? logo_stamm() : 'nadoku-hubschrauber';
+    return ui_asset('assets/images/' . $stamm . ($aufDunkel ? '-farbig-negativ' : '-farbig') . '.svg');
 }
 
 
@@ -479,7 +496,7 @@ function ui_logo(bool $weiss = false): string
  */
 function ui_logo_masse(int $hoehe): array
 {
-    $stamm = function_exists('logo_stamm') ? logo_stamm() : 'gen-em_logo_helicopter';
+    $stamm = function_exists('logo_stamm') ? logo_stamm() : 'nadoku-hubschrauber';
     /* Rahmen der SVG, nach dem Beschnitt deckungsgleich mit der
      * Zeichnung: Luft 400,16 x 249,81 · Boden 420 x 335. */
     $verhaeltnis = str_contains($stamm, 'nef') ? 420 / 335 : 400.16 / 249.81;
@@ -563,7 +580,7 @@ function ui_kopf(array $o = []): void
       <?php $lm = ui_logo_masse(34); ?>
       <img src="<?= ui_e(ui_logo(true)) ?>" alt=""
            width="<?= $lm['breite'] ?>" height="<?= $lm['hoehe'] ?>">
-      <span class="kopf-name"><?= ui_e(ui_instanz_kurz()) ?></span>
+      <span class="kopf-name"><?= ui_e(UI_PRODUKTNAME) ?></span>
       <?php if ($menue): ?><span class="kopf-nutzer"><?= ui_e(ui_user_label()) ?></span><?php endif; ?>
     </a>
 
@@ -660,7 +677,7 @@ function ui_geruest_start(array $o = []): void
       <button type="button" class="knopf knopf-symbol" data-schublade="zu" aria-label="Menü schließen">
         <?= ui_symbol('schliessen', 'symbol-gross') ?>
       </button>
-      <span class="kopf-name"><?= ui_e(ui_instanz_kurz()) ?></span>
+      <span class="kopf-name"><?= ui_e(UI_PRODUKTNAME) ?></span>
     </div>
     <nav class="leiste-haupt nur-schublade" aria-label="Hauptbereiche">
       <a class="eintrag<?= ($o['aktiv'] ?? '') === 'start' ? ' aktiv' : '' ?>" href="index.php">

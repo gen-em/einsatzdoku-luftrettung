@@ -332,10 +332,12 @@ function logo_stamm(): string
     $w = (string)($_SESSION['logo_wahl'] ?? '');
     $auf = ($w === 'hubschrauber' || $w === 'fahrzeug') ? $w : logo_standard_aufgeloest();
     /* Der EINSTELLUNGSWERT heisst weiter 'fahrzeug' — er steht so in
-     * users.logo_wahl und in app_state.logo_standard. Der DATEISTAMM heisst
-     * seit dem Logo-Wechsel 'gen-em_logo_nef'. Beides auseinanderzuhalten
-     * spart eine Migration gespeicherter Werte. */
-    return $auf === 'fahrzeug' ? 'gen-em_logo_nef' : 'gen-em_logo_helicopter';
+     * users.logo_wahl und in app_state.logo_standard. Der DATEISTAMM ist
+     * seit Schritt 26 die Produktmarke aus dem Branding-Repo
+     * ('nadoku-nef', bis dahin 'gen-em_logo_nef'). Beides
+     * auseinanderzuhalten spart eine Migration gespeicherter Werte. Die
+     * Fassung (farbig, farbig-negativ, weiss) haengt der Aufrufer an. */
+    return $auf === 'fahrzeug' ? 'nadoku-nef' : 'nadoku-hubschrauber';
 }
 
 /* ---- Formular-Token (CSRF) ------------------------------------------------

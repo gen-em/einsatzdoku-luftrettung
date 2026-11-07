@@ -347,16 +347,20 @@ function favicon_tags(): string {
      * und ist der Rueckfall fuer Browser, die kein PNG-Icon nehmen. Eine
      * zweite .ico je Logo waere zwei Dateien fuer einen Rueckfall, den
      * heute kaum ein Browser braucht. */
-    $png = function_exists('logo_stamm') && logo_stamm() === 'gen-em_logo_nef'
-        ? 'assets/images/favicon_nef.png'
-        : 'assets/images/favicon_helicopter.png';
+    $stamm = function_exists('logo_stamm') ? logo_stamm() : 'nadoku-hubschrauber';
 
-    // PNG zuerst: Es ist die Fassung, die wir sicher ausliefern. Die .ico ohne
-    // sizes-Angabe hinterher — mit sizes="any" wuerden manche Browser sie
-    // bevorzugen und bei ihrem Fehlen gar kein Symbol zeigen.
-    return '<link rel="icon" type="image/png" href="' . e($basis . '/' . asset($png)) . '">' . "\n"
+    /* DREI ANGEBOTE (seit Schritt 26, Produktmarke aus dem Branding-Repo):
+     * das SVG fuer Browser, die es nehmen (scharf in jeder Groesse), das PNG
+     * in 32 px fuer die uebrigen, und das Apple-Symbol in 180 px auf Schnee.
+     * Alle drei sind aus der farbigen Fassung erzeugt — farbig auch bei
+     * 16 px (Entscheidung der Betreiberin, `erzeuge_favicons.py` im Repo).
+     * Die .ico ohne sizes-Angabe hinterher — mit sizes="any" wuerden manche
+     * Browser sie bevorzugen und bei ihrem Fehlen gar kein Symbol zeigen. */
+    $b = $basis . '/assets/images/';
+    return '<link rel="icon" type="image/svg+xml" href="' . e($basis . '/' . asset('assets/images/favicon-' . $stamm . '.svg')) . '">' . "\n"
+         . '<link rel="icon" type="image/png" sizes="32x32" href="' . e($basis . '/' . asset('assets/images/favicon-' . $stamm . '-32.png')) . '">' . "\n"
          . '<link rel="icon" href="' . e($basis . '/favicon.ico') . '">'
-         . '<link rel="apple-touch-icon" href="' . e($basis . '/' . asset($png)) . '">';
+         . '<link rel="apple-touch-icon" href="' . e($basis . '/' . asset('assets/images/apple-touch-' . $stamm . '.png')) . '">';
 }
 
 /**
@@ -383,13 +387,18 @@ function logo_src(): string {
      * nicht. Wo sie fehlt — im Einrichter vor der ersten Einrichtung —, bleibt
      * es beim Hubschrauber. */
     $pfad = (string)konfig('app.logo_path', '');
+    /* MITGELIEFERT HEISST: einer der beiden alten Namen (bis Schritt 26,
+     * so steht er in der `config.php` jeder bestehenden Anlage) oder ein
+     * neuer. Beide fuehren auf die Logo-Wahl, nicht auf die Datei. */
     $eigen = $pfad !== ''
         && !str_contains($pfad, 'gen-em_logo_helicopter')
         && !str_contains($pfad, 'gen-em_logo_nef')
+        && !str_contains($pfad, 'nadoku-hubschrauber')
+        && !str_contains($pfad, 'nadoku-nef')
         && is_file(__DIR__ . '/' . ltrim($pfad, '/'));
     if ($eigen) { return asset($pfad); }
-    $stamm = function_exists('logo_stamm') ? logo_stamm() : 'gen-em_logo_helicopter';
-    return asset('assets/images/' . $stamm . '.svg');
+    $stamm = function_exists('logo_stamm') ? logo_stamm() : 'nadoku-hubschrauber';
+    return asset('assets/images/' . $stamm . '-farbig.svg');
 }
 
 /** UTC-DATETIME (aus DB) -> Anzeige in App-Zeitzone */

@@ -22,29 +22,6 @@ require_once __DIR__ . '/protokoll_lib.php';
  *
  */
 
-/**
- * Liegt der NEF-Platzhalter noch?
- *
- * Gefragt wird die DATEI, nicht eine Zahl im Code: Der Platzhalter traegt das
- * Wort in seinem Kopfkommentar, und sobald die echte Datei an seiner Stelle
- * liegt, verschwindet der Hinweis von selbst. Gelesen werden nur die ersten
- * 400 Byte — der Kommentar steht ganz oben.
- */
-function logo_platzhalter_liegt(): array
-{
-    $liegt = [];
-    foreach (['gen-em_logo_nef.svg', 'gen-em_logo_nef_weiss.svg'] as $datei) {
-        $pfad = __DIR__ . '/assets/images/' . $datei;
-        if (!is_file($pfad)) { continue; }
-        $f = @fopen($pfad, 'rb');
-        if ($f === false) { continue; }
-        $kopf = (string)fread($f, 400);
-        fclose($f);
-        if (str_contains($kopf, 'PLATZHALTER')) { $liegt[] = $datei; }
-    }
-    return $liegt;
-}
-
 /* Die drei Wahlmoeglichkeiten des Installationsstandards. „wechselnd" ist
  * auch hier waehlbar — eine Installation, die beide
  * Rettungsmittel fuehrt, hat denselben Grund dafuer wie eine einzelne Person.
@@ -167,7 +144,7 @@ ui_seite_start(['titel' => 'Installation']);
                          'klein' => 'Höchstens ' . INSTANZ_MAX . ' Zeichen ohne '
                                   . 'Zeilenumbruch; leer heißt Vorgabe.']); ?>
           <?php ui_feld(['name' => 'instanz_kurz', 'label' => 'Kurzname',
-                         'label_zusatz' => 'im Browsertab und in der Kopfleiste',
+                         'label_zusatz' => 'im Browsertab und auf der Anmeldeseite',
                          'wert' => instanz_kurz(),
                          'platzhalter' => INSTANZ_KURZ_VORGABE]); ?>
           <?= ui_knopf(['text' => 'Namen speichern', 'art' => 'primaer']) ?>
@@ -218,11 +195,11 @@ ui_seite_start(['titel' => 'Installation']);
                  Dunkelblau, weil das Logo dort steht, wo man es am haeufigsten
                  sieht: in der Kopfleiste. */ ?>
         <?php $stamm = logo_standard_aufgeloest() === 'fahrzeug'
-                     ? 'gen-em_logo_nef' : 'gen-em_logo_helicopter'; ?>
+                     ? 'nadoku-nef' : 'nadoku-hubschrauber'; ?>
         <?php $masse = ui_logo_masse(34); ?>
         <div class="logo-vorschau">
           <div class="logo-kachel">
-            <img src="<?= e(ui_asset('assets/images/' . $stamm . '_weiss.svg')) ?>"
+            <img src="<?= e(ui_asset('assets/images/' . $stamm . '-farbig-negativ.svg')) ?>"
                  width="<?= (int)$masse['breite'] ?>" height="<?= (int)$masse['hoehe'] ?>"
                  alt="">
           </div>
@@ -235,16 +212,6 @@ ui_seite_start(['titel' => 'Installation']);
           <?php ui_segment(['name' => 'logo', 'id' => 'logo-standard',
                             'wert' => logo_standard(),
                             'optionen' => INSTALLATION_LOGOS]); ?>
-          <?php $platzhalter = logo_platzhalter_liegt(); ?>
-          <?php if ($platzhalter): ?>
-            <?php /* EINE MELDUNG, KEIN KARTENTEXT: Der Hinweis nennt
-                     einen Zustand, der von selbst verschwindet, sobald die
-                     echten Dateien liegen — das ist, was `.meldung` sagt. */ ?>
-            <?= ui_meldung_markup('info', 'Die echte Datei ersetzt ihn 1:1 — '
-                . 'gleicher Name, gleiche Maße. Betroffen: '
-                . implode(', ', $platzhalter) . '.',
-                'Das Fahrzeug-Logo ist ein Platzhalter.') ?>
-          <?php endif; ?>
           <div class="listen-form-fuss">
             <?= ui_knopf(['text' => 'Standard speichern', 'symbol' => 'haken',
                           'art' => 'primaer']) ?>

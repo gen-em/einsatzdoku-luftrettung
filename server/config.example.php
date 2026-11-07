@@ -9,7 +9,7 @@ return [
     'app' => [
         'base_url'  => 'https://einsatz.example.invalid',  // ohne Slash am Ende
         'timezone'  => 'Europe/Berlin',               // Anzeige; Speicherung ist UTC
-        'logo_path' => 'assets/images/gen-em_logo_helicopter.svg',  // Logo auf Login- und Einrichtungsseite
+        'logo_path' => 'assets/images/nadoku-hubschrauber-farbig.svg',  // Logo auf Login- und Einrichtungsseite
         'max_body_bytes' => 524288,                   // 512 KB Ingest-Limit
         // Die KONTAKTADRESSE und die BETREIBERMAIL stehen NICHT hier, sondern
         // unter Verwaltung -> Installation. Grund: config.php wird zur Laufzeit nicht geschrieben

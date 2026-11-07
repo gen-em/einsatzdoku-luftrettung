@@ -1,12 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<!-- Rahmen beschnitten in S3/AP11 (Web 12.4.2): Die Zeichnung misst
-     420 x 335 und begann bei y=42,5; der Rahmen war 420 x 420, also oben
-     und unten je 42,5 Einheiten leer. Ein Artefakt des Exports, keine
-     Gestaltungsentscheidung — und der Grund, warum das Bodenlogo neben
-     dem Luftlogo kleiner wirkte: Skaliert wird ueber die Hoehe, und ein
-     Viertel dieser Hoehe war Luft. AN DER ZEICHNUNG IST NICHTS GEAENDERT,
-     nur am Rahmen. -->
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 42.5 420 335">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000"><svg x="20.0" y="117.1" width="960.0" height="765.7" viewBox="0 42.5 420 335">
   <defs>
     <style>
       .cls-1 {
@@ -44,7 +36,7 @@
       }
 
       .cls-7, .cls-8 {
-        fill: #1d0e0a;
+        fill: #1a2e4d;
       }
     </style>
   </defs>
@@ -70,4 +62,4 @@
       <path class="cls-8" d="M213,99.5c0-14.36,11.64-26,26-26s26,11.64,26,26h-52Z"/>
     </g>
   </g>
-</svg>
+</svg></svg>

@@ -14,6 +14,19 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 23.9.2] — unveröffentlicht
+
+### Geändert
+
+- **Web — die Kopfleiste trägt die Produktmarke NAdoku** (Schritt 26,
+  Backlog Nr. 62). Die Logodateien führten seit einem Austausch wieder
+  Näherungen der Markenfarben, und eine berichtigte Vorlage gab es nicht;
+  das Branding-Repo liefert sie jetzt, mit dunkelblauer Grundform, und
+  daneben steht fest der Produktname „NAdoku" statt des Kurznamens der
+  Installation. Die Browser-Symbole sind aus denselben Dateien neu erzeugt.
+  Die Wartungsseite zeigt immer den Hubschrauber, weil eine Marke nicht bei
+  jedem Neuladen wechseln darf.
+
 ## [Web 23.9.1] — unveröffentlicht
 
 ### Geändert

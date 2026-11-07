@@ -63,30 +63,41 @@ einfügt.
 
 ## 2. Marke
 
+**Die Quelle ist das Branding-Repo** `gen-em/gen-em-branding` (seit
+Schritt 26, Konzept MA). Farben, Tonstufen, Schriftschnitte und die
+Produktmarke stehen dort, freigegeben von der Betreiberin; die Anwendung
+übernimmt sie und rechnet nichts mehr selbst. Bis dahin legte dieses
+Kapitel eigene Tief- und Hellwerte fest — sie sind entfallen. Der
+übernommene Stand steht mit Commit und Prüfsumme im Kopf von Abschnitt 2 in
+`server/assets/style.css`; wer das Repo nachzieht, ersetzt dort den Block
+und rechnet `tools/screenshots/kontrast.py` neu.
+
 ### 2.1 Die Grundtöne
 
-Sie sind gesetzt, nicht abgeleitet — sie kommen aus der Marke Gen-EM und
-werden hier nur festgehalten.
+Sie sind gesetzt, nicht abgeleitet — sie kommen aus der Marke Gen-EM.
 
-| Name | HEX | Pantone | wofür |
-|---|---|---|---|
-| Schnee | `#FFFCFA` | — | Karten, Kästen, Eingabefelder |
-| Rauch | `#F7F5ED` | — | die Seite unter den Karten |
-| Sand | `#D4C7AD` | — | Mechanik: Blattgriff, ausgeschalteter Schalter |
-| Asphalt | `#1A0500` | — | Fließtext |
-| Dunkelblau | `#1A2E4D` | — | Kopfleiste, Überschriften, Logo-Grundton |
-| Orange | `#FF8F1F` | 1495 C | Handeln |
-| Blau | `#4280E5` | 2727 C | Auswählen und Erklären |
-| Rot | `#D63338` | 1797 C | Aufmerksamkeit |
+| Name | HEX | Pantone | Token (Repo) | wofür |
+|---|---|---|---|---|
+| Schnee | `#FFFCFA` | — | `--genem-schnee` | die Seite, Eingabefelder, Schrift auf Dunkelblau |
+| Rauch | `#F7F5ED` | — | `--genem-rauch` | Abgesetztes: Tabellenkopf, Hover, gesperrtes Feld |
+| Sand | `#D4C7AD` | — | `--genem-sand` | Mechanik: Blattgriff, ausgeschalteter Schalter |
+| Asphalt | `#1A0500` | — | `--genem-asphalt` | Fließtext |
+| Dunkelblau | `#1A2E4D` | — | `--genem-dunkelblau` | Aktion, Kopfleiste, Überschriften, Grundform der Produktmarke |
+| Orange | `#FF8F1F` | 1495 C | `--genem-philipp-orange` | Markenfläche, Status „Aufmerksamkeit" |
+| Blau | `#4280E5` | 2727 C | `--genem-max-blau` | Fokusring, Markenfläche |
+| Rot | `#D63338` | 1797 C | `--genem-newroz-rot` | Markenfläche, Gefahr |
 
-**Weiß ist keine Fläche.** In der Marke ist Weiß nur Logo- und Schriftfarbe
-auf Dunkel. Im alten Stylesheet stand `#FFF` vierzehnmal als Fläche — das ist
-der Grund, warum die Oberfläche stellenweise kalt wirkte, während der Rest
-warm war. Als Token gibt es nur `--auf-dunkel` für Schrift auf Dunkelblau.
+Dazu führt das Repo **Tonstufen 50 bis 900** je Gründerfarbe, für Neutral
+(neutral 75 ist die Karte, 200 die Linie, 600 die Kleinschrift) und — als
+einzige neue Farbe — **Grün**, nur für Status (E-MA-02). Welche Stufe welche
+Rolle trägt, steht in Kapitel 3.
 
-**Es gibt genau eine Graustufe**, `--gedaempft` `#6E6459`. Der Bestand hatte
-daneben eine zweite, kühle Familie (`5B5F66`, `9AA0A6`, `8A96A8`, `C6CEDB` …)
-— zwei Grauwelten in einer Oberfläche. Sie ist ersatzlos fort.
+**Weiß ist keine Fläche.** In der Marke ist Weiß auf Dunkel Schnee; Weiß
+selbst steht nirgends.
+
+**Es gibt genau eine Graustufe**, `--gedaempft` (neutral 600 `#725D49`).
+Der Bestand hatte einmal daneben eine zweite, kühle Familie — zwei
+Grauwelten in einer Oberfläche. Sie ist ersatzlos fort.
 
 ### 2.2 Schriften
 
@@ -96,8 +107,13 @@ Zwei quelloffene Schriften, beide **selbst ausgeliefert** aus
 
 | Schrift | Schnitte | Einsatz |
 |---|---|---|
-| **Bricolage Grotesque** | 500, 600 | Überschriften, Kopfleiste, Knöpfe, Kartentitel, Kennzahlen |
-| **Open Sans** | 400, 600, 700 | Fließtext, Formularfelder, Tabelleninhalt |
+| **Bricolage Grotesque** | 500 | Überschriften, Kopfleiste, Knöpfe, Kartentitel, Kennzahlen, Produktname |
+| **Open Sans** | 400, 700 | Fließtext, Formularfelder, Tabelleninhalt; 700 für jede Auszeichnung |
+
+Das sind die Schnitte, die die Marke vorsieht (`5 Regeln/Typografie.md` im
+Repo). Bis Schritt 26 standen beide Familien auch in 600; jedes
+`font-weight:600` ist seither 500 (Bricolage) oder 700 (Open Sans)
+(E-MA-15).
 
 Je Schnitt liegen die Subsets `latin` und `latin-ext` als `.woff2` vor.
 **Ein Schnitt, der nicht in `@font-face` eingetragen ist, existiert nicht** —
@@ -123,108 +139,90 @@ tippt, muss jedes einzeln sehen — der Codeblock selbst bleibt für die übrige
 sechs Verwendungen (Wiederherstellungsschlüssel, Geräte-ID, API-Schlüssel,
 Cron-Zeile, Serverschlüssel, Setz-Link).
 
-### 2.3 Logo und Logo-Wahl
+### 2.3 Produktmarke und Logo-Wahl
 
-Es gibt **zwei** Bildmarken, und welche erscheint, ist einstellbar
-(E-P3-19/20):
+Die Kopfleiste trägt die **Produktmarke NAdoku**: ein Zeichen und den
+Produktnamen „NAdoku" in Bricolage 500 rechts daneben (E-MA-05, -06;
+Branding-Repo, `5 Regeln/Produktmarken.md`). Es gibt **zwei** Zeichen — je
+Gegenstand eines, Luft- und Bodenrettung —, und welches erscheint, ist
+einstellbar (E-P3-19/20). Die Dateien kommen aus
+`1 Logos/Produktmarken/NAdoku/` des Repos; die Grundform ist Dunkelblau,
+die drei Federfarben stehen je einmal als Fläche.
 
-| Datei | Fassung | Rahmen |
+| Datei (`server/assets/images/`) | Fassung | Rahmen |
 |---|---|---|
-| `server/assets/images/gen-em_logo_helicopter.svg` | Hubschrauber, farbig — heller Grund | 400,16 × 249,81 |
-| `server/assets/images/gen-em_logo_helicopter_weiss.svg` | Hubschrauber, weiß — Kopfleiste | 400,16 × 249,81 |
-| `server/assets/images/gen-em_logo_nef.svg` | Fahrzeug (NEF), farbig | 420 × 335 |
-| `server/assets/images/gen-em_logo_nef_weiss.svg` | Fahrzeug (NEF), weiß | 420 × 335 |
-| `server/assets/images/favicon_helicopter.png`, `favicon_nef.png` | Browser-Symbol je Wahl, 64 × 64 | — |
+| `nadoku-hubschrauber-farbig.svg` | Hubschrauber, Grundform Dunkelblau — heller Grund | 400,16 × 249,81 |
+| `nadoku-hubschrauber-farbig-negativ.svg` | Grundform Schnee, Federfarben bleiben — Kopfleiste, dunkle Flächen | 400,16 × 249,81 |
+| `nadoku-hubschrauber-weiss.svg` | ganz weiß — Flächen in Gründerfarben, Uhr | 400,16 × 249,81 |
+| `nadoku-nef-farbig.svg`, `…-farbig-negativ.svg`, `…-weiss.svg` | Fahrzeug (NEF), dieselben drei | 420 × 335 |
+| `favicon-nadoku-<zeichen>.svg`, `…-32.png`, `apple-touch-nadoku-<zeichen>.png`; `server/favicon.ico` | Browser-Symbol je Wahl, aus der farbigen Fassung; ICO mit 16, 32, 48 px | — |
+| `nadoku-<zeichen>-farbig.png`, `…-weiss.png` | 500 px breit, Quelle der Bildmarken der Android-App | — |
+
+Alles außer den SVG ist **erzeugt**: `node tools/erzeugen/logos.mjs`, nach
+dem Rezept `erzeuge_favicons.py` des Repos — farbig auch bei 16 px. Bis
+Schritt 26 hießen die Dateien `gen-em_logo_*`, die dunkle Fassung war ganz
+weiß, und Favicons gab es als ein PNG in 64 px. Eine bestehende
+`config.php` mit `logo_path => …gen-em_logo_helicopter.svg` gilt weiter als
+„mitgeliefertes Logo" (`logo_src()`).
 
 **Der Rahmen ist deckungsgleich mit der Zeichnung**, und das ist eine Zusage
-(seit Web 12.4.2). Das NEF-Logo war bis dahin auf ein Quadrat gepolstert
-(`viewBox="0 0 420 420"`, die Zeichnung 420 × 335 ab y = 42,5): oben und
-unten je ein Zehntel leer. Skaliert wird aber über die **Höhe** — ein
-Zehntel dieser Höhe war damit Luft, und das Bodenlogo erschien neben dem
-Luftlogo schmaler **und** niedriger zugleich. Gemessen bei 34 px Höhe:
-1 853 gegen 921 px² sichtbare Fläche, also das Doppelte.
-
-Nach dem Beschnitt: **54,5 × 34 px gegen 42,6 × 34 px**, Flächenverhältnis
-**1,28**. Die verbleibende Differenz ist der ehrliche Unterschied zweier
-Motive — das eine liegt quer, das andere weniger — und **keine
-Feinkorrektur wert** (E-S3-12 b, am Bild entschieden). Die Höhen sind gleich,
-und das ist es, was das Auge in einer Zeile vergleicht.
+(seit Web 12.4.2): Skaliert wird über die **Höhe**, und Luft im Rahmen
+ließe ein Zeichen kleiner wirken als das andere. Bei 34 px Höhe misst der
+Hubschrauber 54,5 × 34 px, das NEF 42,6 × 34 px — der ehrliche Unterschied
+zweier Motive (E-S3-12 b).
 
 > **Wer eine dieser SVG anfasst, prüft danach den Rahmen mit `getBBox()`.**
-> Beim Luftlogo läuft ein blauer Streifen rund 156 Einheiten über den Rahmen
-> hinaus; sichtbar ist er nicht — ein Clip schneidet ihn weg —, aber er wird
-> es, sobald jemand den Rahmen weitet. Seit Web 12.4.2 hält ein zusätzlicher
-> Rahmen-Clip ihn unabhängig davon drinnen.
+> Beim Hubschrauber läuft ein blauer Streifen rund 156 Einheiten über den
+> Rahmen hinaus; ein Rahmen-Clip hält ihn drinnen.
 >
 > **Und XML verbietet `--` im Kommentar.** Eine SVG mit einem doppelten
-> Bindestrich im Kommentar ist ungültig; der Browser zeigt sein
-> Platzhalterbild, und `tools/erzeugen/logos.mjs` fotografierte es früher
-> klaglos als Favicon. Das Werkzeug bricht heute ab (S3/AP11).
+> Bindestrich im Kommentar ist ungültig; `tools/erzeugen/logos.mjs` bricht
+> dann ab, statt das Platzhalterbild des Browsers als Favicon zu schreiben.
 
 **Drei Ebenen der Wahl**, und sie greifen in dieser Reihenfolge:
 
 1. **Das Konto** wählt im Profil: Hubschrauber, Fahrzeug, wechselnd oder
    „Standard der Installation".
-2. **Die Installation** setzt ihren Standard unter Einstellungen → Wartung.
-   Er gilt für die Anmeldeseite, für die Passwortseiten und für jedes Konto
-   ohne eigene Wahl.
-3. **Der Rückfall** ist der Hubschrauber.
+2. **Die Installation** setzt ihren Standard unter Verwaltung →
+   Installation. Er gilt für die Anmeldeseite, für die Passwortseiten, für
+   die Druckblätter und für jedes Konto ohne eigene Wahl.
+3. **Der Rückfall** ist der Hubschrauber — auch auf der Wartungsseite, die
+   ohne Datenbank auskommt. Bis Schritt 26 warf sie dort eine Münze; die
+   Produktmarke darf aber **nie bei jedem Seitenaufruf wechseln**
+   (Produktmarken.md, Regel 9).
 
 „Wechselnd" wird **einmal bei der Anmeldung** ausgewürfelt und bleibt in der
-Sitzung stehen. Ein Logo, das bei jedem Seitenaufruf wechselt, ist kein Logo,
-sondern ein Flackern.
+Sitzung stehen.
 
 Eingebunden wird über `logo_src()` und `favicon_tags()` in `server/db.php`
 bzw. `ui_logo()` in `server/ui.php`, nie über einen fest verdrahteten Pfad.
+Den Produktnamen trägt `UI_PRODUKTNAME`; der einstellbare **Kurzname der
+Installation** steht seit Schritt 26 nicht mehr in der Kopfleiste, sondern
+im Browsertab, auf der Anmeldeseite, in Mails und auf den Druckblättern.
 
-**Einsatzregeln**
+**Einsatzregeln** (Repo, `Logo.md` und `Produktmarken.md`)
 
-- Auf Dunkelblau und auf den drei Kernfarben: **weiße Fassung**.
-- Auf hellem, ruhigem Grund: **farbige Fassung**.
-- Auf unruhigem oder dunklem Bild: Logo **neben** das Bild, nicht darauf.
-- Sehr klein: einfarbige Fassung.
-- **Weißraum:** rundum mindestens die Breite eines kleinen „e" der Wortmarke;
-  in der Kopfleiste ist das über `.kopf-marke{gap:…}` und das Innenmaß der
-  Leiste abgebildet.
+- Auf Dunkelblau: **farbig-negativ**. Auf hellem, ruhigem Grund: **farbig**.
+- Auf einer Fläche in Gründerfarbe: **weiß**.
+- Auf unruhigem oder dunklem Bild: Zeichen **neben** das Bild, nicht darauf.
+- **Schutzzone** 0,53 × Zeichenhöhe; in der Kopfleiste über
+  `.kopf-marke{gap:…}` und das Innenmaß der Leiste abgebildet.
 
-Wird ein Logo ausgetauscht, ziehen **alle** Fassungen mit — auch die
-Favicons und die Uhr-Icons (`watch/resources*/drawables/`).
+Wird ein Zeichen ausgetauscht, ziehen **alle** Fassungen mit — Favicons,
+die Bildmarken der Android-App (`android/werkzeuge/bildmarken.sh`) und die
+Uhr-Bilder (`tools/erzeugen/uhr-bilder.sh`). **Die Uhr ist zurzeit nicht
+nachgezogen** (Backlog Nr. 520).
 
-### 2.4 Der Platzhalter
+### 2.4 Das Zeichen trägt die Markenwerte (Backlog Nr. 62, erledigt)
 
-Das Fahrzeug-Logo ist zurzeit ein **Platzhalter**. Er steht dort, damit die
-Logo-Wahl vollständig gebaut und geprüft werden kann, bevor die echte Datei
-vorliegt; sie ersetzt ihn 1:1 — gleicher Name, gleiche Maße, kein Eingriff im
-Code. Die Wartungsseite meldet den Zustand, solange er besteht
-(`logo_platzhalter_liegt()`), und der Hinweis verschwindet von selbst.
-
-### 2.5 Das Logo trägt die Markenwerte — zurzeit nicht (Backlog Nr. 62)
-
-Der offene Punkt B1 aus `docs/Branding.md` war mit P3/O12 **erledigt**: Dort
-war festgehalten, dass die Logodateien von den Markenwerten abwichen (rotes
-Rotorblatt `#E3322B` statt `#D63338`, blaues `#587ABC` statt `#4280E5`,
-oranges `#F7941D` statt `#FF8F1F`, Rumpf `#1D0E0A` statt `#1A0500`), und
-nachgemessen in `gen-em_logo_helicopter.svg` stimmten `#1A0500`, `#4280E5`,
-`#D63338`, `#FF8F1F`.
-
-**Das gilt nicht mehr.** Der Commit „Update Logos" hat mit neuen
-Vektorvorlagen die alten Werte zurückgebracht (Backlog Nr. 62, aufgenommen
-31.08.2026). Nachgemessen am 13.09.2026: `gen-em_logo_helicopter.svg` führt
-`#587ABC`, `#E3322B`, `#F7941D` und Korpus `#1D0E0A`;
-`gen-em_logo_helicopter_weiss.svg` trägt dieselben alten Farbelemente;
-`gen-em_logo_nef.svg` den alten Korpuswert. **Die PNG-Fassungen sind
-dieselbe Lage** (nachgemessen am 13.09.2026, Bildpunkte dekodiert):
-`gen-em_logo_helicopter.png` und `gen-em_logo_helicopter_weiss.png` tragen
-die alten Farbwerte — um ein bis zwei Stufen je Kanal verschoben, weil sie
-gerastert sind (`#1C0B0B`, `#E4302C`, `#577ABC`) —, `gen-em_logo_nef.png`
-den alten Korpuswert. **Richtig sind allein die beiden Fassungen ohne
-Korpus:** `gen-em_logo_nef_weiss.svg` und `gen-em_logo_nef_weiss.png`. Es
-gibt keine korrigierte Quelle.
-**Entschieden am 12.09.2026: neue Vorlagen in den Markenfarben anfordern**
-(Rahmenplan Abschnitt 6, Zuarbeit); bis sie vorliegen, bleibt dieser Absatz
-so stehen, damit hier keine falsche Zusage steht. Nach der Behebung alle
-Fassungen samt Ableitungen (PNG, Favicons, Uhr-Bilder) nachmessen und den
-Absatz zurückdrehen.
+Bis Schritt 26 trugen die Logodateien Näherungswerte (`#587ABC`,
+`#E3322B`, `#F7941D`, Korpus `#1D0E0A`), und es gab keine korrigierte
+Quelle; dieser Abschnitt hielt die falsche Zusage fest (seit dem
+13.09.2026). Das Branding-Repo hat die Zeichen beim Übernehmen bereinigt und
+die Grundform auf Dunkelblau gesetzt; die Anwendung übernimmt diese Fassung
+(E-MA-12). Bis dahin stand hier außerdem ein Abschnitt „Der Platzhalter"
+zum NEF-Logo samt `logo_platzhalter_liegt()` — beides ist mit dem Austausch
+entfallen.
 
 ---
 

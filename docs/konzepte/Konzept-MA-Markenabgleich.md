@@ -32,11 +32,12 @@ Prüfarbeit an der einen örtlichen Anlage (CLAUDE.md 7).
 | MA-03 | Meldungen, Plaketten, Ampel, Kennzahl: Grün für „in Ordnung" | **erledigt** 07.11.2026 (Code; `Design.md`-Text in MA-08) |
 | MA-04 | Knöpfe und Aktivzustände: Aktion Dunkelblau | **erledigt** 07.11.2026 |
 | MA-05 | Spurfarben auf die Tonstufen des Repos (neu gefasst, E-MA-11) | **erledigt** 07.11.2026 (Ring im Dark Mode in MA-07) |
-| MA-06 | Produktmarke NAdoku: Logos, Favicons, Kopfleiste | offen |
+| MA-06 | Produktmarke NAdoku: Logos, Favicons, Kopfleiste | **erledigt** 07.11.2026 (Web 23.9.2) |
 | MA-07 | Dark Mode mit Schalter je Konto | offen |
+| MA-09 | Android-Nachzug: Farbwerte und Bildmarken der App (neu, F-MA-12) | offen |
 | MA-08 | Dokumentation, Prüfmittel, Prüfstand, Abschluss | offen |
 
-**In Arbeit:** MA-06. **Es hakt:** nirgends; alle Fragen sind entschieden
+**In Arbeit:** MA-09. **Es hakt:** nirgends; alle Fragen sind entschieden
 (E-MA-08 bis -20). MA-01, -03, -04 und -05 sind ein Commit geworden: Sie
 stellen dieselben rund 540 Farbstellen im Stylesheet um, und ein Zwischenstand
 hätte Token gezeigt, die es nicht mehr gibt.
@@ -354,3 +355,48 @@ Verwendungen auf `--groesse-2`. `docs/Lizenzen.md` 4 nachgezogen.
 der Skala); `kontrast.py` 58 Paare, 0 verfehlt, 0 ohne Eintrag;
 `design.py schreiben`: Token-Tabelle neu. Sichtprüfung `index.php` 1440 und
 390 px in Chromium.
+
+### MA-06 (Web 23.9.2, 07.11.2026)
+
+**Was gebaut ist.** Sechs SVG der Produktmarke aus dem Repo (@ `95897f3`,
+byte-gleich mit der Übergabe) nach `server/assets/images/`; die zehn alten
+Dateien `gen-em_logo_*` und `favicon_*.png` gelöscht. `logo_stamm()` liefert
+`nadoku-hubschrauber` bzw. `nadoku-nef`, `ui_logo(true)` die Fassung
+farbig-negativ, `logo_src()` die farbige und erkennt alte wie neue Namen in
+`logo_path`. `favicon_tags()` bietet SVG, PNG 32, Apple-Symbol 180 und ICO.
+`tools/erzeugen/logos.mjs` neu geschrieben (erzeugt Favicons, ICO und die
+500-px-PNG für die Android-App); `uhr-bilder.sh`, `lokal_einrichten.sh`,
+Schemaprobe, Wartungsprobe, `pruefablauf.json` auf die neuen Namen.
+Kopfleiste und Schublade zeigen `UI_PRODUKTNAME` („NAdoku").
+`logo_platzhalter_liegt()` samt Meldung entfernt. Design.md 2 neu
+geschrieben, Technik, Lizenzen, Handbuch 3, 3.1a, 11.5, Pruefablauf 4
+nachgezogen; Zuarbeit „Logo-Vorlagen" im Rahmenplan erledigt.
+
+**Entscheidungen dabei.**
+- **E-MA-21 — Die Kopfleiste zeigt fest „NAdoku", nicht den Kurznamen der
+  Installation.** E-MA-06 sagt es, und die Produktmarke ist Zeichen und Name
+  zusammen. Der Kurzname war bis dahin dort einstellbar — gedacht für eine
+  fremde Betreiberin (`instanz_lib.php`); er bleibt im Tab, auf der
+  Anmeldeseite, in Mails und Druckblättern. **Zur Bestätigung durch die
+  Betreiberin vorgelegt** (Abschlussbericht).
+- **E-MA-22 — Die Wartungsseite zeigt fest den Hubschrauber.** Sie warf eine
+  Münze je Aufruf; die Produktmarke darf nicht je Seitenaufruf wechseln
+  (Produktmarken.md, Regel 9). Die Wartungsprobe prüft jetzt das Gegenteil
+  von früher (zehn Aufrufe, ein Logo).
+- **E-MA-23 — Keine 192/512-px-Symbole.** Sie gehören zum Web-App-Manifest
+  (R70, Schritt 13).
+- Produktname in 19 px (`--groesse-5`), nicht 20 wie im Mockup: Die Skala ist
+  geschlossen.
+
+**Befunde dabei.**
+- **F-MA-10 — Die Uhr-Bilder sind aus den alten Dateien gerastert.** Neu
+  erzeugen gehört zu einer Uhr-Fassung → Backlog Nr. 520 (gehört zu 13).
+- **F-MA-12 — Die Android-App übernimmt Farbwerte und Bildmarken aus dem
+  Web** (E-S4-22a; Proben `android-farbabgleich`, `android-bildmarken`).
+  Beide sind seit MA-01 bzw. MA-06 rot: Neun der 17 App-Farben gibt es im Web
+  nicht mehr, und die Quell-PNG heißen anders. Das Konzept sah das nicht vor.
+  Daraus MA-09 (neu).
+
+**Gemessen.** `php -l` über alle 160 Dateien unter `server/` ohne Fehler;
+`logos.mjs` schreibt 11 Dateien (ICO: 3 Bilder 16/32/48); Sichtprüfung der
+Kopfleiste bei 1440 und 390 px (Chromium), Favicons als Kontaktbogen.

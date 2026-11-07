@@ -1168,7 +1168,7 @@
       "ab": "klein",
       "pfade": [
         "server/assets/style.css",
-        "server/assets/images/gen-em_logo_*.png"
+        "server/assets/images/nadoku-*.png"
       ],
       "proben": [
         "android-farbabgleich",

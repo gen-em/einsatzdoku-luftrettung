@@ -20,8 +20,11 @@
 set -euo pipefail
 
 WURZEL="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
-HELI="$WURZEL/server/assets/images/gen-em_logo_helicopter_weiss.svg"
-NEF="$WURZEL/server/assets/images/gen-em_logo_nef_weiss.svg"
+# Seit Schritt 26 die weisse Fassung der Produktmarke (Branding-Repo). Die
+# Bilder unter watch/ sind damit NICHT neu erzeugt — das gehoert zu einer
+# Uhr-Fassung (Backlog Nr. 520); bis dahin zeigt die Uhr die alte Zeichnung.
+HELI="$WURZEL/server/assets/images/nadoku-hubschrauber-weiss.svg"
+NEF="$WURZEL/server/assets/images/nadoku-nef-weiss.svg"
 UHR="$WURZEL/watch"
 TMP="$(mktemp -d)"
 trap 'rm -rf "$TMP"' EXIT

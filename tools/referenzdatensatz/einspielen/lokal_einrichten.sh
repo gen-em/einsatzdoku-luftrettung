@@ -78,7 +78,7 @@ ANTWORT=$(curl -s --noproxy '*' -b "$JAR" -c "$JAR" -X POST "http://$ADRESSE/ins
   --data-urlencode "admin_email=$ADMIN" \
   --data-urlencode "base_url=https://127.0.0.1:$TLS_PORT" \
   --data-urlencode "timezone=Europe/Berlin" \
-  --data-urlencode "logo_path=assets/images/gen-em_logo_helicopter.svg" \
+  --data-urlencode "logo_path=assets/images/nadoku-hubschrauber-farbig.svg" \
   --data-urlencode "smtp_host=127.0.0.1" --data-urlencode "smtp_port=2525" \
   --data-urlencode "smtp_user=noreply@example.invalid" --data-urlencode "smtp_pass=x" \
   --data-urlencode "smtp_from=noreply@example.invalid" \

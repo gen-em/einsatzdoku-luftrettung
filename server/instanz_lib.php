@@ -33,7 +33,9 @@ require_once __DIR__ . '/konfig_lib.php';
  * ZWEI WERTE, WEIL ES ZWEI GEBRAUCHSLAGEN GIBT:
  *
  *   `instanz_kurz()`  Wo wenig Platz ist und der Name oft steht: Browsertab,
- *                     Kopfleiste, Anmeldeseite. Vorgabe „Gen-EM NAdoku".
+ *                     Anmeldeseite (bis Schritt 26 auch die Kopfleiste;
+ *                     dort steht seither die Produktmarke „NAdoku",
+ *                     `UI_PRODUKTNAME`). Vorgabe „Gen-EM NAdoku".
  *   `instanz_name()`  Wo der Name einmal steht und tragen muss: Mailbetreff,
  *                     Grussformel, Schluesselblatt. Vorgabe „Gen-EM
  *                     Einsatzdokumentation Notarzt".
