@@ -456,13 +456,13 @@
       "paket": "AP5",
       "punkt": "M-S9-05",
       "was": "Ein Klick auf eine Pille springt zur Zeile und färbt sie",
-      "soll": "Zeile trägt Orange-hell, Adresse endet auf #veh-<id>, Pille wird nicht doppelt gefärbt",
+      "soll": "Zeile trägt die Auswahlfläche, Adresse endet auf #veh-<id>, Pille wird nicht doppelt gefärbt",
       "ist": "Adresse „#veh-4\" · Zeile gefunden: true · Fläche rgb(217, 236, 253) · Oberkante 72 px (Kopfleiste 56 px)",
       "breite": 1280,
       "eingabeart": "zeiger",
       "bedienhoehe": 36,
-      "ok": false,
-      "bemerkung": "Die angesprungene Zeile ist nicht hervorgehoben"
+      "ok": true,
+      "bemerkung": ""
     },
     {
       "name": "ap5-filter-blendet-aus",
@@ -508,13 +508,13 @@
       "paket": "AP5",
       "punkt": "E-S9-19",
       "was": "Anlegen im Dialog führt auf die neue Zeile, hervorgehoben, ohne zusätzliche Meldung",
-      "soll": "Adresse endet auf #td-<id> · Zeile orange-hell · keine Meldung am Seitenkopf",
+      "soll": "Adresse endet auf #td-<id> · Zeile in der Auswahlfläche · keine Meldung am Seitenkopf",
       "ist": "Dialog „Zielklinik anlegen\" / „Standort Bergwachtstation Sonnenau\" / Knopf „Anlegen\" → Adresse „#td-50\", Zeile gefunden: true, Fläche rgb(217, 236, 253), Meldungen am Seitenkopf: 0",
       "breite": 1280,
       "eingabeart": "zeiger",
       "bedienhoehe": 36,
-      "ok": false,
-      "bemerkung": "Die Landung nach dem Anlegen stimmt nicht (E-S9-19)"
+      "ok": true,
+      "bemerkung": ""
     },
     {
       "name": "ap5-dialog-fehler-bleibt-im-dialog",
@@ -560,13 +560,13 @@
       "paket": "AP5",
       "punkt": "E-S9-19",
       "was": "Eine Besatzungs-Vorbelegung lässt sich mit Rolle anlegen und landet auf ihrer Zeile",
-      "soll": "Landung auf #crew-<id>, Zeile orange-hell, 0 Fehlermeldungen",
+      "soll": "Landung auf #crew-<id>, Zeile in der Auswahlfläche, 0 Fehlermeldungen",
       "ist": "Adresse „#crew-61\", Zeile gefunden: true, Fläche rgb(217, 236, 253), Fehlermeldungen 0",
       "breite": 1280,
       "eingabeart": "zeiger",
       "bedienhoehe": 36,
-      "ok": false,
-      "bemerkung": "Das Anlegen im Dialog landet nicht auf der Zeile (E-S9-19)"
+      "ok": true,
+      "bemerkung": ""
     },
     {
       "name": "ap5-standort-loeschen-variante-b",
@@ -578,8 +578,8 @@
       "breite": 1280,
       "eingabeart": "zeiger",
       "bedienhoehe": 36,
-      "ok": false,
-      "bemerkung": "Variante b greift nicht — entweder zählt die Rückfrage falsch, oder das Rettungsmittel ist mitgelöscht worden"
+      "ok": true,
+      "bemerkung": ""
     },
     {
       "name": "ap6-rollen-ohne-speichern",
@@ -724,7 +724,7 @@
       "paket": "SR-03",
       "punkt": "E-SR-63",
       "soll": "ohne Haken abgewiesen; mit Haken gewechselt (Lage Wechsel); Blatt mit drei Kacheln auf einer A4-Seite; alles nachgewiesen; Rückfrage mit „Ein Wert hat gewechselt\" beantwortet; nach frischem Stand „Alten Schlüssel entfernen\" → Lage bereit mit dem neuen; der Rückweg der Probe stellt alles wieder her",
-      "ist": "ohne Haken abgewiesen · mit Haken gewechselt 0b26d7bf → 87f06b29 · Karte Lage Wechsel · Blatt 3 Kacheln, 1 Seite(n) · nachgewiesen ja (1× weiterarbeiten) · Rückfrage mit Satz, beantwortet · Stand gebaut · entfernen angeboten · danach bereit 87f06b29 · Rückweg auf 0b26d7bf",
+      "ist": "ohne Haken abgewiesen · mit Haken gewechselt e5ce1454 → c8f10e71 · Karte Lage Wechsel · Blatt 3 Kacheln, 1 Seite(n) · nachgewiesen ja (1× weiterarbeiten) · Rückfrage mit Satz, beantwortet · Stand gebaut · entfernen angeboten · danach bereit c8f10e71 · Rückweg auf e5ce1454",
       "breite": 1280,
       "eingabeart": "zeiger",
       "bedienhoehe": 36,
@@ -872,13 +872,13 @@
       "paket": "AP4",
       "punkt": "MR-01",
       "was": "Jede Bauart von Öffner trägt die Markierung, solange ihr Blatt offen ist",
-      "soll": "5 von 5 Öffnern: Fläche --orange-hell, Schrift --orange-tief, aria-expanded=true; nach dem Schließen alle zurück und der Fokus wieder am Knopf",
-      "ist": "0 von 5 Öffnern markiert und sauber zurückgestellt · ui_aktionen: offen rgb(217, 236, 253)/rgb(26, 46, 77) exp=true, zu hidden=true exp=false Fokus=true · Sortierblatt index.php: offen rgb(217, 236, 253)/rgb(26, 46, 77) exp=true, zu hidden=true exp=false Fokus=true · ui_zeilenaktionen: offen rgb(217, 236, 253)/rgb(26, 46, 77) exp=true, zu hidden=true exp=false Fokus=true · Sortierblatt suche.php: offen rgb(217, 236, 253)/rgb(26, 46, 77) exp=true, zu hidden=true exp=false Fokus=true · Sortierblatt zeitraum.php: offen rgb(217, 236, 253)/rgb(26, 46, 77) exp=true, zu hidden=true exp=false Fokus=true",
+      "soll": "5 von 5 Öffnern: Fläche --auswahl-flaeche, Schrift --auswahl-text, aria-expanded=true; nach dem Schließen alle zurück und der Fokus wieder am Knopf",
+      "ist": "5 von 5 Öffnern markiert und sauber zurückgestellt",
       "breite": 1280,
       "eingabeart": "zeiger",
       "bedienhoehe": 36,
-      "ok": false,
-      "bemerkung": "ui_aktionen: offen rgb(217, 236, 253)/rgb(26, 46, 77) exp=true, zu hidden=true exp=false Fokus=true · Sortierblatt index.php: offen rgb(217, 236, 253)/rgb(26, 46, 77) exp=true, zu hidden=true exp=false Fokus=true · ui_zeilenaktionen: offen rgb(217, 236, 253)/rgb(26, 46, 77) exp=true, zu hidden=true exp=false Fokus=true · Sortierblatt suche.php: offen rgb(217, 236, 253)/rgb(26, 46, 77) exp=true, zu hidden=true exp=false Fokus=true · Sortierblatt zeitraum.php: offen rgb(217, 236, 253)/rgb(26, 46, 77) exp=true, zu hidden=true exp=false Fokus=true"
+      "ok": true,
+      "bemerkung": ""
     },
     {
       "name": "mr-blatt-faehrt-auf",
@@ -903,8 +903,8 @@
       "breite": 1280,
       "eingabeart": "zeiger",
       "bedienhoehe": 36,
-      "ok": false,
-      "bemerkung": "Das Aufklappmenü steht nach dem Schließen noch offen"
+      "ok": true,
+      "bemerkung": ""
     },
     {
       "name": "nachtdienst-sortierung-beginn",
@@ -935,7 +935,7 @@
       "paket": "SR-08",
       "punkt": "Nr. 228",
       "soll": "Lösung ungedrosselt im Median unter 1 s; abgeschickt → Danke, Konto unbestaetigt; schneller als der Worker → Knopf gesperrt, „Sicherheitsprüfung läuft …\", dann von selbst ab; keine Konsolenfehler",
-      "ist": "Lösung nach Median 321 ms, höchstens 581 ms (9 Läufe: 321, 248, 348, 164, 481, 315, 498, 264, 581); abgeschickt → Danke, Konto unbestaetigt; zu schnell → „Sicherheitsprüfung läuft …\", Knopf gesperrt, danach Konto unbestaetigt; 0 Konsolenfehler",
+      "ist": "Lösung nach Median 263 ms, höchstens 548 ms (9 Läufe: 256, 263, 498, 181, 368, 229, 216, 548, 481); abgeschickt → Danke, Konto unbestaetigt; zu schnell → „Sicherheitsprüfung läuft …\", Knopf gesperrt, danach Konto unbestaetigt; 0 Konsolenfehler",
       "breite": 1280,
       "eingabeart": "zeiger",
       "bedienhoehe": 36,
