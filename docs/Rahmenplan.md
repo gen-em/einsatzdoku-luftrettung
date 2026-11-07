@@ -1,15 +1,15 @@
 # Rahmenplan — Programm „Gen-EM NAdoku" bis v1.0
 
-**Fassung 226 (07.11.2026)** · Steuerung: Reihenfolge, Status, programmweite
+**Fassung 227 (07.11.2026)** · Steuerung: Reihenfolge, Status, programmweite
 Entscheidungen. Verlauf: `Rahmenplan-Verlauf.md`. Fassungen 1–15:
 `Rahmenplan-Archiv.md`; Fassungen 16–124: `Rahmenplan-Archiv-2.md`.
 
-**Stand `origin/main`** (Commit `bfaca8b`, PR #153, gemessen 05.11.2026): Web 23.8.2 ·
-Uhr 4.3.2 · Android 0.21.0; alle drei ausgeliefert (Tags auf `bfaca8b`, 05.11.2026).
-**Läuft:** 26 (MA, Markenabgleich), Zweig `claude/lucid-knuth-2yu16r`.
-**Als Nächstes:** 13 (P7), nach 26.
+**Stand `origin/main`** (Commit `f27c977`, PR #156, gemessen 07.11.2026): Web 23.11.3 ·
+Uhr 4.3.3 · Android 0.22.0; auf Staging, Produktiv noch auf Web 23.8.2 · Uhr 4.3.2 · Android 0.21.0 (Tags auf `bfaca8b`).
+**Läuft:** nichts; 26 (MA) abgeschlossen 07.11.2026 (PR #156).
+**Als Nächstes:** 13 (P7).
 **Offene PRs:** keine.
-**Fällig bei der Betreiberin:** 40 Posten (Abschnitt 6.1). **`update.php`:** auf Staging und Produktiv nichts offen (Betreiberin, 20.10.2026, nach Web 23).
+**Fällig bei der Betreiberin:** 41 Posten (Abschnitt 6.1). **`update.php`:** auf Staging nichts offen (Betreiberin, 07.11.2026, nach Web 23.10); auf Produktiv nach dem Tag `web-v23.11.3` fällig (Migration `2026_11_07_darstellung`).
 
 Kennungen sind Namen, keine Reihenfolge.
 
@@ -104,7 +104,7 @@ liest die 7.x-Sicherung genau einmal) · Rückwärtskompatibilität ab v1.0 (R60
 ## 3. Fahrplan — die nächsten Schritte
 
 Schrittnummern sind **Namen**, keine Reihenfolge; sie werden nie umvergeben.
-**Die Reihenfolge der offenen Schritte ist:** 26 → 13 → 14 (26 als Einschub, E-MA-19; E-BE-02 bis -04, 02.11.2026; PR, 21 bis 24 und BR7 davor sind erledigt); der Betriebsübergang folgt auf v1.0. Daneben, ohne Platz in
+**Die Reihenfolge der offenen Schritte ist:** 13 → 14 (E-BE-02 bis -04, 02.11.2026; PR, 21 bis 24, BR7 und 26 davor sind erledigt); der Betriebsübergang folgt auf v1.0. Daneben, ohne Platz in
 der Reihe: die Paketschnitte von **11** und Teil C von **6** (seit SD-M1
 frei). **Warum so:** P6 liegt in zwei Hälften um S11 (R86): das
 **Bedrohungsmodell (12, abgeschlossen) vor S11 (12a, abgeschlossen)**, weil es dessen
@@ -119,7 +119,6 @@ weil das Altbestand-Werkzeug ein einziges Konto voraussetzte.
 |---|---|---|---|---|---|
 | 6 | **S4 — Rest, Teil C** | Play Console nach R65: interner Test-Track für Handy und Uhr unter einem Eintrag, Versionscode-Versatz, Signaturweg; Android 1.0.0 (E-R45-7). Die Vorbereitung ohne D-U-N-S und Schlüssel ist gebaut (Android 0.13.0), die Gerätetests sind erfolgt (24.09.2026) | D-U-N-S, Organisationskonto und Play App Signing — erledigt 26.09.2026 (SD-M1); offen in 6.2: Wear-OS-Uhr, Demo-Video, Datensicherheitsformular | `docs/konzepte/Konzept-S4-Handy-Uhr-Client.md` 13; `Vorbereitung-Play-Console.md` | offen — Teile A bis C gemergt 04.09.2026 (PR #33, Abschnitt 8); Android 1.0.0 und der interne Test-Track können beginnen |
 | 11 | **Planung v1.0** | Festlegungen vor dem Schnitt (R65 bis R73, entschieden 03.09.2026); Ergebnis sind die Konzepte der Phasen P6 bis P8 mit je eigenem Paketschnitt (P6 nach der Freigaberunde des Reviews) | keine | `docs/konzepte/Konzept-Planung-v1.0.md` | gemergt 03.09.2026 — Festlegungen entschieden (R65–R73); offen nur die Paketschnitte, je mit dem Konzept zu 12b, 13 und 14 |
-| 26 | **MA — Markenabgleich** | Oberfläche nach `gen-em/gen-em-branding`: Token, Aktion Dunkelblau, Grün für Status, Schriften, Spurfarben, Produktmarke (Nr. 62), Dark Mode je Konto | keine | `docs/konzepte/Konzept-MA-Markenabgleich.md` | Umsetzung — Einschub vor 13 (E-MA-19) |
 | 13 | **P7 — Gesicht v1.0** | Umbenennung überall (E-Mail-Langform entscheiden), Demo-Passwort (R25); Vertrag v1 (R12, Nr. 23); Doku-Neufassung, Handbuch als HTML (R16, R72); Manifest (R70); Changelog neu (R15); Backlog-Übernahme; Kommentarregel (R69, Nr. 409); Lizenzen, Tabellen mit Mockup (Nr. 342) | 26 | eigenes Konzept nach K1 | offen — Konzeptsitzung kann neben 24 laufen, Umsetzung nach 24 |
 | 14 | **P8 — Schnitt** | Neuaufsetzen mit Übernahme per edbak (R40 (3), R60, Nr. 324); Migrationsregister neu (R66); Repo-Umzug und Inventur mit Begründung je Weglassung (R68); Kette im neuen Repositorium (R67, R40 (4)); Rechts- und Betreiberunterlagen (R41); Abnahme nach R11; Tags `web-v1.0.0`, `uhr-v…`, `android-v1.0.0` | 13 | eigenes Konzept nach K1 | offen — nach 13; die Inventur (R68) entscheidet die zwölf Werkzeug-Punkte mit `gehört zu: 14` (E-BE-04) |
 | — | **Betriebsübergang** | Öffnung in Wellen über die Betriebsarten (R41); Produktionsfreigabe in den Stores mit Welle 1 (R65; nach MDR-Abgrenzung und Rechtsunterlagen); mit Welle 1 entfällt die Seitenladung (`apk.php`, Handbuch 10.1); Garmin-Uhr über den Connect-IQ-Store; halbjährliche Probe-Wiederherstellung | v1.0 | — | offen — beginnt mit v1.0 (nach den Schritten 13 und 14); Wellen nach R41 |
@@ -138,7 +137,7 @@ Backlog-Nummern verlangen die Gegenproben aus 2.2.
 
 | jetzt parallel möglich | nicht parallel |
 |---|---|
-| Konzeptarbeit zu allem; ein Abschluss nach K9 zu allem — er schreibt nur Buchführung | 26 → 13 → 14 nacheinander in der Umsetzung (R71, R86, E-BE-02, E-MA-19) |
+| Konzeptarbeit zu allem; ein Abschluss nach K9 zu allem — er schreibt nur Buchführung | 13 → 14 nacheinander in der Umsetzung (R71, R86, E-BE-02) |
 
 **Merge-Reihenfolge auf `main`:** ein Pull Request je Phase nach Freigabe
 (K7); nach jeder Migration `update.php`; nach einem fremden Merge nimmt jeder
@@ -204,6 +203,7 @@ gestrichen, 6a abgehakt; was steht, ist bestätigt offen.
 | **Prüfliste BR5:** P-BR5-11 (echter Safari), P-R17-34 (Bitwarden, Nr. 430, seit Web 23.7.2 erneut), P-BR5-14 (APK-Zeilen nach dem nächsten Android-Tag); P-BR5-08 prüft Claude, sobald ein Job scheitert | 22 | 04.11.2026 | `Pruefliste.md` 3, 8, 10 |
 | **Prüfliste GR:** P-GR-01 bis -03 (Garmin), -04 bis -07 (Handy) auf echten Geräten gegen Staging — Abmelden, Aktivieren, Rückstand, fremdes Konto; die Tags `uhr-v4.3.2` und `android-v0.21.0` sind ohne sie gesetzt (05.11.2026) | 21 | 04.11.2026 | `Pruefliste.md` 10 |
 | **Prüfliste BR6:** P-BR6-04 (Venu 3s), -05, -06 (Telefon, Frist), nach den Tags (05.11.2026); -07 freiwillig (Safari) | 23 | 05.11.2026 | `Pruefliste.md` 9, 10 |
+| **Prüfliste MA:** P-MA-01 (Produktiv nach dem Tag: `update.php`), P-MA-08, -11, -16 (Safari, VoiceOver/TalkBack), P-MA-12, -17 (Android 0.22.0 hell und dunkel, Garmin 4.3.3 auf dem Gerät); die Claude-Punkte prüft die Arbeitsumgebung auf Staging (R91) | 26 | 07.11.2026 | `Pruefliste.md` 7 bis 10 |
 | **Prüfliste RD:** P-RD-09 (Safari: Segment mit Schnitt über Mitternacht), P-RD-10 (Produktiv nach dem Tag `web-v23.8.2`: Demo zurücksetzen, Karte öffnet, keine Gerätemeldung) | 24 | 05.11.2026 | `Pruefliste.md` 9 |
 
 ### 6.2 Vor einem bestimmten Schritt
@@ -422,6 +422,7 @@ die Aufräumfassung vom 24.09.2026 gelöscht hat (Archiv-2, Verlaufszeile 110).
 | 22 — BR5: Backlog-Runde 5, Web | Web 23.6.3–23.7.3 | 04.11.2026 · PR #141, #148 | gelöscht (`778b7953`) | `Pruefliste.md` 3, 8, 10 | Anlegemarke für Kontopaar und Rückweg, eine Passwortprüfung, `post_text()`, Mail-Absagen, Deadlock in `protokoll()`, APK nach Gerät; neu 480, 481 |
 | 23 — BR6: Backlog-Runde 6 | Web 23.7.4–23.7.7, Uhr 4.3.2, Android 0.21.0 | 04.11.2026 · PR #150 | gelöscht (`e62c7632`) | `Pruefliste.md` 9, 10 | Wartungslauf auf MySQL, Demo-Marke, Mail-Absage, Formularabstand, Sync-Zeile Venu 3s, Frist des Handypuffers, Prüfstand im Arbeitsbaum, Rundlauf mit Schlüsselpaar; Schemaprobe Fall 8; neu 500 |
 | 24 — RD: Referenzdatensatz und Demo, alle Spurfälle | Web 23.8.0–23.8.2 | 05.11.2026 · PR #152 | gelöscht (`99d82b32`) | `Pruefliste.md` 9 | Fixture wieder erzeugbar, alle Spurfälle in Referenz und Demo; Reset packt Stufe 2/3; Rücknahme und Fälligkeit berichtigt; Riegel `fixtureabgleich`; keine Gerätewarnung nach Reset; neu 510 |
+| 26 — MA: Markenabgleich mit dem Branding-Repo | Web 23.9.0–23.11.3, Android 0.21.1–0.22.0, Uhr 4.3.3 | 07.11.2026 · PR #156 | gelöscht (`57ef0f0`) | `Pruefliste.md` 7 bis 10 | Marke aus `gen-em-branding`; Aktion Dunkelblau, Hauptaktion Orange; Dark Mode; axe-core 0 Verstöße |
 | BR7 — Backlog-Runde 7 | nur Werkzeug | 06.11.2026 · PR #154 | gelöscht (`063eb827`) | — (kein Handpunkt) | Schemaprobe auf einer Kopie von `server/` (Nr. 510); Bedienprobe misst den Nachladeknopf auf 390 px statt P-R4-17; Prüfrunde auf Staging, Zeiger `produktion` 26 h fehlend, jetzt mit Löschsperre |
 | 21 — GR: Geräterunde | Uhr 4.2.0–4.3.1, Android 0.19.0–0.20.0 | 02.11.2026 · PR #136 | gelöscht (`129604f2`) | `Pruefliste.md` 10 | Antwortauswertung nach der Fehlertabelle im Vertrag (403, 429, 503, 507), Neukoppeln mit Schlüsselbindung gegen fremde Konten, Senden nach Reaktivieren, Sync-Seite ohne Überlappung; ausgeliefert noch nicht (Tags offen); neu 470, 471 |
 
