@@ -14,6 +14,17 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 23.11.1] — unveröffentlicht
+
+### Geändert
+
+- **Web — die Browser-Symbole kommen fertig aus dem Branding-Repo**
+  (Schritt 26). Bisher zeichnete ein eigenes Werkzeug sie nach dem Rezept
+  des Repos nach; das Repo liefert sie inzwischen selbst, und zwei
+  Erzeuger für dieselben Dateien laufen früher oder später auseinander.
+  Das Symbol auf dem Home-Bildschirm des iPhones ist dabei etwas größer
+  geworden.
+
 ## [Web 23.11.0] — unveröffentlicht
 
 ### Hinzugefügt

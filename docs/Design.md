@@ -155,11 +155,16 @@ die drei Federfarben stehen je einmal als Fläche.
 | `nadoku-hubschrauber-farbig-negativ.svg` | Grundform Schnee, Federfarben bleiben — Kopfleiste, dunkle Flächen | 400,16 × 249,81 |
 | `nadoku-hubschrauber-weiss.svg` | ganz weiß — Flächen in Gründerfarben | 400,16 × 249,81 |
 | `nadoku-nef-farbig.svg`, `…-farbig-negativ.svg`, `…-weiss.svg` | Fahrzeug (NEF), dieselben drei | 420 × 335 |
-| `favicon-nadoku-<zeichen>.svg`, `…-32.png`, `apple-touch-nadoku-<zeichen>.png`; `server/favicon.ico` | Browser-Symbol je Wahl, aus der farbigen Fassung; ICO mit 16, 32, 48 px | — |
+| `favicon-nadoku-<zeichen>.svg`, `…-32.png`, `apple-touch-nadoku-<zeichen>.png`; `server/favicon.ico` | Browser-Symbol je Wahl, aus dem Favicon-Set des Repos (Zeichen 92 % breit); ICO mit 16, 32, 48 px | — |
 | `nadoku-<zeichen>-farbig.png`, `…-farbig-negativ.png` | 500 px breit, Quelle der Bildmarken der Android-App | — |
 
-Alles außer den SVG ist **erzeugt**: `node tools/erzeugen/logos.mjs`, nach
-dem Rezept `erzeuge_favicons.py` des Repos — farbig auch bei 16 px. Bis
+Alles außer den Zeichen-SVG kommt aus **einem Lauf**: `node
+tools/erzeugen/logos.mjs` holt die Favicons aus dem Set des Repos
+(`1 Logos/Produktmarken/NAdoku/Favicon/`, seit Commit `e7bf4fc`; farbig auch
+bei 16 px) und rastert die PNG für Android. Bis Web 23.11.0 zeichnete das
+Skript die Favicons selbst nach dem Rezept des Repos; zwei Erzeuger für
+dieselben Dateien laufen auseinander (E-MA-35). Die Symbole in 192 und
+512 px und das Manifest bleiben im Repo, bis R70 (Schritt 13) sie braucht. Bis
 Schritt 26 hießen die Dateien `gen-em_logo_*`, die dunkle Fassung war ganz
 weiß, und Favicons gab es als ein PNG in 64 px. Eine bestehende
 `config.php` mit `logo_path => …gen-em_logo_helicopter.svg` gilt weiter als
@@ -177,7 +182,7 @@ zweier Motive (E-S3-12 b).
 >
 > **Und XML verbietet `--` im Kommentar.** Eine SVG mit einem doppelten
 > Bindestrich im Kommentar ist ungültig; `tools/erzeugen/logos.mjs` bricht
-> dann ab, statt das Platzhalterbild des Browsers als Favicon zu schreiben.
+> dann ab, statt das Platzhalterbild des Browsers als Bildmarke zu schreiben.
 
 **Drei Ebenen der Wahl**, und sie greifen in dieser Reihenfolge:
 

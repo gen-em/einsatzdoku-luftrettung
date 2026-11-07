@@ -612,8 +612,9 @@ Backlog Nr. 230.
 - **Die Produktmarke** (`server/assets/images/nadoku-*.svg`, seit Schritt 26)
   ist eine eigene Datei des Projekts und steht unter der Projektlizenz; sie
   kommt aus dem Branding-Repo `gen-em/gen-em-branding`
-  (`1 Logos/Produktmarken/NAdoku/`, Commit `95897f3`). Favicons und PNG sind
-  daraus erzeugt (`tools/erzeugen/logos.mjs`). Regeln für ihren Einsatz:
+  (`1 Logos/Produktmarken/NAdoku/`, Commit `e7bf4fc`). Die Favicons stammen
+  aus dem Set des Repos (`…/NAdoku/Favicon/`), die PNG sind daraus erzeugt;
+  beides holt `tools/erzeugen/logos.mjs`. Regeln für ihren Einsatz:
   `docs/Design.md`, Kapitel 2.
 - **Der Inhalt von Impressum und Datenschutzerklärung** ist Sache der
   BetreiberIn. Die Anwendung liefert keinen Text mit (R32); sie stellt nur die

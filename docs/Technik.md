@@ -587,7 +587,7 @@ Daten erst nach Server-Bestätigung.
 │   │                      je Subset latin und latin-ext (@fontsource, OFL-1.1)
 │   │   └── images/        Produktmarke NAdoku als SVG (farbig, farbig-negativ, weiss) je
 │   │       │                Hubschrauber und NEF, aus dem Branding-Repo (seit Schritt 26);
-│   │       │                Favicons und 500-px-PNG daraus erzeugt (tools/erzeugen/ (logos))
+│   │       │                Favicons aus dem Set des Repos, 500-px-PNG daraus (tools/erzeugen/ (logos))
 │   │       └── symbole/    je Zeichen eine SVG-Datei (Tabler Icons, MIT;
 │   │                       ein eigener Entwurf), 24 x 24, currentColor, Anker
 │   │                       <g id="i">; dazu LICENSE-tabler-icons.txt und

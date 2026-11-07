@@ -40,14 +40,14 @@ Prüfarbeit an der einen örtlichen Anlage (CLAUDE.md 7).
 | MA-10 | Nachzug des Repos auf `e7bf4fc`: Token hell und dunkel, Gefahrknopf als Umriss, Warnung immer mit Symbol | **erledigt** 07.11.2026 (Web 23.10.1) |
 | MA-11 | Kurzname der Installation zurück in die Kopfleiste (E-MA-21 aufgehoben) | **erledigt** 07.11.2026 (Web 23.10.2) |
 | MA-12 | Hauptaktion in Orange, einmal je Seite, auf sechs Seiten | **erledigt** 07.11.2026 (Web 23.11.0) |
-| MA-13 | Favicon-Sets aus dem Repo | offen |
+| MA-13 | Favicon-Sets aus dem Repo | **erledigt** 07.11.2026 (Web 23.11.1) |
 | MA-14 | Barrierefreiheit: die Funde von axe beheben, Abruf beim Verlassen der Seite abbrechen | offen |
 | MA-15 | axe-core als Prüfmittel in drei Engines | offen |
 | MA-16 | Android: Rollen wie im Web, Dark Mode, Hauptaktion „Dienst beginnen" (E-MA-24 aufgehoben) | offen |
 | MA-17 | Garmin: die Zeichen der Produktmarke (Backlog Nr. 520) | offen |
 | MA-18 | Dokumentation, Prüfstand zweimal grün, Pull Request nachgezogen | offen |
 
-**In Arbeit:** zweite Runde, MA-13 (Statusblock oben). Erste Runde: MA-08, Prüfstand und Pull Request stehen. Prüfdokument:
+**In Arbeit:** zweite Runde, MA-14 (Statusblock oben). Erste Runde: MA-08, Prüfstand und Pull Request stehen. Prüfdokument:
 `Pruefdokument-MA-Markenabgleich.md` (15 Handpunkte). **Zur Bestätigung
 vorgelegt:** E-MA-21 (Kopfleiste fest „NAdoku") und E-MA-24 (Android nur
 Werte). **Es hakt:** nirgends; alle Fragen sind entschieden
@@ -345,6 +345,7 @@ Runde (eine Datei im Kern, Prüfarbeit an der einen Anlage).
 | E-MA-32 | Die Funde der Barrierefreiheitsprüfung (axe-core) werden in diesem Einschub behoben, Links im Fließtext werden unterstrichen | Betreiberin, 07.11.2026 („1. Ja") |
 | E-MA-33 | axe-core wird vendoriert und als Prüfmittel in drei Engines aufgenommen | Betreiberin, 07.11.2026 („2. Ja") |
 | E-MA-34 | Am Ende laufen alle Proben über die Oberfläche zweimal hintereinander grün, in allen drei Engines | Betreiberin, 07.11.2026 („stabil und reproduzierbar") |
+| E-MA-35 | Die Favicons werden aus dem Set des Repos geholt, nicht mehr selbst gezeichnet; `logos.mjs` kopiert sie und rastert nur noch die PNG für Android. Symbole 192/512, maskable und Manifest bleiben im Repo (R70) | Umsetzung, aus E-MA-25 |
 
 ## 7. Fragen an die Betreiberin
 
@@ -622,6 +623,17 @@ abgeleitet, 0 ohne Eintrag. `vollstaendigkeit.py`: keine Befunde (die Art
 hell und 390 px dunkel (am Handy rückt die Knopfreihe unter den Titel),
 Anmeldung 1440 px dunkel. **Nebenbefund:** Der Container war zwischen MA-11
 und MA-12 neu gestartet worden; Startfolge 6.1a gefahren, kein Wartungsschalter.
+
+### MA-13 (Web 23.11.1, 07.11.2026)
+
+**Was gebaut ist.** `logos.mjs` holt je Zeichen `favicon.svg`,
+`favicon-32.png`, `apple-touch-icon.png` und einmal `favicon.ico` aus dem
+Set des Repos (Pfad über `BRANDING_REPO`, Vorgabe neben dem Repositorium;
+fehlt es, bricht das Skript ab und schreibt nichts). Die eigene Zeichnung
+der Favicons und der ICO-Schreiber sind entfernt.
+
+**Geprüft.** Lauf: 7 Dateien geholt, die vier Android-PNG byte-gleich
+neu gerastert (`git status` zeigt sie nicht). `php -l server/db.php`.
 
 ## 10. Vorher-Messung der zweiten Runde (07.11.2026, Web 23.10.0)
 

@@ -352,8 +352,10 @@ function favicon_tags(): string {
     /* DREI ANGEBOTE (seit Schritt 26, Produktmarke aus dem Branding-Repo):
      * das SVG fuer Browser, die es nehmen (scharf in jeder Groesse), das PNG
      * in 32 px fuer die uebrigen, und das Apple-Symbol in 180 px auf Schnee.
-     * Alle drei sind aus der farbigen Fassung erzeugt — farbig auch bei
-     * 16 px (Entscheidung der Betreiberin, `erzeuge_favicons.py` im Repo).
+     * Alle drei stammen seit Web 23.11.1 unveraendert aus dem Favicon-Set
+     * des Repos (`tools/erzeugen/logos.mjs` holt sie) — farbig auch bei
+     * 16 px (Entscheidung der Betreiberin). Kein Manifest-Verweis: das
+     * Manifest kommt mit R70 (Schritt 13).
      * Die .ico ohne sizes-Angabe hinterher — mit sizes="any" wuerden manche
      * Browser sie bevorzugen und bei ihrem Fehlen gar kein Symbol zeigen. */
     $b = $basis . '/assets/images/';

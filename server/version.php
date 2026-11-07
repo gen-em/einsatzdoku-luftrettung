@@ -8688,4 +8688,10 @@ declare(strict_types=1);
  *   (`ui_speichern_leiste(['haupt' => true])`), Diensttag anlegen,
  *   Anmelden (beide Formulare), Konto anlegen. Alles andere bleibt
  *   `primaer` in Dunkelblau. Neben; kein Schema. */
-const WEB_VERSION = '23.11.0';
+/* 23.11.1 — DIE FAVICONS AUS DEM SET DES REPOS (Schritt 26, MA-13).
+ *   `tools/erzeugen/logos.mjs` zeichnet sie nicht mehr selbst, sondern holt
+ *   SVG, 32-px-PNG, Apple-Symbol und ICO aus
+ *   `1 Logos/Produktmarken/NAdoku/Favicon/` (Repo-Commit e7bf4fc; Zeichen
+ *   92 % breit statt 96 %, Apple-Symbol groesser). Dateinamen und
+ *   `favicon_tags()` bleiben; kein Manifest (R70). Korrektur; kein Schema. */
+const WEB_VERSION = '23.11.1';
