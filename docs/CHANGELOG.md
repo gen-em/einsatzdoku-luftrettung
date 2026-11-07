@@ -14,6 +14,16 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 23.10.2] — unveröffentlicht
+
+### Geändert
+
+- **Web — in der Kopfleiste steht wieder der Kurzname der Anlage** (Schritt
+  26). Web 23.9.2 hatte ihn durch den festen Produktnamen „NAdoku" ersetzt;
+  wer aber Staging und Produktiv oder zwei Wachen nebeneinander offen hat,
+  unterscheidet sie an genau dieser Stelle. Das Zeichen der Produktmarke
+  bleibt.
+
 ## [Web 23.10.1] — unveröffentlicht
 
 ### Geändert

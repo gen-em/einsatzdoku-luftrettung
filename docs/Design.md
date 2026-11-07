@@ -141,8 +141,8 @@ Cron-Zeile, Serverschlüssel, Setz-Link).
 
 ### 2.3 Produktmarke und Logo-Wahl
 
-Die Kopfleiste trägt die **Produktmarke NAdoku**: ein Zeichen und den
-Produktnamen „NAdoku" in Bricolage 500 rechts daneben (E-MA-05, -06;
+Die Kopfleiste trägt das **Zeichen der Produktmarke NAdoku** und rechts
+daneben, in Bricolage 500, den Kurznamen der Installation (E-MA-05, -28;
 Branding-Repo, `5 Regeln/Produktmarken.md`). Es gibt **zwei** Zeichen — je
 Gegenstand eines, Luft- und Bodenrettung —, und welches erscheint, ist
 einstellbar (E-P3-19/20). Die Dateien kommen aus
@@ -196,9 +196,11 @@ Sitzung stehen.
 
 Eingebunden wird über `logo_src()` und `favicon_tags()` in `server/db.php`
 bzw. `ui_logo()` in `server/ui.php`, nie über einen fest verdrahteten Pfad.
-Den Produktnamen trägt `UI_PRODUKTNAME`; der einstellbare **Kurzname der
-Installation** steht seit Schritt 26 nicht mehr in der Kopfleiste, sondern
-im Browsertab, auf der Anmeldeseite, in Mails und auf den Druckblättern.
+Neben dem Zeichen steht in der Kopfleiste der einstellbare **Kurzname der
+Installation** (`ui_instanz_kurz()`), wie im Browsertab und auf der
+Anmeldeseite. Web 23.9.2 bis 23.10.1 zeigte dort fest „NAdoku"; die
+BetreiberIn hat das zurückgenommen (E-MA-28): Wer mehrere Anlagen betreibt,
+erkennt sie an der Kopfleiste.
 
 **Einsatzregeln** (Repo, `Logo.md` und `Produktmarken.md`)
 

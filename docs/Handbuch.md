@@ -332,8 +332,9 @@ den vollständigen Empfang bestätigt hat. Den aktuellen Stand zeigt die
 
 ## 3. Die Web-Oberfläche — Überblick
 
-Die Kopfleiste zeigt links das Zeichen und den Namen **NAdoku** — die
-Produktmarke der Software; am breiten
+Die Kopfleiste zeigt links das Zeichen der Produktmarke und den Kurznamen
+der Anlage (Vorgabe **Gen-EM NAdoku**, einstellbar unter Verwaltung →
+Installation, 11.5); am breiten
 Bildschirm steht der eigene Name daneben (im Profil setzbar, sonst die
 E-Mail-Adresse). Rechts stehen **Startseite**, **Suche** (Abschnitt 4.6) und
 das Zahnrad für die **Einstellungen**. Sie bleibt beim Scrollen oben stehen.
@@ -4790,10 +4791,9 @@ Browsertab, Kopfleiste, Anmeldeseite, Wartungsseite, Schlüsselblatt — und
 
 - **Name** — der lange. Er steht im Betreff jeder Mail und unter der
   Grußformel. Vorgabe: *Gen-EM Einsatzdokumentation Notarzt*.
-- **Kurzname** — der kurze. Er steht dort, wo wenig Platz ist: im Browsertab
-  und auf der Anmeldeseite. Vorgabe: *Gen-EM NAdoku*. Oben in der
-  Kopfleiste steht dagegen immer die Produktmarke „NAdoku" mit dem
-  gewählten Zeichen — sie ist der Name der Software, nicht der Anlage.
+- **Kurzname** — der kurze. Er steht dort, wo wenig Platz ist: im
+  Browsertab, oben in der Kopfleiste neben dem Zeichen und auf der
+  Anmeldeseite. Vorgabe: *Gen-EM NAdoku*.
 
 **Wer nichts einträgt, ändert nichts** — dann gelten die Vorgaben, und alles
 sieht aus wie bisher. Leer lassen setzt auch wieder darauf zurück.

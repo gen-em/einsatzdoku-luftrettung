@@ -38,7 +38,7 @@ Prüfarbeit an der einen örtlichen Anlage (CLAUDE.md 7).
 | MA-08 | Dokumentation, Prüfmittel, Prüfstand, Abschluss | **gebaut** 07.11.2026 — Prüfstand und Pull Request; Abschluss nach der Freigabe |
 | *Zweite Runde (Auftrag der Betreiberin, 07.11.2026)* | | |
 | MA-10 | Nachzug des Repos auf `e7bf4fc`: Token hell und dunkel, Gefahrknopf als Umriss, Warnung immer mit Symbol | **erledigt** 07.11.2026 (Web 23.10.1) |
-| MA-11 | Kurzname der Installation zurück in die Kopfleiste (E-MA-21 aufgehoben) | offen |
+| MA-11 | Kurzname der Installation zurück in die Kopfleiste (E-MA-21 aufgehoben) | **erledigt** 07.11.2026 (Web 23.10.2) |
 | MA-12 | Hauptaktion in Orange, einmal je Seite, auf sechs Seiten | offen |
 | MA-13 | Favicon-Sets aus dem Repo | offen |
 | MA-14 | Barrierefreiheit: die Funde von axe beheben, Abruf beim Verlassen der Seite abbrechen | offen |
@@ -47,7 +47,7 @@ Prüfarbeit an der einen örtlichen Anlage (CLAUDE.md 7).
 | MA-17 | Garmin: die Zeichen der Produktmarke (Backlog Nr. 520) | offen |
 | MA-18 | Dokumentation, Prüfstand zweimal grün, Pull Request nachgezogen | offen |
 
-**In Arbeit:** zweite Runde, MA-11 (Statusblock oben). Erste Runde: MA-08, Prüfstand und Pull Request stehen. Prüfdokument:
+**In Arbeit:** zweite Runde, MA-12 (Statusblock oben). Erste Runde: MA-08, Prüfstand und Pull Request stehen. Prüfdokument:
 `Pruefdokument-MA-Markenabgleich.md` (15 Handpunkte). **Zur Bestätigung
 vorgelegt:** E-MA-21 (Kopfleiste fest „NAdoku") und E-MA-24 (Android nur
 Werte). **Es hakt:** nirgends; alle Fragen sind entschieden
@@ -597,6 +597,14 @@ ergänzt.
 Quelldatei (`diff` ohne Leerzeilen, keine Abweichung). `kontrast.py`: 60
 Paare je Modus, 0 verfehlt; 38 aus Regeln abgeleitet, 0 ohne Eintrag.
 `vollstaendigkeit.py`: keine Befunde. `php -l` der drei PHP-Dateien sauber.
+
+### MA-11 (Web 23.10.2, 07.11.2026)
+
+**Was gebaut ist.** `ui_kopf()` und der Kopf der Schublade zeigen
+`ui_instanz_kurz()`; `UI_PRODUKTNAME` ist entfernt (keine Verwendung mehr,
+`grep` über `server/`, `tools/`, `docs/`). Beschriftung des Kurznamens in
+Verwaltung → Installation, Handbuch 3 und 11.5, Design 2.3,
+`instanz_lib.php` nachgezogen. **Geprüft:** `php -l` der drei Dateien.
 
 ## 10. Vorher-Messung der zweiten Runde (07.11.2026, Web 23.10.0)
 

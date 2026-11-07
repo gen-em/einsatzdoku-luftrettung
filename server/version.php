@@ -8674,4 +8674,9 @@ declare(strict_types=1);
  *   `ui.php` (Wartung, Ueberlast, Wartungsbanner, HTTPS-Seite) tragen das
  *   Warnsymbol, wie jede Warnung (`STOERUNG_WARNSYMBOL`). Korrektur; kein
  *   Schema. */
-const WEB_VERSION = '23.10.1';
+/* 23.10.2 — DER KURZNAME STEHT WIEDER IN DER KOPFLEISTE (Schritt 26,
+ *   MA-11). Neben dem Zeichen steht wieder `ui_instanz_kurz()` statt des
+ *   festen „NAdoku"; `UI_PRODUKTNAME` entfaellt. Die BetreiberIn hat E-MA-21
+ *   zurueckgenommen (E-MA-28): Wer mehrere Anlagen betreibt, erkennt sie an
+ *   der Kopfleiste. Korrektur; kein Schema. */
+const WEB_VERSION = '23.10.2';

@@ -144,7 +144,7 @@ ui_seite_start(['titel' => 'Installation']);
                          'klein' => 'Höchstens ' . INSTANZ_MAX . ' Zeichen ohne '
                                   . 'Zeilenumbruch; leer heißt Vorgabe.']); ?>
           <?php ui_feld(['name' => 'instanz_kurz', 'label' => 'Kurzname',
-                         'label_zusatz' => 'im Browsertab und auf der Anmeldeseite',
+                         'label_zusatz' => 'im Browsertab, in der Kopfleiste und auf der Anmeldeseite',
                          'wert' => instanz_kurz(),
                          'platzhalter' => INSTANZ_KURZ_VORGABE]); ?>
           <?= ui_knopf(['text' => 'Namen speichern', 'art' => 'primaer']) ?>

@@ -224,18 +224,6 @@ function ui_instanz_kurz(): string
 }
 
 /**
- * Der Produktname neben der Produktmarke in der Kopfleiste (E-MA-06).
- *
- * FEST, NICHT EINSTELLBAR — anders als der Kurzname der Installation. Zeichen
- * und Name sind zusammen die Produktmarke (Branding-Repo,
- * `5 Regeln/Produktmarken.md`, Regel 5: Bricolage Medium, rechts neben dem
- * Zeichen). Bis Schritt 26 stand an dieser Stelle `instanz_kurz()`; der
- * Kurzname steht seither im Browsertab, auf der Anmeldeseite, in Mails und
- * Druckblaettern, aber nicht mehr in der Kopfleiste.
- */
-const UI_PRODUKTNAME = 'NAdoku';
-
-/**
  * Das Etikett dieser Anlage — `umgebung()`, oder `null`.
  *
  * `umgebung_lib.php` laedt nur `konfig_lib.php`, und die laedt nichts; beide
@@ -587,7 +575,7 @@ function ui_kopf(array $o = []): void
       <?php $lm = ui_logo_masse(34); ?>
       <img src="<?= ui_e(ui_logo(true)) ?>" alt=""
            width="<?= $lm['breite'] ?>" height="<?= $lm['hoehe'] ?>">
-      <span class="kopf-name"><?= ui_e(UI_PRODUKTNAME) ?></span>
+      <span class="kopf-name"><?= ui_e(ui_instanz_kurz()) ?></span>
       <?php if ($menue): ?><span class="kopf-nutzer"><?= ui_e(ui_user_label()) ?></span><?php endif; ?>
     </a>
 
@@ -684,7 +672,7 @@ function ui_geruest_start(array $o = []): void
       <button type="button" class="knopf knopf-symbol" data-schublade="zu" aria-label="Menü schließen">
         <?= ui_symbol('schliessen', 'symbol-gross') ?>
       </button>
-      <span class="kopf-name"><?= ui_e(UI_PRODUKTNAME) ?></span>
+      <span class="kopf-name"><?= ui_e(ui_instanz_kurz()) ?></span>
     </div>
     <nav class="leiste-haupt nur-schublade" aria-label="Hauptbereiche">
       <a class="eintrag<?= ($o['aktiv'] ?? '') === 'start' ? ' aktiv' : '' ?>" href="index.php">
