@@ -82,7 +82,7 @@ NV-Gerüst.
 | OF-P-22 | Listenkopf (Suche, Zeitfilter, Art) unübersichtlich, aktiver Zeitraum nicht erkennbar | Baustein | Gestaltung | entschieden (E-OF-18): Filterknopf |
 | OF-P-23 | Statusseite zu voll | Betrieb | Gestaltung | entschieden (E-OF-20): Probleme zuerst |
 | OF-P-24 | Hintergrundjobs: ausdünnen, Plaketten brechen um, „Anhalten" umbenennen | Betrieb | Umbau | entschieden (E-OF-10, E-OF-21) |
-| OF-P-25 | Servereinstellungen vereinfachen | Betrieb | Gestaltung | 1 Mockup, gemeinsamer Klappbaustein |
+| OF-P-25 | Servereinstellungen vereinfachen | Betrieb | Gestaltung | entschieden (E-OF-22): Klappkarten |
 | OF-P-26 | Komplett-Backup vereinfachen | Betrieb | Gestaltung | 1 Mockup, gemeinsamer Klappbaustein |
 | OF-P-27 | Backup-Ziele als eigene Seite auflösen | Betrieb | Umbau | Q-OF-06 (Ort) |
 | OF-P-28 | Dark Mode mit Umschalter in der Kopfleiste | alle | Funktion | entschieden (E-OF-09) |
@@ -129,6 +129,7 @@ Seite Hintergrundjobs (bei P-24).
 | E-OF-19 | P-09: Variante **B — ein Satz plus „Verwalten"**: Die Karte Zweitfaktor zeigt zugeklappt einen Satz mit allem Wichtigen und einen Knopf „Verwalten"; aufgeklappt die Zeilen mit ihren Handlungen. Bild `konzept-of/mockups/OF-P09-B-satz-verwalten.png` | Betreiberin, 07.11.2026 (Kommentar im Mockup B) |
 | E-OF-20 | P-23: Variante **A — Probleme zuerst, Bereiche zugeklappt**: Oben ein Abschnitt mit genau den Zeilen, die etwas brauchen, je mit ihrem Bereich; darunter jeder Bereich als zugeklappter Abschnitt mit Zahl und Plakette. Bild `konzept-of/mockups/OF-P23-A-probleme-zuerst.png` | Betreiberin, 07.11.2026 (Kommentar im Mockup C) |
 | E-OF-21 | P-24: **Vorschlag** übernommen: „Jobs vorübergehend pausieren“ als eigene Karte oben; im Zustand je Job ein kurzer Satz, Plaketten brechen nicht um („heute 23:24“ statt Datum); Auslöser, Kettentoken und Monitoring in der üblichen Klappkarte, Zustand als Plakette im Kopf. Bild `konzept-of/mockups/OF-P24-vorschlag.png` | Betreiberin, 07.11.2026 (Kommentar im Mockup C) |
+| E-OF-22 | P-25: **Vorschlag** übernommen: Jede Karte der Servereinstellungen wird Klappkarte; zugeklappt zeigt sie den eingestellten Stand in einer Zeile und die Plakette, aufgeklappt das Formular. Der Klappbaustein ist derselbe wie bei P-24. Ob die Backup-Ziele dorthin wandern, ist P-27 und noch offen. Bild `konzept-of/mockups/OF-P25-vorschlag.png` | Betreiberin, 07.11.2026 (Kommentar im Mockup C) |
 
 Aus Schritt 26 übernommen: E-MA-36 (Beenden-Knöpfe der App bleiben
 vollflächig rot) ist bestätigt.
