@@ -74,7 +74,7 @@ NV-Gerüst.
 | OF-P-14 | Kachel „GPS-Daten verdichten" für NutzerInnen kaum relevant | Backup | Umbau | Q-OF-04 |
 | OF-P-15 | Seitenerklärung „Backup": schwer lesbar, zu lang | Backup | Text/Regel | mit P-10 |
 | OF-P-16 | Untermenü listet „Für dich freigegebenes Backup", die Karte fehlt | Navigation | Fehler | Sprungliste listet nur vorhandene Karten; alle Seiten prüfen |
-| OF-P-17 | Seite „Import / Export" unintuitiv, zu viel Text, zu breite Elemente | Einstellungen | Gestaltung | 3 Mockups |
+| OF-P-17 | Seite „Import / Export" unintuitiv, zu viel Text, zu breite Elemente | Einstellungen | Gestaltung | entschieden (E-OF-26): erst wählen, dann füllen |
 | OF-P-18 | Kontenliste: Spalte „Öffnen" verlangt waagerechtes Scrollen | Verwaltung | Umbau | Vorschlag Q-OF-05 |
 | OF-P-19 | Seitenbreite uneinheitlich (Installation schmal, NutzerInnen breit) | alle | Regel | zentrale Regel + Prüfmittel, Mockup |
 | OF-P-20 | Reiter kaum als Bedienelement erkennbar | Baustein | Gestaltung | entschieden (E-OF-17): gleiche Form wie die Bereichszeile |
@@ -133,6 +133,7 @@ Seite Hintergrundjobs (bei P-24).
 | E-OF-23 | P-26: **Vorschlag** übernommen: Oben der Stand (offen), darunter Regeln, Stände und Backup-Ziele als Klappkarten in derselben Form wie die Servereinstellungen; „Jetzt sichern“ ist die eine orange Hauptaktion. Ob die Backup-Ziele zusätzlich dort und in den Servereinstellungen stehen, ist P-27 und noch offen. Bild `konzept-of/mockups/OF-P26-vorschlag.png` | Betreiberin, 07.11.2026 (Kommentar im Mockup C) |
 | E-OF-24 | P-27 und Q-OF-06: Die Seite „Backup-Ziele“ entfällt. Die Ziele stehen **an beiden Orten** als dieselbe Klappkarte (ein Baustein): als letzte Karte in den Servereinstellungen und unter den Ständen im Komplett-Backup. „Ziel anlegen“ öffnet den heutigen Dialog. Bilder `konzept-of/mockups/OF-P27-servereinstellungen.png`, `…/OF-P27-komplett-backup.png` | Betreiberin, 07.11.2026 (Kommentar im Mockup C) |
 | E-OF-25 | P-11: Variante **B2 — nach Gerätetyp, Koppeln im Dialog**: Je eine Karte für Garmin und für Android/Wear OS mit den gekoppelten Geräten; darunter nur ein Knopf „Weitere Uhr koppeln“ bzw. „Weiteres Gerät koppeln“. Er öffnet einen Dialog mit den drei Schritten aus Variante A (App installieren, Kopplung am Gerät starten, Code eingeben), angepasst an den Gerätetyp. Platzzahl als Kleinzeile unter den Karten. Bild `konzept-of/mockups/OF-P11-B2-dialog.png` | Betreiberin, 07.11.2026 (Kommentar im Mockup B: „B, unter ‚weitere Uhr koppeln‘ dann ein Popup“, danach „so wie Mockup“) |
+| E-OF-26 | P-17: Variante **C — erst wählen, dann füllen**: Zwei Wahlkarten „Liste übernehmen“ und „Liste ausgeben“ mit je einem Satz, darunter nur das passende kurze Formular. Bild `konzept-of/mockups/OF-P17-C-wahlkarten.png` | Betreiberin, 07.11.2026 (Kommentar im Mockup B) |
 
 Aus Schritt 26 übernommen: E-MA-36 (Beenden-Knöpfe der App bleiben
 vollflächig rot) ist bestätigt.
