@@ -8692,6 +8692,6 @@ declare(strict_types=1);
  *   `tools/erzeugen/logos.mjs` zeichnet sie nicht mehr selbst, sondern holt
  *   SVG, 32-px-PNG, Apple-Symbol und ICO aus
  *   `1 Logos/Produktmarken/NAdoku/Favicon/` (Repo-Commit e7bf4fc; Zeichen
- *   92 % breit statt 96 %, Apple-Symbol groesser). Dateinamen und
+ *   92 % breit statt 96 %, Apple-Symbol wie bisher 70 %). Dateinamen und
  *   `favicon_tags()` bleiben; kein Manifest (R70). Korrektur; kein Schema. */
 const WEB_VERSION = '23.11.1';

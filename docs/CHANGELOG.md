@@ -22,8 +22,8 @@ frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
   (Schritt 26). Bisher zeichnete ein eigenes Werkzeug sie nach dem Rezept
   des Repos nach; das Repo liefert sie inzwischen selbst, und zwei
   Erzeuger für dieselben Dateien laufen früher oder später auseinander.
-  Das Symbol auf dem Home-Bildschirm des iPhones ist dabei etwas größer
-  geworden.
+  Sichtbar ändert sich wenig: Das Zeichen im Browser-Tab hat etwas mehr
+  Rand.
 
 ## [Web 23.11.0] — unveröffentlicht
 
