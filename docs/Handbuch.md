@@ -332,7 +332,9 @@ den vollständigen Empfang bestätigt hat. Den aktuellen Stand zeigt die
 
 ## 3. Die Web-Oberfläche — Überblick
 
-Die Kopfleiste zeigt links das Logo und den Namen **Gen-EM NAdoku**; am breiten
+Die Kopfleiste zeigt links das Zeichen der Produktmarke und den Kurznamen
+der Anlage (Vorgabe **Gen-EM NAdoku**, einstellbar unter Verwaltung →
+Installation, 11.5); am breiten
 Bildschirm steht der eigene Name daneben (im Profil setzbar, sonst die
 E-Mail-Adresse). Rechts stehen **Startseite**, **Suche** (Abschnitt 4.6) und
 das Zahnrad für die **Einstellungen**. Sie bleibt beim Scrollen oben stehen.
@@ -410,9 +412,10 @@ und Formular. Sie ist nach Jahr und Monat gruppiert (Abschnitt 4.4).
 stehen dort, immer in derselben Reihenfolge:
 
 1. **Die Umgebung** — nur auf einer Testanlage: „Staging — Testdaten, kein
-   Echtbetrieb". Dazu ist dort die **Kopfleiste rot** statt dunkelblau, und
+   Echtbetrieb". Dazu ist dort die **Kopfleiste orange** (dunkles Orange,
+   bis Web 23.9.0 rot) statt dunkelblau, und
    vor jedem Seitentitel im Browser steht „[Staging]". Auf der Anlage für den
-   Echtbetrieb gibt es nichts davon. Wer eine rote Leiste sieht, trägt dort
+   Echtbetrieb gibt es nichts davon. Wer eine orange Leiste sieht, trägt dort
    keine echten Einsätze ein.
 2. **Eine Ankündigung** der BetreiberIn, etwa eine Wartung. Sie steht auch
    über der Anmeldung. Das **×** rechts blendet sie aus, bis du dich abmeldest;
@@ -431,7 +434,7 @@ Schreibtisch als Knöpfe am rechten Zeilenrand. Auf schmalen Geräten steht dort
 dieselben Handlungen untereinander stehen, „Löschen" rot und abgesetzt. Das
 gilt überall: Stammdaten, Geräte, NutzerInnen, Papierkorb.
 
-**Das Blatt fährt von unten herein, und der Knopf bleibt orange**, solange es
+**Das Blatt fährt von unten herein, und der Knopf bleibt hellblau hinterlegt**, solange es
 offen steht — damit zu sehen ist, wohin es gehört und womit man es wieder
 zumacht. Zum Schließen genügt der Knopf ein zweites Mal, ein Tipp daneben,
 „Abbrechen" im Blatt oder die Escape-Taste. Wer im Betriebssystem
@@ -578,7 +581,7 @@ genommen, gilt das ab dem nächsten Klick; ein Ab- und Anmelden ist nicht nötig
 
 ---
 
-### 3.1a Profil: Name, Adresse und Logo
+### 3.1a Profil: Name, Adresse, Logo und Darstellung
 
 Unter dem Zahnrad → **Profil** stehen dein Anzeigename (er erscheint in der
 Kopfleiste neben der Marke), deine Anmelde-Adresse und seit Web 9.7.0 die
@@ -615,8 +618,9 @@ oder BetreiberIn — als reine Anzeige. Sie erklärt, warum zwei Konten unter de
 Zahnrad verschieden viel sehen; geändert wird sie in der Verwaltung
 (11.3), nicht hier.
 
-Die Anwendung bringt zwei Logos mit — einen Hubschrauber und ein Fahrzeug.
-Welches du siehst, entscheidest du selbst:
+Die Anwendung bringt zwei Zeichen mit — einen Hubschrauber und ein Fahrzeug
+(NEF), beide in Dunkelblau mit den drei Gen-EM-Farben. Welches du siehst,
+entscheidest du selbst:
 
 | Wahl | Bedeutung |
 |---|---|
@@ -634,13 +638,26 @@ bleibt das Logo, wie es ist. Ein Logo, das beim Blättern springt, wäre keine
 Abwechslung, sondern Unruhe.
 
 Die **Anmeldeseite** zeigt immer den Standard der Installation. Dort ist noch
-niemand angemeldet, und die Wahl hängt am Konto. (Bis Web 9.9.0 zeigte sie
+niemand angemeldet, und die Wahl hängt am Konto. Die **Wartungsseite** zeigt
+immer den Hubschrauber; sie kommt ohne Datenbank aus und kennt den Standard
+deshalb nicht. (Bis Web 9.9.0 zeigte sie
 stattdessen immer den Hubschrauber, gleich wie der Standard eingestellt war.)
 
 Den **Standard der Installation** setzt die Verwaltung unter
 **Verwaltung → Installation** (11.5). Er wirkt sofort, auch für bereits
 angemeldete Konten — aber nur bei denen, die hier „Standard der Installation"
 stehen haben. Eine getroffene eigene Wahl bleibt unberührt.
+
+**Karte „Darstellung": hell oder dunkel.** Seit Web 23.10.0 wählst du im
+Profil, wie die Oberfläche aussieht: **Wie das Gerät** (die Vorgabe — sie
+folgt der Einstellung von Handy oder Rechner), **Hell** oder **Dunkel**. Die
+Wahl gilt für dein Konto auf jedem Gerät und wirkt sofort nach dem
+Speichern. Dunkel heißt: dunkelblaue Flächen, helle Schrift, dieselben
+Farben für Hinweise und Warnungen in dunklen Tönen. **Die Karte bleibt hell**
+— eine dunkle Karte bräuchte einen weiteren Kartendienst, der deinen
+Ausschnitt sähe —, ebenso alles, was du druckst. Die Anmeldeseite kennt
+dein Konto noch nicht und folgt immer dem Gerät. Im Demo-Konto lässt sich
+das Profil nicht speichern; dort gilt die Einstellung des Geräts.
 
 **Karte „Datenschutz": die Adresssuche.** Seit Web 15.8.0 steht im Profil
 darunter der Schalter **„Adressvorschläge aus dem Internet"**. Er entscheidet
@@ -1170,7 +1187,11 @@ Tages mit **„Einsatz nachtragen"**, **„Diensttag-Daten bearbeiten"**,
 (Abschnitt 4.5a), **„GPS-Daten als GPX"** (Abschnitt 4.1a) und **„Tag löschen"**
 (Abschnitt 8). Auf dem Handy fährt
 das Blatt von unten herein, am Desktop steht es als Menü am Knopf; Escape
-schließt es, die Tastatur bedient es vollständig.
+schließt es, die Tastatur bedient es vollständig. Rechts neben dem Menü
+steht **„Einsatz nachtragen"** zusätzlich als oranger Knopf — die
+Haupthandlung der Seite. Orange ist in der Oberfläche diesem einen Knopf je
+Seite vorbehalten (Anmelden, Konto anlegen, Diensttag anlegen, Einsatz
+bearbeiten und speichern); alles andere handelt in Dunkelblau.
 
 Pro Tag:
 
@@ -1232,7 +1253,7 @@ Pro Tag:
   mit Orange/Blau/Rot) und dem Ruhe-Track in gedämpftem Graublau. Kleine
   **Richtungspfeile** auf den Aufzeichnungen zeigen die Bewegungsrichtung.
   Der **Standort** steht als Haus-Schild auf der Karte, der **Einsatzort**
-  als oranger Kreis. Anfang und Ende der Aufzeichnung sind hier **nicht**
+  als dunkelblauer Kreis. Anfang und Ende der Aufzeichnung sind hier **nicht**
   gekennzeichnet — die Tagesübersicht zeigt den ganzen Tag, und was ihn
   einrahmt, steht am einzelnen Einsatz (Abschnitt 4.2). Bis Web 15.9.0
   behauptete dieser Absatz das Gegenteil.
@@ -1533,7 +1554,7 @@ hinausreicht.
 Über dem Titel steht der **Rückweg** „‹ Sonntag, 27.12.2026" zurück zur
 Tagesübersicht. Der Titel heißt „Einsatz N · Uhrzeit" (N = Nummer des Tages
 nach Alarmierungszeit; auf dem Handy nur „Einsatz N"). Rechts daneben:
-**„Bearbeiten"** als oranger Hauptknopf und das Aktionsblatt mit
+**„Bearbeiten"** als dunkelblauer Hauptknopf und das Aktionsblatt mit
 **Verschieben**, **GPS-Daten als GPX** und **Löschen** (mobil „···", am Desktop
 „Aktionen"; Escape schließt, die Tastatur bedient es vollständig — seit
 Web 9.3.0 dasselbe Blatt wie auf der Startseite). **GPS-Daten als GPX** erscheint
@@ -1668,7 +1689,7 @@ nicht gespeichert, nach einem Neuladen ist er wieder aus.
 
 Die Karte **Einsatzphasen** nennt im Kopf die Gesamtdauer und je Zeile
 Nummer, Name, Uhrzeit und den **Minutenabstand** zur vorigen Phase. Zeigt
-man auf eine Zeile (am Handy: antippen), leuchtet sie orange und ihr
+man auf eine Zeile (am Handy: antippen), wird sie hellblau hinterlegt und ihr
 **Teilstück des Tracks** — von der vorigen Phase bis zu ihr — färbt sich
 blau auf der Karte; ein eingeblendeter Phasenpunkt leuchtet ebenso.
 
@@ -2768,13 +2789,13 @@ entpackt hast), sagt die Anwendung auch das.
 
 **Woran du siehst, wie es ausgegangen ist:** Die Rückmeldungen tragen seit
 Web 9.7.2 ihre Farbe. Ein Fehlschlag ist **rot** mit Warnsymbol, ein Ergebnis
-**blau mit Haken**, und was gerade läuft („Daten werden geladen …") steht
+**grün mit Haken** (bis Web 23.9.0 blau), und was gerade läuft („Daten werden geladen …") steht
 schlicht in Grau — es ist kein Ergebnis, und ein Haken daneben behauptete
 eines. Ein Backup, bei dem sich einzelne Angaben nicht entschlüsseln ließen,
 meldet sich **orange**: Die Datei ist vollständig, aber dieser Teil öffnet
 sich nur wieder in diesem Konto.
 
-**Orange heißt auch: Etwas wurde verworfen.** Jede Angabe aus der Datei läuft
+**Die Warnfarbe heißt auch: Etwas wurde verworfen.** Jede Angabe aus der Datei läuft
 beim Einspielen durch dieselbe Prüfung wie alles, was die Anwendung annimmt.
 Was sie nicht passiert, wird nicht übernommen, und die Abschlussmeldung sagt
 es seit Web 23.0.2 mit Feld und Anzahl — etwa „ACHTUNG: Verworfen hat die
@@ -2886,7 +2907,7 @@ beschädigt" — was beides nicht stimmte.)
 Der Aufbau der Datei ist in `docs/Backup-Format.md` vollständig beschrieben —
 sie lässt sich damit auch ohne dieses Programm entschlüsseln.
 
-#### GPS-Daten verdichten
+### GPS-Daten verdichten
 
 *Seit Web 22.6.0.*
 
@@ -2982,7 +3003,7 @@ Unter **Einstellungen → Import / Export** lässt sich eine vorhandene
 Einsatzliste (Excel oder CSV) übernehmen — etwa eine über Jahre gepflegte
 Jahresliste.
 
-#### Die übrigen Wege
+### Die übrigen Wege
 
 **Der Name ist weiter gefasst als die Seite, und seit Web 19.3.0 sagt sie das
 selbst.** Hier läuft die **Einsatzliste als Ganzes** in beide Richtungen —
@@ -3022,7 +3043,7 @@ nicht zur Verfügung — und damit auch kein GPX-Import.
 wählen*, *2. Prüfen und korrigieren*, *3. Übernehmen*. Die Schritte 2 und 3
 erscheinen erst, wenn der vorige getan ist. In Schritt 2 lässt sich die
 Tabelle einschränken auf *Alle Zeilen*, *Nur Probleme* oder *Nur Dubletten* —
-die gewählte Fläche ist orange hinterlegt.
+die gewählte Fläche ist hellblau hinterlegt.
 
 Die Datei wird **nicht hochgeladen**. Sie wird in deinem Browser gelesen,
 geprüft und dort verschlüsselt; der Server bekommt Name, Geburtsdatum, Alter,
@@ -3469,7 +3490,7 @@ getippt hast.
 
 - Über den **Rettungsmitteln** steht dann eine Reihe runder Marken, je eine
   mit dem Zeichen und dem Namen. Ein Tipp darauf springt zu der Zeile, und
-  die Zeile ist kurz orange hinterlegt, damit du sie unter den anderen
+  die Zeile ist kurz hellblau hinterlegt, damit du sie unter den anderen
   wiederfindest.
 - Über den **übrigen Listen** steht ein **Filterfeld** mit einer Lupe. Tippe
   ein paar Buchstaben, und es bleibt stehen, was dazu passt — sofort, ohne
@@ -3532,7 +3553,7 @@ Die Rückfrage sagt das vorher und nennt sie mit Namen: „5 eigene
 Stammdatensätze … werden mitgelöscht. 1 Rettungsmittel ohne Standortpflicht —
 Bergwacht Hochkreuth — bleibt bestehen und steht danach unter ‚Ohne
 Standort'." Nach dem Löschen führt die Seite gleich dorthin, mit der Zeile
-orange hinterlegt. Bereits dokumentierte Diensttage bleiben in jedem Fall
+hellblau hinterlegt. Bereits dokumentierte Diensttage bleiben in jedem Fall
 unverändert — sie haben ihre Angaben beim Anlegen eingefroren.
 
 ### 9.1a Vier Typen von Rettungsmitteln
@@ -4774,8 +4795,9 @@ Browsertab, Kopfleiste, Anmeldeseite, Wartungsseite, Schlüsselblatt — und
 
 - **Name** — der lange. Er steht im Betreff jeder Mail und unter der
   Grußformel. Vorgabe: *Gen-EM Einsatzdokumentation Notarzt*.
-- **Kurzname** — der kurze. Er steht dort, wo wenig Platz ist: im Browsertab
-  und oben in der Kopfleiste. Vorgabe: *Gen-EM NAdoku*.
+- **Kurzname** — der kurze. Er steht dort, wo wenig Platz ist: im
+  Browsertab, oben in der Kopfleiste neben dem Zeichen und auf der
+  Anmeldeseite. Vorgabe: *Gen-EM NAdoku*.
 
 **Wer nichts einträgt, ändert nichts** — dann gelten die Vorgaben, und alles
 sieht aus wie bisher. Leer lassen setzt auch wieder darauf zurück.
@@ -5135,7 +5157,7 @@ derselben Kennung im Fehlerprotokoll des Webspace.
 #### Eine Zeile lesen
 
 Die **Plakette** sagt die Art des Ereignisses, ihre **Farbe** das Gewicht:
-grau ein gewöhnlicher Vorgang, blau etwas Erledigtes, orange ein Eingriff
+grau ein gewöhnlicher Vorgang, grün etwas Erledigtes (bis Web 23.9.0 blau), orange ein Eingriff
 oder eine Sperre, rot ein Fehler. Darunter stehen Zeit, wer gehandelt hat
 („Kommandozeile" oder „job", wenn es kein Mensch war) und wen es betraf.
 **Eine Zeile mit Winkel lässt sich aufklappen** — darunter stehen die
@@ -5285,7 +5307,7 @@ Dorthin führen auch die drei Zeilen „Verlangsamung", „Gesperrt" und
 
 | Farbe | heißt |
 |---|---|
-| **blau** | Es ist in Ordnung. |
+| **grün** | Es ist in Ordnung. (Bis Web 23.9.0 war das blau; blau heißt seither eine Eigenschaft, etwa „Produktiv".) |
 | **orange** | Es braucht Aufmerksamkeit, arbeitet aber. |
 | **rot** | Es arbeitet nicht — oder es geht dabei etwas verloren. |
 | grau | Nicht eingerichtet, oder eine reine Zahl ohne Wertung. |
@@ -5347,7 +5369,7 @@ aus, kommt niemand mehr an Verwaltung und Betrieb"), ein Admin als
 Vertretung der Verwaltung, aber nicht des Betriebs, eine zweite
 BetreiberIn ohne Zweitfaktor — oder **„keine BetreiberIn"**: Keine ist
 handlungsfähig. Das siehst du nach einem Update, solange du deinen eigenen
-Zweitfaktor noch nicht eingerichtet hast. Blau „vertreten" ab zwei handlungsfähigen
+Zweitfaktor noch nicht eingerichtet hast. Grün „vertreten" ab zwei handlungsfähigen
 BetreiberInnen. **Orange und nicht rot**, weil jede neue Anlage mit genau
 einer BetreiberIn beginnt — es arbeitet ja. Der Zähler am Menüpunkt „Status"
 zählt die Zeile mit und steht deshalb auf einer Anlage mit einer BetreiberIn
@@ -5359,7 +5381,7 @@ nicht, die Zeile bleibt deshalb orange.
 **Die Zeile „Rückweg-Prüfung"** (seit Web 20.43.0) sagt, ob diese Anlage den
 Rückweg beim Zweitfaktor prüfen kann — den Weg, auf dem jemand mit dem
 Wiederherstellungsschlüssel vom Notfallblatt den eigenen Zweitfaktor
-zurücksetzt, wenn Handy und Codes fehlen. Blau „prüft" mit Weg und Dauer:
+zurücksetzt, wenn Handy und Codes fehlen. Grün „prüft" mit Weg und Dauer:
 „openssl" ist der schnelle, „reines PHP" der langsamere, beide tragen. Orange
 „abgeschaltet": Der Selbsttest ist gescheitert, der Rückweg wird bei der
 Anmeldung nicht angeboten; Codes und das Zurücksetzen durch die Verwaltung
@@ -5395,7 +5417,7 @@ Versuch — eine Einladung, die vorgestern scheiterte, war danach unsichtbar.
 
 | Zeile | heißt | was zu tun ist |
 |---|---|---|
-| blau **leer** | Nichts liegt an. | nichts |
+| grün **leer** | Nichts liegt an. | nichts |
 | orange **N wartet** | Der Mailserver war kurz gestört. Die Anwendung versucht es über 24 Stunden bis zu fünfmal. | abwarten |
 | rot **N unzustellbar** | Fünf Versuche, alle gescheitert — oder, seit Web 23.6.4, der Mailserver hat den Empfänger gleich beim ersten Versuch endgültig abgelehnt (etwa „Postfach gibt es nicht“). Die Zeile **nennt die Adressen** und den letzten Grund. | Grund lesen, Adresse prüfen, Vorgang von Hand wiederholen |
 
@@ -5578,7 +5600,7 @@ Kennung `protokoll:`. Der häufigste Grund: Ein Update ist eingespielt, aber
 
 *Bis Web 21.0.0 stand das in der zugeklappten Karte „Was hier gilt" am Ende
 der Seite (P5c/AP9).* Die Ampel hat **vier Töne**, und sie bedeuten auf der
-ganzen Seite dasselbe: **Blau** — es ist in Ordnung. **Orange** — es braucht
+ganzen Seite dasselbe: **Grün** — es ist in Ordnung (bis Web 23.9.0 Blau). **Orange** — es braucht
 Aufmerksamkeit, arbeitet aber. **Rot** — es arbeitet nicht, oder es geht dabei
 etwas verloren. **Neutral** — nicht eingerichtet, oder eine reine Zahl ohne
 Wertung. Die Meldung oben zählt die roten und orangen Zeilen.

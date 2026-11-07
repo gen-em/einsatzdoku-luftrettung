@@ -52,9 +52,11 @@
  *
  * Herkunft: npm-Pakete @fontsource/bricolage-grotesque 5.3.0 und
  * @fontsource/open-sans 5.3.0 (beide OFL-1.1), Unterverzeichnis files/.
- * Übernommen wurden ausschließlich die tatsächlich benutzten Schnitte:
- * Bricolage 500/600, Open Sans 400/600/700 — je in den Subsets latin und
- * latin-ext. Wer einen weiteren Schnitt braucht, legt die Datei dazu UND
+ * Übernommen wurden ausschließlich die Schnitte, die die Marke vorsieht
+ * (Branding-Repo, `5 Regeln/Typografie.md`): Bricolage 500, Open Sans 400
+ * und 700 — je in den Subsets latin und latin-ext. Die 600er beider
+ * Familien sind seit Schritt 26 entfallen (E-MA-15); jedes `font-weight:600`
+ * wurde 500 (Bricolage) oder 700 (Open Sans). Wer einen weiteren Schnitt braucht, legt die Datei dazu UND
  * trägt sie hier ein; ohne @font-face nutzt die Datei nichts.
  *
  * unicode-range trennt die beiden Subsets: latin-ext wird nur geladen, wenn
@@ -71,16 +73,6 @@
   unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,
     U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,
     U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}
-@font-face{font-family:'Bricolage Grotesque';font-style:normal;font-weight:600;
-  font-display:swap;src:url(fonts/bricolage-grotesque-latin-600-normal.woff2) format('woff2');
-  unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,
-    U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,
-    U+FEFF,U+FFFD}
-@font-face{font-family:'Bricolage Grotesque';font-style:normal;font-weight:600;
-  font-display:swap;src:url(fonts/bricolage-grotesque-latin-ext-600-normal.woff2) format('woff2');
-  unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,
-    U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,
-    U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}
 @font-face{font-family:'Open Sans';font-style:normal;font-weight:400;
   font-display:swap;src:url(fonts/open-sans-latin-400-normal.woff2) format('woff2');
   unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,
@@ -88,16 +80,6 @@
     U+FEFF,U+FFFD}
 @font-face{font-family:'Open Sans';font-style:normal;font-weight:400;
   font-display:swap;src:url(fonts/open-sans-latin-ext-400-normal.woff2) format('woff2');
-  unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,
-    U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,
-    U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}
-@font-face{font-family:'Open Sans';font-style:normal;font-weight:600;
-  font-display:swap;src:url(fonts/open-sans-latin-600-normal.woff2) format('woff2');
-  unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,
-    U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,
-    U+FEFF,U+FFFD}
-@font-face{font-family:'Open Sans';font-style:normal;font-weight:600;
-  font-display:swap;src:url(fonts/open-sans-latin-ext-600-normal.woff2) format('woff2');
   unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,
     U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,
     U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}
@@ -117,100 +99,327 @@
  *
  * Hier steht jeder Wert der Oberfläche — und nur hier. Die
  * Vollständigkeitsprüfung meldet jeden Hexwert, jede Schriftgröße und jedes
- * Pixelmaß, das außerhalb dieses Blocks steht.
+ * Pixelmaß, das außerhalb eines :root-Blocks steht.
  *
- * FARBROLLEN. Die Farbe sagt, worum es geht:
+ * DIE FARBEN KOMMEN AUS DEM BRANDING-REPO (seit Schritt 26, Konzept MA).
+ * Bis dahin rechnete diese Datei ihre Tief- und Hellwerte selbst, weil es
+ * keine Quelle dafür gab; seit dem 06.11.2026 gibt es sie, und zwei
+ * Rechnungen für dieselbe Marke liefen früher oder später auseinander.
+ * Deshalb zwei Blöcke:
  *
- *   Orange       Handeln und „hier bin ich" — Primärknopf, aktiver
- *                Menüpunkt, Anlegen-Wege, Vorbelegungsstern, aktive Kachel,
- *                Zeilenhervorhebung.
- *   Rot          Aufmerksamkeit — Löschen, Fehler, offene Zuordnung,
- *                unvollständiger Einsatz, Fehleinsatz.
- *   Blau         Auswählen und Erklären — Textlinks, Sortierpfeil, gewählte
- *                Filter, Fokusring, Hinweis, Vollzug.
- *   Dunkelblau   Struktur — Kopfleiste, Überschriften, Häkchen, Symbole,
- *                Tabellenkopf.
+ *   :root {…}   (mit Leerzeichen) der Block `farben.css` des Repos,
+ *               WÖRTLICH — Leitwerte, Tonstufen 50–900, Semantik. Er wird
+ *               nicht von Hand geändert, sondern ersetzt (E-MA-17).
+ *   :root{…}    (ohne) die Rollen der Anwendung. Sie zeigen auf
+ *               `--genem-*` und sagen, WOFÜR eine Farbe steht.
+ *
+ * FARBROLLEN (Konzept MA, E-MA-01, -02):
+ *
+ *   Dunkelblau   Aktion und Struktur — Primärknopf, Auswahlschrift,
+ *                Kopfleiste, Überschriften, Häkchen, Symbole.
+ *   Blau         Erklären — Textlinks (blau 600), Fokusring (blau 500),
+ *                Auswahlfläche (blau 100), Hinweis.
+ *   Grün         Vollzug und „in Ordnung" — nur als Status.
+ *   Orange       Aufmerksamkeit — nur als Status und als Markenfläche,
+ *                nicht mehr als Handeln.
+ *   Rot          Fehler, Gefahr, Löschen.
  *   Sand/Grau    Mechanik — Winkel, Trennlinien, inaktive Symbole.
  *
- * Grün und Gelb gibt es nicht. Beide wären markenfremd. Vollzug ist Blau
- * mit Haken, „Bearbeiten" der neutrale Rahmenknopf.
+ * STATUS = Symbol + Fläche 100 + Schrift 700, die Linie 600. Die
+ * Gründerfarben selbst (Orange FF8F1F, Blau 4280E5, Rot D63338) sind Fläche
+ * und Strich, nicht Schrift; Gelb gibt es nicht.
  *
- * JE FARBE EIN TIEF UND EIN HELL. Das „Tief" ist die Schriftfassung und
- * erreicht auf Schnee die Kontrastschwelle; das „Hell" ist die Fläche. Die
- * Marke selbst (Orange FF8F1F, Blau 4280E5, Rot D63338) ist Fläche und
- * Strich, nicht Schrift.
+ * NACHGERECHNETE KONTRASTE (WCAG 2.1, gegen die Karte neutral 75 FCF8F3,
+ * wo nicht anders gesagt):
  *
- * NACHGERECHNETE KONTRASTE (gegen Schnee FFFCFA, WCAG 2.1):
+ *   Asphalt            18,64:1    Schnee auf Dunkelblau     13,33:1  Kopf, Primärknopf
+ *   Dunkelblau         12,88:1    Dunkelblau auf blau 100   11,26:1  Auswahl
+ *   neutral 600         5,88:1    blau 700 auf blau 100      7,54:1  Hinweis
+ *   blau 600 (Link)     5,59:1    grün 700 auf grün 100      7,13:1  Vollzug
+ *   blau 500 (Fokus)    3,77:1    orange 700 auf orange 100  5,67:1  Warnung
+ *     — gegen Schnee, Schwelle 3:1   rot 700 auf rot 100     8,12:1  Fehler
  *
- *   Asphalt          19,29:1     Dunkelblau auf Orange     5,97:1  Primärknopf
- *   Dunkelblau       13,33:1     Weiß auf Dunkelblau      13,62:1  Kopfleiste
- *   Gedämpft          5,66:1     Blau als Strich/Fokus     3,77:1
- *   Blau tief         7,82:1     Orange als Fläche         2,23:1  nie Schrift
- *   Rot tief          7,58:1     Rot D63338                4,68:1
- *   Orange tief       4,32:1  — nur ab 14 px fett oder 18 px (Schwelle 3:1)
- *
- * Die Rechnung steht in tools/screenshots/kontrast.py und
- * läuft bei jedem Screenshot-Lauf mit; die Tabelle in docs/Design.md wird
- * daraus erzeugt, nicht abgeschrieben.
+ * Die Rechnung steht in tools/screenshots/kontrast.py und läuft bei jedem
+ * Screenshot-Lauf mit; die Tabelle in docs/Design.md wird daraus erzeugt.
  */
 
+/* ---- Branding-Repo: Farb-Token -------------------------------------------
+ * Herkunft: github.com/gen-em/gen-em-branding, Commit e7bf4fc,
+ *           Datei „9 Technik/Tokens/farben.css" (Zeilen 1 bis 123, der
+ *           helle Teil; der dunkle steht in Abschnitt 2a).
+ * SHA-256 der ganzen Quelldatei:
+ *           ba55f31283132c153113054e951236ea5167cad298b21bfef43fe9f242f9ab26
+ * Wer das Repo nachzieht, ersetzt den Block zwischen den beiden Marken und
+ * die Prüfsumme — und rechnet `kontrast.py` neu.
+ * ===== Anfang des übernommenen Blocks ===== */
+/* GenEM Farb-Tokens – Generiert von 9 Technik/Werkzeuge/erzeuge_farben.py aus 9 Technik/Tokens/farbpalette.quelle.json – nicht von Hand ändern. */
+:root {
+  /* Neutrale Farben */
+  --genem-schnee: #fffcfa;
+  --genem-rauch: #f7f5ed;
+  --genem-sand: #d4c7ad;
+  --genem-asphalt: #1a0500;
+
+  /* Markenfarbe */
+  --genem-dunkelblau: #1a2e4d;
+
+  /* Gründerfarben */
+  --genem-newroz-rot: #d63338;
+  --genem-newroz-rosa: #fce2d6;
+  --genem-max-blau: #4280e5;
+  --genem-max-hellblau: #d9ecfd;
+  --genem-philipp-orange: #ff8f1f;
+  --genem-philipp-hellorange: #ffebd6;
+
+  /* Technische Werte */
+  --genem-weiss: #ffffff;
+  --genem-schwarz: #000000;
+
+  /* Tonstufen (Ergänzung) */
+  --genem-rot-50: #fff5e9;
+  --genem-rot-75: #ffebe0;
+  --genem-rot-100: #fce2d6;
+  --genem-rot-200: #f7bca6;
+  --genem-rot-300: #ef947c;
+  --genem-rot-400: #e46957;
+  --genem-rot-500: #d63338;
+  --genem-rot-600: #af1e26;
+  --genem-rot-700: #890415;
+  --genem-rot-800: #650004;
+  --genem-rot-900: #400000;
+
+  --genem-blau-50: #eafdff;
+  --genem-blau-75: #e2f4ff;
+  --genem-blau-100: #d9ecfd;
+  --genem-blau-200: #afd3f8;
+  --genem-blau-300: #87b9f2;
+  --genem-blau-400: #629dec;
+  --genem-blau-500: #4280e5;
+  --genem-blau-600: #3463af;
+  --genem-blau-700: #27487c;
+  --genem-blau-800: #1a2e4d;
+  --genem-blau-900: #101b2c;
+
+  --genem-orange-50: #fff7e5;
+  --genem-orange-75: #fff1de;
+  --genem-orange-100: #ffebd6;
+  --genem-orange-200: #ffd6ae;
+  --genem-orange-300: #ffc086;
+  --genem-orange-400: #ffa95b;
+  --genem-orange-500: #ff8f1f;
+  --genem-orange-600: #ca6900;
+  --genem-orange-700: #974600;
+  --genem-orange-800: #632800;
+  --genem-orange-900: #320e00;
+
+  --genem-neutral-50: #fffcfa;
+  --genem-neutral-75: #fcf8f3;
+  --genem-neutral-100: #f7f5ed;
+  --genem-neutral-200: #e5decd;
+  --genem-neutral-300: #d4c7ad;
+  --genem-neutral-400: #b2a28a;
+  --genem-neutral-500: #927f68;
+  --genem-neutral-600: #725d49;
+  --genem-neutral-700: #533d2c;
+  --genem-neutral-800: #361f11;
+  --genem-neutral-900: #1a0500;
+
+  --genem-gruen-50: #f1fef3;
+  --genem-gruen-75: #e5f9e8;
+  --genem-gruen-100: #d9f3dd;
+  --genem-gruen-200: #b3e0bb;
+  --genem-gruen-300: #8bcd99;
+  --genem-gruen-400: #5bab6f;
+  --genem-gruen-500: #218a45;
+  --genem-gruen-600: #147236;
+  --genem-gruen-700: #065a27;
+  --genem-gruen-800: #033d16;
+  --genem-gruen-900: #002307;
+
+  /* Semantik laut Guideline */
+  --genem-text-standard: var(--genem-asphalt);
+  --genem-text-alternativ: var(--genem-dunkelblau);
+  --genem-logo-negativ-kopf: var(--genem-schnee);
+  --genem-icon-kontur: var(--genem-dunkelblau);
+
+  /* Semantik (Ergänzung, Kontraste geprüft) */
+  --genem-flaeche-standard: var(--genem-schnee);
+  --genem-flaeche-karte: var(--genem-neutral-75);
+  --genem-flaeche-abgesetzt: var(--genem-rauch);
+  --genem-linie: var(--genem-neutral-200);
+  --genem-linie-stark: var(--genem-neutral-600);
+  --genem-text-sekundaer: var(--genem-neutral-600);
+  --genem-text-rot: var(--genem-rot-500);
+  --genem-text-blau: var(--genem-blau-600);
+  --genem-text-orange: var(--genem-orange-700);
+  --genem-text-auf-rot: var(--genem-weiss);
+  --genem-text-auf-blau: var(--genem-weiss);
+  --genem-text-auf-orange: var(--genem-asphalt);
+  --genem-text-auf-dunkelblau: var(--genem-schnee);
+  --genem-aktion: var(--genem-dunkelblau);
+  --genem-aktion-hover: var(--genem-blau-700);
+  --genem-text-auf-aktion: var(--genem-schnee);
+  --genem-aktion-haupt: var(--genem-philipp-orange);
+  --genem-aktion-haupt-hover: var(--genem-orange-400);
+  --genem-text-auf-aktion-haupt: var(--genem-asphalt);
+  --genem-status-info-flaeche: var(--genem-blau-100);
+  --genem-status-info-text: var(--genem-blau-700);
+  --genem-status-info-linie: var(--genem-blau-600);
+  --genem-status-erfolg-flaeche: var(--genem-gruen-100);
+  --genem-status-erfolg-text: var(--genem-gruen-700);
+  --genem-status-erfolg-linie: var(--genem-gruen-600);
+  --genem-status-warnung-flaeche: var(--genem-orange-100);
+  --genem-status-warnung-text: var(--genem-orange-700);
+  --genem-status-warnung-linie: var(--genem-orange-600);
+  --genem-status-fehler-flaeche: var(--genem-rot-100);
+  --genem-status-fehler-text: var(--genem-rot-700);
+  --genem-status-fehler-linie: var(--genem-rot-600);
+}
+/* ===== Ende des übernommenen Blocks ===== */
+
 :root{
+  /* ---- Leitwerte -------------------------------------------------------
+   * Die acht Markenwerte unter ihren alten Namen. Sie stehen für die MARKE
+   * und schalten im Dark Mode nicht um: Kopfleiste, Spurfarben, Fokusring,
+   * Kartenzeichen, Logo-Kachel. Wer eine ROLLE meint — Text, Fläche,
+   * Status —, nimmt die Rollen darunter. Weiß (#FFF) ist KEIN Token: In der
+   * Marke ist Weiß auf Dunkel Schnee. */
+  --schnee:var(--genem-schnee);
+  --rauch:var(--genem-rauch);
+  --sand:var(--genem-sand);
+  --asphalt:var(--genem-asphalt);
+  --dunkelblau:var(--genem-dunkelblau);
+  --orange:var(--genem-philipp-orange);
+  --blau:var(--genem-max-blau);
+  --rot:var(--genem-newroz-rot);
+
   /* ---- Flächen ---------------------------------------------------------
-   * Schnee ist die Karte, Rauch die Seite darunter, Sand die Mechanik.
-   * Weiß (#FFF) ist KEIN Token: In der Marke ist Weiß nur Logo- und
-   * Schriftfarbe auf Dunkel. Als Fläche wirkte es kalt, wo der Rest warm
-   * ist. */
-  --schnee:#FFFCFA;
-  --rauch:#F7F5ED;
-  --sand:#D4C7AD;
+   * Schnee ist die Seite, neutral 75 die Karte darauf, Rauch das
+   * Abgesetzte darin — Tabellenkopf, Hover, gesperrtes Feld (E-MA-04). Bis
+   * Schritt 26 war es umgekehrt: Rauch die Seite, Schnee die Karte. Das
+   * Eingabefeld liegt eine Stufe heller als die Karte, auf Schnee. */
+  --flaeche-seite:var(--genem-flaeche-standard);
+  --flaeche-karte:var(--genem-flaeche-karte);
+  --flaeche-abgesetzt:var(--genem-flaeche-abgesetzt);
+  --flaeche-feld:var(--genem-flaeche-standard);
+  /* Dunkle Markenfläche hinter der Anmeldung — im Dark Mode blau 900, damit
+   * die Karte darauf (dann Dunkelblau) nicht in ihr verschwindet. */
+  --flaeche-marke:var(--genem-dunkelblau);
 
   /* ---- Schrift ---------------------------------------------------------
-   * Gedämpft ist die EINZIGE Graustufe. Eine zweite, kühle Familie daneben
-   * ergäbe zwei Grauwelten in einer Oberfläche. */
-  --asphalt:#1A0500;
-  --dunkelblau:#1A2E4D;
-  --gedaempft:#6E6459;
-  --auf-dunkel:#FFFFFF;                /* Schrift auf Dunkelblau, 13,62:1 */
+   * Gedämpft ist die EINZIGE Graustufe — neutral 600, warm wie der Rest.
+   * Eine zweite, kühle Familie daneben ergäbe zwei Grauwelten. */
+  --text:var(--genem-text-standard);
+  --text-titel:var(--genem-text-alternativ);
+  --gedaempft:var(--genem-text-sekundaer);
+  --text-link:var(--genem-text-blau);
+  /* Der Link unter dem Zeiger, wo die Zeile dabei auf Rauch wechselt. Hell
+   * dieselbe Farbe; dunkel eine Stufe heller (blau 200), weil blau 300 auf
+   * blau 700 nur 4,45:1 erreicht. */
+  --text-link-hover:var(--genem-text-blau);
+  --auf-dunkel:var(--genem-schnee);     /* Schrift auf Dunkelblau, 13,33:1 */
 
   /* ---- Linien ----------------------------------------------------------
    * ZWEI Linien, und der Unterschied ist keine Geschmacksfrage:
    *
-   *   --linie        aufgehelltes Sand, 1,36:1. Trennt, schmückt, umrandet
-   *                  Karten. Rein zeichnerisch — WCAG 1.4.11 nimmt
-   *                  dekorative Trenner ausdrücklich aus.
-   *   --linie-stark  begrenzt BEDIENELEMENTE: Eingabefeld, neutraler Knopf,
-   *                  Segmentwahl, Kästchen. Dort ist der Rand die einzige
-   *                  Auskunft darüber, wo das Element anfängt und aufhört,
-   *                  und dafür verlangt WCAG 3:1. Gedämpft erreicht 5,66:1
-   *                  und ist ohnehin schon Token — ein neuer Farbwert war
-   *                  dafür nicht nötig.
-   *
-   * Ohne die Trennung hätte jedes Eingabefeld einen Rand von 1,4:1 —
-   * sichtbar für gute Augen, unsichtbar für andere. */
-  --linie:#E3DAC6;
-  --linie-stark:var(--gedaempft);
+   *   --linie        neutral 200. Trennt, schmückt, umrandet Karten. Rein
+   *                  zeichnerisch — WCAG 1.4.11 nimmt dekorative Trenner
+   *                  ausdrücklich aus.
+   *   --linie-stark  neutral 600, 6,09:1. Begrenzt BEDIENELEMENTE:
+   *                  Eingabefeld, neutraler Knopf, Segmentwahl, Kästchen.
+   *                  Dort ist der Rand die einzige Auskunft darüber, wo das
+   *                  Element anfängt, und dafür verlangt WCAG 3:1. */
+  --linie:var(--genem-linie);
+  --linie-stark:var(--genem-linie-stark);
+  /* Mechanik: Winkel, Griff, leere Bahn. Sand, im Dark Mode blau 400. */
+  --mechanik:var(--genem-sand);
 
-  /* ---- Orange — Handeln ------------------------------------------------ */
-  --orange:#FF8F1F;
-  --orange-tief:#C25A00;
-  --orange-hell:#FFEBD6;
+  /* ---- Aktion — Dunkelblau ---------------------------------------------
+   * Primärknopf, gewählte Segmentwahl, eingeschalteter Schalter, Häkchen
+   * im Kästchen. Bis Schritt 26 war Handeln Orange mit dunkelblauer
+   * Schrift (5,97:1); die Marke reserviert die Gründerfarben seither für
+   * Flächen und Status (E-MA-01). */
+  --aktion:var(--genem-aktion);
+  --aktion-hover:var(--genem-aktion-hover);
+  --auf-aktion:var(--genem-text-auf-aktion);
+  /* ---- Hauptaktion — Philipp-Orange, höchstens einmal je Seite ----------
+   * Die eine Handlung, für die jemand die Seite öffnet („Einsatz
+   * nachtragen", „Anmelden"). Asphalt auf Orange, 8,6:1, nie Weiß
+   * (2,3:1). Repo „5 Regeln/Farben.md", Ergänzung Aktionsfarbe, seit
+   * Commit e7bf4fc (E-MA-27). */
+  --aktion-haupt:var(--genem-aktion-haupt);
+  --aktion-haupt-hover:var(--genem-aktion-haupt-hover);
+  --auf-aktion-haupt:var(--genem-text-auf-aktion-haupt);
 
-  /* ---- Blau — Auswählen und Erklären ----------------------------------- */
-  --blau:#4280E5;
-  --blau-tief:#1F4E9C;
-  --blau-hell:#D9ECFD;
+  /* ---- Auswahl — „hier bin ich" ----------------------------------------
+   * Aktiver Menüpunkt, gewählte Kachel, Vorbelegung, Zeilenhervorhebung,
+   * aktiver Filter: blau 100 als Fläche, Dunkelblau als Schrift und Strich.
+   * In der Kopfleiste ist der Aktivstrich blau 300 (auf Dunkelblau
+   * 6,65:1). */
+  --auswahl-flaeche:var(--genem-blau-100);
+  --auswahl-text:var(--genem-dunkelblau);
+  --auswahl-linie:var(--genem-aktion);
+  --kopf-aktiv:var(--genem-blau-300);
 
-  /* ---- Rot — Aufmerksamkeit -------------------------------------------- */
-  --rot:#D63338;
-  --rot-tief:#9E2226;
-  --rosa:#FCE2D6;
+  /* ---- Status ----------------------------------------------------------
+   * Je Ton Fläche (Stufe 100), Schrift (700) und Linie (600). Das Symbol
+   * trägt die Schrift. */
+  --info-flaeche:var(--genem-status-info-flaeche);
+  --info-text:var(--genem-status-info-text);
+  --info-linie:var(--genem-status-info-linie);
+  --erfolg-flaeche:var(--genem-status-erfolg-flaeche);
+  --erfolg-text:var(--genem-status-erfolg-text);
+  --erfolg-linie:var(--genem-status-erfolg-linie);
+  --warnung-flaeche:var(--genem-status-warnung-flaeche);
+  --warnung-text:var(--genem-status-warnung-text);
+  --warnung-linie:var(--genem-status-warnung-linie);
+  --fehler-flaeche:var(--genem-status-fehler-flaeche);
+  --fehler-text:var(--genem-status-fehler-text);
+  --fehler-linie:var(--genem-status-fehler-linie);
 
-  /* ---- Primärknopf -----------------------------------------------------
-   * Die eine Stelle, an der die Kontrastfrage entschieden wurde: Weiß auf
-   * Orange sind 2,3:1 und damit unlesbar; Dunkelblau auf Orange sind 5,97:1.
-   * Der Knopf trägt deshalb dunkelblaue Schrift. */
-  --knopf-primaer-flaeche:var(--orange);
-  --knopf-primaer-schrift:var(--dunkelblau);
+  /* ---- Gefahr ----------------------------------------------------------
+   * Der Zähler offener Fehler: rot 700 als volle Fläche, Schnee als
+   * Schrift, 9,83:1. Der Löschknopf trägt seit Commit e7bf4fc des Repos
+   * keine Fläche mehr, sondern einen Umriss aus den Fehler-Rollen (rot 600
+   * Linie, rot 700 Schrift, rot 100 unter dem Zeiger; E-MA-26) — bis dahin
+   * war er rot 700 voll (E-MA-09). */
+  --gefahr:var(--genem-rot-700);
+  --auf-gefahr:var(--genem-schnee);
+
+  /* ---- Fokus ---------------------------------------------------------- */
+  --fokus:var(--genem-max-blau);
+
+  /* ---- Umgebungsetikett (Staging, Demo) --------------------------------
+   * Die Kopfleiste einer Anlage, die nicht Produktiv ist: orange 800 mit
+   * Schrift orange 200, 8,44:1. Bis Schritt 26 Rot — Rot heißt in dieser
+   * Oberfläche Fehler, und Staging ist keiner. */
+  --umgebung-flaeche:var(--genem-orange-800);
+  --umgebung-text:var(--genem-orange-200);
+
+  /* ---- Diagramme -------------------------------------------------------
+   * Säule und Balken in Blau, der Höchstwert in Orange — Gründerfarben als
+   * Fläche, nie als Schrift. Die vier Teile des Speicherbalkens tragen
+   * Kategorien, keine Wertung. */
+  --diagramm-wert:var(--genem-max-blau);
+  --diagramm-wert-hover:var(--genem-blau-600);
+  --diagramm-hoechst:var(--genem-orange-600);
+  --diagramm-1:var(--genem-max-blau);
+  --diagramm-2:var(--genem-dunkelblau);
+  --diagramm-3:var(--genem-philipp-orange);
+  --diagramm-4:var(--genem-sand);
+
+  /* ---- Papier ----------------------------------------------------------
+   * Die Druckblätter (Notfall-, Code-, Schlüsselblatt) sind Papier und
+   * bleiben hell, auch im Dark Mode und auf dem Schirm. */
+  --papier:var(--genem-schnee);
+  --papier-abgesetzt:var(--genem-rauch);
+  --papier-text:var(--genem-asphalt);
+  --papier-titel:var(--genem-dunkelblau);
+  --papier-leise:var(--genem-neutral-600);
+  --papier-warnung:var(--genem-rot-700);
+  /* Formularelemente, Rollbalken und Datumsauswahl des Browsers folgen
+   * dieser Angabe; der Dark Mode stellt sie auf  (Abschnitt 2a). */
+  color-scheme:light;
 
   /* ---- Schriftfamilien -------------------------------------------------
    * Die Ersatzlisten sind NORMAL BREIT. Stünde eine schmale Schrift wie
@@ -229,10 +438,14 @@
 
   /* ---- Schriftskala ----------------------------------------------------
    * Major Third (1,25) um die Grundgröße 15/16 px — eine Skala, keine
-   * Sammlung.
+   * Sammlung. Das Branding-Repo rechnet dieselbe Reihe ab 16 px; die 15 px
+   * der Oberfläche sind dort als Ausnahme für dichte Fachanwendungen
+   * festgehalten (`5 Regeln/Typografie.md`, E-MA-07).
    *
-   *   1  12  Kleinzeile, Plakette, Tabellenfuß
-   *   2  13  Kleinzeile groß, Beschriftung, Meta
+   *   2  13  Kleinzeile, Plakette, Beschriftung, Meta, Tabellenfuß —
+   *          die kleinste Stufe. Bis Schritt 26 gab es darunter noch 12 px
+   *          (`--groesse-1`); das Branding-Repo setzt 13 als Minimum
+   *          (E-MA-07), und die Stufe 1 bleibt frei.
    *   3  15  Grundgröße der Oberfläche
    *   4  16  Fließtext (Lesespalte, Rechtstexte) — 15 × 1,067
    *   5  19  Kartentitel, Abschnittskopf        — 15 × 1,25
@@ -241,7 +454,6 @@
    *
    * Der Seitentitel hat einen eigenen Namen statt --groesse-7, weil er als
    * einziger von der Fensterbreite abhängt. */
-  --groesse-1:12px;
   --groesse-2:13px;
   --groesse-3:15px;
   --groesse-4:16px;
@@ -355,23 +567,26 @@
 
   /* ---- Spurfarben --------------------------------------------------------
    * Acht Farben für die Einsätze eines Tages, in Vergabereihenfolge: die
-   * drei Markenfarben, Dunkelblau und vier ABGELEITETE Töne — jede
-   * Ableitung mit Herkunft:
-   *   spur-5..7  die Tief-Töne der drei Markenfarben (stehen oben bereits
-   *              als Schrifttöne; hier tragen sie Fläche auf der Karte)
-   *   spur-8     Sand, von L 75 % auf 40 % abgedunkelt (4,6:1 auf Schnee)
-   * Die Ruhespur ist Mechanik, keine Botschaft — sie fährt gedämpft.
-   * JavaScript liest die Werte über getComputedStyle; eine zweite Liste im
-   * Code gibt es nicht. */
-  --spur-1:var(--orange);
-  --spur-2:var(--blau);
-  --spur-3:var(--rot);
-  --spur-4:var(--dunkelblau);
-  --spur-5:var(--orange-tief);
-  --spur-6:var(--blau-tief);
-  --spur-7:var(--rot-tief);
-  --spur-8:#867146;
-  --spur-ruhe:var(--gedaempft);
+   * drei Gründerfarben, Dunkelblau und vier Tonstufen des Repos. Dieselben
+   * Werte tragen die Marken links in der Einsatztabelle — sie sind die
+   * Legende der Karte, kein Status (Konzept MA, F-MA-01, E-MA-11):
+   *   spur-5..7  Stufe 600 der drei Gründerfarben (bis Schritt 26 die
+   *              eigenen Tief-Töne, die es seither nicht mehr gibt)
+   *   spur-8     neutral 500 (bis Schritt 26 ein eigener Hexwert, Sand auf
+   *              L 40 % abgedunkelt), 3,77:1 auf Schnee
+   * Die Ruhespur ist Mechanik, keine Botschaft — sie fährt in neutral 600.
+   * Alle neun sind LEITWERTE und schalten im Dark Mode nicht um: Die Karte
+   * bleibt hell (E-MA-14). JavaScript liest die Werte über
+   * getComputedStyle; eine zweite Liste im Code gibt es nicht. */
+  --spur-1:var(--genem-philipp-orange);
+  --spur-2:var(--genem-max-blau);
+  --spur-3:var(--genem-newroz-rot);
+  --spur-4:var(--genem-dunkelblau);
+  --spur-5:var(--genem-orange-600);
+  --spur-6:var(--genem-blau-600);
+  --spur-7:var(--genem-rot-600);
+  --spur-8:var(--genem-neutral-500);
+  --spur-ruhe:var(--genem-neutral-600);
 
   /* ---- Schwellen ---------------------------------------------------------
    * Diese vier Werte stehen hier zur AUSKUNFT — für JavaScript, für
@@ -413,6 +628,170 @@
   --auf-dunkel-flaeche:rgba(255,255,255,.14);
   --auf-dunkel-strich:rgba(255,255,255,.35);
 }
+
+/* == 2a. DARK MODE ========================================================
+ *
+ * EINE ZWEITE ZUORDNUNG DERSELBEN ROLLEN, KEIN ZWEITES FARBSYSTEM (Konzept
+ * MA, E-MA-03, Board MA-04). Die Seite wird blau 900, die Karte Dunkelblau,
+ * das Abgesetzte blau 700; Schrift Schnee, Ueberschriften blau 100,
+ * Kleinschrift blau 200, Links blau 300, Status Flaeche 800 und Schrift 200.
+ * Die Blau-Reihe und nicht ein warmes Schwarz, weil Dunkelblau die dunkle
+ * Markenfarbe ist.
+ *
+ * ZWEI AUSLOESER, DIESELBEN WERTE. `prefers-color-scheme: dark` ohne Wahl
+ * des Kontos, und `data-theme="dark"`, das `ui_seite_start()` setzt, wenn
+ * das Konto im Profil „Dunkel" gewaehlt hat; `data-theme="light"` haelt
+ * die Seite auf einem dunklen Geraet hell. CSS kennt keinen Selektor fuer
+ * „System oder Schalter", deshalb steht jeder Block zweimal.
+ *
+ * WAS NICHT UMSCHALTET, mit Absicht: die Leitwerte (`--schnee`,
+ * `--dunkelblau` …) — die Kopfleiste bleibt Dunkelblau, und die Karte
+ * (Leaflet) bleibt hell, samt Kartenzeichen und Spurfarben (E-MA-14: ein
+ * dunkler Kacheldienst waere ein weiterer Dritter, Bedrohungsmodell Lage G);
+ * und `--papier-*`, die Druckblaetter.
+ *
+ * Erst der Block des Branding-Repos, woertlich (Herkunft wie in Abschnitt
+ * 2, „9 Technik/Tokens/farben.css" ab Zeile 124), dann die Rollen der
+ * Anwendung, die das Repo nicht kennt: Auswahl (blau 700 mit Schnee),
+ * Mechanik, Zaehler offener Fehler (rot 300 mit rot 900, Board MA-08),
+ * Fokus (blau 100), Markenflaeche und Diagramme (Stufen 300/400 auf
+ * dunklem Grund). Die Schrift auf der Aktion und die Hauptaktion bringt
+ * das Repo seit Commit e7bf4fc selbst mit.
+ * ===== Anfang des übernommenen Blocks ===== */
+
+/* Dark Mode (Ergänzung): nur die semantischen Tokens werden neu zugewiesen.
+   Automatisch nach Systemeinstellung, abschaltbar mit data-theme="light"; erzwingbar mit data-theme="dark". */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --genem-flaeche-standard: var(--genem-blau-900);
+    --genem-flaeche-karte: var(--genem-dunkelblau);
+    --genem-flaeche-abgesetzt: var(--genem-blau-700);
+    --genem-linie: var(--genem-blau-700);
+    --genem-linie-stark: var(--genem-blau-300);
+    --genem-text-standard: var(--genem-schnee);
+    --genem-text-alternativ: var(--genem-blau-100);
+    --genem-text-sekundaer: var(--genem-blau-200);
+    --genem-text-rot: var(--genem-rot-300);
+    --genem-text-blau: var(--genem-blau-300);
+    --genem-text-orange: var(--genem-orange-400);
+    --genem-text-auf-dunkelblau: var(--genem-schnee);
+    --genem-aktion: var(--genem-blau-300);
+    --genem-aktion-hover: var(--genem-blau-200);
+    --genem-text-auf-aktion: var(--genem-dunkelblau);
+    --genem-aktion-haupt: var(--genem-orange-400);
+    --genem-aktion-haupt-hover: var(--genem-orange-300);
+    --genem-text-auf-aktion-haupt: var(--genem-asphalt);
+    --genem-status-info-flaeche: var(--genem-blau-700);
+    --genem-status-info-text: var(--genem-blau-100);
+    --genem-status-info-linie: var(--genem-blau-400);
+    --genem-status-erfolg-flaeche: var(--genem-gruen-800);
+    --genem-status-erfolg-text: var(--genem-gruen-200);
+    --genem-status-erfolg-linie: var(--genem-gruen-400);
+    --genem-status-warnung-flaeche: var(--genem-orange-800);
+    --genem-status-warnung-text: var(--genem-orange-200);
+    --genem-status-warnung-linie: var(--genem-orange-400);
+    --genem-status-fehler-flaeche: var(--genem-rot-800);
+    --genem-status-fehler-text: var(--genem-rot-200);
+    --genem-status-fehler-linie: var(--genem-rot-400);
+  }
+}
+:root[data-theme="dark"] {
+  --genem-flaeche-standard: var(--genem-blau-900);
+  --genem-flaeche-karte: var(--genem-dunkelblau);
+  --genem-flaeche-abgesetzt: var(--genem-blau-700);
+  --genem-linie: var(--genem-blau-700);
+  --genem-linie-stark: var(--genem-blau-300);
+  --genem-text-standard: var(--genem-schnee);
+  --genem-text-alternativ: var(--genem-blau-100);
+  --genem-text-sekundaer: var(--genem-blau-200);
+  --genem-text-rot: var(--genem-rot-300);
+  --genem-text-blau: var(--genem-blau-300);
+  --genem-text-orange: var(--genem-orange-400);
+  --genem-text-auf-dunkelblau: var(--genem-schnee);
+  --genem-aktion: var(--genem-blau-300);
+  --genem-aktion-hover: var(--genem-blau-200);
+  --genem-text-auf-aktion: var(--genem-dunkelblau);
+  --genem-aktion-haupt: var(--genem-orange-400);
+  --genem-aktion-haupt-hover: var(--genem-orange-300);
+  --genem-text-auf-aktion-haupt: var(--genem-asphalt);
+  --genem-status-info-flaeche: var(--genem-blau-700);
+  --genem-status-info-text: var(--genem-blau-100);
+  --genem-status-info-linie: var(--genem-blau-400);
+  --genem-status-erfolg-flaeche: var(--genem-gruen-800);
+  --genem-status-erfolg-text: var(--genem-gruen-200);
+  --genem-status-erfolg-linie: var(--genem-gruen-400);
+  --genem-status-warnung-flaeche: var(--genem-orange-800);
+  --genem-status-warnung-text: var(--genem-orange-200);
+  --genem-status-warnung-linie: var(--genem-orange-400);
+  --genem-status-fehler-flaeche: var(--genem-rot-800);
+  --genem-status-fehler-text: var(--genem-rot-200);
+  --genem-status-fehler-linie: var(--genem-rot-400);
+}
+/* ===== Ende des übernommenen Blocks ===== */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme:dark;
+    --auswahl-flaeche:var(--genem-blau-700);
+    --auswahl-text:var(--genem-schnee);
+    --mechanik:var(--genem-blau-400);
+    --gefahr:var(--genem-rot-300);
+    --auf-gefahr:var(--genem-rot-900);
+    --fokus:var(--genem-blau-100);
+    --text-link-hover:var(--genem-blau-200);
+    --flaeche-marke:var(--genem-blau-900);
+    --diagramm-wert:var(--genem-blau-400);
+    --diagramm-wert-hover:var(--genem-blau-300);
+    --diagramm-hoechst:var(--genem-orange-400);
+    --diagramm-1:var(--genem-blau-400);
+    --diagramm-2:var(--genem-blau-100);
+    --diagramm-3:var(--genem-orange-400);
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme:dark;
+  --auswahl-flaeche:var(--genem-blau-700);
+  --auswahl-text:var(--genem-schnee);
+  --mechanik:var(--genem-blau-400);
+  --gefahr:var(--genem-rot-300);
+  --auf-gefahr:var(--genem-rot-900);
+  --fokus:var(--genem-blau-100);
+  --text-link-hover:var(--genem-blau-200);
+  --flaeche-marke:var(--genem-blau-900);
+  --diagramm-wert:var(--genem-blau-400);
+  --diagramm-wert-hover:var(--genem-blau-300);
+  --diagramm-hoechst:var(--genem-orange-400);
+  --diagramm-1:var(--genem-blau-400);
+  --diagramm-2:var(--genem-blau-100);
+  --diagramm-3:var(--genem-orange-400);
+}
+
+/* DRUCKEN IST IMMER HELL. Ein Drucker auf dunklem Geraet bekaeme sonst
+ * blau-900-Flaechen aufs Papier. Die Spezifitaet (0,3,0) liegt ueber beiden
+ * Ausloesern (0,2,0); zurueckgestellt werden die Rollen, die der Druck
+ * zeigt — Flaechen, Schrift, Linien. */
+@media print {
+  :root:root:root {
+    color-scheme:light;
+    --flaeche-seite:var(--genem-schnee);
+    --flaeche-karte:var(--genem-schnee);
+    --flaeche-abgesetzt:var(--genem-rauch);
+    --flaeche-feld:var(--genem-schnee);
+    --text:var(--genem-asphalt);
+    --text-titel:var(--genem-dunkelblau);
+    --gedaempft:var(--genem-neutral-600);
+    --text-link:var(--genem-blau-600);
+    --text-link-hover:var(--genem-blau-600);
+    --linie:var(--genem-neutral-200);
+    --linie-stark:var(--genem-neutral-600);
+  }
+}
+
+/* Die Kopfleiste traegt im Dunkeln eine Linie nach unten: Dunkelblau auf
+ * blau 900 waere als Kante kaum zu sehen (Board MA-03). */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .kopf { border-bottom:var(--strich) solid var(--genem-blau-700); }
+}
+:root[data-theme="dark"] .kopf { border-bottom:var(--strich) solid var(--genem-blau-700); }
 
 @media (min-width:720px){
   :root{ --groesse-titel:30px; }
@@ -480,8 +859,8 @@ html{
 }
 
 body{
-  background:var(--rauch);
-  color:var(--asphalt);
+  background:var(--flaeche-seite);
+  color:var(--text);
   font-family:var(--schrift-text);
   font-size:var(--groesse-3);
   line-height:var(--zeile);
@@ -493,7 +872,7 @@ body{
 
 /* ---- Überschriften -------------------------------------------------------
  *
- * Bricolage 600 für alles, was Titel ist. GESPERRTE VERSALIEN gibt es nur
+ * Bricolage 500 für alles, was Titel ist. GESPERRTE VERSALIEN gibt es nur
  * für Abschnittsköpfe in den Leisten („Diensttage", „Filter",
  * „Administration") — nicht für jeden Tabellenkopf, jede Legende und jeden
  * Feldnamen. Auf 360 px wäre das die teuerste Zeile der Anwendung.
@@ -503,9 +882,9 @@ body{
  * Nebel bis 9 Uhr" erschiene sonst als gesperrte Versalzeile. */
 h1,h2,h3,h4{
   font-family:var(--schrift-kopf);
-  font-weight:600;
+  font-weight:500;
   line-height:var(--zeile-eng);
-  color:var(--dunkelblau);
+  color:var(--text-titel);
   text-wrap:balance;
 }
 h1{font-size:var(--groesse-titel)}
@@ -529,8 +908,14 @@ p{margin:0}
  * Blau ist „Auswählen und Erklären". Textlinks tragen es; sie sind nicht
  * unterstrichen, solange sie in einer Zeile mit anderer Auszeichnung stehen,
  * aber im Fließtext schon — dort ist die Farbe allein zu wenig. */
-a{color:var(--blau-tief);text-decoration:none}
+a{color:var(--text-link);text-decoration:none}
 a:hover{text-decoration:underline}
+/* LINKS IM FLIESSTEXT SIND UNTERSTRICHEN. Blau 600 gegen Asphalt sind
+ * 1,05:1 — wer Farben schlecht unterscheidet, findet einen Link mitten im
+ * Satz nur an der Linie (WCAG 1.4.1, axe `link-in-text-block`, F-MA-22,
+ * E-MA-32). Links mit eigener Klasse (Knopf, Eintrag, Kartenaktion) sind
+ * Bedienelemente mit eigener Form und bleiben, wie sie sind. */
+:where(p, li, dd, .feld-hinweis, .titelzeile-unter, .seiten-erklaerung) a:not([class]){text-decoration:underline}
 
 /* ---- Formularelemente erben die Schrift ----------------------------------
  * Ohne das nehmen sie die des Betriebssystems, und die Seite hat plötzlich
@@ -550,13 +935,13 @@ img,svg,video{max-width:100%;height:auto}
  * mit eigenem Rand in dessen Farbe. */
 :focus{outline:none}
 :focus-visible{
-  outline:var(--strich-stark) solid var(--blau);
+  outline:var(--strich-stark) solid var(--fokus);
   outline-offset:var(--strich-stark);
   border-radius:var(--radius-klein);
 }
 
 /* Textauswahl in der Markenfarbe statt im Systemblau. */
-::selection{background:var(--orange-hell);color:var(--asphalt)}
+::selection{background:var(--auswahl-flaeche);color:var(--text)}
 
 /* ---- Symbole -------------------------------------------------------------
  *
@@ -705,7 +1090,7 @@ img,svg,video{max-width:100%;height:auto}
  * 34 px lassen in der 56 px hohen Leiste oben und unten je 11 px Luft. */
 .kopf-marke img{height:34px;width:auto;flex:0 0 auto}
 .kopf-name{
-  font-family:var(--schrift-kopf);font-weight:600;
+  font-family:var(--schrift-kopf);font-weight:500;
   font-size:var(--groesse-5);line-height:1;
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
 }
@@ -721,10 +1106,10 @@ img,svg,video{max-width:100%;height:auto}
   height:var(--knopf);padding:0 var(--abstand-3);
   color:var(--auf-dunkel);text-decoration:none;
   border-bottom:var(--strich-stark) solid transparent;
-  font-family:var(--schrift-kopf);font-weight:600;
+  font-family:var(--schrift-kopf);font-weight:500;
 }
 .kopf-punkt:hover{text-decoration:none;border-bottom-color:var(--auf-dunkel-strich)}
-.kopf-punkt.aktiv{border-bottom-color:var(--orange)}
+.kopf-punkt.aktiv{border-bottom-color:var(--kopf-aktiv)}
 /* Der Rückweg der öffentlichen Hülle („Zurück zur Anmeldung") gilt in jeder
  * Breite — .kopf-punkt ist unter 1024 px ausgeblendet, weil dort die
  * Schublade die Hauptpunkte trägt; einen Rückweg trägt sie nicht. */
@@ -738,16 +1123,14 @@ img,svg,video{max-width:100%;height:auto}
 /* KOPFLEISTE EINER ANLAGE MIT ETIKETT (.kopf-umgebung) — Variante der
  * Kopfleiste. Gesetzt von ui_kopf(),
  * wenn `app.umgebung` einen Namen traegt; die Farbe ist eine geschlossene
- * Liste, heute nur `rot`. Weiss auf --rot 4,78 : 1.
- * Der aktive Punkt: --orange haette auf Rot 2,10 : 1 und fiele unter die
- * 3 : 1 aus WCAG 1.4.11. --orange-hell bleibt in der Familie „hier stehst du"
- * und traegt 4,12 : 1.
- * Der Name traegt auf Dunkelblau --sand (8,15 : 1); auf Rot waeren es
- * 2,86 : 1. --schnee traegt 4,68 : 1 und bleibt durch Gewicht 400 gegen 600
- * der Marke untergeordnet. */
-.kopf-umgebung{background:var(--rot)}
-.kopf-umgebung .kopf-punkt.aktiv{border-bottom-color:var(--orange-hell)}
-.kopf-umgebung .kopf-nutzer{color:var(--schnee)}
+ * Liste, heute nur `rot` (der Name des Werts blieb, die Farbe ist seit
+ * Schritt 26 orange 800 — Rot heisst Fehler, und Staging ist keiner).
+ * Schnee auf orange 800 13,9 : 1; Aktivstrich und Name in orange 200,
+ * 8,44 : 1. Der Name bleibt durch Gewicht 400 gegen 500 der Marke
+ * untergeordnet. */
+.kopf-umgebung{background:var(--umgebung-flaeche)}
+.kopf-umgebung .kopf-punkt.aktiv{border-bottom-color:var(--umgebung-text)}
+.kopf-umgebung .kopf-nutzer{color:var(--umgebung-text)}
 
 /* ---- Rahmen: Leiste und Inhalt als Einheit, zentriert -------------------- */
 .rahmen{
@@ -772,7 +1155,7 @@ img,svg,video{max-width:100%;height:auto}
 .leiste{
   position:fixed;inset:0 auto 0 0;z-index:60;
   width:86%;max-width:var(--schublade);
-  background:var(--schnee);
+  background:var(--flaeche-karte);
   border-right:var(--strich) solid var(--linie);
   display:flex;flex-direction:column;
   transform:translateX(-100%);
@@ -795,7 +1178,7 @@ img,svg,video{max-width:100%;height:auto}
   height:var(--kopf);flex:0 0 auto;
   padding:0 var(--abstand-3);
   border-bottom:var(--strich) solid var(--linie);
-  color:var(--dunkelblau);
+  color:var(--text-titel);
 }
 .leiste-haupt{padding:var(--abstand-3) var(--abstand-2) 0;flex:0 0 auto}
 .leiste-liste{flex:1 1 auto;overflow-y:auto;padding:var(--abstand-2)}
@@ -812,7 +1195,7 @@ img,svg,video{max-width:100%;height:auto}
  * Groesse und Kontrast, nicht von Ausrichtung — linksbuendig bleibt sie.
  *
  * KEINE VERSALIEN UND KEINE SPERRUNG, und das ist am Bild entschieden: Bei
- * 15 px in Bricolage 600 liest sich
+ * 15 px in Bricolage 500 (bis Schritt 26 600) liest sich
  * „DIENSTTAGE" gesperrt als ETIKETT und steht dem Jahreseintrag „2026"
  * darunter an Lautstaerke kaum nach — zwei Ueberschriften statt einer
  * Ordnung. Gemischt gesetzt bleibt es eine Ueberschrift: praesent, aber
@@ -821,8 +1204,8 @@ img,svg,video{max-width:100%;height:auto}
  * Ersatz fuer die Groesse, die da ist. */
 .leiste-kopfzeile{
   font-family:var(--schrift-kopf);font-size:var(--groesse-3);
-  font-weight:600;
-  color:var(--asphalt);
+  font-weight:500;
+  color:var(--text);
   padding:var(--abstand-3) var(--abstand-3) var(--abstand-2);
 }
 .leiste-leer{color:var(--gedaempft);padding:0 var(--abstand-3)}
@@ -834,8 +1217,8 @@ img,svg,video{max-width:100%;height:auto}
  * unterscheidet.
  *
  * „LINIE". Eine Gewichtsstufe allein unterscheidet die Überschrift nicht
- * von einem Eintrag — Bricolage ist nur in 500 und 600 eingebunden, 400
- * fällt auf 500. Deshalb: Winkel rechts (die linke Spalte gehört allein den
+ * von einem Eintrag — Bricolage ist nur in 500 eingebunden (seit Schritt 26;
+ * bis dahin auch 600), 400 fällt auf 500. Deshalb: Winkel rechts (die linke Spalte gehört allein den
  * Symbolen), eine Schriftstufe größer in Dunkelblau, Trennlinie und Luft vor
  * jedem weiteren Bereich. Für DIESES Menü gilt damit nicht, dass zwei
  * Leisten mit demselben Mechanismus denselben Griff haben: Die
@@ -848,7 +1231,7 @@ img,svg,video{max-width:100%;height:auto}
  * zählt und die Zahl sonst zweimal ansagt. */
 .leiste-gruppe > .akkordeon-zeile{
   font-size:var(--groesse-4);
-  color:var(--dunkelblau);
+  color:var(--text-titel);
 }
 .leiste-gruppe > .akkordeon-zeile > .akkordeon-winkel{order:2;margin-left:auto}
 .leiste-gruppe + .leiste-gruppe{
@@ -862,7 +1245,7 @@ img,svg,video{max-width:100%;height:auto}
  * gibt, ohne ihn anzubieten. Derselbe Akkordeon-Baustein wie in den Leisten,
  * nur mit dem Abstand einer Kartenzeile darüber. */
 .apk-fach{margin-top:var(--abstand-3)}
-.apk-fach > .akkordeon-zeile{font-size:var(--groesse-3);color:var(--blau-tief)}
+.apk-fach > .akkordeon-zeile{font-size:var(--groesse-3);color:var(--text-link)}
 .gruppen-zahl{color:var(--gedaempft);font-weight:400;font-size:var(--groesse-2)}
 .leiste-gruppe[open] > .akkordeon-zeile .gruppen-zahl{display:none}
 
@@ -875,8 +1258,8 @@ img,svg,video{max-width:100%;height:auto}
  * `menue.js` erzeugt sie aus den Karten der Seite — deshalb steht hier keine
  * Regel für einen leeren Behälter: Ohne Karten entsteht keiner.
  *
- * DIE MARKIERUNG IST FETT, NICHT ORANGE. Orange heißt in dieser Oberfläche
- * „hier stehst du" und gehört dem aktiven Menüpunkt; die oberste sichtbare
+ * DIE MARKIERUNG IST FETT, NICHT FARBIG. Die Auswahlfläche heißt in dieser
+ * Oberfläche „hier stehst du" und gehört dem aktiven Menüpunkt; die oberste sichtbare
  * Karte ist etwas Schwächeres — ein Hinweis, wo im Text man gerade liest. */
 .eintrag-unterliste{
   display:flex;flex-direction:column;
@@ -890,8 +1273,8 @@ img,svg,video{max-width:100%;height:auto}
   text-decoration:none;
   overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
 }
-.eintrag-unter:hover{background:var(--rauch);color:var(--asphalt);text-decoration:none}
-.eintrag-unter.hier{color:var(--dunkelblau);font-weight:600}
+.eintrag-unter:hover{background:var(--flaeche-abgesetzt);color:var(--text);text-decoration:none}
+.eintrag-unter.hier{color:var(--text-titel);font-weight:700}
 
 /* SPRUNGMARKEN ERST AB 950 PX FENSTERHÖHE — in der festen Leiste. Bei
  * 1280 × 720 schoben sie auf acht von vierzehn Seiten Einträge unter den
@@ -929,7 +1312,7 @@ img,svg,video{max-width:100%;height:auto}
 }
 .fuss-zeile{margin:0;display:flex;flex-wrap:wrap;gap:var(--abstand-2);justify-content:center}
 .fuss-rechts{margin-top:var(--abstand-1)}
-.fuss-seite a{color:var(--blau-tief);font-weight:600}
+.fuss-seite a{color:var(--text-link);font-weight:700}
 /* --gedaempft, nicht --sand. Auf --rauch ergaebe Sand 1,53:1 — die
  * Versionsnummer ist die Auskunft, mit der ein Fehlerbericht anfaengt, und
  * damit ein zu LESENDER Text. `kontrast.py` fuehrt „Sand auf Schnee" als
@@ -938,7 +1321,7 @@ img,svg,video{max-width:100%;height:auto}
  * So 5,30:1. Die dunkle Fassung darunter bleibt, wie sie ist. */
 .fuss-version{color:var(--gedaempft)}
 .fuss-dunkel{
-  background:var(--dunkelblau);color:var(--rauch);
+  background:var(--dunkelblau);color:var(--auf-dunkel);
   border-top:0;
 }
 .fuss-dunkel a{color:var(--auf-dunkel)}
@@ -975,38 +1358,40 @@ img,svg,video{max-width:100%;height:auto}
   padding:0 var(--abstand-1) 0 var(--abstand-2);
   border-radius:var(--radius-klein);
   cursor:pointer;list-style:none;
-  font-family:var(--schrift-kopf);font-weight:600;font-size:var(--groesse-4);
-  color:var(--dunkelblau);
+  font-family:var(--schrift-kopf);font-weight:500;font-size:var(--groesse-4);
+  color:var(--text-titel);
 }
 .akkordeon-zeile::-webkit-details-marker{display:none}
-.akkordeon-zeile:hover{background:var(--rauch)}
+.akkordeon-zeile:hover{background:var(--flaeche-abgesetzt)}
 /* winkel.svg zeigt nach UNTEN. Zugeklappt wird er nach rechts gedreht,
  * aufgeklappt steht er in Ruhelage: „›" heißt zu, „⌄" heißt offen. Umgekehrt
  * (offen = oben) ist die Konvention mancher Aufklappmenüs, aber nicht die
  * dieses Entwurfs. */
-.akkordeon-winkel{color:var(--sand);transition:transform var(--dauer) ease-out;
+.akkordeon-winkel{color:var(--mechanik);transition:transform var(--dauer) ease-out;
   transform:rotate(-90deg)}
 details[open] > .akkordeon-zeile > .akkordeon-winkel{transform:none}
 .akkordeon-text{flex:1 1 auto;min-width:0}
 /* Der Weg in die Jahres- bzw. Monatsübersicht: eigenes Ziel, eigene
- * Trefferfläche, 44 px. ER STEHT IM <summary>: Als Kind des <details>
- * daneben wäre er an jeder zugeklappten Zeile unsichtbar und unerreichbar,
- * denn der Inhalt eines geschlossenen <details> wird nicht gerendert. Weil
- * ein Link im <summary> beim Klick auch das Auf- und Zuklappen auslöst,
- * fängt daylist.js ihn ab und navigiert selbst. */
+ * Trefferfläche, 44 px. ER STEHT NEBEN DEM <details>, in `.akkordeon-rahmen`,
+ * und liegt rechts über der Kopfzeile: Als Kind des <details> wäre er an
+ * jeder zugeklappten Zeile unsichtbar, im <summary> ein Bedienelement im
+ * Bedienelement (bis Web 23.11.1; F-MA-22). Die Kopfzeile hält rechts Platz
+ * für ihn frei. */
+.akkordeon-rahmen{position:relative}
+.akkordeon-rahmen > .akkordeon > .akkordeon-zeile{padding-right:calc(var(--knopf) + var(--abstand-1))}
 .akkordeon-uebersicht{
-  margin-left:auto;flex:0 0 auto;
+  position:absolute;top:0;right:var(--abstand-1);z-index:1;
   width:var(--knopf);height:var(--knopf);
   display:flex;align-items:center;justify-content:center;
-  color:var(--sand);border-radius:var(--radius-klein);
+  color:var(--mechanik);border-radius:var(--radius-klein);
 }
-.akkordeon-uebersicht:hover{color:var(--blau-tief);background:var(--rauch)}
+.akkordeon-uebersicht:hover{color:var(--text-link-hover);background:var(--flaeche-abgesetzt)}
 .akkordeon-inhalt{padding-left:var(--abstand-3)}
 .akkordeon-monat > .akkordeon-zeile{font-size:var(--groesse-3)}
 
 /* ---- Eintrag -------------------------------------------------------------
- * Menüpunkt und Diensttag. Aktiv: hell orange mit orangem Strich links —
- * in BEIDEN Leisten gleich.
+ * Menüpunkt und Diensttag. Aktiv: Auswahlfläche (blau 100) mit
+ * dunkelblauem Strich links — in BEIDEN Leisten gleich.
  */
 .eintrag{
   display:flex;align-items:center;gap:var(--abstand-2);
@@ -1014,10 +1399,10 @@ details[open] > .akkordeon-zeile > .akkordeon-winkel{transform:none}
   padding:0 var(--abstand-2);
   border-radius:var(--radius-klein);
   border-left:var(--abstand-1) solid transparent;
-  color:var(--asphalt);text-decoration:none;
+  color:var(--text);text-decoration:none;
 }
-.eintrag:hover{background:var(--rauch);text-decoration:none}
-.eintrag .symbol{color:var(--dunkelblau)}
+.eintrag:hover{background:var(--flaeche-abgesetzt);text-decoration:none}
+.eintrag .symbol{color:var(--text-titel)}
 /* Das Datum schrumpft NICHT. Haetten Datum und Rettungsmittelname beide
  * `flex:1 1 auto`, wuerde bei 260 px Leistenbreite aus „27.12.2026" ein
  * „27.12.20…" — abgeschnitten wuerde also die Auskunft, die den Eintrag
@@ -1027,8 +1412,10 @@ details[open] > .akkordeon-zeile > .akkordeon-winkel{transform:none}
  * nichts hervor -- es macht nur
  * den Block schwer, und der aktive Punkt muss seine Erkennbarkeit allein aus
  * Flaeche und Randstrich holen. Die Auszeichnung wandert von „alle" zu
- * „einer": Grundschnitt 400, der aktive Punkt 600. Dieselbe Ueberlegung wie
- * bei den Blattzeilen. */
+ * „einer": Grundschnitt 400, der aktive Punkt 600 — so bis Schritt 26. Seit
+ * die Marke Bricolage nur in 500 fuehrt, faellt beides auf 500, und der
+ * aktive Punkt traegt sich allein ueber Auswahlflaeche, Strich und Farbe.
+ * Dieselbe Ueberlegung wie bei den Blattzeilen. */
 .eintrag-text{
   flex:1 0 auto;min-width:0;
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
@@ -1045,16 +1432,17 @@ details[open] > .akkordeon-zeile > .akkordeon-winkel{transform:none}
   color:var(--gedaempft);font-size:var(--groesse-2);
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
 }
-.eintrag.aktiv{background:var(--orange-hell);border-left-color:var(--orange)}
-.eintrag.aktiv .eintrag-text{color:var(--dunkelblau);font-weight:600}
+.eintrag.aktiv{background:var(--auswahl-flaeche);border-left-color:var(--auswahl-linie)}
+.eintrag.aktiv .eintrag-text{color:var(--auswahl-text);font-weight:500}
 
-/* Der Fuß der Leiste: „Zuordnung offen" (rosa mit rotem Zähler, nur solange
- * etwas offen ist), „Diensttag anlegen" (orange), Papierkorb (gedämpft). */
-.eintrag-offen{background:var(--rosa)}
-.eintrag-offen .symbol{color:var(--rot-tief)}
-.eintrag-offen .eintrag-text{color:var(--rot-tief)}
+/* Der Fuß der Leiste: „Zuordnung offen" (Fehlerfläche mit rotem Zähler, nur
+ * solange etwas offen ist), „Diensttag anlegen" (Linkfarbe), Papierkorb
+ * (gedämpft). */
+.eintrag-offen{background:var(--fehler-flaeche)}
+.eintrag-offen .symbol{color:var(--fehler-text)}
+.eintrag-offen .eintrag-text{color:var(--fehler-text)}
 .eintrag-anlegen .symbol,
-.eintrag-anlegen .eintrag-text{color:var(--orange-tief)}
+.eintrag-anlegen .eintrag-text{color:var(--text-link)}
 /* Kein `font-weight:400` hier: 400 ist die Grundform, die Angabe waere eine
  * Dublette (9.16). */
 .eintrag-leise .symbol,
@@ -1064,18 +1452,18 @@ details[open] > .akkordeon-zeile > .akkordeon-winkel{transform:none}
   min-width:var(--abstand-5);height:var(--abstand-5);padding:0 var(--abstand-1);
   display:inline-flex;align-items:center;justify-content:center;
   border-radius:var(--radius-rund);
-  background:var(--rot);color:var(--auf-dunkel);
-  font-size:var(--groesse-1);font-weight:700;
+  background:var(--gefahr);color:var(--auf-gefahr);
+  font-size:var(--groesse-2);font-weight:700;
 }
 /* DREI TÖNE, DIESELBEN WIE DIE AMPEL (Design.md 9.23). Rot ist die
- * Grundform — die offene Zuordnung ist rot. Orange heißt „braucht Aufmerksamkeit, arbeitet aber",
+ * Grundform (rot 700 mit Schnee) — die offene Zuordnung ist rot. Orange heißt „braucht Aufmerksamkeit, arbeitet aber",
  * neutral „eine Zahl ohne Wertung": ausstehende Updates sind kein Fehler,
  * sondern Arbeit, die jemand auslösen muss.
  *
- * NEUTRAL STEHT AUF SAND, NICHT AUF ROT MIT WENIGER SÄTTIGUNG. Ein blasses
+ * NEUTRAL STEHT AUF RAUCH, NICHT AUF ROT MIT WENIGER SÄTTIGUNG. Ein blasses
  * Rot liest sich als „fast schlimm"; die Zahl soll aber gar nichts bewerten. */
-.zaehler-orange{background:var(--orange);color:var(--dunkelblau)}
-.zaehler-neutral{background:var(--sand);color:var(--dunkelblau)}
+.zaehler-orange{background:var(--warnung-flaeche);color:var(--warnung-text)}
+.zaehler-neutral{background:var(--flaeche-abgesetzt);color:var(--text-titel)}
 
 
 /* == 6. KARTE, ZEILE, TITELZEILE ===========================================
@@ -1086,7 +1474,7 @@ details[open] > .akkordeon-zeile > .akkordeon-winkel{transform:none}
  */
 
 .karte{
-  background:var(--schnee);
+  background:var(--flaeche-karte);
   border:var(--strich) solid var(--linie);
   border-radius:var(--radius-gross);
   margin-bottom:var(--abstand-5);
@@ -1113,10 +1501,10 @@ details[open] > .akkordeon-zeile > .akkordeon-winkel{transform:none}
   margin-left:auto;flex:0 0 auto;
   display:inline-flex;align-items:center;gap:var(--abstand-2);
   min-height:var(--knopf);padding:0 var(--abstand-2);
-  font-family:var(--schrift-kopf);font-weight:600;
+  font-family:var(--schrift-kopf);font-weight:500;
 }
-.karte-aktion-blau{color:var(--blau-tief)}
-.karte-aktion-orange{color:var(--orange-tief)}
+.karte-aktion-blau{color:var(--text-link)}
+.karte-aktion-orange{color:var(--text-link)}
 .karte-inhalt{padding:var(--abstand-4)}
 .karte-vorschau{
   margin-left:auto;color:var(--gedaempft);
@@ -1124,7 +1512,7 @@ details[open] > .akkordeon-zeile > .akkordeon-winkel{transform:none}
 }
 .karte-klappbar > .karte-kopf{cursor:pointer;border-bottom:0}
 .karte-klappbar[open] > .karte-kopf{border-bottom:var(--strich) solid var(--linie)}
-.karte-klappbar > .karte-kopf .akkordeon-winkel{color:var(--sand)}
+.karte-klappbar > .karte-kopf .akkordeon-winkel{color:var(--mechanik)}
 .karte-klappbar[open] > .karte-kopf .akkordeon-winkel{transform:none}
 
 /* ---- Zeile ---------------------------------------------------------------
@@ -1145,15 +1533,15 @@ details[open] > .akkordeon-zeile > .akkordeon-winkel{transform:none}
  * die Bedienhoehe und wird vom Bilderlauf gemessen. */
 .nach-oben{margin:var(--abstand-4) 0 0;text-align:right}
 a.zeile{text-decoration:none;color:inherit}
-a.zeile:hover{background:var(--rauch);text-decoration:none}
-a.zeile:hover .zeile-haupt{color:var(--blau-tief)}
-a.zeile:focus-visible{outline:var(--strich-stark) solid var(--blau);outline-offset:var(--strich-stark);border-radius:var(--radius-klein)}
-.zeile-weiter{color:var(--sand);flex:0 0 auto}
-a.zeile:hover .zeile-weiter{color:var(--blau-tief)}
+a.zeile:hover{background:var(--flaeche-abgesetzt);text-decoration:none}
+a.zeile:hover .zeile-haupt{color:var(--text-link-hover)}
+a.zeile:focus-visible{outline:var(--strich-stark) solid var(--fokus);outline-offset:var(--strich-stark);border-radius:var(--radius-klein)}
+.zeile-weiter{color:var(--mechanik);flex:0 0 auto}
+a.zeile:hover .zeile-weiter{color:var(--text-link-hover)}
 .zeile:last-child{border-bottom:0;padding-bottom:0}
 .zeile:first-child{padding-top:0}
 .zeile-text{flex:1 1 auto;min-width:0}
-.zeile-haupt{font-weight:600;color:var(--asphalt)}
+.zeile-haupt{font-weight:700;color:var(--text)}
 .zeile-text a{color:inherit}
 .zeile-klein{display:block;color:var(--gedaempft);font-size:var(--groesse-2)}
 .zeile-plaketten{display:flex;flex-wrap:wrap;gap:var(--abstand-1);flex:0 1 auto}
@@ -1173,26 +1561,26 @@ a.zeile:hover .zeile-weiter{color:var(--blau-tief)}
 .zeile-mehr > summary.zeile{padding:var(--abstand-3) 0}
 .zeile-mehr:first-child > summary.zeile{padding-top:0}
 .zeile-mehr:last-child{border-bottom:0}
-.zeile-winkel{color:var(--sand);transform:rotate(-90deg);transition:transform var(--dauer) ease-out}
+.zeile-winkel{color:var(--mechanik);transform:rotate(-90deg);transition:transform var(--dauer) ease-out}
 .zeile-mehr[open] > summary .zeile-winkel{transform:none}
 .zeile-daten{
   display:grid;grid-template-columns:max-content minmax(0,1fr);gap:var(--abstand-1) var(--abstand-3);
   margin:0 0 var(--abstand-3);padding:var(--abstand-2) var(--abstand-3);
-  background:var(--rauch);border-radius:var(--radius-klein);
+  background:var(--flaeche-abgesetzt);border-radius:var(--radius-klein);
   font-family:var(--schrift-fest);font-size:var(--groesse-2);
 }
 .zeile-daten dt{color:var(--gedaempft)}
 .zeile-daten dd{margin:0;overflow-wrap:anywhere}
 /* Zeile hervorgehoben — die Spurliste des Diensttages.
  *
- * Kein neuer Farbwert und kein neues Mass: dieselbe Rauchflaeche, die schon
- * die neutrale Plakette traegt, plus ein orangener Balken links in
- * --strich-stark. Der Balken ist die Verbindung zur Karte, auf der die
+ * Kein neuer Farbwert und kein neues Mass: dieselbe abgesetzte Flaeche,
+ * die schon die neutrale Plakette traegt, plus ein Balken in der
+ * Auswahlfarbe links in --strich-stark. Der Balken ist die Verbindung zur Karte, auf der die
  * zugehoerige Linie gleichzeitig dicker wird — beides ohne zusaetzliches
  * Element und ohne dass die Zeile ihre Hoehe aendert. */
 .zeile-hervor{
-  background:var(--rauch);
-  box-shadow:inset var(--strich-stark) 0 0 var(--orange);
+  background:var(--flaeche-abgesetzt);
+  box-shadow:inset var(--strich-stark) 0 0 var(--auswahl-linie);
   padding-left:var(--abstand-2);
 }
 /* Kein eigener Fokusring: Es gibt EINEN fuer die ganze Anwendung
@@ -1214,7 +1602,7 @@ a.zeile:hover .zeile-weiter{color:var(--blau-tief)}
  * reicht, ist der negative Aussenabstand GENAU dieser Wert — mit
  * `--abstand-3` blieben je Seite 4 px Weiss stehen. */
 .zeile:target{
-  background:var(--orange-hell);
+  background:var(--auswahl-flaeche);
   margin:0 calc(var(--abstand-4) * -1);
   padding-left:var(--abstand-4);
   padding-right:var(--abstand-4);
@@ -1225,7 +1613,7 @@ a.zeile:hover .zeile-weiter{color:var(--blau-tief)}
 .rueckweg{
   display:inline-flex;align-items:center;gap:var(--abstand-1);
   min-height:var(--knopf);
-  color:var(--blau-tief);font-weight:600;
+  color:var(--text-link);font-weight:700;
 }
 .titelzeile-haupt{display:flex;align-items:flex-start;gap:var(--abstand-3);flex-wrap:wrap}
 /* flex-basis auto statt fester 14rem: Ein kurzer Titel („Einsatz 1") liess
@@ -1253,7 +1641,7 @@ a.zeile:hover .zeile-weiter{color:var(--blau-tief)}
   padding:0 var(--abstand-4);
   border-radius:var(--radius);
   border:var(--strich-stark) solid transparent;
-  font-family:var(--schrift-kopf);font-weight:600;
+  font-family:var(--schrift-kopf);font-weight:500;
   font-size:var(--groesse-3);
   text-decoration:none;cursor:pointer;
   white-space:nowrap;
@@ -1261,28 +1649,40 @@ a.zeile:hover .zeile-weiter{color:var(--blau-tief)}
 .knopf:hover{text-decoration:none}
 .knopf[disabled],.knopf[aria-disabled="true"]{opacity:.5;cursor:default}
 
-/* Dunkelblaue Schrift auf Orange: 5,97:1. Weiß auf Orange wären 2,3:1 und
- * damit unlesbar. */
+/* Schnee auf Dunkelblau: 13,33:1. Bis Schritt 26 war der Knopf Orange mit
+ * dunkelblauer Schrift (5,97:1); Aktion ist seither Dunkelblau (E-MA-01). */
 .knopf-primaer{
-  background:var(--knopf-primaer-flaeche);
-  color:var(--knopf-primaer-schrift);
-  border-color:var(--knopf-primaer-flaeche);
+  background:var(--aktion);
+  color:var(--auf-aktion);
+  border-color:var(--aktion);
 }
-.knopf-primaer:hover{background:var(--orange-tief);border-color:var(--orange-tief);color:var(--auf-dunkel)}
+.knopf-primaer:hover{background:var(--aktion-hover);border-color:var(--aktion-hover);color:var(--auf-aktion)}
+/* DIE HAUPTAKTION — Orange mit Asphalt, 8,6:1 (dunkel orange 400, 10,4:1).
+ * Höchstens EINMAL je Seite: die Handlung, für die jemand die Seite öffnet.
+ * Branding-Repo, Ergänzung „Aktionsfarbe", Variante 3 (Commit e7bf4fc);
+ * welche Seiten sie tragen, steht in E-MA-27 und Design.md 9.4. Dieselbe
+ * Form wie der Primärknopf; unter dem Zeiger eine Stufe heller, die Schrift
+ * bleibt. */
+.knopf-haupt{
+  background:var(--aktion-haupt);
+  color:var(--auf-aktion-haupt);
+  border-color:var(--aktion-haupt);
+}
+.knopf-haupt:hover{background:var(--aktion-haupt-hover);border-color:var(--aktion-haupt-hover);color:var(--auf-aktion-haupt)}
 .knopf-neutral{
-  background:var(--schnee);color:var(--dunkelblau);
+  background:var(--flaeche-karte);color:var(--text-titel);
   border-color:var(--linie-stark);
 }
-.knopf-neutral:hover{background:var(--rauch)}
-.knopf-gefahr{background:var(--schnee);color:var(--rot-tief);border-color:var(--rot)}
-.knopf-gefahr:hover{background:var(--rosa)}
+.knopf-neutral:hover{background:var(--flaeche-abgesetzt)}
+.knopf-gefahr{background:var(--flaeche-karte);color:var(--fehler-text);border-color:var(--fehler-linie)}
+.knopf-gefahr:hover{background:var(--fehler-flaeche);color:var(--fehler-text)}
 .knopf-leise{background:none;color:var(--gedaempft);padding:0 var(--abstand-2)}
-.knopf-leise:hover{color:var(--asphalt)}
+.knopf-leise:hover{color:var(--text)}
 .knopf-symbol{
   width:var(--knopf);height:var(--knopf);padding:0;
   background:none;color:inherit;border-color:transparent;
 }
-.knopf-symbol:hover{background:var(--rauch)}
+.knopf-symbol:hover{background:var(--flaeche-abgesetzt)}
 .knopf-breit{width:100%}
 
 
@@ -1295,14 +1695,15 @@ a.zeile:hover .zeile-weiter{color:var(--blau-tief)}
   display:inline-flex;align-items:center;gap:var(--abstand-1);
   padding:var(--abstand-1) var(--abstand-2);
   border-radius:var(--radius-klein);
-  font-size:var(--groesse-1);font-weight:600;
+  font-size:var(--groesse-2);font-weight:700;
   white-space:nowrap;
 }
 .plakette .symbol{width:calc(var(--symbol-klein) - 2px);height:calc(var(--symbol-klein) - 2px)}
-.plakette-neutral{background:var(--rauch);color:var(--gedaempft);border:var(--strich) solid var(--linie)}
-.plakette-orange{background:var(--orange-hell);color:var(--asphalt)}
-.plakette-blau{background:var(--blau-hell);color:var(--dunkelblau)}
-.plakette-rot{background:var(--rosa);color:var(--rot-tief)}
+.plakette-neutral{background:var(--flaeche-abgesetzt);color:var(--gedaempft);border:var(--strich) solid var(--linie)}
+.plakette-gruen{background:var(--erfolg-flaeche);color:var(--erfolg-text)}
+.plakette-orange{background:var(--warnung-flaeche);color:var(--warnung-text)}
+.plakette-blau{background:var(--info-flaeche);color:var(--info-text)}
+.plakette-rot{background:var(--fehler-flaeche);color:var(--fehler-text)}
 .plakette-weg{
   display:inline-flex;align-items:center;justify-content:center;
   width:var(--symbol);height:var(--symbol);
@@ -1312,14 +1713,12 @@ a.zeile:hover .zeile-weiter{color:var(--blau-tief)}
 
 /* == 9. MELDUNG ============================================================
  *
- * Vier Töne mit Symbol und optionalem fettem Auftakt. Kein Grün: Die
- * Vollzugsmeldung ist blau wie der Hinweis und unterscheidet
- * sich durch das Symbol — Haken gegen Kreis-i. Farbe ist nie der einzige
- * Träger (Grundregel 3).
- *
- * Die Warnung trägt ihren Text in Asphalt, nicht in Orange tief: Orange tief
- * auf Orange hell sind 3,81:1 und damit unter der Schwelle für Fließtext.
- * Der fette Auftakt darf orange sein — für fette Schrift ab 14 px gilt 3:1.
+ * Fünf Töne mit Symbol und optionalem fettem Auftakt, je Fläche 100 und
+ * Schrift 700 ihrer Farbe: Hinweis blau, Vollzug grün (seit Schritt 26;
+ * bis dahin blau wie der Hinweis), Warnung orange, Fehler und Schutz rot.
+ * Das Symbol unterscheidet zusätzlich — Haken, Kreis-i, Dreieck, Kreuz,
+ * Schloss. Farbe ist nie der einzige Träger (Grundregel 3). Orange 700 auf
+ * orange 100 erreicht 5,67:1 und trägt deshalb auch den Fließtext.
  */
 .meldung{
   display:flex;flex-wrap:wrap;align-items:center;gap:var(--abstand-3);
@@ -1333,12 +1732,12 @@ a.zeile:hover .zeile-weiter{color:var(--blau-tief)}
 .meldung p{flex:1 1 16rem;min-width:0}
 .meldung .symbol{flex:0 0 auto}
 .meldung-aktion{flex:0 0 auto}
-.meldung-fehler{background:var(--rosa);color:var(--rot-tief)}
-.meldung-fehler .symbol{color:var(--rot)}
-.meldung-info{background:var(--blau-hell);color:var(--blau-tief)}
-.meldung-info .symbol{color:var(--blau-tief)}
-.meldung-ok{background:var(--blau-hell);color:var(--blau-tief)}
-.meldung-ok .symbol{color:var(--blau-tief)}
+.meldung-fehler{background:var(--fehler-flaeche);color:var(--fehler-text)}
+.meldung-fehler .symbol{color:var(--fehler-text)}
+.meldung-info{background:var(--info-flaeche);color:var(--info-text)}
+.meldung-info .symbol{color:var(--info-text)}
+.meldung-ok{background:var(--erfolg-flaeche);color:var(--erfolg-text)}
+.meldung-ok .symbol{color:var(--erfolg-text)}
 /* SCHUTZ — rot, aber kein Fehler. Fuer den
  * einen Fall, in dem eine Meldung dauerhaft steht und trotzdem die Farbe des
  * Ernstfalls braucht: ein Datenschutzhinweis an der Stelle, an der jemand
@@ -1347,12 +1746,12 @@ a.zeile:hover .zeile-weiter{color:var(--blau-tief)}
  * bei JEDEM Aufruf der Seite dasteht, darf einen Vorleser nicht jedes Mal
  * unterbrechen. Das Symbol ist das Schloss, nicht die Warnung: Es geht um
  * Schutzbeduerftigkeit, nicht um einen Fehlgriff. */
-.meldung-schutz{background:var(--rosa);color:var(--rot-tief)}
-.meldung-schutz .symbol{color:var(--rot)}
-.meldung-schutz strong{color:var(--rot-tief)}
-.meldung-warn{background:var(--orange-hell);color:var(--asphalt)}
-.meldung-warn .symbol{color:var(--orange-tief)}
-.meldung-warn strong{color:var(--orange-tief)}
+.meldung-schutz{background:var(--fehler-flaeche);color:var(--fehler-text)}
+.meldung-schutz .symbol{color:var(--fehler-text)}
+.meldung-schutz strong{color:var(--fehler-text)}
+.meldung-warn{background:var(--warnung-flaeche);color:var(--warnung-text)}
+.meldung-warn .symbol{color:var(--warnung-text)}
+.meldung-warn strong{color:var(--warnung-text)}
 
 
 /* == 10. AKTIONSMENÜ UND BLATT =============================================
@@ -1369,11 +1768,10 @@ a.zeile:hover .zeile-weiter{color:var(--blau-tief)}
  *
  * Das Blatt deckt am Handy die untere Bildhaelfte ab, und der Knopf, aus dem
  * es kam, verschwaende darin optisch — wer es wieder zumachen will, suchte.
- * Er traegt deshalb, solange sein Blatt offen ist, die Flaeche `--orange-hell`
- * mit `--orange-tief` darauf: 11,7:1 gegen den dunkelblauen Kartenkopf,
- * 3,8:1 fuer die Punkte gegen die Flaeche — ueber den 3:1, die WCAG 1.4.11
- * fuer ein Bedienelement verlangt (`kontrast.py`, Paar „Orange tief auf
- * Orange hell"). Ein Ring ueberzeugt nicht; auf Blau-hell laege er bei
+ * Er traegt deshalb, solange sein Blatt offen ist, die Auswahlflaeche
+ * (blau 100) mit Dunkelblau darauf, 11,26:1 — dieselbe Aussage wie jeder
+ * aktive Punkt (`kontrast.py`, Paar „Dunkelblau auf blau 100"). Bis
+ * Schritt 26 war es Orange hell mit Orange tief. Ein Ring ueberzeugt nicht; er laege bei
  * 1,9:1.
  *
  * AM ATTRIBUT, NICHT AN DER KLASSE — und das ist der Kern. Oeffner gibt es in
@@ -1385,12 +1783,12 @@ a.zeile:hover .zeile-weiter{color:var(--blau-tief)}
  *
  * `border-radius` steht hier mit, weil nicht jeder Oeffner ein `.knopf` ist:
  * `.karte-sortieren` ist ein blanker Button, und ohne die Rundung bekaeme er
- * ein hartes oranges Quadrat. Die Spezifitaet (0,2,0) liegt ueber jeder
+ * ein hartes hellblaues Quadrat. Die Spezifitaet (0,2,0) liegt ueber jeder
  * Knopfvariante und ueber deren `:hover`. */
 [data-blatt][aria-expanded="true"]{
-  background:var(--orange-hell);
-  color:var(--orange-tief);
-  border-color:var(--orange-hell);
+  background:var(--auswahl-flaeche);
+  color:var(--auswahl-text);
+  border-color:var(--auswahl-flaeche);
   border-radius:var(--radius);
 }
 
@@ -1415,7 +1813,7 @@ a.zeile:hover .zeile-weiter{color:var(--blau-tief)}
  * trotzdem, worauf sich das Skript NICHT verlaesst (es hat einen Nachlauf). */
 .blatt{
   position:fixed;inset:auto 0 0 0;z-index:70;
-  background:var(--schnee);
+  background:var(--flaeche-karte);
   border-radius:var(--radius-gross) var(--radius-gross) 0 0;
   box-shadow:var(--schatten-hoch);
   padding:var(--abstand-3) var(--abstand-3) var(--abstand-5);
@@ -1426,7 +1824,7 @@ a.zeile:hover .zeile-weiter{color:var(--blau-tief)}
 .blatt.blatt-auf{transform:none}
 .blatt-griff{
   width:2.5rem;height:var(--abstand-1);margin:0 auto var(--abstand-3);
-  border-radius:var(--radius-rund);background:var(--sand);
+  border-radius:var(--radius-rund);background:var(--mechanik);
 }
 .blatt-titel{
   font-size:var(--groesse-5);text-align:center;
@@ -1436,10 +1834,10 @@ a.zeile:hover .zeile-weiter{color:var(--blau-tief)}
 /* NORMAL STATT FETT (F-N1-F). Die Einträge standen auf 600 — dasselbe
  * Gewicht wie ein Kartentitel. In einem Menü, in dem JEDE Zeile so gesetzt
  * ist, hebt das nichts hervor; es macht nur den ganzen Block schwer.
- * Unterschieden wird hier ohnehin durch Symbol und Farbe (orange fürs
+ * Unterschieden wird hier ohnehin durch Symbol und Farbe (Linkfarbe fürs
  * Anlegen, rot fürs Löschen), nicht durch das Gewicht.
  *
- * WARUM NICHT 500 als Mittelweg: Open Sans liegt in 400, 600 und 700 vor —
+ * WARUM NICHT 500 als Mittelweg: Open Sans liegt in 400 und 700 vor —
  * einen 500er-Schnitt gibt es nicht. Die Angabe fiele still auf 400 zurück,
  * und im Stylesheet stünde eine Zahl, die nichts bedeutet. Ein vierter
  * Schriftschnitt wäre eine weitere Datei für einen Menüeintrag. */
@@ -1448,19 +1846,19 @@ a.zeile:hover .zeile-weiter{color:var(--blau-tief)}
   min-height:var(--blatt-zeile);
   padding:0 var(--abstand-3);
   border-radius:var(--radius-klein);
-  color:var(--asphalt);font-weight:400;
+  color:var(--text);font-weight:400;
 }
-.blatt-zeile:hover{background:var(--rauch);text-decoration:none}
-.blatt-zeile .symbol{color:var(--dunkelblau)}
-.blatt-anlegen,.blatt-anlegen .symbol{color:var(--orange-tief)}
+.blatt-zeile:hover{background:var(--flaeche-abgesetzt);text-decoration:none}
+.blatt-zeile .symbol{color:var(--text-titel)}
+.blatt-anlegen,.blatt-anlegen .symbol{color:var(--text-link)}
 /* Löschen steht rot UND durch eine Linie abgesetzt: Wer schnell tippt, soll
  * nicht danebengreifen. */
 .blatt-gefahr{
-  color:var(--rot-tief);
+  color:var(--fehler-text);
   margin-top:var(--abstand-2);padding-top:var(--abstand-2);
   border-top:var(--strich) solid var(--linie);
 }
-.blatt-gefahr .symbol{color:var(--rot)}
+.blatt-gefahr .symbol{color:var(--fehler-text)}
 .blatt-abbrechen{width:100%;margin-top:var(--abstand-3)}
 
 
@@ -1481,13 +1879,13 @@ a.zeile:hover .zeile-weiter{color:var(--blau-tief)}
 .feldsatz-gesperrt{border:0;padding:0;margin:0;min-width:0}
 .feldsatz-gesperrt[disabled]{opacity:.55}
 .feld{margin-bottom:var(--abstand-3)}
-.feld-label{display:block;font-weight:600;margin-bottom:var(--abstand-1)}
-.feld-pflicht{color:var(--rot-tief)}
+.feld-label{display:block;font-weight:700;margin-bottom:var(--abstand-1)}
+.feld-pflicht{color:var(--fehler-text)}
 .feld-eingabe{
   display:block;width:100%;
   height:var(--knopf);
   padding:0 var(--abstand-3);
-  background:var(--schnee);color:var(--asphalt);
+  background:var(--flaeche-feld);color:var(--text);
   border:var(--strich) solid var(--linie-stark);
   border-radius:var(--radius-klein);
 }
@@ -1511,7 +1909,7 @@ a.zeile:hover .zeile-weiter{color:var(--blau-tief)}
  * Es GILT ZUSAETZLICH im gesperrten Feldsatz (`.feldsatz-gesperrt[disabled]`
  * vererbt `disabled` an seine Felder). Das ist gewollt: Die Deckkraft daempft
  * die ganze Gruppe, die Flaeche sagt, welches Element gemeint ist. */
-.feld-eingabe:disabled{background:var(--rauch);color:var(--gedaempft);cursor:not-allowed}
+.feld-eingabe:disabled{background:var(--flaeche-abgesetzt);color:var(--gedaempft);cursor:not-allowed}
 .feld-mehrzeilig{height:auto;padding:var(--abstand-3)}
 /* DAS DATEIFELD: sein Knopf hängt oben, solange ihn nichts in die Mitte holt.
  *
@@ -1603,13 +2001,13 @@ input[type=checkbox].schalter-box{position:absolute;opacity:0;width:0;height:0;m
  * `flex:0 1 auto` lässt den Text nur so breit werden, wie er ist. Die
  * TREFFERFLÄCHE bleibt die ganze Zeile: Das `<label>` behält seine Breite,
  * nur sein Inhalt rückt zusammen. */
-.schalter-text{flex:0 1 auto;font-weight:600}
+.schalter-text{flex:0 1 auto;font-weight:700}
 .schalter-klein{display:block;font-weight:400;color:var(--gedaempft);font-size:var(--groesse-2)}
 .schalter-griff{
   flex:0 0 auto;position:relative;
   width:var(--schalter-breit);height:var(--schalter-hoch);
   border-radius:var(--radius-rund);
-  background:var(--sand);
+  background:var(--mechanik);
   transition:background var(--dauer) ease-out;
 }
 .schalter-griff::after{
@@ -1621,12 +2019,12 @@ input[type=checkbox].schalter-box{position:absolute;opacity:0;width:0;height:0;m
   background:var(--schnee);
   transition:transform var(--dauer) ease-out;
 }
-.schalter-box:checked + .schalter-label .schalter-griff{background:var(--orange)}
+.schalter-box:checked + .schalter-label .schalter-griff{background:var(--aktion)}
 .schalter-box:checked + .schalter-label .schalter-griff::after{
   transform:translateX(calc(var(--schalter-breit) - var(--schalter-hoch)));
 }
 .schalter-box:focus-visible + .schalter-label .schalter-griff{
-  outline:var(--strich-stark) solid var(--blau);outline-offset:var(--strich-stark);
+  outline:var(--strich-stark) solid var(--fokus);outline-offset:var(--strich-stark);
 }
 /* AUSGEGRAUT — ein Schalter, den eine Einstellung darueber gesperrt hat
  * (die Installation ist die Obergrenze des Kontoschalters).
@@ -1637,13 +2035,13 @@ input[type=checkbox].schalter-box{position:absolute;opacity:0;width:0;height:0;m
  * nicht, und sie soll es nicht versuchen. */
 .schalter-box:disabled + .schalter-label{cursor:not-allowed}
 .schalter-box:disabled + .schalter-label .schalter-text{color:var(--gedaempft)}
-.schalter-box:disabled + .schalter-label .schalter-griff{background:var(--rauch)}
-.schalter-box:disabled + .schalter-label .schalter-griff::after{background:var(--sand)}
-/* Abhängige Felder klappen darunter auf, eingerückt mit orangem Randstrich. */
+.schalter-box:disabled + .schalter-label .schalter-griff{background:var(--flaeche-abgesetzt)}
+.schalter-box:disabled + .schalter-label .schalter-griff::after{background:var(--mechanik)}
+/* Abhängige Felder klappen darunter auf, eingerückt mit Randstrich in `--linie-stark`. */
 .schalter-abhaengig{
   margin:var(--abstand-2) 0 var(--abstand-4) var(--abstand-3);
   padding-left:var(--abstand-4);
-  border-left:var(--strich-stark) solid var(--orange);
+  border-left:var(--strich-stark) solid var(--linie-stark);
 }
 
 /* ---- Segmentwahl ---------------------------------------------------------
@@ -1677,15 +2075,15 @@ input[type=checkbox].segment-box{position:absolute;opacity:0;width:0;height:0;mi
   flex:1 1 auto;margin:0;
   display:flex;align-items:center;justify-content:center;
   min-height:var(--knopf);padding:0 var(--abstand-3);
-  background:var(--schnee);color:var(--dunkelblau);
-  font-family:var(--schrift-kopf);font-weight:600;
+  background:var(--flaeche-feld);color:var(--text-titel);
+  font-family:var(--schrift-kopf);font-weight:500;
   cursor:pointer;text-align:center;
   border-right:var(--strich) solid var(--linie);
 }
 .segment-taste:last-of-type{border-right:0}
-.segment-box:checked + .segment-taste{background:var(--orange);color:var(--knopf-primaer-schrift)}
+.segment-box:checked + .segment-taste{background:var(--aktion);color:var(--auf-aktion)}
 .segment-box:focus-visible + .segment-taste{
-  outline:var(--strich-stark) solid var(--blau);outline-offset:calc(var(--strich-stark) * -1);
+  outline:var(--strich-stark) solid var(--fokus);outline-offset:calc(var(--strich-stark) * -1);
 }
 
 /* ---- Speichern-Leiste ----------------------------------------------------
@@ -1704,7 +2102,7 @@ input[type=checkbox].segment-box{position:absolute;opacity:0;width:0;height:0;mi
    * sie folgt — nicht, weil sie anders geschnitten ist. */
   margin:var(--abstand-4) 0 0;
   padding:var(--abstand-3);
-  background:var(--schnee);
+  background:var(--flaeche-karte);
   border-top:var(--strich) solid var(--linie);
   border-radius:var(--radius-gross);
   box-shadow:var(--schatten);
@@ -1724,7 +2122,7 @@ input[type=checkbox].segment-box{position:absolute;opacity:0;width:0;height:0;mi
  *
  * Wert in Bricolage mit Einheit, darunter die Beschriftung. Die Hervorhebung
  * eines Extremwerts ist orange, nicht rot: Rot heißt in dieser Oberfläche
- * „Aufmerksamkeit", und ein Höchstwert ist kein Fehler.
+ * „Fehler", und ein Höchstwert ist kein Fehler.
  */
 .kennzahl-raster{
   display:grid;gap:var(--abstand-3);
@@ -1741,15 +2139,15 @@ input[type=checkbox].segment-box{position:absolute;opacity:0;width:0;height:0;mi
   position:relative;
   display:flex;flex-direction:column;justify-content:center;
   padding:var(--abstand-3);
-  background:var(--schnee);
+  background:var(--flaeche-karte);
   border:var(--strich) solid var(--linie);
   border-radius:var(--radius);
 }
-.kennzahl.aktiv{background:var(--orange-hell);border-color:var(--orange)}
+.kennzahl.aktiv{background:var(--auswahl-flaeche);border-color:var(--auswahl-linie)}
 .kennzahl-wert{
-  font-family:var(--schrift-kopf);font-weight:600;
+  font-family:var(--schrift-kopf);font-weight:500;
   font-size:var(--groesse-6);line-height:var(--zeile-eng);
-  color:var(--dunkelblau);
+  color:var(--text-titel);
 }
 .kennzahl-einheit{font-size:var(--groesse-2);color:var(--gedaempft);margin-left:var(--abstand-1)}
 .kennzahl-label{font-size:var(--groesse-2);color:var(--gedaempft)}
@@ -1758,11 +2156,11 @@ input[type=checkbox].segment-box{position:absolute;opacity:0;width:0;height:0;mi
  * der Kachel und nicht als zweite Zeile darunter. Bei schmalen Kacheln
  * bricht die Zeile um — das ist richtiger, als eine feste zweite Zeile zu
  * erzwingen, die bei den übrigen Kacheln leer bliebe. */
-.kennzahl-tag{color:var(--orange-tief);font-weight:600;white-space:nowrap}
+.kennzahl-tag{color:var(--warnung-text);font-weight:700;white-space:nowrap}
 .kennzahl-extrem::after{
   content:"";position:absolute;top:var(--abstand-2);right:var(--abstand-2);
   width:var(--abstand-2);height:var(--abstand-2);
-  border-radius:var(--radius-rund);background:var(--orange);
+  border-radius:var(--radius-rund);background:var(--warnung-linie);
 }
 
 
@@ -1823,13 +2221,13 @@ input[type=checkbox].segment-box{position:absolute;opacity:0;width:0;height:0;mi
    * aufzumachen waere der Anfang vom Ende der geschlossenen Skala. */
   width:var(--symbol-gross);height:var(--symbol-gross);flex:0 0 var(--symbol-gross);
   border-radius:var(--radius-rund);
-  background:var(--dunkelblau);color:var(--auf-dunkel);
-  font-size:var(--groesse-2);font-weight:600;line-height:1;
+  background:var(--aktion);color:var(--auf-aktion);
+  font-size:var(--groesse-2);font-weight:700;line-height:1;
 }
 /* OPTIONAL: Sand statt Dunkelblau. Der Schritt bleibt sichtbar und tritt
  * zurueck — dieselbe Aussage wie der neutrale Knopf daneben. */
-.erststart-nr-kann{background:var(--sand);color:var(--asphalt)}
-.erststart-nr-fertig{background:var(--blau)}
+.erststart-nr-kann{background:var(--flaeche-abgesetzt);color:var(--text)}
+.erststart-nr-fertig{background:var(--erfolg-linie)}
 
 /* Die Nummer steht oben, nicht mittig: Bei zwei Zeilen Text saehe sie sonst
  * aus, als gehoere sie zur zweiten. Ohne Feinabstand — 2 px stuenden
@@ -1939,19 +2337,19 @@ input[type=checkbox].segment-box{position:absolute;opacity:0;width:0;height:0;mi
              margin:calc(var(--abstand-2) * -1) 0 var(--abstand-4)}
 
 /* Das Verzeichnis */
-.doku-nav{background:var(--schnee);border:var(--strich) solid var(--linie);
+.doku-nav{background:var(--flaeche-karte);border:var(--strich) solid var(--linie);
           border-radius:var(--radius);padding:var(--abstand-3)}
 .doku-suche{display:block;margin-bottom:var(--abstand-2)}
 .doku-liste{list-style:none;margin:0;padding:0}
 .doku-e{margin:0}
 .doku-e a{display:block;padding:var(--abstand-1) var(--abstand-2);
-          border-radius:var(--radius-klein);color:var(--asphalt);
+          border-radius:var(--radius-klein);color:var(--text);
           font-size:var(--groesse-2);line-height:var(--zeile-eng);
           text-decoration:none}
-.doku-e a:hover{background:var(--rauch)}
+.doku-e a:hover{background:var(--flaeche-abgesetzt)}
 .doku-e3 a{padding-left:var(--abstand-4);color:var(--gedaempft)}
-/* AKTIV: Dunkelblau auf Blau-hell. Nachgemessen 4,9:1. */
-.doku-e.aktiv a{background:var(--blau-hell);color:var(--dunkelblau);font-weight:600}
+/* AKTIV: Dunkelblau auf der Auswahlfläche (blau 100), 11,26:1. */
+.doku-e.aktiv a{background:var(--auswahl-flaeche);color:var(--auswahl-text);font-weight:700}
 .doku-leer{color:var(--gedaempft);font-size:var(--groesse-2);
            padding:var(--abstand-2);margin:0}
 
@@ -1989,15 +2387,15 @@ input[type=checkbox].segment-box{position:absolute;opacity:0;width:0;height:0;mi
 .doku-text th,.doku-text td{border:var(--strich) solid var(--linie);
                             padding:var(--abstand-1) var(--abstand-2);
                             text-align:left;vertical-align:top}
-.doku-text th{background:var(--rauch);font-weight:600}
+.doku-text th{background:var(--flaeche-abgesetzt);font-weight:700}
 
 /* Codeblock: Rauch mit Linie. `pre` scrollt waagerecht, statt die Seite zu
  * sprengen — eine lange Zeile im Handbuch ist sonst ein Ueberlauf auf
  * jedem Handy. */
-.doku-text pre{background:var(--rauch);border:var(--strich) solid var(--linie);
+.doku-text pre{background:var(--flaeche-abgesetzt);border:var(--strich) solid var(--linie);
                border-radius:var(--radius-klein);padding:var(--abstand-2);
                margin-bottom:var(--abstand-3);overflow-x:auto}
-.doku-text pre code{font-family:var(--schrift-fest);font-size:var(--groesse-1);
+.doku-text pre code{font-family:var(--schrift-fest);font-size:var(--groesse-2);
                     line-height:var(--zeile-eng);white-space:pre}
 /* INLINE-CODE MUSS UMBRECHEN DUERFEN. Ohne `overflow-wrap` schiebt ein
  * langer Pfad oder eine Adresse in Schraegstrichen die ganze Seite nach
@@ -2009,13 +2407,13 @@ input[type=checkbox].segment-box{position:absolute;opacity:0;width:0;height:0;mi
  * eigenes Override an der Skala vorbei: Die Basisregel setzt bereits
  * `--schrift-fest` und `--groesse-2`. Hier steht, was wirklich neu ist —
  * Flaeche, Radius und der Umbruch. */
-.doku-text code{background:var(--rauch);border-radius:var(--radius-klein);
+.doku-text code{background:var(--flaeche-abgesetzt);border-radius:var(--radius-klein);
                 padding:0 var(--abstand-1);overflow-wrap:anywhere}
 .doku-text pre code{background:none;padding:0}
 
 /* Blockzitat: der blaue Hinweisstreifen, wie `meldung-info` */
-.doku-text blockquote{border-left:var(--strich-stark) solid var(--blau);
-                      background:var(--blau-hell);border-radius:0 var(--radius-klein) var(--radius-klein) 0;
+.doku-text blockquote{border-left:var(--strich-stark) solid var(--info-linie);
+                      background:var(--info-flaeche);border-radius:0 var(--radius-klein) var(--radius-klein) 0;
                       padding:var(--abstand-2) var(--abstand-3);
                       margin:0 0 var(--abstand-3)}
 .doku-text blockquote p:last-child{margin-bottom:0}
@@ -2062,7 +2460,7 @@ input[type=checkbox].segment-box{position:absolute;opacity:0;width:0;height:0;mi
 
 /* ---- Anmeldung ----------------------------------------------------------- */
 .anmeldung-body{
-  background:var(--dunkelblau);
+  background:var(--flaeche-marke);
   min-height:100vh;min-height:100dvh;
   display:flex;flex-direction:column;
 }
@@ -2078,7 +2476,7 @@ input[type=checkbox].segment-box{position:absolute;opacity:0;width:0;height:0;mi
 }
 .anmeldung-karte{
   width:100%;max-width:var(--anmeldekarte);
-  background:var(--schnee);
+  background:var(--flaeche-karte);
   border-radius:var(--radius-gross);
   padding:var(--abstand-5);
   box-shadow:var(--schatten-hoch);
@@ -2099,11 +2497,11 @@ input[type=checkbox].segment-box{position:absolute;opacity:0;width:0;height:0;mi
   display:flex;align-items:center;gap:var(--abstand-3);
   padding:var(--abstand-3) var(--abstand-4);
   margin-bottom:var(--abstand-5);
-  background:var(--orange-hell);
+  background:var(--info-flaeche);
   border-radius:var(--radius);
   font-size:var(--groesse-2);
 }
-.demo-hinweis .symbol{color:var(--orange-tief)}
+.demo-hinweis .symbol{color:var(--info-text)}
 
 /* ---- Die Reihe der Hinweise (.hinweise) ----------------------------------
  * Umgebung → Ankündigung → Demo → Datenschutz, an der Stelle des
@@ -2112,10 +2510,11 @@ input[type=checkbox].segment-box{position:absolute;opacity:0;width:0;height:0;mi
  * ergäbe das 32-px-Lücken zwischen Zeilen, die zusammengehören. */
 .hinweise{display:flex;flex-direction:column;gap:var(--abstand-2);margin-bottom:var(--abstand-5)}
 .hinweise > .demo-hinweis,.hinweise > .meldung{margin-bottom:0}
-/* Umgebungszeile — Variante des Hinweisstreifens im Ton der Fehlermeldung:
- * Rot-tief auf Rosa 6,27 : 1. Nicht wegklickbar, wie der Demo-Hinweis. */
-.hinweis-umgebung{background:var(--rosa);color:var(--rot-tief)}
-.hinweis-umgebung .symbol{color:var(--rot-tief)}
+/* Umgebungszeile — Variante des Hinweisstreifens im Ton der Warnung:
+ * orange 700 auf orange 100, 5,67 : 1 (bis Schritt 26 rot — Staging ist kein
+ * Fehler). Nicht wegklickbar, wie der Demo-Hinweis. */
+.hinweis-umgebung{background:var(--warnung-flaeche);color:var(--warnung-text)}
+.hinweis-umgebung .symbol{color:var(--warnung-text)}
 /* Ankündigung — die vorhandene .meldung (info/warn); das Kreuz steht in
  * .meldung-aktion. Die Klasse benennt den Verwender. Das Kreuz bleibt oben
  * rechts, auch auf dem Handy: .meldung bricht sonst um, sobald der Text seine
@@ -2149,8 +2548,8 @@ input[type=checkbox].segment-box{position:absolute;opacity:0;width:0;height:0;mi
  * das, was er ist. Die ZELLEN behalten ihre Ausrichtung: Zahlen fluchten
  * weiter rechts, Text steht weiter links. */
 .tabelle th{
-  text-align:center;font-weight:600;
-  color:var(--dunkelblau);
+  text-align:center;font-weight:700;
+  color:var(--text-titel);
   padding:var(--abstand-2) var(--abstand-2);
   border-bottom:var(--strich-stark) solid var(--linie);
   white-space:nowrap;
@@ -2165,7 +2564,12 @@ input[type=checkbox].segment-box{position:absolute;opacity:0;width:0;height:0;mi
   vertical-align:middle;
 }
 .tabelle tr:last-child td{border-bottom:0}
-.tabelle-scroll{overflow-x:auto}
+/* POSITION:RELATIVE, damit der Behälter hält, was in ihm absolut steht —
+ * den Vorlesetext einer Kopfzelle (`.nur-vorlesen`, seit Web 23.11.2). Ohne
+ * hing er am Dokument, und eine Tabelle, die breiter ist als die Seite, zog
+ * über ihn die ganze Seite in die Breite (Kontenliste bei 768 und 1024 px,
+ * Bilderlauf, F-MA-28). */
+.tabelle-scroll{overflow-x:auto;position:relative}
 
 
 /* == 15. DIALOG ============================================================
@@ -2180,11 +2584,11 @@ input[type=checkbox].segment-box{position:absolute;opacity:0;width:0;height:0;mi
  */
 .dialog{
   border:0;padding:0;
-  background:var(--schnee);
+  background:var(--flaeche-karte);
   border-radius:var(--radius-gross);
   box-shadow:var(--schatten-hoch);
   max-width:min(92vw,32rem);width:100%;
-  color:var(--asphalt);
+  color:var(--text);
   /* EIN DIALOG, DER LÄNGER IST ALS DER BILDSCHIRM, ROLLT IN SICH. Der
    * Rettungsmittel-Dialog hat vier Felder, fünf Rollenhaken und zwei
    * Fähigkeitshaken und ist am Handy höher als das Glas. Ohne Höhenangabe
@@ -2283,7 +2687,7 @@ input,select,textarea{
   max-width:100%;
   padding:var(--abstand-2) var(--abstand-3);
   min-height:var(--knopf);
-  background:var(--schnee);color:var(--asphalt);
+  background:var(--flaeche-feld);color:var(--text);
   border:var(--strich) solid var(--linie-stark);
   border-radius:var(--radius-klein);
 }
@@ -2293,7 +2697,7 @@ input,select,textarea{
  * Kästchen ausblenden will, braucht `input[type=checkbox].meine-klasse` —
  * `.meine-klasse` allein verliert. */
 input[type=checkbox],input[type=radio]{
-  min-height:0;width:var(--symbol);height:var(--symbol);accent-color:var(--orange);
+  min-height:0;width:var(--symbol);height:var(--symbol);accent-color:var(--aktion);
 }
 /* Das Muster `<label>Text <input></label>`: Beschriftung oben, Feld darunter
  * in voller Breite. Ohne diese Regel liefe die Eingabe neben der Beschriftung
@@ -2309,7 +2713,7 @@ label:has(> input[type=radio]){
 }
 summary{cursor:pointer}
 code,kbd,pre{font-family:var(--schrift-fest);font-size:var(--groesse-2)}
-pre{overflow-x:auto;background:var(--rauch);padding:var(--abstand-3);border-radius:var(--radius-klein)}
+pre{overflow-x:auto;background:var(--flaeche-abgesetzt);padding:var(--abstand-3);border-radius:var(--radius-klein)}
 
 
 /* == 18. SCHWELLEN =========================================================
@@ -2483,32 +2887,32 @@ pre{overflow-x:auto;background:var(--rauch);padding:var(--abstand-3);border-radi
   min-height:calc(var(--knopf) + var(--abstand-3));
   padding:0 var(--abstand-2);
   border-bottom:var(--strich) solid var(--linie);
-  color:var(--asphalt);text-decoration:none;
+  color:var(--text);text-decoration:none;
 }
 .uebersicht-zeile:last-child{border-bottom:0}
-.uebersicht-zeile:hover{background:var(--rauch);text-decoration:none}
-.uebersicht-zeile .symbol{color:var(--dunkelblau)}
+.uebersicht-zeile:hover{background:var(--flaeche-abgesetzt);text-decoration:none}
+.uebersicht-zeile .symbol{color:var(--text-titel)}
 .uebersicht-text{
   flex:1 1 auto;min-width:0;
-  font-family:var(--schrift-kopf);font-weight:600;font-size:var(--groesse-4);
+  font-family:var(--schrift-kopf);font-weight:500;font-size:var(--groesse-4);
 }
-.uebersicht-winkel{color:var(--sand)}
+.uebersicht-winkel{color:var(--mechanik)}
 /* DIE BEREICHSKARTE (Design.md 9.1).
  * Je Bereich eine eigene Karte; der Kopf trägt ein rundes Bereichszeichen,
  * den Bereichsnamen und die Zahl der Einträge — als Gruppe MITTIG — und liegt
- * auf Rauch, dem Ton der Seite. Abgesetzt wird über das Zeichen und die
- * Mitte, nicht über eine Farbe mit Bedeutung: Orange heißt „hier stehst du",
- * Hellblau „erledigt", Rot „Gefahr", und ein getönter Kopf läse sich als
+ * auf Rauch, der abgesetzten Fläche. Abgesetzt wird über das Zeichen und die
+ * Mitte, nicht über eine Farbe mit Bedeutung: Blau 100 heißt „hier stehst du",
+ * Grün „erledigt", Rot „Gefahr", und ein getönter Kopf läse sich als
  * Meldung. */
 .karte-bereich > .karte-kopf{
   justify-content:center;
-  background:var(--rauch);
+  background:var(--flaeche-abgesetzt);
   border-radius:calc(var(--radius-gross) - var(--strich)) calc(var(--radius-gross) - var(--strich)) 0 0;
 }
 .bereich-zeichen{
   flex:0 0 auto;display:inline-flex;align-items:center;justify-content:center;
   width:var(--knopf);height:var(--knopf);border-radius:var(--radius-rund);
-  background:var(--dunkelblau);color:var(--auf-dunkel);
+  background:var(--aktion);color:var(--auf-aktion);
 }
 
 /* AM SCHREIBTISCH DREI SPALTEN. `auto-fit` füllt nach Rolle: eine Spalte für
@@ -2557,11 +2961,11 @@ pre{overflow-x:auto;background:var(--rauch);padding:var(--abstand-3);border-radi
   display:flex;gap:var(--abstand-3);
   padding:var(--abstand-3) 0;
   border-bottom:var(--strich) solid var(--linie);
-  color:var(--asphalt);text-decoration:none;
+  color:var(--text);text-decoration:none;
 }
 .kachel:last-child{border-bottom:0;padding-bottom:0}
 .kachel:first-child{padding-top:0}
-.kachel:hover{text-decoration:none;background:var(--rauch)}
+.kachel:hover{text-decoration:none;background:var(--flaeche-abgesetzt)}
 .kachel-streifen{
   flex:0 0 auto;width:var(--abstand-1);
   border-radius:var(--radius-rund);
@@ -2570,20 +2974,20 @@ pre{overflow-x:auto;background:var(--rauch);padding:var(--abstand-3);border-radi
 }
 .kachel-zeit{
   flex:0 0 auto;
-  font-family:var(--schrift-kopf);font-weight:600;
-  color:var(--dunkelblau);
+  font-family:var(--schrift-kopf);font-weight:500;
+  color:var(--text-titel);
   min-width:3.2em;
 }
 .kachel-rumpf{flex:1 1 auto;min-width:0}
 .kachel-kopf{display:flex;align-items:baseline;gap:var(--abstand-2)}
 .kachel-ort{
   flex:1 1 auto;min-width:0;
-  font-weight:600;font-size:var(--groesse-4);
+  font-weight:700;font-size:var(--groesse-4);
   overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
 }
 .kachel-km{flex:0 0 auto;color:var(--gedaempft);font-size:var(--groesse-2)}
 .kachel-dx{
-  color:var(--asphalt);
+  color:var(--text);
   display:-webkit-box;-webkit-box-orient:vertical;
   -webkit-line-clamp:2;line-clamp:2;overflow:hidden;
 }
@@ -2596,13 +3000,13 @@ pre{overflow-x:auto;background:var(--rauch);padding:var(--abstand-3);border-radi
   color:var(--gedaempft);font-size:var(--groesse-2);
 }
 /* Artzeichen und Datum als erstes Element (Suche, Zeitraum). */
-.kachel-art{flex:0 0 auto;color:var(--dunkelblau);align-self:center}
+.kachel-art{flex:0 0 auto;color:var(--text-titel);align-self:center}
 .kachel-datum{
   flex:0 0 auto;
-  font-family:var(--schrift-kopf);font-weight:600;color:var(--dunkelblau);
+  font-family:var(--schrift-kopf);font-weight:500;color:var(--text-titel);
 }
 /* Warnzeichen „vorhanden, aber nicht lesbar" in der Kachel. */
-.kachel .patfehler{color:var(--rot-tief)}
+.kachel .patfehler{color:var(--fehler-text)}
 
 /* ---- Tabelle: Verfeinerungen ---------------------------------------------
  * Der Baustein .tabelle steht in Abschnitt 14; hier kommt dazu, was die
@@ -2610,28 +3014,45 @@ pre{overflow-x:auto;background:var(--rauch);padding:var(--abstand-3);border-radi
  * .tabelle-scroll), Farbstreifen, blauer
  * Sortierpfeil, dunkelblaue Haken, die klickbare Zeile. */
 .tabelle{display:table}
-.tabelle-scroll{overflow-x:auto}
+.tabelle-scroll{overflow-x:auto;position:relative}
 .tabelle th.sortable{cursor:pointer;white-space:nowrap}
-.tabelle th.sortable:hover{color:var(--blau-tief)}
-.tabelle .arrow{color:var(--blau);vertical-align:middle}
+.tabelle th.sortable:hover{color:var(--text-link-hover)}
+.tabelle .arrow{color:var(--text-link);vertical-align:middle}
 .tabelle .arrow .symbol{width:var(--groesse-2);height:var(--groesse-2)}
-.tabelle .tabelle-haken{color:var(--dunkelblau)}
+.tabelle .tabelle-haken{color:var(--text-titel)}
 .tabelle .streifen{
   display:inline-block;width:var(--abstand-1);height:var(--abstand-5);
   border-radius:var(--radius-rund);vertical-align:middle;
 }
 .tabelle .streifen-spalte{width:var(--abstand-3)}
+/* IM DUNKELN EIN RAND (MA-05, E-MA-11). Der Streifen traegt die Spurfarbe
+ * der Karte, und die bleibt hell; `--spur-4` ist Dunkelblau und laege auf
+ * der dunkelblauen Karte unsichtbar. Ein Rand in `--linie-stark` (blau 300)
+ * fasst jeden Streifen ein, ohne seine Farbe zu aendern. */
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]) .tabelle .streifen,
+  :root:not([data-theme="light"]) .legende-linie{box-shadow:0 0 0 var(--strich) var(--linie-stark)}
+}
+:root[data-theme="dark"] .tabelle .streifen,
+:root[data-theme="dark"] .legende-linie{box-shadow:0 0 0 var(--strich) var(--linie-stark)}
+/* Die Karte (Leaflet) bleibt im Dunkeln hell (E-MA-14) und bekommt dafuer
+ * einen Rahmen in `--linie-stark`, damit die helle Flaeche nicht ohne Kante
+ * auf der dunklen Seite steht (Board MA-03). */
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]) .geo{box-shadow:0 0 0 var(--strich) var(--linie-stark)}
+}
+:root[data-theme="dark"] .geo{box-shadow:0 0 0 var(--strich) var(--linie-stark)}
 .tabelle tr.clickable{cursor:pointer}
-.tabelle tr.clickable:hover td{background:var(--rauch)}
+.tabelle tr.clickable:hover td{background:var(--flaeche-abgesetzt)}
 .tabelle tr.clickable:focus-visible{outline-offset:calc(var(--strich-stark) * -1)}
 .tabelle td.dash,.tabelle .patfehler{color:var(--gedaempft)}
-.tabelle .patfehler .symbol{color:var(--rot-tief)}
+.tabelle .patfehler .symbol{color:var(--fehler-text)}
 /* EIN ZEILENKOPF IST EINE BESCHRIFTUNG, KEINE SPALTENÜBERSCHRIFT.
  * `.tabelle th` steht auf `text-align:center` — richtig für die Kopfzeile,
  * falsch für die erste Spalte einer Kennzahlentabelle, in der links die
  * Beschriftung und rechts die Zahlen stehen. Die Regel greift NUR bei
  * `scope="row"`. */
-.tabelle th[scope="row"]{text-align:left;font-weight:600}
+.tabelle th[scope="row"]{text-align:left;font-weight:700}
 .tabelle td.zahl-spalte{text-align:right}
 .tabelle td.haken-spalte{text-align:center}
 /* Eine Dauer wie „1h 06min" ist EINE Angabe und wird nicht getrennt. */
@@ -2649,9 +3070,9 @@ pre{overflow-x:auto;background:var(--rauch);padding:var(--abstand-3);border-radi
 .karte-sortieren{
   display:inline-flex;align-items:center;justify-content:center;
   min-width:var(--knopf);min-height:var(--knopf);
-  color:var(--blau-tief);flex:0 0 auto;
+  color:var(--text-link);flex:0 0 auto;
 }
-.blatt-zeile.aktiv{background:var(--orange-hell);color:var(--dunkelblau)}
+.blatt-zeile.aktiv{background:var(--auswahl-flaeche);color:var(--auswahl-text)}
 
 /* ---- Wochentag im Titel: lang ab 720, kurz darunter ---------------------- */
 .wtag-lang{display:none}
@@ -2713,7 +3134,8 @@ pre{overflow-x:auto;background:var(--rauch);padding:var(--abstand-3);border-radi
  *
  * Der Marker-Satz gilt für alle drei Kartenseiten und entsteht in
  * assets/geo.js. Die Zeichnung: Schilder (Haus, Klinik) als weiße Kästchen;
- * der Einsatzort als oranger Kreis mit Pin; Start und Ende als blauer bzw.
+ * der Einsatzort als dunkelblauer Kreis mit Pin in Schnee (bis Schritt 26
+ * orange); Start und Ende als blauer bzw.
  * roter Rand am Schild des Ortes, an dem die Spur beginnt oder endet —
  * beides am selben Ort als Doppelrand. Richtungspfeile erscheinen erst ab
  * einer Zoomstufe, bei der sie nicht gedrängt stehen.
@@ -2727,8 +3149,8 @@ pre{overflow-x:auto;background:var(--rauch);padding:var(--abstand-3);border-radi
  *
  * AUSSEN LIEGT IMMER 1 px SCHNEE, am Schild und nur dort. Er trennt die
  * Farbe von der Karte, damit Blau nicht auf Grün und Rot nicht auf Braun
- * stößt. Der Einsatzort-Kreis bekommt ihn NICHT: Er ist orange auf einer
- * Karte, die kein Orange trägt, und freigegeben sind für ihn 28 px — mit
+ * stößt. Der Einsatzort-Kreis bekommt ihn NICHT: Er ist dunkelblau und
+ * trägt einen Schatten, und freigegeben sind für ihn 28 px — mit
  * Trennlinie wären es 30.
  *
  * DIE SCHATTENANGABEN TRAGEN DEN SCHLAGSCHATTEN MIT. Überschrieben die drei
@@ -2774,7 +3196,7 @@ pre{overflow-x:auto;background:var(--rauch);padding:var(--abstand-3);border-radi
 .geo-kreis{
   display:flex;align-items:center;justify-content:center;
   width:var(--geo-kreis);height:var(--geo-kreis);
-  background:var(--orange);color:var(--dunkelblau);
+  background:var(--dunkelblau);color:var(--schnee);
   border-radius:var(--radius-rund);
   box-shadow:var(--schatten);
 }
@@ -2867,7 +3289,7 @@ pre{overflow-x:auto;background:var(--rauch);padding:var(--abstand-3);border-radi
 
 /* ---- Einsatzphasen als Zeilenliste ---------------------------------------
  * Nummer gedämpft, Name, rechts die Uhrzeit mit dem Minutenabstand zur
- * vorigen Phase klein darunter. Die angetippte Zeile leuchtet orange und
+ * vorigen Phase klein darunter. Die angetippte Zeile trägt die Auswahlfläche und
  * hebt ihr Teilstück auf der Karte hervor (einsatz.php). */
 .phasen-zeile{
   display:grid;
@@ -2879,14 +3301,14 @@ pre{overflow-x:auto;background:var(--rauch);padding:var(--abstand-3);border-radi
 }
 .phasen > .phasen-zeile:first-child{border-top:0}
 .phasen-nr{color:var(--gedaempft)}
-.phasen-zeit{text-align:right;font-weight:600;color:var(--dunkelblau)}
+.phasen-zeit{text-align:right;font-weight:700;color:var(--text-titel)}
 .phasen-abstand{
   display:block;font-weight:400;
   color:var(--gedaempft);font-size:var(--groesse-2);
 }
-.phasen-zeile.hl{background:var(--orange-hell)}
+.phasen-zeile.hl{background:var(--auswahl-flaeche)}
 .phasen-zwischentitel{
-  font-size:var(--groesse-3);color:var(--dunkelblau);
+  font-size:var(--groesse-3);color:var(--text-titel);
   padding:var(--abstand-3) var(--abstand-4) 0;
 }
 
@@ -2900,21 +3322,21 @@ pre{overflow-x:auto;background:var(--rauch);padding:var(--abstand-3);border-radi
   background:var(--schnee);color:var(--dunkelblau);
   border:var(--strich) solid var(--dunkelblau);
   border-radius:var(--radius-klein);
-  font:600 var(--groesse-1)/1 var(--schrift-text);
+  font:700 var(--groesse-2)/1 var(--schrift-text);
   box-shadow:var(--schatten);
 }
-.pm-chip.hl{background:var(--orange);border-color:var(--orange-tief)}
+.pm-chip.hl{background:var(--genem-blau-100);border-color:var(--genem-dunkelblau)}
 .geo .map-ctrl-phase a{
   width:auto;height:auto;
   padding:var(--abstand-1) var(--abstand-2);
-  font:600 var(--groesse-1)/var(--zeile) var(--schrift-text);
+  font:700 var(--groesse-2)/var(--zeile) var(--schrift-text);
   color:var(--dunkelblau);
 }
 /* Der Vollbildknopf teilt den aktiven Zustand mit dem Phasenumschalter — ein
  * Selektor mehr, keine zweite Regel. Ohne ihn hiesse der Knopf im Vollbild
  * „Vollbild verlassen" und saehe aus wie vorher. */
 .geo .map-ctrl-phase a.active,
-.geo .map-ctrl-fs a.active{background:var(--orange-hell)}
+.geo .map-ctrl-fs a.active{background:var(--genem-blau-100)}
 
 /* ---- VOLLBILD ------------------------------------------------------------
  *
@@ -3022,12 +3444,12 @@ body.map-fs-lock{overflow:hidden}
   gap:0 var(--abstand-3);
 }
 
-/* Detailfelder eines Schalters: eingerückt hinter einer orangen Linie
+/* Detailfelder eines Schalters: eingerückt hinter einer Linie in `--linie-stark`
  * (etwa Cycles unter dem Windeneinsatz). */
 .childfields{
   margin:0 0 var(--abstand-3) var(--abstand-2);
   padding-left:var(--abstand-4);
-  border-left:var(--strich-stark) solid var(--orange);
+  border-left:var(--strich-stark) solid var(--linie-stark);
 }
 .fld-sub{margin-left:0}
 
@@ -3069,15 +3491,15 @@ label + .feld-klein{margin-bottom:var(--abstand-3)}
 
 .locstate{color:var(--gedaempft);font-size:var(--groesse-2);margin:var(--abstand-1) 0 0}
 .locstate:empty{display:none}
-.locstate-fehler{color:var(--rot-tief)}
+.locstate-fehler{color:var(--fehler-text)}
 
 /* ---- Chips (Koordinaten am Ortsfeld, gewählte Rettungsmittel) ------------ */
 .rmchips{display:flex;flex-wrap:wrap;gap:var(--abstand-1);align-items:center}
 .rmchip{
   display:inline-flex;align-items:center;
-  background:var(--blau-hell);color:var(--dunkelblau);
+  background:var(--auswahl-flaeche);color:var(--auswahl-text);
   border-radius:var(--radius-rund);
-  font-size:var(--groesse-2);font-weight:600;
+  font-size:var(--groesse-2);font-weight:700;
   /* GLEICH VIEL ABSTAND ZUM TEXT WIE ZUM RAND: 6 px beidseits des Symbols. 6 px ist keine Stufe des
    * Vierer-Rasters — es ist anderthalb `--abstand-1`, und genau so steht es
    * da, damit die Zahl ihre Herkunft behaelt. Links bleibt `--abstand-2`:
@@ -3118,12 +3540,12 @@ label + .feld-klein{margin-bottom:var(--abstand-3)}
 }
 /* Rueckmeldung ohne neue Flaeche: der Ton wird kraeftiger. Eine Fuellung
  * haette eine zweite Blauflaeche auf der ersten bedeutet. */
-.rmx:hover{color:var(--blau-tief)}
+.rmx:hover{color:var(--text-link)}
 /* Eingabefeld mit Chips darin (Weitere Rettungsmittel). */
 .rmbox{position:relative}
 .rmfeld{
   display:flex;flex-wrap:wrap;gap:var(--abstand-1);align-items:center;
-  background:var(--schnee);
+  background:var(--flaeche-karte);
   border:var(--strich) solid var(--linie-stark);
   border-radius:var(--radius-klein);
   padding:var(--abstand-1) var(--abstand-2);
@@ -3165,7 +3587,7 @@ label + .feld-klein{margin-bottom:var(--abstand-3)}
 .vorschlaege{
   position:absolute;left:0;right:0;z-index:35;
   margin:var(--abstand-1) 0 0;padding:0;list-style:none;
-  background:var(--schnee);
+  background:var(--flaeche-karte);
   border:var(--strich) solid var(--linie-stark);
   border-radius:var(--radius-klein);
   box-shadow:var(--schatten);
@@ -3175,9 +3597,9 @@ label + .feld-klein{margin-bottom:var(--abstand-3)}
  * Zeile zum Anfassen und traegt deshalb keine Bedienhoehe. */
 .vorschlaege-gruppe{
   padding:var(--abstand-1) var(--abstand-3);
-  font-family:var(--schrift-kopf);font-weight:600;font-size:var(--groesse-1);
+  font-family:var(--schrift-kopf);font-weight:500;font-size:var(--groesse-2);
   letter-spacing:.06em;text-transform:uppercase;color:var(--gedaempft);
-  background:var(--rauch);border-top:var(--strich) solid var(--linie);
+  background:var(--flaeche-abgesetzt);border-top:var(--strich) solid var(--linie);
 }
 .vorschlaege-gruppe:first-child{border-top:0}
 .vorschlag{
@@ -3196,16 +3618,15 @@ label + .feld-klein{margin-bottom:var(--abstand-3)}
 }
 /* Zeiger und Pfeiltaste teilen sich EINE Markierung — sonst haette die
  * Tastaturbedienung ein zweites Aussehen fuer dieselbe Aussage.
- * DER STRICH IST `--orange-tief`: Er steht hier allein — Rauch hebt sich
- * von Schnee kaum ab —, und Orange erreichte darauf 2,09:1. Die Regel aus
- * Design.md 3.1 und derselbe Tausch wie beim Reiter: 4,04:1. kontrast.py
- * leitet die Paare aus den Regeln ab und misst es. */
-.vorschlag:hover,.vorschlag.aktiv{background:var(--rauch);border-left-color:var(--orange-tief)}
+ * DER STRICH IST DIE AUSWAHLLINIE (Dunkelblau): Er steht hier allein — Rauch
+ * hebt sich von der Karte kaum ab —, und Dunkelblau erreicht darauf
+ * 12,4:1. kontrast.py leitet die Paare aus den Regeln ab und misst es. */
+.vorschlag:hover,.vorschlag.aktiv{background:var(--flaeche-abgesetzt);border-left-color:var(--auswahl-linie)}
 /* Die freie Eingabe ist eine HANDLUNG, kein Datensatz. */
 .vorschlag-neu .vorschlag-haupt{
-  color:var(--orange-tief);font-family:var(--schrift-kopf);font-weight:600;
+  color:var(--text-link);font-family:var(--schrift-kopf);font-weight:500;
 }
-.vorschlag-neu .symbol{color:var(--orange-tief)}
+.vorschlag-neu .symbol{color:var(--text-link)}
 /* Behaelter eines Textfeldes mit Vorschlagsliste (Besatzungsfelder). Das
  * Ortsfeld und die Rettungsmittelbox bringen ihren eigenen mit. */
 .feld-vorschlag{position:relative}
@@ -3226,24 +3647,24 @@ label + .feld-klein{margin-bottom:var(--abstand-3)}
   margin-bottom:var(--abstand-3);
 }
 .rea-ereignisse{margin-left:var(--abstand-2);padding-left:var(--abstand-3);
-  border-left:var(--strich-stark) solid var(--orange)}
-.zeile-weg{color:var(--rot)}
+  border-left:var(--strich-stark) solid var(--linie-stark)}
+.zeile-weg{color:var(--fehler-text)}
 
 /* ---- Schneide-Bereich -----------------------------------------------------
  *
  * Der aufklappbare Bereich unter einer Ruhesegment-Zeile: Aus dem Segment
  * wird ein Einsatz herausgeschnitten. Er GEHÖRT ZUR ZEILE DARÜBER, und das
- * sagt der orange Randstrich — dieselbe Form wie `.rea-ereignisse`, kein
+ * sagt der Randstrich in `--linie-stark` — dieselbe Form wie `.rea-ereignisse`, kein
  * neuer Gedanke.
  *
  * Kein eigener Farbwert und keine eigene Größe: Alles hier kommt aus den
- * vorhandenen Token. Die Zeitleiste benutzt `--sand` für die volle Dauer und
- * `--orange` für das Gewählte — dieselbe Aussage wie überall sonst („dieser
+ * vorhandenen Token. Die Zeitleiste benutzt `--mechanik` für die volle Dauer und
+ * `--aktion` für das Gewählte — dieselbe Aussage wie überall sonst („dieser
  * Teil ist gemeint"). */
 .schnitt-bereich{
   margin:var(--abstand-2) 0 var(--abstand-4) var(--abstand-2);
   padding:var(--abstand-3) 0 var(--abstand-3) var(--abstand-3);
-  border-left:var(--strich-stark) solid var(--orange);
+  border-left:var(--strich-stark) solid var(--linie-stark);
 }
 /* Untereinander, ab 720 px nebeneinander und gleich breit — dieselbe Form und
  * dieselbe Schwelle wie `.listen-form-felder`. `grid-auto-flow:column` statt
@@ -3267,7 +3688,7 @@ label + .feld-klein{margin-bottom:var(--abstand-3)}
  * in zwei Größen, je nach Fenster. Mit Prozentbreiten auf gewöhnlichen
  * Elementen bleibt der Text der Text und nur der Balken skaliert. */
 .schnitt-vorschau{
-  background:var(--rauch);
+  background:var(--flaeche-abgesetzt);
   border-radius:var(--radius);
   padding:var(--abstand-3) var(--abstand-3) var(--abstand-2);
   margin-bottom:var(--abstand-3);
@@ -3279,11 +3700,11 @@ label + .feld-klein{margin-bottom:var(--abstand-3)}
 .schnitt-leiste{position:relative;height:var(--abstand-4);margin-top:var(--abstand-5)}
 .schnitt-bahn{
   position:absolute;inset:0;
-  background:var(--sand);border-radius:var(--radius-rund);
+  background:var(--mechanik);border-radius:var(--radius-rund);
 }
 .schnitt-wahl{
   position:absolute;top:0;bottom:0;
-  background:var(--orange);border-radius:var(--radius-rund);
+  background:var(--aktion);border-radius:var(--radius-rund);
 }
 /* Schon einmal Geschnittenes: dieselbe Fläche, aber blasser — es ist kein
  * zweiter gewählter Bereich, sondern einer, der nicht mehr da ist. Ein
@@ -3297,14 +3718,14 @@ label + .feld-klein{margin-bottom:var(--abstand-3)}
 .schnitt-griff{
   position:absolute;top:calc(-1 * var(--abstand-1));
   bottom:calc(-1 * var(--abstand-1));
-  width:var(--strich-stark);background:var(--dunkelblau);
+  width:var(--strich-stark);background:var(--aktion);
 }
 /* Die Beschriftung am Griff: mittig darüber, und `translateX(-50%)` statt
  * einer gerechneten Verschiebung — die Textbreite kennt nur der Browser. */
 .schnitt-marke{
   position:absolute;bottom:calc(100% + var(--abstand-1));
   transform:translateX(-50%);
-  white-space:nowrap;font-size:var(--groesse-2);color:var(--dunkelblau);
+  white-space:nowrap;font-size:var(--groesse-2);color:var(--text-titel);
 }
 .schnitt-raender{
   display:flex;justify-content:space-between;
@@ -3312,11 +3733,11 @@ label + .feld-klein{margin-bottom:var(--abstand-3)}
   margin-top:var(--abstand-2);
 }
 
-/* Orange Anlegen-Wege in Kartenfüßen („+ Phase hinzufügen"). */
+/* Anlegen-Wege in Kartenfüßen („+ Phase hinzufügen") in der Linkfarbe. */
 .anlegen-link{
   display:inline-flex;align-items:center;gap:var(--abstand-2);
   min-height:var(--knopf);
-  color:var(--orange-tief);font-family:var(--schrift-kopf);font-weight:600;
+  color:var(--text-link);font-family:var(--schrift-kopf);font-weight:500;
 }
 .karte-fussweg{margin:0}
 
@@ -3415,13 +3836,13 @@ button.blatt-zeile{
 .feldblock{margin-bottom:var(--abstand-3)}
 
 /* Segmentwahl in der Filterspalte: leiser als die Segmentwahl im Inhalt —
- * hell orange mit orangem Rahmen statt voller Fläche. Bis zu
- * sieben davon stehen untereinander; sieben orange Balken wären ein Alarm,
+ * Auswahlfläche mit dunkelblauem Rahmen statt voller Fläche. Bis zu
+ * sieben davon stehen untereinander; sieben dunkle Balken wären laut,
  * und gemeint ist eine Einstellung. */
 .segment-filter .segment-taste{padding:0 var(--abstand-2)}
 .segment-filter .segment-box:checked + .segment-taste{
-  background:var(--orange-hell);color:var(--asphalt);
-  box-shadow:inset 0 0 0 var(--strich-stark) var(--orange);
+  background:var(--auswahl-flaeche);color:var(--auswahl-text);
+  box-shadow:inset 0 0 0 var(--strich-stark) var(--auswahl-linie);
 }
 /* Mehrfachwahl (Wochentage): dieselben Tasten, aber Kästchen statt
  * Radioknöpfen — mehrere Tage gleichzeitig sind der Regelfall. Sieben Tasten
@@ -3453,17 +3874,17 @@ button.blatt-zeile{
   width:var(--knopf);height:var(--knopf);
   border:0;background:none;color:var(--gedaempft);cursor:pointer;
 }
-.suchfeld-x:hover{color:var(--asphalt)}
+.suchfeld-x:hover{color:var(--text)}
 .filterknopf{flex:0 0 auto;min-height:var(--suchfeld)}
 
 .suchhinweis{margin-bottom:var(--abstand-3)}
 /* Ein Link mitten im Fließtext, der aufklappt statt zu navigieren. */
 .leiser-link{
   border:0;background:none;padding:0;cursor:pointer;
-  color:var(--blau-tief);font:inherit;font-weight:600;
+  color:var(--text-link);font:inherit;font-weight:700;
 }
 .suchsyntax{
-  background:var(--schnee);
+  background:var(--flaeche-karte);
   border:var(--strich) solid var(--linie);
   border-radius:var(--radius);
   padding:var(--abstand-3) var(--abstand-4);
@@ -3471,7 +3892,7 @@ button.blatt-zeile{
 }
 .suchsyntax li{margin-bottom:var(--abstand-1)}
 .suchsyntax code{
-  background:var(--rauch);border-radius:var(--radius-klein);
+  background:var(--flaeche-abgesetzt);border-radius:var(--radius-klein);
   padding:0 var(--abstand-1);
 }
 
@@ -3480,10 +3901,10 @@ button.blatt-zeile{
 /* ---- Trefferkarte -------------------------------------------------------- */
 .sortieren-aktion{margin-left:auto;position:relative}
 .karte-treffer .karte-aktion{margin-left:0}
-/* Das Trefferwort hell orange hinterlegt — die Fläche trägt hier
+/* Das Trefferwort in orange 100 hinterlegt (Textmarker) — die Fläche trägt hier
  * keine Bedeutung allein, sie zeigt nur, wo der Begriff steht; der Text
  * bleibt Asphalt und damit voll lesbar. */
-mark.treffer{background:var(--orange-hell);color:inherit;border-radius:var(--radius-klein)}
+mark.treffer{background:var(--warnung-flaeche);color:inherit;border-radius:var(--radius-klein)}
 
 /* Die Nachladezeile unter der Tabelle (missiontable.js, 200 Zeilen je Seite). */
 .mehrzeile{
@@ -3493,7 +3914,7 @@ mark.treffer{background:var(--orange-hell);color:inherit;border-radius:var(--rad
 
 /* Artzeichen, Datum und Beginn der Kachel stehen in einer Zeile;
  * das Zeichen sitzt vor dem Datum und nimmt die Farbe der Zeile an. */
-.kachel-art{margin-right:var(--abstand-1);color:var(--dunkelblau)}
+.kachel-art{margin-right:var(--abstand-1);color:var(--text-titel)}
 .kachel-art .symbol{vertical-align:-.15em}
 .kachel-datum{white-space:nowrap}
 /* Mit Datum braucht die Zeitspalte mehr Platz als die reine Uhrzeit. */
@@ -3573,16 +3994,16 @@ mark.treffer{background:var(--orange-hell);color:inherit;border-radius:var(--rad
  * aktiven Diensttag (`.eintrag.aktiv`), damit „hier stehe ich" überall
  * gleich aussieht. */
 .akkordeon.aktiv > .akkordeon-zeile{
-  background:var(--orange-hell);
-  box-shadow:inset var(--strich-stark) 0 0 var(--orange);
+  background:var(--auswahl-flaeche);
+  box-shadow:inset var(--strich-stark) 0 0 var(--auswahl-linie);
 }
-.akkordeon.aktiv > .akkordeon-zeile .akkordeon-text{color:var(--dunkelblau)}
+.akkordeon.aktiv > .akkordeon-zeile .akkordeon-text{color:var(--auswahl-text)}
 
-/* Die Zeile des Extremwert-Trägers, hell orange statt rot: Rot
- * heißt in dieser Oberfläche „Aufmerksamkeit" — ein Höchstwert ist kein
+/* Die Zeile des Extremwert-Trägers, orange 100 statt rot: Rot
+ * heißt in dieser Oberfläche „Fehler" — ein Höchstwert ist kein
  * Fehler. Gilt für die Tabellenzeile ab 720 px und die Kachel darunter. */
-.hl-extrem{background:var(--orange-hell)}
-tr.hl-extrem td{background:var(--orange-hell)}
+.hl-extrem{background:var(--warnung-flaeche)}
+tr.hl-extrem td{background:var(--warnung-flaeche)}
 
 
 /* ===========================================================================
@@ -3609,27 +4030,27 @@ input[type=radio].wahl-box{position:absolute;opacity:0;width:0;height:0;min-heig
   border-radius:var(--radius-klein);
   cursor:pointer;
 }
-.wahl-zeile:hover{background:var(--rauch)}
+.wahl-zeile:hover{background:var(--flaeche-abgesetzt)}
 .wahl-punkt{
   flex:0 0 auto;width:var(--symbol);height:var(--symbol);
   border:var(--strich-stark) solid var(--linie-stark);
   border-radius:var(--radius-rund);
-  background:var(--schnee);
+  background:var(--flaeche-feld);
 }
-.wahl-text{flex:1 1 auto;font-weight:600;color:var(--dunkelblau)}
+.wahl-text{flex:1 1 auto;font-weight:700;color:var(--text-titel)}
 .wahl-zusatz{flex:0 0 auto;color:var(--gedaempft);font-size:var(--groesse-2)}
 
-/* Gewählt: hell orange mit orangem Rahmen und gefülltem Punkt — dieselbe
+/* Gewählt: Auswahlfläche mit dunkelblauem Rahmen und gefülltem Punkt — dieselbe
  * Sprache wie die aktive Kennzahl-Kachel und der aktive Leisteneintrag. */
-.wahl-box:checked + .wahl-zeile{background:var(--orange-hell)}
+.wahl-box:checked + .wahl-zeile{background:var(--auswahl-flaeche)}
 .wahl-box:checked + .wahl-zeile .wahl-punkt{
-  border-color:var(--orange);
-  box-shadow:inset 0 0 0 var(--strich-stark) var(--schnee);
-  background:var(--orange);
+  border-color:var(--auswahl-linie);
+  box-shadow:inset 0 0 0 var(--strich-stark) var(--flaeche-feld);
+  background:var(--aktion);
 }
 /* Der Fokusring gehört an die ZEILE, nicht an das versteckte Radio: Sonst
  * ist die Tastaturbedienung unsichtbar. */
-.wahl-box:focus-visible + .wahl-zeile{outline:var(--strich-stark) solid var(--blau);outline-offset:var(--strich-stark)}
+.wahl-box:focus-visible + .wahl-zeile{outline:var(--strich-stark) solid var(--fokus);outline-offset:var(--strich-stark)}
 
 /* Unter 480 px rutscht der Zusatz unter den Text — „zurzeit Hubschrauber
  * (RTH)" neben „Standard der Installation" sprengt sonst jede Zeile. */
@@ -3660,21 +4081,22 @@ input[type=radio].wahl-box{position:absolute;opacity:0;width:0;height:0;min-heig
   border-radius:var(--radius-klein);
   background:var(--linie);
 }
-.pwstaerke-text{font-weight:600;color:var(--dunkelblau)}
+.pwstaerke-text{font-weight:700;color:var(--text-titel)}
 /* Der Hinweissatz steht in eigener Zeile — er ist zwei Zeilen lang und
  * schöbe die Stufe sonst aus dem Bild. */
 .pwstaerke-hinweis{flex:1 0 100%}
 
-/* Rot bis Stufe 0, orange für 1–2, Dunkelblau ab 3: dieselbe Bedeutung wie
- * überall — Rot ist ein Halt, Orange ein Hinweis, Dunkelblau die Ruhe. */
-.pwq-0 .pwstaerke-balken > span.an{background:var(--rot)}
-.pwq-0 .pwstaerke-text{color:var(--rot-tief)}
+/* Rot bis Stufe 0, orange für 1–2, grün ab 3: dieselbe Bedeutung wie
+ * überall — Rot ist ein Halt, Orange ein Hinweis, Grün „in Ordnung" (bis
+ * Schritt 26 Dunkelblau). */
+.pwq-0 .pwstaerke-balken > span.an{background:var(--fehler-linie)}
+.pwq-0 .pwstaerke-text{color:var(--fehler-text)}
 .pwq-1 .pwstaerke-balken > span.an,
-.pwq-2 .pwstaerke-balken > span.an{background:var(--orange)}
+.pwq-2 .pwstaerke-balken > span.an{background:var(--warnung-linie)}
 .pwq-1 .pwstaerke-text,
-.pwq-2 .pwstaerke-text{color:var(--orange-tief)}
+.pwq-2 .pwstaerke-text{color:var(--warnung-text)}
 .pwq-3 .pwstaerke-balken > span.an,
-.pwq-4 .pwstaerke-balken > span.an{background:var(--dunkelblau)}
+.pwq-4 .pwstaerke-balken > span.an{background:var(--erfolg-linie)}
 
 /* VERWALTUNGSLISTEN. Erklärtext auf drei Zeilen unter dem Titel,
  * dann die Karte mit Zeilen und darunter — IN derselben Karte — das
@@ -3698,8 +4120,8 @@ h1 + .seiten-erklaerung{margin-top:0}
   margin-top:var(--abstand-3);
 }
 .listen-form-titel{
-  font-family:var(--schrift-kopf);font-weight:600;
-  font-size:var(--groesse-3);color:var(--dunkelblau);
+  font-family:var(--schrift-kopf);font-weight:500;
+  font-size:var(--groesse-3);color:var(--text-titel);
   margin:0 0 var(--abstand-2);
 }
 .listen-form-felder{display:grid;gap:var(--abstand-3)}
@@ -3717,9 +4139,9 @@ h1 + .seiten-erklaerung{margin-top:0}
   .listen-form-felder{grid-template-columns:1fr 1fr;align-items:start}
 }
 
-/* Der Vorbelegungsstern in der Zeile: orange, weil er eine Auszeichnung ist
- * und keine Warnung. */
-.zeile-stern{color:var(--orange)}
+/* Der Vorbelegungsstern in der Zeile: Dunkelblau, weil er eine Auszeichnung
+ * ist und keine Warnung (bis Schritt 26 orange). */
+.zeile-stern{color:var(--aktion)}
 
 /* Die Knopfreihe der Zeilenaktionen (Desktop). Mobil steht dort das „⋯",
  * das der Aktionsblatt-Baustein mitbringt.
@@ -3734,11 +4156,12 @@ h1 + .seiten-erklaerung{margin-top:0}
   .zeile-knoepfe{display:flex;flex-wrap:wrap;gap:var(--abstand-2);justify-content:flex-end}
 }
 
-/* „Als Vorbelegung" ist leise UND orange: Sie ist eine
- * Auszeichnung, kein Hauptweg — ein voller Orangeknopf neben „Bearbeiten"
+/* „Als Vorbelegung" ist leise und in der Linkfarbe (der Klassenname stammt
+ * aus der Zeit, als sie orange war): Sie ist eine
+ * Auszeichnung, kein Hauptweg — ein voller Primärknopf neben „Bearbeiten"
  * und „Löschen" behauptete, sie sei die zu erwartende Handlung. */
-.knopf-leise-orange{color:var(--orange-tief)}
-.knopf-leise-orange .symbol{color:var(--orange)}
+.knopf-leise-orange{color:var(--text-link)}
+.knopf-leise-orange .symbol{color:var(--text-link)}
 
 /* Die Listen innerhalb einer Standort-Karte (Rettungsmittel, Besatzung,
  * Zielkliniken, weitere Rettungsmittel, Bergwacht). Sie sind Abschnitte,
@@ -3765,8 +4188,8 @@ h1 + .seiten-erklaerung{margin-top:0}
 /* Die Rolle innerhalb der Besatzungsliste — eine Ebene tiefer als der
  * Listentitel, deshalb kleiner und ohne eigene Linie. */
 .sd-rolle{
-  font-family:var(--schrift-kopf);font-weight:600;
-  font-size:var(--groesse-3);color:var(--dunkelblau);
+  font-family:var(--schrift-kopf);font-weight:500;
+  font-size:var(--groesse-3);color:var(--text-titel);
   margin:var(--abstand-4) 0 var(--abstand-2);
 }
 /* Der Klammerzusatz an einer Feldbeschriftung („(optional)"). */
@@ -3782,7 +4205,7 @@ h1 + .seiten-erklaerung{margin-top:0}
  * Eingabefeld zuständig (.feld-fest). Den Baustein benutzen sechs andere
  * Stellen. */
 .codeblock{
-  background:var(--rauch);
+  background:var(--flaeche-abgesetzt);
   border:var(--strich) solid var(--linie);
   border-radius:var(--radius);
   padding:var(--abstand-3);
@@ -3795,8 +4218,8 @@ h1 + .seiten-erklaerung{margin-top:0}
 .codeblock-titel:not(:first-child){margin-top:var(--abstand-3)}
 .codeblock-wert{
   font-family:var(--schrift-fest);
-  font-size:var(--groesse-5);font-weight:600;
-  color:var(--dunkelblau);
+  font-size:var(--groesse-5);font-weight:700;
+  color:var(--text-titel);
   letter-spacing:.06em;
   word-break:break-all;
   margin:0;
@@ -3824,7 +4247,7 @@ h1 + .seiten-erklaerung{margin-top:0}
 .codeblock-wert-lang{
   font-family:var(--schrift-fest);
   font-size:var(--groesse-2);font-weight:400;
-  color:var(--dunkelblau);
+  color:var(--text-titel);
   word-break:break-all;
   line-height:1.5;
   margin:0;
@@ -3877,13 +4300,13 @@ h1 + .seiten-erklaerung{margin-top:0}
   margin-right:var(--abstand-1);
   vertical-align:middle;
 }
-/* Die vier Arten und „frei". Blau und Dunkelblau für die beiden Backup-Arten
+/* Die vier Arten und „frei" (`--diagramm-1` bis `-4`). Blau und Dunkelblau für die beiden Backup-Arten
  * (sie gehören zusammen), Orange für die Datenbank (sie wächst und ist der
  * Grund, warum die Grenze NICHT für sie gilt), Sand für die Dateien. */
-.sb-konto{background:var(--blau)}
-.sb-komplett{background:var(--dunkelblau)}
-.sb-db{background:var(--orange)}
-.sb-dateien{background:var(--sand)}
+.sb-konto{background:var(--diagramm-1)}
+.sb-komplett{background:var(--diagramm-2)}
+.sb-db{background:var(--diagramm-3)}
+.sb-dateien{background:var(--diagramm-4)}
 .sb-frei{background:var(--linie)}
 
 /* ZUSTANDSZEILE — Fortschritt und Ergebnis einer langen Handlung (Backup,
@@ -3912,10 +4335,10 @@ h1 + .seiten-erklaerung{margin-top:0}
 }
 .ladeplatz-ring{
   width:var(--symbol-klein);height:var(--symbol-klein);flex:0 0 var(--symbol-klein);border-radius:50%;
-  border:var(--strich-stark) solid var(--linie);border-top-color:var(--orange-tief);
+  border:var(--strich-stark) solid var(--linie);border-top-color:var(--aktion);
   animation:ladeplatz-dreh 900ms linear infinite;
 }
-.ladeplatz-still .ladeplatz-ring{animation:none;border-color:var(--orange-tief)}
+.ladeplatz-still .ladeplatz-ring{animation:none;border-color:var(--aktion)}
 @keyframes ladeplatz-dreh{to{transform:rotate(360deg)}}
 .geo .ladeplatz{
   position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:500;
@@ -3926,13 +4349,13 @@ h1 + .seiten-erklaerung{margin-top:0}
 /* BALKEN — Fortschritt eines langen Laufs, IN der Zustandszeile unter dem
  * Ladeplatz (Verwender: der Wartungslauf). Hoehe wie die Glieder des
  * Passwortbalkens (`--strich-balken`), Flaeche `--linie`, Fuellung
- * `--orange-tief` (3,2 : 1 auf `--linie`, fuer eine Grafik genug). Die Breite
+ * `--aktion` (Dunkelblau, 10,6 : 1 auf `--linie`). Die Breite
  * der Fuellung setzt das Skript; `role="progressbar"` traegt den Wert. */
 .balken{
   height:var(--strich-balken);border-radius:calc(var(--strich-balken) / 2);
   background:var(--linie);overflow:hidden;margin-top:var(--abstand-2);
 }
-.balken > i{display:block;height:100%;width:0;background:var(--orange-tief)}
+.balken > i{display:block;height:100%;width:0;background:var(--aktion)}
 /* Geht eine Huelle nicht auf, steht die Meldung an der Stelle des
  * Ladeplatzes — mittig in der Kartenflaeche. */
 .geo > [data-ortsdaten]{
@@ -3955,8 +4378,8 @@ h1 + .seiten-erklaerung{margin-top:0}
  * rot geflutete Fläche zwingt jeden Text darin auf einen zweiten Kontrastwert
  * und macht das Formular darin schwerer lesbar — die Warnung soll den Rahmen
  * betreffen, nicht die Eingabe. */
-.karte-gefahr{border-color:var(--rot)}
-.karte-gefahr .karte-titel{color:var(--rot-tief)}
+.karte-gefahr{border-color:var(--fehler-linie)}
+.karte-gefahr .karte-titel{color:var(--fehler-text)}
 
 
 /* ---- Statuskacheln mit Ton -----------------------------------------------
@@ -3964,11 +4387,11 @@ h1 + .seiten-erklaerung{margin-top:0}
  * angesehen werden", Rot für „das fehlt". Dieselben zwei Töne wie bei der
  * Plakette, dieselbe Bedeutung. Als Verweis behält sie ihre Farben und
  * bekommt beim Überfahren nur den Rahmen. */
-.kennzahl-orange{background:var(--orange-hell);border-color:var(--orange)}
-.kennzahl-rot{background:var(--rosa);border-color:var(--rot)}
-.kennzahl-rot .kennzahl-wert{color:var(--rot-tief)}
+.kennzahl-orange{background:var(--warnung-flaeche);border-color:var(--warnung-linie)}
+.kennzahl-rot{background:var(--fehler-flaeche);border-color:var(--fehler-linie)}
+.kennzahl-rot .kennzahl-wert{color:var(--fehler-text)}
 a.kennzahl{display:block;text-decoration:none;color:inherit}
-a.kennzahl:hover{border-color:var(--blau);text-decoration:none}
+a.kennzahl:hover{border-color:var(--aktion);text-decoration:none}
 
 
 /* ---- Kopf einer langen Liste: Suche und Filter --------------------------- */
@@ -3992,8 +4415,8 @@ a.kennzahl:hover{border-color:var(--blau);text-decoration:none}
 /* FILTERREIHE (.filterreihe) — Verweise, keine Knöpfe im Formular: Ein Filter
  * ändert die angezeigte Liste, und das ist eine Navigation. So trägt jeder
  * Filter eine eigene Adresse (teilbar, im Verlauf, mit der Zurück-Taste
- * erreichbar), und er funktioniert ohne Skript. Der aktive ist orange
- * hinterlegt — dieselbe Auszeichnung wie die aktive Kennzahl. */
+ * erreichbar), und er funktioniert ohne Skript. Der aktive trägt die
+ * Auswahlfläche — dieselbe Auszeichnung wie die aktive Kennzahl. */
 .filterreihe{display:flex;flex-wrap:wrap;gap:var(--abstand-2)}
 /* Ein Auswahlfeld in der Filterreihe („Art") ist so hoch wie ein
  * Filter und nur so breit, wie es muss. */
@@ -4009,12 +4432,12 @@ a.kennzahl:hover{border-color:var(--blau);text-decoration:none}
   min-height:var(--knopf);padding:0 var(--abstand-3);
   border:var(--strich) solid var(--linie-stark);
   border-radius:var(--radius);
-  background:var(--schnee);color:var(--dunkelblau);
-  font-family:var(--schrift-kopf);font-weight:600;
+  background:var(--flaeche-karte);color:var(--text-titel);
+  font-family:var(--schrift-kopf);font-weight:500;
   text-decoration:none;white-space:nowrap;
 }
-.listenfilter:hover{background:var(--rauch);text-decoration:none}
-.listenfilter.aktiv{background:var(--orange-hell);border-color:var(--orange)}
+.listenfilter:hover{background:var(--flaeche-abgesetzt);text-decoration:none}
+.listenfilter.aktiv{background:var(--auswahl-flaeche);border-color:var(--auswahl-linie)}
 /* Die Zahl ist eine eigene Fläche, damit sie sich vom Wort abhebt, ohne eine
  * zweite Schriftgröße zu brauchen.
  *
@@ -4029,10 +4452,10 @@ a.kennzahl:hover{border-color:var(--blau);text-decoration:none}
   min-width:calc(var(--symbol) + var(--abstand-1));
   padding:0 var(--abstand-1);
   border-radius:var(--radius-klein);
-  background:var(--rauch);color:var(--gedaempft);
-  font-size:var(--groesse-1);
+  background:var(--flaeche-abgesetzt);color:var(--gedaempft);
+  font-size:var(--groesse-2);
 }
-.listenfilter.aktiv .listenfilter-zahl{background:var(--orange);color:var(--knopf-primaer-schrift)}
+.listenfilter.aktiv .listenfilter-zahl{background:var(--aktion);color:var(--auf-aktion)}
 
 /* ZEITRAUMWAHL (.zeitraumwahl) — die
  * Filterreihe der Statistik: feste Fenster als Pillen (9.18a) und zwei
@@ -4056,30 +4479,30 @@ a.kennzahl:hover{border-color:var(--blau);text-decoration:none}
  * beide aus PHP, ohne Bibliothek und ohne Skript: Säulen über die Zeit
  * (`ui_diagramm_saeulen()`) und Anteile als Balken (`ui_diagramm_balken()`).
  *
- * EINE FARBE JE DIAGRAMM. Blau erklärt; der Höchstwert steht in Orange tief
- * und trägt seine Zahl: Orange auf Schnee erreicht 2,23 : 1 und verfehlte
- * als Grafik die 3 : 1 aus WCAG 1.4.11 — dasselbe wie beim Rückstandspunkt
- * der App. Die Schrift steht in Asphalt und
+ * EINE FARBE JE DIAGRAMM. Blau erklärt; der Höchstwert steht in orange 600
+ * (`--diagramm-hoechst`) und trägt seine Zahl: Orange 500 auf Schnee
+ * erreicht 2,23 : 1 und verfehlte als Grafik die 3 : 1 aus WCAG 1.4.11,
+ * orange 600 erreicht 3,72 : 1. Die Schrift steht in Asphalt und
  * Gedämpft, nie in der Reihenfarbe; Gitter in Linie, die Nulllinie stärker
  * in Gedämpft. */
 .diagramm{margin:0 0 var(--abstand-3)}
 .diagramm-saeulen{display:block;overflow:visible}
 .diagramm-saeulen .gitter{stroke:var(--linie);stroke-width:1}
 .diagramm-saeulen .nulllinie{stroke:var(--gedaempft);stroke-width:1}
-.diagramm-saeulen .achse{fill:var(--gedaempft);font-size:var(--groesse-1)}
+.diagramm-saeulen .achse{fill:var(--gedaempft);font-size:var(--groesse-2)}
 .diagramm-saeulen .achse-x{text-anchor:middle}
-.diagramm-saeulen .saeule-wert{fill:var(--blau)}
-.diagramm-saeulen .hoechst .saeule-wert{fill:var(--orange-tief)}
+.diagramm-saeulen .saeule-wert{fill:var(--diagramm-wert)}
+.diagramm-saeulen .hoechst .saeule-wert{fill:var(--diagramm-hoechst)}
 .diagramm-saeulen .saeule-flaeche{fill:transparent}
 /* DIE ZAHL EINER SÄULE STEHT NUR BEIM ÜBERFAHREN — die des Höchstwerts
  * immer. Ohne Skript: `:hover` an der Gruppe, deren unsichtbare Fläche die
  * ganze Spalte deckt, damit auch eine niedrige Säule zu treffen ist. */
-.diagramm-saeulen .saeule-zahl{fill:var(--asphalt);font-size:var(--groesse-1);
-  font-weight:600;text-anchor:middle;visibility:hidden}
+.diagramm-saeulen .saeule-zahl{fill:var(--text);font-size:var(--groesse-2);
+  font-weight:700;text-anchor:middle;visibility:hidden}
 .diagramm-saeulen .saeule:hover .saeule-zahl,
 .diagramm-saeulen .hoechst .saeule-zahl{visibility:visible}
-.diagramm-saeulen .saeule:hover .saeule-wert{fill:var(--blau-tief)}
-.diagramm-saeulen .hoechst:hover .saeule-wert{fill:var(--orange-tief)}
+.diagramm-saeulen .saeule:hover .saeule-wert{fill:var(--diagramm-wert-hover)}
+.diagramm-saeulen .hoechst:hover .saeule-wert{fill:var(--diagramm-hoechst)}
 @media (max-width:479px){
   .diagramm-saeulen .achse-breit{display:none}
 }
@@ -4092,11 +4515,11 @@ a.kennzahl:hover{border-color:var(--blau);text-decoration:none}
   .kleinvielfach{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
 .kleinvielfach-titel{font-family:var(--schrift-kopf);font-size:var(--groesse-3);
-  margin:0 0 var(--abstand-1);color:var(--dunkelblau)}
-.kleinvielfach-wert{margin:0 0 var(--abstand-2);color:var(--asphalt);
-  font-family:var(--schrift-kopf);font-size:var(--groesse-5);font-weight:600}
+  margin:0 0 var(--abstand-1);color:var(--text-titel)}
+.kleinvielfach-wert{margin:0 0 var(--abstand-2);color:var(--text);
+  font-family:var(--schrift-kopf);font-size:var(--groesse-5);font-weight:500}
 .kleinvielfach-wert span{margin-left:var(--abstand-1);color:var(--gedaempft);
-  font-family:var(--schrift-text);font-size:var(--groesse-1);font-weight:400}
+  font-family:var(--schrift-text);font-size:var(--groesse-2);font-weight:400}
 
 /* Balken: Beschriftung, Spur, Zahl in einer Zeile; die Spur in Linie, die
  * Füllung in Blau. */
@@ -4107,7 +4530,7 @@ a.kennzahl:hover{border-color:var(--blau);text-decoration:none}
 .balken-text .zeile-klein{display:block}
 .balken-spur{display:block}
 .balken-grund{fill:var(--linie)}
-.balken-fuellung{fill:var(--blau)}
+.balken-fuellung{fill:var(--diagramm-wert)}
 .balken-zahl{min-width:3ch;text-align:right;font-variant-numeric:tabular-nums}
 
 
@@ -4115,7 +4538,7 @@ a.kennzahl:hover{border-color:var(--blau);text-decoration:none}
 /* Name und Adresse stehen untereinander in EINER Zelle: Zwei
  * Spalten dafür kosteten Breite und träfen doch nie beide zugleich zu — ein
  * Konto ohne Namen hat nur die Adresse. */
-.konto-name{display:block;font-weight:600;color:var(--dunkelblau)}
+.konto-name{display:block;font-weight:700;color:var(--text-titel)}
 .konto-mail{display:block;color:var(--gedaempft);font-size:var(--groesse-2)}
 .tabelle-konten .wahl-spalte{width:var(--knopf);text-align:center}
 .tabelle-konten .oeffnen-spalte{width:1%;text-align:right;white-space:nowrap}
@@ -4123,11 +4546,11 @@ a.kennzahl:hover{border-color:var(--blau);text-decoration:none}
   display:inline-flex;align-items:center;gap:var(--abstand-1);
   color:inherit;text-decoration:none;
 }
-.tabelle-konten th.sortable a:hover{color:var(--blau-tief);text-decoration:none}
+.tabelle-konten th.sortable a:hover{color:var(--text-link);text-decoration:none}
 .oeffnen{
   display:inline-flex;align-items:center;gap:var(--abstand-1);
-  min-height:var(--knopf);color:var(--blau-tief);
-  font-family:var(--schrift-kopf);font-weight:600;
+  min-height:var(--knopf);color:var(--text-link);
+  font-family:var(--schrift-kopf);font-weight:500;
 }
 
 /* Das Kästchen vor dem Text einer Zeile (mobile Fassung derselben Liste). */
@@ -4150,17 +4573,17 @@ a.kennzahl:hover{border-color:var(--blau);text-decoration:none}
   min-width:var(--knopf);min-height:var(--knopf);padding:0 var(--abstand-2);
   border:var(--strich) solid var(--linie-stark);
   border-radius:var(--radius);
-  background:var(--schnee);color:var(--dunkelblau);
-  font-family:var(--schrift-kopf);font-weight:600;
+  background:var(--flaeche-karte);color:var(--text-titel);
+  font-family:var(--schrift-kopf);font-weight:500;
   text-decoration:none;
 }
-.seitenknopf:hover{background:var(--rauch);text-decoration:none}
-.seitenknopf.aktiv{background:var(--orange-hell);border-color:var(--orange)}
+.seitenknopf:hover{background:var(--flaeche-abgesetzt);text-decoration:none}
+.seitenknopf.aktiv{background:var(--auswahl-flaeche);border-color:var(--auswahl-linie)}
 /* Der Pfeil am Rand bleibt STEHEN, wenn es nichts mehr gibt, statt zu
  * verschwinden: Ein Knopf, der sich beim Blättern in Luft auflöst, verschiebt
  * die übrigen unter dem Finger weg. */
-.seitenknopf.aus{color:var(--sand);border-color:var(--linie);cursor:default}
-.seitenknopf.aus:hover{background:var(--schnee)}
+.seitenknopf.aus{color:var(--mechanik);border-color:var(--linie);cursor:default}
+.seitenknopf.aus:hover{background:var(--flaeche-karte)}
 .seitenluecke{
   display:inline-flex;align-items:center;justify-content:center;
   min-width:var(--knopf);min-height:var(--knopf);color:var(--gedaempft);
@@ -4168,7 +4591,7 @@ a.kennzahl:hover{border-color:var(--blau);text-decoration:none}
 
 /* Die Zahl der Sammelleiste ist IMMER sichtbar (der Hinweis eines schmutzigen
  * Formulars erscheint erst ab 720 px). Sie ist die ganze Aussage der Leiste. */
-.speichern-zahl{display:block;color:var(--asphalt);font-weight:600}
+.speichern-zahl{display:block;color:var(--text);font-weight:700}
 
 
 /* ===========================================================================
@@ -4258,8 +4681,8 @@ a.kennzahl:hover{border-color:var(--blau);text-decoration:none}
   height:var(--knopf);padding:0 var(--abstand-3) 0 var(--abstand-2);
   border:var(--strich) solid var(--linie-stark);
   border-radius:var(--radius-rund);
-  background:var(--schnee);color:var(--dunkelblau);
-  font-family:var(--schrift-kopf);font-weight:600;font-size:var(--groesse-2);
+  background:var(--flaeche-karte);color:var(--text-titel);
+  font-family:var(--schrift-kopf);font-weight:500;font-size:var(--groesse-2);
   text-decoration:none;white-space:nowrap;
 }
 /* Ohne Artzeichen steht der Text sonst zu weit links an der Rundung. */
@@ -4268,11 +4691,11 @@ a.kennzahl:hover{border-color:var(--blau);text-decoration:none}
   width:var(--symbol-klein);height:var(--symbol-klein);
   margin-right:var(--abstand-1);color:var(--gedaempft);flex:0 0 auto;
 }
-.sprungziel:hover{background:var(--rauch);text-decoration:none}
+.sprungziel:hover{background:var(--flaeche-abgesetzt);text-decoration:none}
 /* `.aktiv` und nicht `.ziel` — ein Name für „hier stehst du", derselbe wie an
  * Kennzahl, Listenfilter, Leisteneintrag und Seitenknopf. */
-.sprungziel.aktiv{background:var(--orange-hell);border-color:var(--orange)}
-.sprungziel.aktiv .symbol{color:var(--orange-tief)}
+.sprungziel.aktiv{background:var(--auswahl-flaeche);border-color:var(--auswahl-linie)}
+.sprungziel.aktiv .symbol{color:var(--auswahl-text)}
 
 /* DER FILTER HEISST `.kartenfilter` UND NICHT `.filterfeld`: `.filterfelder`
  * (Mehrzahl) ist der Innenabstand einer aufgeklappten Filtergruppe
@@ -4307,7 +4730,7 @@ a.kennzahl:hover{border-color:var(--blau);text-decoration:none}
   width:var(--knopf);height:var(--knopf);
   border:0;background:none;color:var(--gedaempft);cursor:pointer;
 }
-.kartenfilter-x:hover{color:var(--asphalt)}
+.kartenfilter-x:hover{color:var(--text)}
 /* Der Leerzustand ist ein gewöhnlicher Hinweis; er braucht nur den Abstand,
  * den die weggefilterten Zeilen hinterlassen. */
 .kartenfilter-leer{margin:var(--abstand-3) 0 0}
@@ -4366,7 +4789,7 @@ a.kennzahl:hover{border-color:var(--blau);text-decoration:none}
  * ======================================================================== */
 .imp-roll{container-type:inline-size}
 .imp-daygroup td{
-  background:var(--rauch);
+  background:var(--flaeche-abgesetzt);
   border-top:var(--strich-stark) solid var(--linie);
   padding:0;
 }
@@ -4380,8 +4803,8 @@ a.kennzahl:hover{border-color:var(--blau);text-decoration:none}
  * Datenzeile ist in dieser Anwendung die Schriftfamilie, nicht das Gewicht —
  * `<strong>` allein hat genau deshalb nicht gereicht. */
 .imp-tag{
-  font-family:var(--schrift-kopf);font-weight:600;
-  font-size:var(--groesse-3);color:var(--dunkelblau);
+  font-family:var(--schrift-kopf);font-weight:500;
+  font-size:var(--groesse-3);color:var(--text-titel);
 }
 .imp-rest{color:var(--gedaempft);font-size:var(--groesse-2)}
 /* DIE EINE ABWEICHUNG VOM BAUSTEIN, und sie ist noetig: `.plakette` steht auf
@@ -4482,8 +4905,8 @@ a.kennzahl:hover{border-color:var(--blau);text-decoration:none}
  * REITER (.reiter-rahmen, .reiter, .reiter-punkt, .reiter-abgesetzt) — NEUER
  * BAUSTEIN, freigegeben mit Mockup. Wechsel zwischen
  * gleichrangigen Sichten EINER Seite; serverseitig, jeder Reiter ist ein
- * Verweis (`ui_reiter()`). Orange heisst wie in der Kopfleiste „hier stehst
- * du" — hier in der tiefen Stufe, weil der Strich auf Rauch steht. Unter
+ * Verweis (`ui_reiter()`). Der dunkelblaue Strich heisst wie in der
+ * Kopfleiste „hier stehst du". Unter
  * 720 px rollt die Reihe in ihrem EIGENEN Behaelter — die Seite selbst
  * laeuft nie waagerecht aus dem Bild (Grundregel Kapitel 6).
  * ======================================================================== */
@@ -4496,16 +4919,16 @@ a.kennzahl:hover{border-color:var(--blau);text-decoration:none}
 .reiter-punkt{
   flex:0 0 auto;display:inline-flex;align-items:center;
   min-height:var(--knopf);padding:0 var(--abstand-3);
-  font-family:var(--schrift-kopf);font-weight:600;color:var(--gedaempft);
+  font-family:var(--schrift-kopf);font-weight:500;color:var(--gedaempft);
   text-decoration:none;white-space:nowrap;
   border-bottom:var(--strich-stark) solid transparent;
 }
-.reiter-punkt:hover{color:var(--dunkelblau);text-decoration:none}
-/* ORANGE TIEF, NICHT ORANGE: Der Strich steht auf
- * Rauch, und --orange haette dort 2,09 : 1 — unter den 3 : 1 fuer einen
- * Bedienzustand. Die Schrift wechselt zwar mit, aber Gedaempft gegen
- * Dunkelblau sind auch nur 2,35 : 1. --orange-tief: 4,04 : 1. */
-.reiter-punkt.aktiv{color:var(--dunkelblau);border-bottom-color:var(--orange-tief)}
+.reiter-punkt:hover{color:var(--text-titel);text-decoration:none}
+/* DER STRICH TRAEGT DEN ZUSTAND: Die Schrift wechselt zwar mit, aber
+ * Gedaempft gegen Dunkelblau sind nur 2,35 : 1. Die Auswahllinie
+ * (Dunkelblau) erreicht auf der Karte 12,88 : 1; bis Schritt 26 war es
+ * Orange tief. */
+.reiter-punkt.aktiv{color:var(--text-titel);border-bottom-color:var(--auswahl-linie)}
 /* Abgesetzter Reiter am rechten Rand („Archiv"): kein Ereignis-Reiter,
  * sondern die Ablage. */
 .reiter-abgesetzt{margin-left:auto}
@@ -4514,8 +4937,8 @@ a.kennzahl:hover{border-color:var(--blau);text-decoration:none}
 .reiter-rahmen.rollt::after,.reiter-rahmen.rollt-links::before{
   content:"";position:absolute;top:0;bottom:var(--strich);width:var(--abstand-5);pointer-events:none;z-index:1;
 }
-.reiter-rahmen.rollt::after{right:0;background:linear-gradient(to right,transparent,var(--rauch))}
-.reiter-rahmen.rollt-links::before{left:0;background:linear-gradient(to left,transparent,var(--rauch))}
+.reiter-rahmen.rollt::after{right:0;background:linear-gradient(to right,transparent,var(--flaeche-karte))}
+.reiter-rahmen.rollt-links::before{left:0;background:linear-gradient(to left,transparent,var(--flaeche-karte))}
 
 /* DIE PROTOKOLLLISTE (.protokoll-liste). UNTER 720 px STEHT DIE PLAKETTE
  * UNTER DEM TEXT. Gemessen bei 376 px: Neben einer Plakette von
@@ -4573,7 +4996,7 @@ a.kennzahl:hover{border-color:var(--blau);text-decoration:none}
 .codeblock-liste{
   list-style:none;margin:var(--abstand-2) 0 var(--abstand-3);padding:0;counter-reset:code;
   display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--abstand-1) var(--abstand-4);
-  font-family:var(--schrift-fest);font-size:var(--groesse-4);font-weight:600;color:var(--dunkelblau);letter-spacing:.06em;
+  font-family:var(--schrift-fest);font-size:var(--groesse-4);font-weight:700;color:var(--text-titel);letter-spacing:.06em;
 }
 .codeblock-liste li{counter-increment:code;white-space:nowrap}
 .codeblock-liste li::before{content:counter(code) ".";display:inline-block;min-width:2.2em;color:var(--gedaempft);font-weight:400;letter-spacing:0}
@@ -4588,15 +5011,15 @@ a.kennzahl:hover{border-color:var(--blau);text-decoration:none}
  * Seitentyp (`page:`) trägt nicht in jedem Browser, der hier druckt. Gedruckt
  * wird in dieser Anwendung ohnehin nur auf den Blättern. */
 @page{size:A4;margin:14mm 18mm}
-.blatt-druck{font-size:var(--groesse-3);line-height:1.45;color:var(--asphalt)}
+.blatt-druck{font-size:var(--groesse-3);line-height:1.45;color:var(--papier-text)}
 .blatt-kopf{display:flex;align-items:center;gap:var(--abstand-3);
   padding-bottom:var(--abstand-2);margin-bottom:var(--abstand-3);
-  border-bottom:var(--strich-stark) solid var(--dunkelblau)}
+  border-bottom:var(--strich-stark) solid var(--papier-titel)}
 /* Millimeter, weil es ein Druckblatt ist: Die Skala der Bildschirmgrößen
  * gilt dort nicht, und 11 mm sind die Höhe der Kopfzeile auf Papier. */
 .blatt-kopf img{height:11mm;width:auto;flex:0 0 auto}
-.blatt-marke{font-family:var(--schrift-kopf);font-weight:600;font-size:var(--groesse-6);color:var(--dunkelblau);line-height:var(--zeile-eng);min-width:0;overflow-wrap:anywhere}
-.blatt-kopf-rechts{margin-left:auto;flex:0 1 45%;min-width:0;overflow-wrap:anywhere;text-align:right;font-size:var(--groesse-2);color:var(--gedaempft);line-height:1.4}
+.blatt-marke{font-family:var(--schrift-kopf);font-weight:500;font-size:var(--groesse-6);color:var(--papier-titel);line-height:var(--zeile-eng);min-width:0;overflow-wrap:anywhere}
+.blatt-kopf-rechts{margin-left:auto;flex:0 1 45%;min-width:0;overflow-wrap:anywhere;text-align:right;font-size:var(--groesse-2);color:var(--papier-leise);line-height:1.4}
 /* `break-word` AN DER ÜBERSCHRIFT: „Wiederherstellungscodes" ist bei 360 px
  * breiter als die Spalte (345 gegen 328 px, Bilderlauf) und hat keine
  * Stelle, an der ein Browser von sich aus umbricht. Dieselbe Härte wie
@@ -4612,12 +5035,12 @@ a.kennzahl:hover{border-color:var(--blau);text-decoration:none}
 /* DIE KACHEL: Rahmen, Rauch, Feste Schrift. Der Rahmen trägt die Aussage —
  * die Fläche ist Zugabe für den Bildschirm und für den, der
  * „Hintergrundgrafiken" mitdruckt. */
-.blatt-kachel{border:var(--strich-stark) solid var(--dunkelblau);border-radius:var(--radius);
-  background:var(--rauch);padding:var(--abstand-2) var(--abstand-4);margin:0 0 var(--abstand-2);
+.blatt-kachel{border:var(--strich-stark) solid var(--papier-titel);border-radius:var(--radius);
+  background:var(--papier-abgesetzt);padding:var(--abstand-2) var(--abstand-4);margin:0 0 var(--abstand-2);
   break-inside:avoid;page-break-inside:avoid}
 .blatt-kachel-kopf{display:flex;align-items:baseline;justify-content:space-between;gap:var(--abstand-3);flex-wrap:wrap}
-.blatt-kachel-name{font-family:var(--schrift-kopf);font-weight:600;font-size:var(--groesse-5);color:var(--dunkelblau)}
-.blatt-kachel-neben{font-size:var(--groesse-2);color:var(--gedaempft)}
+.blatt-kachel-name{font-family:var(--schrift-kopf);font-weight:500;font-size:var(--groesse-5);color:var(--papier-titel)}
+.blatt-kachel-neben{font-size:var(--groesse-2);color:var(--papier-leise)}
 .blatt-kachel > p{font-size:var(--groesse-2);margin:0}
 .blatt-kachel-neben code{font-size:inherit}
 /* DIE NUMMERIERTEN GRUPPEN (.blatt-druck-gruppen) —
@@ -4631,17 +5054,17 @@ a.kennzahl:hover{border-color:var(--blau);text-decoration:none}
 .blatt-druck-gruppen{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:var(--abstand-1) 0;margin:var(--abstand-1) 0 var(--abstand-2)}
 .blatt-druck-gruppen-5{grid-template-columns:repeat(5,minmax(0,1fr));max-width:30rem}
 .blatt-druck-gruppe{display:flex;flex-direction:column;align-items:center;
-  font-family:var(--schrift-fest);font-size:var(--groesse-5);font-weight:600;letter-spacing:.08em;line-height:1.25}
+  font-family:var(--schrift-fest);font-size:var(--groesse-5);font-weight:700;letter-spacing:.08em;line-height:1.25}
 .blatt-druck-gruppen-5 .blatt-druck-gruppe{font-size:var(--groesse-6)}
 .blatt-druck-gruppe::before{content:attr(data-nr);font-family:var(--schrift-text);font-weight:400;
-  font-size:var(--groesse-1);letter-spacing:0;color:var(--gedaempft)}
+  font-size:var(--groesse-2);letter-spacing:0;color:var(--papier-leise)}
 .blatt-fuss{margin-top:var(--abstand-3);padding-top:var(--abstand-2);border-top:var(--strich) solid var(--linie);
-  font-size:var(--groesse-1);color:var(--gedaempft);display:flex;justify-content:space-between;gap:var(--abstand-3)}
+  font-size:var(--groesse-2);color:var(--papier-leise);display:flex;justify-content:space-between;gap:var(--abstand-3)}
 /* AM BILDSCHIRM sieht das Blatt aus wie das Blatt: A4 mit den Rändern aus @page.
  * `max-width:100%`, weil A4 794 px breit ist und die Regel ab 720 px greift:
  * Bei 768 px stünde das Blatt 26 px über (Bilderlauf in Firefox und
  * WebKit). Ab 794 px ändert die Grenze nichts. */
-@media screen{ .blatt-druck{padding:var(--abstand-4);background:var(--schnee)} }
+@media screen{ .blatt-druck{padding:var(--abstand-4);background:var(--papier)} }
 @media screen and (min-width:720px){
   .blatt-druck{box-sizing:border-box;width:210mm;max-width:100%;min-height:297mm;padding:14mm 18mm;margin:var(--abstand-5) auto;
     border:var(--strich) solid var(--linie);box-shadow:var(--schatten)}
@@ -4652,8 +5075,8 @@ a.kennzahl:hover{border-color:var(--blau);text-decoration:none}
  * Fläche: Das Blatt muss auch schwarzweiß sagen, dass es nicht zur
  * Produktivanlage gehört. */
 .blatt-umgebung{margin:0 0 var(--abstand-3);padding:var(--abstand-1) var(--abstand-3);
-  border:var(--strich-stark) solid var(--rot-tief);border-radius:var(--radius-klein);
-  font-size:var(--groesse-3);color:var(--rot-tief)}
+  border:var(--strich-stark) solid var(--papier-warnung);border-radius:var(--radius-klein);
+  font-size:var(--groesse-3);color:var(--papier-warnung)}
 /* DIE CODELISTE DES CODEBLATTS (.blatt-codes) — zehn Einmalcodes, nummeriert,
  * mit einem Kästchen zum Abhaken. Zwei Spalten; die Nummer steht davor, nicht
  * darüber, weil ein Code acht Zeichen hat und nicht vier. DAS KÄSTCHEN STEHT
@@ -4662,8 +5085,8 @@ a.kennzahl:hover{border-color:var(--blau);text-decoration:none}
 .blatt-codes{list-style:none;margin:var(--abstand-2) 0;padding:0;counter-reset:code;
   display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--abstand-2) var(--abstand-5)}
 .blatt-codes li{counter-increment:code;display:flex;align-items:center;gap:var(--abstand-3);margin:0;
-  font-family:var(--schrift-fest);font-size:var(--groesse-5);font-weight:600;letter-spacing:.08em;line-height:1.25}
+  font-family:var(--schrift-fest);font-size:var(--groesse-5);font-weight:700;letter-spacing:.08em;line-height:1.25}
 .blatt-codes li::before{content:counter(code);min-width:1.5em;text-align:right;
-  font-family:var(--schrift-text);font-weight:400;font-size:var(--groesse-2);letter-spacing:0;color:var(--gedaempft)}
+  font-family:var(--schrift-text);font-weight:400;font-size:var(--groesse-2);letter-spacing:0;color:var(--papier-leise)}
 .blatt-codes li::after{content:"";order:-1;width:1em;height:1em;flex:0 0 auto;
   border:var(--strich) solid var(--linie-stark);border-radius:var(--radius-klein)}

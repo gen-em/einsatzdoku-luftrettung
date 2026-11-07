@@ -1,6 +1,7 @@
 package org.genem.nadoku.handy
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -22,7 +23,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import org.genem.nadoku.R
 import org.genem.nadoku.gemeinsam.Bildmarke
-import org.genem.nadoku.gemeinsam.Farbe
+import org.genem.nadoku.gemeinsam.Rolle
 import org.genem.nadoku.handy.kopplung.Serveradresse
 import org.genem.nadoku.gemeinsam.LogoWahl
 import org.genem.nadoku.gemeinsam.Motiv
@@ -162,7 +163,7 @@ fun DienstAnsicht(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Farbe.rauch)
+            .background(Rolle.flaecheSeite)
             /* Die Navigationsleiste unten -- und im Querformat die seitliche
              * Geste. Wie oben gilt: `background` zuerst, damit
              * die Flaeche bis zum Rand faerbt, das Padding danach, damit der
@@ -259,7 +260,7 @@ private fun Zustandsblock(
             R.string.sync_gekoppelt_mit,
             Serveradresse.BASIS.removePrefix("https://").removePrefix("http://").trimEnd('/'),
         ),
-        punktfarbe = Farbe.blau, schriftfarbe = Farbe.blauTief,
+        punktfarbe = Rolle.infoLinie, schriftfarbe = Rolle.infoText,
     )
     Zustandszeile(
         text = if (rueckstand > 0) {
@@ -267,13 +268,14 @@ private fun Zustandsblock(
         } else {
             stringResource(R.string.sync_vollstaendig)
         },
-        /* `orangeTief` UND NICHT `orange`. Der Punkt ist ein grafisches
-         * Objekt und braucht nach WCAG 1.4.11 3,0 : 1 gegen die Fläche.
-         * `marke_orange` auf `marke_schnee` erreicht 2,23 : 1,
-         * `marke_orange_tief` 4,32 : 1; das Paar steht in der Liste von
-         * `werkzeuge/kontraste.py`. */
-        punktfarbe = if (rueckstand > 0) Farbe.orangeTief else Farbe.blau,
-        schriftfarbe = Farbe.gedaempft,
+        /* DIE LINIE DER WARNUNG, NICHT PHILIPP-ORANGE. Der Punkt ist ein
+         * grafisches Objekt und braucht nach WCAG 1.4.11 3,0 : 1 gegen die
+         * Fläche; Philipp-Orange auf Schnee erreicht 2,23 : 1,
+         * `warnung_linie` (orange 600, dunkel 400) mindestens 3,59 : 1. Ist
+         * nichts offen, ist der Zustand in Ordnung — grün wie im Web. Die
+         * Paare stehen in `werkzeuge/kontraste.py`. */
+        punktfarbe = if (rueckstand > 0) Rolle.warnungLinie else Rolle.erfolgLinie,
+        schriftfarbe = Rolle.gedaempft,
     )
 
     /* WAS DER SERVER ABGEWIESEN HAT, STEHT HIER.
@@ -288,7 +290,7 @@ private fun Zustandsblock(
             text = androidx.compose.ui.res.pluralStringResource(
                 R.plurals.sync_abgewiesen, abgewiesen, abgewiesen,
             ),
-            punktfarbe = Farbe.rot, schriftfarbe = Farbe.rotTief,
+            punktfarbe = Rolle.fehlerLinie, schriftfarbe = Rolle.fehlerText,
         )
         /* VERWERFEN. Ohne Weg würde die rote Zeile zur Tapete: Sie stünde,
          * bis nach 30 Tagen die Frist räumt, und niemand könnte etwas tun.
@@ -317,7 +319,7 @@ private fun Zustandsblock(
     if (fremd > 0) {
         Zustandszeile(
             text = androidx.compose.ui.res.pluralStringResource(R.plurals.sync_fremd, fremd, fremd),
-            punktfarbe = Farbe.rot, schriftfarbe = Farbe.rotTief,
+            punktfarbe = Rolle.fehlerLinie, schriftfarbe = Rolle.fehlerText,
         )
         KnopfNeutral(stringResource(R.string.fremde_verwerfen)) { aufFremdeVerwerfen() }
         Hinweiskasten(stringResource(R.string.fremde_hinweis))
@@ -331,7 +333,7 @@ private fun Zustandsblock(
             text = androidx.compose.ui.res.pluralStringResource(
                 R.plurals.sync_verworfen, verworfen, verworfen,
             ),
-            color = Farbe.gedaempft, fontSize = 13.sp,
+            color = Rolle.gedaempft, fontSize = 13.sp,
         )
     }
 
@@ -343,7 +345,7 @@ private fun Zustandsblock(
     if (sendelaufLaeuft) {
         Text(
             text = stringResource(R.string.sync_sendet),
-            color = Farbe.gedaempft, fontSize = 13.sp,
+            color = Rolle.gedaempft, fontSize = 13.sp,
         )
     } else if (ergebnis != null) {
         Text(
@@ -367,8 +369,8 @@ private fun Zustandsblock(
                     )
             },
             color = when (ergebnis.ausgang) {
-                Sendeausgang.GESENDET -> Farbe.gedaempft
-                else -> Farbe.rotTief
+                Sendeausgang.GESENDET -> Rolle.gedaempft
+                else -> Rolle.fehlerText
             },
             fontSize = 13.sp,
         )
@@ -381,7 +383,7 @@ private fun Zustandsblock(
     if (fristBis != null) {
         Text(
             text = stringResource(R.string.sync_frist, fristBis),
-            color = Farbe.rotTief, fontSize = 13.sp,
+            color = Rolle.fehlerText, fontSize = 13.sp,
         )
     }
 
@@ -404,7 +406,11 @@ private fun androidx.compose.foundation.layout.ColumnScope.RuhenderDienst(
     Bildmarke(
         motiv = motiv,
         kachel = 96.dp,
-        aufDunkel = false,
+        /* Auf der dunklen Karte die negative Fassung (Korpus Schnee) — die
+         * farbige hat einen dunkelblauen Korpus, und der verschwaende auf
+         * Dunkelblau; nur die Federn blieben stehen. Dieselbe Regel wie im
+         * Web (Produktmarken.md: auf Dunkelblau farbig-negativ). */
+        aufDunkel = isSystemInDarkTheme(),
         modifier = Modifier.align(Alignment.CenterHorizontally),
         beschreibung = stringResource(
             if (motiv == Motiv.LUFT) R.string.marke_luft_beschreibung
@@ -413,7 +419,7 @@ private fun androidx.compose.foundation.layout.ColumnScope.RuhenderDienst(
     )
     Text(
         text = stringResource(R.string.dienst_keiner),
-        color = Farbe.dunkelblau, fontSize = 24.sp, fontWeight = FontWeight.SemiBold,
+        color = Rolle.textTitel, fontSize = 24.sp, fontWeight = FontWeight.SemiBold,
         modifier = Modifier.align(Alignment.CenterHorizontally),
     )
     // Die Vorgabe ist die zuletzt getroffene Wahl.
@@ -429,7 +435,7 @@ private fun androidx.compose.foundation.layout.ColumnScope.RuhenderDienst(
      * Ablehnung müsste erklärt werden, und über dem Knopf steht die
      * Erklärung schon. */
     if (stand.ortungFreigegeben && stand.standortAn) {
-        KnopfPrimaer(stringResource(R.string.dienst_beginnen)) { aufBeginnen() }
+        KnopfHaupt(stringResource(R.string.dienst_beginnen)) { aufBeginnen() }
     }
 }
 
@@ -447,13 +453,13 @@ private fun androidx.compose.foundation.layout.ColumnScope.LaufenderDienst(
             if (stand.modus == Modus.NUR_AUFZEICHNEN) R.string.modus_nur_aufzeichnen
             else R.string.modus_phasen
         ),
-        color = Farbe.dunkelblau, fontSize = 19.sp, fontWeight = FontWeight.SemiBold,
+        color = Rolle.textTitel, fontSize = 19.sp, fontWeight = FontWeight.SemiBold,
     )
     Text(
         text = androidx.compose.ui.res.pluralStringResource(
             R.plurals.dienst_punkte, stand.punkte.toInt(), stand.punkte, stand.streckeKm,
         ),
-        color = Farbe.gedaempft, fontSize = 13.sp,
+        color = Rolle.gedaempft, fontSize = 13.sp,
     )
 
     if (stand.modus == Modus.NUR_AUFZEICHNEN) {
@@ -518,16 +524,17 @@ private fun ortungstext(stand: Dienststand): String {
  * Alle vier Zustaende, in denen nichts aufgezeichnet wird, sind rot und
  * unterscheiden sich am Wortlaut. Orange fuer `UNGENAU` geht nicht:
  * nachgerechnet traegt kein vorhandenes Orange Text auf Schnee
- * (`marke_orange` 2,23 : 1, `marke_orange_tief` 4,32 : 1 — beide unter AA).
- * `rotTief` erreicht 7,58 : 1. Die farbliche Abstufung „warnt" gegen „fehlt
+ * (`marke_orange` 2,23 : 1, `marke_orange_tief` damals 4,32 : 1 — beide unter
+ * AA; seit orange 700 sind es 6,44 : 1, die Entscheidung blieb).
+ * `rotTief` erreicht 9,8 : 1. Die farbliche Abstufung „warnt" gegen „fehlt
  * ganz" geht dabei verloren; aufgezeichnet wird in beiden Faellen nichts, und
  * das ist die Aussage, auf die es ankommt.
  */
 @Composable
 private fun ortungsfarbe(stand: Ortungsstand?) = when (stand) {
-    Ortungsstand.OK -> Farbe.asphalt
-    Ortungsstand.SUCHT, null -> Farbe.gedaempft
-    else -> Farbe.rotTief
+    Ortungsstand.OK -> Rolle.text
+    Ortungsstand.SUCHT, null -> Rolle.gedaempft
+    else -> Rolle.fehlerText
 }
 
 @Preview(showBackground = true)

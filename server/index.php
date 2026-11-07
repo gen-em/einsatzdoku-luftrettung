@@ -311,6 +311,13 @@ ui_seite_start(['titel' => 'Tagesübersicht', 'karte' => true,
             ['text' => 'Tag löschen', 'symbol' => 'korb', 'gefahr' => true,
              'href' => 'diensttag_loeschen.php?d=' . (int)$selDay, 'attr' => 'id="daydellink"'],
           ]]) ?>
+          <?php /* DIE HAUPTAKTION DER SEITE (E-MA-27, Mockup MA-02): rechts
+                   neben „Aktionen", Orange. Der Eintrag im Menue und „+
+                   Nachtragen" an der Einsatzkarte bleiben — das Menue ist der
+                   vollstaendige Katalog, der Link steht dort, wo man die Liste
+                   liest. Die Adresse setzt loadDay() wie bei den anderen. */ ?>
+          <?= ui_knopf(['text' => 'Einsatz nachtragen', 'art' => 'haupt', 'symbol' => 'plus',
+                        'href' => 'einsatz_form.php', 'attr' => ' id="addmission-haupt"']) ?>
         </div>
       </div>
       <p class="titelzeile-unter" id="dayunter" hidden></p>
@@ -335,7 +342,11 @@ ui_seite_start(['titel' => 'Tagesübersicht', 'karte' => true,
         </a>
       </div>
       <div class="karte-inhalt">
-        <div class="tag-lese" id="taglese"></div>
+        <?php /* EIN <dl>, KEIN <div>: Die Felder sind dt/dd-Paare, und ohne
+                 umgebende Liste sind sie fuer einen Screenreader keine
+                 Paare (axe `dlitem`, F-MA-22). Auch der Leerzustand ist ein
+                 Paar, damit die Liste gueltig bleibt. */ ?>
+        <dl class="tag-lese" id="taglese"></dl>
         <form id="dayform" class="tag-form" hidden data-dirty-track data-submit-on-ctrl-enter>
         <label id="basefeld">Standort
           <select name="base_id" id="basesel">
@@ -372,7 +383,7 @@ ui_seite_start(['titel' => 'Tagesübersicht', 'karte' => true,
         <?php /* EINE EBENE TIEFER ALS DIE AUSWAHL: derselbe
                  Baustein, mit dem abhängige Felder unter einem Schalter
                  aufklappen (`.schalter-abhaengig`) — eingerückt
-                 hinter einem orangen Randstrich. Die Felder gehören zur
+                 hinter einem Randstrich in `--linie-stark`. Die Felder gehören zur
                  Auswahl darüber und stehen deshalb nicht auf gleicher Höhe
                  mit ihr. */ ?>
         <div class="schalter-abhaengig" id="adhocfelder" hidden>
@@ -471,9 +482,12 @@ ui_seite_start(['titel' => 'Tagesübersicht', 'karte' => true,
                  leise Link oeffnet das Blatt mit den Spalten. Er
                  ist bewusst KEINE zweite Kopfaktion: Die eine Handlung der
                  Karte bleibt „+ Nachtragen". */ ?>
-        <button type="button" class="karte-sortieren nur-unter-720"
+        <?php /* Der Name am Knopf selbst: Den <title> im Symbol nimmt
+                 WebKit nicht als Namen des Knopfs (axe `button-name`, nur
+                 dort gemeldet, F-MA-22). */ ?>
+        <button type="button" class="karte-sortieren nur-unter-720" aria-label="Sortieren"
                 data-blatt="sortblatt" aria-expanded="false" aria-controls="sortblatt">
-          <?= ui_symbol('sortieren', '', 'Sortieren') ?>
+          <?= ui_symbol('sortieren') ?>
         </button>
         <a class="karte-aktion karte-aktion-orange" id="addmission" href="einsatz_form.php">
           <?= ui_symbol('plus') ?><span>Nachtragen</span>
@@ -911,6 +925,7 @@ async function loadDay(dayId){
   document.getElementById('daymergelink').href = 'diensttag_zusammenfuehren.php?d=' + d.day_id;
   document.getElementById('dayspurenlink').href = 'tag_spuren.php?d=' + d.day_id;
   document.getElementById('addmission-menu').href = 'einsatz_form.php?d=' + d.day_id;
+  document.getElementById('addmission-haupt').href = 'einsatz_form.php?d=' + d.day_id;
   // Das Menü als Ganzes wird sichtbar, nicht die einzelnen Einträge: Ein
   // aufklappbarer Kopf mit leerer Liste wäre ein Angebot ohne Inhalt.
   document.getElementById('dayaktionen').hidden = false;
@@ -1175,7 +1190,8 @@ async function entschluesselePat(){
       m._ort = extractOrt(o.loc.addr);
       changed = true;
       if (o.loc.lat != null) {
-        /* Einsatzort: oranger Kreis mit Pin (E-P3-40) — einheitlich fuer
+        /* Einsatzort: dunkelblauer Kreis mit Pin (E-P3-40, seit Schritt 26
+           dunkelblau statt orange) — einheitlich fuer
            alle Einsaetze; welcher zu welchem gehoert, sagen Spurfarbe und
            Popup. */
         layerGroup.addLayer(EdGeo.markerEinsatzort([o.loc.lat, o.loc.lon],
@@ -1569,7 +1585,8 @@ function zeigeTagLese(meta){
     if (meta.notes)  { zeile('Notizen', meta.notes, false, true); }
   }
   lese.innerHTML = zeilen.length ? zeilen.join('')
-    : '<p class="tag-lese-leer">Noch keine Angaben — über „Bearbeiten" nachtragen.</p>';
+    : '<div class="tagfeld tagfeld-breit"><dt class="nur-vorlesen">Diensttag-Daten</dt>'
+      + '<dd class="tag-lese-leer">Noch keine Angaben — über „Bearbeiten" nachtragen.</dd></div>';
 }
 
 /* „Bearbeiten" klappt dasselbe Formular in der Karte auf (E-P3-31); der

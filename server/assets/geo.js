@@ -8,7 +8,7 @@
  *
  *   Standort      Haus im weissen, dunkelblau umrandeten Schild + Namensschild
  *   Zielklinik    Klinik im selben Schild + Namensschild
- *   Einsatzort    oranger Kreis mit Pin
+ *   Einsatzort    dunkelblauer Kreis mit Pin in Schnee (bis Schritt 26 orange)
  *   Start         blauer Ring UM das Schild des Ortes, an dem die Spur beginnt
  *   Ende          roter Ring; beides am selben Ort ein Doppelring
  *   Pfeile        Richtungspfeile auf der Spur, erst ab einer Zoomstufe, bei
@@ -92,7 +92,7 @@
       title: name || '', keyboard: false, zIndexOffset: 500 });
   }
 
-  /* ---- Einsatzort: oranger Kreis mit Pin --------------------------------
+  /* ---- Einsatzort: dunkelblauer Kreis mit Pin ---------------------------
    *
    * DIE MASSE STEHEN HIER UND IM STYLESHEET, und das ist bewusst: Leaflet
    * braucht sie als Zahl, das Stylesheet als Token. Wer eines aendert,

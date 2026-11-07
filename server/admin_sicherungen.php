@@ -532,7 +532,7 @@ ui_seite_start(['titel' => 'Konto-Backups']);
         $juengstes = $v['pakete'] ? edbak_zeitpunkt_text($v['pakete'][0]['erzeugt']) : null;
         $plaketten = '';
         if (!$v['lesbar']) { $plaketten .= ui_plakette('Begleitdatei nicht lesbar', ['ton' => 'orange']); }
-        if ($v['freigabe']) { $plaketten .= ui_plakette('freigegeben', ['ton' => 'blau']); }
+        if ($v['freigabe']) { $plaketten .= ui_plakette('freigegeben', ['ton' => 'gruen']); }
         /* Die Paketwahl des Dialogs — als Datenfeld am Knopf, damit derselbe
            Dialog für jeden Ordner taugt (assets/dialog.js füllt aus
            `data-w-*`). Aufbau: Datei|Beschriftung, Einträge durch \n. */

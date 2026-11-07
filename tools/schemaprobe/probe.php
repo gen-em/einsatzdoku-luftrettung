@@ -313,7 +313,7 @@ file_put_contents($cfgPfad, "<?php\n// Wegwerfdatei der Schemaprobe. Wird am End
         'db'  => ['dsn'  => "mysql:host={$opt['--host']};port={$opt['--port']};dbname=$DB;charset=utf8mb4",
                   'user' => $opt['--benutzer'], 'pass' => $opt['--passwort']],
         'app' => ['base_url' => 'https://127.0.0.1', 'timezone' => 'Europe/Berlin',
-                  'logo_path' => 'assets/images/gen-em_logo_helicopter.svg',
+                  'logo_path' => 'assets/images/nadoku-hubschrauber-farbig.svg',
                   'max_body_bytes' => 524288],
         'smtp' => ['host' => '127.0.0.1', 'port' => 2525, 'user' => 'x', 'pass' => 'x',
                    'from' => 'x@example.invalid', 'secure' => 'none'],

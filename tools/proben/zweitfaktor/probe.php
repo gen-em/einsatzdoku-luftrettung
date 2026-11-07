@@ -1061,8 +1061,8 @@ $zeile = null;
 foreach (status_erhebung()['karten'][0]['zeilen'] as $z) {
     if ($z['text'] === 'Verwaltungskonten') { $zeile = $z; }
 }
-pruefe($zeile !== null && ($ohneAdmin['betreiberinnen'] >= 2) === ($zeile['ton'] === 'blau'),
-       'Ampel: blau genau bei zwei handlungsfähigen BetreiberInnen, sonst orange',
+pruefe($zeile !== null && ($ohneAdmin['betreiberinnen'] >= 2) === ($zeile['ton'] === 'gruen'),
+       'Ampel: gruen genau bei zwei handlungsfähigen BetreiberInnen, sonst orange (bis Web 23.9.0 blau)',
        ($zeile['plakette'] ?? '?') . ' / ' . ($zeile['ton'] ?? '?'));
 
 /* DIE TABELLE DER FÄLLE: Rollenmix →
@@ -1074,7 +1074,7 @@ $faelle = [
     [[2, 1, 1], ['1 BetreiberIn', 'orange', '1 BetreiberIn und 1 Admin']],
     [[1, 1, 2], ['1 BetreiberIn', 'orange', '2 BetreiberInnen, eine ohne Zweitfaktor']],
     [[3, 1, 2], ['1 BetreiberIn', 'orange', 'dasselbe mit einem Admin daneben']],
-    [[2, 2, 2], ['vertreten', 'blau', '2 handlungsfähige BetreiberInnen']],
+    [[2, 2, 2], ['vertreten', 'gruen', '2 handlungsfähige BetreiberInnen']],
     [[1, 0, 1], ['keine BetreiberIn', 'orange', 'keine BetreiberIn handlungsfähig']],
 ];
 foreach ($faelle as [[$v, $b, $a], [$plakette, $ton, $fall]]) {

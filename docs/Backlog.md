@@ -52,7 +52,8 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
 
 | Spanne | Zweig | seit |
 |---|---|---|
-| ab 520 | frei — höchste reservierte Nummer 519; frei blieben 511 bis 519 aus der Spanne von 24 und BR7 (PR #152 bis #154), 501 bis 509 aus der von 23 (PR #150, #151), 482 bis 489 aus der Spanne von 22 (PR #148, #149), 492 bis 499 aus der des Prüfdurchgangs (PR #147), 472 bis 479 aus der Spanne von 21 (PR #136), 461 bis 469 aus der Spanne von PR (PR #133), 434 bis 439 aus der Spanne von PR #129, 441 bis 449 aus der von PR #130, 420 bis 429 aus der Spanne von 20 (PR #127), 412 bis 419 aus der von 12b (PR #125), 394 bis 399 aus der Spanne von 19 (PR #112 bis #114), 389 aus der von 12a (PR #116), 372 bis 379 aus der von 12 (PR #103), 362 bis 369 aus der von PK, 359 aus der von 18 (PR #101), 348 und 349 aus der von 17, 338 aus der von AR | 04.11.2026 |
+| 520 bis 529 | `claude/lucid-knuth-2yu16r` (26, MA) | 06.11.2026 |
+| ab 530 | frei — höchste reservierte Nummer 529; frei blieben 511 bis 519 aus der Spanne von 24 und BR7 (PR #152 bis #154), 501 bis 509 aus der von 23 (PR #150, #151), 482 bis 489 aus der Spanne von 22 (PR #148, #149), 492 bis 499 aus der des Prüfdurchgangs (PR #147), 472 bis 479 aus der Spanne von 21 (PR #136), 461 bis 469 aus der Spanne von PR (PR #133), 434 bis 439 aus der Spanne von PR #129, 441 bis 449 aus der von PR #130, 420 bis 429 aus der Spanne von 20 (PR #127), 412 bis 419 aus der von 12b (PR #125), 394 bis 399 aus der Spanne von 19 (PR #112 bis #114), 389 aus der von 12a (PR #116), 372 bis 379 aus der von 12 (PR #103), 362 bis 369 aus der von PK, 359 aus der von 18 (PR #101), 348 und 349 aus der von 17, 338 aus der von AR | 04.11.2026 |
 
 ---
 
@@ -147,25 +148,6 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      dass wenigstens Einsatz und Phasen zusammen fallen.
 
      ---
-
-<!-- -->
-
-62. **Logodateien tragen teilweise wieder die alten Farbwerte.** · gehört zu: 13 · Stand: offen · seit 31.08.2026
-     Befund (B-S4-01; bis 02.09.2026 Nr. 49): Der Commit „Update Logos" hat
-     alte Werte zurückgebracht — `gen-em_logo_helicopter.svg` führt `#587abc`,
-     `#e3322b`, `#f7941d`, Korpus `#1d0e0a` statt `#4280E5`, `#D63338`,
-     `#FF8F1F`, `#1A0500`; die PNG ebenso (gemessen 13.09.2026). Richtig sind
-     nur `gen-em_logo_nef_weiss.svg` und `gen-em_logo_nef.png`.
-     Entschieden 12.09.2026: neue Vorlagen anfordern; bis dahin nichts am
-     Code. `Design.md` 2.5 ist am 13.09.2026 berichtigt.
-     Weg: Die Durchsicht vom 26.09.2026 nahm an, die Vorlagen lägen vor
-     (E-SD-34); im Baum ist seit `6f316ee` vom 12.09.2026 keine Logodatei
-     geändert (Konzept R4, F-R4-08). Mit den Vorlagen alle Fassungen samt
-     Ableitungen (PNG, Favicons, Uhr-Bilder) nachziehen, nachmessen und
-     `Design.md` 2.5 mitziehen — mit dem neuen NEF-Logo, vor P7.
-     Ziel 13 seit 26.09.2026 (R4-01, E-R4-08); Schritt 17 fasst keine
-     Bilddatei an.
-     Werdegang bis 26.09.2026: `docs/Backlog.md@f5bddc2`, Nr. 62.
 
 <!-- -->
 
@@ -701,24 +683,6 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
 
 <!-- -->
 
-411. **Der Stilvergleich hat eine Liste geplanter Abweichungen für drei Engines.** · gehört zu: 14 · Stand: offen · seit 31.10.2026
-     *Aufgenommen 31.10.2026 mit R17-29 (F-R17-91).* Grün ist der
-     Stilvergleich, wenn die gemessenen Signaturen der Liste
-     `tools/stilvergleich/geplant.txt` GLEICHEN. Seit R87 läuft er in drei
-     Engines, und die benennen dieselbe Verschiebung verschieden: Chromium
-     `bottom, inset, top`, Firefox `bottom, top`, WebKit mit `size`; WebKit
-     misst dazu das `svg` im Schattenbaum eines `<use>`. Gemessen mit einer
-     Liste aus Chromium: Firefox 5, WebKit 6 ungeplant. Eine gewollte
-     Gestaltungsänderung, die etwas verschiebt, wird damit nirgends ganz
-     grün; R17-29 ist ausgewichen (keine Stilregel nötig).
-     *Weg:* je Engine eine Liste (`geplant-<motor>.txt`), `--schreiben`
-     schreibt alle drei; oder die Signatur auf eine gemeinsame Menge von
-     Eigenschaften abbilden (`inset` aus `top`/`bottom`, ohne `size`).
-     *Abnahme:* eine Probe-Änderung an `style.css`, `--schreiben`, danach
-     drei Engines grün; eine zweite, ungeplante Änderung rot in allen dreien.
-
-<!-- -->
-
 430. **Bitwarden zeigt beim Backup mit Kontopasswort den Eintrag nicht im Menü am Feld.** · gehört zu: Zuarbeit · Stand: teilweise · seit 02.11.2026
      *Aufgenommen 02.11.2026 aus P-R17-34 (Handprüfung auf Produktiv,
      Firefox mit Bitwarden).* Seit Web 23.4.0 bietet Bitwarden im Feld
@@ -738,3 +702,33 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      Anmeldename in einem eigenen Formular, Enter erstellt das Backup; Karte
      pixelgleich, Backup in drei Engines. Offen bis zur Handprüfung mit
      Bitwarden (P-R17-34, `Pruefliste.md` 3).
+
+<!-- -->
+
+521. **Der Bilderlauf nimmt den Dark Mode nicht auf.** · gehört zu: nächste Backlog-Runde · Stand: offen · seit 07.11.2026
+     *Aufgenommen 07.11.2026 mit MA-07 (F-MA-15).* Seit Web 23.10.0 gibt
+     es eine dunkle Darstellung (`prefers-color-scheme` und `data-theme`),
+     und `tools/screenshots/aufnehmen.mjs` fährt nur hell. Ein Überlauf,
+     eine unsichtbare Kante oder ein Text in der falschen Rolle, die nur im
+     Dunkeln auftreten, findet damit niemand; `kontrast.py` rechnet die
+     Paare beider Modi, sieht aber keine Seite. Ein Lauf dunkel über alle
+     Seiten und zehn Breiten verdoppelte die Zeit des Bilderlaufs (heute
+     rund 25 Minuten). *Weg:* Schalter `--dunkel` (Kontext mit
+     `colorScheme: 'dark'`), im vollen Lauf dunkel in Chromium allein über
+     drei Breiten, Ausgabe getrennt. *Abnahme:* eine absichtlich falsche
+     Rolle (`color:var(--dunkelblau)` auf einer Karte) ist im dunklen Lauf
+     als Befund sichtbar, im hellen nicht.
+
+<!-- -->
+
+523. **Der Klassenname `.knopf-leise-orange` stimmt nicht mehr.** · gehört zu: 13 · Stand: offen · seit 07.11.2026
+     *Aufgenommen 07.11.2026 mit MA-01 (F-MA-07).* Die Variante des leisen
+     Knopfs („Als Vorbelegung") trägt seit Web 23.9.0 die Linkfarbe, kein
+     Orange; ebenso heißt `.karte-aktion-orange` noch nach der alten Farbe,
+     und `.zaehler-orange` meint jetzt die Warnung. Die Namen stehen in
+     `ui_knopf()` (`'leise-orange'`), in den Aufrufen, in der Streichliste
+     und in der Tonprüfung. *Weg:* in `leise-hervor` bzw. `karte-aktion-anlegen`
+     umbenennen, Aufrufer und `vollstaendigkeit-streichliste.md` nachziehen.
+     *Abnahme:* `vollstaendigkeit.py` keine Befunde, `grep -rn "orange"`
+     findet in Klassennamen nur noch Töne der Plakette und Kennzahl.
+

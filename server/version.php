@@ -8615,5 +8615,103 @@ declare(strict_types=1);
  *   (R91-Nachpruefung zu Schritt 24 auf Staging). Die Geraete der Fixture
  *   entstehen beim Reset neu, und die Startseite meldete sie als „neue
  *   Geraete … warst du das nicht?". Der Reset bestaetigt den Hinweis und den
- *   Erststart-Schritt „Geraet koppeln"; kein Schema. */
-const WEB_VERSION = '23.8.2';
+ *   Erststart-Schritt „Geraet koppeln"; kein Schema.
+ *
+ * 23.9.0 — DIE FARBEN KOMMEN AUS DEM BRANDING-REPO (Schritt 26, Konzept MA,
+ *   MA-01 bis MA-05). `style.css` traegt den Token-Block von
+ *   `gen-em/gen-em-branding` woertlich und darueber eine Schicht von Rollen
+ *   (`--text`, `--flaeche-karte`, `--aktion`, `--auswahl-*`, `--erfolg-*` …);
+ *   die eigenen Tief- und Hellwerte entfallen. Aktion ist Dunkelblau statt
+ *   Orange, Gruen kommt als Statusfarbe fuer „in Ordnung" dazu (Plakette
+ *   `gruen`, Meldung `ok`), Schnee ist die Seite und neutral 75 die Karte.
+ *   Rund achtzig Plaketten, die Blau fuer einen guten Zustand trugen, tragen
+ *   jetzt Gruen; Blau bleibt fuer Eigenschaften. Das Umgebungsetikett ist
+ *   orange 800 statt rot, und `'farbe' => 'rot'` in der `config.php` gilt
+ *   weiter. Neben; kein Schema.
+ *
+ * 23.9.1 — DIE SCHRIFTSCHNITTE DER MARKE (Schritt 26, MA-02). Bricolage nur
+ *   noch in 500, Open Sans in 400 und 700; die vier 600er-Dateien sind
+ *   entfernt, jedes `font-weight:600` ist 500 oder 700. Die kleinste
+ *   Schriftstufe ist 13 px, `--groesse-1` (12 px) entfaellt. Korrektur;
+ *   kein Schema.
+ *
+ * 23.9.2 — DIE PRODUKTMARKE NADOKU (Schritt 26, MA-06; Backlog Nr. 62).
+ *   Zeichen aus dem Branding-Repo (`nadoku-hubschrauber`, `nadoku-nef`, je
+ *   farbig, farbig-negativ, weiss; Grundform Dunkelblau, Markenfarben
+ *   exakt) statt der `gen-em_logo_*` mit Naeherungswerten. Die Kopfleiste
+ *   zeigt Zeichen (farbig-negativ) und den festen Namen „NAdoku"
+ *   (`UI_PRODUKTNAME`); der Kurzname der Installation steht seither nur
+ *   noch im Tab, auf der Anmeldeseite, in Mails und Druckblaettern.
+ *   Favicons als SVG, 32-px-PNG, Apple-Symbol und ICO (16/32/48), erzeugt
+ *   von `tools/erzeugen/logos.mjs`. Die Wartungsseite zeigt fest den
+ *   Hubschrauber statt einer Muenze; `logo_platzhalter_liegt()` entfaellt.
+ *   Ein `logo_path` mit altem Namen gilt weiter als mitgeliefert.
+ *   Korrektur; kein Schema. */
+/* 23.10.0 — DER DARK MODE, MIT SCHALTER JE KONTO (Schritt 26, MA-07).
+ *   Eine zweite Zuordnung derselben Rollen auf die Blau-Reihe des
+ *   Branding-Repos (Abschnitt 2a von `style.css`, der Block des Repos
+ *   woertlich, dazu die Rollen der Anwendung). Ausloeser sind
+ *   `prefers-color-scheme` und `data-theme` am <html>, das
+ *   `ui_seite_start()` aus der Sitzung setzt. Die Wahl steht in
+ *   `users.darstellung` ('' wie das Geraet, 'hell', 'dunkel') und im Profil
+ *   als Karte „Darstellung". Karte (Leaflet), Kopfleiste und Druckblaetter
+ *   bleiben hell bzw. dunkelblau; Drucken ist immer hell. Die Anmeldeseiten
+ *   waehlen ihr Logo mit <picture>. `kontrast.py` rechnet jedes Paar in
+ *   beiden Modi.
+ *
+ *   NEBENNUMMER MIT MIGRATION: `2026_11_07_darstellung` legt
+ *   `users.darstellung` an. Nach dem Deploy muss eine Administratorin
+ *   `update.php` aufrufen; bis dahin gilt fuer jedes Konto „wie das Geraet",
+ *   und Anmeldung und Profil laufen weiter — beide Leser vertragen die
+ *   fehlende Spalte. */
+/* 23.10.1 — DER NACHZUG DES BRANDING-REPOS AUF E7BF4FC (Schritt 26, MA-10).
+ *   Beide uebernommenen Bloecke in `style.css` ersetzt (hell und dunkel,
+ *   neue Pruefsumme); das Repo bringt jetzt die Schrift auf der Aktion und
+ *   die Hauptaktion (Orange, `--aktion-haupt`) selbst mit. Der Gefahrknopf
+ *   ist ein Umriss (rot 600 Linie, rot 700 Schrift, rot 100 unter dem
+ *   Zeiger) statt einer roten Flaeche; `--gefahr-hover` entfaellt, `--gefahr`
+ *   bleibt fuer den Zaehler offener Fehler. Die vier Warnkaesten ohne
+ *   `ui.php` (Wartung, Ueberlast, Wartungsbanner, HTTPS-Seite) tragen das
+ *   Warnsymbol, wie jede Warnung (`STOERUNG_WARNSYMBOL`). Korrektur; kein
+ *   Schema. */
+/* 23.10.2 — DER KURZNAME STEHT WIEDER IN DER KOPFLEISTE (Schritt 26,
+ *   MA-11). Neben dem Zeichen steht wieder `ui_instanz_kurz()` statt des
+ *   festen „NAdoku"; `UI_PRODUKTNAME` entfaellt. Die BetreiberIn hat E-MA-21
+ *   zurueckgenommen (E-MA-28): Wer mehrere Anlagen betreibt, erkennt sie an
+ *   der Kopfleiste. Korrektur; kein Schema. */
+/* 23.11.0 — DIE HAUPTAKTION IN ORANGE (Schritt 26, MA-12). Neue Knopfart
+ *   `haupt` (`.knopf-haupt`, `--aktion-haupt` aus dem Repo, Asphalt auf
+ *   Philipp-Orange), hoechstens einmal je Seite, auf sechs Seiten (E-MA-27):
+ *   Tagesuebersicht „Einsatz nachtragen" als Knopf rechts neben „Aktionen"
+ *   (Mockup MA-02; `#addmission-haupt`, die Adresse setzt `loadDay()`),
+ *   Einsatz „Bearbeiten", Einsatzformular ueber die Speicherleiste
+ *   (`ui_speichern_leiste(['haupt' => true])`), Diensttag anlegen,
+ *   Anmelden (beide Formulare), Konto anlegen. Alles andere bleibt
+ *   `primaer` in Dunkelblau. Neben; kein Schema. */
+/* 23.11.1 — DIE FAVICONS AUS DEM SET DES REPOS (Schritt 26, MA-13).
+ *   `tools/erzeugen/logos.mjs` zeichnet sie nicht mehr selbst, sondern holt
+ *   SVG, 32-px-PNG, Apple-Symbol und ICO aus
+ *   `1 Logos/Produktmarken/NAdoku/Favicon/` (Repo-Commit e7bf4fc; Zeichen
+ *   92 % breit statt 96 %, Apple-Symbol wie bisher 70 %). Dateinamen und
+ *   `favicon_tags()` bleiben; kein Manifest (R70). Korrektur; kein Schema. */
+/* 23.11.2 — BARRIEREFREIHEIT NACH AXE-CORE (Schritt 26, MA-14, E-MA-31,
+ *   -32). Gemessen vorher: 11 Regeln verletzt, gleich in drei Engines;
+ *   nachher 0. Der Weg in die Jahres-/Monatsuebersicht steht neben dem
+ *   <details> in `.akkordeon-rahmen` statt im <summary> (daylist.js faengt
+ *   keinen Klick mehr ab); „Aktionen" und „Sortieren" tragen ihren Namen
+ *   am Knopf; Phasenfelder mit `aria-label`; Tagesfelder und Lesefelder des
+ *   Einsatzes in <dl>; leere Kopfzellen mit Vorlesetext bzw. im Handbuch
+ *   als <td>; Codebloecke und Tabellen der Hilfe mit `tabindex`; zwei
+ *   Ueberschriften im Handbuch eine Ebene hoeher; der gesperrte
+ *   Seitenknopf mit `role="link"`; die zweite Navigation heisst
+ *   „Hauptbereiche im Menue". Links im Fliesstext sind unterstrichen.
+ *   EdApi bricht Abrufe beim Verlassen der Seite selbst ab
+ *   (`beforeunload`, nach einer Sekunde frisches Signal; `EdApi.signal()`
+ *   fuer eigene Abrufe) — WebKit meldete sie sonst als Seitenfehler.
+ *   Korrektur; kein Schema. */
+/* 23.11.3 — DER VORLESETEXT IN DER KOPFZELLE ZOG DIE SEITE BREIT (Schritt 26,
+ *   MA-18, F-MA-28). `.tabelle-scroll` traegt `position:relative`; ohne hing
+ *   der absolut gesetzte Vorlesetext aus 23.11.2 am Dokument, und die
+ *   Kontenliste lief bei 768 und 1024 px waagerecht ueber (Bilderlauf, drei
+ *   Engines). Korrektur; kein Schema. */
+const WEB_VERSION = '23.11.3';

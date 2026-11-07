@@ -279,10 +279,10 @@ function speicher_uebersicht(): array
  */
 function speicher_ton(int $prozent, array $schwellen): string
 {
-    if (!$schwellen) { return 'blau'; }
+    if (!$schwellen) { return 'gruen'; }
     if ($prozent >= (int)max($schwellen)) { return 'rot'; }
     if ($prozent >= (int)min($schwellen)) { return 'orange'; }
-    return 'blau';
+    return 'gruen';
 }
 
 /* ---------------------------------------------------------------------------

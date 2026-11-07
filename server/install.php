@@ -242,7 +242,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $adminEmail = email_normalisieren(post_text('admin_email'));
     $baseUrl = rtrim($in('base_url'), '/');
     $timezone = $in('timezone') ?: 'Europe/Berlin';
-    $logoPath = $in('logo_path') ?: 'assets/images/gen-em_logo_helicopter.svg';
+    $logoPath = $in('logo_path') ?: 'assets/images/nadoku-hubschrauber-farbig.svg';
 
     $smtp = [
         'host' => $in('smtp_host'), 'port' => (int)($in('smtp_port') ?: 465),
@@ -595,7 +595,7 @@ function render_form(array $v, array $errors, string $nachweis,
           <?php ui_feld(['name' => 'timezone', 'label' => 'Zeitzone (Anzeige)',
                          'wert' => (string)($v['timezone'] ?? 'Europe/Berlin')]); ?>
           <?php ui_feld(['name' => 'logo_path', 'label' => 'Logo-Pfad',
-                         'wert' => (string)($v['logo_path'] ?? 'assets/images/gen-em_logo_helicopter.svg'),
+                         'wert' => (string)($v['logo_path'] ?? 'assets/images/nadoku-hubschrauber-farbig.svg'),
                          'klein' => 'Nur für ein EIGENES Logo. Zeigt der Pfad auf eines '
                                   . 'der beiden mitgelieferten, entscheidet die Logo-Wahl '
                                   . '(Betrieb und Profil).']); ?>

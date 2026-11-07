@@ -157,7 +157,7 @@ if (isset($_GET['bestaetigen'])) {
 <main class="anmeldung">
  <?php ui_hinweise(); ?>
  <div class="anmeldung-karte">
-  <img src="<?= e(logo_src()) ?>" alt="" class="anmeldung-logo">
+  <?= logo_bild_anmeldung() ?>
   <h1 class="anmeldung-titel"><?= e(instanz_kurz()) ?></h1>
   <p class="anmeldung-unter">Einsatzdokumentation Notarzt</p>
   <h2 class="anmeldung-schritt">Code bestätigen</h2>
@@ -268,7 +268,7 @@ ui_seite_start(['titel' => 'Zweitfaktor einrichten', 'klasse' => 'anmeldung-body
 <main class="anmeldung">
  <?php ui_hinweise(); ?>
  <div class="anmeldung-karte">
-  <img src="<?= e(logo_src()) ?>" alt="" class="anmeldung-logo">
+  <?= logo_bild_anmeldung() ?>
   <h1 class="anmeldung-titel"><?= e(instanz_kurz()) ?></h1>
   <p class="anmeldung-unter">Einsatzdokumentation Notarzt</p>
 <?php if ($codes !== null): ?>

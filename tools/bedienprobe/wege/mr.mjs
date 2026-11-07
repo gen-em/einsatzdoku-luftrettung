@@ -36,8 +36,11 @@ const OEFFNER = [
   { seite: 'zeitraum.php?y=2026',         id: 'sortblatt', was: 'Sortierblatt zeitraum.php' },
 ];
 
-const ORANGE_HELL = 'rgb(255, 235, 214)';   /* --orange-hell */
-const ORANGE_TIEF = 'rgb(194, 90, 0)';      /* --orange-tief */
+/* Seit Schritt 26 (Konzept MA) trägt der offene Öffner die Auswahl:
+ * blau 100 mit Dunkelblau. Bis dahin Orange hell mit Orange tief. Die Probe
+ * läuft hell (Playwright-Vorgabe `colorScheme: light`). */
+const AUSWAHL_FLAECHE = 'rgb(217, 236, 253)';   /* --auswahl-flaeche, blau 100 */
+const AUSWAHL_TEXT    = 'rgb(26, 46, 77)';      /* --auswahl-text, Dunkelblau */
 
 /** Die gerechnete Fahrtdauer des Blattes in Millisekunden — dieselbe Frage,
  *  die `blatt.js` stellt. 0 heißt „keine Fahrt". */
@@ -77,7 +80,7 @@ export const wege = [
     name: 'mr-oeffner-markiert',
     paket: 'AP4', punkt: 'MR-01', rolle: 'demo',
     was: 'Jede Bauart von Öffner trägt die Markierung, solange ihr Blatt offen ist',
-    soll: '5 von 5 Öffnern: Fläche --orange-hell, Schrift --orange-tief, aria-expanded=true; '
+    soll: '5 von 5 Öffnern: Fläche --auswahl-flaeche, Schrift --auswahl-text, aria-expanded=true; '
         + 'nach dem Schließen alle zurück und der Fokus wieder am Knopf',
     async fahren(k) {
       /* BEI 390 px, UND ZWAR ABSICHTLICH. Zwei der fünf Öffner gibt es nur
@@ -102,7 +105,7 @@ export const wege = [
         await k.seite.waitForTimeout(Math.round(await fahrtMs(k.seite, o.id)) + 250);
         const zu = await stand(k.seite, o.id);
         const gut = auf && zu
-          && auf.flaeche === ORANGE_HELL && auf.schrift === ORANGE_TIEF
+          && auf.flaeche === AUSWAHL_FLAECHE && auf.schrift === AUSWAHL_TEXT
           && auf.expanded === 'true' && auf.hidden === false
           && zu.expanded === 'false' && zu.hidden === true && zu.fokusAmKnopf;
         if (gut) { treffer.push(o.was); }
@@ -188,7 +191,7 @@ export const wege = [
       await k.seite.waitForTimeout(60);
       const gleichDanach = await stand(k.seite, 'dayblatt');
       const ok = ms === 0 && offen && !offen.hidden
-              && offen.flaeche === ORANGE_HELL
+              && offen.flaeche === AUSWAHL_FLAECHE
               && gleichDanach && gleichDanach.hidden === true;
       return {
         ist: `Fahrtdauer ${ms} ms · offen hidden=${offen ? offen.hidden : '—'}, `

@@ -457,13 +457,14 @@ function wartung_antwort_json(): never
  * das, was umgebaut wird. Das Stylesheet darf verlinkt werden — es ist eine
  * statische Datei und laeuft nicht durch PHP.
  *
- * DAS LOGO WIRFT EINE MUENZE. `logo_stamm()` faellt aus (Datenbank), und ein
- * fest eingebautes Logo waere eine Aussage: Diese Anwendung dokumentiert
- * Luft- UND bodengebundene Notarzteinsaetze, und die Wahl „wechselnd" ist
- * genau deshalb der Installationsstandard. Der Wurf hier ist derselbe wie in
- * `logo_aufloesen()` — nur ohne Sitzung und ohne Datenbank. Wer ein eigenes
- * Logo eingestellt hat, sieht waehrend der Wartung eines der beiden
- * Standardlogos; das ist der Preis dafuer, dass diese Seite ohne Datenbank
+ * DAS LOGO IST DER HUBSCHRAUBER, die Vorbelegung der Installation
+ * (`LOGO_STANDARD_VORGABE`). `logo_stamm()` faellt aus (Datenbank). Bis
+ * Schritt 26 warf die Seite hier eine Muenze zwischen Hubschrauber und NEF;
+ * die Regeln der Produktmarke (Branding-Repo, `Produktmarken.md`, Regel 9)
+ * erlauben je Gegenstand ein Zeichen, aber „nie einen Wechsel bei jedem
+ * Seitenaufruf" — und ein Neuladen der Wartungsseite ist einer. Wer ein
+ * eigenes Logo oder das NEF eingestellt hat, sieht waehrend der Wartung den
+ * Hubschrauber; das ist der Preis dafuer, dass diese Seite ohne Datenbank
  * auskommt.
  *
  * KEIN SKRIPT auf dieser Seite. Sie soll auch dann stehen, wenn die
@@ -476,6 +477,13 @@ function wartung_antwort_seite(bool $rueckweg = true): never
     echo wartung_seite_html($rueckweg);
     exit;
 }
+
+/* DAS WARNSYMBOL DER STOERUNGSSEITEN, als Dateiverweis. Eine Warnmeldung
+ * traegt immer ein Symbol, damit eine orange Meldung nie wie die orange
+ * Hauptaktion aussieht (Branding-Repo, „5 Regeln/Farben.md", seit Commit
+ * e7bf4fc). Diese Seiten laufen ohne `ui.php`; das Markup ist das, das
+ * `ui_symbol('warnung', 'symbol-gross')` ohne Symbolvorrat ausgibt. */
+const STOERUNG_WARNSYMBOL = '<svg class="symbol symbol-gross" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="assets/images/symbole/warnung.svg#i"></use></svg>';
 
 /**
  * DAS GERUEST BEIDER STOERUNGSSEITEN.
@@ -502,9 +510,8 @@ function wartung_antwort_seite(bool $rueckweg = true): never
  */
 function stoerung_seite_html(string $titel, string $innen): string
 {
-    /* DAS LOGO WIRFT EINE MUENZE — siehe wartung_seite_html(). */
-    $stamm = random_int(0, 1) === 1 ? 'gen-em_logo_nef' : 'gen-em_logo_helicopter';
-    $logo  = 'assets/images/' . $stamm . '.svg';
+    /* DAS LOGO IST DER HUBSCHRAUBER — siehe wartung_antwort_seite(). */
+    $logo  = 'assets/images/nadoku-hubschrauber-farbig.svg';
     /* Erkennungswert wie asset() ihn setzt, aber ohne db.php: die
      * Aenderungszeit der Datei. Faellt sie aus, bleibt der Verweis nackt —
      * schlimmstenfalls zeigt ein Browser ein altes Stylesheet, und die Seite
@@ -587,7 +594,7 @@ function wartung_seite_html(bool $rueckweg = true): string
 
     return stoerung_seite_html('Wartung — ' . $wer,
         '      <h1>Wartung</h1>' . "\n"
-      . '      <div class="meldung meldung-warn" role="status">' . "\n"
+      . '      <div class="meldung meldung-warn" role="status">' . STOERUNG_WARNSYMBOL . "\n"
       . '        <p><strong>NAdoku wird gerade aktualisiert</strong> und ist in wenigen'
       . ' Minuten wieder da. Deine Uhr und dein Handy liefern ihre Daten danach'
       . ' von selbst nach.</p>' . "\n"
@@ -674,7 +681,7 @@ function wartung_balken(): string
     };
     if ($zusatz !== '') { $von = ' — automatisch geschaltet'; }
 
-    return '<div class="meldung meldung-warn" role="status">'
+    return '<div class="meldung meldung-warn" role="status">' . STOERUNG_WARNSYMBOL
          . '<p><strong>Wartungsmodus ' . $h($seit) . $von . '</strong> — alle anderen '
          . 'Anfragen bekommen 503. Geräte liefern nach.' . $h($zusatz) . '</p></div>';
 }
@@ -1005,7 +1012,7 @@ function ueberlast_seite_html(): string
 {
     return stoerung_seite_html('Ausgelastet — ' . INSTANZ_KURZ_VORGABE,
         '      <h1>Ausgelastet</h1>' . "\n"
-      . '      <div class="meldung meldung-warn" role="status">' . "\n"
+      . '      <div class="meldung meldung-warn" role="status">' . STOERUNG_WARNSYMBOL . "\n"
       . '        <p><strong>Der Server ist gerade ausgelastet</strong> — bitte in'
       . ' einer Minute noch einmal. Deine Uhr und dein Handy liefern ihre Daten'
       . ' von selbst nach.</p>' . "\n"

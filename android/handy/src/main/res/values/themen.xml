@@ -22,14 +22,15 @@
     nicht die von AppCompat oder Material Components: Beide waeren eine weitere
     Abhaengigkeit fuer nichts.
 
-    Die Fensterfarbe ist `—rauch`, die Flaeche der Seite — nicht Weiss. Weiss
-    ist in dieser Marke keine Flaeche (siehe farben.xml); ein weisses
-    Startfenster, das eine Sekunde spaeter auf Rauch umspringt, sieht nach
-    Fehler aus.
+    Die Fensterfarbe ist die Flaeche der Seite (`rolle_flaeche_seite`) —
+    nicht Weiss. Ein weisses Startfenster, das eine Sekunde spaeter auf die
+    Seitenflaeche umspringt, sieht nach Fehler aus. Seit Android 0.22.0 ist
+    sie eine Rolle und schaltet mit dem Dark Mode um; das dunkle Thema steht
+    in `values-night/themen.xml` (Elternthema ohne `Light`).
 -->
 <resources>
     <style name="Theme.NAdoku" parent="@android:style/Theme.Material.Light.NoActionBar">
-        <item name="android:windowBackground">@color/marke_rauch</item>
-        <item name="android:colorAccent">@color/marke_orange</item>
+        <item name="android:windowBackground">@color/rolle_flaeche_seite</item>
+        <item name="android:colorAccent">@color/rolle_aktion</item>
     </style>
 </resources>

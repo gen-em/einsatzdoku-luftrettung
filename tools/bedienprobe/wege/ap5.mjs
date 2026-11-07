@@ -5,7 +5,8 @@
  *   E-S9-14 / Nr. 44   Sprungliste ab sechs Einträgen, Pille mit Artzeichen
  *   E-S9-18            Filterfeld in den langen Listen, filtert im Browser
  *   F-S9-K-04          Artzeichen in der Rettungsmittel-Zeile
- *   M-S9-05            Die angesprungene Zeile wird orange (`:target`)
+ *   M-S9-05            Die angesprungene Zeile trägt die Auswahl (`:target`;
+ *                      bis Schritt 26 orange)
  *
  * WARUM DIESE WEGE UND KEIN BILD. Die Abnahme des Konzepts verlangt für die
  * Schwelle „ab sechs" ein Bild („5 → nein, 6 → ja"). Am Referenzbestand ist
@@ -209,7 +210,7 @@ export const wege = [
     name: 'ap5-sprung-faerbt-die-zeile',
     paket: 'AP5', punkt: 'M-S9-05', rolle: 'demo',
     was: 'Ein Klick auf eine Pille springt zur Zeile und färbt sie',
-    soll: 'Zeile trägt Orange-hell, Adresse endet auf #veh-<id>, Pille wird nicht doppelt gefärbt',
+    soll: 'Zeile trägt die Auswahlfläche, Adresse endet auf #veh-<id>, Pille wird nicht doppelt gefärbt',
     async fahren(k) {
       const bid = await ersterStandort(k);
       await k.gehZu(SEITE(k, bid));
@@ -238,9 +239,10 @@ export const wege = [
           };
         });
         await k.bild('ap5-sprung-faerbt-die-zeile');
-        /* --orange-hell ist #FFEBD6 = rgb(255, 235, 214). */
-        const orange = /rgb\(255,\s*235,\s*214\)/.test(mass.flaeche || '');
-        const ok = /^#veh-\d+$/.test(mass.hash) && mass.zeileDa && orange
+        /* --auswahl-flaeche ist blau 100, #D9ECFD = rgb(217, 236, 253) (bis
+         * Schritt 26 --orange-hell, rgb(255, 235, 214)). */
+        const auswahl = /rgb\(217,\s*236,\s*253\)/.test(mass.flaeche || '');
+        const ok = /^#veh-\d+$/.test(mass.hash) && mass.zeileDa && auswahl
                 && mass.oben !== null && mass.oben >= mass.kopf;
         return {
           ist: `Adresse „${mass.hash}" · Zeile gefunden: ${mass.zeileDa} · `
@@ -248,7 +250,7 @@ export const wege = [
              + `(Kopfleiste ${mass.kopf} px)`,
           ok,
           bemerkung: ok ? ''
-            : (orange ? 'Die Zeile sitzt hinter der Kopfleiste'
+            : (auswahl ? 'Die Zeile sitzt hinter der Kopfleiste'
                       : 'Die angesprungene Zeile ist nicht hervorgehoben'),
         };
       } finally {
@@ -397,7 +399,7 @@ export const wege = [
     name: 'ap5-dialog-anlegen-landet-auf-der-zeile',
     paket: 'AP5', punkt: 'E-S9-19', rolle: 'demo',
     was: 'Anlegen im Dialog führt auf die neue Zeile, hervorgehoben, ohne zusätzliche Meldung',
-    soll: 'Adresse endet auf #td-<id> · Zeile orange-hell · keine Meldung am Seitenkopf',
+    soll: 'Adresse endet auf #td-<id> · Zeile in der Auswahlfläche · keine Meldung am Seitenkopf',
     async fahren(k) {
       const bid = await ersterStandort(k);
       const NAME = 'KP Zielklinik Dialog';
@@ -427,8 +429,8 @@ export const wege = [
           };
         });
         await k.bild('ap5-dialog-landung');
-        const orange = /rgb\(255,\s*235,\s*214\)/.test(mass.flaeche);
-        const ok = /^#td-\d+$/.test(mass.hash) && mass.gefunden && orange
+        const auswahl = /rgb\(217,\s*236,\s*253\)/.test(mass.flaeche);
+        const ok = /^#td-\d+$/.test(mass.hash) && mass.gefunden && auswahl
                 && mass.text.includes(NAME) && mass.meldungen === 0
                 && kopf.titel === 'Zielklinik anlegen' && kopf.knopf === 'Anlegen'
                 && kopf.unter.startsWith('Standort ');
@@ -616,7 +618,7 @@ export const wege = [
     name: 'ap5-besatzung-anlegen',
     paket: 'AP5', punkt: 'E-S9-19', rolle: 'demo',
     was: 'Eine Besatzungs-Vorbelegung lässt sich mit Rolle anlegen und landet auf ihrer Zeile',
-    soll: 'Landung auf #crew-<id>, Zeile orange-hell, 0 Fehlermeldungen',
+    soll: 'Landung auf #crew-<id>, Zeile in der Auswahlfläche, 0 Fehlermeldungen',
     async fahren(k) {
      /* DIESER WEG FUHR FRUEHER UEBER DIE VERWALTUNG (`admin_stammdaten.php`:
         systemweite Besatzungs-Vorbelegungen ließen sich dort nicht
@@ -649,8 +651,8 @@ export const wege = [
           };
         });
         await k.bild('ap5-besatzung-anlegen');
-        const orange = /rgb\(255,\s*235,\s*214\)/.test(mass.flaeche);
-        const ok = /^#crew-\d+$/.test(mass.hash) && mass.gefunden && orange
+        const auswahl = /rgb\(217,\s*236,\s*253\)/.test(mass.flaeche);
+        const ok = /^#crew-\d+$/.test(mass.hash) && mass.gefunden && auswahl
                 && mass.text.includes(NAME) && mass.fehler === 0;
         return {
           ist: `Adresse „${mass.hash}", Zeile gefunden: ${mass.gefunden}, `
@@ -759,12 +761,12 @@ export const wege = [
         }, NAME);
         await k.bild('ap5-loeschen-danach');
 
-        const orange = /rgb\(255,\s*235,\s*214\)/.test(mass.flaeche);
+        const auswahl = /rgb\(217,\s*236,\s*253\)/.test(mass.flaeche);
         const ok = /2 eigene Stammdatensätze/.test(frage)
                 && frage.includes(BLEIBT)
                 && /1 Rettungsmittel ohne Standortpflicht/.test(frage)
                 && !frage.includes(GEHT)
-                && /^#veh-\d+$/.test(mass.hash) && orange
+                && /^#veh-\d+$/.test(mass.hash) && auswahl
                 && mass.text.includes(BLEIBT) && mass.karteOffen
                 && mass.standortWeg;
         return {

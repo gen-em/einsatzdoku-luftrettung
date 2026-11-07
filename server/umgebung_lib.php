@@ -8,7 +8,7 @@ require_once __DIR__ . '/konfig_lib.php';
  * UMGEBUNG — das Etikett einer Anlage, die nicht die Produktivanlage ist
  * ===========================================================================
  *
- *     umgebung()           // ['name' => 'Staging', 'farbe' => 'rot', …] oder null
+ *     umgebung()           // ['name' => 'Staging', 'farbe' => 'orange', …] oder null
  *     umgebung_praefix()   // '[Staging] ' oder ''
  *
  * WOFUER. Staging und Produktiv saehen sonst gleich aus. Wer zwei Reiter
@@ -35,11 +35,22 @@ require_once __DIR__ . '/konfig_lib.php';
  * Heute eine. Eine zweite braucht eine Regel im Stylesheet, einen Kontrast
  * gegen die Kopfleiste (`kontrast.py`) und eine Freigabe mit Mockup
  * (`CLAUDE.md` 5) — und damit mehr als einen Eintrag hier. Ein unbekannter
- * Wert wird deshalb nicht ignoriert, sondern ROT gezeichnet und auf der
+ * Wert wird deshalb nicht ignoriert, sondern in der ersten Farbe gezeichnet und auf der
  * Statusseite benannt: Wer „lila" eintraegt, will eine Kennzeichnung,
  * und keine Kennzeichnung waere die schlechtere Antwort.
  */
-const UMGEBUNG_FARBEN = ['rot'];
+const UMGEBUNG_FARBEN = ['orange'];
+
+/**
+ * Fruehere Namen einer Farbe, die weiter gelten.
+ *
+ * Bis Schritt 26 (Konzept MA) war das Etikett ROT, und so steht es in der
+ * `config.php` von Staging. Seither ist es orange 800: Rot heisst in der
+ * Oberflaeche Fehler, und eine Testanlage ist keiner. Ein alter Eintrag wird
+ * still auf den neuen Namen gelesen — eine Warnung auf der Statusseite fuer
+ * eine Datei, die niemand anfassen muss, waere Laerm.
+ */
+const UMGEBUNG_FARBEN_FRUEHER = ['rot' => 'orange'];
 
 /**
  * Das Etikett aus `config.php`, oder `null`, wenn keines gesetzt ist.
@@ -50,7 +61,7 @@ const UMGEBUNG_FARBEN = ['rot'];
  * UMGEBUNG_FARBEN. `farbe_roh` ist, was in der Datei steht; die Statusseite
  * braucht es fuer ihren Satz („mit der Farbe ‚lila'").
  *
- * OHNE NAMEN KEIN ETIKETT. Ein Eintrag `['farbe' => 'rot']` ohne `name` ist
+ * OHNE NAMEN KEIN ETIKETT. Ein Eintrag `['farbe' => 'orange']` ohne `name` ist
  * ein halber Eintrag; er faerbte die Kopfleiste und liesse den Titel leer.
  * Er zaehlt wie keiner.
  */
@@ -65,6 +76,7 @@ function umgebung(): ?array
      * sie weglaesst, meint sie — eine Warnung dafuer waere Laerm. */
     $farbeRoh = trim((string)($roh['farbe'] ?? ''));
     if ($farbeRoh === '') { $farbeRoh = UMGEBUNG_FARBEN[0]; }
+    $farbeRoh = UMGEBUNG_FARBEN_FRUEHER[$farbeRoh] ?? $farbeRoh;
     $bekannt  = in_array($farbeRoh, UMGEBUNG_FARBEN, true);
     return [
         'name'          => $name,

@@ -1485,7 +1485,8 @@ ui_seite_start(['titel' => $editing ? 'Einsatz bearbeiten' : 'Einsatz nachtragen
              KEIN "Verwerfen" und kein Abbrechen-Link mehr — der Rueckweg oben
              genuegt, und die beforeunload-Rueckfrage des Dirty-Trackings
              schuetzt ungespeicherte Eingaben auf jedem Weg hinaus. */
-          ui_speichern_leiste(['text' => $editing ? 'Änderungen speichern' : 'Einsatz anlegen']); ?>
+          ui_speichern_leiste(['text' => $editing ? 'Änderungen speichern' : 'Einsatz anlegen',
+                               'haupt' => true]); ?>
   </form>
 <?php ui_geruest_ende(); ?>
 <?php ui_krypto_bootstrap(); ?>
@@ -1570,6 +1571,10 @@ function addRow(no, time) {
   div.className = 'phasen-eingabe';
   const sel = document.createElement('select');
   sel.name = 'ph_no[]';
+  // Die Zeile hat keine sichtbare Beschriftung je Feld — der Kopf der Karte
+  // sagt „Phasen". Ohne Namen las ein Screenreader „Auswahl" und
+  // „Eingabefeld" (axe `select-name`, `label-title-only`, F-MA-22).
+  sel.setAttribute('aria-label', 'Phase');
   for (let p = 2; p <= 9; p++) {
     const o = document.createElement('option');
     o.value = p; o.textContent = p + ' · ' + PHASE_LABELS[p];
@@ -1583,6 +1588,7 @@ function addRow(no, time) {
   // erfasst. Serverseitig prueft weiterhin local_to_utc().
   t.type = 'text'; t.className = 'zeitfeld';
   t.name = 'ph_time[]'; t.value = time || '';
+  t.setAttribute('aria-label', 'Uhrzeit der Phase');
   div.append(sel, t, wegKnopf('Diese Phase entfernen', () => div));
   document.getElementById('phaserows').appendChild(div);
   return sel;

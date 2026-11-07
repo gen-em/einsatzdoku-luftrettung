@@ -18,7 +18,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.sp
 import org.genem.nadoku.R
-import org.genem.nadoku.gemeinsam.Farbe
+import org.genem.nadoku.gemeinsam.Rolle
 import org.genem.nadoku.gemeinsam.LogoWahl
 import org.genem.nadoku.handy.kopplung.Abweisung
 import org.genem.nadoku.handy.kopplung.Kopplungscode
@@ -103,7 +103,7 @@ fun KopplungAnsicht(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(Farbe.rauch)
+            .background(Rolle.flaecheSeite)
             /* Die Navigationsleiste unten -- und im Querformat die seitliche
              * Geste. Wie oben gilt: `background` zuerst, damit
              * die Flaeche bis zum Rand faerbt, das Padding danach, damit der
@@ -119,8 +119,8 @@ fun KopplungAnsicht(
             Karte {
                 Zustandszeile(
                     text = stringResource(R.string.sync_nicht_eingerichtet),
-                    punktfarbe = Farbe.rot,
-                    schriftfarbe = Farbe.rotTief,
+                    punktfarbe = Rolle.fehlerLinie,
+                    schriftfarbe = Rolle.fehlerText,
                 )
 
                 when (schritt) {
@@ -129,7 +129,7 @@ fun KopplungAnsicht(
                         Hinweiskasten(stringResource(R.string.kopplung_code_wo))
                         Text(
                             text = stringResource(R.string.kopplung_wartet),
-                            color = Farbe.blauTief, fontSize = 15.sp,
+                            color = Rolle.infoText, fontSize = 15.sp,
                         )
                         Restzeit(schritt.restSekunden)
                         KnopfNeutral(stringResource(R.string.kopplung_abbrechen)) {
@@ -155,13 +155,13 @@ fun KopplungAnsicht(
                     is Kopplungsschritt.Startet ->
                         Text(
                             text = stringResource(R.string.kopplung_laeuft),
-                            color = Farbe.blauTief, fontSize = 15.sp,
+                            color = Rolle.infoText, fontSize = 15.sp,
                         )
 
                     is Kopplungsschritt.Bestaetigt ->
                         Text(
                             text = stringResource(R.string.kopplung_bestaetigt),
-                            color = Farbe.blauTief, fontSize = 15.sp,
+                            color = Rolle.erfolgText, fontSize = 15.sp,
                         )
 
                     else -> {
@@ -239,11 +239,11 @@ private fun Codeanzeige(code: String) {
     ) {
         Text(
             text = stringResource(R.string.kopplung_code_zeigen),
-            color = Farbe.gedaempft, fontSize = 13.sp,
+            color = Rolle.gedaempft, fontSize = 13.sp,
         )
         Text(
             text = Kopplungscode.gruppiert(code),
-            color = Farbe.asphalt,
+            color = Rolle.text,
             fontSize = 34.sp,
             fontWeight = FontWeight.Bold,
             textAlign = TextAlign.Center,
@@ -263,7 +263,7 @@ private fun Codeanzeige(code: String) {
 private fun Kontoanzeige(konto: String) {
     Text(
         text = konto,
-        color = Farbe.asphalt,
+        color = Rolle.text,
         fontSize = 20.sp,
         fontWeight = FontWeight.Bold,
         textAlign = TextAlign.Center,
@@ -288,7 +288,7 @@ private fun Restzeit(sekunden: Int) {
     } else {
         pluralStringResource(R.plurals.kopplung_rest_sek, sekunden, sekunden)
     }
-    Text(text = text, color = Farbe.gedaempft, fontSize = 13.sp)
+    Text(text = text, color = Rolle.gedaempft, fontSize = 13.sp)
 }
 
 /**
@@ -309,14 +309,14 @@ fun Meldungsblock(
     Column(verticalArrangement = Arrangement.spacedBy(Abstand.eins)) {
         Zustandszeile(
             text = titel,
-            punktfarbe = if (warnend) Farbe.rot else Farbe.blau,
-            schriftfarbe = if (warnend) Farbe.rotTief else Farbe.blauTief,
+            punktfarbe = if (warnend) Rolle.fehlerLinie else Rolle.erfolgLinie,
+            schriftfarbe = if (warnend) Rolle.fehlerText else Rolle.erfolgText,
         )
         if (hinweis != null) {
-            Text(text = hinweis, color = Farbe.gedaempft, fontSize = 13.sp)
+            Text(text = hinweis, color = Rolle.gedaempft, fontSize = 13.sp)
         }
         if (!servermeldung.isNullOrBlank()) {
-            Text(text = servermeldung, color = Farbe.gedaempft, fontSize = 12.sp)
+            Text(text = servermeldung, color = Rolle.gedaempft, fontSize = 12.sp)
         }
     }
 }

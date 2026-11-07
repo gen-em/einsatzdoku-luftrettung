@@ -16,7 +16,7 @@ sealed interface Syncstand {
     /** Rot. Es fehlt etwas Grundsätzliches — der nächste Schritt gehört dazu. */
     data class NichtEingerichtet(val fehlt: Fehlt) : Syncstand
 
-    /** Orange. Gekoppelt, aber N abgeschlossene Pakete warten. */
+    /** Warnung (orange 600). Gekoppelt, aber N abgeschlossene Pakete warten. */
     data class Rueckstand(val pakete: Int) : Syncstand
 
     /** Blau. Server da, Kopplung da, nichts offen. */

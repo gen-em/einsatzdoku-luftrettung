@@ -176,8 +176,8 @@ pruefe(!preg_match(RW_PRIVAT_RE, 'edka1:0123456789abcdef:' . $chiffre),
 /* ---- 5. Statuszeile ---------------------------------------------------------- */
 echo "== A5. Statuszeile „Rückweg-Prüfung\" in drei Lagen\n";
 $lagen = [
-    ['openssl', ['ok' => true,  'weg' => 'openssl', 'ms' => 2.0],   'blau',   'prüft',        'openssl'],
-    ['php',     ['ok' => true,  'weg' => 'php',     'ms' => 214.0], 'blau',   'prüft',        'reines PHP'],
+    ['openssl', ['ok' => true,  'weg' => 'openssl', 'ms' => 2.0],   'gruen',  'prüft',        'openssl'],
+    ['php',     ['ok' => true,  'weg' => 'php',     'ms' => 214.0], 'gruen',  'prüft',        'reines PHP'],
     ['fehl',    ['ok' => false, 'weg' => 'php',     'ms' => 0.0],   'orange', 'abgeschaltet', 'abgeschaltet'],
 ];
 $treffer = 0;

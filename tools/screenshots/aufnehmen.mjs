@@ -127,7 +127,7 @@ const JOBS_TOKEN = wert('--jobs-token', '');
 /* DAS UMGEBUNGSETIKETT. Mit `--etikett Staging` misst
  * der Lauf auf JEDER Seite, ob der Titel mit „[Staging] " beginnt und ob die
  * Kopfleiste — wo es eine gibt — `kopf-umgebung` traegt. Ohne den Schalter
- * misst er die Gegenrichtung: kein Vorsatz, keine rote Leiste. Anlass: Die
+ * misst er die Gegenrichtung: kein Vorsatz, keine farbige Leiste (seit Schritt 26 orange 800, bis dahin rot). Anlass: Die
  * Abnahme verlangt „Praefix auf allen Seiten, Kopfleiste rot auf
  * allen Seiten mit Kopfleiste" — ein Bild zeigt die Farbe, aber keines den
  * Seitentitel, und 58 Seiten von Hand aufzurufen ist keine Messung.

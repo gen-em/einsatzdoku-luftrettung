@@ -34,6 +34,7 @@ import androidx.compose.material3.Text
 import org.genem.nadoku.R
 import org.genem.nadoku.gemeinsam.Bildmarke
 import org.genem.nadoku.gemeinsam.Farbe
+import org.genem.nadoku.gemeinsam.Rolle
 import org.genem.nadoku.gemeinsam.LogoWahl
 import org.genem.nadoku.gemeinsam.Motiv
 
@@ -141,18 +142,18 @@ fun Zustandszeile(text: String, punktfarbe: Color, schriftfarbe: Color, modifier
 }
 
 /**
- * Erklaerkasten auf Hellblau (Blau erklaert).
- * Bewusst anders als im Web, wo die Wahlliste hell-orange waehlt.
+ * Erklaerkasten auf der Hinweisflaeche (`info_flaeche`: blau 100, dunkel
+ * blau 700) — wie die Hinweismeldung im Web.
  */
 @Composable
 fun Hinweiskasten(text: String, modifier: Modifier = Modifier) {
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .background(Farbe.blauHell, RoundedCornerShape(Radius.normal))
+            .background(Rolle.infoFlaeche, RoundedCornerShape(Radius.normal))
             .padding(horizontal = Abstand.drei, vertical = Abstand.zwei),
     ) {
-        Text(text = text, color = Farbe.asphalt, fontSize = 13.sp)
+        Text(text = text, color = Rolle.text, fontSize = 13.sp)
     }
 }
 
@@ -192,15 +193,28 @@ private fun Knopfflaeche(
     }
 }
 
-/** Die eine handelnde Handlung einer Ansicht: Orange, dunkelblaue Schrift. */
+/**
+ * Die EINE Hauptaktion einer Ansicht: Orange mit Asphalt-Schrift, nie Weiss
+ * (2,3:1). Am Handy nur „Dienst beginnen" -- wofuer man die App oeffnet.
+ * Wie im Web (Knopfart `haupt`, E-MA-27, -29).
+ */
+@Composable
+fun KnopfHaupt(beschriftung: String, modifier: Modifier = Modifier, aufTippen: () -> Unit) =
+    Knopfflaeche(beschriftung, Rolle.aktionHaupt, Rolle.aufAktionHaupt, null, modifier, aufTippen)
+
+/**
+ * Eine handelnde Handlung: Dunkelblau mit Schnee (dunkel: blau 300 mit
+ * Dunkelblau). Bis Android 0.21.1 war sie Orange -- seit dem Web handelt
+ * auch die App in Dunkelblau, und Orange bleibt der Hauptaktion.
+ */
 @Composable
 fun KnopfPrimaer(beschriftung: String, modifier: Modifier = Modifier, aufTippen: () -> Unit) =
-    Knopfflaeche(beschriftung, Farbe.knopfPrimaerFlaeche, Farbe.knopfPrimaerSchrift, null, modifier, aufTippen)
+    Knopfflaeche(beschriftung, Rolle.aktion, Rolle.aufAktion, null, modifier, aufTippen)
 
-/** Alles Uebrige: Schneeflaeche mit Rand. */
+/** Alles Uebrige: Kartenflaeche mit starkem Rand. */
 @Composable
 fun KnopfNeutral(beschriftung: String, modifier: Modifier = Modifier, aufTippen: () -> Unit) =
-    Knopfflaeche(beschriftung, Farbe.schnee, Farbe.dunkelblau, Farbe.gedaempft, modifier, aufTippen)
+    Knopfflaeche(beschriftung, Rolle.flaecheKarte, Rolle.textTitel, Rolle.linieStark, modifier, aufTippen)
 
 /**
  * Beendende Handlung: VOLLFLAECHIG rot, weisse Schrift.
@@ -210,14 +224,15 @@ fun KnopfNeutral(beschriftung: String, modifier: Modifier = Modifier, aufTippen:
  */
 @Composable
 fun KnopfBeenden(beschriftung: String, modifier: Modifier = Modifier, aufTippen: () -> Unit) =
-    Knopfflaeche(beschriftung, Farbe.knopfBeendenFlaeche, Farbe.knopfBeendenSchrift, null, modifier, aufTippen)
+    Knopfflaeche(beschriftung, Rolle.gefahr, Rolle.aufGefahr, null, modifier, aufTippen)
 
 /**
  * Die Wahl aus zwei Moeglichkeiten, nebeneinander.
  *
- * DIE GEWAEHLTE HAELFTE STEHT AUF HELLBLAU, nicht auf Hell-Orange wie die
- * Wahlliste im Web. In der App waehlt Blau — damit die Rolle aus
- * Design.md 3.1 sichtbar wird. Der Unterschied ist freigegeben.
+ * DIE GEWAEHLTE HAELFTE TRAEGT DIE AUSWAHL (`auswahl_flaeche` mit
+ * `auswahl_text`) — dieselbe Rolle wie im Web. Bis Android 0.21.1 war das
+ * ein freigegebener Unterschied (das Web waehlte damals Hell-Orange); seit
+ * Schritt 26 waehlen beide Blau.
  */
 @Composable
 fun Zweierwahl(
@@ -231,11 +246,11 @@ fun Zweierwahl(
         modifier = modifier
             .fillMaxWidth()
             .heightIn(min = BEDIENHOEHE)
-            .border(1.dp, Farbe.gedaempft, RoundedCornerShape(Radius.normal))
+            .border(1.dp, Rolle.linieStark, RoundedCornerShape(Radius.normal))
             .clip(RoundedCornerShape(Radius.normal)),
     ) {
         Haelfte(links, linksGewaehlt, Modifier.weight(1f)) { aufWahl(true) }
-        Box(Modifier.fillMaxHeight().width(1.dp).background(Farbe.gedaempft))
+        Box(Modifier.fillMaxHeight().width(1.dp).background(Rolle.linieStark))
         Haelfte(rechts, !linksGewaehlt, Modifier.weight(1f)) { aufWahl(false) }
     }
 }
@@ -245,14 +260,14 @@ private fun Haelfte(text: String, gewaehlt: Boolean, modifier: Modifier, aufTipp
     Box(
         modifier = modifier
             .fillMaxHeight()
-            .background(if (gewaehlt) Farbe.blauHell else Farbe.schnee)
+            .background(if (gewaehlt) Rolle.auswahlFlaeche else Rolle.flaecheKarte)
             .clickable(onClick = aufTippen)
             .padding(horizontal = Abstand.zwei, vertical = Abstand.drei),
         contentAlignment = Alignment.Center,
     ) {
         Text(
             text = text,
-            color = if (gewaehlt) Farbe.blauTief else Farbe.dunkelblau,
+            color = if (gewaehlt) Rolle.auswahlText else Rolle.textTitel,
             fontSize = 13.sp,
             fontWeight = if (gewaehlt) FontWeight.SemiBold else FontWeight.Normal,
             textAlign = TextAlign.Center,
@@ -274,10 +289,10 @@ fun Wahlzeile(
             .fillMaxWidth()
             .heightIn(min = BEDIENHOEHE)
             .background(
-                if (gewaehlt) Farbe.blauHell else Farbe.schnee,
+                if (gewaehlt) Rolle.auswahlFlaeche else Rolle.flaecheKarte,
                 RoundedCornerShape(Radius.normal),
             )
-            .border(1.dp, Farbe.linie, RoundedCornerShape(Radius.normal))
+            .border(1.dp, Rolle.linie, RoundedCornerShape(Radius.normal))
             .clickable(onClick = aufTippen)
             .padding(horizontal = Abstand.drei, vertical = Abstand.zwei),
         verticalAlignment = Alignment.CenterVertically,
@@ -285,12 +300,12 @@ fun Wahlzeile(
     ) {
         Text(
             text = beschriftung,
-            color = if (gewaehlt) Farbe.blauTief else Farbe.dunkelblau,
+            color = if (gewaehlt) Rolle.auswahlText else Rolle.textTitel,
             fontSize = 15.sp,
             fontWeight = if (gewaehlt) FontWeight.SemiBold else FontWeight.Normal,
         )
         if (zustand != null) {
-            Text(text = zustand, color = Farbe.gedaempft, fontSize = 13.sp)
+            Text(text = zustand, color = Rolle.gedaempft, fontSize = 13.sp)
         }
     }
 }
@@ -304,7 +319,7 @@ fun Wahlzeile(
  */
 @Composable
 fun Aufnahmepunkt(modifier: Modifier = Modifier) {
-    Box(modifier.size(10.dp).background(Farbe.rot, CircleShape))
+    Box(modifier.size(10.dp).background(Rolle.fehlerLinie, CircleShape))
 }
 
 /** Eine Karte: Schneeflaeche, Rand aus `--linie`, Inhalt untereinander. */
@@ -313,8 +328,8 @@ fun Karte(modifier: Modifier = Modifier, inhalt: @Composable androidx.compose.fo
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .background(Farbe.schnee, RoundedCornerShape(Radius.gross))
-            .border(1.dp, Farbe.linie, RoundedCornerShape(Radius.gross))
+            .background(Rolle.flaecheKarte, RoundedCornerShape(Radius.gross))
+            .border(1.dp, Rolle.linie, RoundedCornerShape(Radius.gross))
             .padding(Abstand.vier),
         verticalArrangement = Arrangement.spacedBy(Abstand.drei),
         content = inhalt,

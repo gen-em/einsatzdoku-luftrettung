@@ -32,6 +32,7 @@ Wiederholung des Wegs nach einer Zeitüberschreitung (Nr. 393).
 | Werkzeug | Weg | Grund |
 |---|---|---|
 | `tools/bedienprobe/probe.mjs` | Probe: bedienprobe | Zwei Stücke nur in Chromium (E-DM-05), in Firefox und WebKit benannt: der Weg `einstellungen-profil-passkey` (virtueller Authenticator über CDP) und im Weg `betrieb-server-schluesselwechsel` die Seitenzahl des Schlüsselblatts (`page.pdf()`) |
+| `tools/barrierefreiheit/probe.mjs` | Probe: barrierefreiheit | alle drei Engines vollständig (seit Schritt 26, Nr. 524) |
 | `tools/screenshots/aufnehmen.mjs` | Probe: bilderlauf | |
 | `tools/stilvergleich/stilvergleich.js` | Probe: stilvergleich | |
 | `tools/proben/abmelden/pruefe.mjs` | Probe: abmelde-probe | |
@@ -50,7 +51,7 @@ Wiederholung des Wegs nach einer Zeitüberschreitung (Nr. 393).
 | `tools/referenzdatensatz/einspielen/passwort_setzen.mjs` | Helfer | gerufen von `kreislauf.py`, `pruefkonto.py`, `einspielen.py` und `messen.py`; läuft in deren Engine |
 | `tools/messstand/browserprobe.mjs` | nur Chromium | Die Grundlinie ist gedrosseltes Chromium, und die CPU-Drossel gibt es nur über CDP (E-DM-06) |
 | `tools/messstand/einspielen.mjs` | nur Chromium | wie `browserprobe.mjs` (E-DM-06) |
-| `tools/erzeugen/logos.mjs` | kein Test | erzeugt die Logo-Bilder aus SVG |
+| `tools/erzeugen/logos.mjs` | kein Test | holt die Favicons aus dem Branding-Repo, rastert die Bildmarke (PNG) |
 | `tools/proben/kopplung/rundlauf.mjs` | von Hand | kein Prüfstand ruft ihn (Nr. 391) |
 | `tools/proben/anteil/betriebslauf.mjs` | von Hand | kein Prüfstand ruft ihn (Nr. 391) |
 | `tools/proben/anteil/umstellungslauf.mjs` | von Hand | kein Prüfstand ruft ihn (Nr. 391) |

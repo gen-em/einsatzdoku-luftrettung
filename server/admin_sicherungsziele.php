@@ -375,7 +375,7 @@ ui_seite_start(['titel' => 'Backup-Ziele']);
                     . ' — diese Anwendung fasst sie nie an, auch nicht mit '
                     . 'eingeschalteter Aufbewahrungsregel.',
                 'plaketten' => ui_plakette((string)(int)$bestand['fremd'],
-                    ['ton' => (int)$bestand['fremd'] > 0 ? 'orange' : 'blau'])]);
+                    ['ton' => (int)$bestand['fremd'] > 0 ? 'orange' : 'gruen'])]);
       ?>
       <p class="feld-hinweis">Eine Momentaufnahme, die nicht gespeichert wird;
          was nicht dem Namensmuster einer Sicherung entspricht, zählt als fremd.</p>
@@ -455,7 +455,7 @@ ui_seite_start(['titel' => 'Backup-Ziele']);
                 'klein' => $rueckKlein,
                 'plaketten' => $rueck === null
                     ? ui_plakette('unbekannt', ['ton' => 'neutral'])
-                    : ui_plakette((string)$rueck, ['ton' => $rueck > 0 ? 'orange' : 'blau'])]);
+                    : ui_plakette((string)$rueck, ['ton' => $rueck > 0 ? 'orange' : 'gruen'])]);
       ?>
       <p class="feld-hinweis">Der Versand schickt, was am Ziel nach Name und Größe
          fehlt, und wiederholt deshalb eine abgebrochene Übertragung.
@@ -474,17 +474,17 @@ ui_seite_start(['titel' => 'Backup-Ziele']);
         <?php
         $prot = strtoupper((string)$z['protokoll']);
         $plaketten = (int)$z['aktiv'] === 1
-            ? ui_plakette('aktiv', ['ton' => 'blau'])
+            ? ui_plakette('aktiv', ['ton' => 'gruen'])
             : ui_plakette('abgeschaltet', ['ton' => 'neutral']);
         if (($z['letzter_fehler'] ?? null) !== null) {
             $plaketten .= ui_plakette('zuletzt gescheitert', ['ton' => 'rot']);
         } elseif (($z['letzter_erfolg'] ?? null) !== null) {
-            $plaketten .= ui_plakette('zuletzt in Ordnung', ['ton' => 'blau']);
+            $plaketten .= ui_plakette('zuletzt in Ordnung', ['ton' => 'gruen']);
         } else {
             $plaketten .= ui_plakette('nie geprüft', ['ton' => 'orange']);
         }
         if ((string)$z['protokoll'] === 'sftp' && ($z['fingerabdruck'] ?? null) !== null) {
-            $plaketten .= ui_plakette('Hostschlüssel bekannt', ['ton' => 'blau']);
+            $plaketten .= ui_plakette('Hostschlüssel bekannt', ['ton' => 'gruen']);
         }
         $klein = $prot . ' · ' . (string)$z['nutzer'] . '@' . (string)$z['host']
                . ':' . (int)$z['port'] . ' · ' . (string)$z['pfad'];

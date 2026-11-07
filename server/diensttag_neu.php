@@ -162,7 +162,7 @@ ui_seite_start(['titel' => 'Diensttag anlegen']);
       <?php endif; ?>
 
       <div class="listen-form-fuss">
-        <?= ui_knopf(['text' => 'Diensttag anlegen', 'art' => 'primaer',
+        <?= ui_knopf(['text' => 'Diensttag anlegen', 'art' => 'haupt',
                       'symbol' => 'plus']) ?>
         <?php /* Abbrechen mit Rückfrage — sie erscheint nur, wenn
                  tatsächlich etwas geändert wurde. Beim unveränderten Vorschlag

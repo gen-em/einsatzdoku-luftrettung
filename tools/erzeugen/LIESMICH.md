@@ -18,7 +18,7 @@ Nichts — es erzeugt:
 | Name | erzeugt |
 |---|---|
 | `design` | die Tabellen in `docs/Design.md`; mit `schreiben` ersetzt es sie dort (CLAUDE.md 5) |
-| `logos` | die Favicons **aus** den Logodateien |
+| `logos` | Favicons, ICO und die 500-px-PNG **aus** den SVG der Produktmarke |
 | `uhr-bilder` | die vorgerasterten Bildmarken der Uhr-App |
 | `geraetemodelle` | `server/geraetemodelle.php` (+ `nachaufloesen`) |
 | `wegwerfdomains` | die Liste der Wegwerf-Mailanbieter (Nr. 230) |

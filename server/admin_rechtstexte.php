@@ -172,7 +172,7 @@ ui_seite_start(['titel' => 'Rechtstexte']);
         <div class="rechtstext-fuss">
           <?= $leer
               ? ui_plakette('leer', ['ton' => 'rot'])
-              : ui_plakette('öffentlich', ['ton' => 'blau']) ?>
+              : ui_plakette('öffentlich', ['ton' => 'gruen']) ?>
           <span class="feld-klein">Seite:
             <a href="<?= e(RT_SEITEN[$k]) ?>"><?= e(RT_SEITEN[$k]) ?></a></span>
         </div>

@@ -383,8 +383,13 @@ pruefe(($seite['kopf']['cache-control'] ?? '') === 'no-store',
  * 500: Der Ausnahmetext nennt Host und Benutzer. */
 $verraten = ['SQLSTATE', '1203', '1040', 'PDO', $cfg['db']['user'],
              'max_user_connections', 'Stack trace'];
+/* OHNE DIE VERWEISE. Seit Schritt 26 heissen die Dateien der Produktmarke
+ * `nadoku-*.svg`, und auf einer Anlage, deren Datenbankbenutzer `nadoku`
+ * heisst (die oertliche), stand der Benutzer damit scheinbar im Logo-Pfad.
+ * Gesucht wird im Text der Seite, nicht in `src`/`href`. */
+$rumpfText = (string)preg_replace('/\b(?:src|href)="[^"]*"/', '', $seite['rumpf']);
 $gefunden = array_values(array_filter($verraten,
-    static fn(string $w): bool => str_contains($seite['rumpf'], $w)));
+    static fn(string $w): bool => str_contains($rumpfText, $w)));
 pruefe($gefunden === [], '... und verraet nichts ueber die Datenbank',
        $gefunden === [] ? 'keiner von ' . count($verraten) . ' Begriffen'
                         : implode(', ', $gefunden));

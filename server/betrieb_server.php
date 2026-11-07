@@ -952,12 +952,12 @@ ui_seite_start(['titel' => 'Servereinstellungen']);
        der Wert je auf dem Bildschirm steht. Wer ihn braucht, druckt das
        Blatt. */ ?>
   <?php
-    /* VIER TOENE, UND „ok" IST KEINER DAVON. Das Stylesheet kennt
-     * `.plakette-blau`, `-neutral`, `-orange` und `-rot` — nachgezaehlt am
-     * 14.09.2026. Ein `'ton' => 'ok'` ergibt eine Klasse ohne Regel, also
+    /* FUENF TOENE, UND „ok" IST KEINER DAVON. Das Stylesheet kennt
+     * `.plakette-gruen`, `-blau`, `-neutral`, `-orange` und `-rot` (gruen
+     * seit Schritt 26). Ein `'ton' => 'ok'` ergibt eine Klasse ohne Regel, also
      * eine ungestaltete Plakette, und zwar ohne jede Fehlermeldung. Zwei
      * Stellen im Bestand tun das schon. */
-    $skTon = ['bereit' => 'blau', 'rotation' => 'blau', 'fehlt' => 'rot',
+    $skTon = ['bereit' => 'gruen', 'rotation' => 'gruen', 'fehlt' => 'rot',
               'abweichend' => 'rot'][$skZustand['stand']] ?? 'neutral';
     /* DER WECHSEL DES SERVERSCHLUESSELS: Zustand des Jobs und die drei
      * Bedingungen vor dem Entfernen — aus derselben Quelle wie der Riegel in
@@ -972,20 +972,20 @@ ui_seite_start(['titel' => 'Servereinstellungen']);
     /* „fehlt" ist NEUTRAL, nicht rot (Design.md 9.23): Ohne Anteil arbeitet
      * alles wie vorher, es geht nichts verloren. Rot bleibt der Lage
      * vorbehalten, in der niemand mehr an seine Angaben kommt. */
-    $anTon = ['bereit' => 'blau', 'rotation' => 'blau', 'fehlt' => 'neutral',
+    $anTon = ['bereit' => 'gruen', 'rotation' => 'gruen', 'fehlt' => 'neutral',
               'abweichend' => 'rot'][$anZustand['stand']] ?? 'neutral';
     $anOffen = $anZaehlung['ohne'] + $anZaehlung['alt'];
   ?>
   <?php ui_karte_start(['titel' => 'Schlüssel des Servers', 'id' => 'k-schluessel',
       'plakette' => ($skZustand['stand'] === 'bereit' && $anZustand['stand'] === 'bereit')
-          ? ui_plakette('in Ordnung', ['ton' => 'blau'])
+          ? ui_plakette('in Ordnung', ['ton' => 'gruen'])
           : (($skZustand['stand'] === 'abweichend' || $anZustand['stand'] === 'abweichend')
               ? ui_plakette('abweichend', ['ton' => 'rot'])
               : ($skZustand['stand'] === 'fehlt'
                   ? ui_plakette('unvollständig', ['ton' => 'rot'])
                   : ($anZustand['stand'] === 'fehlt'
                       ? ui_plakette('nicht eingerichtet', ['ton' => 'neutral'])
-                      : ui_plakette('Übergang läuft', ['ton' => 'blau']))))]); ?>
+                      : ui_plakette('Übergang läuft', ['ton' => 'gruen']))))]); ?>
   <?= $kartenMeldung('k-schluessel') ?>
 
     <p class="feld-hinweis">Zwei Geheimnisse in <code>config.php</code>, nicht
@@ -1073,7 +1073,7 @@ ui_seite_start(['titel' => 'Servereinstellungen']);
             'klein' => implode(' · ', $teile) . $umstellungRest,
             'plaketten' => ui_plakette($anOffen === 0 ? 'vollständig'
                                                       : $anOffen . ' offen',
-                ['ton' => 'blau']),
+                ['ton' => $anOffen === 0 ? 'gruen' : 'blau']),
           ]);
       }
 
@@ -1432,7 +1432,7 @@ ui_seite_start(['titel' => 'Servereinstellungen']);
         'text'  => 'Ablage',
         'klein' => (string)$sp['ablage']['pfad'],
         'plaketten' => $sp['ablage']['ok']
-            ? ui_plakette('beschreibbar', ['ton' => 'blau'])
+            ? ui_plakette('beschreibbar', ['ton' => 'gruen'])
             : ui_plakette('nicht beschreibbar', ['ton' => 'rot']),
       ]);
       if (!$sp['ablage']['ok'] && $sp['ablage']['grund'] !== null) {
@@ -1465,7 +1465,7 @@ ui_seite_start(['titel' => 'Servereinstellungen']);
   ?>
   <?php ui_karte_start(['titel' => 'Sicherheitskopfzeilen', 'id' => 'k-kopfzeilen',
       'plakette' => kopf_csp_scharf()
-          ? ui_plakette('CSP scharf', ['ton' => 'blau'])
+          ? ui_plakette('CSP scharf', ['ton' => 'gruen'])
           : ui_plakette('CSP meldet nur', ['ton' => 'orange'])]); ?>
   <?= $kartenMeldung('k-kopfzeilen') ?>
     <p class="feld-hinweis">Die Content-Security-Policy sagt dem Browser, woher
@@ -1501,7 +1501,7 @@ ui_seite_start(['titel' => 'Servereinstellungen']);
       <?php ui_zeile(['text' => 'Berichte der letzten 30 Tage',
           'klein' => 'Keine — die Richtlinie ist vollständig, oder niemand war auf '
                    . 'einer Seite, die etwas nachlädt (Karten, Import, Export).',
-          'plaketten' => ui_plakette('0', ['ton' => 'blau'])]); ?>
+          'plaketten' => ui_plakette('0', ['ton' => 'gruen'])]); ?>
     <?php endif; ?>
   <?php ui_karte_ende(); ?>
 
@@ -1705,7 +1705,7 @@ ui_seite_start(['titel' => 'Servereinstellungen']);
   <?php ui_karte_start(['titel' => 'Ratenschutz', 'id' => 'k-ratenschutz',
       'plakette' => $vBr['stufe'] > 0
           ? ui_plakette('Verlangsamung Stufe ' . $vBr['stufe'], ['ton' => 'orange'])
-          : ui_plakette('ruhig', ['ton' => 'blau'])]); ?>
+          : ui_plakette('ruhig', ['ton' => 'gruen'])]); ?>
   <?= $kartenMeldung('k-ratenschutz') ?>
     <p class="feld-hinweis">Eine Sperre dauert beim zweiten Mal länger und
        zählt am eingetippten Namen, nicht am Konto.
@@ -1765,7 +1765,7 @@ ui_seite_start(['titel' => 'Servereinstellungen']);
     <?php else: ?>
       <?php ui_zeile(['text' => 'Laufende Sperren',
           'klein' => 'Keine — das ist der Normalfall.',
-          'plaketten' => ui_plakette('0', ['ton' => 'blau'])]); ?>
+          'plaketten' => ui_plakette('0', ['ton' => 'gruen'])]); ?>
     <?php endif; ?>
   <?php ui_karte_ende(); ?>
 
@@ -1776,7 +1776,7 @@ ui_seite_start(['titel' => 'Servereinstellungen']);
            daneben steht im Profil und kann nur noch einschraenken. */ ?>
   <?php ui_karte_start(['titel' => 'Adresssuche', 'id' => 'k-adresssuche',
       'plakette' => geocoder_installation_an()
-          ? ui_plakette('an', ['ton' => 'blau'])
+          ? ui_plakette('an', ['ton' => 'gruen'])
           : ui_plakette('aus', ['ton' => 'neutral'])]); ?>
   <?= $kartenMeldung('k-adresssuche') ?>
     <p class="feld-hinweis">Beim Tippen in einem Ortsfeld und nach jeder Wahl auf

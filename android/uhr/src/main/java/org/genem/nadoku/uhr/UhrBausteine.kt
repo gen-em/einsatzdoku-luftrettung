@@ -31,8 +31,9 @@ import org.genem.nadoku.gemeinsam.Farbe
  * SIE SIND NICHT DIE DES HANDYS, und das ist Absicht: Ein rundes Display
  * schneidet an den Seiten ab, die Bedienung geschieht mit einem Finger und
  * oft mit Handschuhen, und der Grund ist Asphalt statt Rauch. Was beide
- * teilen, sind die **Farbrollen** — Orange handelt, Blau erklärt
- * und bestätigt, Rot warnt und beendet.
+ * teilen, sind die **Farbrollen** — Blau handelt (blau 300, die
+ * Aktion des Dark Mode), Blau erklärt und bestätigt, Rot warnt und beendet.
+ * Orange trägt seit Android 0.22.0 nur die Hauptaktion des Handys.
  *
  * ALLE MASSE SIND BLIND GEWÄHLT: Es gibt keinen Emulator und keine
  * Uhr. Berührziele, Schriftgrößen und die Randabstände gehören am Gerät
@@ -52,7 +53,12 @@ import org.genem.nadoku.gemeinsam.Farbe
 val UHR_BEDIENHOEHE: Dp = 48.dp
 
 
-/** Der eine große Knopf: Orange handelt, dunkelblaue Schrift. */
+/**
+ * Der eine große Knopf: blau 300 mit dunkelblauer Schrift, 6,6:1 — die
+ * Aktion des Dark Mode im Web; die Uhr ist immer dunkel. Bis Android 0.21.1
+ * war er Orange. Orange trägt seither nur die Hauptaktion des Handys, und die
+ * Uhr hat keine (E-MA-29).
+ */
 @Composable
 fun UhrKnopf(
     beschriftung: String,
@@ -61,7 +67,7 @@ fun UhrKnopf(
     schrift: Color? = null,
     aufTippen: () -> Unit,
 ) {
-    val f = flaeche ?: Farbe.orange
+    val f = flaeche ?: Farbe.blau300
     val s = schrift ?: Farbe.dunkelblau
     Box(
         modifier = modifier
@@ -123,7 +129,7 @@ fun Phasenreihe(
         )
         Text(
             text = beschriftung,
-            color = if (naechste) Farbe.orange else Farbe.aufDunkel,
+            color = if (naechste) Farbe.blau300 else Farbe.aufDunkel,
             fontSize = 13.sp,
             fontWeight = if (naechste) FontWeight.SemiBold else FontWeight.Normal,
             modifier = Modifier.weight(1f),
@@ -133,7 +139,7 @@ fun Phasenreihe(
         Text(
             text = zeiten.joinToString(" · ")
                 .ifEmpty { androidx.compose.ui.res.stringResource(org.genem.nadoku.R.string.keine_zeit) },
-            color = if (naechste) Farbe.orange else Farbe.blau,
+            color = if (naechste) Farbe.blau300 else Farbe.blau,
             fontSize = 13.sp,
         )
     }

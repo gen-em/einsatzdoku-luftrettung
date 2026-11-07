@@ -80,7 +80,14 @@ function ui_seite_start(array $o): void
          * bleibt das Attribut leer und die Verweise laufen ohne
          * Erkennungswert — richtig, denn der Einrichter laeuft genau einmal. */
         '<html lang="de" data-webversion="'
-            . (defined('WEB_VERSION') ? ui_e(WEB_VERSION) : '') . '">',
+            . (defined('WEB_VERSION') ? ui_e(WEB_VERSION) : '') . '"'
+            /* DIE DARSTELLUNG DES KONTOS (MA-07): `data-theme="light"` oder
+             * `"dark"`, wenn das Konto im Profil eine Wahl getroffen hat —
+             * serverseitig, damit nichts hell aufblitzt. Ohne Wahl und ohne
+             * Sitzung kein Attribut; dann folgt das Stylesheet dem Geraet. */
+            . (function_exists('darstellung_attribut') && darstellung_attribut() !== ''
+                ? ' data-theme="' . darstellung_attribut() . '"' : '')
+            . '>',
         '<head>',
         '<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">',
         /* DER VORSATZ „[Staging] ": Der Reiter im Browser
@@ -243,9 +250,10 @@ function ui_favicon(): string
     if (function_exists('favicon_tags')) { return favicon_tags(); }
     // Rueckfall ohne config.php: seitenrelativ. Der Einrichter liegt im selben
     // Verzeichnis wie die Anwendung, damit zeigen die Pfade richtig.
-    return '<link rel="icon" type="image/png" href="assets/images/favicon_helicopter.png">' . "\n"
+    return '<link rel="icon" type="image/svg+xml" href="assets/images/favicon-nadoku-hubschrauber.svg">' . "\n"
+         . '<link rel="icon" type="image/png" sizes="32x32" href="assets/images/favicon-nadoku-hubschrauber-32.png">' . "\n"
          . '<link rel="icon" href="favicon.ico">'
-         . '<link rel="apple-touch-icon" href="assets/images/favicon_helicopter.png">';
+         . '<link rel="apple-touch-icon" href="assets/images/apple-touch-nadoku-hubschrauber.png">';
 }
 
 /**
@@ -445,21 +453,25 @@ function ui_user_label(): string {
 }
 
 /**
- * Pfad zum Logo für die Kopfleiste (weiße Fassung) bzw. für helle Flächen.
+ * Pfad zur Produktmarke: auf dunkler Fläche (Kopfleiste) die Fassung
+ * „farbig-negativ" (Grundform Schnee, Federfarben bleiben), auf heller die
+ * farbige (Grundform Dunkelblau). Bis Schritt 26 hieß die dunkle Fassung
+ * „weiß" und war es ganz; die weiße gibt es weiter, für Flächen in
+ * Gründerfarben, und die Anwendung braucht sie nicht.
  *
  * Die Wahl je Profil (Standard / Hubschrauber / Fahrzeug /
  * wechselnd) steht in `users.logo_wahl` und wird bei der
  * Anmeldung EINMAL aufgelöst (session_lib.php). Diese Funktion liest nur
  * das Ergebnis — eine Zuweisung und keine Suche über 25 Seiten.
  */
-function ui_logo(bool $weiss = false): string
+function ui_logo(bool $aufDunkel = false): string
 {
     /* Es entscheidet logo_stamm() (session_lib.php) — dieselbe
      * Stelle, die auch favicon_tags() fragt. So können Kopfleiste und
      * Browser-Symbol nicht auseinanderlaufen. Ohne Sitzung
      * (Anmeldung, Einrichter) liefert sie den Standard. */
-    $stamm = function_exists('logo_stamm') ? logo_stamm() : 'gen-em_logo_helicopter';
-    return ui_asset('assets/images/' . $stamm . ($weiss ? '_weiss' : '') . '.svg');
+    $stamm = function_exists('logo_stamm') ? logo_stamm() : 'nadoku-hubschrauber';
+    return ui_asset('assets/images/' . $stamm . ($aufDunkel ? '-farbig-negativ' : '-farbig') . '.svg');
 }
 
 
@@ -479,7 +491,7 @@ function ui_logo(bool $weiss = false): string
  */
 function ui_logo_masse(int $hoehe): array
 {
-    $stamm = function_exists('logo_stamm') ? logo_stamm() : 'gen-em_logo_helicopter';
+    $stamm = function_exists('logo_stamm') ? logo_stamm() : 'nadoku-hubschrauber';
     /* Rahmen der SVG, nach dem Beschnitt deckungsgleich mit der
      * Zeichnung: Luft 400,16 x 249,81 · Boden 420 x 335. */
     $verhaeltnis = str_contains($stamm, 'nef') ? 420 / 335 : 400.16 / 249.81;
@@ -525,7 +537,7 @@ function ui_artzeichen(?string $kind, string $klassen = '', ?string $typ = null)
  *
  * Mobil: Menüknopf links, Logo und Name in der Mitte, Zahnrad rechts.
  * Ab 1024: Logo, Name und Nutzername links; rechts „Startseite" und „Suche"
- * mit Symbol (aktiv mit orangem Strich) und das Zahnrad.
+ * mit Symbol (aktiv mit Strich in blau 300) und das Zahnrad.
  *
  * Der Menüpunkt heißt STARTSEITE, nicht „Übersicht" — im Suchmenü
  * daneben war „Übersicht" missverständlich. Der Seitentitel bleibt
@@ -662,7 +674,11 @@ function ui_geruest_start(array $o = []): void
       </button>
       <span class="kopf-name"><?= ui_e(ui_instanz_kurz()) ?></span>
     </div>
-    <nav class="leiste-haupt nur-schublade" aria-label="Hauptbereiche">
+    <?php /* EIN ZWEITER NAME, nicht derselbe wie die Kopfleiste: Bei
+             schmaler Breite stehen beide Navigationen im Baum, und zwei
+             „Hauptbereiche" sind fuer einen Screenreader nicht zu
+             unterscheiden (axe `landmark-unique`, F-MA-22). */ ?>
+    <nav class="leiste-haupt nur-schublade" aria-label="Hauptbereiche im Menü">
       <a class="eintrag<?= ($o['aktiv'] ?? '') === 'start' ? ' aktiv' : '' ?>" href="index.php">
         <?= ui_symbol('kalender') ?><span class="eintrag-text">Startseite</span>
       </a>
@@ -837,36 +853,43 @@ function ui_leiste_diensttage(?int $currentDayId, array $zeitraum = []): void
         <?php /* Aktiv ist die JAHRESzeile nur bei der Jahresübersicht — steht
                  ein Monat an, trägt der Monat die Markierung. */
               $jahrAktiv = $aktivesJahr === $jahrS && $aktiverMonat === ''; ?>
+        <?php /* DER BALKEN-LINK STEHT NEBEN DEM <details>, IN EINEM RAHMEN.
+                 Als Kind des <details> waere er an jeder zugeklappten Zeile
+                 unsichtbar (der Inhalt eines geschlossenen <details> wird
+                 nicht gerendert, F-P3-R); im <summary> war er bis Web 23.11.1
+                 ein Bedienelement im Bedienelement — ein Screenreader las die
+                 Zeile als einen Schalter, und axe meldete es an jeder Seite
+                 mit Leiste (`nested-interactive`, F-MA-22). Der Rahmen legt
+                 ihn per CSS rechts ueber die Kopfzeile. Im Markup steht er
+                 VOR dem <details>, damit die Tabfolge nicht erst durch alle
+                 Monate des Jahres laeuft. */ ?>
+        <div class="akkordeon-rahmen">
+          <a class="akkordeon-uebersicht" href="zeitraum.php?y=<?= ui_e($jahrS) ?>"
+             <?= $jahrAktiv ? 'aria-current="page"' : '' ?>
+             aria-label="Jahresübersicht <?= ui_e($jahrS) ?>" title="Jahresübersicht">
+            <?= ui_symbol('balken') ?>
+          </a>
         <details class="akkordeon<?= $jahrAktiv ? ' aktiv' : '' ?>"
                  <?= $jahrS === $offenesJahr ? 'open' : '' ?>>
-          <?php /* Der Balken-Link steht IM summary: Als Kind des <details>
-                   wäre er an jeder zugeklappten Zeile unsichtbar — der Inhalt
-                   eines geschlossenen <details> wird nicht gerendert.
-                   daylist.js fängt den Klick ab, damit er nicht
-                   zusätzlich auf- und zuklappt. */ ?>
           <summary class="akkordeon-zeile">
             <?= ui_symbol('winkel', 'akkordeon-winkel') ?>
             <span class="akkordeon-text"><?= ui_e($jahrS) ?></span>
-            <a class="akkordeon-uebersicht" href="zeitraum.php?y=<?= ui_e($jahrS) ?>"
-               <?= $jahrAktiv ? 'aria-current="page"' : '' ?>
-               aria-label="Jahresübersicht <?= ui_e($jahrS) ?>" title="Jahresübersicht">
-              <?= ui_symbol('balken') ?>
-            </a>
           </summary>
           <div class="akkordeon-inhalt">
           <?php foreach ($monate as $monat => $monatsTage):
               $monatS = str_pad((string)$monat, 2, '0', STR_PAD_LEFT); ?>
             <?php $monatAktiv = $aktivesJahr === $jahrS && $aktiverMonat === $monatS; ?>
+            <div class="akkordeon-rahmen">
+              <a class="akkordeon-uebersicht"
+                 href="zeitraum.php?y=<?= ui_e($jahrS) ?>&amp;m=<?= ui_e($monatS) ?>"
+                 <?= $monatAktiv ? 'aria-current="page"' : '' ?>
+                 aria-label="Monatsübersicht <?= ui_e($monatsnamen[(int)$monatS]) ?>"
+                 title="Monatsübersicht"><?= ui_symbol('balken') ?></a>
             <details class="akkordeon akkordeon-monat<?= $monatAktiv ? ' aktiv' : '' ?>"
                      <?= ($jahrS === $offenesJahr && $monatS === $offenerMonat) ? 'open' : '' ?>>
               <summary class="akkordeon-zeile">
                 <?= ui_symbol('winkel', 'akkordeon-winkel') ?>
                 <span class="akkordeon-text"><?= ui_e($monatsnamen[(int)$monatS]) ?></span>
-                <a class="akkordeon-uebersicht"
-                   href="zeitraum.php?y=<?= ui_e($jahrS) ?>&amp;m=<?= ui_e($monatS) ?>"
-                   <?= $monatAktiv ? 'aria-current="page"' : '' ?>
-                   aria-label="Monatsübersicht <?= ui_e($monatsnamen[(int)$monatS]) ?>"
-                   title="Monatsübersicht"><?= ui_symbol('balken') ?></a>
               </summary>
               <div class="akkordeon-inhalt">
               <?php foreach ($monatsTage as $t):
@@ -913,9 +936,11 @@ function ui_leiste_diensttage(?int $currentDayId, array $zeitraum = []): void
               <?php endforeach; ?>
               </div>
             </details>
+            </div>
           <?php endforeach; ?>
           </div>
         </details>
+        </div>
       <?php endforeach; ?>
       <?php /* Dieselbe gedaempfte Zeile wie „noch keine" oben — ein Hinweis,
                kein Fehler. Der Weg zu den aelteren Tagen ist die Suche: Sie
@@ -1557,10 +1582,10 @@ function ui_datenschutz_hinweis(): void
  *
  * VIER TÖNE, jeder mit Symbol und optionalem fettem Auftakt:
  *
- *   fehler   rosa/rot   Dreieck    „Nicht gespeichert."
- *   info     hellblau   Kreis-i    Erklärung, Zustand
- *   ok       hellblau   Haken      Vollzug: „Backup erstellt."
- *   warn     hellorange Dreieck    Warnung, die kein Fehler ist
+ *   fehler   rot 100    Dreieck    „Nicht gespeichert."
+ *   info     blau 100   Kreis-i    Erklärung, Zustand
+ *   ok       grün 100   Haken      Vollzug: „Backup erstellt." (bis Schritt 26 blau)
+ *   warn     orange 100 Dreieck    Warnung, die kein Fehler ist
  *
  * KEIN GRÜN — eine Farbe, die es in der Marke nicht gibt. Die
  * Vollzugsmeldung ist blau wie der Hinweis und unterscheidet sich durch das
@@ -1639,9 +1664,9 @@ function ui_meldung_markup(string $ton, string $text, string $auftakt = '',
  * zehn Stellen zurückgenommen.
  *
  * VIER ARTEN, nach Bedeutung und nicht nach Aussehen:
- *   primaer   Orange, dunkelblaue Schrift — die eine Haupthandlung
+ *   primaer   Dunkelblau, Schrift Schnee — die eine Haupthandlung
  *   neutral   Rahmen — alles Übrige, auch „Bearbeiten"
- *   gefahr    roter Rahmen, rote Schrift — Löschen
+ *   gefahr    rot 700, Schrift Schnee — Löschen (bis Schritt 26 roter Rahmen)
  *   leise     nur Schrift — Abbrechen, Nebenwege
  *   symbol    44 x 44, nur ein Zeichen (braucht 'titel')
  *
@@ -1721,9 +1746,11 @@ function ui_codeblock_lang(string $wert, string $titel = ''): string
  * sind KEINE Bedienelemente — wer eine anklickbar braucht, nimmt einen Knopf.
  * 
  *
- * Töne: neutral · orange (Winde, Bergwacht) · blau (Sekundär,
- * Rettungsmittel, aktuell, freigegeben) · rot (Fehleinsatz, kein Ende, nie
- * gesichert, leer).
+ * Töne (seit Schritt 26 fünf, E-MA-08): neutral (Zahl ohne Wertung) ·
+ * gruen (Zustand in Ordnung: Vollzug, freigegeben, gesichert, an) · blau
+ * (Eigenschaft: Sekundär, Rettungsmittel, aktuell, verschlüsselt) · orange
+ * (Aufmerksamkeit: Winde, Bergwacht, überfällig) · rot (arbeitet nicht:
+ * Fehleinsatz, kein Ende, nie gesichert, leer).
  * ------------------------------------------------------------------------ */
 function ui_plakette(string $text, array $o = []): string
 {
@@ -1767,7 +1794,7 @@ function ui_ladeplatz(string $text, array $o = []): string
  *
  * Jeder Inhaltsblock ist eine Karte mit Titel in Bricolage, optionaler Zahl
  * (gedämpft) und GENAU EINER Kopfaktion rechts als Link mit Symbol:
- * „Bearbeiten" (blau) oder ein Anlegen-Weg („+ Nachtragen", orange tief).
+ * „Bearbeiten" oder ein Anlegen-Weg („+ Nachtragen"), beide in der Linkfarbe.
  * Eine zweite Kopfaktion gibt es nicht — was mehr braucht, bekommt ein
  * Aktionsmenü.
  *
@@ -2145,7 +2172,7 @@ function ui_zeile_mehr(array $o, array $daten): void
  * REITER  (.reiter-rahmen, .reiter, .reiter-punkt, .reiter-abgesetzt)
  *
  * Wechsel zwischen gleichrangigen Sichten EINER Seite — serverseitig, jeder
- * Reiter ist ein Verweis. Orange unterstrichen wie der aktive Punkt der
+ * Reiter ist ein Verweis. Dunkelblau unterstrichen wie der aktive Punkt der
  * Kopfleiste: „hier stehst du". Drei Verwender sind geplant: Protokoll (hier
  * entstanden), Statistik, Rechtstexte.
  *
@@ -2292,7 +2319,10 @@ function ui_listenfuss(array $o): void
     if ($seiten > 1) {
         echo '  <nav class="seitenwahl" aria-label="Seiten">' . "\n";
         echo '    <a class="seitenknopf' . ($seite <= 1 ? ' aus' : '') . '" '
-           . ($seite > 1 ? 'href="' . ui_e($weg($seite - 1)) . '"' : 'aria-disabled="true"')
+           /* Ohne href hat ein <a> keine Rolle, und an einem Element ohne
+            * Rolle ist aria-label verboten (axe `aria-prohibited-attr`,
+            * F-MA-22): Der gesperrte Knopf traegt sie ausdruecklich. */
+           . ($seite > 1 ? 'href="' . ui_e($weg($seite - 1)) . '"' : 'role="link" aria-disabled="true"')
            . ' aria-label="Vorige Seite">' . ui_symbol('winkel', 'symbol-links') . "</a>\n";
         $zeigen = [1, $seiten, $seite, $seite - 1, $seite + 1];
         $zeigen = array_values(array_unique(array_filter($zeigen,
@@ -2309,7 +2339,7 @@ function ui_listenfuss(array $o): void
                . $n . "</a>\n";
         }
         echo '    <a class="seitenknopf' . ($seite >= $seiten ? ' aus' : '') . '" '
-           . ($seite < $seiten ? 'href="' . ui_e($weg($seite + 1)) . '"' : 'aria-disabled="true"')
+           . ($seite < $seiten ? 'href="' . ui_e($weg($seite + 1)) . '"' : 'role="link" aria-disabled="true"')
            . ' aria-label="Nächste Seite">' . ui_symbol('winkel', 'symbol-rechts') . "</a>\n";
         echo "  </nav>\n";
     }
@@ -2400,7 +2430,7 @@ function ui_diagramm_skala(int $hoechst): array
  * PHP, ohne Bibliothek und ohne Skript.
  *
  * EINE FARBE, DER HÖCHSTWERT HERVORGEHOBEN UND BESCHRIFTET: Blau erklärt,
- * Orange tief hebt hervor — und die Zahl darüber sagt es noch
+ * Orange 600 hebt hervor — und die Zahl darüber sagt es noch
  * einmal, weil Farbe nie der einzige Träger ist. Jede andere Säule zeigt ihre
  * Zahl beim Überfahren (`:hover`) und trägt sie als `<title>`.
  *
@@ -2563,7 +2593,11 @@ function ui_aktionen(array $o): string
     $id = (string)($o['id'] ?? ('aktionen-' . substr(sha1((string)($o['titel'] ?? '')
         . count((array)($o['eintraege'] ?? []))), 0, 8)));
     $m  = '<div class="aktionen">';
-    $m .= '<button type="button" class="knopf knopf-neutral aktionen-knopf" '
+    /* DER NAME STEHT AM KNOPF, nicht nur im Text: Unter 720 px ist
+     * „Aktionen" ausgeblendet (`nur-breit`), und uebrig blieb ein Knopf ohne
+     * Namen — ein Screenreader sagte nur „Taste" (axe `button-name`,
+     * F-MA-22). Breit stimmen Beschriftung und Name ueberein. */
+    $m .= '<button type="button" class="knopf knopf-neutral aktionen-knopf" aria-label="Aktionen" '
         . 'aria-expanded="false" aria-controls="' . $id . '" data-blatt="' . $id . '">'
         . ui_symbol('punkte', 'symbol-gross nur-schmal')
         . '<span class="nur-breit">Aktionen</span>'
@@ -2679,8 +2713,8 @@ function ui_feld(array $o): void
  * SCHALTER  (.schalter)
  *
  * Ja/Nein-Felder werden Schalter in 44-px-Zeilen: Beschriftung links, an in
- * Orange. Abhängige Felder klappen darunter auf, eingerückt mit orangem
- * Randstrich.
+ * Dunkelblau. Abhängige Felder klappen darunter auf, eingerückt mit einem
+ * Randstrich in `--linie-stark`.
  *
  * Gebaut aus einer echten Checkbox — die Tastaturbedienung, der
  * Vorlesezustand und das Absenden im Formular kommen damit vom Browser und
@@ -2710,7 +2744,7 @@ function ui_schalter(array $o): void
 /* ---------------------------------------------------------------------------
  * SEGMENTWAHL  (.segment)
  *
- * Tastenreihe mit orangem Aktivzustand — für Gemischt/Luft/Boden,
+ * Tastenreihe mit dunkelblauem Aktivzustand — für Gemischt/Luft/Boden,
  * egal/ja/nein und die Wochentage. Mobil vollbreit.
  *
  * Als Radiogruppe gebaut, nicht als Knopfreihe mit Skript: Pfeiltasten,
@@ -2770,8 +2804,8 @@ function ui_segment_markup(array $o): string
  * WAHLLISTE  (.wahlliste)
  *
  * Eine Reihe großer Auswahlzeilen mit Radio links, Beschriftung und einem
- * gedämpften Zusatz rechts; die gewählte Zeile wird hell orange mit orangem
- * Rahmen. Freigegeben mit Mockup.
+ * gedämpften Zusatz rechts; die gewählte Zeile trägt die Auswahlfläche mit
+ * dunkelblauem Rahmen. Freigegeben mit Mockup.
  *
  * WARUM NICHT DIE SEGMENTWAHL: Ein Segment trägt kurze Wörter nebeneinander
  * („Gemischt / Luft / Boden"). Hier stehen vier Zeilen mit Erklärung
@@ -2942,7 +2976,9 @@ function ui_speichern_leiste(array $o = []): void
      *     immer sichtbar), kein_haken (nicht an forms.js hängen),
      *     hinweis_vorlage (forms.js ersetzt den Hinweis dann durch
      *     „<Vorlage>: Karte A und Karte B" — die Titel der Karten, in denen
-     *     etwas geändert wurde) */
+     *     etwas geändert wurde), haupt (der Knopf ist die Hauptaktion der
+     *     Seite, Orange statt Dunkelblau — nur dort, wo das Formular der
+     *     Zweck der Seite ist, E-MA-27) */
     $id = !empty($o['id']) ? ' id="' . ui_e((string)$o['id']) . '"' : '';
     ?>
 <div class="speichern"<?= $id ?><?= empty($o['kein_haken']) ? ' data-speichern' : '' ?> hidden>
@@ -2961,7 +2997,8 @@ function ui_speichern_leiste(array $o = []): void
         ?? 'Es gibt ungespeicherte Änderungen · Strg + Enter speichert')) ?></p>
     <?= ui_knopf([
         'text' => (string)($o['text'] ?? 'Speichern'),
-        'art' => 'primaer', 'symbol' => (string)($o['symbol'] ?? 'haken'),
+        'art' => !empty($o['haupt']) ? 'haupt' : 'primaer',
+        'symbol' => (string)($o['symbol'] ?? 'haken'),
         /* MIT ZAHL IST DER KNOPF NICHT BREIT. `knopf-breit` (width:100%) wird
          * erst ab 720 px zurueckgenommen (`.speichern .knopf-breit{width:auto}`)
          * — passend zum Hinweis, der genau dort erscheint. Die Zahl steht in
@@ -2982,11 +3019,10 @@ function ui_speichern_leiste(array $o = []): void
  *
  * Wert in Bricolage mit Einheit, darunter die Beschriftung. Extremwerte
  * tragen einen Punkt oben rechts und den Tag in der Beschriftung; die aktive
- * Kachel wird hell orange mit orangem Rahmen.
+ * Kachel trägt die Auswahlfläche mit dunkelblauem Rahmen.
  *
  * Die Hervorhebung war rot und ist jetzt orange: Rot heißt in dieser
- * Oberfläche „Aufmerksamkeit" (Fehler, Löschen), und ein Höchstwert ist kein
- * Fehler.
+ * Oberfläche „Fehler" (und Löschen), und ein Höchstwert ist kein Fehler.
  *
  * $o: wert, einheit, label, extrem (Text des Tages), aktiv, attr
  * ------------------------------------------------------------------------ */

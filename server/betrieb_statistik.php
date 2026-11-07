@@ -485,7 +485,7 @@ function stat_kopf(string $key, string $text, string $sort, string $richtung): s
  */
 function stat_zeitraumtabelle(array $fenster, array $zeilen): void
 {
-    echo '<div class="tabelle-scroll"><table class="tabelle"><thead><tr><th>&nbsp;</th>';
+    echo '<div class="tabelle-scroll"><table class="tabelle"><thead><tr><th><span class="nur-vorlesen">Kennzahl</span></th>';
     foreach ($fenster as $t) { echo '<th class="zahl-spalte">' . e($t) . '</th>'; }
     echo '</tr></thead><tbody>';
     foreach ($zeilen as [$titel, $unter, $werte, $bezug]) {
