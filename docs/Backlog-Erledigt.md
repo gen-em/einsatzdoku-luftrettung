@@ -11104,3 +11104,18 @@ zutreffen.
      geerbt wird je Engine mit Rückfall auf die alte gemeinsame Liste.
      Abnahme: Farbumbau 2 757/2 757/2 763 Signaturen je 0 ungeplant, eine
      zusätzliche Regel rot in allen dreien.
+
+524. **Die Weboberfläche ist nie auf Barrierefreiheit gemessen worden.** · gehört zu: 26 · Stand: erledigt · seit 07.11.2026
+     *Aufgenommen 07.11.2026 mit Schritt 26 (MA, F-MA-22).* Kontrast
+     rechnet `kontrast.py`, aber was ein Screenreader oder die Tastatur
+     erlebt, maß kein Werkzeug. axe-core fand auf 46 Aufrufen je Engine 11
+     verletzte Regeln, gleich in Chromium, Firefox und WebKit: „Aktionen"
+     am Handy ohne Namen, Übersichtslink im Aufklappschalter, `dt`/`dd`
+     ohne `dl`, Phasenfelder ohne Beschriftung, Links nur an der Farbe
+     erkennbar u. a.
+     *Weg:* die Funde beheben (MA-14), axe-core vendoriert als Prüfmittel
+     (MA-15). *Abnahme:* 0 Verstöße in drei Engines, eine Gegenprobe mit
+     einem Knopf ohne Namen rot.
+     Erledigt 07.11.2026 mit Schritt 26 (MA-14, MA-15; Web 23.11.2):
+     0 Verstöße auf 74 Aufrufen je Engine (hell und dunkel), Gegenprobe
+     rot (1 Befund, Exit 1).

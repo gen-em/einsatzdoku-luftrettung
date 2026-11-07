@@ -32,6 +32,7 @@ Wiederholung des Wegs nach einer Zeitüberschreitung (Nr. 393).
 | Werkzeug | Weg | Grund |
 |---|---|---|
 | `tools/bedienprobe/probe.mjs` | Probe: bedienprobe | Zwei Stücke nur in Chromium (E-DM-05), in Firefox und WebKit benannt: der Weg `einstellungen-profil-passkey` (virtueller Authenticator über CDP) und im Weg `betrieb-server-schluesselwechsel` die Seitenzahl des Schlüsselblatts (`page.pdf()`) |
+| `tools/barrierefreiheit/probe.mjs` | Probe: barrierefreiheit | alle drei Engines vollständig (seit Schritt 26, Nr. 524) |
 | `tools/screenshots/aufnehmen.mjs` | Probe: bilderlauf | |
 | `tools/stilvergleich/stilvergleich.js` | Probe: stilvergleich | |
 | `tools/proben/abmelden/pruefe.mjs` | Probe: abmelde-probe | |

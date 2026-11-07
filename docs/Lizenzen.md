@@ -499,6 +499,19 @@ Bezogen über das npm-Paketarchiv (`npm pack jsqr@1.4.0`), Datei
 „Zweitfaktor einrichten" liest damit den QR-Code aus einem Abzug und hält den
 Inhalt gegen die angezeigte otpauth-Adresse. Zur Laufzeit wird er nie geladen.
 
+### 7.0a Die Prüfbibliothek axe-core (seit Schritt 26)
+
+**axe-core** 4.14.0 (Deque Systems), **MPL-2.0**, liegt unter
+`tools/barrierefreiheit/vendor/axe.min.js`, die Lizenz daneben
+(`axe-core-LICENSE`). Bezogen über das npm-Paket (`npm i axe-core@4.14.0`,
+07.11.2026), Datei `axe.min.js` **byteweise unverändert**, SHA-256
+`20c09fe157a8a34a30e241aaa1fcdade657734f08ab379ecfbeb7d45cc46e878`; die
+Probe rechnet sie vor jedem Lauf nach. Ohne Herkunftskopf in der Datei —
+ein Kopf änderte die Summe, und die MPL verlangt, dass ihr eigener Kopf
+oben bleibt. **Nur Prüfwerkzeug** (E-MA-33, Nr. 524): Die Barrierefreiheitsprobe
+spielt sie in jede gemessene Seite ein. Zur Laufzeit wird sie nie geladen
+und liegt in keinem ausgelieferten Verzeichnis.
+
 ### 7.1 Das GPX-1.1-Schema (seit Web 10.3.0)
 
 Eine Ausnahme von „hier steht nur, was ausgeliefert wird" — sie steht
@@ -626,6 +639,7 @@ Backlog Nr. 230.
 
 | Fassung | Was |
 |---|---|
+| Web 23.11.1–23.11.2 (Schritt 26, MA-13, MA-15) | Abschnitt 7.0a: **axe-core** 4.14.0 (MPL-2.0) als Prüfwerkzeug unter `tools/barrierefreiheit/vendor/` (E-MA-33, Nr. 524), byteweise unverändert mit SHA-256. Die Favicons der Produktmarke kommen aus dem Set des Branding-Repos (Commit `e7bf4fc`). |
 | Web 20.42.0 (P5c/AP5) | Abschnitt 3: **qrcode-generator** 2.0.4 (MIT) für den QR-Code des Zweitfaktors (E-P5c-41, hebt SP-11 in diesem Punkt auf). Nur die Modulmatrix; das SVG baut die Anwendung. Abschnitt 7.0: **jsQR** 1.4.0 (Apache-2.0) als Prüfwerkzeug unter `tools/bedienprobe/vendor/` (E-P5c-87). Beide mit Herkunft und SHA-256 im Dateikopf. |
 | Web 20.39.0 (P5c/AP2) | Abschnitt 5: **ein neues Zeichen**, Tabler Icons **„list"** (MIT), Outline, Strich 2 im 24-px-Raster wie der übrige Vorrat — `protokoll.svg`. Es trägt den Menüpunkt Verwaltung → Protokoll; jeder Punkt der Einstellungsleiste trägt ein Zeichen, und der Vorrat hatte keines für eine Ereignisliste. **57 → 58 Dateien.** Die Zahl in Abschnitt 5 stand noch bei **56** und war damit schon vor diesem Paket um ein Zeichen hinter dem Ordner zurück; gezählt am 24.09.2026: 58 `.svg` im Ordner. Kein neuer Fremdbestandteil und kein neuer Laufzeitdienst: derselbe Satz, aus dem die übrigen kommen. |
 | Web 19.3.0 (Backlog-Runde 2) | Abschnitt 5: **ein neues Zeichen**, Tabler Icons **„mail"** (MIT), Outline, Strich 2 im 24-px-Raster wie der übrige Vorrat — `mail.svg`. Es trägt den Knopf „Testmail an mich" auf Betrieb → Status (Backlog Nr. 120). **52 → 53 Dateien.** Kein neuer Fremdbestandteil und kein neuer Laufzeitdienst: derselbe Satz, aus dem die 52 kommen. Gebraucht wurde es, weil der Vorrat kein Zeichen für „E-Mail" hatte (gemessen: 0 Treffer) und alle elf vorhandenen Kopfaktionen eines tragen — eine textnackte wäre eine neue Darstellung gewesen. |

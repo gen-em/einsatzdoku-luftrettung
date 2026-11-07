@@ -42,12 +42,12 @@ Prüfarbeit an der einen örtlichen Anlage (CLAUDE.md 7).
 | MA-12 | Hauptaktion in Orange, einmal je Seite, auf sechs Seiten | **erledigt** 07.11.2026 (Web 23.11.0) |
 | MA-13 | Favicon-Sets aus dem Repo | **erledigt** 07.11.2026 (Web 23.11.1) |
 | MA-14 | Barrierefreiheit: die Funde von axe beheben, Abruf beim Verlassen der Seite abbrechen | **erledigt** 07.11.2026 (Web 23.11.2) |
-| MA-15 | axe-core als Prüfmittel in drei Engines | offen |
+| MA-15 | axe-core als Prüfmittel in drei Engines | **erledigt** 07.11.2026 (nur `tools/`, keine Fassung) |
 | MA-16 | Android: Rollen wie im Web, Dark Mode, Hauptaktion „Dienst beginnen" (E-MA-24 aufgehoben) | offen |
 | MA-17 | Garmin: die Zeichen der Produktmarke (Backlog Nr. 520) | offen |
 | MA-18 | Dokumentation, Prüfstand zweimal grün, Pull Request nachgezogen | offen |
 
-**In Arbeit:** zweite Runde, MA-15 (Statusblock oben). Erste Runde: MA-08, Prüfstand und Pull Request stehen. Prüfdokument:
+**In Arbeit:** zweite Runde, MA-16 (Statusblock oben). Erste Runde: MA-08, Prüfstand und Pull Request stehen. Prüfdokument:
 `Pruefdokument-MA-Markenabgleich.md` (15 Handpunkte). **Zur Bestätigung
 vorgelegt:** E-MA-21 (Kopfleiste fest „NAdoku") und E-MA-24 (Android nur
 Werte). **Es hakt:** nirgends; alle Fragen sind entschieden
@@ -664,6 +664,27 @@ Nachbesserung: 0 leere Kopfzellen, 4 `<pre>` und 48 `<table>` mit
 `tabindex`. Sichtprüfung Chromium: Seitenleiste (Übersichtssymbol an
 derselben Stelle), Import (unterstrichene Links). `node --check` der vier
 geänderten Skripte, `php -l` der sieben PHP-Dateien.
+
+### MA-15 (Prüfmittel, 07.11.2026)
+
+**Was gebaut ist.** `tools/barrierefreiheit/` nach `Pruefablauf.md` 6.12:
+Backlog Nr. 524 (gleich erledigt, Backlog-Erledigt), `probe.mjs` über
+`starten()`, `LIESMICH.md` mit fünf Abschnitten und Anlass, axe-core 4.14.0
+byteweise unverändert unter `vendor/` (SHA-256 im Werkzeug nachgerechnet,
+Lizenz daneben, `Lizenzen.md` 7.0a), Probe `barrierefreiheit` in
+`pruefablauf.json` (installation, demo, motoren) an den Mustern
+`oberflaeche`, `stylesheet`, `motoren` und einem eigenen
+`barrierefreiheit-werkzeug`, Zeile im Register `motoren.md`, Zeile in
+`Pruefablauf.md` 6.11, Tabelle in 4 erzeugt. 28 Seiten, 74 Aufrufe je
+Engine (dunkel nur bei 1440 px — dort wechseln die Flächen, die Breite
+nicht).
+
+**Geprüft.** Chromium: 74 Aufrufe, 0 Befunde, 292 Knoten unentschieden,
+197 s. Gegenprobe (`aria-label` an „Aktionen" entfernt, `--nur index.php`):
+1 Befund `button-name`, Rückgabewert 1; danach `ui.php` zurück, `git diff`
+leer. Riegel: `bestand` 0 Befunde in allen Regeln, `pruefen.sh alle` 16 von
+16, Selbstproben 14 von 14, `kettenaufrufe` ohne Widerspruch. Firefox und
+WebKit fährt der Prüfstand (MA-18).
 
 ## 10. Vorher-Messung der zweiten Runde (07.11.2026, Web 23.10.0)
 
