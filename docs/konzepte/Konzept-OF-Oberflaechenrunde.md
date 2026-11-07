@@ -37,11 +37,11 @@ es im Kopf von `server/version.php`.
 | Paket | Inhalt | Modell · Fächerung | Stand |
 |---|---|---|---|
 | OF-00 | Konzept, Fahrplanzeile, Backlog-Spanne, Übernahme von NV und der Vorbereitung | Fable · keine | **erledigt** 07.11.2026 |
-| NV-01 | Bereichszeile unter der Kopfleiste — als Reiter-Baustein für beide Ebenen (E-OF-17, E-OF-40); Seitenreiter in derselben Form (OF-P-20) | Opus · keine | offen |
+| NV-01 | Bereichszeile unter der Kopfleiste — als Reiter-Baustein für beide Ebenen (E-OF-17, E-OF-40); Seitenreiter in derselben Form (OF-P-20); Ziel „Betrieb“ ist der erste Punkt (E-OF-51) | Opus · keine | offen |
 | NV-02 | Rahmenkarte für alle drei Leistentypen: Abschnitte in den Einstellungen, Karten auf Startseite und Suche (E-OF-36 bis -38); Leiste klebt und rollt innen (E-OF-37); Fußzeile als dunkelblauer Abschluss (E-OF-34) | Opus · keine | offen |
 | NV-03 | Leiste der Einstellungen auf den aktiven Bereich kürzen; aktiver Eintrag ohne Strich in jeder Leiste (OF-P-04, E-OF-16); „Abmelden“ nur in der Leiste (E-OF-27); Sprungmarken nur zu sichtbaren Karten (OF-P-16) | Opus · keine | offen |
-| NV-04 | Schmale Breiten: Bereichszeile rollt, Rahmenkarte ohne Rand, Schublade mit drei Bereichen; die Übersicht bleibt (Q-NV-03, Q-OF-08) | Opus · keine | offen |
-| OF-01 | Regeln für alle Seiten: eine rechte Kante, Felder 36 rem (E-OF-31); Speicherknopf im Abschnitt oder Speicherleiste (E-OF-32, E-OF-41); Handbuch-Verweise raus (E-OF-02); ein Satz je Karte (OF-P-10, -15) | Opus · keine | offen |
+| NV-04 | Schmale Breiten: Bereichszeile rollt, Rahmenkarte ohne Rand, Schublade mit drei Bereichen; die Übersicht bleibt (E-OF-50) | Opus · keine | offen |
+| OF-01 | Regeln für alle Seiten: eine rechte Kante, Felder 36 rem (E-OF-31); Speicherknopf im Abschnitt oder Speicherleiste (E-OF-32, E-OF-41); Handbuch-Verweise raus (E-OF-02); ein Satz je Karte (OF-P-10, -15); drei Messungen im Bilderlauf (E-OF-49, Nr. 530) | Opus · keine | offen |
 | OF-02 | Bausteine I: Klappkarte mit Stand und Plakette (E-OF-42); Segmentwahl abwählbar und senkrecht mittig (OF-P-05, E-OF-33); Zeile mit Plakette und Knopf auf einer Linie (OF-P-08); sechs neue Zeichen | Opus · keine | offen |
 | OF-03 | Bausteine II, Eingabe: Datumsfeld `TT.MM.JJJJ` (E-OF-06, E-OF-44); Ortsfeld-Hinweis als Zeichen (E-OF-07); Listenkopf mit Filterknopf (E-OF-18) | Opus · keine | offen |
 | OF-04 | Einstellungen: Profil mit Zweitfaktor „ein Satz plus Verwalten“ (E-OF-19); Geräte nach Typ, Koppeln im Dialog (E-OF-25); Import / Export „erst wählen, dann füllen“ (E-OF-26); Backup (OF-P-14, Q-OF-04; OF-P-15) | Opus · keine | offen |
@@ -51,10 +51,10 @@ es im Kopf von `server/version.php`.
 | OF-08 | Darstellung: Umschalter Mond/Sonne in der Kopfleiste, vier Einstellungen im Profil, keine Migration (E-OF-09, E-OF-43) | Opus · keine | offen |
 | OF-09 | Abschluss (NV-05 geht auf): Dokumentation, Prüfmittel, Prüfstand voll, Pull Request, Prüfdokument | Opus · keine | offen |
 
-**In Arbeit:** nichts — OF-00 ist mit diesem Commit erledigt; die Umsetzung
-beginnt mit NV-01, sobald Q-OF-11 (Reihenfolge) beantwortet ist. **Offen bei
-der Betreiberin:** Q-OF-03, -04, -05, -08, -11 bis -14, Q-NV-02, -03
-(Abschnitt 7). **Meilenstein:** OF-M1 (Statuszeilen, zu Beginn von OF-06).
+**In Arbeit:** nichts — OF-00 ist erledigt, die Umsetzung kann mit NV-01
+beginnen (Q-OF-11 bestätigt, 07.11.2026). **Offen bei der Betreiberin:**
+Q-OF-04, -05, -12, -13, -14 (Abschnitt 7; Erklärung angefordert).
+**Meilenstein:** OF-M1 (Statuszeilen, zu Beginn von OF-06).
 
 ---
 
@@ -174,8 +174,8 @@ enthält `origin/main` `ac4a7bd` (Merge von PR #157).
   Erklärtext-Zählung aus Design.md 6 (E-P5c-128) ist eine Handregel; der
   Bilderlauf (`tools/screenshots/aufnehmen.mjs`) misst Knopfhöhen, Überlauf
   und „Karten außerhalb `main.inhalt`“ an der gerenderten Seite — er ist die
-  Stelle, an der drei weitere Messungen hingehören, falls Q-OF-03 mit Ja
-  beantwortet wird. Ein neues Werkzeug braucht es nicht.
+  Stelle, an der drei weitere Messungen hingehören (E-OF-49). Ein neues
+  Werkzeug braucht es nicht.
 - **F-OF-15 — Der Reiter-Baustein (`ui_reiter()`, Design.md 9.37) und die
   Bereichszeile aus NV-01 wären zwei Reihen in zwei Formen.** E-OF-17
   entscheidet eine Form für beide Ebenen; NV-01 baut die Bereichszeile
@@ -239,8 +239,7 @@ Gerüst (NV), jede Seite benutzt die Regeln (OF-01) und Bausteine (OF-02,
   (`--gedaempft`, 400) hinter dem Namen, der Aufmerksamkeits-Zähler als
   vorhandene Plakette `ui_zaehler()`, **summiert über den Block** (E-OF-14).
 - **`ui_bereichszeile(string $aktiv)`** bleibt als Funktion: Sie baut aus
-  `ui_einstellungen_punkte()` die Punkte (Ziel = erster Punkt des Blocks,
-  Q-NV-02) und ruft `ui_reiter(['klasse' => 'reiter-bereiche', …])`. Die
+  `ui_einstellungen_punkte()` die Punkte (Ziel = erster Punkt des Blocks, E-OF-51) und ruft `ui_reiter(['klasse' => 'reiter-bereiche', …])`. Die
   Variante `.reiter-bereiche` setzt nur Lage und Breite: volle Fensterbreite,
   Fläche Schnee, Linie unten, Inhalt auf `--rahmen` zentriert mit dem
   Seitenabstand der Kopfleiste. Aufruf in `ui_geruest_start()` nach
@@ -323,17 +322,22 @@ Gerüst (NV), jede Seite benutzt die Regeln (OF-01) und Bausteine (OF-02,
   rollt waagerecht (`overflow-x: auto`, Rollbalken verborgen — das kann
   `.reiter-rahmen` mit `reiter.js` schon); die Schublade bleibt mit allen
   drei Bereichen; der Rückweg „‹ Einstellungen“ bleibt.
-- **Die Übersicht (`einstellungen.php` ohne `t`) bleibt** (Q-NV-03, Q-OF-08,
-  Empfehlung ja): Einstieg vom Zahnrad und auf dem Handy der einzige
+- **Die Übersicht (`einstellungen.php` ohne `t`) bleibt** (E-OF-50): Einstieg vom Zahnrad und auf dem Handy der einzige
   Überblick. Am Desktop zeigt sie die Bereichszeile mit „Einstellungen“
   aktiv und die drei Bereichskarten ohne „Abmelden“ (E-OF-27).
 - **Abnahme:** P-NV-05, P-NV-06, P-NV-08, P-OF-06.
 
 ### OF-01 Regeln für alle Seiten
 
-Drei Regeln, einmal im Stylesheet, einmal in Design.md 6 — und falls Q-OF-03
-mit Ja beantwortet wird, dreimal im Bilderlauf gemessen (Nr. 530 als Anlass;
-die Nummer wird erst mit der Antwort angelegt).
+Drei Regeln, einmal im Stylesheet, einmal in Design.md 6 — und dreimal im
+Bilderlauf gemessen (E-OF-49, Anlass Nr. 530): (1) kein `.knopf` als
+direktes Kind von `.inhalt` zwischen zwei `.karte`; (2) in
+`.rahmenkarte-abschnitte` endet jede `.karte` an der rechten Kante von
+`.inhalt`; (3) je `.karte` höchstens ein Satz in `.feld-hinweis` und
+`.seiten-erklaerung` außerhalb von Meldungen, Leerzuständen und
+Befundzeilen (Zählung nach Design.md 6, E-P5c-128). Jede Abweichung ist ein
+Befund wie ein Knopf falscher Höhe; die Sollzahl steht in der `LIESMICH.md`
+des Bilderlaufs.
 
 - **Eine rechte Kante** (E-OF-31, Bild `OF-P19-vorschlag.png`): Jeder
   Abschnitt und seine Linie reichen bis zur rechten Kante des Inhalts;
@@ -642,8 +646,8 @@ diesem Konzept unter 9 (Prüfprotokoll OF-06). Danach gefächert (Statusblock).
   Wahlkarten), Bedienprobe-Wege (Datumsfeld, Koppel-Dialog, Filterknopf,
   Segment abwählbar), `kennzeichnung`, `textprobe` (neue Wörter),
   `vollstaendigkeit` (neue Klassen, Streichliste), `register.php` (Zeile
-  Datum), `pruefablauf.json` (neue Dateien → Proben); falls Q-OF-03 ja: drei
-  Messungen im Bilderlauf mit Nr. 530.
+  Datum), `pruefablauf.json` (neue Dateien → Proben); die drei
+  Messungen des Bilderlaufs aus OF-01 (E-OF-49, Nr. 530) mit Selbstprobe.
 - **Prüfstand** Hauptstufe voll, drei Engines, zweimal grün (E-MA-34 als
   Maßstab); Pull Request; Prüfdokument nach CLAUDE.md 7 und am Ende in
   `Pruefliste.md`; Erledigt-Zeile, Verlaufszeile, Konzept gelöscht.
@@ -698,7 +702,7 @@ der Vorbereitung und der NV-Übergabe übernommen; neu ab E-OF-39.
 | E-OF-36 | Q-NV-01, Teil Startseite (Mockup E, E1): Die Startseite bekommt die gemeinsame Rahmenkarte (Diensttage-Leiste und Inhalt in einer Fläche), Unterform **2 — Karten bleiben Karten** darin. Damit liegen auf der Startseite Karten mit Rand in der umrandeten Rahmenkarte; das widerspricht Prüfpunkt P-NV-04 („keine Karte in der Karte“), der für die Startseite deshalb nicht gilt *(nachgezogen in Abschnitt 8)*. Bilder `OF-E1-2-karten-1920.png`, `OF-E1-2-karten-390.png` | Betreiberin, 07.11.2026 (Kommentar im Mockup E) |
 | E-OF-37 | Startseite beim Scrollen (Mockup E, E2), Unterform **2 — Karten**: Die Diensttage-Leiste klebt unter der Kopfleiste, ist höchstens so hoch wie das Fenster und scrollt in sich; „Diensttag anlegen“ und „Papierkorb“ bleiben unten sichtbar; die Fläche der Leistenspalte reicht bis zum Boden der Rahmenkarte. Bild `OF-E2-2-karten-gescrollt.png` | Betreiberin, 07.11.2026 (Kommentar im Mockup E) |
 | E-OF-38 | Q-NV-01, Teil Suche (Mockup E, E3): Die Suche bekommt die gemeinsame Rahmenkarte wie die Startseite, Unterform **2 — Karten bleiben Karten**; die lange Filterleiste klebt und scrollt in sich. Damit ist Q-NV-01 ganz entschieden: Rahmenkarte auch für Startseite und Suche, dort mit Karten statt Abschnitten (P-NV-04 gilt für beide nicht). Bild `OF-E3-2-suche-karten.png` | Betreiberin, 07.11.2026 (Kommentar im Mockup E) |
-| E-OF-39 | Schritt **27**, Kennung OF, als Einschub vor 13 (Reihenfolge 27 → 13 → 14), weil die Betreiberin die Runde nach dem Merge von 26 beauftragt hat (E-OF-03) und 13 (Gesicht v1.0) auf der fertigen Oberfläche aufsetzen soll. **Zur Bestätigung vorgelegt** (Q-OF-11) | Konzept, aus E-OF-03 |
+| E-OF-39 | Schritt **27**, Kennung OF, als Einschub vor 13 (Reihenfolge 27 → 13 → 14), weil die Betreiberin die Runde nach dem Merge von 26 beauftragt hat (E-OF-03) und 13 (Gesicht v1.0) auf der fertigen Oberfläche aufsetzen soll | Konzept, aus E-OF-03 — **bestätigt** von der Betreiberin, 07.11.2026 (Q-OF-11) |
 | E-OF-40 | Die Bereichszeile ist der Reiter-Baustein `ui_reiter()` mit der Lagevariante `.reiter-bereiche`; `ui_bereichszeile()` baut nur die Punkte. Beide Ebenen haben damit eine Regel im Stylesheet; die 48 px (E-NV-04) gelten auch für Seitenreiter | Konzept, aus E-OF-17 (F-OF-15) |
 | E-OF-41 | Die Speicherleiste ist der Umbau von `ui_speichern_leiste()` (Design.md 9.9), kein zweiter Baustein: Sitz am Rand der Rahmenkarte, Fläche `--auswahl-flaeche`, Text „Geändert: …“; die Sammelleiste bleibt zweite Verwendung in derselben Form | Konzept, aus E-OF-32 (F-OF-02) |
 | E-OF-42 | Die Klappkarte (`ui_karte_start(['zu' => true])`) trägt `stand` (bisher `vorschau`) und `plakette`; die Sperre aus Design.md 9.1 fällt für die Plakette, nicht für die Kopfaktion. Ein Baustein für Status, Hintergrundjobs, Servereinstellungen, Komplett-Backup und Backup-Ziele | Konzept, aus E-OF-21 bis -24 (F-OF-03) |
@@ -707,6 +711,9 @@ der Vorbereitung und der NV-Übergabe übernommen; neu ab E-OF-39.
 | E-OF-45 | Backup-Ziele: die Karte entsteht einmal in `server/sicherungsziele_teile.php` und wird von Servereinstellungen und Komplett-Backup eingebunden; `admin_sicherungsziele.php` bleibt Ziel der Formulare und leitet bei GET um; der Menüpunkt entfällt | Konzept, aus E-OF-24 (F-OF-07) |
 | E-OF-46 | Demo-Schalter: Der vorhandene Schalter „Demo-Anmeldung zulassen“ zieht aus den Servereinstellungen in die Karte „Demo-Konto“ unter Installation; ein Wert, eine Stelle. `admin_demo.php` leitet um, die Kontrollzahlen werden Statuszeilen | Konzept, aus E-OF-08 (F-OF-06, -07) |
 | E-OF-47 | `Vorbereitung-OF-Oberflaechenrunde.md` geht in diesem Konzept auf (Punkte, Entscheidungen, Fragen wörtlich) und wird mit diesem Commit gelöscht; zwei Dateien mit derselben Entscheidungstabelle altern an einer unbemerkt. Die Git-Historie behält sie (`0464977`) | Konzept |
+| E-OF-49 | Q-OF-03: Die drei Seitenregeln (Knopf zwischen Abschnitten, eine rechte Kante, ein Satz je Karte) misst der Bilderlauf an der gerenderten Seite; kein neues Werkzeug. Anlass Backlog Nr. 530 | Betreiberin, 07.11.2026 („ok, so machen wir es“) |
+| E-OF-50 | Q-OF-08 und Q-NV-03: Die Übersichtsseite „Einstellungen“ bleibt neben Bereichszeile und Leiste, unverändert bis auf „Abmelden“ (E-OF-27) | Betreiberin, 07.11.2026 |
+| E-OF-51 | Q-NV-02: Der Reiter „Betrieb“ führt auf den ersten Punkt des Blocks, keine Sonderregel; heute ist das Status | Betreiberin, 07.11.2026 |
 | E-OF-48 | Papierkorb: Das Artzeichen des Diensttags (`ohne-zuordnung`, Hubschrauber, Fahrzeug) steht vor dem Datum wie in Leiste und Vorschlägen — so zeigt es das freigegebene Bild; „entfernt“ in E-OF-30 meint die Stelle neben den Knöpfen. Will die Betreiberin es im Papierkorb ganz weglassen, ist das eine Zeile | Konzept, aus E-OF-30 (F-OF-16) |
 
 Aus Schritt 26 übernommen: E-MA-36 (Beenden-Knöpfe der App bleiben
@@ -716,17 +723,15 @@ vollflächig rot) ist bestätigt.
 
 Beantwortet und in Entscheidungen aufgegangen: Q-OF-01 (Auswahl je Mockup →
 E-OF-16 bis -34), Q-OF-06 → E-OF-24, Q-OF-07 → E-OF-30, Q-OF-09 → E-OF-17,
-Q-OF-10 → E-OF-35, Q-NV-01 → E-OF-36 bis -38, Q-NV-04 → E-OF-14.
+Q-OF-10 → E-OF-35, Q-NV-01 → E-OF-36 bis -38, Q-NV-04 → E-OF-14; am
+07.11.2026 dazu Q-OF-03 → E-OF-49, Q-OF-08 und Q-NV-03 → E-OF-50, Q-NV-02 →
+E-OF-51, Q-OF-11 → E-OF-39 bestätigt.
 
 | Nr. | Frage | Empfehlung | Hängt an |
 |---|---|---|---|
 | Q-OF-02 | P-23: Welche Zeilen der Statusseite entfallen? Claude legt je Zeile vor: Kann sie rot werden, muss dann jemand handeln, steht es woanders schon | Vorlage zu Beginn von OF-06 (Meilenstein OF-M1); bis dahin nichts entscheiden | OF-06 |
-| Q-OF-03 | P-10, -07, -19: Sollen die neuen Regeln von einem Prüfmittel gemessen werden (Erklärtext je Karte, Knopf zwischen Abschnitten, eine rechte Kante)? | **Ja**, als drei Messungen im Bilderlauf, der die Seite gerendert sieht (F-OF-14) — kein neues Werkzeug; Anlass Nr. 530 wird mit der Antwort angelegt. Ohne Messung reißt eine Regel beim nächsten Paket unbemerkt | OF-01, OF-09 |
 | Q-OF-04 | P-14: Kachel „GPS-Daten verdichten“ nur zeigen, wenn etwas fällig ist oder ein Lauf scheiterte — oder ganz weg bzw. als Zeile unter „Was dein Konto hält“? | nur bei Bedarf zeigen; die Zahl bleibt als Zeile unter „Was dein Konto hält“ | OF-04 |
 | Q-OF-05 | P-18: Name des Kontos als Verweis, Spalte „Öffnen“ entfällt (Tastatur und Screenreader brauchen ein fokussierbares Element) — bestätigt? | ja | OF-05 |
-| Q-OF-08 / Q-NV-03 | Bleibt die Übersichtsseite „Einstellungen“ (`einstellungen.php` ohne `t`) neben Bereichszeile und Leiste? | **Ja**, unverändert bis auf „Abmelden“ (E-OF-27): Einstieg vom Zahnrad, auf dem Handy der einzige Überblick | NV-04 |
-| Q-NV-02 | Ziel des Reiters „Betrieb“: Status (hat den Zähler) oder der erste Punkt der Liste? | erster Punkt des Blocks, keine Sonderregel — heute ist das Status | NV-01 |
-| Q-OF-11 | Schritt 27 als Einschub vor 13 (E-OF-39) — bestätigt? | ja; 13 (Umbenennung, Handbuch als HTML, Manifest) baut auf der fertigen Oberfläche auf | Fahrplan |
 | Q-OF-12 | Datumsfeld (E-OF-06) an allen acht Stellen aus F-OF-05, auch Geburtsdatum und Suchfilter? | ja, alle — zwei Datumsformen auf einer Seite (Suche: Datum und Alarmzeit) wären der nächste Punkt der Betreiberin | OF-03 |
 | Q-OF-13 | Darstellung (E-OF-43): Bestehende Konten ohne Wahl („Wie das Gerät“) bekommen mit der neuen Vorgabe den Umschalter — in Ordnung? Und: „Jetzt sichern“ wird siebte Hauptaktion in Orange (E-MA-27 nannte sechs Seiten) | beides ja: Der Umschalter folgt beim ersten Aufruf ohnehin dem Gerät, es ändert sich nur, dass ein Klick möglich ist; das Komplett-Backup hat genau eine Haupthandlung | OF-08, OF-06 |
 | Q-OF-14 | Das „?“ der Kopfleiste führt auf das ganze Handbuch. Mit E-OF-02 fallen die Verweise auf Kapitel. Soll das „?“ das Kapitel der aktuellen Seite öffnen (Zuordnung Menüpunkt → Handbuchmarke in `ui_einstellungen_punkte()`)? | ja — eine Zeile je Menüpunkt, der Riegel `anker` hält die Ziele | OF-01 |
