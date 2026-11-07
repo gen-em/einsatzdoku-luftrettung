@@ -44,10 +44,10 @@ Prüfarbeit an der einen örtlichen Anlage (CLAUDE.md 7).
 | MA-14 | Barrierefreiheit: die Funde von axe beheben, Abruf beim Verlassen der Seite abbrechen | **erledigt** 07.11.2026 (Web 23.11.2) |
 | MA-15 | axe-core als Prüfmittel in drei Engines | **erledigt** 07.11.2026 (nur `tools/`, keine Fassung) |
 | MA-16 | Android: Rollen wie im Web, Dark Mode, Hauptaktion „Dienst beginnen" (E-MA-24 aufgehoben) | **erledigt** 07.11.2026 (Android 0.22.0) |
-| MA-17 | Garmin: die Zeichen der Produktmarke (Backlog Nr. 520) | offen |
+| MA-17 | Garmin: die Zeichen der Produktmarke (Backlog Nr. 520) | **erledigt** 07.11.2026 (Uhr 4.3.3) |
 | MA-18 | Dokumentation, Prüfstand zweimal grün, Pull Request nachgezogen | offen |
 
-**In Arbeit:** zweite Runde, MA-17 (Statusblock oben). Erste Runde: MA-08, Prüfstand und Pull Request stehen. Prüfdokument:
+**In Arbeit:** zweite Runde, MA-18 (Prüfstand) (Statusblock oben). Erste Runde: MA-08, Prüfstand und Pull Request stehen. Prüfdokument:
 `Pruefdokument-MA-Markenabgleich.md` (15 Handpunkte). **Zur Bestätigung
 vorgelegt:** E-MA-21 (Kopfleiste fest „NAdoku") und E-MA-24 (Android nur
 Werte). **Es hakt:** nirgends; alle Fragen sind entschieden
@@ -702,8 +702,9 @@ WebKit fährt der Prüfstand (MA-18).
 ### MA-16 (Android 0.22.0, 07.11.2026)
 
 **Was gebaut ist.** `Rolle` in `Farbe.kt` mit 24 Rollen, `rollen.xml` hell
-und dunkel (Werte aus dem Web errechnet), alle 92 Farbstellen des
-Handy-Moduls auf Rollen (übrig: Kopfleiste als Leitwert), `KnopfHaupt` für
+und dunkel (Werte aus dem Web errechnet), alle Farbstellen des
+Handy-Moduls auf Rollen (94 Stellen laut `kontraste.py` samt `gemeinsam/`;
+übrig als Leitwert nur die Kopfleiste), `KnopfHaupt` für
 „Dienst beginnen", `KnopfPrimaer` Dunkelblau, Zustand in Ordnung grün,
 Thema mit `values-night`. Uhr: großer Knopf und nächste Phase blau 300
 (`marke_blau_300`). `farbabgleich.py` und `kontraste.py` rechnen beide
@@ -718,6 +719,20 @@ verschieden, Bedienhöhe 48 dp; Uhr 7 Bilder. `kontraste.py` 36 Paare in 59
 Rechnungen, 0 Befunde, Selbstprobe 7 von 7; `farbabgleich.py` 48
 Rollenwerte, 0 Abweichungen, 0 eigene; `bildmarken.sh pruefen` 0
 Abweichungen. Nicht geprüft: Gerät (P-MA-12).
+
+### MA-17 (Uhr 4.3.3, 07.11.2026)
+
+**Was gebaut ist.** `bash tools/erzeugen/uhr-bilder.sh` mit unverändertem
+Rezept aus `nadoku-*-farbig-negativ.svg`: 17 Bilder (9 Startsymbole in
+35 bis 70 px, 8 Bildmarken in vier Stufen 60 bis 118 px). `APP_VERSION`
+4.3.3. Backlog Nr. 520 erledigt.
+
+**Geprüft.** Ausbaustufe `uhr` der Arbeitsumgebung aufgebaut (SDK und
+Gerätedateien, „Arbeitsumgebung vollständig"). Bau für alle Geräteklassen
+wie `uhr-stufe1`: 99 übersetzt, 0 fehlgeschlagen, 0 ohne Gerätedatei.
+Bildmarke und Startsymbol auf Asphalt angesehen (Korpus weiß, Federn in den
+Markenfarben). Sync-Seite, Rundlauf und Krypto fährt der Prüfstand (MA-18);
+Simulator und Uhr bleiben Handprüfung (P-MA-17).
 
 ## 10. Vorher-Messung der zweiten Runde (07.11.2026, Web 23.10.0)
 

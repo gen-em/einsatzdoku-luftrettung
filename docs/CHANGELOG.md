@@ -381,6 +381,18 @@ frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
   nie mehr als die Hälfte, nie unter 5 s — huckepack an einer Seitenanfrage
   fängt der Versand weiter nicht an.
 
+## [Uhr 4.3.3] — unveröffentlicht
+
+Schritt 26 (MA), Paket MA-17 (Backlog Nr. 520).
+
+### Geändert
+
+- **Uhr — das Startsymbol und die Bildmarke zeigen die Produktmarke
+  NAdoku.** Web und Android-App tragen sie seit diesem Schritt, die Uhr
+  zeigte noch die alte Zeichnung mit genäherten Markenfarben. Die Bilder
+  sind mit dem vorhandenen Rezept aus der dunklen Fassung des Branding-Repos
+  neu gerastert; an Größen und Anordnung ändert sich nichts.
+
 ## [Uhr 4.3.2] — unveröffentlicht
 
 Schritt 23 (BR6), Paket BR6-06 (Backlog Nr. 470).

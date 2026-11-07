@@ -11138,3 +11138,20 @@ zutreffen.
      die Uhr in blau 300. Statt Mockups die Bilder des Bilderlaufs hell und
      dunkel im Pull Request (Auftrag der BetreiberIn). Der Gerätetest bleibt
      Handprüfung (P-MA-12).
+
+520. **Die Uhr zeigt noch die alten Zeichen.** · gehört zu: 26 · Stand: erledigt · seit 07.11.2026
+     *Aufgenommen 07.11.2026 mit MA-06 (Konzept MA, Schritt 26).* Die Web-
+     oberfläche trägt seit Web 23.9.2 die Produktmarke aus dem Branding-Repo
+     (Grundform Dunkelblau, Markenfarben exakt), die Android-App seit MA-09.
+     Die Launcher-Symbole und Bildmarken der Garmin-Uhr unter
+     `watch/resources*/drawables/` sind aus den alten `gen-em_logo_*_weiss.svg`
+     gerastert und tragen deren Näherungswerte (Backlog Nr. 62). Das Rezept
+     zeigt schon auf die neuen Dateien (`tools/erzeugen/uhr-bilder.sh`,
+     `nadoku-*-farbig-negativ.svg`); neu erzeugen gehört zu einer Uhr-Fassung mit
+     Simulatorlauf und Gerätetest, nicht in einen Web-Einschub. *Weg:*
+     `bash tools/erzeugen/uhr-bilder.sh`, Uhr-Fassung hochstufen, Bilder im
+     Simulator und auf der Uhr ansehen. *Abnahme:* Launcher und Sync-Seite
+     zeigen das neue Zeichen; `compare` gegen die Ausgabe des Rezepts 0.
+     Erledigt 07.11.2026 mit Schritt 26 (MA-17, Uhr 4.3.3): 17 Bilder in
+     11 Größen neu gerastert, Rezept unverändert. Simulator und Uhr bleiben
+     Handprüfung (P-MA-17).
