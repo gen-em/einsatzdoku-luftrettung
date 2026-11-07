@@ -45,15 +45,9 @@ Prüfarbeit an der einen örtlichen Anlage (CLAUDE.md 7).
 | MA-15 | axe-core als Prüfmittel in drei Engines | **erledigt** 07.11.2026 (nur `tools/`, keine Fassung) |
 | MA-16 | Android: Rollen wie im Web, Dark Mode, Hauptaktion „Dienst beginnen" (E-MA-24 aufgehoben) | **erledigt** 07.11.2026 (Android 0.22.0) |
 | MA-17 | Garmin: die Zeichen der Produktmarke (Backlog Nr. 520) | **erledigt** 07.11.2026 (Uhr 4.3.3) |
-| MA-18 | Dokumentation, Prüfstand zweimal grün, Pull Request nachgezogen | offen |
+| MA-18 | Dokumentation, Prüfstand zweimal grün, Pull Request nachgezogen | **erledigt** 07.11.2026 (Web 23.11.3; PR #156 gemergt) |
 
-**In Arbeit:** zweite Runde, MA-18 (Prüfstand) (Statusblock oben). Erste Runde: MA-08, Prüfstand und Pull Request stehen. Prüfdokument:
-`Pruefdokument-MA-Markenabgleich.md` (15 Handpunkte). **Zur Bestätigung
-vorgelegt:** E-MA-21 (Kopfleiste fest „NAdoku") und E-MA-24 (Android nur
-Werte). **Es hakt:** nirgends; alle Fragen sind entschieden
-(E-MA-08 bis -20). MA-01, -03, -04 und -05 sind ein Commit geworden: Sie
-stellen dieselben rund 540 Farbstellen im Stylesheet um, und ein Zwischenstand
-hätte Token gezeigt, die es nicht mehr gibt.
+**In Arbeit:** nichts — Schritt 26 ist mit PR #156 gemergt (07.11.2026) und abgeschlossen. **Bestätigt:** E-MA-36 (Betreiberin, 07.11.2026).
 
 ---
 
@@ -346,7 +340,7 @@ Runde (eine Datei im Kern, Prüfarbeit an der einen Anlage).
 | E-MA-33 | axe-core wird vendoriert und als Prüfmittel in drei Engines aufgenommen | Betreiberin, 07.11.2026 („2. Ja") |
 | E-MA-34 | Am Ende laufen alle Proben über die Oberfläche zweimal hintereinander grün, in allen drei Engines | Betreiberin, 07.11.2026 („stabil und reproduzierbar") |
 | E-MA-35 | Die Favicons werden aus dem Set des Repos geholt, nicht mehr selbst gezeichnet; `logos.mjs` kopiert sie und rastert nur noch die PNG für Android. Symbole 192/512, maskable und Manifest bleiben im Repo (R70) | Umsetzung, aus E-MA-25 |
-| E-MA-36 | Die beendenden Knöpfe der App (Einsatz abschließen, Dienst beenden, Gerät trennen, Abschluss der Uhr) bleiben vollflächig rot, statt dem Umriss des Web zu folgen: Auf einem Gerät im Einsatz muss das Beenden ohne Lesen erkennbar sein (Begründung von E-S4-22a). Werte wie der Zähler offener Fehler im Web (`--gefahr`) | Umsetzung — **zur Bestätigung vorgelegt** |
+| E-MA-36 | Die beendenden Knöpfe der App (Einsatz abschließen, Dienst beenden, Gerät trennen, Abschluss der Uhr) bleiben vollflächig rot, statt dem Umriss des Web zu folgen: Auf einem Gerät im Einsatz muss das Beenden ohne Lesen erkennbar sein (Begründung von E-S4-22a). Werte wie der Zähler offener Fehler im Web (`--gefahr`) | Umsetzung — **bestätigt** von der Betreiberin, 07.11.2026 |
 
 ## 7. Fragen an die Betreiberin
 
@@ -750,6 +744,18 @@ Bildmarken, Ströme), Uhr (Stufe 1, Rundlauf, Sync-Seite), Schemaprobe.
 Kein Protokoll meldet einen abgebrochenen Abruf beim Seitenwechsel (die
 Zählung aus `motor.mjs` erscheint ab 1). Danach Web 23.11.3, Stilvergleich
 neu geschrieben (Zahlen unverändert).
+
+**Lauf 2** (nach Web 23.11.3): 73 grün, 0 rot, 10 592 s; eine
+abgefangene Wiederholung in WebKit (Weg `einstellungen-profil-zweitfaktor`,
+`waitForURL` nach 90 s, Neuanmeldung nach Nr. 393). Bericht im Commit
+`d60de9a`. **Lauf 3** auf demselben Stand: 73 grün, 0 rot, 10 602 s, 0
+Wiederholungen; Bericht im Kopf-Commit `8e21a43` (Baum `a1d380da`).
+Damit ist E-MA-34 belegt: zwei volle Läufe hintereinander grün.
+
+**Nach dem Merge** (PR #156, 07.11.2026): Prüfung auf `main` grün;
+Auslieferung auf Staging grün; Stufe 2 zuerst rot, weil Staging wegen der
+Migration in Wartung stand (HTTP 503) — nach `update.php` durch die
+Betreiberin neu gestartet.
 
 ## 10. Vorher-Messung der zweiten Runde (07.11.2026, Web 23.10.0)
 
