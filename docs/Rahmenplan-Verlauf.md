@@ -9,6 +9,7 @@ Verlauf bis zum Schnitt). Die Fassungszählung läuft fortlaufend weiter.
 
 | Fassung | Datum | Anlass | Was |
 |---|---|---|---|
+| 228 | 07.11.2026 | 27 | Schritt 27 (OF, Oberflächenrunde) begonnen als Einschub vor 13 (E-OF-39, Q-OF-11): Konzept `Konzept-OF-Oberflaechenrunde.md`; NV und die Vorbereitung OF gehen darin auf (E-OF-35, -47). Kopf: Stand `ac4a7bd` (PR #157). Spanne 530–539. |
 | 227 | 07.11.2026 | 26 | 26 (MA) abgeschlossen (PR #156): Erledigt-Zeile, Konzept gelöscht (`57ef0f0`), P-MA in der Prüfliste, 6.1 „Prüfliste MA“, E-MA-36 bestätigt. Kopf: Stand `f27c977`. Spanne 520–529 frei. |
 | 226 | 07.11.2026 | 26 | Zuarbeit „Logo-Vorlagen in den Markenfarben" (6.2, Nr. 62) erledigt: Das Branding-Repo liefert die bereinigten Zeichen, MA-06 übernimmt sie. Neu Nr. 520 (Uhr-Bilder, gehört zu 13). |
 | 225 | 06.11.2026 | 26 | Schritt 26 (MA, Markenabgleich) begonnen als Einschub vor 13: Konzept `Konzept-MA-Markenabgleich.md`, Q-MA-01 bis -04 entschieden. Nr. 62 wandert von 13 nach 26 (E-MA-12). |
