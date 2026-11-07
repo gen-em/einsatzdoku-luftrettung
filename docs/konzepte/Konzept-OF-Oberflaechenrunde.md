@@ -41,19 +41,18 @@ es im Kopf von `server/version.php`.
 | NV-02 | Rahmenkarte für alle drei Leistentypen: Abschnitte in den Einstellungen, Karten auf Startseite und Suche (E-OF-36 bis -38); Leiste klebt und rollt innen (E-OF-37); Fußzeile als dunkelblauer Abschluss (E-OF-34) | Opus · keine | offen |
 | NV-03 | Leiste der Einstellungen auf den aktiven Bereich kürzen; aktiver Eintrag ohne Strich in jeder Leiste (OF-P-04, E-OF-16); „Abmelden“ nur in der Leiste (E-OF-27); Sprungmarken nur zu sichtbaren Karten (OF-P-16) | Opus · keine | offen |
 | NV-04 | Schmale Breiten: Bereichszeile rollt, Rahmenkarte ohne Rand, Schublade mit drei Bereichen; die Übersicht bleibt (E-OF-50) | Opus · keine | offen |
-| OF-01 | Regeln für alle Seiten: eine rechte Kante, Felder 36 rem (E-OF-31); Speicherknopf im Abschnitt oder Speicherleiste (E-OF-32, E-OF-41); Handbuch-Verweise raus (E-OF-02); ein Satz je Karte (OF-P-10, -15); drei Messungen im Bilderlauf (E-OF-49, Nr. 530) | Opus · keine | offen |
+| OF-01 | Regeln für alle Seiten: eine rechte Kante, Felder 36 rem (E-OF-31); Speicherknopf im Abschnitt oder Speicherleiste (E-OF-32, E-OF-41); Handbuch-Verweise raus, das „?“ öffnet das Kapitel der Seite (E-OF-02, -56); ein Satz je Karte (OF-P-10, -15); drei Messungen im Bilderlauf (E-OF-49, Nr. 530) | Opus · keine | offen |
 | OF-02 | Bausteine I: Klappkarte mit Stand und Plakette (E-OF-42); Segmentwahl abwählbar und senkrecht mittig (OF-P-05, E-OF-33); Zeile mit Plakette und Knopf auf einer Linie (OF-P-08); sechs neue Zeichen | Opus · keine | offen |
-| OF-03 | Bausteine II, Eingabe: Datumsfeld `TT.MM.JJJJ` (E-OF-06, E-OF-44); Ortsfeld-Hinweis als Zeichen (E-OF-07); Listenkopf mit Filterknopf (E-OF-18) | Opus · keine | offen |
-| OF-04 | Einstellungen: Profil mit Zweitfaktor „ein Satz plus Verwalten“ (E-OF-19); Geräte nach Typ, Koppeln im Dialog (E-OF-25); Import / Export „erst wählen, dann füllen“ (E-OF-26); Backup (OF-P-14, Q-OF-04; OF-P-15) | Opus · keine | offen |
-| OF-05 | Verwaltung: Kontenliste ohne Spalte „Öffnen“ (OF-P-18, Q-OF-05); Demo-Konto als Karte unter Installation, ein Schalter statt zwei (E-OF-08, E-OF-46) | Opus · keine | offen |
+| OF-03 | Bausteine II, Eingabe: Datumsfeld `TT.MM.JJJJ` an allen acht Stellen (E-OF-06, -44, -54); Ortsfeld-Hinweis als Zeichen (E-OF-07); Listenkopf mit Filterknopf (E-OF-18) | Opus · keine | offen |
+| OF-04 | Einstellungen: Profil mit Zweitfaktor „ein Satz plus Verwalten“ (E-OF-19); Geräte nach Typ, Koppeln im Dialog (E-OF-25); Import / Export „erst wählen, dann füllen“ (E-OF-26); Backup (E-OF-52, OF-P-15) | Opus · keine | offen |
+| OF-05 | Verwaltung: Kontenliste ohne Spalte „Öffnen“ (E-OF-53); Demo-Konto als Karte unter Installation, ein Schalter statt zwei (E-OF-08, E-OF-46) | Opus · keine | offen |
 | OF-06 | Betrieb: Status „Probleme zuerst“ (E-OF-20; Q-OF-02 → OF-M1); Hintergrundjobs (E-OF-10, -21); Servereinstellungen als Klappkarten (E-OF-22); Komplett-Backup (E-OF-23); Backup-Ziele an beiden Orten, die Seite entfällt (E-OF-24, E-OF-45) | Opus · **gefächert** nach OF-M1: je ein Agent für Status, Hintergrundjobs, Servereinstellungen und Komplett-Backup samt Ziele; `ui.php`, `style.css`, `status_lib.php`, Texte und Prüfarbeit seriell | offen |
 | OF-07 | Einsatz, Diensttag, Karte, Papierkorb: Ruhesegmente-Kachel entfällt (E-OF-05); GPX-Zeichen (E-OF-11); Plakette „ausgedünnt“ entfällt (E-OF-12); Karte „Einsatz und Transport“ im Feldkatalog (E-OF-33); Schlösser in eigener Spalte (E-OF-28); Kartenart ohne Anbieter (E-OF-13); Leaflet-Bedienelemente im Branding (E-OF-29); Papierkorb mit `restore`, Artzeichen vor das Datum (E-OF-30, E-OF-48) | Opus · **gefächert**: ein Agent Formular und Leseansicht (`einsatz_form.php`, `mission_fields.php`, `einsatz.php`), einer Karte (`geo.js`, `map_layers.js`, Leaflet-Regeln), einer Tagesübersicht und Papierkorb (`index.php`, `tag_spuren.php`, `papierkorb.php`); `style.css`, Design.md und Prüfarbeit seriell | offen |
-| OF-08 | Darstellung: Umschalter Mond/Sonne in der Kopfleiste, vier Einstellungen im Profil, keine Migration (E-OF-09, E-OF-43) | Opus · keine | offen |
+| OF-08 | Darstellung: Umschalter Mond/Sonne in der Kopfleiste, vier Einstellungen im Profil, keine Migration (E-OF-09, -43, -55) | Opus · keine | offen |
 | OF-09 | Abschluss (NV-05 geht auf): Dokumentation, Prüfmittel, Prüfstand voll, Pull Request, Prüfdokument | Opus · keine | offen |
 
 **In Arbeit:** nichts — OF-00 ist erledigt, die Umsetzung kann mit NV-01
-beginnen (Q-OF-11 bestätigt, 07.11.2026). **Offen bei der Betreiberin:**
-Q-OF-04, -05, -12, -13, -14 (Abschnitt 7; Erklärung angefordert).
+beginnen (Q-OF-11 bestätigt, 07.11.2026). **Offen bei der Betreiberin:** nichts — alle Fragen sind entschieden (Abschnitt 7); Q-OF-02 wird in OF-M1 vorgelegt.
 **Meilenstein:** OF-M1 (Statuszeilen, zu Beginn von OF-06).
 
 ---
@@ -184,9 +183,15 @@ enthält `origin/main` `ac4a7bd` (Merge von PR #157).
   Baustein.
 - **F-OF-16 — Der gestrichelte Kreis im Papierkorb** ist `ohne-zuordnung.svg`
   (Tabler „circle-dashed“), das Artzeichen „ohne Rettungsmittel“ aus
-  `ui_artzeichen()`, neben die Knöpfe gesetzt statt vor das Datum. Im Mockup
-  zu OF-P-37 steht das Artzeichen vor dem Datum wie in der Leiste (E-OF-48).
-
+  `ui_artzeichen()`, neben die Knöpfe gesetzt statt vor das Datum. Im Mockup  zu OF-P-37 steht das Artzeichen vor dem Datum wie in der Leiste (E-OF-48).
+- **F-OF-17 — Den Verdichtungsstand sieht nur die NutzerIn.** Der
+  Wartungslauf (`wartungslauf.js`, Karte `k-verdichten`) arbeitet von selbst:
+  still auf der Startseite (20 Stücke je Aufruf) und auf der Backup-Seite,
+  solange der Reiter offen ist — ohne Knopf. Die Statusseite kennt ihn
+  nicht; `status_lib.php` nennt „Verdichten“ nur als Jobart. Der Server
+  könnte die ungepackten Stücke zählen (`spur2_faellig()` liest nur den
+  Klartext-Umriss), tut es aber für den Betrieb heute nicht. Daraus E-OF-52
+  und eine Option für OF-M1.
 ## 3. Quellen
 
 | Quelle | Wo | Was |
@@ -364,8 +369,12 @@ des Bilderlaufs.
 - **Erklärtext ohne Verweis** (E-OF-02, OF-P-10, -15): Design.md 6 wird
   neu gefasst — je Karte höchstens ein Satz, **kein** Verweis „Handbuch: …“,
   die Regel gilt jetzt auch für den Bereich Einstellungen (E-P5c-06 hebt
-  sich damit auf); die 62 Verweise und 49 Wortnennungen fallen (F-OF-04),
-  der Riegel `anker` bleibt. Wo der eine Satz nicht reicht („Konto löschen“:
+  sich damit auf); die 62 Verweise und 49 Wortnennungen fallen (F-OF-04),  der Riegel `anker` bleibt. **Das „?“ der Kopfleiste öffnet das Kapitel
+  der aktuellen Seite** (E-OF-56): `ui_einstellungen_punkte()` bekommt je
+  Punkt die Handbuchmarke (`hilfe.php#…`), `ui_kopf()` setzt sie als Ziel;
+  Seiten mit Diensttage-Leiste (Tagesübersicht, Einsatz, Formular,
+  Papierkorb, Suche) tragen ihre Marke in `ui_geruest_start()`; ohne Marke
+  bleibt das ganze Handbuch. `anker` hält die Ziele. Wo der eine Satz nicht reicht („Konto löschen“:
   was mit den Daten geschieht, die Frist), bleibt das Wesentliche als
   Meldung (`ui_meldung()`), nicht als Absatz. Seitenerklärung „Backup“
   (OF-P-15) auf einen Satz.
@@ -415,9 +424,8 @@ des Bilderlaufs.
   Umrechnung je Seite:** PHP `datum_de_lesen()` / `datum_de()` in
   `server/eingabe_lib.php` (Register `tools/zaehlung/register.php` bekommt
   eine Zeile: kein `strtotime`/`DateTime::createFromFormat('d.m.Y')` außerhalb
-  der Lib), Browser `EdFormat.datumLesen()` / `.datum()` in `format.js`. Die
-  acht Stellen aus F-OF-05 ziehen um, das Geburtsdatum (verschlüsselt) im
-  Browser vor dem Verschließen; `min`/`max` werden von der Prüfung in der
+  der Lib), Browser `EdFormat.datumLesen()` / `.datum()` in `format.js`. Die  acht Stellen aus F-OF-05 ziehen um (E-OF-54), das Geburtsdatum
+  (verschlüsselt) im Browser vor dem Verschließen; `min`/`max` werden von der Prüfung in der
   Lib gehalten. Breite: `--feld-datum` (11 ch), kein Kalender.
 - **Ortsfeld** (E-OF-07): Der Satz zur Adresssuche (`.loc-datenschutz`,
   heute einmal je Seite unter dem ersten Ortsfeld) wird ein Zeichen `hinweis`
@@ -467,15 +475,18 @@ des Bilderlaufs.
   darunter nur das passende Formular; Felder 36 rem (OF-01). Die
   Sprungmarken (1. Datei wählen, 2. Prüfen, 3. Übernehmen, Export) folgen
   der Wahl (F-OF-11-Mechanik).
-- **Backup** (OF-P-14, -15, -16): Seitenerklärung ein Satz; Kachel
-  „GPS-Daten verdichten“ nach Q-OF-04 (Empfehlung: nur zeigen, wenn etwas
-  fällig ist oder ein Lauf scheiterte); „Für dich freigegebenes Backup“ wie
-  heute nur bei Freigabe, jetzt auch ohne Marke (NV-03).
+- **Backup** (OF-P-14, -15, -16): Seitenerklärung ein Satz; Karte
+  „GPS-Daten verdichten“ nur, wenn ein Lauf gescheitert ist oder nach dem
+  stillen Abarbeiten Fälliges bleibt; sonst steht die Zahl als Zeile unter
+  „Was dein Konto hält“ (E-OF-52). Kommt in OF-M1 eine Statuszeile
+  „Verdichtung fällig“ für den Betrieb dazu, entfällt die Karte beim User
+  ganz (Bedingung der Betreiberin, E-OF-52). „Für dich freigegebenes Backup“
+  wie heute nur bei Freigabe, jetzt auch ohne Marke (NV-03).
 - **Abnahme:** P-OF-15 bis P-OF-18.
 
 ### OF-05 Verwaltung
 
-- **Kontenliste** (OF-P-18, Q-OF-05, Empfehlung ja): Der Name des Kontos ist
+- **Kontenliste** (E-OF-53): Der Name des Kontos ist
   der Verweis auf die Kontoseite, die Spalte `oeffnen-spalte` entfällt. Die
   Zeile bleibt per Tastatur erreichbar (ein Verweis je Zeile, mit
   Vorlesetext „Konto … öffnen“). Nr. 342 wird nachgezogen: der
@@ -530,8 +541,7 @@ diesem Konzept unter 9 (Prüfprotokoll OF-06). Danach gefächert (Statusblock).
   Demo-Schalter (OF-05). Als letzte Karte „Backup-Ziele“ (unten).
 - **Komplett-Backup** (E-OF-23, Bild `OF-P26-vorschlag.png`): oben die
   offene Karte „Stand“ mit Plakette (jüngster Stand, belegter Speicher, nächster
-  Lauf), „Jetzt sichern“ als die eine orange Hauptaktion in der Titelzeile
-  (E-MA-27 bekommt eine siebte Seite — zur Kenntnis der Betreiberin, Q-OF-13),
+  Lauf), „Jetzt sichern“ als die eine orange Hauptaktion in der Titelzeile  (E-MA-27 bekommt eine siebte Seite, E-OF-55),
   darunter Regeln, Stände und Backup-Ziele als Klappkarten.
 - **Backup-Ziele an beiden Orten** (E-OF-24, E-OF-45, Bilder `OF-P27-…`):
   Die Karte entsteht **einmal** in `server/sicherungsziele_teile.php`
@@ -598,10 +608,10 @@ diesem Konzept unter 9 (Prüfprotokoll OF-06). Danach gefächert (Statusblock).
 - **Vier Einstellungen im Profil** (E-OF-09): Umschalter (Vorgabe) · Immer
   hell · Immer dunkel · Folgt System, als `ui_wahlliste()` wie heute. Werte in
   `users.darstellung` (E-OF-43): `''` = Umschalter (Vorgabe; bisher System —
-  bestehende Konten ohne Wahl bekommen damit den Umschalter, Q-OF-13),
-  `'hell'`, `'dunkel'`, **neu** `'system'`; `DARSTELLUNGEN`, `schema.sql`
+  bestehende Konten ohne Wahl bekommen damit den Umschalter, Q-OF-13),  `'hell'`, `'dunkel'`, **neu** `'system'`; `DARSTELLUNGEN`, `schema.sql`
   (Kommentar) und `darstellung_attribut()` ziehen nach, **keine Migration**
-  (F-OF-13).
+  (F-OF-13); dass Bestandskonten ohne Wahl damit den Umschalter bekommen,
+  ist entschieden (E-OF-55).
 - **Umschalter in der Kopfleiste:** ein Symbolknopf `mond`/`sonne` zwischen
   „?“ und Zahnrad (44 px, `aria-pressed`, Name „Dunkel ein“/„Dunkel aus“),
   sichtbar bei Umschalter und bei Folgt System, nicht bei Immer hell/dunkel
@@ -714,6 +724,11 @@ der Vorbereitung und der NV-Übergabe übernommen; neu ab E-OF-39.
 | E-OF-49 | Q-OF-03: Die drei Seitenregeln (Knopf zwischen Abschnitten, eine rechte Kante, ein Satz je Karte) misst der Bilderlauf an der gerenderten Seite; kein neues Werkzeug. Anlass Backlog Nr. 530 | Betreiberin, 07.11.2026 („ok, so machen wir es“) |
 | E-OF-50 | Q-OF-08 und Q-NV-03: Die Übersichtsseite „Einstellungen“ bleibt neben Bereichszeile und Leiste, unverändert bis auf „Abmelden“ (E-OF-27) | Betreiberin, 07.11.2026 |
 | E-OF-51 | Q-NV-02: Der Reiter „Betrieb“ führt auf den ersten Punkt des Blocks, keine Sonderregel; heute ist das Status | Betreiberin, 07.11.2026 |
+| E-OF-52 | Q-OF-04: Die Karte „GPS-Daten verdichten“ zeigt die NutzerIn nur, wenn ein Lauf gescheitert ist oder Fälliges nach dem stillen Abarbeiten bleibt; sonst eine Zeile unter „Was dein Konto hält“. Bedingung der Betreiberin: Sobald der Betrieb den Zustand im Status sieht (Option in OF-M1, F-OF-17), entfällt die Karte beim User ganz | Betreiberin, 07.11.2026 („beim User nie zeigen, wenn der Admin es sieht; wenn nicht, wie der Vorschlag“) |
+| E-OF-53 | Q-OF-05: Der Name des Kontos ist der Verweis auf die Kontoseite, die Spalte „Öffnen“ entfällt | Betreiberin, 07.11.2026 |
+| E-OF-54 | Q-OF-12: Das Datumsfeld `TT.MM.JJJJ` an allen acht Stellen, auch Geburtsdatum und Suchfilter | Betreiberin, 07.11.2026 |
+| E-OF-55 | Q-OF-13: Bestandskonten ohne Wahl bekommen mit der neuen Vorgabe den Umschalter; „Jetzt sichern“ ist die siebte Hauptaktion in Orange (ergänzt E-MA-27) | Betreiberin, 07.11.2026 |
+| E-OF-56 | Q-OF-14: Das „?“ der Kopfleiste öffnet das Handbuchkapitel der aktuellen Seite; Zuordnung je Menüpunkt, der Riegel `anker` hält die Ziele | Betreiberin, 07.11.2026 |
 | E-OF-48 | Papierkorb: Das Artzeichen des Diensttags (`ohne-zuordnung`, Hubschrauber, Fahrzeug) steht vor dem Datum wie in Leiste und Vorschlägen — so zeigt es das freigegebene Bild; „entfernt“ in E-OF-30 meint die Stelle neben den Knöpfen. Will die Betreiberin es im Papierkorb ganz weglassen, ist das eine Zeile | Konzept, aus E-OF-30 (F-OF-16) |
 
 Aus Schritt 26 übernommen: E-MA-36 (Beenden-Knöpfe der App bleiben
@@ -725,16 +740,15 @@ Beantwortet und in Entscheidungen aufgegangen: Q-OF-01 (Auswahl je Mockup →
 E-OF-16 bis -34), Q-OF-06 → E-OF-24, Q-OF-07 → E-OF-30, Q-OF-09 → E-OF-17,
 Q-OF-10 → E-OF-35, Q-NV-01 → E-OF-36 bis -38, Q-NV-04 → E-OF-14; am
 07.11.2026 dazu Q-OF-03 → E-OF-49, Q-OF-08 und Q-NV-03 → E-OF-50, Q-NV-02 →
-E-OF-51, Q-OF-11 → E-OF-39 bestätigt.
+E-OF-51, Q-OF-11 → E-OF-39 bestätigt, Q-OF-04 → E-OF-52, Q-OF-05 → E-OF-53,
+Q-OF-12 → E-OF-54, Q-OF-13 → E-OF-55, Q-OF-14 → E-OF-56.
+
+Offen ist nur Q-OF-02; sie wird zu Beginn von OF-06 als Tabelle vorgelegt
+(OF-M1).
 
 | Nr. | Frage | Empfehlung | Hängt an |
 |---|---|---|---|
 | Q-OF-02 | P-23: Welche Zeilen der Statusseite entfallen? Claude legt je Zeile vor: Kann sie rot werden, muss dann jemand handeln, steht es woanders schon | Vorlage zu Beginn von OF-06 (Meilenstein OF-M1); bis dahin nichts entscheiden | OF-06 |
-| Q-OF-04 | P-14: Kachel „GPS-Daten verdichten“ nur zeigen, wenn etwas fällig ist oder ein Lauf scheiterte — oder ganz weg bzw. als Zeile unter „Was dein Konto hält“? | nur bei Bedarf zeigen; die Zahl bleibt als Zeile unter „Was dein Konto hält“ | OF-04 |
-| Q-OF-05 | P-18: Name des Kontos als Verweis, Spalte „Öffnen“ entfällt (Tastatur und Screenreader brauchen ein fokussierbares Element) — bestätigt? | ja | OF-05 |
-| Q-OF-12 | Datumsfeld (E-OF-06) an allen acht Stellen aus F-OF-05, auch Geburtsdatum und Suchfilter? | ja, alle — zwei Datumsformen auf einer Seite (Suche: Datum und Alarmzeit) wären der nächste Punkt der Betreiberin | OF-03 |
-| Q-OF-13 | Darstellung (E-OF-43): Bestehende Konten ohne Wahl („Wie das Gerät“) bekommen mit der neuen Vorgabe den Umschalter — in Ordnung? Und: „Jetzt sichern“ wird siebte Hauptaktion in Orange (E-MA-27 nannte sechs Seiten) | beides ja: Der Umschalter folgt beim ersten Aufruf ohnehin dem Gerät, es ändert sich nur, dass ein Klick möglich ist; das Komplett-Backup hat genau eine Haupthandlung | OF-08, OF-06 |
-| Q-OF-14 | Das „?“ der Kopfleiste führt auf das ganze Handbuch. Mit E-OF-02 fallen die Verweise auf Kapitel. Soll das „?“ das Kapitel der aktuellen Seite öffnen (Zuordnung Menüpunkt → Handbuchmarke in `ui_einstellungen_punkte()`)? | ja — eine Zeile je Menüpunkt, der Riegel `anker` hält die Ziele | OF-01 |
 
 ## 8. Prüfpunkte
 
@@ -771,7 +785,7 @@ geht in `Pruefliste.md` auf.
 | P-OF-15 | Zweitfaktor | Profil mit und ohne Zweitfaktor, mit Passkey | ein Satz mit allem Wichtigen; „Verwalten“ klappt vier Zeilen auf, Plakette und Knopf auf einer Linie |
 | P-OF-16 | Koppel-Dialog | Geräte: „Weitere Uhr koppeln“, Code eingeben; 390 px | drei Schritte je Typ, Dialog rollt in sich, `kopplungsprobe` grün |
 | P-OF-17 | Import / Export | Wahlkarte wechseln; Sprungmarken | nur das gewählte Formular; Marken folgen |
-| P-OF-18 | Backup-Seite | Erklärung, Kachel „verdichten“ je nach Q-OF-04 | ein Satz; Kachel nur bei Bedarf |
+| P-OF-18 | Backup-Seite | Erklärung; Backup-Seite mit und ohne gescheiterten Lauf | ein Satz; Karte „verdichten“ nur bei Bedarf, sonst Zeile unter „Was dein Konto hält“ |
 | P-OF-19 | Kontenliste | 1024 und 1920, Tab-Taste durch die Zeilen | kein waagerechtes Rollen; jeder Name ist ein fokussierbarer Verweis |
 | P-OF-20 | Demo-Konto | Installation: Schalter aus; Demo-Anmeldung versuchen; Status | Anmeldung gesperrt, Konto bleibt, Warnung weg; Servereinstellungen ohne Schalter; Kennzahlen auf Status |
 | P-OF-21 | Status | mit und ohne Befunde | nur nicht-grüne Zeilen oben, Bereiche zugeklappt mit Zahl und Plakette; ein Wort für grün |
