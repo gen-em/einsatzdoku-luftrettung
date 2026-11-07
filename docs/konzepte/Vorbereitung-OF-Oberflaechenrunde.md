@@ -91,7 +91,7 @@ NV-Gerüst.
 | OF-P-31 | Plakette „GPS-Daten ausgedünnt" weglassen | Einsatz | Umbau | entschieden (E-OF-12) |
 | OF-P-32 | Einsatzformular (nachtragen und bearbeiten): Schalter und abhängige Felder ordnen | Einsatz | Gestaltung | 1 Mockup, zentral im Feldkatalog |
 | OF-P-33 | Handbuch-Link in Seitentexten | alle | Text | entschieden (E-OF-02) |
-| OF-P-34 | Schlösser in einer Spalte statt hinter der Beschriftung | Einsatz | Gestaltung | Mockup einer ganzen Seite; Riegel `kennzeichnung` muss halten |
+| OF-P-34 | Schlösser in einer Spalte statt hinter der Beschriftung | Einsatz | Gestaltung | entschieden (E-OF-28): Schloss links in eigener Spalte; Riegel `kennzeichnung` muss halten |
 | OF-P-35 | Kartenauswahl ohne Anbieternamen | Karte | Text | entschieden (E-OF-13) |
 | OF-P-36 | Leaflet-Bedienelemente ins Branding | Karte | Gestaltung | 1 Mockup (vorher/nachher) |
 | OF-P-37 | Papierkorb: gestrichelter Kreis neben „Wiederherstellen", Symbol des Knopfs | Papierkorb | Fehler/Symbol | Kreis klären; 3 Symbole (Q-OF-07) |
@@ -135,6 +135,7 @@ Seite Hintergrundjobs (bei P-24).
 | E-OF-25 | P-11: Variante **B2 — nach Gerätetyp, Koppeln im Dialog**: Je eine Karte für Garmin und für Android/Wear OS mit den gekoppelten Geräten; darunter nur ein Knopf „Weitere Uhr koppeln“ bzw. „Weiteres Gerät koppeln“. Er öffnet einen Dialog mit den drei Schritten aus Variante A (App installieren, Kopplung am Gerät starten, Code eingeben), angepasst an den Gerätetyp. Platzzahl als Kleinzeile unter den Karten. Bild `konzept-of/mockups/OF-P11-B2-dialog.png` | Betreiberin, 07.11.2026 (Kommentar im Mockup B: „B, unter ‚weitere Uhr koppeln‘ dann ein Popup“, danach „so wie Mockup“) |
 | E-OF-26 | P-17: Variante **C — erst wählen, dann füllen**: Zwei Wahlkarten „Liste übernehmen“ und „Liste ausgeben“ mit je einem Satz, darunter nur das passende kurze Formular. Bild `konzept-of/mockups/OF-P17-C-wahlkarten.png` | Betreiberin, 07.11.2026 (Kommentar im Mockup B) |
 | E-OF-27 | Regel (aus P-29): „Abmelden“ steht am Rechner nur unten in der Leiste, nie im Inhalt; der große Knopf am Ende der Einstellungs-Übersicht entfällt dort. Am Handy steht es in der Schublade. Die Lage der Fußzeile (P-29) ist damit noch nicht entschieden | Betreiberin, 07.11.2026 (Kommentar im Mockup A: „Abmelden hat in der Mitte nix zu suchen“) |
+| E-OF-28 | P-34: Variante **Links vor der Beschriftung**: feste Beschriftungsspalte (14 rem), das Schloss steht vor dem Wort in einer eigenen schmalen Spalte, Felder ohne Schloss rücken gleich weit ein. Der Riegel `kennzeichnung` (Sollliste) muss weiter halten. Bild `konzept-of/mockups/OF-P34-links.png` | Betreiberin, 07.11.2026 (Kommentar im Mockup D) |
 
 Aus Schritt 26 übernommen: E-MA-36 (Beenden-Knöpfe der App bleiben
 vollflächig rot) ist bestätigt.
