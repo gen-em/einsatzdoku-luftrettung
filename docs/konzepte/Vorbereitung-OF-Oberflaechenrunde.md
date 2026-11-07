@@ -66,7 +66,7 @@ NV-Gerüst.
 | OF-P-06 | Datumsfelder zu schmal, Format je Browser („dd/mm/yyyy") | Baustein | Umbau | entschieden (E-OF-06) |
 | OF-P-07 | Speicherknopf zwischen Karten ohne Bezug („Profil speichern", „Passwort ändern") | alle | Regel | zentrale Regel + Prüfmittel, Mockup |
 | OF-P-08 | Zweitfaktor, Zeile „Gemerkte Geräte": Plakette und Knopf senkrecht verschoben | Profil | Korrektur | Zeilenbaustein prüfen |
-| OF-P-09 | Karte „Zweitfaktor" zu kompliziert | Profil | Gestaltung | 3 Mockups |
+| OF-P-09 | Karte „Zweitfaktor" zu kompliziert | Profil | Gestaltung | entschieden (E-OF-19): ein Satz plus „Verwalten" |
 | OF-P-10 | Zu viel Erklärtext (Konto hält, Konto löschen u. a.) | alle | Regel | Regel „ein Satz je Karte" durchsetzen, Prüfmittel; bei „Konto löschen" das Wesentliche sichtbar lassen |
 | OF-P-11 | Seite „Geräte" unintuitiv (Reihenfolge, Text, Warnung, Platzzahl, Menühinweis, APK) | Einstellungen | Gestaltung | 3 Mockups |
 | OF-P-12 | Hinweis zur Adresssuche unter jedem Ortsfeld zu lang | Baustein | Umbau | entschieden (E-OF-07) |
@@ -79,7 +79,7 @@ NV-Gerüst.
 | OF-P-19 | Seitenbreite uneinheitlich (Installation schmal, NutzerInnen breit) | alle | Regel | zentrale Regel + Prüfmittel, Mockup |
 | OF-P-20 | Reiter kaum als Bedienelement erkennbar | Baustein | Gestaltung | entschieden (E-OF-17): gleiche Form wie die Bereichszeile |
 | OF-P-21 | Demo-Konto als Karte unter Installation (an/aus, letzter Reset) | Verwaltung | Umbau | entschieden (E-OF-08); Kontrollzahlen zur Statusseite |
-| OF-P-22 | Listenkopf (Suche, Zeitfilter, Art) unübersichtlich, aktiver Zeitraum nicht erkennbar | Baustein | Gestaltung | 3 Mockups, mit P-20 |
+| OF-P-22 | Listenkopf (Suche, Zeitfilter, Art) unübersichtlich, aktiver Zeitraum nicht erkennbar | Baustein | Gestaltung | entschieden (E-OF-18): Filterknopf |
 | OF-P-23 | Statusseite zu voll | Betrieb | Gestaltung | Relevanz je Zeile prüfen, 3 Mockups |
 | OF-P-24 | Hintergrundjobs: ausdünnen, Plaketten brechen um, „Anhalten" umbenennen | Betrieb | Umbau | entschieden (E-OF-10), Mockup |
 | OF-P-25 | Servereinstellungen vereinfachen | Betrieb | Gestaltung | 1 Mockup, gemeinsamer Klappbaustein |
@@ -125,6 +125,8 @@ Seite Hintergrundjobs (bei P-24).
 | E-OF-15 | Q-OF-09: Ob Seitenreiter wie die Bereichszeile aussehen, wird an den Mockups zu P-20 entschieden | Betreiberin, 07.11.2026 |
 | E-OF-16 | P-04: Variante **A — ohne Markierung**: Der aktive Eintrag trägt nur die Auswahlfläche, kein Strich links; gilt für jede Leiste (Einstellungen, Diensttage, Vorschläge). Bild `konzept-of/mockups/OF-P04-A-ohne-markierung.png` | Betreiberin, 07.11.2026 (Kommentar im Mockup A) |
 | E-OF-17 | P-20 und Q-OF-09: Variante **A — gleiche Form**: Seitenreiter (Rechtstexte, Protokoll, Statistik u. a.) sehen aus wie die Bereichszeile aus NV; ein Reiter-Baustein für beide Ebenen. Bild `konzept-of/mockups/OF-P20-A-gleiche-form.png` | Betreiberin, 07.11.2026 (Kommentar im Mockup A) |
+| E-OF-18 | P-22: Variante **B — Filterknopf**: Neben dem Suchfeld ein Knopf „Filter" mit Plakette (Zahl der gesetzten Filter), der die Filter aufklappt. Nachgebessert auf Hinweis: Der Knopf ist so hoch wie das Suchfeld, kräftiger Rand, fett, mit Symbol Tabler „filter" (neu im Vorrat, Design.md 6). Bild `konzept-of/mockups/OF-P22-B-filterknopf.png` | Betreiberin, 07.11.2026 (Kommentar im Mockup A) |
+| E-OF-19 | P-09: Variante **B — ein Satz plus „Verwalten"**: Die Karte Zweitfaktor zeigt zugeklappt einen Satz mit allem Wichtigen und einen Knopf „Verwalten"; aufgeklappt die Zeilen mit ihren Handlungen. Bild `konzept-of/mockups/OF-P09-B-satz-verwalten.png` | Betreiberin, 07.11.2026 (Kommentar im Mockup B) |
 
 Aus Schritt 26 übernommen: E-MA-36 (Beenden-Knöpfe der App bleiben
 vollflächig rot) ist bestätigt.
