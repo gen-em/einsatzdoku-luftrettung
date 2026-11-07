@@ -634,7 +634,7 @@ katalog.html  div.symbol-text <div>  :  color-scheme
 katalog.html  div.tabelle <div>  :  color-scheme
 katalog.html  div.tabelle-haken <div.tabelle>  :  color-scheme
 katalog.html  div.tabelle-konten <div>  :  color-scheme
-katalog.html  div.tabelle-scroll <div>  :  color-scheme
+katalog.html  div.tabelle-scroll <div>  :  bottom, color-scheme, left, position, right, top
 katalog.html  div.tag-form-fuss <div>  :  color-scheme
 katalog.html  div.tag-lese <div.einsatz-raster>  :  color-scheme
 katalog.html  div.tag-lese <div>  :  color-scheme
@@ -1012,7 +1012,7 @@ seiten.html[admin_users.php]  div.dialog-kopf <form>  :  color-scheme
 seiten.html[admin_users.php]  div.fld-reihe <div.dialog-inhalt>  :  color-scheme
 seiten.html[admin_users.php]  div.kennzahl-raster.X <div>  :  color-scheme
 seiten.html[admin_users.php]  div.nur-unter-720 <div>  :  color-scheme
-seiten.html[admin_users.php]  div.tabelle-scroll.nur-ab-720 <div>  :  color-scheme
+seiten.html[admin_users.php]  div.tabelle-scroll.nur-ab-720 <div>  :  bottom, color-scheme, left, position, right, top
 seiten.html[admin_users.php]  form <dialog.dialog>  :  color-scheme
 seiten.html[admin_users.php]  form#f-auswahl <div>  :  color-scheme
 seiten.html[admin_users.php]  h2 <div.dialog-kopf>  :  color-scheme, font, font-weight
@@ -1031,8 +1031,8 @@ seiten.html[admin_users.php]  span <a.oeffnen>  :  border, border-bottom, border
 seiten.html[admin_users.php]  span.arrow <a>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, font-weight, outline, width
 seiten.html[admin_users.php]  span.konto-mail <td>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, outline, width
 seiten.html[admin_users.php]  span.konto-name <td>  :  color-scheme, font-weight, width
-seiten.html[admin_users.php]  span.nur-vorlesen <th.oeffnen-spalte>  :  color-scheme, font-weight, left, right
-seiten.html[admin_users.php]  span.nur-vorlesen <th.wahl-spalte>  :  color-scheme, font-weight
+seiten.html[admin_users.php]  span.nur-vorlesen <th.oeffnen-spalte>  :  bottom, color-scheme, font-weight, left, right, top
+seiten.html[admin_users.php]  span.nur-vorlesen <th.wahl-spalte>  :  bottom, color-scheme, font-weight, top
 seiten.html[admin_users.php]  style <head>  :  color-scheme
 seiten.html[admin_users.php]  table.tabelle.tabelle-konten <div.tabelle-scroll.nur-ab-720>  :  color-scheme
 seiten.html[admin_users.php]  tbody <table.tabelle.tabelle-konten>  :  color-scheme
@@ -1206,7 +1206,7 @@ seiten.html[betrieb_statistik.php]  div.form-raster.form-raster-links-breit <div
 seiten.html[betrieb_statistik.php]  div.form-spalte <div.form-raster.form-raster-links-breit>  :  color-scheme
 seiten.html[betrieb_statistik.php]  div.kennzahl-raster.kennzahl-raster-4 <div>  :  color-scheme
 seiten.html[betrieb_statistik.php]  div.kleinvielfach <div.form-spalte>  :  color-scheme
-seiten.html[betrieb_statistik.php]  div.tabelle-scroll <div>  :  color-scheme
+seiten.html[betrieb_statistik.php]  div.tabelle-scroll <div>  :  bottom, color-scheme, left, position, right, top
 seiten.html[betrieb_statistik.php]  h3.kleinvielfach-titel <div>  :  color-scheme, font, font-weight
 seiten.html[betrieb_statistik.php]  head <html>  :  color-scheme
 seiten.html[betrieb_statistik.php]  html <->  :  color-scheme
@@ -1740,7 +1740,7 @@ seiten.html[import.php]  div.feld <div.listen-form-felder>  :  color-scheme
 seiten.html[import.php]  div.feld <div>  :  color-scheme
 seiten.html[import.php]  div.listen-form-felder <div>  :  color-scheme
 seiten.html[import.php]  div.listen-form-fuss <div>  :  color-scheme
-seiten.html[import.php]  div.tabelle-scroll.imp-roll <div>  :  color-scheme
+seiten.html[import.php]  div.tabelle-scroll.imp-roll <div>  :  color-scheme, position
 seiten.html[import.php]  head <html>  :  color-scheme
 seiten.html[import.php]  html <->  :  color-scheme
 seiten.html[import.php]  label.feld-label <div.feld>  :  color-scheme, font, font-weight
@@ -1812,7 +1812,7 @@ seiten.html[index.php]  div.karte-kopf <section.karte>  :  border-bottom, border
 seiten.html[index.php]  div.meldung-aktion <div.meldung.meldung-info>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, outline
 seiten.html[index.php]  div.meldung-aktion <div.meldung.meldung-warn>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, outline
 seiten.html[index.php]  div.meldung.meldung-warn <div>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, outline
-seiten.html[index.php]  div.tabelle-scroll.nur-ab-720 <div.karte-inhalt>  :  color-scheme
+seiten.html[index.php]  div.tabelle-scroll.nur-ab-720 <div.karte-inhalt>  :  bottom, color-scheme, left, position, right, top
 seiten.html[index.php]  div.tag-form-fuss <form.tag-form>  :  color-scheme
 seiten.html[index.php]  div.tag-raster <div>  :  color-scheme
 seiten.html[index.php]  div.tagfeld <span.wtag-kurz>  :  color-scheme
@@ -2285,7 +2285,7 @@ seiten.html[suche.php]  div.leiste-liste <div>  :  color-scheme
 seiten.html[suche.php]  div.meldung-aktion <div.meldung.meldung-info>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, outline
 seiten.html[suche.php]  div.suchfeld <div.suchzeile>  :  color-scheme, width
 seiten.html[suche.php]  div.suchzeile <div>  :  color-scheme
-seiten.html[suche.php]  div.tabelle-scroll.nur-ab-720 <div.karte-inhalt>  :  color-scheme
+seiten.html[suche.php]  div.tabelle-scroll.nur-ab-720 <div.karte-inhalt>  :  bottom, color-scheme, left, position, right, top
 seiten.html[suche.php]  h2.blatt-titel <div.blatt>  :  color-scheme, font, font-weight
 seiten.html[suche.php]  h2.karte-titel <div.karte-kopf>  :  color-scheme, font, font-weight, width
 seiten.html[suche.php]  head <html>  :  color-scheme
@@ -2713,7 +2713,7 @@ seiten.html[zeitraum.php]  div.aktionen.sortieren-aktion <div.karte-kopf>  :  co
 seiten.html[zeitraum.php]  div.blatt-griff <div.blatt>  :  color-scheme
 seiten.html[zeitraum.php]  div.karte-inhalt <section.karte.karte-treffer>  :  color-scheme
 seiten.html[zeitraum.php]  div.karte-kopf <section.karte.karte-treffer>  :  border-bottom, border-bottom-color, border-color, color-scheme
-seiten.html[zeitraum.php]  div.tabelle-scroll.nur-ab-720 <div.karte-inhalt>  :  color-scheme
+seiten.html[zeitraum.php]  div.tabelle-scroll.nur-ab-720 <div.karte-inhalt>  :  bottom, color-scheme, left, position, right, top
 seiten.html[zeitraum.php]  h2.blatt-titel <div.blatt>  :  color-scheme, font, font-weight
 seiten.html[zeitraum.php]  h2.karte-titel <div.karte-kopf>  :  color-scheme, font, font-weight, width
 seiten.html[zeitraum.php]  head <html>  :  color-scheme

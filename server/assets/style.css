@@ -2564,7 +2564,12 @@ input[type=checkbox].segment-box{position:absolute;opacity:0;width:0;height:0;mi
   vertical-align:middle;
 }
 .tabelle tr:last-child td{border-bottom:0}
-.tabelle-scroll{overflow-x:auto}
+/* POSITION:RELATIVE, damit der Behälter hält, was in ihm absolut steht —
+ * den Vorlesetext einer Kopfzelle (`.nur-vorlesen`, seit Web 23.11.2). Ohne
+ * hing er am Dokument, und eine Tabelle, die breiter ist als die Seite, zog
+ * über ihn die ganze Seite in die Breite (Kontenliste bei 768 und 1024 px,
+ * Bilderlauf, F-MA-28). */
+.tabelle-scroll{overflow-x:auto;position:relative}
 
 
 /* == 15. DIALOG ============================================================
@@ -3009,7 +3014,7 @@ pre{overflow-x:auto;background:var(--flaeche-abgesetzt);padding:var(--abstand-3)
  * .tabelle-scroll), Farbstreifen, blauer
  * Sortierpfeil, dunkelblaue Haken, die klickbare Zeile. */
 .tabelle{display:table}
-.tabelle-scroll{overflow-x:auto}
+.tabelle-scroll{overflow-x:auto;position:relative}
 .tabelle th.sortable{cursor:pointer;white-space:nowrap}
 .tabelle th.sortable:hover{color:var(--text-link-hover)}
 .tabelle .arrow{color:var(--text-link);vertical-align:middle}

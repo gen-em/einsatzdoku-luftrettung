@@ -14,6 +14,16 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 23.11.3] — unveröffentlicht
+
+### Behoben
+
+- **Web — die Kontenliste lief bei mittlerer Breite seitlich über** (Schritt
+  26). Der neue Vorlesetext in einer Tabellenkopfzelle aus 23.11.2 war
+  absolut gesetzt, hing deshalb an der ganzen Seite statt an der scrollenden
+  Tabelle und machte die Seite so breit wie die Tabelle. Der Tabellenbehälter
+  hält ihn jetzt.
+
 ## [Web 23.11.2] — unveröffentlicht
 
 ### Behoben

@@ -602,6 +602,12 @@ alle sieben vom Umbau verursacht und behoben:
 - **F-MA-27 — Lint meldet im Handy-Modul 6 Warnungen**, alle „neuere
   Fassung verfügbar" (AGP 9.5.1, Kotlin 2.4.21, wear-compose 1.7.1,
   Robolectric 4.17). Sie hängen am Datum, nicht an MA-16; nicht behoben.
+- **F-MA-28 — Der Vorlesetext einer Kopfzelle zog die Kontenliste breit.**
+  Lauf 1 des Prüfstands: Bilderlauf rot in drei Engines, `admin_users.php`
+  (drei Rollen) bei 768 und 1024 px, Seite 895 statt 768 px. Der
+  `.nur-vorlesen`-Text aus MA-14 ist absolut gesetzt, und `.tabelle-scroll`
+  war kein Bezugsrahmen. Jetzt `position:relative` (Web 23.11.3); axe-core
+  hatte den Fehler nicht sehen können — es misst Regeln, keinen Überlauf.
 
 **Gemessen** (vor dem Prüfstand, auf demselben Baum): `decken.py` 21
 Decken, 0 gerissen; `bestand.py` 0 Befunde; `uebersicht.py` läuft;
@@ -733,6 +739,17 @@ wie `uhr-stufe1`: 99 übersetzt, 0 fehlgeschlagen, 0 ohne Gerätedatei.
 Bildmarke und Startsymbol auf Asphalt angesehen (Korpus weiß, Federn in den
 Markenfarben). Sync-Seite, Rundlauf und Krypto fährt der Prüfstand (MA-18);
 Simulator und Uhr bleiben Handprüfung (P-MA-17).
+
+### MA-18 (Abschluss, 07.11.2026)
+
+**Lauf 1** (`pruefen.sh --voll`, Hauptstufe, drei Engines, zehn Breiten,
+alle Seiten, Handy und Uhr gebaut): 72 grün, 1 rot (Bilderlauf, F-MA-28),
+10 501 s. Grün darin u. a. Bedienprobe (drei Engines), Barrierefreiheit
+(drei Engines), Stilvergleich, Android (Bau, Kontraste, Farbabgleich,
+Bildmarken, Ströme), Uhr (Stufe 1, Rundlauf, Sync-Seite), Schemaprobe.
+Kein Protokoll meldet einen abgebrochenen Abruf beim Seitenwechsel (die
+Zählung aus `motor.mjs` erscheint ab 1). Danach Web 23.11.3, Stilvergleich
+neu geschrieben (Zahlen unverändert).
 
 ## 10. Vorher-Messung der zweiten Runde (07.11.2026, Web 23.10.0)
 

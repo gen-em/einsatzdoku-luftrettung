@@ -8709,4 +8709,9 @@ declare(strict_types=1);
  *   (`beforeunload`, nach einer Sekunde frisches Signal; `EdApi.signal()`
  *   fuer eigene Abrufe) — WebKit meldete sie sonst als Seitenfehler.
  *   Korrektur; kein Schema. */
-const WEB_VERSION = '23.11.2';
+/* 23.11.3 — DER VORLESETEXT IN DER KOPFZELLE ZOG DIE SEITE BREIT (Schritt 26,
+ *   MA-18, F-MA-28). `.tabelle-scroll` traegt `position:relative`; ohne hing
+ *   der absolut gesetzte Vorlesetext aus 23.11.2 am Dokument, und die
+ *   Kontenliste lief bei 768 und 1024 px waagerecht ueber (Bilderlauf, drei
+ *   Engines). Korrektur; kein Schema. */
+const WEB_VERSION = '23.11.3';
