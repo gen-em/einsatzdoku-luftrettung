@@ -270,7 +270,7 @@ private fun Zustandsblock(
         /* `orangeTief` UND NICHT `orange`. Der Punkt ist ein grafisches
          * Objekt und braucht nach WCAG 1.4.11 3,0 : 1 gegen die Fläche.
          * `marke_orange` auf `marke_schnee` erreicht 2,23 : 1,
-         * `marke_orange_tief` 4,32 : 1; das Paar steht in der Liste von
+         * `marke_orange_tief` (orange 700) 6,44 : 1; das Paar steht in der Liste von
          * `werkzeuge/kontraste.py`. */
         punktfarbe = if (rueckstand > 0) Farbe.orangeTief else Farbe.blau,
         schriftfarbe = Farbe.gedaempft,
@@ -518,8 +518,9 @@ private fun ortungstext(stand: Dienststand): String {
  * Alle vier Zustaende, in denen nichts aufgezeichnet wird, sind rot und
  * unterscheiden sich am Wortlaut. Orange fuer `UNGENAU` geht nicht:
  * nachgerechnet traegt kein vorhandenes Orange Text auf Schnee
- * (`marke_orange` 2,23 : 1, `marke_orange_tief` 4,32 : 1 — beide unter AA).
- * `rotTief` erreicht 7,58 : 1. Die farbliche Abstufung „warnt" gegen „fehlt
+ * (`marke_orange` 2,23 : 1, `marke_orange_tief` damals 4,32 : 1 — beide unter
+ * AA; seit orange 700 sind es 6,44 : 1, die Entscheidung blieb).
+ * `rotTief` erreicht 9,8 : 1. Die farbliche Abstufung „warnt" gegen „fehlt
  * ganz" geht dabei verloren; aufgezeichnet wird in beiden Faellen nichts, und
  * das ist die Aussage, auf die es ankommt.
  */

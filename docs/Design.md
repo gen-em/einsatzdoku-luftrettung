@@ -153,10 +153,10 @@ die drei Federfarben stehen je einmal als Fläche.
 |---|---|---|
 | `nadoku-hubschrauber-farbig.svg` | Hubschrauber, Grundform Dunkelblau — heller Grund | 400,16 × 249,81 |
 | `nadoku-hubschrauber-farbig-negativ.svg` | Grundform Schnee, Federfarben bleiben — Kopfleiste, dunkle Flächen | 400,16 × 249,81 |
-| `nadoku-hubschrauber-weiss.svg` | ganz weiß — Flächen in Gründerfarben, Uhr | 400,16 × 249,81 |
+| `nadoku-hubschrauber-weiss.svg` | ganz weiß — Flächen in Gründerfarben | 400,16 × 249,81 |
 | `nadoku-nef-farbig.svg`, `…-farbig-negativ.svg`, `…-weiss.svg` | Fahrzeug (NEF), dieselben drei | 420 × 335 |
 | `favicon-nadoku-<zeichen>.svg`, `…-32.png`, `apple-touch-nadoku-<zeichen>.png`; `server/favicon.ico` | Browser-Symbol je Wahl, aus der farbigen Fassung; ICO mit 16, 32, 48 px | — |
-| `nadoku-<zeichen>-farbig.png`, `…-weiss.png` | 500 px breit, Quelle der Bildmarken der Android-App | — |
+| `nadoku-<zeichen>-farbig.png`, `…-farbig-negativ.png` | 500 px breit, Quelle der Bildmarken der Android-App | — |
 
 Alles außer den SVG ist **erzeugt**: `node tools/erzeugen/logos.mjs`, nach
 dem Rezept `erzeuge_favicons.py` des Repos — farbig auch bei 16 px. Bis

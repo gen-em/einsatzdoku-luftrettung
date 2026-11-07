@@ -12,8 +12,8 @@
 # Arbeitsplatz erzeugen laesst, ist keine gute Ressource.
 #
 # Sie sind hier auch nicht noetig: server/assets/images/ fuehrt dieselben vier
-# Motive bereits als PNG in 500 px Breite -- gerastert aus denselben Vorlagen,
-# fuer die Weboberflaeche. Android skaliert eine Bitmap ohnehin auf die
+# Motive bereits als PNG in 500 px Breite -- gerastert aus denselben Vorlagen
+# (tools/erzeugen/logos.mjs). Android skaliert eine Bitmap ohnehin auf die
 # angeforderte Groesse; 500 px reichen fuer den Kopf der Handy-App (rund 20 dp)
 # und fuer ein Sechstel der Displayhoehe einer Uhr (rund 75 px) um ein
 # Vielfaches. Deshalb -nodpi: EINE Datei fuer alle Dichten, statt fuenf
@@ -27,11 +27,12 @@
 #              dieselben Vorlagen, aus denen die Garmin-Uhr seit 1.10.3 ihre
 #              logo_luft.png / logo_boden.png rastert.
 #
-# ACHTUNG, offener Fund B-S4-01: Die SVG tragen teilweise noch die ALTEN
-# Farbwerte (#587abc, #e3322b, #f7941d, Korpus #1d0e0a). Am 31.08.2026 wurde
-# entschieden, das bewusst liegen zu lassen (Backlog Nr. 62); die App erbt den
-# jeweils aktuellen Stand der Dateien. Wer die Vorlagen berichtigt, laesst
-# dieses Skript danach laufen -- sonst zeigt die App weiter die alten Werte.
+# SEIT SCHRITT 26 (Konzept MA) sind die Quellen die Produktmarke NAdoku aus
+# dem Branding-Repo (Grundform Dunkelblau, Markenfarben exakt; Backlog
+# Nr. 62). Die Fassung, die die App "weiss" nennt, heisst dort
+# "farbig-negativ" (Grundform Schnee, Federfarben bleiben) -- dieselbe
+# Aussage wie vorher. Die PNG erzeugt tools/erzeugen/logos.mjs. Bis dahin
+# stand hier der offene Fund B-S4-01 (alte Farbwerte in den Vorlagen).
 #
 # Aufruf:  werkzeuge/bildmarken.sh          # holen und Pruefsummen nennen
 #          werkzeuge/bildmarken.sh pruefen  # nur pruefen, nichts schreiben
@@ -44,10 +45,10 @@ ZIEL="$WURZEL/android/gemeinsam/res/drawable-nodpi"
 
 # <Quelldatei>:<Zieldatei>
 PAARE="
-gen-em_logo_helicopter.png:marke_luft_farbig.png
-gen-em_logo_helicopter_weiss.png:marke_luft_weiss.png
-gen-em_logo_nef.png:marke_boden_farbig.png
-gen-em_logo_nef_weiss.png:marke_boden_weiss.png
+nadoku-hubschrauber-farbig.png:marke_luft_farbig.png
+nadoku-hubschrauber-farbig-negativ.png:marke_luft_weiss.png
+nadoku-nef-farbig.png:marke_boden_farbig.png
+nadoku-nef-farbig-negativ.png:marke_boden_weiss.png
 "
 
 nur_pruefen=0

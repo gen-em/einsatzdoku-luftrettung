@@ -1118,6 +1118,15 @@ Prüfmodus, damit der Lauf den Baum nicht ändert —, `farbabgleich` und
 Web berührt ist (Muster `android-quellen`). Bis dahin liefen sie nur, wenn
 jemand daran dachte.
 
+**Seit Android 0.21.1 (Schritt 26, Konzept MA)** stammen die Werte des Web
+aus dem Branding-Repo `gen-em/gen-em-branding`: `farbabgleich.py` liest
+beide `:root`-Blöcke des Stylesheets und zeigt Tief- und Hellwerte der App
+auf die Tonstufen des Repos (`--genem-orange-700` …); `bildmarken.sh` holt
+die Produktmarke NAdoku (`nadoku-*-farbig.png`, und für die Fassung, die die
+App „weiss" nennt, `…-farbig-negativ.png`). Die **Rollen** der App sind
+dabei unverändert — im Web handelt seither Dunkelblau, in der App weiter
+Orange.
+
 Sie sind das Gegenstück zu `tools/quelltext/` (`vollstaendigkeit`) und
 `tools/screenshots/kontrast.py` der Weboberfläche — und sie mussten eigene
 sein, weil die App andere Paare zusammenstellt (weiße Schrift auf

@@ -750,7 +750,7 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      `watch/resources*/drawables/` sind aus den alten `gen-em_logo_*_weiss.svg`
      gerastert und tragen deren Näherungswerte (Backlog Nr. 62). Das Rezept
      zeigt schon auf die neuen Dateien (`tools/erzeugen/uhr-bilder.sh`,
-     `nadoku-*-weiss.svg`); neu erzeugen gehört zu einer Uhr-Fassung mit
+     `nadoku-*-farbig-negativ.svg`); neu erzeugen gehört zu einer Uhr-Fassung mit
      Simulatorlauf und Gerätetest, nicht in einen Web-Einschub. *Weg:*
      `bash tools/erzeugen/uhr-bilder.sh`, Uhr-Fassung hochstufen, Bilder im
      Simulator und auf der Uhr ansehen. *Abnahme:* Launcher und Sync-Seite

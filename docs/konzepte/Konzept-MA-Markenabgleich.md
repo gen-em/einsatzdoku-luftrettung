@@ -34,10 +34,10 @@ Prüfarbeit an der einen örtlichen Anlage (CLAUDE.md 7).
 | MA-05 | Spurfarben auf die Tonstufen des Repos (neu gefasst, E-MA-11) | **erledigt** 07.11.2026 (Ring im Dark Mode in MA-07) |
 | MA-06 | Produktmarke NAdoku: Logos, Favicons, Kopfleiste | **erledigt** 07.11.2026 (Web 23.9.2) |
 | MA-07 | Dark Mode mit Schalter je Konto | offen |
-| MA-09 | Android-Nachzug: Farbwerte und Bildmarken der App (neu, F-MA-12) | offen |
+| MA-09 | Android-Nachzug: Farbwerte und Bildmarken der App (neu, F-MA-12) | **erledigt** 07.11.2026 (Android 0.21.1; Bau im Prüfstand) |
 | MA-08 | Dokumentation, Prüfmittel, Prüfstand, Abschluss | offen |
 
-**In Arbeit:** MA-09. **Es hakt:** nirgends; alle Fragen sind entschieden
+**In Arbeit:** MA-07. **Es hakt:** nirgends; alle Fragen sind entschieden
 (E-MA-08 bis -20). MA-01, -03, -04 und -05 sind ein Commit geworden: Sie
 stellen dieselben rund 540 Farbstellen im Stylesheet um, und ein Zwischenstand
 hätte Token gezeigt, die es nicht mehr gibt.
@@ -234,6 +234,15 @@ damit `--spur-4` (Dunkelblau) auf Dunkelblau sichtbar bleibt.
   serverseitig, damit nichts aufblitzt. **Nach dem Deploy muss
   `update.php` laufen**; bis dahin gilt für jedes Konto „System".
 
+### MA-09 Android-Nachzug (neu, aus F-MA-12)
+
+Die App übernimmt Farbwerte (E-S4-22a) und Bildmarken aus dem Web; zwei
+Proben halten beides gegeneinander. Nachgezogen werden **nur Werte**: die
+sechs Farben, die es im Web so nicht mehr gibt, auf die Tonstufen des Repos,
+die vier Bildmarken auf die Produktmarke. Die **Rollen** der App (Orange
+handelt) bleiben; sie nachzuziehen ist ein eigenes Konzept mit Mockup und
+Gerätetest (E-MA-24). Eigene Android-Fassung (Korrektur).
+
 ### MA-08 Dokumentation, Prüfmittel, Abschluss
 
 - `Design.md`: Kapitel 2 (Quelle = Repo, Produktmarke), 3 (Farbrollen neu),
@@ -272,6 +281,10 @@ damit `--spur-4` (Dunkelblau) auf Dunkelblau sichtbar bleibt.
 | E-MA-18 | Die Kopie der Repo-Dateien aus der Übergabe wird nicht eingecheckt; Quelle ist das Repo mit Commit | Betreiberin, 06.11.2026 |
 | E-MA-19 | Schritt 26, Kennung MA, als Einschub vor 13 (Reihenfolge 26 → 13 → 14) | Betreiberin, 06.11.2026 |
 | E-MA-20 | Ein Pull Request am Ende, keine Zwischen-PRs; Halt nur, wo eine Entscheidung fehlt | Betreiberin, 06.11.2026 |
+| E-MA-21 | Kopfleiste fest „NAdoku", Kurzname der Installation nur noch in Tab, Anmeldung, Mails, Druckblättern | Umsetzung (aus E-MA-06) — **zur Bestätigung vorgelegt** |
+| E-MA-22 | Wartungsseite fest Hubschrauber statt Münze (Produktmarken.md, Regel 9) | Umsetzung |
+| E-MA-23 | Keine 192/512-px-Symbole; sie gehören zum Manifest (R70, Schritt 13) | Umsetzung |
+| E-MA-24 | Android-Nachzug nur der Werte (MA-09), Rollen der App unverändert; Uhr-Bilder nicht neu erzeugt (Nr. 520) | Umsetzung — **zur Bestätigung vorgelegt**; das Paket ist ein eigener Commit und lässt sich zurücknehmen |
 
 ## 7. Fragen an die Betreiberin
 
@@ -397,6 +410,26 @@ nachgezogen; Zuarbeit „Logo-Vorlagen" im Rahmenplan erledigt.
   nicht mehr, und die Quell-PNG heißen anders. Das Konzept sah das nicht vor.
   Daraus MA-09 (neu).
 
-**Gemessen.** `php -l` über alle 160 Dateien unter `server/` ohne Fehler;
+**Gemessen.** `php -l` über die 135 PHP-Dateien in `server/` ohne Fehler;
 `logos.mjs` schreibt 11 Dateien (ICO: 3 Bilder 16/32/48); Sichtprüfung der
 Kopfleiste bei 1440 und 390 px (Chromium), Favicons als Kontaktbogen.
+
+### MA-09 (Android 0.21.1, 07.11.2026)
+
+**Was gebaut ist.** `farben.xml`: sechs Werte auf Repo-Tonstufen
+(Gedämpft `#725D49`, Linie `#E5DECD`, Orange tief `#974600`, Blau tief
+`#27487C`, Rot tief `#890415`, Schrift auf Dunkel `#FFFCFA`); drei Hellwerte
+sind schon Stufe 100. `farbabgleich.py` liest beide `:root`-Blöcke (bis dahin
+das erste `:root{` im Rohtext — es stand nach MA-01 in einem Kommentar) und
+zeigt Tief- und Hellwerte auf `--genem-*`. `bildmarken.sh` holt die
+Produktmarke; die App-Fassung „weiss" ist die Repo-Fassung
+„farbig-negativ" (Korpus Schnee, Federn farbig — dieselbe Aussage wie
+vorher). `logos.mjs` erzeugt deshalb `…-farbig-negativ.png` statt
+`…-weiss.png`, und `uhr-bilder.sh` zeigt ebenfalls auf farbig-negativ.
+Zwei Kommentare in `DienstAnsicht.kt` mit Kontrastzahlen nachgezogen.
+
+**Gemessen.** `farbabgleich.py`: 17 App-Token, **0 Abweichungen, 0 eigene
+Werte**. `bildmarken.sh pruefen`: **0 Abweichungen** (vier Dateien).
+`kontraste.py`: **29 Paare, 0 Befunde** (u. a. Rückstandspunkt orange 700
+6,44:1, Ortung fehlt rot 700 9,83:1, Beenden-Knopf Schnee auf Rot 4,68:1).
+Der Android-Bau läuft im Prüfstand (Abschluss).

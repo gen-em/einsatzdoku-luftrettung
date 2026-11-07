@@ -48,31 +48,49 @@ ZUORDNUNG = {
     "marke_auf_dunkel":   "--auf-dunkel",
     "marke_linie":        "--linie",
     "marke_orange":       "--orange",
-    "marke_orange_tief":  "--orange-tief",
-    "marke_orange_hell":  "--orange-hell",
+    # Seit Schritt 26 (Konzept MA) gibt es im Web keine eigenen Tief- und
+    # Hellwerte mehr; die App zeigt auf die Tonstufen des Branding-Repos,
+    # die dort an derselben Stelle stehen.
+    "marke_orange_tief":  "--genem-orange-700",
+    "marke_orange_hell":  "--genem-orange-100",
     "marke_blau":         "--blau",
-    "marke_blau_tief":    "--blau-tief",
-    "marke_blau_hell":    "--blau-hell",
+    "marke_blau_tief":    "--genem-blau-700",
+    "marke_blau_hell":    "--genem-blau-100",
     "marke_rot":          "--rot",
-    "marke_rot_tief":     "--rot-tief",
-    "marke_rosa":         "--rosa",
+    "marke_rot_tief":     "--genem-rot-700",
+    "marke_rosa":         "--genem-rot-100",
 }
 
 
 def web_token() -> dict[str, str]:
-    """Alle Farbwerte aus dem :root-Block des Stylesheets."""
-    text = STYLESHEET.read_text(encoding="utf-8")
-    anfang = text.index(":root{")
-    # Bis zur ersten schliessenden Klammer am Zeilenanfang -- so endet der
-    # Block in style.css, und Kommentare darin enthalten keine.
-    ende = text.index("\n}", anfang)
-    block = text[anfang:ende]
-    # Kommentare heraus, sonst zaehlen Beispielwerte im Fliesstext mit.
-    block = re.sub(r"/\*.*?\*/", "", block, flags=re.S)
-    return {
-        name: wert.upper()
-        for name, wert in re.findall(r"(--[a-z0-9-]+)\s*:\s*(#[0-9A-Fa-f]{3,8})\s*;", block)
-    }
+    """Alle Farbwerte aus den :root-Bloecken des Stylesheets, hell.
+
+    SEIT SCHRITT 26 ZWEI BLOECKE: der des Branding-Repos (`:root {`, die
+    Hexwerte) und der der Anwendung (`:root{`, Rollen und Leitwerte als
+    `var(--genem-…)`). Gelesen werden beide, Kommentare vorher heraus — bis
+    dahin suchte dieses Skript das erste `:root{` im Rohtext und fand es in
+    einem Kommentar. Verweise werden aufgeloest, damit `--gedaempft` seinen
+    Wert bekommt. Der Dark Mode (`:root[data-theme="dark"]`) zaehlt nicht:
+    Die App hat keinen."""
+    text = re.sub(r"/\*.*?\*/", "", STYLESHEET.read_text(encoding="utf-8"), flags=re.S)
+    roh: dict[str, str] = {}
+    for m in re.finditer(r":root\s*\{", text):
+        tiefe, i = 1, m.end()
+        while tiefe and i < len(text):
+            tiefe += {"{": 1, "}": -1}.get(text[i], 0)
+            i += 1
+        for name, wert in re.findall(r"(--[a-z0-9-]+)\s*:\s*([^;]+);", text[m.end():i - 1]):
+            roh[name] = wert.strip()
+    werte: dict[str, str] = {}
+    for name, wert in roh.items():
+        for _ in range(6):
+            v = re.fullmatch(r"var\((--[a-z0-9-]+)\)", wert)
+            if not v:
+                break
+            wert = roh.get(v.group(1), wert)
+        if re.fullmatch(r"#[0-9A-Fa-f]{6}", wert):
+            werte[name] = wert.upper()
+    return werte
 
 
 def app_token() -> dict[str, str]:

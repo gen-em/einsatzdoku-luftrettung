@@ -17,7 +17,9 @@
  *   apple-touch-<stamm>.png    180 px auf Schnee, Zeichen 70 % breit (iOS
  *                              rundet selbst ab)
  *   <stamm>-farbig.png,        500 px breit — die Quelle der Bildmarken der
- *   <stamm>-weiss.png          Android-App (`android/werkzeuge/bildmarken.sh`)
+ *   <stamm>-farbig-negativ.png Android-App (`android/werkzeuge/bildmarken.sh`;
+ *                              die App nennt die dunkle Fassung „weiss", wie
+ *                              das Web bis Schritt 26)
  * und einmal `server/favicon.ico` (16, 32, 48 px, Hubschrauber, der
  * Standard der Installation).
  *
@@ -106,7 +108,7 @@ for (const stamm of STAEMME) {
   schreibe(join(BILDER, `favicon-${stamm}-32.png`), await raster(fav, 32, 32, stamm));
   schreibe(join(BILDER, `apple-touch-${stamm}.png`),
            await raster(quadrat(`${stamm}-farbig.svg`, 0.70, SCHNEE), 180, 180, stamm));
-  for (const fassung of ['farbig', 'weiss']) {
+  for (const fassung of ['farbig', 'farbig-negativ']) {
     const svg = readFileSync(join(BILDER, `${stamm}-${fassung}.svg`), 'utf8');
     const vb = /viewBox="([^"]+)"/.exec(svg)[1].split(/[\s,]+/).map(Number);
     schreibe(join(BILDER, `${stamm}-${fassung}.png`),

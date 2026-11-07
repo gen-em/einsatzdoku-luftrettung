@@ -11,6 +11,13 @@
     entsteht nicht — die Skala ist geschlossen. Nachgeprueft wird das nicht
     von Hand, sondern von werkzeuge/farbabgleich.py: Es liest :root aus dem
     Stylesheet und diese Datei und meldet jede Abweichung.
+    SEIT SCHRITT 26 (Web 23.9, Konzept MA) kommen die Werte des Web aus dem
+    Branding-Repo gen-em/gen-em-branding. Die Tief-, Hell- und Grauwerte
+    hier sind dessen Tonstufen (orange 700, blau 700, rot 700, je Stufe 100,
+    neutral 600 und 200); bis dahin waren es eigene Ableitungen des Web.
+    DIE ROLLEN DER APP SIND UNVERAENDERT: Das Web hat mit Schritt 26 das
+    Handeln von Orange auf Dunkelblau gelegt, die App nicht. Ihre Rollen
+    nachzuziehen braucht ein eigenes Konzept mit Mockup und Geraetetest.
 
     DIE ROLLEN (Design.md 3.1, in der App unveraendert):
 
@@ -45,25 +52,25 @@
          Gedaempft ist die EINZIGE Graustufe. -->
     <color name="marke_asphalt">#1A0500</color>
     <color name="marke_dunkelblau">#1A2E4D</color>
-    <color name="marke_gedaempft">#6E6459</color>
-    <color name="marke_auf_dunkel">#FFFFFF</color>
+    <color name="marke_gedaempft">#725D49</color>
+    <color name="marke_auf_dunkel">#FFFCFA</color>
 
     <!-- ==== Linien ====================================================== -->
-    <color name="marke_linie">#E3DAC6</color>
+    <color name="marke_linie">#E5DECD</color>
 
     <!-- ==== Orange — Handeln =========================================== -->
     <color name="marke_orange">#FF8F1F</color>
-    <color name="marke_orange_tief">#C25A00</color>
+    <color name="marke_orange_tief">#974600</color>
     <color name="marke_orange_hell">#FFEBD6</color>
 
     <!-- ==== Blau — Auswaehlen und Erklaeren ============================ -->
     <color name="marke_blau">#4280E5</color>
-    <color name="marke_blau_tief">#1F4E9C</color>
+    <color name="marke_blau_tief">#27487C</color>
     <color name="marke_blau_hell">#D9ECFD</color>
 
     <!-- ==== Rot — Aufmerksamkeit ======================================= -->
     <color name="marke_rot">#D63338</color>
-    <color name="marke_rot_tief">#9E2226</color>
+    <color name="marke_rot_tief">#890415</color>
     <color name="marke_rosa">#FCE2D6</color>
 
     <!-- ==== Was hier BEWUSST NICHT steht ===============================

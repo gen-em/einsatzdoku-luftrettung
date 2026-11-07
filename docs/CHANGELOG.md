@@ -377,6 +377,20 @@ Schritt 21 (GR), Paket GR-04 — die Uhr liest die Absage des Servers genauer
   Jetzt versuchen es das Öffnen der Sync-Seite und das Dienstende einmal
   trotz der Marke.
 
+## [Android 0.21.1] — unveröffentlicht
+
+Schritt 26 (MA), Paket MA-09.
+
+### Geändert
+
+- **Android — Farbwerte und Bildmarken folgen dem Branding-Repo.** Die App
+  übernimmt beides aus dem Web, und das Web bezieht es seit Web 23.9 aus
+  `gen-em/gen-em-branding`; ohne Nachzug hätte die App eigene Werte geführt,
+  die es nirgends mehr gibt. Sechs Farben wechseln auf die Tonstufen des
+  Repos, die vier Bildmarken sind die Produktmarke NAdoku mit dunkelblauer
+  Grundform. Was welche Farbe in der App bedeutet, bleibt wie es war; das
+  nachzuziehen braucht ein eigenes Konzept.
+
 ## [Android 0.21.0] — unveröffentlicht
 
 Schritt 23 (BR6), Paket BR6-07 (Backlog Nr. 471).
