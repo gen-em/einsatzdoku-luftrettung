@@ -49,8 +49,13 @@ export const wege = [
       const eigen = await s.evaluate(() => ({
         url: location.search,
         titel: [...document.querySelectorAll('.karte-titel')].map((t) => t.textContent.trim()),
+        /* SICHTBARE Spalten: Die erste Kopfzelle traegt seit Web 23.11.2 ein
+         * Wort nur fuer den Screenreader („Kennzahl", F-MA-22) — es steht
+         * nicht ueber der Spalte und gehoert nicht in den Vergleich. */
         spalten: [...document.querySelectorAll('#k-einsaetze-zeit thead th')]
-          .map((t) => t.textContent.trim()).filter(Boolean),
+          .map((t) => { const k = t.cloneNode(true);
+                        k.querySelectorAll('.nur-vorlesen').forEach((n) => n.remove());
+                        return k.textContent.trim(); }).filter(Boolean),
         /* Das Kreuz trägt sein Etikett als `<title>` im SVG (`ui_symbol()`);
          * der Text der Pille steht im `<span>` davor. */
         pille: (document.querySelector('.zeitraumwahl-felder .listenfilter.aktiv > span') || {})

@@ -179,7 +179,9 @@ ui_seite_start(['titel' => 'Einsatz', 'karte' => true,
         <?= ui_plakette('verschlüsselt', ['ton' => 'blau']) ?>
       </div>
       <div class="karte-inhalt">
-        <div class="tag-lese" id="liste-einsatz"></div>
+        <?php /* <dl> STATT <div> (F-MA-22, axe `dlitem`): Die Zeilen sind
+                 dt/dd-Paare in einem `.tagfeld`. */ ?>
+        <dl class="tag-lese" id="liste-einsatz"></dl>
         <div class="zeile-plaketten" id="plaketten" hidden></div>
       </div>
     </section>
@@ -196,17 +198,17 @@ ui_seite_start(['titel' => 'Einsatz', 'karte' => true,
         <h2 class="karte-titel">PatientIn</h2>
         <?= ui_plakette('verschlüsselt', ['ton' => 'blau']) ?>
       </div>
-      <div class="karte-inhalt"><div class="tag-lese" id="liste-patientin"></div></div>
+      <div class="karte-inhalt"><dl class="tag-lese" id="liste-patientin"></dl></div>
     </section>
 
     <section class="karte karte-block-transport" hidden>
       <div class="karte-kopf"><h2 class="karte-titel">Transport</h2></div>
-      <div class="karte-inhalt"><div class="tag-lese" id="liste-transport"></div></div>
+      <div class="karte-inhalt"><dl class="tag-lese" id="liste-transport"></dl></div>
     </section>
 
     <section class="karte karte-block-besatzung" id="crew-section" hidden>
       <div class="karte-kopf"><h2 class="karte-titel">Besatzung</h2></div>
-      <div class="karte-inhalt"><div class="tag-lese" id="crewlist"></div></div>
+      <div class="karte-inhalt"><dl class="tag-lese" id="crewlist"></dl></div>
     </section>
 
     <div class="einsatz-neben">

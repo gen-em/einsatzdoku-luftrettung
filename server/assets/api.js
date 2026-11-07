@@ -75,6 +75,34 @@
     return typeof CSRF === 'string' ? CSRF : '';
   }
 
+  /* ABGANG: WAS BEIM VERLASSEN DER SEITE NOCH LAEUFT, BRICHT DIE SEITE SELBST
+   * AB (seit Web 23.11.2, E-MA-31). Stille Hintergrundabrufe — Wartungslauf,
+   * Anheben der Notizen — liefen sonst in den Seitenwechsel hinein; WebKit
+   * bricht sie dann von sich aus ab und meldet „due to access control
+   * checks" als Seitenfehler, und die Pruefwerkzeuge brauchten dafuer eine
+   * Ausnahme (`tools/motor.mjs`, Nr. 393). Ein eigener Abbruch ist eine
+   * ruhige Absage (AbortError) statt einer Fehlermeldung.
+   * Kehrt die Seite aus dem Zurueck-Speicher wieder (`pageshow` mit
+   * `persisted`), ist das alte Signal verbraucht — dann gilt ein neues.
+   *
+   * WARUM SCHON `beforeunload` UND NICHT ERST `pagehide`: Gemessen am
+   * 07.11.2026 in der Bedienprobe (WebKit 27.2) — mit `pagehide` allein
+   * blieben es drei abgebrochene Abrufe wie vorher; WebKit bricht beim
+   * Seitenwechsel ab, bevor `pagehide` kommt. Bleibt die Seite nach
+   * `beforeunload` doch stehen (ein Download, die Rueckfrage
+   * „Aenderungen verwerfen?" mit „Bleiben"), gilt nach einer Sekunde ein
+   * neues Signal; was in dieser Sekunde lief, holt der naechste Lauf nach. */
+  let abgang = new AbortController();
+  function abbrechen() { abgang.abort(); }
+  function erneuern() { if (abgang.signal.aborted) { abgang = new AbortController(); } }
+  window.addEventListener('beforeunload', function () {
+    abbrechen();
+    window.setTimeout(erneuern, 1000);
+  });
+  window.addEventListener('pagehide', abbrechen);
+  window.addEventListener('pageshow', function (e) { if (e.persisted) { erneuern(); } });
+  function signal() { return abgang.signal; }
+
   /* Der Grund, ein Satz. Siehe Kopf: `error` ist kein Satz und steht
    * deshalb nur in der Klammer. */
   function grund(status, daten) {
@@ -117,8 +145,13 @@
   async function senden(url, optionen, vorgang) {
     let antwort = null;
     try {
-      antwort = await fetch(url, optionen);
+      antwort = await fetch(url, Object.assign({ signal: signal() }, optionen));
     } catch (e) {
+      /* Beim Verlassen der Seite abgebrochen: keine Meldung — es gibt
+       * niemanden mehr, der sie liest. */
+      if (e && e.name === 'AbortError') {
+        return { ok: false, status: 0, daten: null, meldung: '', abgebrochen: true };
+      }
       return { ok: false, status: 0, daten: null,
                meldung: satz(vorgang, grund(0, null)) };
     }
@@ -210,5 +243,7 @@
     }, (o && o.vorgang) || '');
   }
 
-  window.EdApi = { postJson, postForm };
+  /* `signal` fuer Abrufe, die (noch) nicht ueber EdApi laufen, etwa einen
+   * GET: `fetch(url, { signal: EdApi.signal() })`. */
+  window.EdApi = { postJson, postForm, signal };
 })();

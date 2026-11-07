@@ -910,6 +910,12 @@ p{margin:0}
  * aber im Fließtext schon — dort ist die Farbe allein zu wenig. */
 a{color:var(--text-link);text-decoration:none}
 a:hover{text-decoration:underline}
+/* LINKS IM FLIESSTEXT SIND UNTERSTRICHEN. Blau 600 gegen Asphalt sind
+ * 1,05:1 — wer Farben schlecht unterscheidet, findet einen Link mitten im
+ * Satz nur an der Linie (WCAG 1.4.1, axe `link-in-text-block`, F-MA-22,
+ * E-MA-32). Links mit eigener Klasse (Knopf, Eintrag, Kartenaktion) sind
+ * Bedienelemente mit eigener Form und bleiben, wie sie sind. */
+:where(p, li, dd, .feld-hinweis, .titelzeile-unter, .seiten-erklaerung) a:not([class]){text-decoration:underline}
 
 /* ---- Formularelemente erben die Schrift ----------------------------------
  * Ohne das nehmen sie die des Betriebssystems, und die Seite hat plötzlich
@@ -1366,13 +1372,15 @@ img,svg,video{max-width:100%;height:auto}
 details[open] > .akkordeon-zeile > .akkordeon-winkel{transform:none}
 .akkordeon-text{flex:1 1 auto;min-width:0}
 /* Der Weg in die Jahres- bzw. Monatsübersicht: eigenes Ziel, eigene
- * Trefferfläche, 44 px. ER STEHT IM <summary>: Als Kind des <details>
- * daneben wäre er an jeder zugeklappten Zeile unsichtbar und unerreichbar,
- * denn der Inhalt eines geschlossenen <details> wird nicht gerendert. Weil
- * ein Link im <summary> beim Klick auch das Auf- und Zuklappen auslöst,
- * fängt daylist.js ihn ab und navigiert selbst. */
+ * Trefferfläche, 44 px. ER STEHT NEBEN DEM <details>, in `.akkordeon-rahmen`,
+ * und liegt rechts über der Kopfzeile: Als Kind des <details> wäre er an
+ * jeder zugeklappten Zeile unsichtbar, im <summary> ein Bedienelement im
+ * Bedienelement (bis Web 23.11.1; F-MA-22). Die Kopfzeile hält rechts Platz
+ * für ihn frei. */
+.akkordeon-rahmen{position:relative}
+.akkordeon-rahmen > .akkordeon > .akkordeon-zeile{padding-right:calc(var(--knopf) + var(--abstand-1))}
 .akkordeon-uebersicht{
-  margin-left:auto;flex:0 0 auto;
+  position:absolute;top:0;right:var(--abstand-1);z-index:1;
   width:var(--knopf);height:var(--knopf);
   display:flex;align-items:center;justify-content:center;
   color:var(--mechanik);border-radius:var(--radius-klein);

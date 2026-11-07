@@ -2098,7 +2098,20 @@ nötig, da jede Navigation ohnehin einen Seitenaufruf auslöst.
 `assets/daylist.js` erzwingt nur noch das Akkordeon-Verhalten (ein offenes
 Element je Ebene). Die frühere Trennung der Klickbereiche ist entfallen: Die
 ganze Zeile klappt, und der Weg in die Zeitraumübersicht ist ein eigenes
-Symbol am rechten Rand (`.akkordeon-uebersicht`, 44 px).
+Symbol am rechten Rand (`.akkordeon-uebersicht`, 44 px). Es steht seit Web
+23.11.2 **neben** dem `<details>` in `.akkordeon-rahmen` und liegt per CSS
+über der Kopfzeile; im `<summary>` war es ein Bedienelement im
+Bedienelement (F-MA-22), und `daylist.js` musste seinen Klick abfangen.
+
+**Abrufe beim Verlassen der Seite** (seit Web 23.11.2, E-MA-31): `EdApi`
+hält ein `AbortController`-Signal je Seite und bricht damit bei
+`beforeunload` (und `pagehide`) ab, was noch läuft; bleibt die Seite stehen,
+gilt nach einer Sekunde ein neues. Ein eigener `fetch` nimmt es über
+`EdApi.signal()` mit (`unlock.js`, Anheben der Notizen). Ein Abbruch ist
+`{ok:false, status:0, abgebrochen:true}` ohne Meldung. Vorher brach WebKit
+solche Abrufe selbst ab und meldete sie als Seitenfehler; die Ausnahme dafür
+in `tools/motor.mjs` (Nr. 393) bleibt als Sicherung, ihr Zähler stand
+danach in der Bedienprobe bei 0 (vorher 3).
 
 **Geschützte Zusatzfelder & berechnetes Alter:** `assets/patient.js` (EdPat)
 berechnet das Alter aus dem Geburtsdatum bezogen auf den **Einsatztag** und

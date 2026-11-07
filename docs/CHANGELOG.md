@@ -14,6 +14,20 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 23.11.2] — unveröffentlicht
+
+### Behoben
+
+- **Web — Barrierefreiheit: elf Fehlerarten, die ein Screenreader oder die
+  Tastatur zu spüren bekam** (Schritt 26). Eine Prüfung mit axe-core fand
+  sie in allen drei Browsern gleich: etwa den Knopf „Aktionen", der am
+  Handy keinen Namen hatte, den Link zur Monatsübersicht mitten im
+  Aufklappschalter, Felder ohne Beschriftung und Links im Text, die nur an
+  der Farbe zu erkennen waren. Jetzt meldet dieselbe Prüfung keinen Fehler
+  mehr; Links im Fließtext sind deshalb unterstrichen. Außerdem bricht eine
+  Seite ihre Hintergrundabrufe beim Verlassen selbst ab, statt sie vom
+  Browser abbrechen zu lassen, der das als Fehler meldete.
+
 ## [Web 23.11.1] — unveröffentlicht
 
 ### Geändert

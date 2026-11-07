@@ -674,7 +674,11 @@ function ui_geruest_start(array $o = []): void
       </button>
       <span class="kopf-name"><?= ui_e(ui_instanz_kurz()) ?></span>
     </div>
-    <nav class="leiste-haupt nur-schublade" aria-label="Hauptbereiche">
+    <?php /* EIN ZWEITER NAME, nicht derselbe wie die Kopfleiste: Bei
+             schmaler Breite stehen beide Navigationen im Baum, und zwei
+             „Hauptbereiche" sind fuer einen Screenreader nicht zu
+             unterscheiden (axe `landmark-unique`, F-MA-22). */ ?>
+    <nav class="leiste-haupt nur-schublade" aria-label="Hauptbereiche im Menü">
       <a class="eintrag<?= ($o['aktiv'] ?? '') === 'start' ? ' aktiv' : '' ?>" href="index.php">
         <?= ui_symbol('kalender') ?><span class="eintrag-text">Startseite</span>
       </a>
@@ -849,36 +853,43 @@ function ui_leiste_diensttage(?int $currentDayId, array $zeitraum = []): void
         <?php /* Aktiv ist die JAHRESzeile nur bei der Jahresübersicht — steht
                  ein Monat an, trägt der Monat die Markierung. */
               $jahrAktiv = $aktivesJahr === $jahrS && $aktiverMonat === ''; ?>
+        <?php /* DER BALKEN-LINK STEHT NEBEN DEM <details>, IN EINEM RAHMEN.
+                 Als Kind des <details> waere er an jeder zugeklappten Zeile
+                 unsichtbar (der Inhalt eines geschlossenen <details> wird
+                 nicht gerendert, F-P3-R); im <summary> war er bis Web 23.11.1
+                 ein Bedienelement im Bedienelement — ein Screenreader las die
+                 Zeile als einen Schalter, und axe meldete es an jeder Seite
+                 mit Leiste (`nested-interactive`, F-MA-22). Der Rahmen legt
+                 ihn per CSS rechts ueber die Kopfzeile. Im Markup steht er
+                 VOR dem <details>, damit die Tabfolge nicht erst durch alle
+                 Monate des Jahres laeuft. */ ?>
+        <div class="akkordeon-rahmen">
+          <a class="akkordeon-uebersicht" href="zeitraum.php?y=<?= ui_e($jahrS) ?>"
+             <?= $jahrAktiv ? 'aria-current="page"' : '' ?>
+             aria-label="Jahresübersicht <?= ui_e($jahrS) ?>" title="Jahresübersicht">
+            <?= ui_symbol('balken') ?>
+          </a>
         <details class="akkordeon<?= $jahrAktiv ? ' aktiv' : '' ?>"
                  <?= $jahrS === $offenesJahr ? 'open' : '' ?>>
-          <?php /* Der Balken-Link steht IM summary: Als Kind des <details>
-                   wäre er an jeder zugeklappten Zeile unsichtbar — der Inhalt
-                   eines geschlossenen <details> wird nicht gerendert.
-                   daylist.js fängt den Klick ab, damit er nicht
-                   zusätzlich auf- und zuklappt. */ ?>
           <summary class="akkordeon-zeile">
             <?= ui_symbol('winkel', 'akkordeon-winkel') ?>
             <span class="akkordeon-text"><?= ui_e($jahrS) ?></span>
-            <a class="akkordeon-uebersicht" href="zeitraum.php?y=<?= ui_e($jahrS) ?>"
-               <?= $jahrAktiv ? 'aria-current="page"' : '' ?>
-               aria-label="Jahresübersicht <?= ui_e($jahrS) ?>" title="Jahresübersicht">
-              <?= ui_symbol('balken') ?>
-            </a>
           </summary>
           <div class="akkordeon-inhalt">
           <?php foreach ($monate as $monat => $monatsTage):
               $monatS = str_pad((string)$monat, 2, '0', STR_PAD_LEFT); ?>
             <?php $monatAktiv = $aktivesJahr === $jahrS && $aktiverMonat === $monatS; ?>
+            <div class="akkordeon-rahmen">
+              <a class="akkordeon-uebersicht"
+                 href="zeitraum.php?y=<?= ui_e($jahrS) ?>&amp;m=<?= ui_e($monatS) ?>"
+                 <?= $monatAktiv ? 'aria-current="page"' : '' ?>
+                 aria-label="Monatsübersicht <?= ui_e($monatsnamen[(int)$monatS]) ?>"
+                 title="Monatsübersicht"><?= ui_symbol('balken') ?></a>
             <details class="akkordeon akkordeon-monat<?= $monatAktiv ? ' aktiv' : '' ?>"
                      <?= ($jahrS === $offenesJahr && $monatS === $offenerMonat) ? 'open' : '' ?>>
               <summary class="akkordeon-zeile">
                 <?= ui_symbol('winkel', 'akkordeon-winkel') ?>
                 <span class="akkordeon-text"><?= ui_e($monatsnamen[(int)$monatS]) ?></span>
-                <a class="akkordeon-uebersicht"
-                   href="zeitraum.php?y=<?= ui_e($jahrS) ?>&amp;m=<?= ui_e($monatS) ?>"
-                   <?= $monatAktiv ? 'aria-current="page"' : '' ?>
-                   aria-label="Monatsübersicht <?= ui_e($monatsnamen[(int)$monatS]) ?>"
-                   title="Monatsübersicht"><?= ui_symbol('balken') ?></a>
               </summary>
               <div class="akkordeon-inhalt">
               <?php foreach ($monatsTage as $t):
@@ -925,9 +936,11 @@ function ui_leiste_diensttage(?int $currentDayId, array $zeitraum = []): void
               <?php endforeach; ?>
               </div>
             </details>
+            </div>
           <?php endforeach; ?>
           </div>
         </details>
+        </div>
       <?php endforeach; ?>
       <?php /* Dieselbe gedaempfte Zeile wie „noch keine" oben — ein Hinweis,
                kein Fehler. Der Weg zu den aelteren Tagen ist die Suche: Sie
@@ -2306,7 +2319,10 @@ function ui_listenfuss(array $o): void
     if ($seiten > 1) {
         echo '  <nav class="seitenwahl" aria-label="Seiten">' . "\n";
         echo '    <a class="seitenknopf' . ($seite <= 1 ? ' aus' : '') . '" '
-           . ($seite > 1 ? 'href="' . ui_e($weg($seite - 1)) . '"' : 'aria-disabled="true"')
+           /* Ohne href hat ein <a> keine Rolle, und an einem Element ohne
+            * Rolle ist aria-label verboten (axe `aria-prohibited-attr`,
+            * F-MA-22): Der gesperrte Knopf traegt sie ausdruecklich. */
+           . ($seite > 1 ? 'href="' . ui_e($weg($seite - 1)) . '"' : 'role="link" aria-disabled="true"')
            . ' aria-label="Vorige Seite">' . ui_symbol('winkel', 'symbol-links') . "</a>\n";
         $zeigen = [1, $seiten, $seite, $seite - 1, $seite + 1];
         $zeigen = array_values(array_unique(array_filter($zeigen,
@@ -2323,7 +2339,7 @@ function ui_listenfuss(array $o): void
                . $n . "</a>\n";
         }
         echo '    <a class="seitenknopf' . ($seite >= $seiten ? ' aus' : '') . '" '
-           . ($seite < $seiten ? 'href="' . ui_e($weg($seite + 1)) . '"' : 'aria-disabled="true"')
+           . ($seite < $seiten ? 'href="' . ui_e($weg($seite + 1)) . '"' : 'role="link" aria-disabled="true"')
            . ' aria-label="Nächste Seite">' . ui_symbol('winkel', 'symbol-rechts') . "</a>\n";
         echo "  </nav>\n";
     }
@@ -2577,7 +2593,11 @@ function ui_aktionen(array $o): string
     $id = (string)($o['id'] ?? ('aktionen-' . substr(sha1((string)($o['titel'] ?? '')
         . count((array)($o['eintraege'] ?? []))), 0, 8)));
     $m  = '<div class="aktionen">';
-    $m .= '<button type="button" class="knopf knopf-neutral aktionen-knopf" '
+    /* DER NAME STEHT AM KNOPF, nicht nur im Text: Unter 720 px ist
+     * „Aktionen" ausgeblendet (`nur-breit`), und uebrig blieb ein Knopf ohne
+     * Namen — ein Screenreader sagte nur „Taste" (axe `button-name`,
+     * F-MA-22). Breit stimmen Beschriftung und Name ueberein. */
+    $m .= '<button type="button" class="knopf knopf-neutral aktionen-knopf" aria-label="Aktionen" '
         . 'aria-expanded="false" aria-controls="' . $id . '" data-blatt="' . $id . '">'
         . ui_symbol('punkte', 'symbol-gross nur-schmal')
         . '<span class="nur-breit">Aktionen</span>'

@@ -297,7 +297,12 @@ const EdMissionTable = (() => {
        Suche und Tageskarte dieselbe Farbe. Nicht sortierbar im Sinn einer
        Ordnung, aber der Kopf bleibt anklickbar wie alle (er sortiert dann
        nach Farbe, was niemandem schadet). */
-    { key: 'col',   kopf: '',                      thClass: 'streifen-spalte',
+    /* Der Kopf traegt ein Wort nur fuer den Screenreader: Eine leere
+       Kopfzelle kuendigt eine Spalte ohne Namen an (axe
+       `empty-table-header`, F-MA-22). `nurText()` liest es fuer das
+       Sortierblatt mit. */
+    { key: 'col',   kopf: '<span class="nur-vorlesen">Farbe</span>', thClass: 'streifen-spalte',
+      blatt: false,   // nicht im Sortierblatt — dort stand sie nie
       nurWenn: liste => liste.some(m => m._col),
       wert: m => m._col || '',
       zelle: m => '<td class="streifen-spalte"><span class="streifen"'
@@ -780,7 +785,7 @@ const EdMissionTable = (() => {
       const richtung = sortKey === 'day'
         ? (sortAsc ? 'älteste zuerst' : 'neueste zuerst')
         : (sortAsc ? 'aufsteigend' : 'absteigend');
-      const sichtbareSp = spalten.filter(sp => sp.kopf !== '');
+      const sichtbareSp = spalten.filter(sp => sp.kopf !== '' && sp.blatt !== false);
 
       if (opts.sortlabel) {
         const sp = sichtbareSp.find(x => x.key === sortKey);

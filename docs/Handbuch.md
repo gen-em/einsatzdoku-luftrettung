@@ -2907,7 +2907,7 @@ beschädigt" — was beides nicht stimmte.)
 Der Aufbau der Datei ist in `docs/Backup-Format.md` vollständig beschrieben —
 sie lässt sich damit auch ohne dieses Programm entschlüsseln.
 
-#### GPS-Daten verdichten
+### GPS-Daten verdichten
 
 *Seit Web 22.6.0.*
 
@@ -3003,7 +3003,7 @@ Unter **Einstellungen → Import / Export** lässt sich eine vorhandene
 Einsatzliste (Excel oder CSV) übernehmen — etwa eine über Jahre gepflegte
 Jahresliste.
 
-#### Die übrigen Wege
+### Die übrigen Wege
 
 **Der Name ist weiter gefasst als die Seite, und seit Web 19.3.0 sagt sie das
 selbst.** Hier läuft die **Einsatzliste als Ganzes** in beide Richtungen —

@@ -8694,4 +8694,19 @@ declare(strict_types=1);
  *   `1 Logos/Produktmarken/NAdoku/Favicon/` (Repo-Commit e7bf4fc; Zeichen
  *   92 % breit statt 96 %, Apple-Symbol wie bisher 70 %). Dateinamen und
  *   `favicon_tags()` bleiben; kein Manifest (R70). Korrektur; kein Schema. */
-const WEB_VERSION = '23.11.1';
+/* 23.11.2 — BARRIEREFREIHEIT NACH AXE-CORE (Schritt 26, MA-14, E-MA-31,
+ *   -32). Gemessen vorher: 11 Regeln verletzt, gleich in drei Engines;
+ *   nachher 0. Der Weg in die Jahres-/Monatsuebersicht steht neben dem
+ *   <details> in `.akkordeon-rahmen` statt im <summary> (daylist.js faengt
+ *   keinen Klick mehr ab); „Aktionen" und „Sortieren" tragen ihren Namen
+ *   am Knopf; Phasenfelder mit `aria-label`; Tagesfelder und Lesefelder des
+ *   Einsatzes in <dl>; leere Kopfzellen mit Vorlesetext bzw. im Handbuch
+ *   als <td>; Codebloecke und Tabellen der Hilfe mit `tabindex`; zwei
+ *   Ueberschriften im Handbuch eine Ebene hoeher; der gesperrte
+ *   Seitenknopf mit `role="link"`; die zweite Navigation heisst
+ *   „Hauptbereiche im Menue". Links im Fliesstext sind unterstrichen.
+ *   EdApi bricht Abrufe beim Verlassen der Seite selbst ab
+ *   (`beforeunload`, nach einer Sekunde frisches Signal; `EdApi.signal()`
+ *   fuer eigene Abrufe) — WebKit meldete sie sonst als Seitenfehler.
+ *   Korrektur; kein Schema. */
+const WEB_VERSION = '23.11.2';

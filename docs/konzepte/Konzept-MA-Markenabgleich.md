@@ -41,13 +41,13 @@ Prüfarbeit an der einen örtlichen Anlage (CLAUDE.md 7).
 | MA-11 | Kurzname der Installation zurück in die Kopfleiste (E-MA-21 aufgehoben) | **erledigt** 07.11.2026 (Web 23.10.2) |
 | MA-12 | Hauptaktion in Orange, einmal je Seite, auf sechs Seiten | **erledigt** 07.11.2026 (Web 23.11.0) |
 | MA-13 | Favicon-Sets aus dem Repo | **erledigt** 07.11.2026 (Web 23.11.1) |
-| MA-14 | Barrierefreiheit: die Funde von axe beheben, Abruf beim Verlassen der Seite abbrechen | offen |
+| MA-14 | Barrierefreiheit: die Funde von axe beheben, Abruf beim Verlassen der Seite abbrechen | **erledigt** 07.11.2026 (Web 23.11.2) |
 | MA-15 | axe-core als Prüfmittel in drei Engines | offen |
 | MA-16 | Android: Rollen wie im Web, Dark Mode, Hauptaktion „Dienst beginnen" (E-MA-24 aufgehoben) | offen |
 | MA-17 | Garmin: die Zeichen der Produktmarke (Backlog Nr. 520) | offen |
 | MA-18 | Dokumentation, Prüfstand zweimal grün, Pull Request nachgezogen | offen |
 
-**In Arbeit:** zweite Runde, MA-14 (Statusblock oben). Erste Runde: MA-08, Prüfstand und Pull Request stehen. Prüfdokument:
+**In Arbeit:** zweite Runde, MA-15 (Statusblock oben). Erste Runde: MA-08, Prüfstand und Pull Request stehen. Prüfdokument:
 `Pruefdokument-MA-Markenabgleich.md` (15 Handpunkte). **Zur Bestätigung
 vorgelegt:** E-MA-21 (Kopfleiste fest „NAdoku") und E-MA-24 (Android nur
 Werte). **Es hakt:** nirgends; alle Fragen sind entschieden
@@ -574,6 +574,21 @@ alle sieben vom Umbau verursacht und behoben:
   eine Liste `geplant-<motor>.txt`; gemessen 2 757 / 2 757 / 2 763
   Signaturen, je 0 ungeplant; eine zusätzliche Regel rot in allen dreien.
   Nr. 411 erledigt.
+- **F-MA-22 — Die Oberfläche war nie auf Barrierefreiheit gemessen.**
+  axe-core fand 11 Regeln verletzt, in drei Engines gleich (Abschnitt
+  10.2); keine davon war eine Kontrastfrage. Behoben in MA-14, gemessen
+  wird künftig mit MA-15 (Backlog Nr. 524).
+- **F-MA-23 — `pagehide` kommt in WebKit zu spät.** Der erste Versuch, die
+  Hintergrundabrufe beim Seitenwechsel abzubrechen, änderte nichts (3
+  abgebrochene Abrufe vorher und nachher, `pat_anheben.php` zweimal,
+  `wartungslauf.php` einmal); WebKit bricht ab, bevor `pagehide` feuert. Mit
+  `beforeunload` 0. Preis: Bleibt die Seite nach `beforeunload` stehen,
+  ist eine Sekunde lang kein Hintergrundabruf möglich.
+- **F-MA-24 — Zwei Wege der Bedienprobe wurden durch MA-14 rot** und
+  sind behoben: Der Vorlesetext „Spurfarbe" der Farbspalte zählte für die
+  Wortprobe als „Spur" (jetzt „Farbe"); die Statistikprobe las den
+  Vorlesetext der ersten Kopfzelle als Spalte (sie lässt `.nur-vorlesen`
+  jetzt weg).
 
 **Gemessen** (vor dem Prüfstand, auf demselben Baum): `decken.py` 21
 Decken, 0 gerissen; `bestand.py` 0 Befunde; `uebersicht.py` läuft;
@@ -634,6 +649,21 @@ der Favicons und der ICO-Schreiber sind entfernt.
 
 **Geprüft.** Lauf: 7 Dateien geholt, die vier Android-PNG byte-gleich
 neu gerastert (`git status` zeigt sie nicht). `php -l server/db.php`.
+
+### MA-14 (Web 23.11.2, 07.11.2026)
+
+**Was gebaut ist.** Die elf Regeln aus 10.2, je an ihrer Quelle (Liste in
+`version.php`, 23.11.2); Links im Fließtext unterstrichen (Design.md 6);
+`EdApi` bricht beim Verlassen der Seite ab (F-MA-23).
+
+**Geprüft.** axe-core 4.14.0 mit demselben Lauf wie in 10.2 (46 Aufrufe je
+Engine): Chromium, Firefox, WebKit je **0 Verstöße** (vorher je 11 Regeln,
+409 Knoten in Chromium und Firefox, 412 in WebKit). Bedienprobe WebKit 77/77, 0 abgebrochene Abrufe
+(vorher 3); dabei zwei Wege zuerst rot (F-MA-24), behoben. Handbuch nach der
+Nachbesserung: 0 leere Kopfzellen, 4 `<pre>` und 48 `<table>` mit
+`tabindex`. Sichtprüfung Chromium: Seitenleiste (Übersichtssymbol an
+derselben Stelle), Import (unterstrichene Links). `node --check` der vier
+geänderten Skripte, `php -l` der sieben PHP-Dateien.
 
 ## 10. Vorher-Messung der zweiten Runde (07.11.2026, Web 23.10.0)
 

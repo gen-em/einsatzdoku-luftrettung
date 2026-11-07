@@ -342,7 +342,11 @@ ui_seite_start(['titel' => 'Tagesübersicht', 'karte' => true,
         </a>
       </div>
       <div class="karte-inhalt">
-        <div class="tag-lese" id="taglese"></div>
+        <?php /* EIN <dl>, KEIN <div>: Die Felder sind dt/dd-Paare, und ohne
+                 umgebende Liste sind sie fuer einen Screenreader keine
+                 Paare (axe `dlitem`, F-MA-22). Auch der Leerzustand ist ein
+                 Paar, damit die Liste gueltig bleibt. */ ?>
+        <dl class="tag-lese" id="taglese"></dl>
         <form id="dayform" class="tag-form" hidden data-dirty-track data-submit-on-ctrl-enter>
         <label id="basefeld">Standort
           <select name="base_id" id="basesel">
@@ -478,9 +482,12 @@ ui_seite_start(['titel' => 'Tagesübersicht', 'karte' => true,
                  leise Link oeffnet das Blatt mit den Spalten. Er
                  ist bewusst KEINE zweite Kopfaktion: Die eine Handlung der
                  Karte bleibt „+ Nachtragen". */ ?>
-        <button type="button" class="karte-sortieren nur-unter-720"
+        <?php /* Der Name am Knopf selbst: Den <title> im Symbol nimmt
+                 WebKit nicht als Namen des Knopfs (axe `button-name`, nur
+                 dort gemeldet, F-MA-22). */ ?>
+        <button type="button" class="karte-sortieren nur-unter-720" aria-label="Sortieren"
                 data-blatt="sortblatt" aria-expanded="false" aria-controls="sortblatt">
-          <?= ui_symbol('sortieren', '', 'Sortieren') ?>
+          <?= ui_symbol('sortieren') ?>
         </button>
         <a class="karte-aktion karte-aktion-orange" id="addmission" href="einsatz_form.php">
           <?= ui_symbol('plus') ?><span>Nachtragen</span>
@@ -1578,7 +1585,8 @@ function zeigeTagLese(meta){
     if (meta.notes)  { zeile('Notizen', meta.notes, false, true); }
   }
   lese.innerHTML = zeilen.length ? zeilen.join('')
-    : '<p class="tag-lese-leer">Noch keine Angaben — über „Bearbeiten" nachtragen.</p>';
+    : '<div class="tagfeld tagfeld-breit"><dt class="nur-vorlesen">Diensttag-Daten</dt>'
+      + '<dd class="tag-lese-leer">Noch keine Angaben — über „Bearbeiten" nachtragen.</dd></div>';
 }
 
 /* „Bearbeiten" klappt dasselbe Formular in der Karte auf (E-P3-31); der

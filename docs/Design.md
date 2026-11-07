@@ -757,6 +757,20 @@ Schriftgrößen außerhalb jeder Skala; heute sind es **0**.
 
 Was für **jede** Seite gilt, unabhängig vom Baustein. Stylesheet, Abschnitt 3.
 
+**Links im Fließtext sind unterstrichen** (seit Web 23.11.2, E-MA-32): Ein
+Link ohne eigene Klasse in einem Absatz, Listenpunkt, `dd`, Feldhinweis,
+in der Unterzeile des Titels oder der Seitenerklärung trägt die Linie.
+Blau 600 gegen Asphalt sind 1,05:1 — die Farbe allein trägt die Aussage
+nicht (WCAG 1.4.1). Links mit eigener Form (Knopf, Eintrag, Kartenaktion)
+und Links in Tabellenzellen bleiben ohne.
+
+**Barrierefreiheit wird gemessen** (seit E-MA-33): `tools/barrierefreiheit/`
+fährt axe-core (WCAG 2.0 bis 2.2, A und AA) über die Seiten, in drei
+Engines. Eine Bedienung ohne Namen, ein Bedienelement im Bedienelement,
+`dt`/`dd` ohne `dl`, eine leere Kopfzelle: Das sind die Fehler, die es
+gefunden hat (F-MA-22). Wer einen Baustein baut, gibt jedem Knopf einen Namen,
+auch wenn sein Text schmal ausgeblendet wird.
+
 **Zwei Höhen für Bedienelemente — und eine Bedingung, die beide trennt**
 (`--knopf`, E-S8-09, R76):
 
