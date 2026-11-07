@@ -16,6 +16,7 @@ katalog.html  a <div.fuss-anmeldung>  :  color-scheme
 katalog.html  a <div.fuss-dunkel>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, outline
 katalog.html  a <div.fuss-seite>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, font, font-weight, outline
 katalog.html  a <div.map-ctrl-phase>  :  color-scheme, font, font-size, font-weight, line-height
+katalog.html  a <div.seiten-erklaerung>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, outline
 katalog.html  a <div.tabelle-konten>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, outline
 katalog.html  a <div.text>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, outline
 katalog.html  a <div.zeile-text>  :  color-scheme
@@ -37,6 +38,7 @@ katalog.html  code <pre>  :  color-scheme, font, font-size, line-height
 katalog.html  dd <div.tagfeld>  :  color-scheme
 katalog.html  dd <div.zeile-daten>  :  color-scheme
 katalog.html  dd <div>  :  color-scheme
+katalog.html  dd <li>  :  color-scheme
 katalog.html  details <div>  :  color-scheme
 katalog.html  div <body>  :  color-scheme, height
 katalog.html  div <div.feld-hinweis>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, outline
@@ -53,20 +55,23 @@ katalog.html  div <label>  :  color-scheme
 katalog.html  div.achse <div.diagramm-saeulen>  :  color-scheme, fill, font, font-size, height, line-height
 katalog.html  div.achse-breit <div.diagramm-saeulen>  :  color-scheme
 katalog.html  div.achse-x <div.diagramm-saeulen>  :  color-scheme
+katalog.html  div.akkordeon <div.akkordeon-rahmen>  :  color-scheme
 katalog.html  div.akkordeon <div>  :  color-scheme
 katalog.html  div.akkordeon-inhalt <div.leiste-gruppe>  :  color-scheme
 katalog.html  div.akkordeon-inhalt <div>  :  color-scheme
 katalog.html  div.akkordeon-monat <div>  :  color-scheme
+katalog.html  div.akkordeon-rahmen <div>  :  bottom, color-scheme, inset, left, position, right, top
 katalog.html  div.akkordeon-text <div.akkordeon-zeile>  :  color-scheme, font, font-weight
 katalog.html  div.akkordeon-text <div.filtergruppe>  :  color-scheme
 katalog.html  div.akkordeon-text <div>  :  color-scheme
-katalog.html  div.akkordeon-uebersicht <div>  :  color-scheme
+katalog.html  div.akkordeon-uebersicht <div>  :  bottom, color-scheme, flex, inset, left, margin, margin-left, position, right, top, z-index
 katalog.html  div.akkordeon-winkel <div.akkordeon-zeile>  :  color-scheme, font, font-weight, margin, margin-left, width
 katalog.html  div.akkordeon-winkel <div.karte-kopf>  :  color-scheme
 katalog.html  div.akkordeon-winkel <div>  :  color-scheme
 katalog.html  div.akkordeon-zeile <details>  :  color-scheme, font, font-weight
 katalog.html  div.akkordeon-zeile <div.akkordeon-monat>  :  color-scheme, font, font-weight
 katalog.html  div.akkordeon-zeile <div.akkordeon.aktiv>  :  background, box-shadow, color-scheme, font, font-weight
+katalog.html  div.akkordeon-zeile <div.akkordeon>  :  color-scheme, font, font-weight, padding, padding-right
 katalog.html  div.akkordeon-zeile <div.apk-fach>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, font, font-weight, outline
 katalog.html  div.akkordeon-zeile <div.filtergruppe>  :  color-scheme, font, font-weight
 katalog.html  div.akkordeon-zeile <div.leiste-gruppe>  :  color-scheme, font, font-weight
@@ -194,6 +199,7 @@ katalog.html  div.feld-eingabe <div.zeitraumwahl-felder>  :  border, border-bott
 katalog.html  div.feld-eingabe <div>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color-scheme
 katalog.html  div.feld-fest <div>  :  color-scheme
 katalog.html  div.feld-gesperrt <div>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, outline
+katalog.html  div.feld-hinweis <dd>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, outline
 katalog.html  div.feld-hinweis <div.dialog-fuss-lang>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, outline
 katalog.html  div.feld-hinweis <div.logo-vorschau>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, outline
 katalog.html  div.feld-hinweis <div>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, outline
@@ -345,6 +351,7 @@ katalog.html  div.knopf <div>  :  color-scheme, font, font-weight, width
 katalog.html  div.knopf-breit <div.speichern>  :  color-scheme
 katalog.html  div.knopf-breit <div>  :  color-scheme
 katalog.html  div.knopf-gefahr <div>  :  background, border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, outline
+katalog.html  div.knopf-haupt <div>  :  background, border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color-scheme
 katalog.html  div.knopf-leise <div>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, outline
 katalog.html  div.knopf-leise-orange <div>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, outline
 katalog.html  div.knopf-neutral <div>  :  background, border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color-scheme
@@ -554,6 +561,7 @@ katalog.html  div.segment-taste <div.segment-art>  :  color-scheme, font, font-w
 katalog.html  div.segment-taste <div.segment-filter>  :  color-scheme, font, font-weight
 katalog.html  div.segment-taste <div.segment-mehrfach>  :  color-scheme, font, font-weight
 katalog.html  div.segment-taste <div>  :  color-scheme, font, font-weight
+katalog.html  div.seiten-erklaerung <div.titelzeile-unter>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, outline
 katalog.html  div.seiten-erklaerung <div>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, font, font-weight, outline
 katalog.html  div.seitenknopf <div>  :  background, border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color-scheme, font, font-weight
 katalog.html  div.seitenknopf.aktiv <div>  :  background, border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color-scheme, font, font-weight
@@ -644,6 +652,7 @@ katalog.html  div.titelzeile-aktionen <div>  :  color-scheme
 katalog.html  div.titelzeile-aktionen.segment-art <div>  :  color-scheme
 katalog.html  div.titelzeile-haupt <div>  :  color-scheme
 katalog.html  div.titelzeile-text <div>  :  color-scheme
+katalog.html  div.titelzeile-unter <div.feld-hinweis>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, outline
 katalog.html  div.titelzeile-unter <div>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, outline
 katalog.html  div.uebersicht-raster <div>  :  color-scheme
 katalog.html  div.uebersicht-text <div>  :  color-scheme, font, font-weight
@@ -758,6 +767,7 @@ katalog.html  li <div.codeblock-liste>  :  color-scheme, font, font-weight
 katalog.html  li <div.doku-text>  :  color-scheme
 katalog.html  li <div.suchsyntax>  :  color-scheme
 katalog.html  li <div.text>  :  color-scheme
+katalog.html  li <div>  :  color-scheme
 katalog.html  mark.treffer <div>  :  color-scheme
 katalog.html  meta <head>  :  color-scheme
 katalog.html  ol <div.blatt-druck>  :  color-scheme
@@ -800,7 +810,7 @@ katalog.html  ul <div.doku-text>  :  color-scheme
 katalog.html  ul <div.text>  :  color-scheme
 katalog.html  ul <div>  :  color-scheme
 katalog.html  video <div>  :  color-scheme
-seiten.html[admin_demo.php]  a <p.seiten-erklaerung>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, outline
+seiten.html[admin_demo.php]  a <p.seiten-erklaerung>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, outline, text-decoration
 seiten.html[admin_demo.php]  body <html>  :  background, color-scheme
 seiten.html[admin_demo.php]  div <body>  :  color-scheme
 seiten.html[admin_demo.php]  div.kennzahl-raster.kennzahl-raster-4 <div>  :  color-scheme
@@ -818,7 +828,7 @@ seiten.html[admin_demo.php]  strong <p.feld-hinweis>  :  border, border-bottom, 
 seiten.html[admin_demo.php]  strong <p.seiten-erklaerung>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, outline
 seiten.html[admin_demo.php]  style <head>  :  color-scheme
 seiten.html[admin_installation.php]  a <div>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, outline
-seiten.html[admin_installation.php]  a <p.feld-hinweis>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, outline
+seiten.html[admin_installation.php]  a <p.feld-hinweis>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, outline, text-decoration
 seiten.html[admin_installation.php]  body <html>  :  background, color-scheme
 seiten.html[admin_installation.php]  div <body>  :  color-scheme
 seiten.html[admin_installation.php]  div <div>  :  color-scheme
@@ -840,7 +850,7 @@ seiten.html[admin_installation.php]  p.feld-hinweis <div.logo-vorschau>  :  bord
 seiten.html[admin_installation.php]  strong <p.feld-hinweis>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, outline
 seiten.html[admin_installation.php]  style <head>  :  color-scheme
 seiten.html[admin_komplettsicherung.php]  a <div>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, outline
-seiten.html[admin_komplettsicherung.php]  a <p.feld-hinweis>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, outline
+seiten.html[admin_komplettsicherung.php]  a <p.feld-hinweis>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, outline, text-decoration
 seiten.html[admin_komplettsicherung.php]  body <html>  :  background, color-scheme
 seiten.html[admin_komplettsicherung.php]  code <p.feld-hinweis>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, outline
 seiten.html[admin_komplettsicherung.php]  div <body>  :  color-scheme
@@ -864,8 +874,8 @@ seiten.html[admin_komplettsicherung.php]  input <form>  :  border, border-bottom
 seiten.html[admin_komplettsicherung.php]  meta <head>  :  color-scheme
 seiten.html[admin_komplettsicherung.php]  p.feld-hinweis <div>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, outline
 seiten.html[admin_komplettsicherung.php]  style <head>  :  color-scheme
-seiten.html[admin_protokoll.php]  a <p.feld-hinweis>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, outline
-seiten.html[admin_protokoll.php]  a <p.seiten-erklaerung>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, outline
+seiten.html[admin_protokoll.php]  a <p.feld-hinweis>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, outline, text-decoration
+seiten.html[admin_protokoll.php]  a <p.seiten-erklaerung>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, outline, text-decoration
 seiten.html[admin_protokoll.php]  body <html>  :  background, color-scheme
 seiten.html[admin_protokoll.php]  div <body>  :  color-scheme
 seiten.html[admin_protokoll.php]  div.archiv-liste <div>  :  color-scheme
@@ -881,7 +891,7 @@ seiten.html[admin_protokoll.php]  p.feld-hinweis <div>  :  border, border-bottom
 seiten.html[admin_protokoll.php]  p.seiten-erklaerung <div>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, outline
 seiten.html[admin_protokoll.php]  strong <p.seiten-erklaerung>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, outline
 seiten.html[admin_protokoll.php]  style <head>  :  color-scheme
-seiten.html[admin_rechtstexte.php]  a <p.seiten-erklaerung>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, outline
+seiten.html[admin_rechtstexte.php]  a <p.seiten-erklaerung>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, outline, text-decoration
 seiten.html[admin_rechtstexte.php]  a <span.feld-klein>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, outline
 seiten.html[admin_rechtstexte.php]  body <html>  :  background, color-scheme
 seiten.html[admin_rechtstexte.php]  div <body>  :  color-scheme
@@ -903,7 +913,7 @@ seiten.html[admin_rechtstexte.php]  span <div>  :  color-scheme
 seiten.html[admin_rechtstexte.php]  span.feld-klein <div.rechtstext-fuss>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, outline
 seiten.html[admin_rechtstexte.php]  style <head>  :  color-scheme
 seiten.html[admin_sicherungen.php]  a <div>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, outline
-seiten.html[admin_sicherungen.php]  a <p.feld-hinweis>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, outline
+seiten.html[admin_sicherungen.php]  a <p.feld-hinweis>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, outline, text-decoration
 seiten.html[admin_sicherungen.php]  body <html>  :  background, color-scheme
 seiten.html[admin_sicherungen.php]  dialog#dlg-einspielen.dialog <div>  :  background, color-scheme
 seiten.html[admin_sicherungen.php]  dialog#dlg-freigeben.dialog <div>  :  background, color-scheme
@@ -937,7 +947,7 @@ seiten.html[admin_sicherungen.php]  strong <p.feld-hinweis>  :  border, border-b
 seiten.html[admin_sicherungen.php]  strong <p>  :  color-scheme
 seiten.html[admin_sicherungen.php]  style <head>  :  color-scheme
 seiten.html[admin_sicherungsziele.php]  a <div>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, outline
-seiten.html[admin_sicherungsziele.php]  a <p.feld-hinweis>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, outline
+seiten.html[admin_sicherungsziele.php]  a <p.feld-hinweis>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, outline, text-decoration
 seiten.html[admin_sicherungsziele.php]  body <html>  :  background, color-scheme
 seiten.html[admin_sicherungsziele.php]  div <body>  :  color-scheme
 seiten.html[admin_sicherungsziele.php]  div <div>  :  color-scheme
@@ -954,7 +964,7 @@ seiten.html[admin_sicherungsziele.php]  meta <head>  :  color-scheme
 seiten.html[admin_sicherungsziele.php]  p.feld-hinweis <div>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, outline
 seiten.html[admin_sicherungsziele.php]  strong <p.feld-hinweis>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, outline
 seiten.html[admin_sicherungsziele.php]  style <head>  :  color-scheme
-seiten.html[admin_user.php]  a <p.feld-hinweis>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, outline
+seiten.html[admin_user.php]  a <p.feld-hinweis>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, outline, text-decoration
 seiten.html[admin_user.php]  body <html>  :  background, color-scheme
 seiten.html[admin_user.php]  dialog#dlg-einspielen.dialog <div>  :  background, color-scheme
 seiten.html[admin_user.php]  dialog#dlg-freigeben.dialog <div>  :  background, color-scheme
@@ -989,7 +999,7 @@ seiten.html[admin_user.php]  p.feld-klein <div.form-spalte>  :  border, border-b
 seiten.html[admin_user.php]  strong <p.feld-hinweis>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, outline
 seiten.html[admin_user.php]  strong <p>  :  color-scheme
 seiten.html[admin_user.php]  style <head>  :  color-scheme
-seiten.html[admin_users.php]  a <p.seiten-erklaerung>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, outline
+seiten.html[admin_users.php]  a <p.seiten-erklaerung>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, outline, text-decoration
 seiten.html[admin_users.php]  a <th.sortable>  :  color-scheme, font-weight, width
 seiten.html[admin_users.php]  a.oeffnen <td.oeffnen-spalte>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, font-weight, outline, width
 seiten.html[admin_users.php]  body <html>  :  background, color-scheme
@@ -1021,6 +1031,7 @@ seiten.html[admin_users.php]  span <a.oeffnen>  :  border, border-bottom, border
 seiten.html[admin_users.php]  span.arrow <a>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, font-weight, outline, width
 seiten.html[admin_users.php]  span.konto-mail <td>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, outline, width
 seiten.html[admin_users.php]  span.konto-name <td>  :  color-scheme, font-weight, width
+seiten.html[admin_users.php]  span.nur-vorlesen <th.oeffnen-spalte>  :  color-scheme, font-weight, inset, left, right
 seiten.html[admin_users.php]  span.nur-vorlesen <th.wahl-spalte>  :  color-scheme, font-weight
 seiten.html[admin_users.php]  style <head>  :  color-scheme
 seiten.html[admin_users.php]  table.tabelle.tabelle-konten <div.tabelle-scroll.nur-ab-720>  :  color-scheme
@@ -1061,7 +1072,7 @@ seiten.html[adresse_verwaltung.php]  meta <head>  :  color-scheme
 seiten.html[adresse_verwaltung.php]  p.text <main.inhalt>  :  color-scheme
 seiten.html[adresse_verwaltung.php]  strong <p.text>  :  color-scheme
 seiten.html[adresse_verwaltung.php]  style <head>  :  color-scheme
-seiten.html[bestaetigen.php]  a <p.anmeldung-neben>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, outline
+seiten.html[bestaetigen.php]  a <p.anmeldung-neben>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, outline, text-decoration
 seiten.html[bestaetigen.php]  body <html>  :  background, color-scheme
 seiten.html[bestaetigen.php]  div <body>  :  color-scheme
 seiten.html[bestaetigen.php]  div.anmeldung-karte <main.anmeldung>  :  background, color-scheme
@@ -1074,7 +1085,7 @@ seiten.html[bestaetigen.php]  p.anmeldung-neben <div.anmeldung-karte>  :  color-
 seiten.html[bestaetigen.php]  p.anmeldung-unter <div.anmeldung-karte>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, outline
 seiten.html[bestaetigen.php]  p.feld-hinweis <div.anmeldung-karte>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, outline
 seiten.html[bestaetigen.php]  style <head>  :  color-scheme
-seiten.html[betrieb_jobs.php]  a <p.feld-hinweis>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, outline
+seiten.html[betrieb_jobs.php]  a <p.feld-hinweis>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, outline, text-decoration
 seiten.html[betrieb_jobs.php]  body <html>  :  background, color-scheme
 seiten.html[betrieb_jobs.php]  code <p.feld-hinweis>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, outline
 seiten.html[betrieb_jobs.php]  div <body>  :  color-scheme
@@ -1126,7 +1137,7 @@ seiten.html[betrieb_schluesselblatt.php]  strong <p.blatt-umgebung>  :  border, 
 seiten.html[betrieb_schluesselblatt.php]  strong <p>  :  color-scheme
 seiten.html[betrieb_schluesselblatt.php]  strong <span.blatt-kachel-neben>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, outline
 seiten.html[betrieb_schluesselblatt.php]  style <head>  :  color-scheme
-seiten.html[betrieb_server.php]  a <p.feld-hinweis>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, outline
+seiten.html[betrieb_server.php]  a <p.feld-hinweis>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, outline, text-decoration
 seiten.html[betrieb_server.php]  a <span.feld-klein-inline>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, outline
 seiten.html[betrieb_server.php]  body <html>  :  background, color-scheme
 seiten.html[betrieb_server.php]  code <p.feld-hinweis>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, outline
@@ -1172,8 +1183,8 @@ seiten.html[betrieb_server.php]  span.feld-klein-inline <label.feld-label>  :  b
 seiten.html[betrieb_server.php]  strong <p>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, outline
 seiten.html[betrieb_server.php]  style <head>  :  color-scheme
 seiten.html[betrieb_server.php]  textarea#f-ank_text.feld-eingabe.feld-mehrzeilig <div.feld>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color-scheme
-seiten.html[betrieb_sicherheit.php]  a <p.feld-hinweis>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, outline
-seiten.html[betrieb_sicherheit.php]  a <p.feld-klein>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, outline
+seiten.html[betrieb_sicherheit.php]  a <p.feld-hinweis>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, outline, text-decoration
+seiten.html[betrieb_sicherheit.php]  a <p.feld-klein>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, outline, text-decoration
 seiten.html[betrieb_sicherheit.php]  body <html>  :  background, color-scheme
 seiten.html[betrieb_sicherheit.php]  div <body>  :  color-scheme
 seiten.html[betrieb_sicherheit.php]  form#f-auf-X <div>  :  color-scheme
@@ -1185,7 +1196,7 @@ seiten.html[betrieb_sicherheit.php]  p.feld-hinweis <div>  :  border, border-bot
 seiten.html[betrieb_sicherheit.php]  p.feld-klein <div>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, outline
 seiten.html[betrieb_sicherheit.php]  strong <p.feld-klein>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, outline
 seiten.html[betrieb_sicherheit.php]  style <head>  :  color-scheme
-seiten.html[betrieb_statistik.php]  a <p.feld-klein>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, outline
+seiten.html[betrieb_statistik.php]  a <p.feld-klein>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, outline, text-decoration
 seiten.html[betrieb_statistik.php]  a <span.arrow>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, outline
 seiten.html[betrieb_statistik.php]  body <html>  :  background, color-scheme
 seiten.html[betrieb_statistik.php]  div <body>  :  color-scheme
@@ -1206,6 +1217,7 @@ seiten.html[betrieb_statistik.php]  p.feld-klein <div>  :  border, border-bottom
 seiten.html[betrieb_statistik.php]  p.kleinvielfach-wert <div>  :  color-scheme, font, font-weight
 seiten.html[betrieb_statistik.php]  span <p.kleinvielfach-wert>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, font, font-size, line-height, outline
 seiten.html[betrieb_statistik.php]  span.arrow <div>  :  color-scheme
+seiten.html[betrieb_statistik.php]  span.nur-vorlesen <th>  :  color-scheme, font-weight
 seiten.html[betrieb_statistik.php]  span.zeile-klein <td.zahl-spalte>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, outline
 seiten.html[betrieb_statistik.php]  span.zeile-klein <th>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, font-weight, outline
 seiten.html[betrieb_statistik.php]  strong <p.feld-klein>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, outline
@@ -1221,7 +1233,7 @@ seiten.html[betrieb_statistik.php]  th.zahl-spalte <tr>  :  border-bottom, borde
 seiten.html[betrieb_statistik.php]  thead <table.tabelle>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, outline
 seiten.html[betrieb_statistik.php]  tr <tbody>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, outline
 seiten.html[betrieb_statistik.php]  tr <thead>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, outline
-seiten.html[betrieb_status.php]  a <p.feld-hinweis>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, outline
+seiten.html[betrieb_status.php]  a <p.feld-hinweis>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, outline, text-decoration
 seiten.html[betrieb_status.php]  body <html>  :  background, color-scheme
 seiten.html[betrieb_status.php]  code <p.feld-hinweis>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, outline
 seiten.html[betrieb_status.php]  div <body>  :  color-scheme
@@ -1235,7 +1247,7 @@ seiten.html[betrieb_status.php]  input <form>  :  border, border-bottom, border-
 seiten.html[betrieb_status.php]  meta <head>  :  color-scheme
 seiten.html[betrieb_status.php]  p.feld-hinweis <div>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, outline
 seiten.html[betrieb_status.php]  style <head>  :  color-scheme
-seiten.html[betrieb_updates.php]  a <p.feld-hinweis>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, outline
+seiten.html[betrieb_updates.php]  a <p.feld-hinweis>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, outline, text-decoration
 seiten.html[betrieb_updates.php]  body <html>  :  background, color-scheme
 seiten.html[betrieb_updates.php]  div <body>  :  color-scheme
 seiten.html[betrieb_updates.php]  div <div>  :  color-scheme
@@ -1251,7 +1263,7 @@ seiten.html[betrieb_updates.php]  meta <head>  :  color-scheme
 seiten.html[betrieb_updates.php]  p.feld-hinweis <div.karten-raster>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, outline
 seiten.html[betrieb_updates.php]  p.feld-klein <div.karten-raster>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, outline
 seiten.html[betrieb_updates.php]  style <head>  :  color-scheme
-seiten.html[blatt_dialog.php]  a <p.feld-hinweis>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, outline
+seiten.html[blatt_dialog.php]  a <p.feld-hinweis>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, outline, text-decoration
 seiten.html[blatt_dialog.php]  body <html>  :  background, color-scheme
 seiten.html[blatt_dialog.php]  dialog#dlg-blatt.dialog <div>  :  background, color-scheme
 seiten.html[blatt_dialog.php]  div <body>  :  color-scheme
@@ -1371,8 +1383,21 @@ seiten.html[diensttag_zusammenfuehren.php]  strong <p.feld-hinweis>  :  border, 
 seiten.html[diensttag_zusammenfuehren.php]  strong <p.seiten-erklaerung>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, outline
 seiten.html[diensttag_zusammenfuehren.php]  strong <p>  :  color-scheme
 seiten.html[diensttag_zusammenfuehren.php]  style <head>  :  color-scheme
+seiten.html[doku_lib.php]  body <html>  :  background, color-scheme
+seiten.html[doku_lib.php]  div <body>  :  color-scheme
+seiten.html[doku_lib.php]  div <pre>  :  color-scheme
+seiten.html[doku_lib.php]  head <html>  :  color-scheme
+seiten.html[doku_lib.php]  html <->  :  color-scheme
+seiten.html[doku_lib.php]  meta <head>  :  color-scheme
+seiten.html[doku_lib.php]  pre <pre>  :  color-scheme
+seiten.html[doku_lib.php]  pre <td$1>  :  color-scheme
+seiten.html[doku_lib.php]  style <head>  :  color-scheme
+seiten.html[doku_lib.php]  table <pre>  :  color-scheme
+seiten.html[doku_lib.php]  td$1 <div>  :  color-scheme
+seiten.html[doku_lib.php]  td$1 <th(\s[^>  :  color-scheme
+seiten.html[doku_lib.php]  th(\s[^ <div>  :  color-scheme
 seiten.html[doku_seite.php]  a <div.doku-wege>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, outline
-seiten.html[doku_seite.php]  a <li.doku-eX>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, outline
+seiten.html[doku_seite.php]  a <li.doku-eX>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, outline, text-decoration
 seiten.html[doku_seite.php]  body <html>  :  background, color-scheme
 seiten.html[doku_seite.php]  code <p.doku-quelle>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, outline
 seiten.html[doku_seite.php]  code <p.feld-hinweis>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, outline
@@ -1401,10 +1426,6 @@ seiten.html[einsatz.php]  a#tagzurueck.rueckweg <div.titelzeile>  :  border, bor
 seiten.html[einsatz.php]  body <html>  :  background, color-scheme, height
 seiten.html[einsatz.php]  dd <scriptx>  :  color-scheme
 seiten.html[einsatz.php]  div <body>  :  color-scheme, height
-seiten.html[einsatz.php]  div#crewlist.tag-lese <div.karte-inhalt>  :  color-scheme
-seiten.html[einsatz.php]  div#liste-einsatz.tag-lese <div.karte-inhalt>  :  color-scheme
-seiten.html[einsatz.php]  div#liste-patientin.tag-lese <div.karte-inhalt>  :  color-scheme
-seiten.html[einsatz.php]  div#liste-transport.tag-lese <div.karte-inhalt>  :  color-scheme
 seiten.html[einsatz.php]  div#loaderrorbox.meldung.meldung-fehler <div>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, outline
 seiten.html[einsatz.php]  div#lockbanner.meldung.meldung-info <div>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, outline
 seiten.html[einsatz.php]  div#map.geo <div.geo-spalte>  :  color-scheme
@@ -1430,6 +1451,10 @@ seiten.html[einsatz.php]  div.titelzeile <div>  :  color-scheme
 seiten.html[einsatz.php]  div.titelzeile-aktionen <div.titelzeile-haupt>  :  color-scheme
 seiten.html[einsatz.php]  div.titelzeile-haupt <div.titelzeile>  :  color-scheme
 seiten.html[einsatz.php]  div.titelzeile-text <div.titelzeile-haupt>  :  color-scheme
+seiten.html[einsatz.php]  dl#crewlist.tag-lese <div.karte-inhalt>  :  color-scheme
+seiten.html[einsatz.php]  dl#liste-einsatz.tag-lese <div.karte-inhalt>  :  color-scheme
+seiten.html[einsatz.php]  dl#liste-patientin.tag-lese <div.karte-inhalt>  :  color-scheme
+seiten.html[einsatz.php]  dl#liste-transport.tag-lese <div.karte-inhalt>  :  color-scheme
 seiten.html[einsatz.php]  dt <scriptx>  :  color-scheme
 seiten.html[einsatz.php]  h1#title <div.titelzeile-text>  :  color-scheme, font, font-weight
 seiten.html[einsatz.php]  h2.karte-titel <div.karte-kopf>  :  color-scheme, font, font-weight, width
@@ -1455,7 +1480,7 @@ seiten.html[einsatz.php]  span.pm-chip <scriptx>  :  color-scheme, font, font-si
 seiten.html[einsatz.php]  strong <p>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, outline
 seiten.html[einsatz.php]  style <head>  :  color-scheme
 seiten.html[einsatz.php]  title <scriptx>  :  color-scheme
-seiten.html[einsatz_form.php]  a <p.seiten-erklaerung>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, outline
+seiten.html[einsatz_form.php]  a <p.seiten-erklaerung>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, outline, text-decoration
 seiten.html[einsatz_form.php]  a#addrea.anlegen-link <p.karte-fussweg>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, font, font-weight, outline, width
 seiten.html[einsatz_form.php]  a#addrow.anlegen-link <p.karte-fussweg>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, font, font-weight, outline, width
 seiten.html[einsatz_form.php]  body <html>  :  background, color-scheme
@@ -1542,7 +1567,7 @@ seiten.html[einsatz_loeschen.php]  input <form>  :  border, border-bottom, borde
 seiten.html[einsatz_loeschen.php]  meta <head>  :  color-scheme
 seiten.html[einsatz_loeschen.php]  p <div>  :  color-scheme
 seiten.html[einsatz_loeschen.php]  style <head>  :  color-scheme
-seiten.html[einsatz_verschieben.php]  a <p.seiten-erklaerung>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, outline
+seiten.html[einsatz_verschieben.php]  a <p.seiten-erklaerung>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, outline, text-decoration
 seiten.html[einsatz_verschieben.php]  body <html>  :  background, color-scheme
 seiten.html[einsatz_verschieben.php]  div <body>  :  color-scheme
 seiten.html[einsatz_verschieben.php]  div.listen-form-fuss <div>  :  color-scheme
@@ -1555,10 +1580,10 @@ seiten.html[einsatz_verschieben.php]  meta <head>  :  color-scheme
 seiten.html[einsatz_verschieben.php]  p.seiten-erklaerung <div>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, outline
 seiten.html[einsatz_verschieben.php]  strong <p.seiten-erklaerung>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, outline
 seiten.html[einsatz_verschieben.php]  style <head>  :  color-scheme
-seiten.html[einstellungen.php]  a <p.feld-hinweis>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, outline
-seiten.html[einstellungen.php]  a <p.feld-klein>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, outline
-seiten.html[einstellungen.php]  a <p.seiten-erklaerung>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, outline
-seiten.html[einstellungen.php]  a <p>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, outline
+seiten.html[einstellungen.php]  a <p.feld-hinweis>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, outline, text-decoration
+seiten.html[einstellungen.php]  a <p.feld-klein>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, outline, text-decoration
+seiten.html[einstellungen.php]  a <p.seiten-erklaerung>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, outline, text-decoration
+seiten.html[einstellungen.php]  a <p>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, outline, text-decoration
 seiten.html[einstellungen.php]  body <html>  :  background, color-scheme
 seiten.html[einstellungen.php]  code <p.seiten-erklaerung>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, outline
 seiten.html[einstellungen.php]  dd#vd-faellig <div.tagfeld.tagfeld-breit>  :  color-scheme
@@ -1660,7 +1685,7 @@ seiten.html[einstellungen.php]  strong <p.seiten-erklaerung>  :  border, border-
 seiten.html[einstellungen.php]  strong <p>  :  color-scheme
 seiten.html[einstellungen.php]  style <head>  :  color-scheme
 seiten.html[einstellungen.php]  summary.akkordeon-zeile <details.apk-fach>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, font, font-weight, outline
-seiten.html[einwilligung.php]  a <p.feld-hinweis>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, outline
+seiten.html[einwilligung.php]  a <p.feld-hinweis>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, outline, text-decoration
 seiten.html[einwilligung.php]  body <html>  :  background, color-scheme
 seiten.html[einwilligung.php]  div <body>  :  color-scheme
 seiten.html[einwilligung.php]  div.listen-form-fuss <form>  :  color-scheme
@@ -1695,7 +1720,7 @@ seiten.html[erststart_karte.php]  span <label.erststart-nie>  :  border, border-
 seiten.html[erststart_karte.php]  span.erststart-nr.erststart-nr-fertig <div>  :  background, border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, font, font-weight, outline
 seiten.html[erststart_karte.php]  style <head>  :  color-scheme
 seiten.html[import.php]  a <div>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, outline
-seiten.html[import.php]  a <p.feld-hinweis>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, outline
+seiten.html[import.php]  a <p.feld-hinweis>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, outline, text-decoration
 seiten.html[import.php]  body <html>  :  background, color-scheme
 seiten.html[import.php]  div <body>  :  color-scheme
 seiten.html[import.php]  div <scriptx>  :  color-scheme
@@ -1741,8 +1766,8 @@ seiten.html[import.php]  strong <p.feld-klein>  :  border, border-bottom, border
 seiten.html[import.php]  strong <p.seiten-erklaerung>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, outline
 seiten.html[import.php]  style <head>  :  color-scheme
 seiten.html[import.php]  table#tabelle.tabelle <div.tabelle-scroll.imp-roll>  :  color-scheme
-seiten.html[index.php]  a <p.feld-hinweis>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, outline
-seiten.html[index.php]  a <p>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, outline
+seiten.html[index.php]  a <p.feld-hinweis>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, outline, text-decoration
+seiten.html[index.php]  a <p>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, outline, text-decoration
 seiten.html[index.php]  a#addmission.karte-aktion.karte-aktion-orange <div.karte-kopf>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, font, font-weight, margin, margin-left, outline, width
 seiten.html[index.php]  a#tagdatenknopf.karte-aktion.karte-aktion-blau <div.karte-kopf>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, font, font-weight, margin, margin-left, outline, width
 seiten.html[index.php]  body <html>  :  background, color-scheme
@@ -1755,6 +1780,8 @@ seiten.html[index.php]  button.knopf.knopf-leise.blatt-abbrechen <div.blatt>  : 
 seiten.html[index.php]  datalist <p.meldung.…>  :  color-scheme
 seiten.html[index.php]  dd <div.tagfeld'.+.(doppelt.?.'.tagfeld-doppelt'.:.'').+.(breit.?.'.tagfeld-breit'.:.'').+.'>  :  color-scheme
 seiten.html[index.php]  dd <div.tagfeld>  :  color-scheme
+seiten.html[index.php]  dd.tag-lese-leer <div.tagfeld.tagfeld-breit>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, outline
+seiten.html[index.php]  dd.tag-lese-leer <div.tagfeld>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, outline
 seiten.html[index.php]  dialog#gpxdialog.dialog <div>  :  background, color-scheme
 seiten.html[index.php]  div <body>  :  color-scheme
 seiten.html[index.php]  div <scriptx>  :  color-scheme
@@ -1770,7 +1797,6 @@ seiten.html[index.php]  div#missionskacheln.kachelliste.nur-unter-720 <div.karte
 seiten.html[index.php]  div#ruhezeilen <div.karte-inhalt>  :  color-scheme
 seiten.html[index.php]  div#sortblatt.blatt <div>  :  background, border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color-scheme
 seiten.html[index.php]  div#sortliste.blatt-liste <div.blatt>  :  color-scheme
-seiten.html[index.php]  div#taglese.tag-lese <div.karte-inhalt>  :  color-scheme
 seiten.html[index.php]  div.blatt-griff <div.blatt>  :  color-scheme
 seiten.html[index.php]  div.dialog-fuss <dialog.dialog>  :  color-scheme
 seiten.html[index.php]  div.dialog-inhalt <dialog.dialog>  :  color-scheme
@@ -1791,12 +1817,17 @@ seiten.html[index.php]  div.tag-form-fuss <form.tag-form>  :  color-scheme
 seiten.html[index.php]  div.tag-raster <div>  :  color-scheme
 seiten.html[index.php]  div.tagfeld <span.wtag-kurz>  :  color-scheme
 seiten.html[index.php]  div.tagfeld'.+.(doppelt.?.'.tagfeld-doppelt'.:.'').+.(breit.?.'.tagfeld-breit'.:.'').+.' <scriptx>  :  color-scheme
+seiten.html[index.php]  div.tagfeld.tagfeld-breit <dd>  :  color-scheme
+seiten.html[index.php]  div.tagfeld.tagfeld-breit <scriptx>  :  color-scheme
 seiten.html[index.php]  div.titelzeile <div>  :  color-scheme
 seiten.html[index.php]  div.titelzeile-haupt <div.titelzeile>  :  color-scheme
 seiten.html[index.php]  div.titelzeile-text <div.titelzeile-haupt>  :  color-scheme
 seiten.html[index.php]  div.wahlliste <div.feld>  :  color-scheme
+seiten.html[index.php]  dl#taglese.tag-lese <div.karte-inhalt>  :  color-scheme
 seiten.html[index.php]  dt <div.tagfeld'.+.(doppelt.?.'.tagfeld-doppelt'.:.'').+.(breit.?.'.tagfeld-breit'.:.'').+.'>  :  color-scheme
 seiten.html[index.php]  dt <div.tagfeld>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, outline
+seiten.html[index.php]  dt.nur-vorlesen <div.tagfeld.tagfeld-breit>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, outline
+seiten.html[index.php]  dt.nur-vorlesen <div.tagfeld>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, outline
 seiten.html[index.php]  form <div.meldung-aktion>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, outline
 seiten.html[index.php]  form#dayform.tag-form <div.karte-inhalt>  :  color-scheme
 seiten.html[index.php]  h1#daytitle <div.titelzeile-text>  :  color-scheme, font, font-weight
@@ -1835,8 +1866,6 @@ seiten.html[index.php]  p.feld-hinweis <div.karte-inhalt>  :  border, border-bot
 seiten.html[index.php]  p.feld-hinweis <div.schalter-abhaengig>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, outline
 seiten.html[index.php]  p.feld-klein <div.feld>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, outline
 seiten.html[index.php]  p.meldung.… <scriptx>  :  color-scheme
-seiten.html[index.php]  p.tag-lese-leer <dd>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, outline
-seiten.html[index.php]  p.tag-lese-leer <scriptx>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, outline
 seiten.html[index.php]  scriptx <div>  :  color-scheme
 seiten.html[index.php]  section#einsatzliste.karte.karte-einsaetze <div.tag-raster>  :  background, border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color-scheme
 seiten.html[index.php]  section#ruheliste.karte <div>  :  background, border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color-scheme
@@ -1915,8 +1944,10 @@ seiten.html[kopfzeilen_lib.php]  p.feld-hinweis <div.meldung.meldung-warn>  :  b
 seiten.html[kopfzeilen_lib.php]  span <a.knopf.knopf-neutral>  :  color-scheme, font, font-weight
 seiten.html[kopfzeilen_lib.php]  strong <p>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, outline
 seiten.html[kopfzeilen_lib.php]  style <head>  :  color-scheme
+seiten.html[kopfzeilen_lib.php]  svg <div.meldung.meldung-warn>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, outline, stroke
+seiten.html[kopfzeilen_lib.php]  use <svg>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, outline, stroke
 seiten.html[login.php]  a <nav.fuss-anmeldung>  :  color-scheme
-seiten.html[login.php]  a <p.anmeldung-neben>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, outline
+seiten.html[login.php]  a <p.anmeldung-neben>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, outline, text-decoration
 seiten.html[login.php]  a <p.text>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, outline
 seiten.html[login.php]  body <html>  :  background, color-scheme
 seiten.html[login.php]  br <p.anmeldung-neben>  :  color-scheme
@@ -2040,7 +2071,7 @@ seiten.html[papierkorb.php]  p.feld-hinweis <div>  :  border, border-bottom, bor
 seiten.html[papierkorb.php]  p.seiten-erklaerung <div>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, outline
 seiten.html[papierkorb.php]  strong <p>  :  color-scheme
 seiten.html[papierkorb.php]  style <head>  :  color-scheme
-seiten.html[pw_handling.php]  a <p.anmeldung-neben>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, outline
+seiten.html[pw_handling.php]  a <p.anmeldung-neben>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, outline, text-decoration
 seiten.html[pw_handling.php]  body <html>  :  background, color-scheme
 seiten.html[pw_handling.php]  div <body>  :  color-scheme
 seiten.html[pw_handling.php]  div#rcbox.codeblock <div.anmeldung-karte>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color-scheme
@@ -2078,7 +2109,7 @@ seiten.html[pw_handling.php]  span#pwq.pwstaerke <form>  :  border, border-botto
 seiten.html[pw_handling.php]  strong <p.anmeldung-unter>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, outline
 seiten.html[pw_handling.php]  strong <p>  :  color-scheme
 seiten.html[pw_handling.php]  style <head>  :  color-scheme
-seiten.html[rechtstext_seite.php]  a <p.feld-hinweis>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, outline
+seiten.html[rechtstext_seite.php]  a <p.feld-hinweis>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, outline, text-decoration
 seiten.html[rechtstext_seite.php]  body <html>  :  background, color-scheme
 seiten.html[rechtstext_seite.php]  div <body>  :  color-scheme
 seiten.html[rechtstext_seite.php]  div.rahmen.rahmen-lesespalte <div>  :  color-scheme
@@ -2099,7 +2130,7 @@ seiten.html[rechtstexte_lib.php]  head <html>  :  color-scheme
 seiten.html[rechtstexte_lib.php]  html <->  :  color-scheme
 seiten.html[rechtstexte_lib.php]  meta <head>  :  color-scheme
 seiten.html[rechtstexte_lib.php]  style <head>  :  color-scheme
-seiten.html[registrieren.php]  a <p.anmeldung-neben>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, outline
+seiten.html[registrieren.php]  a <p.anmeldung-neben>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, outline, text-decoration
 seiten.html[registrieren.php]  body <html>  :  background, color-scheme
 seiten.html[registrieren.php]  div <body>  :  color-scheme
 seiten.html[registrieren.php]  div.anmeldung-karte <main.anmeldung>  :  background, color-scheme
@@ -2120,7 +2151,7 @@ seiten.html[registrieren.php]  p.anmeldung-unter <div.anmeldung-karte>  :  borde
 seiten.html[registrieren.php]  p.zustandszeile <form>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, outline
 seiten.html[registrieren.php]  span <label>  :  color-scheme
 seiten.html[registrieren.php]  style <head>  :  color-scheme
-seiten.html[reset_request.php]  a <p.anmeldung-neben>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, outline
+seiten.html[reset_request.php]  a <p.anmeldung-neben>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, outline, text-decoration
 seiten.html[reset_request.php]  body <html>  :  background, color-scheme
 seiten.html[reset_request.php]  div <body>  :  color-scheme
 seiten.html[reset_request.php]  div.anmeldung-karte <main.anmeldung>  :  background, color-scheme
@@ -2172,7 +2203,7 @@ seiten.html[schluessel_teile.php]  p.feld-hinweis <div.dialog-kopf>  :  border, 
 seiten.html[schluessel_teile.php]  p.meldung.meldung-fehler <div.dialog-inhalt>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, outline
 seiten.html[schluessel_teile.php]  span <label.rf-haken>  :  color-scheme
 seiten.html[schluessel_teile.php]  style <head>  :  color-scheme
-seiten.html[session_lib.php]  a <p.anmeldung-neben>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, outline
+seiten.html[session_lib.php]  a <p.anmeldung-neben>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, outline, text-decoration
 seiten.html[session_lib.php]  body <html>  :  background, color-scheme
 seiten.html[session_lib.php]  div <body>  :  color-scheme
 seiten.html[session_lib.php]  div <scriptx>  :  color-scheme
@@ -2321,7 +2352,7 @@ seiten.html[suche.php]  tbody <table.tabelle>  :  color-scheme
 seiten.html[suche.php]  thead <table.tabelle>  :  color-scheme
 seiten.html[suche.php]  ul <div.suchsyntax>  :  color-scheme
 seiten.html[suche.php]  wert <scriptx>  :  color-scheme
-seiten.html[systemmeldung_lib.php]  a <p>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, outline
+seiten.html[systemmeldung_lib.php]  a <p>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, outline, text-decoration
 seiten.html[systemmeldung_lib.php]  body <html>  :  background, color-scheme
 seiten.html[systemmeldung_lib.php]  div <body>  :  color-scheme
 seiten.html[systemmeldung_lib.php]  div <div>  :  color-scheme
@@ -2358,8 +2389,8 @@ seiten.html[tag_spuren.php]  strong <p.feld-hinweis>  :  border, border-bottom, 
 seiten.html[tag_spuren.php]  style <head>  :  color-scheme
 seiten.html[ui.php]  a <a.<button.class=>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, font, font-weight, outline
 seiten.html[ui.php]  a <div.filterreihe>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, font, font-weight, outline
-seiten.html[ui.php]  a <p.fuss-zeile>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, outline
-seiten.html[ui.php]  a <p>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, outline
+seiten.html[ui.php]  a <p.fuss-zeile>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, outline, text-decoration
+seiten.html[ui.php]  a <p>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, outline, text-decoration
 seiten.html[ui.php]  a <span.zaehler.<div.class=>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, font, font-size, height, line-height, outline, width
 seiten.html[ui.php]  a <span.zeile-haupt>  :  color-scheme, font, font-weight
 seiten.html[ui.php]  a <svg>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, font, font-weight, outline
@@ -2380,7 +2411,7 @@ seiten.html[ui.php]  a.<button.type= <h1>  :  border, border-bottom, border-bott
 seiten.html[ui.php]  a.<button.type= <h2.blatt-titel>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, font-weight, outline
 seiten.html[ui.php]  a.<button.type= <main.inhalt>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, font-weight, outline
 seiten.html[ui.php]  a.<button.type= <p.feld-klein.loc-datenschutz>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, font-weight, outline
-seiten.html[ui.php]  a.akkordeon-uebersicht <summary.akkordeon-zeile>  :  color-scheme, font, font-weight
+seiten.html[ui.php]  a.akkordeon-uebersicht <div.akkordeon-rahmen>  :  bottom, color-scheme, flex, inset, left, margin, margin-left, position, right, top, z-index
 seiten.html[ui.php]  a.eintrag.eintrag-anlegen <div.leiste-fuss>  :  color-scheme
 seiten.html[ui.php]  a.eintrag.eintrag-leise <div.leiste-fuss>  :  color-scheme
 seiten.html[ui.php]  a.eintrag.eintrag-offen <div.leiste-fuss>  :  color-scheme
@@ -2402,8 +2433,8 @@ seiten.html[ui.php]  a.listenfilter.><span>.<span.class= <nav.seitenwahl>  :  ba
 seiten.html[ui.php]  a.rueckweg <div.titelzeile>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, font, font-weight, outline, width
 seiten.html[ui.php]  a.seitenknopf.<span.class= <nav.seitenwahl>  :  background, border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color-scheme, font, font-weight
 seiten.html[ui.php]  a.uebersicht-zeile <span.zaehler.<div.class=>  :  border-bottom, border-bottom-color, border-color, color-scheme, font, font-size, line-height
-seiten.html[ui.php]  aside#leiste.leisteX <div.X>  :  color-scheme
-seiten.html[ui.php]  body <html>  :  background, color-scheme
+seiten.html[ui.php]  aside#leiste.leisteX <div.X>  :  color-scheme, height
+seiten.html[ui.php]  body <html>  :  background, color-scheme, height
 seiten.html[ui.php]  button#Xlupe.knopf.knopf-symbol <div.ortsfeld-zeile>  :  color-scheme, font, font-weight
 seiten.html[ui.php]  button.<a.class= <a.listenfilter.><span>.<div.class=>  :  color-scheme, font-weight
 seiten.html[ui.php]  button.<a.class= <h2.karte-titel>  :  color-scheme, font, font-weight
@@ -2416,21 +2447,23 @@ seiten.html[ui.php]  button.knopf.knopf-symbol <span.aktionen.ortsfeld-aktionen>
 seiten.html[ui.php]  button.knopf.knopf-symbol.kopf-menue <div.kopf-innen>  :  color-scheme, font, font-weight, width
 seiten.html[ui.php]  dd <div.zeile-aktionen>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, font, font-weight, outline
 seiten.html[ui.php]  details.<summary.class= <div.codeblock-text>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, font, font-size, height, line-height, outline
-seiten.html[ui.php]  details.akkordeon.akkordeon-monatX <div.akkordeon-inhalt>  :  color-scheme
+seiten.html[ui.php]  details.akkordeon.akkordeon-monatX <div.akkordeon-rahmen>  :  color-scheme
 seiten.html[ui.php]  details.akkordeon.leiste-gruppe <div.leiste-liste>  :  color-scheme
-seiten.html[ui.php]  details.akkordeonX <div.leiste-liste>  :  color-scheme
+seiten.html[ui.php]  details.akkordeonX <div.akkordeon-rahmen>  :  color-scheme
 seiten.html[ui.php]  details.zeile-mehr <div.zeile-aktionen>  :  color-scheme, font, font-weight
-seiten.html[ui.php]  div <body>  :  color-scheme
+seiten.html[ui.php]  div <body>  :  color-scheme, height
 seiten.html[ui.php]  div <scriptx>  :  color-scheme
 seiten.html[ui.php]  div#<button type=.kartenfilter <a.<button.class=>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, font, font-weight, outline
 seiten.html[ui.php]  div#<div class=.aktionen.<button.type= <a.<button.type=>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, font-weight, outline
 seiten.html[ui.php]  div#<div class=.blatt <button.knopf.knopf-neutral.aktionen-knopf>  :  background, border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color-scheme, font-weight
 seiten.html[ui.php]  div#Xchips.rmchips <div.loc-widget.X>  :  color-scheme
 seiten.html[ui.php]  div#Xortsblatt.blatt <span.aktionen.ortsfeld-aktionen>  :  background, border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color-scheme
-seiten.html[ui.php]  div.X <g>  :  color-scheme
+seiten.html[ui.php]  div.X <g>  :  color-scheme, height
 seiten.html[ui.php]  div.akkordeon-inhalt <details.akkordeon.akkordeon-monatX>  :  color-scheme
 seiten.html[ui.php]  div.akkordeon-inhalt <details.akkordeon.leiste-gruppe>  :  color-scheme
 seiten.html[ui.php]  div.akkordeon-inhalt <details.akkordeonX>  :  color-scheme
+seiten.html[ui.php]  div.akkordeon-rahmen <div.akkordeon-inhalt>  :  color-scheme, position
+seiten.html[ui.php]  div.akkordeon-rahmen <div.leiste-liste>  :  bottom, color-scheme, height, inset, left, position, right, top
 seiten.html[ui.php]  div.aktionen <div.balken-zahl>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, font-weight, outline
 seiten.html[ui.php]  div.balken-text <div.balken-zeile>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, font, font-weight, outline
 seiten.html[ui.php]  div.balken-zahl <div.balken-text>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, font-weight, min-width, outline
@@ -2449,7 +2482,7 @@ seiten.html[ui.php]  div.karte-inhalt <h2.karte-titel>  :  color-scheme, font, f
 seiten.html[ui.php]  div.kopf-innen <g>  :  color-scheme
 seiten.html[ui.php]  div.leiste-fuss <aside.leisteX>  :  border-color, border-top, border-top-color, color-scheme
 seiten.html[ui.php]  div.leiste-kopf.nur-schublade <aside.leisteX>  :  border-bottom, border-bottom-color, border-color, color-scheme
-seiten.html[ui.php]  div.leiste-liste <aside.leisteX>  :  color-scheme
+seiten.html[ui.php]  div.leiste-liste <aside.leisteX>  :  color-scheme, height
 seiten.html[ui.php]  div.loc-widget.X <aside.leisteX>  :  color-scheme
 seiten.html[ui.php]  div.loc-widget.X <div.loc-widget.X>  :  color-scheme
 seiten.html[ui.php]  div.meldung-aktion <form>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, font, font-size, line-height, outline
@@ -2491,14 +2524,14 @@ seiten.html[ui.php]  h2.karte-titel <section.<div.class=>  :  color-scheme, font
 seiten.html[ui.php]  h2.leiste-kopfzeile <aside.leisteX>  :  color-scheme, font, font-weight
 seiten.html[ui.php]  h2.leiste-kopfzeile <div>  :  color-scheme, font, font-weight
 seiten.html[ui.php]  head <html>  :  color-scheme
-seiten.html[ui.php]  html <->  :  color-scheme
+seiten.html[ui.php]  html <->  :  color-scheme, height
 seiten.html[ui.php]  img <a.kopf-marke>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, outline
 seiten.html[ui.php]  input <form>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color-scheme, font, font-size, line-height
 seiten.html[ui.php]  input#<button class= <nav.reiter>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color-scheme, font, font-weight
 seiten.html[ui.php]  input#X.feld-eingabe <div.feldX>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color-scheme
-seiten.html[ui.php]  input#X.schalter-box <div.schalter>  :  accent-color, color-scheme
-seiten.html[ui.php]  input#X.segment-box <div.segmentX>  :  accent-color, color-scheme
-seiten.html[ui.php]  input#X.wahl-box <div.wahlliste>  :  accent-color, color-scheme
+seiten.html[ui.php]  input#X.schalter-box <div.schalter>  :  accent-color, bottom, color-scheme, inset, top
+seiten.html[ui.php]  input#X.segment-box <div.segmentX>  :  accent-color, bottom, color-scheme, inset, top
+seiten.html[ui.php]  input#X.wahl-box <div.wahlliste>  :  accent-color, bottom, color-scheme, inset, top
 seiten.html[ui.php]  input#Xaddr <div.ortsfeld-zeile>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color-scheme
 seiten.html[ui.php]  input#Xlat <div.loc-widget.X>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color-scheme
 seiten.html[ui.php]  input#Xlon <div.loc-widget.X>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color-scheme
@@ -2593,7 +2626,7 @@ seiten.html[ui.php]  span.zeile-klein <span.zeile-haupt>  :  border, border-bott
 seiten.html[ui.php]  string,string <g>  :  color-scheme
 seiten.html[ui.php]  strong <p>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, outline
 seiten.html[ui.php]  style <head>  :  color-scheme
-seiten.html[ui.php]  summary.akkordeon-zeile <details.akkordeon.akkordeon-monatX>  :  color-scheme, font, font-weight
+seiten.html[ui.php]  summary.akkordeon-zeile <details.akkordeon.akkordeon-monatX>  :  color-scheme, font, font-weight, padding, padding-right
 seiten.html[ui.php]  summary.akkordeon-zeile <details.akkordeon.leiste-gruppe>  :  color-scheme, font, font-weight
 seiten.html[ui.php]  summary.akkordeon-zeile <details.akkordeonX>  :  color-scheme, font, font-weight
 seiten.html[ui.php]  svg <div>  :  color-scheme
@@ -2639,8 +2672,10 @@ seiten.html[wartung_lib.php]  strong <div.text>  :  color-scheme
 seiten.html[wartung_lib.php]  strong <h1>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, font, font-weight, outline
 seiten.html[wartung_lib.php]  strong <p>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, outline
 seiten.html[wartung_lib.php]  style <head>  :  color-scheme
+seiten.html[wartung_lib.php]  svg <div>  :  color-scheme
+seiten.html[wartung_lib.php]  use <svg>  :  color-scheme
 seiten.html[wiederherstellen.php]  a <div.rahmen.rahmen-lesespalte>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, outline
-seiten.html[wiederherstellen.php]  a <p.feld-hinweis>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, outline
+seiten.html[wiederherstellen.php]  a <p.feld-hinweis>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, outline, text-decoration
 seiten.html[wiederherstellen.php]  body <html>  :  background, color-scheme
 seiten.html[wiederherstellen.php]  br <p.feld-hinweis>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, outline
 seiten.html[wiederherstellen.php]  code <p.feld-hinweis>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, outline
@@ -2698,7 +2733,7 @@ seiten.html[zeitraum.php]  table#rangetable.tabelle <div.tabelle-scroll.nur-ab-7
 seiten.html[zeitraum.php]  tbody#rangebody <table.tabelle>  :  color-scheme
 seiten.html[zeitraum.php]  thead <table.tabelle>  :  color-scheme
 seiten.html[zweitfaktor.php]  a <nav.fuss-anmeldung>  :  color-scheme
-seiten.html[zweitfaktor.php]  a <p.anmeldung-neben>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, outline
+seiten.html[zweitfaktor.php]  a <p.anmeldung-neben>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, color-scheme, outline, text-decoration
 seiten.html[zweitfaktor.php]  body <html>  :  background, color-scheme
 seiten.html[zweitfaktor.php]  div <body>  :  color-scheme
 seiten.html[zweitfaktor.php]  div <div>  :  color-scheme
