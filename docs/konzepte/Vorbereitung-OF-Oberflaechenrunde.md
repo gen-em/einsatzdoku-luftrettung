@@ -12,7 +12,7 @@ Gespräch. Wo das Bild von Produktiv stammt, ist der Punkt auf dem neuen
 Stand (Staging) gegenzuprüfen, bevor er gebaut wird.
 **Modell:** Das Konzept schreibt **Fable** (Auftrag der Betreiberin,
 07.11.2026). Diese Datei sammelt nur.
-**Mockups:** als Artifact (private Seiten auf claude.ai), im Live-Umfeld
+**Mockups (07.11.2026):** A Navigation https://claude.ai/artifact/3q3V9kYSGenWHKSeJCMYmp · B Einstellungen https://claude.ai/artifact/FLBQ9RmPrm7quLHSUdoxA9 · C Betrieb https://claude.ai/artifact/Se94QDeSS1Vkktmmv6ZPug · D Einsatz und Karte https://claude.ai/artifact/WHAx1KgVdVudfBPRmKqX5Q · E Startseite und Suche (in Arbeit). Befund zu P-37: Der gestrichelte Kreis ist das Zeichen „ohne Rettungsmittel“, nur falsch platziert. Form: als Artifact (private Seiten auf claude.ai), im Live-Umfeld
 (echtes Stylesheet, echte Texte, Demo-Daten). Entschiedene Mockups kommen
 als Bild nach `docs/konzepte/konzept-of/mockups/`.
 
@@ -121,6 +121,9 @@ Seite Hintergrundjobs (bei P-24).
 | E-OF-12 | P-31: Die Plakette „GPS-Daten ausgedünnt" entfällt; die Auskunft bleibt in der GPX-Datei und im Handbuch | Betreiberin, 07.11.2026 |
 | E-OF-13 | P-35: Kartenauswahl ohne Anbieternamen (Standard, Wanderkarte, Topografisch, Satellit); die Zuschreibung unten rechts muss je Ebene den Anbieter nennen — vorher prüfen | Betreiberin, 07.11.2026 |
 
+| E-OF-14 | Q-NV-04: Die rote Zahl steht am Reiter jedes Bereichs, summiert über seine Punkte (Verwaltung z. B. überfällige Konto-Backups, Betrieb die Statusbefunde) | Betreiberin, 07.11.2026 |
+| E-OF-15 | Q-OF-09: Ob Seitenreiter wie die Bereichszeile aussehen, wird an den Mockups zu P-20 entschieden | Betreiberin, 07.11.2026 |
+
 Aus Schritt 26 übernommen: E-MA-36 (Beenden-Knöpfe der App bleiben
 vollflächig rot) ist bestätigt.
 
@@ -137,5 +140,6 @@ vollflächig rot) ist bestätigt.
 | Q-OF-07 | P-37: Symbol für „Wiederherstellen": `restore` (Vorschlag), `arrow-back-up` oder `trash-off` | P-37 |
 | Q-OF-08 | Übersichtsseite „Einstellungen" doppelt zur Seitenleiste, „Abmelden" doppelt — eigener Punkt? | mit Q-NV-03 |
 | Q-OF-09 | Sollen Seitenreiter (Rechtstexte, Protokoll, Statistik) dieselbe Form bekommen wie die Bereichszeile aus NV? | P-20, NV-01 |
-| Q-OF-10 | Reihenfolge: NV zuerst als eigener Schritt (Opus, fertig konzipiert), OF danach auf dem NV-Gerüst — oder NV in OF aufgehen lassen? | NV, OF |
+| Q-OF-10 | Reihenfolge: NV jetzt bauen (echter Stand auf Staging, Fable plant gegen Code) oder NV in OF aufgehen lassen (einmal bauen, beide Pakete berühren `ui.php`/`style.css`)? Die Mockups sind schon im NV-Gerüst | NV, OF |
+| Q-NV-01 (Stand) | Gemeinsamer Kasten auch für Startseite und Suche: Tendenz **ja**, Mockups (Gruppe E) zur Entscheidung | NV |
 | Q-NV-01 bis -04 | Offene Fragen aus Konzept NV (Rahmenkarte auch für Startseite und Suche; Ziel des Reiters „Betrieb"; Übersicht bleibt; Zähler in allen Bereichen) | NV |
