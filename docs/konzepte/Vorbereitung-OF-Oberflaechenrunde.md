@@ -76,7 +76,7 @@ NV-Gerüst.
 | OF-P-16 | Untermenü listet „Für dich freigegebenes Backup", die Karte fehlt | Navigation | Fehler | Sprungliste listet nur vorhandene Karten; alle Seiten prüfen |
 | OF-P-17 | Seite „Import / Export" unintuitiv, zu viel Text, zu breite Elemente | Einstellungen | Gestaltung | entschieden (E-OF-26): erst wählen, dann füllen |
 | OF-P-18 | Kontenliste: Spalte „Öffnen" verlangt waagerechtes Scrollen | Verwaltung | Umbau | Vorschlag Q-OF-05 |
-| OF-P-19 | Seitenbreite uneinheitlich (Installation schmal, NutzerInnen breit) | alle | Regel | zentrale Regel + Prüfmittel, Mockup |
+| OF-P-19 | Seitenbreite uneinheitlich (Installation schmal, NutzerInnen breit) | alle | Regel | entschieden (E-OF-31): Felder begrenzt, nicht Abschnitte; Prüfmittel offen (Q-OF-03) |
 | OF-P-20 | Reiter kaum als Bedienelement erkennbar | Baustein | Gestaltung | entschieden (E-OF-17): gleiche Form wie die Bereichszeile |
 | OF-P-21 | Demo-Konto als Karte unter Installation (an/aus, letzter Reset) | Verwaltung | Umbau | entschieden (E-OF-08); Kontrollzahlen zur Statusseite |
 | OF-P-22 | Listenkopf (Suche, Zeitfilter, Art) unübersichtlich, aktiver Zeitraum nicht erkennbar | Baustein | Gestaltung | entschieden (E-OF-18): Filterknopf |
@@ -138,6 +138,7 @@ Seite Hintergrundjobs (bei P-24).
 | E-OF-28 | P-34: Variante **Links vor der Beschriftung**: feste Beschriftungsspalte (14 rem), das Schloss steht vor dem Wort in einer eigenen schmalen Spalte, Felder ohne Schloss rücken gleich weit ein. Der Riegel `kennzeichnung` (Sollliste) muss weiter halten. Bild `konzept-of/mockups/OF-P34-links.png` | Betreiberin, 07.11.2026 (Kommentar im Mockup D) |
 | E-OF-29 | P-36 (mit P-35): **Vorschlag** übernommen: Kartenknöpfe in Bedienhöhe der App (44 px, am Zeigergerät 36 px), Kartenfläche, starke Linie, Radius wie Knöpfe, kein Schatten; Ebenenwahl mit dem App-Symbol „Karte“, offen mit Überschrift „Kartenart“, Zeilen in Bedienhöhe, Auswahl Dunkelblau, Namen ohne Anbieter (die Anbieter bleiben im Quellennachweis). Bilder `konzept-of/mockups/OF-P36-vorschlag.png`, `…/OF-P36-vorschlag-ebenen.png` | Betreiberin, 07.11.2026 (Kommentar im Mockup D) |
 | E-OF-30 | P-37 und Q-OF-07: Variante **A — Tabler „restore“** (kreisender Pfeil mit Punkt) für „Wiederherstellen“; nicht direkt neben „Aktualisieren“ stellen, die beiden sind verwandt. Der gestrichelte Kreis (Zeichen „ohne Rettungsmittel“, falsch platziert) wird unabhängig davon entfernt. Bild `konzept-of/mockups/OF-P37-A-restore.png` | Betreiberin, 07.11.2026 (Kommentar im Mockup D) |
+| E-OF-31 | P-19: **Vorschlag** übernommen: Jeder Abschnitt und seine Linie reichen bis zur rechten Kante der Rahmenkarte; begrenzt werden die Felder (36 rem), nicht die Abschnitte. Alle Seiten haben dieselbe rechte Kante; Listenseiten bleiben, wie sie sind. Ob ein Prüfmittel die Regel misst, ist Q-OF-03. Bild `konzept-of/mockups/OF-P19-vorschlag.png` | Betreiberin, 07.11.2026 (Kommentar im Mockup B) |
 
 Aus Schritt 26 übernommen: E-MA-36 (Beenden-Knöpfe der App bleiben
 vollflächig rot) ist bestätigt.
