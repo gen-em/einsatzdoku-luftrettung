@@ -25,7 +25,7 @@ declare -A RUF=(
 )
 declare -A WAS=(
   [design]="die Tabellen in docs/Design.md (Token, Schwellen, Symbole, Bausteine)"
-  [logos]="die Favicons AUS den Logodateien"
+  [logos]="die Favicons aus dem Branding-Repo, die Raster der Bildmarke"
   [uhr-bilder]="die vorgerasterten Bildmarken der Uhr-App"
   [geraetemodelle]="server/geraetemodelle.php aus der Garmin-Geräteliste"
   [nachaufloesen]="Teilenummern nachschlagen, die erzeugen.py offen ließ"

@@ -20,8 +20,12 @@
 set -euo pipefail
 
 WURZEL="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
-HELI="$WURZEL/server/assets/images/gen-em_logo_helicopter_weiss.svg"
-NEF="$WURZEL/server/assets/images/gen-em_logo_nef_weiss.svg"
+# Seit Schritt 26 die Fassung „farbig-negativ" der Produktmarke
+# (Branding-Repo): Grundform Schnee, Federfarben bleiben — das, was hier
+# bis dahin „weiss" hiess (die Dunkelgrund-Fassung). Neu erzeugt mit Uhr
+# 4.3.3 (Schritt 26, MA-17, Backlog Nr. 520).
+HELI="$WURZEL/server/assets/images/nadoku-hubschrauber-farbig-negativ.svg"
+NEF="$WURZEL/server/assets/images/nadoku-nef-farbig-negativ.svg"
 UHR="$WURZEL/watch"
 TMP="$(mktemp -d)"
 trap 'rm -rf "$TMP"' EXIT

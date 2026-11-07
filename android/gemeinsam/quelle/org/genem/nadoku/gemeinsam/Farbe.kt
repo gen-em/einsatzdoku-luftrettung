@@ -19,6 +19,11 @@ import org.genem.nadoku.R
  * `werkzeuge/farbabgleich.py` haelt die XML-Datei gegen `:root` und meldet
  * jede Abweichung; damit ist die Kette geschlossen: Web -> farben.xml -> App.
  *
+ * LEITWERTE, NICHT ROLLEN. Was hier steht, schaltet nicht um: die
+ * Kopfleiste des Handys (Dunkelblau mit Schnee), die Uhr (immer dunkel), die
+ * Bildmarke. Die Rollen des Handys -- Flaechen, Schrift, Handeln, Zustaende,
+ * hell und dunkel -- stehen in [Rolle] (seit Android 0.22.0).
+ *
  * WARUM ES @Composable-EIGENSCHAFTEN SIND: `colorResource` braucht den
  * Ressourcen-Zugriff der Compose-Umgebung. Wer eine Farbe ausserhalb einer
  * Composable braucht -- etwa fuer die Benachrichtigung des Vordergrunddienstes
@@ -41,7 +46,7 @@ object Farbe {
     // ---- Linien ------------------------------------------------------------
     val linie: Color @Composable @ReadOnlyComposable get() = colorResource(R.color.marke_linie)
 
-    // ---- Orange handelt ----------------------------------------------------
+    // ---- Orange (Leitwerte; die Hauptaktion ist Rolle.aktionHaupt) -----------
     val orange: Color @Composable @ReadOnlyComposable get() = colorResource(R.color.marke_orange)
     val orangeTief: Color @Composable @ReadOnlyComposable get() = colorResource(R.color.marke_orange_tief)
     val orangeHell: Color @Composable @ReadOnlyComposable get() = colorResource(R.color.marke_orange_hell)
@@ -50,27 +55,62 @@ object Farbe {
     val blau: Color @Composable @ReadOnlyComposable get() = colorResource(R.color.marke_blau)
     val blauTief: Color @Composable @ReadOnlyComposable get() = colorResource(R.color.marke_blau_tief)
     val blauHell: Color @Composable @ReadOnlyComposable get() = colorResource(R.color.marke_blau_hell)
+    /** Die Aktion des Dark Mode im Web (blau 300) -- auf der Uhr, die immer
+     *  dunkel ist, die Flaeche des grossen Knopfs und die naechste Phase. */
+    val blau300: Color @Composable @ReadOnlyComposable get() = colorResource(R.color.marke_blau_300)
 
     // ---- Rot warnt ---------------------------------------------------------
     val rot: Color @Composable @ReadOnlyComposable get() = colorResource(R.color.marke_rot)
     val rotTief: Color @Composable @ReadOnlyComposable get() = colorResource(R.color.marke_rot_tief)
     val rosa: Color @Composable @ReadOnlyComposable get() = colorResource(R.color.marke_rosa)
+}
+
+/**
+ * Die Farbrollen des Handys -- dieselben wie im Web (`--x` ist `rolle_x`).
+ *
+ * HELL UND DUNKEL STEHEN NICHT HIER, sondern in `values/rollen.xml` und
+ * `values-night/rollen.xml`; Android waehlt nach der Systemeinstellung,
+ * `colorResource` liest die passende Datei. Handeln ist Dunkelblau
+ * ([aktion]), die eine Hauptaktion Orange ([aktionHaupt], „Dienst
+ * beginnen"); ein Zustand in Ordnung ist gruen ([erfolgText]), eine
+ * Eigenschaft blau ([infoText]), ein Fehler rot ([fehlerText]).
+ *
+ * `werkzeuge/farbabgleich.py` haelt beide Dateien gegen das Web,
+ * `werkzeuge/kontraste.py` jedes Paar in beiden Modi.
+ */
+object Rolle {
+    val flaecheSeite: Color @Composable @ReadOnlyComposable get() = colorResource(R.color.rolle_flaeche_seite)
+    val flaecheKarte: Color @Composable @ReadOnlyComposable get() = colorResource(R.color.rolle_flaeche_karte)
+    val text: Color @Composable @ReadOnlyComposable get() = colorResource(R.color.rolle_text)
+    val textTitel: Color @Composable @ReadOnlyComposable get() = colorResource(R.color.rolle_text_titel)
+    val gedaempft: Color @Composable @ReadOnlyComposable get() = colorResource(R.color.rolle_gedaempft)
+    val textLink: Color @Composable @ReadOnlyComposable get() = colorResource(R.color.rolle_text_link)
+    val linie: Color @Composable @ReadOnlyComposable get() = colorResource(R.color.rolle_linie)
+    val linieStark: Color @Composable @ReadOnlyComposable get() = colorResource(R.color.rolle_linie_stark)
+
+    val aktion: Color @Composable @ReadOnlyComposable get() = colorResource(R.color.rolle_aktion)
+    val aufAktion: Color @Composable @ReadOnlyComposable get() = colorResource(R.color.rolle_auf_aktion)
+    val aktionHaupt: Color @Composable @ReadOnlyComposable get() = colorResource(R.color.rolle_aktion_haupt)
+    val aufAktionHaupt: Color @Composable @ReadOnlyComposable get() = colorResource(R.color.rolle_auf_aktion_haupt)
+    val auswahlFlaeche: Color @Composable @ReadOnlyComposable get() = colorResource(R.color.rolle_auswahl_flaeche)
+    val auswahlText: Color @Composable @ReadOnlyComposable get() = colorResource(R.color.rolle_auswahl_text)
+
+    val infoFlaeche: Color @Composable @ReadOnlyComposable get() = colorResource(R.color.rolle_info_flaeche)
+    val infoText: Color @Composable @ReadOnlyComposable get() = colorResource(R.color.rolle_info_text)
+    val infoLinie: Color @Composable @ReadOnlyComposable get() = colorResource(R.color.rolle_info_linie)
+    val erfolgText: Color @Composable @ReadOnlyComposable get() = colorResource(R.color.rolle_erfolg_text)
+    val erfolgLinie: Color @Composable @ReadOnlyComposable get() = colorResource(R.color.rolle_erfolg_linie)
+    val warnungLinie: Color @Composable @ReadOnlyComposable get() = colorResource(R.color.rolle_warnung_linie)
+    val fehlerText: Color @Composable @ReadOnlyComposable get() = colorResource(R.color.rolle_fehler_text)
+    val fehlerLinie: Color @Composable @ReadOnlyComposable get() = colorResource(R.color.rolle_fehler_linie)
 
     /**
-     * Der Primaerknopf traegt DUNKELBLAUE Schrift auf Orange, nicht weisse:
-     * Weiss auf Orange sind 2,3:1 und damit unlesbar, Dunkelblau auf Orange
-     * 5,97:1. Dieselbe Entscheidung wie im Web.
+     * Beendende Handlungen: VOLLFLAECHIG rot. Das Web zeichnet den
+     * Gefahrknopf seit Repo-Commit e7bf4fc als Umriss; die App bleibt bei
+     * der Flaeche (E-MA-36) -- auf einem Geraet im Einsatz muss die
+     * beendende Handlung ohne Lesen erkennbar sein. Werte wie der Zaehler
+     * offener Fehler im Web (`--gefahr`, `--auf-gefahr`).
      */
-    val knopfPrimaerFlaeche: Color @Composable @ReadOnlyComposable get() = orange
-    val knopfPrimaerSchrift: Color @Composable @ReadOnlyComposable get() = dunkelblau
-
-    /**
-     * Beendende Handlungen: vollflaechig rot mit weisser Schrift.
-     * Das ist bewusst groesser aufgetragen als der rote Rahmen des
-     * Web-Gefahrknopfs -- auf einem Geraet im Einsatz muss die beendende
-     * Handlung ohne Lesen erkennbar sein. Weiss auf `--rot` sind 4,78:1 -- ueber AA.
-     * werkzeuge/kontraste.py rechnet alle Paare der App nach.
-     */
-    val knopfBeendenFlaeche: Color @Composable @ReadOnlyComposable get() = rot
-    val knopfBeendenSchrift: Color @Composable @ReadOnlyComposable get() = aufDunkel
+    val gefahr: Color @Composable @ReadOnlyComposable get() = colorResource(R.color.rolle_gefahr)
+    val aufGefahr: Color @Composable @ReadOnlyComposable get() = colorResource(R.color.rolle_auf_gefahr)
 }

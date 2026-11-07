@@ -207,11 +207,15 @@ Beide unter `server/assets/fonts/`, eingebunden über `@font-face` in
 
 | Schrift | Schnitte | Lizenz | Herkunft |
 |---|---|---|---|
-| **Bricolage Grotesque** | 500, 600 | SIL Open Font License 1.1 | npm `@fontsource/bricolage-grotesque` 5.3.0 |
-| **Open Sans** | 400, 600, 700 | SIL Open Font License 1.1 | npm `@fontsource/open-sans` 5.3.0 |
+| **Bricolage Grotesque** | 500 | SIL Open Font License 1.1 | npm `@fontsource/bricolage-grotesque` 5.3.0 |
+| **Open Sans** | 400, 700 | SIL Open Font License 1.1 | npm `@fontsource/open-sans` 5.3.0 |
 
-Übernommen wurden **ausschließlich die tatsächlich benutzten Schnitte**, je in
-den Subsets `latin` und `latin-ext` — zehn `.woff2`-Dateien. Wer einen
+Übernommen wurden **ausschließlich die Schnitte, die die Marke vorsieht**
+(Branding-Repo `gen-em/gen-em-branding`, `5 Regeln/Typografie.md`), je in
+den Subsets `latin` und `latin-ext` — sechs `.woff2`-Dateien. Bis Schritt 26
+waren es zehn; die 600er beider Familien sind entfallen (E-MA-15). Das Repo
+liefert dieselben Familien auch als variable Dateien; die Anwendung bleibt
+bei den kleineren Subsets. Wer einen
 weiteren Schnitt braucht, legt die Datei dazu *und* trägt sie im Stylesheet
 ein; ohne `@font-face` nutzt eine Datei im Ordner nichts.
 
@@ -495,6 +499,19 @@ Bezogen über das npm-Paketarchiv (`npm pack jsqr@1.4.0`), Datei
 „Zweitfaktor einrichten" liest damit den QR-Code aus einem Abzug und hält den
 Inhalt gegen die angezeigte otpauth-Adresse. Zur Laufzeit wird er nie geladen.
 
+### 7.0a Die Prüfbibliothek axe-core (seit Schritt 26)
+
+**axe-core** 4.14.0 (Deque Systems), **MPL-2.0**, liegt unter
+`tools/barrierefreiheit/vendor/axe.min.js`, die Lizenz daneben
+(`axe-core-LICENSE`). Bezogen über das npm-Paket (`npm i axe-core@4.14.0`,
+07.11.2026), Datei `axe.min.js` **byteweise unverändert**, SHA-256
+`20c09fe157a8a34a30e241aaa1fcdade657734f08ab379ecfbeb7d45cc46e878`; die
+Probe rechnet sie vor jedem Lauf nach. Ohne Herkunftskopf in der Datei —
+ein Kopf änderte die Summe, und die MPL verlangt, dass ihr eigener Kopf
+oben bleibt. **Nur Prüfwerkzeug** (E-MA-33, Nr. 524): Die Barrierefreiheitsprobe
+spielt sie in jede gemessene Seite ein. Zur Laufzeit wird sie nie geladen
+und liegt in keinem ausgelieferten Verzeichnis.
+
 ### 7.1 Das GPX-1.1-Schema (seit Web 10.3.0)
 
 Eine Ausnahme von „hier steht nur, was ausgeliefert wird" — sie steht
@@ -605,9 +622,13 @@ Backlog Nr. 230.
 - **Der Referenzdatensatz** (`tools/referenzdatensatz/`) ist erfunden. Namen,
   Diagnosen und Orte sind frei erdacht; die Straßengeometrie stammt aus
   OpenStreetMap (ODbL) und ist dort im Ordner vermerkt.
-- **Die Logos** (`server/assets/images/gen-em_logo_*.svg`) sind eigene
-  Dateien des Projekts und stehen unter der Projektlizenz. Regeln für ihren
-  Einsatz: `docs/Design.md`, Kapitel 2.
+- **Die Produktmarke** (`server/assets/images/nadoku-*.svg`, seit Schritt 26)
+  ist eine eigene Datei des Projekts und steht unter der Projektlizenz; sie
+  kommt aus dem Branding-Repo `gen-em/gen-em-branding`
+  (`1 Logos/Produktmarken/NAdoku/`, Commit `e7bf4fc`). Die Favicons stammen
+  aus dem Set des Repos (`…/NAdoku/Favicon/`), die PNG sind daraus erzeugt;
+  beides holt `tools/erzeugen/logos.mjs`. Regeln für ihren Einsatz:
+  `docs/Design.md`, Kapitel 2.
 - **Der Inhalt von Impressum und Datenschutzerklärung** ist Sache der
   BetreiberIn. Die Anwendung liefert keinen Text mit (R32); sie stellt nur die
   Seiten und den Editor.
@@ -618,6 +639,7 @@ Backlog Nr. 230.
 
 | Fassung | Was |
 |---|---|
+| Web 23.11.1–23.11.2 (Schritt 26, MA-13, MA-15) | Abschnitt 7.0a: **axe-core** 4.14.0 (MPL-2.0) als Prüfwerkzeug unter `tools/barrierefreiheit/vendor/` (E-MA-33, Nr. 524), byteweise unverändert mit SHA-256. Die Favicons der Produktmarke kommen aus dem Set des Branding-Repos (Commit `e7bf4fc`). |
 | Web 20.42.0 (P5c/AP5) | Abschnitt 3: **qrcode-generator** 2.0.4 (MIT) für den QR-Code des Zweitfaktors (E-P5c-41, hebt SP-11 in diesem Punkt auf). Nur die Modulmatrix; das SVG baut die Anwendung. Abschnitt 7.0: **jsQR** 1.4.0 (Apache-2.0) als Prüfwerkzeug unter `tools/bedienprobe/vendor/` (E-P5c-87). Beide mit Herkunft und SHA-256 im Dateikopf. |
 | Web 20.39.0 (P5c/AP2) | Abschnitt 5: **ein neues Zeichen**, Tabler Icons **„list"** (MIT), Outline, Strich 2 im 24-px-Raster wie der übrige Vorrat — `protokoll.svg`. Es trägt den Menüpunkt Verwaltung → Protokoll; jeder Punkt der Einstellungsleiste trägt ein Zeichen, und der Vorrat hatte keines für eine Ereignisliste. **57 → 58 Dateien.** Die Zahl in Abschnitt 5 stand noch bei **56** und war damit schon vor diesem Paket um ein Zeichen hinter dem Ordner zurück; gezählt am 24.09.2026: 58 `.svg` im Ordner. Kein neuer Fremdbestandteil und kein neuer Laufzeitdienst: derselbe Satz, aus dem die übrigen kommen. |
 | Web 19.3.0 (Backlog-Runde 2) | Abschnitt 5: **ein neues Zeichen**, Tabler Icons **„mail"** (MIT), Outline, Strich 2 im 24-px-Raster wie der übrige Vorrat — `mail.svg`. Es trägt den Knopf „Testmail an mich" auf Betrieb → Status (Backlog Nr. 120). **52 → 53 Dateien.** Kein neuer Fremdbestandteil und kein neuer Laufzeitdienst: derselbe Satz, aus dem die 52 kommen. Gebraucht wurde es, weil der Vorrat kein Zeichen für „E-Mail" hatte (gemessen: 0 Treffer) und alle elf vorhandenen Kopfaktionen eines tragen — eine textnackte wäre eine neue Darstellung gewesen. |

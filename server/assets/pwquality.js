@@ -610,10 +610,10 @@ const EdPwQuality = (() => {
    * Schreibt das Ergebnis in ein Element — als BALKEN aus vier Segmenten mit
    * der Stufe daneben.
    *
-   * Eine Textzeile in einer von fünf Farben bräuchte Grün und Gelb — zwei
-   * Töne, die es in der Marke nicht gibt. Der Balken sagt dasselbe ohne
-   * fremde Farbe: Wie viele Segmente gefüllt sind, ist die
-   * Auskunft; die Farbe (rot / orange / dunkelblau) verstärkt sie nur.
+   * Eine Textzeile in einer von fünf Farben bräuchte Gelb — einen Ton, den
+   * es in der Marke nicht gibt. Der Balken sagt dasselbe ohne fremde Farbe:
+   * Wie viele Segmente gefüllt sind, ist die Auskunft; die Farbe (rot /
+   * orange / grün, bis Schritt 26 dunkelblau) verstärkt sie nur.
    *
    * VIER SEGMENTE bei fünf Stufen (0..4): Stufe 0 füllt eines und färbt es
    * rot. Null gefüllte Segmente wären ein leerer Kasten — von „noch nichts

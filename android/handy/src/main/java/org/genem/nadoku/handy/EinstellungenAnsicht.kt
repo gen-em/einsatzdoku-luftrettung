@@ -19,7 +19,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.sp
 import org.genem.nadoku.BuildConfig
 import org.genem.nadoku.R
-import org.genem.nadoku.gemeinsam.Farbe
+import org.genem.nadoku.gemeinsam.Rolle
 import org.genem.nadoku.gemeinsam.LogoWahl
 import org.genem.nadoku.handy.kopplung.Trennergebnis
 
@@ -59,7 +59,7 @@ fun EinstellungenAnsicht(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Farbe.rauch)
+            .background(Rolle.flaecheSeite)
             /* Die Navigationsleiste unten -- und im Querformat die seitliche
              * Geste. Wie oben gilt: `background` zuerst, damit
              * die Flaeche bis zum Rand faerbt, das Padding danach, damit der
@@ -75,7 +75,7 @@ fun EinstellungenAnsicht(
             Karte {
                 Text(
                     text = stringResource(R.string.einstellungen_logo),
-                    color = Farbe.dunkelblau, fontSize = 15.sp, fontWeight = FontWeight.SemiBold,
+                    color = Rolle.textTitel, fontSize = 15.sp, fontWeight = FontWeight.SemiBold,
                 )
                 Wahlzeile(
                     beschriftung = stringResource(R.string.logo_wechselnd),
@@ -95,7 +95,7 @@ fun EinstellungenAnsicht(
             Karte {
                 Text(
                     text = stringResource(R.string.einstellungen_uhr),
-                    color = Farbe.dunkelblau, fontSize = 15.sp, fontWeight = FontWeight.SemiBold,
+                    color = Rolle.textTitel, fontSize = 15.sp, fontWeight = FontWeight.SemiBold,
                 )
                 Wahlzeile(
                     beschriftung = stringResource(R.string.uhr_sperre),
@@ -104,7 +104,7 @@ fun EinstellungenAnsicht(
                 ) { aufUhrSperre(!uhrSperre) }
                 Text(
                     text = stringResource(R.string.uhr_sperre_hinweis),
-                    color = Farbe.gedaempft, fontSize = 13.sp,
+                    color = Rolle.gedaempft, fontSize = 13.sp,
                 )
             }
 
@@ -140,19 +140,19 @@ fun EinstellungenAnsicht(
             Karte {
                 Text(
                     text = stringResource(R.string.einstellungen_recht),
-                    color = Farbe.dunkelblau, fontSize = 15.sp, fontWeight = FontWeight.SemiBold,
+                    color = Rolle.textTitel, fontSize = 15.sp, fontWeight = FontWeight.SemiBold,
                 )
                 KnopfNeutral(stringResource(R.string.datenschutz)) { aufDatenschutz() }
                 KnopfNeutral(stringResource(R.string.impressum)) { aufImpressum() }
                 Text(
                     text = stringResource(R.string.recht_hinweis),
-                    color = Farbe.gedaempft, fontSize = 13.sp,
+                    color = Rolle.gedaempft, fontSize = 13.sp,
                 )
             }
 
             Text(
                 text = stringResource(R.string.fassung, BuildConfig.VERSION_NAME),
-                color = Farbe.gedaempft, fontSize = 12.sp,
+                color = Rolle.gedaempft, fontSize = 12.sp,
             )
             KnopfNeutral(stringResource(R.string.zurueck)) { aufZurueck() }
         }

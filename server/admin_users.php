@@ -665,7 +665,7 @@ ui_seite_start(['titel' => 'NutzerInnen']);
                 endif; ?></a>
             </th>
           <?php endforeach; ?>
-          <th class="oeffnen-spalte"></th>
+          <th class="oeffnen-spalte"><span class="nur-vorlesen">Öffnen</span></th>
         </tr></thead>
         <tbody>
         <?php foreach ($zeilen as $k):

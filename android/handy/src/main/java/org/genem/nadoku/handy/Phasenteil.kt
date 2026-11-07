@@ -25,7 +25,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import org.genem.nadoku.R
-import org.genem.nadoku.gemeinsam.Farbe
+import org.genem.nadoku.gemeinsam.Rolle
 import org.genem.nadoku.gemeinsam.Phasen
 
 /** Eine gesetzte Phase, wie die Anzeige sie braucht. */
@@ -65,7 +65,7 @@ fun ColumnScope.Phasenteil(
         } else {
             stringResource(R.string.einsatz_kein)
         },
-        color = Farbe.dunkelblau, fontSize = 19.sp, fontWeight = FontWeight.SemiBold,
+        color = Rolle.textTitel, fontSize = 19.sp, fontWeight = FontWeight.SemiBold,
     )
 
     /* DER EINE GROSSE KNOPF. Ohne laufenden Einsatz trägt er Phase 2 — sie
@@ -111,7 +111,7 @@ fun ColumnScope.Phasenteil(
 
         Text(
             text = stringResource(R.string.phasenliste),
-            color = Farbe.gedaempft, fontSize = 13.sp,
+            color = Rolle.gedaempft, fontSize = 13.sp,
         )
         Column(verticalArrangement = Arrangement.spacedBy(Abstand.eins)) {
             for (nummer in sichtbar) {
@@ -139,8 +139,8 @@ private fun Phasenreihe(nummer: Int, zeiten: List<Phasenzeile>, aufTippen: () ->
         modifier = Modifier
             .fillMaxWidth()
             .heightIn(min = BEDIENHOEHE)
-            .background(Farbe.schnee, RoundedCornerShape(Radius.normal))
-            .border(1.dp, Farbe.linie, RoundedCornerShape(Radius.normal))
+            .background(Rolle.flaecheKarte, RoundedCornerShape(Radius.normal))
+            .border(1.dp, Rolle.linie, RoundedCornerShape(Radius.normal))
             .clickable(onClick = aufTippen)
             .padding(horizontal = Abstand.drei, vertical = Abstand.zwei),
         verticalAlignment = Alignment.CenterVertically,
@@ -148,11 +148,11 @@ private fun Phasenreihe(nummer: Int, zeiten: List<Phasenzeile>, aufTippen: () ->
     ) {
         Text(
             text = nummer.toString(),
-            color = Farbe.gedaempft, fontSize = 13.sp, fontFamily = FontFamily.Monospace,
+            color = Rolle.gedaempft, fontSize = 13.sp, fontFamily = FontFamily.Monospace,
         )
         Text(
             text = Phasen.beschriftung(nummer),
-            color = if (gesetzt) Farbe.gedaempft else Farbe.dunkelblau,
+            color = if (gesetzt) Rolle.gedaempft else Rolle.textTitel,
             fontSize = 15.sp,
             modifier = Modifier.weight(1f),
         )
@@ -161,7 +161,7 @@ private fun Phasenreihe(nummer: Int, zeiten: List<Phasenzeile>, aufTippen: () ->
          * Wer nur die letzte zeigte, verschwiege genau das. */
         Text(
             text = zeiten.joinToString(" · ") { it.hhmm },
-            color = Farbe.blauTief, fontSize = 13.sp, fontWeight = FontWeight.SemiBold,
+            color = Rolle.infoText, fontSize = 13.sp, fontWeight = FontWeight.SemiBold,
         )
     }
 }

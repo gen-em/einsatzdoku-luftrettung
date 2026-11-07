@@ -246,7 +246,7 @@ ui_seite_start(['titel' => 'Updates']);
       'plakette' => $ausstehend
           ? ui_plakette($blockiert > 0 ? $blockiert . ' blockiert' : 'steht aus',
                         ['ton' => $blockiert > 0 ? 'rot' : 'orange'])
-          : ui_plakette('alles aktuell', ['ton' => 'blau'])]); ?>
+          : ui_plakette('alles aktuell', ['ton' => 'gruen'])]); ?>
 
     <?php if ($ausfuehren): ?>
       <?= ui_meldung_markup($laufMeldung[0], $laufMeldung[1]) ?>
@@ -380,7 +380,7 @@ ui_seite_start(['titel' => 'Updates']);
           : 'noch nichts verbucht']); ?>
     <?php foreach (array_reverse($erledigt) as [$id, $label, , $detail, , , $web]): ?>
       <?php
-        $plaketten = ui_plakette('erledigt', ['ton' => 'blau']);
+        $plaketten = ui_plakette('erledigt', ['ton' => 'gruen']);
         if ($web !== null) { $plaketten .= ui_plakette('Web ' . $web, ['ton' => 'neutral']); }
         ui_zeile(['text' => $label, 'klein' => $detail . ' · ' . $id,
                   'plaketten' => $plaketten]);

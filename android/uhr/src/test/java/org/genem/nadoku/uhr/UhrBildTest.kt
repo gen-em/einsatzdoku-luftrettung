@@ -24,10 +24,11 @@ import java.security.MessageDigest
 private const val UhrBausteine_SOLL_DP = 48.0
 
 /**
- * Die Flächenfarben der Knöpfe: Orange handelt, Rot beendet.
- * An ihnen erkennt die Messung ein Bedienelement im Bild.
+ * Die Flächenfarben der Knöpfe, an denen die Messung ein Bedienelement im
+ * Bild erkennt: blau 300 handelt (seit Android 0.22.0; bis dahin Orange),
+ * Rot beendet. Die Uhr ist immer dunkel; es sind Leitwerte.
  */
-private val KNOPFFARBEN = setOf(0xFFFF8F1F.toInt(), 0xFFD63338.toInt())
+private val KNOPFFARBEN = setOf(0xFF87B9F2.toInt(), 0xFFD63338.toInt())
 
 /**
  * Bilder der Uhr-Ansicht OHNE Emulator und ohne Gerät.
@@ -178,16 +179,16 @@ class UhrBildTest {
     }
 
     /**
-     * Die Höhe der orangenen Knopffläche in dp.
+     * Die Höhe der farbigen Knopffläche in dp.
      *
      * Gezählt wird das höchste zusammenhängende Band von Zeilen, in denen
-     * Markenorange vorkommt. Die Umrechnung ist der Bildmaßstab: Die Kante
+     * eine Knopffarbe vorkommt. Die Umrechnung ist der Bildmaßstab: Die Kante
      * trägt [kante] Punkte für 192 bzw. 227 dp.
      */
     private fun knopfhoeheDp(punkte: IntArray, kante: Int): Double {
-        /* ZWEI KNOPFFARBEN, NICHT EINE. Der handelnde Knopf ist orange, der
+        /* ZWEI KNOPFFARBEN, NICHT EINE. Der handelnde Knopf ist blau 300, der
          * beendende vollflächig rot — „Einsatz abschließen" und „Dienst
-         * beenden" tragen Rot. Eine Messung, die nur Orange sucht, meldet für
+         * beenden" tragen Rot. Eine Messung, die nur eine Farbe sucht, meldet für
          * die laufende Ansicht 3,0 dp; das ist kein Fehler der Oberfläche,
          * sondern des Prüfmittels. */
         val knopffarben = KNOPFFARBEN

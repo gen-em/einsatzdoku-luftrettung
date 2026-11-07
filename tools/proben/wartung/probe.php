@@ -965,16 +965,20 @@ pruefe(str_contains($loginQuelle, 'wartung_antwort_seite(false);')
                      (string)file_get_contents($wurzel . '/wartung_lib.php')) === 1,
        '19a ... und login.php zeigt sie ohne ihn (Rolle bekannt, reicht nicht)');
 
-/* Der Muenzwurf des Logos (statt logo_stamm(), das die Datenbank braucht).
- * Zwanzig Aufrufe muessen beide Logos zeigen — sonst ist der Wurf keiner. */
+/* Das Logo der Wartungsseite (statt logo_stamm(), das die Datenbank
+ * braucht). Bis Schritt 26 warf die Seite eine Muenze, und hier stand
+ * „zwanzig Aufrufe zeigen beide Logos". Seither ist es fest der
+ * Hubschrauber: Die Produktmarke darf nicht je Seitenaufruf wechseln
+ * (Branding-Repo, Produktmarken.md, Regel 9). Zehn Aufrufe muessen also
+ * genau EIN Logo zeigen, und zwar dieses. */
 $logos = [];
-for ($i = 0; $i < 20; $i++) {
-    if (preg_match('/images\/(gen-em_logo_[a-z]+)\.svg/', hole('index.php')['rumpf'], $m)) {
+for ($i = 0; $i < 10; $i++) {
+    if (preg_match('/images\/(nadoku-[a-z]+-farbig)\.svg/', hole('index.php')['rumpf'], $m)) {
         $logos[$m[1]] = true;
     }
 }
-pruefe(count($logos) === 2,
-       '20  Das Logo wirft eine Muenze — beide Standardlogos kommen vor',
+pruefe(array_keys($logos) === ['nadoku-hubschrauber-farbig'],
+       '20  Das Logo der Wartungsseite ist fest der Hubschrauber',
        implode(', ', array_keys($logos)));
 
 /* ======================================================================

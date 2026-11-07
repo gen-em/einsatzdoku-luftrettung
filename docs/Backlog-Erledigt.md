@@ -11062,3 +11062,96 @@ zutreffen.
      Kopie von server/ mit eigener config.php; die der Anlage bleibt
      unberührt (Prüfsumme alle 0,2 s: 0 Abweichungen, alte Fassung 76),
      Matrix 4 × 52/0.
+
+62. **Logodateien tragen teilweise wieder die alten Farbwerte.** · gehört zu: 26 · Stand: erledigt · seit 31.08.2026
+     Befund (B-S4-01; bis 02.09.2026 Nr. 49): Der Commit „Update Logos" hat
+     alte Werte zurückgebracht — `gen-em_logo_helicopter.svg` führt `#587abc`,
+     `#e3322b`, `#f7941d`, Korpus `#1d0e0a` statt `#4280E5`, `#D63338`,
+     `#FF8F1F`, `#1A0500`; die PNG ebenso (gemessen 13.09.2026). Richtig sind
+     nur `gen-em_logo_nef_weiss.svg` und `gen-em_logo_nef.png`.
+     Entschieden 12.09.2026: neue Vorlagen anfordern; bis dahin nichts am
+     Code. `Design.md` 2.5 ist am 13.09.2026 berichtigt.
+     Weg: Die Durchsicht vom 26.09.2026 nahm an, die Vorlagen lägen vor
+     (E-SD-34); im Baum ist seit `6f316ee` vom 12.09.2026 keine Logodatei
+     geändert (Konzept R4, F-R4-08). Mit den Vorlagen alle Fassungen samt
+     Ableitungen (PNG, Favicons, Uhr-Bilder) nachziehen, nachmessen und
+     `Design.md` 2.5 mitziehen — mit dem neuen NEF-Logo, vor P7.
+     Ziel 13 seit 26.09.2026 (R4-01, E-R4-08); Schritt 17 fasst keine
+     Bilddatei an.
+     Werdegang bis 26.09.2026: `docs/Backlog.md@f5bddc2`, Nr. 62.
+     Erledigt 07.11.2026 mit Schritt 26 (MA-06, MA-09; Web 23.9.2,
+     Android 0.21.1): Web und Android-App tragen die Produktmarke NAdoku
+     aus dem Branding-Repo, Grundform Dunkelblau, Markenfarben exakt. Die
+     Uhr-Bilder sind Nr. 520.
+
+411. **Der Stilvergleich hat eine Liste geplanter Abweichungen für drei Engines.** · gehört zu: 14 · Stand: erledigt · seit 31.10.2026
+     *Aufgenommen 31.10.2026 mit R17-29 (F-R17-91).* Grün ist der
+     Stilvergleich, wenn die gemessenen Signaturen der Liste
+     `tools/stilvergleich/geplant.txt` GLEICHEN. Seit R87 läuft er in drei
+     Engines, und die benennen dieselbe Verschiebung verschieden: Chromium
+     `bottom, inset, top`, Firefox `bottom, top`, WebKit mit `size`; WebKit
+     misst dazu das `svg` im Schattenbaum eines `<use>`. Gemessen mit einer
+     Liste aus Chromium: Firefox 5, WebKit 6 ungeplant. Eine gewollte
+     Gestaltungsänderung, die etwas verschiebt, wird damit nirgends ganz
+     grün; R17-29 ist ausgewichen (keine Stilregel nötig).
+     *Weg:* je Engine eine Liste (`geplant-<motor>.txt`), `--schreiben`
+     schreibt alle drei; oder die Signatur auf eine gemeinsame Menge von
+     Eigenschaften abbilden (`inset` aus `top`/`bottom`, ohne `size`).
+     *Abnahme:* eine Probe-Änderung an `style.css`, `--schreiben`, danach
+     drei Engines grün; eine zweite, ungeplante Änderung rot in allen dreien.
+     Erledigt 07.11.2026 mit Schritt 26 (MA-08): je Engine eine Liste
+     (geplant-<motor>.txt), --schreiben ohne MOTOR schreibt alle drei,
+     geerbt wird je Engine mit Rückfall auf die alte gemeinsame Liste.
+     Abnahme: Farbumbau 2 757/2 757/2 763 Signaturen je 0 ungeplant, eine
+     zusätzliche Regel rot in allen dreien.
+
+524. **Die Weboberfläche ist nie auf Barrierefreiheit gemessen worden.** · gehört zu: 26 · Stand: erledigt · seit 07.11.2026
+     *Aufgenommen 07.11.2026 mit Schritt 26 (MA, F-MA-22).* Kontrast
+     rechnet `kontrast.py`, aber was ein Screenreader oder die Tastatur
+     erlebt, maß kein Werkzeug. axe-core fand auf 46 Aufrufen je Engine 11
+     verletzte Regeln, gleich in Chromium, Firefox und WebKit: „Aktionen"
+     am Handy ohne Namen, Übersichtslink im Aufklappschalter, `dt`/`dd`
+     ohne `dl`, Phasenfelder ohne Beschriftung, Links nur an der Farbe
+     erkennbar u. a.
+     *Weg:* die Funde beheben (MA-14), axe-core vendoriert als Prüfmittel
+     (MA-15). *Abnahme:* 0 Verstöße in drei Engines, eine Gegenprobe mit
+     einem Knopf ohne Namen rot.
+     Erledigt 07.11.2026 mit Schritt 26 (MA-14, MA-15; Web 23.11.2):
+     0 Verstöße auf 74 Aufrufen je Engine (hell und dunkel), Gegenprobe
+     rot (1 Befund, Exit 1).
+
+522. **Die Android-App handelt in Orange, das Web in Dunkelblau.** · gehört zu: 26 · Stand: erledigt · seit 07.11.2026
+     *Aufgenommen 07.11.2026 mit MA-09 (E-MA-24).* Seit Schritt 26 sind im
+     Web die Gründerfarben Markenflächen und Status, Handeln ist
+     Dunkelblau (E-MA-01). Die App hat mit Android 0.21.1 nur die
+     **Werte** übernommen (Tonstufen, Produktmarke); ihre **Rollen** sind
+     geblieben — Primärknopf Orange mit dunkelblauer Schrift, Blau für
+     „in Ordnung", kein Grün, kein Dark Mode. Wer zwischen Handy und
+     Browser wechselt, sieht zwei Farbsprachen. *Weg:* eigenes Konzept mit
+     Mockups für Handy und Uhr (48 dp, Handschuhe), Rollen wie im Web
+     (`Farbe.kt`), Dark Mode über die Systemeinstellung, Gerätetest.
+     *Abnahme:* `kontraste.py` mit den neuen Paaren grün, Bilderlauf beider
+     Module angesehen, Gerätetest auf Handy und Uhr.
+     Erledigt 07.11.2026 mit Schritt 26 (MA-16, Android 0.22.0, E-MA-29):
+     Rollen wie im Web (`Rolle`, `values/` und `values-night/rollen.xml`),
+     Dark Mode nach dem System, Hauptaktion „Dienst beginnen" in Orange,
+     die Uhr in blau 300. Statt Mockups die Bilder des Bilderlaufs hell und
+     dunkel im Pull Request (Auftrag der BetreiberIn). Der Gerätetest bleibt
+     Handprüfung (P-MA-12).
+
+520. **Die Uhr zeigt noch die alten Zeichen.** · gehört zu: 26 · Stand: erledigt · seit 07.11.2026
+     *Aufgenommen 07.11.2026 mit MA-06 (Konzept MA, Schritt 26).* Die Web-
+     oberfläche trägt seit Web 23.9.2 die Produktmarke aus dem Branding-Repo
+     (Grundform Dunkelblau, Markenfarben exakt), die Android-App seit MA-09.
+     Die Launcher-Symbole und Bildmarken der Garmin-Uhr unter
+     `watch/resources*/drawables/` sind aus den alten `gen-em_logo_*_weiss.svg`
+     gerastert und tragen deren Näherungswerte (Backlog Nr. 62). Das Rezept
+     zeigt schon auf die neuen Dateien (`tools/erzeugen/uhr-bilder.sh`,
+     `nadoku-*-farbig-negativ.svg`); neu erzeugen gehört zu einer Uhr-Fassung mit
+     Simulatorlauf und Gerätetest, nicht in einen Web-Einschub. *Weg:*
+     `bash tools/erzeugen/uhr-bilder.sh`, Uhr-Fassung hochstufen, Bilder im
+     Simulator und auf der Uhr ansehen. *Abnahme:* Launcher und Sync-Seite
+     zeigen das neue Zeichen; `compare` gegen die Ausgabe des Rezepts 0.
+     Erledigt 07.11.2026 mit Schritt 26 (MA-17, Uhr 4.3.3): 17 Bilder in
+     11 Größen neu gerastert, Rezept unverändert. Simulator und Uhr bleiben
+     Handprüfung (P-MA-17).

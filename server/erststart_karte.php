@@ -141,7 +141,7 @@ $schritte = [
         'vorn'      => $vorn,
         'text'      => $s['titel'],
         'klein'     => $klein,
-        'plaketten' => $fertig ? ui_plakette('erledigt', ['ton' => 'blau']) : '',
+        'plaketten' => $fertig ? ui_plakette('erledigt', ['ton' => 'gruen']) : '',
         'aktionen'  => $fertig ? '' : ui_knopf([
             'text' => $s['knopf'], 'art' => $s['art'], 'href' => $s['href'],
         ]),

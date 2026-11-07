@@ -340,9 +340,93 @@
     {
       "id": "technik-logodateien",
       "datei": "docs/Technik.md",
-      "zeile": "je Hubschrauber und Fahrzeug",
+      "zeile": "Hubschrauber und NEF, aus dem Branding-Repo",
       "klasse": "Homonym",
-      "begruendung": "Verzeichnisbaum: Es liegen zwei Logodateien, eine mit einem Hubschrauber und eine mit einem Fahrzeug. Der Satz nennt beide gleichrangig und beschreibt Dateien, nicht Einsatzarten."
+      "begruendung": "Verzeichnisbaum: Es liegen die Dateien der Produktmarke, je eine mit einem Hubschrauber und eine mit einem NEF (seit Schritt 26 aus dem Branding-Repo). Der Satz nennt beide gleichrangig und beschreibt Dateien, nicht Einsatzarten."
+    },
+    {
+      "id": "produktmarke-datei-admin-installation",
+      "datei": "server/admin_installation.php",
+      "zeile": "nadoku-hubschrauber",
+      "klasse": "Homonym",
+      "begruendung": "Seit Schritt 26 (Konzept MA) heissen die Dateien der Produktmarke `nadoku-hubschrauber-*` und `nadoku-nef-*` (Branding-Repo, 1 Logos/Produktmarken/NAdoku/). Das Wort benennt die Zeichnung eines der beiden gleichrangigen Zeichen, nicht die Einsatzart; bis dahin hiessen die Dateien englisch `gen-em_logo_helicopter`."
+    },
+    {
+      "id": "produktmarke-datei-betrieb-schluesselblatt",
+      "datei": "server/betrieb_schluesselblatt.php",
+      "zeile": "nadoku-hubschrauber",
+      "klasse": "Homonym",
+      "begruendung": "Seit Schritt 26 (Konzept MA) heissen die Dateien der Produktmarke `nadoku-hubschrauber-*` und `nadoku-nef-*` (Branding-Repo, 1 Logos/Produktmarken/NAdoku/). Das Wort benennt die Zeichnung eines der beiden gleichrangigen Zeichen, nicht die Einsatzart; bis dahin hiessen die Dateien englisch `gen-em_logo_helicopter`."
+    },
+    {
+      "id": "produktmarke-datei-db",
+      "datei": "server/db.php",
+      "zeile": "nadoku-hubschrauber",
+      "klasse": "Homonym",
+      "begruendung": "Seit Schritt 26 (Konzept MA) heissen die Dateien der Produktmarke `nadoku-hubschrauber-*` und `nadoku-nef-*` (Branding-Repo, 1 Logos/Produktmarken/NAdoku/). Das Wort benennt die Zeichnung eines der beiden gleichrangigen Zeichen, nicht die Einsatzart; bis dahin hiessen die Dateien englisch `gen-em_logo_helicopter`."
+    },
+    {
+      "id": "produktmarke-datei-install",
+      "datei": "server/install.php",
+      "zeile": "nadoku-hubschrauber",
+      "klasse": "Homonym",
+      "begruendung": "Seit Schritt 26 (Konzept MA) heissen die Dateien der Produktmarke `nadoku-hubschrauber-*` und `nadoku-nef-*` (Branding-Repo, 1 Logos/Produktmarken/NAdoku/). Das Wort benennt die Zeichnung eines der beiden gleichrangigen Zeichen, nicht die Einsatzart; bis dahin hiessen die Dateien englisch `gen-em_logo_helicopter`."
+    },
+    {
+      "id": "produktmarke-datei-session-lib",
+      "datei": "server/session_lib.php",
+      "zeile": "nadoku-hubschrauber",
+      "klasse": "Homonym",
+      "begruendung": "Seit Schritt 26 (Konzept MA) heissen die Dateien der Produktmarke `nadoku-hubschrauber-*` und `nadoku-nef-*` (Branding-Repo, 1 Logos/Produktmarken/NAdoku/). Das Wort benennt die Zeichnung eines der beiden gleichrangigen Zeichen, nicht die Einsatzart; bis dahin hiessen die Dateien englisch `gen-em_logo_helicopter`."
+    },
+    {
+      "id": "produktmarke-datei-ui",
+      "datei": "server/ui.php",
+      "zeile": "nadoku-hubschrauber",
+      "klasse": "Homonym",
+      "begruendung": "Seit Schritt 26 (Konzept MA) heissen die Dateien der Produktmarke `nadoku-hubschrauber-*` und `nadoku-nef-*` (Branding-Repo, 1 Logos/Produktmarken/NAdoku/). Das Wort benennt die Zeichnung eines der beiden gleichrangigen Zeichen, nicht die Einsatzart; bis dahin hiessen die Dateien englisch `gen-em_logo_helicopter`."
+    },
+    {
+      "id": "produktmarke-datei-wartung-lib",
+      "datei": "server/wartung_lib.php",
+      "zeile": "nadoku-hubschrauber",
+      "klasse": "Homonym",
+      "begruendung": "Seit Schritt 26 (Konzept MA) heissen die Dateien der Produktmarke `nadoku-hubschrauber-*` und `nadoku-nef-*` (Branding-Repo, 1 Logos/Produktmarken/NAdoku/). Das Wort benennt die Zeichnung eines der beiden gleichrangigen Zeichen, nicht die Einsatzart; bis dahin hiessen die Dateien englisch `gen-em_logo_helicopter`."
+    },
+    {
+      "id": "produktmarke-datei-design",
+      "datei": "docs/Design.md",
+      "zeile": "nadoku-hubschrauber",
+      "klasse": "Homonym",
+      "begruendung": "Seit Schritt 26 (Konzept MA) heissen die Dateien der Produktmarke `nadoku-hubschrauber-*` und `nadoku-nef-*` (Branding-Repo, 1 Logos/Produktmarken/NAdoku/). Das Wort benennt die Zeichnung eines der beiden gleichrangigen Zeichen, nicht die Einsatzart; bis dahin hiessen die Dateien englisch `gen-em_logo_helicopter`."
+    },
+    {
+      "id": "design-produktmarke-masse",
+      "datei": "docs/Design.md",
+      "zeile": "Hubschrauber 54,5 × 34 px, das NEF",
+      "klasse": "Homonym",
+      "begruendung": "Die Produktmarke NAdoku hat zwei gleichrangige Zeichen, Hubschrauber und NEF (E-P3-20, E-MA-05). Der Satz beschreibt das BILD, nicht die Einsatzart."
+    },
+    {
+      "id": "design-produktmarke-streifen",
+      "datei": "docs/Design.md",
+      "zeile": "Beim Hubschrauber läuft ein blauer Streifen",
+      "klasse": "Homonym",
+      "begruendung": "Die Produktmarke NAdoku hat zwei gleichrangige Zeichen, Hubschrauber und NEF (E-P3-20, E-MA-05). Der Satz beschreibt das BILD, nicht die Einsatzart."
+    },
+    {
+      "id": "handbuch-wartung-zeichen",
+      "datei": "docs/Handbuch.md",
+      "zeile": "immer den Hubschrauber; sie kommt ohne Datenbank aus",
+      "klasse": "Homonym",
+      "begruendung": "Die Produktmarke NAdoku hat zwei gleichrangige Zeichen, Hubschrauber und NEF (E-P3-20, E-MA-05). Der Satz beschreibt das BILD, nicht die Einsatzart. Die Wartungsseite zeigt fest eines der beiden Zeichen, weil sie den Standard ohne Datenbank nicht kennt (E-MA-22)."
+    },
+    {
+      "id": "technik-wartung-zeichen",
+      "datei": "docs/Technik.md",
+      "zeile": "zeigt \\*\\*fest den Hubschrauber\\*\\*",
+      "klasse": "Homonym",
+      "begruendung": "Die Produktmarke NAdoku hat zwei gleichrangige Zeichen, Hubschrauber und NEF (E-P3-20, E-MA-05). Der Satz beschreibt das BILD, nicht die Einsatzart. Die Wartungsseite zeigt fest eines der beiden Zeichen (E-MA-22)."
     },
     {
       "id": "logowahl-standard",
@@ -403,7 +487,7 @@
     {
       "id": "handbuch-logowahl-zwei",
       "datei": "docs/Handbuch.md",
-      "zeile": "bringt zwei Logos mit — einen Hubschrauber und ein Fahrzeug",
+      "zeile": "bringt zwei Zeichen mit — einen Hubschrauber und ein Fahrzeug",
       "klasse": "Homonym",
       "begruendung": "Die Logo-Wahl aus E-P3-20 bietet ausdruecklich zwei Logos an: Hubschrauber (RTH) und Fahrzeug (NEF). Der Satz nennt beide gleichrangig und beschreibt das BILD, nicht die Einsatzart."
     },

@@ -14,6 +14,128 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 23.11.3] — unveröffentlicht
+
+### Behoben
+
+- **Web — die Kontenliste lief bei mittlerer Breite seitlich über** (Schritt
+  26). Der neue Vorlesetext in einer Tabellenkopfzelle aus 23.11.2 war
+  absolut gesetzt, hing deshalb an der ganzen Seite statt an der scrollenden
+  Tabelle und machte die Seite so breit wie die Tabelle. Der Tabellenbehälter
+  hält ihn jetzt.
+
+## [Web 23.11.2] — unveröffentlicht
+
+### Behoben
+
+- **Web — Barrierefreiheit: elf Fehlerarten, die ein Screenreader oder die
+  Tastatur zu spüren bekam** (Schritt 26). Eine Prüfung mit axe-core fand
+  sie in allen drei Browsern gleich: etwa den Knopf „Aktionen", der am
+  Handy keinen Namen hatte, den Link zur Monatsübersicht mitten im
+  Aufklappschalter, Felder ohne Beschriftung und Links im Text, die nur an
+  der Farbe zu erkennen waren. Jetzt meldet dieselbe Prüfung keinen Fehler
+  mehr; Links im Fließtext sind deshalb unterstrichen. Außerdem bricht eine
+  Seite ihre Hintergrundabrufe beim Verlassen selbst ab, statt sie vom
+  Browser abbrechen zu lassen, der das als Fehler meldete.
+
+## [Web 23.11.1] — unveröffentlicht
+
+### Geändert
+
+- **Web — die Browser-Symbole kommen fertig aus dem Branding-Repo**
+  (Schritt 26). Bisher zeichnete ein eigenes Werkzeug sie nach dem Rezept
+  des Repos nach; das Repo liefert sie inzwischen selbst, und zwei
+  Erzeuger für dieselben Dateien laufen früher oder später auseinander.
+  Sichtbar ändert sich wenig: Das Zeichen im Browser-Tab hat etwas mehr
+  Rand.
+
+## [Web 23.11.0] — unveröffentlicht
+
+### Hinzugefügt
+
+- **Web — die Hauptaktion einer Seite ist orange** (Schritt 26). Seit der
+  Umstellung auf Dunkelblau sahen alle Knöpfe gleich aus, und die eine
+  Handlung, für die man eine Seite öffnet, stach nicht mehr heraus. Das
+  Branding-Repo sieht dafür Orange vor, höchstens einmal je Seite: Einsatz
+  nachtragen, Einsatz bearbeiten und speichern, Diensttag anlegen, Anmelden
+  und Konto anlegen. Seiten ohne eine solche Handlung, etwa Suche,
+  Einstellungen und Verwaltung, bleiben ganz in Dunkelblau.
+
+## [Web 23.10.2] — unveröffentlicht
+
+### Geändert
+
+- **Web — in der Kopfleiste steht wieder der Kurzname der Anlage** (Schritt
+  26). Web 23.9.2 hatte ihn durch den festen Produktnamen „NAdoku" ersetzt;
+  wer aber Staging und Produktiv oder zwei Wachen nebeneinander offen hat,
+  unterscheidet sie an genau dieser Stelle. Das Zeichen der Produktmarke
+  bleibt.
+
+## [Web 23.10.1] — unveröffentlicht
+
+### Geändert
+
+- **Web — der Löschknopf ist ein roter Umriss statt einer roten Fläche**
+  (Schritt 26). Das Branding-Repo hat seine Knopfregeln nachgezogen: Eine
+  volle rote Fläche zog den Blick stärker als jede andere Handlung der
+  Seite, und gerade das Löschen soll man nicht zuerst sehen. Jede
+  Warnmeldung trägt jetzt ein Symbol, auch auf den Wartungs- und
+  Störungsseiten, damit eine orange Meldung nicht mit der künftigen orangen
+  Hauptaktion verwechselt wird.
+
+## [Web 23.10.0] — unveröffentlicht
+
+### Hinzugefügt
+
+- **Web — Dark Mode, mit Schalter je Konto** (Schritt 26). Wer abends oder im
+  Fahrzeug dokumentiert, hatte nur eine helle Oberfläche; jetzt folgt sie der
+  Einstellung des Geräts, und im Profil lässt sich „Hell" oder „Dunkel" fest
+  wählen. Die dunklen Werte kommen aus dem Branding-Repo, als zweite
+  Zuordnung derselben Farbrollen auf die Blau-Reihe — kein zweites
+  Farbsystem, das auseinanderlaufen könnte. Die Karte bleibt hell, weil eine
+  dunkle Karte einen weiteren Kartendienst bräuchte, der den Ausschnitt
+  sähe; Gedrucktes bleibt ebenfalls hell. **Nach dem Deploy `update.php`
+  aufrufen** (neue Spalte `users.darstellung`).
+
+## [Web 23.9.2] — unveröffentlicht
+
+### Geändert
+
+- **Web — die Kopfleiste trägt die Produktmarke NAdoku** (Schritt 26,
+  Backlog Nr. 62). Die Logodateien führten seit einem Austausch wieder
+  Näherungen der Markenfarben, und eine berichtigte Vorlage gab es nicht;
+  das Branding-Repo liefert sie jetzt, mit dunkelblauer Grundform, und
+  daneben steht fest der Produktname „NAdoku" statt des Kurznamens der
+  Installation. Die Browser-Symbole sind aus denselben Dateien neu erzeugt.
+  Die Wartungsseite zeigt immer den Hubschrauber, weil eine Marke nicht bei
+  jedem Neuladen wechseln darf.
+
+## [Web 23.9.1] — unveröffentlicht
+
+### Geändert
+
+- **Web — Schriften in den Schnitten der Marke, nichts mehr unter 13 px**
+  (Schritt 26). Titel und Knöpfe standen in Bricolage 600 und Beschriftungen
+  in Open Sans 600, zwei Schnitte, die die Marke nicht vorsieht; jetzt gilt
+  Bricolage 500 und Open Sans 400 und 700, und vier Schriftdateien fallen weg.
+  Plaketten, Zähler und Diagrammachsen standen in 12 px, unter dem Minimum
+  des Branding-Repos, und stehen jetzt in 13 px.
+
+## [Web 23.9.0] — unveröffentlicht
+
+### Geändert
+
+- **Web — die Farben kommen aus dem Branding-Repo, Handeln ist Dunkelblau
+  statt Orange** (Schritt 26). Die Oberfläche rechnete ihre Tief- und
+  Hellwerte selbst, weil es keine Quelle gab; seit dem 06.11.2026 legt das
+  Repo `gen-em/gen-em-branding` sie fest, und das Stylesheet übernimmt seinen
+  Token-Block wörtlich. Die Gründerfarben sind dort Markenflächen und
+  Status, keine Aktionsfarbe — deshalb sind Primärknopf, Auswahl und
+  Schalter jetzt dunkelblau, und Grün kommt als einzige neue Farbe für „in
+  Ordnung" dazu, wo bisher ein Blau mit Haken stand. Die Seite ist Schnee,
+  die Karte ein Ton dunkler, die Kopfleiste einer Testanlage orange statt
+  rot, weil Rot Fehler heißt.
+
 ## [Web 23.8.2] — unveröffentlicht
 
 ### Behoben
@@ -269,6 +391,18 @@ frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
   nie mehr als die Hälfte, nie unter 5 s — huckepack an einer Seitenanfrage
   fängt der Versand weiter nicht an.
 
+## [Uhr 4.3.3] — unveröffentlicht
+
+Schritt 26 (MA), Paket MA-17 (Backlog Nr. 520).
+
+### Geändert
+
+- **Uhr — das Startsymbol und die Bildmarke zeigen die Produktmarke
+  NAdoku.** Web und Android-App tragen sie seit diesem Schritt, die Uhr
+  zeigte noch die alte Zeichnung mit genäherten Markenfarben. Die Bilder
+  sind mit dem vorhandenen Rezept aus der dunklen Fassung des Branding-Repos
+  neu gerastert; an Größen und Anordnung ändert sich nichts.
+
 ## [Uhr 4.3.2] — unveröffentlicht
 
 Schritt 23 (BR6), Paket BR6-06 (Backlog Nr. 470).
@@ -337,6 +471,34 @@ Schritt 21 (GR), Paket GR-04 — die Uhr liest die Absage des Servers genauer
   sie — die aber kam nie zustande, so dass erst ein Neustart der App half.
   Jetzt versuchen es das Öffnen der Sync-Seite und das Dienstende einmal
   trotz der Marke.
+
+## [Android 0.22.0] — unveröffentlicht
+
+Schritt 26 (MA), Paket MA-16.
+
+### Hinzugefügt
+
+- **Android — dieselbe Farbsprache wie im Browser, und ein Dark Mode.** Wer
+  zwischen Handy und Browser wechselte, sah zwei Farbsprachen: In der App
+  handelte Orange, im Web seit Schritt 26 Dunkelblau. Jetzt hat die App die
+  Farbrollen des Web, Orange trägt nur noch „Dienst beginnen", und sie folgt
+  der hellen oder dunklen Einstellung des Telefons. Die Uhr bleibt dunkel und
+  handelt in Hellblau; beendende Knöpfe bleiben vollflächig rot, weil man sie
+  im Einsatz ohne Lesen erkennen muss.
+
+## [Android 0.21.1] — unveröffentlicht
+
+Schritt 26 (MA), Paket MA-09.
+
+### Geändert
+
+- **Android — Farbwerte und Bildmarken folgen dem Branding-Repo.** Die App
+  übernimmt beides aus dem Web, und das Web bezieht es seit Web 23.9 aus
+  `gen-em/gen-em-branding`; ohne Nachzug hätte die App eigene Werte geführt,
+  die es nirgends mehr gibt. Sechs Farben wechseln auf die Tonstufen des
+  Repos, die vier Bildmarken sind die Produktmarke NAdoku mit dunkelblauer
+  Grundform. Was welche Farbe in der App bedeutet, bleibt wie es war; das
+  nachzuziehen braucht ein eigenes Konzept.
 
 ## [Android 0.21.0] — unveröffentlicht
 

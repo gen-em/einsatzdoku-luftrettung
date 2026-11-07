@@ -534,7 +534,10 @@ function https_tor(): void
        . '<link rel="stylesheet" href="assets/style.css"></head><body>'
        . '<div class="rahmen rahmen-lesespalte"><main class="inhalt"><div class="text">'
        . '<h1>Diese Anwendung läuft nur über HTTPS</h1>'
-       . '<div class="meldung meldung-warn" role="status"><p>'
+       /* Mit Symbol wie jede Warnung (Repo-Regel seit e7bf4fc); ohne `ui.php`
+        * als Dateiverweis, wie `ui_symbol()` ihn ohne Vorrat schreibt. */
+       . '<div class="meldung meldung-warn" role="status">'
+       . '<svg class="symbol symbol-gross" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="assets/images/symbole/warnung.svg#i"></use></svg><p>'
        . 'Du hast sie über <strong>http://</strong> aufgerufen. Über diesen Weg '
        . 'kann sie nicht arbeiten.</p></div>'
        . '<p><strong>Warum nicht einfach umleiten?</strong> Weil eine Umleitung '

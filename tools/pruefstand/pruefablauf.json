@@ -232,6 +232,13 @@
       "demo": true,
       "motoren": true
     },
+    "barrierefreiheit": {
+      "aufruf": "node tools/barrierefreiheit/probe.mjs",
+      "braucht": "installation",
+      "demo": true,
+      "motoren": true,
+      "bemerkung": "Schritt 26 (MA-15, E-MA-33), Anlass Nr. 524: axe-core ueber 28 Seiten, 74 Aufrufe je Engine (hell und dunkel). Gruen heisst 0 Befunde; was axe nicht entscheiden kann, wird nur gezaehlt."
+    },
     "bilderlauf": {
       "aufruf": "node tools/screenshots/aufnehmen.mjs --breiten {breiten} {seiten}",
       "braucht": "installation",
@@ -935,7 +942,8 @@
       "proben": [
         "stilvergleich",
         "bilderlauf",
-        "kontraste"
+        "kontraste",
+        "barrierefreiheit"
       ],
       "anlass": "P0/A3"
     },
@@ -948,7 +956,8 @@
       ],
       "proben": [
         "bilderlauf",
-        "bedienprobe"
+        "bedienprobe",
+        "barrierefreiheit"
       ],
       "anlass": "Nr. 185, 225; PS-2"
     },
@@ -975,6 +984,17 @@
         "bedienprobe"
       ],
       "anlass": "F-PU-08 (PU-04): Wer die Bedienprobe oder einen ihrer Wege aendert, faehrt sie. Bis dahin fuehrte nur wege/registrieren.mjs dorthin (Muster registrierung). Nicht tools/bedienprobe/**: ausgabe/bericht.* ist eingecheckt, und jeder Lauf haette den naechsten ausgeloest."
+    },
+    {
+      "id": "barrierefreiheit-werkzeug",
+      "ab": "klein",
+      "pfade": [
+        "tools/barrierefreiheit/**"
+      ],
+      "proben": [
+        "barrierefreiheit"
+      ],
+      "anlass": "Nr. 524 (Schritt 26, MA-15): Wer die Probe, ihre Seitenliste oder die vendorierte Bibliothek aendert, faehrt sie."
     },
     {
       "id": "kette",
@@ -1168,7 +1188,7 @@
       "ab": "klein",
       "pfade": [
         "server/assets/style.css",
-        "server/assets/images/gen-em_logo_*.png"
+        "server/assets/images/nadoku-*.png"
       ],
       "proben": [
         "android-farbabgleich",
@@ -1200,7 +1220,8 @@
         "stilvergleich",
         "kreislauf-csv",
         "kreislauf-edbak",
-        "rueckwegprobe"
+        "rueckwegprobe",
+        "barrierefreiheit"
       ],
       "anlass": "Nr. 390 — die Engine-Wahl und das Register gelten fuer jede Browserprobe; wer sie aendert, faehrt alle Browserproben. tools/motor.mjs hebt ab neben auf drei Engines (umfang.engine_wahl, E-PU-16); bis PU-03 hiess es hier pauschal drei (R87)."
     }

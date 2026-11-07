@@ -67,7 +67,8 @@ import java.security.MessageDigest
  *
  * - Gemessen wird die **Anordnung**, nicht das Aussehen auf einem Gerät.
  *   Schriftrasterung, Herstelleraufsätze und die Systemleisten fehlen.
- * - Die Bedienhöhe wird an den **farbigen** Knöpfen gemessen (Orange, Rot).
+ * - Die Bedienhöhe wird an den **farbigen** Knöpfen gemessen (Aktion,
+ *   Hauptaktion, Gefahr — hell und dunkel).
  *   `KnopfNeutral` trägt Schneefläche mit Rand und ist im Bild nicht sicher
  *   von der Karte zu trennen; er benutzt dieselbe `Knopfflaeche` und
  *   dieselbe `BEDIENHOEHE`, ist hier aber **nicht belegt**.
@@ -102,9 +103,27 @@ class HandyBildTest {
 
     /**
      * Die Flächenfarben, an denen ein Bedienelement im Bild zu erkennen ist:
-     * Orange handelt, Rot beendet.
+     * Aktion, Hauptaktion, Gefahr — je Modus aus den Ressourcen gelesen
+     * (`rolle_aktion`, `rolle_aktion_haupt`, `rolle_gefahr`), nicht als Hexwert
+     * hier. Bis Android 0.21.1 standen hier Orange und Rot fest.
      */
-    private val knopffarben = setOf(0xFFFF8F1F.toInt(), 0xFFD63338.toInt())
+    private var knopffarben: Set<Int> = emptySet()
+
+    /**
+     * Die Kopfleiste (Leitwert Dunkelblau, schaltet nicht um). Hell trägt die
+     * Aktion DIESELBE Farbe; ohne Ausschluss zählte die Kopfleiste als
+     * bildbreiter Knopf am Rand. Ausgenommen werden die Zeilen von oben, die
+     * zur Hälfte in dieser Farbe stehen.
+     */
+    private var kopffarbe: Int = 0
+
+    /**
+     * Ein Band unter dieser Höhe ist eine LINIE, kein Knopf: Im Dark Mode
+     * trägt der Rand des Nebenknopfs (`linie_stark`, blau 300) dieselbe Farbe
+     * wie die Aktion. 8 dp liegt weit unter jedem Knopf (48 dp) und weit über
+     * jedem Rand (1 dp).
+     */
+    private val linieBisDp = 8.0
 
     /** Die zugesagte Bedienhöhe. Toleranz 1 dp für die Rasterung. */
     private val sollDp = 48.0
@@ -371,10 +390,22 @@ class HandyBildTest {
     fun alleBildschirmeInDreiBreiten() {
         val messungen = mutableListOf<Messung>()
 
-        for (breiteDp in breiten) {
-            RuntimeEnvironment.setQualifiers("w${breiteDp}dp-h800dp-xhdpi")
-            for ((name, inhalt) in bildschirme()) {
-                messungen += male("$name-${breiteDp}dp", breiteDp, inhalt)
+        /* HELL UND DUNKEL (seit Android 0.22.0). Die Rollen schalten über
+         * `values-night/` um; Robolectric folgt dem Qualifier `night`. Die
+         * hellen Bilder behalten ihren Namen, die dunklen tragen `-dunkel`. */
+        for ((modus, qualifier) in listOf("" to "notnight", "-dunkel" to "night")) {
+            for (breiteDp in breiten) {
+                RuntimeEnvironment.setQualifiers("w${breiteDp}dp-h800dp-$qualifier-xhdpi")
+                val kontext = RuntimeEnvironment.getApplication()
+                knopffarben = setOf(
+                    kontext.getColor(org.genem.nadoku.R.color.rolle_aktion),
+                    kontext.getColor(org.genem.nadoku.R.color.rolle_aktion_haupt),
+                    kontext.getColor(org.genem.nadoku.R.color.rolle_gefahr),
+                )
+                kopffarbe = kontext.getColor(org.genem.nadoku.R.color.marke_dunkelblau)
+                for ((name, inhalt) in bildschirme()) {
+                    messungen += male("$name-${breiteDp}dp$modus", breiteDp, inhalt)
+                }
             }
         }
 
@@ -602,9 +633,10 @@ class HandyBildTest {
         for (y in 0 until hochPx) {
             if ((0 until breitePx).any { hochPunkte[y * breitePx + it] != grund }) letzteZeile = y
         }
-        val alleBaender = knopfbaender(hochPunkte, breitePx, hochPx)
+        val linie = (linieBisDp * dichte).toInt()
+        val alleBaender = knopfbaender(hochPunkte, breitePx, hochPx).filter { it.count() > linie }
 
-        val band = knopfband(punkte, breitePx, hoehePx)
+        val band = knopfbaender(punkte, breitePx, hoehePx).lastOrNull { it.count() > linie }
         return Messung(
             name = name,
             breiteDp = breiteDp,
@@ -622,39 +654,26 @@ class HandyBildTest {
     }
 
     /**
-     * Das **unterste** zusammenhaengende Band aus Knopffarbe.
-     *
-     * Warum das unterste und nicht das hoechste: Die Frage ist, ob die
-     * Handlung des Bildschirms erreichbar ist, und die steht unten. Gezaehlt
-     * werden nur Zeilen, in denen die Farbe **breitflaechig** vorkommt —
-     * mindestens die halbe Bildbreite. Ohne diese Bedingung zaehlte der rote
-     * Aufnahmepunkt als Knopfzeile: Er traegt dieselbe Farbe wie der
-     * Beenden-Knopf, und die Messung meldete dann 3 dp statt 48.
-     *
-     * @return der Zeilenbereich, oder `null`, wenn kein farbiger Knopf im
-     *   sichtbaren Bereich liegt
+     * Wie viele Zeilen von oben die Kopfleiste belegt — zur Hälfte in
+     * [kopffarbe]. Sie werden bei der Suche nach Knöpfen übersprungen.
      */
-    private fun knopfband(punkte: IntArray, breite: Int, hoehe: Int): IntRange? {
-        val schwelle = breite / 2
-        val istKnopfzeile = BooleanArray(hoehe) { y ->
-            var treffer = 0
-            val zeile = y * breite
-            for (x in 0 until breite) if (punkte[zeile + x] in knopffarben) treffer++
-            treffer >= schwelle
-        }
-        var ende = -1
-        for (y in hoehe - 1 downTo 0) if (istKnopfzeile[y]) { ende = y; break }
-        if (ende < 0) return null
-        var anfang = ende
-        while (anfang > 0 && istKnopfzeile[anfang - 1]) anfang--
-        return anfang..ende
+    private fun kopfEnde(punkte: IntArray, breite: Int, hoehe: Int): Int {
+        var y = 0
+        while (y < hoehe && (0 until breite).count { punkte[y * breite + it] == kopffarbe } >= breite / 2) y++
+        return y
     }
 
-    /** **Alle** zusammenhaengenden Knopfbaender, von oben nach unten. */
+    /**
+     * **Alle** zusammenhaengenden Knopfbaender unter der Kopfleiste, von oben
+     * nach unten. Gezaehlt werden nur Zeilen, in denen die Farbe
+     * **breitflaechig** vorkommt — mindestens die halbe Bildbreite. Ohne
+     * diese Bedingung zaehlte der rote Aufnahmepunkt als Knopfzeile. Das
+     * unterste Band ist die Handlung des Bildschirms: Die steht unten.
+     */
     private fun knopfbaender(punkte: IntArray, breite: Int, hoehe: Int): List<IntRange> {
         val schwelle = breite / 2
         val baender = mutableListOf<IntRange>()
-        var y = 0
+        var y = kopfEnde(punkte, breite, hoehe)
         while (y < hoehe) {
             val voll = { z: Int ->
                 (0 until breite).count { punkte[z * breite + it] in knopffarben } >= schwelle
@@ -678,7 +697,7 @@ class HandyBildTest {
      * sich herausgestellt hat, dass die nichts messen kann.
      */
     private fun knopfAmRand(punkte: IntArray, breite: Int, hoehe: Int): Boolean {
-        for (y in 0 until hoehe) {
+        for (y in kopfEnde(punkte, breite, hoehe) until hoehe) {
             val zeile = y * breite
             if (punkte[zeile] in knopffarben) return true
             if (punkte[zeile + breite - 1] in knopffarben) return true

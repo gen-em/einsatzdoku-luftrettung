@@ -694,7 +694,7 @@ ui_kopf(['menue' => false]);
                   'klein' => zahl_text((int)$stand['statements'], 0)
                            . ' Anweisungen ausgeführt',
                   'plaketten' => ui_plakette($anteil . ' %',
-                                             ['ton' => $anteil >= 100 ? 'blau' : 'orange'])]);
+                                             ['ton' => $anteil >= 100 ? 'gruen' : 'orange'])]);
         if (!($stand['endmarke'] ?? false)) {
             ui_zeile(['text' => 'Keine Endmarke',
                       'klein' => 'Die Datei stammt nicht aus dieser Anwendung (etwa aus '

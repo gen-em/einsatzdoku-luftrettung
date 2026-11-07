@@ -219,7 +219,7 @@ ui_seite_start(['titel' => 'Sicherheit']);
                      . $restText($sp['rest']) . ')'
                      . ' · ' . $sp['versuche'] . ' Fehlversuche im Fenster',
             'plaketten' => ui_plakette('Stufe ' . $sp['stufe'],
-                ['ton' => $sp['stufe'] >= rate_stufe_hoechste() ? 'orange' : 'blau']),
+                ['ton' => $sp['stufe'] >= rate_stufe_hoechste() ? 'orange' : 'gruen']),
             'aktionen' => ui_zeilenaktionen([
                 'titel'     => $merkmalText($sp['merkmal']),
                 'eintraege' => [[
@@ -242,7 +242,7 @@ ui_seite_start(['titel' => 'Sicherheit']);
   <?php ui_karte_start(['titel' => 'Verlangsamung', 'id' => 'k-bremse-global',
       'plakette' => $bremse['stufe'] > 0
           ? ui_plakette('Stufe ' . $bremse['stufe'], ['ton' => 'orange'])
-          : ui_plakette('ruhig', ['ton' => 'blau'])]); ?>
+          : ui_plakette('ruhig', ['ton' => 'gruen'])]); ?>
     <?php if ($bremse['stufe'] > 0): ?>
       <?php /* OHNE TAGS IM TEXT: `ui_meldung_markup()`
                maskiert den Text — ein `<strong>` hier laese die
@@ -345,7 +345,7 @@ ui_seite_start(['titel' => 'Sicherheit']);
           $ton = match ($z['art']) {
               'aufgehoben'    => 'neutral',
               'verlangsamung' => 'orange',
-              default         => $z['stufe'] >= rate_stufe_hoechste() ? 'orange' : 'blau',
+              default         => $z['stufe'] >= rate_stufe_hoechste() ? 'orange' : 'gruen',
           };
           $was = match ($z['art']) {
               'aufgehoben'    => 'aufgehoben',
@@ -409,7 +409,7 @@ ui_seite_start(['titel' => 'Sicherheit']);
   <?php /* ---- 6. Mailregel ----------------------------------------------- */ ?>
   <?php ui_karte_start(['titel' => 'Meldung per Mail', 'id' => 'k-mail',
       'plakette' => $mailregel['an']
-          ? ui_plakette('an', ['ton' => 'blau'])
+          ? ui_plakette('an', ['ton' => 'gruen'])
           : ui_plakette('aus', ['ton' => 'neutral'])]); ?>
     <p class="feld-hinweis">Erreicht eine Sperre die letzte Sprosse (Stufe
        <?= (int)$mailregel['stufe'] ?>) oder die Verlangsamung ihre vierte Stufe,

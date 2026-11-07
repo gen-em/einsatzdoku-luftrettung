@@ -63,30 +63,41 @@ einfügt.
 
 ## 2. Marke
 
+**Die Quelle ist das Branding-Repo** `gen-em/gen-em-branding` (seit
+Schritt 26, Konzept MA). Farben, Tonstufen, Schriftschnitte und die
+Produktmarke stehen dort, freigegeben von der BetreiberIn; die Anwendung
+übernimmt sie und rechnet nichts mehr selbst. Bis dahin legte dieses
+Kapitel eigene Tief- und Hellwerte fest — sie sind entfallen. Der
+übernommene Stand steht mit Commit und Prüfsumme im Kopf von Abschnitt 2 in
+`server/assets/style.css`; wer das Repo nachzieht, ersetzt dort den Block
+und rechnet `tools/screenshots/kontrast.py` neu.
+
 ### 2.1 Die Grundtöne
 
-Sie sind gesetzt, nicht abgeleitet — sie kommen aus der Marke Gen-EM und
-werden hier nur festgehalten.
+Sie sind gesetzt, nicht abgeleitet — sie kommen aus der Marke Gen-EM.
 
-| Name | HEX | Pantone | wofür |
-|---|---|---|---|
-| Schnee | `#FFFCFA` | — | Karten, Kästen, Eingabefelder |
-| Rauch | `#F7F5ED` | — | die Seite unter den Karten |
-| Sand | `#D4C7AD` | — | Mechanik: Blattgriff, ausgeschalteter Schalter |
-| Asphalt | `#1A0500` | — | Fließtext |
-| Dunkelblau | `#1A2E4D` | — | Kopfleiste, Überschriften, Logo-Grundton |
-| Orange | `#FF8F1F` | 1495 C | Handeln |
-| Blau | `#4280E5` | 2727 C | Auswählen und Erklären |
-| Rot | `#D63338` | 1797 C | Aufmerksamkeit |
+| Name | HEX | Pantone | Token (Repo) | wofür |
+|---|---|---|---|---|
+| Schnee | `#FFFCFA` | — | `--genem-schnee` | die Seite, Eingabefelder, Schrift auf Dunkelblau |
+| Rauch | `#F7F5ED` | — | `--genem-rauch` | Abgesetztes: Tabellenkopf, Hover, gesperrtes Feld |
+| Sand | `#D4C7AD` | — | `--genem-sand` | Mechanik: Blattgriff, ausgeschalteter Schalter |
+| Asphalt | `#1A0500` | — | `--genem-asphalt` | Fließtext |
+| Dunkelblau | `#1A2E4D` | — | `--genem-dunkelblau` | Aktion, Kopfleiste, Überschriften, Grundform der Produktmarke |
+| Orange | `#FF8F1F` | 1495 C | `--genem-philipp-orange` | Markenfläche, Status „Aufmerksamkeit" |
+| Blau | `#4280E5` | 2727 C | `--genem-max-blau` | Fokusring, Markenfläche |
+| Rot | `#D63338` | 1797 C | `--genem-newroz-rot` | Markenfläche, Gefahr |
 
-**Weiß ist keine Fläche.** In der Marke ist Weiß nur Logo- und Schriftfarbe
-auf Dunkel. Im alten Stylesheet stand `#FFF` vierzehnmal als Fläche — das ist
-der Grund, warum die Oberfläche stellenweise kalt wirkte, während der Rest
-warm war. Als Token gibt es nur `--auf-dunkel` für Schrift auf Dunkelblau.
+Dazu führt das Repo **Tonstufen 50 bis 900** je Gründerfarbe, für Neutral
+(neutral 75 ist die Karte, 200 die Linie, 600 die Kleinschrift) und — als
+einzige neue Farbe — **Grün**, nur für Status (E-MA-02). Welche Stufe welche
+Rolle trägt, steht in Kapitel 3.
 
-**Es gibt genau eine Graustufe**, `--gedaempft` `#6E6459`. Der Bestand hatte
-daneben eine zweite, kühle Familie (`5B5F66`, `9AA0A6`, `8A96A8`, `C6CEDB` …)
-— zwei Grauwelten in einer Oberfläche. Sie ist ersatzlos fort.
+**Weiß ist keine Fläche.** In der Marke ist Weiß auf Dunkel Schnee; Weiß
+selbst steht nirgends.
+
+**Es gibt genau eine Graustufe**, `--gedaempft` (neutral 600 `#725D49`).
+Der Bestand hatte einmal daneben eine zweite, kühle Familie — zwei
+Grauwelten in einer Oberfläche. Sie ist ersatzlos fort.
 
 ### 2.2 Schriften
 
@@ -96,8 +107,13 @@ Zwei quelloffene Schriften, beide **selbst ausgeliefert** aus
 
 | Schrift | Schnitte | Einsatz |
 |---|---|---|
-| **Bricolage Grotesque** | 500, 600 | Überschriften, Kopfleiste, Knöpfe, Kartentitel, Kennzahlen |
-| **Open Sans** | 400, 600, 700 | Fließtext, Formularfelder, Tabelleninhalt |
+| **Bricolage Grotesque** | 500 | Überschriften, Kopfleiste, Knöpfe, Kartentitel, Kennzahlen, Produktname |
+| **Open Sans** | 400, 700 | Fließtext, Formularfelder, Tabelleninhalt; 700 für jede Auszeichnung |
+
+Das sind die Schnitte, die die Marke vorsieht (`5 Regeln/Typografie.md` im
+Repo). Bis Schritt 26 standen beide Familien auch in 600; jedes
+`font-weight:600` ist seither 500 (Bricolage) oder 700 (Open Sans)
+(E-MA-15).
 
 Je Schnitt liegen die Subsets `latin` und `latin-ext` als `.woff2` vor.
 **Ein Schnitt, der nicht in `@font-face` eingetragen ist, existiert nicht** —
@@ -123,263 +139,314 @@ tippt, muss jedes einzeln sehen — der Codeblock selbst bleibt für die übrige
 sechs Verwendungen (Wiederherstellungsschlüssel, Geräte-ID, API-Schlüssel,
 Cron-Zeile, Serverschlüssel, Setz-Link).
 
-### 2.3 Logo und Logo-Wahl
+### 2.3 Produktmarke und Logo-Wahl
 
-Es gibt **zwei** Bildmarken, und welche erscheint, ist einstellbar
-(E-P3-19/20):
+Die Kopfleiste trägt das **Zeichen der Produktmarke NAdoku** und rechts
+daneben, in Bricolage 500, den Kurznamen der Installation (E-MA-05, -28;
+Branding-Repo, `5 Regeln/Produktmarken.md`). Es gibt **zwei** Zeichen — je
+Gegenstand eines, Luft- und Bodenrettung —, und welches erscheint, ist
+einstellbar (E-P3-19/20). Die Dateien kommen aus
+`1 Logos/Produktmarken/NAdoku/` des Repos; die Grundform ist Dunkelblau,
+die drei Federfarben stehen je einmal als Fläche.
 
-| Datei | Fassung | Rahmen |
+| Datei (`server/assets/images/`) | Fassung | Rahmen |
 |---|---|---|
-| `server/assets/images/gen-em_logo_helicopter.svg` | Hubschrauber, farbig — heller Grund | 400,16 × 249,81 |
-| `server/assets/images/gen-em_logo_helicopter_weiss.svg` | Hubschrauber, weiß — Kopfleiste | 400,16 × 249,81 |
-| `server/assets/images/gen-em_logo_nef.svg` | Fahrzeug (NEF), farbig | 420 × 335 |
-| `server/assets/images/gen-em_logo_nef_weiss.svg` | Fahrzeug (NEF), weiß | 420 × 335 |
-| `server/assets/images/favicon_helicopter.png`, `favicon_nef.png` | Browser-Symbol je Wahl, 64 × 64 | — |
+| `nadoku-hubschrauber-farbig.svg` | Hubschrauber, Grundform Dunkelblau — heller Grund | 400,16 × 249,81 |
+| `nadoku-hubschrauber-farbig-negativ.svg` | Grundform Schnee, Federfarben bleiben — Kopfleiste, dunkle Flächen | 400,16 × 249,81 |
+| `nadoku-hubschrauber-weiss.svg` | ganz weiß — Flächen in Gründerfarben | 400,16 × 249,81 |
+| `nadoku-nef-farbig.svg`, `…-farbig-negativ.svg`, `…-weiss.svg` | Fahrzeug (NEF), dieselben drei | 420 × 335 |
+| `favicon-nadoku-<zeichen>.svg`, `…-32.png`, `apple-touch-nadoku-<zeichen>.png`; `server/favicon.ico` | Browser-Symbol je Wahl, aus dem Favicon-Set des Repos (Zeichen 92 % breit); ICO mit 16, 32, 48 px | — |
+| `nadoku-<zeichen>-farbig.png`, `…-farbig-negativ.png` | 500 px breit, Quelle der Bildmarken der Android-App | — |
+
+Alles außer den Zeichen-SVG kommt aus **einem Lauf**: `node
+tools/erzeugen/logos.mjs` holt die Favicons aus dem Set des Repos
+(`1 Logos/Produktmarken/NAdoku/Favicon/`, seit Commit `e7bf4fc`; farbig auch
+bei 16 px) und rastert die PNG für Android. Bis Web 23.11.0 zeichnete das
+Skript die Favicons selbst nach dem Rezept des Repos; zwei Erzeuger für
+dieselben Dateien laufen auseinander (E-MA-35). Die Symbole in 192 und
+512 px und das Manifest bleiben im Repo, bis R70 (Schritt 13) sie braucht. Bis
+Schritt 26 hießen die Dateien `gen-em_logo_*`, die dunkle Fassung war ganz
+weiß, und Favicons gab es als ein PNG in 64 px. Eine bestehende
+`config.php` mit `logo_path => …gen-em_logo_helicopter.svg` gilt weiter als
+„mitgeliefertes Logo" (`logo_src()`).
 
 **Der Rahmen ist deckungsgleich mit der Zeichnung**, und das ist eine Zusage
-(seit Web 12.4.2). Das NEF-Logo war bis dahin auf ein Quadrat gepolstert
-(`viewBox="0 0 420 420"`, die Zeichnung 420 × 335 ab y = 42,5): oben und
-unten je ein Zehntel leer. Skaliert wird aber über die **Höhe** — ein
-Zehntel dieser Höhe war damit Luft, und das Bodenlogo erschien neben dem
-Luftlogo schmaler **und** niedriger zugleich. Gemessen bei 34 px Höhe:
-1 853 gegen 921 px² sichtbare Fläche, also das Doppelte.
-
-Nach dem Beschnitt: **54,5 × 34 px gegen 42,6 × 34 px**, Flächenverhältnis
-**1,28**. Die verbleibende Differenz ist der ehrliche Unterschied zweier
-Motive — das eine liegt quer, das andere weniger — und **keine
-Feinkorrektur wert** (E-S3-12 b, am Bild entschieden). Die Höhen sind gleich,
-und das ist es, was das Auge in einer Zeile vergleicht.
+(seit Web 12.4.2): Skaliert wird über die **Höhe**, und Luft im Rahmen
+ließe ein Zeichen kleiner wirken als das andere. Bei 34 px Höhe misst der
+Hubschrauber 54,5 × 34 px, das NEF 42,6 × 34 px — der ehrliche Unterschied
+zweier Motive (E-S3-12 b).
 
 > **Wer eine dieser SVG anfasst, prüft danach den Rahmen mit `getBBox()`.**
-> Beim Luftlogo läuft ein blauer Streifen rund 156 Einheiten über den Rahmen
-> hinaus; sichtbar ist er nicht — ein Clip schneidet ihn weg —, aber er wird
-> es, sobald jemand den Rahmen weitet. Seit Web 12.4.2 hält ein zusätzlicher
-> Rahmen-Clip ihn unabhängig davon drinnen.
+> Beim Hubschrauber läuft ein blauer Streifen rund 156 Einheiten über den
+> Rahmen hinaus; ein Rahmen-Clip hält ihn drinnen.
 >
 > **Und XML verbietet `--` im Kommentar.** Eine SVG mit einem doppelten
-> Bindestrich im Kommentar ist ungültig; der Browser zeigt sein
-> Platzhalterbild, und `tools/erzeugen/logos.mjs` fotografierte es früher
-> klaglos als Favicon. Das Werkzeug bricht heute ab (S3/AP11).
+> Bindestrich im Kommentar ist ungültig; `tools/erzeugen/logos.mjs` bricht
+> dann ab, statt das Platzhalterbild des Browsers als Bildmarke zu schreiben.
 
 **Drei Ebenen der Wahl**, und sie greifen in dieser Reihenfolge:
 
 1. **Das Konto** wählt im Profil: Hubschrauber, Fahrzeug, wechselnd oder
    „Standard der Installation".
-2. **Die Installation** setzt ihren Standard unter Einstellungen → Wartung.
-   Er gilt für die Anmeldeseite, für die Passwortseiten und für jedes Konto
-   ohne eigene Wahl.
-3. **Der Rückfall** ist der Hubschrauber.
+2. **Die Installation** setzt ihren Standard unter Verwaltung →
+   Installation. Er gilt für die Anmeldeseite, für die Passwortseiten, für
+   die Druckblätter und für jedes Konto ohne eigene Wahl.
+3. **Der Rückfall** ist der Hubschrauber — auch auf der Wartungsseite, die
+   ohne Datenbank auskommt. Bis Schritt 26 warf sie dort eine Münze; die
+   Produktmarke darf aber **nie bei jedem Seitenaufruf wechseln**
+   (Produktmarken.md, Regel 9).
 
 „Wechselnd" wird **einmal bei der Anmeldung** ausgewürfelt und bleibt in der
-Sitzung stehen. Ein Logo, das bei jedem Seitenaufruf wechselt, ist kein Logo,
-sondern ein Flackern.
+Sitzung stehen.
 
 Eingebunden wird über `logo_src()` und `favicon_tags()` in `server/db.php`
 bzw. `ui_logo()` in `server/ui.php`, nie über einen fest verdrahteten Pfad.
+Neben dem Zeichen steht in der Kopfleiste der einstellbare **Kurzname der
+Installation** (`ui_instanz_kurz()`), wie im Browsertab und auf der
+Anmeldeseite. Web 23.9.2 bis 23.10.1 zeigte dort fest „NAdoku"; die
+BetreiberIn hat das zurückgenommen (E-MA-28): Wer mehrere Anlagen betreibt,
+erkennt sie an der Kopfleiste.
 
-**Einsatzregeln**
+**Einsatzregeln** (Repo, `Logo.md` und `Produktmarken.md`)
 
-- Auf Dunkelblau und auf den drei Kernfarben: **weiße Fassung**.
-- Auf hellem, ruhigem Grund: **farbige Fassung**.
-- Auf unruhigem oder dunklem Bild: Logo **neben** das Bild, nicht darauf.
-- Sehr klein: einfarbige Fassung.
-- **Weißraum:** rundum mindestens die Breite eines kleinen „e" der Wortmarke;
-  in der Kopfleiste ist das über `.kopf-marke{gap:…}` und das Innenmaß der
-  Leiste abgebildet.
+- Auf Dunkelblau: **farbig-negativ**. Auf hellem, ruhigem Grund: **farbig**.
+- Auf einer Fläche in Gründerfarbe: **weiß**.
+- Auf unruhigem oder dunklem Bild: Zeichen **neben** das Bild, nicht darauf.
+- **Schutzzone** 0,53 × Zeichenhöhe; in der Kopfleiste über
+  `.kopf-marke{gap:…}` und das Innenmaß der Leiste abgebildet.
 
-Wird ein Logo ausgetauscht, ziehen **alle** Fassungen mit — auch die
-Favicons und die Uhr-Icons (`watch/resources*/drawables/`).
+Wird ein Zeichen ausgetauscht, ziehen **alle** Fassungen mit — Favicons,
+die Bildmarken der Android-App (`android/werkzeuge/bildmarken.sh`) und die
+Uhr-Bilder (`tools/erzeugen/uhr-bilder.sh`). **Die Uhr ist zurzeit nicht
+nachgezogen** (Backlog Nr. 520).
 
-### 2.4 Der Platzhalter
+### 2.4 Das Zeichen trägt die Markenwerte (Backlog Nr. 62, erledigt)
 
-Das Fahrzeug-Logo ist zurzeit ein **Platzhalter**. Er steht dort, damit die
-Logo-Wahl vollständig gebaut und geprüft werden kann, bevor die echte Datei
-vorliegt; sie ersetzt ihn 1:1 — gleicher Name, gleiche Maße, kein Eingriff im
-Code. Die Wartungsseite meldet den Zustand, solange er besteht
-(`logo_platzhalter_liegt()`), und der Hinweis verschwindet von selbst.
-
-### 2.5 Das Logo trägt die Markenwerte — zurzeit nicht (Backlog Nr. 62)
-
-Der offene Punkt B1 aus `docs/Branding.md` war mit P3/O12 **erledigt**: Dort
-war festgehalten, dass die Logodateien von den Markenwerten abwichen (rotes
-Rotorblatt `#E3322B` statt `#D63338`, blaues `#587ABC` statt `#4280E5`,
-oranges `#F7941D` statt `#FF8F1F`, Rumpf `#1D0E0A` statt `#1A0500`), und
-nachgemessen in `gen-em_logo_helicopter.svg` stimmten `#1A0500`, `#4280E5`,
-`#D63338`, `#FF8F1F`.
-
-**Das gilt nicht mehr.** Der Commit „Update Logos" hat mit neuen
-Vektorvorlagen die alten Werte zurückgebracht (Backlog Nr. 62, aufgenommen
-31.08.2026). Nachgemessen am 13.09.2026: `gen-em_logo_helicopter.svg` führt
-`#587ABC`, `#E3322B`, `#F7941D` und Korpus `#1D0E0A`;
-`gen-em_logo_helicopter_weiss.svg` trägt dieselben alten Farbelemente;
-`gen-em_logo_nef.svg` den alten Korpuswert. **Die PNG-Fassungen sind
-dieselbe Lage** (nachgemessen am 13.09.2026, Bildpunkte dekodiert):
-`gen-em_logo_helicopter.png` und `gen-em_logo_helicopter_weiss.png` tragen
-die alten Farbwerte — um ein bis zwei Stufen je Kanal verschoben, weil sie
-gerastert sind (`#1C0B0B`, `#E4302C`, `#577ABC`) —, `gen-em_logo_nef.png`
-den alten Korpuswert. **Richtig sind allein die beiden Fassungen ohne
-Korpus:** `gen-em_logo_nef_weiss.svg` und `gen-em_logo_nef_weiss.png`. Es
-gibt keine korrigierte Quelle.
-**Entschieden am 12.09.2026: neue Vorlagen in den Markenfarben anfordern**
-(Rahmenplan Abschnitt 6, Zuarbeit); bis sie vorliegen, bleibt dieser Absatz
-so stehen, damit hier keine falsche Zusage steht. Nach der Behebung alle
-Fassungen samt Ableitungen (PNG, Favicons, Uhr-Bilder) nachmessen und den
-Absatz zurückdrehen.
+Bis Schritt 26 trugen die Logodateien Näherungswerte (`#587ABC`,
+`#E3322B`, `#F7941D`, Korpus `#1D0E0A`), und es gab keine korrigierte
+Quelle; dieser Abschnitt hielt die falsche Zusage fest (seit dem
+13.09.2026). Das Branding-Repo hat die Zeichen beim Übernehmen bereinigt und
+die Grundform auf Dunkelblau gesetzt; die Anwendung übernimmt diese Fassung
+(E-MA-12). Bis dahin stand hier außerdem ein Abschnitt „Der Platzhalter"
+zum NEF-Logo samt `logo_platzhalter_liegt()` — beides ist mit dem Austausch
+entfallen.
 
 ---
 
 ## 3. Farbrollen und abgeleitete Töne
 
-### 3.1 Die drei Kernfarben tragen je eine Aussage
+### 3.1 Jede Farbe trägt eine Aussage — und Handeln ist Dunkelblau
 
-Das ist die wichtigste Farbregel der Anwendung, und sie ist nicht dekorativ:
+Das ist die wichtigste Farbregel der Anwendung, und sie ist nicht dekorativ.
+**Seit Schritt 26 (Konzept MA)** folgt sie dem Branding-Repo: Die drei
+Gründerfarben sind **Markenflächen und Status, keine Aktionsfarbe**
+(E-MA-01).
 
 | Farbe | sagt | wo |
 |---|---|---|
-| **Orange** | *Hier wird gehandelt* | Primärknopf, aktiver Menüpunkt, „+ Anlegen"-Wege, Hervorhebung, gewählte Zeile |
-| **Blau** | *Hier wird ausgewählt oder erklärt* | Textlinks, Fokusring, Hinweismeldung, Plakette einer Auswahl |
-| **Rot** | *Achtung* | Löschen, Fehler, „nie gesichert", „kein Ende erfasst" |
+| **Dunkelblau** (`--aktion`) | *Hier wird gehandelt* | Primärknopf, gewählte Segmenttaste, eingeschalteter Schalter, Radiopunkt, Fortschritt, Vorbelegungsstern |
+| **Philipp-Orange** (`--aktion-haupt`) | *Dafür bist du hier* | die **eine** Hauptaktion einer Seite, höchstens einmal (Knopfart `haupt`, 9.4); Schrift Asphalt, nie Weiß |
+| **Blau 100 / Dunkelblau** (`--auswahl-*`) | *Hier stehst du* | aktiver Menüpunkt und Diensttag, aktive Kennzahl, aktiver Filter, Sprungziel, offener Blattöffner, Zeilenhervorhebung |
+| **Blau 600** (`--text-link`) | *Hier geht es weiter* | Textlinks, „+ Anlegen"-Wege, Kartenaktionen |
+| **Blau** (Status `info`) | *Zur Auskunft* | Hinweismeldung, Plakette einer **Eigenschaft** (Sekundär, verschlüsselt, Fassung) |
+| **Grün** (Status `erfolg`) | *Es ist in Ordnung* | Vollzugsmeldung, Plakette eines **Zustands** (freigegeben, aktiv, erledigt), Ampel |
+| **Orange** (Status `warnung`) | *Braucht Aufmerksamkeit, arbeitet aber* | Warnung, Extremwert, Umgebungsetikett, Trefferwort |
+| **Rot** (Status `fehler`, `--gefahr`) | *Achtung, arbeitet nicht* | Löschen, Fehler, „nie gesichert", „kein Ende erfasst" |
 
-**Ein Höchstwert ist kein Fehler.** Die Hervorhebung der Extremwerte in der
-Zeitraumübersicht war rot und ist orange geworden — Rot heißt in dieser
-Oberfläche „Aufmerksamkeit", und ein Maximum verlangt keine.
+Bis Schritt 26 hieß Orange „hier wird gehandelt" (Primärknopf, aktiver
+Menüpunkt, Anlegen-Wege), und Grün gab es nicht: Vollzug war Blau mit Haken.
+Die Plakette `blau` trug dabei zweierlei — „in Ordnung" und „Eigenschaft".
+Seither ist das getrennt (E-MA-08): Ein Zustand bekommt `gruen`, eine
+Eigenschaft bleibt `blau`.
+
+**Ein Höchstwert ist kein Fehler.** Die Hervorhebung der Extremwerte ist
+orange — Rot heißt in dieser Oberfläche „Fehler", und ein Maximum verlangt
+keine Behebung.
 
 **Farbe ist nie der einzige Träger einer Aussage.** Jeder Zustand hat
 zusätzlich Text, Symbol oder Position. Eine Plakette trägt kein Häkchen: Ihr
 Vorhandensein *ist* das Häkchen (E-P3-17).
 
-**Orange heißt seit Web 19.6.0 auch „hier ist gerade etwas offen"** (E-MR-21,
-E-MR-25). Ein Öffner, dessen Blatt offen steht, trägt `--orange-hell` mit
-`--orange-tief` darauf — dieselbe Sprache wie die aktive Kennzahl und das
-angesprungene Sprungziel. Das ist keine zweite Bedeutung neben „hier wird
-gehandelt", sondern deren Fortsetzung: Der Knopf **ist** gerade die Handlung,
-und das Blatt darunter gehört zu ihm. Die Regel steht am Attribut
-(`[data-blatt][aria-expanded="true"]`) und gilt damit für alle vier Bauarten
-von Öffnern — auch für die nächste.
+**Ein offener Öffner trägt die Auswahl** (seit Web 19.6.0, E-MR-21, -25;
+Farbe seit Schritt 26): Ein Knopf, dessen Blatt offen steht, trägt
+`--auswahl-flaeche` mit `--auswahl-text` — dieselbe Sprache wie die aktive
+Kennzahl. Die Regel steht am Attribut (`[data-blatt][aria-expanded="true"]`)
+und gilt für alle vier Bauarten von Öffnern.
 
-### 3.2 Warum es je drei Töne gibt
+### 3.2 Status: Fläche 100, Schrift 700, Linie 600
 
-Jede Kernfarbe kommt dreifach vor, und die drei sind nicht austauschbar:
+Jeder Status kommt dreifach vor, und die drei sind nicht austauschbar
+(Branding-Repo, `5 Regeln/Farben.md`; E-MA-02):
 
-| Endung | Rolle | Beispiel |
+| Rolle | Stufe | wofür |
 |---|---|---|
-| — (`--orange`) | **Fläche und Strich.** Nie Schrift. | Primärknopf, aktiver Rand |
-| `-tief` | **Schrift.** Blau und Rot tief erreichen 4,5:1 auf Schnee; **Orange tief 4,32:1** — als Schrift nur groß oder fett (3.4). | Textlink, Fehlertext |
-| `-hell` | **Fläche unter Schrift.** | Meldung, Plakette |
+| `--<status>-flaeche` | 100 | Fläche unter Schrift: Meldung, Plakette, Kennzahl im Ton |
+| `--<status>-text` | 700 | Schrift und Symbol darauf; erreicht 4,5:1 auf der Fläche **und** auf der Karte |
+| `--<status>-linie` | 600 | Rahmen, Strich, Balken |
 
-Das ist der Fund F-P3-J: Orange erreicht auf Schnee 2,2:1 und ist als Schrift
-unbenutzbar; die Marke gibt aber keinen dunkleren Ton her. Statt den
-Markenwert zu ändern, bekommt jede Farbe eine dunkle Textfassung
-(`--orange-tief` `#C25A00`, `--blau-tief` `#1F4E9C`, `--rot-tief` `#9E2226`).
+Der Status heißt `info` (blau), `erfolg` (grün), `warnung` (orange),
+`fehler` (rot). Die Gründerfarbe selbst (Stufe 500) ist Fläche und Strich,
+nie Schrift: Orange erreicht auf Schnee 2,23:1.
 
-*Bis R4-08 stand in der Tabelle „dunkel genug für 4,5:1 auf Schnee" für
-alle drei. Für Orange tief stimmte das nie (4,32:1); das Werkzeug rechnete
-das Paar ohnehin mit 3,0 als „nur groß oder fett". Die Ableitung aus dem
-Stylesheet fand dazu die weiße Schrift auf Orange tief im Hover des
-Primärknopfs (4,42:1 bei 15 px); die BetreiberIn hat entschieden, dass der
-Ton passt, und keine Farbe geändert (E-R4-30).*
+*Bis Schritt 26 führte die Anwendung je Farbe eigene Töne `-tief`
+(Schrift) und `-hell` (Fläche) — `--orange-tief` `#C25A00` erreichte 4,32:1
+und war als Schrift nur groß oder fett zu gebrauchen (F-P3-J, E-R4-30). Die
+Tonstufen des Repos haben das gelöst: orange 700 erreicht 6,44:1 auf
+Schnee.*
 
 ### 3.3 Zwei Linien, und der Unterschied ist keine Geschmacksfrage
 
-| Token | Kontrast | wofür |
+| Token | hell | wofür |
 |---|---|---|
-| `--linie` `#E3DAC6` | 1,36:1 | Trennt, schmückt, umrandet Karten — **rein zeichnerisch**. WCAG 1.4.11 nimmt dekorative Trenner ausdrücklich aus. |
-| `--linie-stark` = `--gedaempft` | 5,66:1 | Begrenzt **Bedienelemente**: Eingabefeld, neutraler Knopf, Segmentwahl, Kästchen. Dort ist der Rand die einzige Auskunft darüber, wo das Element anfängt — und dafür verlangt WCAG 3:1. |
+| `--linie` | neutral 200, 1,31:1 | Trennt, schmückt, umrandet Karten — **rein zeichnerisch**. WCAG 1.4.11 nimmt dekorative Trenner ausdrücklich aus. |
+| `--linie-stark` | neutral 600, 6,09:1 | Begrenzt **Bedienelemente**: Eingabefeld, neutraler Knopf, Segmentwahl, Kästchen. Dort ist der Rand die einzige Auskunft darüber, wo das Element anfängt — und dafür verlangt WCAG 3:1. |
 
-Das ist der Fund F-P3-K: Anlage G des Konzepts führt für Ränder 3:1, nennt
-aber nur Farben, die darunter liegen. Ohne diese Trennung hätte jedes
-Eingabefeld einen Rand von 1,4:1 — sichtbar für gute Augen, unsichtbar für
-andere. Ein neuer Farbwert war dafür nicht nötig: Gedämpft ist ohnehin Token.
+Das ist der Fund F-P3-K: Ohne diese Trennung hätte jedes Eingabefeld einen
+Rand von 1,4:1 — sichtbar für gute Augen, unsichtbar für andere.
 
 ### 3.4 Kontraste
 
-Gerechnet von `python3 tools/screenshots/kontrast.py` aus dem Stylesheet.
-Zielwert ist WCAG AA: **4,5:1** für Fließtext, **3:1** für großen Text,
-Ränder und Bedienelemente. Geprüft wird gegen die **tatsächliche Fläche** —
-Schnee oder Rauch, nicht Weiß.
+Gerechnet von `python3 tools/screenshots/kontrast.py` aus dem Stylesheet,
+**seit Schritt 26 in beiden Modi**: hell und dunkel (Kapitel 3a). Zielwert
+ist WCAG AA: **4,5:1** für Fließtext, **3:1** für großen Text, Ränder und
+Bedienelemente. Geprüft wird gegen die **tatsächliche Fläche** — Karte
+(neutral 75), Seite (Schnee), Abgesetztes (Rauch), nicht Weiß. Die Paare
+heißen nach Rollen, nicht nach Farben: Die Rollen sind in beiden Modi
+dieselben, ihre Werte nicht.
 
-| Paar | Ist | Soll | Rolle |
-|---|--:|--:|---|
-| Asphalt auf Schnee | 19,29:1 | 4,5 | Fließtext |
-| Asphalt auf Rauch | 18,05:1 | 4,5 | Fließtext |
-| Dunkelblau auf Schnee | 13,33:1 | 4,5 | Titel, Symbole |
-| Dunkelblau auf Rauch | 12,48:1 | 4,5 | Titel, Symbole |
-| Gedämpft auf Schnee | 5,66:1 | 4,5 | Kleinzeile |
-| Gedämpft auf Rauch | 5,30:1 | 4,5 | Kleinzeile |
-| Blau tief auf Schnee | 7,82:1 | 4,5 | Textlink |
-| Blau tief auf Blau hell | 6,61:1 | 4,5 | Hinweis, Vollzug |
-| Rot tief auf Schnee | 7,58:1 | 4,5 | Fehlertext |
-| Rot tief auf Rosa | 6,27:1 | 4,5 | Fehlermeldung |
-| Asphalt auf Orange hell | 16,99:1 | 4,5 | Warnung, Plakette |
-| Dunkelblau auf Blau hell | 11,26:1 | 4,5 | Plakette |
-| **Dunkelblau auf Orange** | **5,97:1** | 4,5 | **Primärknopf** |
-| Weiß auf Dunkelblau | 13,62:1 | 4,5 | Kopfleiste |
-| Orange tief auf Schnee | 4,32:1 | 3,0 | nur groß oder fett |
-| Orange tief auf Rauch | 4,04:1 | 3,0 | nur groß oder fett; Strich des aktiven Reiters (9.37) |
-| Orange tief auf Orange hell | 3,81:1 | 3,0 | Warnung, Auftakt fett |
-| Rot auf Schnee | 4,68:1 | 3,0 | Gefahrknopf: Rand und Schrift ab 18 px |
-| Blau als Fokusring | 3,77:1 | 3,0 | Rand |
-| Linie stark auf Schnee | 5,66:1 | 3,0 | Rand von Bedienelementen |
-| Linie stark auf Rauch | 5,30:1 | 3,0 | Rand von Bedienelementen |
-| Dunkelblau auf Orange hell | 11,74:1 | 4,5 | aktives Sprungziel, aktive Kennzahl |
-| Weiß auf Rot | 4,78:1 | 4,5 | Kopfleiste einer Anlage mit Etikett (9.36) |
-| Schnee auf Rot | 4,68:1 | 4,5 | Name in dieser Kopfleiste |
-| Orange hell auf Rot | 4,12:1 | 3,0 | Strich des aktiven Kopfpunkts auf Rot |
-| Asphalt auf Sand | 11,80:1 | 4,5 | Nummer eines offenen Schritts (Erststart) |
-| Blau auf Blau hell | 3,19:1 | 3,0 | Strich am Zitat im Handbuch |
-| Blau tief auf Rauch | 7,32:1 | 4,5 | Übersichtszeile der Einstellungen unter dem Zeiger |
-| Dunkelblau auf Orange | 5,97:1 | 4,5 | oranger Zähler, Zeichen im Einsatzort-Kreis |
-| Dunkelblau auf Sand | 8,15:1 | 4,5 | neutraler Zähler |
-| Primärschrift auf Orange | 5,97:1 | 4,5 | Zahl des aktiven Filters, gewählte Segmenttaste |
-| Rauch auf Dunkelblau | 12,48:1 | 4,5 | Fußzeile auf dunklem Grund |
-| Rot auf Rosa | 3,87:1 | 3,0 | Rahmen der roten Kennzahl |
-| Blau als Säule auf Schnee | 3,77:1 | 3,0 | Säule und Balken der Diagramme (9.40) |
-| Orange tief als Höchstwert auf Schnee | 4,32:1 | 3,0 | hervorgehobene Säule (9.40) |
-| Blau tief als Säule unter dem Zeiger | 7,82:1 | 3,0 | Säule unter dem Zeiger (9.40) |
+| Paar | hell | dunkel | Soll | Rolle |
+|---|--:|--:|--:|---|
+| Text auf Karte | 18,64:1 | 13,33:1 | 4,5 | Fliesstext |
+| Text auf Seite | 19,29:1 | 16,92:1 | 4,5 | Fliesstext ausserhalb von Karten |
+| Text auf abgesetzt | 18,05:1 | 8,92:1 | 4,5 | Fliesstext unter dem Zeiger, Tabellenkopf |
+| Text im Feld | 19,29:1 | 16,92:1 | 4,5 | Eingabefeld |
+| Titel auf Karte | 12,88:1 | 11,26:1 | 4,5 | Titel, Symbole |
+| Titel auf Seite | 13,33:1 | 14,29:1 | 4,5 | Seitentitel |
+| Titel auf abgesetzt | 12,48:1 | 7,54:1 | 4,5 | Titel, Symbole auf Rauch |
+| Titel im Feld | 13,33:1 | 14,29:1 | 4,5 | Segmenttaste |
+| Gedaempft auf Karte | 5,88:1 | 8,75:1 | 4,5 | Kleinzeile |
+| Gedaempft auf abgesetzt | 5,70:1 | 5,86:1 | 4,5 | Kleinzeile, gesperrtes Feld |
+| Link auf Karte | 5,59:1 | 6,65:1 | 4,5 | Textlink, Anlegen-Weg |
+| Link unter dem Zeiger | 5,42:1 | 5,86:1 | 4,5 | Link, dessen Zeile unter dem Zeiger auf Rauch wechselt |
+| Link auf Seite | 5,79:1 | 8,44:1 | 4,5 | Link in der Fusszeile |
+| Fehlertext auf Karte | 9,49:1 | 8,24:1 | 4,5 | Pflichtzeichen, Fehler am Feld |
+| Linie stark auf Karte | 5,88:1 | 6,65:1 | 3,0 | Rand von Bedienelementen |
+| Linie stark im Feld | 6,09:1 | 8,44:1 | 3,0 | Rand des Eingabefelds |
+| Linie stark auf abgesetzt | 5,70:1 | 4,45:1 | 3,0 | Rand des gesperrten Felds |
+| Fokus auf Seite | 3,77:1 | 14,29:1 | 3,0 | Fokusring |
+| Fokus auf Karte | 3,64:1 | 11,26:1 | 3,0 | Fokusring |
+| Auf Aktion (Primaerknopf) | 13,33:1 | 6,65:1 | 4,5 | Primaerknopf, gewaehlte Segmenttaste, Zahl des aktiven Filters |
+| Auf Aktion unter dem Zeiger | 8,92:1 | 8,75:1 | 4,5 | Primaerknopf unter dem Zeiger |
+| Aktion auf Karte | 12,88:1 | 6,65:1 | 3,0 | Schalter an, Radiopunkt, Fortschritt, Stern |
+| Auswahltext auf Auswahl | 11,26:1 | 8,92:1 | 4,5 | aktiver Menuepunkt, aktive Kennzahl, Chip |
+| Auswahllinie auf Auswahl | 11,26:1 | 4,45:1 | 3,0 | Strich am aktiven Eintrag |
+| Auswahllinie auf Karte | 12,88:1 | 6,65:1 | 3,0 | Strich des aktiven Reiters |
+| Auswahllinie auf abgesetzt | 12,48:1 | 4,45:1 | 3,0 | Strich am Vorschlag unter dem Zeiger |
+| Text auf Auswahl | 16,30:1 | 8,92:1 | 4,5 | Textauswahl |
+| Info auf Info | 7,54:1 | 7,54:1 | 4,5 | Hinweis, Plakette blau |
+| Erfolg auf Erfolg | 7,13:1 | 8,49:1 | 4,5 | Vollzug, Plakette gruen |
+| Warnung auf Warnung | 5,67:1 | 8,44:1 | 4,5 | Warnung, Plakette orange |
+| Fehler auf Fehler | 8,12:1 | 8,17:1 | 4,5 | Fehler, Schutz, Plakette rot |
+| Infolinie auf Info | 4,89:1 | 3,28:1 | 3,0 | Strich am Zitat im Handbuch |
+| Warnlinie auf Warnung | 3,27:1 | 6,04:1 | 3,0 | Rahmen der orangen Kennzahl |
+| Fehlerlinie auf Fehler | 5,59:1 | 4,15:1 | 3,0 | Rahmen der roten Kennzahl |
+| Fehlerlinie auf Karte | 6,54:1 | 4,19:1 | 3,0 | Rahmen der Gefahrkarte |
+| Warntext auf Karte | 6,22:1 | 10,04:1 | 4,5 | Tag des Extremwerts |
+| Erfolgslinie auf Karte | 5,69:1 | 4,86:1 | 3,0 | erledigter Schritt, Passwortbalken |
+| Auf Gefahr (Loeschknopf) | 9,83:1 | 7,55:1 | 4,5 | Gefahrknopf, roter Zaehler |
+| Auf Gefahr unter dem Zeiger | 13,22:1 | 10,43:1 | 4,5 | Gefahrknopf unter dem Zeiger |
+| Titel auf abgesetzt (Zaehler) | 12,48:1 | 7,54:1 | 4,5 | neutraler Zaehler |
+| Schnee auf Dunkelblau (Kopfleiste) | 13,33:1 | 13,33:1 | 4,5 | Kopfleiste, dunkler Fuss, Bereichszeichen |
+| Kopfaktiv auf Dunkelblau | 6,65:1 | 6,65:1 | 3,0 | Strich des aktiven Kopfpunkts |
+| Sand auf Dunkelblau (Name im Kopf) | 8,15:1 | 8,15:1 | 4,5 | Nutzername in der Kopfleiste |
+| Schnee auf Umgebung (Kopfleiste Staging) | 11,21:1 | 11,21:1 | 4,5 | Kopfleiste mit Etikett |
+| Umgebungstext auf Umgebung | 8,44:1 | 8,44:1 | 4,5 | Name und aktiver Punkt in der Kopfleiste mit Etikett |
+| Schnee auf Dunkelblau (Einsatzort) | 13,33:1 | 13,33:1 | 3,0 | Pin im Einsatzort-Kreis der Karte |
+| Saeule auf Karte | 3,64:1 | 4,90:1 | 3,0 | Saeule und Balken der Diagramme |
+| Hoechstwert auf Karte | 3,59:1 | 7,18:1 | 3,0 | hervorgehobene Saeule |
+| Saeule unter dem Zeiger | 5,59:1 | 6,65:1 | 3,0 | Saeule unter dem Zeiger |
+| Papiertext auf Papier | 19,29:1 | 19,29:1 | 4,5 | Druckblatt |
+| Papiertitel auf abgesetzt | 12,48:1 | 12,48:1 | 4,5 | Kachel im Druckblatt |
+| Papier leise auf Papier | 6,09:1 | 6,09:1 | 4,5 | Kleinzeile im Druckblatt |
+| Papierwarnung auf Papier | 9,83:1 | 9,83:1 | 4,5 | Umgebungszeile im Druckblatt |
+| QR-Modul auf Schnee | 19,29:1 | 19,29:1 | 4,5 | QR-Code — immer dunkel auf hell, sonst liest ihn keine Kamera |
+| Schnee auf Markenflaeche | 13,33:1 | 16,92:1 | 4,5 | Fuss unter der Anmeldekarte |
+| Dunkelblau auf Schnee (Kartenschild) | 13,33:1 | 13,33:1 | 4,5 | Schild, Phasenpunkt, Pfeil, Kartenknopf |
+| Blau auf Schnee (Startring) | 3,77:1 | 3,77:1 | 3,0 | Ring am Ort, an dem die Spur beginnt |
+| Rot auf Schnee (Endring) | 4,68:1 | 4,68:1 | 3,0 | Ring am Ort, an dem die Spur endet |
 
-**36 Paare, 0 verfehlt** (Web 21.6.0). **Seit R4-08 ist die Liste nicht mehr
-das Maß:** `kontrast.py` leitet die Paare aus den Regeln des Stylesheets ab
-(Vorder- und Hintergrund in derselben Regel, dazu jede Farbe, die allein
-steht) und meldet jedes, das weder hier noch unter den Ausnahmen steht —
-Backlog Nr. 116. Der erste Lauf fand **14**: die acht Paare oben, die ihren
-Sollwert erreichen, den Strich am Vorschlag (2,09:1 — seither Orange tief)
-und fünf, die jetzt als Ausnahme stehen. Was die Ableitung nicht sieht: eine
-bekannte Schrift auf einer neuen Fläche, die eine Elternregel setzt. Hier
-standen bis Web 20.38.0 21 Paare, bis R4-08 25, bis R4-24 33.
+**58 Paare je Modus, 0 verfehlt** (Web 23.10.0). **Die Liste ist nicht das
+Maß** (seit R4-08, Backlog Nr. 116): `kontrast.py` leitet die Paare aus den
+Regeln des Stylesheets ab und meldet jedes, das weder hier noch unter den
+Ausnahmen steht — beim Lauf zu Web 23.10.0 **36 abgeleitet, 0 ohne
+Eintrag**. Was die Ableitung nicht sieht: eine bekannte Schrift auf einer
+neuen Fläche, die eine Elternregel setzt. *Bis Schritt 26 standen hier 36
+Paare unter den Namen der Farben („Asphalt auf Schnee"), nur hell.*
 
-**Neun Ausnahmen, jede mit Grund** — sie stehen im Werkzeug selbst, damit
+**Ausnahmen, jede mit Grund** — sie stehen im Werkzeug selbst, damit
 niemand sie aus Versehen weiterreicht:
 
-- **Orange als Fläche auf Schnee (2,23:1).** Orange trägt nirgends allein:
-  Der Primärknopf hat dunkelblaue Schrift darauf (5,97:1), der aktive
-  Menüpunkt zusätzlich Fläche und Fettung.
-- **Linie auf Schnee (1,36:1).** Zierrat, kein Bedienelement — siehe 3.3.
-- **Sand auf Schnee (1,64:1).** Der Winkel des Akkordeons ist Mechanik, keine
-  Botschaft; die aufklappbare Zeile daneben ist in Dunkelblau beschriftet.
-  Sand als *Fläche* (Blattgriff, ausgeschalteter Schalter) fällt ohnehin nicht
-  darunter, und Sand auf Dunkelblau erreicht 8,15:1.
-
-  Die Ausnahme ist in O10 **kleiner** geworden: Die Versionsnummer der
-  Fußzeile trug Sand ebenfalls, und dort stimmte die Begründung nicht — sie
-  ist die Auskunft, mit der ein Fehlerbericht anfängt, also ein zu *lesender*
-  Text. Sie steht jetzt in `--gedaempft` (5,30:1). **Wer diese Ausnahme
-  künftig weiterreicht, prüfe zuerst, ob der Text gelesen werden soll.**
-- **Weiß auf Orange tief (4,42:1)** im Hover des Primärknopfs — 15 px,
-  Gewicht 600, also normale Schrift. Die BetreiberIn hat den Ton angenommen
-  (E-R4-30); in Ruhe steht der Knopf mit 5,97:1 da.
-- **Linie auf Rauch (1,27:1).** Rahmen von Codeblock, `<pre>` und
-  Tagesgruppe des Imports — Zierrat wie „Linie auf Schnee".
-- **Orange als Strich auf Orange hell (1,97:1).** Aktiver Leisteneintrag,
-  aktive Kennzahl, Kennzahl im Ton orange: Der Strich begleitet die Fläche
-  und trägt den Zustand nicht allein — dieselbe Sprache wie oben.
-- **Orange tief auf Orange (1,93:1).** Rand des hervorgehobenen Phasenpunkts
-  auf der Karte; die orange Fläche ist das Zeichen.
+- **Linie auf Karte, auf Rauch, im Feld.** Zierrat, kein Bedienelement —
+  siehe 3.3; der Trenner zwischen zwei Segmenttasten gehört dazu.
+- **Mechanik auf Karte.** Der Winkel des Akkordeons ist Mechanik, keine
+  Botschaft; die aufklappbare Zeile daneben ist beschriftet. Als *Fläche*
+  (Blattgriff, ausgeschalteter Schalter) fällt Mechanik ohnehin nicht
+  darunter. **Wer diese Ausnahme weiterreicht, prüfe zuerst, ob der Text
+  gelesen werden soll** (O10: die Versionsnummer).
 - **Spurfarbe als Farbschlüssel.** Die Linie der Legende zeigt die Farbe der
   Spur; was sie bedeutet, sagt die Beschriftung daneben.
-- **Blau als Balken auf Linie (2,77:1).** Die Füllung eines Anteilsbalkens
-  auf seiner Spur (9.40): Zahl und Anteil stehen in derselben Zeile, der
-  Balken trägt nichts allein; die Spur in Linie ist die freigegebene Form
-  (M-R4-24).
+- **Säule als Balken auf Linie, Speicherbalken.** Zahl und Anteil stehen in
+  derselben Zeile; der Balken trägt nichts allein (M-R4-24).
+- **Radiopunkt gewählt.** Rand und Füllung sind eine Farbe; der Ring in
+  `--flaeche-feld` macht den Punkt.
+- **Karte: Ladering, Fläche vor den Kacheln, Kartenzeichen.** Die Karte bleibt
+  in beiden Modi hell (E-MA-14).
+- **Kante der Kopfleiste im Dunkeln.** Zierrat zwischen zwei dunklen Flächen.
+
+---
+
+## 3a. Dark Mode
+
+*Seit Web 23.10.0 (Schritt 26, MA-07; Board MA-03, -04, -07, -08).*
+**Eine zweite Zuordnung derselben Rollen, kein zweites Farbsystem**
+(E-MA-03). Jede Rolle aus Kapitel 3 bekommt im Dunkeln eine andere Stufe
+derselben Tonreihen; die Bausteine wissen davon nichts.
+
+| Rolle | hell | dunkel |
+|---|---|---|
+| Seite, Karte, Abgesetztes | Schnee, neutral 75, Rauch | blau 900, Dunkelblau, blau 700 |
+| Text, Titel, Gedämpft | Asphalt, Dunkelblau, neutral 600 | Schnee, blau 100, blau 200 |
+| Link (unter dem Zeiger) | blau 600 (blau 600) | blau 300 (blau 200) |
+| Linie, Linie stark | neutral 200, neutral 600 | blau 700, blau 300 |
+| Aktion, Schrift darauf | Dunkelblau, Schnee | blau 300, Dunkelblau |
+| Auswahl: Fläche, Schrift | blau 100, Dunkelblau | blau 700, Schnee |
+| Status: Fläche, Schrift, Linie | 100, 700, 600 | 800, 200, 400 (Info: 700, 100, 400) |
+| Gefahrknopf: Linie, Schrift, Fläche unter dem Zeiger | rot 600, rot 700, rot 100 | rot 400, rot 200, rot 800 |
+| Zähler offener Fehler, Schrift darauf | rot 700, Schnee | rot 300, rot 900 |
+| Fokus | blau 500 | blau 100 |
+
+**Warum die Blau-Reihe** und nicht ein warmes Schwarz: Dunkelblau ist die
+dunkle Markenfarbe; ein Schwarz aus der Neutral-Reihe kippte die Marke ins
+Beige (Board MA-04).
+
+**Zwei Auslöser, dieselben Werte.** Ohne Wahl folgt die Oberfläche dem
+Gerät (`prefers-color-scheme`); im Profil lässt sich „Hell" oder „Dunkel"
+fest wählen, und `ui_seite_start()` setzt dann `data-theme` am `<html>` —
+serverseitig, damit nichts aufblitzt (E-MA-13). Der Schalter ist eine
+**Wahlliste** (9.31) im Profil, kein neuer Baustein in der Kopfleiste.
+
+**Was nicht umschaltet:**
+
+- **Die Kopfleiste** bleibt Dunkelblau und bekommt im Dunkeln eine Kante in
+  blau 700 nach unten.
+- **Die Karte** (Leaflet) bleibt hell, samt Kartenzeichen und Spurfarben,
+  mit einem Rahmen in `--linie-stark` (E-MA-14). Ein dunkler Kacheldienst
+  wäre ein weiterer Dritter, der den Ausschnitt sähe (Bedrohungsmodell
+  Lage G). Die Spurstreifen der Tabelle bekommen im Dunkeln einen Rand,
+  damit `--spur-4` (Dunkelblau) auf der dunkelblauen Karte sichtbar bleibt.
+- **Druckblätter** (`--papier-*`) und **jeder Druck** bleiben hell.
+- **Das Logo** steht in der Kopfleiste ohnehin in der Fassung
+  farbig-negativ; die Anmeldeseiten wählen mit `<picture>` nach dem Gerät.
 
 ---
 
@@ -399,69 +466,140 @@ auseinanderlaufen kann.
 
 <!-- ERZEUGT von tools/erzeugen/design.py — nicht von Hand ändern. -->
 
-101 Token in 15 Gruppen, alle aus `:root` in `server/assets/style.css`. Die Spalte **benutzt** zählt die `var()`-Verweise im übrigen Stylesheet.
+142 Token in 21 Gruppen, alle aus `:root` in `server/assets/style.css`. Die Spalte **benutzt** zählt die `var()`-Verweise im übrigen Stylesheet.
+
+**Leitwerte**
+
+| Token | Wert | benutzt | |
+|---|---|--:|---|
+| `--schnee` | `var(--genem-schnee)` | 15 |  |
+| `--rauch` | `var(--genem-rauch)` | 1 |  |
+| `--sand` | `var(--genem-sand)` | 1 |  |
+| `--asphalt` | `var(--genem-asphalt)` | 1 |  |
+| `--dunkelblau` | `var(--genem-dunkelblau)` | 11 |  |
+| `--orange` | `var(--genem-philipp-orange)` | 0 |  |
+| `--blau` | `var(--genem-max-blau)` | 4 |  |
+| `--rot` | `var(--genem-newroz-rot)` | 4 |  |
 
 **Flächen**
 
 | Token | Wert | benutzt | |
 |---|---|--:|---|
-| `--schnee` | `#FFFCFA` | 38 |  |
-| `--rauch` | `#F7F5ED` | 39 |  |
-| `--sand` | `#D4C7AD` | 15 |  |
+| `--flaeche-seite` | `var(--genem-flaeche-standard)` | 1 |  |
+| `--flaeche-karte` | `var(--genem-flaeche-karte)` | 19 |  |
+| `--flaeche-abgesetzt` | `var(--genem-flaeche-abgesetzt)` | 35 |  |
+| `--flaeche-feld` | `var(--genem-flaeche-standard)` | 5 |  |
+| `--flaeche-marke` | `var(--genem-dunkelblau)` | 1 |  |
 
 **Schrift**
 
 | Token | Wert | benutzt | |
 |---|---|--:|---|
-| `--asphalt` | `#1A0500` | 26 |  |
-| `--dunkelblau` | `#1A2E4D` | 64 |  |
-| `--gedaempft` | `#6E6459` | 75 |  |
-| `--auf-dunkel` | `#FFFFFF` | 10 | Schrift auf Dunkelblau, 13,62:1 |
+| `--text` | `var(--genem-text-standard)` | 21 |  |
+| `--text-titel` | `var(--genem-text-alternativ)` | 36 |  |
+| `--gedaempft` | `var(--genem-text-sekundaer)` | 70 |  |
+| `--text-link` | `var(--genem-text-blau)` | 19 |  |
+| `--text-link-hover` | `var(--genem-text-blau)` | 4 |  |
+| `--auf-dunkel` | `var(--genem-schnee)` | 7 | Schrift auf Dunkelblau, 13,33:1 |
 
 **Linien**
 
 | Token | Wert | benutzt | |
 |---|---|--:|---|
-| `--linie` | `#E3DAC6` | 46 |  |
-| `--linie-stark` | `var(--gedaempft)` | 12 |  |
+| `--linie` | `var(--genem-linie)` | 46 |  |
+| `--linie-stark` | `var(--genem-linie-stark)` | 20 |  |
+| `--mechanik` | `var(--genem-sand)` | 11 |  |
 
-**Orange — Handeln**
-
-| Token | Wert | benutzt | |
-|---|---|--:|---|
-| `--orange` | `#FF8F1F` | 29 |  |
-| `--orange-tief` | `#C25A00` | 24 |  |
-| `--orange-hell` | `#FFEBD6` | 23 |  |
-
-**Blau — Auswählen und Erklären**
+**Aktion — Dunkelblau**
 
 | Token | Wert | benutzt | |
 |---|---|--:|---|
-| `--blau` | `#4280E5` | 16 |  |
-| `--blau-tief` | `#1F4E9C` | 19 |  |
-| `--blau-hell` | `#D9ECFD` | 6 |  |
+| `--aktion` | `var(--genem-aktion)` | 16 |  |
+| `--aktion-hover` | `var(--genem-aktion-hover)` | 2 |  |
+| `--auf-aktion` | `var(--genem-text-auf-aktion)` | 6 |  |
 
-**Rot — Aufmerksamkeit**
-
-| Token | Wert | benutzt | |
-|---|---|--:|---|
-| `--rot` | `#D63338` | 14 |  |
-| `--rot-tief` | `#9E2226` | 19 |  |
-| `--rosa` | `#FCE2D6` | 7 |  |
-
-**Primärknopf**
+**Hauptaktion — Philipp-Orange, höchstens einmal je Seite**
 
 | Token | Wert | benutzt | |
 |---|---|--:|---|
-| `--knopf-primaer-flaeche` | `var(--orange)` | 2 |  |
-| `--knopf-primaer-schrift` | `var(--dunkelblau)` | 3 |  |
+| `--aktion-haupt` | `var(--genem-aktion-haupt)` | 2 |  |
+| `--aktion-haupt-hover` | `var(--genem-aktion-haupt-hover)` | 2 |  |
+| `--auf-aktion-haupt` | `var(--genem-text-auf-aktion-haupt)` | 2 |  |
+
+**Auswahl — „hier bin ich"**
+
+| Token | Wert | benutzt | |
+|---|---|--:|---|
+| `--auswahl-flaeche` | `var(--genem-blau-100)` | 16 |  |
+| `--auswahl-text` | `var(--genem-dunkelblau)` | 8 |  |
+| `--auswahl-linie` | `var(--genem-aktion)` | 11 |  |
+| `--kopf-aktiv` | `var(--genem-blau-300)` | 1 |  |
+
+**Status**
+
+| Token | Wert | benutzt | |
+|---|---|--:|---|
+| `--info-flaeche` | `var(--genem-status-info-flaeche)` | 4 |  |
+| `--info-text` | `var(--genem-status-info-text)` | 4 |  |
+| `--info-linie` | `var(--genem-status-info-linie)` | 1 |  |
+| `--erfolg-flaeche` | `var(--genem-status-erfolg-flaeche)` | 2 |  |
+| `--erfolg-text` | `var(--genem-status-erfolg-text)` | 3 |  |
+| `--erfolg-linie` | `var(--genem-status-erfolg-linie)` | 2 |  |
+| `--warnung-flaeche` | `var(--genem-status-warnung-flaeche)` | 8 |  |
+| `--warnung-text` | `var(--genem-status-warnung-text)` | 9 |  |
+| `--warnung-linie` | `var(--genem-status-warnung-linie)` | 3 |  |
+| `--fehler-flaeche` | `var(--genem-status-fehler-flaeche)` | 6 |  |
+| `--fehler-text` | `var(--genem-status-fehler-text)` | 20 |  |
+| `--fehler-linie` | `var(--genem-status-fehler-linie)` | 4 |  |
+
+**Gefahr**
+
+| Token | Wert | benutzt | |
+|---|---|--:|---|
+| `--gefahr` | `var(--genem-rot-700)` | 1 |  |
+| `--auf-gefahr` | `var(--genem-schnee)` | 1 |  |
+
+**Fokus**
+
+| Token | Wert | benutzt | |
+|---|---|--:|---|
+| `--fokus` | `var(--genem-max-blau)` | 5 |  |
+
+**Umgebungsetikett (Staging, Demo)**
+
+| Token | Wert | benutzt | |
+|---|---|--:|---|
+| `--umgebung-flaeche` | `var(--genem-orange-800)` | 1 |  |
+| `--umgebung-text` | `var(--genem-orange-200)` | 2 |  |
+
+**Diagramme**
+
+| Token | Wert | benutzt | |
+|---|---|--:|---|
+| `--diagramm-wert` | `var(--genem-max-blau)` | 2 |  |
+| `--diagramm-wert-hover` | `var(--genem-blau-600)` | 1 |  |
+| `--diagramm-hoechst` | `var(--genem-orange-600)` | 2 |  |
+| `--diagramm-1` | `var(--genem-max-blau)` | 1 |  |
+| `--diagramm-2` | `var(--genem-dunkelblau)` | 1 |  |
+| `--diagramm-3` | `var(--genem-philipp-orange)` | 1 |  |
+| `--diagramm-4` | `var(--genem-sand)` | 1 |  |
+
+**Papier**
+
+| Token | Wert | benutzt | |
+|---|---|--:|---|
+| `--papier` | `var(--genem-schnee)` | 1 |  |
+| `--papier-abgesetzt` | `var(--genem-rauch)` | 1 |  |
+| `--papier-text` | `var(--genem-asphalt)` | 1 |  |
+| `--papier-titel` | `var(--genem-dunkelblau)` | 4 |  |
+| `--papier-leise` | `var(--genem-neutral-600)` | 5 |  |
+| `--papier-warnung` | `var(--genem-rot-700)` | 2 |  |
 
 **Schriftskala**
 
 | Token | Wert | benutzt | |
 |---|---|--:|---|
-| `--groesse-1` | `12px` | 12 |  |
-| `--groesse-2` | `13px` | 57 |  |
+| `--groesse-2` | `13px` | 69 |  |
 | `--groesse-3` | `15px` | 16 |  |
 | `--groesse-4` | `16px` | 15 |  |
 | `--groesse-5` | `19px` | 13 |  |
@@ -475,7 +613,7 @@ auseinanderlaufen kann.
 
 | Token | Wert | benutzt | |
 |---|---|--:|---|
-| `--abstand-1` | `4px` | 84 |  |
+| `--abstand-1` | `4px` | 86 |  |
 | `--abstand-2` | `8px` | 121 |  |
 | `--abstand-3` | `12px` | 164 |  |
 | `--abstand-4` | `16px` | 67 |  |
@@ -494,7 +632,7 @@ auseinanderlaufen kann.
 | Token | Wert | benutzt | |
 |---|---|--:|---|
 | `--kopf` | `56px` | 13 |  |
-| `--knopf` | `44px` | 45 |  |
+| `--knopf` | `44px` | 46 |  |
 | `--leiste` | `260px` | 2 | Seitenleiste ab 1200 |
 | `--leiste-schmal` | `220px` | 2 | Seitenleiste 1024–1199 |
 | `--leiste-filter` | `280px` | 1 | Filterleiste der Suche ab 1200 |
@@ -513,7 +651,7 @@ auseinanderlaufen kann.
 | `--symbol-text` | `1em` | 2 | Symbol im Fliesstext |
 | `--symbol` | `20px` | 13 | Symbolgröße in der Zeile |
 | `--symbol-gross` | `24px` | 14 | Symbolgröße im Knopf und Kartenkopf |
-| `--strich` | `1px` | 58 | Haarlinie |
+| `--strich` | `1px` | 64 | Haarlinie |
 | `--strich-stark` | `2px` | 37 | Aktivstrich, Randstrich, Fokus |
 | `--radius-rund` | `999px` | 20 | Zähler, Griff, Punkt — voll rund |
 | `--schalter-breit` | `46px` | 2 | der Schalter, 46 breit … |
@@ -546,15 +684,15 @@ auseinanderlaufen kann.
 
 | Token | Wert | benutzt | |
 |---|---|--:|---|
-| `--spur-1` | `var(--orange)` | 1 |  |
-| `--spur-2` | `var(--blau)` | 0 |  |
-| `--spur-3` | `var(--rot)` | 0 |  |
-| `--spur-4` | `var(--dunkelblau)` | 0 |  |
-| `--spur-5` | `var(--orange-tief)` | 0 |  |
-| `--spur-6` | `var(--blau-tief)` | 0 |  |
-| `--spur-7` | `var(--rot-tief)` | 0 |  |
-| `--spur-8` | `#867146` | 0 |  |
-| `--spur-ruhe` | `var(--gedaempft)` | 0 |  |
+| `--spur-1` | `var(--genem-philipp-orange)` | 1 |  |
+| `--spur-2` | `var(--genem-max-blau)` | 0 |  |
+| `--spur-3` | `var(--genem-newroz-rot)` | 0 |  |
+| `--spur-4` | `var(--genem-dunkelblau)` | 0 |  |
+| `--spur-5` | `var(--genem-orange-600)` | 0 |  |
+| `--spur-6` | `var(--genem-blau-600)` | 0 |  |
+| `--spur-7` | `var(--genem-rot-600)` | 0 |  |
+| `--spur-8` | `var(--genem-neutral-500)` | 0 |  |
+| `--spur-ruhe` | `var(--genem-neutral-600)` | 0 |  |
 
 **Schwellen**
 
@@ -577,23 +715,28 @@ auseinanderlaufen kann.
 | `--auf-dunkel-flaeche` | `rgba(255,255,255,.14)` | 3 |  |
 | `--auf-dunkel-strich` | `rgba(255,255,255,.35)` | 1 |  |
 
-**Ungenutzt:** `--spur-2`, `--spur-3`, `--spur-4`, `--spur-5`, `--spur-6`, `--spur-7`, `--spur-8`, `--spur-ruhe`, `--s-handy`, `--s-leiste`, `--s-zwei`, `--s-karte-neben`.
+**Ungenutzt:** `--orange`, `--spur-2`, `--spur-3`, `--spur-4`, `--spur-5`, `--spur-6`, `--spur-7`, `--spur-8`, `--spur-ruhe`, `--s-handy`, `--s-leiste`, `--s-zwei`, `--s-karte-neben`.
 
 ## 5. Schriftskala
 
-Sieben Stufen, in Pixeln, ohne Zwischenwerte. Sie ist **geschlossen**: Eine
+Sechs Stufen, in Pixeln, ohne Zwischenwerte. Sie ist **geschlossen**: Eine
 Größe, die nicht in dieser Tabelle steht, gibt es nicht — die
 Vollständigkeitsprüfung meldet jede.
 
 | Token | Wert | wofür |
 |---|---|---|
-| `--groesse-1` | 12 px | Plakette, Kleinstzeile, Zähler |
-| `--groesse-2` | 13 px | Kleinzeile, Hinweis, Tabelleninhalt |
+| `--groesse-2` | 13 px | Kleinzeile, Hinweis, Tabelleninhalt, Plakette, Zähler — die kleinste Stufe |
 | `--groesse-3` | 15 px | Fließtext der Oberfläche, Leistenüberschrift |
 | `--groesse-4` | 16 px | Kartentitel, Knopf |
 | `--groesse-5` | 19 px | Abschnittsüberschrift |
 | `--groesse-6` | 24 px | Seitentitel |
 | `--groesse-titel` | 28 px | Titel der Lesespalte |
+
+**Seit Schritt 26 gibt es keine 12 px mehr** (E-MA-07): Das Branding-Repo
+setzt 13 px als Minimum, und `--groesse-1` ist entfallen; Plakette, Zähler,
+Diagrammachsen und Kleinstzeilen stehen in `--groesse-2`. Die Grundgröße
+15 px weicht von der Reihe des Repos (ab 16 px) ab und ist dort als
+Ausnahme für dichte Fachanwendungen festgehalten.
 
 Das ist die Antwort auf den offenen Punkt **B2** aus `docs/Branding.md`
 („keine geschlossene Größenskala; die Anwendung folgt einer Major-Third-Skala
@@ -613,6 +756,20 @@ Schriftgrößen außerhalb jeder Skala; heute sind es **0**.
 ## 6. Grundregeln
 
 Was für **jede** Seite gilt, unabhängig vom Baustein. Stylesheet, Abschnitt 3.
+
+**Links im Fließtext sind unterstrichen** (seit Web 23.11.2, E-MA-32): Ein
+Link ohne eigene Klasse in einem Absatz, Listenpunkt, `dd`, Feldhinweis,
+in der Unterzeile des Titels oder der Seitenerklärung trägt die Linie.
+Blau 600 gegen Asphalt sind 1,05:1 — die Farbe allein trägt die Aussage
+nicht (WCAG 1.4.1). Links mit eigener Form (Knopf, Eintrag, Kartenaktion)
+und Links in Tabellenzellen bleiben ohne.
+
+**Barrierefreiheit wird gemessen** (seit E-MA-33): `tools/barrierefreiheit/`
+fährt axe-core (WCAG 2.0 bis 2.2, A und AA) über die Seiten, in drei
+Engines. Eine Bedienung ohne Namen, ein Bedienelement im Bedienelement,
+`dt`/`dd` ohne `dl`, eine leere Kopfzelle: Das sind die Fehler, die es
+gefunden hat (F-MA-22). Wer einen Baustein baut, gibt jedem Knopf einen Namen,
+auch wenn sein Text schmal ausgeblendet wird.
 
 **Zwei Höhen für Bedienelemente — und eine Bedingung, die beide trennt**
 (`--knopf`, E-S8-09, R76):
@@ -967,7 +1124,7 @@ AGPL-3.0; siehe `docs/Lizenzen.md`.
 | `ohne-zuordnung.svg` | Tabler Icons „circle-dashed" (MIT) | 2 |
 | `ordner-plus.svg` | Tabler Icons „folder-plus" (MIT) | 1 |
 | `pfeil-hoch.svg` | Tabler Icons „arrow-up" (MIT) | 6 |
-| `plus.svg` | Tabler Icons „plus" (MIT) | 23 |
+| `plus.svg` | Tabler Icons „plus" (MIT) | 24 |
 | `position.svg` | Tabler Icons „current-location" (MIT) | 5 |
 | `profil.svg` | Tabler Icons „user" (MIT) | 17 |
 | `protokoll.svg` | Tabler Icons „list" (MIT) | 21 |
@@ -990,7 +1147,7 @@ AGPL-3.0; siehe `docs/Lizenzen.md`.
 | `uhrzeit.svg` | Tabler Icons „clock" (MIT) | 3 |
 | `veranstaltung.svg` | Tabler Icons „ticket" (MIT) | 11 |
 | `vollbild.svg` | Tabler Icons „maximize" (MIT) | 1 |
-| `warnung.svg` | Tabler Icons „alert-triangle" (MIT) | 29 |
+| `warnung.svg` | Tabler Icons „alert-triangle" (MIT) | 30 |
 | `werkzeug.svg` | Tabler Icons „tool" (MIT) | 0 |
 | `winkel.svg` | Tabler Icons „chevron-down" (MIT) | 19 |
 | `zahnrad.svg` | Tabler Icons „settings" (MIT) | 2 |
@@ -1073,59 +1230,59 @@ für eine Rückfrage — nicht für ein neues Element.
 | Baustein | Klasse | Regel im Stylesheet | `ui.php` |
 |---|---|---|--:|
 | `ui_seite_start()` | — | Hüllenfunktion, kein eigenes Element | 53 |
-| `ui_seite_ende()` | — | Hüllenfunktion, kein eigenes Element | 174 |
-| `ui_favicon()` | — | Hüllenfunktion, kein eigenes Element | 241 |
-| `ui_symbol()` | `.symbol` | ja (+9 Unterklassen) | 301 |
-| `ui_logo_masse()` | `.logo-masse` | **keine** | 480 |
-| `ui_kopf()` | `.kopf` | ja (+25 Unterklassen) | 541 |
-| `ui_geruest_start()` | `.inhalt` | ja | 633 |
-| `ui_leiste_ende()` | `.leiste` | ja (+17 Unterklassen) | 699 |
-| `ui_geruest_ende()` | `.inhalt` | ja | 723 |
-| `ui_leiste_diensttage()` | `.leiste-liste` | ja | 773 |
-| `ui_zaehler()` | `.zaehler` | ja (+2 Unterklassen) | 1013 |
-| `ui_leiste_einstellungen()` | `.leiste-liste` | ja | 1172 |
-| `ui_einstellungen_uebersicht()` | `.uebersicht-raster` | ja | 1243 |
-| `ui_fuss_seite()` | `.fuss-seite` | ja | 1322 |
-| `ui_hinweise()` | `.hinweise` | ja | 1370 |
-| `ui_umgebung_hinweis()` | `.hinweis-umgebung` | ja | 1398 |
-| `ui_ankuendigung()` | `.meldung-ankuendigung` | ja | 1433 |
-| `ui_demo_hinweis()` | `.demo-hinweis` | ja | 1486 |
-| `ui_datenschutz_hinweis()` | `.datenschutz-hinweis` | **keine** | 1539 |
-| `ui_meldung_markup()` | `.meldung` | ja (+19 Unterklassen) | 1604 |
-| `ui_knopf()` | `.knopf` | ja (+17 Unterklassen) | 1650 |
-| `ui_codeblock_lang()` | `.codeblock-lang` | ja | 1702 |
-| `ui_plakette()` | `.plakette` | ja (+5 Unterklassen) | 1728 |
-| `ui_ladeplatz()` | `.ladeplatz` | ja (+3 Unterklassen) | 1755 |
-| `ui_karte_start()` | `.karte` | ja (+37 Unterklassen) | 1795 |
-| `ui_karte_ende()` | `.karte` | ja (+37 Unterklassen) | 1879 |
-| `ui_nach_oben()` | `.nach-oben` | ja | 1914 |
-| `ui_sprungliste()` | `.sprungliste` | ja | 1956 |
-| `ui_kartenfilter()` | `.kartenfilter` | ja (+4 Unterklassen) | 2004 |
-| `ui_zeile()` | `.zeile` | ja (+35 Unterklassen) | 2066 |
-| `ui_zeile_mehr()` | `.zeile-mehr` | ja | 2121 |
-| `ui_reiter()` | `.reiter` | ja (+9 Unterklassen) | 2169 |
-| `ui_listenkopf()` | `.listenkopf` | ja | 2213 |
-| `ui_listenfuss()` | `.listenfuss` | ja | 2285 |
-| `ui_zeitraumwahl()` | `.zeitraumwahl` | ja (+5 Unterklassen) | 2340 |
-| `ui_diagramm_skala()` | `.diagramm-skala` | **keine** | 2386 |
-| `ui_diagramm_saeulen()` | `.diagramm-saeulen` | ja | 2420 |
-| `ui_diagramm_balken()` | `.diagramm-balken` | ja | 2492 |
-| `ui_titelzeile()` | `.titelzeile` | ja (+6 Unterklassen) | 2516 |
-| `ui_aktionen()` | `.aktionen` | ja (+2 Unterklassen) | 2558 |
-| `ui_feld()` | `.feld` | ja (+26 Unterklassen) | 2626 |
-| `ui_schalter()` | `.schalter` | ja (+27 Unterklassen) | 2691 |
-| `ui_segment_markup()` | `.segment` | ja (+23 Unterklassen) | 2735 |
-| `ui_wahlliste()` | `.wahlliste` | ja | 2788 |
-| `ui_zeilenaktionen()` | `.zeile-aktionen` | ja | 2832 |
-| `ui_speichern_leiste()` | `.speichern` | ja (+4 Unterklassen) | 2931 |
-| `ui_kennzahl()` | `.kennzahl` | ja (+20 Unterklassen) | 2993 |
-| `ui_abbruch()` | `.rahmen` | ja (+1 Unterklassen) | 3034 |
-| `ui_csrf_bootstrap()` | `.csrf-bootstrap` | **keine** | 3126 |
-| `ui_geocoder_bootstrap()` | `.geocoder-bootstrap` | **keine** | 3164 |
-| `ui_geocoder_hinweis()` | `.geocoder-hinweis` | **keine** | 3194 |
-| `ui_ortsfeld()` | `.ortsfeld-zeile` | ja | 3206 |
-| `ui_tabellen_bootstrap()` | `.tabellen-bootstrap` | **keine** | 3349 |
-| `ui_krypto_bootstrap()` | — | Hüllenfunktion, kein eigenes Element | 3428 |
+| `ui_seite_ende()` | — | Hüllenfunktion, kein eigenes Element | 181 |
+| `ui_favicon()` | — | Hüllenfunktion, kein eigenes Element | 248 |
+| `ui_symbol()` | `.symbol` | ja (+9 Unterklassen) | 309 |
+| `ui_logo_masse()` | `.logo-masse` | **keine** | 492 |
+| `ui_kopf()` | `.kopf` | ja (+25 Unterklassen) | 553 |
+| `ui_geruest_start()` | `.inhalt` | ja | 645 |
+| `ui_leiste_ende()` | `.leiste` | ja (+17 Unterklassen) | 715 |
+| `ui_geruest_ende()` | `.inhalt` | ja | 739 |
+| `ui_leiste_diensttage()` | `.leiste-liste` | ja | 789 |
+| `ui_zaehler()` | `.zaehler` | ja (+2 Unterklassen) | 1038 |
+| `ui_leiste_einstellungen()` | `.leiste-liste` | ja | 1197 |
+| `ui_einstellungen_uebersicht()` | `.uebersicht-raster` | ja | 1268 |
+| `ui_fuss_seite()` | `.fuss-seite` | ja | 1347 |
+| `ui_hinweise()` | `.hinweise` | ja | 1395 |
+| `ui_umgebung_hinweis()` | `.hinweis-umgebung` | ja | 1423 |
+| `ui_ankuendigung()` | `.meldung-ankuendigung` | ja | 1458 |
+| `ui_demo_hinweis()` | `.demo-hinweis` | ja | 1511 |
+| `ui_datenschutz_hinweis()` | `.datenschutz-hinweis` | **keine** | 1564 |
+| `ui_meldung_markup()` | `.meldung` | ja (+19 Unterklassen) | 1629 |
+| `ui_knopf()` | `.knopf` | ja (+19 Unterklassen) | 1675 |
+| `ui_codeblock_lang()` | `.codeblock-lang` | ja | 1727 |
+| `ui_plakette()` | `.plakette` | ja (+6 Unterklassen) | 1755 |
+| `ui_ladeplatz()` | `.ladeplatz` | ja (+3 Unterklassen) | 1782 |
+| `ui_karte_start()` | `.karte` | ja (+37 Unterklassen) | 1822 |
+| `ui_karte_ende()` | `.karte` | ja (+37 Unterklassen) | 1906 |
+| `ui_nach_oben()` | `.nach-oben` | ja | 1941 |
+| `ui_sprungliste()` | `.sprungliste` | ja | 1983 |
+| `ui_kartenfilter()` | `.kartenfilter` | ja (+4 Unterklassen) | 2031 |
+| `ui_zeile()` | `.zeile` | ja (+35 Unterklassen) | 2093 |
+| `ui_zeile_mehr()` | `.zeile-mehr` | ja | 2148 |
+| `ui_reiter()` | `.reiter` | ja (+9 Unterklassen) | 2196 |
+| `ui_listenkopf()` | `.listenkopf` | ja | 2240 |
+| `ui_listenfuss()` | `.listenfuss` | ja | 2312 |
+| `ui_zeitraumwahl()` | `.zeitraumwahl` | ja (+5 Unterklassen) | 2370 |
+| `ui_diagramm_skala()` | `.diagramm-skala` | **keine** | 2416 |
+| `ui_diagramm_saeulen()` | `.diagramm-saeulen` | ja | 2450 |
+| `ui_diagramm_balken()` | `.diagramm-balken` | ja | 2522 |
+| `ui_titelzeile()` | `.titelzeile` | ja (+7 Unterklassen) | 2546 |
+| `ui_aktionen()` | `.aktionen` | ja (+2 Unterklassen) | 2588 |
+| `ui_feld()` | `.feld` | ja (+27 Unterklassen) | 2660 |
+| `ui_schalter()` | `.schalter` | ja (+27 Unterklassen) | 2725 |
+| `ui_segment_markup()` | `.segment` | ja (+23 Unterklassen) | 2769 |
+| `ui_wahlliste()` | `.wahlliste` | ja | 2822 |
+| `ui_zeilenaktionen()` | `.zeile-aktionen` | ja | 2866 |
+| `ui_speichern_leiste()` | `.speichern` | ja (+4 Unterklassen) | 2965 |
+| `ui_kennzahl()` | `.kennzahl` | ja (+20 Unterklassen) | 3029 |
+| `ui_abbruch()` | `.rahmen` | ja (+1 Unterklassen) | 3070 |
+| `ui_csrf_bootstrap()` | `.csrf-bootstrap` | **keine** | 3162 |
+| `ui_geocoder_bootstrap()` | `.geocoder-bootstrap` | **keine** | 3200 |
+| `ui_geocoder_hinweis()` | `.geocoder-hinweis` | **keine** | 3230 |
+| `ui_ortsfeld()` | `.ortsfeld-zeile` | ja | 3242 |
+| `ui_tabellen_bootstrap()` | `.tabellen-bootstrap` | **keine** | 3385 |
+| `ui_krypto_bootstrap()` | — | Hüllenfunktion, kein eigenes Element | 3464 |
 
 54 Funktionen mit Markup in `server/ui.php`, davon 4 Hüllenfunktionen ohne eigenes Element.
 **Ohne Regel im Stylesheet:** `ui_logo_masse()`, `ui_datenschutz_hinweis()`, `ui_diagramm_skala()`, `ui_csrf_bootstrap()`, `ui_geocoder_bootstrap()`, `ui_geocoder_hinweis()`, `ui_tabellen_bootstrap()` — jede davon ist zu prüfen: entweder ein Behälter, der zu Recht keine Gestaltung braucht, oder eine Lücke.
@@ -1186,10 +1343,11 @@ Dunkelblau, Symbol in `--auf-dunkel`), den Titel und die Zahl — **als Gruppe
 mittig**. Aufruf: `ui_karte_start(['titel' => …, 'zahl' => …, 'klasse' =>
 'karte-bereich', 'symbol' => 'profil'])`; die Option `symbol` gibt das Zeichen
 vor dem Titel aus. Abgesetzt wird über das Zeichen und die Mitte, **nicht über
-eine Farbe mit Bedeutung** — Orange heißt „hier stehst du", Hellblau
+eine Farbe mit Bedeutung** — blau 100 heißt „hier stehst du", Grün
 „erledigt", Rot „Gefahr", und ein getönter Kopf las sich im Mockup als Meldung
-oder Kopfleiste. Kontraste, gerechnet: Weiß auf Dunkelblau 13,6 : 1,
-Dunkelblau auf Rauch (Titel) 12,5 : 1, Gedämpft auf Rauch (Zahl) 5,3 : 1.
+oder Kopfleiste. Das Zeichen steht seit Schritt 26 in `--aktion` mit
+`--auf-aktion` (hell Dunkelblau mit Schnee, dunkel blau 300 mit
+Dunkelblau). Kontraste: Kapitel 3.4.
 
 - **Ein Verwender:** die Einstellungs-Übersicht (9.27). Ein zweiter braucht
   einen Grund.
@@ -1325,14 +1483,15 @@ wäre auf dem Handy eine Bildschirmlänge je Zeile.
 
 ### 9.4 Knopf
 
-**Vier Arten nach Bedeutung, nicht nach Aussehen** (E-P3-22):
+**Sechs Arten nach Bedeutung, nicht nach Aussehen** (E-P3-22, `haupt` seit E-MA-27):
 
 | Art | Aussehen | wofür |
 |---|---|---|
-| `primaer` | Orange, dunkelblaue Schrift | die **eine** Haupthandlung einer Seite |
-| `neutral` | Rahmen | alles Übrige, auch „Bearbeiten" |
-| `gefahr` | roter Rahmen, rote Schrift | Löschen |
-| `leise` | nur Schrift | Abbrechen, Nebenwege |
+| `haupt` | Philipp-Orange, Schrift Asphalt (dunkel: orange 400); unter dem Zeiger orange 400 (dunkel 300) | die **eine** Hauptaktion der Seite, höchstens einmal — heute auf sechs Seiten (E-MA-27): Tagesübersicht „Einsatz nachtragen", Einsatz „Bearbeiten", Einsatzformular „Speichern" (Speicherleiste mit `'haupt' => true`), Diensttag anlegen, Anmelden, Konto anlegen |
+| `primaer` | Dunkelblau, Schrift Schnee (dunkel: blau 300, Schrift Dunkelblau) | eine Handlung, die die Seite weiterbringt („Speichern" in einem Dialog, „Übernehmen") |
+| `neutral` | Umriss `--linie-stark`, Schrift Dunkelblau, unter dem Zeiger Rauch | alles Übrige |
+| `gefahr` | Umriss rot 600, Schrift rot 700, unter dem Zeiger rot 100 | Löschen |
+| `leise` | nur Schrift `--gedaempft`, unter dem Zeiger Asphalt | Abbrechen, Nebenwege |
 | `symbol` | 44 × 44, nur ein Zeichen | braucht `titel` fürs Vorlesen |
 
 ```html
@@ -1352,11 +1511,18 @@ Medienabfrage, nicht am Ort.
 
 | Ton | Fläche | Symbol | `role` | wofür |
 |---|---|---|---|---|
-| `info` | Blau hell | Hinweis | `status` | Auskunft |
-| `ok` | Blau hell | Haken | `status` | Vollzug |
-| `warn` | Orange hell | Warnung | `status` | Vorsicht |
-| `fehler` | Rosa | Warnung | `alert` | etwas ist schiefgegangen |
-| `schutz` | Rosa | Schloss | `status` | schutzbedürftige Daten, dauerhaft |
+| `info` | `--info-*` (blau 100 / 700) | Hinweis | `status` | Auskunft |
+| `ok` | `--erfolg-*` (grün 100 / 700) | Haken | `status` | Vollzug |
+| `warn` | `--warnung-*` (orange 100 / 700) | Warnung | `status` | Vorsicht |
+| `fehler` | `--fehler-*` (rot 100 / 700) | Warnung | `alert` | etwas ist schiefgegangen |
+| `schutz` | `--fehler-*` (rot 100 / 700) | Schloss | `status` | schutzbedürftige Daten, dauerhaft |
+
+**Seit Schritt 26 ist `ok` grün** (E-MA-02): Bis dahin stand Vollzug blau
+wie der Hinweis und unterschied sich nur am Symbol. Text und Symbol tragen
+jetzt die Schrift der Stufe 700 — auch bei der Warnung, deren Text bis dahin
+in Asphalt stand, weil Orange tief auf Orange hell 3,81:1 verfehlte
+(orange 700 auf orange 100: 5,67:1). Im Dark Mode Fläche 800, Schrift 200
+(3a).
 
 **`schutz` ist rot und trotzdem kein Fehler** (S3, Rückmeldung vom
 01.09.2026). Er ist für den einen Fall da, in dem eine Meldung **dauerhaft**
@@ -1389,19 +1555,29 @@ quetscht ein breiter Knopf den Text auf ein Wort je Zeile (Fund aus O3).
 
 ### 9.6 Plakette
 
-**Zweck:** Ein Zustand an einer Zeile oder in einem Kartenkopf. Vier Töne:
-`neutral` · `orange` (Winde, Bergwacht) · `blau` (Sekundär, Rettungsmittel,
-aktuell, freigegeben) · `rot` (Fehleinsatz, kein Ende, nie gesichert, leer).
+**Zweck:** Ein Zustand an einer Zeile oder in einem Kartenkopf. **Fünf Töne**
+(seit Schritt 26, E-MA-08):
+
+| Ton | heißt | Beispiele |
+|---|---|---|
+| `neutral` | eine Zahl ohne Wertung, nicht eingerichtet | „0", „aus" |
+| `gruen` | ein **Zustand** ist in Ordnung | freigegeben, aktiv, erledigt, an, in Ordnung |
+| `blau` | eine **Eigenschaft** | Sekundär, verschlüsselt, aktuell, Fassung, „N Einträge" |
+| `orange` | braucht Aufmerksamkeit, arbeitet aber | Winde, Bergwacht, überfällig |
+| `rot` | arbeitet nicht | Fehleinsatz, kein Ende, nie gesichert, leer |
 
 ```html
-<span class="plakette plakette-blau">freigegeben</span>
+<span class="plakette plakette-gruen">freigegeben</span>
 ```
+
+Bis Schritt 26 trug `blau` beides, Zustand und Eigenschaft; rund achtzig
+Übergaben, die einen Zustand meinten, sind dabei auf `gruen` gewechselt.
 
 **Plaketten tragen kein Häkchen: Ihr Vorhandensein ist das Häkchen.** Und sie
 sind **kein Bedienelement** — wer eine anklickbar braucht, nimmt einen Knopf
 (E-P3-17).
 
-> **Es sind genau diese vier Töne.** Ein fünfter Wert erzeugt eine Klasse ohne
+> **Es sind genau diese fünf Töne.** Ein sechster Wert erzeugt eine Klasse ohne
 > Regel — die Plakette steht dann ohne Hintergrund da, als bloßer Text. Genau
 > das ist passiert: `warn` wurde an drei Stellen übergeben und fiel niemandem
 > auf, weil der Klassenname zusammengesetzt wird (`'plakette-' . $ton`) und als
@@ -1414,9 +1590,9 @@ sind **kein Bedienelement** — wer eine anklickbar braucht, nimmt einen Knopf
 > gefunden, bevor es ausgeliefert wurde: Die neue Karte „Schlüssel des
 > Servers" sollte `plakette-ok` tragen, und die Klasse gibt es im Stylesheet
 > nicht. Sie steht seit Längerem an **zwei Stellen im Bestand** und war dort
-> nie aufgefallen. Wer einen Zustand „alles in Ordnung" meint, nimmt `blau` —
-> das ist der Ton dafür (9.23). Die zwei Altstellen sind mit P5b/AP9
-> behoben.
+> nie aufgefallen. Wer einen Zustand „alles in Ordnung" meint, nimmt seit
+> Schritt 26 `gruen` (bis dahin `blau`) — das ist der Ton dafür (9.23). Die
+> zwei Altstellen sind mit P5b/AP9 behoben.
 
 > **Plakette und Schloss schließen einander nicht mehr aus** (S3/AP6,
 > E-S3-16). F-N1-B hatte in P3 entschieden: entweder die Plakette
@@ -1569,8 +1745,12 @@ Klick öffnet die Liste, auf die sie sich bezieht — deshalb ein `<a>` und kein
 `<div>`: Ein Klickziel, das kein Link ist, bedient weder Tastatur noch
 Kontextmenü.
 
-Töne wie bei der Plakette (`neutral` / `orange` / `rot`). Die Hervorhebung
-der Extremwerte ist **orange, nicht rot** — siehe 3.1.
+Töne wie bei der Plakette, im Bestand nur `orange` und `rot` (ohne Ton
+neutral); ein `gruen` ist nicht gebaut, weil keine Kachel einen guten
+Zustand meldet (F-MA-06). Die Hervorhebung der Extremwerte ist **orange,
+nicht rot** — siehe 3.1. Die **aktive** Kachel trägt seit Schritt 26 die
+Auswahlfläche mit dunkelblauem Rahmen (bis dahin Orange hell mit
+orangem Rahmen).
 
 **Das Raster** (`.kennzahl-raster`) folgt dem Satz: zwei Spalten unter 720 px,
 darüber vier oder fünf, je nach Zahl der Kacheln (Kapitel 7). Eine Ausnahme
@@ -1705,7 +1885,8 @@ gerade?":
   `translateY(100%)` hieße dort „um die eigene Höhe nach unten", also neben
   die Sache. Der 1024er Block setzt deshalb `transform:none; transition:none`.
 - **Die Markierung.** Solange sein Blatt offen ist, trägt der Öffner
-  `--orange-hell` mit `--orange-tief` (Kapitel 3.1). Sie hängt am Attribut,
+  `--auswahl-flaeche` mit `--auswahl-text` (Kapitel 3.1; bis Schritt 26
+  Orange hell mit Orange tief). Sie hängt am Attribut,
   nicht an einer Klasse — siehe dort.
 
 **Für wen das wichtig ist, der `blatt.js` anfasst:** Die Reihenfolge ist kein
@@ -1873,9 +2054,9 @@ keine PHP-Seite, die ihn ausgeben könnte. In der erzeugten Bausteintabelle
   .schnitt-felder     eine Reihe Zeitfelder (flex, 1 1 180px je Feld)
 ```
 
-**Der orange Randstrich ist nicht neu.** `.schnitt-bereich` benutzt dieselbe
+**Der Randstrich ist nicht neu.** `.schnitt-bereich` benutzt dieselbe
 Form wie `.rea-ereignisse`: `border-left: var(--strich-stark) solid
-var(--orange)` plus Innenabstand. Sie sagt „das hier gehört zur Zeile
+var(--linie-stark)` plus Innenabstand (bis Schritt 26 in `--orange`). Sie sagt „das hier gehört zur Zeile
 darüber" (E-P3-28), und dafür gibt es keinen zweiten Weg.
 
 **Kein neuer Farbwert und keine neue Größe.** Alles hier kommt aus den Token
@@ -1918,7 +2099,7 @@ Werts**:
 
 | Stufe | Klasse | Wofür | Schrift |
 |---|---|---|---|
-| groß | `.codeblock-wert` | Werte, die jemand **abschreibt**: Kopplungscode, Wiederherstellungsschlüssel | `--groesse-5`, 600, gesperrt (`.06em`) |
+| groß | `.codeblock-wert` | Werte, die jemand **abschreibt**: Kopplungscode, Wiederherstellungsschlüssel | `--groesse-5`, 700, gesperrt (`.06em`) |
 | klein | `.codeblock-wert-lang` | sechzig bis hundert Zeichen, die jemand **kopiert**: Cron-Zeile, Token-Adresse, Setz-Link, Einladungslink, Geräte-ID, API-Schlüssel, APK-Prüfsumme | `--groesse-2`, 400, ohne Sperrung, `word-break:break-all` |
 
 ```
@@ -2177,13 +2358,13 @@ bekommt ein Aktionsmenü.
 
 ### 9.23 Die Ampel: was die vier Plakettentöne auf einer Statusseite heißen
 
-*Neu mit Web 15.3.0 (S8/AP4, E-S8-16).* **Keine neuen Töne** — die vier gibt
-es seit P3 (9.4). Neu ist, dass sie auf **Betrieb → Status** eine feste
-Bedeutung tragen, und dass diese Bedeutung an einer Stelle steht.
+*Neu mit Web 15.3.0 (S8/AP4, E-S8-16); „in Ordnung" grün seit Web 23.9.0
+(Schritt 26).* Die Töne der Plakette (9.6) tragen auf **Betrieb → Status**
+eine feste Bedeutung, und diese Bedeutung steht an einer Stelle.
 
 | Ton | heißt | woran man es erkennt |
 |---|---|---|
-| **blau** | Es ist in Ordnung. | Der Normalzustand. Eine blaue Zeile fordert nichts. |
+| **grün** | Es ist in Ordnung. | Der Normalzustand. Eine grüne Zeile fordert nichts. Bis Schritt 26 war das **blau**; blau heißt seither „Eigenschaft" (Umgebung „Produktiv", Fassung). |
 | **orange** | Es braucht Aufmerksamkeit, **arbeitet aber**. | Wartungsmodus an, Job mit Rückstand, Backup überfällig. |
 | **rot** | Es **arbeitet nicht** — oder es geht dabei etwas verloren. | Serverschlüssel fehlt, Job mit Fehler, Ablage nicht beschreibbar. |
 | neutral | Nicht eingerichtet, oder eine reine Zahl ohne Wertung. | Kein Backup-Ziel, PHP-Fassung. |
@@ -2237,7 +2418,8 @@ Zustands bleiben.
 > mit demselben Mechanismus sollen denselben Griff haben" (E-S8-07). Option 1
 > hebt sie **für dieses Menü** auf: Links stand der Winkel genau dort, wo die
 > Einträge ihr Symbol tragen, und zwischen Überschrift und Eintrag lag eine
-> einzige Gewichtsstufe (Bricolage ist nur in 500 und 600 eingebunden) — die
+> einzige Gewichtsstufe (Bricolage war nur in 500 und 600 eingebunden, seit
+> Schritt 26 nur in 500) — die
 > Überschrift las sich wie ein Eintrag. **Die Diensttage-Leiste bleibt, wie
 > sie ist:** Winkel links, Jahreszeilen in `--groesse-4`, keine Trennlinie. Sie
 > trägt `.leiste-gruppe` nicht.
@@ -2249,7 +2431,10 @@ ist, nicht was man sieht.
 
 **Der Zähler** (`.zaehler`) steht rechts im Eintrag und nur über null. Drei
 Töne, dieselben wie die Ampel in 9.23: rot (Grundform), `.zaehler-orange`,
-`.zaehler-neutral`. Neutral steht auf Sand, nicht auf blassem Rot — ein
+`.zaehler-neutral`. Rot ist seit Schritt 26 die Gefahrfläche (rot 700 mit
+Schnee; der Gefahrknopf trägt sie seit Repo-Commit e7bf4fc nicht mehr, er
+ist ein Umriss), Orange die Warnfläche (orange 100 mit orange 700). Neutral steht auf
+Rauch (bis Schritt 26 Sand), nicht auf blassem Rot — ein
 blasses Rot läse sich als „fast schlimm", die Zahl soll aber gar nichts
 bewerten.
 
@@ -2258,8 +2443,8 @@ obersten sichtbaren Karte `.hier`) stehen unter dem aktiven Eintrag: die
 Kartentitel der Seite als Sprungmarken, `--unterpunkt` (28 px) hoch, eine
 Schriftstufe kleiner, ohne Symbol und ohne Randstrich. Sie sind **keine**
 Menüpunkte zweiter Ordnung; wer sie dafür hält, sucht dahinter eine eigene
-Seite. Die Markierung ist **fett, nicht orange**: Orange heißt in dieser
-Oberfläche „hier stehst du" und gehört dem aktiven Menüpunkt.
+Seite. Die Markierung ist **fett, nicht farbig**: Die Auswahlfläche heißt in
+dieser Oberfläche „hier stehst du" und gehört dem aktiven Menüpunkt.
 
 **Unter 950 px Fensterhöhe fallen sie in der festen Leiste weg** (seit Web
 21.1.0, E-P5c-131, dort unter 800 px; seit 21.1.3 unter 950, F-P5c-164;
@@ -2434,12 +2619,12 @@ Handlung.
 | | |
 |---|---|
 | `.vorschlaege` | schwebt (`position:absolute`, **`z-index:35`**); der Behälter trägt `position:relative` |
-| `.vorschlaege-gruppe` | Herkunftszeile auf Rauch, `--groesse-1`, versal — keine Bedienhöhe, sie ist nicht anzufassen |
+| `.vorschlaege-gruppe` | Herkunftszeile auf Rauch, `--groesse-2`, versal — keine Bedienhöhe, sie ist nicht anzufassen |
 | `.vorschlag` | `min-height: var(--knopf)` — folgt beiden Bedienhöhen von selbst (44/36, R76) |
-| `.vorschlag.aktiv`, `:hover` | Rauch mit `--abstand-1` **Orange tief** links — **eine** Markierung für Zeiger und Pfeiltaste. Bis Web 21.1.5 stand dort `--orange` (2,09:1 auf Rauch); der Strich steht allein, und dann gilt 3.1 (4,04:1, R4-08) |
+| `.vorschlag.aktiv`, `:hover` | Rauch mit `--abstand-1` in `--auswahl-linie` (Dunkelblau) links — **eine** Markierung für Zeiger und Pfeiltaste. Bis Web 21.1.5 stand dort `--orange` (2,09:1 auf Rauch), bis Schritt 26 Orange tief (4,04:1); der Strich steht allein und braucht 3:1 |
 | `.vorschlag-haupt` | eine Zeile, mit Ellipse; der getippte Teil in `<b>` |
 | `.vorschlag-neben` | die Herkunft, gedämpft, `--groesse-2` |
-| `.vorschlag-neu` | die freie Eingabe: `--orange-tief`, Kopfschrift — sie ist eine Handlung, kein Datensatz |
+| `.vorschlag-neu` | die freie Eingabe: `--text-link` (bis Schritt 26 Orange tief), Kopfschrift — sie ist eine Handlung, kein Datensatz |
 
 **Kein neues Token.** Alle Werte kommen aus der Skala; die Höhe ist `--knopf`.
 
@@ -2879,10 +3064,10 @@ Streifen gab es schon — den Demo-Hinweis und den Datenschutz-Hinweis
 
 | Streifen | Klasse | Ton | wegklickbar |
 |---|---|---|---|
-| Umgebung | `.demo-hinweis.hinweis-umgebung` | Rot tief auf Rosa (6,27 : 1), Symbol `server` | nein |
+| Umgebung | `.demo-hinweis.hinweis-umgebung` | Warnung: orange 700 auf orange 100 (5,67 : 1), Symbol `server` (bis Schritt 26 rot) | nein |
 | Ankündigung | `.meldung.meldung-info` / `.meldung-warn` + `.meldung-ankuendigung` | wie die Meldung | ja, je Sitzung |
-| Demo | `.demo-hinweis` | Orange hell | nein |
-| Datenschutz | `.demo-hinweis` | Orange hell | nein |
+| Demo | `.demo-hinweis` | Info: blau 700 auf blau 100 (bis Schritt 26 Orange hell) | nein |
+| Datenschutz | `.demo-hinweis` | Info, wie Demo | nein |
 
 **Die Reihe `.hinweise`** ist ein Spaltenbehälter mit `--abstand-2`
 zwischen den Streifen und `--abstand-5` darunter; die Kinder geben ihren
@@ -2901,10 +3086,13 @@ nicht bekommt, und das Kreuz landete allein in einer Zeile unten links. Hat
 der Text mehr als einen Satz, steht der erste als fetter Auftakt.
 
 **Die Kopfleiste einer Anlage mit Etikett** (`.kopf-umgebung`) ist eine
-Variante von `.kopf`: Fläche `--rot` statt `--dunkelblau` (Weiß darauf
-4,78 : 1), der Name in `--schnee` statt `--sand` (Sand hätte auf Rot
-2,86 : 1), und der **aktive Kopfpunkt** gestrichen in `--orange-hell`
-(4,12 : 1). Das gewohnte `--orange` hätte auf Rot 2,10 : 1 und fiele unter
+Variante von `.kopf`: Fläche `--umgebung-flaeche` (orange 800) statt
+`--dunkelblau` (Schnee darauf 13,9 : 1), Name und **aktiver Kopfpunkt** in
+`--umgebung-text` (orange 200, 8,44 : 1). *Seit Schritt 26; bis dahin war sie
+rot (`--rot`, Weiß 4,78 : 1, Name in Schnee, aktiver Punkt in Orange hell) —
+Rot heißt Fehler, und eine Testanlage ist keiner. Der Wert `'farbe' => 'rot'`
+in der `config.php` gilt weiter.* Was folgt, beschreibt die Abwägung von
+damals: Das gewohnte `--orange` hätte auf Rot 2,10 : 1 und fiele unter
 die 3 : 1 für einen Bedienzustand (WCAG 1.4.11); `--orange-hell` bleibt in
 der Farbe, die „hier stehst du" heißt. Weiß wäre die Alternative gewesen
 (Variante B, nicht gewählt). **Die Farbe ist eine geschlossene Liste** —
@@ -2939,13 +3127,14 @@ ui_reiter(['label' => 'Bereiche des Protokolls', 'punkte' => [
 | Teil | Darstellung |
 |---|---|
 | `.reiter` | Reihe mit Grundlinie `--strich` in `--linie`, `--abstand-4` darunter |
-| `.reiter-punkt` | Kopfschrift 600, `--gedaempft`, `min-height: var(--knopf)` (44/36 px), nie umbrechend |
-| `.reiter-punkt.aktiv` | `--dunkelblau`, Unterstrich `--strich-stark` in `--orange-tief`, `aria-current="page"` |
+| `.reiter-punkt` | Kopfschrift 500, `--gedaempft`, `min-height: var(--knopf)` (44/36 px), nie umbrechend |
+| `.reiter-punkt.aktiv` | `--text-titel`, Unterstrich `--strich-stark` in `--auswahl-linie` (Dunkelblau), `aria-current="page"` |
 | `.reiter-abgesetzt` | am rechten Rand (`margin-left:auto`) — die Ablage („Archiv"), kein Ereignisreiter |
 | `.reiter-rahmen` | Behälter für den Verlauf am Rand; `.rollt` / `.rollt-links` setzt `assets/reiter.js` |
 
-**Orange heißt „hier stehst du"** — dieselbe Auszeichnung wie der aktive
-Punkt der Kopfleiste, **aber in der tiefen Stufe** (E-P5c-79). Der Strich
+**Der Strich heißt „hier stehst du"** — seit Schritt 26 in Dunkelblau
+(`--auswahl-linie`, 12,48 : 1 auf Rauch). Bis dahin stand er in Orange,
+**in der tiefen Stufe** (E-P5c-79), und die Begründung dafür bleibt lehrreich: Der Strich
 steht auf Rauch, und `--orange` hätte dort **2,09 : 1**, unter den 3 : 1 für
 einen Bedienzustand (WCAG 1.4.11). Die Schrift wechselt zwar mit, von
 Gedämpft nach Dunkelblau, aber auch diese beiden liegen nur **2,35 : 1**
@@ -3071,7 +3260,7 @@ Notfallblatt die Wahl des Kontos, ohne Sitzung der Standard (E-P5c-30).
 | Teil | Darstellung |
 |---|---|
 | `.blatt-kopf` | Bildmarke (11 mm hoch) + `.blatt-marke` (Kurzname der Installation, Kopfschrift `--groesse-6`) links, `.blatt-kopf-rechts` (Adresse, Konto, Druckzeit; `--groesse-2`, gedämpft) rechts; darunter `--strich-stark` in `--dunkelblau` |
-| `.blatt-umgebung` | nur mit `app.umgebung`: Rahmen `--strich-stark` in `--rot-tief`, Text in `--rot-tief` — ohne Fläche, weil der Browser Flächen nicht druckt (E-P5c-50) |
+| `.blatt-umgebung` | nur mit `app.umgebung`: Rahmen `--strich-stark` in `--papier-warnung` (rot 700), Text ebenso — ohne Fläche, weil der Browser Flächen nicht druckt (E-P5c-50). Die Druckblätter benutzen nur `--papier-*` und bleiben im Dark Mode hell |
 | `.blatt-druck h1` / `h2` | `--groesse-titel` / `--groesse-4` |
 | `.blatt-druck .meldung` | die vorhandene Meldung, auf Papier mit Rand `--strich` in `--linie-stark` |
 | `.blatt-kachel` | Rahmen `--strich-stark` in `--dunkelblau`, Fläche `--rauch` (im Druck ohne), nicht umbrechend; Kopf mit `.blatt-kachel-name` und `.blatt-kachel-neben` |
@@ -3128,11 +3317,12 @@ Laufzeit" bleibt unberührt, `docs/Lizenzen.md` auch.
   768 px — keine Stufe der Skala (7, F-R4-68). Nie eine Grafik mit zwei Farben
   oder zwei Achsen.
 
-**Farbe.** Eine je Diagramm: **Blau** erklärt (3,77 : 1 auf Schnee), der
-**Höchstwert** steht in **Orange tief** (4,32 : 1) und trägt seine Zahl
-(E-R4-60). Das Mockup zeigte Orange — als Grafik verfehlt es auf Schnee mit
+**Farbe.** Eine je Diagramm: **Blau** erklärt (`--diagramm-wert`, 3,64 : 1
+auf der Karte), der **Höchstwert** steht in **orange 600**
+(`--diagramm-hoechst`, 3,59 : 1 auf der Karte; bis Schritt 26 Orange tief) und trägt seine
+Zahl (E-R4-60). Im Dark Mode Stufe 400 auf Dunkelblau (3a). Das Mockup zeigte Orange — als Grafik verfehlt es auf Schnee mit
 2,23 : 1 die 3 : 1 aus WCAG 1.4.11, derselbe Fund wie der Rückstandspunkt
-der App (B-S5Z-13). Unter dem Zeiger wird eine Säule Blau tief und zeigt
+der App (B-S5Z-13). Unter dem Zeiger wird eine Säule blau 600 und zeigt
 ihre Zahl (`:hover`, ohne Skript); jede trägt sie außerdem als `<title>`.
 Schrift nur in Asphalt und Gedämpft, Gitter in Linie. Die Füllung eines
 Balkens auf seiner Spur (Linie) hat 2,77 : 1 — ausgenommen in `kontrast.py`,
@@ -3156,7 +3346,8 @@ Reanimation liegen seit Web 22 verschlossen auf dem Server, und eine graue
 Karte sah nach zwei Sekunden aus wie „keine GPS-Daten".
 
 - **Ring und Satz** — `ui_ladeplatz($text, $o)`: ein Ring 16 px (Strich
-  `--strich-stark`, `--linie` mit einem Viertel `--orange-tief`, dreht in
+  `--strich-stark`, `--linie` mit einem Viertel `--aktion` (bis Schritt 26
+  Orange tief), dreht in
   900 ms) und ein Satz in `--gedaempft`, `--groesse-2`. In der
   Kartenfläche (`.geo .ladeplatz`) mittig auf einem Schnee-Kästchen mit Rand
   `--linie`, in einer Karte als Zeile an der Stelle des Inhalts.
@@ -3173,8 +3364,9 @@ Karte sah nach zwei Sekunden aus wie „keine GPS-Daten".
 
 **Keine neue Farbe, keine neue Schriftgröße.** Kontrast (nachgerechnet im
 Mockup): `--gedaempft` auf `--schnee` 5,7 : 1, auf `--rauch` 5,3 : 1;
-`--orange-tief` auf `--schnee` 4,3 : 1, auf `--linie` 3,2 : 1 — für eine
-Grafik genügt 3 : 1 (WCAG 1.4.11).
+`--aktion` (Dunkelblau) auf der Karte 12,9 : 1, auf `--linie` 10,6 : 1 —
+für eine Grafik genügt 3 : 1 (WCAG 1.4.11). Bis Schritt 26 Orange tief,
+4,3 und 3,2 : 1.
 
 **Verwender (Web 22.0.3):** Einsatzansicht (Karte und Phasenkarte, die dabei
 sofort sichtbar ist), Diensttag (Karte), GPS-Daten des Diensttags
@@ -3184,7 +3376,7 @@ Zeile oben in der Trefferkarte: „Weitere geschützte Angaben werden geöffnet
 GPX-Archiv, Wartungslauf) ist mit demselben Mockup freigegeben und steht seit
 Web 22.6.0 im Stylesheet (`.balken`, Füllung `.balken > i`): Höhe
 `--strich-balken` (6 px), Ecken die halbe Höhe, Fläche `--linie`, Füllung
-`--orange-tief` (3,2 : 1 auf `--linie`, für eine Grafik genug), `role="progressbar"`
+`--aktion` (Dunkelblau, 10,6 : 1 auf `--linie`; bis Schritt 26 Orange tief), `role="progressbar"`
 mit Wert. Er steht **in** der `.zustandszeile` unter dem Ladeplatz. Erster
 Verwender: die Karte **„GPS-Daten verdichten"** im Reiter Backup (S11-07,
 Mockup M-S11-02, Variante 1) — Ring und „Wird verdichtet: 17 von 42", darunter
@@ -3392,6 +3584,8 @@ genau das, wogegen sie schützt.
 
 | Fassung | Was |
 |---|---|
+| **Web 23.10.1–23.11.2 (Schritt 26, Konzept MA, zweite Runde)** | **Repo auf `e7bf4fc`** (Token hell und dunkel). **9.4:** Knopfart **`haupt`** (Philipp-Orange mit Asphalt, einmal je Seite, sechs Seiten, E-MA-27), `gefahr` als **Umriss** (E-MA-26), Tabelle der Arten nach dem Repo. **2.3:** in der Kopfleiste wieder der **Kurzname** (E-MA-28); Favicons aus dem Set des Repos (E-MA-35). **3.1:** Zeile Hauptaktion. **3a:** Gefahrknopf und Zähler getrennt. **6:** Links im Fließtext unterstrichen, Barrierefreiheit wird gemessen (E-MA-32, -33). Kein neuer Baustein; `haupt` ist die Form des Primärknopfs mit den Repo-Token (Board 9D). |
+| **Web 23.9.0–23.10.0 (Schritt 26, Konzept MA)** | **Die Marke kommt aus dem Branding-Repo** `gen-em/gen-em-branding`. **2** neu geschrieben: Grundtöne mit Repo-Token, Schriften 500/400/700 (die 600er entfallen, E-MA-15), **Produktmarke NAdoku** statt `gen-em_logo_*` (2.3), der Platzhalter-Abschnitt fällt, Backlog Nr. 62 erledigt (2.4). **3** neu: Aktion Dunkelblau statt Orange (E-MA-01), Auswahl blau 100, **Grün** für „in Ordnung" (E-MA-02), Status je Fläche 100 / Schrift 700 / Linie 600, Kontrasttabelle nach **Rollen** und in **zwei Modi** (58 Paare je Modus, 0 verfehlt). **3a neu — Dark Mode** (E-MA-03, -13, -14), freigegeben mit den Boards MA-03, -04, -07, -08. **5:** `--groesse-1` (12 px) entfällt (E-MA-07). **9.5** `ok` grün, **9.6** fünf Töne mit `gruen` (E-MA-08), **9.23** grün statt blau, 9.10, 9.36, 9.37, 9.40 und die Vorschlagsliste mit den neuen Rollen. **Neue Token** (Rollen statt Farbwerten, Kapitel 4 neu erzeugt); **kein neuer Baustein** — der Schalter „Darstellung" ist eine Wahlliste (9.7). |
 | **Web 23.6.0 (R17-29)** | **8, Einbindung:** Die Zeichen stehen einmal je Seite als Vorrat (`ui_symbolvorrat()`, ein `<svg display="none">` ohne Regel im Stylesheet), die Verweise zeigen dorthin; ohne Vorrat wie zuvor auf die Datei. Kein neues Zeichen, kein sichtbarer Unterschied (fünf Seiten in drei Engines pixelweise verglichen). **9.41:** Ladeplatz auch in Suche und Zeitraum; gesteuert über `EdHtml.ladeplatz()` statt `EdOrtsdaten.ladeplatz()`. Kein neuer Baustein: `ui_symbolvorrat()` gibt ein unsichtbares Element ohne Gestaltung aus und steht im Erzeuger als Handwerkszeug. |
 | **28.09.2026 (R4-25, Werkzeug, keine Auslieferung)** | **4, 7, 8 und 9 neu erzeugt — alle vier Tabellen waren veraltet**: Nutzungszahlen der Token, die Schwellen, Symbolzählungen, die Zeilen der Bausteine. Seither hält `bestand` (Regel `design`) sie an den Erzeuger, und `design.py schreiben` ersetzt sie (Nr. 209). **3.4** um die Paare und die Ausnahme aus R4-24 ergänzt, **12** um die drei Fassungen darunter (F-R4-69). |
 | **Web 21.6.0 (R4-24)** | **9.40 neu — Diagramm**, freigegeben mit M-R4-24 (Q-R4-16): Säulen über die Zeit und Anteile als Balken, Inline-SVG aus PHP, ohne Bibliothek; Höchstwert in Orange tief (E-R4-60); kleine Vielfache ab der Schwelle 720 nebeneinander (F-R4-68). **7:** Die Ausnahme 479 px trägt zwei Regelblöcke mehr, keine neue Breite. **Kein neues Token, kein neuer Farbwert.** |

@@ -494,10 +494,11 @@ Zwei Dinge hängen mit daran, und beide sind gemessen:
 | `server/spur_lib.php`, `tools/schemaprobe/**` | klein | `schemaprobe` | Nr. 458 -- eine Abfrage, die nur MySQL mit ONLY_FULL_GROUP_BY und echt vorbereiteten Anweisungen ablehnt (Schemaprobe, Fall 8) |
 | `server/install.php`, `server/plattform_lib.php` | klein | `installweiche` | PP-1 |
 | `docs/rechtstexte/*.md`, `server/nutzungsbedingungen.php`, `server/avv.php`, `server/datenschutz.php` | klein | `rechtstexte` | P3/O10 |
-| `server/assets/style.css`, `tools/stilvergleich/**` | klein | `stilvergleich`, `bilderlauf`, `kontraste` | P0/A3 |
-| `server/*.php`, `server/assets/*.js` | klein | `bilderlauf`, `bedienprobe` | Nr. 185, 225; PS-2 |
+| `server/assets/style.css`, `tools/stilvergleich/**` | klein | `stilvergleich`, `bilderlauf`, `kontraste`, `barrierefreiheit` | P0/A3 |
+| `server/*.php`, `server/assets/*.js` | klein | `bilderlauf`, `bedienprobe`, `barrierefreiheit` | Nr. 185, 225; PS-2 |
 | `tools/screenshots/aufnehmen.mjs`, `tools/screenshots/seiten.json` | klein | `bilderlauf` | F-PU-08 (PU-04): Wer den Bilderlauf oder seine Seitenliste aendert, faehrt ihn. Bis dahin fuehrte keine Zeile von tools/screenshots/ zum Bilderlauf -- nur der Stilvergleich und der Riegel kettenaufrufe sahen die Datei. |
 | `tools/bedienprobe/*.mjs`, `tools/bedienprobe/wege/**` | klein | `bedienprobe` | F-PU-08 (PU-04): Wer die Bedienprobe oder einen ihrer Wege aendert, faehrt sie. Bis dahin fuehrte nur wege/registrieren.mjs dorthin (Muster registrierung). Nicht tools/bedienprobe/**: ausgabe/bericht.* ist eingecheckt, und jeder Lauf haette den naechsten ausgeloest. |
+| `tools/barrierefreiheit/**` | klein | `barrierefreiheit` | Nr. 524 (Schritt 26, MA-15): Wer die Probe, ihre Seitenliste oder die vendorierte Bibliothek aendert, faehrt sie. |
 | `.github/workflows/*.yml`, `tools/**` | klein | `kettenaufrufe` | Nr. 217 |
 | `android/**` | klein | `android-bau`, `android-kontraste`, `android-farbabgleich`, `android-bildmarken`, `android-stroeme` | E-PK-02 |
 | `server/kontopaar_lib.php`, `server/api/kontopaar.php`, `server/assets/kontopaar.js`, `server/assets/unlock.js`, `tools/proben/kontopaar/**` | klein | `kontopaarprobe` | Nr. 43 |
@@ -509,8 +510,8 @@ Zwei Dinge hängen mit daran, und beide sind gemessen:
 | `server/betrieb_statistik.php`, `server/statistik_lib.php` | klein | `messstand`, `bilderlauf` | Nr. 295 (Messstand-Schritt statistik: drei Reiter unter 1 s bei 5000 Einsätzen, EXPLAIN). Stand bis R4-04 am ENDE der Muster, weil die Reihenfolge der Proben entschied, wen der Demo-Reset traf (F-P5c-127); seit R4-04 schiebt der Pruefstand die Demo-Marke vor jeder Probe mit demo: true (Nr. 322), und die Stelle ist gleichgueltig. |
 | `server/**` | haupt | `messstand`, `anteilprobe`, `verbindungsprobe`, `schemaprobe` | F-S2-E; Nr. 267 -- der Export scheiterte nur auf MySQL 8.4 -- dazu, was Pruefablauf.md 3 erst der Hauptstufe gibt: Messstand, Anteil- und Verbindungsprobe (PK-05). |
 | `docs/Rahmenplan*.md`, `docs/Backlog*.md`, `CLAUDE.md`, `tools/steuerung/**` | klein | `steuerung`, `nummern` | Nr. 177, 196, 199 (Konzept SD): die Decken der Steuerungsdokumente und die Kopfzeilen des Backlogs. Der Riegel laeuft ohnehin in jeder Stufe; das Muster benennt die Beruehrung. Nr. 339 (R4-03): eine neue Nummer, die ein anderer Zweig schon traegt -- nur oertlich, deshalb nur hier. Seit PU-05 (E-PU-06) laeuft steuerung nur noch hier, als hinweis; Stufe 1 faehrt sie nicht mehr. |
-| `server/assets/style.css`, `server/assets/images/gen-em_logo_*.png` | klein | `android-farbabgleich`, `android-bildmarken` | Nr. 334 (R4-04): Die App uebernimmt Farbwerte und Bildmarken aus dem Web (E-S4-22a). Wer sie dort aendert, erfaehrt hier, dass die App nachzieht -- ohne den Android-Bau, der dafuer nichts misst. |
-| `tools/motor.mjs`, `tools/pruefstand/motoren.md`, `tools/zweitfaktor/totp.mjs` | klein | `gpxprobe`, `freigabeprobe`, `fristprobe`, `abmelde-probe`, `containerprobe`, `huellenprobe`, `kontopaarprobe`, `ortsdatenprobe`, `wartungslaufprobe`, `browserprobe-csp`, `bedienprobe`, `bilderlauf`, `stilvergleich`, `kreislauf-csv`, `kreislauf-edbak`, `rueckwegprobe` | Nr. 390 — die Engine-Wahl und das Register gelten fuer jede Browserprobe; wer sie aendert, faehrt alle Browserproben. tools/motor.mjs hebt ab neben auf drei Engines (umfang.engine_wahl, E-PU-16); bis PU-03 hiess es hier pauschal drei (R87). |
+| `server/assets/style.css`, `server/assets/images/nadoku-*.png` | klein | `android-farbabgleich`, `android-bildmarken` | Nr. 334 (R4-04): Die App uebernimmt Farbwerte und Bildmarken aus dem Web (E-S4-22a). Wer sie dort aendert, erfaehrt hier, dass die App nachzieht -- ohne den Android-Bau, der dafuer nichts misst. |
+| `tools/motor.mjs`, `tools/pruefstand/motoren.md`, `tools/zweitfaktor/totp.mjs` | klein | `gpxprobe`, `freigabeprobe`, `fristprobe`, `abmelde-probe`, `containerprobe`, `huellenprobe`, `kontopaarprobe`, `ortsdatenprobe`, `wartungslaufprobe`, `browserprobe-csp`, `bedienprobe`, `bilderlauf`, `stilvergleich`, `kreislauf-csv`, `kreislauf-edbak`, `rueckwegprobe`, `barrierefreiheit` | Nr. 390 — die Engine-Wahl und das Register gelten fuer jede Browserprobe; wer sie aendert, faehrt alle Browserproben. tools/motor.mjs hebt ab neben auf drei Engines (umfang.engine_wahl, E-PU-16); bis PU-03 hiess es hier pauschal drei (R87). |
 
 **Die billigen Riegel laufen in jeder Stufe, ohne Muster:** `syntax-php`, `wortliste`, `vollstaendigkeit`, `kontraste`, `linkprobe`, `anker`, `kennzeichnung`, `fremdsummen`, `dokumente`, `bestand`, `syntax-py`, `handbuch`, `installweiche`, `behandler`, `sitzungshaertung`, `cspprobe`, `jobregister`, `migrationsregister`, `rechtstexte`, `kettenaufrufe`, `zaehlung`, `spaltenregister`, `fixtureabgleich`.
 
@@ -1032,15 +1033,18 @@ gehalten; **jede Abweichung darüber hinaus ist unbeabsichtigt und wird
 geklärt, bevor committet wird.** Wer eine Null erwartet, wo eine Liste
 richtig ist, schaltet das Werkzeug beim ersten beabsichtigten Umbau ab.
 
-**Die Liste steht seit P5c/AP1 in einer Datei** (F-P5c-72):
-`tools/stilvergleich/geplant.txt`, je Zeile eine Signatur — Probe, Element
+**Die Liste steht seit P5c/AP1 in einer Datei** (F-P5c-72), **seit
+Schritt 26 in einer je Engine** (Backlog Nr. 411):
+`tools/stilvergleich/geplant-<motor>.txt`, je Zeile eine Signatur — Probe, Element
 mit Elternteil, die Namen der Eigenschaften, die sich ändern (ohne Werte,
 vereinigt über alle Breiten). Grün ist der Lauf, wenn Messung und Liste
 **gleich** sind: Eine ungeplante Abweichung ist rot, und eine geplante, die
 nicht gemessen wird, auch — sonst verdeckte eine veraltete Liste beim
 nächsten Mal eine ungewollte Änderung. Geschrieben wird sie mit
-`bash tools/stilvergleich/gegen.sh --schreiben`, **gelesen im Pull
-Request**: Jede Zeile ist die Aussage „das soll sich ändern". Fehlt die
+`bash tools/stilvergleich/gegen.sh --schreiben` (ohne `MOTOR` alle drei),
+**gelesen im Pull Request**. Je Engine, weil die drei dieselbe Verschiebung
+verschieden benennen (Chromium `inset`, WebKit dazu `size`); eine gemeinsame
+Liste stimmte nie für alle drei: Jede Zeile ist die Aussage „das soll sich ändern". Fehlt die
 Datei oder ist sie leer, gilt die Null. **Nach dem Merge bleibt sie
 stehen** (seit dem 26.09.2026, Nr. 330): `gegen.sh` übergibt die Liste des
 Vergleichsstands als `--geerbt`, und eine Zeile, die dort wortgleich steht
@@ -1092,7 +1096,8 @@ hier steht, ist nur, **was grün heißt**:
 | `tools/quelltext/` `pysyntax`, `handbuch` | 0 Syntaxfehler und 0 Warnungen (ungültige Escape-Folge, seit R4-07) bei mindestens einer Datei; beide Dokumente rendern, gültiges UTF-8, 0 Bilder aus fremder Quelle |
 | `tools/referenzdatensatz/fixture/` `abgleich.py` | Fixture und Referenz gleich (Diensttage, Einsätze, Segmente samt Papierkorb, Schnitte, Löschvermerke, je Aufzeichnung `n`, Stufe 3 und dort `n_original`), `umriss.json` gehört zur eingecheckten `.edbak` (SHA-256), mit `--tief` auch aus der `.edbak` nachgerechnet; Selbstprobe 8 von 8 (seit Schritt 24, RD-05) |
 | `./gradlew build` | 0 Lint-Fehler, 0 Fehlschläge |
-| `tools/stilvergleich/` | die gemessenen Abweichungen sind genau `geplant.txt` — ohne Datei: 0 (6.10) |
+| `tools/stilvergleich/` | die gemessenen Abweichungen sind je Engine genau `geplant-<motor>.txt` — ohne Datei: 0 (6.10) |
+| `tools/barrierefreiheit/` | 0 Befunde von axe-core (WCAG 2.0–2.2 A/AA, best-practice) auf jeder Seite der Liste, je Engine; „unentschieden" zählt nur; die Bibliothek trägt ihre SHA-256 (seit Schritt 26, Nr. 524) |
 | `tools/steuerung/` (im Prüfstand, als `hinweis`; seit PU-05 kein Riegel im Tor) | 0 Decken gerissen (welche es sind, sagt `decken.py`), 0 Kopfzeilen ohne Grammatik, 0 ohne gültiges Ziel, 0 Nummern in beiden Backlog-Dateien, 0 Einträge als Codeblock, 0 offene Einträge ohne eigene Liste mit ihrer Nummer (seit R4-25); Selbstproben alle Fälle grün |
 
 PK-04 hat zwei davon geändert: E-PK-16 hat der Vollständigkeit die

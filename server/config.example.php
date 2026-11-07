@@ -9,7 +9,7 @@ return [
     'app' => [
         'base_url'  => 'https://einsatz.example.invalid',  // ohne Slash am Ende
         'timezone'  => 'Europe/Berlin',               // Anzeige; Speicherung ist UTC
-        'logo_path' => 'assets/images/gen-em_logo_helicopter.svg',  // Logo auf Login- und Einrichtungsseite
+        'logo_path' => 'assets/images/nadoku-hubschrauber-farbig.svg',  // Logo auf Login- und Einrichtungsseite
         'max_body_bytes' => 524288,                   // 512 KB Ingest-Limit
         // Die KONTAKTADRESSE und die BETREIBERMAIL stehen NICHT hier, sondern
         // unter Verwaltung -> Installation. Grund: config.php wird zur Laufzeit nicht geschrieben
@@ -21,12 +21,12 @@ return [
         // NUR AUF EINER ANLAGE, DIE NICHT DIE PRODUKTIVANLAGE IST. Leer oder
         // fehlend heisst: keine Kennzeichnung — die Anlage verhaelt sich wie
         // die Produktivanlage, und die Statusseite sagt „Produktiv". Gesetzt,
-        // traegt jede Seite den Titelvorsatz „[Staging]", eine rote
+        // traegt jede Seite den Titelvorsatz „[Staging]", eine orangefarbene
         // Kopfleiste und die Zeile „Staging — Testdaten, kein Echtbetrieb".
         // Nie abgeleitet: Weder Domain noch Zweig setzen es, nur diese Zeile.
-        // `farbe` ist eine geschlossene Liste, heute nur 'rot'.
+        // `farbe` ist eine geschlossene Liste, heute nur 'orange' (bis Web 23.8 'rot', das weiter gilt).
         //
-        //   'umgebung' => ['name' => 'Staging', 'farbe' => 'rot'],
+        //   'umgebung' => ['name' => 'Staging', 'farbe' => 'orange'],
     ],
     // ---- Betreff-Vorsatz der Mails ----------------------------------------
     // Auf Staging '[Staging]': Jede Mail dieser Anlage traegt ihn vorn im

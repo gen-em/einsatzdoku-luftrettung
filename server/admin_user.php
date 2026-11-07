@@ -1106,7 +1106,7 @@ ui_seite_start(['titel' => ($u['name'] ?: $u['email']) . ' — Konto']);
     <?php ui_karte_start(['titel' => 'Status', 'id' => 'karte-status',
         'plakette' => ui_plakette(KONTO_STATUS[$kStatus] ?? $kStatus,
             ['ton' => match ($kStatus) {
-                'aktiv'    => 'blau',
+                'aktiv'    => 'gruen',
                 'gesperrt' => 'rot',
                 default    => 'orange',
             }])]); ?>
@@ -1193,7 +1193,7 @@ ui_seite_start(['titel' => ($u['name'] ?: $u['email']) . ' — Konto']);
                    && rolle_darf_zweitfaktor_zuruecksetzen($userRole, $u['role'] ?? null);
             $zfWer  = trim((string)($u['name'] ?? '')) !== '' ? (string)$u['name'] : (string)$u['email']; ?>
     <?php ui_karte_start(['titel' => 'Zweitfaktor', 'id' => 'karte-zweitfaktor',
-        'plakette' => $zfZ['an'] ? ui_plakette('an', ['ton' => 'blau']) : ui_plakette('aus')]); ?>
+        'plakette' => $zfZ['an'] ? ui_plakette('an', ['ton' => 'gruen']) : ui_plakette('aus')]); ?>
       <?php if ($zfZ['an']): ?>
         <?php /* Die Zahl der Passkeys: nur die Zahl, keine Liste —
                  entfernen kann sie die Person selbst, und „Zurücksetzen"
@@ -1244,7 +1244,7 @@ ui_seite_start(['titel' => ($u['name'] ?: $u['email']) . ' — Konto']);
           $proz  = (int)round($fuell['anteil'] * 100); ?>
     <?php ui_karte_start(['titel' => 'Mengen und Grenzen', 'id' => 'karte-mengen',
         'plakette' => ui_plakette($proz . ' %', ['ton' => $fuell['voll'] ? 'rot'
-                                : ($fuell['warnung'] ? 'orange' : 'blau')])]); ?>
+                                : ($fuell['warnung'] ? 'orange' : 'gruen')])]); ?>
       <?php ui_zeile(['text' => 'Einsätze',
           'klein' => 'ohne die im Papierkorb',
           'plaketten' => ui_plakette($fuell['einsaetze'] . ' von '
@@ -1315,7 +1315,7 @@ ui_seite_start(['titel' => ($u['name'] ?: $u['email']) . ' — Konto']);
                    . $kennungKurz,
           'klein' => implode(' · ', $klein),
           'plaketten' => (int)$d['active']
-              ? ui_plakette('aktiv', ['ton' => 'blau'])
+              ? ui_plakette('aktiv', ['ton' => 'gruen'])
               : ui_plakette('deaktiviert', ['ton' => 'neutral']),
           'aktionen' => $nurSupport
               ? ((int)$d['active'] && !$nurAnsehen
@@ -1407,7 +1407,7 @@ ui_seite_start(['titel' => ($u['name'] ?: $u['email']) . ' — Konto']);
            bisher an JEDER Zeile — bei drei Paketen dreimal dasselbe Wort,
            das nie etwas anderes sagt. Dieselbe Ueberlegung wie bei den
            Statuskacheln der NutzerInnen-Liste: Null ist kein Befund. */
-        $plaketten = $istFreigabe ? ui_plakette('freigegeben', ['ton' => 'blau']) : '';
+        $plaketten = $istFreigabe ? ui_plakette('freigegeben', ['ton' => 'gruen']) : '';
         if (!$lesbar) { $plaketten .= ui_plakette('nicht lesbar', ['ton' => 'rot']); }
         /* HART BESTÄTIGEN, WENN ES DIE LETZTE IST. Bleibt ein weiteres
            Paket dieses Kontos stehen, genügt die übliche Rückfrage. */

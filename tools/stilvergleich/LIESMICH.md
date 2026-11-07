@@ -1,13 +1,13 @@
 # Stilvergleich
 
 Hat sich am Erscheinungsbild etwas geändert, das niemand wollte?
-**Anlass: Nr. 312, 321** — ein Umbau des Stylesheets ohne Netz und doppelten Boden (P0/A3); eine fremde Seite, die wuchs, machte Signaturen ungeplant.
+**Anlass: Nr. 312, 321, 411** — ein Umbau des Stylesheets ohne Netz und doppelten Boden (P0/A3); eine fremde Seite, die wuchs, machte Signaturen ungeplant; drei Engines benennen dieselbe Änderung verschieden.
 
 ## Aufruf
 
 ```bash
 bash tools/stilvergleich/gegen.sh [<ref>]              # Vorgabe: origin/main
-bash tools/stilvergleich/gegen.sh --schreiben [<ref>]  # Messung als geplant.txt ablegen
+bash tools/stilvergleich/gegen.sh --schreiben [<ref>]  # Messung je Engine als geplant-<motor>.txt ablegen
 ```
 
 `gegen.sh` holt den Vergleichsstand aus git, baut die vier Proben und fährt `stilvergleich.js`. Die Einzelschritte (`proben.py`, `kaskade.py`, `chunks.py`) sind für die Handarbeit da.
@@ -27,7 +27,7 @@ Dateien, nicht eine laufende Anlage. `NODE_PATH` setzt `gegen.sh`, weil
 
 ## Erwartete Zahl
 
-**Genau die Signaturen in `geplant.txt` — ohne Datei 0** (`Pruefablauf.md` 6.10); gelesen im Pull Request.
+**Genau die Signaturen in `geplant-<motor>.txt` — ohne Datei 0** (`Pruefablauf.md` 6.10); gelesen im Pull Request. Je Engine eine Liste seit Schritt 26 (Nr. 411): Gemessen 07.11.2026 gegen `origin/main` (Konzept MA, zweite Runde): **2 792 / 2 792 / 2 798 Signaturen** (Chromium / Firefox / WebKit) aus je 65 312 Elementmessungen; erste Runde 2 757 / 2 757 / 2 763, je 0 ungeplant, eine zusätzliche Regel rot in allen dreien.
 Gemessen 28.09.2026 (R4-23 und R4-24, Zeitraumwahl und Diagramme) gegen `origin/main`: **62 296 Elementmessungen, 104 Signaturen** in drei Gruppen — die neuen Klassen (Katalog und Statistikseite), die längere Katalogseite (Höhen und die statische Lage von Elementen mit `position:absolute` ohne `top`) und **52 aus `seiten.html[ui.php]`**: Die Seitenprobe liest den Quelltext von `ui.php` als Markup, und die Zeichenketten neuer Bausteine verschieben dort die Schachtelung — Nachfolgendes erbt dann z. B. `font-variant-numeric` von `.balken-zahl`. Keine echte Seite ändert sich damit; das misst der Bilderlauf.
 Gemessen 26.09.2026 (R4-08) gegen `origin/main`: **61 191 Elementmessungen, 1 Signatur** (`.vorschlag.aktiv`, Web 21.1.6); gegen die Änderung aus Web 21.1.3 dieselben 13 Signaturen wie das alte Werkzeug; eine Seite, die um 25 Zeilen mit Vorlesetext wächst: vorher 1 ungeplant, nachher 0. Nach dem Merge bleibt die Datei stehen: Zeilen, die wortgleich im Vergleichsstand stehen und nicht gemessen werden, zählen als „geerbt" nicht mit (`--geerbt`, seit dem 26.09.2026, Nr. 330).
 Gemessen 26.09.2026 gegen `origin/main` vor dem Merge von Web 21.1.3 (Höhenschwelle der Sprungmarken): **42 276 Elementmessungen, 13 Signaturen** (Chromium); nach dem Merge dieselben 13 als „geerbt, nicht gemessen" — der erste Lauf, der das neue Verhalten braucht. Gegenprobe gegen den eigenen Stand (Zustand nach dem Merge): ohne `--geerbt` rot mit 13 „nicht gemessen", mit `--geerbt` grün mit 13 „geerbt"; eine eigene Zeile ohne Messung rot; eine leere Liste gegen `main` rot mit 13 ungeplant.

@@ -342,5 +342,16 @@ function doku_seite(string $name): ?array
 
     $html = $p->text($md);
 
+    /* ZWEI NACHBESSERUNGEN FUER BARRIEREFREIHEIT (F-MA-22, axe-core), am
+     * fertigen HTML statt in der vendorierten Bibliothek:
+     *  - Eine LEERE KOPFZELLE (`| | Spalte |`) ist keine Kopfzelle; ein
+     *    Screenreader kuendigt sonst eine Spalte ohne Namen an
+     *    (`empty-table-header`). Sie wird eine gewoehnliche Zelle.
+     *  - Codeblock und Tabelle scrollen am Handy waagerecht; ohne
+     *    `tabindex` erreicht die Tastatur den verdeckten Teil nicht
+     *    (`scrollable-region-focusable`). */
+    $html = preg_replace('~<th(\s[^>]*)?>\s*</th>~', '<td$1></td>', $html) ?? $html;
+    $html = str_replace(['<pre>', '<table>'], ['<pre tabindex="0">', '<table tabindex="0">'], $html);
+
     return ['html' => $html, 'inhalt' => $p->inhalt, 'titel' => $titel];
 }

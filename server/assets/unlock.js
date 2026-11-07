@@ -397,7 +397,9 @@ const EdUnlock = (() => {
          liefert: Ein Konto mit tausend Altnotizen soll nicht eine einzige
          riesige Anfrage bauen. */
       for (let runde = 0; runde < 50; runde++) {
-        const r = await fetch('api/pat_anheben.php', { credentials: 'same-origin' });
+        /* Mit dem Abgangssignal von EdApi: Dieser GET laeuft still im
+           Hintergrund und bricht beim Verlassen der Seite ab (E-MA-31). */
+        const r = await fetch('api/pat_anheben.php', { credentials: 'same-origin', signal: EdApi.signal() });
         if (!r.ok) { return; }
         const j = await r.json();
         const liste = (j && j.missions) || [];

@@ -38,6 +38,8 @@ früherer Stand genannt, im Satz erkennbar. `Beispiel`: ein Platzhalter.
 | `GARMIN/(Apps\|APPS)/\|Devices/\|Fonts/\|compiler\.json\|first_stage_ramdisk/` | Fremd | Ordner auf der Uhr, im Connect-IQ-SDK und im Emulatorabbild |
 | `HashDiff\.js\|deploy\.js\|syncProvider\.js` | Fremd | Quelltext der Aktion `@samkirkland/ftp-deploy`, nachgelesen in `Technik.md` 12.7 |
 | `composer\.json\|org\.json\|dist/jsQR\.js\|LICENSE\.txt\|disposable_email_blocklist\.conf` | Fremd | Dateien in fremden Paketen, deren Herkunft `Lizenzen.md` nennt |
+| `erzeuge_favicons\.py\|Logo\.md\|Produktmarken\.md\|Farben\.md\|Typografie\.md` | Fremd | Dateien im Branding-Repo `gen-em/gen-em-branding` (`9 Technik/Werkzeuge/`, `5 Regeln/`), auf die `Design.md` 2 und 3 verweisen (Schritt 26) |
+| `gen-em_logo_(helicopter\|nef)(_weiss)?\.(svg\|png)` | Früher | die Logodateien bis Schritt 26; seither `nadoku-*` (`Design.md` 2.3), genannt im Änderungsverlauf |
 | `styles\.xml` | Fremd | Teil einer Excel-Datei |
 | `gpx\.php\|(server/)?gpx_lib\.php\|site_elevation_lib\.php` | Früher | bis Web 22.2.0 bzw. 22.7.0, im Satz als „bis" genannt |
 | `(api/\|assets/)?ortsumzug(_lib)?\.(php\|js)\|tools/proben/ortsumzug/\|tools/proben/gpx/probe\.php` | Früher | der Ortsumzug bis Web 23 (S11-12) und die alte GPX-Probe |

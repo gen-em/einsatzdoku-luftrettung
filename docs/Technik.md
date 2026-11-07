@@ -583,12 +583,11 @@ Daten erst nach Server-Bestätigung.
 │   │                       des QR-Codes; das SVG baut assets/qr.js) ·
 │   │                      leaflet/ — Leaflet 1.9.4, BSD-2-Clause (Karten; CSS, JS, images/);
 │   │                      alle lokal vendoriert (kein CDN), Herkunft und SHA-256 im Dateikopf
-│   │   └── fonts/         Bricolage Grotesque 500/600 und Open Sans 400/600/700 als woff2,
+│   │   └── fonts/         Bricolage Grotesque 500 und Open Sans 400/700 als woff2,
 │   │                      je Subset latin und latin-ext (@fontsource, OFL-1.1)
-│   │   └── images/        Logos als SVG (farbig + weiss) je Hubschrauber und Fahrzeug,
-│   │       │                favicon.png + favicon-fahrzeug.png (erzeugt aus den
-│   │       │                Logodateien, s. tools/erzeugen/ (logos)); das Fahrzeug-Logo ist bis
-│   │       │                zur Zulieferung ein PLATZHALTER (gestrichelter Rahmen)
+│   │   └── images/        Produktmarke NAdoku als SVG (farbig, farbig-negativ, weiss) je
+│   │       │                Hubschrauber und NEF, aus dem Branding-Repo (seit Schritt 26);
+│   │       │                Favicons aus dem Set des Repos, 500-px-PNG daraus (tools/erzeugen/ (logos))
 │   │       └── symbole/    je Zeichen eine SVG-Datei (Tabler Icons, MIT;
 │   │                       ein eigener Entwurf), 24 x 24, currentColor, Anker
 │   │                       <g id="i">; dazu LICENSE-tabler-icons.txt und
@@ -1028,7 +1027,7 @@ Motoren 0. Ein Rauschfilter dafür ist deshalb **nicht** gebaut worden.
 
 | Tabelle | Zweck / Besonderheiten |
 |---|---|
-| `users` | Login (E-Mail = Username), Rolle (`role`, seit Web 20.41.0 vier Werte: `user`, `admin`, `betreiberin`, `support` — R75, E-P5c-14); Löschen kaskadiert alles; **Browser-Schlüsselableitung** (`kdf_salt` + `kdf_iter` = Rundenzahl je Konto) und **E2E-Schlüssel-Hüllen** `pat_wrap_pw`/`pat_wrap_rc` (Inhaltsschlüssel passwort- bzw. wiederherstellungsverpackt), dazu `pat_key_check` = im Browser gerechnete Prüfsumme des Inhaltsschlüssels (NULL bei Altbestand — ein gültiger Zustand); `session_epoch` = Zähler, mit dem ein Passwortwechsel offene Sitzungen beendet (**seit Web 4.5.0 in Gebrauch**). `password_hash` ist NULL, solange das Passwort noch nicht gesetzt wurde — ein solches Konto kann sich nicht anmelden. Die **Sortierregel der E-Mail-Spalte ist ausdrücklich festgelegt** (`utf8mb4_unicode_ci`); ohne das hinge die Anmeldung an der Standardregel der jeweiligen Installation. Seit Web 4.5.0 schreibt und sucht der Code zusätzlich kleingeschrieben (`email_lib.php`), hängt also nicht mehr von der Sortierregel ab; **Bestandszeilen bleiben unverändert**, die ci-Regel trifft sie ohnehin. Seit Web 9.7.0 dazu **`logo_wahl`** (`''` = Standard der Installation, sonst `hubschrauber` / `fahrzeug` / `wechselnd`, E-P3-20) — der Leerstring ist die Vorgabe, damit ein späterer Wechsel des Installationsstandards bestehende Konten erreicht. Seit Web 9.8.0 dazu **`last_login`** (DATETIME NULL) — der Zeitpunkt der letzten **Anmeldung**, geschrieben von `login.php` und sonst nirgends; Kontoseite und NutzerInnen-Liste zeigen ihn. Der Bestand bekommt bei der Migration NULL und nicht NOW(): Der Wert wäre sonst erfunden, und zwar genau in der Spalte, mit der man ungenutzte Konten sucht. NULL erscheint als „—“. **Seit Web 20.17.0 der Lebenszyklus** (P5b/AP2, E-P5b-12): `status` (`unbestaetigt` / `wartet` / `aktiv` / `gesperrt`), `bestaetigt_am`, `gesperrt_seit`, `gesperrt_grund`, `loeschung_am`. **Der Bestand wird `aktiv`** — jeder andere Wert wäre eine Aussage über Konten, die es vor der Prüfung schon gab, und `unbestaetigt` sperrte sie am Tag nach dem Update alle aus. `bestaetigt_am` bleibt dort **NULL**: „die Frage stellte sich nicht", dieselbe Entscheidung wie bei `last_login`. Der Index `idx_status_loeschung` ist für die Verfalljobs, nicht für die Anzeige. **Seit Web 20.42.0 der Zweitfaktor** (P5c/AP5, E-P5c-54): `totp_geheimnis` (20 Byte, versiegelt mit `sk_versiegeln()`, Zweck `totp|<user_id>` — der Zweck verhindert das Umhängen auf ein anderes Konto), `totp_seit` (eingeschaltet, **erst nach einem bestätigten Code**; ein Geheimnis ohne `totp_seit` ist eine angefangene Einrichtung) und `totp_schritt` (der zuletzt angenommene Zeitschritt — kein Code gilt zweimal). Siehe 4.38. **Seit Web 20.43.0 das Paar des Rückwegs** (Konzept RW, E-RW-05): `rw_oeffentlich` (öffentlicher Teil eines ECDSA-P-256-Paars, SPKI in Base64, 124 Zeichen), `rw_privat` (der private Teil als Chiffretext unter dem **Inhaltsschlüssel**, `edk1:`, nie `edka1:` — er muss mit dem Wiederherstellungsschlüssel allein aufgehen, wie `pat_wrap_rc`), `rw_seit` (wann es entstand). Leer heißt: noch kein Paar. Ein Abzug enthält den öffentlichen Teil und einen Chiffretext unter einem Schlüssel, den der Server nie kennt — er kann prüfen, nicht signieren (4.38). **Seit Web 22.0.0 das Schlüsselpaar des Kontos** (S11-03): `kp_oeffentlich` (öffentlicher Teil eines ECDH-P-256-Paars, SPKI, **versiegelt** mit `sk_versiegeln()`, Zweck `kontopaar|<user_id>`), `kp_privat` (privater Teil unter dem **Inhaltsschlüssel**, `edk1:`, nie `edka1:`), `kp_seit`. Leer heißt: noch kein Paar. Siehe 4.40 |
+| `users` | Login (E-Mail = Username), Rolle (`role`, seit Web 20.41.0 vier Werte: `user`, `admin`, `betreiberin`, `support` — R75, E-P5c-14); Löschen kaskadiert alles; **Browser-Schlüsselableitung** (`kdf_salt` + `kdf_iter` = Rundenzahl je Konto) und **E2E-Schlüssel-Hüllen** `pat_wrap_pw`/`pat_wrap_rc` (Inhaltsschlüssel passwort- bzw. wiederherstellungsverpackt), dazu `pat_key_check` = im Browser gerechnete Prüfsumme des Inhaltsschlüssels (NULL bei Altbestand — ein gültiger Zustand); `session_epoch` = Zähler, mit dem ein Passwortwechsel offene Sitzungen beendet (**seit Web 4.5.0 in Gebrauch**). `password_hash` ist NULL, solange das Passwort noch nicht gesetzt wurde — ein solches Konto kann sich nicht anmelden. Die **Sortierregel der E-Mail-Spalte ist ausdrücklich festgelegt** (`utf8mb4_unicode_ci`); ohne das hinge die Anmeldung an der Standardregel der jeweiligen Installation. Seit Web 4.5.0 schreibt und sucht der Code zusätzlich kleingeschrieben (`email_lib.php`), hängt also nicht mehr von der Sortierregel ab; **Bestandszeilen bleiben unverändert**, die ci-Regel trifft sie ohnehin. Seit Web 9.7.0 dazu **`logo_wahl`** (`''` = Standard der Installation, sonst `hubschrauber` / `fahrzeug` / `wechselnd`, E-P3-20) — der Leerstring ist die Vorgabe, damit ein späterer Wechsel des Installationsstandards bestehende Konten erreicht. Seit Web 23.10.0 dazu **`darstellung`** (`''` = wie das Gerät, sonst `hell` / `dunkel`; Migration `2026_11_07_darstellung`, Schritt 26, MA-07) — gelesen bei der Anmeldung wie `logo_wahl`, ausgegeben als `data-theme` (4.41). Seit Web 9.8.0 dazu **`last_login`** (DATETIME NULL) — der Zeitpunkt der letzten **Anmeldung**, geschrieben von `login.php` und sonst nirgends; Kontoseite und NutzerInnen-Liste zeigen ihn. Der Bestand bekommt bei der Migration NULL und nicht NOW(): Der Wert wäre sonst erfunden, und zwar genau in der Spalte, mit der man ungenutzte Konten sucht. NULL erscheint als „—“. **Seit Web 20.17.0 der Lebenszyklus** (P5b/AP2, E-P5b-12): `status` (`unbestaetigt` / `wartet` / `aktiv` / `gesperrt`), `bestaetigt_am`, `gesperrt_seit`, `gesperrt_grund`, `loeschung_am`. **Der Bestand wird `aktiv`** — jeder andere Wert wäre eine Aussage über Konten, die es vor der Prüfung schon gab, und `unbestaetigt` sperrte sie am Tag nach dem Update alle aus. `bestaetigt_am` bleibt dort **NULL**: „die Frage stellte sich nicht", dieselbe Entscheidung wie bei `last_login`. Der Index `idx_status_loeschung` ist für die Verfalljobs, nicht für die Anzeige. **Seit Web 20.42.0 der Zweitfaktor** (P5c/AP5, E-P5c-54): `totp_geheimnis` (20 Byte, versiegelt mit `sk_versiegeln()`, Zweck `totp|<user_id>` — der Zweck verhindert das Umhängen auf ein anderes Konto), `totp_seit` (eingeschaltet, **erst nach einem bestätigten Code**; ein Geheimnis ohne `totp_seit` ist eine angefangene Einrichtung) und `totp_schritt` (der zuletzt angenommene Zeitschritt — kein Code gilt zweimal). Siehe 4.38. **Seit Web 20.43.0 das Paar des Rückwegs** (Konzept RW, E-RW-05): `rw_oeffentlich` (öffentlicher Teil eines ECDSA-P-256-Paars, SPKI in Base64, 124 Zeichen), `rw_privat` (der private Teil als Chiffretext unter dem **Inhaltsschlüssel**, `edk1:`, nie `edka1:` — er muss mit dem Wiederherstellungsschlüssel allein aufgehen, wie `pat_wrap_rc`), `rw_seit` (wann es entstand). Leer heißt: noch kein Paar. Ein Abzug enthält den öffentlichen Teil und einen Chiffretext unter einem Schlüssel, den der Server nie kennt — er kann prüfen, nicht signieren (4.38). **Seit Web 22.0.0 das Schlüsselpaar des Kontos** (S11-03): `kp_oeffentlich` (öffentlicher Teil eines ECDH-P-256-Paars, SPKI, **versiegelt** mit `sk_versiegeln()`, Zweck `kontopaar|<user_id>`), `kp_privat` (privater Teil unter dem **Inhaltsschlüssel**, `edk1:`, nie `edka1:`), `kp_seit`. Leer heißt: noch kein Paar. Siehe 4.40 |
 | `vertraute_geraete` | „Gerät merken" beim Zweitfaktor (seit Web 21.8.0, Schritt 18, SR-02, E-SR-07): `user_id` (`ON DELETE CASCADE`), `token_hash` (SHA-256 des Cookies `EDGERAET`, eindeutig), `angelegt_am`, `zuletzt_am` (fortgeschrieben bei jeder Anmeldung ohne Code, ohne Protokoll). **Kein User-Agent, kein Gerätename** (R36). **Gültig ist eine Zeile, solange `angelegt_am` plus die heutige Dauer ihrer Rollengruppe in der Zukunft liegt** — gerechnet beim Prüfen, nicht beim Merken (E-SR-17); der Aufräumjob löscht abgelaufene. Reist im Komplett-Stand mit (nur Hashes), **nicht** im Konto-Backup: Ein Cookie gehört zu einem Browser, nicht zu einem Konto. Mehr in 4.38 |
 | `passkeys` | Passkeys als Verfahren des Zweitfaktors (seit Web 21.10.0, Schritt 18, SR-09, E-SR-29 bis -33): `user_id` (`ON DELETE CASCADE`), `credential_id` (Base64url der Kennung, höchstens 1023 Byte → `VARCHAR(1364)`, `ascii_bin`), `credential_hash` (SHA-256 der Kennung, `CHAR(64)`, **eindeutig** — seit Web 21.11.0, E-SR-47: Ein Index über die Kennung selbst reichte über 767 Byte und scheiterte unter einem älteren Zeilenformat), `rp_id` (die Adresse, für die der Passkey entstand, seit Web 21.11.0, E-SR-48; Index `idx_konto` über `user_id, rp_id`), `oeffentlich` (der öffentliche Schlüssel als SPKI-PEM — bei der Registrierung aus COSE überführt, damit die Anmeldung ohne CBOR auskommt), `alg` (-7 ES256 oder -257 RS256), `zaehler` (Signaturzähler, E-SR-33), `bezeichnung` (bis 40 Zeichen oder leer), `angelegt_am`, `zuletzt_am`, `gewarnt_am` (letzte Mail wegen eines zurückgelaufenen Zählers, höchstens eine je Tag, E-SR-46). **Kein User-Agent, keine AAGUID, kein Gerätename** (E-SR-31, R36); höchstens zehn je Konto **und Adresse** (`PK_HOECHSTENS`, geprüft unter `FOR UPDATE`). Reist im Komplett-Stand mit, **nicht** im Konto-Backup: Ein Passkey gilt nur für die Adresse, an der er entstand (Backup-Format 4, 6.11). Mehr in 4.38 |
 | `totp_codes` | Die Wiederherstellungscodes des Zweitfaktors (seit Web 20.42.0, P5c/AP5): `user_id`, `hash` (`password_hash()`), `benutzt_am` (NULL = offen). **Nicht am Serverschlüssel** (E-P5c-42) — sie sind der Rückweg für genau den Fall, dass das Geheimnis nicht mehr zu öffnen ist. `ON DELETE CASCADE` mit dem Konto. Angenommen wird atomar (`UPDATE … WHERE benutzt_am IS NULL`, gültig bei `rowCount() = 1`) |
@@ -2099,7 +2098,20 @@ nötig, da jede Navigation ohnehin einen Seitenaufruf auslöst.
 `assets/daylist.js` erzwingt nur noch das Akkordeon-Verhalten (ein offenes
 Element je Ebene). Die frühere Trennung der Klickbereiche ist entfallen: Die
 ganze Zeile klappt, und der Weg in die Zeitraumübersicht ist ein eigenes
-Symbol am rechten Rand (`.akkordeon-uebersicht`, 44 px).
+Symbol am rechten Rand (`.akkordeon-uebersicht`, 44 px). Es steht seit Web
+23.11.2 **neben** dem `<details>` in `.akkordeon-rahmen` und liegt per CSS
+über der Kopfzeile; im `<summary>` war es ein Bedienelement im
+Bedienelement (F-MA-22), und `daylist.js` musste seinen Klick abfangen.
+
+**Abrufe beim Verlassen der Seite** (seit Web 23.11.2, E-MA-31): `EdApi`
+hält ein `AbortController`-Signal je Seite und bricht damit bei
+`beforeunload` (und `pagehide`) ab, was noch läuft; bleibt die Seite stehen,
+gilt nach einer Sekunde ein neues. Ein eigener `fetch` nimmt es über
+`EdApi.signal()` mit (`unlock.js`, Anheben der Notizen). Ein Abbruch ist
+`{ok:false, status:0, abgebrochen:true}` ohne Meldung. Vorher brach WebKit
+solche Abrufe selbst ab und meldete sie als Seitenfehler; die Ausnahme dafür
+in `tools/motor.mjs` (Nr. 393) bleibt als Sicherung, ihr Zähler stand
+danach in der Bedienprobe bei 0 (vorher 3).
 
 **Geschützte Zusatzfelder & berechnetes Alter:** `assets/patient.js` (EdPat)
 berechnet das Alter aus dem Geburtsdatum bezogen auf den **Einsatztag** und
@@ -7253,7 +7265,7 @@ geändert** (E-S5W-08).
 | Sichtbarkeit | Es gibt kein automatisches Ausschalten (E-S5W-05). Ein oranger Balken auf `betrieb_updates.php` und `login.php` nennt Zeitpunkt und Konto — das sind die beiden einzigen Seiten, auf denen ein stehengebliebener Wartungsmodus überhaupt auffallen kann |
 | Jobs | laufen weiter (E-S5W-11). `jobs.php` mit Token ist Ausnahme, damit das Komplett-Backup **während** der Wartung läuft — genau dann ist es konsistent. Der Huckepack-Weg aus `auth_guard.php` läuft auf `betrieb_updates.php` mit, und zwar **vor** `require_betreiberin()` und damit vor jeder Migration desselben Aufrufs. Wer Ruhe braucht: `jobs.php --pause` |
 | Anmeldung | Der Passwortvergleich ist unverändert. **Nach** einem Erfolg entscheidet die Rolle: Admin und BetreiberIn weiter, alles andere sofort wieder abgemeldet und auf die Wartungsseite (E-S5W-09). Die Ratenschutz-Zähler werden trotzdem geleert — das Passwort war richtig |
-| Logo | Die Wartungsseite kann `logo_stamm()` nicht rufen (Datenbank) und **wirft eine Münze** zwischen den beiden Standardlogos, wie `logo_aufloesen('wechselnd')`. Eine Installation mit eigenem Logo sieht während der Wartung eines der beiden Standardlogos |
+| Logo | Die Wartungsseite kann `logo_stamm()` nicht rufen (Datenbank) und zeigt **fest den Hubschrauber**, die Vorbelegung der Installation. Bis Schritt 26 warf sie eine Münze; die Produktmarke darf nicht je Seitenaufruf wechseln (Design.md 2.3). Eine Installation mit eigenem Logo oder dem NEF sieht während der Wartung den Hubschrauber |
 
 **Die Datei ist der Schalter, nicht ihr Inhalt.** Liegt sie da, ist aber
 unlesbar oder kein gültiges JSON, gilt die Wartung trotzdem; der Balken sagt
@@ -10084,6 +10096,45 @@ Adminpaket-Fassungen (JSON, unversiegeltes ZIP) liest die Verwaltung weiter
 
 **Nach dem Deploy:** `update.php`. Die Wartung bleibt sonst an.
 
+
+### 4.41 Farben aus dem Branding-Repo und der Dark Mode (ab Web 23.9.0, Schritt 26)
+
+*Konzept MA, E-MA-01 bis -24.* **Die Farbwerte stehen nicht mehr in eigener
+Rechnung, sondern im Branding-Repo** `gen-em/gen-em-branding`. Abschnitt 2
+von `server/assets/style.css` trägt dessen Datei
+`9 Technik/Tokens/farben.css` **wörtlich** — als eigener `:root {`-Block mit
+Commit und SHA-256 im Kommentar darüber, nicht als zweite Datei, weil sechs
+Seiten `style.css` selbst einbinden (F-MA-04, E-MA-17). Darunter der
+`:root{`-Block der Anwendung mit **Rollen** (`--text`, `--flaeche-karte`,
+`--aktion`, `--auswahl-*`, `--info-*` … `--fehler-*`, `--gefahr`,
+`--diagramm-*`, `--papier-*`), die auf `--genem-*` zeigen. Die Leitwerte
+(`--schnee`, `--dunkelblau` …) bleiben als Namen und stehen nur noch dort,
+wo die Marke gemeint ist: Kopfleiste, Karte, Spurfarben, Fokus. Wer das Repo
+nachzieht, ersetzt beide übernommenen Blöcke (hell in 2, dunkel in 2a) und
+die Prüfsumme und rechnet `tools/screenshots/kontrast.py` neu.
+
+**Dark Mode** (Abschnitt 2a): eine zweite Zuordnung derselben Rollen, kein
+zweites Farbsystem. Zwei Auslöser mit denselben Werten —
+`@media (prefers-color-scheme: dark)` mit `:root:not([data-theme="light"])`
+und `:root[data-theme="dark"]`. Das Attribut setzt `ui_seite_start()` aus der
+Sitzung (`darstellung_attribut()`, `session_lib.php`), also serverseitig und
+ohne Aufblitzen; die Wahl liest `login.php` mit `darstellung_lesen()` — einer
+eigenen, abgesicherten Abfrage, damit vor der Migration keine Anmeldung an
+der fehlenden Spalte scheitert — und `einstellungen.php` setzt sie nach dem
+Speichern neu. Ohne Wahl und ohne Sitzung steht kein Attribut da, und die
+Seite folgt dem Gerät; die Anmeldeseiten wählen ihr Logo dafür mit
+`<picture>` (`logo_bild_anmeldung()`, `db.php`).
+
+**Was nicht umschaltet:** die Karte (Leaflet) samt Kartenzeichen und
+Spurfarben — ein dunkler Kacheldienst wäre ein weiterer Dritter
+(E-MA-14, Bedrohungsmodell Lage G); sie bekommt im Dunkeln einen Rahmen —,
+die Kopfleiste (Dunkelblau, im Dunkeln mit einer Kante in blau 700) und die
+Druckblätter (`--papier-*`). **Drucken ist immer hell:** ein Block unter
+`@media print` stellt die Rollen mit Spezifität (0,3,0) zurück.
+
+**Nach dem Deploy muss `update.php` laufen** (`users.darstellung`). Bis dahin
+gilt für jedes Konto „wie das Gerät"; Anmeldung und Profil funktionieren.
+
 ## 5. Uhr-App (Monkey C) — Modulstruktur
 
 | Datei | Verantwortung |
@@ -10487,6 +10538,13 @@ stehen in `android/LIESMICH.md`; hier steht, wie es zusammenhängt.
 | `android/handy/` | Telefon | Kopplung, Aufzeichnung, Dienstklammer, Phasen und Einsätze, Senden an `ingest.php` — **und die Zugangsdaten** |
 | `android/uhr/` | Wear OS | dasselbe Bedienbild am Handgelenk, **ohne** Zugangsdaten |
 | `android/gemeinsam/` | beide | Nachrichtenformat, Data-Layer-Weg, Kennungen, Modus, Phasen, Farben, Bildmarke (E-S4-24) |
+
+**Farben der App** (seit Android 0.22.0, E-MA-29): `Rolle.x` liest `rolle_x`
+aus `gemeinsam/res/values/rollen.xml` (hell) bzw. `values-night/rollen.xml`
+(dunkel) — dieselben Rollen wie `--x` im Web, Wert für Wert, geprüft von
+`android/werkzeuge/farbabgleich.py` und `kontraste.py` in beiden Modi. Der
+Dark Mode folgt dem System; einen Schalter hat die App nicht. `Farbe` hält
+die Leitwerte, die nicht umschalten (Kopfleiste, Uhr, Bildmarke).
 
 **Die Uhr kennt weder Serveradresse noch API-Schlüssel** (E-S4-11). Sie
 schickt ihre Ereignisse an das Handy, und das Handy sendet. Das ist keine
@@ -13905,16 +13963,18 @@ E-P5c-05):** In der `config.php` **der Testanlage** — nie auf Produktiv —
 unter `app` das Etikett, und daneben den Betreff-Vorsatz der Mails:
 
 ```php
-'app'  => [ /* … */ 'umgebung' => ['name' => 'Staging', 'farbe' => 'rot'] ],
+'app'  => [ /* … */ 'umgebung' => ['name' => 'Staging', 'farbe' => 'orange'] ],
 'mail' => ['betreff_praefix' => '[Staging]'],
 ```
 
-Danach trägt jede Seite „[Staging]" im Titel, eine rote Kopfleiste und den
+Danach trägt jede Seite „[Staging]" im Titel, eine orange Kopfleiste (orange 800,
+bis Web 23.9.0 rot) und den
 Streifen „Staging — Testdaten, kein Echtbetrieb"; die Wartungs- und die
 Überlastseite nur den Titel. Notfall-, Schlüssel- und Codeblatt tragen den
 Titel und — seit Web 21.1.0 bzw. beim Codeblatt seit 20.42.0 — eine rot
 umrandete Umgebungszeile unter dem Blattkopf (E-P5c-50). `farbe` ist eine geschlossene Liste
-(`UMGEBUNG_FARBEN` in `server/umgebung_lib.php`, heute nur `rot`). **Nie
+(`UMGEBUNG_FARBEN` in `server/umgebung_lib.php`, heute nur `orange`; ein
+`'rot'` aus der Zeit davor gilt still als `orange`, `UMGEBUNG_FARBEN_FRUEHER`). **Nie
 abgeleitet** — kein Blick auf Domain oder Zweig; ohne Eintrag verhält sich
 die Anlage wie die Produktivanlage. **Prüfen:** Betrieb → Status, Karte
 „Server", Zeile „Umgebung" — blau mit „Staging" bzw. „Produktiv"; orange,
@@ -14921,11 +14981,11 @@ getroffen haben.
 `konfig('app.logo_path')` gewinnt nur noch, wenn dort eine **fremde** Datei
 steht (F-P3-AN). `pw_handling.php` lädt dafür `session_lib.php`.
 
-**Der Platzhalterhinweis** an der Logo-Karte fragt die Datei, nicht eine
-Zahl im Code: `logo_platzhalter_liegt()` liest die ersten 400 Byte von
-`gen-em_logo_nef.svg` und `…_weiss.svg` und sucht das Wort „PLATZHALTER"
-im Kopfkommentar. Er verschwindet damit von selbst, sobald die echten Dateien
-liegen — sie ersetzen den Platzhalter 1:1 (gleicher Name, gleicher `viewBox`).
+**Der Platzhalterhinweis** an der Logo-Karte (`logo_platzhalter_liegt()`)
+ist mit Schritt 26 entfallen: Er fragte die alten Dateien `gen-em_logo_nef*`
+nach dem Wort „PLATZHALTER", und die echten lagen längst. Die Dateien heißen
+seither `nadoku-*` (Design.md 2.3); ein `logo_path` mit einem alten Namen
+gilt weiter als mitgeliefert.
 
 
 ### 14.8 Installation und Rechtstexte (R32, seit Web 9.11.0; Installation seit Web

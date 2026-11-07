@@ -325,7 +325,7 @@ ui_seite_start([
           bei 400 px liest er sich wie auf dem Handy — was er dort ohnehin
           tut. */ ?>
  <div class="anmeldung-karte">
-  <img src="<?= e(logo_src()) ?>" alt="<?= e(instanz_kurz()) ?>" class="anmeldung-logo">
+  <?= logo_bild_anmeldung(instanz_kurz()) ?>
 
   <?php if ($done): ?>
     <h1 class="anmeldung-titel">Fertig</h1>

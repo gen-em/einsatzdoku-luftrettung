@@ -6,7 +6,8 @@
 # Aufruf:  bash tools/stilvergleich/gegen.sh [--schreiben] [<ref>]
 #          <ref> ist der Vergleichsstand (Vorgabe: origin/main)
 #          --schreiben legt die gemessenen Abweichungen als Liste der
-#          geplanten ab (geplant.txt) — siehe unten
+#          geplanten ab (geplant-<motor>.txt) — siehe unten; ohne MOTOR
+#          fuer alle drei Engines nacheinander
 #
 # ANLASS (21.09.2026): In `pruefablauf.json` stand
 # `python3 tools/stilvergleich/proben.py` — ohne Argumente. `proben.py` baut
@@ -20,8 +21,15 @@
 # das liegt in diesem Abbild unter /opt/node22/lib/node_modules, nicht im
 # Projekt. Deshalb die Zeile NODE_PATH unten.
 #
+# JE ENGINE EINE LISTE (seit Schritt 26, Backlog Nr. 411). Die drei Engines
+# benennen dieselbe Verschiebung verschieden — Chromium `bottom, inset, top`,
+# Firefox `bottom, top`, WebKit dazu `size` —, und eine Liste konnte deshalb
+# nie fuer alle drei stimmen. Bei kleinen Aenderungen fiel das nicht auf; der
+# Farbumbau aus Konzept MA (2 767 Signaturen) machte es unuebersehbar. Die
+# Engine kommt aus MOTOR (Vorgabe chromium, wie `motorWahl()`).
+#
 # DIE LISTE DER GEPLANTEN ABWEICHUNGEN: Steht
-# `tools/stilvergleich/geplant.txt`, ist der Lauf gruen, wenn die gemessenen
+# `tools/stilvergleich/geplant-<motor>.txt`, ist der Lauf gruen, wenn die gemessenen
 # Abweichungen genau diese Liste sind — nicht weniger, nicht mehr. Fehlt sie
 # oder ist sie leer, gilt wie bisher: null Abweichungen. Der Weg bei einer
 # gewollten Gestaltungsaenderung: `gegen.sh --schreiben`, die Datei lesen,
@@ -36,6 +44,14 @@ set -euo pipefail
 
 SCHREIBEN=""
 if [ "${1:-}" = "--schreiben" ]; then SCHREIBEN=1; shift; fi
+# --schreiben ohne MOTOR: alle drei Listen, eine nach der anderen.
+if [ -n "$SCHREIBEN" ] && [ -z "${MOTOR:-}" ]; then
+    for m in chromium firefox webkit; do
+        MOTOR="$m" bash "${BASH_SOURCE[0]}" --schreiben "$@"
+    done
+    exit 0
+fi
+MOTOR="${MOTOR:-chromium}"; export MOTOR
 REF="${1:-origin/main}"
 WURZEL="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 NEU="$WURZEL/server/assets/style.css"
@@ -48,7 +64,7 @@ git -C "$WURZEL" show "$REF:server/assets/style.css" > "$ALT" \
 
 python3 "$WURZEL/tools/stilvergleich/proben.py" "$ALT" "$NEU" "$ARBEIT/proben" >/dev/null
 
-GEPLANT="$WURZEL/tools/stilvergleich/geplant.txt"
+GEPLANT="$WURZEL/tools/stilvergleich/geplant-$MOTOR.txt"
 GEERBT="$ARBEIT/geerbt.txt"
 LISTE=()
 if [ -n "$SCHREIBEN" ]; then LISTE=(--geplant-schreiben "$GEPLANT")
@@ -56,11 +72,14 @@ elif [ -f "$GEPLANT" ]; then
     LISTE=(--geplant "$GEPLANT")
     # Fehlt die Liste im Vergleichsstand, gibt es nichts zu erben — dann
     # bleibt es bei der strengen Zaehlung, nicht bei einem Abbruch.
-    if git -C "$WURZEL" show "$REF:tools/stilvergleich/geplant.txt" > "$GEERBT" 2>/dev/null; then
+    # Im Vergleichsstand zuerst die Liste derselben Engine, sonst die eine
+    # gemeinsame aus der Zeit vor Nr. 411.
+    if git -C "$WURZEL" show "$REF:tools/stilvergleich/geplant-$MOTOR.txt" > "$GEERBT" 2>/dev/null \
+       || git -C "$WURZEL" show "$REF:tools/stilvergleich/geplant.txt" > "$GEERBT" 2>/dev/null; then
         LISTE+=(--geerbt "$GEERBT")
     fi
 fi
 
-echo "Vergleichsstand: $REF"
+echo "Vergleichsstand: $REF · Engine: $MOTOR"
 NODE_PATH="${NODE_PATH:-/opt/node22/lib/node_modules}" \
     node "$WURZEL/tools/stilvergleich/stilvergleich.js" "$ARBEIT/proben" "$ALT" "$NEU" "${LISTE[@]}"

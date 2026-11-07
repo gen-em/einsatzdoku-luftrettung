@@ -124,7 +124,7 @@ $umg     = umgebung();
  * Das Blatt gehört der Anlage, nicht der Person, die es druckt.
  * Dieselbe Auflösung wie die Kachel unter Verwaltung → Installation. */
 $logoStamm = logo_standard_aufgeloest() === 'fahrzeug'
-           ? 'gen-em_logo_nef' : 'gen-em_logo_helicopter';
+           ? 'nadoku-nef-farbig' : 'nadoku-hubschrauber-farbig';
 
 $h = static fn(string $s): string => htmlspecialchars($s, ENT_QUOTES, 'UTF-8');
 
