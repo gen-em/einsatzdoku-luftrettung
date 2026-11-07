@@ -994,7 +994,7 @@ ui_seite_start(['titel' => 'Anmelden', 'klasse' => 'anmeldung-body']);
         }
     } ?>
     <div class="listen-form-fuss">
-      <?= ui_knopf(['text' => 'Anmelden', 'art' => 'primaer', 'breit' => true]) ?>
+      <?= ui_knopf(['text' => 'Anmelden', 'art' => 'haupt', 'breit' => true]) ?>
     </div>
   </form>
   <?php if ($pkLogin !== null): ?>
@@ -1034,7 +1034,7 @@ ui_seite_start(['titel' => 'Anmelden', 'klasse' => 'anmeldung-body']);
       <input type="password" name="password" required autocomplete="current-password">
     </label>
     <div class="listen-form-fuss">
-      <?= ui_knopf(['text' => 'Anmelden', 'art' => 'primaer', 'breit' => true]) ?>
+      <?= ui_knopf(['text' => 'Anmelden', 'art' => 'haupt', 'breit' => true]) ?>
     </div>
   </form>
   <p class="anmeldung-neben"><a href="reset_request.php">Passwort vergessen?</a>

@@ -8679,4 +8679,13 @@ declare(strict_types=1);
  *   festen „NAdoku"; `UI_PRODUKTNAME` entfaellt. Die BetreiberIn hat E-MA-21
  *   zurueckgenommen (E-MA-28): Wer mehrere Anlagen betreibt, erkennt sie an
  *   der Kopfleiste. Korrektur; kein Schema. */
-const WEB_VERSION = '23.10.2';
+/* 23.11.0 — DIE HAUPTAKTION IN ORANGE (Schritt 26, MA-12). Neue Knopfart
+ *   `haupt` (`.knopf-haupt`, `--aktion-haupt` aus dem Repo, Asphalt auf
+ *   Philipp-Orange), hoechstens einmal je Seite, auf sechs Seiten (E-MA-27):
+ *   Tagesuebersicht „Einsatz nachtragen" als Knopf rechts neben „Aktionen"
+ *   (Mockup MA-02; `#addmission-haupt`, die Adresse setzt `loadDay()`),
+ *   Einsatz „Bearbeiten", Einsatzformular ueber die Speicherleiste
+ *   (`ui_speichern_leiste(['haupt' => true])`), Diensttag anlegen,
+ *   Anmelden (beide Formulare), Konto anlegen. Alles andere bleibt
+ *   `primaer` in Dunkelblau. Neben; kein Schema. */
+const WEB_VERSION = '23.11.0';

@@ -1485,7 +1485,8 @@ ui_seite_start(['titel' => $editing ? 'Einsatz bearbeiten' : 'Einsatz nachtragen
              KEIN "Verwerfen" und kein Abbrechen-Link mehr — der Rueckweg oben
              genuegt, und die beforeunload-Rueckfrage des Dirty-Trackings
              schuetzt ungespeicherte Eingaben auf jedem Weg hinaus. */
-          ui_speichern_leiste(['text' => $editing ? 'Änderungen speichern' : 'Einsatz anlegen']); ?>
+          ui_speichern_leiste(['text' => $editing ? 'Änderungen speichern' : 'Einsatz anlegen',
+                               'haupt' => true]); ?>
   </form>
 <?php ui_geruest_ende(); ?>
 <?php ui_krypto_bootstrap(); ?>

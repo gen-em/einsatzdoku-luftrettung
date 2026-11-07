@@ -311,6 +311,13 @@ ui_seite_start(['titel' => 'Tagesübersicht', 'karte' => true,
             ['text' => 'Tag löschen', 'symbol' => 'korb', 'gefahr' => true,
              'href' => 'diensttag_loeschen.php?d=' . (int)$selDay, 'attr' => 'id="daydellink"'],
           ]]) ?>
+          <?php /* DIE HAUPTAKTION DER SEITE (E-MA-27, Mockup MA-02): rechts
+                   neben „Aktionen", Orange. Der Eintrag im Menue und „+
+                   Nachtragen" an der Einsatzkarte bleiben — das Menue ist der
+                   vollstaendige Katalog, der Link steht dort, wo man die Liste
+                   liest. Die Adresse setzt loadDay() wie bei den anderen. */ ?>
+          <?= ui_knopf(['text' => 'Einsatz nachtragen', 'art' => 'haupt', 'symbol' => 'plus',
+                        'href' => 'einsatz_form.php', 'attr' => ' id="addmission-haupt"']) ?>
         </div>
       </div>
       <p class="titelzeile-unter" id="dayunter" hidden></p>
@@ -911,6 +918,7 @@ async function loadDay(dayId){
   document.getElementById('daymergelink').href = 'diensttag_zusammenfuehren.php?d=' + d.day_id;
   document.getElementById('dayspurenlink').href = 'tag_spuren.php?d=' + d.day_id;
   document.getElementById('addmission-menu').href = 'einsatz_form.php?d=' + d.day_id;
+  document.getElementById('addmission-haupt').href = 'einsatz_form.php?d=' + d.day_id;
   // Das Menü als Ganzes wird sichtbar, nicht die einzelnen Einträge: Ein
   // aufklappbarer Kopf mit leerer Liste wäre ein Angebot ohne Inhalt.
   document.getElementById('dayaktionen').hidden = false;

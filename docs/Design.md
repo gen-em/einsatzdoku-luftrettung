@@ -240,6 +240,7 @@ Gründerfarben sind **Markenflächen und Status, keine Aktionsfarbe**
 | Farbe | sagt | wo |
 |---|---|---|
 | **Dunkelblau** (`--aktion`) | *Hier wird gehandelt* | Primärknopf, gewählte Segmenttaste, eingeschalteter Schalter, Radiopunkt, Fortschritt, Vorbelegungsstern |
+| **Philipp-Orange** (`--aktion-haupt`) | *Dafür bist du hier* | die **eine** Hauptaktion einer Seite, höchstens einmal (Knopfart `haupt`, 9.4); Schrift Asphalt, nie Weiß |
 | **Blau 100 / Dunkelblau** (`--auswahl-*`) | *Hier stehst du* | aktiver Menüpunkt und Diensttag, aktive Kennzahl, aktiver Filter, Sprungziel, offener Blattöffner, Zeilenhervorhebung |
 | **Blau 600** (`--text-link`) | *Hier geht es weiter* | Textlinks, „+ Anlegen"-Wege, Kartenaktionen |
 | **Blau** (Status `info`) | *Zur Auskunft* | Hinweismeldung, Plakette einer **Eigenschaft** (Sekundär, verschlüsselt, Fassung) |
@@ -516,9 +517,9 @@ auseinanderlaufen kann.
 
 | Token | Wert | benutzt | |
 |---|---|--:|---|
-| `--aktion-haupt` | `var(--genem-aktion-haupt)` | 0 |  |
-| `--aktion-haupt-hover` | `var(--genem-aktion-haupt-hover)` | 0 |  |
-| `--auf-aktion-haupt` | `var(--genem-text-auf-aktion-haupt)` | 0 |  |
+| `--aktion-haupt` | `var(--genem-aktion-haupt)` | 2 |  |
+| `--aktion-haupt-hover` | `var(--genem-aktion-haupt-hover)` | 2 |  |
+| `--auf-aktion-haupt` | `var(--genem-text-auf-aktion-haupt)` | 2 |  |
 
 **Auswahl — „hier bin ich"**
 
@@ -709,7 +710,7 @@ auseinanderlaufen kann.
 | `--auf-dunkel-flaeche` | `rgba(255,255,255,.14)` | 3 |  |
 | `--auf-dunkel-strich` | `rgba(255,255,255,.35)` | 1 |  |
 
-**Ungenutzt:** `--orange`, `--aktion-haupt`, `--aktion-haupt-hover`, `--auf-aktion-haupt`, `--spur-2`, `--spur-3`, `--spur-4`, `--spur-5`, `--spur-6`, `--spur-7`, `--spur-8`, `--spur-ruhe`, `--s-handy`, `--s-leiste`, `--s-zwei`, `--s-karte-neben`.
+**Ungenutzt:** `--orange`, `--spur-2`, `--spur-3`, `--spur-4`, `--spur-5`, `--spur-6`, `--spur-7`, `--spur-8`, `--spur-ruhe`, `--s-handy`, `--s-leiste`, `--s-zwei`, `--s-karte-neben`.
 
 ## 5. Schriftskala
 
@@ -1104,7 +1105,7 @@ AGPL-3.0; siehe `docs/Lizenzen.md`.
 | `ohne-zuordnung.svg` | Tabler Icons „circle-dashed" (MIT) | 2 |
 | `ordner-plus.svg` | Tabler Icons „folder-plus" (MIT) | 1 |
 | `pfeil-hoch.svg` | Tabler Icons „arrow-up" (MIT) | 6 |
-| `plus.svg` | Tabler Icons „plus" (MIT) | 23 |
+| `plus.svg` | Tabler Icons „plus" (MIT) | 24 |
 | `position.svg` | Tabler Icons „current-location" (MIT) | 5 |
 | `profil.svg` | Tabler Icons „user" (MIT) | 17 |
 | `protokoll.svg` | Tabler Icons „list" (MIT) | 21 |
@@ -1211,58 +1212,58 @@ für eine Rückfrage — nicht für ein neues Element.
 |---|---|---|--:|
 | `ui_seite_start()` | — | Hüllenfunktion, kein eigenes Element | 53 |
 | `ui_seite_ende()` | — | Hüllenfunktion, kein eigenes Element | 181 |
-| `ui_favicon()` | — | Hüllenfunktion, kein eigenes Element | 260 |
-| `ui_symbol()` | `.symbol` | ja (+9 Unterklassen) | 321 |
-| `ui_logo_masse()` | `.logo-masse` | **keine** | 504 |
-| `ui_kopf()` | `.kopf` | ja (+25 Unterklassen) | 565 |
-| `ui_geruest_start()` | `.inhalt` | ja | 657 |
-| `ui_leiste_ende()` | `.leiste` | ja (+17 Unterklassen) | 723 |
-| `ui_geruest_ende()` | `.inhalt` | ja | 747 |
-| `ui_leiste_diensttage()` | `.leiste-liste` | ja | 797 |
-| `ui_zaehler()` | `.zaehler` | ja (+2 Unterklassen) | 1037 |
-| `ui_leiste_einstellungen()` | `.leiste-liste` | ja | 1196 |
-| `ui_einstellungen_uebersicht()` | `.uebersicht-raster` | ja | 1267 |
-| `ui_fuss_seite()` | `.fuss-seite` | ja | 1346 |
-| `ui_hinweise()` | `.hinweise` | ja | 1394 |
-| `ui_umgebung_hinweis()` | `.hinweis-umgebung` | ja | 1422 |
-| `ui_ankuendigung()` | `.meldung-ankuendigung` | ja | 1457 |
-| `ui_demo_hinweis()` | `.demo-hinweis` | ja | 1510 |
-| `ui_datenschutz_hinweis()` | `.datenschutz-hinweis` | **keine** | 1563 |
-| `ui_meldung_markup()` | `.meldung` | ja (+19 Unterklassen) | 1628 |
-| `ui_knopf()` | `.knopf` | ja (+17 Unterklassen) | 1674 |
-| `ui_codeblock_lang()` | `.codeblock-lang` | ja | 1726 |
-| `ui_plakette()` | `.plakette` | ja (+6 Unterklassen) | 1754 |
-| `ui_ladeplatz()` | `.ladeplatz` | ja (+3 Unterklassen) | 1781 |
-| `ui_karte_start()` | `.karte` | ja (+37 Unterklassen) | 1821 |
-| `ui_karte_ende()` | `.karte` | ja (+37 Unterklassen) | 1905 |
-| `ui_nach_oben()` | `.nach-oben` | ja | 1940 |
-| `ui_sprungliste()` | `.sprungliste` | ja | 1982 |
-| `ui_kartenfilter()` | `.kartenfilter` | ja (+4 Unterklassen) | 2030 |
-| `ui_zeile()` | `.zeile` | ja (+35 Unterklassen) | 2092 |
-| `ui_zeile_mehr()` | `.zeile-mehr` | ja | 2147 |
-| `ui_reiter()` | `.reiter` | ja (+9 Unterklassen) | 2195 |
-| `ui_listenkopf()` | `.listenkopf` | ja | 2239 |
-| `ui_listenfuss()` | `.listenfuss` | ja | 2311 |
-| `ui_zeitraumwahl()` | `.zeitraumwahl` | ja (+5 Unterklassen) | 2366 |
-| `ui_diagramm_skala()` | `.diagramm-skala` | **keine** | 2412 |
-| `ui_diagramm_saeulen()` | `.diagramm-saeulen` | ja | 2446 |
-| `ui_diagramm_balken()` | `.diagramm-balken` | ja | 2518 |
-| `ui_titelzeile()` | `.titelzeile` | ja (+6 Unterklassen) | 2542 |
-| `ui_aktionen()` | `.aktionen` | ja (+2 Unterklassen) | 2584 |
-| `ui_feld()` | `.feld` | ja (+26 Unterklassen) | 2652 |
-| `ui_schalter()` | `.schalter` | ja (+27 Unterklassen) | 2717 |
-| `ui_segment_markup()` | `.segment` | ja (+23 Unterklassen) | 2761 |
-| `ui_wahlliste()` | `.wahlliste` | ja | 2814 |
-| `ui_zeilenaktionen()` | `.zeile-aktionen` | ja | 2858 |
-| `ui_speichern_leiste()` | `.speichern` | ja (+4 Unterklassen) | 2957 |
-| `ui_kennzahl()` | `.kennzahl` | ja (+20 Unterklassen) | 3018 |
-| `ui_abbruch()` | `.rahmen` | ja (+1 Unterklassen) | 3059 |
-| `ui_csrf_bootstrap()` | `.csrf-bootstrap` | **keine** | 3151 |
-| `ui_geocoder_bootstrap()` | `.geocoder-bootstrap` | **keine** | 3189 |
-| `ui_geocoder_hinweis()` | `.geocoder-hinweis` | **keine** | 3219 |
-| `ui_ortsfeld()` | `.ortsfeld-zeile` | ja | 3231 |
-| `ui_tabellen_bootstrap()` | `.tabellen-bootstrap` | **keine** | 3374 |
-| `ui_krypto_bootstrap()` | — | Hüllenfunktion, kein eigenes Element | 3453 |
+| `ui_favicon()` | — | Hüllenfunktion, kein eigenes Element | 248 |
+| `ui_symbol()` | `.symbol` | ja (+9 Unterklassen) | 309 |
+| `ui_logo_masse()` | `.logo-masse` | **keine** | 492 |
+| `ui_kopf()` | `.kopf` | ja (+25 Unterklassen) | 553 |
+| `ui_geruest_start()` | `.inhalt` | ja | 645 |
+| `ui_leiste_ende()` | `.leiste` | ja (+17 Unterklassen) | 711 |
+| `ui_geruest_ende()` | `.inhalt` | ja | 735 |
+| `ui_leiste_diensttage()` | `.leiste-liste` | ja | 785 |
+| `ui_zaehler()` | `.zaehler` | ja (+2 Unterklassen) | 1025 |
+| `ui_leiste_einstellungen()` | `.leiste-liste` | ja | 1184 |
+| `ui_einstellungen_uebersicht()` | `.uebersicht-raster` | ja | 1255 |
+| `ui_fuss_seite()` | `.fuss-seite` | ja | 1334 |
+| `ui_hinweise()` | `.hinweise` | ja | 1382 |
+| `ui_umgebung_hinweis()` | `.hinweis-umgebung` | ja | 1410 |
+| `ui_ankuendigung()` | `.meldung-ankuendigung` | ja | 1445 |
+| `ui_demo_hinweis()` | `.demo-hinweis` | ja | 1498 |
+| `ui_datenschutz_hinweis()` | `.datenschutz-hinweis` | **keine** | 1551 |
+| `ui_meldung_markup()` | `.meldung` | ja (+19 Unterklassen) | 1616 |
+| `ui_knopf()` | `.knopf` | ja (+19 Unterklassen) | 1662 |
+| `ui_codeblock_lang()` | `.codeblock-lang` | ja | 1714 |
+| `ui_plakette()` | `.plakette` | ja (+6 Unterklassen) | 1742 |
+| `ui_ladeplatz()` | `.ladeplatz` | ja (+3 Unterklassen) | 1769 |
+| `ui_karte_start()` | `.karte` | ja (+37 Unterklassen) | 1809 |
+| `ui_karte_ende()` | `.karte` | ja (+37 Unterklassen) | 1893 |
+| `ui_nach_oben()` | `.nach-oben` | ja | 1928 |
+| `ui_sprungliste()` | `.sprungliste` | ja | 1970 |
+| `ui_kartenfilter()` | `.kartenfilter` | ja (+4 Unterklassen) | 2018 |
+| `ui_zeile()` | `.zeile` | ja (+35 Unterklassen) | 2080 |
+| `ui_zeile_mehr()` | `.zeile-mehr` | ja | 2135 |
+| `ui_reiter()` | `.reiter` | ja (+9 Unterklassen) | 2183 |
+| `ui_listenkopf()` | `.listenkopf` | ja | 2227 |
+| `ui_listenfuss()` | `.listenfuss` | ja | 2299 |
+| `ui_zeitraumwahl()` | `.zeitraumwahl` | ja (+5 Unterklassen) | 2354 |
+| `ui_diagramm_skala()` | `.diagramm-skala` | **keine** | 2400 |
+| `ui_diagramm_saeulen()` | `.diagramm-saeulen` | ja | 2434 |
+| `ui_diagramm_balken()` | `.diagramm-balken` | ja | 2506 |
+| `ui_titelzeile()` | `.titelzeile` | ja (+6 Unterklassen) | 2530 |
+| `ui_aktionen()` | `.aktionen` | ja (+2 Unterklassen) | 2572 |
+| `ui_feld()` | `.feld` | ja (+26 Unterklassen) | 2640 |
+| `ui_schalter()` | `.schalter` | ja (+27 Unterklassen) | 2705 |
+| `ui_segment_markup()` | `.segment` | ja (+23 Unterklassen) | 2749 |
+| `ui_wahlliste()` | `.wahlliste` | ja | 2802 |
+| `ui_zeilenaktionen()` | `.zeile-aktionen` | ja | 2846 |
+| `ui_speichern_leiste()` | `.speichern` | ja (+4 Unterklassen) | 2945 |
+| `ui_kennzahl()` | `.kennzahl` | ja (+20 Unterklassen) | 3009 |
+| `ui_abbruch()` | `.rahmen` | ja (+1 Unterklassen) | 3050 |
+| `ui_csrf_bootstrap()` | `.csrf-bootstrap` | **keine** | 3142 |
+| `ui_geocoder_bootstrap()` | `.geocoder-bootstrap` | **keine** | 3180 |
+| `ui_geocoder_hinweis()` | `.geocoder-hinweis` | **keine** | 3210 |
+| `ui_ortsfeld()` | `.ortsfeld-zeile` | ja | 3222 |
+| `ui_tabellen_bootstrap()` | `.tabellen-bootstrap` | **keine** | 3365 |
+| `ui_krypto_bootstrap()` | — | Hüllenfunktion, kein eigenes Element | 3444 |
 
 54 Funktionen mit Markup in `server/ui.php`, davon 4 Hüllenfunktionen ohne eigenes Element.
 **Ohne Regel im Stylesheet:** `ui_logo_masse()`, `ui_datenschutz_hinweis()`, `ui_diagramm_skala()`, `ui_csrf_bootstrap()`, `ui_geocoder_bootstrap()`, `ui_geocoder_hinweis()`, `ui_tabellen_bootstrap()` — jede davon ist zu prüfen: entweder ein Behälter, der zu Recht keine Gestaltung braucht, oder eine Lücke.
@@ -1463,10 +1464,11 @@ wäre auf dem Handy eine Bildschirmlänge je Zeile.
 
 ### 9.4 Knopf
 
-**Vier Arten nach Bedeutung, nicht nach Aussehen** (E-P3-22):
+**Sechs Arten nach Bedeutung, nicht nach Aussehen** (E-P3-22, `haupt` seit E-MA-27):
 
 | Art | Aussehen | wofür |
 |---|---|---|
+| `haupt` | Philipp-Orange, Schrift Asphalt (dunkel: orange 400); unter dem Zeiger orange 400 (dunkel 300) | die **eine** Hauptaktion der Seite, höchstens einmal — heute auf sechs Seiten (E-MA-27): Tagesübersicht „Einsatz nachtragen", Einsatz „Bearbeiten", Einsatzformular „Speichern" (Speicherleiste mit `'haupt' => true`), Diensttag anlegen, Anmelden, Konto anlegen |
 | `primaer` | Dunkelblau, Schrift Schnee (dunkel: blau 300, Schrift Dunkelblau) | eine Handlung, die die Seite weiterbringt („Speichern" in einem Dialog, „Übernehmen") |
 | `neutral` | Umriss `--linie-stark`, Schrift Dunkelblau, unter dem Zeiger Rauch | alles Übrige |
 | `gefahr` | Umriss rot 600, Schrift rot 700, unter dem Zeiger rot 100 | Löschen |

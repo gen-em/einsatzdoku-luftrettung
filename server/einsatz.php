@@ -57,7 +57,9 @@ ui_seite_start(['titel' => 'Einsatz', 'karte' => true,
         <h1 id="title">Einsatz</h1>
       </div>
       <div class="titelzeile-aktionen">
-        <?= ui_knopf(['text' => 'Bearbeiten', 'art' => 'primaer', 'symbol' => 'stift',
+        <?php /* HAUPTAKTION (E-MA-27): Wer einen Einsatz ansieht, will ihn meist
+                 vervollstaendigen. Orange, einmal auf der Seite. */ ?>
+        <?= ui_knopf(['text' => 'Bearbeiten', 'art' => 'haupt', 'symbol' => 'stift',
                       'href' => 'einsatz_form.php?id=' . $mid]) ?>
         <?php
           /* DER GPX-ABRUF STEHT IM VORHANDENEN AKTIONSMENUE.

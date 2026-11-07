@@ -493,7 +493,7 @@ $unterzeile = match ($art) {
       <?php endforeach; ?>
 
       <div class="listen-form-fuss">
-        <?= ui_knopf(['text' => 'Konto anlegen', 'art' => 'primaer', 'breit' => true,
+        <?= ui_knopf(['text' => 'Konto anlegen', 'art' => 'haupt', 'breit' => true,
                       'attr' => ' data-pow-knopf']) ?>
       </div>
       <?php /* OHNE SKRIPT STEHT HIER EIN SATZ, MIT SKRIPT ZUNAECHST NICHTS:

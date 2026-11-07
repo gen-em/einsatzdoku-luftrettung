@@ -2956,7 +2956,9 @@ function ui_speichern_leiste(array $o = []): void
      *     immer sichtbar), kein_haken (nicht an forms.js hängen),
      *     hinweis_vorlage (forms.js ersetzt den Hinweis dann durch
      *     „<Vorlage>: Karte A und Karte B" — die Titel der Karten, in denen
-     *     etwas geändert wurde) */
+     *     etwas geändert wurde), haupt (der Knopf ist die Hauptaktion der
+     *     Seite, Orange statt Dunkelblau — nur dort, wo das Formular der
+     *     Zweck der Seite ist, E-MA-27) */
     $id = !empty($o['id']) ? ' id="' . ui_e((string)$o['id']) . '"' : '';
     ?>
 <div class="speichern"<?= $id ?><?= empty($o['kein_haken']) ? ' data-speichern' : '' ?> hidden>
@@ -2975,7 +2977,8 @@ function ui_speichern_leiste(array $o = []): void
         ?? 'Es gibt ungespeicherte Änderungen · Strg + Enter speichert')) ?></p>
     <?= ui_knopf([
         'text' => (string)($o['text'] ?? 'Speichern'),
-        'art' => 'primaer', 'symbol' => (string)($o['symbol'] ?? 'haken'),
+        'art' => !empty($o['haupt']) ? 'haupt' : 'primaer',
+        'symbol' => (string)($o['symbol'] ?? 'haken'),
         /* MIT ZAHL IST DER KNOPF NICHT BREIT. `knopf-breit` (width:100%) wird
          * erst ab 720 px zurueckgenommen (`.speichern .knopf-breit{width:auto}`)
          * — passend zum Hinweis, der genau dort erscheint. Die Zahl steht in

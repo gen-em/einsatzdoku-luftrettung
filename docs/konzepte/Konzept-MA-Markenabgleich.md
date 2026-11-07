@@ -39,7 +39,7 @@ Prüfarbeit an der einen örtlichen Anlage (CLAUDE.md 7).
 | *Zweite Runde (Auftrag der Betreiberin, 07.11.2026)* | | |
 | MA-10 | Nachzug des Repos auf `e7bf4fc`: Token hell und dunkel, Gefahrknopf als Umriss, Warnung immer mit Symbol | **erledigt** 07.11.2026 (Web 23.10.1) |
 | MA-11 | Kurzname der Installation zurück in die Kopfleiste (E-MA-21 aufgehoben) | **erledigt** 07.11.2026 (Web 23.10.2) |
-| MA-12 | Hauptaktion in Orange, einmal je Seite, auf sechs Seiten | offen |
+| MA-12 | Hauptaktion in Orange, einmal je Seite, auf sechs Seiten | **erledigt** 07.11.2026 (Web 23.11.0) |
 | MA-13 | Favicon-Sets aus dem Repo | offen |
 | MA-14 | Barrierefreiheit: die Funde von axe beheben, Abruf beim Verlassen der Seite abbrechen | offen |
 | MA-15 | axe-core als Prüfmittel in drei Engines | offen |
@@ -47,7 +47,7 @@ Prüfarbeit an der einen örtlichen Anlage (CLAUDE.md 7).
 | MA-17 | Garmin: die Zeichen der Produktmarke (Backlog Nr. 520) | offen |
 | MA-18 | Dokumentation, Prüfstand zweimal grün, Pull Request nachgezogen | offen |
 
-**In Arbeit:** zweite Runde, MA-12 (Statusblock oben). Erste Runde: MA-08, Prüfstand und Pull Request stehen. Prüfdokument:
+**In Arbeit:** zweite Runde, MA-13 (Statusblock oben). Erste Runde: MA-08, Prüfstand und Pull Request stehen. Prüfdokument:
 `Pruefdokument-MA-Markenabgleich.md` (15 Handpunkte). **Zur Bestätigung
 vorgelegt:** E-MA-21 (Kopfleiste fest „NAdoku") und E-MA-24 (Android nur
 Werte). **Es hakt:** nirgends; alle Fragen sind entschieden
@@ -605,6 +605,23 @@ Paare je Modus, 0 verfehlt; 38 aus Regeln abgeleitet, 0 ohne Eintrag.
 `grep` über `server/`, `tools/`, `docs/`). Beschriftung des Kurznamens in
 Verwaltung → Installation, Handbuch 3 und 11.5, Design 2.3,
 `instanz_lib.php` nachgezogen. **Geprüft:** `php -l` der drei Dateien.
+
+### MA-12 (Web 23.11.0, 07.11.2026)
+
+**Was gebaut ist.** `.knopf-haupt` (Form des Primärknopfs, Token der
+Hauptaktion), Knopfart `haupt` in `ui_knopf()` ohne Sonderweg (die Klasse
+folgt der Art), Option `haupt` an `ui_speichern_leiste()`. Sechs Seiten nach
+E-MA-27; in der Tagesübersicht `#addmission-haupt` rechts neben „Aktionen",
+Menüeintrag und „+ Nachtragen" an der Einsatzkarte bleiben wie im Mockup
+MA-02.
+
+**Geprüft.** `kontrast.py`: 60 Paare je Modus, 0 verfehlt (neu: Asphalt auf
+Orange 8,6:1 hell, auf orange 400 dunkel; unter dem Zeiger); 40 aus Regeln
+abgeleitet, 0 ohne Eintrag. `vollstaendigkeit.py`: keine Befunde (die Art
+`haupt` hat ihre Regel). Sichtprüfung in Chromium: Tagesübersicht 1440 px
+hell und 390 px dunkel (am Handy rückt die Knopfreihe unter den Titel),
+Anmeldung 1440 px dunkel. **Nebenbefund:** Der Container war zwischen MA-11
+und MA-12 neu gestartet worden; Startfolge 6.1a gefahren, kein Wartungsschalter.
 
 ## 10. Vorher-Messung der zweiten Runde (07.11.2026, Web 23.10.0)
 

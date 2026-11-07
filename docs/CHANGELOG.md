@@ -14,6 +14,18 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 23.11.0] — unveröffentlicht
+
+### Hinzugefügt
+
+- **Web — die Hauptaktion einer Seite ist orange** (Schritt 26). Seit der
+  Umstellung auf Dunkelblau sahen alle Knöpfe gleich aus, und die eine
+  Handlung, für die man eine Seite öffnet, stach nicht mehr heraus. Das
+  Branding-Repo sieht dafür Orange vor, höchstens einmal je Seite: Einsatz
+  nachtragen, Einsatz bearbeiten und speichern, Diensttag anlegen, Anmelden
+  und Konto anlegen. Seiten ohne eine solche Handlung, etwa Suche,
+  Einstellungen und Verwaltung, bleiben ganz in Dunkelblau.
+
 ## [Web 23.10.2] — unveröffentlicht
 
 ### Geändert

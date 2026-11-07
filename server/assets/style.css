@@ -1649,6 +1649,18 @@ a.zeile:hover .zeile-weiter{color:var(--text-link-hover)}
   border-color:var(--aktion);
 }
 .knopf-primaer:hover{background:var(--aktion-hover);border-color:var(--aktion-hover);color:var(--auf-aktion)}
+/* DIE HAUPTAKTION — Orange mit Asphalt, 8,6:1 (dunkel orange 400, 10,4:1).
+ * Höchstens EINMAL je Seite: die Handlung, für die jemand die Seite öffnet.
+ * Branding-Repo, Ergänzung „Aktionsfarbe", Variante 3 (Commit e7bf4fc);
+ * welche Seiten sie tragen, steht in E-MA-27 und Design.md 9.4. Dieselbe
+ * Form wie der Primärknopf; unter dem Zeiger eine Stufe heller, die Schrift
+ * bleibt. */
+.knopf-haupt{
+  background:var(--aktion-haupt);
+  color:var(--auf-aktion-haupt);
+  border-color:var(--aktion-haupt);
+}
+.knopf-haupt:hover{background:var(--aktion-haupt-hover);border-color:var(--aktion-haupt-hover);color:var(--auf-aktion-haupt)}
 .knopf-neutral{
   background:var(--flaeche-karte);color:var(--text-titel);
   border-color:var(--linie-stark);

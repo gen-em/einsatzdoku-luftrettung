@@ -1187,7 +1187,11 @@ Tages mit **„Einsatz nachtragen"**, **„Diensttag-Daten bearbeiten"**,
 (Abschnitt 4.5a), **„GPS-Daten als GPX"** (Abschnitt 4.1a) und **„Tag löschen"**
 (Abschnitt 8). Auf dem Handy fährt
 das Blatt von unten herein, am Desktop steht es als Menü am Knopf; Escape
-schließt es, die Tastatur bedient es vollständig.
+schließt es, die Tastatur bedient es vollständig. Rechts neben dem Menü
+steht **„Einsatz nachtragen"** zusätzlich als oranger Knopf — die
+Haupthandlung der Seite. Orange ist in der Oberfläche diesem einen Knopf je
+Seite vorbehalten (Anmelden, Konto anlegen, Diensttag anlegen, Einsatz
+bearbeiten und speichern); alles andere handelt in Dunkelblau.
 
 Pro Tag:
 
