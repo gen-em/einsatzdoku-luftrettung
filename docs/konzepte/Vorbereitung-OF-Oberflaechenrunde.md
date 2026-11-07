@@ -61,7 +61,7 @@ NV-Gerüst.
 | OF-P-01 | Stufe 2 nach dem Merge rot: Staging in Wartung wegen offener Migration (HTTP 503) | Kette | Ablauf | erledigt (`update.php`, Stufe 2 neu gestartet) |
 | OF-P-02 | Tagesübersicht: Abstand zwischen Karte und Kachel „Ruhesegmente" zu klein | Tag | Abstand | erledigt sich mit P-03, sonst prüfen |
 | OF-P-03 | Kachel „Ruhesegmente" entfällt; Schneiden ins Aktionsmenü des Diensttags | Tag | Umbau | entschieden (E-OF-05) |
-| OF-P-04 | Markierung aktiver Elemente (Strich links, mehrere Farben/Orte) | alle | Gestaltung | 3 Mockups, eine ohne Markierung |
+| OF-P-04 | Markierung aktiver Elemente (Strich links, mehrere Farben/Orte) | alle | Gestaltung | entschieden (E-OF-16): ohne Markierung |
 | OF-P-05 | Segmentwahl „Wochentage": Beschriftung nicht senkrecht mittig | Baustein | Korrektur | alle Segmentwahlen prüfen |
 | OF-P-06 | Datumsfelder zu schmal, Format je Browser („dd/mm/yyyy") | Baustein | Umbau | entschieden (E-OF-06) |
 | OF-P-07 | Speicherknopf zwischen Karten ohne Bezug („Profil speichern", „Passwort ändern") | alle | Regel | zentrale Regel + Prüfmittel, Mockup |
@@ -123,6 +123,7 @@ Seite Hintergrundjobs (bei P-24).
 
 | E-OF-14 | Q-NV-04: Die rote Zahl steht am Reiter jedes Bereichs, summiert über seine Punkte (Verwaltung z. B. überfällige Konto-Backups, Betrieb die Statusbefunde) | Betreiberin, 07.11.2026 |
 | E-OF-15 | Q-OF-09: Ob Seitenreiter wie die Bereichszeile aussehen, wird an den Mockups zu P-20 entschieden | Betreiberin, 07.11.2026 |
+| E-OF-16 | P-04: Variante **A — ohne Markierung**: Der aktive Eintrag trägt nur die Auswahlfläche, kein Strich links; gilt für jede Leiste (Einstellungen, Diensttage, Vorschläge). Bild `konzept-of/mockups/OF-P04-A-ohne-markierung.png` | Betreiberin, 07.11.2026 (Kommentar im Mockup A) |
 
 Aus Schritt 26 übernommen: E-MA-36 (Beenden-Knöpfe der App bleiben
 vollflächig rot) ist bestätigt.
