@@ -84,7 +84,7 @@ NV-Gerüst.
 | OF-P-24 | Hintergrundjobs: ausdünnen, Plaketten brechen um, „Anhalten" umbenennen | Betrieb | Umbau | entschieden (E-OF-10, E-OF-21) |
 | OF-P-25 | Servereinstellungen vereinfachen | Betrieb | Gestaltung | entschieden (E-OF-22): Klappkarten |
 | OF-P-26 | Komplett-Backup vereinfachen | Betrieb | Gestaltung | entschieden (E-OF-23): Stand oben, Klappkarten |
-| OF-P-27 | Backup-Ziele als eigene Seite auflösen | Betrieb | Umbau | Q-OF-06 (Ort) |
+| OF-P-27 | Backup-Ziele als eigene Seite auflösen | Betrieb | Umbau | entschieden (E-OF-24): an beiden Orten |
 | OF-P-28 | Dark Mode mit Umschalter in der Kopfleiste | alle | Funktion | entschieden (E-OF-09) |
 | OF-P-29 | Fußzeile als heller Streifen unter allem | alle | Gestaltung | 3 Mockups |
 | OF-P-30 | Symbole „download"/„upload" für GPX | Tag, Einsatz | Symbol | entschieden (E-OF-11) |
@@ -131,6 +131,7 @@ Seite Hintergrundjobs (bei P-24).
 | E-OF-21 | P-24: **Vorschlag** übernommen: „Jobs vorübergehend pausieren“ als eigene Karte oben; im Zustand je Job ein kurzer Satz, Plaketten brechen nicht um („heute 23:24“ statt Datum); Auslöser, Kettentoken und Monitoring in der üblichen Klappkarte, Zustand als Plakette im Kopf. Bild `konzept-of/mockups/OF-P24-vorschlag.png` | Betreiberin, 07.11.2026 (Kommentar im Mockup C) |
 | E-OF-22 | P-25: **Vorschlag** übernommen: Jede Karte der Servereinstellungen wird Klappkarte; zugeklappt zeigt sie den eingestellten Stand in einer Zeile und die Plakette, aufgeklappt das Formular. Der Klappbaustein ist derselbe wie bei P-24. Ob die Backup-Ziele dorthin wandern, ist P-27 und noch offen. Bild `konzept-of/mockups/OF-P25-vorschlag.png` | Betreiberin, 07.11.2026 (Kommentar im Mockup C) |
 | E-OF-23 | P-26: **Vorschlag** übernommen: Oben der Stand (offen), darunter Regeln, Stände und Backup-Ziele als Klappkarten in derselben Form wie die Servereinstellungen; „Jetzt sichern“ ist die eine orange Hauptaktion. Ob die Backup-Ziele zusätzlich dort und in den Servereinstellungen stehen, ist P-27 und noch offen. Bild `konzept-of/mockups/OF-P26-vorschlag.png` | Betreiberin, 07.11.2026 (Kommentar im Mockup C) |
+| E-OF-24 | P-27 und Q-OF-06: Die Seite „Backup-Ziele“ entfällt. Die Ziele stehen **an beiden Orten** als dieselbe Klappkarte (ein Baustein): als letzte Karte in den Servereinstellungen und unter den Ständen im Komplett-Backup. „Ziel anlegen“ öffnet den heutigen Dialog. Bilder `konzept-of/mockups/OF-P27-servereinstellungen.png`, `…/OF-P27-komplett-backup.png` | Betreiberin, 07.11.2026 (Kommentar im Mockup C) |
 
 Aus Schritt 26 übernommen: E-MA-36 (Beenden-Knöpfe der App bleiben
 vollflächig rot) ist bestätigt.
@@ -144,7 +145,7 @@ vollflächig rot) ist bestätigt.
 | Q-OF-03 | P-10, -07, -19: Sollen die neuen Regeln von einem Prüfmittel gemessen werden (Erklärtext je Karte, Knopf zwischen Karten, Kartenbreite je Seitenart)? | P-07, -10, -19 |
 | Q-OF-04 | P-14: Kachel „GPS-Daten verdichten" nur zeigen, wenn etwas fällig ist oder ein Lauf scheiterte — oder ganz weg bzw. als Zeile unter „Was dein Konto hält"? | P-14 |
 | Q-OF-05 | P-18: Name des Kontos als Link, Spalte „Öffnen" entfällt (Tastatur und Screenreader brauchen ein fokussierbares Element) — bestätigt? | P-18 |
-| Q-OF-06 | P-27: Backup-Ziele nach Komplett-Backup (Vorschlag) oder nach Servereinstellungen? | P-27 |
+| Q-OF-06 | ~~P-27: Backup-Ziele nach Komplett-Backup (Vorschlag) oder nach Servereinstellungen?~~ entschieden (E-OF-24): beides | P-27 |
 | Q-OF-07 | P-37: Symbol für „Wiederherstellen": `restore` (Vorschlag), `arrow-back-up` oder `trash-off` | P-37 |
 | Q-OF-08 | Übersichtsseite „Einstellungen" doppelt zur Seitenleiste, „Abmelden" doppelt — eigener Punkt? | mit Q-NV-03 |
 | Q-OF-09 | ~~Seitenreiter wie die Bereichszeile?~~ entschieden (E-OF-17) | P-20, NV-01 |
