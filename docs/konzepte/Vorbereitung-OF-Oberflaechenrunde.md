@@ -86,7 +86,7 @@ NV-Gerüst.
 | OF-P-26 | Komplett-Backup vereinfachen | Betrieb | Gestaltung | entschieden (E-OF-23): Stand oben, Klappkarten |
 | OF-P-27 | Backup-Ziele als eigene Seite auflösen | Betrieb | Umbau | entschieden (E-OF-24): an beiden Orten |
 | OF-P-28 | Dark Mode mit Umschalter in der Kopfleiste | alle | Funktion | entschieden (E-OF-09) |
-| OF-P-29 | Fußzeile als heller Streifen unter allem | alle | Gestaltung | 3 Mockups |
+| OF-P-29 | Fußzeile als heller Streifen unter allem | alle | Gestaltung | entschieden (E-OF-34): dunkelblauer Abschluss |
 | OF-P-30 | Symbole „download"/„upload" für GPX | Tag, Einsatz | Symbol | entschieden (E-OF-11) |
 | OF-P-31 | Plakette „GPS-Daten ausgedünnt" weglassen | Einsatz | Umbau | entschieden (E-OF-12) |
 | OF-P-32 | Einsatzformular (nachtragen und bearbeiten): Schalter und abhängige Felder ordnen | Einsatz | Gestaltung | entschieden (E-OF-33): eine Karte, Transport als drei abwählbare Felder; zentral im Feldkatalog |
@@ -141,6 +141,7 @@ Seite Hintergrundjobs (bei P-24).
 | E-OF-31 | P-19: **Vorschlag** übernommen: Jeder Abschnitt und seine Linie reichen bis zur rechten Kante der Rahmenkarte; begrenzt werden die Felder (36 rem), nicht die Abschnitte. Alle Seiten haben dieselbe rechte Kante; Listenseiten bleiben, wie sie sind. Ob ein Prüfmittel die Regel misst, ist Q-OF-03. Bild `konzept-of/mockups/OF-P19-vorschlag.png` | Betreiberin, 07.11.2026 (Kommentar im Mockup B) |
 | E-OF-32 | P-07, Regel für alle Seiten: Speichert ein Knopf **einen** Abschnitt, steht er als letztes Element in ihm. Speichert er **mehrere**, erscheint am unteren Rand der Rahmenkarte eine klebende Speicherleiste, sobald etwas geändert ist: Fläche Auswahlblau (`--auswahl-flaeche`, schaltet im Dunkelmodus mit), kein Strich und kein Bogen darüber, links fett „Geändert: …“, rechts der Knopf. Sie gehört zu keinem einzelnen Abschnitt. Ob ein Prüfmittel Knöpfe zwischen Abschnitten meldet, ist Q-OF-03. Bild `konzept-of/mockups/OF-P07-speicherleiste.png` | Betreiberin, 07.11.2026 (Kommentare im Mockup B, nach zwei Nachbesserungen) |
 | E-OF-33 | P-32 (nachtragen und bearbeiten): eine Karte „Einsatz und Transport“. Oben die Schalter Sekundärtransport und Fehleinsatz nebeneinander; dann die Transportart als Segmentwahl mit **drei Feldern Luft, Boden, Ambulant**, höchstens eines gewählt, ein zweiter Klick nimmt die Wahl zurück (dann offen, kein eigenes Feld „offen“); darunter Transportziel und die Schalter NA-Begleitung und Schockraum nebeneinander, ohne Einzug. Bei „Ambulant“ fallen Ziel und Schalter weg. Umsetzung zentral im Feldkatalog. Bilder `konzept-of/mockups/OF-P32-vorschlag-leer.png`, `…/OF-P32-vorschlag-gefuellt.png` | Betreiberin, 07.11.2026 (Kommentare im Mockup D) |
+| E-OF-34 | P-29: Variante **C — dunkelblauer Abschluss**: Die Fußzeile ist ein schmaler Streifen in Dunkelblau wie die Kopfleiste, unter der Rahmenkarte über die ganze Breite; die Seite ist oben und unten gerahmt. Im Inhalt steht kein „Abmelden“ (E-OF-27). Entschieden an einer ganzen, scrollbaren Seite im Gerüst aus Konzept NV. Bild `konzept-of/mockups/OF-P29-C-dunkelblau.png` | Betreiberin, 07.11.2026 (Kommentar auf der Vergleichsseite A/C) |
 
 Aus Schritt 26 übernommen: E-MA-36 (Beenden-Knöpfe der App bleiben
 vollflächig rot) ist bestätigt.
