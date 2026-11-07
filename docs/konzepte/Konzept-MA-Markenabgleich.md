@@ -35,9 +35,12 @@ Prüfarbeit an der einen örtlichen Anlage (CLAUDE.md 7).
 | MA-06 | Produktmarke NAdoku: Logos, Favicons, Kopfleiste | **erledigt** 07.11.2026 (Web 23.9.2) |
 | MA-07 | Dark Mode mit Schalter je Konto | **erledigt** 07.11.2026 (Web 23.10.0, Migration) |
 | MA-09 | Android-Nachzug: Farbwerte und Bildmarken der App (neu, F-MA-12) | **erledigt** 07.11.2026 (Android 0.21.1; Bau im Prüfstand) |
-| MA-08 | Dokumentation, Prüfmittel, Prüfstand, Abschluss | offen |
+| MA-08 | Dokumentation, Prüfmittel, Prüfstand, Abschluss | **gebaut** 07.11.2026 — Prüfstand und Pull Request; Abschluss nach der Freigabe |
 
-**In Arbeit:** MA-08. **Es hakt:** nirgends; alle Fragen sind entschieden
+**In Arbeit:** MA-08, Prüfstand und Pull Request. Prüfdokument:
+`Pruefdokument-MA-Markenabgleich.md` (15 Handpunkte). **Zur Bestätigung
+vorgelegt:** E-MA-21 (Kopfleiste fest „NAdoku") und E-MA-24 (Android nur
+Werte). **Es hakt:** nirgends; alle Fragen sind entschieden
 (E-MA-08 bis -20). MA-01, -03, -04 und -05 sind ein Commit geworden: Sie
 stellen dieselben rund 540 Farbstellen im Stylesheet um, und ein Zwischenstand
 hätte Token gezeigt, die es nicht mehr gibt.
@@ -474,3 +477,50 @@ Stylesheet (Teilzeichenkettenvergleich). In Chromium: `index.php` und
 „dunkel" gesetzt, Browser hell → `data-theme="dark"`, Seitenfläche
 `rgb(16, 27, 44)` (blau 900); als Druck → `rgb(255, 252, 250)` (Schnee);
 Anmeldeseite ohne Konto → kein Attribut, Logo dunkel `…-farbig-negativ.svg`.
+
+### MA-08 (Dokumentation, Prüfmittel, 07.11.2026)
+
+**Was gebaut ist.** `Design.md`: Kapitel 3 neu (Rollen, Status 100/700/600,
+Kontrasttabelle aus `kontrast.py --json` mit Spalten hell und dunkel),
+**neues Kapitel 3a Dark Mode**, Kapitel 5 ohne 12 px, 9.5, 9.6, 9.10, 9.23,
+9.36, 9.37, 9.40, Vorschlagsliste, Ladeplatz und Balken mit den neuen
+Rollen, Eintrag im Änderungsverlauf; erzeugte Tabellen neu. Handbuch:
+Kopfleiste, Profil (Logo, Darstellung), Farbangaben an zwölf Stellen
+(Auswahl hellblau, Vollzug grün, Ampel grün, Testanlage orange).
+Technik: 3 (`users.darstellung`), 4.41 neu, Runbook Umgebungsetikett.
+`tools/screenshots/LIESMICH.md` mit den neuen Sollzahlen. Backlog: Nr. 62
+und Nr. 411 erledigt, **521** (Bilderlauf dunkel), **522** (Rollen der
+Android-App), **523** (Klassennamen mit „orange") neu. Prüfdokument angelegt.
+
+**Der erste Prüfstandslauf** (Hauptstufe, voll, 8 597 s; auf einem Baum,
+der danach noch geändert wurde — deshalb kein Bericht): **59 grün, 7 rot**,
+alle sieben vom Umbau verursacht und behoben:
+- **F-MA-16 — Die Wortliste kannte die neuen Dateinamen nicht.** Die alten
+  hießen englisch (`gen-em_logo_helicopter`), die neuen deutsch
+  (`nadoku-hubschrauber-*`); „Hubschrauber" ist ein Luftbegriff (P2).
+  Zwölf Ausnahmen der Klasse Homonym dazu, zwei bestehende auf den neuen
+  Wortlaut; „Betreiberin" in `Design.md` → „BetreiberIn".
+- **F-MA-17 — Die Dokumentenprobe** fand Dateien des Branding-Repos und die
+  alten Logonamen im Änderungsverlauf; zwei Zeilen in
+  `dokumente-ausnahmen.md` (Fremd, Früher).
+- **F-MA-18 — Zweitfaktor- und Rückwegprobe erwarteten `blau`** für „in
+  Ordnung"; jetzt `gruen`.
+- **F-MA-19 — Die Bedienprobe prüfte gegen `--orange-hell`/`--orange-tief`**
+  (offener Öffner, angesprungene Zeile, Landung nach dem Anlegen); jetzt
+  gegen die Auswahl (blau 100, Dunkelblau).
+- **F-MA-20 — Die Verbindungsprobe meldete den Datenbankbenutzer** auf der
+  503-Seite: Örtlich heißt er `nadoku`, und so beginnen die neuen
+  Logodateien. Sie sucht jetzt im Text der Seite, nicht in `src`/`href`.
+- **F-MA-21 — Der Stilvergleich konnte nicht für drei Engines grün werden**
+  (Backlog Nr. 411): Sie benennen dieselbe Änderung verschieden. Je Engine
+  eine Liste `geplant-<motor>.txt`; gemessen 2 757 / 2 757 / 2 763
+  Signaturen, je 0 ungeplant; eine zusätzliche Regel rot in allen dreien.
+  Nr. 411 erledigt.
+
+**Gemessen** (vor dem Prüfstand, auf demselben Baum): `decken.py` 21
+Decken, 0 gerissen; `bestand.py` 0 Befunde; `uebersicht.py` läuft;
+`vollstaendigkeit.py` keine Befunde; `kontrast.py` 58 Paare je Modus,
+0 verfehlt, 0 ohne Eintrag. **Der Prüfstand** (Hauptstufe wegen der
+Migration, voll) steht mit seinem Bericht in der Nachricht des letzten
+Commits; seine Zahlen stehen dort und nicht hier, weil jede Zeile hier nach
+der Messung den Baum änderte.

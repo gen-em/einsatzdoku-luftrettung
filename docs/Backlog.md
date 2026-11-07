@@ -151,25 +151,6 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
 
 <!-- -->
 
-62. **Logodateien tragen teilweise wieder die alten Farbwerte.** · gehört zu: 26 · Stand: offen · seit 31.08.2026
-     Befund (B-S4-01; bis 02.09.2026 Nr. 49): Der Commit „Update Logos" hat
-     alte Werte zurückgebracht — `gen-em_logo_helicopter.svg` führt `#587abc`,
-     `#e3322b`, `#f7941d`, Korpus `#1d0e0a` statt `#4280E5`, `#D63338`,
-     `#FF8F1F`, `#1A0500`; die PNG ebenso (gemessen 13.09.2026). Richtig sind
-     nur `gen-em_logo_nef_weiss.svg` und `gen-em_logo_nef.png`.
-     Entschieden 12.09.2026: neue Vorlagen anfordern; bis dahin nichts am
-     Code. `Design.md` 2.5 ist am 13.09.2026 berichtigt.
-     Weg: Die Durchsicht vom 26.09.2026 nahm an, die Vorlagen lägen vor
-     (E-SD-34); im Baum ist seit `6f316ee` vom 12.09.2026 keine Logodatei
-     geändert (Konzept R4, F-R4-08). Mit den Vorlagen alle Fassungen samt
-     Ableitungen (PNG, Favicons, Uhr-Bilder) nachziehen, nachmessen und
-     `Design.md` 2.5 mitziehen — mit dem neuen NEF-Logo, vor P7.
-     Ziel 13 seit 26.09.2026 (R4-01, E-R4-08); Schritt 17 fasst keine
-     Bilddatei an.
-     Werdegang bis 26.09.2026: `docs/Backlog.md@f5bddc2`, Nr. 62.
-
-<!-- -->
-
 80. **Auswertung der Gerätestatistik — und die zweite Hälfte der Frage.** · gehört zu: Zuarbeit · Stand: teilweise · seit 02.09.2026
      Befund: Rest von Nr. 59 (Speicherung, Web 12.9.0). Gebaut ist
      inzwischen fast alles: die Modelltabelle auf Betrieb → Statistik (S8/AP4,
@@ -702,24 +683,6 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
 
 <!-- -->
 
-411. **Der Stilvergleich hat eine Liste geplanter Abweichungen für drei Engines.** · gehört zu: 14 · Stand: offen · seit 31.10.2026
-     *Aufgenommen 31.10.2026 mit R17-29 (F-R17-91).* Grün ist der
-     Stilvergleich, wenn die gemessenen Signaturen der Liste
-     `tools/stilvergleich/geplant.txt` GLEICHEN. Seit R87 läuft er in drei
-     Engines, und die benennen dieselbe Verschiebung verschieden: Chromium
-     `bottom, inset, top`, Firefox `bottom, top`, WebKit mit `size`; WebKit
-     misst dazu das `svg` im Schattenbaum eines `<use>`. Gemessen mit einer
-     Liste aus Chromium: Firefox 5, WebKit 6 ungeplant. Eine gewollte
-     Gestaltungsänderung, die etwas verschiebt, wird damit nirgends ganz
-     grün; R17-29 ist ausgewichen (keine Stilregel nötig).
-     *Weg:* je Engine eine Liste (`geplant-<motor>.txt`), `--schreiben`
-     schreibt alle drei; oder die Signatur auf eine gemeinsame Menge von
-     Eigenschaften abbilden (`inset` aus `top`/`bottom`, ohne `size`).
-     *Abnahme:* eine Probe-Änderung an `style.css`, `--schreiben`, danach
-     drei Engines grün; eine zweite, ungeplante Änderung rot in allen dreien.
-
-<!-- -->
-
 430. **Bitwarden zeigt beim Backup mit Kontopasswort den Eintrag nicht im Menü am Feld.** · gehört zu: Zuarbeit · Stand: teilweise · seit 02.11.2026
      *Aufgenommen 02.11.2026 aus P-R17-34 (Handprüfung auf Produktiv,
      Firefox mit Bitwarden).* Seit Web 23.4.0 bietet Bitwarden im Feld
@@ -755,3 +718,48 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      `bash tools/erzeugen/uhr-bilder.sh`, Uhr-Fassung hochstufen, Bilder im
      Simulator und auf der Uhr ansehen. *Abnahme:* Launcher und Sync-Seite
      zeigen das neue Zeichen; `compare` gegen die Ausgabe des Rezepts 0.
+
+<!-- -->
+
+521. **Der Bilderlauf nimmt den Dark Mode nicht auf.** · gehört zu: nächste Backlog-Runde · Stand: offen · seit 07.11.2026
+     *Aufgenommen 07.11.2026 mit MA-07 (F-MA-15).* Seit Web 23.10.0 gibt
+     es eine dunkle Darstellung (`prefers-color-scheme` und `data-theme`),
+     und `tools/screenshots/aufnehmen.mjs` fährt nur hell. Ein Überlauf,
+     eine unsichtbare Kante oder ein Text in der falschen Rolle, die nur im
+     Dunkeln auftreten, findet damit niemand; `kontrast.py` rechnet die
+     Paare beider Modi, sieht aber keine Seite. Ein Lauf dunkel über alle
+     Seiten und zehn Breiten verdoppelte die Zeit des Bilderlaufs (heute
+     rund 25 Minuten). *Weg:* Schalter `--dunkel` (Kontext mit
+     `colorScheme: 'dark'`), im vollen Lauf dunkel in Chromium allein über
+     drei Breiten, Ausgabe getrennt. *Abnahme:* eine absichtlich falsche
+     Rolle (`color:var(--dunkelblau)` auf einer Karte) ist im dunklen Lauf
+     als Befund sichtbar, im hellen nicht.
+
+<!-- -->
+
+522. **Die Android-App handelt in Orange, das Web in Dunkelblau.** · gehört zu: nach v1.0 · Stand: offen · seit 07.11.2026
+     *Aufgenommen 07.11.2026 mit MA-09 (E-MA-24).* Seit Schritt 26 sind im
+     Web die Gründerfarben Markenflächen und Status, Handeln ist
+     Dunkelblau (E-MA-01). Die App hat mit Android 0.21.1 nur die
+     **Werte** übernommen (Tonstufen, Produktmarke); ihre **Rollen** sind
+     geblieben — Primärknopf Orange mit dunkelblauer Schrift, Blau für
+     „in Ordnung", kein Grün, kein Dark Mode. Wer zwischen Handy und
+     Browser wechselt, sieht zwei Farbsprachen. *Weg:* eigenes Konzept mit
+     Mockups für Handy und Uhr (48 dp, Handschuhe), Rollen wie im Web
+     (`Farbe.kt`), Dark Mode über die Systemeinstellung, Gerätetest.
+     *Abnahme:* `kontraste.py` mit den neuen Paaren grün, Bilderlauf beider
+     Module angesehen, Gerätetest auf Handy und Uhr.
+
+<!-- -->
+
+523. **Der Klassenname `.knopf-leise-orange` stimmt nicht mehr.** · gehört zu: 13 · Stand: offen · seit 07.11.2026
+     *Aufgenommen 07.11.2026 mit MA-01 (F-MA-07).* Die Variante des leisen
+     Knopfs („Als Vorbelegung") trägt seit Web 23.9.0 die Linkfarbe, kein
+     Orange; ebenso heißt `.karte-aktion-orange` noch nach der alten Farbe,
+     und `.zaehler-orange` meint jetzt die Warnung. Die Namen stehen in
+     `ui_knopf()` (`'leise-orange'`), in den Aufrufen, in der Streichliste
+     und in der Tonprüfung. *Weg:* in `leise-hervor` bzw. `karte-aktion-anlegen`
+     umbenennen, Aufrufer und `vollstaendigkeit-streichliste.md` nachziehen.
+     *Abnahme:* `vollstaendigkeit.py` keine Befunde, `grep -rn "orange"`
+     findet in Klassennamen nur noch Töne der Plakette und Kennzahl.
+

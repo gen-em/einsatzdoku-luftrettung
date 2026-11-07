@@ -1032,15 +1032,18 @@ gehalten; **jede Abweichung darüber hinaus ist unbeabsichtigt und wird
 geklärt, bevor committet wird.** Wer eine Null erwartet, wo eine Liste
 richtig ist, schaltet das Werkzeug beim ersten beabsichtigten Umbau ab.
 
-**Die Liste steht seit P5c/AP1 in einer Datei** (F-P5c-72):
-`tools/stilvergleich/geplant.txt`, je Zeile eine Signatur — Probe, Element
+**Die Liste steht seit P5c/AP1 in einer Datei** (F-P5c-72), **seit
+Schritt 26 in einer je Engine** (Backlog Nr. 411):
+`tools/stilvergleich/geplant-<motor>.txt`, je Zeile eine Signatur — Probe, Element
 mit Elternteil, die Namen der Eigenschaften, die sich ändern (ohne Werte,
 vereinigt über alle Breiten). Grün ist der Lauf, wenn Messung und Liste
 **gleich** sind: Eine ungeplante Abweichung ist rot, und eine geplante, die
 nicht gemessen wird, auch — sonst verdeckte eine veraltete Liste beim
 nächsten Mal eine ungewollte Änderung. Geschrieben wird sie mit
-`bash tools/stilvergleich/gegen.sh --schreiben`, **gelesen im Pull
-Request**: Jede Zeile ist die Aussage „das soll sich ändern". Fehlt die
+`bash tools/stilvergleich/gegen.sh --schreiben` (ohne `MOTOR` alle drei),
+**gelesen im Pull Request**. Je Engine, weil die drei dieselbe Verschiebung
+verschieden benennen (Chromium `inset`, WebKit dazu `size`); eine gemeinsame
+Liste stimmte nie für alle drei: Jede Zeile ist die Aussage „das soll sich ändern". Fehlt die
 Datei oder ist sie leer, gilt die Null. **Nach dem Merge bleibt sie
 stehen** (seit dem 26.09.2026, Nr. 330): `gegen.sh` übergibt die Liste des
 Vergleichsstands als `--geerbt`, und eine Zeile, die dort wortgleich steht
@@ -1092,7 +1095,7 @@ hier steht, ist nur, **was grün heißt**:
 | `tools/quelltext/` `pysyntax`, `handbuch` | 0 Syntaxfehler und 0 Warnungen (ungültige Escape-Folge, seit R4-07) bei mindestens einer Datei; beide Dokumente rendern, gültiges UTF-8, 0 Bilder aus fremder Quelle |
 | `tools/referenzdatensatz/fixture/` `abgleich.py` | Fixture und Referenz gleich (Diensttage, Einsätze, Segmente samt Papierkorb, Schnitte, Löschvermerke, je Aufzeichnung `n`, Stufe 3 und dort `n_original`), `umriss.json` gehört zur eingecheckten `.edbak` (SHA-256), mit `--tief` auch aus der `.edbak` nachgerechnet; Selbstprobe 8 von 8 (seit Schritt 24, RD-05) |
 | `./gradlew build` | 0 Lint-Fehler, 0 Fehlschläge |
-| `tools/stilvergleich/` | die gemessenen Abweichungen sind genau `geplant.txt` — ohne Datei: 0 (6.10) |
+| `tools/stilvergleich/` | die gemessenen Abweichungen sind je Engine genau `geplant-<motor>.txt` — ohne Datei: 0 (6.10) |
 | `tools/steuerung/` (im Prüfstand, als `hinweis`; seit PU-05 kein Riegel im Tor) | 0 Decken gerissen (welche es sind, sagt `decken.py`), 0 Kopfzeilen ohne Grammatik, 0 ohne gültiges Ziel, 0 Nummern in beiden Backlog-Dateien, 0 Einträge als Codeblock, 0 offene Einträge ohne eigene Liste mit ihrer Nummer (seit R4-25); Selbstproben alle Fälle grün |
 
 PK-04 hat zwei davon geändert: E-PK-16 hat der Vollständigkeit die

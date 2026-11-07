@@ -13943,16 +13943,18 @@ E-P5c-05):** In der `config.php` **der Testanlage** — nie auf Produktiv —
 unter `app` das Etikett, und daneben den Betreff-Vorsatz der Mails:
 
 ```php
-'app'  => [ /* … */ 'umgebung' => ['name' => 'Staging', 'farbe' => 'rot'] ],
+'app'  => [ /* … */ 'umgebung' => ['name' => 'Staging', 'farbe' => 'orange'] ],
 'mail' => ['betreff_praefix' => '[Staging]'],
 ```
 
-Danach trägt jede Seite „[Staging]" im Titel, eine rote Kopfleiste und den
+Danach trägt jede Seite „[Staging]" im Titel, eine orange Kopfleiste (orange 800,
+bis Web 23.9.0 rot) und den
 Streifen „Staging — Testdaten, kein Echtbetrieb"; die Wartungs- und die
 Überlastseite nur den Titel. Notfall-, Schlüssel- und Codeblatt tragen den
 Titel und — seit Web 21.1.0 bzw. beim Codeblatt seit 20.42.0 — eine rot
 umrandete Umgebungszeile unter dem Blattkopf (E-P5c-50). `farbe` ist eine geschlossene Liste
-(`UMGEBUNG_FARBEN` in `server/umgebung_lib.php`, heute nur `rot`). **Nie
+(`UMGEBUNG_FARBEN` in `server/umgebung_lib.php`, heute nur `orange`; ein
+`'rot'` aus der Zeit davor gilt still als `orange`, `UMGEBUNG_FARBEN_FRUEHER`). **Nie
 abgeleitet** — kein Blick auf Domain oder Zweig; ohne Eintrag verhält sich
 die Anlage wie die Produktivanlage. **Prüfen:** Betrieb → Status, Karte
 „Server", Zeile „Umgebung" — blau mit „Staging" bzw. „Produktiv"; orange,

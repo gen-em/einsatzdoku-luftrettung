@@ -411,9 +411,10 @@ und Formular. Sie ist nach Jahr und Monat gruppiert (Abschnitt 4.4).
 stehen dort, immer in derselben Reihenfolge:
 
 1. **Die Umgebung** — nur auf einer Testanlage: „Staging — Testdaten, kein
-   Echtbetrieb". Dazu ist dort die **Kopfleiste rot** statt dunkelblau, und
+   Echtbetrieb". Dazu ist dort die **Kopfleiste orange** (dunkles Orange,
+   bis Web 23.9.0 rot) statt dunkelblau, und
    vor jedem Seitentitel im Browser steht „[Staging]". Auf der Anlage für den
-   Echtbetrieb gibt es nichts davon. Wer eine rote Leiste sieht, trägt dort
+   Echtbetrieb gibt es nichts davon. Wer eine orange Leiste sieht, trägt dort
    keine echten Einsätze ein.
 2. **Eine Ankündigung** der BetreiberIn, etwa eine Wartung. Sie steht auch
    über der Anmeldung. Das **×** rechts blendet sie aus, bis du dich abmeldest;
@@ -432,7 +433,7 @@ Schreibtisch als Knöpfe am rechten Zeilenrand. Auf schmalen Geräten steht dort
 dieselben Handlungen untereinander stehen, „Löschen" rot und abgesetzt. Das
 gilt überall: Stammdaten, Geräte, NutzerInnen, Papierkorb.
 
-**Das Blatt fährt von unten herein, und der Knopf bleibt orange**, solange es
+**Das Blatt fährt von unten herein, und der Knopf bleibt hellblau hinterlegt**, solange es
 offen steht — damit zu sehen ist, wohin es gehört und womit man es wieder
 zumacht. Zum Schließen genügt der Knopf ein zweites Mal, ein Tipp daneben,
 „Abbrechen" im Blatt oder die Escape-Taste. Wer im Betriebssystem
@@ -1247,7 +1248,7 @@ Pro Tag:
   mit Orange/Blau/Rot) und dem Ruhe-Track in gedämpftem Graublau. Kleine
   **Richtungspfeile** auf den Aufzeichnungen zeigen die Bewegungsrichtung.
   Der **Standort** steht als Haus-Schild auf der Karte, der **Einsatzort**
-  als oranger Kreis. Anfang und Ende der Aufzeichnung sind hier **nicht**
+  als dunkelblauer Kreis. Anfang und Ende der Aufzeichnung sind hier **nicht**
   gekennzeichnet — die Tagesübersicht zeigt den ganzen Tag, und was ihn
   einrahmt, steht am einzelnen Einsatz (Abschnitt 4.2). Bis Web 15.9.0
   behauptete dieser Absatz das Gegenteil.
@@ -1548,7 +1549,7 @@ hinausreicht.
 Über dem Titel steht der **Rückweg** „‹ Sonntag, 27.12.2026" zurück zur
 Tagesübersicht. Der Titel heißt „Einsatz N · Uhrzeit" (N = Nummer des Tages
 nach Alarmierungszeit; auf dem Handy nur „Einsatz N"). Rechts daneben:
-**„Bearbeiten"** als oranger Hauptknopf und das Aktionsblatt mit
+**„Bearbeiten"** als dunkelblauer Hauptknopf und das Aktionsblatt mit
 **Verschieben**, **GPS-Daten als GPX** und **Löschen** (mobil „···", am Desktop
 „Aktionen"; Escape schließt, die Tastatur bedient es vollständig — seit
 Web 9.3.0 dasselbe Blatt wie auf der Startseite). **GPS-Daten als GPX** erscheint
@@ -1683,7 +1684,7 @@ nicht gespeichert, nach einem Neuladen ist er wieder aus.
 
 Die Karte **Einsatzphasen** nennt im Kopf die Gesamtdauer und je Zeile
 Nummer, Name, Uhrzeit und den **Minutenabstand** zur vorigen Phase. Zeigt
-man auf eine Zeile (am Handy: antippen), leuchtet sie orange und ihr
+man auf eine Zeile (am Handy: antippen), wird sie hellblau hinterlegt und ihr
 **Teilstück des Tracks** — von der vorigen Phase bis zu ihr — färbt sich
 blau auf der Karte; ein eingeblendeter Phasenpunkt leuchtet ebenso.
 
@@ -2783,13 +2784,13 @@ entpackt hast), sagt die Anwendung auch das.
 
 **Woran du siehst, wie es ausgegangen ist:** Die Rückmeldungen tragen seit
 Web 9.7.2 ihre Farbe. Ein Fehlschlag ist **rot** mit Warnsymbol, ein Ergebnis
-**blau mit Haken**, und was gerade läuft („Daten werden geladen …") steht
+**grün mit Haken** (bis Web 23.9.0 blau), und was gerade läuft („Daten werden geladen …") steht
 schlicht in Grau — es ist kein Ergebnis, und ein Haken daneben behauptete
 eines. Ein Backup, bei dem sich einzelne Angaben nicht entschlüsseln ließen,
 meldet sich **orange**: Die Datei ist vollständig, aber dieser Teil öffnet
 sich nur wieder in diesem Konto.
 
-**Orange heißt auch: Etwas wurde verworfen.** Jede Angabe aus der Datei läuft
+**Die Warnfarbe heißt auch: Etwas wurde verworfen.** Jede Angabe aus der Datei läuft
 beim Einspielen durch dieselbe Prüfung wie alles, was die Anwendung annimmt.
 Was sie nicht passiert, wird nicht übernommen, und die Abschlussmeldung sagt
 es seit Web 23.0.2 mit Feld und Anzahl — etwa „ACHTUNG: Verworfen hat die
@@ -3037,7 +3038,7 @@ nicht zur Verfügung — und damit auch kein GPX-Import.
 wählen*, *2. Prüfen und korrigieren*, *3. Übernehmen*. Die Schritte 2 und 3
 erscheinen erst, wenn der vorige getan ist. In Schritt 2 lässt sich die
 Tabelle einschränken auf *Alle Zeilen*, *Nur Probleme* oder *Nur Dubletten* —
-die gewählte Fläche ist orange hinterlegt.
+die gewählte Fläche ist hellblau hinterlegt.
 
 Die Datei wird **nicht hochgeladen**. Sie wird in deinem Browser gelesen,
 geprüft und dort verschlüsselt; der Server bekommt Name, Geburtsdatum, Alter,
@@ -3484,7 +3485,7 @@ getippt hast.
 
 - Über den **Rettungsmitteln** steht dann eine Reihe runder Marken, je eine
   mit dem Zeichen und dem Namen. Ein Tipp darauf springt zu der Zeile, und
-  die Zeile ist kurz orange hinterlegt, damit du sie unter den anderen
+  die Zeile ist kurz hellblau hinterlegt, damit du sie unter den anderen
   wiederfindest.
 - Über den **übrigen Listen** steht ein **Filterfeld** mit einer Lupe. Tippe
   ein paar Buchstaben, und es bleibt stehen, was dazu passt — sofort, ohne
@@ -3547,7 +3548,7 @@ Die Rückfrage sagt das vorher und nennt sie mit Namen: „5 eigene
 Stammdatensätze … werden mitgelöscht. 1 Rettungsmittel ohne Standortpflicht —
 Bergwacht Hochkreuth — bleibt bestehen und steht danach unter ‚Ohne
 Standort'." Nach dem Löschen führt die Seite gleich dorthin, mit der Zeile
-orange hinterlegt. Bereits dokumentierte Diensttage bleiben in jedem Fall
+hellblau hinterlegt. Bereits dokumentierte Diensttage bleiben in jedem Fall
 unverändert — sie haben ihre Angaben beim Anlegen eingefroren.
 
 ### 9.1a Vier Typen von Rettungsmitteln
@@ -5152,7 +5153,7 @@ derselben Kennung im Fehlerprotokoll des Webspace.
 #### Eine Zeile lesen
 
 Die **Plakette** sagt die Art des Ereignisses, ihre **Farbe** das Gewicht:
-grau ein gewöhnlicher Vorgang, blau etwas Erledigtes, orange ein Eingriff
+grau ein gewöhnlicher Vorgang, grün etwas Erledigtes (bis Web 23.9.0 blau), orange ein Eingriff
 oder eine Sperre, rot ein Fehler. Darunter stehen Zeit, wer gehandelt hat
 („Kommandozeile" oder „job", wenn es kein Mensch war) und wen es betraf.
 **Eine Zeile mit Winkel lässt sich aufklappen** — darunter stehen die
@@ -5302,7 +5303,7 @@ Dorthin führen auch die drei Zeilen „Verlangsamung", „Gesperrt" und
 
 | Farbe | heißt |
 |---|---|
-| **blau** | Es ist in Ordnung. |
+| **grün** | Es ist in Ordnung. (Bis Web 23.9.0 war das blau; blau heißt seither eine Eigenschaft, etwa „Produktiv".) |
 | **orange** | Es braucht Aufmerksamkeit, arbeitet aber. |
 | **rot** | Es arbeitet nicht — oder es geht dabei etwas verloren. |
 | grau | Nicht eingerichtet, oder eine reine Zahl ohne Wertung. |
@@ -5364,7 +5365,7 @@ aus, kommt niemand mehr an Verwaltung und Betrieb"), ein Admin als
 Vertretung der Verwaltung, aber nicht des Betriebs, eine zweite
 BetreiberIn ohne Zweitfaktor — oder **„keine BetreiberIn"**: Keine ist
 handlungsfähig. Das siehst du nach einem Update, solange du deinen eigenen
-Zweitfaktor noch nicht eingerichtet hast. Blau „vertreten" ab zwei handlungsfähigen
+Zweitfaktor noch nicht eingerichtet hast. Grün „vertreten" ab zwei handlungsfähigen
 BetreiberInnen. **Orange und nicht rot**, weil jede neue Anlage mit genau
 einer BetreiberIn beginnt — es arbeitet ja. Der Zähler am Menüpunkt „Status"
 zählt die Zeile mit und steht deshalb auf einer Anlage mit einer BetreiberIn
@@ -5376,7 +5377,7 @@ nicht, die Zeile bleibt deshalb orange.
 **Die Zeile „Rückweg-Prüfung"** (seit Web 20.43.0) sagt, ob diese Anlage den
 Rückweg beim Zweitfaktor prüfen kann — den Weg, auf dem jemand mit dem
 Wiederherstellungsschlüssel vom Notfallblatt den eigenen Zweitfaktor
-zurücksetzt, wenn Handy und Codes fehlen. Blau „prüft" mit Weg und Dauer:
+zurücksetzt, wenn Handy und Codes fehlen. Grün „prüft" mit Weg und Dauer:
 „openssl" ist der schnelle, „reines PHP" der langsamere, beide tragen. Orange
 „abgeschaltet": Der Selbsttest ist gescheitert, der Rückweg wird bei der
 Anmeldung nicht angeboten; Codes und das Zurücksetzen durch die Verwaltung
@@ -5412,7 +5413,7 @@ Versuch — eine Einladung, die vorgestern scheiterte, war danach unsichtbar.
 
 | Zeile | heißt | was zu tun ist |
 |---|---|---|
-| blau **leer** | Nichts liegt an. | nichts |
+| grün **leer** | Nichts liegt an. | nichts |
 | orange **N wartet** | Der Mailserver war kurz gestört. Die Anwendung versucht es über 24 Stunden bis zu fünfmal. | abwarten |
 | rot **N unzustellbar** | Fünf Versuche, alle gescheitert — oder, seit Web 23.6.4, der Mailserver hat den Empfänger gleich beim ersten Versuch endgültig abgelehnt (etwa „Postfach gibt es nicht“). Die Zeile **nennt die Adressen** und den letzten Grund. | Grund lesen, Adresse prüfen, Vorgang von Hand wiederholen |
 
@@ -5595,7 +5596,7 @@ Kennung `protokoll:`. Der häufigste Grund: Ein Update ist eingespielt, aber
 
 *Bis Web 21.0.0 stand das in der zugeklappten Karte „Was hier gilt" am Ende
 der Seite (P5c/AP9).* Die Ampel hat **vier Töne**, und sie bedeuten auf der
-ganzen Seite dasselbe: **Blau** — es ist in Ordnung. **Orange** — es braucht
+ganzen Seite dasselbe: **Grün** — es ist in Ordnung (bis Web 23.9.0 Blau). **Orange** — es braucht
 Aufmerksamkeit, arbeitet aber. **Rot** — es arbeitet nicht, oder es geht dabei
 etwas verloren. **Neutral** — nicht eingerichtet, oder eine reine Zahl ohne
 Wertung. Die Meldung oben zählt die roten und orangen Zeilen.

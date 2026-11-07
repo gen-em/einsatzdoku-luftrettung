@@ -11062,3 +11062,45 @@ zutreffen.
      Kopie von server/ mit eigener config.php; die der Anlage bleibt
      unberührt (Prüfsumme alle 0,2 s: 0 Abweichungen, alte Fassung 76),
      Matrix 4 × 52/0.
+
+62. **Logodateien tragen teilweise wieder die alten Farbwerte.** · gehört zu: 26 · Stand: erledigt · seit 31.08.2026
+     Befund (B-S4-01; bis 02.09.2026 Nr. 49): Der Commit „Update Logos" hat
+     alte Werte zurückgebracht — `gen-em_logo_helicopter.svg` führt `#587abc`,
+     `#e3322b`, `#f7941d`, Korpus `#1d0e0a` statt `#4280E5`, `#D63338`,
+     `#FF8F1F`, `#1A0500`; die PNG ebenso (gemessen 13.09.2026). Richtig sind
+     nur `gen-em_logo_nef_weiss.svg` und `gen-em_logo_nef.png`.
+     Entschieden 12.09.2026: neue Vorlagen anfordern; bis dahin nichts am
+     Code. `Design.md` 2.5 ist am 13.09.2026 berichtigt.
+     Weg: Die Durchsicht vom 26.09.2026 nahm an, die Vorlagen lägen vor
+     (E-SD-34); im Baum ist seit `6f316ee` vom 12.09.2026 keine Logodatei
+     geändert (Konzept R4, F-R4-08). Mit den Vorlagen alle Fassungen samt
+     Ableitungen (PNG, Favicons, Uhr-Bilder) nachziehen, nachmessen und
+     `Design.md` 2.5 mitziehen — mit dem neuen NEF-Logo, vor P7.
+     Ziel 13 seit 26.09.2026 (R4-01, E-R4-08); Schritt 17 fasst keine
+     Bilddatei an.
+     Werdegang bis 26.09.2026: `docs/Backlog.md@f5bddc2`, Nr. 62.
+     Erledigt 07.11.2026 mit Schritt 26 (MA-06, MA-09; Web 23.9.2,
+     Android 0.21.1): Web und Android-App tragen die Produktmarke NAdoku
+     aus dem Branding-Repo, Grundform Dunkelblau, Markenfarben exakt. Die
+     Uhr-Bilder sind Nr. 520.
+
+411. **Der Stilvergleich hat eine Liste geplanter Abweichungen für drei Engines.** · gehört zu: 14 · Stand: erledigt · seit 31.10.2026
+     *Aufgenommen 31.10.2026 mit R17-29 (F-R17-91).* Grün ist der
+     Stilvergleich, wenn die gemessenen Signaturen der Liste
+     `tools/stilvergleich/geplant.txt` GLEICHEN. Seit R87 läuft er in drei
+     Engines, und die benennen dieselbe Verschiebung verschieden: Chromium
+     `bottom, inset, top`, Firefox `bottom, top`, WebKit mit `size`; WebKit
+     misst dazu das `svg` im Schattenbaum eines `<use>`. Gemessen mit einer
+     Liste aus Chromium: Firefox 5, WebKit 6 ungeplant. Eine gewollte
+     Gestaltungsänderung, die etwas verschiebt, wird damit nirgends ganz
+     grün; R17-29 ist ausgewichen (keine Stilregel nötig).
+     *Weg:* je Engine eine Liste (`geplant-<motor>.txt`), `--schreiben`
+     schreibt alle drei; oder die Signatur auf eine gemeinsame Menge von
+     Eigenschaften abbilden (`inset` aus `top`/`bottom`, ohne `size`).
+     *Abnahme:* eine Probe-Änderung an `style.css`, `--schreiben`, danach
+     drei Engines grün; eine zweite, ungeplante Änderung rot in allen dreien.
+     Erledigt 07.11.2026 mit Schritt 26 (MA-08): je Engine eine Liste
+     (geplant-<motor>.txt), --schreiben ohne MOTOR schreibt alle drei,
+     geerbt wird je Engine mit Rückfall auf die alte gemeinsame Liste.
+     Abnahme: Farbumbau 2 757/2 757/2 763 Signaturen je 0 ungeplant, eine
+     zusätzliche Regel rot in allen dreien.
