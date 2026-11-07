@@ -1,0 +1,141 @@
+# Vorbereitung — Oberflächenrunde (OF)
+
+**Zielpfad:** `docs/konzepte/Vorbereitung-OF-Oberflaechenrunde.md` — eine
+Sammlung der Punkte, der gefallenen Entscheidungen und der offenen Fragen,
+aus der das Konzept OF entsteht. Kein Konzept nach K1, keine Fahrplanzeile,
+kein Code.
+**Zweig:** `claude/oberflaechenrunde-of` (aufgesetzt auf den Abschluss von
+Schritt 26, PR #157).
+**Grundlage:** Durchsicht von Staging (Web 23.11.3) und Produktiv (Web
+23.8.2) durch die Betreiberin am 07.11.2026, je Punkt ein Bildschirmfoto im
+Gespräch. Wo das Bild von Produktiv stammt, ist der Punkt auf dem neuen
+Stand (Staging) gegenzuprüfen, bevor er gebaut wird.
+**Modell:** Das Konzept schreibt **Fable** (Auftrag der Betreiberin,
+07.11.2026). Diese Datei sammelt nur.
+**Mockups:** als Artifact (private Seiten auf claude.ai), im Live-Umfeld
+(echtes Stylesheet, echte Texte, Demo-Daten). Entschiedene Mockups kommen
+als Bild nach `docs/konzepte/konzept-of/mockups/`.
+
+**Bezeichner:** Punkte **OF-P-nn** (Nummer aus der Sammlung), Entscheidungen
+**E-OF-nn**, Fragen an die Betreiberin **Q-OF-nn**. Nummern zweistellig, nie
+wiederverwendet.
+
+---
+
+## 1. Auftrag
+
+Anlass (07.11.2026, nach dem Merge von Schritt 26): Die Betreiberin sammelt
+Probleme der Oberfläche; Claude nimmt sie auf, ohne zu bauen. Danach:
+Fragen klären, die die Mockups brauchen; Mockups im Hintergrund bauen;
+übrige Fragen klären; das Konzept schreibt Fable.
+
+Grundsatz aus mehreren Punkten (7, 10, 19, 23–26): **eine zentrale Regel
+statt einer Korrektur je Seite** — als Baustein in `ui.php`/`style.css`,
+in `Design.md` beschrieben, und wo möglich von einem Prüfmittel gemessen,
+damit es nicht wieder passiert.
+
+## 1a. Verhältnis zu Konzept NV (Navigation)
+
+Am 07.11.2026 kam die Übergabe **NV** dazu (`Konzept-NV-Navigation.md`,
+Mockups in `konzept-nv/mockups/`): Variante D ist entschieden (E-NV-01) —
+Bereichszeile unter der Kopfleiste, Leiste und Inhalt in einer
+Rahmenkarte, Karten darin als Abschnitte. NV ist ein fertiges Konzept für
+Opus, OF wird von Fable geschrieben. Überschneidungen:
+
+| OF | NV | Folge |
+|---|---|---|
+| P-04 Markierung aktiver Elemente | Leiste zeigt nur den aktiven Bereich | Mockups von P-04 in der NV-Leiste |
+| P-07 Knopf zwischen Karten | E-NV-03: Karten werden in der Rahmenkarte zu Abschnitten | Regel P-07 gilt im NV-Gerüst für Abschnitte |
+| P-19 Seitenbreite | Rahmenkarte 1680 px, Lesespalte im Inhalt | P-19 geht weitgehend in NV-02 auf |
+| P-20 Reiter | Bereichszeile ist ein Reiter-Baustein | Seitenreiter und Bereichszeile in einer Sprache (Q-OF-09) |
+| P-29 Fußzeile | Fußzeile „unverändert" unter der Rahmenkarte | Mockups von P-29 auf dem NV-Gerüst |
+| Q-OF-08 Übersicht doppelt | Q-NV-03: Übersicht bleibt (Empfehlung) | Q-OF-08 wird mit Q-NV-03 entschieden |
+
+Die Mockups der Gruppen Einstellungen und Betrieb entstehen deshalb im
+NV-Gerüst.
+
+## 2. Die Punkte
+
+| Nr. | Punkt | Bereich | Art | Stand |
+|---|---|---|---|---|
+| OF-P-01 | Stufe 2 nach dem Merge rot: Staging in Wartung wegen offener Migration (HTTP 503) | Kette | Ablauf | erledigt (`update.php`, Stufe 2 neu gestartet) |
+| OF-P-02 | Tagesübersicht: Abstand zwischen Karte und Kachel „Ruhesegmente" zu klein | Tag | Abstand | erledigt sich mit P-03, sonst prüfen |
+| OF-P-03 | Kachel „Ruhesegmente" entfällt; Schneiden ins Aktionsmenü des Diensttags | Tag | Umbau | entschieden (E-OF-05) |
+| OF-P-04 | Markierung aktiver Elemente (Strich links, mehrere Farben/Orte) | alle | Gestaltung | 3 Mockups, eine ohne Markierung |
+| OF-P-05 | Segmentwahl „Wochentage": Beschriftung nicht senkrecht mittig | Baustein | Korrektur | alle Segmentwahlen prüfen |
+| OF-P-06 | Datumsfelder zu schmal, Format je Browser („dd/mm/yyyy") | Baustein | Umbau | entschieden (E-OF-06) |
+| OF-P-07 | Speicherknopf zwischen Karten ohne Bezug („Profil speichern", „Passwort ändern") | alle | Regel | zentrale Regel + Prüfmittel, Mockup |
+| OF-P-08 | Zweitfaktor, Zeile „Gemerkte Geräte": Plakette und Knopf senkrecht verschoben | Profil | Korrektur | Zeilenbaustein prüfen |
+| OF-P-09 | Karte „Zweitfaktor" zu kompliziert | Profil | Gestaltung | 3 Mockups |
+| OF-P-10 | Zu viel Erklärtext (Konto hält, Konto löschen u. a.) | alle | Regel | Regel „ein Satz je Karte" durchsetzen, Prüfmittel; bei „Konto löschen" das Wesentliche sichtbar lassen |
+| OF-P-11 | Seite „Geräte" unintuitiv (Reihenfolge, Text, Warnung, Platzzahl, Menühinweis, APK) | Einstellungen | Gestaltung | 3 Mockups |
+| OF-P-12 | Hinweis zur Adresssuche unter jedem Ortsfeld zu lang | Baustein | Umbau | entschieden (E-OF-07) |
+| OF-P-13 | ~~Adresssuche über den Server leiten~~ | — | — | gestrichen (E-OF-04) |
+| OF-P-14 | Kachel „GPS-Daten verdichten" für NutzerInnen kaum relevant | Backup | Umbau | Q-OF-04 |
+| OF-P-15 | Seitenerklärung „Backup": schwer lesbar, zu lang | Backup | Text/Regel | mit P-10 |
+| OF-P-16 | Untermenü listet „Für dich freigegebenes Backup", die Karte fehlt | Navigation | Fehler | Sprungliste listet nur vorhandene Karten; alle Seiten prüfen |
+| OF-P-17 | Seite „Import / Export" unintuitiv, zu viel Text, zu breite Elemente | Einstellungen | Gestaltung | 3 Mockups |
+| OF-P-18 | Kontenliste: Spalte „Öffnen" verlangt waagerechtes Scrollen | Verwaltung | Umbau | Vorschlag Q-OF-05 |
+| OF-P-19 | Seitenbreite uneinheitlich (Installation schmal, NutzerInnen breit) | alle | Regel | zentrale Regel + Prüfmittel, Mockup |
+| OF-P-20 | Reiter kaum als Bedienelement erkennbar | Baustein | Gestaltung | 3 Mockups, gilt für alle Reiter |
+| OF-P-21 | Demo-Konto als Karte unter Installation (an/aus, letzter Reset) | Verwaltung | Umbau | entschieden (E-OF-08); Kontrollzahlen zur Statusseite |
+| OF-P-22 | Listenkopf (Suche, Zeitfilter, Art) unübersichtlich, aktiver Zeitraum nicht erkennbar | Baustein | Gestaltung | 3 Mockups, mit P-20 |
+| OF-P-23 | Statusseite zu voll | Betrieb | Gestaltung | Relevanz je Zeile prüfen, 3 Mockups |
+| OF-P-24 | Hintergrundjobs: ausdünnen, Plaketten brechen um, „Anhalten" umbenennen | Betrieb | Umbau | entschieden (E-OF-10), Mockup |
+| OF-P-25 | Servereinstellungen vereinfachen | Betrieb | Gestaltung | 1 Mockup, gemeinsamer Klappbaustein |
+| OF-P-26 | Komplett-Backup vereinfachen | Betrieb | Gestaltung | 1 Mockup, gemeinsamer Klappbaustein |
+| OF-P-27 | Backup-Ziele als eigene Seite auflösen | Betrieb | Umbau | Q-OF-06 (Ort) |
+| OF-P-28 | Dark Mode mit Umschalter in der Kopfleiste | alle | Funktion | entschieden (E-OF-09) |
+| OF-P-29 | Fußzeile als heller Streifen unter allem | alle | Gestaltung | 3 Mockups |
+| OF-P-30 | Symbole „download"/„upload" für GPX | Tag, Einsatz | Symbol | entschieden (E-OF-11) |
+| OF-P-31 | Plakette „GPS-Daten ausgedünnt" weglassen | Einsatz | Umbau | entschieden (E-OF-12) |
+| OF-P-32 | Einsatzformular (nachtragen und bearbeiten): Schalter und abhängige Felder ordnen | Einsatz | Gestaltung | 1 Mockup, zentral im Feldkatalog |
+| OF-P-33 | Handbuch-Link in Seitentexten | alle | Text | entschieden (E-OF-02) |
+| OF-P-34 | Schlösser in einer Spalte statt hinter der Beschriftung | Einsatz | Gestaltung | Mockup einer ganzen Seite; Riegel `kennzeichnung` muss halten |
+| OF-P-35 | Kartenauswahl ohne Anbieternamen | Karte | Text | entschieden (E-OF-13) |
+| OF-P-36 | Leaflet-Bedienelemente ins Branding | Karte | Gestaltung | 1 Mockup (vorher/nachher) |
+| OF-P-37 | Papierkorb: gestrichelter Kreis neben „Wiederherstellen", Symbol des Knopfs | Papierkorb | Fehler/Symbol | Kreis klären; 3 Symbole (Q-OF-07) |
+
+Nebenbefunde aus den Bildern, ohne eigene Nummer bis zur Entscheidung:
+Plakette im Kartentitel bei schmaler Breite abgeschnitten, Leerzeile unter
+„Einsatzort" (bei P-34); Übersichtsseite „Einstellungen" doppelt zur
+Seitenleiste und „Abmelden" doppelt (Q-OF-08); auf der Statusseite fünf
+Wörter für denselben grünen Zustand (bei P-23); Auslöser „token" auf der
+Seite Hintergrundjobs (bei P-24).
+
+## 3. Entscheidungen
+
+| Nr. | Entscheidung | Von wem |
+|---|---|---|
+| E-OF-01 | Mockups als Artifact im Live-Umfeld; entschiedene Mockups als Bild nach `konzept-of/mockups/` | Betreiberin, 07.11.2026 |
+| E-OF-02 | Kein Verweis „Handbuch: …" mehr in Seitentexten und Karten, überall; der Weg ins Handbuch ist das „?" der Kopfleiste. Gekürzte Erklärungen stehen ohne Verweis | Betreiberin, 07.11.2026 |
+| E-OF-03 | Eigenes Konzept OF auf eigenem Zweig; das Konzept schreibt Fable | Betreiberin, 07.11.2026 |
+| E-OF-04 | P-13 gestrichen: Die Adresssuche bleibt im Browser. Über den Server ginge der Klartext der verschlüsselten Ortsfelder durch ihn hindurch (`CLAUDE.md` 4) | Betreiberin, 07.11.2026 |
+| E-OF-05 | P-03: Die Kachel „Ruhesegmente" entfällt; im Aktionsmenü des Diensttags heißt der Weg „Einsatz aus GPS-Daten ausschneiden" | Betreiberin, 07.11.2026 |
+| E-OF-06 | P-06: Eigenes Datumsfeld `TT.MM.JJJJ` mit Maske wie die Zeitfelder, ohne Kalender | Betreiberin, 07.11.2026 |
+| E-OF-07 | P-12: Am Ortsfeld nur ein Symbol; der Satz zur Adresssuche erscheint beim Antippen bzw. Darüberfahren und ist mit Tastatur und Screenreader erreichbar | Betreiberin, 07.11.2026 |
+| E-OF-08 | P-21: „Aus" sperrt die Anmeldung des Demo-Kontos; Konto und Daten bleiben, der Reset ruht, die Warnung zum Schlüsselmaterial verschwindet. Ob es heute schon einen Schalter gibt, ist zu prüfen | Betreiberin, 07.11.2026 |
+| E-OF-09 | P-28: Vier Einstellungen im Profil — **Umschalter (Vorgabe)**: Mond/Sonne zwischen „?" und Zahnrad, Wahl gespeichert; **Immer hell** und **Immer dunkel** ohne Umschalter; **Folgt System**: folgt dem Gerät und zeigt den Umschalter, ein Klick gilt **bis zur Abmeldung**. Gespeichert **im Konto** (Migration). Erster Aufruf im Umschalter-Modus nach dem Gerät; ohne Anmeldung nach dem Gerät, ohne Umschalter (Vorschlag, nicht widersprochen). Symbole Tabler `moon`/`sun` | Betreiberin, 07.11.2026 |
+| E-OF-10 | P-24: „Anhalten" heißt „Jobs vorübergehend pausieren"; die Begriffe werden überall nachgezogen (Knopf, Meldungen, Handbuch, Protokoll) | Betreiberin, 07.11.2026 |
+| E-OF-11 | P-30: Tabler `download` für „GPS-Daten als GPX", `upload` für „GPX importieren"; beide neuen Zeichen freigegeben | Betreiberin, 07.11.2026 |
+| E-OF-12 | P-31: Die Plakette „GPS-Daten ausgedünnt" entfällt; die Auskunft bleibt in der GPX-Datei und im Handbuch | Betreiberin, 07.11.2026 |
+| E-OF-13 | P-35: Kartenauswahl ohne Anbieternamen (Standard, Wanderkarte, Topografisch, Satellit); die Zuschreibung unten rechts muss je Ebene den Anbieter nennen — vorher prüfen | Betreiberin, 07.11.2026 |
+
+Aus Schritt 26 übernommen: E-MA-36 (Beenden-Knöpfe der App bleiben
+vollflächig rot) ist bestätigt.
+
+## 4. Offene Fragen
+
+| Nr. | Frage | Hängt an |
+|---|---|---|
+| Q-OF-01 | Auswahl je Mockup (P-04, -09, -11, -17, -20, -22, -23, -29: je 3 Varianten; P-07, -19, -24 bis -27, -32, -34, -36: je ein Vorschlag) | Mockups |
+| Q-OF-02 | P-23: Welche Zeilen der Statusseite entfallen? Claude legt je Zeile vor: Kann sie rot werden, muss dann jemand handeln, steht es woanders schon | P-23 |
+| Q-OF-03 | P-10, -07, -19: Sollen die neuen Regeln von einem Prüfmittel gemessen werden (Erklärtext je Karte, Knopf zwischen Karten, Kartenbreite je Seitenart)? | P-07, -10, -19 |
+| Q-OF-04 | P-14: Kachel „GPS-Daten verdichten" nur zeigen, wenn etwas fällig ist oder ein Lauf scheiterte — oder ganz weg bzw. als Zeile unter „Was dein Konto hält"? | P-14 |
+| Q-OF-05 | P-18: Name des Kontos als Link, Spalte „Öffnen" entfällt (Tastatur und Screenreader brauchen ein fokussierbares Element) — bestätigt? | P-18 |
+| Q-OF-06 | P-27: Backup-Ziele nach Komplett-Backup (Vorschlag) oder nach Servereinstellungen? | P-27 |
+| Q-OF-07 | P-37: Symbol für „Wiederherstellen": `restore` (Vorschlag), `arrow-back-up` oder `trash-off` | P-37 |
+| Q-OF-08 | Übersichtsseite „Einstellungen" doppelt zur Seitenleiste, „Abmelden" doppelt — eigener Punkt? | mit Q-NV-03 |
+| Q-OF-09 | Sollen Seitenreiter (Rechtstexte, Protokoll, Statistik) dieselbe Form bekommen wie die Bereichszeile aus NV? | P-20, NV-01 |
+| Q-OF-10 | Reihenfolge: NV zuerst als eigener Schritt (Opus, fertig konzipiert), OF danach auf dem NV-Gerüst — oder NV in OF aufgehen lassen? | NV, OF |
+| Q-NV-01 bis -04 | Offene Fragen aus Konzept NV (Rahmenkarte auch für Startseite und Suche; Ziel des Reiters „Betrieb"; Übersicht bleibt; Zähler in allen Bereichen) | NV |
