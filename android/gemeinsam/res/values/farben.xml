@@ -67,6 +67,9 @@
     <color name="marke_blau">#4280E5</color>
     <color name="marke_blau_tief">#27487C</color>
     <color name="marke_blau_hell">#D9ECFD</color>
+    <!-- blau 300: die Aktion des Dark Mode im Web; auf der Uhr Knopf und
+         naechste Phase (seit Android 0.22.0) -->
+    <color name="marke_blau_300">#87B9F2</color>
 
     <!-- ==== Rot — Aufmerksamkeit ======================================= -->
     <color name="marke_rot">#D63338</color>

@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Farbrollen der App, dunkel (values-night).
+
+    DIESELBEN ROLLEN WIE IM WEB (seit Android 0.22.0, Schritt 26, E-MA-29):
+    `rolle_x` ist die Rolle `x` aus server/assets/style.css (dort mit
+    zwei Bindestrichen davor), Wert fuer Wert.
+    Handeln ist Dunkelblau (`aktion`), die eine Hauptaktion Orange
+    (`aktion_haupt`, am Handy „Dienst beginnen"); ein Zustand in Ordnung ist
+    gruen, eine Eigenschaft blau, ein Fehler rot.
+
+    ZWEI DATEIEN, EIN NAME: `values/rollen.xml` ist hell,
+    `values-night/rollen.xml` dunkel. Android waehlt nach der
+    Systemeinstellung; die App hat keinen eigenen Schalter.
+
+    Nachgerechnet von werkzeuge/farbabgleich.py (gegen das Web, beide Modi)
+    und werkzeuge/kontraste.py (die Paare, beide Modi). Die Leitwerte
+    (Kopfleiste, Uhr, Bildmarke) stehen in values/farben.xml und schalten
+    nicht um.
+-->
+<resources>
+    <color name="rolle_flaeche_seite">#101B2C</color>  <!-- Grund unter den Karten -->
+    <color name="rolle_flaeche_karte">#1A2E4D</color>  <!-- Karte, Dialog, Nebenknopf -->
+    <color name="rolle_text">#FFFCFA</color>  <!-- Fliesstext -->
+    <color name="rolle_text_titel">#D9ECFD</color>  <!-- Titel, Beschriftung von Zeilen -->
+    <color name="rolle_gedaempft">#AFD3F8</color>  <!-- Nebentext -->
+    <color name="rolle_text_link">#87B9F2</color>  <!-- Textknopf in Dialogen -->
+    <color name="rolle_linie">#27487C</color>  <!-- Rahmen von Behaeltern (Zierde) -->
+    <color name="rolle_linie_stark">#87B9F2</color>  <!-- Rahmen von Bedienelementen -->
+    <color name="rolle_aktion">#87B9F2</color>  <!-- Primaerknopf: Flaeche -->
+    <color name="rolle_auf_aktion">#1A2E4D</color>  <!-- Primaerknopf: Schrift -->
+    <color name="rolle_aktion_haupt">#FFA95B</color>  <!-- Hauptaktion (Dienst beginnen): Flaeche -->
+    <color name="rolle_auf_aktion_haupt">#1A0500</color>  <!-- Hauptaktion: Schrift, nie Weiss -->
+    <color name="rolle_auswahl_flaeche">#27487C</color>  <!-- gewaehlte Zeile -->
+    <color name="rolle_auswahl_text">#FFFCFA</color>  <!-- gewaehlte Zeile: Schrift -->
+    <color name="rolle_info_flaeche">#27487C</color>  <!-- Hinweiskasten -->
+    <color name="rolle_info_text">#D9ECFD</color>  <!-- Auskunft (Eigenschaft, Zeit, Ablauf) -->
+    <color name="rolle_info_linie">#629DEC</color>  <!-- Punkt einer Eigenschaft -->
+    <color name="rolle_erfolg_text">#B3E0BB</color>  <!-- Zustand in Ordnung: Schrift -->
+    <color name="rolle_erfolg_linie">#5BAB6F</color>  <!-- Zustand in Ordnung: Punkt -->
+    <color name="rolle_warnung_linie">#FFA95B</color>  <!-- Rueckstand: Punkt -->
+    <color name="rolle_fehler_text">#F7BCA6</color>  <!-- Fehler: Schrift -->
+    <color name="rolle_fehler_linie">#E46957</color>  <!-- Fehler, Aufnahme: Punkt -->
+    <color name="rolle_gefahr">#EF947C</color>  <!-- beendende Handlung: Flaeche -->
+    <color name="rolle_auf_gefahr">#400000</color>  <!-- beendende Handlung: Schrift -->
+</resources>

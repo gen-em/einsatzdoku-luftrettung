@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Das Thema der Handy-App im Dark Mode (seit Android 0.22.0, E-MA-29).
+    Gleich gebaut wie `values/themen.xml`, nur mit dem dunklen Elternthema —
+    die Farben sind Rollen und kommen aus `values-night/rollen.xml`. Ohne
+    diese Datei zoege das helle Elternthema helle Systemdialoge ueber die
+    dunkle Oberflaeche.
+-->
+<resources>
+    <style name="Theme.NAdoku" parent="@android:style/Theme.Material.NoActionBar">
+        <item name="android:windowBackground">@color/rolle_flaeche_seite</item>
+        <item name="android:colorAccent">@color/rolle_aktion</item>
+    </style>
+</resources>

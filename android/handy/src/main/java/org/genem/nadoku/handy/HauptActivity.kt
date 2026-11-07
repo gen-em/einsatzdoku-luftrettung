@@ -40,7 +40,7 @@ import kotlinx.coroutines.withContext
 import org.genem.nadoku.BuildConfig
 import org.genem.nadoku.R
 import org.genem.nadoku.handy.kopplung.Serveradresse
-import org.genem.nadoku.gemeinsam.Farbe
+import org.genem.nadoku.gemeinsam.Rolle
 import org.genem.nadoku.gemeinsam.LogoWahl
 import org.genem.nadoku.handy.aufzeichnung.AufzeichnungsDienst
 import org.genem.nadoku.handy.aufzeichnung.Ortungsstand
@@ -770,19 +770,19 @@ private fun Rueckfrage(
 ) {
     AlertDialog(
         onDismissRequest = aufNein,
-        title = { Text(titel, color = Farbe.dunkelblau) },
-        text = { Text(text, color = Farbe.asphalt) },
+        title = { Text(titel, color = Rolle.textTitel) },
+        text = { Text(text, color = Rolle.text) },
         confirmButton = {
             TextButton(onClick = aufJa) {
-                Text(ja, color = Farbe.rotTief, fontWeight = FontWeight.SemiBold)
+                Text(ja, color = Rolle.fehlerText, fontWeight = FontWeight.SemiBold)
             }
         },
         dismissButton = {
             TextButton(onClick = aufNein) {
-                Text(nein, color = Farbe.dunkelblau)
+                Text(nein, color = Rolle.textTitel)
             }
         },
-        containerColor = Farbe.schnee,
+        containerColor = Rolle.flaecheKarte,
     )
 }
 
@@ -798,17 +798,17 @@ internal fun Verbrauchhinweis(aufVerstanden: () -> Unit) {
      * aus dem einmaligen Hinweis eine Dauerwarnung. */
     AlertDialog(
         onDismissRequest = aufVerstanden,
-        title = { Text(stringResource(R.string.verbrauch_titel), color = Farbe.dunkelblau) },
-        text = { Text(stringResource(R.string.verbrauch_hinweis), color = Farbe.asphalt) },
+        title = { Text(stringResource(R.string.verbrauch_titel), color = Rolle.textTitel) },
+        text = { Text(stringResource(R.string.verbrauch_hinweis), color = Rolle.text) },
         confirmButton = {
             TextButton(onClick = aufVerstanden) {
                 Text(
                     stringResource(R.string.verbrauch_verstanden),
-                    color = Farbe.blauTief, fontWeight = FontWeight.SemiBold,
+                    color = Rolle.textLink, fontWeight = FontWeight.SemiBold,
                 )
             }
         },
-        containerColor = Farbe.schnee,
+        containerColor = Rolle.flaecheKarte,
     )
 }
 
@@ -816,21 +816,21 @@ internal fun Verbrauchhinweis(aufVerstanden: () -> Unit) {
 private fun Akkufrage(aufOeffnen: () -> Unit, aufSpaeter: () -> Unit) {
     AlertDialog(
         onDismissRequest = aufSpaeter,
-        title = { Text(stringResource(R.string.akku_titel), color = Farbe.dunkelblau) },
-        text = { Text(stringResource(R.string.akku_hinweis), color = Farbe.asphalt) },
+        title = { Text(stringResource(R.string.akku_titel), color = Rolle.textTitel) },
+        text = { Text(stringResource(R.string.akku_hinweis), color = Rolle.text) },
         confirmButton = {
             TextButton(onClick = aufOeffnen) {
                 Text(
                     stringResource(R.string.akku_oeffnen),
-                    color = Farbe.blauTief, fontWeight = FontWeight.SemiBold,
+                    color = Rolle.textLink, fontWeight = FontWeight.SemiBold,
                 )
             }
         },
         dismissButton = {
             TextButton(onClick = aufSpaeter) {
-                Text(stringResource(R.string.akku_spaeter), color = Farbe.dunkelblau)
+                Text(stringResource(R.string.akku_spaeter), color = Rolle.textTitel)
             }
         },
-        containerColor = Farbe.schnee,
+        containerColor = Rolle.flaecheKarte,
     )
 }

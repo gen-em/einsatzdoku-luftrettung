@@ -10,8 +10,14 @@ Karten. Die App stellt andere Paare zusammen: weisse Schrift auf vollflaechig
 Rot (die beendenden Handlungen, E-S4-22a) und alles, was die Uhr auf Asphalt
 zeichnet. Diese Paare kommen im Web nicht vor und stuenden dort ungeprueft.
 
-Die Werte kommen aus gemeinsam/res/values/farben.xml -- also aus derselben
-Datei, die die App benutzt, nicht aus einer Abschrift.
+Die Werte kommen aus gemeinsam/res/values/farben.xml (Leitwerte) und
+values/rollen.xml bzw. values-night/rollen.xml (Rollen) -- also aus denselben
+Dateien, die die App benutzt, nicht aus einer Abschrift.
+
+ZWEI MODI (seit Android 0.22.0, E-MA-29). Das Handy liest seine Farben ueber
+`Rolle.x` (`rolle_x`), hell aus `values/`, dunkel aus `values-night/`. Ein
+Paar, in dem eine Rolle steht, wird in BEIDEN Modi gerechnet und muss in
+beiden halten; ein Paar nur aus Leitwerten (Kopfleiste, Uhr) einmal.
 
 ZIELWERTE (WCAG 2.1):
   4,5:1  normale Schrift (AA)
@@ -60,6 +66,8 @@ from pathlib import Path
 
 WURZEL = Path(__file__).resolve().parents[1]
 FARBEN = WURZEL / "gemeinsam" / "res" / "values" / "farben.xml"
+ROLLEN = {"hell": WURZEL / "gemeinsam" / "res" / "values" / "rollen.xml",
+          "dunkel": WURZEL / "gemeinsam" / "res" / "values-night" / "rollen.xml"}
 QUELLEN = {
     "handy": ["handy/src/main", "gemeinsam/quelle"],
     "uhr": ["uhr/src/main", "gemeinsam/quelle"],
@@ -67,47 +75,30 @@ QUELLEN = {
 
 # (Modul, Beschreibung, Vordergrund-Token, Hintergrund-Token, Zielwert)
 PAARE = [
-    # -- Handy, heller Grund --
-    ("handy", "Titel auf Karte",              "marke_dunkelblau", "marke_schnee",     4.5),
-    ("handy", "Nebentext auf Karte",          "marke_gedaempft",  "marke_schnee",     4.5),
-    ("handy", "Primaerknopf: Schrift",        "marke_dunkelblau", "marke_orange",     4.5),
-    ("handy", "Beenden-Knopf: Schrift",       "marke_auf_dunkel", "marke_rot",        4.5),
-    ("handy", "Hinweiskasten: Schrift",       "marke_asphalt",    "marke_blau_hell",  4.5),
-    ("handy", "Auswahl aktiv: Schrift",       "marke_blau_tief",  "marke_blau_hell",  4.5),
-    ("handy", "Kopfleiste: Schrift",          "marke_auf_dunkel", "marke_dunkelblau", 4.5),
-    # Seit 0.16.0 (AR-04), gefunden von der Vollstaendigkeitspruefung: Der
-    # Seitengrund Rauch hatte kein einziges Paar. Unmittelbar darauf stehen
-    # die Fassungszeile und der Rahmen des Zurueck-Knopfs.
-    ("handy", "Fassungszeile auf Seitengrund", "marke_gedaempft", "marke_rauch",      4.5),
-    # -- Zustandszeile der Ortung (E1, E-S5Z-22) --
-    #
-    # Das Konzept sah fuer UNGENAU Orange als SCHRIFT vor. Nachgerechnet:
-    # marke_orange 2,23:1, marke_orange_tief 4,32:1 -- beide unter AA. Rot
-    # traegt hier, und alle vier Zustaende ohne Aufzeichnung sind deshalb rot
-    # (E-S5Z-22); sie unterscheiden sich am Wortlaut.
-    ("handy", "Ortung ok: Schrift",           "marke_asphalt",    "marke_schnee",     4.5),
-    ("handy", "Ortung sucht: Schrift",        "marke_gedaempft",  "marke_schnee",     4.5),
-    ("handy", "Ortung fehlt: Schrift",        "marke_rot_tief",   "marke_schnee",     4.5),
-    # -- grafische Objekte (1.4.11): 3:1 --
-    ("handy", "Aufnahmepunkt auf Karte",      "marke_rot",        "marke_schnee",     3.0),
-    # B-S5Z-13: Der Punkt der Zeile "Rueckstand N Pakete" trug bis E1
-    # `marke_orange` -- 2,23:1 gegen Schnee und damit unter den 3,0, die
-    # WCAG 1.4.11 fuer ein grafisches Objekt verlangt. Er trug sie deshalb so
-    # lange, weil dieses Paar in dieser Liste fehlte.
-    ("handy", "Rueckstandspunkt auf Karte",   "marke_orange_tief", "marke_schnee",    3.0),
-    ("handy", "Warnpunkt auf Karte",          "marke_rot",        "marke_schnee",     3.0),
-    # Seit 0.16.0 (AR-04): der blaue Zustandspunkt (Sync, Kopplung) -- er
-    # bestand immer, stand aber nicht in der Liste.
-    ("handy", "Zustandspunkt blau auf Karte", "marke_blau",       "marke_schnee",     3.0),
-    # Hier stand bis R4-21 das Paar „Cursor im Eingabefeld" (bis 0.16.0
-    # `marke_orange`, 2,23:1). Das Eingabefeld hatte seit R63 keinen Aufrufer
-    # mehr und ist mit Nr. 336 gegangen; kommt eines wieder, meldet die
-    # Vollstaendigkeitspruefung seinen Cursor als Zeichen ohne Paar.
-    # Die Rahmen echter Bedienelemente: Umschalter, Nebenknopf -- auf der
-    # Karte und auf dem Seitengrund (Zurueck-Knopf).
-    ("handy", "Rahmen Bedienelement, Karte",  "marke_gedaempft",  "marke_schnee",     3.0),
-    ("handy", "Rahmen Bedienelement, Seite",  "marke_gedaempft",  "marke_rauch",      3.0),
-    # -- Uhr: derselbe Zustand am Handgelenk (E-S5Z-15) --
+    ("handy", "Titel auf Karte",              "rolle_text_titel", "rolle_flaeche_karte", 4.5),
+    ("handy", "Titel auf Seite",              "rolle_text_titel", "rolle_flaeche_seite", 4.5),
+    ("handy", "Text auf Karte",               "rolle_text",       "rolle_flaeche_karte", 4.5),
+    ("handy", "Nebentext auf Karte",          "rolle_gedaempft",  "rolle_flaeche_karte", 4.5),
+    ("handy", "Nebentext auf Seite",          "rolle_gedaempft",  "rolle_flaeche_seite", 4.5),
+    ("handy", "Primaerknopf: Schrift",        "rolle_auf_aktion", "rolle_aktion",        4.5),
+    ("handy", "Hauptaktion: Schrift",         "rolle_auf_aktion_haupt", "rolle_aktion_haupt", 4.5),
+    ("handy", "Beenden-Knopf: Schrift",       "rolle_auf_gefahr", "rolle_gefahr",        4.5),
+    ("handy", "Hinweiskasten: Schrift",       "rolle_text",       "rolle_info_flaeche",  4.5),
+    ("handy", "Auswahl aktiv: Schrift",       "rolle_auswahl_text", "rolle_auswahl_flaeche", 4.5),
+    ("handy", "Auskunft auf Karte",           "rolle_info_text",  "rolle_flaeche_karte", 4.5),
+    ("handy", "Auskunft auf Seite",           "rolle_info_text",  "rolle_flaeche_seite", 4.5),
+    ("handy", "In Ordnung auf Karte",         "rolle_erfolg_text", "rolle_flaeche_karte", 4.5),
+    ("handy", "In Ordnung auf Seite",         "rolle_erfolg_text", "rolle_flaeche_seite", 4.5),
+    ("handy", "Fehler auf Karte",             "rolle_fehler_text", "rolle_flaeche_karte", 4.5),
+    ("handy", "Fehler auf Seite",             "rolle_fehler_text", "rolle_flaeche_seite", 4.5),
+    ("handy", "Textknopf im Dialog",          "rolle_text_link",  "rolle_flaeche_karte", 4.5),
+    ("handy", "Kopfleiste: Schrift",          "marke_auf_dunkel", "marke_dunkelblau",    4.5),
+    ("handy", "Aufnahme-/Fehlerpunkt",        "rolle_fehler_linie", "rolle_flaeche_karte", 3.0),
+    ("handy", "Punkt in Ordnung",             "rolle_erfolg_linie", "rolle_flaeche_karte", 3.0),
+    ("handy", "Rueckstandspunkt",             "rolle_warnung_linie", "rolle_flaeche_karte", 3.0),
+    ("handy", "Punkt einer Eigenschaft",      "rolle_info_linie", "rolle_flaeche_karte", 3.0),
+    ("handy", "Rahmen Bedienelement, Karte",  "rolle_linie_stark", "rolle_flaeche_karte", 3.0),
+    ("handy", "Rahmen Bedienelement, Seite",  "rolle_linie_stark", "rolle_flaeche_seite", 3.0),
     ("uhr",   "Uhr: keine Ortung",            "marke_rosa",       "marke_asphalt",    4.5),
     # B-S5Z-15: Dieselbe Zeile in ihrer aelteren Fassung. `marke_rot` als
     # SCHRIFT auf Asphalt traegt 4,12:1 -- unter AA. Als FLAECHE mit weisser
@@ -123,8 +114,8 @@ PAARE = [
     ("uhr",   "Uhr: Hauptschrift",            "marke_auf_dunkel", "marke_asphalt",    4.5),
     ("uhr",   "Uhr: Nebenschrift",            "marke_sand",       "marke_asphalt",    4.5),
     ("uhr",   "Uhr: gesetzte Phasenzeit",     "marke_blau",       "marke_asphalt",    4.5),
-    ("uhr",   "Uhr: naechste Phase",          "marke_orange",     "marke_asphalt",    4.5),
-    ("uhr",   "Uhr: Durchlaufknopf Schrift",  "marke_dunkelblau", "marke_orange",     4.5),
+    ("uhr",   "Uhr: naechste Phase",          "marke_blau_300",   "marke_asphalt",    4.5),
+    ("uhr",   "Uhr: Knopf Schrift",           "marke_dunkelblau", "marke_blau_300",   4.5),
     ("uhr",   "Uhr: Abschluss-Rueckfrage",    "marke_auf_dunkel", "marke_rot",        4.5),
     ("uhr",   "Aufnahmepunkt auf Uhr",        "marke_rot",        "marke_asphalt",    3.0),
     ("uhr",   "Zustandspunkt blau auf Uhr",   "marke_blau",       "marke_asphalt",    3.0),
@@ -134,13 +125,13 @@ PAARE = [
 # Begruendung. Keine Ausnahme fuer einen zu schwachen Wert: Was hier steht,
 # wird gar nicht gerechnet, und deshalb steht der Grund dabei.
 ZIERDE = {
-    ("handy", "marke_linie", "Linie"):
+    ("handy", "rolle_linie", "Linie"):
         "Rahmen um Karte, Phasenzeile und Auswahlzeile. Die Karte ist kein "
         "Bedienelement, sondern ein Behaelter; Phasen- und Auswahlzeile erkennt "
         "man an ihrer Beschriftung und die Wahl an Flaeche und Schrift (Blau hell, "
-        "Blau tief). WCAG 1.4.11 verlangt 3:1 nur fuer das, was man zum Erkennen "
+        "Auswahltext). WCAG 1.4.11 verlangt 3:1 nur fuer das, was man zum Erkennen "
         "braucht. Die Rahmen echter Bedienelemente -- Umschalter, Nebenknopf -- "
-        "sind `gedaempft` und stehen mit 5,66:1 in der Liste.",
+        "sind `linie_stark` und stehen in der Liste.",
 }
 
 ROLLE_NACH_NAME = {
@@ -152,18 +143,24 @@ ROLLE_NACH_NAME = {
 }
 SCHRIFT_AUFRUFE = {"Text", "BasicText", "TextStyle"}
 VORDER_ROLLEN = ("Schrift", "Zeichen", "Linie")
-ALIAS = {"knopfPrimaerFlaeche": "orange", "knopfPrimaerSchrift": "dunkelblau",
-         "knopfBeendenFlaeche": "rot", "knopfBeendenSchrift": "aufDunkel"}
+def token_von(name, objekt="Farbe"):
+    """`Farbe.blauTief` -> `marke_blau_tief`, `Rolle.textTitel` -> `rolle_text_titel`."""
+    praefix = "rolle_" if objekt == "Rolle" else "marke_"
+    return praefix + re.sub(r"([A-Z0-9]+)", lambda m: "_" + m.group(1).lower(), name)
 
 
-def token_von(name):
-    name = ALIAS.get(name, name)
-    return "marke_" + re.sub(r"([A-Z])", lambda m: "_" + m.group(1).lower(), name)
-
-
-def token():
-    text = re.sub(r"<!--.*?-->", "", FARBEN.read_text(encoding="utf-8"), flags=re.S)
+def _farben(datei):
+    if not datei.exists():
+        return {}
+    text = re.sub(r"<!--.*?-->", "", datei.read_text(encoding="utf-8"), flags=re.S)
     return dict(re.findall(r'<color\s+name="([^"]+)"\s*>\s*(#[0-9A-Fa-f]{6})\s*</color>', text))
+
+
+def token(modus="hell"):
+    """Leitwerte und Rollen eines Modus."""
+    werte = _farben(FARBEN)
+    werte.update(_farben(ROLLEN[modus]))
+    return werte
 
 
 def leuchtdichte(hexwert):
@@ -338,14 +335,14 @@ def vorkommen(wurzel=WURZEL, quellen=QUELLEN):
         sig = signaturen(texte.values())
         gefunden, unbekannt = {}, []
         for f, t in texte.items():
-            for m in re.finditer(r"\bFarbe\.(\w+)", t):
+            for m in re.finditer(r"\b(Farbe|Rolle)\.(\w+)", t):
                 zeile = t.count("\n", 0, m.start()) + 1
                 ort = f"{f.relative_to(wurzel)}:{zeile}"
                 r = rolle_an(t, m.start(), sig)
                 if r is None:
-                    unbekannt.append((ort, m.group(1)))
+                    unbekannt.append((ort, m.group(1) + "." + m.group(2)))
                 else:
-                    gefunden.setdefault((token_von(m.group(1)), r), []).append(ort)
+                    gefunden.setdefault((token_von(m.group(2), m.group(1)), r), []).append(ort)
         aus[modul] = (gefunden, unbekannt)
     return aus
 
@@ -353,18 +350,25 @@ def vorkommen(wurzel=WURZEL, quellen=QUELLEN):
 # ------------------------------------------------------------------ Pruefen
 
 def pruefen(paare, zierde, farben, gefunden_je_modul, ausgabe=print):
+    """`farben` ist {Modus: {Token: Wert}} -- ein Paar mit einer Rolle wird
+    in jedem Modus gerechnet, eines nur aus Leitwerten einmal (hell)."""
     befunde = 0
-    ausgabe(f"{'Modul':<6} {'Paar':<30} {'Vorder':<8} {'Grund':<8} {'Ist':>7}  {'Soll':>5}")
+    gerechnet = 0
+    ausgabe(f"{'Modul':<6} {'Paar':<30} {'Modus':<6} {'Vorder':<8} {'Grund':<8} {'Ist':>7}  {'Soll':>5}")
     for modul, name, vorne, hinten, soll in paare:
-        if vorne not in farben or hinten not in farben:
-            ausgabe(f"{modul:<6} {name:<30} TOKEN FEHLT ({vorne} / {hinten})")
-            befunde += 1
-            continue
-        wert = kontrast(farben[vorne], farben[hinten])
-        marke = " " if wert >= soll else "!"
-        if wert < soll:
-            befunde += 1
-        ausgabe(f"{modul:<6} {name:<30} {farben[vorne]:<8} {farben[hinten]:<8} {wert:6.2f}:1 {soll:5.1f} {marke}")
+        rolle = vorne.startswith("rolle_") or hinten.startswith("rolle_")
+        for modus in (farben if rolle else ["hell"]):
+            f = farben[modus]
+            if vorne not in f or hinten not in f:
+                ausgabe(f"{modul:<6} {name:<30} {modus:<6} TOKEN FEHLT ({vorne} / {hinten})")
+                befunde += 1
+                continue
+            gerechnet += 1
+            wert = kontrast(f[vorne], f[hinten])
+            marke = " " if wert >= soll else "!"
+            if wert < soll:
+                befunde += 1
+            ausgabe(f"{modul:<6} {name:<30} {modus:<6} {f[vorne]:<8} {f[hinten]:<8} {wert:6.2f}:1 {soll:5.1f} {marke}")
 
     ausgabe("\nVollstaendigkeit je Modul und Rolle")
     for modul, (gefunden, unbekannt) in gefunden_je_modul.items():
@@ -388,13 +392,13 @@ def pruefen(paare, zierde, farben, gefunden_je_modul, ausgabe=print):
             ausgabe(f"  ROLLE? {modul:<6} Farbe.{name:<12} {ort} -- Rolle nicht erkannt")
         ausgabe(f"  {modul}: {sum(len(o) for o in gefunden.values())} Stellen, "
                 f"{len(gefunden)} Paare aus Farbe und Rolle, {len(unbekannt)} ohne Rolle")
-    ausgabe(f"\nPaare geprueft: {len(paare)}   Befunde: {befunde}")
+    ausgabe(f"\nPaare geprueft: {len(paare)} ({gerechnet} Rechnungen, Rollen hell und dunkel)   Befunde: {befunde}")
     return befunde
 
 
 def selbstprobe():
     """Die zwei historischen Fehler, eingebaut -- und eine Gegenprobe."""
-    farben = token()
+    farben = {"hell": token("hell"), "dunkel": token("dunkel")}
     faelle = []
     kopf = "package x\n@Composable fun Punkt(punktfarbe: Color) {}\n"
 
@@ -428,6 +432,13 @@ def selbstprobe():
     # Ein Paar unter dem Zielwert.
     lauf({}, [("handy", "zu hell", "marke_orange", "marke_schnee", 4.5)], True,
          "Paar unter dem Zielwert")
+    # Eine Rolle, die hell haelt und dunkel nicht (blau 300 auf blau 700,
+    # 3,6:1) -- nur der Lauf ueber beide Modi sieht es.
+    lauf({}, [("handy", "nur dunkel zu schwach", "rolle_aktion", "rolle_info_flaeche", 4.5)], True,
+         "Rolle nur im Dark Mode unter dem Zielwert")
+    # Eine Rolle als Schrift, ohne Paar -> rot.
+    lauf({"h/R.kt": "fun r() { Text(\"x\", color = Rolle.erfolgText) }\n"},
+         grund, True, "Rolle als Schrift, nicht gelistet")
     # Gegenprobe: dieselben Stellen, alles gelistet -> gruen.
     voll = grund + [("handy", "Punkt", "marke_orange_tief", "marke_schnee", 3.0),
                     ("uhr", "Rosa", "marke_rosa", "marke_asphalt", 4.5)]
@@ -448,7 +459,7 @@ def main():
         return 2
     if "--selbstprobe" in sys.argv[1:]:
         return selbstprobe()
-    befunde = pruefen(PAARE, ZIERDE, token(), vorkommen())
+    befunde = pruefen(PAARE, ZIERDE, {"hell": token("hell"), "dunkel": token("dunkel")}, vorkommen())
     return 1 if befunde else 0
 
 

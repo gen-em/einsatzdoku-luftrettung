@@ -10,7 +10,15 @@ Dieses Skript liest beide Seiten und rechnet nach:
 
   Quelle Web   server/assets/style.css, Block ``:root`` (die EINE Stelle,
                an der ein Wert im Web steht -- CLAUDE.md 5)
-  Quelle App   android/gemeinsam/res/values/farben.xml
+  Quelle App   android/gemeinsam/res/values/farben.xml (Leitwerte),
+               android/gemeinsam/res/values/rollen.xml und
+               values-night/rollen.xml (Rollen, hell und dunkel)
+
+ROLLEN (seit Android 0.22.0, Schritt 26, E-MA-29). Eine Farbe `rolle_x`
+gehoert zur Web-Rolle `--x` -- dieselben Namen, keine Zuordnungstabelle.
+Die helle Datei wird gegen das helle Web gehalten, `values-night` gegen
+das dunkle (`:root[data-theme="dark"]`, Block des Repos und Block der
+Anwendung). Eine Rolle, die es im Web nicht gibt, ist ein EIGENER Wert.
 
 Gemeldet wird dreierlei, und jede Zahl gehoert ins Pruefprotokoll:
 
@@ -33,6 +41,8 @@ from pathlib import Path
 WURZEL = Path(__file__).resolve().parents[2]
 STYLESHEET = WURZEL / "server" / "assets" / "style.css"
 FARBEN = WURZEL / "android" / "gemeinsam" / "res" / "values" / "farben.xml"
+ROLLEN_HELL = WURZEL / "android" / "gemeinsam" / "res" / "values" / "rollen.xml"
+ROLLEN_DUNKEL = WURZEL / "android" / "gemeinsam" / "res" / "values-night" / "rollen.xml"
 
 # App-Token -> Web-Token.  Die Zuordnung steht hier und nicht in einem Namens-
 # muster: "marke_auf_dunkel" hiesse sonst "--auf_dunkel", und das Web schreibt
@@ -56,13 +66,14 @@ ZUORDNUNG = {
     "marke_blau":         "--blau",
     "marke_blau_tief":    "--genem-blau-700",
     "marke_blau_hell":    "--genem-blau-100",
+    "marke_blau_300":     "--genem-blau-300",
     "marke_rot":          "--rot",
     "marke_rot_tief":     "--genem-rot-700",
     "marke_rosa":         "--genem-rot-100",
 }
 
 
-def web_token() -> dict[str, str]:
+def web_token(dunkel: bool = False) -> dict[str, str]:
     """Alle Farbwerte aus den :root-Bloecken des Stylesheets, hell.
 
     SEIT SCHRITT 26 ZWEI BLOECKE: der des Branding-Repos (`:root {`, die
@@ -70,11 +81,14 @@ def web_token() -> dict[str, str]:
     `var(--genem-…)`). Gelesen werden beide, Kommentare vorher heraus — bis
     dahin suchte dieses Skript das erste `:root{` im Rohtext und fand es in
     einem Kommentar. Verweise werden aufgeloest, damit `--gedaempft` seinen
-    Wert bekommt. Der Dark Mode (`:root[data-theme="dark"]`) zaehlt nicht:
-    Die App hat keinen."""
+    Wert bekommt. Mit `dunkel` legt es die Bloecke `:root[data-theme="dark"]`
+    darueber -- seit Android 0.22.0 hat die App einen Dark Mode."""
     text = re.sub(r"/\*.*?\*/", "", STYLESHEET.read_text(encoding="utf-8"), flags=re.S)
     roh: dict[str, str] = {}
-    for m in re.finditer(r":root\s*\{", text):
+    muster = r':root\[data-theme="dark"\]\s*\{' if dunkel else r"(?<![\w\])]):root\s*\{"
+    if dunkel:
+        roh.update(web_token_roh(text))
+    for m in re.finditer(muster, text):
         tiefe, i = 1, m.end()
         while tiefe and i < len(text):
             tiefe += {"{": 1, "}": -1}.get(text[i], 0)
@@ -93,8 +107,26 @@ def web_token() -> dict[str, str]:
     return werte
 
 
-def app_token() -> dict[str, str]:
-    text = FARBEN.read_text(encoding="utf-8")
+def web_token_roh(text: str) -> dict[str, str]:
+    """Die unaufgeloesten Eintraege der hellen :root-Bloecke. NICHT der
+    Druckblock `:root:root:root{` (immer hell, mit eigenem Gewicht) -- ein
+    nacktes `:root\\s*\\{` traf sein letztes Glied, und seine Werte lagen
+    dann ueber allem; derselbe Ausschluss wie in kontrast.py."""
+    roh: dict[str, str] = {}
+    for m in re.finditer(r"(?<![\w\])]):root\s*\{", text):
+        tiefe, i = 1, m.end()
+        while tiefe and i < len(text):
+            tiefe += {"{": 1, "}": -1}.get(text[i], 0)
+            i += 1
+        for name, wert in re.findall(r"(--[a-z0-9-]+)\s*:\s*([^;]+);", text[m.end():i - 1]):
+            roh[name] = wert.strip()
+    return roh
+
+
+def app_token(datei: Path = FARBEN) -> dict[str, str]:
+    if not datei.exists():
+        return {}
+    text = datei.read_text(encoding="utf-8")
     text = re.sub(r"<!--.*?-->", "", text, flags=re.S)
     return {
         name: wert.upper()
@@ -117,11 +149,29 @@ def main() -> int:
         elif web[ziel] != wert:
             abweichungen.append(f"{name} = {wert}, Web {ziel} = {web[ziel]}")
 
+    # Die Rollen, je Modus gegen ihr Gegenstueck im Web.
+    rollen = 0
+    for datei, dunkel in ((ROLLEN_HELL, False), (ROLLEN_DUNKEL, True)):
+        w = web_token(dunkel)
+        modus = "dunkel" if dunkel else "hell"
+        for name, wert in sorted(app_token(datei).items()):
+            rollen += 1
+            ziel = "--" + name.removeprefix("rolle_").replace("_", "-")
+            if not name.startswith("rolle_") or ziel not in w:
+                eigene.append(f"{name} ({modus}) = {wert}")
+            elif w[ziel] != wert:
+                abweichungen.append(f"{name} ({modus}) = {wert}, Web {ziel} = {w[ziel]}")
+    hell = set(app_token(ROLLEN_HELL)); dunkel = set(app_token(ROLLEN_DUNKEL))
+    for name in sorted(hell ^ dunkel):
+        abweichungen.append(f"{name}: nur in {'hell' if name in hell else 'dunkel'} -- jede Rolle braucht beide Modi")
+
     genutzt = {ZUORDNUNG[n] for n in app if n in ZUORDNUNG}
-    ungenutzt = sorted(t for t in web if t not in genutzt)
+    genutzt |= {"--" + n.removeprefix("rolle_").replace("_", "-") for n in hell}
+    ungenutzt = sorted(t for t in web if t not in genutzt and not t.startswith("--genem-"))
 
     print(f"Web-Token (Farben in :root): {len(web)}")
     print(f"App-Token (farben.xml):      {len(app)}")
+    print(f"Rollen (hell + dunkel):      {rollen}")
     print(f"Abweichungen:                {len(abweichungen)}")
     for z in abweichungen:
         print(f"  ! {z}")

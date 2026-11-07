@@ -1105,8 +1105,8 @@ einmal erzeugt und dem Auftraggeber zur Verwahrung übergeben.
 
 | Skript | Was es prüft | Sollstand |
 |---|---|---|
-| `farbabgleich.py` | App-Token gegen `:root` des Web | 0 Abweichungen, 0 eigene Farbwerte |
-| `kontraste.py` | Kontrast jedes Farbpaars der App — und seit 0.16.0, ob die Liste **vollständig** ist: jede Farbe, die im Quelltext eines Moduls als Schrift, Zeichen, Linie oder Fläche vorkommt, steht in der Paarliste dieses Moduls in dieser Rolle (Nr. 116). `--selbstprobe` baut die zwei historischen Lücken ein (B-S5Z-13, -15) | 0 Befunde (Paare unter Zielwert, fehlende Paare, Farben ohne erkannte Rolle); Selbstprobe 5 von 5 |
+| `farbabgleich.py` | App-Token gegen `:root` des Web; seit 0.22.0 die Rollen `rolle_x` gegen `--x`, hell gegen hell, `values-night` gegen das dunkle Web | 0 Abweichungen, 0 eigene Farbwerte, jede Rolle in beiden Modi |
+| `kontraste.py` | Kontrast jedes Farbpaars der App — und seit 0.16.0, ob die Liste **vollständig** ist: jede Farbe, die im Quelltext eines Moduls als Schrift, Zeichen, Linie oder Fläche vorkommt, steht in der Paarliste dieses Moduls in dieser Rolle (Nr. 116). `--selbstprobe` baut die zwei historischen Lücken ein (B-S5Z-13, -15), seit 0.22.0 auch eine Rolle, die nur dunkel zu schwach ist. Ein Paar mit einer Rolle wird hell **und** dunkel gerechnet | 0 Befunde (Paare unter Zielwert, fehlende Paare, Farben ohne erkannte Rolle); Selbstprobe 7 von 7 |
 | `bildmarken.sh` | Bildmarken gegen ihre Vorlagen (`pruefen` schreibt nichts) | 0 Abweichungen |
 | `stroeme.py` | Soll-Zahlen der Ausdünnung, mit der Referenzregel aus `tools/referenzdatensatz/` nachgerechnet (`pruefen` vergleicht mit `stroeme.txt`, statt sie zu schreiben) | 0 Abweichungen gegen die analytischen Werte |
 
@@ -1123,9 +1123,21 @@ aus dem Branding-Repo `gen-em/gen-em-branding`: `farbabgleich.py` liest
 beide `:root`-Blöcke des Stylesheets und zeigt Tief- und Hellwerte der App
 auf die Tonstufen des Repos (`--genem-orange-700` …); `bildmarken.sh` holt
 die Produktmarke NAdoku (`nadoku-*-farbig.png`, und für die Fassung, die die
-App „weiss" nennt, `…-farbig-negativ.png`). Die **Rollen** der App sind
-dabei unverändert — im Web handelt seither Dunkelblau, in der App weiter
-Orange.
+App „weiss" nennt, `…-farbig-negativ.png`).
+
+**Seit Android 0.22.0 (MA-16, E-MA-29)** hat die App die **Rollen** des Web
+und einen **Dark Mode** nach der Systemeinstellung: `Rolle.x` in
+`gemeinsam/quelle/…/Farbe.kt` liest `rolle_x` aus `gemeinsam/res/values/rollen.xml`
+(hell) bzw. `values-night/rollen.xml` (dunkel), und `rolle_x` ist `--x` des
+Web, Wert für Wert. Handeln ist Dunkelblau (`KnopfPrimaer`), die eine
+Hauptaktion Orange (`KnopfHaupt`, nur „Dienst beginnen"); ein Zustand in
+Ordnung grün, eine Eigenschaft blau. **`Farbe`** hält nur noch die
+Leitwerte, die nicht umschalten: Kopfleiste, Uhr, Bildmarke. Die Uhr ist
+immer dunkel und handelt in blau 300; eine Hauptaktion hat sie nicht. Die
+beendenden Knöpfe bleiben vollflächig rot (E-MA-36), während das Web seinen
+Gefahrknopf als Umriss zeichnet. Der Bilderlauf zeichnet jeden
+Handy-Bildschirm hell und dunkel (`…-dunkel.png`) und liest die
+Knopffarben je Modus aus den Ressourcen.
 
 Sie sind das Gegenstück zu `tools/quelltext/` (`vollstaendigkeit`) und
 `tools/screenshots/kontrast.py` der Weboberfläche — und sie mussten eigene

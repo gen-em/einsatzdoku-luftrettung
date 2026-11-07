@@ -450,6 +450,20 @@ Schritt 21 (GR), Paket GR-04 — die Uhr liest die Absage des Servers genauer
   Jetzt versuchen es das Öffnen der Sync-Seite und das Dienstende einmal
   trotz der Marke.
 
+## [Android 0.22.0] — unveröffentlicht
+
+Schritt 26 (MA), Paket MA-16.
+
+### Hinzugefügt
+
+- **Android — dieselbe Farbsprache wie im Browser, und ein Dark Mode.** Wer
+  zwischen Handy und Browser wechselte, sah zwei Farbsprachen: In der App
+  handelte Orange, im Web seit Schritt 26 Dunkelblau. Jetzt hat die App die
+  Farbrollen des Web, Orange trägt nur noch „Dienst beginnen", und sie folgt
+  der hellen oder dunklen Einstellung des Telefons. Die Uhr bleibt dunkel und
+  handelt in Hellblau; beendende Knöpfe bleiben vollflächig rot, weil man sie
+  im Einsatz ohne Lesen erkennen muss.
+
 ## [Android 0.21.1] — unveröffentlicht
 
 Schritt 26 (MA), Paket MA-09.

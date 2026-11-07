@@ -43,11 +43,11 @@ Prüfarbeit an der einen örtlichen Anlage (CLAUDE.md 7).
 | MA-13 | Favicon-Sets aus dem Repo | **erledigt** 07.11.2026 (Web 23.11.1) |
 | MA-14 | Barrierefreiheit: die Funde von axe beheben, Abruf beim Verlassen der Seite abbrechen | **erledigt** 07.11.2026 (Web 23.11.2) |
 | MA-15 | axe-core als Prüfmittel in drei Engines | **erledigt** 07.11.2026 (nur `tools/`, keine Fassung) |
-| MA-16 | Android: Rollen wie im Web, Dark Mode, Hauptaktion „Dienst beginnen" (E-MA-24 aufgehoben) | offen |
+| MA-16 | Android: Rollen wie im Web, Dark Mode, Hauptaktion „Dienst beginnen" (E-MA-24 aufgehoben) | **erledigt** 07.11.2026 (Android 0.22.0) |
 | MA-17 | Garmin: die Zeichen der Produktmarke (Backlog Nr. 520) | offen |
 | MA-18 | Dokumentation, Prüfstand zweimal grün, Pull Request nachgezogen | offen |
 
-**In Arbeit:** zweite Runde, MA-16 (Statusblock oben). Erste Runde: MA-08, Prüfstand und Pull Request stehen. Prüfdokument:
+**In Arbeit:** zweite Runde, MA-17 (Statusblock oben). Erste Runde: MA-08, Prüfstand und Pull Request stehen. Prüfdokument:
 `Pruefdokument-MA-Markenabgleich.md` (15 Handpunkte). **Zur Bestätigung
 vorgelegt:** E-MA-21 (Kopfleiste fest „NAdoku") und E-MA-24 (Android nur
 Werte). **Es hakt:** nirgends; alle Fragen sind entschieden
@@ -346,6 +346,7 @@ Runde (eine Datei im Kern, Prüfarbeit an der einen Anlage).
 | E-MA-33 | axe-core wird vendoriert und als Prüfmittel in drei Engines aufgenommen | Betreiberin, 07.11.2026 („2. Ja") |
 | E-MA-34 | Am Ende laufen alle Proben über die Oberfläche zweimal hintereinander grün, in allen drei Engines | Betreiberin, 07.11.2026 („stabil und reproduzierbar") |
 | E-MA-35 | Die Favicons werden aus dem Set des Repos geholt, nicht mehr selbst gezeichnet; `logos.mjs` kopiert sie und rastert nur noch die PNG für Android. Symbole 192/512, maskable und Manifest bleiben im Repo (R70) | Umsetzung, aus E-MA-25 |
+| E-MA-36 | Die beendenden Knöpfe der App (Einsatz abschließen, Dienst beenden, Gerät trennen, Abschluss der Uhr) bleiben vollflächig rot, statt dem Umriss des Web zu folgen: Auf einem Gerät im Einsatz muss das Beenden ohne Lesen erkennbar sein (Begründung von E-S4-22a). Werte wie der Zähler offener Fehler im Web (`--gefahr`) | Umsetzung — **zur Bestätigung vorgelegt** |
 
 ## 7. Fragen an die Betreiberin
 
@@ -589,6 +590,18 @@ alle sieben vom Umbau verursacht und behoben:
   Wortprobe als „Spur" (jetzt „Farbe"); die Statistikprobe las den
   Vorlesetext der ersten Kopfzelle als Spalte (sie lässt `.nur-vorlesen`
   jetzt weg).
+- **F-MA-25 — `farbabgleich.py` las den Druckblock als hellen Modus.** Das
+  Muster `:root\s*\{` traf das letzte Glied von `:root:root:root{`; dessen
+  Werte (immer hell) lagen über allem. Hell fiel es nicht auf, weil dort
+  Druck und Bildschirm gleich sind; dunkel ergab es Schnee als Kartenfläche.
+  Jetzt derselbe Ausschluss wie in `kontrast.py`.
+- **F-MA-26 — Im Dark Mode verschwand der Korpus der Bildmarke** auf der
+  dunklen Karte der Dienstansicht (farbige Fassung, dunkelblauer Korpus).
+  Gefunden beim Ansehen der Übersichtsbilder, nicht von einer Probe; jetzt
+  die negative Fassung bei `isSystemInDarkTheme()`.
+- **F-MA-27 — Lint meldet im Handy-Modul 6 Warnungen**, alle „neuere
+  Fassung verfügbar" (AGP 9.5.1, Kotlin 2.4.21, wear-compose 1.7.1,
+  Robolectric 4.17). Sie hängen am Datum, nicht an MA-16; nicht behoben.
 
 **Gemessen** (vor dem Prüfstand, auf demselben Baum): `decken.py` 21
 Decken, 0 gerissen; `bestand.py` 0 Befunde; `uebersicht.py` läuft;
@@ -685,6 +698,26 @@ nicht).
 leer. Riegel: `bestand` 0 Befunde in allen Regeln, `pruefen.sh alle` 16 von
 16, Selbstproben 14 von 14, `kettenaufrufe` ohne Widerspruch. Firefox und
 WebKit fährt der Prüfstand (MA-18).
+
+### MA-16 (Android 0.22.0, 07.11.2026)
+
+**Was gebaut ist.** `Rolle` in `Farbe.kt` mit 24 Rollen, `rollen.xml` hell
+und dunkel (Werte aus dem Web errechnet), alle 92 Farbstellen des
+Handy-Moduls auf Rollen (übrig: Kopfleiste als Leitwert), `KnopfHaupt` für
+„Dienst beginnen", `KnopfPrimaer` Dunkelblau, Zustand in Ordnung grün,
+Thema mit `values-night`. Uhr: großer Knopf und nächste Phase blau 300
+(`marke_blau_300`). `farbabgleich.py` und `kontraste.py` rechnen beide
+Modi; der Bilderlauf zeichnet hell und dunkel und liest die Knopffarben aus
+den Ressourcen. Übersichtsbilder für die Abnahme:
+`konzept-ma/android/MA-16-handy-hell.png`, `-dunkel.png`, `MA-16-uhr.png`.
+
+**Geprüft.** `./gradlew build` grün (3 min 25 s): 377 Prüffälle, 15
+übersprungen, 0 Fehlschläge; Lint 0 Fehler (Warnungen F-MA-27). Bilderlauf
+Handy 162 Bilder (27 Bildschirme × 3 Breiten × hell/dunkel), alle paarweise
+verschieden, Bedienhöhe 48 dp; Uhr 7 Bilder. `kontraste.py` 36 Paare in 59
+Rechnungen, 0 Befunde, Selbstprobe 7 von 7; `farbabgleich.py` 48
+Rollenwerte, 0 Abweichungen, 0 eigene; `bildmarken.sh pruefen` 0
+Abweichungen. Nicht geprüft: Gerät (P-MA-12).
 
 ## 10. Vorher-Messung der zweiten Runde (07.11.2026, Web 23.10.0)
 

@@ -737,21 +737,6 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
 
 <!-- -->
 
-522. **Die Android-App handelt in Orange, das Web in Dunkelblau.** · gehört zu: nach v1.0 · Stand: offen · seit 07.11.2026
-     *Aufgenommen 07.11.2026 mit MA-09 (E-MA-24).* Seit Schritt 26 sind im
-     Web die Gründerfarben Markenflächen und Status, Handeln ist
-     Dunkelblau (E-MA-01). Die App hat mit Android 0.21.1 nur die
-     **Werte** übernommen (Tonstufen, Produktmarke); ihre **Rollen** sind
-     geblieben — Primärknopf Orange mit dunkelblauer Schrift, Blau für
-     „in Ordnung", kein Grün, kein Dark Mode. Wer zwischen Handy und
-     Browser wechselt, sieht zwei Farbsprachen. *Weg:* eigenes Konzept mit
-     Mockups für Handy und Uhr (48 dp, Handschuhe), Rollen wie im Web
-     (`Farbe.kt`), Dark Mode über die Systemeinstellung, Gerätetest.
-     *Abnahme:* `kontraste.py` mit den neuen Paaren grün, Bilderlauf beider
-     Module angesehen, Gerätetest auf Handy und Uhr.
-
-<!-- -->
-
 523. **Der Klassenname `.knopf-leise-orange` stimmt nicht mehr.** · gehört zu: 13 · Stand: offen · seit 07.11.2026
      *Aufgenommen 07.11.2026 mit MA-01 (F-MA-07).* Die Variante des leisen
      Knopfs („Als Vorbelegung") trägt seit Web 23.9.0 die Linkfarbe, kein

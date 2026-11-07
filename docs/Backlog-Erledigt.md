@@ -11119,3 +11119,22 @@ zutreffen.
      Erledigt 07.11.2026 mit Schritt 26 (MA-14, MA-15; Web 23.11.2):
      0 Verstöße auf 74 Aufrufen je Engine (hell und dunkel), Gegenprobe
      rot (1 Befund, Exit 1).
+
+522. **Die Android-App handelt in Orange, das Web in Dunkelblau.** · gehört zu: 26 · Stand: erledigt · seit 07.11.2026
+     *Aufgenommen 07.11.2026 mit MA-09 (E-MA-24).* Seit Schritt 26 sind im
+     Web die Gründerfarben Markenflächen und Status, Handeln ist
+     Dunkelblau (E-MA-01). Die App hat mit Android 0.21.1 nur die
+     **Werte** übernommen (Tonstufen, Produktmarke); ihre **Rollen** sind
+     geblieben — Primärknopf Orange mit dunkelblauer Schrift, Blau für
+     „in Ordnung", kein Grün, kein Dark Mode. Wer zwischen Handy und
+     Browser wechselt, sieht zwei Farbsprachen. *Weg:* eigenes Konzept mit
+     Mockups für Handy und Uhr (48 dp, Handschuhe), Rollen wie im Web
+     (`Farbe.kt`), Dark Mode über die Systemeinstellung, Gerätetest.
+     *Abnahme:* `kontraste.py` mit den neuen Paaren grün, Bilderlauf beider
+     Module angesehen, Gerätetest auf Handy und Uhr.
+     Erledigt 07.11.2026 mit Schritt 26 (MA-16, Android 0.22.0, E-MA-29):
+     Rollen wie im Web (`Rolle`, `values/` und `values-night/rollen.xml`),
+     Dark Mode nach dem System, Hauptaktion „Dienst beginnen" in Orange,
+     die Uhr in blau 300. Statt Mockups die Bilder des Bilderlaufs hell und
+     dunkel im Pull Request (Auftrag der BetreiberIn). Der Gerätetest bleibt
+     Handprüfung (P-MA-12).

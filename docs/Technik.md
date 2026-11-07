@@ -10539,6 +10539,13 @@ stehen in `android/LIESMICH.md`; hier steht, wie es zusammenhängt.
 | `android/uhr/` | Wear OS | dasselbe Bedienbild am Handgelenk, **ohne** Zugangsdaten |
 | `android/gemeinsam/` | beide | Nachrichtenformat, Data-Layer-Weg, Kennungen, Modus, Phasen, Farben, Bildmarke (E-S4-24) |
 
+**Farben der App** (seit Android 0.22.0, E-MA-29): `Rolle.x` liest `rolle_x`
+aus `gemeinsam/res/values/rollen.xml` (hell) bzw. `values-night/rollen.xml`
+(dunkel) — dieselben Rollen wie `--x` im Web, Wert für Wert, geprüft von
+`android/werkzeuge/farbabgleich.py` und `kontraste.py` in beiden Modi. Der
+Dark Mode folgt dem System; einen Schalter hat die App nicht. `Farbe` hält
+die Leitwerte, die nicht umschalten (Kopfleiste, Uhr, Bildmarke).
+
 **Die Uhr kennt weder Serveradresse noch API-Schlüssel** (E-S4-11). Sie
 schickt ihre Ereignisse an das Handy, und das Handy sendet. Das ist keine
 Bequemlichkeit, sondern die Sicherheitsaussage der Bauform: Eine verlorene
