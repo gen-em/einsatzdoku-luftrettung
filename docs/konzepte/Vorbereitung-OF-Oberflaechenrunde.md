@@ -64,7 +64,7 @@ NV-Gerüst.
 | OF-P-04 | Markierung aktiver Elemente (Strich links, mehrere Farben/Orte) | alle | Gestaltung | entschieden (E-OF-16): ohne Markierung |
 | OF-P-05 | Segmentwahl „Wochentage": Beschriftung nicht senkrecht mittig | Baustein | Korrektur | alle Segmentwahlen prüfen |
 | OF-P-06 | Datumsfelder zu schmal, Format je Browser („dd/mm/yyyy") | Baustein | Umbau | entschieden (E-OF-06) |
-| OF-P-07 | Speicherknopf zwischen Karten ohne Bezug („Profil speichern", „Passwort ändern") | alle | Regel | zentrale Regel + Prüfmittel, Mockup |
+| OF-P-07 | Speicherknopf zwischen Karten ohne Bezug („Profil speichern", „Passwort ändern") | alle | Regel | entschieden (E-OF-32): Fuß im Abschnitt oder klebende Speicherleiste; Prüfmittel offen (Q-OF-03) |
 | OF-P-08 | Zweitfaktor, Zeile „Gemerkte Geräte": Plakette und Knopf senkrecht verschoben | Profil | Korrektur | Zeilenbaustein prüfen |
 | OF-P-09 | Karte „Zweitfaktor" zu kompliziert | Profil | Gestaltung | entschieden (E-OF-19): ein Satz plus „Verwalten" |
 | OF-P-10 | Zu viel Erklärtext (Konto hält, Konto löschen u. a.) | alle | Regel | Regel „ein Satz je Karte" durchsetzen, Prüfmittel; bei „Konto löschen" das Wesentliche sichtbar lassen |
@@ -139,6 +139,7 @@ Seite Hintergrundjobs (bei P-24).
 | E-OF-29 | P-36 (mit P-35): **Vorschlag** übernommen: Kartenknöpfe in Bedienhöhe der App (44 px, am Zeigergerät 36 px), Kartenfläche, starke Linie, Radius wie Knöpfe, kein Schatten; Ebenenwahl mit dem App-Symbol „Karte“, offen mit Überschrift „Kartenart“, Zeilen in Bedienhöhe, Auswahl Dunkelblau, Namen ohne Anbieter (die Anbieter bleiben im Quellennachweis). Bilder `konzept-of/mockups/OF-P36-vorschlag.png`, `…/OF-P36-vorschlag-ebenen.png` | Betreiberin, 07.11.2026 (Kommentar im Mockup D) |
 | E-OF-30 | P-37 und Q-OF-07: Variante **A — Tabler „restore“** (kreisender Pfeil mit Punkt) für „Wiederherstellen“; nicht direkt neben „Aktualisieren“ stellen, die beiden sind verwandt. Der gestrichelte Kreis (Zeichen „ohne Rettungsmittel“, falsch platziert) wird unabhängig davon entfernt. Bild `konzept-of/mockups/OF-P37-A-restore.png` | Betreiberin, 07.11.2026 (Kommentar im Mockup D) |
 | E-OF-31 | P-19: **Vorschlag** übernommen: Jeder Abschnitt und seine Linie reichen bis zur rechten Kante der Rahmenkarte; begrenzt werden die Felder (36 rem), nicht die Abschnitte. Alle Seiten haben dieselbe rechte Kante; Listenseiten bleiben, wie sie sind. Ob ein Prüfmittel die Regel misst, ist Q-OF-03. Bild `konzept-of/mockups/OF-P19-vorschlag.png` | Betreiberin, 07.11.2026 (Kommentar im Mockup B) |
+| E-OF-32 | P-07, Regel für alle Seiten: Speichert ein Knopf **einen** Abschnitt, steht er als letztes Element in ihm. Speichert er **mehrere**, erscheint am unteren Rand der Rahmenkarte eine klebende Speicherleiste, sobald etwas geändert ist: Fläche Auswahlblau (`--auswahl-flaeche`, schaltet im Dunkelmodus mit), kein Strich und kein Bogen darüber, links fett „Geändert: …“, rechts der Knopf. Sie gehört zu keinem einzelnen Abschnitt. Ob ein Prüfmittel Knöpfe zwischen Abschnitten meldet, ist Q-OF-03. Bild `konzept-of/mockups/OF-P07-speicherleiste.png` | Betreiberin, 07.11.2026 (Kommentare im Mockup B, nach zwei Nachbesserungen) |
 
 Aus Schritt 26 übernommen: E-MA-36 (Beenden-Knöpfe der App bleiben
 vollflächig rot) ist bestätigt.
