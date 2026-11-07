@@ -94,7 +94,7 @@ NV-Gerüst.
 | OF-P-34 | Schlösser in einer Spalte statt hinter der Beschriftung | Einsatz | Gestaltung | entschieden (E-OF-28): Schloss links in eigener Spalte; Riegel `kennzeichnung` muss halten |
 | OF-P-35 | Kartenauswahl ohne Anbieternamen | Karte | Text | entschieden (E-OF-13) |
 | OF-P-36 | Leaflet-Bedienelemente ins Branding | Karte | Gestaltung | entschieden (E-OF-29): Vorschlag |
-| OF-P-37 | Papierkorb: gestrichelter Kreis neben „Wiederherstellen", Symbol des Knopfs | Papierkorb | Fehler/Symbol | Kreis klären; 3 Symbole (Q-OF-07) |
+| OF-P-37 | Papierkorb: gestrichelter Kreis neben „Wiederherstellen", Symbol des Knopfs | Papierkorb | Fehler/Symbol | entschieden (E-OF-30): Symbol restore; Kreis klären |
 
 Nebenbefunde aus den Bildern, ohne eigene Nummer bis zur Entscheidung:
 Plakette im Kartentitel bei schmaler Breite abgeschnitten, Leerzeile unter
@@ -137,6 +137,7 @@ Seite Hintergrundjobs (bei P-24).
 | E-OF-27 | Regel (aus P-29): „Abmelden“ steht am Rechner nur unten in der Leiste, nie im Inhalt; der große Knopf am Ende der Einstellungs-Übersicht entfällt dort. Am Handy steht es in der Schublade. Die Lage der Fußzeile (P-29) ist damit noch nicht entschieden | Betreiberin, 07.11.2026 (Kommentar im Mockup A: „Abmelden hat in der Mitte nix zu suchen“) |
 | E-OF-28 | P-34: Variante **Links vor der Beschriftung**: feste Beschriftungsspalte (14 rem), das Schloss steht vor dem Wort in einer eigenen schmalen Spalte, Felder ohne Schloss rücken gleich weit ein. Der Riegel `kennzeichnung` (Sollliste) muss weiter halten. Bild `konzept-of/mockups/OF-P34-links.png` | Betreiberin, 07.11.2026 (Kommentar im Mockup D) |
 | E-OF-29 | P-36 (mit P-35): **Vorschlag** übernommen: Kartenknöpfe in Bedienhöhe der App (44 px, am Zeigergerät 36 px), Kartenfläche, starke Linie, Radius wie Knöpfe, kein Schatten; Ebenenwahl mit dem App-Symbol „Karte“, offen mit Überschrift „Kartenart“, Zeilen in Bedienhöhe, Auswahl Dunkelblau, Namen ohne Anbieter (die Anbieter bleiben im Quellennachweis). Bilder `konzept-of/mockups/OF-P36-vorschlag.png`, `…/OF-P36-vorschlag-ebenen.png` | Betreiberin, 07.11.2026 (Kommentar im Mockup D) |
+| E-OF-30 | P-37 und Q-OF-07: Variante **A — Tabler „restore“** (kreisender Pfeil mit Punkt) für „Wiederherstellen“; nicht direkt neben „Aktualisieren“ stellen, die beiden sind verwandt. Der gestrichelte Kreis (Zeichen „ohne Rettungsmittel“, falsch platziert) wird unabhängig davon entfernt. Bild `konzept-of/mockups/OF-P37-A-restore.png` | Betreiberin, 07.11.2026 (Kommentar im Mockup D) |
 
 Aus Schritt 26 übernommen: E-MA-36 (Beenden-Knöpfe der App bleiben
 vollflächig rot) ist bestätigt.
@@ -151,7 +152,7 @@ vollflächig rot) ist bestätigt.
 | Q-OF-04 | P-14: Kachel „GPS-Daten verdichten" nur zeigen, wenn etwas fällig ist oder ein Lauf scheiterte — oder ganz weg bzw. als Zeile unter „Was dein Konto hält"? | P-14 |
 | Q-OF-05 | P-18: Name des Kontos als Link, Spalte „Öffnen" entfällt (Tastatur und Screenreader brauchen ein fokussierbares Element) — bestätigt? | P-18 |
 | Q-OF-06 | ~~P-27: Backup-Ziele nach Komplett-Backup (Vorschlag) oder nach Servereinstellungen?~~ entschieden (E-OF-24): beides | P-27 |
-| Q-OF-07 | P-37: Symbol für „Wiederherstellen": `restore` (Vorschlag), `arrow-back-up` oder `trash-off` | P-37 |
+| Q-OF-07 | ~~P-37: Symbol für „Wiederherstellen": `restore` (Vorschlag), `arrow-back-up` oder `trash-off`~~ entschieden (E-OF-30) | P-37 |
 | Q-OF-08 | Übersichtsseite „Einstellungen" doppelt zur Seitenleiste, „Abmelden" doppelt — eigener Punkt? | mit Q-NV-03 |
 | Q-OF-09 | ~~Seitenreiter wie die Bereichszeile?~~ entschieden (E-OF-17) | P-20, NV-01 |
 | Q-OF-10 | Reihenfolge: NV jetzt bauen (echter Stand auf Staging, Fable plant gegen Code) oder NV in OF aufgehen lassen (einmal bauen, beide Pakete berühren `ui.php`/`style.css`)? Die Mockups sind schon im NV-Gerüst | NV, OF |
