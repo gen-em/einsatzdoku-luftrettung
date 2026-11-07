@@ -36,8 +36,18 @@ Prüfarbeit an der einen örtlichen Anlage (CLAUDE.md 7).
 | MA-07 | Dark Mode mit Schalter je Konto | **erledigt** 07.11.2026 (Web 23.10.0, Migration) |
 | MA-09 | Android-Nachzug: Farbwerte und Bildmarken der App (neu, F-MA-12) | **erledigt** 07.11.2026 (Android 0.21.1; Bau im Prüfstand) |
 | MA-08 | Dokumentation, Prüfmittel, Prüfstand, Abschluss | **gebaut** 07.11.2026 — Prüfstand und Pull Request; Abschluss nach der Freigabe |
+| *Zweite Runde (Auftrag der Betreiberin, 07.11.2026)* | | |
+| MA-10 | Nachzug des Repos auf `e7bf4fc`: Token hell und dunkel, Gefahrknopf als Umriss, Warnung immer mit Symbol | **erledigt** 07.11.2026 (Web 23.10.1) |
+| MA-11 | Kurzname der Installation zurück in die Kopfleiste (E-MA-21 aufgehoben) | offen |
+| MA-12 | Hauptaktion in Orange, einmal je Seite, auf sechs Seiten | offen |
+| MA-13 | Favicon-Sets aus dem Repo | offen |
+| MA-14 | Barrierefreiheit: die Funde von axe beheben, Abruf beim Verlassen der Seite abbrechen | offen |
+| MA-15 | axe-core als Prüfmittel in drei Engines | offen |
+| MA-16 | Android: Rollen wie im Web, Dark Mode, Hauptaktion „Dienst beginnen" (E-MA-24 aufgehoben) | offen |
+| MA-17 | Garmin: die Zeichen der Produktmarke (Backlog Nr. 520) | offen |
+| MA-18 | Dokumentation, Prüfstand zweimal grün, Pull Request nachgezogen | offen |
 
-**In Arbeit:** MA-08, Prüfstand und Pull Request. Prüfdokument:
+**In Arbeit:** zweite Runde, MA-11 (Statusblock oben). Erste Runde: MA-08, Prüfstand und Pull Request stehen. Prüfdokument:
 `Pruefdokument-MA-Markenabgleich.md` (15 Handpunkte). **Zur Bestätigung
 vorgelegt:** E-MA-21 (Kopfleiste fest „NAdoku") und E-MA-24 (Android nur
 Werte). **Es hakt:** nirgends; alle Fragen sind entschieden
@@ -260,6 +270,43 @@ Gerätetest (E-MA-24). Eigene Android-Fassung (Korrektur).
 - Prüfstand voll (Stylesheet berührt, Migration ⇒ Hauptstufe), Bericht im
   letzten Commit, Prüfdokument in die Prüfliste, Pull Request.
 
+### Zweite Runde (07.11.2026)
+
+Auftrag der Betreiberin nach dem ersten Pull Request: Kurzname zurück,
+Android und Garmin mit, das Repo auf seinen neuen Stand nachziehen; dazu die
+Ausnahmen der Prüfmittel bewerten, die Oberflächenproben stabil machen und
+eine Barrierefreiheitsprüfung aufnehmen. Vor dem Umbau gemessen (Abschnitt
+10): Bedienprobe 77 von 77 in drei Engines, axe-core 11 Regeln verletzt.
+
+- **MA-10 Nachzug `e7bf4fc`.** Beide übernommenen Blöcke ersetzen,
+  Prüfsumme; Gefahrknopf als Umriss (E-MA-26), Warnkästen ohne `ui.php`
+  mit Symbol. Korrektur.
+- **MA-11 Kurzname.** `ui_kopf()` zeigt wieder `ui_instanz_kurz()`;
+  Beschriftung in der Installation, Handbuch, Design (E-MA-28). Korrektur.
+- **MA-12 Hauptaktion.** Neue Knopfart `haupt` in `ui_knopf()` (keine neue
+  Darstellung: die Form des Primärknopfs mit den Repo-Token der
+  Hauptaktion, freigegeben mit Repo-Board 9D und E-MA-27), Option an
+  `ui_speichern_leiste()`, die sechs Seiten. Neben.
+- **MA-13 Favicons.** Die Sets aus `1 Logos/Produktmarken/NAdoku/Favicon/`
+  statt eigener Erzeugung; ohne Manifest (R70). Korrektur.
+- **MA-14 Barrierefreiheit.** Die Funde aus Abschnitt 10.2 beheben; Links
+  im Fließtext unterstrichen; den stillen Abruf beim Verlassen der Seite
+  abbrechen (E-MA-31). Korrektur.
+- **MA-15 axe-core als Prüfmittel.** Vendoriert unter
+  `tools/barrierefreiheit/vendor/`, Herkunft und SHA-256; Seitenliste hell
+  und dunkel, drei Engines; Eintrag in `Pruefablauf.md` und im Register
+  der Motoren; Anlass Backlog Nr. 524. Nur `tools/` — keine Fassung.
+- **MA-16 Android.** Rollen und Dark Mode in `Farbe.kt` und im Thema,
+  Hauptaktion „Dienst beginnen", Bilderlauf hell und dunkel; Backlog
+  Nr. 522 erledigt. Eigene Android-Fassung (Neben).
+- **MA-17 Garmin.** `tools/erzeugen/uhr-bilder.sh`, Uhr-Fassung in
+  `Const.mc`; Backlog Nr. 520 erledigt.
+- **MA-18 Abschluss.** Dokumente, Prüfstand voll, die Oberflächenproben
+  zweimal (E-MA-34), Pull Request, Prüfdokument.
+
+**Modell:** Opus. **Fächerung:** keine — dieselbe Lage wie in der ersten
+Runde (eine Datei im Kern, Prüfarbeit an der einen Anlage).
+
 ## 6. Entscheidungen
 
 | Nr. | Entscheidung | Von wem |
@@ -284,10 +331,20 @@ Gerätetest (E-MA-24). Eigene Android-Fassung (Korrektur).
 | E-MA-18 | Die Kopie der Repo-Dateien aus der Übergabe wird nicht eingecheckt; Quelle ist das Repo mit Commit | Betreiberin, 06.11.2026 |
 | E-MA-19 | Schritt 26, Kennung MA, als Einschub vor 13 (Reihenfolge 26 → 13 → 14) | Betreiberin, 06.11.2026 |
 | E-MA-20 | Ein Pull Request am Ende, keine Zwischen-PRs; Halt nur, wo eine Entscheidung fehlt | Betreiberin, 06.11.2026 |
-| E-MA-21 | Kopfleiste fest „NAdoku", Kurzname der Installation nur noch in Tab, Anmeldung, Mails, Druckblättern | Umsetzung (aus E-MA-06) — **zur Bestätigung vorgelegt** |
+| E-MA-21 | Kopfleiste fest „NAdoku", Kurzname der Installation nur noch in Tab, Anmeldung, Mails, Druckblättern | Umsetzung (aus E-MA-06) — **aufgehoben** durch E-MA-28 |
 | E-MA-22 | Wartungsseite fest Hubschrauber statt Münze (Produktmarken.md, Regel 9) | Umsetzung |
 | E-MA-23 | Keine 192/512-px-Symbole; sie gehören zum Manifest (R70, Schritt 13) | Umsetzung |
-| E-MA-24 | Android-Nachzug nur der Werte (MA-09), Rollen der App unverändert; Uhr-Bilder nicht neu erzeugt (Nr. 520) | Umsetzung — **zur Bestätigung vorgelegt**; das Paket ist ein eigener Commit und lässt sich zurücknehmen |
+| E-MA-24 | Android-Nachzug nur der Werte (MA-09), Rollen der App unverändert; Uhr-Bilder nicht neu erzeugt (Nr. 520) | Umsetzung — **aufgehoben** durch E-MA-29 und -30 |
+| E-MA-25 | Das Repo wird auf `e7bf4fc` nachgezogen (Aktionsfarbe Variante 3, Knopfregeln, Favicon-Sets) | Betreiberin, 07.11.2026 („Änderungen im Branding-Repo … mit beachten & umsetzen") |
+| E-MA-26 | Gefahrknopf wie im Repo: Umriss rot 600, Schrift rot 700, unter dem Zeiger rot 100. Ersetzt E-MA-09; die volle rote Fläche bleibt nur dem Zähler offener Fehler | Betreiberin, 07.11.2026 |
+| E-MA-27 | Hauptaktion (`knopf-haupt`, Orange mit Asphalt) einmal je Seite auf sechs Seiten: Tagesübersicht „Einsatz nachtragen" als Knopf in der Titelzeile neben „Aktionen" (Mockup MA-02), Einsatzansicht „Bearbeiten", Einsatzformular „Speichern" in der Speicherleiste, Diensttag anlegen „Diensttag anlegen", Anmeldung „Anmelden", Registrierung „Konto anlegen". Keine Hauptaktion auf Suche, Import/Export, Einstellungen, Verwaltung, Betrieb und seltenen Abläufen | Betreiberin, 07.11.2026 („Passt so, bitte umsetzen") |
+| E-MA-28 | Die Kopfleiste zeigt wieder den einstellbaren Kurznamen der Installation; E-MA-21 ist aufgehoben | Betreiberin, 07.11.2026 |
+| E-MA-29 | Android bekommt die Rollen des Webs (Aktion Dunkelblau, Hauptaktion Orange „Dienst beginnen", die Wear-Uhr keine) und einen Dark Mode nach dem System. Statt eines Mockups liegen die Bilder des Android-Bilderlaufs hell und dunkel im Pull Request zur Abnahme | Betreiberin, 07.11.2026 |
+| E-MA-30 | Garmin: nur die Zeichen der Produktmarke, keine Farbumstellung | Betreiberin, 07.11.2026 |
+| E-MA-31 | Die Ausnahmen der Prüfmittel je Browser bleiben bis auf eine: den Abruf, der beim Verlassen der Seite noch läuft, bricht die Anwendung selbst ab (Bewertung in Abschnitt 10) | Betreiberin beauftragt die Prüfung, 07.11.2026; Bewertung Umsetzung |
+| E-MA-32 | Die Funde der Barrierefreiheitsprüfung (axe-core) werden in diesem Einschub behoben, Links im Fließtext werden unterstrichen | Betreiberin, 07.11.2026 („1. Ja") |
+| E-MA-33 | axe-core wird vendoriert und als Prüfmittel in drei Engines aufgenommen | Betreiberin, 07.11.2026 („2. Ja") |
+| E-MA-34 | Am Ende laufen alle Proben über die Oberfläche zweimal hintereinander grün, in allen drei Engines | Betreiberin, 07.11.2026 („stabil und reproduzierbar") |
 
 ## 7. Fragen an die Betreiberin
 
@@ -524,3 +581,61 @@ Decken, 0 gerissen; `bestand.py` 0 Befunde; `uebersicht.py` läuft;
 Migration, voll) steht mit seinem Bericht in der Nachricht des letzten
 Commits; seine Zahlen stehen dort und nicht hier, weil jede Zeile hier nach
 der Messung den Baum änderte.
+
+### MA-10 (Web 23.10.1, 07.11.2026)
+
+**Was gebaut ist.** Beide übernommenen Blöcke aus `farben.css` @ `e7bf4fc`
+(SHA-256 `ba55f312…ab26`, 192 Zeilen; hell 1 bis 123, dunkel ab 124).
+`--auf-aktion` zeigt auf `--genem-text-auf-aktion`, die beiden
+App-Überschreibungen im Dunkeln entfallen; `--aktion-haupt`,
+`-haupt-hover`, `--auf-aktion-haupt` neu. `knopf-gefahr` trägt die
+Fehler-Rollen als Umriss; `--gefahr-hover` entfällt. Vier Warnkästen ohne
+Symbol gefunden (`wartung_lib.php` dreimal, `kopfzeilen_lib.php`) und
+ergänzt.
+
+**Geprüft.** Der Block zwischen den Marken ist zeilengleich mit der
+Quelldatei (`diff` ohne Leerzeilen, keine Abweichung). `kontrast.py`: 60
+Paare je Modus, 0 verfehlt; 38 aus Regeln abgeleitet, 0 ohne Eintrag.
+`vollstaendigkeit.py`: keine Befunde. `php -l` der drei PHP-Dateien sauber.
+
+## 10. Vorher-Messung der zweiten Runde (07.11.2026, Web 23.10.0)
+
+### 10.1 Ausnahmen der Prüfmittel je Engine
+
+| Ausnahme (`tools/motor.mjs`, `motoren.md`) | Engine | Bewertung |
+|---|---|---|
+| CSP-Bericht nach `screenshot()` (`webkitScreenshotOhneBericht`) | WebKit | Werkzeug: vor dem Bild 0 Berichte, danach genau 1 (`style-src-elem`, das `<style>`, das Playwright selbst einsetzt); mit `caret:'initial'` und `animations:'allow'` unverändert. Bleibt |
+| Abgebrochener Abruf beim Seitenwechsel (`webkitAbgangLeise`, „access control checks") | WebKit | **Anwendung:** ein Hintergrundabruf läuft beim Verlassen noch. Abbruch über `pagehide` in `EdApi` (MA-14), danach Zählung prüfen |
+| `NS_BINDING_ABORTED` am Schriftabruf | Firefox | Werkzeug: Abbruch durch die nächste Navigation des Werkzeugs. Ein Vorladen würde ihn seltener machen, nicht abschaffen. Bleibt |
+| `ResizeObserver loop completed …` | WebKit | Spezifikation; der Kartencode ändert dabei keine Größe. Bleibt |
+| Wiederholung bei „WebKit encountered an internal error" | WebKit | Browserfehler; im letzten Lauf 0 Wiederholungen. Bleibt als Sicherung |
+| Passkey (CDP), `page.pdf`, `--drossel`, Messstand nur Chromium | Chromium | Diese Mittel gibt es nur dort. Bleibt |
+| Stilvergleich mit einer Liste je Engine (Nr. 411) | alle | Namen der Eigenschaften (`inset`, `size`), kein Gestaltungsunterschied. Bleibt |
+
+### 10.2 Bedienprobe und Barrierefreiheit vorher
+
+**Bedienprobe** (`tools/bedienprobe/probe.mjs`): Chromium 77/77 (377 s),
+Firefox 77/77 (346 s), WebKit 77/77 (341 s).
+
+**axe-core 4.14.0**, Regeln WCAG 2.0 bis 2.2 A und AA und „best-practice",
+46 Aufrufe je Engine (5 Seiten abgemeldet und 13 als Demo-Konto je bei 1440
+und 390 px, 10 Verwaltungs- und Betriebsseiten als BetreiberIn bei 1440 px).
+**Kein Kontrastverstoß.** In allen drei Engines dieselben 11 Regeln:
+
+| Regel | Seiten | Knoten | Ursache |
+|---|---|---|---|
+| `nested-interactive` | 16 | 208 | Bedienelemente in der Kopfzeile (`summary`) des Monatsakkordeons der Seitenleiste |
+| `dlitem` | 8 | 88 | `dt`/`dd` der Tagesfelder ohne `dl` |
+| `link-in-text-block` | 14 | 35 | Links im Fließtext nur durch Farbe abgesetzt (1,05:1 zum Text) |
+| `select-name` | 2 | 16 | Phasennummer im Einsatzformular ohne Beschriftung |
+| `label-title-only` | 2 | 16 | Phasenzeit im Einsatzformular nur mit `title` |
+| `empty-table-header` | 8 | 18 | Kopfzelle der Spaltenwahl leer |
+| `landmark-unique` | 11 | 11 | zwei `<nav>` „Hauptbereiche" bei 390 px |
+| `button-name` | 4 | 4 (WebKit 7) | „Aktionen" bei 390 px ohne Namen (der Text ist ausgeblendet); WebKit dazu „Karte sortieren" |
+| `heading-order` | 2 | 4 | Hilfe: Überschrift springt eine Ebene |
+| `scrollable-region-focusable` | 2 | 8 | Hilfe: Codeblock und Tabelle mit eigener Scrollleiste ohne Tastaturzugang |
+| `aria-prohibited-attr` | 1 | 1 | Protokoll: `aria-label` an einem `<a>` ohne Rolle |
+
+Unentschieden ließ axe 140 Kontraststellen (Text auf Verlauf, Bild oder
+halbdurchsichtiger Fläche); die Paare rechnet `kontrast.py`.
+

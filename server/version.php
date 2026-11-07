@@ -8664,4 +8664,14 @@ declare(strict_types=1);
  *   `update.php` aufrufen; bis dahin gilt fuer jedes Konto „wie das Geraet",
  *   und Anmeldung und Profil laufen weiter — beide Leser vertragen die
  *   fehlende Spalte. */
-const WEB_VERSION = '23.10.0';
+/* 23.10.1 — DER NACHZUG DES BRANDING-REPOS AUF E7BF4FC (Schritt 26, MA-10).
+ *   Beide uebernommenen Bloecke in `style.css` ersetzt (hell und dunkel,
+ *   neue Pruefsumme); das Repo bringt jetzt die Schrift auf der Aktion und
+ *   die Hauptaktion (Orange, `--aktion-haupt`) selbst mit. Der Gefahrknopf
+ *   ist ein Umriss (rot 600 Linie, rot 700 Schrift, rot 100 unter dem
+ *   Zeiger) statt einer roten Flaeche; `--gefahr-hover` entfaellt, `--gefahr`
+ *   bleibt fuer den Zaehler offener Fehler. Die vier Warnkaesten ohne
+ *   `ui.php` (Wartung, Ueberlast, Wartungsbanner, HTTPS-Seite) tragen das
+ *   Warnsymbol, wie jede Warnung (`STOERUNG_WARNSYMBOL`). Korrektur; kein
+ *   Schema. */
+const WEB_VERSION = '23.10.1';

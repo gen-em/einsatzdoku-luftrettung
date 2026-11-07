@@ -478,6 +478,13 @@ function wartung_antwort_seite(bool $rueckweg = true): never
     exit;
 }
 
+/* DAS WARNSYMBOL DER STOERUNGSSEITEN, als Dateiverweis. Eine Warnmeldung
+ * traegt immer ein Symbol, damit eine orange Meldung nie wie die orange
+ * Hauptaktion aussieht (Branding-Repo, „5 Regeln/Farben.md", seit Commit
+ * e7bf4fc). Diese Seiten laufen ohne `ui.php`; das Markup ist das, das
+ * `ui_symbol('warnung', 'symbol-gross')` ohne Symbolvorrat ausgibt. */
+const STOERUNG_WARNSYMBOL = '<svg class="symbol symbol-gross" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="assets/images/symbole/warnung.svg#i"></use></svg>';
+
 /**
  * DAS GERUEST BEIDER STOERUNGSSEITEN.
  *
@@ -587,7 +594,7 @@ function wartung_seite_html(bool $rueckweg = true): string
 
     return stoerung_seite_html('Wartung — ' . $wer,
         '      <h1>Wartung</h1>' . "\n"
-      . '      <div class="meldung meldung-warn" role="status">' . "\n"
+      . '      <div class="meldung meldung-warn" role="status">' . STOERUNG_WARNSYMBOL . "\n"
       . '        <p><strong>NAdoku wird gerade aktualisiert</strong> und ist in wenigen'
       . ' Minuten wieder da. Deine Uhr und dein Handy liefern ihre Daten danach'
       . ' von selbst nach.</p>' . "\n"
@@ -674,7 +681,7 @@ function wartung_balken(): string
     };
     if ($zusatz !== '') { $von = ' — automatisch geschaltet'; }
 
-    return '<div class="meldung meldung-warn" role="status">'
+    return '<div class="meldung meldung-warn" role="status">' . STOERUNG_WARNSYMBOL
          . '<p><strong>Wartungsmodus ' . $h($seit) . $von . '</strong> — alle anderen '
          . 'Anfragen bekommen 503. Geräte liefern nach.' . $h($zusatz) . '</p></div>';
 }
@@ -1005,7 +1012,7 @@ function ueberlast_seite_html(): string
 {
     return stoerung_seite_html('Ausgelastet — ' . INSTANZ_KURZ_VORGABE,
         '      <h1>Ausgelastet</h1>' . "\n"
-      . '      <div class="meldung meldung-warn" role="status">' . "\n"
+      . '      <div class="meldung meldung-warn" role="status">' . STOERUNG_WARNSYMBOL . "\n"
       . '        <p><strong>Der Server ist gerade ausgelastet</strong> — bitte in'
       . ' einer Minute noch einmal. Deine Uhr und dein Handy liefern ihre Daten'
       . ' von selbst nach.</p>' . "\n"

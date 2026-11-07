@@ -14,6 +14,18 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 23.10.1] — unveröffentlicht
+
+### Geändert
+
+- **Web — der Löschknopf ist ein roter Umriss statt einer roten Fläche**
+  (Schritt 26). Das Branding-Repo hat seine Knopfregeln nachgezogen: Eine
+  volle rote Fläche zog den Blick stärker als jede andere Handlung der
+  Seite, und gerade das Löschen soll man nicht zuerst sehen. Jede
+  Warnmeldung trägt jetzt ein Symbol, auch auf den Wartungs- und
+  Störungsseiten, damit eine orange Meldung nicht mit der künftigen orangen
+  Hauptaktion verwechselt wird.
+
 ## [Web 23.10.0] — unveröffentlicht
 
 ### Hinzugefügt

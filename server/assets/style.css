@@ -144,11 +144,11 @@
  */
 
 /* ---- Branding-Repo: Farb-Token -------------------------------------------
- * Herkunft: github.com/gen-em/gen-em-branding, Commit 95897f3,
- *           Datei „9 Technik/Tokens/farben.css" (Zeilen 1 bis 119, der
+ * Herkunft: github.com/gen-em/gen-em-branding, Commit e7bf4fc,
+ *           Datei „9 Technik/Tokens/farben.css" (Zeilen 1 bis 123, der
  *           helle Teil; der dunkle steht in Abschnitt 2a).
  * SHA-256 der ganzen Quelldatei:
- *           3afe1c86f013069876eabca1bfe3030f6dec111325367388801e9302d7d2b5cf
+ *           ba55f31283132c153113054e951236ea5167cad298b21bfef43fe9f242f9ab26
  * Wer das Repo nachzieht, ersetzt den Block zwischen den beiden Marken und
  * die Prüfsumme — und rechnet `kontrast.py` neu.
  * ===== Anfang des übernommenen Blocks ===== */
@@ -258,6 +258,10 @@
   --genem-text-auf-dunkelblau: var(--genem-schnee);
   --genem-aktion: var(--genem-dunkelblau);
   --genem-aktion-hover: var(--genem-blau-700);
+  --genem-text-auf-aktion: var(--genem-schnee);
+  --genem-aktion-haupt: var(--genem-philipp-orange);
+  --genem-aktion-haupt-hover: var(--genem-orange-400);
+  --genem-text-auf-aktion-haupt: var(--genem-asphalt);
   --genem-status-info-flaeche: var(--genem-blau-100);
   --genem-status-info-text: var(--genem-blau-700);
   --genem-status-info-linie: var(--genem-blau-600);
@@ -337,7 +341,15 @@
    * Flächen und Status (E-MA-01). */
   --aktion:var(--genem-aktion);
   --aktion-hover:var(--genem-aktion-hover);
-  --auf-aktion:var(--genem-text-auf-dunkelblau);
+  --auf-aktion:var(--genem-text-auf-aktion);
+  /* ---- Hauptaktion — Philipp-Orange, höchstens einmal je Seite ----------
+   * Die eine Handlung, für die jemand die Seite öffnet („Einsatz
+   * nachtragen", „Anmelden"). Asphalt auf Orange, 8,6:1, nie Weiß
+   * (2,3:1). Repo „5 Regeln/Farben.md", Ergänzung Aktionsfarbe, seit
+   * Commit e7bf4fc (E-MA-27). */
+  --aktion-haupt:var(--genem-aktion-haupt);
+  --aktion-haupt-hover:var(--genem-aktion-haupt-hover);
+  --auf-aktion-haupt:var(--genem-text-auf-aktion-haupt);
 
   /* ---- Auswahl — „hier bin ich" ----------------------------------------
    * Aktiver Menüpunkt, gewählte Kachel, Vorbelegung, Zeilenhervorhebung,
@@ -366,10 +378,12 @@
   --fehler-linie:var(--genem-status-fehler-linie);
 
   /* ---- Gefahr ----------------------------------------------------------
-   * Der Löschknopf und der Zähler offener Fehler: rot 700 als volle
-   * Fläche, Schnee als Schrift, 9,83:1 (E-MA-09). */
+   * Der Zähler offener Fehler: rot 700 als volle Fläche, Schnee als
+   * Schrift, 9,83:1. Der Löschknopf trägt seit Commit e7bf4fc des Repos
+   * keine Fläche mehr, sondern einen Umriss aus den Fehler-Rollen (rot 600
+   * Linie, rot 700 Schrift, rot 100 unter dem Zeiger; E-MA-26) — bis dahin
+   * war er rot 700 voll (E-MA-09). */
   --gefahr:var(--genem-rot-700);
-  --gefahr-hover:var(--genem-rot-800);
   --auf-gefahr:var(--genem-schnee);
 
   /* ---- Fokus ---------------------------------------------------------- */
@@ -637,11 +651,12 @@
  * und `--papier-*`, die Druckblaetter.
  *
  * Erst der Block des Branding-Repos, woertlich (Herkunft wie in Abschnitt
- * 2, „9 Technik/Tokens/farben.css" ab Zeile 120), dann die Rollen der
- * Anwendung, die das Repo nicht kennt: Schrift auf der Aktion (Dunkelblau
- * auf blau 300), Auswahl (blau 700 mit Schnee), Mechanik, Gefahrknopf
- * (rot 300 mit rot 900, Board MA-08), Fokus (blau 100), Markenflaeche und
- * Diagramme (Stufen 300/400 auf dunklem Grund).
+ * 2, „9 Technik/Tokens/farben.css" ab Zeile 124), dann die Rollen der
+ * Anwendung, die das Repo nicht kennt: Auswahl (blau 700 mit Schnee),
+ * Mechanik, Zaehler offener Fehler (rot 300 mit rot 900, Board MA-08),
+ * Fokus (blau 100), Markenflaeche und Diagramme (Stufen 300/400 auf
+ * dunklem Grund). Die Schrift auf der Aktion und die Hauptaktion bringt
+ * das Repo seit Commit e7bf4fc selbst mit.
  * ===== Anfang des übernommenen Blocks ===== */
 
 /* Dark Mode (Ergänzung): nur die semantischen Tokens werden neu zugewiesen.
@@ -662,6 +677,10 @@
     --genem-text-auf-dunkelblau: var(--genem-schnee);
     --genem-aktion: var(--genem-blau-300);
     --genem-aktion-hover: var(--genem-blau-200);
+    --genem-text-auf-aktion: var(--genem-dunkelblau);
+    --genem-aktion-haupt: var(--genem-orange-400);
+    --genem-aktion-haupt-hover: var(--genem-orange-300);
+    --genem-text-auf-aktion-haupt: var(--genem-asphalt);
     --genem-status-info-flaeche: var(--genem-blau-700);
     --genem-status-info-text: var(--genem-blau-100);
     --genem-status-info-linie: var(--genem-blau-400);
@@ -691,6 +710,10 @@
   --genem-text-auf-dunkelblau: var(--genem-schnee);
   --genem-aktion: var(--genem-blau-300);
   --genem-aktion-hover: var(--genem-blau-200);
+  --genem-text-auf-aktion: var(--genem-dunkelblau);
+  --genem-aktion-haupt: var(--genem-orange-400);
+  --genem-aktion-haupt-hover: var(--genem-orange-300);
+  --genem-text-auf-aktion-haupt: var(--genem-asphalt);
   --genem-status-info-flaeche: var(--genem-blau-700);
   --genem-status-info-text: var(--genem-blau-100);
   --genem-status-info-linie: var(--genem-blau-400);
@@ -708,12 +731,10 @@
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     color-scheme:dark;
-    --auf-aktion:var(--genem-dunkelblau);
     --auswahl-flaeche:var(--genem-blau-700);
     --auswahl-text:var(--genem-schnee);
     --mechanik:var(--genem-blau-400);
     --gefahr:var(--genem-rot-300);
-    --gefahr-hover:var(--genem-rot-200);
     --auf-gefahr:var(--genem-rot-900);
     --fokus:var(--genem-blau-100);
     --text-link-hover:var(--genem-blau-200);
@@ -728,12 +749,10 @@
 }
 :root[data-theme="dark"] {
   color-scheme:dark;
-  --auf-aktion:var(--genem-dunkelblau);
   --auswahl-flaeche:var(--genem-blau-700);
   --auswahl-text:var(--genem-schnee);
   --mechanik:var(--genem-blau-400);
   --gefahr:var(--genem-rot-300);
-  --gefahr-hover:var(--genem-rot-200);
   --auf-gefahr:var(--genem-rot-900);
   --fokus:var(--genem-blau-100);
   --text-link-hover:var(--genem-blau-200);
@@ -1635,8 +1654,8 @@ a.zeile:hover .zeile-weiter{color:var(--text-link-hover)}
   border-color:var(--linie-stark);
 }
 .knopf-neutral:hover{background:var(--flaeche-abgesetzt)}
-.knopf-gefahr{background:var(--gefahr);color:var(--auf-gefahr);border-color:var(--gefahr)}
-.knopf-gefahr:hover{background:var(--gefahr-hover)}
+.knopf-gefahr{background:var(--flaeche-karte);color:var(--fehler-text);border-color:var(--fehler-linie)}
+.knopf-gefahr:hover{background:var(--fehler-flaeche);color:var(--fehler-text)}
 .knopf-leise{background:none;color:var(--gedaempft);padding:0 var(--abstand-2)}
 .knopf-leise:hover{color:var(--text)}
 .knopf-symbol{

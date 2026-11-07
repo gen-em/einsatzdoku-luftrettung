@@ -131,7 +131,7 @@ PAARE = [
     ('Link auf Karte',                    'text-link',     'flaeche-karte',     4.5, 'Textlink, Anlegen-Weg'),
     ('Link unter dem Zeiger',             'text-link-hover', 'flaeche-abgesetzt', 4.5, 'Link, dessen Zeile unter dem Zeiger auf Rauch wechselt'),
     ('Link auf Seite',                    'text-link',     'flaeche-seite',     4.5, 'Link in der Fusszeile'),
-    ('Fehlertext auf Karte',              'fehler-text',   'flaeche-karte',     4.5, 'Pflichtzeichen, Fehler am Feld'),
+    ('Fehlertext auf Karte',              'fehler-text',   'flaeche-karte',     4.5, 'Pflichtzeichen, Fehler am Feld, Gefahrknopf (Umriss)'),
     ('Linie stark auf Karte',             'linie-stark',   'flaeche-karte',     3.0, 'Rand von Bedienelementen'),
     ('Linie stark im Feld',               'linie-stark',   'flaeche-feld',      3.0, 'Rand des Eingabefelds'),
     ('Linie stark auf abgesetzt',         'linie-stark',   'flaeche-abgesetzt', 3.0, 'Rand des gesperrten Felds'),
@@ -140,6 +140,8 @@ PAARE = [
     # Aktion und Auswahl
     ('Auf Aktion (Primaerknopf)',         'auf-aktion',    'aktion',            4.5, 'Primaerknopf, gewaehlte Segmenttaste, Zahl des aktiven Filters'),
     ('Auf Aktion unter dem Zeiger',       'auf-aktion',    'aktion-hover',      4.5, 'Primaerknopf unter dem Zeiger'),
+    ('Auf Hauptaktion',                   'auf-aktion-haupt', 'aktion-haupt',   4.5, 'die eine Hauptaktion der Seite (Asphalt auf Orange)'),
+    ('Auf Hauptaktion unter dem Zeiger',  'auf-aktion-haupt', 'aktion-haupt-hover', 4.5, 'Hauptaktion unter dem Zeiger'),
     ('Aktion auf Karte',                  'aktion',        'flaeche-karte',     3.0, 'Schalter an, Radiopunkt, Fortschritt, Stern'),
     ('Auswahltext auf Auswahl',           'auswahl-text',  'auswahl-flaeche',   4.5, 'aktiver Menuepunkt, aktive Kennzahl, Chip'),
     ('Auswahllinie auf Auswahl',          'auswahl-linie', 'auswahl-flaeche',   3.0, 'Strich am aktiven Eintrag'),
@@ -157,8 +159,8 @@ PAARE = [
     ('Fehlerlinie auf Karte',             'fehler-linie',  'flaeche-karte',     3.0, 'Rahmen der Gefahrkarte'),
     ('Warntext auf Karte',                'warnung-text',  'flaeche-karte',     4.5, 'Tag des Extremwerts'),
     ('Erfolgslinie auf Karte',            'erfolg-linie',  'flaeche-karte',     3.0, 'erledigter Schritt, Passwortbalken'),
-    ('Auf Gefahr (Loeschknopf)',          'auf-gefahr',    'gefahr',            4.5, 'Gefahrknopf, roter Zaehler'),
-    ('Auf Gefahr unter dem Zeiger',       'auf-gefahr',    'gefahr-hover',      4.5, 'Gefahrknopf unter dem Zeiger'),
+    ('Auf Gefahr (Zaehler)',              'auf-gefahr',    'gefahr',            4.5, 'roter Zaehler offener Fehler'),
+    ('Fehlertext auf Fehler (Gefahrknopf unter dem Zeiger)', 'fehler-text', 'fehler-flaeche', 4.5, 'Gefahrknopf unter dem Zeiger (Umriss, seit Repo e7bf4fc)'),
     ('Titel auf abgesetzt (Zaehler)',     'text-titel',    'flaeche-abgesetzt', 4.5, 'neutraler Zaehler'),
     # Kopfleiste und Markenflaechen: Leitwerte, schalten nicht um
     ('Schnee auf Dunkelblau (Kopfleiste)', 'auf-dunkel',   'dunkelblau',        4.5, 'Kopfleiste, dunkler Fuss, Bereichszeichen'),

@@ -413,7 +413,8 @@ derselben Tonreihen; die Bausteine wissen davon nichts.
 | Aktion, Schrift darauf | Dunkelblau, Schnee | blau 300, Dunkelblau |
 | Auswahl: Fläche, Schrift | blau 100, Dunkelblau | blau 700, Schnee |
 | Status: Fläche, Schrift, Linie | 100, 700, 600 | 800, 200, 400 (Info: 700, 100, 400) |
-| Gefahr, Schrift darauf | rot 700, Schnee | rot 300, rot 900 |
+| Gefahrknopf: Linie, Schrift, Fläche unter dem Zeiger | rot 600, rot 700, rot 100 | rot 400, rot 200, rot 800 |
+| Zähler offener Fehler, Schrift darauf | rot 700, Schnee | rot 300, rot 900 |
 | Fokus | blau 500 | blau 100 |
 
 **Warum die Blau-Reihe** und nicht ein warmes Schwarz: Dunkelblau ist die
@@ -457,7 +458,7 @@ auseinanderlaufen kann.
 
 <!-- ERZEUGT von tools/erzeugen/design.py — nicht von Hand ändern. -->
 
-140 Token in 20 Gruppen, alle aus `:root` in `server/assets/style.css`. Die Spalte **benutzt** zählt die `var()`-Verweise im übrigen Stylesheet.
+142 Token in 21 Gruppen, alle aus `:root` in `server/assets/style.css`. Die Spalte **benutzt** zählt die `var()`-Verweise im übrigen Stylesheet.
 
 **Leitwerte**
 
@@ -477,7 +478,7 @@ auseinanderlaufen kann.
 | Token | Wert | benutzt | |
 |---|---|--:|---|
 | `--flaeche-seite` | `var(--genem-flaeche-standard)` | 1 |  |
-| `--flaeche-karte` | `var(--genem-flaeche-karte)` | 18 |  |
+| `--flaeche-karte` | `var(--genem-flaeche-karte)` | 19 |  |
 | `--flaeche-abgesetzt` | `var(--genem-flaeche-abgesetzt)` | 35 |  |
 | `--flaeche-feld` | `var(--genem-flaeche-standard)` | 5 |  |
 | `--flaeche-marke` | `var(--genem-dunkelblau)` | 1 |  |
@@ -507,7 +508,15 @@ auseinanderlaufen kann.
 |---|---|--:|---|
 | `--aktion` | `var(--genem-aktion)` | 16 |  |
 | `--aktion-hover` | `var(--genem-aktion-hover)` | 2 |  |
-| `--auf-aktion` | `var(--genem-text-auf-dunkelblau)` | 6 |  |
+| `--auf-aktion` | `var(--genem-text-auf-aktion)` | 6 |  |
+
+**Hauptaktion — Philipp-Orange, höchstens einmal je Seite**
+
+| Token | Wert | benutzt | |
+|---|---|--:|---|
+| `--aktion-haupt` | `var(--genem-aktion-haupt)` | 0 |  |
+| `--aktion-haupt-hover` | `var(--genem-aktion-haupt-hover)` | 0 |  |
+| `--auf-aktion-haupt` | `var(--genem-text-auf-aktion-haupt)` | 0 |  |
 
 **Auswahl — „hier bin ich"**
 
@@ -531,17 +540,16 @@ auseinanderlaufen kann.
 | `--warnung-flaeche` | `var(--genem-status-warnung-flaeche)` | 8 |  |
 | `--warnung-text` | `var(--genem-status-warnung-text)` | 9 |  |
 | `--warnung-linie` | `var(--genem-status-warnung-linie)` | 3 |  |
-| `--fehler-flaeche` | `var(--genem-status-fehler-flaeche)` | 5 |  |
-| `--fehler-text` | `var(--genem-status-fehler-text)` | 18 |  |
-| `--fehler-linie` | `var(--genem-status-fehler-linie)` | 3 |  |
+| `--fehler-flaeche` | `var(--genem-status-fehler-flaeche)` | 6 |  |
+| `--fehler-text` | `var(--genem-status-fehler-text)` | 20 |  |
+| `--fehler-linie` | `var(--genem-status-fehler-linie)` | 4 |  |
 
 **Gefahr**
 
 | Token | Wert | benutzt | |
 |---|---|--:|---|
-| `--gefahr` | `var(--genem-rot-700)` | 3 |  |
-| `--gefahr-hover` | `var(--genem-rot-800)` | 1 |  |
-| `--auf-gefahr` | `var(--genem-schnee)` | 2 |  |
+| `--gefahr` | `var(--genem-rot-700)` | 1 |  |
+| `--auf-gefahr` | `var(--genem-schnee)` | 1 |  |
 
 **Fokus**
 
@@ -699,7 +707,7 @@ auseinanderlaufen kann.
 | `--auf-dunkel-flaeche` | `rgba(255,255,255,.14)` | 3 |  |
 | `--auf-dunkel-strich` | `rgba(255,255,255,.35)` | 1 |  |
 
-**Ungenutzt:** `--orange`, `--spur-2`, `--spur-3`, `--spur-4`, `--spur-5`, `--spur-6`, `--spur-7`, `--spur-8`, `--spur-ruhe`, `--s-handy`, `--s-leiste`, `--s-zwei`, `--s-karte-neben`.
+**Ungenutzt:** `--orange`, `--aktion-haupt`, `--aktion-haupt-hover`, `--auf-aktion-haupt`, `--spur-2`, `--spur-3`, `--spur-4`, `--spur-5`, `--spur-6`, `--spur-7`, `--spur-8`, `--spur-ruhe`, `--s-handy`, `--s-leiste`, `--s-zwei`, `--s-karte-neben`.
 
 ## 5. Schriftskala
 
@@ -1117,7 +1125,7 @@ AGPL-3.0; siehe `docs/Lizenzen.md`.
 | `uhrzeit.svg` | Tabler Icons „clock" (MIT) | 3 |
 | `veranstaltung.svg` | Tabler Icons „ticket" (MIT) | 11 |
 | `vollbild.svg` | Tabler Icons „maximize" (MIT) | 1 |
-| `warnung.svg` | Tabler Icons „alert-triangle" (MIT) | 29 |
+| `warnung.svg` | Tabler Icons „alert-triangle" (MIT) | 30 |
 | `werkzeug.svg` | Tabler Icons „tool" (MIT) | 0 |
 | `winkel.svg` | Tabler Icons „chevron-down" (MIT) | 19 |
 | `zahnrad.svg` | Tabler Icons „settings" (MIT) | 2 |
@@ -1457,10 +1465,10 @@ wäre auf dem Handy eine Bildschirmlänge je Zeile.
 
 | Art | Aussehen | wofür |
 |---|---|---|
-| `primaer` | Orange, dunkelblaue Schrift | die **eine** Haupthandlung einer Seite |
-| `neutral` | Rahmen | alles Übrige, auch „Bearbeiten" |
-| `gefahr` | roter Rahmen, rote Schrift | Löschen |
-| `leise` | nur Schrift | Abbrechen, Nebenwege |
+| `primaer` | Dunkelblau, Schrift Schnee (dunkel: blau 300, Schrift Dunkelblau) | eine Handlung, die die Seite weiterbringt („Speichern" in einem Dialog, „Übernehmen") |
+| `neutral` | Umriss `--linie-stark`, Schrift Dunkelblau, unter dem Zeiger Rauch | alles Übrige |
+| `gefahr` | Umriss rot 600, Schrift rot 700, unter dem Zeiger rot 100 | Löschen |
+| `leise` | nur Schrift `--gedaempft`, unter dem Zeiger Asphalt | Abbrechen, Nebenwege |
 | `symbol` | 44 × 44, nur ein Zeichen | braucht `titel` fürs Vorlesen |
 
 ```html
@@ -2401,7 +2409,8 @@ ist, nicht was man sieht.
 **Der Zähler** (`.zaehler`) steht rechts im Eintrag und nur über null. Drei
 Töne, dieselben wie die Ampel in 9.23: rot (Grundform), `.zaehler-orange`,
 `.zaehler-neutral`. Rot ist seit Schritt 26 die Gefahrfläche (rot 700 mit
-Schnee), Orange die Warnfläche (orange 100 mit orange 700). Neutral steht auf
+Schnee; der Gefahrknopf trägt sie seit Repo-Commit e7bf4fc nicht mehr, er
+ist ein Umriss), Orange die Warnfläche (orange 100 mit orange 700). Neutral steht auf
 Rauch (bis Schritt 26 Sand), nicht auf blassem Rot — ein
 blasses Rot läse sich als „fast schlimm", die Zahl soll aber gar nichts
 bewerten.
