@@ -80,8 +80,8 @@ NV-Gerüst.
 | OF-P-20 | Reiter kaum als Bedienelement erkennbar | Baustein | Gestaltung | entschieden (E-OF-17): gleiche Form wie die Bereichszeile |
 | OF-P-21 | Demo-Konto als Karte unter Installation (an/aus, letzter Reset) | Verwaltung | Umbau | entschieden (E-OF-08); Kontrollzahlen zur Statusseite |
 | OF-P-22 | Listenkopf (Suche, Zeitfilter, Art) unübersichtlich, aktiver Zeitraum nicht erkennbar | Baustein | Gestaltung | entschieden (E-OF-18): Filterknopf |
-| OF-P-23 | Statusseite zu voll | Betrieb | Gestaltung | Relevanz je Zeile prüfen, 3 Mockups |
-| OF-P-24 | Hintergrundjobs: ausdünnen, Plaketten brechen um, „Anhalten" umbenennen | Betrieb | Umbau | entschieden (E-OF-10), Mockup |
+| OF-P-23 | Statusseite zu voll | Betrieb | Gestaltung | entschieden (E-OF-20): Probleme zuerst |
+| OF-P-24 | Hintergrundjobs: ausdünnen, Plaketten brechen um, „Anhalten" umbenennen | Betrieb | Umbau | entschieden (E-OF-10, E-OF-21) |
 | OF-P-25 | Servereinstellungen vereinfachen | Betrieb | Gestaltung | 1 Mockup, gemeinsamer Klappbaustein |
 | OF-P-26 | Komplett-Backup vereinfachen | Betrieb | Gestaltung | 1 Mockup, gemeinsamer Klappbaustein |
 | OF-P-27 | Backup-Ziele als eigene Seite auflösen | Betrieb | Umbau | Q-OF-06 (Ort) |
@@ -127,6 +127,8 @@ Seite Hintergrundjobs (bei P-24).
 | E-OF-17 | P-20 und Q-OF-09: Variante **A — gleiche Form**: Seitenreiter (Rechtstexte, Protokoll, Statistik u. a.) sehen aus wie die Bereichszeile aus NV; ein Reiter-Baustein für beide Ebenen. Bild `konzept-of/mockups/OF-P20-A-gleiche-form.png` | Betreiberin, 07.11.2026 (Kommentar im Mockup A) |
 | E-OF-18 | P-22: Variante **B — Filterknopf**: Neben dem Suchfeld ein Knopf „Filter" mit Plakette (Zahl der gesetzten Filter), der die Filter aufklappt. Nachgebessert auf Hinweis: Der Knopf ist so hoch wie das Suchfeld, kräftiger Rand, fett, mit Symbol Tabler „filter" (neu im Vorrat, Design.md 6). Bild `konzept-of/mockups/OF-P22-B-filterknopf.png` | Betreiberin, 07.11.2026 (Kommentar im Mockup A) |
 | E-OF-19 | P-09: Variante **B — ein Satz plus „Verwalten"**: Die Karte Zweitfaktor zeigt zugeklappt einen Satz mit allem Wichtigen und einen Knopf „Verwalten"; aufgeklappt die Zeilen mit ihren Handlungen. Bild `konzept-of/mockups/OF-P09-B-satz-verwalten.png` | Betreiberin, 07.11.2026 (Kommentar im Mockup B) |
+| E-OF-20 | P-23: Variante **A — Probleme zuerst, Bereiche zugeklappt**: Oben ein Abschnitt mit genau den Zeilen, die etwas brauchen, je mit ihrem Bereich; darunter jeder Bereich als zugeklappter Abschnitt mit Zahl und Plakette. Bild `konzept-of/mockups/OF-P23-A-probleme-zuerst.png` | Betreiberin, 07.11.2026 (Kommentar im Mockup C) |
+| E-OF-21 | P-24: **Vorschlag** übernommen: „Jobs vorübergehend pausieren“ als eigene Karte oben; im Zustand je Job ein kurzer Satz, Plaketten brechen nicht um („heute 23:24“ statt Datum); Auslöser, Kettentoken und Monitoring in der üblichen Klappkarte, Zustand als Plakette im Kopf. Bild `konzept-of/mockups/OF-P24-vorschlag.png` | Betreiberin, 07.11.2026 (Kommentar im Mockup C) |
 
 Aus Schritt 26 übernommen: E-MA-36 (Beenden-Knöpfe der App bleiben
 vollflächig rot) ist bestätigt.
