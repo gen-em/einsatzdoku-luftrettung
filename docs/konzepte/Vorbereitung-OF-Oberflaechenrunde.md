@@ -93,7 +93,7 @@ NV-Gerüst.
 | OF-P-33 | Handbuch-Link in Seitentexten | alle | Text | entschieden (E-OF-02) |
 | OF-P-34 | Schlösser in einer Spalte statt hinter der Beschriftung | Einsatz | Gestaltung | entschieden (E-OF-28): Schloss links in eigener Spalte; Riegel `kennzeichnung` muss halten |
 | OF-P-35 | Kartenauswahl ohne Anbieternamen | Karte | Text | entschieden (E-OF-13) |
-| OF-P-36 | Leaflet-Bedienelemente ins Branding | Karte | Gestaltung | 1 Mockup (vorher/nachher) |
+| OF-P-36 | Leaflet-Bedienelemente ins Branding | Karte | Gestaltung | entschieden (E-OF-29): Vorschlag |
 | OF-P-37 | Papierkorb: gestrichelter Kreis neben „Wiederherstellen", Symbol des Knopfs | Papierkorb | Fehler/Symbol | Kreis klären; 3 Symbole (Q-OF-07) |
 
 Nebenbefunde aus den Bildern, ohne eigene Nummer bis zur Entscheidung:
@@ -136,6 +136,7 @@ Seite Hintergrundjobs (bei P-24).
 | E-OF-26 | P-17: Variante **C — erst wählen, dann füllen**: Zwei Wahlkarten „Liste übernehmen“ und „Liste ausgeben“ mit je einem Satz, darunter nur das passende kurze Formular. Bild `konzept-of/mockups/OF-P17-C-wahlkarten.png` | Betreiberin, 07.11.2026 (Kommentar im Mockup B) |
 | E-OF-27 | Regel (aus P-29): „Abmelden“ steht am Rechner nur unten in der Leiste, nie im Inhalt; der große Knopf am Ende der Einstellungs-Übersicht entfällt dort. Am Handy steht es in der Schublade. Die Lage der Fußzeile (P-29) ist damit noch nicht entschieden | Betreiberin, 07.11.2026 (Kommentar im Mockup A: „Abmelden hat in der Mitte nix zu suchen“) |
 | E-OF-28 | P-34: Variante **Links vor der Beschriftung**: feste Beschriftungsspalte (14 rem), das Schloss steht vor dem Wort in einer eigenen schmalen Spalte, Felder ohne Schloss rücken gleich weit ein. Der Riegel `kennzeichnung` (Sollliste) muss weiter halten. Bild `konzept-of/mockups/OF-P34-links.png` | Betreiberin, 07.11.2026 (Kommentar im Mockup D) |
+| E-OF-29 | P-36 (mit P-35): **Vorschlag** übernommen: Kartenknöpfe in Bedienhöhe der App (44 px, am Zeigergerät 36 px), Kartenfläche, starke Linie, Radius wie Knöpfe, kein Schatten; Ebenenwahl mit dem App-Symbol „Karte“, offen mit Überschrift „Kartenart“, Zeilen in Bedienhöhe, Auswahl Dunkelblau, Namen ohne Anbieter (die Anbieter bleiben im Quellennachweis). Bilder `konzept-of/mockups/OF-P36-vorschlag.png`, `…/OF-P36-vorschlag-ebenen.png` | Betreiberin, 07.11.2026 (Kommentar im Mockup D) |
 
 Aus Schritt 26 übernommen: E-MA-36 (Beenden-Knöpfe der App bleiben
 vollflächig rot) ist bestätigt.
