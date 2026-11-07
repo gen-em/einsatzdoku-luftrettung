@@ -89,7 +89,7 @@ NV-Gerüst.
 | OF-P-29 | Fußzeile als heller Streifen unter allem | alle | Gestaltung | 3 Mockups |
 | OF-P-30 | Symbole „download"/„upload" für GPX | Tag, Einsatz | Symbol | entschieden (E-OF-11) |
 | OF-P-31 | Plakette „GPS-Daten ausgedünnt" weglassen | Einsatz | Umbau | entschieden (E-OF-12) |
-| OF-P-32 | Einsatzformular (nachtragen und bearbeiten): Schalter und abhängige Felder ordnen | Einsatz | Gestaltung | 1 Mockup, zentral im Feldkatalog |
+| OF-P-32 | Einsatzformular (nachtragen und bearbeiten): Schalter und abhängige Felder ordnen | Einsatz | Gestaltung | entschieden (E-OF-33): eine Karte, Transport als drei abwählbare Felder; zentral im Feldkatalog |
 | OF-P-33 | Handbuch-Link in Seitentexten | alle | Text | entschieden (E-OF-02) |
 | OF-P-34 | Schlösser in einer Spalte statt hinter der Beschriftung | Einsatz | Gestaltung | entschieden (E-OF-28): Schloss links in eigener Spalte; Riegel `kennzeichnung` muss halten |
 | OF-P-35 | Kartenauswahl ohne Anbieternamen | Karte | Text | entschieden (E-OF-13) |
@@ -140,6 +140,7 @@ Seite Hintergrundjobs (bei P-24).
 | E-OF-30 | P-37 und Q-OF-07: Variante **A — Tabler „restore“** (kreisender Pfeil mit Punkt) für „Wiederherstellen“; nicht direkt neben „Aktualisieren“ stellen, die beiden sind verwandt. Der gestrichelte Kreis (Zeichen „ohne Rettungsmittel“, falsch platziert) wird unabhängig davon entfernt. Bild `konzept-of/mockups/OF-P37-A-restore.png` | Betreiberin, 07.11.2026 (Kommentar im Mockup D) |
 | E-OF-31 | P-19: **Vorschlag** übernommen: Jeder Abschnitt und seine Linie reichen bis zur rechten Kante der Rahmenkarte; begrenzt werden die Felder (36 rem), nicht die Abschnitte. Alle Seiten haben dieselbe rechte Kante; Listenseiten bleiben, wie sie sind. Ob ein Prüfmittel die Regel misst, ist Q-OF-03. Bild `konzept-of/mockups/OF-P19-vorschlag.png` | Betreiberin, 07.11.2026 (Kommentar im Mockup B) |
 | E-OF-32 | P-07, Regel für alle Seiten: Speichert ein Knopf **einen** Abschnitt, steht er als letztes Element in ihm. Speichert er **mehrere**, erscheint am unteren Rand der Rahmenkarte eine klebende Speicherleiste, sobald etwas geändert ist: Fläche Auswahlblau (`--auswahl-flaeche`, schaltet im Dunkelmodus mit), kein Strich und kein Bogen darüber, links fett „Geändert: …“, rechts der Knopf. Sie gehört zu keinem einzelnen Abschnitt. Ob ein Prüfmittel Knöpfe zwischen Abschnitten meldet, ist Q-OF-03. Bild `konzept-of/mockups/OF-P07-speicherleiste.png` | Betreiberin, 07.11.2026 (Kommentare im Mockup B, nach zwei Nachbesserungen) |
+| E-OF-33 | P-32 (nachtragen und bearbeiten): eine Karte „Einsatz und Transport“. Oben die Schalter Sekundärtransport und Fehleinsatz nebeneinander; dann die Transportart als Segmentwahl mit **drei Feldern Luft, Boden, Ambulant**, höchstens eines gewählt, ein zweiter Klick nimmt die Wahl zurück (dann offen, kein eigenes Feld „offen“); darunter Transportziel und die Schalter NA-Begleitung und Schockraum nebeneinander, ohne Einzug. Bei „Ambulant“ fallen Ziel und Schalter weg. Umsetzung zentral im Feldkatalog. Bilder `konzept-of/mockups/OF-P32-vorschlag-leer.png`, `…/OF-P32-vorschlag-gefuellt.png` | Betreiberin, 07.11.2026 (Kommentare im Mockup D) |
 
 Aus Schritt 26 übernommen: E-MA-36 (Beenden-Knöpfe der App bleiben
 vollflächig rot) ist bestätigt.
