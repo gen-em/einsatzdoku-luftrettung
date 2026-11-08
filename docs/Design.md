@@ -466,7 +466,7 @@ auseinanderlaufen kann.
 
 <!-- ERZEUGT von tools/erzeugen/design.py — nicht von Hand ändern. -->
 
-142 Token in 21 Gruppen, alle aus `:root` in `server/assets/style.css`. Die Spalte **benutzt** zählt die `var()`-Verweise im übrigen Stylesheet.
+144 Token in 21 Gruppen, alle aus `:root` in `server/assets/style.css`. Die Spalte **benutzt** zählt die `var()`-Verweise im übrigen Stylesheet.
 
 **Leitwerte**
 
@@ -486,8 +486,8 @@ auseinanderlaufen kann.
 | Token | Wert | benutzt | |
 |---|---|--:|---|
 | `--flaeche-seite` | `var(--genem-flaeche-standard)` | 1 |  |
-| `--flaeche-karte` | `var(--genem-flaeche-karte)` | 19 |  |
-| `--flaeche-abgesetzt` | `var(--genem-flaeche-abgesetzt)` | 35 |  |
+| `--flaeche-karte` | `var(--genem-flaeche-karte)` | 20 |  |
+| `--flaeche-abgesetzt` | `var(--genem-flaeche-abgesetzt)` | 36 |  |
 | `--flaeche-feld` | `var(--genem-flaeche-standard)` | 5 |  |
 | `--flaeche-marke` | `var(--genem-dunkelblau)` | 1 |  |
 
@@ -497,7 +497,7 @@ auseinanderlaufen kann.
 |---|---|--:|---|
 | `--text` | `var(--genem-text-standard)` | 21 |  |
 | `--text-titel` | `var(--genem-text-alternativ)` | 36 |  |
-| `--gedaempft` | `var(--genem-text-sekundaer)` | 70 |  |
+| `--gedaempft` | `var(--genem-text-sekundaer)` | 71 |  |
 | `--text-link` | `var(--genem-text-blau)` | 19 |  |
 | `--text-link-hover` | `var(--genem-text-blau)` | 4 |  |
 | `--auf-dunkel` | `var(--genem-schnee)` | 7 | Schrift auf Dunkelblau, 13,33:1 |
@@ -506,7 +506,7 @@ auseinanderlaufen kann.
 
 | Token | Wert | benutzt | |
 |---|---|--:|---|
-| `--linie` | `var(--genem-linie)` | 46 |  |
+| `--linie` | `var(--genem-linie)` | 47 |  |
 | `--linie-stark` | `var(--genem-linie-stark)` | 20 |  |
 | `--mechanik` | `var(--genem-sand)` | 11 |  |
 
@@ -613,10 +613,10 @@ auseinanderlaufen kann.
 
 | Token | Wert | benutzt | |
 |---|---|--:|---|
-| `--abstand-1` | `4px` | 86 |  |
-| `--abstand-2` | `8px` | 121 |  |
+| `--abstand-1` | `4px` | 87 |  |
+| `--abstand-2` | `8px` | 124 |  |
 | `--abstand-3` | `12px` | 164 |  |
-| `--abstand-4` | `16px` | 67 |  |
+| `--abstand-4` | `16px` | 70 |  |
 | `--abstand-5` | `24px` | 35 |  |
 
 **Radien**
@@ -631,13 +631,14 @@ auseinanderlaufen kann.
 
 | Token | Wert | benutzt | |
 |---|---|--:|---|
-| `--kopf` | `56px` | 13 |  |
-| `--knopf` | `44px` | 46 |  |
+| `--kopf` | `56px` | 17 |  |
+| `--knopf` | `44px` | 45 |  |
+| `--bereiche` | `48px` | 4 |  |
 | `--leiste` | `260px` | 2 | Seitenleiste ab 1200 |
 | `--leiste-schmal` | `220px` | 2 | Seitenleiste 1024–1199 |
 | `--leiste-filter` | `280px` | 1 | Filterleiste der Suche ab 1200 |
 | `--leiste-filter-schmal` | `240px` | 1 | Filterleiste 1024–1199 |
-| `--rahmen` | `1680px` | 3 | Leiste und Inhalt als Einheit |
+| `--rahmen` | `1680px` | 4 | Leiste und Inhalt als Einheit |
 | `--lesespalte` | `760px` | 5 | Fließtext |
 | `--schublade` | `320px` | 1 | Höchstbreite der mobilen Schublade |
 | `--blatt-zeile` | `50px` | 1 | Zeilenhöhe im Aktionsblatt |
@@ -651,8 +652,9 @@ auseinanderlaufen kann.
 | `--symbol-text` | `1em` | 2 | Symbol im Fliesstext |
 | `--symbol` | `20px` | 13 | Symbolgröße in der Zeile |
 | `--symbol-gross` | `24px` | 14 | Symbolgröße im Knopf und Kartenkopf |
-| `--strich` | `1px` | 64 | Haarlinie |
-| `--strich-stark` | `2px` | 37 | Aktivstrich, Randstrich, Fokus |
+| `--strich` | `1px` | 67 | Haarlinie |
+| `--strich-stark` | `2px` | 36 | Aktivstrich, Randstrich, Fokus |
+| `--strich-reiter` | `calc(var(--strich-stark) + var(--strich))` | 1 | 3 px |
 | `--radius-rund` | `999px` | 20 | Zähler, Griff, Punkt — voll rund |
 | `--schalter-breit` | `46px` | 2 | der Schalter, 46 breit … |
 | `--schalter-hoch` | `26px` | 4 | … 26 hoch, damit er in eine |
@@ -1008,12 +1010,12 @@ zählt nur Breiten.
 | `@media (min-width:1200px)` | 5 |
 | `@media (hover: hover) and (pointer: fine) and (min-width:1024px)` | 1 |
 | `@media (min-width:1024px) and (max-height:949px)` | 1 |
-| `@media (min-width:1024px)` | 3 |
-| `@media (min-width:720px)` | 15 |
+| `@media (min-width:1024px)` | 4 |
+| `@media (min-width:720px)` | 16 |
 | `@media screen and (min-width:720px)` | 1 |
 | `@media (max-width:479px)` | 3 |
 
-Zusammen 31 Medienblöcke über 5 verschiedene Breiten: 479 px, 720 px, 1024 px, 1200 px, 1600 px.
+Zusammen 33 Medienblöcke über 5 verschiedene Breiten: 479 px, 720 px, 1024 px, 1200 px, 1600 px.
 
 ### Verhalten je Baustein
 
@@ -1128,7 +1130,7 @@ AGPL-3.0; siehe `docs/Lizenzen.md`.
 | `position.svg` | Tabler Icons „current-location" (MIT) | 5 |
 | `profil.svg` | Tabler Icons „user" (MIT) | 17 |
 | `protokoll.svg` | Tabler Icons „list" (MIT) | 21 |
-| `punkte.svg` | Tabler Icons „dots" (MIT) | 65 |
+| `punkte.svg` | Tabler Icons „dots" (MIT) | 70 |
 | `reanimation.svg` | Tabler Icons „activity" (MIT) | 0 |
 | `rechtstexte.svg` | Tabler Icons „file-text" (MIT) | 2 |
 | `schliessen.svg` | Tabler Icons „x" (MIT) | 15 |
@@ -1236,53 +1238,53 @@ für eine Rückfrage — nicht für ein neues Element.
 | `ui_logo_masse()` | `.logo-masse` | **keine** | 492 |
 | `ui_kopf()` | `.kopf` | ja (+25 Unterklassen) | 553 |
 | `ui_geruest_start()` | `.inhalt` | ja | 645 |
-| `ui_leiste_ende()` | `.leiste` | ja (+17 Unterklassen) | 715 |
-| `ui_geruest_ende()` | `.inhalt` | ja | 739 |
-| `ui_leiste_diensttage()` | `.leiste-liste` | ja | 789 |
-| `ui_zaehler()` | `.zaehler` | ja (+2 Unterklassen) | 1038 |
-| `ui_leiste_einstellungen()` | `.leiste-liste` | ja | 1197 |
-| `ui_einstellungen_uebersicht()` | `.uebersicht-raster` | ja | 1268 |
-| `ui_fuss_seite()` | `.fuss-seite` | ja | 1347 |
-| `ui_hinweise()` | `.hinweise` | ja | 1395 |
-| `ui_umgebung_hinweis()` | `.hinweis-umgebung` | ja | 1423 |
-| `ui_ankuendigung()` | `.meldung-ankuendigung` | ja | 1458 |
-| `ui_demo_hinweis()` | `.demo-hinweis` | ja | 1511 |
-| `ui_datenschutz_hinweis()` | `.datenschutz-hinweis` | **keine** | 1564 |
-| `ui_meldung_markup()` | `.meldung` | ja (+19 Unterklassen) | 1629 |
-| `ui_knopf()` | `.knopf` | ja (+19 Unterklassen) | 1675 |
-| `ui_codeblock_lang()` | `.codeblock-lang` | ja | 1727 |
-| `ui_plakette()` | `.plakette` | ja (+6 Unterklassen) | 1755 |
-| `ui_ladeplatz()` | `.ladeplatz` | ja (+3 Unterklassen) | 1782 |
-| `ui_karte_start()` | `.karte` | ja (+37 Unterklassen) | 1822 |
-| `ui_karte_ende()` | `.karte` | ja (+37 Unterklassen) | 1906 |
-| `ui_nach_oben()` | `.nach-oben` | ja | 1941 |
-| `ui_sprungliste()` | `.sprungliste` | ja | 1983 |
-| `ui_kartenfilter()` | `.kartenfilter` | ja (+4 Unterklassen) | 2031 |
-| `ui_zeile()` | `.zeile` | ja (+35 Unterklassen) | 2093 |
-| `ui_zeile_mehr()` | `.zeile-mehr` | ja | 2148 |
-| `ui_reiter()` | `.reiter` | ja (+9 Unterklassen) | 2196 |
-| `ui_listenkopf()` | `.listenkopf` | ja | 2240 |
-| `ui_listenfuss()` | `.listenfuss` | ja | 2312 |
-| `ui_zeitraumwahl()` | `.zeitraumwahl` | ja (+5 Unterklassen) | 2370 |
-| `ui_diagramm_skala()` | `.diagramm-skala` | **keine** | 2416 |
-| `ui_diagramm_saeulen()` | `.diagramm-saeulen` | ja | 2450 |
-| `ui_diagramm_balken()` | `.diagramm-balken` | ja | 2522 |
-| `ui_titelzeile()` | `.titelzeile` | ja (+7 Unterklassen) | 2546 |
-| `ui_aktionen()` | `.aktionen` | ja (+2 Unterklassen) | 2588 |
-| `ui_feld()` | `.feld` | ja (+27 Unterklassen) | 2660 |
-| `ui_schalter()` | `.schalter` | ja (+27 Unterklassen) | 2725 |
-| `ui_segment_markup()` | `.segment` | ja (+23 Unterklassen) | 2769 |
-| `ui_wahlliste()` | `.wahlliste` | ja | 2822 |
-| `ui_zeilenaktionen()` | `.zeile-aktionen` | ja | 2866 |
-| `ui_speichern_leiste()` | `.speichern` | ja (+4 Unterklassen) | 2965 |
-| `ui_kennzahl()` | `.kennzahl` | ja (+20 Unterklassen) | 3029 |
-| `ui_abbruch()` | `.rahmen` | ja (+1 Unterklassen) | 3070 |
-| `ui_csrf_bootstrap()` | `.csrf-bootstrap` | **keine** | 3162 |
-| `ui_geocoder_bootstrap()` | `.geocoder-bootstrap` | **keine** | 3200 |
-| `ui_geocoder_hinweis()` | `.geocoder-hinweis` | **keine** | 3230 |
-| `ui_ortsfeld()` | `.ortsfeld-zeile` | ja | 3242 |
-| `ui_tabellen_bootstrap()` | `.tabellen-bootstrap` | **keine** | 3385 |
-| `ui_krypto_bootstrap()` | — | Hüllenfunktion, kein eigenes Element | 3464 |
+| `ui_leiste_ende()` | `.leiste` | ja (+17 Unterklassen) | 721 |
+| `ui_geruest_ende()` | `.inhalt` | ja | 745 |
+| `ui_leiste_diensttage()` | `.leiste-liste` | ja | 795 |
+| `ui_zaehler()` | `.zaehler` | ja (+2 Unterklassen) | 1044 |
+| `ui_leiste_einstellungen()` | `.leiste-liste` | ja | 1203 |
+| `ui_einstellungen_uebersicht()` | `.uebersicht-raster` | ja | 1274 |
+| `ui_fuss_seite()` | `.fuss-seite` | ja | 1353 |
+| `ui_hinweise()` | `.hinweise` | ja | 1401 |
+| `ui_umgebung_hinweis()` | `.hinweis-umgebung` | ja | 1429 |
+| `ui_ankuendigung()` | `.meldung-ankuendigung` | ja | 1464 |
+| `ui_demo_hinweis()` | `.demo-hinweis` | ja | 1517 |
+| `ui_datenschutz_hinweis()` | `.datenschutz-hinweis` | **keine** | 1570 |
+| `ui_meldung_markup()` | `.meldung` | ja (+19 Unterklassen) | 1635 |
+| `ui_knopf()` | `.knopf` | ja (+19 Unterklassen) | 1681 |
+| `ui_codeblock_lang()` | `.codeblock-lang` | ja | 1733 |
+| `ui_plakette()` | `.plakette` | ja (+6 Unterklassen) | 1761 |
+| `ui_ladeplatz()` | `.ladeplatz` | ja (+3 Unterklassen) | 1788 |
+| `ui_karte_start()` | `.karte` | ja (+37 Unterklassen) | 1828 |
+| `ui_karte_ende()` | `.karte` | ja (+37 Unterklassen) | 1912 |
+| `ui_nach_oben()` | `.nach-oben` | ja | 1947 |
+| `ui_sprungliste()` | `.sprungliste` | ja | 1989 |
+| `ui_kartenfilter()` | `.kartenfilter` | ja (+4 Unterklassen) | 2037 |
+| `ui_zeile()` | `.zeile` | ja (+35 Unterklassen) | 2099 |
+| `ui_zeile_mehr()` | `.zeile-mehr` | ja | 2154 |
+| `ui_reiter()` | `.reiter` | ja (+18 Unterklassen) | 2211 |
+| `ui_listenkopf()` | `.listenkopf` | ja | 2310 |
+| `ui_listenfuss()` | `.listenfuss` | ja | 2382 |
+| `ui_zeitraumwahl()` | `.zeitraumwahl` | ja (+5 Unterklassen) | 2440 |
+| `ui_diagramm_skala()` | `.diagramm-skala` | **keine** | 2486 |
+| `ui_diagramm_saeulen()` | `.diagramm-saeulen` | ja | 2520 |
+| `ui_diagramm_balken()` | `.diagramm-balken` | ja | 2592 |
+| `ui_titelzeile()` | `.titelzeile` | ja (+7 Unterklassen) | 2616 |
+| `ui_aktionen()` | `.aktionen` | ja (+2 Unterklassen) | 2658 |
+| `ui_feld()` | `.feld` | ja (+27 Unterklassen) | 2730 |
+| `ui_schalter()` | `.schalter` | ja (+27 Unterklassen) | 2795 |
+| `ui_segment_markup()` | `.segment` | ja (+23 Unterklassen) | 2839 |
+| `ui_wahlliste()` | `.wahlliste` | ja | 2892 |
+| `ui_zeilenaktionen()` | `.zeile-aktionen` | ja | 2936 |
+| `ui_speichern_leiste()` | `.speichern` | ja (+4 Unterklassen) | 3035 |
+| `ui_kennzahl()` | `.kennzahl` | ja (+20 Unterklassen) | 3099 |
+| `ui_abbruch()` | `.rahmen` | ja (+2 Unterklassen) | 3140 |
+| `ui_csrf_bootstrap()` | `.csrf-bootstrap` | **keine** | 3232 |
+| `ui_geocoder_bootstrap()` | `.geocoder-bootstrap` | **keine** | 3270 |
+| `ui_geocoder_hinweis()` | `.geocoder-hinweis` | **keine** | 3300 |
+| `ui_ortsfeld()` | `.ortsfeld-zeile` | ja | 3312 |
+| `ui_tabellen_bootstrap()` | `.tabellen-bootstrap` | **keine** | 3455 |
+| `ui_krypto_bootstrap()` | — | Hüllenfunktion, kein eigenes Element | 3534 |
 
 54 Funktionen mit Markup in `server/ui.php`, davon 4 Hüllenfunktionen ohne eigenes Element.
 **Ohne Regel im Stylesheet:** `ui_logo_masse()`, `ui_datenschutz_hinweis()`, `ui_diagramm_skala()`, `ui_csrf_bootstrap()`, `ui_geocoder_bootstrap()`, `ui_geocoder_hinweis()`, `ui_tabellen_bootstrap()` — jede davon ist zu prüfen: entweder ein Behälter, der zu Recht keine Gestaltung braucht, oder eine Lücke.
@@ -3115,6 +3117,13 @@ Sicherung, Ziele, System, dazu Archiv; hier stand bis Web 21.1.0 ein Reiter
 Parameter steht in der Adresse, und ohne Skript funktioniert alles. **Drei
 Verwender:** Protokoll (AP2, hier entstanden), Statistik (AP7), Rechtstexte
 (AP9, seit Web 21.1.0 — der einzige, dessen Reiter ein Formular schützen).
+**Seit Web 23.12.0 dazu die Bereichszeile** der Einstellungen
+(`ui_bereichszeile()`, Konzept OF, NV-01): derselbe Baustein in einer
+zweiten **Lage** (`klasse` → `.reiter-bereiche`), nicht in einer zweiten
+Form (E-OF-17, -40). Sie steht in voller Fensterbreite zwischen Kopfleiste
+und Rahmen, die Reiter auf dem Raster der Kopfleiste, klebt ab 1024 px
+unter der Kopfleiste, und jeder Reiter trägt leise die Zahl seiner Punkte
+(`zahl` → `.bereich-zahl`) und den summierten Zähler (`zaehler`, 9.23).
 
 ```php
 ui_reiter(['label' => 'Bereiche des Protokolls', 'punkte' => [
@@ -3127,8 +3136,10 @@ ui_reiter(['label' => 'Bereiche des Protokolls', 'punkte' => [
 | Teil | Darstellung |
 |---|---|
 | `.reiter` | Reihe mit Grundlinie `--strich` in `--linie`, `--abstand-4` darunter |
-| `.reiter-punkt` | Kopfschrift 500, `--gedaempft`, `min-height: var(--knopf)` (44/36 px), nie umbrechend |
-| `.reiter-punkt.aktiv` | `--text-titel`, Unterstrich `--strich-stark` in `--auswahl-linie` (Dunkelblau), `aria-current="page"` |
+| `.reiter-punkt` | Kopfschrift **700**, `--gedaempft`, `min-height: var(--bereiche)` (**48 px in jeder Breite**, E-NV-04), Fläche `--flaeche-abgesetzt` beim Darüberfahren, nie umbrechend — bis Web 23.11 500 und `--knopf` |
+| `.reiter-punkt.aktiv` | `--text-titel`, Unterstrich `--strich-reiter` (3 px, bis Web 23.11 `--strich-stark`) in `--auswahl-linie` (Dunkelblau), `aria-current="page"` |
+| `.reiter-bereiche` | Lage der Bereichszeile: volle Breite, Fläche Karte, Linie unten am Rahmen statt an der Reihe; ab 1024 px `sticky` unter `--kopf` |
+| `.bereich-zahl` | Zahl der Punkte hinter dem Namen, `--gedaempft`, 400 |
 | `.reiter-abgesetzt` | am rechten Rand (`margin-left:auto`) — die Ablage („Archiv"), kein Ereignisreiter |
 | `.reiter-rahmen` | Behälter für den Verlauf am Rand; `.rollt` / `.rollt-links` setzt `assets/reiter.js` |
 

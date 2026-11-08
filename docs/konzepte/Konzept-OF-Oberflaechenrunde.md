@@ -6,7 +6,7 @@ und `Q-NV-NN`, Prüfpunkte `P-OF-NN` und `P-NV-NN` (`docs/Pruefablauf.md` 7).
 Die Punkte der Betreiberin heißen `OF-P-01` bis `OF-P-37`; sie sind keine
 Pakete. **Alle NV-Nummern behalten ihren Wert** (E-OF-35).
 
-**Zweig:** `claude/oberflaechenrunde-of` · **Herkunft:** Durchsicht von
+**Zweig:** Konzept auf `claude/oberflaechenrunde-of` (bis `843a72e`), Umsetzung auf `claude/of-oberflachenrunde-umsetzung-8riu6b` (F-OF-18) · **Herkunft:** Durchsicht von
 Staging (Web 23.11.3) und Produktiv (Web 23.8.2) durch die Betreiberin am
 07.11.2026, gesammelt in `Vorbereitung-OF-Oberflaechenrunde.md` (letzter
 Stand `0464977`, hier aufgegangen und gelöscht, E-OF-47), dazu die Übergabe
@@ -37,7 +37,7 @@ es im Kopf von `server/version.php`.
 | Paket | Inhalt | Modell · Fächerung | Stand |
 |---|---|---|---|
 | OF-00 | Konzept, Fahrplanzeile, Backlog-Spanne, Übernahme von NV und der Vorbereitung | Fable · keine | **erledigt** 07.11.2026 |
-| NV-01 | Bereichszeile unter der Kopfleiste — als Reiter-Baustein für beide Ebenen (E-OF-17, E-OF-40); Seitenreiter in derselben Form (OF-P-20); Ziel „Betrieb“ ist der erste Punkt (E-OF-51) | Opus · keine | offen |
+| NV-01 | Bereichszeile unter der Kopfleiste — als Reiter-Baustein für beide Ebenen (E-OF-17, E-OF-40); Seitenreiter in derselben Form (OF-P-20); Ziel „Betrieb“ ist der erste Punkt (E-OF-51) | Opus · keine | **erledigt** 08.11.2026 (Web 23.12.0) |
 | NV-02 | Rahmenkarte für alle drei Leistentypen: Abschnitte in den Einstellungen, Karten auf Startseite und Suche (E-OF-36 bis -38); Leiste klebt und rollt innen (E-OF-37); Fußzeile als dunkelblauer Abschluss (E-OF-34) | Opus · keine | offen |
 | NV-03 | Leiste der Einstellungen auf den aktiven Bereich kürzen; aktiver Eintrag ohne Strich in jeder Leiste (OF-P-04, E-OF-16); „Abmelden“ nur in der Leiste (E-OF-27); Sprungmarken nur zu sichtbaren Karten (OF-P-16) | Opus · keine | offen |
 | NV-04 | Schmale Breiten: Bereichszeile rollt, Rahmenkarte ohne Rand, Schublade mit drei Bereichen; die Übersicht bleibt (E-OF-50) | Opus · keine | offen |
@@ -51,8 +51,9 @@ es im Kopf von `server/version.php`.
 | OF-08 | Darstellung: Umschalter Mond/Sonne in der Kopfleiste, vier Einstellungen im Profil, keine Migration (E-OF-09, -43, -55) | Opus · keine | offen |
 | OF-09 | Abschluss (NV-05 geht auf): Dokumentation, Prüfmittel, Prüfstand voll, Pull Request, Prüfdokument | Opus · keine | offen |
 
-**In Arbeit:** nichts — OF-00 ist erledigt, die Umsetzung kann mit NV-01
-beginnen (Q-OF-11 bestätigt, 07.11.2026). **Offen bei der Betreiberin:** nichts — alle Fragen sind entschieden (Abschnitt 7); Q-OF-02 wird in OF-M1 vorgelegt.
+**In Arbeit:** NV-02 Rahmenkarte. **Erledigt:** OF-00, NV-01. **Hakt:**
+nichts; F-OF-19 (eine Rolle mit einem Bereich sieht einen einzelnen
+Reiter) ist der Betreiberin zur Kenntnis vorgelegt. **Offen bei der Betreiberin:** nichts — alle Fragen sind entschieden (Abschnitt 7); Q-OF-02 wird in OF-M1 vorgelegt.
 **Meilenstein:** OF-M1 (Statuszeilen, zu Beginn von OF-06).
 
 ---
@@ -192,6 +193,22 @@ enthält `origin/main` `ac4a7bd` (Merge von PR #157).
   könnte die ungepackten Stücke zählen (`spur2_faellig()` liest nur den
   Klartext-Umriss), tut es aber für den Betrieb heute nicht. Daraus E-OF-52
   und eine Option für OF-M1.
+- **F-OF-18 — Der Konzeptzweig enthielt `main` nur dem Inhalt nach.**
+  `843a72e` hat beide Eltern von `ac4a7bd` als Vorfahren, den Merge-Commit
+  selbst aber nicht; „enthält `origin/main` `ac4a7bd`“ (F-OF-01, OF-00)
+  stimmte für den Baum, nicht für den Graphen. Für „Require branches to be
+  up to date“ zählt der Graph. Die Umsetzung arbeitet auf dem Sitzungszweig
+  `claude/of-oberflachenrunde-umsetzung-8riu6b`, gesetzt auf `843a72e` mit
+  `ac4a7bd` hineingemergt (`38a4393`, Baum unverändert; Betreiberin,
+  08.11.2026). `claude/oberflaechenrunde-of` bleibt auf `843a72e` stehen.
+- **F-OF-19 — Eine Rolle mit einem Bereich sieht einen einzelnen Reiter.**
+  Die NutzerIn (und das Demo-Konto) sieht nur „Einstellungen 5“ in der
+  Bereichszeile; das Konzept sagt nur „Rollen, die einen Bereich nicht
+  sehen, sehen seinen Reiter nicht“. Umgesetzt wie geschrieben — die Zeile
+  steht auch mit einem Reiter, damit das Gerüst für alle Rollen dasselbe
+  ist. Soll sie bei einem Bereich entfallen, ist das eine Bedingung in
+  `ui_geruest_start()`.
+
 ## 3. Quellen
 
 | Quelle | Wo | Was |
@@ -729,6 +746,9 @@ der Vorbereitung und der NV-Übergabe übernommen; neu ab E-OF-39.
 | E-OF-54 | Q-OF-12: Das Datumsfeld `TT.MM.JJJJ` an allen acht Stellen, auch Geburtsdatum und Suchfilter | Betreiberin, 07.11.2026 |
 | E-OF-55 | Q-OF-13: Bestandskonten ohne Wahl bekommen mit der neuen Vorgabe den Umschalter; „Jetzt sichern“ ist die siebte Hauptaktion in Orange (ergänzt E-MA-27) | Betreiberin, 07.11.2026 |
 | E-OF-56 | Q-OF-14: Das „?“ der Kopfleiste öffnet das Handbuchkapitel der aktuellen Seite; Zuordnung je Menüpunkt, der Riegel `anker` hält die Ziele | Betreiberin, 07.11.2026 |
+| E-OF-57 | NV-01: Die Bereichszeile klebt ab 1024 px unter der Kopfleiste, die Leiste unter beiden (`.rahmen-bereiche`); darunter rollt sie mit der Seite weg — auf dem Handy wären 104 px feste Kopfzone ein Sechstel des Bildes. Unter 720 px enger (`--abstand-2` statt `-4`), damit drei Bereiche bei 390 px ohne Rollen stehen (P-NV-06) | Umsetzung, 08.11.2026 |
+| E-OF-58 | NV-01: Der Unterstrich von 3 px (E-NV-05) ist ein abgeleitetes Maß `--strich-reiter: calc(var(--strich-stark) + var(--strich))`, keine neue Zahl in der Skala; „keine Token außer `--bereiche`“ (Abschnitt 1) gilt damit für die Skala, nicht für die Rechnung | Umsetzung, 08.11.2026 |
+| E-OF-59 | NV-01: Fassung — NV-01 hebt die Nebennummer (23.12.0); die Hauptnummer kommt mit NV-02 (24.0.0), weil erst die Rahmenkarte und die gekürzte Leiste den Weg sichtbar ändern (K3) | Betreiberin, 08.11.2026 |
 | E-OF-48 | Papierkorb: Das Artzeichen des Diensttags (`ohne-zuordnung`, Hubschrauber, Fahrzeug) steht vor dem Datum wie in Leiste und Vorschlägen — so zeigt es das freigegebene Bild; „entfernt“ in E-OF-30 meint die Stelle neben den Knöpfen. Will die Betreiberin es im Papierkorb ganz weglassen, ist das eine Zeile | Konzept, aus E-OF-30 (F-OF-16) |
 
 Aus Schritt 26 übernommen: E-MA-36 (Beenden-Knöpfe der App bleiben
@@ -828,3 +848,53 @@ Ausnahmen, 0 ungenutzte Ausnahmen**.
 
 **Nicht geprüft:** nichts im Browser — es gibt noch keinen Code. Die
 Prüfpunkte in Abschnitt 8 nennen je Paket, was dann zu messen ist.
+
+### NV-01 Bereichszeile (08.11.2026, Web 23.12.0)
+
+**Was getan ist.** `ui_reiter()` nimmt `klasse` (Lage am Rahmen) und je
+Punkt `zahl` und `zaehler`; das Skript `reiter.js` lädt einmal je Seite
+(vorher je Reihe — mit zwei Reihen hätte jede zwei Horcher bekommen).
+`ui_bereichszeile()` baut die Punkte aus `ui_einstellungen_punkte()`:
+Ziel = erster Punkt des Blocks (E-OF-51), Zahl der Punkte, Zähler als Summe
+(rot, sobald einer rot ist; E-OF-14). `ui_geruest_start()` ruft sie nach
+`ui_kopf()` nur bei `leiste === 'einstellungen'` und setzt
+`.rahmen-bereiche`. Stylesheet: `--bereiche` (48 px), `--strich-reiter`
+(E-OF-58), `.reiter-punkt` 700 / 48 px / Unterstrich 3 px / Hover
+`--flaeche-abgesetzt` für alle Reiter (E-OF-17), `.reiter-bereiche` als
+Lage, ab 1024 px `sticky` samt Leiste und `scroll-padding-top` (E-OF-57).
+Design.md 9.37 nachgezogen, Tabellen mit `design.py schreiben` erzeugt;
+Handbuch 2 (Bereichszeile); CHANGELOG; `version.php` 23.12.0 (E-OF-59).
+
+**Gemessen** (Chromium, eigenes Aufnahmeskript gegen die örtliche Anlage,
+Konto BetreiberIn): Bereichszeile bei 1920 neben Protokoll-Reitern —
+gleiche Form (Bild gegen `OF-P20-A`); bei **390 px `scrollWidth` 390 =
+`clientWidth` 390**, drei Reiter ohne Rollen (vorher 1. Versuch: rollte,
+daher E-OF-57 enger); Höhe jedes Reiters **48 px**. Servereinstellungen
+1366 × 700, 900 px gerollt, **in Chromium, Firefox und WebKit gleich**:
+Zeile oben bei 56 px, 49 px hoch (48 + Linie), Leiste von 105 bis 700 px
+(= Fensterboden). Demo-Konto: ein Reiter „Einstellungen 5“ (F-OF-19).
+
+**Probleme und Lösung.** (1) Der Stilvergleich meldete in allen drei
+Engines 18 ungeplante Signaturen — die neue Reiterform, die Lage der
+Bereichszeile und die längere Katalogseite (Höhen, statische Lage
+absolut gesetzter Elemente); alle gewollt, mit `gegen.sh --schreiben`
+als `geplant-<motor>.txt` abgelegt (je 18). (2) Der erste vollständige
+Prüfstand (7 401 s) war **57 grün, 2 rot**: Bedienprobe (drei Engines,
+Weg `admin-protokoll-reiter`) und Rollenprobe („Protokoll: genau zwei
+Reiter“: 4). Beide suchten `.reiter-punkt` seitenweit und fanden die
+Bereichszeile mit — ein Fehler der Prüfmittel, nicht der Seite. Die Wege
+in `tools/bedienprobe/wege/` (Protokoll, Statistik, Rechtstexte) suchen
+jetzt unter `#inhalt`, die Rollenprobe zählt nur in der Reihe „Bereiche
+des Protokolls“. Einzeln nachgefahren: Rollenprobe 4 von 4 Rollen,
+Bedienprobe (Chromium) 77 von 77 Wegen. (3) Ein Neustart des Containers
+brach den zweiten Lauf nach rund 20 Minuten ab (`Exit 137`, `uptime`
+0 min) — Startfolge nach `Sandbox-Setup.md` 6.1a neu gefahren, Anlage
+mit `--neu`. (4) Die örtliche Kopie von `origin/main` stand auf PR #149
+(`a1521a6`); `auswahl.py` hielt den Unterschied deshalb für `haupt`
+(Migration aus Schritt 26). Neu geholt: `neben`, 23.11.3 → 23.12.0.
+Prüfstand über den endgültigen Baum: Bericht im Commit.
+
+**Nicht geprüft:** P-NV-07 (Kontraste) läuft mit `kontrast.py` im
+Prüfstand; P-NV-01 (Raster der Kanten) wird erst mit der Rahmenkarte
+(NV-02) messbar.
+

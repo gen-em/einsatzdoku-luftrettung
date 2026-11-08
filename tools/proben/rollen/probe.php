@@ -552,7 +552,13 @@ if ($s === null || $a === null) {
     pruef($gegen === [], 'Gegenprobe: beim Admin stehen die Marken da',
           $gegen === [] ? '' : 'fehlt: ' . implode(', ', $gegen));
     $r = hole('admin_protokoll.php', $s['sid']);
-    $reiter = substr_count($r['rumpf'], 'class="reiter-punkt');
+    /* NUR DIE REIHE DES PROTOKOLLS. Seit Web 23.12.0 steht darueber die
+     * Bereichszeile (Konzept OF, NV-01) mit denselben Reitern — beim
+     * Support zwei: Einstellungen und Verwaltung. Seitenweit gezaehlt
+     * waeren es vier, und die Probe mass die Zeile statt der Seite. */
+    $reihe = preg_match('~<nav class="reiter" aria-label="Bereiche des Protokolls">(.*?)</nav>~s',
+                        $r['rumpf'], $tr) ? $tr[1] : '';
+    $reiter = substr_count($reihe, 'class="reiter-punkt');
     pruef($r['code'] === 200 && $reiter === 2, 'Protokoll: genau zwei Reiter',
           'HTTP ' . $r['code'] . ', ' . $reiter . ' Reiter');
 

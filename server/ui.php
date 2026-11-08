@@ -648,12 +648,18 @@ function ui_geruest_start(array $o = []): void
     ui_hat_tagesleiste($leiste === 'diensttage');
     ui_hat_menueleiste($leiste === 'einstellungen');
     ui_kopf(['aktiv' => (string)($o['aktiv'] ?? '')]);
+    /* DIE BEREICHSZEILE steht nur im Einstellungsbereich, zwischen Kopfleiste
+     * und Rahmen (Konzept OF, NV-01). Der Rahmen erfaehrt davon, damit die
+     * Leiste ab 1024 px unter BEIDEN klebt. */
+    $bereiche = $leiste === 'einstellungen';
+    if ($bereiche) { ui_bereichszeile((string)($o['menue'] ?? '')); }
     /* LESESPALTE: Eine Seite mit wenigen Karten und viel
      * Erklärtext liest sich auf 760 px besser als über die volle Breite eines
      * 1920er Bildschirms. Die Regel `.rahmen-lesespalte` gab es längst — sie
      * war nur für Seiten OHNE Leiste gebaut (Anmeldung, Rechtstexte,
      * Wiederherstellung) und über das Gerüst nicht erreichbar. */
-    $rahmen = 'rahmen' . (!empty($o['lesespalte']) ? ' rahmen-lesespalte' : '');
+    $rahmen = 'rahmen' . (!empty($o['lesespalte']) ? ' rahmen-lesespalte' : '')
+            . ($bereiche ? ' rahmen-bereiche' : '');
     ?>
 <div class="schleier" data-schublade="zu" hidden></div>
 <div class="<?= ui_e($rahmen) ?>">
@@ -2189,25 +2195,89 @@ function ui_zeile_mehr(array $o, array $daten): void
  * SEITEN MIT REITERN TRAGEN KEINE UNTERPUNKTE IN DER LEISTE: `menue.js` baut
  * keine, wenn `#inhalt` eine `.reiter`-Reihe enthaelt.
  *
- * $o: label (fuer die Vorlesesoftware), punkte [ ['text', 'href',
+ * EIN BAUSTEIN FUER ZWEI EBENEN (Konzept OF, E-OF-17, -40). Die
+ * Bereichszeile der Einstellungen (`ui_bereichszeile()`) ist dieselbe Reihe
+ * in einer zweiten LAGE (`klasse` => 'reiter-bereiche'): gleiche Schrift,
+ * gleiche Hoehe, gleicher Unterstrich. Zwei Formen fuer zwei Reihen
+ * uebereinander waeren zwei Bausteine gewesen.
+ *
+ * $o: label (fuer die Vorlesesoftware), klasse (Lagevariante am Rahmen),
+ *     punkte [ ['text', 'href',
  *     'aktiv' => bool, 'abgesetzt' => bool (am rechten Rand, fuer eine
- *     Ablage wie „Archiv"), 'attr' => fertige Attribute] ]
+ *     Ablage wie „Archiv"), 'attr' => fertige Attribute,
+ *     'zahl' => ?int (leise hinter dem Namen, z. B. Zahl der Punkte),
+ *     'zaehler' => ?array (Plakette wie `ui_zaehler()`)] ]
  * ------------------------------------------------------------------------ */
 function ui_reiter(array $o): void
 {
+    static $skriptGeladen = false;
     $punkte = (array)($o['punkte'] ?? []);
     if (!$punkte) { return; }
-    echo '<div class="reiter-rahmen"><nav class="reiter" aria-label="'
+    $rahmen = 'reiter-rahmen' . (isset($o['klasse']) ? ' ' . (string)$o['klasse'] : '');
+    echo '<div class="' . ui_e($rahmen) . '"><nav class="reiter" aria-label="'
        . ui_e((string)($o['label'] ?? 'Bereiche dieser Seite')) . '">';
     foreach ($punkte as $p) {
         $k = 'reiter-punkt' . (!empty($p['abgesetzt']) ? ' reiter-abgesetzt' : '')
            . (!empty($p['aktiv']) ? ' aktiv' : '');
+        $zahl = isset($p['zahl'])
+              ? '<span class="bereich-zahl" aria-hidden="true">' . (int)$p['zahl'] . '</span>' : '';
         echo '<a class="' . $k . '" href="' . ui_e((string)$p['href']) . '"'
            . (!empty($p['aktiv']) ? ' aria-current="page"' : '')
-           . (string)($p['attr'] ?? '') . '>' . ui_e((string)$p['text']) . '</a>';
+           . (string)($p['attr'] ?? '') . '><span>' . ui_e((string)$p['text']) . '</span>'
+           . $zahl . ui_zaehler($p['zaehler'] ?? null) . '</a>';
     }
     echo "</nav></div>\n";
-    echo '<script src="' . ui_e(ui_asset('assets/reiter.js')) . '" defer></script>' . "\n";
+    /* EINMAL JE SEITE. Seit es die Bereichszeile gibt, stehen auf Protokoll,
+     * Statistik und Rechtstexte zwei Reihen — das Skript zweimal geladen
+     * haengte jeder Reihe zwei Horcher an. */
+    if (!$skriptGeladen) {
+        $skriptGeladen = true;
+        echo '<script src="' . ui_e(ui_asset('assets/reiter.js')) . '" defer></script>' . "\n";
+    }
+}
+
+
+/**
+ * Die Bereichszeile der Einstellungen (Konzept OF, NV-01) — Einstellungen ·
+ * Verwaltung · Betrieb als Reiter unter der Kopfleiste.
+ *
+ * Sie baut nur die Punkte und ruft `ui_reiter()` (E-OF-40). Jeder Reiter
+ * fuehrt auf den ERSTEN Punkt seines Blocks, ohne Sonderregel (E-OF-51);
+ * dahinter steht leise die Zahl der Punkte, und der Aufmerksamkeitszaehler
+ * ist die Summe ueber den Block (E-OF-14). Ist einer der Zaehler rot, ist es
+ * die Summe auch — sonst traegt sie den Ton des ersten.
+ *
+ * Aktiv ist der Block, der `$aktiv` enthaelt; auf der Uebersicht (`''`)
+ * ist es „Einstellungen". Rollen, die einen Bereich nicht sehen, sehen
+ * seinen Reiter nicht — `ui_einstellungen_punkte()` liefert ihn gar nicht.
+ */
+function ui_bereichszeile(string $aktiv): void
+{
+    $punkte = [];
+    foreach (ui_einstellungen_punkte() as $b) {
+        if (!$b['punkte']) { continue; }
+        $hatAkt = false;
+        $n = 0; $ton = null;
+        foreach ($b['punkte'] as $pk) {
+            if ($aktiv === $pk[0]) { $hatAkt = true; }
+            $z = $pk[4] ?? null;
+            if ($z !== null && (int)$z['n'] > 0) {
+                $n += (int)$z['n'];
+                $zt = (string)($z['ton'] ?? 'rot');
+                $ton = ($ton === null || $zt === 'rot') ? $zt : $ton;
+            }
+        }
+        if ($aktiv === '' && $b['schluessel'] === 'einstellungen') { $hatAkt = true; }
+        $punkte[] = [
+            'text'    => $b['titel'] !== '' ? $b['titel'] : 'Einstellungen',
+            'href'    => $b['punkte'][0][1],
+            'aktiv'   => $hatAkt,
+            'zahl'    => count($b['punkte']),
+            'zaehler' => $n > 0 ? ['n' => $n, 'ton' => $ton] : null,
+        ];
+    }
+    ui_reiter(['label' => 'Bereiche der Einstellungen', 'klasse' => 'reiter-bereiche',
+               'punkte' => $punkte]);
 }
 
 

@@ -14,6 +14,19 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 23.12.0] — unveröffentlicht
+
+### Hinzugefügt
+
+- **Web — die Bereiche der Einstellungen stehen als Reiter unter der
+  Kopfleiste** (Schritt 27). Einstellungen, Verwaltung und Betrieb waren nur
+  als Klappblöcke in der Leiste zu finden, und wer in einem Bereich stand,
+  sah die anderen erst nach dem Aufklappen. Jetzt steht über dem Inhalt eine
+  Zeile mit den Bereichen, ihrer Zahl an Punkten und einer roten oder orangen
+  Zahl, wenn darin etwas zu tun ist. Die Reiter innerhalb einer Seite
+  (Protokoll, Statistik, Rechtstexte) haben dieselbe, etwas kräftigere Form
+  bekommen, damit es in der Anwendung nur eine Art Reiter gibt.
+
 ## [Web 23.11.3] — unveröffentlicht
 
 ### Behoben

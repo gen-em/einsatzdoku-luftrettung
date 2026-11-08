@@ -373,6 +373,15 @@ dessen eigener Seite. Der Grund war, dass beide Reiter denselben Bestand
 luden und man zwischen ihnen hin und her ging, um einen einzigen Standort
 einzurichten.
 
+**Unter der Kopfleiste stehen dieselben Blöcke als Reiter** (seit Web
+23.12.0): Einstellungen · Verwaltung · Betrieb, je mit der Zahl seiner
+Einträge und — wenn darin etwas zu tun ist — der Summe der Zahlen an seinen
+Menüpunkten. Ein Klick führt auf den ersten Punkt des Blocks, bei Betrieb
+also auf den Status. Am breiten Bildschirm bleibt die Zeile beim Scrollen
+unter der Kopfleiste stehen, auf dem Handy rollt sie mit der Seite weg. Die
+Reiter innerhalb einer Seite (Protokoll, Statistik, Rechtstexte) sehen
+genauso aus; welche Reihe die obere Ebene ist, sagt ihre Lage.
+
 **In der Leiste klappen dieselben drei Blöcke auf und zu.** Ihre Namen
 stehen eine Stufe größer in Dunkelblau, der Winkel zum Aufklappen rechts, und
 eine Linie trennt die Blöcke voneinander (seit Web 21.1.0 — bis dahin stand

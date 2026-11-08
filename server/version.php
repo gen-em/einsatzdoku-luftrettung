@@ -8714,4 +8714,17 @@ declare(strict_types=1);
  *   der absolut gesetzte Vorlesetext aus 23.11.2 am Dokument, und die
  *   Kontenliste lief bei 768 und 1024 px waagerecht ueber (Bilderlauf, drei
  *   Engines). Korrektur; kein Schema. */
-const WEB_VERSION = '23.11.3';
+/* 23.12.0 — DIE BEREICHSZEILE (Schritt 27, Konzept OF, NV-01; E-OF-14,
+ *   -17, -40, -51, E-NV-04, -05). Unter der Kopfleiste stehen die Bloecke
+ *   der Einstellungen (Einstellungen · Verwaltung · Betrieb) als Reiter, je
+ *   mit der Zahl seiner Punkte und dem summierten Aufmerksamkeitszaehler;
+ *   ein Reiter fuehrt auf den ersten Punkt seines Blocks. Sie ist KEIN
+ *   neuer Baustein, sondern `ui_reiter()` in einer zweiten Lage
+ *   (`.reiter-bereiche`), und die Seitenreiter von Protokoll, Statistik
+ *   und Rechtstexte bekommen dieselbe Form: 700, 48 px (`--bereiche`),
+ *   Unterstrich 3 px (`--strich-reiter`, gerechnet aus den beiden
+ *   Strichen). Ab 1024 px klebt die Zeile unter der Kopfleiste und die
+ *   Leiste unter beiden; das Skript der Reihe laedt einmal je Seite. Neben,
+ *   weil die Leiste noch alle Bloecke traegt und der Weg derselbe ist —
+ *   die Hauptnummer kommt mit der Rahmenkarte (NV-02). Kein Schema. */
+const WEB_VERSION = '23.12.0';

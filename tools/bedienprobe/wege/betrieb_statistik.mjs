@@ -44,7 +44,7 @@ export const wege = [
       await s.locator('#f-zeitraum-bis').fill(BIS);
       await Promise.all([
         s.waitForURL(/von=2026-03-01/, { timeout: 15000 }).catch(() => {}),
-        s.locator('.reiter-punkt').first().focus(),
+        s.locator('#inhalt .reiter-punkt').first().focus(),
       ]);
       const eigen = await s.evaluate(() => ({
         url: location.search,
@@ -81,7 +81,7 @@ export const wege = [
       /* Der Reiter behält den Zeitraum; „aktiv" steht als „—". */
       await Promise.all([
         s.waitForURL(/r=nutzer/, { timeout: 15000 }).catch(() => {}),
-        s.locator('.reiter-punkt', { hasText: 'NutzerInnen' }).click(),
+        s.locator('#inhalt .reiter-punkt', { hasText: 'NutzerInnen' }).click(),
       ]);
       const nutzer = await s.evaluate(() => {
         const zeile = [...document.querySelectorAll('#k-konten-zeit tbody tr')]

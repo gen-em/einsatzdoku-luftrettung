@@ -489,6 +489,11 @@
    * Knopf, sondern ein Link mit Symbol. */
   --kopf:56px;
   --knopf:44px;
+  /* DIE BEREICHSZEILE (Konzept OF, NV-01) ist 48 px hoch, in jeder Breite und
+   * an jedem Zeiger (E-NV-04): Sie ist Navigation wie die Kopfleiste, kein
+   * Knopf, und die 36-px-Regel am Zeigergerät gilt deshalb nicht. Dasselbe Maß
+   * tragen die Seitenreiter — ein Baustein für beide Ebenen (E-OF-17, -40). */
+  --bereiche:48px;
   --leiste:260px;                      /* Seitenleiste ab 1200 */
   --leiste-schmal:220px;               /* Seitenleiste 1024–1199 */
   --leiste-filter:280px;               /* Filterleiste der Suche ab 1200 */
@@ -520,6 +525,9 @@
   --symbol-gross:24px;                 /* Symbolgröße im Knopf und Kartenkopf */
   --strich:1px;                        /* Haarlinie */
   --strich-stark:2px;                  /* Aktivstrich, Randstrich, Fokus */
+  /* Der Unterstrich des aktiven Reiters ist 3 px (E-NV-05, Bild OF-P20-A):
+   * eine RECHNUNG aus den beiden Strichen, keine neue Zahl in der Skala. */
+  --strich-reiter:calc(var(--strich-stark) + var(--strich)); /* 3 px */
   --radius-rund:999px;                 /* Zähler, Griff, Punkt — voll rund */
   --schalter-breit:46px;               /* der Schalter, 46 breit … */
   --schalter-hoch:26px;                /* … 26 hoch, damit er in eine */
@@ -4916,14 +4924,21 @@ a.kennzahl:hover{border-color:var(--aktion);text-decoration:none}
   overflow-x:auto;overscroll-behavior-x:contain;scrollbar-width:none;
 }
 .reiter::-webkit-scrollbar{display:none}
+/* EINE FORM FÜR BEIDE EBENEN (Konzept OF, E-OF-17, -40): Seitenreiter und
+ * Bereichszeile tragen dieselbe Schrift (Open Sans 700), dieselbe Höhe
+ * (`--bereiche`, 48 px) und denselben Unterstrich (3 px Dunkelblau). Bis
+ * Web 23 waren die Seitenreiter leiser (500, 44 px, 2 px). Welche Reihe die
+ * obere Ebene ist, sagt die Lage. */
 .reiter-punkt{
-  flex:0 0 auto;display:inline-flex;align-items:center;
-  min-height:var(--knopf);padding:0 var(--abstand-3);
-  font-family:var(--schrift-kopf);font-weight:500;color:var(--gedaempft);
+  flex:0 0 auto;display:inline-flex;align-items:center;gap:var(--abstand-2);
+  min-height:var(--bereiche);padding:0 var(--abstand-4);
+  font-family:var(--schrift-kopf);font-weight:700;color:var(--gedaempft);
   text-decoration:none;white-space:nowrap;
-  border-bottom:var(--strich-stark) solid transparent;
+  border-bottom:var(--strich-reiter) solid transparent;
 }
-.reiter-punkt:hover{color:var(--text-titel);text-decoration:none}
+.reiter-punkt:hover{color:var(--text-titel);text-decoration:none;background:var(--flaeche-abgesetzt)}
+/* Die Zahl der Punkte hinter dem Namen (Bereichszeile): leise, nicht fett. */
+.bereich-zahl{color:var(--gedaempft);font-weight:400}
 /* DER STRICH TRAEGT DEN ZUSTAND: Die Schrift wechselt zwar mit, aber
  * Gedaempft gegen Dunkelblau sind nur 2,35 : 1. Die Auswahllinie
  * (Dunkelblau) erreicht auf der Karte 12,88 : 1; bis Schritt 26 war es
@@ -4939,6 +4954,41 @@ a.kennzahl:hover{border-color:var(--aktion);text-decoration:none}
 }
 .reiter-rahmen.rollt::after{right:0;background:linear-gradient(to right,transparent,var(--flaeche-karte))}
 .reiter-rahmen.rollt-links::before{left:0;background:linear-gradient(to left,transparent,var(--flaeche-karte))}
+
+/* DIE BEREICHSZEILE (.reiter-bereiche) ist der Reiter-Baustein in einer
+ * zweiten LAGE, nicht in einer zweiten Form (E-OF-40): volle Fensterbreite
+ * unter der Kopfleiste, Fläche Schnee, Linie unten, die Reiter auf dem
+ * Raster der Kopfleiste (`--rahmen`, derselbe Seitenabstand). Die Linie
+ * trägt hier der Rahmen über die ganze Breite, nicht die Reihe. */
+.reiter-bereiche{
+  background:var(--flaeche-karte);
+  border-bottom:var(--strich) solid var(--linie);
+}
+/* AUF DEM HANDY ENGER: Drei Bereiche mit Zahl und Zähler sollen bei 390 px
+ * ohne Rollen nebeneinander stehen (P-NV-06); ein vierter rollt. Ab 720 px
+ * gilt das Maß der Seitenreiter und das Raster der Kopfleiste. */
+.reiter-bereiche .reiter{
+  max-width:var(--rahmen);margin:0 auto;padding:0;
+  border-bottom:0;gap:0;
+}
+.reiter-bereiche .reiter-punkt{padding:0 var(--abstand-2);gap:var(--abstand-1)}
+@media (min-width:720px){
+  .reiter-bereiche .reiter{padding:0 var(--abstand-3)}
+  .reiter-bereiche .reiter-punkt{padding:0 var(--abstand-4);gap:var(--abstand-2)}
+}
+/* Ab 1024 px klebt sie unter der Kopfleiste; die Leiste klebt dann unter
+ * beiden (`.rahmen-bereiche` im Gerüst). Darunter rollt sie mit der Seite
+ * weg — auf dem Handy wären 104 px feste Kopfzone ein Sechstel des Bildes. */
+@media (min-width:1024px){
+  .reiter-bereiche{position:sticky;top:var(--kopf);z-index:30}
+  .rahmen-bereiche .leiste{
+    top:calc(var(--kopf) + var(--bereiche) + var(--strich));
+    height:calc(100vh - var(--kopf) - var(--bereiche) - var(--strich));
+  }
+  html:has(.reiter-bereiche){
+    scroll-padding-top:calc(var(--kopf) + var(--bereiche) + var(--abstand-4));
+  }
+}
 
 /* DIE PROTOKOLLLISTE (.protokoll-liste). UNTER 720 px STEHT DIE PLAKETTE
  * UNTER DEM TEXT. Gemessen bei 376 px: Neben einer Plakette von
