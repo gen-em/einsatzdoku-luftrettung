@@ -1467,7 +1467,11 @@ details[open] > .akkordeon-zeile > .akkordeon-winkel{transform:none}
   color:var(--gedaempft);font-size:var(--groesse-2);
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
 }
-.eintrag.aktiv{background:var(--auswahl-flaeche);border-left-color:var(--auswahl-linie)}
+/* OHNE STRICH (Konzept OF, E-OF-16, Bild OF-P04-A): Der aktive Eintrag
+ * traegt nur die Auswahlflaeche und die Auswahlschrift — in jeder Leiste,
+ * in jeder Breite. Bis Web 24.0 stand links ein dunkelblauer Strich daneben;
+ * Flaeche und Strich sagten zweimal dasselbe. */
+.eintrag.aktiv{background:var(--auswahl-flaeche)}
 .eintrag.aktiv .eintrag-text{color:var(--auswahl-text);font-weight:500}
 
 /* Der Fuß der Leiste: „Zuordnung offen" (Fehlerfläche mit rotem Zähler, nur
@@ -2824,6 +2828,13 @@ pre{overflow-x:auto;background:var(--flaeche-abgesetzt);padding:var(--abstand-3)
     height:min(calc(100vh - var(--kopf) - var(--bereiche) - var(--strich)), 100%);
   }
   .leiste-spalte .leiste-liste{min-height:0}
+  /* NUR DER AKTIVE BEREICH (NV-03, E-NV-02): Die Bereiche stehen in der
+     Bereichszeile; die Leiste zeigt den einen, ohne Kopfzeile und ohne die
+     Linie davor. Der Server rendert alle — unter 1024 px sind sie das
+     Akkordeon der Schublade. */
+  .leiste-gruppe:not(.leiste-gruppe-aktiv){display:none}
+  .leiste-gruppe-aktiv > .akkordeon-zeile{display:none}
+  .leiste-gruppe.leiste-gruppe-aktiv{margin-top:0;padding-top:0;border-top:0}
   .schleier{display:none}
   .schublade-auf{overflow:visible}
   .kopf-menue{display:none}
@@ -3684,7 +3695,10 @@ label + .feld-klein{margin-bottom:var(--abstand-3)}
  * DER STRICH IST DIE AUSWAHLLINIE (Dunkelblau): Er steht hier allein — Rauch
  * hebt sich von der Karte kaum ab —, und Dunkelblau erreicht darauf
  * 12,4:1. kontrast.py leitet die Paare aus den Regeln ab und misst es. */
-.vorschlag:hover,.vorschlag.aktiv{background:var(--flaeche-abgesetzt);border-left-color:var(--auswahl-linie)}
+/* SEIT WEB 24.1 OHNE STRICH, MIT AUSWAHLFLAECHE (E-OF-16): Rauch allein
+ * hebt sich von der Karte kaum ab — der Strich war deshalb die eigentliche
+ * Markierung. Blau 100 traegt sie allein, wie beim aktiven Eintrag. */
+.vorschlag:hover,.vorschlag.aktiv{background:var(--auswahl-flaeche)}
 /* Die freie Eingabe ist eine HANDLUNG, kein Datensatz. */
 .vorschlag-neu .vorschlag-haupt{
   color:var(--text-link);font-family:var(--schrift-kopf);font-weight:500;
@@ -4058,7 +4072,6 @@ mark.treffer{background:var(--warnung-flaeche);color:inherit;border-radius:var(-
  * gleich aussieht. */
 .akkordeon.aktiv > .akkordeon-zeile{
   background:var(--auswahl-flaeche);
-  box-shadow:inset var(--strich-stark) 0 0 var(--auswahl-linie);
 }
 .akkordeon.aktiv > .akkordeon-zeile .akkordeon-text{color:var(--auswahl-text)}
 

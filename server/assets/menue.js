@@ -59,7 +59,12 @@
   Array.prototype.forEach.call(bloecke, function (block) {
     /* Der Block der aktiven Seite bleibt, wie PHP ihn gesetzt hat — offen.
      * `.aktiv` steht am Eintrag, nicht am Block; hier wird danach gesucht. */
-    var traegtAktiv = !!block.querySelector('.eintrag.aktiv');
+    /* SEIT NV-03 (Konzept OF) auch der Block, den der Server als aktiven
+     * Bereich auszeichnet — auf der Uebersicht traegt keiner einen aktiven
+     * Eintrag, und am Schreibtisch ist der aktive Block der einzige, den
+     * die Leiste zeigt: zugeklappt stuende sie leer da. */
+    var traegtAktiv = !!block.querySelector('.eintrag.aktiv')
+                   || block.classList.contains('leiste-gruppe-aktiv');
     var gemerkt = lies(block.dataset.gruppe);
     if (gemerkt !== null && !traegtAktiv) { block.open = gemerkt === '1'; }
 
@@ -114,18 +119,35 @@
    * Reiterwechsel ihren Inhalt. */
   if (inhalt.querySelector('.reiter')) { return; }
 
-  var karten = [];
-  Array.prototype.forEach.call(inhalt.querySelectorAll('.karte[id]'), function (k) {
-    var titel = k.querySelector('.karte-titel');
-    if (titel) { karten.push({ el: k, titel: titel.textContent.trim() }); }
-  });
-  /* EINE EINZIGE KARTE IST KEIN INHALTSVERZEICHNIS. Sie zu verlinken hiesse,
-   * auf die Seite zu verweisen, auf der man steht. */
-  if (karten.length < 2) { return; }
+  /* NUR SICHTBARE KARTEN (Konzept OF, NV-03, OF-P-16, F-OF-11). Bis Web 24
+   * stand eine Marke auch fuer eine Karte, die in einem verborgenen Behaelter
+   * liegt — auf der Backup-Seite „Fuer dich freigegebenes Backup", das nur
+   * erscheint, wenn eine Freigabe vorliegt. Ein Sprung dorthin fuehrte ins
+   * Leere. Gefragt wird nach `[hidden]` an der Karte oder einem Vorfahren,
+   * nicht nach der Box: In der geschlossenen Schublade hat keine Karte eine
+   * Lage, und gezaehlt werden soll trotzdem. */
+  var karten = [], liste = null, marken = [];
 
-  var liste = document.createElement('div');
-  liste.className = 'eintrag-unterliste';
-  var marken = karten.map(function (k) {
+  function sichtbar(k) { return !k.closest('[hidden]'); }
+
+  function bauen() {
+    karten = [];
+    Array.prototype.forEach.call(inhalt.querySelectorAll('.karte[id]'), function (k) {
+      var titel = k.querySelector('.karte-titel');
+      if (titel && sichtbar(k)) { karten.push({ el: k, titel: titel.textContent.trim() }); }
+    });
+    if (liste) { liste.remove(); liste = null; }
+    marken = [];
+    /* EINE EINZIGE KARTE IST KEIN INHALTSVERZEICHNIS. Sie zu verlinken
+     * hiesse, auf die Seite zu verweisen, auf der man steht. */
+    if (karten.length < 2) { return; }
+    liste = document.createElement('div');
+    liste.className = 'eintrag-unterliste';
+    marken = karten.map(markeBauen);
+    aktiv.parentNode.insertBefore(liste, aktiv.nextSibling);
+  }
+
+  function markeBauen(k) {
     var a = document.createElement('a');
     a.className = 'eintrag-unter';
     a.href = '#' + k.el.id;
@@ -146,8 +168,24 @@
     }
     liste.appendChild(a);
     return a;
-  });
-  aktiv.parentNode.insertBefore(liste, aktiv.nextSibling);
+  }
+
+  bauen();
+
+  /* BLENDET DIE SEITE EINE KARTE EIN ODER AUS, ZIEHEN DIE MARKEN NACH. Ein
+   * Beobachter auf `hidden` im Inhalt statt eines Aufrufs je Seite: So kann
+   * keine Seite mit bedingter Karte das Nachziehen vergessen. Gebuendelt
+   * auf einen Durchgang je Bild. */
+  var geplant = false;
+  new MutationObserver(function () {
+    if (geplant) { return; }
+    geplant = true;
+    requestAnimationFrame(function () {
+      geplant = false;
+      bauen();
+      if (breit) { neuBeobachten(); }
+    });
+  }).observe(inhalt, { attributes: true, attributeFilter: ['hidden'], subtree: true });
 
   /* Die Markierung nur am Schreibtisch — die Begruendung steht oben. */
   if (!breit) { return; }
@@ -182,8 +220,13 @@
    * deshalb der linke Rand des Kastens: gleiche Kante, gleicher Topf. Das
    * kommt ohne eine zweite Stelle aus, an der die Schwelle 1200 stuende.
    */
-  var kopf = parseInt(
-      getComputedStyle(document.documentElement).getPropertyValue('--kopf'), 10) || 56;
+  var wurzelstil = getComputedStyle(document.documentElement);
+  var kopf = parseInt(wurzelstil.getPropertyValue('--kopf'), 10) || 56;
+  /* Unter der Kopfleiste klebt seit NV-01 die Bereichszeile; der Saum
+   * beginnt unter BEIDEN. */
+  if (document.querySelector('.reiter-bereiche')) {
+    kopf += parseInt(wurzelstil.getPropertyValue('--bereiche'), 10) || 48;
+  }
   var SAUM = kopf + 24;
   var hatSpalten = !!inhalt.querySelector('.form-spalte');
 
@@ -212,5 +255,10 @@
     rootMargin: '-' + SAUM + 'px 0px 0px 0px',
     threshold: 0,
   });
-  karten.forEach(function (k) { beobachter.observe(k.el); });
+  function neuBeobachten() {
+    beobachter.disconnect();
+    karten.forEach(function (k) { beobachter.observe(k.el); });
+    markieren();
+  }
+  neuBeobachten();
 })();

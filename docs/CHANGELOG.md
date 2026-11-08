@@ -14,6 +14,26 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 24.1.0] — unveröffentlicht
+
+### Geändert
+
+- **Web — die Leiste der Einstellungen zeigt nur noch den Bereich, in dem
+  man steht** (Schritt 27). Seit die Bereiche als Reiter über dem Inhalt
+  stehen, wiederholte die Leiste sie als Klappblöcke darunter. Am breiten
+  Bildschirm steht dort jetzt nur noch der aktive Bereich, in der Schublade
+  des Handys bleiben alle drei. Der aktive Menüpunkt ist nur noch blau
+  hinterlegt, ohne Strich daneben, und „Abmelden“ steht nur noch unten in
+  der Leiste statt zusätzlich auf der Übersicht.
+
+### Behoben
+
+- **Web — eine Sprungmarke führte zu einer unsichtbaren Karte** (Schritt
+  27). Auf der Backup-Seite stand eine Marke „Für dich freigegebenes
+  Backup“ auch dann, wenn nichts freigegeben war und die Karte gar nicht
+  angezeigt wurde. Jetzt bekommen nur sichtbare Karten eine Marke, und
+  blendet eine Seite eine Karte ein, erscheint ihre Marke mit.
+
 ## [Web 24.0.0] — unveröffentlicht
 
 ### Geändert

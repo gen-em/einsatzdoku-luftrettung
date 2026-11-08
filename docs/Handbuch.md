@@ -359,10 +359,10 @@ Blöcke** geteilt, und wer welchen sieht, hängt an der Rolle:
 | **Verwaltung** | Admins; der **Support** nur NutzerInnen und Protokoll | NutzerInnen, **Konto-Backups**, **Installation**, **Rechtstexte**, Demo-Konto, Protokoll — **Kapitel 11** |
 | **Betrieb** | BetreiberInnen | **Status**, **Statistik**, **Updates**, **Hintergrundjobs**, **Servereinstellungen**, **Komplett-Backup**, **Backup-Ziele** — **Kapitel 12** |
 
-Jeder Block ist eine eigene Karte; im Kopf stehen ein rundes Zeichen, sein
-Name und die Zahl der Einträge. Am Schreibtisch stehen die Blöcke
-nebeneinander, auf schmalen Geräten untereinander. Abmelden steht getrennt
-am Ende und fragt sicherheitshalber nach.
+Jeder Block hat einen Kopf mit rundem Zeichen, Namen und der Zahl der
+Einträge. Am Schreibtisch stehen die Blöcke nebeneinander, auf schmalen
+Geräten untereinander. **Abmelden** steht unten in der Leiste (auf dem
+Handy unten in der Schublade) und fragt sicherheitshalber nach.
 
 Der Punkt für die Stammdaten hat zweimal den Namen gewechselt, und beide alten
 Links funktionieren weiter. Bis Web 6.3.0 hieß er „Standortdaten" und trug
@@ -390,7 +390,12 @@ unter der Kopfleiste stehen, auf dem Handy rollt sie mit der Seite weg. Die
 Reiter innerhalb einer Seite (Protokoll, Statistik, Rechtstexte) sehen
 genauso aus; welche Reihe die obere Ebene ist, sagt ihre Lage.
 
-**In der Leiste klappen dieselben drei Blöcke auf und zu.** Ihre Namen
+**Am breiten Bildschirm zeigt die Leiste nur den Bereich, in dem du
+stehst** (seit Web 24.1.0) — die anderen erreichst du über die Reiter
+darüber. Der aktive Menüpunkt ist blau hinterlegt.
+
+**In der Schublade auf schmalen Geräten klappen die drei Blöcke auf und
+zu.** Ihre Namen
 stehen eine Stufe größer in Dunkelblau, der Winkel zum Aufklappen rechts, und
 eine Linie trennt die Blöcke voneinander (seit Web 21.1.0 — bis dahin stand
 der Winkel links, dort, wo die Einträge ihr Symbol tragen). Offen sind
@@ -411,7 +416,8 @@ höchstens eine Minute alt.
 
 **Unter dem geöffneten Menüpunkt stehen die Karten der Seite** als
 Sprungmarken — kleiner und ohne Symbol, damit sie nicht wie eigene Seiten
-aussehen. Ein Klick springt zur Karte; während man liest, ist die Marke der
+aussehen. Eine Karte, die die Seite gerade nicht zeigt (etwa „Für dich
+freigegebenes Backup", solange nichts freigegeben ist), hat keine Marke. Ein Klick springt zur Karte; während man liest, ist die Marke der
 Karte fett, die gerade oben steht. **Ist das Fenster niedriger als 950 px**
 (seit Web 21.1.3; vorher 800 px), fallen die Sprungmarken in der festen
 Leiste weg: Sonst

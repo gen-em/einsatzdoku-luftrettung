@@ -1259,8 +1259,13 @@ function ui_leiste_einstellungen(string $aktiv): void
         $hatAkt = false;
         foreach ($b['punkte'] as $pk) { if ($aktiv === $pk[0]) { $hatAkt = true; } }
         $offen  = $hatAkt || $b['schluessel'] === 'einstellungen';
+        /* DER AKTIVE BEREICH (Konzept OF, NV-03, E-NV-02): Ab 1024 px zeigt
+         * die Leiste nur ihn, ohne Kopfzeile — die Bereiche stehen in der
+         * Bereichszeile. Auf der Uebersicht ist es „Einstellungen". In der
+         * Schublade bleiben alle drei als Akkordeon. */
+        $istBereich = $hatAkt || ($aktiv === '' && $b['schluessel'] === 'einstellungen');
         ?>
-        <details class="akkordeon leiste-gruppe"<?= $offen ? ' open' : '' ?>
+        <details class="akkordeon leiste-gruppe<?= $istBereich ? ' leiste-gruppe-aktiv' : '' ?>"<?= $offen ? ' open' : '' ?>
                  data-gruppe="<?= ui_e($b['schluessel']) ?>">
           <summary class="akkordeon-zeile">
             <?= ui_symbol('winkel', 'akkordeon-winkel') ?>
@@ -1298,8 +1303,8 @@ function ui_leiste_einstellungen(string $aktiv): void
  * gibt — dort ist die Leiste eine Schublade, und ein Zahnrad, das ungefragt
  * auf „Profil" landet, verschweigt die übrigen sechzehn Punkte.
  *
- * Jeder Bereich ist eine Bereichskarte. „Abmelden" steht
- * getrennt am Ende, darunter nur der Name der angemeldeten Person.
+ * Jeder Bereich ist eine Bereichskarte. „Abmelden" steht seit Web 24.1
+ * nur noch in der Leiste (E-OF-27).
  */
 function ui_einstellungen_uebersicht(): void
 {
@@ -1344,12 +1349,9 @@ function ui_einstellungen_uebersicht(): void
         ui_karte_ende();
     }
     echo '  </div>' . "\n";
-    ui_karte_start();
-    echo '    ' . ui_knopf(['text' => 'Abmelden', 'href' => 'logout.php', 'art' => 'leise',
-        'symbol' => 'abmelden', 'breit' => true,
-        'attr' => ' data-confirm="Wirklich abmelden?" data-confirm-ok="Abmelden"'
-                . ' data-confirm-tone="normal"']) . "\n";
-    ui_karte_ende();
+    /* „ABMELDEN" STEHT NUR IN DER LEISTE (Konzept OF, E-OF-27): am
+     * Schreibtisch unten in der Leiste, auf dem Handy in der Schublade. Bis
+     * Web 24.0 stand hier zusaetzlich ein breiter Knopf in eigener Karte. */
     ui_geruest_ende();
     ui_seite_ende();
 }

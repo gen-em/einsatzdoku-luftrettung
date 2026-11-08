@@ -339,9 +339,9 @@ dieselben, ihre Werte nicht.
 | Auf Aktion unter dem Zeiger | 8,92:1 | 8,75:1 | 4,5 | Primaerknopf unter dem Zeiger |
 | Aktion auf Karte | 12,88:1 | 6,65:1 | 3,0 | Schalter an, Radiopunkt, Fortschritt, Stern |
 | Auswahltext auf Auswahl | 11,26:1 | 8,92:1 | 4,5 | aktiver Menuepunkt, aktive Kennzahl, Chip |
-| Auswahllinie auf Auswahl | 11,26:1 | 4,45:1 | 3,0 | Strich am aktiven Eintrag |
+| Auswahllinie auf Auswahl | 11,26:1 | 4,45:1 | 3,0 | Rahmen der aktiven Kennzahl, Filterpille und Segmenttaste |
 | Auswahllinie auf Karte | 12,88:1 | 6,65:1 | 3,0 | Strich des aktiven Reiters |
-| Auswahllinie auf abgesetzt | 12,48:1 | 4,45:1 | 3,0 | Strich am Vorschlag unter dem Zeiger |
+| Auswahllinie auf abgesetzt | 12,48:1 | 4,45:1 | 3,0 | Strich der hervorgehobenen Tabellenzeile |
 | Text auf Auswahl | 16,30:1 | 8,92:1 | 4,5 | Textauswahl |
 | Info auf Info | 7,54:1 | 7,54:1 | 4,5 | Hinweis, Plakette blau |
 | Erfolg auf Erfolg | 7,13:1 | 8,49:1 | 4,5 | Vollzug, Plakette gruen |
@@ -487,7 +487,7 @@ auseinanderlaufen kann.
 |---|---|--:|---|
 | `--flaeche-seite` | `var(--genem-flaeche-standard)` | 1 |  |
 | `--flaeche-karte` | `var(--genem-flaeche-karte)` | 22 |  |
-| `--flaeche-abgesetzt` | `var(--genem-flaeche-abgesetzt)` | 36 |  |
+| `--flaeche-abgesetzt` | `var(--genem-flaeche-abgesetzt)` | 35 |  |
 | `--flaeche-feld` | `var(--genem-flaeche-standard)` | 5 |  |
 | `--flaeche-marke` | `var(--genem-dunkelblau)` | 1 |  |
 
@@ -530,9 +530,9 @@ auseinanderlaufen kann.
 
 | Token | Wert | benutzt | |
 |---|---|--:|---|
-| `--auswahl-flaeche` | `var(--genem-blau-100)` | 16 |  |
+| `--auswahl-flaeche` | `var(--genem-blau-100)` | 17 |  |
 | `--auswahl-text` | `var(--genem-dunkelblau)` | 8 |  |
-| `--auswahl-linie` | `var(--genem-aktion)` | 11 |  |
+| `--auswahl-linie` | `var(--genem-aktion)` | 8 |  |
 | `--kopf-aktiv` | `var(--genem-blau-300)` | 1 |  |
 
 **Status**
@@ -653,7 +653,7 @@ auseinanderlaufen kann.
 | `--symbol` | `20px` | 13 | Symbolgröße in der Zeile |
 | `--symbol-gross` | `24px` | 14 | Symbolgröße im Knopf und Kartenkopf |
 | `--strich` | `1px` | 72 | Haarlinie |
-| `--strich-stark` | `2px` | 36 | Aktivstrich, Randstrich, Fokus |
+| `--strich-stark` | `2px` | 35 | Aktivstrich, Randstrich, Fokus |
 | `--strich-reiter` | `calc(var(--strich-stark) + var(--strich))` | 1 | 3 px |
 | `--radius-rund` | `999px` | 20 | Zähler, Griff, Punkt — voll rund |
 | `--schalter-breit` | `46px` | 2 | der Schalter, 46 breit … |
@@ -1097,7 +1097,7 @@ AGPL-3.0; siehe `docs/Lizenzen.md`.
 
 | Datei | Herkunft (Tabler-Name) | Nennungen im Code |
 |---|---|--:|
-| `abmelden.svg` | Tabler Icons „logout" (MIT) | 2 |
+| `abmelden.svg` | Tabler Icons „logout" (MIT) | 1 |
 | `aktualisieren.svg` | Tabler Icons „refresh" (MIT) | 1 |
 | `balken.svg` | Tabler Icons „chart-bar" (MIT) | 4 |
 | `bergwacht.svg` | Tabler Icons „mountain" (MIT) | 32 |
@@ -1238,53 +1238,53 @@ für eine Rückfrage — nicht für ein neues Element.
 | `ui_logo_masse()` | `.logo-masse` | **keine** | 504 |
 | `ui_kopf()` | `.kopf` | ja (+25 Unterklassen) | 565 |
 | `ui_geruest_start()` | `.inhalt` | ja | 657 |
-| `ui_leiste_ende()` | `.leiste` | ja (+23 Unterklassen) | 750 |
+| `ui_leiste_ende()` | `.leiste` | ja (+28 Unterklassen) | 750 |
 | `ui_geruest_ende()` | `.inhalt` | ja | 775 |
 | `ui_leiste_diensttage()` | `.leiste-liste` | ja | 825 |
 | `ui_zaehler()` | `.zaehler` | ja (+2 Unterklassen) | 1074 |
 | `ui_leiste_einstellungen()` | `.leiste-liste` | ja | 1233 |
-| `ui_einstellungen_uebersicht()` | `.uebersicht-raster` | ja | 1304 |
-| `ui_fuss_seite()` | `.fuss-seite` | ja | 1383 |
-| `ui_hinweise()` | `.hinweise` | ja | 1431 |
-| `ui_umgebung_hinweis()` | `.hinweis-umgebung` | ja | 1459 |
-| `ui_ankuendigung()` | `.meldung-ankuendigung` | ja | 1494 |
-| `ui_demo_hinweis()` | `.demo-hinweis` | ja | 1547 |
-| `ui_datenschutz_hinweis()` | `.datenschutz-hinweis` | **keine** | 1600 |
-| `ui_meldung_markup()` | `.meldung` | ja (+19 Unterklassen) | 1665 |
-| `ui_knopf()` | `.knopf` | ja (+19 Unterklassen) | 1711 |
-| `ui_codeblock_lang()` | `.codeblock-lang` | ja | 1763 |
-| `ui_plakette()` | `.plakette` | ja (+6 Unterklassen) | 1791 |
-| `ui_ladeplatz()` | `.ladeplatz` | ja (+3 Unterklassen) | 1818 |
-| `ui_karte_start()` | `.karte` | ja (+43 Unterklassen) | 1858 |
-| `ui_karte_ende()` | `.karte` | ja (+43 Unterklassen) | 1942 |
-| `ui_nach_oben()` | `.nach-oben` | ja | 1977 |
-| `ui_sprungliste()` | `.sprungliste` | ja | 2019 |
-| `ui_kartenfilter()` | `.kartenfilter` | ja (+4 Unterklassen) | 2067 |
-| `ui_zeile()` | `.zeile` | ja (+35 Unterklassen) | 2129 |
-| `ui_zeile_mehr()` | `.zeile-mehr` | ja | 2184 |
-| `ui_reiter()` | `.reiter` | ja (+18 Unterklassen) | 2241 |
-| `ui_listenkopf()` | `.listenkopf` | ja | 2340 |
-| `ui_listenfuss()` | `.listenfuss` | ja | 2412 |
-| `ui_zeitraumwahl()` | `.zeitraumwahl` | ja (+5 Unterklassen) | 2470 |
-| `ui_diagramm_skala()` | `.diagramm-skala` | **keine** | 2516 |
-| `ui_diagramm_saeulen()` | `.diagramm-saeulen` | ja | 2550 |
-| `ui_diagramm_balken()` | `.diagramm-balken` | ja | 2622 |
-| `ui_titelzeile()` | `.titelzeile` | ja (+7 Unterklassen) | 2646 |
-| `ui_aktionen()` | `.aktionen` | ja (+2 Unterklassen) | 2688 |
-| `ui_feld()` | `.feld` | ja (+27 Unterklassen) | 2760 |
-| `ui_schalter()` | `.schalter` | ja (+27 Unterklassen) | 2825 |
-| `ui_segment_markup()` | `.segment` | ja (+23 Unterklassen) | 2869 |
-| `ui_wahlliste()` | `.wahlliste` | ja | 2922 |
-| `ui_zeilenaktionen()` | `.zeile-aktionen` | ja | 2966 |
-| `ui_speichern_leiste()` | `.speichern` | ja (+4 Unterklassen) | 3065 |
-| `ui_kennzahl()` | `.kennzahl` | ja (+20 Unterklassen) | 3129 |
-| `ui_abbruch()` | `.rahmen` | ja (+3 Unterklassen) | 3170 |
-| `ui_csrf_bootstrap()` | `.csrf-bootstrap` | **keine** | 3262 |
-| `ui_geocoder_bootstrap()` | `.geocoder-bootstrap` | **keine** | 3300 |
-| `ui_geocoder_hinweis()` | `.geocoder-hinweis` | **keine** | 3330 |
-| `ui_ortsfeld()` | `.ortsfeld-zeile` | ja | 3342 |
-| `ui_tabellen_bootstrap()` | `.tabellen-bootstrap` | **keine** | 3485 |
-| `ui_krypto_bootstrap()` | — | Hüllenfunktion, kein eigenes Element | 3564 |
+| `ui_einstellungen_uebersicht()` | `.uebersicht-raster` | ja | 1309 |
+| `ui_fuss_seite()` | `.fuss-seite` | ja | 1385 |
+| `ui_hinweise()` | `.hinweise` | ja | 1433 |
+| `ui_umgebung_hinweis()` | `.hinweis-umgebung` | ja | 1461 |
+| `ui_ankuendigung()` | `.meldung-ankuendigung` | ja | 1496 |
+| `ui_demo_hinweis()` | `.demo-hinweis` | ja | 1549 |
+| `ui_datenschutz_hinweis()` | `.datenschutz-hinweis` | **keine** | 1602 |
+| `ui_meldung_markup()` | `.meldung` | ja (+19 Unterklassen) | 1667 |
+| `ui_knopf()` | `.knopf` | ja (+19 Unterklassen) | 1713 |
+| `ui_codeblock_lang()` | `.codeblock-lang` | ja | 1765 |
+| `ui_plakette()` | `.plakette` | ja (+6 Unterklassen) | 1793 |
+| `ui_ladeplatz()` | `.ladeplatz` | ja (+3 Unterklassen) | 1820 |
+| `ui_karte_start()` | `.karte` | ja (+43 Unterklassen) | 1860 |
+| `ui_karte_ende()` | `.karte` | ja (+43 Unterklassen) | 1944 |
+| `ui_nach_oben()` | `.nach-oben` | ja | 1979 |
+| `ui_sprungliste()` | `.sprungliste` | ja | 2021 |
+| `ui_kartenfilter()` | `.kartenfilter` | ja (+4 Unterklassen) | 2069 |
+| `ui_zeile()` | `.zeile` | ja (+35 Unterklassen) | 2131 |
+| `ui_zeile_mehr()` | `.zeile-mehr` | ja | 2186 |
+| `ui_reiter()` | `.reiter` | ja (+18 Unterklassen) | 2243 |
+| `ui_listenkopf()` | `.listenkopf` | ja | 2342 |
+| `ui_listenfuss()` | `.listenfuss` | ja | 2414 |
+| `ui_zeitraumwahl()` | `.zeitraumwahl` | ja (+5 Unterklassen) | 2472 |
+| `ui_diagramm_skala()` | `.diagramm-skala` | **keine** | 2518 |
+| `ui_diagramm_saeulen()` | `.diagramm-saeulen` | ja | 2552 |
+| `ui_diagramm_balken()` | `.diagramm-balken` | ja | 2624 |
+| `ui_titelzeile()` | `.titelzeile` | ja (+7 Unterklassen) | 2648 |
+| `ui_aktionen()` | `.aktionen` | ja (+2 Unterklassen) | 2690 |
+| `ui_feld()` | `.feld` | ja (+27 Unterklassen) | 2762 |
+| `ui_schalter()` | `.schalter` | ja (+27 Unterklassen) | 2827 |
+| `ui_segment_markup()` | `.segment` | ja (+23 Unterklassen) | 2871 |
+| `ui_wahlliste()` | `.wahlliste` | ja | 2924 |
+| `ui_zeilenaktionen()` | `.zeile-aktionen` | ja | 2968 |
+| `ui_speichern_leiste()` | `.speichern` | ja (+4 Unterklassen) | 3067 |
+| `ui_kennzahl()` | `.kennzahl` | ja (+20 Unterklassen) | 3131 |
+| `ui_abbruch()` | `.rahmen` | ja (+3 Unterklassen) | 3172 |
+| `ui_csrf_bootstrap()` | `.csrf-bootstrap` | **keine** | 3264 |
+| `ui_geocoder_bootstrap()` | `.geocoder-bootstrap` | **keine** | 3302 |
+| `ui_geocoder_hinweis()` | `.geocoder-hinweis` | **keine** | 3332 |
+| `ui_ortsfeld()` | `.ortsfeld-zeile` | ja | 3344 |
+| `ui_tabellen_bootstrap()` | `.tabellen-bootstrap` | **keine** | 3487 |
+| `ui_krypto_bootstrap()` | — | Hüllenfunktion, kein eigenes Element | 3566 |
 
 54 Funktionen mit Markup in `server/ui.php`, davon 4 Hüllenfunktionen ohne eigenes Element.
 **Ohne Regel im Stylesheet:** `ui_logo_masse()`, `ui_datenschutz_hinweis()`, `ui_diagramm_skala()`, `ui_csrf_bootstrap()`, `ui_geocoder_bootstrap()`, `ui_geocoder_hinweis()`, `ui_tabellen_bootstrap()` — jede davon ist zu prüfen: entweder ein Behälter, der zu Recht keine Gestaltung braucht, oder eine Lücke.
@@ -2407,6 +2407,18 @@ Drei Bausteine, die nur hier vorkommen und zusammengehören (S8/AP5, E-S8-04,
 E-S8-07, E-S8-15). Alle drei entstehen in `ui_leiste_einstellungen()` und
 `assets/menue.js`.
 
+**Am Schreibtisch zeigt die Leiste nur den aktiven Block** (seit Web 24.1.0,
+Konzept OF, NV-03, E-NV-02): `ui_leiste_einstellungen()` rendert alle
+Blöcke und zeichnet den aktiven mit `.leiste-gruppe-aktiv` aus (auf der
+Übersicht „Einstellungen"); ab 1024 px blendet das Stylesheet die übrigen
+aus und dem aktiven die Kopfzeile, Linie und Luft davor. Die Bereiche stehen
+in der Bereichszeile (9.37). **Unter 1024 px, in der Schublade, gilt alles
+Folgende unverändert** — drei Blöcke als Akkordeon, `menue.js` merkt den
+Klappzustand; den aktiven Block lässt es offen. Der aktive Eintrag trägt in
+jeder Leiste **nur die Auswahlfläche, keinen Strich** (E-OF-16, Bild
+OF-P04-A; bis Web 24.0 dazu ein Strich `--auswahl-linie` links), ebenso die
+markierte Jahres- oder Monatszeile der Diensttage-Leiste.
+
 **Der Block ist ein Akkordeon.** `<details class="akkordeon leiste-gruppe">`
 mit `<summary class="akkordeon-zeile">` — derselbe Baustein wie in der
 Diensttage-Leiste. **Seit Web 21.1.0 nach Option 1 „Linie"** (P5c/AP9,
@@ -2442,7 +2454,9 @@ bewerten.
 
 **Die Unterpunkte** (`.eintrag-unterliste` mit `.eintrag-unter`, Marke der
 obersten sichtbaren Karte `.hier`) stehen unter dem aktiven Eintrag: die
-Kartentitel der Seite als Sprungmarken, `--unterpunkt` (28 px) hoch, eine
+Kartentitel der Seite als Sprungmarken — **nur sichtbarer Karten** (seit Web
+24.1.0, OF-P-16: eine Karte in einem `[hidden]`-Behälter bekommt keine, und
+blendet die Seite eine ein oder aus, baut `menue.js` die Marken neu), `--unterpunkt` (28 px) hoch, eine
 Schriftstufe kleiner, ohne Symbol und ohne Randstrich. Sie sind **keine**
 Menüpunkte zweiter Ordnung; wer sie dafür hält, sucht dahinter eine eigene
 Seite. Die Markierung ist **fett, nicht farbig**: Die Auswahlfläche heißt in
@@ -2623,7 +2637,7 @@ Handlung.
 | `.vorschlaege` | schwebt (`position:absolute`, **`z-index:35`**); der Behälter trägt `position:relative` |
 | `.vorschlaege-gruppe` | Herkunftszeile auf Rauch, `--groesse-2`, versal — keine Bedienhöhe, sie ist nicht anzufassen |
 | `.vorschlag` | `min-height: var(--knopf)` — folgt beiden Bedienhöhen von selbst (44/36, R76) |
-| `.vorschlag.aktiv`, `:hover` | Rauch mit `--abstand-1` in `--auswahl-linie` (Dunkelblau) links — **eine** Markierung für Zeiger und Pfeiltaste. Bis Web 21.1.5 stand dort `--orange` (2,09:1 auf Rauch), bis Schritt 26 Orange tief (4,04:1); der Strich steht allein und braucht 3:1 |
+| `.vorschlag.aktiv`, `:hover` | `--auswahl-flaeche` (Blau 100), **ohne Strich** — **eine** Markierung für Zeiger und Pfeiltaste (seit Web 24.1.0, E-OF-16). Bis dahin Rauch mit einem Strich `--abstand-1` links: bis Web 21.1.5 in `--orange` (2,09:1 auf Rauch), bis Schritt 26 in Orange tief (4,04:1), danach in `--auswahl-linie`; der Strich trug die Markierung allein, weil Rauch sich von der Karte kaum abhebt |
 | `.vorschlag-haupt` | eine Zeile, mit Ellipse; der getippte Teil in `<b>` |
 | `.vorschlag-neben` | die Herkunft, gedämpft, `--groesse-2` |
 | `.vorschlag-neu` | die freie Eingabe: `--text-link` (bis Schritt 26 Orange tief), Kopfschrift — sie ist eine Handlung, kein Datensatz |
@@ -3615,6 +3629,7 @@ genau das, wogegen sie schützt.
 
 | Fassung | Was |
 |---|---|
+| **Web 24.1.0 (Schritt 27, Konzept OF, NV-03)** | **9.25:** Am Schreibtisch nur der aktive Block (`.leiste-gruppe-aktiv`), Schublade unverändert; aktiver Eintrag, markierte Zeitraumzeile und Vorschlag **ohne Strich**, der Vorschlag auf Blau 100 statt Rauch (E-OF-16); Sprungmarken nur zu sichtbaren Karten. **3.4:** zwei Paare neu beschrieben (der Strich, den sie nannten, ist fort; die Paare tragen andere Stellen). **10.1:** „Abmelden" nur in der Leiste (E-OF-27). Kein neuer Baustein, kein Token. |
 | **Web 23.12.0–24.0.0 (Schritt 27, Konzept OF, NV-01 und NV-02)** | **9.37:** Bereichszeile als zweite Lage des Reiter-Bausteins, Reiter 700 / 48 px (`--bereiche`) / Unterstrich 3 px (`--strich-reiter`) für beide Ebenen (E-OF-17, -40). **10.1:** Rahmenkarte um Leiste und Inhalt, Abschnitte statt Karten im Bereich Einstellungen (E-NV-01, -03, E-OF-36 bis -38); Fußzeile dunkelblau (E-OF-34). Neue Token `--bereiche` und das abgeleitete `--strich-reiter`; kein neuer Baustein — Bereichszeile und Rahmenkarte sind mit den Mockups NV und OF freigegeben (Konzept OF). |
 | **Web 23.10.1–23.11.2 (Schritt 26, Konzept MA, zweite Runde)** | **Repo auf `e7bf4fc`** (Token hell und dunkel). **9.4:** Knopfart **`haupt`** (Philipp-Orange mit Asphalt, einmal je Seite, sechs Seiten, E-MA-27), `gefahr` als **Umriss** (E-MA-26), Tabelle der Arten nach dem Repo. **2.3:** in der Kopfleiste wieder der **Kurzname** (E-MA-28); Favicons aus dem Set des Repos (E-MA-35). **3.1:** Zeile Hauptaktion. **3a:** Gefahrknopf und Zähler getrennt. **6:** Links im Fließtext unterstrichen, Barrierefreiheit wird gemessen (E-MA-32, -33). Kein neuer Baustein; `haupt` ist die Form des Primärknopfs mit den Repo-Token (Board 9D). |
 | **Web 23.9.0–23.10.0 (Schritt 26, Konzept MA)** | **Die Marke kommt aus dem Branding-Repo** `gen-em/gen-em-branding`. **2** neu geschrieben: Grundtöne mit Repo-Token, Schriften 500/400/700 (die 600er entfallen, E-MA-15), **Produktmarke NAdoku** statt `gen-em_logo_*` (2.3), der Platzhalter-Abschnitt fällt, Backlog Nr. 62 erledigt (2.4). **3** neu: Aktion Dunkelblau statt Orange (E-MA-01), Auswahl blau 100, **Grün** für „in Ordnung" (E-MA-02), Status je Fläche 100 / Schrift 700 / Linie 600, Kontrasttabelle nach **Rollen** und in **zwei Modi** (58 Paare je Modus, 0 verfehlt). **3a neu — Dark Mode** (E-MA-03, -13, -14), freigegeben mit den Boards MA-03, -04, -07, -08. **5:** `--groesse-1` (12 px) entfällt (E-MA-07). **9.5** `ok` grün, **9.6** fünf Töne mit `gruen` (E-MA-08), **9.23** grün statt blau, 9.10, 9.36, 9.37, 9.40 und die Vorschlagsliste mit den neuen Rollen. **Neue Token** (Rollen statt Farbwerten, Kapitel 4 neu erzeugt); **kein neuer Baustein** — der Schalter „Darstellung" ist eine Wahlliste (9.7). |

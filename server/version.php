@@ -8741,4 +8741,15 @@ declare(strict_types=1);
  *   Anmeldung ist damit keine eigene Form mehr. Was in derselben Runde noch
  *   kommt (gekuerzte Leiste, Regeln, Bausteine, Seiten), zaehlt in der
  *   Nebennummer weiter. Kein Schema. */
-const WEB_VERSION = '24.0.0';
+/* 24.1.0 — DIE LEISTE ZEIGT DEN AKTIVEN BEREICH (Schritt 27, Konzept OF,
+ *   NV-03; E-NV-02, E-OF-16, -27, OF-P-16). Ab 1024 px blendet das
+ *   Stylesheet alle Bloecke bis auf `.leiste-gruppe-aktiv` aus, und diesem
+ *   die Kopfzeile; der Server rendert weiter alle, weil die Schublade sie
+ *   als Akkordeon braucht. `menue.js` haelt den aktiven Block offen, auch
+ *   auf der Uebersicht, wo kein Eintrag aktiv ist. Der aktive Eintrag, die
+ *   markierte Zeitraumzeile und der Vorschlag tragen keinen Strich mehr,
+ *   nur die Auswahlflaeche. „Abmelden" steht nur noch in der Leiste. Die
+ *   Sprungmarken nennen nur sichtbare Karten und ziehen nach, wenn eine
+ *   Seite eine Karte ein- oder ausblendet (ein MutationObserver auf
+ *   `hidden` statt eines Aufrufs je Seite). Neben; kein Schema. */
+const WEB_VERSION = '24.1.0';

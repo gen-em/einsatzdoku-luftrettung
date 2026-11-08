@@ -39,7 +39,7 @@ es im Kopf von `server/version.php`.
 | OF-00 | Konzept, Fahrplanzeile, Backlog-Spanne, Übernahme von NV und der Vorbereitung | Fable · keine | **erledigt** 07.11.2026 |
 | NV-01 | Bereichszeile unter der Kopfleiste — als Reiter-Baustein für beide Ebenen (E-OF-17, E-OF-40); Seitenreiter in derselben Form (OF-P-20); Ziel „Betrieb“ ist der erste Punkt (E-OF-51) | Opus · keine | **erledigt** 08.11.2026 (Web 23.12.0) |
 | NV-02 | Rahmenkarte für alle drei Leistentypen: Abschnitte in den Einstellungen, Karten auf Startseite und Suche (E-OF-36 bis -38); Leiste klebt und rollt innen (E-OF-37); Fußzeile als dunkelblauer Abschluss (E-OF-34) | Opus · keine | **erledigt** 08.11.2026 (Web 24.0.0) |
-| NV-03 | Leiste der Einstellungen auf den aktiven Bereich kürzen; aktiver Eintrag ohne Strich in jeder Leiste (OF-P-04, E-OF-16); „Abmelden“ nur in der Leiste (E-OF-27); Sprungmarken nur zu sichtbaren Karten (OF-P-16) | Opus · keine | offen |
+| NV-03 | Leiste der Einstellungen auf den aktiven Bereich kürzen; aktiver Eintrag ohne Strich in jeder Leiste (OF-P-04, E-OF-16); „Abmelden“ nur in der Leiste (E-OF-27); Sprungmarken nur zu sichtbaren Karten (OF-P-16) | Opus · keine | **erledigt** 08.11.2026 (Web 24.1.0) |
 | NV-04 | Schmale Breiten: Bereichszeile rollt, Rahmenkarte ohne Rand, Schublade mit drei Bereichen; die Übersicht bleibt (E-OF-50) | Opus · keine | offen |
 | OF-01 | Regeln für alle Seiten: eine rechte Kante, Felder 36 rem (E-OF-31); Speicherknopf im Abschnitt oder Speicherleiste (E-OF-32, E-OF-41); Handbuch-Verweise raus, das „?“ öffnet das Kapitel der Seite (E-OF-02, -56); ein Satz je Karte (OF-P-10, -15); drei Messungen im Bilderlauf (E-OF-49, Nr. 530) | Opus · keine | offen |
 | OF-02 | Bausteine I: Klappkarte mit Stand und Plakette (E-OF-42); Segmentwahl abwählbar und senkrecht mittig (OF-P-05, E-OF-33); Zeile mit Plakette und Knopf auf einer Linie (OF-P-08); sechs neue Zeichen | Opus · keine | offen |
@@ -51,7 +51,7 @@ es im Kopf von `server/version.php`.
 | OF-08 | Darstellung: Umschalter Mond/Sonne in der Kopfleiste, vier Einstellungen im Profil, keine Migration (E-OF-09, -43, -55) | Opus · keine | offen |
 | OF-09 | Abschluss (NV-05 geht auf): Dokumentation, Prüfmittel, Prüfstand voll, Pull Request, Prüfdokument | Opus · keine | offen |
 
-**In Arbeit:** NV-03 Leiste kürzen. **Erledigt:** OF-00, NV-01, NV-02.
+**In Arbeit:** NV-04 schmale Breiten. **Erledigt:** OF-00, NV-01 bis NV-03.
 **Prüfweise seit NV-02:** E-OF-60. **Hakt:**
 nichts; F-OF-19 (eine Rolle mit einem Bereich sieht einen einzelnen
 Reiter) ist der Betreiberin zur Kenntnis vorgelegt. **Offen bei der Betreiberin:** nichts — alle Fragen sind entschieden (Abschnitt 7); Q-OF-02 wird in OF-M1 vorgelegt.
@@ -209,6 +209,13 @@ enthält `origin/main` `ac4a7bd` (Merge von PR #157).
   steht auch mit einem Reiter, damit das Gerüst für alle Rollen dasselbe
   ist. Soll sie bei einem Bereich entfallen, ist das eine Bedingung in
   `ui_geruest_start()`.
+
+- **F-OF-20 — Die Höhenschwelle der Sprungmarken ist vielleicht
+  überholt.** Unter 950 px Fensterhöhe fallen die Sprungmarken in der
+  festen Leiste weg (Design.md 9.25), weil sie bei 18 Einträgen die
+  Einträge aus dem Bild schoben. Seit NV-03 zeigt die Leiste höchstens
+  sieben Einträge (Betrieb). Die Schwelle bleibt in OF stehen — sie zu
+  heben, wäre eine eigene Messung und ist nicht beauftragt.
 
 ## 3. Quellen
 
@@ -752,6 +759,7 @@ der Vorbereitung und der NV-Übergabe übernommen; neu ab E-OF-39.
 | E-OF-59 | NV-01: Fassung — NV-01 hebt die Nebennummer (23.12.0); die Hauptnummer kommt mit NV-02 (24.0.0), weil erst die Rahmenkarte und die gekürzte Leiste den Weg sichtbar ändern (K3) | Betreiberin, 08.11.2026 |
 | E-OF-60 | Prüfweise der Umsetzung: Nach jedem Paket die billigen Mittel — 24 Riegel aus `pruefablauf.json` (`braucht: nichts`), Stilvergleich in drei Engines mit Durchsicht der neuen Signaturen, `kontrast.py`, gezielte Bilder der berührten Seiten; Bilderlauf, Barrierefreiheit und Bedienprobe in Chromium nach NV-04; der volle Prüfstand mit Bericht vor dem Pull Request (OF-09). Grund: Zwei Neustarts des Containers brachen den vollen Prüfstand (rund 2 h) nach 20 und nach 180 Minuten ab (NV-01) | Betreiberin, 08.11.2026 (Vorschlag Claude) |
 | E-OF-61 | NV-02: (1) Auch die Bereichskarten der Übersicht werden Abschnitte, ohne Rauchfläche im Kopf — so zeigt es das freigegebene Bild `OF-P29-C`; E-OF-50 („unverändert“) bezieht sich auf Inhalt und Zweck der Seite. (2) Jeder Abschnitt trägt die Linie oben, auch der erste; sie steht damit unter dem Seitentitel wie in `NV-01` — eine Ausnahme für die erste Karte (Abschnitt 5, NV-02) braucht es dafür nicht. (3) Die Fußzeile bleibt im Druck weg (Abschnitt 5, NV-02); bis Web 23 wurde sie gedruckt — „wie heute“ dort stimmte nicht. (4) Unter 1024 px haben Rahmenkarte und Leistenspalte keine Box (`display: contents`); was die schmale Breite sonst braucht, bringt NV-04 | Umsetzung, 08.11.2026 |
+| E-OF-62 | NV-03: Die Sprungmarken ziehen über einen `MutationObserver` auf `hidden` im Inhalt nach, nicht über einen Aufruf der Backup-Seite (Abschnitt 5, NV-03). So kann keine Seite mit bedingter Karte — Backup, Zweitfaktor, Geräte, Import / Export nach OF-04 — das Nachziehen vergessen; die Durchsicht je Seite entfällt damit. Der Vorschlag verliert mit dem Strich seine einzige Markierung auf Rauch und bekommt deshalb die Auswahlfläche (Blau 100) statt Rauch; zwei Kontrastpaare, deren Beschreibung den Strich nannte, tragen weiter andere Stellen und sind neu beschrieben | Umsetzung, 08.11.2026 |
 | E-OF-48 | Papierkorb: Das Artzeichen des Diensttags (`ohne-zuordnung`, Hubschrauber, Fahrzeug) steht vor dem Datum wie in Leiste und Vorschlägen — so zeigt es das freigegebene Bild; „entfernt“ in E-OF-30 meint die Stelle neben den Knöpfen. Will die Betreiberin es im Papierkorb ganz weglassen, ist das eine Zeile | Konzept, aus E-OF-30 (F-OF-16) |
 
 Aus Schritt 26 übernommen: E-MA-36 (Beenden-Knöpfe der App bleiben
@@ -940,4 +948,37 @@ Konsolenfehler 0, Knöpfe falscher Höhe 0, 211 Karten / 0 außerhalb.
 **Nicht geprüft:** Bilderlauf, Barrierefreiheit und Bedienprobe in
 Firefox und WebKit (E-OF-60: nach NV-04 bzw. im vollen Prüfstand);
 Druckvorschau von Hand.
+
+### NV-03 Leiste kürzen (08.11.2026, Web 24.1.0)
+
+**Was getan ist.** `ui_leiste_einstellungen()` zeichnet den aktiven Block
+mit `.leiste-gruppe-aktiv` aus (auf der Übersicht „Einstellungen“); ab
+1024 px blendet das Stylesheet die übrigen und dessen Kopfzeile aus.
+`menue.js` hält den aktiven Block offen, auch ohne aktiven Eintrag; die
+Sprungmarken entstehen nur aus Karten ohne `[hidden]`-Vorfahren und ziehen
+über einen Beobachter nach (E-OF-62); der Saum der Markierung rechnet die
+Bereichszeile mit. Strich weg an `.eintrag.aktiv`, `.akkordeon.aktiv` und
+`.vorschlag` (Vorschlag auf Blau 100); „Abmelden“ aus der Übersicht
+entfernt (E-OF-27). Design.md 9.25, 9.28, 3.4 (zwei Beschreibungen,
+gleichlautend in `kontrast.py`), Verlauf; Handbuch 2; CHANGELOG;
+`version.php` 24.1.0.
+
+**Gemessen** (Prüfweise E-OF-60). Bilder Chromium 1920: Profil gegen
+`NV-01` (nur der aktive Bereich, kein Strich, Marken darunter), Übersicht
+gegen `OF-P29-C` (kein „Abmelden“ im Inhalt). Backup-Seite: Marken
+„Backup erstellen | Backup einspielen | GPS-Daten verdichten“ — die
+verborgene Freigabe-Karte fehlt; Box eingeblendet → **4 Marken**, wieder
+ausgeblendet → **3**, **gleich in Chromium, Firefox und WebKit** (P-OF-05).
+Status bei 390 px: drei Kopfzeilen in der Schublade (`flex`); bei 1366 px
+`none, none, block`. Riegel **24 von 24** (`bestand` erst nach dem
+Erzeugen der Tabellen grün — die Reihenfolge war falsch, nicht der Stand).
+Stilvergleich 105 / 106 / 111 Signaturen, die neuen durchgesehen
+(ausgeblendete Blöcke, Strich, Vorschlagsfläche, dazu die
+Quelltextprobe von `ui.php` unter dem neuen Klassennamen), 0 ungeplant.
+Kontrast 60 Paare je Modus, 0 verfehlt, 39 abgeleitet (eins weniger: der
+Strich am Vorschlag), 0 ohne Eintrag.
+
+**Nicht geprüft:** Bilderlauf, Barrierefreiheit, Bedienprobe (nach NV-04,
+E-OF-60); die Durchsicht der übrigen Seiten mit bedingten Karten von Hand
+(E-OF-62 macht sie überflüssig, belegt ist nur die Backup-Seite).
 

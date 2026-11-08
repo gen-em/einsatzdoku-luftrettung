@@ -144,9 +144,9 @@ PAARE = [
     ('Auf Hauptaktion unter dem Zeiger',  'auf-aktion-haupt', 'aktion-haupt-hover', 4.5, 'Hauptaktion unter dem Zeiger'),
     ('Aktion auf Karte',                  'aktion',        'flaeche-karte',     3.0, 'Schalter an, Radiopunkt, Fortschritt, Stern'),
     ('Auswahltext auf Auswahl',           'auswahl-text',  'auswahl-flaeche',   4.5, 'aktiver Menuepunkt, aktive Kennzahl, Chip'),
-    ('Auswahllinie auf Auswahl',          'auswahl-linie', 'auswahl-flaeche',   3.0, 'Strich am aktiven Eintrag'),
+    ('Auswahllinie auf Auswahl',          'auswahl-linie', 'auswahl-flaeche',   3.0, 'Rahmen der aktiven Kennzahl, Filterpille und Segmenttaste'),
     ('Auswahllinie auf Karte',            'auswahl-linie', 'flaeche-karte',     3.0, 'Strich des aktiven Reiters'),
-    ('Auswahllinie auf abgesetzt',        'auswahl-linie', 'flaeche-abgesetzt', 3.0, 'Strich am Vorschlag unter dem Zeiger'),
+    ('Auswahllinie auf abgesetzt',        'auswahl-linie', 'flaeche-abgesetzt', 3.0, 'Strich der hervorgehobenen Tabellenzeile'),
     ('Text auf Auswahl',                  'text',          'auswahl-flaeche',   4.5, 'Textauswahl'),
     # Status: je Fläche 100, Schrift 700
     ('Info auf Info',                     'info-text',     'info-flaeche',      4.5, 'Hinweis, Plakette blau'),
