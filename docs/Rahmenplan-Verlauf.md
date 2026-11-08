@@ -9,6 +9,7 @@ Verlauf bis zum Schnitt). Die Fassungszählung läuft fortlaufend weiter.
 
 | Fassung | Datum | Anlass | Was |
 |---|---|---|---|
+| 230 | 08.11.2026 | 26 | R91-Nachprüfung MA auf Staging: P-MA-02, -04 bis -06, -10, -15, -18 bestanden; P-MA-03, -07, -14 gescheitert → Nr. 540 bis 542; P-MA-09 bis auf die Wartungsseite. Fassung 228 und 229 trägt der Zweig von 27 (OF). |
 | 227 | 07.11.2026 | 26 | 26 (MA) abgeschlossen (PR #156): Erledigt-Zeile, Konzept gelöscht (`57ef0f0`), P-MA in der Prüfliste, 6.1 „Prüfliste MA“, E-MA-36 bestätigt. Kopf: Stand `f27c977`. Spanne 520–529 frei. |
 | 226 | 07.11.2026 | 26 | Zuarbeit „Logo-Vorlagen in den Markenfarben" (6.2, Nr. 62) erledigt: Das Branding-Repo liefert die bereinigten Zeichen, MA-06 übernimmt sie. Neu Nr. 520 (Uhr-Bilder, gehört zu 13). |
 | 225 | 06.11.2026 | 26 | Schritt 26 (MA, Markenabgleich) begonnen als Einschub vor 13: Konzept `Konzept-MA-Markenabgleich.md`, Q-MA-01 bis -04 entschieden. Nr. 62 wandert von 13 nach 26 (E-MA-12). |
