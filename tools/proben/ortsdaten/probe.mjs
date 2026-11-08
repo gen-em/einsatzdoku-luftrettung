@@ -596,7 +596,8 @@ try {
     }
   };
   const exportieren = async (pers) => {
-    await s.goto(`${BASIS}/import.php`, { waitUntil: 'networkidle' });
+    /* Seit Web 24.5 erst die Wahlkarte „Liste ausgeben" (E-OF-26). */
+    await s.goto(`${BASIS}/import.php#exportform`, { waitUntil: 'networkidle' });
     await setze('input[name="exp_zr"][value="all"]', true);
     await s.selectOption('#exp_fmt', 'b');
     await setze('#exp_pat', pers);

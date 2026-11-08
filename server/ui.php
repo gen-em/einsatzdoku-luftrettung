@@ -3252,7 +3252,9 @@ function ui_speichern_leiste(array $o = []): void
         $o['hinweis_vorlage'] = 'Geändert';
     }
     ?>
-<div class="speichern"<?= $id ?><?= empty($o['kein_haken']) ? ' data-speichern' : '' ?> hidden>
+<div class="speichern"<?= $id ?><?= empty($o['kein_haken']) ? ' data-speichern' : '' ?><?=
+     /* Formularleiste fuer ein Formular weiter oben (forms.js, `leisteVon()`). */
+     empty($o['kein_haken']) && !empty($o['form']) ? ' data-fuer="' . ui_e((string)$o['form']) . '"' : '' ?> hidden>
   <?php /* HINWEIS ZUERST, KNOPF DANACH. Stuende der Knopf im Markup vorn und
            damit links, die Zaehlung rechts davon, waere es umgekehrt zu allem
            anderen in dieser Oberflaeche, wo die Haupthandlung rechts sitzt. Die

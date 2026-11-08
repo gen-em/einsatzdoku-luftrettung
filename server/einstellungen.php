@@ -1452,7 +1452,13 @@ ui_seite_start(['titel' => 'Einstellungen',
     ?>
     <?php ui_titelzeile(['titel' => 'Profil']); ?>
 
-    <form method="post" id="pfform">
+    <?php /* EIN FORMULAR UEBER DREI ABSCHNITTE (Angaben, Logo, Darstellung)
+             speichert die Speicherleiste am Boden der Rahmenkarte (Konzept
+             OF, E-OF-32, Bild OF-P07); sie steht am Ende dieses Reiters und
+             haengt ueber `form=` / `data-fuer` an diesem Formular. Bis Web
+             24.4 stand „Profil speichern" zwischen Darstellung und
+             Datenschutz und gehoerte optisch zum falschen Abschnitt. */ ?>
+    <form method="post" id="pfform" data-dirty-track>
       <?= csrf_field() ?><input type="hidden" name="action" value="profile">
       <input type="hidden" name="old_token" id="pf_oldtok">
 
@@ -1482,17 +1488,17 @@ ui_seite_start(['titel' => 'Einstellungen',
                  Feld waere hier eine Einladung, die ins Leere fuehrt. */ ?>
         <p class="feld-hinweis">Rolle: <strong><?= e(rolle_text(eigene_rolle())) ?></strong><?php
           if (ist_betreiberin()): ?> — du siehst zusätzlich den Bereich
-          <em>Betrieb</em>.<?php elseif (ist_admin()): ?> — du siehst zusätzlich den
-          Bereich <em>Verwaltung</em>.<?php elseif (ist_support()): ?> — du siehst unter
-          <em>Verwaltung</em> die Konten der NutzerInnen und das Protokoll.<?php endif; ?> Geändert wird sie in der
-          Verwaltung, nicht hier.</p>
+          <em>Betrieb</em><?php elseif (ist_admin()): ?> — du siehst zusätzlich den
+          Bereich <em>Verwaltung</em><?php elseif (ist_support()): ?> — du siehst unter
+          <em>Verwaltung</em> die Konten der NutzerInnen und das Protokoll<?php endif; ?>; geändert wird sie in der
+          Verwaltung.</p>
       <?php ui_karte_ende(); ?>
 
       <?php /* LOGO-WAHL. Sie gilt für Kopfleiste UND
                Browser-Symbol; die Anmeldeseite zeigt immer den Standard, weil
                dort noch niemand angemeldet ist und die Wahl am Konto hängt. */ ?>
       <?php ui_karte_start(['titel' => 'Logo', 'id' => 'k-logo']); ?>
-        <p class="feld-hinweis">Gilt für Kopfleiste und Browser-Symbol. Die Wahl
+        <p class="feld-hinweis">Gilt für Kopfleiste und Browser-Symbol und
           übersteuert den Standard der Installation.</p>
         <?php ui_wahlliste([
             'name' => 'logo_wahl', 'wert' => $logoWahl, 'label' => 'Logo',
@@ -1513,8 +1519,7 @@ ui_seite_start(['titel' => 'Einstellungen',
                Kopfleiste → Profil; ein eigener Schalter in der Leiste waere
                ein neuer Baustein (CLAUDE.md 5). */ ?>
       <?php ui_karte_start(['titel' => 'Darstellung', 'id' => 'k-darstellung']); ?>
-        <p class="feld-hinweis">Hell oder dunkel — gilt für dieses Konto auf jedem
-          Gerät. „Wie das Gerät" folgt der Einstellung von Handy oder Rechner.
+        <p class="feld-hinweis">Hell oder dunkel für dieses Konto auf jedem Gerät —
           Karten und Druckblätter bleiben hell.</p>
         <?php ui_wahlliste([
             'name' => 'darstellung', 'wert' => $darstellungWahl, 'label' => 'Darstellung',
@@ -1540,9 +1545,6 @@ ui_seite_start(['titel' => 'Einstellungen',
                Konsole bliebe still, die Knopfhoehen stimmten. Sehen laesst es
                sich nur am Bild. */ ?>
 
-      <div class="listen-form-fuss">
-        <?= ui_knopf(['text' => 'Profil speichern', 'art' => 'primaer']) ?>
-      </div>
     </form>
 
       <?php /* DATENSCHUTZ: die Adresssuche je Konto.
@@ -1563,14 +1565,10 @@ ui_seite_start(['titel' => 'Einstellungen',
           'plakette' => ($geoInst && $geoKonto)
               ? ui_plakette('Adresssuche an', ['ton' => 'blau'])
               : ui_plakette('Adresssuche aus', ['ton' => 'neutral'])]); ?>
-        <p class="feld-hinweis">Beim Tippen in einem Ortsfeld schickt der Browser
-          den getippten Text an <strong><?= e(geocoder_host()) ?></strong> und
-          bekommt Adressvorschläge zurück; nach einer Wahl auf der Karte geht die
-          Koordinate denselben Weg, um die Adresse dazu zu holen. <strong>Nichts
-          anderes verlässt dabei das Gerät</strong> — kein Name, keine Diagnose,
-          keine Einsatznummer. Ohne die Suche bleiben Koordinaten, Plus Codes,
-          „Meine Position" und die Karte selbst; nur die Vorschläge und die
-          Umkehrsuche entfallen.</p>
+        <p class="feld-hinweis">Beim Tippen in einem Ortsfeld geht der getippte
+          Text an <strong><?= e(geocoder_host()) ?></strong>, nach einer Wahl auf der
+          Karte die Koordinate — <strong>nichts anderes</strong>, kein Name, keine
+          Diagnose, keine Einsatznummer.</p>
         <?php if ($geoInst): ?>
           <form method="post" action="einstellungen.php?t=profil#k-datenschutz">
             <?= csrf_field() ?><input type="hidden" name="action" value="datenschutz">
@@ -1589,11 +1587,9 @@ ui_seite_start(['titel' => 'Einstellungen',
               'label' => 'Adressvorschläge aus dem Internet',
               'an' => false, 'attr' => ' disabled',
               'klein' => 'Für diese Installation abgeschaltet.']); ?>
-          <p class="feld-hinweis">Die <strong>Installation</strong> hat die
-            Adresssuche abgeschaltet (Betrieb → Servereinstellungen, Karte
-            „Adresssuche"). Solange das so ist, ändert dieser Schalter nichts —
-            deshalb steht er ausgegraut. Wer ihn braucht, wendet sich an die
-            BetreiberIn.</p>
+          <?php ui_meldung('Solange das so ist, ändert dieser Schalter nichts; wer '
+              . 'ihn braucht, wendet sich an die BetreiberIn.', null, 'info', '          ',
+              ['auftakt' => 'Die Installation hat die Adresssuche abgeschaltet.']); ?>
         <?php endif; ?>
       <?php ui_karte_ende(); ?>
 
@@ -1621,11 +1617,12 @@ ui_seite_start(['titel' => 'Einstellungen',
         <?php ui_feld(['label' => 'Neues Passwort wiederholen', 'name' => 'new2', 'id' => 'pw_new2',
                        'art' => 'password', 'pflicht' => true,
                        'attr' => ' autocomplete="new-password"']); ?>
+        <?php /* DER KNOPF STEHT IM ABSCHNITT, den er speichert (E-OF-32). */ ?>
+        <div class="listen-form-fuss">
+          <?= ui_knopf(['text' => 'Passwort ändern', 'art' => 'primaer']) ?>
+        </div>
+        <span class="feld-hinweis" id="pwstate"></span>
       <?php ui_karte_ende(); ?>
-      <div class="listen-form-fuss">
-        <?= ui_knopf(['text' => 'Passwort ändern', 'art' => 'primaer']) ?>
-      </div>
-      <span class="feld-hinweis" id="pwstate"></span>
     </form>
 
     <?php /* ---- Wiederherstellungsschluessel ----------
@@ -1641,14 +1638,9 @@ ui_seite_start(['titel' => 'Einstellungen',
              Ordner ist „neu erzeugen" die einzige richtige Antwort — der
              alte Zettel wird damit ungueltig, und genau das ist gewollt. */ ?>
     <?php ui_karte_start(['titel' => 'Wiederherstellungsschlüssel']); ?>
-      <p>Er öffnet deine verschlüsselten Daten, wenn du dein Passwort
-         vergessen hast — die BetreiberIn kann das nicht. Du hast ihn einmal
-         bekommen, beim Einrichten deines Kontos, auf dem
-         <strong>Notfallblatt</strong>.</p>
-      <p class="feld-hinweis">Verloren? Dann erzeuge einen neuen. Das alte
-         Blatt wird damit ungültig; deine Daten bleiben unverändert und
-         lesbar. Nachträglich drucken lässt sich ein Blatt nicht — der Server
-         kennt den Schlüssel nicht.</p>
+      <p class="feld-hinweis">Er steht auf deinem <strong>Notfallblatt</strong> und
+         öffnet deine Daten, wenn du das Passwort vergessen hast; ein neuer macht
+         das alte Blatt ungültig, deine Daten bleiben lesbar.</p>
       <div class="listen-form-fuss">
         <?= ui_knopf(['text' => 'Neuen Schlüssel erzeugen', 'art' => 'neutral',
                       'typ' => 'button', 'attr' => ' data-schluessel-auf']) ?>
@@ -1698,74 +1690,96 @@ ui_seite_start(['titel' => 'Einstellungen',
         </div>
       </form>
 <?php else: ?>
-      <p>Zusätzlich zum Passwort ein sechsstelliger Code aus einer App auf deinem Handy.</p>
+<?php if (!$zf['an'] && !demo_ist_demo($userId)): ?>
+      <p class="feld-hinweis">Zusätzlich zum Passwort ein sechsstelliger Code aus einer App auf deinem Handy.</p>
+<?php endif; ?>
 <?php if ($zf['an']):
-        $zfBenutzt = max(0, $zf['codes_alle'] - $zf['codes_offen']);
-        ui_zeile(['text' => 'Eingeschaltet', 'klein' => 'seit ' . datum_zeit_text($zf['seit'])]);
-        ui_zeile(['text' => 'Wiederherstellungscodes',
-                  'klein' => $zfLeer($zfBenutzt) . ' benutzt — neue Codes machen die alten ungültig',
-                  'plaketten' => ui_plakette($zf['codes_offen'] . ' von ' . $zf['codes_alle'],
-                                             ['ton' => 'blau'])]);
-        /* GEMERKTE GERAETE: Zahl und „Alle
-           vergessen". Der Knopf gehoert zum Formular `f-zf-geraete` unter
-           der Karte (`form=`), weil die Zeile in keinem Formular steht.
-           Vor `update.php` fehlt die Zeile — die Tabelle gibt es noch nicht. */
-        if (zweitfaktor_geraete_da()) {
+        /* EIN SATZ PLUS „VERWALTEN" (Konzept OF, OF-04, E-OF-19, Bild
+           OF-P09-B). Bis Web 24.4 standen hier sechs Zeilen offen, und die
+           Knöpfe standen getrennt von ihren Zeilen in einer Reihe darunter.
+           Jetzt sagt EINE Zeile alles Wichtige; sie ist das <summary> eines
+           <details>, und aufgeklappt trägt jede Zeile ihre eine Handlung
+           (OF-P-08). Die Formulare sind dieselben, die Knöpfe hängen über
+           `form=` an ihnen. */
+        $zfGeraeteDa = zweitfaktor_geraete_da();
+        require_once __DIR__ . '/passkey_lib.php';
+        $pkDa = pk_verfuegbar();
+        /* NUR DIE DER HEUTIGEN ADRESSE ZAEHLEN UND GELTEN. Passkeys einer
+           frueheren Adresse (nach einem Umzug oder einem Komplett-Stand von
+           anderswo) stehen darunter, als nicht nutzbar gekennzeichnet, mit
+           „Entfernen". */
+        $pkAlle  = $pkDa ? pk_liste($userId) : [];
+        $pkListe = array_values(array_filter($pkAlle, static fn(array $p): bool => $p['hier']));
+        $pkFremd = array_values(array_filter($pkAlle, static fn(array $p): bool => !$p['hier']));
+        $zfZahl = static fn(int $n, string $eins, string $mehr): string
+            => ($n === 0 ? 'kein' : $n) . ' ' . ($n === 1 || $n === 0 ? $eins : $mehr);
+        $zfSatz = ['seit ' . datum_text($zf['seit']),
+                   $zf['codes_offen'] . ($zf['codes_offen'] === 1 ? ' Code' : ' Codes') . ' übrig'];
+        if ($rwZ['stand'] === 'da')        { $zfSatz[] = 'Rückweg eingerichtet'; }
+        elseif ($rwZ['stand'] === 'fehlt') { $zfSatz[] = 'Rückweg ab der nächsten Anmeldung'; }
+        if ($zfGeraeteDa) { $zfSatz[] = $zf['geraete'] === 0 ? 'kein gemerktes Gerät'
+                                     : $zfZahl($zf['geraete'], 'gemerktes Gerät', 'gemerkte Geräte'); }
+        if ($pkDa)        { $zfSatz[] = $zfZahl(count($pkListe), 'Passkey', 'Passkeys'); }
+        /* DAS GEHEIMNIS IST NICHT ZU OEFFNEN, wenn die Anlage einen anderen
+           Serverschluessel hat als bei der Einrichtung (Wiederanlauf,
+           eingespieltes Komplett-Backup). Die Anmeldung geht dann mit
+           Wiederherstellungscodes und Passkeys; das soll ÜBER dem Satz
+           stehen und nicht erst beim naechsten Anmelden auffallen.
+           PASSKEYS HAENGEN NICHT AM SERVERSCHLUESSEL — sie bleiben der Weg
+           hinein; Ausschalten oder Zuruecksetzen nimmt sie aber mit. */
+        if (totp_geheimnis($userId) === null) {
+            $pkNoch = !empty($pkListe);
+            ui_meldung(null, ($zfPflicht
+                ? 'Die Verwaltung muss ihn zurücksetzen; danach richtest du ihn neu ein.'
+                : 'Schalte ihn aus und richte ihn neu ein.')
+                . ($pkNoch ? ' Bis dahin meldest du dich mit deinem Passkey an; das '
+                           . ($zfPflicht ? 'Zurücksetzen' : 'Ausschalten') . ' nimmt ihn mit — lege ihn danach neu an.' : ''),
+                'info', '      ',
+                ['auftakt_fehler' => 'Das Geheimnis lässt sich auf dieser Anlage nicht öffnen.']);
+        } ?>
+      <?php /* OFFEN, SOLANGE DER CODE FRISCH IST (15 Minuten): Dann kommt man
+               von „Zuerst Code bestätigen" und will einen Passkey hinzufügen —
+               das Formular dazu steht in der aufgeklappten Zeile. */ ?>
+      <details class="zeile-mehr zf-verwalten"<?= zweitfaktor_frisch() ? ' open' : '' ?>>
+        <summary class="zeile">
+          <span class="zeile-text"><span class="zeile-haupt">Eingeschaltet</span>
+            <span class="zf-satz"><?= e(implode(' · ', $zfSatz)) ?></span></span>
+          <span class="knopf knopf-neutral" aria-hidden="true"><?= ui_symbol('zahnrad') ?><span>Verwalten</span></span>
+        </summary>
+<?php
+        ui_zeile(['text' => 'Codes zur Wiederherstellung',
+                  'klein' => $zf['codes_offen'] . ' von ' . $zf['codes_alle']
+                           . ' übrig — neue machen die alten ungültig',
+                  'aktionen' => ui_knopf(['text' => 'Neu erzeugen', 'art' => 'leise',
+                      'attr' => ' form="f-zf-codes" data-confirm="Neue Codes erzeugen? Die bisherigen gelten danach nicht mehr — auch die auf einem gedruckten Codeblatt." data-confirm-ok="Neue Codes erzeugen" data-confirm-tone="normal"'])]);
+        /* GEMERKTE GERAETE: Zahl und „Vergessen". Vor `update.php` fehlt die
+           Zeile — die Tabelle gibt es noch nicht. */
+        if ($zfGeraeteDa) {
             $zfTage = zweitfaktor_geraet_dauer($userRole);
             ui_zeile(['text' => 'Gemerkte Geräte',
-                      'klein' => $zfTage > 0
-                          ? 'dort fragt die Anmeldung ' . $zfTage . ($zfTage === 1 ? ' Tag' : ' Tage')
-                            . ' lang keinen Code — der Haken steht im Code-Schritt'
-                          : 'auf dieser Anlage für deine Rolle abgeschaltet',
-                      'plaketten' => ui_plakette((string)$zf['geraete'],
-                                                 ['ton' => $zf['geraete'] > 0 ? 'blau' : 'neutral']),
+                      'klein' => $zfZahl($zf['geraete'], 'Gerät', 'Geräte') . ' · '
+                          . ($zfTage > 0
+                              ? 'dort fragt die Anmeldung ' . $zfTage . ($zfTage === 1 ? ' Tag' : ' Tage')
+                                . ' lang keinen Code'
+                              : 'auf dieser Anlage für deine Rolle abgeschaltet'),
                       'aktionen' => $zf['geraete'] > 0
-                          ? ui_knopf(['text' => 'Alle vergessen', 'art' => 'leise',
+                          ? ui_knopf(['text' => 'Vergessen', 'art' => 'leise',
                                       'attr' => ' form="f-zf-geraete" data-confirm="Alle gemerkten Geräte vergessen? Die nächste Anmeldung fragt dort wieder nach dem Code — auch an diesem." data-confirm-ok="Vergessen" data-confirm-tone="normal"'])
                           : '']);
         }
-        /* DER RUECKWEG: die dritte
-           Zeile. Nur hier, bei eingeschaltetem Zweitfaktor — ausgeschaltet
-           hat das Paar keinen Verbraucher. Vor `update.php` ('spalten')
-           fehlt sie ganz; das Demo-Konto kommt hier nie an, sein
-           Zweitfaktor ist gesperrt. */
-        if ($rwZ['stand'] === 'da') {
-            ui_zeile(['text' => 'Rückweg mit dem Wiederherstellungsschlüssel',
-                      'klein' => 'seit ' . datum_text($rwZ['seit']) . ' — der Schlüssel vom '
-                               . 'Notfallblatt genügt, wenn Handy und Codes fehlen',
-                      'plaketten' => ui_plakette('eingerichtet', ['ton' => 'gruen'])]);
-        } elseif ($rwZ['stand'] === 'fehlt') {
-            ui_zeile(['text' => 'Rückweg mit dem Wiederherstellungsschlüssel',
-                      'klein' => 'wird beim nächsten Anmelden eingerichtet — bis dahin setzt '
-                               . 'die Verwaltung zurück',
-                      'plaketten' => ui_plakette('ab der nächsten Anmeldung')]);
-        }
-        /* PASSKEYS: ein weiteres Verfahren
-           dieses Faktors, deshalb hier und nur bei eingeschaltetem
-           Zweitfaktor. Vorhandene Bausteine: eine Zeile je
-           Passkey, ein Feld, ein Knopf. „Hinzufügen" nur mit FRISCHEM Code —
-           sonst der Verweis auf die Bestätigung, damit die Reihenfolge zu
-           sehen ist, bevor der Dialog der Plattform aufgeht; der
-           Endpunkt prüft es noch einmal. Die Herausforderung entsteht hier,
-           beim Aufbau, und gilt zehn Minuten einmal. Ohne taugliche Adresse
-           (keine Domain, kein HTTPS) oder vor `update.php` fehlt der
-           Abschnitt ganz. */
-        require_once __DIR__ . '/passkey_lib.php';
-        $pkDa = pk_verfuegbar();
+        /* PASSKEYS: ein weiteres Verfahren dieses Faktors. „Hinzufügen" nur
+           mit FRISCHEM Code — sonst der Verweis auf die Bestätigung, damit die
+           Reihenfolge zu sehen ist, bevor der Dialog der Plattform aufgeht;
+           der Endpunkt prüft es noch einmal. Die Herausforderung entsteht
+           hier, beim Aufbau, und gilt zehn Minuten einmal. Ohne taugliche
+           Adresse (keine Domain, kein HTTPS) oder vor `update.php` fehlt der
+           Abschnitt ganz. Das Formular zum Hinzufügen bleibt unter der Zeile
+           (passkey.js zeigt es, wo der Browser Passkeys kann). */
         if ($pkDa) {
-            /* NUR DIE DER HEUTIGEN ADRESSE ZAEHLEN UND GELTEN. Passkeys einer
-               frueheren Adresse (nach einem Umzug
-               oder einem Komplett-Stand von anderswo) stehen darunter, als
-               nicht nutzbar gekennzeichnet, mit „Entfernen". */
-            $pkAlle  = pk_liste($userId);
-            $pkListe = array_values(array_filter($pkAlle, static fn(array $p): bool => $p['hier']));
-            $pkFremd = array_values(array_filter($pkAlle, static fn(array $p): bool => !$p['hier']));
             ui_zeile(['text' => 'Passkeys',
                       'klein' => $pkListe
-                          ? 'ersetzen bei der Anmeldung den Code — mit Fingerabdruck, Gesicht, PIN oder Sicherheitsschlüssel'
-                          : 'noch keiner — ein Passkey ersetzt bei der Anmeldung den Code',
-                      'plaketten' => ui_plakette(count($pkListe) . ' von ' . PK_HOECHSTENS,
-                                                 ['ton' => $pkListe ? 'blau' : 'neutral'])]);
+                          ? count($pkListe) . ' von ' . PK_HOECHSTENS . ' — ersetzen bei der Anmeldung den Code'
+                          : 'noch keiner — ein Passkey ersetzt bei der Anmeldung den Code']);
             foreach ($pkListe as $pk) {
                 $pkName = pk_anzeigename($pk);
                 ui_zeile(['text' => $pkName,
@@ -1793,71 +1807,63 @@ ui_seite_start(['titel' => 'Einstellungen',
                 pk_herausforderung_stellen($pkAblage);
                 $_SESSION['passkey_reg'] = $pkAblage;
                 $pkU = pk_ursprung(); ?>
-      <div data-passkey-anlegen hidden
-           data-pk-herausforderung="<?= e($pkAblage['herausforderung']) ?>"
-           data-pk-rp-id="<?= e($pkU['rp_id']) ?>" data-pk-rp-name="<?= e(instanz_kurz()) ?>"
-           data-pk-nutzer="<?= e(pk_b64u(pack('J', $userId))) ?>"
-           data-pk-name="<?= e((string)($row['email'] ?? '')) ?>"
-           data-pk-kennungen="<?= e((string)json_encode(array_column($pkListe, 'kennung'))) ?>">
-        <?php ui_feld(['name' => 'pk_bezeichnung', 'label' => 'Bezeichnung (optional)',
-                       'platzhalter' => 'z. B. Handy oder Laptop',
-                       'attr' => ' maxlength="' . PK_BEZEICHNUNG_MAX . '" autocomplete="off"']); ?>
-        <div class="listen-form-fuss">
-          <?= ui_knopf(['text' => 'Passkey hinzufügen', 'art' => 'neutral', 'typ' => 'button',
-                        'symbol' => 'plus', 'attr' => ' data-passkey-knopf']) ?>
+        <div data-passkey-anlegen hidden
+             data-pk-herausforderung="<?= e($pkAblage['herausforderung']) ?>"
+             data-pk-rp-id="<?= e($pkU['rp_id']) ?>" data-pk-rp-name="<?= e(instanz_kurz()) ?>"
+             data-pk-nutzer="<?= e(pk_b64u(pack('J', $userId))) ?>"
+             data-pk-name="<?= e((string)($row['email'] ?? '')) ?>"
+             data-pk-kennungen="<?= e((string)json_encode(array_column($pkListe, 'kennung'))) ?>">
+          <?php ui_feld(['name' => 'pk_bezeichnung', 'label' => 'Bezeichnung (optional)',
+                         'platzhalter' => 'z. B. Handy oder Laptop',
+                         'attr' => ' maxlength="' . PK_BEZEICHNUNG_MAX . '" autocomplete="off"']); ?>
+          <div class="listen-form-fuss">
+            <?= ui_knopf(['text' => 'Passkey hinzufügen', 'art' => 'neutral', 'typ' => 'button',
+                          'symbol' => 'plus', 'attr' => ' data-passkey-knopf']) ?>
+          </div>
+          <div data-passkey-zustand></div>
         </div>
-        <div data-passkey-zustand></div>
-      </div>
 <?php
             } elseif (count($pkListe) < PK_HOECHSTENS) { ?>
-      <p class="feld-klein"><a href="zweitfaktor.php?bestaetigen=1&amp;zurueck=<?=
-        e(rawurlencode('einstellungen.php?t=profil#k-zweitfaktor')) ?>">Zuerst Code bestätigen</a> —
-        dann lässt sich ein Passkey hinzufügen (15 Minuten lang).</p>
+        <p class="feld-klein"><a href="zweitfaktor.php?bestaetigen=1&amp;zurueck=<?=
+          e(rawurlencode('einstellungen.php?t=profil#k-zweitfaktor')) ?>">Zuerst Code bestätigen</a> —
+          dann lässt sich ein Passkey hinzufügen (15 Minuten lang).</p>
 <?php
             }
         }
-        /* DAS GEHEIMNIS IST NICHT ZU OEFFNEN, wenn die Anlage einen anderen
-           Serverschluessel hat als bei der Einrichtung (Wiederanlauf,
-           eingespieltes Komplett-Backup). Die Anmeldung geht dann mit
-           Wiederherstellungscodes und Passkeys; das soll hier
-           stehen und nicht erst beim naechsten Anmelden auffallen. */
-        if (totp_geheimnis($userId) === null) {
-            /* PASSKEYS HAENGEN NICHT AM SERVERSCHLUESSEL — sie
-               bleiben hier der Weg hinein; Ausschalten oder Zuruecksetzen
-               nimmt sie aber mit, und das soll man
-               vorher lesen. */
-            $pkNoch = !empty($pkListe);
-            ui_meldung(null, ($zfPflicht
-                ? 'Die Verwaltung muss ihn zurücksetzen; danach richtest du ihn neu ein.'
-                : 'Schalte ihn aus und richte ihn neu ein.')
-                . ($pkNoch ? ' Bis dahin meldest du dich mit deinem Passkey an; das '
-                           . ($zfPflicht ? 'Zurücksetzen' : 'Ausschalten') . ' nimmt ihn mit — lege ihn danach neu an.' : ''),
-                'info', '      ',
-                ['auftakt_fehler' => 'Das Geheimnis lässt sich auf dieser Anlage nicht öffnen.']);
+        /* DER RUECKWEG: nur bei eingeschaltetem Zweitfaktor — ausgeschaltet
+           hat das Paar keinen Verbraucher. Vor `update.php` ('spalten') fehlt
+           er ganz; das Demo-Konto kommt hier nie an. */
+        if ($rwZ['stand'] === 'da') {
+            ui_zeile(['text' => 'Rückweg mit dem Wiederherstellungsschlüssel',
+                      'klein' => 'eingerichtet ' . datum_text($rwZ['seit']) . ' — der Schlüssel vom '
+                               . 'Notfallblatt genügt, wenn Handy und Codes fehlen',
+                      'aktionen' => ui_knopf(['text' => 'Erneuern', 'art' => 'leise', 'typ' => 'button',
+                                              'attr' => ' data-rueckweg-auf'])]);
+        } elseif ($rwZ['stand'] === 'fehlt') {
+            ui_zeile(['text' => 'Rückweg mit dem Wiederherstellungsschlüssel',
+                      'klein' => 'wird beim nächsten Anmelden eingerichtet — bis dahin setzt '
+                               . 'die Verwaltung zurück']);
         }
         if ($zfPflicht): ?>
-      <p class="feld-klein">Für die Rolle <?= e(rolle_text($userRole)) ?> Pflicht — ausschalten geht nicht; zurücksetzen kann <?=
-        rolle_ist_betreiberin($userRole) ? 'eine andere BetreiberIn' : 'eine BetreiberIn' ?><?=
-        $rwZ['stand'] === 'da' ? ' oder du selbst mit dem Wiederherstellungsschlüssel' : '' ?>.</p>
-<?php endif; ?>
-      <form method="post" action="einstellungen.php?t=profil#k-zweitfaktor">
-        <?= csrf_field() ?>
+        <p class="feld-klein">Für die Rolle <?= e(rolle_text($userRole)) ?> Pflicht — ausschalten geht nicht; zurücksetzen kann <?=
+          rolle_ist_betreiberin($userRole) ? 'eine andere BetreiberIn' : 'eine BetreiberIn' ?><?=
+          $rwZ['stand'] === 'da' ? ' oder du selbst mit dem Wiederherstellungsschlüssel' : '' ?>.</p>
+<?php   else: ?>
         <div class="listen-form-fuss">
-          <?= ui_knopf(['text' => 'Neue Codes erzeugen', 'art' => 'neutral', 'name' => 'action',
-                        'wert' => 'zf_codes_neu',
-                        'attr' => ' data-confirm="Neue Codes erzeugen? Die bisherigen gelten danach nicht mehr — auch die auf einem gedruckten Codeblatt." data-confirm-ok="Neue Codes erzeugen" data-confirm-tone="normal"']) ?>
-          <?php if ($rwZ['stand'] === 'da'): /* nur, wo ein Paar zu ersetzen ist */ ?>
-          <?= ui_knopf(['text' => 'Rückweg erneuern', 'art' => 'neutral', 'typ' => 'button',
-                        'attr' => ' data-rueckweg-auf']) ?>
-          <?php endif; ?>
-          <?php if (!$zfPflicht): ?>
-          <?= ui_knopf(['text' => 'Ausschalten', 'art' => 'leise', 'name' => 'action',
-                        'wert' => 'zf_ausschalten',
-                        'attr' => ' data-confirm="Zweitfaktor ausschalten? Die Anmeldung fragt danach wieder nur nach dem Passwort; die Codes und deine Passkeys werden ungültig." data-confirm-ok="Ausschalten"']) ?>
-          <?php endif; ?>
+          <?= ui_knopf(['text' => 'Ausschalten', 'art' => 'leise', 'attr' => ' form="f-zf-aus"'
+                        . ' data-confirm="Zweitfaktor ausschalten? Die Anmeldung fragt danach wieder nur nach dem Passwort; die Codes und deine Passkeys werden ungültig." data-confirm-ok="Ausschalten"']) ?>
         </div>
+<?php   endif; ?>
+      </details>
+      <form method="post" action="einstellungen.php?t=profil#k-zweitfaktor" id="f-zf-codes" hidden>
+        <?= csrf_field() ?><input type="hidden" name="action" value="zf_codes_neu">
       </form>
-      <?php if (zweitfaktor_geraete_da() && $zf['geraete'] > 0): ?>
+      <?php if (!$zfPflicht): ?>
+      <form method="post" action="einstellungen.php?t=profil#k-zweitfaktor" id="f-zf-aus" hidden>
+        <?= csrf_field() ?><input type="hidden" name="action" value="zf_ausschalten">
+      </form>
+      <?php endif; ?>
+      <?php if ($zfGeraeteDa && $zf['geraete'] > 0): ?>
       <form method="post" action="einstellungen.php?t=profil#k-zweitfaktor" id="f-zf-geraete" hidden>
         <?= csrf_field() ?><input type="hidden" name="action" value="zf_geraete_vergessen">
       </form>
@@ -2164,6 +2170,19 @@ ui_seite_start(['titel' => 'Einstellungen',
           'klein' => 'Einsätze samt GPS-Daten und Ruhesegmenten, geschätzt',
           'plaketten' => ui_plakette(groesse_paar_text($fuell['bytes'], $fuell['grenze_bytes']),
                        ['ton' => 'neutral'])]); ?>
+      <?php /* GPS-DATEN VERDICHTEN als Zeile (E-OF-52): Die Karte dazu steht
+               unter Backup nur, wenn etwas fällig ist. */
+            $vdProfil = count(spur2_faellig_kandidaten(db(), (int)$userId, time(), [], null));
+            ui_zeile(['text' => 'GPS-Daten verdichten',
+                      'klein' => $vdProfil === 0
+                          ? 'nichts fällig — dein Browser fasst neue Aufzeichnungen von selbst zusammen'
+                          : 'noch nicht zusammengefasst — sie werden unter Backup abgearbeitet',
+                      'plaketten' => ui_plakette($vdProfil === 0 ? 'erledigt' : $vdProfil . ' fällig',
+                                                 ['ton' => $vdProfil === 0 ? 'gruen' : 'orange']),
+                      'aktionen' => $vdProfil > 0
+                          ? ui_knopf(['text' => 'Abarbeiten', 'art' => 'leise',
+                                      'href' => 'einstellungen.php?t=backup#k-verdichten'])
+                          : '']); ?>
       <?php if ($fuell['voll']): ?>
         <?= ui_meldung_markup('warn', 'Die Grenze ist erreicht. Der Server nimmt '
             . 'keine Gerätedaten mehr an — Uhr und Handy behalten sie und senden '
@@ -2174,11 +2193,9 @@ ui_seite_start(['titel' => 'Einstellungen',
             . 'Wird eine der beiden Grenzen erreicht, nimmt der Server keine '
             . 'Gerätedaten mehr an.') ?>
       <?php endif; ?>
-      <p class="feld-hinweis"><strong>Was hilft:</strong> alte Diensttage löschen —
-         was im Papierkorb liegt, zählt nicht mit, Löschen wirkt also sofort. Oder
-         die Verwaltung um eine höhere Grenze bitten; sie kann sie je Konto setzen.
-         Vorher ausleiten kannst du alles unter
-         <a href="import.php">Import / Export</a>.</p>
+      <p class="feld-hinweis"><strong>Was hilft:</strong> alte Diensttage löschen
+         (der Papierkorb zählt nicht mit) oder die Verwaltung um eine höhere Grenze
+         bitten — vorher ausleiten geht unter <a href="import.php">Import / Export</a>.</p>
     <?php ui_karte_ende(); ?>
 
     <?php /* ---- Konto löschen ------------------------
@@ -2201,17 +2218,16 @@ ui_seite_start(['titel' => 'Einstellungen',
         <p class="feld-hinweis">Das Demo-Konto lässt sich nicht löschen — es setzt
            sich 30 Minuten nach der ersten Änderung ohnehin selbst zurück.</p>
       <?php else: ?>
-        <p class="feld-hinweis"><strong>Dein Konto wird sofort gesperrt und nach
-           <?= KONTO_KARENZ_TAGE ?> Tagen endgültig gelöscht.</strong> In dieser Zeit
-           genügt eine Anmeldung, und die Löschung ist zurückgenommen — einen Knopf
-           dafür brauchst du nicht.</p>
-        <p class="feld-hinweis">Nach dem Termin sind Einsätze, GPS-Daten, Stammdaten
-           und Konto-Backups <strong>endgültig fort</strong>. Es gibt danach keinen
-           Weg zurück, auch nicht über die Verwaltung: Deine Daten sind mit deinem
-           Passwort verschlüsselt, und niemand sonst kann sie öffnen.</p>
-        <p class="feld-hinweis"><strong>Willst du sie behalten, leite sie vorher
-           aus</strong> — unter <a href="import.php">Import / Export</a>. Danach ist
-           es zu spät.</p>
+        <?php /* DAS WESENTLICHE ALS MELDUNG (Konzept OF, OF-01, Design.md 6):
+                 Frist und Endgültigkeit passen nicht in einen Satz und sind
+                 keine Erklärung, sondern eine Warnung. */ ?>
+        <?php ui_meldung('In dieser Zeit nimmt eine Anmeldung die Löschung zurück; '
+            . 'danach sind Einsätze, GPS-Daten, Stammdaten und Konto-Backups endgültig '
+            . 'fort, auch für die Verwaltung — nur dein Passwort öffnet sie.', null,
+            'warn', '        ', ['auftakt' => 'Dein Konto wird sofort gesperrt und nach '
+            . KONTO_KARENZ_TAGE . ' Tagen gelöscht.']); ?>
+        <p class="feld-hinweis"><strong>Willst du deine Daten behalten, leite sie
+           vorher aus</strong> — unter <a href="import.php">Import / Export</a>.</p>
         <form method="post" id="loeschform"
               data-confirm="Konto wirklich zur Löschung anmelden? Es wird sofort gesperrt und nach <?= KONTO_KARENZ_TAGE ?> Tagen endgültig gelöscht. Eine Anmeldung in dieser Zeit nimmt die Löschung zurück."
               data-confirm-ok="Zur Löschung anmelden">
@@ -2273,6 +2289,9 @@ ui_seite_start(['titel' => 'Einstellungen',
         </script>
       <?php endif; ?>
     <?php ui_karte_ende(); ?>
+
+    <?php ui_speichern_leiste(['text' => 'Profil speichern', 'form' => 'pfform']); ?>
+    <script src="<?= asset('assets/forms.js') ?>"></script>
 
   <?php elseif ($tab === 'standorte' || $tab === 'standort'): ?>
     <?php
@@ -2479,10 +2498,9 @@ ui_seite_start(['titel' => 'Einstellungen',
              Mal öffnet, liest sie nicht mehr und muss trotzdem daran vorbei.
              Was wegfällt, steht an der Handlung selbst: Die Rückfrage beim
              Löschen beziffert, was mitgeht. */ ?>
-    <p class="seiten-erklaerung">Der Standort ist der Anker aller Diensttage: Er trägt
-       die Vorbelegung, den Abfahrtsort, die Rettungsmittel, die Besatzung und
-       die Zielkliniken. Ein Klick auf einen Standort führt auf seine Seite;
-       der Stern markiert die Vorbelegung neuer Diensttage.</p>
+    <p class="seiten-erklaerung">Der Standort trägt Vorbelegung, Abfahrtsort,
+       Rettungsmittel, Besatzung und Zielkliniken deiner Diensttage — der Stern
+       markiert die Vorbelegung neuer.</p>
 
     <?php ui_karte_start(['titel' => 'Eigene Standorte', 'zahl' => count($eigene), 'id' => 'standorte']); ?>
       <?php if (!$eigene): ?>
@@ -2706,10 +2724,8 @@ ui_seite_start(['titel' => 'Einstellungen',
              sechs Zeilen; was wegfällt, steht an der Handlung selbst — die
              Löschrückfrage sagt, dass dokumentierte Diensttage bleiben. */ ?>
     <p class="seiten-erklaerung">Was an den ausgewählten
-       <a href="einstellungen.php?t=standorte">Standorten</a> hängt:
-       Rettungsmittel und ihre Rollen, Besatzungs-Vorbelegungen, Zielkliniken,
-       weitere Rettungsmittel und Bergwacht. Änderungen wirken nur auf neue
-       Diensttage — dokumentierte haben ihre Angaben eingefroren.</p>
+       <a href="einstellungen.php?t=standorte">Standorten</a> hängt; Änderungen
+       wirken nur auf neue Diensttage, dokumentierte bleiben, wie sie sind.</p>
 
     <?php foreach ($sdBases as $b): $bid = (int)$b['id']; ?>
       <?php /* Ein Block je Standort, darin je Datenart ein eigener. Die zweite
@@ -2784,9 +2800,9 @@ ui_seite_start(['titel' => 'Einstellungen',
                                          'art' => 'orange', 'href' => '#',
                                          'attr' => sd_oeffner('dlg-veh', $vehKette(null, $bid))]]); ?>
         <section class="sd-liste" id="<?= e($anker) ?>-veh">
-          <p class="feld-hinweis">Die Art entscheidet über Besatzungsrollen und die
-             im Einsatzformular sichtbaren Felder. Fähigkeiten (Winde, Bergwacht)
-             gibt es nur luftgebunden — beim Typ Bergwacht in beiden Arten.</p>
+          <p class="feld-hinweis">Die Art entscheidet über Besatzungsrollen und
+             sichtbare Felder; Fähigkeiten (Winde, Bergwacht) gibt es nur
+             luftgebunden, beim Typ Bergwacht in beiden Arten.</p>
           <?php if (!$vehListe): ?>
             <p class="feld-hinweis">Noch keine Rettungsmittel an diesem Standort.</p>
           <?php endif; ?>
@@ -2854,9 +2870,8 @@ ui_seite_start(['titel' => 'Einstellungen',
                                              'titel' => 'Besatzungsmitglied anlegen',
                                              'knopf' => 'Anlegen', 'id' => '0', 'name' => '',
                                              'rolle' => (string)$rollenHier[0]])] : null]); ?>
-        <p class="feld-hinweis">Vorschläge für die Besatzungsfelder, je Rolle.
-           Freitext bleibt überall möglich — wer aushilft, muss nicht erst hier
-           eingetragen werden.</p>
+        <p class="feld-hinweis">Vorschläge für die Besatzungsfelder je Rolle —
+           Freitext bleibt überall möglich.</p>
         <?php /* DER FILTER STEHT VOR DER SEKTION, nicht darin: Das Skript
                  filtert die KINDER des Listenbehälters, und das Feld selbst
                  gehört nicht dazu. Der Hinweis darüber ist mit demselben
@@ -2870,9 +2885,8 @@ ui_seite_start(['titel' => 'Einstellungen',
                } ?>
         <section class="sd-liste" id="<?= e($anker) ?>-crew">
           <?php if (!$rollenHier): ?>
-            <p class="feld-hinweis">Noch keine Rolle an diesem Standort. Rollen
-               entstehen am Rettungsmittel: Trage oben eines ein und hake an,
-               welche Rollen es führt.</p>
+            <p class="feld-hinweis">Noch keine Rolle an diesem Standort — Rollen
+               entstehen am Rettungsmittel oben.</p>
           <?php endif; ?>
           <?php foreach ($rollenHier as $rk): $rr = CREW_ROLES[$rk]; ?>
             <?php /* h3 UND NICHT h4: Der doppelte Titel `h3.sd-titel`
@@ -2917,9 +2931,8 @@ ui_seite_start(['titel' => 'Einstellungen',
                                              'titel' => 'Zielklinik anlegen', 'knopf' => 'Anlegen',
                                              'id' => '0', 'name' => '',
                                              'lat' => '', 'lon' => ''])]]); ?>
-        <p class="feld-hinweis">Vorschläge für das Feld „Transportziel" im
-           Einsatz. Koordinaten sind freiwillig; ohne sie entsteht lediglich
-           kein Pin auf der Karte.</p>
+        <p class="feld-hinweis">Vorschläge für das Feld „Transportziel"; ohne
+           Koordinaten entsteht nur kein Pin auf der Karte.</p>
         <?php if (count($sdTd[$bid] ?? []) >= SD_HILFE_AB) {
                    ui_kartenfilter(['id' => 'filt-td-' . $bid,
                                     'ziel' => $anker . '-td',
@@ -3008,9 +3021,8 @@ ui_seite_start(['titel' => 'Einstellungen',
                                          'attr' => sd_oeffner('dlg-bw', [
                                              'titel' => 'Bereitschaft anlegen',
                                              'knopf' => 'Anlegen', 'id' => '0', 'name' => ''])]]); ?>
-          <p class="feld-hinweis">Bereitschaften für das Feld „Bergwacht" im
-             Einsatz. Der Abschnitt erscheint, weil an diesem Standort ein
-             Rettungsmittel steht, das die Fähigkeit führen darf.</p>
+          <p class="feld-hinweis">Bereitschaften für das Feld „Bergwacht" — der
+             Abschnitt steht, weil hier ein Rettungsmittel die Fähigkeit führen darf.</p>
           <?php if (count($sdBw[$bid] ?? []) >= SD_HILFE_AB) {
                      ui_kartenfilter(['id' => 'filt-bw-' . $bid,
                                       'ziel' => $anker . '-bw',
@@ -3265,18 +3277,18 @@ ui_seite_start(['titel' => 'Einstellungen',
     <?php /* DREI ZEILEN. Was in der Datei steht und warum das
              Passwort zählt, gehört an die Handlung — es steht in der Karte
              „Backup erstellen", direkt über der Passwortwahl. */ ?>
-    <p class="seiten-erklaerung">Sichert <strong>alle</strong> deine Daten in eine
-       einzelne Datei (<code>.edbak</code>), verschlüsselt mit einem Passwort
-       deiner Wahl. Ver- und Entschlüsselung passieren vollständig in deinem
-       Browser — der Server sieht die Inhalte nie. Dadurch lässt sich ein
-       Backup auch in ein anderes Konto einspielen.
+    <?php /* EIN SATZ (Konzept OF, OF-P-15); dass der Browser ver- und
+             entschlüsselt, sagt die Karte „Backup erstellen" an der Handlung. */ ?>
+    <p class="seiten-erklaerung">Sichert <strong>alle</strong> deine Daten,
+       verschlüsselt mit einem Passwort deiner Wahl, in eine Datei
+       (<code>.edbak</code>) —
        <?php /* DER RUECKWEG. Der Verweis zeigte bisher nur
                 in eine Richtung: Import / Export sagte nichts vom Backup, und
                 das Backup nichts vom Export. Beide Seiten bewegen die Daten
                 EINER NutzerIn — wer auf der falschen steht, soll die andere
                 genannt bekommen, nicht das Menue absuchen muessen. */ ?>
-       Zum Weiterverarbeiten in anderen Programmen — Excel, CSV — gibt es
-       stattdessen <a href="import.php">Import / Export</a>.</p>
+       zum Weiterverarbeiten in Excel oder CSV gibt es
+       <a href="import.php">Import / Export</a>.</p>
 
     <div id="lockwarn" hidden>
       <?php ui_meldung(
@@ -3350,9 +3362,8 @@ ui_seite_start(['titel' => 'Einstellungen',
     <?php ui_karte_ende(); ?>
 
     <?php ui_karte_start(['titel' => 'Backup einspielen', 'id' => 'k-einspielen']); ?>
-      <p class="feld-hinweis">Spielt ein Backup in <strong>dieses</strong> Konto
-         zurück. Vorhandene Einsätze, Tage und Stammdaten bleiben unangetastet —
-         das Einspielen ergänzt nur Fehlendes und ist gefahrlos wiederholbar.</p>
+      <p class="feld-hinweis">Ergänzt in <strong>diesem</strong> Konto nur, was fehlt —
+         Vorhandenes bleibt, und Wiederholen ist gefahrlos.</p>
       <?php ui_feld(['label' => 'Datei (.edbak)', 'id' => 'bfile', 'name' => 'bfile',
                      'art' => 'file', 'pflicht' => true, 'attr' => ' accept=".edbak"']); ?>
       <?php ui_feld(['label' => 'Passwort des Backups', 'id' => 'ipw',
@@ -3376,15 +3387,24 @@ ui_seite_start(['titel' => 'Einstellungen',
              und er arbeitet es ab, solange der Reiter offen ist — ohne Knopf.
              Vorhandene Bausteine: Karte mit Plakette, `.tag-lese`,
              `.zustandszeile` mit Ladeplatz und Balken. */ ?>
+    <?php /* NUR BEI BEDARF (Konzept OF, OF-04, E-OF-52): Die Karte steht nur,
+             wenn nach dem stillen Abarbeiten auf der Startseite noch etwas
+             fällig ist — ein gescheiterter Lauf hinterlässt genau das. Sonst
+             steht die Zahl als Zeile unter „Was dein Konto hält" im Profil.
+             Gezählt wird über den Klartext-Umriss (`spur2_faellig_kandidaten()`),
+             derselbe Weg, den der Wartungslauf nimmt. */
+          $vdZahl = count(spur2_faellig_kandidaten(db(), (int)$userId, time(), [], null)); ?>
+    <?php if ($vdZahl > 0): ?>
     <?php ui_karte_start(['titel' => 'GPS-Daten verdichten', 'id' => 'k-verdichten',
                           'plakette' => ui_plakette('verschlüsselt', ['ton' => 'blau'])]); ?>
-      <p class="feld-hinweis">Neue Aufzeichnungen von Uhr und Handy liegen ungepackt.
-         Dein Browser fasst sie zusammen und dünnt sie nach 31 Tagen aus — der Server
-         kann das nicht, weil er sie nicht lesen kann.</p>
+      <p class="feld-hinweis">Dein Browser fasst neue Aufzeichnungen zusammen und dünnt
+         sie nach 31 Tagen aus, solange diese Seite offen ist — der Server kann sie
+         nicht lesen.</p>
       <dl class="tag-lese"><div class="tagfeld tagfeld-breit"><dt>Fällig</dt>
         <dd id="vd-faellig">wird gezählt …</dd></div></dl>
       <div id="vd-zustand" class="zustandszeile" role="status" aria-live="polite"></div>
     <?php ui_karte_ende(); ?>
+    <?php endif; ?>
 
     <?php /* ---- Von der Administration freigegebenes Backup -------
              Erscheint NUR, wenn tatsächlich eine Freigabe vorliegt. Ein
@@ -5096,12 +5116,10 @@ ui_seite_start(['titel' => 'Einstellungen',
 
   <?php else: ?>
     <?php ui_titelzeile(['titel' => 'Geräte']); ?>
-    <?php /* EIN SATZ MIT BELEGUNG UND GRENZE: Die Belegung ist die Zahl,
-             wegen der man die Erklärung überhaupt liest. */ ?>
+    <?php /* EIN SATZ; die Belegung steht seit Web 24.5 als Kleinzeile unter
+             den Karten (Konzept OF, E-OF-25). */ ?>
     <p class="seiten-erklaerung">Uhr oder Handy zeichnet den Dienst auf und
-       liefert ihn hierher. <strong><?= count($devices) ?> von <?= MAX_GERAETE ?></strong>
-       Plätzen belegt — deaktivierte zählen mit, erst Entkoppeln gibt einen Platz
-       frei.</p>
+       liefert ihn hierher.</p>
 
     <?php if ($devNeu > 0): ?>
       <?php /* Zweite Spur neben der E-Mail beim Koppeln: Wer die Post nicht
@@ -5222,10 +5240,9 @@ ui_seite_start(['titel' => 'Einstellungen',
                                           $koppelWarten['geraet_modell'],
                                           $koppelWarten['geraet_teil']),
             'klein' => 'Kennung ' . geraet_kennung_kurz((string)$koppelWarten['device_id'])]); ?>
-        <p class="feld-hinweis">Das Gerät fragt jetzt, ob es sich mit deinem Konto
-           verbinden soll — <strong>bestätige dort mit Ja</strong>. Es zeigt dabei
-           deine E-Mail-Adresse, teilweise verdeckt. Danach erscheint es unten in
-           der Liste.</p>
+        <p class="feld-hinweis">Das Gerät fragt jetzt mit deiner teilweise verdeckten
+           E-Mail-Adresse, ob es sich verbinden soll — <strong>bestätige dort mit
+           Ja</strong>.</p>
         <p class="feld-klein" id="kopplung-warten"
            data-rest="<?= $kwRest ?>"
            data-quelle="api/kopplung_stand.php"
@@ -5258,10 +5275,9 @@ ui_seite_start(['titel' => 'Einstellungen',
                      . ' · gültig bis '
                      . fmt_local(gmdate('Y-m-d H:i:s', time() + $ksRest), 'H:i') . ' Uhr'
                      . ' · Kennung ' . geraet_kennung_kurz((string)$koppelSitzung['device_id'])]); ?>
-        <p class="feld-hinweis">Wenn das dein Gerät ist und der Code stimmt, verbinde
-           es. Das Gerät fragt dich danach noch einmal — erst dein Ja dort schließt
-           die Kopplung ab. Kommt dir das Gerät unbekannt vor: abbrechen. Dann
-           geschieht nichts.</p>
+        <p class="feld-hinweis">Ist das dein Gerät und stimmt der Code, verbinde es —
+           erst dein Ja am Gerät schließt die Kopplung ab; ist es dir unbekannt,
+           brich ab.</p>
         <?php if ($koppelSitzung['geraet_art'] === null && $koppelSitzung['geraet_teil'] === null): ?>
           <?php /* Ohne Selbstauskunft steht hier „Gerät unbekannt" — und dann
                    trägt die Rückfrage nichts mehr, woran sich ein fremdes
@@ -5280,57 +5296,42 @@ ui_seite_start(['titel' => 'Einstellungen',
         </form>
       <?php ui_karte_ende(); ?>
 
-    <?php else: ?>
-      <?php ui_karte_start(['titel' => 'Gerät koppeln', 'id' => 'koppeln']); ?>
-        <?php if (geraete_grenze_erreicht(db(), $userId)): ?>
-          <?php /* Kein Feld, wo die Eingabe ohnehin abgewiesen würde: Erst ein
-                   Platz, dann ein Code. Denselben Wortlaut nennt der
-                   Fehlerzweig der Aktion. */ ?>
-          <p class="feld-hinweis">Es sind bereits <?= MAX_GERAETE ?> Geräte mit diesem
-             Konto verbunden. Bitte zuerst ein nicht mehr genutztes Gerät löschen —
-             dann lässt sich wieder ein Gerät koppeln.</p>
-        <?php else: ?>
-          <p class="feld-hinweis">Starte die Kopplung auf dem Gerät:
-             <strong>Sync-Seite → Gerät koppeln</strong>. Das Gerät zeigt einen Code
-             aus <?= PAIR_LEN ?> Zeichen. Gib ihn hier ein; danach fragt das Gerät, ob
-             es sich mit deinem Konto verbinden soll — bestätige dort mit Ja. Der Code
-             ist <?= PAIR_TTL_MIN ?> Minuten gültig.</p>
-          <?php /* Der Tastenweg steht als Zusatz mit genannter Plattform: Er gilt
-                   nur für Fenix und Forerunner. Auf der Venu 3s gibt es weder START
-                   noch DOWN — der frühere Satz war für sie schon falsch, als sie
-                   dazukam. Die Tabelle je Uhr steht im Handbuch, Abschnitt 2.0. */ ?>
-          <p class="feld-klein">Auf Garmin-Uhren: die Sync-Seite erreichst du vom
-             Startbildschirm mit DOWN, das Koppeln startet mit gedrückt gehaltener
-             START-Taste. Die Tastenwege der einzelnen Uhren stehen im Handbuch,
-             Abschnitt 2.0.</p>
-          <form method="post" action="einstellungen.php?t=geraete">
-            <?= csrf_field() ?><input type="hidden" name="action" value="koppeln_pruefen">
-            <?php /* `feld-fest` setzt die Schreibmaschinenschrift (Design.md 2.2):
-                     Der Code wird abgelesen und abgetippt, und in Festbreite steht
-                     jedes Zeichen für sich. Die Eingabe nimmt ihn mit und ohne
-                     Leerzeichen und in jeder Schreibung — pair_code_normalisieren()
-                     räumt das auf, bevor gesucht wird; deshalb maxlength 8 und nicht
-                     6. Der Platzhalter ist ein Phantasiecode. */ ?>
-            <?php ui_feld([
-                'name'        => 'code',
-                'label'       => 'Code vom Gerät',
-                'klasse'      => 'feld-fest',
-                'platzhalter' => 'AB3 K7Q',
-                'attr'        => ' maxlength="8" autocomplete="off" '
-                               . 'autocapitalize="characters" spellcheck="false"']); ?>
-            <div class="listen-form-fuss">
-              <?= ui_knopf(['text' => 'Weiter', 'art' => 'primaer']) ?>
-            </div>
-          </form>
-        <?php endif; ?>
-      <?php ui_karte_ende(); ?>
     <?php endif; ?>
 
-    <?php ui_karte_start(['titel' => 'Geräte', 'zahl' => count($devices), 'id' => 'geraeteliste']); ?>
-      <?php if (!$devices): ?>
-        <p class="feld-hinweis">Noch keine Geräte angelegt.</p>
+    <?php /* ---- DIE GERAETE NACH TYP (Konzept OF, OF-04, E-OF-25, Bild
+             OF-P11-B2). Bis Web 24.4 stand über allem eine Karte „Gerät
+             koppeln" mit zwei Absätzen Anleitung, darunter eine Liste aller
+             Geräte und am Ende „App installieren". Jetzt je Gerätetyp eine
+             Karte mit den gekoppelten Geräten und darunter ein leiser Knopf,
+             der den KOPPEL-DIALOG öffnet: App installieren, Kopplung am
+             Gerät starten, Code eingeben — die Anleitung kommt, wenn man sie
+             braucht. Ein Gerät der Art `handy` gehört zu Android; alle
+             übrigen, auch Altgeräte ohne Art, zur Garmin-Uhr (die Wear-OS-Uhr
+             koppelt nicht selbst, sie sendet über das Handy). Die
+             Zwischenzustände des Koppelns bleiben Karten (oben). */
+          $gTypen = [
+              'garmin'  => ['titel' => 'Garmin-Uhr', 'id' => 'k-garmin', 'dlg' => 'koppeln',
+                            'erst' => 'Uhr koppeln', 'weiter' => 'Weitere Uhr koppeln'],
+              'android' => ['titel' => 'Android-Handy und Wear-OS-Uhr', 'id' => 'k-android',
+                            'dlg' => 'koppeln-android',
+                            'erst' => 'Gerät koppeln', 'weiter' => 'Weiteres Gerät koppeln'],
+          ];
+          $gJe = ['garmin' => [], 'android' => []];
+          foreach ($devices as $gd) { $gJe[($gd['geraet_art'] ?? null) === 'handy' ? 'android' : 'garmin'][] = $gd; }
+          $gVoll = geraete_grenze_erreicht(db(), $userId);
+          /* Im Zustand 1 (kein Kopplungsvorgang) öffnet ein falscher Code den
+             Dialog wieder, aus dem er kam — mit derselben Meldung darin. */
+          $gFehlerTyp = ($koppelWarten === null && $koppelSitzung === null && $error !== null
+                         && post_text('action') === 'koppeln_pruefen')
+                      ? (post_text('typ') === 'android' ? 'android' : 'garmin') : null;
+          foreach ($gTypen as $gTyp => $gT):
+              $gListe = $gJe[$gTyp];
+              ui_karte_start(['titel' => $gT['titel'], 'id' => $gT['id']]
+                             + ($gListe ? ['zahl' => (string)count($gListe)] : [])); ?>
+      <?php if (!$gListe): ?>
+        <p class="feld-hinweis">Noch keines gekoppelt.</p>
       <?php endif; ?>
-      <?php foreach ($devices as $d):
+      <?php foreach ($gListe as $d):
             $did = (int)$d['id'];
             $aktiv = (int)$d['active'] === 1;
             /* WAS FUER EIN GERAET DAS IST, steht vorn: Wer drei
@@ -5417,12 +5418,7 @@ ui_seite_start(['titel' => 'Einstellungen',
             ]),
         ]); ?>
       <?php endforeach; ?>
-
-      <?php /* NUR DAS UMBENENNEN STEHT IN DIESER KARTE. Die Reihenfolge der Seite
-               folgt der Haeufigkeit: koppeln, ansehen, App holen, Ausnahme.
-               Das Umbenennen dagegen gehoert zur Zeile, auf deren Punkte-Menue man
-               gerade geklickt hat, und bleibt hier. */ ?>
-      <?php if ($editDev): ?>
+      <?php if ($editDev && in_array((int)$editDev['id'], array_map(static fn($x) => (int)$x['id'], $gListe), true)): ?>
         <div class="listen-form">
           <h3 class="listen-form-titel">Bezeichnung ändern</h3>
           <form method="post" action="einstellungen.php?t=geraete">
@@ -5442,71 +5438,53 @@ ui_seite_start(['titel' => 'Einstellungen',
             </div>
           </form>
         </div>
-      <?php else: ?>
-        <p class="feld-klein">Im Menü der Zeile: Bezeichnung ändern ·
-           Deaktivieren / Aktivieren · Entkoppeln.</p>
       <?php endif; ?>
-    <?php ui_karte_ende(); ?>
+      <?php if (!$gVoll && $koppelWarten === null && $koppelSitzung === null): ?>
+        <div class="listen-form-fuss">
+          <?= ui_knopf(['text' => $gListe ? $gT['weiter'] : $gT['erst'], 'art' => 'leise',
+                        'symbol' => 'plus', 'typ' => 'button',
+                        'attr' => ' data-dialog="' . $gT['dlg'] . '"']) ?>
+        </div>
+      <?php endif; ?>
+    <?php ui_karte_ende(); endforeach; ?>
 
-    <?php /* ---- App installieren -------------
-             ZWEI WEGE, EIN RUECKFALL. Die Uhr-App kommt aus dem
-             Connect-IQ-Store, die Handy- und Wear-OS-App aus dem Play Store;
-             das APK auf diesem Server ist der Weg fuer den Fall, dass der
-             Store nicht geht.
+    <?php /* DIE PLATZZAHL ALS KLEINZEILE, die Warnung nur, wenn sie gilt. */ ?>
+    <p class="feld-klein"><?= count($devices) ?> von <?= MAX_GERAETE ?> Plätzen belegt —
+       deaktivierte zählen mit, erst Entkoppeln gibt einen Platz frei.</p>
+    <?php if ($gVoll): ?>
+      <?php ui_meldung('Bitte zuerst ein nicht mehr genutztes Gerät entkoppeln — dann lässt '
+          . 'sich wieder eines koppeln.', null, 'warn', '      ',
+          ['auftakt' => 'Alle ' . MAX_GERAETE . ' Plätze sind belegt.']); ?>
+    <?php endif; ?>
 
-             DIE ADRESSEN STEHEN IN ZWEI KONSTANTEN, und beide sind LEER.
-             Weder der Beitrittslink des internen Play-Tests noch die Adresse
-             der Uhr-App im Connect-IQ-Store liegen vor (Rahmenplan
-             Abschnitt 6, Stand 06.09.2026). Solange eine leer ist, steht ihre
-             Zeile ohne Knopf da — mit dem Weg als Text, denn „im Store nach
-             NAdoku suchen" ist auch ohne Link eine Anleitung. Ein Knopf ins
-             Leere waere schlechter als keiner. Nachzutragen ist danach je
-             eine Zeile in `db.php`.
-
-             DIE KARTE STEHT IMMER, auch ohne APK auf dem Server: Sie
-             beantwortet die Frage „wie bekomme ich die App", und die stellt
-             sich auf jeder Installation. Frueher hiess sie „NAdoku fuer
-             Android" und erschien nur, wenn ein APK dalag — die Uhr kam
-             darin gar nicht vor. */ ?>
-    <?php ui_karte_start(['titel' => 'App installieren', 'id' => 'k-app']); ?>
-      <?php
-      ui_zeile([
-          'text'  => 'Garmin-Uhr',
-          'klein' => CONNECT_IQ_URL !== ''
-              ? 'Im Connect-IQ-Store auf die Uhr laden. Danach auf der Sync-Seite '
-                . '„Gerät koppeln" starten.'
-              : 'Im Connect-IQ-Store auf dem Handy nach „NAdoku" suchen und auf die Uhr '
-                . 'laden. Danach auf der Sync-Seite „Gerät koppeln" starten.',
-          'aktionen' => CONNECT_IQ_URL !== ''
-              ? ui_knopf(['text' => 'Connect IQ', 'art' => 'neutral',
-                          'href' => CONNECT_IQ_URL, 'attr' => ' target="_blank" rel="noopener"'])
-              : '',
-      ]);
-      ui_zeile([
-          'text'  => 'Android-Handy oder Wear-OS-Uhr',
-          'klein' => PLAY_TEST_URL !== ''
-              ? 'Über den Play Store — im internen Test bis zur Freigabe. Mit dem Link '
-                . 'trittst du dem Test bei und installierst wie jede andere App.'
-              : 'Über den Play Store, sobald der interne Test offen ist. Bis dahin führt '
-                . 'der Weg über das APK weiter unten.',
-          'aktionen' => PLAY_TEST_URL !== ''
-              ? ui_knopf(['text' => 'Play Store', 'art' => 'neutral',
-                          'href' => PLAY_TEST_URL, 'attr' => ' target="_blank" rel="noopener"'])
-              : '',
-      ]);
-      ?>
-
-      <?php /* DAS APK KLAPPT AUF. Es ist der Rueckfall, nicht der
-               Weg — zugeklappt sagt die Zeile, dass es ihn gibt, ohne ihn
-               anzubieten. Die Karte zeigt, was auf dem Server LIEGT: Name,
-               Groesse, Datum und der gerechnete SHA-256; von Hand gepflegt
-               wird nichts.
-
-               DER DOWNLOAD IST EINE LEISE HANDLUNG: Die eine Haupthandlung
-               dieses Reiters bleibt „Weiter"
-               am Feld „Code vom Geraet", und der Store steht
-               darueber mit einem neutralen Knopf. */ ?>
-      <?php $apks = apk_liste(); if ($apks): ?>
+    <?php /* ---- DIE KOPPEL-DIALOGE (Design.md 9.11, Formulardialog): drei
+             Schritte je Gerätetyp. Derselbe Endpunkt wie bisher
+             (`koppeln_pruefen`); `typ` sagt nur, welcher Dialog nach einem
+             falschen Code wieder aufgeht. Der Garmin-Dialog trägt die
+             Kennung `koppeln`, die die Kopplungsprobe und der Bilderlauf
+             suchen; in den Zwischenzuständen trägt sie die Karte. */
+          if (!$gVoll && $koppelWarten === null && $koppelSitzung === null):
+          foreach ($gTypen as $gTyp => $gT): ?>
+    <dialog class="dialog" id="<?= e($gT['dlg']) ?>" aria-labelledby="<?= e($gT['dlg']) ?>-titel">
+      <form method="post" action="einstellungen.php?t=geraete">
+        <?= csrf_field() ?><input type="hidden" name="action" value="koppeln_pruefen">
+        <input type="hidden" name="typ" value="<?= e($gTyp) ?>">
+        <div class="dialog-kopf"><h2 id="<?= e($gT['dlg']) ?>-titel"><?= e($gT['titel']) ?> koppeln</h2></div>
+        <div class="dialog-inhalt">
+          <?php if ($gFehlerTyp === $gTyp): ?>
+            <?php ui_meldung(null, $error, 'info', '          '); ?>
+          <?php endif; ?>
+          <ol class="koppel-schritte">
+            <li><strong>App installieren</strong>
+              <?php if ($gTyp === 'garmin'): ?>
+                <span class="feld-klein"><?= CONNECT_IQ_URL !== ''
+                    ? '<a href="' . e(CONNECT_IQ_URL) . '" target="_blank" rel="noopener">Connect IQ Store</a>, App „NAdoku"'
+                    : 'Connect IQ Store, App „NAdoku" — auf dem Handy suchen und auf die Uhr laden' ?></span>
+              <?php else: ?>
+                <span class="feld-klein"><?= PLAY_TEST_URL !== ''
+                    ? '<a href="' . e(PLAY_TEST_URL) . '" target="_blank" rel="noopener">Play Store</a> — im internen Test bis zur Freigabe'
+                    : 'Play Store, sobald der interne Test offen ist — bis dahin das APK darunter' ?></span>
+                <?php $apks = apk_liste(); if ($apks): ?>
         <details class="apk-fach">
           <summary class="akkordeon-zeile">
             <?= ui_symbol('winkel', 'akkordeon-winkel') ?>
@@ -5543,7 +5521,44 @@ ui_seite_start(['titel' => 'Einstellungen',
              Datei nach.</p>
         </details>
       <?php endif; ?>
-    <?php ui_karte_ende(); ?>
+              <?php endif; ?>
+            </li>
+            <li><strong>Kopplung starten</strong>
+              <span class="feld-klein"><?= $gTyp === 'garmin'
+                  ? 'auf der Uhr: Sync-Seite → Gerät koppeln (Fenix, Forerunner: DOWN, dann START halten). Sie zeigt einen Code.'
+                  : 'in der App: Einstellungen → Gerät koppeln. Sie zeigt einen Code.' ?></span></li>
+            <li><strong>Code eingeben</strong>
+              <?php /* `feld-fest`: Der Code wird abgelesen und abgetippt, in
+                       Festbreite steht jedes Zeichen für sich. Mit und ohne
+                       Leerzeichen, in jeder Schreibung — pair_code_normalisieren()
+                       räumt auf; deshalb maxlength 8. */ ?>
+              <?php ui_feld([
+                  'name'        => 'code',
+                  'id'          => 'code-' . $gTyp,
+                  'label'       => 'Code vom Gerät',
+                  'klasse'      => 'feld-fest',
+                  'platzhalter' => 'AB3 K7Q',
+                  'pflicht'     => true,
+                  'klein'       => PAIR_TTL_MIN . ' Minuten gültig; danach fragt das Gerät, ob es sich verbinden soll.',
+                  'attr'        => ' maxlength="8" autocomplete="off" '
+                                 . 'autocapitalize="characters" spellcheck="false"']); ?>
+            </li>
+          </ol>
+        </div>
+        <div class="dialog-fuss">
+          <?= ui_knopf(['text' => 'Abbrechen', 'art' => 'leise', 'typ' => 'button',
+                        'attr' => ' data-dialog-zu']) ?>
+          <?= ui_knopf(['text' => 'Gerät koppeln', 'art' => 'primaer']) ?>
+        </div>
+      </form>
+    </dialog>
+<?php     endforeach; ?>
+    <script src="<?= asset('assets/dialog.js') ?>"></script>
+    <?php if ($gFehlerTyp !== null): ?>
+    <script<?= kopf_nonce_attr() ?>>window.edDialog && window.edDialog.auf(<?= json_encode($gTypen[$gFehlerTyp]['dlg']) ?>);</script>
+    <?php endif; ?>
+<?php   endif; ?>
+
 
   <?php endif; ?>
 

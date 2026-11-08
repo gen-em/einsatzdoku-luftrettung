@@ -179,11 +179,16 @@ export const wege = [
                      { cwd: WURZEL, stdio: 'ignore' });
         await s.goto(`${k.basis}/einstellungen.php?t=profil`, { waitUntil: 'domcontentloaded' });
         const zeile = s.locator('#k-zweitfaktor .zeile', { hasText: 'Rückweg mit dem Wiederherstellungsschlüssel' });
-        const plakette = ((await zeile.locator('.plakette').textContent().catch(() => '')) || '').trim();
+        /* Seit Web 24.5 (E-OF-19) steht der Zustand in der Kleinzeile der
+           Zeile, ohne Plakette, und der Knopf heisst „Erneuern". */
+        const plakette = ((await zeile.locator('.zeile-klein').textContent().catch(() => '')) || '')
+          .trim().split(' ')[0];
         const knopf = await s.locator('#k-zweitfaktor [data-rueckweg-auf]').count();
         merke(plakette === 'eingerichtet' && knopf === 1, `Karte „${plakette}", Knopf ${knopf}`);
 
-        /* 7. Erneuern: zuerst mit falschem Passwort, dann mit dem richtigen. */
+        /* 7. Erneuern: zuerst mit falschem Passwort, dann mit dem richtigen.
+              Ohne frischen Code ist „Verwalten" zugeklappt (E-OF-19). */
+        await s.click('#k-zweitfaktor details.zf-verwalten > summary');
         await s.click('#k-zweitfaktor [data-rueckweg-auf]');
         await s.fill('#rw-pw', 'falsch-falsch-falsch');
         await s.click('#dlg-rueckweg [data-rw-erneuern]');

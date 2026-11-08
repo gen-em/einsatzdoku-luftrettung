@@ -261,7 +261,13 @@ const weiter = async () => {
                      seite.click('#koppeln .knopf-primaer')]);
   await seite.waitForLoadState('networkidle');
 };
-const geraeteZahl = async () => seite.locator('#geraeteliste .zeile').count();
+/* SEIT WEB 24.5 (Konzept OF, E-OF-25): die Geräte in zwei Karten nach Typ,
+   das Codefeld im Koppel-Dialog `#koppeln` (Garmin), der erst aufgeht. */
+const geraeteZahl = async () => seite.locator('#k-garmin .zeile, #k-android .zeile').count();
+const oeffnen = async () => {
+  if (await seite.locator('dialog#koppeln[open]').count()) { return; }
+  if (await seite.locator('[data-dialog="koppeln"]').count()) { await seite.click('[data-dialog="koppeln"]'); }
+};
 
 await geh();
 const vorher = await geraeteZahl();
@@ -270,25 +276,28 @@ const vorher = await geraeteZahl();
 console.log('\n  Zustand 1 — Code vom Gerät eingeben');
 pruefe(await seite.locator('#koppeln input[name="code"]').count() === 1,
        'Das Feld „Code vom Gerät" steht da');
-pruefe((await seite.locator('#koppeln .knopf-primaer').innerText()).trim() === 'Weiter',
-       'Die eine Haupthandlung heißt „Weiter" und ist primär');
+pruefe((await seite.locator('#koppeln .knopf-primaer').innerText()).trim() === 'Gerät koppeln',
+       'Die eine Haupthandlung des Dialogs heißt „Gerät koppeln" und ist primär');
 pruefe(await seite.locator('.codeblock').count() === 0,
        'Kein Kopplungscode-Kasten mehr — das Gerät zeigt ihn (S5)');
-pruefe(await seite.locator('.knopf-primaer').count() === 1,
-       'Genau EIN primärer Knopf auf der Seite (Design.md 9.16)',
-       (await seite.locator('.knopf-primaer').count()) + ' gefunden');
+pruefe(await seite.locator('#koppeln .knopf-primaer').count() === 1,
+       'Genau EIN primärer Knopf im Dialog (Design.md 9.16)',
+       (await seite.locator('#koppeln .knopf-primaer').count()) + ' gefunden');
+await oeffnen();
 await bild(seite, 'rundlauf-1-eingabe');
 
 /* ---- Die beiden Fehlerwege ---------------------------------------------- */
+await oeffnen();
 await seite.fill('#koppeln input[name="code"]', 'AB0K7Q');
 await weiter();
-pruefe((await seite.locator('.meldung-fehler').innerText()).includes('0, O, 1 und I'),
+pruefe((await seite.locator('.meldung-fehler').first().innerText()).includes('0, O, 1 und I'),
        'Ein Code mit „0" -> eigene Meldung, kein Rateversuch (E-S5-17)');
 await bild(seite, 'rundlauf-1b-formatfehler');
 
+await oeffnen();
 await seite.fill('#koppeln input[name="code"]', 'ZZZZZZ');
 await weiter();
-pruefe((await seite.locator('.meldung-fehler').innerText()).includes('kennt der Server nicht'),
+pruefe((await seite.locator('.meldung-fehler').first().innerText()).includes('kennt der Server nicht'),
        'Ein unbekannter Code -> „kennt der Server nicht"');
 
 /* ---- Ein Gerät meldet sich an ------------------------------------------- */
@@ -308,6 +317,7 @@ pruefe(!!geraet.code && !!geraet.device_id && !!geraet.api_key,
  * auf; ginge das schief, fände der Server den Code nicht. */
 console.log('\n  Zustand 2 — die Rückfrage im Web');
 const getippt = (geraet.code.slice(0, 3) + ' ' + geraet.code.slice(3)).toLowerCase();
+await oeffnen();
 await seite.fill('#koppeln input[name="code"]', getippt);
 await weiter();
 const k2 = await seite.locator('#koppeln').innerText();
@@ -358,7 +368,7 @@ pruefe((await seite.locator('.meldung-ok').innerText()).includes('jetzt mit dein
        'Vollzugsmeldung im Ton „ok"');
 pruefe(await geraeteZahl() === vorher + 1, 'Das Gerät steht in der Liste',
        `${vorher} -> ${await geraeteZahl()}`);
-pruefe((await seite.locator('#geraeteliste').innerText()).includes('Venu 3S'),
+pruefe((await seite.locator('#k-garmin').innerText()).includes('Venu 3S'),
        'mit Art und Modell');
 pruefe((await seite.locator('#koppeln').innerText()).includes('Code vom Gerät'),
        'Die Karte steht wieder auf Zustand 1');

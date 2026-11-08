@@ -488,7 +488,7 @@ auseinanderlaufen kann.
 | `--flaeche-seite` | `var(--genem-flaeche-standard)` | 1 |  |
 | `--flaeche-karte` | `var(--genem-flaeche-karte)` | 21 |  |
 | `--flaeche-abgesetzt` | `var(--genem-flaeche-abgesetzt)` | 35 |  |
-| `--flaeche-feld` | `var(--genem-flaeche-standard)` | 5 |  |
+| `--flaeche-feld` | `var(--genem-flaeche-standard)` | 6 |  |
 | `--flaeche-marke` | `var(--genem-dunkelblau)` | 1 |  |
 
 **Schrift**
@@ -496,8 +496,8 @@ auseinanderlaufen kann.
 | Token | Wert | benutzt | |
 |---|---|--:|---|
 | `--text` | `var(--genem-text-standard)` | 21 |  |
-| `--text-titel` | `var(--genem-text-alternativ)` | 36 |  |
-| `--gedaempft` | `var(--genem-text-sekundaer)` | 68 |  |
+| `--text-titel` | `var(--genem-text-alternativ)` | 37 |  |
+| `--gedaempft` | `var(--genem-text-sekundaer)` | 69 |  |
 | `--text-link` | `var(--genem-text-blau)` | 18 |  |
 | `--text-link-hover` | `var(--genem-text-blau)` | 4 |  |
 | `--auf-dunkel` | `var(--genem-schnee)` | 7 | Schrift auf Dunkelblau, 13,33:1 |
@@ -507,7 +507,7 @@ auseinanderlaufen kann.
 | Token | Wert | benutzt | |
 |---|---|--:|---|
 | `--linie` | `var(--genem-linie)` | 48 |  |
-| `--linie-stark` | `var(--genem-linie-stark)` | 21 |  |
+| `--linie-stark` | `var(--genem-linie-stark)` | 22 |  |
 | `--mechanik` | `var(--genem-sand)` | 11 |  |
 
 **Aktion — Dunkelblau**
@@ -530,9 +530,9 @@ auseinanderlaufen kann.
 
 | Token | Wert | benutzt | |
 |---|---|--:|---|
-| `--auswahl-flaeche` | `var(--genem-blau-100)` | 18 |  |
+| `--auswahl-flaeche` | `var(--genem-blau-100)` | 19 |  |
 | `--auswahl-text` | `var(--genem-dunkelblau)` | 9 |  |
-| `--auswahl-linie` | `var(--genem-aktion)` | 8 |  |
+| `--auswahl-linie` | `var(--genem-aktion)` | 9 |  |
 | `--kopf-aktiv` | `var(--genem-blau-300)` | 1 |  |
 
 **Status**
@@ -563,7 +563,7 @@ auseinanderlaufen kann.
 
 | Token | Wert | benutzt | |
 |---|---|--:|---|
-| `--fokus` | `var(--genem-max-blau)` | 5 |  |
+| `--fokus` | `var(--genem-max-blau)` | 6 |  |
 
 **Umgebungsetikett (Staging, Demo)**
 
@@ -599,7 +599,7 @@ auseinanderlaufen kann.
 
 | Token | Wert | benutzt | |
 |---|---|--:|---|
-| `--groesse-2` | `13px` | 69 |  |
+| `--groesse-2` | `13px` | 70 |  |
 | `--groesse-3` | `15px` | 16 |  |
 | `--groesse-4` | `16px` | 15 |  |
 | `--groesse-5` | `19px` | 13 |  |
@@ -613,18 +613,18 @@ auseinanderlaufen kann.
 
 | Token | Wert | benutzt | |
 |---|---|--:|---|
-| `--abstand-1` | `4px` | 88 |  |
-| `--abstand-2` | `8px` | 127 |  |
-| `--abstand-3` | `12px` | 167 |  |
-| `--abstand-4` | `16px` | 75 |  |
-| `--abstand-5` | `24px` | 38 |  |
+| `--abstand-1` | `4px` | 89 |  |
+| `--abstand-2` | `8px` | 129 |  |
+| `--abstand-3` | `12px` | 170 |  |
+| `--abstand-4` | `16px` | 77 |  |
+| `--abstand-5` | `24px` | 39 |  |
 
 **Radien**
 
 | Token | Wert | benutzt | |
 |---|---|--:|---|
 | `--radius-klein` | `6px` | 29 | Plakette, Kästchen, Eingabefeld |
-| `--radius` | `10px` | 21 | Knopf, Meldung |
+| `--radius` | `10px` | 22 | Knopf, Meldung |
 | `--radius-gross` | `12px` | 8 | Karte, Blatt, Dialog |
 
 **Maße**
@@ -643,7 +643,7 @@ auseinanderlaufen kann.
 | `--schublade` | `320px` | 1 | Höchstbreite der mobilen Schublade |
 | `--blatt-zeile` | `50px` | 1 | Zeilenhöhe im Aktionsblatt |
 | `--unterpunkt` | `28px` | 2 | Sprungmarke unter dem Menüpunkt |
-| `--feld-breit` | `36rem` | 2 | Höchstbreite eines Felds: Listensuche, Felder der Einstellungen |
+| `--feld-breit` | `36rem` | 4 | Höchstbreite eines Felds: Listensuche, Felder der Einstellungen |
 | `--feld-datum` | `calc(11ch + 2 * var(--abstand-3) + 2 * var(--strich))` | 1 |  |
 | `--uebersicht-spalte` | `240px` | 1 | schmalste Spalte der Einstellungs-Übersicht |
 | `--suchfeld` | `48px` | 2 | das große Suchfeld |
@@ -653,8 +653,8 @@ auseinanderlaufen kann.
 | `--symbol-text` | `1em` | 2 | Symbol im Fliesstext |
 | `--symbol` | `20px` | 13 | Symbolgröße in der Zeile |
 | `--symbol-gross` | `24px` | 14 | Symbolgröße im Knopf und Kartenkopf |
-| `--strich` | `1px` | 71 | Haarlinie |
-| `--strich-stark` | `2px` | 35 | Aktivstrich, Randstrich, Fokus |
+| `--strich` | `1px` | 72 | Haarlinie |
+| `--strich-stark` | `2px` | 37 | Aktivstrich, Randstrich, Fokus |
 | `--strich-reiter` | `calc(var(--strich-stark) + var(--strich))` | 1 | 3 px |
 | `--radius-rund` | `999px` | 20 | Zähler, Griff, Punkt — voll rund |
 | `--schalter-breit` | `46px` | 2 | der Schalter, 46 breit … |
@@ -1027,11 +1027,11 @@ zählt nur Breiten.
 | `@media (hover: hover) and (pointer: fine) and (min-width:1024px)` | 1 |
 | `@media (min-width:1024px) and (max-height:949px)` | 1 |
 | `@media (min-width:1024px)` | 4 |
-| `@media (min-width:720px)` | 16 |
+| `@media (min-width:720px)` | 17 |
 | `@media screen and (min-width:720px)` | 1 |
 | `@media (max-width:479px)` | 3 |
 
-Zusammen 33 Medienblöcke über 5 verschiedene Breiten: 479 px, 720 px, 1024 px, 1200 px, 1600 px.
+Zusammen 34 Medienblöcke über 5 verschiedene Breiten: 479 px, 720 px, 1024 px, 1200 px, 1600 px.
 
 ### Verhalten je Baustein
 
@@ -1146,7 +1146,7 @@ AGPL-3.0; siehe `docs/Lizenzen.md`.
 | `ohne-zuordnung.svg` | Tabler Icons „circle-dashed" (MIT) | 2 |
 | `ordner-plus.svg` | Tabler Icons „folder-plus" (MIT) | 1 |
 | `pfeil-hoch.svg` | Tabler Icons „arrow-up" (MIT) | 6 |
-| `plus.svg` | Tabler Icons „plus" (MIT) | 24 |
+| `plus.svg` | Tabler Icons „plus" (MIT) | 25 |
 | `position.svg` | Tabler Icons „current-location" (MIT) | 5 |
 | `profil.svg` | Tabler Icons „user" (MIT) | 18 |
 | `protokoll.svg` | Tabler Icons „list" (MIT) | 21 |
@@ -1165,7 +1165,7 @@ AGPL-3.0; siehe `docs/Lizenzen.md`.
 | `status.svg` | Tabler Icons „activity" (MIT) | 49 |
 | `stern.svg` | Tabler Icons „star" (MIT) | 7 |
 | `stift.svg` | Tabler Icons „pencil" (MIT) | 8 |
-| `tausch.svg` | Tabler Icons „arrows-exchange" (MIT) | 14 |
+| `tausch.svg` | Tabler Icons „arrows-exchange" (MIT) | 16 |
 | `uhr.svg` | Tabler Icons „device-watch" (MIT) | 282 |
 | `uhrzeit.svg` | Tabler Icons „clock" (MIT) | 3 |
 | `veranstaltung.svg` | Tabler Icons „ticket" (MIT) | 11 |
@@ -1174,7 +1174,7 @@ AGPL-3.0; siehe `docs/Lizenzen.md`.
 | `werkzeug.svg` | Tabler Icons „tool" (MIT) | 0 |
 | `wiederherstellen.svg` | Tabler Icons „restore" (MIT) | 2 |
 | `winkel.svg` | Tabler Icons „chevron-down" (MIT) | 19 |
-| `zahnrad.svg` | Tabler Icons „settings" (MIT) | 2 |
+| `zahnrad.svg` | Tabler Icons „settings" (MIT) | 3 |
 | `ziel-fern.svg` | Tabler Icons „cloud-upload" (MIT) | 1 |
 | `zurueck.svg` | Tabler Icons „arrow-left" (MIT) | 34 |
 
@@ -1294,20 +1294,20 @@ für eine Rückfrage — nicht für ein neues Element.
 | `ui_titelzeile()` | `.titelzeile` | ja (+7 Unterklassen) | 2751 |
 | `ui_aktionen()` | `.aktionen` | ja (+2 Unterklassen) | 2793 |
 | `ui_datum_eingabe()` | `.datum-eingabe` | **keine** | 2879 |
-| `ui_feld()` | `.feld` | ja (+30 Unterklassen) | 2902 |
+| `ui_feld()` | `.feld` | ja (+31 Unterklassen) | 2902 |
 | `ui_schalter()` | `.schalter` | ja (+27 Unterklassen) | 2973 |
 | `ui_segment_markup()` | `.segment` | ja (+23 Unterklassen) | 3017 |
 | `ui_wahlliste()` | `.wahlliste` | ja | 3087 |
 | `ui_zeilenaktionen()` | `.zeile-aktionen` | ja | 3131 |
 | `ui_speichern_leiste()` | `.speichern` | ja (+4 Unterklassen) | 3230 |
-| `ui_kennzahl()` | `.kennzahl` | ja (+20 Unterklassen) | 3300 |
-| `ui_abbruch()` | `.rahmen` | ja (+3 Unterklassen) | 3341 |
-| `ui_csrf_bootstrap()` | `.csrf-bootstrap` | **keine** | 3433 |
-| `ui_geocoder_bootstrap()` | `.geocoder-bootstrap` | **keine** | 3471 |
-| `ui_geocoder_hinweis()` | `.geocoder-hinweis` | **keine** | 3502 |
-| `ui_ortsfeld()` | `.ortsfeld-zeile` | ja | 3531 |
-| `ui_tabellen_bootstrap()` | `.tabellen-bootstrap` | **keine** | 3675 |
-| `ui_krypto_bootstrap()` | — | Hüllenfunktion, kein eigenes Element | 3754 |
+| `ui_kennzahl()` | `.kennzahl` | ja (+20 Unterklassen) | 3302 |
+| `ui_abbruch()` | `.rahmen` | ja (+3 Unterklassen) | 3343 |
+| `ui_csrf_bootstrap()` | `.csrf-bootstrap` | **keine** | 3435 |
+| `ui_geocoder_bootstrap()` | `.geocoder-bootstrap` | **keine** | 3473 |
+| `ui_geocoder_hinweis()` | `.geocoder-hinweis` | **keine** | 3504 |
+| `ui_ortsfeld()` | `.ortsfeld-zeile` | ja | 3533 |
+| `ui_tabellen_bootstrap()` | `.tabellen-bootstrap` | **keine** | 3677 |
+| `ui_krypto_bootstrap()` | — | Hüllenfunktion, kein eigenes Element | 3756 |
 
 55 Funktionen mit Markup in `server/ui.php`, davon 4 Hüllenfunktionen ohne eigenes Element.
 **Ohne Regel im Stylesheet:** `ui_logo_masse()`, `ui_datenschutz_hinweis()`, `ui_diagramm_skala()`, `ui_datum_eingabe()`, `ui_csrf_bootstrap()`, `ui_geocoder_bootstrap()`, `ui_geocoder_hinweis()`, `ui_tabellen_bootstrap()` — jede davon ist zu prüfen: entweder ein Behälter, der zu Recht keine Gestaltung braucht, oder eine Lücke.
@@ -1774,6 +1774,12 @@ Kartenrand. Links steht fett in der Auswahlschrift, **was** geändert ist
 *Bis Web 24.1 hatte sie die Form der Karte* (E-R43-1, seit Web 12.2.3:
 Radius, Linie oben, Schatten), weil sie zwischen Karten stand; seit die
 Karten der Einstellungen Abschnitte sind, gehört sie zu keinem.
+
+**Sie kann außerhalb ihres Formulars stehen** (seit Web 24.5.0): Am Boden der
+Rahmenkarte sitzt sie als letztes Kind des Inhalts, auch wenn das Formular
+weiter oben endet (Profil). Dann trägt sie `data-fuer="<Formular-id>"`, ihr
+Knopf `form=` (`ui_speichern_leiste(['form' => …])`), und `forms.js` findet
+sie dort.
 
 **Die Regel dazu gilt für jede Seite** (Kapitel 6, gemessen im Bilderlauf):
 Speichert ein Knopf **einen** Abschnitt, steht er als letztes Element darin;
@@ -3489,6 +3495,31 @@ Mockup M-S11-02, Variante 1) — Ring und „Wird verdichtet: 17 von 42", darunt
 der Balken; am Ende die Meldung. Export und GPX-Archiv zeigen bis auf Weiteres
 nur die Textzeile.
 
+### 9.42 Wahlkarten (`.wahlkarten`, `.wahlkarte`, seit Web 24.5.0)
+
+*Freigegeben mit dem Mockup OF-P17-C (Konzept OF, E-OF-26).*
+
+**Zweck:** Eine Seite mit zwei Wegen — „Liste übernehmen" und „Liste
+ausgeben" — zeigt erst die Wahl und dann nur das Formular, das dazu gehört.
+Zwei Radios in Kartenform nebeneinander (ab 720 px), zusammen so breit wie
+ein Feld (`--feld-breit`); je Karte Zeichen und Titel, darunter **ein** Satz.
+Gewählt: Auswahlfläche mit dunkelblauem Rand, wie die gewählte Wahlliste
+(9.7). Das Radio ist verborgen wie in der Segmentwahl; der Fokusring steht
+an der Karte. Die Teile der Seite tragen `data-wahl-zu="<name>"
+data-wahl="<wert>"`; `assets/wahlkarten.js` blendet die nicht gewählten aus,
+und die Sprungmarken folgen (9.25). Ohne Skript stehen alle Teile da; ein
+Anker in einem Teil wählt dessen Karte. **Warum nicht die Segmentwahl:**
+Sie trägt kurze Wörter; hier gehört zu jeder Wahl ein Satz, der sagt, was
+sie tut. Verwender: Import / Export.
+
+**Der Koppel-Dialog** (Geräte, seit Web 24.5.0, E-OF-25, Bild OF-P11-B2) ist
+kein Baustein, sondern ein Formulardialog (9.11) mit einer nummerierten
+Schrittliste `.koppel-schritte` (App installieren, Kopplung starten, Code
+eingeben). **Die Zweitfaktor-Karte** im Profil (E-OF-19, Bild OF-P09-B) ist
+die aufklappbare Zeile `.zeile-mehr` (9.2): Ihr `<summary>` ist eine Zeile
+mit dem einen Satz und einem Knopfbild „Verwalten", aufgeklappt stehen die
+Zeilen mit je einer Handlung.
+
 ## 10. Seitentypen und das Rezept für eine neue Seite
 
 ### 10.1 Sechs Typen
@@ -3711,6 +3742,7 @@ genau das, wogegen sie schützt.
 
 | Fassung | Was |
 |---|---|
+| **Web 24.5.0 (Schritt 27, Konzept OF, OF-04)** | **9.42 neu — Wahlkarten**, freigegeben mit OF-P17-C; dort auch Koppel-Dialog und Zweitfaktor-Karte als Verwendungen vorhandener Bausteine. **9.9:** Speicherleiste außerhalb des Formulars (`data-fuer`). **6:** Feldraster `.listen-form-felder` in den Einstellungen auf `--feld-breit` begrenzt. |
 | **Web 24.4.0 (Schritt 27, Konzept OF, OF-03)** | **9.7:** Datumsfeld `TT.MM.JJJJ` (`ui_datum_eingabe()`, `.feld-datum`, `--feld-datum`) an allen acht Stellen. **9.13:** Zeichen statt Kleinzeile am Ortsfeld, der Satz als Tooltip. **9.18a:** Filterknopf mit gesetzten Filtern als Pillen. Neues abgeleitetes Maß `--feld-datum`; kein neuer Baustein — alle drei mit den Mockups freigegeben. |
 | **Web 24.2.0–24.3.0 (Schritt 27, Konzept OF, OF-01 und OF-02)** | **6:** Erklärtext ohne Verweis, das „?" öffnet das Kapitel; drei Seitenregeln im Bilderlauf. **9.9** Speicherleiste als Auswahlfläche am Rand. **4:** `--feld-breit` statt `--listensuche-breit`. **9.1:** Klappkarte mit Stand und Plakette (`stand` statt `vorschau`). **9.2:** Plakette und Knopf auf einer Linie. **9.7:** Segmentwahl abwählbar. **8:** sechs Zeichen (`filter`, `wiederherstellen`, `herunterladen`, `hochladen`, `mond`, `sonne`), freigegeben mit den Mockups. Kein neuer Baustein. |
 | **Web 24.1.0 (Schritt 27, Konzept OF, NV-03)** | **9.25:** Am Schreibtisch nur der aktive Block (`.leiste-gruppe-aktiv`), Schublade unverändert; aktiver Eintrag, markierte Zeitraumzeile und Vorschlag **ohne Strich**, der Vorschlag auf Blau 100 statt Rauch (E-OF-16); Sprungmarken nur zu sichtbaren Karten. **3.4:** zwei Paare neu beschrieben (der Strich, den sie nannten, ist fort; die Paare tragen andere Stellen). **10.1:** „Abmelden" nur in der Leiste (E-OF-27). Kein neuer Baustein, kein Token. |

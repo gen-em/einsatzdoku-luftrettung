@@ -550,6 +550,8 @@ Daten erst nach Server-Bestätigung.
 │   │                      zeitfeld.js (Zeiteingabe im 24-Stunden-Format, s. u.),
 │   │                      datumsfeld.js (Datumseingabe TT.MM.JJJJ, seit Web 24.4.0),
 │   │                      segment.js (abwählbare Segmentwahl, seit Web 24.3.0),
+│   │                      wahlkarten.js (erst wählen, dann füllen: Import / Export,
+│   │                        seit Web 24.5.0),
 │   │                      klappkarte.js (Gerüst: öffnet die Klappkarte, auf die
 │   │                        der Anker zeigt, seit Web 24.3.0),
 │   │                      keyguard.js (Bindung/Lebensdauer des Inhaltsschlüssels),

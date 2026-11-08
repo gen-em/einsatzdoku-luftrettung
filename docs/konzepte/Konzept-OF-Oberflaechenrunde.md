@@ -44,18 +44,17 @@ es im Kopf von `server/version.php`.
 | OF-01 | Regeln für alle Seiten: eine rechte Kante, Felder 36 rem (E-OF-31); Speicherknopf im Abschnitt oder Speicherleiste (E-OF-32, E-OF-41); Handbuch-Verweise raus, das „?“ öffnet das Kapitel der Seite (E-OF-02, -56); ein Satz je Karte (OF-P-10, -15); drei Messungen im Bilderlauf (E-OF-49, Nr. 530) | Opus · keine | **erledigt** 08.11.2026 (Web 24.2.0) |
 | OF-02 | Bausteine I: Klappkarte mit Stand und Plakette (E-OF-42); Segmentwahl abwählbar und senkrecht mittig (OF-P-05, E-OF-33); Zeile mit Plakette und Knopf auf einer Linie (OF-P-08); sechs neue Zeichen | Opus · keine | **erledigt** 08.11.2026 (Web 24.3.0) |
 | OF-03 | Bausteine II, Eingabe: Datumsfeld `TT.MM.JJJJ` an allen acht Stellen (E-OF-06, -44, -54); Ortsfeld-Hinweis als Zeichen (E-OF-07); Listenkopf mit Filterknopf (E-OF-18) | Opus · keine | **erledigt** 08.11.2026 (Web 24.4.0) |
-| OF-04 | Einstellungen: Profil mit Zweitfaktor „ein Satz plus Verwalten“ (E-OF-19); Geräte nach Typ, Koppeln im Dialog (E-OF-25); Import / Export „erst wählen, dann füllen“ (E-OF-26); Backup (E-OF-52, OF-P-15) | Opus · keine | offen |
+| OF-04 | Einstellungen: Profil mit Zweitfaktor „ein Satz plus Verwalten“ (E-OF-19); Geräte nach Typ, Koppeln im Dialog (E-OF-25); Import / Export „erst wählen, dann füllen“ (E-OF-26); Backup (E-OF-52, OF-P-15) | Opus · keine | **erledigt** 08.11.2026 (Web 24.5.0) |
 | OF-05 | Verwaltung: Kontenliste ohne Spalte „Öffnen“ (E-OF-53); Demo-Konto als Karte unter Installation, ein Schalter statt zwei (E-OF-08, E-OF-46) | Opus · keine | offen |
 | OF-06 | Betrieb: Status „Probleme zuerst“ (E-OF-20; Q-OF-02 → OF-M1); Hintergrundjobs (E-OF-10, -21); Servereinstellungen als Klappkarten (E-OF-22); Komplett-Backup (E-OF-23); Backup-Ziele an beiden Orten, die Seite entfällt (E-OF-24, E-OF-45) | Opus · **gefächert** nach OF-M1: je ein Agent für Status, Hintergrundjobs, Servereinstellungen und Komplett-Backup samt Ziele; `ui.php`, `style.css`, `status_lib.php`, Texte und Prüfarbeit seriell | offen |
 | OF-07 | Einsatz, Diensttag, Karte, Papierkorb: Ruhesegmente-Kachel entfällt (E-OF-05); GPX-Zeichen (E-OF-11); Plakette „ausgedünnt“ entfällt (E-OF-12); Karte „Einsatz und Transport“ im Feldkatalog (E-OF-33); Schlösser in eigener Spalte (E-OF-28); Kartenart ohne Anbieter (E-OF-13); Leaflet-Bedienelemente im Branding (E-OF-29); Papierkorb mit `restore`, Artzeichen vor das Datum (E-OF-30, E-OF-48) | Opus · **gefächert**: ein Agent Formular und Leseansicht (`einsatz_form.php`, `mission_fields.php`, `einsatz.php`), einer Karte (`geo.js`, `map_layers.js`, Leaflet-Regeln), einer Tagesübersicht und Papierkorb (`index.php`, `tag_spuren.php`, `papierkorb.php`); `style.css`, Design.md und Prüfarbeit seriell | offen |
 | OF-08 | Darstellung: Umschalter Mond/Sonne in der Kopfleiste, vier Einstellungen im Profil, keine Migration (E-OF-09, -43, -55) | Opus · keine | offen |
 | OF-09 | Abschluss (NV-05 geht auf): Dokumentation, Prüfmittel, Prüfstand voll, Pull Request, Prüfdokument | Opus · keine | offen |
 
-**In Arbeit:** OF-04 Einstellungen. **Erledigt:** OF-00, NV-01 bis NV-04
-(das Gerüst), OF-01 bis OF-03. **Je Paket mitzunehmen:** seine Zeilen unter
-`seitenregeln` in `tools/screenshots/ausnahmen.json` (E-OF-65) — OF-04
-Profil, Geräte, Backup, Import / Export, Standorte; OF-05 Kontoseite,
-Protokoll-Archiv; OF-06 Jobs, Sicherheit, Servereinstellungen; OF-07
+**In Arbeit:** OF-05 Verwaltung. **Erledigt:** OF-00, NV-01 bis NV-04
+(das Gerüst), OF-01 bis OF-04. **Je Paket mitzunehmen:** seine Zeilen unter
+`seitenregeln` in `tools/screenshots/ausnahmen.json` (E-OF-65) — OF-05
+Kontoseite (das Protokoll-Archiv ist mit OF-04 frei, E-OF-70 (6)); OF-06 Jobs, Sicherheit, Servereinstellungen; OF-07
 Tagesübersicht, Papierkorb, Diensttag- und Einsatzseiten.
 **Prüfweise seit NV-02:** E-OF-60. **Hakt:**
 nichts; F-OF-19 (eine Rolle mit einem Bereich sieht einen einzelnen
@@ -781,11 +780,12 @@ der Vorbereitung und der NV-Übergabe übernommen; neu ab E-OF-39.
 | E-OF-62 | NV-03: Die Sprungmarken ziehen über einen `MutationObserver` auf `hidden` im Inhalt nach, nicht über einen Aufruf der Backup-Seite (Abschnitt 5, NV-03). So kann keine Seite mit bedingter Karte — Backup, Zweitfaktor, Geräte, Import / Export nach OF-04 — das Nachziehen vergessen; die Durchsicht je Seite entfällt damit. Der Vorschlag verliert mit dem Strich seine einzige Markierung auf Rauch und bekommt deshalb die Auswahlfläche (Blau 100) statt Rauch; zwei Kontrastpaare, deren Beschreibung den Strich nannte, tragen weiter andere Stellen und sind neu beschrieben | Umsetzung, 08.11.2026 |
 | E-OF-63 | NV-04 ohne Codeänderung: Was Abschnitt 5 für unter 1024 px verlangt, leistet `display: contents` an Rahmenkarte und Leistenspalte aus NV-02 (E-OF-61) — keine Box, kein Rand, keine Fläche; die Bereichszeile rollt (NV-01), Schublade und Rückweg sind unverändert. Die Regel `.rahmen { padding: --abstand-3 }` entfällt: `.inhalt` trägt den Abstand schon, und der Inhalt liegt wie im Bild `NV-05` 12 px vom Rand; mit ihr wären es 24. Keine neue Fassung — es ändert sich nichts, was ausgeliefert wird | Umsetzung, 08.11.2026 |
 | E-OF-64 | OF-01: Den Verweis ins Handbuch behalten die Druckblätter (Notfall-, Code-, Schlüsselblatt — auf Papier gibt es kein „?“) und die öffentlichen Seiten ohne Kopfmenü (Wiederherstellung, Notzugang zum Zweitfaktor), auf denen er der einzige Weg ins Handbuch ist. „Überall“ in E-OF-02 meint die Seiten mit Kopfleiste | Umsetzung, 08.11.2026 |
-| E-OF-65 | OF-01: Die drei Seitenregeln sind ab sofort rot im Bilderlauf; die 31 bekannten Verstöße stehen mit dem Paket, das sie behebt, unter `seitenregeln` in `ausnahmen.json`. Jedes Paket streicht seine Zeilen, eine Ausnahme ohne Befund ist selbst rot — so läuft die Liste bis OF-09 auf null, und ein neuer Verstoß fällt sofort auf. Seiten ohne eigenes Paket sind zugeordnet: Standorte und Rückfrage beim Konto zu OF-04, Diensttag anlegen / Datum / zusammenführen und Einsatz verschieben zu OF-07 | Umsetzung, 08.11.2026 |
+| E-OF-65 | OF-01: Die drei Seitenregeln sind ab sofort rot im Bilderlauf; die 31 bekannten Verstöße stehen mit dem Paket, das sie behebt, unter `seitenregeln` in `ausnahmen.json`. Jedes Paket streicht seine Zeilen, eine Ausnahme ohne Befund ist selbst rot — so läuft die Liste bis OF-09 auf null, und ein neuer Verstoß fällt sofort auf. Seiten ohne eigenes Paket sind zugeordnet: Standorte zu OF-04, Rückfrage beim Konto (`02h`) sowie Diensttag anlegen / Datum / zusammenführen und Einsatz verschieben zu OF-07 | Umsetzung, 08.11.2026 |
 | E-OF-66 | OF-01: Die Handbuchmarken stehen als Zuordnung Menüpunkt → Marke in `ui_hilfe_marke()`, nicht als sechstes Glied der Punkt-Tupel — die Tupel werden an fünf Stellen positionsweise gelesen. Seiten mit eigenem Kapitel (Kontoseite, Sicherheit, die Diensttage-Seiten, Suche) geben `hilfe` an `ui_geruest_start()` | Umsetzung, 08.11.2026 |
 | E-OF-67 | OF-01: Die Speicherleiste bekommt ihre Form jetzt (Fläche, bündig, „Geändert: …“ als Vorgabe jeder Formularleiste); welche Seite Knöpfe im Abschnitt und welche die Leiste trägt, entscheidet das Paket der Seite (Profil OF-04, Installation OF-05, Servereinstellungen OF-06), wie Abschnitt 5 es sagt. „Ungespeichert“ der Rechtstexte wird „Geändert“ | Umsetzung, 08.11.2026 |
 | E-OF-68 | OF-02: `vorschau` heißt `stand` bei allen **neun** Verwendern, nicht bei dreien (Abschnitt 5 zählte drei); `.karte-vorschau` heißt `.karte-stand`. Das Öffnen „nach dem Absenden“ macht ein Gerüstskript `klappkarte.js` am Anker der Adresse, nicht der Server — die Seiten leiten nach dem Speichern auf `#k-…` um, und den Anker sieht nur der Browser; dasselbe Skript öffnet die Karte beim Sprung über eine Sprungmarke. Die Leertaste der abwählbaren Segmentwahl behandelt `segment.js` selbst, weil Chromium und WebKit auf einem gewählten Radio keinen Klick auslösen | Umsetzung, 08.11.2026 |
 | E-OF-69 | OF-03: (1) Datumsformatieren bleibt bei den vorhandenen `EdFormat.tag()` (Browser) und kommt als `datum_de()` nach `format_lib.php` (Register: Text aus Zeitpunkt → `format_lib`); nur das Lesen steht in `eingabe_lib.php` (`datum_de_lesen()`, `post_datum()`, `get_datum()`) und als `EdFormat.datumLesen()`. Beide Formen gelten beim Lesen; ein Wert, der kein Tag ist, geht unverändert an die Prüfung der Seite. Die Suche trägt in der Adresse weiter ISO (Art `datum`), damit verschickte Links gelten. (2) Das Zeichen zur Adresssuche bleibt **einmal je Seite** am ersten Ortsfeld, wie der Satz vorher; der Tooltip ist so breit wie die Feldzeile, kein `title` am Knopf (er stünde zweimal im Vorlesetext). (3) Der Filterknopf ist ein Knopf mit `aria-expanded`, kein `<details>`: Knopf neben dem Suchfeld und Reihe darunter liegen nicht in einem Kasten. „Gesetzt“ heißt aktiv und nicht `vorgabe`; die Pille nimmt über `weg` zurück | Umsetzung, 08.11.2026 |
+| E-OF-70 | OF-04: (1) „Verwalten“ ist ein `<details>` im Inhalt der Zweitfaktor-Karte (`zf-verwalten`), sein `<summary>` die Zeile mit dem Satz und dem Knopfbild; offen ist es von selbst, solange der Code frisch ist (`zweitfaktor_frisch()`) — dann steht die Handlung, für die man gerade bestätigt hat, schon da. Die Zahlen (Geräte, Passkeys, Rückweg) stehen in der Kleinzeile, nicht als Plakette (OF-P-08). Das Ausschalten hat ein eigenes Formular, weil es am Codes-Formular zwei `action`-Felder gesendet hätte. (2) Das Anlegen eines Passkeys bleibt der Block unter der Zeile „Passkeys“ (Bezeichnung, Knopf), keine Aktion in der Zeile — `passkey.js` blendet ihn erst ein, wenn der Browser Passkeys kann. (3) Geräte: Art `handy` gehört zur Karte „Android-Handy und Wear-OS-Uhr“, jede andere zur Garmin-Karte; der Dialog trägt den Typ als verborgenes Feld und öffnet nach einem Fehler wieder. (4) Die Speicherleiste kann zu einem Formular außerhalb gehören: `ui_speichern_leiste(['form'])` setzt `data-fuer`, `forms.js` findet sie darüber. (5) Wahlkarten (`wahlkarten.js`): der Anker der Adresse wählt, beim Laden **und** bei `hashchange` — eine Sprungmarke auf `#exportform` lädt nicht neu. (6) Ein Leerzustand („Noch kein …“, „Kein …“) zählt in der Seitenregel `saetze` nicht als Satz der Karte; damit fällt die Ausnahme des Protokoll-Archivs (`44c`, OF-05) ohne Umbau weg. (7) Korrektur an E-OF-65: „Rückfrage beim Konto“ (`02h`) steht in `ausnahmen.json` bei OF-07, nicht bei OF-04; der Text von E-OF-65 ist angeglichen | Umsetzung, 08.11.2026 |
 | E-OF-48 | Papierkorb: Das Artzeichen des Diensttags (`ohne-zuordnung`, Hubschrauber, Fahrzeug) steht vor dem Datum wie in Leiste und Vorschlägen — so zeigt es das freigegebene Bild; „entfernt“ in E-OF-30 meint die Stelle neben den Knöpfen. Will die Betreiberin es im Papierkorb ganz weglassen, ist das eine Zeile | Konzept, aus E-OF-30 (F-OF-16) |
 
 Aus Schritt 26 übernommen: E-MA-36 (Beenden-Knöpfe der App bleiben
@@ -1191,4 +1191,58 @@ BetreiberIn, Anlage danach mit `--neu`.
 (Verschließen und Öffnen); die Ankündigung „Sichtbar bis“ und der
 Rechtstext-Stand im Bild; Bilderlauf, Barrierefreiheit und Bedienprobe in
 Firefox und WebKit (E-OF-60).
+
+### OF-04 Einstellungen (08.11.2026, Web 24.5.0)
+
+**Was getan ist.** Profil: Zweitfaktor als ein Satz plus „Verwalten“ mit
+den Zeilen Codes, Gemerkte Geräte, Passkeys, Rückweg (E-OF-70 (1), (2));
+Einleitungssatz nur ohne Zweitfaktor; Profil-Formular mit Speicherleiste
+(`data-fuer`, E-OF-70 (4)), „Passwort ändern“ als Knopf in der Karte; Sätze
+gekürzt (Rolle, Logo, Darstellung, Datenschutz, Wiederherstellungsschlüssel,
+„Was hilft“); „Konto löschen“ als Warnmeldung plus ein Satz; Zeile „GPS-Daten
+verdichten“ unter „Was dein Konto hält“. Geräte: zwei Karten nach Typ
+(E-OF-70 (3)), Koppeln im Dialog mit drei Schritten, App-Fach als Schritt 1,
+App-Karte entfällt, Platzzahl als Kleinzeile, Meldung nur bei vollem Platz.
+Import / Export: Baustein Wahlkarten (Design.md 9.42, `wahlkarten.js`).
+Backup: ein Satz, Karte „GPS-Daten verdichten“ nur bei Fälligem (E-OF-52 —
+ob sie ganz entfällt, entscheidet OF-M1). Standorte und Standortseite:
+Sätze gekürzt. Prüfmittel: Bilderlauf (Kopplungszustand im Dialog,
+Leerzustand-Regel, Selbstprobe 33 von 33), Kopplungs-Rundlauf, Bedienprobe
+(Passkey, Rückweg, Zweitfaktor-merken lesen die Kleinzeile bzw. öffnen
+„Verwalten“), Ortsdaten-Probe, Textprobe-Ausnahmen (Garmin-Stellen nach
+Typ), `vollstaendigkeit-ohne-regel` (`zf-verwalten`, `zf-satz`), neun
+Seiten aus `ausnahmen.json` gestrichen, dazu `44c`. Doku: Handbuch 3.1f, 6,
+7, 10; Design.md 9.9, 9.42, Verlauf; Technik (Baum); CHANGELOG;
+`version.php` 24.5.0.
+
+**Gemessen** (Prüfweise E-OF-60). Riegel **24 von 24**. Kontrast **60
+Paare je Modus, 0 verfehlt**. Stilvergleich gegen `origin/main`: 66 638
+Elementmessungen, geplant und gemessen **173 / 173 / 180** Signaturen
+(Chromium / Firefox / WebKit), **0 ungeplant**, die neuen durchgesehen.
+**Bilderlauf** Chromium, drei Breiten, voller Lauf: Überlauf 0,
+Konsolenfehler 0, Knöpfe 0, Seitenregeln 1 Befund (die Ausnahme `44c` ohne
+Befund, gestrichen); danach die zehn berührten Seiten nachgefahren: 30
+Bilder, Überlauf 0, Konsolenfehler 0, Knöpfe 0, Seitenregeln 39 Karten /
+20 Kanten, **0 Befunde, 0 ausgenommen**. **Bedienprobe** Chromium 74 von
+77, die drei roten (siehe Probleme) danach allein **3 von 3**. Proben:
+Zweitfaktor **139 ok, 0 fehlen**; Rollen **612 Erwartungen, 0 nicht
+erfüllt**; Ortsdaten **58 ok, 0 fehlen**; Kopplung **85 / 0**,
+Kopplungs-Rundlauf **25 / 0**, 0 Konsolenfehler.
+
+**Probleme.** (1) Drei Bedienwege lasen die Zahlen als Plakette und
+rechneten mit offenem „Verwalten“ — der Rückweg-Weg klickte 30 s auf einen
+verborgenen Knopf; umgestellt auf die Kleinzeile bzw. das Öffnen des
+`<summary>`, wie eine Nutzerin es tut. (2) Die Ortsdaten-Probe fand das
+Exportformular verborgen: Sie kam von `import.php` und sprang auf
+`#exportform`, ohne dass die Seite neu lud — dasselbe hätte eine Nutzerin
+mit der Sprungmarke erlebt; `wahlkarten.js` hört jetzt auf `hashchange`
+(E-OF-70 (5)). (3) Das Ausschalten des Zweitfaktors hing zuerst am
+Codes-Formular und hätte zwei `action`-Felder gesendet; eigenes Formular.
+(4) Die Wortliste stieß sich an den neuen Garmin-Stellen; die zwei alten
+Ausnahmen sind durch zwei neue ersetzt, die die Geräte nach Typ nennen.
+
+**Nicht geprüft:** Bilderlauf, Barrierefreiheit und Bedienprobe in Firefox
+und WebKit (E-OF-60, kommt mit dem vollen Prüfstand); der Koppel-Dialog mit
+echter Garmin-Uhr und echtem Handy (Handprüfung); die Karte „GPS-Daten
+verdichten“ mit einem gescheiterten Lauf im Bild.
 

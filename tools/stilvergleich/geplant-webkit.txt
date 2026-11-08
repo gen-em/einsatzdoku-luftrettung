@@ -20,8 +20,10 @@ katalog.html  div.akkordeon-zeile <div.leiste-gruppe-aktiv>  :  display, height,
 katalog.html  div.akkordeon-zeile <div.leiste-gruppe>  :  height, size, width
 katalog.html  div.bereich-zahl <div>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, outline
 katalog.html  div.eintrag.aktiv <div>  :  border-color, border-left, border-left-color
+katalog.html  div.feld <div.koppel-schritte>  :  list-style, margin, margin-top, min-height, min-width, size, width
 katalog.html  div.feld-eingabe <div.rahmenkarte-abschnitte>  :  max-width, size, width
 katalog.html  div.feld-eingabe.feld-datum <div>  :  font, font-variant-numeric, max-width, size, width
+katalog.html  div.feld-klein <li>  :  list-style, size, width
 katalog.html  div.filtergesetzt <div>  :  align-items, column-gap, display, flex-wrap, gap
 katalog.html  div.filterknopf <div.listensuche>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, column-gap, font, font-weight, gap, size, width
 katalog.html  div.form-raster-einspaltig <div.rahmenkarte-abschnitte>  :  max-width, size, width
@@ -39,6 +41,7 @@ katalog.html  div.karte-stand <div>  :  border, border-bottom, border-bottom-col
 katalog.html  div.kartenfilter-lupe <div>  :  bottom, inset, top
 katalog.html  div.kartenfilter-x <div>  :  bottom, inset, top
 katalog.html  div.knopf-breit <div.speichern>  :  size, width
+katalog.html  div.koppel-schritte <div>  :  column-gap, display, flex-direction, gap, height, list-style, padding, padding-left, size
 katalog.html  div.leiste <div.leiste-spalte>  :  background, border, border-color, border-right, border-width, height, inset, size, top
 katalog.html  div.leiste <div.rahmen-bereiche>  :  height, inset, size, top
 katalog.html  div.leiste-gruppe <div>  :  display, height, size, width
@@ -46,6 +49,7 @@ katalog.html  div.leiste-gruppe-aktiv <div>  :  height, size
 katalog.html  div.leiste-liste <div.leiste-spalte>  :  size, width
 katalog.html  div.leiste-spalte <div.rahmen-bereiche>  :  background, border, border-color, border-right, border-width, display, flex, height, size, width
 katalog.html  div.leiste-spalte <div>  :  background, border, border-color, border-right, border-width, display, flex, height, size, width
+katalog.html  div.listen-form-felder <div.rahmenkarte-abschnitte>  :  grid-template-columns, max-width, size, width
 katalog.html  div.meldung <div.ortsfeld-hinweis-text>  :  box-shadow, margin, margin-bottom
 katalog.html  div.nur-vorlesen <div>  :  bottom, inset, top
 katalog.html  div.ortsfeld-hinweis <div>  :  flex
@@ -69,6 +73,11 @@ katalog.html  div.suchfeld-lupe <div>  :  bottom, inset, top
 katalog.html  div.suchfeld-x <div>  :  bottom, inset, top
 katalog.html  div.vorschlaege <div>  :  bottom, inset, top
 katalog.html  div.vorschlag.aktiv <div>  :  background, border-color, border-left, border-left-color
+katalog.html  div.wahlkarte <div>  :  background, border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-radius, border-right, border-top, border-top-color, border-width, bottom, column-gap, cursor, display, flex-direction, gap, height, inset, left, padding, padding-bottom, padding-left, padding-right, padding-top, position, right, size, top
+katalog.html  div.wahlkarte-text <div>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, font, font-size, height, line-height, outline, size, text-align
+katalog.html  div.wahlkarte-titel <div>  :  align-items, border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, column-gap, display, font, font-family, font-weight, gap, justify-content, outline, text-align
+katalog.html  div.wahlkarte.wahlkarte-box <div>  :  background, border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-radius, border-right, border-top, border-top-color, border-width, bottom, column-gap, cursor, display, flex-direction, gap, height, inset, left, padding, padding-bottom, padding-left, padding-right, padding-top, position, right, size, top
+katalog.html  div.wahlkarten <div>  :  column-gap, display, gap, grid-auto-flow, grid-template-columns, grid-template-rows, margin, margin-bottom, max-width, size, width
 katalog.html  div.wahlliste <div.rahmenkarte-abschnitte>  :  max-width, size, width
 katalog.html  div.zeile-aktionen <div.protokoll-liste>  :  align-items
 katalog.html  div.zeile-aktionen <div>  :  align-items
@@ -81,9 +90,27 @@ katalog.html  html <->  :  height, scroll-padding-top, size
 katalog.html  input.schalter-box <div>  :  bottom, inset, top
 katalog.html  input.segment-box <div>  :  bottom, inset, top
 katalog.html  input.wahl-box <div>  :  bottom, inset, top
+katalog.html  input.wahlkarte-box <div>  :  bottom, display, height, inset, left, min-width, opacity, position, right, size, top, width
+katalog.html  li <div.koppel-schritte>  :  height, list-style, min-height, min-width, size, width
+katalog.html  strong <li>  :  display, height, list-style, size, width
 seiten.html[einsatz.php]  div#plaketten.zeile-plaketten <div.karte-inhalt>  :  align-items
+seiten.html[einstellungen.php]  details.apk-fach <li>  :  list-style
 seiten.html[einstellungen.php]  div.listen-form-felder <form>  :  grid-template-columns
+seiten.html[einstellungen.php]  li <ol.koppel-schritte>  :  list-style
+seiten.html[einstellungen.php]  ol.koppel-schritte <div.dialog-inhalt>  :  column-gap, display, flex-direction, gap, list-style, padding, padding-left
+seiten.html[einstellungen.php]  p.feld-klein <details.apk-fach>  :  list-style
+seiten.html[einstellungen.php]  span.feld-klein <li>  :  display, list-style
+seiten.html[einstellungen.php]  strong <li>  :  display, list-style
+seiten.html[import.php]  body <html>  :  height, size
+seiten.html[import.php]  div <body>  :  height, size
 seiten.html[import.php]  div#exp_zeitraum_row.listen-form-felder <div>  :  grid-template-columns
+seiten.html[import.php]  div.wahlkarten <div>  :  column-gap, display, gap, grid-auto-flow, grid-template-columns, grid-template-rows, height, margin, margin-bottom, max-width, size, width
+seiten.html[import.php]  html <->  :  height, size
+seiten.html[import.php]  input.wahlkarte-box <label.wahlkarte>  :  bottom, height, inset, left, min-width, opacity, position, right, size, top, width
+seiten.html[import.php]  label.wahlkarte <div.wahlkarten>  :  background, border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-radius, border-right, border-top, border-top-color, border-width, bottom, cursor, flex-direction, height, inset, left, min-width, padding, padding-bottom, padding-left, padding-right, padding-top, position, right, size, top, width
+seiten.html[import.php]  span.wahlkarte-text <label.wahlkarte>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, cursor, font, font-size, height, line-height, outline, size, text-align, width
+seiten.html[import.php]  span.wahlkarte-titel <label.wahlkarte>  :  align-items, border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, column-gap, cursor, display, font, font-family, font-weight, gap, height, justify-content, outline, size, text-align, width
+seiten.html[import.php]  strong <span.wahlkarte-text>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, cursor, font, font-size, line-height, outline, text-align
 seiten.html[suche.php]  div#filterplaketten.zeile-plaketten.filterplaketten <div>  :  align-items
 seiten.html[ui.php]  a.><span>.<div.class= <div.filtergesetzt>  :  display
 seiten.html[ui.php]  a.akkordeon-uebersicht <div.akkordeon-rahmen>  :  inset, left

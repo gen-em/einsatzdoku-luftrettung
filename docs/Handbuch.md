@@ -918,7 +918,15 @@ Blatt eintippen. **„Zurück zur Anmeldung"** bricht ab. Nach **fünf falschen
 Codes** ist die Anmeldung dieses Kontos eine Viertelstunde gesperrt, bei
 Wiederholung länger; die Meldung nennt, ab wann es wieder geht.
 
-**Ausschalten** geht nur, wo er kein Muss ist: Karte → **„Ausschalten"**.
+**Die Karte zeigt eingeschaltet einen Satz** (seit Web 24.5.0): seit wann,
+wie viele Codes übrig sind, ob der Rückweg steht, wie viele Geräte gemerkt und
+wie viele Passkeys angelegt sind. **„Verwalten"** klappt darunter die Zeilen
+auf — Codes zur Wiederherstellung (**„Neu erzeugen"**), Gemerkte Geräte
+(**„Vergessen"**), Passkeys und Rückweg (**„Erneuern"**), jede mit ihrer
+Handlung.
+
+**Ausschalten** geht nur, wo er kein Muss ist: Karte → „Verwalten" →
+**„Ausschalten"**.
 Für Support, Admin und BetreiberIn gibt es den Knopf nicht; dort **setzt die
 Verwaltung zurück** (11.1) — die BetreiberIn für alle Rollen, ein Admin nur
 für NutzerInnen, und niemand am eigenen Konto. Du bekommst dann eine Mail, und
@@ -995,7 +1003,7 @@ Support, Admin und BetreiberIn 7 (Betrieb → Servereinstellungen, Karte
 - **Nicht an einem Rechner, den andere mitbenutzen.** Ein gemerkter Browser
   ist so gut wie dein Handy: Wer dort dein Passwort kennt, ist drin.
 - **Vergessen:** Einstellungen → Profil, Karte „Zweitfaktor", Zeile
-  „Gemerkte Geräte" → **„Alle vergessen"**. Von selbst vergessen werden alle
+  „Gemerkte Geräte" (unter „Verwalten") → **„Vergessen"**. Von selbst vergessen werden alle
   gemerkten Geräte, wenn du dein **Passwort wechselst oder zurücksetzt**, wenn
   der Zweitfaktor **ausgeschaltet oder zurückgesetzt** wird, und wenn die
   BetreiberIn die Dauer **kürzer** stellt, als dein Gerät schon gemerkt ist.
@@ -2956,8 +2964,10 @@ das Ruhesegment abgeschlossen ist, und **dünnt sie 31 Tage nach dem Ende aus**
 - **Auf der Startseite** erledigt er bei jedem Aufruf still bis zu zwanzig
   Aufzeichnungen — sobald die geschützten Angaben entsperrt sind. Nach dem
   Passwort fragt er dafür nie.
-- **Hier, unter Backup**, steht die Karte **„GPS-Daten verdichten"**. Sie
-  nennt, was fällig ist („42 Aufzeichnungen aus 11 Diensttagen"), und arbeitet
+- **Hier, unter Backup**, steht die Karte **„GPS-Daten verdichten"** — seit
+  Web 24.5.0 nur, wenn nach der Startseite noch etwas fällig ist; sonst steht
+  im Profil unter „Was dein Konto hält" die Zeile „GPS-Daten verdichten:
+  erledigt". Die Karte nennt, was fällig ist („42 Aufzeichnungen aus 11 Diensttagen"), und arbeitet
   es ab, solange die Seite offen ist: Ring, Zahl und Balken zeigen, wie weit er
   ist; am Ende steht das Ergebnis. Fehlt bei einem Einsatz die Höhe des
   Einsatzorts, trägt er sie dabei nach.
@@ -3037,7 +3047,9 @@ Einspielen ist nicht nötig.
 
 Unter **Einstellungen → Import / Export** lässt sich eine vorhandene
 Einsatzliste (Excel oder CSV) übernehmen — etwa eine über Jahre gepflegte
-Jahresliste.
+Jahresliste — oder die eigene als Datei ausgeben. **Oben wählst du zwischen
+„Liste übernehmen" und „Liste ausgeben"** (seit Web 24.5.0); darunter steht
+nur das Formular, das dazu gehört.
 
 ### Die übrigen Wege
 
@@ -3767,12 +3779,22 @@ eingefroren.
 Unter **Einstellungen → „Geräte"** verwaltet jede/r die eigenen Geräte — die
 Uhr, seit Web 12.8.0 auch das Handy mit der Android-App.
 
-**Die Karte „Gerät koppeln" steht oben und hat drei Zustände** *(seit Web
-13.1.0)*. Sie führt den Weg, den Abschnitt 2.2 von der Uhr aus beschreibt:
+**Die Geräte stehen nach Typ in zwei Karten** (seit Web 24.5.0): „Garmin-Uhr"
+und „Android-Handy und Wear-OS-Uhr" — eine Wear-OS-Uhr steht nicht selbst
+darin, sie sendet über das Handy. Unter jeder Karte öffnet **„Weitere Uhr
+koppeln"** bzw. **„Weiteres Gerät koppeln"** einen Dialog mit drei
+Schritten: App installieren (Connect IQ Store bzw. Play Store, dazu das APK
+von Hand), Kopplung am Gerät starten, Code eingeben. Darunter steht, wie
+viele der Plätze belegt sind; sind alle belegt, fehlt der Knopf, und eine
+Meldung sagt es.
 
-1. **Ein Feld „Code vom Gerät".** Du startest die Kopplung **am Gerät**; es
-   zeigt sechs Zeichen, die du hier eintippst. Groß- und Kleinschreibung und
-   ein Leerzeichen in der Mitte sind egal.
+**Das Koppeln hat drei Zustände** *(seit Web 13.1.0)*. Es führt den Weg, den
+Abschnitt 2.2 von der Uhr aus beschreibt:
+
+1. **Ein Feld „Code vom Gerät"** im Dialog. Du startest die Kopplung **am
+   Gerät**; es zeigt sechs Zeichen, die du hier eintippst. Groß- und
+   Kleinschreibung und ein Leerzeichen in der Mitte sind egal. Ist der Code
+   falsch, geht der Dialog mit der Meldung wieder auf.
 2. **Eine Rückfrage.** Sie zeigt, **welches Gerät** sich meldet: die Art
    („Uhr" oder „Handy") und das Modell, das es selbst gemeldet hat, dazu den
    Code in zwei Dreiergruppen und die gekürzte Gerätekennung. Erst **„Verbinden"** ordnet die Sitzung deinem

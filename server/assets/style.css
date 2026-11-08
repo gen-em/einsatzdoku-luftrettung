@@ -1190,6 +1190,9 @@ img,svg,video{max-width:100%;height:auto}
 .rahmenkarte-abschnitte .feld-eingabe,
 .rahmenkarte-abschnitte .wahlliste{max-width:var(--feld-breit)}
 .rahmenkarte-abschnitte .form-raster-einspaltig{max-width:none}
+/* Ein Feldraster zweier Felder nebeneinander (Von / Bis, Rettungsmittel /
+ * Standort) ist ebenfalls ein Feld im Sinne der Regel. */
+.rahmenkarte-abschnitte .listen-form-felder{max-width:var(--feld-breit)}
 /* Die Bereichskarten der Übersicht verlieren mit dem Rand auch die Rauchfläche
  * im Kopf (Bild OF-P29-C); Zeichen und Mitte tragen die Absetzung allein. */
 .rahmenkarte-abschnitte .karte-bereich > .karte-kopf{background:transparent;border-radius:0}
@@ -1296,6 +1299,34 @@ img,svg,video{max-width:100%;height:auto}
  * gibt, ohne ihn anzubieten. Derselbe Akkordeon-Baustein wie in den Leisten,
  * nur mit dem Abstand einer Kartenzeile darüber. */
 .apk-fach{margin-top:var(--abstand-3)}
+/* DIE SCHRITTE DES KOPPEL-DIALOGS (Konzept OF, OF-04, E-OF-25, Bild
+ * OF-P11-B2): eine nummerierte Liste, je Schritt der Name fett und darunter
+ * eine Kleinzeile. Listen tragen sonst kein Zeichen (Abschnitt 2). */
+.koppel-schritte{list-style:decimal;padding-left:var(--abstand-5);margin:0;
+  display:flex;flex-direction:column;gap:var(--abstand-3)}
+.koppel-schritte > li > strong{display:block}
+.koppel-schritte > li > .feld-klein{display:block}
+.koppel-schritte .feld{margin-top:var(--abstand-2)}
+
+/* WAHLKARTEN (Konzept OF, OF-04, E-OF-26, Bild OF-P17-C): zwei Radios in
+ * Kartenform, nebeneinander ab 720 px, zusammen so breit wie ein Feld (36 rem).
+ * Gewählt trägt sie die Auswahlfläche mit dunkelblauem Rand — dieselbe
+ * Auszeichnung wie die gewählte Wahlliste. Das Radio ist verborgen wie in der
+ * Segmentwahl; der Fokus steht auf der Karte. */
+.wahlkarten{display:grid;grid-template-columns:minmax(0,1fr);gap:var(--abstand-3);
+  max-width:var(--feld-breit);margin-bottom:var(--abstand-4)}
+.wahlkarte{position:relative;display:flex;flex-direction:column;gap:var(--abstand-1);
+  margin:0;padding:var(--abstand-3) var(--abstand-4);cursor:pointer;
+  background:var(--flaeche-feld);border:var(--strich) solid var(--linie-stark);border-radius:var(--radius)}
+input[type=radio].wahlkarte-box{position:absolute;opacity:0;width:0;height:0;min-height:0}
+.wahlkarte-titel{display:flex;align-items:center;justify-content:flex-start;gap:var(--abstand-2);text-align:left;
+  font-family:var(--schrift-kopf);font-weight:500;color:var(--text-titel)}
+.wahlkarte-text{color:var(--gedaempft);font-size:var(--groesse-2);text-align:left}
+.wahlkarte:has(.wahlkarte-box:checked){background:var(--auswahl-flaeche);border-color:var(--auswahl-linie)}
+.wahlkarte:has(.wahlkarte-box:focus-visible){outline:var(--strich-stark) solid var(--fokus);outline-offset:var(--strich-stark)}
+@media (min-width:720px){
+  .wahlkarten{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+}
 .apk-fach > .akkordeon-zeile{font-size:var(--groesse-3);color:var(--text-link)}
 .gruppen-zahl{color:var(--gedaempft);font-weight:400;font-size:var(--groesse-2)}
 .leiste-gruppe[open] > .akkordeon-zeile .gruppen-zahl{display:none}

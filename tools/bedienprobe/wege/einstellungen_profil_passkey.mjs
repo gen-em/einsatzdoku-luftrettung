@@ -136,7 +136,13 @@ export const wege = [
           const haupt = e => e.querySelector('.zeile-haupt')?.textContent.trim();
           const kopf = zeilen.find(e => haupt(e) === 'Passkeys');
           return {
-            plakette: kopf ? kopf.querySelector('.plakette')?.textContent.trim() : null,
+            /* Seit Web 24.5 (E-OF-19) steht die Zahl in der Kleinzeile:
+               „1 von 10 — …" oder „noch keiner — …". */
+            plakette: (() => {
+              const z = kopf?.querySelector('.zeile-klein')?.textContent.trim() || '';
+              const m = /^(\d+ von \d+)/.exec(z);
+              return m ? m[1] : (z.startsWith('noch keiner') ? '0 von 10' : null);
+            })(),
             probe: zeilen.some(e => haupt(e) === 'Bedienprobe' && e.textContent.includes('Entfernen')),
             anlegen: !!document.querySelector('[data-passkey-anlegen]'),
             verweis: [...document.querySelectorAll('#k-zweitfaktor a')]

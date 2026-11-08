@@ -8787,4 +8787,16 @@ declare(strict_types=1);
  *   als Kleinzeile. Der Listenkopf (Protokoll, NutzerInnen) hat einen
  *   Filterknopf; gesetzte Filter stehen als Pillen mit Kreuz darunter. Neben;
  *   kein Schema. */
-const WEB_VERSION = '24.4.0';
+/* 24.5.0 — DIE EINSTELLUNGEN (Schritt 27, Konzept OF, OF-04; E-OF-19, -25,
+ *   -26, -52). Profil: Der Zweitfaktor zeigt eingeschaltet einen Satz und
+ *   klappt mit „Verwalten" die Zeilen mit je einer Handlung auf; das
+ *   Profilformular speichert ueber die Speicherleiste am Kartenboden (sie
+ *   steht ausserhalb des Formulars, `data-fuer`, forms.js), „Passwort
+ *   aendern" im Abschnitt; je Abschnitt ein Satz, „Konto loeschen" mit dem
+ *   Wesentlichen als Meldung. Geraete: zwei Karten nach Typ, Koppeln im
+ *   Dialog mit drei Schritten (App, Kopplung, Code), Platzzahl als
+ *   Kleinzeile. Import / Export: Wahlkarten (`.wahlkarten`,
+ *   `assets/wahlkarten.js`). Backup: ein Satz; „GPS-Daten verdichten" nur,
+ *   wenn etwas faellig ist, sonst eine Zeile im Profil. Standorte: je
+ *   Abschnitt ein Satz. Neben; kein Schema. */
+const WEB_VERSION = '24.5.0';

@@ -14,6 +14,19 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 24.5.0] — unveröffentlicht
+
+### Geändert
+
+- **Web — die Einstellungsseiten sind aufgeräumt** (Schritt 27). Profil,
+  Geräte, Import / Export und Backup trugen mehrere Absätze Erklärung,
+  Knöpfe zwischen den Abschnitten und Anleitungen, die man selten braucht.
+  Jetzt sagt der Zweitfaktor in einem Satz, wie er steht, und „Verwalten“
+  zeigt die Handlungen; die Geräte stehen nach Typ, und das Koppeln führt
+  ein Dialog in drei Schritten; Import / Export fragt zuerst, ob du eine
+  Liste übernehmen oder ausgeben willst. Gespeichert wird das Profil über
+  die Leiste am unteren Rand, die nennt, was geändert ist.
+
 ## [Web 24.4.0] — unveröffentlicht
 
 ### Geändert

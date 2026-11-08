@@ -65,39 +65,7 @@
     "22-einsatz-verschieben": {
       "saetze": "OF-07 — Diensttag- und Einsatzseiten (Tagesübersicht samt Ruhesegmente-Kachel, Papierkorb, Diensttag anlegen / Datum / zusammenführen, Einsatz verschieben, GPS-Daten)"
     },
-    "30-einstellungen-profil": {
-      "knopf": "OF-04 — Einstellungen — Profil, Geräte, Backup, Import / Export, Standorte",
-      "saetze": "OF-04 — Einstellungen — Profil, Geräte, Backup, Import / Export, Standorte"
-    },
-    "30a-einstellungen-profil-zweitfaktor": {
-      "knopf": "OF-04 — Einstellungen — Profil, Geräte, Backup, Import / Export, Standorte",
-      "saetze": "OF-04 — Einstellungen — Profil, Geräte, Backup, Import / Export, Standorte"
-    },
-    "31-einstellungen-standorte": {
-      "saetze": "OF-04 — Einstellungen — Profil, Geräte, Backup, Import / Export, Standorte"
-    },
-    "32-standortseite": {
-      "saetze": "OF-04 — Einstellungen — Profil, Geräte, Backup, Import / Export, Standorte"
-    },
-    "33-einstellungen-geraete": {
-      "saetze": "OF-04 — Einstellungen — Profil, Geräte, Backup, Import / Export, Standorte"
-    },
-    "33a-geraete-rueckfrage": {
-      "saetze": "OF-04 — Einstellungen — Profil, Geräte, Backup, Import / Export, Standorte"
-    },
-    "33b-geraete-warten": {
-      "saetze": "OF-04 — Einstellungen — Profil, Geräte, Backup, Import / Export, Standorte"
-    },
-    "34-einstellungen-backup": {
-      "saetze": "OF-04 — Einstellungen — Profil, Geräte, Backup, Import / Export, Standorte"
-    },
-    "35-import-export": {
-      "saetze": "OF-04 — Einstellungen — Profil, Geräte, Backup, Import / Export, Standorte"
-    },
     "41-kontoseite": {
-      "saetze": "OF-05 — Verwaltung — Kontoseite und Protokoll"
-    },
-    "44c-protokoll-archiv": {
       "saetze": "OF-05 — Verwaltung — Kontoseite und Protokoll"
     },
     "45b-betrieb-sicherheit": {

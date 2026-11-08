@@ -537,6 +537,8 @@ if (flag('--selbstprobe')) {
       html: SEITE(K('A', '<div class="meldung"><p class="feld-hinweis">Eins. Zwei. Drei.</p></div>')) },
     { nr: 32, grund: 'ein Rest ohne Satzzeichen ab vier Woertern zaehlt mit', was: 'saetze', soll: 1,
       html: SEITE(K('A', '<p class="feld-hinweis">Ein Satz. Und hier noch vier Woerter</p>')) },
+    { nr: 33, grund: 'ein Leerzustand neben dem Erklaersatz zaehlt nicht', was: 'saetze', soll: 0,
+      html: SEITE(K('A', '<p class="feld-hinweis">Vorschlaege je Rolle.</p><p class="feld-hinweis">Noch keine Eintraege.</p>')) },
   ];
   const probeBrowser = await starten(PW, MOTOR, {});
   const probe = await probeBrowser.newPage({ viewport: { width: 1280, height: 800 } });
@@ -621,6 +623,10 @@ function seitenregelnMessen() {
           let n = 0;
           for (const h of Array.from(k.querySelectorAll('.feld-hinweis')).filter(sichtbar)) {
             if (h.closest('.meldung, .zeile, dialog, .blatt, .codeblock') || h.closest('.karte') !== k) { continue; }
+            /* LEERZUSTAENDE ZAEHLEN NICHT (Design.md 6): „Noch keine
+               Einträge.", „Zurzeit keine." sind Zustand, keine Erklärung. Sie
+               tragen keine eigene Klasse; erkannt werden sie am Anfang. */
+            if (/^\s*(Noch kein|Zurzeit kein|Kein[e]? )/.test(h.innerText || '')) { continue; }
             n += saetze(h.innerText || '');
           }
           ergebnis.gezaehlt++;
@@ -1150,6 +1156,11 @@ async function vorher(seite, schritte, fehlerSammler) {
         fehlerSammler.push('Kein Feld „Code vom Gerät" auf der Seite — steht die '
                          + 'Kopplungskarte in einem anderen Zustand (Gerätelimit erreicht)?');
         continue;
+      }
+      /* Seit Web 24.5 steht das Feld im Koppel-Dialog (E-OF-25) — öffnen. */
+      if (!(await seite.locator('dialog#koppeln[open]').count())
+          && await seite.locator('[data-dialog="koppeln"]').count()) {
+        await seite.locator('[data-dialog="koppeln"]').click();
       }
       await feld.fill(sitzung.code);
       await Promise.all([seite.waitForNavigation({ timeout: 30000 }),
