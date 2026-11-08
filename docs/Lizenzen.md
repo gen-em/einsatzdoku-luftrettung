@@ -259,22 +259,26 @@ und beide sind eng gefasst.
 
 ### 6.1 Kartenkacheln
 
-Der Browser lädt die Kartenbilder direkt beim jeweiligen Anbieter. Drei
-Ebenen stehen zur Wahl (`server/assets/map_layers.js`):
+Der Browser lädt die Kartenbilder direkt beim jeweiligen Anbieter. Vier
+Ebenen stehen zur Wahl (`server/assets/map_layers.js`; hier stand bis Web
+24.8.0 „drei", die Tabelle führte vier). Die Auswahl nennt seit Web 24.8.0
+nur die Kartenart, nicht den Anbieter (Konzept OF, E-OF-13); die
+Namensnennung, die die Lizenz verlangt, steht je Ebene im Attributionsband
+unten rechts:
 
 | Ebene | Anbieter | Daten unter |
 |---|---|---|
 | Standard | `tile.openstreetmap.org` | **ODbL** — © OpenStreetMap-Mitwirkende |
 | Topografisch | `tile.opentopomap.org` | **CC-BY-SA**, Daten © OpenStreetMap-Mitwirkende |
-| Wandern | `tile.openmaps.fr` (OpenHikingMap) | Daten **ODbL** — © OpenStreetMap-Mitwirkende; Kacheln nach der Tile usage policy von openmaps.fr (Absatz darunter) |
-| Luftbild | `server.arcgisonline.com` (Esri World Imagery) | Esri-Nutzungsbedingungen |
+| Wanderkarte | `tile.openmaps.fr` (OpenHikingMap) | Daten **ODbL** — © OpenStreetMap-Mitwirkende; Kacheln nach der Tile usage policy von openmaps.fr (Absatz darunter) |
+| Satellitenbild | `server.arcgisonline.com` (Esri World Imagery) | Esri-Nutzungsbedingungen |
 
 **Die Namensnennung verweist auf** `wiki.openstreetmap.org`,
 `www.openstreetmap.org`, `opentopomap.org`, `openmaps.fr` und `www.esri.com`.
 Das sind Links im Attributionsband, keine Kachelquellen — abgerufen wird von
 ihnen nichts.
 
-> **Die Zeile „Wandern" ist seit dem 03.11.2026 geprüft** (Backlog Nr. 280,
+> **Die Zeile „Wanderkarte" (bis Web 24.8.0 „Wandern") ist seit dem 03.11.2026 geprüft** (Backlog Nr. 280,
 > P-PK-27). Bis dahin stand hier, dass die Bedingungen unbekannt sind: Die
 > Ebene kam mit `map_layers.js` und der Content-Security-Policy
 > (`kopfzeilen_lib.php`), ohne in dieser Liste zu stehen, und die

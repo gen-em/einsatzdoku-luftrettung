@@ -1305,9 +1305,11 @@ Pro Tag:
   auf sehr breiten Bildschirmen (ab 1600 px) rückt sie neben Daten und
   Tabelle. Oben links lässt sich die Karte per Klick auf **Vollbild**
   stellen (erneuter Klick oder ESC verlässt den Vollbildmodus wieder), oben
-  rechts zwischen vier Kartenebenen umschalten: **Standard**, **Wanderkarte**
-  (mit Höhenlinien), **Topographisch** und — seit Web 7.0.0 —
-  **Satellitenbild**. Das Luftbild zeigt, was Höhenlinien nicht leisten: ob
+  rechts über das Kartenzeichen zwischen vier Kartenarten umschalten:
+  **Standard**, **Wanderkarte** (mit Höhenlinien), **Topografisch** und —
+  seit Web 7.0.0 — **Satellitenbild**. Wer die Kacheln liefert
+  (OpenStreetMap, OpenHikingMap, OpenTopoMap, Esri), steht seit Web 24.8.0
+  nicht mehr in der Auswahl, sondern je Kartenart in der Zeile unten rechts. Das Luftbild zeigt, was Höhenlinien nicht leisten: ob
   der Einsatzort auf einer Wiese, im Wald oder auf einem Parkplatz lag. Es ist
   bewusst nicht der Standard, weil es deutlich größere Kacheln lädt. Beide
   Controls stehen auf allen drei Kartenseiten der Anwendung zur Verfügung.

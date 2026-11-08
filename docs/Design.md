@@ -2908,6 +2908,18 @@ Herkunft. 14 px und 18 px stehen auf keiner Skala des Projekts, und die Skala
 ist geschlossen; eine begründete Ableitung ist der Weg, den Kapitel 6 dafür
 vorsieht.
 
+**Die Bedienelemente der Karte** (seit Web 24.8.0, Konzept OF, OF-07,
+E-OF-29, Bilder OF-P36): Zoom, Vollbild, Kartengröße, Phasenumschalter und
+Ebenenwahl tragen die Bedienhöhe `--knopf` (44 px, am Zeigergerät 36 px),
+die Kartenfläche `--flaeche-karte`, die Linie `--linie-stark`, den Radius
+eines Knopfes und keinen Schatten. Die Ebenenwahl zeigt das Zeichen `karte`
+statt des Leaflet-Bildes und offen die Überschrift „Kartenart“, Zeilen in
+Bedienhöhe, gewählt in Dunkelblau; die Namen nennen keinen Anbieter, der steht
+im Attributionsband (E-OF-13). Die Regeln stehen in `style.css` mit einer
+Klasse mehr als Leaflets eigene (`.leaflet-control`), weil `leaflet.css` auf
+der Spurenseite nach `style.css` lädt; die Bibliothek bleibt unberührt. Der
+Phasenumschalter ist Text und behält seine Breite.
+
 ### 9.31 Sprungliste (`.sprungliste` / `.sprungziel`)
 
 **Zweck:** in eine **lange Liste** hineinspringen. Eine umbrechende Zeile
@@ -3752,6 +3764,7 @@ genau das, wogegen sie schützt.
 
 | Fassung | Was |
 |---|---|
+| **Web 24.8.0 (Schritt 27, Konzept OF, OF-07)** | **9.30:** Bedienelemente der Karte im Branding, Ebenenwahl mit Zeichen `karte` und Überschrift „Kartenart“, Namen ohne Anbieter (E-OF-13, -29). Kein neuer Baustein, kein Token. |
 | **Web 24.7.0 (Schritt 27, Konzept OF, OF-06)** | **9.1:** Stand und Plakette der Klappkarte als eine Gruppe (`.karte-stand-gruppe`). **9.2:** `zeile-umbruch` für Zeilen mit mehreren Plaketten oder Plakette und Knopf. Statusseite „Probleme zuerst", Servereinstellungen, Hintergrundjobs und Komplett-Backup aus vorhandenen Bausteinen (Klappkarte, Zeile, Segmentwahl, `haupt`); kein neuer Baustein, kein Token. |
 | **Web 24.5.0 (Schritt 27, Konzept OF, OF-04)** | **9.42 neu — Wahlkarten**, freigegeben mit OF-P17-C; dort auch Koppel-Dialog und Zweitfaktor-Karte als Verwendungen vorhandener Bausteine. **9.9:** Speicherleiste außerhalb des Formulars (`data-fuer`). **6:** Feldraster `.listen-form-felder` in den Einstellungen auf `--feld-breit` begrenzt. |
 | **Web 24.4.0 (Schritt 27, Konzept OF, OF-03)** | **9.7:** Datumsfeld `TT.MM.JJJJ` (`ui_datum_eingabe()`, `.feld-datum`, `--feld-datum`) an allen acht Stellen. **9.13:** Zeichen statt Kleinzeile am Ortsfeld, der Satz als Tooltip. **9.18a:** Filterknopf mit gesetzten Filtern als Pillen. Neues abgeleitetes Maß `--feld-datum`; kein neuer Baustein — alle drei mit den Mockups freigegeben. |

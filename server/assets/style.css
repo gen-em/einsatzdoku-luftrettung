@@ -3407,6 +3407,71 @@ pre{overflow-x:auto;background:var(--flaeche-abgesetzt);padding:var(--abstand-3)
  * unsere Marker zeichnen sich selbst. */
 .leaflet-div-icon{background:none;border:0}
 
+/* ---- BEDIENELEMENTE DER KARTE IM BRANDING (Konzept OF, OF-07, E-OF-29) ----
+ *
+ * Leaflet bringt kleine weisse Quadrate mit Schatten mit — eine eigene
+ * Formensprache neben der App. Jetzt: Bedienhoehe `--knopf` (44 px, am
+ * Zeigergeraet 36 px), Kartenflaeche, starke Linie, Radius wie ein Knopf,
+ * kein Schatten. Die Ebenenwahl traegt das Zeichen `karte` (map_layers.js),
+ * offen eine Ueberschrift und Zeilen in Bedienhoehe, gewaehlt in Dunkelblau.
+ *
+ * EINE KLASSE MEHR ALS LEAFLET (`.leaflet-control`), nicht die Reihenfolge:
+ * Auf der Spurenseite laedt leaflet.css NACH style.css, und Leaflets Regeln
+ * (`.leaflet-touch .leaflet-bar a`) haben sonst dasselbe Gewicht. Die
+ * Bibliothek selbst bleibt unberuehrt.
+ *
+ * GRUNDFARBEN STATT ROLLEN, wie die uebrigen Kartenzeichen: Die Karte bleibt
+ * im Dunkeln hell (E-MA-14), ihre Knoepfe auch. `--flaeche-karte`,
+ * `--linie-stark` usw. schalten um; ihre hellen Werte (neutral 75, neutral
+ * 600, neutral 200, Rauch, Asphalt) tun es nicht. */
+.leaflet-container .leaflet-bar.leaflet-control,
+.leaflet-container .leaflet-control-layers.leaflet-control{
+  border:var(--strich) solid var(--genem-neutral-600);border-radius:var(--radius);
+  background:var(--genem-neutral-75);background-clip:padding-box;
+  box-shadow:none;overflow:hidden;
+}
+.leaflet-container .leaflet-bar.leaflet-control a{
+  display:flex;align-items:center;justify-content:center;
+  width:var(--knopf);height:var(--knopf);line-height:var(--knopf);
+  background:var(--genem-neutral-75);color:var(--dunkelblau);
+  border-bottom:var(--strich) solid var(--genem-neutral-200);
+}
+.leaflet-container .leaflet-bar.leaflet-control a:last-child{border-bottom:0}
+/* DER PHASENUMSCHALTER DER EINSATZKARTE IST TEXT, KEIN ZEICHEN: Er behaelt
+ * seine Breite (Regel `.geo .map-ctrl-phase a` weiter unten), nur die Hoehe
+ * folgt dem Knopf. */
+.leaflet-container .leaflet-bar.leaflet-control.map-ctrl-phase a{
+  width:auto;padding:0 var(--abstand-2);
+}
+.leaflet-container .leaflet-bar.leaflet-control a:hover,
+.leaflet-container .leaflet-control-layers.leaflet-control .leaflet-control-layers-toggle:hover{
+  background-color:var(--genem-rauch);
+}
+.leaflet-container .leaflet-control-layers.leaflet-control .leaflet-control-layers-toggle{
+  width:var(--knopf);height:var(--knopf);
+  background-image:none;color:var(--dunkelblau);
+}
+/* Das Zeichen mittig im Umschalter — ohne `display` am Umschalter selbst:
+ * Leaflet blendet ihn im offenen Zustand ueber `display:none` aus. */
+.leaflet-control-layers-toggle .symbol{
+  display:block;margin:calc((var(--knopf) - var(--symbol)) / 2) auto 0;
+}
+.leaflet-container .leaflet-control-layers-expanded.leaflet-control{
+  padding:var(--abstand-2) var(--abstand-3);color:var(--genem-asphalt);
+  font:var(--groesse-3)/var(--zeile) var(--schrift-text);
+}
+.leaflet-control-layers-titel{
+  color:var(--genem-neutral-600);font-size:var(--groesse-2);
+  padding-bottom:var(--abstand-1);
+}
+.leaflet-control-layers-base label{
+  display:flex;align-items:center;min-height:var(--knopf);
+}
+.leaflet-control-layers-base label > span{
+  display:flex;align-items:center;gap:var(--abstand-2);
+}
+.leaflet-control-layers-base input{accent-color:var(--dunkelblau);margin:0}
+
 
 /* == 22. EINSATZANSICHT ====================================================
  *

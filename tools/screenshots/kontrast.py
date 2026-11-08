@@ -239,6 +239,21 @@ AUSNAHMEN = [
      'Rand des hervorgehobenen Phasenpunkts und Flaeche des aktiven '
      'Kartenknopfs (.pm-chip.hl, .map-ctrl-*): Sie liegen auf der Karte, und '
      'die bleibt im Dark Mode hell (E-MA-14). Dunkelblau auf blau 100 11,26:1.'),
+    # Die Bedienelemente der Karte (Konzept OF, OF-07, E-OF-29): hell wie die
+    # Karte, deshalb Grundfarben statt Rollen.
+    ('Zeichen der Kartenknöpfe', 'dunkelblau', 'genem-neutral-75',
+     'Zoom, Vollbild, Kartengroesse, Kartenart: Zeichen auf der Flaeche der '
+     'Kartenknoepfe, im Dark Mode hell wie die Karte (E-MA-14, E-OF-29).'),
+    ('Rand der Kartenknöpfe', 'genem-neutral-600', 'genem-neutral-75',
+     'Rand der Knopfgruppe und Ueberschrift „Kartenart" — der helle Wert von '
+     '--linie-stark bzw. --gedaempft, im Dark Mode unveraendert.'),
+    ('Trennlinie der Kartenknöpfe', 'genem-neutral-200', 'genem-neutral-75',
+     'Linie zwischen zwei Knoepfen derselben Gruppe — Zierrat; die Gruppe '
+     'begrenzt der Rand in neutral 600.'),
+    ('Text der Kartenart', 'genem-asphalt', 'genem-neutral-75',
+     'Namen der Kartenarten in der offenen Ebenenwahl, hell wie die Karte.'),
+    ('Kartenknopf unter dem Zeiger', 'dunkelblau', 'genem-rauch',
+     'Flaeche eines Kartenknopfs unter dem Zeiger, hell wie die Karte.'),
 ]
 
 
